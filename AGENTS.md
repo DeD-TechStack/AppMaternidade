@@ -6,6 +6,6 @@ Antes de trabalhar neste repositório, leia `PROGRESSO_TASK_HERMES.md` (objetivo
 
 **Consultor interativo de Daniel:** aba "Consultor ChatGPT Web - AppMaternidade". Não é o revisor autônomo (`revisor-appmaternidade`, outra família, só leitura).
 
-Este projeto é separado do Investment e do BreakInv: não copie arquitetura, dados nem permissões deles. Android e iOS são requisitos; web e tecnologias continuam em discussão (`PROGRESSO_TASK_HERMES.md`).
+Este projeto é separado do Investment e do BreakInv: não copie arquitetura, dados nem permissões deles. O produto começa como site completo; Android e iOS vêm depois, por port (ADR-009, em `docs/AppMaternidade/06_ADRs/`). A stack do site está no ADR-009.
 
 Esta entrada não autoriza implementação, processamento do backlog, gasto, publicação nem commit/push. Um pedido explícito de Daniel delimita o trabalho. Preserve as edições locais existentes (`.gitignore`, `PROGRESSO_TASK_HERMES.md`, `docs/AppMaternidade/`, `tasks/`).
