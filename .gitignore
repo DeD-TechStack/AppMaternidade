@@ -1,0 +1,43 @@
+# AppMaternidade — exclusões locais
+# Criado pelo Hermes na task APP-001 (22/10/2026). Não havia .gitignore antes.
+# Nenhum commit/push foi feito nesta task; estas regras evitam versionar por engano
+# material local, privado ou de terceiros.
+
+# Clones e execuções das referências de terceiros (estudo local, fora do produto)
+/_referencias/
+
+# Estado local do Obsidian (janela, cache, plugins, configurações do aplicativo)
+/docs/AppMaternidade/.obsidian/
+/docs/AppMaternidade/.trash/
+
+# Capturas de tela de evidência (mostram o ambiente local de Daniel)
+/docs/AppMaternidade/09_Evidencias/capturas/
+
+# Insumos privados: contexto original fornecido por Daniel e pacotes de entrega
+/tasks/hermes/*/contexto/
+/entregas/
+
+# Registros de testes de acesso feitos em execução local (dados fictícios, 127.0.0.1)
+# contra projetos de terceiros. Ficam fora do Git até Daniel decidir sobre divulgação
+# responsável aos mantenedores (decisão D7 em docs/AppMaternidade/07_Roadmap/Decisoes_para_Daniel.md).
+/docs/AppMaternidade/09_Evidencias/Execucao_Referencias/Sprout_Track/07_api_probe.json
+/docs/AppMaternidade/09_Evidencias/Execucao_Referencias/Sprout_Track/08_api_probe2.json
+/docs/AppMaternidade/09_Evidencias/Execucao_Referencias/Sprout_Track/09_check_offline.json
+/docs/AppMaternidade/09_Evidencias/Execucao_Referencias/Sprout_Track/11_Resumo_Passos_API.md
+/docs/AppMaternidade/09_Evidencias/Execucao_Referencias/Sprout_Track/06_next_dev.log
+/docs/AppMaternidade/09_Evidencias/Execucao_Referencias/Sprout_Track/12_UI_Navegador.md
+/docs/AppMaternidade/09_Evidencias/Execucao_Referencias/Sprout_Track/roteiros/api_probe.py
+/docs/AppMaternidade/09_Evidencias/Execucao_Referencias/Sprout_Track/roteiros/api_probe2.py
+/docs/AppMaternidade/09_Evidencias/Execucao_Referencias/Sprout_Track/roteiros/check_offline.py
+/docs/AppMaternidade/09_Evidencias/Execucao_Referencias/Baby_Buddy/03_api_curl.log
+/docs/AppMaternidade/09_Evidencias/Execucao_Referencias/Baby_Buddy/06_extras_sem_auth.log
+/docs/AppMaternidade/09_Evidencias/Execucao_Referencias/Baby_Buddy/roteiros/api_tests.sh
+
+# Segredos e ambientes locais
+.env
+.env.*
+!.env.example
+*.local
+node_modules/
+.venv/
+__pycache__/
