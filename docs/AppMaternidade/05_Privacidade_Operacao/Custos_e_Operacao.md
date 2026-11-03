@@ -2,7 +2,7 @@
 tipo: design-doc
 status: proposta
 responsavel: Hermes (coordenador da APP-001)
-revisado_em: 2026-10-22
+revisado_em: 2026-11-03
 tarefa: MAT-13
 adr: ADR-008
 fontes_principais:
@@ -18,13 +18,27 @@ fontes_principais:
 
 # Custos e operação
 
+## Site (rumo atual)
+
+Custos do site completo ([ADR-009](../06_ADRs/ADR-009_Site_Completo_Primeiro.md)), por fase. Os preços do Supabase vêm de [Preços datados](../08_Referencias/Tecnologias/Precos_Datados.md), seção 3, fotografia de 22/10/2026.
+
+| Fase | Serviço | Custo | Fonte |
+| --- | --- | --- | --- |
+| Desenvolvimento local e demonstração eventual, sem dados reais | GitHub Pages em repositório público | Grátis, a confirmar | O cofre não tem fonte datada |
+| Desenvolvimento local e demonstração eventual, sem dados reais | Supabase Free | US$ 0; o projeto pausa após 1 semana sem uso; preço na região São Paulo a confirmar | Preços datados, seção 3 (22/10/2026) |
+| Piloto com famílias reais | Supabase Pro | US$ 25/mês; preço na região São Paulo a confirmar | Preços datados, seção 3 (22/10/2026) |
+
+A seção 6.1 deste documento diz: "Planos gratuitos não entram em produção nem em homologação contínua, porque pausam por inatividade." Por isso, o Free só serve para a primeira fase.
+
+As seções seguintes descrevem a arquitetura da APP-001 (rumo anterior) e servem de base para o port.
+
 Cenários de custo e o mínimo de operação para a arquitetura proposta: React Native + Expo e o Conjunto B (Supabase, PowerSync e serviço de domínio) ([Arquitetura proposta](../03_Arquitetura/Arquitetura_Proposta.md)).
 
 Todos os preços vêm de [Preços datados](../08_Referencias/Tecnologias/Precos_Datados.md), uma fotografia das páginas oficiais em 22/10/2026. Os valores estão em USD, sem impostos, IOF nem câmbio. Preço de página não é contrato. **Plano gratuito não é garantia de produção, e assinatura pessoal de IA não é crédito de API.**
 
 Os cenários de 100, 1.000 e 10.000 famílias são ilustrativos, não previsão de demanda.
 
-## 1. Custo por fase
+## 1. Custo por fase (rumo anterior)
 
 | Fase ([Roadmap](../07_Roadmap/Roadmap_e_Proxima_Fatia.md)) | Composição proposta | Custo mensal ilustrativo | Observações |
 | --- | --- | --- | --- |
