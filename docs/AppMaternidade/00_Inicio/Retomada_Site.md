@@ -38,7 +38,7 @@ Em 03/11/2026, Daniel definiu o rumo: o AppMaternidade começa como site complet
 
 ## O que está em andamento
 
-Nenhum cartão aberto no board.
+Nenhum cartão aberto no board. Desde 03/11/2026, às 15h35, o projeto está em pausa por limite, a pedido de Daniel: nada é despachado até ele voltar. A main está em a9a74eb, com a árvore limpa e sem push.
 
 ## Próximos passos (quando Daniel voltar)
 

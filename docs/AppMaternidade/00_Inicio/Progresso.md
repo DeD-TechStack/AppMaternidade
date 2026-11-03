@@ -21,6 +21,7 @@ Horários em America/Sao_Paulo, tirados do relógio da máquina ou de carimbos d
 
 Uma linha por marco, a mais recente no topo. O estado corrente fica em [Retomada do site](Retomada_Site.md), e o detalhe de cada marco está no cartão Kanban citado.
 
+- 03/11/2026, 15h35: **pausa por limite**, pedida por Daniel por meio do coordenador. O board está sem cartões abertos. A main está em a9a74eb, com a árvore limpa e sem push. Na volta, o primeiro passo são as specs da MAT-34 e da MAT-43.
 - 03/11/2026: **MAT-32 integrada.** Os design docs v0.4 entraram na main pelo cartão `t_46deffa1`. O SHA revisado era 7577216 e foi reposicionado sobre a fundação como 5500c66, com patches idênticos. A revisão aprovou na rodada 2; a rodada 1 tinha devolvido o DOC-08 por implementação.
 - 03/11/2026: **parada do dia.** A nota de retomada foi criada (d04c26f). Daniel retoma na quinta.
 - 03/11/2026: **MAT-35 integrada.** A fundação do site entrou pelo cartão `t_da8e708b`, com d731d3d por avanço direto (ff). O veredito foi APPROVED_WITH_LIMITS, e o contrato foi reconciliado.
