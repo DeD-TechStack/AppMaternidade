@@ -41,3 +41,8 @@
 node_modules/
 .venv/
 __pycache__/
+
+# Site (web/): saídas de build e cache do Vite e do TypeScript
+web/dist/
+web/.vite/
+*.tsbuildinfo
