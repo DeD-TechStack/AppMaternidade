@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verificar:
+    name: Verificar (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v5
+        with:
+          # Histórico completo: o verificar-commits percorre o intervalo desde a base.
+          fetch-depth: 0
+          # Na pull_request, usa a cabeça da PR e não o commit de merge; no push fica vazio
+          # e o checkout usa o commit do push.
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Instalar o Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      - name: Instalar as dependências do site
+        working-directory: web
+        run: npm ci
+
+      - name: Verificar o site (typecheck, lint, test, build)
+        working-directory: web
+        run: npm run check
+
+      - name: Testar o script da política de commits
+        run: node --test scripts/verificar-commits.test.mjs
+
+      # A base é fixa: os commits até ela não seguem esta política (dois títulos passam
+      # de 72 caracteres), e o mesmo intervalo vale em todo push e na PR.
+      - name: Verificar a política de commits desde a base
+        run: node scripts/verificar-commits.mjs c7142bb43b763216fa124d101aa0b020f4d26e08..HEAD
