@@ -1,0 +1,25 @@
+# Sondagem do ambiente para build nativo — 2026-10-22 03:21:11 -0300
+Host: Windows 11 (sem macOS/Xcode por definição)
+$ echo ANDROID_HOME=$ANDROID_HOME ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT
+ANDROID_HOME=<vazio> ANDROID_SDK_ROOT=<vazio>
+$ command -v adb -> não encontrado
+$ command -v sdkmanager -> não encontrado
+$ command -v emulator -> não encontrado
+$ command -v gradle -> não encontrado
+$ command -v xcodebuild -> não encontrado
+$ command -v pod -> não encontrado
+$ command -v java -> /c/Program Files/Eclipse Adoptium/jdk-21.0.11.10-hotspot/bin/java
+$ java -version
+openjdk version "21.0.11" 2026-04-21 LTS
+OpenJDK Runtime Environment Temurin-21.0.11+10 (build 21.0.11+10-LTS)
+$ ls $LOCALAPPDATA/Android/Sdk
+ls: cannot access 'C:\Users\danie.DESKTOP-AUUT84P\AppData\Local/Android/Sdk': No such file or directory
+$ ls env/ (arquivos de ambiente exigidos pelos scripts e pelo babel.config.js)
+ls: cannot access 'env': No such file or directory
+$ git check-ignore -v env/.env.bebbo android/app/src/prod/google-services.json ios/GoogleServices/Production/GoogleService-Info.plist
+.gitignore:39:env/*	env/.env.bebbo
+.gitignore:55:google-services*.json	android/app/src/prod/google-services.json
+.gitignore:31:ios/GoogleServices/**/GoogleService-Info*.plist	ios/GoogleServices/Production/GoogleService-Info.plist
+$ git ls-files | grep -c google-services.json
+0
+Conclusão: build Android exige Android SDK 35 + Build-Tools 35.0.0 + NDK 27.0.12077973 (README/android/build.gradle) e google-services.json do flavor; build iOS exige macOS/Xcode/CocoaPods. Nenhum dos dois está disponível nesta máquina; build nativo não foi tentado.

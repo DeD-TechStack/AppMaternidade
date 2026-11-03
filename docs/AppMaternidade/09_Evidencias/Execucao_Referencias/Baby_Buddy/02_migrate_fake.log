@@ -1,0 +1,29 @@
+# 02 migrate + dados ficticios (execucao final, banco recriado) - 22/10/2026 03:18:16 -0300
+obs: uma primeira rodada exploratoria (03:06-03:13) foi descartada: banco apagado e recriado para um log unico e coerente; ela mostrou os mesmos comportamentos e tres erros do proprio roteiro (rota /api/profile com barra final, caminhos MSYS no curl nativo).
+obs: manage.py roda com o python do venv sem -I (o -I remove o diretorio do script do sys.path e quebra os imports do projeto); configuracao via .env ficticio do clone.
+obs: o shell do Hermes e compartilhado com outro subagente que exportou DATABASE_URL (Prisma/SQLite, esquema file:). Uma tentativa as 03:17 falhou com 'ValueError: No support for file' (dj_database_url). Todos os comandos Django daqui em diante usam 'env -u DATABASE_URL -u DB_* -u SECRET_KEY ...' (lista completa no roteiro) sem alterar o ambiente do outro agente.
+$ rm data/db.sqlite3 && env -u DATABASE_URL ... .venv/Scripts/python.exe manage.py migrate
+  Applying core.0039_child_due_date... OK
+  Applying sessions.0001_initial... OK
+  Applying webhooks.0001_initial... OK
+exit=0
+$ env -u ... .venv/Scripts/python.exe manage.py fake --children 2 --days 5
+Successfully added fake data.
+exit=0
+
+## usuarios ficticios e grupos
+obs: 'migrate' cria automaticamente o superusuario admin/admin quando nao ha superusuario (babybuddy/management/commands/migrate.py)
+$ env -u ... .venv/Scripts/python.exe manage.py shell -c "exec(open(r'<scratch>/setup_users.py').read())"   # tokens ficam so no scratch
+
+usuarios: {'resp_a': {'id': 2, 'superuser': True, 'grupos': [], 'tz': 'America/Sao_Paulo'}, 'cuidadora_b': {'id': 3, 'superuser': False, 'grupos': ['caregiver'], 'tz': 'UTC'}, 'avo_c': {'id': 4, 'superuser': False, 'grupos': ['read_only'], 'tz': 'UTC'}, 'baba_familia2': {'id': 5, 'superuser': False, 'grupos': ['caregiver'], 'tz': 'UTC'}}
+criancas: [(1, 'brenda-howard'), (2, 'mary-tyler')]
+grupo read_only ['view_bmi', 'view_child', 'view_diaperchange', 'view_feeding', 'view_headcircumference', 'view_height', 'view_heightpercentile', 'view_medication', 'view_note', 'view_pumping', 'view_sleep', 'view_tag', 'view_tagged', 'view_temperature', 'view_timer', 'view_tummytime', 'view_weight', 'view_weightpercentile']
+grupo caregiver ['add_diaperchange', 'add_feeding', 'add_medication', 'add_note', 'add_sleep', 'add_temperature', 'add_timer', 'add_tummytime', 'add_weight', 'change_diaperchange', 'change_feeding', 'change_medication', 'change_note', 'change_sleep', 'change_temperature', 'change_timer', 'change_tummytime', 'change_weight', 'view_child', 'view_diaperchange', 'view_feeding', 'view_medication', 'view_note', 'view_sleep', 'view_temperature', 'view_timer', 'view_tummytime', 'view_weight']
+exit=0
+$ manage.py shell: usuarios (username, is_superuser, is_staff)
+
+[('admin', True, True), ('resp_a', True, False), ('cuidadora_b', False, False), ('avo_c', False, False), ('baba_familia2', False, False)]
+$ manage.py shell: criancas e contagens
+
+[(1, 'brenda-howard', '2026-10-17'), (2, 'mary-tyler', '2026-10-17')]
+{'Sleep': 53, 'Feeding': 52, 'DiaperChange': 108, 'TummyTime': 62, 'Pumping': 77, 'Note': 5, 'Timer': 0, 'Medication': 19, 'Temperature': 28}

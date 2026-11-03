@@ -1,0 +1,81 @@
+inicio 2026-10-22 03:10:39 -0300
+$ pnpm exec vitest run (workspace: utils, schemas, api, web, mcp-server)
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mC:/Projetos/AppMaternidade/_referencias/finnberry[39m
+
+ [32m✓[39m [33m|@finnberry/api|[39m src/routers/medicine.test.ts [2m([22m[2m13 tests[22m[2m)[22m[90m 42[2mms[22m[39m
+ [32m✓[39m [33m|@finnberry/api|[39m src/routers/household.test.ts [2m([22m[2m22 tests[22m[2m)[22m[90m 44[2mms[22m[39m
+ [32m✓[39m [33m|@finnberry/api|[39m src/routers/temperature.test.ts [2m([22m[2m13 tests[22m[2m)[22m[90m 35[2mms[22m[39m
+ [32m✓[39m [35m|@finnberry/mcp-server|[39m src/tools/helpers.test.ts [2m([22m[2m20 tests[22m[2m)[22m[90m 14[2mms[22m[39m
+ [32m✓[39m [36m|@finnberry/utils|[39m src/timeline.test.ts [2m([22m[2m46 tests[22m[2m)[22m[90m 68[2mms[22m[39m
+ [32m✓[39m [35m|@finnberry/mcp-server|[39m src/resources/index.test.ts [2m([22m[2m14 tests[22m[2m)[22m[90m 18[2mms[22m[39m
+ [32m✓[39m [33m|@finnberry/api|[39m src/routers/diaper.test.ts [2m([22m[2m13 tests[22m[2m)[22m[90m 28[2mms[22m[39m
+ [32m✓[39m [33m|@finnberry/api|[39m src/routers/sleep.test.ts [2m([22m[2m14 tests[22m[2m)[22m[90m 38[2mms[22m[39m
+ [32m✓[39m [35m|@finnberry/mcp-server|[39m src/prompts/index.test.ts [2m([22m[2m11 tests[22m[2m)[22m[90m 48[2mms[22m[39m
+ [32m✓[39m [33m|@finnberry/api|[39m src/routers/feeding.test.ts [2m([22m[2m15 tests[22m[2m)[22m[90m 32[2mms[22m[39m
+ [32m✓[39m [33m|@finnberry/api|[39m src/routers/timeline.test.ts [2m([22m[2m13 tests[22m[2m)[22m[90m 104[2mms[22m[39m
+ [32m✓[39m [35m|@finnberry/mcp-server|[39m src/tools/query-helpers.test.ts [2m([22m[2m27 tests[22m[2m)[22m[90m 15[2mms[22m[39m
+ [32m✓[39m [35m|@finnberry/schemas|[39m src/temperature.test.ts [2m([22m[2m23 tests[22m[2m)[22m[90m 16[2mms[22m[39m
+ [32m✓[39m [35m|@finnberry/schemas|[39m src/feeding.test.ts [2m([22m[2m25 tests[22m[2m)[22m[90m 18[2mms[22m[39m
+ [32m✓[39m [33m|@finnberry/api|[39m src/routers/child.test.ts [2m([22m[2m11 tests[22m[2m)[22m[90m 26[2mms[22m[39m
+ [32m✓[39m [35m|@finnberry/schemas|[39m src/medicine.test.ts [2m([22m[2m25 tests[22m[2m)[22m[90m 15[2mms[22m[39m
+ [32m✓[39m [35m|@finnberry/schemas|[39m src/sleep.test.ts [2m([22m[2m25 tests[22m[2m)[22m[90m 18[2mms[22m[39m
+ [32m✓[39m [33m|@finnberry/api|[39m src/routers/user.test.ts [2m([22m[2m6 tests[22m[2m)[22m[90m 19[2mms[22m[39m
+ [32m✓[39m [33m|@finnberry/api|[39m src/routers/growth.test.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 24[2mms[22m[39m
+ [32m✓[39m [35m|@finnberry/schemas|[39m src/diaper.test.ts [2m([22m[2m19 tests[22m[2m)[22m[90m 13[2mms[22m[39m
+ [32m✓[39m [35m|@finnberry/schemas|[39m src/activity.test.ts [2m([22m[2m19 tests[22m[2m)[22m[90m 14[2mms[22m[39m
+ [32m✓[39m [33m|@finnberry/api|[39m src/trpc.test.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 15[2mms[22m[39m
+ [32m✓[39m [35m|@finnberry/schemas|[39m src/child.test.ts [2m([22m[2m18 tests[22m[2m)[22m[90m 16[2mms[22m[39m
+ [32m✓[39m [35m|@finnberry/schemas|[39m src/household.test.ts [2m([22m[2m19 tests[22m[2m)[22m[90m 15[2mms[22m[39m
+ [32m✓[39m [35m|@finnberry/schemas|[39m src/growth.test.ts [2m([22m[2m16 tests[22m[2m)[22m[90m 19[2mms[22m[39m
+ [32m✓[39m [35m|@finnberry/schemas|[39m src/pumping.test.ts [2m([22m[2m17 tests[22m[2m)[22m[90m 14[2mms[22m[39m
+ [32m✓[39m [35m|@finnberry/schemas|[39m src/timeline.test.ts [2m([22m[2m21 tests[22m[2m)[22m[90m 15[2mms[22m[39m
+ [32m✓[39m [35m|@finnberry/schemas|[39m src/common.test.ts [2m([22m[2m16 tests[22m[2m)[22m[90m 14[2mms[22m[39m
+ [32m✓[39m [36m|@finnberry/utils|[39m src/format.test.ts [2m([22m[2m16 tests[22m[2m)[22m[90m 8[2mms[22m[39m
+ [32m✓[39m [35m|@finnberry/schemas|[39m src/user.test.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 9[2mms[22m[39m
+ [32m✓[39m [36m|@finnberry/utils|[39m src/date.test.ts [2m([22m[2m22 tests[22m[2m)[22m[90m 36[2mms[22m[39m
+ [32m✓[39m [33m|@finnberry/api|[39m src/routers/activity.test.ts [2m([22m[2m9 tests[22m[2m)[22m[90m 25[2mms[22m[39m
+ [32m✓[39m [33m|@finnberry/api|[39m src/routers/pumping.test.ts [2m([22m[2m7 tests[22m[2m)[22m[90m 25[2mms[22m[39m
+ [32m✓[39m [34m|@finnberry/web|[39m src/hooks/use-toast.test.ts [2m([22m[2m12 tests[22m[2m)[22m[90m 10[2mms[22m[39m
+ [32m✓[39m [34m|@finnberry/web|[39m src/stores/timer-store.test.ts [2m([22m[2m19 tests[22m[2m)[22m[90m 12[2mms[22m[39m
+[90mstderr[2m | src/hooks/use-chat.test.ts[2m > [22m[2museChat[2m > [22m[2mstop[2m > [22m[2maborts ongoing request
+[22m[39mAn update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+ [32m✓[39m [34m|@finnberry/web|[39m src/hooks/use-chat.test.ts [2m([22m[2m23 tests[22m[2m)[22m[90m 117[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m36 passed[39m[22m[90m (36)[39m
+[2m      Tests [22m [1m[32m613 passed[39m[22m[90m (613)[39m
+[2m   Start at [22m 03:10:59
+[2m   Duration [22m 38.92s[2m (transform 8.63s, setup 13.46s, collect 109.33s, tests 1.00s, environment 71.95s, prepare 48.45s)[22m
+
+exit=0
+fim 2026-10-22 03:11:40 -0300

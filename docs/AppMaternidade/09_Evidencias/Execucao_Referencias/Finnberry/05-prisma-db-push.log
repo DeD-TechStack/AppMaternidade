@@ -1,0 +1,48 @@
+inicio 2026-10-22 03:13:34 -0300
+$ pnpm exec prisma db push --skip-generate (DATABASE_URL=postgresql://finnberry:<omitido>@127.0.0.1:38110/finnberry_ref)
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "finnberry_ref", schema "public" at "127.0.0.1:38110"
+
+Your database is now in sync with your Prisma schema. Done in 726ms
+
+exit=0
+fim 2026-10-22 03:13:51 -0300
+                List of relations
+ Schema |        Name         | Type  |   Owner   
+--------+---------------------+-------+-----------
+ public | accounts            | table | finnberry
+ public | activity_records    | table | finnberry
+ public | children            | table | finnberry
+ public | diaper_records      | table | finnberry
+ public | feeding_records     | table | finnberry
+ public | growth_records      | table | finnberry
+ public | household_invites   | table | finnberry
+ public | household_members   | table | finnberry
+ public | households          | table | finnberry
+ public | medicine_records    | table | finnberry
+ public | medicines           | table | finnberry
+ public | pumping_records     | table | finnberry
+ public | sessions            | table | finnberry
+ public | sleep_records       | table | finnberry
+ public | temperature_records | table | finnberry
+ public | users               | table | finnberry
+ public | verification_tokens | table | finnberry
+(17 rows)
+
+accounts|f
+activity_records|f
+children|f
+diaper_records|f
+feeding_records|f
+growth_records|f
+household_invites|f
+household_members|f
+households|f
+medicine_records|f
+medicines|f
+pumping_records|f
+sessions|f
+sleep_records|f
+temperature_records|f
+users|f
+verification_tokens|f

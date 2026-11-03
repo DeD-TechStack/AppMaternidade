@@ -1,0 +1,25 @@
+# prisma generate (main + log)
+inicio: 2026-10-22 03:11:23 -0300
+$ npx prisma generate
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma\schema.prisma.
+
+✔ Generated Prisma Client (v7.10.0) to .\node_modules\@prisma\client in 1.41s
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+
+exit=0
+$ npx prisma generate --config prisma/log.config.ts
+Loaded Prisma config from prisma\log.config.ts.
+
+Prisma schema loaded from prisma\log-schema.prisma.
+
+✔ Generated Prisma Client (v7.10.0) to .\node_modules\.prisma\log-client in 147ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+
+exit=0
+fim: 2026-10-22 03:11:37 -0300

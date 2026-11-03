@@ -1,0 +1,270 @@
+inicio 2026-10-22 04:00:23 -0300
+ambiente: Windows 11 Pro, Git Bash, Python Python 3.14.7 (-I), Node v24.20.0
+fonte: pnpm-lock.yaml do commit 5e17b1a e node_modules instalado em 22/10/2026 03:07-03:09 (log 01); somente leitura
+observacao: o campo license do package.json e autodeclarado; nao substitui a leitura do arquivo LICENSE de cada pacote
+$ python -I roteiros/dep_licenses.py C:/Projetos/AppMaternidade/_referencias/finnberry 07-licencas-dependencias.json
+{
+ "producao": {
+  "pacotes_unicos": 434,
+  "contagem_por_licenca": {
+   "MIT": 340,
+   "ISC": 19,
+   "Apache-2.0": 17,
+   "BSD-3-Clause": 4,
+   "Apache-2.0 AND LGPL-3.0-or-later": 2,
+   "BSD-2-Clause": 2,
+   "SEE LICENSE IN README.md": 1,
+   "CC-BY-4.0": 1,
+   "MIT-0": 1,
+   "0BSD": 1
+  },
+  "sinalizados": {
+   "SEE LICENSE IN README.md": [
+    "@anthropic-ai/claude-agent-sdk@0.2.20"
+   ],
+   "Apache-2.0 AND LGPL-3.0-or-later": [
+    "@img/sharp-win32-x64@0.33.5",
+    "@img/sharp-win32-x64@0.34.5"
+   ]
+  },
+  "sem_package_json_instalado": [
+   "@emnapi/runtime@1.8.1",
+   "@img/sharp-darwin-arm64@0.33.5",
+   "@img/sharp-darwin-arm64@0.34.5",
+   "@img/sharp-darwin-x64@0.33.5",
+   "@img/sharp-darwin-x64@0.34.5",
+   "@img/sharp-libvips-darwin-arm64@1.0.4",
+   "@img/sharp-libvips-darwin-arm64@1.2.4",
+   "@img/sharp-libvips-darwin-x64@1.0.4",
+   "@img/sharp-libvips-darwin-x64@1.2.4",
+   "@img/sharp-libvips-linux-arm64@1.0.4",
+   "@img/sharp-libvips-linux-arm64@1.2.4",
+   "@img/sharp-libvips-linux-arm@1.0.5",
+   "@img/sharp-libvips-linux-arm@1.2.4",
+   "@img/sharp-libvips-linux-ppc64@1.2.4",
+   "@img/sharp-libvips-linux-riscv64@1.2.4",
+   "@img/sharp-libvips-linux-s390x@1.2.4",
+   "@img/sharp-libvips-linux-x64@1.0.4",
+   "@img/sharp-libvips-linux-x64@1.2.4",
+   "@img/sharp-libvips-linuxmusl-arm64@1.0.4",
+   "@img/sharp-libvips-linuxmusl-arm64@1.2.4"
+  ]
+ },
+ "todos_os_snapshots": {
+  "pacotes_unicos": 977,
+  "contagem_por_licenca": {
+   "MIT": 702,
+   "Apache-2.0": 36,
+   "ISC": 36,
+   "BSD-2-Clause": 12,
+   "BSD-3-Clause": 11,
+   "MPL-2.0": 3,
+   "BlueOak-1.0.0": 3,
+   "MIT-0": 2,
+   "Apache-2.0 AND LGPL-3.0-or-later": 2,
+   "SEE LICENSE IN README.md": 1,
+   "Python-2.0": 1,
+   "CC-BY-4.0": 1,
+   "CC0-1.0": 1,
+   "0BSD": 1
+  },
+  "sinalizados": {
+   "SEE LICENSE IN README.md": [
+    "@anthropic-ai/claude-agent-sdk@0.2.20"
+   ],
+   "Apache-2.0 AND LGPL-3.0-or-later": [
+    "@img/sharp-win32-x64@0.33.5",
+    "@img/sharp-win32-x64@0.34.5"
+   ],
+   "MPL-2.0": [
+    "axe-core@4.11.1",
+    "lightningcss-win32-x64-msvc@1.30.2",
+    "lightningcss@1.30.2"
+   ]
+  },
+  "sem_package_json_instalado": [
+   "@emnapi/core@1.8.1",
+   "@emnapi/runtime@1.8.1",
+   "@emnapi/wasi-threads@1.1.0",
+   "@esbuild/aix-ppc64@0.21.5",
+   "@esbuild/aix-ppc64@0.27.2",
+   "@esbuild/android-arm64@0.21.5",
+   "@esbuild/android-arm64@0.27.2",
+   "@esbuild/android-arm@0.21.5",
+   "@esbuild/android-arm@0.27.2",
+   "@esbuild/android-x64@0.21.5",
+   "@esbuild/android-x64@0.27.2",
+   "@esbuild/darwin-arm64@0.21.5",
+   "@esbuild/darwin-arm64@0.27.2",
+   "@esbuild/darwin-x64@0.21.5",
+   "@esbuild/darwin-x64@0.27.2",
+   "@esbuild/freebsd-arm64@0.21.5",
+   "@esbuild/freebsd-arm64@0.27.2",
+   "@esbuild/freebsd-x64@0.21.5",
+   "@esbuild/freebsd-x64@0.27.2",
+   "@esbuild/linux-arm64@0.21.5"
+  ]
+ },
+ "pacotes_principais": {
+  "@anthropic-ai/claude-agent-sdk": [
+   "0.2.20: SEE LICENSE IN README.md"
+  ],
+  "@anthropic-ai/sdk": [
+   "0.71.2: MIT"
+  ],
+  "@auth/core": [
+   "0.41.0: ISC",
+   "0.41.1: ISC"
+  ],
+  "@auth/prisma-adapter": [
+   "2.11.1: ISC"
+  ],
+  "@img/sharp-win32-x64": [
+   "0.33.5: Apache-2.0 AND LGPL-3.0-or-later",
+   "0.34.5: Apache-2.0 AND LGPL-3.0-or-later"
+  ],
+  "@modelcontextprotocol/sdk": [
+   "1.25.3: MIT"
+  ],
+  "@playwright/test": [
+   "1.58.0: Apache-2.0"
+  ],
+  "@prisma/client": [
+   "6.19.2: Apache-2.0"
+  ],
+  "@radix-ui/react-dialog": [
+   "1.1.15: MIT"
+  ],
+  "@supabase/realtime-js": [
+   "2.91.1: MIT"
+  ],
+  "@supabase/supabase-js": [
+   "2.91.1: MIT"
+  ],
+  "@tailwindcss/postcss": [
+   "4.1.18: MIT"
+  ],
+  "@tanstack/react-query": [
+   "5.90.20: MIT"
+  ],
+  "@trpc/client": [
+   "11.8.1: MIT"
+  ],
+  "@trpc/react-query": [
+   "11.8.1: MIT"
+  ],
+  "@trpc/server": [
+   "11.8.1: MIT"
+  ],
+  "axe-core": [
+   "4.11.1: MPL-2.0"
+  ],
+  "caniuse-lite": [
+   "1.0.30001766: CC-BY-4.0"
+  ],
+  "class-variance-authority": [
+   "0.7.1: Apache-2.0"
+  ],
+  "date-fns": [
+   "4.1.0: MIT"
+  ],
+  "eslint": [
+   "9.39.2: MIT"
+  ],
+  "lightningcss": [
+   "1.30.2: MPL-2.0"
+  ],
+  "lucide-react": [
+   "0.471.2: ISC"
+  ],
+  "next": [
+   "15.5.9: MIT"
+  ],
+  "next-auth": [
+   "5.0.0-beta.30: ISC"
+  ],
+  "nodemailer": [
+   "7.0.12: MIT-0"
+  ],
+  "prisma": [
+   "6.19.2: Apache-2.0"
+  ],
+  "react": [
+   "19.2.3: MIT"
+  ],
+  "react-dom": [
+   "19.2.3: MIT"
+  ],
+  "react-markdown": [
+   "10.1.0: MIT"
+  ],
+  "remark-gfm": [
+   "4.0.1: MIT"
+  ],
+  "sharp": [
+   "0.34.5: Apache-2.0"
+  ],
+  "superjson": [
+   "2.2.6: MIT"
+  ],
+  "tailwind-merge": [
+   "2.6.0: MIT"
+  ],
+  "tailwindcss": [
+   "4.1.18: MIT"
+  ],
+  "turbo": [
+   "2.7.6: MIT"
+  ],
+  "typescript": [
+   "5.9.3: Apache-2.0"
+  ],
+  "vitest": [
+   "2.1.9: MIT"
+  ],
+  "zod": [
+   "3.25.76: MIT"
+  ],
+  "zustand": [
+   "5.0.10: MIT"
+  ]
+ },
+ "importadores_lidos": [
+  ".",
+  "apps/mcp-server",
+  "apps/web",
+  "packages/api",
+  "packages/db",
+  "packages/schemas",
+  "packages/utils"
+ ]
+}
+exit=0
+--- leitura direta de arquivos de licenca de pacotes sinalizados ---
+$ cat @anthropic-ai/claude-agent-sdk@0.2.20/LICENSE.md
+© Anthropic PBC. All rights reserved. Use is subject to the Legal Agreements outlined here: https://code.claude.com/docs/en/legal-and-compliance.
+
+$ head -12 @img/sharp-win32-x64@0.34.5/README.md
+# `@img/sharp-win32-x64`
+
+Prebuilt sharp for use with Windows x64.
+
+## Licensing
+
+Copyright 2013 Lovell Fuller and others.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+[https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
+$ grep -n -i lgpl @img/sharp-win32-x64@0.34.5/README.md
+31:| fribidi       | LGPLv3                                                                                                    |
+32:| glib          | LGPLv3                                                                                                    |
+37:| libexif       | LGPLv3                                                                                                    |
+39:| libheif       | LGPLv3                                                                                                    |
+43:| librsvg       | LGPLv3                                                                                                    |
+$ head -3 lucide-react@0.471.2/LICENSE
+ISC License
+
+Copyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.
+fim 2026-10-22 04:00:26 -0300

@@ -1,0 +1,5 @@
+# Clone do Bebbo — 2026-10-22 02:57:30 -0300
+$ git clone --filter=blob:none --branch main https://github.com/UNICEFECAR/parenting-app-bebbo-mobile.git bebbo
+Cloning into 'bebbo'...
+exit=0
+fim: 2026-10-22 02:57:52 -0300

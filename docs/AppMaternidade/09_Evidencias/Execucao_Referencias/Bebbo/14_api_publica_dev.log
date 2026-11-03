@@ -1,0 +1,54 @@
+# Sonda da API pública V1 (ambiente dev documentado no README) — 2026-10-22 03:34:12 -0300
+
+$ curl -sS -m 40 -D <headers> -o <body> "https://dev.bebbo.app/api/country-groups/Bebbo"
+http_code=200 bytes=15678 tempo=1.695401s
+-- cabeçalhos relevantes:
+Content-Type: application/json
+Cache-Control: max-age=2764800, public
+x-drupal-dynamic-cache: UNCACHEABLE (poor cacheability)
+expires: Sun, 19 Nov 1978 05:00:00 GMT
+last-modified: Thu, 22 Oct 2026 06:34:07 GMT
+x-drupal-cache: MISS
+etag: W/"1792650847"
+Age: 0
+x-cache: MISS, MISS
+vary: Accept-Encoding
+via: Acquia Platform CDN 1.244
+-- início do corpo (até 600 bytes):
+{"status":200,"total":17,"langcode":"en","datetime":"2026-10-22 12:04","data":[{"CountryID":"6","name":"Albania (Shqip\u00ebria)","country_email":"admin@bebbo.app","content_toggle":"ai_chatbot, baby_size, childs_growth, faqs, guide, health_check_up, learning, pregnancy, vaccination","app_name":"Bebbo","country_national_partner":{"url":"https:\/\/dev.bebbo.app\/sites\/default\/files\/styles\/content_1200xh_\/public\/2024-07\/IPH_sm.webp?itok=ZCOrM8BK","name":"IPH_sm.png","alt":"IPH"},"country_sponsor_logo":{"url":"","name":"","alt":""},"unicef_logo":{"url":"https:\/\/dev.bebbo.app\/sites\/defau
+
+$ curl -sS -m 40 -D <headers> -o <body> "https://dev.bebbo.app/api/taxonomies/en/child_age"
+http_code=200 bytes=1305 tempo=0.615478s
+-- cabeçalhos relevantes:
+Content-Type: application/json
+Cache-Control: max-age=2764800, public
+x-drupal-dynamic-cache: MISS
+expires: Sun, 19 Nov 1978 05:00:00 GMT
+last-modified: Thu, 22 Oct 2026 06:34:09 GMT
+x-drupal-cache: MISS
+etag: W/"1792650849"
+Age: 0
+x-cache: MISS, MISS
+vary: Accept-Encoding
+via: Acquia Platform CDN 1.244
+-- início do corpo (até 600 bytes):
+{"status":200,"langcode":"en","datetime":"2026-10-22 12:04","data":{"child_age":[{"id":43,"name":"1st month","days_from":0,"days_to":31,"buffers_days":10,"age_bracket":[43,44,45]},{"id":44,"name":"2nd month","days_from":32,"days_to":60,"buffers_days":10,"age_bracket":[44,45,46]},{"id":45,"name":"3-4 months","days_from":61,"days_to":121,"buffers_days":10,"age_bracket":[45,46,47]},{"id":46,"name":"5-6 months","days_from":122,"days_to":182,"buffers_days":10,"age_bracket":[46,47,48]},{"id":47,"name":"7-9 months","days_from":183,"days_to":274,"buffers_days":10,"age_bracket":[47,48]},{"id":48,"name"
+
+$ curl -sS -m 40 -D <headers> -o <body> "https://dev.bebbo.app/api/check-update/126"
+http_code=200 bytes=227 tempo=0.555345s
+-- cabeçalhos relevantes:
+Content-Type: application/json
+Cache-Control: max-age=2764800, public
+x-drupal-dynamic-cache: MISS
+expires: Sun, 19 Nov 1978 05:00:00 GMT
+last-modified: Wed, 14 Oct 2026 06:33:12 GMT
+x-drupal-cache: MISS
+etag: W/"1791959592"
+Age: 691257
+x-cache: HIT, MISS
+vary: Accept-Encoding
+via: Acquia Platform CDN 1.244
+-- início do corpo (até 600 bytes):
+{"status":200,"flag":1,"updated_at":"1777033288","content_update":{"flag":1,"updated_at":"1777033288"},"app_update":{"flag":1,"updated_at":"1776167439","google_play_url":"https:\/\/play.google.com\/store","app_store_url":null}}
+
+fim: 2026-10-22 03:34:16 -0300

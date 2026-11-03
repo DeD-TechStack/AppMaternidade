@@ -1,0 +1,374 @@
+# TypeScript (tsc --noEmit) no commit 5ec8c89
+Comando: NODE_OPTIONS=--max-old-space-size=8192 ./node_modules/.bin/tsc --noEmit -p tsconfig.json --pretty false
+== tsc inicio 2026-10-22 03:16:11 -0300
+Version 5.0.4
+exit=2 fim 2026-10-22 03:16:46 -0300
+Total de linhas 'error TS': 154
+Arquivos distintos com erro: 53
+Códigos mais frequentes:
+     30 error TS2769
+     28 error TS2345
+     21 error TS2339
+     12 error TS18047
+     11 error TS6137
+      9 error TS2363
+      9 error TS2362
+      8 error TS2839
+      6 error TS2322
+      5 error TS7006
+      4 error TS2554
+      3 error TS18048
+      2 error TS7015
+      1 error TS2741
+      1 error TS2740
+Arquivos com mais erros:
+     29 app/services/notificationService.ts
+     15 app/database/dbquery/dataRealmCommon.ts
+      9 app/screens/home/bottomTabs/Activities.tsx
+      8 app/screens/home/bottomTabs/Articles.tsx
+      6 app/components/HeaderNotiIcon.tsx
+      6 app/components/ChildDate.tsx
+      5 app/screens/CustomDrawerContent.tsx
+      5 app/navigation/AppNavigation.tsx
+      4 app/screens/Walkthrough.tsx
+      3 app/services/commonApiService.ts
+      3 app/screens/localization/LanguageSelection.tsx
+      3 app/screens/home/Notifications.tsx
+      3 app/screens/home/EditChildProfile.tsx
+      2 app/services/googleDrive.ts
+      2 app/services/googleAuth.ts
+
+## Saída completa
+app/components/ActivitiesCategories.tsx(73,52): error TS7006: Parameter 'item' implicitly has an 'any' type.
+app/components/ActivitiesCategories.tsx(73,58): error TS7006: Parameter 'index' implicitly has an 'any' type.
+app/components/AgeBrackets.tsx(21,42): error TS2339: Property 'id' does not exist on type '{ name: string; }'.
+app/components/ChildDate.tsx(9,40): error TS6137: Cannot import type declaration files. Consider importing 'types' instead of '@types/types'.
+app/components/ChildDate.tsx(346,33): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | null' is not assignable to parameter of type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | null' is not assignable to parameter of type 'string | number'.
+app/components/ChildDate.tsx(353,33): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | null' is not assignable to parameter of type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | null' is not assignable to parameter of type 'string | number'.
+app/components/ChildDate.tsx(391,35): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | null' is not assignable to parameter of type 'string | number | Date'.
+      Type 'null' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | null' is not assignable to parameter of type 'string | number'.
+      Type 'null' is not assignable to type 'string | number'.
+app/components/ChildDate.tsx(402,31): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | null' is not assignable to parameter of type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | null' is not assignable to parameter of type 'string | number'.
+app/components/ChildDate.tsx(410,31): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | null' is not assignable to parameter of type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | null' is not assignable to parameter of type 'string | number'.
+app/components/CountryItem.tsx(25,26): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: PolymorphicComponentProps<"native", FastOmit<TextProps, never>, void, void, {}, {}>): Element', gave the following error.
+    Type '{ children: any; isActive: any; }' is not assignable to type 'IntrinsicAttributes & FastOmit<Substitute<FastOmit<TextProps, never>, FastOmit<{}, never>>, keyof ExecutionProps> & FastOmit<...> & { ...; }'.
+      Property 'isActive' does not exist on type 'IntrinsicAttributes & FastOmit<Substitute<FastOmit<TextProps, never>, FastOmit<{}, never>>, keyof ExecutionProps> & FastOmit<...> & { ...; }'.
+  Overload 2 of 2, '(props: FastOmit<TextProps, never>): ReactElement<unknown, string | JSXElementConstructor<any>> | null', gave the following error.
+    Type '{ children: any; isActive: any; }' is not assignable to type 'IntrinsicAttributes & FastOmit<TextProps, never>'.
+      Property 'isActive' does not exist on type 'IntrinsicAttributes & FastOmit<TextProps, never>'.
+app/components/growth/GrowthChart.tsx(101,15): error TS2322: Type '{ fontSize: number; opacity: number; }' is not assignable to type 'ViewStyle'.
+  Object literal may only specify known properties, and 'fontSize' does not exist in type 'ViewStyle'.
+app/components/growth/GrowthChart.tsx(200,11): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type '{ children: Element; width: number; height: number; }' is not assignable to type 'IntrinsicAttributes & IntrinsicClassAttributes<View> & Readonly<ViewProps>'.
+      Property 'width' does not exist on type 'IntrinsicAttributes & IntrinsicClassAttributes<View> & Readonly<ViewProps>'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type '{ children: Element; width: number; height: number; }' is not assignable to type 'IntrinsicAttributes & IntrinsicClassAttributes<View> & Readonly<ViewProps>'.
+      Property 'width' does not exist on type 'IntrinsicAttributes & IntrinsicClassAttributes<View> & Readonly<ViewProps>'.
+app/components/growth/LastChildMeasure.tsx(165,32): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: PolymorphicComponentProps<"native", FastOmit<ViewProps, never>, void, void, {}, {}>): Element', gave the following error.
+    Type '{ children: Element[]; alignItems: string; }' is not assignable to type 'IntrinsicAttributes & FastOmit<Substitute<FastOmit<ViewProps, never>, FastOmit<{}, never>>, keyof ExecutionProps> & FastOmit<...> & { ...; }'.
+      Property 'alignItems' does not exist on type 'IntrinsicAttributes & FastOmit<Substitute<FastOmit<ViewProps, never>, FastOmit<{}, never>>, keyof ExecutionProps> & FastOmit<...> & { ...; }'.
+  Overload 2 of 2, '(props: FastOmit<ViewProps, never>): ReactElement<unknown, string | JSXElementConstructor<any>> | null', gave the following error.
+    Type '{ children: Element[]; alignItems: string; }' is not assignable to type 'IntrinsicAttributes & FastOmit<ViewProps, never>'.
+      Property 'alignItems' does not exist on type 'IntrinsicAttributes & FastOmit<ViewProps, never>'.
+app/components/HeaderBabyMenu.tsx(10,31): error TS6137: Cannot import type declaration files. Consider importing 'types' instead of '@types/types'.
+app/components/HeaderBabyMenu.tsx(145,47): error TS2345: Argument of type '(a: any) => -1 | undefined' is not assignable to parameter of type '(a: any, b: any) => number'.
+  Type 'number | undefined' is not assignable to type 'number'.
+    Type 'undefined' is not assignable to type 'number'.
+app/components/HeaderNotiIcon.tsx(199,52): error TS7006: Parameter 'item' implicitly has an 'any' type.
+app/components/HeaderNotiIcon.tsx(324,21): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+app/components/HeaderNotiIcon.tsx(324,52): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+app/components/HeaderNotiIcon.tsx(413,33): error TS2839: This condition will always return 'true' since JavaScript compares objects by reference, not value.
+app/components/HeaderNotiIcon.tsx(486,29): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+app/components/HeaderNotiIcon.tsx(486,52): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+app/components/healthChekup/UpcomingHealthCheckup.tsx(80,9): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string | number'.
+app/components/homeScreen/BabyNotification.tsx(14,31): error TS6137: Cannot import type declaration files. Consider importing 'types' instead of '@types/types'.
+app/components/homeScreen/BabyNotification.tsx(104,41): error TS2345: Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string'.
+  Type 'DateTime<true>' is not assignable to type 'string'.
+app/components/LanguageItem.tsx(26,26): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: PolymorphicComponentProps<"native", FastOmit<TextProps, never>, void, void, {}, {}>): Element', gave the following error.
+    Type '{ children: any; isActive: boolean; }' is not assignable to type 'IntrinsicAttributes & FastOmit<Substitute<FastOmit<TextProps, never>, FastOmit<{}, never>>, keyof ExecutionProps> & FastOmit<...> & { ...; }'.
+      Property 'isActive' does not exist on type 'IntrinsicAttributes & FastOmit<Substitute<FastOmit<TextProps, never>, FastOmit<{}, never>>, keyof ExecutionProps> & FastOmit<...> & { ...; }'.
+  Overload 2 of 2, '(props: FastOmit<TextProps, never>): ReactElement<unknown, string | JSXElementConstructor<any>> | null', gave the following error.
+    Type '{ children: any; isActive: boolean; }' is not assignable to type 'IntrinsicAttributes & FastOmit<TextProps, never>'.
+      Property 'isActive' does not exist on type 'IntrinsicAttributes & FastOmit<TextProps, never>'.
+app/components/Ruler.tsx(345,36): error TS2322: Type '{ addListener: Function; removeListener: Function; }' is not assignable to type 'Mapping'.
+  Type '{ addListener: Function; removeListener: Function; }' is not assignable to type '{ [key: string]: Mapping; }'.
+    Property 'addListener' is incompatible with index signature.
+      Type 'Function' is not assignable to type 'Mapping'.
+        Type 'Function' is not assignable to type '{ [key: string]: Mapping; }'.
+          Index signature for type 'string' is missing in type 'Function'.
+app/components/shared/InfiniteScrollList.tsx(49,31): error TS2339: Property 'scrollToOffset' does not exist on type 'never'.
+app/components/vaccination/tabs/PreviousVaccines.tsx(83,9): error TS2345: Argument of type '["DetailsScreen", { fromScreen: string; headerColor: any; backgroundColor: any; detailData: any; netInfo: any; }]' is not assignable to parameter of type '[screen: "DetailsScreen"] | [screen: "DetailsScreen", params: { fromScreen: string; headerColor: any; backgroundColor: any; detailData: any; } | undefined]'.
+  Type '["DetailsScreen", { fromScreen: string; headerColor: any; backgroundColor: any; detailData: any; netInfo: any; }]' is not assignable to type '[screen: "DetailsScreen", params: { fromScreen: string; headerColor: any; backgroundColor: any; detailData: any; } | undefined]'.
+    Type at position 1 in source is not compatible with type at position 1 in target.
+      Type '{ fromScreen: string; headerColor: any; backgroundColor: any; detailData: any; netInfo: any; }' is not assignable to type '{ fromScreen: string; headerColor: any; backgroundColor: any; detailData: any; }'.
+        Object literal may only specify known properties, and 'netInfo' does not exist in type '{ fromScreen: string; headerColor: any; backgroundColor: any; detailData: any; }'.
+app/components/vaccination/tabs/UpcomingVaccines.tsx(64,9): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string | number'.
+app/components/VideoPlayer.tsx(83,5): error TS2839: This condition will always return 'true' since JavaScript compares objects by reference, not value.
+app/components/VideoPlayer.tsx(205,30): error TS2454: Variable 'videoId' is used before being assigned.
+app/database/dbquery/dataRealmCommon.ts(91,82): error TS2345: Argument of type '"modified"' is not assignable to parameter of type 'boolean | UpdateMode | undefined'.
+app/database/dbquery/dataRealmCommon.ts(118,115): error TS2339: Property 'id' does not exist on type 'Entity'.
+app/database/dbquery/dataRealmCommon.ts(120,96): error TS2339: Property 'isarticle_pinned' does not exist on type 'RealmObject<Entity, never> & Entity'.
+app/database/dbquery/dataRealmCommon.ts(121,48): error TS2339: Property 'isarticle_pinned' does not exist on type 'RealmObject<Entity, never> & Entity'.
+app/database/dbquery/dataRealmCommon.ts(124,52): error TS2339: Property 'isarticle_pinned' does not exist on type 'RealmObject<Entity, never> & Entity'.
+app/database/dbquery/dataRealmCommon.ts(125,52): error TS2339: Property 'isarticle_pinned' does not exist on type 'Entity'.
+app/database/dbquery/dataRealmCommon.ts(128,52): error TS2339: Property 'isarticle_pinned' does not exist on type 'Entity'.
+app/database/dbquery/dataRealmCommon.ts(130,90): error TS2345: Argument of type '"modified"' is not assignable to parameter of type 'boolean | UpdateMode | undefined'.
+app/database/dbquery/dataRealmCommon.ts(133,44): error TS2339: Property 'isarticle_pinned' does not exist on type 'Entity'.
+app/database/dbquery/dataRealmCommon.ts(134,86): error TS2345: Argument of type '"modified"' is not assignable to parameter of type 'boolean | UpdateMode | undefined'.
+app/database/dbquery/dataRealmCommon.ts(160,57): error TS7015: Element implicitly has an 'any' type because index expression is not of type 'number'.
+app/database/dbquery/dataRealmCommon.ts(161,54): error TS7015: Element implicitly has an 'any' type because index expression is not of type 'number'.
+app/database/dbquery/dataRealmCommon.ts(164,102): error TS2345: Argument of type '"modified"' is not assignable to parameter of type 'boolean | UpdateMode | undefined'.
+app/database/dbquery/dataRealmCommon.ts(169,99): error TS2345: Argument of type '"modified"' is not assignable to parameter of type 'boolean | UpdateMode | undefined'.
+app/database/dbquery/dataRealmCommon.ts(214,32): error TS2345: Argument of type '"modified"' is not assignable to parameter of type 'boolean | UpdateMode | undefined'.
+app/database/dbquery/userRealmCommon.ts(117,74): error TS2345: Argument of type '"modified"' is not assignable to parameter of type 'boolean | UpdateMode | undefined'.
+app/database/dbquery/userRealmCommon.ts(294,74): error TS2345: Argument of type '"modified"' is not assignable to parameter of type 'boolean | UpdateMode | undefined'.
+app/localization/initI18next.ts(68,1): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(callback?: Callback | undefined): Promise<TFunction<"translation", undefined>>', gave the following error.
+    Argument of type '{ compatibilityJSON: string; resources: any; react: { useSuspense: boolean; }; interpolation: { escapeValue: boolean; }; postProcess: string[]; }' is not assignable to parameter of type 'Callback'.
+      Object literal may only specify known properties, and 'compatibilityJSON' does not exist in type 'Callback'.
+  Overload 2 of 2, '(options: InitOptions<unknown>, callback?: Callback | undefined): Promise<TFunction<"translation", undefined>>', gave the following error.
+    Type '"v3"' is not assignable to type '"v4"'.
+app/navigation/AppNavigation.tsx(93,37): error TS2339: Property 'colors' does not exist on type 'DefaultTheme'.
+app/navigation/AppNavigation.tsx(94,41): error TS2339: Property 'colors' does not exist on type 'DefaultTheme'.
+app/navigation/AppNavigation.tsx(96,31): error TS2554: Expected 1 arguments, but got 0.
+app/navigation/AppNavigation.tsx(1131,30): error TS2554: Expected 1 arguments, but got 0.
+app/navigation/AppNavigation.tsx(1154,9): error TS2740: Type '{}' is missing the following properties from type 'any[]': length, pop, push, concat, and 31 more.
+app/redux/reducers/utilsSlice.ts(326,12): error TS7006: Parameter 'uniqueName' implicitly has an 'any' type.
+app/redux/reducers/utilsSlice.ts(330,12): error TS7006: Parameter 'uniqueName' implicitly has an 'any' type.
+app/redux/sagaMiddleware/saga.ts(170,26): error TS2339: Property 'filter' does not exist on type 'AxiosResponse<any, any, {}>'.
+app/screens/AddChildInfoSetup.tsx(33,24): error TS6137: Cannot import type declaration files. Consider importing 'types' instead of '@types/types'.
+app/screens/AddChildInfoSetup.tsx(133,30): error TS2339: Property 'route' does not exist on type 'Props'.
+app/screens/AddChildSetup.tsx(33,24): error TS6137: Cannot import type declaration files. Consider importing 'types' instead of '@types/types'.
+app/screens/AddChildSetup.tsx(138,26): error TS2339: Property 'route' does not exist on type 'Props'.
+app/screens/AddExpectingChildProfile.tsx(40,24): error TS6137: Cannot import type declaration files. Consider importing 'types' instead of '@types/types'.
+app/screens/AddSiblingData.tsx(26,24): error TS6137: Cannot import type declaration files. Consider importing 'types' instead of '@types/types'.
+app/screens/ChildSetup.tsx(582,45): error TS2345: Argument of type '["AddChildSetup", { birthDate: Date; relationship: string; relationshipname: string; userRelationToParent: undefined; parentName: string; }]' is not assignable to parameter of type '[screen: "AddChildSetup"] | [screen: "AddChildSetup", params: undefined]'.
+  Type '["AddChildSetup", { birthDate: Date; relationship: string; relationshipname: string; userRelationToParent: undefined; parentName: string; }]' is not assignable to type '[screen: "AddChildSetup", params: undefined]'.
+    Type at position 1 in source is not compatible with type at position 1 in target.
+      Type '{ birthDate: Date; relationship: string; relationshipname: string; userRelationToParent: undefined; parentName: string; }' is not assignable to type 'undefined'.
+app/screens/ChildSetup.tsx(735,46): error TS2339: Property 'isCancel' does not exist on type 'typeof import("C:/Projetos/AppMaternidade/_referencias/bebbo/node_modules/@react-native-documents/picker/lib/typescript/index")'.
+app/screens/CustomDrawerContent.tsx(59,31): error TS6137: Cannot import type declaration files. Consider importing 'types' instead of '@types/types'.
+app/screens/CustomDrawerContent.tsx(255,21): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+app/screens/CustomDrawerContent.tsx(255,52): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+app/screens/CustomDrawerContent.tsx(629,13): error TS2839: This condition will always return 'true' since JavaScript compares objects by reference, not value.
+app/screens/CustomDrawerContent.tsx(772,13): error TS2839: This condition will always return 'true' since JavaScript compares objects by reference, not value.
+app/screens/home/bottomTabs/Activities.tsx(282,32): error TS18047: 'searchIndex.current' is possibly 'null'.
+app/screens/home/bottomTabs/Activities.tsx(320,30): error TS18047: 'searchIndex.current' is possibly 'null'.
+app/screens/home/bottomTabs/Activities.tsx(380,32): error TS18047: 'searchIndex.current' is possibly 'null'.
+app/screens/home/bottomTabs/Activities.tsx(414,30): error TS18047: 'searchIndex.current' is possibly 'null'.
+app/screens/home/bottomTabs/Activities.tsx(551,38): error TS2345: Argument of type 'unknown[]' is not assignable to parameter of type 'SetStateAction<never[]>'.
+  Type 'unknown[]' is not assignable to type 'never[]'.
+    Type 'unknown' is not assignable to type 'never'.
+app/screens/home/bottomTabs/Activities.tsx(841,43): error TS2345: Argument of type 'unknown[]' is not assignable to parameter of type 'readonly { [x: string]: any; }[]'.
+  Type 'unknown' is not assignable to type '{ [x: string]: any; }'.
+app/screens/home/bottomTabs/Activities.tsx(842,9): error TS2322: Type 'MiniSearch<{ [x: string]: any; }>' is not assignable to type 'null'.
+app/screens/home/bottomTabs/Activities.tsx(879,26): error TS18047: 'searchIndex.current' is possibly 'null'.
+app/screens/home/bottomTabs/Activities.tsx(915,26): error TS18047: 'searchIndex.current' is possibly 'null'.
+app/screens/home/bottomTabs/Articles.tsx(447,32): error TS18047: 'searchIndex.current' is possibly 'null'.
+app/screens/home/bottomTabs/Articles.tsx(485,30): error TS18047: 'searchIndex.current' is possibly 'null'.
+app/screens/home/bottomTabs/Articles.tsx(542,32): error TS18047: 'searchIndex.current' is possibly 'null'.
+app/screens/home/bottomTabs/Articles.tsx(576,30): error TS18047: 'searchIndex.current' is possibly 'null'.
+app/screens/home/bottomTabs/Articles.tsx(724,48): error TS2345: Argument of type '{ processTerm: (term: string) => string[]; extractField: (document: any, fieldName: string) => string; searchOptions: { boost: { title: number; summary: number; body: number; meta_keywords: number; keywords: number; }; ... 5 more ...; weights: { ...; }; }; fields: string[]; storeFields: string[]; }' is not assignable to parameter of type 'Options<any>'.
+  The types of 'searchOptions.combineWith' are incompatible between these types.
+    Type 'string' is not assignable to type 'CombinationOperator | undefined'.
+app/screens/home/bottomTabs/Articles.tsx(727,9): error TS2322: Type 'MiniSearch<any>' is not assignable to type 'null'.
+app/screens/home/bottomTabs/Articles.tsx(795,26): error TS18047: 'searchIndex.current' is possibly 'null'.
+app/screens/home/bottomTabs/Articles.tsx(830,26): error TS18047: 'searchIndex.current' is possibly 'null'.
+app/screens/home/bottomTabs/ChildDevelopment.tsx(197,23): error TS2554: Expected 1 arguments, but got 0.
+app/screens/home/Childgrowth.tsx(262,39): error TS2345: Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string'.
+  Type 'DateTime<true>' is not assignable to type 'string'.
+app/screens/home/ChildProfile.tsx(50,31): error TS6137: Cannot import type declaration files. Consider importing 'types' instead of '@types/types'.
+app/screens/home/DetailsScreen.tsx(50,3): error TS2614: Module '"@native-html/table-plugin"' has no exported member 'IGNORED_TAGS'. Did you mean to use 'import IGNORED_TAGS from "@native-html/table-plugin"' instead?
+app/screens/home/EditChildProfile.tsx(43,55): error TS6137: Cannot import type declaration files. Consider importing 'types' instead of '@types/types'.
+app/screens/home/EditChildProfile.tsx(359,33): error TS2769: No overload matches this call.
+  Argument of type '["ChildProfileScreen"]' is not assignable to parameter of type '[screen: "Home", params: {}] | [screen: "Favourites", params: {}] | [screen: "NotificationsScreen"] | [screen: "NotificationsScreen", params: undefined] | [screen: "ChildgrowthScreen"] | [screen: "ChildgrowthScreen", params: undefined] | [screen: "ChildDevelopmentScreen"] | ... 12 more ... | [screen: ...]'.
+    Type '["ChildProfileScreen"]' is not assignable to type '[screen: "SupportChat", params: undefined]'.
+      Source has 1 element(s) but target requires 2.
+  Overload 2 of 2, '(options: { key: string; params?: {} | undefined; merge?: boolean | undefined; } | { name: "Home"; key?: string | undefined; params: {}; merge?: boolean | undefined; } | { key: string; params?: {} | undefined; merge?: boolean | undefined; } | ... 18 more ... | { ...; }): void', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '{ key: string; params?: {} | undefined; merge?: boolean | undefined; } | { name: "Home"; key?: string | undefined; params: {}; merge?: boolean | undefined; } | { key: string; params?: {} | undefined; merge?: boolean | undefined; } | ... 18 more ... | { ...; }'.
+app/screens/home/EditChildProfile.tsx(523,19): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ImageBackgroundProps): ImageBackground', gave the following error.
+    Type '{ uri: string; } | null' is not assignable to type 'ImageSourcePropType | undefined'.
+      Type 'null' is not assignable to type 'ImageSourcePropType | undefined'.
+  Overload 2 of 2, '(props: ImageBackgroundProps, context: any): ImageBackground', gave the following error.
+    Type '{ uri: string; } | null' is not assignable to type 'ImageSourcePropType | undefined'.
+      Type 'null' is not assignable to type 'ImageSourcePropType | undefined'.
+app/screens/home/Favourites.tsx(46,16): error TS2339: Property 'closeDrawer' does not exist on type 'NotificationsNavigationProp'.
+app/screens/home/HealthCheckups.tsx(65,30): error TS18048: 'themeContext' is possibly 'undefined'.
+app/screens/home/HealthCheckups.tsx(103,7): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string | number'.
+app/screens/home/Notifications.tsx(157,13): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+app/screens/home/Notifications.tsx(157,44): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+app/screens/home/Notifications.tsx(629,26): error TS2345: Argument of type '["notiDelSelected", { count: string; }]' is not assignable to parameter of type '[key: string | string[], options: TOptionsBase & $Dictionary & { defaultValue: string; }] | [key: string | string[], defaultValue: string, options?: (TOptionsBase & $Dictionary) | undefined] | [key: ...]'.
+  Type '["notiDelSelected", { count: string; }]' is not assignable to type '[key: "notiDelSelected" | "notiDelSelected"[], options?: (TOptionsBase & $Dictionary) | undefined]'.
+    Type at position 1 in source is not compatible with type at position 1 in target.
+      Type '{ count: string; }' is not assignable to type 'TOptionsBase & $Dictionary'.
+        Type '{ count: string; }' is not assignable to type 'TOptionsBase'.
+          Types of property 'count' are incompatible.
+            Type 'string' is not assignable to type 'number'.
+app/screens/home/SettingScreen.tsx(1530,48): error TS2339: Property 'isCancel' does not exist on type 'typeof import("C:/Projetos/AppMaternidade/_referencias/bebbo/node_modules/@react-native-documents/picker/lib/typescript/index")'.
+app/screens/home/SupportChat.tsx(95,16): error TS2339: Property 'closeDrawer' does not exist on type 'SupportChatNavigationProp'.
+app/screens/home/Vaccination.tsx(71,30): error TS18048: 'themeContext' is possibly 'undefined'.
+app/screens/localization/CountrySelection.tsx(201,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: FlatListProps<any>): FlatList<any>', gave the following error.
+    Type 'false | (() => Element)' is not assignable to type 'ComponentType<any> | ReactElement<unknown, string | JSXElementConstructor<any>> | null | undefined'.
+      Type 'false' is not assignable to type 'ComponentType<any> | ReactElement<unknown, string | JSXElementConstructor<any>> | null | undefined'.
+  Overload 2 of 2, '(props: FlatListProps<any>, context: any): FlatList<any>', gave the following error.
+    Type 'false | (() => Element)' is not assignable to type 'ComponentType<any> | ReactElement<unknown, string | JSXElementConstructor<any>> | null | undefined'.
+app/screens/localization/CountrySelection.tsx(212,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: FlatListProps<any>): FlatList<any>', gave the following error.
+    Type 'false | (() => Element)' is not assignable to type 'ComponentType<any> | ReactElement<unknown, string | JSXElementConstructor<any>> | null | undefined'.
+  Overload 2 of 2, '(props: FlatListProps<any>, context: any): FlatList<any>', gave the following error.
+    Type 'false | (() => Element)' is not assignable to type 'ComponentType<any> | ReactElement<unknown, string | JSXElementConstructor<any>> | null | undefined'.
+app/screens/localization/LanguageSelection.tsx(224,13): error TS2322: Type '"HomeDrawerNavigator"' is not assignable to type 'keyof LocalizationStackParamList'.
+app/screens/localization/LanguageSelection.tsx(289,27): error TS2345: Argument of type '["LoadingScreen", { apiJsonData: any; prevPage: string; }]' is not assignable to parameter of type '[screen: "LanguageSelection"] | [screen: "LanguageSelection", params: undefined] | [screen: "CountrySelection", params: {}] | [screen: "CountryLanguageConfirmation", params: {}]'.
+  Type '["LoadingScreen", { apiJsonData: any; prevPage: string; }]' is not assignable to type '[screen: "CountryLanguageConfirmation", params: {}]'.
+    Type at position 0 in source is not compatible with type at position 0 in target.
+      Type '"LoadingScreen"' is not assignable to type '"CountryLanguageConfirmation"'.
+app/screens/localization/LanguageSelection.tsx(362,41): error TS2345: Argument of type 'string' is not assignable to parameter of type '{ key: string; params?: undefined; merge?: boolean | undefined; } | { name: "LanguageSelection"; key?: string | undefined; params: undefined; merge?: boolean | undefined; } | { key: string; params?: {} | undefined; merge?: boolean | undefined; } | { ...; } | { ...; } | { ...; }'.
+app/screens/vaccination/AddChildVaccination.tsx(175,38): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'DateTime<boolean>' is not assignable to parameter of type 'string | number | Date'.
+      Type 'DateTime<boolean>' is missing the following properties from type 'Date': toDateString, toTimeString, toLocaleDateString, toLocaleTimeString, and 36 more.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'DateTime<boolean>' is not assignable to parameter of type 'string | number'.
+app/screens/vaccination/AddChildVaccination.tsx(468,40): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'DateTime<boolean>' is not assignable to parameter of type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'DateTime<boolean>' is not assignable to parameter of type 'string | number'.
+app/screens/Walkthrough.tsx(28,32): error TS2307: Cannot find module '@dynamicImportsClass/dynamicImports' or its corresponding type declarations.
+app/screens/Walkthrough.tsx(212,13): error TS2339: Property 'goToSlide' does not exist on type 'RefObject<any>'.
+app/screens/Walkthrough.tsx(230,49): error TS2339: Property 'goToSlide' does not exist on type 'RefObject<any>'.
+app/screens/Walkthrough.tsx(278,29): error TS2741: Property 'current' is missing in type 'AppIntroSlider<{ title: string; image: any; colors: string[]; textcolor: string; subtitle: string; }>' but required in type 'RefObject<any>'.
+app/services/commonApiService.ts(442,5): error TS2554: Expected 1 arguments, but got 3.
+app/services/commonApiService.ts(525,20): error TS2839: This condition will always return 'true' since JavaScript compares objects by reference, not value.
+app/services/commonApiService.ts(527,21): error TS2839: This condition will always return 'true' since JavaScript compares objects by reference, not value.
+app/services/googleAuth.ts(42,7): error TS2322: Type 'SignInResponse' is not assignable to type 'User | null'.
+  Type 'SignInSuccessResponse' is missing the following properties from type 'User': user, scopes, idToken, serverAuthCode
+app/services/googleAuth.ts(54,39): error TS2339: Property 'isSignedIn' does not exist on type '{ hasPlayServices: (options?: HasPlayServicesParams | undefined) => Promise<boolean>; configure: (options?: ConfigureParams | undefined) => void; ... 8 more ...; getTokens: () => Promise<...>; }'.
+app/services/googleDrive.ts(20,13): error TS2345: Argument of type '{ title: string; message: string; }' is not assignable to parameter of type 'Rationale'.
+  Property 'buttonPositive' is missing in type '{ title: string; message: string; }' but required in type 'Rationale'.
+app/services/googleDrive.ts(43,13): error TS2345: Argument of type '{ title: string; message: string; }' is not assignable to parameter of type 'Rationale'.
+  Property 'buttonPositive' is missing in type '{ title: string; message: string; }' but required in type 'Rationale'.
+app/services/interpretationService.ts(90,47): error TS2345: Argument of type 'Date' is not assignable to parameter of type 'number'.
+app/services/notificationService.ts(55,27): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+app/services/notificationService.ts(55,58): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+app/services/notificationService.ts(106,25): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+app/services/notificationService.ts(106,56): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+app/services/notificationService.ts(195,39): error TS2345: Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string'.
+  Type 'DateTime<true>' is not assignable to type 'string'.
+app/services/notificationService.ts(197,61): error TS2345: Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string'.
+  Type 'DateTime<true>' is not assignable to type 'string'.
+app/services/notificationService.ts(235,39): error TS2345: Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string'.
+  Type 'DateTime<true>' is not assignable to type 'string'.
+app/services/notificationService.ts(237,61): error TS2345: Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string'.
+  Type 'DateTime<true>' is not assignable to type 'string'.
+app/services/notificationService.ts(265,42): error TS2345: Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string'.
+  Type 'DateTime<true>' is not assignable to type 'string'.
+app/services/notificationService.ts(267,64): error TS2345: Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string'.
+  Type 'DateTime<true>' is not assignable to type 'string'.
+app/services/notificationService.ts(344,25): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+app/services/notificationService.ts(344,56): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+app/services/notificationService.ts(642,25): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+app/services/notificationService.ts(642,56): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+app/services/notificationService.ts(689,28): error TS2839: This condition will always return 'true' since JavaScript compares objects by reference, not value.
+app/services/notificationService.ts(691,36): error TS2839: This condition will always return 'true' since JavaScript compares objects by reference, not value.
+app/services/notificationService.ts(713,39): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string | number | Date'.
+      Type 'DateTime<true>' is not assignable to type 'string | number | Date'.
+        Type 'DateTime<true>' is missing the following properties from type 'Date': toDateString, toTimeString, toLocaleDateString, toLocaleTimeString, and 36 more.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string | number'.
+      Type 'DateTime<true>' is not assignable to type 'string | number'.
+app/services/notificationService.ts(726,39): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string | number'.
+app/services/notificationService.ts(743,41): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string | number'.
+app/services/notificationService.ts(761,39): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string | number'.
+app/services/notificationService.ts(779,41): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string | number'.
+app/services/notificationService.ts(797,41): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string | number'.
+app/services/notificationService.ts(816,39): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string | number'.
+app/services/notificationService.ts(833,41): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string | number'.
+app/services/notificationService.ts(851,43): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string | number'.
+app/services/notificationService.ts(875,27): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+app/services/notificationService.ts(875,58): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+app/services/notificationService.ts(882,37): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string | number'.
+app/services/notificationService.ts(898,37): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'DateTime<true> | DateTime<false>' is not assignable to parameter of type 'string | number'.
+app/services/periodicSync.ts(112,13): error TS18048: 'childAgedays' is possibly 'undefined'.
+app/services/StatusBarHeight.ts(29,59): error TS2551: Property 'isTVOS' does not exist on type 'PlatformIOSStatic'. Did you mean 'isTV'?
+app/services/Utils.ts(1,31): error TS6137: Cannot import type declaration files. Consider importing 'types' instead of '@types/types'.

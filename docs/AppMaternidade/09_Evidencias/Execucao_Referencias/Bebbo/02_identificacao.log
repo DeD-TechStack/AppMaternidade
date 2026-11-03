@@ -1,0 +1,20 @@
+# Identificação do clone — 2026-10-22 02:58:20 -0300
+$ git rev-parse --abbrev-ref HEAD
+main
+$ git rev-parse HEAD
+5ec8c89198368638c8111b80c6159cfb12f5e9ad
+$ git log -1 --format='%H %ci %an | %s'
+5ec8c89198368638c8111b80c6159cfb12f5e9ad 2026-09-15 18:24:54 +0530 neharuparel | Merge pull request #1106 from UNICEFECAR/Development
+$ git remote -v
+origin	https://github.com/UNICEFECAR/parenting-app-bebbo-mobile.git (fetch) [blob:none]
+origin	https://github.com/UNICEFECAR/parenting-app-bebbo-mobile.git (push)
+$ git rev-list --count HEAD
+10987
+$ git log --reverse --format='%ci' | head -1  (primeiro commit)
+2021-05-19 16:52:11 +0530 101452ea Initial Commit
+$ git status --short | wc -l
+0
+$ du -sh (sem .git)
+274M	.
+Comparação com a fotografia do pacote 5ec8c89198368638c8111b80c6159cfb12f5e9ad:
+IGUAL

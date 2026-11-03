@@ -1,0 +1,21 @@
+# 03b corrida na conversao de timer - rodada exploratoria (descartada) - excerto do log do runserver (PID 14520), 22/10/2026
+# mesmo roteiro do B-13: seis POST /api/tummy-times/ {"timer":3} em paralelo (banco anterior, depois apagado)
+# linhas de traceback com caminhos locais omitidas; ficam so as linhas de requisicao e as excecoes
+[22/Oct/2026 03:13:01] "POST /api/feedings/ HTTP/1.1" 201 203
+[22/Oct/2026 03:13:02] "POST /api/timers/ HTTP/1.1" 201 111
+[22/Oct/2026 03:13:05] "POST /api/tummy-times/ HTTP/1.1" 201 160
+Bad Request: /api/tummy-times/
+[22/Oct/2026 03:13:05] "POST /api/tummy-times/ HTTP/1.1" 400 55
+Bad Request: /api/tummy-times/
+[22/Oct/2026 03:13:05] "POST /api/tummy-times/ HTTP/1.1" 400 55
+Internal Server Error: /api/tummy-times/
+sqlite3.OperationalError: database is locked
+django.db.utils.OperationalError: database is locked
+[22/Oct/2026 03:13:05] "POST /api/tummy-times/ HTTP/1.1" 500 262021
+[22/Oct/2026 03:13:05,929] - Broken pipe from ('127.0.0.1', 53972)
+Bad Request: /api/tummy-times/
+[22/Oct/2026 03:13:05] "POST /api/tummy-times/ HTTP/1.1" 400 55
+Bad Request: /api/tummy-times/
+[22/Oct/2026 03:13:05] "POST /api/tummy-times/ HTTP/1.1" 400 55
+[22/Oct/2026 03:13:07] "GET /api/tummy-times/?child=3 HTTP/1.1" 200 212
+Internal Server Error: /api/timers/

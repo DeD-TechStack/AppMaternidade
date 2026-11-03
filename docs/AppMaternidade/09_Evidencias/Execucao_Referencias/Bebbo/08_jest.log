@@ -1,0 +1,29 @@
+# Jest no commit 5ec8c89
+Comandos: ./node_modules/.bin/jest --listTests ; ./node_modules/.bin/jest --ci
+== jest inicio 2026-10-22 03:16:46 -0300
+29.7.0
+listTests exit=0
+jest exit=1 fim 2026-10-22 03:16:51 -0300
+
+## jest --listTests
+jest-haste-map: Haste module naming collision: @styles
+  The following files share their name; please adjust your hasteImpl:
+    * <rootDir>\app\instances\babuni\styles\package.json
+    * <rootDir>\app\instances\bebbo\styles\package.json
+
+jest-haste-map: Haste module naming collision: @images
+  The following files share their name; please adjust your hasteImpl:
+    * <rootDir>\app\instances\babuni\assets\images\package.json
+    * <rootDir>\app\instances\bebbo\assets\images\package.json
+
+
+
+## jest --ci
+No tests found, exiting with code 1
+Run with `--passWithNoTests` to exit with code 0
+In C:\Projetos\AppMaternidade\_referencias\bebbo
+  613 files checked.
+  testMatch: C:/Projetos/AppMaternidade/_referencias/bebbo/src/**\?(*.)+(spec|test).[jt]s?(x) - 0 matches
+  testPathIgnorePatterns: \\node_modules\\ - 613 matches
+  testRegex:  - 0 matches
+Pattern:  - 0 matches

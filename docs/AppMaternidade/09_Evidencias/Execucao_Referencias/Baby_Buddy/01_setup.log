@@ -1,0 +1,52 @@
+# 01 setup - 22/10/2026 03:01:39 -0300
+host: Windows 11; shell: git-bash; clone: C:/Projetos/AppMaternidade/_referencias/babybuddy
+branch: master  sha: 09629cf633cf3a2059a21ade4cea7ea4d846422f  data_commit: 2026-10-12 11:42:30 -0700
+guarda .env criado no clone (valores ficticios; impede find_dotenv de subir diretorios): DJANGO_SETTINGS_MODULE=babybuddy.settings.development, SECRET_KEY=<ficticia>, ALLOWED_HOSTS=127.0.0.1,localhost, DEBUG=True
+$ py -3.12 -m venv .venv
+exit=0
+$ .venv/Scripts/python.exe -I --version
+Python 3.12.10
+
+## pip install - 22/10/2026 03:02:12 -0300
+$ .venv/Scripts/python.exe -m pip install --disable-pip-version-check -r requirements.txt
+Using cached packaging-26.3-py3-none-any.whl (129 kB)
+Downloading pilkit-3.0-py3-none-any.whl (20 kB)
+Using cached pillow-12.3.0-cp312-cp312-win_amd64.whl (7.2 MB)
+Using cached plotly-6.9.0-py3-none-any.whl (9.9 MB)
+Downloading psycopg2_binary-2.9.13-cp312-cp312-win_amd64.whl (2.8 MB)
+   ---------------------------------------- 2.8/2.8 MB 80.8 MB/s eta 0:00:00
+Using cached pydantic-2.13.5-py3-none-any.whl (472 kB)
+Using cached pydantic_core-2.46.5-cp312-cp312-win_amd64.whl (2.0 MB)
+Using cached python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+Downloading python_dotenv-1.2.3-py3-none-any.whl (22 kB)
+Downloading python_ipware-3.0.0-py3-none-any.whl (10 kB)
+Using cached pyyaml-6.0.3-cp312-cp312-win_amd64.whl (154 kB)
+Downloading s3transfer-0.19.2-py3-none-any.whl (90 kB)
+Downloading segno-1.6.6-py3-none-any.whl (76 kB)
+Using cached six-1.17.0-py2.py3-none-any.whl (11 kB)
+Downloading sqlparse-0.6.0-py3-none-any.whl (50 kB)
+Downloading tablib-3.10.0-py3-none-any.whl (50 kB)
+Using cached typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+Using cached typing_inspection-0.4.4-py3-none-any.whl (14 kB)
+Using cached tzdata-2026.4-py2.py3-none-any.whl (347 kB)
+Downloading uritemplate-4.2.0-py3-none-any.whl (11 kB)
+Using cached urllib3-2.8.0-py3-none-any.whl (135 kB)
+Downloading whitenoise-6.12.0-py3-none-any.whl (20 kB)
+Installing collected packages: django-dbsettings, whitenoise, urllib3, uritemplate, tzdata, typing-extensions, tablib, sqlparse, six, segno, pyyaml, python-ipware, python-dotenv, psycopg2-binary, pillow, packaging, narwhals, jmespath, inflection, diff-match-patch, asgiref, annotated-types, typing-inspection, python-dateutil, pydantic-core, plotly, pilkit, gunicorn, faker, django-ipware, django, pydantic, djangorestframework, django-widget-tweaks, django-taggit, django-storages, django-import-export, django-filter, django-cors-headers, django-axes, django-appconf, dj-database-url, botocore, s3transfer, django-qr-code, django-imagekit, boto3
+Successfully installed annotated-types-0.8.0 asgiref-3.12.1 boto3-1.43.97 botocore-1.43.97 diff-match-patch-20241021 dj-database-url-2.3.0 django-5.2.17 django-appconf-1.2.0 django-axes-7.1.0 django-cors-headers-4.9.0 django-dbsettings-1.4.0 django-filter-25.2 django-imagekit-6.1.1 django-import-export-4.4.1 django-ipware-7.0.1 django-qr-code-4.2.0 django-storages-1.14.6 django-taggit-6.1.0 django-widget-tweaks-1.5.1 djangorestframework-3.18.1 faker-36.2.3 gunicorn-23.0.0 inflection-0.5.1 jmespath-1.1.0 narwhals-2.26.0 packaging-26.3 pilkit-3.0 pillow-12.3.0 plotly-6.9.0 psycopg2-binary-2.9.13 pydantic-2.13.5 pydantic-core-2.46.5 python-dateutil-2.9.0.post0 python-dotenv-1.2.3 python-ipware-3.0.0 pyyaml-6.0.3 s3transfer-0.19.2 segno-1.6.6 six-1.17.0 sqlparse-0.6.0 tablib-3.10.0 typing-extensions-4.16.0 typing-inspection-0.4.4 tzdata-2026.4 uritemplate-4.2.0 urllib3-2.8.0 whitenoise-6.12.0
+exit=0
+$ pip freeze (principais)
+boto3==1.43.97
+Django==5.2.17
+django-axes==7.1.0
+django-dbsettings==1.4.0
+django-filter==25.2
+django-import-export==4.4.1
+django-taggit==6.1.0
+djangorestframework==3.18.1
+Faker==36.2.3
+gunicorn==23.0.0
+pillow==12.3.0
+plotly==6.9.0
+psycopg2-binary==2.9.13
+whitenoise==6.12.0

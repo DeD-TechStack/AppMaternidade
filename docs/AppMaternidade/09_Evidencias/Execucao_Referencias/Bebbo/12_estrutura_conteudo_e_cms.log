@@ -1,0 +1,173 @@
+# Estrutura do conteúdo offline e das taxonomias (instância bebbo) e árvore do CMS
+Script: inspect_taxonomy.py e cms_tree.py (texto em 13_scripts_auxiliares.txt), executados com python -I
+Data: 2026-10-22 03:26:54 -0300
+
+## inspect_taxonomy.py
+idiomas na taxonomia offline: 23 ['al-sq', 'bg-bg', 'by-be', 'by-ru', 'en', 'gr-el', 'kg-ky', 'kg-ru', 'md-ro', 'me-cnr', 'mk-mk', 'mk-sq', 'ro-ro', 'rs-en', 'rs-sr', 'ru', 'sk', 'tj-ru', 'tj-tg', 'uk', 'uz-kaa', 'uz-ru', 'uz-uz']
+chaves de taxonomia (en): ['activity_category', 'category', 'chatbot_category', 'chatbot_child_age', 'chatbot_subcategory', 'child_age', 'child_gender', 'growth_introductory', 'growth_period', 'growth_type', 'parent_gender', 'relationship_to_parent', 'standard_deviation_category', 'subcategory', 'type_of_article', 'type_of_support']
+child_age (en): 13 faixas
+  id=166191 name='Pregnancy' days_from=-300 days_to=-1 buffers_days=0 age_bracket=[166191]
+  id=43 name='1st month' days_from=0 days_to=31 buffers_days=10 age_bracket=[43, 44, 45]
+  id=44 name='2nd month' days_from=32 days_to=60 buffers_days=10 age_bracket=[44, 45, 46]
+  id=45 name='3-4 months' days_from=61 days_to=121 buffers_days=10 age_bracket=[45, 46, 47]
+  id=46 name='5-6 months' days_from=122 days_to=182 buffers_days=10 age_bracket=[46, 47, 48]
+  id=47 name='7-9 months' days_from=183 days_to=274 buffers_days=10 age_bracket=[47, 48]
+  id=48 name='10-12 months' days_from=275 days_to=365 buffers_days=10 age_bracket=[48, 49]
+  id=49 name='13-18 months' days_from=366 days_to=547 buffers_days=10 age_bracket=[49, 50]
+  id=50 name='19-24 months' days_from=548 days_to=730 buffers_days=10 age_bracket=[50, 51]
+  id=51 name='25-36 months' days_from=731 days_to=1095 buffers_days=10 age_bracket=[51, 52]
+  id=52 name='37-48 months' days_from=1096 days_to=1460 buffers_days=10 age_bracket=[52, 57]
+  id=57 name='49-60 months' days_from=1461 days_to=1825 buffers_days=10 age_bracket=[57, 58]
+  id=58 name='61-72 months' days_from=1826 days_to=2190 buffers_days=10 age_bracket=[58]
+campos de child_age: ['age_bracket', 'buffers_days', 'days_from', 'days_to', 'id', 'name']
+article.ts: idiomas=23 contagem por idioma={'en': 1, 'ru': 1, 'al-sq': 1, 'by-be': 1, 'by-ru': 1, 'bg-bg': 1, 'gr-el': 1, 'kg-ky': 1, 'kg-ru': 1, 'md-ro': 1, 'me-cnr': 1, 'mk-mk': 1, 'mk-sq': 1, 'ro-ro': 1, 'rs-sr': 1, 'rs-en': 1, 'tj-tg': 1, 'tj-ru': 1, 'uk': 1, 'uz-uz': 542, 'uz-ru': 608, 'uz-kaa': 528, 'sk': 1}
+   campos do 1o item: ['body', 'category', 'child_age', 'child_gender', 'cover_image', 'created_at', 'embedded_images', 'id', 'keywords', 'licensed', 'mandatory', 'parent_gender', 'premature', 'related_articles', 'summary', 'title', 'type', 'updated_at']
+   licensed={'0': 1} mandatory={'0': 1}
+   updated_at (ano-mes, min..max): Mon, 11 .. Mon, 11
+ActivitiesData.ts: idiomas=23 contagem por idioma={'en': 12, 'ru': 12, 'al-sq': 12, 'by-be': 12, 'by-ru': 12, 'bg-bg': 12, 'gr-el': 12, 'kg-ky': 12, 'kg-ru': 12, 'md-ro': 12, 'me-cnr': 12, 'mk-mk': 12, 'mk-sq': 12, 'ro-ro': 12, 'rs-sr': 12, 'rs-en': 12, 'tj-tg': 12, 'tj-ru': 12, 'uk': 8, 'uz-uz': 244, 'uz-ru': 262, 'uz-kaa': 244, 'sk': 12}
+   campos do 1o item: ['activity_category', 'body', 'child_age', 'cover_image', 'created_at', 'embedded_images', 'equipment', 'id', 'mandatory', 'related_milestone', 'summary', 'title', 'type', 'type_of_support', 'updated_at']
+   licensed={'None': 12} mandatory={'1': 12}
+   updated_at (ano-mes, min..max): Mon, 11 .. Mon, 11
+MileStonesData.ts: idiomas=23 contagem por idioma={'en': 36, 'ru': 134, 'al-sq': 36, 'by-be': 36, 'by-ru': 36, 'bg-bg': 36, 'gr-el': 36, 'kg-ky': 36, 'kg-ru': 36, 'md-ro': 36, 'me-cnr': 36, 'mk-mk': 36, 'mk-sq': 36, 'ro-ro': 36, 'rs-sr': 36, 'rs-en': 36, 'tj-tg': 36, 'tj-ru': 36, 'uk': 36, 'uz-uz': 134, 'uz-ru': 134, 'uz-kaa': 134, 'sk': 36}
+   campos do 1o item: ['body', 'child_age', 'created_at', 'id', 'mandatory', 'related_activities', 'related_articles', 'related_video_articles', 'title', 'type', 'updated_at']
+   licensed={'None': 36} mandatory={'0': 36}
+   updated_at (ano-mes, min..max): Mon, 10 .. Wed, 09
+VideoArticleData.ts: idiomas=23 contagem por idioma={'en': 121, 'ru': 0, 'al-sq': 0, 'by-be': 0, 'by-ru': 0, 'bg-bg': 0, 'gr-el': 0, 'kg-ky': 0, 'kg-ru': 0, 'md-ro': 0, 'me-cnr': 0, 'mk-mk': 0, 'mk-sq': 0, 'ro-ro': 0, 'rs-sr': 0, 'rs-en': 0, 'tj-tg': 0, 'tj-ru': 0, 'uk': 0, 'uz-uz': 137, 'uz-ru': 139, 'uz-kaa': 136, 'sk': 0}
+   campos do 1o item: ['body', 'category', 'child_age', 'child_gender', 'cover_image', 'cover_video', 'created_at', 'embedded_images', 'id', 'keywords', 'licensed', 'mandatory', 'parent_gender', 'premature', 'related_articles', 'related_video_articles', 'summary', 'title', 'type', 'updated_at']
+   licensed={'0': 121} mandatory={'0': 1, '1': 120}
+   updated_at (ano-mes, min..max): <time d .. <time d
+FaqsData.ts: idiomas=23 contagem por idioma={'en': 0, 'ru': 0, 'al-sq': 0, 'by-be': 0, 'by-ru': 0, 'bg-bg': 0, 'gr-el': 0, 'kg-ky': 0, 'kg-ru': 0, 'md-ro': 0, 'me-cnr': 0, 'mk-mk': 0, 'mk-sq': 0, 'ro-ro': 0, 'rs-sr': 0, 'rs-en': 0, 'tj-tg': 0, 'tj-ru': 0, 'uk': 0, 'uz-uz': 190, 'uz-ru': 190, 'uz-kaa': 190, 'sk': 0}
+== strings de UI por locale ==
+  ALsq       462 chaves
+  BGbg       462 chaves
+  BYbe       462 chaves
+  BYru       462 chaves
+  GRarb      450 chaves
+  GRda       450 chaves
+  GRel       463 chaves
+  KGky       462 chaves
+  KGru       462 chaves
+  MDro       465 chaves
+  MEcnr      464 chaves
+  MKmk       464 chaves
+  MKsq       463 chaves
+  ROro       465 chaves
+  RSen       463 chaves
+  RSsr       462 chaves
+  TJru       463 chaves
+  TJtg       463 chaves
+  UZkaa      465 chaves
+  UZru       463 chaves
+  UZuz       463 chaves
+  en         463 chaves
+  ru         465 chaves
+  sk         466 chaves
+  uk         465 chaves
+
+## cms_tree.py (repositório UNICEFECAR/parenting-app-bebbo-CMS @ 5060246f34ec7caafb9adf4e00245c2a1a46957c, árvore lida via gh api)
+truncated False count 3867
+custom modules: ['README.md', 'bebbo_api_security', 'bebbo_custom_general', 'bebbo_serializer', 'custom_article', 'custom_serialization', 'file_sanitizer', 'group_country_field', 'language_custom_field', 'language_visibility_control', 'pb_content_analytics', 'pb_custom_field', 'pb_custom_form', 'pb_custom_migrate', 'pb_custom_rest_api', 'pb_custom_standard_deviation', 'pb_strings']
+   docroot/modules/custom/bebbo_api_security/bebbo_api_security.info.yml
+   docroot/modules/custom/bebbo_api_security/bebbo_api_security.routing.yml
+   docroot/modules/custom/bebbo_api_security/src/Controller/SecurityController.php
+   docroot/modules/custom/bebbo_custom_general/bebbo_custom_general.info.yml
+   docroot/modules/custom/bebbo_custom_general/bebbo_custom_general.routing.yml
+   docroot/modules/custom/bebbo_custom_general/src/Controller/AppStoreRedirectController.php
+   docroot/modules/custom/bebbo_custom_general/src/Controller/CountryUsersController.php
+   docroot/modules/custom/bebbo_custom_general/src/Controller/CsvExportController.php
+   docroot/modules/custom/bebbo_custom_general/src/Controller/PbMobile.php
+   docroot/modules/custom/bebbo_custom_general/src/Controller/WarmerLogController.php
+   docroot/modules/custom/bebbo_serializer/bebbo_serializer.info.yml
+   docroot/modules/custom/bebbo_serializer/bebbo_serializer.routing.yml
+   docroot/modules/custom/bebbo_serializer/src/Controller/CheckUpdateController.php
+   docroot/modules/custom/custom_article/custom_article.info.yml
+   docroot/modules/custom/custom_article/custom_article.routing.yml
+   docroot/modules/custom/custom_serialization/custom_serialization.info.yml
+   docroot/modules/custom/file_sanitizer/file_sanitizer.info.yml
+   docroot/modules/custom/group_country_field/group_country_field.info.yml
+   docroot/modules/custom/language_custom_field/language_custom_field.info.yml
+   docroot/modules/custom/language_visibility_control/language_visibility_control.info.yml
+   docroot/modules/custom/pb_content_analytics/pb_content_analytics.info.yml
+   docroot/modules/custom/pb_content_analytics/pb_content_analytics.routing.yml
+   docroot/modules/custom/pb_content_analytics/src/Controller/AnalyticsSyncController.php
+   docroot/modules/custom/pb_custom_field/pb_custom_field.info.yml
+   docroot/modules/custom/pb_custom_field/src/Controller/GroupMembershipCreateController.php
+   docroot/modules/custom/pb_custom_form/pb_custom_form.info.yml
+   docroot/modules/custom/pb_custom_form/pb_custom_form.routing.yml
+   docroot/modules/custom/pb_custom_migrate/pb_custom_migrate.info.yml
+   docroot/modules/custom/pb_custom_rest_api/pb_custom_rest_api.info.yml
+   docroot/modules/custom/pb_custom_rest_api/src/Plugin/rest/resource/CustomRestResource.php
+   docroot/modules/custom/pb_custom_rest_api/src/Plugin/rest/resource/V2CustomRestResource.php
+   docroot/modules/custom/pb_custom_standard_deviation/pb_custom_standard_deviation.info.yml
+   docroot/modules/custom/pb_strings/pb_strings.info.yml
+   docroot/modules/custom/pb_strings/pb_strings.routing.yml
+   docroot/modules/custom/pb_strings/src/Controller/StringsListController.php
+node types: []
+vocabularies: []
+docs: ['docs/API_REFERENCE.md', 'docs/API_SECURITY.md', 'docs/ARCHITECTURE.md', 'docs/BranchingStrategy.png', 'docs/CICD_DEPLOYMENT.md', 'docs/CODING_STYLE_GUIDE.md', 'docs/CONFIGURATION.md', 'docs/DEPENDENCIES.md', 'docs/DESCRIPTION_GOALS.md', 'docs/ENVIRONMENTS.md', 'docs/GITHUB_TEMPLATES.md', 'docs/MODULES.md', 'docs/ONBOARDING.md', 'docs/POST_SETUP_CONFIGURATION.md', 'docs/RUNBOOK.md']
+views count 0
+[]
+workflows: []
+languages (config): 0 []
+article fields: []
+activities fields: []
+tests: 7 ['tests/README.md', 'tests/behat/.gitignore', 'tests/behat/behat.yml', 'tests/behat/example.local.yml', 'tests/behat/features/bootstrap/Drupal/FeatureContext.php', 'tests/behat/local.yml', 'tests/behat/media/readme.md']
+github: ['.github/workflows/pipelines.yml']
+sites: ['bangladesh', 'common_settings', 'default', 'ecuador', 'pakistan', 'settings', 'somoa', 'turkey', 'zimbabwe']
+
+## Locales por instância (ls app/instances/*/assets/locale) — 2026-10-22 03:36:50 -0300
+app/instances/babuni/assets/locale: availableLanguage.ts bn.ts 
+app/instances/bebbo/assets/locale: ALsq.ts availableLanguage.ts BGbg.ts BYbe.ts BYru.ts en.ts GRarb.ts GRda.ts GRel.ts KGky.ts KGru.ts MDro.ts MEcnr.ts MKmk.ts MKsq.ts ROro.ts RSen.ts RSsr.ts ru.ts sk.ts TJru.ts TJtg.ts uk.ts UZkaa.ts UZru.ts UZuz.ts 
+app/instances/bebboDev/assets/locale: ALsq.ts availableLanguage.ts BGbg.ts BYbe.ts BYru.ts en.ts GRarb.ts GRda.ts GRel.ts KGky.ts KGru.ts MDro.ts MEcnr.ts MKmk.ts MKsq.ts ROro.ts RSen.ts RSsr.ts ru.ts sk.ts TJru.ts TJtg.ts uk.ts UZkaa.ts UZru.ts UZuz.ts 
+app/instances/bebboPacific/assets/locale: availableLanguage.ts FJen.ts FJfj.ts WSen.ts WSsm.ts 
+app/instances/foleja/assets/locale: availableLanguage.ts XKrs.ts XKsq.ts 
+app/instances/merhabaBebek/assets/locale: availableLanguage.ts tr.ts 
+app/instances/reraiUmntwana/assets/locale: availableLanguage.ts ZWen.ts ZWnd.ts ZWsn.ts 
+app/instances/wawamor/assets/locale: availableLanguage.ts en.ts ESec.ts 
+
+## Acessibilidade e escala de fonte (grep em app/ e App.tsx, *.tsx/*.ts/*.js)
+accessibilityLabel: 0
+accessibilityRole: 0
+accessibilityHint: 0
+accessible=: 0
+allowFontScaling (todas = {false}): 14
+app/screens/AddChildInfoSetup.tsx:572
+app/screens/AddChildSetup.tsx:599
+app/screens/AddExpectingChildProfile.tsx:401
+app/screens/AddSiblingData.tsx:224
+app/screens/ChildImportSetup.tsx:214
+app/screens/ChildSetup.tsx:508
+app/screens/EditParentDetails.tsx:343
+app/screens/growth/AddNewChildgrowth.tsx:885
+app/screens/healthCheckup/AddChildHealthCheckup.tsx:982
+app/screens/home/bottomTabs/Activities.tsx:1077
+app/screens/home/bottomTabs/Articles.tsx:999
+app/screens/home/EditChildProfile.tsx:575
+app/screens/vaccination/AddChildVaccination.tsx:870
+maxFontSizeMultiplier: 0
+TouchableOpacity/Pressable: 111
+
+## Chamadas HTTP não-GET no app (grep method post/put, axios.post, fetch()
+app/services/EventSyncService.ts:38:      const latestNetState = await NetInfo.fetch();
+(acima: só NetInfo.fetch; googleDrive.ts excluído — fala com a API do Google Drive)
+
+## encryptionKey em app/ (Realm cifrado?)
+0
+
+## Eventos de analytics com texto de busca
+app/screens/home/bottomTabs/Activities.tsx:954:        params: { activity_searched: queryText },
+app/screens/home/bottomTabs/Articles.tsx:867:        params: { article_searched: queryText },
+
+## Tamanho por pasta (API git/trees do GitHub, commit 5ec8c89; script treesize.py)
+== top dirs (2 levels) by size ==
+   237.02 MB   4303 files  app/instances
+    13.90 MB    699 files  android/app
+     4.51 MB     32 files  app/assets
+     3.89 MB      5 files  referenceImages/ReadMe
+     3.10 MB     20 files  ios/ReraiUmntwana
+     2.37 MB    165 files  ios/assets
+     1.80 MB     99 files  ios/ParentBuddyApp
+     0.91 MB     15 files  ios/LottieSplash
+     0.86 MB     47 files  app/screens
+     0.70 MB      1 files  package-lock.json
+     0.43 MB     88 files  app/components

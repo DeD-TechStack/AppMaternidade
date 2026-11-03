@@ -1,0 +1,44 @@
+inicio 2026-10-22 03:07:20 -0300
+9.15.0
+Progress: resolved 812, reused 0, downloaded 399, added 392
+Progress: resolved 812, reused 0, downloaded 404, added 398
+Progress: resolved 812, reused 0, downloaded 410, added 403
+Progress: resolved 812, reused 0, downloaded 428, added 418
+Progress: resolved 812, reused 0, downloaded 454, added 443
+Progress: resolved 812, reused 0, downloaded 475, added 469
+Progress: resolved 812, reused 0, downloaded 501, added 495
+Progress: resolved 812, reused 0, downloaded 527, added 522
+Progress: resolved 812, reused 0, downloaded 556, added 554
+Progress: resolved 812, reused 0, downloaded 575, added 571
+Progress: resolved 812, reused 0, downloaded 601, added 594
+Progress: resolved 812, reused 0, downloaded 647, added 642
+Progress: resolved 812, reused 0, downloaded 672, added 669
+Progress: resolved 812, reused 0, downloaded 711, added 710
+Progress: resolved 812, reused 0, downloaded 726, added 720
+Progress: resolved 812, reused 0, downloaded 734, added 727
+Progress: resolved 812, reused 0, downloaded 745, added 737
+Progress: resolved 812, reused 0, downloaded 756, added 746
+Progress: resolved 812, reused 0, downloaded 770, added 761
+Progress: resolved 812, reused 0, downloaded 787, added 776
+Progress: resolved 812, reused 0, downloaded 807, added 796
+Progress: resolved 812, reused 0, downloaded 808, added 804
+Progress: resolved 812, reused 0, downloaded 810, added 806
+Progress: resolved 812, reused 0, downloaded 810, added 807
+Progress: resolved 812, reused 0, downloaded 811, added 807
+Progress: resolved 812, reused 0, downloaded 811, added 809
+Progress: resolved 812, reused 0, downloaded 811, added 810
+Progress: resolved 812, reused 0, downloaded 811, added 811
+Progress: resolved 812, reused 0, downloaded 812, added 811
+Progress: resolved 812, reused 0, downloaded 812, added 812
+Progress: resolved 812, reused 0, downloaded 812, added 812, done
+ WARN  Failed to create bin at C:\Projetos\AppMaternidade\_referencias\finnberry\apps\web\node_modules\.bin\finnberry-mcp. ENOENT: no such file or directory, stat 'C:\Projetos\AppMaternidade\_referencias\finnberry\apps\mcp-server\dist\index.js.EXE'
+
+devDependencies:
++ @vitest/coverage-v8 2.1.9
++ turbo 2.7.6
++ typescript 5.9.3
++ vitest 2.1.9
+
+Done in 1m 13.2s
+exit=0
+fim 2026-10-22 03:09:28 -0300

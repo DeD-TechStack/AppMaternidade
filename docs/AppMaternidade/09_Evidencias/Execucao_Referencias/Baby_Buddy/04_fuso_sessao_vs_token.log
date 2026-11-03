@@ -1,0 +1,41 @@
+# 04 fuso: mesma API por sessao vs token - 22/10/2026 03:21:29 -0300
+# Por token (log 03, C-09): sono 16:30-17:15 -03:00 gravado com nap=false e datas devolvidas em UTC (Z), embora o perfil de resp_a tenha timezone America/Sao_Paulo.
+# Aqui: django.test.Client com force_login(resp_a) (autenticacao por sessao, passa pelo UserTimezoneMiddleware), no mesmo banco SQLite.
+$ env -u DATABASE_URL ... .venv/Scripts/python.exe manage.py shell -c "exec(open(r'<scratch>/session_tz.py').read())"
+
+fuso do perfil de resp_a: America/Sao_Paulo
+TIME_ZONE ativo no shell: UTC
+SESSAO POST /api/sleep/ {'child': 3, 'start': '2026-10-21T15:00:00-03:00', 'end': '2026-10-21T15:40:00-03:00'}
+  HTTP 201 nap= True start(resposta)= 2026-10-21T15:00:00-03:00 duration= 00:40:00
+SESSAO GET /api/sleep/?child=3 -> como os mesmos registros aparecem na sessao (fuso do usuario):
+  id 56 start 2026-10-15T22:00:00-03:00 end 2026-10-15T23:00:00-03:00 nap False duration 01:00:00
+  id 58 start 2026-10-21T15:00:00-03:00 end 2026-10-21T15:40:00-03:00 nap True duration 00:40:00
+  id 57 start 2026-10-21T16:30:00-03:00 end 2026-10-21T17:15:00-03:00 nap False duration 00:45:00
+  id 54 start 2026-10-21T22:00:00-03:00 end 2026-10-22T01:30:00-03:00 nap False duration 03:30:00
+Banco (UTC) para os mesmos registros:
+  id 56 start (armazenado) 2026-10-16T01:00:00+00:00 nap False
+  id 58 start (armazenado) 2026-10-21T18:00:00+00:00 nap True
+  id 57 start (armazenado) 2026-10-21T19:30:00+00:00 nap False
+  id 54 start (armazenado) 2026-10-22T01:00:00+00:00 nap False
+exit=0
+
+## complemento - 03:21:52: regra de soneca do modelo (Sleep.save: nap_start_min <= hora local do inicio <= nap_start_max) aplicada ao registro 57 (16:30 -03:00) em cada fuso ativo
+$ env -u ... manage.py shell -c "<trecho abaixo>"
+    import zoneinfo
+    from django.utils import timezone
+    from core.models import Sleep
+    s = Sleep.objects.get(id=57)
+    print("faixa de soneca configurada:", Sleep.settings.nap_start_min, "-", Sleep.settings.nap_start_max)
+    for tz in ("UTC", "America/Sao_Paulo"):
+        with timezone.override(zoneinfo.ZoneInfo(tz)):
+            t = timezone.localtime(s.start).time()
+            print("fuso ativo", tz, "-> hora local do inicio", t, "-> nap seria", Sleep.settings.nap_start_min <= t <= Sleep.settings.nap_start_max)
+    print("valor gravado via token (fuso ativo UTC):", s.nap)
+
+faixa de soneca configurada: 06:00:00 - 18:00:00
+fuso ativo UTC -> hora local do inicio 19:30:00 -> nap seria False
+fuso ativo America/Sao_Paulo -> hora local do inicio 16:30:00 -> nap seria True
+valor gravado via token (fuso ativo UTC): False
+exit=0
+
+# obs: o bloco final do session_tz.py (filtro start__hour__in=[19]) nao encontrou registro e nao imprimiu nada; o complemento acima recalcula a regra pelo id 57.

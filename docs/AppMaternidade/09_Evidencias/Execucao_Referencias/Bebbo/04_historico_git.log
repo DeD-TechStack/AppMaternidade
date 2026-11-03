@@ -1,0 +1,53 @@
+# Histórico Git do clone (blob:none) — 2026-10-22 03:24:10 -0300
+$ git log --since=2025-10-22 --format='%an' main | sort | uniq -c | sort -rn
+    201 neharuparel
+      2 Jignesh Rana
+$ git log --since=2025-10-22 --oneline main | wc -l
+203
+$ git log --since=2025-10-22 --no-merges --oneline main | wc -l
+129
+$ commits por mês (sem merges, últimos 12 meses)
+     12 2025-10
+     20 2025-11
+     18 2025-12
+     10 2026-01
+     14 2026-02
+     10 2026-03
+     19 2026-04
+      4 2026-05
+      8 2026-06
+      6 2026-07
+      5 2026-08
+      3 2026-09
+$ git log --since=2025-10-22 --no-merges --oneline main -- 'app/instances/*/assets/offlinecontent' | wc -l
+0
+$ git log --no-merges --format='%h %cs %s' -8 main -- app/instances/bebbo/assets/offlinecontent
+bcd26f9d 2026-08-14 - Offline data for Foleja, Merhababebek and Bebbo(Uzbekistan) is updated - Offline content for taxonomy for all countries in Bebbo updated based on content_toggle flag. - ReadMe is updated to add missing steps. - Readme file to create new instance is updated
+6ff25267 2025-08-25 - Resolved expected child text with info icon design issue - Added offline data same as uz-uz for karakalpak language - Removed 1 readme reference causing issue in wawamor
+8f47b3ae 2025-08-21 Added Karakalpak language for Uzbek cOuntry in Bebbo and Bebbodev instance and all related changes in localization files. - Modified childSetupprematureMessageNext string for all english languages - Changed default gender in Child profile screen to Girl
+2edc34c3 2025-02-28 - changes done based on akhror comments
+$ git log --format='%h %cs %s' -5 main -- app/database/config/dbConfig.ts app/database/config/dataDbConfig.ts
+12c6cd68 2026-03-27 - Updated Event schema to add params column as params were not saved for offline events and hence not logged to firebase. - Updated Realm Schema version - Resolved relationship_with_child user property logged as undefined. Added condition based on value type. - Resolved netinfo value undefined in DetailScreen when not passed. Taking the value from hook and using. - Added conditions when logging firebase events for params to have default value as 0 if no id. - Added await when logging events in DetailScreen to wait for event to be logged. - Updated event sync service to store params properly in updated schema. - Optimized EventSyncservice function which logged offline events once user is online. - Optimized netinfo hook. - Optimized logevent function to check for network once again in EventSyncService as netinfo was passed as null from many screens like Chatbot, Home, Articles,etc.. which caused events to be logged as offline event and loss of params. - Resolved Dependabot alerts by overiding modules like flatted,svgo,lodash. - Updated svg transformer plugin version. - Updated axios, undici, minimatch and fast-xml-parser for some modules and not for all as causing error with React native cli.
+cdac7f97 2025-09-15 - Lazy loaded persistor in App.tsx - Added ExportOptionsWawamor.plist - Lazy loaded Realm in all the files used.
+b8edbdac 2025-05-09 - changes for text style
+757eef2f 2025-05-06 - Enhance dailyReads - Fixed the scrolling issue in android
+dd3f310d 2024-10-28 -> fix redirection issue and upload app to store
+$ git log --format='%h %cs %s' -3 main -- app/services/periodicSync.ts app/services/EventSyncService.ts
+12c6cd68 2026-03-27 - Updated Event schema to add params column as params were not saved for offline events and hence not logged to firebase. - Updated Realm Schema version - Resolved relationship_with_child user property logged as undefined. Added condition based on value type. - Resolved netinfo value undefined in DetailScreen when not passed. Taking the value from hook and using. - Added conditions when logging firebase events for params to have default value as 0 if no id. - Added await when logging events in DetailScreen to wait for event to be logged. - Updated event sync service to store params properly in updated schema. - Optimized EventSyncservice function which logged offline events once user is online. - Optimized netinfo hook. - Optimized logevent function to check for network once again in EventSyncService as netinfo was passed as null from many screens like Chatbot, Home, Articles,etc.. which caused events to be logged as offline event and loss of params. - Resolved Dependabot alerts by overiding modules like flatted,svgo,lodash. - Updated svg transformer plugin version. - Updated axios, undici, minimatch and fast-xml-parser for some modules and not for all as causing error with React native cli.
+0297b658 2026-01-20 - Modified App icons for android to support android 16 devices. Added xml and foregroubd icons for same. - Added a new icon for Terms and conidtions in Fontello and updated fontello.ttf file. - Added Term and Conditions in the Side Menu. - Resolved Daily read issue where only 1 activity was showed in wawamor on opening the app for continuous 3 4 days in future. - Improved chatbot performance - Expected child unable to edit date issue resolved. - Option to Edit a child DOB to future date added when Editing any child. - Added offline flag to firebase events captured offline. - Made possible changes for Coountry ID Crash in some of the apps.
+444b94cf 2025-07-28 - Created and used various selector's where ever json.parse was used. Whereever possible. - Resolved Custom Drawer Left Navigation click issue - Resolved milestone click issue - White screen during navigation and profile switch white screen issue resolved - Country selection sort issue resolved - Daily reads article missing issue resolved
+$ git log --format='%h %cs %s' -3 main -- jest.config.js __tests__ .github/workflows
+83d48f6f 2025-07-24 - React Native version changed to 0.78.2. - Modified file from .java to .kt and .m to .swift and necessary code changes. - Modified manifest as per the new requirements. - Updated plugins to match RNversion and updated patches for same - Firebase code changes for new version - Selector warnings resolved for some screens
+3ba19b14 2025-04-24 Disbaling CI pipeline run on Development and Main branch
+ea27d07d 2024-09-30 Update ios_Prod.yml
+$ git tag --sort=-creatordate | head -10
+Prod_v2.5.0
+Foleja_Prod_v2.4.4
+Prod_v2.4.4
+Prod_v2.4.3
+Prod_v2.4.1
+Prod_v2.3.1
+Prod_v2.3.0
+Prod_v2.2.4
+Prod_v2.2.3
+Prod_v2.1.1

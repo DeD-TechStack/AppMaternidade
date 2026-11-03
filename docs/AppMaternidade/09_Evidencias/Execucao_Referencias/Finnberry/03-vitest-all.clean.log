@@ -1,0 +1,81 @@
+inicio 2026-10-22 03:10:39 -0300
+$ pnpm exec vitest run (workspace: utils, schemas, api, web, mcp-server)
+
+ RUN  v2.1.9 C:/Projetos/AppMaternidade/_referencias/finnberry
+
+ ✓ |@finnberry/api| src/routers/medicine.test.ts (13 tests) 42ms
+ ✓ |@finnberry/api| src/routers/household.test.ts (22 tests) 44ms
+ ✓ |@finnberry/api| src/routers/temperature.test.ts (13 tests) 35ms
+ ✓ |@finnberry/mcp-server| src/tools/helpers.test.ts (20 tests) 14ms
+ ✓ |@finnberry/utils| src/timeline.test.ts (46 tests) 68ms
+ ✓ |@finnberry/mcp-server| src/resources/index.test.ts (14 tests) 18ms
+ ✓ |@finnberry/api| src/routers/diaper.test.ts (13 tests) 28ms
+ ✓ |@finnberry/api| src/routers/sleep.test.ts (14 tests) 38ms
+ ✓ |@finnberry/mcp-server| src/prompts/index.test.ts (11 tests) 48ms
+ ✓ |@finnberry/api| src/routers/feeding.test.ts (15 tests) 32ms
+ ✓ |@finnberry/api| src/routers/timeline.test.ts (13 tests) 104ms
+ ✓ |@finnberry/mcp-server| src/tools/query-helpers.test.ts (27 tests) 15ms
+ ✓ |@finnberry/schemas| src/temperature.test.ts (23 tests) 16ms
+ ✓ |@finnberry/schemas| src/feeding.test.ts (25 tests) 18ms
+ ✓ |@finnberry/api| src/routers/child.test.ts (11 tests) 26ms
+ ✓ |@finnberry/schemas| src/medicine.test.ts (25 tests) 15ms
+ ✓ |@finnberry/schemas| src/sleep.test.ts (25 tests) 18ms
+ ✓ |@finnberry/api| src/routers/user.test.ts (6 tests) 19ms
+ ✓ |@finnberry/api| src/routers/growth.test.ts (8 tests) 24ms
+ ✓ |@finnberry/schemas| src/diaper.test.ts (19 tests) 13ms
+ ✓ |@finnberry/schemas| src/activity.test.ts (19 tests) 14ms
+ ✓ |@finnberry/api| src/trpc.test.ts (8 tests) 15ms
+ ✓ |@finnberry/schemas| src/child.test.ts (18 tests) 16ms
+ ✓ |@finnberry/schemas| src/household.test.ts (19 tests) 15ms
+ ✓ |@finnberry/schemas| src/growth.test.ts (16 tests) 19ms
+ ✓ |@finnberry/schemas| src/pumping.test.ts (17 tests) 14ms
+ ✓ |@finnberry/schemas| src/timeline.test.ts (21 tests) 15ms
+ ✓ |@finnberry/schemas| src/common.test.ts (16 tests) 14ms
+ ✓ |@finnberry/utils| src/format.test.ts (16 tests) 8ms
+ ✓ |@finnberry/schemas| src/user.test.ts (8 tests) 9ms
+ ✓ |@finnberry/utils| src/date.test.ts (22 tests) 36ms
+ ✓ |@finnberry/api| src/routers/activity.test.ts (9 tests) 25ms
+ ✓ |@finnberry/api| src/routers/pumping.test.ts (7 tests) 25ms
+ ✓ |@finnberry/web| src/hooks/use-toast.test.ts (12 tests) 10ms
+ ✓ |@finnberry/web| src/stores/timer-store.test.ts (19 tests) 12ms
+stderr | src/hooks/use-chat.test.ts > useChat > stop > aborts ongoing request
+An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+ ✓ |@finnberry/web| src/hooks/use-chat.test.ts (23 tests) 117ms
+
+ Test Files  36 passed (36)
+      Tests  613 passed (613)
+   Start at  03:10:59
+   Duration  38.92s (transform 8.63s, setup 13.46s, collect 109.33s, tests 1.00s, environment 71.95s, prepare 48.45s)
+
+exit=0
+fim 2026-10-22 03:11:40 -0300

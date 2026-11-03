@@ -1,0 +1,6 @@
+inicio 2026-10-22 03:13:00 -0300
+$ docker run -d --name appmat-ref-finnberry-pg --label appmat.ref=finnberry -p 127.0.0.1:38110:5432 --tmpfs /var/lib/postgresql/data -e POSTGRES_USER=finnberry -e POSTGRES_PASSWORD=<omitido> -e POSTGRES_DB=finnberry_ref postgres:16.6-alpine
+efa801d1f44b73b2fb76ea56eb364bc9506d566d7b9a96a900ddffedf675c30f
+exit=0
+/var/run/postgresql:5432 - accepting connections
+appmat-ref-finnberry-pg	postgres:16.6-alpine	127.0.0.1:38110->5432/tcp	Up 7 seconds

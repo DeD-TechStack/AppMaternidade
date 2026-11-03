@@ -1,0 +1,36 @@
+inicio 2026-10-22 03:59:58 -0300
+ambiente: Windows 11 Pro 10.0.26300, Git Bash, git version 2.53.0.windows.3, Node v24.20.0, Docker version 29.9.2, build a82e528
+clone: C:/Projetos/AppMaternidade/_referencias/finnberry (somente leitura; nada alterado nos arquivos versionados)
+$ git rev-parse HEAD
+5e17b1a71e10735f0b6aaa22996ce37349d9402c
+$ git branch --show-current
+main
+$ git log -1 --format="%H | %ci | %cI | %an | %s"
+5e17b1a71e10735f0b6aaa22996ce37349d9402c | 2026-01-29 23:36:19 -0800 | 2026-01-29T23:36:19-08:00 | Brad Kenstler | Add Vercel deployment section to README (#46)
+$ git log -1 --format=%cd --date=iso-strict-local (UTC)
+2026-01-30T07:36:19Z
+$ git ls-remote origin refs/heads/main  (consulta de leitura ao GitHub)
+5e17b1a71e10735f0b6aaa22996ce37349d9402c	refs/heads/main
+$ git status --porcelain (arquivos versionados alterados; vazio = nenhum)
+$ git rev-list --count HEAD
+104
+$ git log --reverse --format="%ci %s" | head -2
+2026-01-25 06:24:50 +0000 Initial commit: Finnberry baby tracking app
+2026-01-25 06:39:29 +0000 Add MIT License
+$ git shortlog -sn HEAD
+    89	Brad Kenstler
+     8	Claude
+     7	Ubuntu
+$ git ls-files | wc -l
+218
+$ git ls-files | grep -ciE "\.(png|jpe?g|svg|ico|webp|gif|woff2?|ttf|otf)$" (imagens/fontes versionadas)
+0
+$ git ls-files | grep -iE "migrations|\.sql$" (migracoes/SQL versionados)
+(nenhum)
+$ git grep -n -i -E "row level|create policy|enable row" (politicas RLS versionadas)
+(nenhuma ocorrencia)
+$ git hash-object LICENSE
+959fe476874b22e45aa3de2f270b5c0eff0867fc
+$ sha256sum LICENSE
+2aa2c07d766bd1e30df317f43631a5a1d162f0758a011b654944c764ce8aa5de *LICENSE
+fim 2026-10-22 04:00:00 -0300

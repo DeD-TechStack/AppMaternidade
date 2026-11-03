@@ -1,0 +1,19 @@
+
+## 08 nome repetido de crianca na mesma instancia - 22/10/2026 03:31:06 -0300
+# Child.slug e unique=True e editable=False (core/models.py L215-222). Duas familias com bebes de mesmo nome na mesma instancia:
+    import json
+    from django.contrib.auth import get_user_model
+    from django.test import Client
+    c = Client(HTTP_HOST="127.0.0.1", raise_request_exception=False)
+    c.force_login(get_user_model().objects.get(username="resp_a"))
+    for i in (1, 2):
+        r = c.post("/api/children/", data=json.dumps({"first_name": "Ana", "last_name": "Exemplo", "birth_date": "2026-10-10"}), content_type="application/json")
+        body = r.content.decode()[:160] if r.status_code < 500 else "(corpo HTML de erro suprimido)"
+        print("POST /api/children/ Ana Exemplo tentativa", i, "-> HTTP", r.status_code, body)
+Internal Server Error: /api/children/
+sqlite3.IntegrityError: UNIQUE constraint failed: core_child.slug
+    with self.db.wrap_database_errors:
+django.db.utils.IntegrityError: UNIQUE constraint failed: core_child.slug
+POST /api/children/ Ana Exemplo tentativa 1 -> HTTP 201 {"id":4,"first_name":"Ana","last_name":"Exemplo","birth_date":"2026-10-10","birth_time":null,"due_date":null,"slug":"ana-exemplo","picture":null}
+POST /api/children/ Ana Exemplo tentativa 2 -> HTTP 500 (corpo HTML de erro suprimido)
+exit=0

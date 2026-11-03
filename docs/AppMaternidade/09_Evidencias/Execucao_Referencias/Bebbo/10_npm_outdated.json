@@ -1,0 +1,569 @@
+{
+  "@attarchi/react-native-lottie-splash-screen": {
+    "current": "2.0.4",
+    "wanted": "2.0.4",
+    "latest": "3.0.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\@attarchi\\react-native-lottie-splash-screen"
+  },
+  "@babel/core": {
+    "current": "7.28.3",
+    "wanted": "7.29.7",
+    "latest": "8.0.7",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\@babel\\core"
+  },
+  "@babel/preset-env": {
+    "current": "7.28.3",
+    "wanted": "7.29.7",
+    "latest": "8.0.7",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\@babel\\preset-env"
+  },
+  "@babel/runtime": {
+    "current": "7.28.3",
+    "wanted": "7.29.10",
+    "latest": "8.0.7",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\@babel\\runtime"
+  },
+  "@react-native-async-storage/async-storage": {
+    "current": "2.2.0",
+    "wanted": "2.2.0",
+    "latest": "3.1.1",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\@react-native-async-storage\\async-storage"
+  },
+  "@react-native-community/cli": {
+    "current": "15.0.1",
+    "wanted": "15.0.1",
+    "latest": "20.2.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\@react-native-community\\cli"
+  },
+  "@react-native-community/cli-platform-android": {
+    "current": "15.0.1",
+    "wanted": "15.0.1",
+    "latest": "20.2.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\@react-native-community\\cli-platform-android"
+  },
+  "@react-native-community/cli-platform-ios": {
+    "current": "15.0.1",
+    "wanted": "15.0.1",
+    "latest": "20.2.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\@react-native-community\\cli-platform-ios"
+  },
+  "@react-native-community/datetimepicker": {
+    "current": "8.4.4",
+    "wanted": "8.6.0",
+    "latest": "9.2.2",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\@react-native-community\\datetimepicker"
+  },
+  "@react-native-community/netinfo": {
+    "current": "11.4.1",
+    "wanted": "11.5.2",
+    "latest": "12.0.1",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\@react-native-community\\netinfo"
+  },
+  "@react-native-community/push-notification-ios": {
+    "current": "1.11.0",
+    "wanted": "1.12.0",
+    "latest": "1.12.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\@react-native-community\\push-notification-ios"
+  },
+  "@react-native-documents/picker": {
+    "current": "10.1.5",
+    "wanted": "10.1.7",
+    "latest": "12.0.3",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\@react-native-documents\\picker"
+  },
+  "@react-native-firebase/analytics": {
+    "current": "22.4.0",
+    "wanted": "22.4.0",
+    "latest": "27.0.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\@react-native-firebase\\analytics"
+  },
+  "@react-native-firebase/app": {
+    "current": "22.4.0",
+    "wanted": "22.4.0",
+    "latest": "27.0.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\@react-native-firebase\\app"
+  },
+  "@react-native-firebase/crashlytics": {
+    "current": "22.4.0",
+    "wanted": "22.4.0",
+    "latest": "27.0.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\@react-native-firebase\\crashlytics"
+  },
+  "@react-native-firebase/messaging": {
+    "current": "22.4.0",
+    "wanted": "22.4.0",
+    "latest": "27.0.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\@react-native-firebase\\messaging"
+  },
+  "@react-native-google-signin/google-signin": {
+    "current": "15.0.0",
+    "wanted": "15.0.0",
+    "latest": "16.1.5",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\@react-native-google-signin\\google-signin"
+  },
+  "@react-native/babel-preset": {
+    "current": "0.78.2",
+    "wanted": "0.78.2",
+    "latest": "0.88.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\@react-native\\babel-preset"
+  },
+  "@react-native/eslint-config": {
+    "current": "0.78.2",
+    "wanted": "0.78.2",
+    "latest": "0.88.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\@react-native\\eslint-config"
+  },
+  "@react-native/metro-config": {
+    "current": "0.78.2",
+    "wanted": "0.78.2",
+    "latest": "0.88.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\@react-native\\metro-config"
+  },
+  "@react-native/typescript-config": {
+    "current": "0.78.2",
+    "wanted": "0.78.2",
+    "latest": "0.88.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\@react-native\\typescript-config"
+  },
+  "@react-navigation/bottom-tabs": {
+    "current": "6.6.1",
+    "wanted": "6.6.1",
+    "latest": "7.21.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\@react-navigation\\bottom-tabs"
+  },
+  "@react-navigation/drawer": {
+    "current": "6.7.2",
+    "wanted": "6.7.2",
+    "latest": "7.14.4",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\@react-navigation\\drawer"
+  },
+  "@react-navigation/native": {
+    "current": "6.1.18",
+    "wanted": "6.1.18",
+    "latest": "7.5.1",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\@react-navigation\\native"
+  },
+  "@react-navigation/stack": {
+    "current": "6.4.1",
+    "wanted": "6.4.1",
+    "latest": "7.12.1",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\@react-navigation\\stack"
+  },
+  "@reduxjs/toolkit": {
+    "current": "2.8.2",
+    "wanted": "2.13.0",
+    "latest": "2.13.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\@reduxjs\\toolkit"
+  },
+  "@robinbobin/react-native-google-drive-api-wrapper": {
+    "current": "2.2.4",
+    "wanted": "2.2.6",
+    "latest": "2.2.6",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\@robinbobin\\react-native-google-drive-api-wrapper"
+  },
+  "@sayem314/react-native-keep-awake": {
+    "current": "1.3.1",
+    "wanted": "1.4.0",
+    "latest": "2.0.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\@sayem314\\react-native-keep-awake"
+  },
+  "@shopify/react-native-skia": {
+    "current": "2.2.4",
+    "wanted": "2.14.0",
+    "latest": "2.14.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\@shopify\\react-native-skia"
+  },
+  "@types/jest": {
+    "current": "29.5.14",
+    "wanted": "29.5.14",
+    "latest": "30.0.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\@types\\jest"
+  },
+  "@types/luxon": {
+    "current": "3.7.1",
+    "wanted": "3.7.6",
+    "latest": "3.7.6",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\@types\\luxon"
+  },
+  "@types/react": {
+    "current": "19.1.11",
+    "wanted": "19.3.0",
+    "latest": "19.3.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\@types\\react"
+  },
+  "@types/react-redux": {
+    "current": "7.1.34",
+    "wanted": "7.1.35",
+    "latest": "7.1.35",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\@types\\react-redux"
+  },
+  "@types/react-test-renderer": {
+    "current": "19.1.0",
+    "wanted": "19.3.0",
+    "latest": "19.3.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\@types\\react-test-renderer"
+  },
+  "@types/styled-components": {
+    "current": "5.1.34",
+    "wanted": "5.1.36",
+    "latest": "5.1.36",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\@types\\styled-components"
+  },
+  "axios": {
+    "current": "1.18.1",
+    "wanted": "1.20.0",
+    "latest": "1.20.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\axios"
+  },
+  "babel-plugin-module-resolver": {
+    "current": "5.0.2",
+    "wanted": "5.0.3",
+    "latest": "5.0.3",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\babel-plugin-module-resolver"
+  },
+  "eslint": {
+    "current": "8.57.1",
+    "wanted": "8.57.1",
+    "latest": "10.13.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\eslint"
+  },
+  "i18next": {
+    "current": "25.4.2",
+    "wanted": "25.10.10",
+    "latest": "26.5.4",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\i18next"
+  },
+  "jest": {
+    "current": "29.7.0",
+    "wanted": "29.7.0",
+    "latest": "30.5.2",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\jest"
+  },
+  "lottie-react-native": {
+    "current": "6.7.2",
+    "wanted": "6.7.2",
+    "latest": "7.5.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\lottie-react-native"
+  },
+  "luxon": {
+    "current": "3.7.1",
+    "wanted": "3.7.2",
+    "latest": "3.7.2",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\luxon"
+  },
+  "minisearch": {
+    "current": "7.1.2",
+    "wanted": "7.2.0",
+    "latest": "7.2.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\minisearch"
+  },
+  "moment": {
+    "current": "2.30.1",
+    "wanted": "2.31.0",
+    "latest": "2.31.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\moment"
+  },
+  "prettier": {
+    "current": "2.8.8",
+    "wanted": "2.8.8",
+    "latest": "3.9.10",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\prettier"
+  },
+  "react": {
+    "current": "19.0.0",
+    "wanted": "19.0.0",
+    "latest": "19.3.1",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\react"
+  },
+  "react-i18next": {
+    "current": "15.7.2",
+    "wanted": "15.7.4",
+    "latest": "17.1.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\react-i18next"
+  },
+  "react-native": {
+    "current": "0.78.2",
+    "wanted": "0.78.2",
+    "latest": "0.88.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\react-native"
+  },
+  "react-native-actions-sheet": {
+    "current": "0.9.7",
+    "wanted": "0.9.8",
+    "latest": "11.0.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\react-native-actions-sheet"
+  },
+  "react-native-aes-crypto": {
+    "current": "3.2.1",
+    "wanted": "3.3.0",
+    "latest": "3.3.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\react-native-aes-crypto"
+  },
+  "react-native-config": {
+    "current": "1.5.5",
+    "wanted": "1.5.5",
+    "latest": "1.7.2",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\react-native-config"
+  },
+  "react-native-dotenv": {
+    "current": "3.4.11",
+    "wanted": "3.4.12",
+    "latest": "5.0.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\react-native-dotenv"
+  },
+  "react-native-error-boundary": {
+    "current": "2.0.0",
+    "wanted": "2.0.0",
+    "latest": "3.1.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\react-native-error-boundary"
+  },
+  "react-native-fast-image": {
+    "current": "8.6.3",
+    "wanted": "8.31.2",
+    "latest": "10.8.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\react-native-fast-image"
+  },
+  "react-native-fbsdk-next": {
+    "current": "13.4.1",
+    "wanted": "13.4.3",
+    "latest": "13.4.3",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\react-native-fbsdk-next"
+  },
+  "react-native-gesture-handler": {
+    "current": "2.28.0",
+    "wanted": "2.33.1",
+    "latest": "3.4.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\react-native-gesture-handler"
+  },
+  "react-native-get-random-values": {
+    "current": "1.11.0",
+    "wanted": "1.11.0",
+    "latest": "2.0.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\react-native-get-random-values"
+  },
+  "react-native-image-crop-picker": {
+    "current": "0.51.1",
+    "wanted": "0.51.1",
+    "latest": "0.52.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\react-native-image-crop-picker"
+  },
+  "react-native-localize": {
+    "current": "3.5.2",
+    "wanted": "3.7.2",
+    "latest": "3.7.2",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\react-native-localize"
+  },
+  "react-native-permissions": {
+    "current": "5.4.2",
+    "wanted": "5.6.3",
+    "latest": "5.6.3",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\react-native-permissions"
+  },
+  "react-native-popup-menu": {
+    "current": "0.18.0",
+    "wanted": "0.18.0",
+    "latest": "0.19.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\react-native-popup-menu"
+  },
+  "react-native-reanimated": {
+    "current": "3.19.1",
+    "wanted": "3.19.5",
+    "latest": "4.7.1",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\react-native-reanimated"
+  },
+  "react-native-rename": {
+    "current": "3.2.17",
+    "wanted": "3.3.2",
+    "latest": "3.3.2",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\react-native-rename"
+  },
+  "react-native-restart": {
+    "current": "0.0.27",
+    "wanted": "0.0.27",
+    "latest": "0.0.29",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\react-native-restart"
+  },
+  "react-native-safe-area-context": {
+    "current": "5.6.1",
+    "wanted": "5.10.1",
+    "latest": "5.10.1",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\react-native-safe-area-context"
+  },
+  "react-native-screens": {
+    "current": "4.15.2",
+    "wanted": "4.15.2",
+    "latest": "4.30.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\react-native-screens"
+  },
+  "react-native-share": {
+    "current": "12.2.0",
+    "wanted": "12.3.1",
+    "latest": "12.3.1",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\react-native-share"
+  },
+  "react-native-svg": {
+    "current": "15.12.1",
+    "wanted": "15.16.0",
+    "latest": "15.16.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\react-native-svg"
+  },
+  "react-native-timeline-flatlist": {
+    "current": "0.8.0",
+    "wanted": "0.8.0",
+    "latest": "1.0.1",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\react-native-timeline-flatlist"
+  },
+  "react-native-url-polyfill": {
+    "current": "2.0.0",
+    "wanted": "2.0.0",
+    "latest": "4.0.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\react-native-url-polyfill"
+  },
+  "react-native-vector-image": {
+    "current": "0.4.5",
+    "wanted": "0.4.5",
+    "latest": "0.6.1",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\react-native-vector-image"
+  },
+  "react-native-video": {
+    "current": "6.19.0",
+    "wanted": "6.19.3",
+    "latest": "6.19.3",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\react-native-video"
+  },
+  "react-native-webview": {
+    "current": "13.15.0",
+    "wanted": "13.17.0",
+    "latest": "14.0.1",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\react-native-webview"
+  },
+  "react-redux": {
+    "current": "9.2.0",
+    "wanted": "9.3.0",
+    "latest": "9.3.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\react-redux"
+  },
+  "react-test-renderer": {
+    "current": "19.0.0",
+    "wanted": "19.0.0",
+    "latest": "19.3.1",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\react-test-renderer"
+  },
+  "redux-saga": {
+    "current": "1.3.0",
+    "wanted": "1.5.1",
+    "latest": "1.5.1",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\redux-saga"
+  },
+  "reselect": {
+    "current": "5.1.1",
+    "wanted": "5.3.0",
+    "latest": "5.3.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\reselect"
+  },
+  "styled-components": {
+    "current": "6.1.19",
+    "wanted": "6.6.0",
+    "latest": "6.6.0",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\styled-components"
+  },
+  "typescript": {
+    "current": "5.0.4",
+    "wanted": "5.0.4",
+    "latest": "7.0.2",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\typescript"
+  },
+  "uuid": {
+    "current": "11.1.0",
+    "wanted": "11.1.1",
+    "latest": "14.0.3",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\uuid"
+  },
+  "victory-native": {
+    "current": "36.9.2",
+    "wanted": "36.9.2",
+    "latest": "43.0.1",
+    "dependent": "bebbo",
+    "location": "C:\\Projetos\\AppMaternidade\\_referencias\\bebbo\\node_modules\\victory-native"
+  }
+}

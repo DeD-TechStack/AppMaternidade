@@ -1,0 +1,48 @@
+# 05 suite de testes do projeto - Windows 11, Python 3.12.10 (venv), Django 5.2.17, SQLite de teste (criado e destruido pelo runner)
+# comando equivalente ao 'gulp test' (gulpfile.js L242-270), sem pipenv; ambiente sem DATABASE_URL e afins (env -u ...)
+$ env -u DATABASE_URL ... .venv/Scripts/python.exe -Wa manage.py test --settings=babybuddy.settings.test --parallel 4 --exclude-tag isolate --noinput
+inicio 22/10/2026 03:22:26 -0300
+Found 528 test(s).
+Creating test database for alias 'default'...
+Cache table 'cache_default' already exists.
+Cloning test database for alias 'default'...
+Cloning test database for alias 'default'...
+Cloning test database for alias 'default'...
+Cloning test database for alias 'default'...
+System check identified no issues (0 silenced).
+...........................................................................................................................................................................................................................................................................................................................................................................................................................................................................Webhook event feeding.created 42 to Home failed (HTTP 500).
+............................Webhook event feeding.created 42 to Home failed (HTTP 500).
+Webhook event feeding.created 42 to Home failed (HTTP 500).
+Webhook event feeding.created 42 to Home failed (HTTP 500).
+Webhook event feeding.created 42 to Home failed (HTTP 500).
+Webhook event feeding.created 42 to Home failed (HTTP 500).
+.............Webhook event sleep.created 7 to Elsewhere failed (timed out).
+Webhook event feeding.created 42 to Home failed (HTTP 500).
+Webhook event feeding.created 42 to Home failed (HTTP 500).
+Webhook event feeding.created 42 to Home failed (HTTP 500).
+Webhook event feeding.created 42 to Home failed (HTTP 500).
+............................
+----------------------------------------------------------------------
+Ran 528 tests in 67.481s
+
+OK
+Destroying test database for alias 'default'...
+Destroying test database for alias 'default'...
+Destroying test database for alias 'default'...
+Destroying test database for alias 'default'...
+Destroying test database for alias 'default'...
+exit=0 fim 22/10/2026 03:23:45 -0300
+
+## teste isolado listado em gulpfile.config.js (testsConfig.isolated) - 22/10/2026 03:24:46 -0300
+$ env -u DATABASE_URL ... .venv/Scripts/python.exe manage.py test --settings=babybuddy.settings.test babybuddy.tests.tests_views.ViewsTestCase.test_password_reset
+Creating test database for alias 'default'...
+.
+----------------------------------------------------------------------
+Ran 1 test in 3.172s
+
+OK
+Destroying test database for alias 'default'...
+Found 1 test(s).
+Cache table 'cache_default' already exists.
+System check identified no issues (0 silenced).
+exit=0 fim 22/10/2026 03:25:00 -0300

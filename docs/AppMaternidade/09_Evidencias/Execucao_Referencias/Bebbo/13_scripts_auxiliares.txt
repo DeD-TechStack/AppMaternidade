@@ -1,0 +1,283 @@
+=================== run_checks.sh
+#!/usr/bin/env bash
+# Verificações estáticas no clone do Bebbo (sem build nativo). Saídas brutas ficam no scratch.
+# Uso: bash run_checks.sh
+set -u
+REPO=/c/Projetos/AppMaternidade/_referencias/bebbo
+OUT=/c/Users/danie.DESKTOP-AUUT84P/AppData/Local/hermes/cache/scratch/bebbo-ref/checks
+mkdir -p "$OUT"
+cd "$REPO" || exit 1
+ts() { date '+%Y-%m-%d %H:%M:%S %z'; }
+
+echo "== tsc inicio $(ts)" > "$OUT/tsc.meta"
+./node_modules/.bin/tsc --version >> "$OUT/tsc.meta" 2>&1
+NODE_OPTIONS=--max-old-space-size=8192 ./node_modules/.bin/tsc --noEmit -p tsconfig.json --pretty false > "$OUT/tsc.out" 2>&1
+echo "exit=$? fim $(ts)" >> "$OUT/tsc.meta"
+
+echo "== jest inicio $(ts)" > "$OUT/jest.meta"
+./node_modules/.bin/jest --version >> "$OUT/jest.meta" 2>&1
+./node_modules/.bin/jest --listTests > "$OUT/jest_list.out" 2>&1
+echo "listTests exit=$?" >> "$OUT/jest.meta"
+./node_modules/.bin/jest --ci > "$OUT/jest.out" 2>&1
+echo "jest exit=$? fim $(ts)" >> "$OUT/jest.meta"
+
+echo "== audit inicio $(ts)" > "$OUT/audit.meta"
+npm audit --json > "$OUT/audit.json" 2> "$OUT/audit.err"
+echo "audit exit=$? fim $(ts)" >> "$OUT/audit.meta"
+npm audit --omit=dev --json > "$OUT/audit_prod.json" 2> "$OUT/audit_prod.err"
+echo "audit prod exit=$? fim $(ts)" >> "$OUT/audit.meta"
+
+echo "== outdated inicio $(ts)" > "$OUT/outdated.meta"
+npm outdated --json > "$OUT/outdated.json" 2> "$OUT/outdated.err"
+echo "outdated exit=$? fim $(ts)" >> "$OUT/outdated.meta"
+
+echo "== eslint inicio $(ts)" > "$OUT/eslint.meta"
+./node_modules/.bin/eslint --version >> "$OUT/eslint.meta" 2>&1
+NODE_OPTIONS=--max-old-space-size=8192 ./node_modules/.bin/eslint app App.tsx --ext .js,.jsx,.ts,.tsx --ignore-pattern 'app/instances/*/assets/offlinecontent/**' --ignore-pattern 'app/instances/*/assets/locale/**' -f json -o "$OUT/eslint.json" > "$OUT/eslint.stdout" 2>&1
+echo "eslint exit=$? fim $(ts)" >> "$OUT/eslint.meta"
+echo "TUDO FEITO $(ts)" > "$OUT/DONE"
+
+=================== summarize_checks.py
+# Resume saídas de npm audit / npm outdated / eslint do clone do Bebbo.
+import json, os, sys, collections
+OUT = sys.argv[1]
+
+def load(name):
+    p = os.path.join(OUT, name)
+    if not os.path.exists(p) or os.path.getsize(p) == 0:
+        return None
+    try:
+        return json.load(open(p, encoding='utf-8'))
+    except Exception as e:
+        print(name, 'erro de parse:', e)
+        return None
+
+for name in ('audit.json', 'audit_prod.json'):
+    a = load(name)
+    if not a:
+        print(name, ': vazio')
+        continue
+    meta = a.get('metadata', {})
+    print('==', name, 'vulnerabilities:', meta.get('vulnerabilities'), 'deps:', meta.get('dependencies'))
+    vulns = a.get('vulnerabilities', {})
+    rows = []
+    for pkg, v in vulns.items():
+        if v.get('severity') in ('critical', 'high'):
+            via = [x if isinstance(x, str) else x.get('title', '')[:70] for x in v.get('via', [])][:2]
+            fix = v.get('fixAvailable')
+            if isinstance(fix, dict):
+                fix = '%s@%s major=%s' % (fix.get('name'), fix.get('version'), fix.get('isSemVerMajor'))
+            rows.append((v.get('severity'), pkg, v.get('isDirect'), via, fix))
+    for r in sorted(rows):
+        print('  ', r)
+
+o = load('outdated.json')
+if o:
+    major = []
+    for pkg, v in o.items():
+        if isinstance(v, list):
+            v = v[0]
+        cur = v.get('current') or v.get('wanted')
+        lat = v.get('latest')
+        try:
+            cm = int(str(cur).split('.')[0]); lm = int(str(lat).split('.')[0])
+        except Exception:
+            cm = lm = None
+        if cm is not None and lm is not None and lm > cm:
+            major.append((pkg, cur, lat))
+        elif pkg in ('react-native', 'realm', 'react', 'typescript'):
+            major.append((pkg, cur, lat))
+    print('== outdated: total=%d; com major atrás=%d' % (len(o), len(major)))
+    for m in sorted(major):
+        print('  ', m)
+
+e = load('eslint.json')
+if e:
+    files = len(e)
+    errs = sum(f.get('errorCount', 0) for f in e)
+    warns = sum(f.get('warningCount', 0) for f in e)
+    rules = collections.Counter()
+    for f in e:
+        for m in f.get('messages', []):
+            rules[m.get('ruleId')] += 1
+    print('== eslint: arquivos=%d erros=%d avisos=%d' % (files, errs, warns))
+    for r, c in rules.most_common(12):
+        print('  ', c, r)
+
+=================== inspect_taxonomy.py
+# Extrai estrutura (sem copiar textos editoriais longos) das taxonomias e do conteudo offline do Bebbo.
+# Uso: python -I inspect_taxonomy.py <pasta offlinecontent> <pasta locale>
+import json, re, sys, os, collections
+
+off = sys.argv[1]
+loc = sys.argv[2]
+
+def load_ts_object(path, varname):
+    txt = open(path, encoding='utf-8').read()
+    i = txt.index('=', txt.index(varname)) + 1
+    body = txt[i:].strip()
+    if body.endswith(';'):
+        body = body[:-1]
+    # remove trailing commas antes de } ou ]
+    body = re.sub(r',(\s*[}\]])', r'\1', body)
+    return json.loads(body)
+
+tax = load_ts_object(os.path.join(off, 'taxonomies.ts'), 'taxonomydata')
+print('idiomas na taxonomia offline:', len(tax), sorted(tax.keys()))
+en = tax['en'][0]['allData']
+print('chaves de taxonomia (en):', sorted(en.keys()))
+ca = en.get('child_age', [])
+print('child_age (en): %d faixas' % len(ca))
+for c in ca:
+    print('  id=%s name=%r days_from=%s days_to=%s buffers_days=%s age_bracket=%s' % (
+        c.get('id'), c.get('name'), c.get('days_from'), c.get('days_to'), c.get('buffers_days'), c.get('age_bracket')))
+print('campos de child_age:', sorted(ca[0].keys()) if ca else None)
+
+for fname, var in [('article.ts', 'articledata'), ('ActivitiesData.ts', 'ActivitiesData'),
+                   ('MileStonesData.ts', 'MileStonesData'), ('VideoArticleData.ts', 'VideoArticleData'),
+                   ('FaqsData.ts', 'FaqsData')]:
+    try:
+        d = load_ts_object(os.path.join(off, fname), var)
+    except Exception as e:
+        print(fname, 'ERRO parse', e)
+        continue
+    counts = {k: len(v) for k, v in d.items()}
+    print('%s: idiomas=%d contagem por idioma=%s' % (fname, len(d), counts))
+    sample = d.get('en') or next(iter(d.values()))
+    if sample:
+        print('   campos do 1o item:', sorted(sample[0].keys()))
+        lic = collections.Counter(str(x.get('licensed')) for x in sample)
+        man = collections.Counter(str(x.get('mandatory')) for x in sample)
+        print('   licensed=%s mandatory=%s' % (dict(lic), dict(man)))
+        ua = sorted({str(x.get('updated_at'))[:7] for x in sample})
+        print('   updated_at (ano-mes, min..max):', ua[0] if ua else None, '..', ua[-1] if ua else None)
+
+# contagem de chaves de UI por locale
+print('== strings de UI por locale ==')
+for f in sorted(os.listdir(loc)):
+    if not f.endswith('.ts') or f == 'availableLanguage.ts':
+        continue
+    txt = open(os.path.join(loc, f), encoding='utf-8').read()
+    keys = re.findall(r'^\s*"?([A-Za-z0-9_]+)"?\s*:', txt, flags=re.M)
+    print('  %-8s %5d chaves' % (f[:-3], len(set(keys))))
+
+=================== cms_tree.py
+# Resume a árvore do repositório do CMS do Bebbo (lida via API do GitHub).
+import json, sys
+d = json.load(open(sys.argv[1], encoding='utf-8'))
+print('truncated', d.get('truncated'), 'count', len(d['tree']))
+paths = [t['path'] for t in d['tree'] if t['type'] == 'blob']
+custom = [p for p in paths if '/modules/custom/' in p]
+mods = sorted({p.split('/modules/custom/')[1].split('/')[0] for p in custom})
+print('custom modules:', mods)
+for p in custom:
+    if p.endswith('.routing.yml') or ('/Controller/' in p) or ('/Plugin/rest/' in p) or p.endswith('.info.yml'):
+        print('  ', p)
+nt = [p for p in paths if p.startswith('config/default/node.type.')]
+print('node types:', [p.split('node.type.')[1][:-4] for p in nt])
+voc = [p for p in paths if p.startswith('config/default/taxonomy.vocabulary.')]
+print('vocabularies:', [p.split('taxonomy.vocabulary.')[1][:-4] for p in voc])
+docs = [p for p in paths if p.startswith('docs/')]
+print('docs:', docs)
+views = [p for p in paths if p.startswith('config/default/views.view.')]
+print('views count', len(views))
+print([v.split('views.view.')[1][:-4] for v in views])
+wf = [p for p in paths if p.startswith('config/default/workflows.workflow.')]
+print('workflows:', wf)
+langs = [p for p in paths if p.startswith('config/default/language.entity.')]
+print('languages (config):', len(langs), [p.split('language.entity.')[1][:-4] for p in langs])
+art_fields = [p for p in paths if p.startswith('config/default/field.field.node.article.')]
+print('article fields:', [p.split('field.field.node.article.')[1][:-4] for p in art_fields])
+act_fields = [p for p in paths if p.startswith('config/default/field.field.node.activities.')]
+print('activities fields:', [p.split('field.field.node.activities.')[1][:-4] for p in act_fields])
+tests = [p for p in paths if p.startswith('tests/')]
+print('tests:', len(tests), tests[:15])
+gh = [p for p in paths if p.startswith('.github/')]
+print('github:', gh)
+sites = sorted({p.split('/')[2] for p in paths if p.startswith('docroot/sites/') and len(p.split('/')) > 3})
+print('sites:', sites)
+
+=================== github_meta.sh
+#!/usr/bin/env bash
+# Coleta metadados públicos via gh CLI (somente leitura) para a ficha do Bebbo.
+cd /c/Projetos/AppMaternidade/_referencias/bebbo || exit 1
+R=UNICEFECAR/parenting-app-bebbo-mobile
+C=UNICEFECAR/parenting-app-bebbo-CMS
+run() { echo "\$ $*"; "$@" 2>&1; }
+echo "# Metadados via API do GitHub (gh CLI, leitura pública) — $(date '+%Y-%m-%d %H:%M:%S %z')"
+run gh api repos/$R --jq '{default_branch,archived,pushed_at,updated_at,created_at,license:.license.spdx_id,stars:.stargazers_count,forks:.forks_count,open_issues:.open_issues_count,size_kb:.size}'
+run git ls-remote origin HEAD refs/heads/main
+run gh api repos/$R/branches --paginate --jq '.[]|.name'
+echo "\$ gh pr list -R $R --state open (número, data, autor, título)"
+gh pr list -R $R --state open --limit 30 --json number,title,createdAt,author --jq '.[]|"#\(.number) \(.createdAt[0:10]) \(.author.login) | \(.title)"' 2>&1
+echo "\$ gh issue list -R $R --state open (número, data, título)"
+gh issue list -R $R --state open --limit 30 --json number,title,createdAt --jq '.[]|"#\(.number) \(.createdAt[0:10]) | \(.title)"' 2>&1
+run git for-each-ref refs/tags/Prod_v2.5.0 refs/tags/Prod_v2.4.4 --format='%(refname:short) %(creatordate:short)'
+echo
+echo "# Repositório do CMS (backend de conteúdo)"
+run gh api repos/$C --jq '{default_branch,archived,pushed_at,license:.license.spdx_id,language,open_issues:.open_issues_count}'
+run gh api repos/$C/commits/main --jq '.sha + " " + .commit.committer.date'
+echo
+echo "# Bibliotecas usadas pelo app (situação upstream)"
+for r in realm/realm-js zo0r/react-native-push-notification itinance/react-native-fs DylanVann/react-native-fast-image; do
+  run gh api repos/$r --jq '{full_name,archived,pushed_at}'
+done
+echo "\$ (README do realm-js, primeiras linhas)"
+gh api -H "Accept: application/vnd.github.raw" repos/realm/realm-js/readme 2>&1 | head -6
+echo "\$ versões instaladas em node_modules (após npm ci --ignore-scripts)"
+for p in react-native react realm @react-native-firebase/app react-native-push-notification redux-persist typescript i18next; do
+  printf '%s ' "$p"; node -e "console.log(require('./node_modules/$p/package.json').version)" 2>&1
+done
+echo "fim: $(date '+%Y-%m-%d %H:%M:%S %z')"
+
+=================== collect_evidence.sh
+#!/usr/bin/env bash
+# Copia saídas brutas (sem segredos) do scratch para a pasta de evidências do cofre.
+SCR=/c/Users/danie.DESKTOP-AUUT84P/AppData/Local/hermes/cache/scratch/bebbo-ref
+EV=/c/Projetos/AppMaternidade/docs/AppMaternidade/09_Evidencias/Execucao_Referencias/Bebbo
+C=$SCR/checks
+mkdir -p "$EV"
+
+{ echo "# npm ci (clone do Bebbo, scripts de instalação desativados)"; echo "Diretório: C:/Projetos/AppMaternidade/_referencias/bebbo"; echo "Comando: npm ci --ignore-scripts --legacy-peer-deps --no-audit --no-fund --loglevel=warn"; echo "Node v24.20.0 (node -v no shell interativo) / npm 11.19.0"; echo "Observação: --ignore-scripts impede o postinstall (patch-package) e scripts de dependências; os patches de patches/ NÃO foram aplicados."; echo; cat "$SCR/npm_ci.log"; } > "$EV/06_npm_ci.log"
+
+{ echo "# TypeScript (tsc --noEmit) no commit 5ec8c89"; echo "Comando: NODE_OPTIONS=--max-old-space-size=8192 ./node_modules/.bin/tsc --noEmit -p tsconfig.json --pretty false"; cat "$C/tsc.meta"; echo "Total de linhas 'error TS': $(grep -c 'error TS' "$C/tsc.out")"; echo "Arquivos distintos com erro: $(grep 'error TS' "$C/tsc.out" | cut -d'(' -f1 | sort -u | wc -l)"; echo "Códigos mais frequentes:"; grep -o 'error TS[0-9]*' "$C/tsc.out" | sort | uniq -c | sort -rn | head -15; echo "Arquivos com mais erros:"; grep 'error TS' "$C/tsc.out" | cut -d'(' -f1 | sort | uniq -c | sort -rn | head -15; echo; echo "## Saída completa"; cat "$C/tsc.out"; } > "$EV/07_tsc.log"
+
+{ echo "# Jest no commit 5ec8c89"; echo "Comandos: ./node_modules/.bin/jest --listTests ; ./node_modules/.bin/jest --ci"; cat "$C/jest.meta"; echo; echo "## jest --listTests"; cat "$C/jest_list.out"; echo; echo "## jest --ci"; cat "$C/jest.out"; } > "$EV/08_jest.log"
+
+{ echo "# ESLint (configuração do repositório) no commit 5ec8c89"; echo "Comando: ./node_modules/.bin/eslint app App.tsx --ext .js,.jsx,.ts,.tsx --ignore-pattern 'app/instances/*/assets/offlinecontent/**' --ignore-pattern 'app/instances/*/assets/locale/**' -f json"; cat "$C/eslint.meta"; echo; echo "## stdout/stderr"; cat "$C/eslint.stdout"; } > "$EV/11_eslint.log"
+
+cp "$C/audit.json" "$EV/09_npm_audit_completo.json"
+cp "$C/audit_prod.json" "$EV/09_npm_audit_producao.json"
+cp "$C/outdated.json" "$EV/10_npm_outdated.json"
+{ echo "# Resumo de npm audit (completo e --omit=dev) e npm outdated"; echo "Comandos: npm audit --json ; npm audit --omit=dev --json ; npm outdated --json"; cat "$C/audit.meta"; cat "$C/outdated.meta"; echo; python -I -X utf8 "C:/Users/danie.DESKTOP-AUUT84P/AppData/Local/hermes/cache/scratch/bebbo-ref/summarize_checks.py" "C:/Users/danie.DESKTOP-AUUT84P/AppData/Local/hermes/cache/scratch/bebbo-ref/checks"; } > "$EV/09_10_resumo_audit_outdated.log" 2>&1
+
+{ echo "# Estrutura do conteúdo offline e das taxonomias (instância bebbo) e árvore do CMS"; echo "Script: inspect_taxonomy.py e cms_tree.py (texto em 13_scripts_auxiliares.txt), executados com python -I"; echo "Data: $(date '+%Y-%m-%d %H:%M:%S %z')"; echo; echo "## inspect_taxonomy.py"; python -I -X utf8 "C:/Users/danie.DESKTOP-AUUT84P/AppData/Local/hermes/cache/scratch/bebbo-ref/inspect_taxonomy.py" "C:/Projetos/AppMaternidade/_referencias/bebbo/app/instances/bebbo/assets/offlinecontent" "C:/Projetos/AppMaternidade/_referencias/bebbo/app/instances/bebbo/assets/locale"; echo; echo "## cms_tree.py (repositório UNICEFECAR/parenting-app-bebbo-CMS @ 5060246f34ec7caafb9adf4e00245c2a1a46957c, árvore lida via gh api)"; python -I -X utf8 "C:/Users/danie.DESKTOP-AUUT84P/AppData/Local/hermes/cache/scratch/bebbo-ref/cms_tree.py" "C:/Users/danie.DESKTOP-AUUT84P/AppData/Local/hermes/cache/scratch/bebbo-ref/cms_tree.json"; } > "$EV/12_estrutura_conteudo_e_cms.log" 2>&1
+
+{ for f in run_checks.sh summarize_checks.py inspect_taxonomy.py cms_tree.py github_meta.sh collect_evidence.sh treesize.py; do echo "=================== $f"; cat "$SCR/$f"; echo; done; } > "$EV/13_scripts_auxiliares.txt"
+ls -la "$EV"
+
+=================== treesize.py
+import json, sys, collections
+d = json.load(open(sys.argv[1], encoding='utf-8'))
+by2 = collections.Counter(); cnt2 = collections.Counter()
+ext = collections.Counter()
+big = []
+for t in d['tree']:
+    if t['type'] != 'blob': continue
+    p = t['path']; s = t.get('size', 0)
+    parts = p.split('/')
+    k = '/'.join(parts[:2]) if len(parts) > 1 else parts[0]
+    by2[k] += s; cnt2[k] += 1
+    e = p.rsplit('.', 1)[-1].lower() if '.' in parts[-1] else '(none)'
+    ext[e] += s
+    big.append((s, p))
+print("== top dirs (2 levels) by size ==")
+for k, v in by2.most_common(30):
+    print(f"{v/1e6:9.2f} MB  {cnt2[k]:5d} files  {k}")
+print("== by extension ==")
+for k, v in ext.most_common(20):
+    print(f"{v/1e6:9.2f} MB  {k}")
+print("== biggest files ==")
+for s, p in sorted(big, reverse=True)[:25]:
+    print(f"{s/1e6:9.2f} MB  {p}")
+

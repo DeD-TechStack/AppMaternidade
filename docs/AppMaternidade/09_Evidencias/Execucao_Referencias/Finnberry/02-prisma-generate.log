@@ -1,0 +1,12 @@
+inicio 2026-10-22 03:09:42 -0300
+$ pnpm exec prisma generate (packages/db)
+Prisma schema loaded from prisma\schema.prisma
+
+✔ Generated Prisma Client (v6.19.2) to .\..\..\node_modules\.pnpm\@prisma+client@6.19.2_prisma@6.19.2_magicast@0.3.5_typescript@5.9.3__typescript@5.9.3\node_modules\@prisma\client in 314ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Want to turn off tips and other hints? https://pris.ly/tip-4-nohints
+
+exit=0
+fim 2026-10-22 03:10:28 -0300

@@ -1,0 +1,43 @@
+# ESLint (configuração do repositório) no commit 5ec8c89
+Comando: ./node_modules/.bin/eslint app App.tsx --ext .js,.jsx,.ts,.tsx --ignore-pattern 'app/instances/*/assets/offlinecontent/**' --ignore-pattern 'app/instances/*/assets/locale/**' -f json
+== eslint inicio 2026-10-22 03:19:22 -0300
+v8.57.1
+eslint exit=2 fim 2026-10-22 03:19:30 -0300
+
+## stdout/stderr
+
+Oops! Something went wrong! :(
+
+ESLint: 8.57.1
+
+TypeError: minimatch is not a function
+Occurred while linting C:\Projetos\AppMaternidade\_referencias\bebbo\app\components\FavActivities.tsx:164
+Rule: "react/no-unstable-nested-components"
+    at propMatchesRenderPropPattern (C:\Projetos\AppMaternidade\_referencias\bebbo\node_modules\eslint-plugin-react\lib\rules\no-unstable-nested-components.js:42:38)
+    at isComponentInRenderProp (C:\Projetos\AppMaternidade\_referencias\bebbo\node_modules\eslint-plugin-react\lib\rules\no-unstable-nested-components.js:208:9)
+    at validate (C:\Projetos\AppMaternidade\_referencias\bebbo\node_modules\eslint-plugin-react\lib\rules\no-unstable-nested-components.js:429:52)
+    at ArrowFunctionExpression (C:\Projetos\AppMaternidade\_referencias\bebbo\node_modules\eslint-plugin-react\lib\rules\no-unstable-nested-components.js:485:39)
+    at C:\Projetos\AppMaternidade\_referencias\bebbo\node_modules\eslint-plugin-react\lib\util\Components.js:281:9
+    at Array.forEach (<anonymous>)
+    at mergedHandler (C:\Projetos\AppMaternidade\_referencias\bebbo\node_modules\eslint-plugin-react\lib\util\Components.js:280:16)
+    at ruleErrorHandler (C:\Projetos\AppMaternidade\_referencias\bebbo\node_modules\eslint\lib\linter\linter.js:1076:28)
+    at C:\Projetos\AppMaternidade\_referencias\bebbo\node_modules\eslint\lib\linter\safe-emitter.js:45:58
+    at Array.forEach (<anonymous>)
+    at Object.emit (C:\Projetos\AppMaternidade\_referencias\bebbo\node_modules\eslint\lib\linter\safe-emitter.js:45:38)
+    at NodeEventGenerator.applySelector (C:\Projetos\AppMaternidade\_referencias\bebbo\node_modules\eslint\lib\linter\node-event-generator.js:297:26)
+    at NodeEventGenerator.applySelectors (C:\Projetos\AppMaternidade\_referencias\bebbo\node_modules\eslint\lib\linter\node-event-generator.js:326:22)
+    at NodeEventGenerator.enterNode (C:\Projetos\AppMaternidade\_referencias\bebbo\node_modules\eslint\lib\linter\node-event-generator.js:340:14)
+    at CodePathAnalyzer.enterNode (C:\Projetos\AppMaternidade\_referencias\bebbo\node_modules\eslint\lib\linter\code-path-analysis\code-path-analyzer.js:803:23)
+    at C:\Projetos\AppMaternidade\_referencias\bebbo\node_modules\eslint\lib\linter\linter.js:1111:32
+    at Array.forEach (<anonymous>)
+    at runRules (C:\Projetos\AppMaternidade\_referencias\bebbo\node_modules\eslint\lib\linter\linter.js:1106:15)
+    at Linter._verifyWithoutProcessors (C:\Projetos\AppMaternidade\_referencias\bebbo\node_modules\eslint\lib\linter\linter.js:1355:31)
+    at Linter._verifyWithoutProcessors (C:\Projetos\AppMaternidade\_referencias\bebbo\node_modules\eslint-plugin-eslint-comments\lib\utils\patch.js:181:42)
+    at Linter._verifyWithConfigArray (C:\Projetos\AppMaternidade\_referencias\bebbo\node_modules\eslint\lib\linter\linter.js:1807:21)
+    at Linter.verify (C:\Projetos\AppMaternidade\_referencias\bebbo\node_modules\eslint\lib\linter\linter.js:1437:65)
+    at Linter.verifyAndFix (C:\Projetos\AppMaternidade\_referencias\bebbo\node_modules\eslint\lib\linter\linter.js:2068:29)
+    at verifyText (C:\Projetos\AppMaternidade\_referencias\bebbo\node_modules\eslint\lib\cli-engine\cli-engine.js:254:48)
+    at CLIEngine.executeOnFiles (C:\Projetos\AppMaternidade\_referencias\bebbo\node_modules\eslint\lib\cli-engine\cli-engine.js:834:28)
+    at ESLint.lintFiles (C:\Projetos\AppMaternidade\_referencias\bebbo\node_modules\eslint\lib\eslint\eslint.js:551:23)
+    at Object.execute (C:\Projetos\AppMaternidade\_referencias\bebbo\node_modules\eslint\lib\cli.js:421:36)
+    at async main (C:\Projetos\AppMaternidade\_referencias\bebbo\node_modules\eslint\bin\eslint.js:152:22)

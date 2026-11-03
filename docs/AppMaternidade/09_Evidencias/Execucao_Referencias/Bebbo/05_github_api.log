@@ -1,0 +1,78 @@
+# Metadados via API do GitHub (gh CLI, leitura pública) — 2026-10-22 03:25:07 -0300
+$ gh api repos/UNICEFECAR/parenting-app-bebbo-mobile --jq {default_branch,archived,pushed_at,updated_at,created_at,license:.license.spdx_id,stars:.stargazers_count,forks:.forks_count,open_issues:.open_issues_count,size_kb:.size}
+{"archived":false,"created_at":"2021-05-18T09:04:13Z","default_branch":"main","forks":25,"license":"GPL-3.0","open_issues":11,"pushed_at":"2026-10-19T10:42:56Z","size_kb":550473,"stars":19,"updated_at":"2026-10-21T04:12:40Z"}
+$ git ls-remote origin HEAD refs/heads/main
+5ec8c89198368638c8111b80c6159cfb12f5e9ad	HEAD
+5ec8c89198368638c8111b80c6159cfb12f5e9ad	refs/heads/main
+$ gh api repos/UNICEFECAR/parenting-app-bebbo-mobile/branches --paginate --jq .[]|.name
+AppNameReplaced
+BackLogIssues
+Bugs-&-OfflineContent
+CodeOfConduct
+Dependabot-Alerts
+Development
+OfflineImages
+OfflineTajik
+ReadmeLogo
+ReraiBuild
+ReraiChatbot
+ReraiImages
+SoLoaderCrash
+android-target-sdk-36
+dependabot/npm_and_yarn/luxon-3.7.2
+dependabot/npm_and_yarn/react-native/eslint-config-0.84.1
+dependabot/npm_and_yarn/react-native-async-storage/async-storage-3.0.2
+dependabot/npm_and_yarn/react-native-community/push-notification-ios-1.12.0
+dependabot/npm_and_yarn/react-navigation/native-7.2.2
+fatuApp
+main
+neharuparel-patch-2
+$ gh pr list -R UNICEFECAR/parenting-app-bebbo-mobile --state open (número, data, autor, título)
+#1113 2026-10-19 neharuparel | Development
+#1110 2026-09-19 Mayrisass | Add FUNDING.json for Ethereum funding details
+#1107 2026-09-19 Mayrisass | Patch 2
+#1084 2026-04-02 app/dependabot | Bump @react-native-async-storage/async-storage from 2.2.0 to 3.0.2
+#1083 2026-04-02 app/dependabot | Bump @react-native-community/push-notification-ios from 1.11.0 to 1.12.0
+#1082 2026-04-02 app/dependabot | Bump @react-navigation/native from 6.1.18 to 7.2.2
+#1081 2026-04-02 app/dependabot | Bump luxon from 3.7.1 to 3.7.2
+#1080 2026-04-02 app/dependabot | Bump @react-native/eslint-config from 0.78.2 to 0.84.1
+$ gh issue list -R UNICEFECAR/parenting-app-bebbo-mobile --state open (número, data, título)
+#1069 2026-03-05 | Add New Zealand to Bebbo Pacific
+#991 2024-08-09 | Display FAQ content on Home screen
+#934 2023-09-21 | Proposal: Migrate Documentation from GitHub Wiki to Static Website
+$ git for-each-ref refs/tags/Prod_v2.5.0 refs/tags/Prod_v2.4.4 --format=%(refname:short) %(creatordate:short)
+Prod_v2.4.4 2026-02-16
+Prod_v2.5.0 2026-09-15
+
+# Repositório do CMS (backend de conteúdo)
+$ gh api repos/UNICEFECAR/parenting-app-bebbo-CMS --jq {default_branch,archived,pushed_at,license:.license.spdx_id,language,open_issues:.open_issues_count}
+{"archived":false,"default_branch":"main","language":"PHP","license":"GPL-3.0","open_issues":20,"pushed_at":"2026-10-15T06:00:33Z"}
+$ gh api repos/UNICEFECAR/parenting-app-bebbo-CMS/commits/main --jq .sha + " " + .commit.committer.date
+5060246f34ec7caafb9adf4e00245c2a1a46957c 2026-10-13T09:05:18Z
+
+# Bibliotecas usadas pelo app (situação upstream)
+$ gh api repos/realm/realm-js --jq {full_name,archived,pushed_at}
+{"archived":false,"full_name":"realm/realm-js","pushed_at":"2026-10-21T18:11:25Z"}
+$ gh api repos/zo0r/react-native-push-notification --jq {full_name,archived,pushed_at}
+{"archived":true,"full_name":"zo0r/react-native-push-notification","pushed_at":"2024-01-30T05:26:00Z"}
+$ gh api repos/itinance/react-native-fs --jq {full_name,archived,pushed_at}
+{"archived":false,"full_name":"itinance/react-native-fs","pushed_at":"2024-03-18T00:17:22Z"}
+$ gh api repos/DylanVann/react-native-fast-image --jq {full_name,archived,pushed_at}
+{"archived":false,"full_name":"DylanVann/react-native-fast-image","pushed_at":"2026-10-22T06:24:29Z"}
+$ (README do realm-js, primeiras linhas)
+> [!WARNING]
+> We announced the deprecation of Atlas Device Sync + Realm SDKs in September 2024. For more information please see:
+> - [SDK Deprecation](https://www.mongodb.com/docs/atlas/device-sdks/deprecation/)
+> - [Device Sync Deprecation](https://www.mongodb.com/docs/atlas/app-services/sync/device-sync-deprecation/)
+>
+> For a version of RealmJS without sync features, install from [community on npm](https://www.npmjs.com/package/realm/v/community) or see the `community` git branch.
+$ versões instaladas em node_modules (após npm ci --ignore-scripts)
+react-native 0.78.2
+react 19.0.0
+realm 20.2.0
+@react-native-firebase/app 22.4.0
+react-native-push-notification 8.1.1
+redux-persist 6.0.0
+typescript 5.0.4
+i18next 25.4.2
+fim: 2026-10-22 03:25:18 -0300
