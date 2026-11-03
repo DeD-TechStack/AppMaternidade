@@ -2,7 +2,7 @@
 tipo: decisoes
 status: proposta
 responsavel: Hermes (coordenador da APP-001)
-revisado_em: 2026-10-22
+revisado_em: 2026-11-03
 tarefa: MAT-15
 fontes_principais:
   - 03_Arquitetura/Comparacao_de_Arquiteturas.md
@@ -12,9 +12,9 @@ fontes_principais:
 
 # Decisões para Daniel
 
-Só as decisões que mudam de forma significativa o produto, o custo ou a manutenção. Cada uma traz opções, a recomendação do Hermes, o impacto, o que continua reversível e quando precisa ser tomada. Nenhuma foi tomada: os ADRs continuam "Proposta" até a sua resposta.
+Só as decisões que mudam de forma significativa o produto, o custo ou a manutenção. Cada uma traz opções, a recomendação do Hermes, o impacto, o que continua reversível e quando precisa ser tomada. D8 e D11 foram tomadas em 03/11/2026; D1 foi adiada até o port; as demais seguem abertas.
 
-Para responder, basta indicar o número e a opção (por exemplo, "D1: A; D2: A; D3: A"), aqui na conversa ou num comentário da tarefa correspondente no itsaplan (coluna "Esperando Daniel", http://localhost:3001/oficina/MAT). Cada resposta volta ao ADR correspondente com data, e a tarefa muda de estado. As decisões D1, D2 e D3 bloqueiam a prova técnica (MAT-17); D4 bloqueia a fundação (MAT-18); D5 bloqueia a fatia da comunidade (MAT-19); D6 não bloqueia nada agora; D7 precisa de resposta antes do primeiro push do repositório, que é público.
+Para responder, basta indicar o número e a opção (por exemplo, "D1: A; D2: A; D3: A"), aqui na conversa ou num comentário da tarefa correspondente no itsaplan (coluna "Esperando Daniel", http://localhost:3001/oficina/MAT). Cada resposta volta ao ADR correspondente com data, e a tarefa muda de estado. As decisões D1, D2 e D3 bloqueiam a prova técnica, MAT-17 (no port); D4 bloqueia a fundação (MAT-18); D5 bloqueia a fatia da comunidade (MAT-19); D6 não bloqueia nada agora; D7 precisa de resposta antes do primeiro push do repositório, que é público.
 
 ## Resumo
 
@@ -27,9 +27,14 @@ Para responder, basta indicar o número e a opção (por exemplo, "D1: A; D2: A;
 | D5 | MAT-24 | Pessoas para conteúdo, moderação e jurídico | Revisor de conteúdo registrado, 1 ou 2 moderadores de meio período no piloto, consultoria em LGPD e ECA Digital | Abertura da comunidade e do conteúdo |
 | D6 | MAT-25 | Monetização | Em aberto; sem anúncios direcionados com dados de rotina | Antes do piloto público (não bloqueia a próxima etapa) |
 | D7 | MAT-26 | Registros de testes de acesso em projetos de terceiros | Manter fora do Git; Daniel avisa os mantenedores em particular, pelo canal de segurança de cada projeto | Antes do primeiro push do repositório |
+| D8 | MAT-28 | Stack do site | D8-A: React + TypeScript + Vite, Tailwind 4, shadcn/ui e Magic UI, Supabase e PWA; port pelo Capacitor | — (decidida) |
+| D9 | MAT-29 | Domínio e hospedagem | GitHub Pages do próprio repositório, com Supabase Free na região São Paulo; domínio próprio depois | publicar o site |
+| D10 | MAT-30 | Detector Impeccable | Verificação local, não bloqueante e com versão fixa | portão final (MAT-42) |
+| D11 | MAT-31 | REA e sala limpa | Sala limpa reduzida e declarada | — (decidida) |
 
 ## D1 — Framework mobile
 
+- **Estado:** Adiada até o port (ADR-009).
 - **Opções:** (A) React Native + Expo; (B) Flutter; (C) Kotlin Multiplatform com UI nativa.
 - **Recomendação:** A. Detalhes no [ADR-002](../06_ADRs/ADR-002_Framework_Mobile.md).
   - Com o EAS, o ciclo de iOS inteiro roda a partir do Windows num fluxo integrado: build, assinatura, instalação no iPhone e TestFlight.
@@ -42,6 +47,7 @@ Para responder, basta indicar o número e a opção (por exemplo, "D1: A; D2: A;
 
 ## D2 — Conjunto de dados, backend e região
 
+- **Estado:** Respondida em parte pela D8: backend Supabase na região São Paulo. A sincronização offline nativa volta a ser decidida no port.
 - **Opções:** (A) Supabase + PowerSync + serviço de domínio próprio (Conjunto B); (B) API própria com sincronização própria (Conjunto C); (C) Firebase (Conjunto A).
 - **Recomendação:** A. O protocolo de escrita (conflitos, permissões, revogação) fica sob nosso controle; a fila offline e o download parcial vêm prontos; a saída para a opção B não exige refazer o servidor. Detalhes no [ADR-003](../06_ADRs/ADR-003_Backend_Persistencia_Autenticacao.md) e na [Comparação de arquiteturas](../03_Arquitetura/Comparacao_de_Arquiteturas.md).
 - **Impacto:**
@@ -55,6 +61,7 @@ Para responder, basta indicar o número e a opção (por exemplo, "D1: A; D2: A;
 
 ## D3 — Quem publica e contas nas lojas
 
+- **Estado:** Contas de loja: só no port.
 - **Opções:** (A) pessoa jurídica; (B) pessoa física.
 - **Recomendação:** A. A diretriz 5.1.1(ix) da Apple diz que apps de setores regulados, como saúde, ou que exigem informação sensível devem ser enviados por pessoa jurídica; o Google indica conta de organização para apps de saúde; o Marco Civil e a tese do STF também falam em pessoa jurídica. Se isso se aplica a este app precisa de validação jurídica. Ver [Pesquisa de privacidade, legal e lojas](../08_Referencias/Pesquisa_Privacidade_Legal_e_Lojas.md).
 - **Impacto:** conta de organização na Play não tem a exigência de teste fechado com 12 testadores por 14 dias, que vale para contas pessoais criadas depois de 13/11/2023. Contas de organização nas duas lojas exigem número D-U-N-S, e a da Apple pede também site e e-mail com domínio próprio. Como pessoa física, o nome legal de Daniel aparece como vendedor na App Store. Abrir a empresa tem custos próprios (abertura, contabilidade), não levantados. Custos das lojas em 22/10/2026: Apple US$ 99/ano; Google Play US$ 25 uma vez.
@@ -63,6 +70,7 @@ Para responder, basta indicar o número e a opção (por exemplo, "D1: A; D2: A;
 
 ## D4 — Recorte do MVP
 
+- **Estado:** Respondida em parte: o site sai com todas as funcionalidades; público e idade mínima continuam abertos.
 - **Proposta:** bebês de 0 a 12 meses; Brasil, em pt-BR; usuários adultos de 18 anos ou mais; comunidade só com texto, sem mensagens diretas; sem IA generativa respondendo a usuários; sem anúncios; web com site público e painel interno, sem app web para famílias.
 - **Por quê:** reduz riscos de saúde, de moderação e do ECA Digital enquanto o núcleo é validado. Detalhes em [Visão e escopo](../01_Produto/Visao_e_Escopo.md), [ADR-001](../06_ADRs/ADR-001_Plataformas_e_Web.md), [ADR-006](../06_ADRs/ADR-006_Comunidade_e_Moderacao.md) e [ADR-007](../06_ADRs/ADR-007_Conteudo_Educativo_e_IA.md).
 - **Impacto:** pais adolescentes ficam de fora no MVP; gestação fica para depois.
@@ -95,6 +103,37 @@ Para responder, basta indicar o número e a opção (por exemplo, "D1: A; D2: A;
 - **Impacto:** nenhum no AppMaternidade. As lições já estão nas fichas e nos cenários Q-06 de [Qualidade e validação](../05_Privacidade_Operacao/Qualidade_e_Validacao.md).
 - **Reversível:** A e B sim. C não.
 - **Quando:** antes do primeiro push do repositório, porque o remoto é público.
+
+## D8, stack do site (MAT-28): decidida
+
+Decidida em 03/11/2026, por delegação de Daniel: opção A.
+
+| Opção | O que é | Prós | Contras |
+|---|---|---|---|
+| A (escolhida) | React + TypeScript + Vite, Tailwind 4, shadcn/ui e Magic UI, Supabase e PWA; port pelo Capacitor | Usa os componentes da lista; hospedagem estática barata; o port reaproveita o código | Recursos nativos avançados pedem plugin |
+| B | Next.js (App Router), com a mesma UI e o mesmo backend | Renderização no servidor e SEO | Mais peças para operar; a hospedagem ideal é a Vercel, cujo plano Hobby não permitiria uso comercial ("a confirmar": sem fonte datada no cofre) |
+| C | Expo Router com React Native Web | Melhor reaproveitamento num app nativo | Não usa shadcn/ui nem Magic UI, que dependem do DOM; contraria a regra de componentes |
+
+## D9, domínio e hospedagem (MAT-29): aberta, com Daniel
+
+- **Recomendação:** GitHub Pages do próprio repositório, publicado por GitHub Actions, com Supabase Free na região São Paulo. Domínio próprio fica para depois. Custo zero.
+- **Alternativas:** Cloudflare Pages, Netlify ou Vercel nos planos grátis; Supabase Pro quando houver usuários reais.
+- **Publicar exige push autorizado.** Antes dele: a D7 (MAT-26) e a retirada de caminhos locais `C:/Users/...` de três documentos.
+
+## D10, detector Impeccable (MAT-30): aberta, com Daniel
+
+- **Recomendação:** liberar como verificação local, não bloqueante e com versão fixa, depois da avaliação do coordenador pela `skill-scouting`.
+- **Alternativa:** não usar, porque G4 a G6 já cobrem o critério.
+
+## D11, REA e sala limpa (MAT-31): decidida
+
+Decidida em 03/11/2026: opção A, sala limpa reduzida e declarada.
+- A REA roda pela CLI (`rea-agents@6.8.0`).
+- O analista é o líder, com rede só para a referência.
+- O reconstrutor recebe só a especificação filtrada.
+- O verificador (revisor-appmaternidade) só relata.
+- **Limite:** mesma conta do Windows; o isolamento é por instrução e permissão.
+- **Alternativas avaliadas:** B, conta ou contêiner isolado; C, sem REA.
 
 ## O que não precisa de decisão agora
 
