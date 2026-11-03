@@ -1,3 +1,20 @@
-body {
-  margin: 0;
+@import 'tailwindcss';
+@import './styles/tokens.css';
+
+@layer base {
+  body {
+    margin: 0;
+    background-color: var(--color-papel);
+    color: var(--color-tinta);
+  }
+
+  a {
+    color: var(--color-tinta);
+    text-decoration: underline;
+  }
+
+  a:focus-visible {
+    outline: 2px solid var(--color-destaque);
+    outline-offset: 2px;
+  }
 }
