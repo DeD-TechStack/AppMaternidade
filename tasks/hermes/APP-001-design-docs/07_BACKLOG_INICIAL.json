@@ -1,0 +1,441 @@
+{
+  "schema_version": 1,
+  "kind": "conceptual_backlog_seed",
+  "project": "AppMaternidade",
+  "prepared_on": "2026-10-22",
+  "notes": [
+    "IDs seed_id são locais, não IDs do itsaplan.",
+    "Mapear campos, estados e dependências para o esquema real da integração.",
+    "Criação de tarefas não autoriza disparo automático de agentes.",
+    "Tarefas future não fazem parte do aceite documental."
+  ],
+  "tasks": [
+    {
+      "seed_id": "DOC-001",
+      "title": "Conferir contexto, escopo e checkpoint",
+      "phase": "design",
+      "workstream": "Descoberta e escopo",
+      "priority": "normal",
+      "status_hint": "Backlog",
+      "depends_on": [],
+      "objective": "Ler pedido direto e contexto, inspecionar workspace, preservar trabalho existente e iniciar progresso.",
+      "deliverables": [
+        "00_Inicio/Progresso.md"
+      ],
+      "acceptance": [
+        "Android/iOS fixos; web/stack abertas.",
+        "Resumo da outra IA não inicia implementação automaticamente.",
+        "Estado Git e próxima ação registrados."
+      ],
+      "auto_dispatch": false
+    },
+    {
+      "seed_id": "DOC-002",
+      "title": "Criar e verificar projeto AppMaternidade no itsaplan",
+      "phase": "design",
+      "workstream": "Operação e entrega",
+      "priority": "normal",
+      "status_hint": "Backlog",
+      "depends_on": [
+        "DOC-001"
+      ],
+      "objective": "Identificar instância/workspace e criar ou reutilizar projeto correspondente à task.",
+      "deliverables": [
+        "00_Inicio/Registro_Organizacao.md",
+        "Projeto e tarefas no itsaplan"
+      ],
+      "acceptance": [
+        "URL/ID/chave reais relidos.",
+        "Sem duplicação nem alteração de outros projetos.",
+        "Semente mapeada ao esquema real, sem disparar agentes automaticamente."
+      ],
+      "auto_dispatch": false
+    },
+    {
+      "seed_id": "DOC-003",
+      "title": "Criar cofre no Obsidian normal e Home",
+      "phase": "design",
+      "workstream": "Operação e entrega",
+      "priority": "normal",
+      "status_hint": "Backlog",
+      "depends_on": [
+        "DOC-001"
+      ],
+      "objective": "Registrar pasta própria como cofre no perfil normal e organizar os documentos canônicos.",
+      "deliverables": [
+        "00_Inicio/Home.md",
+        "00_Inicio/Registro_Organizacao.md"
+      ],
+      "acceptance": [
+        "Cofre AppMaternidade aberto no perfil normal.",
+        "Caminho e perfil comprovados.",
+        "Não usa Obsidian Oficina nem duplica textos editáveis."
+      ],
+      "auto_dispatch": false
+    },
+    {
+      "seed_id": "DOC-004",
+      "title": "Pesquisar concorrentes e definir hipótese de produto",
+      "phase": "design",
+      "workstream": "Descoberta e escopo",
+      "priority": "normal",
+      "status_hint": "Backlog",
+      "depends_on": [
+        "DOC-001"
+      ],
+      "objective": "Comparar Napper e referências atuais, validar lacunas e propor escopo.",
+      "deliverables": [
+        "01_Produto/Visao_e_Escopo.md",
+        "01_Produto/Concorrentes_e_Diferenciais.md"
+      ],
+      "acceptance": [
+        "Fontes/data e limitações por produto.",
+        "Rotina, desenvolvimento, comunidade e família incluídos.",
+        "Ausência de tummy time no Napper não presumida."
+      ],
+      "auto_dispatch": false
+    },
+    {
+      "seed_id": "DOC-005",
+      "title": "Analisar quatro repositórios e licenças",
+      "phase": "design",
+      "workstream": "Referências e licenças",
+      "priority": "normal",
+      "status_hint": "Backlog",
+      "depends_on": [
+        "DOC-001"
+      ],
+      "objective": "Inspecionar código e documentos em commits conhecidos; distinguir conceito e reutilização.",
+      "deliverables": [
+        "08_Referencias/Analise_dos_Repositorios.md",
+        "08_Referencias/Licencas_e_Fontes.md"
+      ],
+      "acceptance": [
+        "Quatro SHAs, licenças e permalinks.",
+        "Achados de código separados de execução/documentação.",
+        "Limites de reutilização do Sprout e Bebbo tratados."
+      ],
+      "auto_dispatch": false
+    },
+    {
+      "seed_id": "DOC-006",
+      "title": "Desenhar jornadas e navegação mobile",
+      "phase": "design",
+      "workstream": "Experiência mobile",
+      "priority": "normal",
+      "status_hint": "Backlog",
+      "depends_on": [
+        "DOC-004"
+      ],
+      "objective": "Propor telas e fluxos rápidos, acessíveis e adequados a cuidados noturnos.",
+      "deliverables": [
+        "02_Experiencia/Fluxos_e_Telas.md"
+      ],
+      "acceptance": [
+        "Onboarding, registro, timer, convite, histórico e comunidade.",
+        "Estados offline/conflito/erro e acessibilidade.",
+        "Android e iOS considerados."
+      ],
+      "auto_dispatch": false
+    },
+    {
+      "seed_id": "DOC-007",
+      "title": "Comparar mobile e arquiteturas completas",
+      "phase": "design",
+      "workstream": "Arquitetura e dados",
+      "priority": "normal",
+      "status_hint": "Backlog",
+      "depends_on": [
+        "DOC-004",
+        "DOC-005"
+      ],
+      "objective": "Comparar frameworks e três conjuntos completos com SDKs reais e caminho iOS.",
+      "deliverables": [
+        "03_Arquitetura/Comparacao_de_Arquiteturas.md",
+        "03_Arquitetura/Arquitetura_Proposta.md"
+      ],
+      "acceptance": [
+        "Recomendação provisória e alternativa.",
+        "SDK/runtime Firebase explicitados.",
+        "Sync real, custos e manutenção comparados."
+      ],
+      "auto_dispatch": false
+    },
+    {
+      "seed_id": "DOC-008",
+      "title": "Especificar modelo e permissões",
+      "phase": "design",
+      "workstream": "Arquitetura e dados",
+      "priority": "normal",
+      "status_hint": "Backlog",
+      "depends_on": [
+        "DOC-007"
+      ],
+      "objective": "Modelar famílias, cuidadores, bebês, registros e comunidade com fronteiras de acesso.",
+      "deliverables": [
+        "03_Arquitetura/Modelo_de_Dados_e_Permissoes.md"
+      ],
+      "acceptance": [
+        "Matriz de permissões e invariantes.",
+        "Participação na comunidade não dá acesso ao bebê.",
+        "Anexos e operações privilegiadas cobertos."
+      ],
+      "auto_dispatch": false
+    },
+    {
+      "seed_id": "DOC-009",
+      "title": "Especificar offline, conflitos e temporizadores",
+      "phase": "design",
+      "workstream": "Arquitetura e dados",
+      "priority": "normal",
+      "status_hint": "Backlog",
+      "depends_on": [
+        "DOC-008"
+      ],
+      "objective": "Definir protocolo e comportamentos nos cenários de falha e concorrência.",
+      "deliverables": [
+        "03_Arquitetura/Offline_Sincronizacao_e_Temporizadores.md"
+      ],
+      "acceptance": [
+        "Idempotência, conflito, exclusão e revogação.",
+        "Kill/reopen e timestamps/fuso.",
+        "Limite de remoção remota em aparelho offline descrito."
+      ],
+      "auto_dispatch": false
+    },
+    {
+      "seed_id": "DOC-010",
+      "title": "Definir comunidade e moderação",
+      "phase": "design",
+      "workstream": "Comunidade e conteúdo",
+      "priority": "normal",
+      "status_hint": "Backlog",
+      "depends_on": [
+        "DOC-004"
+      ],
+      "objective": "Comparar tópicos assíncronos, salas e evolução; definir operação mínima.",
+      "deliverables": [
+        "04_Comunidade_Conteudo/Comunidade_e_Moderacao.md"
+      ],
+      "acceptance": [
+        "Formato recomendado com consequências.",
+        "Denúncia, bloqueio e ação de moderação.",
+        "Separação da identidade pública e rotina."
+      ],
+      "auto_dispatch": false
+    },
+    {
+      "seed_id": "DOC-011",
+      "title": "Definir tummy time e ciclo editorial",
+      "phase": "design",
+      "workstream": "Comunidade e conteúdo",
+      "priority": "normal",
+      "status_hint": "Backlog",
+      "depends_on": [
+        "DOC-004",
+        "DOC-005"
+      ],
+      "objective": "Planejar atividade, histórico e conteúdo educativo por fase.",
+      "deliverables": [
+        "04_Comunidade_Conteudo/Desenvolvimento_e_Conteudo.md"
+      ],
+      "acceptance": [
+        "Sessão e registro retrospectivo.",
+        "Fonte, revisão, versão e limites de conteúdo.",
+        "Sem metas clínicas ou orientações inventadas."
+      ],
+      "auto_dispatch": false
+    },
+    {
+      "seed_id": "DOC-012",
+      "title": "Documentar privacidade e segurança",
+      "phase": "design",
+      "workstream": "Operação e entrega",
+      "priority": "normal",
+      "status_hint": "Backlog",
+      "depends_on": [
+        "DOC-008",
+        "DOC-009",
+        "DOC-010",
+        "DOC-011"
+      ],
+      "objective": "Detalhar minimização, retenção, exclusão/exportação, administração e incidentes.",
+      "deliverables": [
+        "05_Privacidade_Operacao/Privacidade_e_Seguranca.md"
+      ],
+      "acceptance": [
+        "Banco, anexos, sync, logs e notificações cobertos.",
+        "Obrigações de lançamento a verificar em fontes oficiais.",
+        "Não declarar conformidade sem validação."
+      ],
+      "auto_dispatch": false
+    },
+    {
+      "seed_id": "DOC-013",
+      "title": "Estimar custos e operação",
+      "phase": "design",
+      "workstream": "Operação e entrega",
+      "priority": "normal",
+      "status_hint": "Backlog",
+      "depends_on": [
+        "DOC-007",
+        "DOC-010"
+      ],
+      "objective": "Comparar protótipo, lançamento e crescimento com carga e preços datados.",
+      "deliverables": [
+        "05_Privacidade_Operacao/Custos_e_Operacao.md"
+      ],
+      "acceptance": [
+        "Premissas de famílias/operações/mídia/builds.",
+        "Moderação, backups e suporte incluídos.",
+        "Sem contratação nem promessa de gratuito permanente."
+      ],
+      "auto_dispatch": false
+    },
+    {
+      "seed_id": "DOC-014",
+      "title": "Definir qualidade e provas técnicas",
+      "phase": "design",
+      "workstream": "Operação e entrega",
+      "priority": "normal",
+      "status_hint": "Backlog",
+      "depends_on": [
+        "DOC-006",
+        "DOC-009",
+        "DOC-012"
+      ],
+      "objective": "Especificar validação baseada nos riscos do produto.",
+      "deliverables": [
+        "05_Privacidade_Operacao/Qualidade_e_Validacao.md"
+      ],
+      "acceptance": [
+        "Cenários Q-01 a Q-12 com entrada/resultado/evidência.",
+        "Estratégia Android/iOS físicos.",
+        "Plano de teste distinto de teste executado."
+      ],
+      "auto_dispatch": false
+    },
+    {
+      "seed_id": "DOC-015",
+      "title": "Consolidar ADRs, decisões e roadmap",
+      "phase": "design",
+      "workstream": "Operação e entrega",
+      "priority": "normal",
+      "status_hint": "Backlog",
+      "depends_on": [
+        "DOC-005",
+        "DOC-006",
+        "DOC-007",
+        "DOC-008",
+        "DOC-009",
+        "DOC-010",
+        "DOC-011",
+        "DOC-012",
+        "DOC-013",
+        "DOC-014"
+      ],
+      "objective": "Conectar recomendações à próxima fatia funcional e questões de Daniel.",
+      "deliverables": [
+        "06_ADRs/",
+        "07_Roadmap/Roadmap_e_Proxima_Fatia.md",
+        "07_Roadmap/Decisoes_para_Daniel.md"
+      ],
+      "acceptance": [
+        "ADRs completos podem permanecer Proposta.",
+        "Web separada por três papéis.",
+        "Implementação futura tem escopo/aceite e dependências."
+      ],
+      "auto_dispatch": false
+    },
+    {
+      "seed_id": "DOC-016",
+      "title": "Revisar documentação e entregar recibos",
+      "phase": "design",
+      "workstream": "Operação e entrega",
+      "priority": "normal",
+      "status_hint": "Backlog",
+      "depends_on": [
+        "DOC-002",
+        "DOC-003",
+        "DOC-015"
+      ],
+      "objective": "Conferir documentos, links, backlog e integrações; entregar relatório final.",
+      "deliverables": [
+        "00_Inicio/Progresso.md",
+        "Relatorio_Final.md"
+      ],
+      "acceptance": [
+        "Critérios 06_CRITERIOS_DE_ACEITE.md preenchidos.",
+        "Projeto itsaplan e cofre verificados.",
+        "Pendências e decisões não mascaradas como concluídas."
+      ],
+      "auto_dispatch": false
+    },
+    {
+      "seed_id": "FUT-001",
+      "title": "Validar a stack escolhida com uma prova pequena",
+      "phase": "future",
+      "workstream": "Arquitetura e dados",
+      "priority": "future",
+      "status_hint": "Backlog",
+      "depends_on": [
+        "DOC-015"
+      ],
+      "objective": "Após resolver as decisões necessárias, validar a combinação concreta Android/iOS e offline.",
+      "deliverables": [
+        "Prova técnica isolada",
+        "Relatório de resultados"
+      ],
+      "acceptance": [
+        "Etapa futura, fora do aceite documental.",
+        "Somente riscos relevantes e casos de sync prioritários.",
+        "Sem dados reais nem contratação implícita."
+      ],
+      "auto_dispatch": false
+    },
+    {
+      "seed_id": "FUT-002",
+      "title": "Construir fundação e primeira fatia de cuidados",
+      "phase": "future",
+      "workstream": "Arquitetura e dados",
+      "priority": "future",
+      "status_hint": "Backlog",
+      "depends_on": [
+        "FUT-001"
+      ],
+      "objective": "Implementar família/bebê, outro cuidador, tummy time, histórico e sincronização.",
+      "deliverables": [
+        "Base executável",
+        "Instruções de execução"
+      ],
+      "acceptance": [
+        "Fluxo de ponta a ponta real.",
+        "Offline/concorrência/isolation conforme design.",
+        "Não confundir telas estáticas com funcionalidade."
+      ],
+      "auto_dispatch": false
+    },
+    {
+      "seed_id": "FUT-003",
+      "title": "Entregar fatia inicial da comunidade",
+      "phase": "future",
+      "workstream": "Comunidade e conteúdo",
+      "priority": "future",
+      "status_hint": "Backlog",
+      "depends_on": [
+        "FUT-002"
+      ],
+      "objective": "Implementar formato aprovado com tópico/resposta, denúncia e separação da rotina privada.",
+      "deliverables": [
+        "Comunidade utilizável no recorte aprovado"
+      ],
+      "acceptance": [
+        "Permissões e moderação verificadas.",
+        "Sem acesso automático aos dados do bebê.",
+        "Não disparar esta tarefa durante a fase documental."
+      ],
+      "auto_dispatch": false
+    }
+  ]
+}
+
