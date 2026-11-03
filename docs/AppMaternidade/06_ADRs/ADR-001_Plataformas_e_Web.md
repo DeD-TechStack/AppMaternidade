@@ -1,7 +1,7 @@
 ---
 tipo: adr
 id: ADR-001
-status: Proposta
+status: Substituída em parte pelo ADR-009 (plataformas); as regras do painel interno continuam valendo
 data: 2026-10-22
 autor: Hermes (coordenador da APP-001)
 aprovador: nenhum até agora
@@ -10,7 +10,9 @@ tarefas: MAT-4, MAT-6, MAT-15
 
 # ADR-001 — Plataformas, papéis da web e limites do MVP
 
-**Status:** Proposta. Recomendação técnica do Hermes; não aprovada por Daniel.
+> Nota de 03/11/2026: Daniel mudou o rumo para site completo primeiro e port depois. Ver [ADR-009](ADR-009_Site_Completo_Primeiro.md). O texto abaixo fica como registro da APP-001.
+
+**Status:** Substituída em parte pelo ADR-009 (plataformas); as regras do painel interno continuam valendo
 
 ## Contexto e requisitos
 

@@ -10,6 +10,8 @@ tarefas: MAT-7, MAT-15, MAT-17
 
 # ADR-002 — Framework mobile e estratégia Android e iOS
 
+> Nota de 03/11/2026: Daniel mudou o rumo para site completo primeiro e port depois. Ver [ADR-009](ADR-009_Site_Completo_Primeiro.md). O texto abaixo fica como registro da APP-001.
+
 **Status:** Proposta. Recomendação técnica do Hermes; não aprovada por Daniel.
 
 ## Contexto e requisitos
