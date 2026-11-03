@@ -10,6 +10,8 @@ tarefas: MAT-10, MAT-15, MAT-18, MAT-19
 
 # ADR-006 — Formato de comunidade e capacidade de moderação
 
+> Nota de 03/11/2026: o rumo mudou para site completo primeiro e port Android e iOS depois ([ADR-009](ADR-009_Site_Completo_Primeiro.md)). Onde este texto fala em app nativo, leia como o port; o site cobre as mesmas funções.
+
 **Status:** Proposta. Recomendação técnica do Hermes; não aprovada por Daniel.
 
 ## Contexto e requisitos

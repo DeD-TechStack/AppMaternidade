@@ -7,6 +7,8 @@ revisado_em: 2026-10-22
 
 # AppMaternidade
 
+> Nota de 03/11/2026: o rumo mudou para site completo primeiro e port Android e iOS depois ([ADR-009](../06_ADRs/ADR-009_Site_Completo_Primeiro.md)). Onde este texto fala em app nativo, leia como o port; o site cobre as mesmas funções.
+
 Nome provisório. É um aplicativo Android e iOS para mães, pais e outros cuidadores autorizados. Serve para:
 
 - acompanhar a rotina e o desenvolvimento do bebê;
@@ -15,12 +17,12 @@ Nome provisório. É um aplicativo Android e iOS para mães, pais e outros cuida
 
 ## Etapa atual
 
-A task APP-001, de 22/10/2026, cobre pesquisa, design docs e organização. Nenhuma stack está aprovada: as recomendações deste cofre são propostas do Hermes até uma decisão de Daniel. A implementação funcional é a etapa seguinte do roadmap.
+A task APP-001, de 22/10/2026, cobre pesquisa, design docs e organização. A stack do site está decidida no ADR-009 (D8); as demais recomendações deste cofre seguem como propostas do Hermes até uma decisão de Daniel. A implementação funcional é a etapa seguinte do roadmap.
 
 ## Por onde começar
 
 1. [Relatório final da APP-001](Relatorio_Final_APP-001.md): o que foi entregue, a recomendação e o que falta.
-2. [Decisões para Daniel](../07_Roadmap/Decisoes_para_Daniel.md): de D1 a D7.
+2. [Decisões para Daniel](../07_Roadmap/Decisoes_para_Daniel.md): de D1 a D11.
 3. [Visão e escopo](../01_Produto/Visao_e_Escopo.md) e [Arquitetura proposta](../03_Arquitetura/Arquitetura_Proposta.md).
 
 Apoio:
@@ -60,7 +62,7 @@ Status entre parênteses: proposta, rascunho ou Proposta (para ADR).
 - [Custos e operação](../05_Privacidade_Operacao/Custos_e_Operacao.md) (proposta)
 - [Qualidade e validação](../05_Privacidade_Operacao/Qualidade_e_Validacao.md) (proposta)
 
-**06 ADRs (todos com status Proposta)**
+**06 ADRs (ADR-009 Aceita; ADR-001 substituída em parte; os demais Proposta)**
 
 - [ADR-001 Plataformas e web](../06_ADRs/ADR-001_Plataformas_e_Web.md)
 - [ADR-002 Framework mobile](../06_ADRs/ADR-002_Framework_Mobile.md)

@@ -18,6 +18,8 @@ fontes_principais:
 
 # Comparação de arquiteturas
 
+> Nota de 03/11/2026: o rumo mudou para site completo primeiro e port Android e iOS depois ([ADR-009](../06_ADRs/ADR-009_Site_Completo_Primeiro.md)). Onde este texto fala em app nativo, leia como o port; o site cobre as mesmas funções.
+
 Proposta do Hermes. Nenhuma tecnologia está aprovada e nada foi construído ou medido: as comparações vêm de documentação oficial, de consultas aos registros de pacotes e de inferências marcadas como [HIP]. A decisão fica nos [ADR-002](../06_ADRs/ADR-002_Framework_Mobile.md) e [ADR-003](../06_ADRs/ADR-003_Backend_Persistencia_Autenticacao.md), que dependem de Daniel e da prova técnica (MAT-17).
 
 Regras do pacote seguidas aqui:

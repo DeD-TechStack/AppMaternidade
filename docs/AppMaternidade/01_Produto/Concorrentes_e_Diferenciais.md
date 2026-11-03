@@ -19,6 +19,8 @@ fontes_principais:
 
 # Concorrentes e diferenciais
 
+> Nota de 03/11/2026: o rumo mudou para site completo primeiro e port Android e iOS depois ([ADR-009](../06_ADRs/ADR-009_Site_Completo_Primeiro.md)). Onde este texto fala em app nativo, leia como o port; o site cobre as mesmas funções.
+
 Síntese das oito fichas de concorrentes, consultadas em 22/10/2026. As fichas usaram só fontes públicas: sites, lojas, centrais de ajuda, políticas de privacidade, blogs e avaliações. Nenhum app foi instalado, nenhuma conta foi criada e não houve engenharia reversa. Por isso, as afirmações sobre os produtos são [DOC] (declarado pelo próprio produto) ou [HIP] (inferência, ausência nas fontes ou relato isolado). Nada aqui é [EXEC]. Os códigos entre colchetes (N01, H05, PW13…) remetem à tabela de fontes da ficha de cada produto.
 
 "Não encontrado" significa ausência nas fontes consultadas, não prova de que o recurso não exista.

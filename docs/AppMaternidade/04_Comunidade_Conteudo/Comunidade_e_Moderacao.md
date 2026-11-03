@@ -16,6 +16,8 @@ fontes_principais:
 
 # Comunidade e moderação
 
+> Nota de 03/11/2026: o rumo mudou para site completo primeiro e port Android e iOS depois ([ADR-009](../06_ADRs/ADR-009_Site_Completo_Primeiro.md)). Onde este texto fala em app nativo, leia como o port; o site cobre as mesmas funções.
+
 Proposta de formato, regras e operação da comunidade do AppMaternidade, a partir da [pesquisa de comunidade e conteúdo](../08_Referencias/Pesquisa_Comunidade_e_Conteudo.md) e das fichas de concorrentes. Os números entre colchetes, como [1], remetem às fontes dessa pesquisa, consultadas em 22/10/2026. Os códigos F01 a F50 remetem à [pesquisa de privacidade, legal e lojas](../08_Referencias/Pesquisa_Privacidade_Legal_e_Lojas.md). Os códigos BC, KN e PN remetem às tabelas de fontes das fichas [BabyCenter](../08_Referencias/Concorrentes/BabyCenter.md), [Kinedu](../08_Referencias/Concorrentes/Kinedu.md) e [Peanut](../08_Referencias/Concorrentes/Peanut.md).
 
 Tudo aqui é [HIP], salvo indicação: nada foi testado com usuários nem validado juridicamente.

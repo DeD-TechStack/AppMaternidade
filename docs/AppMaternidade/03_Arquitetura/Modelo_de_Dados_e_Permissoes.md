@@ -13,6 +13,8 @@ fontes_principais:
 
 # Modelo de dados e permissões
 
+> Nota de 03/11/2026: o rumo mudou para site completo primeiro e port Android e iOS depois ([ADR-009](../06_ADRs/ADR-009_Site_Completo_Primeiro.md)). Onde este texto fala em app nativo, leia como o port; o site cobre as mesmas funções.
+
 Proposta do Hermes, ainda não aprovada por Daniel. O modelo é lógico: vale para qualquer um dos conjuntos de arquitetura comparados em [Comparação de arquiteturas](Comparacao_de_Arquiteturas.md). Nomes de tabelas, tipos de coluna e índices ficam para a implementação.
 
 ## 1. Problema

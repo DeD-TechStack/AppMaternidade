@@ -17,6 +17,8 @@ fontes_principais:
 
 # Desenvolvimento e conteúdo
 
+> Nota de 03/11/2026: o rumo mudou para site completo primeiro e port Android e iOS depois ([ADR-009](../06_ADRs/ADR-009_Site_Completo_Primeiro.md)). Onde este texto fala em app nativo, leia como o port; o site cobre as mesmas funções.
+
 Proposta para o pilar de desenvolvimento. Cobre:
 
 - tummy time na rotina;

@@ -15,6 +15,8 @@ fontes_principais:
 
 # Fluxos e telas
 
+> Nota de 03/11/2026: o rumo mudou para site completo primeiro e port Android e iOS depois ([ADR-009](../06_ADRs/ADR-009_Site_Completo_Primeiro.md)). Onde este texto fala em app nativo, leia como o port; o site cobre as mesmas funções.
+
 Proposta do Hermes para a experiência mobile em Android e iOS. A navegação é hipótese a testar com cuidadores reais; nada aqui é layout final nem identidade visual. Os wireframes são esquemas de conteúdo, sem estilo.
 
 ## 1. Princípios

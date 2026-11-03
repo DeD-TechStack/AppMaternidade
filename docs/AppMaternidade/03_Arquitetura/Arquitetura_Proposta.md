@@ -16,6 +16,8 @@ fontes_principais:
 
 # Arquitetura proposta
 
+> Nota de 03/11/2026: o rumo mudou para site completo primeiro e port Android e iOS depois ([ADR-009](../06_ADRs/ADR-009_Site_Completo_Primeiro.md)). Onde este texto fala em app nativo, leia como o port; o site cobre as mesmas funções.
+
 Proposta do Hermes, derivada da recomendação em [Comparação de arquiteturas](Comparacao_de_Arquiteturas.md). Não foi aprovada nem construída. Descreve fronteiras, responsabilidades, interfaces e o caminho dos dados; regras de negócio estão em [Modelo de dados e permissões](Modelo_de_Dados_e_Permissoes.md) e [Offline, sincronização e temporizadores](Offline_Sincronizacao_e_Temporizadores.md), que valem para qualquer conjunto.
 
 ## 1. Visão geral

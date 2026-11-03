@@ -18,6 +18,8 @@ fontes_principais:
 
 # Privacidade e segurança
 
+> Nota de 03/11/2026: o rumo mudou para site completo primeiro e port Android e iOS depois ([ADR-009](../06_ADRs/ADR-009_Site_Completo_Primeiro.md)). Onde este texto fala em app nativo, leia como o port; o site cobre as mesmas funções.
+
 > **Não é parecer jurídico.** Este documento transforma a [pesquisa de privacidade, legal e lojas](../08_Referencias/Pesquisa_Privacidade_Legal_e_Lojas.md) em propostas de produto e de arquitetura. Ele não declara que o AppMaternidade está em conformidade com nenhuma lei ou política de loja. Toda obrigação listada precisa ser conferida no texto oficial e validada por profissional antes do lançamento.
 
 Os códigos F01 a F50 remetem à tabela de fontes da pesquisa, consultada em 22/10/2026. As marcas [DOC] e [HIP] seguem as [Convenções](../00_Inicio/Convencoes.md).

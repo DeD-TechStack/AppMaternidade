@@ -13,6 +13,8 @@ fontes_principais:
 
 # Visão e escopo
 
+> Nota de 03/11/2026: o rumo mudou para site completo primeiro e port Android e iOS depois ([ADR-009](../06_ADRs/ADR-009_Site_Completo_Primeiro.md)). Onde este texto fala em app nativo, leia como o port; o site cobre as mesmas funções.
+
 Proposta do Hermes. O nome AppMaternidade é provisório; escopo etário, mercado inicial, monetização e papel da web aguardam decisão de Daniel (ver [Decisões para Daniel](../07_Roadmap/Decisoes_para_Daniel.md)).
 
 ## 1. Problema
@@ -76,7 +78,7 @@ Personas são hipóteses de projeto, a validar em entrevistas.
 
 | ID | Requisito | Como verificar |
 | --- | --- | --- |
-| RNF-01 | Android e iOS com o mesmo conjunto de funções do MVP | Testes em aparelhos físicos das duas plataformas |
+| RNF-01 | site completo primeiro; Android e iOS com o mesmo conjunto de funções do MVP no port | teste no navegador (site) e, no port, nos aparelhos |
 | RNF-02 | Registros essenciais funcionam sem conexão (alcance definido no documento de sincronização) | Cenários Q-01, Q-02 e Q-08 de [Qualidade e validação](../05_Privacidade_Operacao/Qualidade_e_Validacao.md) |
 | RNF-03 | Isolamento entre famílias em consultas, escritas, arquivos, sincronização e notificações | Cenário Q-06 e testes de autorização por rota |
 | RNF-04 | Comunidade sem acesso à rotina privada | Cenário Q-07 |
@@ -99,6 +101,8 @@ Métricas a medir num piloto; os alvos são hipóteses para discussão, não res
 
 ## 9. Recorte em etapas
 
+No rumo atual, ver ADR-009.
+
 | Etapa | O que entra | O que prova |
 | --- | --- | --- |
 | Fundação técnica | Projeto mobile nas duas plataformas, autenticação, família, vínculo, bebê, banco local com fila, sincronização mínima, autorização no servidor, testes de isolamento | Que a arquitetura escolhida aguenta offline, troca de turno e revogação |
@@ -109,9 +113,13 @@ A próxima fatia funcional a implementar está em [Roadmap e próxima fatia](../
 
 ## 10. Fora do MVP
 
+No rumo atual, ver ADR-009.
+
 Previsão de sono, IA generativa, reconhecimento por câmera, wearables e monitores, chat em tempo real, salas de áudio ou vídeo, telemedicina, marketplace, anúncios e gestação. Qualquer um volta só com utilidade demonstrada, avaliação de privacidade e custo justificado.
 
 ## 11. Web: três perguntas separadas
+
+No rumo atual, ver ADR-009.
 
 | Papel da web | Proposta | Quando |
 | --- | --- | --- |
