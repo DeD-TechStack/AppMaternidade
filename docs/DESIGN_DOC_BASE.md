@@ -244,6 +244,8 @@ A stack do site é a D8-A, **decidida por delegação de Daniel em 03/11/2026** 
 | Regras de domínio | Camada TypeScript proposta na APP-001, com a autorização aplicada no banco (RLS). | Definir responsabilidades e evitar serviços adicionais sem necessidade concreta. |
 | Port | Capacitor. | Recursos nativos e gatilho de reavaliação no ADR-009, seção 4. |
 | Distribuição iOS futura | No port: build e submissão em nuvem, com testes em aparelho. | O EAS permite esse fluxo a partir de Windows; isso não elimina adaptação, testes nem revisão da loja. [F6] |
+| Hospedagem e domínio (D9, MAT-29) | Decidida por Daniel em 03/11/2026: GitHub Pages do próprio repositório, publicado por GitHub Actions; Supabase Free na região São Paulo, só para desenvolvimento e demonstração sem dados reais; domínio próprio depois. | Para publicar ainda faltam a D7 (MAT-26), a retirada de caminhos locais e o push autorizado. |
+| Detector Impeccable (D10, MAT-30) | Decidida por delegação de Daniel em 03/11/2026: verificação local, não bloqueante e com versão fixa, no portão final (MAT-42). | Antes, passa por avaliação na `skill-scouting`. |
 
 "Uma base" significa compartilhar regras, componentes e organização quando fizer sentido. Armazenamento, notificações, instalação e recursos de sistema podem exigir implementações próprias por plataforma.
 
@@ -301,10 +303,8 @@ Para o aceite do site (MAT-42), exigir os portões G1 a G12 de [Direção visual
 | Quem opera e modera? | Nomear responsáveis antes de receber dados reais e abrir conversas. | Viabilidade do piloto e capacidade de suporte. |
 | Este recorte está aceito? | Sim, ampliado: site completo (03/11/2026) | Ordem de implementação e critérios da primeira versão. |
 | Há acesso a iPhone para validar? | Garantir aparelho real nos testes do site, no Safari e na PWA instalada. | Capacidade de manter o iPhone como prioridade efetiva. |
-| D9: Onde o site fica publicado e com que domínio? | GitHub Pages do próprio repositório, publicado por GitHub Actions, com Supabase Free na região São Paulo; domínio próprio depois (MAT-29). | custo, endereço e data da primeira demonstração |
-| D10: Usar o detector Impeccable? | Liberar como verificação local, não bloqueante e com versão fixa, depois da avaliação do coordenador (MAT-30). | um verificador a mais no portão final |
 
-Relação com as decisões D1 a D11 (`07_Roadmap/Decisoes_para_Daniel.md`): o recorte de público fica na D4 (MAT-23); quem opera e modera, na D3 (MAT-22) e na D5 (MAT-24); a monetização, na D6 (MAT-25). A D7 (MAT-26), sobre registros fora do Git, continua necessária antes de publicar o restante da documentação. A D9 e a D10 estão na tabela acima. As perguntas sobre o grupo do piloto e o iPhone são desta base.
+Relação com as decisões D1 a D11 (`07_Roadmap/Decisoes_para_Daniel.md`): o recorte de público fica na D4 (MAT-23); quem opera e modera, na D3 (MAT-22) e na D5 (MAT-24); a monetização, na D6 (MAT-25). A D7 (MAT-26), sobre registros fora do Git, continua necessária antes de publicar o restante da documentação. A D9 (MAT-29) e a D10 (MAT-30) foram decididas em 03/11/2026 e estão na seção 12. As perguntas sobre o grupo do piloto e o iPhone são desta base.
 
 Essas perguntas definem o que o site e o piloto precisam sustentar. Convém respondê-las antes de abrir o piloto.
 

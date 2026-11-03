@@ -142,6 +142,5 @@ Planejamento sem execução e sem estimativa de prazo: não há histórico de pr
 
 ## Questões abertas
 
-1. D9 (MAT-29): onde o site fica publicado; condiciona a fase 6.
-2. D5 (MAT-24) e D7 (MAT-26): pessoas para conteúdo e moderação, e registros de testes de acesso; condicionam a fase 6.
-3. Recursos nativos do port (ADR-009, seção 4): definem quando a fase 7 pode começar.
+1. D5 (MAT-24) e D7 (MAT-26): pessoas para conteúdo e moderação, e registros de testes de acesso; condicionam a fase 6.
+2. Recursos nativos do port (ADR-009, seção 4): definem quando a fase 7 pode começar.

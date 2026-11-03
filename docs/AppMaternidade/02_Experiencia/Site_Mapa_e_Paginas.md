@@ -71,6 +71,6 @@ Como ler as colunas:
 
 ## Questões abertas
 
-1. Endereço público do site e domínio: dependem da D9 (MAT-29).
+1. Domínio próprio: fica para depois. A D9 (MAT-29), decidida em 03/11/2026, publica o site no GitHub Pages do próprio repositório.
 2. Como a página Exclusão de conta confirma que a conta é da pessoa sem login (código por e-mail ou outro meio): fica para a fatia de conta.
 3. Se as páginas públicas de conteúdo (Desenvolvimento e tummy time) devem ser indexadas: depende do ciclo editorial do [ADR-007](../06_ADRs/ADR-007_Conteudo_Educativo_e_IA.md).

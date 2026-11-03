@@ -78,5 +78,4 @@ A política de commits do G10 está em [Política de commits](../00_Inicio/Polit
 ## Questões abertas
 
 1. Nota mínima do G6: sai na MAT-34.
-2. D10 (MAT-30): se o detector Impeccable entra como verificação a mais no portão final.
-3. Paleta, tipografia e tema escuro do modo madrugada: saem na MAT-34, com os tokens em `web/DESIGN.md`.
+2. Paleta, tipografia e tema escuro do modo madrugada: saem na MAT-34, com os tokens em `web/DESIGN.md`.

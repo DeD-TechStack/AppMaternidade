@@ -100,9 +100,7 @@ As regras do painel interno ficam em vigor:
 
 ## 7. Questões abertas
 
-1. D9 (MAT-29): onde o site fica publicado e com que domínio.
-2. D10 (MAT-30): usar ou não o detector Impeccable no portão final.
-3. Recursos nativos do port: como o Capacitor resolve cronômetro na tela bloqueada, Live Activity, notificação contínua no Android e banco local cifrado.
+1. Recursos nativos do port: como o Capacitor resolve cronômetro na tela bloqueada, Live Activity, notificação contínua no Android e banco local cifrado.
 
 ## Referências
 
