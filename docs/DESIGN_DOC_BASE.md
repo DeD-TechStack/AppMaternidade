@@ -1,12 +1,12 @@
 # Design doc base de escopo (AppMaternidade)
 
-**Versão:** 0.3  
-**Status:** proposta em revisão  
-**Data:** 23 de outubro de 2026  
+**Versão:** 0.4  
+**Status:** em revisão  
+**Data:** 3 de novembro de 2026  
 **Etapa:** definição de produto e escopo, antes de qualquer implementação  
 **Histórico de versões:** no fim do documento.
 
-Esta base consolida o pedido original do projeto e a documentação da primeira etapa (APP-001, em `docs/AppMaternidade`). Serve para discutir o que o produto deve fazer, qual recorte vale testar primeiro e o que ainda precisa de decisão. As propostas de plataforma, público e tecnologia não representam aprovação definitiva nem substituem automaticamente os ADRs existentes.
+Esta base consolida o pedido original do projeto e a documentação da primeira etapa (APP-001, em `docs/AppMaternidade`). Serve para discutir o que o produto deve fazer, em que ordem e o que ainda precisa de decisão. O rumo e a stack do site estão decididos no [ADR-009](AppMaternidade/06_ADRs/ADR-009_Site_Completo_Primeiro.md). As propostas de público e de operação continuam em revisão e não substituem automaticamente os outros ADRs.
 
 ## 1. Resumo para a primeira leitura
 
@@ -14,11 +14,11 @@ O AppMaternidade é um aplicativo de acompanhamento da rotina do bebê e de coor
 
 O problema central é a informação espalhada: um cuidador não sabe quando o outro registrou uma mamada, se uma soneca ainda está em andamento ou que observação ficou para o próximo turno. O aplicativo deve tornar essas informações fáceis de registrar e consultar, com autoria e estado de sincronização claros.
 
-A direção proposta é começar com um **piloto web feito para celular**, acessível por link e com instalação opcional na tela inicial. Android e iOS continuam previstos como aplicativos de loja, com compartilhamento de código quando adequado. A prioridade ao iPhone aparece desde os testes do piloto, sem depender de um aplicativo de loja já pronto.
+Daniel decidiu em 03/11/2026 começar pelo **site completo**, com todas as funcionalidades RF-01 a RF-14. O site é feito para o celular, abre por link e pode ser instalado na tela inicial (PWA). Android e iOS vêm depois, como port do mesmo produto pelo Capacitor ([ADR-009](AppMaternidade/06_ADRs/ADR-009_Site_Completo_Primeiro.md)). O iPhone continua prioridade: os testes do site incluem o Safari no iPhone, sem esperar um app de loja.
 
-O piloto reúne quatro pilares:
+O site reúne quatro pilares:
 
-| Pilar | Entrega inicial proposta |
+| Pilar | Entrega no site |
 | --- | --- |
 | Rotina | Os sete tipos de registro da APP-001 (sono, amamentação, mamadeira, alimentação sólida, fralda, tummy time e observação curta) e histórico diário com registro rápido. |
 | Desenvolvimento | Sessões de tummy time, registro retrospectivo e um pequeno conjunto de atividades com fontes e revisão. |
@@ -29,18 +29,18 @@ O público inicial proposto é de cuidadores adultos, no Brasil, em português, 
 
 A primeira experiência deve permitir que uma família entre pelo link, cadastre o bebê, convide outro cuidador, registre cuidados e consulte o histórico. Também deve permitir uma sessão de tummy time e uma conversa temática sem publicar automaticamente informações privadas da criança.
 
-**Próximo passo:** revisar escopo, público e prioridades. Depois dessa revisão e da autorização para avançar, a prova técnica avalia os riscos de plataforma. Nenhum código ou prova técnica é parte desta entrega documental.
+**Próximo passo:** referência visual (MAT-33), direção visual e tokens (MAT-34) e fundação do site (MAT-35), seguidas das fatias MAT-36 a MAT-41. Esta entrega é documental e não contém código.
 
 ## 2. O que está estabelecido e o que continua em proposta
 
 | Tema | Situação nesta base |
 | --- | --- |
 | Rotina, desenvolvimento, comunidade e cuidado compartilhado | Pilares trazidos no pedido original. |
-| Android e iOS | Destinos previstos para o produto; sequência de lançamento em revisão. |
+| Android e iOS | Destinos do produto, por port depois do site (ADR-009). |
 | Revisão deste documento antes de implementar | Restrição expressa da rodada atual. |
-| Piloto web/PWA primeiro | Direção recomendada, ainda em revisão. |
-| Expo com saída web | Candidato preferido, condicionado à viabilidade dos fluxos críticos. |
-| Supabase, PowerSync e serviço de domínio TypeScript | Proposta técnica da APP-001; não aprovada por esta base. |
+| Site completo primeiro, com PWA | Decidido por Daniel em 03/11/2026 (ADR-009). |
+| Stack do site D8-A | Decidida por delegação de Daniel em 03/11/2026 (ADR-009). |
+| Supabase em São Paulo e regras de domínio em TypeScript | Supabase decidido na D8-A; a sincronização nativa (PowerSync ou outra) volta a ser decidida no port. |
 | Brasil, pt-BR, 0–12 meses e contas de adultos | Recorte proposto; confirmar público e tratamento das exceções. |
 | Comunidade em texto, sem mensagens diretas | Simplificação proposta para a primeira versão. |
 | Ausência de anúncios e de IA respondendo às famílias | Limite proposto para o início. |
@@ -72,9 +72,9 @@ A integração dos quatro pilares é uma hipótese de valor a validar. Esta base
 
 Cada adulto usa sua própria conta. O compartilhamento ocorre por vínculo autorizado, sem depender de uma senha familiar única.
 
-O modelo da APP-001 já define três papéis na família: responsável (pode haver mais de um), cuidador (edita e exclui só o que criou e pode encerrar qualquer sessão em andamento) e observador (só lê). Qualquer vínculo pode ter validade, como o da babá (`03_Arquitetura/Modelo_de_Dados_e_Permissoes.md`, seção 5). Para manter o piloto pequeno, propõe-se expor no início só responsável e cuidador; confirmar se o observador entra. O mesmo modelo já admite vários bebês por família (RF-05); falta decidir se a interface do piloto mostra a troca de bebê. Cada registro identifica explicitamente a família e o bebê, sem associação implícita ao bebê errado.
+O modelo da APP-001 já define três papéis na família: responsável (pode haver mais de um), cuidador (edita e exclui só o que criou e pode encerrar qualquer sessão em andamento) e observador (só lê). Qualquer vínculo pode ter validade, como o da babá (`03_Arquitetura/Modelo_de_Dados_e_Permissoes.md`, seção 5). O mesmo modelo admite vários bebês por família. Como o site cobre o RF-05 inteiro, os três papéis e a troca de bebê entram no escopo do site (MAT-36 a MAT-41). Cada registro identifica explicitamente a família e o bebê, sem associação implícita ao bebê errado.
 
-## 5. Escopo funcional proposto para o piloto
+## 5. Escopo funcional do site (MAT-36 a MAT-41)
 
 | Área | O que entra | Como reconhecer a entrega |
 | --- | --- | --- |
@@ -91,20 +91,22 @@ O modelo da APP-001 já define três papéis na família: responsável (pode hav
 | Comunidade | Assuntos, tópicos, respostas em texto, denúncia e bloqueio. | Uma conversa funciona sem expor os dados privados do bebê e existe alguém capaz de tratar denúncias. |
 | Operação mínima | Suporte, pedidos de exportação/exclusão e administração da comunidade. | Há um procedimento viável e um responsável; pedidos não dependem de acessar dados de outras famílias. |
 
-A primeira versão do histórico prioriza compreensão do dia e correção dos registros. Relatórios avançados, comparações entre bebês e previsões de sono não são condição de entrada no piloto.
+O site cobre RF-01 a RF-14. A lista de páginas, com os RF de cada uma, está em [Mapa e páginas do site](AppMaternidade/02_Experiencia/Site_Mapa_e_Paginas.md).
+
+A primeira versão do histórico prioriza compreensão do dia e correção dos registros. Relatórios avançados, comparações entre bebês e previsões de sono ficam fora do escopo do site (MAT-36 a MAT-41).
 
 ### Notificações
 
-A proposta é que o núcleo do piloto funcione sem permissão de notificação. Push pode ser acrescentado ao recorte validado, com ativação opcional e texto que não revele detalhes sensíveis na tela bloqueada. Atraso ou ausência de uma notificação não pode impedir o registro ou alterar a duração de uma sessão.
+O núcleo do site funciona sem permissão de notificação. As notificações do RF-14 entram como Web Push, com ativação opcional e texto que não revele detalhes sensíveis na tela bloqueada. Atraso ou ausência de uma notificação não pode impedir o registro ou alterar a duração de uma sessão.
 
-No iPhone, apps web adicionados à tela inicial podem solicitar Web Push desde o iOS 16.4, por interação direta da pessoa. Isso torna a função possível no piloto web, mas não demonstra sua confiabilidade no aplicativo ainda não construído. [F1]
+No iPhone, apps web adicionados à tela inicial podem solicitar Web Push desde o iOS 16.4, por interação direta da pessoa. Isso torna a função possível no site, mas a confiabilidade só se confirma testando no iPhone. [F1]
 
-Na APP-001, o RF-14 previa notificações entre cuidadores e lembretes locais desligados por padrão. Na web, o lembrete agendado pelo próprio aparelho não está disponível da mesma forma (a confirmar na MAT-17): os lembretes passariam a ser push enviados pelo servidor e dependeriam de rede.
+Na APP-001, o RF-14 previa notificações entre cuidadores e lembretes locais desligados por padrão. Na web, o lembrete agendado pelo próprio aparelho não está disponível da mesma forma (a confirmar nas fatias do site): os lembretes passam a ser push enviados pelo servidor e dependem de rede.
 
 ## 6. O que fica para fases posteriores
 
-- Aplicativos publicados nas lojas e integrações específicas de Android/iOS.
-- Live Activities, widgets e apresentação contínua de atividades na tela bloqueada.
+- No port (ADR-009): aplicativos publicados nas lojas e integrações específicas de Android/iOS.
+- Live Activities, widgets e apresentação contínua de atividades na tela bloqueada, também no port.
 - Chat ao vivo, rodas de conversa síncronas, mensagens diretas e envio de mídia na comunidade. As rodas ao vivo não foram descartadas: o ADR-006 as deixa como etapa 3, condicionada à demanda medida.
 - Gestação e acompanhamento de faixas etárias além do recorte inicial.
 - Previsão sofisticada de sonecas, planos personalizados e IA respondendo às famílias.
@@ -116,7 +118,7 @@ Na APP-001, o RF-14 previa notificações entre cuidadores e lembretes locais de
 
 Essas exclusões reduzem o primeiro recorte. Não eliminam os quatro pilares nem atribuem prioridade permanente às expansões.
 
-## 7. Jornadas que o piloto precisa sustentar
+## 7. Jornadas que o site precisa sustentar
 
 ### 7.1 Entrar pelo link e iniciar uma família
 
@@ -148,13 +150,13 @@ Uma pessoa abre um assunto, publica uma pergunta e recebe respostas. Participar 
 | Comunidade | Assuntos, tópicos, respostas e recursos de proteção. |
 | Família e conta | Bebê, participantes, convites, permissões, preferências e dados da conta. |
 
-Esta navegação é uma hipótese de trabalho. Os desenhos devem mostrar também estado vazio, salvamento, falta de conexão, pendência, conflito, erro e acesso negado.
+Esta navegação é uma hipótese de trabalho. Os desenhos devem mostrar também estado vazio, salvamento, falta de conexão, pendência, conflito, erro e acesso negado. O mapa completo, com as páginas públicas, de acesso e da equipe, está em [Mapa e páginas do site](AppMaternidade/02_Experiencia/Site_Mapa_e_Paginas.md).
 
 Botões de registro precisam ser alcançáveis com uma mão. Texto ampliado, leitor de tela, contraste e uso em baixa luminosidade devem ser considerados desde os fluxos iniciais.
 
 ## 9. Offline e sincronização como parte do escopo
 
-“Funcionar offline” tem um alcance concreto:
+"Funcionar offline" tem um alcance concreto:
 
 | Operação | Comportamento proposto sem conexão |
 | --- | --- |
@@ -164,7 +166,7 @@ Botões de registro precisam ser alcançáveis com uma mão. Texto ampliado, lei
 | Criar registros privados essenciais | Persistir no aparelho e manter pendência até a aceitação pelo servidor. |
 | Iniciar/encerrar sessão disponível localmente | Persistir a intenção e reconciliar ao reconectar. |
 | Convidar, aceitar convite ou alterar permissões | Exigir conexão e confirmação do servidor. |
-| Publicar na comunidade e efetivar ações de moderação | Exigir conexão; rascunho offline não é requisito do piloto. |
+| Publicar na comunidade e efetivar ações de moderação | Exigir conexão; rascunho offline não é requisito do site. |
 | Trocar de conta ou sair com pendências | Aplicar uma política explícita que preserve privacidade e evite perda silenciosa. |
 
 Os estados mínimos de um registro são **salvo neste aparelho**, **aguardando sincronização**, **sincronizado** e, quando necessário, **conflito ou envio rejeitado**. O aplicativo deve orientar a recuperação quando houver rejeição.
@@ -175,47 +177,49 @@ Reenvio após falha não deve criar duas atividades. Exclusão versus edição, 
 
 A revogação precisa bloquear novas operações remotas não autorizadas. Dados já armazenados em um aparelho desconectado não desaparecem instantaneamente; o desenho deve definir o tratamento na reconexão.
 
-Para a web, armazenar a interface para abertura offline é um trabalho próprio, com política de atualização de service worker. O Expo documenta essa configuração e alerta para os efeitos de cache sobre atualizações. Não basta produzir uma saída web para concluir esse requisito. [F2]
+No site, abrir offline exige guardar a interface num service worker, com política de atualização própria (PWA, MAT-41). A fonte consultada no rumo anterior já alertava para o efeito do cache sobre as atualizações [F2]. Gerar o site como PWA não basta para cumprir esse requisito.
 
-O armazenamento do navegador tem limites e pode sofrer remoção de dados. Solicitar persistência não é garantia de concessão nem substitui sincronização e recuperação. O teste deve incluir armazenamento indisponível ou insuficiente; o aplicativo não pode informar “salvo” após uma gravação que falhou. [F3]
+O armazenamento do navegador tem limites e pode sofrer remoção de dados. Solicitar persistência não é garantia de concessão nem substitui sincronização e recuperação. O teste deve incluir armazenamento indisponível ou insuficiente; o aplicativo não pode informar "salvo" após uma gravação que falhou. [F3]
 
 ## 10. Privacidade, comunidade e operação
 
-A rotina familiar e a identidade da comunidade têm finalidades e permissões diferentes. Entrar em um tópico não deve conceder acesso a um bebê. O compartilhamento de uma informação privada, se futuramente existir, precisará de escolha explícita e prévia do conteúdo (o RF-12 da APP-001 já previa isso: resumo da rotina só por ação consciente, com prévia). Ele não é condição do piloto.
+A rotina familiar e a identidade da comunidade têm finalidades e permissões diferentes. Entrar em um tópico não deve conceder acesso a um bebê. O RF-12 da APP-001 prevê compartilhar um resumo da rotina só por ação consciente, com prévia do conteúdo. Ele entra no site com essa condição.
 
 A proposta inicial usa texto simples na comunidade e limita dados armazenados no aparelho ao necessário para o uso offline. A análise técnica deve tratar conteúdo malicioso, acesso ao perfil do navegador, troca de conta e arquivos locais. Uma vulnerabilidade de script pode atingir dados acessíveis pela mesma origem; separar tabelas ou telas não resolve sozinho essa fronteira. [F4]
 
-Na proposta nativa da APP-001, o banco local é cifrado (PowerSync com op-sqlite e SQLCipher), com chave no Keychain ou no Keystore (`05_Privacidade_Operacao/Privacidade_e_Seguranca.md`, seção 9). O SQLCipher do `expo-sqlite` não cobre a web (`08_Referencias/Tecnologias/Mobile_e_Plataformas.md`), então a web precisa de um desenho próprio de proteção local.
+Na proposta nativa da APP-001, que volta a ser avaliada no port (ADR-009), o banco local é cifrado (PowerSync com op-sqlite e SQLCipher), com chave no Keychain ou no Keystore (`05_Privacidade_Operacao/Privacidade_e_Seguranca.md`, seção 9). O SQLCipher do `expo-sqlite` não cobre a web (`08_Referencias/Tecnologias/Mobile_e_Plataformas.md`), então o site precisa de um desenho próprio de proteção local.
 
 Não se deve concluir, nesta fase, que a web não admite criptografia ou que qualquer armazenamento local oferece a mesma proteção de uma aplicação nativa. Proteção de dados e gestão de chaves exigem desenho específico para cada ambiente. [F4]
 
 Antes de coletar dados reais no piloto, a proposta exige:
 
-- Identificar quem opera o serviço e responde pelo tratamento dos dados; decidir a forma adequada de atuação com avaliação jurídica pertinente. Hoje isso está junto com as contas das lojas na D3 (MAT-22); a proposta é separar em duas decisões.
+- Identificar quem opera o serviço e responde pelo tratamento dos dados; decidir a forma adequada de atuação com avaliação jurídica pertinente. Hoje isso está na D3 (MAT-22), junto com as contas de loja, que ficam para o port; a proposta é separar em duas decisões.
 - Definir finalidade, dados mínimos, informação às famílias, acesso, retenção, exportação e exclusão.
-- Validar a política de contas adultas e o tratamento de situações fora do recorte; não assumir que a passagem por uma loja resolveu esse ponto. A D4 (MAT-23) propõe 18 anos ou mais; o parecer sobre o ECA Digital e a consultoria em LGPD estão na D5 (MAT-24).
+- Validar a política de contas adultas e o tratamento de situações fora do recorte; não assumir que a passagem por uma loja, no port, resolva esse ponto. A D4 (MAT-23) propõe 18 anos ou mais; o parecer sobre o ECA Digital e a consultoria em LGPD estão na D5 (MAT-24).
 - Definir responsável por suporte, moderação e incidentes.
 - Validar isolamento entre famílias, recuperação dos dados e proteção das operações administrativas.
 
-Esses itens são requisitos de preparação do piloto, não uma declaração de conformidade jurídica. A decisão sobre contas Apple/Google pertence à distribuição e pode ocorrer em outra etapa.
+Esses itens são requisitos de preparação do piloto, não uma declaração de conformidade jurídica. A decisão sobre contas Apple/Google pertence à distribuição e fica para o port (ADR-009).
 
 ## 11. Etapas e critérios para avançar
 
 | Etapa | Entrega | Condição para avançar |
 | --- | --- | --- |
-| Revisão documental — agora | Escopo, jornadas, fases e decisões abertas compreensíveis. | O documento é lido e corrigido, o que for aceito fica registrado e a finalidade da web é esclarecida com o interessado. |
-| Prova técnica — após autorização | Evidências dos riscos de plataforma, usando dados fictícios e o recorte da MAT-17. | Registro e recuperação local, sincronização, contas/convites e isolamento funcionam nos ambientes-alvo; limitações conhecidas têm decisão. |
-| Piloto web com grupo convidado | Os quatro pilares no recorte inicial, com operação e suporte definidos. | Uso observado demonstra utilidade; problemas relevantes de integridade/acesso são resolvidos e as prioridades são revisadas. |
-| MVP estabilizado | Fluxos essenciais consolidados, conteúdo e moderação sustentáveis. | Capacidade de ampliar o público sem depender de correções manuais recorrentes para usar o núcleo do produto. |
-| Aplicativos de loja | Android/iOS com adaptações de plataforma e validação própria. | Demanda, limitações da web ou recursos necessários justificam a entrega; há capacidade de teste, assinatura, revisão e manutenção. |
+| Design docs (MAT-32) | Este documento e o cofre no rumo do site completo. | Revisão aprovada e integração na `main`. |
+| Referência visual, direção e tokens (MAT-33 e MAT-34) | Especificação visual filtrada, direção visual e `web/DESIGN.md`. | Sala limpa conferida; tokens validados. |
+| Fundação e backend local (MAT-35 e MAT-43) | Projeto web com testes, tipos, lint e verificação de commits; Supabase local com dados fictícios. | Portões G1, G2, G10 e G12 de [Direção visual](AppMaternidade/02_Experiencia/Direcao_Visual.md). |
+| Fatias do site (MAT-36 a MAT-41) | RF-01 a RF-14, com as páginas do [mapa do site](AppMaternidade/02_Experiencia/Site_Mapa_e_Paginas.md). | Portões G1 a G12 em cada fatia. |
+| Portão final (MAT-42) | Junção de qualidade e aceite do site inteiro. | Critérios da seção 13. |
+| Piloto com famílias reais convidadas | Os quatro pilares em uso, com operação e suporte definidos. | Depende de D5 (MAT-24), D7 (MAT-26) e D9 (MAT-29). O uso observado orienta as prioridades. |
+| Port Android e iOS | O mesmo produto empacotado pelo Capacitor, com adaptações de plataforma e validação própria. | Contas de loja (D3), assinatura e solução para os recursos nativos do ADR-009, seção 4. |
 
-Na APP-001, a sequência era outra: fundação técnica (MAT-18), MVP utilizável em Android e iOS e piloto fechado com poucas famílias, pelo TestFlight e pelo teste fechado da Play (`07_Roadmap/Roadmap_e_Proxima_Fatia.md`, F5). O app web para cuidadores ficava entre as evoluções posteriores (F6; `01_Produto/Visao_e_Escopo.md`, seções 9 e 11). Esta base propõe o piloto web antes do MVP estabilizado e das lojas. As tarefas MAT-17 (prova técnica), MAT-18 (fundação e primeira fatia de cuidados) e MAT-19 (fatia da comunidade) continuam no backlog e só começam com autorização explícita.
+Na APP-001, a sequência era outra: fundação técnica (MAT-18), MVP utilizável em Android e iOS e piloto fechado com poucas famílias, pelo TestFlight e pelo teste fechado da Play (`07_Roadmap/Roadmap_e_Proxima_Fatia.md`, F5). O app web para cuidadores ficava entre as evoluções posteriores (F6; `01_Produto/Visao_e_Escopo.md`, seções 9 e 11). Desde 03/11/2026, o rumo é o site completo primeiro. As tarefas MAT-17 (prova técnica), MAT-18 (fundação e primeira fatia de cuidados) e MAT-19 (fatia da comunidade) ficam congeladas até o port; o que elas tinham de produto passa para as fatias do site.
 
-Piloto e MVP são fases de maturidade do produto. Lojas são também uma decisão de canal: se o piloto revelar que uma limitação compromete o uso essencial no iPhone, a entrada do app nativo pode ser antecipada. Não é necessário manter uma ordem rígida que contrarie as evidências.
+O port também é uma decisão de canal: se o piloto mostrar que uma limitação do navegador compromete o uso essencial no iPhone, o port pode ser antecipado. Não é necessário manter uma ordem rígida que contrarie as evidências.
 
 ### MAT-17: evidências planejadas, ainda não executadas
 
-A futura prova técnica deve cobrir, em iPhone real e Android representativo:
+No port: a futura prova técnica deve cobrir, em iPhone real e Android representativo:
 
 1. Registro offline, encerramento, reabertura e sincronização sem perda ou duplicação nos cenários testados.
 2. Duas abas, sessões concorrentes e duas pessoas editando a mesma atividade.
@@ -228,7 +232,28 @@ A futura prova técnica deve cobrir, em iPhone real e Android representativo:
 
 Se uma combinação falhar, identificar se a causa está no SDK, na persistência, no navegador, no desenho de sincronização ou na implementação. Isso orienta a alternativa; mudar de framework não resolve automaticamente todas essas classes de problema.
 
-## 12. Direção técnica proposta
+## 12. Direção técnica
+
+A stack do site é a D8-A, **decidida por delegação de Daniel em 03/11/2026** ([ADR-009](AppMaternidade/06_ADRs/ADR-009_Site_Completo_Primeiro.md)). A D8-B (Next.js) e a D8-C (Expo Router com React Native Web) ficam como alternativas avaliadas, com prós e contras no ADR.
+
+| Camada | Decisão | Observação |
+| --- | --- | --- |
+| Interface | React + TypeScript + Vite, Tailwind CSS 4, componentes shadcn/ui e Magic UI. | Componentes só da lista aprovada, com versão e licença registradas ([Direção visual](AppMaternidade/02_Experiencia/Direcao_Visual.md), G8). |
+| Dados remotos e identidade | Supabase (PostgreSQL, Auth e RLS) na região São Paulo. | Preço da região a confirmar; plano conforme a fase ([Custos e operação](AppMaternidade/05_Privacidade_Operacao/Custos_e_Operacao.md)). |
+| Offline | Offline no site: PWA com fila local em IndexedDB (MAT-41); a sincronização nativa (PowerSync ou outra) volta a ser decidida no port. | Estados e regras da seção 9. |
+| Regras de domínio | Camada TypeScript proposta na APP-001, com a autorização aplicada no banco (RLS). | Definir responsabilidades e evitar serviços adicionais sem necessidade concreta. |
+| Port | Capacitor. | Recursos nativos e gatilho de reavaliação no ADR-009, seção 4. |
+| Distribuição iOS futura | No port: build e submissão em nuvem, com testes em aparelho. | O EAS permite esse fluxo a partir de Windows; isso não elimina adaptação, testes nem revisão da loja. [F6] |
+
+"Uma base" significa compartilhar regras, componentes e organização quando fizer sentido. Armazenamento, notificações, instalação e recursos de sistema podem exigir implementações próprias por plataforma.
+
+O Capacitor não resolve sozinho qualquer limitação observada no Safari. Live Activities e outros recursos nativos precisam de avaliação específica no port.
+
+Este documento não contrata serviços, fixa versões de dependências nem fecha o orçamento.
+
+### Rumo anterior (APP-001)
+
+Texto da versão 0.3, substituído pelo ADR-009 e mantido como registro:
 
 | Camada | Candidato ou princípio | Condição de decisão |
 | --- | --- | --- |
@@ -239,21 +264,19 @@ Se uma combinação falhar, identificar se a causa está no SDK, na persistênci
 | Alternativa web | React web com PWA e Capacitor para empacotamento posterior. | Reavaliar se a web predominar ou se a opção A falhar por motivo que a alternativa consiga resolver. |
 | Distribuição iOS futura | Build e submissão em nuvem, com testes em aparelho. | O EAS permite esse fluxo a partir de Windows; isso não elimina adaptação, testes nem revisão da loja. [F6] |
 
-“Uma base” significa compartilhar regras, componentes e organização quando fizer sentido. Armazenamento, notificações, instalação e recursos de sistema podem exigir implementações próprias por plataforma.
-
 O Capacitor deve continuar como alternativa comparável, sem promessa de que seu uso resolva por si só qualquer limitação observada no Safari. Live Activities e outros recursos nativos precisam de avaliação específica.
 
-A decisão de stack deve vir depois dos requisitos que justificam a escolha. Este documento não contrata serviços, fixa versões de dependências nem fecha o orçamento.
+A decisão de stack deve vir depois dos requisitos que justificam a escolha.
 
 ### Custos por etapa
 
-No piloto, estimar hospedagem, banco, sincronização, autenticação/e-mail, monitoramento, suporte, moderação e acesso aos aparelhos de teste. Nas lojas, acrescentar contas, build, distribuição e manutenção específica.
+No site, sem dados reais, estimar hospedagem estática e o Supabase. No piloto com famílias reais, somar banco pago, autenticação/e-mail, monitoramento, suporte, moderação e acesso aos aparelhos de teste. No port, acrescentar contas de loja, build, distribuição e manutenção específica.
 
-As estimativas da APP-001 foram feitas para nativo primeiro e estão em `05_Privacidade_Operacao/Custos_e_Operacao.md` e na D2 (MAT-21); precisam ser refeitas para o piloto web.
+A tabela do site está em `05_Privacidade_Operacao/Custos_e_Operacao.md`, seção "Site (rumo atual)". As estimativas da APP-001 eram para apps nativos e ficam no mesmo documento, marcadas como rumo anterior, e na D2 (MAT-21).
 
-Evitar converter o adiamento de Apple/EAS em uma economia mensal fixa sem antes definir quais planos seriam necessários. O acesso a um iPhone de teste é um requisito de validação, que pode ser atendido sem assumir imediatamente a compra de um aparelho.
+Adiar Apple e EAS para o port não vira uma economia mensal fixa enquanto os planos necessários não estiverem definidos. O acesso a um iPhone de teste é um requisito de validação, que pode ser atendido sem assumir imediatamente a compra de um aparelho.
 
-## 13. Critérios de sucesso e aceite do piloto
+## 13. Critérios de sucesso do piloto e aceite do site (MAT-42)
 
 O piloto deve permitir observar:
 
@@ -266,29 +289,30 @@ O piloto deve permitir observar:
 
 Antes do recrutamento, definir tamanho do grupo, duração, dispositivos representados e critérios mensuráveis de avaliação. Esta base não inventa resultados, metas comerciais ou números de adoção.
 
-Para aceitar a primeira entrega utilizável, exigir demonstração dos fluxos essenciais nos aparelhos-alvo, correção dos defeitos de perda/duplicação conhecidos e ausência de falhas de autorização pendentes que permitam acesso entre famílias. Resultado de um conjunto de testes não equivale a garantia absoluta contra falhas futuras.
+Para o aceite do site (MAT-42), exigir os portões G1 a G12 de [Direção visual](AppMaternidade/02_Experiencia/Direcao_Visual.md), demonstração dos fluxos essenciais no navegador do celular, em iPhone e Android, correção dos defeitos de perda/duplicação conhecidos e ausência de falhas de autorização pendentes que permitam acesso entre famílias. Resultado de um conjunto de testes não equivale a garantia absoluta contra falhas futuras.
 
 ## 14. Decisões em aberto
 
 | Decisão | Proposta de partida | O que a resposta altera |
 | --- | --- | --- |
-| O que o interessado quis dizer com “web”? | Perguntar se quer uma demonstração por link ou uso diário pelas famílias. | Canal inicial, necessidades offline e importância de instalar a PWA. |
 | Quem participará do piloto? | Pequeno grupo convidado, com presença de usuários de iPhone e Android. | Recrutamento, suporte, dispositivos e validação de uso. |
 | Qual o recorte de público? | Brasil, pt-BR, bebês de 0–12 meses e contas de adultos. | Conteúdo, regras de entrada e tratamento de casos fora da faixa. |
-| Um ou vários bebês por família? | O modelo já admite vários; decidir se o piloto mostra a troca de bebê. | Seleção de bebê, convites, histórico e esforço do piloto. |
+| Um ou vários bebês por família? | O modelo já admite vários; o site completo mostra a troca de bebê (RF-05). | Seleção de bebê, convites e histórico. |
 | Quem opera e modera? | Nomear responsáveis antes de receber dados reais e abrir conversas. | Viabilidade do piloto e capacidade de suporte. |
-| Este recorte inicial está aceito? | Quatro pilares, os sete tipos de registro e comunidade textual simples. | Ordem de implementação e critérios da primeira versão. |
-| Há acesso a iPhone para validar? | Garantir aparelho real desde a prova técnica. | Capacidade de manter o iPhone como prioridade efetiva. |
+| Este recorte está aceito? | Sim, ampliado: site completo (03/11/2026) | Ordem de implementação e critérios da primeira versão. |
+| Há acesso a iPhone para validar? | Garantir aparelho real nos testes do site, no Safari e na PWA instalada. | Capacidade de manter o iPhone como prioridade efetiva. |
+| D9: Onde o site fica publicado e com que domínio? | GitHub Pages do próprio repositório, publicado por GitHub Actions, com Supabase Free na região São Paulo; domínio próprio depois (MAT-29). | custo, endereço e data da primeira demonstração |
+| D10: Usar o detector Impeccable? | Liberar como verificação local, não bloqueante e com versão fixa, depois da avaliação do coordenador (MAT-30). | um verificador a mais no portão final |
 
-Relação com as decisões já abertas (D1 a D7): o recorte de público e o recorte inicial ficam na D4 (MAT-23); quem opera e modera, na D3 (MAT-22) e na D5 (MAT-24); a stack, na D1 (MAT-20) e na D2 (MAT-21); a monetização, na D6 (MAT-25). A D7 (MAT-26), sobre registros fora do Git, continua necessária antes de publicar o restante da documentação. As perguntas sobre o interessado, o grupo do piloto e o iPhone são novas.
+Relação com as decisões D1 a D11 (`07_Roadmap/Decisoes_para_Daniel.md`): o recorte de público fica na D4 (MAT-23); quem opera e modera, na D3 (MAT-22) e na D5 (MAT-24); a monetização, na D6 (MAT-25). A D7 (MAT-26), sobre registros fora do Git, continua necessária antes de publicar o restante da documentação. A D9 e a D10 estão na tabela acima. As perguntas sobre o grupo do piloto e o iPhone são desta base.
 
-A recomendação é resolver essas perguntas antes de discutir mais bibliotecas. Elas definem o produto que a arquitetura precisa sustentar.
+Essas perguntas definem o que o site e o piloto precisam sustentar. Convém respondê-las antes de abrir o piloto.
 
 ## 15. Relação com os documentos existentes
 
 Esta base é uma referência de leitura e discussão. A atualização dos documentos de origem deve preservar o histórico das propostas.
 
-Os documentos da APP-001 ficam em `docs/AppMaternidade`, com entrada em `00_Inicio/Home.md`, e ainda não estão no repositório. Eles descrevem a proposta da APP-001 (nativo primeiro). Esta base registra a proposta revista de 22/10 para canal, fases e web; nos demais temas, valem os documentos da APP-001. A reconciliação acontece nas partes abaixo, depois da revisão deste documento.
+Os documentos da APP-001 ficam em `docs/AppMaternidade`, com entrada em `00_Inicio/Home.md`, versionados desde o commit 7ae6421. Eles descrevem a proposta da APP-001, com apps nativos antes do site, e desde 03/11/2026 levam uma nota apontando para o ADR-009. Esta base registra o rumo do site completo; nos demais temas, valem os documentos da APP-001. A reconciliação acontece nas partes abaixo, depois da revisão deste documento.
 
 | Documento da APP-001 | Ajuste a reconciliar após a revisão |
 | --- | --- |
@@ -299,22 +323,22 @@ Os documentos da APP-001 ficam em `docs/AppMaternidade`, com entrada em `00_Inic
 | D3 | Separar distribuição nas lojas de responsabilidade pela operação/tratamento dos dados. |
 | Custos, qualidade e fluxos | Orçamento por fase, iPhone real, instalação opcional e convites entre contextos. |
 
-**Resultado esperado da revisão:** escopo compreendido e corrigido, decisões registradas e definição de quando a MAT-17 poderá começar. Até lá, o trabalho permanece documental.
+**Resultado esperado da revisão:** escopo compreendido e corrigido, decisões registradas e as fatias do site prontas para começar depois da fundação (MAT-35).
 
 ## Fontes e origem
 
-**Origem do produto e das propostas:** pedido original do projeto, consulta sobre plataformas de 22/10/2026 e documentação da APP-001, conferida em 22/10/2026. As referências a arquivos apontam para essa documentação, em `docs/AppMaternidade`: `01_Produto/Visao_e_Escopo.md`, `01_Produto/Concorrentes_e_Diferenciais.md`, `03_Arquitetura/Modelo_de_Dados_e_Permissoes.md`, `03_Arquitetura/Comparacao_de_Arquiteturas.md`, `05_Privacidade_Operacao/Privacidade_e_Seguranca.md`, `05_Privacidade_Operacao/Custos_e_Operacao.md`, `06_ADRs/ADR-006_Comunidade_e_Moderacao.md`, `07_Roadmap/Roadmap_e_Proxima_Fatia.md`, `08_Referencias/Tecnologias/Mobile_e_Plataformas.md` e a lista das decisões D1 a D7, em `07_Roadmap/`.
+**Origem do produto e das propostas:** pedido original do projeto, consulta sobre plataformas de 22/10/2026, documentação da APP-001, conferida em 22/10/2026, e as decisões de Daniel de 03/11/2026 ([ADR-009](AppMaternidade/06_ADRs/ADR-009_Site_Completo_Primeiro.md)). As referências a arquivos apontam para essa documentação, em `docs/AppMaternidade`: `01_Produto/Visao_e_Escopo.md`, `01_Produto/Concorrentes_e_Diferenciais.md`, `03_Arquitetura/Modelo_de_Dados_e_Permissoes.md`, `03_Arquitetura/Comparacao_de_Arquiteturas.md`, `05_Privacidade_Operacao/Privacidade_e_Seguranca.md`, `05_Privacidade_Operacao/Custos_e_Operacao.md`, `06_ADRs/ADR-006_Comunidade_e_Moderacao.md`, `07_Roadmap/Roadmap_e_Proxima_Fatia.md`, `08_Referencias/Tecnologias/Mobile_e_Plataformas.md` e a lista das decisões D1 a D11, em `07_Roadmap/`.
 
 **Fontes técnicas consultadas em 22/10/2026:**
 
 - **[F1] WebKit — Web Push for Web Apps on iOS and iPadOS:** [https://webkit.org/blog/13878/web-push-for-web-apps-on-ios-and-ipados/](https://webkit.org/blog/13878/web-push-for-web-apps-on-ios-and-ipados/)
-- **[F2] Expo — Progressive web apps:** [https://docs.expo.dev/guides/progressive-web-apps/](https://docs.expo.dev/guides/progressive-web-apps/)
+- No port: **[F2] Expo — Progressive web apps:** [https://docs.expo.dev/guides/progressive-web-apps/](https://docs.expo.dev/guides/progressive-web-apps/)
 - **[F3] WebKit — Updates to Storage Policy:** [https://webkit.org/blog/14403/updates-to-storage-policy/](https://webkit.org/blog/14403/updates-to-storage-policy/)
 - **[F4] OWASP — HTML5 Security Cheat Sheet:** [https://cheatsheetseries.owasp.org/cheatsheets/HTML5_Security_Cheat_Sheet.html](https://cheatsheetseries.owasp.org/cheatsheets/HTML5_Security_Cheat_Sheet.html)
-- **[F5] PowerSync — React Native Web Support:** [https://docs.powersync.com/client-sdks/frameworks/react-native-web-support](https://docs.powersync.com/client-sdks/frameworks/react-native-web-support)
-- **[F6] Expo — FAQ, desenvolvimento iOS a partir de Windows:** [https://docs.expo.dev/faq/](https://docs.expo.dev/faq/)
+- **[F5] PowerSync — React Native Web Support** (rumo anterior; volta a ser avaliada no port): [https://docs.powersync.com/client-sdks/frameworks/react-native-web-support](https://docs.powersync.com/client-sdks/frameworks/react-native-web-support)
+- **[F6] Expo — FAQ, desenvolvimento iOS a partir de Windows** (usada no port): [https://docs.expo.dev/faq/](https://docs.expo.dev/faq/)
 
-As fontes sustentam capacidades e limites técnicos específicos. O recorte de produto, a sequência de fases e os critérios de aceite são propostas desta versão, ainda em revisão.
+As fontes sustentam capacidades e limites técnicos específicos. O rumo e a stack estão no ADR-009; o recorte de público e os critérios de aceite do piloto continuam em revisão.
 
 ## Histórico de versões
 
@@ -323,6 +347,7 @@ As fontes sustentam capacidades e limites técnicos específicos. O recorte de p
 | 0.1 | 22/10/2026 | Versão-base: escopo, jornadas, telas, offline, privacidade, fases e decisões. |
 | 0.2 | 22/10/2026 | Conferida com a documentação da APP-001: sete tipos de registro, papéis e vários bebês do modelo, lembretes na web, cifra local do nativo, sequência original da APP-001, ligação com D1 a D7 e MAT-17 a MAT-19, caminhos dos documentos; formatação e links limpos. |
 | 0.3 | 23/10/2026 | Texto focado no projeto, sem menções a pessoas nem ao processo de elaboração; publicado também no GitHub. |
+| 0.4 | 03/11/2026 | Rumo novo decidido por Daniel: site completo primeiro, port Android e iOS depois; stack D8-A (ADR-009). |
 
 ## Como manter este documento
 
