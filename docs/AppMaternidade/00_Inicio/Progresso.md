@@ -17,6 +17,15 @@ Checkpoint vivo da execução da task APP-001-DESIGNDOCS. Ao retomar depois de u
 
 Horários em America/Sao_Paulo, tirados do relógio da máquina ou de carimbos dos próprios sistemas. Correção às 03:30: os horários 02:45, 02:50 e 02:58 das versões anteriores deste arquivo foram estimados sem consultar o relógio; os valores abaixo vêm dos carimbos reais.
 
+## Registro do site (rumo atual, desde 03/11/2026)
+
+Uma linha por marco, a mais recente no topo. O estado corrente fica em [Retomada do site](Retomada_Site.md), e o detalhe de cada marco está no cartão Kanban citado.
+
+- 03/11/2026: **MAT-32 integrada.** Os design docs v0.4 entraram na main pelo cartão `t_46deffa1`. O SHA revisado era 7577216 e foi reposicionado sobre a fundação como 5500c66, com patches idênticos. A revisão aprovou na rodada 2; a rodada 1 tinha devolvido o DOC-08 por implementação.
+- 03/11/2026: **parada do dia.** A nota de retomada foi criada (d04c26f). Daniel retoma na quinta.
+- 03/11/2026: **MAT-35 integrada.** A fundação do site entrou pelo cartão `t_da8e708b`, com d731d3d por avanço direto (ff). O veredito foi APPROVED_WITH_LIMITS, e o contrato foi reconciliado.
+- 03/11/2026: **decisões.** D8 (stack, por delegação de Daniel), D9 (GitHub Pages, decidida por Daniel), D10 (Impeccable, por delegação) e D11 (sala limpa reduzida), nas tarefas MAT-28 a MAT-31. Nesse mesmo dia, Daniel mudou o rumo para "site completo primeiro, port depois" (MAT-27).
+
 ## Estado inicial conferido (22/10/2026 02:29)
 
 - Workspace: `.git`, `entregas/`, `tasks/`, `PROGRESSO_TASK_HERMES.md`. Sem `.gitignore` e sem AGENTS.md aplicável (`C:/Projetos/AGENTS.md`, `C:/AGENTS.md` e o do workspace não existem).

@@ -32,18 +32,19 @@ Em 03/11/2026, Daniel definiu o rumo: o AppMaternidade começa como site complet
 - **Estudo da referência visual (MAT-33):** a especificação abstrata está fora do repositório, na pasta de staging do projeto, e passou na busca de termos proibidos.
 - **Cadastro do projeto:** os comandos de validação e a lista de comandos do OpenCode foram preenchidos.
 
+- **Design docs v0.4 (MAT-32):** integrados na main em 5500c66 (cartão `t_46deffa1`).
+  - Entraram o ADR-009, o mapa de páginas, a direção visual, a política de commits, o roadmap e as decisões, os custos, as notas de status e a frase nova do `AGENTS.md`.
+  - Ficou aberto um detalhe não bloqueante: a origem "Analise" da linha "Família e conta" do mapa tem 8 palavras, e a regra pede de 4 a 6.
+
 ## O que está em andamento
 
-- **Design docs v0.4 (MAT-32):** cartão `t_46deffa1`, em revisão no `revisor-appmaternidade`. São 14 commits, entre eles o ADR-009, o mapa de páginas, a direção visual, a política de commits e a frase nova do `AGENTS.md`.
-  - Depois da aprovação, o líder reposiciona os commits sobre d731d3d, confere que o conteúdo não mudou e integra.
-  - Se o revisor não rodar por falta de limite, o cartão espera. Não force.
+Nenhum cartão aberto no board.
 
 ## Próximos passos (quando Daniel voltar)
 
-1. Integrar a MAT-32 depois do veredito.
-2. Escrever e aprovar as specs da direção visual e dos tokens (MAT-34) e do backend local com Supabase (MAT-43). Os dois viram cartões `[impl]` executados pelo OpenCode e podem rodar em paralelo.
-3. Depois disso, as fatias do site, MAT-36 a MAT-41: site público, conta e família, rotina, desenvolvimento, comunidade e offline.
-4. Por último, o portão final (MAT-42).
+1. Escrever e aprovar as specs da direção visual e dos tokens (MAT-34) e do backend local com Supabase (MAT-43). Os dois viram cartões `[impl]` executados pelo OpenCode e podem rodar em paralelo.
+2. Depois disso, as fatias do site, MAT-36 a MAT-41: site público, conta e família, rotina, desenvolvimento, comunidade e offline.
+3. Por último, o portão final (MAT-42).
 
 ## Regras em vigor desde 03/11/2026
 
