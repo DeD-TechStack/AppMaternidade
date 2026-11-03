@@ -35,6 +35,10 @@ Apoio:
 
 Status entre parênteses: proposta, rascunho ou Proposta (para ADR).
 
+**00 Início**
+
+- [Política de commits](Politica_de_Commits.md) (em revisão)
+
 **01 Produto**
 
 - [Visão e escopo](../01_Produto/Visao_e_Escopo.md) (proposta)
@@ -43,6 +47,8 @@ Status entre parênteses: proposta, rascunho ou Proposta (para ADR).
 **02 Experiência**
 
 - [Fluxos e telas](../02_Experiencia/Fluxos_e_Telas.md) (proposta)
+- [Mapa e páginas do site](../02_Experiencia/Site_Mapa_e_Paginas.md) (em revisão)
+- [Direção visual do site](../02_Experiencia/Direcao_Visual.md) (em revisão)
 
 **03 Arquitetura**
 
@@ -72,6 +78,7 @@ Status entre parênteses: proposta, rascunho ou Proposta (para ADR).
 - [ADR-006 Comunidade e moderação](../06_ADRs/ADR-006_Comunidade_e_Moderacao.md)
 - [ADR-007 Conteúdo educativo e IA](../06_ADRs/ADR-007_Conteudo_Educativo_e_IA.md)
 - [ADR-008 Documentação, operação, custos e evolução](../06_ADRs/ADR-008_Documentacao_Operacao_Custos_e_Evolucao.md)
+- [ADR-009 Site completo primeiro](../06_ADRs/ADR-009_Site_Completo_Primeiro.md)
 
 **07 Roadmap**
 
