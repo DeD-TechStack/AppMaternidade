@@ -31,6 +31,7 @@ Em 03/11/2026, Daniel definiu o rumo: o AppMaternidade começa como site complet
   - O site tem só duas páginas provisórias: a inicial e a de endereço inexistente. Ainda não há tela de produto.
 - **Estudo da referência visual (MAT-33):** a especificação abstrata está fora do repositório, na pasta de staging do projeto, e passou na busca de termos proibidos.
 - **Cadastro do projeto:** os comandos de validação e a lista de comandos do OpenCode foram preenchidos.
+- **Backend local (MAT-43):** integrado na main em b76a707 (cartão `t_58526cc9`). Traz a CLI do Supabase 3.0.0, 3 migrações (contas, famílias, vínculos e bebês, com RLS e grants por coluna), 10 testes pgTAP com 123 asserções, seed fictício e job `banco` no CI. Para rodar: `npm run db:start`, `db:reset`, `db:test` e `db:stop`.
 - **Direção visual, tokens e protótipo (MAT-34):** integrados na main em e57c844 (cartão `t_dd87ca3d`), depois de 4 revisões. O `web/DESIGN.md` traz os tokens validados, e há as telas Início, Hoje (com modo madrugada) e Sessão, com dados fictícios. Ficam 294 testes, incluindo a geometria de todo texto em 100% e 200% de fonte, em 4 larguras. O G6 ficou entre 7,17 e 7,25, e é esse patamar que a MAT-44 vai elevar.
 
 - **Design docs v0.4 (MAT-32):** integrados na main em 5500c66 (cartão `t_46deffa1`).
@@ -47,8 +48,7 @@ Estado às 17h55:
   - fechar o G6 com duas notas independentes, ambas acima de 8,0;
   - usar ícones do lucide-react.
 - **Estudo de apps de maternidade (MAT-49, pronto):** o estudo está em `_staging/appmaternidade/PESQ-APPS/ESTUDO_PADROES.md`. Toda tela logada nova (MAT-37 a MAT-41) usa os padrões P1 a P7 e passa pelo `imgdiff` contra os 3 recortes, com teto de 75.
-- **MAT-43 (backend local):** está pronta, mas a revisão saiu inconclusiva porque o revisor não tem Docker. Quem decide é o coordenador.
-- **MAT-45, MAT-46 e MAT-47 (banco):** as specs v2 já incorporam a 1ª releitura e as decisões comuns de banco (`_staging/appmaternidade/DECISOES_BANCO_20261105.md`, C1 a C9). Falta a 2ª releitura por outra família, que espera os cartões de leitura do revisor, travados na infra.
+- **MAT-45, MAT-46 e MAT-47 (banco):** as specs v2 já incorporam a 1ª releitura e as decisões comuns de banco (`_staging/appmaternidade/DECISOES_BANCO_20261105.md`, C1 a C9). A 2ª releitura por outra família foi relançada às 18h50, porque os cartões de leitura do revisor estavam desbloqueados; a base, MAT-43, já está na main.
 - **MAT-36 (páginas públicas):** a spec v2 está pronta. A releitura vem depois da MAT-44 na main.
 
 ## Roteiro do site completo (pedido de Daniel em 05/11/2026)
