@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(46);
+select plan(47);
 
 -- 1 (...01) responsável da família 1. 2 (...02) só concedeu um papel e criou um bebê, sem vínculo.
 -- 3 (...03) cuidador, com o papel concedido por 2. 4 e 5 existem só em auth.users.
@@ -163,6 +163,16 @@ select is(
   (select count(*)::int from public.familias where nome in ('Casa inválida', 'Casa válida')),
   1,
   'só a chamada com fuso válido criou família'
+);
+
+select is(
+  (select v.concedido_por is null and v.encerrado_em is null and v.papel = 'responsavel' and v.estado = 'ativo'
+          and v.epoca = 1
+     from public.vinculos v
+     join public.familias f on f.id = v.familia_id
+    where f.nome = 'Casa válida' and v.conta_id = 'aaaaaaaa-0000-4000-8000-000000000001'),
+  true,
+  'o vínculo criado por criar_familia (chamada autenticada) tem concedido_por e encerrado_em nulos'
 );
 
 -- Nascimento: o hoje da família não depende do TimeZone da sessão.

@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(52);
+select plan(55);
 
 -- Família 1: 1 e 2 responsáveis ativos, 3 cuidador, 4 observador, 5 responsável revogado,
 -- 6 responsável que saiu, 7 responsável com validade vencida. Família 2: 8 responsável.
@@ -415,6 +415,72 @@ select is(
   array['familia', 'papel', 'vinculo_valido_ate'],
   'criar_convite não recebe a conta chamadora por parâmetro'
 );
+
+-- Conferência final da C3 (regra 3) em criar_convite: um gatilho depois do insert derruba todos os
+-- responsáveis da família do convite, inclusive o chamador, como faria uma chamada simultânea.
+-- Família 6: 12 e 13 são responsáveis ativos.
+insert into auth.users (id, email) values
+  ('aaaaaaaa-0000-4000-8000-000000000012', 'r12@exemplo.invalid'),
+  ('aaaaaaaa-0000-4000-8000-000000000013', 'r13@exemplo.invalid');
+
+insert into public.contas (id, nome_privado) values
+  ('aaaaaaaa-0000-4000-8000-000000000012', 'R12'),
+  ('aaaaaaaa-0000-4000-8000-000000000013', 'R13');
+
+insert into public.familias (id, nome, fuso, criada_por) values
+  ('ffffffff-0000-4000-8000-000000000006', 'Família 6', 'America/Sao_Paulo', 'aaaaaaaa-0000-4000-8000-000000000012');
+
+insert into public.vinculos (id, familia_id, conta_id, papel) values
+  ('bb000000-0000-4000-8000-000000000012', 'ffffffff-0000-4000-8000-000000000006', 'aaaaaaaa-0000-4000-8000-000000000012', 'responsavel'),
+  ('bb000000-0000-4000-8000-000000000013', 'ffffffff-0000-4000-8000-000000000006', 'aaaaaaaa-0000-4000-8000-000000000013', 'responsavel');
+
+create function pg_temp.foto() returns text language sql as $$
+  select (select md5(string_agg(v::text, '|' order by v.id)) from public.vinculos v) || '/'
+      || (select md5(string_agg(c::text, '|' order by c.id)) from public.convites c);
+$$;
+
+select set_config('teste.foto', pg_temp.foto(), true);
+
+create function teste_falhas.derruba_responsaveis() returns trigger language plpgsql as $$
+begin
+  if pg_trigger_depth() = 1 then
+    update public.vinculos set estado = 'saiu'
+     where familia_id = new.familia_id and papel = 'responsavel';
+  end if;
+  return null;
+end;
+$$;
+
+create trigger falha_simulada after insert on public.convites
+  for each row execute function teste_falhas.derruba_responsaveis();
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000012", "role": "authenticated"}';
+
+select throws_ok(
+  $$select public.criar_convite('ffffffff-0000-4000-8000-000000000006', 'cuidador')$$,
+  'P0001', 'ultimo responsavel',
+  'a conferência final recusa criar_convite que deixaria a família sem responsável'
+);
+
+reset role;
+drop trigger falha_simulada on public.convites;
+
+select is(
+  pg_temp.foto(), current_setting('teste.foto'),
+  'depois da recusa, nenhum convite foi gravado e vínculos e épocas estão intactos'
+);
+
+-- Controle sem gatilho: a operação normal dá certo na família 6 e na família 1.
+set local role authenticated;
+set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000001", "role": "authenticated"}';
+
+select lives_ok(
+  $$select public.criar_convite('ffffffff-0000-4000-8000-000000000001', 'cuidador')$$,
+  'controle sem gatilho: criar_convite dá certo e a família segue com responsável'
+);
+
+reset role;
 
 -- Reconferência depois da trava (C3): A e B são responsáveis ativos da família 5; na mesma transação,
 -- A rebaixa B e B já não cria convite. Vale para os dois papéis de destino.

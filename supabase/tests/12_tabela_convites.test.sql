@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(38);
+select plan(46);
 
 -- Família 1: 1 responsável ativo, 2 cuidador, 3 observador, 4 responsável revogado,
 -- 5 responsável que saiu, 6 responsável com validade vencida.
@@ -290,6 +290,61 @@ select is(
     where estado = 'pendente' and familia_id in ('ffffffff-0000-4000-8000-000000000001', 'ffffffff-0000-4000-8000-000000000002')),
   3,
   'os convites seguem intactos depois das tentativas negadas'
+);
+
+-- Insert, update e delete diretos negados também para cuidador e observador; a linha segue intacta.
+set local role authenticated;
+set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000002", "role": "authenticated"}';
+
+select throws_ok(
+  $$insert into public.convites (familia_id, papel, codigo_hash, expira_em)
+    values ('ffffffff-0000-4000-8000-000000000001', 'observador', 'hash-cuidador', now() + interval '7 days')$$,
+  '42501', null, 'cuidador não insere convite direto'
+);
+select throws_ok(
+  $$update public.convites set estado = 'revogado' where id = 'c0000000-0000-4000-8000-000000000001'$$,
+  '42501', null, 'cuidador não altera convite direto'
+);
+select throws_ok(
+  $$delete from public.convites where id = 'c0000000-0000-4000-8000-000000000001'$$,
+  '42501', null, 'cuidador não apaga convite direto'
+);
+
+reset role;
+
+select is(
+  (select c.estado::text || '|' || c.papel::text || '|' || c.criado_por::text
+     from public.convites c where c.id = 'c0000000-0000-4000-8000-000000000001'),
+  'pendente|observador|aaaaaaaa-0000-4000-8000-000000000001',
+  'a linha segue intacta depois das tentativas do cuidador'
+);
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000003", "role": "authenticated"}';
+
+select throws_ok(
+  $$insert into public.convites (familia_id, papel, codigo_hash, expira_em)
+    values ('ffffffff-0000-4000-8000-000000000001', 'observador', 'hash-observador', now() + interval '7 days')$$,
+  '42501', null, 'observador não insere convite direto'
+);
+select throws_ok(
+  $$update public.convites set estado = 'revogado' where id = 'c0000000-0000-4000-8000-000000000001'$$,
+  '42501', null, 'observador não altera convite direto'
+);
+select throws_ok(
+  $$delete from public.convites where id = 'c0000000-0000-4000-8000-000000000001'$$,
+  '42501', null, 'observador não apaga convite direto'
+);
+
+reset role;
+
+select is(
+  (select c.estado::text || '|' || c.papel::text || '|' || c.criado_por::text
+     from public.convites c where c.id = 'c0000000-0000-4000-8000-000000000001')
+  || '|' || (select count(*)::text from public.convites
+              where familia_id in ('ffffffff-0000-4000-8000-000000000001', 'ffffffff-0000-4000-8000-000000000002')),
+  'pendente|observador|aaaaaaaa-0000-4000-8000-000000000001|4',
+  'a linha e o total de convites seguem intactos depois das tentativas do observador'
 );
 
 -- Chaves estrangeiras em ação.

@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(46);
+select plan(52);
 
 create function pg_temp.chaves(j jsonb) returns text[] language sql as $$
   select array(select k from jsonb_object_keys(j) k order by k);
@@ -300,6 +300,66 @@ select is(
   'conta sem vínculo recebe vinculos como [] (nunca nula)'
 );
 select is(current_setting('teste.h')::jsonb -> 'familias', '[]'::jsonb, 'conta sem vínculo recebe familias como []');
+
+-- Resultado inteiro de quem não é responsável ativo (cuidador B, observador C, vínculo revogado E):
+-- as chaves exatas, familias vazia, só os próprios vínculos, e nenhum dado de família, bebê, convite
+-- nem de outra conta no texto. O familia_id do próprio vínculo pode aparecer.
+create function pg_temp.vaza(doc text, propria int) returns boolean language sql as $$
+  select doc ~ '(Família|bebe0000|c0000000|codigo_hash|segredo|Teo|Lia|Arquivado|Bebê)'
+      or exists (
+        select 1 from generate_series(1, 10) n
+         where n <> propria
+           and doc like ('%aaaaaaaa-0000-4000-8000-0000000000' || lpad(n::text, 2, '0') || '%')
+      );
+$$;
+
+select is(
+  current_setting('teste.b')::jsonb - 'gerado_em',
+  jsonb_build_object(
+    'formato', 'appmaternidade-exportacao-v1',
+    'conta', jsonb_build_object('id', 'aaaaaaaa-0000-4000-8000-000000000002', 'email', 'b@exemplo.invalid',
+                                'nome_privado', 'B', 'fuso', 'America/Sao_Paulo', 'criada_em', '2026-01-02T03:04:05.000000Z'),
+    'vinculos', jsonb_build_array(jsonb_build_object(
+      'familia_id', 'ffffffff-0000-4000-8000-000000000001', 'papel', 'cuidador', 'estado', 'ativo',
+      'valido_ate', pg_temp.utc(now() + interval '5 days'), 'epoca', 1,
+      'criado_em', pg_temp.utc(now() - interval '9 days'), 'encerrado_em', null)),
+    'familias', '[]'::jsonb),
+  'cuidador: o resultado inteiro tem só a conta, o próprio vínculo e familias = []'
+);
+select is(pg_temp.vaza(current_setting('teste.b'), 2), false,
+  'cuidador: o texto não traz família, bebê, convite, codigo_hash nem outra conta');
+
+select is(
+  current_setting('teste.c')::jsonb - 'gerado_em',
+  jsonb_build_object(
+    'formato', 'appmaternidade-exportacao-v1',
+    'conta', jsonb_build_object('id', 'aaaaaaaa-0000-4000-8000-000000000003', 'email', 'c@exemplo.invalid',
+                                'nome_privado', 'C', 'fuso', 'America/Sao_Paulo', 'criada_em', '2026-01-02T03:04:05.000000Z'),
+    'vinculos', jsonb_build_array(jsonb_build_object(
+      'familia_id', 'ffffffff-0000-4000-8000-000000000001', 'papel', 'observador', 'estado', 'ativo',
+      'valido_ate', null, 'epoca', 1,
+      'criado_em', pg_temp.utc(now() - interval '8 days'), 'encerrado_em', null)),
+    'familias', '[]'::jsonb),
+  'observador: o resultado inteiro tem só a conta, o próprio vínculo e familias = []'
+);
+select is(pg_temp.vaza(current_setting('teste.c'), 3), false,
+  'observador: o texto não traz família, bebê, convite, codigo_hash nem outra conta');
+
+select is(
+  current_setting('teste.e')::jsonb - 'gerado_em',
+  jsonb_build_object(
+    'formato', 'appmaternidade-exportacao-v1',
+    'conta', jsonb_build_object('id', 'aaaaaaaa-0000-4000-8000-000000000005', 'email', 'e@exemplo.invalid',
+                                'nome_privado', 'E', 'fuso', 'America/Sao_Paulo', 'criada_em', '2026-01-02T03:04:05.000000Z'),
+    'vinculos', jsonb_build_array(jsonb_build_object(
+      'familia_id', 'ffffffff-0000-4000-8000-000000000001', 'papel', 'cuidador', 'estado', 'revogado',
+      'valido_ate', null, 'epoca', 2,
+      'criado_em', pg_temp.utc(now() - interval '7 days'), 'encerrado_em', pg_temp.utc(now() - interval '1 day'))),
+    'familias', '[]'::jsonb),
+  'vínculo revogado: o resultado inteiro tem só a conta, o próprio vínculo e familias = []'
+);
+select is(pg_temp.vaza(current_setting('teste.e'), 5), false,
+  'vínculo revogado: o texto não traz família, bebê, convite, codigo_hash nem outra conta');
 
 -- Conta sem linha em contas, anônimo e efeito sobre os dados.
 set local role authenticated;
