@@ -14,7 +14,7 @@ function lerTokens(css: string): Record<string, string> {
   const bloco = /@theme\s*\{([^}]*)\}/.exec(css)
   if (!bloco) throw new Error('bloco @theme não encontrado em tokens.css')
   const cores: Record<string, string> = {}
-  for (const [, nome, hex] of bloco[1].matchAll(/--color-([a-z-]+):\s*(#[0-9a-f]{6})\s*;/g)) {
+  for (const [, nome, hex] of bloco[1].matchAll(/--color-([a-z0-9-]+):\s*(#[0-9a-f]{6})\s*;/g)) {
     cores[nome] = hex
   }
   return cores
@@ -64,12 +64,14 @@ describe('contraste e limites dos tokens', () => {
     )
   })
 
-  it('o bloco @theme tem as 16 cores do DESIGN.md', () => {
+  it('o bloco @theme tem as 20 cores do DESIGN.md', () => {
     expect(Object.keys(cores).sort()).toEqual(
       [
         'primary', 'neutral', 'accent', 'on-accent', 'info', 'line', 'focus', 'paper-deep',
+        'field-1', 'field-2',
         'night-primary', 'night-neutral', 'night-accent', 'night-on-accent', 'night-info',
         'night-line', 'night-focus', 'night-paper-deep',
+        'night-field-1', 'night-field-2',
       ].sort(),
     )
   })
@@ -83,6 +85,10 @@ describe('contraste e limites dos tokens', () => {
     ['night-on-accent', 'night-accent'],
     ['night-accent', 'night-neutral'],
     ['night-info', 'night-neutral'],
+    ['primary', 'field-1'],
+    ['primary', 'field-2'],
+    ['night-primary', 'night-field-1'],
+    ['night-primary', 'night-field-2'],
   ]
   for (const [texto, fundo] of paresDeTexto) {
     it(`${texto} sobre ${fundo} tem contraste de pelo menos 4,5`, () => {
@@ -95,6 +101,10 @@ describe('contraste e limites dos tokens', () => {
     ['focus', 'accent'],
     ['night-focus', 'night-neutral'],
     ['night-focus', 'night-accent'],
+    ['focus', 'field-1'],
+    ['focus', 'field-2'],
+    ['night-focus', 'night-field-1'],
+    ['night-focus', 'night-field-2'],
   ]
   for (const [foco, fundo] of paresDeFoco) {
     it(`${foco} contra ${fundo} tem contraste de pelo menos 3`, () => {
@@ -256,13 +266,13 @@ describe('tema', () => {
 
   it('define as variáveis de uso do tema claro com as cores do dia', () => {
     for (const uso of usos) {
-      expect(claro, uso).toMatch(new RegExp(`--${uso}:\\s*var\\(--color-(?!night-)[a-z-]+\\)`))
+      expect(claro, uso).toMatch(new RegExp(`--${uso}:\\s*var\\(--color-(?!night-)[a-z0-9-]+\\)`))
     }
   })
 
   it('o bloco data-tema="madrugada" aponta as mesmas variáveis para as cores da noite', () => {
     for (const uso of usos) {
-      expect(madrugada, uso).toMatch(new RegExp(`--${uso}:\\s*var\\(--color-night-[a-z-]+\\)`))
+      expect(madrugada, uso).toMatch(new RegExp(`--${uso}:\\s*var\\(--color-night-[a-z0-9-]+\\)`))
     }
   })
 

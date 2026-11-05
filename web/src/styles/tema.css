@@ -9,9 +9,18 @@
   --cor-foco: var(--color-focus);
   --cor-papel-fundo: var(--color-paper-deep);
 
-  /* Campo do cronômetro na Sessão */
+  /* Campos de cor do Início: o barro e a lavanda. Sobre eles o texto é sempre a tinta. */
+  --cor-campo-1: var(--color-field-1);
+  --cor-campo-2: var(--color-field-2);
+
+  /* Campo do cronômetro na Sessão e do cartão Em andamento no Hoje */
   --cor-campo-sessao: var(--color-accent);
   --cor-numero-sessao: var(--color-on-accent);
+  --borda-campo: none;
+
+  /* Botão principal dentro de um campo: o urucum do botão sumiria no urucum do campo. */
+  --cor-botao-campo: var(--color-on-accent);
+  --cor-texto-botao-campo: var(--color-accent);
 
   --fonte-exibicao: 'Fraunces', Georgia, serif;
   --fonte-texto: 'Instrument Sans', system-ui, sans-serif;
@@ -19,6 +28,9 @@
   --alvo-rapido: 48px;
 }
 
+/* A madrugada vale para a página inteira (data-tema no html) ou só para um invólucro local, como
+   a miniatura da madrugada no Início (data-tema-local). Um bloco só, para os dois não divergirem. */
+[data-tema-local='madrugada'],
 :root[data-tema='madrugada'] {
   --cor-fundo: var(--color-night-neutral);
   --cor-texto: var(--color-night-primary);
@@ -29,8 +41,15 @@
   --cor-foco: var(--color-night-focus);
   --cor-papel-fundo: var(--color-night-paper-deep);
 
+  --cor-campo-1: var(--color-night-field-1);
+  --cor-campo-2: var(--color-night-field-2);
+
   --cor-campo-sessao: var(--color-night-paper-deep);
   --cor-numero-sessao: var(--color-night-primary);
+  --borda-campo: 1px solid var(--color-night-line);
+
+  --cor-botao-campo: var(--color-night-accent);
+  --cor-texto-botao-campo: var(--color-night-on-accent);
 
   --alvo-rapido: 56px;
 }
