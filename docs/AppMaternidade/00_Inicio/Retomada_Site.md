@@ -49,11 +49,36 @@ Estado às 15h40:
 - **MAT-34:** faz a última micro-correção de acessibilidade.
 - **MAT-44 (salto visual, decisão de Daniel):** a spec está em explique de volta. O cartão só nasce depois que a MAT-34 for integrada.
 
-## Próximos passos (quando Daniel voltar)
+## Roteiro do site completo (pedido de Daniel em 05/11/2026)
 
-1. Escrever e aprovar as specs da direção visual e dos tokens (MAT-34) e do backend local com Supabase (MAT-43). Os dois viram cartões `[impl]` executados pelo OpenCode e podem rodar em paralelo.
-2. Depois disso, as fatias do site, MAT-36 a MAT-41: site público, conta e família, rotina, desenvolvimento, comunidade e offline.
-3. Por último, o portão final (MAT-42).
+Daniel, em 05/11/2026: "não quero só homepage, quero site inteiro funcional". O site deve:
+- funcionar de ponta a ponta;
+- ter a interface próxima da referência, adaptada para nós;
+- ficar publicado, para o professor entrar e usar tudo com dados fictícios.
+
+O acesso é por e-mail e senha, com recuperação por e-mail (decisão de Daniel). O e-mail de contato do site fica pendente.
+
+O trabalho anda em duas trilhas paralelas, uma de banco e uma de tela. Cada cartão tem o próprio worktree.
+
+| Ordem | Tarefa | O que entrega | Depende de |
+|---|---|---|---|
+| 1 | MAT-34 | protótipo de 3 telas (rodada 2 de correção) | — |
+| 1 | MAT-43 | banco local: contas, famílias, vínculos e bebês | revisão com Docker (coordenador) |
+| 2 | MAT-44 | salto visual com a referência, base do visual de todas as páginas | MAT-34 |
+| 2 | MAT-45, MAT-46, MAT-47 | banco de conta e família, de rotina e de comunidade | MAT-43 |
+| 3 | MAT-36 | páginas públicas: Como funciona, Cuidado compartilhado, Desenvolvimento, Regras, Privacidade, Termos, Exclusão, Contato e Sobre | MAT-44 |
+| 3 | MAT-37 | telas de entrar, criar conta, recuperar acesso, convite, família e conta, ligadas ao banco | MAT-44, MAT-45 |
+| 4 | MAT-38 | Hoje, os 7 registros, Sessão e Histórico ligados ao banco | MAT-37, MAT-46 |
+| 4 | MAT-39 | Desenvolvimento: tummy time e atividades, com fontes | MAT-37, MAT-46 |
+| 4 | MAT-40 | Comunidade e painel de moderação | MAT-37, MAT-47 |
+| 5 | MAT-41 | PWA: offline, sincronização e lembretes | MAT-38 |
+| 6 | MAT-48 | publicação: Supabase Free em São Paulo e GitHub Pages pelo CI, com conta de demonstração | push e secrets autorizados por Daniel |
+| 7 | MAT-42 | portão final de qualidade e aceite | todas |
+
+**Como o professor vai usar:** o site publicado fala com um projeto Supabase Free em São Paulo, só com dados fictícios.
+- Haverá uma conta de demonstração já com família, bebê e uma semana de registros.
+- O professor também pode criar a própria conta.
+- Daniel cria o projeto e cadastra as chaves como secrets do GitHub. Nenhum agente vê as chaves.
 
 ## Regras em vigor desde 03/11/2026
 

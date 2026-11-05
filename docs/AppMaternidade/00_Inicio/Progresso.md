@@ -21,6 +21,12 @@ Horários em America/Sao_Paulo, tirados do relógio da máquina ou de carimbos d
 
 Uma linha por marco, a mais recente no topo. O estado corrente fica em [Retomada do site](Retomada_Site.md), e o detalhe de cada marco está no cartão Kanban citado.
 
+- 05/11/2026: **pedido de Daniel: site inteiro funcional.**
+  - O site vai funcionar de ponta a ponta, com a interface próxima da referência, publicado para o professor usar com dados fictícios.
+  - Decisões de Daniel: acesso por e-mail e senha, com recuperação; Supabase Free agora, só com dados fictícios; o e-mail de contato fica pendente.
+  - Tarefas novas no itsaplan: MAT-45, MAT-46 e MAT-47 (banco de conta, rotina e comunidade) e MAT-48 (publicação).
+  - A spec da MAT-44 foi aprovada na v3.
+  - O roteiro completo está na nota de retomada.
 - 05/11/2026: **decisão de Daniel: salto visual (MAT-44, D11 revista).** O protótipo da MAT-34 ficou genérico, com G6 entre 7,17 e 7,25. A MAT-34 fecha como está, e a MAT-44 refaz as 3 telas com as capturas da referência visíveis para quem monta e componentes da lista aprovada (shadcn/ui, Magic UI), com G6 mínimo de 8,0. Continua proibido copiar código, imagem, texto e marca. As capturas ficam fora do Git, em `_staging/appmaternidade/MAT-44/referencia/`.
 - 05/11/2026: **specs aprovadas e cartões criados.** A MAT-34 v2 virou o cartão `t_dd87ca3d` e a MAT-43 v2, o `t_58526cc9`, os dois com base cc91ec8. O G6 tem mínimo de 7,0 por tela.
 - 05/11/2026: **retomada** liberada por Daniel. As specs da MAT-34 e da MAT-43 foram escritas, v1 em explique de volta. A main está em c81a094.
