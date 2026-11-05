@@ -1,10 +1,15 @@
 import { useEffect, useRef, useState, type RefObject } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
 import { ColunaApp } from '../componentes/ColunaApp.tsx'
+import { ATIVIDADE_TUMMY } from '../conteudo/textos.ts'
 import { BarraInferior } from '../prototipo/BarraInferior.tsx'
 import { FaixaPrototipo } from '../prototipo/FaixaPrototipo.tsx'
+import { IlustracaoBerco } from '../prototipo/IlustracaoBerco.tsx'
+import { IlustracaoMamada } from '../prototipo/IlustracaoMamada.tsx'
+import { IlustracaoTapete } from '../prototipo/IlustracaoTapete.tsx'
 import { NavegacaoInferior } from '../prototipo/NavegacaoInferior.tsx'
 import { SessaoInfo } from '../prototipo/SessaoInfo.tsx'
+import { nomeDoCampo } from '../prototipo/campo.ts'
 import { usePrototipo } from '../prototipo/contexto.ts'
 import { focoDoEstado } from '../prototipo/foco.ts'
 import { NOME_BEBE, ROTULO_SESSAO, ehTipoSessao, type TipoSessao } from '../prototipo/estado.ts'
@@ -143,18 +148,37 @@ function CorpoDaSessao({ titulo }: { titulo: RefObject<HTMLHeadingElement | null
 
       <div className="mt-6">
         <SessaoInfo
+          campo={nomeDoCampo('accent', estado.madrugada)}
           cronometro={formatarCronometro(agora - sessao.inicio)}
           hora={formatarHora(sessao.inicio)}
           pessoa={sessao.pessoa}
-          atividade={sessao.tipo === 'tummy' ? 'Espelho no chão' : undefined}
+          atividade={sessao.tipo === 'tummy' ? ATIVIDADE_TUMMY : undefined}
         />
       </div>
 
-      <div className="mt-auto pt-10">
+      {/* O espaço entre o campo e as ações é de uma ilustração do tipo da sessão. A área cresce
+          com o espaço livre (flex-1) e vai a zero antes de empurrar as ações (min-h-0): a figura
+          preenche a área, com teto de tamanho médio, e some quando a janela é baixa. */}
+      <div className="relative mt-6 min-h-0 flex-1">
+        <IlustracaoDaSessao tipo={sessao.tipo} />
+      </div>
+
+      <div className="mt-auto pt-6">
         <AcoesDaSessao />
       </div>
     </>
   )
+}
+
+/** Sono: o berço. Tummy time: o tapete. Mamada: a poltrona (a mais próxima). */
+function IlustracaoDaSessao({ tipo }: { tipo: TipoSessao }) {
+  if (tipo === 'sono') {
+    return <IlustracaoBerco className="absolute inset-0 m-auto block h-full max-h-[16rem] w-full max-w-[16rem]" />
+  }
+  if (tipo === 'tummy') {
+    return <IlustracaoTapete className="absolute inset-0 m-auto block h-full max-h-[16rem] w-full max-w-[16rem]" />
+  }
+  return <IlustracaoMamada className="absolute inset-0 m-auto block h-full max-h-[16rem] w-full max-w-[16rem]" />
 }
 
 export function Sessao() {
@@ -198,15 +222,19 @@ export function Sessao() {
               <h1 ref={titulo} tabIndex={-1} className="titulo-tela alvo-foco">
                 Nenhuma sessão em andamento
               </h1>
-              <p className="mt-4">
-                <Link
-                  to="/app/hoje"
-                  state={{ foco: 'titulo' }}
-                  className="alvo-toque inline-flex items-center"
-                >
-                  Voltar para Hoje
-                </Link>
-              </p>
+              <div
+                data-campo={nomeDoCampo('field-1', estado.madrugada)}
+                className="-mx-4 mt-6 flex flex-1 items-center justify-center rounded-none px-4 py-10"
+              >
+                <IlustracaoBerco className="block h-auto w-full max-w-[22rem]" />
+              </div>
+              <Link
+                to="/app/hoje"
+                state={{ foco: 'titulo' }}
+                className="botao botao-secundario botao-grande mt-6"
+              >
+                Voltar para Hoje
+              </Link>
             </>
           ) : (
             <CorpoDaSessao titulo={titulo} />

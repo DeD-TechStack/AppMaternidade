@@ -7,6 +7,7 @@ import { CartaoEmAndamento } from '../prototipo/CartaoEmAndamento.tsx'
 import { Confirmacao } from '../prototipo/Confirmacao.tsx'
 import { FaixaPrototipo } from '../prototipo/FaixaPrototipo.tsx'
 import { NavegacaoInferior } from '../prototipo/NavegacaoInferior.tsx'
+import { nomeDoCampo } from '../prototipo/campo.ts'
 import { usePrototipo } from '../prototipo/contexto.ts'
 import {
   IDADE_BEBE,
@@ -36,6 +37,7 @@ function CartaoDaSessao({ cartao }: { cartao: RefObject<HTMLElement | null> }) {
   return (
     <CartaoEmAndamento
       ref={cartao}
+      campo={nomeDoCampo('accent', estado.madrugada)}
       sessao={
         sessao
           ? {
@@ -111,39 +113,49 @@ export function Hoje() {
 
       <main className="flex-1 px-4 pb-8 pt-6">
         <div>
-          <h1 ref={titulo} tabIndex={-1} className="titulo-tela alvo-foco">
-            Hoje
-          </h1>
-          <p className="mt-1">{`${NOME_BEBE}, ${IDADE_BEBE}`}</p>
+          <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
+            <div>
+              <h1 ref={titulo} tabIndex={-1} className="titulo-tela alvo-foco">
+                Hoje
+              </h1>
+              <p className="mt-1">{`${NOME_BEBE}, ${IDADE_BEBE}`}</p>
+            </div>
 
-          <button
-            type="button"
-            aria-pressed={estado.madrugada}
-            className="botao botao-secundario mt-4"
-            onClick={() => dispatch({ tipo: 'definirMadrugada', valor: !estado.madrugada })}
-          >
-            Modo madrugada
-          </button>
+            <button
+              type="button"
+              aria-pressed={estado.madrugada}
+              className="botao botao-secundario"
+              onClick={() => dispatch({ tipo: 'definirMadrugada', valor: !estado.madrugada })}
+            >
+              Modo madrugada
+            </button>
+          </div>
 
           <div className="mt-6">
             <CartaoDaSessao cartao={cartao} />
           </div>
 
-          <section aria-labelledby="titulo-saber" className="mt-8 border-t pt-4">
+          {/* A nota de passagem é um campo de lavanda a rente da tela, como no Início: a frase é o
+              que importa ao chegar no turno. Na madrugada o campo é o lavanda escuro. */}
+          <section
+            aria-labelledby="titulo-saber"
+            data-campo={nomeDoCampo('field-2', estado.madrugada)}
+            className="-mx-4 mt-8 rounded-none px-4 py-8"
+          >
             <h2 id="titulo-saber" className="rotulo">
               Para você saber
             </h2>
-            <p className="nota-italico mt-3">{estado.nota.texto}</p>
-            <p className="tabular mt-1 text-sm">{`${estado.nota.autor}, ${estado.nota.hora}`}</p>
+            <p className="nota-italico mt-4 text-[2rem] leading-tight">{estado.nota.texto}</p>
+            <p className="tabular mt-3 text-sm">{`${estado.nota.autor}, ${estado.nota.hora}`}</p>
           </section>
 
-          <section aria-labelledby="titulo-ultimos" className="mt-8 border-t pt-4">
+          <section aria-labelledby="titulo-ultimos" className="mt-10">
             <h2 id="titulo-ultimos" className="rotulo">
               Últimos
             </h2>
-            <ul className="mt-3 divide-y border-y">
+            <ul className="mt-4 divide-y border-y">
               {estado.ultimos.map((item) => (
-                <li key={item.chave} className="flex items-baseline justify-between gap-4 py-3">
+                <li key={item.chave} className="flex items-baseline justify-between gap-4 py-4">
                   <span>{item.rotulo}</span> <span className="tabular text-right">{item.quando}</span>
                 </li>
               ))}

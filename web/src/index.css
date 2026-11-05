@@ -19,6 +19,8 @@
   html {
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   body {
@@ -88,9 +90,21 @@
     letter-spacing: -0.02em;
   }
 
+  /* Títulos sem linha viúva; o corpo corrido sem última linha de uma palavra só. */
+  .promessa,
+  .titulo-secao,
+  .titulo-tela,
+  .titulo-linha {
+    text-wrap: balance;
+  }
+
+  .texto-medida {
+    text-wrap: pretty;
+  }
+
   .marca {
     font-size: 1.25rem;
-    font-weight: 600;
+    font-weight: 800;
   }
 
   .promessa {
@@ -113,9 +127,9 @@
   }
 
   .titulo-linha {
-    font-size: 1.375rem;
+    font-size: 1.75rem;
     font-weight: 600;
-    line-height: 1.2;
+    line-height: 1.15;
   }
 
   .numero-fato {
@@ -168,24 +182,27 @@
     padding: 0.375rem 0.5rem;
   }
 
-  .campo-cor {
-    border-radius: var(--radius-media, 8px);
+  /* Campos de cor do Início (data-campo). O valor é o nome do token; a cor vem das variáveis de
+     uso, que na madrugada apontam para os tons da noite. Sobre o barro e a lavanda, a tinta. */
+  [data-campo] {
+    border-radius: var(--radius-card, 8px);
+  }
+
+  [data-campo='accent'] {
     background-color: var(--cor-destaque);
     color: var(--cor-sobre-destaque);
-    padding: 1rem;
   }
 
-  .painel {
-    border: 1px solid var(--cor-linha);
-    border-radius: var(--radius-media, 8px);
-    background-color: var(--cor-fundo);
+  [data-campo='field-1'],
+  [data-campo='night-field-1'] {
+    background-color: var(--cor-campo-1);
     color: var(--cor-texto);
-    padding: 1rem;
   }
 
-  /* Dentro de um painel o cartão perde o contorno: nunca há cartão dentro de cartão. */
-  .bloco-miniatura {
-    padding: 0;
+  [data-campo='field-2'],
+  [data-campo='night-field-2'] {
+    background-color: var(--cor-campo-2);
+    color: var(--cor-texto);
   }
 
   /* Coluna única das telas logadas: faixa, conteúdo, barra e navegação alinhados nela. */
@@ -201,15 +218,40 @@
     }
   }
 
-  .campo-sessao {
+  /* O cronômetro da Sessão e o cartão Em andamento do Hoje ficam num campo de cor. De dia é o
+     urucum; na madrugada, o papel fundo escuro com contorno, sem ponto claro. */
+  .campo-sessao,
+  .campo-andamento {
     border-radius: var(--radius-media, 8px);
+    border-block: var(--borda-campo);
     background-color: var(--cor-campo-sessao);
     color: var(--cor-numero-sessao);
     padding: 1.5rem 1rem;
   }
 
-  :root[data-tema='madrugada'] .campo-sessao {
-    border: 1px solid var(--cor-linha);
+  /* No Hoje o cartão sangra até as bordas da coluna (a margem da tela é de 1 rem). */
+  .cartao.campo-andamento {
+    margin-inline: -1rem;
+    border: 0;
+    border-block: var(--borda-campo);
+    border-radius: 0;
+  }
+
+  /* Com o campo a rente da tela, o contorno de foco vai para dentro dele, onde não é cortado. */
+  .cartao.campo-andamento:focus-visible {
+    outline-offset: -4px;
+  }
+
+  .campo-andamento .botao-principal {
+    border-color: var(--cor-botao-campo);
+    background-color: var(--cor-botao-campo);
+    color: var(--cor-texto-botao-campo);
+  }
+
+  .campo-andamento .botao-secundario {
+    border-color: currentColor;
+    background-color: transparent;
+    color: inherit;
   }
 
   .cronometro {
@@ -234,11 +276,13 @@
     min-height: 44px;
   }
 
-  /* Botões */
+  /* Botões. A resposta ao toque é cor e um deslocamento de 1 px, em 120 ms: nada de escala,
+     giro ou inclinação (VIS-08). */
   .botao {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 0.5rem;
     min-height: 48px;
     border: 1px solid transparent;
     border-radius: var(--radius-control, 6px);
@@ -249,6 +293,14 @@
     letter-spacing: 0.02em;
     text-align: center;
     text-decoration: none;
+    transition-property: transform, opacity, background-color, border-color;
+    transition-duration: 120ms;
+    transition-timing-function: ease-out;
+  }
+
+  .botao:active:not(:disabled) {
+    opacity: 0.85;
+    transform: translateY(1px);
   }
 
   .botao-principal {
@@ -279,6 +331,10 @@
 
   .acao-rapida {
     min-height: var(--alvo-rapido);
+    gap: 0.375rem;
+    /* 15 px: com o ícone, o rótulo mais longo (Tummy time) cabe numa linha nas cinco colunas da
+       coluna de 40 rem, sem espremer o ícone. */
+    font-size: 0.9375rem;
     border-color: var(--cor-papel-fundo);
     background-color: var(--cor-papel-fundo);
     padding-inline: 0.5rem;
@@ -352,11 +408,15 @@
     right: 0;
   }
 
+  /* O ícone fica em cima do rótulo, alinhado pelo topo; o rótulo continua sendo o nome acessível
+     do item. */
   .nav-item {
     grid-row: 2;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
+    gap: 0.25rem;
     /* Rede de segurança: o rótulo nunca vaza da coluna, mesmo sem dicionário de hifenização. */
     min-width: 0;
     min-height: 48px;
@@ -364,7 +424,7 @@
     border: 0;
     border-top: 3px solid transparent;
     background-color: transparent;
-    padding: 0.25rem 0;
+    padding: 0.5rem 0 0.25rem;
     color: var(--cor-texto);
     font-size: 0.75rem;
     font-weight: 500;
@@ -407,7 +467,10 @@
     }
 
     .nav-item {
-      justify-content: flex-start;
+      flex-direction: row;
+      align-items: center;
+      gap: 0.75rem;
+      padding-block: 0.25rem;
       padding-inline: 0.75rem;
       text-align: left;
     }
@@ -425,11 +488,243 @@
     font-weight: 600;
   }
 
-  /* Ilustração: traço contínuo de tinta, preenchimento chapado de tinta ou papel */
+  /* Vitrine do Início: o palco tem tamanho natural fixo e encolhe por escala. A escala depende
+     da largura da página em rem (contêiner pagina), nunca da janela, e cresce em degraus de modo
+     que o palco inteiro sempre caiba na largura: nada do que tem texto fica cortado pela borda.
+     Abaixo de 46 rem o palco tem só o notebook e um celular (58 rem de largura natural); a
+     partir de 46 rem entra o segundo celular (72 rem). Só o fundo do palco é cortado, nunca uma
+     linha de texto. */
+  .vitrine {
+    --escala: 0.38;
+    position: relative;
+    overflow: hidden;
+    height: calc(55rem * var(--escala));
+  }
+
+  @container pagina (min-width: 26rem) {
+    .vitrine {
+      --escala: 0.44;
+    }
+  }
+
+  @container pagina (min-width: 30rem) {
+    .vitrine {
+      --escala: 0.52;
+    }
+  }
+
+  @container pagina (min-width: 36rem) {
+    .vitrine {
+      --escala: 0.62;
+    }
+  }
+
+  @container pagina (min-width: 42rem) {
+    .vitrine {
+      --escala: 0.72;
+    }
+  }
+
+  @container pagina (min-width: 46rem) {
+    .vitrine {
+      --escala: 0.62;
+    }
+
+    .vitrine-palco {
+      width: 72rem;
+      margin-left: -36rem;
+    }
+  }
+
+  @container pagina (min-width: 64rem) {
+    .vitrine {
+      --escala: 0.85;
+    }
+  }
+
+  @container pagina (min-width: 80rem) {
+    .vitrine {
+      --escala: 1;
+    }
+  }
+
+  .vitrine-palco {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 58rem;
+    height: 55rem;
+    margin-left: -29rem;
+    transform: scale(var(--escala));
+    transform-origin: top center;
+  }
+
+  /* Madrugada: quatro filhos da grade. Em coluna única (página estreita) a ordem é título e
+     texto, ilustração, celular e legenda, tudo centrado no celular. A partir de 64 rem, duas
+     colunas: o texto no alto da esquerda, a ilustração apoiada na base do celular (a linha do
+     meio, 1fr, é a que sobra ao lado dele) e a legenda logo abaixo do celular, com a largura
+     dele: a legenda tem largura 0 e mínimo de 100%, para a coluna ser a do celular e não a do
+     texto da legenda. */
+  .madrugada-grade {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 2.5rem;
+  }
+
+  .madrugada-celular {
+    justify-self: center;
+  }
+
+  .madrugada-legenda {
+    max-width: 18rem;
+    justify-self: center;
+  }
+
+  @container pagina (min-width: 46rem) {
+    .madrugada-legenda {
+      max-width: 20.4rem;
+    }
+  }
+
+  @container pagina (min-width: 64rem) {
+    .madrugada-grade {
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-areas: "texto celular" "ilustracao celular" ". legenda";
+      grid-template-rows: auto 1fr auto;
+      column-gap: 4rem;
+      row-gap: 0;
+    }
+
+    .madrugada-texto {
+      grid-area: texto;
+    }
+
+    .madrugada-ilustracao {
+      grid-area: ilustracao;
+      align-self: end;
+      justify-self: start;
+      margin-top: 2rem;
+    }
+
+    .madrugada-celular {
+      grid-area: celular;
+      justify-self: start;
+    }
+
+    .madrugada-legenda {
+      grid-area: legenda;
+      width: 0;
+      min-width: 100%;
+      max-width: none;
+      margin-top: 1.5rem;
+      justify-self: start;
+    }
+  }
+
+  /* Aparelhos desenhados em CSS, sem sombra. A profundidade vem de sobrepor e mudar a escala.
+     Por dentro vão as miniaturas de verdade, em tamanho natural: os componentes decidem o
+     layout pela largura que têm, e a escala só encolhe o conjunto. Cantos concêntricos: o raio
+     de fora é o de dentro mais o respiro entre os dois. */
+  .aparelho {
+    flex: none;
+  }
+
+  .aparelho-tela {
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto);
+    overflow: hidden;
+    font-size: 1rem;
+  }
+
+  .aparelho-celular {
+    position: relative;
+    width: 24rem;
+    aspect-ratio: 9 / 14;
+    border: 2px solid var(--cor-linha);
+    border-radius: 2.5rem;
+    background-color: var(--cor-linha);
+    padding: 0.5rem;
+  }
+
+  .aparelho-celular .aparelho-tela {
+    height: 100%;
+    border-radius: 2rem;
+    padding: 2.75rem 1rem 1rem;
+  }
+
+  /* O furo da câmera, um traço de tinta no alto da tela. */
+  .aparelho-celular::after {
+    content: '';
+    position: absolute;
+    top: 1.1rem;
+    left: 50%;
+    width: 4.5rem;
+    height: 1.1rem;
+    margin-left: -2.25rem;
+    border-radius: 999px;
+    background-color: var(--cor-linha);
+  }
+
+  .aparelho-notebook {
+    width: 56rem;
+  }
+
+  .aparelho-tampa {
+    aspect-ratio: 16 / 10;
+    border: 2px solid var(--cor-linha);
+    border-radius: 1rem 1rem 0 0;
+    background-color: var(--cor-linha);
+    padding: 0.625rem;
+  }
+
+  .aparelho-notebook .aparelho-tela {
+    height: 100%;
+    border-radius: 0.375rem;
+    /* Margens largas dos lados, como uma janela de navegador: é sobre elas e sobre a moldura
+       que os celulares se sobrepõem, nunca sobre o texto. */
+    padding: 1.5rem 6.5rem;
+  }
+
+  .aparelho-base {
+    height: 1.25rem;
+    margin-inline: -2.5rem;
+    border: 2px solid var(--cor-linha);
+    border-radius: 0 0 1.25rem 1.25rem;
+    background-color: var(--cor-papel-fundo);
+  }
+
+  /* Faixa de fatos: uma coluna, duas e quatro, conforme a largura da página em rem. Cada fato
+     leva uma linha de tinta no topo; a faixa fecha com uma linha embaixo. */
+  .faixa-fatos {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    column-gap: 1.5rem;
+    border-bottom: 1px solid var(--cor-linha);
+  }
+
+  .faixa-fatos > li {
+    border-top: 1px solid var(--cor-linha);
+    padding-block: 1.5rem;
+  }
+
+  @container pagina (min-width: 46rem) {
+    .faixa-fatos {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @container pagina (min-width: 64rem) {
+    .faixa-fatos {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  /* Ilustração: traço contínuo de tinta de uma espessura só, preenchimento chapado nas cores
+     dos tokens (papel, urucum, barro, lavanda, papel fundo e a própria tinta). */
   .ilu {
     fill: none;
     stroke: var(--cor-texto);
-    stroke-width: 2.5;
+    stroke-width: 3;
     stroke-linecap: round;
     stroke-linejoin: round;
   }
@@ -442,8 +737,54 @@
     fill: var(--cor-texto);
   }
 
+  .ilu-urucum {
+    fill: var(--cor-destaque);
+  }
+
+  .ilu-barro {
+    fill: var(--cor-campo-1);
+  }
+
+  .ilu-lavanda {
+    fill: var(--cor-campo-2);
+  }
+
+  .ilu-fundo {
+    fill: var(--cor-papel-fundo);
+  }
+
   .ilu-sem-traco {
     stroke: none;
+  }
+
+  /* Braço ou perna: um traço grosso de tinta com outro mais fino da cor por cima, o que deixa
+     o membro com o mesmo contorno de 3 unidades das outras formas. */
+  .ilu-membro {
+    stroke-width: 16;
+  }
+
+  .ilu-membro-dentro {
+    stroke-width: 10;
+  }
+
+  .ilu-dentro-papel {
+    stroke: var(--cor-fundo);
+  }
+
+  .ilu-dentro-tinta {
+    stroke: var(--cor-texto);
+  }
+
+  .ilu-dentro-urucum {
+    stroke: var(--cor-destaque);
+  }
+
+  .ilu-dentro-barro {
+    stroke: var(--cor-campo-1);
+  }
+
+  .ilu-dentro-lavanda {
+    stroke: var(--cor-campo-2);
   }
 
   /* Entrada dos blocos: só opacidade e deslocamento curto (VIS-08) */
