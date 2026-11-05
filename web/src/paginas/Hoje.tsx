@@ -153,7 +153,7 @@ export function Hoje() {
       </main>
 
       <BarraInferior>
-        <section aria-label="Registro rápido" className="registro-rapido @container">
+        <section aria-label="Registro rápido" className="registro-rapido">
           <Confirmacao
             texto={estado.confirmacao?.texto ?? null}
             aoDesfazer={desfazer}

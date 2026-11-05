@@ -9,14 +9,17 @@ import {
 
 type Painel = 'fralda' | 'mais'
 
-// Grade de 6 colunas no celular: Sono, Mamada e Fralda ocupam 2 colunas cada; Tummy time e
-// + Mais ocupam 3 cada. Os rótulos não quebram, então as duas linhas têm a mesma altura. A
-// partir de 48 rem, os 5 ficam numa linha só. Num contêiner muito estreito (fonte em 200%),
-// a grade vira uma coluna e o rótulo pode quebrar, em vez de vazar do botão.
-const GRADE = 'grid grid-cols-6 gap-2 md:grid-cols-5 @max-[16rem]:grid-cols-1'
-const ACAO = 'botao acao-rapida whitespace-nowrap @max-[16rem]:whitespace-normal'
-const PRIMEIRA_LINHA = `${ACAO} col-span-2 md:col-span-1 @max-[16rem]:col-span-1`
-const SEGUNDA_LINHA = `${ACAO} col-span-3 md:col-span-1 @max-[16rem]:col-span-1`
+// O layout depende da largura DO COMPONENTE, em rem, e não da janela: ele aparece no Hoje, em
+// coluna de 40 rem, e na miniatura do Início, num painel de 260 a 400 px. Por isso o div raiz é
+// o contêiner (@container) e só há variantes de contêiner aqui, nunca sm:/md:/lg:. Faixas:
+//  - abaixo de 17 rem: uma coluna, e o rótulo pode quebrar (fonte em 200%, painel estreito);
+//  - de 17 a 36 rem: grade de 6 colunas. Sono, Mamada e Fralda ocupam 2 colunas cada; Tummy
+//    time e + Mais ocupam 3 cada. Os rótulos não quebram, então as duas linhas têm a mesma altura;
+//  - a partir de 36 rem: os 5 numa linha só, rótulos sem quebra.
+const GRADE = 'grid grid-cols-6 gap-2 @min-[36rem]:grid-cols-5 @max-[17rem]:grid-cols-1'
+const ACAO = 'botao acao-rapida whitespace-nowrap @max-[17rem]:whitespace-normal'
+const PRIMEIRA_LINHA = `${ACAO} col-span-2 @min-[36rem]:col-span-1 @max-[17rem]:col-span-1`
+const SEGUNDA_LINHA = `${ACAO} col-span-3 @min-[36rem]:col-span-1 @max-[17rem]:col-span-1`
 
 interface Props {
   aoIniciarSessao: (tipo: TipoSessao) => void
@@ -78,7 +81,7 @@ export function BotoesRapidos({
   }
 
   return (
-    <div>
+    <div className="@container">
       <div className={GRADE}>
         <button
           ref={refSono}

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, fireEvent, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
+import { BotoesRapidos } from './prototipo/BotoesRapidos.tsx'
 import { criarEstadoInicial, type EstadoPrototipo } from './prototipo/estado.ts'
 import { renderizarRota } from './teste/renderizarRota.tsx'
 
@@ -438,7 +439,9 @@ describe('D3: faixa de fatos', () => {
 function conferirGrade(grade: HTMLElement) {
   expect(grade.classList.contains('grid')).toBe(true)
   expect(grade.classList.contains('grid-cols-6')).toBe(true)
-  expect(grade.classList.contains('md:grid-cols-5')).toBe(true)
+  // R1b: os limiares são da largura do componente (contêiner), em rem, nunca da janela.
+  expect(grade.classList.contains('@min-[36rem]:grid-cols-5')).toBe(true)
+  expect(grade.classList.contains('@max-[17rem]:grid-cols-1')).toBe(true)
 
   const botoes = [...grade.querySelectorAll<HTMLElement>(':scope > button')]
   expect(botoes.map((b) => b.textContent)).toEqual(['Sono', 'Mamada', 'Fralda', 'Tummy time', '+ Mais'])
@@ -447,8 +450,10 @@ function conferirGrade(grade: HTMLElement) {
     2, 2, 2, 3, 3,
   ])
   for (const botao of botoes) {
-    expect(botao.classList.contains('md:col-span-1'), botao.outerHTML).toBe(true)
+    expect(botao.classList.contains('@min-[36rem]:col-span-1'), botao.outerHTML).toBe(true)
+    expect(botao.classList.contains('@max-[17rem]:col-span-1'), botao.outerHTML).toBe(true)
     expect(botao.classList.contains('whitespace-nowrap'), botao.outerHTML).toBe(true)
+    expect(botao.classList.contains('@max-[17rem]:whitespace-normal'), botao.outerHTML).toBe(true)
   }
 }
 
@@ -471,6 +476,112 @@ describe('D4: botões rápidos com a mesma altura', () => {
     const sono = container.querySelector<HTMLElement>('[inert] button[aria-label="Iniciar sono de Lia"]')!
     conferirGrade(sono.parentElement!)
   })
+})
+
+// ---------------------------------------------------------------------------
+// R1b: os botões rápidos decidem o layout pela largura do próprio componente
+
+/** Elementos com variante de contêiner (@max-[…]:, @min-[…]:) sem `@container` num ancestral. */
+function variantesSemContainer(container: HTMLElement): string[] {
+  const problemas: string[] = []
+  for (const elemento of container.querySelectorAll<HTMLElement>('[class]')) {
+    const variantes = [...elemento.classList].filter((c) => c.startsWith('@') && c.includes(':'))
+    if (variantes.length === 0) continue
+    // `parentElement?.closest` não conta o próprio elemento: o contêiner tem de estar ACIMA.
+    if (elemento.parentElement?.closest('[class~="@container"]') == null) {
+      problemas.push(`${elemento.tagName.toLowerCase()} [${variantes.join(' ')}] sem contêiner acima`)
+    }
+  }
+  return problemas
+}
+
+describe('R1b: toda variante de contêiner tem um contêiner acima, onde quer que seja montada', () => {
+  it('no Início, incluindo a miniatura inerte', async () => {
+    const { container } = renderizarRota('/')
+    await screen.findByRole('heading', { level: 1 })
+    expect(container.querySelector('[inert] button')).not.toBeNull()
+
+    expect(variantesSemContainer(container)).toEqual([])
+  })
+
+  for (const [tema, estado] of [
+    ['claro', claro],
+    ['madrugada', madrugada],
+  ] as const) {
+    it(`no Hoje (${tema}), com a escolha de fralda e depois o "+ Mais" abertos`, () => {
+      const { container } = renderizarRota('/app/hoje', { estadoInicial: estado() })
+      expect(variantesSemContainer(container)).toEqual([])
+
+      fireEvent.click(screen.getByRole('button', { name: 'Registrar fralda de Lia' }))
+      expect(variantesSemContainer(container)).toEqual([])
+
+      fireEvent.click(screen.getByRole('button', { name: 'Mais registros' }))
+      expect(variantesSemContainer(container)).toEqual([])
+    })
+
+    it(`na Sessão (${tema})`, () => {
+      const { container } = renderizarRota('/app/sessao', { estadoInicial: estado() })
+
+      expect(variantesSemContainer(container)).toEqual([])
+    })
+  }
+
+  it('o detector enxerga um elemento com variante e sem contêiner', () => {
+    const { container } = render(<div className="@max-[17rem]:grid-cols-1" />)
+
+    expect(variantesSemContainer(container)).toHaveLength(1)
+  })
+})
+
+describe('R1b: BotoesRapidos não depende da janela', () => {
+  const semAcao = () => undefined
+
+  for (const desativado of [false, true]) {
+    describe(desativado ? 'desativado (miniatura)' : 'ativo (Hoje)', () => {
+      it('o div raiz declara o contêiner (@container)', () => {
+        const { container } = render(
+          <BotoesRapidos
+            aoIniciarSessao={semAcao}
+            aoRegistrarFralda={semAcao}
+            aoRegistrarMais={semAcao}
+            desativado={desativado}
+          />,
+        )
+
+        expect(container.firstElementChild!.classList.contains('@container')).toBe(true)
+      })
+
+      it('nenhum descendente usa variante de janela (sm:, md:, lg:, xl:, 2xl:)', () => {
+        const { container } = render(
+          <BotoesRapidos
+            aoIniciarSessao={semAcao}
+            aoRegistrarFralda={semAcao}
+            aoRegistrarMais={semAcao}
+            desativado={desativado}
+          />,
+        )
+        fireEvent.click(container.querySelector('button[aria-label="Mais registros"]')!)
+
+        const deJanela = [...container.querySelectorAll<HTMLElement>('[class]')].flatMap((elemento) =>
+          [...elemento.classList].filter((c) => /^(sm|md|lg|xl|2xl):/.test(c)),
+        )
+        expect(deJanela).toEqual([])
+      })
+
+      it('as variantes de contêiner têm contêiner acima, dentro do próprio componente', () => {
+        const { container } = render(
+          <BotoesRapidos
+            aoIniciarSessao={semAcao}
+            aoRegistrarFralda={semAcao}
+            aoRegistrarMais={semAcao}
+            desativado={desativado}
+          />,
+        )
+
+        expect(variantesSemContainer(container)).toEqual([])
+      })
+    })
+  }
 })
 
 // ---------------------------------------------------------------------------
