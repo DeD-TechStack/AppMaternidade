@@ -21,6 +21,7 @@ Horários em America/Sao_Paulo, tirados do relógio da máquina ou de carimbos d
 
 Uma linha por marco, a mais recente no topo. O estado corrente fica em [Retomada do site](Retomada_Site.md), e o detalhe de cada marco está no cartão Kanban citado.
 
+- 05/11/2026: **rascunho do conteúdo de Desenvolvimento (MAT-39, cartão [pesquisa] `t_78297271`).** São 8 itens com 66 citações e a licença de cada fonte conferida, guardados no staging, fora do Git. Tudo está marcado como rascunho sem revisão. A publicação espera a D5 (MAT-24), que define quem revisa. Os termos da AAP proíbem análise por IA, então essa fonte entra só como link.
 - 05/11/2026: **paralelismo ligado (pedido de Daniel via coordenador).** Cinco frentes passaram a andar juntas:
   - MAT-44 (`t_10f8dad7`, em `web/src`);
   - MAT-45 (`t_e3572be9`), MAT-46 (`t_c9df145a`) e MAT-47 (`t_569c296e`), em `supabase/`;
