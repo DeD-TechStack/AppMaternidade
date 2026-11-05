@@ -14,7 +14,7 @@ fontes_principais:
 
 Só as decisões que mudam de forma significativa o produto, o custo ou a manutenção. Cada uma traz opções, a recomendação do Hermes, o impacto, o que continua reversível e quando precisa ser tomada. D8 a D11 foram tomadas em 03/11/2026; D1 foi adiada até o port; as demais seguem abertas.
 
-Para responder, basta indicar o número e a opção (por exemplo, "D1: A; D2: A; D3: A"), aqui na conversa ou num comentário da tarefa correspondente no itsaplan (coluna "Esperando Daniel", http://localhost:3001/oficina/MAT). Cada resposta volta ao ADR correspondente com data, e a tarefa muda de estado. As decisões D1, D2 e D3 bloqueiam a prova técnica, MAT-17 (no port); D4 bloqueia a fundação (MAT-18); D5 bloqueia a fatia da comunidade (MAT-19); D6 não bloqueia nada agora; D7 precisa de resposta antes do primeiro push do repositório, que é público.
+Para responder, basta indicar o número e a opção (por exemplo, "D1: A; D2: A; D3: A"), aqui na conversa ou num comentário da tarefa correspondente no itsaplan (coluna "Esperando Daniel", http://localhost:3001/oficina/MAT). Cada resposta volta ao ADR correspondente com data, e a tarefa muda de estado. As decisões D1, D2 e D3 bloqueiam a prova técnica, MAT-17 (no port); D4 bloqueia a fundação (MAT-18); D5 bloqueia a fatia da comunidade (MAT-19); D6 não bloqueia nada agora; a D7 foi decidida em 05/11/2026 (A), e o push do repositório, que é público, está liberado.
 
 ## Resumo
 
