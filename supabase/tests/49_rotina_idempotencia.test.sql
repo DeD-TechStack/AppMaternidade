@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(52);
+select plan(65);
 
 -- Família 1: R (...01) responsável, C (...02) cuidador, O (...03) observador. Bebês b1 (ativo) e b3 (arquivado).
 -- Família 2: X (...11) responsável. Reenvio é a gravação repetida pelo mesmo id (C6): nada muda.
@@ -25,7 +25,8 @@ insert into public.vinculos (familia_id, conta_id, papel) values
   ('ffffffff-0000-4000-8000-000000000002', 'aaaaaaaa-0000-4000-8000-000000000011', 'responsavel');
 insert into public.bebes (id, familia_id, nome, nascimento, criado_por, estado) values
   ('bbbbbbbb-0000-4000-8000-000000000001', 'ffffffff-0000-4000-8000-000000000001', 'Bebê 1', '2026-01-01', 'aaaaaaaa-0000-4000-8000-000000000001', 'ativo'),
-  ('bbbbbbbb-0000-4000-8000-000000000003', 'ffffffff-0000-4000-8000-000000000001', 'Bebê 3', '2026-01-01', 'aaaaaaaa-0000-4000-8000-000000000001', 'ativo');
+  ('bbbbbbbb-0000-4000-8000-000000000003', 'ffffffff-0000-4000-8000-000000000001', 'Bebê 3', '2026-01-01', 'aaaaaaaa-0000-4000-8000-000000000001', 'ativo'),
+  ('bbbbbbbb-0000-4000-8000-000000000002', 'ffffffff-0000-4000-8000-000000000002', 'Bebê 2', '2026-01-01', 'aaaaaaaa-0000-4000-8000-000000000011', 'ativo');
 
 create function pg_temp.rid(n int) returns uuid language sql immutable as $$
   select ('019a0000-0000-7000-8000-' || lpad(to_hex(n), 12, '0'))::uuid;
@@ -116,6 +117,53 @@ select is(
   pg_temp.erro($$select pg_temp.grava_sono(1)$$),
   pg_temp.erro($$select public.encerrar_sessao(pg_temp.rid(999), '2026-11-01 11:00+00')$$),
   'id de outra família e id inexistente dão o mesmo SQLSTATE e a mesma mensagem (não se distingue)');
+
+-- Colisão de id alheio com bebê válido da própria família (C6): X é responsável da família 2 e chama
+-- gravar_registro com o id de um registro da família 1 e o bebê 2 (da família 2). Sono e fralda da
+-- família 1, cada um com o mesmo tipo e com o outro tipo. Registro 1 = sono, registro 50 = fralda.
+reset role;
+insert into public.registros (id, familia_id, bebe_id, tipo, inicio, detalhes, fuso, deslocamento_min, criado_por)
+values (pg_temp.rid(50), 'ffffffff-0000-4000-8000-000000000001', 'bbbbbbbb-0000-4000-8000-000000000001', 'fralda',
+        '2026-11-01 10:00+00', '{"conteudo": "coco"}', 'America/Sao_Paulo', -180, 'aaaaaaaa-0000-4000-8000-000000000001');
+select pg_temp.guarda();
+select set_config('teste.hist_f1', pg_temp.hist(1) || ' ' || pg_temp.hist(50), true);
+set local role authenticated;
+set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000011", "role": "authenticated"}';
+select throws_ok($$select pg_temp.grava_sono(1, 'sono', null, 'bbbbbbbb-0000-4000-8000-000000000002')$$, 'P0002', 'registro inexistente',
+  'bebê da família 2 + id de sono da família 1, como sono: registro inexistente');
+select is(
+  pg_temp.erro($$select pg_temp.grava_sono(1, 'sono', null, 'bbbbbbbb-0000-4000-8000-000000000002')$$),
+  pg_temp.erro($$select public.encerrar_sessao(pg_temp.rid(999), '2026-11-01 11:00+00')$$),
+  'bebê da família 2 + id de sono da família 1, como sono: erro igual ao de id inexistente');
+select throws_ok($$select pg_temp.grava_sono(1, 'fralda', null, 'bbbbbbbb-0000-4000-8000-000000000002')$$, 'P0002', 'registro inexistente',
+  'bebê da família 2 + id de sono da família 1, como fralda: registro inexistente');
+select is(
+  pg_temp.erro($$select pg_temp.grava_sono(1, 'fralda', null, 'bbbbbbbb-0000-4000-8000-000000000002')$$),
+  pg_temp.erro($$select public.encerrar_sessao(pg_temp.rid(999), '2026-11-01 11:00+00')$$),
+  'bebê da família 2 + id de sono da família 1, como fralda: erro igual ao de id inexistente');
+select throws_ok($$select pg_temp.grava_sono(50, 'fralda', null, 'bbbbbbbb-0000-4000-8000-000000000002')$$, 'P0002', 'registro inexistente',
+  'bebê da família 2 + id de fralda da família 1, como fralda: registro inexistente');
+select is(
+  pg_temp.erro($$select pg_temp.grava_sono(50, 'fralda', null, 'bbbbbbbb-0000-4000-8000-000000000002')$$),
+  pg_temp.erro($$select public.encerrar_sessao(pg_temp.rid(999), '2026-11-01 11:00+00')$$),
+  'bebê da família 2 + id de fralda da família 1, como fralda: erro igual ao de id inexistente');
+select throws_ok($$select pg_temp.grava_sono(50, 'sono', null, 'bbbbbbbb-0000-4000-8000-000000000002')$$, 'P0002', 'registro inexistente',
+  'bebê da família 2 + id de fralda da família 1, como sono: registro inexistente');
+select is(
+  pg_temp.erro($$select pg_temp.grava_sono(50, 'sono', null, 'bbbbbbbb-0000-4000-8000-000000000002')$$),
+  pg_temp.erro($$select public.encerrar_sessao(pg_temp.rid(999), '2026-11-01 11:00+00')$$),
+  'bebê da família 2 + id de fralda da família 1, como sono: erro igual ao de id inexistente');
+reset role;
+select ok(pg_temp.intacto_id(pg_temp.rid(1)), 'depois das colisões, o sono da família 1 seguiu intacto (hash)');
+select ok(pg_temp.intacto_id(pg_temp.rid(50)), 'depois das colisões, a fralda da família 1 seguiu intacta (hash)');
+select is(pg_temp.hist(1) || ' ' || pg_temp.hist(50), current_setting('teste.hist_f1'),
+  'depois das colisões, o histórico das duas linhas da família 1 é o mesmo');
+select is((select count(*)::int from public.registros where familia_id = 'ffffffff-0000-4000-8000-000000000002'), 0,
+  'depois das colisões, a família 2 não ganhou registro');
+select is((select count(*)::int from public.registro_alteracoes where familia_id = 'ffffffff-0000-4000-8000-000000000002'), 0,
+  'depois das colisões, a família 2 não ganhou linha de histórico');
+set local role authenticated;
+set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000011", "role": "authenticated"}';
 
 -- editar_registro: repetir com os mesmos valores não muda a versão nem grava histórico. -------------
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000001", "role": "authenticated"}';
