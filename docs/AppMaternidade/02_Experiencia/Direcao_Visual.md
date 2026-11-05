@@ -71,11 +71,11 @@ Valem para toda tarefa que mexe no site (MAT-27). O roadmap e as tarefas apontam
 - **G11 Revisão:** veredito APPROVED do `revisor-appmaternidade` (outra família) sobre o SHA exato; integração só com `git merge --ff-only` desse SHA.
 - **G12 Dados:** só dados fictícios em teste; nenhum dado real de família.
 
-Nota mínima do award-bar: definida na MAT-34, que atualiza esta nota.
+Nota mínima do award-bar (G6): 7,0 no total ponderado, por tela, para protótipos e fatias; 8,0 é a meta do portão final (MAT-42). Definida na MAT-34.
 
 A política de commits do G10 está em [Política de commits](../00_Inicio/Politica_de_Commits.md).
 
 ## Questões abertas
 
-1. Nota mínima do G6: sai na MAT-34.
-2. Paleta, tipografia e tema escuro do modo madrugada: saem na MAT-34, com os tokens em `web/DESIGN.md`.
+1. ~~Nota mínima do G6: sai na MAT-34.~~: resolvido na MAT-34, ver web/DESIGN.md
+2. ~~Paleta, tipografia e tema escuro do modo madrugada: saem na MAT-34, com os tokens em `web/DESIGN.md`.~~: resolvido na MAT-34, ver web/DESIGN.md
