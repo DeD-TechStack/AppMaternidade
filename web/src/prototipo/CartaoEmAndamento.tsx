@@ -1,4 +1,4 @@
-import { useId } from 'react'
+import { useId, type Ref } from 'react'
 import { Link } from 'react-router'
 
 interface SessaoEmAndamento {
@@ -10,14 +10,21 @@ interface SessaoEmAndamento {
 interface Props {
   sessao: SessaoEmAndamento | null
   aoEncerrar?: () => void
+  /** O Hoje guarda o cartão para levar o foco até ele (tabindex="-1"). A miniatura não tem. */
+  ref?: Ref<HTMLElement>
   /** Versão do Início: sem contorno próprio (o painel já tem) e sem nada focável. */
   miniatura?: boolean
 }
 
-export function CartaoEmAndamento({ sessao, aoEncerrar, miniatura = false }: Props) {
+export function CartaoEmAndamento({ sessao, aoEncerrar, ref, miniatura = false }: Props) {
   const idTitulo = useId()
   return (
-    <section aria-labelledby={idTitulo} className={miniatura ? 'bloco-miniatura' : 'cartao'}>
+    <section
+      ref={ref}
+      aria-labelledby={idTitulo}
+      tabIndex={miniatura ? undefined : -1}
+      className={miniatura ? 'bloco-miniatura' : 'cartao alvo-foco'}
+    >
       <h2 id={idTitulo} className="rotulo">
         Em andamento
       </h2>
@@ -38,6 +45,7 @@ export function CartaoEmAndamento({ sessao, aoEncerrar, miniatura = false }: Pro
             </button>
             <Link
               to="/app/sessao"
+              state={{ foco: 'titulo' }}
               className="botao botao-secundario"
               tabIndex={miniatura ? -1 : undefined}
             >

@@ -451,3 +451,235 @@ describe('madrugada', () => {
     expect(document.documentElement.getAttribute('data-tema')).toBe('madrugada')
   })
 })
+
+// ---------------------------------------------------------------------------
+// R3: toda ação que remove ou troca o controle que tem o foco leva o foco a um sucessor
+// lógico e visível. A confirmação nunca recebe o foco.
+
+const TABBABLE = 'a[href], button, textarea, input, select, [tabindex]'
+
+/** Os controles que o Tab alcança, na ordem do DOM. */
+function tabbables(): HTMLElement[] {
+  return [...document.querySelectorAll<HTMLElement>(TABBABLE)].filter(
+    (e) => e.tabIndex >= 0 && !(e as HTMLButtonElement).disabled && e.closest('[inert]') === null,
+  )
+}
+
+/** O primeiro controle que o Tab alcança depois de `atual`, na ordem do DOM. */
+function proximoTabbable(atual: Element): HTMLElement | undefined {
+  return tabbables().find(
+    (e) => !atual.contains(e) && (atual.compareDocumentPosition(e) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0,
+  )
+}
+
+/** O foco está num elemento da tela (nem body, nem a região de confirmação) e o Tab segue dali. */
+function conferirFocoValido(container: HTMLElement) {
+  const ativo = document.activeElement
+  expect(ativo, 'activeElement').not.toBeNull()
+  expect(ativo, 'o foco caiu no body').not.toBe(document.body)
+  expect(container.contains(ativo), 'o foco saiu do documento renderizado').toBe(true)
+  expect(ativo!.closest('[role="status"]'), 'o foco foi para a região de confirmação').toBeNull()
+  const proximo = proximoTabbable(ativo!)
+  expect(proximo, 'não há próximo controle focável').toBeDefined()
+  expect(container.contains(proximo!)).toBe(true)
+}
+
+/** Foca o controle e o aciona, como Tab + Enter. */
+function acionarComTeclado(controle: HTMLElement) {
+  controle.focus()
+  fireEvent.click(controle)
+}
+
+describe('R3: o foco acompanha ações que removem o controle focado', () => {
+  for (const [tema, aplicar] of [
+    ['claro', (e: EstadoPrototipo): EstadoPrototipo => e],
+    ['madrugada', (e: EstadoPrototipo): EstadoPrototipo => ({ ...e, madrugada: true })],
+  ] as const) {
+    describe(tema, () => {
+      const base = () => aplicar(criarEstadoInicial(Date.now()))
+      const semSessao = () => ({ ...base(), sessao: null })
+      const botao = (nome: string) => screen.getByRole('button', { name: nome })
+      const cartao = (container: HTMLElement) => container.querySelector<HTMLElement>('.cartao')!
+
+      it('Hoje: "Encerrar" leva o foco ao cartão "Em andamento"', () => {
+        const { container } = renderizarRota('/app/hoje', { estadoInicial: base() })
+
+        acionarComTeclado(botao('Encerrar'))
+
+        expect(document.activeElement).toBe(cartao(container))
+        expect(cartao(container).textContent).toContain('Nenhuma sessão em andamento.')
+        conferirFocoValido(container)
+      })
+
+      it('Hoje: "Desfazer" depois de Encerrar leva o foco a "Iniciar sono de Lia"', () => {
+        const { container } = renderizarRota('/app/hoje', { estadoInicial: base() })
+        acionarComTeclado(botao('Encerrar'))
+
+        acionarComTeclado(botao('Desfazer'))
+
+        expect(document.activeElement).toBe(botao('Iniciar sono de Lia'))
+        conferirFocoValido(container)
+      })
+
+      it('Hoje: "Desfazer" depois de Mamadeira leva o foco a "Iniciar sono de Lia"', () => {
+        const { container } = renderizarRota('/app/hoje', { estadoInicial: base() })
+        fireEvent.click(botao('Mais registros'))
+        fireEvent.click(botao('Mamadeira'))
+
+        acionarComTeclado(botao('Desfazer'))
+
+        expect(document.activeElement).toBe(botao('Iniciar sono de Lia'))
+        conferirFocoValido(container)
+      })
+
+      it('Hoje: "Desfazer" depois de Fralda leva o foco a "Iniciar sono de Lia"', () => {
+        const { container } = renderizarRota('/app/hoje', { estadoInicial: base() })
+        fireEvent.click(botao('Registrar fralda de Lia'))
+        fireEvent.click(botao('Xixi'))
+
+        acionarComTeclado(botao('Desfazer'))
+
+        expect(document.activeElement).toBe(botao('Iniciar sono de Lia'))
+        conferirFocoValido(container)
+      })
+
+      it('Hoje: "Fechar" depois de Mamadeira leva o foco a "Iniciar sono de Lia"', () => {
+        const { container } = renderizarRota('/app/hoje', { estadoInicial: base() })
+        fireEvent.click(botao('Mais registros'))
+        fireEvent.click(botao('Mamadeira'))
+
+        acionarComTeclado(botao('Fechar'))
+
+        expect(document.activeElement).toBe(botao('Iniciar sono de Lia'))
+        expect(screen.getByRole('status').textContent).toBe('')
+        conferirFocoValido(container)
+      })
+
+      it('Hoje: Fralda → Xixi devolve o foco ao botão Fralda, e a região status não é focável', () => {
+        const { container } = renderizarRota('/app/hoje', { estadoInicial: base() })
+        expect(screen.getByRole('status').hasAttribute('tabindex')).toBe(false)
+
+        fireEvent.click(botao('Registrar fralda de Lia'))
+        fireEvent.click(botao('Xixi'))
+
+        expect(document.activeElement).toBe(botao('Registrar fralda de Lia'))
+        expect(screen.getByRole('status').hasAttribute('tabindex')).toBe(false)
+        conferirFocoValido(container)
+      })
+
+      it('Sessão → "Encerrar" leva ao Hoje com o cartão focado', async () => {
+        const { container } = renderizarRota('/app/sessao', { estadoInicial: base() })
+
+        acionarComTeclado(botao('Encerrar'))
+
+        await screen.findByRole('heading', { level: 1, name: 'Hoje' })
+        await waitFor(() => expect(document.activeElement).toBe(cartao(container)))
+        conferirFocoValido(container)
+      })
+
+      it('Sessão → "Salvar" com nota leva ao Hoje com o cartão focado', async () => {
+        const { container } = renderizarRota('/app/sessao', { estadoInicial: base() })
+        fireEvent.click(botao('Encerrar e anotar'))
+        fireEvent.change(screen.getByRole('textbox', { name: 'Nota' }), { target: { value: 'Dormiu bem' } })
+
+        acionarComTeclado(botao('Salvar'))
+
+        await screen.findByRole('heading', { level: 1, name: 'Hoje' })
+        await waitFor(() => expect(document.activeElement).toBe(cartao(container)))
+        conferirFocoValido(container)
+      })
+
+      it('Sessão → "Salvar" sem nota leva ao Hoje com o cartão focado', async () => {
+        const { container } = renderizarRota('/app/sessao', { estadoInicial: base() })
+        fireEvent.click(botao('Encerrar e anotar'))
+
+        acionarComTeclado(botao('Salvar'))
+
+        await screen.findByRole('heading', { level: 1, name: 'Hoje' })
+        await waitFor(() => expect(document.activeElement).toBe(cartao(container)))
+        conferirFocoValido(container)
+      })
+
+      it('Sessão → "Descartar" e "Descartar" levam ao Hoje com o cartão focado', async () => {
+        const { container } = renderizarRota('/app/sessao', { estadoInicial: base() })
+        fireEvent.click(botao('Descartar'))
+
+        acionarComTeclado(within(screen.getByRole('group', { name: 'Descartar esta sessão?' })).getByRole('button', { name: 'Descartar' }))
+
+        await screen.findByRole('heading', { level: 1, name: 'Hoje' })
+        await waitFor(() => expect(document.activeElement).toBe(cartao(container)))
+        conferirFocoValido(container)
+      })
+
+      it('Hoje → atalho Sono sem sessão leva o foco ao h1 da Sessão', async () => {
+        const { container } = renderizarRota('/app/hoje', { estadoInicial: semSessao() })
+
+        acionarComTeclado(botao('Iniciar sono de Lia'))
+
+        const titulo = await screen.findByRole('heading', { level: 1, name: 'Sono de Lia' })
+        await waitFor(() => expect(document.activeElement).toBe(titulo))
+        conferirFocoValido(container)
+      })
+
+      it('Hoje → atalho com outra sessão em andamento leva o foco ao h1 da Sessão (com o aviso)', async () => {
+        const { container } = renderizarRota('/app/hoje', { estadoInicial: base() })
+
+        acionarComTeclado(botao('Iniciar tummy time de Lia'))
+
+        const titulo = await screen.findByRole('heading', { level: 1, name: 'Sono de Lia' })
+        expect(screen.getByText('Já há uma sessão de Sono em andamento.')).toBeTruthy()
+        await waitFor(() => expect(document.activeElement).toBe(titulo))
+        conferirFocoValido(container)
+      })
+
+      it('Hoje → "Ver sessão" leva o foco ao h1 da Sessão', async () => {
+        const { container } = renderizarRota('/app/hoje', { estadoInicial: base() })
+        const ver = screen.getByRole('link', { name: 'Ver sessão' })
+        ver.focus()
+
+        fireEvent.click(ver)
+
+        const titulo = await screen.findByRole('heading', { level: 1, name: 'Sono de Lia' })
+        await waitFor(() => expect(document.activeElement).toBe(titulo))
+        conferirFocoValido(container)
+      })
+
+      it('Sessão vazia → "Voltar para Hoje" leva o foco ao h1 "Hoje"', async () => {
+        const { container } = renderizarRota('/app/sessao', { estadoInicial: semSessao() })
+
+        const voltar = screen.getByRole('link', { name: 'Voltar para Hoje' })
+        voltar.focus()
+        fireEvent.click(voltar)
+
+        const titulo = await screen.findByRole('heading', { level: 1, name: 'Hoje' })
+        await waitFor(() => expect(document.activeElement).toBe(titulo))
+        conferirFocoValido(container)
+      })
+
+      it('Sessão → item Hoje da navegação leva o foco ao h1 "Hoje"', async () => {
+        const { container } = renderizarRota('/app/sessao', { estadoInicial: base() })
+        const nav = screen.getByRole('navigation', { name: 'Principal' })
+        const hoje = within(nav).getByRole('link', { name: 'Hoje' })
+        hoje.focus()
+
+        fireEvent.click(hoje)
+
+        const titulo = await screen.findByRole('heading', { level: 1, name: 'Hoje' })
+        await waitFor(() => expect(document.activeElement).toBe(titulo))
+        conferirFocoValido(container)
+      })
+
+      it('carregar a URL direto não move o foco (Hoje, Sessão e Sessão vazia)', () => {
+        for (const [caminho, estado] of [
+          ['/app/hoje', base()],
+          ['/app/sessao', base()],
+          ['/app/sessao', semSessao()],
+        ] as const) {
+          const { unmount } = renderizarRota(caminho, { estadoInicial: estado })
+          expect(document.activeElement, caminho).toBe(document.body)
+          unmount()
+        }
+      })
+    })
+  }
+})

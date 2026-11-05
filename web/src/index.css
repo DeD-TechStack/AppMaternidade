@@ -289,10 +289,13 @@
     border-color: var(--cor-linha);
   }
 
-  /* Barra de baixo da tela: botões rápidos e navegação, opacas. Só fica colada à janela
-     (.barra-fixa) enquanto sua altura couber em 35% dela; o resto do tempo, no fluxo. */
+  /* Barra de baixo da tela: botões rápidos e navegação, opacas. Fica colada à janela
+     (.barra-fixa) quando a janela tem pelo menos 40rem de altura (ver barraFixa.ts); com
+     fonte ou zoom altos, fica no fluxo. */
   .barra-inferior {
     background-color: var(--cor-fundo);
+    /* Contêiner de largura: a navegação decide o layout pela largura da barra, em rem. */
+    container-type: inline-size;
   }
 
   .barra-fixa {
@@ -315,9 +318,11 @@
     padding-bottom: max(6px, env(safe-area-inset-bottom));
   }
 
-  /* "Em breve" marca, como um colchete, as colunas 2 a 5 (Histórico a Família). */
+  /* "Em breve" marca, como um colchete, as colunas 2 a 5 (Histórico a Família). No DOM ela vem
+     logo depois de Hoje, a mesma ordem da coluna única; na grade de 5 a posição é explícita. */
   .nav-legenda {
     grid-column: 2 / span 4;
+    grid-row: 1;
     position: relative;
     margin-top: 0.25rem;
     padding-bottom: 0.25rem;
@@ -348,10 +353,14 @@
   }
 
   .nav-item {
+    grid-row: 2;
     display: flex;
     align-items: center;
     justify-content: center;
+    /* Rede de segurança: o rótulo nunca vaza da coluna, mesmo sem dicionário de hifenização. */
+    min-width: 0;
     min-height: 48px;
+    overflow-wrap: anywhere;
     border: 0;
     border-top: 3px solid transparent;
     background-color: transparent;
@@ -371,6 +380,44 @@
      visível não leva caractere invisível, então o nome acessível é o próprio texto. */
   .nav-item-hifeniza {
     hyphens: auto;
+  }
+
+  /* Abaixo de 22 rem de largura da barra (celular em fonte ampliada, zoom, coluna estreita) os
+     5 rótulos não cabem lado a lado: a navegação vira uma coluna, um item por linha, com
+     "Em breve" como título do grupo dos 4. A rem acompanha a fonte raiz. */
+  @container (max-width: 22rem) {
+    .nav-inferior {
+      grid-template-columns: minmax(0, 1fr);
+      padding-inline: 0;
+    }
+
+    .nav-legenda,
+    .nav-item {
+      grid-column: auto;
+      grid-row: auto;
+    }
+
+    .nav-legenda {
+      margin-inline: 0.75rem;
+    }
+
+    .nav-legenda::before,
+    .nav-legenda::after {
+      display: none;
+    }
+
+    .nav-item {
+      justify-content: flex-start;
+      padding-inline: 0.75rem;
+      text-align: left;
+    }
+  }
+
+  /* Alvo de foco por programa (cartão e títulos com tabindex="-1"): o contorno aparece para
+     quem chega pelo teclado; com mouse ou toque, o foco por programa não desenha caixa. */
+  .alvo-foco:focus-visible {
+    outline: 2px solid var(--cor-foco);
+    outline-offset: 2px;
   }
 
   .nav-item[aria-current='page'] {

@@ -77,7 +77,7 @@ describe('G3-1: alvo de toque de 44 px', () => {
 })
 
 // ---------------------------------------------------------------------------
-// G3-2
+// R2 (substitui o antigo G3-2, que decidia pela altura atual da barra)
 
 const observadores: Array<() => void> = []
 
@@ -97,20 +97,34 @@ function definirAlturaDaJanela(valor: number) {
   Object.defineProperty(window, 'innerHeight', { configurable: true, writable: true, value: valor })
 }
 
-/** Simula uma nova medida e avisa o ResizeObserver, como o navegador faria. */
-function medir(barra: number, janela: number) {
-  alturaDaBarra = barra
-  definirAlturaDaJanela(janela)
+/** Avisa o ResizeObserver, como o navegador faria quando a barra muda de tamanho. */
+function avisarOObservador() {
   act(() => {
     for (const aoMedir of observadores) aoMedir()
   })
 }
 
-const paddingDeRolagem = () => document.documentElement.style.getPropertyValue('scroll-padding-bottom')
+/** Simula uma nova medida da barra e da janela. */
+function medir(barra: number, janela: number) {
+  alturaDaBarra = barra
+  definirAlturaDaJanela(janela)
+  avisarOObservador()
+}
 
-describe('G3-2: a barra de baixo só fica fixa se sobrar tela', () => {
+const definirFonteRaiz = (valor: string) => document.documentElement.style.setProperty('font-size', valor)
+const paddingDeRolagem = () => document.documentElement.style.getPropertyValue('scroll-padding-bottom')
+const barraDe = (container: HTMLElement) => container.querySelector('.barra-inferior')!
+const estaFixa = (container: HTMLElement) => barraDe(container).classList.contains('barra-fixa')
+
+// R2: a decisão depende da JANELA e da FONTE RAIZ (uma janela de pelo menos 40 rem de altura),
+// nunca da altura atual da barra. Confirmação e painéis fazem a barra crescer no uso normal e
+// não podem tirá-la da janela.
+describe('R2: a barra de baixo fica fixa em janela de 40 rem ou mais, qualquer que seja a altura da barra', () => {
   beforeEach(() => {
     observadores.length = 0
+    alturaDaBarra = 420
+    definirAlturaDaJanela(844)
+    definirFonteRaiz('16px')
     vi.stubGlobal('ResizeObserver', ObservadorFalso)
     vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(
       () =>
@@ -120,6 +134,7 @@ describe('G3-2: a barra de baixo só fica fixa se sobrar tela', () => {
 
   afterEach(() => {
     definirAlturaDaJanela(alturaOriginalDaJanela)
+    document.documentElement.style.removeProperty('font-size')
   })
 
   for (const [tela, caminho] of [
@@ -127,44 +142,72 @@ describe('G3-2: a barra de baixo só fica fixa se sobrar tela', () => {
     ['Sessão', '/app/sessao'],
   ] as const) {
     describe(tela, () => {
-      const barra = (container: HTMLElement) => container.querySelector('.barra-inferior')!
-
-      it('com 170 px numa janela de 844 px fica fixa e reserva 178 px de rolagem', () => {
+      it('janela de 844 px com fonte de 16 px: fixa, e reserva a altura medida mais 8 px de rolagem', () => {
         const { container } = renderizarRota(caminho)
 
         medir(170, 844)
 
-        expect(barra(container).classList.contains('barra-fixa')).toBe(true)
+        expect(estaFixa(container)).toBe(true)
         expect(paddingDeRolagem()).toBe('178px')
       })
 
-      it('com 370 px numa janela de 900 px (fonte em 200%) fica estática e não reserva rolagem', () => {
-        const { container } = renderizarRota(caminho)
-        medir(170, 844)
-
-        medir(370, 900)
-
-        expect(barra(container).classList.contains('barra-fixa')).toBe(false)
-        expect(paddingDeRolagem()).toBe('')
-      })
-
-      it('com 766 px numa janela de 844 px (celular em 200%) fica estática', () => {
+      it('uma barra de 766 px numa janela de 844 px com fonte de 16 px continua fixa', () => {
         const { container } = renderizarRota(caminho)
 
         medir(766, 844)
 
-        expect(barra(container).classList.contains('barra-fixa')).toBe(false)
+        expect(estaFixa(container)).toBe(true)
+        expect(paddingDeRolagem()).toBe('774px')
+      })
+
+      it('fonte raiz em 200% (32 px) numa janela de 844 px: estática e sem reserva de rolagem', () => {
+        const { container } = renderizarRota(caminho)
+        medir(170, 844)
+        expect(estaFixa(container)).toBe(true)
+
+        definirFonteRaiz('32px')
+        avisarOObservador()
+
+        expect(estaFixa(container)).toBe(false)
         expect(paddingDeRolagem()).toBe('')
       })
 
-      it('volta a ficar fixa quando a janela cresce', () => {
+      it('fonte raiz em 200% numa janela de 900 px: estática', () => {
         const { container } = renderizarRota(caminho)
-        medir(300, 450)
-        expect(barra(container).classList.contains('barra-fixa')).toBe(false)
+        definirFonteRaiz('32px')
 
-        medir(300, 1000)
+        medir(370, 900)
 
-        expect(barra(container).classList.contains('barra-fixa')).toBe(true)
+        expect(estaFixa(container)).toBe(false)
+      })
+
+      it('zoom de 200% em 1440 × 900 (janela de 450 px com fonte de 16 px): estática', () => {
+        const { container } = renderizarRota(caminho)
+
+        medir(170, 450)
+
+        expect(estaFixa(container)).toBe(false)
+        expect(paddingDeRolagem()).toBe('')
+      })
+
+      it('1440 × 900 com fonte de 16 px: fixa', () => {
+        const { container } = renderizarRota(caminho)
+
+        medir(170, 900)
+
+        expect(estaFixa(container)).toBe(true)
+      })
+
+      it('volta a ficar fixa quando a fonte volta a 16 px', () => {
+        const { container } = renderizarRota(caminho)
+        definirFonteRaiz('32px')
+        medir(300, 844)
+        expect(estaFixa(container)).toBe(false)
+
+        definirFonteRaiz('16px')
+        avisarOObservador()
+
+        expect(estaFixa(container)).toBe(true)
         expect(paddingDeRolagem()).toBe('308px')
       })
 
@@ -175,14 +218,14 @@ describe('G3-2: a barra de baixo só fica fixa se sobrar tela', () => {
         act(() => {
           window.dispatchEvent(new Event('resize'))
         })
-        expect(barra(container).classList.contains('barra-fixa')).toBe(true)
+        expect(estaFixa(container)).toBe(true)
 
         definirAlturaDaJanela(400)
         act(() => {
           window.dispatchEvent(new Event('resize'))
         })
 
-        expect(barra(container).classList.contains('barra-fixa')).toBe(false)
+        expect(estaFixa(container)).toBe(false)
       })
 
       it('ao sair da tela, remove a reserva de rolagem', () => {
@@ -197,12 +240,143 @@ describe('G3-2: a barra de baixo só fica fixa se sobrar tela', () => {
     })
   }
 
+  // A barra de 420 px (mais de 35% de 844 px) é a medida de uma confirmação com o painel aberto.
+  const agir = (nome: string) => fireEvent.click(screen.getByRole('button', { name: nome }))
+  const estados: Array<[string, () => void]> = [
+    ['estado inicial', () => {}],
+    ['painel Fralda aberto', () => agir('Registrar fralda de Lia')],
+    [
+      'Fralda confirmada',
+      () => {
+        agir('Registrar fralda de Lia')
+        agir('Xixi')
+      },
+    ],
+    ['"+ Mais" aberto', () => agir('Mais registros')],
+    ...['Mamadeira', 'Alimentação sólida', 'Observação'].map((item): [string, () => void] => [
+      `${item} confirmada`,
+      () => {
+        agir('Mais registros')
+        agir(item)
+      },
+    ]),
+    ['depois de Encerrar', () => agir('Encerrar')],
+    [
+      'depois de Desfazer',
+      () => {
+        agir('Encerrar')
+        agir('Desfazer')
+      },
+    ],
+    [
+      'depois de Fechar',
+      () => {
+        agir('Mais registros')
+        agir('Mamadeira')
+        agir('Fechar')
+      },
+    ],
+  ]
+
+  for (const [tema, estado] of [
+    ['claro', claro],
+    ['madrugada', madrugada],
+  ] as const) {
+    for (const [nome, preparar] of estados) {
+      it(`Hoje (${tema}), ${nome}: a barra continua fixa (barra de 420 px, janela de 844 px, fonte de 16 px)`, () => {
+        const { container } = renderizarRota('/app/hoje', { estadoInicial: estado() })
+
+        preparar()
+        avisarOObservador()
+
+        expect(estaFixa(container)).toBe(true)
+      })
+    }
+
+    it(`Hoje (${tema}), com fonte raiz de 32 px, a barra não é fixa`, () => {
+      const { container } = renderizarRota('/app/hoje', { estadoInicial: estado() })
+      definirFonteRaiz('32px')
+
+      avisarOObservador()
+
+      expect(estaFixa(container)).toBe(false)
+    })
+  }
+
   it('sem ResizeObserver (jsdom, navegadores muito antigos) a barra continua fixa', () => {
     vi.unstubAllGlobals()
     const { container } = renderizarRota('/app/hoje')
 
-    expect(container.querySelector('.barra-inferior')!.classList.contains('barra-fixa')).toBe(true)
+    expect(estaFixa(container)).toBe(true)
   })
+})
+
+// ---------------------------------------------------------------------------
+// R1
+
+describe('R1: navegação inferior', () => {
+  for (const [tela, caminho] of [
+    ['Hoje', '/app/hoje'],
+    ['Sessão', '/app/sessao'],
+  ] as const) {
+    for (const [tema, estado] of [
+      ['claro', claro],
+      ['madrugada', madrugada],
+    ] as const) {
+      describe(`${tela} (${tema})`, () => {
+        it('os filhos da nav seguem a ordem visual: Hoje, "Em breve", Histórico, Desenvolvimento, Comunidade, Família', () => {
+          renderizarRota(caminho, { estadoInicial: estado() })
+          const nav = screen.getByRole('navigation', { name: 'Principal' })
+
+          expect([...nav.children].map((filho) => filho.textContent?.trim())).toEqual([
+            'Hoje',
+            'Em breve',
+            'Histórico',
+            'Desenvolvimento',
+            'Comunidade',
+            'Família',
+          ])
+        })
+
+        it('nenhum texto da navegação contém U+00AD', () => {
+          renderizarRota(caminho, { estadoInicial: estado() })
+          const nav = screen.getByRole('navigation', { name: 'Principal' })
+
+          expect(nav.textContent).not.toContain('­')
+        })
+
+        it('só "Desenvolvimento" tem a classe de hifenização', () => {
+          renderizarRota(caminho, { estadoInicial: estado() })
+          const nav = screen.getByRole('navigation', { name: 'Principal' })
+
+          expect([...nav.querySelectorAll('.nav-item-hifeniza')].map((i) => i.textContent)).toEqual([
+            'Desenvolvimento',
+          ])
+        })
+
+        it('a nav fica dentro da barra, que é o contêiner de largura', () => {
+          const { container } = renderizarRota(caminho, { estadoInicial: estado() })
+
+          expect(container.querySelector('.barra-inferior nav.nav-inferior')).not.toBeNull()
+        })
+
+        it('mantém aria-disabled, aria-describedby para "Em breve" e, no Hoje, aria-current', () => {
+          renderizarRota(caminho, { estadoInicial: estado() })
+          const nav = screen.getByRole('navigation', { name: 'Principal' })
+          const legenda = within(nav).getByText('Em breve')
+
+          for (const botao of nav.querySelectorAll('button')) {
+            expect(botao.getAttribute('aria-disabled')).toBe('true')
+            expect(botao.getAttribute('aria-describedby')).toBe(legenda.id)
+            expect(botao.hasAttribute('aria-label')).toBe(false)
+          }
+          expect(within(nav).getByRole('link', { name: 'Hoje' }).hasAttribute('aria-current')).toBe(
+            tela === 'Hoje',
+          )
+        })
+      })
+    }
+  }
 })
 
 // ---------------------------------------------------------------------------

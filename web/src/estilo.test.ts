@@ -318,7 +318,10 @@ describe('G3-1: alvo de toque', () => {
   it('nenhuma regra isolada reduz o alvo dessas classes', () => {
     for (const seletor of ['.botao', '.nav-item', '.alvo-toque']) {
       for (const corpo of corposDe(seletor)) {
-        expect(corpo, seletor).not.toMatch(/min-width:\s*0\b/)
+        // `.nav-item` tem min-width: 0 de propósito (R1): é a rede de segurança contra o vazamento
+        // do rótulo. A largura de 44 px é garantida pelo contêiner (22 rem ou mais = colunas de
+        // pelo menos 69 px; abaixo disso a nav vira uma coluna). A altura continua valendo.
+        if (seletor !== '.nav-item') expect(corpo, seletor).not.toMatch(/min-width:\s*0\b/)
         const altura = /min-height:\s*(\d+)px/.exec(corpo)
         if (altura) expect(Number(altura[1]), seletor).toBeGreaterThanOrEqual(44)
       }
@@ -414,12 +417,68 @@ describe('D2: coluna única das telas logadas', () => {
   })
 })
 
-describe('D5: navegação sem hifenização automática', () => {
-  it('.nav-item usa hifens manuais e não quebra a palavra em qualquer ponto', () => {
+describe('D5: hifenização da navegação', () => {
+  it('.nav-item usa hifens manuais; só o modificador .nav-item-hifeniza hifeniza', () => {
     const corpo = corposDe('.nav-item').join('')
     expect(corpo).toMatch(/hyphens:\s*manual/)
     expect(corpo).not.toMatch(/hyphens:\s*auto/)
-    expect(corpo).not.toMatch(/overflow-wrap:\s*anywhere/)
+    expect(corposDe('.nav-item-hifeniza').join('')).toMatch(/hyphens:\s*auto/)
+  })
+})
+
+describe('R1: navegação em uma coluna quando os rótulos não cabem', () => {
+  it('.nav-item tem min-width: 0 e overflow-wrap: anywhere (a quebra nunca vaza da coluna)', () => {
+    const corpo = corposDe('.nav-item').join('')
+    expect(corpo).toMatch(/min-width:\s*0\b/)
+    expect(corpo).toMatch(/overflow-wrap:\s*anywhere/)
+  })
+
+  it('um ancestral da navegação declara container-type: inline-size', () => {
+    expect(corposDe('.barra-inferior').join('')).toMatch(/container-type:\s*inline-size/)
+  })
+
+  it('abaixo de 22rem do contêiner, @container põe .nav-inferior numa coluna', () => {
+    const bloco = /@container\s*\(\s*max-width:\s*22rem\s*\)\s*\{\s*\.nav-inferior\s*\{([^}]*)\}/.exec(semComentarios)
+    expect(bloco).not.toBeNull()
+    expect(bloco![1]).toMatch(/grid-template-columns:\s*minmax\(0,\s*1fr\)/)
+  })
+
+  it('na coluna única, a legenda e os itens perdem a posição explícita da grade de 5', () => {
+    const bloco = /@container\s*\(\s*max-width:\s*22rem\s*\)\s*\{[\s\S]*?\.nav-legenda,\s*\.nav-item\s*\{([^}]*)\}/.exec(
+      semComentarios,
+    )
+    expect(bloco).not.toBeNull()
+    expect(bloco![1]).toMatch(/grid-column:\s*auto/)
+    expect(bloco![1]).toMatch(/grid-row:\s*auto/)
+  })
+
+  it('na grade de 5 colunas a posição é explícita no CSS: legenda na linha 1, itens na linha 2', () => {
+    expect(corposDe('.nav-legenda').join('')).toMatch(/grid-row:\s*1\b/)
+    expect(corposDe('.nav-item').join('')).toMatch(/grid-row:\s*2\b/)
+  })
+
+  it('os traços do colchete não aparecem na coluna única', () => {
+    const bloco = /@container\s*\(\s*max-width:\s*22rem\s*\)\s*\{[\s\S]*?\.nav-legenda::before,\s*\.nav-legenda::after\s*\{([^}]*)\}/.exec(
+      semComentarios,
+    )
+    expect(bloco).not.toBeNull()
+    expect(bloco![1]).toMatch(/display:\s*none/)
+  })
+})
+
+describe('R3/W1: contorno de foco dos alvos de foco por programa, só para teclado', () => {
+  it('.alvo-foco:focus-visible tem contorno de 2 px na cor de foco e afastamento de 2 px', () => {
+    const corpo = regras(semComentarios)
+      .filter((r) => r.seletor === '.alvo-foco:focus-visible')
+      .map((r) => r.corpo)
+      .join('')
+    expect(corpo).toMatch(/outline:\s*2px solid var\(--cor-foco\)/)
+    expect(corpo).toMatch(/outline-offset:\s*2px/)
+  })
+
+  it('não existe seletor .alvo-foco:focus sem o -visible (mouse e toque não desenham caixa)', () => {
+    const seletores = regras(semComentarios).map((r) => r.seletor)
+    expect(seletores.filter((s) => /\.alvo-foco:focus(?!-visible)/.test(s))).toEqual([])
   })
 })
 
