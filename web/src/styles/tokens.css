@@ -2,20 +2,24 @@
 @theme {
   --color-primary: #1a1511;
   --color-neutral: #f6efe3;
-  --color-accent: #b0431c;
+  --color-accent: #b0401c;
   --color-on-accent: #fff8ee;
   --color-info: #2b5c70;
   --color-line: #1a1511;
   --color-focus: #1a1511;
   --color-paper-deep: #ebe1d0;
+  --color-field-1: #c9a39a;
+  --color-field-2: #b8adc4;
   --color-night-primary: #e3d6c3;
   --color-night-neutral: #17120e;
-  --color-night-accent: #c47255;
+  --color-night-accent: #c47055;
   --color-night-on-accent: #17120e;
   --color-night-info: #8fb0bf;
   --color-night-line: #e3d6c3;
   --color-night-focus: #f7efe2;
   --color-night-paper-deep: #251e18;
+  --color-night-field-1: #3a2723;
+  --color-night-field-2: #2c2733;
   --font-display: "Fraunces";
   --font-heading: "Fraunces";
   --font-body: "Instrument Sans";
