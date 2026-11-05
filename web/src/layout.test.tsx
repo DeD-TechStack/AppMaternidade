@@ -481,15 +481,38 @@ describe('D4: botões rápidos com a mesma altura', () => {
 // ---------------------------------------------------------------------------
 // R1b: os botões rápidos decidem o layout pela largura do próprio componente
 
-/** Elementos com variante de contêiner (@max-[…]:, @min-[…]:) sem `@container` num ancestral. */
+/** `@min-[46rem]/pagina:grid-cols-12` → 'pagina'; `@max-[17rem]:grid-cols-1` → '' (sem nome); outro token → null. */
+const VARIANTE_DE_CONTEINER = /^@[a-z0-9-]*(?:\[[^\]]*\])?(?:\/([A-Za-z0-9_-]+))?:/
+
+function nomeDoContainerExigido(token: string): string | null {
+  const achado = VARIANTE_DE_CONTEINER.exec(token)
+  return achado ? (achado[1] ?? '') : null
+}
+
+/** Algum ancestral (sem contar o próprio elemento) é o contêiner que a variante consulta? */
+function temContainerAcima(elemento: Element, nome: string): boolean {
+  for (let acima = elemento.parentElement; acima; acima = acima.parentElement) {
+    for (const token of acima.classList) {
+      // Variante sem nome consulta o contêiner mais próximo, nomeado ou não; com nome, só esse.
+      if (nome === '' ? token === '@container' || token.startsWith('@container/') : token === `@container/${nome}`) {
+        return true
+      }
+    }
+  }
+  return false
+}
+
+/** Elementos com variante de contêiner (@max-[…]:, @min-[…]:, com ou sem /nome) sem o contêiner acima. */
 function variantesSemContainer(container: HTMLElement): string[] {
   const problemas: string[] = []
   for (const elemento of container.querySelectorAll<HTMLElement>('[class]')) {
-    const variantes = [...elemento.classList].filter((c) => c.startsWith('@') && c.includes(':'))
-    if (variantes.length === 0) continue
-    // `parentElement?.closest` não conta o próprio elemento: o contêiner tem de estar ACIMA.
-    if (elemento.parentElement?.closest('[class~="@container"]') == null) {
-      problemas.push(`${elemento.tagName.toLowerCase()} [${variantes.join(' ')}] sem contêiner acima`)
+    // O contêiner tem de estar ACIMA: `temContainerAcima` não conta o próprio elemento.
+    const semContainer = [...elemento.classList].filter((token) => {
+      const nome = nomeDoContainerExigido(token)
+      return nome !== null && !temContainerAcima(elemento, nome)
+    })
+    if (semContainer.length > 0) {
+      problemas.push(`${elemento.tagName.toLowerCase()} [${semContainer.join(' ')}] sem contêiner acima`)
     }
   }
   return problemas
@@ -582,6 +605,137 @@ describe('R1b: BotoesRapidos não depende da janela', () => {
       })
     })
   }
+})
+
+// ---------------------------------------------------------------------------
+// R4: o Início decide as colunas pelo espaço em rem da página, não pela janela
+
+describe('R4: o Início decide as colunas pela largura da página em rem', () => {
+  const rotaDoInicio = async () => {
+    const resultado = renderizarRota('/')
+    await screen.findByRole('heading', { level: 1 })
+    return resultado.container
+  }
+  const raizDaPagina = (container: HTMLElement) => container.querySelector<HTMLElement>('[class~="@container/pagina"]')
+  const VARIANTE_DE_JANELA = /(^|:)(sm|md|lg|xl|2xl):/
+
+  it('o div raiz declara o contêiner nomeado @container/pagina', async () => {
+    const container = await rotaDoInicio()
+
+    const raiz = raizDaPagina(container)
+    expect(raiz, 'nenhum elemento tem @container/pagina').not.toBeNull()
+    expect(raiz).toBe(container.firstElementChild)
+  })
+
+  it('só o raiz tem variante de janela (o padding lateral), inclusive fora da miniatura e dentro dela', async () => {
+    const container = await rotaDoInicio()
+    const raiz = raizDaPagina(container)
+
+    const deJanela = [...container.querySelectorAll<HTMLElement>('[class]')]
+      .filter((elemento) => elemento !== raiz)
+      .flatMap((elemento) => [...elemento.classList].filter((token) => VARIANTE_DE_JANELA.test(token)))
+    expect(deJanela).toEqual([])
+    expect(container.querySelector('[inert] [class]')).not.toBeNull()
+  })
+
+  it('a única variante de janela do raiz é o padding lateral md:px-[2%]', async () => {
+    const container = await rotaDoInicio()
+
+    const doRaiz = [...(raizDaPagina(container)?.classList ?? [])].filter((token) => VARIANTE_DE_JANELA.test(token))
+    expect(doRaiz).toEqual(['md:px-[2%]'])
+  })
+
+  it('toda variante …/pagina: tem o @container/pagina num ancestral, incluindo a miniatura inerte', async () => {
+    const container = await rotaDoInicio()
+
+    const usadas = [...container.querySelectorAll<HTMLElement>('[class]')].flatMap((elemento) =>
+      [...elemento.classList].filter((token) => nomeDoContainerExigido(token) === 'pagina'),
+    )
+    expect(usadas.length).toBeGreaterThan(10)
+    expect(variantesSemContainer(container)).toEqual([])
+    const dentroDaMiniatura = container.querySelectorAll('[inert] [class*="/pagina:"]')
+    expect(dentroDaMiniatura.length).toBeGreaterThan(0)
+  })
+
+  it('o limiar é 46 rem em todas as variantes nomeadas', async () => {
+    const container = await rotaDoInicio()
+
+    const limiares = new Set(
+      [...container.querySelectorAll<HTMLElement>('[class]')].flatMap((elemento) =>
+        [...elemento.classList]
+          .filter((token) => nomeDoContainerExigido(token) === 'pagina')
+          .map((token) => /^@(?:min|max)-\[([^\]]+)\]/.exec(token)?.[1] ?? token),
+      ),
+    )
+    expect([...limiares]).toEqual(['46rem'])
+  })
+
+  it('as telas logadas e a rota inexistente não usam o contêiner da página', () => {
+    for (const caminho of ['/app/hoje', '/app/sessao', '/qualquer-coisa']) {
+      const { container, unmount } = renderizarRota(caminho)
+      expect(container.querySelector('[class*="/pagina"]'), caminho).toBeNull()
+      unmount()
+    }
+  })
+
+  describe('o detector de contêiner (variantesSemContainer) entende nomes', () => {
+    it('variante nomeada sem contêiner acima é achada', () => {
+      const { container } = render(<div className="@min-[46rem]/pagina:flex" />)
+
+      expect(variantesSemContainer(container)).toHaveLength(1)
+    })
+
+    it('variante nomeada com contêiner de outro nome acima é achada', () => {
+      const { container } = render(
+        <div className="@container/outro">
+          <div className="@min-[46rem]/pagina:flex" />
+        </div>,
+      )
+
+      expect(variantesSemContainer(container)).toHaveLength(1)
+    })
+
+    it('variante nomeada com o contêiner certo acima passa', () => {
+      const { container } = render(
+        <div className="@container/pagina">
+          <p className="@min-[46rem]/pagina:first:pl-0" />
+        </div>,
+      )
+
+      expect(variantesSemContainer(container)).toEqual([])
+    })
+
+    it('o próprio elemento não conta como seu contêiner', () => {
+      const { container } = render(<div className="@container/pagina @min-[46rem]/pagina:flex" />)
+
+      expect(variantesSemContainer(container)).toHaveLength(1)
+    })
+
+    it('variante sem nome aceita @container e @container/qualquer-nome acima', () => {
+      const { container } = render(
+        <>
+          <div className="@container">
+            <p className="@max-[17rem]:grid-cols-1" />
+          </div>
+          <div className="@container/pagina">
+            <p className="@max-[17rem]:grid-cols-1" />
+          </div>
+        </>,
+      )
+
+      expect(variantesSemContainer(container)).toEqual([])
+    })
+
+    it('@container/pagina não conta como contêiner da variante @container/outro', () => {
+      const { container } = render(
+        <div className="@container/pagina">
+          <p className="@min-[46rem]/outro:flex" />
+        </div>,
+      )
+
+      expect(variantesSemContainer(container)).toHaveLength(1)
+    })
+  })
 })
 
 // ---------------------------------------------------------------------------
