@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type RefObject } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
 import { ColunaApp } from '../componentes/ColunaApp.tsx'
 import { BarraInferior } from '../prototipo/BarraInferior.tsx'
@@ -6,6 +6,7 @@ import { FaixaPrototipo } from '../prototipo/FaixaPrototipo.tsx'
 import { NavegacaoInferior } from '../prototipo/NavegacaoInferior.tsx'
 import { SessaoInfo } from '../prototipo/SessaoInfo.tsx'
 import { usePrototipo } from '../prototipo/contexto.ts'
+import { focoDoEstado } from '../prototipo/foco.ts'
 import { NOME_BEBE, ROTULO_SESSAO, ehTipoSessao, type TipoSessao } from '../prototipo/estado.ts'
 import { formatarCronometro, formatarHora } from '../prototipo/formatar.ts'
 import { useAgora } from '../prototipo/useAgora.ts'
@@ -31,9 +32,10 @@ function AcoesDaSessao() {
     painelAnterior.current = painel
   }, [painel])
 
+  // Encerrar, salvar e descartar tiram esta tela do ar: o foco vai ao cartão "Em andamento" do Hoje.
   function encerrar(comNota: boolean) {
     dispatch({ tipo: 'encerrar', agora: Date.now(), comNota })
-    void navigate('/app/hoje')
+    void navigate('/app/hoje', { state: { foco: 'cartao' } })
   }
 
   function salvarNota() {
@@ -44,7 +46,7 @@ function AcoesDaSessao() {
 
   function descartar() {
     dispatch({ tipo: 'descartar' })
-    void navigate('/app/hoje')
+    void navigate('/app/hoje', { state: { foco: 'cartao' } })
   }
 
   return (
@@ -122,7 +124,7 @@ function AcoesDaSessao() {
   )
 }
 
-function CorpoDaSessao() {
+function CorpoDaSessao({ titulo }: { titulo: RefObject<HTMLHeadingElement | null> }) {
   const { estado } = usePrototipo()
   const location = useLocation()
   const agora = useAgora(1000)
@@ -134,7 +136,9 @@ function CorpoDaSessao() {
 
   return (
     <>
-      <h1 className="titulo-tela">{`${rotulo} de ${NOME_BEBE}`}</h1>
+      <h1 ref={titulo} tabIndex={-1} className="titulo-tela alvo-foco">
+        {`${rotulo} de ${NOME_BEBE}`}
+      </h1>
       {avisar ? <p className="texto-info mt-2">{`Já há uma sessão de ${rotulo} em andamento.`}</p> : null}
 
       <div className="mt-6">
@@ -160,6 +164,15 @@ export function Sessao() {
   const tipoBruto = parametros.get('tipo')
   const tipoDaUrl: TipoSessao | null = ehTipoSessao(tipoBruto) ? tipoBruto : null
   const semSessao = estado.sessao === null
+  const location = useLocation()
+  const titulo = useRef<HTMLHeadingElement>(null)
+
+  // Chegando por navegação interna (atalhos, "Ver sessão"), o foco vai ao h1 da tela, que é o
+  // da sessão ou o do estado vazio. Pela URL (inclusive com ?tipo=), o foco não se move.
+  const foco = focoDoEstado(location.state)
+  useEffect(() => {
+    if (foco === 'titulo') titulo.current?.focus()
+  }, [foco, location.key])
 
   // `?tipo=` só vale uma vez, e só quando não há sessão. Depois de começar, sai da URL e a
   // guarda impede que, ao encerrar, a página comece outra sessão sozinha. O reducer ignora
@@ -182,15 +195,21 @@ export function Sessao() {
         <div className="flex w-full flex-1 flex-col">
           {semSessao && !iniciandoPelaUrl ? (
             <>
-              <h1 className="titulo-tela">Nenhuma sessão em andamento</h1>
+              <h1 ref={titulo} tabIndex={-1} className="titulo-tela alvo-foco">
+                Nenhuma sessão em andamento
+              </h1>
               <p className="mt-4">
-                <Link to="/app/hoje" className="alvo-toque inline-flex items-center">
+                <Link
+                  to="/app/hoje"
+                  state={{ foco: 'titulo' }}
+                  className="alvo-toque inline-flex items-center"
+                >
                   Voltar para Hoje
                 </Link>
               </p>
             </>
           ) : (
-            <CorpoDaSessao />
+            <CorpoDaSessao titulo={titulo} />
           )}
         </div>
       </main>

@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState, type Ref } from 'react'
 import {
   ESCOLHAS_FRALDA,
   ITENS_MAIS,
@@ -24,11 +24,19 @@ interface Props {
   aoRegistrarMais: (item: ItemMais) => void
   /** Versão do Início: botões sem ação e fora da ordem de Tab. */
   desativado?: boolean
+  /** O Hoje leva o foco ao primeiro botão quando "Desfazer" e "Fechar" saem da tela. */
+  refSono?: Ref<HTMLButtonElement>
 }
 
 // Os botões de registro da tela Hoje. Fralda abre uma escolha de um toque; "+ Mais" é um
 // disclosure. Esc fecha o que estiver aberto e o foco volta ao botão que abriu.
-export function BotoesRapidos({ aoIniciarSessao, aoRegistrarFralda, aoRegistrarMais, desativado = false }: Props) {
+export function BotoesRapidos({
+  aoIniciarSessao,
+  aoRegistrarFralda,
+  aoRegistrarMais,
+  desativado = false,
+  refSono,
+}: Props) {
   const [painel, setPainel] = useState<Painel | null>(null)
   const botaoFralda = useRef<HTMLButtonElement>(null)
   const botaoMais = useRef<HTMLButtonElement>(null)
@@ -73,6 +81,7 @@ export function BotoesRapidos({ aoIniciarSessao, aoRegistrarFralda, aoRegistrarM
     <div>
       <div className={GRADE}>
         <button
+          ref={refSono}
           type="button"
           aria-label="Iniciar sono de Lia"
           className={PRIMEIRA_LINHA}

@@ -1,4 +1,5 @@
-import { useNavigate } from 'react-router'
+import { useEffect, useRef, type RefObject } from 'react'
+import { useLocation, useNavigate } from 'react-router'
 import { ColunaApp } from '../componentes/ColunaApp.tsx'
 import { BarraInferior } from '../prototipo/BarraInferior.tsx'
 import { BotoesRapidos } from '../prototipo/BotoesRapidos.tsx'
@@ -15,16 +16,26 @@ import {
   type ItemMais,
   type TipoSessao,
 } from '../prototipo/estado.ts'
+import { focoDoEstado } from '../prototipo/foco.ts'
 import { formatarDuracao } from '../prototipo/formatar.ts'
 import { useAgora } from '../prototipo/useAgora.ts'
 
 // O cartão se atualiza sozinho: a duração sai de `agora - inicio`, nunca de um contador.
-function CartaoDaSessao() {
+// Ao encerrar, o botão "Encerrar" some; o foco vai para o próprio cartão, que passa a dizer
+// "Nenhuma sessão em andamento.".
+function CartaoDaSessao({ cartao }: { cartao: RefObject<HTMLElement | null> }) {
   const { estado, dispatch } = usePrototipo()
   const agora = useAgora(1000)
   const sessao = estado.sessao
+
+  function encerrar() {
+    dispatch({ tipo: 'encerrar', agora: Date.now(), comNota: false })
+    cartao.current?.focus()
+  }
+
   return (
     <CartaoEmAndamento
+      ref={cartao}
       sessao={
         sessao
           ? {
@@ -34,7 +45,7 @@ function CartaoDaSessao() {
             }
           : null
       }
-      aoEncerrar={() => dispatch({ tipo: 'encerrar', agora: Date.now(), comNota: false })}
+      aoEncerrar={encerrar}
     />
   )
 }
@@ -42,15 +53,38 @@ function CartaoDaSessao() {
 export function Hoje() {
   const { estado, dispatch } = usePrototipo()
   const navigate = useNavigate()
+  const location = useLocation()
+  const titulo = useRef<HTMLHeadingElement>(null)
+  const cartao = useRef<HTMLElement>(null)
+  const primeiroBotao = useRef<HTMLButtonElement>(null)
+
+  // Chegando por navegação interna, o foco vai ao alvo que a origem pediu; pela URL, não se move.
+  const foco = focoDoEstado(location.state)
+  useEffect(() => {
+    if (foco === 'cartao') cartao.current?.focus()
+    else if (foco === 'titulo') titulo.current?.focus()
+  }, [foco, location.key])
 
   function iniciarSessao(tipo: TipoSessao) {
     if (estado.sessao) {
       // Já há uma sessão: abre a que existe e deixa a Sessão mostrar o aviso.
-      void navigate('/app/sessao', { state: { jaEmAndamento: true } })
+      void navigate('/app/sessao', { state: { jaEmAndamento: true, foco: 'titulo' } })
       return
     }
     dispatch({ tipo: 'iniciar', sessao: tipo, agora: Date.now() })
-    void navigate('/app/sessao')
+    void navigate('/app/sessao', { state: { foco: 'titulo' } })
+  }
+
+  // "Desfazer" e "Fechar" somem com a confirmação; o foco vai ao primeiro botão rápido, que é
+  // o próximo controle na ordem do DOM e continua na tela. A confirmação nunca recebe o foco.
+  function desfazer() {
+    dispatch({ tipo: 'desfazer' })
+    primeiroBotao.current?.focus()
+  }
+
+  function fecharConfirmacao() {
+    dispatch({ tipo: 'fecharConfirmacao' })
+    primeiroBotao.current?.focus()
   }
 
   function registrarFralda(escolha: EscolhaFralda) {
@@ -77,7 +111,9 @@ export function Hoje() {
 
       <main className="flex-1 px-4 pb-8 pt-6">
         <div>
-          <h1 className="titulo-tela">Hoje</h1>
+          <h1 ref={titulo} tabIndex={-1} className="titulo-tela alvo-foco">
+            Hoje
+          </h1>
           <p className="mt-1">{`${NOME_BEBE}, ${IDADE_BEBE}`}</p>
 
           <button
@@ -90,7 +126,7 @@ export function Hoje() {
           </button>
 
           <div className="mt-6">
-            <CartaoDaSessao />
+            <CartaoDaSessao cartao={cartao} />
           </div>
 
           <section aria-labelledby="titulo-saber" className="mt-8 border-t pt-4">
@@ -120,10 +156,11 @@ export function Hoje() {
         <section aria-label="Registro rápido" className="registro-rapido @container">
           <Confirmacao
             texto={estado.confirmacao?.texto ?? null}
-            aoDesfazer={() => dispatch({ tipo: 'desfazer' })}
-            aoFechar={() => dispatch({ tipo: 'fecharConfirmacao' })}
+            aoDesfazer={desfazer}
+            aoFechar={fecharConfirmacao}
           />
           <BotoesRapidos
+            refSono={primeiroBotao}
             aoIniciarSessao={iniciarSessao}
             aoRegistrarFralda={registrarFralda}
             aoRegistrarMais={registrarMais}
