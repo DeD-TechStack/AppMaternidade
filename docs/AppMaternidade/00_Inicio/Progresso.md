@@ -21,6 +21,18 @@ Horários em America/Sao_Paulo, tirados do relógio da máquina ou de carimbos d
 
 Uma linha por marco, a mais recente no topo. O estado corrente fica em [Retomada do site](Retomada_Site.md), e o detalhe de cada marco está no cartão Kanban citado.
 
+- 05/11/2026: **paralelismo ligado (pedido de Daniel via coordenador).** Cinco frentes passaram a andar juntas:
+  - MAT-44 (`t_10f8dad7`, em `web/src`);
+  - MAT-45 (`t_e3572be9`), MAT-46 (`t_c9df145a`) e MAT-47 (`t_569c296e`), em `supabase/`;
+  - a pesquisa da MAT-39 (`t_78297271`).
+
+  **Preparação** para os bancos não colidirem:
+  - cada tarefa grava o seed no próprio arquivo em `supabase/seeds/`, carregado pelo `config.toml` desde 39f7c82 (decisão C4 revista);
+  - cada cartão sobe um Supabase isolado, com `project_id` e portas próprios, pelo `isolar_supabase.py` do staging. O teste com dois bancos ao mesmo tempo deu 123/123 em cada.
+
+  **Decisão do líder:** as 3 specs de banco seguem com a releitura provisória da mesma família, porque o runtime do revisor caiu. O explique de volta por outra família entra quando ele voltar, antes da revisão do código.
+
+  A MAT-48a (Pages pelo CI) está com a spec v1 em explique de volta. Ela depende da MAT-44 na main, porque usa o `basename` do roteador.
 - 05/11/2026: **D7 = A e push liberado (decisões de Daniel).**
   - **D7:** os registros das sondagens de acesso ficam só no disco, fora do Git, sem contato com os mantenedores.
   - **Usuário local:** o nome de usuário do Windows virou `<usuario>` nos arquivos rastreados (6 arquivos, 14 ocorrências). Nos commits antigos ele continua, por escolha de Daniel.
