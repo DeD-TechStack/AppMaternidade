@@ -45,3 +45,27 @@ jobs:
       # de 72 caracteres), e o mesmo intervalo vale em todo push e na PR.
       - name: Verificar a política de commits desde a base
         run: node scripts/verificar-commits.mjs c7142bb43b763216fa124d101aa0b020f4d26e08..HEAD
+
+  banco:
+    name: Banco (Supabase local)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v5
+
+      - name: Instalar o Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      - name: Instalar as dependências
+        run: npm ci
+
+      - name: Subir o Supabase local
+        run: npm run db:start
+
+      - name: Testar o banco (pgTAP)
+        run: npm run db:test
+
+      - name: Verificar o banco (lint)
+        run: npm run db:lint
