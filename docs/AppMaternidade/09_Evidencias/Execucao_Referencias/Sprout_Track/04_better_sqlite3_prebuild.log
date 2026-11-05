@@ -7,9 +7,9 @@ $ node ../../../../prebuild-install/bin.js --verbose
 prebuild-install info npm cache directory missing, creating it...
 prebuild-install http request GET https://github.com/WiseLibs/better-sqlite3/releases/download/v12.11.1/better-sqlite3-v12.11.1-node-v137-win32-x64.tar.gz
 prebuild-install http 200 https://github.com/WiseLibs/better-sqlite3/releases/download/v12.11.1/better-sqlite3-v12.11.1-node-v137-win32-x64.tar.gz
-prebuild-install info downloading to @ C:\Users\danie.DESKTOP-AUUT84P\AppData\Roaming\npm-cache\_prebuilds\4d2ad7-better-sqlite3-v12.11.1-node-v137-win32-x64.tar.gz.2404-58640ad4f0a738.tmp
-prebuild-install info renaming to @ C:\Users\danie.DESKTOP-AUUT84P\AppData\Roaming\npm-cache\_prebuilds\4d2ad7-better-sqlite3-v12.11.1-node-v137-win32-x64.tar.gz
-prebuild-install info unpacking @ C:\Users\danie.DESKTOP-AUUT84P\AppData\Roaming\npm-cache\_prebuilds\4d2ad7-better-sqlite3-v12.11.1-node-v137-win32-x64.tar.gz
+prebuild-install info downloading to @ C:\Users\<usuario>\AppData\Roaming\npm-cache\_prebuilds\4d2ad7-better-sqlite3-v12.11.1-node-v137-win32-x64.tar.gz.2404-58640ad4f0a738.tmp
+prebuild-install info renaming to @ C:\Users\<usuario>\AppData\Roaming\npm-cache\_prebuilds\4d2ad7-better-sqlite3-v12.11.1-node-v137-win32-x64.tar.gz
+prebuild-install info unpacking @ C:\Users\<usuario>\AppData\Roaming\npm-cache\_prebuilds\4d2ad7-better-sqlite3-v12.11.1-node-v137-win32-x64.tar.gz
 prebuild-install info unpack resolved to C:\Projetos\AppMaternidade\_referencias\sprout-track\node_modules\@prisma\adapter-better-sqlite3\node_modules\better-sqlite3\build\Release\better_sqlite3.node
 prebuild-install info unpack required C:\Projetos\AppMaternidade\_referencias\sprout-track\node_modules\@prisma\adapter-better-sqlite3\node_modules\better-sqlite3\build\Release\better_sqlite3.node successfully
 prebuild-install info install Successfully installed prebuilt binary!

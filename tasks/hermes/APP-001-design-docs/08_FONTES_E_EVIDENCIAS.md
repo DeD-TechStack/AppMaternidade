@@ -16,7 +16,7 @@ Data de consulta e preparação: 22/10/2026, referência de calendário America/
 ## Insumos originais
 
 Resumo fornecido por Daniel:
-C:/Users/danie.DESKTOP-AUUT84P/Downloads/Contexto_AppMaternidade_Consultor_Hermes.md
+C:/Users/<usuario>/Downloads/Contexto_AppMaternidade_Consultor_Hermes.md
 
 SHA-256 do original:
 C473CF2A7A6E70836611677F2729BE16E0DC3EFFDC7935E232EE6721AC00505D

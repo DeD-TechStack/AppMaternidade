@@ -10,7 +10,7 @@ Android e iOS são requisitos. Web e tecnologias permanecem em discussão. A sol
 
 ## Evidências já conferidas
 
-- Resumo localizado e lido em `C:\Users\danie.DESKTOP-AUUT84P\Downloads\Contexto_AppMaternidade_Consultor_Hermes.md`.
+- Resumo localizado e lido em `C:\Users\<usuario>\Downloads\Contexto_AppMaternidade_Consultor_Hermes.md`.
 - Workspace `C:\Projetos\AppMaternidade` localizado; na retomada continha somente `.git`.
 - Repositório GitHub `https://github.com/DeD-TechStack/AppMaternidade` acessível; público, tamanho informado 0, branch padrão informada `main`.
 - Imagem de referência inspecionada: lista de projetos do workspace Oficina, com BreakInv e Investment. Serve como referência de organização; AppMaternidade deverá ser projeto separado.

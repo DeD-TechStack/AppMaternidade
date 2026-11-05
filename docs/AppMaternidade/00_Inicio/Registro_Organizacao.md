@@ -204,7 +204,7 @@ Vínculos "bloqueado por" novos: ids 123 a 127. O documento 9 foi ligado às sei
 | Cofre | AppMaternidade |
 | Caminho | `C:/Projetos/AppMaternidade/docs/AppMaternidade` |
 | Aplicativo | Obsidian 1.14.4, executável `C:/OrchestrationLab/apps/orca/home/AppData/Local/Programs/Obsidian/Obsidian.exe`, o mesmo associado ao protocolo `obsidian://` |
-| Perfil normal (usado) | Cadastro em `C:/Users/danie.DESKTOP-AUUT84P/AppData/Roaming/obsidian/obsidian.json`; antes do registro listava BreakInv e FORJAI |
+| Perfil normal (usado) | Cadastro em `C:/Users/<usuario>/AppData/Roaming/obsidian/obsidian.json`; antes do registro listava BreakInv e FORJAI |
 | Perfil Oficina (não usado) | Lançador `C:/OrchestrationLab/Abrir-Obsidian-Oficina.cmd`, com `--user-data-dir` em `C:/OrchestrationLab/apps/orca/home/AppData/Roaming/obsidian` (cofre OficinaConhecimento) |
 | Situação | **Registrado por Daniel às 07:00:46**, no seletor do perfil normal. Evidências: entrada `75cd70ea629fa64f` no `%APPDATA%/obsidian/obsidian.json`, com `open: true`; janela "AppMaternidade - Obsidian 1.14.4" no processo 24904, sem `--user-data-dir`, com os processos filhos em `%APPDATA%/obsidian`; pasta `.obsidian/` criada às 07:00:47, fora do Git. O cadastro da Oficina continua com o mesmo SHA-256 de antes (`5dec260f…`). Antes, às 03:12:45, a automação de interface tinha voltado "BLOCKED, not run; the user did NOT consent" e não foi repetida. **Navegação no aplicativo:** conferida pelo `workspace.json` do cofre, sem automação de interface: Home às 07:11:55; ADR-002 às 07:12:03, depois ADR-003, ADR-001, ADR-007 e ADR-004; Roadmap e Decisões às 07:12:39; e o design doc Comunidade e moderação, aberto às 07:12:42. |
 

@@ -13,7 +13,7 @@ $ java -version
 openjdk version "21.0.11" 2026-04-21 LTS
 OpenJDK Runtime Environment Temurin-21.0.11+10 (build 21.0.11+10-LTS)
 $ ls $LOCALAPPDATA/Android/Sdk
-ls: cannot access 'C:\Users\danie.DESKTOP-AUUT84P\AppData\Local/Android/Sdk': No such file or directory
+ls: cannot access 'C:\Users\<usuario>\AppData\Local/Android/Sdk': No such file or directory
 $ ls env/ (arquivos de ambiente exigidos pelos scripts e pelo babel.config.js)
 ls: cannot access 'env': No such file or directory
 $ git check-ignore -v env/.env.bebbo android/app/src/prod/google-services.json ios/GoogleServices/Production/GoogleService-Info.plist
