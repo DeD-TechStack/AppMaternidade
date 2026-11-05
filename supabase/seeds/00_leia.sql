@@ -1,0 +1,3 @@
+-- Seeds por tarefa (dados fictícios). Cada tarefa de banco cria o próprio arquivo
+-- supabase/seeds/<NN>_<assunto>.sql, carregado depois de ../seed.sql, em ordem de nome.
+-- Nenhuma tarefa edita o arquivo de outra.
