@@ -1,20 +1,439 @@
 @import 'tailwindcss';
 @import './styles/tokens.css';
+@import './styles/tema.css';
+@import '@fontsource/fraunces/latin-600.css';
+@import '@fontsource/fraunces/latin-800.css';
+@import '@fontsource/fraunces/latin-400-italic.css';
+@import '@fontsource/instrument-sans/latin-400.css';
+@import '@fontsource/instrument-sans/latin-500.css';
+@import '@fontsource/instrument-sans/latin-600.css';
 
 @layer base {
+  /* Toda borda usa a tinta do tema; as linhas de 1 px são a estrutura (DESIGN.md, Layout). */
+  *,
+  ::before,
+  ::after {
+    border-color: var(--cor-linha);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
   body {
     margin: 0;
-    background-color: var(--color-papel);
-    color: var(--color-tinta);
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: 1.0625rem;
+    font-weight: 400;
+    line-height: 1.55;
   }
 
   a {
-    color: var(--color-tinta);
+    color: inherit;
     text-decoration: underline;
+    text-underline-offset: 3px;
   }
 
-  a:focus-visible {
-    outline: 2px solid var(--color-destaque);
+  button,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  /* Foco visível em todo elemento focável (VIS-08) */
+  :focus-visible {
+    outline: 2px solid var(--cor-foco);
     outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* Tipografia */
+  .rotulo {
+    font-family: var(--fonte-texto);
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  /* A voz de exibição (Fraunces) e o espaçamento dos títulos, uma vez só. */
+  .marca,
+  .promessa,
+  .titulo-secao,
+  .titulo-tela,
+  .titulo-linha,
+  .numero-fato,
+  .nota-italico {
+    font-family: var(--fonte-exibicao);
+  }
+
+  .marca,
+  .titulo-secao,
+  .titulo-tela,
+  .titulo-linha {
+    letter-spacing: -0.01em;
+  }
+
+  .promessa,
+  .numero-fato {
+    letter-spacing: -0.02em;
+  }
+
+  .marca {
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+
+  .promessa {
+    font-size: clamp(2.75rem, 7.2vw, 4.5rem);
+    font-weight: 800;
+    line-height: 1;
+    overflow-wrap: break-word;
+  }
+
+  .titulo-secao {
+    font-size: clamp(1.75rem, 3.2vw, 2.25rem);
+    font-weight: 600;
+    line-height: 1.1;
+  }
+
+  .titulo-tela {
+    font-size: 2.25rem;
+    font-weight: 600;
+    line-height: 1.1;
+  }
+
+  .titulo-linha {
+    font-size: 1.375rem;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  .numero-fato {
+    font-size: clamp(2.25rem, 4.2vw, 3.5rem);
+    font-weight: 800;
+    line-height: 1;
+    overflow-wrap: anywhere;
+  }
+
+  .numero-grande {
+    font-family: var(--fonte-texto);
+    font-size: clamp(2.5rem, 12vw, 3.5rem);
+    font-weight: 600;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .nota-italico {
+    font-size: 1.5rem;
+    font-style: italic;
+    font-weight: 400;
+    line-height: 1.25;
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .texto-medida {
+    max-width: 65ch;
+  }
+
+  .texto-info {
+    color: var(--cor-info);
+  }
+
+  /* Superfícies */
+  .cartao {
+    border: 1px solid var(--cor-linha);
+    border-radius: var(--radius-card, 8px);
+    background-color: var(--cor-fundo);
+    padding: 1rem;
+  }
+
+  /* A etiqueta é só o fundo, o canto e o respiro; a tipografia vem de .rotulo. */
+  .etiqueta {
+    display: inline-block;
+    border-radius: var(--radius-tag, 3px);
+    background-color: var(--cor-papel-fundo);
+    padding: 0.375rem 0.5rem;
+  }
+
+  .campo-cor {
+    border-radius: var(--radius-media, 8px);
+    background-color: var(--cor-destaque);
+    color: var(--cor-sobre-destaque);
+    padding: 1rem;
+  }
+
+  .painel {
+    border: 1px solid var(--cor-linha);
+    border-radius: var(--radius-media, 8px);
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto);
+    padding: 1rem;
+  }
+
+  /* Dentro de um painel o cartão perde o contorno: nunca há cartão dentro de cartão. */
+  .bloco-miniatura {
+    padding: 0;
+  }
+
+  /* Coluna única das telas logadas: faixa, conteúdo, barra e navegação alinhados nela. */
+  .coluna-app {
+    width: 100%;
+    max-width: 40rem;
+    margin-inline: auto;
+  }
+
+  @media (min-width: 48rem) {
+    .coluna-app {
+      border-inline: 1px solid var(--cor-linha);
+    }
+  }
+
+  .campo-sessao {
+    border-radius: var(--radius-media, 8px);
+    background-color: var(--cor-campo-sessao);
+    color: var(--cor-numero-sessao);
+    padding: 1.5rem 1rem;
+  }
+
+  :root[data-tema='madrugada'] .campo-sessao {
+    border: 1px solid var(--cor-linha);
+  }
+
+  .cronometro {
+    font-family: var(--fonte-texto);
+    font-size: clamp(4.5rem, 21vw, 8rem);
+    font-weight: 600;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+  }
+
+  /* A miniatura do Início usa o mesmo cronômetro, em tamanho menor. */
+  .cronometro-mini {
+    font-size: clamp(2.75rem, 13vw, 4.5rem);
+  }
+
+  /* Alvo de toque: todo botão e link fora de parágrafo tem pelo menos 44 × 44 px. */
+  .alvo-toque,
+  .botao,
+  .nav-item {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* Botões */
+  .botao {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-control, 6px);
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: 0.02em;
+    text-align: center;
+    text-decoration: none;
+  }
+
+  .botao-principal {
+    border-color: var(--cor-destaque);
+    background-color: var(--cor-destaque);
+    color: var(--cor-sobre-destaque);
+  }
+
+  .botao-secundario {
+    border-color: var(--cor-linha);
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto);
+  }
+
+  /* Ligado: papel fundo e contorno de destaque. Nunca a cor do texto como fundo, que na
+     madrugada seria o ponto mais claro da tela. O padding compensa o contorno de 2 px. */
+  .botao-secundario[aria-pressed='true'] {
+    border: 2px solid var(--cor-destaque);
+    background-color: var(--cor-papel-fundo);
+    color: var(--cor-texto);
+    padding: calc(0.75rem - 1px) calc(1rem - 1px);
+  }
+
+  .botao-grande {
+    min-height: 56px;
+    width: 100%;
+  }
+
+  .acao-rapida {
+    min-height: var(--alvo-rapido);
+    border-color: var(--cor-papel-fundo);
+    background-color: var(--cor-papel-fundo);
+    padding-inline: 0.5rem;
+    color: var(--cor-texto);
+  }
+
+  .acao-rapida[aria-expanded='true'] {
+    border-color: var(--cor-linha);
+  }
+
+  /* Barra de baixo da tela: botões rápidos e navegação, opacas. Só fica colada à janela
+     (.barra-fixa) enquanto sua altura couber em 35% dela; o resto do tempo, no fluxo. */
+  .barra-inferior {
+    background-color: var(--cor-fundo);
+  }
+
+  .barra-fixa {
+    position: sticky;
+    bottom: 0;
+  }
+
+  .registro-rapido {
+    border-top: 1px solid var(--cor-linha);
+    padding: 0.75rem 1rem 0.5rem;
+  }
+
+  /* Navegação inferior */
+  .nav-inferior {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    border-top: 1px solid var(--cor-linha);
+    background-color: var(--cor-fundo);
+    padding-inline: 0.25rem;
+    padding-bottom: max(6px, env(safe-area-inset-bottom));
+  }
+
+  /* "Em breve" marca, como um colchete, as colunas 2 a 5 (Histórico a Família). */
+  .nav-legenda {
+    grid-column: 2 / span 4;
+    position: relative;
+    margin-top: 0.25rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid var(--cor-linha);
+    text-align: left;
+    font-size: 0.75rem;
+    line-height: 1.3;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .nav-legenda::before,
+  .nav-legenda::after {
+    content: '';
+    position: absolute;
+    bottom: calc(-0.375rem - 1px);
+    width: 1px;
+    height: 0.375rem;
+    background-color: var(--cor-linha);
+  }
+
+  .nav-legenda::before {
+    left: 0;
+  }
+
+  .nav-legenda::after {
+    right: 0;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    border: 0;
+    border-top: 3px solid transparent;
+    background-color: transparent;
+    padding: 0.25rem 0;
+    color: var(--cor-texto);
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.2;
+    text-align: center;
+    text-decoration: none;
+    /* Hifens manuais: nenhum item quebra palavra sozinho. Só "Desenvolvimento" opta pela
+       quebra automática, com o modificador abaixo. */
+    hyphens: manual;
+  }
+
+  /* Só "Desenvolvimento" quebra em 390 px (o <html lang="pt-BR"> dá o dicionário). O texto
+     visível não leva caractere invisível, então o nome acessível é o próprio texto. */
+  .nav-item-hifeniza {
+    hyphens: auto;
+  }
+
+  .nav-item[aria-current='page'] {
+    border-top-color: var(--cor-destaque);
+    font-weight: 600;
+  }
+
+  /* Ilustração: traço contínuo de tinta, preenchimento chapado de tinta ou papel */
+  .ilu {
+    fill: none;
+    stroke: var(--cor-texto);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .ilu-papel {
+    fill: var(--cor-fundo);
+  }
+
+  .ilu-tinta {
+    fill: var(--cor-texto);
+  }
+
+  .ilu-sem-traco {
+    stroke: none;
+  }
+
+  /* Entrada dos blocos: só opacidade e deslocamento curto (VIS-08) */
+  .entrada {
+    animation: entrada 240ms ease-out both;
+  }
+
+  .atraso-1 {
+    animation-delay: 60ms;
+  }
+
+  .atraso-2 {
+    animation-delay: 120ms;
+  }
+
+  :root[data-tema='madrugada'] .entrada {
+    animation: none;
+  }
+}
+
+@keyframes entrada {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
   }
 }

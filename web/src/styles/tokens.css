@@ -1,7 +1,52 @@
-/* Tokens provisórios; a MAT-34 substitui pelos do DESIGN.md */
+/* Gerado de web/DESIGN.md por designmd export; não editar à mão */
 @theme {
-  --color-papel: #F6F1E9;
-  --color-tinta: #1F1B16;
-  --color-destaque: #A64B24;
-  --color-linha: #D9CFC2;
+  --color-primary: #1a1511;
+  --color-neutral: #f6efe3;
+  --color-accent: #b0431c;
+  --color-on-accent: #fff8ee;
+  --color-info: #2b5c70;
+  --color-line: #1a1511;
+  --color-focus: #1a1511;
+  --color-paper-deep: #ebe1d0;
+  --color-night-primary: #e3d6c3;
+  --color-night-neutral: #17120e;
+  --color-night-accent: #c47255;
+  --color-night-on-accent: #17120e;
+  --color-night-info: #8fb0bf;
+  --color-night-line: #e3d6c3;
+  --color-night-focus: #f7efe2;
+  --color-night-paper-deep: #251e18;
+  --font-display: "Fraunces";
+  --font-heading: "Fraunces";
+  --font-body: "Instrument Sans";
+  --font-numeric: "Instrument Sans";
+  --font-label: "Instrument Sans";
+  --text-display: 4.5rem;
+  --text-heading: 2.25rem;
+  --text-body: 1.0625rem;
+  --text-numeric: 3.5rem;
+  --text-label: 0.875rem;
+  --tracking-display: -0.02em;
+  --tracking-heading: -0.01em;
+  --tracking-label: 0.04em;
+  --font-weight-display: 800;
+  --font-weight-heading: 600;
+  --font-weight-body: 400;
+  --font-weight-numeric: 600;
+  --font-weight-label: 600;
+  --radius-tag: 3px;
+  --radius-control: 6px;
+  --radius-card: 8px;
+  --radius-media: 8px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 40px;
+  --spacing-2xl: 64px;
+  --spacing-3xl: 96px;
+  --spacing-page-margin: 16px;
+  --spacing-measure: 65ch;
+  --spacing-target: 44px;
+  --spacing-target-night: 56px;
 }

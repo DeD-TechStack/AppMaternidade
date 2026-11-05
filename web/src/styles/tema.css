@@ -1,0 +1,36 @@
+/* Variáveis de uso. Os componentes leem só estas; as cores de verdade ficam em tokens.css. */
+:root {
+  --cor-fundo: var(--color-neutral);
+  --cor-texto: var(--color-primary);
+  --cor-destaque: var(--color-accent);
+  --cor-sobre-destaque: var(--color-on-accent);
+  --cor-info: var(--color-info);
+  --cor-linha: var(--color-line);
+  --cor-foco: var(--color-focus);
+  --cor-papel-fundo: var(--color-paper-deep);
+
+  /* Campo do cronômetro na Sessão */
+  --cor-campo-sessao: var(--color-accent);
+  --cor-numero-sessao: var(--color-on-accent);
+
+  --fonte-exibicao: 'Fraunces', Georgia, serif;
+  --fonte-texto: 'Instrument Sans', system-ui, sans-serif;
+
+  --alvo-rapido: 48px;
+}
+
+:root[data-tema='madrugada'] {
+  --cor-fundo: var(--color-night-neutral);
+  --cor-texto: var(--color-night-primary);
+  --cor-destaque: var(--color-night-accent);
+  --cor-sobre-destaque: var(--color-night-on-accent);
+  --cor-info: var(--color-night-info);
+  --cor-linha: var(--color-night-line);
+  --cor-foco: var(--color-night-focus);
+  --cor-papel-fundo: var(--color-night-paper-deep);
+
+  --cor-campo-sessao: var(--color-night-paper-deep);
+  --cor-numero-sessao: var(--color-night-primary);
+
+  --alvo-rapido: 56px;
+}

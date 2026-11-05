@@ -1,9 +1,13 @@
 import { Outlet } from 'react-router'
+import { ProvedorPrototipo } from '../prototipo/ProvedorPrototipo.tsx'
+import type { EstadoPrototipo } from '../prototipo/estado.ts'
 
-export function Layout() {
+// Layout raiz: guarda o estado do protótipo para o Início, o Hoje e a Sessão compartilharem.
+// Cada tela monta o próprio <main>.
+export function Layout({ estadoInicial }: { estadoInicial?: EstadoPrototipo }) {
   return (
-    <main className="mx-auto max-w-2xl px-6 py-12">
+    <ProvedorPrototipo estadoInicial={estadoInicial}>
       <Outlet />
-    </main>
+    </ProvedorPrototipo>
   )
 }
