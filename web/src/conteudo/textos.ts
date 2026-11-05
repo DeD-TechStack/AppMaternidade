@@ -62,3 +62,44 @@ export const CHAMADA = {
 } as const
 
 export const RODAPE = 'Protótipo em construção. Nada aqui é dado real.'
+
+// Links-âncora do cabeçalho do Início: o rótulo e o id da seção para onde cada um leva.
+export const NAVEGACAO = [
+  { rotulo: 'As telas', alvo: 'secao-telas' },
+  { rotulo: 'Para que serve', alvo: 'secao-serve' },
+  { rotulo: 'Madrugada', alvo: 'secao-madrugada' },
+] as const
+
+// Parágrafo ao lado do celular da madrugada: diz o que a miniatura mostra.
+export const LEGENDA_MADRUGADA =
+  'No celular, a mesma sessão de tummy time no modo madrugada: tela escura, cronômetro grande e botões maiores.'
+
+// A atividade sugerida do Tummy time, na tela Sessão e na miniatura dela no Início.
+export const ATIVIDADE_TUMMY = 'Espelho no chão'
+
+// O que as telas em miniatura dos aparelhos do Início mostram. São dados fixos de uma família
+// fictícia, os mesmos do estado inicial do protótipo; o relógio não anda.
+export const MINIATURAS = {
+  hoje: {
+    titulo: 'Hoje',
+    bebe: 'Lia, 3 meses',
+    sessao: { rotulo: 'Sono', duracao: '1 h 12 min', pessoa: 'Bruno' },
+    nota: { rotulo: 'Para você saber', texto: 'Pomada só à noite.', autor: 'Carla, 22:40' },
+    ultimos: {
+      rotulo: 'Últimos',
+      itens: [
+        { rotulo: 'Mamada', quando: 'há 2 h 10 min' },
+        { rotulo: 'Fralda', quando: 'há 50 min' },
+        { rotulo: 'Tummy time', quando: 'ontem 17:30' },
+      ],
+    },
+  },
+  sessao: {
+    titulo: 'Tummy time de Lia',
+    cronometro: '04:35',
+    hora: '17:02',
+    pessoa: 'Ana',
+    atividade: ATIVIDADE_TUMMY,
+    acoes: ['Encerrar', 'Encerrar e anotar', 'Descartar'],
+  },
+} as const

@@ -12,20 +12,23 @@ interface Props {
   aoEncerrar?: () => void
   /** O Hoje guarda o cartão para levar o foco até ele (tabindex="-1"). A miniatura não tem. */
   ref?: Ref<HTMLElement>
-  /** Versão do Início: sem contorno próprio (o painel já tem) e sem nada focável. */
+  /** Versão do Início: o mesmo campo de cor, sem contorno de cartão, sem ids e sem nada focável. */
   miniatura?: boolean
+  /** Nome do token do campo (data-campo), que muda com o tema. Só no cartão do Hoje. */
+  campo?: string
 }
 
-export function CartaoEmAndamento({ sessao, aoEncerrar, ref, miniatura = false }: Props) {
+export function CartaoEmAndamento({ sessao, aoEncerrar, ref, miniatura = false, campo }: Props) {
   const idTitulo = useId()
   return (
     <section
       ref={ref}
-      aria-labelledby={idTitulo}
+      aria-labelledby={miniatura ? undefined : idTitulo}
       tabIndex={miniatura ? undefined : -1}
-      className={miniatura ? 'bloco-miniatura' : 'cartao alvo-foco'}
+      data-campo={miniatura ? undefined : campo}
+      className={miniatura ? 'campo-andamento' : 'cartao campo-andamento alvo-foco'}
     >
-      <h2 id={idTitulo} className="rotulo">
+      <h2 id={miniatura ? undefined : idTitulo} className="rotulo">
         Em andamento
       </h2>
       {sessao ? (

@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState, type Ref } from 'react'
+import { Baby, Droplets, Milk, Moon } from 'lucide-react'
 import {
   ESCOLHAS_FRALDA,
   ITENS_MAIS,
@@ -91,7 +92,8 @@ export function BotoesRapidos({
           onClick={() => iniciar('sono')}
           {...propsComuns}
         >
-          Sono
+          <Moon size={16} strokeWidth={1.75} className="shrink-0" aria-hidden="true" />
+          <span>Sono</span>
         </button>
         <button
           type="button"
@@ -100,7 +102,8 @@ export function BotoesRapidos({
           onClick={() => iniciar('mamada')}
           {...propsComuns}
         >
-          Mamada
+          <Milk size={16} strokeWidth={1.75} className="shrink-0" aria-hidden="true" />
+          <span>Mamada</span>
         </button>
         <button
           ref={botaoFralda}
@@ -112,7 +115,8 @@ export function BotoesRapidos({
           onClick={() => setPainel(painel === 'fralda' ? null : 'fralda')}
           {...propsComuns}
         >
-          Fralda
+          <Droplets size={16} strokeWidth={1.75} className="shrink-0" aria-hidden="true" />
+          <span>Fralda</span>
         </button>
         <button
           type="button"
@@ -121,7 +125,8 @@ export function BotoesRapidos({
           onClick={() => iniciar('tummy')}
           {...propsComuns}
         >
-          Tummy time
+          <Baby size={16} strokeWidth={1.75} className="shrink-0" aria-hidden="true" />
+          <span>Tummy time</span>
         </button>
         <button
           ref={botaoMais}

@@ -248,10 +248,13 @@ describe('limites do CSS', () => {
     ])
   })
 
-  it('há no máximo duas ilustrações SVG, todas decorativas', () => {
+  it('há de 3 a 6 ilustrações distintas (data-ilustracao), todas decorativas', () => {
     const svgs = arquivosTsx.flatMap((f) => [...f.texto.matchAll(/<svg\b[^>]*>/g)].map((m) => m[0]))
     expect(svgs.length).toBeGreaterThan(0)
-    expect(svgs.length).toBeLessThanOrEqual(2)
+    const nomes = new Set(svgs.map((abertura) => /data-ilustracao="([^"]+)"/.exec(abertura)?.[1]))
+    expect(nomes.has(undefined), 'todo <svg> do produto é uma ilustração com data-ilustracao').toBe(false)
+    expect(nomes.size).toBeGreaterThanOrEqual(3)
+    expect(nomes.size).toBeLessThanOrEqual(6)
     for (const abertura of svgs) expect(abertura).toContain('aria-hidden="true"')
   })
 })
