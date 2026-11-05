@@ -48,7 +48,7 @@ Estado às 17h55:
   - fechar o G6 com duas notas independentes, ambas acima de 8,0;
   - usar ícones do lucide-react.
 - **Estudo de apps de maternidade (MAT-49, pronto):** o estudo está em `_staging/appmaternidade/PESQ-APPS/ESTUDO_PADROES.md`. Toda tela logada nova (MAT-37 a MAT-41) usa os padrões P1 a P7 e passa pelo `imgdiff` contra os 3 recortes, com teto de 75.
-- **MAT-45, MAT-46 e MAT-47 (banco):** as specs v2 já incorporam a 1ª releitura e as decisões comuns de banco (`_staging/appmaternidade/DECISOES_BANCO_20261105.md`, C1 a C9). A 2ª releitura por outra família foi relançada às 18h50, porque os cartões de leitura do revisor estavam desbloqueados; a base, MAT-43, já está na main.
+- **MAT-45, MAT-46 e MAT-47 (banco):** as specs v2 já incorporam a 1ª releitura e as decisões comuns de banco (`_staging/appmaternidade/DECISOES_BANCO_20261105.md`, C1 a C9). A base, a MAT-43, já está na main. A 2ª releitura por outra família está parada por falha do runtime Codex do revisor, "codex app-server stdout closed". Os cartões t_6bf153de, t_fcd8ad89 e t_620068a5 foram recriados em worktree e caíram igual. O caso foi escalado à infra no comentário 53.
 - **MAT-36 (páginas públicas):** a spec v2 está pronta. A releitura vem depois da MAT-44 na main.
 
 ## Roteiro do site completo (pedido de Daniel em 05/11/2026)
