@@ -20,11 +20,17 @@ import { usePrototipo } from '../prototipo/contexto.ts'
 const semAcao = () => undefined
 
 // Miniaturas feitas com os mesmos componentes de Hoje e Sessão, com dados fixos.
-// O contêiner é inert e aria-hidden: nada dentro recebe foco nem é lido.
+// O contêiner é inert e aria-hidden: nada dentro recebe foco nem é lido. Os dois painéis ficam
+// lado a lado só quando a página tem 46 rem ou mais (contêiner @container/pagina, na raiz); com
+// fonte ampliada, 46 rem passa da largura da janela e eles empilham, onde o texto cabe.
 function MiniaturasDoProduto() {
   return (
-    <div inert aria-hidden="true" className="flex flex-col gap-6 md:flex-row md:items-start">
-      <div className="painel md:w-1/2">
+    <div
+      inert
+      aria-hidden="true"
+      className="flex flex-col gap-6 @min-[46rem]/pagina:flex-row @min-[46rem]/pagina:items-start"
+    >
+      <div className="painel @min-[46rem]/pagina:w-1/2">
         <CartaoEmAndamento miniatura sessao={{ rotulo: 'Sono', duracao: '1 h 12 min', pessoa: 'Bruno' }} />
         <div className="mt-4">
           <BotoesRapidos
@@ -35,7 +41,7 @@ function MiniaturasDoProduto() {
           />
         </div>
       </div>
-      <div className="painel md:mt-16 md:w-1/2">
+      <div className="painel @min-[46rem]/pagina:mt-16 @min-[46rem]/pagina:w-1/2">
         <p className="titulo-linha mb-4">Tummy time de Lia</p>
         <SessaoInfo miniatura cronometro="04:35" hora="17:02" pessoa="Ana" atividade="Espelho no chão" />
       </div>
@@ -51,8 +57,13 @@ export function Inicio() {
     dispatch({ tipo: 'definirMadrugada', valor: false })
   }, [dispatch])
 
+  // O raiz é o contêiner da página: as colunas seguem a largura dela em rem da fonte raiz. Uma
+  // media query (md:) mede a janela em rem do navegador (16 px) e ignora a fonte ampliada; com o
+  // texto em 200% as colunas continuariam lado a lado e o texto não caberia. 46 rem é o conteúdo
+  // do raiz em 768 px com fonte 100% (768 − 2 × 2%). O padding lateral, abaixo, é a única variante
+  // de janela da página: um contêiner não consulta o próprio tamanho.
   return (
-    <div className="flex min-h-dvh flex-col px-4 md:px-[2%]">
+    <div className="@container/pagina flex min-h-dvh flex-col px-4 md:px-[2%]">
       <header className="border-b py-4">
         <p className="marca">AppMaternidade</p>
       </header>
@@ -60,56 +71,63 @@ export function Inicio() {
       <main className="flex-1">
         <section
           aria-labelledby="promessa"
-          className="entrada grid grid-cols-4 gap-x-4 pb-12 pt-10 md:grid-cols-12 md:pb-24 md:pt-16"
+          className="entrada grid grid-cols-4 gap-x-4 pb-12 pt-10 @min-[46rem]/pagina:grid-cols-12 @min-[46rem]/pagina:pb-24 @min-[46rem]/pagina:pt-16"
         >
-          <ul className="col-span-4 mb-6 flex flex-wrap gap-2 md:col-span-12">
+          <ul className="col-span-4 mb-6 flex flex-wrap gap-2 @min-[46rem]/pagina:col-span-12">
             {PILARES.map((pilar) => (
               <li key={pilar} className="etiqueta rotulo">
                 {pilar}
               </li>
             ))}
           </ul>
-          <h1 id="promessa" className="promessa col-span-4 md:col-span-9">
+          <h1 id="promessa" className="promessa col-span-4 @min-[46rem]/pagina:col-span-9">
             {PROMESSA}
           </h1>
-          <p className="texto-medida col-span-4 mt-8 md:col-span-7">{APRESENTACAO}</p>
+          <p className="texto-medida col-span-4 mt-8 @min-[46rem]/pagina:col-span-7">{APRESENTACAO}</p>
         </section>
 
-        <section aria-labelledby="titulo-telas" className="entrada atraso-1 pb-12 md:pb-24">
+        <section aria-labelledby="titulo-telas" className="entrada atraso-1 pb-12 @min-[46rem]/pagina:pb-24">
           <h2 id="titulo-telas" className="titulo-secao mb-6">
             {TELAS.titulo}
           </h2>
-          <div className="grid grid-cols-4 gap-4 md:grid-cols-12 md:gap-6">
-            <div className="campo-cor col-span-4 md:col-span-8">
+          <div className="grid grid-cols-4 gap-4 @min-[46rem]/pagina:grid-cols-12 @min-[46rem]/pagina:gap-6">
+            <div className="campo-cor col-span-4 @min-[46rem]/pagina:col-span-8">
               <MiniaturasDoProduto />
             </div>
-            <p className="col-span-4 md:col-span-4 md:self-end md:border-l md:pl-6">{TELAS.texto}</p>
+            <p className="col-span-4 @min-[46rem]/pagina:col-span-4 @min-[46rem]/pagina:self-end @min-[46rem]/pagina:border-l @min-[46rem]/pagina:pl-6">
+              {TELAS.texto}
+            </p>
           </div>
         </section>
 
-        <section aria-labelledby="titulo-serve" className="entrada atraso-2 pb-12 md:pb-24">
+        <section aria-labelledby="titulo-serve" className="entrada atraso-2 pb-12 @min-[46rem]/pagina:pb-24">
           <h2 id="titulo-serve" className="rotulo mb-4">
             {PARA_QUE_SERVE.titulo}
           </h2>
           {PARA_QUE_SERVE.linhas.map((linha) => (
-            <div key={linha.rotulo} className="grid grid-cols-1 border-t last:border-b md:grid-cols-12">
-              <h3 className="titulo-linha pt-5 md:col-span-3 md:py-6">{linha.rotulo}</h3>
-              <div className="pb-6 pt-2 md:col-span-9 md:border-l md:py-6 md:pl-6">
+            <div
+              key={linha.rotulo}
+              className="grid grid-cols-1 border-t last:border-b @min-[46rem]/pagina:grid-cols-12"
+            >
+              <h3 className="titulo-linha pt-5 @min-[46rem]/pagina:col-span-3 @min-[46rem]/pagina:py-6">
+                {linha.rotulo}
+              </h3>
+              <div className="pb-6 pt-2 @min-[46rem]/pagina:col-span-9 @min-[46rem]/pagina:border-l @min-[46rem]/pagina:py-6 @min-[46rem]/pagina:pl-6">
                 <p className="texto-medida">{linha.texto}</p>
               </div>
             </div>
           ))}
         </section>
 
-        <section aria-labelledby="titulo-fatos" className="entrada atraso-2 pb-12 md:pb-24">
+        <section aria-labelledby="titulo-fatos" className="entrada atraso-2 pb-12 @min-[46rem]/pagina:pb-24">
           <h2 id="titulo-fatos" className="rotulo mb-4">
             {FATOS.titulo}
           </h2>
-          <ul className="grid grid-cols-1 border-y md:grid-cols-4">
+          <ul className="grid grid-cols-1 border-y @min-[46rem]/pagina:grid-cols-4">
             {FATOS.itens.map((fato) => (
               <li
                 key={fato.valor}
-                className="border-t py-6 first:border-t-0 md:border-t-0 md:border-l md:px-6 md:first:border-l-0 md:first:pl-0"
+                className="border-t py-6 first:border-t-0 @min-[46rem]/pagina:border-t-0 @min-[46rem]/pagina:border-l @min-[46rem]/pagina:px-6 @min-[46rem]/pagina:first:border-l-0 @min-[46rem]/pagina:first:pl-0"
               >
                 <p className="numero-fato">{fato.valor}</p>
                 <p className="mt-3">{fato.legenda}</p>
@@ -120,12 +138,12 @@ export function Inicio() {
 
         <section
           aria-labelledby="titulo-madrugada"
-          className="entrada atraso-2 grid grid-cols-4 gap-4 pb-12 md:grid-cols-12 md:gap-6 md:pb-24"
+          className="entrada atraso-2 grid grid-cols-4 gap-4 pb-12 @min-[46rem]/pagina:grid-cols-12 @min-[46rem]/pagina:gap-6 @min-[46rem]/pagina:pb-24"
         >
-          <div className="campo-cor col-span-4 md:col-span-7">
+          <div className="campo-cor col-span-4 @min-[46rem]/pagina:col-span-7">
             <IlustracaoMamada className="block h-auto w-full" />
           </div>
-          <div className="col-span-4 md:col-span-5 md:self-center md:pl-6">
+          <div className="col-span-4 @min-[46rem]/pagina:col-span-5 @min-[46rem]/pagina:self-center @min-[46rem]/pagina:pl-6">
             <h2 id="titulo-madrugada" className="titulo-secao">
               {MADRUGADA.titulo}
             </h2>
@@ -133,7 +151,10 @@ export function Inicio() {
           </div>
         </section>
 
-        <section aria-labelledby="titulo-chamada" className="entrada atraso-2 border-t py-12 md:py-16">
+        <section
+          aria-labelledby="titulo-chamada"
+          className="entrada atraso-2 border-t py-12 @min-[46rem]/pagina:py-16"
+        >
           <h2 id="titulo-chamada" className="titulo-secao">
             {CHAMADA.titulo}
           </h2>
