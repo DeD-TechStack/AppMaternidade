@@ -44,6 +44,11 @@ A pausa por limite de 03/11/2026 terminou em 05/11/2026, liberada por Daniel. As
 
 A integração depende da aprovação do revisor. Na MAT-34, o líder confere também o G9 (sala limpa).
 
+Estado às 15h40:
+- **MAT-43:** pronta, mas com a revisão inconclusiva. O revisor ficou sem acesso ao Docker, e a decisão é do coordenador.
+- **MAT-34:** faz a última micro-correção de acessibilidade.
+- **MAT-44 (salto visual, decisão de Daniel):** a spec está em explique de volta. O cartão só nasce depois que a MAT-34 for integrada.
+
 ## Próximos passos (quando Daniel voltar)
 
 1. Escrever e aprovar as specs da direção visual e dos tokens (MAT-34) e do backend local com Supabase (MAT-43). Os dois viram cartões `[impl]` executados pelo OpenCode e podem rodar em paralelo.
