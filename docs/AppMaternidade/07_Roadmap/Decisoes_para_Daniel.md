@@ -26,7 +26,7 @@ Para responder, basta indicar o número e a opção (por exemplo, "D1: A; D2: A;
 | D4 | MAT-23 | Recorte do MVP | 0 a 12 meses, Brasil em pt-BR, adultos 18+, comunidade só texto, sem IA generativa para usuários, sem anúncios | Fundação (MAT-18) |
 | D5 | MAT-24 | Pessoas para conteúdo, moderação e jurídico | Revisor de conteúdo registrado, 1 ou 2 moderadores de meio período no piloto, consultoria em LGPD e ECA Digital | Abertura da comunidade e do conteúdo |
 | D6 | MAT-25 | Monetização | Em aberto; sem anúncios direcionados com dados de rotina | Antes do piloto público (não bloqueia a próxima etapa) |
-| D7 | MAT-26 | Registros de testes de acesso em projetos de terceiros | Manter fora do Git; Daniel avisa os mantenedores em particular, pelo canal de segurança de cada projeto | Antes do primeiro push do repositório |
+| D7 | MAT-26 | Registros de testes de acesso em projetos de terceiros | A: manter só no disco, fora do Git, sem contato com os mantenedores | — (decidida em 05/11/2026) |
 | D8 | MAT-28 | Stack do site | D8-A: React + TypeScript + Vite, Tailwind 4, shadcn/ui e Magic UI, Supabase e PWA; port pelo Capacitor | — (decidida) |
 | D9 | MAT-29 | Domínio e hospedagem | GitHub Pages do próprio repositório, com Supabase Free na região São Paulo; domínio próprio depois | — (decidida) |
 | D10 | MAT-30 | Detector Impeccable | Verificação local, não bloqueante e com versão fixa | — (decidida) |
@@ -91,6 +91,7 @@ Para responder, basta indicar o número e a opção (por exemplo, "D1: A; D2: A;
 
 ## D7 — Registros de testes de acesso em projetos de terceiros
 
+- **Decidida por Daniel em 05/11/2026: opção A.** Os registros ficam só no disco, fora do Git, sem contato com os mantenedores. O push do repositório foi liberado.
 - **Situação.** Na primeira rodada das fichas, antes da regra de só ler código, dois subagentes fizeram sondagens de acesso em instâncias locais do Sprout Track e do Baby Buddy, com dados fictícios e só em 127.0.0.1.
   - Os registros estão no disco, em `09_Evidencias/Execucao_Referencias/Sprout_Track/` e `Baby_Buddy/`. Desde 05:05 estão no `.gitignore` e não entram em nenhum commit.
   - As fichas não detalham esses registros. Os pontos de acesso aparecem só como perguntas de auditoria.
@@ -120,7 +121,7 @@ Decidida por Daniel em 03/11/2026.
 - **Hospedagem:** GitHub Pages do próprio repositório, publicado por GitHub Actions. Custo zero.
 - **Backend:** Supabase Free na região São Paulo, só para desenvolvimento e demonstração sem dados reais.
 - **Domínio próprio:** depois.
-- **Para publicar ainda faltam:** a D7 (MAT-26), a retirada de caminhos locais `C:/Users/...` de três documentos e o push autorizado.
+- **Para publicar:** em 05/11/2026 a D7 foi decidida (A), o nome de usuário local virou `<usuario>` nos arquivos rastreados (nos commits antigos ele continua, por escolha de Daniel) e o push foi liberado como rotina. Falta só a MAT-48: o projeto Supabase na nuvem, os secrets no GitHub e o Pages pelo CI.
 - **Alternativas avaliadas:** Cloudflare Pages, Netlify ou Vercel nos planos grátis; Supabase Pro quando houver usuários reais.
 
 ## D10, detector Impeccable (MAT-30): decidida

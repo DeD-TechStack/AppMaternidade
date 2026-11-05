@@ -91,10 +91,15 @@ O trabalho anda em duas trilhas paralelas, uma de banco e uma de tela. Cada cart
 
 ## Antes de publicar
 
-Sem push até Daniel liberar. Antes do primeiro push:
-1. decidir a D7 (MAT-26), que trata dos registros dos testes de acesso;
-2. retirar dos documentos os caminhos locais da máquina;
-3. Daniel autorizar o push.
+Desde 05/11/2026 o push é rotina, por decisão de Daniel. A D7 ficou com a opção A, e o nome de usuário local foi trocado por `<usuario>`.
+
+Depois de cada integração aprovada, o líder faz quatro coisas:
+- procura segredos no diff (sk-, ghp_, AKIA, Bearer, password=, api_key=, .env);
+- confere o `git status`;
+- confere que autor e committer são Daniel Macedo;
+- faz o push normal da `main`.
+
+Para o site ficar no ar ainda falta a MAT-48: o projeto Supabase na nuvem e os secrets no GitHub, que ficam com Daniel, e o Pages pelo CI.
 
 ## Ver a prévia
 
