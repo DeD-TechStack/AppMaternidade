@@ -31,6 +31,7 @@ Em 03/11/2026, Daniel definiu o rumo: o AppMaternidade começa como site complet
   - O site tem só duas páginas provisórias: a inicial e a de endereço inexistente. Ainda não há tela de produto.
 - **Estudo da referência visual (MAT-33):** a especificação abstrata está fora do repositório, na pasta de staging do projeto, e passou na busca de termos proibidos.
 - **Cadastro do projeto:** os comandos de validação e a lista de comandos do OpenCode foram preenchidos.
+- **Direção visual, tokens e protótipo (MAT-34):** integrados na main em e57c844 (cartão `t_dd87ca3d`), depois de 4 revisões. O `web/DESIGN.md` traz os tokens validados, e há as telas Início, Hoje (com modo madrugada) e Sessão, com dados fictícios. Ficam 294 testes, incluindo a geometria de todo texto em 100% e 200% de fonte, em 4 larguras. O G6 ficou entre 7,17 e 7,25, e é esse patamar que a MAT-44 vai elevar.
 
 - **Design docs v0.4 (MAT-32):** integrados na main em 5500c66 (cartão `t_46deffa1`).
   - Entraram o ADR-009, o mapa de páginas, a direção visual, a política de commits, o roadmap e as decisões, os custos, as notas de status e a frase nova do `AGENTS.md`.
@@ -38,26 +39,14 @@ Em 03/11/2026, Daniel definiu o rumo: o AppMaternidade começa como site complet
 
 ## O que está em andamento
 
-A pausa por limite de 03/11/2026 terminou em 05/11/2026, liberada por Daniel. As specs v2 da MAT-34 e da MAT-43 foram aprovadas, cada uma com o Major da releitura corrigido, e os dois cartões rodam em paralelo pelo OpenCode:
-- `t_dd87ca3d`: direção visual, tokens e protótipo de Início, Hoje e Sessão;
-- `t_58526cc9`: Supabase local, RLS e testes pgTAP.
-
-A integração depende da aprovação do revisor. Na MAT-34, o líder confere também o G9 (sala limpa).
-
-Estado às 17h05:
-- **MAT-43:** pronta, mas com a revisão inconclusiva. O revisor ficou sem acesso ao Docker, e a decisão é do coordenador.
-- **MAT-34:** está em revisão, no 3º candidato (f132b38). As rodadas já corrigiram:
-  - os rótulos em fonte de 200%;
-  - a barra fixa;
-  - o foco depois de cada ação.
-- **MAT-44 (salto visual):** a spec v4, aprovada, segue a auditoria de UI que Daniel pediu. A v4 mudou estes pontos:
-  - antes do código, 3 direções; vence a de maior nota do award-bar, sem espera (D-1 = não, decisão de Daniel); na integração, o leitor cego do líder confere a escolha;
-  - o OpenCode carrega as skills de interface;
-  - um laço visual de até 3 iterações;
-  - o G6 por duas notas independentes, ambas acima de 8,0;
-  - ícones do lucide-react.
-
-  O cartão só nasce depois que a MAT-34 for integrada.
+Estado às 17h55:
+- **MAT-44 (salto visual):** o cartão `t_77b96e90` nasceu da main e57c844, com a spec v4 (sha256 `750efcf5`) e o contrato `0d75b04d3288`. O que ele tem de fazer:
+  - antes do código, montar 3 direções; vence a de maior nota do award-bar, sem espera (D-1 = não, decisão de Daniel), e na integração o leitor cego do líder confere a escolha;
+  - fazer o OpenCode carregar as skills de interface, com prova no recibo;
+  - passar por um laço visual de até 3 iterações;
+  - fechar o G6 com duas notas independentes, ambas acima de 8,0;
+  - usar ícones do lucide-react.
+- **MAT-43 (backend local):** está pronta, mas a revisão saiu inconclusiva porque o revisor não tem Docker. Quem decide é o coordenador.
 - **MAT-45, MAT-46 e MAT-47 (banco):** as specs v2 já incorporam a 1ª releitura e as decisões comuns de banco (`_staging/appmaternidade/DECISOES_BANCO_20261105.md`, C1 a C9). Falta a 2ª releitura por outra família, que espera os cartões de leitura do revisor, travados na infra.
 - **MAT-36 (páginas públicas):** a spec v2 está pronta. A releitura vem depois da MAT-44 na main.
 
