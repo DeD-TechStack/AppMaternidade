@@ -21,6 +21,7 @@ Horários em America/Sao_Paulo, tirados do relógio da máquina ou de carimbos d
 
 Uma linha por marco, a mais recente no topo. O estado corrente fica em [Retomada do site](Retomada_Site.md), e o detalhe de cada marco está no cartão Kanban citado.
 
+- 05/11/2026: **decisão de Daniel, D-1 = não.** Na MAT-44, a direção entre as 3 é escolhida só pela nota do award-bar, sem esperar ninguém. O leitor cego do líder confere a escolha na integração. A spec v4 foi ajustada (sha256 `079d7467`).
 - 05/11/2026: **decisões comuns de banco e auditoria de UI.**
   - **Banco (C1 a C9),** decisões do líder para MAT-45, MAT-46 e MAT-47:
     - autoria com `set null`, que aparece como "pessoa removida";

@@ -51,7 +51,7 @@ Estado às 17h05:
   - a barra fixa;
   - o foco depois de cada ação.
 - **MAT-44 (salto visual):** a spec v4, aprovada, segue a auditoria de UI que Daniel pediu. A v4 mudou estes pontos:
-  - antes do código, 3 direções; Daniel escolhe uma em até 30 min, e sem resposta vale a nota do award-bar;
+  - antes do código, 3 direções; vence a de maior nota do award-bar, sem espera (D-1 = não, decisão de Daniel); na integração, o leitor cego do líder confere a escolha;
   - o OpenCode carrega as skills de interface;
   - um laço visual de até 3 iterações;
   - o G6 por duas notas independentes, ambas acima de 8,0;
