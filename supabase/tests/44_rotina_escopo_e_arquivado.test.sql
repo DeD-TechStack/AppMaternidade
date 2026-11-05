@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(234);
+select plan(287);
 
 -- Família 1: R1 (...01) responsável, C1 (...02) cuidador, O1 (...03) observador.
 -- Família 2: R2 (...11) responsável, C2 (...12) cuidador, O2 (...13) observador.
@@ -84,11 +84,33 @@ select lives_ok(
   'nota sem bebê (bebe_id nulo) não depende da chave composta');
 
 -- Instantâneo (md5 da linha inteira, com versao e atualizado_em) para provar que o negado não tocou nada.
+-- Hash do conteúdo das 3 tabelas e as contagens delas: guarda() grava, nada_mudou() confere (como dono).
+create function pg_temp.hash_tudo() returns text language sql security definer as $$
+  select md5(
+    (select coalesce(string_agg(r::text, ',' order by id), '') from public.registros r) || '|' ||
+    (select coalesce(string_agg(n::text, ',' order by id), '') from public.notas_cuidado n) || '|' ||
+    (select coalesce(string_agg(a::text, ',' order by id), '') from public.registro_alteracoes a))
+  || ' ' || (select count(*) from public.registros) || ',' || (select count(*) from public.notas_cuidado)
+  || ',' || (select count(*) from public.registro_alteracoes);
+$$;
 create temp table snap (id uuid primary key, h text);
 create function pg_temp.guarda() returns void language sql security definer as $$
   delete from pg_temp.snap;
   insert into pg_temp.snap select r.id, md5(r::text) from public.registros r;
   insert into pg_temp.snap select n.id, md5(n::text) from public.notas_cuidado n;
+  select set_config('teste.tudo', pg_temp.hash_tudo(), true);
+$$;
+create function pg_temp.nada_mudou() returns boolean language sql security definer as $$
+  select pg_temp.hash_tudo() = current_setting('teste.tudo');
+$$;
+-- SQLSTATE e mensagem de uma consulta, em texto ("sem erro" se passar).
+create function pg_temp.erro(consulta text) returns text language plpgsql as $$
+begin
+  execute consulta;
+  return 'sem erro';
+exception when others then
+  return sqlstate || ':' || sqlerrm;
+end;
 $$;
 create function pg_temp.intacto_id(alvo uuid) returns boolean language sql security definer as $$
   select s.h = coalesce(
@@ -103,7 +125,7 @@ $$;
 
 -- Bateria entre famílias: a conta tem vínculo ativo na família própria e tenta mexer na outra
 -- (sono `r`, fralda `r + 100`, nota `n`, bebê `b`, família `f`). A resposta é "inexistente" e a linha fica intacta.
-create function pg_temp.bateria_cruzada(r int, n int, b uuid, f uuid, f_propria uuid, rotulo text)
+create function pg_temp.bateria_cruzada(r int, n int, b uuid, f uuid, f_propria uuid, b_proprio uuid, rotulo text)
 returns setof text language plpgsql as $$
 begin
   return next is(
@@ -194,6 +216,96 @@ begin
     format($q$select public.excluir_nota(%L)$q$, pg_temp.nid(n)),
     'P0002', 'nota inexistente', rotulo || ': excluir_nota responde nota inexistente');
   return next ok(pg_temp.intacto_id(pg_temp.nid(n)), rotulo || ': excluir_nota não tocou a nota');
+
+  -- Variação: id de registro alheio com o bebê VÁLIDO da própria família (colisão de id, C6).
+  return next throws_ok(
+    format($q$select public.gravar_registro(%L, %L, 'sono', '2026-11-01 10:00+00', 'America/Sao_Paulo', -180)$q$, pg_temp.rid(r), b_proprio),
+    'P0002', 'registro inexistente', rotulo || ': id de sono alheio com o bebê da própria família responde registro inexistente');
+  return next ok(pg_temp.intacto_id(pg_temp.rid(r)), rotulo || ': o sono alheio seguiu intacto (colisão com bebê próprio)');
+  return next ok(pg_temp.nada_mudou(), rotulo || ': nada foi criado na família própria (colisão de sono)');
+  return next throws_ok(
+    format($q$select public.gravar_registro(%L, %L, 'fralda', '2026-11-01 10:00+00', 'America/Sao_Paulo', -180, null, '{"conteudo": "xixi"}')$q$, pg_temp.rid(r + 100), b_proprio),
+    'P0002', 'registro inexistente', rotulo || ': id de fralda alheia com o bebê da própria família responde registro inexistente');
+  return next ok(pg_temp.intacto_id(pg_temp.rid(r + 100)), rotulo || ': a fralda alheia seguiu intacta (colisão com bebê próprio)');
+  return next ok(pg_temp.nada_mudou(), rotulo || ': nada foi criado na família própria (colisão de fralda)');
+end;
+$$;
+
+-- Equivalência com o realmente inexistente: como A (R1, família 1), cada operação com o recurso da família 2
+-- e com um uuid v7 que não existe em nenhuma tabela dá o MESMO "SQLSTATE:mensagem", igual ao esperado.
+create function pg_temp.bateria_inexistente() returns setof text language plpgsql as $$
+declare
+  c_b2 constant text := 'bbbbbbbb-0000-4000-8000-000000000002';
+  c_f2 constant text := 'ffffffff-0000-4000-8000-000000000002';
+  c_f1 constant text := 'ffffffff-0000-4000-8000-000000000001';
+  c_inex constant text := '019c0000-0000-7000-8000-000000000001';
+  e_alheio text;
+  e_inex text;
+begin
+  -- gravar_registro com id_bebe
+  e_alheio := pg_temp.erro(format($q$select public.gravar_registro(%L, %L, 'sono', '2026-11-01 10:00+00', 'America/Sao_Paulo', -180)$q$, pg_temp.rid(9101), c_b2));
+  e_inex := pg_temp.erro(format($q$select public.gravar_registro(%L, %L, 'sono', '2026-11-01 10:00+00', 'America/Sao_Paulo', -180)$q$, pg_temp.rid(9102), c_inex));
+  return next is(e_alheio, e_inex, 'gravar_registro (sono): bebê da família 2 e bebê inexistente dão o mesmo erro');
+  return next is(e_alheio, 'P0002:bebe inexistente', 'gravar_registro (sono): o erro é P0002 bebe inexistente');
+  e_alheio := pg_temp.erro(format($q$select public.gravar_registro(%L, %L, 'fralda', '2026-11-01 10:00+00', 'America/Sao_Paulo', -180, null, '{"conteudo": "xixi"}')$q$, pg_temp.rid(9103), c_b2));
+  e_inex := pg_temp.erro(format($q$select public.gravar_registro(%L, %L, 'fralda', '2026-11-01 10:00+00', 'America/Sao_Paulo', -180, null, '{"conteudo": "xixi"}')$q$, pg_temp.rid(9104), c_inex));
+  return next is(e_alheio, e_inex, 'gravar_registro (fralda): bebê da família 2 e bebê inexistente dão o mesmo erro');
+  return next is(e_alheio, 'P0002:bebe inexistente', 'gravar_registro (fralda): o erro é P0002 bebe inexistente');
+  return next ok(pg_temp.nada_mudou(), 'gravar_registro: nenhuma linha mudou e as contagens das 3 tabelas são as mesmas');
+
+  -- editar_registro
+  e_alheio := pg_temp.erro(format($q$select public.editar_registro(%L, '2026-11-01 10:00+00', null, '{}', 'x', 'America/Sao_Paulo', -180)$q$, pg_temp.rid(2)));
+  e_inex := pg_temp.erro(format($q$select public.editar_registro(%L, '2026-11-01 10:00+00', null, '{}', 'x', 'America/Sao_Paulo', -180)$q$, pg_temp.rid(9001)));
+  return next is(e_alheio, e_inex, 'editar_registro (valores de sono): id da família 2 e id inexistente dão o mesmo erro');
+  return next is(e_alheio, 'P0002:registro inexistente', 'editar_registro (sono): o erro é P0002 registro inexistente');
+  e_alheio := pg_temp.erro(format($q$select public.editar_registro(%L, '2026-11-01 10:00+00', null, '{"conteudo": "xixi"}', 'x', 'America/Sao_Paulo', -180)$q$, pg_temp.rid(102)));
+  e_inex := pg_temp.erro(format($q$select public.editar_registro(%L, '2026-11-01 10:00+00', null, '{"conteudo": "xixi"}', 'x', 'America/Sao_Paulo', -180)$q$, pg_temp.rid(9001)));
+  return next is(e_alheio, e_inex, 'editar_registro (valores de fralda): id da família 2 e id inexistente dão o mesmo erro');
+  return next is(e_alheio, 'P0002:registro inexistente', 'editar_registro (fralda): o erro é P0002 registro inexistente');
+  return next ok(pg_temp.nada_mudou(), 'editar_registro: nenhuma linha mudou e as contagens das 3 tabelas são as mesmas');
+
+  -- encerrar_sessao, excluir_registro, restaurar_registro
+  e_alheio := pg_temp.erro(format($q$select public.encerrar_sessao(%L, '2026-11-01 11:00+00')$q$, pg_temp.rid(2)));
+  e_inex := pg_temp.erro(format($q$select public.encerrar_sessao(%L, '2026-11-01 11:00+00')$q$, pg_temp.rid(9001)));
+  return next is(e_alheio, e_inex, 'encerrar_sessao: id da família 2 e id inexistente dão o mesmo erro');
+  return next is(e_alheio, 'P0002:registro inexistente', 'encerrar_sessao: o erro é P0002 registro inexistente');
+  e_alheio := pg_temp.erro(format($q$select public.excluir_registro(%L)$q$, pg_temp.rid(102)));
+  e_inex := pg_temp.erro(format($q$select public.excluir_registro(%L)$q$, pg_temp.rid(9001)));
+  return next is(e_alheio, e_inex, 'excluir_registro: id da família 2 e id inexistente dão o mesmo erro');
+  return next is(e_alheio, 'P0002:registro inexistente', 'excluir_registro: o erro é P0002 registro inexistente');
+  e_alheio := pg_temp.erro(format($q$select public.restaurar_registro(%L)$q$, pg_temp.rid(102)));
+  e_inex := pg_temp.erro(format($q$select public.restaurar_registro(%L)$q$, pg_temp.rid(9001)));
+  return next is(e_alheio, e_inex, 'restaurar_registro: id da família 2 e id inexistente dão o mesmo erro');
+  return next is(e_alheio, 'P0002:registro inexistente', 'restaurar_registro: o erro é P0002 registro inexistente');
+  return next ok(pg_temp.nada_mudou(), 'encerrar, excluir e restaurar: nenhuma linha mudou e as contagens são as mesmas');
+
+  -- gravar_nota, editar_nota, excluir_nota
+  e_alheio := pg_temp.erro(format($q$select public.gravar_nota(%L, %L, 'Texto')$q$, pg_temp.nid(9101), c_f2));
+  e_inex := pg_temp.erro(format($q$select public.gravar_nota(%L, %L, 'Texto')$q$, pg_temp.nid(9102), c_inex));
+  return next is(e_alheio, e_inex, 'gravar_nota: família 2 e família inexistente dão o mesmo erro');
+  return next is(e_alheio, 'P0002:familia inexistente', 'gravar_nota: o erro é P0002 familia inexistente');
+  e_alheio := pg_temp.erro(format($q$select public.gravar_nota(%L, %L, 'Texto', %L)$q$, pg_temp.nid(9103), c_f1, c_b2));
+  e_inex := pg_temp.erro(format($q$select public.gravar_nota(%L, %L, 'Texto', %L)$q$, pg_temp.nid(9104), c_f1, c_inex));
+  return next is(e_alheio, e_inex, 'gravar_nota (família 1): bebê da família 2 e bebê inexistente dão o mesmo erro');
+  return next is(e_alheio, 'P0002:bebe inexistente', 'gravar_nota (família 1): o erro é P0002 bebe inexistente');
+  e_alheio := pg_temp.erro(format($q$select public.editar_nota(%L, 'Invasão', null)$q$, pg_temp.nid(2)));
+  e_inex := pg_temp.erro(format($q$select public.editar_nota(%L, 'Invasão', null)$q$, pg_temp.nid(9001)));
+  return next is(e_alheio, e_inex, 'editar_nota: nota da família 2 e nota inexistente dão o mesmo erro');
+  return next is(e_alheio, 'P0002:nota inexistente', 'editar_nota: o erro é P0002 nota inexistente');
+  e_alheio := pg_temp.erro(format($q$select public.excluir_nota(%L)$q$, pg_temp.nid(2)));
+  e_inex := pg_temp.erro(format($q$select public.excluir_nota(%L)$q$, pg_temp.nid(9001)));
+  return next is(e_alheio, e_inex, 'excluir_nota: nota da família 2 e nota inexistente dão o mesmo erro');
+  return next is(e_alheio, 'P0002:nota inexistente', 'excluir_nota: o erro é P0002 nota inexistente');
+  return next ok(pg_temp.nada_mudou(), 'notas: nenhuma linha mudou e as contagens das 3 tabelas são as mesmas');
+
+  -- registros_do_dia
+  return next is(
+    (select count(*)::int from public.registros_do_dia(c_b2::uuid, '2026-11-01')), 0,
+    'registros_do_dia: bebê da família 2 devolve 0 linhas');
+  return next is(
+    (select count(*)::int from public.registros_do_dia(c_inex::uuid, '2026-11-01')), 0,
+    'registros_do_dia: bebê inexistente devolve 0 linhas, como o da família 2');
+  return next ok(pg_temp.nada_mudou(), 'registros_do_dia: nenhuma linha mudou e as contagens são as mesmas');
 end;
 $$;
 
@@ -280,13 +392,15 @@ set local role authenticated;
 
 -- Outra família, para cada papel dela (R2, C2, O2 tentam mexer na família 1; R1 tenta a família 2).
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000011", "role": "authenticated"}';
-select * from pg_temp.bateria_cruzada(1, 1, 'bbbbbbbb-0000-4000-8000-000000000001', 'ffffffff-0000-4000-8000-000000000001', 'ffffffff-0000-4000-8000-000000000002', 'responsável da outra família');
+select * from pg_temp.bateria_cruzada(1, 1, 'bbbbbbbb-0000-4000-8000-000000000001', 'ffffffff-0000-4000-8000-000000000001', 'ffffffff-0000-4000-8000-000000000002', 'bbbbbbbb-0000-4000-8000-000000000002', 'responsável da outra família');
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000012", "role": "authenticated"}';
-select * from pg_temp.bateria_cruzada(1, 1, 'bbbbbbbb-0000-4000-8000-000000000001', 'ffffffff-0000-4000-8000-000000000001', 'ffffffff-0000-4000-8000-000000000002', 'cuidador da outra família');
+select * from pg_temp.bateria_cruzada(1, 1, 'bbbbbbbb-0000-4000-8000-000000000001', 'ffffffff-0000-4000-8000-000000000001', 'ffffffff-0000-4000-8000-000000000002', 'bbbbbbbb-0000-4000-8000-000000000002', 'cuidador da outra família');
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000013", "role": "authenticated"}';
-select * from pg_temp.bateria_cruzada(1, 1, 'bbbbbbbb-0000-4000-8000-000000000001', 'ffffffff-0000-4000-8000-000000000001', 'ffffffff-0000-4000-8000-000000000002', 'observador da outra família');
+select * from pg_temp.bateria_cruzada(1, 1, 'bbbbbbbb-0000-4000-8000-000000000001', 'ffffffff-0000-4000-8000-000000000001', 'ffffffff-0000-4000-8000-000000000002', 'bbbbbbbb-0000-4000-8000-000000000002', 'observador da outra família');
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000001", "role": "authenticated"}';
-select * from pg_temp.bateria_cruzada(2, 2, 'bbbbbbbb-0000-4000-8000-000000000002', 'ffffffff-0000-4000-8000-000000000002', 'ffffffff-0000-4000-8000-000000000001', 'responsável da família 1 diante da família 2');
+select * from pg_temp.bateria_cruzada(2, 2, 'bbbbbbbb-0000-4000-8000-000000000002', 'ffffffff-0000-4000-8000-000000000002', 'ffffffff-0000-4000-8000-000000000001', 'bbbbbbbb-0000-4000-8000-000000000001', 'responsável da família 1 diante da família 2');
+-- Equivalência com o realmente inexistente (como R1).
+select * from pg_temp.bateria_inexistente();
 
 -- Bebê arquivado: responsável e cuidador (dono dos registros) recebem "bebe arquivado".
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000001", "role": "authenticated"}';
