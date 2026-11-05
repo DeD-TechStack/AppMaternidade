@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(60);
+select plan(64);
 
 create function pg_temp.u(n int) returns uuid language sql immutable as $$
   select ('aaaaaaaa-0000-4000-8000-0000000000' || lpad(n::text, 2, '0'))::uuid;
@@ -20,12 +20,12 @@ create function pg_temp.foto() returns text language sql as $$
       || (select count(*)::text from auth.users);
 $$;
 
--- Contas 01 a 39; a 30 (N) existe só em auth.users, sem linha em contas.
+-- Contas 01 a 40; a 30 (N) existe só em auth.users, sem linha em contas.
 insert into auth.users (id, email)
-select pg_temp.u(n), 'u' || n || '@exemplo.invalid' from generate_series(1, 39) as n;
+select pg_temp.u(n), 'u' || n || '@exemplo.invalid' from generate_series(1, 40) as n;
 
 insert into public.contas (id, nome_privado)
-select pg_temp.u(n), 'U' || n from generate_series(1, 39) as n where n <> 30;
+select pg_temp.u(n), 'U' || n from generate_series(1, 40) as n where n <> 30;
 
 -- Famílias (o número da família é o da lista abaixo; criada_por entre parênteses):
 --   1 (01), 2 (02), 3 (25), 4 (03), 5 (04), 6 (27), 7 (12), 8 (28), 9 (14), 10 (17), 11 (22), 12 (32),
@@ -99,7 +99,10 @@ insert into public.convites (id, familia_id, papel, criado_por, codigo_hash, exp
   ('c0000000-0000-4000-8000-0000000000e1', pg_temp.f(14), 'responsavel', pg_temp.u(34),
    encode(extensions.digest(repeat('e1', 32), 'sha256'), 'hex'), now() + interval '3 days'),
   ('c0000000-0000-4000-8000-0000000000e2', pg_temp.f(15), 'responsavel', pg_temp.u(37),
-   encode(extensions.digest(repeat('e2', 32), 'sha256'), 'hex'), now() + interval '3 days');
+   encode(extensions.digest(repeat('e2', 32), 'sha256'), 'hex'), now() + interval '3 days'),
+  -- e3: convite de cuidador da família 11 (criado por 22) que a conta 40 aceita e depois exclui.
+  ('c0000000-0000-4000-8000-0000000000e3', pg_temp.f(11), 'cuidador', pg_temp.u(22),
+   encode(extensions.digest(repeat('e3', 32), 'sha256'), 'hex'), now() + interval '3 days');
 
 -- 05 foi promovido por 04.
 update public.vinculos set concedido_por = pg_temp.u(4)
@@ -194,9 +197,10 @@ select is(
   'convites pendentes da conta, em qualquer família, viram revogado; todos ficam com criado_por nulo'
 );
 select is(
-  (select c.aceito_por from public.convites c where c.id = 'c0000000-0000-4000-8000-000000000003'),
-  pg_temp.u(5),
-  'o convite aceito sobrevive, com quem aceitou e quando (D21)'
+  (select c.aceito_por::text || '|' || (c.aceito_em = now())::text || '|' || c.estado::text
+     from public.convites c where c.id = 'c0000000-0000-4000-8000-000000000003'),
+  pg_temp.u(5)::text || '|true|aceito',
+  'o convite aceito que a conta criou sobrevive, com aceito_por e aceito_em intactos (D21)'
 );
 select is(
   (select b.nome || ':' || coalesce(b.criado_por::text, 'nulo') from public.bebes b where b.id = 'bebe0000-0000-4000-8000-000000000001'),
@@ -410,6 +414,28 @@ select is(
   (select criada_por from public.familias where id = pg_temp.f(15)),
   pg_temp.u(39),
   'a titularidade vai para o responsável que nunca saiu também quando o outro foi revogado e voltou'
+);
+
+-- Conta que aceitou um convite (cuidadora 40, família 11): ao excluí-la, o convite continua existindo,
+-- com aceito_por nulo e aceito_em intacto; quem o criou (22) segue como criador.
+set local role authenticated;
+set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000040", "role": "authenticated"}';
+select lives_ok($$select public.aceitar_convite(repeat('e3', 32))$$, 'a cuidadora aceita o convite de verdade');
+select lives_ok($$select public.excluir_conta()$$, 'a cuidadora que aceitou o convite exclui a conta');
+reset role;
+select is(
+  (select c.estado::text || '|' || coalesce(c.aceito_por::text, 'nulo') || '|' || (c.aceito_em = now())::text
+          || '|' || (c.criado_por = pg_temp.u(22))::text
+     from public.convites c where c.id = 'c0000000-0000-4000-8000-0000000000e3'),
+  'aceito|nulo|true|true',
+  'o convite aceito continua, com aceito_por nulo, aceito_em intacto e o criador mantido'
+);
+select is(
+  (select count(*)::int from auth.users where id = pg_temp.u(40))
+  + (select count(*)::int from public.contas where id = pg_temp.u(40))
+  + (select count(*)::int from public.vinculos where conta_id = pg_temp.u(40)),
+  0,
+  'a conta, o usuário e o vínculo da cuidadora sumiram'
 );
 
 -- Falhas simuladas (C3) e rede de proteção: 31 é cuidador da família 12, onde 32 é responsável.

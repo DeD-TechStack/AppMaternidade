@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(72);
+select plan(89);
 
 -- Família 1: 01, 02 e 03 responsáveis ativos (01 é a mais antiga), 04 cuidador com validade futura, 05 cuidador,
 -- 06 observador com validade futura, 07 observador, 08 cuidador revogado, 09 observador que saiu,
@@ -267,7 +267,52 @@ set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000001", 
 select throws_ok($$select public.revogar_vinculo('bb000000-0000-4000-8000-000000000002')$$,
   'P0001', 'vinculo inativo', 'o vínculo recém-revogado é inativo');
 
+-- Efeito imediato da revogação, sob a identidade de cada alvo (responsável 02, cuidador 04, observador 06).
+-- A política de vinculos só deixa ler quem tem vínculo ativo na família: o revogado não lê nem o próprio vínculo.
+set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000002", "role": "authenticated"}';
+select is((select count(*)::int from public.familias where id = 'ffffffff-0000-4000-8000-000000000001'), 0,
+  'responsável revogado lê 0 linhas em familias');
+select is((select count(*)::int from public.vinculos where familia_id = 'ffffffff-0000-4000-8000-000000000001'), 0,
+  'responsável revogado lê 0 linhas em vinculos da família, nem o próprio');
+select is((select count(*)::int from public.bebes where familia_id = 'ffffffff-0000-4000-8000-000000000001'), 0,
+  'responsável revogado lê 0 linhas em bebes');
+select throws_ok(
+  $$insert into public.bebes (familia_id, nome, nascimento, criado_por)
+    values ('ffffffff-0000-4000-8000-000000000001', 'Revogado 02', '2026-01-01', 'aaaaaaaa-0000-4000-8000-000000000002')$$,
+  '42501', null, 'responsável revogado não insere bebê');
+
+set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000004", "role": "authenticated"}';
+select is((select count(*)::int from public.familias where id = 'ffffffff-0000-4000-8000-000000000001'), 0,
+  'cuidador revogado lê 0 linhas em familias');
+select is((select count(*)::int from public.vinculos where familia_id = 'ffffffff-0000-4000-8000-000000000001'), 0,
+  'cuidador revogado lê 0 linhas em vinculos da família, nem o próprio');
+select is((select count(*)::int from public.bebes where familia_id = 'ffffffff-0000-4000-8000-000000000001'), 0,
+  'cuidador revogado lê 0 linhas em bebes');
+select throws_ok(
+  $$insert into public.bebes (familia_id, nome, nascimento, criado_por)
+    values ('ffffffff-0000-4000-8000-000000000001', 'Revogado 04', '2026-01-01', 'aaaaaaaa-0000-4000-8000-000000000004')$$,
+  '42501', null, 'cuidador revogado não insere bebê');
+
+set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000006", "role": "authenticated"}';
+select is((select count(*)::int from public.familias where id = 'ffffffff-0000-4000-8000-000000000001'), 0,
+  'observador revogado lê 0 linhas em familias');
+select is((select count(*)::int from public.vinculos where familia_id = 'ffffffff-0000-4000-8000-000000000001'), 0,
+  'observador revogado lê 0 linhas em vinculos da família, nem o próprio');
+select is((select count(*)::int from public.bebes where familia_id = 'ffffffff-0000-4000-8000-000000000001'), 0,
+  'observador revogado lê 0 linhas em bebes');
+select throws_ok(
+  $$insert into public.bebes (familia_id, nome, nascimento, criado_por)
+    values ('ffffffff-0000-4000-8000-000000000001', 'Revogado 06', '2026-01-01', 'aaaaaaaa-0000-4000-8000-000000000006')$$,
+  '42501', null, 'observador revogado não insere bebê');
+
+reset role;
+select is(
+  (select count(*)::int from public.bebes where nome in ('Revogado 02', 'Revogado 04', 'Revogado 06')), 0,
+  'nenhum bebê foi criado pelos revogados'
+);
+
 -- sair_da_familia: efeitos. 03 (responsável), 05 (cuidador) e 07 (observador) saem.
+set local role authenticated;
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000003", "role": "authenticated"}';
 select lives_ok($$select public.sair_da_familia('ffffffff-0000-4000-8000-000000000001')$$,
   'responsável sai quando há outro responsável ativo');
@@ -280,8 +325,16 @@ select throws_ok(
 
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000005", "role": "authenticated"}';
 select lives_ok($$select public.sair_da_familia('ffffffff-0000-4000-8000-000000000001')$$, 'cuidador sai');
+select is((select count(*)::int from public.familias where id = 'ffffffff-0000-4000-8000-000000000001'), 0,
+  'cuidador que saiu lê 0 linhas em familias na mesma transação');
+select is((select count(*)::int from public.bebes where familia_id = 'ffffffff-0000-4000-8000-000000000001'), 0,
+  'cuidador que saiu lê 0 linhas em bebes na mesma transação');
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000007", "role": "authenticated"}';
 select lives_ok($$select public.sair_da_familia('ffffffff-0000-4000-8000-000000000001')$$, 'observador sai');
+select is((select count(*)::int from public.familias where id = 'ffffffff-0000-4000-8000-000000000001'), 0,
+  'observador que saiu lê 0 linhas em familias na mesma transação');
+select is((select count(*)::int from public.bebes where familia_id = 'ffffffff-0000-4000-8000-000000000001'), 0,
+  'observador que saiu lê 0 linhas em bebes na mesma transação');
 select throws_ok($$select public.sair_da_familia('ffffffff-0000-4000-8000-000000000001')$$,
   '42501', 'sem permissao', 'quem acabou de sair não sai de novo');
 

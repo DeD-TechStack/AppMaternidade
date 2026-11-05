@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(60);
+select plan(69);
 
 -- Família 1: 1 e 2 responsáveis ativos, 3 cuidador, 4 observador, 5 responsável revogado,
 -- 6 responsável que saiu, 7 responsável com validade vencida. Família 2: 8 responsável.
@@ -56,6 +56,17 @@ insert into public.bebes (id, familia_id, nome, nascimento, estado, criado_por, 
   ('bebe0000-0000-4000-8000-000000000004', 'ffffffff-0000-4000-8000-000000000002', 'Outra família', '2026-01-01', 'ativo',
    'aaaaaaaa-0000-4000-8000-000000000008', now());
 
+-- Família 4: dois bebês ativos com o mesmo criado_em; o id menor tem o nome que vem depois no alfabeto
+-- e é inserido por último, para provar que a ordem é por id e não por nome nem por inserção.
+insert into public.familias (id, nome, fuso, criada_por) values
+  ('ffffffff-0000-4000-8000-000000000004', 'Família 4', 'America/Sao_Paulo', 'aaaaaaaa-0000-4000-8000-000000000008');
+
+insert into public.bebes (id, familia_id, nome, nascimento, estado, criado_por, criado_em) values
+  ('bebe0000-0000-4000-8000-0000000000b2', 'ffffffff-0000-4000-8000-000000000004', 'Abe', '2026-03-01', 'ativo',
+   'aaaaaaaa-0000-4000-8000-000000000008', now() - interval '5 days'),
+  ('bebe0000-0000-4000-8000-0000000000b1', 'ffffffff-0000-4000-8000-000000000004', 'Zed', '2026-03-02', 'ativo',
+   'aaaaaaaa-0000-4000-8000-000000000008', now() - interval '5 days');
+
 -- Código de cada convite: o hexadecimal de dois caracteres da coluna cod repetido 32 vezes.
 insert into public.convites (id, familia_id, papel, vinculo_valido_ate, criado_por, codigo_hash,
                              expira_em, estado, aceito_por, aceito_em)
@@ -86,7 +97,9 @@ from (values
   ('c0000000-0000-4000-8000-0000000000a9', 'ffffffff-0000-4000-8000-000000000003', 'observador',
    null, 'a9', now() + interval '3 days', 'pendente', null, null),
   ('c0000000-0000-4000-8000-0000000000b1', 'ffffffff-0000-4000-8000-000000000002', 'observador',
-   null, 'b1', now() + interval '3 days', 'pendente', null, null)
+   null, 'b1', now() + interval '3 days', 'pendente', null, null),
+  ('c0000000-0000-4000-8000-0000000000d4', 'ffffffff-0000-4000-8000-000000000004', 'observador',
+   null, 'd4', now() + interval '3 days', 'pendente', null, null)
 ) as v(id, familia, papel, valido, cod, expira, estado, aceito_por, aceito_em);
 
 select set_config('teste.antes', (select md5(string_agg(c::text, '|' order by c.id)) from public.convites c), true);
@@ -149,6 +162,12 @@ select is(
 );
 
 select is(
+  public.ver_convite(repeat('d4', 32)) -> 'bebes',
+  '["Zed", "Abe"]'::jsonb,
+  'bebês ativos com o mesmo criado_em saem em ordem de id'
+);
+
+select is(
   (public.ver_convite(repeat('a2', 32)) ->> 'vinculo_valido_ate'),
   current_setting('teste.valido_a2'),
   'a validade do vínculo sai em UTC no formato do JSON'
@@ -162,6 +181,14 @@ select is(
 );
 
 select throws_ok($$select public.ver_convite(repeat('a1', 31))$$, 'P0001', 'convite invalido', 'código curto demais');
+select throws_ok(
+  $$select public.ver_convite(repeat('a1', 31) || 'a')$$,
+  'P0001', 'convite invalido', 'código com exatamente 63 caracteres hexadecimais'
+);
+select throws_ok(
+  $$select public.ver_convite(repeat('a1', 32) || 'a')$$,
+  'P0001', 'convite invalido', 'código com exatamente 65 caracteres hexadecimais'
+);
 select throws_ok($$select public.ver_convite(repeat('a1', 33))$$, 'P0001', 'convite invalido', 'código longo demais');
 select throws_ok($$select public.ver_convite(repeat('g1', 32))$$, 'P0001', 'convite invalido', 'código fora do hexadecimal');
 select throws_ok($$select public.ver_convite('')$$, 'P0001', 'convite invalido', 'código vazio');
@@ -279,6 +306,27 @@ select is(
     where estado = 'pendente' and id in ('c0000000-0000-4000-8000-0000000000a9', 'c0000000-0000-4000-8000-0000000000b1')),
   2,
   'convites de outras famílias não foram tocados'
+);
+
+-- Depois de revogado, o código já não serve para aceitar, e nenhum vínculo é criado.
+set local role authenticated;
+set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000010", "role": "authenticated"}';
+
+select throws_ok(
+  $$select public.aceitar_convite(repeat('a1', 32))$$,
+  'P0001', 'convite revogado', 'o convite revogado por revogar_convite não pode ser aceito'
+);
+select throws_ok(
+  $$select public.aceitar_convite(repeat('a5', 32))$$,
+  'P0001', 'convite revogado', 'o convite vencido e depois revogado também dá convite revogado no aceite'
+);
+
+reset role;
+
+select is(
+  (select count(*)::int from public.vinculos where conta_id = 'aaaaaaaa-0000-4000-8000-000000000010'),
+  0,
+  'o aceite recusado não criou vínculo'
 );
 
 select set_config('teste.antes', (select md5(string_agg(c::text, '|' order by c.id)) from public.convites c), true);
@@ -410,6 +458,58 @@ select is(
   'pendente',
   'as falhas simuladas deixaram o convite pendente'
 );
+
+-- Conferência final da C3 (regra 3) em revogar_convite: um gatilho depois do update derruba os
+-- responsáveis da família 2 (X8, o único), como faria uma chamada simultânea.
+create function pg_temp.foto() returns text language sql as $$
+  select (select md5(string_agg(v::text, '|' order by v.id)) from public.vinculos v) || '/'
+      || (select md5(string_agg(c::text, '|' order by c.id)) from public.convites c);
+$$;
+
+select set_config('teste.foto', pg_temp.foto(), true);
+
+create function teste_falhas.derruba_responsaveis() returns trigger language plpgsql as $$
+begin
+  if pg_trigger_depth() = 1 then
+    update public.vinculos set estado = 'saiu'
+     where familia_id = new.familia_id and papel = 'responsavel';
+  end if;
+  return null;
+end;
+$$;
+
+create trigger falha_simulada after update on public.convites
+  for each row execute function teste_falhas.derruba_responsaveis();
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000008", "role": "authenticated"}';
+select throws_ok(
+  $$select public.revogar_convite('c0000000-0000-4000-8000-0000000000b1')$$,
+  'P0001', 'ultimo responsavel',
+  'a conferência final recusa revogar_convite que deixaria a família sem responsável'
+);
+
+reset role;
+drop trigger falha_simulada on public.convites;
+
+select is(
+  pg_temp.foto(), current_setting('teste.foto'),
+  'depois da recusa, o convite segue pendente e vínculos e épocas estão intactos'
+);
+
+-- Controle sem gatilho: um convite pendente novo é revogado normalmente pelo responsável 01.
+insert into public.convites (id, familia_id, papel, criado_por, codigo_hash, expira_em)
+values ('c0000000-0000-4000-8000-0000000000c1', 'ffffffff-0000-4000-8000-000000000001', 'observador',
+        'aaaaaaaa-0000-4000-8000-000000000001', 'hash-controle', now() + interval '3 days');
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000001", "role": "authenticated"}';
+select lives_ok(
+  $$select public.revogar_convite('c0000000-0000-4000-8000-0000000000c1')$$,
+  'controle sem gatilho: revogar_convite dá certo e a família segue com responsável'
+);
+
+reset role;
 
 select matches(
   (select p.prosrc from pg_proc p where p.oid = 'public.revogar_convite(uuid)'::regprocedure),

@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(53);
+select plan(62);
 
 -- Família 1: 1 responsável, 5 cuidador ativo, 6 observador ativo; 7 revogado (época 3), 8 saiu (época 2),
 -- 9 ativo com validade vencida, 10 revogado (usado nas falhas simuladas). Família 2: 12 responsável.
@@ -20,7 +20,10 @@ insert into auth.users (id, email) values
   ('aaaaaaaa-0000-4000-8000-000000000011', 'n11@exemplo.invalid'),
   ('aaaaaaaa-0000-4000-8000-000000000012', 'x12@exemplo.invalid'),
   ('aaaaaaaa-0000-4000-8000-000000000013', 'w13@exemplo.invalid'),
-  ('aaaaaaaa-0000-4000-8000-000000000014', 'y14@exemplo.invalid');
+  ('aaaaaaaa-0000-4000-8000-000000000014', 'y14@exemplo.invalid'),
+  ('aaaaaaaa-0000-4000-8000-000000000015', 'k15@exemplo.invalid'),
+  ('aaaaaaaa-0000-4000-8000-000000000016', 'j16@exemplo.invalid'),
+  ('aaaaaaaa-0000-4000-8000-000000000017', 'r17@exemplo.invalid');
 
 insert into public.contas (id, nome_privado) values
   ('aaaaaaaa-0000-4000-8000-000000000001', 'R1'),
@@ -35,7 +38,10 @@ insert into public.contas (id, nome_privado) values
   ('aaaaaaaa-0000-4000-8000-000000000010', 'Rg10'),
   ('aaaaaaaa-0000-4000-8000-000000000012', 'X12'),
   ('aaaaaaaa-0000-4000-8000-000000000013', 'W13'),
-  ('aaaaaaaa-0000-4000-8000-000000000014', 'Y14');
+  ('aaaaaaaa-0000-4000-8000-000000000014', 'Y14'),
+  ('aaaaaaaa-0000-4000-8000-000000000015', 'K15'),
+  ('aaaaaaaa-0000-4000-8000-000000000016', 'J16'),
+  ('aaaaaaaa-0000-4000-8000-000000000017', 'R17');
 
 insert into public.familias (id, nome, fuso, criada_por) values
   ('ffffffff-0000-4000-8000-000000000001', 'Família 1', 'America/Sao_Paulo', 'aaaaaaaa-0000-4000-8000-000000000001'),
@@ -108,6 +114,26 @@ from (values
   ('c0000000-0000-4000-8000-0000000000d2', 'observador', null, 'aaaaaaaa-0000-4000-8000-000000000001', 'd2',
    now() + interval '3 days', 'pendente', null, null)
 ) as v(id, papel, valido, criador, cod, expira, estado, aceito_por, aceito_em);
+
+-- d3: pendente de cuidador na família 1, para o controle sem falha (convidada 15).
+-- Família 9, montada como dono sem nenhum responsável ativo (estado de defesa): 17 é responsável revogado
+-- e criou o convite f1 (pendente, de cuidador), que 16 aceita no controle de "sem responsável antes".
+insert into public.convites (id, familia_id, papel, criado_por, codigo_hash, expira_em) values
+  ('c0000000-0000-4000-8000-0000000000d3', 'ffffffff-0000-4000-8000-000000000001', 'cuidador',
+   'aaaaaaaa-0000-4000-8000-000000000001', encode(extensions.digest(repeat('d3', 32), 'sha256'), 'hex'),
+   now() + interval '3 days');
+
+insert into public.familias (id, nome, fuso, criada_por) values
+  ('ffffffff-0000-4000-8000-000000000009', 'Família 9', 'America/Sao_Paulo', 'aaaaaaaa-0000-4000-8000-000000000017');
+
+insert into public.vinculos (id, familia_id, conta_id, papel, estado) values
+  ('bb000000-0000-4000-8000-000000000017', 'ffffffff-0000-4000-8000-000000000009', 'aaaaaaaa-0000-4000-8000-000000000017',
+   'responsavel', 'revogado');
+
+insert into public.convites (id, familia_id, papel, criado_por, codigo_hash, expira_em) values
+  ('c0000000-0000-4000-8000-0000000000f1', 'ffffffff-0000-4000-8000-000000000009', 'cuidador',
+   'aaaaaaaa-0000-4000-8000-000000000017', encode(extensions.digest(repeat('f1', 32), 'sha256'), 'hex'),
+   now() + interval '3 days');
 
 -- Novo membro: D aceita o convite de observador.
 set local role authenticated;
@@ -324,6 +350,14 @@ select throws_ok($$select public.aceitar_convite(repeat('b6', 32))$$, 'P0001', '
 -- Identidade e formato do código.
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000013", "role": "authenticated"}';
 select throws_ok($$select public.aceitar_convite(repeat('a1', 31))$$, 'P0001', 'convite invalido', 'código curto demais');
+select throws_ok(
+  $$select public.aceitar_convite(repeat('a1', 31) || 'a')$$,
+  'P0001', 'convite invalido', 'código com exatamente 63 caracteres hexadecimais'
+);
+select throws_ok(
+  $$select public.aceitar_convite(repeat('a1', 32) || 'a')$$,
+  'P0001', 'convite invalido', 'código com exatamente 65 caracteres hexadecimais'
+);
 select throws_ok($$select public.aceitar_convite(repeat('a1', 33))$$, 'P0001', 'convite invalido', 'código longo demais');
 select throws_ok($$select public.aceitar_convite(repeat('g1', 32))$$, 'P0001', 'convite invalido', 'código fora do hexadecimal');
 select throws_ok($$select public.aceitar_convite('')$$, 'P0001', 'convite invalido', 'código vazio');
@@ -501,6 +535,87 @@ select is(
   || (select md5(string_agg(v::text, '|' order by v.id)) from public.vinculos v),
   current_setting('teste.antes'),
   'as falhas simuladas desfizeram tudo: convites, vínculos e épocas iguais'
+);
+
+-- Conferência final da C3 (regra 3) em aceitar_convite: um gatilho depois do insert ou update de vínculos
+-- derruba os responsáveis da família, como faria uma chamada simultânea. d1 (13, vínculo novo) e
+-- d2 (10, reingresso) são cuidador e observador; a família 1 tem responsável ativo antes (01).
+create function pg_temp.foto() returns text language sql as $$
+  select (select md5(string_agg(v::text, '|' order by v.id)) from public.vinculos v) || '/'
+      || (select md5(string_agg(c::text, '|' order by c.id)) from public.convites c);
+$$;
+
+select set_config('teste.foto', pg_temp.foto(), true);
+
+create function teste_falhas.derruba_responsaveis() returns trigger language plpgsql as $$
+begin
+  if pg_trigger_depth() = 1 then
+    update public.vinculos set estado = 'saiu'
+     where familia_id = new.familia_id and papel = 'responsavel';
+  end if;
+  return null;
+end;
+$$;
+
+create trigger falha_simulada after insert or update on public.vinculos
+  for each row execute function teste_falhas.derruba_responsaveis();
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000013", "role": "authenticated"}';
+select throws_ok(
+  $$select public.aceitar_convite(repeat('d1', 32))$$,
+  'P0001', 'ultimo responsavel',
+  'a conferência final recusa aceitar_convite (vínculo novo) que deixaria a família sem responsável'
+);
+
+set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000010", "role": "authenticated"}';
+select throws_ok(
+  $$select public.aceitar_convite(repeat('d2', 32))$$,
+  'P0001', 'ultimo responsavel',
+  'a conferência final recusa aceitar_convite (reingresso) que deixaria a família sem responsável'
+);
+
+reset role;
+drop trigger falha_simulada on public.vinculos;
+
+select is(
+  pg_temp.foto(), current_setting('teste.foto'),
+  'depois das recusas, os convites seguem pendentes, nenhum vínculo foi criado ou mudado e as épocas estão intactas'
+);
+
+-- Controle sem gatilho: a operação normal dá certo (convite d3, convidada 15, família 1 com responsável).
+set local role authenticated;
+set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000015", "role": "authenticated"}';
+select is(
+  public.aceitar_convite(repeat('d3', 32)),
+  'ffffffff-0000-4000-8000-000000000001'::uuid,
+  'controle sem gatilho: aceitar_convite dá certo e devolve a família'
+);
+
+-- Família montada sem nenhum responsável ativo antes (estado de defesa): a regra só vale quando havia
+-- responsável antes, então o aceite de cuidador dá certo.
+set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000016", "role": "authenticated"}';
+select is(
+  public.aceitar_convite(repeat('f1', 32)),
+  'ffffffff-0000-4000-8000-000000000009'::uuid,
+  'família sem responsável ativo antes: aceitar_convite de cuidador dá certo'
+);
+
+reset role;
+
+select is(
+  (select v.estado::text || '|' || v.papel::text || '|' || v.epoca::text
+     from public.vinculos v
+    where v.familia_id = 'ffffffff-0000-4000-8000-000000000009' and v.conta_id = 'aaaaaaaa-0000-4000-8000-000000000016'),
+  'ativo|cuidador|1',
+  'o vínculo da família sem responsável foi criado, como cuidador, época 1'
+);
+
+select is(
+  (select count(*)::int from public.vinculos
+    where familia_id = 'ffffffff-0000-4000-8000-000000000009' and papel = 'responsavel' and estado = 'ativo'),
+  0,
+  'a família segue sem responsável ativo: o aceite não inventou proibição nem promoveu ninguém'
 );
 
 select matches(

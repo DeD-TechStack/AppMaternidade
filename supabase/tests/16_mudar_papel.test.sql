@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(55);
+select plan(61);
 
 -- Família 1: 01 responsável (a mais antiga), 02 e 03 responsáveis, 04 e 05 cuidadores com validade futura,
 -- 06 e 07 observadores (06 com validade futura), 08 cuidador revogado, 09 observador que saiu,
@@ -306,6 +306,12 @@ select throws_ok(
     values ('ffffffff-0000-4000-8000-000000000001', 'Rebaixado', '2026-01-01', 'aaaaaaaa-0000-4000-8000-000000000002')$$,
   '42501', null, 'quem foi rebaixado já não insere bebê'
 );
+set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000006", "role": "authenticated"}';
+select lives_ok(
+  $$insert into public.bebes (familia_id, nome, nascimento, criado_por)
+    values ('ffffffff-0000-4000-8000-000000000001', 'Promovido observador', '2026-01-01', 'aaaaaaaa-0000-4000-8000-000000000006')$$,
+  'o observador promovido a responsável já insere bebê'
+);
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000004", "role": "authenticated"}';
 select lives_ok(
   $$insert into public.bebes (familia_id, nome, nascimento, criado_por)
@@ -322,6 +328,65 @@ select lives_ok(
 reset role;
 
 select is(pg_temp.v(1), 'ativo|cuidador|-|2|04', 'o rebaixado tem época 2 e foi concedido por 04');
+
+-- Autorrebaixamento com dois responsáveis: 22 e 23 são responsáveis ativos da família 5; 22 criou dois
+-- convites pendentes e 23 criou um.
+insert into auth.users (id, email) values
+  ('aaaaaaaa-0000-4000-8000-000000000022', 'u22@exemplo.invalid'),
+  ('aaaaaaaa-0000-4000-8000-000000000023', 'u23@exemplo.invalid');
+
+insert into public.contas (id, nome_privado) values
+  ('aaaaaaaa-0000-4000-8000-000000000022', 'U22'),
+  ('aaaaaaaa-0000-4000-8000-000000000023', 'U23');
+
+insert into public.familias (id, nome, fuso, criada_por) values
+  ('ffffffff-0000-4000-8000-000000000005', 'Família 5', 'America/Sao_Paulo', 'aaaaaaaa-0000-4000-8000-000000000022');
+
+insert into public.vinculos (id, familia_id, conta_id, papel) values
+  ('bb000000-0000-4000-8000-000000000022', 'ffffffff-0000-4000-8000-000000000005', 'aaaaaaaa-0000-4000-8000-000000000022', 'responsavel'),
+  ('bb000000-0000-4000-8000-000000000023', 'ffffffff-0000-4000-8000-000000000005', 'aaaaaaaa-0000-4000-8000-000000000023', 'responsavel');
+
+insert into public.convites (id, familia_id, papel, criado_por, codigo_hash, expira_em) values
+  ('c0000000-0000-4000-8000-000000000051', 'ffffffff-0000-4000-8000-000000000005', 'observador',
+   'aaaaaaaa-0000-4000-8000-000000000022', 'hash-51', now() + interval '3 days'),
+  ('c0000000-0000-4000-8000-000000000052', 'ffffffff-0000-4000-8000-000000000005', 'cuidador',
+   'aaaaaaaa-0000-4000-8000-000000000022', 'hash-52', now() + interval '3 days'),
+  ('c0000000-0000-4000-8000-000000000053', 'ffffffff-0000-4000-8000-000000000005', 'observador',
+   'aaaaaaaa-0000-4000-8000-000000000023', 'hash-53', now() + interval '3 days');
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000022", "role": "authenticated"}';
+select lives_ok(
+  $$select public.mudar_papel('bb000000-0000-4000-8000-000000000022', 'cuidador')$$,
+  'o responsável se rebaixa a cuidador quando há outro responsável ativo'
+);
+select throws_ok(
+  $$insert into public.bebes (familia_id, nome, nascimento, criado_por)
+    values ('ffffffff-0000-4000-8000-000000000005', 'Autorrebaixado', '2026-01-01', 'aaaaaaaa-0000-4000-8000-000000000022')$$,
+  '42501', null, 'quem se rebaixou já não insere bebê na mesma transação'
+);
+
+reset role;
+
+select is(
+  (select v.estado::text || '|' || v.papel::text || '|' || v.epoca::text || '|' || right(v.concedido_por::text, 2)
+     from public.vinculos v where v.id = 'bb000000-0000-4000-8000-000000000022'),
+  'ativo|cuidador|2|22',
+  'o autorrebaixado fica cuidador ativo, com época 2 e concedido por ele mesmo'
+);
+select is(
+  (select array_agg(c.estado::text order by c.id) from public.convites c
+    where c.criado_por = 'aaaaaaaa-0000-4000-8000-000000000022'),
+  array['revogado', 'revogado'],
+  'os convites pendentes que o autorrebaixado criou viram revogado'
+);
+select is(
+  (select v.papel::text || '|' || v.epoca::text || '|' || (select c.estado::text from public.convites c
+                                                          where c.id = 'c0000000-0000-4000-8000-000000000053')
+     from public.vinculos v where v.id = 'bb000000-0000-4000-8000-000000000023'),
+  'responsavel|1|pendente',
+  'o outro responsável e o convite dele seguem intactos'
+);
 
 -- Conversões de erro por falha simulada (C3): 04 é responsável, 07 é cuidador.
 select set_config('teste.foto', pg_temp.foto(), true);
