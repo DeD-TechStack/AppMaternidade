@@ -46,6 +46,7 @@ Estado às 17h55:
   - passar por um laço visual de até 3 iterações;
   - fechar o G6 com duas notas independentes, ambas acima de 8,0;
   - usar ícones do lucide-react.
+- **Estudo de apps de maternidade (MAT-49, pronto):** o estudo está em `_staging/appmaternidade/PESQ-APPS/ESTUDO_PADROES.md`. Toda tela logada nova (MAT-37 a MAT-41) usa os padrões P1 a P7 e passa pelo `imgdiff` contra os 3 recortes, com teto de 75.
 - **MAT-43 (backend local):** está pronta, mas a revisão saiu inconclusiva porque o revisor não tem Docker. Quem decide é o coordenador.
 - **MAT-45, MAT-46 e MAT-47 (banco):** as specs v2 já incorporam a 1ª releitura e as decisões comuns de banco (`_staging/appmaternidade/DECISOES_BANCO_20261105.md`, C1 a C9). Falta a 2ª releitura por outra família, que espera os cartões de leitura do revisor, travados na infra.
 - **MAT-36 (páginas públicas):** a spec v2 está pronta. A releitura vem depois da MAT-44 na main.
