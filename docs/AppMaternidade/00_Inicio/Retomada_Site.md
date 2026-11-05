@@ -38,7 +38,7 @@ Em 03/11/2026, Daniel definiu o rumo: o AppMaternidade começa como site complet
 
 ## O que está em andamento
 
-Nenhum cartão aberto no board. Desde 03/11/2026, às 15h35, o projeto está em pausa por limite, a pedido de Daniel: nada é despachado até ele voltar. A main está em a9a74eb, com a árvore limpa e sem push.
+A pausa por limite de 03/11/2026 terminou em 05/11/2026, liberada por Daniel. As specs da MAT-34 (direção visual e protótipo de 3 telas) e da MAT-43 (Supabase local com RLS) estão escritas e passam agora pela releitura sem contexto. Ficam em `_staging/appmaternidade/MAT-34/` e `MAT-43/`. O board ainda não tem cartão aberto.
 
 ## Próximos passos (quando Daniel voltar)
 
