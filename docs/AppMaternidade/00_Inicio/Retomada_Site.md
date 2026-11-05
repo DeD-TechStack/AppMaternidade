@@ -40,7 +40,7 @@ Em 03/11/2026, Daniel definiu o rumo: o AppMaternidade começa como site complet
 ## O que está em andamento
 
 Estado às 17h55:
-- **MAT-44 (salto visual):** o cartão `t_77b96e90` nasceu da main e57c844, com a spec v4 (sha256 `750efcf5`) e o contrato `0d75b04d3288`. O que ele tem de fazer:
+- **MAT-44 (salto visual):** o cartão `t_10f8dad7` roda num worktree criado em 2a35dc7 (a main com a MAT-34, mais um commit de cofre), com a spec v4 (sha256 `750efcf5`) e o contrato `0d75b04d3288`. O que ele tem de fazer:
   - antes do código, montar 3 direções; vence a de maior nota do award-bar, sem espera (D-1 = não, decisão de Daniel), e na integração o leitor cego do líder confere a escolha;
   - fazer o OpenCode carregar as skills de interface, com prova no recibo;
   - passar por um laço visual de até 3 iterações;

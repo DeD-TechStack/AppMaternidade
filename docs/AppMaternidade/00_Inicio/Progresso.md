@@ -21,7 +21,7 @@ Horários em America/Sao_Paulo, tirados do relógio da máquina ou de carimbos d
 
 Uma linha por marco, a mais recente no topo. O estado corrente fica em [Retomada do site](Retomada_Site.md), e o detalhe de cada marco está no cartão Kanban citado.
 
-- 05/11/2026: **MAT-34 integrada e MAT-44 lançada.** O revisor aprovou na revisão 4 (4bd664b). O líder fez o rebase sobre a main com range-diff idêntico, e a integração foi por ff em e57c844, com 294 testes, links e o verificador 6/6. O cartão da MAT-44 é o `t_77b96e90`. O contrato foi para `0d75b04d3288`, com `npm.cmd` no OpenCode e o papel ux da auditoria.
+- 05/11/2026: **MAT-34 integrada e MAT-44 lançada.** O revisor aprovou na revisão 4 (4bd664b). O líder fez o rebase sobre a main com range-diff idêntico, e a integração foi por ff em e57c844, com 294 testes, links e o verificador 6/6. O cartão da MAT-44 é o `t_10f8dad7`. O 1º, `t_77b96e90`, foi arquivado porque tinha sido criado sem workspace_path. O contrato foi para `0d75b04d3288`, com `npm.cmd` no OpenCode e o papel ux da auditoria.
 - 05/11/2026: **decisão de Daniel, D-1 = não.** Na MAT-44, a direção entre as 3 é escolhida só pela nota do award-bar, sem esperar ninguém. O leitor cego do líder confere a escolha na integração. A spec v4 foi ajustada (sha256 `079d7467`).
 - 05/11/2026: **decisões comuns de banco e auditoria de UI.**
   - **Banco (C1 a C9),** decisões do líder para MAT-45, MAT-46 e MAT-47:
