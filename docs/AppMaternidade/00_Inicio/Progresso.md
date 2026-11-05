@@ -21,6 +21,21 @@ Horários em America/Sao_Paulo, tirados do relógio da máquina ou de carimbos d
 
 Uma linha por marco, a mais recente no topo. O estado corrente fica em [Retomada do site](Retomada_Site.md), e o detalhe de cada marco está no cartão Kanban citado.
 
+- 05/11/2026: **decisões comuns de banco e auditoria de UI.**
+  - **Banco (C1 a C9),** decisões do líder para MAT-45, MAT-46 e MAT-47:
+    - autoria com `set null`, que aparece como "pessoa removida";
+    - a família só é apagada por `excluir_familia`;
+    - trava e nova conferência em toda mudança de vínculo;
+    - a mesma resposta para id inexistente e para id de outra família;
+    - faixas de migração, testes e seed separadas por tarefa.
+  - **Specs v2** (sha256): MAT-45 `98c9a722`, MAT-46 `56be696e`, MAT-47 `8a3ce6de`, MAT-36 `538fc3e7`.
+  - **MAT-44 v4** (`e6e4affd`), feita pela auditoria de UI do coordenador:
+    - 3 direções antes do código;
+    - skills de interface obrigatórias no OpenCode;
+    - laço visual de até 3 iterações;
+    - G6 com duas notas independentes ≥ 8,0;
+    - ícones lucide-react.
+  - A MAT-37 ficou só com as telas, porque o banco de conta passou para a MAT-45.
 - 05/11/2026: **pedido de Daniel: site inteiro funcional.**
   - O site vai funcionar de ponta a ponta, com a interface próxima da referência, publicado para o professor usar com dados fictícios.
   - Decisões de Daniel: acesso por e-mail e senha, com recuperação; Supabase Free agora, só com dados fictícios; o e-mail de contato fica pendente.

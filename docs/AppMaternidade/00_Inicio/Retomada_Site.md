@@ -44,10 +44,22 @@ A pausa por limite de 03/11/2026 terminou em 05/11/2026, liberada por Daniel. As
 
 A integração depende da aprovação do revisor. Na MAT-34, o líder confere também o G9 (sala limpa).
 
-Estado às 15h40:
+Estado às 17h05:
 - **MAT-43:** pronta, mas com a revisão inconclusiva. O revisor ficou sem acesso ao Docker, e a decisão é do coordenador.
-- **MAT-34:** faz a última micro-correção de acessibilidade.
-- **MAT-44 (salto visual, decisão de Daniel):** a spec está em explique de volta. O cartão só nasce depois que a MAT-34 for integrada.
+- **MAT-34:** está em revisão, no 3º candidato (f132b38). As rodadas já corrigiram:
+  - os rótulos em fonte de 200%;
+  - a barra fixa;
+  - o foco depois de cada ação.
+- **MAT-44 (salto visual):** a spec v4, aprovada, segue a auditoria de UI que Daniel pediu. A v4 mudou estes pontos:
+  - antes do código, 3 direções; Daniel escolhe uma em até 30 min, e sem resposta vale a nota do award-bar;
+  - o OpenCode carrega as skills de interface;
+  - um laço visual de até 3 iterações;
+  - o G6 por duas notas independentes, ambas acima de 8,0;
+  - ícones do lucide-react.
+
+  O cartão só nasce depois que a MAT-34 for integrada.
+- **MAT-45, MAT-46 e MAT-47 (banco):** as specs v2 já incorporam a 1ª releitura e as decisões comuns de banco (`_staging/appmaternidade/DECISOES_BANCO_20261105.md`, C1 a C9). Falta a 2ª releitura por outra família, que espera os cartões de leitura do revisor, travados na infra.
+- **MAT-36 (páginas públicas):** a spec v2 está pronta. A releitura vem depois da MAT-44 na main.
 
 ## Roteiro do site completo (pedido de Daniel em 05/11/2026)
 
