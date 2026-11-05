@@ -12,12 +12,15 @@
     "check": "npm run typecheck && npm run lint && npm run test && npm run build"
   },
   "dependencies": {
+    "@fontsource/fraunces": "5.3.0",
+    "@fontsource/instrument-sans": "5.3.0",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "react-router": "7.18.5"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",
+    "@google/design.md": "0.4.0",
     "@tailwindcss/vite": "4.3.4",
     "@testing-library/dom": "10.4.2",
     "@testing-library/react": "16.3.3",
