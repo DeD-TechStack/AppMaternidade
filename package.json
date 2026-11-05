@@ -1,0 +1,14 @@
+{
+  "name": "appmaternidade",
+  "private": true,
+  "scripts": {
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:reset": "supabase db reset",
+    "db:test": "supabase test db",
+    "db:lint": "supabase db lint --level warning --fail-on warning"
+  },
+  "devDependencies": {
+    "supabase": "3.0.0"
+  }
+}
