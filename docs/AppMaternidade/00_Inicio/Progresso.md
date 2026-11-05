@@ -21,6 +21,7 @@ Horários em America/Sao_Paulo, tirados do relógio da máquina ou de carimbos d
 
 Uma linha por marco, a mais recente no topo. O estado corrente fica em [Retomada do site](Retomada_Site.md), e o detalhe de cada marco está no cartão Kanban citado.
 
+- 05/11/2026: **specs aprovadas e cartões criados.** A MAT-34 v2 virou o cartão `t_dd87ca3d` e a MAT-43 v2, o `t_58526cc9`, os dois com base cc91ec8. O G6 tem mínimo de 7,0 por tela.
 - 05/11/2026: **retomada** liberada por Daniel. As specs da MAT-34 e da MAT-43 foram escritas, v1 em explique de volta. A main está em c81a094.
 - 03/11/2026, 15h35: **pausa por limite**, pedida por Daniel por meio do coordenador. O board está sem cartões abertos. A main está em a9a74eb, com a árvore limpa e sem push. Na volta, o primeiro passo são as specs da MAT-34 e da MAT-43.
 - 03/11/2026: **MAT-32 integrada.** Os design docs v0.4 entraram na main pelo cartão `t_46deffa1`. O SHA revisado era 7577216 e foi reposicionado sobre a fundação como 5500c66, com patches idênticos. A revisão aprovou na rodada 2; a rodada 1 tinha devolvido o DOC-08 por implementação.

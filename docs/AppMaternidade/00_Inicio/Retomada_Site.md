@@ -38,7 +38,11 @@ Em 03/11/2026, Daniel definiu o rumo: o AppMaternidade começa como site complet
 
 ## O que está em andamento
 
-A pausa por limite de 03/11/2026 terminou em 05/11/2026, liberada por Daniel. As specs da MAT-34 (direção visual e protótipo de 3 telas) e da MAT-43 (Supabase local com RLS) estão escritas e passam agora pela releitura sem contexto. Ficam em `_staging/appmaternidade/MAT-34/` e `MAT-43/`. O board ainda não tem cartão aberto.
+A pausa por limite de 03/11/2026 terminou em 05/11/2026, liberada por Daniel. As specs v2 da MAT-34 e da MAT-43 foram aprovadas, cada uma com o Major da releitura corrigido, e os dois cartões rodam em paralelo pelo OpenCode:
+- `t_dd87ca3d`: direção visual, tokens e protótipo de Início, Hoje e Sessão;
+- `t_58526cc9`: Supabase local, RLS e testes pgTAP.
+
+A integração depende da aprovação do revisor. Na MAT-34, o líder confere também o G9 (sala limpa).
 
 ## Próximos passos (quando Daniel voltar)
 
