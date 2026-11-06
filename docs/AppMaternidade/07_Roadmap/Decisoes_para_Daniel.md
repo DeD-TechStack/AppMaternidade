@@ -141,6 +141,15 @@ Decidida em 03/11/2026: opção A, sala limpa reduzida e declarada.
 - **Limite:** mesma conta do Windows; o isolamento é por instrução e permissão.
 - **Alternativas avaliadas:** B, conta ou contêiner isolado; C, sem REA.
 
+## Decisões da demonstração (Daniel, 06/11/2026)
+
+Estas decisões valem para a prévia acadêmica publicada no Pages, com o Supabase `appmaternidade-demo`.
+
+1. **Contas.** Cada pessoa cria a própria conta pelo site, com o Supabase de verdade. Não há contas de demonstração nem o secret `DEMO_PASSWORD`, que não existe no repositório (conferido em 06/11/2026). Nas palavras de Daniel: "o Supabase subiu para isso, o site tem que funcionar de verdade, o uso é leve".
+2. **Conteúdo de Desenvolvimento.** Entra normal, **sem** o selo "Rascunho em revisão", porque a prévia deve parecer pronta e funcionando. Continuam valendo a fonte citada em cada item e o aviso padrão de que o conteúdo não substitui orientação médica.
+3. **Verificação extra de quem modera** (MFA no painel, ADR-003 e Arquitetura): em aberto, porque Daniel pediu explicação antes de decidir.
+4. **Contato e LGPD.** O e-mail de contato é o e-mail de autor dos commits do repositório (`git config user.email`), e o encarregado de dados é Daniel Macedo. Os dois são provisórios da demonstração. O valor do e-mail não é copiado para notas nem logs; ele entra só nas páginas do site que o pedem.
+
 ## O que não precisa de decisão agora
 
 Nome definitivo do produto, identidade visual, tipos de registro além do MVP, widgets e expansões. Ficam no [Roadmap](Roadmap_e_Proxima_Fatia.md).

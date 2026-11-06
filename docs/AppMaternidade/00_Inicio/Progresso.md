@@ -21,6 +21,13 @@ Horários em America/Sao_Paulo, tirados do relógio da máquina ou de carimbos d
 
 Uma linha por marco, a mais recente no topo. O estado corrente fica em [Retomada do site](Retomada_Site.md), e o detalhe de cada marco está no cartão Kanban citado.
 
+- 06/11/2026: **decisões de Daniel para a demonstração**, registradas em 07_Roadmap/Decisoes_para_Daniel.md:
+  - não há contas de demonstração: cada pessoa cria a sua;
+  - Desenvolvimento entra sem o selo de rascunho, com a fonte citada e o aviso médico;
+  - o contato e o encarregado de dados são provisórios, com o e-mail do autor dos commits e Daniel Macedo;
+  - a verificação extra no painel de moderação continua em aberto.
+
+  A MAT-48b foi destravada.
 - 06/11/2026: **frente visual MAT-44c (decisão de Daniel, ~15h).**
   - Daniel reprovou o site publicado: estático, com ilustrações ruins e tela desorganizada.
   - **Aceite novo:** vale a nota de um avaliador que não fez a tela, comparando lado a lado com a referência (https://www.raredays.com/work/dr-becky), com mínimo de 8,0. Abaixo disso, a tela não integra, e a última palavra é de Daniel pela GALERIA.html.
