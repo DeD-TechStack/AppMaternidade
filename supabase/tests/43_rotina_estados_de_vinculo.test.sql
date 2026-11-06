@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(302);
+select plan(366);
 
 -- Família 1 com um responsável ativo (...01) e um cuidador ativo com validade futura (...02).
 -- Contas sem vínculo ativo, uma por papel e por estado (revogado, saiu, vencido):
@@ -222,6 +222,102 @@ select is(public.encerrar_sessao(pg_temp.rid(302), '2026-11-01 12:00+00'), '2026
 select lives_ok(
   $$select public.gravar_nota(pg_temp.nid(302), 'ffffffff-0000-4000-8000-000000000001', 'Nota do controle')$$,
   'controle: cuidador ativo com validade futura grava nota');
+
+reset role;
+
+-- Adendo R-B, 46-M6 (1º caso): objetos PRÓPRIOS de quem perdeu o vínculo. Cada conta abaixo tem vínculo
+-- ativo, grava um sono (em andamento) e uma nota pelas funções, e só depois perde o vínculo:
+--   41 responsável revogado; 42 cuidador revogado; 43 cuidador que saiu; 44 cuidador vencido.
+-- Sem vínculo ativo, nem o que a conta mesmo criou lhe pertence: a resposta é "inexistente" e a linha fica intacta.
+insert into auth.users (id, email)
+select pg_temp.conta(n), 'conta' || n || '@exemplo.invalid' from unnest(array[41, 42, 43, 44]) as n;
+insert into public.contas (id, nome_privado)
+select pg_temp.conta(n), 'Conta ' || n from unnest(array[41, 42, 43, 44]) as n;
+insert into public.vinculos (familia_id, conta_id, papel, estado, valido_ate) values
+  ('ffffffff-0000-4000-8000-000000000001', pg_temp.conta(41), 'responsavel', 'ativo', null),
+  ('ffffffff-0000-4000-8000-000000000001', pg_temp.conta(42), 'cuidador', 'ativo', null),
+  ('ffffffff-0000-4000-8000-000000000001', pg_temp.conta(43), 'cuidador', 'ativo', null),
+  ('ffffffff-0000-4000-8000-000000000001', pg_temp.conta(44), 'cuidador', 'ativo', now() + interval '1 day');
+
+create function pg_temp.cria_proprios(n int) returns setof text language plpgsql as $$
+begin
+  return next lives_ok(
+    format($q$select public.gravar_registro(%L, 'bbbbbbbb-0000-4000-8000-000000000001', 'sono', '2026-11-01 10:00+00', 'America/Sao_Paulo', -180)$q$, pg_temp.rid(500 + n)),
+    'conta ' || n || ': grava o próprio sono enquanto o vínculo está ativo');
+  return next lives_ok(
+    format($q$select public.gravar_nota(%L, 'ffffffff-0000-4000-8000-000000000001', 'Nota própria', 'bbbbbbbb-0000-4000-8000-000000000001')$q$, pg_temp.nid(500 + n)),
+    'conta ' || n || ': grava a própria nota enquanto o vínculo está ativo');
+end;
+$$;
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000041", "role": "authenticated"}';
+select * from pg_temp.cria_proprios(41);
+set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000042", "role": "authenticated"}';
+select * from pg_temp.cria_proprios(42);
+set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000043", "role": "authenticated"}';
+select * from pg_temp.cria_proprios(43);
+set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000044", "role": "authenticated"}';
+select * from pg_temp.cria_proprios(44);
+reset role;
+
+-- Agora o vínculo se perde, cada um do seu jeito.
+update public.vinculos set estado = 'revogado' where conta_id in (pg_temp.conta(41), pg_temp.conta(42));
+update public.vinculos set estado = 'saiu' where conta_id = pg_temp.conta(43);
+update public.vinculos set valido_ate = now() - interval '1 day' where conta_id = pg_temp.conta(44);
+select pg_temp.guarda();
+
+create function pg_temp.bateria_propria(n int, rotulo text) returns setof text language plpgsql as $$
+begin
+  return next is(
+    (select count(*)::int from public.registros) + (select count(*)::int from public.notas_cuidado)
+      + (select count(*)::int from public.registro_alteracoes),
+    0, rotulo || ': não lê nem o que ela mesma criou (registros, notas e histórico)');
+  return next is(
+    (select count(*)::int from public.registros_do_dia('bbbbbbbb-0000-4000-8000-000000000001', '2026-11-01')),
+    0, rotulo || ': registros_do_dia devolve 0 linhas');
+
+  return next throws_ok(
+    format($q$select public.editar_registro(%L, '2026-11-01 10:00+00', null, '{}', 'x', 'America/Sao_Paulo', -180)$q$, pg_temp.rid(500 + n)),
+    'P0002', 'registro inexistente', rotulo || ': editar_registro do próprio sono responde registro inexistente');
+  return next ok(pg_temp.intacto_id(pg_temp.rid(500 + n)), rotulo || ': editar_registro não tocou o próprio sono');
+
+  return next throws_ok(
+    format($q$select public.encerrar_sessao(%L, '2026-11-01 11:00+00')$q$, pg_temp.rid(500 + n)),
+    'P0002', 'registro inexistente', rotulo || ': encerrar_sessao do próprio sono responde registro inexistente');
+  return next ok(pg_temp.intacto_id(pg_temp.rid(500 + n)), rotulo || ': a própria sessão seguiu aberta e intacta');
+
+  return next throws_ok(
+    format($q$select public.excluir_registro(%L)$q$, pg_temp.rid(500 + n)),
+    'P0002', 'registro inexistente', rotulo || ': excluir_registro do próprio sono responde registro inexistente');
+  return next ok(pg_temp.intacto_id(pg_temp.rid(500 + n)), rotulo || ': excluir_registro não tocou o próprio sono');
+
+  return next throws_ok(
+    format($q$select public.restaurar_registro(%L)$q$, pg_temp.rid(500 + n)),
+    'P0002', 'registro inexistente', rotulo || ': restaurar_registro do próprio sono responde registro inexistente');
+  return next ok(pg_temp.intacto_id(pg_temp.rid(500 + n)), rotulo || ': restaurar_registro não tocou o próprio sono');
+
+  return next throws_ok(
+    format($q$select public.editar_nota(%L, 'Invasão', null)$q$, pg_temp.nid(500 + n)),
+    'P0002', 'nota inexistente', rotulo || ': editar_nota da própria nota responde nota inexistente');
+  return next ok(pg_temp.intacto_id(pg_temp.nid(500 + n)), rotulo || ': editar_nota não tocou a própria nota');
+
+  return next throws_ok(
+    format($q$select public.excluir_nota(%L)$q$, pg_temp.nid(500 + n)),
+    'P0002', 'nota inexistente', rotulo || ': excluir_nota da própria nota responde nota inexistente');
+  return next ok(pg_temp.intacto_id(pg_temp.nid(500 + n)), rotulo || ': excluir_nota não tocou a própria nota');
+end;
+$$;
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000041", "role": "authenticated"}';
+select * from pg_temp.bateria_propria(41, 'responsável revogado (objetos próprios)');
+set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000042", "role": "authenticated"}';
+select * from pg_temp.bateria_propria(42, 'cuidador revogado (objetos próprios)');
+set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000043", "role": "authenticated"}';
+select * from pg_temp.bateria_propria(43, 'cuidador que saiu (objetos próprios)');
+set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000044", "role": "authenticated"}';
+select * from pg_temp.bateria_propria(44, 'cuidador vencido (objetos próprios)');
 
 reset role;
 
