@@ -28,6 +28,8 @@ interface Props {
   aoRegistrarMais: (item: ItemMais) => void
   /** Versão do Início: botões sem ação e fora da ordem de Tab. */
   desativado?: boolean
+  /** Ícone só existe na área logada: as miniaturas da página pública os escondem (rótulos iguais). */
+  semIcones?: boolean
   /** O Hoje leva o foco ao primeiro botão quando "Desfazer" e "Fechar" saem da tela. */
   refSono?: Ref<HTMLButtonElement>
 }
@@ -39,6 +41,7 @@ export function BotoesRapidos({
   aoRegistrarFralda,
   aoRegistrarMais,
   desativado = false,
+  semIcones = false,
   refSono,
 }: Props) {
   const [painel, setPainel] = useState<Painel | null>(null)
@@ -92,7 +95,7 @@ export function BotoesRapidos({
           onClick={() => iniciar('sono')}
           {...propsComuns}
         >
-          <Moon size={16} strokeWidth={1.75} className="shrink-0" aria-hidden="true" />
+          {semIcones ? null : <Moon size={16} strokeWidth={1.75} className="shrink-0" aria-hidden="true" />}
           <span>Sono</span>
         </button>
         <button
@@ -102,7 +105,7 @@ export function BotoesRapidos({
           onClick={() => iniciar('mamada')}
           {...propsComuns}
         >
-          <Milk size={16} strokeWidth={1.75} className="shrink-0" aria-hidden="true" />
+          {semIcones ? null : <Milk size={16} strokeWidth={1.75} className="shrink-0" aria-hidden="true" />}
           <span>Mamada</span>
         </button>
         <button
@@ -115,7 +118,7 @@ export function BotoesRapidos({
           onClick={() => setPainel(painel === 'fralda' ? null : 'fralda')}
           {...propsComuns}
         >
-          <Droplets size={16} strokeWidth={1.75} className="shrink-0" aria-hidden="true" />
+          {semIcones ? null : <Droplets size={16} strokeWidth={1.75} className="shrink-0" aria-hidden="true" />}
           <span>Fralda</span>
         </button>
         <button
@@ -125,7 +128,7 @@ export function BotoesRapidos({
           onClick={() => iniciar('tummy')}
           {...propsComuns}
         >
-          <Baby size={16} strokeWidth={1.75} className="shrink-0" aria-hidden="true" />
+          {semIcones ? null : <Baby size={16} strokeWidth={1.75} className="shrink-0" aria-hidden="true" />}
           <span>Tummy time</span>
         </button>
         <button

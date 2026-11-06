@@ -2,11 +2,13 @@ import { Membro } from './Membro.tsx'
 
 // Colo: adulto sentado num banquinho com o bebê enrolado nos braços. Traço contínuo de tinta de
 // uma espessura só, preenchimento chapado nas cores dos tokens. Decorativa: o texto da página
-// diz tudo o que importa.
+// diz tudo o que importa. O viewBox é justo (só a figura e o chão, que termina na base do
+// desenho): lado a lado com as outras, as figuras na mesma largura por unidade têm o mesmo
+// tamanho e não se tocam.
 export function IlustracaoColo({ className }: { className?: string }) {
   return (
     <svg
-      viewBox="0 0 240 240"
+      viewBox="56 50 128 172"
       className={`ilu ${className ?? ''}`}
       aria-hidden="true"
       focusable="false"

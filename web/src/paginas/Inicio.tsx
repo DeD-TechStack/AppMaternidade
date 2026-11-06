@@ -33,6 +33,7 @@ function RegistroRapido() {
   return (
     <BotoesRapidos
       desativado
+      semIcones
       aoIniciarSessao={semAcao}
       aoRegistrarFralda={semAcao}
       aoRegistrarMais={semAcao}
@@ -163,7 +164,7 @@ export function Inicio() {
       <main className="flex-1">
         <section
           aria-labelledby="promessa"
-          className="entrada grid grid-cols-4 gap-x-6 pb-10 pt-8 @min-[46rem]/pagina:grid-cols-12 @min-[46rem]/pagina:pb-14 @min-[46rem]/pagina:pt-12"
+          className="entrada grid grid-cols-4 gap-x-6 pb-8 pt-6 @min-[46rem]/pagina:grid-cols-12 @min-[46rem]/pagina:pb-12 @min-[46rem]/pagina:pt-10"
         >
           <ul className="col-span-4 mb-6 flex flex-wrap gap-2 @min-[46rem]/pagina:col-span-12">
             {PILARES.map((pilar) => (
@@ -181,9 +182,14 @@ export function Inicio() {
         </section>
 
         {/* Campo de urucum: o Hoje de computador no notebook, a Sessão num celular e o Hoje de
-            celular no outro. Os celulares se sobrepõem às margens da tela do notebook e ao espaço
-            vazio embaixo da coluna da direita, nunca a uma linha de texto. Em página estreita
-            ficam só o notebook e o Hoje de celular. */}
+            celular no outro, em toda largura (nada some em página estreita, que só muda a
+            composição). Os celulares se sobrepõem à parte de baixo do notebook, à margem da tela
+            dele e ao espaço vazio sob a coluna da direita, nunca ao que a tela tem de mais
+            importante. As posições e escalas abaixo dão ao conjunto pelo menos 2 rem de folga dos
+            quatro lados do palco, centrado (o palco e a escala estão em .vitrine, no CSS):
+            - abaixo de 46 rem, palco de 54 × 67 rem: notebook a 0,78 no meio e os dois celulares
+              lado a lado, em escala 1, por cima da parte de baixo dele;
+            - a partir de 46 rem, palco de 81 × 56 rem: o notebook entre os dois celulares. */}
         <section
           id="secao-telas"
           aria-labelledby="titulo-telas"
@@ -191,18 +197,24 @@ export function Inicio() {
           className="vitrine entrada atraso-1"
         >
           <div inert aria-hidden="true" className="vitrine-palco">
-            <Aparelho tipo="notebook" className="absolute left-[1rem] top-[2rem] @min-[46rem]/pagina:left-[16rem]">
+            <Aparelho
+              tipo="notebook"
+              tela="hoje"
+              className="absolute left-[5.2rem] top-[2rem] origin-top-left scale-[0.78] @min-[46rem]/pagina:left-[19rem] @min-[46rem]/pagina:top-[3rem] @min-[46rem]/pagina:scale-[1]"
+            >
               <TelaHojeComputador />
             </Aparelho>
             <Aparelho
               tipo="celular"
-              className="absolute left-[0.4rem] top-[21rem] hidden origin-top-left scale-[0.9] @min-[46rem]/pagina:block"
+              tela="sessao"
+              className="absolute left-[2.5rem] top-[24rem] origin-top-left scale-[1] @min-[46rem]/pagina:left-[3rem] @min-[46rem]/pagina:top-[19rem] @min-[46rem]/pagina:scale-[0.9]"
             >
               <TelaSessao />
             </Aparelho>
             <Aparelho
               tipo="celular"
-              className="absolute left-[35rem] top-[25rem] origin-top-left scale-[0.8] @min-[46rem]/pagina:left-[50rem]"
+              tela="hoje"
+              className="absolute left-[27.5rem] top-[27rem] origin-top-left scale-[1] @min-[46rem]/pagina:left-[53rem] @min-[46rem]/pagina:top-[23rem] @min-[46rem]/pagina:scale-[0.8]"
             >
               <TelaHoje />
             </Aparelho>
@@ -221,7 +233,7 @@ export function Inicio() {
         <section
           id="secao-serve"
           aria-labelledby="titulo-serve"
-          className="entrada atraso-2 pb-12 @min-[46rem]/pagina:pb-20"
+          className="entrada atraso-2 pb-8 @min-[46rem]/pagina:pb-12"
         >
           <h2 id="titulo-serve" className="rotulo mb-4">
             {PARA_QUE_SERVE.titulo}
@@ -241,17 +253,22 @@ export function Inicio() {
           ))}
         </section>
 
-        {/* Campo de barro: uma cena só. As três ilustrações têm o mesmo tamanho, apoiam-se na
-            mesma linha de chão (o chão de cada uma vai de borda a borda do desenho) e se
-            sobrepõem um pouco, a de trás sempre sob a da frente. */}
+        {/* Campo de barro: uma cena só. Cada desenho tem o viewBox justo (só a figura e o chão,
+            que vai de borda a borda do desenho e termina na base dele), então as figuras lado a
+            lado formam um chão contínuo e nenhuma toca a outra: não há sobreposição nem margem
+            negativa. A largura de cada uma é proporcional à do próprio desenho (14 % = 128, 232 e
+            188 unidades), o que dá às pessoas a mesma escala em toda largura.
+            - Em página estreita: colo e passeio na primeira linha, e o tapete centrado embaixo,
+              a um vão de 16 px, o mesmo de entre as figuras.
+            - A partir de 46 rem: as três na mesma linha, centradas no campo. */}
         <section
           data-campo="field-1"
-          className="entrada atraso-2 px-6 pb-6 pt-10 @min-[46rem]/pagina:px-12 @min-[46rem]/pagina:pb-8 @min-[46rem]/pagina:pt-14"
+          className="entrada atraso-2 px-6 pb-6 pt-8 @min-[46rem]/pagina:px-12 @min-[46rem]/pagina:pb-8 @min-[46rem]/pagina:pt-10"
         >
-          <div className="mx-auto flex max-w-[56rem] items-end">
-            <IlustracaoColo className="block h-auto w-[46%] flex-none @min-[46rem]/pagina:w-[42%]" />
-            <IlustracaoTapete className="-ml-[19%] block h-auto w-[46%] flex-none @min-[46rem]/pagina:-ml-[13%] @min-[46rem]/pagina:w-[42%]" />
-            <IlustracaoPasseio className="-ml-[19%] block h-auto w-[46%] flex-none @min-[46rem]/pagina:-ml-[13%] @min-[46rem]/pagina:w-[42%]" />
+          <div className="mx-auto flex max-w-[56rem] flex-wrap items-end gap-y-4 @min-[46rem]/pagina:flex-nowrap">
+            <IlustracaoColo className="block h-auto w-[40.4%] flex-none @min-[46rem]/pagina:w-[23.3%]" />
+            <IlustracaoTapete className="order-3 mx-auto block h-auto w-[73.2%] flex-none @min-[46rem]/pagina:order-none @min-[46rem]/pagina:w-[42.2%]" />
+            <IlustracaoPasseio className="block h-auto w-[59.4%] flex-none @min-[46rem]/pagina:w-[34.2%]" />
           </div>
         </section>
 
@@ -260,21 +277,26 @@ export function Inicio() {
           id="secao-madrugada"
           aria-labelledby="titulo-madrugada"
           data-campo="field-2"
-          className="madrugada-grade entrada atraso-2 mt-4 px-6 py-10 @min-[46rem]/pagina:px-12 @min-[46rem]/pagina:py-14"
+          className="madrugada-grade entrada atraso-2 mt-4 px-6 py-8 @min-[46rem]/pagina:px-12 @min-[46rem]/pagina:py-12"
         >
-          {/* Quatro filhos da grade, nesta ordem em coluna única: título e texto, ilustração,
-              celular e legenda. Na grade larga o texto fica no alto, a ilustração apoia-se na base
-              do celular e a legenda fica logo abaixo dele, com a largura dele (ver .madrugada-*). */}
+          {/* Quatro filhos da grade, nesta ordem em coluna única: título e texto, cena (a
+              ilustração), celular e legenda logo abaixo dele, com a largura dele. Nada fica atrás
+              do celular. Na grade larga, duas colunas: à esquerda o texto no alto e a ilustração
+              embaixo, na largura da coluna e com o chão na base do celular; à direita o celular e a
+              legenda (ver .madrugada-* no CSS). */}
           <div className="madrugada-texto">
             <h2 id="titulo-madrugada" className="titulo-secao">
               {MADRUGADA.titulo}
             </h2>
             <p className="texto-medida mt-4">{MADRUGADA.texto}</p>
           </div>
-          <IlustracaoMamada className="madrugada-ilustracao block h-auto w-72 max-w-full @min-[46rem]/pagina:w-80" />
+          <div className="madrugada-cena">
+            <IlustracaoMamada larga className="block" />
+          </div>
           <div className="madrugada-celular relative h-[28rem] w-[18rem] flex-none @min-[46rem]/pagina:h-[31.73rem] @min-[46rem]/pagina:w-[20.4rem]">
             <Aparelho
               tipo="celular"
+              tela="sessao"
               tema="madrugada"
               className="absolute left-0 top-0 origin-top-left scale-[0.75] @min-[46rem]/pagina:scale-[0.85]"
             >
@@ -286,7 +308,7 @@ export function Inicio() {
 
         <section
           aria-labelledby="titulo-fatos"
-          className="entrada atraso-2 py-12 @min-[46rem]/pagina:py-20"
+          className="entrada atraso-2 pt-8 @min-[46rem]/pagina:pt-12"
         >
           <h2 id="titulo-fatos" className="rotulo mb-6">
             {FATOS.titulo}
@@ -303,7 +325,7 @@ export function Inicio() {
 
         <section
           aria-labelledby="titulo-chamada"
-          className="entrada atraso-2 flex flex-col items-center border-t py-14 text-center @min-[46rem]/pagina:py-24"
+          className="entrada atraso-2 mt-8 flex flex-col items-center border-t py-12 text-center @min-[46rem]/pagina:mt-12 @min-[46rem]/pagina:py-16"
         >
           <h2 id="titulo-chamada" className="titulo-secao [font-size:clamp(2.25rem,5vw,3.5rem)]">
             {CHAMADA.titulo}
