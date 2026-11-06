@@ -21,6 +21,11 @@ Horários em America/Sao_Paulo, tirados do relógio da máquina ou de carimbos d
 
 Uma linha por marco, a mais recente no topo. O estado corrente fica em [Retomada do site](Retomada_Site.md), e o detalhe de cada marco está no cartão Kanban citado.
 
+- 06/11/2026: **retomada e MAT-44 integrada.**
+  - A MAT-44 (t_10f8dad7, candidato 3a8789d, aprovado na revisão 3) entrou na main em 80d6c4f, com 6 commits idênticos e o check de 451 testes passando.
+  - O G6 não foi cumprido. O leitor cego do líder deu de 5,78 a 7,12, contra 8,03 a 8,17 do revisor. Integrei mesmo assim, por decisão do líder, e os 5 achados viram a correção MAT-44b, que roda depois da MAT-48a.
+  - O cartão da MAT-48a (t_f13634a3) foi criado, com a spec v2.3: o build não recebe as variáveis do banco até a MAT-37.
+  - O isolar_supabase ganhou os slots 37 a 41. A releitura R-B das MAT-36 a 41 está em curso.
 - 06/11/2026: **PAUSA para a janela v0.23.0** (decisão de Daniel). As correções R-B da MAT-45 (t_ad018d1e, f738247) e da MAT-47 (t_e0627701, c16b68c) foram integradas: o banco completo passou com 56 arquivos e 3.485 asserções, e a main está em 881275d. A MAT-44 (t_10f8dad7) foi APROVADA no candidato 3a8789d, e falta o portão do líder (leitor cego e rebase). As specs MAT-36 v3, MAT-37 a 41 e MAT-48b estão no staging, ainda sem cartão. O próximo passo está em Retomada_Site.md, na seção PAUSA.
 - 05/11/2026: **correção R-B da MAT-46 integrada** (t_d4e788ea, candidato a80924e, aprovado na revisão 1). Foram 5 commits, aplicados com cherry-pick, e o range-diff saiu idêntico. O banco completo passou com 49 arquivos e 3.138 asserções, e o check com 294. A main ficou em 4cc3e70.
 - 05/11/2026: **bancos de conta e família, rotina e comunidade integrados** (MAT-45 bc91d76, MAT-46 6d4e03f, MAT-47 3385db4, todos aprovados pelo revisor). Foram aplicados com cherry-pick, e o range-diff deu 26 commits idênticos. O banco completo deu PASS: 45 arquivos de teste, 2.930 asserções. A main ficou em 29cccc4. A releitura das specs por outra família foi feita pela rota R-B (codex gpt-6-astra, só leitura), porque o cartão de leitura cai num bug do Hermes no Windows. Ela deu B=3 e M=23 no total. As decisões ficaram no adendo `_staging/appmaternidade/DECISOES_BANCO_RB_20261105.md` (sha256 ac29c080), e as correções estão em 3 cartões paralelos: t_ad018d1e, t_d4e788ea e t_e0627701.
