@@ -177,6 +177,12 @@
   /* A etiqueta é só o fundo, o canto e o respiro; a tipografia vem de .rotulo. */
   .etiqueta {
     display: inline-block;
+    /* Nunca passa da largura da linha: com a fonte ampliada uma palavra só ("Desenvolvimento")
+       é mais larga que a página; ela quebra dentro da etiqueta (hífen automático, com o idioma
+       pt-BR do html) sem mudar o texto. */
+    max-width: 100%;
+    hyphens: auto;
+    overflow-wrap: anywhere;
     border-radius: var(--radius-tag, 3px);
     background-color: var(--cor-papel-fundo);
     padding: 0.375rem 0.5rem;
@@ -675,18 +681,92 @@
     height: auto;
   }
 
+  /* O celular da madrugada escala com a largura da página em rem, como a vitrine: a caixa é o
+     tamanho natural do aparelho (24 rem de largura, na proporção 9 por 14) vezes uma escala que
+     é variável, trocada em degraus de @container pagina. As regras sem condição só leem a
+     variável, então a cascata não desfaz nenhum degrau. A caixa mais o padding lateral da seção
+     (3 rem abaixo de 46 rem, 6 rem a partir dela) cabe na página em qualquer largura, inclusive
+     com a fonte raiz ampliada (a página tem menos rem). Onde já cabia o tamanho é o de antes:
+     0,75 (18 rem) abaixo de 46 rem e 0,85 (20,4 rem) a partir de 46 rem. A legenda lê a mesma
+     escala, para ter sempre a largura do celular. */
+  .madrugada-celular,
+  .madrugada-legenda {
+    --celular-escala: 0.08;
+  }
+
   .madrugada-celular {
+    position: relative;
+    flex: none;
     justify-self: center;
+    width: calc(24rem * var(--celular-escala));
+    height: calc(37.3333rem * var(--celular-escala));
   }
 
   .madrugada-legenda {
-    max-width: 18rem;
+    max-width: calc(24rem * var(--celular-escala));
     justify-self: center;
   }
 
-  @container pagina (min-width: 46rem) {
+  @container pagina (min-width: 8rem) {
+    .madrugada-celular,
     .madrugada-legenda {
-      max-width: 20.4rem;
+      --celular-escala: 0.2;
+    }
+  }
+
+  @container pagina (min-width: 10rem) {
+    .madrugada-celular,
+    .madrugada-legenda {
+      --celular-escala: 0.29;
+    }
+  }
+
+  @container pagina (min-width: 12rem) {
+    .madrugada-celular,
+    .madrugada-legenda {
+      --celular-escala: 0.37;
+    }
+  }
+
+  @container pagina (min-width: 14rem) {
+    .madrugada-celular,
+    .madrugada-legenda {
+      --celular-escala: 0.45;
+    }
+  }
+
+  @container pagina (min-width: 16rem) {
+    .madrugada-celular,
+    .madrugada-legenda {
+      --celular-escala: 0.54;
+    }
+  }
+
+  @container pagina (min-width: 18rem) {
+    .madrugada-celular,
+    .madrugada-legenda {
+      --celular-escala: 0.62;
+    }
+  }
+
+  @container pagina (min-width: 20rem) {
+    .madrugada-celular,
+    .madrugada-legenda {
+      --celular-escala: 0.7;
+    }
+  }
+
+  @container pagina (min-width: 21rem) {
+    .madrugada-celular,
+    .madrugada-legenda {
+      --celular-escala: 0.75;
+    }
+  }
+
+  @container pagina (min-width: 46rem) {
+    .madrugada-celular,
+    .madrugada-legenda {
+      --celular-escala: 0.85;
     }
   }
 
