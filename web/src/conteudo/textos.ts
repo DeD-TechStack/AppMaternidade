@@ -103,3 +103,7 @@ export const MINIATURAS = {
     acoes: ['Encerrar', 'Encerrar e anotar', 'Descartar'],
   },
 } as const
+
+// O aviso de toda tela quando o site não tem as variáveis do banco: nada é salvo.
+export const AVISO_DEMONSTRACAO =
+  'Demonstração sem banco: nada do que você registra aqui é salvo. Ao recarregar a página, tudo volta ao começo.'
