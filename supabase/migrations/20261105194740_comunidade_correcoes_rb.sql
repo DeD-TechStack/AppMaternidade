@@ -42,12 +42,34 @@ $$;
 revoke execute on function public.pode_responder(uuid, uuid) from public, anon;
 grant execute on function public.pode_responder(uuid, uuid) to authenticated;
 
--- 47-M1. As quatro funções que agem por papel de plataforma seguem a mesma ordem:
---   1. conferência inicial do papel (recusa barata, antes de qualquer trava);
---   2. trava da linha-alvo;
---   3. reconferência do papel do chamador, já com a trava na mão: a decisão vale pela situação de agora
---      (cada comando de uma função plpgsql em READ COMMITTED enxerga o que foi confirmado até ali);
---   4. as demais regras e a ação.
+-- 47-M1. As quatro funções que agem por papel de plataforma decidem pela situação DEPOIS de toda espera.
+-- Em READ COMMITTED cada comando de uma função plpgsql enxerga o que foi confirmado até o seu início; por
+-- isso a reconferência é um comando próprio, depois da última espera possível, e lê a linha de papel do
+-- próprio chamador com trava compartilhada: uma revogação concorrente do chamador espera esta transação
+-- terminar (ou já terminou, e a leitura não acha a linha).
+--
+-- Ordem das travas (a mesma em todas, para não criar impasse):
+--   1. conferência inicial do papel com tem_papel_plataforma (recusa barata, antes de qualquer trava);
+--   2. só conceder e revogar, que mudam papeis_plataforma: trava consultiva de transação com a chave fixa
+--      201863462913 = (47::bigint << 32) | 1, a mesma nas duas. Toda espera entre concessões e revogações
+--      acontece aqui, antes de qualquer trava de linha e antes da reconferência. Nenhuma outra função usa a chave;
+--   3. linhas de papel (revogar de admin: todas as linhas de admin em ordem de conta_id), depois a linha-alvo;
+--      moderar_conteudo e decidir_denuncia travam o tópico ou a resposta, depois a denúncia;
+--   4. reconferência: a linha de papel vigente do próprio chamador, lida com trava compartilhada; sem linha,
+--      42501 sem papel de plataforma;
+--   5. as demais regras e a ação.
+-- Esperas possíveis, função por função:
+--   conceder_papel_plataforma: a trava consultiva (outra concessão ou revogação em curso); a linha-alvo
+--     (gravação direta ou exclusão de conta que a toque); o upsert, que só espera linha que já está travada
+--     por esta própria transação (a consultiva exclui as outras funções) ou por gravação direta de fora.
+--   revogar_papel_plataforma: a trava consultiva; as linhas de admin e a linha-alvo (as mesmas fontes de fora).
+--   moderar_conteudo: a linha do tópico ou da resposta (edição do autor, outra moderação) e a linha da denúncia
+--     (decidir_denuncia em curso). Não usa a trava consultiva: não muda papel, e a trava compartilhada da linha
+--     do chamador, tomada por último, faz uma revogação dele esperar.
+--   decidir_denuncia: a linha da denúncia (outra decisão, moderar_conteudo com a denúncia) e depois nada mais.
+-- Nenhuma função segura linha de papel enquanto espera tópico, resposta ou denúncia, e as duas que mudam papel
+-- nunca pegam essas linhas: não há ciclo entre elas. Um impasse vindo de fora (exclusão de conta em cascata)
+-- ainda cairia no 40P01 abaixo.
 -- 40P01 (impasse) vira "tente de novo" e 23502 vira "parametro obrigatorio", como no catálogo da MAT-43;
 -- os demais erros, inclusive os do catálogo desta tarefa, passam sem mudança.
 
@@ -120,8 +142,15 @@ begin
     end if;
   end if;
 
-  -- Reconferência com as travas na mão: quem perdeu o papel enquanto esperava não decide mais.
-  if not public.tem_papel_plataforma(array['moderador', 'admin']::public.papel_plataforma[]) then
+  -- Reconferência depois da última espera: a linha de papel vigente do chamador, com trava compartilhada.
+  perform 1
+  from public.papeis_plataforma pp
+  where pp.conta_id = v_conta
+    and pp.papel in ('moderador', 'admin')
+    and (pp.valido_ate is null or pp.valido_ate > now())
+  for share;
+
+  if not found then
     raise exception using errcode = '42501', message = 'sem papel de plataforma';
   end if;
 
@@ -210,8 +239,15 @@ begin
     raise exception using errcode = 'P0002', message = 'denuncia inexistente';
   end if;
 
-  -- Reconferência com a trava na mão: quem perdeu o papel enquanto esperava não decide mais.
-  if not public.tem_papel_plataforma(array['moderador', 'admin']::public.papel_plataforma[]) then
+  -- Reconferência depois da última espera: a linha de papel vigente do chamador, com trava compartilhada.
+  perform 1
+  from public.papeis_plataforma pp
+  where pp.conta_id = v_conta
+    and pp.papel in ('moderador', 'admin')
+    and (pp.valido_ate is null or pp.valido_ate > now())
+  for share;
+
+  if not found then
     raise exception using errcode = '42501', message = 'sem papel de plataforma';
   end if;
 
@@ -272,8 +308,10 @@ end;
 $$;
 
 -- Concede um papel de plataforma, ou renova se a conta já o tem (D19). Só o admin concede.
--- A linha-alvo (conta e papel) é travada se já existir; se ainda não existe, a chave primária
--- serializa duas concessões iguais pelo on conflict.
+-- Ordem: conferência inicial, trava consultiva (chave fixa 201863462913), linha-alvo se já existir,
+-- reconferência da linha de admin do chamador com trava compartilhada, upsert e auditoria.
+-- Na primeira concessão não há linha-alvo para travar; a trava consultiva é que serializa as concessões e
+-- revogações, de modo que a única espera possível fica antes da reconferência.
 create or replace function public.conceder_papel_plataforma(
   p_conta uuid,
   p_papel public.papel_plataforma,
@@ -286,6 +324,9 @@ security definer
 set search_path = ''
 as $$
 declare
+  -- Chave fixa da comunidade para mudar papel de plataforma: (47::bigint << 32) | 1.
+  -- A mesma em conceder_papel_plataforma e revogar_papel_plataforma; nenhuma outra função a usa.
+  c_trava_papeis constant bigint := 201863462913;
   v_conta uuid := (select auth.uid());
   v_nova boolean;
   v_id uuid;
@@ -306,6 +347,9 @@ begin
     raise exception using errcode = 'P0001', message = 'validade no passado';
   end if;
 
+  -- Trava consultiva de transação: toda espera entre concessões e revogações acontece aqui.
+  perform pg_advisory_xact_lock(c_trava_papeis);
+
   if not exists (select 1 from public.contas c where c.id = p_conta) then
     raise exception using errcode = 'P0002', message = 'conta inexistente';
   end if;
@@ -316,8 +360,15 @@ begin
     and pp.papel = p_papel
   for update;
 
-  -- Reconferência com a trava na mão: quem perdeu o papel de admin enquanto esperava não concede mais.
-  if not public.tem_papel_plataforma(array['admin']::public.papel_plataforma[]) then
+  -- Reconferência depois da última espera: a linha de admin vigente do chamador, com trava compartilhada.
+  perform 1
+  from public.papeis_plataforma pp
+  where pp.conta_id = v_conta
+    and pp.papel = 'admin'
+    and (pp.valido_ate is null or pp.valido_ate > now())
+  for share;
+
+  if not found then
     raise exception using errcode = '42501', message = 'sem papel de plataforma';
   end if;
 
@@ -348,6 +399,8 @@ end;
 $$;
 
 -- Revoga um papel de plataforma. Nunca deixa o sistema sem admin vigente. Só o admin revoga.
+-- Ordem: conferência inicial, trava consultiva (a mesma chave fixa de conceder), linhas de admin (só ao revogar
+-- admin), linha-alvo, reconferência da linha de admin do chamador com trava compartilhada, regras e exclusão.
 create or replace function public.revogar_papel_plataforma(
   p_conta uuid,
   p_papel public.papel_plataforma,
@@ -359,6 +412,8 @@ security definer
 set search_path = ''
 as $$
 declare
+  -- Chave fixa da comunidade para mudar papel de plataforma: (47::bigint << 32) | 1 (a de conceder_papel_plataforma).
+  c_trava_papeis constant bigint := 201863462913;
   v_conta uuid := (select auth.uid());
   v_vigente boolean;
   v_id uuid;
@@ -374,6 +429,9 @@ begin
   if p_motivo is null or btrim(p_motivo) = '' then
     raise exception using errcode = 'P0001', message = 'motivo vazio';
   end if;
+
+  -- Trava consultiva de transação: toda espera entre concessões e revogações acontece aqui.
+  perform pg_advisory_xact_lock(c_trava_papeis);
 
   -- Trava todas as linhas de admin, em ordem fixa, antes de contar: duas revogações
   -- ao mesmo tempo não zeram os admins nem se travam uma à outra.
@@ -396,8 +454,15 @@ begin
     raise exception using errcode = 'P0002', message = 'papel inexistente';
   end if;
 
-  -- Reconferência com as travas na mão: quem perdeu o papel de admin enquanto esperava não revoga mais.
-  if not public.tem_papel_plataforma(array['admin']::public.papel_plataforma[]) then
+  -- Reconferência depois da última espera: a linha de admin vigente do chamador, com trava compartilhada.
+  perform 1
+  from public.papeis_plataforma pp
+  where pp.conta_id = v_conta
+    and pp.papel = 'admin'
+    and (pp.valido_ate is null or pp.valido_ate > now())
+  for share;
+
+  if not found then
     raise exception using errcode = '42501', message = 'sem papel de plataforma';
   end if;
 
