@@ -9,11 +9,13 @@ import { usePrefereMovimentoReduzido } from './reduzido.ts'
 // aparece inteira e parada.
 
 interface Props {
-  /** Largura e cor da linha: classes de quem usa a peça (a largura padrão é a do contêiner). */
+  /** Largura e cor da linha: classes de quem usa a peça. Sem largura, ocupa o contêiner. */
   className?: string
 }
 
-const LINHA = 'block h-0.5 w-full origin-left rounded-full bg-current'
+// Sem classe de largura: o span é de bloco e ocupa o contêiner; quem usa a peça decide a largura
+// por `className` (o `cn` só junta classes, então uma largura aqui brigaria com a de fora).
+const LINHA = 'block h-0.5 origin-left rounded-full bg-current'
 
 export function TracoDesenhado({ className }: Props) {
   const reduzido = usePrefereMovimentoReduzido()

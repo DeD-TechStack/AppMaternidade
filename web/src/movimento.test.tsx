@@ -531,6 +531,18 @@ describe('VIS4-20: interação', () => {
         expect(camadaDe(container).getAttribute('data-aberta')).toBe('true')
         expect(getComputedStyle(camadaDe(container)).opacity).not.toBe('0')
       })
+
+      for (const semHover of [false, true]) {
+        it(`${semHover ? 'no ramo de toque' : 'no ramo com hover'} a camada herda o arredondamento do cartão, sem cortar o cartão`, () => {
+          simularMidia({ reduzido, semHover })
+          const { container } = render(cartao())
+
+          expect(camadaDe(container).classList.contains('rounded-[inherit]')).toBe(true)
+          // Sem overflow no cartão: ele cortaria o anel de foco dos focáveis de dentro.
+          const raiz = container.firstElementChild!
+          expect([...raiz.classList].filter((c) => /(^|:)overflow-/.test(c))).toEqual([])
+        })
+      }
     })
 
     describe(`TextoAnimado ${modo}`, () => {
@@ -578,6 +590,31 @@ describe('VIS4-20: interação', () => {
     expect(linha.classList.contains('origin-left')).toBe(true)
     expect(linha.classList.contains('block')).toBe(true)
     expect(container.querySelector('svg')).toBeNull()
+  })
+
+  describe('a largura do traço é de quem usa a peça', () => {
+    const larguras = (no: Element) => [...no.classList].filter((c) => /(^|:)w-/.test(c))
+
+    for (const reduzido of [false, true]) {
+      it(`${reduzido ? 'com' : 'sem'} movimento reduzido: sem className não há classe de largura; com w-48 há só ela`, () => {
+        simularMidia({ reduzido })
+        const sem = render(<TracoDesenhado />)
+        expect(larguras(sem.container.firstElementChild!)).toEqual([])
+        sem.unmount()
+
+        const com = render(<TracoDesenhado className="w-48" />)
+        expect(larguras(com.container.firstElementChild!)).toEqual(['w-48'])
+      })
+    }
+
+    it('o traço da Cortina tem só w-48, centrado', () => {
+      simularMidia()
+      const { container } = render(<Cortina comTraco />)
+
+      const traco = container.querySelector('span[aria-hidden="true"].origin-left')!
+      expect(larguras(traco)).toEqual(['w-48'])
+      expect(traco.parentElement!.className).toMatch(/\bplace-items-center\b/)
+    })
   })
 
   it('nenhum arquivo de movimento/ nem de componentes/terceiros/ cria SVG, de nenhuma forma', () => {
