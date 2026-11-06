@@ -676,14 +676,23 @@ describe('MAT-44 r2 B5: campo da madrugada no Início', () => {
     expect(celular.parentElement).toBe(secao)
   })
 
-  it('o celular tem escala de pelo menos 0,75 (o texto da miniatura fica com 12 px ou mais)', async () => {
+  // Rodada 7: a escala do celular deixou de ser uma classe do JSX (0,75 e 0,85 fixos) e passou a ser
+  // a variável --celular-escala, trocada em degraus de @container; onde o celular já cabia a
+  // escala é a mesma de antes. A conferência de que ele cabe em toda largura está no bloco "r7 #1".
+  it('o celular tem escala de pelo menos 0,75 onde cabe (o texto da miniatura fica com 12 px ou mais) e 0,85 na página larga', async () => {
     const secao = await madrugadaDoInicio()
 
     const celular = secao.querySelector('[data-aparelho="celular"]')!
-    const escalas = [...celular.className.matchAll(/scale-\[([\d.]+)\]/g)].map((m) => parseFloat(m[1]))
-    expect(escalas.length).toBeGreaterThanOrEqual(2)
-    for (const escala of escalas) expect(escala * 16).toBeGreaterThanOrEqual(12)
-    expect(Math.max(...escalas)).toBeGreaterThanOrEqual(0.85)
+    expect(celular.getAttribute('class')).toContain('[scale:var(--celular-escala)]')
+    const escalas = regrasComContexto(estiloGlobal)
+      .filter((r) => r.seletor === '.madrugada-celular' && '--celular-escala' in r.props)
+      .map((r) => ({ condicao: r.condicao, escala: parseFloat(r.props['--celular-escala']) }))
+    const larga = escalas.filter((e) => e.condicao && /min-width:\s*46rem/.test(e.condicao))
+    const cabe = escalas.filter((e) => e.condicao && /min-width:\s*21rem/.test(e.condicao))
+    expect(cabe.length).toBe(1)
+    expect(cabe[0].escala * 16).toBeGreaterThanOrEqual(12)
+    expect(larga.length).toBe(1)
+    expect(larga[0].escala).toBeGreaterThanOrEqual(0.85)
   })
 
   it('a miniatura da madrugada traz o cronômetro e as ações da sessão, em botões grandes', async () => {
@@ -1560,5 +1569,237 @@ describe('MAT-44 r6 #2 e #3: campo de barro com as pessoas na mesma escala e nad
     const vao = /(?:^|\s)gap-y-(\d+)(?:\s|$)/.exec(cena.className)
     expect(vao).not.toBeNull()
     expect(parseInt(vao![1], 10)).toBeLessThanOrEqual(4)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Rodada 7: rolagem horizontal no Início com a fonte ampliada. Com a fonte raiz em 200% a página
+// tem metade das rem (390 px = 12 rem de largura, menos as margens); tudo o que tem tamanho fixo em
+// rem, ou margem negativa, ou uma palavra comprida sem quebra, passa da largura. As regras abaixo
+// valem para a classe do defeito, em toda largura, e não fixam medida estética.
+
+describe('MAT-44 r7 #1: o celular da madrugada escala com a largura da página, em rem', () => {
+  const celularEm = (largura: number, seletor = '.madrugada-celular'): number => {
+    const regras = regrasComContexto(estiloGlobal)
+      .filter((r) => r.seletor === seletor)
+      .sort((a, b) => a.ordem - b.ordem)
+    let escala = Number.NaN
+    for (const regra of regras) {
+      if (regra.condicao) {
+        const minimo = /min-width:\s*([\d.]+)rem/.exec(regra.condicao)
+        if (!minimo || largura < parseFloat(minimo[1])) continue
+      }
+      if ('--celular-escala' in regra.props) escala = parseFloat(regra.props['--celular-escala'])
+    }
+    return escala
+  }
+  const larguraNatural = () =>
+    parseFloat(/width:\s*([\d.]+)rem/.exec(regrasDe(estiloGlobal).find((r) => r.seletor === '.aparelho-celular')!.corpo)![1])
+
+  async function paddingLateral(): Promise<{ estreita: number; larga: number }> {
+    const { container } = renderizarRota('/')
+    await screen.findByRole('heading', { level: 1 })
+    const classe = container.querySelector('#secao-madrugada')!.getAttribute('class')!
+    const base = /(?:^|\s)px-(\d+)(?:\s|$)/.exec(classe)![1]
+    const larga = /@min-\[46rem\]\/pagina:px-(\d+)/.exec(classe)![1]
+    return { estreita: parseInt(base, 10) / 4, larga: parseInt(larga, 10) / 4 }
+  }
+
+  it('de 6 a 140 rem, a caixa do celular mais o padding lateral da seção cabe na largura da página', async () => {
+    const padding = await paddingLateral()
+
+    for (let largura = 6; largura <= 140; largura += 0.25) {
+      const escala = celularEm(largura)
+      expect(escala, `escala em ${largura} rem`).toBeGreaterThan(0)
+      const caixa = larguraNatural() * escala
+      const lateral = 2 * (largura >= 46 ? padding.larga : padding.estreita)
+      expect(caixa, `caixa de ${caixa} rem em ${largura} rem de página (padding ${lateral})`).toBeLessThanOrEqual(
+        largura - lateral + 1e-9,
+      )
+    }
+  })
+
+  it('nas larguras em que já cabia, o tamanho é o de antes: 18 rem abaixo de 46 rem e 20,4 rem a partir de 46 rem', () => {
+    for (let largura = 21; largura < 46; largura += 0.25) {
+      expect(larguraNatural() * celularEm(largura), `${largura} rem`).toBeCloseTo(18, 6)
+    }
+    for (let largura = 46; largura <= 140; largura += 0.25) {
+      expect(larguraNatural() * celularEm(largura), `${largura} rem`).toBeCloseTo(20.4, 6)
+    }
+  })
+
+  it('a escala só cresce com a largura dentro de cada faixa (a troca em 46 rem reinicia a contagem)', () => {
+    let anterior = 0
+    for (let largura = 6; largura <= 140; largura += 0.25) {
+      const escala = celularEm(largura)
+      if (Math.abs(largura - 46) < 1e-9) anterior = 0
+      expect(escala, `${largura} rem`).toBeGreaterThanOrEqual(anterior)
+      anterior = escala
+    }
+  })
+
+  it('a caixa e a altura leem a escala por variável, e a altura segue a proporção do aparelho', () => {
+    const regras = regrasComContexto(estiloGlobal).filter((r) => r.seletor === '.madrugada-celular' && r.condicao === null)
+    const natural = larguraNatural()
+    const proporcao = /aspect-ratio:\s*(\d+)\s*\/\s*(\d+)/.exec(regrasDe(estiloGlobal).find((r) => r.seletor === '.aparelho-celular')!.corpo)!
+    const alturaNatural = natural * (parseFloat(proporcao[2]) / parseFloat(proporcao[1]))
+
+    const largura = regras.map((r) => /^calc\(([\d.]+)rem \* var\(--celular-escala\)\)$/.exec(r.props['width'] ?? '')).find(Boolean)
+    const altura = regras.map((r) => /^calc\(([\d.]+)rem \* var\(--celular-escala\)\)$/.exec(r.props['height'] ?? '')).find(Boolean)
+    expect(largura, 'width calc(natural * escala)').toBeTruthy()
+    expect(altura, 'height calc(natural * escala)').toBeTruthy()
+    expect(parseFloat(largura![1])).toBeCloseTo(natural, 6)
+    expect(parseFloat(altura![1])).toBeCloseTo(alturaNatural, 2)
+  })
+
+  it('no JSX não sobra medida fixa em rem nem escala numérica para o celular da madrugada', async () => {
+    const { container } = renderizarRota('/')
+    await screen.findByRole('heading', { level: 1 })
+
+    const caixa = container.querySelector('.madrugada-celular')!
+    expect(caixa.getAttribute('class')).not.toMatch(/(?:^|\s|:)[wh]-\[[\d.]+rem\]/)
+    const celular = caixa.querySelector('[data-aparelho="celular"]')!
+    expect(celular.getAttribute('class')).not.toMatch(/(?:^|\s|:)scale-\[[\d.]+\]/)
+    expect(celular.getAttribute('class')).toContain('[scale:var(--celular-escala)]')
+  })
+
+  it('a legenda tem a largura do celular em toda largura: mesma escala e largura máxima pela variável', () => {
+    for (let largura = 6; largura <= 140; largura += 0.25) {
+      expect(celularEm(largura, '.madrugada-legenda'), `${largura} rem`).toBe(celularEm(largura))
+    }
+    const base = regrasComContexto(estiloGlobal).filter((r) => r.seletor === '.madrugada-legenda' && r.condicao === null)
+    expect(base.some((r) => /^calc\([\d.]+rem \* var\(--celular-escala\)\)$/.test(r.props['max-width'] ?? ''))).toBe(true)
+  })
+})
+
+describe('MAT-44 r7 #2: a etiqueta nunca passa da largura da linha', () => {
+  it('.etiqueta limita a largura a 100% e quebra a palavra dentro dela, com hífen automático', () => {
+    const regras = regrasComContexto(estiloGlobal).filter((r) => r.seletor === '.etiqueta')
+    const props = Object.assign({}, ...regras.map((r) => r.props)) as Record<string, string>
+
+    expect(props['max-width']).toBe('100%')
+    expect(props['hyphens']).toBe('auto')
+    expect(props['overflow-wrap']).toMatch(/^(anywhere|break-word)$/)
+  })
+
+  it('as etiquetas do Início são itens de uma linha que quebra (flex-wrap), com a classe .etiqueta', async () => {
+    const { container } = renderizarRota('/')
+    await screen.findByRole('heading', { level: 1 })
+
+    const etiquetas = [...container.querySelectorAll('li.etiqueta')]
+    expect(etiquetas.map((e) => e.textContent)).toEqual(['Rotina', 'Desenvolvimento', 'Cuidado compartilhado', 'Comunidade'])
+    for (const etiqueta of etiquetas) expect(etiqueta.parentElement!.className).toMatch(/\bflex-wrap\b/)
+    expect(document.documentElement.getAttribute('lang') ?? 'pt-BR').toBe('pt-BR')
+    expect(lerTexto('../index.html')).toContain('lang="pt-BR"')
+  })
+})
+
+describe('MAT-44 r7 #3: nenhuma margem negativa leva um item da página pública para além da borda', () => {
+  it('no Início, nenhum elemento fora dos aparelhos usa margem negativa em nenhuma faixa', async () => {
+    const { container } = renderizarRota('/')
+    await screen.findByRole('heading', { level: 1 })
+
+    const achados = [...container.querySelectorAll<HTMLElement>('[class]')]
+      .filter((e) => e.closest('[inert]') === null)
+      .flatMap((e) => [...e.classList].filter((t) => /(^|:)-m[trblxyse]?-/.test(t)).map((t) => `${e.tagName.toLowerCase()} ${t}`))
+    expect(achados).toEqual([])
+  })
+
+  it('a navegação do topo continua com os três links e alvos de pelo menos 44 px', async () => {
+    const { container } = renderizarRota('/')
+    await screen.findByRole('heading', { level: 1 })
+
+    const links = [...container.querySelectorAll('header nav a')]
+    expect(links).toHaveLength(3)
+    for (const link of links) expect(link.classList.contains('alvo-toque')).toBe(true)
+    const alvo = regrasComContexto(estiloGlobal).filter((r) => r.seletor === '.alvo-toque').map((r) => r.props)
+    expect(alvo.some((p) => p['min-width'] === '44px' && p['min-height'] === '44px')).toBe(true)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Rodada 8: nenhum texto do Início passa da própria caixa, em toda largura e com a fonte ampliada.
+// A regra é uma só, na raiz do Início, e herdada: quebra de palavra só quando a palavra não cabe
+// (overflow-wrap: break-word, a classe break-words do Tailwind). Sem hífen automático nos títulos,
+// sem overflow-wrap: anywhere (que muda a largura mínima de itens de grade e de flex) e sem
+// esconder nada. O Hoje e a Sessão não recebem a regra.
+
+describe('MAT-44 r8: a raiz do Início quebra a palavra que não cabe, e só ela', () => {
+  async function raizDoInicio() {
+    const { container } = renderizarRota('/')
+    await screen.findByRole('heading', { level: 1 })
+    return container.firstElementChild as HTMLElement
+  }
+
+  /** Os tokens de classe sem a variante (@min-[…]/pagina:, hover:, …). */
+  const semVariante = (token: string) => token.slice(token.lastIndexOf(':') + 1)
+
+  it('o contêiner raiz do Início declara a quebra (break-words) e continua sendo o contêiner da página', async () => {
+    const raiz = await raizDoInicio()
+
+    expect(raiz.matches('[class~="@container/pagina"]')).toBe(true)
+    expect(raiz.classList.contains('break-words')).toBe(true)
+  })
+
+  it('a quebra é a de palavra que não cabe: sem anywhere, sem hífen automático e sem esconder nada na raiz', async () => {
+    const raiz = await raizDoInicio()
+
+    const tokens = [...raiz.classList].map(semVariante)
+    for (const proibido of ['wrap-anywhere', '[overflow-wrap:anywhere]', 'hyphens-auto', '[hyphens:auto]', 'break-all', 'break-keep']) {
+      expect(tokens, proibido).not.toContain(proibido)
+    }
+    expect(tokens.filter((t) => /^overflow(-[xy])?-(hidden|clip)$/.test(t))).toEqual([])
+    expect(tokens.filter((t) => /^(invisible|hidden|sr-only)$/.test(t))).toEqual([])
+  })
+
+  it('nenhum elemento do Início fora dos aparelhos desfaz a quebra pelas classes', async () => {
+    const raiz = await raizDoInicio()
+
+    const desfazem = /^(break-normal|wrap-normal|whitespace-nowrap|text-nowrap|whitespace-pre|\[overflow-wrap:normal\]|\[white-space:nowrap\]|\[word-break:keep-all\])$/
+    const achados = [...raiz.querySelectorAll<HTMLElement>('[class]')]
+      .filter((e) => e.closest('[inert]') === null)
+      .flatMap((e) => [...e.classList].filter((t) => desfazem.test(semVariante(t))).map((t) => `${e.tagName.toLowerCase()} ${t}`))
+    expect(achados).toEqual([])
+  })
+
+  it('nenhuma classe do CSS usada no Início, fora dos aparelhos, desfaz a quebra', async () => {
+    const raiz = await raizDoInicio()
+
+    const usadas = new Set(
+      [...raiz.querySelectorAll<HTMLElement>('[class]')]
+        .filter((e) => e.closest('[inert]') === null)
+        .flatMap((e) => [...e.classList]),
+    )
+    const achados = regrasComContexto(estiloGlobal)
+      .filter((r) => [...r.seletor.matchAll(/\.([\w-]+)/g)].some((m) => usadas.has(m[1])))
+      .filter(
+        (r) =>
+          r.props['overflow-wrap'] === 'normal' ||
+          /^(nowrap|pre)$/.test(r.props['white-space'] ?? '') ||
+          r.props['word-break'] === 'keep-all',
+      )
+      .map((r) => r.seletor)
+    expect(achados).toEqual([])
+  })
+
+  it('o Hoje e a Sessão não recebem a regra: nenhum elemento tem break-words, nem no layout compartilhado', async () => {
+    for (const caminho of ['/app/hoje', '/app/sessao']) {
+      const { container, unmount } = renderizarRota(caminho)
+      await screen.findByRole('heading', { level: 1 })
+      expect(container.querySelectorAll('.break-words'), caminho).toHaveLength(0)
+      unmount()
+    }
+    for (const arquivo of ['componentes/Layout.tsx', 'componentes/ColunaApp.tsx', 'paginas/Hoje.tsx', 'paginas/Sessao.tsx']) {
+      expect(lerTexto(arquivo), arquivo).not.toContain('break-words')
+    }
+  })
+
+  it('nem o html, nem o body, nem o seletor universal declaram quebra ou escondem o excesso', () => {
+    const globais = regrasComContexto(estiloGlobal).filter((r) => ['html', 'body', '*', ':root'].includes(r.seletor))
+    for (const regra of globais) {
+      for (const propriedade of ['overflow-wrap', 'word-break', 'overflow', 'overflow-x', 'hyphens']) {
+        expect(regra.props, `${regra.seletor} { ${propriedade} }`).not.toHaveProperty(propriedade)
+      }
+    }
   })
 })

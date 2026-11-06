@@ -139,21 +139,28 @@ export function Inicio() {
   // conteúdo do raiz em 768 px com fonte 100% (768 − 2 × 2%). O padding lateral, abaixo, é a
   // única variante de janela da página: um contêiner não consulta o próprio tamanho.
   //
+  // break-words (overflow-wrap: break-word) é herdado por todo texto da página: com a fonte
+  // ampliada a página tem menos rem, e uma palavra mais larga que a própria caixa quebra em vez de
+  // vazar. Só quebra quando a palavra não cabe, então com a fonte em 100% nenhuma linha muda. É a
+  // única regra de quebra do Início, na raiz: o Hoje e a Sessão não a recebem. Sem anywhere (que
+  // muda a largura mínima de itens de grade e flex), sem hífen automático nos títulos e sem
+  // esconder nada.
+  //
   // A página alterna campos de cor (data-campo) e faixas de papel, com no máximo dois campos
   // seguidos. O texto longo fica sempre no papel; sobre os campos só há frases curtas.
   return (
-    <div className="@container/pagina flex min-h-dvh flex-col px-4 md:px-[2%]">
+    <div className="@container/pagina flex min-h-dvh flex-col break-words px-4 md:px-[2%]">
       <header className="flex flex-col border-b py-3 @min-[46rem]/pagina:h-16 @min-[46rem]/pagina:flex-row @min-[46rem]/pagina:items-center @min-[46rem]/pagina:justify-between @min-[46rem]/pagina:py-0">
         <p className="marca">AppMaternidade</p>
         <nav
           aria-label="Seções da página"
-          className="-mx-2 flex flex-wrap justify-between @min-[46rem]/pagina:mx-0 @min-[46rem]/pagina:gap-4"
+          className="flex flex-wrap justify-between @min-[46rem]/pagina:gap-4"
         >
           {NAVEGACAO.map((link) => (
             <a
               key={link.alvo}
               href={`#${link.alvo}`}
-              className="alvo-toque inline-flex items-center justify-center px-2 text-[0.9375rem] font-semibold no-underline hover:underline"
+              className="alvo-toque inline-flex items-center justify-center px-2 text-[0.9375rem] font-semibold no-underline first:pl-0 last:pr-0 hover:underline"
             >
               {link.rotulo}
             </a>
@@ -293,12 +300,12 @@ export function Inicio() {
           <div className="madrugada-cena">
             <IlustracaoMamada larga className="block" />
           </div>
-          <div className="madrugada-celular relative h-[28rem] w-[18rem] flex-none @min-[46rem]/pagina:h-[31.73rem] @min-[46rem]/pagina:w-[20.4rem]">
+          <div className="madrugada-celular">
             <Aparelho
               tipo="celular"
               tela="sessao"
               tema="madrugada"
-              className="absolute left-0 top-0 origin-top-left scale-[0.75] @min-[46rem]/pagina:scale-[0.85]"
+              className="absolute left-0 top-0 origin-top-left [scale:var(--celular-escala)]"
             >
               <TelaSessao madrugada />
             </Aparelho>
