@@ -1036,10 +1036,12 @@
      (contêiner "publica", o <main> das páginas novas), nunca da janela, em degraus que nunca deixam
      o conjunto passar da largura: até 46 rem o campo tem 3 rem de margem lateral e o aparelho vem
      sozinho numa linha; de 46 a 64 rem a margem é de 6 rem; a partir de 64 rem o aparelho fica ao
-     lado do parágrafo (6 rem de margem, 4 rem de vão e pelo menos 24 rem para o texto). */
+     lado do parágrafo (6 rem de margem, 2,5 rem de vão e a coluna do texto de 22 rem) e cresce: o
+     celular em tamanho natural e o notebook até 0,94. O que vale em cada largura é conferido em
+     acabamentoPublicas.test.tsx, de 6 a 140 rem. */
   .palco {
-    --escala-celular: 0.2;
-    --escala-notebook: 0.08;
+    --escala-celular: 0.1;
+    --escala-notebook: 0.04;
   }
 
   .palco-celular {
@@ -1054,6 +1056,13 @@
     flex: none;
     width: calc(61rem * var(--escala-notebook));
     height: calc(36.25rem * var(--escala-notebook));
+  }
+
+  @container publica (min-width: 8rem) {
+    .palco {
+      --escala-celular: 0.17;
+      --escala-notebook: 0.07;
+    }
   }
 
   @container publica (min-width: 10rem) {
@@ -1156,32 +1165,32 @@
 
   @container publica (min-width: 64rem) {
     .palco {
-      --escala-celular: 0.9;
-      --escala-notebook: 0.49;
+      --escala-celular: 1;
+      --escala-notebook: 0.54;
     }
   }
 
   @container publica (min-width: 70rem) {
     .palco {
-      --escala-notebook: 0.59;
+      --escala-notebook: 0.64;
     }
   }
 
   @container publica (min-width: 76rem) {
     .palco {
-      --escala-notebook: 0.68;
+      --escala-notebook: 0.74;
     }
   }
 
   @container publica (min-width: 82rem) {
     .palco {
-      --escala-notebook: 0.78;
+      --escala-notebook: 0.84;
     }
   }
 
   @container publica (min-width: 88rem) {
     .palco {
-      --escala-notebook: 0.88;
+      --escala-notebook: 0.94;
     }
   }
 }

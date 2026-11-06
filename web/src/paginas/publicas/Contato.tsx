@@ -24,7 +24,7 @@ export function Contato() {
         <Paragrafo texto={proposito.texto} />
       </SecaoDePapel>
 
-      <CampoDeCor campo="accent" className="@min-[46rem]/publica:min-h-[24rem]">
+      <CampoDeCor campo="accent">
         <div className="grid grid-cols-1 gap-x-6 gap-y-6 @min-[46rem]/publica:grid-cols-12">
           <Titulo2
             secao={urgencia.secao}

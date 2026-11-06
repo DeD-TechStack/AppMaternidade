@@ -33,7 +33,7 @@ export function ComoFunciona() {
 
       <CampoComAparelho campo="field-2" secao={madrugada.secao} aparelho={<CelularDaSessaoDeMadrugada />}>
         <Paragrafo texto={madrugada.texto} className="texto-medida text-lg" />
-        <IlustracaoMamada className="mt-4 block h-auto w-full max-w-[22rem]" />
+        <IlustracaoMamada className="mt-4 block h-auto w-full max-w-[16rem]" />
       </CampoComAparelho>
 
       <CampoComAparelho campo="accent" secao={trocaDeTurno.secao} aparelho={<CelularDoHoje />}>
@@ -45,13 +45,13 @@ export function ComoFunciona() {
       </SecaoDePapel>
 
       <CampoDeCor campo="field-1" className="text-center">
-        <div className="mx-auto flex max-w-[40rem] flex-col items-center gap-6">
+        <div className="mx-auto flex w-full max-w-[40rem] flex-col items-center gap-6">
           <Titulo2 secao={telas.secao} className="[font-size:clamp(2.25rem,5vw,3.5rem)]" />
           <Paragrafo texto={telas.texto} className="texto-medida text-lg" />
           <Link to={telas.para} className="alvo-toque botao botao-principal">
             {telas.link}
           </Link>
-          <IlustracaoPasseio className="mt-6 block h-auto w-[18rem] max-w-full" />
+          <IlustracaoPasseio className="mt-6 block h-auto w-[16rem] max-w-full" />
         </div>
       </CampoDeCor>
     </PaginaPublica>

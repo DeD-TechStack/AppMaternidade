@@ -30,7 +30,7 @@ export function RegrasDaComunidade() {
         <Tabela {...ajuda.tabela} />
       </SecaoDePapel>
 
-      <CampoDeCor campo="field-2" className="@min-[46rem]/publica:min-h-[24rem]">
+      <CampoDeCor campo="field-2">
         <div className="grid grid-cols-1 gap-x-6 gap-y-6 @min-[46rem]/publica:grid-cols-12">
           <Titulo2
             secao={denuncias.secao}

@@ -1,16 +1,17 @@
 import {
   Abertura,
-  CampoDeCor,
+  CampoComIlustracao,
   PaginaPublica,
   SecaoDePapel,
-  Titulo2,
 } from '../../componentes/publicas/Estrutura.tsx'
 import { AvisoDeConstrucao, Paragrafo, Paragrafos } from '../../componentes/publicas/Textos.tsx'
 import { H1, SOBRE } from '../../conteudo/publicas.ts'
 import { IlustracaoBerco } from '../../prototipo/IlustracaoBerco.tsx'
+import { IlustracaoPasseio } from '../../prototipo/IlustracaoPasseio.tsx'
 
-// Sobre o AppMaternidade: para quem é, o que faz (um bloco de linhas, um pilar por linha), o que não
-// faz e quem faz.
+// Sobre o AppMaternidade: papel, campo, papel, campo, papel. "Para quem é" é um campo de lavanda com
+// a figura à direita; "O que ele faz" é um bloco de linhas (um pilar por linha) no papel; "O que ele
+// não faz" é o campo de urucum, com a figura à esquerda; e "Quem faz" fecha no papel.
 export function Sobre() {
   const { paraQuem, oQueFaz, oQueNaoFaz, quemFaz } = SOBRE
   return (
@@ -20,9 +21,13 @@ export function Sobre() {
         <Paragrafo texto={SOBRE.apresentacao} className="texto-medida text-xl leading-snug" />
       </Abertura>
 
-      <SecaoDePapel secao={paraQuem.secao}>
-        <Paragrafo texto={paraQuem.texto} />
-      </SecaoDePapel>
+      <CampoComIlustracao
+        campo="field-2"
+        secao={paraQuem.secao}
+        ilustracao={<IlustracaoPasseio className="block h-auto w-full max-w-[17rem]" />}
+      >
+        <Paragrafo texto={paraQuem.texto} className="texto-medida text-lg" />
+      </CampoComIlustracao>
 
       <SecaoDePapel secao={oQueFaz.secao} bloco={false} corpo="">
         <div>
@@ -40,17 +45,14 @@ export function Sobre() {
         <Paragrafo texto={oQueFaz.depois} className="texto-medida mt-8" />
       </SecaoDePapel>
 
-      <CampoDeCor campo="accent">
-        <div className="grid grid-cols-1 items-end gap-10 @min-[46rem]/publica:grid-cols-12 @min-[46rem]/publica:gap-x-6">
-          <div className="flex flex-col gap-5 @min-[46rem]/publica:col-span-6 @min-[46rem]/publica:col-start-7 @min-[46rem]/publica:row-start-1 @min-[46rem]/publica:self-center">
-            <Titulo2 secao={oQueNaoFaz.secao} className="[font-size:clamp(2rem,4vw,3rem)]" />
-            <Paragrafos textos={oQueNaoFaz.textos} />
-          </div>
-          <div className="@min-[46rem]/publica:col-span-6 @min-[46rem]/publica:col-start-1 @min-[46rem]/publica:row-start-1">
-            <IlustracaoBerco className="mx-auto block h-auto w-full max-w-[26rem]" />
-          </div>
-        </div>
-      </CampoDeCor>
+      <CampoComIlustracao
+        campo="accent"
+        secao={oQueNaoFaz.secao}
+        figuraAEsquerda
+        ilustracao={<IlustracaoBerco className="block h-auto w-full max-w-[16rem]" />}
+      >
+        <Paragrafos textos={oQueNaoFaz.textos} />
+      </CampoComIlustracao>
 
       <SecaoDePapel secao={quemFaz.secao}>
         <Paragrafos textos={quemFaz.textos} />

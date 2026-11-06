@@ -256,6 +256,41 @@ describe('rodapé público', () => {
     }
   })
 
+  // Acabamento 4: cada lista numa coluna própria (listas verticais), e o "Fale conosco" com a frase
+  // do protótipo numa terceira coluna; em página estreita, as duas listas lado a lado se couberem.
+  it('em computador, três colunas: Produto, Regras e privacidade e o contato; em 390, as listas em duas colunas', async () => {
+    for (const caminho of PUBLICAS) {
+      const { container, unmount } = renderizarRota(caminho)
+      await screen.findAllByRole('heading', { level: 1 })
+
+      const grade = container.querySelector('footer')!.firstElementChild as HTMLElement
+      for (const classe of ['grid', 'grid-cols-1', '@min-[20rem]/rodape:grid-cols-2', '@min-[46rem]/rodape:grid-cols-3']) {
+        expect(grade.classList.contains(classe), `${caminho}: ${classe}`).toBe(true)
+      }
+      expect(grade.children, caminho).toHaveLength(3)
+      const [produto, regras, contato] = [...grade.children] as HTMLElement[]
+      expect([produto.getAttribute('aria-label'), regras.getAttribute('aria-label')], caminho).toEqual([
+        'Produto',
+        'Regras e privacidade',
+      ])
+      for (const nav of [produto, regras]) {
+        const lista = nav.querySelector('ul')!
+        expect(lista.className, caminho).toContain('flex-col')
+        expect(lista.className, caminho).not.toContain('flex-wrap')
+        for (const link of nav.querySelectorAll('a')) expect(link.classList.contains('alvo-toque'), caminho).toBe(true)
+      }
+      const paragrafos = [...contato.querySelectorAll(':scope > p')]
+      expect(paragrafos.map((p) => p.textContent), caminho).toEqual([
+        'Fale conosco: Canal de contato a definir',
+        'Protótipo em construção. Nada aqui é dado real.',
+      ])
+      expect(contato.className, caminho).toContain('@min-[20rem]/rodape:col-span-2')
+      expect(contato.className, caminho).toContain('@min-[46rem]/rodape:col-span-1')
+      expect(contato.className, caminho).toContain('@min-[46rem]/rodape:self-start')
+      unmount()
+    }
+  })
+
   it('exatamente um link do rodapé tem aria-current, o da página; na 404, nenhum', async () => {
     for (const caminho of PUBLICAS) {
       const { container, unmount } = renderizarRota(caminho)

@@ -2,10 +2,9 @@ import { NotebookDoHoje } from '../../componentes/publicas/Composicoes.tsx'
 import {
   Abertura,
   CampoComAparelho,
-  CampoDeCor,
+  CampoComIlustracao,
   PaginaPublica,
   SecaoDePapel,
-  Titulo2,
 } from '../../componentes/publicas/Estrutura.tsx'
 import { IlustracaoTroca } from '../../componentes/publicas/IlustracaoTroca.tsx'
 import { AvisoDeConstrucao, Paragrafo, Paragrafos, Tabela } from '../../componentes/publicas/Textos.tsx'
@@ -22,17 +21,13 @@ export function CuidadoCompartilhado() {
         <Paragrafo texto={CUIDADO.apresentacao} className="texto-medida text-xl leading-snug" />
       </Abertura>
 
-      <CampoDeCor campo="field-1">
-        <div className="grid grid-cols-1 items-end gap-10 @min-[46rem]/publica:grid-cols-12 @min-[46rem]/publica:gap-x-6">
-          <div className="flex flex-col gap-5 @min-[46rem]/publica:col-span-6 @min-[46rem]/publica:self-center">
-            <Titulo2 secao={conta.secao} className="[font-size:clamp(2rem,4vw,3rem)]" />
-            <Paragrafo texto={conta.texto} className="texto-medida text-lg" />
-          </div>
-          <div className="@min-[46rem]/publica:col-span-6">
-            <IlustracaoTroca className="mx-auto block h-auto w-full max-w-[32rem]" />
-          </div>
-        </div>
-      </CampoDeCor>
+      <CampoComIlustracao
+        campo="field-1"
+        secao={conta.secao}
+        ilustracao={<IlustracaoTroca className="block h-auto w-full max-w-[20rem]" />}
+      >
+        <Paragrafo texto={conta.texto} className="texto-medida text-lg" />
+      </CampoComIlustracao>
 
       <SecaoDePapel secao={papeis.secao}>
         <Paragrafo texto={papeis.texto} />
