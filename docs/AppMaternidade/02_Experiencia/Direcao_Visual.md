@@ -71,7 +71,7 @@ Valem para toda tarefa que mexe no site (MAT-27). O roadmap e as tarefas apontam
 - **G11 Revisão:** veredito APPROVED do `revisor-appmaternidade` (outra família) sobre o SHA exato; integração só com `git merge --ff-only` desse SHA.
 - **G12 Dados:** só dados fictícios em teste; nenhum dado real de família.
 
-Nota mínima do award-bar (G6): 8,0 no total ponderado, por tela, a partir da MAT-44 (protótipos, fatias e portão final). A MAT-34 usou 7,0.
+Aceite visual (desde a MAT-44c): nota de um avaliador independente que não fez a tela (`omh-award-bar-score`), comparando lado a lado com a referência e com a `replica-diff`, inclusive no movimento; mínimo de 8,0 em cada tela; abaixo disso não integra; a nota do worker só guia; Daniel tem a última palavra pela GALERIA. A MAT-34 usou 7,0, e a MAT-44 usou duas notas de 8,0.
 
 A política de commits do G10 está em [Política de commits](../00_Inicio/Politica_de_Commits.md).
 
