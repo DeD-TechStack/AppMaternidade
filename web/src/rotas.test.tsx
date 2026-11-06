@@ -19,12 +19,15 @@ describe('rotas', () => {
     renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
 
+    const pilares = within(screen.getByRole('main').querySelector('ul')!)
     for (const pilar of ['Rotina', 'Desenvolvimento', 'Cuidado compartilhado', 'Comunidade']) {
-      expect(screen.getByText(pilar).className).toContain('etiqueta')
+      expect(pilares.getByText(pilar).className).toContain('etiqueta')
     }
     const link = screen.getByRole('link', { name: 'Ver o protótipo do Hoje' })
     expect(link.getAttribute('href')).toBe('/app/hoje')
-    expect(screen.getByText('Protótipo em construção. Nada aqui é dado real.')).toBeTruthy()
+    const rodape = within(screen.getByRole('contentinfo'))
+    expect(rodape.getByText('Protótipo em construção. Nada aqui é dado real.')).toBeTruthy()
+    expect(rodape.getByRole('link', { name: 'Início' }).getAttribute('href')).toBe('/')
   })
 
   it('as miniaturas do Início ficam inertes e escondidas do leitor de tela', async () => {

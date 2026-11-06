@@ -1036,6 +1036,15 @@ describe('MAT-44 r2 A3: texto de interface do Início mora em textos.ts', () => 
       'paginas/Inicio.tsx',
       'paginas/NaoEncontrada.tsx',
       'paginas/Sessao.tsx',
+      'paginas/publicas/ComoFunciona.tsx',
+      'paginas/publicas/Contato.tsx',
+      'paginas/publicas/CuidadoCompartilhado.tsx',
+      'paginas/publicas/Desenvolvimento.tsx',
+      'paginas/publicas/ExclusaoDeConta.tsx',
+      'paginas/publicas/Privacidade.tsx',
+      'paginas/publicas/RegrasDaComunidade.tsx',
+      'paginas/publicas/Sobre.tsx',
+      'paginas/publicas/Termos.tsx',
     ])
   })
 

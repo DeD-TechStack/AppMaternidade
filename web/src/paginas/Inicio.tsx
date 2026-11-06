@@ -11,11 +11,11 @@ import {
   PARA_QUE_SERVE,
   PILARES,
   PROMESSA,
-  RODAPE,
   TELAS,
 } from '../conteudo/textos.ts'
 import { Aparelho } from '../componentes/Aparelho.tsx'
 import { AvisoDemonstracao } from '../componentes/AvisoDemonstracao.tsx'
+import { RodapePublico } from '../componentes/publicas/RodapePublico.tsx'
 import { BotoesRapidos } from '../prototipo/BotoesRapidos.tsx'
 import { CartaoEmAndamento } from '../prototipo/CartaoEmAndamento.tsx'
 import { IlustracaoColo } from '../prototipo/IlustracaoColo.tsx'
@@ -346,12 +346,7 @@ export function Inicio() {
         </section>
       </main>
 
-      <footer className="flex flex-wrap items-center justify-between gap-x-6 border-t py-4">
-        <p className="text-sm">{RODAPE}</p>
-        <Link to="/" className="alvo-toque inline-flex items-center">
-          Início
-        </Link>
-      </footer>
+      <RodapePublico />
     </div>
   )
 }
