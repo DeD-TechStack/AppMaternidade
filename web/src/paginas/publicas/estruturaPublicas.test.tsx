@@ -604,6 +604,13 @@ describe('composição: campos de cor, aparelhos e ilustrações', () => {
         const celulas = [...tabela.querySelectorAll('td')]
         expect(celulas).toHaveLength(linhas.length * (colunas.length - 1))
         celulas.forEach((celula) => {
+          // A célula em destaque (o número dos canais de ajuda) não repete o nome da coluna: o número
+          // já está ao lado do canal. O cabeçalho da coluna segue para o leitor de tela.
+          if (celula.hasAttribute('data-destaque')) {
+            expect(celula.children).toHaveLength(1)
+            expect(celula.firstElementChild!.hasAttribute('aria-hidden')).toBe(false)
+            return
+          }
           const nome = colunas[[...celula.parentElement!.children].indexOf(celula)]
           const rotulo = celula.firstElementChild!
           expect(rotulo.getAttribute('aria-hidden'), celula.outerHTML.slice(0, 80)).toBe('true')
@@ -624,10 +631,17 @@ describe('composição: campos de cor, aparelhos e ilustrações', () => {
         expect(limiteDe(tabela.querySelector('caption')!, 'block')).toBe(limite)
         expect(limiteDe(tabela.querySelector('thead')!, 'sr-only')).toBe(limite)
         expect(limiteDe(tabela.querySelector('tbody')!, 'block')).toBe(limite)
-        for (const linha of tabela.querySelectorAll('tbody tr')) expect(limiteDe(linha, 'block')).toBe(limite)
+        // A linha empilhada é um bloco; na tabela com coluna em destaque (canais de ajuda) é uma grade de
+        // duas colunas, no mesmo limite.
+        for (const linha of tabela.querySelectorAll('tbody tr')) {
+          const empilhada = linha.querySelector('[data-destaque]') ? 'grid' : 'block'
+          expect(limiteDe(linha, empilhada)).toBe(limite)
+        }
         for (const th of tabela.querySelectorAll('tbody th')) expect(limiteDe(th, 'block')).toBe(limite)
         for (const celula of tabela.querySelectorAll('td')) {
           expect(limiteDe(celula, 'block')).toBe(limite)
+          // A célula em destaque não tem o nome da coluna (o número está ao lado do canal).
+          if (celula.hasAttribute('data-destaque')) continue
           // O nome da coluna só aparece quando a linha está empilhada.
           const rotulo = celula.firstElementChild!
           expect(rotulo.classList.contains('hidden')).toBe(true)

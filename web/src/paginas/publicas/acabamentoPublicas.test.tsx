@@ -393,6 +393,122 @@ describe('R3-1: o selo é parte da frase e fica em linha, com o ponto colado', (
   })
 })
 
+// Revisão, achado 3: a regra base de .etiqueta (hyphens: auto, overflow-wrap: anywhere) parte palavras
+// do selo em 390 px ("REVI-SÃO"). No selo em linha a quebra é só entre palavras.
+describe('Revisão 3: o selo em linha não parte palavras', () => {
+  // Sem os comentários da regra: eles explicam o que a base faz e citam as declarações.
+  const corpo = (new RegExp('\\.etiqueta-em-linha\\s*\\{([^}]*)\\}').exec(estiloGlobal)?.[1] ?? '').replace(/\/\*[\s\S]*?\*\//g, '')
+
+  it('hyphens manual (ou none), overflow-wrap que não é anywhere, sem nowrap nem overflow hidden', () => {
+    expect(corpo).not.toBe('')
+    expect(corpo).toMatch(/(^|[;\s])hyphens:\s*(manual|none)\s*;/)
+    const quebra = /overflow-wrap:\s*([a-z-]+)/.exec(corpo)
+    expect(quebra, 'declara overflow-wrap').not.toBeNull()
+    expect(quebra![1]).not.toBe('anywhere')
+    expect(quebra![1]).toBe('break-word')
+    expect(corpo).not.toMatch(/white-space:\s*nowrap/)
+    expect(corpo).not.toMatch(/overflow\s*:\s*hidden|overflow-x\s*:\s*hidden|text-overflow/)
+    // Nem fonte menor, nem hifenização automática por outra propriedade.
+    expect(corpo).not.toMatch(/font-size|hyphens:\s*auto|word-break:\s*break-all/)
+  })
+
+  it('a regra vem depois da base .etiqueta (mesma camada), para valer sobre ela', () => {
+    expect(estiloGlobal.indexOf('.etiqueta-em-linha {')).toBeGreaterThan(estiloGlobal.indexOf('.etiqueta {'))
+  })
+
+  it('o texto do selo continua o TF-14, em linha, com o ponto colado', async () => {
+    const container = await abrir('/desenvolvimento')
+
+    const selo = secaoDe(container, 'De onde vem o conteúdo').querySelector('p .etiqueta')!
+    expect(selo.textContent).toBe('Rascunho em revisão — não substitui orientação profissional')
+    expect(selo.classList.contains('etiqueta-em-linha')).toBe(true)
+    expect(selo.nextSibling!.textContent!.startsWith('. Quem vai fazer essa revisão')).toBe(true)
+  })
+})
+
+// Revisão, achado 4: os números de emergência, em destaque ao lado do nome do canal.
+describe('Revisão 4: números de emergência em destaque (só em Regras)', () => {
+  const NUMEROS = ['188', '192', '180', '100']
+  const TEXTO_DA_TABELA_EM_REM = 1.0625
+
+  it('Regras: cada número tem a marca de destaque, negrito, tamanho de pelo menos 1,5 vez o do texto e números tabulares', async () => {
+    const tabela = (await abrir('/regras-da-comunidade')).querySelector('main table')!
+
+    const celulas = [...tabela.querySelectorAll('tbody tr')].map((linha) => linha.querySelector('td')!)
+    expect(celulas.map((c) => c.textContent)).toEqual(NUMEROS)
+    for (const celula of celulas) {
+      expect(celula.getAttribute('data-destaque'), celula.textContent!).toBe('numero')
+      expect(celula.className).toMatch(/(^|\s)font-bold(\s|$)/)
+      expect(celula.className).toMatch(/(^|\s)tabular-nums(\s|$)/)
+      expect(emRem(celula.className, 'text-'), celula.textContent!).toBeGreaterThanOrEqual(1.5 * TEXTO_DA_TABELA_EM_REM)
+    }
+    // Só a coluna do número: nenhuma outra célula é destaque.
+    expect(tabela.querySelectorAll('[data-destaque]')).toHaveLength(NUMEROS.length)
+    for (const celula of tabela.querySelectorAll('tbody td:not([data-destaque])')) {
+      expect(celula.className).not.toMatch(/font-bold/)
+    }
+  })
+
+  it('Cuidado compartilhado: a tabela de papéis não muda (nenhuma célula em destaque)', async () => {
+    const tabela = (await abrir('/cuidado-compartilhado')).querySelector('main table')!
+
+    expect(tabela.querySelectorAll('[data-destaque]')).toHaveLength(0)
+    for (const celula of tabela.querySelectorAll('td')) {
+      expect(celula.className).not.toMatch(/font-bold|tabular-nums/)
+      expect(celula.firstElementChild!.getAttribute('aria-hidden')).toBe('true')
+    }
+    for (const linha of tabela.querySelectorAll('tbody tr')) {
+      expect(linha.className).toContain('@max-[36rem]/publica:block')
+      expect(linha.className).not.toMatch(/grid/)
+    }
+  })
+
+  it('a semântica não muda nas duas tabelas: legenda, cabeçalhos de coluna e de linha, números como texto, sem tel:', async () => {
+    for (const [caminho, legenda, colunas] of [
+      ['/regras-da-comunidade', 'Canais oficiais de ajuda', ['Canal', 'Número', 'Quando usar']],
+      ['/cuidado-compartilhado', 'Papéis na família', ['Papel', 'Para quem é', 'O que vai poder fazer']],
+    ] as const) {
+      const container = await abrir(caminho)
+      const tabela = container.querySelector('main table')!
+      expect(tabela.querySelector('caption')!.textContent).toBe(legenda)
+      expect([...tabela.querySelectorAll('th[scope="col"]')].map((th) => th.textContent)).toEqual(colunas)
+      expect(tabela.querySelectorAll('tbody th[scope="row"]')).toHaveLength(caminho === '/regras-da-comunidade' ? 4 : 3)
+      expect(container.querySelectorAll('a[href^="tel:"]')).toHaveLength(0)
+    }
+  })
+
+  it('em 390 (empilhado) a linha é uma grade de duas colunas: canal e número em cima, "Quando usar" embaixo na largura toda', async () => {
+    const tabela = (await abrir('/regras-da-comunidade')).querySelector('main table')!
+
+    for (const linha of tabela.querySelectorAll('tbody tr')) {
+      expect(linha.className).toContain('@max-[36rem]/publica:grid')
+      expect(linha.className).toContain('@max-[36rem]/publica:grid-cols-[1fr_auto]')
+      // Em 1440 a tabela segue com as três colunas: a grade é só abaixo de 36 rem.
+      expect(linha.className).not.toMatch(/(^|\s)grid(\s|$)/)
+      const [canal, numero, quando] = [...linha.children] as HTMLElement[]
+      expect(canal.getAttribute('scope')).toBe('row')
+      expect(numero.getAttribute('data-destaque')).toBe('numero')
+      expect(quando.className).toContain('@max-[36rem]/publica:col-span-2')
+      // O rótulo visível "Número" some nessa célula (o número já está ao lado do canal); o cabeçalho
+      // da coluna continua para o leitor de tela.
+      expect(numero.querySelector('[aria-hidden="true"]')).toBeNull()
+      expect(numero.textContent).toMatch(/^\d+$/)
+      // "Quando usar" continua com o rótulo visível quando empilhado.
+      expect(quando.firstElementChild!.getAttribute('aria-hidden')).toBe('true')
+      expect(quando.firstElementChild!.textContent).toBe('Quando usar')
+    }
+    expect([...tabela.querySelectorAll('th[scope="col"]')].map((th) => th.textContent)).toContain('Número')
+  })
+
+  it('o número tem o canal ao lado: o canal pode encolher (min-w-0) para o número nunca ser cortado', async () => {
+    const tabela = (await abrir('/regras-da-comunidade')).querySelector('main table')!
+
+    for (const linha of tabela.querySelectorAll('tbody tr')) {
+      expect(linha.querySelector('th')!.className).toContain('min-w-0')
+    }
+  })
+})
+
 describe('R3-2: rodapé, cada link lido como um item só', () => {
   for (const caminho of ['/', '/sobre', '/rota-inexistente']) {
     it(`${caminho}: espaço vertical entre os itens, entrelinha justa no link, sem texto menor nem rolagem horizontal`, async () => {

@@ -89,8 +89,16 @@ const PAPEL = {
  * em cima e, em cada célula, o nome da coluna visível antes do valor. A linha de cabeçalhos sai da
  * vista (sr-only) e continua para o leitor de tela; o nome da coluna repetido na célula é aria-hidden,
  * para não ser lido duas vezes.
+ *
+ * `colunaDeDestaque` (índice da coluna, contando o cabeçalho da linha como 0) põe os valores dessa
+ * coluna em destaque, grandes e em negrito, com `data-destaque="numero"`: é a tabela de canais de ajuda,
+ * onde o número é o que a pessoa procura. Empilhada, a linha vira uma grade de duas colunas (o nome do
+ * canal e o número lado a lado, as demais células embaixo, na largura toda) e a célula em destaque
+ * não repete o nome da coluna (o número já está ao lado do canal; o cabeçalho da coluna continua para o
+ * leitor de tela). Sem a opção, a tabela é a de sempre.
  */
-export function Tabela({ legenda, colunas, linhas }: DadosDeTabela) {
+export function Tabela({ legenda, colunas, linhas, colunaDeDestaque }: DadosDeTabela & { colunaDeDestaque?: number }) {
+  const comDestaque = colunaDeDestaque !== undefined
   return (
     <table
       {...PAPEL.tabela}
@@ -116,30 +124,46 @@ export function Tabela({ legenda, colunas, linhas }: DadosDeTabela) {
           <tr
             key={cabecalho}
             {...PAPEL.linha}
-            className="border-b @max-[36rem]/publica:block @max-[36rem]/publica:py-4"
+            className={
+              comDestaque
+                ? 'border-b @max-[36rem]/publica:grid @max-[36rem]/publica:grid-cols-[1fr_auto] @max-[36rem]/publica:items-baseline @max-[36rem]/publica:gap-x-4 @max-[36rem]/publica:py-4'
+                : 'border-b @max-[36rem]/publica:block @max-[36rem]/publica:py-4'
+            }
           >
             <th
               {...PAPEL.cabecalhoDeLinha}
               scope="row"
-              className="py-4 pr-4 text-left align-top font-semibold @max-[36rem]/publica:block @max-[36rem]/publica:py-0 @max-[36rem]/publica:pb-2 @max-[36rem]/publica:text-lg"
+              className={`py-4 pr-4 text-left align-top font-semibold @max-[36rem]/publica:block @max-[36rem]/publica:py-0 @max-[36rem]/publica:pb-2 @max-[36rem]/publica:text-lg${comDestaque ? ' min-w-0' : ''}`}
             >
               {cabecalho}
             </th>
-            {celulas.map((celula, indice) => (
-              <td
-                key={celula}
-                {...PAPEL.celula}
-                className="tabular py-4 pr-4 align-top @max-[36rem]/publica:block @max-[36rem]/publica:py-2 @max-[36rem]/publica:pr-0"
-              >
-                <span
-                  aria-hidden="true"
-                  className="rotulo hidden @max-[36rem]/publica:block"
+            {celulas.map((celula, indice) => {
+              const destaque = comDestaque && indice + 1 === colunaDeDestaque
+              if (destaque) {
+                return (
+                  <td
+                    key={celula}
+                    {...PAPEL.celula}
+                    data-destaque="numero"
+                    className="py-4 pr-4 text-[2rem] font-bold leading-none tabular-nums align-top @max-[36rem]/publica:block @max-[36rem]/publica:py-0 @max-[36rem]/publica:pr-0 @max-[36rem]/publica:text-right"
+                  >
+                    <span>{celula}</span>
+                  </td>
+                )
+              }
+              return (
+                <td
+                  key={celula}
+                  {...PAPEL.celula}
+                  className={`tabular py-4 pr-4 align-top @max-[36rem]/publica:block @max-[36rem]/publica:py-2 @max-[36rem]/publica:pr-0${comDestaque ? ' @max-[36rem]/publica:col-span-2' : ''}`}
                 >
-                  {colunas[indice + 1]}
-                </span>
-                <span>{celula}</span>
-              </td>
-            ))}
+                  <span aria-hidden="true" className="rotulo hidden @max-[36rem]/publica:block">
+                    {colunas[indice + 1]}
+                  </span>
+                  <span>{celula}</span>
+                </td>
+              )
+            })}
           </tr>
         ))}
       </tbody>

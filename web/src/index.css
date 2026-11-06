@@ -1084,6 +1084,12 @@
     padding-block: 0.125rem;
     -webkit-box-decoration-break: clone;
     box-decoration-break: clone;
+    /* A base .etiqueta hifeniza (hyphens: auto) e quebra em qualquer ponto (overflow-wrap: anywhere): em
+       390 px o selo saía com "REVI-SÃO" e "PROFISSI-ONAL". Aqui a quebra é só entre palavras; com a fonte
+       ampliada uma palavra mais larga que a linha ainda pode quebrar (break-word), nunca por hifenização
+       automática. */
+    hyphens: manual;
+    overflow-wrap: break-word;
   }
 
   /* Grupo de dois aparelhos: o celular na frente é uma proporção do notebook, maior em página estreita

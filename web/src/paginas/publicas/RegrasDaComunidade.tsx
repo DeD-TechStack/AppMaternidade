@@ -27,7 +27,7 @@ export function RegrasDaComunidade() {
 
       <SecaoDePapel secao={ajuda.secao}>
         <Paragrafo texto={ajuda.texto} />
-        <Tabela {...ajuda.tabela} />
+        <Tabela {...ajuda.tabela} colunaDeDestaque={1} />
       </SecaoDePapel>
 
       <CampoDeCor campo="field-2">
