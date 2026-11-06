@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(128);
+select plan(140);
 
 -- Ids de teste: c047... + número. Contas 1 a 9; perfis 11, 12, 13, 14, 17, 19 (conta + 10);
 -- tópicos 21 a 27; respostas 31 a 38.
@@ -105,12 +105,24 @@ insert into public.respostas (id, topico_id, autor_id, resposta_a, corpo, estado
 
 set local role authenticated;
 
+-- A conta 5 é a "Sem perfil": aceite vigente e nenhum perfil. Ela só cria o perfil depois de todas as
+-- recusas rotuladas "Sem perfil" (bloco de controle positivo mais abaixo). Pré-condição, afirmada antes de cada bloco.
+select is(
+  pg_temp.ler(5, 'select public.meu_perfil_id()::text'), null,
+  'Sem perfil (antes dos perfis): meu_perfil_id() é NULL'
+);
+
+select is(
+  pg_temp.ler(5, 'select public.aceite_vigente()::text'), 'true',
+  'Sem perfil (antes dos perfis): há aceite vigente'
+);
+
 -- Perfis: insert (aceite vigente, conta própria), update (escritor habilitado), colunas e delete
 select is(
   pg_temp.exec(v.n, v.sql), v.esperado, v.descricao
 ) from (values
-  (5, $s$insert into public.perfis_publicos (conta_id, apelido) values (pg_temp.i(5), 'teste_semperfil')$s$, '1',
-   'Sem perfil (com aceite) cria o próprio perfil'),
+  (5, $s$insert into public.perfis_publicos (conta_id, apelido) values (pg_temp.i(2), 'teste_alheio_dois')$s$, 'ERRO:42501',
+   'Sem perfil não cria perfil em nome de outra conta'),
   (8, $s$insert into public.perfis_publicos (conta_id, apelido) values (pg_temp.i(8), 'teste_admin')$s$, 'ERRO:42501',
    'Admin sem aceite não cria perfil'),
   (6, $s$insert into public.perfis_publicos (conta_id, apelido) values (pg_temp.i(6), 'teste_semconta')$s$, 'ERRO:42501',
@@ -165,6 +177,17 @@ select is(
 
 set local role authenticated;
 
+-- Pré-condição da situação "Sem perfil": a conta 5 tem aceite vigente e não tem perfil próprio.
+select is(
+  pg_temp.ler(5, 'select public.meu_perfil_id()::text'), null,
+  'Sem perfil (antes dos tópicos): meu_perfil_id() é NULL'
+);
+
+select is(
+  pg_temp.ler(5, 'select public.aceite_vigente()::text'), 'true',
+  'Sem perfil (antes dos tópicos): há aceite vigente'
+);
+
 -- Tópicos: insert
 select is(
   pg_temp.exec(v.n, v.sql), v.esperado, v.descricao
@@ -172,7 +195,8 @@ select is(
   (1, pg_temp.t('pg_temp.i(11)'), '1', 'Autor cria tópico'),
   (2, pg_temp.t('pg_temp.i(11)'), 'ERRO:42501', 'Outro não cria tópico em nome do Autor'),
   (4, pg_temp.t('pg_temp.i(14)'), 'ERRO:42501', 'Sem aceite não cria tópico'),
-  (5, pg_temp.t('null'), 'ERRO:42501', 'Sem perfil não cria tópico'),
+  (5, pg_temp.t('null'), 'ERRO:42501', 'Sem perfil não cria tópico (autor_id NULL, o que a conta tentaria de verdade)'),
+  (5, pg_temp.t('pg_temp.i(12)'), 'ERRO:42501', 'Sem perfil não cria tópico com autor_id de outro perfil (tentativa de se passar pelo Outro)'),
   (6, pg_temp.t('pg_temp.i(12)'), 'ERRO:42501', 'Sem conta não cria tópico'),
   (3, pg_temp.t('pg_temp.i(13)'), '1', 'Bloqueado cria tópico'),
   (7, pg_temp.t('pg_temp.i(17)'), '1', 'Moderador cria tópico como usuário comum'),
@@ -254,6 +278,16 @@ select is(
 
 set local role authenticated;
 
+select is(
+  pg_temp.ler(5, 'select public.meu_perfil_id()::text'), null,
+  'Sem perfil (antes das respostas): meu_perfil_id() é NULL'
+);
+
+select is(
+  pg_temp.ler(5, 'select public.aceite_vigente()::text'), 'true',
+  'Sem perfil (antes das respostas): há aceite vigente'
+);
+
 -- Respostas: insert
 select is(
   pg_temp.exec(v.n, v.sql), v.esperado, v.descricao
@@ -264,7 +298,8 @@ select is(
   (2, pg_temp.r('pg_temp.i(12)', 22), 'ERRO:42501', 'ninguém responde tópico oculto'),
   (2, pg_temp.r('pg_temp.i(12)', 23), 'ERRO:42501', 'ninguém responde tópico removido'),
   (4, pg_temp.r('pg_temp.i(14)', 21), 'ERRO:42501', 'Sem aceite não responde'),
-  (5, pg_temp.r('null', 21), 'ERRO:42501', 'Sem perfil não responde'),
+  (5, pg_temp.r('null', 21), 'ERRO:42501', 'Sem perfil não responde (autor_id NULL, o que a conta tentaria de verdade)'),
+  (5, pg_temp.r('pg_temp.i(12)', 21), 'ERRO:42501', 'Sem perfil não responde com autor_id de outro perfil (tentativa de se passar pelo Outro)'),
   (6, pg_temp.r('pg_temp.i(12)', 21), 'ERRO:42501', 'Sem conta não responde'),
   (8, pg_temp.r('null', 21), 'ERRO:42501', 'Admin sem perfil nem aceite não responde'),
   (7, pg_temp.r('pg_temp.i(17)', 21), '1', 'Moderador responde como usuário comum'),
@@ -328,6 +363,30 @@ select is(
   'Resposta R4',
   'as tentativas negadas não mudaram a resposta oculta'
 );
+
+-- Controle positivo: só agora a conta 5 cria o perfil. Com ele, publica e responde. Isso prova que as recusas
+-- anteriores, rotuladas "Sem perfil", eram pela falta de perfil.
+set local role authenticated;
+
+select is(
+  pg_temp.exec(5, $s$insert into public.perfis_publicos (conta_id, apelido) values (pg_temp.i(5), 'teste_semperfil')$s$),
+  '1',
+  'Sem perfil (com aceite) cria o próprio perfil'
+);
+
+select is(
+  pg_temp.ler(5, 'select (public.meu_perfil_id() is not null)::text'), 'true',
+  'depois de criar o perfil, a conta 5 passa a ter meu_perfil_id()'
+);
+
+select is(
+  pg_temp.exec(v.n, v.sql), v.esperado, v.descricao
+) from (values
+  (5, pg_temp.t('public.meu_perfil_id()'), '1', 'com perfil, a conta 5 cria tópico'),
+  (5, pg_temp.r('public.meu_perfil_id()', 21), '1', 'com perfil, a conta 5 responde ao T1')
+) as v(n, sql, esperado, descricao);
+
+reset role;
 
 -- [removido] (D11), pelo caminho real: apagar o perfil do autor (on delete set null em autor_id).
 -- O Removível (conta 10, perfil 20) tem o tópico 41 (visível, com editado_em), o tópico 42 (oculto, com motivo),
