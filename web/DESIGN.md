@@ -232,7 +232,7 @@ Escala: corpo de 17 px (`body`, 1,0625 rem); títulos de seção em 36 px (`head
   - **média (46 a menos de 60 rem):** uma coluna; padding de 24 px (`lg`) e gap de 40 px (`xl`);
   - **larga (60 rem ou mais):** grade de 2 colunas de mesma largura, cada cartão em 1 ou 2 colunas; padding de 40 px (`xl`) e gap de 64 px (`2xl`).
   - Em toda faixa o gap é maior que o padding lateral mais 8 px, e todos os cartões têm o mesmo padding. Os cartões são filhos diretos do `<main>`.
-- **Linha de leitura:** todo texto corrido tem `max-width` entre 55ch e 70ch. No computador, as linhas cheias ficam entre 55 e 70 caracteres.
+- **Linha de leitura:** todo texto corrido tem `max-width` entre 55ch e 70ch. No computador, as linhas cheias ficam entre 55 e 70 caracteres. Na Instrument Sans a 17 px, 1ch tem cerca de 11,3 px e cabe cerca de 1,4 caractere por ch, então o `max-width` em ch é só o teto: a largura efetiva vem da coluna de texto de 32,5rem (cerca de 60 a 66 caracteres) nas faixas média e larga.
 - Ritmo vertical pela escala de `spacing`: 16 px dentro de um bloco e, entre cartões do Início, o gap da faixa.
 
 ## Composição
@@ -241,7 +241,7 @@ Análise abstrata das referências visuais da MAT-44 e da MAT-44c. Só entram pa
 
 - **Padrões de bloco.**
   - Cartão de aparelhos: um campo de cor com um grupo de aparelhos inteiros, lado a lado, sem um cobrir o outro, e um texto curto que diz o que eles mostram.
-  - Bloco de linhas: rótulo serifado à esquerda e texto à direita, separados por uma linha vertical fina e por linhas horizontais entre as linhas, sobre papel.
+  - Bloco de linhas: rótulo serifado à esquerda e texto à direita, separados por uma linha vertical fina e por linhas horizontais entre as linhas, sobre papel. Num cartão de uma coluna, o rótulo fica em cima do texto. Os fatos usam o mesmo bloco, com o termo no lugar do rótulo.
   - Cartão de janela: um único aparelho grande, notebook, ocupando a maior parte do cartão.
   - Dupla de cartões: dois cartões lado a lado na grade larga, cada um com um aparelho ou um texto.
   - Fecho: título serifado e a chamada para o protótipo, com respiro antes do rodapé.
@@ -270,7 +270,15 @@ Três direções foram montadas como telas estáticas (`.oc/direcoes/A`, `B` e `
 
 Vence a C (7,51 contra 7,39 da A). O texto ao lado do aparelho em cada cartão largo lê melhor que o texto em cima, e a madrugada escura em par mostra o modo noturno sem tomar a largura toda. Na área logada, a faixa lateral em papel fundo separa a navegação sem linha extra, e a Sessão com a ilustração num campo à direita deixa o cronômetro e as ações na coluna da esquerda. A B perdeu em UX: a navegação de 12 rem quebra "Desenvolvimento" e a promessa ao lado da Sessão deixa alturas desiguais. A A perdeu em inovação por repetir o padrão de pares sem um ponto focal.
 
-Distribuição escolhida na faixa larga (6 cartões, 3 com aparelho): promessa com a única ilustração fora dos aparelhos (2 colunas); telas, com o notebook do Hoje e o celular da Sessão (2); madrugada (1) e para que serve (1) em par; fatos (2); chamada com o celular do Hoje (2).
+Distribuição escolhida na faixa larga (6 cartões, 3 com aparelho):
+
+- promessa (2 colunas): a partir de 80 rem, texto na coluna 1 e a ilustração na coluna 2, com a borda esquerda na linha da coluna 2; abaixo disso, o texto e, embaixo, a ilustração centrada;
+- telas (2): a partir de 85,3 rem (quando a fileira notebook + celular cabe no cartão), texto em cima do notebook do Hoje e o celular da Sessão à direita, com as bases alinhadas; abaixo disso, empilhados, com os aparelhos centrados;
+- madrugada e para que serve: a partir de 80 rem, uma coluna cada, em par; abaixo disso, duas colunas cada. "Para que serve" leva a segunda ilustração fora dos aparelhos, centrada no fim do cartão, na mesma escala da primeira, para o par fechar sem vazio;
+- fatos (2): bloco de linhas;
+- chamada (2): texto, link, o celular do Hoje e a legenda, empilhados numa coluna de 32,5rem centrada no cartão (o texto continua alinhado à esquerda dentro dela). A madrugada faz o mesmo quando ocupa as duas colunas.
+
+Na medição da rodada 1, o texto ao lado de um aparelho alto deixava um vazio maior que duas vezes o gap embaixo do texto. Por isso, nos cartões com celular, o texto fica em cima do aparelho, e lado a lado só ficam peças de altura parecida (notebook com texto ao lado do celular, madrugada ao lado de "para que serve").
 
 ### Direção escolhida (VIS2-00)
 
