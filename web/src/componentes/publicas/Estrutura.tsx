@@ -150,8 +150,10 @@ export function CampoComIlustracao({ campo, secao, ilustracao, figuraAEsquerda =
 interface PropsDoCampoComAparelho {
   campo: Campo
   secao: Secao
-  /** O aparelho (celular ou notebook) em miniatura. */
+  /** O aparelho (celular ou notebook) ou o grupo de aparelhos em miniatura. */
   aparelho: ReactNode
+  /** Em computador, o texto alinhado ao topo ou à base do aparelho (ou do grupo). */
+  alinhamentoDoTexto?: 'topo' | 'base'
   /** O parágrafo que diz o que ele mostra. */
   children: ReactNode
 }
@@ -163,12 +165,13 @@ interface PropsDoCampoComAparelho {
  * do aparelho, numa coluna estreita de 22 rem colada a ele e alinhada ao topo dele, sem vazio no meio.
  * O aparelho cresce nesse tamanho de página (ver .palco em index.css).
  */
-export function CampoComAparelho({ campo, secao, aparelho, children }: PropsDoCampoComAparelho) {
+export function CampoComAparelho({ campo, secao, aparelho, alinhamentoDoTexto = 'topo', children }: PropsDoCampoComAparelho) {
+  const alinhamento = alinhamentoDoTexto === 'base' ? '@min-[64rem]/publica:items-end' : '@min-[64rem]/publica:items-start'
   return (
     <CampoDeCor campo={campo}>
       <div className="mx-auto w-full @min-[64rem]/publica:w-fit">
         <Titulo2 secao={secao} className="[font-size:clamp(2rem,4vw,3rem)]" />
-        <div className="mt-10 flex flex-col items-center gap-10 @min-[64rem]/publica:flex-row @min-[64rem]/publica:items-start @min-[64rem]/publica:gap-10">
+        <div className={`mt-10 flex flex-col items-center gap-10 @min-[64rem]/publica:flex-row @min-[64rem]/publica:gap-10 ${alinhamento}`}>
           <div className="flex-none">{aparelho}</div>
           <div className="flex w-full max-w-[65ch] min-w-0 flex-col gap-4 @min-[64rem]/publica:w-[22rem] @min-[64rem]/publica:flex-none">
             {children}

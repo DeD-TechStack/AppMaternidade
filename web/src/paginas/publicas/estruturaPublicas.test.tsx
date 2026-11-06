@@ -544,8 +544,8 @@ describe('composição: campos de cor, aparelhos e ilustrações', () => {
         }
       }
     }
-    // Dois celulares no Como funciona e um notebook no Cuidado compartilhado.
-    expect(total).toBe(3)
+    // Dois celulares no Como funciona e, no Cuidado compartilhado, o grupo de um notebook e um celular.
+    expect(total).toBe(4)
   })
 
   it('o celular da madrugada mostra só o SessaoInfo; o celular e o notebook do Hoje, só o CartaoEmAndamento', async () => {

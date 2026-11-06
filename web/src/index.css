@@ -1058,6 +1058,28 @@
     height: calc(36.25rem * var(--escala-notebook));
   }
 
+  /* O valor grande da miniatura (cronômetro e duração do cartão) tem tamanho fixo aqui, e a linha não
+     quebra. Os componentes usam clamp com vw (janela), então com a janela larga a fonte chegava a 72 e
+     56 px e não cabia na tela fixa do aparelho. 3,5 rem e 2,5 rem são os tamanhos de um valor que cabe com
+     folga com o zoom do invólucro (ver Composicoes.tsx); o texto corrente da miniatura fica em 17 px. */
+  .palco .cronometro-mini {
+    font-size: 3.5rem;
+    white-space: nowrap;
+    overflow-wrap: normal;
+  }
+
+  .palco .numero-grande {
+    font-size: 2.5rem;
+    white-space: nowrap;
+    overflow-wrap: normal;
+  }
+
+  /* Grupo de dois aparelhos: o celular na frente é uma proporção do notebook, maior em página estreita
+     para o valor continuar legível (em 390 px o celular tem mais de 5 rem de largura). */
+  .palco-grupo {
+    --proporcao-do-celular: 0.7;
+  }
+
   @container publica (min-width: 8rem) {
     .palco {
       --escala-celular: 0.17;
@@ -1191,6 +1213,18 @@
   @container publica (min-width: 88rem) {
     .palco {
       --escala-notebook: 0.94;
+    }
+  }
+
+  @container publica (min-width: 46rem) {
+    .palco-grupo {
+      --proporcao-do-celular: 0.6;
+    }
+  }
+
+  @container publica (min-width: 64rem) {
+    .palco-grupo {
+      --proporcao-do-celular: 0.55;
     }
   }
 }

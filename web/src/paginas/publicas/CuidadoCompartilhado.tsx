@@ -1,4 +1,4 @@
-import { NotebookDoHoje } from '../../componentes/publicas/Composicoes.tsx'
+import { GrupoNotebookECelularDoHoje } from '../../componentes/publicas/Composicoes.tsx'
 import {
   Abertura,
   CampoComAparelho,
@@ -38,7 +38,12 @@ export function CuidadoCompartilhado() {
         <Paragrafo texto={registro.texto} />
       </SecaoDePapel>
 
-      <CampoComAparelho campo="accent" secao={passagem.secao} aparelho={<NotebookDoHoje />}>
+      <CampoComAparelho
+        campo="accent"
+        secao={passagem.secao}
+        aparelho={<GrupoNotebookECelularDoHoje />}
+        alinhamentoDoTexto="base"
+      >
         <Paragrafo texto={passagem.texto} className="texto-medida text-lg" />
       </CampoComAparelho>
 

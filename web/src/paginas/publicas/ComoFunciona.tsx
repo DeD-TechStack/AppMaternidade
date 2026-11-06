@@ -3,10 +3,9 @@ import { CelularDaSessaoDeMadrugada, CelularDoHoje } from '../../componentes/pub
 import {
   Abertura,
   CampoComAparelho,
-  CampoDeCor,
+  CampoComIlustracao,
   PaginaPublica,
   SecaoDePapel,
-  Titulo2,
 } from '../../componentes/publicas/Estrutura.tsx'
 import { AvisoDeConstrucao, Paragrafo, Paragrafos } from '../../componentes/publicas/Textos.tsx'
 import { COMO_FUNCIONA, H1, TF } from '../../conteudo/publicas.ts'
@@ -44,16 +43,16 @@ export function ComoFunciona() {
         <Paragrafos textos={comecar.textos} />
       </SecaoDePapel>
 
-      <CampoDeCor campo="field-1" className="text-center">
-        <div className="mx-auto flex w-full max-w-[40rem] flex-col items-center gap-6">
-          <Titulo2 secao={telas.secao} className="[font-size:clamp(2.25rem,5vw,3.5rem)]" />
-          <Paragrafo texto={telas.texto} className="texto-medida text-lg" />
-          <Link to={telas.para} className="alvo-toque botao botao-principal">
-            {telas.link}
-          </Link>
-          <IlustracaoPasseio className="mt-6 block h-auto w-[16rem] max-w-full" />
-        </div>
-      </CampoDeCor>
+      <CampoComIlustracao
+        campo="field-1"
+        secao={telas.secao}
+        ilustracao={<IlustracaoPasseio className="block h-auto w-full max-w-[17rem]" />}
+      >
+        <Paragrafo texto={telas.texto} className="texto-medida text-lg" />
+        <Link to={telas.para} className="alvo-toque botao botao-principal self-start">
+          {telas.link}
+        </Link>
+      </CampoComIlustracao>
     </PaginaPublica>
   )
 }

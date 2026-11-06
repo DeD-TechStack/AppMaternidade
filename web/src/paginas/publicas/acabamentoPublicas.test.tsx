@@ -114,6 +114,8 @@ describe('3: campos com ilustração em duas colunas assimétricas', () => {
     ['/desenvolvimento', 'Quando procurar um profissional', false],
     ['/sobre', 'Para quem é', false],
     ['/sobre', 'O que ele não faz', true],
+    // Rodada 2, defeito 4: o fecho de Como funciona deixa de ser um bloco centrado empilhado.
+    ['/como-funciona', 'Veja as telas do protótipo', false],
   ]
 
   for (const [caminho, h2, aEsquerda] of CAMPOS) {
@@ -152,14 +154,32 @@ describe('3: campos com ilustração em duas colunas assimétricas', () => {
   })
 })
 
+/** A escala dos aparelhos (var(--escala-*)) em cada largura de página, em rem, lida do CSS como texto. */
+function escalaEm(largura: number): { celular: number; notebook: number } {
+  const base = /\.palco\s*\{([^}]*)\}/.exec(estiloGlobal)![1]
+  const valores = { celular: 0, notebook: 0 }
+  const ler = (corpo: string) => {
+    const celular = /--escala-celular:\s*([\d.]+)/.exec(corpo)
+    const notebook = /--escala-notebook:\s*([\d.]+)/.exec(corpo)
+    if (celular) valores.celular = parseFloat(celular[1])
+    if (notebook) valores.notebook = parseFloat(notebook[1])
+  }
+  ler(base)
+  const degraus = [...estiloGlobal.matchAll(/@container publica \(min-width:\s*([\d.]+)rem\)\s*\{\s*\.palco\s*\{([^}]*)\}\s*\}/g)]
+  for (const [, minimo, corpo] of degraus) if (largura >= parseFloat(minimo)) ler(corpo)
+  return valores
+}
+
 describe('5: campos com aparelho, o parágrafo colado a ele', () => {
-  const CAMPOS: Array<[string, string]> = [
-    ['/como-funciona', 'Na troca de turno'],
-    ['/como-funciona', 'De madrugada'],
-    ['/cuidado-compartilhado', 'Na passagem de turno'],
+  // [página, h2, alinhamento do texto à linha do aparelho em computador]. Rodada 2: o texto do grupo
+  // de dois aparelhos (Cuidado compartilhado) fica alinhado à base do grupo.
+  const CAMPOS: Array<[string, string, string]> = [
+    ['/como-funciona', 'Na troca de turno', 'items-start'],
+    ['/como-funciona', 'De madrugada', 'items-start'],
+    ['/cuidado-compartilhado', 'Na passagem de turno', 'items-end'],
   ]
 
-  for (const [caminho, h2] of CAMPOS) {
+  for (const [caminho, h2, alinhamento] of CAMPOS) {
     it(`${caminho} · ${h2}: grupo centrado, parágrafo numa coluna estreita alinhada ao topo do aparelho`, async () => {
       const campo = secaoDe(await abrir(caminho), h2)
 
@@ -169,7 +189,7 @@ describe('5: campos com aparelho, o parágrafo colado a ele', () => {
       const [titulo, linha] = [...grupo.children] as HTMLElement[]
       expect(titulo.tagName).toBe('H2')
       expect(linha.className).toContain('@min-[64rem]/publica:flex-row')
-      expect(linha.className).toContain('@min-[64rem]/publica:items-start')
+      expect(linha.className).toContain(`@min-[64rem]/publica:${alinhamento}`)
       const [aparelho, texto] = [...linha.children] as HTMLElement[]
       expect(aparelho.querySelector('[data-aparelho]')).not.toBeNull()
       expect(texto.querySelector('p')).not.toBeNull()
@@ -182,21 +202,6 @@ describe('5: campos com aparelho, o parágrafo colado a ele', () => {
 
   // O aparelho cresce no desktop e, em toda largura da página, nunca passa dela. O CSS é lido como texto:
   // a escala de cada degrau do contêiner "publica" e o que cabe a cada lado.
-  function escalaEm(largura: number): { celular: number; notebook: number } {
-    const base = /\.palco\s*\{([^}]*)\}/.exec(estiloGlobal)![1]
-    const valores = { celular: 0, notebook: 0 }
-    const ler = (corpo: string) => {
-      const celular = /--escala-celular:\s*([\d.]+)/.exec(corpo)
-      const notebook = /--escala-notebook:\s*([\d.]+)/.exec(corpo)
-      if (celular) valores.celular = parseFloat(celular[1])
-      if (notebook) valores.notebook = parseFloat(notebook[1])
-    }
-    ler(base)
-    const degraus = [...estiloGlobal.matchAll(/@container publica \(min-width:\s*([\d.]+)rem\)\s*\{\s*\.palco\s*\{([^}]*)\}\s*\}/g)]
-    for (const [, minimo, corpo] of degraus) if (largura >= parseFloat(minimo)) ler(corpo)
-    return valores
-  }
-
   it('em 1440 (página de 86,4 rem) o celular passa de 1 e o notebook de 0,8', () => {
     const { celular, notebook } = escalaEm(86.4)
 
@@ -213,5 +218,163 @@ describe('5: campos com aparelho, o parágrafo colado a ele', () => {
       expect(24 * celular, `celular em ${largura} rem`).toBeLessThanOrEqual(sobra + 1e-9)
       expect(61 * notebook, `notebook em ${largura} rem`).toBeLessThanOrEqual(sobra + 1e-9)
     }
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Rodada 2
+
+describe('R2-1: o valor grande da miniatura fica numa linha só, em toda largura de janela', () => {
+  // O CartaoEmAndamento e o SessaoInfo não mudam. O valor grande usa clamp(…, vw, …): com a janela larga a
+  // fonte chega ao máximo (56 e 72 px) e a tela do aparelho, de tamanho fixo, não a comporta. A solução
+  // é do invólucro: o tamanho do valor dentro do .palco não depende da janela, e o zoom do invólucro
+  // deixa a largura certa.
+  const regra = (seletor: string) => {
+    const escapado = seletor.replace(/[.]/g, '\\.')
+    return new RegExp(`${escapado}\\s*\\{([^}]*)\\}`).exec(estiloGlobal)?.[1] ?? ''
+  }
+  const fonteEmPx = (seletor: string) => {
+    const achado = /font-size:\s*([\d.]+)rem\s*;/.exec(regra(seletor))
+    return achado ? parseFloat(achado[1]) * 16 : undefined
+  }
+
+  // Largura útil da tela, em px sem zoom: celular 24 rem menos moldura (2 × (2 px + 0,5 rem)) e
+  // respiro lateral da tela (2 × 1 rem) = 20,75 rem; notebook 56 rem menos tampa (2 × 2 px + 2 × 0,625 rem)
+  // e margens da tela (2 × 6,5 rem) = 41,5 rem.
+  const TELA_EM_PX = { celular: 20.75 * 16, notebook: 41.5 * 16 }
+  // Largura do campo (padding lateral de 1 rem de cada lado) e do texto em em: 0,55 em por caractere,
+  // medida folgada para o tabular de Instrument Sans (os dígitos têm cerca de 0,6 em, o espaço 0,25 em).
+  const RESPIRO_DO_CAMPO = 32
+  const EM_POR_CARACTERE = 0.55
+
+  it('dentro do .palco o tamanho do valor é fixo em rem (sem vw, sem clamp) e a linha não quebra', () => {
+    for (const seletor of ['.palco .cronometro-mini', '.palco .numero-grande']) {
+      const corpo = regra(seletor)
+      expect(corpo, seletor).not.toBe('')
+      expect(corpo, seletor).not.toMatch(/vw|clamp\(/)
+      expect(fonteEmPx(seletor), seletor).toBeDefined()
+      expect(corpo, seletor).toMatch(/white-space:\s*nowrap/)
+      expect(corpo, seletor).toMatch(/overflow-wrap:\s*normal/)
+    }
+  })
+
+  it('o valor continua o elemento mais forte da tela e proporcional ao aparelho (pelo menos 40 px, com o zoom do invólucro)', async () => {
+    const container = await abrir('/como-funciona')
+    for (const aparelho of container.querySelectorAll('[data-aparelho]')) {
+      const zoom = parseFloat(/\[zoom:([\d.]+)\]/.exec(aparelho.querySelector('[class*="zoom:"]')!.className)![1])
+      const valor = aparelho.querySelector('.cronometro-mini') ? fonteEmPx('.palco .cronometro-mini')! : fonteEmPx('.palco .numero-grande')!
+      expect(valor * zoom, aparelho.getAttribute('data-tela')!).toBeGreaterThanOrEqual(48)
+      // O texto corrente da miniatura (17 px × zoom) fica bem menor que o valor.
+      expect(valor).toBeGreaterThan(2 * 17)
+    }
+  })
+
+  it('em todos os aparelhos das páginas novas (celulares e notebook), a largura útil comporta o valor', async () => {
+    let total = 0
+    for (const caminho of ['/como-funciona', '/cuidado-compartilhado']) {
+      const container = await abrir(caminho)
+      for (const aparelho of container.querySelectorAll('[data-aparelho]')) {
+        total++
+        const tipo = aparelho.getAttribute('data-aparelho') as 'celular' | 'notebook'
+        const invólucro = aparelho.querySelector('[class*="zoom:"]')
+        expect(invólucro, `${caminho}: ${tipo}`).not.toBeNull()
+        const zoom = parseFloat(/\[zoom:([\d.]+)\]/.exec(invólucro!.className)![1])
+        const disponivel = TELA_EM_PX[tipo] / zoom - RESPIRO_DO_CAMPO
+        const valor = aparelho.querySelector('[role="timer"]') ?? aparelho.querySelector('.numero-grande')!
+        const fonte = valor.classList.contains('cronometro-mini') ? fonteEmPx('.palco .cronometro-mini')! : fonteEmPx('.palco .numero-grande')!
+        const necessario = (valor.textContent ?? '').length * EM_POR_CARACTERE * fonte
+        expect(necessario, `${caminho}: ${tipo} ${valor.textContent}`).toBeLessThanOrEqual(disponivel)
+      }
+    }
+    expect(total).toBe(4)
+  })
+})
+
+describe('R2-2: "Na passagem de turno" é um grupo de dois aparelhos', () => {
+  const TEXTO =
+    'No notebook e no celular, o mesmo cartão do Hoje com a soneca que Bruno começou: cada adulto vai ver a mesma sessão no próprio aparelho. O plano é que quem chega encontre, numa tela só, as notas em destaque deixadas por quem estava antes e tudo o que aconteceu desde que saiu.'
+
+  it('um notebook e, na frente dele, um celular, os dois tela="hoje" com o CartaoEmAndamento, no mesmo grupo', async () => {
+    const campo = secaoDe(await abrir('/cuidado-compartilhado'), 'Na passagem de turno')
+
+    const aparelhos = [...campo.querySelectorAll<HTMLElement>('[data-aparelho]')]
+    expect(aparelhos.map((a) => a.getAttribute('data-aparelho'))).toEqual(['notebook', 'celular'])
+    for (const aparelho of aparelhos) {
+      expect(aparelho.getAttribute('data-tela')).toBe('hoje')
+      expect(aparelho.hasAttribute('inert')).toBe(true)
+      expect(aparelho.getAttribute('aria-hidden')).toBe('true')
+      expect(aparelho.querySelectorAll('.campo-andamento')).toHaveLength(1)
+      expect(aparelho.querySelector('.campo-sessao')).toBeNull()
+    }
+    // O celular vem depois no DOM (fica na frente) e os dois moram na mesma caixa do grupo.
+    const grupo = aparelhos[0].closest('.palco-grupo')!
+    expect(grupo).not.toBeNull()
+    expect(grupo.contains(aparelhos[1])).toBe(true)
+    expect(grupo.querySelectorAll('[data-aparelho]')).toHaveLength(2)
+    // O celular se ancora no canto inferior do grupo e é menor que o notebook.
+    for (const classe of ['absolute', 'bottom-0', 'right-0', 'origin-bottom-right']) {
+      expect(aparelhos[1].classList.contains(classe), classe).toBe(true)
+    }
+  })
+
+  it('o parágrafo é o texto novo, sem outros parágrafos no campo, depois do grupo', async () => {
+    const campo = secaoDe(await abrir('/cuidado-compartilhado'), 'Na passagem de turno')
+
+    const paragrafos = [...campo.querySelectorAll('p')].filter(fora)
+    expect(paragrafos.map((p) => p.textContent)).toEqual([TEXTO])
+    const ultimoAparelho = [...campo.querySelectorAll('[data-aparelho]')].at(-1)!
+    expect(ultimoAparelho.compareDocumentPosition(paragrafos[0]) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
+  })
+
+  it('o celular do grupo é menor que o notebook em toda largura e continua legível em 390 (pelo menos 5 rem de largura)', () => {
+    const k = (largura: number) => {
+      let valor = Number(/\.palco-grupo\s*\{[^}]*--proporcao-do-celular:\s*([\d.]+)/.exec(estiloGlobal)?.[1])
+      for (const [, minimo, corpo] of estiloGlobal.matchAll(
+        /@container publica \(min-width:\s*([\d.]+)rem\)\s*\{\s*\.palco-grupo\s*\{([^}]*)\}\s*\}/g,
+      )) {
+        const novo = /--proporcao-do-celular:\s*([\d.]+)/.exec(corpo)
+        if (largura >= parseFloat(minimo) && novo) valor = parseFloat(novo[1])
+      }
+      return valor
+    }
+    for (let largura = 6; largura <= 140; largura += 0.25) {
+      const proporcao = k(largura)
+      expect(proporcao, `proporção em ${largura} rem`).toBeGreaterThan(0)
+      expect(proporcao, `proporção em ${largura} rem`).toBeLessThan(1)
+    }
+    const { notebook } = escalaEm(22.4)
+    expect(24 * notebook * k(22.4)).toBeGreaterThanOrEqual(5)
+    // O grupo inteiro (a caixa do notebook) cabe na largura em toda página, como o notebook sozinho.
+    for (let largura = 6; largura <= 140; largura += 0.25) {
+      const sobra = largura < 46 ? largura - 3 : largura < 64 ? largura - 6 : largura - 6 - 2.5 - 22
+      expect(61 * escalaEm(largura).notebook, `grupo em ${largura} rem`).toBeLessThanOrEqual(sobra + 1e-9)
+    }
+  })
+})
+
+describe('R2-3: Sobre, a frase do protótipo é nota da tabela "O que ele faz"', () => {
+  it('fica na coluna das frases, logo abaixo da última linha, menor que elas e na cor do texto', async () => {
+    const secao = secaoDe(await abrir('/sobre'), 'O que ele faz')
+
+    const nota = [...secao.querySelectorAll('p')].find((p) => p.textContent === 'Hoje já existe o protótipo das telas Hoje e Sessão, com uma família fictícia.')!
+    expect(nota).toBeDefined()
+    const linhas = nota.closest('section')!.querySelectorAll('h3')
+    expect(linhas).toHaveLength(4)
+    // Logo abaixo da última linha da tabela, e não antes de nenhuma.
+    const ultimaLinha = linhas[3].parentElement!
+    expect(ultimaLinha.compareDocumentPosition(nota) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
+    const coluna = nota.parentElement!
+    const grade = coluna.parentElement!
+    expect(grade.previousElementSibling, 'a nota vem logo depois do bloco das linhas').toBe(ultimaLinha.parentElement)
+    // Na coluna da direita (a das frases): do 4º ao 12º, com o mesmo recuo de 1,5 rem.
+    expect(grade.className).toContain('@min-[46rem]/publica:grid-cols-12')
+    expect(coluna.className).toContain('@min-[46rem]/publica:col-start-4')
+    expect(coluna.className).toContain('@min-[46rem]/publica:col-span-9')
+    expect(coluna.className).toContain('@min-[46rem]/publica:pl-6')
+    // Menor que as frases da tabela (17 px) e na cor do texto: sem opacidade nem token novo.
+    expect(emRem(nota.className, 'text-')).toBeLessThan(1.0625)
+    expect(nota.className).toContain('text-[var(--cor-texto)]')
+    expect(nota.className).not.toMatch(/opacity|\/\d+/)
+    expect(nota.className).toContain('texto-medida')
   })
 })

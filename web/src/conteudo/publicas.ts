@@ -272,7 +272,7 @@ export const CUIDADO = {
   passagem: {
     secao: secao('Na passagem de turno'),
     texto:
-      'No notebook, o cartão do Hoje com a soneca que Bruno começou. O plano é que quem chega encontre, numa tela só, as notas em destaque deixadas por quem estava antes e tudo o que aconteceu desde que saiu.',
+      'No notebook e no celular, o mesmo cartão do Hoje com a soneca que Bruno começou: cada adulto vai ver a mesma sessão no próprio aparelho. O plano é que quem chega encontre, numa tela só, as notas em destaque deixadas por quem estava antes e tudo o que aconteceu desde que saiu.',
   },
   parar: {
     secao: secao('Quando alguém para de cuidar'),

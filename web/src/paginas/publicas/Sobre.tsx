@@ -42,7 +42,13 @@ export function Sobre() {
             </div>
           ))}
         </div>
-        <Paragrafo texto={oQueFaz.depois} className="texto-medida mt-8" />
+        {/* A frase é nota da tabela: na coluna das frases (do 4º ao 12º, com o recuo da linha vertical),
+            logo abaixo da última linha, menor que elas e na cor do texto. */}
+        <div className="grid grid-cols-1 @min-[46rem]/publica:grid-cols-12">
+          <div className="pt-4 @min-[46rem]/publica:col-span-9 @min-[46rem]/publica:col-start-4 @min-[46rem]/publica:pl-6">
+            <Paragrafo texto={oQueFaz.depois} className="texto-medida text-[0.9375rem] text-[var(--cor-texto)]" />
+          </div>
+        </div>
       </SecaoDePapel>
 
       <CampoComIlustracao
