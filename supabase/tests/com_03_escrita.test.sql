@@ -71,9 +71,9 @@ insert into public.aceites_termos (conta_id, versao) values
   (pg_temp.i(5), '2026-11-05'), (pg_temp.i(7), '2026-11-05'), (pg_temp.i(9), '2026-11-05');
 
 insert into public.perfis_publicos (id, conta_id, apelido) values
-  (pg_temp.i(11), pg_temp.i(1), 'teste_autor'), (pg_temp.i(12), pg_temp.i(2), 'teste_outro'),
-  (pg_temp.i(13), pg_temp.i(3), 'teste_bloqueado'), (pg_temp.i(14), pg_temp.i(4), 'teste_semaceite'),
-  (pg_temp.i(17), pg_temp.i(7), 'teste_moderador'), (pg_temp.i(19), pg_temp.i(9), 'teste_modvencido');
+  (pg_temp.i(11), pg_temp.i(1), 't_autor'), (pg_temp.i(12), pg_temp.i(2), 't_outro'),
+  (pg_temp.i(13), pg_temp.i(3), 't_bloqueado'), (pg_temp.i(14), pg_temp.i(4), 't_semaceite'),
+  (pg_temp.i(17), pg_temp.i(7), 't_moderador'), (pg_temp.i(19), pg_temp.i(9), 't_modvencido');
 
 insert into public.bloqueios (bloqueador_id, bloqueado_id) values (pg_temp.i(11), pg_temp.i(13));
 
@@ -121,17 +121,17 @@ select is(
 select is(
   pg_temp.exec(v.n, v.sql), v.esperado, v.descricao
 ) from (values
-  (5, $s$insert into public.perfis_publicos (conta_id, apelido) values (pg_temp.i(2), 'teste_alheio_dois')$s$, 'ERRO:42501',
+  (5, $s$insert into public.perfis_publicos (conta_id, apelido) values (pg_temp.i(2), 't_alheio_dois')$s$, 'ERRO:42501',
    'Sem perfil não cria perfil em nome de outra conta'),
-  (8, $s$insert into public.perfis_publicos (conta_id, apelido) values (pg_temp.i(8), 'teste_admin')$s$, 'ERRO:42501',
+  (8, $s$insert into public.perfis_publicos (conta_id, apelido) values (pg_temp.i(8), 't_admin')$s$, 'ERRO:42501',
    'Admin sem aceite não cria perfil'),
-  (6, $s$insert into public.perfis_publicos (conta_id, apelido) values (pg_temp.i(6), 'teste_semconta')$s$, 'ERRO:42501',
+  (6, $s$insert into public.perfis_publicos (conta_id, apelido) values (pg_temp.i(6), 't_semconta')$s$, 'ERRO:42501',
    'Sem conta não cria perfil'),
-  (4, $s$insert into public.perfis_publicos (conta_id, apelido) values (pg_temp.i(4), 'teste_outroapelido')$s$, 'ERRO:42501',
+  (4, $s$insert into public.perfis_publicos (conta_id, apelido) values (pg_temp.i(4), 't_outroapelido')$s$, 'ERRO:42501',
    'Sem aceite não cria perfil'),
-  (2, $s$insert into public.perfis_publicos (conta_id, apelido) values (pg_temp.i(8), 'teste_alheio')$s$, 'ERRO:42501',
+  (2, $s$insert into public.perfis_publicos (conta_id, apelido) values (pg_temp.i(8), 't_alheio')$s$, 'ERRO:42501',
    'ninguém cria perfil em nome de outra conta'),
-  (1, $s$insert into public.perfis_publicos (conta_id, apelido) values (pg_temp.i(1), 'teste_autor_dois')$s$, 'ERRO:23505',
+  (1, $s$insert into public.perfis_publicos (conta_id, apelido) values (pg_temp.i(1), 't_autor_dois')$s$, 'ERRO:23505',
    'cada conta tem no máximo um perfil'),
   (1, $s$update public.perfis_publicos set bio = 'nova bio' where id = pg_temp.i(11)$s$, '1',
    'Autor altera o próprio perfil'),
@@ -153,7 +153,7 @@ select is(
    'Moderador vencido altera o próprio perfil como usuário comum'),
   (1, $s$update public.perfis_publicos set conta_id = pg_temp.i(2) where id = pg_temp.i(11)$s$, 'ERRO:42501',
    'conta_id do perfil não é alterável'),
-  (1, $s$update public.perfis_publicos set apelido = 'teste_outro' where id = pg_temp.i(11)$s$, 'ERRO:23505',
+  (1, $s$update public.perfis_publicos set apelido = 't_outro' where id = pg_temp.i(11)$s$, 'ERRO:23505',
    'apelido repetido é recusado'),
   (1, $s$delete from public.perfis_publicos where id = pg_temp.i(11)$s$, 'ERRO:42501',
    'Autor não apaga o perfil'),
@@ -369,7 +369,7 @@ select is(
 set local role authenticated;
 
 select is(
-  pg_temp.exec(5, $s$insert into public.perfis_publicos (conta_id, apelido) values (pg_temp.i(5), 'teste_semperfil')$s$),
+  pg_temp.exec(5, $s$insert into public.perfis_publicos (conta_id, apelido) values (pg_temp.i(5), 't_semperfil')$s$),
   '1',
   'Sem perfil (com aceite) cria o próprio perfil'
 );
@@ -395,7 +395,7 @@ reset role;
 insert into auth.users (id, email) values (pg_temp.i(10), 'c047-removivel@exemplo.invalid');
 insert into public.contas (id, nome_privado) values (pg_temp.i(10), 'Removível');
 insert into public.aceites_termos (conta_id, versao) values (pg_temp.i(10), '2026-11-05');
-insert into public.perfis_publicos (id, conta_id, apelido) values (pg_temp.i(20), pg_temp.i(10), 'teste_removivel');
+insert into public.perfis_publicos (id, conta_id, apelido) values (pg_temp.i(20), pg_temp.i(10), 't_removivel');
 
 insert into public.topicos (id, espaco_id, autor_id, titulo, corpo, estado, motivo_moderacao, editado_em) values
   (pg_temp.i(41), (select id from public.espacos where slug = 'sono'), pg_temp.i(20),

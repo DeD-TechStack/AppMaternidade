@@ -84,7 +84,7 @@ insert into public.aceites_termos (conta_id, versao) values
   (pg_temp.i(54), '2026-11-05'), (pg_temp.i(55), '2026-11-05');
 
 insert into public.perfis_publicos (id, conta_id, apelido) values
-  (pg_temp.i(11), pg_temp.i(1), 'teste_autor'), (pg_temp.i(12), pg_temp.i(2), 'teste_outro');
+  (pg_temp.i(11), pg_temp.i(1), 't_autor'), (pg_temp.i(12), pg_temp.i(2), 't_outro');
 
 insert into public.topicos (id, espaco_id, autor_id, titulo, corpo) values
   (pg_temp.i(21), (select id from public.espacos where slug = 'sono'), pg_temp.i(11), 'Tópico T1', 'Corpo T1');
@@ -113,13 +113,13 @@ select is(
   v.esperado,
   'Sem perfil cria perfil, apelido ' || v.rotulo
 ) from (values
-  (5, 'abaixo do mínimo (2 caracteres)', $v$'ab'$v$, 'ERRO:23514'),
+  (5, 'abaixo do mínimo (2 caracteres)', $v$'t_'$v$, 'ERRO:23514'),
   (5, 'só espaços', $v$'   '$v$, 'ERRO:23514'),
   (5, 'com espaço no começo', $v$' abc'$v$, 'ERRO:23514'),
   (5, 'com espaço no fim', $v$'abc '$v$, 'ERRO:23514'),
   (5, 'de 1 caractere com espaços', $v$'a  '$v$, 'ERRO:23514'),
   (5, 'um acima do máximo (31 caracteres)', $v$repeat('c', 31)$v$, 'ERRO:23514'),
-  (51, 'no mínimo (3 caracteres)', $v$'cba'$v$, '1'),
+  (51, 'no mínimo (3 caracteres)', $v$'t_a'$v$, '1'),
   (52, 'no máximo (30 caracteres)', $v$repeat('c', 30)$v$, '1')
 ) as v(n, rotulo, valor, esperado);
 
@@ -130,12 +130,12 @@ select is(
   v.esperado,
   'Sem perfil cria perfil, bio ' || v.rotulo
 ) from (values
-  (5, 'teste_bio_neg', 'vazia (abaixo do mínimo)', $v$''$v$, 'ERRO:23514'),
-  (5, 'teste_bio_neg', 'só espaços', $v$'   '$v$, 'ERRO:23514'),
-  (5, 'teste_bio_neg', 'um acima do máximo (161 caracteres)', $v$repeat('b', 161)$v$, 'ERRO:23514'),
-  (53, 'teste_bio_min', 'no mínimo (1 caractere)', $v$'x'$v$, '1'),
-  (54, 'teste_bio_max', 'no máximo (160 caracteres)', $v$repeat('b', 160)$v$, '1'),
-  (55, 'teste_bio_nulo', 'nula', 'null', '1')
+  (5, 't_bio_neg', 'vazia (abaixo do mínimo)', $v$''$v$, 'ERRO:23514'),
+  (5, 't_bio_neg', 'só espaços', $v$'   '$v$, 'ERRO:23514'),
+  (5, 't_bio_neg', 'um acima do máximo (161 caracteres)', $v$repeat('b', 161)$v$, 'ERRO:23514'),
+  (53, 't_bio_min', 'no mínimo (1 caractere)', $v$'x'$v$, '1'),
+  (54, 't_bio_max', 'no máximo (160 caracteres)', $v$repeat('b', 160)$v$, '1'),
+  (55, 't_bio_nulo', 'nula', 'null', '1')
 ) as v(n, apelido, rotulo, valor, esperado);
 
 -- perfis_publicos.apelido, editado pelo Autor (update)
@@ -144,13 +144,13 @@ select is(
   v.esperado,
   'Autor edita o apelido: ' || v.rotulo
 ) from (values
-  ('abaixo do mínimo (2 caracteres)', $v$'ab'$v$, 'ERRO:23514'),
+  ('abaixo do mínimo (2 caracteres)', $v$'t_'$v$, 'ERRO:23514'),
   ('só espaços', $v$'   '$v$, 'ERRO:23514'),
   ('com espaço no começo', $v$' xyz'$v$, 'ERRO:23514'),
   ('com espaço no fim', $v$'xyz '$v$, 'ERRO:23514'),
   ('de 1 caractere com espaços', $v$'a  '$v$, 'ERRO:23514'),
   ('um acima do máximo (31 caracteres)', $v$repeat('z', 31)$v$, 'ERRO:23514'),
-  ('no mínimo (3 caracteres)', $v$'xyz'$v$, '1'),
+  ('no mínimo (3 caracteres)', $v$'t_b'$v$, '1'),
   ('no máximo (30 caracteres)', $v$repeat('z', 30)$v$, '1')
 ) as v(rotulo, valor, esperado);
 
@@ -335,15 +335,15 @@ select is(
   pg_temp.tenta(v.sql), v.esperado, v.descricao
 ) from (values
   -- perfis_publicos.apelido: 3 a 30, sem espaço no começo nem no fim; único sem diferenciar caixa
-  ($s$update public.perfis_publicos set apelido = 'ab' where id = pg_temp.i(11)$s$, 'ERRO:23514', 'apelido com 2 caracteres é recusado'),
+  ($s$update public.perfis_publicos set apelido = 't_' where id = pg_temp.i(11)$s$, 'ERRO:23514', 'apelido com 2 caracteres é recusado'),
   ($s$update public.perfis_publicos set apelido = '   ' where id = pg_temp.i(11)$s$, 'ERRO:23514', 'apelido só com espaços é recusado'),
   ($s$update public.perfis_publicos set apelido = ' abc' where id = pg_temp.i(11)$s$, 'ERRO:23514', 'apelido com espaço no começo é recusado'),
   ($s$update public.perfis_publicos set apelido = 'abc ' where id = pg_temp.i(11)$s$, 'ERRO:23514', 'apelido com espaço no fim é recusado'),
   ($s$update public.perfis_publicos set apelido = 'a  ' where id = pg_temp.i(11)$s$, 'ERRO:23514', 'apelido de 1 caractere com espaços é recusado'),
-  ($s$update public.perfis_publicos set apelido = 'abc' where id = pg_temp.i(11)$s$, 'ok', 'apelido com 3 caracteres passa'),
+  ($s$update public.perfis_publicos set apelido = 't_c' where id = pg_temp.i(11)$s$, 'ok', 'apelido com 3 caracteres passa'),
   ($s$update public.perfis_publicos set apelido = repeat('a', 30) where id = pg_temp.i(11)$s$, 'ok', 'apelido com 30 caracteres passa'),
   ($s$update public.perfis_publicos set apelido = repeat('a', 31) where id = pg_temp.i(11)$s$, 'ERRO:23514', 'apelido com 31 caracteres é recusado'),
-  ($s$update public.perfis_publicos set apelido = 'TESTE_OUTRO' where id = pg_temp.i(11)$s$, 'ERRO:23505', 'apelido repetido com outra caixa é recusado'),
+  ($s$update public.perfis_publicos set apelido = 'T_OUTRO' where id = pg_temp.i(11)$s$, 'ERRO:23505', 'apelido repetido com outra caixa é recusado'),
   -- perfis_publicos.bio: 1 a 160, ou nulo
   ($s$update public.perfis_publicos set bio = '' where id = pg_temp.i(11)$s$, 'ERRO:23514', 'bio vazia é recusada'),
   ($s$update public.perfis_publicos set bio = '   ' where id = pg_temp.i(11)$s$, 'ERRO:23514', 'bio só com espaços é recusada'),
@@ -434,7 +434,7 @@ select is(
   (2, $s$insert into public.respostas (topico_id, autor_id, corpo)
          values (pg_temp.i(21), pg_temp.i(12), repeat('r', 2001))$s$,
    'ERRO:23514', 'Outro não responde com corpo de 2001 caracteres'),
-  (5, $s$insert into public.perfis_publicos (conta_id, apelido) values (pg_temp.i(5), 'ab')$s$,
+  (5, $s$insert into public.perfis_publicos (conta_id, apelido) values (pg_temp.i(5), 't_')$s$,
    'ERRO:23514', 'Sem perfil não cria perfil com apelido de 2 caracteres')
 ) as v(n, sql, esperado, descricao);
 

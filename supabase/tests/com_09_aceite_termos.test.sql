@@ -68,8 +68,8 @@ insert into public.aceites_termos (conta_id, versao) values
   (pg_temp.i(1), '2026-11-05'), (pg_temp.i(2), '2026-11-05'), (pg_temp.i(5), '2026-11-05');
 
 insert into public.perfis_publicos (id, conta_id, apelido) values
-  (pg_temp.i(11), pg_temp.i(1), 'teste_autor'), (pg_temp.i(12), pg_temp.i(2), 'teste_outro'),
-  (pg_temp.i(14), pg_temp.i(4), 'teste_semaceite');
+  (pg_temp.i(11), pg_temp.i(1), 't_autor'), (pg_temp.i(12), pg_temp.i(2), 't_outro'),
+  (pg_temp.i(14), pg_temp.i(4), 't_semaceite');
 
 insert into public.topicos (id, espaco_id, autor_id, titulo, corpo) values
   (pg_temp.i(21), (select id from public.espacos where slug = 'sono'), pg_temp.i(11), 'Tópico T1', 'Corpo T1'),
@@ -117,7 +117,7 @@ select is(
   (5, $s$select public.aceitar_termos('2026-11-05')$s$, '1', 'quem já aceitou aceita de novo sem erro'),
   (8, $s$select public.aceitar_termos('2026-11-05')$s$, '1', 'Admin aceita a versão vigente'),
   (8, pg_temp.t('null'), 'ERRO:42501', 'aceitar não basta: sem perfil não publica'),
-  (8, $s$insert into public.perfis_publicos (conta_id, apelido) values (pg_temp.i(8), 'teste_admin')$s$, '1',
+  (8, $s$insert into public.perfis_publicos (conta_id, apelido) values (pg_temp.i(8), 't_admin')$s$, '1',
    'com o aceite, o Admin cria o próprio perfil'),
   (8, pg_temp.t('public.meu_perfil_id()'), '1',
    'com aceite e perfil, o Admin publica como usuário comum')
@@ -197,10 +197,10 @@ select is(
    'sem aceitar a versão nova, ainda se protege bloqueando (D7)'),
   (1, $s$select public.aceitar_termos('2026-11-05')$s$, 'ERRO:P0001:versao nao vigente',
    'a versão antiga não é mais aceitável'),
-  (5, $s$insert into public.perfis_publicos (conta_id, apelido) values (pg_temp.i(5), 'teste_semperfil')$s$, 'ERRO:42501',
+  (5, $s$insert into public.perfis_publicos (conta_id, apelido) values (pg_temp.i(5), 't_semperfil')$s$, 'ERRO:42501',
    'com aceite antigo, não se cria perfil'),
   (5, $s$select public.aceitar_termos('2026-12-01')$s$, '1', 'Sem perfil aceita a versão nova'),
-  (5, $s$insert into public.perfis_publicos (conta_id, apelido) values (pg_temp.i(5), 'teste_semperfil')$s$, '1',
+  (5, $s$insert into public.perfis_publicos (conta_id, apelido) values (pg_temp.i(5), 't_semperfil')$s$, '1',
    'com a versão nova aceita, cria o perfil'),
   (1, $s$select public.aceitar_termos('2026-12-01')$s$, '1', 'o Autor aceita a versão nova'),
   (1, pg_temp.t('pg_temp.i(11)'), '1', 'depois de aceitar, o Autor volta a criar tópico'),
