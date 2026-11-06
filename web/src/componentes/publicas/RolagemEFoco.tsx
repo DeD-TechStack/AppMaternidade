@@ -20,7 +20,10 @@ type TipoDeTroca = 'inicial' | 'POP' | 'nova'
 interface Troca {
   tipo: TipoDeTroca
   destino: Destino
-  /** A troca manteve o caminho e a busca da página anterior e traz um #âncora. */
+  /**
+   * A troca manteve o caminho e a busca da página anterior e só o fragmento mudou, inclusive quando o
+   * novo fragmento é vazio. A mesma URL (nada mudou) não é troca só de âncora.
+   */
   soAncora: boolean
   /** O #âncora da URL existe na página de destino. */
   ancoraValida: boolean
@@ -69,6 +72,15 @@ function alvoDaAncora(hash: string): HTMLElement | null {
   return document.getElementById(id)
 }
 
+/** Deixa o título pronto para o foco por código: tabindex="-1" e sem contorno extra. Não move o foco. */
+function prepararParaFoco(titulo: HTMLElement | null) {
+  if (!titulo) return
+  if (!titulo.hasAttribute('tabindex')) titulo.setAttribute('tabindex', '-1')
+  // O contorno de foco por código é o das outras páginas (utilitário já usado no h1 delas). O foco visível
+  // dos controles não muda.
+  titulo.classList.add('focus:outline-none')
+}
+
 /** Foco por código, sem rolar. O título que não é focável ganha tabindex="-1" antes. */
 function focar(elemento: HTMLElement | null) {
   if (!elemento) return
@@ -76,31 +88,43 @@ function focar(elemento: HTMLElement | null) {
   elemento.focus({ preventScroll: true })
 }
 
+/** O fragmento sem o "#" solto: "#" e "" são a mesma URL. */
+const fragmentoDe = (hash: string) => (hash === '#' ? '' : hash)
+
 export function RolagemEFoco() {
   const local = useLocation()
   const tipoDeNavegacao: string = useNavigationType()
   const rotas = useMatches()
   // A última troca tratada. O efeito pode rodar duas vezes para a mesma rota (StrictMode): a chave
   // da localização impede o segundo tratamento. Sem anterior, é a entrada inicial.
-  const anterior = useRef<{ chave: string; caminho: string; busca: string } | null>(null)
+  const anterior = useRef<{ chave: string; caminho: string; busca: string; hash: string } | null>(null)
   const rotaCoringa = rotas.length > 0 && rotas[rotas.length - 1].params['*'] !== undefined
 
   useEffect(() => {
+    // O h1 das páginas da MAT-36 fica pronto para o foco por código em toda troca, inclusive na entrada
+    // inicial (quando o foco não se move). A Página não encontrada não pode mudar, então é esta camada
+    // que dá o tabindex ao h1 dela.
+    const destino = classificarDestino(local.pathname, rotaCoringa)
+    if (destino === 'mat36') prepararParaFoco(document.querySelector<HTMLElement>('main h1'))
+
     if (anterior.current?.chave === local.key) return
     const inicial = anterior.current === null
     const alvo = alvoDaAncora(local.hash)
+    const hash = fragmentoDe(local.hash)
+    // Troca só de âncora: mesmo caminho e mesma busca, e o fragmento mudou (também para vazio). A mesma
+    // URL, por exemplo o link do rodapé da página em que já se está, não é troca de âncora.
     const soAncora =
       !inicial &&
-      local.hash !== '' &&
       anterior.current?.caminho === local.pathname &&
-      anterior.current.busca === local.search
+      anterior.current.busca === local.search &&
+      anterior.current.hash !== hash
     const decisao = decidir({
       tipo: inicial ? 'inicial' : tipoDeNavegacao === 'POP' ? 'POP' : 'nova',
-      destino: classificarDestino(local.pathname, rotaCoringa),
+      destino,
       soAncora,
       ancoraValida: alvo !== null,
     })
-    anterior.current = { chave: local.key, caminho: local.pathname, busca: local.search }
+    anterior.current = { chave: local.key, caminho: local.pathname, busca: local.search, hash }
 
     if (decisao.rolagem === 'alvo' && alvo && typeof alvo.scrollIntoView === 'function') alvo.scrollIntoView()
     else if (decisao.rolagem === 'topo') window.scrollTo(0, 0)

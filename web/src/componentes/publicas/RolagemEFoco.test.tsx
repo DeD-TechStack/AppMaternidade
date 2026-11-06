@@ -237,6 +237,184 @@ describe('linha 4: troca só de âncora', () => {
   })
 })
 
+// Revisão, achado 1: a troca só de âncora é a navegação nova em que o caminho e a busca ficam iguais e
+// só o fragmento muda, inclusive quando o novo fragmento é vazio.
+describe('linha 4 (revisão): retirar ou trocar só o fragmento não rola nem move o foco', () => {
+  const PAGINAS: Array<[string, string]> = [
+    ['/privacidade', 'secao-seus-direitos'],
+    ['/regras-da-comunidade', 'secao-ajuda-agora'],
+    ['/termos', 'secao-sua-conta'],
+  ]
+  const DESTINOS: Array<[string, string]> = [
+    ['sem fragmento', ''],
+    ['fragmento vazio (#)', '#'],
+    ['fragmento inexistente', '#secao-que-nao-existe'],
+  ]
+
+  for (const [pagina, id] of PAGINAS) {
+    for (const [nome, sufixo] of DESTINOS) {
+      it(`${pagina}: de #${id} para ${nome}`, async () => {
+        const { roteador } = renderizarRota(pagina)
+        await screen.findByRole('heading', { level: 1 })
+        await ir(roteador, `${pagina}#${id}`)
+        const alvo = document.getElementById(id)!
+        expect(document.activeElement).toBe(alvo)
+        limparRegistros()
+
+        await ir(roteador, `${pagina}${sufixo}`)
+
+        expect(rolagemAoTopo).not.toHaveBeenCalled()
+        expect(alvosRolados).toHaveLength(0)
+        expect(document.activeElement).toBe(alvo)
+      })
+    }
+  }
+
+  it('o mesmo vale com REPLACE', async () => {
+    const { roteador } = renderizarRota('/privacidade')
+    await screen.findByRole('heading', { level: 1 })
+    await ir(roteador, '/privacidade#secao-seus-direitos')
+    const alvo = document.getElementById('secao-seus-direitos')!
+    limparRegistros()
+
+    await act(async () => {
+      await roteador.navigate('/privacidade', { replace: true })
+    })
+
+    expect(rolagemAoTopo).not.toHaveBeenCalled()
+    expect(alvosRolados).toHaveLength(0)
+    expect(document.activeElement).toBe(alvo)
+  })
+
+  it('trocar o fragmento por outro válido continua rolando até o alvo e focando o h2', async () => {
+    const { roteador } = renderizarRota('/privacidade')
+    await screen.findByRole('heading', { level: 1 })
+    await ir(roteador, '/privacidade#secao-seus-direitos')
+    limparRegistros()
+
+    await ir(roteador, '/privacidade#secao-por-quanto-tempo')
+
+    const alvo = document.getElementById('secao-por-quanto-tempo')!
+    expect(alvosRolados).toEqual([alvo])
+    expect(aoTopo()).toHaveLength(0)
+    expect(document.activeElement).toBe(alvo)
+  })
+
+  it('a mesma URL sem fragmento não é troca só de âncora: vai ao topo e leva o foco ao h1', async () => {
+    const { roteador } = renderizarRota('/privacidade')
+    await screen.findByRole('heading', { level: 1 })
+    limparRegistros()
+
+    await ir(roteador, '/privacidade')
+
+    expect(aoTopo()).toHaveLength(1)
+    expect(alvosRolados).toHaveLength(0)
+    expect(document.activeElement).toBe(screen.getByRole('heading', { level: 1 }))
+  })
+
+  it('clicar no link do rodapé da página em que já se está também vai ao topo e foca o h1', async () => {
+    renderizarRota('/privacidade')
+    await screen.findByRole('heading', { level: 1 })
+    limparRegistros()
+
+    fireEvent.click(within(screen.getByRole('contentinfo')).getByRole('link', { name: 'Privacidade' }))
+
+    expect(aoTopo()).toHaveLength(1)
+    expect(document.activeElement).toBe(screen.getByRole('heading', { level: 1 }))
+  })
+
+  it('a mesma URL com âncora válida não é troca só de âncora: rola ao alvo e foca o h2, sem ir ao topo', async () => {
+    const { roteador } = renderizarRota('/privacidade')
+    await screen.findByRole('heading', { level: 1 })
+    await ir(roteador, '/privacidade#secao-seus-direitos')
+    limparRegistros()
+
+    await ir(roteador, '/privacidade#secao-seus-direitos')
+
+    const alvo = document.getElementById('secao-seus-direitos')!
+    expect(alvosRolados).toEqual([alvo])
+    expect(aoTopo()).toHaveLength(0)
+    expect(document.activeElement).toBe(alvo)
+  })
+
+  it('a mesma URL com âncora inexistente: topo e foco no h1', async () => {
+    const { roteador } = renderizarRota('/privacidade')
+    await screen.findByRole('heading', { level: 1 })
+    await ir(roteador, '/privacidade#secao-que-nao-existe')
+    limparRegistros()
+
+    await ir(roteador, '/privacidade#secao-que-nao-existe')
+
+    expect(aoTopo()).toHaveLength(1)
+    expect(alvosRolados).toHaveLength(0)
+    expect(document.activeElement).toBe(screen.getByRole('heading', { level: 1 }))
+  })
+})
+
+// Revisão, achado 2: o h1 das 10 páginas da MAT-36 fica pronto para o foco por código desde a entrada
+// inicial, sem receber o foco.
+describe('h1 pronto para o foco por código (revisão)', () => {
+  const DEZ = [
+    '/como-funciona',
+    '/cuidado-compartilhado',
+    '/desenvolvimento',
+    '/regras-da-comunidade',
+    '/privacidade',
+    '/termos',
+    '/exclusao-de-conta',
+    '/contato',
+    '/sobre',
+    '/rota-inexistente',
+  ]
+
+  for (const caminho of DEZ) {
+    it(`entrada inicial em ${caminho}: h1 com tabindex -1 e sem contorno extra, foco no body`, async () => {
+      renderizarRota(caminho)
+      const titulo = await screen.findByRole('heading', { level: 1 })
+
+      expect(titulo.getAttribute('tabindex')).toBe('-1')
+      expect(titulo.classList.contains('focus:outline-none')).toBe(true)
+      // Fora da ordem do Tab e sem receber o foco.
+      expect(titulo.tabIndex).toBe(-1)
+      expect(document.activeElement).toBe(document.body)
+    })
+  }
+
+  it('de /sobre para a Página não encontrada: o h1 recebe o foco, com tabindex -1 e sem contorno extra', async () => {
+    const { roteador } = renderizarRota('/sobre')
+    await screen.findByRole('heading', { level: 1 })
+
+    await ir(roteador, '/rota-inexistente')
+
+    const titulo = screen.getByRole('heading', { level: 1 })
+    expect(titulo.getAttribute('tabindex')).toBe('-1')
+    expect(titulo.classList.contains('focus:outline-none')).toBe(true)
+    expect(document.activeElement).toBe(titulo)
+  })
+
+  it('voltando (POP) à Página não encontrada na entrada inicial, o h1 continua pronto', async () => {
+    const { roteador } = renderizarRota('/rota-inexistente')
+    await screen.findByRole('heading', { level: 1 })
+    await ir(roteador, '/sobre')
+
+    await voltar(roteador)
+
+    const titulo = screen.getByRole('heading', { level: 1 })
+    expect(titulo.getAttribute('tabindex')).toBe('-1')
+    expect(document.activeElement).toBe(titulo)
+  })
+
+  it('o h1 do Início e o das telas logadas não são tocados', async () => {
+    const inicio = renderizarRota('/')
+    expect((await screen.findByRole('heading', { level: 1 })).hasAttribute('tabindex')).toBe(false)
+    inicio.unmount()
+
+    renderizarRota('/app/hoje')
+    const hoje = await screen.findByRole('heading', { level: 1 })
+    expect(hoje.classList.contains('focus:outline-none')).toBe(false)
+  })
+})
+
 describe('linha 5: navegação nova', () => {
   it('de uma página pública para outra pelo rodapé, vai ao topo e leva o foco ao h1', async () => {
     renderizarRota('/sobre')
