@@ -21,6 +21,14 @@ Horários em America/Sao_Paulo, tirados do relógio da máquina ou de carimbos d
 
 Uma linha por marco, a mais recente no topo. O estado corrente fica em [Retomada do site](Retomada_Site.md), e o detalhe de cada marco está no cartão Kanban citado.
 
+- 06/11/2026: **frente visual MAT-44c (decisão de Daniel, ~15h).**
+  - Daniel reprovou o site publicado: estático, com ilustrações ruins e tela desorganizada.
+  - **Aceite novo:** vale a nota de um avaliador que não fez a tela, comparando lado a lado com a referência (https://www.raredays.com/work/dr-becky), com mínimo de 8,0. Abaixo disso, a tela não integra, e a última palavra é de Daniel pela GALERIA.html.
+  - **Unificação:** a MAT-44b e a MAT-50 (movimento) viraram a MAT-44c.
+  - **Referência gravada** em vídeo e quadros no cartão [pesquisa] t_db4f7ab6, com G9 limpo.
+  - **Spec v2 aprovada** (sha256 740c873b), em dois cartões em série: o 44c-1 (t_f67d8962, rodando) faz layout, grade, mockups reais e madrugada escura; o 44c-2 faz o movimento.
+  - **MAT-36 (t_b2a55931):** o leitor cego deu de 6,36 a 7,05, e ela espera a 44c-1 como pai.
+  - **MAT-37 a 41:** ficam paradas até a base visual nova.
 - 06/11/2026: **site no ar (MAT-48a).** O cartão t_f13634a3 teve o candidato 5844fa5 aprovado e foi integrado em 2beddee: 4 commits, range-diff idêntico, check com 469 testes. O workflow Pages rodou com sucesso no run 42246281381.
   - A ACC-09 passou: https://ded-techstack.github.io/AppMaternidade/ responde 200, e /app/hoje e /app/sessao abrem pelo 404.html com o app (h1 Hoje e Sono de Lia), nos dois casos com o aviso "Demonstração sem banco".
   - Nenhuma ação avisou de Node depreciado; o único aviso foi o `punycode` do próprio Node.
