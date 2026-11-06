@@ -340,18 +340,18 @@ select is(
 select throws_ok(
   $$select public.gravar_registro('019a0000-0000-7000-8000-000000000f05', 'bbbbbbbb-0000-4000-8000-000000000001',
       null, now() - interval '1 hour', 'America/Sao_Paulo', -180)$$,
-  '23502', 'null value in column "tipo" of relation "registros" violates not-null constraint',
-  'gravar_registro: tipo nulo dá o 23502 do Postgres');
+  '23502', 'parametro obrigatorio',
+  'gravar_registro: tipo nulo dá 23502 "parametro obrigatorio" (adendo R-B, R6)');
 select throws_ok(
   $$select public.gravar_registro('019a0000-0000-7000-8000-000000000f06', 'bbbbbbbb-0000-4000-8000-000000000001',
       'sono', null, 'America/Sao_Paulo', -180)$$,
-  '23502', 'null value in column "inicio" of relation "registros" violates not-null constraint',
-  'gravar_registro: início nulo dá o 23502 do Postgres');
+  '23502', 'parametro obrigatorio',
+  'gravar_registro: início nulo dá 23502 "parametro obrigatorio" (adendo R-B, R6)');
 select throws_ok(
   $$select public.gravar_registro('019a0000-0000-7000-8000-000000000f07', 'bbbbbbbb-0000-4000-8000-000000000001',
       'sono', now() - interval '1 hour', null, -180)$$,
-  '23502', 'null value in column "fuso" of relation "registros" violates not-null constraint',
-  'gravar_registro: fuso nulo dá o 23502 do Postgres');
+  '23502', 'parametro obrigatorio',
+  'gravar_registro: fuso nulo dá 23502 "parametro obrigatorio" (adendo R-B, R6)');
 
 -- UUID pelas funções, como responsável (id v7 entra; v4 e o uuid nulo são Inválidos).
 select throws_ok(

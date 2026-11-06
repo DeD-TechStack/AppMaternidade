@@ -86,7 +86,7 @@ select throws_ok($$select public.gravar_nota(pg_temp.nid(21), 'ffffffff-0000-400
 select throws_ok($$select public.gravar_nota(pg_temp.nid(22), 'ffffffff-0000-4000-8000-000000000001', repeat('a', 501))$$, '23514',
   'new row for relation "notas_cuidado" violates check constraint "notas_cuidado_texto_check"', 'texto de 501 caracteres é recusado');
 select throws_ok($$select public.gravar_nota(pg_temp.nid(23), 'ffffffff-0000-4000-8000-000000000001', null)$$, '23502',
-  'null value in column "texto" of relation "notas_cuidado" violates not-null constraint', 'texto nulo dá o 23502 do Postgres');
+  'parametro obrigatorio', 'texto nulo dá 23502 "parametro obrigatorio" (adendo R-B, R6)');
 select throws_ok($$select public.gravar_nota('019b0000-0000-4000-8000-000000000024', 'ffffffff-0000-4000-8000-000000000001', 'Texto')$$, '23514',
   'new row for relation "notas_cuidado" violates check constraint "notas_cuidado_id_uuidv7_check"', 'id que não é UUID v7 é recusado');
 select ok(not (pg_temp.existe(20) or pg_temp.existe(21) or pg_temp.existe(22) or pg_temp.existe(23)), 'nenhuma nota inválida foi criada');
