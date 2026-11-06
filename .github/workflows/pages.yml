@@ -1,0 +1,86 @@
+name: Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "web/**"
+      - "web/package*.json"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  construir:
+    name: Construir o site
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      pages: read
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v5
+
+      - name: Instalar o Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      - name: Configurar o Pages
+        id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Explicar a falha do Pages
+        if: failure() && steps.pages.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          saida=$(gh api "repos/$GITHUB_REPOSITORY/pages" 2>&1) || true
+          if [[ "$saida" == *"HTTP 404"* ]]; then
+            echo "::error title=Pages não ativado::Ative em Settings > Pages > Source: GitHub Actions e rode o workflow de novo."
+          else
+            echo "::error title=configure-pages falhou::$saida"
+          fi
+
+      - name: Instalar as dependências do site
+        working-directory: web
+        run: npm ci
+
+      - name: Verificar o site (typecheck, lint, test, build)
+        working-directory: web
+        run: npm run check
+
+      - name: Gerar o build com o subcaminho do Pages
+        working-directory: web
+        env:
+          BASE_SITE: ${{ steps.pages.outputs.base_path }}
+        run: npm run build
+
+      - name: Enviar o site para o Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/dist
+
+  publicar:
+    name: Publicar no Pages
+    needs: construir
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.publicar.outputs.page_url }}
+    steps:
+      - name: Publicar no GitHub Pages
+        id: publicar
+        uses: actions/deploy-pages@v4
