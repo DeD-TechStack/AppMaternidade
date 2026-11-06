@@ -81,9 +81,9 @@ insert into public.aceites_termos (conta_id, versao) values
   (pg_temp.i(5), '2026-11-05'), (pg_temp.i(7), '2026-11-05'), (pg_temp.i(9), '2026-11-05');
 
 insert into public.perfis_publicos (id, conta_id, apelido) values
-  (pg_temp.i(11), pg_temp.i(1), 'teste_autor'), (pg_temp.i(12), pg_temp.i(2), 'teste_outro'),
-  (pg_temp.i(13), pg_temp.i(3), 'teste_bloqueado'), (pg_temp.i(14), pg_temp.i(4), 'teste_semaceite'),
-  (pg_temp.i(17), pg_temp.i(7), 'teste_moderador'), (pg_temp.i(19), pg_temp.i(9), 'teste_modvencido');
+  (pg_temp.i(11), pg_temp.i(1), 't_autor'), (pg_temp.i(12), pg_temp.i(2), 't_outro'),
+  (pg_temp.i(13), pg_temp.i(3), 't_bloqueado'), (pg_temp.i(14), pg_temp.i(4), 't_semaceite'),
+  (pg_temp.i(17), pg_temp.i(7), 't_moderador'), (pg_temp.i(19), pg_temp.i(9), 't_modvencido');
 
 insert into public.papeis_plataforma (conta_id, papel, valido_ate) values
   (pg_temp.i(7), 'moderador', null), (pg_temp.i(8), 'admin', null),

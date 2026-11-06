@@ -88,7 +88,7 @@ delete from public.papeis_plataforma where papel = 'admin' and conta_id <> pg_te
 
 -- Uma denúncia para provar o efeito de um papel recém-concedido.
 insert into public.perfis_publicos (id, conta_id, apelido) values
-  (pg_temp.i(12), pg_temp.i(2), 'teste_outro');
+  (pg_temp.i(12), pg_temp.i(2), 't_outro');
 insert into public.denuncias (id, denunciante_id, perfil_id, motivo) values
   (pg_temp.i(41), pg_temp.i(1), pg_temp.i(12), 'outro');
 
