@@ -120,29 +120,29 @@ select throws_ok(
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000019", "role": "authenticated"}';
 select throws_ok(
   $$select public.mudar_papel('bb000000-0000-4000-8000-000000000005', 'observador')$$,
-  '42501', 'sem permissao', 'responsável revogado não muda papel'
+  'P0002', 'vinculo inexistente', 'responsável revogado não muda papel (sem visibilidade: P0002)'
 );
 
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000020", "role": "authenticated"}';
 select throws_ok(
   $$select public.mudar_papel('bb000000-0000-4000-8000-000000000005', 'observador')$$,
-  '42501', 'sem permissao', 'responsável que saiu não muda papel'
+  'P0002', 'vinculo inexistente', 'responsável que saiu não muda papel (sem visibilidade: P0002)'
 );
 
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000021", "role": "authenticated"}';
 select throws_ok(
   $$select public.mudar_papel('bb000000-0000-4000-8000-000000000005', 'observador')$$,
-  '42501', 'sem permissao', 'responsável com validade vencida não muda papel'
+  'P0002', 'vinculo inexistente', 'responsável com validade vencida não muda papel (sem visibilidade: P0002)'
 );
 
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000011", "role": "authenticated"}';
 select throws_ok(
   $$select public.mudar_papel('bb000000-0000-4000-8000-000000000005', 'observador')$$,
-  '42501', 'sem permissao', 'responsável de outra família não muda papel na família 1'
+  'P0002', 'vinculo inexistente', 'responsável de outra família não muda papel na família 1 (sem visibilidade: P0002)'
 );
 select throws_ok(
   $$select public.mudar_papel('bb000000-0000-4000-8000-0000000000ee', 'observador')$$,
-  '42501', 'sem permissao', 'vínculo inexistente dá o mesmo erro de vínculo alheio'
+  'P0002', 'vinculo inexistente', 'vínculo inexistente dá o mesmo erro de vínculo alheio (P0002)'
 );
 
 -- Vínculo alvo inativo (revogado, saiu e vencido), com qualquer papel pedido.

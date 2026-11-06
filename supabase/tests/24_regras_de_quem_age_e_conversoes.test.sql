@@ -85,7 +85,7 @@ set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000002", 
 
 select throws_ok(
   $$select public.sair_da_familia('ffffffff-0000-4000-8000-000000000001')$$,
-  '42501', 'sem permissao', 'R2: B revogado já não sai da família'
+  'P0002', 'familia inexistente', 'R2: B revogado já não sai da família (sem visibilidade: P0002)'
 );
 select is(
   public.aceitar_convite(repeat('c2', 32)),

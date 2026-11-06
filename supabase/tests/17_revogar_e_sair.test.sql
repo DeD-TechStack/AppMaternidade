@@ -124,21 +124,21 @@ select throws_ok($$select public.revogar_vinculo('bb000000-0000-4000-8000-000000
 
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000019", "role": "authenticated"}';
 select throws_ok($$select public.revogar_vinculo('bb000000-0000-4000-8000-000000000005')$$,
-  '42501', 'sem permissao', 'responsável revogado não revoga vínculo');
+  'P0002', 'vinculo inexistente', 'responsável revogado não revoga vínculo (sem visibilidade: P0002)');
 
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000020", "role": "authenticated"}';
 select throws_ok($$select public.revogar_vinculo('bb000000-0000-4000-8000-000000000005')$$,
-  '42501', 'sem permissao', 'responsável que saiu não revoga vínculo');
+  'P0002', 'vinculo inexistente', 'responsável que saiu não revoga vínculo (sem visibilidade: P0002)');
 
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000021", "role": "authenticated"}';
 select throws_ok($$select public.revogar_vinculo('bb000000-0000-4000-8000-000000000005')$$,
-  '42501', 'sem permissao', 'responsável com validade vencida não revoga vínculo');
+  'P0002', 'vinculo inexistente', 'responsável com validade vencida não revoga vínculo (sem visibilidade: P0002)');
 
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000011", "role": "authenticated"}';
 select throws_ok($$select public.revogar_vinculo('bb000000-0000-4000-8000-000000000005')$$,
-  '42501', 'sem permissao', 'responsável de outra família não revoga vínculo da família 1');
+  'P0002', 'vinculo inexistente', 'responsável de outra família não revoga vínculo da família 1 (sem visibilidade: P0002)');
 select throws_ok($$select public.revogar_vinculo('bb000000-0000-4000-8000-0000000000ee')$$,
-  '42501', 'sem permissao', 'vínculo inexistente dá o mesmo erro de vínculo alheio');
+  'P0002', 'vinculo inexistente', 'vínculo inexistente dá o mesmo erro de vínculo alheio (P0002)');
 
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000001", "role": "authenticated"}';
 select throws_ok($$select public.revogar_vinculo('bb000000-0000-4000-8000-000000000001')$$,
@@ -176,27 +176,27 @@ select throws_ok($$select public.sair_da_familia('ffffffff-0000-4000-8000-000000
 
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000008", "role": "authenticated"}';
 select throws_ok($$select public.sair_da_familia('ffffffff-0000-4000-8000-000000000001')$$,
-  '42501', 'sem permissao', 'vínculo revogado não sai');
+  'P0002', 'familia inexistente', 'vínculo revogado não sai (sem visibilidade: P0002)');
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000009", "role": "authenticated"}';
 select throws_ok($$select public.sair_da_familia('ffffffff-0000-4000-8000-000000000001')$$,
-  '42501', 'sem permissao', 'quem já saiu não sai de novo');
+  'P0002', 'familia inexistente', 'quem já saiu não sai de novo (sem visibilidade: P0002)');
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000010", "role": "authenticated"}';
 select throws_ok($$select public.sair_da_familia('ffffffff-0000-4000-8000-000000000001')$$,
-  '42501', 'sem permissao', 'vínculo vencido não sai');
+  'P0002', 'familia inexistente', 'vínculo vencido não sai (sem visibilidade: P0002)');
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000016", "role": "authenticated"}';
 select throws_ok($$select public.sair_da_familia('ffffffff-0000-4000-8000-000000000003')$$,
-  '42501', 'sem permissao', 'responsável revogado recebe sem permissao, que vem antes de ultimo responsavel');
+  'P0002', 'familia inexistente', 'responsável revogado recebe familia inexistente, que vem antes de ultimo responsavel');
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000017", "role": "authenticated"}';
 select throws_ok($$select public.sair_da_familia('ffffffff-0000-4000-8000-000000000003')$$,
-  '42501', 'sem permissao', 'responsável que saiu recebe sem permissao');
+  'P0002', 'familia inexistente', 'responsável que saiu recebe familia inexistente');
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000018", "role": "authenticated"}';
 select throws_ok($$select public.sair_da_familia('ffffffff-0000-4000-8000-000000000003')$$,
-  '42501', 'sem permissao', 'responsável com validade vencida recebe sem permissao');
+  'P0002', 'familia inexistente', 'responsável com validade vencida recebe familia inexistente');
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000011", "role": "authenticated"}';
 select throws_ok($$select public.sair_da_familia('ffffffff-0000-4000-8000-000000000001')$$,
-  '42501', 'sem permissao', 'conta de outra família não sai da família 1');
+  'P0002', 'familia inexistente', 'conta de outra família não sai da família 1 (sem visibilidade: P0002)');
 select throws_ok($$select public.sair_da_familia('ffffffff-0000-4000-8000-0000000000ee')$$,
-  '42501', 'sem permissao', 'família inexistente dá o mesmo erro');
+  'P0002', 'familia inexistente', 'família inexistente dá o mesmo erro (P0002)');
 select throws_ok($$select public.sair_da_familia(null)$$,
   'P0001', 'parametro obrigatorio', 'família nula');
 
@@ -259,9 +259,9 @@ set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000002", 
 select is((select count(*)::int from public.familias where id = 'ffffffff-0000-4000-8000-000000000001'), 0,
   'quem foi revogado já não lê a família na mesma transação');
 select throws_ok($$select public.revogar_vinculo('bb000000-0000-4000-8000-000000000001')$$,
-  '42501', 'sem permissao', 'de dois responsáveis que revogam um ao outro, o segundo recebe sem permissao');
+  'P0002', 'vinculo inexistente', 'de dois responsáveis que revogam um ao outro, o segundo recebe vinculo inexistente (P0002)');
 select throws_ok($$select public.revogar_vinculo('bb000000-0000-4000-8000-000000000003')$$,
-  '42501', 'sem permissao', 'o revogado já não revoga ninguém');
+  'P0002', 'vinculo inexistente', 'o revogado já não revoga ninguém (sem visibilidade: P0002)');
 
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000001", "role": "authenticated"}';
 select throws_ok($$select public.revogar_vinculo('bb000000-0000-4000-8000-000000000002')$$,
@@ -336,7 +336,7 @@ select is((select count(*)::int from public.familias where id = 'ffffffff-0000-4
 select is((select count(*)::int from public.bebes where familia_id = 'ffffffff-0000-4000-8000-000000000001'), 0,
   'observador que saiu lê 0 linhas em bebes na mesma transação');
 select throws_ok($$select public.sair_da_familia('ffffffff-0000-4000-8000-000000000001')$$,
-  '42501', 'sem permissao', 'quem acabou de sair não sai de novo');
+  'P0002', 'familia inexistente', 'quem acabou de sair não sai de novo (sem visibilidade: P0002)');
 
 reset role;
 
