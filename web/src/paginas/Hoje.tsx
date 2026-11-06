@@ -135,28 +135,29 @@ export function Hoje() {
             <CartaoDaSessao cartao={cartao} />
           </div>
 
-          {/* A nota de passagem é um campo de lavanda a rente da tela, como no Início: a frase é o
-              que importa ao chegar no turno. Na madrugada o campo é o lavanda escuro. */}
+          {/* A hierarquia é a dos dados: o cartão (o mais forte), os últimos registros (legíveis de
+              relance) e, por fim, a nota de passagem, num campo de lavanda compacto e inset, que
+              não sangra como o cartão. Na madrugada o campo é o lavanda escuro. */}
           <section
             aria-labelledby="titulo-saber"
             data-campo={nomeDoCampo('field-2', estado.madrugada)}
-            className="-mx-4 mt-8 rounded-none px-4 py-8"
+            className="mt-6 px-4 py-5"
           >
             <h2 id="titulo-saber" className="rotulo">
               Para você saber
             </h2>
-            <p className="nota-italico mt-4 text-[2rem] leading-tight">{estado.nota.texto}</p>
-            <p className="tabular mt-3 text-sm">{`${estado.nota.autor}, ${estado.nota.hora}`}</p>
+            <p className="nota-italico mt-2 text-[1.5rem] leading-tight">{estado.nota.texto}</p>
+            <p className="tabular mt-2 text-sm">{`${estado.nota.autor}, ${estado.nota.hora}`}</p>
           </section>
 
-          <section aria-labelledby="titulo-ultimos" className="mt-10">
+          <section aria-labelledby="titulo-ultimos" className="mt-8">
             <h2 id="titulo-ultimos" className="rotulo">
               Últimos
             </h2>
-            <ul className="mt-4 divide-y border-y">
+            <ul className="mt-3 divide-y border-y">
               {estado.ultimos.map((item) => (
-                <li key={item.chave} className="flex items-baseline justify-between gap-4 py-4">
-                  <span>{item.rotulo}</span> <span className="tabular text-right">{item.quando}</span>
+                <li key={item.chave} className="flex items-baseline justify-between gap-4 py-4 text-lg">
+                  <span>{item.rotulo}</span> <span className="tabular text-right font-semibold">{item.quando}</span>
                 </li>
               ))}
             </ul>

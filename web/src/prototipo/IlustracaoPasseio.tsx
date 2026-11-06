@@ -1,11 +1,12 @@
 import { Membro } from './Membro.tsx'
 
 // Passeio: adulto empurrando o carrinho, com o bebê espiando sob a capota. Traço contínuo de
-// tinta, preenchimento chapado nas cores dos tokens.
+// tinta, preenchimento chapado nas cores dos tokens. O viewBox é justo (só a cena e o chão, que
+// termina na base do desenho).
 export function IlustracaoPasseio({ className }: { className?: string }) {
   return (
     <svg
-      viewBox="0 0 240 240"
+      viewBox="36 44 188 178"
       className={`ilu ${className ?? ''}`}
       aria-hidden="true"
       focusable="false"

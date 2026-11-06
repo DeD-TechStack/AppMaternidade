@@ -488,87 +488,191 @@
     font-weight: 600;
   }
 
-  /* Vitrine do Início: o palco tem tamanho natural fixo e encolhe por escala. A escala depende
-     da largura da página em rem (contêiner pagina), nunca da janela, e cresce em degraus de modo
-     que o palco inteiro sempre caiba na largura: nada do que tem texto fica cortado pela borda.
-     Abaixo de 46 rem o palco tem só o notebook e um celular (58 rem de largura natural); a
-     partir de 46 rem entra o segundo celular (72 rem). Só o fundo do palco é cortado, nunca uma
-     linha de texto. */
+  /* Vitrine do Início: o palco tem tamanho natural fixo e encolhe por escala. O tamanho natural e
+     a escala são variáveis do .vitrine; as regras do .vitrine-palco só leem as variáveis, então
+     nenhuma declaração dele pode desfazer, pela ordem da cascata, a medida de um bloco
+     @container. A escala depende da largura da página em rem (contêiner pagina), nunca da
+     janela, e cresce em degraus de modo que o palco inteiro caiba na largura em qualquer largura
+     (inclusive com a fonte raiz em 200%): palco × escala nunca passa da largura. As margens dos
+     aparelhos dentro do palco (pelo menos 2 rem dos quatro lados, o conjunto centrado) são
+     calculadas nas posições de cada aparelho em Inicio.tsx.
+     Abaixo de 46 rem: notebook e dois celulares, grandes e empilhados (54 × 67 rem). A partir de
+     46 rem: notebook entre os dois celulares (81 × 56 rem). */
   .vitrine {
-    --escala: 0.38;
+    --escala: 0.11;
+    --palco-largura: 54rem;
+    --palco-altura: 67rem;
     position: relative;
     overflow: hidden;
-    height: calc(55rem * var(--escala));
-  }
-
-  @container pagina (min-width: 26rem) {
-    .vitrine {
-      --escala: 0.44;
-    }
-  }
-
-  @container pagina (min-width: 30rem) {
-    .vitrine {
-      --escala: 0.52;
-    }
-  }
-
-  @container pagina (min-width: 36rem) {
-    .vitrine {
-      --escala: 0.62;
-    }
-  }
-
-  @container pagina (min-width: 42rem) {
-    .vitrine {
-      --escala: 0.72;
-    }
-  }
-
-  @container pagina (min-width: 46rem) {
-    .vitrine {
-      --escala: 0.62;
-    }
-
-    .vitrine-palco {
-      width: 72rem;
-      margin-left: -36rem;
-    }
-  }
-
-  @container pagina (min-width: 64rem) {
-    .vitrine {
-      --escala: 0.85;
-    }
-  }
-
-  @container pagina (min-width: 80rem) {
-    .vitrine {
-      --escala: 1;
-    }
+    height: calc(var(--palco-altura) * var(--escala));
   }
 
   .vitrine-palco {
     position: absolute;
     top: 0;
     left: 50%;
-    width: 58rem;
-    height: 55rem;
-    margin-left: -29rem;
+    width: var(--palco-largura);
+    height: var(--palco-altura);
+    margin-left: calc(var(--palco-largura) / -2);
     transform: scale(var(--escala));
     transform-origin: top center;
   }
 
-  /* Madrugada: quatro filhos da grade. Em coluna única (página estreita) a ordem é título e
-     texto, ilustração, celular e legenda, tudo centrado no celular. A partir de 64 rem, duas
-     colunas: o texto no alto da esquerda, a ilustração apoiada na base do celular (a linha do
-     meio, 1fr, é a que sobra ao lado dele) e a legenda logo abaixo do celular, com a largura
-     dele: a legenda tem largura 0 e mínimo de 100%, para a coluna ser a do celular e não a do
-     texto da legenda. */
+  @container pagina (min-width: 8rem) {
+    .vitrine {
+      --escala: 0.14;
+    }
+  }
+
+  @container pagina (min-width: 10rem) {
+    .vitrine {
+      --escala: 0.18;
+    }
+  }
+
+  @container pagina (min-width: 12rem) {
+    .vitrine {
+      --escala: 0.22;
+    }
+  }
+
+  @container pagina (min-width: 14rem) {
+    .vitrine {
+      --escala: 0.25;
+    }
+  }
+
+  @container pagina (min-width: 16rem) {
+    .vitrine {
+      --escala: 0.29;
+    }
+  }
+
+  @container pagina (min-width: 18rem) {
+    .vitrine {
+      --escala: 0.33;
+    }
+  }
+
+  @container pagina (min-width: 20rem) {
+    .vitrine {
+      --escala: 0.37;
+    }
+  }
+
+  @container pagina (min-width: 22rem) {
+    .vitrine {
+      --escala: 0.4;
+    }
+  }
+
+  @container pagina (min-width: 24rem) {
+    .vitrine {
+      --escala: 0.44;
+    }
+  }
+
+  @container pagina (min-width: 27rem) {
+    .vitrine {
+      --escala: 0.5;
+    }
+  }
+
+  @container pagina (min-width: 30rem) {
+    .vitrine {
+      --escala: 0.55;
+    }
+  }
+
+  @container pagina (min-width: 33rem) {
+    .vitrine {
+      --escala: 0.6;
+    }
+  }
+
+  @container pagina (min-width: 46rem) {
+    .vitrine {
+      --escala: 0.55;
+      --palco-largura: 81rem;
+      --palco-altura: 56rem;
+    }
+  }
+
+  @container pagina (min-width: 49rem) {
+    .vitrine {
+      --escala: 0.6;
+    }
+  }
+
+  @container pagina (min-width: 53rem) {
+    .vitrine {
+      --escala: 0.65;
+    }
+  }
+
+  @container pagina (min-width: 57rem) {
+    .vitrine {
+      --escala: 0.7;
+    }
+  }
+
+  @container pagina (min-width: 61rem) {
+    .vitrine {
+      --escala: 0.75;
+    }
+  }
+
+  @container pagina (min-width: 65rem) {
+    .vitrine {
+      --escala: 0.8;
+    }
+  }
+
+  @container pagina (min-width: 69rem) {
+    .vitrine {
+      --escala: 0.85;
+    }
+  }
+
+  @container pagina (min-width: 73rem) {
+    .vitrine {
+      --escala: 0.9;
+    }
+  }
+
+  @container pagina (min-width: 77rem) {
+    .vitrine {
+      --escala: 0.95;
+    }
+  }
+
+  /* Madrugada: quatro filhos da grade, sem nada sobreposto. Em coluna única (página estreita) a
+     ordem é título e texto, cena (a ilustração), celular e legenda. A cena mostra só o meio do
+     desenho largo (o svg tem o dobro da largura da caixa e recua metade para a esquerda), que é
+     onde está a cena, com o chão de borda a borda da caixa. A partir de 64 rem, duas colunas: à
+     esquerda o texto no alto e a ilustração embaixo, na largura da coluna e com o chão na base do
+     celular; à direita o celular e a legenda logo abaixo dele, com a largura dele (a legenda tem
+     largura 0 e mínimo de 100%, para a coluna ser a do celular e não a do texto da legenda). */
   .madrugada-grade {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    row-gap: 2.5rem;
+    row-gap: 1.5rem;
+  }
+
+  .madrugada-cena {
+    width: 100%;
+    max-width: 26rem;
+    margin-inline: auto;
+    overflow: hidden;
+  }
+
+  .madrugada-cena > svg {
+    position: relative;
+    left: -50%;
+    display: block;
+    width: 200%;
+    max-width: none;
+    height: auto;
   }
 
   .madrugada-celular {
@@ -589,7 +693,7 @@
   @container pagina (min-width: 64rem) {
     .madrugada-grade {
       grid-template-columns: minmax(0, 1fr) auto;
-      grid-template-areas: "texto celular" "ilustracao celular" ". legenda";
+      grid-template-areas: "texto celular" "cena celular" ". legenda";
       grid-template-rows: auto 1fr auto;
       column-gap: 4rem;
       row-gap: 0;
@@ -599,15 +703,23 @@
       grid-area: texto;
     }
 
-    .madrugada-ilustracao {
-      grid-area: ilustracao;
+    /* O chão do desenho (sua base) cai na base do celular. */
+    .madrugada-cena {
+      grid-area: cena;
       align-self: end;
-      justify-self: start;
+      max-width: none;
+      margin-inline: 0;
       margin-top: 2rem;
+    }
+
+    .madrugada-cena > svg {
+      left: 0;
+      width: 100%;
     }
 
     .madrugada-celular {
       grid-area: celular;
+      align-self: end;
       justify-self: start;
     }
 
