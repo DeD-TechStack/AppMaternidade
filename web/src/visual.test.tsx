@@ -372,20 +372,30 @@ describe('MAT-44: SVG e movimento', () => {
     }
   })
 
-  it('o movimento é só em CSS: motion e framer-motion não estão no package.json nem são importados', () => {
+  it('motion entra com versão exata da major 12, framer-motion não é dependência direta, e só os arquivos da VIS4-20 importam motion/react', () => {
     const pacote = JSON.parse(readFileSync(pastaSrc + '../package.json', 'utf8')) as {
       dependencies?: Record<string, string>
       devDependencies?: Record<string, string>
     }
-    const instalados = Object.keys({ ...pacote.dependencies, ...pacote.devDependencies })
-    expect(instalados).not.toContain('motion')
-    expect(instalados).not.toContain('framer-motion')
+    expect(pacote.dependencies?.motion).toMatch(/^12\.\d+\.\d+$/)
+    expect(pacote.dependencies).not.toHaveProperty('framer-motion')
+    expect(pacote.devDependencies).not.toHaveProperty('framer-motion')
 
-    const importam = listarFontes(pastaSrc, true)
-      .filter((f) => f.nome !== 'visual.test.tsx')
-      .filter((f) => /from\s+['"](motion\/react|motion|framer-motion)['"]/.test(f.texto))
-      .map((f) => f.nome)
-    expect(importam).toEqual([])
+    const arquivos = listarFontes(pastaSrc, true).filter((f) => f.nome !== 'visual.test.tsx')
+    const importaDe = (f: { texto: string }, pacotes: string) =>
+      new RegExp(`from\\s+['"](${pacotes})['"]`).test(f.texto)
+
+    const importamOsPacotesAntigos = arquivos.filter((f) => importaDe(f, 'motion|framer-motion')).map((f) => f.nome)
+    expect(importamOsPacotesAntigos).toEqual([])
+
+    const importamMotionReact = arquivos.filter((f) => importaDe(f, 'motion/react')).map((f) => f.nome)
+    expect(importamMotionReact.length).toBeGreaterThan(0)
+    for (const nome of importamMotionReact) {
+      expect(
+        /^(movimento\/|componentes\/terceiros\/|componentes\/vitrine\/)/.test(nome) || nome === 'paginas/Inicio.tsx',
+        nome,
+      ).toBe(true)
+    }
   })
 })
 
