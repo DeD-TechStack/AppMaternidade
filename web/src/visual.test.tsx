@@ -144,7 +144,7 @@ describe('MAT-44: composição do Início', () => {
 
     const grupo = container.querySelector<HTMLElement>('[inert]')!
     expect(grupo.getAttribute('aria-hidden')).toBe('true')
-    expect(grupo.querySelector('button[aria-label="Iniciar sono de Lia"]')).not.toBeNull()
+    expect(grupo.querySelector('button[aria-label="Iniciar sono de Heloísa"]')).not.toBeNull()
     expect(grupo.querySelector('[role="timer"].cronometro-mini')).not.toBeNull()
     expect(grupo.querySelector('[class*="/pagina:"]')).not.toBeNull()
   })
@@ -612,13 +612,13 @@ describe('MAT-44 r2 B2: cena de ilustrações do campo de barro', () => {
 describe('MAT-44 r2 B3 e B4: Sessão', () => {
   it('as informações da sessão ficam dentro do campo do cronômetro, em linhas com régua', () => {
     const { container } = renderizarRota('/app/sessao', {
-      estadoInicial: { ...criarEstadoInicial(Date.now()), sessao: { tipo: 'tummy', inicio: Date.now() - 60_000, pessoa: 'Ana' } },
+      estadoInicial: { ...criarEstadoInicial(Date.now()), sessao: { tipo: 'tummy', inicio: Date.now() - 60_000, pessoa: 'Juliana' } },
     })
 
     const campo = container.querySelector('[role="timer"]')!.closest('[data-campo]')!
     const linhas = [...campo.querySelectorAll('p.border-t')]
     expect(linhas.map((l) => l.textContent)).toEqual([
-      expect.stringMatching(/^Iniciado às \d{2}:\d{2} por Ana$/),
+      expect.stringMatching(/^Iniciado às \d{2}:\d{2} por Juliana$/),
       'Atividade sugerida: Espelho no chão',
     ])
     expect(linhas.every((l) => l.classList.contains('border-current'))).toBe(true)
@@ -764,7 +764,7 @@ describe('MAT-44 r3 #2: botões rápidos com o mesmo tratamento em toda largura 
       const { container } = renderizarRota(caminho, { estadoInicial: estado() })
       await screen.findAllByRole('heading')
 
-      const sono = container.querySelector('button[aria-label="Iniciar sono de Lia"]')!
+      const sono = container.querySelector('button[aria-label="Iniciar sono de Heloísa"]')!
       const botoes = [...sono.parentElement!.children] as HTMLElement[]
       expect(botoes.map((b) => b.textContent)).toEqual(['Sono', 'Mamada', 'Fralda', 'Tummy time', '+ Mais'])
       for (const botao of botoes.slice(0, 4)) {
@@ -897,7 +897,7 @@ describe('MAT-44 r3 #4: campo do cronômetro apertado', () => {
 describe('MAT-44 r4 #1: a Sessão ocupa o vazio com uma ilustração do tipo da sessão', () => {
   const sessaoDe = (tipo: 'sono' | 'mamada' | 'tummy'): EstadoPrototipo => ({
     ...criarEstadoInicial(Date.now()),
-    sessao: { tipo, inicio: Date.now() - 60_000, pessoa: 'Ana' },
+    sessao: { tipo, inicio: Date.now() - 60_000, pessoa: 'Juliana' },
   })
 
   for (const [tipo, ilustracao] of [
@@ -1308,15 +1308,15 @@ describe('MAT-44 r5 R2: nenhum ícone na página pública', () => {
     const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
 
-    const grades = [...container.querySelectorAll('[inert] button[aria-label="Iniciar sono de Lia"]')].map((b) => b.parentElement!)
+    const grades = [...container.querySelectorAll('[inert] button[aria-label="Iniciar sono de Heloísa"]')].map((b) => b.parentElement!)
     expect(grades.length).toBeGreaterThanOrEqual(2)
     for (const grade of grades) {
       expect([...grade.children].map((b) => b.textContent)).toEqual(['Sono', 'Mamada', 'Fralda', 'Tummy time', '+ Mais'])
       expect([...grade.children].map((b) => b.getAttribute('aria-label'))).toEqual([
-        'Iniciar sono de Lia',
-        'Iniciar mamada de Lia',
-        'Registrar fralda de Lia',
-        'Iniciar tummy time de Lia',
+        'Iniciar sono de Heloísa',
+        'Iniciar mamada de Heloísa',
+        'Registrar fralda de Heloísa',
+        'Iniciar tummy time de Heloísa',
         'Mais registros',
       ])
     }
@@ -1348,7 +1348,7 @@ describe('MAT-44 r5 R2: nenhum ícone na página pública', () => {
     it(`/app/hoje (${tema}): os quatro botões rápidos com ícone continuam com ícone e rótulo visível`, () => {
       renderizarRota('/app/hoje', { estadoInicial: estado() })
 
-      for (const nome of ['Iniciar sono de Lia', 'Iniciar mamada de Lia', 'Registrar fralda de Lia', 'Iniciar tummy time de Lia']) {
+      for (const nome of ['Iniciar sono de Heloísa', 'Iniciar mamada de Heloísa', 'Registrar fralda de Heloísa', 'Iniciar tummy time de Heloísa']) {
         const botao = screen.getByRole('button', { name: nome })
         expect(botao.querySelectorAll('svg.lucide'), nome).toHaveLength(1)
         expect(botao.querySelector('span')!.textContent!.trim(), nome).not.toBe('')

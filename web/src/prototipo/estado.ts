@@ -14,9 +14,9 @@ export function ehTipoSessao(valor: unknown): valor is TipoSessao {
   return typeof valor === 'string' && (TIPOS_SESSAO as readonly string[]).includes(valor)
 }
 
-export const NOME_BEBE = 'Lia'
+export const NOME_BEBE = 'Heloísa'
 export const IDADE_BEBE = '3 meses'
-const PESSOA_PADRAO = 'Ana'
+const PESSOA_PADRAO = 'Juliana'
 
 interface Sessao {
   tipo: TipoSessao

@@ -86,7 +86,7 @@ describe('cronômetro', () => {
 
 describe('fralda', () => {
   function abrirFralda() {
-    const gatilho = screen.getByRole('button', { name: 'Registrar fralda de Lia' })
+    const gatilho = screen.getByRole('button', { name: 'Registrar fralda de Heloísa' })
     fireEvent.click(gatilho)
     return gatilho
   }
@@ -108,7 +108,7 @@ describe('fralda', () => {
     renderizarRota('/app/hoje')
     abrirFralda()
 
-    const grupo = screen.getByRole('group', { name: 'Fralda de Lia' })
+    const grupo = screen.getByRole('group', { name: 'Fralda de Heloísa' })
     expect(within(grupo).getAllByRole('button').map((b) => b.textContent)).toEqual([
       'Xixi',
       'Cocô',
@@ -160,7 +160,7 @@ describe('fralda', () => {
 
     fireEvent.keyDown(document.activeElement!, { key: 'Escape' })
 
-    expect(screen.queryByRole('group', { name: 'Fralda de Lia' })).toBeNull()
+    expect(screen.queryByRole('group', { name: 'Fralda de Heloísa' })).toBeNull()
     expect(gatilho.getAttribute('aria-expanded')).toBe('false')
     expect(document.activeElement).toBe(gatilho)
     expect(screen.getByRole('status').textContent).toBe('')
@@ -172,7 +172,7 @@ describe('fralda', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
 
-    expect(screen.queryByRole('group', { name: 'Fralda de Lia' })).toBeNull()
+    expect(screen.queryByRole('group', { name: 'Fralda de Heloísa' })).toBeNull()
     expect(document.activeElement).toBe(gatilho)
     expect(itensDeUltimos()).toContain('Fralda há 50 min')
   })
@@ -193,7 +193,7 @@ describe('fralda', () => {
 
     fireEvent.click(mais)
     expect(mais.getAttribute('aria-expanded')).toBe('true')
-    const grupo = screen.getByRole('group', { name: 'Outros registros de Lia' })
+    const grupo = screen.getByRole('group', { name: 'Outros registros de Heloísa' })
     expect(within(grupo).getAllByRole('button').map((b) => b.textContent)).toEqual([
       'Mamadeira',
       'Alimentação sólida',
@@ -219,10 +219,10 @@ describe('fralda', () => {
     renderizarRota('/app/hoje')
 
     const nomes: Array<[string, string]> = [
-      ['Iniciar sono de Lia', 'Sono'],
-      ['Iniciar mamada de Lia', 'Mamada'],
-      ['Registrar fralda de Lia', 'Fralda'],
-      ['Iniciar tummy time de Lia', 'Tummy time'],
+      ['Iniciar sono de Heloísa', 'Sono'],
+      ['Iniciar mamada de Heloísa', 'Mamada'],
+      ['Registrar fralda de Heloísa', 'Fralda'],
+      ['Iniciar tummy time de Heloísa', 'Tummy time'],
       ['Mais registros', '+ Mais'],
     ]
     for (const [nome, visivel] of nomes) {
@@ -260,10 +260,10 @@ describe('sessões', () => {
   it('iniciar tummy time com o Sono em andamento abre o Sono com o aviso', async () => {
     renderizarRota('/app/hoje')
 
-    fireEvent.click(screen.getByRole('button', { name: 'Iniciar tummy time de Lia' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Iniciar tummy time de Heloísa' }))
 
     const titulo = await screen.findByRole('heading', { level: 1 })
-    expect(titulo.textContent).toBe('Sono de Lia')
+    expect(titulo.textContent).toBe('Sono de Heloísa')
     expect(screen.getByText('Já há uma sessão de Sono em andamento.')).toBeTruthy()
   })
 
@@ -273,19 +273,19 @@ describe('sessões', () => {
     fireEvent.click(screen.getByRole('link', { name: 'Ver sessão' }))
 
     const titulo = await screen.findByRole('heading', { level: 1 })
-    expect(titulo.textContent).toBe('Sono de Lia')
+    expect(titulo.textContent).toBe('Sono de Heloísa')
     expect(screen.queryByText(/Já há uma sessão/)).toBeNull()
   })
 
-  it('sem sessão, o botão rápido começa uma sessão por Ana e abre a Sessão', async () => {
+  it('sem sessão, o botão rápido começa uma sessão por Juliana e abre a Sessão', async () => {
     renderizarRota('/app/hoje', { estadoInicial: { ...criarEstadoInicial(Date.now()), sessao: null } })
     expect(screen.getByText('Nenhuma sessão em andamento.')).toBeTruthy()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Iniciar mamada de Lia' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Iniciar mamada de Heloísa' }))
 
     const titulo = await screen.findByRole('heading', { level: 1 })
-    expect(titulo.textContent).toBe('Mamada de Lia')
-    expect(screen.getByText(/por Ana$/)).toBeTruthy()
+    expect(titulo.textContent).toBe('Mamada de Heloísa')
+    expect(screen.getByText(/por Juliana$/)).toBeTruthy()
     expect(screen.queryByText(/Já há uma sessão/)).toBeNull()
   })
 
@@ -339,7 +339,7 @@ describe('sessões', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
 
     expect(screen.queryByRole('textbox', { name: 'Nota' })).toBeNull()
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Sono de Lia')
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Sono de Heloísa')
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Encerrar e anotar' }))
   })
 
@@ -352,7 +352,7 @@ describe('sessões', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Manter' }))
 
     expect(screen.queryByText('Descartar esta sessão?')).toBeNull()
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Sono de Lia')
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Sono de Heloísa')
   })
 
   it('"Descartar" confirmado volta ao Hoje sem registro e sem confirmação', async () => {
@@ -379,7 +379,7 @@ describe('sessões', () => {
     )
 
     const titulo = await screen.findByRole('heading', { level: 1 })
-    expect(titulo.textContent).toBe('Sono de Lia')
+    expect(titulo.textContent).toBe('Sono de Heloísa')
     expect(screen.getAllByRole('timer')).toHaveLength(1)
     // O ?tipo= sai da URL depois de começar.
     await waitFor(() => expect(roteador.state.location.search).toBe(''))
@@ -389,7 +389,7 @@ describe('sessões', () => {
     const { roteador } = renderizarRota('/app/sessao?tipo=mamada', {
       estadoInicial: { ...criarEstadoInicial(Date.now()), sessao: null },
     })
-    await screen.findByRole('heading', { name: 'Mamada de Lia' })
+    await screen.findByRole('heading', { name: 'Mamada de Heloísa' })
 
     fireEvent.click(screen.getByRole('button', { name: 'Encerrar' }))
 
@@ -428,7 +428,7 @@ describe('madrugada', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Modo madrugada' }))
 
     fireEvent.click(screen.getByRole('link', { name: 'Ver sessão' }))
-    await screen.findByRole('heading', { name: 'Sono de Lia' })
+    await screen.findByRole('heading', { name: 'Sono de Heloísa' })
     expect(document.documentElement.getAttribute('data-tema')).toBe('madrugada')
 
     await act(async () => {
@@ -511,46 +511,46 @@ describe('R3: o foco acompanha ações que removem o controle focado', () => {
         conferirFocoValido(container)
       })
 
-      it('Hoje: "Desfazer" depois de Encerrar leva o foco a "Iniciar sono de Lia"', () => {
+      it('Hoje: "Desfazer" depois de Encerrar leva o foco a "Iniciar sono de Heloísa"', () => {
         const { container } = renderizarRota('/app/hoje', { estadoInicial: base() })
         acionarComTeclado(botao('Encerrar'))
 
         acionarComTeclado(botao('Desfazer'))
 
-        expect(document.activeElement).toBe(botao('Iniciar sono de Lia'))
+        expect(document.activeElement).toBe(botao('Iniciar sono de Heloísa'))
         conferirFocoValido(container)
       })
 
-      it('Hoje: "Desfazer" depois de Mamadeira leva o foco a "Iniciar sono de Lia"', () => {
+      it('Hoje: "Desfazer" depois de Mamadeira leva o foco a "Iniciar sono de Heloísa"', () => {
         const { container } = renderizarRota('/app/hoje', { estadoInicial: base() })
         fireEvent.click(botao('Mais registros'))
         fireEvent.click(botao('Mamadeira'))
 
         acionarComTeclado(botao('Desfazer'))
 
-        expect(document.activeElement).toBe(botao('Iniciar sono de Lia'))
+        expect(document.activeElement).toBe(botao('Iniciar sono de Heloísa'))
         conferirFocoValido(container)
       })
 
-      it('Hoje: "Desfazer" depois de Fralda leva o foco a "Iniciar sono de Lia"', () => {
+      it('Hoje: "Desfazer" depois de Fralda leva o foco a "Iniciar sono de Heloísa"', () => {
         const { container } = renderizarRota('/app/hoje', { estadoInicial: base() })
-        fireEvent.click(botao('Registrar fralda de Lia'))
+        fireEvent.click(botao('Registrar fralda de Heloísa'))
         fireEvent.click(botao('Xixi'))
 
         acionarComTeclado(botao('Desfazer'))
 
-        expect(document.activeElement).toBe(botao('Iniciar sono de Lia'))
+        expect(document.activeElement).toBe(botao('Iniciar sono de Heloísa'))
         conferirFocoValido(container)
       })
 
-      it('Hoje: "Fechar" depois de Mamadeira leva o foco a "Iniciar sono de Lia"', () => {
+      it('Hoje: "Fechar" depois de Mamadeira leva o foco a "Iniciar sono de Heloísa"', () => {
         const { container } = renderizarRota('/app/hoje', { estadoInicial: base() })
         fireEvent.click(botao('Mais registros'))
         fireEvent.click(botao('Mamadeira'))
 
         acionarComTeclado(botao('Fechar'))
 
-        expect(document.activeElement).toBe(botao('Iniciar sono de Lia'))
+        expect(document.activeElement).toBe(botao('Iniciar sono de Heloísa'))
         expect(screen.getByRole('status').textContent).toBe('')
         conferirFocoValido(container)
       })
@@ -559,10 +559,10 @@ describe('R3: o foco acompanha ações que removem o controle focado', () => {
         const { container } = renderizarRota('/app/hoje', { estadoInicial: base() })
         expect(screen.getByRole('status').hasAttribute('tabindex')).toBe(false)
 
-        fireEvent.click(botao('Registrar fralda de Lia'))
+        fireEvent.click(botao('Registrar fralda de Heloísa'))
         fireEvent.click(botao('Xixi'))
 
-        expect(document.activeElement).toBe(botao('Registrar fralda de Lia'))
+        expect(document.activeElement).toBe(botao('Registrar fralda de Heloísa'))
         expect(screen.getByRole('status').hasAttribute('tabindex')).toBe(false)
         conferirFocoValido(container)
       })
@@ -614,9 +614,9 @@ describe('R3: o foco acompanha ações que removem o controle focado', () => {
       it('Hoje → atalho Sono sem sessão leva o foco ao h1 da Sessão', async () => {
         const { container } = renderizarRota('/app/hoje', { estadoInicial: semSessao() })
 
-        acionarComTeclado(botao('Iniciar sono de Lia'))
+        acionarComTeclado(botao('Iniciar sono de Heloísa'))
 
-        const titulo = await screen.findByRole('heading', { level: 1, name: 'Sono de Lia' })
+        const titulo = await screen.findByRole('heading', { level: 1, name: 'Sono de Heloísa' })
         await waitFor(() => expect(document.activeElement).toBe(titulo))
         conferirFocoValido(container)
       })
@@ -624,9 +624,9 @@ describe('R3: o foco acompanha ações que removem o controle focado', () => {
       it('Hoje → atalho com outra sessão em andamento leva o foco ao h1 da Sessão (com o aviso)', async () => {
         const { container } = renderizarRota('/app/hoje', { estadoInicial: base() })
 
-        acionarComTeclado(botao('Iniciar tummy time de Lia'))
+        acionarComTeclado(botao('Iniciar tummy time de Heloísa'))
 
-        const titulo = await screen.findByRole('heading', { level: 1, name: 'Sono de Lia' })
+        const titulo = await screen.findByRole('heading', { level: 1, name: 'Sono de Heloísa' })
         expect(screen.getByText('Já há uma sessão de Sono em andamento.')).toBeTruthy()
         await waitFor(() => expect(document.activeElement).toBe(titulo))
         conferirFocoValido(container)
@@ -639,7 +639,7 @@ describe('R3: o foco acompanha ações que removem o controle focado', () => {
 
         fireEvent.click(ver)
 
-        const titulo = await screen.findByRole('heading', { level: 1, name: 'Sono de Lia' })
+        const titulo = await screen.findByRole('heading', { level: 1, name: 'Sono de Heloísa' })
         await waitFor(() => expect(document.activeElement).toBe(titulo))
         conferirFocoValido(container)
       })

@@ -50,7 +50,7 @@ describe('G3-1: alvo de toque de 44 px', () => {
       const { container } = renderizarRota('/app/hoje', { estadoInicial: estado() })
       expect(semAlvoDe44(container)).toEqual([])
 
-      fireEvent.click(screen.getByRole('button', { name: 'Registrar fralda de Lia' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Registrar fralda de Heloísa' }))
       expect(semAlvoDe44(container)).toEqual([])
 
       fireEvent.click(screen.getByRole('button', { name: 'Xixi' }))
@@ -245,11 +245,11 @@ describe('R2: a barra de baixo fica fixa em janela de 40 rem ou mais, qualquer q
   const agir = (nome: string) => fireEvent.click(screen.getByRole('button', { name: nome }))
   const estados: Array<[string, () => void]> = [
     ['estado inicial', () => {}],
-    ['painel Fralda aberto', () => agir('Registrar fralda de Lia')],
+    ['painel Fralda aberto', () => agir('Registrar fralda de Heloísa')],
     [
       'Fralda confirmada',
       () => {
-        agir('Registrar fralda de Lia')
+        agir('Registrar fralda de Heloísa')
         agir('Xixi')
       },
     ],
@@ -412,7 +412,7 @@ describe('D2: telas logadas numa coluna única', () => {
     const { container } = renderizarRota('/app/hoje')
 
     const barra = container.querySelector('.coluna-app .barra-inferior')!
-    expect(within(barra as HTMLElement).getByRole('button', { name: 'Iniciar sono de Lia' })).toBeTruthy()
+    expect(within(barra as HTMLElement).getByRole('button', { name: 'Iniciar sono de Heloísa' })).toBeTruthy()
     expect(within(barra as HTMLElement).getByRole('navigation', { name: 'Principal' })).toBeTruthy()
   })
 })
@@ -465,7 +465,7 @@ describe('D4: botões rápidos com a mesma altura', () => {
     it(`no Hoje (${tema}) a grade é de 6 colunas: 2+2+2 e 3+3`, () => {
       renderizarRota('/app/hoje', { estadoInicial: estado() })
 
-      conferirGrade(screen.getByRole('button', { name: 'Iniciar sono de Lia' }).parentElement!)
+      conferirGrade(screen.getByRole('button', { name: 'Iniciar sono de Heloísa' }).parentElement!)
     })
   }
 
@@ -473,7 +473,7 @@ describe('D4: botões rápidos com a mesma altura', () => {
     const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
 
-    const sono = container.querySelector<HTMLElement>('[inert] button[aria-label="Iniciar sono de Lia"]')!
+    const sono = container.querySelector<HTMLElement>('[inert] button[aria-label="Iniciar sono de Heloísa"]')!
     conferirGrade(sono.parentElement!)
   })
 })
@@ -535,7 +535,7 @@ describe('R1b: toda variante de contêiner tem um contêiner acima, onde quer qu
       const { container } = renderizarRota('/app/hoje', { estadoInicial: estado() })
       expect(variantesSemContainer(container)).toEqual([])
 
-      fireEvent.click(screen.getByRole('button', { name: 'Registrar fralda de Lia' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Registrar fralda de Heloísa' }))
       expect(variantesSemContainer(container)).toEqual([])
 
       fireEvent.click(screen.getByRole('button', { name: 'Mais registros' }))
@@ -813,7 +813,7 @@ describe('G3-4: o texto visível está no nome acessível', () => {
       const { container } = renderizarRota('/app/hoje', { estadoInicial: estado() })
       expect(nomesQueDivergem(container)).toEqual([])
 
-      fireEvent.click(screen.getByRole('button', { name: 'Registrar fralda de Lia' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Registrar fralda de Heloísa' }))
       expect(nomesQueDivergem(container)).toEqual([])
 
       fireEvent.click(screen.getByRole('button', { name: 'Mais registros' }))

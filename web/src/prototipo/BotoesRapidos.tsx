@@ -90,7 +90,7 @@ export function BotoesRapidos({
         <button
           ref={refSono}
           type="button"
-          aria-label="Iniciar sono de Lia"
+          aria-label="Iniciar sono de Heloísa"
           className={PRIMEIRA_LINHA}
           onClick={() => iniciar('sono')}
           {...propsComuns}
@@ -100,7 +100,7 @@ export function BotoesRapidos({
         </button>
         <button
           type="button"
-          aria-label="Iniciar mamada de Lia"
+          aria-label="Iniciar mamada de Heloísa"
           className={PRIMEIRA_LINHA}
           onClick={() => iniciar('mamada')}
           {...propsComuns}
@@ -111,7 +111,7 @@ export function BotoesRapidos({
         <button
           ref={botaoFralda}
           type="button"
-          aria-label="Registrar fralda de Lia"
+          aria-label="Registrar fralda de Heloísa"
           aria-expanded={painel === 'fralda'}
           aria-controls={painel === 'fralda' ? idFralda : undefined}
           className={PRIMEIRA_LINHA}
@@ -123,7 +123,7 @@ export function BotoesRapidos({
         </button>
         <button
           type="button"
-          aria-label="Iniciar tummy time de Lia"
+          aria-label="Iniciar tummy time de Heloísa"
           className={SEGUNDA_LINHA}
           onClick={() => iniciar('tummy')}
           {...propsComuns}
@@ -153,7 +153,7 @@ export function BotoesRapidos({
           ref={painelFralda}
           id={idFralda}
           role="group"
-          aria-label="Fralda de Lia"
+          aria-label="Fralda de Heloísa"
           className="mt-2 flex flex-wrap gap-2"
         >
           {ESCOLHAS_FRALDA.map((escolha) => (
@@ -180,7 +180,7 @@ export function BotoesRapidos({
       ) : null}
 
       {painel === 'mais' ? (
-        <div id={idMais} role="group" aria-label="Outros registros de Lia" className="mt-2 flex flex-wrap gap-2">
+        <div id={idMais} role="group" aria-label="Outros registros de Heloísa" className="mt-2 flex flex-wrap gap-2">
           {ITENS_MAIS.map((item) => (
             <button
               key={item.chave}

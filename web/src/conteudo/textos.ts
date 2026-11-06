@@ -55,9 +55,8 @@ export const MADRUGADA = {
 } as const
 
 export const CHAMADA = {
-  titulo: 'Veja um dia de Lia',
-  texto:
-    'Lia, 3 meses, e os cuidadores Ana, Bruno e Carla são uma família fictícia. Nada do que aparece no protótipo é salvo.',
+  titulo: 'Veja um dia de Heloísa',
+  texto: 'Um dia de exemplo com Heloísa, 3 meses, e quem cuida dela: Juliana, Bruno e Carla.',
   link: 'Ver o protótipo do Hoje',
 } as const
 
@@ -82,7 +81,7 @@ export const ATIVIDADE_TUMMY = 'Espelho no chão'
 export const MINIATURAS = {
   hoje: {
     titulo: 'Hoje',
-    bebe: 'Lia, 3 meses',
+    bebe: 'Heloísa, 3 meses',
     sessao: { rotulo: 'Sono', duracao: '1 h 12 min', pessoa: 'Bruno' },
     nota: { rotulo: 'Para você saber', texto: 'Pomada só à noite.', autor: 'Carla, 22:40' },
     ultimos: {
@@ -95,10 +94,10 @@ export const MINIATURAS = {
     },
   },
   sessao: {
-    titulo: 'Tummy time de Lia',
+    titulo: 'Tummy time de Heloísa',
     cronometro: '04:35',
     hora: '17:02',
-    pessoa: 'Ana',
+    pessoa: 'Juliana',
     atividade: ATIVIDADE_TUMMY,
     acoes: ['Encerrar', 'Encerrar e anotar', 'Descartar'],
   },

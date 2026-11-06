@@ -66,7 +66,7 @@ describe('acessibilidade (axe-core)', () => {
 
   it('não tem violações no Hoje com a escolha de fralda aberta e a confirmação na tela', async () => {
     const { container } = renderizarRota('/app/hoje')
-    fireEvent.click(screen.getByRole('button', { name: 'Registrar fralda de Lia' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Registrar fralda de Heloísa' }))
     expect(await violacoes(container)).toEqual([])
 
     fireEvent.click(screen.getByRole('button', { name: 'Xixi' }))

@@ -55,9 +55,9 @@ describe('rotas', () => {
     renderizarRota('/app/sessao?tipo=tummy', { estadoInicial: semSessao() })
 
     const titulo = await screen.findByRole('heading', { level: 1 })
-    expect(titulo.textContent).toBe('Tummy time de Lia')
+    expect(titulo.textContent).toBe('Tummy time de Heloísa')
     expect(screen.getByText('Atividade sugerida: Espelho no chão')).toBeTruthy()
-    expect(screen.getByText(/^Iniciado às \d{2}:\d{2} por Ana$/)).toBeTruthy()
+    expect(screen.getByText(/^Iniciado às \d{2}:\d{2} por Juliana$/)).toBeTruthy()
   })
 
   it('a Sessão sem sessão e sem tipo mostra o estado vazio', async () => {
@@ -80,7 +80,7 @@ describe('rotas', () => {
     renderizarRota('/app/sessao?tipo=tummy')
 
     const titulo = await screen.findByRole('heading', { level: 1 })
-    expect(titulo.textContent).toBe('Sono de Lia')
+    expect(titulo.textContent).toBe('Sono de Heloísa')
     expect(screen.queryByText(/Atividade sugerida/)).toBeNull()
   })
 

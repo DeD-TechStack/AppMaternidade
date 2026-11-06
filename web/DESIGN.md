@@ -289,7 +289,7 @@ Plano. Profundidade vem de linha, cor, espaço, sobreposição e escala, não de
 - Faça: registro em até 2 toques a partir de Hoje; ações principais na metade de baixo da tela; alvos de pelo menos 44 × 44 px, 56 px de altura na madrugada (Fluxos §1).
 - Faça: tema escuro de pouco brilho na madrugada, sem fundo branco, com movimento mínimo (Fluxos §1).
 - Faça: erro reversível. Toda confirmação tem "Desfazer" e só sai quando a pessoa fecha ou faz outro registro (Fluxos §1).
-- Faça: rótulos completos para leitor de tela ("Iniciar sono de Lia") e texto ampliável até 200% sem corte (Fluxos §1).
+- Faça: rótulos completos para leitor de tela ("Iniciar sono de Heloísa") e texto ampliável até 200% sem corte (Fluxos §1).
 - Não faça: linguagem de cobrança. Nada de "atrasado", metas, pontos ou rankings (Fluxos §1).
 - Não faça: copiar layout de tela inteira, proporções exatas, textos, ilustrações, fotos, vídeos, logos ou nomes da referência visual (ESPEC §9).
 - Não faça: números de "prova social" sem fonte real nem depoimento inventado (ESPEC §9).

@@ -123,7 +123,7 @@ describe('aviso de demonstração: lugar na tela', () => {
   it('a região status da confirmação continua única e não contém o aviso', () => {
     definirBanco('', '')
     const { container } = renderizarRota('/app/hoje')
-    fireEvent.click(screen.getByRole('button', { name: 'Registrar fralda de Lia' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Registrar fralda de Heloísa' }))
     fireEvent.click(screen.getByRole('button', { name: 'Xixi' }))
 
     const regioes = screen.getAllByRole('status')
