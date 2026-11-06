@@ -10,6 +10,61 @@ fontes_principais: board Kanban appmaternidade; itsaplan MAT-27 a MAT-43; git ma
 
 Esta é a nota de partida da próxima sessão de trabalho no site. Ela registra o estado da sessão de 03/11/2026. Antes de agir, confira o board `appmaternidade`, o itsaplan (MAT-27 e as tarefas filhas) e o `git log` da main: o estado verdadeiro está lá, não nesta nota.
 
+## PAUSA para a janela v0.23.0 (decisão de Daniel, 05/11/2026 ~23h30; fechada em 06/11/2026 ~00h20)
+
+Hoje no board `appmaternidade` nenhum cartão está rodando, pronto ou em revisão, e não há OpenCode ativo. A main está em `881275d`, sincronizada com origin/main.
+
+**Pronto (na main):**
+- Fundação do site (MAT-35) e direção visual com o protótipo de 3 telas (MAT-34).
+- Banco local completo, com as correções da releitura por outra família:
+  - MAT-43 (base);
+  - MAT-45 (conta e família): `t_e3572be9` e a correção `t_ad018d1e`, f738247;
+  - MAT-46 (rotina): `t_c9df145a` e a correção `t_d4e788ea`, a80924e;
+  - MAT-47 (comunidade): `t_569c296e` e a correção `t_e0627701`, c16b68c.
+
+  São 56 arquivos de teste e 3.485 asserções passando, mais o check do site com 294 testes.
+- Infra de Daniel feita:
+  - GitHub Pages ativado (Source: GitHub Actions);
+  - projeto Supabase `appmaternidade-demo` (Free, us-east-1, ref caatnppalmwyrldtdooh), com login por e-mail, Confirm email desligado, Site URL e Redirect URL do Pages;
+  - os 5 secrets no GitHub, conferidos só pelo nome.
+
+**Aprovado, mas ainda fora da main:**
+- **MAT-44** (salto visual de Início, Hoje e Sessão): `t_10f8dad7`, APROVADA na revisão 3 do candidato `3a8789d898a40e35107fa2ba983747276c7b284f`, com base 2a35dc7. O G6 do revisor deu 8,03 a 8,17.
+- A integração não foi feita na pausa porque ainda falta o portão do líder: a nota do leitor cego (G6) e o rebase sobre 881275d.
+- A prévia local em http://127.0.0.1:5180/ mostra esse candidato (worktree `.worktrees/previa`).
+
+**Specs no staging (fora do Git, `C:/OrchestrationLab/projetos/_staging/appmaternidade/`), ainda sem cartão:**
+
+| Spec | Estado | Linhas | sha256 |
+|---|---|---|---|
+| MAT-36 (páginas públicas) | v3, depois da R-B 1 (B=2 M=9 N=7) | 788 | 5db326af |
+| MAT-48a (Pages pelo CI) | v2.2, **aprovada** | — | 815e1f94 |
+| MAT-37 (conta e login) | RASCUNHO v1 | 594 | 5f375c49 |
+| MAT-38 (Hoje, registros, Sessão, Histórico) | RASCUNHO v1 | 648 | 1c534bbd |
+| MAT-39 (Desenvolvimento) | RASCUNHO v1 | 701 | b17e6f20 |
+| MAT-40 (Comunidade e moderação) | RASCUNHO v1 | 733 | 1d52798e |
+| MAT-41 (PWA e offline) | RASCUNHO v1 | 502 | 326b1c10 |
+| MAT-48b (banco na nuvem), em `MAT-48/TAREFA_48b.md` | RASCUNHO v1 | 480 | feff3fbe |
+
+Cada rascunho tem uma tabela de decisões pendentes do líder no fim. A **MAT-50** (movimento, itsaplan 214) é uma pendência planejada e só nasce depois da MAT-44 na main.
+
+**Próximo passo exato da retomada, em ordem:**
+1. Ler o AGENTS.md e o board, e conferir que o Hermes está na v0.23.0, que o gateway foi reiniciado e se o itsaplan voltou.
+2. **Integrar a MAT-44:**
+   - rebase de 3a8789d sobre a main;
+   - range-diff;
+   - `npm --prefix web run check`;
+   - nota do leitor cego (G6, maior ou igual a 8,0, com diferença de até 1,0 para a nota do revisor);
+   - ff, push e cofre.
+3. **Rodar a D2 da MAT-48b antes do cartão da MAT-48a.** Os secrets `VITE_*` já existem, então o aviso de demonstração some e a ACC-09 da 48a reprova. Decidir se a v2.3 da 48a deixa de passar os `VITE_*` ao build até a MAT-37. Depois disso, criar o cartão da **MAT-48a**: é ele que põe o site no ar.
+4. **Preparar as specs:**
+   - acrescentar os slots 37 a 41 no `ferramentas/isolar_supabase.py`;
+   - decidir as pendências das specs MAT-37 a 41 e 48b;
+   - rodar o explique de volta R-B (`ferramentas/rb_explique.py --tela MAT-NN`) na MAT-36 v3 e nas 6 novas.
+5. **Cartões em paralelo** (até 5): MAT-36, MAT-37 e MAT-50. Depois da MAT-37 na main, MAT-38, 39 e 40. Por último, a MAT-41.
+
+**Pendências com Daniel:** D5 (quem revisa o conteúdo de Desenvolvimento, que vai ao site com o selo "Rascunho em revisão"), e-mail de contato e encarregado de dados.
+
 ## Rumo
 
 Em 03/11/2026, Daniel definiu o rumo: o AppMaternidade começa como site completo, com RF-01 a RF-14. Android e iOS vêm depois, por port (empacotar o site como app de loja pelo Capacitor). A tarefa-mãe é a MAT-27, com os portões de aceite G1 a G12.
