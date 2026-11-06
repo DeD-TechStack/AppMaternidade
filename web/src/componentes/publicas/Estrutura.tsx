@@ -7,7 +7,7 @@ import type { Secao } from '../../conteudo/publicas.ts'
 
 /** O <main> de uma página nova. Só tem <section> como filhos diretos. */
 export function PaginaPublica({ leitura = false, children }: { leitura?: boolean; children: ReactNode }) {
-  const base = '@container/publica break-words px-4 pb-16 md:px-[2%]'
+  const base = '@container/publica px-4 pb-16 md:px-[2%]'
   if (leitura) {
     // Texto jurídico: coluna de leitura de 44 rem (704 px), centrada, com a margem lateral de sempre.
     return (
@@ -85,7 +85,7 @@ export function SecaoDePapel({ secao, bloco = true, corpo = 'flex flex-col gap-4
     <section className="secao-papel entrada py-10 @min-[46rem]/publica:py-14">
       <div className="grid grid-cols-1 gap-x-6 gap-y-5 @min-[46rem]/publica:grid-cols-12">
         <Titulo2 secao={secao} className="@min-[46rem]/publica:col-span-4" />
-        <div className={`${corpo} @min-[46rem]/publica:col-span-8 @min-[46rem]/publica:border-l @min-[46rem]/publica:pl-6`}>
+        <div className={`${corpo} min-w-0 @min-[46rem]/publica:col-span-8 @min-[46rem]/publica:border-l @min-[46rem]/publica:pl-6`}>
           {children}
         </div>
       </div>

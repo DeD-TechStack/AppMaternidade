@@ -18,7 +18,10 @@ export function LayoutPublico() {
   }, [dispatch, pathname])
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    // break-words (overflow-wrap: break-word) é herdado por todo texto das páginas dentro do layout,
+    // inclusive a Página não encontrada, que não muda: com a fonte ampliada uma palavra mais larga
+    // que a caixa quebra em vez de vazar. Só quebra quando a palavra não cabe.
+    <div className="flex min-h-dvh flex-col break-words">
       <div className="px-4 md:px-[2%]">
         <CabecalhoPublico />
       </div>

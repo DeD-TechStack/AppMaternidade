@@ -1,79 +1,31 @@
+import type { ReactNode } from 'react'
 import { MINIATURAS } from '../../conteudo/textos.ts'
 import { CartaoEmAndamento } from '../../prototipo/CartaoEmAndamento.tsx'
 import { SessaoInfo } from '../../prototipo/SessaoInfo.tsx'
 import { Aparelho } from '../Aparelho.tsx'
 
-// Composições de aparelho das páginas públicas: a moldura de celular ou de notebook com as telas do
-// protótipo em miniatura, no tamanho natural, e o relógio parado (dados fixos de MINIATURAS). São
-// vitrine: inertes, escondidas do leitor de tela, sem navegação inferior, sem ids e sem efeito no
-// <html>. Cada uma mora numa caixa (.palco) que reserva a altura e escala o aparelho pela largura da
-// página, em degraus (ver MAT-36 em index.css).
+// Composições de aparelho das páginas públicas: a moldura de celular ou de notebook com UM componente
+// do protótipo em miniatura (CartaoEmAndamento ou SessaoInfo), com os dados fixos de MINIATURAS e o
+// relógio parado. Nada mais entra na tela: título, nota, lista e ações são das telas do Início, que
+// não se reaproveitam aqui. É vitrine: inerte, escondida do leitor de tela, sem navegação inferior,
+// sem ids e sem efeito no <html>. Cada composição mora numa caixa (.palco) que reserva a altura e
+// escala o aparelho pela largura da página, em degraus (ver MAT-36 em index.css).
 
-/** A nota "Para você saber" do Hoje. */
-function NotaDoHoje() {
-  const { nota } = MINIATURAS.hoje
+/**
+ * O invólucro do componente dentro da tela. A tela só tem o componente, então ele cresce com `zoom`
+ * (a caixa do aparelho e a escala da vitrine não mudam) e fica no meio da altura útil da tela, sem
+ * sobrar um vazio embaixo. `altura` é a altura útil da tela em rem: celular 32 rem (a moldura tem
+ * 37,33 rem, menos a borda, o respiro e a faixa da câmera) e notebook 30 rem.
+ */
+function NaTela({ ampliacao, altura, children }: { ampliacao: string; altura: string; children: ReactNode }) {
   return (
-    <div>
-      <p className="rotulo">{nota.rotulo}</p>
-      <p className="nota-italico mt-2">{nota.texto}</p>
-      <p className="tabular mt-1 text-sm">{nota.autor}</p>
+    <div className={`flex items-center ${altura}`}>
+      <div className={`w-full ${ampliacao}`}>{children}</div>
     </div>
   )
 }
 
-/** A lista "Últimos" do Hoje. */
-function UltimosDoHoje() {
-  const { ultimos } = MINIATURAS.hoje
-  return (
-    <div>
-      <p className="rotulo">{ultimos.rotulo}</p>
-      <ul className="mt-2 divide-y border-y">
-        {ultimos.itens.map((item) => (
-          <li key={item.rotulo} className="flex items-baseline justify-between gap-4 py-2">
-            <span>{item.rotulo}</span>
-            <span className="tabular text-right">{item.quando}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  )
-}
-
-/** O alto do Hoje: título, bebê e o cartão em andamento. */
-function CartaoDoHoje() {
-  const { hoje } = MINIATURAS
-  return (
-    <div>
-      <p className="titulo-linha">{hoje.titulo}</p>
-      <p className="mt-1">{hoje.bebe}</p>
-      <div className="mt-4">
-        <CartaoEmAndamento miniatura sessao={hoje.sessao} />
-      </div>
-    </div>
-  )
-}
-
-/** As ações da Sessão, desativadas e fora da ordem de Tab. */
-function AcoesEmMiniatura() {
-  const [encerrar, anotar, descartar] = MINIATURAS.sessao.acoes
-  return (
-    <div className="mt-6 flex flex-col gap-3">
-      <button type="button" disabled tabIndex={-1} className="botao botao-principal botao-grande">
-        {encerrar}
-      </button>
-      <div className="flex flex-wrap gap-3">
-        <button type="button" disabled tabIndex={-1} className="botao botao-secundario">
-          {anotar}
-        </button>
-        <button type="button" disabled tabIndex={-1} className="botao botao-secundario">
-          {descartar}
-        </button>
-      </div>
-    </div>
-  )
-}
-
-/** Celular com o Hoje: o cartão da soneca que ainda não acabou e a nota de passagem. */
+/** Celular com o cartão "Em andamento" do Hoje: a soneca que ainda não acabou. */
 export function CelularDoHoje() {
   return (
     <div className="palco palco-celular">
@@ -82,16 +34,15 @@ export function CelularDoHoje() {
         tela="hoje"
         className="absolute left-0 top-0 origin-top-left [scale:var(--escala-celular)]"
       >
-        <CartaoDoHoje />
-        <div className="mt-6">
-          <NotaDoHoje />
-        </div>
+        <NaTela ampliacao="[zoom:1.4]" altura="h-[32rem]">
+          <CartaoEmAndamento miniatura sessao={MINIATURAS.hoje.sessao} />
+        </NaTela>
       </Aparelho>
     </div>
   )
 }
 
-/** Celular com a Sessão nas cores da madrugada (o <html> não muda). */
+/** Celular com o cronômetro da Sessão nas cores da madrugada (o <html> não muda). */
 export function CelularDaSessaoDeMadrugada() {
   const { sessao } = MINIATURAS
   return (
@@ -102,22 +53,22 @@ export function CelularDaSessaoDeMadrugada() {
         tema="madrugada"
         className="absolute left-0 top-0 origin-top-left [scale:var(--escala-celular)]"
       >
-        <p className="titulo-linha mb-4">{sessao.titulo}</p>
-        <SessaoInfo
-          miniatura
-          campo="night-paper-deep"
-          cronometro={sessao.cronometro}
-          hora={sessao.hora}
-          pessoa={sessao.pessoa}
-          atividade={sessao.atividade}
-        />
-        <AcoesEmMiniatura />
+        <NaTela ampliacao="[zoom:1.5]" altura="h-[32rem]">
+          <SessaoInfo
+            miniatura
+            campo="night-paper-deep"
+            cronometro={sessao.cronometro}
+            hora={sessao.hora}
+            pessoa={sessao.pessoa}
+            atividade={sessao.atividade}
+          />
+        </NaTela>
       </Aparelho>
     </div>
   )
 }
 
-/** Notebook com o Hoje de computador: o cartão numa coluna, a nota e os últimos registros na outra. */
+/** Notebook com o cartão "Em andamento" do Hoje, em tamanho maior, ocupando a tela. */
 export function NotebookDoHoje() {
   return (
     <div className="palco palco-notebook">
@@ -126,13 +77,9 @@ export function NotebookDoHoje() {
         tela="hoje"
         className="absolute top-0 origin-top-left [left:calc(2.5rem*var(--escala-notebook))] [scale:var(--escala-notebook)]"
       >
-        <div className="grid grid-cols-2 items-start gap-8">
-          <CartaoDoHoje />
-          <div className="flex flex-col gap-6">
-            <NotaDoHoje />
-            <UltimosDoHoje />
-          </div>
-        </div>
+        <NaTela ampliacao="[zoom:1.6]" altura="h-[30rem]">
+          <CartaoEmAndamento miniatura sessao={MINIATURAS.hoje.sessao} />
+        </NaTela>
       </Aparelho>
     </div>
   )

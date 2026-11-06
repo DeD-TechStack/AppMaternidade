@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { screen } from '@testing-library/react'
+import { MINIATURAS } from '../../conteudo/textos.ts'
 import { renderizarRota } from '../../teste/renderizarRota.tsx'
 
 // A estrutura das 9 páginas novas (MAT-36): seções, campos de cor, composições de aparelho,
@@ -157,7 +158,8 @@ describe('seções das 9 páginas novas', () => {
       'Ligue 180',
       'Disque 100',
     ])
-    expect([...canais.querySelectorAll('tbody tr')].map((linha) => linha.children[1].textContent)).toEqual([
+    // O valor é o último filho da célula (o primeiro é o nome da coluna, visível só empilhado).
+    expect([...canais.querySelectorAll('tbody tr')].map((linha) => (linha.children[1].lastElementChild ?? linha.children[1]).textContent)).toEqual([
       '188',
       '192',
       '180',
@@ -500,6 +502,138 @@ describe('composição: campos de cor, aparelhos e ilustrações', () => {
 
     for (const caminho of ['/regras-da-comunidade', '/contato']) {
       expect((await contar(caminho)).campos, caminho).toBeGreaterThanOrEqual(1)
+    }
+  })
+
+  // Correção 1: dentro do aparelho ficam só o CartaoEmAndamento e o SessaoInfo em miniatura. O
+  // título, o bebê, a nota, os últimos e as ações são das funções internas do Início.
+  it('todo [data-aparelho] das páginas novas contém só elementos de um CartaoEmAndamento ou de um SessaoInfo', async () => {
+    const { hoje, sessao } = MINIATURAS
+    const dosOutrosBlocos = [
+      hoje.titulo,
+      hoje.bebe,
+      hoje.nota.rotulo,
+      hoje.nota.texto,
+      hoje.nota.autor,
+      hoje.ultimos.rotulo,
+      ...hoje.ultimos.itens.flatMap((item) => [item.rotulo, item.quando]),
+      sessao.titulo,
+      ...sessao.acoes.slice(1),
+    ]
+    let total = 0
+    for (const caminho of NOVAS) {
+      const container = await abrir(caminho)
+
+      for (const aparelho of container.querySelectorAll('[data-aparelho]')) {
+        total++
+        const tela = aparelho.querySelector('.aparelho-tela')!
+        const folhas = [...tela.querySelectorAll('*')].filter((e) => e.children.length === 0)
+        const textos = folhas.map((e) => e.textContent?.trim())
+        for (const texto of dosOutrosBlocos) expect(textos, `${caminho}: ${texto}`).not.toContain(texto)
+        // Ações da Sessão (Encerrar, Encerrar e anotar, Descartar): botões fora dos componentes.
+        expect(tela.querySelectorAll('button.botao-grande'), caminho).toHaveLength(0)
+
+        for (const elemento of tela.querySelectorAll('*')) {
+          const doComponente = elemento.closest('.campo-andamento, .campo-sessao') !== null
+          const involucro = elemento.querySelector('.campo-andamento, .campo-sessao') !== null
+          expect(doComponente || involucro, `${caminho}: ${elemento.outerHTML.slice(0, 80)}`).toBe(true)
+          if (involucro && !doComponente) {
+            const proprios = [...elemento.childNodes].filter((no) => no.nodeType === Node.TEXT_NODE && no.textContent?.trim())
+            expect(proprios, `${caminho}: invólucro com texto`).toHaveLength(0)
+          }
+        }
+      }
+    }
+    // Dois celulares no Como funciona e um notebook no Cuidado compartilhado.
+    expect(total).toBe(3)
+  })
+
+  it('o celular da madrugada mostra só o SessaoInfo; o celular e o notebook do Hoje, só o CartaoEmAndamento', async () => {
+    const como = await abrir('/como-funciona')
+    const madrugada = secaoDe(como, 'De madrugada').querySelector('[data-aparelho]')!
+    expect(madrugada.querySelectorAll('.campo-sessao')).toHaveLength(1)
+    expect(madrugada.querySelectorAll('.campo-andamento')).toHaveLength(0)
+
+    const troca = secaoDe(como, 'Na troca de turno').querySelector('[data-aparelho="celular"]')!
+    expect(troca.querySelectorAll('.campo-andamento')).toHaveLength(1)
+    expect(troca.querySelectorAll('.campo-sessao')).toHaveLength(0)
+
+    const cuidado = await abrir('/cuidado-compartilhado')
+    const notebook = secaoDe(cuidado, 'Na passagem de turno').querySelector('[data-aparelho="notebook"]')!
+    expect(notebook.querySelectorAll('.campo-andamento')).toHaveLength(1)
+    expect(notebook.querySelectorAll('.campo-sessao')).toHaveLength(0)
+  })
+
+  // Correção 3: abaixo de uma largura de contêiner em rem, cada linha da tabela vira um bloco
+  // empilhado, com o nome da coluna antes do valor; a semântica de tabela fica nos papéis ARIA.
+  describe('tabelas empilhadas em página estreita', () => {
+    const TABELAS: Array<[string, string[], string[]]> = [
+      ['/cuidado-compartilhado', ['Papel', 'Para quem é', 'O que vai poder fazer'], ['Responsável', 'Cuidador', 'Observador']],
+      ['/regras-da-comunidade', ['Canal', 'Número', 'Quando usar'], ['CVV', 'SAMU', 'Ligue 180', 'Disque 100']],
+    ]
+    const LIMITE = /@max-\[(\d+(?:\.\d+)?)rem\]\/publica:/
+
+    /** O limite, em rem, de uma classe `@max-[Nrem]/publica:<utilitário>` do elemento. */
+    function limiteDe(elemento: Element, utilitario: string): number {
+      const token = [...elemento.classList].find((classe) => classe.endsWith(`/publica:${utilitario}`) && LIMITE.test(classe))
+      if (!token) throw new Error(`sem ${utilitario} empilhado em ${elemento.outerHTML.slice(0, 80)}`)
+      return parseFloat(LIMITE.exec(token)![1])
+    }
+
+    for (const [caminho, colunas, linhas] of TABELAS) {
+      it(`${caminho}: papéis ARIA explícitos, legenda e escopos`, async () => {
+        const tabela = (await abrir(caminho)).querySelector('main table')!
+
+        expect(tabela.getAttribute('role')).toBe('table')
+        expect(tabela.querySelector('caption')).not.toBeNull()
+        expect(tabela.querySelector('thead')!.getAttribute('role')).toBe('rowgroup')
+        expect(tabela.querySelector('tbody')!.getAttribute('role')).toBe('rowgroup')
+        for (const linha of tabela.querySelectorAll('tr')) expect(linha.getAttribute('role')).toBe('row')
+        const cabecalhosDeColuna = [...tabela.querySelectorAll('th[scope="col"]')]
+        expect(cabecalhosDeColuna.map((th) => th.textContent)).toEqual(colunas)
+        for (const th of cabecalhosDeColuna) expect(th.getAttribute('role')).toBe('columnheader')
+        const cabecalhosDeLinha = [...tabela.querySelectorAll('th[scope="row"]')]
+        expect(cabecalhosDeLinha.map((th) => th.textContent)).toEqual(linhas)
+        for (const th of cabecalhosDeLinha) expect(th.getAttribute('role')).toBe('rowheader')
+        for (const celula of tabela.querySelectorAll('td')) expect(celula.getAttribute('role')).toBe('cell')
+      })
+
+      it(`${caminho}: cada célula tem o nome da coluna, escondido do leitor de tela, antes do valor`, async () => {
+        const tabela = (await abrir(caminho)).querySelector('main table')!
+
+        const celulas = [...tabela.querySelectorAll('td')]
+        expect(celulas).toHaveLength(linhas.length * (colunas.length - 1))
+        celulas.forEach((celula) => {
+          const nome = colunas[[...celula.parentElement!.children].indexOf(celula)]
+          const rotulo = celula.firstElementChild!
+          expect(rotulo.getAttribute('aria-hidden'), celula.outerHTML.slice(0, 80)).toBe('true')
+          expect(rotulo.textContent).toBe(nome)
+          expect(celula.children.length, 'rótulo e valor').toBe(2)
+          expect(celula.children[1].textContent).not.toBe('')
+        })
+      })
+
+      it(`${caminho}: o empilhamento vale por largura de contêiner em rem, no mesmo limite em todas as peças`, async () => {
+        const tabela = (await abrir(caminho)).querySelector('main table')!
+
+        const limite = limiteDe(tabela, 'block')
+        // Em rem (acompanha a fonte ampliada) e nunca menor que 3 colunas confortáveis, nem do tamanho da página.
+        expect(limite).toBeGreaterThanOrEqual(30)
+        expect(limite).toBeLessThanOrEqual(46)
+        expect(tabela.innerHTML).not.toMatch(/@max-\[[\d.]+px\]/)
+        expect(limiteDe(tabela.querySelector('caption')!, 'block')).toBe(limite)
+        expect(limiteDe(tabela.querySelector('thead')!, 'sr-only')).toBe(limite)
+        expect(limiteDe(tabela.querySelector('tbody')!, 'block')).toBe(limite)
+        for (const linha of tabela.querySelectorAll('tbody tr')) expect(limiteDe(linha, 'block')).toBe(limite)
+        for (const th of tabela.querySelectorAll('tbody th')) expect(limiteDe(th, 'block')).toBe(limite)
+        for (const celula of tabela.querySelectorAll('td')) {
+          expect(limiteDe(celula, 'block')).toBe(limite)
+          // O nome da coluna só aparece quando a linha está empilhada.
+          const rotulo = celula.firstElementChild!
+          expect(rotulo.classList.contains('hidden')).toBe(true)
+          expect(limiteDe(rotulo, 'block')).toBe(limite)
+        }
+      })
     }
   })
 

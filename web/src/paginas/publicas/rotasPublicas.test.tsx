@@ -147,15 +147,73 @@ describe('cabeçalho público', () => {
     }
   })
 
-  it('cada link tem alvo de 44 px (alvo-toque), o desktop tem até 64 px de altura e nada usa o contêiner da página', async () => {
+  it('cada link tem alvo de 44 px (alvo-toque) e nada usa o contêiner da página (a altura está em "altura do cabeçalho público")', async () => {
     const { container } = renderizarRota('/como-funciona')
     await screen.findAllByRole('heading', { level: 1 })
 
     const cabecalho = container.querySelector('header')!
     for (const link of cabecalho.querySelectorAll('a')) expect(link.classList.contains('alvo-toque')).toBe(true)
-    expect(cabecalho.innerHTML).toContain('@min-[46rem]/cabecalho:h-16')
     expect(cabecalho.innerHTML).not.toContain('/pagina')
     expect(cabecalho.querySelector('nav')!.className).toContain('flex-wrap')
+  })
+})
+
+// Correção 2: a linha de baixo (1 px) conta na altura. O <header> inteiro mede no máximo 64 px a
+// partir de 46 rem: a altura do miolo mais a borda do <header>.
+describe('altura do cabeçalho público no desktop', () => {
+  /** Altura, em px com a fonte de 16 px, declarada por `@min-[46rem]/<contêiner>:h-…`. */
+  function alturaDoDesktop(cabecalho: Element): number {
+    const token = [...cabecalho.querySelectorAll('[class]')]
+      .flatMap((e) => [...e.classList])
+      .find((classe) => /^@min-\[46rem\]\/cabecalho:h-/.test(classe))
+    if (!token) throw new Error('o cabeçalho não declara altura a partir de 46 rem')
+    const valor = token.replace(/^@min-\[46rem\]\/cabecalho:h-/, '')
+    if (valor === '16') return 64
+    const calculo = /^\[calc\((\d+(?:\.\d+)?)rem_-_(\d+)px\)\]$/.exec(valor)
+    if (calculo) return parseFloat(calculo[1]) * 16 - parseInt(calculo[2], 10)
+    const fixo = /^\[(\d+)px\]$/.exec(valor)
+    if (fixo) return parseInt(fixo[1], 10)
+    throw new Error(`altura não prevista: ${valor}`)
+  }
+
+  it('o miolo mais a linha de baixo do <header> somam no máximo 64 px', async () => {
+    for (const caminho of DA_MAT36) {
+      const { container, unmount } = renderizarRota(caminho)
+      await screen.findAllByRole('heading', { level: 1 })
+
+      const cabecalho = container.querySelector('header')!
+      const borda = /(^|\s)border(-b)?(\s|$)/.test(cabecalho.className) ? 1 : 0
+      expect(borda, caminho).toBe(1)
+      expect(alturaDoDesktop(cabecalho) + borda, caminho).toBeLessThanOrEqual(64)
+      unmount()
+    }
+  })
+})
+
+// Correção 4: a quebra de palavra que não cabe vale em todas as páginas dentro do layout público,
+// inclusive a Página não encontrada, que não pode mudar. Uma regra só, no invólucro (como no Início).
+describe('quebra de palavra no layout público', () => {
+  it('o invólucro de cada página pública (cabeçalho, página e rodapé) tem break-words', async () => {
+    for (const caminho of DA_MAT36) {
+      const { container, unmount } = renderizarRota(caminho)
+      await screen.findAllByRole('heading', { level: 1 })
+
+      const invólucro = container.firstElementChild as HTMLElement
+      expect(invólucro.contains(container.querySelector('header')), caminho).toBe(true)
+      expect(invólucro.contains(container.querySelector('main')), caminho).toBe(true)
+      expect(invólucro.contains(container.querySelector('footer')), caminho).toBe(true)
+      expect(invólucro.classList.contains('break-words'), caminho).toBe(true)
+      unmount()
+    }
+  })
+
+  it('Hoje e Sessão continuam sem a regra', async () => {
+    for (const caminho of ['/app/hoje', '/app/sessao']) {
+      const { container, unmount } = renderizarRota(caminho)
+      await screen.findAllByRole('heading', { level: 1 })
+      expect(container.querySelectorAll('.break-words'), caminho).toHaveLength(0)
+      unmount()
+    }
   })
 })
 

@@ -68,29 +68,76 @@ export function Paragrafos({ textos }: { textos: readonly Texto[] }) {
   )
 }
 
-/** Tabela com legenda, cabeçalhos de coluna e a primeira célula de cada linha como cabeçalho da linha. */
+// Os papéis ARIA da tabela vão em objetos e entram por spread. Quando a tabela se empilha (display:
+// block), o navegador pode perder o papel nativo de table, rowgroup, row, cell e cabeçalho; o papel
+// explícito o mantém para o leitor de tela. O spread é só para o lint não tratar o papel como
+// redundante: nas outras larguras ele é o mesmo da tag.
+const PAPEL = {
+  tabela: { role: 'table' },
+  grupo: { role: 'rowgroup' },
+  linha: { role: 'row' },
+  cabecalhoDeColuna: { role: 'columnheader' },
+  cabecalhoDeLinha: { role: 'rowheader' },
+  celula: { role: 'cell' },
+} as const
+
+/**
+ * Tabela com legenda, cabeçalhos de coluna e a primeira célula de cada linha como cabeçalho da linha.
+ *
+ * Abaixo de 36 rem de largura da página (contêiner "publica", em rem: vale também com a fonte
+ * ampliada, quando a página tem menos rem) cada linha vira um bloco empilhado: o cabeçalho da linha
+ * em cima e, em cada célula, o nome da coluna visível antes do valor. A linha de cabeçalhos sai da
+ * vista (sr-only) e continua para o leitor de tela; o nome da coluna repetido na célula é aria-hidden,
+ * para não ser lido duas vezes.
+ */
 export function Tabela({ legenda, colunas, linhas }: DadosDeTabela) {
   return (
-    <table className="w-full border-collapse text-left text-[0.9375rem] leading-snug @min-[46rem]/publica:text-[1.0625rem]">
-      <caption className="rotulo pb-3 text-left">{legenda}</caption>
-      <thead>
-        <tr className="border-y">
+    <table
+      {...PAPEL.tabela}
+      className="w-full border-collapse text-left text-[0.9375rem] leading-snug @min-[46rem]/publica:text-[1.0625rem] @max-[36rem]/publica:block"
+    >
+      <caption className="rotulo pb-3 text-left @max-[36rem]/publica:block">{legenda}</caption>
+      <thead {...PAPEL.grupo} className="@max-[36rem]/publica:sr-only">
+        <tr {...PAPEL.linha} className="border-y">
           {colunas.map((coluna) => (
-            <th key={coluna} scope="col" className="rotulo py-3 pr-4 text-left align-bottom">
+            <th
+              key={coluna}
+              {...PAPEL.cabecalhoDeColuna}
+              scope="col"
+              className="rotulo py-3 pr-4 text-left align-bottom"
+            >
               {coluna}
             </th>
           ))}
         </tr>
       </thead>
-      <tbody>
+      <tbody {...PAPEL.grupo} className="@max-[36rem]/publica:block">
         {linhas.map(([cabecalho, ...celulas]) => (
-          <tr key={cabecalho} className="border-b">
-            <th scope="row" className="py-4 pr-4 text-left align-top font-semibold">
+          <tr
+            key={cabecalho}
+            {...PAPEL.linha}
+            className="border-b @max-[36rem]/publica:block @max-[36rem]/publica:py-4"
+          >
+            <th
+              {...PAPEL.cabecalhoDeLinha}
+              scope="row"
+              className="py-4 pr-4 text-left align-top font-semibold @max-[36rem]/publica:block @max-[36rem]/publica:py-0 @max-[36rem]/publica:pb-2 @max-[36rem]/publica:text-lg"
+            >
               {cabecalho}
             </th>
-            {celulas.map((celula) => (
-              <td key={celula} className="tabular py-4 pr-4 align-top">
-                {celula}
+            {celulas.map((celula, indice) => (
+              <td
+                key={celula}
+                {...PAPEL.celula}
+                className="tabular py-4 pr-4 align-top @max-[36rem]/publica:block @max-[36rem]/publica:py-2 @max-[36rem]/publica:pr-0"
+              >
+                <span
+                  aria-hidden="true"
+                  className="rotulo hidden @max-[36rem]/publica:block"
+                >
+                  {colunas[indice + 1]}
+                </span>
+                <span>{celula}</span>
               </td>
             ))}
           </tr>
