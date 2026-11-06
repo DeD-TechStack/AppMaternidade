@@ -15,6 +15,7 @@ import {
   TELAS,
 } from '../conteudo/textos.ts'
 import { Aparelho } from '../componentes/Aparelho.tsx'
+import { AvisoDemonstracao } from '../componentes/AvisoDemonstracao.tsx'
 import { BotoesRapidos } from '../prototipo/BotoesRapidos.tsx'
 import { CartaoEmAndamento } from '../prototipo/CartaoEmAndamento.tsx'
 import { IlustracaoColo } from '../prototipo/IlustracaoColo.tsx'
@@ -150,6 +151,7 @@ export function Inicio() {
   // seguidos. O texto longo fica sempre no papel; sobre os campos só há frases curtas.
   return (
     <div className="@container/pagina flex min-h-dvh flex-col break-words px-4 md:px-[2%]">
+      <AvisoDemonstracao />
       <header className="flex flex-col border-b py-3 @min-[46rem]/pagina:h-16 @min-[46rem]/pagina:flex-row @min-[46rem]/pagina:items-center @min-[46rem]/pagina:justify-between @min-[46rem]/pagina:py-0">
         <p className="marca">AppMaternidade</p>
         <nav
