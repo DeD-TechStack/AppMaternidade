@@ -1,7 +1,13 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(82);
+select plan(88);
+
+-- 47-M5 (adendo R-B): cada subcaso roda isolado, com savepoint e rollback to savepoint. O estado de um
+-- subcaso nunca vaza para o seguinte: a denúncia aberta num caso não muda a contagem do outro, e o
+-- bloqueio criado num caso não vira o bloqueio já existente do caso seguinte. Para o pgTAP, a última
+-- asserção do arquivo fica fora de qualquer savepoint (o contador de testes volta ao total certo).
+-- Cada subcaso é "savepoint s; asserção; rollback to savepoint s; release savepoint s;".
 
 create function pg_temp.i(n int) returns uuid language sql immutable as $$
   select ('c0470000-0000-4000-8000-' || lpad(n::text, 12, '0'))::uuid
@@ -58,9 +64,9 @@ insert into public.aceites_termos (conta_id, versao) values
   (pg_temp.i(5), '2026-11-05'), (pg_temp.i(7), '2026-11-05'), (pg_temp.i(9), '2026-11-05');
 
 insert into public.perfis_publicos (id, conta_id, apelido) values
-  (pg_temp.i(11), pg_temp.i(1), 'teste_autor'), (pg_temp.i(12), pg_temp.i(2), 'teste_outro'),
-  (pg_temp.i(13), pg_temp.i(3), 'teste_bloqueado'), (pg_temp.i(14), pg_temp.i(4), 'teste_semaceite'),
-  (pg_temp.i(17), pg_temp.i(7), 'teste_moderador'), (pg_temp.i(19), pg_temp.i(9), 'teste_modvencido');
+  (pg_temp.i(11), pg_temp.i(1), 't_autor'), (pg_temp.i(12), pg_temp.i(2), 't_outro'),
+  (pg_temp.i(13), pg_temp.i(3), 't_bloqueado'), (pg_temp.i(14), pg_temp.i(4), 't_semaceite'),
+  (pg_temp.i(17), pg_temp.i(7), 't_moderador'), (pg_temp.i(19), pg_temp.i(9), 't_modvencido');
 
 -- O Autor bloqueou o Bloqueado.
 insert into public.bloqueios (bloqueador_id, bloqueado_id) values (pg_temp.i(11), pg_temp.i(13));
@@ -104,145 +110,180 @@ from pg_proc where oid = 'public.minhas_denuncias()'::regprocedure;
 
 set local role authenticated;
 
-select is(
-  pg_temp.ler(v.n, $q$select coalesce(string_agg(right(id::text, 2), ','), '') from public.minhas_denuncias()$q$),
-  v.esperado, v.descricao
-) from (values
-  (2, '42,44,41', 'Outro vê as próprias denúncias, da mais nova para a mais antiga, empate por id'),
-  (1, '43', 'Autor vê só a própria denúncia'),
-  (7, '', 'Moderador não vê denúncia de outra conta em minhas_denuncias'),
-  (8, '', 'Admin não vê denúncia de outra conta em minhas_denuncias'),
-  (6, '', 'conta sem linha em contas recebe 0 linhas de minhas_denuncias')
-) as v(n, esperado, descricao);
+-- minhas_denuncias, uma conta por subcaso
+savepoint s;
+select is(pg_temp.ler(2, $q$select coalesce(string_agg(right(id::text, 2), ','), '') from public.minhas_denuncias()$q$),
+  '42,44,41', 'Outro vê as próprias denúncias, da mais nova para a mais antiga, empate por id');
+rollback to savepoint s; release savepoint s;
 
--- denunciar: erros na ordem do catálogo, um por asserção
-select is(
-  pg_temp.exec(v.n, v.sql), v.esperado, v.descricao
-) from (values
-  (6, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(21))$s$,
-   'ERRO:P0001:sem conta', 'sem conta não denuncia'),
-  (4, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(21))$s$,
-   'ERRO:P0001:sem aceite', 'sem aceite não denuncia'),
-  (8, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(21))$s$,
-   'ERRO:P0001:sem aceite', 'Admin sem aceite não denuncia'),
-  (5, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(21))$s$,
-   'ERRO:P0001:sem perfil', 'sem perfil não denuncia'),
-  (1, $s$select public.denunciar(null::public.motivo_denuncia, p_topico_id => pg_temp.i(21))$s$,
-   'ERRO:P0001:parametro obrigatorio', 'motivo nulo é recusado'),
-  (1, $s$select public.denunciar(p_motivo => 'outro')$s$,
-   'ERRO:23514:alvo invalido', 'denúncia sem alvo é recusada'),
-  (1, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(21), p_resposta_id => pg_temp.i(31))$s$,
-   'ERRO:23514:alvo invalido', 'denúncia com tópico e resposta é recusada'),
-  (1, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(21), p_perfil_id => pg_temp.i(12))$s$,
-   'ERRO:23514:alvo invalido', 'denúncia com tópico e perfil é recusada'),
-  (1, $s$select public.denunciar(p_motivo => 'outro', p_resposta_id => pg_temp.i(31), p_perfil_id => pg_temp.i(12))$s$,
-   'ERRO:23514:alvo invalido', 'denúncia com resposta e perfil é recusada'),
-  (1, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(21), p_resposta_id => pg_temp.i(31), p_perfil_id => pg_temp.i(12))$s$,
-   'ERRO:23514:alvo invalido', 'denúncia com os três alvos é recusada'),
-  (1, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(99))$s$,
-   'ERRO:P0002:alvo inexistente', 'tópico inexistente'),
-  (1, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(22))$s$,
-   'ERRO:P0002:alvo inexistente', 'tópico oculto não é denunciável'),
-  (1, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(23))$s$,
-   'ERRO:P0002:alvo inexistente', 'tópico removido não é denunciável'),
-  (2, $s$select public.denunciar(p_motivo => 'outro', p_resposta_id => pg_temp.i(99))$s$,
-   'ERRO:P0002:alvo inexistente', 'resposta inexistente'),
-  (2, $s$select public.denunciar(p_motivo => 'outro', p_resposta_id => pg_temp.i(34))$s$,
-   'ERRO:P0002:alvo inexistente', 'resposta oculta não é denunciável'),
-  (2, $s$select public.denunciar(p_motivo => 'outro', p_resposta_id => pg_temp.i(35))$s$,
-   'ERRO:P0002:alvo inexistente', 'resposta visível de tópico removido não é denunciável'),
-  (1, $s$select public.denunciar(p_motivo => 'outro', p_perfil_id => pg_temp.i(99))$s$,
-   'ERRO:P0002:alvo inexistente', 'perfil inexistente'),
-  (1, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(61))$s$,
-   'ERRO:P0002:alvo inexistente', 'id de bebê usado como tópico não é alvo de denúncia'),
-  (1, $s$select public.denunciar(p_motivo => 'outro', p_resposta_id => pg_temp.i(61))$s$,
-   'ERRO:P0002:alvo inexistente', 'id de bebê usado como resposta não é alvo de denúncia'),
-  (1, $s$select public.denunciar(p_motivo => 'outro', p_perfil_id => pg_temp.i(61))$s$,
-   'ERRO:P0002:alvo inexistente', 'id de bebê usado como perfil não é alvo de denúncia'),
-  (1, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(60))$s$,
-   'ERRO:P0002:alvo inexistente', 'id de família usado como tópico não é alvo de denúncia'),
-  (1, $s$select public.denunciar(p_motivo => 'outro', p_resposta_id => pg_temp.i(60))$s$,
-   'ERRO:P0002:alvo inexistente', 'id de família usado como resposta não é alvo de denúncia'),
-  (1, $s$select public.denunciar(p_motivo => 'outro', p_perfil_id => pg_temp.i(60))$s$,
-   'ERRO:P0002:alvo inexistente', 'id de família usado como perfil não é alvo de denúncia'),
-  (2, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(21), p_texto => repeat('d', 501))$s$,
-   'ERRO:23514', 'texto de denúncia acima de 500 sai do check'),
-  (2, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(21), p_texto => '')$s$,
-   'ERRO:23514', 'texto de denúncia vazio sai do check')
-) as v(n, sql, esperado, descricao);
+savepoint s;
+select is(pg_temp.ler(1, $q$select coalesce(string_agg(right(id::text, 2), ','), '') from public.minhas_denuncias()$q$),
+  '43', 'Autor vê só a própria denúncia');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.ler(7, $q$select coalesce(string_agg(right(id::text, 2), ','), '') from public.minhas_denuncias()$q$),
+  '', 'Moderador não vê denúncia de outra conta em minhas_denuncias');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.ler(8, $q$select coalesce(string_agg(right(id::text, 2), ','), '') from public.minhas_denuncias()$q$),
+  '', 'Admin não vê denúncia de outra conta em minhas_denuncias');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.ler(6, $q$select coalesce(string_agg(right(id::text, 2), ','), '') from public.minhas_denuncias()$q$),
+  '', 'conta sem linha em contas recebe 0 linhas de minhas_denuncias');
+rollback to savepoint s; release savepoint s;
+
+-- denunciar: erros na ordem do catálogo, um subcaso por asserção
+savepoint s;
+select is(pg_temp.exec(6, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(21))$s$),
+  'ERRO:P0001:sem conta', 'sem conta não denuncia');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(4, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(21))$s$),
+  'ERRO:P0001:sem aceite', 'sem aceite não denuncia');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(8, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(21))$s$),
+  'ERRO:P0001:sem aceite', 'Admin sem aceite não denuncia');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(5, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(21))$s$),
+  'ERRO:P0001:sem perfil', 'sem perfil não denuncia');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(1, $s$select public.denunciar(null::public.motivo_denuncia, p_topico_id => pg_temp.i(21))$s$),
+  'ERRO:P0001:parametro obrigatorio', 'motivo nulo é recusado');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(1, $s$select public.denunciar(p_motivo => 'outro')$s$),
+  'ERRO:23514:alvo invalido', 'denúncia sem alvo é recusada');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(1, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(21), p_resposta_id => pg_temp.i(31))$s$),
+  'ERRO:23514:alvo invalido', 'denúncia com tópico e resposta é recusada');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(1, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(21), p_perfil_id => pg_temp.i(12))$s$),
+  'ERRO:23514:alvo invalido', 'denúncia com tópico e perfil é recusada');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(1, $s$select public.denunciar(p_motivo => 'outro', p_resposta_id => pg_temp.i(31), p_perfil_id => pg_temp.i(12))$s$),
+  'ERRO:23514:alvo invalido', 'denúncia com resposta e perfil é recusada');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(1, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(21), p_resposta_id => pg_temp.i(31), p_perfil_id => pg_temp.i(12))$s$),
+  'ERRO:23514:alvo invalido', 'denúncia com os três alvos é recusada');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(1, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(99))$s$),
+  'ERRO:P0002:alvo inexistente', 'tópico inexistente');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(1, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(22))$s$),
+  'ERRO:P0002:alvo inexistente', 'tópico oculto não é denunciável');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(1, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(23))$s$),
+  'ERRO:P0002:alvo inexistente', 'tópico removido não é denunciável');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(2, $s$select public.denunciar(p_motivo => 'outro', p_resposta_id => pg_temp.i(99))$s$),
+  'ERRO:P0002:alvo inexistente', 'resposta inexistente');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(2, $s$select public.denunciar(p_motivo => 'outro', p_resposta_id => pg_temp.i(34))$s$),
+  'ERRO:P0002:alvo inexistente', 'resposta oculta não é denunciável');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(2, $s$select public.denunciar(p_motivo => 'outro', p_resposta_id => pg_temp.i(35))$s$),
+  'ERRO:P0002:alvo inexistente', 'resposta visível de tópico removido não é denunciável');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(1, $s$select public.denunciar(p_motivo => 'outro', p_perfil_id => pg_temp.i(99))$s$),
+  'ERRO:P0002:alvo inexistente', 'perfil inexistente');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(1, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(61))$s$),
+  'ERRO:P0002:alvo inexistente', 'id de bebê usado como tópico não é alvo de denúncia');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(1, $s$select public.denunciar(p_motivo => 'outro', p_resposta_id => pg_temp.i(61))$s$),
+  'ERRO:P0002:alvo inexistente', 'id de bebê usado como resposta não é alvo de denúncia');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(1, $s$select public.denunciar(p_motivo => 'outro', p_perfil_id => pg_temp.i(61))$s$),
+  'ERRO:P0002:alvo inexistente', 'id de bebê usado como perfil não é alvo de denúncia');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(1, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(60))$s$),
+  'ERRO:P0002:alvo inexistente', 'id de família usado como tópico não é alvo de denúncia');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(1, $s$select public.denunciar(p_motivo => 'outro', p_resposta_id => pg_temp.i(60))$s$),
+  'ERRO:P0002:alvo inexistente', 'id de família usado como resposta não é alvo de denúncia');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(1, $s$select public.denunciar(p_motivo => 'outro', p_perfil_id => pg_temp.i(60))$s$),
+  'ERRO:P0002:alvo inexistente', 'id de família usado como perfil não é alvo de denúncia');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(2, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(21), p_texto => repeat('d', 501))$s$),
+  'ERRO:23514', 'texto de denúncia acima de 500 sai do check');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(2, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(21), p_texto => '')$s$),
+  'ERRO:23514', 'texto de denúncia vazio sai do check');
+rollback to savepoint s; release savepoint s;
 
 -- Sem versão vigente: termos indisponíveis (o erro de conta vem antes)
+savepoint s;
 reset role;
 update public.versoes_termos set vigente = false where vigente;
 set local role authenticated;
+select is(pg_temp.exec(6, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(21))$s$),
+  'ERRO:P0001:sem conta', 'sem versão vigente, sem conta ainda dá sem conta');
+rollback to savepoint s; release savepoint s;
 
-select is(
-  pg_temp.exec(v.n, v.sql), v.esperado, v.descricao
-) from (values
-  (6, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(21))$s$,
-   'ERRO:P0001:sem conta', 'sem versão vigente, sem conta ainda dá sem conta'),
-  (1, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(21))$s$,
-   'ERRO:P0001:termos indisponiveis', 'sem versão vigente, ninguém denuncia')
-) as v(n, sql, esperado, descricao);
-
+savepoint s;
 reset role;
-update public.versoes_termos set vigente = true where versao = '2026-11-05';
+update public.versoes_termos set vigente = false where vigente;
 set local role authenticated;
+select is(pg_temp.exec(1, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(21))$s$),
+  'ERRO:P0001:termos indisponiveis', 'sem versão vigente, ninguém denuncia');
+rollback to savepoint s; release savepoint s;
 
 -- denunciar: acertos. Bloqueio e autoria não impedem (D16).
-select is(
-  pg_temp.exec(v.n, v.sql), v.esperado, v.descricao
-) from (values
-  (2, $s$select set_config('teste.den', public.denunciar(p_motivo => 'spam_venda', p_topico_id => pg_temp.i(21), p_texto => 'Texto da denuncia')::text, true)$s$,
-   '1', 'Outro denuncia um tópico visível'),
-  (2, $s$select public.denunciar(p_motivo => 'outro', p_resposta_id => pg_temp.i(31))$s$,
-   '1', 'Outro denuncia uma resposta visível (a própria também, D16)'),
-  (2, $s$select public.denunciar(p_motivo => 'dados_pessoais', p_perfil_id => pg_temp.i(11))$s$,
-   '1', 'Outro denuncia o perfil do Autor'),
-  (3, $s$select public.denunciar(p_motivo => 'ataque_assedio', p_topico_id => pg_temp.i(21))$s$,
-   '1', 'Bloqueado denuncia o tópico de quem o bloqueou'),
-  (3, $s$select public.denunciar(p_motivo => 'ataque_assedio', p_perfil_id => pg_temp.i(11))$s$,
-   '1', 'Bloqueado denuncia o perfil de quem o bloqueou'),
-  (1, $s$select public.denunciar(p_motivo => 'spam_venda', p_perfil_id => pg_temp.i(13))$s$,
-   '1', 'Autor denuncia o perfil de quem bloqueou'),
-  (1, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(21))$s$,
-   '1', 'Autor denuncia o próprio tópico'),
-  (7, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(21))$s$,
-   '1', 'Moderador denuncia como usuário comum'),
-  (9, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(21))$s$,
-   '1', 'Moderador vencido denuncia como usuário comum')
-) as v(n, sql, esperado, descricao);
-
--- Denúncia só por função: nenhum comando direto
-select is(
-  pg_temp.exec(v.n, v.sql), 'ERRO:42501', v.descricao
-) from (values
-  (2, $s$insert into public.denuncias (denunciante_id, topico_id, motivo) values (pg_temp.i(2), pg_temp.i(21), 'outro')$s$,
-   'Outro não insere denúncia direto'),
-  (7, $s$insert into public.denuncias (denunciante_id, topico_id, motivo) values (pg_temp.i(7), pg_temp.i(21), 'outro')$s$,
-   'Moderador não insere denúncia direto'),
-  (8, $s$insert into public.denuncias (denunciante_id, topico_id, motivo) values (pg_temp.i(8), pg_temp.i(21), 'outro')$s$,
-   'Admin não insere denúncia direto'),
-  (7, $s$update public.denuncias set estado = 'procedente' where id = pg_temp.i(41)$s$,
-   'Moderador não muda o estado da denúncia direto'),
-  (2, $s$update public.denuncias set texto = 'mudei' where id = pg_temp.i(41)$s$,
-   'o denunciante não edita a denúncia'),
-  (2, $s$select decidida_por::text from public.denuncias limit 1$s$,
-   'o denunciante não lê denuncias.decidida_por'),
-  (7, $s$select decidida_por::text from public.denuncias limit 1$s$,
-   'Moderador não lê denuncias.decidida_por'),
-  (2, $s$select denunciante_id::text from public.denuncias limit 1$s$,
-   'o denunciante não lê denuncias.denunciante_id'),
-  (7, $s$select denunciante_id::text from public.denuncias limit 1$s$,
-   'Moderador não lê denuncias.denunciante_id'),
-  (7, $s$delete from public.denuncias where id = pg_temp.i(41)$s$,
-   'Moderador não apaga denúncia'),
-  (2, $s$delete from public.denuncias where id = pg_temp.i(41)$s$,
-   'o denunciante não apaga denúncia')
-) as v(n, sql, descricao);
-
+savepoint s;
+select is(pg_temp.exec(2, $s$select set_config('teste.den', public.denunciar(p_motivo => 'spam_venda', p_topico_id => pg_temp.i(21), p_texto => 'Texto da denuncia')::text, true)$s$),
+  '1', 'Outro denuncia um tópico visível');
 reset role;
-
 select is(
   (select count(*)::int from public.denuncias
     where id = current_setting('teste.den')::uuid
@@ -250,101 +291,244 @@ select is(
       and resposta_id is null and perfil_id is null
       and motivo = 'spam_venda' and texto = 'Texto da denuncia'
       and estado = 'aberta' and decidida_por is null and decidida_em is null),
-  1,
-  'denunciar grava a denúncia aberta e devolve o id dela'
-);
-
-select is(
-  (select count(*)::int from public.denuncias where denunciante_id = pg_temp.i(2)),
-  6,
-  'Outro tem as 3 denúncias prontas e as 3 que abriu (tópico, resposta e perfil do Autor): as chamadas negadas não gravaram nada'
-);
-
--- Bloqueios: criar, remover e efeito nos dois sentidos
+  1, 'denunciar grava a denúncia aberta e devolve o id dela');
+select is((select count(*)::int from public.denuncias where denunciante_id = pg_temp.i(2)), 4,
+  'Outro tem as 3 denúncias prontas e a 1 que abriu neste subcaso (nenhuma sobra de outro subcaso)');
 set local role authenticated;
+select is(pg_temp.ler(2, $q$select count(*) from public.minhas_denuncias()$q$), '4',
+  'depois de denunciar, minhas_denuncias() de Outro devolve as 3 prontas e a nova');
+select is(pg_temp.ler(2, $q$select (id = current_setting('teste.den')::uuid)::text || '/' || estado::text
+  from public.minhas_denuncias() where id = current_setting('teste.den')::uuid$q$),
+  'true/aberta', 'a denúncia recém-aberta aparece em minhas_denuncias() como aberta');
+rollback to savepoint s; release savepoint s;
 
-select is(
-  pg_temp.exec(v.n, v.sql), v.esperado, v.descricao
-) from (values
-  (1, $s$insert into public.bloqueios (bloqueador_id, bloqueado_id) values (pg_temp.i(11), pg_temp.i(12))$s$,
-   '1', 'Autor bloqueia o Outro'),
-  (4, $s$insert into public.bloqueios (bloqueador_id, bloqueado_id) values (pg_temp.i(14), pg_temp.i(12))$s$,
-   '1', 'quem não aceitou os termos ainda pode bloquear (D7)'),
-  (7, $s$insert into public.bloqueios (bloqueador_id, bloqueado_id) values (pg_temp.i(17), pg_temp.i(12))$s$,
-   '1', 'Moderador bloqueia como usuário comum'),
-  (9, $s$insert into public.bloqueios (bloqueador_id, bloqueado_id) values (pg_temp.i(19), pg_temp.i(12))$s$,
-   '1', 'Moderador vencido bloqueia como usuário comum'),
-  (5, $s$insert into public.bloqueios (bloqueador_id, bloqueado_id) values (null, pg_temp.i(12))$s$,
-   'ERRO:42501', 'sem perfil não bloqueia'),
-  (6, $s$insert into public.bloqueios (bloqueador_id, bloqueado_id) values (pg_temp.i(12), pg_temp.i(13))$s$,
-   'ERRO:42501', 'sem conta não bloqueia em nome de outro perfil'),
-  (8, $s$insert into public.bloqueios (bloqueador_id, bloqueado_id) values (pg_temp.i(17), pg_temp.i(13))$s$,
-   'ERRO:42501', 'Admin não bloqueia em nome de outro perfil'),
-  (2, $s$insert into public.bloqueios (bloqueador_id, bloqueado_id) values (pg_temp.i(11), pg_temp.i(14))$s$,
-   'ERRO:42501', 'Outro não bloqueia em nome do Autor'),
-  (1, $s$insert into public.bloqueios (bloqueador_id, bloqueado_id) values (pg_temp.i(11), pg_temp.i(11))$s$,
-   'ERRO:23514', 'ninguém bloqueia a si mesmo'),
-  (1, $s$insert into public.bloqueios (bloqueador_id, bloqueado_id) values (pg_temp.i(11), pg_temp.i(13))$s$,
-   'ERRO:23505', 'o mesmo bloqueio não se repete'),
-  (1, $s$insert into public.bloqueios (bloqueador_id, bloqueado_id) values (pg_temp.i(11), pg_temp.i(99))$s$,
-   'ERRO:23503', 'bloqueio de perfil inexistente é recusado'),
-  (1, $s$update public.bloqueios set bloqueado_id = pg_temp.i(14) where bloqueador_id = pg_temp.i(11)$s$,
-   'ERRO:42501', 'bloqueio não se altera'),
-  (2, $s$delete from public.bloqueios where bloqueador_id = pg_temp.i(11) and bloqueado_id = pg_temp.i(13)$s$,
-   '0', 'Outro não remove bloqueio do Autor (0 linhas)'),
-  (3, $s$delete from public.bloqueios where bloqueador_id = pg_temp.i(11) and bloqueado_id = pg_temp.i(13)$s$,
-   '0', 'o Bloqueado não remove o bloqueio (0 linhas)'),
-  (7, $s$delete from public.bloqueios where bloqueador_id = pg_temp.i(11) and bloqueado_id = pg_temp.i(13)$s$,
-   '0', 'Moderador não remove bloqueio alheio (0 linhas)'),
-  (8, $s$delete from public.bloqueios where bloqueador_id = pg_temp.i(11) and bloqueado_id = pg_temp.i(13)$s$,
-   '0', 'Admin não remove bloqueio alheio (0 linhas)'),
-  (6, $s$delete from public.bloqueios where bloqueador_id = pg_temp.i(11) and bloqueado_id = pg_temp.i(13)$s$,
-   '0', 'sem conta não remove bloqueio (0 linhas)')
-) as v(n, sql, esperado, descricao);
+-- Depois de denunciar, a conta que denunciou (Moderador, sem denúncia anterior) vê exatamente 1 linha
+savepoint s;
+select is(pg_temp.ler(7, $q$select count(*) from public.minhas_denuncias()$q$), '0',
+  'antes de denunciar, minhas_denuncias() do Moderador devolve 0 linhas');
+select is(pg_temp.exec(7, $s$select set_config('teste.den', public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(21))::text, true)$s$),
+  '1', 'Moderador denuncia como usuário comum');
+select is(pg_temp.ler(7, $q$select count(*) from public.minhas_denuncias()$q$), '1',
+  'depois de denunciar, minhas_denuncias() de quem denunciou devolve a denúncia: 1 linha');
+select is(pg_temp.ler(7, $q$select (id = current_setting('teste.den')::uuid)::text from public.minhas_denuncias()$q$), 'true',
+  'a linha devolvida é a denúncia que ele abriu');
+rollback to savepoint s; release savepoint s;
 
-reset role;
+savepoint s;
+select is(pg_temp.exec(2, $s$select public.denunciar(p_motivo => 'outro', p_resposta_id => pg_temp.i(31))$s$),
+  '1', 'Outro denuncia uma resposta visível (a própria também, D16)');
+rollback to savepoint s; release savepoint s;
 
-select is(
-  (select count(*)::int from public.bloqueios
-    where bloqueador_id = pg_temp.i(11) and bloqueado_id = pg_temp.i(13)),
-  1,
-  'o bloqueio do Autor ao Bloqueado segue intacto depois das tentativas alheias'
-);
+savepoint s;
+select is(pg_temp.exec(2, $s$select public.denunciar(p_motivo => 'dados_pessoais', p_perfil_id => pg_temp.i(11))$s$),
+  '1', 'Outro denuncia o perfil do Autor');
+rollback to savepoint s; release savepoint s;
 
-set local role authenticated;
+savepoint s;
+select is(pg_temp.exec(3, $s$select public.denunciar(p_motivo => 'ataque_assedio', p_topico_id => pg_temp.i(21))$s$),
+  '1', 'Bloqueado denuncia o tópico de quem o bloqueou');
+rollback to savepoint s; release savepoint s;
 
--- Efeito nos dois sentidos, e desfeito ao desbloquear
-select is(
-  pg_temp.ler(v.n, v.sql), v.esperado, v.descricao
-) from (values
-  (3, $s$select count(*) from public.topicos where id = pg_temp.i(21)$s$, '0', 'o Bloqueado não vê o tópico de quem o bloqueou'),
-  (1, $s$select count(*) from public.topicos where id = pg_temp.i(25)$s$, '0', 'o Autor não vê o tópico de quem bloqueou'),
-  (1, $s$select count(*) from public.perfis_publicos where id = pg_temp.i(13)$s$, '0', 'o Autor não vê o perfil de quem bloqueou'),
-  (3, $s$select count(*) from public.perfis_publicos where id = pg_temp.i(11)$s$, '0', 'o Bloqueado não vê o perfil de quem o bloqueou'),
-  (3, $s$select count(*) from public.bloqueios where bloqueado_id = pg_temp.i(13)$s$, '0', 'o Bloqueado não vê a linha do bloqueio')
-) as v(n, sql, esperado, descricao);
+savepoint s;
+select is(pg_temp.exec(3, $s$select public.denunciar(p_motivo => 'ataque_assedio', p_perfil_id => pg_temp.i(11))$s$),
+  '1', 'Bloqueado denuncia o perfil de quem o bloqueou');
+rollback to savepoint s; release savepoint s;
 
-select is(
-  pg_temp.exec(1, $s$delete from public.bloqueios where bloqueador_id = pg_temp.i(11) and bloqueado_id = pg_temp.i(13)$s$),
-  '1',
-  'Autor desbloqueia o Bloqueado'
-);
+savepoint s;
+select is(pg_temp.exec(1, $s$select public.denunciar(p_motivo => 'spam_venda', p_perfil_id => pg_temp.i(13))$s$),
+  '1', 'Autor denuncia o perfil de quem bloqueou');
+rollback to savepoint s; release savepoint s;
 
-select is(
-  pg_temp.ler(v.n, v.sql), v.esperado, v.descricao
-) from (values
-  (3, $s$select count(*) from public.topicos where id = pg_temp.i(21)$s$, '1', 'desbloqueado, o Bloqueado volta a ver o tópico do Autor'),
-  (1, $s$select count(*) from public.topicos where id = pg_temp.i(25)$s$, '1', 'desbloqueado, o Autor volta a ver o tópico do Bloqueado')
-) as v(n, sql, esperado, descricao);
+savepoint s;
+select is(pg_temp.exec(1, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(21))$s$),
+  '1', 'Autor denuncia o próprio tópico');
+rollback to savepoint s; release savepoint s;
 
-select is(
-  pg_temp.exec(3, $s$insert into public.respostas (topico_id, autor_id, corpo)
+savepoint s;
+select is(pg_temp.exec(9, $s$select public.denunciar(p_motivo => 'outro', p_topico_id => pg_temp.i(21))$s$),
+  '1', 'Moderador vencido denuncia como usuário comum');
+rollback to savepoint s; release savepoint s;
+
+-- Denúncia só por função: nenhum comando direto
+savepoint s;
+select is(pg_temp.exec(2, $s$insert into public.denuncias (denunciante_id, topico_id, motivo) values (pg_temp.i(2), pg_temp.i(21), 'outro')$s$),
+  'ERRO:42501', 'Outro não insere denúncia direto');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(7, $s$insert into public.denuncias (denunciante_id, topico_id, motivo) values (pg_temp.i(7), pg_temp.i(21), 'outro')$s$),
+  'ERRO:42501', 'Moderador não insere denúncia direto');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(8, $s$insert into public.denuncias (denunciante_id, topico_id, motivo) values (pg_temp.i(8), pg_temp.i(21), 'outro')$s$),
+  'ERRO:42501', 'Admin não insere denúncia direto');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(7, $s$update public.denuncias set estado = 'procedente' where id = pg_temp.i(41)$s$),
+  'ERRO:42501', 'Moderador não muda o estado da denúncia direto');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(2, $s$update public.denuncias set texto = 'mudei' where id = pg_temp.i(41)$s$),
+  'ERRO:42501', 'o denunciante não edita a denúncia');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(2, $s$select decidida_por::text from public.denuncias limit 1$s$),
+  'ERRO:42501', 'o denunciante não lê denuncias.decidida_por');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(7, $s$select decidida_por::text from public.denuncias limit 1$s$),
+  'ERRO:42501', 'Moderador não lê denuncias.decidida_por');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(2, $s$select denunciante_id::text from public.denuncias limit 1$s$),
+  'ERRO:42501', 'o denunciante não lê denuncias.denunciante_id');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(7, $s$select denunciante_id::text from public.denuncias limit 1$s$),
+  'ERRO:42501', 'Moderador não lê denuncias.denunciante_id');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(7, $s$delete from public.denuncias where id = pg_temp.i(41)$s$),
+  'ERRO:42501', 'Moderador não apaga denúncia');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(2, $s$delete from public.denuncias where id = pg_temp.i(41)$s$),
+  'ERRO:42501', 'o denunciante não apaga denúncia');
+rollback to savepoint s; release savepoint s;
+
+-- Bloqueios: criar, remover e efeito nos dois sentidos, um subcaso por asserção
+savepoint s;
+select is(pg_temp.exec(1, $s$insert into public.bloqueios (bloqueador_id, bloqueado_id) values (pg_temp.i(11), pg_temp.i(12))$s$),
+  '1', 'Autor bloqueia o Outro');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(4, $s$insert into public.bloqueios (bloqueador_id, bloqueado_id) values (pg_temp.i(14), pg_temp.i(12))$s$),
+  '1', 'quem não aceitou os termos ainda pode bloquear (D7)');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(7, $s$insert into public.bloqueios (bloqueador_id, bloqueado_id) values (pg_temp.i(17), pg_temp.i(12))$s$),
+  '1', 'Moderador bloqueia como usuário comum');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(9, $s$insert into public.bloqueios (bloqueador_id, bloqueado_id) values (pg_temp.i(19), pg_temp.i(12))$s$),
+  '1', 'Moderador vencido bloqueia como usuário comum');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(5, $s$insert into public.bloqueios (bloqueador_id, bloqueado_id) values (null, pg_temp.i(12))$s$),
+  'ERRO:42501', 'sem perfil não bloqueia');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(6, $s$insert into public.bloqueios (bloqueador_id, bloqueado_id) values (pg_temp.i(12), pg_temp.i(13))$s$),
+  'ERRO:42501', 'sem conta não bloqueia em nome de outro perfil');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(8, $s$insert into public.bloqueios (bloqueador_id, bloqueado_id) values (pg_temp.i(17), pg_temp.i(13))$s$),
+  'ERRO:42501', 'Admin não bloqueia em nome de outro perfil');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(2, $s$insert into public.bloqueios (bloqueador_id, bloqueado_id) values (pg_temp.i(11), pg_temp.i(14))$s$),
+  'ERRO:42501', 'Outro não bloqueia em nome do Autor');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(1, $s$insert into public.bloqueios (bloqueador_id, bloqueado_id) values (pg_temp.i(11), pg_temp.i(11))$s$),
+  'ERRO:23514', 'ninguém bloqueia a si mesmo');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(1, $s$insert into public.bloqueios (bloqueador_id, bloqueado_id) values (pg_temp.i(11), pg_temp.i(13))$s$),
+  'ERRO:23505', 'o mesmo bloqueio não se repete');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(1, $s$insert into public.bloqueios (bloqueador_id, bloqueado_id) values (pg_temp.i(11), pg_temp.i(99))$s$),
+  'ERRO:23503', 'bloqueio de perfil inexistente é recusado');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(1, $s$update public.bloqueios set bloqueado_id = pg_temp.i(14) where bloqueador_id = pg_temp.i(11)$s$),
+  'ERRO:42501', 'bloqueio não se altera');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(2, $s$delete from public.bloqueios where bloqueador_id = pg_temp.i(11) and bloqueado_id = pg_temp.i(13)$s$),
+  '0', 'Outro não remove bloqueio do Autor (0 linhas)');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(3, $s$delete from public.bloqueios where bloqueador_id = pg_temp.i(11) and bloqueado_id = pg_temp.i(13)$s$),
+  '0', 'o Bloqueado não remove o bloqueio (0 linhas)');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(7, $s$delete from public.bloqueios where bloqueador_id = pg_temp.i(11) and bloqueado_id = pg_temp.i(13)$s$),
+  '0', 'Moderador não remove bloqueio alheio (0 linhas)');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(8, $s$delete from public.bloqueios where bloqueador_id = pg_temp.i(11) and bloqueado_id = pg_temp.i(13)$s$),
+  '0', 'Admin não remove bloqueio alheio (0 linhas)');
+rollback to savepoint s; release savepoint s;
+
+savepoint s;
+select is(pg_temp.exec(6, $s$delete from public.bloqueios where bloqueador_id = pg_temp.i(11) and bloqueado_id = pg_temp.i(13)$s$),
+  '0', 'sem conta não remove bloqueio (0 linhas)');
+rollback to savepoint s; release savepoint s;
+
+-- Efeito nos dois sentidos, e desfeito ao desbloquear: um único subcaso, porque é uma sequência
+savepoint s;
+select is(pg_temp.ler(3, $q$select count(*) from public.topicos where id = pg_temp.i(21)$q$),
+  '0', 'o Bloqueado não vê o tópico de quem o bloqueou');
+select is(pg_temp.ler(1, $q$select count(*) from public.topicos where id = pg_temp.i(25)$q$),
+  '0', 'o Autor não vê o tópico de quem bloqueou');
+select is(pg_temp.ler(1, $q$select count(*) from public.perfis_publicos where id = pg_temp.i(13)$q$),
+  '0', 'o Autor não vê o perfil de quem bloqueou');
+select is(pg_temp.ler(3, $q$select count(*) from public.perfis_publicos where id = pg_temp.i(11)$q$),
+  '0', 'o Bloqueado não vê o perfil de quem o bloqueou');
+select is(pg_temp.ler(3, $q$select count(*) from public.bloqueios where bloqueado_id = pg_temp.i(13)$q$),
+  '0', 'o Bloqueado não vê a linha do bloqueio');
+select is(pg_temp.exec(1, $s$delete from public.bloqueios where bloqueador_id = pg_temp.i(11) and bloqueado_id = pg_temp.i(13)$s$),
+  '1', 'Autor desbloqueia o Bloqueado');
+select is(pg_temp.ler(3, $q$select count(*) from public.topicos where id = pg_temp.i(21)$q$),
+  '1', 'desbloqueado, o Bloqueado volta a ver o tópico do Autor');
+select is(pg_temp.ler(1, $q$select count(*) from public.topicos where id = pg_temp.i(25)$q$),
+  '1', 'desbloqueado, o Autor volta a ver o tópico do Bloqueado');
+select is(pg_temp.exec(3, $s$insert into public.respostas (topico_id, autor_id, corpo)
     values (pg_temp.i(21), pg_temp.i(13), 'Resposta depois do desbloqueio')$s$),
-  '1',
-  'desbloqueado, o Bloqueado volta a responder o tópico do Autor'
+  '1', 'desbloqueado, o Bloqueado volta a responder o tópico do Autor');
+rollback to savepoint s; release savepoint s;
+
+-- Fechamento, fora de qualquer savepoint: nenhum subcaso deixou sobra (isolamento) e o bloqueio da fixture existe
+reset role;
+
+select is(
+  (select count(*)::int from public.denuncias where id::text like 'c047%' or denunciante_id::text like 'c047%'),
+  4,
+  'depois de todos os subcasos só restam as 4 denúncias da fixture (cada subcaso foi desfeito)'
 );
 
-reset role;
+select is(
+  (select count(*)::int from public.bloqueios where bloqueador_id = pg_temp.i(11) and bloqueado_id = pg_temp.i(13))
+    + (select count(*)::int from public.bloqueios where bloqueador_id::text like 'c047%'),
+  2,
+  'o bloqueio do Autor ao Bloqueado segue intacto e é o único bloqueio da fixture (nenhum subcaso vazou)'
+);
 
 select * from finish();
 rollback;
