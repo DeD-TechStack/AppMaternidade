@@ -355,11 +355,11 @@ select throws_ok(
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000008", "role": "authenticated"}';
 select throws_ok(
   $$select public.revogar_convite('c0000000-0000-4000-8000-0000000000a4')$$,
-  '42501', 'sem permissao', 'responsável de outra família não revoga convite alheio'
+  'P0002', 'convite inexistente', 'responsável de outra família não revoga convite alheio (sem visibilidade: P0002)'
 );
 select throws_ok(
   $$select public.revogar_convite('c0000000-0000-4000-8000-0000000000ee')$$,
-  '42501', 'sem permissao', 'convite inexistente dá o mesmo erro de convite alheio'
+  'P0002', 'convite inexistente', 'convite inexistente dá o mesmo erro de convite alheio (P0002)'
 );
 
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000003", "role": "authenticated"}';
@@ -375,17 +375,17 @@ select throws_ok(
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000005", "role": "authenticated"}';
 select throws_ok(
   $$select public.revogar_convite('c0000000-0000-4000-8000-0000000000a4')$$,
-  '42501', 'sem permissao', 'responsável revogado não revoga convite'
+  'P0002', 'convite inexistente', 'responsável revogado não revoga convite (sem visibilidade: P0002)'
 );
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000006", "role": "authenticated"}';
 select throws_ok(
   $$select public.revogar_convite('c0000000-0000-4000-8000-0000000000a4')$$,
-  '42501', 'sem permissao', 'responsável que saiu não revoga convite'
+  'P0002', 'convite inexistente', 'responsável que saiu não revoga convite (sem visibilidade: P0002)'
 );
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000007", "role": "authenticated"}';
 select throws_ok(
   $$select public.revogar_convite('c0000000-0000-4000-8000-0000000000a4')$$,
-  '42501', 'sem permissao', 'responsável com vínculo vencido não revoga convite'
+  'P0002', 'convite inexistente', 'responsável com vínculo vencido não revoga convite (sem visibilidade: P0002)'
 );
 
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000009", "role": "authenticated"}';

@@ -78,21 +78,21 @@ select throws_ok($$select public.excluir_familia('ffffffff-0000-4000-8000-000000
 
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000005", "role": "authenticated"}';
 select throws_ok($$select public.excluir_familia('ffffffff-0000-4000-8000-000000000001')$$,
-  '42501', 'sem permissao', 'responsável revogado não exclui a família');
+  'P0002', 'familia inexistente', 'responsável revogado não exclui a família (sem visibilidade: P0002)');
 
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000006", "role": "authenticated"}';
 select throws_ok($$select public.excluir_familia('ffffffff-0000-4000-8000-000000000001')$$,
-  '42501', 'sem permissao', 'responsável que saiu não exclui a família');
+  'P0002', 'familia inexistente', 'responsável que saiu não exclui a família (sem visibilidade: P0002)');
 
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000007", "role": "authenticated"}';
 select throws_ok($$select public.excluir_familia('ffffffff-0000-4000-8000-000000000001')$$,
-  '42501', 'sem permissao', 'responsável com validade vencida não exclui a família');
+  'P0002', 'familia inexistente', 'responsável com validade vencida não exclui a família (sem visibilidade: P0002)');
 
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000008", "role": "authenticated"}';
 select throws_ok($$select public.excluir_familia('ffffffff-0000-4000-8000-000000000001')$$,
-  '42501', 'sem permissao', 'responsável de outra família não exclui a família 1');
+  'P0002', 'familia inexistente', 'responsável de outra família não exclui a família 1 (sem visibilidade: P0002)');
 select throws_ok($$select public.excluir_familia('ffffffff-0000-4000-8000-0000000000ee')$$,
-  '42501', 'sem permissao', 'família inexistente dá o mesmo erro de família alheia');
+  'P0002', 'familia inexistente', 'família inexistente dá o mesmo erro de família alheia (P0002)');
 
 -- Parâmetro nulo, conta sem linha em contas e a ordem dos erros.
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000001", "role": "authenticated"}';
@@ -162,7 +162,7 @@ select lives_ok($$select public.excluir_familia('ffffffff-0000-4000-8000-0000000
 select is((select count(*)::int from public.familias where id = 'ffffffff-0000-4000-8000-000000000001'), 0,
   'quem excluiu já não lê a família na mesma transação');
 select throws_ok($$select public.excluir_familia('ffffffff-0000-4000-8000-000000000001')$$,
-  '42501', 'sem permissao', 'excluir a família de novo dá sem permissao, como família inexistente');
+  'P0002', 'familia inexistente', 'excluir a família de novo dá familia inexistente (P0002)');
 
 reset role;
 

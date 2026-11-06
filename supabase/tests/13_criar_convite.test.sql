@@ -173,14 +173,14 @@ select lives_ok(
 
 select throws_ok(
   $$select public.criar_convite('ffffffff-0000-4000-8000-000000000001', 'observador')$$,
-  '42501', 'sem permissao',
-  'responsável de outra família não cria convite na família 1'
+  'P0002', 'familia inexistente',
+  'responsável de outra família não cria convite na família 1 (sem visibilidade: P0002)'
 );
 
 select throws_ok(
   $$select public.criar_convite('ffffffff-0000-4000-8000-0000000000ee', 'observador')$$,
-  '42501', 'sem permissao',
-  'família inexistente dá o mesmo erro de família alheia'
+  'P0002', 'familia inexistente',
+  'família inexistente dá o mesmo erro de família alheia (P0002)'
 );
 
 -- Papéis sem permissão.
@@ -205,24 +205,24 @@ set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000005", 
 
 select throws_ok(
   $$select public.criar_convite('ffffffff-0000-4000-8000-000000000001', 'observador')$$,
-  '42501', 'sem permissao',
-  'responsável revogado não cria convite'
+  'P0002', 'familia inexistente',
+  'responsável revogado não cria convite (sem visibilidade: P0002)'
 );
 
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000006", "role": "authenticated"}';
 
 select throws_ok(
   $$select public.criar_convite('ffffffff-0000-4000-8000-000000000001', 'observador')$$,
-  '42501', 'sem permissao',
-  'responsável que saiu não cria convite'
+  'P0002', 'familia inexistente',
+  'responsável que saiu não cria convite (sem visibilidade: P0002)'
 );
 
 set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000007", "role": "authenticated"}';
 
 select throws_ok(
   $$select public.criar_convite('ffffffff-0000-4000-8000-000000000001', 'observador')$$,
-  '42501', 'sem permissao',
-  'responsável com vínculo vencido não cria convite'
+  'P0002', 'familia inexistente',
+  'responsável com vínculo vencido não cria convite (sem visibilidade: P0002)'
 );
 
 -- Conta sem linha em contas e parâmetros nulos.
