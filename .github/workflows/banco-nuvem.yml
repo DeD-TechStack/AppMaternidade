@@ -1,0 +1,145 @@
+name: Banco na nuvem
+
+# Aplica as migrações no projeto da nuvem (MAT-48b). Roda à mão na main e a cada push na main
+# que mude as migrações. O job de testes não recebe credencial alguma e nunca se liga à nuvem;
+# só os passos dos jobs seguintes recebem o que cada um pede.
+on:
+  push:
+    branches: [main]
+    paths: ["supabase/migrations/**"]
+  workflow_dispatch:
+    inputs:
+      dados_iniciais:
+        description: Garantir a versão vigente dos termos e, se informado, o primeiro admin
+        type: boolean
+        default: false
+      conta_admin:
+        description: Id da conta que recebe o papel admin (tela Conta, Id da sua conta); vazio para nenhum
+        type: string
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: banco-nuvem
+  cancel-in-progress: false
+
+jobs:
+  testar:
+    name: Testar o banco (Supabase local)
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v5
+
+      - name: Instalar o Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      - name: Instalar as dependências
+        run: npm ci
+
+      - name: Testar o script do banco na nuvem
+        run: node --test scripts/banco-nuvem.test.mjs
+
+      - name: Subir o Supabase local
+        run: npm run db:start
+
+      - name: Testar o banco (pgTAP)
+        run: npm run db:test
+
+      - name: Verificar o banco (lint)
+        run: npm run db:lint
+
+      - name: Conferir as migrações no banco local
+        run: node scripts/banco-nuvem.mjs conferir --local
+
+      - name: Conferir a Data API e o Auth no banco local
+        run: node scripts/banco-nuvem.mjs api --local
+
+      - name: Ensaiar os dados iniciais no banco local
+        run: node scripts/banco-nuvem.mjs dados --local
+
+  aplicar:
+    name: Aplicar as migrações na nuvem
+    needs: testar
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v5
+
+      - name: Instalar o Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      - name: Instalar as dependências
+        run: npm ci
+
+      - name: Ligar ao projeto da nuvem
+        run: node scripts/banco-nuvem.mjs link
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+
+      - name: Aplicar as migrações
+        run: node scripts/banco-nuvem.mjs push
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+
+      - name: Conferir que nenhuma migração ficou pendente
+        run: node scripts/banco-nuvem.mjs conferir
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+
+      - name: Conferir a Data API e o Auth
+        run: node scripts/banco-nuvem.mjs api
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+
+  dados:
+    name: Garantir os dados iniciais
+    needs: aplicar
+    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.dados_iniciais
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v5
+
+      - name: Instalar o Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      - name: Instalar as dependências
+        run: npm ci
+
+      - name: Ligar ao projeto da nuvem
+        run: node scripts/banco-nuvem.mjs link
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+
+      - name: Garantir os termos e o primeiro admin
+        run: node scripts/banco-nuvem.mjs dados
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          CONTA_ADMIN: ${{ inputs.conta_admin }}
