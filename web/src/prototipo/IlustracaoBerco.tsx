@@ -28,9 +28,10 @@ export function IlustracaoBerco({ className }: { className?: string }) {
       <rect className="ilu-lavanda" x="24" y="150" width="108" height="16" rx="3" />
       <ellipse className="ilu-urucum" cx="88" cy="143" rx="34" ry="12" />
       <path d="M70 133Q74 143 70 154" />
-      <circle className="ilu-barro" cx="50" cy="141" r="12" />
-      <path d="M45 141Q48 144 51 141" />
-      <path d="M46 130Q51 124 57 130" />
+      {/* a cabeça do bebê (16 de largura) é menor que a do adulto (18) e tem cerca de 1/4 do corpo */}
+      <circle className="ilu-barro" cx="50" cy="141" r="8" />
+      <path d="M47 142.5Q50 145 53 142.5" />
+      <path d="M47 135Q50 130 53 135" />
       <rect className="ilu-fundo" x="24" y="166" width="108" height="6" rx="2" />
       <rect className="ilu-fundo" x="14" y="92" width="10" height="128" rx="3" />
       <rect className="ilu-fundo" x="132" y="92" width="10" height="128" rx="3" />
@@ -40,15 +41,17 @@ export function IlustracaoBerco({ className }: { className?: string }) {
       {/* porta aberta, vão da porta e o adulto saindo do quarto */}
       <rect className="ilu-papel" x="160" y="56" width="74" height="164" rx="2" />
       <path className="ilu-lavanda" d="M160 56L146 66V214L160 220Z" />
-      <Membro d="M188 178L184 210" cor="tinta" />
-      <Membro d="M208 178L214 210" cor="tinta" />
+      <Membro d="M188 168L184 210" cor="tinta" />
+      <Membro d="M208 168L214 210" cor="tinta" />
       <ellipse className="ilu-barro" cx="182" cy="214" rx="10" ry="5" />
       <ellipse className="ilu-barro" cx="216" cy="214" rx="10" ry="5" />
-      <path className="ilu-urucum" d="M180 126Q198 116 216 126L220 178H176Z" />
-      <circle className="ilu-papel" cx="198" cy="98" r="16" />
-      <path className="ilu-tinta" d="M182 96C182 76 214 76 214 96C208 88 188 88 182 96Z" />
-      <Membro d="M180 132L170 162" cor="urucum" />
-      <circle className="ilu-barro" cx="169" cy="166" r="6" />
+      <path className="ilu-urucum" d="M180 112Q198 102 216 112L220 168H176Z" />
+      {/* cabeça do adulto: cerca de 20 de altura (com o cabelo) contra cerca de 136 da figura em
+          pé, de 83 a 219 (1/6,8); a do bebê (16 de largura) é menor que a dele (18) */}
+      <circle className="ilu-papel" cx="198" cy="94" r="9" />
+      <path className="ilu-tinta" d="M189 93C189 80 207 80 207 93C204 88 192 88 189 93Z" />
+      <Membro d="M180 118L170 150" cor="urucum" />
+      <circle className="ilu-barro" cx="169" cy="154" r="6" />
     </svg>
   )
 }

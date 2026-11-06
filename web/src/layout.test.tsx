@@ -361,7 +361,7 @@ describe('R1: navegação inferior', () => {
           expect(container.querySelector('.barra-inferior nav.nav-inferior')).not.toBeNull()
         })
 
-        it('mantém aria-disabled, aria-describedby para "Em breve" e, no Hoje, aria-current', () => {
+        it('mantém aria-disabled, aria-describedby para "Em breve" e aria-current (page no Hoje, true na Sessão)', () => {
           renderizarRota(caminho, { estadoInicial: estado() })
           const nav = screen.getByRole('navigation', { name: 'Principal' })
           const legenda = within(nav).getByText('Em breve')
@@ -371,8 +371,8 @@ describe('R1: navegação inferior', () => {
             expect(botao.getAttribute('aria-describedby')).toBe(legenda.id)
             expect(botao.hasAttribute('aria-label')).toBe(false)
           }
-          expect(within(nav).getByRole('link', { name: 'Hoje' }).hasAttribute('aria-current')).toBe(
-            tela === 'Hoje',
+          expect(within(nav).getByRole('link', { name: 'Hoje' }).getAttribute('aria-current')).toBe(
+            tela === 'Hoje' ? 'page' : 'true',
           )
         })
       })

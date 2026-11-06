@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type RefObject } from 'react'
+import { useEffect, useId, useRef, useState, type RefObject } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
 import { ColunaApp } from '../componentes/ColunaApp.tsx'
 import { ATIVIDADE_TUMMY } from '../conteudo/textos.ts'
@@ -15,11 +15,13 @@ import { focoDoEstado } from '../prototipo/foco.ts'
 import { NOME_BEBE, ROTULO_SESSAO, ehTipoSessao, type TipoSessao } from '../prototipo/estado.ts'
 import { formatarCronometro, formatarHora } from '../prototipo/formatar.ts'
 import { useAgora } from '../prototipo/useAgora.ts'
+import { useVitrine } from '../prototipo/vitrine.ts'
 
 type Painel = 'nota' | 'descartar'
 
 function AcoesDaSessao() {
   const { dispatch } = usePrototipo()
+  const vitrine = useVitrine()
   const navigate = useNavigate()
   const [painel, setPainel] = useState<Painel | null>(null)
   const painelAnterior = useRef<Painel | null>(null)
@@ -27,6 +29,9 @@ function AcoesDaSessao() {
   const botaoManter = useRef<HTMLButtonElement>(null)
   const botaoAnotar = useRef<HTMLButtonElement>(null)
   const botaoDescartar = useRef<HTMLButtonElement>(null)
+  const idNota = useId()
+  const idPergunta = useId()
+  const tab = vitrine ? -1 : undefined
 
   // O foco acompanha o painel: entra nele ao abrir e volta ao botão que o abriu ao fechar.
   useEffect(() => {
@@ -54,9 +59,15 @@ function AcoesDaSessao() {
     void navigate('/app/hoje', { state: { foco: 'cartao' } })
   }
 
+  // Os painéis abrem logo abaixo da linha dos botões secundários, na mesma coluna do "Encerrar".
   return (
     <div className="flex flex-col gap-3">
-      <button type="button" className="botao botao-principal botao-grande" onClick={() => encerrar(false)}>
+      <button
+        type="button"
+        tabIndex={tab}
+        className="botao botao-principal botao-grande"
+        onClick={() => encerrar(false)}
+      >
         Encerrar
       </button>
 
@@ -65,6 +76,7 @@ function AcoesDaSessao() {
           <button
             ref={botaoAnotar}
             type="button"
+            tabIndex={tab}
             className="botao botao-secundario"
             onClick={() => setPainel('nota')}
           >
@@ -75,6 +87,7 @@ function AcoesDaSessao() {
           <button
             ref={botaoDescartar}
             type="button"
+            tabIndex={tab}
             className="botao botao-secundario"
             onClick={() => setPainel('descartar')}
           >
@@ -85,12 +98,12 @@ function AcoesDaSessao() {
 
       {painel === 'nota' ? (
         <div role="group" aria-label="Encerrar e anotar" className="flex flex-col gap-3 border-t pt-4">
-          <label htmlFor="campo-nota" className="rotulo">
+          <label htmlFor={idNota} className="rotulo">
             Nota
           </label>
           <textarea
             ref={campoNota}
-            id="campo-nota"
+            id={idNota}
             rows={4}
             className="min-h-[6rem] w-full rounded-[6px] border bg-[var(--cor-fundo)] p-3"
           />
@@ -106,8 +119,8 @@ function AcoesDaSessao() {
       ) : null}
 
       {painel === 'descartar' ? (
-        <div role="group" aria-labelledby="pergunta-descartar" className="flex flex-col gap-3 border-t pt-4">
-          <p id="pergunta-descartar" className="font-semibold">
+        <div role="group" aria-labelledby={idPergunta} className="flex flex-col gap-3 border-t pt-4">
+          <p id={idPergunta} className="font-semibold">
             Descartar esta sessão?
           </p>
           <div className="flex flex-wrap gap-3">
@@ -132,6 +145,7 @@ function AcoesDaSessao() {
 function CorpoDaSessao({ titulo }: { titulo: RefObject<HTMLHeadingElement | null> }) {
   const { estado } = usePrototipo()
   const location = useLocation()
+  const vitrine = useVitrine()
   const agora = useAgora(1000)
   const sessao = estado.sessao
   if (!sessao) return null
@@ -139,14 +153,25 @@ function CorpoDaSessao({ titulo }: { titulo: RefObject<HTMLHeadingElement | null
   const avisar = (location.state as { jaEmAndamento?: boolean } | null)?.jaEmAndamento === true
   const rotulo = ROTULO_SESSAO[sessao.tipo]
 
+  // "Voltar para Hoje" é o primeiro controle da tela, acima do título, nos dois layouts: leva ao
+  // Hoje com o foco no h1, sem perguntar nada e sem encerrar; a sessão continua.
   return (
     <>
-      <h1 ref={titulo} tabIndex={-1} className="titulo-tela alvo-foco">
+      <Link
+        to="/app/hoje"
+        state={{ foco: 'titulo' }}
+        tabIndex={vitrine ? -1 : undefined}
+        className="sessao-voltar botao botao-secundario self-start"
+      >
+        Voltar para Hoje
+      </Link>
+
+      <h1 ref={titulo} tabIndex={-1} className="sessao-titulo titulo-tela alvo-foco mt-4">
         {`${rotulo} de ${NOME_BEBE}`}
       </h1>
-      {avisar ? <p className="texto-info mt-2">{`Já há uma sessão de ${rotulo} em andamento.`}</p> : null}
+      {avisar ? <p className="sessao-aviso texto-info mt-2">{`Já há uma sessão de ${rotulo} em andamento.`}</p> : null}
 
-      <div className="mt-6">
+      <div className="sessao-campo mt-6">
         <SessaoInfo
           campo={nomeDoCampo('accent', estado.madrugada)}
           cronometro={formatarCronometro(agora - sessao.inicio)}
@@ -158,12 +183,16 @@ function CorpoDaSessao({ titulo }: { titulo: RefObject<HTMLHeadingElement | null
 
       {/* O espaço entre o campo e as ações é de uma ilustração do tipo da sessão. A área cresce
           com o espaço livre (flex-1) e vai a zero antes de empurrar as ações (min-h-0): a figura
-          preenche a área, com teto de tamanho médio, e some quando a janela é baixa. */}
-      <div className="relative mt-6 min-h-0 flex-1">
+          preenche a área, com teto de tamanho médio, e some quando a janela é baixa. No layout
+          largo a área é o campo de barro da coluna da direita, com a figura no meio dele. */}
+      <div
+        data-campo={nomeDoCampo('field-1', estado.madrugada)}
+        className="sessao-ilu relative mt-6 min-h-0 flex-1"
+      >
         <IlustracaoDaSessao tipo={sessao.tipo} />
       </div>
 
-      <div className="mt-auto pt-6">
+      <div className="sessao-acoes mt-auto pt-6">
         <AcoesDaSessao />
       </div>
     </>
@@ -183,6 +212,7 @@ function IlustracaoDaSessao({ tipo }: { tipo: TipoSessao }) {
 
 export function Sessao() {
   const { estado, dispatch } = usePrototipo()
+  const vitrine = useVitrine()
   const navigate = useNavigate()
   const [parametros] = useSearchParams()
   const tipoBruto = parametros.get('tipo')
@@ -192,46 +222,50 @@ export function Sessao() {
   const titulo = useRef<HTMLHeadingElement>(null)
 
   // Chegando por navegação interna (atalhos, "Ver sessão"), o foco vai ao h1 da tela, que é o
-  // da sessão ou o do estado vazio. Pela URL (inclusive com ?tipo=), o foco não se move.
-  const foco = focoDoEstado(location.state)
+  // da sessão ou o do estado vazio. Pela URL (inclusive com ?tipo=), o foco não se move. Num
+  // aparelho do Início a tela nunca move o foco.
+  const foco = vitrine ? null : focoDoEstado(location.state)
   useEffect(() => {
     if (foco === 'titulo') titulo.current?.focus()
   }, [foco, location.key])
 
   // `?tipo=` só vale uma vez, e só quando não há sessão. Depois de começar, sai da URL e a
   // guarda impede que, ao encerrar, a página comece outra sessão sozinha. O reducer ignora
-  // o segundo "iniciar" que o StrictMode provoca.
+  // o segundo "iniciar" que o StrictMode provoca. Num aparelho do Início a URL não é da tela.
   const jaIniciouPelaUrl = useRef(false)
   useEffect(() => {
-    if (jaIniciouPelaUrl.current || !semSessao || !tipoDaUrl) return
+    if (vitrine || jaIniciouPelaUrl.current || !semSessao || !tipoDaUrl) return
     jaIniciouPelaUrl.current = true
     dispatch({ tipo: 'iniciar', sessao: tipoDaUrl, agora: Date.now() })
     void navigate('/app/sessao', { replace: true })
-  }, [semSessao, tipoDaUrl, dispatch, navigate])
+  }, [vitrine, semSessao, tipoDaUrl, dispatch, navigate])
 
-  const iniciandoPelaUrl = semSessao && tipoDaUrl !== null
+  const iniciandoPelaUrl = !vitrine && semSessao && tipoDaUrl !== null
 
+  // No layout largo as peças da tela ocupam áreas de uma grade (ver .sessao-* em index.css): a
+  // ordem do DOM e a do Tab são as mesmas do estreito.
   return (
     <ColunaApp>
       <FaixaPrototipo />
 
-      <main className="flex flex-1 flex-col px-4 pb-6 pt-6">
-        <div className="flex w-full flex-1 flex-col">
+      <main className="sessao-main flex flex-1 flex-col px-4 pb-6 pt-6">
+        <div className="sessao-corpo flex w-full flex-1 flex-col">
           {semSessao && !iniciandoPelaUrl ? (
             <>
-              <h1 ref={titulo} tabIndex={-1} className="titulo-tela alvo-foco">
+              <h1 ref={titulo} tabIndex={-1} className="sessao-titulo titulo-tela alvo-foco">
                 Nenhuma sessão em andamento
               </h1>
               <div
                 data-campo={nomeDoCampo('field-1', estado.madrugada)}
-                className="-mx-4 mt-6 flex flex-1 items-center justify-center rounded-none px-4 py-10"
+                className="sessao-ilu-vazio -mx-4 mt-6 flex flex-1 items-center justify-center rounded-none px-4 py-10"
               >
                 <IlustracaoBerco className="block h-auto w-full max-w-[22rem]" />
               </div>
               <Link
                 to="/app/hoje"
                 state={{ foco: 'titulo' }}
-                className="botao botao-secundario botao-grande mt-6"
+                tabIndex={vitrine ? -1 : undefined}
+                className="sessao-voltar-vazio botao botao-secundario botao-grande mt-6"
               >
                 Voltar para Hoje
               </Link>

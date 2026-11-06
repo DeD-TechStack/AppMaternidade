@@ -16,11 +16,15 @@ function fonteRaizEmPx(): number {
 // o navegador rolar o controle focado até acima da barra (WCAG 2.4.11). Reavalia quando a janela
 // muda (resize: zoom, rotação) e quando a barra muda de tamanho (ResizeObserver): trocar a fonte
 // muda a barra, e ela serve de gatilho. Sem ResizeObserver (jsdom), fica no padrão: fixa.
-export function useBarraFixa() {
+//
+// `ativo` é falso na barra de um aparelho do Início: ela não mede nada, não mexe no <html> e fica
+// no fluxo da moldura.
+export function useBarraFixa(ativo = true) {
   const barra = useRef<HTMLDivElement>(null)
   const [fixa, setFixa] = useState(true)
 
   useEffect(() => {
+    if (!ativo) return
     const elemento = barra.current
     if (!elemento) return
     const raiz = document.documentElement
@@ -45,7 +49,7 @@ export function useBarraFixa() {
       window.removeEventListener('resize', medir)
       raiz.style.removeProperty('scroll-padding-bottom')
     }
-  }, [])
+  }, [ativo])
 
-  return { barra, fixa }
+  return { barra, fixa: ativo && fixa }
 }

@@ -1,55 +1,61 @@
 import { Membro } from './Membro.tsx'
 
-// Colo: adulto sentado num banquinho com o bebê enrolado nos braços. Traço contínuo de tinta de
-// uma espessura só, preenchimento chapado nas cores dos tokens. Decorativa: o texto da página
-// diz tudo o que importa. O viewBox é justo (só a figura e o chão, que termina na base do
-// desenho): lado a lado com as outras, as figuras na mesma largura por unidade têm o mesmo
-// tamanho e não se tocam.
+// Colo: adulto em pé embalando o bebê nos braços. Traço contínuo de tinta de uma espessura só,
+// preenchimento chapado nas cores dos tokens. Decorativa: o texto da página diz tudo o que importa.
+//
+// O viewBox é em pé (160 × 222), com a mesma altura de viewBox da ilustração da mamada: as duas,
+// no Início, têm a mesma escala. O chão termina na base do desenho.
+//
+// Proporções: a cabeça do adulto tem 29 de altura (com o cabelo) contra cerca de 188 da figura
+// em pé, cerca de 1/6,4; o bebê tem a cabeça à vista, de 18 de altura (menor que a do adulto), e
+// cerca de 1/3 do corpo dele. Os braços saem dos ombros, envolvem o bebê e terminam em mãos; as
+// pernas terminam em sapatos.
 export function IlustracaoColo({ className }: { className?: string }) {
   return (
     <svg
-      viewBox="56 50 128 172"
+      viewBox="40 0 160 222"
       className={`ilu ${className ?? ''}`}
       aria-hidden="true"
       focusable="false"
       data-ilustracao="colo"
     >
-      {/* chão e banquinho */}
+      {/* chão */}
       <path d="M0 220H240" />
-      <rect className="ilu-tinta" x="68" y="186" width="104" height="12" rx="4" />
-      <path d="M82 198V220M158 198V220" />
 
       {/* pernas e sapatos */}
-      <Membro d="M98 184L96 212" cor="tinta" />
-      <Membro d="M142 184L144 212" cor="tinta" />
-      <ellipse className="ilu-urucum" cx="92" cy="214" rx="12" ry="6" />
-      <ellipse className="ilu-urucum" cx="148" cy="214" rx="12" ry="6" />
+      <Membro d="M108 146L106 210" cor="tinta" />
+      <Membro d="M132 146L134 210" cor="tinta" />
+      <ellipse className="ilu-urucum" cx="102" cy="215" rx="12" ry="5" />
+      <ellipse className="ilu-urucum" cx="138" cy="215" rx="12" ry="5" />
 
-      {/* tronco, colo e cabeça */}
-      <path className="ilu-lavanda" d="M92 112C92 94 148 94 148 112L156 176H84Z" />
-      <rect className="ilu-tinta" x="80" y="164" width="80" height="26" rx="13" />
-      <circle className="ilu-papel" cx="120" cy="76" r="20" />
-      <path className="ilu-tinta" d="M100 74C100 50 140 50 140 74C132 64 108 64 100 74Z" />
-      <circle className="ilu-tinta ilu-sem-traco" cx="112" cy="80" r="1.8" />
-      <circle className="ilu-tinta ilu-sem-traco" cx="128" cy="80" r="1.8" />
-      <path d="M113 88Q120 93 127 88" />
+      {/* tronco, cabeça, cabelo e rosto */}
+      <path className="ilu-lavanda" d="M96 84C96 56 144 56 144 84L150 146H90Z" />
+      <circle className="ilu-papel" cx="120" cy="48" r="14" />
+      <path className="ilu-tinta" d="M106 46C106 28 134 28 134 46C129 38 111 38 106 46Z" />
+      <circle className="ilu-tinta ilu-sem-traco" cx="115.5" cy="49" r="1.5" />
+      <circle className="ilu-tinta ilu-sem-traco" cx="124.5" cy="49" r="1.5" />
+      <path d="M116 55Q120 58 124 55" />
 
-      {/* bebê enrolado e os braços que o seguram */}
+      {/* braços: saem dos ombros e passam por trás do bebê; as mãos aparecem sobre a manta */}
+      <Membro d="M98 74C82 92 84 124 112 128" cor="lavanda" />
+      <Membro d="M142 74C158 94 152 124 130 128" cor="lavanda" />
+
+      {/* bebê embalado, deitado na diagonal, com a cabeça à vista no alto */}
       <ellipse
         className="ilu-papel"
-        cx="122"
-        cy="150"
-        rx="36"
-        ry="17"
-        transform="rotate(-12 122 150)"
+        cx="120"
+        cy="112"
+        rx="26"
+        ry="12"
+        transform="rotate(18 120 112)"
       />
-      <path d="M112 138Q116 150 110 162" />
-      <circle className="ilu-barro" cx="90" cy="152" r="13" />
-      <path d="M84 152Q88 156 92 152" />
-      <Membro d="M94 104C80 128 88 160 116 166" cor="lavanda" />
-      <Membro d="M146 104C162 130 152 158 128 164" cor="lavanda" />
-      <circle className="ilu-papel" cx="116" cy="166" r="7" />
-      <circle className="ilu-papel" cx="128" cy="164" r="7" />
+      <circle className="ilu-barro" cx="95" cy="103" r="9" />
+      <path d="M91 102Q93 104 95 102" />
+      <path d="M93 107Q95 109 97 107" />
+
+      {/* mãos do adulto sobre a manta */}
+      <circle className="ilu-papel" cx="112" cy="128" r="6" />
+      <circle className="ilu-papel" cx="130" cy="128" r="6" />
     </svg>
   )
 }

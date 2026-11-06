@@ -1,5 +1,6 @@
 import { useId, type Ref } from 'react'
 import { Link } from 'react-router'
+import { useVitrine } from './vitrine.ts'
 
 interface SessaoEmAndamento {
   rotulo: string
@@ -20,15 +21,19 @@ interface Props {
 
 export function CartaoEmAndamento({ sessao, aoEncerrar, ref, miniatura = false, campo }: Props) {
   const idTitulo = useId()
+  // Num aparelho do Início o cartão é o do Hoje de verdade, sem id (nenhum id repetido no
+  // documento) e com os controles fora da ordem de Tab.
+  const vitrine = useVitrine()
+  const semId = miniatura || vitrine
   return (
     <section
       ref={ref}
-      aria-labelledby={miniatura ? undefined : idTitulo}
+      aria-labelledby={semId ? undefined : idTitulo}
       tabIndex={miniatura ? undefined : -1}
       data-campo={miniatura ? undefined : campo}
       className={miniatura ? 'campo-andamento' : 'cartao campo-andamento alvo-foco'}
     >
-      <h2 id={miniatura ? undefined : idTitulo} className="rotulo">
+      <h2 id={semId ? undefined : idTitulo} className="rotulo">
         Em andamento
       </h2>
       {sessao ? (
@@ -42,7 +47,7 @@ export function CartaoEmAndamento({ sessao, aoEncerrar, ref, miniatura = false, 
               className="botao botao-principal"
               onClick={aoEncerrar}
               disabled={miniatura}
-              tabIndex={miniatura ? -1 : undefined}
+              tabIndex={miniatura || vitrine ? -1 : undefined}
             >
               Encerrar
             </button>
@@ -50,7 +55,7 @@ export function CartaoEmAndamento({ sessao, aoEncerrar, ref, miniatura = false, 
               to="/app/sessao"
               state={{ foco: 'titulo' }}
               className="botao botao-secundario"
-              tabIndex={miniatura ? -1 : undefined}
+              tabIndex={miniatura || vitrine ? -1 : undefined}
             >
               Ver sessão
             </Link>

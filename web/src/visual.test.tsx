@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { screen } from '@testing-library/react'
+import { LEGENDA_CHAMADA, TELAS_ESTREITA } from './conteudo/textos.ts'
 import { criarEstadoInicial, type EstadoPrototipo } from './prototipo/estado.ts'
 import { renderizarRota } from './teste/renderizarRota.tsx'
 import { listarFontes, pastaSrcDe } from './teste/fontes.ts'
@@ -119,11 +120,13 @@ describe('MAT-44: composição do Início', () => {
     expect(secoes.length).toBeGreaterThan(campos.length)
   })
 
-  it('os campos usam o urucum, o barro e a lavanda', async () => {
+  it('os campos usam o urucum e cores da paleta, e a madrugada usa um campo da noite', async () => {
     const container = await inicio()
 
     const usados = new Set([...container.querySelectorAll('main > section[data-campo]')].map((s) => s.getAttribute('data-campo')))
-    expect([...usados].sort()).toEqual(['accent', 'field-1', 'field-2'])
+    expect([...usados]).toContain('accent')
+    for (const campo of usados) expect(['accent', 'field-1', 'field-2', 'night-paper-deep', 'night-field-1', 'night-field-2']).toContain(campo)
+    expect(container.querySelector('#secao-madrugada')!.getAttribute('data-campo')).toMatch(/^night-(paper-deep|field-1|field-2)$/)
   })
 
   it('há pelo menos 2 aparelhos, inertes e escondidos do leitor de tela, e um deles é notebook', async () => {
@@ -139,21 +142,10 @@ describe('MAT-44: composição do Início', () => {
     expect(aparelhos.some((a) => a.getAttribute('data-aparelho') === 'notebook')).toBe(true)
   })
 
-  it('o primeiro [inert] é o grupo de miniaturas, com os botões rápidos, o cronômetro e as variantes da página', async () => {
-    const container = await inicio()
-
-    const grupo = container.querySelector<HTMLElement>('[inert]')!
-    expect(grupo.getAttribute('aria-hidden')).toBe('true')
-    expect(grupo.querySelector('button[aria-label="Iniciar sono de Heloísa"]')).not.toBeNull()
-    expect(grupo.querySelector('[role="timer"].cronometro-mini')).not.toBeNull()
-    expect(grupo.querySelector('[class*="/pagina:"]')).not.toBeNull()
-  })
-
-  it('as miniaturas usam os mesmos componentes, sem navegação inferior, sem ids e sem efeito no <html>', async () => {
+  it('os mockups usam os mesmos componentes, sem ids e sem efeito no <html>', async () => {
     const container = await inicio()
 
     for (const aparelho of container.querySelectorAll('[data-aparelho]')) {
-      expect(aparelho.querySelector('nav'), 'navegação inferior dentro do aparelho').toBeNull()
       expect(aparelho.querySelector('[id]'), 'id dentro do aparelho').toBeNull()
     }
     expect(container.querySelectorAll('[data-aparelho] .campo-andamento').length).toBeGreaterThan(0)
@@ -161,12 +153,13 @@ describe('MAT-44: composição do Início', () => {
     expect(document.documentElement.hasAttribute('data-tema')).toBe(false)
   })
 
-  it('a miniatura da madrugada usa o invólucro local, não o <html>', async () => {
+  it('a madrugada do Início usa o invólucro local, só dentro da seção da madrugada, não o <html>', async () => {
     const container = await inicio()
 
     const locais = container.querySelectorAll('[data-tema-local="madrugada"]')
-    expect(locais).toHaveLength(1)
-    expect(locais[0].closest('[data-aparelho="celular"]')).not.toBeNull()
+    expect(locais.length).toBeGreaterThanOrEqual(1)
+    for (const local of locais) expect(local.closest('#secao-madrugada')).not.toBeNull()
+    expect([...locais].some((local) => local.closest('[data-aparelho="celular"]') !== null)).toBe(true)
     expect(document.documentElement.hasAttribute('data-tema')).toBe(false)
   })
 
@@ -175,11 +168,14 @@ describe('MAT-44: composição do Início', () => {
 
     expect(screen.getByText('Duas telas do protótipo')).toBeTruthy()
     expect(screen.getByText(/^Na tela Hoje ficam a soneca que Bruno começou/)).toBeTruthy()
+    expect(screen.getByText(TELAS_ESTREITA.titulo)).toBeTruthy()
+    expect(screen.getByText(TELAS_ESTREITA.texto)).toBeTruthy()
     expect(
       screen.getByText(
-        'No celular, a mesma sessão de tummy time no modo madrugada: tela escura, cronômetro grande e botões maiores.',
+        'No celular, a mamada que Juliana começou às 03:10, vista no modo madrugada: tela escura, cronômetro grande e botões maiores.',
       ),
     ).toBeTruthy()
+    expect(screen.getByText(LEGENDA_CHAMADA)).toBeTruthy()
   })
 
   it('o cabeçalho tem até 64 px no desktop e os links têm alvo de 44 px', async () => {
@@ -498,111 +494,16 @@ describe('MAT-44 r2 A2: ícones só na navegação inferior e nos botões rápid
 // ---------------------------------------------------------------------------
 // Rodada 2, parte B: composição.
 
-describe('MAT-44 r2 B1: vitrine de aparelhos do Início', () => {
-  async function aparelhosDoTopo() {
-    const { container } = renderizarRota('/')
-    await screen.findByRole('heading', { level: 1 })
-    const palco = container.querySelector<HTMLElement>('.vitrine-palco')!
-    const celulares = [...palco.querySelectorAll<HTMLElement>('[data-aparelho="celular"]')]
-    return { container, palco, notebook: palco.querySelector<HTMLElement>('[data-aparelho="notebook"]')!, celulares }
-  }
-
-  it('o notebook mostra um Hoje de computador, com o cartão, a nota e a lista Últimos', async () => {
-    const { notebook } = await aparelhosDoTopo()
-
-    expect(notebook.querySelector('.campo-andamento')).not.toBeNull()
-    expect(notebook.textContent).toContain('Para você saber')
-    expect(notebook.textContent).toContain('Pomada só à noite.')
-    expect(notebook.textContent).toContain('Últimos')
-    expect(notebook.textContent).toContain('Tummy time')
-    expect(notebook.querySelector('[role="timer"]')).toBeNull()
-  })
-
-  it('há dois celulares e cada um mostra uma tela distinta: um o Hoje, outro a Sessão', async () => {
-    const { celulares, notebook } = await aparelhosDoTopo()
-
-    expect(celulares).toHaveLength(2)
-    const doHoje = celulares.filter((c) => c.querySelector('.campo-andamento') !== null)
-    const daSessao = celulares.filter((c) => c.querySelector('[role="timer"]') !== null)
-    expect(doHoje).toHaveLength(1)
-    expect(daSessao).toHaveLength(1)
-    expect(doHoje[0]).not.toBe(daSessao[0])
-    // O celular do Hoje não repete a nota nem a lista do notebook; o da Sessão não tem o cartão.
-    expect(doHoje[0].textContent).not.toContain('Para você saber')
-    expect(daSessao[0].querySelector('.campo-andamento')).toBeNull()
-    // A tela do notebook é diferente das dos celulares: é a única com a lista Últimos.
-    expect(celulares.every((c) => !c.textContent!.includes('Últimos'))).toBe(true)
-    expect(notebook.querySelector('ul')).not.toBeNull()
-  })
-
-  // R3 (rodada 5): antes o celular da Sessão sumia em página estreita; agora os dois celulares e o
-  // notebook ficam em toda largura, cada um com posição e escala próprias na faixa estreita.
-  it('em página estreita os dois celulares continuam: cada um tem posição e escala sem variante', async () => {
-    const { celulares } = await aparelhosDoTopo()
-
-    expect(celulares).toHaveLength(2)
-    for (const celular of celulares) {
-      const classe = celular.getAttribute('class')!
-      expect(classe).not.toMatch(/(?:^|\s)hidden(?:\s|$)/)
-      expect(classe).toMatch(/(?:^|\s)left-\[[\d.]+rem\]/)
-      expect(classe).toMatch(/(?:^|\s)top-\[[\d.]+rem\]/)
-      expect(classe).toMatch(/(?:^|\s)scale-\[[\d.]+\]/)
-    }
-  })
-
-  it('o notebook tem margens laterais largas, que é onde os celulares se sobrepõem', () => {
-    const corpo = regrasDe(estiloGlobal).find((r) => r.seletor === '.aparelho-notebook .aparelho-tela')!.corpo
-    const [, vertical, lateral] = /padding:\s*([\d.]+)rem\s+([\d.]+)rem/.exec(corpo)!
-    expect(parseFloat(vertical)).toBeLessThan(parseFloat(lateral))
-    expect(parseFloat(lateral)).toBeGreaterThanOrEqual(6)
-  })
-
-  // R1 (rodada 5): o palco passou a ter o tamanho natural em variáveis do .vitrine, trocadas em
-  // 46 rem; o ajuste de cada degrau à largura é conferido no bloco "r5 R1".
-  it('o palco encolhe por degraus: o valor sem condição já cabe na menor largura, e cada degrau só muda variáveis', () => {
-    const regras = regrasComContexto(estiloGlobal).filter((r) => r.seletor === '.vitrine')
-    const base = regras.find((r) => r.condicao === null && '--escala' in r.props)!
-    expect(parseFloat(base.props['--escala']) * parseFloat(base.props['--palco-largura'])).toBeLessThanOrEqual(6)
-    const degraus = regras.filter((r) => r.condicao !== null)
-    expect(degraus.length).toBeGreaterThanOrEqual(15)
-    for (const degrau of degraus) {
-      expect(Object.keys(degrau.props).every((p) => p.startsWith('--')), degrau.condicao!).toBe(true)
-    }
-    expect(vitrineEm(22.4).escala * vitrineEm(22.4).largura).toBeLessThanOrEqual(22.4)
-  })
-
-  it('o campo da vitrine não tem sombra: a profundidade vem da sobreposição e da escala', () => {
+// MAT-44c-1: a vitrine de aparelhos e a cena de ilustrações do campo de barro foram refeitas (os
+// aparelhos mostram as telas reais; ver mat44c.test.tsx). Ficam aqui as duas regras que continuam
+// valendo para o CSS e para os desenhos.
+describe('MAT-44 r2 B1 e B2 (MAT-44c-1): sombra e chão das ilustrações', () => {
+  it('o CSS dos aparelhos e dos campos não tem sombra: a profundidade vem do campo e do contorno', () => {
     expect(estiloGlobal).not.toMatch(/box-shadow/)
-  })
-})
-
-describe('MAT-44 r2 B2: cena de ilustrações do campo de barro', () => {
-  // Rodada 6: as figuras não se sobrepõem (antes a regra era "mesma largura e sobrepostas"); a
-  // escala igual das pessoas e a ausência de margem negativa estão no bloco "r6 #2 e #3".
-  it('as três ilustrações ficam no mesmo recipiente, na ordem, e cada uma com largura em porcentagem', async () => {
-    const { container } = renderizarRota('/')
-    await screen.findByRole('heading', { level: 1 })
-
-    const campo = container.querySelector('main > section[data-campo="field-1"]')!
-    const figuras = [...campo.querySelectorAll<SVGElement>('[data-ilustracao]')]
-    expect(figuras.map((f) => f.getAttribute('data-ilustracao'))).toEqual(['colo', 'tapete', 'passeio'])
-    expect(new Set(figuras.map((f) => f.parentElement)).size).toBe(1)
-    for (const figura of figuras) {
-      expect(figura.getAttribute('class')).toMatch(/(?:^|\s)w-\[[\d.]+%\]/)
-      expect(figura.getAttribute('class')).toMatch(/@min-\[46rem\]\/pagina:w-\[[\d.]+%\]/)
-    }
-  })
-
-  it('o campo não tem altura mínima solta: a altura vem das ilustrações', async () => {
-    const { container } = renderizarRota('/')
-    await screen.findByRole('heading', { level: 1 })
-
-    const campo = container.querySelector('main > section[data-campo="field-1"]')!
-    expect(campo.className).not.toMatch(/min-h-/)
   })
 
   it('o chão de cada ilustração vai de borda a borda do desenho, para formar uma linha só', () => {
-    for (const nome of ['Colo', 'Tapete', 'Passeio', 'Mamada', 'Berco']) {
+    for (const nome of ['Colo', 'Tapete', 'Mamada', 'Berco']) {
       const texto = lerTexto(`prototipo/Ilustracao${nome}.tsx`)
       expect(texto, nome).toContain('<path d="M0 220H240" />')
     }
@@ -657,45 +558,14 @@ describe('MAT-44 r2 B3 e B4: Sessão', () => {
   })
 })
 
-describe('MAT-44 r2 B5: campo da madrugada no Início', () => {
+describe('MAT-44 r2 B5 (MAT-44c-1): campo da madrugada no Início', () => {
   async function madrugadaDoInicio() {
     const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
     return container.querySelector<HTMLElement>('#secao-madrugada')!
   }
 
-  it('a legenda vem logo depois do celular, os dois filhos do mesmo campo', async () => {
-    const secao = await madrugadaDoInicio()
-
-    const celular = secao.querySelector<HTMLElement>('.madrugada-celular')!
-    expect(celular.querySelector('[data-aparelho="celular"]')).not.toBeNull()
-    const legenda = celular.nextElementSibling as HTMLElement
-    expect(legenda.textContent).toMatch(/^No celular,/)
-    expect(legenda.classList.contains('madrugada-legenda')).toBe(true)
-    expect(legenda.parentElement).toBe(secao)
-    expect(celular.parentElement).toBe(secao)
-  })
-
-  // Rodada 7: a escala do celular deixou de ser uma classe do JSX (0,75 e 0,85 fixos) e passou a ser
-  // a variável --celular-escala, trocada em degraus de @container; onde o celular já cabia a
-  // escala é a mesma de antes. A conferência de que ele cabe em toda largura está no bloco "r7 #1".
-  it('o celular tem escala de pelo menos 0,75 onde cabe (o texto da miniatura fica com 12 px ou mais) e 0,85 na página larga', async () => {
-    const secao = await madrugadaDoInicio()
-
-    const celular = secao.querySelector('[data-aparelho="celular"]')!
-    expect(celular.getAttribute('class')).toContain('[scale:var(--celular-escala)]')
-    const escalas = regrasComContexto(estiloGlobal)
-      .filter((r) => r.seletor === '.madrugada-celular' && '--celular-escala' in r.props)
-      .map((r) => ({ condicao: r.condicao, escala: parseFloat(r.props['--celular-escala']) }))
-    const larga = escalas.filter((e) => e.condicao && /min-width:\s*46rem/.test(e.condicao))
-    const cabe = escalas.filter((e) => e.condicao && /min-width:\s*21rem/.test(e.condicao))
-    expect(cabe.length).toBe(1)
-    expect(cabe[0].escala * 16).toBeGreaterThanOrEqual(12)
-    expect(larga.length).toBe(1)
-    expect(larga[0].escala).toBeGreaterThanOrEqual(0.85)
-  })
-
-  it('a miniatura da madrugada traz o cronômetro e as ações da sessão, em botões grandes', async () => {
+  it('o aparelho da madrugada traz o cronômetro e as ações da sessão, em botões grandes', async () => {
     const secao = await madrugadaDoInicio()
 
     expect(secao.querySelector('[role="timer"]')).not.toBeNull()
@@ -797,55 +667,20 @@ describe('MAT-44 r3 #2: botões rápidos com o mesmo tratamento em toda largura 
   })
 })
 
-describe('MAT-44 r3 #3: aparelhos sem tela vazia', () => {
-  it('o celular tem a proporção de 9 por 14, que acompanha o conteúdo', () => {
-    const corpo = regrasDe(estiloGlobal).find((r) => r.seletor === '.aparelho-celular')!.corpo
-    expect(corpo).toMatch(/aspect-ratio:\s*9\s*\/\s*14\s*;/)
-  })
-
-  it('cada celular termina em botões desativados e fora da ordem de Tab (ações da sessão ou registro rápido)', async () => {
+describe('MAT-44 r3 #3 (MAT-44c-1): os aparelhos são telas reais, inertes e sem controle focável', () => {
+  it('todo aparelho é inerte, escondido do leitor de tela, sem id e sem controle que o Tab alcance', async () => {
     const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
 
-    const celulares = [...container.querySelectorAll<HTMLElement>('[data-aparelho="celular"]')]
-    expect(celulares).toHaveLength(3)
-    for (const celular of celulares) {
-      const botoes = [...celular.querySelectorAll<HTMLButtonElement>('button')]
-      expect(botoes.length).toBeGreaterThanOrEqual(3)
-      const ultimo = botoes[botoes.length - 1]
-      expect(ultimo.disabled).toBe(true)
-      expect(ultimo.tabIndex).toBe(-1)
-      // O último controle é do pé da tela: não sobra tela vazia embaixo dele no DOM.
-      expect(ultimo.closest('.aparelho-tela')!.firstElementChild!.lastElementChild!.contains(ultimo)).toBe(true)
-    }
-  })
-
-  it('os celulares da Sessão mostram as ações da sessão em miniatura: Encerrar, Encerrar e anotar e Descartar', async () => {
-    const { container } = renderizarRota('/')
-    await screen.findByRole('heading', { level: 1 })
-
-    const daSessao = [...container.querySelectorAll<HTMLElement>('[data-aparelho="celular"]')].filter(
-      (c) => c.querySelector('[role="timer"]') !== null,
-    )
-    expect(daSessao).toHaveLength(2)
-    for (const celular of daSessao) {
-      const nomes = [...celular.querySelectorAll('button')].map((b) => b.textContent)
-      expect(nomes).toEqual(['Encerrar', 'Encerrar e anotar', 'Descartar'])
-      for (const botao of celular.querySelectorAll<HTMLButtonElement>('button')) {
-        expect(botao.disabled).toBe(true)
-        expect(botao.tabIndex).toBe(-1)
-      }
-    }
-  })
-
-  it('continuam inertes e sem ids', async () => {
-    const { container } = renderizarRota('/')
-    await screen.findByRole('heading', { level: 1 })
-
-    for (const aparelho of container.querySelectorAll('[data-aparelho]')) {
+    const aparelhos = [...container.querySelectorAll<HTMLElement>('[data-aparelho]')]
+    expect(aparelhos.length).toBeGreaterThanOrEqual(2)
+    for (const aparelho of aparelhos) {
       expect(aparelho.hasAttribute('inert')).toBe(true)
       expect(aparelho.getAttribute('aria-hidden')).toBe('true')
       expect(aparelho.querySelector('[id]')).toBeNull()
+      for (const controle of aparelho.querySelectorAll<HTMLElement>('a, button, input, textarea, select')) {
+        expect(controle.tabIndex < 0 || (controle as HTMLButtonElement).disabled, controle.outerHTML).toBe(true)
+      }
     }
   })
 })
@@ -942,7 +777,7 @@ describe('MAT-44 r4 #1: a Sessão ocupa o vazio com uma ilustração do tipo da 
     expect(cl).toMatch(/\bmax-w-\[16rem\]/)
   })
 
-  it('nenhuma ilustração nova: o total de distintas continua em 5', async () => {
+  it('nenhuma ilustração nova: as distintas são as da base, e as três da Sessão continuam', async () => {
     const nomes = new Set<string>()
     for (const [caminho, estado] of [
       ['/', claro()],
@@ -957,59 +792,8 @@ describe('MAT-44 r4 #1: a Sessão ocupa o vazio com uma ilustração do tipo da 
       for (const f of container.querySelectorAll('[data-ilustracao]')) nomes.add(f.getAttribute('data-ilustracao')!)
       unmount()
     }
-    expect([...nomes].sort()).toEqual(['berco', 'colo', 'mamada', 'passeio', 'tapete'])
-  })
-})
-
-describe('MAT-44 r4 #2: campo da madrugada recomposto', () => {
-  async function secaoMadrugada() {
-    const { container } = renderizarRota('/')
-    await screen.findByRole('heading', { level: 1 })
-    return container.querySelector<HTMLElement>('#secao-madrugada')!
-  }
-
-  it('em coluna única a ordem é título e texto, ilustração, celular e legenda', async () => {
-    const secao = await secaoMadrugada()
-
-    const filhos = [...secao.children] as HTMLElement[]
-    expect(filhos).toHaveLength(4)
-    expect(filhos[0].querySelector('#titulo-madrugada')).not.toBeNull()
-    expect(filhos[0].textContent).toContain('O modo madrugada escurece a tela')
-    expect(filhos[1].querySelector('[data-ilustracao="mamada"]')).not.toBeNull()
-    expect(filhos[2].classList.contains('madrugada-celular')).toBe(true)
-    expect(filhos[3].classList.contains('madrugada-legenda')).toBe(true)
-  })
-
-  it('cada filho tem a sua área da grade, e a grade larga põe o texto no alto e a ilustração na base do celular', () => {
-    const css = semComentarios(estiloGlobal)
-
-    expect(css).toMatch(/grid-template-areas:\s*"texto celular"\s*"cena celular"\s*"\. legenda"/)
-    expect(css).toMatch(/grid-template-rows:\s*auto 1fr auto/)
-    for (const [classe, area] of [
-      ['madrugada-texto', 'texto'],
-      ['madrugada-cena', 'cena'],
-      ['madrugada-celular', 'celular'],
-      ['madrugada-legenda', 'legenda'],
-    ]) {
-      expect(css, classe).toMatch(new RegExp(`\\.${classe}\\s*\\{[^}]*grid-area:\\s*${area}\\s*;`))
-    }
-    const cena = regrasDe(estiloGlobal).filter((r) => r.seletor === '.madrugada-cena').map((r) => r.corpo).join('')
-    expect(cena).toMatch(/align-self:\s*end/)
-  })
-
-  it('a legenda tem a largura do celular e não alarga a coluna', () => {
-    const regras = regrasDe(estiloGlobal).filter((r) => r.seletor === '.madrugada-legenda').map((r) => r.corpo).join('')
-
-    expect(regras).toMatch(/width:\s*0\s*;/)
-    expect(regras).toMatch(/min-width:\s*100%/)
-  })
-
-  it('o título e o texto, a ilustração, o celular e a legenda são do mesmo campo', async () => {
-    const secao = await secaoMadrugada()
-
-    expect(secao.classList.contains('madrugada-grade')).toBe(true)
-    expect(secao.querySelector('.madrugada-texto')).not.toBeNull()
-    expect(secao.querySelector('.madrugada-cena [data-ilustracao]')).not.toBeNull()
+    for (const nome of nomes) expect(['berco', 'colo', 'mamada', 'passeio', 'tapete']).toContain(nome)
+    for (const nome of ['berco', 'mamada', 'tapete']) expect([...nomes]).toContain(nome)
   })
 })
 
@@ -1079,8 +863,16 @@ describe('MAT-44 r2 A3: texto de interface do Início mora em textos.ts', () => 
       'Madrugada',
     ])
     expect(textos.LEGENDA_MADRUGADA).toBe(
-      'No celular, a mesma sessão de tummy time no modo madrugada: tela escura, cronômetro grande e botões maiores.',
+      'No celular, a mamada que Juliana começou às 03:10, vista no modo madrugada: tela escura, cronômetro grande e botões maiores.',
     )
+    expect(textos.LEGENDA_CHAMADA).toBe(
+      'No celular, o Hoje do protótipo: a soneca que Bruno começou, a nota de Carla e os últimos registros.',
+    )
+    expect(textos.TELAS_ESTREITA).toEqual({
+      titulo: 'A tela Hoje',
+      texto:
+        'Na tela Hoje ficam a soneca que Bruno começou, a nota que Carla deixou às 22:40 e os botões de registro na parte de baixo, ao alcance do polegar.',
+    })
   })
 })
 
@@ -1172,144 +964,33 @@ describe('MAT-44 r5 R1: a cascata não desfaz a medida dentro de @container ou @
   })
 })
 
-/** O que vale em cada largura de página (em rem) para a vitrine: escala do palco e tamanho natural dele. */
-function vitrineEm(largura: number) {
-  const regras = regrasComContexto(estiloGlobal).filter((r) => r.seletor === '.vitrine')
-  const valores: Record<string, number> = {}
-  for (const regra of regras.sort((a, b) => a.ordem - b.ordem)) {
-    if (regra.condicao) {
-      const minimo = /min-width:\s*([\d.]+)rem/.exec(regra.condicao)
-      if (!minimo || largura < parseFloat(minimo[1])) continue
-    }
-    for (const nome of ['--escala', '--palco-largura', '--palco-altura']) {
-      if (nome in regra.props) valores[nome] = parseFloat(regra.props[nome])
-    }
-  }
-  return { escala: valores['--escala'], largura: valores['--palco-largura'], altura: valores['--palco-altura'] }
-}
-
-describe('MAT-44 r5 R1: o conjunto de aparelhos cabe no campo, centrado, em toda largura', () => {
-  it('o palco é centrado pela própria largura (não por um valor fixo que a cascata possa trocar)', () => {
-    const palco = regrasComContexto(estiloGlobal).filter((r) => r.seletor === '.vitrine-palco')
-    expect(palco.every((r) => r.condicao === null)).toBe(true)
-    const corpo = palco.map((r) => r.props)
-    expect(corpo.some((p) => p['left'] === '50%')).toBe(true)
-    expect(corpo.some((p) => /^calc\(var\(--palco-largura\)\s*\/\s*-2\)$/.test(p['margin-left'] ?? ''))).toBe(true)
-    expect(corpo.some((p) => p['width'] === 'var(--palco-largura)')).toBe(true)
-  })
-
-  it('de 6 rem (fonte raiz em 200% numa janela de celular, ou zoom alto) a 140 rem, o palco escalado cabe na largura', () => {
-    for (let largura = 6; largura <= 140; largura += 0.25) {
-      const { escala, largura: palco } = vitrineEm(largura)
-      expect(escala, `escala em ${largura} rem`).toBeGreaterThan(0)
-      expect(palco * escala, `palco de ${palco} rem × ${escala} em ${largura} rem`).toBeLessThanOrEqual(largura + 1e-9)
-    }
-  })
-
-  it('a escala só cresce com a largura, dentro de cada faixa (sem degrau para trás, salvo na troca de palco em 46 rem)', () => {
-    let anterior = 0
-    for (let largura = 6; largura <= 140; largura += 0.25) {
-      const { escala } = vitrineEm(largura)
-      if (Math.abs(largura - 46) < 1e-9) {
-        anterior = 0
-        continue
-      }
-      expect(escala, `${largura} rem`).toBeGreaterThanOrEqual(anterior)
-      anterior = escala
-    }
-  })
-
-  it('a altura do campo cabe na janela: no máximo 0,95 de 900 px em 1440 px', () => {
-    const { escala, altura } = vitrineEm(86.4)
-    expect(altura * escala * 16).toBeLessThanOrEqual(0.95 * 900)
-  })
-
-  interface Retangulo { x: number; y: number; largura: number; altura: number }
-
-  const numero = (classe: string, prefixo: string, variante = ''): number | undefined => {
-    const m = new RegExp(`(?:^|\\s)${variante.replace(/[[\]/]/g, '\\$&')}${prefixo}-\\[(-?[\\d.]+)(?:rem)?\\]`).exec(classe)
-    return m ? parseFloat(m[1]) : undefined
-  }
-
-  async function retangulos(faixa: 'estreita' | 'larga'): Promise<{ palco: { largura: number; altura: number }; itens: Array<Retangulo & { tela: string }> }> {
-    const { container } = renderizarRota('/')
-    await screen.findByRole('heading', { level: 1 })
-    const palco = vitrineEm(faixa === 'larga' ? 70 : 30)
-    const largura = parseFloat(/width:\s*([\d.]+)rem/.exec(regrasDe(estiloGlobal).find((r) => r.seletor === '.aparelho-celular')!.corpo)![1])
-    const proporcao = /aspect-ratio:\s*(\d+)\s*\/\s*(\d+)/.exec(regrasDe(estiloGlobal).find((r) => r.seletor === '.aparelho-celular')!.corpo)!
-    const alturaCelular = largura * (parseFloat(proporcao[2]) / parseFloat(proporcao[1]))
-    const larguraNotebook = parseFloat(/width:\s*([\d.]+)rem/.exec(regrasDe(estiloGlobal).find((r) => r.seletor === '.aparelho-notebook')!.corpo)![1])
-    const baseCorpo = regrasDe(estiloGlobal).find((r) => r.seletor === '.aparelho-base')!.corpo
-    // A base do notebook sai da moldura pelos dois lados (margin-inline negativa).
-    const extensaoDaBase = -parseFloat(/margin-inline:\s*(-[\d.]+)rem/.exec(baseCorpo)![1])
-    const alturaBase = parseFloat(/height:\s*([\d.]+)rem/.exec(baseCorpo)![1])
-    const variante = faixa === 'larga' ? '@min-[46rem]/pagina:' : ''
-
-    const itens = [...container.querySelectorAll<HTMLElement>('#secao-telas [data-aparelho]')].map((aparelho) => {
-      const classe = aparelho.getAttribute('class')!
-      const pega = (prefixo: string) => numero(classe, prefixo, variante) ?? numero(classe, prefixo)!
-      const escala = pega('scale')
-      const x = pega('left')
-      const y = pega('top')
-      if (aparelho.getAttribute('data-aparelho') === 'notebook') {
-        const altura = (larguraNotebook * 10) / 16 + alturaBase + 0.25
-        return {
-          tela: aparelho.getAttribute('data-tela')!,
-          x: x - extensaoDaBase * escala,
-          y,
-          largura: (larguraNotebook + 2 * extensaoDaBase) * escala,
-          altura: altura * escala,
-        }
-      }
-      return { tela: aparelho.getAttribute('data-tela')!, x, y, largura: largura * escala, altura: alturaCelular * escala }
-    })
-    return { palco: { largura: palco.largura, altura: palco.altura }, itens }
-  }
-
-  for (const faixa of ['estreita', 'larga'] as const) {
-    it(`faixa ${faixa}: nenhum aparelho passa da borda do palco e há folga de pelo menos 2 rem dos quatro lados`, async () => {
-      const { palco, itens } = await retangulos(faixa)
-
-      expect(itens.length).toBeGreaterThanOrEqual(2)
-      const esquerda = Math.min(...itens.map((i) => i.x))
-      const direita = palco.largura - Math.max(...itens.map((i) => i.x + i.largura))
-      const topo = Math.min(...itens.map((i) => i.y))
-      const base = palco.altura - Math.max(...itens.map((i) => i.y + i.altura))
-      expect(esquerda, 'folga à esquerda').toBeGreaterThanOrEqual(2)
-      expect(direita, 'folga à direita').toBeGreaterThanOrEqual(2)
-      expect(topo, 'folga em cima').toBeGreaterThanOrEqual(2)
-      expect(base, 'folga embaixo').toBeGreaterThanOrEqual(2)
-      // Centrado: as folgas laterais diferem em até 1 rem.
-      expect(Math.abs(esquerda - direita), `esquerda ${esquerda}, direita ${direita}`).toBeLessThanOrEqual(1)
-    })
-  }
-})
-
 describe('MAT-44 r5 R2: nenhum ícone na página pública', () => {
   for (const caminho of ['/', '/qualquer-coisa', '/outra/rota/que/nao/existe']) {
-    it(`${caminho}: zero svg.lucide no documento inteiro, inclusive dentro de [inert]`, async () => {
+    it(`${caminho}: zero svg.lucide fora dos mockups, no documento inteiro`, async () => {
       const { container } = renderizarRota(caminho)
       await screen.findByRole('heading', { level: 1 })
 
-      expect(container.querySelectorAll('svg.lucide')).toHaveLength(0)
-      expect(document.querySelectorAll('svg.lucide')).toHaveLength(0)
+      expect([...container.querySelectorAll('svg.lucide')].filter((s) => !s.closest('[data-aparelho]'))).toHaveLength(0)
+      expect([...document.querySelectorAll('svg.lucide')].filter((s) => !s.closest('[data-aparelho]'))).toHaveLength(0)
     })
 
-    it(`${caminho}: os únicos svg são ilustrações (data-ilustracao)`, async () => {
+    it(`${caminho}: fora dos mockups, os únicos svg são ilustrações (data-ilustracao)`, async () => {
       const { container } = renderizarRota(caminho)
       await screen.findByRole('heading', { level: 1 })
 
-      const outros = [...container.querySelectorAll('svg')].filter((s) => !s.hasAttribute('data-ilustracao'))
+      const outros = [...container.querySelectorAll('svg')].filter(
+        (s) => !s.hasAttribute('data-ilustracao') && !s.closest('[data-aparelho]'),
+      )
       expect(outros).toEqual([])
     })
   }
 
-  it('as miniaturas do Início mostram os mesmos botões rápidos, na mesma ordem e com os mesmos rótulos, sem ícone', async () => {
+  it('os mockups do Hoje mostram os mesmos botões rápidos da tela real, na mesma ordem e com os mesmos rótulos', async () => {
     const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
 
     const grades = [...container.querySelectorAll('[inert] button[aria-label="Iniciar sono de Heloísa"]')].map((b) => b.parentElement!)
-    expect(grades.length).toBeGreaterThanOrEqual(2)
+    expect(grades.length).toBeGreaterThanOrEqual(1)
     for (const grade of grades) {
       expect([...grade.children].map((b) => b.textContent)).toEqual(['Sono', 'Mamada', 'Fralda', 'Tummy time', '+ Mais'])
       expect([...grade.children].map((b) => b.getAttribute('aria-label'))).toEqual([
@@ -1385,7 +1066,7 @@ describe('MAT-44 r5 R3: a vitrine mostra as telas que a legenda anuncia, em toda
     }
   })
 
-  it('nenhum aparelho, nem ancestral dele dentro da seção, tem classe que o esconda em alguma faixa', async () => {
+  it('nenhum aparelho, nem ancestral dele dentro da seção, usa hidden, invisible, sr-only, opacity-0 ou collapse; a visibilidade por faixa vem da VIS4-06 item 5', async () => {
     const secao = await vitrine()
 
     const esconde = /(^|:)(hidden|invisible|sr-only|opacity-0|collapse)$/
@@ -1397,181 +1078,6 @@ describe('MAT-44 r5 R3: a vitrine mostra as telas que a legenda anuncia, em toda
     }
   })
 
-  it('nenhuma regra do CSS da vitrine ou dos aparelhos esconde o que quer que seja', () => {
-    const escondem = regrasComContexto(estiloGlobal)
-      .filter((r) => /\.(vitrine|aparelho)/.test(r.seletor))
-      .filter((r) => r.props['display'] === 'none' || r.props['visibility'] === 'hidden' || r.props['opacity'] === '0')
-      .map((r) => r.seletor)
-    expect(escondem).toEqual([])
-  })
-
-  it('em 390 px os celulares são lidos de relance: pelo menos 9 rem de largura efetiva (eram 7,3)', async () => {
-    const secao = await vitrine()
-
-    const { escala } = vitrineEm(22.4)
-    const celulares = [...secao.querySelectorAll<HTMLElement>('[data-aparelho="celular"]')]
-    expect(celulares.length).toBeGreaterThanOrEqual(2)
-    for (const celular of celulares) {
-      const proprio = /(?:^|\s)scale-\[([\d.]+)\]/.exec(celular.getAttribute('class')!)
-      expect(proprio).not.toBeNull()
-      expect(24 * parseFloat(proprio![1]) * escala, celular.getAttribute('data-tela')!).toBeGreaterThanOrEqual(9)
-    }
-  })
-})
-
-// ---------------------------------------------------------------------------
-// Rodada 6: regras de composição do Início. Medidas de gosto (tamanhos, paddings, vãos) não são
-// fixadas em teste: são conferidas em captura. Aqui só o que é regra: nenhuma figura cobre outra,
-// as pessoas têm a mesma escala, a ordem do DOM e a estrutura das áreas.
-
-describe('MAT-44 r6 #1: madrugada em duas colunas, sem nada atrás do celular', () => {
-  async function secaoMadrugada() {
-    const { container } = renderizarRota('/')
-    await screen.findByRole('heading', { level: 1 })
-    return container.querySelector<HTMLElement>('#secao-madrugada')!
-  }
-
-  it('a ordem do DOM é título e texto, cena (ilustração), celular e legenda', async () => {
-    const secao = await secaoMadrugada()
-
-    const filhos = [...secao.children] as HTMLElement[]
-    expect(filhos).toHaveLength(4)
-    expect(filhos[0].querySelector('#titulo-madrugada')).not.toBeNull()
-    expect(filhos[1].classList.contains('madrugada-cena')).toBe(true)
-    expect(filhos[1].querySelector('[data-ilustracao="mamada"]')).not.toBeNull()
-    expect(filhos[2].classList.contains('madrugada-celular')).toBe(true)
-    expect(filhos[3].classList.contains('madrugada-legenda')).toBe(true)
-  })
-
-  it('nenhuma parte da ilustração fica atrás do celular: sem margem negativa e sem camada (z-*)', async () => {
-    const secao = await secaoMadrugada()
-
-    for (const seletor of ['.madrugada-cena', '.madrugada-celular', '.madrugada-legenda', '[data-ilustracao="mamada"]']) {
-      const elemento = secao.querySelector(seletor)!
-      const classe = elemento.getAttribute('class')!
-      expect(classe, seletor).not.toMatch(/(?:^|\s|:)-m[trblxy]?-/)
-      expect(classe, seletor).not.toMatch(/(?:^|\s|:)z-/)
-    }
-    const negativas = regrasComContexto(estiloGlobal)
-      .filter((r) => r.seletor.includes('.madrugada-') || r.seletor.includes('data-ilustracao'))
-      .flatMap((r) => Object.entries(r.props).map(([p, v]) => `${r.seletor} { ${p}: ${v} }`))
-      .filter((d) => /\{\s*margin[a-z-]*:\s*-/.test(d) || /\{\s*z-index:/.test(d))
-    expect(negativas).toEqual([])
-  })
-
-  it('cena e celular ocupam áreas diferentes da grade, e a grade larga os alinha pela base', () => {
-    const css = semComentarios(estiloGlobal)
-    expect(css).toMatch(/grid-template-areas:\s*"texto celular"\s*"cena celular"\s*"\. legenda"/)
-    for (const [classe, area] of [
-      ['madrugada-texto', 'texto'],
-      ['madrugada-cena', 'cena'],
-      ['madrugada-celular', 'celular'],
-      ['madrugada-legenda', 'legenda'],
-    ]) {
-      expect(css, classe).toMatch(new RegExp(`\\.${classe}\\s*\\{[^}]*grid-area:\\s*${area}\\s*;`))
-    }
-    const larga = regrasComContexto(estiloGlobal).filter((r) => r.condicao !== null)
-    for (const seletor of ['.madrugada-cena', '.madrugada-celular']) {
-      expect(larga.some((r) => r.seletor === seletor && r.props['align-self'] === 'end'), seletor).toBe(true)
-    }
-  })
-
-  it('na grade larga a ilustração ocupa a largura da coluna da esquerda', () => {
-    const larga = regrasComContexto(estiloGlobal).filter(
-      (r) => r.condicao !== null && /min-width:\s*64rem/.test(r.condicao) && r.seletor === '.madrugada-cena > svg',
-    )
-    expect(larga.some((r) => r.props['width'] === '100%')).toBe(true)
-  })
-
-  it('o desenho termina no chão: o viewBox da ilustração larga acaba na linha do chão, na base do celular', async () => {
-    const secao = await secaoMadrugada()
-
-    const desenho = secao.querySelector('[data-ilustracao="mamada"]')!
-    const [, , largura, altura] = desenho.getAttribute('viewBox')!.split(/\s+/).map(Number)
-    expect(largura / altura).toBeGreaterThan(1.5)
-    expect(altura).toBeLessThanOrEqual(223)
-    expect(desenho.getAttribute('aria-hidden')).toBe('true')
-  })
-})
-
-describe('MAT-44 r6 #2 e #3: campo de barro com as pessoas na mesma escala e nada sobreposto', () => {
-  async function cenaDoBarro() {
-    const { container } = renderizarRota('/')
-    await screen.findByRole('heading', { level: 1 })
-    const campo = container.querySelector('main > section[data-campo="field-1"]')!
-    const cena = campo.querySelector('[data-ilustracao]')!.parentElement as HTMLElement
-    const figuras = [...cena.querySelectorAll<SVGElement>('[data-ilustracao]')]
-    return { cena, figuras }
-  }
-
-  const larguraDoDesenho = (figura: Element) => Number(figura.getAttribute('viewBox')!.split(/\s+/)[2])
-  const porcento = (figura: Element, variante: string) => {
-    const classe = figura.getAttribute('class')!
-    const re = variante
-      ? /@min-\[46rem\]\/pagina:w-\[([\d.]+)%\]/
-      : /(?:^|\s)w-\[([\d.]+)%\]/
-    return parseFloat(re.exec(classe)![1])
-  }
-
-  it('as três figuras: colo, tapete e passeio, no mesmo recipiente, na ordem', async () => {
-    const { cena, figuras } = await cenaDoBarro()
-
-    expect(figuras.map((f) => f.getAttribute('data-ilustracao'))).toEqual(['colo', 'tapete', 'passeio'])
-    expect(new Set(figuras.map((f) => f.parentElement)).size).toBe(1)
-    expect(cena.className).toMatch(/\bmx-auto\b/)
-  })
-
-  it('nenhuma figura, nem o recipiente, usa margem negativa em nenhuma faixa (nada cobre nada)', async () => {
-    const { cena, figuras } = await cenaDoBarro()
-
-    for (const elemento of [cena, ...figuras]) {
-      expect(elemento.getAttribute('class'), elemento.getAttribute('data-ilustracao') ?? 'recipiente').not.toMatch(
-        /(?:^|\s|:)-m[trblxy]?-/,
-      )
-    }
-  })
-
-  it('as pessoas têm a mesma escala: a largura de cada figura é proporcional à largura do desenho dela, em cada faixa', async () => {
-    const { figuras } = await cenaDoBarro()
-
-    for (const variante of ['', '@min']) {
-      const escalas = figuras.map((f) => porcento(f, variante) / larguraDoDesenho(f))
-      for (const escala of escalas) {
-        expect(Math.abs(escala / escalas[0] - 1), `faixa ${variante || 'estreita'}: ${escalas.join(', ')}`).toBeLessThan(0.02)
-      }
-    }
-  })
-
-  it('o desenho é cortado rente ao chão e à figura (viewBox justo): termina na linha do chão', async () => {
-    const { figuras } = await cenaDoBarro()
-
-    for (const figura of figuras) {
-      const [x, y, largura, altura] = figura.getAttribute('viewBox')!.split(/\s+/).map(Number)
-      expect(y + altura, figura.getAttribute('data-ilustracao')!).toBeLessThanOrEqual(223)
-      expect(y + altura).toBeGreaterThanOrEqual(221)
-      expect(x + largura).toBeLessThanOrEqual(240)
-      expect(largura).toBeLessThan(240)
-      expect(altura).toBeLessThan(200)
-    }
-  })
-
-  it('cada linha cabe na largura (sem rolagem horizontal): colo+passeio e o tapete, e as três na faixa larga', async () => {
-    const { figuras } = await cenaDoBarro()
-
-    const [colo, tapete, passeio] = figuras
-    expect(porcento(colo, '') + porcento(passeio, '')).toBeLessThanOrEqual(100)
-    expect(porcento(tapete, '')).toBeLessThanOrEqual(100)
-    expect(figuras.reduce((soma, f) => soma + porcento(f, '@min'), 0)).toBeLessThanOrEqual(100)
-  })
-
-  it('o tapete, sozinho na segunda linha, fica centrado, e as duas linhas ficam próximas (vão de até 16 px)', async () => {
-    const { cena, figuras } = await cenaDoBarro()
-
-    expect(figuras[1].getAttribute('class')).toMatch(/\bmx-auto\b/)
-    const vao = /(?:^|\s)gap-y-(\d+)(?:\s|$)/.exec(cena.className)
-    expect(vao).not.toBeNull()
-    expect(parseInt(vao![1], 10)).toBeLessThanOrEqual(4)
-  })
 })
 
 // ---------------------------------------------------------------------------
@@ -1579,100 +1085,6 @@ describe('MAT-44 r6 #2 e #3: campo de barro com as pessoas na mesma escala e nad
 // tem metade das rem (390 px = 12 rem de largura, menos as margens); tudo o que tem tamanho fixo em
 // rem, ou margem negativa, ou uma palavra comprida sem quebra, passa da largura. As regras abaixo
 // valem para a classe do defeito, em toda largura, e não fixam medida estética.
-
-describe('MAT-44 r7 #1: o celular da madrugada escala com a largura da página, em rem', () => {
-  const celularEm = (largura: number, seletor = '.madrugada-celular'): number => {
-    const regras = regrasComContexto(estiloGlobal)
-      .filter((r) => r.seletor === seletor)
-      .sort((a, b) => a.ordem - b.ordem)
-    let escala = Number.NaN
-    for (const regra of regras) {
-      if (regra.condicao) {
-        const minimo = /min-width:\s*([\d.]+)rem/.exec(regra.condicao)
-        if (!minimo || largura < parseFloat(minimo[1])) continue
-      }
-      if ('--celular-escala' in regra.props) escala = parseFloat(regra.props['--celular-escala'])
-    }
-    return escala
-  }
-  const larguraNatural = () =>
-    parseFloat(/width:\s*([\d.]+)rem/.exec(regrasDe(estiloGlobal).find((r) => r.seletor === '.aparelho-celular')!.corpo)![1])
-
-  async function paddingLateral(): Promise<{ estreita: number; larga: number }> {
-    const { container } = renderizarRota('/')
-    await screen.findByRole('heading', { level: 1 })
-    const classe = container.querySelector('#secao-madrugada')!.getAttribute('class')!
-    const base = /(?:^|\s)px-(\d+)(?:\s|$)/.exec(classe)![1]
-    const larga = /@min-\[46rem\]\/pagina:px-(\d+)/.exec(classe)![1]
-    return { estreita: parseInt(base, 10) / 4, larga: parseInt(larga, 10) / 4 }
-  }
-
-  it('de 6 a 140 rem, a caixa do celular mais o padding lateral da seção cabe na largura da página', async () => {
-    const padding = await paddingLateral()
-
-    for (let largura = 6; largura <= 140; largura += 0.25) {
-      const escala = celularEm(largura)
-      expect(escala, `escala em ${largura} rem`).toBeGreaterThan(0)
-      const caixa = larguraNatural() * escala
-      const lateral = 2 * (largura >= 46 ? padding.larga : padding.estreita)
-      expect(caixa, `caixa de ${caixa} rem em ${largura} rem de página (padding ${lateral})`).toBeLessThanOrEqual(
-        largura - lateral + 1e-9,
-      )
-    }
-  })
-
-  it('nas larguras em que já cabia, o tamanho é o de antes: 18 rem abaixo de 46 rem e 20,4 rem a partir de 46 rem', () => {
-    for (let largura = 21; largura < 46; largura += 0.25) {
-      expect(larguraNatural() * celularEm(largura), `${largura} rem`).toBeCloseTo(18, 6)
-    }
-    for (let largura = 46; largura <= 140; largura += 0.25) {
-      expect(larguraNatural() * celularEm(largura), `${largura} rem`).toBeCloseTo(20.4, 6)
-    }
-  })
-
-  it('a escala só cresce com a largura dentro de cada faixa (a troca em 46 rem reinicia a contagem)', () => {
-    let anterior = 0
-    for (let largura = 6; largura <= 140; largura += 0.25) {
-      const escala = celularEm(largura)
-      if (Math.abs(largura - 46) < 1e-9) anterior = 0
-      expect(escala, `${largura} rem`).toBeGreaterThanOrEqual(anterior)
-      anterior = escala
-    }
-  })
-
-  it('a caixa e a altura leem a escala por variável, e a altura segue a proporção do aparelho', () => {
-    const regras = regrasComContexto(estiloGlobal).filter((r) => r.seletor === '.madrugada-celular' && r.condicao === null)
-    const natural = larguraNatural()
-    const proporcao = /aspect-ratio:\s*(\d+)\s*\/\s*(\d+)/.exec(regrasDe(estiloGlobal).find((r) => r.seletor === '.aparelho-celular')!.corpo)!
-    const alturaNatural = natural * (parseFloat(proporcao[2]) / parseFloat(proporcao[1]))
-
-    const largura = regras.map((r) => /^calc\(([\d.]+)rem \* var\(--celular-escala\)\)$/.exec(r.props['width'] ?? '')).find(Boolean)
-    const altura = regras.map((r) => /^calc\(([\d.]+)rem \* var\(--celular-escala\)\)$/.exec(r.props['height'] ?? '')).find(Boolean)
-    expect(largura, 'width calc(natural * escala)').toBeTruthy()
-    expect(altura, 'height calc(natural * escala)').toBeTruthy()
-    expect(parseFloat(largura![1])).toBeCloseTo(natural, 6)
-    expect(parseFloat(altura![1])).toBeCloseTo(alturaNatural, 2)
-  })
-
-  it('no JSX não sobra medida fixa em rem nem escala numérica para o celular da madrugada', async () => {
-    const { container } = renderizarRota('/')
-    await screen.findByRole('heading', { level: 1 })
-
-    const caixa = container.querySelector('.madrugada-celular')!
-    expect(caixa.getAttribute('class')).not.toMatch(/(?:^|\s|:)[wh]-\[[\d.]+rem\]/)
-    const celular = caixa.querySelector('[data-aparelho="celular"]')!
-    expect(celular.getAttribute('class')).not.toMatch(/(?:^|\s|:)scale-\[[\d.]+\]/)
-    expect(celular.getAttribute('class')).toContain('[scale:var(--celular-escala)]')
-  })
-
-  it('a legenda tem a largura do celular em toda largura: mesma escala e largura máxima pela variável', () => {
-    for (let largura = 6; largura <= 140; largura += 0.25) {
-      expect(celularEm(largura, '.madrugada-legenda'), `${largura} rem`).toBe(celularEm(largura))
-    }
-    const base = regrasComContexto(estiloGlobal).filter((r) => r.seletor === '.madrugada-legenda' && r.condicao === null)
-    expect(base.some((r) => /^calc\([\d.]+rem \* var\(--celular-escala\)\)$/.test(r.props['max-width'] ?? ''))).toBe(true)
-  })
-})
 
 describe('MAT-44 r7 #2: a etiqueta nunca passa da largura da linha', () => {
   it('.etiqueta limita a largura a 100% e quebra a palavra dentro dela, com hífen automático', () => {

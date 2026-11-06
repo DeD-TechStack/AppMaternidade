@@ -4,127 +4,29 @@ import {
   APRESENTACAO,
   CHAMADA,
   FATOS,
+  LEGENDA_CHAMADA,
   LEGENDA_MADRUGADA,
   MADRUGADA,
-  MINIATURAS,
   NAVEGACAO,
   PARA_QUE_SERVE,
   PILARES,
   PROMESSA,
   RODAPE,
   TELAS,
+  TELAS_ESTREITA,
 } from '../conteudo/textos.ts'
 import { Aparelho } from '../componentes/Aparelho.tsx'
 import { AvisoDemonstracao } from '../componentes/AvisoDemonstracao.tsx'
-import { BotoesRapidos } from '../prototipo/BotoesRapidos.tsx'
-import { CartaoEmAndamento } from '../prototipo/CartaoEmAndamento.tsx'
+import { TelaReal } from '../componentes/vitrine/TelaReal.tsx'
 import { IlustracaoColo } from '../prototipo/IlustracaoColo.tsx'
 import { IlustracaoMamada } from '../prototipo/IlustracaoMamada.tsx'
-import { IlustracaoPasseio } from '../prototipo/IlustracaoPasseio.tsx'
-import { IlustracaoTapete } from '../prototipo/IlustracaoTapete.tsx'
-import { SessaoInfo } from '../prototipo/SessaoInfo.tsx'
 import { usePrototipo } from '../prototipo/contexto.ts'
 
-const semAcao = () => undefined
-
-// As telas em miniatura são os mesmos componentes de Hoje e Sessão, com dados fixos (textos.ts) e
-// o relógio parado: sem navegação inferior, sem efeito na página, nada focável. Cada aparelho que
-// as mostra é inerte e escondido do leitor de tela.
-function RegistroRapido() {
-  return (
-    <BotoesRapidos
-      desativado
-      semIcones
-      aoIniciarSessao={semAcao}
-      aoRegistrarFralda={semAcao}
-      aoRegistrarMais={semAcao}
-    />
-  )
-}
-
-/** O Hoje do celular: o cartão em andamento e os botões de registro, de cima para baixo. */
-function TelaHoje() {
-  const { hoje } = MINIATURAS
-  return (
-    <div>
-      <p className="titulo-linha">{hoje.titulo}</p>
-      <p className="mt-1">{hoje.bebe}</p>
-      <div className="mt-4">
-        <CartaoEmAndamento miniatura sessao={hoje.sessao} />
-      </div>
-      <div className="mt-4">
-        <RegistroRapido />
-      </div>
-    </div>
-  )
-}
-
-/**
- * O Hoje do computador, mais largo: o cartão em andamento e os botões numa coluna, a nota
- * "Para você saber" e a lista "Últimos" na outra. A coluna da direita é curta de propósito: o
- * celular da frente se apoia no espaço vazio embaixo dela, sem cobrir texto.
- */
-function TelaHojeComputador() {
-  const { hoje } = MINIATURAS
-  return (
-    <div className="grid grid-cols-2 items-start gap-8">
-      <TelaHoje />
-      <div>
-        <p className="rotulo">{hoje.nota.rotulo}</p>
-        <p className="nota-italico mt-2">{hoje.nota.texto}</p>
-        <p className="tabular mt-1 text-sm">{hoje.nota.autor}</p>
-        <p className="rotulo mt-6">{hoje.ultimos.rotulo}</p>
-        <ul className="mt-2 divide-y border-y">
-          {hoje.ultimos.itens.map((item) => (
-            <li key={item.rotulo} className="flex items-baseline justify-between gap-4 py-2">
-              <span>{item.rotulo}</span>
-              <span className="tabular text-right">{item.quando}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  )
-}
-
-/** As ações da Sessão em miniatura, desativadas e fora da ordem de Tab, como as outras miniaturas. */
-function AcoesDaSessaoEmMiniatura() {
-  const [encerrar, anotar, descartar] = MINIATURAS.sessao.acoes
-  return (
-    <div className="mt-6 flex flex-col gap-3">
-      <button type="button" disabled tabIndex={-1} className="botao botao-principal botao-grande">
-        {encerrar}
-      </button>
-      <div className="flex flex-wrap gap-3">
-        <button type="button" disabled tabIndex={-1} className="botao botao-secundario">
-          {anotar}
-        </button>
-        <button type="button" disabled tabIndex={-1} className="botao botao-secundario">
-          {descartar}
-        </button>
-      </div>
-    </div>
-  )
-}
-
-/** A Sessão do celular: o cronômetro com as informações e as ações, como a tela de verdade. */
-function TelaSessao({ madrugada = false }: { madrugada?: boolean }) {
-  const { sessao } = MINIATURAS
-  return (
-    <div>
-      <p className="titulo-linha mb-4">{sessao.titulo}</p>
-      <SessaoInfo
-        miniatura
-        campo={madrugada ? 'night-paper-deep' : 'accent'}
-        cronometro={sessao.cronometro}
-        hora={sessao.hora}
-        pessoa={sessao.pessoa}
-        atividade={sessao.atividade}
-      />
-      <AcoesDaSessaoEmMiniatura />
-    </div>
-  )
-}
+// A faixa estreita mostra só o começo da legenda das telas (TELAS_ESTREITA); da média para cima o
+// texto inteiro (TELAS) aparece. O resto do texto é o que TELAS acrescenta depois da legenda curta.
+const RESTO_DE_TELAS = TELAS.texto.startsWith(TELAS_ESTREITA.texto)
+  ? TELAS.texto.slice(TELAS_ESTREITA.texto.length).trim()
+  : TELAS.texto
 
 export function Inicio() {
   const { dispatch } = usePrototipo()
@@ -134,11 +36,11 @@ export function Inicio() {
     dispatch({ tipo: 'definirMadrugada', valor: false })
   }, [dispatch])
 
-  // O raiz é o contêiner da página: as colunas seguem a largura dela em rem da fonte raiz. Uma
-  // media query (md:) mede a janela em rem do navegador (16 px) e ignora a fonte ampliada; com
-  // o texto em 200% as colunas continuariam lado a lado e o texto não caberia. 46 rem é o
-  // conteúdo do raiz em 768 px com fonte 100% (768 − 2 × 2%). O padding lateral, abaixo, é a
-  // única variante de janela da página: um contêiner não consulta o próprio tamanho.
+  // O raiz é o contêiner da página: o layout segue a largura dela em rem da fonte raiz, em três
+  // faixas: estreita (menos de 46 rem), média (46 a menos de 60 rem) e larga (60 rem ou mais). Uma
+  // media query (md:) mede a janela em rem do navegador (16 px) e ignora a fonte ampliada; com o
+  // texto em 200% as colunas continuariam lado a lado e o texto não caberia. O padding lateral,
+  // abaixo, é a única variante de janela da página: um contêiner não consulta o próprio tamanho.
   //
   // break-words (overflow-wrap: break-word) é herdado por todo texto da página: com a fonte
   // ampliada a página tem menos rem, e uma palavra mais larga que a própria caixa quebra em vez de
@@ -147,8 +49,14 @@ export function Inicio() {
   // muda a largura mínima de itens de grade e flex), sem hífen automático nos títulos e sem
   // esconder nada.
   //
-  // A página alterna campos de cor (data-campo) e faixas de papel, com no máximo dois campos
-  // seguidos. O texto longo fica sempre no papel; sobre os campos só há frases curtas.
+  // O <main> é a grade (ver .inicio-grade em index.css): uma coluna na estreita e na média, duas
+  // colunas de mesma largura na larga, com o mesmo padding em todo cartão e o mesmo gap entre eles
+  // em cada faixa. Os seis cartões, nesta ordem: a promessa (papel), as telas (campo de urucum), a
+  // madrugada (campo da noite) e "para que serve" (papel, em par com a madrugada a partir de 80 rem),
+  // os fatos (papel) e a chamada (campo de lavanda). Papel e campo se alternam, com no máximo dois
+  // campos seguidos. Todo texto corrido mora numa coluna de texto de até 32,5 rem (.coluna-texto). Os
+  // aparelhos são as telas de verdade (ver componentes/vitrine), inertes e escondidos do leitor de
+  // tela, com um parágrafo visível ao lado.
   return (
     <div className="@container/pagina flex min-h-dvh flex-col break-words px-4 md:px-[2%]">
       <AvisoDemonstracao />
@@ -170,183 +78,159 @@ export function Inicio() {
         </nav>
       </header>
 
-      <main className="flex-1">
-        <section
-          aria-labelledby="promessa"
-          className="entrada grid grid-cols-4 gap-x-6 pb-8 pt-6 @min-[46rem]/pagina:grid-cols-12 @min-[46rem]/pagina:pb-12 @min-[46rem]/pagina:pt-10"
-        >
-          <ul className="col-span-4 mb-6 flex flex-wrap gap-2 @min-[46rem]/pagina:col-span-12">
-            {PILARES.map((pilar) => (
-              <li key={pilar} className="etiqueta rotulo">
-                {pilar}
-              </li>
-            ))}
-          </ul>
-          <h1 id="promessa" className="promessa col-span-4 @min-[46rem]/pagina:col-span-8">
-            {PROMESSA}
-          </h1>
-          <p className="texto-medida col-span-4 mt-6 @min-[46rem]/pagina:col-span-4 @min-[46rem]/pagina:mt-0 @min-[46rem]/pagina:self-end">
-            {APRESENTACAO}
-          </p>
+      <main className="inicio-grade flex-1">
+        {/* Promessa, no papel: os pilares, o título e a apresentação, na coluna de texto, e a
+            ilustração. Até 80 rem: o texto e, embaixo, o desenho centrado no cartão. A partir de
+            80 rem: o texto na coluna 1 e o desenho começando na linha da coluna 2. Em todo caso
+            a base do desenho fica na borda de baixo da área de conteúdo do cartão. */}
+        <section aria-labelledby="promessa" className="inicio-promessa inicio-largo entrada">
+          <div className="inicio-promessa-texto coluna-texto">
+            <ul className="flex flex-wrap gap-2">
+              {PILARES.map((pilar) => (
+                <li key={pilar} className="etiqueta rotulo">
+                  {pilar}
+                </li>
+              ))}
+            </ul>
+            <h1 id="promessa" className="promessa mt-6">
+              {PROMESSA}
+            </h1>
+            <p className="texto-medida mt-6">{APRESENTACAO}</p>
+          </div>
+          <IlustracaoColo className="inicio-ilustracao" />
         </section>
 
-        {/* Campo de urucum: o Hoje de computador no notebook, a Sessão num celular e o Hoje de
-            celular no outro, em toda largura (nada some em página estreita, que só muda a
-            composição). Os celulares se sobrepõem à parte de baixo do notebook, à margem da tela
-            dele e ao espaço vazio sob a coluna da direita, nunca ao que a tela tem de mais
-            importante. As posições e escalas abaixo dão ao conjunto pelo menos 2 rem de folga dos
-            quatro lados do palco, centrado (o palco e a escala estão em .vitrine, no CSS):
-            - abaixo de 46 rem, palco de 54 × 67 rem: notebook a 0,78 no meio e os dois celulares
-              lado a lado, em escala 1, por cima da parte de baixo dele;
-            - a partir de 46 rem, palco de 81 × 56 rem: o notebook entre os dois celulares. */}
+        {/* Telas, no campo de urucum: o título e a legenda, e os aparelhos. A partir de 86 rem o texto
+            fica em cima, à esquerda, com o notebook do Hoje embaixo dele e o celular da Sessão à
+            direita, com a base na do notebook; antes disso tudo empilhado, alinhado à esquerda. Média:
+            os dois celulares, o Hoje e a Sessão. Estreita: só o celular com o Hoje. Os aparelhos que
+            não aparecem numa faixa continuam no DOM, escondidos pelo CSS (.aparelho-*-de-*). O título
+            e o primeiro trecho da legenda são os da faixa estreita; da média para cima entra o resto. */}
         <section
           id="secao-telas"
           aria-labelledby="titulo-telas"
           data-campo="accent"
-          className="vitrine entrada atraso-1"
+          className="inicio-telas inicio-largo entrada atraso-1"
         >
-          <div inert aria-hidden="true" className="vitrine-palco">
-            <Aparelho
-              tipo="notebook"
-              tela="hoje"
-              className="absolute left-[5.2rem] top-[2rem] origin-top-left scale-[0.78] @min-[46rem]/pagina:left-[19rem] @min-[46rem]/pagina:top-[3rem] @min-[46rem]/pagina:scale-[1]"
-            >
-              <TelaHojeComputador />
-            </Aparelho>
-            <Aparelho
-              tipo="celular"
-              tela="sessao"
-              className="absolute left-[2.5rem] top-[24rem] origin-top-left scale-[1] @min-[46rem]/pagina:left-[3rem] @min-[46rem]/pagina:top-[19rem] @min-[46rem]/pagina:scale-[0.9]"
-            >
-              <TelaSessao />
-            </Aparelho>
-            <Aparelho
-              tipo="celular"
-              tela="hoje"
-              className="absolute left-[27.5rem] top-[27rem] origin-top-left scale-[1] @min-[46rem]/pagina:left-[53rem] @min-[46rem]/pagina:top-[23rem] @min-[46rem]/pagina:scale-[0.8]"
-            >
-              <TelaHoje />
-            </Aparelho>
+          <div className="inicio-telas-texto coluna-texto">
+            <h2 id="titulo-telas" className="titulo-secao">
+              <span className="somente-estreita">{TELAS_ESTREITA.titulo}</span>
+              <span className="a-partir-de-46">{TELAS.titulo}</span>
+            </h2>
+            <p className="texto-medida mt-4">
+              {TELAS_ESTREITA.texto}
+              <span className="a-partir-de-46">{` ${RESTO_DE_TELAS}`}</span>
+            </p>
           </div>
+          <Aparelho tipo="notebook" tela="hoje" className="aparelho-a-partir-de-60">
+            <TelaReal tela="hoje" />
+          </Aparelho>
+          <Aparelho tipo="celular" tela="hoje" className="aparelho-ate-60">
+            <TelaReal tela="hoje" />
+          </Aparelho>
+          <Aparelho tipo="celular" tela="sessao" className="aparelho-a-partir-de-46 inicio-aparelho-lado">
+            <TelaReal tela="sessao" />
+          </Aparelho>
         </section>
 
-        <section className="entrada atraso-1 grid grid-cols-4 gap-4 py-8 @min-[46rem]/pagina:grid-cols-12 @min-[46rem]/pagina:gap-6 @min-[46rem]/pagina:py-12">
-          <h2 id="titulo-telas" className="rotulo col-span-4 @min-[46rem]/pagina:col-span-3">
-            {TELAS.titulo}
-          </h2>
-          <p className="texto-medida col-span-4 @min-[46rem]/pagina:col-span-9 @min-[46rem]/pagina:border-l @min-[46rem]/pagina:pl-6">
-            {TELAS.texto}
-          </p>
-        </section>
-
-        <section
-          id="secao-serve"
-          aria-labelledby="titulo-serve"
-          className="entrada atraso-2 pb-8 @min-[46rem]/pagina:pb-12"
-        >
-          <h2 id="titulo-serve" className="rotulo mb-4">
-            {PARA_QUE_SERVE.titulo}
-          </h2>
-          {PARA_QUE_SERVE.linhas.map((linha) => (
-            <div
-              key={linha.rotulo}
-              className="grid grid-cols-1 border-t last:border-b @min-[46rem]/pagina:grid-cols-12"
-            >
-              <h3 className="titulo-linha pt-5 @min-[46rem]/pagina:col-span-3 @min-[46rem]/pagina:py-6">
-                {linha.rotulo}
-              </h3>
-              <div className="pb-6 pt-2 @min-[46rem]/pagina:col-span-9 @min-[46rem]/pagina:border-l @min-[46rem]/pagina:py-6 @min-[46rem]/pagina:pl-6">
-                <p className="texto-medida">{linha.texto}</p>
-              </div>
-            </div>
-          ))}
-        </section>
-
-        {/* Campo de barro: uma cena só. Cada desenho tem o viewBox justo (só a figura e o chão,
-            que vai de borda a borda do desenho e termina na base dele), então as figuras lado a
-            lado formam um chão contínuo e nenhuma toca a outra: não há sobreposição nem margem
-            negativa. A largura de cada uma é proporcional à do próprio desenho (14 % = 128, 232 e
-            188 unidades), o que dá às pessoas a mesma escala em toda largura.
-            - Em página estreita: colo e passeio na primeira linha, e o tapete centrado embaixo,
-              a um vão de 16 px, o mesmo de entre as figuras.
-            - A partir de 46 rem: as três na mesma linha, centradas no campo. */}
-        <section
-          data-campo="field-1"
-          className="entrada atraso-2 px-6 pb-6 pt-8 @min-[46rem]/pagina:px-12 @min-[46rem]/pagina:pb-8 @min-[46rem]/pagina:pt-10"
-        >
-          <div className="mx-auto flex max-w-[56rem] flex-wrap items-end gap-y-4 @min-[46rem]/pagina:flex-nowrap">
-            <IlustracaoColo className="block h-auto w-[40.4%] flex-none @min-[46rem]/pagina:w-[23.3%]" />
-            <IlustracaoTapete className="order-3 mx-auto block h-auto w-[73.2%] flex-none @min-[46rem]/pagina:order-none @min-[46rem]/pagina:w-[42.2%]" />
-            <IlustracaoPasseio className="block h-auto w-[59.4%] flex-none @min-[46rem]/pagina:w-[34.2%]" />
-          </div>
-        </section>
-
-        {/* Campo de lavanda: a madrugada, com a miniatura nas cores da noite. */}
+        {/* Madrugada, no papel fundo escuro: o tema da noite vale só dentro do cartão (invólucro
+            local), nunca no <html>. O título, o texto, o celular com a Sessão da mamada de Heloísa (com o
+            relógio parado) e a legenda ficam empilhados, alinhados à esquerda. */}
         <section
           id="secao-madrugada"
           aria-labelledby="titulo-madrugada"
-          data-campo="field-2"
-          className="madrugada-grade entrada atraso-2 mt-4 px-6 py-8 @min-[46rem]/pagina:px-12 @min-[46rem]/pagina:py-12"
+          data-campo="night-paper-deep"
+          data-tema-local="madrugada"
+          className="inicio-madrugada inicio-par entrada atraso-2"
         >
-          {/* Quatro filhos da grade, nesta ordem em coluna única: título e texto, cena (a
-              ilustração), celular e legenda logo abaixo dele, com a largura dele. Nada fica atrás
-              do celular. Na grade larga, duas colunas: à esquerda o texto no alto e a ilustração
-              embaixo, na largura da coluna e com o chão na base do celular; à direita o celular e a
-              legenda (ver .madrugada-* no CSS). */}
-          <div className="madrugada-texto">
+          <div className="coluna-texto">
             <h2 id="titulo-madrugada" className="titulo-secao">
               {MADRUGADA.titulo}
             </h2>
             <p className="texto-medida mt-4">{MADRUGADA.texto}</p>
           </div>
-          <div className="madrugada-cena">
-            <IlustracaoMamada larga className="block" />
+          <Aparelho tipo="celular" tela="sessao" tema="madrugada">
+            <TelaReal tela="madrugada" />
+          </Aparelho>
+          <div className="coluna-texto">
+            <p className="texto-medida">{LEGENDA_MADRUGADA}</p>
           </div>
-          <div className="madrugada-celular">
-            <Aparelho
-              tipo="celular"
-              tela="sessao"
-              tema="madrugada"
-              className="absolute left-0 top-0 origin-top-left [scale:var(--celular-escala)]"
-            >
-              <TelaSessao madrugada />
-            </Aparelho>
-          </div>
-          <p className="madrugada-legenda">{LEGENDA_MADRUGADA}</p>
         </section>
 
+        {/* Para que serve, no papel: as três linhas da base e, no fim, a segunda ilustração. Cada
+            linha tem o rótulo e o texto lado a lado (média, e larga abaixo de 80 rem) ou o rótulo em
+            cima do texto (estreita, e a partir de 80 rem, em par com a madrugada). */}
         <section
-          aria-labelledby="titulo-fatos"
-          className="entrada atraso-2 pt-8 @min-[46rem]/pagina:pt-12"
+          id="secao-serve"
+          aria-labelledby="titulo-serve"
+          className="inicio-serve inicio-par entrada atraso-2"
         >
-          <h2 id="titulo-fatos" className="rotulo mb-6">
+          <h2 id="titulo-serve" className="rotulo">
+            {PARA_QUE_SERVE.titulo}
+          </h2>
+          <div className="inicio-serve-linhas">
+            {PARA_QUE_SERVE.linhas.map((linha) => (
+              <div key={linha.rotulo} className="inicio-serve-linha border-t last:border-b">
+                <h3 className="titulo-linha">{linha.rotulo}</h3>
+                <div className="inicio-serve-texto">
+                  <div className="coluna-texto">
+                    <p className="texto-medida">{linha.texto}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <IlustracaoMamada className="inicio-ilustracao" />
+        </section>
+
+        {/* Fatos, no papel: um bloco de linhas, o termo grande à esquerda e a explicação à direita,
+            na coluna de texto, com uma linha fina entre elas. */}
+        <section aria-labelledby="titulo-fatos" className="inicio-fatos inicio-largo entrada atraso-2">
+          <h2 id="titulo-fatos" className="rotulo">
             {FATOS.titulo}
           </h2>
           <ul className="faixa-fatos">
             {FATOS.itens.map((fato) => (
               <li key={fato.valor}>
                 <p className="numero-fato">{fato.valor}</p>
-                <p className="mt-3">{fato.legenda}</p>
+                <div className="coluna-texto">
+                  <p className="texto-medida">{fato.legenda}</p>
+                </div>
               </li>
             ))}
           </ul>
         </section>
 
+        {/* Chamada, no campo de lavanda: o título, o texto e o link, na coluna de texto, e embaixo o
+            celular com o Hoje e a legenda dele. Tudo alinhado à esquerda. */}
         <section
           aria-labelledby="titulo-chamada"
-          className="entrada atraso-2 mt-8 flex flex-col items-center border-t py-12 text-center @min-[46rem]/pagina:mt-12 @min-[46rem]/pagina:py-16"
+          data-campo="field-2"
+          className="inicio-chamada inicio-largo entrada atraso-2"
         >
-          <h2 id="titulo-chamada" className="titulo-secao [font-size:clamp(2.25rem,5vw,3.5rem)]">
-            {CHAMADA.titulo}
-          </h2>
-          <p className="texto-medida mt-4">{CHAMADA.texto}</p>
-          <Link to="/app/hoje" className="botao botao-principal mt-8">
-            {CHAMADA.link}
-          </Link>
+          <div className="coluna-texto">
+            <h2 id="titulo-chamada" className="titulo-secao [font-size:clamp(2.25rem,5vw,3.5rem)]">
+              {CHAMADA.titulo}
+            </h2>
+            <p className="texto-medida mt-4">{CHAMADA.texto}</p>
+            <p className="mt-4">
+              <Link to="/app/hoje" className="botao botao-principal">
+                {CHAMADA.link}
+              </Link>
+            </p>
+          </div>
+          <div className="inicio-lado">
+            <Aparelho tipo="celular" tela="hoje">
+              <TelaReal tela="hoje" />
+            </Aparelho>
+            <div className="coluna-texto">
+              <p className="texto-medida">{LEGENDA_CHAMADA}</p>
+            </div>
+          </div>
         </section>
       </main>
 
-      <footer className="flex flex-wrap items-center justify-between gap-x-6 border-t py-4">
+      <footer className="flex flex-wrap items-center justify-between gap-x-6 border-t py-4 @min-[46rem]/pagina:py-6">
         <p className="text-sm">{RODAPE}</p>
         <Link to="/" className="alvo-toque inline-flex items-center">
           Início

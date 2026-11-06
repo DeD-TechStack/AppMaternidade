@@ -22,6 +22,11 @@
   --cor-botao-campo: var(--color-on-accent);
   --cor-texto-botao-campo: var(--color-accent);
 
+  /* O campo da madrugada no Início (papel fundo escuro) e o texto dele: valem também fora do tema
+     da madrugada, porque o cartão da madrugada do Início usa a noite só dentro dele. */
+  --cor-campo-noite: var(--color-night-paper-deep);
+  --cor-texto-noite: var(--color-night-primary);
+
   --fonte-exibicao: 'Fraunces', Georgia, serif;
   --fonte-texto: 'Instrument Sans', system-ui, sans-serif;
 

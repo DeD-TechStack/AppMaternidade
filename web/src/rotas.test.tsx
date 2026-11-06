@@ -137,13 +137,13 @@ describe('navegação inferior', () => {
     expect(roteador.state.location.pathname).toBe('/app/hoje')
   })
 
-  it('na Sessão o item Hoje é link, mas não é a página atual', async () => {
+  it('na Sessão o item Hoje é link e marca a aba de origem com aria-current="true"', async () => {
     renderizarRota('/app/sessao')
     const nav = await screen.findByRole('navigation', { name: 'Principal' })
 
     const link = within(nav).getByRole('link', { name: 'Hoje' })
     expect(link.getAttribute('href')).toBe('/app/hoje')
-    expect(link.hasAttribute('aria-current')).toBe(false)
+    expect(link.getAttribute('aria-current')).toBe('true')
     expect(within(nav).getAllByRole('button')).toHaveLength(4)
     expect(screen.getAllByText('Em breve')).toHaveLength(1)
   })

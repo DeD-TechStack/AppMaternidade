@@ -89,6 +89,7 @@ describe('contraste e limites dos tokens', () => {
     ['primary', 'field-2'],
     ['night-primary', 'night-field-1'],
     ['night-primary', 'night-field-2'],
+    ['night-primary', 'night-paper-deep'],
   ]
   for (const [texto, fundo] of paresDeTexto) {
     it(`${texto} sobre ${fundo} tem contraste de pelo menos 4,5`, () => {
@@ -105,6 +106,7 @@ describe('contraste e limites dos tokens', () => {
     ['focus', 'field-2'],
     ['night-focus', 'night-field-1'],
     ['night-focus', 'night-field-2'],
+    ['night-focus', 'night-paper-deep'],
   ]
   for (const [foco, fundo] of paresDeFoco) {
     it(`${foco} contra ${fundo} tem contraste de pelo menos 3`, () => {
