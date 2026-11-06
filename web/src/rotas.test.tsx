@@ -20,7 +20,9 @@ describe('rotas', () => {
     await screen.findByRole('heading', { level: 1 })
 
     for (const pilar of ['Rotina', 'Desenvolvimento', 'Cuidado compartilhado', 'Comunidade']) {
-      expect(screen.getByText(pilar).className).toContain('etiqueta')
+      const fora = screen.getAllByText(pilar).filter((e) => !e.closest('[data-aparelho]'))
+      expect(fora).toHaveLength(1)
+      expect(fora[0].className).toContain('etiqueta')
     }
     const link = screen.getByRole('link', { name: 'Ver o protótipo do Hoje' })
     expect(link.getAttribute('href')).toBe('/app/hoje')

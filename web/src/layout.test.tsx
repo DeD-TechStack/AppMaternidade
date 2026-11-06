@@ -890,13 +890,13 @@ describe('D6: cronômetro', () => {
     expect(cronometro.classList.contains('cronometro-mini')).toBe(false)
   })
 
-  it('o da miniatura do Início usa a mesma classe, com o modificador menor', async () => {
+  it('o do aparelho da Sessão no Início usa a mesma classe da tela real, sem o modificador menor', async () => {
     const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
 
     const cronometro = container.querySelector('[inert] [role="timer"]')!
     expect(cronometro.classList.contains('cronometro')).toBe(true)
-    expect(cronometro.classList.contains('cronometro-mini')).toBe(true)
+    expect(cronometro.classList.contains('cronometro-mini')).toBe(false)
   })
 })
 
