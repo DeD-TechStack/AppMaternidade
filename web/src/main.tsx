@@ -4,7 +4,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router'
 import './index.css'
 import { rotas } from './rotas.tsx'
 
-const roteador = createBrowserRouter(rotas)
+const roteador = createBrowserRouter(rotas, { basename: import.meta.env.BASE_URL })
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
