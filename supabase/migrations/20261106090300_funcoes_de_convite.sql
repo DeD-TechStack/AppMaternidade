@@ -20,6 +20,7 @@ declare
   v_codigo text;
   v_id uuid;
   v_expira timestamptz := now() + interval '7 days';
+  v_antes boolean;
 begin
   if criar_convite.familia is null or criar_convite.papel is null then
     raise exception 'parametro obrigatorio';
@@ -36,6 +37,15 @@ begin
   then
     raise exception 'sem permissao' using errcode = '42501';
   end if;
+
+  -- Estado da família antes de escrever, para a conferência final da C3.
+  select exists (
+    select 1 from public.vinculos o
+    where o.familia_id = criar_convite.familia
+      and o.papel = 'responsavel'
+      and o.estado = 'ativo'
+      and (o.valido_ate is null or o.valido_ate > now())
+  ) into v_antes;
 
   if criar_convite.papel = 'responsavel' and criar_convite.vinculo_valido_ate is not null then
     raise exception 'responsavel sem validade';
@@ -55,6 +65,17 @@ begin
     encode(extensions.digest(v_codigo, 'sha256'), 'hex'), v_expira
   )
   returning id into v_id;
+
+  -- Rede de proteção da C3: a família continua com pelo menos um responsável ativo.
+  if v_antes and not exists (
+    select 1 from public.vinculos o
+    where o.familia_id = criar_convite.familia
+      and o.papel = 'responsavel'
+      and o.estado = 'ativo'
+      and (o.valido_ate is null or o.valido_ate > now())
+  ) then
+    raise exception 'ultimo responsavel';
+  end if;
 
   return jsonb_build_object(
     'id', v_id,
@@ -153,6 +174,7 @@ declare
   v_conv record;
   v_vinc record;
   v_etapa text := 'vinculo';
+  v_antes boolean;
 begin
   if aceitar_convite.codigo is null then
     raise exception 'parametro obrigatorio';
@@ -202,6 +224,16 @@ begin
     raise exception 'convite vencido';
   end if;
 
+  -- Estado da família antes de escrever, para a conferência final da C3. Se não havia responsável
+  -- ativo antes (estado de defesa), a regra não se aplica.
+  select exists (
+    select 1 from public.vinculos o
+    where o.familia_id = v_familia
+      and o.papel = 'responsavel'
+      and o.estado = 'ativo'
+      and (o.valido_ate is null or o.valido_ate > now())
+  ) into v_antes;
+
   select v.id, v.estado, v.valido_ate into v_vinc
     from public.vinculos v
    where v.familia_id = v_familia and v.conta_id = v_conta;
@@ -231,6 +263,17 @@ begin
      set estado = 'aceito', aceito_por = v_conta, aceito_em = now()
    where id = v_conv.id;
 
+  -- Rede de proteção da C3: se a família tinha responsável ativo antes, continua com pelo menos um.
+  if v_antes and not exists (
+    select 1 from public.vinculos o
+    where o.familia_id = v_familia
+      and o.papel = 'responsavel'
+      and o.estado = 'ativo'
+      and (o.valido_ate is null or o.valido_ate > now())
+  ) then
+    raise exception 'ultimo responsavel';
+  end if;
+
   return v_familia;
 exception
   when deadlock_detected then
@@ -259,6 +302,7 @@ declare
   v_conta uuid := auth.uid();
   v_familia uuid;
   v_estado public.estado_convite;
+  v_antes boolean;
 begin
   if revogar_convite.convite is null then
     raise exception 'parametro obrigatorio';
@@ -294,7 +338,27 @@ begin
     raise exception 'convite nao pendente';
   end if;
 
+  -- Estado da família antes de escrever, para a conferência final da C3.
+  select exists (
+    select 1 from public.vinculos o
+    where o.familia_id = v_familia
+      and o.papel = 'responsavel'
+      and o.estado = 'ativo'
+      and (o.valido_ate is null or o.valido_ate > now())
+  ) into v_antes;
+
   update public.convites set estado = 'revogado' where id = revogar_convite.convite;
+
+  -- Rede de proteção da C3: a família continua com pelo menos um responsável ativo.
+  if v_antes and not exists (
+    select 1 from public.vinculos o
+    where o.familia_id = v_familia
+      and o.papel = 'responsavel'
+      and o.estado = 'ativo'
+      and (o.valido_ate is null or o.valido_ate > now())
+  ) then
+    raise exception 'ultimo responsavel';
+  end if;
 exception
   when deadlock_detected then
     raise exception 'tente de novo';
