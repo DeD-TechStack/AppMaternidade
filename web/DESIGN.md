@@ -174,7 +174,7 @@ components:
 
 O AppMaternidade tem cara de caderno de casa, não de painel de software: papel quente, tinta quase preta e uma única cor quente, o urucum, usada em campos grandes e em poucos pontos de ação (ESPEC §1). A estrutura vem de linhas finas na cor da tinta, com margens pequenas e campos de cor largos, no lugar de sombras e cartões flutuantes (ESPEC §2). A página pública fala em tom editorial, com uma serifa de exibição pesada para a promessa e uma sem serifa limpa para o resto (ESPEC §3). A área logada é feita para o colo e para a madrugada: números grandes e tabulares, ações na metade de baixo da tela e um tema escuro de pouco brilho com o mesmo urucum, menos saturado (ESPEC §6 e §8). O movimento é curto e some quando a pessoa pede menos movimento (ESPEC §7).
 
-Desde a MAT-44 o Início é montado em campos de cor de ponta a ponta, alternados com faixas de papel. Os campos são o urucum e dois tons terrosos de pouca saturação, o barro e a lavanda cinza. Sobre eles ficam aparelhos desenhados em CSS, com as telas de Hoje e Sessão em miniatura, e ilustrações de traço de tinta com adultos e bebês em cenas de cuidado. A profundidade vem da sobreposição e da escala dos aparelhos, nunca de sombra.
+Desde a MAT-44c o Início é uma grade de cartões: campos de cor e faixas de papel, em uma coluna no celular e em duas colunas no computador, com o mesmo respiro em todos. Os campos são o urucum, o barro, a lavanda cinza e, na madrugada, o papel fundo escuro. Sobre eles ficam aparelhos desenhados em CSS com as telas reais de Hoje e Sessão (os mesmos componentes da rota, com dados fixos), e no máximo duas ilustrações de traço de tinta fora dos aparelhos. A profundidade vem do campo de cor e do contorno do aparelho, nunca de sombra.
 
 As superfícies são três. O Início é uma página de decidir e aprender, a única com abertura grande. O Hoje é uma superfície de operar: o que importa é registrar rápido e ver o que está em andamento. A Sessão é de inspecionar um único objeto, o cronômetro.
 
@@ -224,25 +224,53 @@ Escala: corpo de 17 px (`body`, 1,0625 rem); títulos de seção em 36 px (`head
 - Campos de cor e blocos de mídia vão quase de ponta a ponta. O texto corrido fica limitado a cerca de 65 caracteres por linha (`measure`).
 - Linhas de 1 px na tinta separam seções (horizontais) e colunas (verticais). Elas são a estrutura principal.
 - No bloco de duas colunas, o rótulo fica à esquerda em 3 das 12 colunas e o texto à direita; no celular, o rótulo vai acima do texto.
-- Na área logada, a barra de botões rápidos fica fixa logo acima da navegação inferior, ao alcance do polegar.
-- Ritmo vertical pela escala de `spacing`: 16 px dentro de um bloco, 40 a 64 px entre blocos, 96 px entre seções da página pública no desktop.
+- **Área logada, dois layouts pela largura do contêiner `app` (em rem, nunca pela janela):**
+  - **estreito (menos de 60 rem):** a coluna única de 40 rem, centrada, com a barra de botões rápidos fixa logo acima da navegação inferior, ao alcance do polegar (regra R2: a barra fica fixa com a janela de 40 rem de altura ou mais);
+  - **largo (60 rem ou mais):** a moldura ocupa a largura menos a margem do layout, com a navegação numa faixa lateral à esquerda (os mesmos 5 itens, um por linha, "Em breve" como título do grupo, sem `sticky` nem `fixed`). O Hoje fica em duas colunas: o cartão "Em andamento" e o registro rápido à esquerda, "Para você saber" e "Últimos" à direita. A Sessão põe o cronômetro e as ações à esquerda e a ilustração do tipo da sessão num campo à direita. A troca entre os dois é só de CSS: a árvore DOM e a ordem do Tab são as mesmas.
+- **Início, três faixas pela largura do contêiner `pagina`:**
+  - **estreita (menos de 46 rem):** uma coluna de cartões; padding lateral de 16 px (`md`) e gap de 24 px (`lg`);
+  - **média (46 a menos de 60 rem):** uma coluna; padding de 24 px (`lg`) e gap de 40 px (`xl`);
+  - **larga (60 rem ou mais):** grade de 2 colunas de mesma largura, cada cartão em 1 ou 2 colunas; padding de 40 px (`xl`) e gap de 64 px (`2xl`).
+  - Em toda faixa o gap é maior que o padding lateral mais 8 px, e todos os cartões têm o mesmo padding. Os cartões são filhos diretos do `<main>`.
+- **Linha de leitura:** todo texto corrido tem `max-width` entre 55ch e 70ch. No computador, as linhas cheias ficam entre 55 e 70 caracteres.
+- Ritmo vertical pela escala de `spacing`: 16 px dentro de um bloco e, entre cartões do Início, o gap da faixa.
 
 ## Composição
 
-Análise abstrata da referência visual da MAT-44 (fatias `desktop_03` a `desktop_23` e `celular_04` a `celular_15`). Só entram padrões, faixas e frações aproximadas; nenhum valor medido, nome ou texto da referência.
+Análise abstrata das referências visuais da MAT-44 e da MAT-44c. Só entram padrões, faixas e frações aproximadas; nenhum valor medido, nome ou texto da referência.
 
 - **Padrões de bloco.**
-  - Campo de aparelhos: um campo de cor largo com vários aparelhos de alturas diferentes, sobrepostos, sem texto dentro do campo (fatias 03, 09 e 17).
-  - Bloco de linhas: rótulo serifado à esquerda e texto à direita, separados por uma linha vertical fina e por linhas horizontais entre as linhas, sobre papel (fatias 04 e 05).
-  - Campo de ilustrações: figuras de traço espalhadas em volta de um centro vazio, sobre campo de cor (fatias 06 e 07).
-  - Campo de janela: um único aparelho grande, notebook ou navegador, ocupando a maior parte do campo (fatias 08, 10, 11 e 14).
-  - Dupla de campos: dois campos lado a lado, cada um com um elemento solto e uma figura pequena (fatia 18).
-  - Fecho: título serifado centrado e respiro grande antes do rodapé (fatias 22 e 23).
-- **Proporções, em faixas.** O campo de cor ocupa quase toda a largura da área de conteúdo, com uma margem lateral igual à do layout. A altura de cada campo fica entre 1/2 e 1 vez a altura da janela no desktop. Entre um campo e o seguinte há uma fresta de papel estreita, bem menor que a margem lateral de leitura. No bloco de linhas, o rótulo fica entre 1/5 e 1/3 da largura e o texto no resto.
+  - Cartão de aparelhos: um campo de cor com um grupo de aparelhos inteiros, lado a lado, sem um cobrir o outro, e um texto curto que diz o que eles mostram.
+  - Bloco de linhas: rótulo serifado à esquerda e texto à direita, separados por uma linha vertical fina e por linhas horizontais entre as linhas, sobre papel.
+  - Cartão de janela: um único aparelho grande, notebook, ocupando a maior parte do cartão.
+  - Dupla de cartões: dois cartões lado a lado na grade larga, cada um com um aparelho ou um texto.
+  - Fecho: título serifado e a chamada para o protótipo, com respiro antes do rodapé.
+- **Proporções, em faixas.** Cada campo de cor ocupa a área inteira do seu cartão na grade. Entre um cartão e o seguinte fica o gap da faixa, maior que o padding lateral do cartão. No bloco de linhas, o rótulo fica entre 1/5 e 1/3 da largura e o texto no resto.
 - **Escala tipográfica relativa.** O rótulo do bloco de linhas e a citação ficam entre 1,5 e 2,5 vezes o corpo; o título de fecho entre 2,5 e 3,5 vezes. O corpo é a voz de leitura e o resto da página quase não tem texto: o campo fala pela imagem.
-- **Aparelhos.** Aparecem em grupos de 2 a 5, em escalas diferentes, uns na frente dos outros, às vezes cortados pela borda do campo. A profundidade vem da sobreposição e da diferença de tamanho. No nosso produto as molduras são desenhadas em CSS, sem sombra, e por dentro mostram as nossas miniaturas de Hoje e Sessão.
-- **Ilustrações.** Traço preto contínuo de espessura única, preenchimento chapado de poucas cores, figuras inteiras de pessoas em gestos do dia a dia, em escala pequena em relação ao campo. As nossas são próprias: adultos e bebês em cenas de cuidado, traço de tinta e preenchimento com as cores dos tokens.
-- **Ritmo de seções.** Papel e campo se alternam, com no máximo dois campos seguidos. O texto longo nunca fica em cima do campo: fica no papel, entre campos. O topo da página é um campo de aparelhos, sem título grande acima dele.
+- **Aparelhos.** Mostram a tela real (os mesmos componentes da rota, com estado fixo e relógio parado), sem o aviso de demonstração, inertes e escondidos do leitor de tela, com um parágrafo visível ao lado dizendo o que mostram. Em cada largura, todos os celulares visíveis têm a mesma escala, e o notebook a dele; nenhum texto dentro de um aparelho fica abaixo de 11 px efetivos. Na faixa larga eles aparecem em grupos de 1 a 3 (o notebook só nela). Na faixa média, só celulares. Na faixa estreita, um celular por grupo: os outros aparelhos do grupo ficam no DOM e somem por CSS. Nenhum aparelho cobre outro, e nenhum é cortado pela borda do cartão.
+- **Ilustrações.** Traço preto contínuo de espessura única, preenchimento chapado de poucas cores, figuras inteiras de pessoas em gestos do dia a dia. No Início ficam no máximo duas fora dos aparelhos, todas na mesma escala, com a base na borda de baixo da área de conteúdo do cartão e centradas no cartão ou numa linha da grade.
+- **Ritmo de seções.** Papel e campo se alternam pela ordem do DOM, com no máximo dois campos seguidos. O texto longo nunca fica em cima do campo: fica no papel. O Início tem pelo menos 3 cartões de campo de cor, e pelo menos metade dos cartões mostra um aparelho.
+
+### Grade de computador e mockups (VIS4-00)
+
+Leitura abstrata do `COMPOSICAO.md` e do `DESIGN_SISTEMA.md` da pesquisa da MAT-44c (sala limpa). Só faixas e frações; nenhum valor exato, nome ou texto da referência.
+
+- **Grade.** No computador, as peças ficam numa grade de 2 colunas de mesma largura: uma peça larga ocupa as duas, e as peças de proporção parecida vão em par. O espaço entre peças é da ordem da margem lateral no computador e diminui mais rápido que ela no celular. A nossa grade guarda o par e a peça larga, mas mantém o gap maior que o padding em toda faixa, porque o achado A4 era o contrário (cartões colados).
+- **Mídia.** Cantos de 8 px, sem sombra e sem borda; o que separa uma peça da outra é a cor do fundo. Os aparelhos aparecem como objetos inteiros sobre campos de cor lisos. Os nossos são molduras em CSS com a tela real dentro.
+- **Leitura.** O texto corrido fica deslocado na grade, não centralizado, numa medida de cerca de 2/3 da largura útil no computador. A nossa medida fica entre 55ch e 70ch.
+- **Escuro como seção.** O escuro aparece como tratamento de uma seção, não como tema da página. O cartão da madrugada usa o papel fundo escuro (`night-paper-deep`) com o texto e o foco da noite, só dentro dele.
+
+Três direções foram montadas como telas estáticas (`.oc/direcoes/A`, `B` e `C` do cartão `t_f67d8962`) e pontuadas pelo award-bar em 6 capturas cada: Início em 390 e 1440; Hoje e Sessão com o Sono inicial em 1024 e 1440. Total da captura = 0,4 × UI + 0,3 × UX + 0,3 × inovação; nota da direção = média das 6.
+
+| Direção | Início 390 | Início 1440 | Hoje 1024 | Hoje 1440 | Sessão 1024 | Sessão 1440 | Média |
+|---|---|---|---|---|---|---|---|
+| A, Faixas: notebook do Hoje em largura total; Sessão e madrugada em par; fatos e chamada em par; navegação lateral de 15 rem; ilustração da Sessão num campo de papel fundo | 7,00 | 7,56 | 7,42 | 7,56 | 7,34 | 7,48 | 7,39 |
+| B, Abertura em par: promessa ao lado da Sessão; notebook centrado sob o título; madrugada deitada; navegação de 12 rem; cronômetro em largura total | 6,86 | 7,48 | 7,14 | 7,28 | 7,06 | 7,14 | 7,16 |
+| C, Mosaico deitado: texto e aparelho lado a lado em cada cartão largo; madrugada alta em par com um cartão de texto; fatos em 4 colunas; navegação lateral de 16 rem num campo de papel fundo; ilustração da Sessão num campo de barro à direita | 7,00 | 7,76 | 7,48 | 7,62 | 7,54 | 7,68 | 7,51 |
+
+Vence a C (7,51 contra 7,39 da A). O texto ao lado do aparelho em cada cartão largo lê melhor que o texto em cima, e a madrugada escura em par mostra o modo noturno sem tomar a largura toda. Na área logada, a faixa lateral em papel fundo separa a navegação sem linha extra, e a Sessão com a ilustração num campo à direita deixa o cronômetro e as ações na coluna da esquerda. A B perdeu em UX: a navegação de 12 rem quebra "Desenvolvimento" e a promessa ao lado da Sessão deixa alturas desiguais. A A perdeu em inovação por repetir o padrão de pares sem um ponto focal.
+
+Distribuição escolhida na faixa larga (6 cartões, 3 com aparelho): promessa com a única ilustração fora dos aparelhos (2 colunas); telas, com o notebook do Hoje e o celular da Sessão (2); madrugada (1) e para que serve (1) em par; fatos (2); chamada com o celular do Hoje (2).
 
 ### Direção escolhida (VIS2-00)
 
@@ -256,9 +284,11 @@ Três direções de composição foram montadas como telas estáticas para Iníc
 
 Vence a A, pela maior nota. O grupo de aparelhos sobrepostos mostra o produto logo na abertura; a legenda ao lado do campo e o bloco de linhas no papel mantêm a leitura clara nas duas larguras. A B perdeu em UX (campos vazios e rolagem horizontal em 390) e a C pesou com dois campos encostados. No Hoje e na Sessão a A põe o cartão "Em andamento" e o cronômetro num campo de cor de borda a borda no celular.
 
+Esta tabela fica como histórico da MAT-44. A grade do Início e os aparelhos foram refeitos na MAT-44c (subseção "Grade de computador e mockups (VIS4-00)", acima): os aparelhos deixaram de se sobrepor e de mudar de escala, e as miniaturas deram lugar às telas reais.
+
 ## Elevation & Depth
 
-Plano. Profundidade vem de linha, cor, espaço, sobreposição e escala, não de sombra. Nos campos do Início os aparelhos se sobrepõem e mudam de tamanho para dar a sensação de primeiro e segundo plano. Nenhum `box-shadow` com desfoque acima de 4 px, nenhum `backdrop-filter` e nenhum `filter: blur`. A barra fixa de baixo se separa do conteúdo por uma linha de tinta no topo e pelo fundo de papel opaco.
+Plano. Profundidade vem de linha, cor e espaço, não de sombra. No Início, o aparelho se destaca do campo de cor pelo contorno de tinta da moldura; nenhum aparelho cobre outro. Nenhum `box-shadow` com desfoque acima de 4 px, nenhum `backdrop-filter` e nenhum `filter: blur`. A barra fixa de baixo se separa do conteúdo por uma linha de tinta no topo e pelo fundo de papel opaco.
 
 ## Shapes
 
@@ -279,8 +309,9 @@ Plano. Profundidade vem de linha, cor, espaço, sobreposição e escala, não de
 - **`quick-action`:** botão rápido em papel fundo, 48 px de altura, 56 px na madrugada.
 - **Confirmação:** linha de tinta no topo, texto da confirmação, "Desfazer" e "Fechar". Não some sozinha.
 - **Foco:** contorno de 2 px na cor `focus`, com afastamento de 2 px, em todo elemento focável.
-- **Campo de cor (`field-panel-*`):** seção de ponta a ponta da área de conteúdo, canto de 8 px, fundo urucum, barro ou lavanda, com `data-campo` no elemento. Texto sobre o barro e a lavanda é sempre a tinta; sobre o urucum, o `on-accent`.
-- **Aparelho:** moldura de celular ou notebook em CSS, com as miniaturas de Hoje e Sessão dentro, inerte e escondida do leitor de tela, com um parágrafo visível ao lado dizendo o que ela mostra.
+- **Campo de cor (`field-panel-*`):** cartão do Início que ocupa a área inteira da sua célula na grade, canto de 8 px, fundo urucum, barro, lavanda ou, na madrugada, papel fundo escuro (`night-paper-deep`, com os tokens da noite só dentro dele), com `data-campo` no elemento. Texto sobre o barro e a lavanda é sempre a tinta; sobre o urucum, o `on-accent`.
+- **Aparelho:** moldura de celular ou notebook em CSS, com a tela real de Hoje ou Sessão dentro (os mesmos componentes da rota, estado fixo, relógio parado, sem o aviso de demonstração e sem ids repetidos), inerte e escondida do leitor de tela, com um parágrafo visível ao lado dizendo o que ela mostra.
+- **Cartão do Início:** cada seção filha do `<main>` é um cartão da grade, com o padding lateral da faixa; os campos de cor pintam o cartão inteiro, e os cartões de papel não têm fundo nem borda.
 - **Fato em destaque:** o termo do fato em Fraunces grande, com a explicação logo abaixo, numa faixa de quatro colunas no desktop.
 - Os componentes são próprios, feitos com Tailwind e as variáveis de uso de `tema.css`. Da lista aprovada (shadcn/ui e Magic UI) nenhum item entrou na MAT-44: os que serviriam ao Início trazem sombra, desfoque, contador ou movimento contínuo, que as regras daqui proíbem, e os aparelhos são desenhados à mão. Os ícones da área logada vêm do `lucide-react` 1.69.0, importados um a um, sempre ao lado de um rótulo visível.
 
@@ -297,6 +328,6 @@ Plano. Profundidade vem de linha, cor, espaço, sobreposição e escala, não de
 - Não faça: texto essencial dentro de imagem (ESPEC §9).
 - Não faça: gradiente, vidro fosco, sombra pesada, ícone em todo título ou cartão dentro de cartão (ESPEC §1 e §6).
 - Faça: alternar campo de cor e papel no Início, com no máximo dois campos seguidos e texto longo sempre no papel.
-- Faça: profundidade por sobreposição e escala dos aparelhos, nunca por sombra.
+- Faça: aparelhos inteiros, na mesma escala por tipo em cada largura, sobre campos de cor; profundidade nunca por sombra.
 - Não faça: ícone na página pública. Na área logada, ícone só ao lado de um rótulo de texto visível.
 - Não faça: decalcar ilustração, aparelho ou composição de bloco da referência visual, nem usar a cor dela.
