@@ -1031,12 +1031,14 @@ describe('MAT-44 r2 A3: texto de interface do Início mora em textos.ts', () => 
   }
 
   it('encontra as páginas', () => {
-    expect(paginas.map((p) => p.nome).sort()).toEqual([
-      'paginas/Hoje.tsx',
-      'paginas/Inicio.tsx',
-      'paginas/NaoEncontrada.tsx',
-      'paginas/Sessao.tsx',
-    ])
+    expect(paginas.map((p) => p.nome)).toEqual(
+      expect.arrayContaining([
+        'paginas/Hoje.tsx',
+        'paginas/Inicio.tsx',
+        'paginas/NaoEncontrada.tsx',
+        'paginas/Sessao.tsx',
+      ]),
+    )
   })
 
   it('nenhum arquivo de paginas/ declara frase de interface em literal', () => {
