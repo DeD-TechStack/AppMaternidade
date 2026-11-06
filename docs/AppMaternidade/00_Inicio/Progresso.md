@@ -21,6 +21,9 @@ Horários em America/Sao_Paulo, tirados do relógio da máquina ou de carimbos d
 
 Uma linha por marco, a mais recente no topo. O estado corrente fica em [Retomada do site](Retomada_Site.md), e o detalhe de cada marco está no cartão Kanban citado.
 
+- 06/11/2026: **site no ar (MAT-48a).** O cartão t_f13634a3 teve o candidato 5844fa5 aprovado e foi integrado em 2beddee: 4 commits, range-diff idêntico, check com 469 testes. O workflow Pages rodou com sucesso no run 42246281381.
+  - A ACC-09 passou: https://ded-techstack.github.io/AppMaternidade/ responde 200, e /app/hoje e /app/sessao abrem pelo 404.html com o app (h1 Hoje e Sono de Lia), nos dois casos com o aviso "Demonstração sem banco".
+  - Nenhuma ação avisou de Node depreciado; o único aviso foi o `punycode` do próprio Node.
 - 06/11/2026: **retomada e MAT-44 integrada.**
   - A MAT-44 (t_10f8dad7, candidato 3a8789d, aprovado na revisão 3) entrou na main em 80d6c4f, com 6 commits idênticos e o check de 451 testes passando.
   - O G6 não foi cumprido. O leitor cego do líder deu de 5,78 a 7,12, contra 8,03 a 8,17 do revisor. Integrei mesmo assim, por decisão do líder, e os 5 achados viram a correção MAT-44b, que roda depois da MAT-48a.

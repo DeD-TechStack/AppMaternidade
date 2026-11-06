@@ -10,6 +10,8 @@ fontes_principais: board Kanban appmaternidade; itsaplan MAT-27 a MAT-43; git ma
 
 Esta é a nota de partida da próxima sessão de trabalho no site. Ela registra o estado da sessão de 03/11/2026. Antes de agir, confira o board `appmaternidade`, o itsaplan (MAT-27 e as tarefas filhas) e o `git log` da main: o estado verdadeiro está lá, não nesta nota.
 
+**Site publicado (06/11/2026):** https://ded-techstack.github.io/AppMaternidade/ (MAT-48a, main 2beddee). Ele mostra Início, Hoje e Sessão com o aviso "Demonstração sem banco". As variáveis do banco entram no build com a MAT-37.
+
 ## PAUSA para a janela v0.23.0 (decisão de Daniel, 05/11/2026 ~23h30; fechada em 06/11/2026 ~00h20)
 
 Hoje no board `appmaternidade` nenhum cartão está rodando, pronto ou em revisão, e não há OpenCode ativo. A main está em `881275d`, sincronizada com origin/main.
