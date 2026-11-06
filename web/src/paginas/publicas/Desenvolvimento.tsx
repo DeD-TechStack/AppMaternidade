@@ -39,7 +39,7 @@ export function Desenvolvimento() {
         <Paragrafos textos={conteudo.antes} />
         <p className="texto-medida">
           {conteudo.comSelo.antes}
-          <span className="etiqueta rotulo">{conteudo.comSelo.selo}</span>
+          <span className="etiqueta rotulo etiqueta-em-linha">{conteudo.comSelo.selo}</span>
           {conteudo.comSelo.depois}
         </p>
         <Paragrafos textos={conteudo.depois} />

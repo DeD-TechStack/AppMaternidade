@@ -1069,9 +1069,21 @@
   }
 
   .palco .numero-grande {
-    font-size: 2.5rem;
+    font-size: 2.15rem;
     white-space: nowrap;
     overflow-wrap: normal;
+  }
+
+  /* O selo (.etiqueta) dentro de um parágrafo é parte da frase: em linha, e não um bloco que parte a
+     frase ao meio. Quando quebra em duas linhas, o fundo e o respiro se repetem em cada uma
+     (box-decoration-break: clone). O respiro vertical é pequeno para o selo não passar da entrelinha
+     e cobrir as linhas vizinhas. O ponto que vem depois do selo não tem espaço antes: a quebra de linha
+     não cai entre os dois. Vale depois de .etiqueta, que continua inline-block nas listas (pilares). */
+  .etiqueta-em-linha {
+    display: inline;
+    padding-block: 0.125rem;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
   }
 
   /* Grupo de dois aparelhos: o celular na frente é uma proporção do notebook, maior em página estreita

@@ -352,6 +352,109 @@ describe('R2-2: "Na passagem de turno" é um grupo de dois aparelhos', () => {
   })
 })
 
+// ---------------------------------------------------------------------------
+// Rodada 3 (capturas de 390 px)
+
+describe('R3-1: o selo é parte da frase e fica em linha, com o ponto colado', () => {
+  const PAGINAS = ['/', '/rota-inexistente', ...NOVAS]
+  const regra = (seletor: string) => new RegExp(`${seletor.replace(/[.]/g, '\\.')}\\s*\\{([^}]*)\\}`).exec(estiloGlobal)?.[1] ?? ''
+
+  it('em toda página, uma .etiqueta dentro de um parágrafo é .etiqueta-em-linha; a lista de pilares do Início não muda', async () => {
+    let selos = 0
+    for (const caminho of PAGINAS) {
+      const container = await abrir(caminho)
+      for (const etiqueta of container.querySelectorAll('.etiqueta')) {
+        if (etiqueta.closest('p') === null) {
+          // Pilares do Início: itens de lista, blocos que quebram como sempre.
+          expect(etiqueta.classList.contains('etiqueta-em-linha'), caminho).toBe(false)
+          continue
+        }
+        selos++
+        expect(etiqueta.classList.contains('etiqueta-em-linha'), `${caminho}: ${etiqueta.textContent}`).toBe(true)
+        // O ponto vem logo depois, no mesmo parágrafo, sem espaço entre o selo e ele.
+        const depois = etiqueta.nextSibling
+        expect(depois?.nodeType, caminho).toBe(Node.TEXT_NODE)
+        expect(depois!.textContent!.startsWith('.'), caminho).toBe(true)
+      }
+    }
+    expect(selos).toBeGreaterThanOrEqual(1)
+  })
+
+  it('.etiqueta-em-linha é display: inline, repete o fundo e o respiro em cada linha e não aumenta a entrelinha', () => {
+    const corpo = regra('.etiqueta-em-linha')
+
+    expect(corpo).toMatch(/display:\s*inline\s*;/)
+    expect(corpo).toMatch(/box-decoration-break:\s*clone/)
+    expect(corpo).toMatch(/-webkit-box-decoration-break:\s*clone/)
+    // O respiro vertical do selo não passa da entrelinha (1,55 × 17 px = 26 px; o selo tem 18 px de linha).
+    const vertical = /padding-block:\s*([\d.]+)rem/.exec(corpo)
+    expect(vertical).not.toBeNull()
+    expect(parseFloat(vertical![1]) * 16 * 2 + 14 * 1.3).toBeLessThanOrEqual(26)
+  })
+})
+
+describe('R3-2: rodapé, cada link lido como um item só', () => {
+  for (const caminho of ['/', '/sobre', '/rota-inexistente']) {
+    it(`${caminho}: espaço vertical entre os itens, entrelinha justa no link, sem texto menor nem rolagem horizontal`, async () => {
+      const rodape = (await abrir(caminho)).querySelector('footer')!
+
+      const listas = [...rodape.querySelectorAll('nav ul')]
+      expect(listas).toHaveLength(2)
+      for (const lista of listas) {
+        // Além dos 44 px do alvo: 8 px entre um item e o seguinte.
+        expect(lista.className).toMatch(/(^|\s)gap-y-2(\s|$)/)
+        expect(lista.className).toContain('flex-col')
+        for (const link of lista.querySelectorAll('a')) {
+          expect(link.className, link.textContent!).toMatch(/(^|\s)leading-(snug|tight)(\s|$)/)
+          expect(link.classList.contains('alvo-toque')).toBe(true)
+          // O texto não encolhe (o tamanho é o do corpo) e não é forçado a uma linha só.
+          expect(link.className).not.toMatch(/text-(xs|sm|\[)|whitespace-nowrap|truncate/)
+        }
+      }
+      // As colunas podem encolher abaixo do conteúdo (sem rolagem horizontal da página).
+      for (const nav of rodape.querySelectorAll('nav')) expect(nav.className).toContain('min-w-0')
+    })
+  }
+})
+
+describe('R3-3: as telas dos celulares de Como funciona são alinhadas do mesmo jeito', () => {
+  // Alturas naturais (sem zoom), em rem, somando os paddings e as linhas dos componentes que não
+  // mudam: CartaoEmAndamento ≈ 3 (padding) + 1,2 (rótulo) + 2,7 (sessão) + 2,2 (valor de 34 px, com
+  // margem) + 1,7 (por ...) + 4 (botões) e SessaoInfo ≈ 3 + 1,2 + 0,5 + 3,5 + 1 + 5,8.
+  const ALTURA_NATURAL = { cartao: 15.2, sessao: 15 }
+  const ALTURA_UTIL_DA_TELA = 32
+
+  it('as duas telas começam no alto, abaixo da margem da barra de status (o respiro de cima da tela)', async () => {
+    const container = await abrir('/como-funciona')
+
+    const celulares = [...container.querySelectorAll<HTMLElement>('[data-aparelho="celular"]')]
+    expect(celulares).toHaveLength(2)
+    const classes = celulares.map((c) => c.querySelector<HTMLElement>('[class*="zoom:"]')!.parentElement!.className)
+    for (const classe of classes) {
+      expect(classe).toContain('items-start')
+      expect(classe).not.toContain('items-center')
+    }
+    expect(classes[0]).toBe(classes[1])
+    // Sem margem extra acima do componente: a margem de cima é a da própria moldura (2,75 rem de
+    // respiro no alto da tela, onde ficam a câmera e a barra de status), que o Aparelho já traz.
+    for (const classe of classes) expect(classe).not.toMatch(/(^|\s)(pt|mt|my)-/)
+  })
+
+  it('o vazio embaixo é de no máximo cerca de um terço da tela, nos dois celulares', async () => {
+    for (const caminho of ['/como-funciona', '/cuidado-compartilhado']) {
+      const container = await abrir(caminho)
+      for (const celular of container.querySelectorAll('[data-aparelho="celular"]')) {
+        const zoom = parseFloat(/\[zoom:([\d.]+)\]/.exec(celular.querySelector('[class*="zoom:"]')!.className)![1])
+        const natural = celular.querySelector('.campo-sessao') ? ALTURA_NATURAL.sessao : ALTURA_NATURAL.cartao
+        const ocupado = (natural * zoom) / ALTURA_UTIL_DA_TELA
+        expect(1 - ocupado, `${caminho}: ${celular.getAttribute('data-tela')} (${(ocupado * 100).toFixed(0)}% ocupado)`).toBeLessThanOrEqual(1 / 3)
+        // E não passa da tela.
+        expect(ocupado).toBeLessThanOrEqual(0.9)
+      }
+    }
+  })
+})
+
 describe('R2-3: Sobre, a frase do protótipo é nota da tabela "O que ele faz"', () => {
   it('fica na coluna das frases, logo abaixo da última linha, menor que elas e na cor do texto', async () => {
     const secao = secaoDe(await abrir('/sobre'), 'O que ele faz')

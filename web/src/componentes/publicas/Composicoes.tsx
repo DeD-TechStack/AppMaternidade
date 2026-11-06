@@ -23,18 +23,33 @@ import { Aparelho } from '../Aparelho.tsx'
  * sobrar um vazio embaixo. `altura` é a altura útil da tela em rem: celular 32 rem (a moldura tem
  * 37,33 rem, menos a borda, o respiro e a faixa da câmera) e notebook 30 rem.
  */
-function NaTela({ ampliacao, altura, children }: { ampliacao: string; altura: string; children: ReactNode }) {
+function NaTela({
+  ampliacao,
+  altura,
+  alinhamento,
+  children,
+}: {
+  ampliacao: string
+  altura: string
+  alinhamento: 'topo' | 'centro'
+  children: ReactNode
+}) {
+  const alinhar = alinhamento === 'topo' ? 'items-start' : 'items-center'
   return (
-    <div className={`flex items-center ${altura}`}>
+    <div className={`flex ${alinhar} ${altura}`}>
       <div className={`w-full ${ampliacao}`}>{children}</div>
     </div>
   )
 }
 
-/** A tela do celular com o cartão "Em andamento" do Hoje: a soneca que ainda não acabou. */
+/**
+ * A tela do celular com o cartão "Em andamento" do Hoje: a soneca que ainda não acabou. Como numa
+ * tela real, o conteúdo começa no alto, abaixo do respiro de 2,75 rem que a moldura já tem no topo
+ * (câmera e barra de status), e o zoom o leva a ocupar mais de dois terços da tela.
+ */
 function TelaDoCelularComCartao() {
   return (
-    <NaTela ampliacao="[zoom:1.25]" altura="h-[32rem]">
+    <NaTela ampliacao="[zoom:1.42]" altura="h-[32rem]" alinhamento="topo">
       <CartaoEmAndamento miniatura sessao={MINIATURAS.hoje.sessao} />
     </NaTela>
   )
@@ -43,7 +58,7 @@ function TelaDoCelularComCartao() {
 /** A tela do notebook com o cartão "Em andamento" do Hoje, em tamanho maior, ocupando a tela. */
 function TelaDoNotebookComCartao() {
   return (
-    <NaTela ampliacao="[zoom:1.6]" altura="h-[30rem]">
+    <NaTela ampliacao="[zoom:1.6]" altura="h-[30rem]" alinhamento="centro">
       <CartaoEmAndamento miniatura sessao={MINIATURAS.hoje.sessao} />
     </NaTela>
   )
@@ -75,7 +90,7 @@ export function CelularDaSessaoDeMadrugada() {
         tema="madrugada"
         className="absolute left-0 top-0 origin-top-left [scale:var(--escala-celular)]"
       >
-        <NaTela ampliacao="[zoom:1.4]" altura="h-[32rem]">
+        <NaTela ampliacao="[zoom:1.45]" altura="h-[32rem]" alinhamento="topo">
           <SessaoInfo
             miniatura
             campo="night-paper-deep"

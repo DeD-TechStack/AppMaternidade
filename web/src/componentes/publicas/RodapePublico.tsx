@@ -15,14 +15,16 @@ interface Item {
 
 function ListaDeLinks({ rotulo, itens }: { rotulo: string; itens: readonly Item[] }) {
   return (
-    <nav aria-label={rotulo}>
-      <ul className="flex flex-col items-start">
+    <nav aria-label={rotulo} className="min-w-0">
+      {/* gap-y-2: 8 px entre um item e o seguinte, além dos 44 px do alvo, para um link de duas linhas
+          não encostar nos vizinhos. */}
+      <ul className="flex flex-col items-start gap-y-2">
         {itens.map((item) => (
           <li key={item.para}>
             <NavLink
               to={item.para}
               end
-              className="alvo-toque inline-flex items-center aria-[current=page]:font-semibold aria-[current=page]:decoration-[var(--cor-destaque)] aria-[current=page]:decoration-[3px] aria-[current=page]:underline-offset-[6px]"
+              className="alvo-toque inline-flex items-center leading-snug aria-[current=page]:font-semibold aria-[current=page]:decoration-[var(--cor-destaque)] aria-[current=page]:decoration-[3px] aria-[current=page]:underline-offset-[6px]"
             >
               {item.rotulo}
             </NavLink>
