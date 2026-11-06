@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(287);
+select plan(317);
 
 -- Família 1: R1 (...01) responsável, C1 (...02) cuidador, O1 (...03) observador.
 -- Família 2: R2 (...11) responsável, C2 (...12) cuidador, O2 (...13) observador.
@@ -460,6 +460,79 @@ set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000002", 
 select lives_ok(
   $$select public.gravar_registro(pg_temp.rid(701), 'bbbbbbbb-0000-4000-8000-000000000003', 'sono', '2026-11-01 10:00+00', 'America/Sao_Paulo', -180)$$,
   'depois de desarquivar, o cuidador volta a gravar no bebê');
+
+reset role;
+
+-- Adendo R-B, 46-M6 (2º caso): isolamento de um OBSERVADOR e de um CUIDADOR da família 2 contra objetos da
+-- família 1 em estados que a bateria cruzada não cobre: sessão encerrada, registro excluído fora do prazo
+-- e nota excluída. Se o registro fosse visível, cada operação daria outro erro ("sessao encerrada", "registro
+-- excluido", "prazo de restauracao encerrado", "nota excluida", "sem permissao") ou passaria calada
+-- (encerrar de novo, excluir de novo); o isolamento exige P0002, nunca 42501, e a linha intacta.
+-- 21 sono encerrado, 22 fralda excluída há 40 dias, nota 21 excluída; todos do C1, no bebê 1 (família 1).
+insert into public.registros (id, familia_id, bebe_id, tipo, inicio, fim, detalhes, fuso, deslocamento_min, criado_por)
+values
+  (pg_temp.rid(21), 'ffffffff-0000-4000-8000-000000000001', 'bbbbbbbb-0000-4000-8000-000000000001', 'sono', '2026-11-01 10:00+00', '2026-11-01 11:00+00', '{}', 'America/Sao_Paulo', -180, 'aaaaaaaa-0000-4000-8000-000000000002'),
+  (pg_temp.rid(22), 'ffffffff-0000-4000-8000-000000000001', 'bbbbbbbb-0000-4000-8000-000000000001', 'fralda', '2026-11-01 10:00+00', null, '{"conteudo": "xixi"}', 'America/Sao_Paulo', -180, 'aaaaaaaa-0000-4000-8000-000000000002');
+insert into public.notas_cuidado (id, familia_id, bebe_id, texto, criado_por) values
+  (pg_temp.nid(21), 'ffffffff-0000-4000-8000-000000000001', 'bbbbbbbb-0000-4000-8000-000000000001', 'Nota 21', 'aaaaaaaa-0000-4000-8000-000000000002');
+select set_config('request.jwt.claims', '{"sub": "aaaaaaaa-0000-4000-8000-000000000002"}', true);
+update public.registros set excluido_em = now() where id = pg_temp.rid(22);
+update public.registros set excluido_em = now() - interval '40 days' where id = pg_temp.rid(22);
+update public.notas_cuidado set excluida_em = now() where id = pg_temp.nid(21);
+update public.registros set atualizado_em = '2026-11-01 12:00+00' where id in (pg_temp.rid(21), pg_temp.rid(22));
+update public.notas_cuidado set atualizado_em = '2026-11-01 12:00+00' where id = pg_temp.nid(21);
+select pg_temp.guarda();
+
+create function pg_temp.bateria_outra_familia_estados(rotulo text) returns setof text language plpgsql as $$
+begin
+  return next is(
+    (select count(*)::int from public.registros where familia_id = 'ffffffff-0000-4000-8000-000000000001')
+      + (select count(*)::int from public.notas_cuidado where familia_id = 'ffffffff-0000-4000-8000-000000000001')
+      + (select count(*)::int from public.registro_alteracoes where familia_id = 'ffffffff-0000-4000-8000-000000000001'),
+    0, rotulo || ': não lê registros, notas nem histórico da família 1');
+
+  return next throws_ok(
+    format($q$select public.editar_registro(%L, '2026-11-01 10:00+00', null, '{}', 'x', 'America/Sao_Paulo', -180)$q$, pg_temp.rid(21)),
+    'P0002', 'registro inexistente', rotulo || ': editar sessão encerrada de outra família responde registro inexistente, não "sessao encerrada"');
+  return next ok(pg_temp.intacto_id(pg_temp.rid(21)), rotulo || ': a sessão encerrada seguiu intacta (edição)');
+
+  return next throws_ok(
+    format($q$select public.encerrar_sessao(%L, '2026-11-01 12:00+00')$q$, pg_temp.rid(21)),
+    'P0002', 'registro inexistente', rotulo || ': encerrar de novo sessão de outra família responde registro inexistente, não o fim do primeiro');
+  return next ok(pg_temp.intacto_id(pg_temp.rid(21)), rotulo || ': a sessão encerrada seguiu intacta (encerramento)');
+
+  return next throws_ok(
+    format($q$select public.editar_registro(%L, '2026-11-01 10:00+00', null, '{"conteudo": "xixi"}', 'x', 'America/Sao_Paulo', -180)$q$, pg_temp.rid(22)),
+    'P0002', 'registro inexistente', rotulo || ': editar excluído de outra família responde registro inexistente, não "registro excluido"');
+  return next ok(pg_temp.intacto_id(pg_temp.rid(22)), rotulo || ': o excluído seguiu intacto (edição)');
+
+  return next throws_ok(
+    format($q$select public.restaurar_registro(%L)$q$, pg_temp.rid(22)),
+    'P0002', 'registro inexistente', rotulo || ': restaurar excluído de outra família fora do prazo responde registro inexistente, não o prazo');
+  return next ok(pg_temp.intacto_id(pg_temp.rid(22)), rotulo || ': o excluído seguiu excluído e intacto (restauração)');
+
+  return next throws_ok(
+    format($q$select public.excluir_registro(%L)$q$, pg_temp.rid(22)),
+    'P0002', 'registro inexistente', rotulo || ': excluir de novo registro de outra família responde registro inexistente, não silêncio');
+  return next ok(pg_temp.intacto_id(pg_temp.rid(22)), rotulo || ': o excluído seguiu intacto (exclusão)');
+
+  return next throws_ok(
+    format($q$select public.editar_nota(%L, 'Invasão', null)$q$, pg_temp.nid(21)),
+    'P0002', 'nota inexistente', rotulo || ': editar nota excluída de outra família responde nota inexistente, não "nota excluida"');
+  return next ok(pg_temp.intacto_id(pg_temp.nid(21)), rotulo || ': a nota excluída seguiu intacta (edição)');
+
+  return next throws_ok(
+    format($q$select public.excluir_nota(%L)$q$, pg_temp.nid(21)),
+    'P0002', 'nota inexistente', rotulo || ': excluir de novo nota de outra família responde nota inexistente, não silêncio');
+  return next ok(pg_temp.intacto_id(pg_temp.nid(21)), rotulo || ': a nota excluída seguiu intacta (exclusão)');
+end;
+$$;
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000013", "role": "authenticated"}';
+select * from pg_temp.bateria_outra_familia_estados('observador da família 2');
+set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000012", "role": "authenticated"}';
+select * from pg_temp.bateria_outra_familia_estados('cuidador da família 2');
 
 reset role;
 
