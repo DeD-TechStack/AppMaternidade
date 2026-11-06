@@ -12,6 +12,33 @@ Esta é a nota de partida da próxima sessão de trabalho no site. Ela registra 
 
 **Site publicado (06/11/2026):** https://ded-techstack.github.io/AppMaternidade/ (MAT-48a, main 2beddee). Ele mostra Início, Hoje e Sessão com o aviso "Demonstração sem banco". As variáveis do banco entram no build com a MAT-37.
 
+## PAUSA de 06/11/2026 ~19h30 (limite do Claude, decisão de Daniel): ESTADO VIGENTE
+
+**No ar:** main **599b975**, em https://ded-techstack.github.io/AppMaternidade/. É o site da MAT-44 e da MAT-48a, agora com a família de exemplo Heloísa (bebê) e Juliana (mãe), mais Bruno e Carla. A frase do protótipo passou a ser "Um dia de exemplo com Heloísa…". A troca de nomes veio do cartão t_5c545bc3, aprovado pelo revisor (469 testes). Ela só mexe em texto, não muda o layout.
+
+**Galeria:** `C:/OrchestrationLab/projetos/_staging/appmaternidade/PAUSA_20261106/GALERIA.html`.
+
+**Pela metade.** Todos os cartões abaixo estão bloqueados como needs_input `[decisor: Daniel] pausa de 06/11 (limite do Claude)`, com o worktree em `.worktrees/<id>` preservado:
+- **t_f67d8962, 44c-1 (base de layout).** O candidato é o 79b4dfc. O avaliador independente deu notas de 5,58 a 6,22, abaixo de 8, então não integra. As 2 exceções de teste estão no comentário 109, e os 8 defeitos para a nova rodada visual estão no comentário 110.
+- **t_ecf636f5, 44c-2a (componentes de movimento).** O candidato c8aa498 levou BLOCK, com R1 (o estado e o foco se perdem ao alternar movimento reduzido) e R2 (scaleX abaixo do piso de 0,8). A correção estava em curso.
+- **t_915e3632, 37a (login, sessão e Conta).** Parou no ponto em que estava.
+- **t_fa51c4df, 48b (banco na nuvem).** Spec v2 com sha 956e8853. Parou no ponto em que estava.
+
+**Na fila, ligados aos pais e sem rodar:**
+- t_b2a55931, MAT-36 (páginas públicas): a correção cd25061 está aprovada e o cartão espera a 44c-1.
+- t_1757260d, 37g (Google): espera a 37a, e o adendo `MAT-37/ADENDO_GOOGLE.md` tem sha a0fba14e.
+
+**Pendências de Daniel:**
+- configurar o Google OAuth, com o passo a passo no fim do ADENDO_GOOGLE;
+- decidir o MFA do moderador;
+- depois da 48b, criar a própria conta no site e informar o "Id da sua conta".
+
+**Próxima ação exata na retomada:**
+1. Desbloqueie a t_f67d8962. Ela faz a rodada visual dos comentários 109 e 110.
+2. Quando ela voltar, rode o avaliador independente lado a lado com a referência. Ela só integra com nota de 8 ou mais.
+3. Ao mesmo tempo, desbloqueie a t_ecf636f5, a t_915e3632 e a t_fa51c4df. Com 4 ou mais cartões rodando, use no máximo 2 subagentes ao mesmo tempo, porque em 06/11 às 18h51 tudo caiu junto.
+4. Refaça os corpos da 44c-2b e da 37b e as specs v3 das MAT-38, 39, 40 e 41, que ficaram interrompidas. O contexto comum está em `_staging/appmaternidade/CONTEXTO_CARTOES.md`.
+
 ## PAUSA para a janela v0.23.0 (decisão de Daniel, 05/11/2026 ~23h30; fechada em 06/11/2026 ~00h20)
 
 Hoje no board `appmaternidade` nenhum cartão está rodando, pronto ou em revisão, e não há OpenCode ativo. A main está em `881275d`, sincronizada com origin/main.

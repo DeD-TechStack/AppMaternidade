@@ -361,6 +361,16 @@ Ações de recuperação:
   - SHA-256 `C4E13E4F4668D1643E404EA7EBCE888B117569E700DE8BC92C75D12FBFF029B2`.
   - Recibo: `entregas\AppMaternidade_APP-001_Retorno_Hermes_2026-10-22_VERIFICACAO.json`.
 
+### 06/11/2026 ~19h30 — pausa por limite do Claude
+
+- O cartão t_5c545bc3 trocou a família de exemplo para Heloísa e Juliana e foi aprovado. Ele entrou por ff em **599b975**, que já foi enviado e publicado no Pages.
+- Ficaram bloqueados para a pausa, com o worktree preservado:
+  - t_f67d8962, a 44c-1, com notas de 5,58 a 6,22 abaixo de 8;
+  - t_ecf636f5, a 44c-2a;
+  - t_915e3632, a 37a;
+  - t_fa51c4df, a 48b.
+- A galeria está em `_staging/appmaternidade/PAUSA_20261106/GALERIA.html`. O próximo passo está em `Retomada_Site.md`, na seção "PAUSA de 06/11/2026".
+
 ## Bloqueios
 
 | Desde | Item | Situação | Menor intervenção |
