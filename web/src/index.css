@@ -2919,6 +2919,21 @@
     padding: 64px;
   }
 
+  /* O retrato (c8–c10, 413 px) é estreito: a ilustração tem 32 px de folga em vez de 64. */
+  .sb-midia[data-formato='retrato'] > .vp-ilustracao {
+    padding: 32px;
+  }
+
+  /* O parágrafo de apresentação ao lado do retrato: o texto em c2–c7, no topo do retrato, como a frase da
+     citação do Início (a moldura não tem texto, então não entra na conta de colunas lado a lado). */
+  .vp-col-c2-c7 {
+    grid-column: 2 / 8;
+  }
+
+  .vp-com-retrato-texto {
+    align-self: start;
+  }
+
   /* O texto curto do bloco do círculo CTA: centrado, a 24 px do título. */
   .vp-cta-texto {
     max-width: 560px;
@@ -2971,8 +2986,22 @@
      Sem rolagem horizontal. Com números em destaque, a linha é uma grade de duas colunas: o nome do canal
      e o número lado a lado, o resto embaixo. */
   @media (max-width: 767px) {
-    .vp-ilustracao {
-      padding: 24px;
+    .vp-ilustracao,
+    .sb-midia[data-formato='retrato'] > .vp-ilustracao {
+      padding: 16px;
+    }
+
+    /* Em 390 o texto ocupa a coluna inteira e o retrato vem abaixo, a 48 px, em moldura quadrada. */
+    .vp-col-c2-c7 {
+      grid-column: 1 / -1;
+    }
+
+    .vp-com-retrato-midia {
+      margin-top: 48px;
+    }
+
+    .vp-com-retrato .sb-midia[data-formato='retrato'] {
+      aspect-ratio: 1 / 1;
     }
 
     .vp-tabela,

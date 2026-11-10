@@ -16,13 +16,13 @@ export function Desenvolvimento() {
         etiquetas={ETIQUETAS_LATERAIS.desenvolvimento}
       />
       <Apresentacao texto={DESENVOLVIMENTO.apresentacao} margem="sb-mt-fio-bloco" />
-      <MidiaLarga peca={{ cena: 'tapete', fundo: 'lavanda' }} margem="sb-mt-midia-titulo" />
+      <MidiaLarga peca={{ cena: 'tapete', fundo: 'lavanda' }} margem="sb-mt-par-numeros" />
       <LinhaDeLeitura secao={rotina.secao} blocos={[rotina.texto]} margem="sb-mt-midia-linhas" />
       <LinhaDeLeitura secao={semMetas.secao} blocos={semMetas.textos} />
       <LinhaDeLeitura secao={conteudo.secao} blocos={conteudo.textos} />
       <ParDeMidias
-        esquerda={{ cena: 'colo', fundo: 'barro' }}
-        direita={{ cena: 'berco', fundo: 'lavanda' }}
+        esquerda={{ cena: 'colo', fundo: 'lavanda' }}
+        direita={{ cena: 'berco', fundo: 'barro' }}
         margem="sb-mt-midia-linhas"
       />
       <LinhaDeLeitura secao={profissional.secao} blocos={profissional.textos} margem="sb-mt-midia-linhas" />

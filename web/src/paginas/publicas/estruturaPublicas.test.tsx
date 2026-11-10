@@ -74,21 +74,22 @@ const MIDIAS: Record<string, Array<[string, string, string]>> = {
     ['colo', 'lavanda', 'par'],
   ],
   '/cuidado-compartilhado': [
-    ['colo', 'lavanda', 'larga'],
-    ['passeio', 'barro', 'larga'],
+    ['mamada', 'lavanda', 'larga'],
+    ['passeio', 'barro', 'par'],
+    ['colo', 'lavanda', 'par'],
   ],
   '/desenvolvimento': [
     ['tapete', 'lavanda', 'larga'],
-    ['colo', 'barro', 'par'],
-    ['berco', 'lavanda', 'par'],
+    ['colo', 'lavanda', 'par'],
+    ['berco', 'barro', 'par'],
   ],
   '/regras-da-comunidade': [['mamada', 'barro', 'larga']],
   '/privacidade': [['berco', 'lavanda', 'larga']],
   '/termos': [['passeio', 'barro', 'larga']],
-  '/exclusao-de-conta': [['colo', 'lavanda', 'larga']],
+  '/exclusao-de-conta': [['tapete', 'lavanda', 'larga']],
   '/contato': [['mamada', 'barro', 'larga']],
   '/sobre': [
-    ['passeio', 'barro', 'larga'],
+    ['passeio', 'barro', 'retrato'],
     ['berco', 'barro', 'par'],
     ['tapete', 'lavanda', 'par'],
   ],
@@ -319,6 +320,34 @@ describe('mídia das páginas', () => {
         if (bloco.querySelector('nav')) continue
         seguidos += 1
         expect(seguidos, `${caminho}: ${bloco.textContent?.slice(0, 30)}`).toBeLessThanOrEqual(3)
+      }
+    }
+  })
+
+  it('o Sobre abre com o parágrafo de apresentação ao lado do retrato (c8–c10), e a moldura vem depois do texto', async () => {
+    const container = await abrir('/sobre')
+    const [, bloco] = filhosDoMain(container)
+
+    expect(bloco.hasAttribute('data-bloco')).toBe(true)
+    const paragrafo = bloco.querySelector('p[data-apresentacao]')!
+    const retrato = bloco.querySelector('[data-midia][data-formato="retrato"]')!
+    expect(paragrafo).not.toBeNull()
+    expect(retrato.getAttribute('data-fundo')).toBe('barro')
+    expect(paragrafo.compareDocumentPosition(retrato) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
+    expect(retrato.closest('.col-c8-c10')).not.toBeNull()
+    // O retrato é o único bloco de mídia sem formato largo ou par: as outras 3 páginas do G6 não o têm.
+    for (const caminho of ['/como-funciona', '/cuidado-compartilhado', '/desenvolvimento']) {
+      expect((await abrir(caminho)).querySelector('[data-formato="retrato"]'), caminho).toBeNull()
+    }
+  })
+
+  it('o colo só aparece em moldura lavanda: o barro da cabeça do bebê some no fundo barro', async () => {
+    for (const caminho of NOVAS) {
+      const container = await abrir(caminho)
+      for (const moldura of container.querySelectorAll('main [data-midia]')) {
+        if (moldura.querySelector('[data-ilustracao="colo"]')) {
+          expect(moldura.getAttribute('data-fundo'), caminho).toBe('lavanda')
+        }
       }
     }
   })
