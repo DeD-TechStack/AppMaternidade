@@ -2577,6 +2577,76 @@
 }
 
 /* ---------------------------------------------------------------------------------------------
+   44d-3, passo 2 (E-7): o erro de campo não muda a altura da linha abaixo de 768. Só se acrescenta aqui.
+   ------------------------------------------------------------------------------------------ */
+@layer components {
+  /* Abaixo de 768 o campo é um bloco e o erro entrava no fluxo (8 px de margem + 24 de linha), o que
+     crescia a linha em 32 px e empurrava o botão. Agora o erro sai do fluxo e fica ancorado no campo,
+     no vão de 24 px que já existe abaixo dele (o `gap` entre as linhas, ou os 24 px até o botão ou o
+     aceite): a mensagem de 1 linha (17/24) cabe nele. O erro fica rente ao fio do campo dele (a letra
+     tem uns 5 px de ar em cima e embaixo da caixa de 24), e o vão entre a última linha e o botão passa
+     de 24 para 32 px, para o texto urucum não ficar colado ao botão urucum (E-4 e B-4 seguem com folga).
+     Com ajuda na linha (`data-ajuda`), a linha reserva o lugar das duas mensagens (8 + 24 = 32 px de
+     `padding-bottom`), a ajuda fica ancorada nele e, com erro, sai da vista sem sair do DOM (o mesmo
+     `clip` de 768 para cima, e o `aria-describedby` segue lendo as duas). Por isso a linha tem a mesma
+     altura com ou sem erro. Em 768 ou mais nada muda: a mensagem mora dentro da linha de 112 px. */
+  @media (max-width: 767px) {
+    .sb-acesso-campos .sb-campo-erro {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      left: 0;
+      margin: 0;
+      padding: 0;
+    }
+
+    .sb-acesso-campos + .sb-acesso-acao {
+      margin-top: 32px;
+    }
+
+    /* Na linha com ajuda o fundo do campo é a reserva de 32 px: o erro sobe 8 px, para ficar rente ao
+       fio como nas outras linhas. */
+    .sb-acesso-campos .sb-campo[data-ajuda] {
+      padding-bottom: 32px;
+    }
+
+    .sb-acesso-campos .sb-campo[data-ajuda] .sb-campo-erro {
+      top: auto;
+      bottom: 8px;
+    }
+
+    .sb-acesso-campos .sb-campo[data-ajuda] .sb-campo-ajuda {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      margin: 0;
+    }
+
+    .sb-acesso-campos .sb-campo[data-ajuda][data-erro] .sb-campo-ajuda {
+      right: auto;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+    }
+
+    /* Começar: a ajuda já fica fora da vista e fora do fluxo (a frase dela está na linha "O que vem
+       depois"), então não há lugar a reservar: o erro cai no vão abaixo do campo. */
+    .conta-campos-compactos .sb-campo[data-ajuda] {
+      padding-bottom: 0;
+    }
+
+    .conta-campos-compactos .sb-campo[data-ajuda] .sb-campo-erro {
+      top: 100%;
+      bottom: auto;
+    }
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------
    44d-3, passo 3: Começar e Conta. Só se acrescenta aqui.
    ------------------------------------------------------------------------------------------ */
 @layer components {

@@ -464,3 +464,62 @@ describe('o CSS de 44d-3 segue o contrato', () => {
     for (const m of bloco.matchAll(/border(?:-[a-z]+)*\s*:\s*([^;}]+)/g)) expect(m[1], m[0]).toMatch(/^\s*(0|none|1px\b)/)
   })
 })
+
+// E-7 (e C-4, R-4, B-4, que o reaproveitam): "o erro aparece em 17/24 abaixo do campo, sem mudar a
+// altura da linha". Abaixo de 768 o campo é um bloco, e um erro que entra no fluxo (com margem) cresce
+// a linha em 32 px e empurra o botão. A causa é o fluxo: o erro precisa sair dele e morar no vão que já
+// existe abaixo do campo. A altura real é do medidor e da sonda; este teste só impede a volta da causa.
+describe('o erro de campo abaixo de 768 não ocupa fluxo (E-7)', () => {
+  /** As regras (seletor e corpo) de dentro de cada `@media (max-width: 767px)` do bloco, sem comentários. */
+  function regrasAbaixoDe768(texto: string) {
+    const regras: Array<{ seletor: string; corpo: string }> = []
+    for (const abertura of texto.matchAll(/@media\s*\(max-width:\s*767px\)\s*\{/g)) {
+      const comeco = abertura.index + abertura[0].length
+      let profundidade = 1
+      let fim = comeco
+      while (fim < texto.length && profundidade > 0) {
+        if (texto[fim] === '{') profundidade += 1
+        else if (texto[fim] === '}') profundidade -= 1
+        fim += 1
+      }
+      for (const regra of texto.slice(comeco, fim - 1).matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+        regras.push({ seletor: regra[1].trim(), corpo: regra[2] })
+      }
+    }
+    return regras
+  }
+
+  const regras = regrasAbaixoDe768(semComentarios(blocoDe44d3))
+  const doErro = regras.filter((r) => /\.sb-campo-erro$/.test(r.seletor) && r.seletor.includes('.sb-acesso-campos'))
+
+  it('o erro das linhas de acesso é `position: absolute`, ancorado no campo, sem margem', () => {
+    expect(doErro.length).toBeGreaterThan(0)
+    const corpo = doErro.map((r) => r.corpo).join(';')
+    expect(corpo).toMatch(/position:\s*absolute/)
+    for (const m of corpo.matchAll(/margin(?:-[a-z]+)?\s*:\s*([^;}]+)/g)) expect(m[1].trim(), m[0]).toMatch(/^0(px)?(\s+0(px)?)*$/)
+  })
+
+  it('nenhuma regra abaixo de 768 devolve o erro ao fluxo nem dá margem a ele', () => {
+    for (const r of regras.filter((x) => /\.sb-campo-erro$/.test(x.seletor) && x.seletor.includes('.sb-acesso-campos'))) {
+      expect(r.corpo, r.seletor).not.toMatch(/position:\s*(static|relative)/)
+      expect(r.corpo, r.seletor).not.toMatch(/margin(?:-[a-z]+)?\s*:[^;]*[1-9]/)
+    }
+  })
+
+  it('com ajuda, a linha reserva o lugar das mensagens e a ajuda e o erro ficam ancorados nele', () => {
+    const linha = regras.filter((r) => /\.sb-campo\[data-ajuda\]$/.test(r.seletor) && r.seletor.includes('.sb-acesso-campos'))
+    expect(linha.map((r) => r.corpo).join(';')).toMatch(/padding-bottom:\s*32px/)
+    const ajuda = regras.filter((r) => /\.sb-campo\[data-ajuda\]\s+\.sb-campo-ajuda$/.test(r.seletor) && r.seletor.includes('.sb-acesso-campos'))
+    expect(ajuda.map((r) => r.corpo).join(';')).toMatch(/position:\s*absolute/)
+    const erro = regras.filter((r) => /\.sb-campo\[data-ajuda\]\s+\.sb-campo-erro$/.test(r.seletor) && r.seletor.includes('.sb-acesso-campos'))
+    expect(erro.map((r) => r.corpo).join(';')).toMatch(/bottom:\s*8px/)
+  })
+
+  it('com ajuda e erro, a ajuda sai da vista pelo clip (continua no DOM, sem display: none)', () => {
+    const ajuda = regras.filter((r) => /\.sb-campo\[data-ajuda\]\[data-erro\]\s+\.sb-campo-ajuda$/.test(r.seletor) && r.seletor.includes('.sb-acesso-campos'))
+    expect(ajuda.length).toBeGreaterThan(0)
+    const corpo = ajuda.map((r) => r.corpo).join(';')
+    expect(corpo).toMatch(/clip:\s*rect\(0,\s*0,\s*0,\s*0\)/)
+    expect(corpo).not.toMatch(/display:\s*none|visibility:\s*hidden/)
+  })
+})

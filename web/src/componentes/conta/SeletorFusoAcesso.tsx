@@ -36,7 +36,7 @@ export function SeletorFusoAcesso({ rotulo, valor, aoMudar, guardado, ajuda, err
 
   return (
     <div className="grade-10">
-      <div className="sb-campo col-c2-c8" data-erro={erro ? '' : undefined}>
+      <div className="sb-campo col-c2-c8" data-erro={erro ? '' : undefined} data-ajuda={ajuda ? '' : undefined}>
         <label htmlFor={id} className="sb-campo-rotulo t-rotulo">
           {rotulo}
         </label>
