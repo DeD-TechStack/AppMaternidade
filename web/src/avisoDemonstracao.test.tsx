@@ -8,6 +8,7 @@ import { renderizarRota } from './teste/renderizarRota.tsx'
 
 const TEXTO = 'Demonstração sem banco: nada do que você registra aqui é salvo. Ao recarregar a página, tudo volta ao começo.'
 const SELETOR = '[data-aviso="demonstracao"]'
+const ETIQUETA = 'Protótipo com dados de exemplo'
 const URL_FICTICIA = 'https://exemplo.invalid'
 const CHAVE_FICTICIA = 'chave-ficticia'
 
@@ -41,20 +42,114 @@ describe('aviso de demonstração: aparece quando falta uma variável do banco',
     expect(AVISO_DEMONSTRACAO).toBe(TEXTO)
   })
 
+  // E6: o Início e a 404 seguem com o parágrafo; o Hoje e a Sessão têm a etiqueta, nunca o parágrafo.
   for (const [nome, url, chave, aparece] of casos) {
-    it(`${nome}: ${aparece ? 'mostra' : 'não mostra'} o aviso em todas as telas`, async () => {
+    it(`${nome}: ${aparece ? 'mostra' : 'não mostra'} o aviso no Início e na rota inexistente`, async () => {
       definirBanco(url, chave)
 
-      for (const caminho of ['/', '/app/hoje', '/app/sessao', '/qualquer-coisa']) {
+      for (const caminho of ['/', '/qualquer-coisa']) {
         const { container, unmount } = renderizarRota(caminho)
         await screen.findByRole('heading', { level: 1 })
 
         expect(container.querySelectorAll(SELETOR), caminho).toHaveLength(aparece ? 1 : 0)
         expect(screen.queryAllByText(TEXTO), caminho).toHaveLength(aparece ? 1 : 0)
+        expect(screen.queryAllByText(ETIQUETA), caminho).toHaveLength(0)
+        unmount()
+      }
+    })
+
+    it(`${nome}: o Hoje e a Sessão nunca mostram o parágrafo do aviso (E6)`, async () => {
+      definirBanco(url, chave)
+
+      for (const caminho of ['/app/hoje', '/app/sessao']) {
+        const { container, unmount } = renderizarRota(caminho)
+        await screen.findByRole('heading', { level: 1 })
+
+        expect(container.querySelectorAll(SELETOR), caminho).toHaveLength(0)
+        expect(screen.queryAllByText(TEXTO), caminho).toHaveLength(0)
         unmount()
       }
     })
   }
+})
+
+// MAT-44d-2 volta 1, E6 (H-2): o aviso do protótipo na lateral da abertura do Hoje e da Sessão é uma
+// `Etiqueta` com o texto exato, com ou sem as variáveis do banco, e o parágrafo não aparece no `main`.
+describe('aviso de demonstração: a etiqueta da abertura (E6)', () => {
+  const bancos: Array<[string, string, string]> = [
+    ['sem as variáveis do banco', '', ''],
+    ['só com a URL', URL_FICTICIA, ''],
+    ['só com a chave', '', CHAVE_FICTICIA],
+    ['com as duas variáveis do banco', URL_FICTICIA, CHAVE_FICTICIA],
+  ]
+  const telas: Array<[string, string, () => EstadoPrototipo]> = [
+    ['o Hoje', '/app/hoje', claro],
+    ['o Hoje (madrugada)', '/app/hoje', madrugada],
+    ['a Sessão', '/app/sessao', claro],
+    ['a Sessão (madrugada)', '/app/sessao', madrugada],
+    ['a Sessão sem sessão', '/app/sessao', () => ({ ...claro(), sessao: null })],
+  ]
+
+  for (const [tela, caminho, estado] of telas) {
+    for (const [banco, url, chave] of bancos) {
+      it(`${tela}, ${banco}: a lateral da abertura tem a etiqueta "${ETIQUETA}" e não há parágrafo de aviso no main`, () => {
+        definirBanco(url, chave)
+        const { container } = renderizarRota(caminho, { estadoInicial: estado() })
+
+        const etiquetas = [...container.querySelectorAll<HTMLElement>('.sb-abertura .sb-etiqueta')]
+        expect(etiquetas.map((e) => e.textContent)).toEqual([ETIQUETA])
+        const etiqueta = etiquetas[0]
+        expect(etiqueta.tagName).toBe('SPAN')
+        expect(etiqueta.classList.contains('t-ui')).toBe(true)
+        expect(etiqueta.closest('ul.sb-abertura-lateral')).not.toBeNull()
+        expect(etiqueta.closest('main')).not.toBeNull()
+        expect(etiqueta.parentElement!.tagName).toBe('LI')
+        expect(container.querySelector('main [data-aviso="demonstracao"]')).toBeNull()
+        expect(container.querySelector(SELETOR)).toBeNull()
+        expect(container.querySelector('.aviso-demonstracao')).toBeNull()
+        expect(screen.queryByText(TEXTO)).toBeNull()
+      })
+    }
+  }
+
+  it('a etiqueta é uma só no main inteiro do Hoje e da Sessão (nada a duplica fora da abertura)', () => {
+    for (const caminho of ['/app/hoje', '/app/sessao']) {
+      definirBanco('', '')
+      const { container, unmount } = renderizarRota(caminho)
+
+      expect(screen.getAllByText(ETIQUETA), caminho).toHaveLength(1)
+      expect(container.querySelectorAll('main .sb-etiqueta'), caminho).toHaveLength(1)
+      unmount()
+    }
+  })
+
+  it('o Início e a rota inexistente não ganham a etiqueta: seguem com o parágrafo "Demonstração sem banco" (sem banco)', async () => {
+    definirBanco('', '')
+
+    for (const caminho of ['/', '/qualquer-coisa']) {
+      const { container, unmount } = renderizarRota(caminho)
+      await screen.findByRole('heading', { level: 1 })
+
+      const aviso = container.querySelector(SELETOR)!
+      expect(aviso.tagName, caminho).toBe('P')
+      expect(aviso.textContent, caminho).toBe(TEXTO)
+      expect(screen.queryByText(ETIQUETA), caminho).toBeNull()
+      unmount()
+    }
+  })
+
+  it('o Início e a rota inexistente não mostram aviso nem a etiqueta com o banco configurado', async () => {
+    definirBanco(URL_FICTICIA, CHAVE_FICTICIA)
+
+    for (const caminho of ['/', '/qualquer-coisa']) {
+      const { container, unmount } = renderizarRota(caminho)
+      await screen.findByRole('heading', { level: 1 })
+
+      expect(container.querySelector(SELETOR), caminho).toBeNull()
+      expect(screen.queryByText(ETIQUETA), caminho).toBeNull()
+      unmount()
+    }
+  })
 })
 
 describe('aviso de demonstração: variante lateral (coluna da abertura)', () => {
@@ -117,15 +212,26 @@ describe('aviso de demonstração: variante lateral (coluna da abertura)', () =>
 })
 
 describe('aviso de demonstração: texto e marcador são o mesmo elemento', () => {
-  it('em /app/hoje, com as duas variáveis vazias, o data-aviso e o texto exato apontam o mesmo <p>', () => {
+  it('no Início, com as duas variáveis vazias, o data-aviso e o texto exato apontam o mesmo <p>', async () => {
     definirBanco('', '')
-    const { container } = renderizarRota('/app/hoje')
+    const { container } = renderizarRota('/')
+    await screen.findByRole('heading', { level: 1 })
 
     const marcado = container.querySelector(SELETOR)
     expect(marcado).not.toBeNull()
     expect(marcado!.tagName).toBe('P')
     expect(marcado!.textContent).toBe(TEXTO)
     expect(screen.getByText(TEXTO)).toBe(marcado)
+  })
+
+  it('em /app/hoje, com as duas variáveis vazias, a etiqueta é um <span> com o texto exato e não há o <p> (E6)', () => {
+    definirBanco('', '')
+    const { container } = renderizarRota('/app/hoje')
+
+    expect(container.querySelector(SELETOR)).toBeNull()
+    const etiqueta = screen.getByText(ETIQUETA)
+    expect(etiqueta.tagName).toBe('SPAN')
+    expect(etiqueta.classList.contains('sb-etiqueta')).toBe(true)
   })
 })
 
@@ -150,33 +256,31 @@ describe('aviso de demonstração: lugar na tela', () => {
     ['com sessão', claro],
     ['sem sessão', () => ({ ...claro(), sessao: null })],
   ] as const) {
-    it(`na Sessão (${nome}) o aviso é um item da coluna lateral da abertura: sem faixa no topo, sem coluna única e sem recuo próprio`, () => {
+    it(`na Sessão (${nome}) o aviso é a etiqueta, um item da coluna lateral da abertura: sem faixa no topo, sem coluna única e sem parágrafo`, () => {
       definirBanco('', '')
       const { container } = renderizarRota('/app/sessao', { estadoInicial: estado() })
 
-      const aviso = container.querySelector(SELETOR)!
-      expect(container.querySelectorAll(SELETOR)).toHaveLength(1)
-      expect(aviso.closest('ul.sb-abertura-lateral')).not.toBeNull()
-      expect(aviso.parentElement!.tagName).toBe('LI')
-      expect([...aviso.classList]).toEqual(expect.arrayContaining(['t-ui', 't-secundario']))
-      expect(aviso.classList.contains('px-4')).toBe(false)
+      const etiqueta = screen.getByText(ETIQUETA)
+      expect(container.querySelectorAll(SELETOR)).toHaveLength(0)
+      expect(etiqueta.classList.contains('sb-etiqueta')).toBe(true)
+      expect(etiqueta.closest('ul.sb-abertura-lateral')).not.toBeNull()
+      expect(etiqueta.parentElement!.tagName).toBe('LI')
       expect(container.querySelector('.coluna-app')).toBeNull()
       expect(container.querySelector('[aria-label="Aviso do protótipo"]')).toBeNull()
       expect(container.firstElementChild!.firstElementChild!.matches('[data-cabecalho]')).toBe(true)
     })
   }
 
-  it('no Hoje o aviso é um item da coluna lateral da abertura: sem faixa no topo, sem coluna única e sem o aviso duplicado', () => {
+  it('no Hoje o aviso é a etiqueta, um item da coluna lateral da abertura: sem faixa no topo, sem coluna única e sem parágrafo', () => {
     definirBanco('', '')
     const { container } = renderizarRota('/app/hoje')
 
-    const aviso = container.querySelector(SELETOR)!
-    expect(container.querySelectorAll(SELETOR)).toHaveLength(1)
+    const aviso = screen.getByText(ETIQUETA)
+    expect(container.querySelectorAll(SELETOR)).toHaveLength(0)
     expect(aviso.closest('ul.sb-abertura-lateral')).not.toBeNull()
     expect(aviso.closest('main')!.firstElementChild!.contains(aviso)).toBe(true)
     expect(aviso.parentElement!.tagName).toBe('LI')
-    expect([...aviso.classList]).toEqual(expect.arrayContaining(['t-ui', 't-secundario']))
-    expect(aviso.classList.contains('px-4')).toBe(false)
+    expect(aviso.classList.contains('sb-etiqueta')).toBe(true)
     expect(container.querySelector('.coluna-app')).toBeNull()
     expect(container.querySelector('[aria-label="Aviso do protótipo"]')).toBeNull()
     expect(screen.queryByText('Protótipo: dados fictícios, nada é salvo.')).toBeNull()
@@ -185,20 +289,22 @@ describe('aviso de demonstração: lugar na tela', () => {
     expect(container.firstElementChild!.firstElementChild!.matches('[data-cabecalho]')).toBe(true)
   })
 
-  it('no Hoje, com as variáveis do banco, a lateral mostra a etiqueta "Protótipo, dados fictícios" e nenhum aviso', () => {
+  it('no Hoje, com as variáveis do banco, a lateral mostra a etiqueta "Protótipo com dados de exemplo" e nenhum aviso', () => {
     definirBanco(URL_FICTICIA, CHAVE_FICTICIA)
     const { container } = renderizarRota('/app/hoje')
 
     expect(container.querySelectorAll(SELETOR)).toHaveLength(0)
-    const etiqueta = screen.getByText('Protótipo, dados fictícios')
+    const etiqueta = screen.getByText(ETIQUETA)
     expect(etiqueta.classList.contains('sb-etiqueta')).toBe(true)
     expect(etiqueta.closest('ul.sb-abertura-lateral')).not.toBeNull()
+    expect(screen.queryByText('Protótipo, dados fictícios')).toBeNull()
   })
 
-  it('no Hoje, sem as variáveis do banco, a etiqueta não aparece (o aviso a substitui)', () => {
+  it('no Hoje, sem as variáveis do banco, a etiqueta também aparece (E6: o parágrafo saiu)', () => {
     definirBanco('', '')
     renderizarRota('/app/hoje')
 
+    expect(screen.getByText(ETIQUETA)).toBeTruthy()
     expect(screen.queryByText('Protótipo, dados fictícios')).toBeNull()
   })
 
@@ -223,8 +329,10 @@ describe('aviso de demonstração: lugar na tela', () => {
     const regioes = screen.getAllByRole('status')
     expect(regioes).toHaveLength(1)
     expect(regioes[0].querySelector(SELETOR)).toBeNull()
-    expect(regioes[0].contains(container.querySelector(SELETOR))).toBe(false)
+    expect(regioes[0].contains(screen.getByText(ETIQUETA))).toBe(false)
     expect(regioes[0].textContent).not.toContain('Demonstração sem banco')
+    expect(regioes[0].textContent).not.toContain(ETIQUETA)
+    expect(container.querySelector(SELETOR)).toBeNull()
   })
 })
 
@@ -232,7 +340,8 @@ describe('aviso de demonstração: marcação', () => {
   it('é um <p> simples, sem role, sem aria-* e sem classe com variante de janela', async () => {
     definirBanco('', '')
 
-    for (const caminho of ['/', '/app/hoje', '/app/sessao', '/qualquer-coisa']) {
+    // O Hoje e a Sessão não têm mais o parágrafo (E6); a marcação vale para o Início e a rota inexistente.
+    for (const caminho of ['/', '/qualquer-coisa']) {
       const { container, unmount } = renderizarRota(caminho)
       await screen.findByRole('heading', { level: 1 })
 
@@ -276,7 +385,8 @@ describe('aviso de demonstração: acessibilidade (axe-core)', () => {
         definirBanco('', '')
         const { container } = renderizarRota(caminho, { estadoInicial: estado() })
         await screen.findByRole('heading', { level: 1 })
-        expect(container.querySelector(SELETOR)).not.toBeNull()
+        expect(screen.getByText(ETIQUETA)).toBeTruthy()
+        expect(container.querySelector(SELETOR)).toBeNull()
         expect(document.documentElement.hasAttribute('data-tema')).toBe(tema === 'madrugada')
 
         expect(await violacoes(container)).toEqual([])

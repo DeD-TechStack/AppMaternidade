@@ -1,10 +1,14 @@
-import { AvisoDemonstracao } from '../componentes/AvisoDemonstracao.tsx'
 import { Etiqueta } from '../componentes/base/Etiqueta.tsx'
-import { temBanco } from './banco.ts'
 
-// O aviso do protótipo é um item da coluna lateral da abertura (EMENDAS E2): sem as variáveis do
-// banco, o aviso de demonstração (15/21, texto secundário); com elas, a etiqueta "Protótipo, dados
-// fictícios". Devolve o <li> que o `Abertura` espera na lateral. O Hoje e a Sessão usam o mesmo.
+// O aviso do protótipo é um item da coluna lateral da abertura (EMENDAS E2, VOLTA1 E6): sempre a
+// etiqueta "Protótipo com dados de exemplo", com ou sem as variáveis do banco. O parágrafo de aviso
+// (várias linhas) não aparece no `main` do Hoje nem da Sessão; o Início e a rota inexistente seguem com
+// o `AvisoDemonstracao`, e a linha do rodapé da casca continua dizendo que nada ali é dado real.
+// Devolve o <li> que o `Abertura` espera na lateral. O Hoje e a Sessão usam o mesmo.
 export function ItemAvisoDaAbertura() {
-  return <li>{temBanco() ? <Etiqueta>Protótipo, dados fictícios</Etiqueta> : <AvisoDemonstracao lateral />}</li>
+  return (
+    <li>
+      <Etiqueta>Protótipo com dados de exemplo</Etiqueta>
+    </li>
+  )
 }

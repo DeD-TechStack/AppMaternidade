@@ -75,11 +75,12 @@ describe('Sessão: a abertura (E3)', () => {
     expect(container.querySelector('.sb-abertura-subtitulo')!.textContent).toBe('Iniciado às 08:48 por Bruno')
   })
 
-  it('a lateral traz o aviso e o link "Voltar para Hoje" (para /app/hoje, no estilo do sistema)', () => {
+  it('a lateral traz a etiqueta do protótipo e o link "Voltar para Hoje" (para /app/hoje, no estilo do sistema)', () => {
     const { container } = renderizarRota('/app/sessao')
 
     const lateral = container.querySelector<HTMLElement>('.sb-abertura-lateral')!
-    expect(lateral.querySelector('[data-aviso="demonstracao"]')).not.toBeNull()
+    expect(within(lateral).getByText('Protótipo com dados de exemplo').classList.contains('sb-etiqueta')).toBe(true)
+    expect(container.querySelector('main [data-aviso="demonstracao"]')).toBeNull()
     const voltar = within(lateral).getByRole('link', { name: 'Voltar para Hoje' })
     expect(voltar.tagName).toBe('A')
     expect(voltar.getAttribute('href')).toBe('/app/hoje')
@@ -88,14 +89,15 @@ describe('Sessão: a abertura (E3)', () => {
     expect([...lateral.children].every((filho) => filho.tagName === 'LI')).toBe(true)
   })
 
-  it('com as variáveis do banco a lateral mostra a etiqueta "Protótipo, dados fictícios" no lugar do aviso', () => {
+  it('com as variáveis do banco a lateral mostra a mesma etiqueta "Protótipo com dados de exemplo" e nenhum aviso', () => {
     vi.stubEnv('VITE_SUPABASE_URL', 'https://exemplo.invalid')
     vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'chave-ficticia')
     try {
       const { container } = renderizarRota('/app/sessao')
 
       expect(container.querySelector('[data-aviso="demonstracao"]')).toBeNull()
-      expect(screen.getByText('Protótipo, dados fictícios').closest('.sb-abertura-lateral')).not.toBeNull()
+      expect(screen.getByText('Protótipo com dados de exemplo').closest('.sb-abertura-lateral')).not.toBeNull()
+      expect(screen.queryByText('Protótipo, dados fictícios')).toBeNull()
     } finally {
       vi.unstubAllEnvs()
     }
@@ -110,7 +112,8 @@ describe('Sessão: a abertura (E3)', () => {
     expect(aviso.closest('.sb-abertura-lateral')).not.toBeNull()
     expect(aviso.classList.contains('t-ui')).toBe(true)
     expect(aviso.hasAttribute('role')).toBe(false)
-    expect(container.querySelector('[data-aviso="demonstracao"]')).not.toBeNull()
+    expect(within(aviso.closest<HTMLElement>('.sb-abertura-lateral')!).getByText('Protótipo com dados de exemplo')).toBeTruthy()
+    expect(container.querySelector('[data-aviso="demonstracao"]')).toBeNull()
     unmount()
 
     renderizarRota('/app/hoje')
@@ -293,7 +296,7 @@ describe('Sessão: a mídia (E5, bloco 3)', () => {
 })
 
 describe('Sessão: sem sessão (E3)', () => {
-  it('h1 "Nenhuma sessão em andamento", subtítulo curto, aviso e link na lateral, e só a mídia do berço no corpo', () => {
+  it('h1 "Nenhuma sessão em andamento", subtítulo curto, etiqueta e link na lateral, e só a mídia do berço no corpo', () => {
     const { container } = renderizarRota('/app/sessao', { estadoInicial: semSessao() })
 
     const h1 = screen.getByRole('heading', { level: 1 })
@@ -301,7 +304,8 @@ describe('Sessão: sem sessão (E3)', () => {
     expect(h1.getAttribute('tabindex')).toBe('-1')
     expect(container.querySelector('.sb-abertura-subtitulo')!.textContent).toBe('Comece uma sessão pela barra Registrar no Hoje.')
     const lateral = container.querySelector<HTMLElement>('.sb-abertura-lateral')!
-    expect(lateral.querySelector('[data-aviso="demonstracao"]')).not.toBeNull()
+    expect(within(lateral).getByText('Protótipo com dados de exemplo').classList.contains('sb-etiqueta')).toBe(true)
+    expect(container.querySelector('[data-aviso="demonstracao"]')).toBeNull()
     expect(within(lateral).getByRole('link', { name: 'Voltar para Hoje' }).getAttribute('href')).toBe('/app/hoje')
     const filhos = [...principal(container).children] as HTMLElement[]
     expect(filhos).toHaveLength(2)
