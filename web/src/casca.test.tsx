@@ -941,6 +941,12 @@ describe('casca do site (Layout)', () => {
       'Início', 'Sistema', 'Hoje', 'Sessão', 'Entrar', 'Conta',
     ])
     expect(within(rodape as HTMLElement).getByText('Próximas áreas')).toBeTruthy()
+    // Desde a MAT-36 (volta 1, N1) o rodapé tem um 2º nav, a linha "Páginas do site", com outro nome.
+    expect(
+      within(rodape as HTMLElement)
+        .getAllByRole('navigation')
+        .map((nav) => nav.getAttribute('aria-label')),
+    ).toEqual(['Rodapé', 'Páginas do site, no rodapé'])
   })
 
   it('a área logada e a página de amostra usam o cabeçalho logado; a rota inexistente, o público', async () => {

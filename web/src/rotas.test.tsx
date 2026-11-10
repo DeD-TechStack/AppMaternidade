@@ -16,11 +16,13 @@ describe('rotas', () => {
   })
 
   it('o Início traz os quatro pilares e os links "Ver o protótipo" para o Hoje', async () => {
-    renderizarRota('/')
+    const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
 
+    // Só o `main`: o rodapé da casca também tem um link "Cuidado compartilhado" (a linha "Páginas do site").
+    const principal = within(container.querySelector<HTMLElement>('main')!)
     for (const pilar of ['Rotina', 'Desenvolvimento', 'Cuidado compartilhado', 'Comunidade']) {
-      expect(screen.getByText(pilar).className).toContain('etiqueta')
+      expect(principal.getByText(pilar).className).toContain('etiqueta')
     }
     // Um na abertura e o círculo CTA: os dois levam ao Hoje.
     const links = screen.getAllByRole('link', { name: 'Ver o protótipo' })
