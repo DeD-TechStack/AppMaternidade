@@ -21,6 +21,11 @@ Horários em America/Sao_Paulo, tirados do relógio da máquina ou de carimbos d
 
 Uma linha por marco, a mais recente no topo. O estado corrente fica em [Retomada do site](Retomada_Site.md), e o detalhe de cada marco está no cartão Kanban citado.
 
+- 10/11/2026: **44d-4 (Início) integrada em `int/refazer`.** É o cartão t_27b74658.
+  - O revisor aprovou na revisão 3. O candidato 8a7c89d entrou por ff-only, com push.
+  - O Fable deu 7,8/7,5 e depois 8,1/8,0.
+  - Os textos novos (título, subtítulo e citação) esperam a aprovação de Daniel pela galeria.
+  - A 44d-2 e a 44d-3 fazem merge de `int/refazer` antes do próximo HANDOFF.
 - 10/11/2026: **44d-1 integrada em `int/refazer`.**
   - Cartão t_0288c2c3. O revisor aprovou na revisão 3, e o candidato 1774cc3 entrou por ff-only, com push.
   - Notas do Fable por rodada: 7,3 a 7,8, depois 8,0 a 8,2, e por fim 8,2 a 8,4.
