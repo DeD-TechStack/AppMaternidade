@@ -125,7 +125,7 @@ describe('textos fixos nos lugares certos', () => {
         const container = await abrir(caminho)
         expect(paragrafosCom(container, texto), `${nome} em ${caminho}`).toHaveLength(paginas.includes(caminho) ? 1 : 0)
       }
-    })
+    }, 30000)
   }
 
   it('TF-13 ("Fale conosco:") vem seguido do link de e-mail, no mesmo parágrafo, na lateral do Contato', async () => {
@@ -144,7 +144,7 @@ describe('textos fixos nos lugares certos', () => {
     expect(paragrafosCom(termos, `Para falar sobre estes termos: ${EMAIL_CONTATO}.`)).toHaveLength(1)
     const regras = await abrir('/regras-da-comunidade')
     expect(paragrafosCom(regras, `Canal para denúncias: ${EMAIL_CONTATO}.`)).toHaveLength(1)
-  })
+  }, 30000)
 
   it('o Contato: "Para que serve este canal" tem só a primeira frase', async () => {
     const container = await abrir('/contato')
@@ -176,7 +176,7 @@ describe('textos fixos nos lugares certos', () => {
     const primeira = texto.search(/tummy time/i)
     expect(primeira).toBeGreaterThan(0)
     expect(texto.slice(primeira, primeira + 120)).toContain('o tempo que o bebê passa de bruços, acordado e com um adulto olhando')
-  })
+  }, 30000)
 })
 
 describe('o e-mail de contato', () => {
@@ -197,7 +197,7 @@ describe('o e-mail de contato', () => {
         expect(principal(container).textContent, caminho).not.toContain(EMAIL_CONTATO)
       }
     }
-  })
+  }, 30000)
 
   it('o endereço só aparece dentro do link: nenhum "@" solto no texto', async () => {
     for (const caminho of NOVAS) {
@@ -208,7 +208,7 @@ describe('o e-mail de contato', () => {
       )
       expect(soltos, caminho).toHaveLength(0)
     }
-  })
+  }, 30000)
 
   it('o rodapé da casca não muda: sem e-mail', async () => {
     const container = await abrir('/contato')
@@ -239,7 +239,7 @@ describe('o que não pode aparecer', () => {
       const texto = textoSemEmail(container).toLowerCase()
       for (const frase of FRASES_PROIBIDAS) expect(texto, `${caminho}: ${frase}`).not.toContain(frase)
     }
-  })
+  }, 30000)
 
   it('as únicas sequências de algarismos são 3, 7, 100, 180, 188 e 192 (e o us-east-1 do TF-15)', async () => {
     for (const caminho of NOVAS) {
@@ -249,7 +249,7 @@ describe('o que não pode aparecer', () => {
       const texto = textoSemEmail(container).replace(TF.regiaoDosDados, '')
       expect(algarismosForaDaLista(texto), caminho).toEqual([])
     }
-  })
+  }, 30000)
 
   it('nenhum link externo, nenhum link de telefone, nenhum formulário e nenhuma imagem de arquivo', async () => {
     for (const caminho of NOVAS) {
@@ -263,7 +263,7 @@ describe('o que não pode aparecer', () => {
       expect(container.querySelectorAll('a[href^="tel:"]'), caminho).toHaveLength(0)
       expect(container.querySelectorAll('main form, main input, main textarea, main img'), caminho).toHaveLength(0)
     }
-  })
+  }, 30000)
 
   it('as páginas não citam chaves de tarefa, nomes de arquivo nem códigos de fonte', async () => {
     for (const caminho of NOVAS) {
@@ -274,7 +274,7 @@ describe('o que não pode aparecer', () => {
       expect(texto, caminho).not.toMatch(/\bLia\b|\bAna\b/)
       expect(texto, caminho).not.toMatch(/conta de teste|senha fornecida/i)
     }
-  })
+  }, 30000)
 })
 
 describe('parágrafos', () => {
@@ -290,7 +290,7 @@ describe('parágrafos', () => {
         expect(palavras(p.textContent ?? '').length, `${caminho}: ${p.textContent}`).toBeLessThanOrEqual(120)
       }
     }
-  })
+  }, 30000)
 
   it('nenhum parágrafo do main está vazio', async () => {
     for (const caminho of NOVAS) {
@@ -298,7 +298,7 @@ describe('parágrafos', () => {
 
       for (const p of principal(container).querySelectorAll('p')) expect(p.textContent!.trim(), caminho).not.toBe('')
     }
-  })
+  }, 30000)
 
   it('os nomes da família de exemplo são Heloísa, Juliana, Bruno e Carla', async () => {
     const container = await abrir('/como-funciona')

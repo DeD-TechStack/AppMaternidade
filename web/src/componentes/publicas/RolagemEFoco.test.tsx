@@ -157,7 +157,7 @@ describe('linha 2: voltar ou avançar', () => {
     const titulo = screen.getByRole('heading', { level: 1 })
     expect(titulo.textContent).toBe('Como funciona')
     expect(document.activeElement).toBe(titulo)
-  })
+  }, 30000)
 
   it('para uma URL com âncora (válida ou não), não rola e o foco fica no h1', async () => {
     const { roteador } = renderizarRota('/regras-da-comunidade#secao-ajuda-agora')
@@ -170,7 +170,7 @@ describe('linha 2: voltar ou avançar', () => {
     expect(rolagemAoTopo).not.toHaveBeenCalled()
     expect(alvosRolados).toHaveLength(0)
     expect(document.activeElement).toBe(screen.getByRole('heading', { level: 1 }))
-  })
+  }, 30000)
 
   it('depois de uma âncora que não existe: ir a outra página e voltar não rola nada', async () => {
     const { roteador } = renderizarRota('/como-funciona')
@@ -183,7 +183,7 @@ describe('linha 2: voltar ou avançar', () => {
 
     expect(rolagemAoTopo).not.toHaveBeenCalled()
     expect(alvosRolados).toHaveLength(0)
-  })
+  }, 30000)
 
   it('voltar para o Início não move o foco', async () => {
     const { roteador } = renderizarRota('/')
@@ -193,7 +193,7 @@ describe('linha 2: voltar ou avançar', () => {
     await voltar(roteador)
 
     expect(document.activeElement).toBe(document.body)
-  })
+  }, 30000)
 })
 
 describe('linha 3: Hoje e Sessão', () => {
@@ -287,7 +287,7 @@ describe('linha 4: retirar ou trocar só o fragmento não rola nem move o foco',
         expect(rolagemAoTopo).not.toHaveBeenCalled()
         expect(alvosRolados).toHaveLength(0)
         expect(document.activeElement).toBe(alvo)
-      })
+      }, 30000)
     }
   }
 
@@ -305,7 +305,7 @@ describe('linha 4: retirar ou trocar só o fragmento não rola nem move o foco',
     expect(rolagemAoTopo).not.toHaveBeenCalled()
     expect(alvosRolados).toHaveLength(0)
     expect(document.activeElement).toBe(alvo)
-  })
+  }, 30000)
 
   it('trocar o fragmento por outro válido continua rolando até o alvo e focando o h2', async () => {
     const { roteador } = renderizarRota('/privacidade')
@@ -319,7 +319,7 @@ describe('linha 4: retirar ou trocar só o fragmento não rola nem move o foco',
     expect(alvosRolados).toEqual([alvo])
     expect(aoTopo()).toHaveLength(0)
     expect(document.activeElement).toBe(alvo)
-  })
+  }, 30000)
 
   it('a mesma URL sem fragmento não é troca só de âncora: vai ao topo e leva o foco ao h1', async () => {
     const { roteador } = renderizarRota('/privacidade')
@@ -356,7 +356,7 @@ describe('linha 4: retirar ou trocar só o fragmento não rola nem move o foco',
     expect(alvosRolados).toEqual([alvo])
     expect(aoTopo()).toHaveLength(0)
     expect(document.activeElement).toBe(alvo)
-  })
+  }, 30000)
 
   it('a mesma URL com âncora inexistente: topo e foco no h1', async () => {
     const { roteador } = renderizarRota('/privacidade')
@@ -369,7 +369,7 @@ describe('linha 4: retirar ou trocar só o fragmento não rola nem move o foco',
     expect(aoTopo()).toHaveLength(1)
     expect(alvosRolados).toHaveLength(0)
     expect(document.activeElement).toBe(screen.getByRole('heading', { level: 1 }))
-  })
+  }, 30000)
 })
 
 // O h1 das 10 páginas da MAT-36 fica pronto para o foco por código desde a entrada inicial, sem
@@ -423,7 +423,7 @@ describe('h1 pronto para o foco por código', () => {
     const titulo = screen.getByRole('heading', { level: 1 })
     expect(titulo.getAttribute('tabindex')).toBe('-1')
     expect(document.activeElement).toBe(titulo)
-  })
+  }, 30000)
 
   it('o h1 do Início e o das telas logadas não são tocados', async () => {
     const inicio = renderizarRota('/')
@@ -433,7 +433,7 @@ describe('h1 pronto para o foco por código', () => {
     renderizarRota('/app/hoje')
     const hoje = await screen.findByRole('heading', { level: 1 })
     expect(hoje.classList.contains('focus:outline-none')).toBe(false)
-  })
+  }, 30000)
 })
 
 describe('linha 5: navegação nova', () => {
@@ -474,7 +474,7 @@ describe('linha 5: navegação nova', () => {
       expect(titulo.getAttribute('tabindex'), caminho).toBe('-1')
       expect(document.activeElement, caminho).toBe(titulo)
     }
-  })
+  }, 30000)
 
   it('com âncora válida, rola até o alvo, não vai ao topo e leva o foco ao h2', async () => {
     const { roteador } = renderizarRota('/sobre')

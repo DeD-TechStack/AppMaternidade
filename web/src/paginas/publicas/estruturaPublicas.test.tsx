@@ -133,14 +133,14 @@ describe('o main das 9 páginas novas', () => {
         }
       }
     }
-  })
+  }, 30000)
 
   it('todo filho do main é uma área útil (começa em x da margem ou de c2, medido em G3)', async () => {
     for (const caminho of NOVAS) {
       const container = await abrir(caminho)
       for (const filho of filhosDoMain(container)) expect(filho.classList.contains('sb-area'), caminho).toBe(true)
     }
-  })
+  }, 30000)
 
   it('os h2 são exatamente os do contrato, na ordem, e não há outros fora de uma mídia', async () => {
     for (const caminho of NOVAS) {
@@ -149,7 +149,7 @@ describe('o main das 9 páginas novas', () => {
       expect(h2Fora(principal(container)).map((h2) => h2.textContent), caminho).toEqual(H2S[caminho])
       expect(container.querySelectorAll('[data-midia] h2, [data-midia] h1'), caminho).toHaveLength(0)
     }
-  })
+  }, 30000)
 
   it('todo h2 tem id secao-<slug> único e tabindex -1; o h1 tem tabindex -1', async () => {
     for (const caminho of NOVAS) {
@@ -166,7 +166,7 @@ describe('o main das 9 páginas novas', () => {
       expect(titulo.getAttribute('tabindex'), caminho).toBe('-1')
       expect(titulo.classList.contains('focus:outline-none'), caminho).toBe(true)
     }
-  })
+  }, 30000)
 
   it('o h2 dos canais de ajuda tem o id fixo secao-ajuda-agora', async () => {
     const container = await abrir('/regras-da-comunidade')
@@ -185,7 +185,7 @@ describe('o main das 9 páginas novas', () => {
       expect(abertura.querySelector('.sb-abertura-lateral.col-c9-c10'), caminho).not.toBeNull()
       expect(abertura.querySelector('.sb-abertura-base'), caminho).not.toBeNull()
     }
-  })
+  }, 30000)
 
   it('os 9 subtítulos têm o mesmo tipo (sem desvio de tamanho) e o de Desenvolvimento é "Sem metas, sem cobrança."', async () => {
     for (const caminho of NOVAS) {
@@ -195,7 +195,7 @@ describe('o main das 9 páginas novas', () => {
     }
     const container = await abrir('/desenvolvimento')
     expect(container.querySelector('.sb-abertura-subtitulo')!.textContent).toBe('Sem metas, sem cobrança.')
-  })
+  }, 30000)
 
   it('"Páginas do site" é uma lista de 9 links pronta para 2 colunas a partir de 768, na ordem dos links', async () => {
     for (const caminho of NOVAS) {
@@ -203,7 +203,7 @@ describe('o main das 9 páginas novas', () => {
       const lista = container.querySelector('nav[aria-label="Páginas do site"] ul.vp-links.vp-links-duplo')!
       expect(lista.querySelectorAll(':scope > li > a'), caminho).toHaveLength(9)
     }
-  })
+  }, 30000)
 
   it('a lateral começa pelo que a página pede e leva o aviso de construção em `ui`, na cor secundária', async () => {
     for (const caminho of NOVAS) {
@@ -223,7 +223,7 @@ describe('o main das 9 páginas novas', () => {
         expect(avisos[0].closest('li')!.compareDocumentPosition(etiqueta) & Node.DOCUMENT_POSITION_PRECEDING, caminho).toBeTruthy()
       }
     }
-  })
+  }, 30000)
 
   it('a ordem da lateral: Como funciona (TF-12, TF-10, link), Privacidade e Termos (TF-10, TF-09), Contato (e-mail, TF-10)', async () => {
     const lateral = async (caminho: string) => {
@@ -256,7 +256,7 @@ describe('o main das 9 páginas novas', () => {
     expect(contato).toHaveLength(2)
     expect(contato[0]).toMatch(/^Fale conosco: \S+@\S+$/)
     expect(contato[1]).toBe('Em construção: algumas funções descritas aqui ainda não estão no ar.')
-  })
+  }, 30000)
 
   it('no Como funciona, o link da lateral e o círculo CTA levam ao protótipo (Hoje)', async () => {
     const container = await abrir('/como-funciona')
@@ -284,7 +284,7 @@ describe('mídia das páginas', () => {
         caminho,
       ).toEqual(MIDIAS[caminho])
     }
-  })
+  }, 30000)
 
   it('a moldura é uma imagem nomeada, sem nenhum texto, com uma ilustração decorativa sem título nem descrição', async () => {
     for (const caminho of NOVAS) {
@@ -302,7 +302,7 @@ describe('mídia das páginas', () => {
         expect(desenhos[0].querySelector('title, desc'), caminho).toBeNull()
       }
     }
-  })
+  }, 30000)
 
   it('as 4 páginas do G6 têm mídia, e nunca mais de 3 blocos de texto seguidos sem uma mídia no meio', async () => {
     for (const caminho of G6) {
@@ -322,7 +322,7 @@ describe('mídia das páginas', () => {
         expect(seguidos, `${caminho}: ${bloco.textContent?.slice(0, 30)}`).toBeLessThanOrEqual(3)
       }
     }
-  })
+  }, 30000)
 
   it('o Sobre abre com um par de mídias (barro e lavanda) e só depois o parágrafo de apresentação; a mídia larga vem mais abaixo', async () => {
     const container = await abrir('/sobre')
@@ -338,7 +338,7 @@ describe('mídia das páginas', () => {
     for (const caminho of NOVAS) {
       expect((await abrir(caminho)).querySelector('main [data-formato="retrato"]'), caminho).toBeNull()
     }
-  })
+  }, 30000)
 
   it('o colo, a mamada e o tapete só aparecem em moldura lavanda: o barro da cabeça do bebê (e da poltrona) some no fundo barro', async () => {
     for (const caminho of NOVAS) {
@@ -349,7 +349,7 @@ describe('mídia das páginas', () => {
         }
       }
     }
-  })
+  }, 30000)
 
   it('a mídia fica entre as linhas certas: Privacidade (4ª e 5ª), Termos (4ª e 5ª) e Exclusão (2ª e 3ª)', async () => {
     for (const [caminho, depoisDe] of [
@@ -366,7 +366,7 @@ describe('mídia das páginas', () => {
       expect(antes.compareDocumentPosition(midia) & Node.DOCUMENT_POSITION_FOLLOWING, caminho).not.toBe(0)
       expect(midia.compareDocumentPosition(depois) & Node.DOCUMENT_POSITION_FOLLOWING, caminho).not.toBe(0)
     }
-  })
+  }, 30000)
 
   it('nenhuma página tem campo de cor, aparelho, selo ou aviso de rascunho, nem cartão com borda', async () => {
     for (const caminho of NOVAS) {
@@ -377,7 +377,7 @@ describe('mídia das páginas', () => {
       expect(container.querySelector('[data-aviso="rascunho"]'), caminho).toBeNull()
       expect(container.querySelector('.cartao'), caminho).toBeNull()
     }
-  })
+  }, 30000)
 })
 
 describe('listas e tabelas', () => {

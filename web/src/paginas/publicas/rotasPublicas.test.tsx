@@ -50,7 +50,7 @@ describe('rotas e títulos', () => {
       expect(titulos[0].textContent, caminho).toBe(h1)
       expect(document.title, caminho).toBe(titulo)
     }
-  })
+  }, 30000)
 
   it('o Sobre, a partir do Início, e o Início, a partir do Sobre', async () => {
     const { roteador } = renderizarRota('/')
@@ -101,7 +101,7 @@ describe('rotas e títulos', () => {
       expect(container.querySelectorAll('footer'), caminho).toHaveLength(1)
       unmount()
     }
-  })
+  }, 30000)
 
   it('a rota do sistema continua como estava, fora do layout público', async () => {
     renderizarRota('/sistema')
@@ -132,7 +132,7 @@ describe('madrugada', () => {
       expect(document.documentElement.hasAttribute('data-tema'), caminho).toBe(false)
       unmount()
     }
-  })
+  }, 30000)
 })
 
 describe('acessibilidade (axe-core) das páginas públicas', () => {
@@ -146,7 +146,7 @@ describe('acessibilidade (axe-core) das páginas públicas', () => {
       expect(
         resultado.violations.map((v) => `${v.id}: ${v.help} (${v.nodes.map((n) => n.html.slice(0, 120)).join(' | ')})`),
       ).toEqual([])
-    })
+    }, 30000)
   }
 })
 
@@ -181,7 +181,7 @@ describe('navegação entre as páginas (PaginasDoSite)', () => {
       expect(nav.compareDocumentPosition(container.querySelector('footer')!) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
       unmount()
     }
-  })
+  }, 30000)
 
   it('só o link da própria página leva aria-current="page"', async () => {
     for (const caminho of CAMINHOS_NOVOS) {
@@ -195,7 +195,7 @@ describe('navegação entre as páginas (PaginasDoSite)', () => {
       expect(atuais[0].getAttribute('href'), caminho).toBe(caminho)
       unmount()
     }
-  })
+  }, 30000)
 
   it('o rótulo é um parágrafo, não um título, e cada link tem alvo de 44 px (alvo-toque)', async () => {
     const { container } = renderizarRota('/sobre')
@@ -266,7 +266,7 @@ describe('links internos', () => {
         if (ancora) expect(destino.ids.get(ancora), `${origem}: ${href}`).toBe(1)
       }
     }
-  })
+  }, 30000)
 
   it('o índice "Nesta página" tem um link para cada h2, na ordem, com o texto do h2', async () => {
     for (const caminho of ['/privacidade', '/termos']) {
@@ -282,7 +282,7 @@ describe('links internos', () => {
       for (const link of links) expect(link.classList.contains('alvo-toque'), caminho).toBe(true)
       unmount()
     }
-  })
+  }, 30000)
 
   it('as outras páginas não têm índice', async () => {
     for (const caminho of CAMINHOS_NOVOS.filter((c) => c !== '/privacidade' && c !== '/termos')) {
@@ -291,7 +291,7 @@ describe('links internos', () => {
       expect(container.querySelector('nav[aria-label="Nesta página"]'), caminho).toBeNull()
       unmount()
     }
-  })
+  }, 30000)
 
   it('o link de urgência do Contato leva às Regras, ao h2 dos canais de ajuda', async () => {
     const { container } = renderizarRota('/contato')

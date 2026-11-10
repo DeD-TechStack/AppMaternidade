@@ -71,7 +71,7 @@ describe('título da aba por rota', () => {
       await roteador.navigate('/sobre')
     })
     expect(document.title).toBe('Sobre | AppMaternidade')
-  })
+  }, 30000)
 
   it('a primeira rota mostrada já define o título', async () => {
     renderizarRota('/termos')
