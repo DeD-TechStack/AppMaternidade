@@ -167,8 +167,11 @@ describe('responder: navegação', () => {
     ['500', () => ({ status: 500 })],
     ['503', () => ({ status: 503 })],
     ['403', () => ({ status: 403 })],
+    ['200 com type opaque', () => ({ status: 200, type: 'opaque' })],
+    ['200 com type opaqueredirect', () => ({ status: 200, type: 'opaqueredirect' })],
+    ['200 redirecionada', () => ({ status: 200, redirected: true })],
   ])('com %s da rede, dá o index.html guardado', async (_nome, fabricar) => {
-    const falsa = { ...fabricar(), redirected: false, text: async () => 'rede' } as unknown as Response
+    const falsa = { redirected: false, ...fabricar(), text: async () => 'rede' } as unknown as Response
     const { deps } = montar(async () => falsa)
     expect(await texto(await responder(navegacao(), CONTEXTO, deps))).toBe('guardado')
   })
