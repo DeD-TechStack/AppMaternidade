@@ -21,6 +21,16 @@ Horários em America/Sao_Paulo, tirados do relógio da máquina ou de carimbos d
 
 Uma linha por marco, a mais recente no topo. O estado corrente fica em [Retomada do site](Retomada_Site.md), e o detalhe de cada marco está no cartão Kanban citado.
 
+- 10/11/2026: **reavaliação do site inteiro (MAT-44d).**
+  - O que motivou: Daniel achou que o site "não segue em nada o site referência". As notas ficaram entre 5,8 e 6,8 mesmo depois do laço visual.
+  - Rodadas paradas: a da 44c-1 (t_f67d8962) e a da 37a (t_915e3632). As duas foram substituídas (comentários 160 e 161).
+  - Diagnóstico: o Fable 5.2 fez o diagnóstico e o plano, em `REAVALIACAO_20261110/DIAGNOSTICO_FABLE.md`.
+  - Decisões: Daniel respondeu às 5 decisões com "tudo sim e segue com opção A".
+  - Spec e ramo: a spec MAT-44d tem sha256 953a9114. O ramo `int/refazer` saiu em f069499.
+  - Cartões: t_0288c2c3, t_6c3e5423, t_5184c99c, t_27b74658, t_cc66cbf8 e t_1584e47e. Cada um tem a sua porta de Vite, de 5254 a 5266.
+  - Vite antigo: o da 5244 foi encerrado. Ele servia o worktree t_f67d8962, e a captura das 09h37 da 44d-1 foi anulada por isso (comentário 163).
+  - A main só recebe a mudança depois que as 9 telas tiverem nota 8 ou mais.
+- 05/11 a 10/11/2026: o detalhe destes marcos está em [Retomada do site](Retomada_Site.md). Aqui fica só o marco acima.
 - 06/11/2026: **decisões de Daniel para a demonstração**, registradas em 07_Roadmap/Decisoes_para_Daniel.md:
   - não há contas de demonstração: cada pessoa cria a sua;
   - Desenvolvimento entra sem o selo de rascunho, com a fonte citada e o aviso médico;
