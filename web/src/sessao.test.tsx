@@ -537,6 +537,39 @@ describe('Sessão: o CSS do bloco /* 44d-2 */ (lido como texto)', () => {
     }
   })
 
+  // VOLTA2 D3: em 1440 o "1" de "1:12:01" (algarismo tabular, com recuo grande dentro da célula) começava 27 px
+  // à direita do x do rótulo. A compensação é óptica: `text-indent` negativo, em `em`, só de 768 para cima.
+  it('D3 (768+): o cronômetro tem text-indent negativo em em (compensa o recuo do 1º dígito), sem letter-spacing novo', () => {
+    const abertura = /@media\s*\(min-width:\s*768px\)\s*\{/g
+    const faixas: string[] = []
+    for (let m = abertura.exec(bloco44); m; m = abertura.exec(bloco44)) {
+      let nivel = 1
+      let i = abertura.lastIndex
+      while (i < bloco44.length && nivel > 0) {
+        if (bloco44[i] === '{') nivel += 1
+        else if (bloco44[i] === '}') nivel -= 1
+        i += 1
+      }
+      faixas.push(bloco44.slice(abertura.lastIndex, i - 1))
+    }
+    const faixa768 = faixas.join('\n')
+    const valor = regraEm(faixa768, '.ha-cron-valor')
+    expect(valor).toMatch(/text-indent:\s*-\d*\.?\d+em\s*;/)
+    // A compensação é de tinta: só tira o recuo do dígito; não pode ser grande a ponto de passar do rótulo.
+    const recuo = Number(/text-indent:\s*(-\d*\.?\d+)em/.exec(valor)![1])
+    expect(recuo).toBeLessThan(0)
+    expect(recuo).toBeGreaterThanOrEqual(-0.15)
+    // Nenhum tracking novo no cronômetro (nem na regra do longo), nem fora da faixa de 768.
+    for (const seletor of ['.ha-cron-valor', ".ha-cron-valor[data-tamanho='longo']", ".ha-cron-valor[data-tamanho='normal']"]) {
+      expect(regra(seletor), seletor).not.toMatch(/letter-spacing/)
+      expect(regraEm(faixa768, seletor), seletor).not.toMatch(/letter-spacing/)
+    }
+    // Abaixo de 768 o recuo não entra (o 390 não muda).
+    expect(emMedia767()).not.toMatch(/text-indent/)
+    // A caixa não se mexe: nada de margem, padding ou largura novos no cronômetro por causa do recuo.
+    expect(valor).not.toMatch(/margin|padding|width|left|transform/)
+  })
+
   it('o campo da nota segue o 2.9: sem caixa, fio sólido embaixo na cor do texto do bloco, Instrument Serif 32', () => {
     const campo = regra('.ha-nota-campo')
     expect(campo).toMatch(/background-color:\s*transparent/)

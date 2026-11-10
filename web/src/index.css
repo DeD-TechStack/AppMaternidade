@@ -2713,6 +2713,17 @@ body:has([data-barra-registrar]) [data-rodape] {
   line-height: 8rem;
 }
 
+/* VOLTA2 D3: o "1" tabular tem um recuo grande dentro da célula e, a 224, a tinta de "1:12:01" começava 27 px à
+   direita do x do rótulo (a caixa já começa nele). O `text-indent` negativo tira esse recuo só da tinta, de forma
+   óptica: não mexe no tracking e a caixa fica onde está (mesma altura, mesmo x, e a mesma largura para qualquer
+   hora, porque o recuo é o mesmo para todas). Em `em`, para o longo (160) acompanhar. Só de 768 para cima: o 390
+   não entra. */
+@media (min-width: 768px) {
+  .ha-cron-valor {
+    text-indent: -0.077em;
+  }
+}
+
 .ha-cron-atividade {
   margin: 8px 0 0;
 }
