@@ -853,6 +853,229 @@ describe('rodada 3: faixa de números, abertura e linhas (regras de CSS)', () =>
   })
 })
 
+// ---------------------------------------------------------------------------
+// Rodada de correção 4 (D4, D6, D7, D8, D9): cabeçalho de 768 para cima, botão desativado e botão
+// "Modo madrugada" ligado na madrugada, rodapé em 390 e o rótulo curto do botão. As geometrias
+// (folga em px, vãos, innerText) são medidas no navegador por `.oc/geo.mjs`; aqui ficam as regras
+// de CSS lidas como texto e os contrastes calculados dos tokens.
+
+/** Avalia `clamp(Apx, calc(Bpx + (100vw - 768px) * K), Cpx)` para uma largura de janela. */
+function avaliarClamp(valor: string, largura: number): number {
+  const m = /clamp\(\s*(\d+(?:\.\d+)?)px\s*,\s*calc\(\s*(\d+(?:\.\d+)?)px\s*\+\s*\(100vw\s*-\s*768px\)\s*\*\s*(\d+(?:\.\d+)?)\s*\)\s*,\s*(\d+(?:\.\d+)?)px\s*\)/.exec(
+    valor,
+  )
+  if (!m) throw new Error(`clamp que o teste não entende: ${valor}`)
+  const [minimo, inicio, taxa, maximo] = [m[1], m[2], m[3], m[4]].map(Number)
+  return Math.min(maximo, Math.max(minimo, inicio + (largura - 768) * taxa))
+}
+
+describe('rodada 4: cabeçalho, desativado, modo madrugada, rodapé em 390 e rótulo curto (regras de CSS)', () => {
+  const base = semMedia(semComentarios)
+  const celular = blocosDeMedia(semComentarios, /max-width:\s*767px/).join('\n')
+  const tablet = blocosDeMedia(semComentarios, /max-width:\s*991px/).join('\n')
+  const corpoBase = (seletor: string) => regras(base).filter((r) => r.seletor === seletor).map((r) => r.corpo).join('')
+  const corpoCelular = (seletor: string) => regras(celular).filter((r) => r.seletor === seletor).map((r) => r.corpo).join('')
+  const cores = lerTokens(tokensCss)
+  const claro = /:root\s*\{([^}]*)\}/.exec(temaCss)![1]
+  const madrugada = /\[data-tema=['"]madrugada['"]\]\s*\{([^}]*)\}/.exec(temaCss)![1]
+  /** O hex que uma variável de uso do tema aponta, pelo `var(--color-*)` do bloco. */
+  const hexDe = (bloco: string, variavel: string): string | undefined => {
+    const m = new RegExp(`${variavel}:\\s*var\\(--color-([a-z0-9-]+)\\)`).exec(bloco)
+    return m ? cores[m[1]] : undefined
+  }
+
+  describe('D4: o botão do cabeçalho não fica colado no último link', () => {
+    it('de 768 para cima o cabeçalho é uma linha flex (nome, links à direita e botão), sem a grade de 10 colunas', () => {
+      const miolo = corpoBase('.sb-cab-miolo')
+      expect(miolo).toMatch(/display:\s*flex/)
+      expect(miolo).not.toMatch(/grid-template-columns/)
+      expect(corpoBase('.sb-cab-nome')).not.toMatch(/grid-column|justify-self/)
+      expect(corpoBase('.sb-cab-links')).not.toMatch(/grid-column|justify-self/)
+      expect(corpoBase('.sb-cab-acao')).not.toMatch(/grid-column|justify-self/)
+    })
+
+    it('a faixa de 768 a 991 não troca o cabeçalho por outra regra (a de 24 px e `space-between` saiu)', () => {
+      const seletores = regras(tablet).map((r) => r.seletor)
+      expect(seletores).not.toContain('.sb-cab-miolo')
+      expect(seletores).not.toContain('.sb-cab-links')
+    })
+
+    it('o gap entre os links e a folga do botão são proporcionais à largura: 16 px em 768, 48 e 32 px a partir de 992', () => {
+      const miolo = corpoBase('.sb-cab-miolo')
+      const gap = /--cab-gap-links:\s*([^;]+);/.exec(miolo)?.[1]
+      const folga = /--cab-folga-acao:\s*([^;]+);/.exec(miolo)?.[1]
+      expect(gap, '--cab-gap-links').toBeDefined()
+      expect(folga, '--cab-folga-acao').toBeDefined()
+      expect(avaliarClamp(gap!, 768)).toBe(16)
+      expect(avaliarClamp(gap!, 1440)).toBe(48)
+      expect(avaliarClamp(folga!, 1440)).toBeGreaterThanOrEqual(32)
+      expect(avaliarClamp(folga!, 1024)).toBeGreaterThanOrEqual(32)
+      expect(avaliarClamp(folga!, 768)).toBeGreaterThanOrEqual(16)
+      // Nunca menos de 16 px entre os links, em nenhuma largura de 768 a 1600.
+      for (let largura = 768; largura <= 1600; largura += 8) expect(avaliarClamp(gap!, largura), `${largura}`).toBeGreaterThanOrEqual(16)
+    })
+
+    it('os links vão para a direita (margin-left: auto), com o gap proporcional, e o botão fica a --cab-folga-acao do último', () => {
+      const links = corpoBase('.sb-cab-links')
+      expect(links).toMatch(/margin-left:\s*auto/)
+      expect(links).toMatch(/gap:\s*var\(--cab-gap-links\)/)
+      expect(links).toMatch(/flex:\s*none/)
+      const acao = corpoBase('.sb-cab-acao')
+      expect(acao).toMatch(/margin-left:\s*var\(--cab-folga-acao\)/)
+      expect(acao).toMatch(/flex:\s*none/)
+      expect(corpoBase('.sb-cab-nome')).toMatch(/flex:\s*none/)
+    })
+
+    it('os links e o gatilho do submenu não encolhem nem quebram (o texto não passa do box de 44 px)', () => {
+      const grupo = regras(base).find((r) => r.seletor.split(/\s*,\s*/).includes('.sb-cab-link'))!
+      expect(grupo.seletor.split(/\s*,\s*/)).toContain('.sb-submenu-gatilho')
+      expect(grupo.corpo).toMatch(/flex:\s*none/)
+      expect(grupo.corpo).toMatch(/white-space:\s*nowrap/)
+      expect(corpoBase('.sb-cab-links > *')).toMatch(/flex:\s*none/)
+    })
+
+    it('o miolo do botão do cabeçalho encolhe o recuo de 24 para 12 px de 992 para 768, e abaixo de 768 volta ao de 12 px de sempre', () => {
+      const miolo = corpoBase('.sb-cab-miolo')
+      const recuo = /--cab-recuo-acao:\s*([^;]+);/.exec(miolo)?.[1]
+      expect(recuo, '--cab-recuo-acao').toBeDefined()
+      expect(avaliarClamp(recuo!, 768)).toBe(12)
+      expect(avaliarClamp(recuo!, 1440)).toBe(24)
+      expect(corpoBase('.sb-cab-acao .sb-moldura-miolo')).toMatch(/padding:\s*0 var\(--cab-recuo-acao\)/)
+      expect(corpoCelular('.sb-cab-acao .sb-moldura-miolo')).toMatch(/padding:\s*0 12px/)
+    })
+
+    it('abaixo de 768 o cabeçalho segue em grade (menu, nome, botão), sem a folga do botão', () => {
+      expect(corpoCelular('.sb-cab-miolo')).toMatch(/display:\s*grid/)
+      expect(corpoCelular('.sb-cab-acao')).toMatch(/margin-left:\s*0/)
+      expect(corpoCelular('.sb-cab-links')).toMatch(/display:\s*none/)
+    })
+  })
+
+  describe('D6: o botão desativado da madrugada não é mais claro que o primário', () => {
+    it('o botão desativado lê o fundo e o texto de variáveis do tema, sem opacidade nem tracejado', () => {
+      const corpo = regras(base).find((r) => r.seletor.includes(".sb-botao[aria-disabled='true']"))!.corpo
+      expect(corpo).toMatch(/background-color:\s*var\(--cor-desativado-fundo\)/)
+      expect(corpo).toMatch(/(?:^|[\s;])color:\s*var\(--cor-desativado-texto\)/)
+      expect(corpo).not.toMatch(/opacity|dashed|dotted|border/)
+    })
+
+    it('no tema claro o desativado segue como era: fundo secundário, texto papel, contraste de 6,38', () => {
+      expect(hexDe(claro, '--cor-desativado-fundo')).toBe(cores.secondary)
+      expect(hexDe(claro, '--cor-desativado-texto')).toBe(cores.neutral)
+      expect(contraste(cores.neutral, cores.secondary)).toBeCloseTo(6.38, 1)
+    })
+
+    it('na madrugada o fundo do desativado tem luminância menor que a do primário, e o texto tem contraste de 4,5 ou mais', () => {
+      const fundo = hexDe(madrugada, '--cor-desativado-fundo')
+      const texto = hexDe(madrugada, '--cor-desativado-texto')
+      expect(fundo, 'fundo do desativado na madrugada').toBeDefined()
+      expect(texto, 'texto do desativado na madrugada').toBeDefined()
+      expect(luminancia(fundo!)).toBeLessThan(luminancia(cores['night-accent']))
+      expect(contraste(texto!, fundo!)).toBeGreaterThanOrEqual(4.5)
+    })
+
+    it('o desativado da madrugada também não é o bloco mais claro da tela (menos claro que o texto da página)', () => {
+      expect(luminancia(hexDe(madrugada, '--cor-desativado-fundo')!)).toBeLessThan(luminancia(cores['night-primary']))
+    })
+  })
+
+  describe('D7: "Modo madrugada" ligado se distingue do desligado', () => {
+    it('desligado segue como era: fundo transparente e a moldura dupla de tinta', () => {
+      const corpo = corpoBase('.sb-moldura')
+      expect(corpo).toMatch(/background:\s*none/)
+      expect(corpo).toMatch(/border:\s*1px solid var\(--cor-texto\)/)
+    })
+
+    it('ligado preenche o botão (não só o miolo) com o destaque e o texto sobre-destaque', () => {
+      const corpo = corpoBase('.sb-moldura[data-ligado]')
+      expect(corpo, 'regra de .sb-moldura[data-ligado]').not.toBe('')
+      expect(corpo).toMatch(/background-color:\s*var\(--cor-destaque\)/)
+      expect(corpo).toMatch(/(?:^|[\s;])color:\s*var\(--cor-sobre-destaque\)/)
+    })
+
+    it('ligado inverte a moldura dupla: o miolo ganha a linha na cor do texto sobre o destaque e perde o fundo próprio', () => {
+      const corpo = corpoBase('.sb-moldura[data-ligado] .sb-moldura-miolo')
+      expect(corpo).toMatch(/border-color:\s*var\(--cor-sobre-destaque\)/)
+      expect(corpo).toMatch(/background-color:\s*transparent/)
+      expect(corpo).not.toMatch(/papel-fundo/)
+    })
+
+    it('o fundo do botão ligado tem 3:1 ou mais contra a página e o texto tem 4,5:1 ou mais, no dia e na madrugada', () => {
+      for (const [bloco, nome] of [
+        [claro, 'dia'],
+        [madrugada, 'madrugada'],
+      ] as const) {
+        const destaque = hexDe(bloco, '--cor-destaque')!
+        const sobre = hexDe(bloco, '--cor-sobre-destaque')!
+        const pagina = hexDe(bloco, '--cor-fundo')!
+        expect(contraste(destaque, pagina), `${nome}: fundo do botão contra a página`).toBeGreaterThanOrEqual(3)
+        expect(contraste(sobre, destaque), `${nome}: texto sobre o fundo do botão`).toBeGreaterThanOrEqual(4.5)
+      }
+    })
+
+    it('o ligado inverte de novo ao passar o mouse (miolo escuro, texto no destaque), também abaixo de 768', () => {
+      const corpo = corpoBase('.sb-moldura[data-ligado]:hover .sb-moldura-miolo')
+      expect(corpo).toMatch(/background-color:\s*var\(--cor-sobre-destaque\)/)
+      expect(corpo).toMatch(/(?:^|[\s;])color:\s*var\(--cor-destaque\)/)
+      expect(corpo).not.toMatch(/papel-fundo|var\(--cor-texto\)/)
+    })
+
+    it('abaixo de 768 o ligado não depende só do fundo: a regra de miolo ligado do celular não pinta o miolo de outro urucum', () => {
+      expect(celular).not.toMatch(/\.sb-cab-acao\[data-ligado\]\s+\.sb-moldura-miolo/)
+    })
+  })
+
+  describe('D8: o rodapé em 390 não tem vão vertical maior que 96 px', () => {
+    const valoresEmPx = (corpo: string, propriedade: string): number[] => {
+      const declaracao = new RegExp(`(?:^|[;\\s])${propriedade}\\s*:\\s*([^;]+)`).exec(corpo)
+      return declaracao ? [...declaracao[1].matchAll(/(\d+(?:\.\d+)?)px/g)].map((m) => Number(m[1])) : []
+    }
+
+    it('os espaços do rodapé em 1440 não mudaram (96, 96, 160, 192, 96 e 32)', () => {
+      expect(corpoBase('.sb-rodape')).toMatch(/padding-block:\s*96px 32px/)
+      expect(corpoBase('.sb-rodape-nome')).toMatch(/margin:\s*96px 0 0/)
+      expect(corpoBase('.sb-rodape-links')).toMatch(/margin-top:\s*160px/)
+      expect(corpoBase('.sb-rodape-final')).toMatch(/margin:\s*192px 0 0/)
+    })
+
+    it('abaixo de 768 nenhum espaço do rodapé passa de 96 px: o de cima, o do nome, o dos links e o da linha final', () => {
+      const pedidos: Array<[string, string]> = [
+        ['.sb-rodape', 'padding-block'],
+        ['.sb-rodape-nome', 'margin-top'],
+        ['.sb-rodape-links', 'margin-top'],
+        ['.sb-rodape-final', 'margin-top'],
+        ['.sb-rodape-bloco', 'margin-top'],
+        ['.sb-rodape-colunas', 'row-gap'],
+      ]
+      for (const [seletor, propriedade] of pedidos) {
+        const valores = valoresEmPx(corpoCelular(seletor), propriedade)
+        expect(valores.length, `${seletor} ${propriedade} abaixo de 768`).toBeGreaterThan(0)
+        for (const valor of valores) expect(valor, `${seletor} ${propriedade}`).toBeLessThanOrEqual(96)
+      }
+    })
+
+    it('abaixo de 768 o resto do CSS do rodapé também não abre vão maior que 96 px', () => {
+      for (const { seletor, corpo } of regras(celular).filter((r) => r.seletor.includes('.sb-rodape'))) {
+        for (const [, valor] of corpo.matchAll(/(?:margin|padding)[a-z-]*:\s*([^;]+)/g)) {
+          for (const px of valor.matchAll(/(\d+(?:\.\d+)?)px/g)) expect(Number(px[1]), `${seletor}: ${valor}`).toBeLessThanOrEqual(96)
+        }
+      }
+    })
+  })
+
+  describe('D9: o rótulo do botão abaixo de 768 é "Madrugada"', () => {
+    it('há dois rótulos no botão: o longo de 768 para cima e o curto, com M maiúsculo, abaixo; sem text-transform', () => {
+      expect(corpoBase('.sb-cab-rotulo-curto')).toMatch(/display:\s*none/)
+      expect(corpoCelular('.sb-cab-rotulo-curto')).toMatch(/display:\s*inline/)
+      expect(corpoCelular('.sb-cab-rotulo-longo')).toMatch(/display:\s*none/)
+      expect(semComentarios).not.toMatch(/\.sb-cab-prefixo/)
+      for (const seletor of ['.sb-cab-rotulo-longo', '.sb-cab-rotulo-curto']) {
+        expect(corpoBase(seletor) + corpoCelular(seletor), seletor).not.toMatch(/text-transform/)
+      }
+    })
+  })
+})
+
 describe('index.html', () => {
   it('declara o idioma e o título', () => {
     expect(indexHtml).toContain('lang="pt-BR"')

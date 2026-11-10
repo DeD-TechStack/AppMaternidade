@@ -5,6 +5,7 @@ import { Abertura } from './componentes/base/Abertura.tsx'
 import { Botao } from './componentes/base/Botao.tsx'
 import { Campo } from './componentes/base/Campo.tsx'
 import { Cabecalho } from './componentes/casca/Cabecalho.tsx'
+import { ROTULO_MADRUGADA, ROTULO_MADRUGADA_CURTO } from './componentes/casca/textos.ts'
 import { renderizarRota } from './teste/renderizarRota.tsx'
 
 // MAT-44d, cartão 1 (SB-4): o cabeçalho, o menu do celular, o submenu "+ Em breve" e as peças de
@@ -74,6 +75,59 @@ describe('cabeçalho: contexto', () => {
     const botao = screen.getByRole('button', { name: 'Modo madrugada' })
     expect(botao.hasAttribute('data-moldura-dupla')).toBe(true)
     expect(botao.querySelector(':scope > .sb-moldura-miolo')).not.toBeNull()
+  })
+})
+
+describe('cabeçalho: o botão "Modo madrugada" (D7 e D9)', () => {
+  it('D9: o botão tem o rótulo longo e o curto, os dois de textos.ts, e o nome acessível continua "Modo madrugada"', () => {
+    cabecalho('logado')
+
+    expect(ROTULO_MADRUGADA).toBe('Modo madrugada')
+    expect(ROTULO_MADRUGADA_CURTO).toBe('Madrugada')
+    const botao = screen.getByRole('button', { name: 'Modo madrugada' })
+    expect(botao.getAttribute('aria-label')).toBe('Modo madrugada')
+    expect(botao.querySelector('.sb-cab-rotulo-longo')!.textContent).toBe(ROTULO_MADRUGADA)
+    expect(botao.querySelector('.sb-cab-rotulo-curto')!.textContent).toBe(ROTULO_MADRUGADA_CURTO)
+    // O curto é o texto com M maiúsculo; nada é feito por CSS, então o innerText de 390 é o do DOM.
+    expect(ROTULO_MADRUGADA_CURTO[0]).toBe('M')
+  })
+
+  it('D9: o rótulo curto é uma duplicata visual (aria-hidden), então o texto visível segue contido no nome acessível (WCAG 2.5.3)', () => {
+    cabecalho('logado')
+
+    const botao = screen.getByRole('button', { name: 'Modo madrugada' })
+    expect(botao.querySelector('.sb-cab-rotulo-curto')!.getAttribute('aria-hidden')).toBe('true')
+    expect(botao.querySelector('.sb-cab-rotulo-longo')!.hasAttribute('aria-hidden')).toBe(false)
+    // O texto visível (sem os aria-hidden) é o rótulo longo, que é o próprio nome acessível.
+    const copia = botao.cloneNode(true) as Element
+    for (const escondido of copia.querySelectorAll('[aria-hidden="true"]')) escondido.remove()
+    expect(copia.textContent).toBe(ROTULO_MADRUGADA)
+    // E o curto, "Madrugada", também está contido no nome acessível, sem diferença de caixa.
+    expect(ROTULO_MADRUGADA.toLowerCase()).toContain(ROTULO_MADRUGADA_CURTO.toLowerCase())
+  })
+
+  it('D9: o texto visível do botão só existe nos dois rótulos (nenhum texto solto fora deles)', () => {
+    cabecalho('logado')
+
+    const miolo = screen.getByRole('button', { name: 'Modo madrugada' }).querySelector('.sb-moldura-miolo')!
+    const filhos = [...miolo.children]
+    expect(filhos.map((filho) => filho.className)).toEqual(['sb-cab-rotulo-longo', 'sb-cab-rotulo-curto'])
+    expect([...miolo.childNodes].filter((no) => no.nodeType === Node.TEXT_NODE)).toHaveLength(0)
+  })
+
+  it('D7: ligado traz data-ligado e aria-pressed="true"; desligado não traz data-ligado', () => {
+    const { unmount } = cabecalho('logado', false)
+    const desligado = screen.getByRole('button', { name: 'Modo madrugada' })
+    expect(desligado.getAttribute('aria-pressed')).toBe('false')
+    expect(desligado.hasAttribute('data-ligado')).toBe(false)
+    unmount()
+
+    cabecalho('logado', true)
+    const ligado = screen.getByRole('button', { name: 'Modo madrugada' })
+    expect(ligado.getAttribute('aria-pressed')).toBe('true')
+    expect(ligado.hasAttribute('data-ligado')).toBe(true)
+    expect(ligado.hasAttribute('data-moldura-dupla')).toBe(true)
+    expect(ligado.querySelector(':scope > .sb-moldura-miolo')).not.toBeNull()
   })
 })
 
