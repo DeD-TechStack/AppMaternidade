@@ -35,5 +35,7 @@ export default defineConfig(({ command }) => ({
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/teste/setup.ts'],
+    // Os testes de web/scripts usam o node:test (node --test); o Vitest não os roda.
+    exclude: ['**/node_modules/**', '**/dist/**', 'scripts/**'],
   },
 }))
