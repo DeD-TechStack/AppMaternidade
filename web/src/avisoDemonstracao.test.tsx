@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import axe from 'axe-core'
+import { AvisoDemonstracao } from './componentes/AvisoDemonstracao.tsx'
 import { AVISO_DEMONSTRACAO } from './conteudo/textos.ts'
 import { criarEstadoInicial, type EstadoPrototipo } from './prototipo/estado.ts'
 import { renderizarRota } from './teste/renderizarRota.tsx'
@@ -56,6 +57,65 @@ describe('aviso de demonstração: aparece quando falta uma variável do banco',
   }
 })
 
+describe('aviso de demonstração: variante lateral (coluna da abertura)', () => {
+  const CLASSES_DO_AVISO_DE_TOPO = ['texto-info', 'text-sm', 'py-1', 'px-4']
+
+  it('com lateral e sem banco: o mesmo <p data-aviso>, com o texto exato e a classe ui + secundário', () => {
+    definirBanco('', '')
+    const { container } = render(<AvisoDemonstracao lateral />)
+
+    const aviso = container.querySelector(SELETOR)!
+    expect(container.querySelectorAll(SELETOR)).toHaveLength(1)
+    expect(aviso.tagName).toBe('P')
+    expect(aviso.textContent).toBe(AVISO_DEMONSTRACAO)
+    expect(screen.getByText(AVISO_DEMONSTRACAO)).toBe(aviso)
+    expect([...aviso.classList].sort()).toEqual(['aviso-demonstracao', 't-secundario', 't-ui'])
+  })
+
+  it('com lateral não leva texto-info, text-sm, py-1 nem px-4 (mesmo com comRecuo)', () => {
+    definirBanco('', '')
+    for (const props of [{ lateral: true }, { lateral: true, comRecuo: true }]) {
+      const { container, unmount } = render(<AvisoDemonstracao {...props} />)
+      const classes = [...container.querySelector(SELETOR)!.classList]
+      for (const classe of CLASSES_DO_AVISO_DE_TOPO) expect(classes, JSON.stringify(props)).not.toContain(classe)
+      unmount()
+    }
+  })
+
+  it('sem lateral (o padrão) nada muda: texto-info, text-sm e py-1; px-4 só com comRecuo', () => {
+    definirBanco('', '')
+    const comum = render(<AvisoDemonstracao />)
+    const classesComuns = [...comum.container.querySelector(SELETOR)!.classList]
+    for (const classe of ['aviso-demonstracao', 'texto-info', 'text-sm', 'py-1']) expect(classesComuns).toContain(classe)
+    expect(classesComuns).not.toContain('px-4')
+    expect(classesComuns).not.toContain('t-ui')
+    expect(classesComuns).not.toContain('t-secundario')
+    comum.unmount()
+
+    const comRecuo = render(<AvisoDemonstracao comRecuo />)
+    expect([...comRecuo.container.querySelector(SELETOR)!.classList]).toContain('px-4')
+    comRecuo.unmount()
+
+    const explicito = render(<AvisoDemonstracao lateral={false} />)
+    expect([...explicito.container.querySelector(SELETOR)!.classList]).toContain('texto-info')
+  })
+
+  for (const [nome, url, chave, aparece] of [
+    ['as duas vazias', '', '', true],
+    ['só a URL', URL_FICTICIA, '', true],
+    ['só a chave', '', CHAVE_FICTICIA, true],
+    ['as duas preenchidas', URL_FICTICIA, CHAVE_FICTICIA, false],
+  ] as const) {
+    it(`com lateral, ${nome}: ${aparece ? 'mostra' : 'não mostra'} o aviso`, () => {
+      definirBanco(url, chave)
+      const { container } = render(<AvisoDemonstracao lateral />)
+
+      expect(container.querySelectorAll(SELETOR)).toHaveLength(aparece ? 1 : 0)
+      expect(container.textContent === '').toBe(!aparece)
+    })
+  }
+})
+
 describe('aviso de demonstração: texto e marcador são o mesmo elemento', () => {
   it('em /app/hoje, com as duas variáveis vazias, o data-aviso e o texto exato apontam o mesmo <p>', () => {
     definirBanco('', '')
@@ -99,24 +159,56 @@ describe('aviso de demonstração: lugar na tela', () => {
     expect(raiz.firstElementChild!.nextElementSibling!.tagName).toBe('NAV')
   })
 
-  for (const [tela, caminho] of [
-    ['Hoje', '/app/hoje'],
-    ['Sessão', '/app/sessao'],
-  ] as const) {
-    it(`é a primeira linha dentro da coluna do ${tela}, antes do header, e com recuo`, () => {
-      definirBanco('', '')
-      const { container } = renderizarRota(caminho)
+  // A Sessão ainda é a da coluna única (parte 2 do cartão 44d-2 a refaz).
+  it('é a primeira linha dentro da coluna da Sessão, antes do header, e com recuo', () => {
+    definirBanco('', '')
+    const { container } = renderizarRota('/app/sessao')
 
-      const coluna = container.querySelector('.coluna-app')!
-      const aviso = container.querySelector(SELETOR)!
-      expect(coluna.firstElementChild).toBe(aviso)
-      conferirTudoDentroDaColuna(container)
-      expect(aviso.classList.contains('px-4')).toBe(true)
-      // Depois do aviso vem a seção da faixa do protótipo, que guarda o <header> dela.
-      expect(aviso.nextElementSibling!.tagName).toBe('SECTION')
-      expect(aviso.nextElementSibling!.querySelector('header')).not.toBeNull()
-    })
-  }
+    const coluna = container.querySelector('.coluna-app')!
+    const aviso = container.querySelector(SELETOR)!
+    expect(coluna.firstElementChild).toBe(aviso)
+    conferirTudoDentroDaColuna(container)
+    expect(aviso.classList.contains('px-4')).toBe(true)
+    // Depois do aviso vem a seção da faixa do protótipo, que guarda o <header> dela.
+    expect(aviso.nextElementSibling!.tagName).toBe('SECTION')
+    expect(aviso.nextElementSibling!.querySelector('header')).not.toBeNull()
+  })
+
+  it('no Hoje o aviso é um item da coluna lateral da abertura: sem faixa no topo, sem coluna única e sem o aviso duplicado', () => {
+    definirBanco('', '')
+    const { container } = renderizarRota('/app/hoje')
+
+    const aviso = container.querySelector(SELETOR)!
+    expect(container.querySelectorAll(SELETOR)).toHaveLength(1)
+    expect(aviso.closest('ul.sb-abertura-lateral')).not.toBeNull()
+    expect(aviso.closest('main')!.firstElementChild!.contains(aviso)).toBe(true)
+    expect(aviso.parentElement!.tagName).toBe('LI')
+    expect([...aviso.classList]).toEqual(expect.arrayContaining(['t-ui', 't-secundario']))
+    expect(aviso.classList.contains('px-4')).toBe(false)
+    expect(container.querySelector('.coluna-app')).toBeNull()
+    expect(container.querySelector('[aria-label="Aviso do protótipo"]')).toBeNull()
+    expect(screen.queryByText('Protótipo: dados fictícios, nada é salvo.')).toBeNull()
+    // O primeiro elemento da página é o cabeçalho do site (H-2).
+    expect(container.querySelector('[data-cabecalho]')!.compareDocumentPosition(aviso) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
+    expect(container.firstElementChild!.firstElementChild!.matches('[data-cabecalho]')).toBe(true)
+  })
+
+  it('no Hoje, com as variáveis do banco, a lateral mostra a etiqueta "Protótipo, dados fictícios" e nenhum aviso', () => {
+    definirBanco(URL_FICTICIA, CHAVE_FICTICIA)
+    const { container } = renderizarRota('/app/hoje')
+
+    expect(container.querySelectorAll(SELETOR)).toHaveLength(0)
+    const etiqueta = screen.getByText('Protótipo, dados fictícios')
+    expect(etiqueta.classList.contains('sb-etiqueta')).toBe(true)
+    expect(etiqueta.closest('ul.sb-abertura-lateral')).not.toBeNull()
+  })
+
+  it('no Hoje, sem as variáveis do banco, a etiqueta não aparece (o aviso a substitui)', () => {
+    definirBanco('', '')
+    renderizarRota('/app/hoje')
+
+    expect(screen.queryByText('Protótipo, dados fictícios')).toBeNull()
+  })
 
   it('é a primeira linha dentro do main da rota inexistente, antes do h1, sem recuo próprio', async () => {
     definirBanco('', '')
