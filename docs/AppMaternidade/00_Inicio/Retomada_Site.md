@@ -12,7 +12,16 @@ Esta é a nota de partida da próxima sessão de trabalho no site. Ela registra 
 
 **Site publicado (06/11/2026):** https://ded-techstack.github.io/AppMaternidade/ (MAT-48a, main 2beddee). Ele mostra Início, Hoje e Sessão com o aviso "Demonstração sem banco". As variáveis do banco entram no build com a MAT-37.
 
-## PAUSA de 06/11/2026 ~19h30 (limite do Claude, decisão de Daniel): ESTADO VIGENTE
+## PAUSA de 09/11/2026 ~22h (conferência antes da retomada, decisão de Daniel): ESTADO VIGENTE
+
+A retomada de 09/11, às ~21h50, saiu cedo demais e foi suspensa. Daniel vai conferir as atualizações, as sessões, as assinaturas e os modelos antes de o trabalho voltar.
+
+- **Cartões parados:** t_f67d8962 (44c-1), t_ecf636f5 (44c-2a), t_915e3632 (37a) e t_fa51c4df (48b) estão bloqueados como needs_input `[decisor: Daniel] pausa de 09/11 (conferência antes da retomada)`. O board os pôs em triage. Os worktrees ficaram preservados, e nada foi integrado nem enviado.
+- **Subagentes:** os 2 que refaziam os corpos 44c-2b e 37b e a spec v3 da MAT-38 foram interrompidos sem escrever nada. A MAT-38 continua na v2, idêntica a `TAREFA_v2.md`.
+- **No ar:** o site continua em 599b975 e a main está em 58ae00f, mais este registro, que está só no local.
+- **Na retomada:** desbloqueie os 4 cartões. Os comentários 114 a 117 pedem o rebase sobre a main. Na 44c-1, valem também os comentários 109 e 110. Relance os 2 subagentes, usando `CONTEXTO_CARTOES.md`. O resto continua igual à seção de 06/11 abaixo.
+
+## PAUSA de 06/11/2026 ~19h30 (limite do Claude, decisão de Daniel)
 
 **No ar:** main **599b975**, em https://ded-techstack.github.io/AppMaternidade/. É o site da MAT-44 e da MAT-48a, agora com a família de exemplo Heloísa (bebê) e Juliana (mãe), mais Bruno e Carla. A frase do protótipo passou a ser "Um dia de exemplo com Heloísa…". A troca de nomes veio do cartão t_5c545bc3, aprovado pelo revisor (469 testes). Ela só mexe em texto, não muda o layout.
 
