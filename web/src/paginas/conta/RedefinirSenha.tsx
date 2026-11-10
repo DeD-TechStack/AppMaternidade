@@ -1,11 +1,19 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
+import { Botao } from '../../componentes/base/Botao.tsx'
 import { apagarChave, CHAVE_RECUPERACAO, lerChave } from '../../componentes/conta/armazenamento.ts'
-import { Campo, CampoSenha } from '../../componentes/conta/Campos.tsx'
+import { CampoAcesso } from '../../componentes/conta/CampoAcesso.tsx'
 import { useEnvio } from '../../componentes/conta/envio.ts'
 import { useFocoNoResumo } from '../../componentes/conta/foco.ts'
 import { MolduraPublica } from '../../componentes/conta/MolduraPublica.tsx'
-import { BOTAO_PRINCIPAL, Carregando, LINK_ALVO, ResumoErro } from '../../componentes/conta/Partes.tsx'
+import {
+  BlocoDoFormulario,
+  BotaoEnvio,
+  CarregandoAcesso,
+  ItemAvisoDeDemonstracao,
+  ItemEtiquetaPrototipo,
+  ResumoErroAcesso,
+} from '../../componentes/conta/PartesAcesso.tsx'
 import { useDadosConta, useSessao } from '../../componentes/conta/sessao.tsx'
 import { COMUM, REDEFINIR, TEXTOS_ERRO, TITULOS, textoDoErro } from '../../conteudo/conta.ts'
 
@@ -71,55 +79,73 @@ export function RedefinirSenha() {
   const vencido = !carregando && (linkVencidoNaUrl || !marcaValida)
 
   return (
-    <MolduraPublica titulo={TITULOS.redefinirSenha} frase={REDEFINIR.frase} ocupado={carregando}>
-      {carregando ? (
-        <Carregando />
-      ) : vencido ? (
-        <div className="flex flex-col items-start gap-3">
-          <p className="font-semibold">{TEXTOS_ERRO.link_vencido}</p>
-          <Link to="/recuperar-acesso" className={LINK_ALVO}>
-            {REDEFINIR.pedirOutroLink}
-          </Link>
-        </div>
-      ) : (
-        <form onSubmit={aoEnviar} noValidate className="flex flex-col gap-5">
-          {erroDoEnvio && !noCampo ? (
-            <ResumoErro
-              erro={erroDoEnvio}
-              repetivel={estado.fase === 'erro' && estado.tentarDeNovo}
-              aoTentarDeNovo={() => void tentarDeNovo()}
-              refResumo={resumo}
-            />
-          ) : null}
-          <CampoSenha
-            rotulo={REDEFINIR.novaSenha}
-            ajuda={COMUM.ajudaSenha}
-            autoComplete="new-password"
-            valor={nova}
-            aoMudar={(valor) => {
-              setNova(valor)
-              setErros((antes) => ({ ...antes, nova: undefined }))
-            }}
-            erro={erros.nova ?? (noCampo && erroDoEnvio ? textoDoErro(erroDoEnvio) : null)}
-            refEntrada={novaRef}
-          />
-          <Campo
-            rotulo={REDEFINIR.repetirSenha}
-            tipo="password"
-            autoComplete="new-password"
-            valor={repetida}
-            aoMudar={(valor) => {
-              setRepetida(valor)
-              setErros((antes) => ({ ...antes, repetida: undefined }))
-            }}
-            erro={erros.repetida}
-            refEntrada={repetidaRef}
-          />
-          <button type="submit" disabled={enviando} className={BOTAO_PRINCIPAL}>
-            {enviando ? COMUM.salvando : REDEFINIR.botao}
-          </button>
-        </form>
-      )}
+    <MolduraPublica
+      titulo={TITULOS.redefinirSenha}
+      subtitulo={REDEFINIR.frase}
+      ocupado={carregando}
+      lateral={
+        <>
+          <ItemEtiquetaPrototipo />
+          <ItemAvisoDeDemonstracao />
+        </>
+      }
+    >
+      <BlocoDoFormulario>
+        {carregando ? (
+          <CarregandoAcesso />
+        ) : vencido ? (
+          <>
+            <p className="sb-status t-corpo">{TEXTOS_ERRO.link_vencido}</p>
+            <div className="sb-acesso-acao">
+              <Botao to="/recuperar-acesso" className="alvo-toque">
+                {REDEFINIR.pedirOutroLink}
+              </Botao>
+            </div>
+          </>
+        ) : (
+          <form onSubmit={aoEnviar} noValidate>
+            {erroDoEnvio && !noCampo ? (
+              <ResumoErroAcesso
+                erro={erroDoEnvio}
+                repetivel={estado.fase === 'erro' && estado.tentarDeNovo}
+                aoTentarDeNovo={() => void tentarDeNovo()}
+                refResumo={resumo}
+              />
+            ) : null}
+            <div className="sb-acesso-campos">
+              <CampoAcesso
+                rotulo={REDEFINIR.novaSenha}
+                tipo="password"
+                mostrarSenha
+                ajuda={COMUM.ajudaSenha}
+                autoComplete="new-password"
+                valor={nova}
+                aoMudar={(valor) => {
+                  setNova(valor)
+                  setErros((antes) => ({ ...antes, nova: undefined }))
+                }}
+                erro={erros.nova ?? (noCampo && erroDoEnvio ? textoDoErro(erroDoEnvio) : null)}
+                refEntrada={novaRef}
+              />
+              <CampoAcesso
+                rotulo={REDEFINIR.repetirSenha}
+                tipo="password"
+                autoComplete="new-password"
+                valor={repetida}
+                aoMudar={(valor) => {
+                  setRepetida(valor)
+                  setErros((antes) => ({ ...antes, repetida: undefined }))
+                }}
+                erro={erros.repetida}
+                refEntrada={repetidaRef}
+              />
+            </div>
+            <div className="sb-acesso-acao">
+              <BotaoEnvio enviando={enviando}>{enviando ? COMUM.salvando : REDEFINIR.botao}</BotaoEnvio>
+            </div>
+          </form>
+        )}
+      </BlocoDoFormulario>
     </MolduraPublica>
   )
 }

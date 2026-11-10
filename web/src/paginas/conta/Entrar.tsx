@@ -1,12 +1,24 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { Link, Navigate, useLocation, useSearchParams } from 'react-router'
+import { Navigate, useLocation, useSearchParams } from 'react-router'
+import { Midia } from '../../componentes/base/Midia.tsx'
 import { AreaDoLoginSocial } from '../../componentes/conta/AreaDoLoginSocial.tsx'
-import { CampoSenha, Campo } from '../../componentes/conta/Campos.tsx'
+import { CampoAcesso } from '../../componentes/conta/CampoAcesso.tsx'
 import { caminhoComVolta, destinoDepoisDeEntrar, voltaValida } from '../../componentes/conta/destino.ts'
 import { useEnvio } from '../../componentes/conta/envio.ts'
 import { useFocoNoResumo } from '../../componentes/conta/foco.ts'
 import { MolduraPublica } from '../../componentes/conta/MolduraPublica.tsx'
-import { BOTAO_PRINCIPAL, Carregando, LINK_ALVO, RegiaoStatus, ResumoErro } from '../../componentes/conta/Partes.tsx'
+import {
+  BlocoDoFormulario,
+  BotaoEnvio,
+  CarregandoAcesso,
+  ItemAvisoDeDemonstracao,
+  ItemEtiquetaPrototipo,
+  ItemLinkDaAbertura,
+  LinhasDeExplicacao,
+  LinkAcesso,
+  RegiaoStatusAcesso,
+  ResumoErroAcesso,
+} from '../../componentes/conta/PartesAcesso.tsx'
 import { useDadosConta, useSessao } from '../../componentes/conta/sessao.tsx'
 import { COMUM, ENTRAR, TITULOS, textoDaPassagem } from '../../conteudo/conta.ts'
 
@@ -59,66 +71,73 @@ export function Entrar() {
   return (
     <MolduraPublica
       titulo={TITULOS.entrar}
-      frase={ENTRAR.frase}
+      subtitulo={ENTRAR.frase}
       ocupado={carregando}
-      ligacoes={
-        <p className="texto-medida">
-          {ENTRAR.semConta}{' '}
-          <Link to={caminhoComVolta('/criar-conta', volta)} className={LINK_ALVO}>
-            {ENTRAR.criarConta}
-          </Link>
-        </p>
+      lateral={
+        <>
+          <ItemEtiquetaPrototipo />
+          <ItemAvisoDeDemonstracao />
+          <ItemLinkDaAbertura para={caminhoComVolta('/criar-conta', volta)}>{ENTRAR.criarConta}</ItemLinkDaAbertura>
+        </>
       }
     >
-      <RegiaoStatus mensagem={textoDaPassagem(location.state)} />
-      <AreaDoLoginSocial />
-      {carregando ? (
-        <Carregando />
-      ) : sessao.estado === 'erro' && sessao.erro ? (
-        <ResumoErro erro={sessao.erro} repetivel aoTentarDeNovo={() => void sessao.recarregarConta()} />
-      ) : (
-        <form onSubmit={aoEnviar} noValidate className="flex flex-col gap-5">
-          {estado.fase === 'erro' ? (
-            <ResumoErro
-              erro={estado.erro}
-              repetivel={estado.tentarDeNovo}
-              aoTentarDeNovo={() => void tentarDeNovo()}
-              refResumo={resumo}
-            />
-          ) : null}
-          <Campo
-            rotulo={COMUM.rotuloEmail}
-            tipo="email"
-            autoComplete="email"
-            valor={email}
-            aoMudar={(valor) => {
-              setEmail(valor)
-              setErros((antes) => ({ ...antes, email: undefined }))
-            }}
-            erro={erros.email}
-            refEntrada={emailRef}
-          />
-          <div className="flex flex-col gap-1">
-            <CampoSenha
-              rotulo={COMUM.rotuloSenha}
-              autoComplete="current-password"
-              valor={senha}
-              aoMudar={(valor) => {
-                setSenha(valor)
-                setErros((antes) => ({ ...antes, senha: undefined }))
-              }}
-              erro={erros.senha}
-              refEntrada={senhaRef}
-            />
-            <Link to={caminhoComVolta('/recuperar-acesso', volta)} className={`${LINK_ALVO} self-end`}>
-              {ENTRAR.esqueci}
-            </Link>
-          </div>
-          <button type="submit" disabled={enviando} className={BOTAO_PRINCIPAL}>
-            {enviando ? COMUM.entrando : ENTRAR.botao}
-          </button>
-        </form>
-      )}
+      <BlocoDoFormulario>
+        <RegiaoStatusAcesso mensagem={textoDaPassagem(location.state)} />
+        <AreaDoLoginSocial />
+        {carregando ? (
+          <CarregandoAcesso />
+        ) : sessao.estado === 'erro' && sessao.erro ? (
+          <ResumoErroAcesso erro={sessao.erro} repetivel aoTentarDeNovo={() => void sessao.recarregarConta()} />
+        ) : (
+          <form onSubmit={aoEnviar} noValidate>
+            {estado.fase === 'erro' ? (
+              <ResumoErroAcesso
+                erro={estado.erro}
+                repetivel={estado.tentarDeNovo}
+                aoTentarDeNovo={() => void tentarDeNovo()}
+                refResumo={resumo}
+              />
+            ) : null}
+            <div className="sb-acesso-campos">
+              <CampoAcesso
+                rotulo={COMUM.rotuloEmail}
+                tipo="email"
+                autoComplete="email"
+                valor={email}
+                aoMudar={(valor) => {
+                  setEmail(valor)
+                  setErros((antes) => ({ ...antes, email: undefined }))
+                }}
+                erro={erros.email}
+                refEntrada={emailRef}
+              />
+              <CampoAcesso
+                rotulo={COMUM.rotuloSenha}
+                tipo="password"
+                mostrarSenha
+                autoComplete="current-password"
+                valor={senha}
+                aoMudar={(valor) => {
+                  setSenha(valor)
+                  setErros((antes) => ({ ...antes, senha: undefined }))
+                }}
+                erro={erros.senha}
+                refEntrada={senhaRef}
+              />
+            </div>
+            <div className="sb-acesso-acao">
+              <BotaoEnvio enviando={enviando}>{enviando ? COMUM.entrando : ENTRAR.botao}</BotaoEnvio>
+              <LinkAcesso para={caminhoComVolta('/recuperar-acesso', volta)}>{ENTRAR.esqueci}</LinkAcesso>
+            </div>
+          </form>
+        )}
+      </BlocoDoFormulario>
+
+      <LinhasDeExplicacao tema={ENTRAR.explicacao.tema} linhas={ENTRAR.explicacao.linhas} />
+
+      <div className="sb-area sb-mt-midia-linhas">
+        <Midia formato="larga" fundo="barro" aria-label={ENTRAR.midia} />
+      </div>
     </MolduraPublica>
   )
 }

@@ -56,19 +56,53 @@ export const CABECALHO = {
   sair: 'Sair',
 } as const
 
+/** A etiqueta da abertura das telas de acesso (MAT-44d-3): o aviso curto de protótipo. */
+export const ETIQUETA_PROTOTIPO = 'Protótipo'
+
+/** Um bloco de linhas "rótulo + texto" (MAT-44d-3): o tema do bloco e as linhas. */
+interface LinhasDoBloco {
+  tema: string
+  linhas: ReadonlyArray<{ rotulo: string; texto: string }>
+}
+
 export const ENTRAR = {
-  frase: 'Use o e-mail e a senha que você cadastrou.',
+  frase: 'Use o e-mail e a senha.',
   botao: 'Entrar',
-  semConta: 'Ainda não tem conta?',
   criarConta: 'Criar conta',
   esqueci: 'Esqueci a senha',
+  /** A moldura de mídia da tela: o conteúdo vem em outro cartão. */
+  midia: 'Celular com a tela Hoje.',
+  explicacao: {
+    tema: 'O que você vê ao entrar',
+    linhas: [
+      { rotulo: 'Registros', texto: 'Sono, mamada, fralda e outros 4 tipos de registro, com um ou dois toques.' },
+      { rotulo: 'Autoria', texto: 'Cada registro mostra quem o fez.' },
+      {
+        rotulo: 'Madrugada',
+        texto: 'O modo madrugada escurece a tela e aumenta os botões, para registrar com uma mão e a luz apagada.',
+      },
+      {
+        rotulo: 'Demonstração',
+        texto: 'Os dados são de demonstração. Nada aqui é dado real, então use só nomes e datas fictícios.',
+      },
+    ],
+  } satisfies LinhasDoBloco,
 } as const
 
 export const CRIAR_CONTA = {
   frase: 'Você precisa de um nome, um e-mail e uma senha.',
   botao: 'Criar conta',
-  jaTemConta: 'Já tem conta?',
   entrar: 'Entrar',
+  explicacao: {
+    tema: 'O que a conta guarda',
+    linhas: [
+      // Os rótulos não repetem os títulos do passo "Seu nome" e da seção "Seus dados" da Conta.
+      { rotulo: 'Nome', texto: 'É o nome que a família vê nos registros que você faz.' },
+      { rotulo: 'E-mail', texto: 'Você entra com ele e com a senha.' },
+      { rotulo: 'Fuso', texto: 'Os horários aparecem no fuso do seu aparelho.' },
+      { rotulo: 'Dados', texto: 'Na tela Conta, você baixa os seus dados em JSON e pode excluir a conta.' },
+    ],
+  } satisfies LinhasDoBloco,
   termos: {
     antes: 'Ao criar a conta, você concorda com os ',
     termos: 'Termos de uso',
@@ -83,12 +117,24 @@ export const AVISO_BANCO_DEMONSTRACAO =
   'Este site é uma demonstração com banco de teste. Para a família e o bebê, use só nomes e datas fictícios.'
 
 export const RECUPERAR = {
-  frase: 'Escreva o e-mail da conta. Enviamos um link para você criar uma senha nova.',
+  frase: 'Enviamos um link para criar uma senha nova.',
   botao: 'Enviar link',
-  resultado:
-    'Se houver uma conta com este e-mail, enviamos um link para criar uma senha nova. Confira também a caixa de spam.',
+  // Uma linha só, para caber na linha de 112 px do campo sem mudar a altura da página (R-3).
+  resultado: 'Se a conta existir, enviamos o link. Confira também o spam.',
   entrar: 'Entrar',
   criarConta: 'Criar conta',
+  explicacao: {
+    tema: 'Como funciona o link',
+    linhas: [
+      { rotulo: 'Envio', texto: 'O link vai para o e-mail que você escrever, se houver uma conta com ele.' },
+      { rotulo: 'Validade', texto: 'O link vence ou deixa de valer depois de usado. Se isso acontecer, peça outro.' },
+      {
+        rotulo: 'Senha nova',
+        texto: 'No link, você escolhe a senha nova. Ela precisa ter pelo menos 6 caracteres e ser diferente da atual.',
+      },
+      { rotulo: 'Se não chegar', texto: 'Confira a caixa de spam. Depois de muitas tentativas seguidas, espere alguns minutos.' },
+    ],
+  } satisfies LinhasDoBloco,
 } as const
 
 export const REDEFINIR = {

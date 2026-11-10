@@ -1,18 +1,27 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { Link, useSearchParams } from 'react-router'
-import { Campo } from '../../componentes/conta/Campos.tsx'
+import { useSearchParams } from 'react-router'
+import { CampoAcesso } from '../../componentes/conta/CampoAcesso.tsx'
 import { caminhoComVolta, urlDoSite, voltaValida } from '../../componentes/conta/destino.ts'
 import { useEnvio } from '../../componentes/conta/envio.ts'
 import { useFocoNoResumo } from '../../componentes/conta/foco.ts'
 import { MolduraPublica } from '../../componentes/conta/MolduraPublica.tsx'
-import { BOTAO_PRINCIPAL, LINK_ALVO, RegiaoStatus, ResumoErro } from '../../componentes/conta/Partes.tsx'
+import {
+  BlocoDoFormulario,
+  BotaoEnvio,
+  ItemAvisoDeDemonstracao,
+  ItemEtiquetaPrototipo,
+  ItemLinkDaAbertura,
+  LinhasDeExplicacao,
+  ResumoErroAcesso,
+} from '../../componentes/conta/PartesAcesso.tsx'
 import { useDadosConta } from '../../componentes/conta/sessao.tsx'
 import { COMUM, RECUPERAR, TITULOS, textoDoErro } from '../../conteudo/conta.ts'
 import type { Resultado } from '../../dados/comum.ts'
 
 // /recuperar-acesso (RF-12). Nenhum resultado depende de a conta existir, então nenhum a revela:
 // `ok` e qualquer erro de negócio (fora `muitas_tentativas` e `email_invalido`) dão a mesma
-// mensagem; rede, "tente de novo" e desconhecido pedem "Tentar de novo".
+// mensagem; rede, "tente de novo" e desconhecido pedem "Tentar de novo". A mensagem de resultado é a
+// região de status da tela e fica na linha do campo (R-3): a linha tem sempre 112 px.
 export function RecuperarAcesso() {
   const dados = useDadosConta()
   const [parametros] = useSearchParams()
@@ -59,44 +68,48 @@ export function RecuperarAcesso() {
   return (
     <MolduraPublica
       titulo={TITULOS.recuperarAcesso}
-      frase={RECUPERAR.frase}
-      ligacoes={
-        <p className="flex flex-wrap gap-x-4">
-          <Link to={caminhoComVolta('/entrar', volta)} className={LINK_ALVO}>
-            {RECUPERAR.entrar}
-          </Link>
-          <Link to={caminhoComVolta('/criar-conta', volta)} className={LINK_ALVO}>
-            {RECUPERAR.criarConta}
-          </Link>
-        </p>
+      subtitulo={RECUPERAR.frase}
+      lateral={
+        <>
+          <ItemEtiquetaPrototipo />
+          <ItemAvisoDeDemonstracao />
+          <ItemLinkDaAbertura para={caminhoComVolta('/entrar', volta)}>{RECUPERAR.entrar}</ItemLinkDaAbertura>
+          <ItemLinkDaAbertura para={caminhoComVolta('/criar-conta', volta)}>{RECUPERAR.criarConta}</ItemLinkDaAbertura>
+        </>
       }
     >
-      <RegiaoStatus mensagem={mensagem} />
-      <form onSubmit={aoEnviar} noValidate className="flex flex-col gap-5">
-        {erroDoEnvio && !noCampo ? (
-          <ResumoErro
-            erro={erroDoEnvio}
-            repetivel={estado.fase === 'erro' && estado.tentarDeNovo}
-            aoTentarDeNovo={() => void tentarDeNovo()}
-            refResumo={resumo}
-          />
-        ) : null}
-        <Campo
-          rotulo={COMUM.rotuloEmail}
-          tipo="email"
-          autoComplete="email"
-          valor={email}
-          aoMudar={(valor) => {
-            setEmail(valor)
-            setErroLocal(null)
-          }}
-          erro={erroLocal ?? (noCampo && erroDoEnvio ? textoDoErro(erroDoEnvio) : null)}
-          refEntrada={emailRef}
-        />
-        <button type="submit" disabled={enviando} className={BOTAO_PRINCIPAL}>
-          {enviando ? COMUM.enviando : RECUPERAR.botao}
-        </button>
-      </form>
+      <BlocoDoFormulario>
+        <form onSubmit={aoEnviar} noValidate>
+          {erroDoEnvio && !noCampo ? (
+            <ResumoErroAcesso
+              erro={erroDoEnvio}
+              repetivel={estado.fase === 'erro' && estado.tentarDeNovo}
+              aoTentarDeNovo={() => void tentarDeNovo()}
+              refResumo={resumo}
+            />
+          ) : null}
+          <div className="sb-acesso-campos">
+            <CampoAcesso
+              rotulo={COMUM.rotuloEmail}
+              tipo="email"
+              autoComplete="email"
+              valor={email}
+              aoMudar={(valor) => {
+                setEmail(valor)
+                setErroLocal(null)
+              }}
+              erro={erroLocal ?? (noCampo && erroDoEnvio ? textoDoErro(erroDoEnvio) : null)}
+              status={mensagem}
+              refEntrada={emailRef}
+            />
+          </div>
+          <div className="sb-acesso-acao">
+            <BotaoEnvio enviando={enviando}>{enviando ? COMUM.enviando : RECUPERAR.botao}</BotaoEnvio>
+          </div>
+        </form>
+      </BlocoDoFormulario>
+
+      <LinhasDeExplicacao tema={RECUPERAR.explicacao.tema} linhas={RECUPERAR.explicacao.linhas} />
     </MolduraPublica>
   )
 }

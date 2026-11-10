@@ -1,16 +1,25 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router'
 import { AreaDoLoginSocial } from '../../componentes/conta/AreaDoLoginSocial.tsx'
-import { Campo, CampoSenha } from '../../componentes/conta/Campos.tsx'
+import { CampoAcesso } from '../../componentes/conta/CampoAcesso.tsx'
 import { caminhoComVolta, destinoDepoisDeEntrar, urlDoSite, voltaValida } from '../../componentes/conta/destino.ts'
 import { useEnvio } from '../../componentes/conta/envio.ts'
 import { useFocoNoResumo } from '../../componentes/conta/foco.ts'
 import { fusoDoAparelho } from '../../componentes/conta/fusos.ts'
 import { MolduraPublica } from '../../componentes/conta/MolduraPublica.tsx'
-import { BOTAO_PRINCIPAL, Carregando, LINK_ALVO, RegiaoStatus, ResumoErro } from '../../componentes/conta/Partes.tsx'
+import {
+  BlocoDoFormulario,
+  BotaoEnvio,
+  CarregandoAcesso,
+  ItemAvisoDeDemonstracao,
+  ItemLinkDaAbertura,
+  LinhasDeExplicacao,
+  LinkAcesso,
+  RegiaoStatusAcesso,
+  ResumoErroAcesso,
+} from '../../componentes/conta/PartesAcesso.tsx'
 import { useDadosConta, useSessao } from '../../componentes/conta/sessao.tsx'
-import { AVISO_BANCO_DEMONSTRACAO, COMUM, CRIAR_CONTA, TITULOS, textoDoErro } from '../../conteudo/conta.ts'
-import { modoDados } from '../../dados/comum.ts'
+import { COMUM, CRIAR_CONTA, TITULOS, textoDoErro } from '../../conteudo/conta.ts'
 
 // /criar-conta (RF-12). Cria o usuário no Auth com o nome nos metadados; com sessão devolvida,
 // cria a conta com o nome e o fuso do aparelho e segue para o destino do RF-10. Sem sessão
@@ -77,102 +86,98 @@ export function CriarConta() {
   }
 
   const carregando = sessao.estado === 'carregando'
-  const comBanco = modoDados() === 'supabase'
 
   return (
     <MolduraPublica
       titulo={TITULOS.criarConta}
-      frase={CRIAR_CONTA.frase}
+      subtitulo={CRIAR_CONTA.frase}
       ocupado={carregando}
-      ligacoes={
-        <p className="texto-medida">
-          {CRIAR_CONTA.jaTemConta}{' '}
-          <Link to={caminhoComVolta('/entrar', volta)} className={LINK_ALVO}>
-            {CRIAR_CONTA.entrar}
-          </Link>
-        </p>
+      lateral={
+        <>
+          <ItemAvisoDeDemonstracao doBanco />
+          <ItemLinkDaAbertura para={caminhoComVolta('/entrar', volta)}>{CRIAR_CONTA.entrar}</ItemLinkDaAbertura>
+        </>
       }
     >
-      {comBanco ? (
-        <p data-aviso="banco-de-demonstracao" className="texto-info">
-          {AVISO_BANCO_DEMONSTRACAO}
-        </p>
-      ) : null}
-      <RegiaoStatus mensagem={confirmacao} />
-      <AreaDoLoginSocial />
-      {carregando ? (
-        <Carregando />
-      ) : sessao.estado === 'erro' && sessao.erro ? (
-        <ResumoErro erro={sessao.erro} repetivel aoTentarDeNovo={() => void sessao.recarregarConta()} />
-      ) : (
-        <form onSubmit={aoEnviar} noValidate className="flex flex-col gap-5">
-          {erroDoEnvio && !campoDoErro ? (
-            <ResumoErro
-              erro={erroDoEnvio}
-              repetivel={estado.fase === 'erro' && estado.tentarDeNovo}
-              aoTentarDeNovo={() => void tentarDeNovo()}
-              refResumo={resumo}
-            >
-              {erroDoEnvio.chave === 'email_em_uso' ? (
-                <div className="flex flex-wrap gap-x-4">
-                  <Link to={caminhoComVolta('/entrar', volta)} className={LINK_ALVO}>
-                    {TITULOS.entrar}
-                  </Link>
-                  <Link to={caminhoComVolta('/recuperar-acesso', volta)} className={LINK_ALVO}>
-                    {TITULOS.recuperarAcesso}
-                  </Link>
-                </div>
-              ) : null}
-            </ResumoErro>
-          ) : null}
-          <Campo
-            rotulo={COMUM.rotuloNome}
-            ajuda={COMUM.ajudaNome}
-            autoComplete="name"
-            valor={nome}
-            aoMudar={(valor) => {
-              setNome(valor)
-              setErros((antes) => ({ ...antes, nome: undefined }))
-            }}
-            erro={erros.nome}
-            refEntrada={nomeRef}
-          />
-          <Campo
-            rotulo={COMUM.rotuloEmail}
-            tipo="email"
-            autoComplete="email"
-            valor={email}
-            aoMudar={(valor) => {
-              setEmail(valor)
-              setErros((antes) => ({ ...antes, email: undefined }))
-            }}
-            erro={erros.email ?? (campoDoErro === 'email' && erroDoEnvio ? textoDoErro(erroDoEnvio) : null)}
-            refEntrada={emailRef}
-          />
-          <CampoSenha
-            rotulo={COMUM.rotuloSenha}
-            ajuda={COMUM.ajudaSenha}
-            autoComplete="new-password"
-            valor={senha}
-            aoMudar={(valor) => {
-              setSenha(valor)
-              setErros((antes) => ({ ...antes, senha: undefined }))
-            }}
-            erro={erros.senha ?? (campoDoErro === 'senha' && erroDoEnvio ? textoDoErro(erroDoEnvio) : null)}
-            refEntrada={senhaRef}
-          />
-          <p className="texto-medida">
-            {CRIAR_CONTA.termos.antes}
-            <Link to="/termos">{CRIAR_CONTA.termos.termos}</Link>
-            {CRIAR_CONTA.termos.meio}
-            <Link to="/privacidade">{CRIAR_CONTA.termos.privacidade}</Link>
-            {CRIAR_CONTA.termos.depois}
-          </p>
-          <button type="submit" disabled={enviando} className={BOTAO_PRINCIPAL}>
-            {enviando ? COMUM.criandoConta : CRIAR_CONTA.botao}
-          </button>
-        </form>
-      )}
+      <BlocoDoFormulario>
+        <RegiaoStatusAcesso mensagem={confirmacao} />
+        <AreaDoLoginSocial />
+        {carregando ? (
+          <CarregandoAcesso />
+        ) : sessao.estado === 'erro' && sessao.erro ? (
+          <ResumoErroAcesso erro={sessao.erro} repetivel aoTentarDeNovo={() => void sessao.recarregarConta()} />
+        ) : (
+          <form onSubmit={aoEnviar} noValidate>
+            {erroDoEnvio && !campoDoErro ? (
+              <ResumoErroAcesso
+                erro={erroDoEnvio}
+                repetivel={estado.fase === 'erro' && estado.tentarDeNovo}
+                aoTentarDeNovo={() => void tentarDeNovo()}
+                refResumo={resumo}
+              >
+                {erroDoEnvio.chave === 'email_em_uso' ? (
+                  <div className="sb-acesso-links">
+                    <LinkAcesso para={caminhoComVolta('/entrar', volta)}>{TITULOS.entrar}</LinkAcesso>
+                    <LinkAcesso para={caminhoComVolta('/recuperar-acesso', volta)}>{TITULOS.recuperarAcesso}</LinkAcesso>
+                  </div>
+                ) : null}
+              </ResumoErroAcesso>
+            ) : null}
+            <div className="sb-acesso-campos">
+              <CampoAcesso
+                rotulo={COMUM.rotuloNome}
+                ajuda={COMUM.ajudaNome}
+                autoComplete="name"
+                valor={nome}
+                aoMudar={(valor) => {
+                  setNome(valor)
+                  setErros((antes) => ({ ...antes, nome: undefined }))
+                }}
+                erro={erros.nome}
+                refEntrada={nomeRef}
+              />
+              <CampoAcesso
+                rotulo={COMUM.rotuloEmail}
+                tipo="email"
+                autoComplete="email"
+                valor={email}
+                aoMudar={(valor) => {
+                  setEmail(valor)
+                  setErros((antes) => ({ ...antes, email: undefined }))
+                }}
+                erro={erros.email ?? (campoDoErro === 'email' && erroDoEnvio ? textoDoErro(erroDoEnvio) : null)}
+                refEntrada={emailRef}
+              />
+              <CampoAcesso
+                rotulo={COMUM.rotuloSenha}
+                tipo="password"
+                mostrarSenha
+                ajuda={COMUM.ajudaSenha}
+                autoComplete="new-password"
+                valor={senha}
+                aoMudar={(valor) => {
+                  setSenha(valor)
+                  setErros((antes) => ({ ...antes, senha: undefined }))
+                }}
+                erro={erros.senha ?? (campoDoErro === 'senha' && erroDoEnvio ? textoDoErro(erroDoEnvio) : null)}
+                refEntrada={senhaRef}
+              />
+            </div>
+            <p className="sb-acesso-aceite t-corpo-p">
+              {CRIAR_CONTA.termos.antes}
+              <Link to="/termos">{CRIAR_CONTA.termos.termos}</Link>
+              {CRIAR_CONTA.termos.meio}
+              <Link to="/privacidade">{CRIAR_CONTA.termos.privacidade}</Link>
+              {CRIAR_CONTA.termos.depois}
+            </p>
+            <div className="sb-acesso-acao">
+              <BotaoEnvio enviando={enviando}>{enviando ? COMUM.criandoConta : CRIAR_CONTA.botao}</BotaoEnvio>
+            </div>
+          </form>
+        )}
+      </BlocoDoFormulario>
+
+      <LinhasDeExplicacao tema={CRIAR_CONTA.explicacao.tema} linhas={CRIAR_CONTA.explicacao.linhas} />
     </MolduraPublica>
   )
 }
