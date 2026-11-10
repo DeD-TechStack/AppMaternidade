@@ -23,6 +23,37 @@ const DO_BRASIL = [
 
 const PADRAO = 'America/Sao_Paulo'
 
+// O nome que a pessoa lê, para cada fuso do Brasil (com acento, como se escreve em português).
+const NOMES_DO_BRASIL: Record<string, string> = {
+  'America/Sao_Paulo': 'São Paulo (Brasília)',
+  'America/Manaus': 'Manaus',
+  'America/Cuiaba': 'Cuiabá',
+  'America/Campo_Grande': 'Campo Grande',
+  'America/Porto_Velho': 'Porto Velho',
+  'America/Rio_Branco': 'Rio Branco',
+  'America/Boa_Vista': 'Boa Vista',
+  'America/Belem': 'Belém',
+  'America/Fortaleza': 'Fortaleza',
+  'America/Recife': 'Recife',
+  'America/Maceio': 'Maceió',
+  'America/Bahia': 'Salvador (Bahia)',
+  'America/Araguaina': 'Araguaína',
+  'America/Santarem': 'Santarém',
+  'America/Noronha': 'Fernando de Noronha',
+  'America/Eirunepe': 'Eirunepé',
+}
+
+/**
+ * O texto de um fuso na tela: o nome em português para os do Brasil; para os demais, a parte depois da
+ * última `/` com espaço no lugar de `_` (`America/Los_Angeles` vira `Los Angeles`); `UTC` fica `UTC`.
+ * Só o texto muda: o valor guardado, o `value` da opção e o envio seguem sendo o identificador IANA.
+ */
+export function nomeDoFuso(id: string): string {
+  const doBrasil = NOMES_DO_BRASIL[id]
+  if (doBrasil) return doBrasil
+  return id.slice(id.lastIndexOf('/') + 1).replaceAll('_', ' ')
+}
+
 /** Primeiro os fusos do Brasil; depois os demais do navegador e `UTC`, em ordem alfabética. */
 export function listaDeFusos(): string[] {
   const todos = new Set<string>(['UTC'])

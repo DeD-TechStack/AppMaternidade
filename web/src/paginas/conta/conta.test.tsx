@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
-import { listaDeFusos } from '../../componentes/conta/fusos.ts'
+import { listaDeFusos, nomeDoFuso } from '../../componentes/conta/fusos.ts'
 import { CHAVE_CONVITE, CHAVE_FAMILIA_ATUAL, CHAVE_RECUPERACAO } from '../../componentes/conta/armazenamento.ts'
 import { CONTA, TEXTOS_ERRO } from '../../conteudo/conta.ts'
 import { dataNoFuso, fusoValido, type Resultado } from '../../dados/comum.ts'
@@ -158,6 +158,32 @@ describe('perfil', () => {
     expect(document.activeElement).not.toBe(status())
   })
 
+  // MAT-44d-3, volta 3, D3: o texto visível do fuso não tem "_"; o valor guardado e o envio são o IANA.
+  it('o select de fuso mostra nomes legíveis (sem "_") com o identificador no value, e salvar grava o identificador', async () => {
+    const dados = novaMemoria()
+    await abrirConta('juliana', dados)
+
+    const opcoes = [...campo('Seu fuso').querySelectorAll('option')]
+    const lista = listaDeFusos()
+    expect(opcoes.map((opcao) => opcao.value)).toEqual(lista)
+    opcoes.forEach((opcao, i) => {
+      expect(opcao.textContent, lista[i]).toBe(nomeDoFuso(lista[i]))
+      expect(opcao.textContent!.trim(), lista[i]).not.toBe('')
+      expect(opcao.textContent, lista[i]).not.toContain('_')
+    })
+    expect(new Set(opcoes.map((opcao) => opcao.textContent)).size).toBe(opcoes.length)
+    expect((campo('Seu fuso') as unknown as HTMLSelectElement).selectedOptions[0].textContent).toBe('São Paulo (Brasília)')
+
+    const porTexto = (texto: string) => opcoes.find((opcao) => opcao.textContent === texto)!
+    digitar('Seu fuso', porTexto('Manaus').value)
+    digitar('Seu fuso', porTexto('São Paulo (Brasília)').value)
+    expect(campo('Seu fuso').value).toBe('America/Sao_Paulo')
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar' }))
+    await waitFor(() => expect(status().textContent).toBe('Dados salvos.'))
+    const conta = await dados.minhaConta()
+    expect(conta.ok && conta.valor?.fuso).toBe('America/Sao_Paulo')
+  })
+
   it('nome vazio dá erro no campo, sem chamar o banco', async () => {
     const dados = novaMemoria()
     await abrirConta('juliana', dados)
@@ -203,7 +229,9 @@ describe('perfil', () => {
 
     const opcoes = [...campo('Seu fuso').querySelectorAll('option')]
     expect(opcoes[0].value).toBe(fora)
-    expect(opcoes[0].textContent).toBe(`${fora} (atual)`)
+    // O texto é o nome legível (sem "_") mais "(atual)"; o valor segue sendo o identificador.
+    expect(opcoes[0].textContent).toBe(`${nomeDoFuso(fora!)} (atual)`)
+    expect(opcoes[0].textContent).not.toContain('_')
     expect(campo('Seu fuso').value).toBe(fora)
     expect(opcoes.slice(1).map((opcao) => opcao.value)).toEqual(listaDeFusos())
 

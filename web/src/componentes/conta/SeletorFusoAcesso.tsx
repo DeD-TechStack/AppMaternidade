@@ -1,6 +1,6 @@
 import { useId, useMemo, type Ref } from 'react'
 import { COMECAR } from '../../conteudo/conta.ts'
-import { listaDeFusos } from './fusos.ts'
+import { listaDeFusos, nomeDoFuso } from './fusos.ts'
 
 interface Props {
   rotulo: string
@@ -21,6 +21,8 @@ interface Props {
  * `sb-campo-entrada`), mais o que a base não tem: o valor controlado pela tela, o `ref` (o foco no
  * primeiro erro), o fuso guardado fora da lista e a ajuda e o erro ligados por `aria-describedby`.
  * Tem a mesma altura (112 px; 64 abaixo de 768), o mesmo fio e a mesma fonte do campo de texto.
+ * O texto de cada opção é o nome legível (`nomeDoFuso`, sem "_"); o `value`, o estado e o envio seguem
+ * sendo o identificador IANA.
  */
 export function SeletorFusoAcesso({ rotulo, valor, aoMudar, guardado, ajuda, erro, refEntrada }: Props) {
   const id = useId()
@@ -52,7 +54,7 @@ export function SeletorFusoAcesso({ rotulo, valor, aoMudar, guardado, ajuda, err
           >
             {opcoes.map((fuso) => (
               <option key={fuso} value={fuso}>
-                {fuso === foraDaLista ? COMECAR.fusoAtual(fuso) : fuso}
+                {fuso === foraDaLista ? COMECAR.fusoAtual(nomeDoFuso(fuso)) : nomeDoFuso(fuso)}
               </option>
             ))}
           </select>

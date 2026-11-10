@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
-import { fusoDoAparelho, listaDeFusos } from '../../componentes/conta/fusos.ts'
+import { fusoDoAparelho, listaDeFusos, nomeDoFuso } from '../../componentes/conta/fusos.ts'
 import { TEXTOS_ERRO } from '../../conteudo/conta.ts'
 import { criarDadosContaMemoria, simularFalha } from '../../dados/conta.memoria.ts'
 import { criarFixtureDeTeste, renderizarComDados } from '../../teste/renderizarComDados.tsx'
@@ -246,6 +246,52 @@ describe('a lista de fusos (RF-14)', () => {
     const opcoes = [...campoDeFuso().options].map((opcao) => opcao.value)
     expect(opcoes).toEqual(listaDeFusos())
     expect(opcoes).toContain(fusoDoAparelho())
+  })
+
+  // MAT-44d-3, volta 3, D3: o texto visível não tem "_" (America/Sao_Paulo); o valor segue sendo o IANA.
+  it('o texto de cada opção da lista inteira é o nome legível: não é vazio, não tem "_", e o value é o identificador', async () => {
+    const dados = await memoriaSemConta()
+    renderizarComDados('/app/comecar', { dados })
+    await screen.findByRole('heading', { level: 1, name: 'Começar' })
+
+    const opcoes = [...campoDeFuso().options]
+    expect(opcoes).toHaveLength(listaDeFusos().length)
+    opcoes.forEach((opcao, i) => {
+      const id = listaDeFusos()[i]
+      expect(opcao.value).toBe(id)
+      expect(opcao.textContent, id).toBe(nomeDoFuso(id))
+      expect(opcao.textContent!.trim(), id).not.toBe('')
+      expect(opcao.textContent, id).not.toContain('_')
+    })
+    expect(campoDeFuso().selectedOptions[0].textContent).not.toContain('_')
+  })
+
+  it('dois fusos diferentes nunca mostram o mesmo texto no select', async () => {
+    const dados = await memoriaSemConta()
+    renderizarComDados('/app/comecar', { dados })
+    await screen.findByRole('heading', { level: 1, name: 'Começar' })
+
+    const textos = [...campoDeFuso().options].map((opcao) => opcao.textContent)
+    expect(new Set(textos).size).toBe(textos.length)
+  })
+
+  it('escolher uma opção pelo texto que se lê grava o identificador no estado e no envio', async () => {
+    const dados = await memoriaSemConta()
+    const { roteador } = renderizarComDados('/app/comecar', { dados })
+    await screen.findByRole('heading', { level: 1, name: 'Começar' })
+
+    const porTexto = (texto: string) => [...campoDeFuso().options].find((opcao) => opcao.textContent === texto)!
+    fireEvent.change(campoDeFuso(), { target: { value: porTexto('Manaus').value } })
+    expect(campoDeFuso().value).toBe('America/Manaus')
+    fireEvent.change(campoDeFuso(), { target: { value: porTexto('São Paulo (Brasília)').value } })
+    expect(campoDeFuso().value).toBe('America/Sao_Paulo')
+    expect(campoDeFuso().selectedOptions[0].textContent).toBe('São Paulo (Brasília)')
+
+    fireEvent.change(campoDeTexto(), { target: { value: 'Nova Pessoa' } })
+    salvar()
+    await waitFor(() => expect(caminhoDe(roteador)).toBe('/app/conta'))
+    const conta = await dados.minhaConta()
+    expect(conta.ok && conta.valor?.fuso).toBe('America/Sao_Paulo')
   })
 
   it('o fuso do aparelho vale se está na lista; senão, America/Sao_Paulo', () => {
