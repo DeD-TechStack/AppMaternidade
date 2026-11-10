@@ -6,11 +6,12 @@ import { IlustracaoPasseio } from '../../prototipo/IlustracaoPasseio.tsx'
 import { IlustracaoTapete } from '../../prototipo/IlustracaoTapete.tsx'
 import { Galeria } from '../base/Galeria.tsx'
 import { Midia } from '../base/Midia.tsx'
+import { IlustracaoPassagem } from './IlustracaoPassagem.tsx'
 
 type Cena = keyof typeof MIDIAS
 type Fundo = 'barro' | 'lavanda'
 
-/** Uma peça: a cena (uma das 5 ilustrações que já existem) e o fundo da moldura. */
+/** Uma peça: a cena (uma das 6 ilustrações: as 5 do protótipo e a passagem de turno) e o fundo da moldura. */
 interface Peca {
   cena: Cena
   fundo: Fundo
@@ -22,6 +23,7 @@ const DESENHOS: Record<Cena, typeof IlustracaoMamada> = {
   colo: IlustracaoColo,
   passeio: IlustracaoPasseio,
   tapete: IlustracaoTapete,
+  passagem: IlustracaoPassagem,
 }
 
 /** A moldura de mídia da base com uma ilustração decorativa dentro; a descrição vai no `aria-label`. */
