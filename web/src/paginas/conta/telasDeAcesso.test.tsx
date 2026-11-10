@@ -522,4 +522,43 @@ describe('o erro de campo abaixo de 768 não ocupa fluxo (E-7)', () => {
     expect(corpo).toMatch(/clip:\s*rect\(0,\s*0,\s*0,\s*0\)/)
     expect(corpo).not.toMatch(/display:\s*none|visibility:\s*hidden/)
   })
+
+  // R-3 (e R-4): "a mensagem ocupa a mesma linha, sem a página mudar de altura". A confirmação (2 linhas
+  // em 358 px) entrava no fluxo: 8 + 48 px a mais na linha, na página e no topo do botão. A causa é o
+  // fluxo: a linha do Recuperar (`data-status`) reserva uma zona fixa de 2 linhas abaixo do campo, com ou
+  // sem mensagem (8 de ar + 48 das duas linhas + 8 de folga = 64 px, na escala de espaços), e a
+  // confirmação e o erro moram nela fora do fluxo. A altura real é do medidor e da sonda.
+  describe('a zona de mensagem da linha com status abaixo de 768 (R-3)', () => {
+    const daLinha = regras.filter((r) => r.seletor.includes('.sb-acesso-campos') && r.seletor.includes('.sb-campo[data-status]'))
+    const corpoDe = (fim: RegExp) =>
+      daLinha
+        .filter((r) => fim.test(r.seletor))
+        .map((r) => r.corpo)
+        .join(';')
+
+    it('a linha com data-status reserva a zona de 2 linhas com `padding-bottom`', () => {
+      expect(corpoDe(/\.sb-campo\[data-status\]$/)).toMatch(/padding-bottom:\s*64px/)
+    })
+
+    it('a confirmação sai do fluxo e fica ancorada na zona, sem margem', () => {
+      const corpo = corpoDe(/\.sb-campo-status$/)
+      expect(corpo).toMatch(/position:\s*absolute/)
+      expect(corpo).toMatch(/top:\s*calc\(100% - 64px\)/)
+      for (const m of corpo.matchAll(/margin(?:-[a-z]+)?\s*:\s*([^;}]+)/g)) expect(m[1].trim(), m[0]).toMatch(/^0(px)?(\s+0(px)?)*$/)
+      expect(corpo).not.toMatch(/position:\s*(static|relative)/)
+    })
+
+    it('o erro do campo mora na mesma zona (sai do vão de 24 px, onde cobriria o botão com 2 linhas)', () => {
+      const corpo = corpoDe(/\.sb-campo-erro$/)
+      expect(corpo).toMatch(/position:\s*absolute/)
+      expect(corpo).toMatch(/top:\s*calc\(100% - 64px\)/)
+      expect(corpo).not.toMatch(/position:\s*(static|relative)/)
+      expect(corpo).not.toMatch(/margin(?:-[a-z]+)?\s*:[^;]*[1-9]/)
+    })
+
+    it('o vão até o botão (32 px) vem depois da zona: a regra do vão não é tocada', () => {
+      const vao = regras.filter((r) => r.seletor === '.sb-acesso-campos + .sb-acesso-acao')
+      expect(vao.map((r) => r.corpo).join(';')).toMatch(/margin-top:\s*32px/)
+    })
+  })
 })
