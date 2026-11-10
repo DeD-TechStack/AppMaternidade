@@ -31,11 +31,18 @@ async function abrir(caminho: string): Promise<HTMLElement> {
 
 const principal = (container: HTMLElement) => container.querySelector('main')!
 
-/** O texto do main: cada trecho de texto separado por quebra de linha (células vizinhas não se juntam). */
+/**
+ * O texto do main: cada trecho de texto separado por quebra de linha (células vizinhas não se juntam).
+ * Um `<wbr>` (a quebra possível do e-mail, depois do "@") não separa nada: o texto de um lado e do outro é um só.
+ */
 function textoDoMain(container: HTMLElement): string {
   const trechos: string[] = []
   const percurso = document.createTreeWalker(principal(container), NodeFilter.SHOW_TEXT)
-  for (let no = percurso.nextNode(); no; no = percurso.nextNode()) trechos.push(no.textContent ?? '')
+  for (let no = percurso.nextNode(); no; no = percurso.nextNode()) {
+    const apos = no.previousSibling
+    if (apos instanceof HTMLElement && apos.tagName === 'WBR' && trechos.length > 0) trechos[trechos.length - 1] += no.textContent ?? ''
+    else trechos.push(no.textContent ?? '')
+  }
   return trechos.join('\n')
 }
 
@@ -128,12 +135,17 @@ describe('textos fixos nos lugares certos', () => {
     }, 30000)
   }
 
-  it('TF-13 ("Fale conosco:") vem seguido do link de e-mail, no mesmo parágrafo, na lateral do Contato', async () => {
+  it('TF-13 ("Fale conosco") é o rótulo da 1ª linha do Contato, e o texto da linha é só o link de e-mail', async () => {
     const container = await abrir('/contato')
 
-    const lateral = container.querySelector('.sb-abertura-lateral p:not([data-aviso])')!
-    expect(lateral.textContent).toBe(`Fale conosco: ${EMAIL_CONTATO}`)
-    expect(lateral.querySelector('a')!.getAttribute('href')).toBe(`mailto:${EMAIL_CONTATO}`)
+    const rotulo = document.getElementById('secao-fale-conosco')!
+    expect(rotulo.textContent).toBe('Fale conosco')
+    const linha = rotulo.closest('section')!
+    expect(linha.previousElementSibling).toBe(principal(container).firstElementChild)
+    const texto = linha.querySelector('.sb-linha-texto')!
+    expect(texto.textContent).toBe(EMAIL_CONTATO)
+    expect(texto.querySelector('a')!.getAttribute('href')).toBe(`mailto:${EMAIL_CONTATO}`)
+    expect(container.querySelector('.sb-abertura-lateral a')).toBeNull()
   })
 
   it('a Privacidade e os Termos dizem o contato do dono: encarregado, e o e-mail depois da frase de cada um', async () => {

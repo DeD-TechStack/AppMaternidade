@@ -1,29 +1,27 @@
-import { AberturaPublica, AvisoLateral } from '../../componentes/publicas/AberturaPublica.tsx'
+import { AberturaPublica } from '../../componentes/publicas/AberturaPublica.tsx'
 import { LinhaDeLeitura } from '../../componentes/publicas/LinhaDeLeitura.tsx'
-import { MidiaLarga } from '../../componentes/publicas/MidiaDePagina.tsx'
 import { PaginasDoSite } from '../../componentes/publicas/PaginasDoSite.tsx'
 import { LinkDeEmail, Paragrafo } from '../../componentes/publicas/Textos.tsx'
-import { CONTATO_PAGINA, H1, SUBTITULOS, TF } from '../../conteudo/publicas.ts'
+import { CONTATO_PAGINA, H1, SUBTITULOS } from '../../conteudo/publicas.ts'
 
-/** Contato: o canal único para suporte, privacidade e denúncias, e o aviso de que não atende urgência. */
+/**
+ * Contato: o canal primeiro (a linha "Fale conosco", com o e-mail em `subtitulo`), a urgência logo depois,
+ * depois para que serve o canal. Sem mídia: a página é um canal e um aviso.
+ */
 export function Contato() {
-  const { proposito, urgencia } = CONTATO_PAGINA
+  const { canal, urgencia, proposito } = CONTATO_PAGINA
   return (
     <main className="vp-pagina">
-      <AberturaPublica
-        titulo={H1.contato}
-        subtitulo={SUBTITULOS.contato}
-        antes={
-          <AvisoLateral>
-            {TF.faleConosco} <LinkDeEmail />
-          </AvisoLateral>
-        }
-      />
-      <LinhaDeLeitura secao={proposito.secao} blocos={[proposito.texto]} margem="sb-mt-fio-bloco" />
-      <MidiaLarga peca={{ cena: 'mamada', fundo: 'lavanda' }} margem="sb-mt-midia-linhas" />
-      <LinhaDeLeitura secao={urgencia.secao} margem="sb-mt-midia-linhas">
+      <AberturaPublica titulo={H1.contato} subtitulo={SUBTITULOS.contato} />
+      <LinhaDeLeitura secao={canal.secao} margem="sb-mt-fio-bloco">
+        <p className="vp-bloco t-subtitulo">
+          <LinkDeEmail />
+        </p>
+      </LinhaDeLeitura>
+      <LinhaDeLeitura secao={urgencia.secao}>
         <Paragrafo texto={urgencia.texto} />
       </LinhaDeLeitura>
+      <LinhaDeLeitura secao={proposito.secao} blocos={[proposito.texto]} />
       <PaginasDoSite />
     </main>
   )

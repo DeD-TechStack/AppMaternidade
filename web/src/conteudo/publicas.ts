@@ -143,7 +143,7 @@ export const TF = {
   semDiagnostico:
     'O AppMaternidade não faz diagnóstico e não substitui a orientação de um profissional de saúde.', // TF-11
   telasFicticias: 'As telas mostradas aqui são exemplos com uma família fictícia.', // TF-12
-  faleConosco: 'Fale conosco:', // TF-13
+  faleConosco: 'Fale conosco', // TF-13 (o rótulo da 1ª linha do Contato, sobre o e-mail)
   regiaoDosDados:
     'Nesta fase de avaliação, a demonstração roda num projeto Supabase nos Estados Unidos (região us-east-1), só com dados fictícios.', // TF-15
 } as const
@@ -221,7 +221,7 @@ export const MIDIAS = {
 
 export const COMO_FUNCIONA = {
   apresentacao:
-    'São três momentos da rotina para mostrar o que o site vai fazer: a primeira semana, a madrugada e a troca de turno. As telas de exemplo são do protótipo de Hoje e Sessão, que já pode ser aberto.',
+    'São três momentos da rotina para mostrar o que o site vai fazer: a primeira semana, a madrugada e a troca de turno. O protótipo de Hoje e Sessão já pode ser aberto, com uma família fictícia.',
   primeiraSemana: {
     secao: secao('Na primeira semana'),
     textos: [
@@ -231,12 +231,12 @@ export const COMO_FUNCIONA = {
   madrugada: {
     secao: secao('De madrugada'),
     texto:
-      'No celular, uma sessão em andamento nas cores da madrugada. O protótipo do Hoje já tem esse modo: tela escura, pouco brilho e botões maiores. O plano é abrir o site no escuro, ver a última mamada e iniciar ou encerrar o registro com uma mão.',
+      'O protótipo do Hoje já tem o modo madrugada: tela escura, pouco brilho e botões maiores. O plano é abrir o site no escuro, ver a última mamada e iniciar ou encerrar o registro com uma mão.',
   },
   trocaDeTurno: {
     secao: secao('Na troca de turno'),
     texto:
-      'No celular, o cartão do Hoje com a soneca que Bruno começou e que ainda não acabou. O plano é que quem chega para o turno veja os registros desde que saiu, a sessão em andamento e as notas em destaque, sem precisar perguntar.',
+      'O plano é que quem chega para o turno veja, sem precisar perguntar, os registros desde que saiu, a sessão em andamento, como a soneca que Bruno começou e ainda não acabou, e as notas em destaque.',
   },
   comecar: {
     secao: secao('Para começar'),
@@ -295,7 +295,7 @@ export const CUIDADO = {
   passagem: {
     secao: secao('Na passagem de turno'),
     texto:
-      'No notebook e no celular, o mesmo cartão do Hoje com a soneca que Bruno começou: cada adulto vai ver a mesma sessão no próprio aparelho. O plano é que quem chega encontre, numa tela só, as notas em destaque deixadas por quem estava antes e tudo o que aconteceu desde que saiu.',
+      'Cada adulto vai ver a mesma sessão no próprio celular ou notebook, como a soneca que Bruno começou. O plano é que quem chega encontre, numa tela só, as notas em destaque deixadas por quem estava antes e tudo o que aconteceu desde que saiu.',
   },
   parar: {
     secao: secao('Quando alguém para de cuidar'),
@@ -603,6 +603,10 @@ export const EXCLUSAO: readonly SecaoDeLeitura[] = [
 // Contato
 
 export const CONTATO_PAGINA = {
+  /** A 1ª linha: o rótulo é o TF-13 e o texto é o link do e-mail (`LinkDeEmail`). */
+  canal: {
+    secao: secao(TF.faleConosco),
+  },
   proposito: {
     secao: secao('Para que serve este canal'),
     texto: 'Este canal vai atender pedidos de suporte, dúvidas sobre privacidade e denúncias sobre a comunidade.',

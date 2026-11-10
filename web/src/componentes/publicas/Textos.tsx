@@ -6,11 +6,23 @@ import type { Bloco, Lista, Texto } from '../../conteudo/publicas.ts'
 // Os textos das páginas públicas: parágrafos (com link de página ou o e-mail de contato dentro) e
 // listas. Cada bloco leva `vp-bloco`, que dá o espaço entre blocos dentro de uma linha.
 
-/** O e-mail de contato: um link `mailto:` cujo texto é o próprio endereço (a constante `EMAIL_CONTATO`). */
+/**
+ * O e-mail de contato: um link `mailto:` cujo texto é o próprio endereço (a constante `EMAIL_CONTATO`).
+ * Um endereço comprido, em tipo grande, quebra depois do "@" (o `<wbr>` não muda o texto do link).
+ */
 export function LinkDeEmail() {
+  const [usuario, ...dominio] = EMAIL_CONTATO.split('@')
   return (
     <a href={`mailto:${EMAIL_CONTATO}`} data-contato="" className="vp-email">
-      {EMAIL_CONTATO}
+      {dominio.length === 0 ? (
+        EMAIL_CONTATO
+      ) : (
+        <>
+          {`${usuario}@`}
+          <wbr />
+          {dominio.join('@')}
+        </>
+      )}
     </a>
   )
 }

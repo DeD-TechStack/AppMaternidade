@@ -52,7 +52,7 @@ const H2S: Record<string, string[]> = {
     'Contato',
   ],
   '/exclusao-de-conta': ['Como pedir', 'O que vai ser apagado', 'O que pode ficar guardado', 'Prazo', 'Antes de excluir'],
-  '/contato': ['Para que serve este canal', 'Em uma urgência'],
+  '/contato': ['Fale conosco', 'Em uma urgência', 'Para que serve este canal'],
   '/sobre': ['Para quem é', 'O que ele faz', 'O que ele não faz', 'Quem faz'],
 }
 
@@ -84,10 +84,11 @@ const MIDIAS: Record<string, Array<[string, string, string]>> = {
     ['berco', 'barro', 'par'],
   ],
   '/regras-da-comunidade': [['passeio', 'barro', 'larga']],
-  '/privacidade': [['berco', 'lavanda', 'larga']],
-  '/termos': [['passeio', 'barro', 'larga']],
-  '/exclusao-de-conta': [['tapete', 'lavanda', 'larga']],
-  '/contato': [['mamada', 'lavanda', 'larga']],
+  // Textos de papel e Contato: sem mídia nem ilustração (volta visual 1, D3 e D6).
+  '/privacidade': [],
+  '/termos': [],
+  '/exclusao-de-conta': [],
+  '/contato': [],
   '/sobre': [
     ['passeio', 'barro', 'par'],
     ['berco', 'lavanda', 'par'],
@@ -225,7 +226,7 @@ describe('o main das 9 páginas novas', () => {
     }
   }, 30000)
 
-  it('a ordem da lateral: Como funciona (TF-12, TF-10, link), Privacidade e Termos (TF-10, TF-09), Contato (e-mail, TF-10)', async () => {
+  it('a ordem da lateral: Como funciona (TF-12, TF-10, link), Privacidade e Termos (TF-10, TF-09), Contato (só TF-10)', async () => {
     const lateral = async (caminho: string) => {
       const container = await abrir(caminho)
       return [...container.querySelectorAll('.sb-abertura-lateral > li')].map((li) => li.textContent)
@@ -252,10 +253,8 @@ describe('o main das 9 páginas novas', () => {
         'Em construção: algumas funções descritas aqui ainda não estão no ar.',
       ])
     }
-    const contato = await lateral('/contato')
-    expect(contato).toHaveLength(2)
-    expect(contato[0]).toMatch(/^Fale conosco: \S+@\S+$/)
-    expect(contato[1]).toBe('Em construção: algumas funções descritas aqui ainda não estão no ar.')
+    // Contato: só o aviso de construção; o canal (o e-mail) saiu da lateral para a 1ª linha da página.
+    expect(await lateral('/contato')).toEqual(['Em construção: algumas funções descritas aqui ainda não estão no ar.'])
   }, 30000)
 
   it('no Como funciona, o link da lateral e o círculo CTA levam ao protótipo (Hoje)', async () => {
@@ -348,23 +347,6 @@ describe('mídia das páginas', () => {
           expect(moldura.getAttribute('data-fundo'), caminho).toBe('lavanda')
         }
       }
-    }
-  }, 30000)
-
-  it('a mídia fica entre as linhas certas: Privacidade (4ª e 5ª), Termos (4ª e 5ª) e Exclusão (2ª e 3ª)', async () => {
-    for (const [caminho, depoisDe] of [
-      ['/privacidade', 4],
-      ['/termos', 4],
-      ['/exclusao-de-conta', 2],
-    ] as const) {
-      const container = await abrir(caminho)
-
-      const midia = container.querySelector('main [data-midia]')!
-      const h2s = h2Fora(principal(container))
-      const antes = h2s[depoisDe - 1]
-      const depois = h2s[depoisDe]
-      expect(antes.compareDocumentPosition(midia) & Node.DOCUMENT_POSITION_FOLLOWING, caminho).not.toBe(0)
-      expect(midia.compareDocumentPosition(depois) & Node.DOCUMENT_POSITION_FOLLOWING, caminho).not.toBe(0)
     }
   }, 30000)
 
