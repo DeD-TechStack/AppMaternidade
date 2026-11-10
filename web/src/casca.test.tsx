@@ -147,6 +147,58 @@ describe('cabeçalho: o botão "Modo madrugada" (D7 e D9)', () => {
   })
 })
 
+// Rodada de correção 2, parte 17 (V7): o fundo do botão ligado sai do botão (vai para um ::before no CSS), então o
+// que o jsdom prova é que o botão segue o mesmo: o `aria-pressed`, o `data-ligado` que liga o CSS, o nome
+// acessível e os dois rótulos, nos dois estados e nos dois cabeçalhos.
+describe('cabeçalho: o botão do cabeçalho mantém o estado e o rótulo (V7)', () => {
+  for (const ligado of [false, true]) {
+    it(`logado, ${ligado ? 'ligado' : 'desligado'}: aria-pressed="${ligado}", data-ligado ${ligado ? 'presente' : 'ausente'}, nome "Modo madrugada" e o rótulo curto "Madrugada" (aria-hidden)`, () => {
+      const { container } = cabecalho('logado', ligado)
+
+      const botao = screen.getByRole('button', { name: 'Modo madrugada' })
+      expect(botao.className).toContain('sb-cab-acao')
+      expect(botao.getAttribute('aria-pressed')).toBe(String(ligado))
+      expect(botao.hasAttribute('data-ligado')).toBe(ligado)
+      expect(botao.getAttribute('aria-label')).toBe('Modo madrugada')
+      expect(botao.querySelector('.sb-cab-rotulo-curto')!.textContent).toBe('Madrugada')
+      expect(botao.querySelector('.sb-cab-rotulo-curto')!.getAttribute('aria-hidden')).toBe('true')
+      expect(botao.querySelector('.sb-cab-rotulo-longo')!.textContent).toBe('Modo madrugada')
+      // O ::before do CSS pinta o botão: nada de elemento extra no DOM nem de estilo em linha.
+      expect(botao.getAttribute('style')).toBeNull()
+      expect([...botao.querySelector('.sb-moldura-miolo')!.children].map((filho) => filho.className)).toEqual([
+        'sb-cab-rotulo-longo',
+        'sb-cab-rotulo-curto',
+      ])
+      expect(container.querySelectorAll('[data-cabecalho-acao]')).toHaveLength(1)
+    })
+  }
+
+  it('o botão alterna o estado sem trocar de elemento (o ::before segue o `data-ligado`)', () => {
+    const { rerender } = cabecalho('logado', false)
+    const antes = screen.getByRole('button', { name: 'Modo madrugada' })
+
+    rerender(
+      <MemoryRouter>
+        <Cabecalho contexto="logado" madrugada aoAlternarMadrugada={() => undefined} />
+      </MemoryRouter>,
+    )
+
+    const depois = screen.getByRole('button', { name: 'Modo madrugada' })
+    expect(depois).toBe(antes)
+    expect(depois.getAttribute('aria-pressed')).toBe('true')
+    expect(depois.hasAttribute('data-ligado')).toBe(true)
+  })
+
+  it('público: o botão do cabeçalho é o link "Entrar", sem estado ligado, que o CSS do ligado não alcança', () => {
+    cabecalho('publico')
+
+    const entrar = screen.getByRole('link', { name: 'Entrar' })
+    expect(entrar.className).toContain('sb-cab-acao')
+    expect(entrar.hasAttribute('data-ligado')).toBe(false)
+    expect(entrar.hasAttribute('aria-pressed')).toBe(false)
+  })
+})
+
 describe('submenu "+ Em breve"', () => {
   it('abre por clique, com as quatro áreas e a etiqueta "Em breve" dentro de cada item', () => {
     cabecalho('logado')

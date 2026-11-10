@@ -1868,9 +1868,13 @@
       height: 64px;
     }
 
+    /* V7: o recuo de cima e de baixo só existe quando o alvo passa de 48 px (madrugada, 56): sobram 4 px
+       de ar de cada lado (3 de recuo + 1 de borda), e o miolo, que estica, fica com 48 px. A área de toque
+       continua sendo o botão inteiro (--alvo-toque). No claro (44 px) o recuo é 0 e o miolo segue com 42. */
     .sb-cab-acao {
       min-height: var(--alvo-toque);
       padding: 0;
+      padding-block: max(0px, calc((var(--alvo-toque) - 48px) / 2 - 1px));
       border-color: transparent;
     }
 
@@ -1890,6 +1894,27 @@
       color: var(--cor-sobre-destaque);
       font-size: 1.0625rem;
       line-height: 1.5rem;
+    }
+
+    /* V7: ligado, a área de toque é a do botão inteiro (--alvo-toque, 56 na madrugada), mas a parte
+       pintada não passa de 48 px: o botão fica sem fundo (e sem a borda colorida do ligado) e o fundo é o
+       do miolo, que o recuo vertical do botão limita a 48 px e centra. É o mesmo urucum de antes
+       (destaque), e a linha interna clara do ligado (a moldura que o distingue) continua a da regra base.
+       O fundo é o do miolo, e não de um pseudo-elemento, para o medidor ler o contraste do rótulo. */
+    .sb-cab-acao[data-ligado] {
+      border-color: transparent;
+      background-color: transparent;
+    }
+
+    .sb-cab-acao[data-ligado] .sb-moldura-miolo {
+      background-color: var(--cor-destaque);
+    }
+
+    /* O anel de foco do botão cabe no cabeçalho de 60 px: com o botão de 56 px (madrugada) sobram 2 px
+       de cada lado, então o recuo de 2 px para fora cortaria o anel em cima. O recuo encolhe até o anel
+       encostar no cabeçalho; no claro (botão de 44 px) continua o recuo global de 2 px. */
+    .sb-cab-acao:focus-visible {
+      outline-offset: min(2px, calc((var(--e-cabecalho) - var(--alvo-toque)) / 2 - 2px));
     }
 
     .sb-cab-acao:hover .sb-moldura-miolo {

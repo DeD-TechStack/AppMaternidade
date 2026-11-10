@@ -1645,7 +1645,108 @@ describe('rodada 4: cabeçalho, desativado, modo madrugada, rodapé em 390 e ró
     })
 
     it('abaixo de 768 o ligado não depende só do fundo: a regra de miolo ligado do celular não pinta o miolo de outro urucum', () => {
-      expect(celular).not.toMatch(/\.sb-cab-acao\[data-ligado\]\s+\.sb-moldura-miolo/)
+      // V7 (parte 17): antes a regra de miolo ligado do celular não podia existir (`not.toMatch(/\.sb-cab-acao\[data-ligado\]\s+\.sb-moldura-miolo/)`):
+      // o botão inteiro era o fundo. Agora o fundo de 48 px é o do miolo (o botão de 56 px fica sem pintura), então a regra existe, mas só com o
+      // MESMO urucum (`--cor-destaque`), sem trocar a linha interna clara (a moldura que distingue o ligado) e sem outra cor.
+      const corpo = corpoCelular('.sb-cab-acao[data-ligado] .sb-moldura-miolo')
+      expect(corpo).toMatch(/background-color:\s*var\(--cor-destaque\)/)
+      expect(corpo).not.toMatch(/border|color-mix|#[0-9a-f]{3,6}|rgb|papel-fundo|transparent/i)
+      expect(corpoBase('.sb-moldura[data-ligado] .sb-moldura-miolo')).toMatch(/border-color:\s*var\(--cor-sobre-destaque\)/)
+    })
+  })
+
+  // Rodada de correção 2, parte 17 (V7): abaixo de 768 o botão do cabeçalho ligado ("Madrugada") tem a área de
+  // toque inteira (a altura de --alvo-toque, 56 na madrugada), mas a parte pintada não passa de 48 px. A parte
+  // pintada é o miolo (que o medidor e a sonda leem como elemento, ao contrário de um pseudo-elemento ou de um
+  // `background-clip`): o botão fica sem fundo e ganha um recuo vertical que limita o miolo a 48 px, centrado.
+  // O anel de foco cabe no cabeçalho de 60 px. As cores não mudam.
+  describe('V7: o "Madrugada" ligado em 390 pinta no máximo 48 px e mantém a área de toque de 56', () => {
+    const LIGADO = '.sb-cab-acao[data-ligado]'
+    // Todas as regras do celular com esse seletor, juntas (o `.sb-cab-acao` aparece em mais de uma).
+    const regraDoCelular = (seletor: string) => corpoCelular(seletor)
+    const CABECALHO = 60 // --e-cabecalho abaixo de 768
+    const BORDA = 1 // a borda do botão (transparente)
+    /** O recuo vertical do botão (padding-block) para uma altura de alvo: 0 até 48 px, e depois metade do que passa, menos a borda. */
+    const recuoDoBotao = (alvo: number) => {
+      const formula = /padding-block:\s*max\(0px,\s*calc\(\(var\(--alvo-toque\)\s*-\s*(\d+)px\)\s*\/\s*2\s*-\s*(\d+)px\)\)/.exec(regraDoCelular('.sb-cab-acao'))
+      if (!formula) return Number.NaN
+      return Math.max(0, (alvo - Number(formula[1])) / 2 - Number(formula[2]))
+    }
+    /** A altura do miolo (o fundo pintado): o botão menos as bordas e o recuo vertical, porque o miolo estica. */
+    const alturaDoMiolo = (alvo: number) => alvo - 2 * BORDA - 2 * recuoDoBotao(alvo)
+
+    it('o botão ligado perde o fundo próprio e a borda colorida: a área de toque fica, sem pintura, e não há pseudo-elemento de fundo', () => {
+      const corpo = regraDoCelular(LIGADO)
+      expect(corpo, LIGADO).not.toBe('')
+      expect(corpo).toMatch(/background-color:\s*transparent/)
+      expect(corpo).toMatch(/border-color:\s*transparent/)
+      expect(corpo).not.toMatch(/(?:^|[^-])height|min-height|padding|margin|position|isolation/)
+      expect(regras(celular).some((r) => /::(?:before|after)/.test(r.seletor) && r.seletor.includes('.sb-cab-acao'))).toBe(false)
+    })
+
+    it('o fundo é o do miolo: o mesmo urucum (destaque) de antes, com a linha interna clara do ligado intacta', () => {
+      const corpo = regraDoCelular(`${LIGADO} .sb-moldura-miolo`)
+      expect(corpo, `${LIGADO} .sb-moldura-miolo`).not.toBe('')
+      expect(corpo).toMatch(/background-color:\s*var\(--cor-destaque\)/)
+      expect(corpo).not.toMatch(/border|color-mix|transparent|height|margin/)
+      expect(corpoBase('.sb-moldura[data-ligado] .sb-moldura-miolo')).toMatch(/border-color:\s*var\(--cor-sobre-destaque\)/)
+    })
+
+    it('a conta: com a altura de alvo de 56 (madrugada) o pintado tem 48 e fica centrado; no claro (44) o miolo segue com os 42 px de antes', () => {
+      expect(Number.isFinite(recuoDoBotao(56)), 'fórmula do padding-block').toBe(true)
+      expect(recuoDoBotao(56)).toBe(3) // 4 px de ar no total, menos a borda de 1 px
+      expect(alturaDoMiolo(56)).toBe(48)
+      expect(alturaDoMiolo(56)).toBeLessThanOrEqual(48)
+      expect(recuoDoBotao(44)).toBe(0)
+      expect(alturaDoMiolo(44)).toBe(42)
+      // Centrado: a mesma folga em cima e embaixo; e a área de toque é a do botão inteiro (min-height do alvo).
+      expect((56 - alturaDoMiolo(56)) / 2).toBe(4)
+      expect(regraDoCelular('.sb-cab-acao')).toMatch(/min-height:\s*var\(--alvo-toque\)/)
+      expect(temaCss).toMatch(/--alvo-toque:\s*56px/)
+      expect(56).toBeGreaterThanOrEqual(56)
+    })
+
+    it('o miolo estica (sem altura, centralização ou margem próprias), e o botão desligado não ganha fundo no celular', () => {
+      const miolo = regraDoCelular('.sb-cab-acao .sb-moldura-miolo')
+      expect(miolo).not.toMatch(/align-self|max-height|(?:^|[^-])height:|margin/)
+      expect(miolo).toMatch(/padding:\s*0 12px/)
+      expect(miolo).toMatch(/font-size:\s*1\.0625rem/)
+      expect(regraDoCelular('.sb-cab-acao')).not.toMatch(/background/)
+    })
+
+    it('o anel de foco do botão cabe no cabeçalho de 60 px: o recuo encolhe com a altura do alvo, e no claro continua o de 2 px', () => {
+      const corpo = regraDoCelular('.sb-cab-acao:focus-visible')
+      expect(corpo, '.sb-cab-acao:focus-visible').not.toBe('')
+      expect(corpo).toMatch(/outline-offset:\s*min\(2px,\s*calc\(\(var\(--e-cabecalho\)\s*-\s*var\(--alvo-toque\)\)\s*\/\s*2\s*-\s*2px\)\)/)
+      expect(corpo).not.toMatch(/outline(?:-width|-style|-color)?:/)
+      const recuo = (alvo: number) => Math.min(2, (CABECALHO - alvo) / 2 - 2)
+      for (const [alvo, tema] of [[56, 'madrugada'], [44, 'claro']] as const) {
+        const topoDoBotao = (CABECALHO - alvo) / 2
+        const foraDoAnel = topoDoBotao - (recuo(alvo) + 2)
+        expect(foraDoAnel, `${tema}: o anel não sai do alto do cabeçalho`).toBeGreaterThanOrEqual(0)
+        expect(CABECALHO - (topoDoBotao + alvo + recuo(alvo) + 2), `${tema}: nem da base`).toBeGreaterThanOrEqual(0)
+      }
+      expect(recuo(44)).toBe(2) // no claro o recuo é o global, então o foco do claro não mudou
+      expect(recuo(56)).toBe(0)
+      // Em 360, 390 e 767 o botão fica a 16 px da borda direita: o anel não sai da janela.
+      for (const largura of [360, 390, 767]) expect(largura - (largura - 16 + recuo(56) + 2)).toBeGreaterThanOrEqual(0)
+    })
+
+    it('abaixo de 768, em qualquer largura, tudo isso vive dentro do bloco do celular: de 768 para cima e no claro nada muda', () => {
+      for (const seletor of [LIGADO, `${LIGADO} .sb-moldura-miolo`, '.sb-cab-acao:focus-visible']) {
+        expect(regras(base).some((r) => r.seletor === seletor), `${seletor} fora do celular`).toBe(false)
+      }
+      // As regras base do ligado (fundo cheio e moldura invertida, as de 768 para cima) seguem como estavam.
+      expect(corpoBase('.sb-moldura[data-ligado]')).toMatch(/background-color:\s*var\(--cor-destaque\)/)
+      expect(corpoBase('.sb-moldura[data-ligado] .sb-moldura-miolo')).toMatch(/background-color:\s*transparent/)
+    })
+
+    it('as cores não mudam: o rótulo continua sobre-destaque no destaque (≥ 4,5:1), e o miolo ligado usa o destaque do tema', () => {
+      expect(regraDoCelular('.sb-cab-acao .sb-moldura-miolo')).toMatch(/color:\s*var\(--cor-sobre-destaque\)/)
+      for (const bloco of [claro, madrugada]) {
+        expect(contraste(hexDe(bloco, '--cor-sobre-destaque')!, hexDe(bloco, '--cor-destaque')!)).toBeGreaterThanOrEqual(4.5)
+      }
+      expect(regraDoCelular(`${LIGADO} .sb-moldura-miolo`)).not.toMatch(/data-tema|color-mix|#[0-9a-f]{3,6}|rgb/i)
     })
   })
 
