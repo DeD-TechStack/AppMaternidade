@@ -668,10 +668,11 @@ describe('R3: o foco acompanha ações que removem o controle focado', () => {
         conferirFocoValido(container)
       })
 
-      it('Sessão → item Hoje da navegação leva o foco ao h1 "Hoje"', async () => {
+      // MAT-44d-2: o item Hoje da navegação inferior saiu; o caminho de volta é o link "Voltar para Hoje"
+      // da coluna lateral da abertura, que leva o foco ao h1 do mesmo jeito.
+      it('Sessão → link "Voltar para Hoje" da lateral leva o foco ao h1 "Hoje"', async () => {
         const { container } = renderizarRota('/app/sessao', { estadoInicial: base() })
-        const nav = screen.getByRole('navigation', { name: 'Principal' })
-        const hoje = within(nav).getByRole('link', { name: 'Hoje' })
+        const hoje = screen.getByRole('link', { name: 'Voltar para Hoje' })
         hoje.focus()
 
         fireEvent.click(hoje)

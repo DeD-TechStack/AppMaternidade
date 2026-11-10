@@ -129,21 +129,6 @@ describe('aviso de demonstração: texto e marcador são o mesmo elemento', () =
   })
 })
 
-/**
- * Nada de tela fica fora da coluna: um só .coluna-app, e todo header, main e nav da tela está dentro dele.
- * O cabeçalho e o rodapé do site (a casca do Layout, 2.6 e 2.7) ficam fora da coluna de propósito.
- */
-function conferirTudoDentroDaColuna(container: HTMLElement) {
-  const colunas = container.querySelectorAll('.coluna-app')
-  expect(colunas).toHaveLength(1)
-  const coluna = colunas[0]
-  const pecas = [...container.querySelectorAll('header, main, nav')].filter(
-    (peca) => peca.closest('[data-cabecalho], [data-rodape]') === null,
-  )
-  expect(pecas.length).toBeGreaterThan(0)
-  for (const peca of pecas) expect(coluna.contains(peca), peca.outerHTML).toBe(true)
-}
-
 describe('aviso de demonstração: lugar na tela', () => {
   it('é a primeira linha dentro do raiz do Início', async () => {
     definirBanco('', '')
@@ -159,20 +144,27 @@ describe('aviso de demonstração: lugar na tela', () => {
     expect(raiz.firstElementChild!.nextElementSibling!.tagName).toBe('NAV')
   })
 
-  // A Sessão ainda é a da coluna única (parte 2 do cartão 44d-2 a refaz).
-  it('é a primeira linha dentro da coluna da Sessão, antes do header, e com recuo', () => {
-    definirBanco('', '')
-    const { container } = renderizarRota('/app/sessao')
+  // MAT-44d-2 parte 2: a Sessão também saiu da coluna única; o aviso é um item da lateral da abertura,
+  // como no Hoje (com e sem sessão).
+  for (const [nome, estado] of [
+    ['com sessão', claro],
+    ['sem sessão', () => ({ ...claro(), sessao: null })],
+  ] as const) {
+    it(`na Sessão (${nome}) o aviso é um item da coluna lateral da abertura: sem faixa no topo, sem coluna única e sem recuo próprio`, () => {
+      definirBanco('', '')
+      const { container } = renderizarRota('/app/sessao', { estadoInicial: estado() })
 
-    const coluna = container.querySelector('.coluna-app')!
-    const aviso = container.querySelector(SELETOR)!
-    expect(coluna.firstElementChild).toBe(aviso)
-    conferirTudoDentroDaColuna(container)
-    expect(aviso.classList.contains('px-4')).toBe(true)
-    // Depois do aviso vem a seção da faixa do protótipo, que guarda o <header> dela.
-    expect(aviso.nextElementSibling!.tagName).toBe('SECTION')
-    expect(aviso.nextElementSibling!.querySelector('header')).not.toBeNull()
-  })
+      const aviso = container.querySelector(SELETOR)!
+      expect(container.querySelectorAll(SELETOR)).toHaveLength(1)
+      expect(aviso.closest('ul.sb-abertura-lateral')).not.toBeNull()
+      expect(aviso.parentElement!.tagName).toBe('LI')
+      expect([...aviso.classList]).toEqual(expect.arrayContaining(['t-ui', 't-secundario']))
+      expect(aviso.classList.contains('px-4')).toBe(false)
+      expect(container.querySelector('.coluna-app')).toBeNull()
+      expect(container.querySelector('[aria-label="Aviso do protótipo"]')).toBeNull()
+      expect(container.firstElementChild!.firstElementChild!.matches('[data-cabecalho]')).toBe(true)
+    })
+  }
 
   it('no Hoje o aviso é um item da coluna lateral da abertura: sem faixa no topo, sem coluna única e sem o aviso duplicado', () => {
     definirBanco('', '')

@@ -141,10 +141,8 @@ describe('R2: a barra de baixo fica fixa em janela de 40 rem ou mais, qualquer q
     document.documentElement.style.removeProperty('font-size')
   })
 
-  for (const [tela, caminho] of [
-    ['Hoje', '/app/hoje'],
-    ['Sessão', '/app/sessao'],
-  ] as const) {
+  // A barra de baixo é só a barra Registrar do Hoje (a Sessão não tem barra desde o 44d-2).
+  for (const [tela, caminho] of [['Hoje', '/app/hoje']] as const) {
     describe(tela, () => {
       it('janela de 844 px com fonte de 16 px: fixa, e reserva a altura medida mais 8 px de rolagem', () => {
         const { container } = renderizarRota(caminho)
@@ -318,64 +316,27 @@ describe('R2: a barra de baixo fica fixa em janela de 40 rem ou mais, qualquer q
 // ---------------------------------------------------------------------------
 // R1
 
-// O Hoje não tem mais navegação inferior (a barra Registrar não é navegação); a Sessão ainda tem,
-// até a parte 2 do cartão 44d-2 refazê-la.
+// MAT-44d-2: nenhuma tela logada tem navegação inferior (a barra Registrar não é navegação). Os
+// testes dos itens da navegação (ordem, hífen opcional, hifenização, contêiner, aria-disabled) eram
+// do `NavegacaoInferior`, que saiu com esta parte; ficam só os que provam que ela não existe.
 describe('R1: navegação inferior', () => {
-  for (const [tela, caminho] of [['Sessão', '/app/sessao']] as const) {
+  for (const [tela, caminho] of [
+    ['Hoje', '/app/hoje'],
+    ['Sessão', '/app/sessao'],
+  ] as const) {
     for (const [tema, estado] of [
       ['claro', claro],
       ['madrugada', madrugada],
     ] as const) {
-      describe(`${tela} (${tema})`, () => {
-        it('os filhos da nav seguem a ordem visual: Hoje, "Em breve", Histórico, Desenvolvimento, Comunidade, Família', () => {
-          renderizarRota(caminho, { estadoInicial: estado() })
-          const nav = screen.getByRole('navigation', { name: 'Principal' })
+      it(`${tela} (${tema}) não tem navegação inferior, barra inferior, legenda "Em breve" nem itens desativados`, () => {
+        const { container } = renderizarRota(caminho, { estadoInicial: estado() })
 
-          expect([...nav.children].map((filho) => filho.textContent?.trim())).toEqual([
-            'Hoje',
-            'Em breve',
-            'Histórico',
-            'Desenvolvimento',
-            'Comunidade',
-            'Família',
-          ])
-        })
-
-        it('nenhum texto da navegação contém U+00AD', () => {
-          renderizarRota(caminho, { estadoInicial: estado() })
-          const nav = screen.getByRole('navigation', { name: 'Principal' })
-
-          expect(nav.textContent).not.toContain('­')
-        })
-
-        it('só "Desenvolvimento" tem a classe de hifenização', () => {
-          renderizarRota(caminho, { estadoInicial: estado() })
-          const nav = screen.getByRole('navigation', { name: 'Principal' })
-
-          expect([...nav.querySelectorAll('.nav-item-hifeniza')].map((i) => i.textContent)).toEqual([
-            'Desenvolvimento',
-          ])
-        })
-
-        it('a nav fica dentro da barra, que é o contêiner de largura', () => {
-          const { container } = renderizarRota(caminho, { estadoInicial: estado() })
-
-          expect(container.querySelector('.barra-inferior nav.nav-inferior')).not.toBeNull()
-        })
-
-        // Na Sessão o item Hoje é link, mas não é a página atual (só havia aria-current no Hoje antigo).
-        it('mantém aria-disabled, aria-describedby para "Em breve" e, na Sessão, o Hoje sem aria-current', () => {
-          renderizarRota(caminho, { estadoInicial: estado() })
-          const nav = screen.getByRole('navigation', { name: 'Principal' })
-          const legenda = within(nav).getByText('Em breve')
-
-          for (const botao of nav.querySelectorAll('button')) {
-            expect(botao.getAttribute('aria-disabled')).toBe('true')
-            expect(botao.getAttribute('aria-describedby')).toBe(legenda.id)
-            expect(botao.hasAttribute('aria-label')).toBe(false)
-          }
-          expect(within(nav).getByRole('link', { name: 'Hoje' }).hasAttribute('aria-current')).toBe(false)
-        })
+        expect(screen.queryByRole('navigation', { name: 'Principal' })).toBeNull()
+        expect(container.querySelector('.barra-inferior, nav.nav-inferior, .nav-item, .nav-legenda')).toBeNull()
+        expect(screen.queryByText('Em breve')).toBeNull()
+        for (const nome of ['Histórico', 'Desenvolvimento', 'Comunidade', 'Família']) {
+          expect(screen.queryByRole('button', { name: nome }), nome).toBeNull()
+        }
       })
     }
   }
@@ -384,30 +345,26 @@ describe('R1: navegação inferior', () => {
 // ---------------------------------------------------------------------------
 // D2
 
-describe('D2: telas logadas numa coluna única', () => {
-  // O Hoje saiu da coluna única (abertura, blocos e barra Registrar sobre a grade); a Sessão ainda
-  // está nela até a parte 2.
+// MAT-44d-2: o Hoje e a Sessão saíram da coluna única (abertura, blocos em `sb-area` sobre a grade).
+// Só o Hoje tem a barra Registrar; a Sessão não tem barra nenhuma.
+describe('D2: telas logadas sobre a grade, sem coluna única', () => {
   const casos: Array<[string, string, () => EstadoPrototipo]> = [
+    ['Hoje', '/app/hoje', claro],
     ['Sessão com sessão', '/app/sessao', claro],
     ['Sessão vazia', '/app/sessao', semSessao],
   ]
 
   for (const [nome, caminho, estado] of casos) {
-    it(`${nome}: faixa, main, barra e navegação ficam dentro do mesmo contêiner de coluna`, () => {
+    it(`${nome}: sem .coluna-app, e a tela é cabeçalho, um main e o rodapé (mais a barra Registrar só no Hoje)`, () => {
       const { container } = renderizarRota(caminho, { estadoInicial: estado() })
 
-      const colunas = container.querySelectorAll('.coluna-app')
-      expect(colunas).toHaveLength(1)
-      const coluna = colunas[0]
-      expect(coluna.querySelector('header')).not.toBeNull()
-      expect(coluna.querySelector('main')).not.toBeNull()
-      expect(coluna.querySelector('.barra-inferior')).not.toBeNull()
-      expect(coluna.querySelector('.barra-inferior nav[aria-label="Principal"]')).not.toBeNull()
-      // Nada de tela fica fora da coluna (o cabeçalho e o rodapé do site ficam fora de propósito).
+      expect(container.querySelector('.coluna-app')).toBeNull()
+      expect(container.querySelectorAll('main')).toHaveLength(1)
       const daTela = [...container.querySelectorAll('header, main, nav')].filter(
         (peca) => peca.closest('[data-cabecalho], [data-rodape]') === null,
       )
-      expect(daTela).toHaveLength(coluna.querySelectorAll('header, main, nav').length)
+      expect(daTela.map((peca) => peca.tagName)).toEqual(['MAIN'])
+      expect(container.querySelectorAll('[data-barra-registrar]')).toHaveLength(nome === 'Hoje' ? 1 : 0)
     })
   }
 
@@ -760,34 +717,8 @@ describe('R4: o Início decide as colunas pela largura da página em rem', () =>
 })
 
 // ---------------------------------------------------------------------------
-// D5
-
-const NOMES_DA_NAVEGACAO = ['Hoje', 'Histórico', 'Desenvolvimento', 'Comunidade', 'Família']
-
-describe('D5: nomes da navegação inferior', () => {
-  for (const [tela, caminho] of [['Sessão', '/app/sessao']] as const) {
-    it(`${tela}: o nome acessível dos 5 itens não tem hífen opcional`, () => {
-      renderizarRota(caminho)
-      const nav = screen.getByRole('navigation', { name: 'Principal' })
-
-      for (const nome of NOMES_DA_NAVEGACAO) {
-        // `name` como texto exato: um ­ no nome acessível faria a busca falhar.
-        const item = within(nav).getByRole(nome === 'Hoje' ? 'link' : 'button', { name: nome })
-        expect(item).toBeTruthy()
-      }
-    })
-
-    it(`${tela}: só "Desenvolvimento" tem a classe de hifenização`, () => {
-      renderizarRota(caminho)
-      const nav = screen.getByRole('navigation', { name: 'Principal' })
-
-      const hifenizados = [...nav.querySelectorAll('.nav-item-hifeniza')].map((item) => item.textContent)
-      expect(hifenizados).toEqual(['Desenvolvimento'])
-      // Todos os outros itens seguem com hifens manuais (a classe base, sem o modificador).
-      expect(nav.querySelectorAll('.nav-item')).toHaveLength(5)
-    })
-  }
-})
+// D5 (nomes da navegação inferior) e D7 ("Em breve" da navegação): saíram com o `NavegacaoInferior`
+// (MAT-44d-2); o R1 acima prova que nenhuma tela logada tem a navegação.
 
 // ---------------------------------------------------------------------------
 // G3-4
@@ -903,11 +834,14 @@ describe('G3-4: o texto visível está no nome acessível', () => {
 // D6
 
 describe('D6: cronômetro', () => {
-  it('o da Sessão usa a classe .cronometro, sem modificador de miniatura', () => {
+  // MAT-44d-2: o cronômetro da Sessão é o `t-cronometro` do sistema-base (Zilla Slab 224/180, 96/77 em
+  // 390), e não mais a classe `.cronometro` (clamp de 4,5 a 8 rem), que só a miniatura do Início usa.
+  it('o da Sessão usa a escala t-cronometro do sistema-base, sem a classe .cronometro nem o modificador de miniatura', () => {
     renderizarRota('/app/sessao')
 
     const cronometro = screen.getByRole('timer', { name: 'Duração da sessão' })
-    expect(cronometro.classList.contains('cronometro')).toBe(true)
+    expect(cronometro.classList.contains('t-cronometro')).toBe(true)
+    expect(cronometro.classList.contains('cronometro')).toBe(false)
     expect(cronometro.classList.contains('cronometro-mini')).toBe(false)
   })
 
@@ -921,22 +855,4 @@ describe('D6: cronômetro', () => {
   })
 })
 
-// ---------------------------------------------------------------------------
-// D7
 
-describe('D7: "Em breve"', () => {
-  for (const [tela, caminho] of [['Sessão', '/app/sessao']] as const) {
-    it(`${tela}: aparece uma vez, na legenda que cobre Histórico até Família`, () => {
-      renderizarRota(caminho)
-      const nav = screen.getByRole('navigation', { name: 'Principal' })
-
-      const legendas = within(nav).getAllByText('Em breve')
-      expect(legendas).toHaveLength(1)
-      expect(legendas[0].classList.contains('nav-legenda')).toBe(true)
-
-      // A ordem do DOM põe Histórico logo depois de Hoje: a legenda (colunas 2 a 5) cobre os 4.
-      const itens = [...nav.querySelectorAll('.nav-item')].map((i) => i.getAttribute('aria-label') ?? i.textContent?.replace('­', ''))
-      expect(itens).toEqual(NOMES_DA_NAVEGACAO)
-    })
-  }
-})

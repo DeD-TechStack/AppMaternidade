@@ -2477,7 +2477,7 @@ body:has([data-barra-registrar]) [data-rodape] {
   flex-wrap: wrap;
   align-items: center;
   gap: 16px;
-  margin-top: 24px;
+  margin-top: 16px;
 }
 
 /* O primário do bloco é o botão invertido: papel sobre urucum (na madrugada, o urucum claro com o
@@ -2638,15 +2638,123 @@ body:has([data-barra-registrar]) [data-rodape] {
   margin-top: 16px;
 }
 
+/* Hoje e Sessão (as duas telas sobre a abertura): o link da coluna lateral tem 56 de alvo nos dois temas,
+   e o item da lista guarda 44 de layout. A base dá ao link `min-height: var(--alvo-toque)` (44 de dia,
+   56 na madrugada): em 390 a lateral fica abaixo do subtítulo e a diferença de 12 px empurrava todos os
+   blocos da madrugada. Com o alvo fixo e o item de altura fixa, os retângulos são os mesmos nos dois temas. */
+.ha-tela .sb-abertura-link {
+  min-height: 56px;
+}
+
+.ha-tela .ha-li-link {
+  height: 44px;
+  min-height: 0;
+}
+
+/* Sessão: o bloco do cronômetro é o bloco de cor da tela. De 768 para cima é uma grade de 10 colunas
+   sobre o bloco inteiro (as colunas são as da página: o fio vertical cai em x de c8) e o recuo de 64 é
+   de cada coluna. O cronômetro (c1–c7) e os botões (c8–c10) ficam lado a lado. */
+.ha-cronometro {
+  padding: 0;
+}
+
+.ha-cron-grade {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+}
+
+.ha-cron-tempo {
+  grid-column: 1 / 8;
+  min-width: 0;
+  padding: 64px;
+}
+
+.ha-cron-rotulo {
+  margin: 0;
+}
+
+.ha-cron-valor {
+  display: block;
+  width: fit-content;
+  margin: 8px 0 0;
+  white-space: nowrap;
+}
+
+.ha-cron-atividade {
+  margin: 8px 0 0;
+}
+
+/* O fio vertical claro (a cor do texto do bloco a 20%) é a borda da coluna das ações, só do lado
+   esquerdo. */
+.ha-cron-acoes {
+  grid-column: 8 / 11;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  padding: 64px;
+  border-left: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+}
+
+.ha-cron-secundarios {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ha-cron-acoes .sb-botao,
+.ha-cron-acoes .sb-moldura {
+  width: 100%;
+}
+
+.ha-cron-painel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ha-cron-painel-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.ha-cron-painel-acoes > * {
+  flex: 1 1 auto;
+}
+
+/* O campo da nota (2.9): sem caixa, fio sólido embaixo na cor do texto do bloco, Instrument Serif 32. */
+.ha-nota-campo {
+  box-sizing: border-box;
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  border-radius: 0;
+  background-color: transparent;
+  color: inherit;
+  font-family: var(--fonte-sb-serifa);
+  font-size: 2rem;
+  line-height: 2.375rem;
+  letter-spacing: 0;
+  resize: none;
+}
+
+/* A mídia da Sessão tem proporção de 3 para 2 (1,5): o contrato pede de 1,45 a 1,55 e a da base é 1,43. */
+.ha-sessao .sb-midia[data-formato='larga'] {
+  aspect-ratio: 3 / 2;
+}
+
 @media (max-width: 767px) {
   .ha-andamento {
     padding: 24px;
   }
 
-  /* Em 390 os dois botões dividem a linha (64 de altura cada); se não couberem, quebram e ocupam a
-     largura inteira. */
-  .ha-andamento-acoes > * {
-    flex: 1 1 auto;
+  /* Em 390 os dois botões do bloco Em andamento dividem a linha: duas colunas iguais com 8 de gap, 64 de
+     altura. O recuo do primário aperta para 16 e o miolo da moldura para 8, e o rótulo pode quebrar em
+     2 linhas dentro dos 64. */
+  .ha-andamento-acoes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
   }
 
   .ha-andamento .ha-encerrar {
@@ -2655,6 +2763,48 @@ body:has([data-barra-registrar]) [data-rodape] {
 
   .ha-andamento .sb-moldura-miolo {
     padding: 0 8px;
+    white-space: normal;
+    text-align: center;
+  }
+
+  /* O cronômetro em 390: uma coluna só, com o recuo do bloco (24) e os botões embaixo: Encerrar em
+     largura total e os outros dois lado a lado (8 de gap). */
+  .ha-cronometro {
+    padding: 24px 8px;
+  }
+
+  .ha-cron-grade {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ha-cron-tempo,
+  .ha-cron-acoes {
+    grid-column: 1 / -1;
+    padding: 0;
+  }
+
+  /* "1:12:00" a 96 px mede 335,6 px e a coluna útil (343 de bloco, 295 com 24 de recuo) não o comporta:
+     o cronômetro usa a borda de 8 do bloco, e o rótulo, a atividade e os botões voltam aos 24 com mais 16. */
+  .ha-cron-rotulo,
+  .ha-cron-atividade {
+    padding-inline: 16px;
+  }
+
+  .ha-cron-acoes {
+    margin-top: 8px;
+    padding: 0 16px;
+    border-left: 0;
+    gap: 8px;
+  }
+
+  .ha-cron-secundarios {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .ha-cron-secundarios > [role='group'] {
+    grid-column: 1 / -1;
   }
 
   .barra-registrar {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { fireEvent, screen, within } from '@testing-library/react'
+import { fireEvent, screen } from '@testing-library/react'
 import { PROMESSA } from './conteudo/textos.ts'
 import { criarEstadoInicial } from './prototipo/estado.ts'
 import { renderizarRota } from './teste/renderizarRota.tsx'
@@ -105,51 +105,30 @@ describe('rotas', () => {
 })
 
 describe('navegação inferior', () => {
-  // MAT-44d-2: o Hoje não tem navegação inferior (a barra Registrar não é navegação). Os testes que
-  // conferiam os itens da navegação passam a ser feitos na Sessão, que ainda a tem (até a parte 2).
-  it('o Hoje não tem navegação inferior: nem a nav "Principal", nem a legenda "Em breve", nem itens desativados', async () => {
-    renderizarRota('/app/hoje')
-    await screen.findByRole('heading', { level: 1 })
+  // MAT-44d-2: nenhuma tela logada tem navegação inferior (a barra Registrar do Hoje não é navegação).
+  // O caminho de volta da Sessão ao Hoje é o link "Voltar para Hoje" da lateral da abertura.
+  for (const caminho of ['/app/hoje', '/app/sessao']) {
+    it(`${caminho} não tem navegação inferior: nem a nav "Principal", nem a legenda "Em breve", nem itens desativados`, async () => {
+      renderizarRota(caminho)
+      await screen.findByRole('heading', { level: 1 })
 
-    expect(screen.queryByRole('navigation', { name: 'Principal' })).toBeNull()
-    expect(screen.queryByText('Em breve')).toBeNull()
-    for (const nome of ['Histórico', 'Desenvolvimento', 'Comunidade', 'Família']) {
-      expect(screen.queryByRole('button', { name: nome }), nome).toBeNull()
-    }
-  })
+      expect(screen.queryByRole('navigation', { name: 'Principal' })).toBeNull()
+      expect(screen.queryByText('Em breve')).toBeNull()
+      for (const nome of ['Histórico', 'Desenvolvimento', 'Comunidade', 'Família']) {
+        expect(screen.queryByRole('button', { name: nome }), nome).toBeNull()
+      }
+    })
+  }
 
-  it('na Sessão só o item Hoje é link; os outros quatro estão desativados', async () => {
-    renderizarRota('/app/sessao')
-    const nav = await screen.findByRole('navigation', { name: 'Principal' })
-
-    const links = within(nav).getAllByRole('link')
-    expect(links.map((l) => l.textContent)).toEqual(['Hoje'])
-    expect(links[0].getAttribute('href')).toBe('/app/hoje')
-
-    for (const nome of ['Histórico', 'Desenvolvimento', 'Comunidade', 'Família']) {
-      const item = within(nav).getByRole('button', { name: nome })
-      expect(item.getAttribute('aria-disabled')).toBe('true')
-    }
-    expect(within(nav).getAllByRole('button')).toHaveLength(4)
-  })
-
-  it('os itens desativados não fazem nada ao toque', async () => {
+  it('na Sessão o caminho de volta é o link "Voltar para Hoje", na lateral, e leva à página /app/hoje', async () => {
     const { roteador } = renderizarRota('/app/sessao')
-    const nav = await screen.findByRole('navigation', { name: 'Principal' })
+    const voltar = await screen.findByRole('link', { name: 'Voltar para Hoje' })
+    expect(voltar.getAttribute('href')).toBe('/app/hoje')
+    expect(voltar.hasAttribute('aria-current')).toBe(false)
 
-    fireEvent.click(within(nav).getByRole('button', { name: 'Histórico' }))
+    fireEvent.click(voltar)
 
-    expect(roteador.state.location.pathname).toBe('/app/sessao')
-  })
-
-  it('na Sessão o item Hoje é link, mas não é a página atual', async () => {
-    renderizarRota('/app/sessao')
-    const nav = await screen.findByRole('navigation', { name: 'Principal' })
-
-    const link = within(nav).getByRole('link', { name: 'Hoje' })
-    expect(link.getAttribute('href')).toBe('/app/hoje')
-    expect(link.hasAttribute('aria-current')).toBe(false)
-    expect(within(nav).getAllByRole('button')).toHaveLength(4)
-    expect(screen.getAllByText('Em breve')).toHaveLength(1)
+    await screen.findByRole('heading', { level: 1, name: 'Hoje' })
+    expect(roteador.state.location.pathname).toBe('/app/hoje')
   })
 })

@@ -3,10 +3,18 @@ import { Membro } from './Membro.tsx'
 // Berço: o bebê dorme sob a manta, com a lua lá fora, e o adulto sai do quarto pela porta
 // aberta. É a ilustração do estado vazio da Sessão (nenhuma sessão em andamento). Traço
 // contínuo de tinta, preenchimento chapado nas cores dos tokens. Decorativa.
-export function IlustracaoBerco({ className }: { className?: string }) {
+export function IlustracaoBerco({
+  className,
+  preserveAspectRatio,
+}: {
+  className?: string
+  /** A moldura da Sessão corta (`slice`) em vez de deixar vão: ver MidiaDaSessao. */
+  preserveAspectRatio?: string
+}) {
   return (
     <svg
       viewBox="0 0 240 240"
+      preserveAspectRatio={preserveAspectRatio}
       className={`ilu ${className ?? ''}`}
       aria-hidden="true"
       focusable="false"
