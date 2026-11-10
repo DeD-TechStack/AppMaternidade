@@ -7,18 +7,24 @@ export const PILARES = ['Rotina', 'Desenvolvimento', 'Cuidado compartilhado', 'C
 export const APRESENTACAO =
   'Um app para a família registrar a rotina do bebê, dividir os cuidados e acompanhar o desenvolvimento, com uma comunidade separada da rotina privada.'
 
-export const TELAS = {
-  titulo: 'Duas telas do protótipo',
-  texto:
-    'Na tela Hoje ficam a soneca que Bruno começou, a nota que Carla deixou às 22:40 e os botões de registro na parte de baixo, ao alcance do polegar. A tela da sessão mostra o cronômetro, contado a partir da hora de início, e quem começou.',
+// A legenda de cada aparelho descreve só o que a janela dele mostra (cada trecho leva o
+// data-descreve da tela que explica; o teste liga a legenda visível ao data-tela do aparelho).
+//
+// O topo mostra o Hoje: o notebook (a partir de 60 rem) tem a tela inteira, com a nota de Carla; o
+// celular (abaixo disso) é uma janela que mostra o cartão da soneca e os botões de registro, e a
+// nota fica fora dela.
+export const HOJE_TOPO = {
+  titulo: 'A tela Hoje',
+  notebook:
+    'Na tela Hoje ficam a soneca que Bruno começou, a nota que Carla deixou às 22:40 e os botões de registro na parte de baixo, ao alcance do polegar.',
+  celular:
+    'Na tela Hoje ficam a soneca que Bruno começou e os botões de registro na parte de baixo, ao alcance do polegar.',
 } as const
 
-// Legenda do cartão das telas na faixa estreita do Início, onde só o celular do Hoje fica visível.
-// TELAS continua sendo a legenda das faixas média e larga.
-export const TELAS_ESTREITA = {
-  titulo: 'A tela Hoje',
-  texto:
-    'Na tela Hoje ficam a soneca que Bruno começou, a nota que Carla deixou às 22:40 e os botões de registro na parte de baixo, ao alcance do polegar.',
+// O celular desta seção mostra a Sessão, em toda largura.
+export const TELAS = {
+  titulo: 'A tela da sessão',
+  texto: 'Mostra o cronômetro, contado a partir da hora de início, e quem começou.',
 } as const
 
 export const PARA_QUE_SERVE = {
@@ -77,13 +83,15 @@ export const NAVEGACAO = [
   { rotulo: 'Madrugada', alvo: 'secao-madrugada' },
 ] as const
 
-// Parágrafo ao lado do celular da madrugada: diz o que a tela do aparelho mostra.
+// Parágrafo ao lado do celular da madrugada: diz o que a tela do aparelho mostra (a janela termina
+// no cronômetro e em quem começou; os botões ficam abaixo dela).
 export const LEGENDA_MADRUGADA =
-  'No celular, a mamada que Juliana começou às 03:10, vista no modo madrugada: tela escura, cronômetro grande e botões maiores.'
+  'No celular, a mamada que Juliana começou às 03:10, vista no modo madrugada: tela escura e cronômetro grande.'
 
-// Parágrafo ao lado do celular do Hoje no cartão da chamada final.
+// Parágrafo ao lado do celular do Hoje no cartão da chamada final (a janela mostra o cartão da
+// soneca e os botões de registro).
 export const LEGENDA_CHAMADA =
-  'No celular, o Hoje do protótipo: a soneca que Bruno começou, a nota de Carla e os últimos registros.'
+  'No celular, o Hoje do protótipo: a soneca que Bruno começou e os botões de registro, ao alcance do polegar.'
 
 // A atividade sugerida do Tummy time, na tela Sessão.
 export const ATIVIDADE_TUMMY = 'Espelho no chão'

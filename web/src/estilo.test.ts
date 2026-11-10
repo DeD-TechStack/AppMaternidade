@@ -498,11 +498,16 @@ describe('R3/W1: contorno de foco dos alvos de foco por programa, só para tecla
 })
 
 describe('D6: cronômetro grande', () => {
-  it('.cronometro vai de 4,5 rem a 8 rem, com números tabulares', () => {
+  // MAT-44c-1 rodada visual 3 (defeito 1): o cronômetro nunca quebra de linha. O tamanho segue a
+  // largura do campo em que ele mora (cqi, o campo é um contêiner de largura) e tem teto de 8 rem; o
+  // piso de 4,5 rem e o vw foram trocados, porque em 530 px de coluna o número de 128 px quebrava.
+  it('.cronometro mede o campo (cqi), vai até 8 rem, tem números tabulares e não quebra de linha', () => {
     const corpo = corposDe('.cronometro').join('')
-    expect(corpo).toMatch(/font-size:\s*clamp\(\s*4\.5rem\s*,\s*21vw\s*,\s*8rem\s*\)/)
+    expect(corpo).toMatch(/font-size:\s*clamp\(\s*[\d.]+rem\s*,\s*\d+cqi\s*,\s*8rem\s*\)/)
+    expect(corpo).not.toMatch(/\bvw\b/)
     expect(corpo).toMatch(/line-height:\s*1\s*;/)
     expect(corpo).toMatch(/font-variant-numeric:\s*tabular-nums/)
+    expect(corpo).toMatch(/white-space:\s*nowrap/)
   })
 
   it('a miniatura tem um modificador menor, que vem depois', () => {
@@ -513,12 +518,17 @@ describe('D6: cronômetro grande', () => {
 })
 
 describe('D7: legenda "Em breve"', () => {
-  it('ocupa as colunas 2 a 5, alinhada à esquerda, com uma linha de 1 px embaixo', () => {
+  // MAT-44c-1 rodada visual 3 (defeito 8): em 390 o rótulo "Em breve" ficava solto sobre a barra. Agora é
+  // uma etiqueta (papel fundo, canto de 3 px) centrada sobre as colunas 2 a 5, que nomeia o grupo, e os
+  // itens desativados ficam esmaecidos; a linha de 1 px embaixo saiu.
+  it('é uma etiqueta centrada sobre as colunas 2 a 5, no papel fundo, e o grupo desativado fica esmaecido', () => {
     const corpo = corposDe('.nav-legenda').join('')
     expect(corpo).toMatch(/grid-column:\s*2\s*\/\s*span 4/)
-    expect(corpo).toMatch(/text-align:\s*left/)
-    expect(corpo).not.toMatch(/text-align:\s*center/)
-    expect(corpo).toMatch(/border-bottom:\s*1px solid var\(--cor-linha\)/)
+    expect(corpo).toMatch(/justify-self:\s*center/)
+    expect(corpo).toMatch(/background-color:\s*var\(--cor-papel-fundo\)/)
+    expect(corpo).toMatch(/border-radius:\s*var\(--radius-tag, 3px\)/)
+    expect(corpo).not.toMatch(/border-bottom/)
+    expect(corposDe(".nav-item[aria-disabled='true']").join('')).toMatch(/opacity:\s*0\.\d+/)
   })
 })
 

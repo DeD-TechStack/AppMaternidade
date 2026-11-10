@@ -27,6 +27,10 @@
   --cor-campo-noite: var(--color-night-paper-deep);
   --cor-texto-noite: var(--color-night-primary);
 
+  /* Botões rápidos: de dia o papel fundo, sem contorno que se veja (a mesma cor da superfície). */
+  --cor-acao-rapida: var(--color-paper-deep);
+  --cor-contorno-acao: var(--color-paper-deep);
+
   --fonte-exibicao: 'Fraunces', Georgia, serif;
   --fonte-texto: 'Instrument Sans', system-ui, sans-serif;
 
@@ -55,6 +59,11 @@
 
   --cor-botao-campo: var(--color-night-accent);
   --cor-texto-botao-campo: var(--color-night-on-accent);
+
+  /* Na madrugada os botões rápidos têm superfície (o barro escuro) e contorno (a tinta da noite),
+     para se lerem sobre o fundo escuro. */
+  --cor-acao-rapida: var(--color-night-field-1);
+  --cor-contorno-acao: var(--color-night-line);
 
   --alvo-rapido: 56px;
 }

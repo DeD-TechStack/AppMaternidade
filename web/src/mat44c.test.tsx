@@ -327,11 +327,12 @@ describe('MAT-44c-1 #4: a grade do Início', () => {
   })
 
   it('o gap passa do padding lateral dos cartões em pelo menos 0,5 rem, em todas as faixas', () => {
-    // O gap entre seções cresce com a faixa; na larga é de 150 px (9,375 rem).
+    // O gap entre seções cresce com a faixa; na larga é de 64 px (4 rem). Rodada visual 3: eram 150 px, e
+    // o canal vazio entre as colunas (defeito 4) vinha daí.
     const esperado: Array<[number, number, number]> = [
       [30, 1, 2.5],
       [50, 1.5, 4],
-      [70, 2.5, 9.375],
+      [70, 2.5, 4],
     ]
     for (const [largura, padding, gap] of esperado) {
       const valores = valoresEm(largura)
@@ -554,15 +555,19 @@ describe('MAT-44c-1 rodada 7 #3: o notebook do Hoje é a imagem do topo, de pont
     expect(telas.querySelector('[data-aparelho="celular"][data-tela="sessao"]')).not.toBeNull()
   })
 
-  it('na larga o título atravessa as duas colunas e os pilares ficam numa coluna lateral à direita, em coluna', () => {
+  // Rodada visual 3 (defeito 3): os pilares deixaram a coluna lateral automática e passaram para a segunda
+  // coluna da grade (a mesma linha vertical do segundo cartão do par), em etiquetas que quebram por palavra.
+  it('na larga o título atravessa as duas colunas e os pilares ficam na segunda coluna, em linha', () => {
     const doTopo = (seletor: string) =>
       regras.find((r) => r.seletor === seletor && r.condicao === '@container pagina (min-width: 60rem)')!
     const promessa = doTopo('.inicio-promessa')
     expect(promessa.props['grid-template-areas']).toMatch(/'titulo titulo'[\s\S]*'texto pilares'[\s\S]*'hero hero'/)
-    expect(doTopo('.inicio-pilares').props['flex-direction']).toBe('column')
+    expect(doTopo('.inicio-pilares').props['grid-area']).toBe('pilares')
+    expect(doTopo('.inicio-pilares').props['flex-direction']).toBeUndefined()
     expect(doTopo('.inicio-hero').props['grid-area']).toBe('hero')
-    // Os pilares não quebram: a coluna deles é automática (a largura da etiqueta mais larga).
-    expect(promessa.props['grid-template-columns']).toBe('minmax(0, 1fr) auto')
+    // As duas colunas são iguais e têm o gap da grade: a segunda começa onde o segundo cartão do par começa.
+    expect(promessa.props['grid-template-columns']).toBe('repeat(2, minmax(0, 1fr))')
+    expect(promessa.props['column-gap']).toBe('var(--gap)')
   })
 })
 
@@ -572,8 +577,12 @@ describe('MAT-44c-1 rodada 3 #2: os fatos são linhas de bloco, o termo logo ao 
     for (const regra of doFato) expect(regra.props['grid-template-columns'] ?? '', regra.seletor).not.toMatch(/subgrid/)
     const colunas = regras.filter((r) => r.seletor === '.faixa-fatos > li' && r.condicao !== null && 'grid-template-columns' in r.props)
     expect(colunas.length).toBeGreaterThan(0)
+    // Média (46 rem): o termo pelo conteúdo e a descrição no resto. Larga (60 rem, rodada visual 3): duas
+    // colunas iguais com o gap da grade, a descrição na segunda coluna (x1), sem o vazio de 40% à direita.
     for (const regra of colunas) {
-      expect(regra.props['grid-template-columns']).toBe('minmax(max-content, 1fr) minmax(0, 3fr)')
+      const larga = regra.condicao === '@container pagina (min-width: 60rem)'
+      expect(regra.props['grid-template-columns']).toBe(larga ? 'repeat(2, minmax(0, 1fr))' : 'minmax(max-content, 1fr) minmax(0, 3fr)')
+      if (larga) expect(regra.props['column-gap']).toBe('var(--gap)')
     }
   })
 
@@ -640,10 +649,11 @@ describe('MAT-44c-1 rodada 3 #4: os botões do painel "+ Mais" têm a largura da
   }
 })
 
-describe('MAT-44c-1 rodada 7 #6: o espaço é de seção: 150 px entre seções na larga e 2rem dentro delas', () => {
-  it('a larga tem o gap de 9,375rem (o mesmo na linha e na coluna) e o respiro interno é de 2rem', () => {
+describe('MAT-44c-1 rodada 7 #6: o espaço é de seção: 64 px entre seções na larga e 2rem dentro delas', () => {
+  it('a larga tem o gap de 4rem (o mesmo na linha e na coluna) e o respiro interno é de 2rem', () => {
     const larga = regras.find((r) => r.seletor === '.inicio-grade' && r.condicao?.includes('60rem') && '--gap' in r.props)!
-    expect(emRem(larga.props['--gap'])).toBeCloseTo(9.375, 3)
+    // Rodada visual 3: o gap era de 150 px (9,375rem); entre as colunas ele virava um canal vazio.
+    expect(emRem(larga.props['--gap'])).toBeCloseTo(4, 3)
     const base = regras.find((r) => r.seletor === '.inicio-grade' && r.condicao === null && '--respiro-interno' in r.props)!
     expect(emRem(base.props['--respiro-interno'])).toBe(2)
     for (const seletor of ['.inicio-promessa', '.inicio-telas', '.inicio-serve', '.inicio-chamada']) {
@@ -652,14 +662,16 @@ describe('MAT-44c-1 rodada 7 #6: o espaço é de seção: 150 px entre seções 
     }
   })
 
-  it('a chamada é um cartão de 2 colunas de texto (32,5rem) e o par telas + madrugada só começa com 85rem', () => {
+  // Rodada visual 3: a chamada (e as telas e a madrugada, de 72rem a 80rem) são cartões de duas colunas iguais com o
+  // gap da grade, o aparelho na segunda (x1); o par telas + madrugada começa com 80rem, onde a meia grade tem 33rem.
+  it('a chamada é um cartão de 2 colunas iguais com o gap da grade e o par telas + madrugada só começa com 80rem', () => {
     const chamada = regras.find((r) => r.seletor === '.inicio-chamada' && r.condicao === '@container pagina (min-width: 72rem)')!
-    expect(chamada.props['grid-template-columns']).toBe('minmax(0, 32.5rem) minmax(0, 32.5rem)')
-    expect(chamada.props['justify-content']).toBe('space-between')
+    expect(chamada.props['grid-template-columns']).toBe('repeat(2, minmax(0, 1fr))')
+    expect(chamada.props['column-gap']).toBe('var(--gap)')
     const par = regras.find((r) => r.seletor === '.inicio-grade > .inicio-par' && /span 1/.test(r.props['grid-column'] ?? ''))!
-    expect(par.condicao).toBe('@container pagina (min-width: 85rem)')
-    // Na meia grade (85rem) cabe a coluna de texto inteira: (85 − 9,375) ÷ 2 − 2 × 2,5.
-    expect((85 - 9.375) / 2 - 5).toBeGreaterThanOrEqual(32.5)
+    expect(par.condicao).toBe('@container pagina (min-width: 80rem)')
+    // Na meia grade (80rem) cabe a coluna de texto inteira: (80 − 4) ÷ 2 − 2 × 2,5.
+    expect((80 - 4) / 2 - 5).toBeGreaterThanOrEqual(32.5)
   })
 
   it('os aparelhos ficam centrados no cartão e o texto fica à esquerda', () => {
@@ -721,23 +733,29 @@ describe('MAT-44c-1 rodada 7 #8: a ilustração enche o cartão de imagem', () =
     expect(campo.props['position']).toBe('relative')
   })
 
-  it('rodada 9 D: a partir de 85rem o campo estica até a base da seção e encosta na linha da direita da grade', () => {
-    const faixa = '@container pagina (min-width: 85rem)'
+  // Rodada visual 3 (defeitos 4 e 5): o campo da ilustração deixou de ser uma caixa de 25rem encostada à direita, com um
+  // canal vazio de 365 px entre ela e o texto; agora ocupa a segunda coluna inteira, da linha x1 à margem direita, a
+  // partir de 72rem (onde o texto de 20 px ainda tem mais de 50 caracteres por linha).
+  it('rodada 9 D: a partir de 72rem o campo ocupa a segunda coluna inteira e estica até a base da seção', () => {
+    const faixa = '@container pagina (min-width: 72rem)'
     const campo = regras.find((r) => r.seletor === '.inicio-serve > .inicio-imagem' && r.condicao === faixa)!
     expect(campo).toBeDefined()
     expect(campo.props['align-self']).toBe('stretch')
-    expect(campo.props['justify-self']).toBe('end')
+    expect(campo.props['justify-self']).toBe('stretch')
     expect(campo.props['aspect-ratio']).toBe('auto')
     expect(campo.props['max-width']).toBe('none')
-    expect(emRem(campo.props['width'])).toBeGreaterThan(0)
+    expect(campo.props['width']).toBe('100%')
     // A seção não centraliza mais o campo na vertical (isso deixava 54 px até a base).
     const secao = regras.find((r) => r.seletor === '.inicio-serve' && r.condicao === faixa)!
     expect(secao.props['align-items']).not.toBe('center')
+    expect(secao.props['grid-template-columns']).toBe('repeat(2, minmax(0, 1fr))')
+    expect(secao.props['column-gap']).toBe('var(--gap)')
     // A seção sem campo de cor não tem padding lateral: a borda direita da seção é a linha da grade.
     expect(regras.find((r) => r.seletor === '.inicio-grade > section:not([data-campo])')!.props['padding-inline']).toBe('0')
-    // O desenho (160 × 222) ocupa mais de 70% do campo, para as alturas prováveis da seção (de 450 a 650 px).
-    const largura = emRem(campo.props['width']) * 16
-    for (const altura of [450, 550, 650]) {
+    // O desenho (160 × 222) ocupa mais de 70% do campo (a segunda coluna de 544 px em 72rem) para as alturas
+    // prováveis da seção com o texto de 20 px (de 600 a 800 px).
+    const largura = (72 * 16 - 4 * 16) / 2
+    for (const altura of [600, 700, 800]) {
       const caixaL = largura
       const caixaA = altura - 16
       const h = Math.min(caixaA, caixaL / (160 / 222))
@@ -780,10 +798,13 @@ describe('MAT-44c-1 rodada 2 #a: todo texto corrido do Início mora numa coluna 
     )
     expect(paragrafos.length).toBeGreaterThanOrEqual(10)
     for (const p of paragrafos) expect(p.closest('.coluna-texto'), p.textContent!.slice(0, 40)).not.toBeNull()
+    // Rodada visual 3: com o corpo de 20 px na larga (60rem), a coluna de 32,5rem dava só 52 caracteres por linha;
+    // ela passa a 36rem nessa faixa (cerca de 62 caracteres) e continua em 32,5rem ou menos nas outras.
     for (const regra of regras.filter((r) => r.seletor === '.coluna-texto')) {
       const largura = regra.props['max-width']
       expect(largura, regra.seletor).toBeDefined()
-      expect(emRem(largura), regra.seletor).toBeLessThanOrEqual(32.5)
+      const teto = regra.condicao === '@container pagina (min-width: 60rem)' ? 36 : 32.5
+      expect(emRem(largura), regra.seletor).toBeLessThanOrEqual(teto)
     }
     // Nenhuma regra do Início fixa 31rem: a coluna de texto é a de 32,5rem.
     expect(estiloGlobal).not.toMatch(/\b31rem\b/)
@@ -794,7 +815,7 @@ describe('MAT-44c-1 rodada 2 #a: todo texto corrido do Início mora numa coluna 
     const doInicio = regras.filter((r) => /\.(inicio-|texto-medida)/.test(r.seletor) && 'max-width' in r.props)
     for (const regra of doInicio) {
       if (/ch$/.test(regra.props['max-width'])) continue
-      expect(regra.props['max-width'], regra.seletor).toMatch(/^(32\.5rem|24rem|17rem|100%)$|^none$/)
+      expect(regra.props['max-width'], regra.seletor).toMatch(/^(36rem|32\.5rem|24rem|17rem|100%)$|^none$/)
     }
   })
 })
@@ -803,14 +824,21 @@ describe('MAT-44c-1 rodada 7 #1 e #2: o celular é uma janela de altura fixa, co
   const doCelular = (seletor: string, condicao: string | null = null) =>
     regras.find((r) => r.seletor === seletor && r.condicao === condicao)!
 
-  it('a janela tem altura fixa (tela de 32,65rem) e a tela tem mais de 22rem de largura, então a barra vem em linha', () => {
+  // Rodada visual 3 (defeito 2): a janela deixou de ter uma altura única (33,65rem): cada tela tem a sua (--janela), medida no
+  // navegador para o recorte cair no respiro entre dois blocos (o campo do cronômetro inteiro na Sessão; o cartão da soneca
+  // inteiro no Hoje), nunca dentro de um texto ou botão.
+  it('a janela tem altura fixa por tela (--janela) e a tela tem mais de 22rem de largura, então a barra vem em linha', () => {
     const celular = doCelular('.aparelho-celular')
     const larguraTotal = emRem(celular.props['width'])
-    const alturaTotal = emRem(celular.props['height'])
     // Moldura: 2 px de borda e 0,375rem de padding de cada lado.
     const moldura = 2 * (2 / 16 + 0.375)
     expect(larguraTotal - moldura).toBeGreaterThan(22)
-    expect(alturaTotal - moldura).toBeCloseTo(32.65, 5)
+    expect(celular.props['height']).toBe('var(--janela)')
+    expect(celular.props['margin-bottom']).toBe('calc(var(--janela) * (var(--escala-celular) - 1))')
+    const daSessao = emRem(celular.props['--janela'])
+    const doHoje = emRem(doCelular(".aparelho-celular[data-tela='hoje']").props['--janela'])
+    expect(daSessao).toBeGreaterThan(32.65 + moldura)
+    expect(doHoje).toBeGreaterThan(daSessao)
     // A regra de uma coluna da navegação é a de 22rem da barra, e a tela dá a ela mais que isso.
     expect(estiloGlobal).toMatch(/@container \(max-width: 22rem\)/)
     // A tela ocupa a janela inteira, o conteúdo corta no que passa e a barra fica presa no pé.
@@ -847,18 +875,21 @@ describe('MAT-44c-1 rodada 7 #1 e #2: o celular é uma janela de altura fixa, co
     expect(larguraDoCelular).toBeGreaterThanOrEqual(0.8 * 358)
     // A caixa útil da seção em 390 é 358 − 2 × 16 = 326 px (1 px de folga de arredondamento).
     expect(larguraDoCelular).toBeLessThanOrEqual(326 + 1)
-    // A janela visível fica entre 360 e 460 px.
-    const visivel = emRem(props['height']) * 16 * escala
-    expect(visivel).toBeGreaterThanOrEqual(360)
-    expect(visivel).toBeLessThanOrEqual(460)
+    // A janela visível fica entre 360 e 560 px (era 460; a do Hoje mostra o cartão da soneca inteiro).
+    for (const janela of [props['--janela'], doCelular(".aparelho-celular[data-tela='hoje']").props['--janela']]) {
+      const visivel = emRem(janela) * 16 * escala
+      expect(visivel).toBeGreaterThanOrEqual(360)
+      expect(visivel).toBeLessThanOrEqual(560)
+    }
     // O menor texto da tela (a navegação, 13 px) fica com pelo menos 11 px; o resto da tela é maior.
     for (const seletor of ['.aparelho-celular .nav-item', '.aparelho-celular .nav-legenda']) {
       expect(emRem(doCelular(seletor).props['font-size']) * 16 * escala, seletor).toBeGreaterThanOrEqual(11)
     }
-    // A escala só muda em degraus e chega a 1 (a variável, não a largura de cada celular).
+    // A escala só muda em degraus e passa de 1 no computador: 1,1 a partir de 72rem e 1,2 a partir de 85rem (rodada visual 3,
+    // defeito 5: aparelhos pequenos dentro dos blocos). É a variável, não a largura de cada celular.
     const escalas = regras.filter((r) => r.seletor === '.aparelho-celular' && '--escala-celular' in r.props)
     expect(escalas.length).toBeGreaterThanOrEqual(3)
-    expect(Math.max(...escalas.map((r) => parseFloat(r.props['--escala-celular'])))).toBe(1)
+    expect(Math.max(...escalas.map((r) => parseFloat(r.props['--escala-celular'])))).toBe(1.2)
   })
 
   it('rodada 11 C: a faixa estreita do celular usa a escala 0,85 (nem 0,8, nem 0,86, nem 0,9) e a tela segue com mais de 22rem', () => {
@@ -881,22 +912,29 @@ describe('MAT-44c-1 rodada 7 #1 e #2: o celular é uma janela de altura fixa, co
       expect(telaDe(props).largura, `${pagina}rem`).toBeGreaterThan(22 * 16)
       expect(parseFloat(props['--escala-celular']), `${pagina}rem`).toBe(0.85)
       expect(emRem(props['width']) * 16 * 0.85, `${pagina}rem`).toBeLessThanOrEqual(311)
-      expect(emRem(props['height']) * 16 * 0.85, `${pagina}rem`).toBeLessThanOrEqual(460)
+      expect(emRem(props['--janela']) * 16 * 0.85, `${pagina}rem`).toBeLessThanOrEqual(560)
     }
     // Um só degrau cobre 390 px a 100% e 768 px a 200% (dentro de @container o rem é o da fonte do contêiner, então
-    // os dois caem em cerca de 22 rem): a mesma altura, 31,6rem, com a margem de baixo lendo a mesma altura.
+    // os dois caem em cerca de 22 rem): a mesma janela (--janela), com a margem de baixo lendo a mesma altura.
     for (const pagina of [20.4, 22, 22.375, 24, 24.9]) {
-      expect(celularEm(pagina)['height'], `${pagina}rem`).toBe('31.6rem')
+      expect(celularEm(pagina)['height'], `${pagina}rem`).toBe('var(--janela)')
+      expect(celularEm(pagina)['margin-bottom'], `${pagina}rem`).toBe('calc(var(--janela) * (var(--escala-celular) - 1))')
     }
+    // A faixa estreita não repete altura nem margem de baixo: elas vêm da base, que lê --janela.
     const faixa = doCelular('.aparelho-celular', '@container pagina (min-width: 20rem) and (max-width: 24.99rem)')
-    expect(faixa.props['margin-bottom']).toBe('calc(31.6rem * (var(--escala-celular) - 1))')
+    expect('height' in faixa.props).toBe(false)
+    expect('margin-bottom' in faixa.props).toBe(false)
     // Não há sub-degrau por largura dentro da faixa de 20 a 24,99rem.
     expect(regras.filter((r) => r.seletor === '.aparelho-celular' && /min-width: 23rem/.test(r.condicao ?? ''))).toEqual([])
     // Das outras faixas nada muda: 0,95 de 25rem e 1 de 30rem, com a moldura da base.
     expect(parseFloat(celularEm(26)['--escala-celular'])).toBe(0.95)
     expect(parseFloat(celularEm(46)['--escala-celular'])).toBe(1)
     expect(celularEm(46)['width']).toBe('23.5rem')
-    expect(celularEm(46)['height']).toBe('33.65rem')
+    expect(celularEm(46)['--janela']).toBe('34.65rem')
+    // No computador: 1,1 (72rem) e 1,2 (85rem), e o celular fica mais largo (26rem) para a barra respirar.
+    expect(parseFloat(celularEm(72)['--escala-celular'])).toBe(1.1)
+    expect(parseFloat(celularEm(85.5)['--escala-celular'])).toBe(1.2)
+    expect(celularEm(72)['width']).toBe('26rem')
   })
 
   it('com a fonte ampliada o celular encolhe em degraus e cabe na área do cartão', () => {
@@ -967,16 +1005,19 @@ describe('MAT-44c-1 rodada 7 #5: a legenda "Em breve" é uma etiqueta discreta, 
     }
   })
 
-  it('o texto é pequeno, em caixa alta e na cor secundária, sobre as colunas 2 a 5, com a linha de 1 px e 4 px de respiro até os ícones', () => {
+  // Rodada visual 3 (defeito 8): a legenda era um texto com uma linha embaixo e parecia solta sobre a barra. Agora é uma
+  // etiqueta (papel fundo, canto de 3 px) centrada sobre as colunas 2 a 5, sem linha; o grupo que ela nomeia fica esmaecido.
+  it('o texto é pequeno, em caixa alta e na cor secundária, numa etiqueta sobre as colunas 2 a 5, com 4 px de respiro até os ícones', () => {
     const base = Object.assign({}, ...legenda.filter((r) => r.condicao === null).map((r) => r.props)) as Record<string, string>
     expect(base['text-transform']).toBe('uppercase')
     expect(base['color']).toBe('var(--cor-info)')
     expect(emRem(base['font-size']) * 16).toBeGreaterThanOrEqual(12)
     expect(emRem(base['font-size']) * 16).toBeLessThanOrEqual(13)
     expect(base['grid-column']).toBe('2 / span 4')
-    expect(base['border-bottom']).toMatch(/^1px solid/)
-    // A linha termina acima dos itens: o item tem 3 px de borda e 0,5rem de padding antes do ícone, e a legenda
-    // deixa mais 0,25rem de margem embaixo: de 4 px, no mínimo, entre a linha e o topo dos ícones.
+    expect(base['background-color']).toBe('var(--cor-papel-fundo)')
+    expect(base['border-bottom']).toBeUndefined()
+    // A etiqueta termina acima dos itens: o item tem 3 px de borda e 0,5rem de padding antes do ícone, e a legenda
+    // deixa mais 0,25rem de margem embaixo: de 4 px, no mínimo, entre a etiqueta e o topo dos ícones.
     const item = Object.assign({}, ...regras.filter((r) => r.seletor === '.nav-item' && r.condicao === null).map((r) => r.props)) as Record<string, string>
     const margemDeBaixo = base['margin'].split(/\s+/)[2]
     const espaco = emRem(margemDeBaixo) * 16 + 3 + parseFloat(item['padding'].split(/\s+/)[0]) * 16
@@ -1012,18 +1053,28 @@ describe('MAT-44c-1 rodada 7 #6 e rodada 8 B: o aumento de escala do computador 
 
   it('o aumento não está no bloco largo comum: ali valem os tamanhos da rodada 6 (cabem em 1024 × 768)', () => {
     expect(emRem(doLargo('.coluna-app .cartao.campo-andamento')[0].props['padding'])).toBeLessThanOrEqual(1.5)
-    expect(doLargo('.coluna-app .numero-grande')[0].props['font-size']).toBe('clamp(2.5rem, 4.5cqi, 3.5rem)')
+    // Rodada visual 3 (defeito 1): o número mede o campo (cqi do contêiner do cartão), com teto de 3,5rem na base.
+    expect(doLargo('.coluna-app .numero-grande')[0].props['font-size']).toBe('clamp(1.5rem, 18cqi, 3.5rem)')
     expect(doLargo('.coluna-app .acao-rapida')).toHaveLength(0)
-    expect(doLargo('.hoje-ultimos li')).toHaveLength(0)
+    // As linhas de "Últimos" só repartem a altura da coluna (flex) na base; o tamanho delas é do bloco de telas altas.
+    for (const regra of doLargo('.hoje-ultimos li')) {
+      expect(regra.props['padding-block']).toBeUndefined()
+      expect(regra.props['font-size']).toBeUndefined()
+    }
     expect(emRem(doLargo('.hoje-titulo')[0].props['margin-top'])).toBeLessThanOrEqual(2)
     expect(emRem(doLargo('.sessao-main')[0].props['padding'].split(/\s+/)[0])).toBeLessThanOrEqual(2)
   })
 
   it('sob min-height o cartão, o cronômetro, os botões, as linhas de "Últimos" e o respiro da Sessão são maiores que na base', () => {
     const de = (s: string) => doBloco.find((r) => r.seletor === s)!.props
-    expect(emRem(de('.coluna-app .cartao.campo-andamento')['padding'])).toBeGreaterThanOrEqual(2.5)
+    // O cartão cresce com a tela alta (de 1,5 para 2 rem). Não passa disso porque o gap entre blocos
+    // tem de ser maior que o respiro de dentro (rodada visual 3, #7, mais abaixo): o gap sobe a 2,5 rem.
+    expect(emRem(de('.coluna-app .cartao.campo-andamento')['padding'])).toBeGreaterThan(
+      emRem(doLargo('.coluna-app .cartao.campo-andamento')[0].props['padding']),
+    )
     expect(de('.coluna-app .numero-grande')['font-size']).toMatch(/cqi/)
-    expect(de('.sessao-campo .cronometro')['font-size']).toMatch(/^clamp\(4\.5rem, \d+cqi, 8rem\)$/)
+    // O cronômetro mede o campo (26cqi) e chega a 8rem nas telas altas; o piso de 4,5rem saiu (rodada visual 3).
+    expect(de('.sessao-campo .cronometro')['font-size']).toMatch(/^clamp\([\d.]+rem, \d+cqi, 8rem\)$/)
     expect(emRem(de('.coluna-app .acao-rapida')['min-height'])).toBeGreaterThanOrEqual(4.5)
     expect(emRem(de('.hoje-ultimos li')['padding-block'])).toBeGreaterThanOrEqual(1.5)
     expect(emRem(de('.sessao-main')['padding'].split(/\s+/)[0])).toBeGreaterThanOrEqual(3)
@@ -1213,5 +1264,414 @@ describe('MAT-44c-1 #11: botões rápidos', () => {
     const texto = lerTexto('prototipo/BotoesRapidos.tsx')
     expect(texto).toContain('whitespace-nowrap')
     expect(texto).toContain('@max-[17rem]:whitespace-normal')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Rodada visual 3, defeito 1: o cronômetro nunca quebra de linha.
+//
+// O jsdom não mede texto, então o teste faz a conta com o que o CSS declara: o cronômetro é um texto
+// sem quebra (white-space: nowrap) cujo tamanho é uma fração da largura do campo em que mora
+// (cqi: .campo-sessao é um contêiner de largura). Se a fração vezes a largura do "1:12:01" em em é
+// menor que 1, ele cabe no campo, qualquer que seja a coluna; o teste confere isso e também o
+// tamanho nas três larguras da captura (390, 1024 e 1440), onde ele tem de continuar grande.
+
+describe('MAT-44c-1 rodada visual 3 #1: o cronômetro não quebra nas larguras 1024, 1440 e 390', () => {
+  // "1:12:01" no pior caso: 5 algarismos tabulares de 0,62 em e 2 dois-pontos de 0,33 em (no
+  // navegador mede cerca de 3,45 em).
+  const LARGURA_EM = 5 * 0.62 + 2 * 0.33
+  const ALTA = '@media (min-height: 860px)'
+
+  const px = (valor: string): number => emRem(valor) * 16
+  const props = (seletor: string, condicao: string | null) =>
+    Object.assign(
+      {},
+      ...regras.filter((r) => r.seletor === seletor && r.condicao === condicao).map((r) => r.props),
+    ) as Record<string, string>
+
+  const semC = semComentarios(estiloGlobal)
+  const comecoDaAlta = semC.indexOf(ALTA)
+  const naAlta = (seletor: string) =>
+    regrasComContexto(semC.slice(comecoDaAlta)).find((r) => r.seletor === seletor)!.props
+
+  function clamp(valor: string) {
+    const m = /^clamp\(\s*([\d.]+)rem\s*,\s*([\d.]+)cqi\s*,\s*([\d.]+)rem\s*\)$/.exec(valor.trim())
+    if (!m) throw new Error(`font-size fora do padrão clamp(rem, cqi, rem): ${valor}`)
+    return { minimo: parseFloat(m[1]) * 16, cqi: parseFloat(m[2]), maximo: parseFloat(m[3]) * 16 }
+  }
+  const tamanho = (valor: string, larguraDoCampo: number): number => {
+    const { minimo, cqi, maximo } = clamp(valor)
+    return Math.max(minimo, Math.min((cqi / 100) * larguraDoCampo, maximo))
+  }
+
+  /** A largura útil (dentro do padding) do campo do cronômetro na Sessão real, em px. */
+  function larguraDoCampo(janela: number, alta: boolean): number {
+    const campoBase = props('.campo-sessao', null)
+    // `padding: 1.5rem 1rem`: o segundo valor é o lateral.
+    const lateralBase = px(campoBase['padding'].split(/\s+/)[1])
+    // O <main> da Sessão tem px-4 (1 rem de cada lado) no estreito; o campo não sangra mais (margin-inline: 0).
+    if (janela < 60 * 16) return Math.min(janela, 40 * 16) - 2 * 16 - 2 * lateralBase
+
+    const moldura = props('.coluna-app', LARGO)
+    const respiro = px(moldura['--respiro'])
+    const largura = Math.min((janela * parseFloat(moldura['width'])) / 100, px(moldura['max-width']))
+    // Colunas: a faixa lateral, as duas do conteúdo e uma de largura zero, com o respiro entre elas.
+    const coluna = (largura - px(moldura['--nav-largura']) - 3 * respiro) / 2
+    const main = 2 * coluna + respiro // .sessao-main: colunas 2 e 3
+    const metade = (main - respiro) / 2 // .sessao-corpo: duas colunas com o mesmo respiro
+    const lateral = alta
+      ? px(naAlta('.sessao-campo .campo-sessao')['padding'].split(/\s+/)[1])
+      : px(props('.sessao-campo .campo-sessao', LARGO)['padding-inline'])
+    return metade - 2 * lateral
+  }
+
+  it('.cronometro e .numero-grande são texto sem quebra (white-space: nowrap), com números tabulares', () => {
+    const cronometro = props('.cronometro', null)
+    expect(cronometro['white-space']).toBe('nowrap')
+    expect(cronometro['font-variant-numeric']).toBe('tabular-nums')
+    // overflow-wrap: anywhere deixava o número quebrar no meio ("1:12:0" e "1").
+    expect(cronometro['overflow-wrap']).toBeUndefined()
+    expect(props('.numero-grande', null)['white-space']).toBe('nowrap')
+  })
+
+  it('o campo é um contêiner de largura e o tamanho do cronômetro é uma fração dele que cabe, em toda regra', () => {
+    for (const campo of ['.campo-sessao', '.campo-andamento']) {
+      const regra = props(campo, null)
+      expect(regra['container-type'], campo).toBe('inline-size')
+    }
+    const regrasDoCronometro: Array<[string, string]> = [
+      ['.cronometro', props('.cronometro', null)['font-size']],
+      ['.coluna-app .cronometro', props('.coluna-app .cronometro', null)['font-size']],
+      ['.sessao-campo .cronometro (largo)', props('.sessao-campo .cronometro', LARGO)['font-size']],
+      ['.sessao-campo .cronometro (telas altas)', naAlta('.sessao-campo .cronometro')['font-size']],
+    ]
+    for (const [nome, valor] of regrasDoCronometro) {
+      const { minimo, cqi } = clamp(valor)
+      // A fração do campo vezes a largura do número em em é menor que 1: ele cabe em qualquer campo.
+      expect((cqi / 100) * LARGURA_EM, `${nome}: ${valor}`).toBeLessThanOrEqual(1)
+      // E o mínimo é pequeno o bastante para caber até num campo estreito (fonte e zoom ampliados).
+      expect(minimo * LARGURA_EM, `${nome}: mínimo`).toBeLessThanOrEqual(120)
+    }
+  })
+
+  const casos: Array<[string, number, boolean]> = [
+    ['390 × 844', 390, false],
+    ['1024 × 768', 1024, false],
+    ['1440 × 900', 1440, true],
+  ]
+  for (const [nome, janela, alta] of casos) {
+    it(`${nome}: o "1:12:01" cabe numa linha do campo e continua grande (48 px ou mais)`, () => {
+      const campo = larguraDoCampo(janela, alta)
+      const valor =
+        janela < 60 * 16
+          ? props('.coluna-app .cronometro', null)['font-size']
+          : alta
+            ? naAlta('.sessao-campo .cronometro')['font-size']
+            : props('.sessao-campo .cronometro', LARGO)['font-size']
+      const fonte = tamanho(valor, campo)
+
+      expect(campo, 'largura útil do campo').toBeGreaterThan(200)
+      expect(fonte * LARGURA_EM, `${fonte.toFixed(1)} px em ${campo.toFixed(0)} px de campo`).toBeLessThanOrEqual(campo)
+      expect(fonte).toBeGreaterThanOrEqual(48)
+    })
+  }
+
+  it('na página o cronômetro mora dentro do campo que é o contêiner (.campo-sessao), na Sessão real e nos aparelhos do Início', async () => {
+    const sessao = renderizarRota('/app/sessao')
+    const daSessao = sessao.container.querySelector('[role="timer"]')!
+    expect(daSessao.classList.contains('cronometro')).toBe(true)
+    expect(daSessao.closest('.campo-sessao')).not.toBeNull()
+    sessao.unmount()
+
+    const { container } = renderizarRota('/')
+    await screen.findByRole('heading', { level: 1 })
+    const dosAparelhos = [...container.querySelectorAll('[data-aparelho] [role="timer"]')]
+    expect(dosAparelhos.length).toBeGreaterThanOrEqual(2)
+    for (const timer of dosAparelhos) expect(timer.closest('.campo-sessao')).not.toBeNull()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Rodada visual 3, achado R1: a legenda descreve o que a janela do aparelho mostra.
+//
+// Cada legenda do Início leva data-descreve com a tela que ela explica (hoje, sessao ou madrugada).
+// O teste, para cada faixa de largura (o CSS esconde um aparelho e uma legenda por faixa com as
+// classes -a-partir-de-60 e -ate-60), liga a legenda visível ao data-tela do aparelho visível da
+// mesma seção, e confere que ela não cita nada que a janela do celular corta fora.
+
+describe('MAT-44c-1 rodada visual 3 R1: a legenda visível é a do aparelho visível (data-descreve = data-tela)', () => {
+  const LARGA = '@container pagina (min-width: 60rem)'
+
+  /** As classes que o CSS esconde (display: none) abaixo de 60 rem e as que esconde de 60 rem em diante. */
+  function escondidasPorFaixa(): Array<[string, Set<string>]> {
+    const abaixo = new Set<string>()
+    const acima = new Set<string>()
+    for (const regra of regras) {
+      const m = /^\.([\w-]+)$/.exec(regra.seletor)
+      if (!m) continue
+      if (regra.condicao === null && regra.props['display'] === 'none') {
+        const volta = regras.some(
+          (r) => r.seletor === regra.seletor && r.condicao === LARGA && r.props['display'] !== undefined && r.props['display'] !== 'none',
+        )
+        if (volta) abaixo.add(m[1])
+      }
+      if (regra.condicao === LARGA && regra.props['display'] === 'none') acima.add(m[1])
+    }
+    return [
+      ['abaixo de 60 rem (estreita e média)', abaixo],
+      ['de 60 rem em diante (larga)', acima],
+    ]
+  }
+
+  const visivel = (elemento: Element, escondidas: Set<string>): boolean => {
+    for (let no: Element | null = elemento; no; no = no.parentElement) {
+      if ([...no.classList].some((classe) => escondidas.has(classe))) return false
+    }
+    return true
+  }
+
+  const telaDoAparelho = (aparelho: Element): 'hoje' | 'sessao' | 'madrugada' =>
+    aparelho.getAttribute('data-tela') === 'hoje'
+      ? 'hoje'
+      : aparelho.querySelector('[data-tema-local="madrugada"]') !== null
+        ? 'madrugada'
+        : 'sessao'
+
+  /** O que a janela de cada aparelho corta fora: a legenda dele não pode prometer isso. */
+  const FORA_DA_JANELA: Record<string, RegExp[]> = {
+    'celular:hoje': [/Carla/, /22:40/, /\bnota\b/i, /últimos/i],
+    'celular:sessao': [/botões/i, /Encerrar/i, /ilustra/i],
+    'celular:madrugada': [/botões/i, /Encerrar/i, /ilustra/i],
+    'notebook:hoje': [],
+  }
+
+  it('as faixas esperadas existem: o CSS esconde as duas versões do topo (aparelho e legenda) por classe', () => {
+    const [[, abaixo], [, acima]] = escondidasPorFaixa()
+    expect([...abaixo].sort()).toEqual(expect.arrayContaining(['aparelho-a-partir-de-60', 'texto-a-partir-de-60']))
+    expect([...acima].sort()).toEqual(expect.arrayContaining(['aparelho-ate-60', 'texto-ate-60']))
+  })
+
+  for (const [faixa, escondidas] of escondidasPorFaixa()) {
+    it(`${faixa}: cada legenda visível descreve a tela do aparelho visível da mesma seção, e todo aparelho visível tem legenda`, async () => {
+      const { container } = renderizarRota('/')
+      await screen.findByRole('heading', { level: 1 })
+
+      const legendas = [...container.querySelectorAll<HTMLElement>('main [data-descreve]')].filter((l) => visivel(l, escondidas))
+      // Topo, telas, madrugada e chamada.
+      expect(legendas.length).toBeGreaterThanOrEqual(4)
+
+      for (const legenda of legendas) {
+        const secao = legenda.closest('main > section')!
+        const aparelhos = [...secao.querySelectorAll<HTMLElement>('[data-aparelho]')].filter((a) => visivel(a, escondidas))
+        const rotulo = legenda.textContent!.slice(0, 50)
+        expect(aparelhos, rotulo).toHaveLength(1)
+        const aparelho = aparelhos[0]
+        expect(telaDoAparelho(aparelho), rotulo).toBe(legenda.getAttribute('data-descreve'))
+
+        // O que a janela do aparelho corta fora não aparece na legenda.
+        const chave = `${aparelho.getAttribute('data-aparelho')}:${telaDoAparelho(aparelho)}`
+        for (const fora of FORA_DA_JANELA[chave]) expect(legenda.textContent, `${chave}: ${fora}`).not.toMatch(fora)
+        // Os nomes e as horas que ela cita estão na tela do aparelho.
+        for (const [citado] of legenda.textContent!.matchAll(/\b(?:Bruno|Juliana|Carla|\d{2}:\d{2})\b/g)) {
+          expect(aparelho.textContent, `${chave}: "${citado}"`).toContain(citado)
+        }
+      }
+
+      const aparelhosVisiveis = [...container.querySelectorAll<HTMLElement>('main [data-aparelho]')].filter((a) => visivel(a, escondidas))
+      expect(aparelhosVisiveis.length).toBeGreaterThanOrEqual(4)
+      for (const aparelho of aparelhosVisiveis) {
+        const secao = aparelho.closest('main > section')!
+        const dessaSecao = legendas.filter((l) => l.closest('main > section') === secao)
+        expect(dessaSecao.length, `${aparelho.getAttribute('data-aparelho')} de ${aparelho.getAttribute('data-tela')} sem legenda`).toBeGreaterThanOrEqual(1)
+      }
+    })
+  }
+
+  it('o topo tem duas legendas (celular e notebook) e cada uma só cita o que a tela dele mostra', async () => {
+    const { container } = renderizarRota('/')
+    await screen.findByRole('heading', { level: 1 })
+
+    const topo = container.querySelector('[aria-labelledby="promessa"]')!
+    const celular = topo.querySelector('.texto-ate-60')!.textContent!
+    const notebook = topo.querySelector('.texto-a-partir-de-60')!.textContent!
+    expect(notebook).toMatch(/Carla/)
+    expect(notebook).toMatch(/22:40/)
+    expect(celular).not.toMatch(/Carla|22:40|nota/)
+    // As duas falam do cartão da soneca que Bruno começou e dos botões de registro, que as duas telas mostram.
+    for (const texto of [celular, notebook]) {
+      expect(texto).toMatch(/soneca que Bruno começou/)
+      expect(texto).toMatch(/botões de registro/)
+    }
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Rodada visual 3, defeito 7: acabamento da grade do Hoje.
+//
+// Um gap só entre blocos vizinhos (2 rem na base e no estreito, 2,5 rem nas telas altas), sempre
+// maior que o respiro de dentro de cada bloco, e o mesmo raio de canto em todos os blocos e botões.
+
+describe('MAT-44c-1 rodada visual 3 #7: um gap só entre blocos do Hoje, maior que o respiro interno, e um raio só', () => {
+  const ALTA = '@media (min-height: 860px)'
+  const semC = semComentarios(estiloGlobal)
+  const comecoDaAlta = semC.indexOf(ALTA)
+  const doLargoBase = (seletor: string) =>
+    regrasComContexto(semC.slice(0, comecoDaAlta))
+      .filter((r) => r.seletor === seletor && r.condicao === LARGO)
+      .map((r) => r.props)
+  const daAlta = (seletor: string) =>
+    regrasComContexto(semC.slice(comecoDaAlta))
+      .filter((r) => r.seletor === seletor && r.condicao === LARGO)
+      .map((r) => r.props)[0]
+
+  const GAPS = ['.hoje-andamento', '.hoje-lateral', '.hoje-lateral > .hoje-ultimos', '.coluna-app .registro-rapido']
+
+  /** O maior respiro lateral ou vertical de um padding de 1 a 4 valores. */
+  const maiorPadding = (valor: string): number => Math.max(...valor.split(/\s+/).map(emRem))
+
+  it('no computador (base 1024 × 768) os quatro gaps são o mesmo valor e passam do padding do cartão e da nota', () => {
+    const gaps = GAPS.map((seletor) => emRem(doLargoBase(seletor).find((p) => 'margin-top' in p)!['margin-top']))
+    expect(new Set(gaps).size, gaps.join(' / ')).toBe(1)
+    const cartao = maiorPadding(doLargoBase('.coluna-app .cartao.campo-andamento')[0]['padding'])
+    const nota = maiorPadding(doLargoBase('.hoje-lateral > .hoje-nota')[0]['padding'])
+    expect(gaps[0]).toBeGreaterThan(cartao)
+    expect(gaps[0]).toBeGreaterThan(nota)
+    // 2 rem: os 32 px do pedido.
+    expect(gaps[0] * 16).toBe(32)
+  })
+
+  it('no computador (telas altas, 1440 × 900) os quatro gaps são o mesmo valor e passam do padding do cartão e da nota', () => {
+    const gaps = GAPS.map((seletor) => emRem(daAlta(seletor)['margin-top']))
+    expect(new Set(gaps).size, gaps.join(' / ')).toBe(1)
+    const cartao = maiorPadding(daAlta('.coluna-app .cartao.campo-andamento')['padding'])
+    const nota = maiorPadding(daAlta('.hoje-lateral > .hoje-nota')['padding'])
+    expect(gaps[0]).toBeGreaterThan(cartao)
+    expect(gaps[0]).toBeGreaterThan(nota)
+  })
+
+  it('no estreito (390) o cartão, a nota e "Últimos" ficam a 2 rem (mt-8) um do outro, mais que o padding vertical do cartão', () => {
+    const { container } = renderizarRota('/app/hoje')
+
+    const andamento = container.querySelector<HTMLElement>('.hoje-andamento')!
+    const nota = container.querySelector<HTMLElement>('.hoje-nota')!
+    const ultimos = container.querySelector<HTMLElement>('.hoje-ultimos')!
+    for (const bloco of [andamento, nota, ultimos]) expect(bloco.classList.contains('mt-8'), bloco.className).toBe(true)
+    // O padding vertical do cartão no estreito (1.5rem 1rem) é menor que os 2 rem do gap.
+    const cartao = props('.campo-andamento')
+    expect(maiorPadding(cartao['padding'])).toBeLessThan(2)
+  })
+
+  // O estreito do cartão vem da regra base, que o teste lê por seletor sem condição.
+  function props(seletor: string): Record<string, string> {
+    return Object.assign({}, ...regras.filter((r) => r.seletor === seletor && r.condicao === null).map((r) => r.props)) as Record<string, string>
+  }
+
+  it('o cartão "Em andamento", os campos, os botões e os botões rápidos usam o mesmo raio de canto (--radius-card, 8 px)', () => {
+    const raio = 'var(--radius-card, 8px)'
+    expect(props('.cartao.campo-andamento')['border-radius']).toBe(raio)
+    expect(props('[data-campo]')['border-radius']).toBe(raio)
+    expect(props('.botao')['border-radius']).toBe(raio)
+    expect(doLargoBase('.coluna-app .cartao.campo-andamento')[0]['border-radius']).toBe(raio)
+    expect(props('.campo-sessao')['border-radius']).toBe(raio)
+    // O cartão do Hoje deixou de sangrar até a borda da tela: sem margem negativa e sem canto reto.
+    expect(props('.cartao.campo-andamento')['margin-inline']).toBe('0')
+  })
+
+  it('os botões rápidos têm gap maior que o respiro de dentro de cada um (16 px contra 8 e 12 px)', () => {
+    const botoes = lerTexto('prototipo/BotoesRapidos.tsx')
+    // gap-4 = 1 rem = 16 px, na grade e nos painéis que abrem.
+    expect(botoes).toMatch(/const GRADE = '[^']*\bgap-4\b/)
+    expect(botoes.match(/flex flex-wrap gap-4/g)?.length).toBe(2)
+    expect(botoes).not.toMatch(/gap-2/)
+    const acao = props('.acao-rapida')
+    const botao = props('.botao')
+    const lateral = emRem(acao['padding-inline'])
+    const vertical = emRem(botao['padding'].split(/\s+/)[0])
+    expect(1).toBeGreaterThan(lateral)
+    expect(1).toBeGreaterThan(vertical)
+  })
+
+  for (const [tema, estado] of [
+    ['claro', claro],
+    ['madrugada', madrugada],
+  ] as const) {
+    it(`Hoje (${tema}): os botões rápidos usam a superfície e o contorno do tema (as variáveis --cor-acao-rapida e --cor-contorno-acao)`, () => {
+      const acao = props('.acao-rapida')
+      expect(acao['background-color']).toBe('var(--cor-acao-rapida)')
+      expect(acao['border-color']).toBe('var(--cor-contorno-acao)')
+      renderizarRota('/app/hoje', { estadoInicial: estado() })
+      expect(screen.getAllByRole('button', { name: /^(Iniciar|Registrar) .* de Heloísa$/ }).length).toBeGreaterThanOrEqual(4)
+    })
+  }
+
+  it('na madrugada o botão rápido tem superfície e contorno que se leem sobre o fundo (tokens da noite, não o papel fundo)', () => {
+    const tema = lerTexto('styles/tema.css')
+    const noite = /\[data-tema-local=['"]madrugada['"]\]\s*,\s*:root\[data-tema=['"]madrugada['"]\]\s*\{([^}]*)\}/.exec(tema)![1]
+    // De dia o contorno é da cor da superfície (sem linha); de noite é a tinta da noite sobre o barro escuro.
+    expect(noite).toMatch(/--cor-acao-rapida:\s*var\(--color-night-field-1\)/)
+    expect(noite).toMatch(/--cor-contorno-acao:\s*var\(--color-night-line\)/)
+    expect(/:root\s*\{([^}]*)\}/.exec(tema)![1]).toMatch(/--cor-acao-rapida:\s*var\(--color-paper-deep\)/)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Rodada visual 3, passo de fechamento: a faixa lateral não é um campo bege vazio, e a chamada do
+// Início tem o celular e a legenda no mesmo x (a segunda coluna da grade).
+
+describe('MAT-44c-1 rodada visual 3 fechamento: a navegação lateral e a chamada do Início', () => {
+  const ALTA = '@media (min-height: 860px)'
+  const semC = semComentarios(estiloGlobal)
+  const comecoDaAlta = semC.indexOf(ALTA)
+  const REGRA_LATERAL = '.coluna-app .nav-inferior'
+
+  it('no layout largo a navegação lateral tem a altura dos itens (align-self: start) e o canto dos outros blocos, sem descer até o pé da tela', () => {
+    const lateral = regras.find((r) => r.seletor === REGRA_LATERAL && r.condicao === LARGO)!
+    expect(lateral.props['align-self']).toBe('start')
+    expect(lateral.props['border-radius']).toBe('var(--radius-card, 8px)')
+    expect(lateral.props['background-color']).toBe('var(--cor-papel-fundo)')
+    // Sem a linha vertical de antes: o bloco é um campo de cor, como os outros, e não uma coluna.
+    expect(lateral.props['border-right']).toBeUndefined()
+  })
+
+  it('o bloco lateral começa na linha do título da tela: 2 rem na base e 3 rem nas telas altas, e 2 rem dentro do aparelho', () => {
+    const base = regras.find((r) => r.seletor === REGRA_LATERAL && r.condicao === LARGO)!
+    expect(emRem(base.props['margin'].split(/\s+/)[0])).toBe(2)
+
+    const altas = regrasComContexto(semC.slice(comecoDaAlta))
+    const alta = altas.find((r) => r.seletor === REGRA_LATERAL && r.condicao === LARGO)!
+    expect(emRem(alta.props['margin-top'])).toBe(3)
+    const tituloAlto = altas.find((r) => r.seletor === '.hoje-titulo' && r.condicao === LARGO)!
+    expect(alta.props['margin-top']).toBe(tituloAlto.props['margin-top'])
+
+    const noAparelho = regras.find((r) => r.seletor === '.aparelho .coluna-app .nav-inferior' && r.condicao === LARGO)!
+    expect(emRem(noAparelho.props['margin-top'])).toBe(2)
+  })
+
+  it('a partir de 72rem o celular da chamada parte da linha da legenda (justify-self: start) e o texto tem a altura dele, com o título no alto e a ação embaixo', () => {
+    const celular = regras.find(
+      (r) => r.seletor === '.inicio-lado > .aparelho' && r.condicao === '@container pagina (min-width: 72rem)',
+    )!
+    expect(celular.props['justify-self']).toBe('start')
+
+    const texto = regras.find(
+      (r) => r.seletor === '.inicio-chamada-texto' && r.condicao === '@container pagina (min-width: 72rem)',
+    )!
+    expect(texto.props['display']).toBe('flex')
+    expect(texto.props['flex-direction']).toBe('column')
+    expect(texto.props['align-self']).toBe('stretch')
+    expect(texto.props['justify-content']).toBe('space-between')
+  })
+
+  it('a chamada tem o título e, num bloco de ação, o parágrafo e o link; o botão continua levando ao protótipo', async () => {
+    const { container } = renderizarRota('/')
+    await screen.findByRole('heading', { level: 1 })
+    const texto = container.querySelector('.inicio-chamada-texto')!
+    expect([...texto.children].map((f) => f.tagName + '.' + f.className.split(' ')[0])).toEqual([
+      'H2.titulo-secao',
+      'DIV.inicio-chamada-acao',
+    ])
+    const acao = texto.querySelector('.inicio-chamada-acao')!
+    expect(acao.querySelector('p.texto-medida')).not.toBeNull()
+    expect(acao.querySelector('a')!.getAttribute('href')).toBe('/app/hoje')
   })
 })

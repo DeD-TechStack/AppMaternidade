@@ -4,6 +4,7 @@ import {
   APRESENTACAO,
   CHAMADA,
   FATOS,
+  HOJE_TOPO,
   LEGENDA_CHAMADA,
   LEGENDA_MADRUGADA,
   MADRUGADA,
@@ -13,19 +14,12 @@ import {
   PROMESSA,
   RODAPE,
   TELAS,
-  TELAS_ESTREITA,
 } from '../conteudo/textos.ts'
 import { Aparelho } from '../componentes/Aparelho.tsx'
 import { AvisoDemonstracao } from '../componentes/AvisoDemonstracao.tsx'
 import { TelaReal } from '../componentes/vitrine/TelaReal.tsx'
 import { IlustracaoColo } from '../prototipo/IlustracaoColo.tsx'
 import { usePrototipo } from '../prototipo/contexto.ts'
-
-// A faixa estreita mostra só o começo da legenda das telas (TELAS_ESTREITA); da média para cima o
-// texto inteiro (TELAS) aparece. O resto do texto é o que TELAS acrescenta depois da legenda curta.
-const RESTO_DE_TELAS = TELAS.texto.startsWith(TELAS_ESTREITA.texto)
-  ? TELAS.texto.slice(TELAS_ESTREITA.texto.length).trim()
-  : TELAS.texto
 
 export function Inicio() {
   const { dispatch } = usePrototipo()
@@ -48,17 +42,21 @@ export function Inicio() {
   // vazar. Só quebra quando a palavra não cabe, então com a fonte em 100% nenhuma linha muda. É a
   // única regra de quebra do Início, na raiz: o Hoje e a Sessão não a recebem.
   //
-  // O <main> é a grade (ver .inicio-grade em index.css): uma coluna na estreita e na média, duas
-  // colunas de mesma largura na larga (só as seções em par usam uma coluna cada). Os seis cartões,
-  // nesta ordem: a promessa (papel, com o campo do notebook do Hoje de ponta a ponta), as telas
-  // (campo de urucum), a madrugada (campo da noite), "para que serve" (papel, com a ilustração num
-  // cartão de imagem), os fatos (papel) e a chamada (campo de lavanda). Papel e campo se alternam,
-  // com no máximo dois campos seguidos. Todo texto corrido mora numa coluna de texto de até 32,5 rem
-  // (.coluna-texto). Os aparelhos são as telas de verdade (ver componentes/vitrine): inertes,
-  // escondidos do leitor de tela e sem texto de serviço, com um parágrafo visível ao lado. O
-  // celular é uma janela de altura fixa, que mostra o topo da tela e a barra de baixo.
+  // A página abre direto no cabeçalho (o aviso de demonstração, que é o primeiro filho, aparece só
+  // acima do bloco final). O <main> é a grade (ver .inicio-grade em index.css): uma
+  // coluna na estreita e na média, duas colunas de mesma largura na larga. Todo bloco de duas
+  // colunas usa o mesmo gap da grade, então a segunda coluna de qualquer seção começa na mesma
+  // linha vertical (a segunda coluna da grade). Os seis cartões, nesta ordem: a promessa (papel, com
+  // o campo do notebook do Hoje de ponta a ponta), as telas (campo de urucum), a madrugada (campo da
+  // noite), "para que serve" (papel, com a ilustração num cartão de imagem), os fatos (papel) e a
+  // chamada (campo de lavanda). O fecho é o rodapé, um bloco de tinta de largura total. Os aparelhos são as telas de verdade (ver componentes/vitrine):
+  // inertes, escondidos do leitor de tela e sem texto de serviço, com um parágrafo visível por
+  // perto. A legenda de cada aparelho diz só o que a janela dele mostra (data-descreve).
   return (
-    <div className="@container/pagina flex min-h-dvh flex-col break-words px-4 md:px-[2%]">
+    <div className="@container/pagina inicio-pagina flex min-h-dvh flex-col break-words px-4 md:px-[2%]">
+      {/* O aviso de demonstração é o primeiro filho (a ordem de leitura e o contrato do componente),
+          mas na tela ele vem depois do conteúdo, logo acima do bloco final (order, em index.css):
+          a página abre direto no cabeçalho. */}
       <AvisoDemonstracao />
       <header className="flex flex-col border-b py-3 @min-[46rem]/pagina:h-16 @min-[46rem]/pagina:flex-row @min-[46rem]/pagina:items-center @min-[46rem]/pagina:justify-between @min-[46rem]/pagina:py-0">
         <p className="marca">AppMaternidade</p>
@@ -79,11 +77,11 @@ export function Inicio() {
       </header>
 
       <main className="inicio-grade flex-1">
-        {/* Promessa, no papel. Larga: o título grande atravessa a grade, a apresentação fica à
-            esquerda e os pilares, numa coluna lateral à direita, uma etiqueta por linha; embaixo,
-            de ponta a ponta, o campo com o notebook do Hoje, grande. Estreita e média: o título, a
-            apresentação, os pilares em linha (quebram por palavra inteira) e o campo com o celular
-            do Hoje. O aparelho que não aparece numa faixa continua no DOM, escondido pelo CSS. */}
+        {/* Promessa, no papel. Larga: o título grande atravessa a grade; a apresentação fica na
+            primeira coluna e os pilares, em etiquetas, na segunda; embaixo, de ponta a ponta, o
+            campo com o notebook do Hoje, grande, e a legenda dele. Estreita e média: o título, a
+            apresentação, os pilares em linha e o campo com o celular do Hoje. O aparelho que não
+            aparece numa faixa continua no DOM, escondido pelo CSS. */}
         <section aria-labelledby="promessa" className="inicio-promessa inicio-largo entrada">
           <h1 id="promessa" className="promessa inicio-promessa-titulo">
             {PROMESSA}
@@ -99,6 +97,17 @@ export function Inicio() {
             ))}
           </ul>
           <div data-campo="field-1" className="inicio-hero">
+            <div className="coluna-texto inicio-hero-texto">
+              <h2 className="titulo-secao">{HOJE_TOPO.titulo}</h2>
+              <p className="texto-medida">
+                <span data-descreve="hoje" className="texto-ate-60">
+                  {HOJE_TOPO.celular}
+                </span>
+                <span data-descreve="hoje" className="texto-a-partir-de-60">
+                  {HOJE_TOPO.notebook}
+                </span>
+              </p>
+            </div>
             <Aparelho tipo="notebook" tela="hoje" className="aparelho-a-partir-de-60">
               <TelaReal tela="hoje" />
             </Aparelho>
@@ -108,9 +117,8 @@ export function Inicio() {
           </div>
         </section>
 
-        {/* Telas, no campo de urucum: o título e a legenda, e o celular da Sessão (o Hoje já está
-            no topo). A partir de 80 rem divide a fileira com a madrugada. O título e o primeiro
-            trecho da legenda são os da faixa estreita; da média para cima entra o resto. */}
+        {/* Telas, no campo de urucum: o título, a legenda e o celular da Sessão (o Hoje já está
+            no topo). A partir de 60 rem divide a fileira com a madrugada. */}
         <section
           id="secao-telas"
           aria-labelledby="titulo-telas"
@@ -119,12 +127,10 @@ export function Inicio() {
         >
           <div className="coluna-texto">
             <h2 id="titulo-telas" className="titulo-secao">
-              <span className="somente-estreita">{TELAS_ESTREITA.titulo}</span>
-              <span className="a-partir-de-46">{TELAS.titulo}</span>
+              {TELAS.titulo}
             </h2>
-            <p className="texto-medida mt-4">
-              {TELAS_ESTREITA.texto}
-              <span className="a-partir-de-46">{` ${RESTO_DE_TELAS}`}</span>
+            <p className="texto-medida mt-4" data-descreve="sessao">
+              {TELAS.texto}
             </p>
           </div>
           <Aparelho tipo="celular" tela="sessao">
@@ -133,8 +139,8 @@ export function Inicio() {
         </section>
 
         {/* Madrugada, no papel fundo escuro: o tema da noite vale só dentro do cartão (invólucro
-            local), nunca no <html>. O título, o texto, o celular com a Sessão da mamada de Heloísa (com
-            o relógio parado) e a legenda ficam empilhados, alinhados à esquerda. */}
+            local), nunca no <html>. O título, o texto, a legenda e o celular com a Sessão da
+            mamada de Heloísa (com o relógio parado), alinhados à esquerda. */}
         <section
           id="secao-madrugada"
           aria-labelledby="titulo-madrugada"
@@ -147,17 +153,17 @@ export function Inicio() {
               {MADRUGADA.titulo}
             </h2>
             <p className="texto-medida mt-4">{MADRUGADA.texto}</p>
+            <p className="texto-medida mt-4" data-descreve="madrugada">
+              {LEGENDA_MADRUGADA}
+            </p>
           </div>
           <Aparelho tipo="celular" tela="sessao" tema="madrugada">
             <TelaReal tela="madrugada" />
           </Aparelho>
-          <div className="coluna-texto">
-            <p className="texto-medida">{LEGENDA_MADRUGADA}</p>
-          </div>
         </section>
 
         {/* Para que serve, no papel: as três linhas da base e, ao lado (larga) ou embaixo, a
-            ilustração num cartão de imagem que ela quase enche. Cada linha tem o rótulo e o texto
+            ilustração num cartão de imagem que ela enche. Cada linha tem o rótulo e o texto
             lado a lado (a partir de 46 rem) ou o rótulo em cima do texto (estreita). */}
         <section
           id="secao-serve"
@@ -187,7 +193,7 @@ export function Inicio() {
         </section>
 
         {/* Fatos, no papel: um bloco de linhas, o termo grande à esquerda e a explicação à direita,
-            na coluna de texto, com uma linha fina entre elas. */}
+            na segunda coluna da grade, com uma linha fina entre as linhas. */}
         <section aria-labelledby="titulo-fatos" className="inicio-fatos inicio-largo entrada atraso-2">
           <h2 id="titulo-fatos" className="rotulo">
             {FATOS.titulo}
@@ -205,40 +211,50 @@ export function Inicio() {
         </section>
 
         {/* Chamada, no campo de lavanda: o título, o texto e o link, na coluna de texto, e o celular
-            com o Hoje e a legenda dele. Larga: o texto à esquerda e o celular à direita; antes
-            disso, um embaixo do outro. */}
+            com o Hoje e a legenda dele. Larga: o texto na primeira coluna e o celular na segunda;
+            antes disso, um embaixo do outro. */}
         <section
           aria-labelledby="titulo-chamada"
           data-campo="field-2"
           className="inicio-chamada inicio-cartao inicio-largo entrada atraso-2"
         >
           <div className="coluna-texto inicio-chamada-texto">
-            <h2 id="titulo-chamada" className="titulo-secao [font-size:clamp(2.25rem,5vw,3.5rem)]">
+            <h2 id="titulo-chamada" className="titulo-secao titulo-fecho">
               {CHAMADA.titulo}
             </h2>
-            <p className="texto-medida mt-4">{CHAMADA.texto}</p>
-            <p className="mt-4">
-              <Link to="/app/hoje" className="botao botao-principal">
-                {CHAMADA.link}
-              </Link>
-            </p>
+            <div className="inicio-chamada-acao">
+              <p className="texto-medida mt-4">{CHAMADA.texto}</p>
+              <p className="mt-6">
+                <Link to="/app/hoje" className="botao botao-principal botao-fecho">
+                  {CHAMADA.link}
+                </Link>
+              </p>
+            </div>
           </div>
           <div className="inicio-lado">
             <Aparelho tipo="celular" tela="hoje">
               <TelaReal tela="hoje" />
             </Aparelho>
             <div className="coluna-texto">
-              <p className="texto-medida">{LEGENDA_CHAMADA}</p>
+              <p className="texto-medida" data-descreve="hoje">
+                {LEGENDA_CHAMADA}
+              </p>
             </div>
           </div>
         </section>
       </main>
 
-      <footer className="flex flex-wrap items-center justify-between gap-x-6 border-t py-4 @min-[46rem]/pagina:py-6">
-        <p className="text-sm">{RODAPE}</p>
-        <Link to="/" className="alvo-toque inline-flex items-center">
-          Início
-        </Link>
+      {/* O fecho: um bloco de tinta de largura total, com o nome em letras grandes e o rodapé. */}
+      <footer className="inicio-rodape">
+        <p className="inicio-rodape-marca">AppMaternidade</p>
+        <div className="inicio-rodape-linhas">
+          <div className="inicio-rodape-textos">
+            <p>{RODAPE}</p>
+          </div>
+          <Link to="/" className="alvo-toque inicio-rodape-link inline-flex">
+            Início
+          </Link>
+        </div>
       </footer>
     </div>
   )

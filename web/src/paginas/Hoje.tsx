@@ -146,7 +146,9 @@ export function Hoje() {
             </button>
           </div>
 
-          <div className="hoje-andamento mt-6">
+          {/* Um gap só (2 rem) entre blocos vizinhos, maior que o respiro dentro de cada um (1,5 rem
+              no cartão e 1,25 rem na nota). */}
+          <div className="hoje-andamento mt-8">
             <CartaoDaSessao cartao={cartao} />
           </div>
 
@@ -158,7 +160,7 @@ export function Hoje() {
             <section
               aria-labelledby={idDe(idSaber)}
               data-campo={nomeDoCampo('field-2', estado.madrugada)}
-              className="hoje-nota mt-6 px-4 py-5"
+              className="hoje-nota mt-8 px-4 py-5"
             >
               <h2 id={idDe(idSaber)} className="rotulo">
                 Para você saber

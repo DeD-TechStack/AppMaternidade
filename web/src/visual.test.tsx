@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { screen } from '@testing-library/react'
-import { LEGENDA_CHAMADA, TELAS_ESTREITA } from './conteudo/textos.ts'
+import { HOJE_TOPO, LEGENDA_CHAMADA, LEGENDA_MADRUGADA, TELAS } from './conteudo/textos.ts'
 import { criarEstadoInicial, type EstadoPrototipo } from './prototipo/estado.ts'
 import { renderizarRota } from './teste/renderizarRota.tsx'
 import { listarFontes, pastaSrcDe } from './teste/fontes.ts'
@@ -163,19 +163,21 @@ describe('MAT-44: composição do Início', () => {
     expect(document.documentElement.hasAttribute('data-tema')).toBe(false)
   })
 
+  // Rodada visual 3, R1: a legenda de cada aparelho descreve o que a janela dele mostra. O topo tem
+  // duas versões (celular e notebook), só uma aparece por faixa; as telas mostram a Sessão (e não
+  // mais "Duas telas"), a madrugada e a chamada falam só do que está dentro da janela do celular.
   it('cada composição de aparelhos tem um parágrafo visível ao lado', async () => {
     await inicio()
 
-    expect(screen.getByText('Duas telas do protótipo')).toBeTruthy()
-    expect(screen.getByText(/^Na tela Hoje ficam a soneca que Bruno começou/)).toBeTruthy()
-    expect(screen.getByText(TELAS_ESTREITA.titulo)).toBeTruthy()
-    expect(screen.getByText(TELAS_ESTREITA.texto)).toBeTruthy()
-    expect(
-      screen.getByText(
-        'No celular, a mamada que Juliana começou às 03:10, vista no modo madrugada: tela escura, cronômetro grande e botões maiores.',
-      ),
-    ).toBeTruthy()
+    expect(screen.getByText(HOJE_TOPO.titulo)).toBeTruthy()
+    expect(screen.getByText(HOJE_TOPO.celular)).toBeTruthy()
+    expect(screen.getByText(HOJE_TOPO.notebook)).toBeTruthy()
+    expect(screen.getByText(TELAS.titulo)).toBeTruthy()
+    expect(screen.getByText(TELAS.texto)).toBeTruthy()
+    expect(screen.getByText(LEGENDA_MADRUGADA)).toBeTruthy()
     expect(screen.getByText(LEGENDA_CHAMADA)).toBeTruthy()
+    // A seção das telas mostra só a Sessão: o título não promete duas telas.
+    expect(screen.queryByText('Duas telas do protótipo')).toBeNull()
   })
 
   it('o cabeçalho tem até 64 px no desktop e os links têm alvo de 44 px', async () => {
@@ -310,11 +312,16 @@ describe('MAT-44: Hoje e Sessão', () => {
     })
   }
 
-  it('o cronômetro tem números tabulares e pelo menos 48 px', () => {
+  // Rodada visual 3, #1: o cronômetro não quebra de linha (white-space: nowrap), então o tamanho se
+  // ajusta à largura do campo em que mora (cqi) e o mínimo do clamp é pequeno, para caber até num
+  // campo estreito (fonte e zoom ampliados). Que ele continua grande (48 px ou mais) em 390, 1024 e
+  // 1440 está em mat44c.test.tsx ("o cronômetro não quebra nas larguras 1024, 1440 e 390").
+  it('o cronômetro tem números tabulares, é grande (até 8 rem) e mede o campo (cqi), sem depender da janela', () => {
     const corpo = /\.cronometro\s*\{([^}]*)\}/.exec(estiloGlobal)![1]
     expect(corpo).toMatch(/font-variant-numeric:\s*tabular-nums/)
-    const minimo = /clamp\(\s*([\d.]+)rem/.exec(corpo)![1]
-    expect(parseFloat(minimo) * 16).toBeGreaterThanOrEqual(48)
+    const [, , , maximo] = /clamp\(\s*([\d.]+)rem\s*,\s*([\d.]+)cqi\s*,\s*([\d.]+)rem\s*\)/.exec(corpo)!
+    expect(parseFloat(maximo) * 16).toBeGreaterThanOrEqual(128)
+    expect(corpo).not.toMatch(/\bvw\b/)
   })
 
   it('o ícone da área logada vem sempre com rótulo de texto visível, escondido do leitor de tela', () => {
@@ -862,17 +869,27 @@ describe('MAT-44 r2 A3: texto de interface do Início mora em textos.ts', () => 
       'Para que serve',
       'Madrugada',
     ])
+    // R1: a janela do celular da madrugada termina no cronômetro e em quem começou (os botões ficam
+    // abaixo dela), e a da chamada mostra o cartão da soneca e os botões de registro (a nota e os
+    // últimos registros ficam fora). As legendas dizem só isso.
     expect(textos.LEGENDA_MADRUGADA).toBe(
-      'No celular, a mamada que Juliana começou às 03:10, vista no modo madrugada: tela escura, cronômetro grande e botões maiores.',
+      'No celular, a mamada que Juliana começou às 03:10, vista no modo madrugada: tela escura e cronômetro grande.',
     )
     expect(textos.LEGENDA_CHAMADA).toBe(
-      'No celular, o Hoje do protótipo: a soneca que Bruno começou, a nota de Carla e os últimos registros.',
+      'No celular, o Hoje do protótipo: a soneca que Bruno começou e os botões de registro, ao alcance do polegar.',
     )
-    expect(textos.TELAS_ESTREITA).toEqual({
+    expect(textos.HOJE_TOPO).toEqual({
       titulo: 'A tela Hoje',
-      texto:
+      notebook:
         'Na tela Hoje ficam a soneca que Bruno começou, a nota que Carla deixou às 22:40 e os botões de registro na parte de baixo, ao alcance do polegar.',
+      celular:
+        'Na tela Hoje ficam a soneca que Bruno começou e os botões de registro na parte de baixo, ao alcance do polegar.',
     })
+    expect(textos.TELAS).toEqual({
+      titulo: 'A tela da sessão',
+      texto: 'Mostra o cronômetro, contado a partir da hora de início, e quem começou.',
+    })
+    expect(textos.TELAS_ESTREITA).toBeUndefined()
   })
 })
 

@@ -17,7 +17,9 @@ type Painel = 'fralda' | 'mais'
 //  - de 17 a 36 rem: grade de 6 colunas. Sono, Mamada e Fralda ocupam 2 colunas cada; Tummy
 //    time e + Mais ocupam 3 cada. Os rótulos não quebram, então as duas linhas têm a mesma altura;
 //  - a partir de 36 rem: os 5 numa linha só, rótulos sem quebra.
-const GRADE = 'grid grid-cols-6 gap-2 @min-[36rem]:grid-cols-5 @max-[17rem]:grid-cols-1'
+// O espaço entre os botões é de 16 px (gap-4), maior que o respiro dentro de cada um (8 px dos lados
+// e 12 px em cima e embaixo): vizinhos se separam mais do que o conteúdo se afasta da própria borda.
+const GRADE = 'grid grid-cols-6 gap-4 @min-[36rem]:grid-cols-5 @max-[17rem]:grid-cols-1'
 const ACAO = 'botao acao-rapida whitespace-nowrap @max-[17rem]:whitespace-normal'
 const PRIMEIRA_LINHA = `${ACAO} col-span-2 @min-[36rem]:col-span-1 @max-[17rem]:col-span-1`
 const SEGUNDA_LINHA = `${ACAO} col-span-3 @min-[36rem]:col-span-1 @max-[17rem]:col-span-1`
@@ -154,7 +156,7 @@ export function BotoesRapidos({
           id={idFralda}
           role="group"
           aria-label="Fralda de Heloísa"
-          className="mt-2 flex flex-wrap gap-2"
+          className="mt-4 flex flex-wrap gap-4"
         >
           {ESCOLHAS_FRALDA.map((escolha) => (
             <button
@@ -180,7 +182,7 @@ export function BotoesRapidos({
       ) : null}
 
       {painel === 'mais' ? (
-        <div id={idMais} role="group" aria-label="Outros registros de Heloísa" className="mt-2 flex flex-wrap gap-2">
+        <div id={idMais} role="group" aria-label="Outros registros de Heloísa" className="mt-4 flex flex-wrap gap-4">
           {ITENS_MAIS.map((item) => (
             <button
               key={item.chave}
