@@ -371,6 +371,12 @@ Ações de recuperação:
   - t_fa51c4df, a 48b.
 - A galeria está em `_staging/appmaternidade/PAUSA_20261106/GALERIA.html`. O próximo passo está em `Retomada_Site.md`, na seção "PAUSA de 06/11/2026".
 
+### 09/11/2026 ~22h — retomada da pausa de 06/11
+
+- A infra desbloqueou os 4 cartões. A 44c-1 (t_f67d8962), a 44c-2a (t_ecf636f5) e a 37a (t_915e3632) estão rodando. A 48b (t_fa51c4df) está pronta e espera vaga na fila.
+- Os comentários 114 a 117 pedem rebase sobre a main bb70ce5, que já traz os nomes Heloísa e Juliana. A 44c-1 segue com a rodada visual pedida nos comentários 109 e 110 e só integra com nota 8 ou mais do avaliador independente.
+- Há 2 subagentes refazendo os corpos dos cartões 44c-2b e 37b e a spec v3 da MAT-38. As MAT-39 a 41 vêm depois.
+
 ## Bloqueios
 
 | Desde | Item | Situação | Menor intervenção |
