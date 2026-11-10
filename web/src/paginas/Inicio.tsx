@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { Link } from 'react-router'
 import {
   APRESENTACAO,
@@ -25,6 +25,17 @@ import { FaixaNumeros } from '../componentes/base/FaixaNumeros.tsx'
 import { Galeria } from '../componentes/base/Galeria.tsx'
 import { LinhaRotuloTexto } from '../componentes/base/LinhaRotuloTexto.tsx'
 import { Midia } from '../componentes/base/Midia.tsx'
+import {
+  CenaCartao,
+  CenaCelulares,
+  CenaIlustracao,
+  CenaMadrugada,
+  CenaMosaico,
+  CenaNotebook,
+  CenaRetrato,
+  CenaSessao,
+} from '../componentes/midia/cenas.tsx'
+import { useEntradaDasMidias } from '../movimento/entradaMidias.ts'
 import { AvisoAbertura } from '../componentes/vitrine/AvisoAbertura.tsx'
 import { CartaoTela } from '../componentes/vitrine/CartaoTela.tsx'
 import { Citacao } from '../componentes/vitrine/Citacao.tsx'
@@ -38,11 +49,14 @@ const { galeria } = MIDIAS_INICIO
 /**
  * O Início, nos 13 blocos do contrato (MAT-44d): abertura, mídia, apresentação, números, mídia,
  * linhas, galeria, citação, cartões, pergunta com CTA, palavras grandes, seção escura (fora do
- * `main`, de borda a borda) e o rodapé da casca. As molduras de mídia estão vazias: o conteúdo
- * delas vem depois. Sem movimento.
+ * `main`, de borda a borda) e o rodapé da casca. Cada moldura de mídia leva uma cena em CSS 3D
+ * (aparelhos com a captura real das nossas telas, ilustrações, mosaico), como filha direta dela.
+ * A entrada ao rolar (M3) liga nos próprios nós `[data-midia]`, sem embrulhá-los.
  */
 export function Inicio() {
   const { dispatch } = usePrototipo()
+  const principal = useRef<HTMLElement>(null)
+  useEntradaDasMidias(principal)
 
   // O Início é sempre claro: sair do modo madrugada ao chegar aqui.
   useEffect(() => {
@@ -51,7 +65,7 @@ export function Inicio() {
 
   return (
     <>
-      <main className="vt-inicio">
+      <main className="vt-inicio" ref={principal}>
         <Abertura
           titulo={PROMESSA}
           subtitulo={SUBTITULO_INICIO}
@@ -71,7 +85,9 @@ export function Inicio() {
         />
 
         <div className="sb-area sb-mt-fio-bloco" data-bloco="">
-          <Midia formato="larga" fundo="barro" aria-label={MIDIAS_INICIO.notebook} />
+          <Midia formato="larga" fundo="barro" aria-label={MIDIAS_INICIO.notebook}>
+            <CenaNotebook />
+          </Midia>
         </div>
 
         <section className="sb-area sb-mt-midia-titulo" data-bloco="">
@@ -90,7 +106,9 @@ export function Inicio() {
         </section>
 
         <div className="sb-area sb-mt-numeros-midia" data-bloco="">
-          <Midia formato="larga" fundo="lavanda" aria-label={MIDIAS_INICIO.celulares} />
+          <Midia formato="larga" fundo="lavanda" aria-label={MIDIAS_INICIO.celulares}>
+            <CenaCelulares />
+          </Midia>
         </div>
 
         <section className="sb-area sb-mt-midia-linhas" data-bloco="">
@@ -106,11 +124,21 @@ export function Inicio() {
 
         <div className="sb-area sb-mt-midia-linhas">
           <Galeria>
-            <Midia formato="larga" fundo="barro" aria-label={galeria.sessao} />
-            <Midia formato="larga" fundo="lavanda" aria-label={galeria.madrugada} />
-            <Midia formato="par" fundo="barro" aria-label={galeria.ilustracoes[0]} />
-            <Midia formato="par" fundo="lavanda" aria-label={galeria.ilustracoes[1]} />
-            <Midia formato="larga" fundo="barro" aria-label={galeria.mosaico} />
+            <Midia formato="larga" fundo="barro" aria-label={galeria.sessao}>
+              <CenaSessao />
+            </Midia>
+            <Midia formato="larga" fundo="lavanda" aria-label={galeria.madrugada}>
+              <CenaMadrugada />
+            </Midia>
+            <Midia formato="par" fundo="barro" aria-label={galeria.ilustracoes[0]}>
+              <CenaIlustracao qual="berco" />
+            </Midia>
+            <Midia formato="par" fundo="lavanda" aria-label={galeria.ilustracoes[1]}>
+              <CenaIlustracao qual="mamada" />
+            </Midia>
+            <Midia formato="larga" fundo="barro" aria-label={galeria.mosaico}>
+              <CenaMosaico />
+            </Midia>
           </Galeria>
         </div>
 
@@ -118,6 +146,7 @@ export function Inicio() {
           texto={CITACAO_TEXTO}
           autoria={`${MINIATURAS.hoje.nota.autor} · ${CITACAO_AVISO}`}
           rotuloRetrato={MIDIAS_INICIO.retrato}
+          midia={<CenaRetrato />}
         />
 
         <section className="sb-area sb-mt-midia-linhas vt-cartoes" aria-labelledby="titulo-cartoes" data-bloco="">
@@ -133,6 +162,7 @@ export function Inicio() {
                 linha={cartao.linha}
                 rotuloMidia={cartao.rotuloMidia}
                 fundo={i === 0 ? 'barro' : 'lavanda'}
+                midia={<CenaCartao tela={i === 0 ? 'hoje' : 'sessao'} />}
               />
             ))}
           </div>

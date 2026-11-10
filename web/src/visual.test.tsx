@@ -136,10 +136,14 @@ describe('MAT-44: composição do Início', () => {
     expect(corpo).toMatch(/font-family:\s*var\(--fonte-sb-slab\)/)
   })
 
+  // MAT-44d-5: as molduras de mídia ganharam as 2 ilustrações do par; fora delas não há svg.
   it('o Início não tem ícone', async () => {
     const container = await inicio()
 
-    expect(container.querySelectorAll('svg')).toHaveLength(0)
+    for (const svg of container.querySelectorAll('svg')) {
+      expect(svg.closest('[data-midia]')).not.toBeNull()
+      expect(svg.hasAttribute('data-ilustracao')).toBe(true)
+    }
   })
 })
 

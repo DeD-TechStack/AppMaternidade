@@ -29,11 +29,14 @@ describe('rotas', () => {
     expect(screen.getByText('Protótipo em construção. Nada aqui é dado real.')).toBeTruthy()
   })
 
-  it('as molduras de mídia do Início são imagens nomeadas e vazias; não há miniatura inerte', async () => {
+  it('as molduras de mídia do Início são imagens nomeadas, sem texto; só os aparelhos de dentro delas são inertes', async () => {
     const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
 
-    expect(container.querySelector('[inert]')).toBeNull()
+    // MAT-44d-5: as molduras têm cena; o inerte vale fora de [data-midia] (não há miniatura inerte).
+    for (const inerte of container.querySelectorAll('[inert]')) {
+      expect(inerte.closest('[data-midia]'), inerte.outerHTML.slice(0, 60)).not.toBeNull()
+    }
     const molduras = [...container.querySelectorAll('[data-midia]')]
     expect(molduras.length).toBeGreaterThan(0)
     for (const moldura of molduras) {

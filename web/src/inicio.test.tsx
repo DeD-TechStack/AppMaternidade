@@ -264,15 +264,49 @@ describe('Início (MAT-44d-4): mídia e galeria', () => {
     }
   })
 
-  it('nenhum aparelho, miniatura, ilustração ou ícone entra no Início', async () => {
+  // MAT-44d-5: as molduras ganharam as cenas (aparelhos 3D com a captura real, ilustrações, mosaico).
+  // Vale agora: nada inerte fora dos aparelhos, nenhum ícone, as molduras com conteúdo e as
+  // ilustrações só dentro de [data-midia].
+  it('nada fica [inert] fora dos aparelhos, não há ícone e a miniatura antiga não volta', async () => {
     const container = await inicio()
 
-    expect(container.querySelector('[data-aparelho]')).toBeNull()
-    expect(container.querySelector('[class*="aparelho"]')).toBeNull()
+    const inertes = [...container.querySelectorAll('[inert]')]
+    expect(inertes.length).toBeGreaterThan(0)
+    for (const inerte of inertes) {
+      expect(inerte.hasAttribute('data-aparelho'), inerte.outerHTML.slice(0, 80)).toBe(true)
+      expect(inerte.closest('[data-midia]'), inerte.outerHTML.slice(0, 80)).not.toBeNull()
+    }
+    // Só o aparelho 3D (ap3d) entra; a moldura de miniatura com o protótipo por dentro não.
+    expect(container.querySelector('.aparelho')).toBeNull()
     expect(container.querySelector('[class*="vitrine"]')).toBeNull()
-    expect(container.querySelector('[inert]')).toBeNull()
-    expect(container.querySelector('[data-ilustracao]')).toBeNull()
-    expect(container.querySelector('svg')).toBeNull()
+    expect(container.querySelector('.lucide')).toBeNull()
+  })
+
+  it('toda moldura [data-midia] tem conteúdo: uma imagem de telas/ ou uma ilustração', async () => {
+    const container = await inicio()
+
+    const molduras = [...container.querySelectorAll('[data-midia]')]
+    expect(molduras).toHaveLength(10)
+    for (const moldura of molduras) {
+      const rotulo = moldura.getAttribute('aria-label')!
+      expect(moldura.children.length, rotulo).toBeGreaterThan(0)
+      const imagens = moldura.querySelectorAll('img')
+      const ilustracoes = moldura.querySelectorAll('svg[data-ilustracao]')
+      expect(imagens.length + ilustracoes.length, rotulo).toBeGreaterThan(0)
+    }
+  })
+
+  it('as ilustrações e os svg só existem dentro das molduras de mídia', async () => {
+    const container = await inicio()
+
+    const svgs = [...container.querySelectorAll('svg')]
+    expect(svgs.length).toBe(2)
+    for (const svg of svgs) {
+      expect(svg.closest('[data-midia]'), svg.outerHTML.slice(0, 60)).not.toBeNull()
+      expect(svg.hasAttribute('data-ilustracao')).toBe(true)
+      expect(svg.getAttribute('aria-hidden')).toBe('true')
+    }
+    expect(container.querySelectorAll('[data-midia] [data-ilustracao]')).toHaveLength(2)
   })
 })
 

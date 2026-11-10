@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 import { Midia } from '../base/Midia.tsx'
 
@@ -9,13 +10,17 @@ interface Props {
   /** A descrição da moldura quadrada. */
   rotuloMidia: string
   fundo: 'barro' | 'lavanda'
+  /** A cena dentro da moldura quadrada (um celular cortado pela borda de baixo, por exemplo). */
+  midia?: ReactNode
 }
 
 /** Cartão de uma tela do protótipo: moldura quadrada, título de 36 px a 12 px dela e uma linha de 24 px. */
-export function CartaoTela({ to, titulo, linha, rotuloMidia, fundo }: Props) {
+export function CartaoTela({ to, titulo, linha, rotuloMidia, fundo, midia }: Props) {
   return (
     <Link to={to} className="vt-cartao alvo-toque">
-      <Midia formato="par" fundo={fundo} aria-label={rotuloMidia} />
+      <Midia formato="par" fundo={fundo} aria-label={rotuloMidia}>
+        {midia}
+      </Midia>
       <span className="vt-cartao-titulo">{titulo}</span>
       <span className="vt-cartao-linha">{linha}</span>
     </Link>
