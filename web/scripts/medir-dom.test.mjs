@@ -37,6 +37,7 @@ import {
   escolherAmbiente,
   fundoReal,
   lerArquivoAmbiente,
+  lerEstadoDeEnvioNaPagina,
   lerFocoNaPagina,
   m1,
   m2,
@@ -47,6 +48,7 @@ import {
   MANUAIS_DO_CASO,
   r1,
   r2,
+  r3,
   verificarAmbiente,
   g1,
   g2,
@@ -118,6 +120,39 @@ function criar(extra = {}) {
 }
 
 const doc1440 = { largura: 1440, altura: 900, clientWidth: 1425, scrollWidth: 1425, grupos: [] }
+
+// --- Fixtures do envio do formulário (E-7 e R-3) ---------------------------------------------
+
+const mensagemDeEnvio = (extra = {}) => ({ tipo: 'erro', texto: 'Escreva o seu e-mail.', linhas: 1, cortada: false, foraDaJanela: false, ...extra })
+
+/**
+ * Um estado lido por `lerEstadoDeEnvioNaPagina`: as linhas de campo pelas alturas (o topo de cada uma é o
+ * fim da anterior, a partir de 400) e o botão de envio 40 px depois da última (`botao: null` o tira).
+ */
+function estadoDeEnvio({ pagina = 2000, alturas = [112, 112], botao, mensagens = [], colisoes = [] } = {}) {
+  let topo = 400
+  const linhas = alturas.map((altura) => {
+    const linha = { top: topo, altura }
+    topo += altura
+    return linha
+  })
+  const botaoLido = botao === undefined ? { top: topo + 40 } : botao === null ? null : { top: botao }
+  return { pagina, linhas, botao: botaoLido, mensagens, colisoes }
+}
+
+const ANEL_OK = { focou: true, tag: 'input', outlineStyle: 'solid', outlineWidth: '2px', outlineOffset: '2px', outlineColor: 'rgb(26, 21, 17)' }
+const FOCO_OK = { controle: ANEL_OK, botao: { ...ANEL_OK, tag: 'button' } }
+
+/** O estado estável: 1440, o envio vazio não mexe em nada e aparecem os dois erros de uma linha. */
+const vazioEstavel = () => ({
+  antes: estadoDeEnvio(),
+  depois: estadoDeEnvio({ mensagens: [mensagemDeEnvio(), mensagemDeEnvio({ texto: 'Escreva a sua senha.' })] }),
+})
+/** O Recuperar enviado: um campo, e a confirmação (1 linha) ocupa a mesma linha de campo. */
+const enviadoEstavel = () => ({
+  antes: estadoDeEnvio({ alturas: [112] }),
+  depois: estadoDeEnvio({ alturas: [112], mensagens: [mensagemDeEnvio({ tipo: 'status', texto: 'Se o e-mail existir, o link chega em instantes.' })] }),
+})
 const doc390 = { largura: 390, altura: 844, clientWidth: 375, scrollWidth: 375, grupos: [] }
 
 const cabecalho = (extra = {}) =>
@@ -1180,7 +1215,7 @@ describe('44d-3: os casos novos nos argumentos e no bloqueio', () => {
   it('os critérios por caso, como na tabela do cartão', () => {
     assert.deepEqual(criteriosDoCaso('entrar'), ['E-1', 'E-2', 'E-3', 'E-4', 'E-5', 'E-6', 'E-7'])
     assert.deepEqual(criteriosDoCaso('criar_conta'), ['E-1', 'E-2', 'E-3', 'E-5', 'E-6', 'E-7', 'C-1', 'C-2', 'C-3'])
-    assert.deepEqual(criteriosDoCaso('recuperar_acesso'), ['E-1', 'E-2', 'E-3', 'E-5', 'E-6', 'E-7', 'R-1', 'R-2'])
+    assert.deepEqual(criteriosDoCaso('recuperar_acesso'), ['E-1', 'E-2', 'E-3', 'E-5', 'E-6', 'E-7', 'R-1', 'R-2', 'R-3'])
     assert.deepEqual(criteriosDoCaso('comecar_seu_nome'), ['E-1', 'E-3', 'E-4', 'E-5', 'E-6', 'E-7', 'B-1', 'B-2', 'B-3'])
     assert.deepEqual(criteriosDoCaso('conta', 'claro'), ['A-1', 'A-2', 'A-3', 'A-4', 'A-5', 'A-6'])
     assert.deepEqual(criteriosDoCaso('conta', 'madrugada'), ['A-1', 'A-2', 'A-3', 'A-4', 'A-5', 'A-6', 'M-1', 'M-2', 'M-3', 'M-4', 'M-5', 'M-6'])
@@ -1512,7 +1547,8 @@ describe('E-6: nada à direita de x de c9 abaixo da abertura', () => {
 
 describe('E-7: o anel de foco de 2 px', () => {
   const anel = (extra = {}) => ({ focou: true, tag: 'input', outlineStyle: 'solid', outlineWidth: '2px', outlineOffset: '2px', outlineColor: 'rgb(26, 21, 17)', ...extra })
-  const doc = (foco = {}) => ({ ...doc1440, foco: { controle: anel(), botao: anel({ tag: 'button' }), ...foco } })
+  // O anel de foco é a parte do E-7 deste bloco; a geometria do envio (estável aqui) tem o bloco dela mais abaixo.
+  const doc = (foco = {}) => ({ ...doc1440, foco: { controle: anel(), botao: anel({ tag: 'button' }), ...foco }, envio: { vazio: vazioEstavel() } })
 
   it('passa: 2 px sólido, offset 2, tinta, no controle e no botão', () => {
     const r = e7(doc(), 'claro')
@@ -2326,7 +2362,7 @@ describe('44d-3: o foco lido pela segunda passada (lerFocoNaPagina)', () => {
     assert.equal(foco.botao.tag, 'button')
     assert.equal(foco.controle.focou, true)
     assert.equal(foco.botao.outlineWidth, '2px')
-    assert.equal(e7({ ...doc1440, foco }, 'claro').ok, true)
+    assert.equal(e7({ ...doc1440, foco, envio: { vazio: vazioEstavel() } }, 'claro').ok, true)
   })
 
   it('sem outline calculado, a regra E-7 reprova o que o coletor leu', () => {
@@ -2338,5 +2374,386 @@ describe('44d-3: o foco lido pela segunda passada (lerFocoNaPagina)', () => {
     const foco = lerFoco('<main><p>Só texto.</p></main>', { outlineStyle: 'solid', outlineWidth: '2px', outlineOffset: '2px', outlineColor: 'rgb(26, 21, 17)' })
     assert.deepEqual(foco, { controle: null, botao: null })
     assert.equal(e7({ ...doc1440, foco }, 'claro').ok, false)
+  })
+})
+
+// ---------------------------------------------------------------------------------------------
+// MAT-44d-3, volta da revisão, passo 1: o medidor envia o formulário e mede a geometria.
+// E-7 (TELAS.md 3.5): o erro aparece em 17/24 abaixo do campo, sem mudar a altura da linha.
+// R-3 (3.7): depois do envio, a mensagem ocupa a mesma linha de 112 px, sem a página mudar de altura.
+
+/** O E-7 de um envio vazio (o anel de foco está certo; só a geometria varia). */
+const e7Vazio = (vazio) => e7({ ...doc1440, foco: FOCO_OK, envio: { vazio } }, 'claro')
+const r3Enviado = (enviado) => r3({ ...doc1440, envio: { enviado } })
+
+describe('E-7: a geometria do envio vazio', () => {
+  it('o estado estável passa (1440: linhas 112 -> 112, página igual, botão no lugar)', () => {
+    const r = e7Vazio(vazioEstavel())
+    assert.equal(r.ok, true, r.motivo)
+    assert.equal(r.regra, 'E-7')
+  })
+
+  it('o comportamento de hoje em 390 reprova: linhas 101 -> 133 e página 3019 -> 3083, com os números na mensagem', () => {
+    const r = e7Vazio({
+      antes: estadoDeEnvio({ pagina: 3019, alturas: [101, 101] }),
+      depois: estadoDeEnvio({ pagina: 3083, alturas: [133, 133], mensagens: [mensagemDeEnvio(), mensagemDeEnvio()] }),
+    })
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /linha 1: altura 101 -> 133/)
+    assert.match(r.motivo, /página: altura 3019 -> 3083/)
+    assert.match(r.motivo, /botão de envio: topo/)
+  })
+
+  it('criar conta em 390 reprova: linhas [133, 101, 133] -> [165, 133, 165]', () => {
+    const r = e7Vazio({
+      antes: estadoDeEnvio({ pagina: 3300, alturas: [133, 101, 133] }),
+      depois: estadoDeEnvio({ pagina: 3428, alturas: [165, 133, 165], mensagens: [mensagemDeEnvio()] }),
+    })
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /linha 1: altura 133 -> 165/)
+    assert.match(r.motivo, /linha 2: altura 101 -> 133/)
+    assert.match(r.motivo, /linha 3: altura 133 -> 165/)
+  })
+
+  it('meio pixel de diferença passa (a tolerância é de 0,6) e um pixel inteiro falha', () => {
+    const base = vazioEstavel()
+    base.depois.linhas[0].altura += 0.5
+    base.depois.pagina = base.antes.pagina
+    assert.equal(e7Vazio(base).ok, true)
+    const um = vazioEstavel()
+    um.depois.linhas[0].altura += 1
+    assert.equal(e7Vazio(um).ok, false)
+  })
+
+  it('o anel de foco continua exigido: foco ausente reprova mesmo com a geometria estável', () => {
+    assert.equal(e7({ ...doc1440, envio: { vazio: vazioEstavel() } }, 'claro').ok, false)
+  })
+
+  describe('falha fechada', () => {
+    const falha = (vazio, padrao) => {
+      const r = e7Vazio(vazio)
+      assert.equal(r.ok, false, `devia reprovar: ${r.motivo}`)
+      if (padrao) assert.match(r.motivo, padrao)
+    }
+
+    it('sem doc.envio, sem o envio vazio e com leitura incompleta', () => {
+      assert.equal(e7({ ...doc1440, foco: FOCO_OK }, 'claro').ok, false)
+      assert.equal(e7({ ...doc1440, foco: FOCO_OK, envio: {} }, 'claro').ok, false)
+      assert.equal(e7({ ...doc1440, foco: FOCO_OK, envio: { vazio: { antes: estadoDeEnvio() } } }, 'claro').ok, false)
+      assert.equal(e7({ ...doc1440, foco: FOCO_OK, envio: { vazio: null } }, 'claro').ok, false)
+      assert.equal(e7(undefined, 'claro').ok, false)
+    })
+
+    it('sem nenhuma linha de campo antes do envio', () => {
+      falha({ antes: estadoDeEnvio({ alturas: [] }), depois: estadoDeEnvio({ alturas: [], mensagens: [mensagemDeEnvio()] }) }, /linha de campo/)
+    })
+
+    it('o número de linhas de campo muda', () => {
+      falha({ antes: estadoDeEnvio(), depois: estadoDeEnvio({ alturas: [112], mensagens: [mensagemDeEnvio()] }) }, /2 antes e 1 depois/)
+    })
+
+    it('o envio vazio não mostra nenhuma mensagem de erro (só ajuda, ou nada)', () => {
+      falha({ antes: estadoDeEnvio(), depois: estadoDeEnvio() }, /erro/)
+      falha({ antes: estadoDeEnvio(), depois: estadoDeEnvio({ mensagens: [mensagemDeEnvio({ tipo: 'ajuda' })] }) }, /erro/)
+      falha({ antes: estadoDeEnvio(), depois: estadoDeEnvio({ mensagens: [mensagemDeEnvio({ tipo: 'status' })] }) }, /erro/)
+    })
+
+    it('mensagem de erro ou de ajuda com 2 linhas onde o limite é 1 (17/24)', () => {
+      const dois = (extra) => ({ antes: estadoDeEnvio(), depois: estadoDeEnvio({ mensagens: [mensagemDeEnvio(), mensagemDeEnvio(extra)] }) })
+      falha(dois({ linhas: 2 }), /2 linhas/)
+      falha(dois({ tipo: 'ajuda', linhas: 2 }), /ajuda com 2 linhas/)
+    })
+
+    it('contagem de linhas ilegível (null, NaN) falha em vez de passar', () => {
+      falha({ antes: estadoDeEnvio(), depois: estadoDeEnvio({ mensagens: [mensagemDeEnvio({ linhas: null })] }) }, /ilegível/)
+      falha({ antes: estadoDeEnvio(), depois: estadoDeEnvio({ mensagens: [mensagemDeEnvio({ linhas: Number.NaN })] }) }, /ilegível/)
+    })
+
+    it('mensagem cortada e mensagem fora da janela', () => {
+      const um = (extra) => ({ antes: estadoDeEnvio(), depois: estadoDeEnvio({ mensagens: [mensagemDeEnvio(extra)] }) })
+      falha(um({ cortada: true }), /cortada/)
+      falha(um({ foraDaJanela: true }), /fora da janela/)
+    })
+
+    it('mensagem que cobre outro elemento (colisão)', () => {
+      falha(
+        { antes: estadoDeEnvio(), depois: estadoDeEnvio({ mensagens: [mensagemDeEnvio()], colisoes: [{ mensagem: 'Escreva o seu e-mail.', com: 'INPUT ana', w: 120, h: 18 }] }) },
+        /cobre INPUT ana/,
+      )
+    })
+
+    it('o topo do botão de envio desce 1 px; botão sem leitura', () => {
+      const desce = vazioEstavel()
+      desce.depois.botao.top += 1
+      falha(desce, /botão de envio: topo/)
+      falha({ antes: estadoDeEnvio(), depois: estadoDeEnvio({ botao: null, mensagens: [mensagemDeEnvio()] }) }, /botão de envio/)
+      falha({ antes: estadoDeEnvio({ botao: null }), depois: estadoDeEnvio({ mensagens: [mensagemDeEnvio()] }) }, /botão de envio/)
+    })
+
+    it('o topo de uma linha muda sem a altura mudar', () => {
+      const topo = vazioEstavel()
+      topo.depois.linhas[1].top += 8
+      falha(topo, /linha 2: topo 512 -> 520/)
+    })
+  })
+
+  describe('mutação: cada medida trocada na fixture estável, uma por vez, derruba o critério', () => {
+    const mutacoes = [
+      ['altura de linha +1', (e) => (e.depois.linhas[0].altura += 1), /linha 1: altura 112 -> 113/],
+      ['topo de linha +1', (e) => (e.depois.linhas[1].top += 1), /linha 2: topo 512 -> 513/],
+      ['altura da página +1', (e) => (e.depois.pagina += 1), /página: altura 2000 -> 2001/],
+      ['topo do botão +1', (e) => (e.depois.botao.top += 1), /botão de envio: topo 664 -> 665/],
+    ]
+    for (const [nome, mutar, padrao] of mutacoes) {
+      it(nome, () => {
+        const e = vazioEstavel()
+        assert.equal(e7Vazio(e).ok, true, 'a fixture estável tem de passar antes da mutação')
+        mutar(e)
+        const r = e7Vazio(e)
+        assert.equal(r.ok, false)
+        assert.match(r.motivo, padrao)
+      })
+    }
+  })
+})
+
+describe('R-3: a confirmação do Recuperar não muda a linha nem a página', () => {
+  it('o estado estável passa: a confirmação de 1 linha, ou de 2 (390), com a linha e a página iguais', () => {
+    const r = r3Enviado(enviadoEstavel())
+    assert.equal(r.ok, true, r.motivo)
+    assert.equal(r.regra, 'R-3')
+    const duas = enviadoEstavel()
+    duas.depois.mensagens[0].linhas = 2
+    assert.equal(r3Enviado(duas).ok, true)
+  })
+
+  it('o comportamento de hoje em 390 reprova: linha 101 -> 157 e página 2672 -> 2728, com os números na mensagem', () => {
+    const r = r3Enviado({
+      antes: estadoDeEnvio({ pagina: 2672, alturas: [101] }),
+      depois: estadoDeEnvio({ pagina: 2728, alturas: [157], mensagens: [mensagemDeEnvio({ tipo: 'status', linhas: 2 })] }),
+    })
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /linha 1: altura 101 -> 157/)
+    assert.match(r.motivo, /página: altura 2672 -> 2728/)
+  })
+
+  describe('falha fechada', () => {
+    const falha = (enviado, padrao) => {
+      const r = r3Enviado(enviado)
+      assert.equal(r.ok, false, `devia reprovar: ${r.motivo}`)
+      if (padrao) assert.match(r.motivo, padrao)
+    }
+    const status = (extra = {}) => mensagemDeEnvio({ tipo: 'status', texto: 'Enviamos o link.', ...extra })
+    const comStatus = (extra) => ({ antes: estadoDeEnvio({ alturas: [112] }), depois: estadoDeEnvio({ alturas: [112], mensagens: [status(extra)] }) })
+
+    it('sem doc.envio, sem o enviado e com leitura incompleta', () => {
+      assert.equal(r3({ ...doc1440 }).ok, false)
+      assert.equal(r3({ ...doc1440, envio: { vazio: vazioEstavel() } }).ok, false)
+      assert.equal(r3({ ...doc1440, envio: { enviado: { depois: estadoDeEnvio() } } }).ok, false)
+      assert.equal(r3(undefined).ok, false)
+    })
+
+    it('sem nenhuma linha de campo antes do envio', () => {
+      falha({ antes: estadoDeEnvio({ alturas: [] }), depois: estadoDeEnvio({ alturas: [], mensagens: [status()] }) }, /linha de campo/)
+    })
+
+    it('a confirmação não aparece (nenhuma mensagem de status visível)', () => {
+      falha({ antes: estadoDeEnvio({ alturas: [112] }), depois: estadoDeEnvio({ alturas: [112] }) }, /status/)
+      falha({ antes: estadoDeEnvio({ alturas: [112] }), depois: estadoDeEnvio({ alturas: [112], mensagens: [mensagemDeEnvio()] }) }, /status/)
+    })
+
+    it('a confirmação com 3 linhas, com 0 ou ilegível', () => {
+      falha(comStatus({ linhas: 3 }), /3 linhas/)
+      falha(comStatus({ linhas: 0 }), /0 linhas/)
+      falha(comStatus({ linhas: null }), /ilegível/)
+    })
+
+    it('a confirmação cortada, fora da janela ou cobrindo outro elemento', () => {
+      falha(comStatus({ cortada: true }), /cortada/)
+      falha(comStatus({ foraDaJanela: true }), /fora da janela/)
+      const colide = comStatus()
+      colide.depois.colisoes = [{ mensagem: 'Enviamos o link.', com: 'BUTTON Enviar', w: 80, h: 10 }]
+      falha(colide, /cobre BUTTON Enviar/)
+    })
+
+    it('o botão de envio desce 1 px; a linha muda de altura; a página muda', () => {
+      const botao = enviadoEstavel()
+      botao.depois.botao.top += 1
+      falha(botao, /botão de envio: topo/)
+      const linha = enviadoEstavel()
+      linha.depois.linhas[0].altura = 157
+      falha(linha, /linha 1: altura 112 -> 157/)
+      const pagina = enviadoEstavel()
+      pagina.depois.pagina += 56
+      falha(pagina, /página: altura 2000 -> 2056/)
+    })
+  })
+
+  describe('mutação: cada medida trocada na fixture estável, uma por vez, derruba o critério', () => {
+    const mutacoes = [
+      ['altura de linha +1', (e) => (e.depois.linhas[0].altura += 1), /linha 1: altura 112 -> 113/],
+      ['topo de linha +1', (e) => (e.depois.linhas[0].top += 1), /linha 1: topo 400 -> 401/],
+      ['altura da página +1', (e) => (e.depois.pagina += 1), /página: altura 2000 -> 2001/],
+      ['topo do botão +1', (e) => (e.depois.botao.top += 1), /botão de envio: topo 552 -> 553/],
+    ]
+    for (const [nome, mutar, padrao] of mutacoes) {
+      it(nome, () => {
+        const e = enviadoEstavel()
+        assert.equal(r3Enviado(e).ok, true, 'a fixture estável tem de passar antes da mutação')
+        mutar(e)
+        const r = r3Enviado(e)
+        assert.equal(r.ok, false)
+        assert.match(r.motivo, padrao)
+      })
+    }
+  })
+})
+
+describe('44d-3 (volta): o R-3 entra no Recuperar e o aviso de "a medição não envia" sai do olho', () => {
+  it('CRITERIOS_DO_CASO do Recuperar acaba em R-3 e o avaliarCriterios o roda', () => {
+    assert.ok(criteriosDoCaso('recuperar_acesso').includes('R-3'))
+    const { criterios } = avaliarCriterios({ doc: { ...doc1440, foco: FOCO_OK, envio: { vazio: vazioEstavel(), enviado: enviadoEstavel() } }, nos: [], tema: 'claro' }, 'recuperar_acesso')
+    const e7r = criterios.find((c) => c.regra === 'E-7')
+    const r3r = criterios.find((c) => c.regra === 'R-3')
+    assert.equal(e7r.ok, true, e7r.motivo)
+    assert.equal(r3r.ok, true, r3r.motivo)
+    assert.equal(r3r.bloqueia, true)
+  })
+
+  it('sem a leitura do envio, o E-7 e o R-3 reprovam fechado dentro do avaliarCriterios', () => {
+    const { criterios } = avaliarCriterios({ doc: { ...doc1440, foco: FOCO_OK }, nos: [], tema: 'claro' }, 'recuperar_acesso')
+    assert.equal(criterios.find((c) => c.regra === 'E-7').ok, false)
+    assert.equal(criterios.find((c) => c.regra === 'R-3').ok, false)
+  })
+
+  it('nenhum item manual diz mais que a medição não envia o formulário', () => {
+    for (const [caso, itens] of Object.entries(MANUAIS_DO_CASO)) {
+      for (const item of itens) assert.doesNotMatch(item.olhar, /não envia/, `${caso} ${item.id}`)
+    }
+    assert.ok(MANUAIS_DO_CASO.recuperar_acesso.some((m) => m.id === 'R-3' && m.olhar.length > 20))
+    assert.ok(MANUAIS_DO_CASO.entrar.some((m) => m.id === 'E-7' && m.olhar.length > 20))
+  })
+})
+
+describe('44d-3 (volta): a leitura em página do estado de envio (lerEstadoDeEnvioNaPagina)', () => {
+  /**
+   * Monta `html` num jsdom, dá a cada elemento o retângulo de `data-r="x,y,w,h"` (o jsdom não mede layout)
+   * e roda a leitura serializada, como o CDP faz. `preparar(window)` ajusta rolagem, scrollWidth etc.
+   */
+  function lerEnvio(html, preparar = () => undefined) {
+    const dom = new JSDOM(`<!doctype html><html><body>${html}</body></html>`, { runScripts: 'outside-only', virtualConsole: new VirtualConsole() })
+    const { window } = dom
+    window.Element.prototype.getBoundingClientRect = function retangulo() {
+      const [x, y, w, h] = (this.getAttribute('data-r') ?? '0,0,100,20').split(',').map(Number)
+      return { x, y, left: x, top: y, width: w, height: h, right: x + w, bottom: y + h }
+    }
+    Object.defineProperty(window.document.documentElement, 'scrollHeight', { configurable: true, value: 2000 })
+    preparar(window)
+    try {
+      return JSON.parse(JSON.stringify(window.eval(`(${lerEstadoDeEnvioNaPagina.toString()})()`)))
+    } finally {
+      window.close()
+    }
+  }
+
+  const FORMULARIO = `
+    <main>
+      <form>
+        <div class="sb-campo" data-r="169,400,963,112"><label data-r="169,420,140,32">E-mail</label><input data-r="500,420,500,48" value="ana"></div>
+        <div class="sb-campo" data-r="169,512,963,112"><label data-r="169,532,140,32">Senha</label><input type="password" data-r="500,532,500,48"></div>
+        <p class="sb-campo-erro" style="line-height: 24px" data-r="500,490,400,24">Escreva o seu e-mail.</p>
+        <button type="submit" data-r="476,664,300,80">Entrar</button>
+      </form>
+    </main>`
+
+  it('devolve o formato certo: página, linhas (topo e altura), botão, mensagens e colisões', () => {
+    const e = lerEnvio(FORMULARIO)
+    assert.equal(e.pagina, 2000)
+    assert.deepEqual(e.linhas, [
+      { top: 400, altura: 112 },
+      { top: 512, altura: 112 },
+    ])
+    assert.deepEqual(e.botao, { top: 664 })
+    assert.equal(e.mensagens.length, 1)
+    assert.deepEqual(e.mensagens[0], { tipo: 'erro', texto: 'Escreva o seu e-mail.', linhas: 1, cortada: false, foraDaJanela: false })
+    assert.deepEqual(e.colisoes, [])
+  })
+
+  it('as coordenadas são as da página: somam a rolagem', () => {
+    const e = lerEnvio(FORMULARIO, (window) => {
+      Object.defineProperty(window, 'scrollY', { configurable: true, value: 50 })
+    })
+    assert.equal(e.linhas[0].top, 450)
+    assert.equal(e.botao.top, 714)
+  })
+
+  it('conta as linhas da mensagem por altura / line-height', () => {
+    const html = FORMULARIO.replace('data-r="500,490,400,24"', 'data-r="500,490,400,48"')
+    assert.equal(lerEnvio(html).mensagens[0].linhas, 2)
+    const tres = FORMULARIO.replace('data-r="500,490,400,24"', 'data-r="500,490,400,72"')
+    assert.equal(lerEnvio(tres).mensagens[0].linhas, 3)
+  })
+
+  it('sem line-height calculado a contagem de linhas é nula (a regra falha fechado), e não um chute', () => {
+    const html = FORMULARIO.replace('style="line-height: 24px" ', '')
+    assert.equal(lerEnvio(html).mensagens[0].linhas, null)
+  })
+
+  it('lê erro, ajuda e status, na ordem dos tipos, e marca cada um', () => {
+    const html = `<main><form>
+      <p class="sb-campo-ajuda" style="line-height: 24px" data-r="0,100,400,24">Use o e-mail do cadastro.</p>
+      <p class="sb-campo-status" role="status" style="line-height: 24px" data-r="0,200,400,24">Enviamos o link.</p>
+      <p class="sb-campo-erro" style="line-height: 24px" data-r="0,300,400,24">Escreva o e-mail.</p>
+    </form></main>`
+    const e = lerEnvio(html)
+    assert.deepEqual(e.mensagens.map((m) => m.tipo), ['erro', 'ajuda', 'status'])
+  })
+
+  it('ignora mensagem vazia (o <p role="status"> sempre presente) e mensagem escondida', () => {
+    const html = `<main><form>
+      <p class="sb-campo-status" role="status" data-r="0,100,400,24"></p>
+      <p class="sb-campo-status" role="status" data-r="0,130,400,24">   </p>
+      <p class="sb-campo-erro" style="visibility: hidden" data-r="0,160,400,24">Escondida por visibility.</p>
+      <p class="sb-campo-erro" style="display: none" data-r="0,190,400,24">Escondida por display.</p>
+      <p class="sb-campo-ajuda" data-r="0,220,1,1">Fina demais (largura 1).</p>
+      <p class="sb-campo-ajuda" data-r="0,250,400,24">Esta aparece.</p>
+    </form></main>`
+    const e = lerEnvio(html)
+    assert.deepEqual(e.mensagens.map((m) => m.texto), ['Esta aparece.'])
+  })
+
+  it('marca a mensagem cortada (scrollWidth > clientWidth) e a que passa da janela', () => {
+    const cortada = lerEnvio(FORMULARIO, (window) => {
+      const p = window.document.querySelector('.sb-campo-erro')
+      Object.defineProperty(p, 'scrollWidth', { configurable: true, value: 300 })
+      Object.defineProperty(p, 'clientWidth', { configurable: true, value: 100 })
+    })
+    assert.equal(cortada.mensagens[0].cortada, true)
+    const fora = lerEnvio(FORMULARIO.replace('data-r="500,490,400,24"', 'data-r="900,490,400,24"'))
+    assert.equal(fora.mensagens[0].foraDaJanela, true)
+    assert.equal(fora.mensagens[0].cortada, false)
+  })
+
+  it('acha a mensagem que cobre outro elemento com texto e ignora o elemento vazio na mesma célula', () => {
+    // Na fixture nada se sobrepõe à mensagem (500,490,400,24); um parágrafo com texto posto em cima dela é a colisão.
+    const cobre = lerEnvio(FORMULARIO.replace('</form>', '<p data-r="520,495,100,20">Outro texto</p></form>'))
+    assert.equal(cobre.colisoes.length, 1)
+    assert.equal(cobre.colisoes[0].mensagem, 'Escreva o seu e-mail.')
+    assert.match(cobre.colisoes[0].com, /^P Outro texto/)
+    assert.ok(cobre.colisoes[0].w > 1 && cobre.colisoes[0].h > 1)
+    // O mesmo elemento, sem texto, ocupa a célula e não é defeito.
+    const vazio = lerEnvio(FORMULARIO.replace('</form>', '<p role="status" data-r="520,495,100,20"></p></form>'))
+    assert.deepEqual(vazio.colisoes, [])
+  })
+
+  it('sem botão de envio o botão é nulo; sem linhas de campo a lista é vazia', () => {
+    const e = lerEnvio('<main><p>Só texto.</p></main>')
+    assert.equal(e.botao, null)
+    assert.deepEqual(e.linhas, [])
+    assert.deepEqual(e.mensagens, [])
+  })
+
+  it('não tem fechamento: serializada por toString, roda sozinha', () => {
+    assert.match(lerEstadoDeEnvioNaPagina.toString(), /^(async )?function lerEstadoDeEnvioNaPagina/)
   })
 })
