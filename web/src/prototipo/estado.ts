@@ -55,6 +55,8 @@ export type Acao =
   | { tipo: 'encerrar'; agora: number; comNota: boolean }
   | { tipo: 'descartar' }
   | { tipo: 'registrar'; chave: string; rotulo: string; confirmacao: string }
+  /** Só troca o texto da confirmação em tela; `ultimos` e o instantâneo do "Desfazer" não mudam. */
+  | { tipo: 'ajustarConfirmacao'; texto: string }
   | { tipo: 'desfazer' }
   | { tipo: 'fecharConfirmacao' }
   | { tipo: 'definirMadrugada'; valor: boolean }
@@ -72,6 +74,21 @@ export const ITENS_MAIS: readonly ItemMais[] = [
 
 export const ESCOLHAS_FRALDA = ['Xixi', 'Cocô', 'Ambos'] as const
 export type EscolhaFralda = (typeof ESCOLHAS_FRALDA)[number]
+
+/**
+ * A fralda se registra com 1 toque (E5): o registro não depende do tipo. O tipo é um ajuste opcional,
+ * feito na confirmação, que só muda o texto ("Fralda registrada: Xixi"); nunca cria outro registro.
+ */
+export const TEXTO_FRALDA = 'Fralda registrada'
+
+export function textoDaFralda(escolha: EscolhaFralda): string {
+  return `${TEXTO_FRALDA}: ${escolha}`
+}
+
+/** A confirmação da fralda, com ou sem o tipo; é ela que traz as escolhas Xixi, Cocô e Ambos. */
+export function ehConfirmacaoDeFralda(texto: string | null): boolean {
+  return texto !== null && (texto === TEXTO_FRALDA || texto.startsWith(`${TEXTO_FRALDA}: `))
+}
 
 const MINUTO = 60_000
 
@@ -127,6 +144,12 @@ export function reduzir(estado: EstadoPrototipo, acao: Acao): EstadoPrototipo {
         confirmacao: { texto: acao.confirmacao, anterior: instantaneo(estado) },
       }
     }
+    case 'ajustarConfirmacao':
+      // Sem confirmação não há o que ajustar. Com ela, só o texto muda: o `anterior` fica, e o
+      // "Desfazer" depois do ajuste volta ao estado de antes do registro.
+      return estado.confirmacao
+        ? { ...estado, confirmacao: { ...estado.confirmacao, texto: acao.texto } }
+        : estado
     case 'desfazer': {
       if (!estado.confirmacao) return estado
       const { sessao, ultimos } = estado.confirmacao.anterior
