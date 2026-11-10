@@ -296,14 +296,15 @@ describe('MAT-44: Hoje e Sessão', () => {
     ['claro', claro],
     ['madrugada', madrugada],
   ] as const) {
-    it(`Hoje (${tema}): o único cartão fica num campo de cor com token válido`, () => {
+    // O Hoje do 44d-2 não tem cartão nem data-campo: o único bloco de cor é o Em andamento, e o tema vem
+    // das variáveis de uso (--cor-campo-sessao: urucum de dia, o bloco escuro na madrugada).
+    it(`Hoje (${tema}): o único bloco de cor é o Em andamento, sem cartão e sem data-campo`, () => {
       const { container } = renderizarRota('/app/hoje', { estadoInicial: estado() })
 
-      const cartoes = container.querySelectorAll('.cartao')
-      expect(cartoes).toHaveLength(1)
-      const nome = cartoes[0].getAttribute('data-campo')!
-      expect(tokens[nome], nome).toBeDefined()
-      expect(nome.startsWith('night-')).toBe(tema === 'madrugada')
+      expect(container.querySelectorAll('.cartao')).toHaveLength(0)
+      expect(container.querySelectorAll('[data-campo]')).toHaveLength(0)
+      expect(container.querySelectorAll('[data-andamento]')).toHaveLength(1)
+      expect(document.documentElement.hasAttribute('data-tema')).toBe(tema === 'madrugada')
     })
 
     it(`Sessão (${tema}): o cronômetro fica num campo de cor com token válido`, () => {
@@ -323,8 +324,14 @@ describe('MAT-44: Hoje e Sessão', () => {
     expect(parseFloat(minimo) * 16).toBeGreaterThanOrEqual(48)
   })
 
+  it('o Hoje não tem ícone: a barra Registrar é só de texto', () => {
+    const { container } = renderizarRota('/app/hoje')
+
+    expect(container.querySelectorAll('svg')).toHaveLength(0)
+  })
+
   it('o ícone da área logada vem sempre com rótulo de texto visível, escondido do leitor de tela', () => {
-    for (const caminho of ['/app/hoje', '/app/sessao']) {
+    for (const caminho of ['/app/sessao']) {
       const { container, unmount } = renderizarRota(caminho)
       const icones = [...container.querySelectorAll('svg.lucide')]
       expect(icones.length, caminho).toBeGreaterThan(0)
@@ -364,7 +371,8 @@ describe('MAT-44: SVG e movimento', () => {
       const { container, unmount } = renderizarRota(caminho, { estadoInicial: estado })
       await screen.findAllByRole('heading')
       const svgs = [...container.querySelectorAll('svg')]
-      expect(svgs.length, caminho).toBeGreaterThan(0)
+      // O Hoje do 44d-2 não tem ícone nem ilustração: nada a conferir nele.
+      if (caminho !== '/app/hoje') expect(svgs.length, caminho).toBeGreaterThan(0)
       for (const svg of svgs) {
         const decorativo = svg.getAttribute('aria-hidden') === 'true'
         const nomeado = svg.hasAttribute('aria-label') || svg.hasAttribute('aria-labelledby') || svg.querySelector('title') !== null
@@ -720,83 +728,81 @@ describe('MAT-44 r2 B5: campo da madrugada no Início', () => {
 // ---------------------------------------------------------------------------
 // Rodada 3: acabamento.
 
-describe('MAT-44 r3 #1: Hoje com mais peso editorial', () => {
+// MAT-44d-2: o Hoje deixou de ter campo de lavanda, lista e cartão. A nota é uma linha rótulo + texto
+// da base, os Últimos são a faixa de 3 números, e o único bloco de cor é o Em andamento (hoje.test.tsx
+// confere cada bloco; aqui ficam as regras de cor e de ordem de leitura que estas rodadas já tinham).
+describe('MAT-44 r3 #1: o Hoje sem campo de lavanda, em papel, na ordem de leitura', () => {
   for (const [tema, estado] of [
     ['claro', claro],
     ['madrugada', madrugada],
   ] as const) {
-    it(`(${tema}) "Para você saber" é um campo de lavanda e o data-campo acompanha o tema`, () => {
+    it(`(${tema}) "Para você saber" fica em papel, sem data-campo nem cartão, com a nota e o autor`, () => {
       renderizarRota('/app/hoje', { estadoInicial: estado() })
 
       const secao = screen.getByRole('heading', { name: 'Para você saber' }).closest('section')!
-      const nome = secao.getAttribute('data-campo')!
-      expect(nome).toBe(tema === 'madrugada' ? 'night-field-2' : 'field-2')
-      expect(tokens[nome]).toBeDefined()
+      expect(secao.hasAttribute('data-campo')).toBe(false)
       expect(secao.querySelector('.cartao')).toBeNull()
       expect(secao.textContent).toContain('Pomada só à noite.')
       expect(secao.textContent).toContain('Carla, 22:40')
     })
   }
 
-  it('"Últimos" fica em papel, com as horas tabulares à direita e respiro maior entre as linhas', () => {
+  it('"Últimos" fica em papel, com os tempos tabulares em Zilla Slab (t-numero) e a legenda de 20 px', () => {
     renderizarRota('/app/hoje')
 
     const secao = screen.getByRole('heading', { name: 'Últimos' }).closest('section')!
     expect(secao.hasAttribute('data-campo')).toBe(false)
-    for (const item of secao.querySelectorAll('li')) {
-      expect(item.className).toMatch(/\bpy-4\b/)
-      const hora = item.lastElementChild!
-      expect(hora.className).toContain('tabular')
-      expect(hora.className).toContain('text-right')
+    const itens = secao.querySelectorAll('.sb-numeros-item')
+    expect(itens).toHaveLength(3)
+    for (const item of itens) {
+      expect(item.querySelector('p.t-numero')).not.toBeNull()
+      expect(item.querySelector('p.t-corpo')).not.toBeNull()
     }
   })
 
-  it('a ordem de leitura é a mesma: cartão, nota, últimos; e há um só cartão', () => {
+  it('a ordem de leitura é: Em andamento, Últimos e Para você saber', () => {
     const { container } = renderizarRota('/app/hoje')
 
-    const cartao = container.querySelector('.cartao')!
-    const nota = screen.getByRole('heading', { name: 'Para você saber' })
+    const andamento = container.querySelector('[data-andamento]')!
     const ultimos = screen.getByRole('heading', { name: 'Últimos' })
-    expect(container.querySelectorAll('.cartao')).toHaveLength(1)
-    expect(cartao.compareDocumentPosition(nota) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
-    expect(nota.compareDocumentPosition(ultimos) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
+    const nota = screen.getByRole('heading', { name: 'Para você saber' })
+    expect(container.querySelectorAll('[data-andamento]')).toHaveLength(1)
+    expect(andamento.compareDocumentPosition(ultimos) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
+    expect(ultimos.compareDocumentPosition(nota) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
   })
 })
 
 describe('MAT-44 r3 #2: botões rápidos com o mesmo tratamento em toda largura e tema', () => {
-  // R2 (rodada 5): as miniaturas do Início (página pública) não têm ícone; o tratamento com ícone
-  // vale para a área logada (ver "r5 R2" para o Início).
+  // R2 (rodada 5): as miniaturas do Início (página pública) não têm ícone. MAT-44d-2: a barra Registrar
+  // do Hoje também é só de texto (os 4 botões iguais, Sono, Mamada, Fralda e Mais), sem ícone e sem o
+  // sinal "+". O tratamento com ícone e o "+ Mais" ficam no `BotoesRapidos`, que só o Início usa.
   const casos: Array<[string, string, () => EstadoPrototipo]> = [
     ['Hoje (claro)', '/app/hoje', claro],
     ['Hoje (madrugada)', '/app/hoje', madrugada],
   ]
 
   for (const [nome, caminho, estado] of casos) {
-    it(`${nome}: Sono, Mamada, Fralda e Tummy time têm exatamente um ícone antes do texto, e o ícone não encolhe`, async () => {
+    it(`${nome}: Sono, Mamada, Fralda e Mais são só texto, num <span>, sem ícone e sem nada aria-hidden`, async () => {
       const { container } = renderizarRota(caminho, { estadoInicial: estado() })
       await screen.findAllByRole('heading')
 
       const sono = container.querySelector('button[aria-label="Iniciar sono de Heloísa"]')!
       const botoes = [...sono.parentElement!.children] as HTMLElement[]
-      expect(botoes.map((b) => b.textContent)).toEqual(['Sono', 'Mamada', 'Fralda', 'Tummy time', '+ Mais'])
-      for (const botao of botoes.slice(0, 4)) {
-        const icones = botao.querySelectorAll('svg')
-        expect(icones, botao.textContent!).toHaveLength(1)
-        expect(icones[0].getAttribute('aria-hidden')).toBe('true')
-        expect(botao.firstElementChild, botao.textContent!).toBe(icones[0])
-        expect(icones[0].getAttribute('class')).toContain('shrink-0')
+      expect(botoes.map((b) => b.textContent)).toEqual(['Sono', 'Mamada', 'Fralda', 'Mais'])
+      for (const botao of botoes) {
+        expect(botao.querySelectorAll('svg'), botao.textContent!).toHaveLength(0)
+        expect(botao.querySelectorAll('[aria-hidden="true"]'), botao.textContent!).toHaveLength(0)
+        expect([...botao.children].map((filho) => filho.tagName), botao.textContent!).toEqual(['SPAN'])
       }
     })
 
-    it(`${nome}: o "+ Mais" leva o próprio sinal, escondido do leitor de tela, antes do texto`, async () => {
+    it(`${nome}: o botão do Mais não leva o sinal "+": o rótulo é "Mais" e o nome acessível, "Mais registros"`, async () => {
       const { container } = renderizarRota(caminho, { estadoInicial: estado() })
       await screen.findAllByRole('heading')
 
       const mais = container.querySelector('button[aria-label="Mais registros"]')!
       expect(mais.querySelectorAll('svg')).toHaveLength(0)
-      const sinal = mais.querySelector('[aria-hidden="true"]')!
-      expect(sinal.textContent).toBe('+')
-      expect(mais.textContent).toBe('+ Mais')
+      expect(mais.textContent).toBe('Mais')
     })
   }
 
@@ -1335,7 +1341,8 @@ describe('MAT-44 r5 R2: nenhum ícone na página pública', () => {
     }
   })
 
-  for (const caminho of ['/app/hoje', '/app/sessao']) {
+  // O Hoje não tem mais navegação inferior (44d-2); a Sessão ainda tem, até a parte 2.
+  for (const caminho of ['/app/sessao']) {
     for (const [tema, estado] of [
       ['claro', claro],
       ['madrugada', madrugada],
@@ -1358,12 +1365,12 @@ describe('MAT-44 r5 R2: nenhum ícone na página pública', () => {
     ['claro', claro],
     ['madrugada', madrugada],
   ] as const) {
-    it(`/app/hoje (${tema}): os quatro botões rápidos com ícone continuam com ícone e rótulo visível`, () => {
+    it(`/app/hoje (${tema}): os quatro botões da barra Registrar têm rótulo visível e nenhum ícone`, () => {
       renderizarRota('/app/hoje', { estadoInicial: estado() })
 
-      for (const nome of ['Iniciar sono de Heloísa', 'Iniciar mamada de Heloísa', 'Registrar fralda de Heloísa', 'Iniciar tummy time de Heloísa']) {
+      for (const nome of ['Iniciar sono de Heloísa', 'Iniciar mamada de Heloísa', 'Registrar fralda de Heloísa', 'Mais registros']) {
         const botao = screen.getByRole('button', { name: nome })
-        expect(botao.querySelectorAll('svg.lucide'), nome).toHaveLength(1)
+        expect(botao.querySelectorAll('svg.lucide'), nome).toHaveLength(0)
         expect(botao.querySelector('span')!.textContent!.trim(), nome).not.toBe('')
       }
     })

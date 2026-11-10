@@ -41,14 +41,14 @@ describe('rotas', () => {
     }
   })
 
-  it('o Hoje tem o h1 "Hoje" e um único cartão', async () => {
+  it('o Hoje tem o h1 "Hoje" e um único bloco de cor (Em andamento), sem cartão', async () => {
     const { container } = renderizarRota('/app/hoje')
 
     const titulo = await screen.findByRole('heading', { level: 1 })
     expect(titulo.textContent).toBe('Hoje')
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
-    expect(container.querySelectorAll('.cartao')).toHaveLength(1)
-    expect(container.querySelector('.cartao .cartao')).toBeNull()
+    expect(container.querySelectorAll('[data-andamento]')).toHaveLength(1)
+    expect(container.querySelector('.cartao')).toBeNull()
   })
 
   it('a Sessão com ?tipo=tummy e sem sessão começa um Tummy time', async () => {
@@ -105,14 +105,26 @@ describe('rotas', () => {
 })
 
 describe('navegação inferior', () => {
-  it('no Hoje só o item Hoje é link; os outros quatro estão desativados', async () => {
+  // MAT-44d-2: o Hoje não tem navegação inferior (a barra Registrar não é navegação). Os testes que
+  // conferiam os itens da navegação passam a ser feitos na Sessão, que ainda a tem (até a parte 2).
+  it('o Hoje não tem navegação inferior: nem a nav "Principal", nem a legenda "Em breve", nem itens desativados', async () => {
     renderizarRota('/app/hoje')
+    await screen.findByRole('heading', { level: 1 })
+
+    expect(screen.queryByRole('navigation', { name: 'Principal' })).toBeNull()
+    expect(screen.queryByText('Em breve')).toBeNull()
+    for (const nome of ['Histórico', 'Desenvolvimento', 'Comunidade', 'Família']) {
+      expect(screen.queryByRole('button', { name: nome }), nome).toBeNull()
+    }
+  })
+
+  it('na Sessão só o item Hoje é link; os outros quatro estão desativados', async () => {
+    renderizarRota('/app/sessao')
     const nav = await screen.findByRole('navigation', { name: 'Principal' })
 
     const links = within(nav).getAllByRole('link')
     expect(links.map((l) => l.textContent)).toEqual(['Hoje'])
     expect(links[0].getAttribute('href')).toBe('/app/hoje')
-    expect(links[0].getAttribute('aria-current')).toBe('page')
 
     for (const nome of ['Histórico', 'Desenvolvimento', 'Comunidade', 'Família']) {
       const item = within(nav).getByRole('button', { name: nome })
@@ -121,20 +133,13 @@ describe('navegação inferior', () => {
     expect(within(nav).getAllByRole('button')).toHaveLength(4)
   })
 
-  it('"Em breve" aparece uma vez', async () => {
-    renderizarRota('/app/hoje')
-    await screen.findByRole('navigation', { name: 'Principal' })
-
-    expect(screen.getAllByText('Em breve')).toHaveLength(1)
-  })
-
   it('os itens desativados não fazem nada ao toque', async () => {
-    const { roteador } = renderizarRota('/app/hoje')
+    const { roteador } = renderizarRota('/app/sessao')
     const nav = await screen.findByRole('navigation', { name: 'Principal' })
 
     fireEvent.click(within(nav).getByRole('button', { name: 'Histórico' }))
 
-    expect(roteador.state.location.pathname).toBe('/app/hoje')
+    expect(roteador.state.location.pathname).toBe('/app/sessao')
   })
 
   it('na Sessão o item Hoje é link, mas não é a página atual', async () => {

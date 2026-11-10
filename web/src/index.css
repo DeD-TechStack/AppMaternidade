@@ -2429,3 +2429,258 @@
     transition: none !important;
   }
 }
+
+/* 44d-2 */
+/* A área logada sobre o sistema-base. Parte 1: o Hoje e a barra Registrar. As cores vêm só das
+   variáveis de uso (tema.css); os espaços, da escala 8, 16, 24, 32, 64, 96, 128, 160 e 192; os raios,
+   de 0, 4, 8 e 50%. Sem sombra e sem movimento. */
+
+/* O fim do conteúdo do Hoje: 64 px de folga para a barra Registrar fixa não cobrir nada. O rodapé
+   perde 64 px de margem (128 em vez de 192) e ganha 64 de folga embaixo: do último bloco ao rodapé
+   continuam os 192 do contrato (64 do main + 128), e a linha final do rodapé não fica sob a barra. */
+.ha-hoje {
+  padding-bottom: 64px;
+}
+
+body:has([data-barra-registrar]) [data-rodape] {
+  margin-top: 128px;
+  padding-bottom: 64px;
+}
+
+/* Em andamento: o bloco de cor do Hoje (urucum de dia; o bloco escuro na madrugada, sem borda). */
+.ha-andamento {
+  padding: 64px;
+  border-radius: 8px;
+  background-color: var(--cor-campo-sessao);
+  color: var(--cor-numero-sessao);
+}
+
+.ha-andamento-rotulo {
+  margin: 0;
+}
+
+.ha-andamento-nome {
+  margin: 8px 0 0;
+}
+
+.ha-andamento-numero {
+  margin: 8px 0 0;
+  white-space: nowrap;
+}
+
+.ha-andamento-pessoa {
+  margin: 8px 0 0;
+}
+
+.ha-andamento-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+/* O primário do bloco é o botão invertido: papel sobre urucum (na madrugada, o urucum claro com o
+   texto escuro). A troca de fundo é na hora. */
+.ha-andamento .ha-encerrar {
+  background-color: var(--cor-botao-campo);
+  color: var(--cor-texto-botao-campo);
+}
+
+.ha-andamento .ha-encerrar:hover {
+  background-color: color-mix(in srgb, var(--cor-botao-campo) 85%, var(--cor-texto-botao-campo));
+}
+
+/* A moldura dupla do bloco tem as linhas na cor do texto do bloco (o papel). */
+.ha-andamento .sb-moldura {
+  border-color: currentColor;
+  color: inherit;
+}
+
+.ha-andamento .sb-moldura-miolo {
+  border-color: currentColor;
+}
+
+.ha-andamento .sb-moldura:hover .sb-moldura-miolo {
+  background-color: var(--cor-botao-campo);
+  color: var(--cor-texto-botao-campo);
+}
+
+/* A barra Registrar (EMENDAS E1): 4 botões iguais numa barra de 64 px. De dia, tinta com texto de
+   papel; na madrugada, o bloco escuro com o texto claro. Fixa embaixo em c1–c10 (32 px de margem) ou, abaixo
+   de 768, de ponta a ponta. Sem borda, sem sombra. */
+.barra-registrar {
+  --ha-barra-fundo: var(--cor-texto);
+  --ha-barra-texto: var(--cor-fundo);
+  position: relative;
+  width: min(100% - 2 * var(--margem), var(--area-util));
+  margin-inline: auto;
+  border: 0;
+  padding: 0;
+  border-radius: 8px 8px 0 0;
+  background-color: var(--ha-barra-fundo);
+  color: var(--ha-barra-texto);
+}
+
+:root[data-tema='madrugada'] .barra-registrar {
+  --ha-barra-fundo: var(--cor-campo-sessao);
+  --ha-barra-texto: var(--cor-texto);
+}
+
+.barra-registrar.barra-fixa {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  width: min(100% - 2 * var(--margem), var(--area-util));
+  margin-inline: auto;
+}
+
+.ha-barra-fileira {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  height: 64px;
+  border-radius: 8px 8px 0 0;
+  overflow: hidden;
+}
+
+.ha-barra-fileira > button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 64px;
+  margin: 0;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  color: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.ha-barra-fileira > button + button {
+  border-left: 1px solid color-mix(in srgb, var(--ha-barra-texto) 20%, transparent);
+}
+
+.ha-barra-fileira > button:hover {
+  background-color: color-mix(in srgb, var(--ha-barra-texto) 12%, transparent);
+}
+
+.ha-barra-fileira > button[aria-expanded='true'] {
+  background-color: color-mix(in srgb, var(--ha-barra-texto) 20%, transparent);
+  text-decoration: underline;
+  text-underline-offset: 6px;
+}
+
+/* O anel de foco (2 px, na cor do papel) fica dentro do botão, para não sair da barra: é desenhado em
+   volta do rótulo, com recuo para fora do rótulo e para dentro do botão. Assim nenhum recuo de anel é
+   negativo (o botão encostado na borda da janela perderia o anel de fora). */
+.ha-barra-fileira > button:focus-visible {
+  outline: none;
+}
+
+.ha-barra-fileira > button:focus-visible > span {
+  outline: 2px solid var(--ha-barra-texto);
+  outline-offset: 4px;
+}
+
+/* O painel logo acima da barra, dentro do elemento fixo: a confirmação, a escolha de fralda e a lista
+   do Mais. Opaco e da largura da barra. Fechado, sem texto e sem grupo, não ocupa nada (a região de
+   status continua no DOM). */
+.ha-painel {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  border-radius: 8px 8px 0 0;
+  background-color: var(--cor-fundo);
+  color: var(--cor-texto);
+}
+
+.ha-painel[data-aberto] {
+  max-height: calc(100dvh - 128px);
+  padding: 24px;
+  overflow-y: auto;
+  border-top: 1px solid var(--cor-fio-suave);
+}
+
+.ha-confirmacao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.ha-confirmacao-texto {
+  flex: 1 1 auto;
+  margin: 0;
+}
+
+.ha-confirmacao-acoes {
+  display: flex;
+  gap: 16px;
+}
+
+.ha-painel-grupo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.ha-painel-grupo > * {
+  flex: 1 1 auto;
+}
+
+.ha-confirmacao ~ .ha-painel-grupo {
+  margin-top: 16px;
+}
+
+@media (max-width: 767px) {
+  .ha-andamento {
+    padding: 24px;
+  }
+
+  /* Em 390 os dois botões dividem a linha (64 de altura cada); se não couberem, quebram e ocupam a
+     largura inteira. */
+  .ha-andamento-acoes > * {
+    flex: 1 1 auto;
+  }
+
+  .ha-andamento .ha-encerrar {
+    padding: 0 16px;
+  }
+
+  .ha-andamento .sb-moldura-miolo {
+    padding: 0 8px;
+  }
+
+  .barra-registrar {
+    width: 100%;
+    border-radius: 0;
+  }
+
+  .barra-registrar.barra-fixa {
+    width: 100%;
+  }
+
+  .ha-barra-fileira {
+    border-radius: 0;
+  }
+
+  /* Rótulo de 20 px (do conjunto da escala): em 390 cada botão tem 97,5 px e "Mamada" a 24 não cabe. */
+  .ha-barra-fileira > button {
+    font-size: 1.25rem;
+    line-height: 1.25rem;
+  }
+
+  .ha-painel {
+    border-radius: 0;
+  }
+
+  .ha-painel[data-aberto] {
+    padding: 16px;
+  }
+}

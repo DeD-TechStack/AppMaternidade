@@ -22,11 +22,13 @@ function sessaoHa(ms: number): EstadoPrototipo {
   }
 }
 
+// A faixa "Últimos" tem 3 colunas: o tempo e a legenda de cada uma, na ordem de leitura
+// ("50 min Fralda, tempo desde o registro", "agora Fralda").
 function itensDeUltimos(): string[] {
   const secao = screen.getByRole('heading', { name: 'Últimos' }).closest('section')!
-  return within(secao)
-    .getAllByRole('listitem')
-    .map((li) => li.textContent ?? '')
+  return [...secao.querySelectorAll('.sb-numeros-item')].map((item) =>
+    [...item.querySelectorAll('p')].map((p) => p.textContent).join(' '),
+  )
 }
 
 function avancar(ms: number) {
@@ -93,14 +95,14 @@ describe('fralda', () => {
 
   it('escolher Xixi mostra a confirmação e põe "Fralda agora" em Últimos', () => {
     renderizarRota('/app/hoje')
-    expect(itensDeUltimos()).toContain('Fralda há 50 min')
+    expect(itensDeUltimos()).toContain('50 min Fralda, tempo desde o registro')
 
     abrirFralda()
     fireEvent.click(screen.getByRole('button', { name: 'Xixi' }))
 
     expect(screen.getByRole('status').textContent).toContain('Fralda registrada: Xixi')
-    expect(itensDeUltimos()).toContain('Fralda agora')
-    expect(itensDeUltimos()).not.toContain('Fralda há 50 min')
+    expect(itensDeUltimos()).toContain('agora Fralda')
+    expect(itensDeUltimos()).not.toContain('50 min Fralda, tempo desde o registro')
     expect(screen.queryByRole('button', { name: 'Xixi' })).toBeNull()
   })
 
@@ -125,7 +127,11 @@ describe('fralda', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Desfazer' }))
 
-    expect(itensDeUltimos()).toEqual(['Mamada há 2 h 10 min', 'Fralda há 50 min', 'Tummy time ontem 17:30'])
+    expect(itensDeUltimos()).toEqual([
+      '2 h 10 Mamada, tempo desde o registro',
+      '50 min Fralda, tempo desde o registro',
+      '17:30 Tummy time, ontem',
+    ])
     expect(screen.getByRole('status').textContent).toBe('')
   })
 
@@ -149,7 +155,7 @@ describe('fralda', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Fechar' }))
 
     expect(screen.getByRole('status').textContent).toBe('')
-    expect(itensDeUltimos()).toContain('Fralda agora')
+    expect(itensDeUltimos()).toContain('agora Fralda')
   })
 
   it('Esc fecha a escolha e devolve o foco ao botão Fralda', () => {
@@ -174,7 +180,7 @@ describe('fralda', () => {
 
     expect(screen.queryByRole('group', { name: 'Fralda de Heloísa' })).toBeNull()
     expect(document.activeElement).toBe(gatilho)
-    expect(itensDeUltimos()).toContain('Fralda há 50 min')
+    expect(itensDeUltimos()).toContain('50 min Fralda, tempo desde o registro')
   })
 
   it('a confirmação não toma o foco do teclado', () => {
@@ -194,7 +200,9 @@ describe('fralda', () => {
     fireEvent.click(mais)
     expect(mais.getAttribute('aria-expanded')).toBe('true')
     const grupo = screen.getByRole('group', { name: 'Outros registros de Heloísa' })
+    // O Tummy time passou para dentro do Mais (a barra Registrar tem 4 botões): é o 1º da lista.
     expect(within(grupo).getAllByRole('button').map((b) => b.textContent)).toEqual([
+      'Tummy time',
       'Mamadeira',
       'Alimentação sólida',
       'Observação',
@@ -202,13 +210,13 @@ describe('fralda', () => {
 
     fireEvent.click(within(grupo).getByRole('button', { name: 'Mamadeira' }))
     expect(screen.getByRole('status').textContent).toContain('Mamadeira registrada')
-    expect(itensDeUltimos()[0]).toBe('Mamadeira agora')
+    expect(itensDeUltimos()[0]).toBe('agora Mamadeira')
 
     fireEvent.click(mais)
     fireEvent.click(screen.getByRole('button', { name: 'Observação' }))
     expect(screen.getByRole('status').textContent).toContain('Observação registrada')
     expect(screen.getByRole('status').textContent).not.toContain('Mamadeira')
-    expect(itensDeUltimos().slice(0, 2)).toEqual(['Observação agora', 'Mamadeira agora'])
+    expect(itensDeUltimos().slice(0, 2)).toEqual(['agora Observação', 'agora Mamadeira'])
 
     fireEvent.click(mais)
     fireEvent.click(screen.getByRole('button', { name: 'Alimentação sólida' }))
@@ -222,12 +230,14 @@ describe('fralda', () => {
       ['Iniciar sono de Heloísa', 'Sono'],
       ['Iniciar mamada de Heloísa', 'Mamada'],
       ['Registrar fralda de Heloísa', 'Fralda'],
-      ['Iniciar tummy time de Heloísa', 'Tummy time'],
-      ['Mais registros', '+ Mais'],
+      ['Mais registros', 'Mais'],
     ]
     for (const [nome, visivel] of nomes) {
       expect(screen.getByRole('button', { name: nome }).textContent).toBe(visivel)
     }
+    // O Tummy time mora no Mais e mantém o nome acessível de sempre.
+    fireEvent.click(screen.getByRole('button', { name: 'Mais registros' }))
+    expect(screen.getByRole('button', { name: 'Iniciar tummy time de Heloísa' }).textContent).toBe('Tummy time')
   })
 })
 
@@ -260,6 +270,7 @@ describe('sessões', () => {
   it('iniciar tummy time com o Sono em andamento abre o Sono com o aviso', async () => {
     renderizarRota('/app/hoje')
 
+    fireEvent.click(screen.getByRole('button', { name: 'Mais registros' }))
     fireEvent.click(screen.getByRole('button', { name: 'Iniciar tummy time de Heloísa' }))
 
     const titulo = await screen.findByRole('heading', { level: 1 })
@@ -499,7 +510,7 @@ describe('R3: o foco acompanha ações que removem o controle focado', () => {
       const base = () => aplicar(criarEstadoInicial(Date.now()))
       const semSessao = () => ({ ...base(), sessao: null })
       const botao = (nome: string) => screen.getByRole('button', { name: nome })
-      const cartao = (container: HTMLElement) => container.querySelector<HTMLElement>('.cartao')!
+      const cartao = (container: HTMLElement) => container.querySelector<HTMLElement>('main [data-andamento]')!
 
       it('Hoje: "Encerrar" leva o foco ao cartão "Em andamento"', () => {
         const { container } = renderizarRota('/app/hoje', { estadoInicial: base() })
@@ -623,6 +634,7 @@ describe('R3: o foco acompanha ações que removem o controle focado', () => {
 
       it('Hoje → atalho com outra sessão em andamento leva o foco ao h1 da Sessão (com o aviso)', async () => {
         const { container } = renderizarRota('/app/hoje', { estadoInicial: base() })
+        fireEvent.click(botao('Mais registros'))
 
         acionarComTeclado(botao('Iniciar tummy time de Heloísa'))
 
