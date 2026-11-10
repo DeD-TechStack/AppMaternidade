@@ -4,6 +4,7 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { CHAVE_RECUPERACAO } from '../../componentes/conta/armazenamento.ts'
 import {
   AVISO_BANCO_DEMONSTRACAO,
+  COMUM,
   CONTA_EXCLUIDA,
   CRIAR_CONTA,
   ENTRAR,
@@ -346,9 +347,30 @@ describe('R-3: em Recuperar, a mensagem de resultado ocupa a mesma linha de 112 
     expect(forma()).toEqual(antes)
   })
 
-  it('a mensagem cabe em uma linha: no máximo 62 caracteres, e a frase não revela se a conta existe', () => {
-    expect(RECUPERAR.resultado.length).toBeLessThanOrEqual(62)
+  it('a mensagem cabe em uma linha: no máximo 40 caracteres, e a frase não revela se a conta existe', () => {
+    // 44d-3, volta 3, D4: a confirmação é de uma linha em 390 (358 px de área útil, 17 px de letra), então a
+    // zona de mensagem da linha tem 1 linha (32 px) e não 2 (64 px). A dica do spam está na linha "Se não chegar".
+    expect(RECUPERAR.resultado).toBe('Se a conta existir, enviamos o link.')
+    expect(RECUPERAR.resultado.length).toBeLessThanOrEqual(40)
     expect(RECUPERAR.resultado).toMatch(/^Se a conta existir/)
+    expect(RECUPERAR.resultado).not.toMatch(/spam/i)
+    expect(RECUPERAR.explicacao.linhas.find((l) => l.rotulo === 'Se não chegar')?.texto).toMatch(/spam/)
+  })
+
+  // D4-erro: os textos que o campo do Recuperar pode mostrar são o erro local (campo vazio), o `email_invalido` do
+  // servidor e a confirmação. Os outros erros do envio vão para o resumo no topo do formulário, não para o campo.
+  // Cada um tem de caber em 1 linha (o regime é o mesmo da confirmação: a página fica parada). Sem como medir
+  // pixel aqui, o teste fixa o comprimento: nenhum passa da confirmação, que o medidor mede em 1 linha no Chrome.
+  it('D4-erro: nenhuma mensagem do campo é maior que a confirmação de 1 linha, então a zona de 1 linha basta', () => {
+    const doCampo = {
+      'escrevaEmail (erro local do campo vazio)': COMUM.escrevaEmail,
+      'email_invalido (erro do servidor, no campo)': TEXTOS_ERRO.email_invalido,
+      'resultado (a confirmação)': RECUPERAR.resultado,
+    }
+    for (const [nome, texto] of Object.entries(doCampo)) {
+      expect(texto, nome).toBeTruthy()
+      expect(texto.length, nome).toBeLessThanOrEqual(RECUPERAR.resultado.length)
+    }
   })
 
   it('no CSS, a mensagem ocupa a terceira linha da grade da linha de campo, como o erro e a ajuda', () => {
@@ -781,12 +803,13 @@ describe('o erro de campo abaixo de 768 não ocupa fluxo (E-7)', () => {
     expect(corpo).not.toMatch(/display:\s*none|visibility:\s*hidden/)
   })
 
-  // R-3 (e R-4): "a mensagem ocupa a mesma linha, sem a página mudar de altura". A confirmação (2 linhas
-  // em 358 px) entrava no fluxo: 8 + 48 px a mais na linha, na página e no topo do botão. A causa é o
-  // fluxo: a linha do Recuperar (`data-status`) reserva uma zona fixa de 2 linhas abaixo do campo, com ou
-  // sem mensagem (8 de ar + 48 das duas linhas + 8 de folga = 64 px, na escala de espaços), e a
-  // confirmação e o erro moram nela fora do fluxo. A altura real é do medidor e da sonda.
-  describe('a zona de mensagem da linha com status abaixo de 768 (R-3)', () => {
+  // R-3 (e R-4): "a mensagem ocupa a mesma linha, sem a página mudar de altura". A mensagem entrava no
+  // fluxo e empurrava a página e o botão. A causa é o fluxo: a linha do Recuperar (`data-status`) reserva
+  // uma zona fixa abaixo do campo, com ou sem mensagem, e a confirmação e o erro moram nela fora do fluxo.
+  // Volta 3, D4: a zona era de 2 linhas (64 px) e deixava 96 px entre o fio do campo e o botão (as telas
+  // irmãs têm 33). Agora a confirmação tem 1 linha em 390, e a zona é de 1 linha: 8 de ar + 24 da linha =
+  // 32 px, mais os 32 px da margem do botão = 64 px do fio ao botão. A altura real é do medidor e da sonda.
+  describe('a zona de mensagem da linha com status abaixo de 768 (R-3, D4)', () => {
     const daLinha = regras.filter((r) => r.seletor.includes('.sb-acesso-campos') && r.seletor.includes('.sb-campo[data-status]'))
     const corpoDe = (fim: RegExp) =>
       daLinha
@@ -794,22 +817,44 @@ describe('o erro de campo abaixo de 768 não ocupa fluxo (E-7)', () => {
         .map((r) => r.corpo)
         .join(';')
 
-    it('a linha com data-status reserva a zona de 2 linhas com `padding-bottom`', () => {
-      expect(corpoDe(/\.sb-campo\[data-status\]$/)).toMatch(/padding-bottom:\s*64px/)
+    it('a linha com data-status reserva a zona de 1 linha (32 px) com `padding-bottom`', () => {
+      expect(corpoDe(/\.sb-campo\[data-status\]$/)).toMatch(/padding-bottom:\s*32px/)
+    })
+
+    it('D4-vao: a zona de 2 linhas (64 px) não volta, em nenhuma regra da linha, da confirmação nem do erro', () => {
+      expect(daLinha.length).toBeGreaterThan(0)
+      for (const r of daLinha) {
+        expect(r.corpo, r.seletor).not.toMatch(/\b64px/)
+        for (const m of r.corpo.matchAll(/padding-bottom:\s*([^;}]+)/g)) expect(m[1].trim(), r.seletor).toBe('32px')
+        for (const m of r.corpo.matchAll(/top:\s*calc\(100% - (\d+)px\)/g)) expect(Number(m[1]), r.seletor).toBeLessThanOrEqual(32)
+      }
+    })
+
+    it('D4-vao: o vão do fio ao botão é a zona (32) mais a margem do botão (32), 64 px no máximo', () => {
+      const zona = Number(/padding-bottom:\s*(\d+)px/.exec(corpoDe(/\.sb-campo\[data-status\]$/))?.[1])
+      const margem = Number(
+        /margin-top:\s*(\d+)px/.exec(
+          regras
+            .filter((r) => r.seletor === '.sb-acesso-campos + .sb-acesso-acao')
+            .map((r) => r.corpo)
+            .join(';'),
+        )?.[1],
+      )
+      expect(zona + margem).toBeLessThanOrEqual(64)
     })
 
     it('a confirmação sai do fluxo e fica ancorada na zona, sem margem', () => {
       const corpo = corpoDe(/\.sb-campo-status$/)
       expect(corpo).toMatch(/position:\s*absolute/)
-      expect(corpo).toMatch(/top:\s*calc\(100% - 64px\)/)
+      expect(corpo).toMatch(/top:\s*calc\(100% - 32px\)/)
       for (const m of corpo.matchAll(/margin(?:-[a-z]+)?\s*:\s*([^;}]+)/g)) expect(m[1].trim(), m[0]).toMatch(/^0(px)?(\s+0(px)?)*$/)
       expect(corpo).not.toMatch(/position:\s*(static|relative)/)
     })
 
-    it('o erro do campo mora na mesma zona (sai do vão de 24 px, onde cobriria o botão com 2 linhas)', () => {
+    it('o erro do campo mora na mesma zona (1 linha: os erros do campo cabem em 1 linha, D4-erro)', () => {
       const corpo = corpoDe(/\.sb-campo-erro$/)
       expect(corpo).toMatch(/position:\s*absolute/)
-      expect(corpo).toMatch(/top:\s*calc\(100% - 64px\)/)
+      expect(corpo).toMatch(/top:\s*calc\(100% - 32px\)/)
       expect(corpo).not.toMatch(/position:\s*(static|relative)/)
       expect(corpo).not.toMatch(/margin(?:-[a-z]+)?\s*:[^;]*[1-9]/)
     })

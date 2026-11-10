@@ -27,6 +27,8 @@
 // Volta 3 (D3): D3-fio, D3-controle e D3-anel medem, em 1440, o ar de 8 px entre a mensagem e o fio da linha, entre o
 // controle e a mensagem e o anel de foco dentro do fio; D3-fuso confere que o select de fuso não mostra "_". Leem a
 // geometria dos campos em repouso e depois do envio vazio (na Conta o nome é esvaziado antes de enviar).
+// Volta 3 (D4): D4-vao mede, só no Recuperar em 390 e em repouso, o vão da base do campo (o fio) ao topo do botão
+// (no máximo 64 px); o R-3, em 390, passa a exigir a confirmação de 1 linha, e a página segue parada ao enviar.
 //
 // A parte pura (as funções g1 a g12, num, o contraste e o resumo) recebe um JSON de nós e devolve
 // { regra, ok, motivo, nos_com_falha }. Ela falha fechado: nó sem texto onde a regra pede texto,
@@ -1069,15 +1071,19 @@ export function e7(doc, tema) {
 
 /**
  * R-3 (Recuperar): depois do envio com o e-mail preenchido (`doc.envio.enviado`, o antes e o depois), a
- * mensagem de status está visível com 1 ou 2 linhas, ocupa a mesma linha de campo e a página não muda de
- * altura; valem as mesmas regras de geometria do E-7 (linha, página, botão, sem corte, sem cobrir).
+ * mensagem de status está visível, ocupa a mesma linha de campo e a página não muda de altura; valem as
+ * mesmas regras de geometria do E-7 (linha, página, botão, sem corte, sem cobrir). De 768 para cima a
+ * confirmação pode ter 1 ou 2 linhas (mora na linha de 112 px). Abaixo de 768 (volta 3, D4) a zona de mensagem
+ * é de 1 linha (32 px), então a confirmação tem exatamente 1 (24 px de caixa): com 2 ela passaria da zona.
  */
 export function r3(doc) {
+  const celular = Boolean(doc) && Number.isFinite(doc.largura) && celularDe(doc)
+  const permitidas = celular ? [1] : [1, 2]
   const falhas = geometriaDoEnvio(doc?.envio?.enviado, 'envio com o e-mail preenchido', (depois) => [
     ...(depois.mensagens.some((m) => m.tipo === 'status') ? [] : [{ no: 'mensagem', motivo: 'depois do envio não há mensagem de status visível' }]),
-    ...limiteDeLinhas(depois, ['status'], [1, 2], '1 ou 2'),
+    ...limiteDeLinhas(depois, ['status'], permitidas, celular ? '1' : '1 ou 2'),
   ])
-  return resultadoComNumeros('R-3', falhas, 'a confirmação (1 ou 2 linhas) ocupa a mesma linha e a página não muda de altura')
+  return resultadoComNumeros('R-3', falhas, `a confirmação (${celular ? '1 linha' : '1 ou 2 linhas'}) ocupa a mesma linha e a página não muda de altura`)
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -1227,6 +1233,55 @@ export function d3Anel(doc, caso) {
       }
     })
     return resultadoComNumeros('D3-anel', falhas, 'o anel de foco de cada controle fica entre o começo e o fim do fio da linha')
+  })
+}
+
+// ---------------------------------------------------------------------------------------------
+// MAT-44d-3, volta 3, defeito D4: em 390 o Recuperar tinha ~96 px entre o fio do campo e o topo do botão "Enviar
+// link": 64 px de zona reservada para uma confirmação de 2 linhas mais 32 px de margem do botão (nas telas irmãs são
+// 33). A confirmação passou a ter 1 linha, a zona é de 1 linha (8 de ar + 24 = 32) e o vão é de 32 + 32.
+//   D4-vao: em 390, em repouso, botão.top - fio.bottom <= 64.
+// O fio de 390 é a borda de baixo do `.sb-campo-controle`, NÃO a base do `.sb-campo`: abaixo de 768 a linha não tem borda
+// de baixo e a zona de mensagem é o `padding-bottom` dela, então a caixa da linha passa do fio (no Chrome: fio em y=568,
+// caixa em 600, botão em 632). Pela caixa o vão de 96 px de antes mediria 32 e passaria; por isso a leitura de envio traz
+// `controles[i].bottom` e o critério mede dali.
+// A estabilidade da página (R-3: altura da página, da linha e topo do botão iguais antes e depois do envio) segue no
+// R-3, que em 390 passa a exigir a confirmação de 1 linha (a zona de 32 px não comporta 2).
+
+/** O maior vão aceito entre o fio do campo (a base do controle) e o topo do botão de envio, em 390 (px). */
+export const VAO_MAXIMO_CAMPO_BOTAO = 64
+/** A largura da janela em que o D4-vao vale (o celular de referência). */
+const LARGURA_DO_D4 = 390
+
+/**
+ * D4-vao: o vão do fio do campo (a base do `.sb-campo-controle` da última linha, a que está sobre o botão) ao topo do
+ * botão de envio, em 390, no Recuperar em repouso (a leitura `doc.envio.enviado.antes`: a tela recém-aberta, antes de
+ * preencher e de enviar, sem mensagem). De 768 para cima não se aplica (a mensagem mora dentro da linha de 112 px);
+ * abaixo de 768 e diferente de 390 reprova fechado, porque os 64 px só se sustentam com a confirmação de 1 linha, que
+ * é a de 358 px. Falha fechada também: leitura ausente, nenhuma linha de campo, a linha sem a base do controle, botão
+ * sem topo e vão negativo (o botão acima do fio é leitura quebrada). A caixa do `.sb-campo` não entra na conta.
+ */
+export function d4Vao(doc) {
+  return comDoc('D4-vao', doc, () => {
+    if (!celularDe(doc)) return naoAplicavel('D4-vao', 'o desenho de 1440 é de outro passo: a mensagem mora dentro da linha de 112 px')
+    if (doc.largura !== LARGURA_DO_D4) {
+      return falhaFechada('D4-vao', `a largura da janela é ${doc.largura} px: o critério só vale em ${LARGURA_DO_D4} (a confirmação de 1 linha é a de 358 px)`)
+    }
+    const antes = doc.envio?.enviado?.antes
+    if (!estadoDeEnvioLegivel(antes)) return falhaFechada('D4-vao', 'sem a leitura do Recuperar em repouso (doc.envio.enviado.antes)')
+    if (antes.linhas.length === 0) return falhaFechada('D4-vao', 'nenhuma linha de campo (.sb-campo) na leitura do Recuperar em repouso')
+    const fio = Array.isArray(antes.controles) ? antes.controles[antes.linhas.length - 1] : undefined
+    if (!fio || typeof fio !== 'object' || !ehNumero(fio.bottom)) {
+      return falhaFechada('D4-vao', 'sem a base do controle (o fio do campo) na leitura do Recuperar em repouso (controles[i].bottom)')
+    }
+    if (!antes.botao || typeof antes.botao !== 'object') return falhaFechada('D4-vao', 'sem o botão de envio na leitura do Recuperar em repouso')
+    if (!ehNumero(antes.botao.top)) return falhaFechada('D4-vao', 'sem o topo do botão de envio (leitura ilegível)')
+    const vao = antes.botao.top - fio.bottom
+    const falhas = []
+    const dizer = `o botão de envio começa em y=${antes.botao.top.toFixed(1)} e o fio do campo (a base do controle) termina em y=${fio.bottom.toFixed(1)}: vão de ${vao.toFixed(1)} px`
+    if (vao > VAO_MAXIMO_CAMPO_BOTAO + TOL_FOLGA) falhas.push({ no: 'vão do campo ao botão', motivo: `${dizer} (o máximo é ${VAO_MAXIMO_CAMPO_BOTAO})` })
+    else if (vao < -TOL_FOLGA) falhas.push({ no: 'vão do campo ao botão', motivo: `${dizer} (o botão está acima do fio: leitura quebrada)` })
+    return resultadoComNumeros('D4-vao', falhas, `o botão de envio começa a ${VAO_MAXIMO_CAMPO_BOTAO} px ou menos do fio do campo, em repouso (vão de ${vao.toFixed(1)} px)`)
   })
 }
 
@@ -1834,7 +1889,7 @@ export function m6(nos) {
 export const CRITERIOS_DO_CASO = {
   entrar: ['E-1', 'E-2', 'E-3', 'E-4', 'E-5', 'E-6', 'E-7', 'D3-fio', 'D3-controle', 'D3-anel'],
   criar_conta: ['E-1', 'E-2', 'E-3', 'E-5', 'E-6', 'E-7', 'C-1', 'C-2', 'C-3', 'D3-fio', 'D3-controle', 'D3-anel'],
-  recuperar_acesso: ['E-1', 'E-2', 'E-3', 'E-5', 'E-6', 'E-7', 'R-1', 'R-2', 'R-3', 'D3-fio', 'D3-controle', 'D3-anel'],
+  recuperar_acesso: ['E-1', 'E-2', 'E-3', 'E-5', 'E-6', 'E-7', 'R-1', 'R-2', 'R-3', 'D3-fio', 'D3-controle', 'D3-anel', 'D4-vao'],
   comecar_seu_nome: ['E-1', 'E-3', 'E-4', 'E-5', 'E-6', 'E-7', 'B-1', 'B-2', 'B-3', 'D3-fio', 'D3-controle', 'D3-anel', 'D3-fuso'],
   conta: ['A-1', 'A-2', 'A-3', 'A-4', 'A-5', 'A-6', 'D3-fio', 'D3-controle', 'D3-anel', 'D3-fuso'],
 }
@@ -1858,6 +1913,7 @@ const REGRAS_DE_TELA = {
   'D3-controle': ({ doc, caso }) => d3Controle(doc, caso),
   'D3-anel': ({ doc, caso }) => d3Anel(doc, caso),
   'D3-fuso': ({ doc, caso }) => d3Fuso(doc, caso),
+  'D4-vao': ({ doc }) => d4Vao(doc),
   'C-1': ({ nos }) => c1(nos),
   'C-2': ({ nos, doc }) => c2(nos, doc),
   'C-3': ({ nos }) => c3(nos),
@@ -2492,9 +2548,10 @@ export function lerFocoNaPagina() {
 }
 
 /**
- * O estado de envio (E-7 e R-3): a geometria que o envio do formulário pode mexer, nas coordenadas da página
- * (`getBoundingClientRect()` mais a rolagem). Devolve `{ pagina, linhas: [{ top, altura }], botao: { top } | null,
- * mensagens: [{ tipo, texto, linhas, cortada, foraDaJanela }], colisoes }`. Roda antes e depois do envio; não
+ * O estado de envio (E-7, R-3 e D4-vao): a geometria que o envio do formulário pode mexer, nas coordenadas da página
+ * (`getBoundingClientRect()` mais a rolagem). Devolve `{ pagina, linhas: [{ top, altura }], controles: [{ bottom } | null],
+ * botao: { top } | null, mensagens: [{ tipo, texto, linhas, cortada, foraDaJanela }], colisoes }`. `controles[i]` é a base
+ * do `.sb-campo-controle` da linha `i` (o fio do campo abaixo de 768). Roda antes e depois do envio; não
  * escreve nada na página. Uma mensagem (`.sb-campo-erro`, `.sb-campo-ajuda`, `.sb-campo-status`) só conta se tiver
  * texto e estiver visível; as linhas são `altura / line-height` (nulas se o line-height não for um número). Na
  * busca de colisões os elementos sem texto não entram: um `<p role="status">` vazio ocupa a célula da grade e não é
@@ -2513,6 +2570,13 @@ export function lerEstadoDeEnvioNaPagina() {
   const linhas = [...document.querySelectorAll('.sb-campo')].map((el) => {
     const r = el.getBoundingClientRect()
     return { top: um(r.top + sy), altura: um(r.height) }
+  })
+  // A base do controle de cada linha (`.sb-campo-controle`), na ordem das linhas (nula se a linha não tem controle). Abaixo de
+  // 768 o `.sb-campo` não tem borda de baixo e a zona de mensagem é o `padding-bottom` dele: o fio visível do campo é a borda
+  // de baixo do controle, não a base da linha (D4-vao mede o vão do fio ao botão).
+  const controles = [...document.querySelectorAll('.sb-campo')].map((el) => {
+    const controle = el.querySelector('.sb-campo-controle')
+    return controle ? { bottom: um(controle.getBoundingClientRect().bottom + sy) } : null
   })
   const botaoEl = document.querySelector('main form button[type="submit"]')
   const botao = botaoEl ? { top: um(botaoEl.getBoundingClientRect().top + sy) } : null
@@ -2554,7 +2618,7 @@ export function lerEstadoDeEnvioNaPagina() {
       if (w > 1 && h > 1) colisoes.push({ mensagem: texto(m).slice(0, 40), com: `${o.tagName} ${texto(o).slice(0, 30)}`.trim(), w: um(w), h: um(h) })
     }
   }
-  return { pagina: document.documentElement.scrollHeight, linhas, botao, mensagens, colisoes }
+  return { pagina: document.documentElement.scrollHeight, linhas, controles, botao, mensagens, colisoes }
 }
 
 /**

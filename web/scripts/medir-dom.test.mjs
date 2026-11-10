@@ -31,6 +31,7 @@ import {
   d3Controle,
   d3Fio,
   d3Fuso,
+  d4Vao,
   e1,
   e2,
   e3,
@@ -1254,7 +1255,8 @@ describe('44d-3: os casos novos nos argumentos e no bloqueio', () => {
     const D3 = ['D3-fio', 'D3-controle', 'D3-anel']
     assert.deepEqual(criteriosDoCaso('entrar'), ['E-1', 'E-2', 'E-3', 'E-4', 'E-5', 'E-6', 'E-7', ...D3])
     assert.deepEqual(criteriosDoCaso('criar_conta'), ['E-1', 'E-2', 'E-3', 'E-5', 'E-6', 'E-7', 'C-1', 'C-2', 'C-3', ...D3])
-    assert.deepEqual(criteriosDoCaso('recuperar_acesso'), ['E-1', 'E-2', 'E-3', 'E-5', 'E-6', 'E-7', 'R-1', 'R-2', 'R-3', ...D3])
+    // Volta 3 (D4): só o Recuperar soma o vão do fio do campo ao botão (D4-vao), em 390.
+    assert.deepEqual(criteriosDoCaso('recuperar_acesso'), ['E-1', 'E-2', 'E-3', 'E-5', 'E-6', 'E-7', 'R-1', 'R-2', 'R-3', ...D3, 'D4-vao'])
     assert.deepEqual(criteriosDoCaso('comecar_seu_nome'), ['E-1', 'E-3', 'E-4', 'E-5', 'E-6', 'E-7', 'B-1', 'B-2', 'B-3', ...D3, 'D3-fuso'])
     assert.deepEqual(criteriosDoCaso('conta', 'claro'), ['A-1', 'A-2', 'A-3', 'A-4', 'A-5', 'A-6', ...D3, 'D3-fuso'])
     assert.deepEqual(criteriosDoCaso('conta', 'madrugada'), ['A-1', 'A-2', 'A-3', 'A-4', 'A-5', 'A-6', ...D3, 'D3-fuso', 'M-1', 'M-2', 'M-3', 'M-4', 'M-5', 'M-6'])
@@ -2965,6 +2967,247 @@ describe('R-3: a confirmação do Recuperar não muda a linha nem a página', ()
   })
 })
 
+// ---------------------------------------------------------------------------------------------
+// MAT-44d-3, volta 3, defeito D4: em 390 havia ~96 px entre a base do campo (o fio) e o topo do botão "Enviar link"
+// (64 px de zona reservada para uma confirmação de 2 linhas mais 32 px de margem do botão); nas telas irmãs o vão
+// tem 33. A confirmação passou a ter 1 linha (zona de 32 px): o vão cai para 32 + 32 = 64 px e a página segue parada
+// quando a confirmação aparece (R-3). Critério:
+//   D4-vao: em 390, em repouso (o Recuperar recém-aberto, sem mensagem), botão.top - fio.bottom <= 64
+//           (o fio é a borda de baixo do `.sb-campo-controle`; a leitura traz `controles[i].bottom`).
+// Fora de 390: acima de 768 não se aplica (a mensagem mora na linha de 112 px); abaixo de 768 mas diferente de 390, a
+// medida não tem o que a sustente e reprova fechado, como a leitura ausente, o campo sem medida e o botão sem topo.
+//
+// O fio de 390 NÃO é a base do `.sb-campo`: abaixo de 768 o `.sb-campo` não tem borda de baixo (`fio: null` na geometria) e a
+// zona de mensagem é o `padding-bottom` dele, então a caixa passa do fio. Medir pela caixa do `.sb-campo` daria 32 px com a
+// zona de 1 linha e 32 px também com a de 2 (a zona entra na caixa): o defeito de 96 px passaria. Por isso a leitura traz a
+// base do controle e o D4 mede dali (os números abaixo são os do Chrome: fio em y=568 com o campo em y=467).
+
+/**
+ * O Recuperar de 390 em repouso, como o Chrome lê: o fio (a base do controle) fica 101 px abaixo do topo da linha de
+ * campo, a zona de mensagem de `zona` px entra na caixa da linha (`padding-bottom`) e o botão começa `vao` px abaixo do
+ * fio. Zona de 32: linha de 133 e vão de 32 + 32 = 64 (a medida de hoje). Zona de 64 (a de antes): linha de 165 e vão 96.
+ */
+const BASE_DO_FIO = 501
+const repouso390 = ({ vao = 64, zona = 32, base = BASE_DO_FIO, botao } = {}) => ({
+  ...estadoDeEnvio({ alturas: [101 + zona], botao: botao === undefined ? base + vao : botao }),
+  controles: [{ bottom: base }],
+})
+const enviado390 = (extra = {}) => ({
+  antes: repouso390(extra),
+  depois: {
+    ...estadoDeEnvio({
+      alturas: [133],
+      botao: BASE_DO_FIO + 64,
+      mensagens: [mensagemDeEnvio({ tipo: 'status', texto: 'Se a conta existir, enviamos o link.' })],
+    }),
+    controles: [{ bottom: BASE_DO_FIO }],
+  },
+})
+const docD4 = (enviado = enviado390(), base = doc390) => ({ ...base, envio: { enviado } })
+
+describe('D4-vao: o vão do fio do campo ao botão, em 390, em repouso', () => {
+  const reprova = (r, padrao) => {
+    assert.equal(r.ok, false, `devia reprovar: ${r.motivo}`)
+    if (padrao) assert.match(r.motivo, padrao)
+    return r
+  }
+
+  it('o estado de antes reprova com os números: 96 px e 97 px (o fio em y=501, o botão começa em 597 e 598)', () => {
+    reprova(
+      d4Vao(docD4(enviado390({ vao: 96, zona: 64 }))),
+      /o botão de envio começa em y=597\.0 e o fio do campo \(a base do controle\) termina em y=501\.0: vão de 96\.0 px \(o máximo é 64\)/,
+    )
+    reprova(d4Vao(docD4(enviado390({ vao: 97, zona: 64 }))), /vão de 97\.0 px/)
+  })
+
+  it('a base do `.sb-campo` não serve de fio: com a zona de 2 linhas a caixa da linha termina a 32 px do botão e o defeito de 96 px passaria; o critério mede pelo fio', () => {
+    const e = enviado390({ vao: 96, zona: 64 })
+    const caixa = e.antes.linhas[0].top + e.antes.linhas[0].altura
+    assert.equal(e.antes.botao.top - caixa, 32, 'pela caixa do .sb-campo o vão de antes pareceria 32 px')
+    reprova(d4Vao(docD4(e)), /vão de 96\.0 px/)
+  })
+
+  it('o estado corrigido passa: 64 px (32 da zona de 1 linha + 32 da margem do botão), e menos também passa', () => {
+    const r = d4Vao(docD4())
+    assert.equal(r.ok, true, r.motivo)
+    assert.equal(r.regra, 'D4-vao')
+    assert.deepEqual(r.nos_com_falha, [])
+    for (const vao of [64, 56, 33, 32]) assert.equal(d4Vao(docD4(enviado390({ vao }))).ok, true, `${vao} px`)
+  })
+
+  it('a borda: 64 passa, 64,25 passa (a tolerância é de 0,25) e 64,5 reprova', () => {
+    assert.equal(d4Vao(docD4(enviado390({ vao: 64.25 }))).ok, true)
+    reprova(d4Vao(docD4(enviado390({ vao: 64.5 }))), /vão de 64\.5 px/)
+  })
+
+  describe('mutação: 1 px a mais em cada medida, uma por vez, derruba o critério no limite 64', () => {
+    const mutacoes = [
+      ['o botão desce 1 px', (e) => (e.antes.botao.top += 1), /vão de 65\.0 px/],
+      ['o fio (a base do controle) sobe 1 px', (e) => (e.antes.controles[0].bottom -= 1), /vão de 65\.0 px/],
+    ]
+    for (const [nome, mutar, padrao] of mutacoes) {
+      it(nome, () => {
+        const e = enviado390()
+        assert.equal(d4Vao(docD4(e)).ok, true, 'a fixture estável tem de passar antes da mutação')
+        mutar(e)
+        reprova(d4Vao(docD4(e)), padrao)
+      })
+    }
+
+    it('o movimento contrário (1 px a menos de vão) passa', () => {
+      const e = enviado390()
+      e.antes.botao.top -= 1
+      assert.equal(d4Vao(docD4(e)).ok, true)
+    })
+  })
+
+  it('lê o repouso (antes do envio): a página depois do envio não entra na conta (isso é do R-3)', () => {
+    const e = enviado390()
+    e.depois.botao.top += 200
+    assert.equal(d4Vao(docD4(e)).ok, true)
+  })
+
+  it('a caixa da linha (`.sb-campo`) não entra na conta: só o fio e o botão', () => {
+    const e = enviado390()
+    e.antes.linhas[0].altura += 40
+    e.antes.linhas[0].top -= 7
+    assert.equal(d4Vao(docD4(e)).ok, true)
+  })
+
+  it('vale o último controle, o que está sobre o botão', () => {
+    const duas = (vao) => ({ ...estadoDeEnvio({ alturas: [133, 133], botao: 701 + vao }), controles: [{ bottom: 501 }, { bottom: 701 }] })
+    reprova(d4Vao(docD4({ antes: duas(96), depois: duas(96) })), /termina em y=701\.0: vão de 96\.0 px/)
+    assert.equal(d4Vao(docD4({ antes: duas(64), depois: duas(64) })).ok, true)
+  })
+
+  describe('largura', () => {
+    it('de 768 para cima não se aplica (a mensagem mora dentro da linha de 112 px), mesmo com o vão grande', () => {
+      const r = d4Vao(docD4(enviado390({ vao: 96 }), doc1440))
+      assert.equal(r.ok, true)
+      assert.match(r.motivo, /não aplicável/)
+    })
+
+    it('abaixo de 768 e diferente de 390 reprova fechado: o critério só vale em 390', () => {
+      for (const largura of [375, 360, 320, 767]) {
+        reprova(d4Vao(docD4(enviado390(), { ...doc390, largura, clientWidth: largura - 15 })), new RegExp(`${largura} px.*só vale em 390`))
+      }
+    })
+  })
+
+  describe('falha fechada', () => {
+    it('sem doc, sem a largura da janela ou sem a clientWidth', () => {
+      assert.equal(d4Vao(undefined).ok, false)
+      assert.equal(d4Vao({ clientWidth: 375 }).ok, false)
+      assert.equal(d4Vao({ largura: 390 }).ok, false)
+    })
+
+    it('sem doc.envio, sem o enviado, sem o antes', () => {
+      reprova(d4Vao({ ...doc390 }), /sem a leitura do Recuperar em repouso/)
+      reprova(d4Vao({ ...doc390, envio: {} }), /sem a leitura do Recuperar em repouso/)
+      reprova(d4Vao({ ...doc390, envio: { vazio: vazioEstavel() } }), /sem a leitura do Recuperar em repouso/)
+      reprova(d4Vao({ ...doc390, envio: { enviado: { depois: estadoDeEnvio() } } }), /sem a leitura do Recuperar em repouso/)
+      reprova(d4Vao({ ...doc390, envio: { enviado: { antes: { pagina: 2000 } } } }), /sem a leitura do Recuperar em repouso/)
+    })
+
+    it('sem campo (nenhuma linha .sb-campo)', () => {
+      reprova(d4Vao(docD4({ antes: estadoDeEnvio({ alturas: [], botao: 600 }), depois: estadoDeEnvio() })), /nenhuma linha de campo/)
+    })
+
+    it('sem botão (nulo, sem topo ou com topo ilegível)', () => {
+      reprova(d4Vao(docD4({ antes: repouso390({ botao: null }), depois: estadoDeEnvio() })), /sem o botão de envio/)
+      for (const topo of [undefined, Number.NaN, '600', null]) {
+        const e = enviado390()
+        e.antes.botao = { top: topo }
+        reprova(d4Vao(docD4(e)), /sem o botão de envio|sem o topo do botão/)
+      }
+    })
+
+    it('sem o fio: a leitura sem `controles`, vazia, curta, com a entrada nula ou com a base ilegível', () => {
+      const sem = (mudar) => {
+        const e = enviado390()
+        mudar(e.antes)
+        return reprova(d4Vao(docD4(e)), /sem a base do controle \(o fio do campo\)/)
+      }
+      sem((a) => delete a.controles)
+      sem((a) => (a.controles = 'controle'))
+      sem((a) => (a.controles = []))
+      sem((a) => (a.controles = [null]))
+      sem((a) => (a.controles = [{}]))
+      sem((a) => (a.controles = [{ bottom: Number.NaN }]))
+      sem((a) => (a.controles = [{ bottom: '501' }]))
+      sem((a) => (a.controles = [{ bottom: undefined }]))
+    })
+
+    it('o vão negativo (o botão acima do fio) é leitura quebrada e reprova', () => {
+      reprova(d4Vao(docD4(enviado390({ botao: 400 }))), /botão de envio começa em y=400\.0.*vão de -101\.0 px/)
+    })
+  })
+
+  describe('dentro do avaliarCriterios', () => {
+    it('o Recuperar soma D4-vao como critério bloqueante, e ele passa com a leitura certa em 390', () => {
+      const { criterios } = avaliarCriterios({ doc: docD4(), nos: [], tema: 'claro' }, 'recuperar_acesso')
+      const c = criterios.find((x) => x.regra === 'D4-vao')
+      assert.ok(c, 'falta D4-vao no Recuperar')
+      assert.equal(c.ok, true, c.motivo)
+      assert.equal(c.bloqueia, true)
+    })
+
+    it('com o vão de hoje (96) o avaliarCriterios reprova o D4-vao com o número, e sem leitura reprova fechado', () => {
+      const hoje = avaliarCriterios({ doc: docD4(enviado390({ vao: 96 })), nos: [], tema: 'claro' }, 'recuperar_acesso')
+      assert.match(hoje.criterios.find((x) => x.regra === 'D4-vao').motivo, /vão de 96\.0 px/)
+      const sem = avaliarCriterios({ doc: { ...doc390 }, nos: [], tema: 'claro' }, 'recuperar_acesso')
+      assert.equal(sem.criterios.find((x) => x.regra === 'D4-vao').ok, false)
+    })
+
+    it('em 1440 o D4-vao do Recuperar não se aplica e passa', () => {
+      const { criterios } = avaliarCriterios({ doc: { ...doc1440 }, nos: [], tema: 'claro' }, 'recuperar_acesso')
+      const c = criterios.find((x) => x.regra === 'D4-vao')
+      assert.equal(c.ok, true)
+      assert.match(c.motivo, /não aplicável/)
+    })
+
+    it('só o Recuperar tem o D4-vao: as outras telas (Entrar, Criar conta, Começar, Conta) ficam como estão', () => {
+      for (const caso of ['entrar', 'criar_conta', 'comecar_seu_nome', 'conta']) {
+        assert.ok(!criteriosDoCaso(caso).includes('D4-vao'), caso)
+        assert.ok(!criteriosDoCaso(caso, 'madrugada').includes('D4-vao'), caso)
+      }
+    })
+  })
+})
+
+describe('R-3 em 390 (D4): a confirmação tem 1 linha, e 2 reprovam', () => {
+  const r3Em390 = (enviado) => r3({ ...doc390, envio: { enviado } })
+
+  it('a confirmação de 1 linha passa e a página, a linha e o botão ficam parados', () => {
+    const r = r3Em390(enviado390())
+    assert.equal(r.ok, true, r.motivo)
+    assert.equal(r.regra, 'R-3')
+  })
+
+  it('a confirmação de 2 linhas (a de antes, em 358 px) reprova: a zona agora é de 1 linha', () => {
+    const e = enviado390()
+    e.depois.mensagens[0].linhas = 2
+    const r = r3Em390(e)
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /mensagem de status com 2 linhas \(o limite é 1\)/)
+  })
+
+  it('a página continua parada: a altura da página, da linha e o topo do botão iguais antes e depois do envio', () => {
+    for (const mutar of [(e) => (e.depois.pagina += 1), (e) => (e.depois.linhas[0].altura += 1), (e) => (e.depois.botao.top += 1)]) {
+      const e = enviado390()
+      assert.equal(r3Em390(e).ok, true)
+      mutar(e)
+      assert.equal(r3Em390(e).ok, false)
+    }
+  })
+
+  it('em 1440 a confirmação segue podendo ter 1 ou 2 linhas (nada mudou em 1440)', () => {
+    const e = enviadoEstavel()
+    e.depois.mensagens[0].linhas = 2
+    assert.equal(r3Enviado(e).ok, true)
+  })
+})
+
 describe('44d-3 (volta): o R-3 entra no Recuperar e o aviso de "a medição não envia" sai do olho', () => {
   it('CRITERIOS_DO_CASO do Recuperar acaba em R-3 e o avaliarCriterios o roda', () => {
     assert.ok(criteriosDoCaso('recuperar_acesso').includes('R-3'))
@@ -3107,6 +3350,27 @@ describe('44d-3 (volta): a leitura em página do estado de envio (lerEstadoDeEnv
     assert.equal(e.botao, null)
     assert.deepEqual(e.linhas, [])
     assert.deepEqual(e.mensagens, [])
+    assert.deepEqual(e.controles, [])
+  })
+
+  // D4: em 390 o fio do campo é a borda de baixo do `.sb-campo-controle`, não a base do `.sb-campo` (que inclui a zona de
+  // mensagem). A leitura traz a base do controle de cada linha, na mesma ordem das linhas (nula onde a linha não tem controle).
+  it('D4: `controles` traz a base do `.sb-campo-controle` de cada linha, nas coordenadas da página e na ordem de `linhas`', () => {
+    const html = `
+      <main>
+        <form>
+          <div class="sb-campo" data-r="16,467,358,133"><label data-r="16,467,358,24">E-mail</label><div class="sb-campo-controle" data-r="16,504,358,64"><input data-r="32,507.5,326,56"></div></div>
+          <div class="sb-campo" data-r="16,600,358,60"><label data-r="16,600,358,24">Sem controle</label></div>
+          <button type="submit" data-r="16,632,358,64">Enviar link</button>
+        </form>
+      </main>`
+    const e = lerEnvio(html, (window) => {
+      window.scrollTo = () => undefined
+      Object.defineProperty(window, 'scrollY', { configurable: true, value: 100 })
+    })
+    assert.equal(e.linhas.length, 2)
+    assert.deepEqual(e.controles, [{ bottom: 668 }, null])
+    assert.equal(e.controles.length, e.linhas.length)
   })
 
   it('não tem fechamento: serializada por toString, roda sozinha', () => {

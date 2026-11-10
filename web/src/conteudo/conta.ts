@@ -110,8 +110,9 @@ export const AVISO_BANCO_DEMONSTRACAO =
 export const RECUPERAR = {
   frase: 'Enviamos um link para criar uma senha nova.',
   botao: 'Enviar link',
-  // Uma linha só, para caber na linha de 112 px do campo sem mudar a altura da página (R-3).
-  resultado: 'Se a conta existir, enviamos o link. Confira também o spam.',
+  // Uma linha só, também em 390 (358 px de área útil, 17 px de letra): a zona de mensagem da linha tem 1 linha e
+  // a página não muda de altura (R-3, D4). A dica do spam está na linha "Se não chegar" da explicação da tela.
+  resultado: 'Se a conta existir, enviamos o link.',
   entrar: 'Entrar',
   criarConta: 'Criar conta',
   explicacao: {

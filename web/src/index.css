@@ -2651,21 +2651,25 @@
    Só se acrescenta aqui.
    ------------------------------------------------------------------------------------------ */
 @layer components {
-  /* A confirmação (2 linhas em 358 px) entrava no fluxo: 8 de margem + 48 de texto a mais na linha, na
-     página e no topo do botão. A linha com a região de status (`data-status`) reserva agora, com ou sem
-     mensagem, uma zona fixa de 2 linhas abaixo do campo (8 de ar + 48 das duas linhas + 8 de folga = 64
-     px), e a confirmação e o erro (1 ou 2 linhas) moram nela, fora do fluxo: `top` é a base da linha
-     menos a zona, e os 8 px de `padding-top` são o ar entre o fio do campo e o texto. O vão até o botão
+  /* A confirmação entrava no fluxo: 8 de margem + o texto a mais na linha, na página e no topo do botão.
+     A linha com a região de status (`data-status`) reserva, com ou sem mensagem, uma zona fixa abaixo do
+     campo, e a confirmação e o erro moram nela, fora do fluxo: `top` é a base da linha menos a zona, e os
+     8 px de `padding-top` são o ar entre o fio do campo e o texto. O vão até o botão
      (`.sb-acesso-campos + .sb-acesso-acao`, 32 px) vem depois da zona. Em 768 ou mais nada muda: a
-     mensagem mora dentro da linha de 112 px. */
+     mensagem mora dentro da linha de 112 px.
+     Volta 3, D4: a zona era de 2 linhas (64 px) para uma confirmação de 2 linhas, e deixava 96 px entre o
+     fio do campo e o botão (as telas irmãs têm 33). A confirmação passou a ter 1 linha em 390 (o texto
+     curto de `RECUPERAR.resultado`), e os erros do campo (`escrevaEmail` e `email_invalido`) são ainda
+     menores, então a zona é de 1 linha: 8 de ar + 24 da linha = 32 px, e 32 + os 32 da margem do botão =
+     64 px do fio ao botão. A página segue parada com ou sem mensagem. */
   @media (max-width: 767px) {
     .sb-acesso-campos .sb-campo[data-status] {
-      padding-bottom: 64px;
+      padding-bottom: 32px;
     }
 
     .sb-acesso-campos .sb-campo[data-status] .sb-campo-status {
       position: absolute;
-      top: calc(100% - 64px);
+      top: calc(100% - 32px);
       right: 0;
       left: 0;
       margin: 0;
@@ -2674,7 +2678,7 @@
 
     .sb-acesso-campos .sb-campo[data-status] .sb-campo-erro {
       position: absolute;
-      top: calc(100% - 64px);
+      top: calc(100% - 32px);
       right: 0;
       bottom: auto;
       left: 0;
@@ -3047,6 +3051,21 @@
     }
   }
 }
+
+/* ---------------------------------------------------------------------------------------------
+   44d-3, volta 3, D4: o vão entre o campo e o botão do Recuperar em 390. Só se acrescenta aqui.
+   ------------------------------------------------------------------------------------------ */
+/* Em 390 havia ~96 px entre a base do campo (o fio) e o topo do botão "Enviar link": 64 px da zona de mensagem de
+   2 linhas (R-3) mais os 32 px da margem do botão. Nas telas irmãs o vão tem 33. Decisão do líder: a confirmação
+   passa a ocupar 1 linha em 390 (`RECUPERAR.resultado`, sem a dica do spam, que já está na linha "Se não chegar"),
+   e a zona de mensagem encolhe para 1 linha: 8 de ar + 24 da linha = 32 px. O vão fica em 32 + 32 = 64 px e a
+   estabilidade do R-3 fica: a zona existe com ou sem mensagem, então a altura da página, a da linha e o topo do
+   botão são os mesmos antes e depois do envio. Os dois erros que o campo do Recuperar mostra (`escrevaEmail`, "Escreva
+   o seu e-mail.", e `email_invalido`, "Confira o e-mail digitado.") são mais curtos que a confirmação: o regime é
+   único (1 linha, página parada) e nenhum erro cresce a página nem cobre o botão.
+   O número está no trecho "passo 3 (R-3)" acima, que é onde a zona nasce (`padding-bottom` da linha e `top` da
+   mensagem e do erro: 64 passou a 32). Não há regra nova aqui, para a zona não ter dois valores no arquivo. Em 768 ou
+   mais nada muda: a mensagem mora dentro da linha de 112 px. */
 
 /* 44d-2 */
 /* A área logada sobre o sistema-base. Parte 1: o Hoje e a barra Registrar. As cores vêm só das

@@ -31,8 +31,9 @@ interface Props {
  * de 64 px. Erro, ajuda e status ficam dentro da linha, sem mudar a altura dela. `data-ajuda` marca a
  * linha que tem ajuda: abaixo de 768 o erro, que fica fora do fluxo, ocupa o lugar da ajuda (ela segue
  * na linha, fora da vista) em vez de cair no vão de 24 px abaixo do campo. `data-status` marca a linha
- * que tem a região de status (mesmo vazia): abaixo de 768 ela reserva uma zona fixa de 2 linhas abaixo
- * do campo, onde moram a confirmação e o erro, para a página não mudar de altura (R-3).
+ * que tem a região de status (mesmo vazia): abaixo de 768 ela reserva uma zona fixa de 1 linha (32 px)
+ * abaixo do campo, onde moram a confirmação e o erro, para a página não mudar de altura (R-3). Por isso
+ * a mensagem dessa linha tem de caber em 1 linha de 358 px (D4: `RECUPERAR.resultado`).
  */
 export function CampoAcesso({
   rotulo,
