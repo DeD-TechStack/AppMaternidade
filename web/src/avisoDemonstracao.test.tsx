@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, screen } from '@testing-library/react'
 import axe from 'axe-core'
-import { AVISO_DEMONSTRACAO } from './conteudo/textos.ts'
+import { AVISO_DEMONSTRACAO, ETIQUETA_AVISO } from './conteudo/textos.ts'
 import { criarEstadoInicial, type EstadoPrototipo } from './prototipo/estado.ts'
 import { renderizarRota } from './teste/renderizarRota.tsx'
 
@@ -49,7 +49,13 @@ describe('aviso de demonstração: aparece quando falta uma variável do banco',
         await screen.findByRole('heading', { level: 1 })
 
         expect(container.querySelectorAll(SELETOR), caminho).toHaveLength(aparece ? 1 : 0)
-        expect(screen.queryAllByText(TEXTO), caminho).toHaveLength(aparece ? 1 : 0)
+        if (caminho === '/') {
+          // O Início não tem a faixa longa: o aviso é uma etiqueta curta na lateral da abertura.
+          expect(screen.queryAllByText(TEXTO), caminho).toHaveLength(0)
+          expect(screen.queryAllByText(ETIQUETA_AVISO), caminho).toHaveLength(aparece ? 1 : 0)
+        } else {
+          expect(screen.queryAllByText(TEXTO), caminho).toHaveLength(aparece ? 1 : 0)
+        }
         unmount()
       }
     })
@@ -85,16 +91,21 @@ function conferirTudoDentroDaColuna(container: HTMLElement) {
 }
 
 describe('aviso de demonstração: lugar na tela', () => {
-  it('vem logo depois do cabeçalho do site e logo antes do main do Início', async () => {
+  it('no Início é uma etiqueta da lateral da abertura, e não há faixa entre o cabeçalho do site e o main', async () => {
     definirBanco('', '')
     const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
 
-    // O Início é um fragmento na casca do Layout (2.6 e 2.7): o aviso vem logo depois do cabeçalho
-    // do site e logo antes do <main>.
+    // O Início é um fragmento na casca do Layout (2.6 e 2.7): o <main> vem logo depois do cabeçalho
+    // do site, e o aviso (um <li data-aviso>) fica na lateral da abertura, depois das etiquetas e
+    // antes do link.
+    const main = container.querySelector('main')!
+    expect(main.previousElementSibling!.matches('[data-cabecalho]')).toBe(true)
     const aviso = container.querySelector(SELETOR)!
-    expect(aviso.previousElementSibling!.matches('[data-cabecalho]')).toBe(true)
-    expect(aviso.nextElementSibling!.tagName).toBe('MAIN')
+    expect(main.contains(aviso)).toBe(true)
+    expect(aviso.parentElement!.classList.contains('sb-abertura-lateral')).toBe(true)
+    expect(aviso.nextElementSibling!.querySelector('a')!.textContent).toBe('Ver o protótipo')
+    expect(aviso.textContent).toBe(ETIQUETA_AVISO)
   })
 
   for (const [tela, caminho] of [
@@ -146,7 +157,8 @@ describe('aviso de demonstração: marcação', () => {
   it('é um <p> simples, sem role, sem aria-* e sem classe com variante de janela', async () => {
     definirBanco('', '')
 
-    for (const caminho of ['/', '/app/hoje', '/app/sessao', '/qualquer-coisa']) {
+    // O Início tem o aviso como etiqueta (<li>, ver o teste de lugar na tela); as outras telas, o <p>.
+    for (const caminho of ['/app/hoje', '/app/sessao', '/qualquer-coisa']) {
       const { container, unmount } = renderizarRota(caminho)
       await screen.findByRole('heading', { level: 1 })
 
@@ -159,6 +171,20 @@ describe('aviso de demonstração: marcação', () => {
       expect([...aviso.classList].filter((c) => /(^|:)(sm|md|lg|xl|2xl):/.test(c)), caminho).toEqual([])
       unmount()
     }
+  })
+
+  it('no Início é um <li> simples com a Etiqueta do sistema, sem role, sem aria-* e sem classe com variante de janela', async () => {
+    definirBanco('', '')
+    const { container } = renderizarRota('/')
+    await screen.findByRole('heading', { level: 1 })
+
+    const aviso = container.querySelector(SELETOR)!
+    expect(aviso.tagName).toBe('LI')
+    expect(aviso.hasAttribute('role')).toBe(false)
+    expect(aviso.getAttributeNames().filter((nome) => nome.startsWith('aria-'))).toEqual([])
+    expect([...aviso.classList].filter((c) => /(^|:)(sm|md|lg|xl|2xl):/.test(c))).toEqual([])
+    expect(aviso.children).toHaveLength(1)
+    expect(aviso.children[0].classList.contains('sb-etiqueta')).toBe(true)
   })
 })
 

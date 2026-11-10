@@ -872,11 +872,11 @@ describe('MAT-44 r2 A3: texto de interface do Início mora em textos.ts', () => 
     expect((textos.NAVEGACAO as ReadonlyArray<{ rotulo: string }>).map((n) => n.rotulo)).toEqual([
       'Hoje',
       'Sessão',
-      'Madrugada',
+      'Conta',
       'Entrar',
     ])
     expect(textos.PROMESSA).toBe('Quem chega no turno já sabe o que houve.')
-    expect(textos.SUBTITULO_INICIO).toBe('A rotina do bebê, dividida entre quem cuida.')
+    expect(textos.SUBTITULO_INICIO).toBe('A rotina do bebê, em equipe.')
     expect((textos.CHAMADA as { titulo: string }).titulo).toBe('Quer ver um dia de Heloísa?')
     expect(textos.SECAO_ESCURA).toEqual({
       titulo: 'Crie sua conta',
@@ -1278,9 +1278,13 @@ describe('MAT-44 r7 #2: a etiqueta nunca passa da largura da linha', () => {
     const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
 
-    const etiquetas = [...container.querySelectorAll('.sb-abertura-lateral .sb-etiqueta')]
+    // Volta 1: sem as variáveis do banco, a lateral tem uma 5ª etiqueta, a do aviso (`li[data-aviso]`);
+    // as 4 do Início são as de sempre.
+    const todas = [...container.querySelectorAll('.sb-abertura-lateral .sb-etiqueta')]
+    const etiquetas = todas.filter((e) => e.closest('[data-aviso]') === null)
     expect(etiquetas.map((e) => e.textContent)).toEqual(['Rotina', 'Desenvolvimento', 'Cuidado compartilhado', 'Comunidade'])
-    for (const etiqueta of etiquetas) expect(etiqueta.parentElement!.tagName).toBe('LI')
+    expect(todas.length - etiquetas.length).toBeLessThanOrEqual(1)
+    for (const etiqueta of todas) expect(etiqueta.parentElement!.tagName).toBe('LI')
     expect(document.documentElement.getAttribute('lang') ?? 'pt-BR').toBe('pt-BR')
     expect(lerTexto('../index.html')).toContain('lang="pt-BR"')
   })
@@ -1331,12 +1335,20 @@ describe('MAT-44 r8: o Início novo não esconde o excesso, e o Hoje e a Sessão
     expect(achados).toEqual([])
   })
 
-  it('nenhuma regra vt-* do CSS declara overflow, visibility ou display: none', () => {
+  it('nenhuma regra vt-* do CSS declara overflow, visibility ou display: none (a única exceção: o círculo de contorno do CTA, só abaixo de 768)', () => {
+    // Volta 1, item 7: abaixo de 768 o círculo de contorno sai e fica um círculo só. É a única regra
+    // `vt-*` que pode esconder um elemento, e só na faixa de celular.
+    const ehExcecao = (r: RegraCss) => r.seletor === '.vt-cta-contorno' && r.condicao === '@media (max-width: 767px)'
     const achados = regrasComContexto(estiloGlobal)
       .filter((r) => r.seletor.includes('.vt-'))
       .filter((r) => 'overflow' in r.props || 'overflow-x' in r.props || r.props['visibility'] === 'hidden' || r.props['display'] === 'none')
+      .filter((r) => !(ehExcecao(r) && r.props['display'] === 'none' && !('overflow' in r.props) && r.props['visibility'] !== 'hidden'))
       .map((r) => r.seletor)
     expect(achados).toEqual([])
+    // A exceção existe e é uma só.
+    const escondidos = regrasComContexto(estiloGlobal).filter((r) => r.seletor.includes('.vt-') && r.props['display'] === 'none')
+    expect(escondidos.map((r) => r.seletor)).toEqual(['.vt-cta-contorno'])
+    expect(escondidos.every(ehExcecao)).toBe(true)
   })
 
   it('o Hoje e a Sessão não recebem a regra: nenhum elemento tem break-words, nem no layout compartilhado', async () => {

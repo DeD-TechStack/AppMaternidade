@@ -619,16 +619,15 @@ describe('R4: o Início decide as colunas pelo CSS do sistema-base, não por var
   }
   const VARIANTE_DE_JANELA = /(^|:)(sm|md|lg|xl|2xl):/
 
-  it('o aviso (se houver), o main e a seção escura são filhos da casca, entre o cabeçalho e o rodapé', async () => {
+  it('o main e a seção escura são filhos da casca, entre o cabeçalho e o rodapé; o aviso (se houver) está dentro do main', async () => {
     const container = await rotaDoInicio()
 
     const main = container.querySelector('main')!
     const secao = container.querySelector('[data-secao-escura]')!
     expect(main.parentElement!.classList.contains('sb-casca')).toBe(true)
     expect(secao.parentElement).toBe(main.parentElement)
-    const aviso = container.querySelector('[data-aviso]')
-    const antes = aviso ?? main
-    expect(antes.previousElementSibling!.matches('[data-cabecalho]')).toBe(true)
+    expect(main.previousElementSibling!.matches('[data-cabecalho]')).toBe(true)
+    for (const aviso of container.querySelectorAll('[data-aviso]')) expect(main.contains(aviso)).toBe(true)
     expect(secao.nextElementSibling!.matches('[data-rodape]')).toBe(true)
   })
 
