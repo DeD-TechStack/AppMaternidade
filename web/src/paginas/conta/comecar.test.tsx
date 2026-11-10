@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { fusoDoAparelho, listaDeFusos } from '../../componentes/conta/fusos.ts'
 import { TEXTOS_ERRO } from '../../conteudo/conta.ts'
 import { criarDadosContaMemoria, simularFalha } from '../../dados/conta.memoria.ts'
@@ -24,69 +24,80 @@ async function memoriaSemConta(nome = 'Nova') {
 }
 
 describe('o passo "Seu nome"', () => {
-  it('mostra o h1 Começar, o h2 Seu nome, a frase e os campos, com o nome dos metadados e o fuso do aparelho', async () => {
+  it('mostra o h1 Começar, a frase sob ele, as 2 linhas de campo e a ajuda de cada uma, com o nome dos metadados e o fuso do aparelho', async () => {
     const dados = await memoriaSemConta('Nova Pessoa')
     renderizarComDados('/app/comecar', { dados })
 
     expect((await screen.findByRole('heading', { level: 1 })).textContent).toBe('Começar')
-    expect(screen.getByRole('heading', { level: 2, name: 'Seu nome' })).toBeTruthy()
-    expect(screen.getByText('Falta pouco. Diga o seu nome e o fuso em que você está.')).toBeTruthy()
+    expect(screen.getByText('Diga o seu nome e o fuso.')).toBeTruthy()
     expect(screen.getByText('É o nome que a família vai ver.')).toBeTruthy()
     expect(screen.getByText('Os horários aparecem neste fuso.')).toBeTruthy()
     expect(campoDeTexto().value).toBe('Nova Pessoa')
     expect(campoDeFuso().value).toBe(fusoDoAparelho())
-    expect(screen.getByRole('button', { name: 'Salvar' }).classList.contains('botao-grande')).toBe(true)
+    expect(campoDeTexto().getAttribute('aria-describedby')).toBe(screen.getByText('É o nome que a família vai ver.').id)
+    // O botão é o primário do sistema (80 px; 64 abaixo de 768), de envio.
+    const salvarBotao = screen.getByRole('button', { name: 'Salvar' })
+    expect(salvarBotao.classList.contains('sb-botao')).toBe(true)
+    expect(salvarBotao.getAttribute('type')).toBe('submit')
   })
 
-  it('a partir de 60 rem usa duas colunas como a moldura pública: h2 e frase à esquerda, formulário à direita, na ordem do DOM', async () => {
+  it('a abertura leva "Passo 1 de 2" como etiqueta na coluna lateral, depois do h1; o formulário vem logo depois, e depois as linhas "O que vem depois"', async () => {
     const dados = await memoriaSemConta()
     const { container } = renderizarComDados('/app/comecar', { dados })
     const h1 = await screen.findByRole('heading', { level: 1 })
-    const status = screen.getByRole('status')
-    const h2 = screen.getByRole('heading', { level: 2, name: 'Seu nome' })
-    const frase = screen.getByText('Falta pouco. Diga o seu nome e o fuso em que você está.')
+    const abertura = container.querySelector('.sb-abertura')!
+    const lateral = abertura.querySelector('.sb-abertura-lateral') as HTMLElement
+
+    const passo = within(lateral).getByText('Passo 1 de 2')
+    expect(passo.classList.contains('sb-etiqueta')).toBe(true)
+    expect(within(lateral).getByText('Protótipo').classList.contains('sb-etiqueta')).toBe(true)
+    expect(abertura.contains(h1)).toBe(true)
+    expect(Boolean(h1.compareDocumentPosition(passo) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true)
+
+    // As 2 linhas de campo (nome e fuso), o botão, e depois as linhas "O que vem depois".
     const formulario = container.querySelector('form')!
-    const grade = h2.closest('section')!
-
-    // Uma coluna no celular; duas a partir de 60 rem, com a divisão e os espaços da MolduraPublica.
-    for (const classe of ['grid', 'gap-10', 'min-[60rem]:grid-cols-[5fr_7fr]', 'min-[60rem]:gap-16']) {
-      expect(grade.classList.contains(classe), classe).toBe(true)
-    }
-    const [esquerda, direita] = [...grade.children]
-    expect(esquerda.contains(h2) && esquerda.contains(frase)).toBe(true)
-    expect(esquerda.contains(formulario)).toBe(false)
-    expect(direita).toBe(formulario)
-    expect(formulario.classList.contains('max-w-[28rem]')).toBe(true)
-
-    // O h1 fica acima das duas colunas e a região de status onde estava, entre o h1 e a grade.
-    expect(grade.contains(h1)).toBe(false)
-    expect(grade.contains(status)).toBe(false)
-    const antes = (a: Element, b: Element) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)
-    expect(antes(h1, status)).toBe(true)
-    expect(antes(status, h2)).toBe(true)
-    expect(antes(h2, frase)).toBe(true)
-    expect(antes(frase, formulario)).toBe(true)
+    expect(formulario.querySelectorAll('.sb-campo')).toHaveLength(2)
+    expect(abertura.nextElementSibling!.contains(formulario)).toBe(true)
+    const linhas = container.querySelector('section[aria-label="O que vem depois"]')!
+    expect(Boolean(formulario.compareDocumentPosition(linhas) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true)
+    expect([...linhas.querySelectorAll('.sb-linha-rotulo')].map((rotulo) => rotulo.textContent)).toEqual([
+      'Nome',
+      'Fuso',
+      'Dados',
+    ])
   })
 
-  it('o seletor de fuso do passo não leva a marca de só leitura', async () => {
+  it('nenhum bloco da tela tem altura mínima própria: a altura é a do conteúdo', async () => {
+    const dados = await memoriaSemConta()
+    const { container } = renderizarComDados('/app/comecar', { dados })
+    await screen.findByRole('heading', { level: 1, name: 'Começar' })
+
+    for (const bloco of container.querySelectorAll<HTMLElement>('main > *')) {
+      expect(bloco.style.minHeight, bloco.className).toBe('')
+      expect(bloco.className).not.toMatch(/min-h-|h-\[/)
+    }
+  })
+
+  it('o seletor de fuso do passo é editável: não leva readonly', async () => {
     const dados = await memoriaSemConta()
     renderizarComDados('/app/comecar', { dados })
-    await screen.findByRole('heading', { level: 2, name: 'Seu nome' })
+    await screen.findByRole('heading', { level: 1, name: 'Começar' })
 
-    expect(campoDeFuso().className).not.toMatch(/read-only:/)
+    expect(campoDeFuso().hasAttribute('readonly')).toBe(false)
+    expect(campoDeFuso().closest('.sb-campo-controle')!.hasAttribute('data-select')).toBe(true)
   })
 
   it('sem nome nos metadados, o campo começa vazio', async () => {
     const dados = await memoriaSemConta('')
     renderizarComDados('/app/comecar', { dados })
-    await screen.findByRole('heading', { level: 2, name: 'Seu nome' })
+    await screen.findByRole('heading', { level: 1, name: 'Começar' })
     expect(campoDeTexto().value).toBe('')
   })
 
   it('"Salvar" cria a conta com o nome e o fuso escolhidos e segue para a Conta', async () => {
     const dados = await memoriaSemConta()
     const { roteador } = renderizarComDados('/app/comecar', { dados })
-    await screen.findByRole('heading', { level: 2, name: 'Seu nome' })
+    await screen.findByRole('heading', { level: 1, name: 'Começar' })
 
     fireEvent.change(campoDeTexto(), { target: { value: '  Nova Pessoa  ' } })
     fireEvent.change(campoDeFuso(), { target: { value: 'America/Manaus' } })
@@ -101,7 +112,7 @@ describe('o passo "Seu nome"', () => {
   it('com o volta, segue para ele depois de salvar', async () => {
     const dados = await memoriaSemConta()
     const { roteador } = renderizarComDados('/app/comecar?volta=%2Fapp%2Fhoje', { dados })
-    await screen.findByRole('heading', { level: 2, name: 'Seu nome' })
+    await screen.findByRole('heading', { level: 1, name: 'Começar' })
 
     salvar()
     await waitFor(() => expect(caminhoDe(roteador)).toBe('/app/hoje'))
@@ -110,7 +121,7 @@ describe('o passo "Seu nome"', () => {
   it('um volta inválido é ignorado: vai à Conta', async () => {
     const dados = await memoriaSemConta()
     const { roteador } = renderizarComDados(`/app/comecar?volta=${encodeURIComponent('/app/comecar')}`, { dados })
-    await screen.findByRole('heading', { level: 2, name: 'Seu nome' })
+    await screen.findByRole('heading', { level: 1, name: 'Começar' })
 
     salvar()
     await waitFor(() => expect(caminhoDe(roteador)).toBe('/app/conta'))
@@ -128,7 +139,7 @@ describe('o passo "Seu nome"', () => {
   it('nome vazio (depois de tirar os espaços) dá erro no campo, sem chamar o banco', async () => {
     const dados = await memoriaSemConta('')
     renderizarComDados('/app/comecar', { dados })
-    await screen.findByRole('heading', { level: 2, name: 'Seu nome' })
+    await screen.findByRole('heading', { level: 1, name: 'Começar' })
     const criarConta = vi.spyOn(dados, 'criarMinhaConta')
 
     fireEvent.change(campoDeTexto(), { target: { value: '   ' } })
@@ -144,7 +155,7 @@ describe('o passo "Seu nome"', () => {
     const dados = await memoriaSemConta()
     simularFalha(dados, 'criarMinhaConta', 'nome_vazio')
     renderizarComDados('/app/comecar', { dados })
-    await screen.findByRole('heading', { level: 2, name: 'Seu nome' })
+    await screen.findByRole('heading', { level: 1, name: 'Começar' })
     salvar()
 
     await waitFor(() => expect(campoDeTexto().getAttribute('aria-invalid')).toBe('true'))
@@ -157,7 +168,7 @@ describe('o passo "Seu nome"', () => {
     const dados = await memoriaSemConta()
     simularFalha(dados, 'criarMinhaConta', 'fuso_invalido')
     renderizarComDados('/app/comecar', { dados })
-    await screen.findByRole('heading', { level: 2, name: 'Seu nome' })
+    await screen.findByRole('heading', { level: 1, name: 'Começar' })
     salvar()
 
     await waitFor(() => expect(campoDeFuso().getAttribute('aria-invalid')).toBe('true'))
@@ -169,23 +180,26 @@ describe('o passo "Seu nome"', () => {
     const dados = await memoriaSemConta()
     simularFalha(dados, 'criarMinhaConta', 'parametro_obrigatorio')
     renderizarComDados('/app/comecar', { dados })
-    await screen.findByRole('heading', { level: 2, name: 'Seu nome' })
+    await screen.findByRole('heading', { level: 1, name: 'Começar' })
     salvar()
 
     expect((await screen.findByRole('alert')).textContent).toBe(TEXTOS_ERRO.parametro_obrigatorio)
     await waitFor(() => expect(document.activeElement).toBe(campoDeTexto()))
   })
 
-  it('traz o cabeçalho da conta, com Sair, e não monta a navegação inferior do protótipo', async () => {
+  it('o cabeçalho é o do site logado, sem "Sair" (ele é só da Conta), e não monta a navegação inferior do protótipo', async () => {
     const dados = await memoriaSemConta()
     renderizarComDados('/app/comecar', { dados })
-    await screen.findByRole('heading', { level: 2, name: 'Seu nome' })
+    await screen.findByRole('heading', { level: 1, name: 'Começar' })
 
-    expect(screen.getByRole('navigation', { name: 'Conta' })).toBeTruthy()
-    expect(screen.getByRole('link', { name: 'Ver o protótipo do Hoje' }).getAttribute('href')).toBe('/app/hoje')
-    expect(screen.getByRole('button', { name: 'Sair' })).toBeTruthy()
+    const cabecalho = within(document.querySelector('[data-cabecalho]') as HTMLElement)
+    expect(cabecalho.getByRole('link', { name: 'Hoje' }).getAttribute('href')).toBe('/app/hoje')
+    expect(cabecalho.getByRole('link', { name: 'Conta' }).getAttribute('href')).toBe('/app/conta')
+    expect(cabecalho.getByRole('button', { name: 'Modo madrugada' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Sair' })).toBeNull()
     expect(screen.queryByRole('navigation', { name: 'Principal' })).toBeNull()
-    expect(screen.getByRole('link', { name: 'Conta' }).hasAttribute('aria-current')).toBe(false)
+    // Um só cabeçalho (o do site): a tela não desenha o próprio.
+    expect(document.querySelectorAll('header')).toHaveLength(1)
   })
 })
 
@@ -227,7 +241,7 @@ describe('a lista de fusos (RF-14)', () => {
   it('o select mostra a lista inteira, e o do aparelho está nela', async () => {
     const dados = await memoriaSemConta()
     renderizarComDados('/app/comecar', { dados })
-    await screen.findByRole('heading', { level: 2, name: 'Seu nome' })
+    await screen.findByRole('heading', { level: 1, name: 'Começar' })
 
     const opcoes = [...campoDeFuso().options].map((opcao) => opcao.value)
     expect(opcoes).toEqual(listaDeFusos())

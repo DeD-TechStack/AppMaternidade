@@ -128,7 +128,8 @@ describe('as rotas do protótipo continuam fora do provedor e da guarda', () => 
     await screen.findByRole('heading', { level: 1, name: 'Conta' })
     expect(screen.getByText('Juliana · juliana@exemplo.invalid')).toBeTruthy()
 
-    fireEvent.click(screen.getByRole('link', { name: 'Ver o protótipo do Hoje' }))
+    // O link para o Hoje é o do cabeçalho do site logado (a tela não desenha mais o próprio cabeçalho).
+    fireEvent.click(document.querySelector<HTMLElement>('[data-cabecalho] a[href="/app/hoje"]')!)
     expect((await screen.findByRole('heading', { level: 1 })).textContent).toBe('Hoje')
     expect(document.title).toBe('Título de antes')
 

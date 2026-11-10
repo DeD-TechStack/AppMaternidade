@@ -129,7 +129,7 @@ describe('o destino depois de entrar (RF-10)', () => {
 
     await waitFor(() => expect(caminhoDe(roteador)).toBe('/app/comecar'))
     expect(roteador.state.location.search).toBe('?volta=%2Fapp%2Fhoje')
-    await screen.findByRole('heading', { level: 2, name: 'Seu nome' })
+    await screen.findByRole('heading', { level: 1, name: 'Começar' })
 
     fireEvent.click(botao('Salvar'))
     await waitFor(() => expect(caminhoDe(roteador)).toBe('/app/hoje'))
@@ -215,7 +215,7 @@ describe('a guarda das rotas logadas (RF-09)', () => {
     const dados = await memoriaComContaIncompleta()
     const { roteador } = renderizarComDados('/app/conta', { dados })
 
-    await screen.findByRole('heading', { level: 2, name: 'Seu nome' })
+    await screen.findByRole('heading', { level: 1, name: 'Começar' })
     expect(caminhoDe(roteador)).toBe('/app/comecar')
     expect(roteador.state.location.search).toBe('?volta=%2Fapp%2Fconta')
     expect(roteador.state.historyAction).toBe('REPLACE')
@@ -225,7 +225,7 @@ describe('a guarda das rotas logadas (RF-09)', () => {
     const dados = await memoriaComContaIncompleta()
     const { roteador } = renderizarComDados('/app/comecar', { dados })
 
-    await screen.findByRole('heading', { level: 2, name: 'Seu nome' })
+    await screen.findByRole('heading', { level: 1, name: 'Começar' })
     expect(caminhoDe(roteador)).toBe('/app/comecar')
     expect(roteador.state.location.search).toBe('')
   })
@@ -374,7 +374,7 @@ describe('/criar-conta', () => {
       await dados.entrar(EMAIL_NOVO, 'senha-nova')
       await roteador.navigate('/entrar')
     })
-    await screen.findByRole('heading', { level: 2, name: 'Seu nome' })
+    await screen.findByRole('heading', { level: 1, name: 'Começar' })
     expect(caminhoDe(roteador)).toBe('/app/comecar')
     expect(campo('Seu nome').value).toBe('Nova')
   })
@@ -385,7 +385,7 @@ describe('/criar-conta', () => {
     const { roteador } = renderizarComDados('/criar-conta', { dados })
     await preencher('Nova Pessoa')
 
-    await screen.findByRole('heading', { level: 2, name: 'Seu nome' })
+    await screen.findByRole('heading', { level: 1, name: 'Começar' })
     expect(caminhoDe(roteador)).toBe('/app/comecar')
     expect(campo('Seu nome').value).toBe('Nova Pessoa')
     expect(screen.queryByRole('alert')).toBeNull()
@@ -708,7 +708,7 @@ describe('/redefinir-senha', () => {
     const { roteador } = renderizarComDados('/redefinir-senha', { dados })
     await trocar('outra-senha')
 
-    await screen.findByRole('heading', { level: 2, name: 'Seu nome' })
+    await screen.findByRole('heading', { level: 1, name: 'Começar' })
     expect(caminhoDe(roteador)).toBe('/app/comecar')
     expect(status().textContent).toBe('Senha trocada.')
   })
@@ -727,12 +727,12 @@ describe('/conta-excluida', () => {
 })
 
 describe('sair (RF-11)', () => {
-  it('o botão Sair do cabeçalho encerra a sessão e leva a /entrar com "Você saiu da conta."', async () => {
+  it('o botão Sair da seção Sair encerra a sessão e leva a /entrar com "Você saiu da conta."', async () => {
     const { roteador, dados } = renderizarComDados('/app/conta', { sessao: 'juliana' })
     await screen.findByRole('heading', { level: 1, name: 'Conta' })
 
-    const cabecalho = within(screen.getByRole('navigation', { name: 'Conta' }))
-    fireEvent.click(cabecalho.getByRole('button', { name: 'Sair' }))
+    const secao = within(screen.getByRole('heading', { level: 2, name: 'Sair' }).closest('section') as HTMLElement)
+    fireEvent.click(secao.getByRole('button', { name: 'Sair' }))
 
     await screen.findByRole('heading', { level: 1, name: 'Entrar' })
     expect(caminhoDe(roteador)).toBe('/entrar')
@@ -744,7 +744,7 @@ describe('sair (RF-11)', () => {
   it('depois de sair, abrir uma rota logada leva a /entrar, sem repetir a mensagem de saída', async () => {
     const { roteador } = renderizarComDados('/app/conta', { sessao: 'juliana' })
     await screen.findByRole('heading', { level: 1, name: 'Conta' })
-    fireEvent.click(screen.getAllByRole('button', { name: 'Sair' })[0])
+    fireEvent.click(screen.getByRole('button', { name: 'Sair' }))
     await screen.findByRole('heading', { level: 1, name: 'Entrar' })
 
     await act(async () => {
@@ -761,7 +761,7 @@ describe('sair (RF-11)', () => {
     renderizarComDados('/app/conta', { sessao: 'juliana' })
     await screen.findByRole('heading', { level: 1, name: 'Conta' })
 
-    fireEvent.click(screen.getAllByRole('button', { name: 'Sair' })[1])
+    fireEvent.click(screen.getByRole('button', { name: 'Sair' }))
     await screen.findByRole('heading', { level: 1, name: 'Entrar' })
 
     expect(sessionStorage.getItem(CHAVE_RECUPERACAO)).toBeNull()
@@ -770,14 +770,15 @@ describe('sair (RF-11)', () => {
     apagarChave('sessao', CHAVE_CONVITE)
   })
 
-  it('se a saída falhar, a pessoa continua entrada: a frase num alerta abaixo do cabeçalho, com o foco, e "Tentar de novo"', async () => {
+  it('se a saída falhar, a pessoa continua entrada: a frase num alerta na seção Sair, com o foco, e "Tentar de novo"', async () => {
     const dados = novaMemoria()
     simularFalha(dados, 'sair', 'rede')
     const { roteador } = renderizarComDados('/app/conta', { dados, sessao: 'juliana' })
     await screen.findByRole('heading', { level: 1, name: 'Conta' })
 
-    fireEvent.click(screen.getAllByRole('button', { name: 'Sair' })[0])
+    fireEvent.click(screen.getByRole('button', { name: 'Sair' }))
     const alerta = await screen.findByRole('alert')
+    expect(screen.getByRole('heading', { level: 2, name: 'Sair' }).closest('section')!.contains(alerta)).toBe(true)
     expect(alerta.textContent).toContain(TEXTOS_ERRO.rede)
     await waitFor(() => expect(document.activeElement).toBe(alerta))
     expect(caminhoDe(roteador)).toBe('/app/conta')
@@ -867,7 +868,7 @@ describe('a saída que a pessoa não pediu (RF-11)', () => {
   it('a sessão que vence entre a leitura da sessão e a da conta, no passo "Seu nome", leva a /entrar', async () => {
     const dados = await memoriaComContaIncompleta()
     const { roteador } = renderizarComDados('/app/comecar', { dados })
-    await screen.findByRole('heading', { level: 2, name: 'Seu nome' })
+    await screen.findByRole('heading', { level: 1, name: 'Começar' })
 
     simularFalha(dados, 'criarMinhaConta', 'sessao_encerrada')
     fireEvent.click(botao('Salvar'))

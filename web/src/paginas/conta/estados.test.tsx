@@ -33,6 +33,9 @@ const novaMemoria = () => criarDadosContaMemoria(criarFixtureDeTeste(Date.now())
 const campo = (rotulo: string) => screen.getByLabelText(rotulo, { selector: 'input, select' }) as HTMLInputElement
 const digitar = (rotulo: string, texto: string) => fireEvent.change(campo(rotulo), { target: { value: texto } })
 const botao = (nome: string) => screen.getByRole('button', { name: nome }) as HTMLButtonElement
+// O botão de moldura dupla do sistema fica desativado com `aria-disabled="true"` (2.9), e não com `disabled`.
+const desativado = (elemento: HTMLElement) =>
+  (elemento as HTMLButtonElement).disabled || elemento.getAttribute('aria-disabled') === 'true'
 const caminhoDe = (roteador: { state: { location: { pathname: string } } }) => roteador.state.location.pathname
 
 function pendente<T>() {
@@ -101,7 +104,7 @@ describe('carregando', () => {
     expect(container.querySelector('form')).toBeNull()
 
     conta.liberar({ ok: true, valor: null })
-    await screen.findByRole('heading', { level: 2, name: 'Seu nome' })
+    await screen.findByRole('heading', { level: 1, name: 'Começar' })
   })
 
   it('/app/conta (conta e famílias): o texto da conta, depois o "Conferindo as suas famílias…"', async () => {
@@ -194,7 +197,7 @@ describe('enviando: o botão desativa, troca o rótulo e um segundo envio não c
     const dados = await memoriaSemConta()
     const conta = segurar<null>(dados, 'criarMinhaConta')
     renderizarComDados('/app/comecar', { dados })
-    await screen.findByRole('heading', { level: 2, name: 'Seu nome' })
+    await screen.findByRole('heading', { level: 1, name: 'Começar' })
 
     const formulario = botao('Salvar').closest('form')!
     fireEvent.submit(formulario)
@@ -229,12 +232,12 @@ describe('enviando: o botão desativa, troca o rótulo e um segundo envio não c
     await screen.findByRole('heading', { level: 1, name: 'Conta' })
 
     fireEvent.click(botao('Baixar meus dados'))
-    await waitFor(() => expect(botao('Preparando o arquivo…').disabled).toBe(true))
+    await waitFor(() => expect(desativado(botao('Preparando o arquivo…'))).toBe(true))
     fireEvent.click(botao('Preparando o arquivo…'))
     expect(exportar.espiao).toHaveBeenCalledTimes(1)
 
     exportar.liberar(falhaDeNegocio('desconhecido'))
-    await waitFor(() => expect(botao('Baixar meus dados').disabled).toBe(false))
+    await waitFor(() => expect(desativado(botao('Baixar meus dados'))).toBe(false))
   })
 
   it('/app/conta: excluir a conta ("Excluindo…")', async () => {
@@ -242,20 +245,20 @@ describe('enviando: o botão desativa, troca o rótulo e um segundo envio não c
     const excluir = segurar<null>(dados, 'excluirConta')
     renderizarComDados('/app/conta', { dados, sessao: 'davi' })
     await screen.findByRole('heading', { level: 1, name: 'Conta' })
-    await waitFor(() => expect(botao('Excluir minha conta').disabled).toBe(false))
+    await waitFor(() => expect(desativado(botao('Excluir minha conta'))).toBe(false))
     fireEvent.click(botao('Excluir minha conta'))
 
     const dialogo = within(screen.getByRole('dialog'))
     fireEvent.change(dialogo.getByLabelText('Senha atual', { selector: 'input' }), { target: { value: SENHA_DEMONSTRACAO } })
     const formulario = dialogo.getByRole('button', { name: 'Excluir conta' }).closest('form')!
     fireEvent.submit(formulario)
-    await waitFor(() => expect((dialogo.getByRole('button', { name: 'Excluindo…' }) as HTMLButtonElement).disabled).toBe(true))
-    expect((dialogo.getByRole('button', { name: 'Cancelar' }) as HTMLButtonElement).disabled).toBe(true)
+    await waitFor(() => expect(desativado(dialogo.getByRole('button', { name: 'Excluindo…' }))).toBe(true))
+    expect(desativado(dialogo.getByRole('button', { name: 'Cancelar' }))).toBe(true)
     fireEvent.submit(formulario)
     expect(excluir.espiao).toHaveBeenCalledTimes(1)
 
     excluir.liberar(falhaDeNegocio('ultimo_responsavel'))
-    await waitFor(() => expect((dialogo.getByRole('button', { name: 'Excluir conta' }) as HTMLButtonElement).disabled).toBe(false))
+    await waitFor(() => expect(desativado(dialogo.getByRole('button', { name: 'Excluir conta' }))).toBe(false))
   })
 })
 
@@ -310,7 +313,7 @@ describe('rede, "tente de novo" e desconhecido: a frase e "Tentar de novo", que 
       const dados = await memoriaSemConta()
       simularFalha(dados, 'criarMinhaConta', chave)
       const { roteador } = renderizarComDados('/app/comecar', { dados })
-      await screen.findByRole('heading', { level: 2, name: 'Seu nome' })
+      await screen.findByRole('heading', { level: 1, name: 'Começar' })
       fireEvent.click(botao('Salvar'))
 
       expect((await screen.findByRole('alert')).textContent).toContain(TEXTOS_ERRO[chave])
@@ -407,7 +410,7 @@ describe('um erro que o catálogo não conhece: a frase de "desconhecido", sem a
     const dados = await memoriaSemConta()
     simularFalha(dados, 'criarMinhaConta', novoErro())
     renderizarComDados('/app/comecar', { dados })
-    await screen.findByRole('heading', { level: 2, name: 'Seu nome' })
+    await screen.findByRole('heading', { level: 1, name: 'Começar' })
     fireEvent.click(botao('Salvar'))
 
     await conferirDesconhecido()
@@ -431,7 +434,7 @@ describe('rede numa escrita: a tela relê e confere o efeito pedido, e não dedu
     simularRespostaPerdida(dados, 'criarMinhaConta')
     const criar = vi.spyOn(dados, 'criarMinhaConta')
     const { roteador } = renderizarComDados('/app/comecar', { dados })
-    await screen.findByRole('heading', { level: 2, name: 'Seu nome' })
+    await screen.findByRole('heading', { level: 1, name: 'Começar' })
     fireEvent.click(botao('Salvar'))
 
     expect((await screen.findByRole('alert')).textContent).toContain(TEXTOS_ERRO.rede)
@@ -540,7 +543,7 @@ describe('rede numa escrita: a tela relê e confere o efeito pedido, e não dedu
     const excluir = vi.spyOn(dados, 'excluirConta')
     const { roteador } = renderizarComDados('/app/conta', { dados, sessao: 'davi' })
     await screen.findByRole('heading', { level: 1, name: 'Conta' })
-    await waitFor(() => expect(botao('Excluir minha conta').disabled).toBe(false))
+    await waitFor(() => expect(desativado(botao('Excluir minha conta'))).toBe(false))
     fireEvent.click(botao('Excluir minha conta'))
 
     const dialogo = within(screen.getByRole('dialog'))
@@ -564,7 +567,7 @@ describe('rede numa escrita: a tela relê e confere o efeito pedido, e não dedu
     simularFalha(dados, 'excluirConta', 'ultimo_responsavel')
     renderizarComDados('/app/conta', { dados, sessao: 'davi' })
     await screen.findByRole('heading', { level: 1, name: 'Conta' })
-    await waitFor(() => expect(botao('Excluir minha conta').disabled).toBe(false))
+    await waitFor(() => expect(desativado(botao('Excluir minha conta'))).toBe(false))
     fireEvent.click(botao('Excluir minha conta'))
 
     const dialogo = within(screen.getByRole('dialog'))
@@ -695,7 +698,7 @@ describe('erro do banco: a frase da linha do catálogo, no campo ou no topo', ()
     simularFalha(dados, 'criarMinhaConta', 'nome_vazio')
     simularFalha(dados, 'criarMinhaConta', 'fuso_invalido')
     renderizarComDados('/app/comecar', { dados })
-    await screen.findByRole('heading', { level: 2, name: 'Seu nome' })
+    await screen.findByRole('heading', { level: 1, name: 'Começar' })
 
     fireEvent.click(botao('Salvar'))
     await waitFor(() => expect(screen.getByText(TEXTOS_ERRO.nome_vazio)).toBeTruthy())
@@ -711,7 +714,7 @@ describe('erro do banco: a frase da linha do catálogo, no campo ou no topo', ()
     fireEvent.click(botao('Salvar'))
     await waitFor(() => expect(screen.getByText(TEXTOS_ERRO.nome_vazio)).toBeTruthy())
 
-    await waitFor(() => expect(botao('Excluir minha conta').disabled).toBe(false))
+    await waitFor(() => expect(desativado(botao('Excluir minha conta'))).toBe(false))
     fireEvent.click(botao('Excluir minha conta'))
     const dialogo = within(screen.getByRole('dialog'))
     fireEvent.change(dialogo.getByLabelText('Senha atual', { selector: 'input' }), { target: { value: 'errada' } })
@@ -748,7 +751,7 @@ describe('rede, "tente de novo" e desconhecido nas leituras e na saída', () => 
       fireEvent.click(botao('Tentar de novo'))
       await waitFor(() => expect(screen.getByRole('alert').textContent).toContain(TEXTOS_ERRO[chave]))
       fireEvent.click(botao('Tentar de novo'))
-      await screen.findByRole('heading', { level: 2, name: 'Seu nome' })
+      await screen.findByRole('heading', { level: 1, name: 'Começar' })
     })
 
     it(`/app/conta, ler a conta (${chave})`, async () => {
@@ -767,9 +770,9 @@ describe('rede, "tente de novo" e desconhecido nas leituras e na saída', () => 
       await screen.findByRole('heading', { level: 1, name: 'Conta' })
 
       expect((await screen.findByRole('alert')).textContent).toContain(TEXTOS_ERRO[chave])
-      expect(botao('Excluir minha conta').disabled).toBe(true)
+      expect(desativado(botao('Excluir minha conta'))).toBe(true)
       await tentarDeNovo()
-      await waitFor(() => expect(botao('Excluir minha conta').disabled).toBe(false))
+      await waitFor(() => expect(desativado(botao('Excluir minha conta'))).toBe(false))
     })
 
     it(`/app/conta, sair (${chave})`, async () => {
@@ -793,7 +796,7 @@ describe('criar a própria conta: conferência falsa', () => {
     simularFalha(dados, 'criarMinhaConta', 'rede')
     simularFalha(dados, 'criarMinhaConta', 'desconhecido')
     renderizarComDados('/app/comecar', { dados })
-    await screen.findByRole('heading', { level: 2, name: 'Seu nome' })
+    await screen.findByRole('heading', { level: 1, name: 'Começar' })
     fireEvent.click(botao('Salvar'))
 
     expect((await screen.findByRole('alert')).textContent).toContain(TEXTOS_ERRO.rede)

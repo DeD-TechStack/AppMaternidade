@@ -40,6 +40,8 @@ async function abrirConta(pessoa: keyof typeof PESSOAS = 'juliana', dados = nova
 }
 
 const botaoExcluir = () => screen.getByRole('button', { name: 'Excluir minha conta' }) as HTMLButtonElement
+// Desativado é `aria-disabled="true"` (2.9): o botão continua focável e mostra o motivo ao lado.
+const desativado = (elemento: HTMLElement) => elemento.getAttribute('aria-disabled') === 'true'
 
 /** Espera a leitura dos impedimentos terminar (o botão sai do "lendo"). */
 async function esperarALeitura() {
@@ -47,48 +49,68 @@ async function esperarALeitura() {
 }
 
 describe('estrutura da tela', () => {
-  it('h1, linha com o nome e o e-mail, cabeçalho da conta e seções na ordem', async () => {
+  it('h1, linha com o nome e o e-mail e as 6 seções na ordem', async () => {
     await abrirConta()
 
     expect(screen.getByText('Juliana · juliana@exemplo.invalid')).toBeTruthy()
     const secoes = screen.getAllByRole('heading', { level: 2 }).map((titulo) => titulo.textContent)
-    expect(secoes).toEqual(['Perfil', 'Id da sua conta', 'Seus dados', 'Excluir conta', 'Privacidade'])
-
-    const cabecalho = within(screen.getByRole('navigation', { name: 'Conta' }))
-    expect(cabecalho.getByRole('link', { name: 'Conta' }).getAttribute('aria-current')).toBe('page')
-    expect(cabecalho.getByRole('link', { name: 'Ver o protótipo do Hoje' }).getAttribute('href')).toBe('/app/hoje')
-    expect(cabecalho.getByRole('button', { name: 'Sair' })).toBeTruthy()
-    expect(screen.getAllByRole('button', { name: 'Sair' })).toHaveLength(2)
+    expect(secoes).toEqual(['Perfil', 'Id da sua conta', 'Seus dados', 'Privacidade', 'Sair', 'Excluir conta'])
+    // Os rótulos das linhas são h3: só o título da seção é h2.
+    expect(screen.getAllByRole('heading', { level: 3 }).map((rotulo) => rotulo.textContent)).toEqual([
+      'Número',
+      'Arquivo',
+      'Contato',
+      'Saída',
+      'O que acontece',
+    ])
     // Não monta a navegação inferior do protótipo.
     expect(screen.queryByRole('navigation', { name: 'Principal' })).toBeNull()
   })
 
-  it('o índice das seções leva às âncoras, cada link com alvo de 44 px', async () => {
+  it('"Sair" é só da Conta: um único botão, na seção Sair, e o cabeçalho do site não o tem', async () => {
+    await abrirConta()
+
+    const sair = screen.getAllByRole('button', { name: 'Sair' })
+    expect(sair).toHaveLength(1)
+    expect(sair[0].closest('section')!.querySelector('h2')!.textContent).toBe('Sair')
+    expect(within(document.querySelector('[data-cabecalho]') as HTMLElement).queryByRole('button', { name: 'Sair' })).toBeNull()
+    expect(within(document.querySelector('[data-cabecalho]') as HTMLElement).queryByRole('link', { name: 'Sair' })).toBeNull()
+  })
+
+  it('o índice das seções leva às 6 âncoras, cada link com alvo de 44 px e cada destino na tela', async () => {
     await abrirConta()
 
     const indice = within(screen.getByRole('navigation', { name: 'Nesta página' }))
     const links = indice.getAllByRole('link')
-    expect(links.map((link) => link.textContent)).toEqual(['Perfil', 'Id da conta', 'Seus dados', 'Excluir conta', 'Privacidade'])
-    expect(links.map((link) => link.getAttribute('href'))).toEqual(['#perfil', '#id-conta', '#exportar', '#excluir-conta', '#privacidade'])
+    expect(links.map((link) => link.textContent)).toEqual([
+      'Perfil',
+      'Id da conta',
+      'Seus dados',
+      'Privacidade',
+      'Sair',
+      'Excluir conta',
+    ])
+    expect(links.map((link) => link.getAttribute('href'))).toEqual([
+      '#perfil',
+      '#id-conta',
+      '#exportar',
+      '#privacidade',
+      '#sair',
+      '#excluir-conta',
+    ])
     for (const link of links) {
       expect(link.classList.contains('alvo-toque')).toBe(true)
       expect(document.querySelector(link.getAttribute('href')!)).not.toBeNull()
     }
   })
-})
 
-describe('cabeçalho da conta', () => {
-  it('a marca nunca encolhe e o cabeçalho em linha quebra a navegação para baixo quando não cabem', async () => {
+  it('cada título de seção é h2, tem tabindex -1 (recebe o foco do índice) e fica dentro de uma section nomeada por ele', async () => {
     await abrirConta()
 
-    const cabecalho = document.querySelector('header')!
-    const marca = cabecalho.querySelector('a.marca')!
-    const classes = cabecalho.classList
-    expect(marca.classList.contains('shrink-0')).toBe(true)
-    expect(classes.contains('min-[40rem]:flex-row')).toBe(true)
-    expect(classes.contains('min-[40rem]:flex-wrap')).toBe(true)
-    // A ordem do DOM é a visual: marca, depois a navegação.
-    expect([...cabecalho.children].map((filho) => filho.tagName)).toEqual(['A', 'NAV'])
+    for (const titulo of screen.getAllByRole('heading', { level: 2 })) {
+      expect(titulo.getAttribute('tabindex')).toBe('-1')
+      expect(titulo.closest('section')!.getAttribute('aria-labelledby')).toBe(titulo.id)
+    }
   })
 })
 
@@ -102,11 +124,22 @@ describe('perfil', () => {
     expect(campo('Seu fuso').value).toBe('America/Sao_Paulo')
   })
 
-  it('só o e-mail leva a marca de só leitura; o seletor de fuso, editável, não', async () => {
+  it('só o e-mail é só leitura; o nome e o seletor de fuso, editáveis, não', async () => {
     await abrirConta()
 
-    expect(campo('E-mail').className).toMatch(/read-only:/)
-    expect(campo('Seu fuso').className).not.toMatch(/read-only:/)
+    expect(campo('E-mail').readOnly).toBe(true)
+    expect(campo('Seu nome').readOnly).toBe(false)
+    expect(campo('Seu fuso').hasAttribute('readonly')).toBe(false)
+  })
+
+  it('os 3 campos são linhas de 112 px do sistema (sb-campo) e o seletor de fuso tem o mesmo controle', async () => {
+    await abrirConta()
+
+    for (const rotulo of ['Seu nome', 'E-mail', 'Seu fuso']) {
+      expect(campo(rotulo).closest('.sb-campo'), rotulo).not.toBeNull()
+      expect(campo(rotulo).classList.contains('sb-campo-entrada'), rotulo).toBe(true)
+    }
+    expect(campo('Seu fuso').closest('.sb-campo-controle')!.hasAttribute('data-select')).toBe(true)
   })
 
   it('salvar muda o nome e o fuso, mostra "Dados salvos." e atualiza a linha do alto', async () => {
@@ -322,12 +355,41 @@ describe('excluir conta: impedimentos', () => {
     await abrirConta('juliana')
     await esperarALeitura()
 
-    expect(botaoExcluir().disabled).toBe(true)
-    const explicacao = document.getElementById(botaoExcluir().getAttribute('aria-describedby')!)!
-    expect(explicacao.textContent).toContain('Você é a única pessoa responsável destas famílias.')
+    expect(desativado(botaoExcluir())).toBe(true)
+    expect(botaoExcluir().hasAttribute('disabled')).toBe(false)
+    // O motivo fica ao lado do botão e é o que o descreve; a lista das famílias vem logo acima dele.
+    const motivo = document.getElementById(botaoExcluir().getAttribute('aria-describedby')!)!
+    expect(motivo.textContent).toBe('Você é a única pessoa responsável destas famílias.')
+    expect(botaoExcluir().closest('.sb-botao-grupo')!.contains(motivo)).toBe(true)
+    const explicacao = document.getElementById('impedimento-exclusao')!
+    expect(explicacao.textContent).toContain('Antes de excluir a conta, torne outra pessoa responsável ou exclua a família:')
     expect(explicacao.textContent).toContain('Família Exemplo')
     expect([...explicacao.querySelectorAll('strong')].map((forte) => forte.textContent)).toEqual(['Família Exemplo'])
     expect(screen.getByText(/^Ao excluir a conta, ela e os seus vínculos com famílias somem/).textContent).toContain('“pessoa removida”')
+  })
+
+  it('o botão desativado de excluir é o preenchido do sistema (texto direto no botão), não o de moldura dupla; o ativado é de moldura dupla; clicar no desativado não abre a caixa', async () => {
+    await abrirConta('juliana')
+    await esperarALeitura()
+
+    expect(desativado(botaoExcluir())).toBe(true)
+    expect(botaoExcluir().getAttribute('data-botao')).toBe('primario')
+    expect(botaoExcluir().hasAttribute('data-moldura-dupla')).toBe(false)
+    expect(botaoExcluir().textContent).toBe('Excluir minha conta')
+    expect(document.querySelectorAll('[style*="dashed"]')).toHaveLength(0)
+    fireEvent.click(botaoExcluir())
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  it('com a conta livre para excluir, o botão é de moldura dupla e abre a caixa', async () => {
+    await abrirConta('davi')
+    await esperarALeitura()
+
+    expect(desativado(botaoExcluir())).toBe(false)
+    expect(botaoExcluir().hasAttribute('data-moldura-dupla')).toBe(true)
+    expect(botaoExcluir().hasAttribute('data-alto')).toBe(true)
+    fireEvent.click(botaoExcluir())
+    expect(screen.getByRole('dialog', { name: 'Excluir a sua conta?' })).toBeTruthy()
   })
 
   it('cada família em que ela é a única responsável entra na lista', async () => {
@@ -340,7 +402,7 @@ describe('excluir conta: impedimentos', () => {
     await screen.findByRole('heading', { level: 1, name: 'Conta' })
     await esperarALeitura()
 
-    const explicacao = document.getElementById(botaoExcluir().getAttribute('aria-describedby')!)!
+    const explicacao = document.getElementById('impedimento-exclusao')!
     expect([...explicacao.querySelectorAll('strong')].map((forte) => forte.textContent)).toEqual(['Solo'])
   })
 
@@ -352,16 +414,17 @@ describe('excluir conta: impedimentos', () => {
     await screen.findByRole('heading', { level: 1, name: 'Conta' })
     await esperarALeitura()
 
-    expect(botaoExcluir().disabled).toBe(false)
+    expect(desativado(botaoExcluir())).toBe(false)
     expect(botaoExcluir().hasAttribute('aria-describedby')).toBe(false)
     expect(document.getElementById('impedimento-exclusao')).toBeNull()
+    expect(botaoExcluir().closest('.sb-botao-grupo')).toBeNull()
   })
 
   it('quem não é responsável (Bruno) e quem não tem família (Davi) podem excluir', async () => {
     for (const pessoa of ['bruno', 'davi'] as const) {
       const { unmount } = await abrirConta(pessoa)
       await esperarALeitura()
-      expect(botaoExcluir().disabled, pessoa).toBe(false)
+      expect(desativado(botaoExcluir()), pessoa).toBe(false)
       unmount()
     }
   })
@@ -380,10 +443,12 @@ describe('excluir conta: impedimentos', () => {
 
     await waitFor(() => expect(typeof liberar).toBe('function'))
     expect(screen.getByText('Conferindo as suas famílias…')).toBeTruthy()
-    expect(botaoExcluir().disabled).toBe(true)
+    expect(desativado(botaoExcluir())).toBe(true)
+    // O motivo está ao lado do botão e o descreve.
+    expect(document.getElementById(botaoExcluir().getAttribute('aria-describedby')!)!.textContent).toBe('Conferindo as suas famílias…')
     liberar()
     await esperarALeitura()
-    expect(botaoExcluir().disabled).toBe(false)
+    expect(desativado(botaoExcluir())).toBe(false)
   })
 })
 
@@ -395,17 +460,19 @@ describe('excluir conta: falha na leitura dos impedimentos', () => {
 
     const alerta = await screen.findByRole('alert')
     expect(alerta.textContent).toContain(TEXTOS_ERRO.rede)
-    expect(botaoExcluir().disabled).toBe(true)
+    expect(desativado(botaoExcluir())).toBe(true)
+    expect(document.getElementById(botaoExcluir().getAttribute('aria-describedby')!)!.textContent).toBe('Não deu para conferir as suas famílias.')
     // Perfil, id, exportar e sair continuam funcionando.
-    expect((screen.getByRole('button', { name: 'Salvar' }) as HTMLButtonElement).disabled).toBe(false)
-    expect((screen.getByRole('button', { name: 'Copiar id' }) as HTMLButtonElement).disabled).toBe(false)
-    expect((screen.getByRole('button', { name: 'Baixar meus dados' }) as HTMLButtonElement).disabled).toBe(false)
-    expect(screen.getAllByRole('button', { name: 'Sair' })).toHaveLength(2)
+    for (const nome of ['Salvar', 'Copiar id', 'Baixar meus dados', 'Sair']) {
+      const botao = screen.getByRole('button', { name: nome }) as HTMLButtonElement
+      expect(botao.disabled, nome).toBe(false)
+      expect(desativado(botao), nome).toBe(false)
+    }
 
     fireEvent.click(within(alerta).getByRole('button', { name: 'Tentar de novo' }))
     await waitFor(() => expect(screen.queryByRole('alert')).toBeNull())
     await esperarALeitura()
-    expect(botaoExcluir().disabled).toBe(false)
+    expect(desativado(botaoExcluir())).toBe(false)
   })
 
   it('uma leitura parcial nunca conta como "sem impedimento": se o detalhe de uma família falhar, o botão segue desativado', async () => {
@@ -415,12 +482,12 @@ describe('excluir conta: falha na leitura dos impedimentos', () => {
 
     const alerta = await screen.findByRole('alert')
     expect(alerta.textContent).toContain(TEXTOS_ERRO.tente_de_novo)
-    expect(botaoExcluir().disabled).toBe(true)
+    expect(desativado(botaoExcluir())).toBe(true)
     expect(document.getElementById('impedimento-exclusao')).toBeNull()
 
     fireEvent.click(within(alerta).getByRole('button', { name: 'Tentar de novo' }))
     await waitFor(() => expect(document.getElementById('impedimento-exclusao')).not.toBeNull())
-    expect(botaoExcluir().disabled).toBe(true)
+    expect(desativado(botaoExcluir())).toBe(true)
     expect(document.getElementById('impedimento-exclusao')!.textContent).toContain('Família Exemplo')
   })
 })
@@ -656,7 +723,9 @@ describe('privacidade e sair', () => {
     const privacidade = document.querySelector('#privacidade')!.closest('section')!
     expect(privacidade.textContent).not.toMatch(/a definir|canal de contato/i)
     expect(document.body.textContent).not.toMatch(/a definir|canal de contato/i)
-    expect(screen.getByRole('link', { name: 'Política de privacidade' }).getAttribute('href')).toBe('/privacidade')
+    const politica = within(document.querySelector('main') as HTMLElement).getByRole('link', { name: 'Política de privacidade' })
+    expect(politica.getAttribute('href')).toBe('/privacidade')
+    expect(politica.hasAttribute('data-moldura-dupla')).toBe(true)
   })
 
   it('todo valor da conta sem ponto de quebra (e-mail da linha do alto, família do impedimento) quebra dentro da palavra', async () => {
@@ -670,10 +739,10 @@ describe('privacidade e sair', () => {
     expect(familia.classList.contains('wrap-anywhere')).toBe(true)
   })
 
-  it('o botão Sair do fim da página faz a mesma saída do cabeçalho', async () => {
+  it('o botão Sair da seção Sair encerra a sessão e leva a /entrar com "Você saiu da conta."', async () => {
     const { roteador } = await abrirConta()
 
-    fireEvent.click(screen.getAllByRole('button', { name: 'Sair' })[1])
+    fireEvent.click(screen.getByRole('button', { name: 'Sair' }))
     await screen.findByRole('heading', { level: 1, name: 'Entrar' })
     expect(caminhoDe(roteador)).toBe('/entrar')
     expect(status().textContent).toBe('Você saiu da conta.')
@@ -690,7 +759,7 @@ describe('privacidade e sair', () => {
     await screen.findByRole('heading', { level: 1, name: 'Conta' })
 
     // A saída é da pessoa; a leitura dos impedimentos, que ainda não voltou, chega depois dela.
-    fireEvent.click(screen.getAllByRole('button', { name: 'Sair' })[0])
+    fireEvent.click(screen.getByRole('button', { name: 'Sair' }))
     liberar({ ok: false, erro: erroDaChave('sessao_encerrada') })
     await screen.findByRole('heading', { level: 1, name: 'Entrar' })
     await new Promise((resolver) => setTimeout(resolver, 20))
