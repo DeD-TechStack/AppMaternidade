@@ -2752,3 +2752,279 @@
     }
   }
 }
+
+/* MAT-36: páginas públicas */
+/* As 9 páginas públicas (Como funciona, Cuidado compartilhado, Desenvolvimento e tummy time, Regras,
+   Privacidade, Termos, Exclusão de conta, Contato e Sobre). Classes `vp-*`. Só os espaços da escala
+   8, 16, 24, 32, 64, 96, 128, 160, 192, só `font-size` do conjunto do 2.2 e só raios 0, 4, 8 e 50%.
+   Em cada seletor o valor base (computador) vem primeiro e a faixa estreita o troca depois. */
+@layer components {
+  /* A caixa do texto de uma linha, de 768 para cima: começa em x de c4 + 32 e tem no máximo 560 px (a
+     medida do texto). O fio vertical continua em x de c4: é um pseudo-elemento 32 px à esquerda da
+     caixa, do topo dela até o fio horizontal de baixo (a caixa estica até lá, como na base). O resultado
+     é o da linha rótulo + texto da base, só que a caixa é a do texto e não a do texto com o recuo.
+     Abaixo de 768 vale a base (rótulo em cima, texto embaixo, sem fio vertical). */
+  @media (min-width: 768px) {
+    .vp-linha .sb-linha-texto {
+      position: relative;
+      max-width: 560px;
+      margin-left: 32px;
+      padding-left: 0;
+      border-left: 0;
+    }
+
+    .vp-linha .sb-linha-texto::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: -32px;
+      width: 1px;
+      background-color: var(--cor-fio-suave);
+    }
+  }
+
+  /* A coluna lateral da abertura: os avisos ficam a 8 px um do outro (sem isso dois avisos seguidos se
+     leem como um parágrafo só) e o texto não termina numa palavra solta. */
+  .vp-pagina .sb-abertura-lateral > li + li {
+    margin-top: 8px;
+  }
+
+  .vp-pagina .sb-abertura-lateral p {
+    text-wrap: pretty;
+  }
+
+  /* O texto de uma linha (c4–c8): os blocos (parágrafos, listas, grupos) ficam a 16 px um do outro. */
+  .vp-texto > .vp-bloco + .vp-bloco {
+    margin-top: 16px;
+  }
+
+  .vp-texto p,
+  .vp-texto h3 {
+    margin: 0;
+  }
+
+  .vp-texto p {
+    text-wrap: pretty;
+  }
+
+  .vp-texto h3 {
+    font-weight: 600;
+  }
+
+  /* Listas: marcador simples e recuo de 24 px, dentro dos 560 px do texto. */
+  .vp-lista {
+    margin: 0;
+    padding: 0 0 0 24px;
+  }
+
+  ul.vp-lista {
+    list-style: disc outside;
+  }
+
+  ol.vp-lista {
+    list-style: decimal outside;
+  }
+
+  .vp-lista > li + li {
+    margin-top: 8px;
+  }
+
+  /* O e-mail de contato: um endereço comprido quebra em vez de passar da coluna. */
+  .vp-email {
+    overflow-wrap: anywhere;
+  }
+
+  /* Link no meio de um parágrafo: o alvo de toque tem pelo menos 44 px de altura. O recuo vertical de
+     um elemento em linha não muda a altura da linha: só estende a área do link (a caixa do texto tem
+     1,2 em de altura). */
+  .vp-texto p a,
+  .vp-email {
+    padding-block: max(0px, calc((44px - 1.2em) / 2));
+  }
+
+  /* O `h1` de uma palavra comprida (Desenvolvimento, AppMaternidade) a 48 px não cabe na coluna de 343 px
+     do celular: quebra a palavra, com hífen quando o idioma (pt-BR) tem o dicionário. */
+  .vp-pagina h1 {
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+
+  /* O subtítulo mais longo ("Sem metas, sem comparação.", 26 caracteres) em 36 px passa dos 343 px da
+     coluna do celular e quebra. Abaixo de 768 ele usa o `rotulo` (32/38), que também está no conjunto. */
+  @media (max-width: 767px) {
+    .vp-subtitulo-longo .sb-abertura-subtitulo {
+      font-size: 2rem;
+      line-height: 2.375rem;
+    }
+  }
+
+  /* O parágrafo de apresentação: 40 rem (640 px) dão cerca de 57 caracteres por linha em 28 px. */
+  .vp-apresentacao {
+    max-width: 40rem;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  /* O que vem abaixo de uma linha, de c2 a c8 (uma tabela), a 32 px do fio da linha. */
+  .vp-depois {
+    padding-top: 32px;
+  }
+
+  /* A lista de links do índice e da navegação entre páginas: cada link tem o alvo de 44 px. */
+  .vp-links {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .vp-links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  .vp-links a[aria-current='page'] {
+    font-weight: 600;
+  }
+
+  /* A ilustração dentro da moldura de mídia: inteira e centrada, com folga dos quatro lados. */
+  .vp-ilustracao {
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 64px;
+  }
+
+  /* O texto curto do bloco do círculo CTA: centrado, a 24 px do título. */
+  .vp-cta-texto {
+    max-width: 560px;
+    margin: 24px auto 0;
+    text-wrap: pretty;
+  }
+
+  /* Tabela de leitura: só fios horizontais de 1 px, em `corpo-p`, de c2 a c8. */
+  .vp-tabela {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+  }
+
+  .vp-tabela-legenda {
+    padding: 0 0 16px;
+    text-align: left;
+  }
+
+  .vp-tabela th,
+  .vp-tabela td {
+    padding: 16px 16px 16px 0;
+    border-bottom: 1px solid var(--cor-fio-suave);
+    text-align: left;
+    vertical-align: baseline;
+  }
+
+  .vp-tabela-cabeca th {
+    border-top: 1px solid var(--cor-fio-suave);
+    font-weight: 600;
+  }
+
+  .vp-tabela th[scope='row'] {
+    font-weight: 600;
+  }
+
+  /* O nome da coluna repetido na célula só aparece quando a tabela se empilha. */
+  .vp-tabela-coluna {
+    display: none;
+  }
+
+  /* Os números de ajuda (188, 192, 180 e 100): Zilla Slab 700 (a família vem de `t-numero`), 48 px. */
+  .vp-tabela .vp-tabela-numero {
+    font-size: 3rem;
+    line-height: 3rem;
+  }
+
+  /* Abaixo de 768 cada linha da tabela é um bloco empilhado: o cabeçalho da linha em cima e, antes de
+     cada valor, o nome da coluna. A linha de cabeçalhos sai da vista e continua para o leitor de tela.
+     Sem rolagem horizontal. Com números em destaque, a linha é uma grade de duas colunas: o nome do canal
+     e o número lado a lado, o resto embaixo. */
+  @media (max-width: 767px) {
+    .vp-ilustracao {
+      padding: 24px;
+    }
+
+    .vp-tabela,
+    .vp-tabela tbody,
+    .vp-tabela tr,
+    .vp-tabela th,
+    .vp-tabela td {
+      display: block;
+    }
+
+    .vp-tabela-legenda {
+      display: block;
+    }
+
+    .vp-tabela-cabeca {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      padding: 0;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+    }
+
+    .vp-tabela tr {
+      padding: 16px 0;
+      border-bottom: 1px solid var(--cor-fio-suave);
+    }
+
+    .vp-tabela th,
+    .vp-tabela td {
+      padding: 0;
+      border: 0;
+    }
+
+    .vp-tabela td {
+      margin-top: 8px;
+    }
+
+    .vp-tabela-coluna {
+      display: block;
+      color: var(--cor-secundario);
+    }
+
+    .vp-tabela[data-com-numero] tbody tr {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: baseline;
+      column-gap: 16px;
+    }
+
+    .vp-tabela[data-com-numero] th[scope='row'] {
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    .vp-tabela[data-com-numero] td {
+      grid-column: 1 / -1;
+    }
+
+    .vp-tabela[data-com-numero] td[data-destaque='numero'] {
+      grid-column: 2;
+      grid-row: 1;
+      margin-top: 0;
+      text-align: right;
+    }
+
+    .vp-tabela[data-com-numero] td[data-destaque='numero'] .vp-tabela-coluna {
+      display: none;
+    }
+
+    .vp-tabela .vp-tabela-numero {
+      font-size: 2.25rem;
+      line-height: 2.25rem;
+    }
+  }
+}
