@@ -12,7 +12,7 @@ export function ExclusaoDeConta() {
       <LeituraEmLinhas
         secoes={EXCLUSAO}
         margem="sb-mt-fio-bloco"
-        entre={{ depoisDe: 2, bloco: <MidiaLarga peca={{ cena: 'colo', fundo: 'lavanda' }} margem="sb-mt-midia-linhas" /> }}
+        entre={{ depoisDe: 2, bloco: <MidiaLarga peca={{ cena: 'tapete', fundo: 'lavanda' }} margem="sb-mt-midia-linhas" /> }}
       />
       <PaginasDoSite />
     </main>
