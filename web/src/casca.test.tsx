@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router'
 import { Abertura } from './componentes/base/Abertura.tsx'
 import { Botao } from './componentes/base/Botao.tsx'
 import { Campo } from './componentes/base/Campo.tsx'
+import { FaixaNumeros } from './componentes/base/FaixaNumeros.tsx'
 import { Cabecalho } from './componentes/casca/Cabecalho.tsx'
 import { ROTULO_MADRUGADA, ROTULO_MADRUGADA_CURTO } from './componentes/casca/textos.ts'
 import { renderizarRota } from './teste/renderizarRota.tsx'
@@ -920,6 +921,40 @@ describe('rota /sistema', () => {
     for (const item of itens) {
       expect([...item.children].map((filho) => filho.className.split(' ')[0])).toEqual(['sb-numeros-valor', 'sb-numeros-legenda'])
     }
+  })
+
+  it('V1: a faixa vem logo depois da abertura como a primeira coisa do bloco (é o contexto que apaga o fio), e o componente não leva marca própria', async () => {
+    const { container } = renderizarRota('/sistema')
+    await screen.findByRole('heading', { level: 1 })
+
+    const abertura = container.querySelector('.sb-abertura')!
+    const faixa = container.querySelector<HTMLElement>('.sb-numeros')!
+    expect(abertura.nextElementSibling!.firstElementChild).toBe(faixa)
+    // A supressão do fio é do contexto (o seletor irmão em index.css): o componente é o mesmo de sempre.
+    expect(faixa.className).toBe('sb-numeros')
+    expect([...faixa.querySelectorAll('.sb-numeros-item')].every((item) => item.className === 'sb-numeros-item')).toBe(true)
+    expect([...faixa.attributes].map((atributo) => atributo.name).sort()).toEqual(['class', 'data-bloco'])
+  })
+
+  it('V1: a faixa fora de uma abertura é o mesmo componente, sem abertura antes dela (o fio do topo continua valendo)', () => {
+    const { container } = render(
+      <section>
+        <p>Antes dela, outro conteúdo.</p>
+        <FaixaNumeros
+          itens={[
+            { valor: '7', legenda: 'um' },
+            { valor: '2', legenda: 'dois' },
+            { valor: '0', legenda: 'zero' },
+          ]}
+        />
+      </section>,
+    )
+
+    const faixa = container.querySelector<HTMLElement>('.sb-numeros')!
+    expect(container.querySelector('.sb-abertura')).toBeNull()
+    expect(faixa.className).toBe('sb-numeros')
+    expect(faixa.matches('.sb-abertura + * > .sb-numeros:first-child')).toBe(false)
+    expect(faixa.closest('section')!.previousElementSibling).toBeNull()
   })
 
   it('toda mídia é uma moldura sem texto, com a descrição em aria-label', async () => {

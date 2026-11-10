@@ -2151,6 +2151,14 @@
     border-left: 1px solid var(--cor-fio-suave);
   }
 
+  /* V1: a faixa que vem logo depois da abertura não desenha o fio do topo: o fio da abertura, a 32 px
+     dele e sem conteúdo no meio, formaria um fio duplo. É o contexto que decide (a faixa que abre o
+     bloco irmão da abertura); a faixa em qualquer outro lugar mantém o fio. O fio some pela cor e
+     não pela largura, para o espaço entre a abertura e a faixa continuar o mesmo. */
+  .sb-abertura + * > .sb-numeros:first-child {
+    border-top-color: transparent;
+  }
+
   .sb-numeros-valor {
     margin: 0;
     white-space: nowrap;
@@ -2178,6 +2186,12 @@
     .sb-numeros-item + .sb-numeros-item {
       padding-left: 0;
       border-left: 0;
+    }
+
+    /* V1: depois da abertura o fio do topo do 1º item também some (o 2º e o 3º, com conteúdo entre o
+       fio e o item de cima, ficam com o fio). Pela cor, para a altura continuar a mesma. */
+    .sb-abertura + * > .sb-numeros:first-child > .sb-numeros-item:first-child {
+      border-top-color: transparent;
     }
   }
 

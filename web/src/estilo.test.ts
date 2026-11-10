@@ -834,6 +834,91 @@ describe('rodada 3: faixa de números, abertura e linhas (regras de CSS)', () =>
     })
   })
 
+  // Rodada de correção 2, parte 10 (V1): nenhum par de fios horizontais a menos de 48 px sem conteúdo
+  // entre eles. A faixa que vem logo depois da abertura não desenha o fio do topo (o da abertura
+  // fica). A supressão vale por contexto (o seletor irmão), não pela amostra: a faixa avulsa
+  // continua com o fio. O fio some pela cor, não pela largura, para o espaço não mudar.
+  describe('V1: a faixa logo depois da abertura não repete o fio da abertura', () => {
+    const apagaOFio = /border-top-color:\s*transparent/
+    const doDesktop = regras(base).filter((r) => apagaOFio.test(r.corpo) && /\.sb-numeros/.test(r.seletor))
+    const doCelular = regras(celular).filter((r) => apagaOFio.test(r.corpo) && /\.sb-numeros/.test(r.seletor))
+    const montar = (html: string) => {
+      const raiz = document.createElement('div')
+      raiz.innerHTML = html
+      return raiz
+    }
+    const FAIXA =
+      '<div class="sb-numeros"><div class="sb-numeros-item"></div><div class="sb-numeros-item"></div><div class="sb-numeros-item"></div></div>'
+    const ABERTURA = '<section class="sb-area sb-abertura"><div class="sb-abertura-base"></div></section>'
+    // Os contextos em que a faixa é a que vem logo depois da abertura, e os em que não é.
+    const DEPOIS_DA_ABERTURA = `${ABERTURA}<section class="sb-area">${FAIXA}</section>`
+    const AVULSA = `<section class="sb-area">${FAIXA}</section>`
+    const AVULSA_NA_RAIZ = FAIXA
+    const NAO_E_A_PRIMEIRA = `${ABERTURA}<section class="sb-area"><p>Texto antes.</p>${FAIXA}</section>`
+    const MAIS_ADIANTE = `${ABERTURA}<section class="sb-area"><p>Outro bloco.</p></section><section class="sb-area">${FAIXA}</section>`
+    const DEPOIS_DE_OUTRA_COISA = `<section class="sb-area"><p>Não é abertura.</p></section><section class="sb-area">${FAIXA}</section>`
+
+    it('de 768 para cima: uma regra apaga o fio do topo da faixa, só depois de uma abertura', () => {
+      expect(doDesktop, 'regras que apagam o fio da faixa de 768 para cima').toHaveLength(1)
+      expect(doDesktop[0].seletor).toMatch(/^\.sb-abertura \+ /)
+      expect(doDesktop[0].seletor).toMatch(/\.sb-numeros(:first-child)?$/)
+    })
+
+    it('de 768 para cima: o seletor casa a faixa que abre o bloco logo depois da abertura e nenhuma outra', () => {
+      const seletor = doDesktop[0].seletor
+      const alvo = (html: string) => montar(html).querySelectorAll(seletor).length
+      expect(alvo(DEPOIS_DA_ABERTURA)).toBe(1)
+      expect(montar(DEPOIS_DA_ABERTURA).querySelector(seletor)?.classList.contains('sb-numeros')).toBe(true)
+      expect(alvo(AVULSA), 'faixa sozinha').toBe(0)
+      expect(alvo(AVULSA_NA_RAIZ), 'faixa direto na raiz').toBe(0)
+      expect(alvo(NAO_E_A_PRIMEIRA), 'faixa depois de outro conteúdo do bloco').toBe(0)
+      expect(alvo(MAIS_ADIANTE), 'faixa em outro bloco, mais adiante').toBe(0)
+      expect(alvo(DEPOIS_DE_OUTRA_COISA), 'faixa depois de um bloco que não é abertura').toBe(0)
+    })
+
+    it('a faixa avulsa continua com o fio do topo (a regra geral não foi tocada)', () => {
+      const geral = corpoBase('.sb-numeros')
+      expect(geral).toMatch(/border-top:\s*1px solid var\(--cor-fio-suave\)/)
+      expect(geral).not.toMatch(/transparent/)
+      expect(corpoCelular('.sb-numeros-item')).toMatch(/border-top:\s*1px solid var\(--cor-fio-suave\)/)
+      expect(corpoCelular('.sb-numeros-item')).not.toMatch(/transparent/)
+    })
+
+    it('abaixo de 768: só o 1º item da faixa logo depois da abertura perde o fio do topo; os itens 2 e 3 ficam com o fio', () => {
+      expect(doCelular, 'regras que apagam o fio do item abaixo de 768').toHaveLength(1)
+      const seletor = doCelular[0].seletor
+      expect(seletor).toMatch(/^\.sb-abertura \+ /)
+      expect(seletor).toMatch(/\.sb-numeros-item:first-child$/)
+      const raiz = montar(DEPOIS_DA_ABERTURA)
+      const itens = [...raiz.querySelectorAll('.sb-numeros-item')]
+      expect(raiz.querySelectorAll(seletor)).toHaveLength(1)
+      expect(raiz.querySelector(seletor)).toBe(itens[0])
+      expect(itens[1].matches(seletor)).toBe(false)
+      expect(itens[2].matches(seletor)).toBe(false)
+      for (const html of [AVULSA, AVULSA_NA_RAIZ, NAO_E_A_PRIMEIRA, MAIS_ADIANTE, DEPOIS_DE_OUTRA_COISA]) {
+        expect(montar(html).querySelectorAll(seletor), html.slice(0, 50)).toHaveLength(0)
+      }
+      // O item 2 e o 3 não ganham regra de fio por conta própria.
+      expect(corpoCelular('.sb-numeros-item + .sb-numeros-item')).not.toMatch(/border-top/)
+    })
+
+    it('o fio sai pela cor e não pela largura: a altura do bloco e o espaço até a abertura não mudam', () => {
+      for (const regra of [...doDesktop, ...doCelular]) {
+        expect(regra.corpo).not.toMatch(/border(-top)?(-width)?:\s*0/)
+        expect(regra.corpo).not.toMatch(/border-top:\s*none/)
+        expect(regra.corpo).not.toMatch(/border-top-style/)
+        expect(regra.corpo).not.toMatch(/(?:margin|padding)[a-z-]*:/)
+      }
+    })
+
+    it('vale nos dois temas: nenhuma regra da faixa depende do `data-tema`, e a madrugada não redefine o fio', () => {
+      const daFaixa = regras(semComentarios).filter((r) => /sb-numeros/.test(r.seletor))
+      expect(daFaixa.length).toBeGreaterThan(0)
+      for (const regra of daFaixa) expect(regra.seletor).not.toMatch(/data-tema/)
+      expect(temaCss).not.toMatch(/sb-numeros/)
+    })
+  })
+
   describe('D5: o fio da linha rótulo + texto termina no início de c9, como o do campo', () => {
     it('a grade interna da linha tem 7 colunas (c2 a c8), com o rótulo em c2–c3 e o texto em c4–c8 como antes', () => {
       expect(corpoBase('.sb-linha')).toMatch(/grid-template-columns:\s*repeat\(7,\s*minmax\(0,\s*1fr\)\)/)
