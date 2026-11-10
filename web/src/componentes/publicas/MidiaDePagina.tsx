@@ -11,7 +11,7 @@ type Cena = keyof typeof MIDIAS
 type Fundo = 'barro' | 'lavanda'
 
 /** Uma peça: a cena (uma das 5 ilustrações que já existem) e o fundo da moldura. */
-export interface Peca {
+interface Peca {
   cena: Cena
   fundo: Fundo
 }
@@ -25,7 +25,7 @@ const DESENHOS: Record<Cena, typeof IlustracaoMamada> = {
 }
 
 /** A moldura de mídia da base com uma ilustração decorativa dentro; a descrição vai no `aria-label`. */
-export function Quadro({ peca, formato }: { peca: Peca; formato: 'larga' | 'par' | 'retrato' }) {
+function Quadro({ peca, formato }: { peca: Peca; formato: 'larga' | 'par' }) {
   const Desenho = DESENHOS[peca.cena]
   return (
     <Midia formato={formato} fundo={peca.fundo} aria-label={MIDIAS[peca.cena]}>

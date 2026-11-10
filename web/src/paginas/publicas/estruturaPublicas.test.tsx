@@ -69,7 +69,7 @@ const G6 = ['/como-funciona', '/cuidado-compartilhado', '/desenvolvimento', '/so
 /** As peças de mídia esperadas em cada página: a cena (a ilustração), o fundo e o formato, na ordem. */
 const MIDIAS: Record<string, Array<[string, string, string]>> = {
   '/como-funciona': [
-    ['mamada', 'barro', 'larga'],
+    ['mamada', 'lavanda', 'larga'],
     ['berco', 'barro', 'par'],
     ['colo', 'lavanda', 'par'],
   ],
@@ -83,15 +83,15 @@ const MIDIAS: Record<string, Array<[string, string, string]>> = {
     ['colo', 'lavanda', 'par'],
     ['berco', 'barro', 'par'],
   ],
-  '/regras-da-comunidade': [['mamada', 'barro', 'larga']],
+  '/regras-da-comunidade': [['passeio', 'barro', 'larga']],
   '/privacidade': [['berco', 'lavanda', 'larga']],
   '/termos': [['passeio', 'barro', 'larga']],
   '/exclusao-de-conta': [['tapete', 'lavanda', 'larga']],
-  '/contato': [['mamada', 'barro', 'larga']],
+  '/contato': [['mamada', 'lavanda', 'larga']],
   '/sobre': [
-    ['passeio', 'barro', 'retrato'],
-    ['berco', 'barro', 'par'],
-    ['tapete', 'lavanda', 'par'],
+    ['passeio', 'barro', 'par'],
+    ['berco', 'lavanda', 'par'],
+    ['tapete', 'lavanda', 'larga'],
   ],
 }
 
@@ -324,28 +324,27 @@ describe('mídia das páginas', () => {
     }
   })
 
-  it('o Sobre abre com o parágrafo de apresentação ao lado do retrato (c8–c10), e a moldura vem depois do texto', async () => {
+  it('o Sobre abre com um par de mídias (barro e lavanda) e só depois o parágrafo de apresentação; a mídia larga vem mais abaixo', async () => {
     const container = await abrir('/sobre')
-    const [, bloco] = filhosDoMain(container)
+    const [, par, apresentacao] = filhosDoMain(container)
 
-    expect(bloco.hasAttribute('data-bloco')).toBe(true)
-    const paragrafo = bloco.querySelector('p[data-apresentacao]')!
-    const retrato = bloco.querySelector('[data-midia][data-formato="retrato"]')!
-    expect(paragrafo).not.toBeNull()
-    expect(retrato.getAttribute('data-fundo')).toBe('barro')
-    expect(paragrafo.compareDocumentPosition(retrato) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
-    expect(retrato.closest('.col-c8-c10')).not.toBeNull()
-    // O retrato é o único bloco de mídia sem formato largo ou par: as outras 3 páginas do G6 não o têm.
-    for (const caminho of ['/como-funciona', '/cuidado-compartilhado', '/desenvolvimento']) {
-      expect((await abrir(caminho)).querySelector('[data-formato="retrato"]'), caminho).toBeNull()
+    expect(par.hasAttribute('data-bloco')).toBe(true)
+    const molduras = [...par.querySelectorAll('[data-midia]')]
+    expect(molduras.map((m) => m.getAttribute('data-formato'))).toEqual(['par', 'par'])
+    expect(molduras.map((m) => m.getAttribute('data-fundo'))).toEqual(['barro', 'lavanda'])
+    expect(par.querySelector('p')).toBeNull()
+    expect(apresentacao.querySelector('p[data-apresentacao]')).not.toBeNull()
+    // Nenhuma página tem retrato (c8–c10): o formato saiu das páginas públicas.
+    for (const caminho of NOVAS) {
+      expect((await abrir(caminho)).querySelector('main [data-formato="retrato"]'), caminho).toBeNull()
     }
   })
 
-  it('o colo só aparece em moldura lavanda: o barro da cabeça do bebê some no fundo barro', async () => {
+  it('o colo, a mamada e o tapete só aparecem em moldura lavanda: o barro da cabeça do bebê (e da poltrona) some no fundo barro', async () => {
     for (const caminho of NOVAS) {
       const container = await abrir(caminho)
       for (const moldura of container.querySelectorAll('main [data-midia]')) {
-        if (moldura.querySelector('[data-ilustracao="colo"]')) {
+        if (moldura.querySelector('[data-ilustracao="colo"], [data-ilustracao="mamada"], [data-ilustracao="tapete"]')) {
           expect(moldura.getAttribute('data-fundo'), caminho).toBe('lavanda')
         }
       }
