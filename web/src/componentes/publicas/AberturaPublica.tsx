@@ -35,28 +35,37 @@ interface Props {
   antes?: ReactNode
   /** Itens da lateral depois do aviso de construção. */
   depois?: ReactNode
+  /**
+   * Leva o aviso de construção (TF-10)? Sim, em toda página que descreve função. A Página não encontrada
+   * não descreve nenhuma e passa `false`.
+   */
+  construcao?: boolean
 }
 
 /**
  * A abertura das páginas públicas: a da base, com a lateral em c9–c10. A lateral leva as etiquetas da
  * página (quando tem), o que ela pede antes do aviso de construção (TF-10), o aviso e o que vem depois.
+ * Sem nenhum desses itens não há lateral (nada de lista vazia).
  */
-export function AberturaPublica({ titulo, subtitulo, etiquetas, antes, depois }: Props) {
+export function AberturaPublica({ titulo, subtitulo, etiquetas, antes, depois, construcao = true }: Props) {
+  const temLateral = Boolean(etiquetas?.length) || Boolean(antes) || Boolean(depois) || construcao
   return (
     <Abertura
       titulo={titulo}
       subtitulo={subtitulo}
       lateral={
-        <>
-          {etiquetas?.map((etiqueta) => (
-            <li key={etiqueta} className="vp-etiqueta-item">
-              <Etiqueta>{etiqueta}</Etiqueta>
-            </li>
-          ))}
-          {antes}
-          <AvisoLateral aviso="construcao">{TF.construcao}</AvisoLateral>
-          {depois}
-        </>
+        temLateral ? (
+          <>
+            {etiquetas?.map((etiqueta) => (
+              <li key={etiqueta} className="vp-etiqueta-item">
+                <Etiqueta>{etiqueta}</Etiqueta>
+              </li>
+            ))}
+            {antes}
+            {construcao ? <AvisoLateral aviso="construcao">{TF.construcao}</AvisoLateral> : null}
+            {depois}
+          </>
+        ) : undefined
       }
     />
   )

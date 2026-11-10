@@ -92,6 +92,16 @@ export const SUBTITULOS = {
 } as const
 
 /**
+ * A Página não encontrada: o `h1`, a linha sob ele (uma linha só, como nas 9 páginas) e o link de volta.
+ * Quem aponta as páginas é a linha "Páginas do site", logo abaixo do link.
+ */
+export const NAO_ENCONTRADA = {
+  h1: 'Página não encontrada',
+  subtitulo: 'Este endereço não existe.',
+  voltar: 'Voltar ao início',
+} as const
+
+/**
  * As etiquetas da lateral da abertura (uma por item, antes do aviso de construção). Só palavras da
  * própria página: os papéis da família, os pontos de Desenvolvimento e os 4 pilares do site.
  */
@@ -112,7 +122,7 @@ export const TITULOS = {
   exclusao: tituloDaAba(H1.exclusao),
   contato: tituloDaAba(H1.contato),
   sobre: tituloDaAba('Sobre'),
-  naoEncontrada: tituloDaAba('Página não encontrada'),
+  naoEncontrada: tituloDaAba(NAO_ENCONTRADA.h1),
   hoje: tituloDaAba('Hoje'),
   sessao: tituloDaAba('Sessão'),
 } as const
