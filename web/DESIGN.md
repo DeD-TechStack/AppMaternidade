@@ -256,6 +256,34 @@ Três direções de composição foram montadas como telas estáticas para Iníc
 
 Vence a A, pela maior nota. O grupo de aparelhos sobrepostos mostra o produto logo na abertura; a legenda ao lado do campo e o bloco de linhas no papel mantêm a leitura clara nas duas larguras. A B perdeu em UX (campos vazios e rolagem horizontal em 390) e a C pesou com dois campos encostados. No Hoje e na Sessão a A põe o cartão "Em andamento" e o cronômetro num campo de cor de borda a borda no celular.
 
+### Área de conta (MAT-37)
+
+As telas de acesso (entrar, criar conta, recuperar acesso, nova senha, conta excluída) e as telas logadas da conta (Começar e Conta) são superfícies de configurar: formulário curto, validação clara e pouca decoração. Elas usam só os tokens e as classes desta base, sem token novo. Não herdam do Início o campo de cor de ponta a ponta, os aparelhos nem as ilustrações.
+
+Três direções foram montadas como telas estáticas para Entrar e Conta e pontuadas pelo award-bar (UI 40%, UX 30%, inovação 30%), em 390 e 1440:
+
+| Direção | UI | UX | Inovação | Total |
+|---|---|---|---|---|
+| A, Folha única: coluna estreita em toda largura; Conta em bloco de linhas, com o rótulo em caixa alta à esquerda | 7,3 | 7,8 | 6,4 | 7,18 |
+| B, Campo e papel: Entrar com um campo de lavanda ao lado do formulário; Conta com cabeçalho em campo de barro e seções em cartões | 6,8 | 6,9 | 7,0 | 6,89 |
+| C, Índice e régua: Entrar em duas colunas no desktop, com o título grande à esquerda e o formulário à direita; Conta com índice das seções à esquerda no desktop e seções separadas por régua de tinta | 7,6 | 7,7 | 7,0 | 7,45 |
+
+Vence a C, pela maior nota. O título em escala grande e a régua de tinta dão a hierarquia sem caixa nem cor, o índice deixa a Conta navegável no desktop e o formulário fica numa medida de leitura de cerca de 28 rem. No celular a C vira uma coluna só, e o índice sai. A A perdeu em inovação, com a coluna estreita solta em 1440. A B perdeu em UI, pelo campo de cor grande sem conteúdo e pelos cartões empilhados no celular.
+
+Depois do aceite visual da primeira versão (notas de 5,0 a 6,2 contra o mínimo de 8,0), a direção C ganhou estes ajustes, sem token novo e sem ícone:
+
+- **Uma grade só.** As telas públicas e as logadas usam o mesmo contêiner (até 90 rem, margem de 32 px) e, a partir de 60 rem, duas colunas iguais separadas por um fio vertical na tinta. A esquerda diz onde a pessoa está (título, frase, links, painel ou índice); a direita é a ação (formulário ou seções) e vai até a borda da régua do cabeçalho.
+- **Título na escala de exibição.** O `h1` usa o token `display` (até 4,5 rem, peso 800, entrelinha 1) nas telas de acesso, em Começar e em Conta. O título que recebe foco por programa não desenha contorno; o contorno de foco continua em todo controle.
+- **Painel de apoio.** Nas telas de acesso e em Começar, a coluna da esquerda fecha com um campo de barro, com a tinta por cima, e linhas de rótulo serifado e texto, separadas por régua. Cada tela tem o seu painel (Entrar: o que se vê ao entrar, com a miniatura do Hoje dentro do aparelho inerte da base; Criar conta: o que a conta guarda; Recuperar: como funciona o link; Começar: o que vem depois). Sem ilustração nova, sem link, fora da ordem do Tab; abaixo de 60 rem ele vem empilhado depois do formulário.
+- **Campos com identidade.** Rótulo em caixa alta (`label`), fio de base de 2 px e, no campo de senha, um botão compacto só com um olho desenhado em CSS (riscado com a senha à mostra, com `aria-label` e `aria-pressed`) à direita, dentro da mesma faixa e separado por régua; o campo fica com cerca de 80% da faixa. No computador a coluna de ação mede até 27,5 rem e o botão principal tem a largura do conteúdo. O seletor de fuso mostra o nome do horário ("Horário de Brasília (São Paulo)") e a seta é feita em CSS.
+- **Erro e aviso.** O resumo de erro é uma caixa de 2 px na cor de destaque, com o texto na tinta. O aviso do banco de demonstração é uma caixa em papel fundo, e não texto na cor de informação.
+- **Conta.** "Excluir minha conta" é a ação perigosa (contorno e texto no destaque, preenchimento no hover) e a sua seção vem sozinha no fim, com régua de 2 px no destaque. O índice lateral é fixo enquanto a página rola e marca a seção atual com um traço de 3 px no destaque; a faixa observada é o terço de cima da janela, em pixels (a altura real, nunca percentual), e no fim da página vale a última seção. "Sair" tem seção própria, entre Privacidade e Excluir conta. O estado desabilitado da ação perigosa usa tinta sobre papel fundo com borda tracejada, sem opacidade, para manter o contraste AA nos dois temas.
+
+Alcance de duas regras gerais desta base na área de conta:
+
+- **"Toda confirmação tem Desfazer"** vale para os registros da rotina. Na área de conta, a ação irreversível (excluir conta, excluir família, remover acesso, sair da família, cancelar convite) pede confirmação antes, numa caixa de diálogo. A ação reversível (mudar o papel de outra pessoa, arquivar, editar) mostra a confirmação na região de status, com o controle inverso na mesma tela. A exceção é rebaixar o próprio papel: quem rebaixa perde os controles de responsável e não tem como desfazer sozinho, então a caixa "mudar papel" aberta na própria linha avisa disso antes do botão de confirmar.
+- **Os 56 px de altura na madrugada** valem para as ações de registro, como na base (`--alvo-rapido`). Na área de conta valem os mínimos gerais: 44 × 44 px em links e controles, 48 px nos botões e 56 px na ação principal de cada formulário, nos dois temas.
+
 ## Elevation & Depth
 
 Plano. Profundidade vem de linha, cor, espaço, sobreposição e escala, não de sombra. Nos campos do Início os aparelhos se sobrepõem e mudam de tamanho para dar a sensação de primeiro e segundo plano. Nenhum `box-shadow` com desfoque acima de 4 px, nenhum `backdrop-filter` e nenhum `filter: blur`. A barra fixa de baixo se separa do conteúdo por uma linha de tinta no topo e pelo fundo de papel opaco.
