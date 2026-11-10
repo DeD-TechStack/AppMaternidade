@@ -64,12 +64,12 @@ describe('contraste e limites dos tokens', () => {
     )
   })
 
-  it('o bloco @theme tem as 20 cores do DESIGN.md', () => {
+  it('o bloco @theme tem as 22 cores do DESIGN.md', () => {
     expect(Object.keys(cores).sort()).toEqual(
       [
-        'primary', 'neutral', 'accent', 'on-accent', 'info', 'line', 'focus', 'paper-deep',
+        'primary', 'neutral', 'accent', 'on-accent', 'secondary', 'info', 'line', 'focus', 'paper-deep',
         'field-1', 'field-2',
-        'night-primary', 'night-neutral', 'night-accent', 'night-on-accent', 'night-info',
+        'night-primary', 'night-neutral', 'night-accent', 'night-on-accent', 'night-secondary', 'night-info',
         'night-line', 'night-focus', 'night-paper-deep',
         'night-field-1', 'night-field-2',
       ].sort(),
@@ -85,6 +85,10 @@ describe('contraste e limites dos tokens', () => {
     ['night-on-accent', 'night-accent'],
     ['night-accent', 'night-neutral'],
     ['night-info', 'night-neutral'],
+    ['secondary', 'neutral'],
+    ['secondary', 'paper-deep'],
+    ['night-secondary', 'night-neutral'],
+    ['night-primary', 'night-paper-deep'],
     ['primary', 'field-1'],
     ['primary', 'field-2'],
     ['night-primary', 'night-field-1'],
@@ -210,14 +214,18 @@ describe('limites do CSS', () => {
     for (const px of deslocamentos) expect(px).toBeLessThanOrEqual(16)
   })
 
-  it('o corpo do texto fica entre 16 e 18 px', () => {
+  it('o corpo do texto é o `corpo` do sistema-base: 20/28 (17/24 abaixo de 768)', () => {
     const body = /(?:^|[\s}])body\s*\{([^}]*)\}/.exec(estiloGlobal)
     expect(body).not.toBeNull()
     const tamanho = /font-size:\s*(\d+(?:\.\d+)?)(rem|px)/.exec(body![1])
     expect(tamanho).not.toBeNull()
     const px = parseFloat(tamanho![1]) * (tamanho![2] === 'rem' ? 16 : 1)
-    expect(px).toBeGreaterThanOrEqual(16)
-    expect(px).toBeLessThanOrEqual(18)
+    expect(px).toBe(20)
+    expect(body![1]).toMatch(/line-height:\s*1\.75rem/)
+    const celular = /@media\s*\(max-width:\s*767px\)\s*\{\s*body\s*\{([^}]*)\}/.exec(estiloGlobal)
+    expect(celular).not.toBeNull()
+    expect(celular![1]).toMatch(/font-size:\s*1\.0625rem/)
+    expect(celular![1]).toMatch(/line-height:\s*1\.5rem/)
   })
 
   it('o body usa as variáveis de uso e a fonte de texto', () => {
@@ -245,6 +253,8 @@ describe('limites do CSS', () => {
       '@fontsource/instrument-sans/latin-400.css',
       '@fontsource/instrument-sans/latin-500.css',
       '@fontsource/instrument-sans/latin-600.css',
+      '@fontsource/instrument-serif/latin-400.css',
+      '@fontsource/zilla-slab/latin-700.css',
     ])
   })
 
@@ -517,6 +527,138 @@ describe('D7: legenda "Em breve"', () => {
     expect(corpo).toMatch(/text-align:\s*left/)
     expect(corpo).not.toMatch(/text-align:\s*center/)
     expect(corpo).toMatch(/border-bottom:\s*1px solid var\(--cor-linha\)/)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Sistema-base (MAT-44d): o contrato da seção 2, conferido no texto do CSS novo (classes t-, sb-,
+// grade- e col-). O que o navegador mede (G1 a G12) está em web/scripts/medir-dom.mjs.
+
+describe('sistema-base: tipo, forma e espaço do CSS novo', () => {
+  const novas = regras(semComentarios).filter((r) =>
+    r.seletor.split(/\s*,\s*/).some((s) => /^\.(t|sb|grade|col)-/.test(s)),
+  )
+  const valoresDe = (propriedade: string) =>
+    novas.flatMap((r) =>
+      [...r.corpo.matchAll(new RegExp(`(?:^|[;\\s])${propriedade}\\s*:\\s*([^;]+)`, 'g'))].map((m) => ({
+        seletor: r.seletor,
+        valor: m[1].trim(),
+      })),
+    )
+  const FONTES_PERMITIDAS = new Set([15, 17, 20, 24, 28, 32, 36, 48, 56, 72, 80, 88, 96, 112, 224])
+  const emPx = (valor: string): number | null => {
+    const m = /^(\d*\.?\d+)(rem|px)$/.exec(valor)
+    return m ? parseFloat(m[1]) * (m[2] === 'rem' ? 16 : 1) : null
+  }
+
+  it('encontra as regras novas', () => {
+    expect(novas.length).toBeGreaterThan(50)
+  })
+
+  it('nenhuma caixa alta e nenhum tracking diferente de 0', () => {
+    expect(valoresDe('text-transform')).toEqual([])
+    for (const { seletor, valor } of valoresDe('letter-spacing')) expect(valor, seletor).toBe('0')
+  })
+
+  it('todo font-size está no conjunto do item 2.2; só o nome do rodapé é fluido', () => {
+    const fora = valoresDe('font-size')
+      .filter(({ seletor, valor }) => !(seletor.includes('.sb-rodape-nome') && valor.startsWith('calc(100cqw')))
+      .filter(({ valor }) => !FONTES_PERMITIDAS.has(emPx(valor) ?? -1))
+    expect(fora).toEqual([])
+  })
+
+  it('a escala de tipo tem os 14 tokens, com o peso e a família do item 2.2', () => {
+    const corpo = (classe: string) => novas.find((r) => r.seletor === classe)!.corpo
+    const esperado: Array<[string, number, number, number]> = [
+      ['.t-display-xl', 96, 96, 600], ['.t-display-m', 72, 72, 400], ['.t-citacao', 48, 58, 400],
+      ['.t-secao', 56, 67, 400], ['.t-subtitulo', 48, 58, 400], ['.t-rotulo', 32, 38, 400],
+      ['.t-nav-grande', 88, 88, 400], ['.t-corpo-g', 28, 39, 400], ['.t-corpo', 20, 28, 400],
+      ['.t-corpo-p', 17, 24, 400], ['.t-ui', 15, 21, 400], ['.t-numero', 112, 90, 700],
+      ['.t-cronometro', 224, 180, 700], ['.t-botao', 24, 24, 600],
+    ]
+    for (const [classe, tamanho, entrelinha, peso] of esperado) {
+      const c = corpo(classe)
+      expect(emPx(/font-size:\s*([^;]+)/.exec(c)![1].trim()), classe).toBe(tamanho)
+      expect(Math.round(emPx(/line-height:\s*([^;]+)/.exec(c)![1].trim())!), classe).toBe(entrelinha)
+      expect(Number(/font-weight:\s*(\d+)/.exec(c)![1]), classe).toBe(peso)
+    }
+    expect(corpo('.t-numero')).toMatch(/font-variant-numeric:\s*tabular-nums/)
+  })
+
+  it('sem sombra, sem filtro de fundo e com raio só em 0, 4, 8 e 50%', () => {
+    expect(valoresDe('box-shadow')).toEqual([])
+    expect(valoresDe('backdrop-filter')).toEqual([])
+    for (const { seletor, valor } of valoresDe('border-radius')) expect(['0', '4px', '8px', '50%'], `${seletor}: ${valor}`).toContain(valor)
+  })
+
+  it('a grade é de 10 colunas iguais sem calha, e de 1 coluna abaixo de 768', () => {
+    expect(corposDe('.grade-10').join('')).toMatch(/grid-template-columns:\s*repeat\(10,\s*minmax\(0,\s*1fr\)\)/)
+    const celular = /@media\s*\(max-width:\s*767px\)\s*\{\s*\.grade-10\s*\{([^}]*)\}/.exec(semComentarios)
+    expect(celular![1]).toMatch(/grid-template-columns:\s*minmax\(0,\s*1fr\)/)
+    expect(corposDe('.grade-10').join('')).not.toMatch(/(?:^|[;\s])gap:/)
+    for (const [classe, colunas] of [
+      ['.col-c1-c10', '1 / 11'], ['.col-c2-c8', '2 / 9'], ['.col-c4-c8', '4 / 9'],
+      ['.col-c1-c8', '1 / 9'], ['.col-c9-c10', '9 / 11'], ['.col-c2-c3', '2 / 4'],
+    ] as const) {
+      expect(corposDe(classe).join(''), classe).toContain(`grid-column: ${colunas}`)
+    }
+  })
+
+  it('a margem é 32, 24 e 16 px e a área útil vai a 1600 (640 abaixo de 768)', () => {
+    const raiz = corposDe(':root').join('')
+    expect(raiz).toMatch(/--margem:\s*32px/)
+    expect(raiz).toMatch(/--area-util:\s*1600px/)
+    expect(semComentarios).toMatch(/@media\s*\(max-width:\s*991px\)\s*\{\s*:root\s*\{[^}]*--margem:\s*24px/)
+    expect(semComentarios).toMatch(/@media\s*\(max-width:\s*767px\)\s*\{\s*:root\s*\{[^}]*--margem:\s*16px[^}]*--area-util:\s*640px/)
+  })
+
+  it('o ritmo vertical (tabela 2.4) usa só valores da escala e os do celular', () => {
+    const permitidos = new Set([8, 16, 24, 32, 48, 64, 96, 128, 160, 192])
+    const blocos = [...semComentarios.matchAll(/:root\s*\{([^}]*)\}/g)].map((m) => m[1])
+    const medidas = blocos.flatMap((b) => [...b.matchAll(/--e-([a-z0-9-]+):\s*(\d+)px/g)])
+    expect(medidas.length).toBeGreaterThan(15)
+    for (const [, nome, valor] of medidas) {
+      if (nome === 'cabecalho') expect([60, 64]).toContain(Number(valor))
+      else expect(permitidos.has(Number(valor)), `--e-${nome}: ${valor}`).toBe(true)
+    }
+    const raiz = corposDe(':root').join('')
+    for (const [nome, valor] of [
+      ['cab-h1', 64], ['h1-sub', 8], ['fio-bloco', 32], ['midia-titulo', 128], ['par-numeros', 96],
+      ['numeros-midia', 128], ['midia-linhas', 160], ['linhas', 32], ['rodape', 192],
+    ] as const) {
+      expect(raiz, nome).toContain(`--e-${nome}: ${valor}px`)
+    }
+  })
+
+  it('o alvo de toque do cabeçalho, do menu e do rodapé vem de --alvo-toque (44 px; 56 na madrugada)', () => {
+    expect(temaCss).toMatch(/:root\s*\{[^}]*--alvo-toque:\s*44px/)
+    expect(temaCss).toMatch(/\[data-tema-local=['"]madrugada['"]\][^{]*\{[^}]*--alvo-toque:\s*56px/)
+    for (const seletor of ['.sb-cab-link', '.sb-submenu-gatilho', '.sb-cab-nome', '.sb-rodape-link', '.sb-menu-link']) {
+      const corpo = regras(semComentarios).find((r) => r.seletor.split(/\s*,\s*/).includes(seletor))!.corpo
+      expect(corpo, seletor).toMatch(/min-height:\s*(var\(--alvo-toque\)|64px)/)
+    }
+    expect(corposDe('.sb-campo-olho').join('')).toMatch(/width:\s*44px[\s\S]*height:\s*var\(--alvo-toque\)/)
+  })
+
+  it('o cabeçalho é fixo no topo, opaco e sem fio embaixo; o rodapé é de borda a borda', () => {
+    const cabecalho = corposDe('.sb-cabecalho').join('')
+    expect(cabecalho).toMatch(/position:\s*sticky/)
+    expect(cabecalho).toMatch(/top:\s*0/)
+    expect(cabecalho).toMatch(/background-color:\s*var\(--cor-fundo\)/)
+    expect(cabecalho).not.toMatch(/border/)
+    const rodape = corposDe('.sb-rodape').join('')
+    expect(rodape).toMatch(/background-color:\s*var\(--cor-rodape\)/)
+    expect(rodape).not.toMatch(/(max-)?width:/)
+  })
+
+  it('o foco do h1 com tabIndex=-1 não mostra contorno, e o resto usa o anel de 2 px', () => {
+    expect(regras(semComentarios).some((r) => r.seletor === 'h1:focus' && /outline:\s*none/.test(r.corpo))).toBe(true)
+  })
+
+  it('o fio de campo na madrugada é sólido (cor do texto) e os outros fios usam --cor-fio-suave', () => {
+    expect(corposDe('.sb-campo-controle').join('')).toMatch(/border-bottom:\s*1px solid var\(--cor-texto\)/)
+    expect(corposDe('.sb-fio-h').join('')).toMatch(/background-color:\s*var\(--cor-fio-suave\)/)
+    expect(temaCss).toMatch(/--cor-fio-suave:\s*color-mix\(in srgb,\s*var\(--color-night-line\)\s*20%,\s*transparent\)/)
   })
 })
 

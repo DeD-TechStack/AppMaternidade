@@ -26,6 +26,21 @@
   --fonte-texto: 'Instrument Sans', system-ui, sans-serif;
 
   --alvo-rapido: 48px;
+
+  /* Sistema-base (MAT-44d): cores de uso do cabeçalho, do rodapé, dos fios e do texto de apoio. */
+  --cor-secundario: var(--color-secondary);
+  --cor-rodape: var(--color-accent);
+  --cor-sobre-rodape: var(--color-on-accent);
+  --cor-fio-suave: var(--color-line);
+
+  /* Famílias do sistema-base, uma por papel (o tipo está em index.css, nas classes .t-*). */
+  --fonte-sb-titulo: 'Fraunces', Georgia, serif;
+  --fonte-sb-serifa: 'Instrument Serif', Georgia, serif;
+  --fonte-sb-corpo: 'Instrument Sans', system-ui, sans-serif;
+  --fonte-sb-slab: 'Zilla Slab', Georgia, serif;
+
+  /* Alvo de toque: 44 px; na madrugada, 56 px de altura. */
+  --alvo-toque: 44px;
 }
 
 /* A madrugada vale para a página inteira (data-tema no html) ou só para um invólucro local, como
@@ -52,4 +67,12 @@
   --cor-texto-botao-campo: var(--color-night-on-accent);
 
   --alvo-rapido: 56px;
+
+  --cor-secundario: var(--color-night-secondary);
+  --cor-rodape: var(--color-night-paper-deep);
+  --cor-sobre-rodape: var(--color-night-primary);
+  /* Na madrugada os fios são a tinta a 20%: só servem de divisor. */
+  --cor-fio-suave: color-mix(in srgb, var(--color-night-line) 20%, transparent);
+
+  --alvo-toque: 56px;
 }

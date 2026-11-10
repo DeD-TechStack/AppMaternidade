@@ -7,6 +7,8 @@
 @import '@fontsource/instrument-sans/latin-400.css';
 @import '@fontsource/instrument-sans/latin-500.css';
 @import '@fontsource/instrument-sans/latin-600.css';
+@import '@fontsource/instrument-serif/latin-400.css';
+@import '@fontsource/zilla-slab/latin-700.css';
 
 @layer base {
   /* Toda borda usa a tinta do tema; as linhas de 1 px são a estrutura (DESIGN.md, Layout). */
@@ -28,9 +30,23 @@
     background-color: var(--cor-fundo);
     color: var(--cor-texto);
     font-family: var(--fonte-texto);
-    font-size: 1.0625rem;
+    /* `corpo` do sistema-base: 20/28 (17/24 abaixo de 768, mais adiante). */
+    font-size: 1.25rem;
     font-weight: 400;
-    line-height: 1.55;
+    line-height: 1.75rem;
+    letter-spacing: 0;
+  }
+
+  @media (max-width: 767px) {
+    body {
+      font-size: 1.0625rem;
+      line-height: 1.5rem;
+    }
+  }
+
+  /* O h1 recebe foco por programa (tabIndex=-1) e não mostra contorno. */
+  h1:focus {
+    outline: none;
   }
 
   a {
@@ -1006,6 +1022,1169 @@
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+/* =============================================================================================
+   Sistema-base (MAT-44d): grade, tipo, ritmo, fios, casca (cabeçalho, menu, rodapé) e peças.
+   Os números vêm de web/DESIGN.md. As classes novas começam com `sb-`, `t-`, `grade-` e `col-`,
+   para não esbarrar nas classes antigas do Início, do Hoje e da Sessão. Em cada seletor o valor
+   base vem primeiro (computador) e as faixas estreitas o trocam depois; nenhum seletor volta ao
+   valor base depois de uma faixa.
+   ============================================================================================= */
+@layer components {
+  /* Grade e ritmo vertical ---------------------------------------------------------------- */
+  :root {
+    --margem: 32px;
+    --area-util: 1600px;
+    --gap-galeria: 32px;
+    --e-cabecalho: 64px;
+    --e-cab-h1: 64px;
+    --e-h1-sub: 8px;
+    --e-fio-bloco: 32px;
+    --e-midia-titulo: 128px;
+    --e-par-numeros: 96px;
+    --e-numeros-midia: 128px;
+    --e-midia-linhas: 160px;
+    --e-linhas: 32px;
+    --e-rodape: 192px;
+    /* Os links-âncora não deixam o título da seção sob o cabeçalho fixo. */
+    scroll-padding-top: var(--e-cabecalho);
+  }
+
+  @media (max-width: 991px) {
+    :root {
+      --margem: 24px;
+      --gap-galeria: 16px;
+    }
+  }
+
+  @media (max-width: 767px) {
+    :root {
+      --margem: 16px;
+      --area-util: 640px;
+      --gap-galeria: 8px;
+      --e-cabecalho: 60px;
+      --e-cab-h1: 32px;
+      --e-fio-bloco: 16px;
+      --e-midia-titulo: 48px;
+      --e-par-numeros: 48px;
+      --e-numeros-midia: 48px;
+      --e-midia-linhas: 48px;
+      --e-linhas: 48px;
+    }
+  }
+
+  /* A área útil: margem fixa dos dois lados e largura máxima (--area-util: 1600, 640 abaixo de
+     768). Todo filho direto de <main> é uma. */
+  .sb-area {
+    width: min(100% - 2 * var(--margem), var(--area-util));
+    margin-inline: auto;
+  }
+
+  .grade-10 {
+    display: grid;
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+  }
+
+  .col-c1-c10 {
+    grid-column: 1 / 11;
+  }
+
+  .col-c1-c8 {
+    grid-column: 1 / 9;
+  }
+
+  .col-c1-c6 {
+    grid-column: 1 / 7;
+  }
+
+  .col-c2-c3 {
+    grid-column: 2 / 4;
+  }
+
+  .col-c2-c8 {
+    grid-column: 2 / 9;
+  }
+
+  .col-c2-c9 {
+    grid-column: 2 / 10;
+  }
+
+  .col-c4-c8 {
+    grid-column: 4 / 9;
+  }
+
+  .col-c8-c10 {
+    grid-column: 8 / 11;
+  }
+
+  .col-c9-c10 {
+    grid-column: 9 / 11;
+  }
+
+  @media (max-width: 767px) {
+    .grade-10 {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .col-c1-c10,
+    .col-c1-c8,
+    .col-c1-c6,
+    .col-c2-c3,
+    .col-c2-c8,
+    .col-c2-c9,
+    .col-c4-c8,
+    .col-c8-c10,
+    .col-c9-c10 {
+      grid-column: 1 / -1;
+    }
+  }
+
+  /* Espaços entre blocos (tabela 2.4): só valores da escala 8, 16, 24, 32, 64, 96, 128, 160, 192. */
+  .sb-mt-fio-bloco {
+    margin-top: var(--e-fio-bloco);
+  }
+
+  .sb-mt-midia-titulo {
+    margin-top: var(--e-midia-titulo);
+  }
+
+  .sb-mt-par-numeros {
+    margin-top: var(--e-par-numeros);
+  }
+
+  .sb-mt-numeros-midia {
+    margin-top: var(--e-numeros-midia);
+  }
+
+  .sb-mt-midia-linhas {
+    margin-top: var(--e-midia-linhas);
+  }
+
+  .sb-mt-64 {
+    margin-top: 64px;
+  }
+
+  /* Escala de tipo (tabela 2.2). Tracking 0 e nenhuma caixa alta, em tudo. -------------------- */
+  .t-display-xl {
+    font-family: var(--fonte-sb-titulo);
+    font-size: 6rem;
+    line-height: 6rem;
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+
+  .t-display-m {
+    font-family: var(--fonte-sb-titulo);
+    font-size: 4.5rem;
+    line-height: 4.5rem;
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  .t-citacao {
+    font-family: var(--fonte-sb-titulo);
+    font-size: 3rem;
+    line-height: 3.625rem;
+    font-weight: 400;
+    font-style: italic;
+    letter-spacing: 0;
+  }
+
+  .t-secao {
+    font-family: var(--fonte-sb-serifa);
+    font-size: 3.5rem;
+    line-height: 4.1875rem;
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  .t-subtitulo {
+    font-family: var(--fonte-sb-serifa);
+    font-size: 3rem;
+    line-height: 3.625rem;
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  .t-rotulo {
+    font-family: var(--fonte-sb-serifa);
+    font-size: 2rem;
+    line-height: 2.375rem;
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  .t-nav-grande {
+    font-family: var(--fonte-sb-serifa);
+    font-size: 5.5rem;
+    line-height: 5.5rem;
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  .t-corpo-g {
+    font-family: var(--fonte-sb-corpo);
+    font-size: 1.75rem;
+    line-height: 2.4375rem;
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  .t-corpo {
+    font-family: var(--fonte-sb-corpo);
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  .t-corpo-p {
+    font-family: var(--fonte-sb-corpo);
+    font-size: 1.0625rem;
+    line-height: 1.5rem;
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  .t-ui {
+    font-family: var(--fonte-sb-corpo);
+    font-size: 0.9375rem;
+    line-height: 1.3125rem;
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  .t-numero {
+    font-family: var(--fonte-sb-slab);
+    font-size: 7rem;
+    line-height: 5.625rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .t-cronometro {
+    font-family: var(--fonte-sb-slab);
+    font-size: 14rem;
+    line-height: 11.25rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .t-botao {
+    font-family: var(--fonte-sb-titulo);
+    font-size: 1.5rem;
+    line-height: 1.5rem;
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+
+  @media (max-width: 991px) {
+    .t-display-xl {
+      font-size: 5rem;
+      line-height: 5rem;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .t-display-xl {
+      font-size: 3rem;
+      line-height: 3rem;
+    }
+
+    .t-display-m {
+      font-size: 3rem;
+      line-height: 3rem;
+    }
+
+    .t-citacao {
+      font-size: 2rem;
+      line-height: 2.375rem;
+    }
+
+    .t-secao,
+    .t-subtitulo {
+      font-size: 2.25rem;
+      line-height: 2.6875rem;
+    }
+
+    .t-rotulo {
+      font-size: 1.5rem;
+      line-height: 1.8125rem;
+    }
+
+    .t-nav-grande {
+      font-size: 3.5rem;
+      line-height: 3.5rem;
+    }
+
+    .t-corpo-g {
+      font-size: 1.25rem;
+      line-height: 1.75rem;
+    }
+
+    .t-corpo {
+      font-size: 1.0625rem;
+      line-height: 1.5rem;
+    }
+
+    .t-cronometro {
+      font-size: 6rem;
+      line-height: 4.8125rem;
+    }
+  }
+
+  .t-secundario {
+    color: var(--cor-secundario);
+  }
+
+  /* Fios de 1 px (tabela 2.5). Sem fio sob o cabeçalho, sem moldura de página. --------------- */
+  .sb-fio-h {
+    height: 1px;
+    background-color: var(--cor-fio-suave);
+  }
+
+  /* Cabeçalho e menu (2.6) ------------------------------------------------------------------ */
+  .sb-cabecalho {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    height: var(--e-cabecalho);
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto);
+  }
+
+  .sb-cab-miolo {
+    display: grid;
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    align-items: center;
+    height: 100%;
+  }
+
+  .sb-cab-nome {
+    grid-column: 1 / 3;
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--alvo-toque);
+    color: inherit;
+    text-decoration: none;
+    font-family: var(--fonte-sb-titulo);
+    font-size: 1.5rem;
+    line-height: 1.5rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    white-space: nowrap;
+  }
+
+  .sb-cab-links {
+    grid-column: 3 / 9;
+    justify-self: end;
+    display: flex;
+    align-items: center;
+    gap: 48px;
+  }
+
+  .sb-cab-acao {
+    grid-column: 9 / 11;
+    justify-self: end;
+  }
+
+  .sb-cab-menu {
+    display: none;
+  }
+
+  .sb-cab-link,
+  .sb-submenu-gatilho {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: var(--alvo-toque);
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .sb-cab-link:hover,
+  .sb-submenu-gatilho:hover,
+  .sb-cab-link[aria-current='page'] {
+    text-decoration: underline;
+    text-underline-offset: 6px;
+  }
+
+  @media (max-width: 991px) {
+    .sb-cab-miolo {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .sb-cab-links {
+      gap: 32px;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .sb-cab-miolo {
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr) auto;
+      gap: 8px;
+    }
+
+    .sb-cab-menu {
+      grid-column: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: var(--alvo-toque);
+      padding: 0;
+      border: 0;
+      background: none;
+      color: inherit;
+      cursor: pointer;
+    }
+
+    .sb-cab-nome {
+      grid-column: 2;
+      justify-self: center;
+      font-size: 1.25rem;
+      line-height: 1.25rem;
+    }
+
+    .sb-cab-links {
+      display: none;
+    }
+
+    .sb-cab-acao {
+      grid-column: 3;
+    }
+  }
+
+  /* O ícone do menu: três barras de 2 px (sem imagem). Aberto, viram um X. */
+  .sb-menu-icone {
+    position: relative;
+    display: block;
+    width: 24px;
+    height: 16px;
+  }
+
+  .sb-menu-icone > span {
+    position: absolute;
+    left: 0;
+    display: block;
+    width: 24px;
+    height: 2px;
+    background-color: currentColor;
+  }
+
+  .sb-menu-icone > span:nth-child(1) {
+    top: 0;
+  }
+
+  .sb-menu-icone > span:nth-child(2) {
+    top: 7px;
+  }
+
+  .sb-menu-icone > span:nth-child(3) {
+    top: 14px;
+  }
+
+  .sb-cab-menu[aria-expanded='true'] .sb-menu-icone > span:nth-child(1) {
+    top: 7px;
+    transform: rotate(45deg);
+  }
+
+  .sb-cab-menu[aria-expanded='true'] .sb-menu-icone > span:nth-child(2) {
+    display: none;
+  }
+
+  .sb-cab-menu[aria-expanded='true'] .sb-menu-icone > span:nth-child(3) {
+    top: 7px;
+    transform: rotate(-45deg);
+  }
+
+  /* Submenu "+ Em breve": painel de moldura dupla que abre na hora. */
+  .sb-submenu {
+    position: relative;
+    display: inline-flex;
+  }
+
+  .sb-submenu-painel {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    z-index: 50;
+    width: 224px;
+  }
+
+  .sb-submenu-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 12px 16px;
+    list-style: none;
+  }
+
+  .sb-submenu-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  /* Menu do celular: painel de papel abaixo do cabeçalho, de itens centrados. */
+  .sb-menu-celular {
+    display: none;
+  }
+
+  @media (max-width: 767px) {
+    .sb-menu-celular {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      left: 0;
+      height: calc(100dvh - var(--e-cabecalho));
+      overflow-y: auto;
+      background-color: var(--cor-fundo);
+      color: var(--cor-texto);
+    }
+
+    .sb-menu-celular:not([hidden]) {
+      display: block;
+    }
+  }
+
+  .sb-menu-grupo {
+    margin: 0;
+    padding: 16px 0;
+    list-style: none;
+    text-align: center;
+  }
+
+  .sb-menu-grupo + .sb-menu-grupo {
+    border-top: 1px solid var(--cor-fio-suave);
+  }
+
+  .sb-menu-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    min-height: 64px;
+  }
+
+  .sb-menu-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 64px;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .sb-menu-link[aria-current='page'] {
+    text-decoration: underline;
+    text-underline-offset: 8px;
+  }
+
+  /* Rodapé (2.7): de borda a borda, em urucum (na madrugada, o bloco escuro). ---------------- */
+  .sb-rodape {
+    margin-top: var(--e-rodape);
+    padding-block: 96px 32px;
+    background-color: var(--cor-rodape);
+    color: var(--cor-sobre-rodape);
+  }
+
+  .sb-rodape-area {
+    container-type: inline-size;
+  }
+
+  /* O fio do topo é interrompido pelo nome do site. */
+  .sb-rodape-topo {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .sb-rodape-topo::before,
+  .sb-rodape-topo::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background-color: currentColor;
+  }
+
+  /* O nome gigante: o tamanho segue a largura da área útil (1% dela = 1cqw), para o texto
+     ocupar de 96% a 100% dela. Abaixo de 768 quebra em duas linhas (cada trecho em um bloco). */
+  .sb-rodape-nome {
+    display: block;
+    margin: 96px 0 0;
+    font-family: var(--fonte-sb-titulo);
+    font-size: calc(100cqw * 0.12);
+    line-height: 1;
+    font-weight: 600;
+    letter-spacing: 0;
+    white-space: nowrap;
+  }
+
+  .sb-rodape-links {
+    margin-top: 160px;
+  }
+
+  .sb-rodape-colunas {
+    grid-column: 1 / 7;
+    display: grid;
+    grid-template-columns: repeat(3, 176px);
+  }
+
+  .sb-rodape-bloco {
+    grid-column: 7 / 11;
+  }
+
+  .sb-rodape-lista {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .sb-rodape-titulo {
+    margin: 0;
+  }
+
+  .sb-rodape-link {
+    display: flex;
+    align-items: center;
+    min-height: var(--alvo-toque);
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  .sb-rodape-final {
+    margin: 192px 0 0;
+  }
+
+  @media (max-width: 767px) {
+    .sb-rodape {
+      padding-block: 160px 64px;
+    }
+
+    .sb-rodape-nome {
+      margin-top: 128px;
+      font-size: calc(100cqw * 0.1585);
+    }
+
+    .sb-rodape-nome > span {
+      display: block;
+    }
+
+    .sb-rodape-links {
+      margin-top: 160px;
+    }
+
+    .sb-rodape-colunas {
+      grid-column: 1 / -1;
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: 20px;
+    }
+
+    .sb-rodape-bloco {
+      grid-column: 1 / -1;
+      margin-top: 20px;
+    }
+
+    .sb-rodape-final {
+      margin-top: 192px;
+    }
+  }
+
+  /* Etiqueta (2.9): ui 15, fundo da superfície, raio 4, padding 2/6, altura 26. -------------- */
+  .sb-etiqueta {
+    display: inline-flex;
+    align-items: center;
+    box-sizing: border-box;
+    height: 26px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background-color: var(--cor-papel-fundo);
+    color: var(--cor-texto);
+    white-space: nowrap;
+  }
+
+  /* Botões (2.9) ----------------------------------------------------------------------------- */
+  .sb-botao {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    height: 80px;
+    padding: 0 32px;
+    border: 0;
+    border-radius: 8px;
+    background-color: var(--cor-destaque);
+    color: var(--cor-sobre-destaque);
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .sb-botao:hover {
+    background-color: color-mix(in srgb, var(--cor-destaque) 85%, var(--cor-texto));
+  }
+
+  .sb-botao[aria-disabled='true'],
+  .sb-botao[aria-disabled='true']:hover {
+    background-color: var(--cor-secundario);
+    color: var(--cor-fundo);
+    cursor: not-allowed;
+  }
+
+  /* Moldura dupla: uma borda de 1 px de raio 8 por fora e, por dentro, um miolo de raio 4. */
+  .sb-moldura {
+    display: inline-flex;
+    box-sizing: border-box;
+    min-height: max(48px, var(--alvo-toque));
+    padding: 3px;
+    border: 1px solid var(--cor-texto);
+    border-radius: 8px;
+    background: none;
+    color: var(--cor-texto);
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .sb-moldura[data-alto] {
+    min-height: 64px;
+  }
+
+  .sb-moldura-miolo {
+    display: inline-flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    padding: 0 24px;
+    border: 1px solid var(--cor-texto);
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+
+  .sb-moldura:hover .sb-moldura-miolo {
+    background-color: var(--cor-texto);
+    color: var(--cor-fundo);
+  }
+
+  .sb-moldura[data-ligado] .sb-moldura-miolo {
+    background-color: var(--cor-papel-fundo);
+  }
+
+  /* O quadro de moldura dupla que não é botão (o painel do submenu). */
+  .sb-quadro {
+    box-sizing: border-box;
+    padding: 3px;
+    border: 1px solid var(--cor-texto);
+    border-radius: 8px;
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto);
+  }
+
+  .sb-quadro-miolo {
+    border: 1px solid var(--cor-texto);
+    border-radius: 4px;
+  }
+
+  .sb-botao-grupo {
+    display: inline-flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  /* Abaixo de 768 o botão do cabeçalho é um botão preenchido de 44 px, sem moldura. */
+  @media (max-width: 767px) {
+    .sb-botao {
+      height: 64px;
+    }
+
+    .sb-cab-acao {
+      min-height: var(--alvo-toque);
+      padding: 0;
+      border-color: transparent;
+    }
+
+    .sb-cab-prefixo {
+      display: none;
+    }
+
+    .sb-cab-acao .sb-moldura-miolo {
+      padding: 0 12px;
+      border-color: transparent;
+      background-color: var(--cor-destaque);
+      color: var(--cor-sobre-destaque);
+      font-size: 1.0625rem;
+      line-height: 1.5rem;
+    }
+
+    .sb-cab-acao:hover .sb-moldura-miolo,
+    .sb-cab-acao[data-ligado] .sb-moldura-miolo {
+      background-color: color-mix(in srgb, var(--cor-destaque) 85%, var(--cor-texto));
+      color: var(--cor-sobre-destaque);
+    }
+  }
+
+  /* Campos (2.9) ----------------------------------------------------------------------------- */
+  .sb-campo {
+    display: grid;
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    align-items: center;
+  }
+
+  .sb-campo-rotulo {
+    grid-column: 2 / 4;
+  }
+
+  .sb-campo-controle {
+    position: relative;
+    grid-column: 4 / 9;
+    display: flex;
+    align-items: center;
+    height: 112px;
+    border-bottom: 1px solid var(--cor-texto);
+  }
+
+  .sb-campo-entrada {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--cor-texto);
+    font-family: var(--fonte-sb-serifa);
+    font-size: 3rem;
+    line-height: 3.625rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    appearance: none;
+  }
+
+  .sb-campo-controle[data-select] .sb-campo-entrada {
+    padding-right: 48px;
+    cursor: pointer;
+  }
+
+  .sb-campo-controle[data-select]::after {
+    content: '';
+    position: absolute;
+    top: calc(50% - 10px);
+    right: 16px;
+    width: 12px;
+    height: 12px;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(45deg);
+    pointer-events: none;
+  }
+
+  .sb-campo-erro {
+    grid-column: 4 / 9;
+    margin: 8px 0 0;
+    color: var(--cor-destaque);
+  }
+
+  .sb-campo-ajuda {
+    grid-column: 4 / 9;
+    margin: 8px 0 0;
+    color: var(--cor-secundario);
+  }
+
+  /* O botão de mostrar senha: 44 × 44 (56 de altura na madrugada), no fim do campo. */
+  .sb-campo-olho {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: var(--alvo-toque);
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--cor-texto);
+    cursor: pointer;
+  }
+
+  .sb-olho {
+    position: relative;
+    display: block;
+    width: 24px;
+    height: 14px;
+    border-top: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    border-radius: 50%;
+  }
+
+  .sb-olho::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 8px;
+    height: 8px;
+    margin: -4px 0 0 -4px;
+    border-radius: 50%;
+    background-color: currentColor;
+  }
+
+  .sb-olho::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -3px;
+    display: none;
+    width: 30px;
+    height: 2px;
+    margin-top: -1px;
+    background-color: currentColor;
+    transform: rotate(-35deg);
+  }
+
+  .sb-campo-olho[aria-pressed='false'] .sb-olho::before {
+    display: block;
+  }
+
+  @media (max-width: 767px) {
+    .sb-campo {
+      display: block;
+    }
+
+    .sb-campo-rotulo {
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .sb-campo-controle {
+      height: 64px;
+      padding-inline: 16px;
+      border-radius: 4px;
+      background-color: var(--cor-papel-fundo);
+    }
+
+    .sb-campo-entrada {
+      font-size: 2rem;
+      line-height: 2.375rem;
+    }
+  }
+
+  /* Mídia e galeria (2.8): molduras vazias, sem texto dentro. --------------------------------- */
+  .sb-midia {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    border-radius: 8px;
+    background-color: var(--cor-campo-1);
+    overflow: hidden;
+  }
+
+  .sb-midia[data-fundo='lavanda'] {
+    background-color: var(--cor-campo-2);
+  }
+
+  .sb-midia[data-formato='larga'] {
+    aspect-ratio: 1376 / 960;
+  }
+
+  .sb-midia[data-formato='par'] {
+    aspect-ratio: 1 / 1;
+  }
+
+  .sb-midia[data-formato='retrato'] {
+    aspect-ratio: 413 / 734;
+  }
+
+  .sb-midia > img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .sb-galeria {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--gap-galeria);
+  }
+
+  .sb-galeria > [data-formato='larga'] {
+    grid-column: 1 / -1;
+  }
+
+  @media (max-width: 767px) {
+    .sb-midia {
+      border-radius: 4px;
+    }
+  }
+
+  /* Abertura (2.4 e 2.5): título em c1–c8, coluna lateral em c9–c10, fios de 1 px. ------------ */
+  .sb-abertura {
+    padding-top: var(--e-cab-h1);
+  }
+
+  .sb-abertura-subtitulo {
+    margin: var(--e-h1-sub) 0 0;
+  }
+
+  .sb-abertura-base {
+    display: grid;
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    height: 80px;
+    margin-top: 64px;
+    border-bottom: 1px solid var(--cor-fio-suave);
+  }
+
+  .sb-abertura-lateral {
+    grid-column: 9 / 11;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin: 0;
+    padding: 0 0 0 24px;
+    border-left: 1px solid var(--cor-fio-suave);
+    list-style: none;
+  }
+
+  .sb-abertura-lateral > li {
+    display: flex;
+    align-items: center;
+    height: 32px;
+  }
+
+  @media (max-width: 767px) {
+    .sb-abertura-base {
+      display: block;
+      height: auto;
+      margin-top: 32px;
+      padding-bottom: 16px;
+    }
+
+    .sb-abertura-lateral {
+      padding-left: 0;
+      border-left: 0;
+    }
+  }
+
+  /* Faixa de números (2.4 e 2.5): 3 colunas, fio no topo e 2 verticais. ----------------------- */
+  .sb-numeros {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-top: 1px solid var(--cor-fio-suave);
+  }
+
+  .sb-numeros-item {
+    min-width: 0;
+    padding: 32px 32px 32px 0;
+  }
+
+  .sb-numeros-item + .sb-numeros-item {
+    padding-left: 32px;
+    border-left: 1px solid var(--cor-fio-suave);
+  }
+
+  .sb-numeros-valor {
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  .sb-numeros-legenda {
+    margin: 16px 0 0;
+  }
+
+  @media (max-width: 767px) {
+    .sb-numeros-item {
+      padding: 16px 8px 16px 0;
+    }
+
+    .sb-numeros-item + .sb-numeros-item {
+      padding-left: 8px;
+    }
+  }
+
+  /* Linha rótulo + texto (2.1 e 2.3): rótulo em c2–c3, texto em c4–c8 com fio vertical em x de
+     c4 e um fio horizontal embaixo, de c2 a c9. -------------------------------------------- */
+  .sb-linha {
+    display: grid;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    border-bottom: 1px solid var(--cor-fio-suave);
+  }
+
+  .sb-linha-rotulo {
+    grid-column: 1 / 3;
+    margin: 0;
+    padding-block: var(--e-linhas);
+  }
+
+  .sb-linha-texto {
+    grid-column: 3 / 8;
+    box-sizing: border-box;
+    max-width: 592px;
+    padding: var(--e-linhas) 0 var(--e-linhas) 32px;
+    border-left: 1px solid var(--cor-fio-suave);
+  }
+
+  .sb-linha-texto > p {
+    margin: 0;
+  }
+
+  @media (max-width: 767px) {
+    .sb-linha {
+      display: block;
+    }
+
+    .sb-linha-rotulo {
+      padding-bottom: 8px;
+    }
+
+    .sb-linha-texto {
+      max-width: none;
+      padding: 0 0 var(--e-linhas);
+      border-left: 0;
+    }
+  }
+
+  /* Botões e etiquetas na página de amostra ----------------------------------------------- */
+  .sb-fila {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 32px;
+  }
+
+  .sb-pilha {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .sb-pilha > li {
+    display: flex;
+    align-items: center;
+    height: 32px;
+  }
+
+  .sb-campos {
+    display: flex;
+    flex-direction: column;
+    gap: 64px;
   }
 }
 
