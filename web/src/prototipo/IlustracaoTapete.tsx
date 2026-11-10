@@ -3,10 +3,18 @@ import { Membro } from './Membro.tsx'
 // Tapete: bebê de bruços levantando a cabeça (tummy time) e um adulto ajoelhado ao lado, com a
 // mão perto dele. Traço contínuo de tinta, preenchimento chapado nas cores dos tokens. O viewBox
 // é justo (só a cena e o chão, que termina na base do desenho).
-export function IlustracaoTapete({ className }: { className?: string }) {
+export function IlustracaoTapete({
+  className,
+  preserveAspectRatio,
+}: {
+  className?: string
+  /** A moldura da Sessão corta (`slice`) em vez de deixar vão: ver MidiaDaSessao. */
+  preserveAspectRatio?: string
+}) {
   return (
     <svg
       viewBox="8 86 232 136"
+      preserveAspectRatio={preserveAspectRatio}
       className={`ilu ${className ?? ''}`}
       aria-hidden="true"
       focusable="false"

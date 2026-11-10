@@ -1,43 +1,45 @@
-import { useEffect, useRef, type RefObject } from 'react'
+import { useEffect, useId, useRef, type RefObject } from 'react'
 import { useLocation, useNavigate } from 'react-router'
-import { ColunaApp } from '../componentes/ColunaApp.tsx'
-import { BarraInferior } from '../prototipo/BarraInferior.tsx'
-import { BotoesRapidos } from '../prototipo/BotoesRapidos.tsx'
-import { CartaoEmAndamento } from '../prototipo/CartaoEmAndamento.tsx'
-import { Confirmacao } from '../prototipo/Confirmacao.tsx'
-import { FaixaPrototipo } from '../prototipo/FaixaPrototipo.tsx'
-import { NavegacaoInferior } from '../prototipo/NavegacaoInferior.tsx'
-import { nomeDoCampo } from '../prototipo/campo.ts'
+import { Abertura } from '../componentes/base/Abertura.tsx'
+import { FaixaNumeros } from '../componentes/base/FaixaNumeros.tsx'
+import { LinhaRotuloTexto } from '../componentes/base/LinhaRotuloTexto.tsx'
+import { BarraRegistrar } from '../componentes/registro/BarraRegistrar.tsx'
+import { BlocoEmAndamento } from '../prototipo/BlocoEmAndamento.tsx'
+import { ItemAvisoDaAbertura } from '../prototipo/ItemAvisoDaAbertura.tsx'
 import { usePrototipo } from '../prototipo/contexto.ts'
 import {
   IDADE_BEBE,
   NOME_BEBE,
   ROTULO_SESSAO,
+  TEXTO_FRALDA,
+  textoDaFralda,
   type EscolhaFralda,
   type ItemMais,
   type TipoSessao,
 } from '../prototipo/estado.ts'
 import { focoDoEstado } from '../prototipo/foco.ts'
-import { formatarDuracao } from '../prototipo/formatar.ts'
+import { formatarDuracao, formatarUltimo } from '../prototipo/formatar.ts'
 import { useAgora } from '../prototipo/useAgora.ts'
+import { useTituloDaTela } from '../prototipo/useTituloDaTela.ts'
 
-// O cartão se atualiza sozinho: a duração sai de `agora - inicio`, nunca de um contador.
-// Ao encerrar, o botão "Encerrar" some; o foco vai para o próprio cartão, que passa a dizer
+const SEM_REGISTRO = { valor: '—', legenda: '—' }
+
+// O bloco se atualiza sozinho: a duração sai de `agora - inicio`, nunca de um contador. Ao
+// encerrar, o botão "Encerrar" some; o foco vai para o próprio bloco, que passa a dizer
 // "Nenhuma sessão em andamento.".
-function CartaoDaSessao({ cartao }: { cartao: RefObject<HTMLElement | null> }) {
+function BlocoDaSessao({ bloco }: { bloco: RefObject<HTMLElement | null> }) {
   const { estado, dispatch } = usePrototipo()
   const agora = useAgora(1000)
   const sessao = estado.sessao
 
   function encerrar() {
     dispatch({ tipo: 'encerrar', agora: Date.now(), comNota: false })
-    cartao.current?.focus()
+    bloco.current?.focus()
   }
 
   return (
-    <CartaoEmAndamento
-      ref={cartao}
-      campo={nomeDoCampo('accent', estado.madrugada)}
+    <BlocoEmAndamento
+      ref={bloco}
       sessao={
         sessao
           ? {
@@ -56,16 +58,18 @@ export function Hoje() {
   const { estado, dispatch } = usePrototipo()
   const navigate = useNavigate()
   const location = useLocation()
-  const titulo = useRef<HTMLHeadingElement>(null)
-  const cartao = useRef<HTMLElement>(null)
+  const { principal, focarTitulo } = useTituloDaTela()
+  const bloco = useRef<HTMLElement>(null)
   const primeiroBotao = useRef<HTMLButtonElement>(null)
+  const idUltimos = useId()
+  const idSaber = useId()
 
   // Chegando por navegação interna, o foco vai ao alvo que a origem pediu; pela URL, não se move.
   const foco = focoDoEstado(location.state)
   useEffect(() => {
-    if (foco === 'cartao') cartao.current?.focus()
-    else if (foco === 'titulo') titulo.current?.focus()
-  }, [foco, location.key])
+    if (foco === 'cartao') bloco.current?.focus()
+    else if (foco === 'titulo') focarTitulo()
+  }, [foco, location.key, focarTitulo])
 
   function iniciarSessao(tipo: TipoSessao) {
     if (estado.sessao) {
@@ -77,8 +81,8 @@ export function Hoje() {
     void navigate('/app/sessao', { state: { foco: 'titulo' } })
   }
 
-  // "Desfazer" e "Fechar" somem com a confirmação; o foco vai ao primeiro botão rápido, que é
-  // o próximo controle na ordem do DOM e continua na tela. A confirmação nunca recebe o foco.
+  // "Desfazer" e "Fechar" somem com a confirmação; o foco vai ao primeiro botão da barra (Sono), que
+  // é o próximo controle na ordem do DOM e continua na tela. A confirmação nunca recebe o foco.
   function desfazer() {
     dispatch({ tipo: 'desfazer' })
     primeiroBotao.current?.focus()
@@ -89,13 +93,14 @@ export function Hoje() {
     primeiroBotao.current?.focus()
   }
 
-  function registrarFralda(escolha: EscolhaFralda) {
-    dispatch({
-      tipo: 'registrar',
-      chave: 'fralda',
-      rotulo: 'Fralda',
-      confirmacao: `Fralda registrada: ${escolha}`,
-    })
+  // Um toque, um registro (E5): o registro não leva o tipo. O tipo é opcional e só ajusta o texto da
+  // confirmação já na tela; `Últimos` e o "Desfazer" não mudam.
+  function registrarFralda() {
+    dispatch({ tipo: 'registrar', chave: 'fralda', rotulo: 'Fralda', confirmacao: TEXTO_FRALDA })
+  }
+
+  function ajustarFralda(escolha: EscolhaFralda) {
+    dispatch({ tipo: 'ajustarConfirmacao', texto: textoDaFralda(escolha) })
   }
 
   function registrarMais(item: ItemMais) {
@@ -107,74 +112,57 @@ export function Hoje() {
     })
   }
 
+  // Três colunas sempre: os 3 primeiros registros, e o travessão nas que faltam.
+  const registros = estado.ultimos.map((item) => formatarUltimo(item.rotulo, item.quando))
+  const coluna = (posicao: number) => registros[posicao] ?? SEM_REGISTRO
+  const faixa = [coluna(0), coluna(1), coluna(2)] as const
+
   return (
-    <ColunaApp>
-      {/* O <header> da faixa não é o banner do site (esse é o cabeçalho do Layout): a seção o tira
-          da conta dos marcos de página. */}
-      <section aria-label="Aviso do protótipo">
-        <FaixaPrototipo />
-      </section>
+    <>
+      <main ref={principal} className="ha-tela ha-hoje">
+        <Abertura
+          titulo="Hoje"
+          subtitulo={`${NOME_BEBE}, ${IDADE_BEBE}`}
+          lateral={[
+            <ItemAvisoDaAbertura key="aviso" />,
+            // O `li` guarda 44 px de layout e o link tem 56 de alvo nos dois temas (ver `.ha-li-link`).
+            // Abaixo de 768 o item some (`.ha-li-ultimos`): a âncora leva à seção logo abaixo e a lateral
+            // gasta 44 px que o bloco Em andamento precisa para terminar em y ≤ 600 (H-3).
+            <li key="ultimos" className="ha-li-link ha-li-ultimos">
+              <a className="sb-abertura-link t-corpo alvo-toque" href="#ultimos">
+                Ir aos últimos
+              </a>
+            </li>,
+          ]}
+        />
 
-      <main className="flex-1 px-4 pb-8 pt-6">
-        <div>
-          {/* O botão "Modo madrugada" mora no cabeçalho do site (Layout). */}
-          <div>
-            <h1 ref={titulo} tabIndex={-1} className="titulo-tela alvo-foco">
-              Hoje
-            </h1>
-            <p className="mt-1">{`${NOME_BEBE}, ${IDADE_BEBE}`}</p>
-          </div>
+        <BlocoDaSessao bloco={bloco} />
 
-          <div className="mt-6">
-            <CartaoDaSessao cartao={cartao} />
-          </div>
+        <section id="ultimos" data-ultimos="" aria-labelledby={idUltimos} className="sb-area sb-mt-par-numeros">
+          <h2 id={idUltimos} className="sr-only">
+            Últimos
+          </h2>
+          <FaixaNumeros itens={faixa} />
+        </section>
 
-          {/* A hierarquia é a dos dados: o cartão (o mais forte), os últimos registros (legíveis de
-              relance) e, por fim, a nota de passagem, num campo de lavanda compacto e inset, que
-              não sangra como o cartão. Na madrugada o campo é o lavanda escuro. */}
-          <section
-            aria-labelledby="titulo-saber"
-            data-campo={nomeDoCampo('field-2', estado.madrugada)}
-            className="mt-6 px-4 py-5"
-          >
-            <h2 id="titulo-saber" className="rotulo">
-              Para você saber
-            </h2>
-            <p className="nota-italico mt-2 text-[1.5rem] leading-tight">{estado.nota.texto}</p>
-            <p className="tabular mt-2 text-sm">{`${estado.nota.autor}, ${estado.nota.hora}`}</p>
-          </section>
-
-          <section aria-labelledby="titulo-ultimos" className="mt-8">
-            <h2 id="titulo-ultimos" className="rotulo">
-              Últimos
-            </h2>
-            <ul className="mt-3 divide-y border-y">
-              {estado.ultimos.map((item) => (
-                <li key={item.chave} className="flex items-baseline justify-between gap-4 py-4 text-lg">
-                  <span>{item.rotulo}</span> <span className="tabular text-right font-semibold">{item.quando}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        </div>
+        <section aria-labelledby={idSaber} className="sb-area sb-mt-midia-titulo">
+          <h2 id={idSaber} className="sr-only">
+            Para você saber
+          </h2>
+          <LinhaRotuloTexto rotulo={`${estado.nota.autor}, ${estado.nota.hora}`}>{estado.nota.texto}</LinhaRotuloTexto>
+        </section>
       </main>
 
-      <BarraInferior>
-        <section aria-label="Registro rápido" className="registro-rapido">
-          <Confirmacao
-            texto={estado.confirmacao?.texto ?? null}
-            aoDesfazer={desfazer}
-            aoFechar={fecharConfirmacao}
-          />
-          <BotoesRapidos
-            refSono={primeiroBotao}
-            aoIniciarSessao={iniciarSessao}
-            aoRegistrarFralda={registrarFralda}
-            aoRegistrarMais={registrarMais}
-          />
-        </section>
-        <NavegacaoInferior hojeAtual />
-      </BarraInferior>
-    </ColunaApp>
+      <BarraRegistrar
+        refSono={primeiroBotao}
+        aoIniciarSessao={iniciarSessao}
+        aoRegistrarFralda={registrarFralda}
+        aoAjustarFralda={ajustarFralda}
+        aoRegistrarMais={registrarMais}
+        texto={estado.confirmacao?.texto ?? null}
+        aoDesfazer={desfazer}
+        aoFechar={fecharConfirmacao}
+      />
+    </>
   )
 }
