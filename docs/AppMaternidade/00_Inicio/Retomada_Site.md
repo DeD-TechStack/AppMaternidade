@@ -12,7 +12,17 @@ Esta é a nota de partida da próxima sessão de trabalho no site. Ela registra 
 
 **Site publicado (06/11/2026):** https://ded-techstack.github.io/AppMaternidade/ (MAT-48a, main 2beddee). Ele mostra Início, Hoje e Sessão com o aviso "Demonstração sem banco". As variáveis do banco entram no build com a MAT-37.
 
-## PAUSA de 09/11/2026 ~22h (conferência antes da retomada, decisão de Daniel): ESTADO VIGENTE
+## RETOMADA de 10/11/2026 (Hermes v0.23.1): ESTADO VIGENTE
+
+- **Cartões e condutor.** O quadro 9119 (PATCH) devolveu a ready os 4 cartões da pausa: t_f67d8962 (44c-1), t_ecf636f5 (44c-2a), t_915e3632 (37a) e t_fa51c4df (48b). Eles e os filhos t_b2a55931 (MAT-36) e t_1757260d (37g) agora são conduzidos pelo **executor-appmaternidade**, em Sonnet. Os comentários 119 a 122 levam a ordem de trabalho: rebase sobre 41d20d3, só as 2 skills, e os testes de borda que falham fechado (item 8).
+- **Prévia.** Fechei o vite que estava aberto na porta 5175 desde 09/11. Ele era do worktree da 37a.
+- **Aceite visual.** O avaliador agora é o do piloto: Fable 5.2 high, com o Opus também nas 2 primeiras telas. As duas notas vão no cartão. Se uma nota ficar a menos de 0,2 do mínimo, a decisão volta para mim. O mínimo continua 8,0.
+- **OSV (decisão do líder, 10/11).** O alerta de `zod 3.25.76` vem de `@google/design.md`, e os de `minimatch 10.2.6` e 3.1.5 vêm do eslint e do typescript-eslint. Todos são **só de desenvolvimento**: não vão para o build do site nem rodam no navegador do usuário. Não abro cartão agora. Eles sobem com a próxima atualização de dependências de desenvolvimento.
+- **Plugins (decisão do líder, 10/11).** O Playwright CLI no OpenCode e o Modern Web Guidance ficam para depois. O foco agora é fechar o site. As capturas continuam pelo `navegacao-agentes`.
+- **Subagentes.** Há 2 em curso. Um escreve os corpos 44c-2b e 37b. O outro faz a spec v3 da MAT-38 com os corpos 38a e 38b. Depois deles vêm as MAT-39, 40 e 41. Com 4 cartões rodando, mantenho no máximo 2 subagentes.
+- **Pendente com Daniel.** Falta configurar o Google OAuth e decidir a verificação extra de quem modera.
+
+## PAUSA de 09/11/2026 ~22h (conferência antes da retomada, decisão de Daniel)
 
 A retomada de 09/11, às ~21h50, saiu cedo demais e foi suspensa. Daniel vai conferir as atualizações, as sessões, as assinaturas e os modelos antes de o trabalho voltar.
 
