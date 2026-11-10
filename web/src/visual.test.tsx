@@ -182,12 +182,14 @@ describe('MAT-44: composição do Início', () => {
     ).toBeTruthy()
   })
 
-  it('o cabeçalho tem até 64 px no desktop e os links têm alvo de 44 px', async () => {
+  it('o cabeçalho é o do site (Layout, 64 px, medido em G2) e os links-âncora da página têm alvo de 44 px', async () => {
     const container = await inicio()
 
+    expect(container.querySelectorAll('header')).toHaveLength(1)
     const cabecalho = container.querySelector('header')!
-    expect(cabecalho.className).toContain('@min-[46rem]/pagina:h-16')
-    const links = [...cabecalho.querySelectorAll('a')]
+    expect(cabecalho.hasAttribute('data-cabecalho')).toBe(true)
+    expect(cabecalho.classList.contains('sb-cabecalho')).toBe(true)
+    const links = [...container.querySelectorAll('nav[aria-label="Seções da página"] a')]
     expect(links).toHaveLength(3)
     for (const link of links) expect(link.classList.contains('alvo-toque')).toBe(true)
   })
@@ -219,12 +221,12 @@ describe('MAT-44: composição do Início', () => {
   })
 })
 
-describe('MAT-44: âncoras do cabeçalho do Início', () => {
+describe('MAT-44: âncoras do Início (nav "Seções da página", que antes ficava no <header> da página)', () => {
   it('cada link começa com #, aponta para um id existente e é único', async () => {
     const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
 
-    const hrefs = [...container.querySelectorAll('header a')].map((a) => a.getAttribute('href')!)
+    const hrefs = [...container.querySelectorAll('nav[aria-label="Seções da página"] a')].map((a) => a.getAttribute('href')!)
     expect(hrefs.length).toBeGreaterThanOrEqual(3)
     for (const href of hrefs) {
       expect(href.startsWith('#'), href).toBe(true)
@@ -238,7 +240,7 @@ describe('MAT-44: âncoras do cabeçalho do Início', () => {
     const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
 
-    expect([...container.querySelectorAll('header a')].map((a) => a.textContent)).toEqual([
+    expect([...container.querySelectorAll('nav[aria-label="Seções da página"] a')].map((a) => a.textContent)).toEqual([
       'As telas',
       'Para que serve',
       'Madrugada',
@@ -1074,8 +1076,9 @@ describe('MAT-44 r2 A3: texto de interface do Início mora em textos.ts', () => 
 
     const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
-    expect([...container.querySelectorAll('header a')].map((a) => a.textContent)).toEqual(navegacao.map((n) => n.rotulo))
-    expect([...container.querySelectorAll('header a')].map((a) => a.getAttribute('href'))).toEqual(
+    const ancoras = () => container.querySelectorAll('nav[aria-label="Seções da página"] a')
+    expect([...ancoras()].map((a) => a.textContent)).toEqual(navegacao.map((n) => n.rotulo))
+    expect([...ancoras()].map((a) => a.getAttribute('href'))).toEqual(
       navegacao.map((n) => `#${n.alvo}`),
     )
     expect(screen.getByText(legenda)).toBeTruthy()
@@ -1721,7 +1724,7 @@ describe('MAT-44 r7 #3: nenhuma margem negativa leva um item da página pública
     const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
 
-    const links = [...container.querySelectorAll('header nav a')]
+    const links = [...container.querySelectorAll('nav[aria-label="Seções da página"] a')]
     expect(links).toHaveLength(3)
     for (const link of links) expect(link.classList.contains('alvo-toque')).toBe(true)
     const alvo = regrasComContexto(estiloGlobal).filter((r) => r.seletor === '.alvo-toque').map((r) => r.props)
@@ -1740,7 +1743,8 @@ describe('MAT-44 r8: a raiz do Início quebra a palavra que não cabe, e só ela
   async function raizDoInicio() {
     const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
-    return container.firstElementChild as HTMLElement
+    // A raiz do Início é a tela, entre o cabeçalho e o rodapé do site (a casca do Layout).
+    return container.querySelector('[class~="@container/pagina"]') as HTMLElement
   }
 
   /** Os tokens de classe sem a variante (@min-[…]/pagina:, hover:, …). */

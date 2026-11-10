@@ -69,12 +69,17 @@ describe('aviso de demonstração: texto e marcador são o mesmo elemento', () =
   })
 })
 
-/** Nada de tela fica fora da coluna: um só .coluna-app, e todo header, main e nav está dentro dele. */
+/**
+ * Nada de tela fica fora da coluna: um só .coluna-app, e todo header, main e nav da tela está dentro dele.
+ * O cabeçalho e o rodapé do site (a casca do Layout, 2.6 e 2.7) ficam fora da coluna de propósito.
+ */
 function conferirTudoDentroDaColuna(container: HTMLElement) {
   const colunas = container.querySelectorAll('.coluna-app')
   expect(colunas).toHaveLength(1)
   const coluna = colunas[0]
-  const pecas = container.querySelectorAll('header, main, nav')
+  const pecas = [...container.querySelectorAll('header, main, nav')].filter(
+    (peca) => peca.closest('[data-cabecalho], [data-rodape]') === null,
+  )
   expect(pecas.length).toBeGreaterThan(0)
   for (const peca of pecas) expect(coluna.contains(peca), peca.outerHTML).toBe(true)
 }
@@ -85,10 +90,13 @@ describe('aviso de demonstração: lugar na tela', () => {
     const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
 
-    const raiz = container.firstElementChild!
+    // A raiz é a tela, entre o cabeçalho e o rodapé do site (a casca do Layout, 2.6 e 2.7); depois
+    // do aviso vem a nav das seções, que ocupa o lugar do <header> antigo da página.
+    const raiz = container.querySelector('[class~="@container/pagina"]')!
     expect(raiz.classList.contains('@container/pagina')).toBe(true)
+    expect(raiz.previousElementSibling!.matches('[data-cabecalho]')).toBe(true)
     expect(raiz.firstElementChild).toBe(container.querySelector(SELETOR))
-    expect(raiz.firstElementChild!.nextElementSibling!.tagName).toBe('HEADER')
+    expect(raiz.firstElementChild!.nextElementSibling!.tagName).toBe('NAV')
   })
 
   for (const [tela, caminho] of [
@@ -104,7 +112,9 @@ describe('aviso de demonstração: lugar na tela', () => {
       expect(coluna.firstElementChild).toBe(aviso)
       conferirTudoDentroDaColuna(container)
       expect(aviso.classList.contains('px-4')).toBe(true)
-      expect(aviso.nextElementSibling!.tagName).toBe('HEADER')
+      // Depois do aviso vem a seção da faixa do protótipo, que guarda o <header> dela.
+      expect(aviso.nextElementSibling!.tagName).toBe('SECTION')
+      expect(aviso.nextElementSibling!.querySelector('header')).not.toBeNull()
     })
   }
 

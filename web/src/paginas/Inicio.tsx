@@ -11,7 +11,6 @@ import {
   PARA_QUE_SERVE,
   PILARES,
   PROMESSA,
-  RODAPE,
   TELAS,
 } from '../conteudo/textos.ts'
 import { Aparelho } from '../componentes/Aparelho.tsx'
@@ -152,23 +151,18 @@ export function Inicio() {
   return (
     <div className="@container/pagina flex min-h-dvh flex-col break-words px-4 md:px-[2%]">
       <AvisoDemonstracao />
-      <header className="flex flex-col border-b py-3 @min-[46rem]/pagina:h-16 @min-[46rem]/pagina:flex-row @min-[46rem]/pagina:items-center @min-[46rem]/pagina:justify-between @min-[46rem]/pagina:py-0">
-        <p className="marca">AppMaternidade</p>
-        <nav
-          aria-label="Seções da página"
-          className="flex flex-wrap justify-between @min-[46rem]/pagina:gap-4"
-        >
-          {NAVEGACAO.map((link) => (
-            <a
-              key={link.alvo}
-              href={`#${link.alvo}`}
-              className="alvo-toque inline-flex items-center justify-center px-2 text-[0.9375rem] font-semibold no-underline first:pl-0 last:pr-0 hover:underline"
-            >
-              {link.rotulo}
-            </a>
-          ))}
-        </nav>
-      </header>
+      {/* O cabeçalho do site vem do Layout; aqui ficam só os links-âncora das seções. */}
+      <nav aria-label="Seções da página" className="flex flex-wrap gap-4 py-3">
+        {NAVEGACAO.map((link) => (
+          <a
+            key={link.alvo}
+            href={`#${link.alvo}`}
+            className="alvo-toque inline-flex items-center justify-center px-2 text-[0.9375rem] font-semibold no-underline first:pl-0 last:pr-0 hover:underline"
+          >
+            {link.rotulo}
+          </a>
+        ))}
+      </nav>
 
       <main className="flex-1">
         <section
@@ -345,13 +339,6 @@ export function Inicio() {
           </Link>
         </section>
       </main>
-
-      <footer className="flex flex-wrap items-center justify-between gap-x-6 border-t py-4">
-        <p className="text-sm">{RODAPE}</p>
-        <Link to="/" className="alvo-toque inline-flex items-center">
-          Início
-        </Link>
-      </footer>
     </div>
   )
 }

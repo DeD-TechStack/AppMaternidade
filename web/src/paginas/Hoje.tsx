@@ -109,26 +109,20 @@ export function Hoje() {
 
   return (
     <ColunaApp>
-      <FaixaPrototipo />
+      {/* O <header> da faixa não é o banner do site (esse é o cabeçalho do Layout): a seção o tira
+          da conta dos marcos de página. */}
+      <section aria-label="Aviso do protótipo">
+        <FaixaPrototipo />
+      </section>
 
       <main className="flex-1 px-4 pb-8 pt-6">
         <div>
-          <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
-            <div>
-              <h1 ref={titulo} tabIndex={-1} className="titulo-tela alvo-foco">
-                Hoje
-              </h1>
-              <p className="mt-1">{`${NOME_BEBE}, ${IDADE_BEBE}`}</p>
-            </div>
-
-            <button
-              type="button"
-              aria-pressed={estado.madrugada}
-              className="botao botao-secundario"
-              onClick={() => dispatch({ tipo: 'definirMadrugada', valor: !estado.madrugada })}
-            >
-              Modo madrugada
-            </button>
+          {/* O botão "Modo madrugada" mora no cabeçalho do site (Layout). */}
+          <div>
+            <h1 ref={titulo} tabIndex={-1} className="titulo-tela alvo-foco">
+              Hoje
+            </h1>
+            <p className="mt-1">{`${NOME_BEBE}, ${IDADE_BEBE}`}</p>
           </div>
 
           <div className="mt-6">

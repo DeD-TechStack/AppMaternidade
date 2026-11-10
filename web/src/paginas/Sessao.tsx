@@ -213,7 +213,11 @@ export function Sessao() {
 
   return (
     <ColunaApp>
-      <FaixaPrototipo />
+      {/* O <header> da faixa não é o banner do site (esse é o cabeçalho do Layout): a seção o tira
+          da conta dos marcos de página. */}
+      <section aria-label="Aviso do protótipo">
+        <FaixaPrototipo />
+      </section>
 
       <main className="flex flex-1 flex-col px-4 pb-6 pt-6">
         <div className="flex w-full flex-1 flex-col">

@@ -18,6 +18,8 @@ const CLASSE_DE_ALVO = /(^|\s)(alvo-toque|botao|nav-item)(\s|$)/
 
 function semAlvoDe44(container: HTMLElement): string[] {
   return [...container.querySelectorAll<HTMLElement>('a, button, textarea, input, select')]
+    // O alvo do cabeçalho e do rodapé novos vem de --alvo-toque (estilo.test.ts) e é medido em G11.
+    .filter((elemento) => elemento.closest('[data-cabecalho], [data-rodape]') === null)
     .filter((elemento) => elemento.closest('p, [inert]') === null)
     .filter((elemento) =>
       elemento.tagName === 'TEXTAREA'
@@ -401,10 +403,11 @@ describe('D2: telas logadas numa coluna única', () => {
       expect(coluna.querySelector('main')).not.toBeNull()
       expect(coluna.querySelector('.barra-inferior')).not.toBeNull()
       expect(coluna.querySelector('.barra-inferior nav[aria-label="Principal"]')).not.toBeNull()
-      // Nada de tela fica fora da coluna.
-      expect(container.querySelectorAll('header, main, nav')).toHaveLength(
-        coluna.querySelectorAll('header, main, nav').length,
+      // Nada de tela fica fora da coluna (o cabeçalho e o rodapé do site ficam fora de propósito).
+      const daTela = [...container.querySelectorAll('header, main, nav')].filter(
+        (peca) => peca.closest('[data-cabecalho], [data-rodape]') === null,
       )
+      expect(daTela).toHaveLength(coluna.querySelectorAll('header, main, nav').length)
     })
   }
 
@@ -624,7 +627,10 @@ describe('R4: o Início decide as colunas pela largura da página em rem', () =>
 
     const raiz = raizDaPagina(container)
     expect(raiz, 'nenhum elemento tem @container/pagina').not.toBeNull()
-    expect(raiz).toBe(container.firstElementChild)
+    // O raiz é a tela, entre o cabeçalho e o rodapé do site (a casca do Layout).
+    expect(raiz!.parentElement!.classList.contains('sb-casca')).toBe(true)
+    expect(raiz!.previousElementSibling!.matches('[data-cabecalho]')).toBe(true)
+    expect(raiz!.nextElementSibling!.matches('[data-rodape]')).toBe(true)
   })
 
   it('só o raiz tem variante de janela (o padding lateral), inclusive fora da miniatura e dentro dela', async () => {
