@@ -18,6 +18,7 @@ export function criarRotas(estadoInicial?: EstadoPrototipo): RouteObject[] {
         { path: 'app/hoje', element: <Hoje /> },
         { path: 'app/sessao', element: <Sessao /> },
         { path: 'sistema', element: <Sistema /> },
+        /* 44d-3 */
         ...rotasDasAreas,
         { path: '*', element: <NaoEncontrada /> },
       ],

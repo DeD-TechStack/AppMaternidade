@@ -15,11 +15,6 @@ export const BOTAO_SECUNDARIO =
 /** Link fora de parágrafo: alvo de 44 px e o sublinhado da base. */
 export const LINK_ALVO = 'alvo-toque inline-flex items-center font-semibold'
 
-/** O estado carregando: o texto, sem formulário clicável. */
-export function Carregando() {
-  return <p className="py-2">{COMUM.carregando}</p>
-}
-
 /**
  * A região de status da tela: única, sempre no DOM (para o leitor de tela anunciar o que entra
  * nela), não move o foco e não some sozinha.

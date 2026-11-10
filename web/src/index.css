@@ -2429,3 +2429,149 @@
     transition: none !important;
   }
 }
+
+/* =============================================================================================
+   44d-3: acesso e Conta (Entrar, Criar conta, Recuperar, Começar e Conta). Só se acrescenta aqui.
+   ========================================================================================== */
+@layer components {
+  /* Telas de acesso (Entrar, Criar conta, Recuperar, Nova senha, Conta excluída). Tudo cabe na
+     grade de 10 colunas: o bloco do formulário é uma área útil, e o que não é uma linha de campo se
+     alinha por porcentagem dela (c2 = 10%, c4 = 30%, c9 = 80%). */
+
+  /* A mensagem de status, o resumo de erro e o estado carregando começam em c2 e ocupam c2–c8. */
+  .sb-status,
+  .sb-resumo {
+    box-sizing: border-box;
+    margin: 0 0 24px 10%;
+    width: 70%;
+  }
+
+  .sb-status {
+    color: var(--cor-texto);
+  }
+
+  .sb-resumo {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .sb-resumo-texto {
+    margin: 0;
+    color: var(--cor-destaque);
+  }
+
+  .sb-acesso-links {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 32px;
+  }
+
+  /* O estado de espera ou de erro das rotas logadas (a guarda): a abertura de uma tela sem título. */
+  .sb-acesso-estado {
+    padding-top: var(--e-cab-h1);
+  }
+
+  /* O link do corpo da tela: o sublinhado e a cor do `a` global, com o alvo de toque inteiro. */
+  .sb-acesso-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--alvo-toque);
+  }
+
+  /* O aviso de demonstração na coluna lateral da abertura: `ui` 15/21 em texto secundário, sem
+     borda nem fundo, com 8 px de ar em cima e embaixo. */
+  .sb-acesso-aviso {
+    margin: 8px 0;
+  }
+
+  /* As linhas de campo ficam encostadas de 768 para cima (o fio de uma e o da seguinte, a 0 px). */
+  .sb-acesso-campos {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* A ação: o botão em x de c4 + 32 (o início do campo) e, ao lado, o link da tela. */
+  .sb-acesso-acao {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    margin-top: 32px;
+    padding-left: calc(30% + 32px);
+  }
+
+  /* O aceite dos termos: 17/24 no x do botão, a 24 px do último campo e a 24 px do botão. */
+  .sb-acesso-aceite {
+    margin: 24px 0 0 calc(30% + 32px);
+    max-width: 480px;
+  }
+
+  .sb-acesso-aceite + .sb-acesso-acao {
+    margin-top: 24px;
+  }
+
+  /* As ligações dentro do texto são inline: o padding vertical não muda a altura da linha, e a caixa
+     delas (20 + 2 × 16 = 52 px) passa a ser o alvo de toque de 44 px. */
+  .sb-acesso-aceite a {
+    padding-block: 16px;
+  }
+
+  .sb-botao:disabled {
+    background-color: var(--cor-desativado-fundo);
+    color: var(--cor-desativado-texto);
+    cursor: not-allowed;
+  }
+
+  /* A mensagem de status dentro da linha do campo (Recuperar): ocupa o lugar da ajuda e do erro,
+     abaixo do valor, sem mudar a altura da linha. */
+  .sb-campo-status {
+    grid-column: 3 / 8;
+    grid-row: 3;
+    margin: 0;
+    padding-left: 32px;
+    color: var(--cor-texto);
+  }
+
+  @media (max-width: 767px) {
+    .sb-status,
+    .sb-resumo {
+      margin-left: 0;
+      width: 100%;
+    }
+
+    .sb-acesso-campos {
+      gap: 24px;
+    }
+
+    .sb-acesso-acao {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 16px;
+      margin-top: 24px;
+      padding-left: 0;
+    }
+
+    .sb-acesso-acao > .sb-acesso-link {
+      align-self: flex-start;
+    }
+
+    .sb-acesso-aceite {
+      margin: 24px 0 0;
+      max-width: none;
+    }
+
+    .sb-acesso-aceite + .sb-acesso-acao {
+      margin-top: 24px;
+    }
+
+    .sb-campo-status {
+      margin: 8px 0 0;
+      padding-left: 0;
+    }
+
+    .sb-campo-status:empty {
+      margin: 0;
+    }
+  }
+}

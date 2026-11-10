@@ -1,17 +1,16 @@
 import type { ReactNode } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router'
-import { AvisoDemonstracao } from '../AvisoDemonstracao.tsx'
-import { Carregando, ResumoErro } from './Partes.tsx'
+import { CarregandoAcesso, ResumoErroAcesso } from './PartesAcesso.tsx'
 import { useSessao } from './sessao.tsx'
 
+// O estado de espera ou de erro das rotas logadas: o próprio `<main>`, com uma área útil que começa a
+// 64 px do cabeçalho (32 abaixo de 768), como a abertura das outras telas. O cabeçalho e o rodapé são
+// do `Layout`.
 function Casca({ ocupado = false, children }: { ocupado?: boolean; children: ReactNode }) {
   return (
-    <div className="mx-auto w-full max-w-[64rem] px-4 py-8">
-      <AvisoDemonstracao />
-      <main aria-busy={ocupado || undefined} className="mt-8">
-        {children}
-      </main>
-    </div>
+    <main aria-busy={ocupado || undefined}>
+      <div className="sb-area sb-acesso-estado">{children}</div>
+    </main>
   )
 }
 
@@ -29,7 +28,7 @@ export function GuardaSessao() {
   if (sessao.estado === 'carregando') {
     return (
       <Casca ocupado>
-        <Carregando />
+        <CarregandoAcesso />
       </Casca>
     )
   }
@@ -37,7 +36,7 @@ export function GuardaSessao() {
   if (sessao.estado === 'erro' && sessao.erro) {
     return (
       <Casca>
-        <ResumoErro erro={sessao.erro} repetivel aoTentarDeNovo={() => void sessao.recarregarConta()} />
+        <ResumoErroAcesso erro={sessao.erro} repetivel aoTentarDeNovo={() => void sessao.recarregarConta()} />
       </Casca>
     )
   }
