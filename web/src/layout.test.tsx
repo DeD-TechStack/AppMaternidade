@@ -786,8 +786,8 @@ describe('G3-4: o texto visível está no nome acessível', () => {
 // D6
 
 describe('D6: cronômetro', () => {
-  // MAT-44d-2: o cronômetro da Sessão é o `t-cronometro` do sistema-base (Zilla Slab 224/180, 96/77 em
-  // 390), e não mais a classe `.cronometro` (clamp de 4,5 a 8 rem), que só a miniatura do Início usa.
+  // MAT-44d-2: o cronômetro da Sessão é o `t-cronometro` do sistema-base (Zilla Slab 224/180; em 390 cai
+  // para 80 e, com 8 ou mais caracteres, para 56: VOLTA1 E2), e não mais a classe `.cronometro` (clamp de 4,5 a 8 rem), que só a miniatura do Início usa.
   it('o da Sessão usa a escala t-cronometro do sistema-base, sem a classe .cronometro nem o modificador de miniatura', () => {
     renderizarRota('/app/sessao')
 

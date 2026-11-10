@@ -480,7 +480,8 @@ describe('Hoje: o CSS do bloco /* 44d-2 */ (lido como texto)', () => {
   })
 
   it('nenhum font-size fora do conjunto da escala, nenhuma caixa alta, nenhuma transição acima de 150 ms e nenhum raio fora de 0, 4, 8 e 50%', () => {
-    const conjunto = new Set([15, 17, 20, 24, 28, 32, 36, 48, 56, 72, 80, 88, 96, 112, 224])
+    // 160: o cronômetro longo (8 ou mais caracteres) da Sessão em 1440 (VOLTA1 E2: "um valor menor que 224").
+    const conjunto = new Set([15, 17, 20, 24, 28, 32, 36, 48, 56, 72, 80, 88, 96, 112, 160, 224])
     expect(semComentarios).not.toMatch(/text-transform/)
     const tamanhos = [...semComentarios.matchAll(/font-size:\s*([\d.]+)(rem|px)(?:\s*!important)?\s*;/g)]
     expect(tamanhos.length).toBeGreaterThan(0)

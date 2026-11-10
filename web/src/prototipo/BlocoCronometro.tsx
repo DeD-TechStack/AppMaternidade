@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { Botao } from '../componentes/base/Botao.tsx'
+import { tamanhoDoCronometro } from './formatar.ts'
 
 type Painel = 'nota' | 'descartar'
 
@@ -63,6 +64,7 @@ export function BlocoCronometro({ cronometro, atividade, aoEncerrar, aoDescartar
             aria-live="off"
             aria-labelledby={idRotulo}
             data-cronometro=""
+            data-tamanho={tamanhoDoCronometro(cronometro)}
             className="ha-cron-valor t-cronometro"
           >
             {cronometro}

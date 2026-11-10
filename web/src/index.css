@@ -2684,6 +2684,16 @@ body:has([data-barra-registrar]) [data-rodape] {
   white-space: nowrap;
 }
 
+/* VOLTA1 E2: o `t-cronometro` de 224 só cabe nos 784 px de "1:12:01" (7 caracteres) dentro de c1–c7; com 8 ou
+   mais caracteres ("10:00:00", "100:00:00") o cronômetro passava do fio vertical de c8. A classe vem do número
+   de caracteres (`data-tamanho`, calculado por `tamanhoDoCronometro`), e não de uma largura medida: o longo cai
+   para 160 (linha de 128, a mesma proporção do `t-cronometro`) e termina com folga antes do fio. O normal não
+   tem regra aqui: continua o 224 da base. */
+.ha-cron-valor[data-tamanho='longo'] {
+  font-size: 10rem;
+  line-height: 8rem;
+}
+
 .ha-cron-atividade {
   margin: 8px 0 0;
 }
@@ -2815,7 +2825,7 @@ body:has([data-barra-registrar]) [data-rodape] {
   /* O cronômetro em 390: uma coluna só, com o recuo do bloco (24) e os botões embaixo: Encerrar em
      largura total e os outros dois lado a lado (8 de gap). */
   .ha-cronometro {
-    padding: 24px 8px;
+    padding: 24px;
   }
 
   .ha-cron-grade {
@@ -2828,16 +2838,24 @@ body:has([data-barra-registrar]) [data-rodape] {
     padding: 0;
   }
 
-  /* "1:12:00" a 96 px mede 335,6 px e a coluna útil (343 de bloco, 295 com 24 de recuo) não o comporta:
-     o cronômetro usa a borda de 8 do bloco, e o rótulo, a atividade e os botões voltam aos 24 com mais 16. */
-  .ha-cron-rotulo,
-  .ha-cron-atividade {
-    padding-inline: 16px;
+  /* VOLTA1 E2: a coluna útil de 390 tem 295 (343 de bloco, 24 de recuo). "1:12:01" a 96 px media ~336 e vazava;
+     a 80 mede ~280 e cabe, então o recuo é um só (24) para o rótulo, o cronômetro, a atividade e os botões, e a
+     caixa dos dígitos começa no x do rótulo. Com 8 ou mais caracteres o cronômetro cai para 56 (cabe até 9). */
+  .ha-cron-valor[data-tamanho='normal'] {
+    font-size: 5rem;
+    line-height: 4rem;
   }
 
+  .ha-cron-valor[data-tamanho='longo'] {
+    font-size: 3.5rem;
+    line-height: 2.8125rem;
+  }
+
+  /* 24 entre a caixa do cronômetro (ou da atividade) e o Encerrar (a E2 pede pelo menos 16; com 16 o vão visível
+     entre o fundo dos dígitos e o botão ficava em cerca de 20 e lia curto). */
   .ha-cron-acoes {
-    margin-top: 8px;
-    padding: 0 16px;
+    margin-top: 24px;
+    padding: 0;
     border-left: 0;
     gap: 8px;
   }

@@ -1,5 +1,29 @@
 import { describe, expect, it } from 'vitest'
-import { formatarCronometro, formatarDuracao, formatarHora, formatarUltimo } from './formatar.ts'
+import { formatarCronometro, formatarDuracao, formatarHora, formatarUltimo, tamanhoDoCronometro } from './formatar.ts'
+
+// VOLTA1 E2: a classe de tamanho do cronômetro vem do número de caracteres da duração, e não de uma largura
+// medida em JavaScript: até 7 ("00:00", "1:12:01") é `normal`; 8 ou mais ("10:00:00", "100:00:00") é `longo`.
+describe('tamanhoDoCronometro', () => {
+  it('devolve "normal" até 7 caracteres', () => {
+    for (const texto of ['00:00', '09:59', '59:59', '0:09:59', '1:00:00', '1:11:11', '1:12:01', '8:08:08', '9:59:59']) {
+      expect(texto.length, texto).toBeLessThanOrEqual(7)
+      expect(tamanhoDoCronometro(texto), texto).toBe('normal')
+    }
+  })
+
+  it('devolve "longo" a partir de 8 caracteres', () => {
+    for (const texto of ['10:00:00', '12:34:56', '23:59:59', '99:59:59', '100:00:00', '1000:00:00']) {
+      expect(texto.length, texto).toBeGreaterThanOrEqual(8)
+      expect(tamanhoDoCronometro(texto), texto).toBe('longo')
+    }
+  })
+
+  it('segue o formato real do cronômetro: 9 h 59 min 59 s é normal e 10 h exatas é longo', () => {
+    expect(tamanhoDoCronometro(formatarCronometro(9 * 3_600_000 + 59 * 60_000 + 59_000))).toBe('normal')
+    expect(tamanhoDoCronometro(formatarCronometro(10 * 3_600_000))).toBe('longo')
+    expect(tamanhoDoCronometro(formatarCronometro(100 * 3_600_000))).toBe('longo')
+  })
+})
 
 const MIN = 60_000
 

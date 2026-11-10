@@ -19,6 +19,16 @@ export function formatarCronometro(ms: number): string {
     : `${doisDigitos(minutos)}:${doisDigitos(segundos)}`
 }
 
+// A classe de tamanho do cronômetro, pelo número de caracteres do texto (VOLTA1 E2): até 7 ("00:00", "1:12:01",
+// "9:59:59") é `normal`; 8 ou mais ("10:00:00", "100:00:00") é `longo` e o CSS o faz cair para um tamanho que
+// cabe. É contagem de caracteres, e não largura medida: os algarismos do cronômetro são tabulares, então a
+// largura da caixa só depende de quantos caracteres há, e a classe não muda enquanto os dígitos mudam.
+const CARACTERES_DO_CRONOMETRO_NORMAL = 7
+
+export function tamanhoDoCronometro(texto: string): 'normal' | 'longo' {
+  return texto.length > CARACTERES_DO_CRONOMETRO_NORMAL ? 'longo' : 'normal'
+}
+
 const TRAVESSAO = '—'
 const PREFIXO_HA = 'há '
 const PREFIXO_ONTEM = 'ontem '

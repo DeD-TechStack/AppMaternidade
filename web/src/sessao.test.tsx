@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { describe, expect, it, vi } from 'vitest'
-import { fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { criarEstadoInicial, type EstadoPrototipo, type TipoSessao } from './prototipo/estado.ts'
 import { renderizarRota } from './teste/renderizarRota.tsx'
 import { listarFontes, pastaSrcDe } from './teste/fontes.ts'
@@ -380,6 +380,53 @@ describe('as peças que saíram (EMENDAS E7): ninguém mais as usa', () => {
   })
 })
 
+// VOLTA1 E2: o tamanho do cronômetro depende do número de caracteres da duração (atributo `data-tamanho` no
+// `role="timer"`), e não de uma largura medida em JavaScript.
+describe('Sessão: o tamanho do cronômetro pelo número de caracteres (E2)', () => {
+  const HORA = 3_600_000
+  const caso = (horas: number, minutos: number, segundos: number) => horas * HORA + minutos * MIN + segundos * 1000 + 400
+
+  const exemplos: Array<[string, number, 'normal' | 'longo']> = [
+    ['09:59', caso(0, 9, 59), 'normal'],
+    ['1:11:11', caso(1, 11, 11), 'normal'],
+    ['8:08:08', caso(8, 8, 8), 'normal'],
+    ['9:59:59', caso(9, 59, 59), 'normal'],
+    ['10:00:00', caso(10, 0, 0), 'longo'],
+    ['23:59:59', caso(23, 59, 59), 'longo'],
+    ['100:00:00', caso(100, 0, 0), 'longo'],
+  ]
+
+  for (const [texto, ms, tamanho] of exemplos) {
+    it(`"${texto}" (${texto.length} caracteres) leva data-tamanho="${tamanho}" no role="timer"`, () => {
+      renderizarRota('/app/sessao', { estadoInicial: sessaoDe('sono', ms) })
+
+      const timer = screen.getByRole('timer', { name: 'Duração da sessão' })
+      expect(timer.textContent).toBe(texto)
+      expect(timer.getAttribute('data-tamanho')).toBe(tamanho)
+    })
+  }
+
+  it('o atributo acompanha o texto quando a duração passa de 7 para 8 caracteres (9:59:59 → 10:00:00)', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-11-05T10:00:00'))
+    try {
+      const inicio = Date.now()
+      renderizarRota('/app/sessao', {
+        estadoInicial: { ...criarEstadoInicial(inicio), sessao: { tipo: 'sono', inicio: inicio - (10 * HORA - 2000), pessoa: 'Bruno' } },
+      })
+      const timer = screen.getByRole('timer', { name: 'Duração da sessão' })
+      expect(timer.getAttribute('data-tamanho')).toBe('normal')
+      act(() => {
+        vi.advanceTimersByTime(3000)
+      })
+      expect(screen.getByRole('timer', { name: 'Duração da sessão' }).textContent).toBe('10:00:01')
+      expect(screen.getByRole('timer', { name: 'Duração da sessão' }).getAttribute('data-tamanho')).toBe('longo')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+})
+
 describe('Sessão: o CSS do bloco /* 44d-2 */ (lido como texto)', () => {
   const inicio44 = css.indexOf('/* 44d-2 */')
   const fim44 = css.indexOf('/* 44d-4 */', inicio44)
@@ -420,20 +467,74 @@ describe('Sessão: o CSS do bloco /* 44d-2 */ (lido como texto)', () => {
     expect(bloco44).toMatch(/@media\s*\(max-width:\s*767px\)\s*\{[\s\S]*\.ha-cron-acoes\s*\{[^}]*border-left:\s*0/)
   })
 
-  // G1 em 390: "1:12:00" a 96 px mede 335,6 px e a coluna útil, com 24 de recuo, tem 295 (310 sem barra de
-  // rolagem): o cronômetro vazava da página. O recuo do bloco cai para 8 nas laterais e só o cronômetro usa
-  // essa borda; rótulo, atividade e botões ficam com 8 + 16 = 24 de recuo, como o contrato manda.
-  it('abaixo de 768 o cronômetro cabe na caixa: recuo lateral de 8 no bloco, e 16 a mais no rótulo, na atividade e nas ações (24 no total)', () => {
-    const celular = bloco44.slice(bloco44.indexOf('@media (max-width: 767px)'))
-    const em = (seletor: string) =>
-      [...celular.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
-        .filter((m) => m[1].trim().replace(/\s+/g, ' ') === seletor)
-        .map((m) => m[2])
-        .join('')
-    expect(em('.ha-cronometro')).toMatch(/padding:\s*24px 8px/)
-    expect(em('.ha-cron-tempo, .ha-cron-acoes')).toMatch(/padding:\s*0\s*;/)
-    expect(em('.ha-cron-rotulo, .ha-cron-atividade')).toMatch(/padding-inline:\s*16px/)
-    expect(em('.ha-cron-acoes')).toMatch(/padding:\s*0 16px/)
+  /** O texto de dentro de cada `@media (max-width: 767px)` do bloco, com as chaves balanceadas. */
+  function emMedia767(): string {
+    const achados: string[] = []
+    const abertura = /@media\s*\(max-width:\s*767px\)\s*\{/g
+    for (let m = abertura.exec(bloco44); m; m = abertura.exec(bloco44)) {
+      let nivel = 1
+      let i = abertura.lastIndex
+      while (i < bloco44.length && nivel > 0) {
+        if (bloco44[i] === '{') nivel += 1
+        else if (bloco44[i] === '}') nivel -= 1
+        i += 1
+      }
+      achados.push(bloco44.slice(abertura.lastIndex, i - 1))
+    }
+    return achados.join('\n')
+  }
+  const regraEm = (texto: string, seletor: string) =>
+    [...texto.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+      .filter((m) => m[1].trim().replace(/\s+/g, ' ') === seletor)
+      .map((m) => m[2])
+      .join('')
+
+  // VOLTA1 E2: o cronômetro de 80 px ("1:12:01" mede ~280) cabe nos 295 da coluna útil de 390 (24 de recuo no
+  // bloco). O truque anterior (recuo lateral de 8 só para o cronômetro, 16 a mais no rótulo) deixava os
+  // dígitos 16 px à esquerda do rótulo: com 80 o recuo volta a ser um só (24) e a caixa começa no x do rótulo.
+  it('abaixo de 768 o bloco tem 24 de recuo em todos os lados e o cronômetro, o rótulo, a atividade e as ações começam no mesmo x', () => {
+    const celular = emMedia767()
+    expect(regraEm(celular, '.ha-cronometro')).toMatch(/padding:\s*24px\s*;/)
+    expect(regraEm(celular, '.ha-cron-tempo, .ha-cron-acoes')).toMatch(/padding:\s*0\s*;/)
+    // Nada de recuo extra só para o rótulo e a atividade (era o 16 que desalinhava o cronômetro).
+    expect(regraEm(celular, '.ha-cron-rotulo, .ha-cron-atividade')).toBe('')
+    expect(regraEm(celular, '.ha-cron-acoes')).toMatch(/padding:\s*0\s*;/)
+    expect(regraEm(celular, '.ha-cron-acoes')).not.toMatch(/padding:\s*0 16px/)
+  })
+
+  it('abaixo de 768 o Encerrar fica pelo menos 16 abaixo da caixa do cronômetro (margin-top de 24 nas ações, da escala)', () => {
+    const margem = /margin-top:\s*(\d+)px/.exec(regraEm(emMedia767(), '.ha-cron-acoes'))
+    expect(margem).not.toBeNull()
+    expect(Number(margem![1])).toBeGreaterThanOrEqual(16)
+    expect(Number(margem![1])).toBe(24)
+  })
+
+  it('E2 (390): o cronômetro normal (até 7 caracteres) cai de 96 para 80 e o longo (8 ou mais) para 56, com a linha na proporção do t-cronometro', () => {
+    const celular = emMedia767()
+    const normal = regraEm(celular, ".ha-cron-valor[data-tamanho='normal']")
+    expect(normal).toMatch(/font-size:\s*5rem\s*;/)
+    expect(normal).toMatch(/line-height:\s*4rem\s*;/)
+    const longo = regraEm(celular, ".ha-cron-valor[data-tamanho='longo']")
+    expect(longo).toMatch(/font-size:\s*3\.5rem\s*;/)
+    expect(longo).toMatch(/line-height:\s*2\.8125rem\s*;/)
+  })
+
+  it('E2 (1440): o normal continua o t-cronometro de 224 (nenhuma regra do bloco o muda) e o longo cai para 160, que termina antes do fio de c8', () => {
+    const foraDoCelular = bloco44.replace(emMedia767(), '')
+    expect(regraEm(foraDoCelular, ".ha-cron-valor[data-tamanho='normal']")).toBe('')
+    const longo = regraEm(foraDoCelular, ".ha-cron-valor[data-tamanho='longo']")
+    expect(longo).toMatch(/font-size:\s*10rem\s*;/)
+    expect(longo).toMatch(/line-height:\s*8rem\s*;/)
+    // A base `.ha-cron-valor` segue sem tamanho próprio (o 224 vem de `t-cronometro`).
+    expect(regra('.ha-cron-valor')).not.toMatch(/font-size/)
+  })
+
+  it('E2: o tamanho vem do atributo (caracteres), e o CSS não usa clamp, calc nem unidade de janela para ajustar o cronômetro', () => {
+    for (const bloco of [emMedia767(), bloco44.replace(emMedia767(), '')]) {
+      for (const seletor of [".ha-cron-valor[data-tamanho='normal']", ".ha-cron-valor[data-tamanho='longo']"]) {
+        expect(regraEm(bloco, seletor)).not.toMatch(/clamp|calc|\dvw|cqw/)
+      }
+    }
   })
 
   it('o campo da nota segue o 2.9: sem caixa, fio sólido embaixo na cor do texto do bloco, Instrument Serif 32', () => {
