@@ -1,6 +1,6 @@
 import { createRef } from 'react'
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { BarraRegistrar } from './componentes/registro/BarraRegistrar.tsx'
 
 // A barra Registrar de 1 toque (EMENDAS E1): 4 botões numa barra fixa, com o painel (confirmação,
@@ -491,7 +491,7 @@ describe('BarraRegistrar: a confirmação', () => {
     expect(container.querySelector('[role="status"]')!.contains(document.activeElement)).toBe(false)
   })
 
-  it('o painel e a confirmação ficam num painel flutuante dentro do elemento fixo, antes da fileira', () => {
+  it('o painel e a confirmação ficam num painel flutuante dentro do elemento fixo, depois da fileira no DOM (o Tab chega a eles)', () => {
     const { barra } = montar({ texto: 'Observação registrada' })
     fireEvent.click(botao('Mais registros'))
 
@@ -501,7 +501,7 @@ describe('BarraRegistrar: a confirmação', () => {
     expect(painel.contains(screen.getByRole('status'))).toBe(true)
     expect(painel.contains(screen.getByRole('group', { name: 'Outros registros de Heloísa' }))).toBe(true)
     expect(fileira.parentElement).toBe(barra)
-    expect(painel.compareDocumentPosition(fileira) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
+    expect(fileira.compareDocumentPosition(painel) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
     expect(painel.contains(fileira)).toBe(false)
   })
 
@@ -526,6 +526,197 @@ describe('BarraRegistrar: a confirmação', () => {
     const doPainel = [...barra.querySelectorAll('[data-painel] button')]
     expect(doPainel.length).toBeGreaterThanOrEqual(6)
     for (const b of doPainel) expect(b.classList.contains('alvo-toque'), b.outerHTML).toBe(true)
+  })
+})
+
+// E8 (VOLTA1): o painel "Mais" e a confirmação no teclado. O jsdom não anda com o Tab nem transforma Enter
+// e Espaço em clique, e o `@testing-library/user-event` não está nas dependências do projeto: o `Tab` aqui
+// anda pelos elementos tabuláveis na ordem do DOM (o que o navegador faz, sem tabindex positivo) e a
+// ativação manda keydown, keyup e click no elemento focado, como o navegador faz num botão.
+describe('BarraRegistrar: o painel Mais e a confirmação no teclado (E8)', () => {
+  const OPCOES_MAIS = ['Tummy time', 'Mamadeira', 'Alimentação sólida', 'Observação']
+  let rodape: HTMLAnchorElement
+
+  function montarComRodape(sobrescritas: Partial<Parameters<typeof BarraRegistrar>[0]> = {}) {
+    const resultado = montar(sobrescritas)
+    // O próximo tabulável depois da barra (o rodapé da página): o que o Tab alcança ao sair do painel.
+    rodape = document.createElement('a')
+    rodape.href = '#rodape'
+    rodape.textContent = 'Rodapé'
+    document.body.append(rodape)
+    return resultado
+  }
+
+  afterEach(() => {
+    rodape?.remove()
+  })
+
+  function tabulaveis(): HTMLElement[] {
+    return [...document.querySelectorAll<HTMLElement>('button, a[href], input, select, textarea, [tabindex]')].filter(
+      (el) => !el.hasAttribute('disabled') && el.getAttribute('tabindex') !== '-1' && !el.closest('[hidden], [inert]'),
+    )
+  }
+
+  function tab(voltar = false) {
+    const atual = document.activeElement as HTMLElement
+    const lista = tabulaveis()
+    const alvo = lista[lista.indexOf(atual) + (voltar ? -1 : 1)]
+    fireEvent.keyDown(atual, { key: 'Tab', shiftKey: voltar })
+    if (alvo) alvo.focus()
+    else atual.blur()
+  }
+
+  function ativar(tecla: 'Enter' | ' ') {
+    const atual = document.activeElement as HTMLElement
+    fireEvent.keyDown(atual, { key: tecla })
+    fireEvent.keyUp(atual, { key: tecla })
+    fireEvent.click(atual)
+  }
+
+  const nomeDoFoco = () => (document.activeElement as HTMLElement).textContent
+
+  /** Percorre `passos` Tabs e devolve o texto do elemento focado depois de cada um. */
+  function percorrer(passos: number, voltar = false): Array<string | null> {
+    const vistos: Array<string | null> = []
+    for (let i = 0; i < passos; i++) {
+      tab(voltar)
+      vistos.push(nomeDoFoco())
+    }
+    return vistos
+  }
+
+  it('com o painel fechado a ordem do Tab é Sono, Mamada, Fralda, Mais e depois o que vem na página', () => {
+    montarComRodape()
+    botao('Iniciar sono de Heloísa').focus()
+
+    expect(percorrer(4)).toEqual(['Mamada', 'Fralda', 'Mais', 'Rodapé'])
+    expect(percorrer(4, true)).toEqual(['Mais', 'Fralda', 'Mamada', 'Sono'])
+  })
+
+  for (const [nome, tecla] of [
+    ['Enter', 'Enter'],
+    ['Espaço', ' '],
+  ] as const) {
+    it(`${nome} no botão "Mais registros" abre o painel e leva o foco à 1ª opção (Tummy time)`, () => {
+      montarComRodape()
+      const mais = botao('Mais registros')
+      mais.focus()
+
+      ativar(tecla)
+
+      expect(mais.getAttribute('aria-expanded')).toBe('true')
+      expect(screen.getByRole('group', { name: 'Outros registros de Heloísa' })).toBeTruthy()
+      expect(document.activeElement).toBe(botao('Iniciar tummy time de Heloísa'))
+      expect(nomeDoFoco()).toBe('Tummy time')
+    })
+
+    it(`${nome}: o Tab percorre Tummy time, Mamadeira, Alimentação sólida e Observação, sem pular nenhuma, e só depois sai do painel`, () => {
+      montarComRodape()
+      botao('Mais registros').focus()
+      ativar(tecla)
+
+      expect(nomeDoFoco()).toBe(OPCOES_MAIS[0])
+      expect(percorrer(4)).toEqual([...OPCOES_MAIS.slice(1), 'Rodapé'])
+    })
+
+    it(`${nome}: o Shift+Tab percorre de volta Observação, Alimentação sólida, Mamadeira, Tummy time e o botão Mais`, () => {
+      montarComRodape()
+      botao('Mais registros').focus()
+      ativar(tecla)
+      percorrer(4) // até o rodapé
+
+      expect(percorrer(5, true)).toEqual([...OPCOES_MAIS].reverse().concat('Mais'))
+    })
+
+    it(`${nome}: Esc fecha o painel, devolve o foco ao botão "Mais registros" e tira o aria-controls`, () => {
+      montarComRodape()
+      const mais = botao('Mais registros')
+      mais.focus()
+      ativar(tecla)
+      percorrer(2) // o foco está no meio do painel
+
+      fireEvent.keyDown(document.activeElement!, { key: 'Escape' })
+
+      expect(screen.queryByRole('group', { name: 'Outros registros de Heloísa' })).toBeNull()
+      expect(document.activeElement).toBe(mais)
+      expect(mais.getAttribute('aria-expanded')).toBe('false')
+      expect(mais.hasAttribute('aria-controls')).toBe(false)
+    })
+  }
+
+  it('o clique do mouse em "Mais registros" também leva o foco à 1ª opção', () => {
+    montarComRodape()
+
+    fireEvent.click(botao('Mais registros'))
+
+    expect(document.activeElement).toBe(botao('Iniciar tummy time de Heloísa'))
+  })
+
+  it('aria-expanded e aria-controls: fechado sem controls; aberto, o controls aponta para o painel; fechado de novo, o controls some', () => {
+    montarComRodape()
+    const mais = botao('Mais registros')
+    expect(mais.getAttribute('aria-expanded')).toBe('false')
+    expect(mais.hasAttribute('aria-controls')).toBe(false)
+
+    fireEvent.click(mais)
+    const painel = screen.getByRole('group', { name: 'Outros registros de Heloísa' })
+    expect(mais.getAttribute('aria-expanded')).toBe('true')
+    expect(painel.id).not.toBe('')
+    expect(mais.getAttribute('aria-controls')).toBe(painel.id)
+    expect(document.getElementById(mais.getAttribute('aria-controls')!)).toBe(painel)
+
+    fireEvent.click(mais)
+    expect(screen.queryByRole('group', { name: 'Outros registros de Heloísa' })).toBeNull()
+    expect(mais.getAttribute('aria-expanded')).toBe('false')
+    expect(mais.hasAttribute('aria-controls')).toBe(false)
+  })
+
+  it('fechar o painel pelo próprio botão Mais deixa o foco no botão Mais', () => {
+    montarComRodape()
+    const mais = botao('Mais registros')
+    fireEvent.click(mais)
+
+    fireEvent.click(mais)
+
+    expect(document.activeElement).toBe(mais)
+  })
+
+  it('o painel vem logo depois do gatilho no DOM: do botão Mais, o próximo Tab é a 1ª opção', () => {
+    montarComRodape()
+    const mais = botao('Mais registros')
+    fireEvent.click(mais)
+    mais.focus()
+
+    expect(percorrer(1)).toEqual(['Tummy time'])
+    expect(percorrer(1, true)).toEqual(['Mais'])
+  })
+
+  it('a confirmação da fralda também vem depois dos botões: o Tab do botão Fralda chega a Desfazer, Fechar, Xixi, Cocô e Ambos, sem pular nenhum', () => {
+    montarComRodape({ texto: 'Fralda registrada' })
+    botao('Registrar fralda de Heloísa').focus()
+
+    expect(percorrer(7)).toEqual(['Mais', 'Desfazer', 'Fechar', 'Xixi', 'Cocô', 'Ambos', 'Rodapé'])
+    expect(percorrer(6, true)).toEqual(['Ambos', 'Cocô', 'Xixi', 'Fechar', 'Desfazer', 'Mais'])
+  })
+
+  it('com a confirmação da fralda na tela, o painel Mais aberto ainda tem as 4 opções percorridas em ordem e só depois sai', () => {
+    montarComRodape({ texto: 'Fralda registrada: Xixi' })
+    const mais = botao('Mais registros')
+    mais.focus()
+
+    ativar('Enter')
+
+    expect(nomeDoFoco()).toBe('Tummy time')
+    expect(percorrer(4)).toEqual([...OPCOES_MAIS.slice(1), 'Rodapé'])
+  })
+
+  it('o role="status" continua único e no DOM com o painel Mais aberto e a confirmação na tela', () => {
+    const { barra } = montarComRodape({ texto: 'Fralda registrada' })
+    fireEvent.click(botao('Mais registros'))
+
+    expect(screen.getAllByRole('status')).toHaveLength(1)
+    expect(barra.querySelectorAll('[role="status"]')).toHaveLength(1)
+    expect(screen.getByRole('status').hasAttribute('tabindex')).toBe(false)
   })
 })
 

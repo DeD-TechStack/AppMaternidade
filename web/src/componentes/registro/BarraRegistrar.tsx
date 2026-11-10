@@ -34,7 +34,8 @@ const BOTAO = 'ha-barra-botao t-botao alvo-toque'
  * Mais, numa barra fixa de 64 px. Sono e Mamada iniciam a sessão na hora, e Fralda também: registra a
  * fralda num toque e a confirmação traz Desfazer, Fechar e a escolha opcional do tipo (Xixi, Cocô,
  * Ambos), que só ajusta o texto. Mais abre a lista (Tummy time, Mamadeira, Alimentação sólida,
- * Observação). O painel flutua logo acima da barra, dentro do elemento fixo, e leva a confirmação, cuja
+ * Observação); ao abrir, o foco vai à 1ª opção (E8). O painel flutua logo acima da barra, dentro do elemento
+ * fixo, mas vem depois da fileira no DOM (o Tab dos botões chega a ele); leva a confirmação, cuja
  * região `role="status"` é única e fica sempre no DOM. Esc fecha o que estiver aberto: o Mais (foco no
  * botão Mais) e, depois, a confirmação da fralda (foco no botão Fralda). Com a janela de menos de
  * 40 rem de altura a barra volta ao fluxo.
@@ -53,8 +54,15 @@ export function BarraRegistrar({
   const [maisAberto, setMaisAberto] = useState(false)
   const botaoFralda = useRef<HTMLButtonElement>(null)
   const botaoMais = useRef<HTMLButtonElement>(null)
+  const grupoMais = useRef<HTMLDivElement>(null)
   const idMais = useId()
   const fraldaNaTela = ehConfirmacaoDeFralda(texto)
+
+  // Ao abrir (clique, Enter ou Espaço), o foco vai à 1ª opção: sem isso ele ficava no gatilho e o
+  // painel passava despercebido para quem usa o teclado (E8).
+  useEffect(() => {
+    if (maisAberto) grupoMais.current?.querySelector('button')?.focus()
+  }, [maisAberto])
 
   useEffect(() => {
     if (!maisAberto && !fraldaNaTela) return
@@ -82,6 +90,12 @@ export function BarraRegistrar({
   function registrarFralda() {
     setMaisAberto(false)
     aoRegistrarFralda()
+  }
+
+  // Fechar pelo próprio botão deixa o foco nele (o foco estava na 1ª opção, que sai com o painel).
+  function alternarMais() {
+    if (maisAberto) botaoMais.current?.focus()
+    setMaisAberto(!maisAberto)
   }
 
   function escolherMais(item: ItemMais) {
@@ -113,34 +127,6 @@ export function BarraRegistrar({
       data-barra-registrar=""
       className={fixa ? 'registro-rapido barra-registrar barra-fixa' : 'registro-rapido barra-registrar'}
     >
-      <div className="ha-painel" data-painel="" data-aberto={aberto ? '' : undefined}>
-        <Confirmacao texto={texto} aoDesfazer={aoDesfazer} aoFechar={aoFechar} escolhas={escolhas} />
-
-        {maisAberto ? (
-          <div
-            id={idMais}
-            role="group"
-            aria-label="Outros registros de Heloísa"
-            className="ha-painel-grupo"
-            data-largos=""
-          >
-            <Botao
-              variante="moldura"
-              className="alvo-toque"
-              aria-label="Iniciar tummy time de Heloísa"
-              onClick={() => iniciar('tummy')}
-            >
-              Tummy time
-            </Botao>
-            {ITENS_MAIS.map((item) => (
-              <Botao key={item.chave} variante="moldura" className="alvo-toque" onClick={() => escolherMais(item)}>
-                {item.rotulo}
-              </Botao>
-            ))}
-          </div>
-        ) : null}
-      </div>
-
       <div className="ha-barra-fileira" data-fileira="">
         <button
           ref={refSono}
@@ -170,10 +156,42 @@ export function BarraRegistrar({
           aria-expanded={maisAberto}
           aria-controls={maisAberto ? idMais : undefined}
           className={BOTAO}
-          onClick={() => setMaisAberto(!maisAberto)}
+          onClick={alternarMais}
         >
           <span>Mais</span>
         </button>
+      </div>
+
+      {/* O painel vem DEPOIS da fileira no DOM, para o Tab do gatilho (Fralda e Mais) chegar a ele e às
+          suas opções, uma a uma, antes de sair da barra. Visualmente continua logo acima dela: `.ha-painel`
+          é `position: absolute; bottom: 100%`, e a posição não depende da ordem do DOM. */}
+      <div className="ha-painel" data-painel="" data-aberto={aberto ? '' : undefined}>
+        <Confirmacao texto={texto} aoDesfazer={aoDesfazer} aoFechar={aoFechar} escolhas={escolhas} />
+
+        {maisAberto ? (
+          <div
+            ref={grupoMais}
+            id={idMais}
+            role="group"
+            aria-label="Outros registros de Heloísa"
+            className="ha-painel-grupo"
+            data-largos=""
+          >
+            <Botao
+              variante="moldura"
+              className="alvo-toque"
+              aria-label="Iniciar tummy time de Heloísa"
+              onClick={() => iniciar('tummy')}
+            >
+              Tummy time
+            </Botao>
+            {ITENS_MAIS.map((item) => (
+              <Botao key={item.chave} variante="moldura" className="alvo-toque" onClick={() => escolherMais(item)}>
+                {item.rotulo}
+              </Botao>
+            ))}
+          </div>
+        ) : null}
       </div>
     </section>
   )
