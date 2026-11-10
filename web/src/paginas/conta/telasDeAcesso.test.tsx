@@ -571,6 +571,99 @@ describe('o anel de foco não encosta na mensagem do campo (D-1)', () => {
       expect(altura!).toBeGreaterThanOrEqual(48)
     })
   })
+
+  // Regressão do D-1 na madrugada: a entrada de 52 px reprovava o G11 (alvo de toque de 56 px de altura na
+  // madrugada, 44 no claro). A entrada de 768 para cima tem de ser, em cada tema, ao menos o `--alvo-toque` dele.
+  // Centrar os 56 px nos 58 da linha do valor leva a base do anel 2 px para baixo: a folga cai para 2 px, e descer a
+  // mensagem para recuperá-la (top: 6 px) encosta o descendente da letra no fio de baixo. Então a entrada cresce para
+  // cima: a base dela e a área do texto (52 px) ficam onde o D-1 as pôs, nos dois temas, e a folga e a mensagem são
+  // as de antes. A madrugada não ganha seletor próprio (`estilo.test.ts`: nenhuma regra do campo depende de
+  // `data-tema`): ela entra pelo token `--alvo-toque`, que o tema já redefine. Altura e folga reais são do medidor.
+  describe('o G11 vale na madrugada (regressão do D-1)', () => {
+    const temaCss = readFileSync(pastaSrcDe(import.meta.url) + '../../styles/tema.css', 'utf8')
+    const alvoDoClaro = Number(/:root\s*\{[^}]*--alvo-toque:\s*(\d+)px/.exec(temaCss)?.[1])
+    const alvoDaMadrugada = Number(
+      /\[data-tema-local=['"]madrugada['"]\][^{]*\{[^}]*--alvo-toque:\s*(\d+)px/.exec(temaCss)?.[1],
+    )
+    const TEMAS = [
+      ['claro', alvoDoClaro],
+      ['madrugada', alvoDaMadrugada],
+    ] as const
+    /** A entrada do D-1: 52 px, centrada na linha do valor. A área do texto e a base dela são as de referência. */
+    const ALTURA_DO_D1 = 52
+    const BASE_DO_D1 = (LINHA_DO_VALOR + ALTURA_DO_D1) / 2
+
+    const corpoDaEntrada = () => corpoDe(deComputador, /\.sb-campo-entrada$/)
+    const ultima = (propriedade: string) => {
+      const todas = [...corpoDaEntrada().matchAll(new RegExp(`(?:^|[;\\s])${propriedade}\\s*:\\s*([^;]+)`, 'g'))]
+      return todas.length > 0 ? todas[todas.length - 1][1].trim() : undefined
+    }
+    /** `calc(max(52px, var(--alvo-toque)) - 52px)` ou `calc((52px - max(52px, var(--alvo-toque))) / 2)`, em px. */
+    function resolver(valor: string | undefined, alvo: number) {
+      if (valor === undefined) return 0
+      const simples = /^(-?\d*\.?\d+)(px)?$/.exec(valor)
+      if (simples) return Number(simples[1])
+      const cresce = /^calc\(\s*max\(\s*(\d+)px\s*,\s*var\(--alvo-toque\)\s*\)\s*-\s*(\d+)px\s*\)$/.exec(valor)
+      if (cresce) return Math.max(Number(cresce[1]), alvo) - Number(cresce[2])
+      const sobe = /^calc\(\s*\(\s*(\d+)px\s*-\s*max\(\s*(\d+)px\s*,\s*var\(--alvo-toque\)\s*\)\s*\)\s*\/\s*(\d+)\s*\)$/.exec(valor)
+      if (sobe) return (Number(sobe[1]) - Math.max(Number(sobe[2]), alvo)) / Number(sobe[3])
+      throw new Error(`valor fora do que o teste sabe ler: ${valor}`)
+    }
+
+    /** A geometria da entrada num tema, em px a partir do topo da linha do valor (58 px, entrada centrada nela). */
+    function entradaNoTema(alvo: number) {
+      const altura = Math.max(px(corpoDaEntrada(), 'height') ?? 0, /min-block-size:\s*var\(--alvo-toque\)/.test(corpoDaEntrada()) ? alvo : 0)
+      const recuo = resolver(ultima('padding-block-start'), alvo)
+      const deslocamento = ultima('position') === 'relative' ? resolver(ultima('top'), alvo) : 0
+      const topo = (LINHA_DO_VALOR - altura) / 2 + deslocamento
+      return { altura, base: topo + altura, areaDoTexto: altura - recuo, centroDoTexto: topo + recuo + (altura - recuo) / 2 }
+    }
+
+    it('os dois alvos vêm do tema: 44 no claro, 56 na madrugada', () => {
+      expect(alvoDoClaro).toBe(44)
+      expect(alvoDaMadrugada).toBe(56)
+    })
+
+    it.each(TEMAS)('a entrada de 768 para cima tem pelo menos o alvo de toque do tema %s (G11)', (_tema, alvo) => {
+      expect(entradaNoTema(alvo).altura).toBeGreaterThanOrEqual(alvo)
+    })
+
+    it('na madrugada a entrada tem pelo menos 56 px de altura', () => {
+      expect(entradaNoTema(alvoDaMadrugada).altura).toBeGreaterThanOrEqual(56)
+    })
+
+    it('no claro a entrada segue com 52 px (nada mudou)', () => {
+      expect(entradaNoTema(alvoDoClaro)).toMatchObject({ altura: ALTURA_DO_D1, base: BASE_DO_D1 })
+    })
+
+    it.each(TEMAS)('o valor e a base da entrada ficam onde o D-1 os pôs, no tema %s', (_tema, alvo) => {
+      const entrada = entradaNoTema(alvo)
+      // A base do anel (base + 4) e, com ela, a folga para a mensagem, não mudam.
+      expect(entrada.base).toBe(BASE_DO_D1)
+      // A área do texto tem os 52 px do D-1 e o centro dela é o centro da linha do valor: o valor não sai do lugar.
+      expect(entrada.areaDoTexto).toBe(ALTURA_DO_D1)
+      expect(entrada.centroDoTexto).toBe(LINHA_DO_VALOR / 2)
+    })
+
+    it.each(TEMAS)('a folga entre a base do anel e a tinta da mensagem é de pelo menos 4 px no tema %s', (_tema, alvo) => {
+      const { base } = entradaNoTema(alvo)
+      for (const fim of [/\.sb-campo-erro$/, /\.sb-campo-ajuda$/, /\.sb-campo-status$/]) {
+        const descida = px(corpoDe(deComputador, fim), 'top')!
+        const folga = LINHA_DO_VALOR + descida + OFFSET_DA_TINTA - (base + ALCANCE_DO_ANEL)
+        expect(folga, `folga com ${String(fim)}`).toBeGreaterThanOrEqual(MINIMO)
+      }
+    })
+
+    it('a mensagem não desce além do D-1 (o descendente da letra não chega ao fio de baixo)', () => {
+      for (const fim of [/\.sb-campo-erro$/, /\.sb-campo-ajuda$/, /\.sb-campo-status$/]) {
+        expect(px(corpoDe(deComputador, fim), 'top'), String(fim)).toBeLessThanOrEqual(4)
+      }
+    })
+
+    it('nenhuma regra do bloco liga a madrugada por `data-tema`: ela entra pelo token', () => {
+      expect(bloco).not.toMatch(/data-tema/)
+    })
+  })
 })
 
 // E-7 (e C-4, R-4, B-4, que o reaproveitam): "o erro aparece em 17/24 abaixo do campo, sem mudar a

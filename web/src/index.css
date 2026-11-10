@@ -2980,6 +2980,32 @@
   }
 }
 
+/* ---------------------------------------------------------------------------------------------
+   44d-3, regressão do D-1 na madrugada (G11): a entrada tem o alvo de toque do tema. Só se acrescenta aqui.
+   ------------------------------------------------------------------------------------------ */
+@layer components {
+  /* A entrada de 52 px do D-1 passa do alvo claro (44) e reprovava o alvo da madrugada (56 de altura). De 768
+     para cima a entrada tem, no mínimo, o `--alvo-toque` do tema (44 no claro, que o 52 já cobre; 56 na
+     madrugada). O tema entra pelo token, não por `data-tema`: nenhuma regra do campo depende do tema.
+     Centrar os 56 px nos 58 da linha do valor (como no claro, com 52) leva o anel 2 px para baixo e a folga
+     para a mensagem cairia de 4 para 2 px. Descer a mensagem para recuperá-la (top: 6 px) encosta o
+     descendente da letra (q, p) no fio de baixo, que fica a 466 e o descendente termina a caixa + 21. Então
+     a entrada não é centrada: a base dela fica onde o D-1 a pôs (3 px acima da base da linha do valor) e ela
+     cresce para cima, para dentro dos 27 px de ar que a linha tem acima do valor, e o `padding-top` igual ao
+     crescimento mantém a área do texto (52 px) onde estava. O crescimento é `max(52, alvo) - 52`: 0 no claro,
+     4 na madrugada. Resultado, nos dois temas: o valor, o rótulo, o fio, a base do anel (441), a mensagem
+     (top: 4 px) e a folga (4 px na ajuda, 8 no erro) são os de antes; só o alvo de toque cresce, 4 px para
+     cima (o anel sobe junto, no ar acima do valor). A linha segue com 112 px. */
+  @media (min-width: 768px) {
+    .sb-acesso-campos .sb-campo-entrada {
+      min-block-size: var(--alvo-toque);
+      padding-block-start: calc(max(52px, var(--alvo-toque)) - 52px);
+      position: relative;
+      top: calc((52px - max(52px, var(--alvo-toque))) / 2);
+    }
+  }
+}
+
 /* 44d-4 */
 /* O Início novo (MAT-44d-4): apresentação, linhas, citação, cartões, pergunta com CTA, palavras
    grandes e seção escura. Classes `vt-*`. Em cada seletor o valor base (computador) vem primeiro e as
