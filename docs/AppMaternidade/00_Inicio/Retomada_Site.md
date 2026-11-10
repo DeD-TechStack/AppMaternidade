@@ -24,6 +24,29 @@ Esta é a nota de partida da próxima sessão de trabalho no site. Ela registra 
 - **Decisão (10/11).** A spec v3 da MAT-38 foi aprovada (sha 87dd78d9) e as das MAT-39, 40 e 41 também (shas 145824bc, 0d387f95 e 93c02716). Os cartões foram criados e ligados aos pais: 44c-2b t_6e8036b9, 37b t_11ad28e6, 38a t_f7bdf7e8, 38b t_7c491177, 39a t_55a580e8, 39b t_c9529365, 40a t_4c921e60, 40b t_359ab800 e 41a t_ab1bd202. A 41b só nasce depois do commit de junção C41b. Na 39a e na MAT-36 entrou uma emenda: sai "Revisão profissional: pendente" e o selo de rascunho (comentários 129 e 130). Para a 48b, a ACC-11 foi emendada no comentário 125.
 - **Marco (10/11): MAT-48b concluída.** Integrei na main **146e290**. Os 3 commits do c2a7cc2 foram rebaseados, e o range-diff deu igual. Como o sandbox do revisor-appmaternidade falha com ShellExecuteExW 1223 neste cartão, a revisão veio da R-B (codex gpt-6-astra, só leitura), com o resultado APPROVED_WITH_LIMITS (`MAT-48/RB_REVISAO_48b.md`). A verificação determinística ficou com o líder, em `.oc/lider_verif/`. **As migrações já estão aplicadas no Supabase da nuvem** (run 42785674785). O job de dados iniciais falhou porque a CLI pede `--yes`. Nada mudou na nuvem, e a correção está no cartão t_0754f01f (MAT-48b-fix). Depois dela, o líder roda o job de dados de novo.
 - **Marco (10/11): banco da nuvem pronto.** A correção t_0754f01f foi integrada em **67d390a**. O run 42787421628 passou nos 3 jobs: testes locais, migrações na nuvem e dados iniciais. Os termos vigentes estão garantidos. O admin ainda não existe e só será criado quando Daniel tiver conta no site, o que depende da 37a.
+- **PAUSA de 10/11, às 20h15 (pedido de Daniel).** Daniel retoma mais tarde, com a infra e o AppMaternidade. Nada foi integrado depois do pedido e não houve push para a main.
+  - **Estado:** `int/refazer` está em **e73e75a** e já tem a 44d-1 (base), a 44d-4 (Início), a 44d-2 (área logada) e a 44d-5 (imagens do Início). A main está em 439a42d, mais esta nota em commit local. O site publicado continua o antigo.
+  - **Cartões pausados, com `needs_input` e o motivo "[decisor: Daniel] pausa de 10/11 (~20h15)":**
+    - t_5184c99c (44d-3, acesso e Conta): na volta visual 1/3, com as notas 7,4–8,2 e o comentário 258. Ao voltar, fazer D1–D5 numa passada só, com o `rodada.py`, e depois Fable e revisão.
+    - t_b2a55931 (MAT-36, páginas públicas): na volta 2/3. 18 de 20 casos passam, e só o Contato fica em 7,6/7,8 (comentários 265 e 269). Ao voltar, fazer N1–N7, o rodapé em 1440 e o zoom dentro do próprio escopo.
+    - t_f21ee109 (44d-6a, área logada, acabamento das imagens e zoom do cabeçalho): começou a 1ª passada. Ao voltar, entregar A, B e C.
+  - **Cartões em fila, presos aos pais pausados (o painel não deixa bloquear um cartão em todo):**
+    - 44d-6b t_6afcc9b3 e 44d-6c t_9a4ca6ee;
+    - 44d-6 t_1584e47e, a conferência final;
+    - 37b t_11ad28e6, 38a t_f7bdf7e8, 38b t_7c491177, 39a t_55a580e8, 39b t_c9529365, 40a t_4c921e60 e 40b t_359ab800.
+  - **Parados de antes:**
+    - 41a t_ab1bd202: a PWA foi adiada por Daniel;
+    - 37a t_915e3632 e 44c-1 t_f67d8962: substituídos;
+    - 37g t_1757260d: espera o Google.
+  - **Ao retomar, em ordem:**
+    1. Desbloquear a 44d-3, a MAT-36 e a 6a.
+    2. Integrar a 44d-3, o que libera a 37b, a 39a, a 40a e a 6b.
+    3. Integrar a MAT-36, o que libera a 6c.
+    4. Fazer a 44d-6.
+    5. Montar a galeria para Daniel.
+  - **Previsão a partir da retomada:** cerca de 4 horas para o visual inteiro em `int/refazer` e mais 3 a 4 horas para a ligação com o banco.
+  - **Ferramenta nova:** `_staging/appmaternidade/ferramentas/rodada/rodada.py`, que faz a cerimônia de cada volta numa chamada só.
+  - PAUSA_OK appmaternidade 2026-11-10T20:20-03:00
 - **Decisão e marco (10/11).** Daniel respondeu: "tudo sim e segue com opção A" (D1 a D5, com a barra Registrar de 1 toque). Saiu a spec MAT-44d, com sha256 953a9114 e as 3 primeiras seções em `_staging/appmaternidade/MAT-44d/TAREFA.md`, e foi criado o ramo `int/refazer`, em f069499, com push. O Pages só publica a partir da main. Ficaram 6 cartões:
   - t_0288c2c3: 44d-1, sistema-base, pronto para começar;
   - t_6c3e5423 (44d-2, área logada), t_5184c99c (44d-3, acesso e Conta, com o código fad75c0 da 37a) e t_27b74658 (44d-4, Início): esperam o 1;
