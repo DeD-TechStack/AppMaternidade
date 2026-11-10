@@ -2103,20 +2103,40 @@
     background-color: var(--cor-fio-suave);
   }
 
-  /* As etiquetas começam no x de c9 e no topo do título, uma sob a outra, a cada 32 px. */
+  /* A coluna lateral (etiquetas e links) começa no topo do título e a 32 px do x de c9, que é onde
+     está o fio vertical dos 80 px finais. O recuo é da coluna inteira, então vale para todo item.
+     Cada item tem 32 px de altura no mínimo: a etiqueta fica em 32 e o link cresce até o alvo de
+     toque, sem ser cortado nem sobrepor o vizinho. */
   .sb-abertura-lateral {
     display: flex;
     flex-direction: column;
     align-self: start;
     margin: 0;
     padding: 0;
+    padding-left: 32px;
     list-style: none;
   }
 
   .sb-abertura-lateral > li {
     display: flex;
     align-items: center;
-    height: 32px;
+    min-height: 32px;
+  }
+
+  /* O link da coluna lateral: o estilo de link do sistema (cor herdada e sublinhado, como o global
+     `a`; o foco é o `:focus-visible` global), com o alvo de toque inteiro. */
+  .sb-abertura-link {
+    display: flex;
+    align-items: center;
+    min-height: var(--alvo-toque);
+  }
+
+  /* De 768 a 991 a coluna c9–c10 é estreita (144 a 185 px): com 32 px de recuo a etiqueta mais longa
+     ("Em construção", 116 px) não cabe em 768. O recuo é de 16 px ali. */
+  @media (max-width: 991px) {
+    .sb-abertura-lateral {
+      padding-left: 16px;
+    }
   }
 
   /* Abaixo de 768 a abertura é uma coluna: o título, o subtítulo, 32 px, as etiquetas, 16 px e o fio. */
@@ -2131,6 +2151,7 @@
 
     .sb-abertura-lateral {
       margin-top: 32px;
+      padding-left: 0;
     }
   }
 

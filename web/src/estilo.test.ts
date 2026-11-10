@@ -834,6 +834,69 @@ describe('rodada 3: faixa de números, abertura e linhas (regras de CSS)', () =>
     })
   })
 
+  // Rodada de correção 2, parte 11 (V2): a coluna lateral da abertura (etiquetas e links) começa em
+  // c9 + 32, a 32 px do fio vertical que está em c9. O recuo é da coluna inteira (do componente
+  // Abertura), então vale para qualquer filho, etiqueta ou link. Abaixo de 768 nada muda.
+  describe('V2: a coluna lateral da abertura começa em c9 + 32', () => {
+    const media991 = blocosDeMedia(semComentarios, /max-width:\s*991px/).join('\n')
+    const corpoMedio = (seletor: string) => regras(media991).filter((r) => r.seletor === seletor).map((r) => r.corpo).join('')
+    const recuoDe = (corpo: string) => Number(/padding-left:\s*(\d+)px/.exec(corpo)?.[1] ?? Number.NaN)
+
+    it('de 992 para cima o recuo de 32 px é do `ul` da lateral inteira (padding-left), sem margem à esquerda', () => {
+      const corpo = corpoBase('.sb-abertura-lateral')
+      expect(corpo).toMatch(/padding-left:\s*32px/)
+      expect(corpo).not.toMatch(/margin-left/)
+      expect(corpo).not.toMatch(/border-left/)
+      // O recuo não é de um filho só: nem o `li` nem a etiqueta nem o link carregam recuo próprio.
+      expect(corpoBase('.sb-abertura-lateral > li')).not.toMatch(/(?:padding|margin)(?:-inline|-left)?:/)
+      expect(corpoBase('.sb-abertura-link')).not.toMatch(/(?:padding|margin)(?:-inline|-left)?:/)
+    })
+
+    it('abaixo de 768 nenhum recuo: a lateral fica em x=16, abaixo do subtítulo', () => {
+      expect(corpoCelular('.sb-abertura-lateral')).toMatch(/padding-left:\s*0/)
+      expect(corpoCelular('.sb-abertura-lateral')).toMatch(/margin-top:\s*32px/)
+    })
+
+    it('de 768 a 991 o recuo cai para 16 px, para a etiqueta mais longa caber nas duas colunas', () => {
+      expect(recuoDe(corpoMedio('.sb-abertura-lateral'))).toBe(16)
+    })
+
+    it('a etiqueta mais longa ("Em construção", 116 px) cabe em c9–c10 menos o recuo, em toda largura de 768 a 1920 (com barra de rolagem)', () => {
+      const MAIOR_ETIQUETA = 116 // medido em 1440: 115,9
+      const BARRA = 15
+      const recuoGrande = recuoDe(corpoBase('.sb-abertura-lateral'))
+      const recuoMedio = recuoDe(corpoMedio('.sb-abertura-lateral'))
+      expect(Number.isFinite(recuoGrande) && Number.isFinite(recuoMedio), 'recuos lidos do CSS').toBe(true)
+      const textoDisponivel = (largura: number) => {
+        const margem = largura >= 992 ? 32 : 24
+        const area = Math.min(largura - BARRA - 2 * margem, 1600)
+        return 0.2 * area - (largura >= 992 ? recuoGrande : recuoMedio)
+      }
+      for (let largura = 768; largura <= 1920; largura += 1) {
+        expect(textoDisponivel(largura), `${largura} px`).toBeGreaterThanOrEqual(MAIOR_ETIQUETA)
+      }
+      // Por que existe a faixa de 768 a 991: com 32 px a etiqueta não cabe em 768.
+      expect(0.2 * (768 - BARRA - 2 * 24) - 32).toBeLessThan(MAIOR_ETIQUETA)
+    })
+
+    it('cada item da lateral cresce com o conteúdo (min-height de 32 px): a etiqueta fica em 32, o link tem o alvo de toque inteiro', () => {
+      const li = corpoBase('.sb-abertura-lateral > li')
+      expect(li).toMatch(/min-height:\s*32px/)
+      expect(li).not.toMatch(/(?:^|[^-])height:\s*32px/)
+    })
+
+    it('o link da lateral tem alvo de toque (--alvo-toque), foco do sistema e o estilo de link do sistema (sem cor nem sublinhado próprios)', () => {
+      const link = corpoBase('.sb-abertura-link')
+      expect(link, 'regra de .sb-abertura-link').not.toBe('')
+      expect(link).toMatch(/display:\s*(?:inline-)?flex/)
+      expect(link).toMatch(/align-items:\s*center/)
+      expect(link).toMatch(/min-height:\s*var\(--alvo-toque\)/)
+      expect(link).not.toMatch(/(?:^|[^-])color:/)
+      expect(link).not.toMatch(/text-decoration:\s*none/)
+      expect(link).not.toMatch(/outline/)
+    })
+  })
+
   // Rodada de correção 2, parte 10 (V1): nenhum par de fios horizontais a menos de 48 px sem conteúdo
   // entre eles. A faixa que vem logo depois da abertura não desenha o fio do topo (o da abertura
   // fica). A supressão vale por contexto (o seletor irmão), não pela amostra: a faixa avulsa

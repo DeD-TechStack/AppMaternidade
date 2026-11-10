@@ -4,6 +4,8 @@ export const AMOSTRA = {
   titulo: 'Sistema',
   subtitulo: 'Grade, tipo e peças do site.',
   etiquetasDaAbertura: ['Base visual', 'Em construção'],
+  // O link da coluna lateral: uma âncora para a seção dos campos, na própria página.
+  linkDaAbertura: { texto: 'Ir aos campos', alvo: 'campos' },
   numeros: [
     { valor: '7', legenda: 'tipos de registro' },
     { valor: '2', legenda: 'toques para registrar' },

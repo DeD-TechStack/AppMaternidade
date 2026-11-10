@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router'
 import { Abertura } from './componentes/base/Abertura.tsx'
 import { Botao } from './componentes/base/Botao.tsx'
 import { Campo } from './componentes/base/Campo.tsx'
+import { Etiqueta } from './componentes/base/Etiqueta.tsx'
 import { FaixaNumeros } from './componentes/base/FaixaNumeros.tsx'
 import { Cabecalho } from './componentes/casca/Cabecalho.tsx'
 import { ROTULO_MADRUGADA, ROTULO_MADRUGADA_CURTO } from './componentes/casca/textos.ts'
@@ -882,16 +883,74 @@ describe('rota /sistema', () => {
     expect(baseDoFio.compareDocumentPosition(lateral) & Node.DOCUMENT_POSITION_PRECEDING).not.toBe(0)
   })
 
-  it('D3: as 2 etiquetas da abertura são itens de uma lista, uma sob a outra, e a abertura sem lateral não cria a lista', async () => {
+  it('D3: as 2 etiquetas e o link da abertura são itens de uma lista, uma sob a outra, e a abertura sem lateral não cria a lista', async () => {
     const { container, unmount } = renderizarRota('/sistema')
     await screen.findByRole('heading', { level: 1 })
     const itens = [...container.querySelectorAll('.sb-abertura-lateral > li')]
-    expect(itens.map((li) => li.textContent)).toEqual(['Base visual', 'Em construção'])
+    expect(itens.map((li) => li.textContent)).toEqual(['Base visual', 'Em construção', 'Ir aos campos'])
     unmount()
 
     const { container: sem } = render(<Abertura titulo="Hoje" subtitulo="A linha sob o título." />)
     expect(sem.querySelector('.sb-abertura-lateral')).toBeNull()
     expect(sem.querySelector('.sb-abertura-base')).not.toBeNull()
+  })
+
+  it('V2: a lateral da amostra tem um link âncora real ("Ir aos campos") para uma seção da própria página, depois das etiquetas', async () => {
+    const { container } = renderizarRota('/sistema')
+    await screen.findByRole('heading', { level: 1 })
+
+    const lateral = container.querySelector<HTMLElement>('.sb-abertura-lateral')!
+    const link = within(lateral).getByRole('link', { name: 'Ir aos campos' })
+    expect(within(lateral).getAllByRole('link')).toHaveLength(1)
+    expect(link.tagName).toBe('A')
+    const href = link.getAttribute('href')!
+    expect(href).toMatch(/^#[a-z][a-z0-9-]*$/)
+    const alvo = container.querySelector<HTMLElement>(`#${href.slice(1)}`)!
+    expect(alvo, 'a seção alvo do link').not.toBeNull()
+    expect(alvo.tagName).toBe('SECTION')
+    expect(alvo.closest('main')).not.toBeNull()
+    expect(alvo.contains(screen.getByLabelText('E-mail'))).toBe(true)
+    // O link é o último item, depois das 2 etiquetas, dentro de um `li` da lista.
+    expect(link.parentElement!.tagName).toBe('LI')
+    expect(link.parentElement).toBe(lateral.lastElementChild)
+    expect(link.classList.contains('sb-abertura-link')).toBe(true)
+    expect(link.hasAttribute('tabindex')).toBe(false)
+    expect(link.hasAttribute('onclick')).toBe(false)
+  })
+
+  it('V2: o recuo é da lateral inteira: uma lateral só de etiquetas e uma com etiquetas e link têm a mesma estrutura (ul > li), sem recuo em cada item', () => {
+    const itensDe = (lateral: HTMLElement) => [...lateral.children]
+    const apenasEtiquetas = render(
+      <Abertura
+        titulo="Hoje"
+        subtitulo="A linha sob o título."
+        lateral={[
+          <li key="a"><Etiqueta>Primeira</Etiqueta></li>,
+          <li key="b"><Etiqueta>Em construção</Etiqueta></li>,
+        ]}
+      />,
+    )
+    const comLink = render(
+      <Abertura
+        titulo="Hoje"
+        subtitulo="A linha sob o título."
+        lateral={[
+          <li key="a"><Etiqueta>Primeira</Etiqueta></li>,
+          <li key="b"><a className="sb-abertura-link t-corpo" href="#algum">Ir adiante</a></li>,
+        ]}
+      />,
+    )
+
+    for (const { container } of [apenasEtiquetas, comLink]) {
+      const lateral = container.querySelector<HTMLElement>('ul.sb-abertura-lateral.col-c9-c10')!
+      expect(lateral, 'a lista da lateral').not.toBeNull()
+      expect(lateral.getAttribute('style')).toBeNull()
+      expect(itensDe(lateral).every((item) => item.tagName === 'LI' && item.getAttribute('style') === null)).toBe(true)
+      expect(itensDe(lateral).every((item) => item.className === '')).toBe(true)
+      expect(lateral.parentElement!.classList.contains('grade-10')).toBe(true)
+    }
+    expect(within(apenasEtiquetas.container).queryByRole('link')).toBeNull()
+    expect(within(comLink.container).getByRole('link', { name: 'Ir adiante' }).getAttribute('href')).toBe('#algum')
   })
 
   it('D5: a linha rótulo + texto ocupa c2–c8, para o fio de baixo terminar no início de c9, como o do campo', async () => {

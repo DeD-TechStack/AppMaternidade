@@ -20,11 +20,18 @@ export function Sistema() {
       <Abertura
         titulo={AMOSTRA.titulo}
         subtitulo={AMOSTRA.subtitulo}
-        lateral={AMOSTRA.etiquetasDaAbertura.map((texto) => (
-          <li key={texto}>
-            <Etiqueta>{texto}</Etiqueta>
-          </li>
-        ))}
+        lateral={[
+          ...AMOSTRA.etiquetasDaAbertura.map((texto) => (
+            <li key={texto}>
+              <Etiqueta>{texto}</Etiqueta>
+            </li>
+          )),
+          <li key="link">
+            <a className="sb-abertura-link t-corpo" href={`#${AMOSTRA.linkDaAbertura.alvo}`}>
+              {AMOSTRA.linkDaAbertura.texto}
+            </a>
+          </li>,
+        ]}
       />
 
       <section className="sb-area sb-mt-fio-bloco">
@@ -52,7 +59,7 @@ export function Sistema() {
         </Galeria>
       </div>
 
-      <section className="sb-area sb-mt-midia-titulo sb-campos" data-bloco="">
+      <section id={AMOSTRA.linkDaAbertura.alvo} className="sb-area sb-mt-midia-titulo sb-campos" data-bloco="">
         <Campo id="amostra-senha" rotulo={campos.senha.rotulo} tipo="senha" ajuda={campos.senha.ajuda} />
         <Campo
           id="amostra-email"
