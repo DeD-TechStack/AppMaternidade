@@ -74,7 +74,7 @@ const MIDIAS: Record<string, Array<[string, string, string]>> = {
     ['colo', 'lavanda', 'par'],
   ],
   '/cuidado-compartilhado': [
-    ['mamada', 'lavanda', 'larga'],
+    ['passagem', 'lavanda', 'larga'],
     ['passeio', 'barro', 'par'],
     ['colo', 'lavanda', 'par'],
   ],
@@ -83,7 +83,7 @@ const MIDIAS: Record<string, Array<[string, string, string]>> = {
     ['colo', 'lavanda', 'par'],
     ['berco', 'barro', 'par'],
   ],
-  '/regras-da-comunidade': [['passeio', 'barro', 'larga']],
+  '/regras-da-comunidade': [['berco', 'lavanda', 'larga']],
   // Textos de papel e Contato: sem mídia nem ilustração (volta visual 1, D3 e D6).
   '/privacidade': [],
   '/termos': [],
@@ -339,11 +339,11 @@ describe('mídia das páginas', () => {
     }
   }, 30000)
 
-  it('o colo, a mamada e o tapete só aparecem em moldura lavanda: o barro da cabeça do bebê (e da poltrona) some no fundo barro', async () => {
+  it('o colo, a mamada, o tapete e a passagem só aparecem em moldura lavanda: o barro da cabeça do bebê (e da poltrona) some no fundo barro', async () => {
     for (const caminho of NOVAS) {
       const container = await abrir(caminho)
       for (const moldura of container.querySelectorAll('main [data-midia]')) {
-        if (moldura.querySelector('[data-ilustracao="colo"], [data-ilustracao="mamada"], [data-ilustracao="tapete"]')) {
+        if (moldura.querySelector('[data-ilustracao="colo"], [data-ilustracao="mamada"], [data-ilustracao="tapete"], [data-ilustracao="passagem"]')) {
           expect(moldura.getAttribute('data-fundo'), caminho).toBe('lavanda')
         }
       }
