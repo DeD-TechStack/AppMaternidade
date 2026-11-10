@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatarCronometro, formatarDuracao, formatarHora } from './formatar.ts'
+import { formatarCronometro, formatarDuracao, formatarHora, formatarUltimo } from './formatar.ts'
 
 const MIN = 60_000
 
@@ -34,6 +34,58 @@ describe('formatarCronometro', () => {
 
   it('descarta o resto de milissegundos', () => {
     expect(formatarCronometro(59_999)).toBe('00:59')
+  })
+})
+
+describe('formatarUltimo', () => {
+  const LEGENDA_HA = ', tempo desde o registro'
+
+  const tabela: Array<[string, string, string, string]> = [
+    ['há 2 h 10 min', 'Mamada', '2 h 10', `Mamada${LEGENDA_HA}`],
+    ['há 50 min', 'Fralda', '50 min', `Fralda${LEGENDA_HA}`],
+    ['ontem 17:30', 'Tummy time', '17:30', 'Tummy time, ontem'],
+    ['agora', 'Mamadeira', 'agora', 'Mamadeira'],
+    ['há 1 h 05 min', 'Mamada', '1 h 05', `Mamada${LEGENDA_HA}`],
+    ['há 3 h', 'Sono', '3 h', `Sono${LEGENDA_HA}`],
+  ]
+  for (const [quando, rotulo, valor, legenda] of tabela) {
+    it(`"${quando}" com o rótulo "${rotulo}" dá "${valor}" e "${legenda}"`, () => {
+      expect(formatarUltimo(rotulo, quando)).toEqual({ valor, legenda })
+    })
+  }
+
+  it('só tira o " min" quando o texto tem " h ": "há 50 min" e "há 5 min" ficam com o "min"', () => {
+    expect(formatarUltimo('Fralda', 'há 5 min').valor).toBe('5 min')
+    expect(formatarUltimo('Fralda', 'há 50 min').valor).toBe('50 min')
+  })
+
+  it('corta os espaços das pontas e os de dentro do que sobra depois do prefixo', () => {
+    expect(formatarUltimo('  Fralda  ', '  há 50 min  ')).toEqual({ valor: '50 min', legenda: `Fralda${LEGENDA_HA}` })
+    expect(formatarUltimo('Tummy time', 'ontem   17:30')).toEqual({ valor: '17:30', legenda: 'Tummy time, ontem' })
+    expect(formatarUltimo('Mamada', '  agora ')).toEqual({ valor: 'agora', legenda: 'Mamada' })
+  })
+
+  it('falha fechado: "quando" vazio, só espaços ou só o prefixo dá o travessão', () => {
+    for (const quando of ['', '   ', 'há ', 'ontem ', '  há   ', ' ontem  ']) {
+      expect(formatarUltimo('Fralda', quando).valor, JSON.stringify(quando)).toBe('—')
+    }
+    expect(formatarUltimo('Fralda', '')).toEqual({ valor: '—', legenda: 'Fralda' })
+  })
+
+  it('falha fechado: rótulo vazio ou só espaços dá o travessão na legenda, sem o complemento', () => {
+    expect(formatarUltimo('', 'há 50 min')).toEqual({ valor: '50 min', legenda: '—' })
+    expect(formatarUltimo('   ', 'ontem 17:30')).toEqual({ valor: '17:30', legenda: '—' })
+    expect(formatarUltimo('', '')).toEqual({ valor: '—', legenda: '—' })
+  })
+
+  it('"Há 50 min" com maiúscula não é um prefixo reconhecido: o texto fica como veio e a legenda é só o rótulo', () => {
+    expect(formatarUltimo('Fralda', 'Há 50 min')).toEqual({ valor: 'Há 50 min', legenda: 'Fralda' })
+    expect(formatarUltimo('Fralda', 'Ontem 17:30')).toEqual({ valor: 'Ontem 17:30', legenda: 'Fralda' })
+  })
+
+  it('o prefixo precisa do espaço: "hábito" e "ontemtarde" não são prefixos', () => {
+    expect(formatarUltimo('Fralda', 'hábito')).toEqual({ valor: 'hábito', legenda: 'Fralda' })
+    expect(formatarUltimo('Fralda', 'ontemtarde')).toEqual({ valor: 'ontemtarde', legenda: 'Fralda' })
   })
 })
 
