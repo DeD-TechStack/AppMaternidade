@@ -35,3 +35,28 @@ describe('a marca de só leitura nos campos', () => {
     expect(seletor.closest('.sb-campo-controle')!.hasAttribute('data-select')).toBe(true)
   })
 })
+
+// O CSS de abaixo de 768 ancora o erro de um jeito quando a linha tem a ajuda (o erro ocupa o lugar
+// dela) e de outro quando não tem (o erro cai no vão abaixo do campo): a marca `data-ajuda` diz qual.
+describe('a marca data-ajuda do campo de acesso', () => {
+  it('só existe quando o campo tem ajuda, com ou sem erro, e a ajuda e o erro seguem no DOM', () => {
+    const { container, rerender } = render(<CampoAcesso rotulo="Senha" valor="" aoMudar={semEfeito} />)
+    expect(container.querySelector('.sb-campo')!.hasAttribute('data-ajuda')).toBe(false)
+
+    rerender(<CampoAcesso rotulo="Senha" valor="" aoMudar={semEfeito} ajuda="Pelo menos 6 caracteres." />)
+    expect(container.querySelector('.sb-campo')!.hasAttribute('data-ajuda')).toBe(true)
+    expect(container.querySelector('.sb-campo')!.hasAttribute('data-erro')).toBe(false)
+
+    rerender(<CampoAcesso rotulo="Senha" valor="" aoMudar={semEfeito} ajuda="Pelo menos 6 caracteres." erro="Use 6 ou mais caracteres." />)
+    const linha = container.querySelector('.sb-campo')!
+    expect(linha.hasAttribute('data-ajuda')).toBe(true)
+    expect(linha.hasAttribute('data-erro')).toBe(true)
+    const entrada = screen.getByLabelText('Senha')
+    expect(entrada.getAttribute('aria-describedby')!.split(' ')).toHaveLength(2)
+    expect(linha.querySelector('p.sb-campo-ajuda')).not.toBeNull()
+    expect(linha.querySelector('p.sb-campo-erro')).not.toBeNull()
+
+    rerender(<CampoAcesso rotulo="Senha" valor="" aoMudar={semEfeito} erro="Use 6 ou mais caracteres." />)
+    expect(container.querySelector('.sb-campo')!.hasAttribute('data-ajuda')).toBe(false)
+  })
+})

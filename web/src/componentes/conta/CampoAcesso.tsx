@@ -28,7 +28,9 @@ interface Props {
  * `sb-campo-ajuda`), mais o que a base não tem: o texto controlado pela tela, `ref` do `input` (o foco
  * no primeiro erro), `somenteLeitura` e a mensagem de status na linha. Em 768 ou mais é uma linha de
  * 112 px de c2 a c8 (rótulo em c2–c3, campo em c4–c8); abaixo disso, o rótulo fica em cima de um campo
- * de 64 px. Erro, ajuda e status ficam dentro da linha, sem mudar a altura dela.
+ * de 64 px. Erro, ajuda e status ficam dentro da linha, sem mudar a altura dela. `data-ajuda` marca a
+ * linha que tem ajuda: abaixo de 768 o erro, que fica fora do fluxo, ocupa o lugar da ajuda (ela segue
+ * na linha, fora da vista) em vez de cair no vão de 24 px abaixo do campo.
  */
 export function CampoAcesso({
   rotulo,
@@ -53,7 +55,7 @@ export function CampoAcesso({
 
   return (
     <div className="grade-10">
-      <div className="sb-campo col-c2-c8" data-erro={erro ? '' : undefined}>
+      <div className="sb-campo col-c2-c8" data-erro={erro ? '' : undefined} data-ajuda={ajuda ? '' : undefined}>
         <label htmlFor={id} className="sb-campo-rotulo t-rotulo">
           {rotulo}
         </label>
