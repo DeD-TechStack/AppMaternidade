@@ -30,7 +30,9 @@ interface Props {
  * 112 px de c2 a c8 (rótulo em c2–c3, campo em c4–c8); abaixo disso, o rótulo fica em cima de um campo
  * de 64 px. Erro, ajuda e status ficam dentro da linha, sem mudar a altura dela. `data-ajuda` marca a
  * linha que tem ajuda: abaixo de 768 o erro, que fica fora do fluxo, ocupa o lugar da ajuda (ela segue
- * na linha, fora da vista) em vez de cair no vão de 24 px abaixo do campo.
+ * na linha, fora da vista) em vez de cair no vão de 24 px abaixo do campo. `data-status` marca a linha
+ * que tem a região de status (mesmo vazia): abaixo de 768 ela reserva uma zona fixa de 2 linhas abaixo
+ * do campo, onde moram a confirmação e o erro, para a página não mudar de altura (R-3).
  */
 export function CampoAcesso({
   rotulo,
@@ -55,7 +57,12 @@ export function CampoAcesso({
 
   return (
     <div className="grade-10">
-      <div className="sb-campo col-c2-c8" data-erro={erro ? '' : undefined} data-ajuda={ajuda ? '' : undefined}>
+      <div
+        className="sb-campo col-c2-c8"
+        data-erro={erro ? '' : undefined}
+        data-ajuda={ajuda ? '' : undefined}
+        data-status={status !== undefined ? '' : undefined}
+      >
         <label htmlFor={id} className="sb-campo-rotulo t-rotulo">
           {rotulo}
         </label>

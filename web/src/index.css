@@ -2647,6 +2647,44 @@
 }
 
 /* ---------------------------------------------------------------------------------------------
+   44d-3, passo 3 (R-3): a mensagem do Recuperar não muda a altura da página abaixo de 768.
+   Só se acrescenta aqui.
+   ------------------------------------------------------------------------------------------ */
+@layer components {
+  /* A confirmação (2 linhas em 358 px) entrava no fluxo: 8 de margem + 48 de texto a mais na linha, na
+     página e no topo do botão. A linha com a região de status (`data-status`) reserva agora, com ou sem
+     mensagem, uma zona fixa de 2 linhas abaixo do campo (8 de ar + 48 das duas linhas + 8 de folga = 64
+     px), e a confirmação e o erro (1 ou 2 linhas) moram nela, fora do fluxo: `top` é a base da linha
+     menos a zona, e os 8 px de `padding-top` são o ar entre o fio do campo e o texto. O vão até o botão
+     (`.sb-acesso-campos + .sb-acesso-acao`, 32 px) vem depois da zona. Em 768 ou mais nada muda: a
+     mensagem mora dentro da linha de 112 px. */
+  @media (max-width: 767px) {
+    .sb-acesso-campos .sb-campo[data-status] {
+      padding-bottom: 64px;
+    }
+
+    .sb-acesso-campos .sb-campo[data-status] .sb-campo-status {
+      position: absolute;
+      top: calc(100% - 64px);
+      right: 0;
+      left: 0;
+      margin: 0;
+      padding: 8px 0 0;
+    }
+
+    .sb-acesso-campos .sb-campo[data-status] .sb-campo-erro {
+      position: absolute;
+      top: calc(100% - 64px);
+      right: 0;
+      bottom: auto;
+      left: 0;
+      margin: 0;
+      padding: 8px 0 0;
+    }
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------
    44d-3, passo 3: Começar e Conta. Só se acrescenta aqui.
    ------------------------------------------------------------------------------------------ */
 @layer components {

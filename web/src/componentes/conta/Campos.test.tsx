@@ -60,3 +60,30 @@ describe('a marca data-ajuda do campo de acesso', () => {
     expect(container.querySelector('.sb-campo')!.hasAttribute('data-ajuda')).toBe(false)
   })
 })
+
+// R-3: o Recuperar reserva, abaixo de 768, uma zona fixa de 2 linhas para a confirmação e o erro, com ou
+// sem mensagem. O CSS precisa saber qual linha tem a região de status: a marca `data-status` diz.
+describe('a marca data-status do campo de acesso', () => {
+  it('só existe quando a tela passa o status, mesmo vazio, e a região role="status" segue no DOM', () => {
+    const { container, rerender } = render(<CampoAcesso rotulo="E-mail" valor="" aoMudar={semEfeito} />)
+    expect(container.querySelector('.sb-campo')!.hasAttribute('data-status')).toBe(false)
+    expect(container.querySelector('[role="status"]')).toBeNull()
+
+    rerender(<CampoAcesso rotulo="E-mail" valor="" aoMudar={semEfeito} status="" />)
+    expect(container.querySelector('.sb-campo')!.hasAttribute('data-status')).toBe(true)
+    expect(screen.getByRole('status').textContent).toBe('')
+
+    rerender(<CampoAcesso rotulo="E-mail" valor="" aoMudar={semEfeito} status={null} />)
+    expect(container.querySelector('.sb-campo')!.hasAttribute('data-status')).toBe(true)
+    expect(screen.getByRole('status').textContent).toBe('')
+
+    rerender(<CampoAcesso rotulo="E-mail" valor="" aoMudar={semEfeito} status="Se a conta existir, enviamos o link." />)
+    const linha = container.querySelector('.sb-campo')!
+    expect(linha.hasAttribute('data-status')).toBe(true)
+    expect(linha.contains(screen.getByRole('status'))).toBe(true)
+    expect(screen.getByRole('status').textContent).toBe('Se a conta existir, enviamos o link.')
+
+    rerender(<CampoAcesso rotulo="E-mail" valor="" aoMudar={semEfeito} erro="Informe o e-mail." />)
+    expect(container.querySelector('.sb-campo')!.hasAttribute('data-status')).toBe(false)
+  })
+})
