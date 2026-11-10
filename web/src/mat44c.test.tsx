@@ -515,8 +515,9 @@ describe('MAT-44c-1 rodada 2 #7: as ilustrações fora dos aparelhos têm a mesm
 // ---------------------------------------------------------------------------
 // Rodada 7
 
+// Uma condição só com max-width (os degraus da fonte ampliada) vale a partir de 0.
 const larguraDa = (condicao: string | null): number =>
-  condicao === null ? 0 : parseFloat(/min-width:\s*([\d.]+)rem/.exec(condicao)![1])
+  condicao === null ? 0 : parseFloat(/min-width:\s*([\d.]+)rem/.exec(condicao)?.[1] ?? '0')
 
 describe('MAT-44c-1 rodada 7 #3: o notebook do Hoje é a imagem do topo, de ponta a ponta, num campo de cor', () => {
   it('em toda largura de 60rem em diante o notebook cabe no campo do topo (padding de 2 × 2,5rem)', () => {
@@ -889,6 +890,39 @@ describe('MAT-44c-1 rodada 7 #1 e #2: o celular é uma janela de altura fixa, co
     expect(celularEm(46)['height']).toBe('34rem')
   })
 
+  it('com a fonte ampliada o celular encolhe em degraus e cabe na área do cartão', () => {
+    // Abaixo de 20rem de contêiner (fonte ou zoom em 200%) só vale a geometria: o celular encolhe, sem exigir
+    // texto legível, mas nunca passa da seção. Cada degrau muda só a escala; a largura e a altura são as da base.
+    const degraus = [
+      { condicao: '@container pagina (max-width: 10.99rem)', escala: 0.22, de: 0 },
+      { condicao: '@container pagina (min-width: 11rem) and (max-width: 13.99rem)', escala: 0.3, de: 11 },
+      { condicao: '@container pagina (min-width: 14rem) and (max-width: 16.99rem)', escala: 0.4, de: 14 },
+      { condicao: '@container pagina (min-width: 17rem) and (max-width: 19.99rem)', escala: 0.55, de: 17 },
+    ]
+    const larguraNatural = emRem(doCelular('.aparelho-celular').props['width'])
+    expect(larguraNatural).toBe(23.5)
+    for (const { condicao, escala, de } of degraus) {
+      const regra = doCelular('.aparelho-celular', condicao)
+      expect(regra, condicao).toBeDefined()
+      expect(Object.keys(regra.props), condicao).toEqual(['--escala-celular'])
+      expect(parseFloat(regra.props['--escala-celular']), condicao).toBe(escala)
+      // A área do cartão (hero) é o contêiner menos cerca de 3,3rem de padding: 7,7rem em 11rem, e assim por diante.
+      // No degrau de baixo (menos de 11rem) o celular fica abaixo de 6rem.
+      const area = de === 0 ? 6 : de - 3.3
+      expect(larguraNatural * escala, condicao).toBeLessThan(area)
+    }
+    // Os degraus cobrem toda a faixa abaixo de 20rem, e a faixa de 20rem em diante não muda.
+    expect(parseFloat(celularEm(10)['--escala-celular'])).toBe(0.22)
+    expect(parseFloat(celularEm(12)['--escala-celular'])).toBe(0.3)
+    expect(parseFloat(celularEm(15)['--escala-celular'])).toBe(0.4)
+    expect(parseFloat(celularEm(18)['--escala-celular'])).toBe(0.55)
+    expect(parseFloat(celularEm(21)['--escala-celular'])).toBe(0.85)
+    // Os degraus vêm depois do bloco de 20 a 24,99rem e antes dos de 25rem em diante.
+    const ordem = regras.filter((r) => r.seletor === '.aparelho-celular' && r.condicao !== null).map((r) => r.condicao!)
+    expect(ordem.indexOf(degraus[0].condicao)).toBeGreaterThan(ordem.findIndex((c) => /min-width: 20rem/.test(c)))
+    expect(ordem.indexOf(degraus[3].condicao)).toBeLessThan(ordem.findIndex((c) => /min-width: 25rem/.test(c)))
+  })
+
   it('o celular de cada seção é o da tela certa e o da faixa estreita é um por grupo', async () => {
     const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
@@ -902,6 +936,14 @@ describe('MAT-44c-1 rodada 7 #1 e #2: o celular é uma janela de altura fixa, co
     ] as const) {
       expect(container.querySelectorAll(`${secao} [data-aparelho="celular"]`), secao).toHaveLength(esperado)
     }
+  })
+})
+
+describe('MAT-44c-1 rodada 13: a legenda do celular da chamada não passa da seção com a fonte ampliada', () => {
+  it('.inicio-lado tem a trilha minmax(0, 1fr), para a legenda do celular não passar da seção com a fonte ampliada', () => {
+    const regra = regras.find((r) => r.seletor === '.inicio-lado' && r.condicao === null)
+    expect(regra).toBeDefined()
+    expect(regra!.props['grid-template-columns']).toBe('minmax(0, 1fr)')
   })
 })
 

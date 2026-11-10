@@ -728,9 +728,12 @@
 
   /* Chamada: o texto e o celular com a legenda. Antes de 72 rem um embaixo do outro; depois, o texto
      à esquerda (centrado na altura do celular) e o celular à direita. Cada lado tem a coluna de
-     texto inteira (2 × 32,5 rem mais o respiro e o padding de 2 × 2,5 rem). */
+     texto inteira (2 × 32,5 rem mais o respiro e o padding de 2 × 2,5 rem). A trilha é
+     minmax(0, 1fr) para encolher com a página: com a fonte ampliada a trilha implícita (auto)
+     crescia até a largura do celular e a legenda passava da seção. */
   .inicio-lado {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     row-gap: 1rem;
     width: 100%;
     max-width: 32.5rem;
@@ -925,6 +928,36 @@
       margin-right: calc(22.7rem * (var(--escala-celular) - 1));
       margin-bottom: calc(31.75rem * (var(--escala-celular) - 1));
       padding: 0.1875rem;
+    }
+  }
+
+  /* Fonte ou zoom ampliados (contêiner abaixo de 20 rem): o contêiner é estreito e o celular encolhe
+     em degraus, para nunca passar da seção. A largura do celular na escala (23,5 rem × escala) cabe
+     na área do cartão: 7,05 rem contra 7,7 rem de área no degrau de 11 rem, 9,4 rem contra 10,7 rem
+     no de 14 rem, 12,9 rem contra 13,7 rem no de 17 rem. Nessa faixa só vale a geometria: o texto
+     do celular não precisa ficar legível. Cada degrau muda só a escala; a largura e a altura são as
+     da base. */
+  @container pagina (max-width: 10.99rem) {
+    .aparelho-celular {
+      --escala-celular: 0.22;
+    }
+  }
+
+  @container pagina (min-width: 11rem) and (max-width: 13.99rem) {
+    .aparelho-celular {
+      --escala-celular: 0.3;
+    }
+  }
+
+  @container pagina (min-width: 14rem) and (max-width: 16.99rem) {
+    .aparelho-celular {
+      --escala-celular: 0.4;
+    }
+  }
+
+  @container pagina (min-width: 17rem) and (max-width: 19.99rem) {
+    .aparelho-celular {
+      --escala-celular: 0.55;
     }
   }
 
