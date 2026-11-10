@@ -962,12 +962,64 @@ function limiteDeLinhas(depois, tipos, permitidas, limite) {
   return falhas
 }
 
+/** A folga mínima entre a borda de baixo do anel de foco e a tinta da mensagem do mesmo campo (px). */
+export const FOLGA_ANEL_MENSAGEM = 4
+/** Meio quarto de pixel de arredondamento da leitura passa; um pixel inteiro não. */
+const TOL_FOLGA = 0.25
+
+/**
+ * O anel de foco não toca a mensagem do campo (E-7). O anel é a caixa do controle ampliada por `outline-offset`
+ * mais `outline-width` (2 + 2 = 4 px para cada lado). A medida honesta da mensagem é o topo da tinta da primeira
+ * linha (`topoLetra`), não o da caixa dela: a caixa tem 24 px e a letra 17, e a tinta começa uns 5 px abaixo do
+ * topo da caixa, então medir pela caixa daria uma folga que o olho não vê. A folga é `topoLetra - base do anel`
+ * e o mínimo é `FOLGA_ANEL_MENSAGEM`. Falha fechada: sem a caixa do controle, sem as mensagens, medida de anel
+ * ilegível e mensagem sem retângulo reprovam. `exigirMensagem` reprova a leitura que não achou mensagem nenhuma
+ * (depois do envio vazio o campo tem erro; sem ele a medida estaria cega).
+ */
+function anelSemTocarAMensagem(leitura, rotulo, { exigirMensagem = false } = {}) {
+  const falhar = (motivo) => [{ no: rotulo, motivo: `${rotulo}: ${motivo}` }]
+  if (!leitura || typeof leitura !== 'object') return falhar('sem a leitura do foco para medir a folga do anel')
+  if (leitura.focou !== true) return falhar('não recebeu foco, sem como medir a folga do anel')
+  const caixa = leitura.caixa
+  if (!caixa || typeof caixa !== 'object' || ![caixa.top, caixa.bottom, caixa.left, caixa.right].every(ehNumero)) {
+    return falhar('sem o retângulo do controle (caixa) para medir a folga do anel')
+  }
+  const largura = px(leitura.outlineWidth)
+  const recuo = px(leitura.outlineOffset)
+  if (!ehNumero(largura) || !ehNumero(recuo)) return falhar('largura ou offset do anel ilegível, sem como medir a folga')
+  if (!Array.isArray(leitura.mensagens)) return falhar('sem a leitura das mensagens do campo para medir a folga do anel')
+  if (exigirMensagem && leitura.mensagens.length === 0) return falhar('o campo não mostra nenhuma mensagem para medir a folga do anel')
+  const alcance = largura + recuo
+  const anel = { top: caixa.top - alcance, bottom: caixa.bottom + alcance, left: caixa.left - alcance, right: caixa.right + alcance }
+  const falhas = []
+  for (const m of leitura.mensagens) {
+    const dela = `${m?.tipo ?? 'mensagem'} "${m?.texto ?? ''}"`
+    if (!m || typeof m !== 'object' || ![m.top, m.bottom, m.left, m.right, m.topoLetra].every(ehNumero)) {
+      falhas.push(...falhar(`${dela} sem retângulo (caixa ou topo da letra ilegível), sem como medir a folga do anel`))
+      continue
+    }
+    if (m.right <= anel.left || m.left >= anel.right || m.bottom <= anel.top) continue
+    const folga = m.topoLetra - anel.bottom
+    if (folga < FOLGA_ANEL_MENSAGEM - TOL_FOLGA) {
+      falhas.push(
+        ...falhar(
+          `o anel de foco (base em y=${anel.bottom.toFixed(1)}) fica a ${folga.toFixed(1)} px da letra de ${dela} (começa em y=${m.topoLetra.toFixed(1)}; o mínimo é ${FOLGA_ANEL_MENSAGEM})`,
+        ),
+      )
+    }
+  }
+  return falhas
+}
+
 /**
  * E-7: (1) o foco tem anel de 2 px (`outline` sólido, offset 2, cor da tinta; na madrugada, `#F7EFE2`) no
- * primeiro controle e no botão de envio; (2) o erro aparece em 17/24 abaixo do campo, sem mudar a altura da
- * linha: com o formulário enviado vazio (`doc.envio.vazio`, o antes e o depois), a altura e o topo de cada
- * linha, a altura da página e o topo do botão de envio não mudam, aparece ao menos uma mensagem de erro, e
- * cada mensagem de erro ou de ajuda tem 1 linha, sem corte, sem sair da janela, sem cobrir outro elemento.
+ * primeiro controle e no botão de envio; (1b) o anel do primeiro controle não toca a mensagem visível do mesmo
+ * campo: a folga entre a base do anel e a tinta da mensagem é de pelo menos 4 px, lida com o campo em repouso
+ * (a ajuda, onde houver) e de novo depois do envio vazio (o erro, `doc.envio.vazio.foco`); (2) o erro aparece em
+ * 17/24 abaixo do campo, sem mudar a altura da linha: com o formulário enviado vazio (`doc.envio.vazio`, o antes e
+ * o depois), a altura e o topo de cada linha, a altura da página e o topo do botão de envio não mudam, aparece ao
+ * menos uma mensagem de erro, e cada mensagem de erro ou de ajuda tem 1 linha, sem corte, sem sair da janela, sem
+ * cobrir outro elemento.
  */
 export function e7(doc, tema) {
   const foco = doc?.foco
@@ -992,6 +1044,15 @@ export function e7(doc, tema) {
       if (!ehCor(parseCor(leitura.outlineColor), cores)) problemas.push(`cor ${leitura.outlineColor} em vez de ${cores[0]}`)
       if (problemas.length > 0) falhas.push({ no: nome, motivo: `${nome}: ${problemas.join('; ')}` })
     }
+    // A folga entre o anel do primeiro controle e a mensagem do campo, em repouso (a ajuda, onde houver).
+    if (foco.controle && typeof foco.controle === 'object' && foco.controle.focou === true) {
+      falhas.push(...anelSemTocarAMensagem(foco.controle, 'controle em repouso'))
+    }
+  }
+  // E depois do envio vazio (o erro): a leitura do foco com a mensagem de erro à vista.
+  const focoDoErro = doc?.envio?.vazio?.foco
+  if (doc?.envio?.vazio && typeof doc.envio.vazio === 'object') {
+    falhas.push(...anelSemTocarAMensagem(focoDoErro?.controle, 'controle depois do envio vazio', { exigirMensagem: true }))
   }
   falhas.push(
     ...geometriaDoEnvio(doc?.envio?.vazio, 'envio do formulário vazio', (depois) => [
@@ -2060,6 +2121,14 @@ export function coletarNaPagina() {
  * O anel de foco (E-7): foca o primeiro controle do formulário e o botão de envio, lê o `outline`
  * calculado e devolve o foco. Roda numa segunda passada, depois de uma tecla Tab, para o `:focus-visible`
  * valer; e depois da coleta, para o foco não mexer nas medidas. Não escreve nada nos campos.
+ *
+ * Com o foco no elemento lê também (nas coordenadas da página) a caixa dele (`caixa`: top, bottom, left,
+ * right) e, se ele mora numa linha de campo (`.sb-campo`), cada mensagem visível dela (`mensagens`: erro,
+ * ajuda, status), com a caixa e o `topoLetra`: o y onde a tinta da primeira linha começa. O `topoLetra`
+ * vem do canvas (`medida: 'tinta'`: topo do retângulo do texto + ascendente da fonte - ascendente real da
+ * tinta da frase); sem canvas é o topo do em-quadrado da linha (`medida: 'estimada'`: topo da caixa +
+ * (entrelinha - corpo) / 2), que fica acima da tinta, então a estimativa nunca folga a favor da regra.
+ * Sem fechamento: é serializada por `toString()`.
  */
 export function lerFocoNaPagina() {
   const sx = window.scrollX
@@ -2068,6 +2137,49 @@ export function lerFocoNaPagina() {
   const aparece = (el) => {
     const r = el.getBoundingClientRect()
     return typeof el.checkVisibility === 'function' ? el.checkVisibility({ visibilityProperty: true }) : r.width > 0 && r.height > 0
+  }
+  const clipZerado = (clip) => /^rect\(\s*0(px)?[\s,]+0(px)?[\s,]+0(px)?[\s,]+0(px)?\s*\)$/.test(clip ?? '')
+  const mensagemAparece = (el) => {
+    const r = el.getBoundingClientRect()
+    const cs = getComputedStyle(el)
+    return r.width > 2 && r.height > 2 && cs.visibility !== 'hidden' && cs.display !== 'none' && !clipZerado(cs.clip)
+  }
+  const caixaDe = (r) => ({ top: r.top + sy, bottom: r.bottom + sy, left: r.left + sx, right: r.right + sx })
+  const topoDaLetra = (el, caixa) => {
+    const cs = getComputedStyle(el)
+    const entrelinha = parseFloat(cs.lineHeight)
+    const corpo = parseFloat(cs.fontSize)
+    const estimado = { topoLetra: caixa.top + (entrelinha - corpo) / 2, medida: 'estimada' }
+    try {
+      const andador = document.createTreeWalker(el, NodeFilter.SHOW_TEXT)
+      let no = andador.nextNode()
+      while (no && (no.textContent ?? '').trim() === '') no = andador.nextNode()
+      const contexto = document.createElement('canvas').getContext('2d')
+      if (!no || !contexto) return estimado
+      const faixa = document.createRange()
+      faixa.selectNodeContents(no)
+      const retangulo = faixa.getBoundingClientRect()
+      contexto.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`
+      const m = contexto.measureText((no.textContent ?? '').trim())
+      const topo = retangulo.top + sy + m.fontBoundingBoxAscent - m.actualBoundingBoxAscent
+      return Number.isFinite(topo) ? { topoLetra: topo, medida: 'tinta' } : estimado
+    } catch {
+      return estimado
+    }
+  }
+  const mensagensDoCampo = (el) => {
+    const campo = el.closest('.sb-campo')
+    if (!campo) return []
+    const lidas = []
+    for (const [tipo, seletor] of [['erro', '.sb-campo-erro'], ['ajuda', '.sb-campo-ajuda'], ['status', '.sb-campo-status']]) {
+      for (const m of campo.querySelectorAll(seletor)) {
+        const texto = (m.textContent ?? '').replace(/\s+/g, ' ').trim()
+        if (texto === '' || !mensagemAparece(m)) continue
+        const caixa = caixaDe(m.getBoundingClientRect())
+        lidas.push({ tipo, texto: texto.slice(0, 90), ...caixa, ...topoDaLetra(m, caixa) })
+      }
+    }
+    return lidas
   }
   const ler = (el) => {
     if (!el) return null
@@ -2081,6 +2193,8 @@ export function lerFocoNaPagina() {
       outlineWidth: cs.outlineWidth,
       outlineOffset: cs.outlineOffset,
       outlineColor: cs.outlineColor,
+      caixa: caixaDe(el.getBoundingClientRect()),
+      mensagens: mensagensDoCampo(el),
     }
     el.blur()
     return leitura
@@ -2379,6 +2493,9 @@ async function coletarEnvio(cdp, base, ambiente, pedido) {
   const antes = await lerEnvio(cdp)
   await enviarFormulario(cdp)
   const envio = { vazio: { antes, depois: await lerEnvio(cdp) } }
+  // O anel de foco com o erro à vista (E-7): o mesmo Tab e a mesma leitura da passada em repouso.
+  await teclarTab(cdp)
+  envio.vazio.foco = await avaliar(cdp, `(${lerFocoNaPagina.toString()})()`)
   if (pedido.caso === 'recuperar_acesso') {
     await abrirCaso(cdp, base, ambiente, pedido)
     const antesDeEnviar = await lerEnvio(cdp)

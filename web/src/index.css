@@ -2926,6 +2926,47 @@
   }
 }
 
+/* ---------------------------------------------------------------------------------------------
+   44d-3, defeito D-1 (E-7): o anel de foco do campo não encosta na mensagem. Só se acrescenta aqui.
+   ------------------------------------------------------------------------------------------ */
+@layer components {
+  /* O anel (2 px de largura, 2 de offset: 4 px fora do `input`) descia até 4 px abaixo da linha do valor, que
+     é onde a mensagem começa, e a tinta da ajuda (o acento do "É" é o ponto mais alto) fica a 1 px do topo da
+     caixa dela: o anel quase encostava no texto (2 px) e, no acento, passava dele. O contrato não muda: linha
+     de 112 px, valor de 48, rótulo de 32, mensagem de 17/24, anel de 2 px com offset 2. Duas peças:
+     1. A entrada tem 52 px e fica centrada na linha do valor (58 px, `align-items: center` do controle): o
+        valor, o rótulo e o fio não saem do lugar, e o anel sobe 3 px por baixo (e desce 3 por cima).
+        52 px cabem o valor de 48 px (a tinta tem uns 45), sem cortar o descendente.
+     2. A mensagem desce 4 px com `position: relative; top: 4px`, sem sair do fluxo: a grade segue com 27 + 58
+        + 24 = 109 px e a linha com 112 (o fio é o 1 px de borda). A caixa de 24 px passa 1 px da linha, só no
+        ar embaixo da letra; a tinta de 14 px termina uns 3 px acima do fio.
+     Folga entre a base do anel e a tinta: 4 px no acento da ajuda e 8 px na tinta do erro (hoje: -3 e 1).
+     Só nas linhas de acesso e da Conta (`.sb-acesso-campos`): a caixa de diálogo da Conta e a base do
+     Sistema ficam como estão. A ajuda escondida pelo erro (`data-erro`, `clip`) não é movida. */
+  @media (min-width: 768px) {
+    .sb-acesso-campos .sb-campo-entrada {
+      height: 52px;
+    }
+
+    .sb-acesso-campos .sb-campo-erro,
+    .sb-acesso-campos .sb-campo:not([data-erro]) .sb-campo-ajuda,
+    .sb-acesso-campos .sb-campo-status {
+      position: relative;
+      top: 4px;
+    }
+  }
+
+  /* Abaixo de 768 o campo é um bloco de 64 px (o fio de 1 px é a borda dele, então a entrada tem 63) e a
+     mensagem começa onde o campo termina: o anel passava 3 px da base dele e a tinta do erro (5 px abaixo
+     do topo da caixa) ficava a 2 px. A entrada de 56 px, centrada, sobe o anel para 0,5 px abaixo do campo:
+     a folga passa a 4,5 px. As mensagens, a reserva da ajuda e o vão de 24 px entre as linhas não mudam. */
+  @media (max-width: 767px) {
+    .sb-acesso-campos .sb-campo-entrada {
+      height: 56px;
+    }
+  }
+}
+
 /* 44d-4 */
 /* O Início novo (MAT-44d-4): apresentação, linhas, citação, cartões, pergunta com CTA, palavras
    grandes e seção escura. Classes `vt-*`. Em cada seletor o valor base (computador) vem primeiro e as
