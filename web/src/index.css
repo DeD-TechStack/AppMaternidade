@@ -2429,3 +2429,278 @@
     transition: none !important;
   }
 }
+
+/* 44d-4 */
+/* O Início novo (MAT-44d-4): apresentação, linhas, citação, cartões, pergunta com CTA, palavras
+   grandes e seção escura. Classes `vt-*`. Em cada seletor o valor base (computador) vem primeiro e as
+   faixas estreitas o trocam depois. Só os espaços da escala 8, 16, 24, 32, 64, 96, 128, 160, 192
+   (a exceção é o vão de 12 px entre a mídia do cartão e o título dele). */
+@layer components {
+  /* O aviso de demonstração, quando o Início o mostra, é filho direto da casca: ele segue a margem
+     da área útil (32, 24 ou 16 px) em vez de colar na borda da janela. */
+  [data-aviso='demonstracao']:has(+ .vt-inicio) {
+    box-sizing: border-box;
+    /* No máximo 40ch de largura (o aviso tem 109 caracteres: numa linha só passaria dos 65 do G10). */
+    max-width: min(40ch, calc(100% - 2 * var(--margem)));
+    margin-left: max(var(--margem), calc((100% - var(--area-util)) / 2));
+    /* 15 px, o menor tamanho da escala (G4). O `text-sm` do componente é de uma camada mais nova: só o
+       `!important` de uma camada anterior o vence. */
+    font-size: 0.9375rem !important;
+  }
+
+  /* Colunas c3–c9 (a seção escura). */
+  .vt-col-c3-c9 {
+    grid-column: 3 / 10;
+  }
+
+  /* Apresentação: título de 48/58 e o parágrafo de 28/39 em c2–c8, a 32 px um do outro. */
+  .vt-apresentacao-titulo {
+    margin: 0;
+  }
+
+  /* 40rem (640 px): o `ch` é a largura do 0, maior que a do caractere médio do texto (cerca de 0,4em
+     contra 0,6em); com 65ch, 52ch e 46ch uma linha ainda passava de 65 caracteres (G10, 69 em 46ch).
+     Com 640 px cabem cerca de 57 caracteres por linha, em 3 linhas. */
+  .vt-apresentacao-texto {
+    max-width: 40rem;
+    margin: 32px 0 0;
+  }
+
+  /* Linhas: o título do bloco vem antes da primeira linha. */
+  .vt-linhas-titulo {
+    margin: 0;
+  }
+
+  /* Citação: o texto em c1–c6, centrado na altura do retrato (c8–c10). */
+  .vt-citacao-texto {
+    align-self: center;
+    margin: 0;
+  }
+
+  .vt-citacao-texto blockquote,
+  .vt-citacao-texto blockquote > p {
+    margin: 0;
+  }
+
+  .vt-citacao-autoria {
+    margin: 32px 0 0;
+    color: var(--cor-secundario);
+  }
+
+  /* Cartões: um fio de largura total (da área útil), o título de 32/38 e 2 cartões de 672 px. */
+  .vt-cartoes {
+    padding-top: 32px;
+    border-top: 1px solid var(--cor-fio-suave);
+  }
+
+  .vt-cartoes-titulo {
+    margin: 0;
+  }
+
+  .vt-cartoes-grade {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 32px;
+    margin-top: 32px;
+  }
+
+  .vt-cartao {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .vt-cartao:hover .vt-cartao-titulo {
+    text-decoration: underline;
+    text-underline-offset: 6px;
+  }
+
+  /* O título do cartão: 36/43 em Instrument Serif, a 12 px da mídia. A linha: 24/29. */
+  .vt-cartao-titulo {
+    display: block;
+    margin-top: 12px;
+    font-family: var(--fonte-sb-serifa);
+    font-size: 2.25rem;
+    line-height: 2.6875rem;
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  .vt-cartao-linha {
+    display: block;
+    color: var(--cor-secundario);
+    font-family: var(--fonte-sb-serifa);
+    font-size: 1.5rem;
+    line-height: 1.8125rem;
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  /* Pergunta e CTA: a pergunta centrada; o círculo urucum de 480 px no centro da janela e, à direita, o
+     círculo de contorno de 240 px. O contorno é um anel (::before) e não uma borda do elemento. */
+  .vt-pergunta {
+    text-align: center;
+  }
+
+  .vt-pergunta-titulo {
+    margin: 0;
+  }
+
+  /* O palco é um bloco comum, e não um flex em linha: o círculo de contorno é absoluto à direita e só
+     os dois círculos se tocam na altura (o G8 lê um pai flex ou grid com filhos lado a lado como
+     colunas, e 480 contra 240 passaria de 120 px de diferença). */
+  .vt-cta-palco {
+    position: relative;
+    margin-top: 64px;
+  }
+
+  .vt-cta,
+  .vt-cta-contorno {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    border-radius: 50%;
+    text-align: center;
+    text-decoration: none;
+  }
+
+  .vt-cta {
+    width: 480px;
+    height: 480px;
+    margin-inline: auto;
+    background-color: var(--cor-destaque);
+    color: var(--cor-sobre-destaque);
+  }
+
+  .vt-cta:hover {
+    background-color: color-mix(in srgb, var(--cor-destaque) 85%, var(--cor-texto));
+  }
+
+  .vt-cta-contorno {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 240px;
+    height: 240px;
+    color: var(--cor-texto);
+  }
+
+  .vt-cta-contorno::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 1px solid var(--cor-fio-suave);
+    border-radius: 50%;
+  }
+
+  .vt-cta-contorno:hover {
+    background-color: var(--cor-texto);
+    color: var(--cor-fundo);
+  }
+
+  /* As 4 palavras grandes: de x=32 a 1408, com o espaço sobrando entre elas. */
+  .vt-nav-lista {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0 32px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .vt-nav-link {
+    display: flex;
+    align-items: center;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .vt-nav-link:hover {
+    text-decoration: underline;
+    text-underline-offset: 12px;
+  }
+
+  /* A seção escura: de borda a borda, fora do <main>. O rodapé tem margin-top de 192; a margem
+     negativa embaixo cancela esse vão, e a seção encosta no rodapé sem faixa de papel entre eles. */
+  .vt-escura {
+    margin-top: var(--e-rodape);
+    margin-bottom: calc(-1 * var(--e-rodape));
+    padding-block: 128px;
+    background-color: var(--cor-texto);
+    color: var(--cor-fundo);
+  }
+
+  /* O anel de foco global é da tinta: sobre a tinta ele sumiria. Aqui é a cor do papel. */
+  .vt-escura :focus-visible {
+    outline-color: var(--cor-fundo);
+  }
+
+  .vt-escura-titulo {
+    margin: 0;
+  }
+
+  .vt-escura-texto {
+    margin: 64px 0 0;
+  }
+
+  .vt-escura-acao {
+    display: flex;
+    margin-top: 64px;
+  }
+
+  /* De 768 a 1099 a coluna não comporta os dois círculos lado a lado: o de contorno vai para baixo. */
+  @media (max-width: 1099px) {
+    /* `relative` e não `static`: o anel (::before) se prende ao próprio círculo. */
+    .vt-cta-contorno {
+      position: relative;
+      margin: 32px auto 0;
+    }
+  }
+
+  /* Abaixo de 768: uma coluna. */
+  @media (max-width: 767px) {
+    .vt-col-c3-c9 {
+      grid-column: 1 / -1;
+    }
+
+    .vt-apresentacao-texto {
+      margin-top: 24px;
+    }
+
+    .vt-citacao-texto {
+      align-self: auto;
+    }
+
+    .vt-citacao-autoria {
+      margin-top: 24px;
+    }
+
+    .vt-citacao-midia {
+      margin-top: 48px;
+    }
+
+    .vt-cartoes-grade {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .vt-cta-palco {
+      margin-top: 32px;
+    }
+
+    .vt-cta {
+      width: 322px;
+      height: 322px;
+    }
+
+    .vt-nav-lista {
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+
+    .vt-escura-texto {
+      margin-top: 24px;
+    }
+  }
+}
