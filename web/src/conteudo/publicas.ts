@@ -10,7 +10,7 @@ export const NOME_SITE = 'AppMaternidade'
  * O endereço de contato: uma constante só. Por enquanto é um marcador; o endereço real entra aqui
  * depois, sem mexer em página nem em teste (os testes leem esta constante).
  */
-export const EMAIL_CONTATO = 'nome.sobrenome@exemplo.invalid'
+export const EMAIL_CONTATO = 'danielmacedosilva11@gmail.com'
 
 function tituloDaAba(nome: string): string {
   return `${nome} | ${NOME_SITE}`
