@@ -4,6 +4,7 @@ import { resolve } from 'node:path'
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import gerarServiceWorker from './sw/passoDeBuild.ts'
 
 // O subcaminho do site no build: vazio ou ausente é "/"; "/x" vira "/x/"; o resto não vale.
 function subcaminhoDoBuild(valor: string | undefined): string {
@@ -31,7 +32,7 @@ function paginaNaoEncontrada(): Plugin {
 // https://vite.dev/config/
 export default defineConfig(({ command }) => ({
   base: command === 'build' ? subcaminhoDoBuild(process.env.BASE_SITE) : '/',
-  plugins: [react(), tailwindcss(), paginaNaoEncontrada()],
+  plugins: [react(), tailwindcss(), paginaNaoEncontrada(), gerarServiceWorker()],
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/teste/setup.ts'],
