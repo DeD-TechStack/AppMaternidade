@@ -1274,9 +1274,65 @@ export function a1(nos, doc) {
   })
 }
 
+const TOL_ESPACO = 1
+
+/** O valor de referência: a mediana (a inferior, se a lista tem tamanho par), que um só valor fora não puxa. */
+const medianaDe = (valores) => [...valores].sort((a, b) => a - b)[(valores.length - 1) >> 1]
+
 /**
- * A-2: as 6 âncoras estão na coluna lateral, com o mesmo x e passo de ≈32 px (em 390 ficam em linha, com
- * quebra: só a contagem e o destino valem), e cada `href` leva a um id que existe.
+ * A-2 em 390 (as âncoras vão em linha, com quebra): o espaço que o olho vê entre duas âncoras vizinhas
+ * é o mesmo (±1 px) na linha e de uma linha para a outra, e o passo vertical entre as linhas é o mesmo
+ * em todas as passagens (±1 px). O espaço é medido entre os RETÂNGULOS DO TEXTO, não entre as caixas:
+ * a caixa de uma âncora curta ("Sair") é mais larga que o texto, por causa do alvo de toque de 44, e
+ * medir caixas esconderia o vão irregular. Sem o retângulo do texto de alguma âncora, reprova fechado.
+ */
+function espacosDeCelular(ancoras) {
+  const faltando = ancoras.filter((a) => !rectValido(a.rectTexto))
+  if (faltando.length > 0) {
+    return faltando.map((a) => ({ no: descrever(a), motivo: `${descrever(a)}: sem a leitura do retângulo do texto (rectTexto)` }))
+  }
+  // As linhas: as âncoras com o mesmo topo de texto (±2), da esquerda para a direita.
+  const linhas = []
+  for (const a of [...ancoras].sort((x, y) => x.rectTexto.y - y.rectTexto.y || x.rectTexto.x - y.rectTexto.x)) {
+    const linha = linhas.find((l) => perto(l.y, a.rectTexto.y, TOL))
+    if (linha) linha.itens.push(a)
+    else linhas.push({ y: a.rectTexto.y, itens: [a] })
+  }
+  const falhas = []
+  const espacos = []
+  for (const linha of linhas) {
+    linha.itens.sort((x, y) => x.rectTexto.x - y.rectTexto.x)
+    for (let i = 1; i < linha.itens.length; i += 1) {
+      const antes = linha.itens[i - 1]
+      const depois = linha.itens[i]
+      espacos.push({ no: depois, valor: depois.rectTexto.x - (antes.rectTexto.x + antes.rectTexto.w) })
+    }
+  }
+  if (espacos.length > 0) {
+    const referencia = medianaDe(espacos.map((e) => e.valor))
+    for (const e of espacos) {
+      if (!perto(e.valor, referencia, TOL_ESPACO)) {
+        falhas.push({ no: descrever(e.no), motivo: `${descrever(e.no)}: espaço de ${e.valor.toFixed(1)} px até a âncora anterior, contra ${referencia.toFixed(1)} da maioria (±${TOL_ESPACO})` })
+      }
+    }
+  }
+  const passos = []
+  for (let i = 1; i < linhas.length; i += 1) passos.push({ no: linhas[i].itens[0], valor: linhas[i].y - linhas[i - 1].y })
+  if (passos.length > 0) {
+    const referencia = medianaDe(passos.map((p) => p.valor))
+    for (const p of passos) {
+      if (!perto(p.valor, referencia, TOL_ESPACO)) {
+        falhas.push({ no: descrever(p.no), motivo: `${descrever(p.no)}: passo vertical de ${p.valor.toFixed(1)} px até a linha anterior, contra ${referencia.toFixed(1)} das outras (±${TOL_ESPACO})` })
+      }
+    }
+  }
+  return falhas
+}
+
+/**
+ * A-2: as 6 âncoras estão na coluna lateral, com o mesmo x e passo de ≈32 px, e cada `href` leva a um id
+ * que existe. Em 390 elas ficam em linha, com quebra: valem a contagem, o destino e o espaço igual entre
+ * vizinhas (ver `espacosDeCelular`).
  */
 export function a2(nos, doc) {
   return comDoc('A-2', doc, () => {
@@ -1287,7 +1343,9 @@ export function a2(nos, doc) {
     for (const a of ancoras) {
       if (a.alvoExiste !== true) falhas.push({ no: descrever(a), motivo: `${descrever(a)}: o href ${a.href ?? '?'} não leva a um id existente` })
     }
-    if (!celularDe(doc)) {
+    if (celularDe(doc)) {
+      falhas.push(...espacosDeCelular(ancoras))
+    } else {
       const x9 = xDaColuna(9, doc.largura, doc.clientWidth)
       const x0 = ancoras[0].rect.x
       for (const a of ancoras) {
@@ -1299,7 +1357,10 @@ export function a2(nos, doc) {
         if (!perto(passo, 32, TOL)) falhas.push({ no: descrever(ancoras[i]), motivo: `${descrever(ancoras[i])}: passo de ${passo.toFixed(1)} px em vez de 32` })
       }
     }
-    return resultadoDeTela('A-2', falhas, `${ancoras.length} âncoras na coluna lateral, no mesmo x, de 32 em 32, todas com destino`)
+    const ok = celularDe(doc)
+      ? `${ancoras.length} âncoras em linha, com o mesmo espaço entre vizinhas e o mesmo passo entre as linhas, todas com destino`
+      : `${ancoras.length} âncoras na coluna lateral, no mesmo x, de 32 em 32, todas com destino`
+    return resultadoDeTela('A-2', falhas, ok)
   })
 }
 

@@ -656,3 +656,50 @@ describe('o CSS do índice sticky', () => {
     expect(nav['padding-top']).not.toMatch(/\d+px/)
   })
 })
+
+// O espaço entre as âncoras em linha (MAT-44d-3, defeito D-3). O jsdom não tem layout: o espaço visto
+// é medido no Chrome (A-2 em 390, entre os retângulos do texto). Aqui se proíbe a CAUSA: o alvo de
+// toque (`.alvo-toque`, `min-width: 44px`) fazia a caixa de uma âncora curta ("Sair", "Perfil") passar
+// do texto, e o vão até a vizinha crescia só nela (24 px contra 38 em Privacidade → Sair → Excluir
+// conta). Em 390 a largura da caixa passa a ser a do texto mais um recuo à direita que a margem
+// negativa devolve ao fluxo: o alvo cresce para dentro do vão, e o vão visto fica o mesmo em todas.
+describe('o CSS das âncoras do índice em linha (390)', () => {
+  const css = readFileSync(pastaSrcDe(import.meta.url) + '../../index.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
+  const SELETOR = '.conta-indice-lista > li > a'
+
+  const regra = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].find((m) => m[1].trim() === SELETOR)
+  const declaracoes = Object.fromEntries(
+    (regra?.[2] ?? '')
+      .split(';')
+      .map((d) => d.split(/:(.*)/s).map((p) => p.trim()))
+      .filter((par) => par[0]),
+  ) as Record<string, string>
+  const px = (valor: string | undefined) => Number.parseFloat(valor ?? 'NaN')
+
+  it('existe uma regra só das âncoras do índice, dentro da faixa de até 767 px', () => {
+    expect(regra, `regra ${SELETOR}`).toBeDefined()
+    const antes = css.slice(0, regra!.index)
+    const ultimaMidia = antes.slice(antes.lastIndexOf('@media'))
+    expect(ultimaMidia).toMatch(/^@media\s*\(max-width:\s*767px\)/)
+  })
+
+  it('a caixa não tem largura mínima: o texto manda no vão até a vizinha', () => {
+    expect(declaracoes['min-width']).toBe('0')
+  })
+
+  it('o alvo de 44 de largura vem de um recuo à direita devolvido por uma margem negativa igual', () => {
+    const recuo = px(declaracoes['padding-inline-end'])
+    const margem = px(declaracoes['margin-inline-end'])
+    expect(recuo).toBeGreaterThan(0)
+    expect(margem).toBe(-recuo)
+    // "Sair" tem ≈ 30 px de texto: com o recuo a caixa passa dos 44 do alvo de toque.
+    expect(30 + recuo).toBeGreaterThanOrEqual(44)
+  })
+
+  it('o vão entre os itens continua o `column-gap` da lista e a altura do item não muda', () => {
+    const lista = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].find((m) => m[1].trim() === '.conta-indice-lista' && m[2].includes('column-gap'))
+    expect(lista?.[2]).toMatch(/column-gap:\s*24px/)
+    const item = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].find((m) => m[1].trim() === '.conta-indice-lista > li' && m[2].includes('height: 44px'))
+    expect(item).toBeDefined()
+  })
+})
