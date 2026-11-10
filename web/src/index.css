@@ -2822,6 +2822,19 @@
       height: 44px;
       min-height: 0;
     }
+
+    /* D-3: o vão visto entre as âncoras é o mesmo em todas. O `.alvo-toque` dá a cada link
+       `min-width: 44px`: a caixa de uma âncora curta ("Sair", "Perfil") passa do texto e o vão até a
+       vizinha crescia só nela (24 px num par, 38 no outro). Aqui a caixa é a do texto (`min-width: 0`)
+       e o alvo de 44 de largura vem de um recuo à direita que a margem negativa igual devolve ao
+       fluxo: o item ocupa só o texto, o vão é o `column-gap` entre textos, e o alvo cresce para dentro
+       do vão (20 px de recuo contra 24 de vão: as caixas não se tocam). "Sair" tem ≈ 30 px de texto:
+       30 + 20 passa dos 44. A altura segue a do `li` (44; 56 na madrugada, como o alvo). */
+    .conta-indice-lista > li > a {
+      min-width: 0;
+      padding-inline-end: 20px;
+      margin-inline-end: -20px;
+    }
   }
 
   /* De 768 para cima o índice acompanha a rolagem (`position: sticky`, logo abaixo do cabeçalho de 64

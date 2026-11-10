@@ -1868,6 +1868,25 @@ describe('A-2: as 6 âncoras da coluna lateral', () => {
     emMain({ tag: 'a', texto: `Seção ${i}`, rect: { x: col(9) + 32, y: 40 + i * 32, w: 120, h: 32 }, m: { ancoraLateral: true, interativo: true }, href: `#s${i}`, alvoExiste: true, ...extra })
   const seis = (mudar = () => ({})) => Array.from({ length: 6 }, (_, i) => ancora(i, mudar(i)))
 
+  // Em 390 as âncoras vão em linha, com quebra. Cada uma leva a caixa (alvo de toque: no mínimo 44 de
+  // largura) e o retângulo do próprio texto, que é o que o olho vê: Perfil, Id da conta, Seus dados |
+  // Privacidade, Sair, Excluir conta. `Sair` é mais estreita que o alvo de 44.
+  const LARGURAS = [38, 80, 78, 85, 30, 95]
+  const ancoras390 = ({ larguras = LARGURAS, porLinha = 3, espaco = () => 24, y = (linha) => 200 + linha * 44, ajuste = () => ({}) } = {}) => {
+    let x = 16
+    return larguras.map((w, i) => {
+      if (i % porLinha === 0) x = 16
+      const ytexto = y(Math.floor(i / porLinha))
+      const no = ancora(i, {
+        rect: { x, y: ytexto - 10, w: Math.max(44, w), h: 44 },
+        rectTexto: { x, y: ytexto, w, h: 24 },
+        ...ajuste(i),
+      })
+      x += w + espaco(i)
+      return no
+    })
+  }
+
   it('passa: 6 âncoras no mesmo x, de 32 em 32, todas com destino', () => {
     const r = a2(seis(), doc1440)
     assert.equal(r.ok, true, r.motivo)
@@ -1886,8 +1905,56 @@ describe('A-2: as 6 âncoras da coluna lateral', () => {
   it('borda: passo de 34 passa (±2) e de 35 falha; em 390 vale só a contagem e o destino (âncoras em linha)', () => {
     assert.equal(a2(seis((i) => ({ rect: { x: col(9) + 32, y: 40 + i * 34, w: 120, h: 32 } })), doc1440).ok, true)
     assert.equal(a2(seis((i) => ({ rect: { x: col(9) + 32, y: 40 + i * 35, w: 120, h: 32 } })), doc1440).ok, false)
-    assert.equal(a2(seis((i) => ({ rect: { x: 16 + (i % 3) * 110, y: 200 + Math.floor(i / 3) * 44, w: 100, h: 44 } })), doc390).ok, true)
-    assert.equal(a2(seis((i) => (i === 0 ? { alvoExiste: false, rect: { x: 16, y: 200, w: 100, h: 44 } } : { rect: { x: 16 + i * 10, y: 200, w: 100, h: 44 } })), doc390).ok, false)
+    assert.equal(a2(ancoras390(), doc390).ok, true)
+    assert.equal(a2(ancoras390({ ajuste: (i) => (i === 0 ? { alvoExiste: false } : {}) }), doc390).ok, false)
+    assert.equal(a2(ancoras390().slice(0, 5), doc390).ok, false)
+  })
+
+  it('390: o espaço visível entre âncoras vizinhas é o mesmo, na linha e de uma linha para a outra', () => {
+    const r = a2(ancoras390(), doc390)
+    assert.equal(r.ok, true, r.motivo)
+    assert.equal(a2(ancoras390({ espaco: () => 30 }), doc390).ok, true)
+  })
+
+  it('390: o defeito D-3 (24 px de Privacidade a Sair e 38 de Sair a Excluir conta) reprova', () => {
+    const r = a2(ancoras390({ espaco: (i) => (i === 4 ? 38 : 24) }), doc390)
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /espaço de 38\.0 px/)
+    assert.equal(r.nos_com_falha.length > 0, true)
+  })
+
+  it('390: uma mutação num espaço — +1 px passa (±1), −2 px e +3 px reprovam', () => {
+    assert.equal(a2(ancoras390({ espaco: (i) => (i === 1 ? 25 : 24) }), doc390).ok, true)
+    assert.equal(a2(ancoras390({ espaco: (i) => (i === 1 ? 22 : 24) }), doc390).ok, false)
+    assert.equal(a2(ancoras390({ espaco: (i) => (i === 3 ? 27 : 24) }), doc390).ok, false)
+    assert.equal(a2(ancoras390({ espaco: (i) => (i === 0 ? 22 : 24) }), doc390).ok, false)
+  })
+
+  it('390: o passo vertical é o mesmo em todas as passagens (3 linhas de 2, ±1 px)', () => {
+    const tresLinhas = (y) => a2(ancoras390({ porLinha: 2, y }), doc390)
+    assert.equal(tresLinhas((l) => 200 + l * 44).ok, true)
+    assert.equal(tresLinhas((l) => 200 + l * 44 + (l === 2 ? 1 : 0)).ok, true)
+    const torta = tresLinhas((l) => 200 + l * 44 + (l === 2 ? 8 : 0))
+    assert.equal(torta.ok, false)
+    assert.match(torta.motivo, /passo vertical de 52\.0 px/)
+  })
+
+  it('390: a madrugada (alvo de 56 de altura) mede o mesmo espaço e o mesmo passo', () => {
+    const r = a2(ancoras390({ ajuste: () => ({}) }).map((no) => ({ ...no, rect: { ...no.rect, y: no.rect.y - 6, h: 56 } })), doc390)
+    assert.equal(r.ok, true, r.motivo)
+  })
+
+  it('390: falha fechado sem o retângulo do texto de uma âncora', () => {
+    const sem = a2(ancoras390({ ajuste: (i) => (i === 4 ? { rectTexto: null } : {}) }), doc390)
+    assert.equal(sem.ok, false)
+    assert.match(sem.motivo, /sem a leitura do retângulo do texto/)
+    assert.equal(a2(ancoras390({ ajuste: (i) => (i === 2 ? { rectTexto: { x: NaN, y: 200, w: 78, h: 24 } } : {}) }), doc390).ok, false)
+    assert.equal(a2(ancoras390({ ajuste: () => ({ rectTexto: undefined }) }), doc390).ok, false)
+  })
+
+  it('1440: o A-2 segue o que era — o rectTexto não entra e o passo é 32', () => {
+    assert.equal(a2(seis((i) => ({ rectTexto: { x: col(9) + 32, y: 40 + i * 32, w: 50 + i * 7, h: 24 } })), doc1440).ok, true)
+    assert.equal(a2(seis(), doc1440).ok, true)
   })
 
   it('falha fechado: nenhuma âncora, âncora sem a leitura do destino e sem retângulo', () => {
