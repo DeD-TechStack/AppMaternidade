@@ -39,6 +39,51 @@ function textoDoMain(container: HTMLElement): string {
   return trechos.join('\n')
 }
 
+/** O texto sem o endereço de e-mail dado (todas as ocorrências): o endereço não é texto da página que as regras conferem. */
+function semOEmail(texto: string, email: string): string {
+  // Cada ocorrência vira um espaço, para que o que estava colado ao endereço não se junte (3 + endereço + 00).
+  return texto.split(email).join(' ')
+}
+
+/** O texto do main sem o e-mail de contato: o que as regras de texto (frases, algarismos, nomes de arquivo) conferem. */
+const textoSemEmail = (container: HTMLElement): string => semOEmail(textoDoMain(container), EMAIL_CONTATO)
+
+/** As sequências de algarismos do texto que não estão na lista aceita. */
+const ALGARISMOS_ACEITOS = ['3', '7', '100', '180', '188', '192']
+const algarismosForaDaLista = (texto: string): string[] =>
+  (texto.match(/\d+/g) ?? []).filter((sequencia) => !ALGARISMOS_ACEITOS.includes(sequencia))
+
+describe('semOEmail', () => {
+  // Um endereço de exemplo só deste teste (com algarismos, ponto e hífen); nunca o valor de EMAIL_CONTATO.
+  const ENDERECO_DE_EXEMPLO = 'maria.souza-11@caixa-22.exemplo.invalid'
+  const TEXTO = `Fale conosco: ${ENDERECO_DE_EXEMPLO}\nPara falar sobre os seus dados: ${ENDERECO_DE_EXEMPLO}.\nLigue 188 ou 192.`
+
+  it('sem a auxiliar, a conferência de algarismos reprova o endereço', () => {
+    expect(algarismosForaDaLista(TEXTO)).toEqual(['11', '22', '11', '22'])
+  })
+
+  it('com a auxiliar, todas as ocorrências do endereço saem e a conferência passa', () => {
+    const limpo = semOEmail(TEXTO, ENDERECO_DE_EXEMPLO)
+
+    expect(limpo).not.toContain(ENDERECO_DE_EXEMPLO)
+    expect(limpo).not.toContain('@')
+    expect(algarismosForaDaLista(limpo)).toEqual([])
+  })
+
+  it('só o endereço sai: qualquer outro algarismo continua reprovando', () => {
+    const limpo = semOEmail(`${TEXTO}\nFalta 11 dias.`, ENDERECO_DE_EXEMPLO)
+
+    expect(algarismosForaDaLista(limpo)).toEqual(['11'])
+    expect(limpo).toContain('Ligue 188 ou 192.')
+  })
+
+  it('o endereço colado a um algarismo não junta sequências (3 + endereço + 00 não vira 300)', () => {
+    const limpo = semOEmail(`3${ENDERECO_DE_EXEMPLO}00`, ENDERECO_DE_EXEMPLO)
+
+    expect(algarismosForaDaLista(limpo)).toEqual(['00'])
+  })
+})
+
 const TF = {
   responsavel: 'Responsável pelo AppMaternidade: a definir.',
   encarregado: 'Encarregado pelo tratamento de dados: Daniel Macedo.',
@@ -191,7 +236,7 @@ describe('o que não pode aparecer', () => {
     for (const caminho of NOVAS) {
       const container = await abrir(caminho)
 
-      const texto = textoDoMain(container).toLowerCase()
+      const texto = textoSemEmail(container).toLowerCase()
       for (const frase of FRASES_PROIBIDAS) expect(texto, `${caminho}: ${frase}`).not.toContain(frase)
     }
   })
@@ -200,10 +245,9 @@ describe('o que não pode aparecer', () => {
     for (const caminho of NOVAS) {
       const container = await abrir(caminho)
 
-      const texto = textoDoMain(container).replace(TF.regiaoDosDados, '')
-      for (const sequencia of texto.match(/\d+/g) ?? []) {
-        expect(['3', '7', '100', '180', '188', '192'], `${caminho}: ${sequencia}`).toContain(sequencia)
-      }
+      // Sem o e-mail de contato (que pode ter algarismos) e sem a frase do TF-15; nenhum outro algarismo é aceito.
+      const texto = textoSemEmail(container).replace(TF.regiaoDosDados, '')
+      expect(algarismosForaDaLista(texto), caminho).toEqual([])
     }
   })
 
@@ -225,7 +269,7 @@ describe('o que não pode aparecer', () => {
     for (const caminho of NOVAS) {
       const container = await abrir(caminho)
 
-      const texto = textoDoMain(container)
+      const texto = textoSemEmail(container)
       expect(texto, caminho).not.toMatch(/\bMAT-\d+|\bTF-\d+|\.(tsx?|css|md|png|svg)\b/)
       expect(texto, caminho).not.toMatch(/\bLia\b|\bAna\b/)
       expect(texto, caminho).not.toMatch(/conta de teste|senha fornecida/i)
