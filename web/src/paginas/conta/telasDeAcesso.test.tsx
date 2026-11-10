@@ -33,10 +33,11 @@ const TELAS = [
 
 // `pastaSrcDe` devolve a pasta do arquivo de teste (web/src/paginas/conta/): o CSS está duas acima.
 const css = readFileSync(pastaSrcDe(import.meta.url) + '../../index.css', 'utf8')
-// O bloco da 44d-3 acaba onde começa o da 44d-4 (o Início), que vem depois dele no arquivo.
+// O bloco da 44d-3 acaba onde começa o primeiro bloco de outro cartão que vem depois dele no arquivo
+// (a 44d-2, a área logada, e a 44d-4, o Início).
 const inicioDe44d3 = css.indexOf('44d-3:')
-const inicioDe44d4 = css.indexOf('/* 44d-4 */')
-const blocoDe44d3 = css.slice(inicioDe44d3, inicioDe44d4 > inicioDe44d3 ? inicioDe44d4 : undefined)
+const fimsPossiveis = ['/* 44d-2 */', '/* 44d-4 */'].map((marca) => css.indexOf(marca)).filter((i) => i > inicioDe44d3)
+const blocoDe44d3 = css.slice(inicioDe44d3, fimsPossiveis.length > 0 ? Math.min(...fimsPossiveis) : undefined)
 const semComentarios = (texto: string) => texto.replace(/\/\*[\s\S]*?\*\//g, '')
 
 beforeEach(() => {

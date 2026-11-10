@@ -49,13 +49,14 @@ describe('RF-01: quem cria o cliente e quem lê as variáveis', () => {
     expect(chamam).toEqual(['dados/cliente.ts'])
   })
 
-  it('só dados/cliente.ts e os dois avisos de demonstração leem as variáveis do banco', () => {
+  it('só dados/cliente.ts e as duas leituras de "tem banco" (aviso do Início e prototipo/banco) leem as variáveis do banco', () => {
     const leem = fontes.filter((f) => /VITE_SUPABASE_(URL|ANON_KEY)/.test(f.texto)).map((f) => f.nome)
-    // O AvisoAbertura (Início, 44d-4) só confere se as variáveis existem, como o AvisoDemonstracao.
+    // O AvisoAbertura (Início, 44d-4) e `prototipo/banco.ts` (44d-2, usado pelo AvisoDemonstracao) só
+    // conferem se as variáveis existem; quem cria o cliente continua sendo só dados/cliente.ts.
     expect(leem.sort()).toEqual([
-      'componentes/AvisoDemonstracao.tsx',
       'componentes/vitrine/AvisoAbertura.tsx',
       'dados/cliente.ts',
+      'prototipo/banco.ts',
     ])
   })
 
