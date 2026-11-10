@@ -600,6 +600,98 @@ describe('Hoje: o CSS do bloco /* 44d-2 */ (lido como texto)', () => {
     expect(item).toMatch(/min-height:\s*0/)
   })
 
+  it('H-3 em 390: o item "Ir aos últimos" some abaixo de 768 (a âncora leva à seção logo abaixo) e só ele: o "Voltar para Hoje" da Sessão fica', () => {
+    // 641 - 44 (o item do link) = 597 ≤ 600.
+    // `.ha-tela .ha-li-ultimos` (0,2,0) vence o `display: flex` de `.sb-abertura-lateral > li` (0,1,1).
+    const celular = regraEm(emMedia767(), '.ha-tela .ha-li-ultimos')
+    expect(celular).toMatch(/display:\s*none/)
+    // Fora do celular (o bloco sem o texto dos `@media (max-width: 767px)`) o item não é escondido.
+    const foraDoCelular = semComentarios.replace(emMedia767(), '')
+    expect(regraEm(foraDoCelular, '.ha-tela .ha-li-ultimos')).not.toMatch(/display:\s*none/)
+    // O seletor é próprio do Hoje: nenhuma regra de celular esconde o `.ha-li-link` (a Sessão também o usa).
+    expect(regraEm(emMedia767(), '.ha-li-link')).not.toMatch(/display:\s*none/)
+    expect(regraEm(emMedia767(), '.ha-tela .ha-li-link')).not.toMatch(/display:\s*none/)
+
+    const hoje = renderizarRota('/app/hoje')
+    const linkHoje = screen.getByRole('link', { name: 'Ir aos últimos' })
+    expect(linkHoje.parentElement!.classList.contains('ha-li-ultimos')).toBe(true)
+    hoje.unmount()
+
+    renderizarRota('/app/sessao')
+    const volta = screen.getByRole('link', { name: 'Voltar para Hoje' })
+    expect(volta.parentElement!.classList.contains('ha-li-ultimos')).toBe(false)
+  })
+
+  // ---- Parte 3 (olhar a tela): defeitos que a imagem mostrou. Cada teste cobre a classe do defeito.
+
+  /** O texto de dentro de cada `@media (min-width: 1200px)` do bloco, com as chaves balanceadas. */
+  function emMedia1200(): string {
+    const achados: string[] = []
+    const abertura = /@media\s*\(min-width:\s*1200px\)\s*\{/g
+    for (let m = abertura.exec(semComentarios); m; m = abertura.exec(semComentarios)) {
+      let nivel = 1
+      let i = abertura.lastIndex
+      while (i < semComentarios.length && nivel > 0) {
+        if (semComentarios[i] === '{') nivel += 1
+        else if (semComentarios[i] === '}') nivel -= 1
+        i += 1
+      }
+      achados.push(semComentarios.slice(abertura.lastIndex, i - 1))
+    }
+    return achados.join('\n')
+  }
+
+  it('P3 (390): a lateral da abertura fica a 16 do subtítulo (e não 32), nas duas telas; o fio e o 16 do subtítulo ao fio seguem', () => {
+    // `.ha-tela .sb-abertura-lateral` (0,2,0) vence o `margin-top: 32px` da base (0,1,0). Em 390 a tummy time
+    // terminava os botões em y=729 (limite 700): são 16 px a menos nas duas telas, em escala.
+    expect(regraEm(emMedia767(), '.ha-tela .sb-abertura-lateral')).toMatch(/margin-top:\s*16px/)
+    // Fora do celular a lateral não tem esse margin-top (ela começa no topo do título).
+    const foraDoCelular = semComentarios.replace(emMedia767(), '')
+    expect(regraEm(foraDoCelular, '.ha-tela .sb-abertura-lateral')).not.toMatch(/margin-top/)
+  })
+
+  it('P3 (390): o item do link da lateral guarda 32 de layout (e não 44) abaixo de 768; o alvo de 56 do link continua e o tema não muda a altura', () => {
+    // 709 - 12 = 697 ≤ 700 na Sessão de tummy time. O link (56 de alvo) transborda 12 para cada lado do item.
+    const item = regraEm(emMedia767(), '.ha-tela .ha-li-link')
+    expect(item).toMatch(/height:\s*32px/)
+    expect(regra('.ha-tela .sb-abertura-link')).toMatch(/min-height:\s*56px/)
+    // De 768 para cima o item guarda 44, como a parte 2 fixou.
+    const foraDoCelular = semComentarios.replace(emMedia767(), '')
+    expect(regraEm(foraDoCelular, '.ha-tela .ha-li-link')).toMatch(/height:\s*44px/)
+  })
+
+  it('P3 (390): os botões dos blocos de cor têm rótulo de 20 (do conjunto) e não 24, para o rótulo não apertar a moldura de 64 nem quebrar sozinho', () => {
+    // "Ver sessão" (Hoje) e "Encerrar e anotar" (Sessão) quebravam em 2 linhas de 24 dentro dos 64 px de moldura.
+    const botoes = regraEm(emMedia767(), '.ha-andamento .sb-botao, .ha-andamento .sb-moldura')
+    expect(botoes).toMatch(/font-size:\s*1\.25rem/)
+    expect(botoes).toMatch(/line-height:\s*1\.25rem/)
+    // De 768 para cima o rótulo continua sendo o `t-botao` de 24: nenhuma regra fora do celular o muda.
+    const foraDoCelular = semComentarios.replace(emMedia767(), '')
+    expect(regraEm(foraDoCelular, '.ha-andamento .sb-botao, .ha-andamento .sb-moldura')).not.toMatch(/font-size/)
+  })
+
+  it('P3: as escolhas dos painéis (Fralda e Mais) têm larguras iguais: grade de 2 colunas, 4 de 1200 em diante, e o Mais, de rótulos longos, em 1 coluna abaixo de 768', () => {
+    const grupo = regra('.ha-painel-grupo')
+    expect(grupo).toMatch(/display:\s*grid/)
+    expect(grupo).toMatch(/grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/)
+    expect(grupo).toMatch(/gap:\s*16px/)
+    // O `flex: 1 1 auto` dava a cada botão a largura do seu texto (288, 300, 324 e 346 px em 1440).
+    expect(regra('.ha-painel-grupo > *')).not.toMatch(/flex/)
+    expect(regraEm(emMedia1200(), '.ha-painel-grupo')).toMatch(/grid-template-columns:\s*repeat\(4,\s*minmax\(0,\s*1fr\)\)/)
+    expect(regraEm(emMedia767(), ".ha-painel-grupo[data-largos]")).toMatch(/grid-template-columns:\s*minmax\(0,\s*1fr\)/)
+  })
+
+  it('P3: o grupo do Mais leva data-largos e o da Fralda não', () => {
+    const { container } = renderizarRota('/app/hoje')
+    fireEvent.click(screen.getByRole('button', { name: 'Mais registros' }))
+    const mais = screen.getByRole('group', { name: 'Outros registros de Heloísa' })
+    expect(mais.hasAttribute('data-largos')).toBe(true)
+    fireEvent.click(screen.getByRole('button', { name: 'Registrar fralda de Heloísa' }))
+    const fralda = screen.getByRole('group', { name: 'Fralda de Heloísa' })
+    expect(fralda.hasAttribute('data-largos')).toBe(false)
+    expect(container.querySelectorAll('.ha-painel-grupo')).toHaveLength(1)
+  })
+
   it('E (M-1): o Hoje marca o main com ha-tela e o item do link da lateral com ha-li-link', () => {
     const { container } = renderizarRota('/app/hoje')
 

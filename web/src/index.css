@@ -2624,14 +2624,18 @@ body:has([data-barra-registrar]) [data-rodape] {
   gap: 16px;
 }
 
+/* As escolhas têm a mesma largura (grade, e não `flex` pelo texto): 2 colunas, 4 de 1200 em diante. O Mais
+   (`data-largos`: "Alimentação sólida" não cabe em meia coluna de 390) vai em 1 coluna abaixo de 768. */
 .ha-painel-grupo {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
 }
 
-.ha-painel-grupo > * {
-  flex: 1 1 auto;
+@media (min-width: 1200px) {
+  .ha-painel-grupo {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
 .ha-confirmacao ~ .ha-painel-grupo {
@@ -2744,6 +2748,37 @@ body:has([data-barra-registrar]) [data-rodape] {
 }
 
 @media (max-width: 767px) {
+  /* H-3: em 390 a abertura gastava 347 px até o fio. O link "Ir aos últimos" (44 de item) leva a uma seção
+     que já está logo abaixo: sai do celular. O "Voltar para Hoje" da Sessão (S-5) fica. */
+  .ha-tela .ha-li-ultimos {
+    display: none;
+  }
+
+  /* A lateral da abertura fica a 16 do subtítulo (a base põe 32): na Sessão de tummy time os botões terminavam
+     em y=729, e o limite de 390 é 700. É o mesmo 16 que separa o subtítulo do fio. */
+  .ha-tela .sb-abertura-lateral {
+    margin-top: 16px;
+  }
+
+  /* O item do link guarda 32 de layout (44 de 768 em diante): o link tem 56 de alvo e transborda 12 de cada
+     lado, sobre o aviso e sobre a margem do fio, onde não há nada para tocar. */
+  .ha-tela .ha-li-link {
+    height: 32px;
+  }
+
+  .ha-painel-grupo[data-largos] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Os botões dos blocos de cor têm rótulo de 20 (o conjunto da escala) em 390: "Ver sessão" e "Encerrar e
+     anotar" quebravam em 2 linhas de 24 dentro dos 64 px da moldura. Com 20, "Ver sessão" cabe numa linha e
+     "Encerrar e anotar" quebra com ar. */
+  .ha-andamento .sb-botao,
+  .ha-andamento .sb-moldura {
+    font-size: 1.25rem;
+    line-height: 1.25rem;
+  }
+
   .ha-andamento {
     padding: 24px;
   }

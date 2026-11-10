@@ -123,7 +123,9 @@ export function Hoje() {
           lateral={[
             <ItemAvisoDaAbertura key="aviso" />,
             // O `li` guarda 44 px de layout e o link tem 56 de alvo nos dois temas (ver `.ha-li-link`).
-            <li key="ultimos" className="ha-li-link">
+            // Abaixo de 768 o item some (`.ha-li-ultimos`): a âncora leva à seção logo abaixo e a lateral
+            // gasta 44 px que o bloco Em andamento precisa para terminar em y ≤ 600 (H-3).
+            <li key="ultimos" className="ha-li-link ha-li-ultimos">
               <a className="sb-abertura-link t-corpo alvo-toque" href="#ultimos">
                 Ir aos últimos
               </a>

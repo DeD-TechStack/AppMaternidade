@@ -119,7 +119,13 @@ export function BarraRegistrar({
         ) : null}
 
         {painel === 'mais' ? (
-          <div id={idMais} role="group" aria-label="Outros registros de Heloísa" className="ha-painel-grupo">
+          <div
+            id={idMais}
+            role="group"
+            aria-label="Outros registros de Heloísa"
+            className="ha-painel-grupo"
+            data-largos=""
+          >
             <Botao
               variante="moldura"
               className="alvo-toque"
