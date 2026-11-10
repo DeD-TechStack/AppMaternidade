@@ -63,8 +63,6 @@ export const ENTRAR = {
   botao: 'Entrar',
   criarConta: 'Criar conta',
   esqueci: 'Esqueci a senha',
-  /** A moldura de mídia da tela: o conteúdo vem em outro cartão. */
-  midia: 'Celular com a tela Hoje.',
   explicacao: {
     tema: 'O que você vê ao entrar',
     linhas: [

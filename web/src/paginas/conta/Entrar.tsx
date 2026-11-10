@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Navigate, useLocation, useSearchParams } from 'react-router'
-import { Midia } from '../../componentes/base/Midia.tsx'
 import { AreaDoLoginSocial } from '../../componentes/conta/AreaDoLoginSocial.tsx'
 import { CampoAcesso } from '../../componentes/conta/CampoAcesso.tsx'
 import { caminhoComVolta, destinoDepoisDeEntrar, voltaValida } from '../../componentes/conta/destino.ts'
@@ -134,10 +133,6 @@ export function Entrar() {
       </BlocoDoFormulario>
 
       <LinhasDeExplicacao tema={ENTRAR.explicacao.tema} linhas={ENTRAR.explicacao.linhas} />
-
-      <div className="sb-area sb-mt-midia-linhas">
-        <Midia formato="larga" fundo="barro" aria-label={ENTRAR.midia} />
-      </div>
     </MolduraPublica>
   )
 }

@@ -363,7 +363,7 @@ describe('as linhas "rótulo + texto" e a mídia', () => {
   const linhasDe = (container: HTMLElement, tema: string) =>
     container.querySelector(`section[aria-label="${tema}"]`)!
 
-  it('Entrar: 4 linhas de "O que você vê ao entrar" e uma moldura de mídia vazia no fim', async () => {
+  it('Entrar: 4 linhas de "O que você vê ao entrar" no fim da página, sem moldura de mídia (D1 da volta 3)', async () => {
     const { container } = abrir('/entrar')
     await screen.findByRole('button', { name: 'Entrar' })
 
@@ -377,16 +377,12 @@ describe('as linhas "rótulo + texto" e a mídia', () => {
       'Demonstração',
     ])
 
-    const midias = container.querySelectorAll('[data-midia]')
-    expect(midias).toHaveLength(1)
-    const midia = midias[0]
-    expect(midia.getAttribute('role')).toBe('img')
-    expect(midia.getAttribute('aria-label')).toBe('Celular com a tela Hoje.')
-    expect(midia.getAttribute('data-formato')).toBe('larga')
-    expect(midia.getAttribute('data-fundo')).toBe('barro')
-    expect(midia.textContent).toBe('')
-    expect(midia.children).toHaveLength(0)
-    expect(container.querySelector('main')!.lastElementChild!.contains(midia)).toBe(true)
+    // Fail-closed: a moldura vazia saiu (o celular com o Hoje é do 44d-5 e a mídia do Entrar é do 44d-6).
+    const principal = container.querySelector('main')!
+    expect(principal.querySelectorAll('[data-midia]')).toHaveLength(0)
+    expect(container.querySelectorAll('[data-midia]')).toHaveLength(0)
+    expect(principal.querySelector('[role="img"]')).toBeNull()
+    expect(principal.lastElementChild).toBe(secao)
   })
 
   it('Criar conta e Recuperar: 4 linhas cada, sem mídia', async () => {
