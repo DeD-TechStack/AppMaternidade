@@ -1,15 +1,53 @@
 // Testes da parte pura do medidor (node --test web/scripts/medir-dom.test.mjs). Para cada regra:
 // um caso que passa, um que falha e um de borda; e os casos em que a medida falha fechado.
 import assert from 'node:assert/strict'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
 import { describe, it } from 'node:test'
-import { JSDOM } from 'jsdom'
+import { JSDOM, VirtualConsole } from 'jsdom'
 import {
+  a1,
+  a2,
+  a3,
+  a4,
+  a5,
+  a6,
   areaUtilDe,
+  avaliarCriterios,
   avaliarTudo,
+  b1,
+  b2,
+  b3,
   bloqueantesDoCaso,
+  c1,
+  c2,
+  c3,
+  CASOS_DE_ACESSO,
   coletarNaPagina,
   contraste,
+  criteriosDoCaso,
+  e1,
+  e2,
+  e3,
+  e4,
+  e5,
+  e6,
+  e7,
+  escolherAmbiente,
   fundoReal,
+  lerArquivoAmbiente,
+  lerFocoNaPagina,
+  m1,
+  m2,
+  m3,
+  m4,
+  m5,
+  m6,
+  MANUAIS_DO_CASO,
+  r1,
+  r2,
+  verificarAmbiente,
   g1,
   g2,
   g3,
@@ -507,9 +545,11 @@ const RETANGULO = { x: 0, y: 0, left: 0, top: 0, width: 100, height: 20, right: 
 
 /** Monta `html` num jsdom, roda o coletor serializado (como o CDP faz) e devolve `{ doc, nos }`. */
 function coletarDe(html, preparar = () => undefined) {
+  // O console virtual sem saída: o jsdom avisa "not implemented" para getComputedStyle com
+  // pseudo-elemento (que o coletor lê nos critérios de tela) e não há o que mostrar.
   const dom = new JSDOM(
     `<!doctype html><html><head><style>* { font-size: 20px; opacity: 1; transform: none; text-transform: none; box-shadow: none; }</style></head><body>${html}</body></html>`,
-    { runScripts: 'outside-only' },
+    { runScripts: 'outside-only', virtualConsole: new VirtualConsole() },
   )
   const { window } = dom
   window.Element.prototype.getBoundingClientRect = () => ({ ...RETANGULO })
@@ -1036,5 +1076,1267 @@ describe('argumentos e loopback', () => {
     assert.doesNotThrow(() => verificarLoopback('http://localhost:5244/'))
     assert.throws(() => verificarLoopback('http://exemplo.invalid/'), /só loopback/)
     assert.throws(() => verificarLoopback('http://192.168.0.5:5244/'), /só loopback/)
+  })
+})
+
+// =============================================================================================
+// MAT-44d-3: as 5 telas de acesso e Conta. Ambiente, argumentos, bloqueio e os critérios de tela.
+
+describe('44d-3: o ambiente (variável > .oc/ambiente.json > padrão)', () => {
+  const ARQUIVO = { BASE_URL: 'http://127.0.0.1:5263', CDP_PORTA: 9363, API_URL: 'http://127.0.0.1:54321', ANON_KEY: 'chave-do-arquivo' }
+
+  it('sem variável nem arquivo, vale o padrão de sempre (5244 e 9344), sem API_URL nem ANON_KEY', () => {
+    assert.deepEqual(escolherAmbiente({}, null), { BASE_URL: 'http://127.0.0.1:5244/', CDP_PORTA: 9344, API_URL: undefined, ANON_KEY: undefined })
+  })
+
+  it('sem variável, o arquivo vale mais que o padrão; a BASE_URL ganha a barra final', () => {
+    assert.deepEqual(escolherAmbiente({}, ARQUIVO), { BASE_URL: 'http://127.0.0.1:5263/', CDP_PORTA: 9363, API_URL: 'http://127.0.0.1:54321', ANON_KEY: 'chave-do-arquivo' })
+  })
+
+  it('a variável vale mais que o arquivo, campo a campo', () => {
+    const r = escolherAmbiente({ CDP_PORTA: '9400', ANON_KEY: 'da-variavel' }, ARQUIVO)
+    assert.equal(r.CDP_PORTA, 9400)
+    assert.equal(r.ANON_KEY, 'da-variavel')
+    assert.equal(r.BASE_URL, 'http://127.0.0.1:5263/')
+    assert.equal(r.API_URL, 'http://127.0.0.1:54321')
+  })
+
+  it('borda: variável vazia ou só com espaços conta como ausente; arquivo que não é objeto é ignorado', () => {
+    assert.equal(escolherAmbiente({ BASE_URL: '', CDP_PORTA: '  ' }, ARQUIVO).CDP_PORTA, 9363)
+    assert.equal(escolherAmbiente({}, ['x']).CDP_PORTA, 9344)
+    assert.equal(escolherAmbiente({}, 'texto').BASE_URL, 'http://127.0.0.1:5244/')
+    assert.equal(escolherAmbiente({}, { CDP_PORTA: null }).CDP_PORTA, 9344)
+  })
+
+  it('só loopback vale, inclusive para a API_URL, e a porta tem de ser um inteiro válido', () => {
+    assert.doesNotThrow(() => verificarAmbiente(escolherAmbiente({}, ARQUIVO)))
+    assert.doesNotThrow(() => verificarAmbiente(escolherAmbiente({}, null)))
+    assert.throws(() => verificarAmbiente(escolherAmbiente({ BASE_URL: 'http://exemplo.invalid/' }, null)), /só loopback/)
+    assert.throws(() => verificarAmbiente(escolherAmbiente({ API_URL: 'http://exemplo.invalid' }, null)), /só loopback/)
+    assert.throws(() => verificarAmbiente(escolherAmbiente({ API_URL: 'http://192.168.0.5:54321' }, ARQUIVO)), /só loopback/)
+    assert.throws(() => verificarAmbiente(escolherAmbiente({ CDP_PORTA: 'abc' }, null)), /CDP_PORTA inválida/)
+    assert.throws(() => verificarAmbiente(escolherAmbiente({ CDP_PORTA: '70000' }, null)), /CDP_PORTA inválida/)
+  })
+
+  it('lê o arquivo do disco: nulo se não existe, objeto se é JSON, erro se está ilegível', () => {
+    const pasta = fs.mkdtempSync(path.join(os.tmpdir(), 'medir-dom-ambiente-'))
+    try {
+      assert.equal(lerArquivoAmbiente(path.join(pasta, 'nao-existe.json')), null)
+      const bom = path.join(pasta, 'ambiente.json')
+      fs.writeFileSync(bom, JSON.stringify(ARQUIVO))
+      assert.deepEqual(lerArquivoAmbiente(bom), ARQUIVO)
+      const ruim = path.join(pasta, 'ruim.json')
+      fs.writeFileSync(ruim, '{ não é json')
+      assert.throws(() => lerArquivoAmbiente(ruim), /ilegível/)
+    } finally {
+      fs.rmSync(pasta, { recursive: true, force: true })
+    }
+  })
+})
+
+describe('44d-3: os casos novos nos argumentos e no bloqueio', () => {
+  it('aceita os 5 casos novos (com sublinhado no nome) e mantém os 4 antigos', () => {
+    const { pedidos } = lerArgumentos([
+      'p',
+      'entrar:claro:1440x900',
+      'criar_conta:claro:390x844',
+      'recuperar_acesso:claro:1440x900',
+      'comecar_seu_nome:madrugada:390x844',
+      'conta:madrugada:390x844',
+      'sessao:claro:1440x900',
+    ])
+    assert.deepEqual(pedidos.map((p) => p.caso), ['entrar', 'criar_conta', 'recuperar_acesso', 'comecar_seu_nome', 'conta', 'sessao'])
+    assert.deepEqual(Object.keys(CASOS_DE_ACESSO), ['entrar', 'criar_conta', 'recuperar_acesso', 'comecar_seu_nome', 'conta'])
+  })
+
+  it(':madrugada é erro de uso nos três casos públicos, e vale em comecar_seu_nome e conta', () => {
+    for (const caso of ['entrar', 'criar_conta', 'recuperar_acesso']) {
+      assert.throws(() => lerArgumentos(['p', `${caso}:madrugada:1440x900`]), /sempre clara/)
+      assert.doesNotThrow(() => lerArgumentos(['p', `${caso}:claro:1440x900`]))
+    }
+    for (const caso of ['comecar_seu_nome', 'conta']) assert.doesNotThrow(() => lerArgumentos(['p', `${caso}:madrugada:1440x900`]))
+    assert.throws(() => lerArgumentos(['p', 'comecar-seu-nome:claro:1440x900']), /argumento inválido/)
+  })
+
+  it('nos 5 casos novos bloqueiam G1 a G12 e SB3 (sem NUM); sistema, as 14; os outros, G2 e G9', () => {
+    for (const caso of Object.keys(CASOS_DE_ACESSO)) {
+      const lista = bloqueantesDoCaso(caso)
+      assert.equal(lista.length, 13, caso)
+      assert.ok(lista.includes('G1') && lista.includes('G12') && lista.includes('SB3'), caso)
+      assert.ok(!lista.includes('NUM'), caso)
+    }
+    assert.equal(bloqueantesDoCaso('sistema').length, 14)
+    assert.deepEqual(bloqueantesDoCaso('hoje'), ['G2', 'G9'])
+  })
+
+  it('avaliarTudo marca G1 como bloqueante num caso novo e NUM como registrada', () => {
+    const resultados = avaliarTudo({ doc: { ...doc1440, scrollWidth: 1500 }, nos: [], tema: 'claro' }, 'entrar')
+    assert.equal(resultados.find((r) => r.regra === 'G1').bloqueia, true)
+    assert.equal(resultados.find((r) => r.regra === 'NUM').bloqueia, false)
+    assert.match(resumo('entrar_claro_1440.json', resultados), /G1 FALHA/)
+    assert.match(resumo('entrar_claro_1440.json', resultados), /NUM ok/)
+  })
+
+  it('os critérios por caso, como na tabela do cartão', () => {
+    assert.deepEqual(criteriosDoCaso('entrar'), ['E-1', 'E-2', 'E-3', 'E-4', 'E-5', 'E-6', 'E-7'])
+    assert.deepEqual(criteriosDoCaso('criar_conta'), ['E-1', 'E-2', 'E-3', 'E-5', 'E-6', 'E-7', 'C-1', 'C-2', 'C-3'])
+    assert.deepEqual(criteriosDoCaso('recuperar_acesso'), ['E-1', 'E-2', 'E-3', 'E-5', 'E-6', 'E-7', 'R-1', 'R-2'])
+    assert.deepEqual(criteriosDoCaso('comecar_seu_nome'), ['E-1', 'E-3', 'E-4', 'E-5', 'E-6', 'E-7', 'B-1', 'B-2', 'B-3'])
+    assert.deepEqual(criteriosDoCaso('conta', 'claro'), ['A-1', 'A-2', 'A-3', 'A-4', 'A-5', 'A-6'])
+    assert.deepEqual(criteriosDoCaso('conta', 'madrugada'), ['A-1', 'A-2', 'A-3', 'A-4', 'A-5', 'A-6', 'M-1', 'M-2', 'M-3', 'M-4', 'M-5', 'M-6'])
+    assert.deepEqual(criteriosDoCaso('hoje'), [])
+    assert.deepEqual(criteriosDoCaso('sistema', 'madrugada'), [])
+  })
+
+  it('avaliarCriterios: sem leitura, todo critério reprova fechado e bloqueia; os manuais vêm junto', () => {
+    const { criterios, criterios_manuais: manuais } = avaliarCriterios({ doc: doc1440, nos: [], tema: 'claro' }, 'entrar')
+    assert.equal(criterios.length, 7)
+    for (const r of criterios) {
+      assert.deepEqual(Object.keys(r).sort(), ['bloqueia', 'motivo', 'nos_com_falha', 'ok', 'regra'])
+      assert.equal(r.ok, false, `${r.regra}: ${r.motivo}`)
+      assert.equal(r.bloqueia, true)
+    }
+    assert.ok(manuais.some((m) => m.id === 'E-6' && m.olhar.length > 20))
+    assert.ok(manuais.some((m) => m.id === 'E-7'))
+    assert.ok(MANUAIS_DO_CASO.recuperar_acesso.some((m) => m.id === 'R-3'))
+  })
+
+  it('avaliarCriterios: os casos antigos saem com as duas listas vazias, e a regra que lança vira falha', () => {
+    assert.deepEqual(avaliarCriterios({ doc: doc1440, nos: [], tema: 'claro' }, 'hoje'), { criterios: [], criterios_manuais: [] })
+    const doc = {
+      get largura() {
+        throw new Error('explodiu')
+      },
+      clientWidth: 1425,
+    }
+    const { criterios } = avaliarCriterios({ doc, nos: [], tema: 'claro' }, 'conta')
+    assert.match(criterios.find((r) => r.regra === 'A-1').motivo, /erro ao medir: explodiu/)
+    assert.ok(criterios.every((r) => r.ok === false))
+  })
+
+  it('o resumo imprime também as regras de tela (E-1 ok E-2 FALHA ...)', () => {
+    const g = [{ regra: 'G1', ok: true, bloqueia: true }]
+    const t = [
+      { regra: 'E-1', ok: true, bloqueia: true },
+      { regra: 'E-2', ok: false, bloqueia: true },
+      { regra: 'E-7', ok: false, bloqueia: false },
+    ]
+    assert.equal(resumo('a.json', g, t), 'RESUMO a.json G1 ok E-1 ok E-2 FALHA E-7 registrada')
+    assert.equal(resumo('a.json', g), 'RESUMO a.json G1 ok')
+  })
+})
+
+// --- Os construtores das fixtures de tela ----------------------------------------------------
+
+const col = (n, doc = doc1440) => xDaColuna(n, doc.largura, doc.clientWidth)
+const TINTA_FIO = 'rgb(26, 21, 17)'
+
+/** Um nó dentro de `<main>`. */
+const emMain = (extra = {}) => criar({ ...extra, m: { noMain: true, ...(extra.m ?? {}) } })
+
+const ABERTURA_FIM = 300
+const abertura = (extra = {}) =>
+  emMain({ tag: 'section', texto: '', rect: { x: 32, y: 0, w: 1361, h: ABERTURA_FIM }, m: { abertura: true, bloco: true, filhoDeMain: true }, ...extra })
+
+/** Uma linha de campo em 1440: a linha, o rótulo e o controle. */
+function campoDesktop(y = 354, o = {}) {
+  const x2 = col(2)
+  const x9 = col(9)
+  const altura = o.altura ?? 112
+  const caixa = emMain({
+    tag: 'div',
+    texto: '',
+    rect: { x: x2, y, w: x9 - x2, h: altura },
+    m: { campo: true },
+    estilo: { borderBottomWidth: '1px', borderBottomStyle: 'solid', borderBottomColor: TINTA_FIO, ...(o.estiloCampo ?? {}) },
+    ...(o.semFio ? {} : { pseudo: { antes: { conteudo: '""', display: 'block', position: 'absolute', x: o.fioX ?? col(4), y: o.fioY ?? y + 32, w: 1, h: o.fioH ?? altura - 33, backgroundColor: TINTA_FIO } } }),
+  })
+  const rotulo = emMain({ tag: 'label', texto: 'E-mail', rect: { x: x2, y: y + 27, w: 137, h: 58 }, m: { rotuloCampo: true }, estilo: { fontSize: o.fonteRotulo ?? '32px' } })
+  const controle = emMain({
+    tag: o.tag ?? 'input',
+    texto: '',
+    textoControle: 'ana',
+    rect: { x: col(4) + 32, y: y + 27, w: 500, h: 58 },
+    m: { controle: true, interativo: true },
+    estilo: { fontSize: o.fonteTexto ?? '48px', fontFamily: '"Instrument Serif", serif', ...(o.estiloControle ?? {}) },
+  })
+  return [caixa, rotulo, controle]
+}
+
+/** Um campo em 390: a linha, o rótulo, a caixa de 64 px e o controle. */
+function campoCelular(y = 400, o = {}) {
+  const caixa = emMain({ tag: 'div', texto: '', rect: { x: 16, y, w: 343, h: 110 }, m: { campo: true } })
+  const rotulo = emMain({ tag: 'label', texto: 'E-mail', rect: { x: 16, y, w: 343, h: 29 }, m: { rotuloCampo: true }, estilo: { fontSize: o.fonteRotulo ?? '24px' } })
+  const caixaDoControle = emMain({
+    tag: 'div',
+    texto: '',
+    rect: { x: 16, y: y + 37, w: 343, h: o.alturaCaixa ?? 64 },
+    m: { campoControle: true },
+    estilo: { borderBottomWidth: '1px', borderBottomStyle: 'solid', borderBottomColor: TINTA_FIO, ...(o.estiloCaixa ?? {}) },
+  })
+  const controle = emMain({
+    tag: o.tag ?? 'input',
+    texto: '',
+    textoControle: 'ana',
+    rect: { x: 32, y: y + 37, w: 300, h: 64 },
+    m: { controle: true, interativo: true },
+    estilo: { fontSize: o.fonteTexto ?? '32px', fontFamily: '"Instrument Serif", serif' },
+  })
+  return [caixa, rotulo, caixaDoControle, controle]
+}
+
+const botaoEnvio = (rect, extra = {}) => emMain({ tag: 'button', texto: 'Entrar', rect, m: { botaoForm: true, interativo: true, botao: true }, ...extra })
+const paginaComCampos = (campos = [campoDesktop(354), campoDesktop(466)]) => [abertura(), ...campos.flat()]
+
+describe('E-1: o fio vertical só em x de c4, com a altura da linha', () => {
+  it('passa: dois campos com o fio em x de c4 e nenhum no meio da janela', () => {
+    const r = e1(paginaComCampos(), doc1440)
+    assert.equal(r.ok, true, r.motivo)
+    assert.equal(r.regra, 'E-1')
+  })
+
+  it('o fio vertical da própria abertura (em x de c9, nos 80 px finais) não conta', () => {
+    const base = emMain({ tag: 'div', texto: '', rect: { x: 32, y: 220, w: 1361, h: 80 }, pseudo: { antes: { conteudo: '""', display: 'block', position: 'absolute', x: col(9), y: 220, w: 1, h: 80, backgroundColor: TINTA_FIO } } })
+    assert.equal(e1([...paginaComCampos(), base], doc1440).ok, true)
+  })
+
+  it('falha: um fio vertical em x=720 (borda de um lado só), correndo abaixo da abertura', () => {
+    const fio = emMain({ tag: 'div', texto: '', rect: { x: 720, y: 136, w: 0, h: 1700 }, estilo: { borderLeftWidth: '1px', borderLeftStyle: 'solid' } })
+    const r = e1([...paginaComCampos(), fio], doc1440)
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /no meio da janela/)
+  })
+
+  it('falha: um fio fora de x de c4, e um elemento fino de 1 px de largura', () => {
+    const fora = emMain({ tag: 'div', texto: '', rect: { x: 900, y: 400, w: 0, h: 200 }, estilo: { borderLeftWidth: '1px', borderLeftStyle: 'solid' } })
+    assert.equal(e1([...paginaComCampos(), fora], doc1440).ok, false)
+    const fino = emMain({ tag: 'div', texto: '', rect: { x: 900, y: 400, w: 1, h: 200 }, estilo: { backgroundColor: TINTA_FIO } })
+    assert.equal(e1([...paginaComCampos(), fino], doc1440).ok, false)
+  })
+
+  it('falha: um campo sem o fio vertical, ou com o fio acabando antes do fio de baixo', () => {
+    assert.equal(e1(paginaComCampos([campoDesktop(354), campoDesktop(466, { semFio: true })]), doc1440).ok, false)
+    const curto = e1(paginaComCampos([campoDesktop(354, { fioH: 60 })]), doc1440)
+    assert.equal(curto.ok, false)
+    assert.match(curto.motivo, /termina em y=/)
+    assert.equal(e1(paginaComCampos([campoDesktop(354, { fioY: 354 })]), doc1440).ok, false)
+  })
+
+  it('borda: o fio a 1,9 px de x de c4 passa (±2) e a 3 px falha; uma borda de 4 px não é fio', () => {
+    assert.equal(e1(paginaComCampos([campoDesktop(354, { fioX: col(4) + 1.9 })]), doc1440).ok, true)
+    assert.equal(e1(paginaComCampos([campoDesktop(354, { fioX: col(4) + 3 })]), doc1440).ok, false)
+    const barra = emMain({ tag: 'div', texto: '', rect: { x: 900, y: 400, w: 0, h: 200 }, estilo: { borderLeftWidth: '4px', borderLeftStyle: 'solid' } })
+    assert.equal(e1([...paginaComCampos(), barra], doc1440).ok, true)
+  })
+
+  it('falha fechado: sem abertura, sem campo e com um fio de pseudo-elemento sem posição legível', () => {
+    assert.equal(e1([...campoDesktop(354)], doc1440).ok, false)
+    assert.equal(e1([abertura()], doc1440).ok, false)
+    const ilegivel = emMain({ tag: 'div', texto: '', rect: { x: 0, y: 400, w: 10, h: 10 }, pseudo: { antes: { conteudo: '""', display: 'block', position: 'static', x: null, y: null, w: 1, h: 100, backgroundColor: TINTA_FIO } } })
+    assert.equal(e1([...paginaComCampos(), ilegivel], doc1440).ok, false)
+    assert.equal(e1(paginaComCampos(), undefined).ok, false)
+    assert.equal(e1(paginaComCampos(), { largura: 1440 }).ok, false)
+  })
+
+  it('em 390 não há fio vertical: passa sem ele e falha com qualquer um', () => {
+    const celular = [abertura({ rect: { x: 16, y: 0, w: 343, h: 300 } }), ...campoCelular(400)]
+    assert.equal(e1(celular, doc390).ok, true)
+    const fio = emMain({ tag: 'div', texto: '', rect: { x: 16, y: 400, w: 0, h: 100 }, estilo: { borderLeftWidth: '1px', borderLeftStyle: 'solid' } })
+    assert.equal(e1([...celular, fio], doc390).ok, false)
+  })
+})
+
+describe('E-2: 112 px de linha, rótulo de 32 e texto de 48 (64, 24 e 32 em 390)', () => {
+  it('passa em 1440 e em 390', () => {
+    assert.equal(e2(paginaComCampos(), doc1440).ok, true)
+    assert.equal(e2([abertura(), ...campoCelular(400)], doc390).ok, true)
+  })
+
+  it('falha: linha de 98 px, rótulo de 14 px e texto de 20 px', () => {
+    assert.equal(e2(paginaComCampos([campoDesktop(354, { altura: 98 })]), doc1440).ok, false)
+    const rotulo = e2(paginaComCampos([campoDesktop(354, { fonteRotulo: '14px' })]), doc1440)
+    assert.equal(rotulo.ok, false)
+    assert.match(rotulo.motivo, /rótulo/)
+    assert.equal(e2(paginaComCampos([campoDesktop(354, { fonteTexto: '20px' })]), doc1440).ok, false)
+  })
+
+  it('falha: as medidas de 1440 em 390, e a caixa de 48 px em 390', () => {
+    assert.equal(e2([abertura(), ...campoCelular(400, { alturaCaixa: 48 })], doc390).ok, false)
+    assert.equal(e2([abertura(), ...campoCelular(400, { fonteTexto: '48px' })], doc390).ok, false)
+  })
+
+  it('borda: 114 px passam (±2) e 115 falham', () => {
+    assert.equal(e2(paginaComCampos([campoDesktop(354, { altura: 114 })]), doc1440).ok, true)
+    assert.equal(e2(paginaComCampos([campoDesktop(354, { altura: 115 })]), doc1440).ok, false)
+  })
+
+  it('falha fechado: sem campo, controle fora de uma linha, campo sem rótulo e sem largura', () => {
+    assert.equal(e2([abertura()], doc1440).ok, false)
+    const solto = emMain({ tag: 'input', texto: '', textoControle: 'x', rect: { x: 700, y: 900, w: 100, h: 58 }, m: { controle: true, interativo: true }, estilo: { fontSize: '48px' } })
+    assert.equal(e2([...paginaComCampos(), solto], doc1440).ok, false)
+    const [caixa, , controle] = campoDesktop(354)
+    assert.equal(e2([abertura(), caixa, controle], doc1440).ok, false)
+    assert.equal(e2(paginaComCampos(), { largura: 1440 }).ok, false)
+  })
+})
+
+describe('E-3: sem borda nos 4 lados e o fio de 1 px de c2 a c9', () => {
+  it('passa em 1440 e em 390', () => {
+    const r = e3(paginaComCampos(), doc1440)
+    assert.equal(r.ok, true, r.motivo)
+    assert.equal(e3([abertura(), ...campoCelular(400)], doc390).ok, true)
+  })
+
+  it('falha: o input com borda nos 4 lados, o fio de 2 px e o fio tracejado', () => {
+    const borda4 = { borderTopWidth: '1px', borderRightWidth: '1px', borderBottomWidth: '1px', borderLeftWidth: '1px', borderTopStyle: 'solid', borderRightStyle: 'solid', borderBottomStyle: 'solid', borderLeftStyle: 'solid' }
+    assert.equal(e3(paginaComCampos([campoDesktop(354, { estiloControle: borda4 })]), doc1440).ok, false)
+    assert.equal(e3(paginaComCampos([campoDesktop(354, { estiloCampo: { borderBottomWidth: '2px' } })]), doc1440).ok, false)
+    assert.equal(e3(paginaComCampos([campoDesktop(354, { estiloCampo: { borderBottomStyle: 'dashed' } })]), doc1440).ok, false)
+  })
+
+  it('falha: o fio que começa em x=785 (o desenho antigo) e o que não chega a c9', () => {
+    const [caixa, rotulo, controle] = campoDesktop(354)
+    const comeca = { ...caixa, rect: { ...caixa.rect, x: 785, w: caixa.rect.w - 616 } }
+    assert.equal(e3([abertura(), comeca, rotulo, controle], doc1440).ok, false)
+    const curto = { ...caixa, rect: { ...caixa.rect, w: caixa.rect.w - 40 } }
+    assert.equal(e3([abertura(), curto, rotulo, controle], doc1440).ok, false)
+  })
+
+  it('borda: o fio começando 1,9 px antes passa (±2) e 3 px antes falha', () => {
+    const [caixa, rotulo, controle] = campoDesktop(354)
+    const com = (d) => [abertura(), { ...caixa, rect: { ...caixa.rect, x: caixa.rect.x - d, w: caixa.rect.w + d } }, rotulo, controle]
+    assert.equal(e3(com(1.9), doc1440).ok, true)
+    assert.equal(e3(com(3), doc1440).ok, false)
+  })
+
+  it('falha fechado: sem campo, border-bottom ausente e controle fora da linha', () => {
+    assert.equal(e3([abertura()], doc1440).ok, false)
+    const [caixa, rotulo, controle] = campoDesktop(354)
+    const semBorda = { ...caixa, estilo: { ...caixa.estilo, borderBottomWidth: undefined } }
+    assert.equal(e3([abertura(), semBorda, rotulo, controle], doc1440).ok, false)
+    const solto = emMain({ tag: 'input', texto: '', textoControle: 'x', rect: { x: 700, y: 900, w: 100, h: 58 }, m: { controle: true, interativo: true } })
+    assert.equal(e3([...paginaComCampos(), solto], doc1440).ok, false)
+  })
+})
+
+describe('E-4: o botão de envio termina em y ≤ 720 (660 em 390)', () => {
+  it('passa em 1440 (fim em 690) e em 390 (fim em 640)', () => {
+    assert.equal(e4([botaoEnvio({ x: 472, y: 610, w: 300, h: 80 })], doc1440).ok, true)
+    assert.equal(e4([botaoEnvio({ x: 16, y: 576, w: 343, h: 64 })], doc390).ok, true)
+  })
+
+  it('falha: o botão terminando em y=811 (o desenho antigo) e, em 390, em y=700', () => {
+    assert.equal(e4([botaoEnvio({ x: 472, y: 731, w: 300, h: 80 })], doc1440).ok, false)
+    assert.equal(e4([botaoEnvio({ x: 16, y: 636, w: 343, h: 64 })], doc390).ok, false)
+  })
+
+  it('borda: termina em y=720 passa e em 721 falha; o limite de 390 é outro', () => {
+    assert.equal(e4([botaoEnvio({ x: 0, y: 640, w: 300, h: 80 })], doc1440).ok, true)
+    assert.equal(e4([botaoEnvio({ x: 0, y: 641, w: 300, h: 80 })], doc1440).ok, false)
+    assert.equal(e4([botaoEnvio({ x: 0, y: 596, w: 300, h: 64 })], doc390).ok, true)
+    assert.equal(e4([botaoEnvio({ x: 0, y: 600, w: 300, h: 64 })], doc390).ok, false)
+  })
+
+  it('falha fechado: sem botão de envio, botão oculto ou sem retângulo', () => {
+    assert.equal(e4([], doc1440).ok, false)
+    assert.equal(e4([botaoEnvio({ x: 0, y: 610, w: 300, h: 80 }, { visivel: false })], doc1440).ok, false)
+    assert.equal(e4([botaoEnvio({}, {})], doc1440).ok, false)
+    assert.equal(e4([botaoEnvio({ x: 0, y: 610, w: 300, h: 80 })], undefined).ok, false)
+  })
+})
+
+describe('E-5: o botão tem altura 80 (64) e começa em x de c4 + 32 (largura da área útil em 390)', () => {
+  it('passa em 1440 e em 390', () => {
+    const r = e5([botaoEnvio({ x: col(4) + 32, y: 610, w: 300, h: 80 })], doc1440)
+    assert.equal(r.ok, true, r.motivo)
+    assert.equal(e5([botaoEnvio({ x: 16, y: 576, w: 343, h: 64 })], doc390).ok, true)
+  })
+
+  it('falha: altura 56, x errado, e em 390 a largura de 200', () => {
+    assert.equal(e5([botaoEnvio({ x: col(4) + 32, y: 610, w: 300, h: 56 })], doc1440).ok, false)
+    assert.equal(e5([botaoEnvio({ x: 785, y: 610, w: 300, h: 80 })], doc1440).ok, false)
+    assert.equal(e5([botaoEnvio({ x: 16, y: 576, w: 200, h: 64 })], doc390).ok, false)
+    assert.equal(e5([botaoEnvio({ x: 16, y: 576, w: 343, h: 80 })], doc390).ok, false)
+  })
+
+  it('borda: ±2 px passam (1,9 aqui, por causa do ponto flutuante) e 3 px falham (altura e x)', () => {
+    assert.equal(e5([botaoEnvio({ x: col(4) + 33.9, y: 610, w: 300, h: 81.9 })], doc1440).ok, true)
+    assert.equal(e5([botaoEnvio({ x: col(4) + 35, y: 610, w: 300, h: 80 })], doc1440).ok, false)
+    assert.equal(e5([botaoEnvio({ x: col(4) + 32, y: 610, w: 300, h: 83 })], doc1440).ok, false)
+  })
+
+  it('falha fechado: sem botão e sem largura da janela', () => {
+    assert.equal(e5([], doc1440).ok, false)
+    assert.equal(e5([botaoEnvio({ x: 472, y: 610, w: 300, h: 80 })], { clientWidth: 1425 }).ok, false)
+  })
+})
+
+describe('E-6: nada à direita de x de c9 abaixo da abertura', () => {
+  const texto = (x, w, extra = {}) => emMain({ rect: { x, y: 500, w: 600, h: 28 }, rectTexto: { x, y: 500, w, h: 28 }, ...extra })
+
+  it('passa com texto, controle e botão dentro de c2–c8', () => {
+    const r = e6([abertura(), texto(col(2), 560), ...campoDesktop(354), botaoEnvio({ x: col(4) + 32, y: 610, w: 300, h: 80 })], doc1440)
+    assert.equal(r.ok, true, r.motivo)
+  })
+
+  it('o conteúdo da abertura (a coluna lateral em c9–c10) e a mídia ficam de fora', () => {
+    const lateral = emMain({ tag: 'li', texto: 'Protótipo', rect: { x: col(9) + 32, y: 40, w: 100, h: 32 } })
+    const midia = emMain({ tag: 'div', texto: '', rect: { x: 32, y: 800, w: 1361, h: 888 }, m: { dentroMidia: true, interativo: true } })
+    assert.equal(e6([abertura(), lateral, midia, texto(col(2), 500)], doc1440).ok, true)
+  })
+
+  it('falha: o formulário em x=785–1225 (o desenho antigo) e o texto que passa de c9', () => {
+    const antigo = emMain({ tag: 'input', texto: '', textoControle: 'a', rect: { x: 785, y: 400, w: 440, h: 48 }, m: { controle: true, interativo: true } })
+    const r = e6([abertura(), antigo, texto(col(2), 500)], doc1440)
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /à direita de/)
+    assert.equal(e6([abertura(), texto(col(2), 1000)], doc1440).ok, false)
+  })
+
+  it('usa o retângulo do texto, não o da caixa: um parágrafo de caixa larga com texto curto passa', () => {
+    const largo = emMain({ rect: { x: col(2), y: 500, w: 1300, h: 28 }, rectTexto: { x: col(2), y: 500, w: 500, h: 28 } })
+    assert.equal(e6([abertura(), largo], doc1440).ok, true)
+  })
+
+  it('borda: terminar 1,9 px depois de c9 passa (±2) e 3 px falha', () => {
+    assert.equal(e6([abertura(), texto(col(2), col(9) + 1.9 - col(2))], doc1440).ok, true)
+    assert.equal(e6([abertura(), texto(col(2), col(9) + 3 - col(2))], doc1440).ok, false)
+  })
+
+  it('falha fechado: sem abertura e sem conteúdo abaixo dela', () => {
+    assert.equal(e6([texto(col(2), 500)], doc1440).ok, false)
+    assert.equal(e6([abertura()], doc1440).ok, false)
+    assert.equal(e6([abertura(), texto(col(2), 500)], undefined).ok, false)
+  })
+})
+
+describe('E-7: o anel de foco de 2 px', () => {
+  const anel = (extra = {}) => ({ focou: true, tag: 'input', outlineStyle: 'solid', outlineWidth: '2px', outlineOffset: '2px', outlineColor: 'rgb(26, 21, 17)', ...extra })
+  const doc = (foco = {}) => ({ ...doc1440, foco: { controle: anel(), botao: anel({ tag: 'button' }), ...foco } })
+
+  it('passa: 2 px sólido, offset 2, tinta, no controle e no botão', () => {
+    const r = e7(doc(), 'claro')
+    assert.equal(r.ok, true, r.motivo)
+    assert.equal(r.regra, 'E-7')
+  })
+
+  it('na madrugada a cor do anel é #F7EFE2 e a tinta reprova', () => {
+    assert.equal(e7(doc({ controle: anel({ outlineColor: 'rgb(247, 239, 226)' }), botao: anel({ outlineColor: 'rgb(247, 239, 226)' }) }), 'madrugada').ok, true)
+    assert.equal(e7(doc(), 'madrugada').ok, false)
+  })
+
+  it('falha: sem outline, de 1 px, tracejado, sem offset e de outra cor', () => {
+    assert.equal(e7(doc({ controle: anel({ outlineStyle: 'none', outlineWidth: '0px' }) }), 'claro').ok, false)
+    assert.equal(e7(doc({ botao: anel({ outlineWidth: '1px' }) }), 'claro').ok, false)
+    assert.equal(e7(doc({ controle: anel({ outlineStyle: 'dashed' }) }), 'claro').ok, false)
+    assert.equal(e7(doc({ controle: anel({ outlineOffset: '0px' }) }), 'claro').ok, false)
+    assert.equal(e7(doc({ botao: anel({ outlineColor: 'rgb(176, 64, 28)' }) }), 'claro').ok, false)
+  })
+
+  it('borda: 2,01 px passa (a tolerância é de 0,01) e 2,5 px falha', () => {
+    assert.equal(e7(doc({ controle: anel({ outlineWidth: '2.005px' }) }), 'claro').ok, true)
+    assert.equal(e7(doc({ controle: anel({ outlineWidth: '2.5px' }) }), 'claro').ok, false)
+  })
+
+  it('falha fechado: sem leitura, sem o botão, elemento que não recebeu foco e campos ausentes', () => {
+    assert.equal(e7({ ...doc1440 }, 'claro').ok, false)
+    assert.equal(e7(undefined, 'claro').ok, false)
+    assert.equal(e7(doc({ botao: null }), 'claro').ok, false)
+    assert.equal(e7(doc({ controle: { focou: false } }), 'claro').ok, false)
+    assert.equal(e7(doc({ controle: anel({ outlineStyle: undefined }) }), 'claro').ok, false)
+    assert.equal(e7(doc({ controle: anel({ outlineColor: undefined }) }), 'claro').ok, false)
+  })
+})
+
+describe('C-1: o aviso de demonstração sem borda, sem fundo e em 15 px', () => {
+  const aviso = (estilo = {}) =>
+    emMain({
+      tag: 'p',
+      texto: 'Este site é uma demonstração.',
+      m: { avisoDemo: true },
+      estilo: { fontSize: '15px', borderTopWidth: '0px', borderRightWidth: '0px', borderBottomWidth: '0px', borderLeftWidth: '0px', backgroundColor: TRANSPARENTE, ...estilo },
+    })
+
+  it('passa', () => assert.equal(c1([aviso()]).ok, true))
+
+  it('falha: com borda (o desenho antigo), com fundo e com 14 px', () => {
+    const r = c1([aviso({ borderTopWidth: '1px', borderTopStyle: 'solid' })])
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /borda/)
+    assert.equal(c1([aviso({ backgroundColor: 'rgb(235, 225, 208)' })]).ok, false)
+    assert.equal(c1([aviso({ fontSize: '14px' })]).ok, false)
+  })
+
+  it('borda: fundo com alfa 0 passa e alfa 0,5 falha; borda de 1 px com style none passa; 15,5 px falha', () => {
+    assert.equal(c1([aviso({ backgroundColor: 'rgba(235, 225, 208, 0)' })]).ok, true)
+    assert.equal(c1([aviso({ backgroundColor: 'rgba(235, 225, 208, 0.5)' })]).ok, false)
+    assert.equal(c1([aviso({ borderTopWidth: '1px', borderTopStyle: 'none' })]).ok, true)
+    assert.equal(c1([aviso({ fontSize: '15.5px' })]).ok, false)
+  })
+
+  it('falha fechado: sem aviso, borda ausente e fundo ilegível', () => {
+    assert.equal(c1([]).ok, false)
+    assert.equal(c1([aviso({ borderLeftWidth: undefined })]).ok, false)
+    assert.equal(c1([aviso({ backgroundColor: 'oklch(0.9 0.02 80)' })]).ok, false)
+  })
+})
+
+describe('C-2 e C-3: o botão Criar conta e o texto de aceite', () => {
+  const aceite = (y, extra = {}) => emMain({ tag: 'p', texto: '', textoTotal: 'Ao criar a conta, você aceita os Termos de uso e a Política de privacidade.', rect: { x: col(4) + 32, y, w: 560, h: 48 }, ...extra })
+
+  it('C-2 passa com o fim em y=866, falha em 900 e é não aplicável em 390', () => {
+    assert.equal(c2([botaoEnvio({ x: 472, y: 786, w: 300, h: 80 })], doc1440).ok, true)
+    const r = c2([botaoEnvio({ x: 472, y: 820, w: 300, h: 80 })], doc1440)
+    assert.equal(r.ok, false)
+    assert.match(c2([botaoEnvio({ x: 16, y: 900, w: 343, h: 64 })], doc390).motivo, /não aplicável/)
+  })
+
+  it('C-2 borda: y=880 passa, 881 falha; falha fechado sem botão', () => {
+    assert.equal(c2([botaoEnvio({ x: 0, y: 800, w: 300, h: 80 })], doc1440).ok, true)
+    assert.equal(c2([botaoEnvio({ x: 0, y: 801, w: 300, h: 80 })], doc1440).ok, false)
+    assert.equal(c2([], doc1440).ok, false)
+    assert.equal(c2([botaoEnvio({ x: 0, y: 800, w: 300, h: 80 })], undefined).ok, false)
+  })
+
+  it('C-3 passa com o aceite a 24 px acima do botão e falha a 80 px', () => {
+    assert.equal(c3([aceite(714), botaoEnvio({ x: 472, y: 786, w: 300, h: 80 })]).ok, true)
+    const longe = c3([aceite(640), botaoEnvio({ x: 472, y: 786, w: 300, h: 80 })])
+    assert.equal(longe.ok, false)
+    assert.match(longe.motivo, /98\.0 px|98 px/)
+  })
+
+  it('C-3 borda: 24 px passam, 25 falham, e o aceite que encosta no botão (0 px) passa', () => {
+    assert.equal(c3([aceite(714), botaoEnvio({ x: 0, y: 786, w: 300, h: 80 })]).ok, true)
+    assert.equal(c3([aceite(713), botaoEnvio({ x: 0, y: 786, w: 300, h: 80 })]).ok, false)
+    assert.equal(c3([aceite(738), botaoEnvio({ x: 0, y: 786, w: 300, h: 80 })]).ok, true)
+  })
+
+  it('C-3 falha fechado: sem botão, sem aceite, aceite depois do botão', () => {
+    assert.equal(c3([aceite(714)]).ok, false)
+    assert.equal(c3([botaoEnvio({ x: 0, y: 786, w: 300, h: 80 })]).ok, false)
+    assert.equal(c3([aceite(900), botaoEnvio({ x: 0, y: 786, w: 300, h: 80 })]).ok, false)
+  })
+})
+
+describe('R-1 e R-2: o h1 de uma linha e o topo das linhas', () => {
+  const h1 = (extra = {}) => emMain({ tag: 'h1', texto: 'Recuperar acesso', rect: { x: 32, y: 64, w: 1100, h: 96 }, rectTexto: { x: 32, y: 64, w: 900, h: 96 }, estilo: { lineHeight: '96px' }, ...extra })
+  const linhas = (y) => emMain({ tag: 'div', texto: '', rect: { x: col(2), y, w: 900, h: 120 }, m: { linha: true } })
+
+  it('R-1 passa: 1 linha em 1440 e 2 linhas em 390', () => {
+    assert.equal(r1([h1()], doc1440).ok, true)
+    assert.equal(r1([h1({ rect: { x: 16, y: 32, w: 343, h: 96 }, rectTexto: { x: 16, y: 32, w: 300, h: 96 }, estilo: { lineHeight: '48px' } })], doc390).ok, true)
+  })
+
+  it('R-1 falha: 2 linhas em 1440, 3 em 390 e o texto que passa de c8', () => {
+    assert.equal(r1([h1({ rect: { x: 32, y: 64, w: 600, h: 192 } })], doc1440).ok, false)
+    assert.equal(r1([h1({ rect: { x: 16, y: 32, w: 343, h: 144 }, rectTexto: { x: 16, y: 32, w: 300, h: 144 }, estilo: { lineHeight: '48px' } })], doc390).ok, false)
+    assert.equal(r1([h1({ rectTexto: { x: 32, y: 64, w: 1200, h: 96 } })], doc1440).ok, false)
+  })
+
+  it('R-1 borda: o texto terminando 1,9 px depois de c9 passa (±2) e 3 px falha', () => {
+    assert.equal(r1([h1({ rectTexto: { x: 32, y: 64, w: col(9) + 1.9 - 32, h: 96 } })], doc1440).ok, true)
+    assert.equal(r1([h1({ rectTexto: { x: 32, y: 64, w: col(9) + 3 - 32, h: 96 } })], doc1440).ok, false)
+  })
+
+  it('R-1 falha fechado: sem h1, sem entrelinha numérica e sem altura', () => {
+    assert.equal(r1([criar()], doc1440).ok, false)
+    assert.equal(r1([h1({ estilo: { lineHeight: 'normal' } })], doc1440).ok, false)
+    assert.equal(r1([h1({ rect: { x: 32, y: 64, w: 100, h: 0 } })], doc1440).ok, false)
+    assert.equal(r1([h1()], undefined).ok, false)
+  })
+
+  it('R-2 passa com o topo em y=738, falha em 800 (e em 780) e é não aplicável em 390', () => {
+    assert.equal(r2([linhas(738)], doc1440).ok, true)
+    assert.equal(r2([linhas(800)], doc1440).ok, false)
+    assert.match(r2([linhas(900)], doc390).motivo, /não aplicável/)
+  })
+
+  it('R-2 borda: y=760 passa e 761 falha; usa a mais alta das linhas; falha fechado sem linhas', () => {
+    assert.equal(r2([linhas(760)], doc1440).ok, true)
+    assert.equal(r2([linhas(761)], doc1440).ok, false)
+    assert.equal(r2([linhas(900), linhas(700)], doc1440).ok, true)
+    assert.equal(r2([], doc1440).ok, false)
+    assert.equal(r2([linhas(738)], undefined).ok, false)
+  })
+})
+
+describe('B-1: "Passo 1 de 2" como etiqueta de 15 px na coluna lateral', () => {
+  const passo = (extra = {}) =>
+    emMain({ tag: 'span', texto: 'Passo 1 de 2', rect: { x: col(9) + 32, y: 40, w: 100, h: 26 }, m: { etiqueta: true }, estilo: { fontSize: '15px', textTransform: 'none' }, ...extra })
+
+  it('passa em 1440 (x ≥ c9 + 32) e em 390 (antes do fio da abertura)', () => {
+    assert.equal(b1([abertura(), passo()], doc1440).ok, true)
+    assert.equal(b1([abertura({ rect: { x: 16, y: 0, w: 343, h: 300 } }), passo({ rect: { x: 16, y: 200, w: 100, h: 26 } })], doc390).ok, true)
+  })
+
+  it('falha: 14 px em caixa alta que não é etiqueta (o desenho antigo), fora da coluna lateral e depois do fio em 390', () => {
+    const antigo = b1([abertura(), passo({ m: { etiqueta: false }, estilo: { fontSize: '14px', textTransform: 'uppercase' } })], doc1440)
+    assert.equal(antigo.ok, false)
+    assert.match(antigo.motivo, /etiqueta|font-size|caixa alta/)
+    assert.equal(b1([abertura(), passo({ rect: { x: 500, y: 40, w: 100, h: 26 } })], doc1440).ok, false)
+    assert.equal(b1([abertura({ rect: { x: 16, y: 0, w: 343, h: 300 } }), passo({ rect: { x: 16, y: 400, w: 100, h: 26 } })], doc390).ok, false)
+  })
+
+  it('borda: x 1,9 px antes passa (±2) e 3 px antes falha; 15,5 px falha', () => {
+    assert.equal(b1([abertura(), passo({ rect: { x: col(9) + 30.1, y: 40, w: 100, h: 26 } })], doc1440).ok, true)
+    assert.equal(b1([abertura(), passo({ rect: { x: col(9) + 29, y: 40, w: 100, h: 26 } })], doc1440).ok, false)
+    assert.equal(b1([abertura(), passo({ estilo: { fontSize: '15.5px' } })], doc1440).ok, false)
+  })
+
+  it('falha fechado: sem o texto, sem text-transform e sem abertura em 390', () => {
+    assert.equal(b1([abertura()], doc1440).ok, false)
+    assert.equal(b1([abertura(), passo({ estilo: { textTransform: undefined } })], doc1440).ok, false)
+    assert.equal(b1([passo({ rect: { x: 16, y: 200, w: 100, h: 26 } })], doc390).ok, false)
+    assert.equal(b1([abertura(), passo()], undefined).ok, false)
+  })
+})
+
+describe('B-2: o select é igual ao input (altura, fio e fonte)', () => {
+  it('passa em 1440 e em 390', () => {
+    const r = b2(paginaComCampos([campoDesktop(354), campoDesktop(466, { tag: 'select' })]), doc1440)
+    assert.equal(r.ok, true, r.motivo)
+    assert.equal(b2([abertura(), ...campoCelular(400), ...campoCelular(560, { tag: 'select' })], doc390).ok, true)
+  })
+
+  it('falha: select de 48 px de altura (caixa antiga), de 20 px de fonte e de outra fonte', () => {
+    assert.equal(b2(paginaComCampos([campoDesktop(354), campoDesktop(466, { tag: 'select', altura: 48 })]), doc1440).ok, false)
+    assert.equal(b2(paginaComCampos([campoDesktop(354), campoDesktop(466, { tag: 'select', fonteTexto: '20px' })]), doc1440).ok, false)
+    assert.equal(b2(paginaComCampos([campoDesktop(354), campoDesktop(466, { tag: 'select', estiloControle: { fontFamily: 'Arial, sans-serif' } })]), doc1440).ok, false)
+  })
+
+  it('falha: o fio do select diferente do fio do input (cor ou espessura)', () => {
+    assert.equal(b2(paginaComCampos([campoDesktop(354), campoDesktop(466, { tag: 'select', estiloCampo: { borderBottomColor: 'rgb(94, 85, 76)' } })]), doc1440).ok, false)
+    assert.equal(b2(paginaComCampos([campoDesktop(354), campoDesktop(466, { tag: 'select', estiloCampo: { borderBottomWidth: '2px' } })]), doc1440).ok, false)
+  })
+
+  it('borda: 2 px de diferença de altura passam e 3 falham', () => {
+    assert.equal(b2(paginaComCampos([campoDesktop(354), campoDesktop(466, { tag: 'select', altura: 114 })]), doc1440).ok, true)
+    assert.equal(b2(paginaComCampos([campoDesktop(354), campoDesktop(466, { tag: 'select', altura: 115 })]), doc1440).ok, false)
+  })
+
+  it('falha fechado: sem select, sem input, select fora de uma linha de campo e fio ausente', () => {
+    assert.equal(b2(paginaComCampos([campoDesktop(354)]), doc1440).ok, false)
+    assert.equal(b2(paginaComCampos([campoDesktop(354, { tag: 'select' })]), doc1440).ok, false)
+    const solto = emMain({ tag: 'select', texto: '', textoControle: 'x', rect: { x: 700, y: 900, w: 100, h: 48 }, m: { controle: true, interativo: true }, estilo: { fontSize: '48px' } })
+    assert.equal(b2([...paginaComCampos([campoDesktop(354)]), solto], doc1440).ok, false)
+    assert.equal(b2(paginaComCampos([campoDesktop(354), campoDesktop(466, { tag: 'select', estiloCampo: { borderBottomColor: undefined } })]), doc1440).ok, false)
+  })
+})
+
+describe('B-3: nenhum bloco com min-height nem altura esticada', () => {
+  const bloco = (extra = {}) =>
+    emMain({ tag: 'section', texto: '', rect: { x: 32, y: 400, w: 1361, h: 300 }, m: { filhoDeMain: true }, estilo: { minHeight: '0px' }, vazioFim: { vazio: 0, margem: 0 }, ...extra })
+
+  it('passa: min-height 0 ou auto e sem vazio no fim', () => {
+    assert.equal(b3([bloco(), bloco({ estilo: { minHeight: 'auto' } })]).ok, true)
+  })
+
+  it('falha: min-height de 828 px e 140 px vazios (o painel esticado do desenho antigo)', () => {
+    const minimo = b3([bloco({ estilo: { minHeight: '828px' } })])
+    assert.equal(minimo.ok, false)
+    assert.match(minimo.motivo, /min-height/)
+    const esticado = b3([bloco({ vazioFim: { vazio: 140, margem: 0 } })])
+    assert.equal(esticado.ok, false)
+    assert.match(esticado.motivo, /esticada/)
+  })
+
+  it('borda: 2 px de vazio passam, 3 falham, e o vazio igual à margem do último filho passa', () => {
+    assert.equal(b3([bloco({ vazioFim: { vazio: 2, margem: 0 } })]).ok, true)
+    assert.equal(b3([bloco({ vazioFim: { vazio: 3, margem: 0 } })]).ok, false)
+    assert.equal(b3([bloco({ vazioFim: { vazio: 32, margem: 32 } })]).ok, true)
+    assert.equal(b3([bloco({ vazioFim: { vazio: -10, margem: 0 } })]).ok, true)
+  })
+
+  it('o [data-bloco] também é um bloco', () => {
+    assert.equal(b3([bloco({ m: { filhoDeMain: false, bloco: true }, vazioFim: { vazio: 90, margem: 0 } })]).ok, false)
+  })
+
+  it('falha fechado: nenhum bloco, min-height ausente e sem a leitura do vazio', () => {
+    assert.equal(b3([criar()]).ok, false)
+    assert.equal(b3([bloco({ estilo: { minHeight: undefined } })]).ok, false)
+    assert.equal(b3([bloco({ vazioFim: null })]).ok, false)
+    assert.equal(b3([bloco({ vazioFim: { vazio: Number.NaN, margem: 0 } })]).ok, false)
+  })
+})
+
+describe('A-1: nada do main abaixo da abertura fora de c2–c8', () => {
+  const texto = (x, w, extra = {}) => emMain({ rect: { x, y: 500, w: 600, h: 28 }, rectTexto: { x, y: 500, w, h: 28 }, ...extra })
+
+  it('passa em 1440 (de c2 a c9) e em 390 (na área útil)', () => {
+    const r = a1([abertura(), texto(col(2), 500), texto(col(2), 900)], doc1440)
+    assert.equal(r.ok, true, r.motivo)
+    assert.equal(a1([abertura({ rect: { x: 16, y: 0, w: 343, h: 300 } }), texto(16, 300)], doc390).ok, true)
+  })
+
+  it('falha: o conteúdo a partir de x=32 e o que passa de c9', () => {
+    const esquerda = a1([abertura(), texto(32, 400)], doc1440)
+    assert.equal(esquerda.ok, false)
+    assert.match(esquerda.motivo, /à esquerda de/)
+    assert.equal(a1([abertura(), texto(col(2), 1100)], doc1440).ok, false)
+    assert.equal(a1([abertura({ rect: { x: 16, y: 0, w: 343, h: 300 } }), texto(16, 400)], doc390).ok, false)
+  })
+
+  it('usa a margem e a área úteis medidas (clientWidth), não x=169,6 fixo', () => {
+    const docSemBarra = { ...doc1440, clientWidth: 1440 }
+    assert.equal(a1([abertura(), texto(169.6, 500)], docSemBarra).ok, true)
+    assert.equal(a1([abertura(), texto(169.6, 500)], doc1440).ok, true)
+    assert.equal(a1([abertura(), texto(col(2, docSemBarra) - 3, 500)], docSemBarra).ok, false)
+  })
+
+  it('borda: 1,9 px à esquerda de c2 passam (±2) e 3 px falham', () => {
+    assert.equal(a1([abertura(), texto(col(2) - 1.9, 500)], doc1440).ok, true)
+    assert.equal(a1([abertura(), texto(col(2) - 3, 500)], doc1440).ok, false)
+  })
+
+  it('falha fechado: sem abertura, sem conteúdo e sem largura', () => {
+    assert.equal(a1([texto(col(2), 500)], doc1440).ok, false)
+    assert.equal(a1([abertura()], doc1440).ok, false)
+    assert.equal(a1([abertura(), texto(col(2), 500)], undefined).ok, false)
+  })
+})
+
+describe('A-2: as 6 âncoras da coluna lateral', () => {
+  const ancora = (i, extra = {}) =>
+    emMain({ tag: 'a', texto: `Seção ${i}`, rect: { x: col(9) + 32, y: 40 + i * 32, w: 120, h: 32 }, m: { ancoraLateral: true, interativo: true }, href: `#s${i}`, alvoExiste: true, ...extra })
+  const seis = (mudar = () => ({})) => Array.from({ length: 6 }, (_, i) => ancora(i, mudar(i)))
+
+  it('passa: 6 âncoras no mesmo x, de 32 em 32, todas com destino', () => {
+    const r = a2(seis(), doc1440)
+    assert.equal(r.ok, true, r.motivo)
+  })
+
+  it('falha: 5 âncoras, uma sem destino, x diferente, passo de 44 e coluna errada', () => {
+    assert.equal(a2(seis().slice(0, 5), doc1440).ok, false)
+    const semAlvo = a2(seis((i) => (i === 3 ? { alvoExiste: false } : {})), doc1440)
+    assert.equal(semAlvo.ok, false)
+    assert.match(semAlvo.motivo, /não leva a um id existente/)
+    assert.equal(a2(seis((i) => (i === 2 ? { rect: { x: col(9) + 60, y: 40 + i * 32, w: 120, h: 32 } } : {})), doc1440).ok, false)
+    assert.equal(a2(seis((i) => ({ rect: { x: col(9) + 32, y: 40 + i * 44, w: 120, h: 44 } })), doc1440).ok, false)
+    assert.equal(a2(seis((i) => ({ rect: { x: 300, y: 40 + i * 32, w: 120, h: 32 } })), doc1440).ok, false)
+  })
+
+  it('borda: passo de 34 passa (±2) e de 35 falha; em 390 vale só a contagem e o destino (âncoras em linha)', () => {
+    assert.equal(a2(seis((i) => ({ rect: { x: col(9) + 32, y: 40 + i * 34, w: 120, h: 32 } })), doc1440).ok, true)
+    assert.equal(a2(seis((i) => ({ rect: { x: col(9) + 32, y: 40 + i * 35, w: 120, h: 32 } })), doc1440).ok, false)
+    assert.equal(a2(seis((i) => ({ rect: { x: 16 + (i % 3) * 110, y: 200 + Math.floor(i / 3) * 44, w: 100, h: 44 } })), doc390).ok, true)
+    assert.equal(a2(seis((i) => (i === 0 ? { alvoExiste: false, rect: { x: 16, y: 200, w: 100, h: 44 } } : { rect: { x: 16 + i * 10, y: 200, w: 100, h: 44 } })), doc390).ok, false)
+  })
+
+  it('falha fechado: nenhuma âncora, âncora sem a leitura do destino e sem retângulo', () => {
+    assert.equal(a2([], doc1440).ok, false)
+    assert.equal(a2(seis((i) => (i === 1 ? { alvoExiste: undefined } : {})), doc1440).ok, false)
+    assert.equal(a2(seis((i) => (i === 1 ? { rect: {} } : {})), doc1440).ok, false)
+    assert.equal(a2(seis(), undefined).ok, false)
+  })
+})
+
+describe('A-3: o título de seção em 48 px, Instrument Serif, em x de c2', () => {
+  const titulo = (extra = {}) =>
+    emMain({ tag: 'h2', texto: 'Perfil', rect: { x: col(2), y: 420, w: 300, h: 58 }, m: { tituloSecao: true }, estilo: { fontSize: '48px', fontFamily: '"Instrument Serif", serif' }, ...extra })
+
+  it('passa em 1440 (48 px) e em 390 (36 px, em x=16)', () => {
+    assert.equal(a3([titulo(), titulo()], doc1440).ok, true)
+    assert.equal(a3([titulo({ rect: { x: 16, y: 420, w: 300, h: 43 }, estilo: { fontSize: '36px', fontFamily: '"Instrument Serif", serif' } })], doc390).ok, true)
+  })
+
+  it('falha: Fraunces de 28 px (o desenho antigo), x=785 e 48 px em 390', () => {
+    const antigo = a3([titulo({ estilo: { fontSize: '28px', fontFamily: 'Fraunces, serif' } })], doc1440)
+    assert.equal(antigo.ok, false)
+    assert.match(antigo.motivo, /font-size 28px/)
+    assert.equal(a3([titulo({ rect: { x: 785, y: 420, w: 300, h: 58 } })], doc1440).ok, false)
+    assert.equal(a3([titulo({ rect: { x: 16, y: 420, w: 300, h: 58 } })], doc390).ok, false)
+  })
+
+  it('borda: x 1,9 px depois passa (±2) e 3 px falha', () => {
+    assert.equal(a3([titulo({ rect: { x: col(2) + 1.9, y: 420, w: 300, h: 58 } })], doc1440).ok, true)
+    assert.equal(a3([titulo({ rect: { x: col(2) + 3, y: 420, w: 300, h: 58 } })], doc1440).ok, false)
+  })
+
+  it('falha fechado: sem título, sem fonte e sem retângulo', () => {
+    assert.equal(a3([], doc1440).ok, false)
+    assert.equal(a3([titulo({ estilo: { fontFamily: undefined } })], doc1440).ok, false)
+    assert.equal(a3([titulo({ rect: {} })], doc1440).ok, false)
+    assert.equal(a3([titulo()], undefined).ok, false)
+  })
+})
+
+describe('A-4: 96 px (±8) do fim de uma seção ao título da seguinte', () => {
+  const secao = (y, h, tituloY) => emMain({ tag: 'section', texto: '', rect: { x: col(2), y, w: 900, h }, m: { secao: true }, tituloDaSecao: { x: col(2), y: tituloY, h: 58 } })
+
+  it('passa: duas e três seções a 96 px', () => {
+    assert.equal(a4([secao(400, 300, 400), secao(796, 200, 796)]).ok, true)
+    assert.equal(a4([secao(400, 300, 400), secao(796, 200, 796), secao(1092, 200, 1092)]).ok, true)
+  })
+
+  it('falha: a 32 px (as seções coladas) e a 160 px', () => {
+    const r = a4([secao(400, 300, 400), secao(732, 200, 732)])
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /esperado 96/)
+    assert.equal(a4([secao(400, 300, 400), secao(860, 200, 860)]).ok, false)
+  })
+
+  it('borda: 88 e 104 passam, 87 e 105 falham', () => {
+    assert.equal(a4([secao(400, 300, 400), secao(788, 200, 788)]).ok, true)
+    assert.equal(a4([secao(400, 300, 400), secao(804, 200, 804)]).ok, true)
+    assert.equal(a4([secao(400, 300, 400), secao(787, 200, 787)]).ok, false)
+    assert.equal(a4([secao(400, 300, 400), secao(805, 200, 805)]).ok, false)
+  })
+
+  it('falha fechado: menos de duas seções e seção sem a posição do título', () => {
+    assert.equal(a4([secao(400, 300, 400)]).ok, false)
+    assert.equal(a4([]).ok, false)
+    const semTitulo = { ...secao(796, 200, 796), tituloDaSecao: undefined }
+    assert.equal(a4([secao(400, 300, 400), semTitulo]).ok, false)
+  })
+})
+
+describe('A-5: nada tracejado e o botão Excluir desativado com aria-disabled', () => {
+  const lados = (estilo) => ({ borderTopStyle: estilo, borderRightStyle: estilo, borderBottomStyle: estilo, borderLeftStyle: estilo })
+  const excluir = (extra = {}) => emMain({ tag: 'button', texto: 'Excluir minha conta', estilo: lados('none'), desativado: false, ariaDisabled: null, ...extra })
+
+  it('passa: sem tracejado, e o botão habilitado ou desativado com aria-disabled="true"', () => {
+    assert.equal(a5([criar({ estilo: lados('none') }), excluir()]).ok, true)
+    assert.equal(a5([criar({ estilo: lados('none') }), excluir({ desativado: true, ariaDisabled: 'true' })]).ok, true)
+  })
+
+  it('falha: borda tracejada (o desenho antigo) e botão desativado só com o atributo disabled', () => {
+    const tracejado = a5([excluir({ estilo: lados('dashed'), desativado: true, ariaDisabled: 'true' })])
+    assert.equal(tracejado.ok, false)
+    assert.match(tracejado.motivo, /dashed/)
+    const semAria = a5([excluir({ desativado: true, ariaDisabled: null })])
+    assert.equal(semAria.ok, false)
+    assert.match(semAria.motivo, /aria-disabled/)
+    assert.equal(a5([excluir({ desativado: true, ariaDisabled: 'false' })]).ok, false)
+  })
+
+  it('borda: uma só borda tracejada já falha; dotted e solid não são dashed', () => {
+    assert.equal(a5([excluir(), criar({ estilo: { ...lados('none'), borderLeftStyle: 'dashed' } })]).ok, false)
+    assert.equal(a5([excluir(), criar({ estilo: lados('dotted') }), criar({ estilo: lados('solid') })]).ok, true)
+  })
+
+  it('falha fechado: sem o botão Excluir, sem a leitura de disabled e border-style ausente', () => {
+    assert.equal(a5([criar({ estilo: lados('none') })]).ok, false)
+    assert.equal(a5([excluir({ desativado: undefined })]).ok, false)
+    assert.equal(a5([excluir({ estilo: { borderTopStyle: undefined } })]).ok, false)
+    assert.equal(a5([]).ok, false)
+  })
+})
+
+describe('A-6: a altura total em 1440 é ≤ 3.200 px', () => {
+  const rodape = (y, h) => criar({ tag: 'footer', texto: '', rect: { x: 0, y, w: 1425, h }, m: { rodape: true } })
+
+  it('passa com 3.000 px (pelo rodapé ou pela altura do documento)', () => {
+    assert.equal(a6([rodape(2100, 900)], doc1440).ok, true)
+    assert.equal(a6([], { ...doc1440, alturaTotal: 3000 }).ok, true)
+  })
+
+  it('falha com 3.465 px (a Conta antiga, com o rodapé)', () => {
+    assert.equal(a6([rodape(2565, 900)], doc1440).ok, false)
+    assert.equal(a6([rodape(100, 100)], { ...doc1440, alturaTotal: 3400 }).ok, false)
+  })
+
+  it('borda: 3.200 passa, 3.201 falha; em 390 não se aplica', () => {
+    assert.equal(a6([rodape(2300, 900)], doc1440).ok, true)
+    assert.equal(a6([rodape(2301, 900)], doc1440).ok, false)
+    assert.match(a6([rodape(5000, 900)], doc390).motivo, /não aplicável/)
+  })
+
+  it('falha fechado: sem rodapé nem altura e sem largura', () => {
+    assert.equal(a6([], doc1440).ok, false)
+    assert.equal(a6([rodape(2100, 900)], undefined).ok, false)
+  })
+})
+
+describe('M-1: os retângulos dos blocos são os mesmos do tema claro', () => {
+  const bloco = (id, y = 100, extra = {}) => ({ id, x: 32, y, w: 1361, h: 300, ...extra })
+  const dupla = (escuro, claro) => ({ ...doc1440, blocos: escuro, blocosClaro: claro })
+
+  it('passa com retângulos iguais e com 1 px de diferença', () => {
+    assert.equal(m1(dupla([bloco('1:header', 0), bloco('2:section')], [bloco('1:header', 0), bloco('2:section')])).ok, true)
+    assert.equal(m1(dupla([bloco('1:section', 101)], [bloco('1:section', 100)])).ok, true)
+  })
+
+  it('falha: o bloco 20 px mais alto e a quantidade de blocos diferente', () => {
+    const r = m1(dupla([bloco('1:section', 100, { h: 320 })], [bloco('1:section')]))
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /1:section/)
+    assert.equal(m1(dupla([bloco('1:section'), bloco('2:section')], [bloco('1:section')])).ok, false)
+  })
+
+  it('borda: 1 px passa e 2 px falham (x, y, w e h)', () => {
+    assert.equal(m1(dupla([bloco('a', 100, { w: 1362 })], [bloco('a')])).ok, true)
+    assert.equal(m1(dupla([bloco('a', 100, { w: 1363 })], [bloco('a')])).ok, false)
+    assert.equal(m1(dupla([bloco('a', 100, { x: 34 })], [bloco('a')])).ok, false)
+  })
+
+  it('falha fechado: sem os blocos de um dos temas, listas vazias e campo ausente', () => {
+    assert.equal(m1(doc1440).ok, false)
+    assert.equal(m1(dupla([bloco('a')], undefined)).ok, false)
+    assert.equal(m1(dupla([], [bloco('a')])).ok, false)
+    assert.equal(m1(dupla([{ id: 'a', x: 32, y: 100, w: 1361 }], [bloco('a')])).ok, false)
+    assert.equal(m1(undefined).ok, false)
+  })
+})
+
+describe('M-2 a M-6: a madrugada', () => {
+  const ESCURO = 'rgb(23, 18, 14)'
+  const SEM_MOVIMENTO = { transitionProperty: 'all', transitionDuration: '0s', transitionDelay: '0s', animationName: 'none', animationDuration: '0s' }
+  const noEscuro = (extra = {}) => criar({ estilo: { color: 'rgb(227, 214, 195)', ...SEM_MOVIMENTO }, cadeia: [TRANSPARENTE, ESCURO], ...extra })
+
+  it('M-2 passa sem borda de 4 lados, ou só na moldura dupla; falha fora dela', () => {
+    const borda4 = { borderTopWidth: '1px', borderRightWidth: '1px', borderBottomWidth: '1px', borderLeftWidth: '1px', borderTopStyle: 'solid', borderRightStyle: 'solid', borderBottomStyle: 'solid', borderLeftStyle: 'solid' }
+    assert.equal(m2([criar(), criar({ estilo: borda4, m: { moldura: true } })]).ok, true)
+    assert.equal(m2([criar(), criar({ estilo: borda4 })]).ok, false)
+    assert.equal(m2([criar({ estilo: { ...borda4, borderLeftWidth: '0px' } })]).ok, true)
+    assert.equal(m2([]).ok, false)
+    assert.equal(m2([{ tag: 'div', visivel: true }]).ok, false)
+  })
+
+  it('M-3: fundo claro só em botões de até 30.000 px²', () => {
+    const claro = 'rgb(196, 112, 85)'
+    const botao = (rect) => noEscuro({ tag: 'button', rect, cadeia: [claro, ESCURO], m: { botao: true } })
+    assert.equal(m3([noEscuro(), botao({ x: 0, y: 0, w: 300, h: 80 })]).ok, true)
+    const fora = m3([noEscuro({ cadeia: ['rgb(235, 225, 208)', ESCURO] })])
+    assert.equal(fora.ok, false)
+    assert.match(fora.motivo, /fora de um botão/)
+    assert.equal(m3([botao({ x: 0, y: 0, w: 400, h: 80 })]).ok, false)
+  })
+
+  it('M-3 borda: 30.000 px² passam e 30.001 falham; fundo escuro e fundo transparente nunca contam', () => {
+    const claro = 'rgb(196, 112, 85)'
+    const botao = (rect) => noEscuro({ tag: 'button', rect, cadeia: [claro, ESCURO], m: { botao: true } })
+    assert.equal(m3([botao({ x: 0, y: 0, w: 300, h: 100 })]).ok, true)
+    assert.equal(m3([botao({ x: 0, y: 0, w: 300.01, h: 100 })]).ok, false)
+    assert.equal(m3([noEscuro({ cadeia: ['rgb(37, 30, 24)', ESCURO] })]).ok, true)
+  })
+
+  it('M-3: o miolo de um botão de moldura dupla (um span dentro do botão) é parte do botão; o que está fora dele não', () => {
+    const miolo = noEscuro({ tag: 'span', rect: { x: 0, y: 0, w: 200, h: 48 }, cadeia: ['rgb(247, 239, 226)', ESCURO], m: { dentroDeBotao: true } })
+    assert.equal(m3([miolo]).ok, true)
+    assert.equal(m3([{ ...miolo, m: {} }]).ok, false)
+  })
+
+  it('o coletor marca o span dentro do botão (dentroDeBotao) e o botão em si não é "dentro"', () => {
+    const { nos } = coletarDe('<main><section><button type="button"><span>Sair</span></button><span>Fora</span></section></main>')
+    const [dentro, fora] = nos.filter((n) => n.tag === 'span')
+    assert.equal(dentro.m.dentroDeBotao, true)
+    assert.equal(fora.m.dentroDeBotao, false)
+    assert.equal(nos.find((n) => n.tag === 'button').m.dentroDeBotao, false)
+    assert.equal(nos.find((n) => n.tag === 'button').m.botao, true)
+  })
+
+  it('M-3 falha fechado: sem nós, fundo ilegível e fundo sem ancestral opaco', () => {
+    assert.equal(m3([]).ok, false)
+    assert.equal(m3([noEscuro({ cadeia: ['oklch(0.9 0.1 80)', ESCURO] })]).ok, false)
+    assert.equal(m3([noEscuro({ cadeia: ['rgba(255, 255, 255, 0.5)', TRANSPARENTE] })]).ok, false)
+  })
+
+  it('M-4: botões com 56 px e contraste de 4,5:1 (inclusive o texto secundário)', () => {
+    const botao = (h) => noEscuro({ tag: 'button', texto: 'Salvar', rect: { x: 0, y: 0, w: 200, h }, m: { botao: true } })
+    assert.equal(m4([botao(56)]).ok, true)
+    assert.equal(m4([botao(48)]).ok, false)
+    assert.equal(m4([botao(55.6)]).ok, true)
+    assert.equal(m4([botao(55)]).ok, false)
+    const secundario = noEscuro({ texto: 'Ajuda', estilo: { color: 'rgb(186, 175, 159)' } })
+    assert.equal(m4([botao(56), secundario]).ok, true)
+    const apagado = noEscuro({ texto: 'Apagado', estilo: { color: 'rgb(90, 80, 70)' } })
+    assert.equal(m4([botao(56), apagado]).ok, false)
+  })
+
+  it('M-4 falha fechado: sem botão, sem texto, texto sem largura e contraste incalculável', () => {
+    assert.equal(m4([noEscuro()]).ok, false)
+    assert.equal(m4([noEscuro({ tag: 'button', texto: '', rect: { x: 0, y: 0, w: 100, h: 56 }, m: { botao: true } })]).ok, false)
+    assert.equal(m4([noEscuro({ tag: 'button', texto: 'a', rect: { x: 0, y: 0, w: 0, h: 56 }, m: { botao: true } })]).ok, false)
+    assert.equal(m4([noEscuro({ tag: 'button', texto: 'a', rect: { x: 0, y: 0, w: 100, h: 56 }, m: { botao: true }, cadeia: [TRANSPARENTE] })]).ok, false)
+  })
+
+  it('M-5: o fio de campo com contraste ≥ 3:1 (em 1440 e em 390)', () => {
+    const fio = (cor) => paginaComCampos([campoDesktop(354, { estiloCampo: { borderBottomColor: cor } })]).map((n) => (n.m.campo ? { ...n, cadeia: [TRANSPARENTE, ESCURO] } : n))
+    assert.equal(m5(fio('rgb(227, 214, 195)'), doc1440).ok, true)
+    const apagado = m5(fio('rgb(60, 50, 42)'), doc1440)
+    assert.equal(apagado.ok, false)
+    assert.match(apagado.motivo, /contraste/)
+    const celular = campoCelular(400, { estiloCaixa: { borderBottomColor: 'rgb(227, 214, 195)' } }).map((n) => (n.m.campoControle ? { ...n, cadeia: [TRANSPARENTE, ESCURO] } : n))
+    assert.equal(m5(celular, doc390).ok, true)
+  })
+
+  it('M-5 borda e falha fechado: 3,0:1 passa; sem fio, sem campo e cor ilegível reprovam', () => {
+    const com = (cor, largura = '1px') => paginaComCampos([campoDesktop(354, { estiloCampo: { borderBottomColor: cor, borderBottomWidth: largura } })]).map((n) => (n.m.campo ? { ...n, cadeia: [TRANSPARENTE, 'rgb(255, 255, 255)'] } : n))
+    // #767676 sobre branco: 4,54:1; #949494 sobre branco: 3,03:1; #959595: 2,99:1.
+    assert.equal(m5(com('rgb(148, 148, 148)'), doc1440).ok, true)
+    assert.equal(m5(com('rgb(150, 150, 150)'), doc1440).ok, false)
+    assert.equal(m5(com('rgb(0, 0, 0)', '0px'), doc1440).ok, false)
+    assert.equal(m5([abertura()], doc1440).ok, false)
+    assert.equal(m5(com('cor-estranha'), doc1440).ok, false)
+    assert.equal(m5(com('rgb(0, 0, 0)'), undefined).ok, false)
+  })
+
+  it('M-6: sem transition acima de 150 ms e sem transform animado', () => {
+    assert.equal(m6([noEscuro()]).ok, true)
+    assert.equal(m6([noEscuro({ estilo: { transitionProperty: 'background-color', transitionDuration: '0.15s' } })]).ok, true)
+    const lenta = m6([noEscuro({ estilo: { transitionProperty: 'background-color', transitionDuration: '0.3s' } })])
+    assert.equal(lenta.ok, false)
+    assert.match(lenta.motivo, /300 ms/)
+    assert.equal(m6([noEscuro({ estilo: { transitionProperty: 'transform', transitionDuration: '0.1s' } })]).ok, false)
+    assert.equal(m6([noEscuro({ estilo: { transitionProperty: 'all', transitionDuration: '0.1s' } })]).ok, false)
+  })
+
+  it('M-6 borda: 150 ms passam, 151 falham, com atraso conta junto, lista de propriedades e duração zero', () => {
+    assert.equal(m6([noEscuro({ estilo: { transitionProperty: 'color', transitionDuration: '150ms' } })]).ok, true)
+    assert.equal(m6([noEscuro({ estilo: { transitionProperty: 'color', transitionDuration: '151ms' } })]).ok, false)
+    assert.equal(m6([noEscuro({ estilo: { transitionProperty: 'color', transitionDuration: '0.1s', transitionDelay: '0.1s' } })]).ok, false)
+    assert.equal(m6([noEscuro({ estilo: { transitionProperty: 'color, opacity', transitionDuration: '0.1s, 0.2s' } })]).ok, false)
+    assert.equal(m6([noEscuro({ estilo: { transitionProperty: 'transform', transitionDuration: '0s' } })]).ok, true)
+  })
+
+  it('M-6 e as animações: acima de 150 ms ou com transform reprovam; sem a leitura dos keyframes, também', () => {
+    const animada = (extra, duracao = '0.1s') => noEscuro({ estilo: { ...SEM_MOVIMENTO, animationName: 'surgir', animationDuration: duracao }, ...extra })
+    assert.equal(m6([animada({ animacaoTransform: false })]).ok, true)
+    assert.equal(m6([animada({ animacaoTransform: true })]).ok, false)
+    assert.equal(m6([animada({ animacaoTransform: null })]).ok, false)
+    assert.equal(m6([animada({ animacaoTransform: undefined })]).ok, false)
+    assert.equal(m6([animada({ animacaoTransform: false }, '0.4s')]).ok, false)
+    assert.equal(m6([animada({ animacaoTransform: false }, '0s')]).ok, true)
+    assert.equal(m6([noEscuro({ animacoes: [{ tipo: 'CSSTransition', propriedades: ['transform'] }] })]).ok, false)
+    assert.equal(m6([noEscuro({ animacoes: [{ tipo: 'CSSTransition', propriedades: ['opacity'] }] })]).ok, true)
+  })
+
+  it('M-6 falha fechado: sem nós, transition ausente e duração ilegível', () => {
+    assert.equal(m6([]).ok, false)
+    assert.equal(m6([criar()]).ok, false)
+    assert.equal(m6([noEscuro({ estilo: { transitionDuration: 'rápido' } })]).ok, false)
+  })
+})
+
+describe('44d-3: o coletor em jsdom lê o que os critérios de tela usam', () => {
+  const PAGINA = `
+    <main>
+      <section data-bloco class="sb-abertura">
+        <h1>Conta</h1>
+        <ul class="sb-abertura-lateral"><li><a href="#perfil">Perfil</a></li><li><a href="#nao-existe">Outra</a></li></ul>
+      </section>
+      <section aria-labelledby="perfil">
+        <h2 id="perfil">Perfil</h2>
+        <form>
+          <div class="sb-campo" style="position: relative"><label for="nome">Nome</label><div class="sb-campo-controle"><input id="nome" value="Ana"></div></div>
+          <p data-aviso="banco-de-demonstracao">Banco de teste.</p>
+          <button type="submit">Salvar</button>
+          <button type="button" disabled aria-disabled="true">Excluir minha conta</button>
+        </form>
+      </section>
+    </main>
+    <footer data-rodape></footer>`
+
+  /** Troca o getComputedStyle só para o pseudo-elemento: o jsdom não o implementa. */
+  const comPseudo = (documento) => {
+    const janela = documento.defaultView
+    const original = janela.getComputedStyle.bind(janela)
+    janela.getComputedStyle = (el, pseudo) =>
+      pseudo
+        ? { content: '""', display: 'block', position: 'absolute', left: '100px', top: '32px', width: '1px', height: '80px', backgroundColor: 'rgb(26, 21, 17)' }
+        : original(el)
+  }
+
+  it('marca a abertura, o campo, o rótulo, o controle, o botão de envio, a âncora, o título e a seção', () => {
+    const { nos } = coletarDe(PAGINA)
+    const por = (nome) => nos.filter((n) => n.m[nome])
+    assert.equal(por('abertura').length, 1)
+    assert.equal(por('campo').length, 1)
+    assert.equal(por('campoControle').length, 1)
+    assert.equal(por('rotuloCampo').length, 1)
+    assert.deepEqual(por('controle').map((n) => n.tag), ['input'])
+    assert.deepEqual(por('botaoForm').map((n) => n.texto), ['Salvar'])
+    assert.equal(por('ancoraLateral').length, 2)
+    assert.deepEqual(por('tituloSecao').map((n) => n.texto), ['Perfil'])
+    assert.equal(por('avisoDemo').length, 1)
+    assert.equal(por('secao').length, 1)
+    assert.equal(por('noMain').length > 5, true)
+  })
+
+  it('a âncora sabe se o destino existe, o botão desativado entrega aria-disabled e a seção, a posição do título', () => {
+    const { nos } = coletarDe(PAGINA)
+    const [a, b] = nos.filter((n) => n.m.ancoraLateral)
+    assert.deepEqual([a.alvoExiste, b.alvoExiste], [true, false])
+    assert.equal(a.href, '#perfil')
+    const excluir = nos.find((n) => n.texto === 'Excluir minha conta')
+    assert.equal(excluir.desativado, true)
+    assert.equal(excluir.ariaDisabled, 'true')
+    assert.equal(nos.find((n) => n.texto === 'Salvar').desativado, false)
+    const secao = nos.find((n) => n.m.secao)
+    assert.ok(Number.isFinite(secao.tituloDaSecao.y) && Number.isFinite(secao.tituloDaSecao.x))
+  })
+
+  it('traz o retângulo do texto, o vazio no fim do bloco, a altura total e os retângulos dos blocos', () => {
+    const { doc, nos } = coletarDe(PAGINA)
+    const rotulo = nos.find((n) => n.m.rotuloCampo)
+    assert.deepEqual(rotulo.rectTexto, { x: 0, y: 0, w: 100, h: 20 })
+    const bloco = nos.find((n) => n.m.filhoDeMain)
+    assert.deepEqual(Object.keys(bloco.vazioFim).sort(), ['margem', 'vazio'])
+    assert.ok('alturaTotal' in doc)
+    // O cabeçalho (nenhum), os 2 filhos de <main> (um deles também é [data-bloco]) e o rodapé.
+    assert.equal(doc.blocos.length, 3)
+    assert.deepEqual(Object.keys(doc.blocos[0]).sort(), ['h', 'id', 'w', 'x', 'y'])
+  })
+
+  it('o formato dos campos que já existiam não muda (só ganham campos novos)', () => {
+    const { nos } = coletarDe(PAGINA)
+    const no = nos.find((n) => n.tag === 'h1')
+    for (const campo of ['fontSize', 'lineHeight', 'fontWeight', 'textTransform', 'boxShadow', 'backgroundColor', 'color', 'opacity', 'transform', 'position', 'top', 'fontFamily', 'fontVariantNumeric']) {
+      assert.ok(campo in no.estilo, campo)
+    }
+    for (const campo of ['minHeight', 'borderBottomColor', 'transitionProperty', 'transitionDuration', 'transitionDelay', 'animationName', 'animationDuration']) {
+      assert.ok(campo in no.estilo, `novo: ${campo}`)
+    }
+    assert.deepEqual(Object.keys(no).filter((k) => ['tag', 'texto', 'visivel', 'rect', 'estilo', 'm', 'cadeia'].includes(k)).sort(), ['cadeia', 'estilo', 'm', 'rect', 'tag', 'texto', 'visivel'])
+  })
+
+  it('lê o pseudo-elemento do campo posicionado (o fio vertical) e deixa nulo o x do pseudo de um elemento estático', () => {
+    const { nos } = coletarDe(PAGINA, comPseudo)
+    const campo = nos.find((n) => n.m.campo)
+    assert.equal(campo.pseudo.antes.w, 1)
+    assert.equal(campo.pseudo.antes.h, 80)
+    assert.equal(campo.pseudo.antes.x, 100)
+    assert.equal(campo.pseudo.antes.y, 32)
+    // Em elemento sem posicionamento, o x do pseudo absoluto é ilegível (nulo): a regra falha fechado.
+    const solto = nos.find((n) => n.m.rotuloCampo)
+    assert.equal(solto.pseudo.antes.x, null)
+  })
+
+  it('sem pseudo-elemento (content none ou getComputedStyle que não o sabe), o nó não ganha `pseudo`', () => {
+    const { nos } = coletarDe(PAGINA, (documento) => {
+      documento.defaultView.getComputedStyle = new Proxy(documento.defaultView.getComputedStyle, {
+        apply: (alvo, esse, argumentos) => {
+          if (argumentos[1]) throw new Error('sem pseudo')
+          return Reflect.apply(alvo, esse, argumentos)
+        },
+      })
+    })
+    assert.equal(nos.some((n) => 'pseudo' in n), false)
+  })
+
+  it('o botão de envio e o título passam a ser lidos sem mexer nos outros testes (G12 segue verde na fixture)', () => {
+    const { nos } = coletarDe(PAGINA)
+    assert.equal(g12(nos).ok, true)
+  })
+})
+
+describe('44d-3: na tela antiga (sem `.sb-*`) o critério acusa o defeito medido, e só depois a ausência da estrutura', () => {
+  const borda4 = { borderTopWidth: '1px', borderRightWidth: '1px', borderBottomWidth: '1px', borderLeftWidth: '1px', borderTopStyle: 'solid', borderRightStyle: 'solid', borderBottomStyle: 'solid', borderLeftStyle: 'solid' }
+  const inputAntigo = (extra = {}) =>
+    emMain({ tag: 'input', texto: '', textoControle: 'a@b.c', rect: { x: 785, y: 200, w: 440, h: 48 }, m: { controle: true, interativo: true }, estilo: { fontSize: '16px', fontFamily: 'Inter, sans-serif', borderBottomColor: 'rgb(26, 21, 17)', ...borda4 }, ...extra })
+  const rotuloAntigo = emMain({ tag: 'label', texto: 'E-mail', rect: { x: 785, y: 170, w: 100, h: 24 }, m: { rotuloCampo: true }, estilo: { fontSize: '14px' } })
+
+  it('E-3: o input com borda nos 4 lados reprova pelo motivo real, antes da falta de `.sb-campo`', () => {
+    const r = e3([inputAntigo()], doc1440)
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /borda nos 4 lados/)
+    assert.equal(e3([], doc1440).ok, false)
+  })
+
+  it('E-2: a letra de 16 px do input e a de 14 px do rótulo reprovam pelo motivo real', () => {
+    const r = e2([inputAntigo(), rotuloAntigo], doc1440)
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /font-size 16px em vez de 48px/)
+    assert.ok(r.nos_com_falha.some((n) => /label/.test(n)))
+    assert.equal(e2([inputAntigo(), rotuloAntigo], doc390).ok, false)
+  })
+
+  it('E-1: um fio vertical em x=720 reprova mesmo sem abertura e sem campo', () => {
+    const fio = emMain({ tag: 'div', texto: '', rect: { x: 720, y: 136, w: 0, h: 1700 }, estilo: { borderLeftWidth: '1px', borderLeftStyle: 'solid' } })
+    const r = e1([fio], doc1440)
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /no meio da janela/)
+  })
+
+  it('E-6 e A-1: o formulário em x=785–1225 reprova sem abertura; o conteúdo à esquerda de c2 também', () => {
+    const e6r = e6([inputAntigo()], doc1440)
+    assert.equal(e6r.ok, false)
+    assert.match(e6r.motivo, /à direita de/)
+    const esquerda = emMain({ rect: { x: 216, y: 300, w: 400, h: 28 }, rectTexto: { x: 216, y: 300, w: 300, h: 28 } })
+    const dentro = a1([esquerda], doc1440)
+    assert.equal(dentro.ok, false, 'sem abertura a regra reprova pela estrutura')
+    assert.match(dentro.motivo, /nenhuma abertura/)
+    const colado = emMain({ rect: { x: 40, y: 300, w: 400, h: 28 }, rectTexto: { x: 40, y: 300, w: 300, h: 28 } })
+    const a1r = a1([colado], doc1440)
+    assert.equal(a1r.ok, false)
+    assert.match(a1r.motivo, /à esquerda de/)
+  })
+
+  it('B-2: um select de 48 px de altura e de 16 px de letra reprova contra o input, sem `.sb-campo`', () => {
+    const entrada = inputAntigo({ rect: { x: 785, y: 200, w: 440, h: 48 } })
+    const selecao = inputAntigo({ tag: 'select', rect: { x: 785, y: 300, w: 440, h: 48 } })
+    const r = b2([entrada, selecao], doc1440)
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /altura 48 em vez de 112/)
+    const maior = b2([inputAntigo({ rect: { x: 785, y: 200, w: 440, h: 112 } }), inputAntigo({ tag: 'select', rect: { x: 785, y: 300, w: 440, h: 112 } })], doc1440)
+    assert.equal(maior.ok, false)
+    assert.match(maior.motivo, /font-size 16px em vez de 48px|fora de uma linha/)
+  })
+
+  it('M-5: o fio do próprio controle, na madrugada, entra na conta quando não há `.sb-campo`', () => {
+    const fraco = inputAntigo({ cadeia: [TRANSPARENTE, 'rgb(23, 18, 14)'], estilo: { ...borda4, borderBottomColor: 'rgb(60, 50, 42)' } })
+    const r = m5([fraco], doc1440)
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /contraste/)
+    const bom = inputAntigo({ cadeia: [TRANSPARENTE, 'rgb(23, 18, 14)'], estilo: { ...borda4, borderBottomColor: 'rgb(227, 214, 195)' } })
+    assert.equal(m5([bom], doc1440).ok, false, 'sem `.sb-campo` a regra ainda reprova, pela estrutura')
+    assert.match(m5([bom], doc1440).motivo, /nenhuma linha de campo/)
+  })
+
+  it('B-3: bloco de mídia ou de até 2 px, lidos sem conteúdo, não são altura esticada; um bloco comum sem leitura reprova', () => {
+    const bloco = (extra = {}) => emMain({ tag: 'div', texto: '', rect: { x: 32, y: 400, w: 1361, h: 300 }, m: { filhoDeMain: true }, estilo: { minHeight: '0px' }, ...extra })
+    const midia = { filhoDeMain: true, midia: true }
+    assert.equal(b3([bloco({ m: midia, vazioFim: null })]).ok, true)
+    assert.equal(b3([bloco({ rect: { x: 0, y: 0, w: 1, h: 1 }, vazioFim: null })]).ok, true)
+    assert.equal(b3([bloco({ vazioFim: null })]).ok, false)
+    assert.equal(b3([bloco({ m: midia, vazioFim: undefined })]).ok, false, 'sem a leitura (undefined) continua reprovando')
+    assert.equal(b3([bloco({ m: midia, vazioFim: null, estilo: { minHeight: '888px' } })]).ok, false, 'o min-height da mídia também vale')
+  })
+
+  it('o coletor lê o vazio de um bloco só com texto (um h1 sem elemento filho) e o de um bloco vazio fica nulo', () => {
+    const { nos } = coletarDe('<main><h1>Começar</h1><div></div><section><p>Texto.</p></section></main>')
+    const h1 = nos.find((n) => n.tag === 'h1')
+    assert.deepEqual(h1.vazioFim, { vazio: 0, margem: 0 })
+    const vazio = nos.find((n) => n.tag === 'div')
+    assert.equal(vazio.vazioFim, null)
+    const secao = nos.find((n) => n.tag === 'section')
+    assert.ok(Number.isFinite(secao.vazioFim.vazio))
+  })
+})
+
+describe('44d-3: o foco lido pela segunda passada (lerFocoNaPagina)', () => {
+  const FORM = `<main><form><input id="a" value="x"><select id="s"><option>a</option></select><button type="submit">Entrar</button></form></main>`
+
+  function lerFoco(html, estilo) {
+    const dom = new JSDOM(`<!doctype html><html><body>${html}</body></html>`, { runScripts: 'outside-only', virtualConsole: new VirtualConsole() })
+    const { window } = dom
+    window.Element.prototype.getBoundingClientRect = () => ({ ...RETANGULO })
+    if (estilo) window.getComputedStyle = () => estilo
+    try {
+      return JSON.parse(JSON.stringify(window.eval(`(${lerFocoNaPagina.toString()})()`)))
+    } finally {
+      window.close()
+    }
+  }
+
+  it('foca o primeiro controle e o botão de envio, lê o outline de cada um e devolve o foco', () => {
+    const estilo = { outlineStyle: 'solid', outlineWidth: '2px', outlineOffset: '2px', outlineColor: 'rgb(26, 21, 17)' }
+    const foco = lerFoco(FORM, estilo)
+    assert.equal(foco.controle.tag, 'input')
+    assert.equal(foco.botao.tag, 'button')
+    assert.equal(foco.controle.focou, true)
+    assert.equal(foco.botao.outlineWidth, '2px')
+    assert.equal(e7({ ...doc1440, foco }, 'claro').ok, true)
+  })
+
+  it('sem outline calculado, a regra E-7 reprova o que o coletor leu', () => {
+    const foco = lerFoco(FORM, { outlineStyle: 'none', outlineWidth: '0px', outlineOffset: '0px', outlineColor: 'rgb(0, 0, 0)' })
+    assert.equal(e7({ ...doc1440, foco }, 'claro').ok, false)
+  })
+
+  it('sem formulário, as duas leituras são nulas e a regra falha fechado', () => {
+    const foco = lerFoco('<main><p>Só texto.</p></main>', { outlineStyle: 'solid', outlineWidth: '2px', outlineOffset: '2px', outlineColor: 'rgb(26, 21, 17)' })
+    assert.deepEqual(foco, { controle: null, botao: null })
+    assert.equal(e7({ ...doc1440, foco }, 'claro').ok, false)
   })
 })

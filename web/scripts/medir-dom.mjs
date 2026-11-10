@@ -2,13 +2,22 @@
 // do contrato. Só biblioteca padrão do Node 24 (fetch e WebSocket), só loopback.
 //
 // Uso: node web/scripts/medir-dom.mjs <pasta> <caso>:<tema>:<LxA> ...
-//   casos: sistema, inicio, hoje, sessao. Temas: claro e madrugada. Ex.: sistema:claro:1440x900
+//   casos: sistema, inicio, hoje, sessao e as 5 telas de acesso e Conta (entrar, criar_conta,
+//   recuperar_acesso, comecar_seu_nome, conta). Temas: claro e madrugada (a madrugada só onde o
+//   cabeçalho tem o botão "Modo madrugada": sistema, hoje, sessao, comecar_seu_nome e conta).
+//   Ex.: sistema:claro:1440x900
 //   Grava <pasta>/<caso>_<tema>_<L>.json e imprime uma linha "RESUMO <arquivo> G1 ok G2 FALHA ...".
 //   Saída 0 se mediu (as falhas ficam no JSON e no RESUMO); 2 em erro de uso ou de conexão.
-//   Ambiente: CDP_PORTA (padrão 9344) e BASE_URL (padrão http://127.0.0.1:5244/).
+//   Ambiente (variável de ambiente > .oc/ambiente.json do diretório atual > padrão): BASE_URL (padrão
+//   http://127.0.0.1:5244/), CDP_PORTA (padrão 9344), API_URL e ANON_KEY (sem padrão; só o caso
+//   comecar_seu_nome os exige, para criar o usuário novo pela API de Auth local).
 //
 // Além de G1 a G12 e SB3 (o nome do rodapé), a regra NUM confere os números em Zilla Slab (família,
 // face carregada e lining-nums).
+//
+// As 5 telas novas rodam também os critérios próprios da tela (TELAS.md): E-1 a E-7, C-1 a C-3, R-1
+// a R-2, B-1 a B-3, A-1 a A-6 e, na madrugada da Conta, M-1 a M-6. Os que só um olho decide vão para
+// `criterios_manuais` no JSON, com uma frase de o que olhar.
 //
 // A parte pura (as funções g1 a g12, num, o contraste e o resumo) recebe um JSON de nós e devolve
 // { regra, ok, motivo, nos_com_falha }. Ela falha fechado: nó sem texto onde a regra pede texto,
@@ -27,8 +36,65 @@ export const RAIOS_PERMITIDOS = ['0', '4px', '8px', '50%']
 const URUCUM = ['#B0401C', '#C47055']
 const MIDIA = ['#C9A39A', '#B8ADC4', '#3A2723', '#2C2733']
 
-const CASOS = ['sistema', 'inicio', 'hoje', 'sessao']
+const CASOS_ANTIGOS = ['sistema', 'inicio', 'hoje', 'sessao']
+/** As 5 telas de acesso e Conta (MAT-44d-3): o caminho de cada uma e como se chega a ela. */
+export const CASOS_DE_ACESSO = {
+  entrar: { caminho: 'entrar', acesso: 'publica', nome: 'Entrar' },
+  criar_conta: { caminho: 'criar-conta', acesso: 'publica', nome: 'Criar conta' },
+  recuperar_acesso: { caminho: 'recuperar-acesso', acesso: 'publica', nome: 'Recuperar acesso' },
+  comecar_seu_nome: { caminho: 'app/comecar', acesso: 'incompleta', nome: 'Começar' },
+  conta: { caminho: 'app/conta', acesso: 'ana', nome: 'Conta' },
+}
+const CASOS = [...CASOS_ANTIGOS, ...Object.keys(CASOS_DE_ACESSO)]
 const TEMAS = ['claro', 'madrugada']
+
+// ---------------------------------------------------------------------------------------------
+// Ambiente: a variável de ambiente vale mais que o arquivo, e o arquivo mais que o padrão.
+
+export const AMBIENTE_PADRAO = { BASE_URL: 'http://127.0.0.1:5244/', CDP_PORTA: 9344 }
+export const ARQUIVO_AMBIENTE = path.join('.oc', 'ambiente.json')
+
+/**
+ * Escolhe BASE_URL, CDP_PORTA, API_URL e ANON_KEY: variável (`env`) > `arquivo` (o JSON de
+ * `.oc/ambiente.json`, ou nulo) > padrão. Valor vazio conta como ausente. API_URL e ANON_KEY não têm
+ * padrão. A BASE_URL sempre termina em barra, para os caminhos relativos valerem.
+ */
+export function escolherAmbiente(env = {}, arquivo = null) {
+  const doArquivo = arquivo && typeof arquivo === 'object' && !Array.isArray(arquivo) ? arquivo : {}
+  const pega = (nome) => {
+    for (const fonte of [env ?? {}, doArquivo]) {
+      const valor = fonte[nome]
+      if (valor !== undefined && valor !== null && String(valor).trim() !== '') return String(valor).trim()
+    }
+    return undefined
+  }
+  const base = pega('BASE_URL') ?? AMBIENTE_PADRAO.BASE_URL
+  return {
+    BASE_URL: base.endsWith('/') ? base : `${base}/`,
+    CDP_PORTA: Number(pega('CDP_PORTA') ?? AMBIENTE_PADRAO.CDP_PORTA),
+    API_URL: pega('API_URL'),
+    ANON_KEY: pega('ANON_KEY'),
+  }
+}
+
+/** Só loopback: a página medida e a API local. Lança Error se a porta não for um inteiro de 1 a 65535. */
+export function verificarAmbiente(ambiente) {
+  verificarLoopback(ambiente.BASE_URL)
+  if (ambiente.API_URL !== undefined) verificarLoopback(ambiente.API_URL)
+  if (!Number.isInteger(ambiente.CDP_PORTA) || ambiente.CDP_PORTA < 1 || ambiente.CDP_PORTA > 65535) {
+    throw new Error(`CDP_PORTA inválida: ${ambiente.CDP_PORTA}`)
+  }
+}
+
+/** Lê o `.oc/ambiente.json` do diretório atual; nulo se não existe. Lança Error se não for um JSON. */
+export function lerArquivoAmbiente(caminho = ARQUIVO_AMBIENTE) {
+  if (!fs.existsSync(caminho)) return null
+  try {
+    return JSON.parse(fs.readFileSync(caminho, 'utf8'))
+  } catch (erro) {
+    throw new Error(`${caminho} ilegível: ${erro.message}`)
+  }
+}
 
 /** A margem fixa da grade pela largura da janela (a da media query, com a barra de rolagem). */
 export function margemDe(largura) {
@@ -509,9 +575,915 @@ export function num(nos, doc) {
   return resultado('NUM', falhas, `${alvos.length} números ou cronômetros em Zilla Slab com a face carregada e lining-nums`)
 }
 
-/** As regras que bloqueiam em cada caso: em `sistema`, todas; nos outros, só G2 e G9 (as demais só se registram). */
+// ---------------------------------------------------------------------------------------------
+// Critérios da tela (TELAS.md). Cada um é uma função pura sobre as leituras da página e devolve
+// { regra, ok, motivo, nos_com_falha }. Falham fechado: o elemento que a regra procura e não existe,
+// a medida ausente, a largura 0 e o número fora da tolerância reprovam. A tolerância é a do texto do
+// critério; onde ele não diz, ±2 px (como no glossário do contrato).
+
+const TOL = 2
+const G_TODAS = ['G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7', 'G8', 'G9', 'G10', 'G11', 'G12', 'SB3']
+
+const naoAplicavel = (regra, motivo) => ({ regra, ok: true, motivo: `não aplicável: ${motivo}`, nos_com_falha: [] })
+const nosDaLista = (nos) => (Array.isArray(nos) ? nos : [])
+const nosVisiveis = (nos, nome) => nosDaLista(nos).filter((no) => marca(no, nome) && visivel(no))
+const rectValido = (r) => Boolean(r) && [r.x, r.y, r.w, r.h].every(Number.isFinite)
+const contem = (pai, filho, folga = 1) =>
+  rectValido(pai?.rect) &&
+  rectValido(filho?.rect) &&
+  filho.rect.x >= pai.rect.x - folga &&
+  filho.rect.y >= pai.rect.y - folga &&
+  filho.rect.x + filho.rect.w <= pai.rect.x + pai.rect.w + folga &&
+  filho.rect.y + filho.rect.h <= pai.rect.y + pai.rect.h + folga
+const quatroLados = (e) => ['Top', 'Right', 'Bottom', 'Left'].every((lado) => px(e?.[`border${lado}Width`]) > 0 && e?.[`border${lado}Style`] !== 'none')
+const primeiraFamilia = (texto) => String(texto ?? '').split(',')[0].trim().replace(/^["']|["']$/g, '')
+const celularDe = (doc) => doc.largura < 768
+const ehMadrugada = (tema) => tema === 'madrugada'
+
+/** A resposta de um critério com várias falhas: o motivo da primeira e quantas mais há. */
+function resultadoDeTela(regra, falhas, motivoOk) {
+  const ok = falhas.length === 0
+  return {
+    regra,
+    ok,
+    motivo: ok ? motivoOk : falhas.length > 1 ? `${falhas[0].motivo} (e mais ${falhas.length - 1})` : falhas[0].motivo,
+    nos_com_falha: falhas.map((f) => f.no),
+  }
+}
+
+/** Todo critério depende da largura da janela e da `clientWidth`: sem elas, reprova. */
+function comDoc(regra, doc, corpo) {
+  if (!doc || !Number.isFinite(doc.largura) || !Number.isFinite(doc.clientWidth)) {
+    return falhaFechada(regra, 'largura da janela ou clientWidth ausente')
+  }
+  return corpo()
+}
+
+/** Os limites de coluna para o conteúdo da página: de c2 ao início de c9 (a área útil inteira abaixo de 768). */
+function limitesDeColuna(doc) {
+  const x1 = xDaColuna(1, doc.largura, doc.clientWidth)
+  if (celularDe(doc)) return { esquerda: x1, direita: x1 + areaUtilDe(doc.largura, doc.clientWidth) }
+  return { esquerda: xDaColuna(2, doc.largura, doc.clientWidth), direita: xDaColuna(9, doc.largura, doc.clientWidth) }
+}
+
+/** O y do fim da abertura (`.sb-abertura`), ou nulo se a página não tem abertura. */
+function aberturaFim(nos) {
+  const abertura = nosVisiveis(nos, 'abertura').find((no) => rectValido(no.rect))
+  return abertura ? abertura.rect.y + abertura.rect.h : null
+}
+
+/**
+ * O conteúdo do `main` abaixo da abertura: o texto (pelo retângulo do próprio texto), os controles e os
+ * alvos de toque (pela caixa). A mídia (`[data-midia]`) não é conteúdo: é uma moldura sem texto.
+ */
+function conteudoAbaixoDaAbertura(nos, fim) {
+  return nosDaLista(nos)
+    .filter(
+      (no) =>
+        visivel(no) &&
+        marca(no, 'noMain') &&
+        !marca(no, 'dentroMidia') &&
+        rectValido(no.rect) &&
+        no.rect.y >= fim - 0.5 &&
+        (marca(no, 'interativo') || marca(no, 'controle') || temTexto(no)),
+    )
+    .map((no) => ({ no, caixa: marca(no, 'interativo') || marca(no, 'controle') || !rectValido(no.rectTexto) ? no.rect : no.rectTexto }))
+}
+
+const botaoDoFormulario = (nos) => nosVisiveis(nos, 'botaoForm').find((no) => rectValido(no.rect))
+
+/** O fio vertical de um nó: borda de um lado só (até 2 px), elemento fino ou pseudo-elemento fino. */
+function fiosVerticais(nos) {
+  const fios = []
+  for (const no of nosDaLista(nos).filter((n) => visivel(n) && marca(n, 'noMain'))) {
+    const r = no.rect
+    const e = no.estilo ?? {}
+    if (!rectValido(r)) continue
+    if (!quatroLados(e) && r.h > 0) {
+      for (const lado of ['Left', 'Right']) {
+        const largura = px(e[`border${lado}Width`])
+        if (largura > 0 && largura <= 2 && e[`border${lado}Style`] !== 'none') {
+          const x = lado === 'Left' ? r.x : r.x + r.w - largura
+          fios.push({ x, y: r.y, h: r.h, no: descrever(no), origem: `border-${lado.toLowerCase()}` })
+        }
+      }
+    }
+    if (r.w > 0 && r.w <= 2 && r.h >= 16 && !marca(no, 'interativo')) {
+      const fundo = parseCor(e.backgroundColor)
+      if (fundo && fundo.a > 0.05) fios.push({ x: r.x, y: r.y, h: r.h, no: descrever(no), origem: 'elemento fino' })
+    }
+    for (const [nome, p] of Object.entries(no.pseudo ?? {})) {
+      if (!p || p.display === 'none' || !(p.w > 0 && p.w <= 2) || !(p.h >= 16)) continue
+      const fundo = parseCor(p.backgroundColor)
+      if (fundo && fundo.a <= 0.05) continue
+      fios.push({ x: p.x, y: p.y, h: p.h, no: `${descrever(no)}::${nome}`, origem: `::${nome}`, ilegivel: !Number.isFinite(p.x) || !Number.isFinite(p.y) })
+    }
+  }
+  return fios
+}
+
+/**
+ * E-1: não há fio vertical no meio da janela (x=720 em 1440). O único fio vertical do formulário está em
+ * x de c4 (444,8) e tem a altura da linha de campo (do topo + 32 até o fio de baixo). Abaixo de 768 não
+ * há fio vertical. Os fios da própria abertura não contam (o vertical em x de c9 acaba no horizontal).
+ */
+export function e1(nos, doc) {
+  return comDoc('E-1', doc, () => {
+    // Mede primeiro o que o DOM tem (os fios que existem) e só depois acusa a estrutura que falta
+    // (abertura e linhas de campo): assim a tela antiga reprova pelo defeito, e não só pela ausência.
+    const fim = aberturaFim(nos)
+    const campos = nosVisiveis(nos, 'campo')
+    const celular = celularDe(doc)
+    const x4 = xDaColuna(4, doc.largura, doc.clientWidth)
+    const meio = doc.largura / 2
+    const falhas = []
+    const fios = fiosVerticais(nos).filter((fio) => fio.ilegivel || fim === null || fio.y + fio.h > fim + 1)
+    for (const fio of fios) {
+      if (fio.ilegivel) falhas.push({ no: fio.no, motivo: `${fio.no}: fio vertical sem posição legível` })
+      else if (celular) falhas.push({ no: fio.no, motivo: `${fio.no}: fio vertical em x=${fio.x.toFixed(1)} abaixo de 768 (não há)` })
+      else if (Math.abs(fio.x - meio) <= 8) falhas.push({ no: fio.no, motivo: `${fio.no}: fio vertical em x=${fio.x.toFixed(1)}, no meio da janela` })
+      else if (!perto(fio.x, x4, TOL)) falhas.push({ no: fio.no, motivo: `${fio.no}: fio vertical em x=${fio.x.toFixed(1)} em vez de x de c4 (${x4.toFixed(1)})` })
+    }
+    if (!celular) {
+      for (const campo of campos) {
+        const pseudo = Object.values(campo.pseudo ?? {}).find((p) => p && p.display !== 'none' && p.w > 0 && p.w <= 2 && p.h >= 16)
+        if (!pseudo || !Number.isFinite(pseudo.x) || !Number.isFinite(pseudo.y)) {
+          falhas.push({ no: descrever(campo), motivo: 'linha de campo sem o fio vertical em x de c4 (::before)' })
+          continue
+        }
+        if (!perto(pseudo.x, x4, TOL)) falhas.push({ no: descrever(campo), motivo: `fio do campo em x=${pseudo.x.toFixed(1)} em vez de ${x4.toFixed(1)}` })
+        if (!perto(pseudo.y + pseudo.h, campo.rect.y + campo.rect.h, TOL)) {
+          falhas.push({ no: descrever(campo), motivo: `fio do campo termina em y=${(pseudo.y + pseudo.h).toFixed(1)}, o campo em y=${(campo.rect.y + campo.rect.h).toFixed(1)}` })
+        }
+        if (!perto(pseudo.y, campo.rect.y + 32, TOL)) {
+          falhas.push({ no: descrever(campo), motivo: `fio do campo começa em y=${pseudo.y.toFixed(1)}, a 32 px do topo seria ${(campo.rect.y + 32).toFixed(1)}` })
+        }
+      }
+    }
+    if (fim === null) falhas.push({ no: 'documento', motivo: 'nenhuma abertura (.sb-abertura)' })
+    if (campos.length === 0) falhas.push({ no: 'documento', motivo: 'nenhuma linha de campo (.sb-campo)' })
+    return resultadoDeTela('E-1', falhas, `${campos.length} campos com o fio em x de c4 e nenhum no meio da janela`)
+  })
+}
+
+/** A caixa de altura do campo: a linha inteira (≥ 768) ou o `.sb-campo-controle` (abaixo de 768). */
+function caixaDoCampo(nos, campo, celular) {
+  return celular ? nosVisiveis(nos, 'campoControle').find((c) => contem(campo, c)) : campo
+}
+
+/**
+ * E-2: cada linha de campo tem 112 px (a caixa do campo tem 64 em 390); o rótulo tem 32 px e o texto
+ * digitado 48 (24 e 32 em 390). Todo controle fica dentro de uma linha de campo.
+ */
+export function e2(nos, doc) {
+  return comDoc('E-2', doc, () => {
+    const campos = nosVisiveis(nos, 'campo')
+    const controles = nosVisiveis(nos, 'controle')
+    const rotulos = nosVisiveis(nos, 'rotuloCampo')
+    if (campos.length === 0 && controles.length === 0) return falhaFechada('E-2', 'nenhum campo: sem linha (.sb-campo) e sem controle')
+    const celular = celularDe(doc)
+    const alvo = celular ? { altura: 64, rotulo: 24, texto: 32 } : { altura: 112, rotulo: 32, texto: 48 }
+    const falhas = []
+    // Os tamanhos de letra se medem em cada controle e em cada rótulo, com ou sem `.sb-campo` em volta.
+    for (const controle of controles) {
+      if (!perto(px(controle.estilo?.fontSize), alvo.texto, 0.01)) {
+        falhas.push({ no: descrever(controle), motivo: `${descrever(controle)}: texto digitado com font-size ${controle.estilo?.fontSize} em vez de ${alvo.texto}px` })
+      }
+    }
+    for (const rotulo of rotulos) {
+      if (!perto(px(rotulo.estilo?.fontSize), alvo.rotulo, 0.01)) {
+        falhas.push({ no: descrever(rotulo), motivo: `${descrever(rotulo)}: rótulo com font-size ${rotulo.estilo?.fontSize} em vez de ${alvo.rotulo}px` })
+      }
+    }
+    campos.forEach((campo, i) => {
+      const nome = `campo ${i + 1}`
+      const caixa = caixaDoCampo(nos, campo, celular)
+      if (!caixa || !rectValido(caixa.rect)) falhas.push({ no: nome, motivo: `${nome}: sem a caixa do campo` })
+      else if (!perto(caixa.rect.h, alvo.altura, TOL)) falhas.push({ no: nome, motivo: `${nome}: altura ${caixa.rect.h.toFixed(1)} em vez de ${alvo.altura}` })
+      if (!rotulos.some((l) => contem(campo, l))) falhas.push({ no: nome, motivo: `${nome}: sem rótulo (label)` })
+      if (!controles.some((c) => contem(campo, c))) falhas.push({ no: nome, motivo: `${nome}: sem controle` })
+    })
+    for (const controle of controles) {
+      if (!campos.some((campo) => contem(campo, controle))) falhas.push({ no: descrever(controle), motivo: `${descrever(controle)}: controle fora de uma linha de campo (.sb-campo)` })
+    }
+    if (campos.length === 0) falhas.push({ no: 'documento', motivo: 'nenhuma linha de campo (.sb-campo)' })
+    return resultadoDeTela('E-2', falhas, `${campos.length} campos de ${alvo.altura} px, rótulo ${alvo.rotulo} e texto ${alvo.texto}`)
+  })
+}
+
+/**
+ * E-3: o `input` não tem borda nos 4 lados. O fio inferior da linha tem 1 px e vai de x de c2 (169,6)
+ * ao início de c9 (1132,8). Abaixo de 768, o fio de 1 px fica na caixa do campo.
+ */
+export function e3(nos, doc) {
+  return comDoc('E-3', doc, () => {
+    const campos = nosVisiveis(nos, 'campo')
+    const controles = nosVisiveis(nos, 'controle')
+    if (campos.length === 0 && controles.length === 0) return falhaFechada('E-3', 'nenhum campo: sem linha (.sb-campo) e sem controle')
+    const celular = celularDe(doc)
+    const x2 = xDaColuna(2, doc.largura, doc.clientWidth)
+    const x9 = xDaColuna(9, doc.largura, doc.clientWidth)
+    const falhas = []
+    // A borda nos 4 lados se mede em cada controle, com ou sem `.sb-campo` em volta.
+    for (const controle of controles) {
+      if (quatroLados(controle.estilo)) falhas.push({ no: descrever(controle), motivo: `${descrever(controle)}: borda nos 4 lados` })
+    }
+    campos.forEach((campo, i) => {
+      const nome = `campo ${i + 1}`
+      const caixa = caixaDoCampo(nos, campo, celular)
+      if (!caixa || !rectValido(caixa.rect)) {
+        falhas.push({ no: nome, motivo: `${nome}: sem a caixa do campo` })
+        return
+      }
+      const e = caixa.estilo ?? {}
+      const largura = px(e.borderBottomWidth)
+      if (Number.isNaN(largura)) falhas.push({ no: nome, motivo: `${nome}: border-bottom ausente` })
+      else if (!perto(largura, 1, 0.01) || e.borderBottomStyle !== 'solid') falhas.push({ no: nome, motivo: `${nome}: fio inferior de ${e.borderBottomWidth} ${e.borderBottomStyle} em vez de 1px solid` })
+      if (!celular) {
+        if (!perto(caixa.rect.x, x2, TOL)) falhas.push({ no: nome, motivo: `${nome}: o fio começa em x=${caixa.rect.x.toFixed(1)} em vez de ${x2.toFixed(1)}` })
+        if (!perto(caixa.rect.x + caixa.rect.w, x9, TOL)) falhas.push({ no: nome, motivo: `${nome}: o fio termina em x=${(caixa.rect.x + caixa.rect.w).toFixed(1)} em vez de ${x9.toFixed(1)}` })
+      }
+    })
+    for (const controle of controles) {
+      if (!campos.some((campo) => contem(campo, controle))) falhas.push({ no: descrever(controle), motivo: `${descrever(controle)}: controle fora de uma linha de campo (.sb-campo)` })
+    }
+    if (campos.length === 0) falhas.push({ no: 'documento', motivo: 'nenhuma linha de campo (.sb-campo)' })
+    return resultadoDeTela('E-3', falhas, `${campos.length} campos com fio de 1 px, sem borda nos 4 lados`)
+  })
+}
+
+/** E-4: o botão de envio termina em y ≤ 720 (1440×900) ou y ≤ 660 (390×844). */
+export function e4(nos, doc) {
+  return comDoc('E-4', doc, () => {
+    const botao = botaoDoFormulario(nos)
+    if (!botao) return falhaFechada('E-4', 'nenhum botão de envio (main form button[type=submit])')
+    const limite = celularDe(doc) ? 660 : 720
+    const fim = botao.rect.y + botao.rect.h
+    const ok = fim <= limite + 0.5
+    return {
+      regra: 'E-4',
+      ok,
+      motivo: `${descrever(botao)} termina em y=${fim.toFixed(1)} (máximo ${limite})`,
+      nos_com_falha: ok ? [] : [descrever(botao)],
+    }
+  })
+}
+
+/** E-5: o botão de envio tem altura 80 (64) e começa em x de c4 + 32 (476,8); em 390 tem a largura da área útil. */
+export function e5(nos, doc) {
+  return comDoc('E-5', doc, () => {
+    const botao = botaoDoFormulario(nos)
+    if (!botao) return falhaFechada('E-5', 'nenhum botão de envio (main form button[type=submit])')
+    const celular = celularDe(doc)
+    const altura = celular ? 64 : 80
+    const x = celular ? xDaColuna(1, doc.largura, doc.clientWidth) : xDaColuna(4, doc.largura, doc.clientWidth) + 32
+    const falhas = []
+    const falhar = (motivo) => falhas.push({ no: descrever(botao), motivo: `${descrever(botao)}: ${motivo}` })
+    if (!perto(botao.rect.h, altura, TOL)) falhar(`altura ${botao.rect.h.toFixed(1)} em vez de ${altura}`)
+    if (!perto(botao.rect.x, x, TOL)) falhar(`x=${botao.rect.x.toFixed(1)} em vez de ${x.toFixed(1)}`)
+    if (celular) {
+      const largura = areaUtilDe(doc.largura, doc.clientWidth)
+      if (!perto(botao.rect.w, largura, TOL)) falhar(`largura ${botao.rect.w.toFixed(1)} em vez de ${largura.toFixed(1)}`)
+    }
+    return resultadoDeTela('E-5', falhas, `botão de ${altura} px em x=${botao.rect.x.toFixed(1)}`)
+  })
+}
+
+/**
+ * E-6 (o que o número alcança): à direita de x de c9 (1132,8) não há conteúdo abaixo da abertura. A
+ * coluna vazia ao lado de um bloco é do olho (G8 só mede a diferença de altura).
+ */
+export function e6(nos, doc) {
+  return comDoc('E-6', doc, () => {
+    // Sem abertura, todo o conteúdo do main entra na conta (o que passa de c9 é defeito de qualquer
+    // jeito) e a falta da abertura é acusada depois.
+    const fim = aberturaFim(nos)
+    const { direita } = limitesDeColuna(doc)
+    const itens = conteudoAbaixoDaAbertura(nos, fim ?? Number.NEGATIVE_INFINITY)
+    if (itens.length === 0) return falhaFechada('E-6', 'nenhum conteúdo abaixo da abertura')
+    const falhas = []
+    for (const { no, caixa } of itens) {
+      const termina = caixa.x + caixa.w
+      if (termina > direita + TOL) falhas.push({ no: descrever(no), motivo: `${descrever(no)} termina em x=${termina.toFixed(1)}, à direita de ${direita.toFixed(1)}` })
+    }
+    if (fim === null) falhas.push({ no: 'documento', motivo: 'nenhuma abertura (.sb-abertura)' })
+    return resultadoDeTela('E-6', falhas, `${itens.length} itens abaixo da abertura, nenhum à direita de x=${direita.toFixed(1)}`)
+  })
+}
+
+const FOCO_TINTA = ['#1A1511']
+const FOCO_MADRUGADA = ['#F7EFE2']
+
+/**
+ * E-7 (o que o número alcança): o foco tem anel de 2 px (`outline` sólido, offset 2, cor da tinta; na
+ * madrugada, `#F7EFE2`) no primeiro controle e no botão de envio. O erro em 17/24 abaixo do campo, sem
+ * mudar a altura da linha, exige enviar o formulário: a medição não o envia, e fica para o olho.
+ */
+export function e7(doc, tema) {
+  const foco = doc?.foco
+  if (!foco || typeof foco !== 'object') return falhaFechada('E-7', 'sem a leitura do anel de foco')
+  const cores = ehMadrugada(tema) ? FOCO_MADRUGADA : FOCO_TINTA
+  const falhas = []
+  for (const [nome, leitura] of [['controle', foco.controle], ['botão de envio', foco.botao]]) {
+    if (!leitura || typeof leitura !== 'object') {
+      falhas.push({ no: nome, motivo: `${nome}: sem a leitura do foco (elemento não achado)` })
+      continue
+    }
+    if (leitura.focou !== true) {
+      falhas.push({ no: nome, motivo: `${nome}: não recebeu foco` })
+      continue
+    }
+    const problemas = []
+    if (leitura.outlineStyle === undefined || leitura.outlineStyle === '' || leitura.outlineStyle === 'none') problemas.push('sem outline')
+    else if (leitura.outlineStyle !== 'solid') problemas.push(`outline ${leitura.outlineStyle}`)
+    if (!perto(px(leitura.outlineWidth), 2, 0.01)) problemas.push(`largura ${leitura.outlineWidth} em vez de 2px`)
+    if (!perto(px(leitura.outlineOffset), 2, 0.01)) problemas.push(`offset ${leitura.outlineOffset} em vez de 2px`)
+    if (!ehCor(parseCor(leitura.outlineColor), cores)) problemas.push(`cor ${leitura.outlineColor} em vez de ${cores[0]}`)
+    if (problemas.length > 0) falhas.push({ no: nome, motivo: `${nome}: ${problemas.join('; ')}` })
+  }
+  return resultadoDeTela('E-7', falhas, 'anel de foco de 2 px, offset 2, na cor do tema, no controle e no botão')
+}
+
+/** C-1: o aviso de demonstração não tem borda nem fundo e tem font-size 15. */
+export function c1(nos) {
+  const avisos = nosVisiveis(nos, 'avisoDemo')
+  if (avisos.length === 0) return falhaFechada('C-1', 'nenhum aviso de demonstração ([data-aviso])')
+  const falhas = []
+  for (const aviso of avisos) {
+    const e = aviso.estilo ?? {}
+    const motivos = []
+    const larguras = ['Top', 'Right', 'Bottom', 'Left'].map((lado) => px(e[`border${lado}Width`]))
+    if (larguras.some(Number.isNaN)) motivos.push('borda ausente')
+    else if (larguras.some((largura, i) => largura > 0 && e[`border${['Top', 'Right', 'Bottom', 'Left'][i]}Style`] !== 'none')) motivos.push('tem borda')
+    const fundo = parseCor(e.backgroundColor)
+    if (!fundo) motivos.push(`fundo ilegível (${e.backgroundColor})`)
+    else if (fundo.a > 0.01) motivos.push(`tem fundo (${e.backgroundColor})`)
+    if (!perto(px(e.fontSize), 15, 0.01)) motivos.push(`font-size ${e.fontSize} em vez de 15px`)
+    if (motivos.length > 0) falhas.push({ no: descrever(aviso), motivo: `${descrever(aviso)}: ${motivos.join('; ')}` })
+  }
+  return resultadoDeTela('C-1', falhas, `${avisos.length} aviso(s) sem borda nem fundo, em 15 px`)
+}
+
+/** C-2: em 1440×900, o botão "Criar conta" termina em y ≤ 880. */
+export function c2(nos, doc) {
+  return comDoc('C-2', doc, () => {
+    if (doc.largura < 992) return naoAplicavel('C-2', 'o critério é de 1440×900')
+    const botao = botaoDoFormulario(nos)
+    if (!botao) return falhaFechada('C-2', 'nenhum botão de envio (main form button[type=submit])')
+    const fim = botao.rect.y + botao.rect.h
+    const ok = fim <= 880.5
+    return { regra: 'C-2', ok, motivo: `${descrever(botao)} termina em y=${fim.toFixed(1)} (máximo 880)`, nos_com_falha: ok ? [] : [descrever(botao)] }
+  })
+}
+
+/** C-3: o texto de aceite fica imediatamente antes do botão, a até 24 px. */
+export function c3(nos) {
+  const botao = botaoDoFormulario(nos)
+  if (!botao) return falhaFechada('C-3', 'nenhum botão de envio (main form button[type=submit])')
+  const aceites = nosDaLista(nos).filter(
+    (no) => visivel(no) && marca(no, 'noMain') && no.tag === 'p' && rectValido(no.rect) && /termos/i.test(`${no.textoTotal ?? ''} ${no.texto ?? ''}`),
+  )
+  if (aceites.length === 0) return falhaFechada('C-3', 'nenhum texto de aceite (parágrafo com "Termos")')
+  const acima = aceites.filter((no) => no.rect.y + no.rect.h <= botao.rect.y + 0.5).sort((a, b) => b.rect.y + b.rect.h - (a.rect.y + a.rect.h))
+  if (acima.length === 0) return falhaFechada('C-3', 'o texto de aceite não fica antes do botão')
+  const aceite = acima[0]
+  const distancia = botao.rect.y - (aceite.rect.y + aceite.rect.h)
+  const ok = distancia <= 24.5
+  return {
+    regra: 'C-3',
+    ok,
+    motivo: `texto de aceite a ${distancia.toFixed(1)} px do botão (máximo 24)`,
+    nos_com_falha: ok ? [] : [descrever(aceite)],
+  }
+}
+
+/** R-1: o `h1` cabe em c1–c8 em 1 linha em 1440 e em até 2 linhas em 390. */
+export function r1(nos, doc) {
+  return comDoc('R-1', doc, () => {
+    const h1 = nosDaLista(nos).find((no) => no.tag === 'h1' && visivel(no))
+    if (!h1) return falhaFechada('R-1', 'nenhum h1')
+    const entrelinha = px(h1.estilo?.lineHeight)
+    if (!(entrelinha > 0) || !(h1.rect?.h > 0)) return falhaFechada('R-1', 'h1 sem entrelinha ou sem altura')
+    const celular = celularDe(doc)
+    const maximo = celular ? 2 : 1
+    const linhas = Math.round(h1.rect.h / entrelinha)
+    const caixa = rectValido(h1.rectTexto) ? h1.rectTexto : h1.rect
+    const { direita } = limitesDeColuna(doc)
+    const esquerda = xDaColuna(1, doc.largura, doc.clientWidth)
+    const falhas = []
+    const falhar = (motivo) => falhas.push({ no: descrever(h1), motivo: `${descrever(h1)}: ${motivo}` })
+    if (linhas > maximo) falhar(`${linhas} linhas em vez de até ${maximo}`)
+    if (caixa.x + caixa.w > direita + TOL) falhar(`o texto termina em x=${(caixa.x + caixa.w).toFixed(1)}, depois de ${direita.toFixed(1)}`)
+    if (caixa.x < esquerda - TOL) falhar(`o texto começa em x=${caixa.x.toFixed(1)}, antes de ${esquerda.toFixed(1)}`)
+    return resultadoDeTela('R-1', falhas, `h1 em ${linhas} linha(s), dentro de c1–c8`)
+  })
+}
+
+/** R-2: o topo das linhas de explicação fica visível sem rolar em 1440×900 (y ≤ 760). */
+export function r2(nos, doc) {
+  return comDoc('R-2', doc, () => {
+    if (doc.largura < 992) return naoAplicavel('R-2', 'o critério é de 1440×900')
+    const linhas = nosVisiveis(nos, 'linha').filter((no) => rectValido(no.rect))
+    if (linhas.length === 0) return falhaFechada('R-2', 'nenhuma linha de explicação (.sb-linha)')
+    const topo = Math.min(...linhas.map((no) => no.rect.y))
+    const ok = topo <= 760.5
+    return { regra: 'R-2', ok, motivo: `o topo das linhas em y=${topo.toFixed(1)} (máximo 760)`, nos_com_falha: ok ? [] : ['linhas de explicação'] }
+  })
+}
+
+/** B-1: "Passo 1 de 2" é uma etiqueta de 15 px, sem caixa alta, na coluna lateral (x ≥ c9 + 32) em 1440. */
+export function b1(nos, doc) {
+  return comDoc('B-1', doc, () => {
+    const passo = nosDaLista(nos).find((no) => visivel(no) && /passo\s+\d+\s+de\s+\d+/i.test(no.texto ?? ''))
+    if (!passo) return falhaFechada('B-1', 'nenhum texto "Passo N de M"')
+    const falhas = []
+    const falhar = (motivo) => falhas.push({ no: descrever(passo), motivo: `${descrever(passo)}: ${motivo}` })
+    if (!marca(passo, 'etiqueta')) falhar('não é uma etiqueta (.sb-etiqueta)')
+    if (!perto(px(passo.estilo?.fontSize), 15, 0.01)) falhar(`font-size ${passo.estilo?.fontSize} em vez de 15px`)
+    if (passo.estilo?.textTransform === undefined) falhar('text-transform ausente')
+    else if (passo.estilo.textTransform === 'uppercase') falhar('em caixa alta')
+    if (!rectValido(passo.rect)) falhar('sem retângulo')
+    else if (celularDe(doc)) {
+      const fim = aberturaFim(nos)
+      if (fim === null) falhar('nenhuma abertura (.sb-abertura) para conferir que a etiqueta vem antes do fio')
+      else if (passo.rect.y + passo.rect.h > fim + 0.5) falhar('a etiqueta fica depois do fio da abertura')
+    } else {
+      const minimo = xDaColuna(9, doc.largura, doc.clientWidth) + 32
+      if (passo.rect.x < minimo - TOL) falhar(`x=${passo.rect.x.toFixed(1)}, antes da coluna lateral (${minimo.toFixed(1)})`)
+    }
+    return resultadoDeTela('B-1', falhas, 'etiqueta de 15 px, sem caixa alta, na coluna lateral')
+  })
+}
+
+/** B-2: o `select` tem a mesma altura, o mesmo fio e a mesma fonte do `input` (112 px, 48 px). */
+export function b2(nos, doc) {
+  return comDoc('B-2', doc, () => {
+    const controles = nosVisiveis(nos, 'controle')
+    const entrada = controles.find((c) => c.tag === 'input')
+    const selecao = controles.find((c) => c.tag === 'select')
+    if (!entrada) return falhaFechada('B-2', 'nenhum input de texto')
+    if (!selecao) return falhaFechada('B-2', 'nenhum select')
+    const campos = nosVisiveis(nos, 'campo')
+    const celular = celularDe(doc)
+    // A altura e o fio são os da linha de campo (`.sb-campo`); sem ela, o do próprio controle. Assim a
+    // tela antiga reprova pelo defeito medido (48 px, 16 px de letra) e a falta da linha vem depois.
+    const caixaDe = (controle) => {
+      const campo = campos.find((k) => contem(k, controle))
+      return (campo && caixaDoCampo(nos, campo, celular)) || controle
+    }
+    const caixaEntrada = caixaDe(entrada)
+    const caixaSelecao = caixaDe(selecao)
+    const alvo = celular ? { altura: 64, texto: 32 } : { altura: 112, texto: 48 }
+    const falhas = []
+    const falhar = (motivo) => falhas.push({ no: descrever(selecao), motivo: `${descrever(selecao)}: ${motivo}` })
+    if (!perto(caixaSelecao.rect?.h, caixaEntrada.rect?.h, TOL)) falhar(`altura ${caixaSelecao.rect?.h} contra ${caixaEntrada.rect?.h} do input`)
+    if (!perto(caixaSelecao.rect?.h, alvo.altura, TOL)) falhar(`altura ${caixaSelecao.rect?.h} em vez de ${alvo.altura}`)
+    const a = caixaEntrada.estilo ?? {}
+    const b = caixaSelecao.estilo ?? {}
+    for (const campo of ['borderBottomWidth', 'borderBottomStyle', 'borderBottomColor']) {
+      if (a[campo] === undefined || b[campo] === undefined) falhar(`${campo} ausente`)
+      else if (a[campo] !== b[campo]) falhar(`${campo} ${b[campo]} contra ${a[campo]} do input`)
+    }
+    const fonteA = px(entrada.estilo?.fontSize)
+    const fonteB = px(selecao.estilo?.fontSize)
+    if (!perto(fonteB, fonteA, 0.01)) falhar(`font-size ${selecao.estilo?.fontSize} contra ${entrada.estilo?.fontSize} do input`)
+    if (!perto(fonteB, alvo.texto, 0.01)) falhar(`font-size ${selecao.estilo?.fontSize} em vez de ${alvo.texto}px`)
+    const famA = primeiraFamilia(entrada.estilo?.fontFamily)
+    const famB = primeiraFamilia(selecao.estilo?.fontFamily)
+    if (famA === '' || famB === '') falhar('font-family ausente')
+    else if (famA !== famB) falhar(`fonte "${famB}" contra "${famA}" do input`)
+    for (const controle of [entrada, selecao]) {
+      if (!campos.some((k) => contem(k, controle))) falhas.push({ no: descrever(controle), motivo: `${descrever(controle)}: fora de uma linha de campo (.sb-campo)` })
+    }
+    return resultadoDeTela('B-2', falhas, `select e input com ${alvo.altura} px, o mesmo fio e a mesma fonte`)
+  })
+}
+
+/** B-3: nenhum bloco tem `min-height` nem altura esticada: a altura é a do conteúdo mais o padding. */
+export function b3(nos) {
+  const blocos = nosDaLista(nos).filter((no) => visivel(no) && (marca(no, 'filhoDeMain') || marca(no, 'bloco')) && rectValido(no.rect))
+  if (blocos.length === 0) return falhaFechada('B-3', 'nenhum bloco (filho de main ou [data-bloco])')
+  const falhas = []
+  for (const bloco of blocos) {
+    const falhar = (motivo) => falhas.push({ no: descrever(bloco), motivo: `${descrever(bloco)}: ${motivo}` })
+    const minimo = bloco.estilo?.minHeight
+    if (typeof minimo !== 'string') falhar('min-height ausente')
+    else if (minimo !== 'auto' && minimo !== 'normal' && px(minimo) !== 0) falhar(`min-height ${minimo}`)
+    const folga = bloco.vazioFim
+    // Uma mídia (moldura vazia, por contrato) e um bloco de até 2 px (um aviso só para o leitor de
+    // tela) não têm conteúdo de onde medir o vazio: não há altura esticada para achar.
+    const semConteudoPorContrato = marca(bloco, 'midia') || bloco.rect.h <= 2
+    if (!folga && semConteudoPorContrato && bloco.vazioFim !== undefined) continue
+    if (!folga || !Number.isFinite(folga.vazio) || !Number.isFinite(folga.margem)) falhar('sem a leitura do vazio no fim do bloco')
+    else if (folga.vazio - folga.margem > TOL) falhar(`altura esticada: ${folga.vazio.toFixed(1)} px vazios no fim (margem do último filho: ${folga.margem.toFixed(1)})`)
+  }
+  return resultadoDeTela('B-3', falhas, `${blocos.length} blocos sem min-height e sem altura esticada`)
+}
+
+/**
+ * A-1: nenhum conteúdo do `main` abaixo da abertura começa à esquerda de x de c2 (169,6) nem termina à
+ * direita de x de c9 (1132,8); abaixo de 768, dentro da área útil. As coordenadas vêm da margem e da
+ * área útil medidas (fórmula do glossário), e não de valores fixos.
+ */
+export function a1(nos, doc) {
+  return comDoc('A-1', doc, () => {
+    // Sem abertura, todo o conteúdo do main entra na conta e a falta da abertura é acusada depois.
+    const fim = aberturaFim(nos)
+    const { esquerda, direita } = limitesDeColuna(doc)
+    const itens = conteudoAbaixoDaAbertura(nos, fim ?? Number.NEGATIVE_INFINITY)
+    if (itens.length === 0) return falhaFechada('A-1', 'nenhum conteúdo abaixo da abertura')
+    const falhas = []
+    for (const { no, caixa } of itens) {
+      if (caixa.x < esquerda - TOL) falhas.push({ no: descrever(no), motivo: `${descrever(no)} começa em x=${caixa.x.toFixed(1)}, à esquerda de ${esquerda.toFixed(1)}` })
+      else if (caixa.x + caixa.w > direita + TOL) falhas.push({ no: descrever(no), motivo: `${descrever(no)} termina em x=${(caixa.x + caixa.w).toFixed(1)}, à direita de ${direita.toFixed(1)}` })
+    }
+    if (fim === null) falhas.push({ no: 'documento', motivo: 'nenhuma abertura (.sb-abertura)' })
+    return resultadoDeTela('A-1', falhas, `${itens.length} itens abaixo da abertura, entre x=${esquerda.toFixed(1)} e x=${direita.toFixed(1)}`)
+  })
+}
+
+/**
+ * A-2: as 6 âncoras estão na coluna lateral, com o mesmo x e passo de ≈32 px (em 390 ficam em linha, com
+ * quebra: só a contagem e o destino valem), e cada `href` leva a um id que existe.
+ */
+export function a2(nos, doc) {
+  return comDoc('A-2', doc, () => {
+    const ancoras = nosVisiveis(nos, 'ancoraLateral').filter((no) => rectValido(no.rect)).sort((a, b) => a.rect.y - b.rect.y || a.rect.x - b.rect.x)
+    if (ancoras.length === 0) return falhaFechada('A-2', 'nenhuma âncora na coluna lateral (.sb-abertura-lateral a[href^="#"])')
+    const falhas = []
+    if (ancoras.length !== 6) falhas.push({ no: 'coluna lateral', motivo: `${ancoras.length} âncoras em vez de 6` })
+    for (const a of ancoras) {
+      if (a.alvoExiste !== true) falhas.push({ no: descrever(a), motivo: `${descrever(a)}: o href ${a.href ?? '?'} não leva a um id existente` })
+    }
+    if (!celularDe(doc)) {
+      const x9 = xDaColuna(9, doc.largura, doc.clientWidth)
+      const x0 = ancoras[0].rect.x
+      for (const a of ancoras) {
+        if (!perto(a.rect.x, x0, TOL)) falhas.push({ no: descrever(a), motivo: `${descrever(a)}: x=${a.rect.x.toFixed(1)} contra ${x0.toFixed(1)} da primeira` })
+        if (a.rect.x < x9 - TOL) falhas.push({ no: descrever(a), motivo: `${descrever(a)}: x=${a.rect.x.toFixed(1)} fora da coluna lateral (c9 em ${x9.toFixed(1)})` })
+      }
+      for (let i = 1; i < ancoras.length; i += 1) {
+        const passo = ancoras[i].rect.y - ancoras[i - 1].rect.y
+        if (!perto(passo, 32, TOL)) falhas.push({ no: descrever(ancoras[i]), motivo: `${descrever(ancoras[i])}: passo de ${passo.toFixed(1)} px em vez de 32` })
+      }
+    }
+    return resultadoDeTela('A-2', falhas, `${ancoras.length} âncoras na coluna lateral, no mesmo x, de 32 em 32, todas com destino`)
+  })
+}
+
+/** A-3: todo título de seção tem 48 px (36 em 390), em Instrument Serif, e começa em x de c2 (169,6). */
+export function a3(nos, doc) {
+  return comDoc('A-3', doc, () => {
+    const titulos = nosVisiveis(nos, 'tituloSecao')
+    if (titulos.length === 0) return falhaFechada('A-3', 'nenhum título de seção (h2 no main)')
+    const celular = celularDe(doc)
+    const tamanho = celular ? 36 : 48
+    const x = xDaColuna(2, doc.largura, doc.clientWidth)
+    const falhas = []
+    for (const t of titulos) {
+      const motivos = []
+      if (!perto(px(t.estilo?.fontSize), tamanho, 0.01)) motivos.push(`font-size ${t.estilo?.fontSize} em vez de ${tamanho}px`)
+      const familia = primeiraFamilia(t.estilo?.fontFamily)
+      if (familia === '') motivos.push('font-family ausente')
+      else if (familia !== 'Instrument Serif') motivos.push(`fonte "${familia}" em vez de "Instrument Serif"`)
+      if (!rectValido(t.rect)) motivos.push('sem retângulo')
+      else if (!perto(t.rect.x, x, TOL)) motivos.push(`x=${t.rect.x.toFixed(1)} em vez de ${x.toFixed(1)}`)
+      if (motivos.length > 0) falhas.push({ no: descrever(t), motivo: `${descrever(t)}: ${motivos.join('; ')}` })
+    }
+    return resultadoDeTela('A-3', falhas, `${titulos.length} títulos de ${tamanho} px em Instrument Serif, em x=${x.toFixed(1)}`)
+  })
+}
+
+/** A-4: do fim de uma seção ao título da seguinte há 96 px (±8). */
+export function a4(nos) {
+  const secoes = nosDaLista(nos)
+    .filter((no) => visivel(no) && marca(no, 'secao') && rectValido(no.rect))
+    .sort((a, b) => a.rect.y - b.rect.y)
+  if (secoes.length < 2) return falhaFechada('A-4', `${secoes.length} seção(ões) com título: preciso de duas para medir a distância`)
+  const falhas = []
+  for (let i = 1; i < secoes.length; i += 1) {
+    const anterior = secoes[i - 1]
+    const tituloDaSeguinte = secoes[i].tituloDaSecao
+    if (!tituloDaSeguinte || !Number.isFinite(tituloDaSeguinte.y)) {
+      falhas.push({ no: descrever(secoes[i]), motivo: `${descrever(secoes[i])}: sem a posição do título` })
+      continue
+    }
+    const distancia = tituloDaSeguinte.y - (anterior.rect.y + anterior.rect.h)
+    if (Math.abs(distancia - 96) > 8) falhas.push({ no: descrever(secoes[i]), motivo: `${distancia.toFixed(1)} px do fim da seção anterior ao título (esperado 96 ±8)` })
+  }
+  return resultadoDeTela('A-4', falhas, `${secoes.length - 1} distâncias entre seções, todas 96 ±8`)
+}
+
+/** A-5: nenhum elemento tem `border-style: dashed`; o botão de excluir, se desativado, tem `aria-disabled="true"`. */
+export function a5(nos) {
+  const lidos = nosDaLista(nos).filter(visivel)
+  if (lidos.length === 0) return falhaFechada('A-5', 'nenhum nó')
+  const falhas = []
+  for (const no of lidos) {
+    for (const lado of ['Top', 'Right', 'Bottom', 'Left']) {
+      const estilo = no.estilo?.[`border${lado}Style`]
+      if (estilo === undefined) {
+        falhas.push({ no: descrever(no), motivo: `${descrever(no)}: border-${lado.toLowerCase()}-style ausente` })
+        break
+      }
+      if (estilo === 'dashed') {
+        falhas.push({ no: descrever(no), motivo: `${descrever(no)}: border-${lado.toLowerCase()}-style dashed` })
+        break
+      }
+    }
+  }
+  const excluir = lidos.find((no) => no.tag === 'button' && /excluir/i.test(`${no.texto ?? ''} ${no.textoTotal ?? ''}`))
+  if (!excluir) falhas.push({ no: 'documento', motivo: 'nenhum botão "Excluir" na página' })
+  else if (excluir.desativado === undefined) falhas.push({ no: descrever(excluir), motivo: `${descrever(excluir)}: sem a leitura de disabled e aria-disabled` })
+  else if (excluir.desativado === true && excluir.ariaDisabled !== 'true') {
+    falhas.push({ no: descrever(excluir), motivo: `${descrever(excluir)}: desativado sem aria-disabled="true" (aria-disabled=${JSON.stringify(excluir.ariaDisabled ?? null)})` })
+  }
+  return resultadoDeTela('A-5', falhas, 'nenhum border-style dashed; o botão Excluir, quando desativado, tem aria-disabled="true"')
+}
+
+/** A-6: a altura total em 1440, com o rodapé, é ≤ 3.200 px. */
+export function a6(nos, doc) {
+  return comDoc('A-6', doc, () => {
+    if (doc.largura < 992) return naoAplicavel('A-6', 'o critério é de 1440')
+    const rodape = nosDaLista(nos).find((no) => marca(no, 'rodape') && rectValido(no.rect))
+    const candidatas = [doc.alturaTotal, rodape ? rodape.rect.y + rodape.rect.h : undefined].filter(Number.isFinite)
+    if (candidatas.length === 0) return falhaFechada('A-6', 'altura total não medida')
+    const total = Math.max(...candidatas)
+    const ok = total <= 3200.5
+    return { regra: 'A-6', ok, motivo: `altura total de ${total.toFixed(0)} px (máximo 3200)`, nos_com_falha: ok ? [] : ['documento'] }
+  })
+}
+
+const PARTES_DO_BLOCO = ['x', 'y', 'w', 'h']
+
+/** M-1: os retângulos de todos os blocos na madrugada são iguais aos do tema claro (±1 px). */
+export function m1(doc) {
+  const escuro = doc?.blocos
+  const claro = doc?.blocosClaro
+  if (!Array.isArray(escuro) || !Array.isArray(claro) || escuro.length === 0 || claro.length === 0) {
+    return falhaFechada('M-1', 'sem os retângulos dos blocos nos dois temas')
+  }
+  const falhas = []
+  if (escuro.length !== claro.length) falhas.push({ no: 'blocos', motivo: `${escuro.length} blocos na madrugada contra ${claro.length} no claro` })
+  for (let i = 0; i < Math.min(escuro.length, claro.length); i += 1) {
+    const [a, b] = [escuro[i], claro[i]]
+    const diferencas = PARTES_DO_BLOCO.filter((parte) => !perto(a?.[parte], b?.[parte], 1))
+    if (diferencas.length > 0) {
+      falhas.push({ no: a?.id ?? `bloco ${i + 1}`, motivo: `${a?.id ?? `bloco ${i + 1}`}: ${diferencas.map((parte) => `${parte} ${a?.[parte]} contra ${b?.[parte]}`).join(', ')}` })
+    }
+  }
+  return resultadoDeTela('M-1', falhas, `${escuro.length} blocos com o mesmo retângulo nos dois temas (±1 px)`)
+}
+
+/** M-2: nenhum elemento tem borda nos 4 lados fora os botões de moldura dupla. */
+export function m2(nos) {
+  const lidos = nosDaLista(nos).filter(visivel)
+  if (lidos.length === 0) return falhaFechada('M-2', 'nenhum nó')
+  const falhas = []
+  for (const no of lidos) {
+    if (!no.estilo) falhas.push({ no: descrever(no), motivo: `${descrever(no)}: sem estilo` })
+    else if (quatroLados(no.estilo) && !marca(no, 'moldura')) falhas.push({ no: descrever(no), motivo: `${descrever(no)}: borda nos 4 lados fora da moldura dupla` })
+  }
+  return resultadoDeTela('M-2', falhas, 'borda nos 4 lados só na moldura dupla')
+}
+
+/** M-3: fundo com luminância relativa > 0,15 só em botões, com área ≤ 30.000 px². */
+export function m3(nos) {
+  const lidos = nosDaLista(nos).filter(visivel)
+  if (lidos.length === 0) return falhaFechada('M-3', 'nenhum nó')
+  const falhas = []
+  for (const no of lidos) {
+    const proprio = parseCor(no.cadeia?.[0])
+    if (!proprio) {
+      falhas.push({ no: descrever(no), motivo: `${descrever(no)}: fundo ilegível (${no.cadeia?.[0]})` })
+      continue
+    }
+    if (proprio.a <= 0.01) continue
+    const fundo = fundoReal(no.cadeia)
+    if (!fundo) {
+      falhas.push({ no: descrever(no), motivo: `${descrever(no)}: fundo incalculável (sem ancestral opaco)` })
+      continue
+    }
+    const luz = luminancia(fundo)
+    if (luz <= 0.15) continue
+    const area = (no.rect?.w ?? Number.NaN) * (no.rect?.h ?? Number.NaN)
+    if (!marca(no, 'botao') && !marca(no, 'dentroDeBotao')) falhas.push({ no: descrever(no), motivo: `${descrever(no)}: fundo claro (luminância ${luz.toFixed(2)}) fora de um botão` })
+    else if (!Number.isFinite(area)) falhas.push({ no: descrever(no), motivo: `${descrever(no)}: botão claro sem retângulo` })
+    else if (area > 30000) falhas.push({ no: descrever(no), motivo: `${descrever(no)}: botão claro de ${Math.round(area)} px² (máximo 30000)` })
+  }
+  return resultadoDeTela('M-3', falhas, 'fundo claro só em botões de até 30.000 px²')
+}
+
+/** M-4: os botões têm altura ≥ 56 e todo texto tem contraste ≥ 4,5:1, inclusive o secundário a 80%. */
+export function m4(nos) {
+  const botoes = nosDaLista(nos).filter((no) => visivel(no) && marca(no, 'botao'))
+  const textos = nosDaLista(nos).filter((no) => visivel(no) && temTexto(no))
+  if (botoes.length === 0) return falhaFechada('M-4', 'nenhum botão')
+  if (textos.length === 0) return falhaFechada('M-4', 'nenhum nó com texto')
+  const falhas = []
+  for (const no of botoes) {
+    if (!(no.rect?.h > 0)) falhas.push({ no: descrever(no), motivo: `${descrever(no)}: botão sem altura` })
+    else if (no.rect.h < 55.5) falhas.push({ no: descrever(no), motivo: `${descrever(no)}: altura ${no.rect.h.toFixed(1)} (mínimo 56)` })
+  }
+  let menor = Infinity
+  for (const no of textos) {
+    if (!(no.rect?.w > 0)) {
+      falhas.push({ no: descrever(no), motivo: `${descrever(no)}: texto com largura 0` })
+      continue
+    }
+    const razao = contraste(no.estilo?.color, no.cadeia)
+    if (razao === null) falhas.push({ no: descrever(no), motivo: `${descrever(no)}: contraste incalculável` })
+    else {
+      menor = Math.min(menor, razao)
+      if (razao < 4.5) falhas.push({ no: descrever(no), motivo: `${descrever(no)}: contraste ${razao.toFixed(2)}:1` })
+    }
+  }
+  return resultadoDeTela('M-4', falhas, `${botoes.length} botões ≥ 56 px; menor contraste ${menor.toFixed(2)}:1`)
+}
+
+/** M-5: o fio de campo de formulário tem contraste ≥ 3:1 contra o fundo. */
+export function m5(nos, doc) {
+  return comDoc('M-5', doc, () => {
+    const campos = nosVisiveis(nos, 'campo')
+    const controles = nosVisiveis(nos, 'controle')
+    if (campos.length === 0 && controles.length === 0) return falhaFechada('M-5', 'nenhum campo: sem linha (.sb-campo) e sem controle')
+    const celular = celularDe(doc)
+    const falhas = []
+    // O fio é o da linha de campo (`.sb-campo`); sem ela, o do próprio controle (a tela antiga).
+    const fios = campos.length > 0 ? campos.map((campo, i) => ({ nome: `campo ${i + 1}`, caixa: caixaDoCampo(nos, campo, celular) })) : controles.map((c) => ({ nome: descrever(c), caixa: c }))
+    for (const { nome, caixa } of fios) {
+      if (!caixa) {
+        falhas.push({ no: nome, motivo: `${nome}: sem a caixa do campo` })
+        continue
+      }
+      const e = caixa.estilo ?? {}
+      if (!(px(e.borderBottomWidth) > 0) || e.borderBottomStyle === 'none') {
+        falhas.push({ no: nome, motivo: `${nome}: sem fio inferior` })
+        continue
+      }
+      const razao = contraste(e.borderBottomColor, caixa.cadeia)
+      if (razao === null) falhas.push({ no: nome, motivo: `${nome}: contraste do fio incalculável (${e.borderBottomColor})` })
+      else if (razao < 3) falhas.push({ no: nome, motivo: `${nome}: fio com contraste ${razao.toFixed(2)}:1 (mínimo 3)` })
+    }
+    if (campos.length === 0) falhas.push({ no: 'documento', motivo: 'nenhuma linha de campo (.sb-campo)' })
+    return resultadoDeTela('M-5', falhas, `${campos.length} fios de campo com contraste ≥ 3:1`)
+  })
+}
+
+function paraSegundos(texto) {
+  const m = /^(-?[\d.]+)(ms|s)$/.exec(String(texto).trim())
+  return m ? (m[2] === 'ms' ? Number(m[1]) / 1000 : Number(m[1])) : Number.NaN
+}
+
+const PROPRIEDADES_DE_TRANSFORM = ['all', 'transform', 'translate', 'scale', 'rotate']
+
+/** M-6: nenhuma `transition` passa de 150 ms e nenhum `transform` é animado. */
+export function m6(nos) {
+  const lidos = nosDaLista(nos).filter(visivel)
+  if (lidos.length === 0) return falhaFechada('M-6', 'nenhum nó')
+  const falhas = []
+  for (const no of lidos) {
+    const e = no.estilo ?? {}
+    const falhar = (motivo) => falhas.push({ no: descrever(no), motivo: `${descrever(no)}: ${motivo}` })
+    if (typeof e.transitionDuration !== 'string' || typeof e.transitionProperty !== 'string') {
+      falhar('transition ausente na leitura')
+      continue
+    }
+    const propriedades = e.transitionProperty.split(',').map((p) => p.trim()).filter(Boolean)
+    const duracoes = e.transitionDuration.split(',').map(paraSegundos)
+    const atrasos = String(e.transitionDelay ?? '0s').split(',').map(paraSegundos)
+    if (propriedades.length === 0 || duracoes.length === 0 || duracoes.some(Number.isNaN) || atrasos.some(Number.isNaN)) {
+      falhar(`transition ilegível (${e.transitionProperty} ${e.transitionDuration})`)
+      continue
+    }
+    propriedades.forEach((propriedade, i) => {
+      const duracao = duracoes[i % duracoes.length]
+      const total = duracao + atrasos[i % atrasos.length]
+      if (duracao > 0 && total > 0.1505) falhar(`transition de ${propriedade} com ${Math.round(total * 1000)} ms`)
+      if (duracao > 0 && PROPRIEDADES_DE_TRANSFORM.includes(propriedade)) falhar(`transition anima ${propriedade === 'all' ? 'tudo (all), inclusive transform' : propriedade}`)
+    })
+    const animacao = String(e.animationName ?? 'none').trim()
+    if (animacao !== 'none' && animacao !== '') {
+      const duracao = Math.max(...String(e.animationDuration ?? '0s').split(',').map(paraSegundos))
+      if (Number.isNaN(duracao)) falhar(`animation ${animacao} com duração ilegível`)
+      else if (duracao > 0) {
+        if (duracao > 0.1505) falhar(`animation ${animacao} com ${Math.round(duracao * 1000)} ms`)
+        if (no.animacaoTransform === true) falhar(`animation ${animacao} anima transform`)
+        else if (no.animacaoTransform !== false) falhar(`animation ${animacao}: keyframes não lidos (não sei se anima transform)`)
+      }
+    }
+    if (Array.isArray(no.animacoes) && no.animacoes.some((a) => (a?.propriedades ?? []).some((p) => PROPRIEDADES_DE_TRANSFORM.includes(p) && p !== 'all'))) {
+      falhar('animação em curso sobre transform')
+    }
+  }
+  return resultadoDeTela('M-6', falhas, 'nenhuma transition acima de 150 ms e nenhum transform animado')
+}
+
+/** Os critérios de cada caso novo, na ordem; os reaproveitados (C-4, R-4, B-4, A-7) são os mesmos ids. */
+export const CRITERIOS_DO_CASO = {
+  entrar: ['E-1', 'E-2', 'E-3', 'E-4', 'E-5', 'E-6', 'E-7'],
+  criar_conta: ['E-1', 'E-2', 'E-3', 'E-5', 'E-6', 'E-7', 'C-1', 'C-2', 'C-3'],
+  recuperar_acesso: ['E-1', 'E-2', 'E-3', 'E-5', 'E-6', 'E-7', 'R-1', 'R-2'],
+  comecar_seu_nome: ['E-1', 'E-3', 'E-4', 'E-5', 'E-6', 'E-7', 'B-1', 'B-2', 'B-3'],
+  conta: ['A-1', 'A-2', 'A-3', 'A-4', 'A-5', 'A-6'],
+}
+const CRITERIOS_DA_MADRUGADA = ['M-1', 'M-2', 'M-3', 'M-4', 'M-5', 'M-6']
+
+/** Os ids dos critérios de tela de um caso e tema (a Conta, na madrugada, soma M-1 a M-6). */
+export function criteriosDoCaso(caso, tema = 'claro') {
+  const base = CRITERIOS_DO_CASO[caso] ?? []
+  return caso === 'conta' && ehMadrugada(tema) ? [...base, ...CRITERIOS_DA_MADRUGADA] : base
+}
+
+const REGRAS_DE_TELA = {
+  'E-1': ({ nos, doc }) => e1(nos, doc),
+  'E-2': ({ nos, doc }) => e2(nos, doc),
+  'E-3': ({ nos, doc }) => e3(nos, doc),
+  'E-4': ({ nos, doc }) => e4(nos, doc),
+  'E-5': ({ nos, doc }) => e5(nos, doc),
+  'E-6': ({ nos, doc }) => e6(nos, doc),
+  'E-7': ({ doc, tema }) => e7(doc, tema),
+  'C-1': ({ nos }) => c1(nos),
+  'C-2': ({ nos, doc }) => c2(nos, doc),
+  'C-3': ({ nos }) => c3(nos),
+  'R-1': ({ nos, doc }) => r1(nos, doc),
+  'R-2': ({ nos, doc }) => r2(nos, doc),
+  'B-1': ({ nos, doc }) => b1(nos, doc),
+  'B-2': ({ nos, doc }) => b2(nos, doc),
+  'B-3': ({ nos }) => b3(nos),
+  'A-1': ({ nos, doc }) => a1(nos, doc),
+  'A-2': ({ nos, doc }) => a2(nos, doc),
+  'A-3': ({ nos, doc }) => a3(nos, doc),
+  'A-4': ({ nos }) => a4(nos),
+  'A-5': ({ nos }) => a5(nos),
+  'A-6': ({ nos, doc }) => a6(nos, doc),
+  'M-1': ({ doc }) => m1(doc),
+  'M-2': ({ nos }) => m2(nos),
+  'M-3': ({ nos }) => m3(nos),
+  'M-4': ({ nos }) => m4(nos),
+  'M-5': ({ nos, doc }) => m5(nos, doc),
+  'M-6': ({ nos }) => m6(nos),
+}
+
+const OLHAR_E6 = 'coluna vazia ao lado de um bloco: o número mede só o que passa de x de c9 (G8 mede a diferença de altura, não o vazio)'
+const OLHAR_E7 = 'enviar o formulário vazio e olhar o erro em 17/24 abaixo do campo, sem mudar a altura da linha de 112 px (a medição não envia o formulário)'
+const OLHAR_PESO = 'peso visual: o título, o formulário e o botão se leem nessa ordem, sem um bloco que pese mais que o resto'
+
+/** Os critérios que só um olho decide, por caso: o id e uma frase de o que olhar. */
+export const MANUAIS_DO_CASO = {
+  entrar: [
+    { id: 'E-6', olhar: OLHAR_E6 },
+    { id: 'E-7', olhar: OLHAR_E7 },
+    { id: 'E-peso', olhar: OLHAR_PESO },
+  ],
+  criar_conta: [
+    { id: 'E-6', olhar: OLHAR_E6 },
+    { id: 'E-7', olhar: OLHAR_E7 },
+    { id: 'C-peso', olhar: OLHAR_PESO },
+  ],
+  recuperar_acesso: [
+    { id: 'E-6', olhar: OLHAR_E6 },
+    { id: 'E-7', olhar: OLHAR_E7 },
+    { id: 'R-3', olhar: 'depois do envio, a mensagem ocupa a mesma linha de 112 px e a página não muda de altura (a medição não envia o formulário)' },
+    { id: 'R-peso', olhar: OLHAR_PESO },
+  ],
+  comecar_seu_nome: [
+    { id: 'E-6', olhar: OLHAR_E6 },
+    { id: 'E-7', olhar: OLHAR_E7 },
+    { id: 'B-peso', olhar: OLHAR_PESO },
+  ],
+  conta: [
+    { id: 'A-3', olhar: 'a serifa dos títulos de seção é condensada (o número só confere a família Instrument Serif, o tamanho e o x)' },
+    { id: 'A-peso', olhar: 'a lateral com as 6 âncoras e as seções se leem como uma coluna só, sem lado vazio' },
+  ],
+}
+
+/**
+ * Avalia os critérios de tela de um caso novo: `criterios` (um resultado por id, todos bloqueantes) e
+ * `criterios_manuais` (o que só um olho decide). Para os casos antigos, as duas listas saem vazias.
+ */
+export function avaliarCriterios({ doc, nos, tema }, caso) {
+  const ids = criteriosDoCaso(caso, tema)
+  const criterios = ids.map((id) => {
+    let r
+    try {
+      r = REGRAS_DE_TELA[id]({ doc, nos, tema })
+    } catch (erro) {
+      r = falhaFechada(id, `erro ao medir: ${erro.message}`)
+    }
+    return { ...r, bloqueia: true }
+  })
+  return { criterios, criterios_manuais: MANUAIS_DO_CASO[caso] ?? [] }
+}
+
+/**
+ * As regras G que bloqueiam em cada caso: em `sistema`, todas (G1 a G12, SB3 e NUM); nas 5 telas novas,
+ * G1 a G12 e SB3 (NUM só se registra); nos outros, só G2 e G9 (as demais só se registram).
+ */
 export function bloqueantesDoCaso(caso) {
-  return caso === 'sistema' ? ['G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7', 'G8', 'G9', 'G10', 'G11', 'G12', 'SB3', 'NUM'] : ['G2', 'G9']
+  if (caso === 'sistema') return [...G_TODAS, 'NUM']
+  if (Object.hasOwn(CASOS_DE_ACESSO, caso)) return G_TODAS
+  return ['G2', 'G9']
 }
 
 /** Avalia as regras sobre as leituras de uma página: `{ doc, nos, tema }`. */
@@ -521,9 +1493,12 @@ export function avaliarTudo({ doc, nos, tema }, caso = 'sistema') {
   return todas.map((r) => ({ ...r, bloqueia: bloqueantes.includes(r.regra) }))
 }
 
-/** A linha de resumo: `RESUMO <arquivo> G1 ok G2 FALHA ...`; falha que não bloqueia sai como "registrada". */
-export function resumo(arquivo, resultados) {
-  const partes = resultados.map((r) => `${r.regra} ${r.ok ? 'ok' : r.bloqueia ? 'FALHA' : 'registrada'}`)
+/**
+ * A linha de resumo: `RESUMO <arquivo> G1 ok G2 FALHA ... E-1 ok E-2 FALHA`; a falha que não bloqueia
+ * sai como "registrada". Os critérios de tela (`criterios`) vêm depois das regras G.
+ */
+export function resumo(arquivo, resultados, criterios = []) {
+  const partes = [...resultados, ...criterios].map((r) => `${r.regra} ${r.ok ? 'ok' : r.bloqueia ? 'FALHA' : 'registrada'}`)
   return `RESUMO ${arquivo} ${partes.join(' ')}`
 }
 
@@ -534,12 +1509,15 @@ export function lerArgumentos(argumentos) {
     throw new Error('uso: node web/scripts/medir-dom.mjs <pasta> <caso>:<tema>:<LxA> ...')
   }
   const pedidos = specs.map((spec) => {
-    const m = /^([a-z]+):([a-z]+):(\d+)x(\d+)$/.exec(spec)
+    const m = /^([a-z_]+):([a-z]+):(\d+)x(\d+)$/.exec(spec)
     if (!m) throw new Error(`argumento inválido: ${spec} (esperado <caso>:<tema>:<LxA>)`)
     const [, caso, tema, largura, altura] = m
     if (!CASOS.includes(caso)) throw new Error(`caso desconhecido: ${caso} (use ${CASOS.join(', ')})`)
     if (!TEMAS.includes(tema)) throw new Error(`tema desconhecido: ${tema} (use ${TEMAS.join(', ')})`)
     if (caso === 'inicio' && tema === 'madrugada') throw new Error('o Início é sempre claro: não há inicio:madrugada')
+    if (tema === 'madrugada' && CASOS_DE_ACESSO[caso]?.acesso === 'publica') {
+      throw new Error(`a tela ${CASOS_DE_ACESSO[caso].nome} é pública e sempre clara (sem sessão não há o botão "Modo madrugada"): não há ${caso}:madrugada`)
+    }
     return { caso, tema, largura: Number(largura), altura: Number(altura) }
   })
   return { pasta, pedidos }
@@ -566,6 +1544,7 @@ export function coletarNaPagina() {
     altura: window.innerHeight,
     clientWidth: raiz.clientWidth,
     scrollWidth: raiz.scrollWidth,
+    alturaTotal: raiz.scrollHeight,
     grupos: [],
     nomeRodape: null,
   }
@@ -669,6 +1648,109 @@ export function coletarNaPagina() {
   }
   doc.fontes = { zillaSlab700: faceCarregada('700', '112px') }
 
+  // Os critérios de tela: o retângulo do próprio texto (a caixa de um parágrafo é mais larga que o
+  // texto), o pseudo-elemento (o fio vertical do campo), os keyframes de uma animação e o vazio no
+  // fim de um bloco. Cada leitura que falha vai como nula: a regra falha fechado.
+  const rectTextoDe = (el) => {
+    let esquerda = Infinity
+    let topo = Infinity
+    let direita = -Infinity
+    let base = -Infinity
+    for (const no of el.childNodes) {
+      if (no.nodeType !== 3 || colapsar(no.textContent) === '') continue
+      const faixa = document.createRange()
+      faixa.selectNodeContents(no)
+      const r = faixa.getBoundingClientRect()
+      if (!(r.width > 0 || r.height > 0)) continue
+      esquerda = Math.min(esquerda, r.left)
+      topo = Math.min(topo, r.top)
+      direita = Math.max(direita, r.right)
+      base = Math.max(base, r.bottom)
+    }
+    return esquerda === Infinity ? null : { x: esquerda + sx, y: topo + sy, w: direita - esquerda, h: base - topo }
+  }
+  const pseudoDe = (el, cs, r, qual) => {
+    try {
+      const ps = getComputedStyle(el, qual)
+      const conteudo = ps.content
+      if (!conteudo || conteudo === 'none' || conteudo === 'normal') return null
+      const absoluto = (ps.position === 'absolute' || ps.position === 'fixed') && cs.position !== 'static'
+      const esquerda = parseFloat(ps.left)
+      const topo = parseFloat(ps.top)
+      return {
+        conteudo,
+        display: ps.display,
+        position: ps.position,
+        x: absoluto && Number.isFinite(esquerda) ? r.x + sx + (parseFloat(cs.borderLeftWidth) || 0) + esquerda : null,
+        y: absoluto && Number.isFinite(topo) ? r.y + sy + (parseFloat(cs.borderTopWidth) || 0) + topo : null,
+        w: parseFloat(ps.width),
+        h: parseFloat(ps.height),
+        backgroundColor: ps.backgroundColor,
+      }
+    } catch {
+      return null
+    }
+  }
+  const ehTransform = (propriedade) => /^(transform|translate|scale|rotate)$/.test(propriedade)
+  const regrasComTransform = (regras, nome) => {
+    let achou = false
+    let leu = true
+    for (const regra of regras) {
+      if (regra.type === 7 && regra.name === nome) {
+        for (const quadro of regra.cssRules) for (const propriedade of quadro.style) if (ehTransform(propriedade)) achou = true
+      } else if (regra.cssRules) {
+        const dentro = regrasComTransform(regra.cssRules, nome)
+        if (dentro === null) leu = false
+        else if (dentro) achou = true
+      }
+    }
+    return achou ? true : leu ? false : null
+  }
+  const animacaoComTransform = (nomes) => {
+    let resultado = false
+    for (const nome of nomes.split(',').map((n) => n.trim()).filter((n) => n !== 'none' && n !== '')) {
+      for (const folha of document.styleSheets) {
+        let regras
+        try {
+          regras = folha.cssRules
+        } catch {
+          return null
+        }
+        const achou = regrasComTransform(regras, nome)
+        if (achou === null) return null
+        if (achou) resultado = true
+      }
+    }
+    return resultado
+  }
+  const vazioNoFim = (el, cs) => {
+    let fim = -Infinity
+    let margem = 0
+    // O texto do próprio bloco (um `<h1>` só com texto não tem elemento filho).
+    for (const no of el.childNodes) {
+      if (no.nodeType !== 3 || colapsar(no.textContent) === '') continue
+      const faixa = document.createRange()
+      faixa.selectNodeContents(no)
+      const tr = faixa.getBoundingClientRect()
+      if ((tr.width > 0 || tr.height > 0) && tr.bottom > fim) fim = tr.bottom
+    }
+    for (const filho of el.querySelectorAll('*')) {
+      if (ignorar.has(filho.tagName)) continue
+      const fr = filho.getBoundingClientRect()
+      if (!(fr.width > 0 && fr.height > 0)) continue
+      const fs = getComputedStyle(filho)
+      if (fs.position === 'absolute' || fs.position === 'fixed') continue
+      if (fr.bottom > fim) {
+        fim = fr.bottom
+        margem = parseFloat(fs.marginBottom) || 0
+      }
+    }
+    if (fim === -Infinity) return null
+    const base = el.getBoundingClientRect().bottom
+    return { vazio: base - (parseFloat(cs.paddingBottom) || 0) - (parseFloat(cs.borderBottomWidth) || 0) - fim, margem }
+  }
+  const tiposSemTexto = ['hidden', 'checkbox', 'radio', 'range', 'color', 'file', 'image', 'submit', 'button', 'reset']
+
   const elementos = [...document.body.querySelectorAll('*')].filter((el) => !ignorar.has(el.tagName))
   const nos = elementos.map((el) => {
     const cs = getComputedStyle(el)
@@ -706,6 +1788,13 @@ export function coletarNaPagina() {
         top: cs.top,
         fontFamily: cs.fontFamily,
         fontVariantNumeric: cs.fontVariantNumeric,
+        minHeight: cs.minHeight,
+        borderBottomColor: cs.borderBottomColor,
+        transitionProperty: cs.transitionProperty,
+        transitionDuration: cs.transitionDuration,
+        transitionDelay: cs.transitionDelay,
+        animationName: cs.animationName,
+        animationDuration: cs.animationDuration,
       },
       m: {
         cabecalho: el.matches('[data-cabecalho]'),
@@ -727,8 +1816,70 @@ export function coletarNaPagina() {
         interativo: el.matches('a, button, input, select, textarea, [role="button"]'),
         // NUM: os números da faixa e o cronômetro em Zilla Slab.
         numero: el.matches('[data-numero], .t-cronometro, [data-cronometro]'),
+        // Critérios de tela (E, C, R, B, A e M).
+        noMain: el.closest('main') !== null && el.tagName !== 'MAIN',
+        dentroMidia: el.closest('[data-midia]') !== null,
+        abertura: el.matches('.sb-abertura, [data-abertura]'),
+        bloco: el.matches('[data-bloco]'),
+        campo: el.matches('.sb-campo'),
+        campoControle: el.matches('.sb-campo-controle'),
+        rotuloCampo: el.tagName === 'LABEL' && el.closest('main') !== null,
+        controle:
+          el.closest('main') !== null &&
+          el.matches('input, select, textarea') &&
+          !tiposSemTexto.includes((el.getAttribute('type') || 'text').toLowerCase()),
+        botaoForm: el.matches('main form button[type="submit"]'),
+        botao: el.tagName === 'BUTTON' || el.matches('[data-botao], [role="button"]'),
+        // O miolo de um botão de moldura dupla é parte do botão (M-3).
+        dentroDeBotao: el.parentElement !== null && el.parentElement.closest('button, [data-botao], [role="button"]') !== null,
+        ancoraLateral: el.matches('.sb-abertura-lateral a[href^="#"]'),
+        etiqueta: el.matches('.sb-etiqueta'),
+        avisoDemo: el.matches('[data-aviso="demonstracao"], [data-aviso="banco-de-demonstracao"]'),
+        linha: el.matches('.sb-linha'),
+        tituloSecao: el.tagName === 'H2' && el.closest('main') !== null,
+        secao: el.closest('main') !== null && el.matches('section, [data-bloco]') && !el.matches('.sb-abertura, [data-abertura]') && el.querySelector('h2') !== null,
       },
       cadeia: cadeiaDe(el),
+    }
+    if (no.m.noMain && textoProprio(el) !== '') no.rectTexto = rectTextoDe(el)
+    if (no.m.noMain) {
+      const pseudo = {}
+      const antes = pseudoDe(el, cs, r, '::before')
+      const depois = pseudoDe(el, cs, r, '::after')
+      if (antes) pseudo.antes = antes
+      if (depois) pseudo.depois = depois
+      if (antes || depois) no.pseudo = pseudo
+    }
+    if (no.m.ancoraLateral) {
+      const destino = el.getAttribute('href') ?? ''
+      let id = destino.slice(1)
+      try {
+        id = decodeURIComponent(id)
+      } catch {
+        /* o href cru serve */
+      }
+      no.href = destino
+      no.alvoExiste = id !== '' && document.getElementById(id) !== null
+    }
+    if (el.tagName === 'BUTTON' || el.tagName === 'A') {
+      no.desativado = Boolean(el.disabled) || el.hasAttribute('aria-disabled')
+      no.ariaDisabled = el.getAttribute('aria-disabled')
+    }
+    if (no.m.secao) {
+      const titulo = el.querySelector('h2')
+      const tr = titulo.getBoundingClientRect()
+      no.tituloDaSecao = { x: tr.x + sx, y: tr.y + sy, h: tr.height }
+    }
+    if (no.m.filhoDeMain || no.m.bloco) no.vazioFim = vazioNoFim(el, cs)
+    if (cs.animationName && cs.animationName !== 'none') no.animacaoTransform = animacaoComTransform(cs.animationName)
+    if (typeof el.getAnimations === 'function') {
+      const lista = el.getAnimations()
+      if (lista.length > 0) {
+        no.animacoes = lista.map((a) => ({
+          tipo: a.constructor ? a.constructor.name : '?',
+          propriedades: a.effect && typeof a.effect.getKeyframes === 'function' ? [...new Set(a.effect.getKeyframes().flatMap((k) => Object.keys(k)))] : [],
+        }))
+      }
     }
     if (no.m.numero) {
       no.fonte = {
@@ -784,7 +1935,51 @@ export function coletarNaPagina() {
     doc.nomeRodape = { larguraTexto, areaUtil: area.getBoundingClientRect().width }
   }
 
+  // Os retângulos dos blocos (o cabeçalho, os filhos de <main>, os [data-bloco] e o rodapé), em ordem
+  // de DOM: a madrugada (M-1) os compara com os do tema claro, lidos antes de ligar o botão.
+  doc.blocos = nos
+    .filter((n) => n.visivel && (n.m.cabecalho || n.m.filhoDeMain || n.m.bloco || n.m.rodape))
+    .map((n, i) => ({ id: `${i + 1}:${n.tag}`, x: n.rect.x, y: n.rect.y, w: n.rect.w, h: n.rect.h }))
+
   return { doc, nos }
+}
+
+/**
+ * O anel de foco (E-7): foca o primeiro controle do formulário e o botão de envio, lê o `outline`
+ * calculado e devolve o foco. Roda numa segunda passada, depois de uma tecla Tab, para o `:focus-visible`
+ * valer; e depois da coleta, para o foco não mexer nas medidas. Não escreve nada nos campos.
+ */
+export function lerFocoNaPagina() {
+  const sx = window.scrollX
+  const sy = window.scrollY
+  const tiposSemTexto = ['hidden', 'checkbox', 'radio', 'range', 'color', 'file', 'image', 'submit', 'button', 'reset']
+  const aparece = (el) => {
+    const r = el.getBoundingClientRect()
+    return typeof el.checkVisibility === 'function' ? el.checkVisibility({ visibilityProperty: true }) : r.width > 0 && r.height > 0
+  }
+  const ler = (el) => {
+    if (!el) return null
+    el.focus({ preventScroll: true })
+    if (document.activeElement !== el) return { focou: false }
+    const cs = getComputedStyle(el)
+    const leitura = {
+      focou: true,
+      tag: el.tagName.toLowerCase(),
+      outlineStyle: cs.outlineStyle,
+      outlineWidth: cs.outlineWidth,
+      outlineOffset: cs.outlineOffset,
+      outlineColor: cs.outlineColor,
+    }
+    el.blur()
+    return leitura
+  }
+  const controle = [...document.querySelectorAll('main form input, main form select, main form textarea')].find(
+    (el) => !tiposSemTexto.includes((el.getAttribute('type') || 'text').toLowerCase()) && aparece(el),
+  )
+  const botao = [...document.querySelectorAll('main form button[type="submit"]')].find(aparece)
+  const foco = { controle: ler(controle), botao: ler(botao) }
+  window.scrollTo(sx, sy)
+  return foco
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -855,9 +2050,105 @@ async function clicarPorTexto(cdp, seletor, texto) {
   await espera(300)
 }
 
-async function abrirCaso(cdp, base, { caso, tema }) {
+// As 5 telas de acesso e Conta (copiado do .oc/cdp.mjs: o medidor não importa de `.oc/`). Cada caso
+// começa limpando a sessão, para os casos públicos não herdarem o login do caso anterior.
+async function limparSessao(cdp, base) {
+  await cdp.enviar('Page.navigate', { url: new URL('entrar', base).href })
+  await esperarPronto(cdp)
+  await avaliar(cdp, `localStorage.clear(); sessionStorage.clear(); true`)
+}
+
+async function esperarSemOcupado(cdp) {
+  for (let i = 0; i < 100; i += 1) {
+    const ocupado = await avaliar(cdp, `!!document.querySelector('main[aria-busy="true"]')`).catch(() => true)
+    if (!ocupado) break
+    await espera(100)
+  }
+  await espera(200)
+}
+
+async function preencherPorRotulo(cdp, rotulo, valor) {
+  const feito = await avaliar(
+    cdp,
+    `(() => { const l = [...document.querySelectorAll('label')].find((x) => x.textContent.trim().toLowerCase().startsWith(${JSON.stringify(rotulo.toLowerCase())})); const i = l && (l.control || document.getElementById(l.htmlFor)); if (!i) return false; Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(i, ${JSON.stringify(valor)}); i.dispatchEvent(new Event('input', { bubbles: true })); return true })()`,
+  )
+  if (!feito) throw new Error(`não achei o campo "${rotulo}"`)
+}
+
+const SENHA_LOCAL = 'senha-local-ficticia'
+
+async function entrarComo(cdp, base, email, senha) {
+  await cdp.enviar('Page.navigate', { url: new URL('entrar', base).href })
+  await esperarPronto(cdp)
+  await preencherPorRotulo(cdp, 'E-mail', email)
+  await preencherPorRotulo(cdp, 'Senha', senha)
+  const enviou = await avaliar(cdp, `(() => { const b = document.querySelector('main form button[type="submit"]'); if (!b) return false; b.click(); return true })()`)
+  if (!enviou) throw new Error('não achei o botão de envio do formulário de /entrar')
+  for (let i = 0; i < 100; i += 1) {
+    if ((await avaliar(cdp, `location.pathname`)) !== '/entrar') break
+    await espera(150)
+  }
+  if ((await avaliar(cdp, `location.pathname`)) === '/entrar') throw new Error('o login não saiu de /entrar')
+}
+
+/** Um usuário novo, sem conta, criado pela API de Auth local (só loopback; a chave não é impressa). */
+async function criarUsuarioSemConta(ambiente) {
+  const email = `incompleta-${Date.now()}@exemplo.invalid`
+  const resposta = await fetch(`${ambiente.API_URL}/auth/v1/signup`, {
+    method: 'POST',
+    headers: { apikey: ambiente.ANON_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password: SENHA_LOCAL }),
+  })
+  if (!resposta.ok) throw new Error(`o cadastro local do usuário novo falhou (${resposta.status})`)
+  return email
+}
+
+async function abrirCasoDeAcesso(cdp, base, ambiente, { caso, tema }) {
+  const { caminho, acesso } = CASOS_DE_ACESSO[caso]
+  await limparSessao(cdp, base)
+  if (acesso === 'ana') await entrarComo(cdp, base, 'ana@exemplo.invalid', SENHA_LOCAL)
+  else if (acesso === 'incompleta') await entrarComo(cdp, base, await criarUsuarioSemConta(ambiente), SENHA_LOCAL)
+  // O destino depois do login pode ser outro (a sessão está guardada no navegador): vai à tela do caso.
+  const esperado = `/${caminho}`
+  if (acesso === 'publica' || (await avaliar(cdp, `location.pathname`)) !== esperado) {
+    await cdp.enviar('Page.navigate', { url: new URL(caminho, base).href })
+  }
+  await esperarPronto(cdp)
+  await esperarSemOcupado(cdp)
+  const chegou = await avaliar(cdp, `location.pathname`)
+  if (chegou !== esperado) throw new Error(`${caso}: a página parou em ${chegou} em vez de ${esperado}`)
+  let blocosClaro
+  if (tema === 'madrugada') {
+    // M-1: os blocos do tema claro, lidos antes de ligar o botão, para comparar com os da madrugada.
+    blocosClaro = (await avaliar(cdp, `(${coletarNaPagina.toString()})()`)).doc.blocos
+    const ligou = await avaliar(cdp, `(() => { const b = document.querySelector('[data-cabecalho] button[aria-pressed]'); if (!b) return false; b.click(); return true })()`)
+    if (!ligou) throw new Error('não achei o botão "Modo madrugada" no cabeçalho')
+    await espera(300)
+    const atual = await avaliar(cdp, `document.documentElement.getAttribute('data-tema')`)
+    if (atual !== 'madrugada') throw new Error('o tema não virou madrugada')
+  }
+  await avaliar(cdp, `document.activeElement && document.activeElement.blur && document.activeElement.blur(); window.scrollTo(0, 0); true`)
+  for (let i = 0; i < 30; i += 1) {
+    const rodando = await avaliar(cdp, `document.getAnimations().filter((a) => a.playState === 'running').length`)
+    if (!rodando) break
+    await espera(100)
+  }
+  await espera(200)
+  return { blocosClaro }
+}
+
+/** Uma tecla Tab: o Chrome passa a tratar o foco seguinte como foco de teclado (`:focus-visible`). */
+async function teclarTab(cdp) {
+  const tecla = { key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9, nativeVirtualKeyCode: 9 }
+  await cdp.enviar('Input.dispatchKeyEvent', { type: 'rawKeyDown', ...tecla })
+  await cdp.enviar('Input.dispatchKeyEvent', { type: 'keyUp', ...tecla })
+}
+
+async function abrirCaso(cdp, base, ambiente, pedido) {
+  const { caso, tema } = pedido
   // Movimento reduzido sempre (G12): as medidas e as capturas usam o mesmo modo.
   await cdp.enviar('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] })
+  if (Object.hasOwn(CASOS_DE_ACESSO, caso)) return abrirCasoDeAcesso(cdp, base, ambiente, pedido)
   const caminho = { sistema: 'sistema', inicio: '', hoje: 'app/hoje', sessao: 'app/hoje' }[caso]
   await cdp.enviar('Page.navigate', { url: new URL(caminho, base).href })
   await esperarPronto(cdp)
@@ -885,24 +2176,36 @@ async function abrirCaso(cdp, base, { caso, tema }) {
 async function principal(argumentos) {
   let pasta
   let pedidos
-  const baseUrl = process.env.BASE_URL ?? 'http://127.0.0.1:5244/'
+  let ambiente
   try {
     ;({ pasta, pedidos } = lerArgumentos(argumentos))
-    verificarLoopback(baseUrl)
+    ambiente = escolherAmbiente(process.env, lerArquivoAmbiente())
+    verificarAmbiente(ambiente)
+    if (pedidos.some((p) => p.caso === 'comecar_seu_nome') && (!ambiente.API_URL || !ambiente.ANON_KEY)) {
+      throw new Error('comecar_seu_nome precisa de API_URL e ANON_KEY (variável de ambiente ou .oc/ambiente.json)')
+    }
   } catch (erro) {
     console.error(erro.message)
     return 2
   }
-  const porta = Number(process.env.CDP_PORTA ?? 9344)
+  const baseUrl = ambiente.BASE_URL
   fs.mkdirSync(pasta, { recursive: true })
   let cdp
   try {
-    cdp = await abrirAlvo(porta)
+    cdp = await abrirAlvo(ambiente.CDP_PORTA)
     for (const pedido of pedidos) {
       await cdp.enviar('Emulation.setDeviceMetricsOverride', { width: pedido.largura, height: pedido.altura, deviceScaleFactor: 1, mobile: false })
-      await abrirCaso(cdp, baseUrl, pedido)
+      const aberto = await abrirCaso(cdp, baseUrl, ambiente, pedido)
       const lido = await avaliar(cdp, `(${coletarNaPagina.toString()})()`)
+      const novo = Object.hasOwn(CASOS_DE_ACESSO, pedido.caso)
+      if (novo) {
+        // As leituras que dependem de um estado: o foco (depois de um Tab) e os blocos do tema claro.
+        await teclarTab(cdp)
+        lido.doc.foco = await avaliar(cdp, `(${lerFocoNaPagina.toString()})()`)
+        if (aberto?.blocosClaro) lido.doc.blocosClaro = aberto.blocosClaro
+      }
       const resultados = avaliarTudo({ ...lido, tema: pedido.tema }, pedido.caso)
+      const { criterios, criterios_manuais } = avaliarCriterios({ ...lido, tema: pedido.tema }, pedido.caso)
       const arquivo = `${pedido.caso}_${pedido.tema}_${pedido.largura}.json`
       const medidas = {
         largura: lido.doc.largura,
@@ -912,12 +2215,17 @@ async function principal(argumentos) {
         rodape: lido.nos.find((n) => n.m.rodape)?.rect ?? null,
         nomeRodape: lido.doc.nomeRodape,
         nos: lido.nos.length,
+        ...(novo ? { alturaTotal: lido.doc.alturaTotal, foco: lido.doc.foco ?? null } : {}),
       }
       fs.writeFileSync(
         path.join(pasta, arquivo),
-        JSON.stringify({ caso: pedido.caso, tema: pedido.tema, largura: pedido.largura, altura: pedido.altura, medido_em: new Date().toISOString(), medidas, resultados }, null, 2),
+        JSON.stringify(
+          { caso: pedido.caso, tema: pedido.tema, largura: pedido.largura, altura: pedido.altura, medido_em: new Date().toISOString(), medidas, resultados, criterios, criterios_manuais },
+          null,
+          2,
+        ),
       )
-      console.log(resumo(arquivo, resultados))
+      console.log(resumo(arquivo, resultados, criterios))
     }
     return 0
   } catch (erro) {
