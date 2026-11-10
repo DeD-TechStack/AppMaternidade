@@ -1610,48 +1610,139 @@ describe('rodada 4: cabeçalho, desativado, modo madrugada, rodapé em 390 e ró
       expect(corpo).toMatch(/border:\s*1px solid var\(--cor-texto\)/)
     })
 
-    it('ligado preenche o botão (não só o miolo) com o destaque e o texto sobre-destaque', () => {
+    // Parte 18: o ligado deixa o urucum (que fica só no botão primário) e passa a ser o fundo `--cor-texto` (#E3D6C3 na madrugada)
+    // com o texto `--cor-fundo` (#17120E). Antes: fundo `--cor-destaque` e texto `--cor-sobre-destaque`. As 5 asserções abaixo foram trocadas.
+    it('ligado preenche o botão (não só o miolo) com a cor do texto da madrugada (fundo) e a da página (texto), sem urucum', () => {
       const corpo = corpoBase('.sb-moldura[data-ligado]')
       expect(corpo, 'regra de .sb-moldura[data-ligado]').not.toBe('')
-      expect(corpo).toMatch(/background-color:\s*var\(--cor-destaque\)/)
-      expect(corpo).toMatch(/(?:^|[\s;])color:\s*var\(--cor-sobre-destaque\)/)
+      expect(corpo).toMatch(/background-color:\s*var\(--cor-texto\)/)
+      expect(corpo).toMatch(/border-color:\s*var\(--cor-texto\)/)
+      expect(corpo).toMatch(/(?:^|[\s;])color:\s*var\(--cor-fundo\)/)
+      expect(corpo).not.toMatch(/destaque/)
     })
 
-    it('ligado inverte a moldura dupla: o miolo ganha a linha na cor do texto sobre o destaque e perde o fundo próprio', () => {
+    it('ligado inverte a moldura dupla: o miolo ganha a linha escura (a cor da página) e perde o fundo próprio', () => {
       const corpo = corpoBase('.sb-moldura[data-ligado] .sb-moldura-miolo')
-      expect(corpo).toMatch(/border-color:\s*var\(--cor-sobre-destaque\)/)
+      expect(corpo).toMatch(/border-color:\s*var\(--cor-fundo\)/)
       expect(corpo).toMatch(/background-color:\s*transparent/)
-      expect(corpo).not.toMatch(/papel-fundo/)
+      expect(corpo).not.toMatch(/papel-fundo|destaque/)
     })
 
-    it('o fundo do botão ligado tem 3:1 ou mais contra a página e o texto tem 4,5:1 ou mais, no dia e na madrugada', () => {
-      for (const [bloco, nome] of [
-        [claro, 'dia'],
-        [madrugada, 'madrugada'],
-      ] as const) {
-        const destaque = hexDe(bloco, '--cor-destaque')!
-        const sobre = hexDe(bloco, '--cor-sobre-destaque')!
-        const pagina = hexDe(bloco, '--cor-fundo')!
-        expect(contraste(destaque, pagina), `${nome}: fundo do botão contra a página`).toBeGreaterThanOrEqual(3)
-        expect(contraste(sobre, destaque), `${nome}: texto sobre o fundo do botão`).toBeGreaterThanOrEqual(4.5)
+    it('o fundo do botão ligado da madrugada tem 3:1 ou mais contra a página (12,99:1) e o texto tem 4,5:1 ou mais (12,99:1)', () => {
+      const fundo = hexDe(madrugada, '--cor-texto')!
+      const pagina = hexDe(madrugada, '--cor-fundo')!
+      expect(contraste(fundo, pagina), 'madrugada: fundo do botão contra a página').toBeGreaterThanOrEqual(12)
+      expect(contraste(pagina, fundo), 'madrugada: texto sobre o fundo do botão').toBeGreaterThanOrEqual(12)
+    })
+
+    it('o ligado inverte de novo ao passar o mouse (miolo escuro, texto claro), também abaixo de 768', () => {
+      const corpo = corpoBase('.sb-moldura[data-ligado]:hover .sb-moldura-miolo')
+      expect(corpo).toMatch(/background-color:\s*var\(--cor-fundo\)/)
+      expect(corpo).toMatch(/(?:^|[\s;])color:\s*var\(--cor-texto\)/)
+      expect(corpo).not.toMatch(/papel-fundo|destaque/)
+    })
+
+    it('abaixo de 768 o ligado não depende só do fundo: a regra de miolo ligado do celular pinta o miolo da cor do texto, sem urucum nem outra cor', () => {
+      // V7 (parte 17) deixou a regra de miolo ligado do celular só com o mesmo urucum (`--cor-destaque`); parte 18: agora é `--cor-texto`
+      // (fundo) e `--cor-fundo` (texto), sem `border` (a linha interna escura é a da regra base), `color-mix`, cor literal nem `transparent`.
+      const corpo = corpoCelular('.sb-cab-acao[data-ligado] .sb-moldura-miolo')
+      expect(corpo).toMatch(/background-color:\s*var\(--cor-texto\)/)
+      expect(corpo).toMatch(/(?:^|[\s;])color:\s*var\(--cor-fundo\)/)
+      expect(corpo).not.toMatch(/border|color-mix|#[0-9a-f]{3,6}|rgb|papel-fundo|transparent|destaque/i)
+      expect(corpoBase('.sb-moldura[data-ligado] .sb-moldura-miolo')).toMatch(/border-color:\s*var\(--cor-fundo\)/)
+    })
+  })
+
+  // Rodada de correção 2, parte 18: na madrugada o urucum (#C47055) fica só no botão primário. O botão "Modo
+  // madrugada" ligado (aria-pressed="true", data-ligado) tem fundo #E3D6C3 (a cor do texto da madrugada) e texto #17120E
+  // (a cor da página), com 12,99:1 contra a página, e a linha interna escura. Vale em 1440 e em 390, no cabeçalho
+  // logado (o único que tem o botão), e no foco do botão: o anel de 2 px nunca encosta no fundo claro.
+  describe('V8: o "Modo madrugada" ligado sem urucum: fundo #E3D6C3 e texto #17120E', () => {
+    const LIGADO = '.sb-moldura[data-ligado]'
+    const fundoDaMadrugada = () => hexDe(madrugada, '--cor-texto')
+    const paginaDaMadrugada = () => hexDe(madrugada, '--cor-fundo')
+
+    it('os tokens da madrugada são os pedidos: --cor-texto = #E3D6C3 (o fundo) e --cor-fundo = #17120E (o texto), sem literal novo', () => {
+      expect(fundoDaMadrugada()?.toLowerCase()).toBe('#e3d6c3')
+      expect(paginaDaMadrugada()?.toLowerCase()).toBe('#17120e')
+      for (const seletor of [LIGADO, `${LIGADO} .sb-moldura-miolo`, `${LIGADO}:hover .sb-moldura-miolo`]) {
+        expect(corpoBase(seletor), seletor).not.toMatch(/#[0-9a-f]{3,8}\b|rgb\(|color-mix/i)
+      }
+      for (const seletor of ['.sb-cab-acao[data-ligado]', '.sb-cab-acao[data-ligado] .sb-moldura-miolo']) {
+        expect(corpoCelular(seletor), seletor).not.toMatch(/#[0-9a-f]{3,8}\b|rgb\(|color-mix/i)
       }
     })
 
-    it('o ligado inverte de novo ao passar o mouse (miolo escuro, texto no destaque), também abaixo de 768', () => {
-      const corpo = corpoBase('.sb-moldura[data-ligado]:hover .sb-moldura-miolo')
-      expect(corpo).toMatch(/background-color:\s*var\(--cor-sobre-destaque\)/)
-      expect(corpo).toMatch(/(?:^|[\s;])color:\s*var\(--cor-destaque\)/)
-      expect(corpo).not.toMatch(/papel-fundo|var\(--cor-texto\)/)
+    it('o ligado usa a cor do texto como fundo e a da página como texto (1440): o botão, a linha interna escura e o mouse', () => {
+      const botao = corpoBase(LIGADO)
+      expect(botao).toMatch(/background-color:\s*var\(--cor-texto\)/)
+      expect(botao).toMatch(/border-color:\s*var\(--cor-texto\)/)
+      expect(botao).toMatch(/(?:^|[\s;])color:\s*var\(--cor-fundo\)/)
+      expect(corpoBase(`${LIGADO} .sb-moldura-miolo`)).toMatch(/border-color:\s*var\(--cor-fundo\)/)
+      const mouse = corpoBase(`${LIGADO}:hover .sb-moldura-miolo`)
+      expect(mouse).toMatch(/background-color:\s*var\(--cor-fundo\)/)
+      expect(mouse).toMatch(/(?:^|[\s;])color:\s*var\(--cor-texto\)/)
     })
 
-    it('abaixo de 768 o ligado não depende só do fundo: a regra de miolo ligado do celular não pinta o miolo de outro urucum', () => {
-      // V7 (parte 17): antes a regra de miolo ligado do celular não podia existir (`not.toMatch(/\.sb-cab-acao\[data-ligado\]\s+\.sb-moldura-miolo/)`):
-      // o botão inteiro era o fundo. Agora o fundo de 48 px é o do miolo (o botão de 56 px fica sem pintura), então a regra existe, mas só com o
-      // MESMO urucum (`--cor-destaque`), sem trocar a linha interna clara (a moldura que distingue o ligado) e sem outra cor.
-      const corpo = corpoCelular('.sb-cab-acao[data-ligado] .sb-moldura-miolo')
-      expect(corpo).toMatch(/background-color:\s*var\(--cor-destaque\)/)
-      expect(corpo).not.toMatch(/border|color-mix|#[0-9a-f]{3,6}|rgb|papel-fundo|transparent/i)
-      expect(corpoBase('.sb-moldura[data-ligado] .sb-moldura-miolo')).toMatch(/border-color:\s*var\(--cor-sobre-destaque\)/)
+    it('em 390 o miolo pintado também é a cor do texto com o texto na cor da página, e o botão de 56 segue sem fundo', () => {
+      const miolo = corpoCelular(`.sb-cab-acao[data-ligado] .sb-moldura-miolo`)
+      expect(miolo).toMatch(/background-color:\s*var\(--cor-texto\)/)
+      expect(miolo).toMatch(/(?:^|[\s;])color:\s*var\(--cor-fundo\)/)
+      const botao = corpoCelular('.sb-cab-acao[data-ligado]')
+      expect(botao).toMatch(/background-color:\s*transparent/)
+      expect(botao).toMatch(/border-color:\s*transparent/)
+      // A pintura de 48 px e a área de toque de 56 da parte anterior seguem (padding-block e min-height).
+      expect(corpoCelular('.sb-cab-acao')).toMatch(/padding-block:\s*max\(0px,\s*calc\(\(var\(--alvo-toque\)\s*-\s*48px\)\s*\/\s*2\s*-\s*1px\)\)/)
+      expect(corpoCelular('.sb-cab-acao')).toMatch(/min-height:\s*var\(--alvo-toque\)/)
+    })
+
+    it('os contrastes: fundo contra a página e texto contra o fundo, ambos 12,99:1 (≥ 12)', () => {
+      const razao = contraste(fundoDaMadrugada()!, paginaDaMadrugada()!)
+      expect(razao).toBeGreaterThanOrEqual(12)
+      expect(razao).toBeCloseTo(12.99, 1)
+    })
+
+    it('o foco do ligado: o anel (#F7EFE2) contrasta com a página escura (≥ 3:1) e nunca encosta no fundo claro do botão (que ele não alcançaria: 1,25:1)', () => {
+      const anel = hexDe(madrugada, '--cor-foco')!
+      expect(contraste(anel, paginaDaMadrugada()!)).toBeGreaterThanOrEqual(3)
+      // Contra o fundo claro do botão o anel não passa de 3:1: por isso a folga entre os dois tem de ser da cor da página.
+      expect(contraste(anel, fundoDaMadrugada()!)).toBeLessThan(3)
+      // 1440: o anel global de 2 px sai 2 px para fora do botão (o pintado), então há 2 px de página entre os dois.
+      const global = regras(base).find((r) => r.seletor === ':focus-visible')?.corpo ?? ''
+      expect(global).toMatch(/outline:\s*2px solid var\(--cor-foco\)/)
+      const folgaEm1440 = Number(/outline-offset:\s*(\d+)px/.exec(global)?.[1])
+      expect(folgaEm1440).toBeGreaterThanOrEqual(1)
+      // 390: o recuo do anel é 0 (cabe no cabeçalho de 60), mas o pintado (o miolo) fica a 1 px da borda do botão por causa da borda
+      // transparente de 1 px, e a 4 px em cima e embaixo: há pelo menos 1 px de página entre o anel e o fundo claro.
+      expect(corpoBase('.sb-moldura')).toMatch(/border:\s*1px solid/)
+      expect(corpoCelular('.sb-cab-acao')).toMatch(/border-color:\s*transparent/)
+      expect(corpoCelular('.sb-cab-acao[data-ligado]')).toMatch(/border-color:\s*transparent/)
+      expect(corpoCelular('.sb-cab-acao')).not.toMatch(/(?:^|[^-])border(?:-width)?:\s*0/)
+      expect(corpoCelular('.sb-cab-acao:focus-visible')).toMatch(/outline-offset:\s*min\(2px/)
+    })
+
+    it('o urucum fica só no botão primário e nos usos de sempre: o botão primário, o desativado e o claro não mudam', () => {
+      const primario = corpoBase('.sb-botao')
+      expect(primario).toMatch(/background-color:\s*var\(--cor-destaque\)/)
+      expect(primario).toMatch(/(?:^|[\s;])color:\s*var\(--cor-sobre-destaque\)/)
+      expect(hexDe(madrugada, '--cor-destaque')?.toLowerCase()).toBe('#c47055')
+      expect(hexDe(madrugada, '--cor-sobre-destaque')?.toLowerCase()).toBe('#17120e')
+      const desativado = regras(base).find((r) => r.seletor.includes(".sb-botao[aria-disabled='true']"))!.corpo
+      expect(desativado).toMatch(/background-color:\s*var\(--cor-desativado-fundo\)/)
+      expect(desativado).toMatch(/color:\s*var\(--cor-desativado-texto\)/)
+      // O desligado (o botão do tema claro): fundo transparente e a moldura de tinta, sem a regra do ligado.
+      expect(corpoBase('.sb-moldura')).toMatch(/background:\s*none/)
+      expect(corpoBase('.sb-moldura')).toMatch(/border:\s*1px solid var\(--cor-texto\)/)
+      // No celular o desligado (claro) continua pintando o miolo de urucum.
+      expect(corpoCelular('.sb-cab-acao .sb-moldura-miolo')).toMatch(/background-color:\s*var\(--cor-destaque\)/)
+      expect(corpoCelular('.sb-cab-acao .sb-moldura-miolo')).toMatch(/color:\s*var\(--cor-sobre-destaque\)/)
+    })
+
+    it('a regra é só do estado ligado: nenhuma regra do ligado depende do tema, e `data-ligado` só vem com o estado ligado do botão', () => {
+      const doLigado = regras(semComentarios).filter((r) => r.seletor.includes('[data-ligado]'))
+      expect(doLigado.length).toBeGreaterThan(0)
+      for (const regra of doLigado) expect(regra.seletor).not.toMatch(/data-tema/)
+      expect(temaCss).not.toMatch(/data-ligado/)
     })
   })
 
@@ -1684,12 +1775,12 @@ describe('rodada 4: cabeçalho, desativado, modo madrugada, rodapé em 390 e ró
       expect(regras(celular).some((r) => /::(?:before|after)/.test(r.seletor) && r.seletor.includes('.sb-cab-acao'))).toBe(false)
     })
 
-    it('o fundo é o do miolo: o mesmo urucum (destaque) de antes, com a linha interna clara do ligado intacta', () => {
+    it('o fundo é o do miolo: a cor do texto da madrugada (parte 18; na parte 17 era o urucum), com a linha interna escura do ligado intacta', () => {
       const corpo = regraDoCelular(`${LIGADO} .sb-moldura-miolo`)
       expect(corpo, `${LIGADO} .sb-moldura-miolo`).not.toBe('')
-      expect(corpo).toMatch(/background-color:\s*var\(--cor-destaque\)/)
-      expect(corpo).not.toMatch(/border|color-mix|transparent|height|margin/)
-      expect(corpoBase('.sb-moldura[data-ligado] .sb-moldura-miolo')).toMatch(/border-color:\s*var\(--cor-sobre-destaque\)/)
+      expect(corpo).toMatch(/background-color:\s*var\(--cor-texto\)/)
+      expect(corpo).not.toMatch(/border|color-mix|transparent|height|margin|destaque/)
+      expect(corpoBase('.sb-moldura[data-ligado] .sb-moldura-miolo')).toMatch(/border-color:\s*var\(--cor-fundo\)/)
     })
 
     it('a conta: com a altura de alvo de 56 (madrugada) o pintado tem 48 e fica centrado; no claro (44) o miolo segue com os 42 px de antes', () => {
@@ -1736,12 +1827,12 @@ describe('rodada 4: cabeçalho, desativado, modo madrugada, rodapé em 390 e ró
       for (const seletor of [LIGADO, `${LIGADO} .sb-moldura-miolo`, '.sb-cab-acao:focus-visible']) {
         expect(regras(base).some((r) => r.seletor === seletor), `${seletor} fora do celular`).toBe(false)
       }
-      // As regras base do ligado (fundo cheio e moldura invertida, as de 768 para cima) seguem como estavam.
-      expect(corpoBase('.sb-moldura[data-ligado]')).toMatch(/background-color:\s*var\(--cor-destaque\)/)
+      // As regras base do ligado (fundo cheio e moldura invertida, as de 768 para cima) seguem como estavam (parte 18: o fundo é a cor do texto).
+      expect(corpoBase('.sb-moldura[data-ligado]')).toMatch(/background-color:\s*var\(--cor-texto\)/)
       expect(corpoBase('.sb-moldura[data-ligado] .sb-moldura-miolo')).toMatch(/background-color:\s*transparent/)
     })
 
-    it('as cores não mudam: o rótulo continua sobre-destaque no destaque (≥ 4,5:1), e o miolo ligado usa o destaque do tema', () => {
+    it('as cores do desligado não mudam (sobre-destaque no destaque, ≥ 4,5:1); o miolo ligado usa a cor do texto e da página (parte 18), sem outra cor', () => {
       expect(regraDoCelular('.sb-cab-acao .sb-moldura-miolo')).toMatch(/color:\s*var\(--cor-sobre-destaque\)/)
       for (const bloco of [claro, madrugada]) {
         expect(contraste(hexDe(bloco, '--cor-sobre-destaque')!, hexDe(bloco, '--cor-destaque')!)).toBeGreaterThanOrEqual(4.5)

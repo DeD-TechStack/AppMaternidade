@@ -1821,24 +1821,26 @@
     display: none;
   }
 
-  /* Ligado (o botão "Modo madrugada" com aria-pressed): o botão inteiro se enche de destaque, com o
-     texto sobre-destaque, e a moldura dupla se inverte (a linha de dentro passa a ser da cor do
-     texto). Distingue-se do desligado pelo fundo cheio e pela moldura, e não só pela cor. */
+  /* Ligado (o botão "Modo madrugada" com aria-pressed): o botão inteiro se enche da cor do texto (na
+     madrugada, o bege claro), com o texto na cor da página (o marrom quase preto): 12,99:1. O urucum
+     fica só no botão primário. A moldura dupla se inverte (a linha de dentro passa a ser da cor da
+     página, escura sobre o fundo claro). Distingue-se do desligado pelo fundo cheio e pela moldura, e
+     não só pela cor. */
   .sb-moldura[data-ligado] {
-    border-color: var(--cor-destaque);
-    background-color: var(--cor-destaque);
-    color: var(--cor-sobre-destaque);
+    border-color: var(--cor-texto);
+    background-color: var(--cor-texto);
+    color: var(--cor-fundo);
   }
 
   .sb-moldura[data-ligado] .sb-moldura-miolo {
-    border-color: var(--cor-sobre-destaque);
+    border-color: var(--cor-fundo);
     background-color: transparent;
   }
 
-  /* Com o mouse em cima, a inversão se inverte de novo: miolo escuro e texto no destaque. */
+  /* Com o mouse em cima, a inversão se inverte de novo: miolo escuro e texto claro. */
   .sb-moldura[data-ligado]:hover .sb-moldura-miolo {
-    background-color: var(--cor-sobre-destaque);
-    color: var(--cor-destaque);
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto);
   }
 
   /* O quadro de moldura dupla que não é botão (o painel do submenu). */
@@ -1898,16 +1900,18 @@
 
     /* V7: ligado, a área de toque é a do botão inteiro (--alvo-toque, 56 na madrugada), mas a parte
        pintada não passa de 48 px: o botão fica sem fundo (e sem a borda colorida do ligado) e o fundo é o
-       do miolo, que o recuo vertical do botão limita a 48 px e centra. É o mesmo urucum de antes
-       (destaque), e a linha interna clara do ligado (a moldura que o distingue) continua a da regra base.
-       O fundo é o do miolo, e não de um pseudo-elemento, para o medidor ler o contraste do rótulo. */
+       do miolo, que o recuo vertical do botão limita a 48 px e centra. A cor é a do ligado da regra base
+       (parte 18: a cor do texto como fundo e a da página como texto, sem urucum), e a linha interna
+       escura do ligado (a moldura que o distingue) continua a da regra base. O fundo é o do miolo, e não
+       de um pseudo-elemento, para o medidor ler o contraste do rótulo. */
     .sb-cab-acao[data-ligado] {
       border-color: transparent;
       background-color: transparent;
     }
 
     .sb-cab-acao[data-ligado] .sb-moldura-miolo {
-      background-color: var(--cor-destaque);
+      background-color: var(--cor-texto);
+      color: var(--cor-fundo);
     }
 
     /* O anel de foco do botão cabe no cabeçalho de 60 px: com o botão de 56 px (madrugada) sobram 2 px
