@@ -3458,6 +3458,26 @@ body:has([data-barra-registrar]) [data-rodape] {
     margin-top: 0;
   }
 
+  /* Com a fonte raiz ampliada (200%) a etiqueta da lateral (c9–c10) é mais larga que a coluna e, sem quebra
+     de linha (`nowrap` e 26 px fixos na base), passava da janela. Aqui ela quebra dentro da coluna: a altura
+     cresce com as linhas (o mínimo é os 26 px de uma linha) e uma palavra comprida também quebra. O item
+     tem 3 px de respiro em cima e embaixo (3 + 26 + 3 = os 32 px da base): em fonte normal nada muda, e com
+     a etiqueta de duas linhas as vizinhas não se encostam. Sem `overflow` nem `line-clamp`: nada de texto
+     escondido. Vale para toda etiqueta da lateral das páginas públicas, em qualquer largura. */
+  .vp-pagina .sb-abertura-lateral > .vp-etiqueta-item {
+    box-sizing: border-box;
+    min-width: 0;
+    padding-block: 3px;
+  }
+
+  .vp-pagina .sb-abertura-lateral > .vp-etiqueta-item > .sb-etiqueta {
+    max-width: 100%;
+    height: auto;
+    min-height: 26px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
   /* O parágrafo de apresentação: 40 rem (640 px) dão cerca de 57 caracteres por linha em 28 px. */
   .vp-apresentacao {
     max-width: 40rem;
