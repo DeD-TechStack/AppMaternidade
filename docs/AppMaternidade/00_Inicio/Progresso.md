@@ -21,6 +21,16 @@ Horários em America/Sao_Paulo, tirados do relógio da máquina ou de carimbos d
 
 Uma linha por marco, a mais recente no topo. O estado corrente fica em [Retomada do site](Retomada_Site.md), e o detalhe de cada marco está no cartão Kanban citado.
 
+- 10/11/2026: **fila religada à 44d.**
+  - Os 6 cartões que dependiam do t_f67d8962 foram religados:
+    - MAT-36 (t_b2a55931) depois da 44d-4;
+    - 37b (t_11ad28e6) depois da 44d-3;
+    - 38a (t_f7bdf7e8) depois da 44d-2;
+    - 41a (t_ab1bd202) depois da 44d-1;
+    - 39a e 40a seguem pelos pais que já tinham.
+  - A 44c-2b (t_6e8036b9) foi arquivada, porque a 44d-5 a substitui.
+  - Os 9 cartões da fila receberam a emenda: base e integração em `int/refazer`, seção 2 da MAT-44d, `--screen`, uma porta própria (5267 a 5275) e Fable com nota 8 ou mais.
+  - Nenhum cartão foi liberado em paralelo agora, porque todos têm tela e seriam refeitos sobre a base velha.
 - 10/11/2026: **reavaliação do site inteiro (MAT-44d).**
   - O que motivou: Daniel achou que o site "não segue em nada o site referência". As notas ficaram entre 5,8 e 6,8 mesmo depois do laço visual.
   - Rodadas paradas: a da 44c-1 (t_f67d8962) e a da 37a (t_915e3632). As duas foram substituídas (comentários 160 e 161).
