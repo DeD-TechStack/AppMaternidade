@@ -7,10 +7,20 @@ import { Membro } from './Membro.tsx'
 // Duas medidas do mesmo desenho: a quadrada (240 × 240), que a Sessão usa, e a larga (480 × 222),
 // do Início, com a cena no meio e o chão indo de borda a borda, cortada rente à linha do chão para
 // ela se apoiar na base do celular ao lado. A cena é a mesma nas duas.
-export function IlustracaoMamada({ className, larga = false }: { className?: string; larga?: boolean }) {
+export function IlustracaoMamada({
+  className,
+  larga = false,
+  preserveAspectRatio,
+}: {
+  className?: string
+  larga?: boolean
+  /** A moldura da Sessão corta (`slice`) em vez de deixar vão: ver MidiaDaSessao. */
+  preserveAspectRatio?: string
+}) {
   return (
     <svg
       viewBox={larga ? '0 0 480 222' : '0 0 240 240'}
+      preserveAspectRatio={preserveAspectRatio}
       className={`ilu ${className ?? ''}`}
       aria-hidden="true"
       focusable="false"

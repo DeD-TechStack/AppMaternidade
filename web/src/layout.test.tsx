@@ -116,7 +116,8 @@ function medir(barra: number, janela: number) {
 
 const definirFonteRaiz = (valor: string) => document.documentElement.style.setProperty('font-size', valor)
 const paddingDeRolagem = () => document.documentElement.style.getPropertyValue('scroll-padding-bottom')
-const barraDe = (container: HTMLElement) => container.querySelector('.barra-inferior')!
+// A barra de baixo é a barra Registrar no Hoje e a barra inferior (navegação) na Sessão.
+const barraDe = (container: HTMLElement) => container.querySelector('.barra-inferior, [data-barra-registrar]')!
 const estaFixa = (container: HTMLElement) => barraDe(container).classList.contains('barra-fixa')
 
 // R2: a decisão depende da JANELA e da FONTE RAIZ (uma janela de pelo menos 40 rem de altura),
@@ -140,10 +141,8 @@ describe('R2: a barra de baixo fica fixa em janela de 40 rem ou mais, qualquer q
     document.documentElement.style.removeProperty('font-size')
   })
 
-  for (const [tela, caminho] of [
-    ['Hoje', '/app/hoje'],
-    ['Sessão', '/app/sessao'],
-  ] as const) {
+  // A barra de baixo é só a barra Registrar do Hoje (a Sessão não tem barra desde o 44d-2).
+  for (const [tela, caminho] of [['Hoje', '/app/hoje']] as const) {
     describe(tela, () => {
       it('janela de 844 px com fonte de 16 px: fixa, e reserva a altura medida mais 8 px de rolagem', () => {
         const { container } = renderizarRota(caminho)
@@ -247,7 +246,7 @@ describe('R2: a barra de baixo fica fixa em janela de 40 rem ou mais, qualquer q
   const agir = (nome: string) => fireEvent.click(screen.getByRole('button', { name: nome }))
   const estados: Array<[string, () => void]> = [
     ['estado inicial', () => {}],
-    ['painel Fralda aberto', () => agir('Registrar fralda de Heloísa')],
+    ['Fralda registrada, sem tipo', () => agir('Registrar fralda de Heloísa')],
     [
       'Fralda confirmada',
       () => {
@@ -317,6 +316,9 @@ describe('R2: a barra de baixo fica fixa em janela de 40 rem ou mais, qualquer q
 // ---------------------------------------------------------------------------
 // R1
 
+// MAT-44d-2: nenhuma tela logada tem navegação inferior (a barra Registrar não é navegação). Os
+// testes dos itens da navegação (ordem, hífen opcional, hifenização, contêiner, aria-disabled) eram
+// do `NavegacaoInferior`, que saiu com esta parte; ficam só os que provam que ela não existe.
 describe('R1: navegação inferior', () => {
   for (const [tela, caminho] of [
     ['Hoje', '/app/hoje'],
@@ -326,57 +328,15 @@ describe('R1: navegação inferior', () => {
       ['claro', claro],
       ['madrugada', madrugada],
     ] as const) {
-      describe(`${tela} (${tema})`, () => {
-        it('os filhos da nav seguem a ordem visual: Hoje, "Em breve", Histórico, Desenvolvimento, Comunidade, Família', () => {
-          renderizarRota(caminho, { estadoInicial: estado() })
-          const nav = screen.getByRole('navigation', { name: 'Principal' })
+      it(`${tela} (${tema}) não tem navegação inferior, barra inferior, legenda "Em breve" nem itens desativados`, () => {
+        const { container } = renderizarRota(caminho, { estadoInicial: estado() })
 
-          expect([...nav.children].map((filho) => filho.textContent?.trim())).toEqual([
-            'Hoje',
-            'Em breve',
-            'Histórico',
-            'Desenvolvimento',
-            'Comunidade',
-            'Família',
-          ])
-        })
-
-        it('nenhum texto da navegação contém U+00AD', () => {
-          renderizarRota(caminho, { estadoInicial: estado() })
-          const nav = screen.getByRole('navigation', { name: 'Principal' })
-
-          expect(nav.textContent).not.toContain('­')
-        })
-
-        it('só "Desenvolvimento" tem a classe de hifenização', () => {
-          renderizarRota(caminho, { estadoInicial: estado() })
-          const nav = screen.getByRole('navigation', { name: 'Principal' })
-
-          expect([...nav.querySelectorAll('.nav-item-hifeniza')].map((i) => i.textContent)).toEqual([
-            'Desenvolvimento',
-          ])
-        })
-
-        it('a nav fica dentro da barra, que é o contêiner de largura', () => {
-          const { container } = renderizarRota(caminho, { estadoInicial: estado() })
-
-          expect(container.querySelector('.barra-inferior nav.nav-inferior')).not.toBeNull()
-        })
-
-        it('mantém aria-disabled, aria-describedby para "Em breve" e, no Hoje, aria-current', () => {
-          renderizarRota(caminho, { estadoInicial: estado() })
-          const nav = screen.getByRole('navigation', { name: 'Principal' })
-          const legenda = within(nav).getByText('Em breve')
-
-          for (const botao of nav.querySelectorAll('button')) {
-            expect(botao.getAttribute('aria-disabled')).toBe('true')
-            expect(botao.getAttribute('aria-describedby')).toBe(legenda.id)
-            expect(botao.hasAttribute('aria-label')).toBe(false)
-          }
-          expect(within(nav).getByRole('link', { name: 'Hoje' }).hasAttribute('aria-current')).toBe(
-            tela === 'Hoje',
-          )
-        })
+        expect(screen.queryByRole('navigation', { name: 'Principal' })).toBeNull()
+        expect(container.querySelector('.barra-inferior, nav.nav-inferior, .nav-item, .nav-legenda')).toBeNull()
+        expect(screen.queryByText('Em breve')).toBeNull()
+        for (const nome of ['Histórico', 'Desenvolvimento', 'Comunidade', 'Família']) {
+          expect(screen.queryByRole('button', { name: nome }), nome).toBeNull()
+        }
       })
     }
   }
@@ -385,7 +345,9 @@ describe('R1: navegação inferior', () => {
 // ---------------------------------------------------------------------------
 // D2
 
-describe('D2: telas logadas numa coluna única', () => {
+// MAT-44d-2: o Hoje e a Sessão saíram da coluna única (abertura, blocos em `sb-area` sobre a grade).
+// Só o Hoje tem a barra Registrar; a Sessão não tem barra nenhuma.
+describe('D2: telas logadas sobre a grade, sem coluna única', () => {
   const casos: Array<[string, string, () => EstadoPrototipo]> = [
     ['Hoje', '/app/hoje', claro],
     ['Sessão com sessão', '/app/sessao', claro],
@@ -393,30 +355,31 @@ describe('D2: telas logadas numa coluna única', () => {
   ]
 
   for (const [nome, caminho, estado] of casos) {
-    it(`${nome}: faixa, main, barra e navegação ficam dentro do mesmo contêiner de coluna`, () => {
+    it(`${nome}: sem .coluna-app, e a tela é cabeçalho, um main e o rodapé (mais a barra Registrar só no Hoje)`, () => {
       const { container } = renderizarRota(caminho, { estadoInicial: estado() })
 
-      const colunas = container.querySelectorAll('.coluna-app')
-      expect(colunas).toHaveLength(1)
-      const coluna = colunas[0]
-      expect(coluna.querySelector('header')).not.toBeNull()
-      expect(coluna.querySelector('main')).not.toBeNull()
-      expect(coluna.querySelector('.barra-inferior')).not.toBeNull()
-      expect(coluna.querySelector('.barra-inferior nav[aria-label="Principal"]')).not.toBeNull()
-      // Nada de tela fica fora da coluna (o cabeçalho e o rodapé do site ficam fora de propósito).
+      expect(container.querySelector('.coluna-app')).toBeNull()
+      expect(container.querySelectorAll('main')).toHaveLength(1)
       const daTela = [...container.querySelectorAll('header, main, nav')].filter(
         (peca) => peca.closest('[data-cabecalho], [data-rodape]') === null,
       )
-      expect(daTela).toHaveLength(coluna.querySelectorAll('header, main, nav').length)
+      expect(daTela.map((peca) => peca.tagName)).toEqual(['MAIN'])
+      expect(container.querySelectorAll('[data-barra-registrar]')).toHaveLength(nome === 'Hoje' ? 1 : 0)
     })
   }
 
-  it('no Hoje os botões rápidos ficam na mesma barra da navegação', () => {
+  it('o Hoje não tem coluna única nem navegação inferior: a barra Registrar fica fora do main, depois dele', () => {
     const { container } = renderizarRota('/app/hoje')
 
-    const barra = container.querySelector('.coluna-app .barra-inferior')!
-    expect(within(barra as HTMLElement).getByRole('button', { name: 'Iniciar sono de Heloísa' })).toBeTruthy()
-    expect(within(barra as HTMLElement).getByRole('navigation', { name: 'Principal' })).toBeTruthy()
+    expect(container.querySelector('.coluna-app')).toBeNull()
+    expect(container.querySelector('.barra-inferior')).toBeNull()
+    expect(container.querySelector('nav.nav-inferior')).toBeNull()
+    expect(screen.queryByRole('navigation', { name: 'Principal' })).toBeNull()
+    const barra = container.querySelector<HTMLElement>('[data-barra-registrar]')!
+    const main = container.querySelector('main')!
+    expect(main.contains(barra)).toBe(false)
+    expect(main.nextElementSibling).toBe(barra)
+    expect(within(barra).getByRole('button', { name: 'Iniciar sono de Heloísa' })).toBeTruthy()
   })
 })
 
@@ -439,36 +402,24 @@ describe('D3: faixa de números', () => {
 // ---------------------------------------------------------------------------
 // D4
 
-function conferirGrade(grade: HTMLElement) {
-  expect(grade.classList.contains('grid')).toBe(true)
-  expect(grade.classList.contains('grid-cols-6')).toBe(true)
-  // R1b: os limiares são da largura do componente (contêiner), em rem, nunca da janela.
-  expect(grade.classList.contains('@min-[36rem]:grid-cols-5')).toBe(true)
-  expect(grade.classList.contains('@max-[17rem]:grid-cols-1')).toBe(true)
-
-  const botoes = [...grade.querySelectorAll<HTMLElement>(':scope > button')]
-  expect(botoes.map((b) => b.textContent)).toEqual(['Sono', 'Mamada', 'Fralda', 'Tummy time', '+ Mais'])
-  // Primeira linha: três botões de 2 colunas. Segunda linha: dois botões de 3 colunas.
-  expect(botoes.map((b) => (b.classList.contains('col-span-2') ? 2 : b.classList.contains('col-span-3') ? 3 : 0))).toEqual([
-    2, 2, 2, 3, 3,
-  ])
-  for (const botao of botoes) {
-    expect(botao.classList.contains('@min-[36rem]:col-span-1'), botao.outerHTML).toBe(true)
-    expect(botao.classList.contains('@max-[17rem]:col-span-1'), botao.outerHTML).toBe(true)
-    expect(botao.classList.contains('whitespace-nowrap'), botao.outerHTML).toBe(true)
-    expect(botao.classList.contains('@max-[17rem]:whitespace-normal'), botao.outerHTML).toBe(true)
-  }
-}
-
 describe('D4: botões rápidos com a mesma altura', () => {
   for (const [tema, estado] of [
     ['claro', claro],
     ['madrugada', madrugada],
   ] as const) {
-    it(`no Hoje (${tema}) a grade é de 6 colunas: 2+2+2 e 3+3`, () => {
+    // A grade de 6 colunas (2+2+2 e 3+3) é a do `BotoesRapidos`, que o Início usa na miniatura. A
+    // barra Registrar do Hoje tem uma fileira de 4 botões iguais: o DOM é o mesmo nos dois temas e a
+    // igualdade de largura é do CSS (`repeat(4, minmax(0, 1fr))`) e do medidor.
+    it(`no Hoje (${tema}) a barra Registrar é uma fileira de 4 botões, sem a grade de 6 colunas`, () => {
       renderizarRota('/app/hoje', { estadoInicial: estado() })
 
-      conferirGrade(screen.getByRole('button', { name: 'Iniciar sono de Heloísa' }).parentElement!)
+      const fileira = screen.getByRole('button', { name: 'Iniciar sono de Heloísa' }).parentElement!
+      expect(fileira.hasAttribute('data-fileira')).toBe(true)
+      expect(fileira.classList.contains('grid-cols-6')).toBe(false)
+      const botoes = [...fileira.querySelectorAll<HTMLElement>(':scope > button')]
+      expect(botoes.map((b) => b.textContent)).toEqual(['Sono', 'Mamada', 'Fralda', 'Mais'])
+      expect(fileira.children).toHaveLength(4)
+      for (const botao of botoes) expect([...botao.classList].filter((c) => /^col-span-/.test(c))).toEqual([])
     })
   }
 
@@ -720,37 +671,8 @@ describe('R4: o Início decide as colunas pelo CSS do sistema-base, não por var
 })
 
 // ---------------------------------------------------------------------------
-// D5
-
-const NOMES_DA_NAVEGACAO = ['Hoje', 'Histórico', 'Desenvolvimento', 'Comunidade', 'Família']
-
-describe('D5: nomes da navegação inferior', () => {
-  for (const [tela, caminho] of [
-    ['Hoje', '/app/hoje'],
-    ['Sessão', '/app/sessao'],
-  ] as const) {
-    it(`${tela}: o nome acessível dos 5 itens não tem hífen opcional`, () => {
-      renderizarRota(caminho)
-      const nav = screen.getByRole('navigation', { name: 'Principal' })
-
-      for (const nome of NOMES_DA_NAVEGACAO) {
-        // `name` como texto exato: um ­ no nome acessível faria a busca falhar.
-        const item = within(nav).getByRole(nome === 'Hoje' ? 'link' : 'button', { name: nome })
-        expect(item).toBeTruthy()
-      }
-    })
-
-    it(`${tela}: só "Desenvolvimento" tem a classe de hifenização`, () => {
-      renderizarRota(caminho)
-      const nav = screen.getByRole('navigation', { name: 'Principal' })
-
-      const hifenizados = [...nav.querySelectorAll('.nav-item-hifeniza')].map((item) => item.textContent)
-      expect(hifenizados).toEqual(['Desenvolvimento'])
-      // Todos os outros itens seguem com hifens manuais (a classe base, sem o modificador).
-      expect(nav.querySelectorAll('.nav-item')).toHaveLength(5)
-    })
-  }
-})
+// D5 (nomes da navegação inferior) e D7 ("Em breve" da navegação): saíram com o `NavegacaoInferior`
+// (MAT-44d-2); o R1 acima prova que nenhuma tela logada tem a navegação.
 
 // ---------------------------------------------------------------------------
 // G3-4
@@ -841,20 +763,22 @@ describe('G3-4: o texto visível está no nome acessível', () => {
     }
   }
 
-  it('o botão "Mais registros" mostra exatamente "+ Mais"', () => {
+  // Na barra Registrar o botão é só "Mais" (sem o sinal "+"). O sinal "+" continua no `BotoesRapidos`
+  // da miniatura do Início, e o texto visível ignorando o aria-hidden é conferido nele.
+  it('o botão "Mais registros" do Hoje mostra exatamente "Mais"', () => {
     renderizarRota('/app/hoje')
 
     const mais = screen.getByRole('button', { name: 'Mais registros' })
-    expect((mais.textContent ?? '').replace(/\s+/g, ' ').trim()).toBe('+ Mais')
+    expect((mais.textContent ?? '').replace(/\s+/g, ' ').trim()).toBe('Mais')
   })
 
-  it('o texto visível ignora o que é aria-hidden e normaliza espaços', () => {
-    const { container } = renderizarRota('/app/hoje')
-    const mais = screen.getByRole('button', { name: 'Mais registros' })
+  it('o texto visível ignora o que é aria-hidden e normaliza espaços (um botão "+ Mais" montado no teste: a miniatura do Início saiu na 44d-4)', () => {
+    const mais = document.createElement('button')
+    mais.innerHTML = '<span aria-hidden="true">+</span>  Mais'
 
     expect(textoVisivel(mais)).toBe('Mais')
-    expect(mais.textContent).toBe('+ Mais')
-    expect(container.querySelectorAll('[aria-hidden="true"]').length).toBeGreaterThan(0)
+    expect(mais.textContent).toBe('+  Mais')
+    expect(mais.querySelectorAll('[aria-hidden="true"]').length).toBeGreaterThan(0)
   })
 })
 
@@ -862,11 +786,14 @@ describe('G3-4: o texto visível está no nome acessível', () => {
 // D6
 
 describe('D6: cronômetro', () => {
-  it('o da Sessão usa a classe .cronometro, sem modificador de miniatura', () => {
+  // MAT-44d-2: o cronômetro da Sessão é o `t-cronometro` do sistema-base (Zilla Slab 224/180; em 390 cai
+  // para 80 e, com 8 ou mais caracteres, para 56: VOLTA1 E2), e não mais a classe `.cronometro` (clamp de 4,5 a 8 rem), que só a miniatura do Início usa.
+  it('o da Sessão usa a escala t-cronometro do sistema-base, sem a classe .cronometro nem o modificador de miniatura', () => {
     renderizarRota('/app/sessao')
 
     const cronometro = screen.getByRole('timer', { name: 'Duração da sessão' })
-    expect(cronometro.classList.contains('cronometro')).toBe(true)
+    expect(cronometro.classList.contains('t-cronometro')).toBe(true)
+    expect(cronometro.classList.contains('cronometro')).toBe(false)
     expect(cronometro.classList.contains('cronometro-mini')).toBe(false)
   })
 
@@ -878,25 +805,4 @@ describe('D6: cronômetro', () => {
   })
 })
 
-// ---------------------------------------------------------------------------
-// D7
 
-describe('D7: "Em breve"', () => {
-  for (const [tela, caminho] of [
-    ['Hoje', '/app/hoje'],
-    ['Sessão', '/app/sessao'],
-  ] as const) {
-    it(`${tela}: aparece uma vez, na legenda que cobre Histórico até Família`, () => {
-      renderizarRota(caminho)
-      const nav = screen.getByRole('navigation', { name: 'Principal' })
-
-      const legendas = within(nav).getAllByText('Em breve')
-      expect(legendas).toHaveLength(1)
-      expect(legendas[0].classList.contains('nav-legenda')).toBe(true)
-
-      // A ordem do DOM põe Histórico logo depois de Hoje: a legenda (colunas 2 a 5) cobre os 4.
-      const itens = [...nav.querySelectorAll('.nav-item')].map((i) => i.getAttribute('aria-label') ?? i.textContent?.replace('­', ''))
-      expect(itens).toEqual(NOMES_DA_NAVEGACAO)
-    })
-  }
-})

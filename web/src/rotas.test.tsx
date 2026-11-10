@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { fireEvent, screen, within } from '@testing-library/react'
+import { fireEvent, screen } from '@testing-library/react'
 import { PROMESSA } from './conteudo/textos.ts'
 import { criarEstadoInicial } from './prototipo/estado.ts'
 import { renderizarRota } from './teste/renderizarRota.tsx'
@@ -46,14 +46,14 @@ describe('rotas', () => {
     }
   })
 
-  it('o Hoje tem o h1 "Hoje" e um único cartão', async () => {
+  it('o Hoje tem o h1 "Hoje" e um único bloco de cor (Em andamento), sem cartão', async () => {
     const { container } = renderizarRota('/app/hoje')
 
     const titulo = await screen.findByRole('heading', { level: 1 })
     expect(titulo.textContent).toBe('Hoje')
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
-    expect(container.querySelectorAll('.cartao')).toHaveLength(1)
-    expect(container.querySelector('.cartao .cartao')).toBeNull()
+    expect(container.querySelectorAll('[data-andamento]')).toHaveLength(1)
+    expect(container.querySelector('.cartao')).toBeNull()
   })
 
   it('a Sessão com ?tipo=tummy e sem sessão começa um Tummy time', async () => {
@@ -110,46 +110,30 @@ describe('rotas', () => {
 })
 
 describe('navegação inferior', () => {
-  it('no Hoje só o item Hoje é link; os outros quatro estão desativados', async () => {
-    renderizarRota('/app/hoje')
-    const nav = await screen.findByRole('navigation', { name: 'Principal' })
+  // MAT-44d-2: nenhuma tela logada tem navegação inferior (a barra Registrar do Hoje não é navegação).
+  // O caminho de volta da Sessão ao Hoje é o link "Voltar para Hoje" da lateral da abertura.
+  for (const caminho of ['/app/hoje', '/app/sessao']) {
+    it(`${caminho} não tem navegação inferior: nem a nav "Principal", nem a legenda "Em breve", nem itens desativados`, async () => {
+      renderizarRota(caminho)
+      await screen.findByRole('heading', { level: 1 })
 
-    const links = within(nav).getAllByRole('link')
-    expect(links.map((l) => l.textContent)).toEqual(['Hoje'])
-    expect(links[0].getAttribute('href')).toBe('/app/hoje')
-    expect(links[0].getAttribute('aria-current')).toBe('page')
+      expect(screen.queryByRole('navigation', { name: 'Principal' })).toBeNull()
+      expect(screen.queryByText('Em breve')).toBeNull()
+      for (const nome of ['Histórico', 'Desenvolvimento', 'Comunidade', 'Família']) {
+        expect(screen.queryByRole('button', { name: nome }), nome).toBeNull()
+      }
+    })
+  }
 
-    for (const nome of ['Histórico', 'Desenvolvimento', 'Comunidade', 'Família']) {
-      const item = within(nav).getByRole('button', { name: nome })
-      expect(item.getAttribute('aria-disabled')).toBe('true')
-    }
-    expect(within(nav).getAllByRole('button')).toHaveLength(4)
-  })
+  it('na Sessão o caminho de volta é o link "Voltar para Hoje", na lateral, e leva à página /app/hoje', async () => {
+    const { roteador } = renderizarRota('/app/sessao')
+    const voltar = await screen.findByRole('link', { name: 'Voltar para Hoje' })
+    expect(voltar.getAttribute('href')).toBe('/app/hoje')
+    expect(voltar.hasAttribute('aria-current')).toBe(false)
 
-  it('"Em breve" aparece uma vez', async () => {
-    renderizarRota('/app/hoje')
-    await screen.findByRole('navigation', { name: 'Principal' })
+    fireEvent.click(voltar)
 
-    expect(screen.getAllByText('Em breve')).toHaveLength(1)
-  })
-
-  it('os itens desativados não fazem nada ao toque', async () => {
-    const { roteador } = renderizarRota('/app/hoje')
-    const nav = await screen.findByRole('navigation', { name: 'Principal' })
-
-    fireEvent.click(within(nav).getByRole('button', { name: 'Histórico' }))
-
+    await screen.findByRole('heading', { level: 1, name: 'Hoje' })
     expect(roteador.state.location.pathname).toBe('/app/hoje')
-  })
-
-  it('na Sessão o item Hoje é link, mas não é a página atual', async () => {
-    renderizarRota('/app/sessao')
-    const nav = await screen.findByRole('navigation', { name: 'Principal' })
-
-    const link = within(nav).getByRole('link', { name: 'Hoje' })
-    expect(link.getAttribute('href')).toBe('/app/hoje')
-    expect(link.hasAttribute('aria-current')).toBe(false)
-    expect(within(nav).getAllByRole('button')).toHaveLength(4)
-    expect(screen.getAllByText('Em breve')).toHaveLength(1)
   })
 })

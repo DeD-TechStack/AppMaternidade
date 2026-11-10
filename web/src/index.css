@@ -2430,6 +2430,587 @@
   }
 }
 
+/* 44d-2 */
+/* A área logada sobre o sistema-base. Parte 1: o Hoje e a barra Registrar. As cores vêm só das
+   variáveis de uso (tema.css); os espaços, da escala 8, 16, 24, 32, 64, 96, 128, 160 e 192; os raios,
+   de 0, 4, 8 e 50%. Sem sombra e sem movimento. */
+
+/* O fim do conteúdo do Hoje: 64 px de folga para a barra Registrar fixa não cobrir nada. O rodapé
+   perde 64 px de margem (128 em vez de 192) e ganha 64 de folga embaixo: do último bloco ao rodapé
+   continuam os 192 do contrato (64 do main + 128), e a linha final do rodapé não fica sob a barra. */
+.ha-hoje {
+  padding-bottom: 64px;
+}
+
+body:has([data-barra-registrar]) [data-rodape] {
+  margin-top: 128px;
+  padding-bottom: 64px;
+}
+
+/* Em andamento: o bloco de cor do Hoje (urucum de dia; o bloco escuro na madrugada, sem borda). */
+.ha-andamento {
+  padding: 64px;
+  border-radius: 8px;
+  background-color: var(--cor-campo-sessao);
+  color: var(--cor-numero-sessao);
+}
+
+.ha-andamento-rotulo {
+  margin: 0;
+}
+
+.ha-andamento-nome {
+  margin: 8px 0 0;
+}
+
+.ha-andamento-numero {
+  margin: 8px 0 0;
+  white-space: nowrap;
+}
+
+.ha-andamento-pessoa {
+  margin: 8px 0 0;
+}
+
+.ha-andamento-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+/* O primário do bloco é o botão invertido: papel sobre urucum (na madrugada, o urucum claro com o
+   texto escuro). A troca de fundo é na hora. */
+.ha-andamento .ha-encerrar {
+  background-color: var(--cor-botao-campo);
+  color: var(--cor-texto-botao-campo);
+}
+
+.ha-andamento .ha-encerrar:hover {
+  background-color: color-mix(in srgb, var(--cor-botao-campo) 85%, var(--cor-texto-botao-campo));
+}
+
+/* A moldura dupla do bloco tem as linhas na cor do texto do bloco (o papel). */
+.ha-andamento .sb-moldura {
+  border-color: currentColor;
+  color: inherit;
+}
+
+.ha-andamento .sb-moldura-miolo {
+  border-color: currentColor;
+}
+
+.ha-andamento .sb-moldura:hover .sb-moldura-miolo {
+  background-color: var(--cor-botao-campo);
+  color: var(--cor-texto-botao-campo);
+}
+
+/* A barra Registrar (EMENDAS E1): 4 botões iguais numa barra de 64 px. De dia, tinta com texto de
+   papel; na madrugada, o bloco escuro com o texto claro. Fixa embaixo em c1–c10 (32 px de margem) ou, abaixo
+   de 768, de ponta a ponta. Sem borda, sem sombra. */
+.barra-registrar {
+  --ha-barra-fundo: var(--cor-texto);
+  --ha-barra-texto: var(--cor-fundo);
+  --ha-barra-fio: transparent;
+  box-sizing: border-box;
+  position: relative;
+  width: min(100% - 2 * var(--margem), var(--area-util));
+  height: 64px;
+  margin-inline: auto;
+  border: 0;
+  /* VOLTA1 E3: o fio de 1 px no topo. Existe nos dois temas (a mesma geometria, M-1), mas só a madrugada lhe dá
+     cor: a barra escura da madrugada se fundia ao fundo da página. O fundo da barra vai até a borda (border-box),
+     então no claro o 1 px transparente mostra a tinta e nada muda. A altura total segue 64. */
+  border-top: 1px solid var(--ha-barra-fio);
+  padding: 0;
+  border-radius: 8px 8px 0 0;
+  background-color: var(--ha-barra-fundo);
+  color: var(--ha-barra-texto);
+}
+
+:root[data-tema='madrugada'] .barra-registrar {
+  --ha-barra-fundo: var(--cor-campo-sessao);
+  --ha-barra-texto: var(--cor-texto);
+  --ha-barra-fio: rgba(227, 214, 195, 0.2);
+}
+
+.barra-registrar.barra-fixa {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  width: min(100% - 2 * var(--margem), var(--area-util));
+  margin-inline: auto;
+}
+
+.ha-barra-fileira {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  /* Sobe o 1 px que a borda do topo da barra ocupa: a fileira de 64 cobre a barra inteira (64 de altura total) e
+     os botões seguem com 64 de alvo; o fio fica visível sob os botões, que não têm fundo. */
+  position: relative;
+  top: -1px;
+  height: 64px;
+  border-radius: 8px 8px 0 0;
+  overflow: hidden;
+}
+
+.ha-barra-fileira > button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 64px;
+  margin: 0;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  color: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.ha-barra-fileira > button + button {
+  border-left: 1px solid color-mix(in srgb, var(--ha-barra-texto) 20%, transparent);
+}
+
+.ha-barra-fileira > button:hover {
+  background-color: color-mix(in srgb, var(--ha-barra-texto) 12%, transparent);
+}
+
+.ha-barra-fileira > button[aria-expanded='true'] {
+  background-color: color-mix(in srgb, var(--ha-barra-texto) 20%, transparent);
+  text-decoration: underline;
+  text-underline-offset: 6px;
+}
+
+/* VOLTA1 E4: o anel de foco (2 px, na cor do papel) contorna o botão inteiro, e não só a palavra, e fica dentro
+   dele (a barra encosta nas bordas da janela). Um `outline-offset` negativo no botão daria isso, mas o teste de
+   estilo só admite duas regras assim no arquivo: o anel é o `outline` de um pseudo-elemento do botão. O
+   `outline` desenha fora da caixa do `::after`: com `inset: 6px` ele ocupa de 4 a 6 px da borda do botão, a 4 px
+   ou mais dos fios verticais e do topo da barra, nos dois temas. */
+.ha-barra-fileira > button:focus-visible {
+  outline: none;
+}
+
+.ha-barra-fileira > button:focus-visible::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  outline: 2px solid var(--ha-barra-texto);
+  outline-offset: 0;
+  pointer-events: none;
+}
+
+/* O painel logo acima da barra, dentro do elemento fixo: a confirmação, a escolha de fralda e a lista
+   do Mais. Opaco e da largura da barra. Fechado, sem texto e sem grupo, não ocupa nada (a região de
+   status continua no DOM). */
+.ha-painel {
+  position: absolute;
+  /* O `100%` conta da borda de DENTRO da barra, depois do fio de 1 px do topo (E3): sem o 1 px a mais o painel
+     cobria o fio. Com ele o painel acaba no topo da barra. */
+  bottom: calc(100% + 1px);
+  left: 0;
+  right: 0;
+  border-radius: 8px 8px 0 0;
+  background-color: var(--cor-fundo);
+  color: var(--cor-texto);
+}
+
+.ha-painel[data-aberto] {
+  max-height: calc(100dvh - 128px);
+  padding: 24px;
+  overflow-y: auto;
+  border-top: 1px solid var(--cor-fio-suave);
+}
+
+.ha-confirmacao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.ha-confirmacao-texto {
+  flex: 1 1 auto;
+  margin: 0;
+}
+
+.ha-confirmacao-acoes {
+  display: flex;
+  gap: 16px;
+}
+
+/* As escolhas têm a mesma largura (grade, e não `flex` pelo texto): 2 colunas, 4 de 1200 em diante. O Mais
+   (`data-largos`: "Alimentação sólida" não cabe em meia coluna de 390) vai em 1 coluna abaixo de 768. */
+.ha-painel-grupo {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+@media (min-width: 1200px) {
+  .ha-painel-grupo {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.ha-confirmacao ~ .ha-painel-grupo {
+  margin-top: 16px;
+}
+
+/* Hoje e Sessão (as duas telas sobre a abertura): o link da coluna lateral tem 56 de alvo nos dois temas,
+   e o item da lista guarda 44 de layout. A base dá ao link `min-height: var(--alvo-toque)` (44 de dia,
+   56 na madrugada): em 390 a lateral fica abaixo do subtítulo e a diferença de 12 px empurrava todos os
+   blocos da madrugada. Com o alvo fixo e o item de altura fixa, os retângulos são os mesmos nos dois temas. */
+.ha-tela .sb-abertura-link {
+  min-height: 56px;
+}
+
+.ha-tela .ha-li-link {
+  height: 44px;
+  min-height: 0;
+}
+
+/* Sessão: o bloco do cronômetro é o bloco de cor da tela. De 768 para cima é uma grade de 10 colunas
+   sobre o bloco inteiro (as colunas são as da página: o fio vertical cai em x de c8) e o recuo de 64 é
+   de cada coluna. O cronômetro (c1–c7) e os botões (c8–c10) ficam lado a lado. */
+.ha-cronometro {
+  padding: 0;
+}
+
+.ha-cron-grade {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+}
+
+.ha-cron-tempo {
+  grid-column: 1 / 8;
+  min-width: 0;
+  padding: 64px;
+}
+
+.ha-cron-rotulo {
+  margin: 0;
+}
+
+.ha-cron-valor {
+  display: block;
+  width: fit-content;
+  margin: 8px 0 0;
+  white-space: nowrap;
+}
+
+/* VOLTA1 E2: o `t-cronometro` de 224 só cabe nos 784 px de "1:12:01" (7 caracteres) dentro de c1–c7; com 8 ou
+   mais caracteres ("10:00:00", "100:00:00") o cronômetro passava do fio vertical de c8. A classe vem do número
+   de caracteres (`data-tamanho`, calculado por `tamanhoDoCronometro`), e não de uma largura medida: o longo cai
+   para 160 (linha de 128, a mesma proporção do `t-cronometro`) e termina com folga antes do fio. O normal não
+   tem regra aqui: continua o 224 da base. */
+.ha-cron-valor[data-tamanho='longo'] {
+  font-size: 10rem;
+  line-height: 8rem;
+}
+
+/* VOLTA2 D3: o "1" tabular tem um recuo grande dentro da célula e, a 224, a tinta de "1:12:01" começava 27 px à
+   direita do x do rótulo (a caixa já começa nele). O `text-indent` negativo tira esse recuo só da tinta, de forma
+   óptica: não mexe no tracking e a caixa fica onde está (mesma altura, mesmo x, e a mesma largura para qualquer
+   hora, porque o recuo é o mesmo para todas). Em `em`, para o longo (160) acompanhar. Só de 768 para cima: o 390
+   não entra.
+   A caixa é `width: fit-content` e o `text-indent` negativo entra nesse cálculo: ela encolhia exatamente o recuo
+   (783,1 para 765,9 em 1440). O `padding-right` do mesmo valor, na mesma regra, devolve essa largura. */
+@media (min-width: 768px) {
+  .ha-cron-valor {
+    text-indent: -0.077em;
+    padding-right: 0.077em;
+  }
+}
+
+.ha-cron-atividade {
+  margin: 8px 0 0;
+}
+
+/* O fio vertical claro (a cor do texto do bloco a 20%) é a borda da coluna das ações, só do lado
+   esquerdo. */
+.ha-cron-acoes {
+  grid-column: 8 / 11;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  padding: 64px;
+  border-left: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+}
+
+.ha-cron-secundarios {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ha-cron-acoes .sb-botao,
+.ha-cron-acoes .sb-moldura {
+  width: 100%;
+}
+
+.ha-cron-painel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ha-cron-painel-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.ha-cron-painel-acoes > * {
+  flex: 1 1 auto;
+}
+
+/* O campo da nota (2.9): sem caixa, fio sólido embaixo na cor do texto do bloco, Instrument Serif 32. */
+.ha-nota-campo {
+  box-sizing: border-box;
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  border-radius: 0;
+  background-color: transparent;
+  color: inherit;
+  font-family: var(--fonte-sb-serifa);
+  font-size: 2rem;
+  line-height: 2.375rem;
+  letter-spacing: 0;
+  resize: none;
+}
+
+/* A mídia da Sessão tem proporção de 3 para 2 (1,5): o contrato pede de 1,45 a 1,55 e a da base é 1,43. */
+.ha-sessao .sb-midia[data-formato='larga'] {
+  aspect-ratio: 3 / 2;
+}
+
+@media (max-width: 767px) {
+  /* H-3: em 390 a abertura gastava 347 px até o fio. O link "Ir aos últimos" (44 de item) leva a uma seção
+     que já está logo abaixo: sai do celular. O "Voltar para Hoje" da Sessão (S-5) fica. */
+  .ha-tela .ha-li-ultimos {
+    display: none;
+  }
+
+  /* A lateral da abertura fica a 16 do subtítulo (a base põe 32): na Sessão de tummy time os botões terminavam
+     em y=729, e o limite de 390 é 700. É o mesmo 16 que separa o subtítulo do fio. */
+  .ha-tela .sb-abertura-lateral {
+    margin-top: 16px;
+  }
+
+  /* O item do link guarda 32 de layout (44 de 768 em diante): o link tem 56 de alvo e transborda 12 de cada
+     lado, sobre o aviso e sobre a margem do fio, onde não há nada para tocar. */
+  .ha-tela .ha-li-link {
+    height: 32px;
+  }
+
+  .ha-painel-grupo[data-largos] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Os botões dos blocos de cor têm rótulo de 20 (o conjunto da escala) em 390: "Ver sessão" e "Encerrar e
+     anotar" quebravam em 2 linhas de 24 dentro dos 64 px da moldura. Com 20, "Ver sessão" cabe numa linha e
+     "Encerrar e anotar" quebra com ar. */
+  .ha-andamento .sb-botao,
+  .ha-andamento .sb-moldura {
+    font-size: 1.25rem;
+    line-height: 1.25rem;
+  }
+
+  .ha-andamento {
+    padding: 24px;
+  }
+
+  /* VOLTA1 E1: em 390 os números de Últimos (112 e 96 px) eram maiores que o do bloco Em andamento (56) e
+     tiravam dele o primeiro ponto de atenção. Abaixo de 768 todos os três ficam em 56 (da escala `numero`),
+     com a linha na proporção do `t-numero` (45 para 56, como 90 para 112) para não sobrar vazio entre o
+     número e a legenda. O `FaixaNumeros` grava o tamanho em `style.fontSize` (112, 96, 72 ou 56): só o
+     `!important` vence o estilo inline, e a base não se edita. De 768 para cima nada muda (112). */
+  [data-ultimos] .sb-numeros-valor {
+    font-size: 3.5rem !important;
+    line-height: 2.8125rem;
+  }
+
+  /* Em 390 os dois botões do bloco Em andamento dividem a linha: duas colunas iguais com 8 de gap, 64 de
+     altura. O recuo do primário aperta para 16 e o miolo da moldura para 8, e o rótulo pode quebrar em
+     2 linhas dentro dos 64. */
+  .ha-andamento-acoes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .ha-andamento .ha-encerrar {
+    padding: 0 16px;
+  }
+
+  .ha-andamento .sb-moldura-miolo {
+    padding: 0 8px;
+    white-space: normal;
+    text-align: center;
+  }
+
+  /* O cronômetro em 390: uma coluna só, com o recuo do bloco (24) e os botões embaixo: Encerrar em
+     largura total e os outros dois lado a lado (8 de gap). */
+  .ha-cronometro {
+    padding: 24px;
+  }
+
+  .ha-cron-grade {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ha-cron-tempo,
+  .ha-cron-acoes {
+    grid-column: 1 / -1;
+    padding: 0;
+  }
+
+  /* VOLTA1 E2: a coluna útil de 390 tem 295 (343 de bloco, 24 de recuo). "1:12:01" a 96 px media ~336 e vazava;
+     a 80 mede ~280 e cabe, então o recuo é um só (24) para o rótulo, o cronômetro, a atividade e os botões, e a
+     caixa dos dígitos começa no x do rótulo. Com 8 ou mais caracteres o cronômetro cai para 56 (cabe até 9). */
+  .ha-cron-valor[data-tamanho='normal'] {
+    font-size: 5rem;
+    line-height: 4rem;
+  }
+
+  .ha-cron-valor[data-tamanho='longo'] {
+    font-size: 3.5rem;
+    line-height: 2.8125rem;
+  }
+
+  /* 24 entre a caixa do cronômetro (ou da atividade) e o Encerrar (a E2 pede pelo menos 16; com 16 o vão visível
+     entre o fundo dos dígitos e o botão ficava em cerca de 20 e lia curto). */
+  .ha-cron-acoes {
+    margin-top: 24px;
+    padding: 0;
+    border-left: 0;
+    gap: 8px;
+  }
+
+  .ha-cron-secundarios {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .ha-cron-secundarios > [role='group'] {
+    grid-column: 1 / -1;
+  }
+
+  .barra-registrar {
+    width: 100%;
+    border-radius: 0;
+  }
+
+  .barra-registrar.barra-fixa {
+    width: 100%;
+  }
+
+  .ha-barra-fileira {
+    border-radius: 0;
+  }
+
+  /* VOLTA1 E4: rótulo de 17 px (o `t-corpo-p` da escala): em 390 cada botão tem 93,8 px (97,5 sem barra de
+     rolagem) e a 20 "Mamada" ficava apertado, com 10 de folga; a 17 o texto cabe com folga e o anel de foco
+     (a 6 px da borda) não toca a palavra. A 17 e peso 600 (t-botao) "Mamada" mede 71,3 e a folga fica em 22,5,
+     abaixo dos 24 da E4: o peso 500 usa a face de 400 que já está no bundle e estreita o texto (tracking 0). */
+  .ha-barra-fileira > button {
+    font-size: 1.0625rem;
+    line-height: 1.5rem;
+    font-weight: 500;
+  }
+
+  .ha-painel {
+    border-radius: 0;
+  }
+
+  .ha-painel[data-aberto] {
+    padding: 16px;
+  }
+
+  /* VOLTA1 E5: rótulo de 20 px (do conjunto da escala) nas 3 escolhas do tipo da fralda, como o da barra. */
+  .ha-confirmacao-escolhas .sb-moldura {
+    font-size: 1.25rem;
+    line-height: 1.25rem;
+  }
+
+  /* VOLTA2 D2: Desfazer e Fechar ocupam a fileira inteira, em 2 colunas iguais com o mesmo gap de 16 das 3
+     escolhas: as duas fileiras terminam no mesmo x (a largura útil menos 16). Antes cada botão tinha a largura
+     do próprio texto e a fileira acabava 28 px antes da das escolhas. */
+  .ha-confirmacao-acoes {
+    display: grid;
+    flex: 1 1 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+}
+
+/* VOLTA1 E5: a escolha opcional do tipo da fralda (Xixi, Cocô, Ambos) mora na confirmação, que é flex com
+   quebra: ocupa uma linha inteira, abaixo do texto e do Desfazer/Fechar, em 3 colunas de largura igual.
+   Os botões são os de moldura das outras escolhas do painel, com o alvo de toque do sistema (44 de dia,
+   56 na madrugada), opacos e sem sombra. O miolo perde o recuo de 24 para os 3 caberem em 390. */
+.ha-confirmacao-escolhas {
+  display: grid;
+  flex: 1 1 100%;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.ha-confirmacao-escolhas .sb-moldura-miolo {
+  padding: 0 8px;
+}
+
+/* VOLTA2 D1: de 768 para cima a confirmação é uma linha só, acima da barra: o texto, as 3 escolhas e depois
+   Desfazer e Fechar. Em duas linhas o painel tinha 161 de altura e cobria o Encerrar e o Ver sessão do bloco
+   Em andamento. O recuo vertical cai de 24 para 16 (16 + 1 de fio + 56 do alvo da madrugada + 16 = 89). A ordem
+   visual é do `order` do flex: o DOM segue Desfazer, Fechar, escolhas (o Tab não muda). O texto encolhe
+   (`min-width: 0`) em vez de empurrar os botões para fora do painel. */
+@media (min-width: 768px) {
+  .ha-painel[data-aberto] {
+    padding: 16px 24px;
+  }
+
+  .ha-confirmacao {
+    flex-wrap: nowrap;
+  }
+
+  .ha-confirmacao-texto {
+    flex: 1 1 0;
+    min-width: 0;
+    order: 0;
+  }
+
+  .ha-confirmacao-escolhas {
+    flex: 0 1 auto;
+    order: 1;
+  }
+
+  .ha-confirmacao-acoes {
+    flex: 0 0 auto;
+    order: 2;
+  }
+}
+
+/* VOLTA2 D4: de 1400 de largura em diante os três números de Últimos ficam em 112, todos. O `FaixaNumeros` escolhe
+   o tamanho de cada um (112, 96, 72 ou 56) medindo `scrollWidth` no primeiro layout; se a Zilla Slab ainda não
+   carregou, a medida usa a fonte de reserva, mais larga, e um número cai para 96 enquanto os outros ficam em 112
+   (visto em 1425 de largura útil). O resultado dependia da corrida entre a fonte e o layout, e a base não se edita:
+   o `!important` vence o `style.fontSize` que ela grava. A linha continua a do `t-numero` (90). Abaixo de 1400 a base
+   decide (de 768 a 1399, onde 112 não caberia) e abaixo de 768 vale a regra de 56 acima. */
+@media (min-width: 1400px) {
+  [data-ultimos] .sb-numeros-valor {
+    font-size: 7rem !important;
+  }
+}
+
 /* 44d-4 */
 /* O Início novo (MAT-44d-4): apresentação, linhas, citação, cartões, pergunta com CTA, palavras
    grandes e seção escura. Classes `vt-*`. Em cada seletor o valor base (computador) vem primeiro e as

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { Aparelho } from './componentes/Aparelho.tsx'
 import { IlustracaoBerco } from './prototipo/IlustracaoBerco.tsx'
 import { IlustracaoColo } from './prototipo/IlustracaoColo.tsx'
@@ -253,23 +253,25 @@ describe('MAT-44: Hoje e Sessão', () => {
     ['claro', claro],
     ['madrugada', madrugada],
   ] as const) {
-    it(`Hoje (${tema}): o único cartão fica num campo de cor com token válido`, () => {
+    // O Hoje do 44d-2 não tem cartão nem data-campo: o único bloco de cor é o Em andamento, e o tema vem
+    // das variáveis de uso (--cor-campo-sessao: urucum de dia, o bloco escuro na madrugada).
+    it(`Hoje (${tema}): o único bloco de cor é o Em andamento, sem cartão e sem data-campo`, () => {
       const { container } = renderizarRota('/app/hoje', { estadoInicial: estado() })
 
-      const cartoes = container.querySelectorAll('.cartao')
-      expect(cartoes).toHaveLength(1)
-      const nome = cartoes[0].getAttribute('data-campo')!
-      expect(tokens[nome], nome).toBeDefined()
-      expect(nome.startsWith('night-')).toBe(tema === 'madrugada')
+      expect(container.querySelectorAll('.cartao')).toHaveLength(0)
+      expect(container.querySelectorAll('[data-campo]')).toHaveLength(0)
+      expect(container.querySelectorAll('[data-andamento]')).toHaveLength(1)
+      expect(document.documentElement.hasAttribute('data-tema')).toBe(tema === 'madrugada')
     })
 
-    it(`Sessão (${tema}): o cronômetro fica num campo de cor com token válido`, () => {
+    // MAT-44d-2: o bloco do cronômetro é o bloco de cor da Sessão e o tema vem das variáveis de uso.
+    it(`Sessão (${tema}): o cronômetro (data-cronometro) fica no bloco de cor (data-andamento), sem data-campo`, () => {
       const { container } = renderizarRota('/app/sessao', { estadoInicial: estado() })
 
-      const campo = container.querySelector('[role="timer"]')!.closest('[data-campo]')!
-      const nome = campo.getAttribute('data-campo')!
-      expect(tokens[nome], nome).toBeDefined()
-      expect(nome.startsWith('night-')).toBe(tema === 'madrugada')
+      expect(container.querySelector('[role="timer"]')!.closest('[data-andamento]')).not.toBeNull()
+      expect(container.querySelector('[role="timer"]')!.hasAttribute('data-cronometro')).toBe(true)
+      expect(container.querySelectorAll('[data-campo]')).toHaveLength(0)
+      expect(document.documentElement.hasAttribute('data-tema')).toBe(tema === 'madrugada')
     })
   }
 
@@ -280,21 +282,20 @@ describe('MAT-44: Hoje e Sessão', () => {
     expect(parseFloat(minimo) * 16).toBeGreaterThanOrEqual(48)
   })
 
-  it('o ícone da área logada vem sempre com rótulo de texto visível, escondido do leitor de tela', () => {
-    for (const caminho of ['/app/hoje', '/app/sessao']) {
-      const { container, unmount } = renderizarRota(caminho)
-      const icones = [...container.querySelectorAll('svg.lucide')]
-      expect(icones.length, caminho).toBeGreaterThan(0)
-      for (const icone of icones) {
-        expect(icone.getAttribute('aria-hidden')).toBe('true')
-        const controle = icone.closest('button, a')
-        expect(controle, 'ícone fora de botão ou link').not.toBeNull()
-        const texto = [...controle!.children]
-          .filter((filho) => filho !== icone && !filho.hasAttribute('aria-hidden'))
-          .map((filho) => filho.textContent?.trim())
-          .join('')
-        expect(texto, controle!.outerHTML).not.toBe('')
-      }
+  it('o Hoje não tem ícone: a barra Registrar é só de texto', () => {
+    const { container } = renderizarRota('/app/hoje')
+
+    expect(container.querySelectorAll('svg')).toHaveLength(0)
+  })
+
+  // MAT-44d-2: sem navegação inferior, a Sessão também ficou sem ícone lucide (o ícone da área logada só
+  // existia na navegação inferior e nos botões rápidos). A regra "ícone sempre com rótulo de texto
+  // visível" continua valendo onde houver ícone (o `BotoesRapidos` do Início, conferido em r3/r5).
+  it('a Sessão, com e sem sessão, não tem nenhum ícone lucide', () => {
+    for (const estado of [claro(), semSessao()]) {
+      const { container, unmount } = renderizarRota('/app/sessao', { estadoInicial: estado })
+
+      expect(container.querySelectorAll('svg.lucide'), 'ícone lucide na Sessão').toHaveLength(0)
       unmount()
     }
   })
@@ -321,8 +322,8 @@ describe('MAT-44: SVG e movimento', () => {
       const { container, unmount } = renderizarRota(caminho, { estadoInicial: estado })
       await screen.findAllByRole('heading')
       const svgs = [...container.querySelectorAll('svg')]
-      // O Início não tem ilustração nem ícone (MAT-44d-4): zero svg lá.
-      expect(svgs.length, caminho).toBeGreaterThanOrEqual(caminho === '/' ? 0 : 1)
+      // O Hoje (44d-2) e o Início (44d-4) não têm ícone nem ilustração: nada a conferir neles.
+      if (caminho !== '/app/hoje' && caminho !== '/') expect(svgs.length, caminho).toBeGreaterThan(0)
       for (const svg of svgs) {
         const decorativo = svg.getAttribute('aria-hidden') === 'true'
         const nomeado = svg.hasAttribute('aria-label') || svg.hasAttribute('aria-labelledby') || svg.querySelector('title') !== null
@@ -436,8 +437,8 @@ describe('MAT-44 r2 A1: resposta a hover, active e foco sem escala, giro ou incl
 describe('MAT-44 r2 A2: ícones só na navegação inferior e nos botões rápidos', () => {
   const importam = listarFontes(pastaSrc).filter((f) => /from\s+['"]lucide-react[^'"]*['"]/.test(f.texto))
 
-  it('só NavegacaoInferior.tsx e BotoesRapidos.tsx importam de lucide-react', () => {
-    expect(importam.map((f) => f.nome).sort()).toEqual(['prototipo/BotoesRapidos.tsx', 'prototipo/NavegacaoInferior.tsx'])
+  it('só BotoesRapidos.tsx importa de lucide-react (a navegação inferior saiu com o 44d-2)', () => {
+    expect(importam.map((f) => f.nome).sort()).toEqual(['prototipo/BotoesRapidos.tsx'])
   })
 
   it('cada import é de ícones nomeados, do pacote raiz', () => {
@@ -507,50 +508,50 @@ describe('MAT-44 r2 B2: ilustrações da cena', () => {
   })
 })
 
+// MAT-44d-2: a Sessão é a abertura, o bloco do cronômetro e a mídia (sessao.test.tsx confere cada
+// bloco). Aqui ficam as regras de composição que estas rodadas já tinham, na forma nova.
 describe('MAT-44 r2 B3 e B4: Sessão', () => {
-  it('as informações da sessão ficam dentro do campo do cronômetro, em linhas com régua', () => {
+  it('as informações da sessão (início e atividade) ficam no cabeçalho e no bloco do cronômetro, sem as linhas com régua do campo antigo', () => {
     const { container } = renderizarRota('/app/sessao', {
       estadoInicial: { ...criarEstadoInicial(Date.now()), sessao: { tipo: 'tummy', inicio: Date.now() - 60_000, pessoa: 'Juliana' } },
     })
 
-    const campo = container.querySelector('[role="timer"]')!.closest('[data-campo]')!
-    const linhas = [...campo.querySelectorAll('p.border-t')]
-    expect(linhas.map((l) => l.textContent)).toEqual([
-      expect.stringMatching(/^Iniciado às \d{2}:\d{2} por Juliana$/),
-      'Atividade sugerida: Espelho no chão',
-    ])
-    expect(linhas.every((l) => l.classList.contains('border-current'))).toBe(true)
+    expect(container.querySelector('.sb-abertura-subtitulo')!.textContent).toMatch(/^Iniciado às \d{2}:\d{2} por Juliana$/)
+    const bloco = container.querySelector('[role="timer"]')!.closest('[data-andamento]')!
+    expect(within(bloco as HTMLElement).getByText('Atividade sugerida: Espelho no chão')).toBeTruthy()
+    expect(container.querySelectorAll('p.border-t')).toHaveLength(0)
   })
 
-  it('as ações ficam no pé da tela, depois do campo, que tem a altura do próprio conteúdo', () => {
+  it('as ações ficam no bloco do cronômetro, depois dele na ordem do DOM está só a mídia', () => {
     const { container } = renderizarRota('/app/sessao')
 
-    const campo = container.querySelector('[role="timer"]')!.closest('[data-campo]')!
-    expect(campo.classList.contains('flex-1')).toBe(false)
+    const bloco = container.querySelector('[role="timer"]')!.closest('[data-andamento]')!
     const acoes = screen.getByRole('button', { name: 'Encerrar' })
-    expect(campo.closest('main')!.contains(acoes)).toBe(true)
-    expect(campo.compareDocumentPosition(acoes) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
-    expect(acoes.closest('.mt-auto')).not.toBeNull()
+    expect(bloco.contains(acoes)).toBe(true)
+    expect(bloco.closest('main')!.contains(acoes)).toBe(true)
+    expect(acoes.closest('.mt-auto')).toBeNull()
+    expect(bloco.nextElementSibling!.querySelector('[data-midia]')).not.toBeNull()
   })
 
-  it('o estado vazio tem a ilustração do berço, própria dele, dentro de um campo de cor', () => {
+  it('o estado vazio tem a ilustração do berço, própria dele, dentro da moldura de mídia em barro', () => {
     const { container } = renderizarRota('/app/sessao', { estadoInicial: semSessao() })
 
     const berco = container.querySelector('[data-ilustracao="berco"]')!
     expect(berco).not.toBeNull()
     expect(berco.getAttribute('aria-hidden')).toBe('true')
-    const campo = berco.closest('[data-campo]')!
-    expect(tokens[campo.getAttribute('data-campo')!]).toBeDefined()
+    const moldura = berco.closest('[data-midia]')!
+    expect(moldura.getAttribute('data-fundo')).toBe('barro')
     expect(container.querySelector('[data-ilustracao="colo"]')).toBeNull()
   })
 
-  it('"Voltar para Hoje" é um botão secundário do sistema, com o mesmo destino e o mesmo nome', () => {
+  it('"Voltar para Hoje" é um link de texto da coluna lateral da abertura (estilo do sistema), com o mesmo destino e o mesmo nome', () => {
     renderizarRota('/app/sessao', { estadoInicial: semSessao() })
 
     const voltar = screen.getByRole('link', { name: 'Voltar para Hoje' })
     expect(voltar.getAttribute('href')).toBe('/app/hoje')
-    expect(voltar.classList.contains('botao')).toBe(true)
-    expect(voltar.classList.contains('botao-secundario')).toBe(true)
+    expect(voltar.classList.contains('sb-abertura-link')).toBe(true)
+    expect(voltar.classList.contains('botao')).toBe(false)
+    expect(voltar.closest('.sb-abertura-lateral')).not.toBeNull()
     expect(voltar.closest('p')).toBeNull()
   })
 })
@@ -576,83 +577,81 @@ describe('MAT-44 r2 B5: CSS do campo da madrugada', () => {
 // ---------------------------------------------------------------------------
 // Rodada 3: acabamento.
 
-describe('MAT-44 r3 #1: Hoje com mais peso editorial', () => {
+// MAT-44d-2: o Hoje deixou de ter campo de lavanda, lista e cartão. A nota é uma linha rótulo + texto
+// da base, os Últimos são a faixa de 3 números, e o único bloco de cor é o Em andamento (hoje.test.tsx
+// confere cada bloco; aqui ficam as regras de cor e de ordem de leitura que estas rodadas já tinham).
+describe('MAT-44 r3 #1: o Hoje sem campo de lavanda, em papel, na ordem de leitura', () => {
   for (const [tema, estado] of [
     ['claro', claro],
     ['madrugada', madrugada],
   ] as const) {
-    it(`(${tema}) "Para você saber" é um campo de lavanda e o data-campo acompanha o tema`, () => {
+    it(`(${tema}) "Para você saber" fica em papel, sem data-campo nem cartão, com a nota e o autor`, () => {
       renderizarRota('/app/hoje', { estadoInicial: estado() })
 
       const secao = screen.getByRole('heading', { name: 'Para você saber' }).closest('section')!
-      const nome = secao.getAttribute('data-campo')!
-      expect(nome).toBe(tema === 'madrugada' ? 'night-field-2' : 'field-2')
-      expect(tokens[nome]).toBeDefined()
+      expect(secao.hasAttribute('data-campo')).toBe(false)
       expect(secao.querySelector('.cartao')).toBeNull()
       expect(secao.textContent).toContain('Pomada só à noite.')
       expect(secao.textContent).toContain('Carla, 22:40')
     })
   }
 
-  it('"Últimos" fica em papel, com as horas tabulares à direita e respiro maior entre as linhas', () => {
+  it('"Últimos" fica em papel, com os tempos tabulares em Zilla Slab (t-numero) e a legenda de 20 px', () => {
     renderizarRota('/app/hoje')
 
     const secao = screen.getByRole('heading', { name: 'Últimos' }).closest('section')!
     expect(secao.hasAttribute('data-campo')).toBe(false)
-    for (const item of secao.querySelectorAll('li')) {
-      expect(item.className).toMatch(/\bpy-4\b/)
-      const hora = item.lastElementChild!
-      expect(hora.className).toContain('tabular')
-      expect(hora.className).toContain('text-right')
+    const itens = secao.querySelectorAll('.sb-numeros-item')
+    expect(itens).toHaveLength(3)
+    for (const item of itens) {
+      expect(item.querySelector('p.t-numero')).not.toBeNull()
+      expect(item.querySelector('p.t-corpo')).not.toBeNull()
     }
   })
 
-  it('a ordem de leitura é a mesma: cartão, nota, últimos; e há um só cartão', () => {
+  it('a ordem de leitura é: Em andamento, Últimos e Para você saber', () => {
     const { container } = renderizarRota('/app/hoje')
 
-    const cartao = container.querySelector('.cartao')!
-    const nota = screen.getByRole('heading', { name: 'Para você saber' })
+    const andamento = container.querySelector('[data-andamento]')!
     const ultimos = screen.getByRole('heading', { name: 'Últimos' })
-    expect(container.querySelectorAll('.cartao')).toHaveLength(1)
-    expect(cartao.compareDocumentPosition(nota) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
-    expect(nota.compareDocumentPosition(ultimos) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
+    const nota = screen.getByRole('heading', { name: 'Para você saber' })
+    expect(container.querySelectorAll('[data-andamento]')).toHaveLength(1)
+    expect(andamento.compareDocumentPosition(ultimos) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
+    expect(ultimos.compareDocumentPosition(nota) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
   })
 })
 
 describe('MAT-44 r3 #2: botões rápidos com o mesmo tratamento em toda largura e tema', () => {
-  // R2 (rodada 5): as miniaturas do Início (página pública) não têm ícone; o tratamento com ícone
-  // vale para a área logada (ver "r5 R2" para o Início).
+  // R2 (rodada 5): as miniaturas do Início (página pública) não têm ícone. MAT-44d-2: a barra Registrar
+  // do Hoje também é só de texto (os 4 botões iguais, Sono, Mamada, Fralda e Mais), sem ícone e sem o
+  // sinal "+". O tratamento com ícone e o "+ Mais" ficam no `BotoesRapidos`, que só o Início usa.
   const casos: Array<[string, string, () => EstadoPrototipo]> = [
     ['Hoje (claro)', '/app/hoje', claro],
     ['Hoje (madrugada)', '/app/hoje', madrugada],
   ]
 
   for (const [nome, caminho, estado] of casos) {
-    it(`${nome}: Sono, Mamada, Fralda e Tummy time têm exatamente um ícone antes do texto, e o ícone não encolhe`, async () => {
+    it(`${nome}: Sono, Mamada, Fralda e Mais são só texto, num <span>, sem ícone e sem nada aria-hidden`, async () => {
       const { container } = renderizarRota(caminho, { estadoInicial: estado() })
       await screen.findAllByRole('heading')
 
       const sono = container.querySelector('button[aria-label="Iniciar sono de Heloísa"]')!
       const botoes = [...sono.parentElement!.children] as HTMLElement[]
-      expect(botoes.map((b) => b.textContent)).toEqual(['Sono', 'Mamada', 'Fralda', 'Tummy time', '+ Mais'])
-      for (const botao of botoes.slice(0, 4)) {
-        const icones = botao.querySelectorAll('svg')
-        expect(icones, botao.textContent!).toHaveLength(1)
-        expect(icones[0].getAttribute('aria-hidden')).toBe('true')
-        expect(botao.firstElementChild, botao.textContent!).toBe(icones[0])
-        expect(icones[0].getAttribute('class')).toContain('shrink-0')
+      expect(botoes.map((b) => b.textContent)).toEqual(['Sono', 'Mamada', 'Fralda', 'Mais'])
+      for (const botao of botoes) {
+        expect(botao.querySelectorAll('svg'), botao.textContent!).toHaveLength(0)
+        expect(botao.querySelectorAll('[aria-hidden="true"]'), botao.textContent!).toHaveLength(0)
+        expect([...botao.children].map((filho) => filho.tagName), botao.textContent!).toEqual(['SPAN'])
       }
     })
 
-    it(`${nome}: o "+ Mais" leva o próprio sinal, escondido do leitor de tela, antes do texto`, async () => {
+    it(`${nome}: o botão do Mais não leva o sinal "+": o rótulo é "Mais" e o nome acessível, "Mais registros"`, async () => {
       const { container } = renderizarRota(caminho, { estadoInicial: estado() })
       await screen.findAllByRole('heading')
 
       const mais = container.querySelector('button[aria-label="Mais registros"]')!
       expect(mais.querySelectorAll('svg')).toHaveLength(0)
-      const sinal = mais.querySelector('[aria-hidden="true"]')!
-      expect(sinal.textContent).toBe('+')
-      expect(mais.textContent).toBe('+ Mais')
+      expect(mais.textContent).toBe('Mais')
     })
   }
 
@@ -673,44 +672,42 @@ describe('MAT-44 r3 #3: aparelhos sem tela vazia', () => {
 
 })
 
-describe('MAT-44 r3 #4: campo do cronômetro apertado', () => {
-  function campoDaSessao() {
+describe('MAT-44 r3 #4: bloco do cronômetro apertado', () => {
+  function colunaDoTempo() {
     const { container } = renderizarRota('/app/sessao')
-    return container.querySelector('[role="timer"]')!.closest('[data-campo]') as HTMLElement
+    return container.querySelector('[role="timer"]')!.parentElement as HTMLElement
   }
 
-  it('o rótulo vem logo acima do número, e a régua e as linhas de informação logo abaixo', () => {
-    const campo = campoDaSessao()
+  it('o rótulo vem logo acima do número, e a atividade (quando há) logo abaixo, na mesma coluna', () => {
+    const coluna = colunaDoTempo()
 
-    const [rotulo, numero, linhas] = [...campo.children] as HTMLElement[]
+    const [rotulo, numero] = [...coluna.children] as HTMLElement[]
     expect(rotulo.textContent).toBe('Duração da sessão')
     expect(numero.getAttribute('role')).toBe('timer')
-    expect(linhas.querySelectorAll('p.border-t').length).toBeGreaterThanOrEqual(1)
-    expect(campo.children).toHaveLength(3)
+    expect(coluna.children).toHaveLength(2)
   })
 
-  it('o número não flutua: sem margem automática e com margem curta do rótulo', () => {
-    const numero = campoDaSessao().querySelector('[role="timer"]')!
+  it('o número não flutua: sem margem automática, e a margem curta do rótulo é do CSS do bloco (8 px)', () => {
+    const numero = colunaDoTempo().querySelector('[role="timer"]')!
 
     expect(numero.className).not.toMatch(/\bm[ty]-auto\b/)
-    expect(numero.className).toMatch(/\bmt-2\b/)
+    expect(/\.ha-cron-valor\s*\{[^}]*margin:\s*8px 0 0/.exec(estiloGlobal)).not.toBeNull()
   })
 
-  it('a altura do campo vem do conteúdo: não estica (sem flex-1) e tem respiro generoso', () => {
-    const campo = campoDaSessao()
+  it('a altura do bloco vem do conteúdo: nada estica (sem flex-1) e o respiro de 64 é do CSS', () => {
+    const coluna = colunaDoTempo()
 
-    expect(campo.classList.contains('flex-1')).toBe(false)
-    expect(campo.className).toMatch(/\bpy-8\b/)
-    expect(campo.parentElement!.classList.contains('flex-1')).toBe(false)
-    expect(campo.parentElement!.parentElement!.classList.contains('flex-1')).toBe(false)
+    for (let no: HTMLElement | null = coluna; no && no.tagName !== 'MAIN'; no = no.parentElement) {
+      expect(no.classList.contains('flex-1'), no.className).toBe(false)
+    }
+    expect(/\.ha-cron-tempo\s*\{[^}]*padding:\s*64px/.exec(estiloGlobal)).not.toBeNull()
   })
 
-  it('as ações continuam embaixo, empurradas ao pé da tela', () => {
+  it('as ações ficam na coluna ao lado do cronômetro, e nada é empurrado ao pé da tela (sem .mt-auto)', () => {
     const { container } = renderizarRota('/app/sessao')
 
-    const acoes = screen.getByRole('button', { name: 'Encerrar' }).closest('.mt-auto')
-    expect(acoes).not.toBeNull()
-    expect(container.querySelector('main')!.contains(acoes)).toBe(true)
+    expect(screen.getByRole('button', { name: 'Encerrar' }).closest('.mt-auto')).toBeNull()
+    expect(container.querySelector('main .mt-auto')).toBeNull()
   })
 })
 
@@ -744,25 +741,20 @@ describe('MAT-44 r4 #1: a Sessão ocupa o vazio com uma ilustração do tipo da 
     }
   }
 
-  it('fica entre o campo e as ações, numa área que cresce sem empurrar as ações', () => {
+  // MAT-44d-2: a ilustração é a mídia larga da Sessão (96 px abaixo do bloco do cronômetro), que ela
+  // cobre inteira: `h-full w-full` e `slice`, sem o teto de 16 rem nem a área `flex-1` da coluna única.
+  it('fica depois do bloco do cronômetro, dentro da moldura de mídia, e a cobre sem distorcer (slice)', () => {
     const { container } = renderizarRota('/app/sessao')
 
-    const campo = container.querySelector('[role="timer"]')!.closest('[data-campo]')!
+    const bloco = container.querySelector('[role="timer"]')!.closest('[data-andamento]')!
     const figura = container.querySelector('main [data-ilustracao]')!
-    const acoes = screen.getByRole('button', { name: 'Encerrar' }).closest('.mt-auto')!
-    expect(campo.compareDocumentPosition(figura) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
-    expect(figura.compareDocumentPosition(acoes) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
-
-    // A área é flex-1 com min-h-0: com pouca altura ela vai a zero antes de empurrar as ações.
-    const area = figura.parentElement!
-    expect(area.classList.contains('flex-1')).toBe(true)
-    expect(area.classList.contains('min-h-0')).toBe(true)
-    expect(area.classList.contains('relative')).toBe(true)
-    // A figura se ajusta à altura da área e tem um teto de tamanho médio.
+    expect(bloco.compareDocumentPosition(figura) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
+    expect(figura.parentElement!.hasAttribute('data-midia')).toBe(true)
     const cl = figura.getAttribute('class')!
     expect(cl).toMatch(/\bh-full\b/)
-    expect(cl).toMatch(/\bmax-h-\[16rem\]/)
-    expect(cl).toMatch(/\bmax-w-\[16rem\]/)
+    expect(cl).toMatch(/\bw-full\b/)
+    expect(cl).not.toMatch(/\bmax-[hw]-\[16rem\]/)
+    expect(figura.getAttribute('preserveAspectRatio')).toMatch(/slice$/)
   })
 
   // O Início deixou de ter ilustração (MAT-44d-4): colo e passeio só existem como desenho, e as
@@ -1062,21 +1054,18 @@ describe('MAT-44 r5 R2: nenhum ícone na página pública', () => {
     expect(container.querySelector('main button')).toBeNull()
   })
 
+  // MAT-44d-2: a navegação inferior saiu do Hoje e da Sessão (era o teste "a navegação inferior continua
+  // com ícone e rótulo visível"). Fica o que o substitui: nenhuma tela logada tem ícone lucide.
   for (const caminho of ['/app/hoje', '/app/sessao']) {
     for (const [tema, estado] of [
       ['claro', claro],
       ['madrugada', madrugada],
     ] as const) {
-      it(`${caminho} (${tema}): a navegação inferior continua com ícone e rótulo visível em cada item`, () => {
-        renderizarRota(caminho, { estadoInicial: estado() })
+      it(`${caminho} (${tema}): sem navegação inferior e sem nenhum ícone lucide`, () => {
+        const { container } = renderizarRota(caminho, { estadoInicial: estado() })
 
-        const itens = [...screen.getByRole('navigation', { name: 'Principal' }).querySelectorAll('.nav-item')]
-        expect(itens).toHaveLength(5)
-        for (const item of itens) {
-          expect(item.querySelectorAll('svg.lucide')).toHaveLength(1)
-          expect(item.firstElementChild!.getAttribute('aria-hidden')).toBe('true')
-          expect(item.querySelector('span')!.textContent!.trim()).not.toBe('')
-        }
+        expect(screen.queryByRole('navigation', { name: 'Principal' })).toBeNull()
+        expect(container.querySelectorAll('.nav-item, svg.lucide')).toHaveLength(0)
       })
     }
   }
@@ -1085,12 +1074,12 @@ describe('MAT-44 r5 R2: nenhum ícone na página pública', () => {
     ['claro', claro],
     ['madrugada', madrugada],
   ] as const) {
-    it(`/app/hoje (${tema}): os quatro botões rápidos com ícone continuam com ícone e rótulo visível`, () => {
+    it(`/app/hoje (${tema}): os quatro botões da barra Registrar têm rótulo visível e nenhum ícone`, () => {
       renderizarRota('/app/hoje', { estadoInicial: estado() })
 
-      for (const nome of ['Iniciar sono de Heloísa', 'Iniciar mamada de Heloísa', 'Registrar fralda de Heloísa', 'Iniciar tummy time de Heloísa']) {
+      for (const nome of ['Iniciar sono de Heloísa', 'Iniciar mamada de Heloísa', 'Registrar fralda de Heloísa', 'Mais registros']) {
         const botao = screen.getByRole('button', { name: nome })
-        expect(botao.querySelectorAll('svg.lucide'), nome).toHaveLength(1)
+        expect(botao.querySelectorAll('svg.lucide'), nome).toHaveLength(0)
         expect(botao.querySelector('span')!.textContent!.trim(), nome).not.toBe('')
       }
     })
@@ -1362,7 +1351,8 @@ describe('MAT-44 r8: o Início novo não esconde o excesso, e o Hoje e a Sessão
       expect(container.querySelectorAll('.break-words'), caminho).toHaveLength(0)
       unmount()
     }
-    for (const arquivo of ['componentes/Layout.tsx', 'componentes/ColunaApp.tsx', 'paginas/Hoje.tsx', 'paginas/Sessao.tsx']) {
+    // O ColunaApp saiu da lista: o 44d-2 o aposentou (ver o teste "peças que saíram" em sessao.test.tsx).
+    for (const arquivo of ['componentes/Layout.tsx', 'paginas/Hoje.tsx', 'paginas/Sessao.tsx']) {
       expect(lerTexto(arquivo), arquivo).not.toContain('break-words')
     }
   })
