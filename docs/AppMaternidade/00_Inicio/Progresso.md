@@ -21,6 +21,11 @@ Horários em America/Sao_Paulo, tirados do relógio da máquina ou de carimbos d
 
 Uma linha por marco, a mais recente no topo. O estado corrente fica em [Retomada do site](Retomada_Site.md), e o detalhe de cada marco está no cartão Kanban citado.
 
+- 10/11/2026: **PWA adiada por Daniel.** As palavras dele: "eu não pedi pra ter instalavel de nada, só o site".
+  - A MAT-41a (t_ab1bd202) parou com `needs_input`.
+  - O worktree e os commits foram guardados, e nada foi integrado.
+  - O ADR-009 e o DESIGN_DOC_BASE receberam emenda.
+  - A 39a e a 40a passaram a depender da 44d-3 e da MAT-36, e não mais da 37b, para rodarem em paralelo.
 - 10/11/2026: **44d-2 (área logada) integrada em `int/refazer`.**
   - Cartão t_6c3e5423. O revisor aprovou na revisão 3, e o eda47ae entrou por ff-only, com push.
   - Notas do Fable: de 7,8 a 8,3, depois de 8,0 a 8,3 e por fim de 8,0 a 8,2.

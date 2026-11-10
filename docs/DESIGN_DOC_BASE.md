@@ -14,7 +14,7 @@ O AppMaternidade é um aplicativo de acompanhamento da rotina do bebê e de coor
 
 O problema central é a informação espalhada: um cuidador não sabe quando o outro registrou uma mamada, se uma soneca ainda está em andamento ou que observação ficou para o próximo turno. O aplicativo deve tornar essas informações fáceis de registrar e consultar, com autoria e estado de sincronização claros.
 
-Daniel decidiu em 03/11/2026 começar pelo **site completo**, com todas as funcionalidades RF-01 a RF-14. O site é feito para o celular, abre por link e pode ser instalado na tela inicial (PWA). Android e iOS vêm depois, como port do mesmo produto pelo Capacitor ([ADR-009](AppMaternidade/06_ADRs/ADR-009_Site_Completo_Primeiro.md)). O iPhone continua prioridade: os testes do site incluem o Safari no iPhone, sem esperar um app de loja.
+Daniel decidiu em 03/11/2026 começar pelo **site completo**, com todas as funcionalidades RF-01 a RF-14. O site é feito para o celular e abre por link. A instalação na tela inicial (PWA) foi adiada por Daniel em 10/11/2026. Android e iOS vêm depois, como port do mesmo produto pelo Capacitor ([ADR-009](AppMaternidade/06_ADRs/ADR-009_Site_Completo_Primeiro.md)). O iPhone continua prioridade: os testes do site incluem o Safari no iPhone, sem esperar um app de loja.
 
 O site reúne quatro pilares:
 
@@ -38,7 +38,7 @@ A primeira experiência deve permitir que uma família entre pelo link, cadastre
 | Rotina, desenvolvimento, comunidade e cuidado compartilhado | Pilares trazidos no pedido original. |
 | Android e iOS | Destinos do produto, por port depois do site (ADR-009). |
 | Revisão deste documento antes de implementar | Restrição expressa da rodada atual. |
-| Site completo primeiro, com PWA | Decidido por Daniel em 03/11/2026 (ADR-009). |
+| Site completo primeiro (PWA adiada por Daniel em 10/11/2026) | Decidido por Daniel em 03/11/2026 (ADR-009). Em 10/11/2026 Daniel tirou a PWA do escopo atual: "só o site". |
 | Stack do site D8-A | Decidida por delegação de Daniel em 03/11/2026 (ADR-009). |
 | Supabase em São Paulo e regras de domínio em TypeScript | Supabase decidido na D8-A; a sincronização nativa (PowerSync ou outra) volta a ser decidida no port. |
 | Brasil, pt-BR, 0–12 meses e contas de adultos | Recorte proposto; confirmar público e tratamento das exceções. |
@@ -155,6 +155,8 @@ Esta navegação é uma hipótese de trabalho. Os desenhos devem mostrar também
 Botões de registro precisam ser alcançáveis com uma mão. Texto ampliado, leitor de tela, contraste e uso em baixa luminosidade devem ser considerados desde os fluxos iniciais.
 
 ## 9. Offline e sincronização como parte do escopo
+
+> **PWA adiada por Daniel em 10/11/2026.** Nada desta seção que depende de service worker ou de instalação (PWA, MAT-41) faz parte do escopo atual. O texto fica como registro do desenho, para quando Daniel pedir a PWA.
 
 "Funcionar offline" tem um alcance concreto:
 

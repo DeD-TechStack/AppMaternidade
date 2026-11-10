@@ -10,6 +10,8 @@ tarefas: MAT-27, MAT-28, MAT-32
 
 # ADR-009 — Site completo primeiro, port Android e iOS depois
 
+> **Emenda de 10/11/2026: PWA adiada por Daniel.** As palavras dele foram: "eu não pedi pra ter instalavel de nada, só o site". Por isso, a PWA (instalação na tela inicial e casca offline, MAT-41) saiu do escopo atual. O site segue como site comum, aberto pelo navegador. A PWA tinha entrado na stack como escolha técnica da D8-A, e não por pedido de Daniel. O cartão MAT-41a (t_ab1bd202) ficou parado: o worktree e os commits foram guardados, e nada foi integrado. A PWA só volta se Daniel pedir.
+
 **Status:** Aceita. Daniel (rumo decidido; stack por delegação registrada na MAT-28).
 
 ## 1. Contexto
