@@ -6,7 +6,8 @@ import type { TipoSessao } from './estado.ts'
 import { DESCRICAO_DA_MIDIA } from './textosSessao.ts'
 
 // A ilustração cobre a moldura (1376 × cerca de 917, proporção 1,5) sem distorcer: `slice` corta o
-// que passa em vez de deixar vão. O berço é quadrado e ancora na base, para o chão não ser cortado.
+// que passa em vez de deixar vão. O berço usa a medida larga (240 × 160, proporção 1,5): não há o que cortar
+// e a figura em pé aparece inteira, do cabelo ao chão.
 const COBRE = 'h-full w-full block'
 
 /**
@@ -22,7 +23,7 @@ export function MidiaDaSessao({ tipo }: { tipo: TipoSessao | null }) {
       ) : tipo === 'mamada' ? (
         <IlustracaoMamada larga className={COBRE} preserveAspectRatio="xMidYMid slice" />
       ) : (
-        <IlustracaoBerco className={COBRE} preserveAspectRatio="xMidYMax slice" />
+        <IlustracaoBerco larga className={COBRE} preserveAspectRatio="xMidYMid slice" />
       )}
     </Midia>
   )

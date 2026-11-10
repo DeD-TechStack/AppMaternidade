@@ -268,6 +268,25 @@ describe('Sessão: a mídia (E5, bloco 3)', () => {
     expect(descricoes.size).toBe(3)
   })
 
+  it('P3: o berço da Sessão mostra a figura inteira e o chão: o viewBox tem a proporção da moldura (1,5) e vai de antes do topo da cabeça (y≈80) até depois da linha do chão (y=220)', () => {
+    // Com o viewBox quadrado e `xMidYMax slice`, a moldura de 1,5 só mostrava y de 80 a 240 e cortava o topo
+    // do cabelo da figura em pé (e a porta). O viewBox da Sessão é um recorte de 240 × 160, sem corte nenhum.
+    for (const estado of [sessaoDe('sono', MIN), semSessao()]) {
+      const { container, unmount } = renderizarRota('/app/sessao', { estadoInicial: estado })
+      const figura = midia(container).querySelector('svg')!
+      expect(figura.getAttribute('data-ilustracao')).toBe('berco')
+      const [x, y, largura, altura] = figura.getAttribute('viewBox')!.split(/\s+/).map(Number)
+      expect(x).toBe(0)
+      expect(largura).toBe(240)
+      expect(largura / altura).toBeGreaterThanOrEqual(1.45)
+      expect(largura / altura).toBeLessThanOrEqual(1.55)
+      expect(y, 'o topo do cabelo da figura está em y≈80').toBeLessThanOrEqual(74)
+      expect(y + altura, 'a linha do chão está em y=220 e os pés vão até 219').toBeGreaterThanOrEqual(224)
+      expect(y + altura).toBeLessThanOrEqual(240)
+      unmount()
+    }
+  })
+
   it('o CSS dá à mídia da Sessão a proporção de 3 para 2 (1,5), dentro de 1,45 a 1,55 (S-4)', () => {
     expect(css).toMatch(/\.ha-sessao \.sb-midia\[data-formato='larga'\]\s*\{[^}]*aspect-ratio:\s*3\s*\/\s*2/)
   })
