@@ -1,12 +1,13 @@
 ---
 version: alpha
 name: AppMaternidade — Urucum
-description: Papel quente, tinta quase preta e um campo de urucum. Editorial na página pública, direto e de uma mão na área logada.
+description: Papel quente, tinta quase preta e um único urucum. Estrutura editorial de grade de 10 colunas, fios de 1 px e tipo em escala fixa. Direto e de uma mão na área logada.
 colors:
   primary: "#1A1511"
   neutral: "#F6EFE3"
   accent: "#B0401C"
   on-accent: "#FFF8EE"
+  secondary: "#5E554C"
   info: "#2B5C70"
   line: "#1A1511"
   focus: "#1A1511"
@@ -17,6 +18,7 @@ colors:
   night-neutral: "#17120E"
   night-accent: "#C47055"
   night-on-accent: "#17120E"
+  night-secondary: "#BAAF9F"
   night-info: "#8FB0BF"
   night-line: "#E3D6C3"
   night-focus: "#F7EFE2"
@@ -24,49 +26,110 @@ colors:
   night-field-1: "#3A2723"
   night-field-2: "#2C2733"
 typography:
-  display:
+  display-xl:
+    fontFamily: Fraunces
+    fontSize: 6rem
+    fontWeight: 600
+    lineHeight: 6rem
+    letterSpacing: 0
+  display-m:
     fontFamily: Fraunces
     fontSize: 4.5rem
-    fontWeight: 800
-    lineHeight: 1
-    letterSpacing: "-0.02em"
-  heading:
+    fontWeight: 400
+    lineHeight: 4.5rem
+    letterSpacing: 0
+  citacao:
     fontFamily: Fraunces
-    fontSize: 2.25rem
-    fontWeight: 600
-    lineHeight: 1.1
-    letterSpacing: "-0.01em"
-  body:
+    fontSize: 3rem
+    fontWeight: 400
+    lineHeight: 3.625rem
+    letterSpacing: 0
+  secao:
+    fontFamily: Instrument Serif
+    fontSize: 3.5rem
+    fontWeight: 400
+    lineHeight: 4.1875rem
+    letterSpacing: 0
+  subtitulo:
+    fontFamily: Instrument Serif
+    fontSize: 3rem
+    fontWeight: 400
+    lineHeight: 3.625rem
+    letterSpacing: 0
+  rotulo:
+    fontFamily: Instrument Serif
+    fontSize: 2rem
+    fontWeight: 400
+    lineHeight: 2.375rem
+    letterSpacing: 0
+  nav-grande:
+    fontFamily: Instrument Serif
+    fontSize: 5.5rem
+    fontWeight: 400
+    lineHeight: 5.5rem
+    letterSpacing: 0
+  corpo-g:
+    fontFamily: Instrument Sans
+    fontSize: 1.75rem
+    fontWeight: 400
+    lineHeight: 2.4375rem
+    letterSpacing: 0
+  corpo:
+    fontFamily: Instrument Sans
+    fontSize: 1.25rem
+    fontWeight: 400
+    lineHeight: 1.75rem
+    letterSpacing: 0
+  corpo-p:
     fontFamily: Instrument Sans
     fontSize: 1.0625rem
     fontWeight: 400
-    lineHeight: 1.55
-  numeric:
+    lineHeight: 1.5rem
+    letterSpacing: 0
+  ui:
     fontFamily: Instrument Sans
-    fontSize: 3.5rem
-    fontWeight: 600
-    lineHeight: 1
+    fontSize: 0.9375rem
+    fontWeight: 400
+    lineHeight: 1.3125rem
+    letterSpacing: 0
+  numero:
+    fontFamily: Zilla Slab
+    fontSize: 7rem
+    fontWeight: 700
+    lineHeight: 5.625rem
+    letterSpacing: 0
     fontFeature: "tnum"
-  label:
-    fontFamily: Instrument Sans
-    fontSize: 0.875rem
+  cronometro:
+    fontFamily: Zilla Slab
+    fontSize: 14rem
+    fontWeight: 700
+    lineHeight: 11.25rem
+    letterSpacing: 0
+    fontFeature: "tnum"
+  botao:
+    fontFamily: Fraunces
+    fontSize: 1.5rem
     fontWeight: 600
-    lineHeight: 1.3
-    letterSpacing: "0.04em"
+    lineHeight: 1.5rem
+    letterSpacing: 0
 rounded:
-  tag: 3px
-  control: 6px
-  card: 8px
+  tag: 4px
+  inner: 4px
+  control: 8px
   media: 8px
 spacing:
-  xs: 4px
-  sm: 8px
-  md: 16px
-  lg: 24px
-  xl: 40px
-  2xl: 64px
-  3xl: 96px
-  page-margin: 16px
+  s8: 8px
+  s16: 16px
+  s24: 24px
+  s32: 32px
+  s64: 64px
+  s96: 96px
+  s128: 128px
+  s160: 160px
+  s192: 192px
+  margin-wide: 32px
+  margin-mid: 24px
+  margin-narrow: 16px
   measure: 65ch
   target: 44px
   target-night: 56px
@@ -74,70 +137,71 @@ components:
   button-primary:
     backgroundColor: "{colors.accent}"
     textColor: "{colors.on-accent}"
-    typography: "{typography.label}"
+    typography: "{typography.botao}"
     rounded: "{rounded.control}"
-    padding: 12px
-    height: 48px
+    padding: 32px
+    height: 80px
   button-primary-night:
     backgroundColor: "{colors.night-accent}"
     textColor: "{colors.night-on-accent}"
-  button-secondary:
+  button-frame:
     backgroundColor: "{colors.neutral}"
     textColor: "{colors.primary}"
-    typography: "{typography.label}"
+    typography: "{typography.botao}"
     rounded: "{rounded.control}"
-    padding: 12px
     height: 48px
-  button-secondary-night:
+  button-frame-night:
     backgroundColor: "{colors.night-neutral}"
     textColor: "{colors.night-primary}"
   tag:
     backgroundColor: "{colors.paper-deep}"
     textColor: "{colors.primary}"
-    typography: "{typography.label}"
+    typography: "{typography.ui}"
     rounded: "{rounded.tag}"
     padding: 6px
+    height: 26px
   tag-night:
     backgroundColor: "{colors.night-paper-deep}"
     textColor: "{colors.night-primary}"
-  card:
-    backgroundColor: "{colors.neutral}"
-    textColor: "{colors.primary}"
-    rounded: "{rounded.card}"
-    padding: 16px
-  card-night:
-    backgroundColor: "{colors.night-neutral}"
-    textColor: "{colors.night-primary}"
-  nav-item:
-    backgroundColor: "{colors.neutral}"
-    textColor: "{colors.primary}"
-    typography: "{typography.label}"
-    height: 48px
-  nav-item-night:
-    backgroundColor: "{colors.night-neutral}"
-    textColor: "{colors.night-primary}"
-  quick-action:
+  field-narrow:
     backgroundColor: "{colors.paper-deep}"
     textColor: "{colors.primary}"
-    typography: "{typography.label}"
-    rounded: "{rounded.control}"
-    height: 48px
-  quick-action-night:
+    typography: "{typography.rotulo}"
+    rounded: "{rounded.tag}"
+    height: 64px
+  field-narrow-night:
     backgroundColor: "{colors.night-paper-deep}"
     textColor: "{colors.night-primary}"
-    height: 56px
-  info-text:
+  secondary-text:
     backgroundColor: "{colors.neutral}"
-    textColor: "{colors.info}"
-  info-text-night:
+    textColor: "{colors.secondary}"
+  secondary-text-night:
     backgroundColor: "{colors.night-neutral}"
-    textColor: "{colors.night-info}"
+    textColor: "{colors.night-secondary}"
+  secondary-text-surface:
+    backgroundColor: "{colors.paper-deep}"
+    textColor: "{colors.secondary}"
   accent-text:
     backgroundColor: "{colors.neutral}"
     textColor: "{colors.accent}"
   accent-text-night:
     backgroundColor: "{colors.night-neutral}"
     textColor: "{colors.night-accent}"
+  info-text:
+    backgroundColor: "{colors.neutral}"
+    textColor: "{colors.info}"
+  info-text-night:
+    backgroundColor: "{colors.night-neutral}"
+    textColor: "{colors.night-info}"
+  footer:
+    backgroundColor: "{colors.accent}"
+    textColor: "{colors.on-accent}"
+  footer-night:
+    backgroundColor: "{colors.night-paper-deep}"
+    textColor: "{colors.night-primary}"
+  dark-section:
+    backgroundColor: "{colors.primary}"
+    textColor: "{colors.neutral}"
   focus-ring:
     backgroundColor: "{colors.neutral}"
     textColor: "{colors.focus}"
@@ -150,153 +214,117 @@ components:
   rule-night:
     backgroundColor: "{colors.night-neutral}"
     textColor: "{colors.night-line}"
-  field-panel-accent:
-    backgroundColor: "{colors.accent}"
-    textColor: "{colors.on-accent}"
-    rounded: "{rounded.card}"
-  field-panel-1:
+  media-1:
     backgroundColor: "{colors.field-1}"
     textColor: "{colors.primary}"
-    rounded: "{rounded.card}"
-  field-panel-1-night:
+    rounded: "{rounded.media}"
+  media-1-night:
     backgroundColor: "{colors.night-field-1}"
     textColor: "{colors.night-primary}"
-  field-panel-2:
+  media-2:
     backgroundColor: "{colors.field-2}"
     textColor: "{colors.primary}"
-    rounded: "{rounded.card}"
-  field-panel-2-night:
+    rounded: "{rounded.media}"
+  media-2-night:
     backgroundColor: "{colors.night-field-2}"
     textColor: "{colors.night-primary}"
 ---
 
 ## Overview
 
-O AppMaternidade tem cara de caderno de casa, não de painel de software: papel quente, tinta quase preta e uma única cor quente, o urucum, usada em campos grandes e em poucos pontos de ação (ESPEC §1). A estrutura vem de linhas finas na cor da tinta, com margens pequenas e campos de cor largos, no lugar de sombras e cartões flutuantes (ESPEC §2). A página pública fala em tom editorial, com uma serifa de exibição pesada para a promessa e uma sem serifa limpa para o resto (ESPEC §3). A área logada é feita para o colo e para a madrugada: números grandes e tabulares, ações na metade de baixo da tela e um tema escuro de pouco brilho com o mesmo urucum, menos saturado (ESPEC §6 e §8). O movimento é curto e some quando a pessoa pede menos movimento (ESPEC §7).
+O AppMaternidade tem cara de caderno de casa, não de painel de software: papel quente, tinta quase preta e uma única cor quente, o urucum. A estrutura vem de uma grade de 10 colunas sem calha, de fios de 1 px na cor da tinta e de uma escala de tipo fixa. Não há sombra, gradiente, vidro fosco nem cartão com borda. A página pública fala em tom editorial, com serifa de exibição para o título e uma serifa condensada para as perguntas e os rótulos. A área logada é feita para o colo e para a madrugada: números grandes e tabulares em slab, uma barra de registro de 64 px e um tema escuro de pouco brilho. O movimento é curto e some quando a pessoa pede menos movimento.
 
-Desde a MAT-44 o Início é montado em campos de cor de ponta a ponta, alternados com faixas de papel. Os campos são o urucum e dois tons terrosos de pouca saturação, o barro e a lavanda cinza. Sobre eles ficam aparelhos desenhados em CSS, com as telas de Hoje e Sessão em miniatura, e ilustrações de traço de tinta com adultos e bebês em cenas de cuidado. A profundidade vem da sobreposição e da escala dos aparelhos, nunca de sombra.
-
-As superfícies são três. O Início é uma página de decidir e aprender, a única com abertura grande. O Hoje é uma superfície de operar: o que importa é registrar rápido e ver o que está em andamento. A Sessão é de inspecionar um único objeto, o cronômetro.
+O contrato abaixo é o do sistema-base (MAT-44d). Ele vale para todas as telas, e a página `sistema` é a amostra viva dele.
 
 ## Colors
 
-A paleta tem uma família quente, uma fria e os neutros. Nada de gradiente, vidro fosco ou brilho.
+Uma família quente, os neutros e a madrugada. Nada de gradiente.
 
-- **Tinta (`primary`, #1A1511):** texto, linhas e contorno de foco. Marrom quase preto, nunca preto puro. `line` e `focus` usam o mesmo valor, porque as linhas são na tinta (ESPEC §2).
-- **Papel (`neutral`, #F6EFE3):** fundo de tudo. Quente e claro, nunca branco.
-- **Papel fundo (`paper-deep`, #EBE1D0):** etiquetas e botões rápidos. Separa sem precisar de sombra.
-- **Urucum (`accent`, #B0401C):** a única cor quente saturada. Vai nos campos de cor do Início, no botão principal e em poucos textos de destaque. O nome vem do pigmento vermelho-alaranjado da semente de urucum. Na MAT-44 o matiz desceu 1,2° (de 15,8° para 14,6°) para ficar a pelo menos 20° de todo papel de cor medido na referência visual.
-- **Barro (`field-1`, #C9A39A):** campo de cor de tom médio, rosado e terroso, saturação HSL de 0,30. Leva sempre a tinta por cima.
-- **Lavanda cinza (`field-2`, #B8ADC4):** segundo campo de cor, frio e apagado, saturação HSL de 0,16. Dá ritmo ao lado do urucum e do barro sem competir com eles. Leva sempre a tinta por cima.
-- **Regra dos campos:** saturação HSL de no máximo 35% nos dois temas, matiz fora do intervalo fechado [35°, 65°] (amarelo e âmbar) e a pelo menos 20° de toda cor saturada medida na referência visual.
-- **Sobre o urucum (`on-accent`, #FFF8EE):** texto e traço claro sobre o campo de urucum. Com um urucum escuro o bastante para servir de texto sobre o papel, o texto escuro por cima não passaria de 4,5:1, por isso o texto sobre o destaque é claro.
-- **Informação (`info`, #2B5C70):** azul-petróleo, só para estado informativo (avisos neutros como "Já há uma sessão em andamento"). Nunca decora.
-- **Madrugada (`night-*`):** fundo #17120E, quente e escuro (luminância 0,0065); texto #E3D6C3, abaixo do branco para não ofuscar; urucum #C47055, mesmo matiz (14,6°) com saturação 0,49 contra 0,73; foco #F7EFE2, o único tom bem claro, para o contorno aparecer sobre o fundo e sobre o urucum. Os campos da madrugada são o barro escuro (`night-field-1`, #3A2723) e a lavanda escura (`night-field-2`, #2C2733), com o texto da madrugada por cima.
-
-Contraste WCAG 2.x, conferido no lint, no `contrast.py` da replica-design e no teste de contraste:
+- **Tinta (`primary`, #1A1511):** texto, fios e seção escura. 15,85:1 sobre o papel.
+- **Papel (`neutral`, #F6EFE3):** fundo de toda página clara.
+- **Secundário (`secondary`, #5E554C):** legendas e ajuda, sólido. 6,38:1 sobre o papel e 5,63:1 sobre a superfície. Nunca se usa tinta a 50% para texto.
+- **Superfície (`paper-deep`, #EBE1D0):** etiquetas e campo no celular.
+- **Urucum (`accent`, #B0401C):** botão primário, CTA, seção "Em andamento" ou cronômetro, rodapé e texto de erro. 5,54:1 com `on-accent` (#FFF8EE) e 5,11:1 como texto sobre o papel.
+- **Barro e lavanda (`field-1` #C9A39A e `field-2` #B8ADC4):** só como fundo de mídia (`[data-midia]`). Nunca cartão com texto.
+- **Informação (`info`, #2B5C70):** só texto de estado neutro. Sai de todo fundo.
+- **Madrugada (`night-*`):** fundo #17120E, texto #E3D6C3 (12,99:1), secundário #BAAF9F (a 80%), fios a 20%, blocos em #251E18, primário #C47055 com texto #17120E (5,13:1), foco #F7EFE2. O rodapé da madrugada usa o bloco #251E18 com texto #E3D6C3, 11,49:1.
+- **Rodapé:** urucum com `on-accent` (#FFF8EE), 5,54:1.
 
 | Par | Claro | Madrugada |
 |---|---|---|
 | texto sobre papel | 15,85 | 12,99 |
-| texto sobre urucum | 5,54 | 5,13 |
+| secundário sobre papel | 6,38 | 8,61 |
+| urucum com texto do botão | 5,54 | 5,13 |
 | urucum como texto sobre papel | 5,11 | 5,13 |
-| informação sobre papel | 6,41 | 8,09 |
-| texto sobre barro (`field-1`) | 7,93 | 9,82 |
-| texto sobre lavanda (`field-2`) | 8,46 | 10,15 |
-| texto sobre papel fundo | 13,99 | 11,49 |
-| foco contra papel | 15,85 | 16,29 |
-| foco contra urucum | 3,10 | 3,17 |
-| foco contra barro | 7,93 | 12,31 |
-| foco contra lavanda | 8,46 | 12,73 |
+| rodapé | 5,54 | 11,49 |
 
 ## Typography
 
-Duas famílias, ambas SIL OFL 1.1, auto-hospedadas pelos pacotes `@fontsource` (registro em `web/PROVENANCE.md`).
+Quatro famílias, todas SIL OFL 1.1, auto-hospedadas pelos pacotes `@fontsource` (registro em `web/PROVENANCE.md`): **Fraunces** (exibição e botões), **Instrument Serif** (subtítulos, perguntas, rótulos e campos), **Instrument Sans** (corpo e interface) e **Zilla Slab** 700 (números e cronômetro).
 
-- **Fraunces** é a voz de exibição: serifa pesada, de terminais macios, só para a promessa do Início, os títulos de seção e o `h1` das telas. Em 600 ela faz o papel da serifa sóbria dos subtítulos (ESPEC §3), sem uma terceira família.
-- **Instrument Sans** é o corpo e a área logada. Tem números tabulares (`tnum`), usados em horários, durações e no cronômetro.
+O tracking é 0 em tudo. **Nenhum texto em caixa alta.** Nada menor que 15 px. O conjunto permitido de `font-size` é 15, 17, 20, 24, 28, 32, 36, 48, 56, 72, 80, 88, 96, 112 e 224, mais o nome do rodapé, que é fluido.
 
-Escala: corpo de 17 px (`body`, 1,0625 rem); títulos de seção em 36 px (`heading`, cerca de 2,1 vezes o corpo); exibição em 72 px no desktop (`display`, cerca de 4,2 vezes), reduzida para 44 a 48 px em 390 px. O cronômetro usa `numeric` (56 px) e cresce até 88 px na Sessão. Rótulos de seção (`label`) em 14 px, peso 600, caixa alta com espaçamento de 0,04 em.
+| Token | 1440 (px/entrelinha, peso) | Abaixo de 768 | Uso |
+|---|---|---|---|
+| `display-xl` | 96/96, 600 (80/80 de 768 a 991) | 48/48 | `h1` de toda tela |
+| `display-m` | 72/72, 400 | 48/48 | título da seção escura |
+| `citacao` | 48/58, 400 itálico | 32/38 | citação |
+| `secao` | 56/67, 400 | 36/43 | pergunta antes do CTA |
+| `subtitulo` | 48/58, 400 | 36/43 | linha sob o `h1`, títulos de bloco |
+| `rotulo` | 32/38, 400 | 24/29 | rótulo das linhas e dos campos |
+| `nav-grande` | 88/88, 400 | 56/56 | palavras grandes do fim do Início |
+| `corpo-g` | 28/39 | 20/28 | parágrafo de abertura |
+| `corpo` | 20/28 | 17/24 | texto das linhas, links do cabeçalho |
+| `corpo-p` | 17/24 | 17/24 | ajuda de campo, links do rodapé |
+| `ui` | 15/21 | 15/21 | etiquetas, texto legal |
+| `numero` | 112/90, 700 | 112/90 (cai para 96, 72 ou 56 se não couber) | números |
+| `cronometro` | 224/180, 700 | 96/77 | cronômetro da Sessão |
+| `botao` | 24/24, 600 | 24/24 | botão primário e de moldura dupla |
+
+Larguras de linha: `corpo-g` até 65ch dentro de c2–c8; texto das linhas em c4–c8 com `padding-left: 32px` e no máximo 560 px; citação em c1–c6. Nenhum parágrafo passa de 65 caracteres por linha.
 
 ## Layout
 
-- O desenho começa em 390 px e cresce. Grade de 4 colunas no celular e de 12 no desktop, com margem externa de 16 px no celular e cerca de 2% da largura no desktop.
-- Campos de cor e blocos de mídia vão quase de ponta a ponta. O texto corrido fica limitado a cerca de 65 caracteres por linha (`measure`).
-- Linhas de 1 px na tinta separam seções (horizontais) e colunas (verticais). Elas são a estrutura principal.
-- No bloco de duas colunas, o rótulo fica à esquerda em 3 das 12 colunas e o texto à direita; no celular, o rótulo vai acima do texto.
-- Na área logada, a barra de botões rápidos fica fixa logo acima da navegação inferior, ao alcance do polegar.
-- Ritmo vertical pela escala de `spacing`: 16 px dentro de um bloco, 40 a 64 px entre blocos, 96 px entre seções da página pública no desktop.
-
-## Composição
-
-Análise abstrata da referência visual da MAT-44 (fatias `desktop_03` a `desktop_23` e `celular_04` a `celular_15`). Só entram padrões, faixas e frações aproximadas; nenhum valor medido, nome ou texto da referência.
-
-- **Padrões de bloco.**
-  - Campo de aparelhos: um campo de cor largo com vários aparelhos de alturas diferentes, sobrepostos, sem texto dentro do campo (fatias 03, 09 e 17).
-  - Bloco de linhas: rótulo serifado à esquerda e texto à direita, separados por uma linha vertical fina e por linhas horizontais entre as linhas, sobre papel (fatias 04 e 05).
-  - Campo de ilustrações: figuras de traço espalhadas em volta de um centro vazio, sobre campo de cor (fatias 06 e 07).
-  - Campo de janela: um único aparelho grande, notebook ou navegador, ocupando a maior parte do campo (fatias 08, 10, 11 e 14).
-  - Dupla de campos: dois campos lado a lado, cada um com um elemento solto e uma figura pequena (fatia 18).
-  - Fecho: título serifado centrado e respiro grande antes do rodapé (fatias 22 e 23).
-- **Proporções, em faixas.** O campo de cor ocupa quase toda a largura da área de conteúdo, com uma margem lateral igual à do layout. A altura de cada campo fica entre 1/2 e 1 vez a altura da janela no desktop. Entre um campo e o seguinte há uma fresta de papel estreita, bem menor que a margem lateral de leitura. No bloco de linhas, o rótulo fica entre 1/5 e 1/3 da largura e o texto no resto.
-- **Escala tipográfica relativa.** O rótulo do bloco de linhas e a citação ficam entre 1,5 e 2,5 vezes o corpo; o título de fecho entre 2,5 e 3,5 vezes. O corpo é a voz de leitura e o resto da página quase não tem texto: o campo fala pela imagem.
-- **Aparelhos.** Aparecem em grupos de 2 a 5, em escalas diferentes, uns na frente dos outros, às vezes cortados pela borda do campo. A profundidade vem da sobreposição e da diferença de tamanho. No nosso produto as molduras são desenhadas em CSS, sem sombra, e por dentro mostram as nossas miniaturas de Hoje e Sessão.
-- **Ilustrações.** Traço preto contínuo de espessura única, preenchimento chapado de poucas cores, figuras inteiras de pessoas em gestos do dia a dia, em escala pequena em relação ao campo. As nossas são próprias: adultos e bebês em cenas de cuidado, traço de tinta e preenchimento com as cores dos tokens.
-- **Ritmo de seções.** Papel e campo se alternam, com no máximo dois campos seguidos. O texto longo nunca fica em cima do campo: fica no papel, entre campos. O topo da página é um campo de aparelhos, sem título grande acima dele.
-
-### Direção escolhida (VIS2-00)
-
-Três direções de composição foram montadas como telas estáticas para Início e Hoje e pontuadas pelo award-bar (UI 40%, UX 30%, inovação 30%), em 390 e 1440:
-
-| Direção | UI | UX | Inovação | Total |
-|---|---|---|---|---|
-| A, Vitrine: promessa curta no papel e, logo abaixo, um campo de urucum alto com notebook e dois celulares sobrepostos; bloco de linhas no papel; campo de barro com cena de ilustrações; campo de lavanda com a madrugada; fatos numa faixa de papel | 7,6 | 7,8 | 7,0 | 7,48 |
-| B, Caderno: promessa enorme no papel; campos baixos alternados um a um; um aparelho por campo saindo pela borda de cima | 7,2 | 6,8 | 7,2 | 7,08 |
-| C, Mosaico: pares de campos encostados; notebook grande sobre lavanda; fatos dentro do campo de urucum; Hoje em duas colunas no desktop | 7,4 | 7,4 | 7,0 | 7,28 |
-
-Vence a A, pela maior nota. O grupo de aparelhos sobrepostos mostra o produto logo na abertura; a legenda ao lado do campo e o bloco de linhas no papel mantêm a leitura clara nas duas larguras. A B perdeu em UX (campos vazios e rolagem horizontal em 390) e a C pesou com dois campos encostados. No Hoje e na Sessão a A põe o cartão "Em andamento" e o cronômetro num campo de cor de borda a borda no celular.
+- **Margem fixa:** 32 px a partir de 992; 24 px de 768 a 991; 16 px abaixo de 768. Largura máxima da área útil de 1600 px (640 px abaixo de 768).
+- **Grade:** 10 colunas iguais sem calha a partir de 768; abaixo disso, 1 coluna. O x de `cN` é `margem + (N−1) × área útil ÷ 10`. Em 1440 (área útil de 1376): c1=32, c2=169,6, c3=307,2, c4=444,8, c5=582,4, c6=720, c7=857,6, c8=995,2, c9=1132,8, c10=1270,4, fim=1408.
+- **Usos:** mídia larga em c1–c10; texto corrido em c2–c8; linha rótulo + texto com rótulo em c2–c3, texto em c4–c8 e fio vertical em x de c4; abertura com título em c1–c8 e coluna lateral em c9–c10; faixa de 3 números com 3 colunas iguais e 2 fios verticais; galeria de 2 colunas com gap de 32 (a partir de 992), 16 (768 a 991) ou 8 (abaixo de 768).
+- **Ritmo vertical:** escala única de 8, 16, 24, 32, 64, 96, 128, 160 e 192. Saem 4 e 40. Cabeçalho para `h1`: 64 (32 no celular). `h1` para subtítulo: 8. Fio da abertura para o primeiro bloco: 32 (16). Mídia para título do bloco: 128 (48). Parágrafo para números: 96 (48). Números para mídia: 128 (48). Mídia para linhas e linhas para galeria: 160 (48). Entre linhas: 32 (48). Entre peças da galeria: 32 (8). Fim do conteúdo para o rodapé: 192.
+- **Fios:** 1 px na tinta (`#1A1511`). Na madrugada, `#E3D6C3` a 20%, que só serve de divisor; o fio de campo de formulário é sólido `#E3D6C3`. Ficam na abertura (horizontal em c1–c10 e vertical em x de c9, só nos 80 px finais), nos números (horizontal no topo e 2 verticais), nas linhas (vertical entre rótulo e texto e horizontal embaixo, de c2 a c9) e antes do bloco de cartões. Proibido: fio sob o cabeçalho, moldura de página e borda nos 4 lados, exceto em botão de moldura dupla.
 
 ## Elevation & Depth
 
-Plano. Profundidade vem de linha, cor, espaço, sobreposição e escala, não de sombra. Nos campos do Início os aparelhos se sobrepõem e mudam de tamanho para dar a sensação de primeiro e segundo plano. Nenhum `box-shadow` com desfoque acima de 4 px, nenhum `backdrop-filter` e nenhum `filter: blur`. A barra fixa de baixo se separa do conteúdo por uma linha de tinta no topo e pelo fundo de papel opaco.
+Plano. Profundidade vem de linha, cor, espaço, escala e, nos aparelhos de mídia, de inclinação em CSS 3D. Nenhum `box-shadow`, nenhum `backdrop-filter` e nenhum `filter: blur`.
 
 ## Shapes
 
-- Cartões e mídia: 8 px (`card`, `media`).
-- Botões e botões rápidos: 6 px (`control`).
-- Etiquetas: 3 px (`tag`), quase retas.
-- Campos de cor: 8 px (`card`), da mesma família dos cartões.
-- Molduras de aparelho: celular com canto largo e notebook com tela de canto pequeno e base mais larga que a tela, desenhados em CSS com contorno de tinta, sem sombra.
-- Ilustrações: traço contínuo de tinta com preenchimento chapado nas cores dos tokens (papel, urucum, barro e lavanda). De 3 a 6 distintas nas três telas, desenhadas para o projeto em SVG, todas decorativas (`aria-hidden="true"`), uma delas no estado vazio da Sessão.
+Só 0, 4, 8 e 50%. Etiqueta e campo no celular: 4. Botão, moldura dupla e mídia: 8 (4 abaixo de 768 na mídia). Moldura dupla: 8 por fora e 4 por dentro. Sem cartão com borda.
 
 ## Components
 
-- **`button-primary`:** fundo urucum, texto claro, 48 px de altura. Uma ação principal por área.
-- **`button-secondary`:** fundo de papel e contorno de 1 px na tinta.
-- **`tag`:** etiqueta em papel fundo, canto de 3 px, rótulo em caixa alta. Usada nos quatro pilares.
-- **`card`:** o único contêiner com borda. Contorno de 1 px na tinta, canto de 8 px, sem sombra. Nunca há cartão dentro de cartão.
-- **`nav-item`:** item da navegação inferior, só texto, 48 px de altura. O item atual tem um traço de urucum de 3 px no topo.
-- **`quick-action`:** botão rápido em papel fundo, 48 px de altura, 56 px na madrugada.
-- **Confirmação:** linha de tinta no topo, texto da confirmação, "Desfazer" e "Fechar". Não some sozinha.
-- **Foco:** contorno de 2 px na cor `focus`, com afastamento de 2 px, em todo elemento focável.
-- **Campo de cor (`field-panel-*`):** seção de ponta a ponta da área de conteúdo, canto de 8 px, fundo urucum, barro ou lavanda, com `data-campo` no elemento. Texto sobre o barro e a lavanda é sempre a tinta; sobre o urucum, o `on-accent`.
-- **Aparelho:** moldura de celular ou notebook em CSS, com as miniaturas de Hoje e Sessão dentro, inerte e escondida do leitor de tela, com um parágrafo visível ao lado dizendo o que ela mostra.
-- **Fato em destaque:** o termo do fato em Fraunces grande, com a explicação logo abaixo, numa faixa de quatro colunas no desktop.
-- Os componentes são próprios, feitos com Tailwind e as variáveis de uso de `tema.css`. Da lista aprovada (shadcn/ui e Magic UI) nenhum item entrou na MAT-44: os que serviriam ao Início trazem sombra, desfoque, contador ou movimento contínuo, que as regras daqui proíbem, e os aparelhos são desenhados à mão. Os ícones da área logada vêm do `lucide-react` 1.69.0, importados um a um, sempre ao lado de um rótulo visível.
+- **Cabeçalho e menu (um componente só):** em 1440, 64 px, `position: sticky; top: 0`, fundo papel opaco, sem `border-bottom`. O nome do site em x=32, em Fraunces 600 24/24. De 3 a 4 links em `corpo`, com 48 px entre eles e o último terminando no x de c9. À direita, um botão de moldura dupla de 48 px, encostado em x=1408. Submenu "+ Em breve": painel de cerca de 224 × 120, moldura dupla, raio 8, abre na hora. Abaixo de 768: 60 px, botão de menu 44 × 44 à esquerda, nome no meio, botão preenchido à direita; o menu é um painel de papel abaixo do cabeçalho, com os itens centrados em `subtitulo`, grupos separados por fios, foco preso, Esc fecha e devolve o foco. Sem navegação inferior.
+- **Rodapé (todas as telas):** de x=0 e com a largura da janela, em urucum (madrugada `#251E18`). Topo com fio interrompido pelo nome do site. Nome gigante fluido com largura de texto ≥ 96% da área útil. Links em colunas em x=32, 208 e 384, mais um bloco em c7, em `corpo-p` sublinhado. Linha final em `ui` 15 com o aviso de protótipo. Altura de cerca de 900 px em 1440.
+- **Seção escura (só no Início):** fundo `primary`, texto papel (15,85:1), conteúdo em c3–c9 e o botão "Criar conta".
+- **Primário:** altura 80 (64 abaixo de 768), padding 0 32, raio 8, urucum, texto `on-accent`, Fraunces 600 24/24. A troca de fundo é na hora.
+- **Moldura dupla:** altura 48 (64 ao lado de um primário), raio 8 por fora e 4 por dentro. A inversão é na hora.
+- **Etiqueta:** `ui` 15, fundo `paper-deep`, raio 4, padding 2/6, altura 26. Empilhadas a cada 32 px.
+- **Campo:** a partir de 768, linha rótulo + campo com rótulo `rotulo` em c2–c3 e campo em c4–c8, altura 112, sem caixa, fio de 1 px embaixo e texto em Instrument Serif 48/58. Abaixo de 768, rótulo 24/29 em cima e campo de 64 px com fundo `paper-deep`, raio 4, fio de tinta embaixo e texto 32. O select tem a mesma altura, fio e fonte. O botão de mostrar senha é de ícone, 44 × 44 no fim do campo, com `aria-label` e `aria-pressed`.
+- **Foco:** anel de 2 px na cor `focus` com `outline-offset: 2px`, só em `:focus-visible`. O `h1` com foco programático (`tabIndex=-1`) não mostra contorno.
+- **Erro:** `corpo-p` 17/24 em urucum (5,11:1), abaixo do campo, sem mudar a altura da linha.
+- **Desativado:** fundo sólido em texto secundário apagado, nunca tracejado, com `aria-disabled="true"` e o motivo ao lado.
+- **CTA circular:** 480 (322 abaixo de 768), urucum. Um segundo círculo, só de contorno, de 240.
+- **Mídia e galeria:** peça larga de 1376 × 888 a 1056; par de 2 × 672 × 672; retrato em c8–c10 de 413 × 734. Moldura com raio 8 (4 abaixo de 768), `overflow: hidden`, sem sombra, sem borda, `object-fit: cover`. Sem texto dentro: a descrição vai no `alt` ou no `aria-label`. Barro e lavanda só como fundo. A legenda fica só nos cartões "As telas".
+- **Barra Registrar (área logada):** 64 px, `position: fixed; bottom: 0`, 4 botões iguais (Sono, Mamada, Fralda e Mais). Não é navegação.
 
 ## Do's and Don'ts
 
-- Faça: registro em até 2 toques a partir de Hoje; ações principais na metade de baixo da tela; alvos de pelo menos 44 × 44 px, 56 px de altura na madrugada (Fluxos §1).
-- Faça: tema escuro de pouco brilho na madrugada, sem fundo branco, com movimento mínimo (Fluxos §1).
-- Faça: erro reversível. Toda confirmação tem "Desfazer" e só sai quando a pessoa fecha ou faz outro registro (Fluxos §1).
-- Faça: rótulos completos para leitor de tela ("Iniciar sono de Heloísa") e texto ampliável até 200% sem corte (Fluxos §1).
-- Não faça: linguagem de cobrança. Nada de "atrasado", metas, pontos ou rankings (Fluxos §1).
-- Não faça: copiar layout de tela inteira, proporções exatas, textos, ilustrações, fotos, vídeos, logos ou nomes da referência visual (ESPEC §9).
-- Não faça: números de "prova social" sem fonte real nem depoimento inventado (ESPEC §9).
-- Não faça: fontes comerciais sem licença (ESPEC §9).
-- Não faça: texto essencial dentro de imagem (ESPEC §9).
-- Não faça: gradiente, vidro fosco, sombra pesada, ícone em todo título ou cartão dentro de cartão (ESPEC §1 e §6).
-- Faça: alternar campo de cor e papel no Início, com no máximo dois campos seguidos e texto longo sempre no papel.
-- Faça: profundidade por sobreposição e escala dos aparelhos, nunca por sombra.
-- Não faça: ícone na página pública. Na área logada, ícone só ao lado de um rótulo de texto visível.
-- Não faça: decalcar ilustração, aparelho ou composição de bloco da referência visual, nem usar a cor dela.
+- Faça: registro em até 2 toques a partir de Hoje; alvos de pelo menos 44 × 44 px, 56 px de altura na madrugada (Fluxos §1).
+- Faça: tema escuro de pouco brilho na madrugada, sem fundo branco.
+- Faça: erro reversível. Toda confirmação tem "Desfazer".
+- Faça: rótulos completos para leitor de tela e texto ampliável até 200% sem corte.
+- Não faça: linguagem de cobrança. Nada de "atrasado", metas, pontos ou rankings.
+- Não faça: caixa alta, tracking diferente de 0, texto menor que 15 px.
+- Não faça: sombra, gradiente, vidro fosco, borda nos 4 lados fora da moldura dupla, fio sob o cabeçalho ou moldura de página.
+- Não faça: texto sobre barro ou lavanda. Eles são só fundo de mídia.
+- Não faça: copiar layout, texto, imagem, marca ou cor de outro site. Só a estrutura é estudada.
+- Não faça: número de "prova social" sem fonte real nem depoimento inventado.
+- Não faça: fonte sem licença nem texto essencial dentro de imagem.
