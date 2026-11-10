@@ -894,8 +894,9 @@
   /* O celular: 23,5 × 34 rem naturais (tela de 22,5 × 33 rem), escalado de cima para a esquerda
      como o notebook, com as margens negativas tirando do fluxo o espaço que a escala libera. A
      escala é a mesma para todos os celulares da página e só muda em degraus, pela largura dela:
-     em 390 px (a página tem 22,4 rem) é 0,86, e o menor texto da tela (13 px na navegação) fica
-     com 11 px ou mais; o celular tem 323 px, com mais de 16 px de folga de cada lado do cartão. */
+     em 390 px (a página tem 22,4 rem) é 0,85, e o menor texto da tela (13 px na navegação) fica
+     com 11,05 px efetivos; o celular tem cerca de 309 px, com cerca de 17 px de folga de cada
+     lado da seção. */
   .aparelho-celular {
     --escala-celular: 0.8;
     position: relative;

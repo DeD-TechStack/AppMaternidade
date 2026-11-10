@@ -1045,15 +1045,17 @@ describe('MAT-44 r5 R3: a vitrine mostra as telas que a legenda anuncia, em toda
     return container.querySelector<HTMLElement>('#secao-telas')!
   }
 
-  it('cada aparelho diz que tela mostra, e há um notebook, uma tela Hoje e uma tela Sessão', async () => {
-    const secao = await vitrine()
+  it('cada aparelho da seção de telas diz que tela mostra, ela tem uma tela Sessão, e o notebook com a tela Hoje fica no topo', async () => {
+    const { container } = renderizarRota('/')
+    await screen.findByRole('heading', { level: 1 })
+    const secao = container.querySelector<HTMLElement>('#secao-telas')!
 
     const aparelhos = [...secao.querySelectorAll<HTMLElement>('[data-aparelho]')]
-    expect(aparelhos.length).toBeGreaterThanOrEqual(2)
+    expect(aparelhos.length).toBeGreaterThanOrEqual(1)
     for (const aparelho of aparelhos) expect(['hoje', 'sessao']).toContain(aparelho.getAttribute('data-tela'))
-    expect(aparelhos.some((a) => a.getAttribute('data-aparelho') === 'notebook')).toBe(true)
-    expect(aparelhos.some((a) => a.getAttribute('data-tela') === 'hoje')).toBe(true)
     expect(aparelhos.some((a) => a.getAttribute('data-tela') === 'sessao')).toBe(true)
+    const topo = container.querySelector<HTMLElement>('[aria-labelledby="promessa"]')!
+    expect(topo.querySelector('[data-aparelho="notebook"][data-tela="hoje"]')).not.toBeNull()
   })
 
   it('a tela marcada é a que o aparelho mostra: sessao tem o cronômetro, hoje tem o cartão Em andamento', async () => {
