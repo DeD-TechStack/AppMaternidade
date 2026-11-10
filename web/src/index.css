@@ -1263,7 +1263,9 @@
     line-height: 5.625rem;
     font-weight: 700;
     letter-spacing: 0;
-    font-variant-numeric: tabular-nums;
+    /* Os algarismos padrão da Zilla Slab são de texto (o 7 desce, o 2 e o 0 ficam na altura do x):
+       lining-nums pede os de capitular, todos na mesma altura e na mesma linha de base. */
+    font-variant-numeric: tabular-nums lining-nums;
   }
 
   .t-cronometro {
@@ -1272,7 +1274,7 @@
     line-height: 11.25rem;
     font-weight: 700;
     letter-spacing: 0;
-    font-variant-numeric: tabular-nums;
+    font-variant-numeric: tabular-nums lining-nums;
   }
 
   .t-botao {

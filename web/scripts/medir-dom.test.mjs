@@ -24,6 +24,7 @@ import {
   g12,
   lerArgumentos,
   margemDe,
+  num,
   parseCor,
   resumo,
   sb3,
@@ -470,7 +471,7 @@ describe('SB3: o nome do rodapé', () => {
 
 describe('avaliarTudo e resumo', () => {
   it('em sistema todas as regras bloqueiam; nos outros casos, só G2 e G9', () => {
-    assert.equal(bloqueantesDoCaso('sistema').length, 13)
+    assert.equal(bloqueantesDoCaso('sistema').length, 14) // G1 a G12, SB3 e NUM
     assert.deepEqual(bloqueantesDoCaso('hoje'), ['G2', 'G9'])
     assert.deepEqual(bloqueantesDoCaso('inicio'), ['G2', 'G9'])
     assert.deepEqual(bloqueantesDoCaso('sessao'), ['G2', 'G9'])
@@ -482,7 +483,7 @@ describe('avaliarTudo e resumo', () => {
 
     assert.match(linha, /^RESUMO hoje_claro_1440\.json G1 registrada G2 FALHA G3 registrada /)
     assert.match(linha, /G9 FALHA/)
-    assert.equal(resultados.length, 13)
+    assert.equal(resultados.length, 14)
     for (const r of resultados) assert.deepEqual(Object.keys(r).sort(), ['bloqueia', 'motivo', 'nos_com_falha', 'ok', 'regra'])
   })
 
@@ -741,6 +742,172 @@ describe('R2.4 G12: a escala vale nos dois eixos', () => {
     const r = g12(nos)
     assert.equal(r.ok, false, r.motivo)
     assert.match(r.motivo, /escala/)
+  })
+})
+
+// ---------------------------------------------------------------------------------------------
+// D1 (rodada de correção 2): os números em Zilla Slab. A regra NUM falha fechado quando a família,
+// a face carregada ou o `lining-nums` não estão provados. Sem `lining-nums` a Zilla Slab desenha
+// algarismos de texto (o 7 desce, o 2 e o 0 ficam na altura do x).
+
+describe('NUM: os números em Zilla Slab 700, com algarismos de capitular', () => {
+  const FONTE_BOA = { familia: 'Zilla Slab', peso: '700', tamanho: '112px', faceCarregada: true }
+  const numero = (extra = {}) =>
+    criar({
+      tag: 'p',
+      texto: '7',
+      m: { numero: true },
+      estilo: { fontFamily: '"Zilla Slab", Georgia, serif', fontWeight: '700', fontSize: '112px', fontVariantNumeric: 'lining-nums tabular-nums' },
+      fonte: FONTE_BOA,
+      ...extra,
+    })
+  const docBom = { ...doc1440, fontes: { zillaSlab700: true } }
+
+  it('passa: Zilla Slab, face carregada e lining-nums, em [data-numero] e no cronômetro', () => {
+    const r = num([numero(), numero({ m: { numero: true, cronometro: true } })], docBom)
+    assert.equal(r.ok, true, r.motivo)
+    assert.equal(r.regra, 'NUM')
+    assert.match(r.motivo, /2 /)
+  })
+
+  it('falha: a primeira família calculada não é Zilla Slab', () => {
+    const r = num([numero({ fonte: { ...FONTE_BOA, familia: 'Georgia' } })], docBom)
+    assert.equal(r.ok, false, r.motivo)
+    assert.match(r.motivo, /Georgia/)
+    assert.equal(r.nos_com_falha.length, 1)
+  })
+
+  it('falha: a face não está carregada (no elemento ou no documento)', () => {
+    assert.equal(num([numero({ fonte: { ...FONTE_BOA, faceCarregada: false } })], docBom).ok, false)
+    assert.equal(num([numero()], { ...doc1440, fontes: { zillaSlab700: false } }).ok, false)
+  })
+
+  it('falha: sem lining-nums, com tabular-nums sozinho, normal ou outra variante', () => {
+    for (const variante of ['tabular-nums', 'normal', 'oldstyle-nums tabular-nums', '']) {
+      const r = num([numero({ estilo: { fontVariantNumeric: variante } })], docBom)
+      assert.equal(r.ok, false, `variante "${variante}": ${r.motivo}`)
+      assert.match(r.motivo, /lining-nums/)
+    }
+  })
+
+  it('falha fechado: dado ausente ou indefinido no resultado do coletor nunca vira ok:true', () => {
+    const semFonte = numero({ fonte: undefined })
+    const semFamilia = numero({ fonte: { peso: '700', tamanho: '112px', faceCarregada: true } })
+    const semFace = numero({ fonte: { familia: 'Zilla Slab', peso: '700', tamanho: '112px' } })
+    const faceNula = numero({ fonte: { ...FONTE_BOA, faceCarregada: null } })
+    const faceTexto = numero({ fonte: { ...FONTE_BOA, faceCarregada: 'true' } })
+    const semVariante = numero({ estilo: { fontVariantNumeric: undefined } })
+    for (const [nome, no] of Object.entries({ semFonte, semFamilia, semFace, faceNula, faceTexto, semVariante })) {
+      const r = num([no], docBom)
+      assert.equal(r.ok, false, `${nome}: ${r.motivo}`)
+    }
+  })
+
+  it('falha fechado: `fontes` ausente, sem o campo, nulo ou o próprio doc ausente', () => {
+    for (const doc of [doc1440, { ...doc1440, fontes: {} }, { ...doc1440, fontes: { zillaSlab700: null } }, { ...doc1440, fontes: { zillaSlab700: undefined } }, { ...doc1440, fontes: null }, undefined, null]) {
+      const r = num([numero()], doc)
+      assert.equal(r.ok, false, `${JSON.stringify(doc?.fontes)}: ${r.motivo}`)
+    }
+  })
+
+  it('não aplicável (ok, no mesmo formato) quando a página não tem número nem cronômetro', () => {
+    const r = num([criar(), criar({ tag: 'h1' })], docBom)
+    assert.deepEqual(Object.keys(r).sort(), ['motivo', 'nos_com_falha', 'ok', 'regra'])
+    assert.equal(r.ok, true)
+    assert.match(r.motivo, /não aplicável/)
+    assert.equal(num([], docBom).ok, true)
+  })
+
+  it('o que não está visível não conta, e um nó que não é número não é medido', () => {
+    assert.equal(num([numero({ visivel: false, fonte: undefined }), criar({ fonte: undefined })], docBom).ok, true)
+  })
+
+  it('é bloqueante em `sistema` e só registrada nos outros casos; entra no resumo', () => {
+    assert.ok(bloqueantesDoCaso('sistema').includes('NUM'))
+    assert.ok(!bloqueantesDoCaso('hoje').includes('NUM'))
+    const nos = [numero({ fonte: { ...FONTE_BOA, familia: 'Georgia' } })]
+    const em = (caso) => avaliarTudo({ doc: docBom, nos, tema: 'claro' }, caso).find((r) => r.regra === 'NUM')
+    assert.equal(em('sistema').ok, false)
+    assert.equal(em('sistema').bloqueia, true)
+    assert.equal(em('hoje').bloqueia, false)
+    assert.match(resumo('sistema_claro_1440.json', avaliarTudo({ doc: docBom, nos, tema: 'claro' }, 'sistema')), /NUM FALHA/)
+  })
+})
+
+describe('NUM: o coletor real em jsdom lê a família, a face e o font-variant-numeric', () => {
+  const ESTILO_BOM = "font-family: 'Zilla Slab', Georgia, serif; font-weight: 700; font-size: 112px; font-variant-numeric: lining-nums tabular-nums"
+  const pagina = (estilo = ESTILO_BOM, extra = '') =>
+    `<main><section data-bloco><p>Texto.</p><p data-numero style="${estilo}">7</p>${extra}</section></main>`
+  const facesCarregadas = (carregada = true) => (documento) => {
+    Object.defineProperty(documento, 'fonts', {
+      configurable: true,
+      value: {
+        check: () => carregada,
+        *[Symbol.iterator]() {
+          yield { family: '"Zilla Slab"', weight: '700', status: carregada ? 'loaded' : 'unloaded' }
+        },
+      },
+    })
+  }
+  const medir = (html, preparar) => {
+    const lido = coletarDe(html, preparar)
+    return { lido, r: num(lido.nos, lido.doc) }
+  }
+
+  it('o caso verde: família, face carregada e lining-nums', () => {
+    const { lido, r } = medir(pagina(), facesCarregadas())
+    const no = lido.nos.find((n) => n.m.numero)
+    assert.equal(no.fonte.familia, 'Zilla Slab')
+    assert.equal(no.fonte.faceCarregada, true)
+    assert.equal(lido.doc.fontes.zillaSlab700, true)
+    assert.match(no.estilo.fontVariantNumeric, /lining-nums/)
+    assert.equal(r.ok, true, r.motivo)
+  })
+
+  it('família errada → ok:false', () => {
+    const { r } = medir(pagina("font-family: Georgia, serif; font-weight: 700; font-size: 112px; font-variant-numeric: lining-nums tabular-nums"), facesCarregadas())
+    assert.equal(r.ok, false, r.motivo)
+  })
+
+  it('face não carregada → ok:false', () => {
+    const { r } = medir(pagina(), facesCarregadas(false))
+    assert.equal(r.ok, false, r.motivo)
+  })
+
+  it('a face só “passa” no check do navegador mas não está registrada → ok:false (check() dá true para fonte sem @font-face)', () => {
+    const { r } = medir(pagina(), (documento) => {
+      Object.defineProperty(documento, 'fonts', { configurable: true, value: { check: () => true, *[Symbol.iterator]() {} } })
+    })
+    assert.equal(r.ok, false, r.motivo)
+  })
+
+  it('sem lining-nums → ok:false', () => {
+    const { r } = medir(pagina("font-family: 'Zilla Slab', Georgia, serif; font-weight: 700; font-size: 112px; font-variant-numeric: tabular-nums"), facesCarregadas())
+    assert.equal(r.ok, false, r.motivo)
+    assert.match(r.motivo, /lining-nums/)
+  })
+
+  it('sem `document.fonts` (o navegador não entrega a leitura) → ok:false, nunca ok:true', () => {
+    const { lido, r } = medir(pagina())
+    assert.equal(lido.nos.find((n) => n.m.numero).fonte.faceCarregada, null)
+    assert.equal(r.ok, false, r.motivo)
+  })
+
+  it('o cronômetro (.t-cronometro e [data-cronometro]) também é medido', () => {
+    const extra =
+      '<p class="t-cronometro" style="font-family: Georgia; font-weight: 700; font-size: 224px; font-variant-numeric: lining-nums">00:05</p>' +
+      '<p data-cronometro style="font-family: \'Zilla Slab\'; font-weight: 700; font-size: 224px; font-variant-numeric: lining-nums">00:06</p>'
+    const { lido, r } = medir(pagina(ESTILO_BOM, extra), facesCarregadas())
+    assert.equal(lido.nos.filter((n) => n.m.numero).length, 3)
+    assert.equal(r.ok, false, r.motivo)
+    assert.equal(r.nos_com_falha.length, 1)
+    assert.match(r.nos_com_falha[0], /00:05/)
+  })
+
+  it('uma página sem número nem cronômetro é “não aplicável”', () => {
+    const { r } = medir('<main><section data-bloco><p>Só texto.</p></section></main>')
+    assert.equal(r.ok, true)
+    assert.match(r.motivo, /não aplicável/)
   })
 })
 

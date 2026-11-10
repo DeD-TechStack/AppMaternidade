@@ -7,7 +7,10 @@
 //   Saída 0 se mediu (as falhas ficam no JSON e no RESUMO); 2 em erro de uso ou de conexão.
 //   Ambiente: CDP_PORTA (padrão 9344) e BASE_URL (padrão http://127.0.0.1:5244/).
 //
-// A parte pura (as funções g1 a g12, o contraste e o resumo) recebe um JSON de nós e devolve
+// Além de G1 a G12 e SB3 (o nome do rodapé), a regra NUM confere os números em Zilla Slab (família,
+// face carregada e lining-nums).
+//
+// A parte pura (as funções g1 a g12, num, o contraste e o resumo) recebe um JSON de nós e devolve
 // { regra, ok, motivo, nos_com_falha }. Ela falha fechado: nó sem texto onde a regra pede texto,
 // largura 0, font-size fora do conjunto, fundo transparente sem ancestral opaco e medida ausente
 // reprovam, em vez de passar por falta de dado.
@@ -464,15 +467,53 @@ export function sb3(doc) {
   }
 }
 
+/**
+ * NUM (2.2, `numero` e `cronometro`): cada `[data-numero]`, `.t-cronometro` e `[data-cronometro]`
+ * visível (a) tem como primeira família calculada "Zilla Slab", (b) tem a face carregada
+ * (`document.fonts.check('<peso> <tamanho> "Zilla Slab"')` e a face registrada e `loaded`, porque
+ * `check()` dá `true` para uma família sem @font-face) e (c) pede `lining-nums`: sem ele a Zilla
+ * Slab desenha algarismos de texto, o 7 desce e o 2 e o 0 ficam na altura do x. Falha fechado:
+ * leitura ausente, nula ou de outro tipo reprova. Sem número nem cronômetro, é "não aplicável".
+ */
+export function num(nos, doc) {
+  const alvos = (Array.isArray(nos) ? nos : []).filter((no) => marca(no, 'numero') && visivel(no))
+  if (alvos.length === 0) {
+    return { regra: 'NUM', ok: true, motivo: 'não aplicável: a página não tem [data-numero] nem cronômetro', nos_com_falha: [] }
+  }
+  const falhas = []
+  if (doc?.fontes?.zillaSlab700 !== true) {
+    falhas.push({
+      no: 'documento',
+      motivo: `document.fonts.check('700 112px "Zilla Slab"') não deu true (leitura: ${JSON.stringify(doc?.fontes?.zillaSlab700 ?? null)})`,
+    })
+  }
+  for (const no of alvos) {
+    // Um elemento com mais de um defeito conta uma vez em `nos_com_falha`, com os motivos juntos.
+    const motivos = []
+    const falhar = (motivo) => motivos.push(motivo)
+    const fonte = no.fonte
+    if (typeof fonte?.familia !== 'string' || fonte.familia.trim() === '') falhar('família calculada ausente')
+    else if (fonte.familia !== 'Zilla Slab') falhar(`a primeira família é "${fonte.familia}" em vez de "Zilla Slab"`)
+    if (fonte?.faceCarregada !== true) {
+      falhar(`face Zilla Slab ${fonte?.peso ?? '?'} ${fonte?.tamanho ?? '?'} não carregada (leitura: ${JSON.stringify(fonte?.faceCarregada ?? null)})`)
+    }
+    const variante = no.estilo?.fontVariantNumeric
+    if (typeof variante !== 'string' || variante.trim() === '') falhar('font-variant-numeric ausente (sem lining-nums)')
+    else if (!/(^|\s)lining-nums(\s|$)/.test(variante)) falhar(`font-variant-numeric "${variante}" sem lining-nums`)
+    if (motivos.length > 0) falhas.push({ no: descrever(no), motivo: `${descrever(no)}: ${motivos.join('; ')}` })
+  }
+  return resultado('NUM', falhas, `${alvos.length} números ou cronômetros em Zilla Slab com a face carregada e lining-nums`)
+}
+
 /** As regras que bloqueiam em cada caso: em `sistema`, todas; nos outros, só G2 e G9 (as demais só se registram). */
 export function bloqueantesDoCaso(caso) {
-  return caso === 'sistema' ? ['G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7', 'G8', 'G9', 'G10', 'G11', 'G12', 'SB3'] : ['G2', 'G9']
+  return caso === 'sistema' ? ['G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7', 'G8', 'G9', 'G10', 'G11', 'G12', 'SB3', 'NUM'] : ['G2', 'G9']
 }
 
 /** Avalia as regras sobre as leituras de uma página: `{ doc, nos, tema }`. */
 export function avaliarTudo({ doc, nos, tema }, caso = 'sistema') {
   const bloqueantes = bloqueantesDoCaso(caso)
-  const todas = [g1(doc), g2(nos, doc), g3(nos, doc), g4(nos), g5(nos, doc), g6(nos), g7(nos), g8(nos, doc), g9(nos, doc), g10(nos), g11(nos, tema), g12(nos), sb3(doc)]
+  const todas = [g1(doc), g2(nos, doc), g3(nos, doc), g4(nos), g5(nos, doc), g6(nos), g7(nos), g8(nos, doc), g9(nos, doc), g10(nos), g11(nos, tema), g12(nos), sb3(doc), num(nos, doc)]
   return todas.map((r) => ({ ...r, bloqueia: bloqueantes.includes(r.regra) }))
 }
 
@@ -602,6 +643,28 @@ export function coletarNaPagina() {
     return linhas.map((linha) => linha.texto.trim().length).filter((n) => n > 0)
   }
 
+  // A Zilla Slab dos números (regra NUM). `document.fonts.check()` dá true para uma família sem
+  // @font-face (cai numa fonte do sistema), então a face também tem de estar registrada e `loaded`.
+  // Sem `document.fonts` (ou se lançar), a leitura é null e a regra falha fechado.
+  const semAspas = (texto) => String(texto).trim().replace(/^["']|["']$/g, '')
+  const pesoCobre = (pesoDaFace, peso) => {
+    const faixa = String(pesoDaFace).split(/\s+/).map(Number).filter(Number.isFinite)
+    const alvo = Number(peso)
+    if (faixa.length === 0 || !Number.isFinite(alvo)) return false
+    return faixa.length === 1 ? faixa[0] === alvo : alvo >= faixa[0] && alvo <= faixa[1]
+  }
+  const faceCarregada = (peso, tamanho) => {
+    if (!document.fonts || typeof document.fonts.check !== 'function') return null
+    try {
+      const passa = document.fonts.check(`${peso} ${tamanho} "Zilla Slab"`) === true
+      const registrada = [...document.fonts].some((face) => semAspas(face.family) === 'Zilla Slab' && face.status === 'loaded' && pesoCobre(face.weight, peso))
+      return passa && registrada
+    } catch {
+      return null
+    }
+  }
+  doc.fontes = { zillaSlab700: faceCarregada('700', '112px') }
+
   const elementos = [...document.body.querySelectorAll('*')].filter((el) => !ignorar.has(el.tagName))
   const nos = elementos.map((el) => {
     const cs = getComputedStyle(el)
@@ -637,6 +700,8 @@ export function coletarNaPagina() {
         transform: cs.transform,
         position: cs.position,
         top: cs.top,
+        fontFamily: cs.fontFamily,
+        fontVariantNumeric: cs.fontVariantNumeric,
       },
       m: {
         cabecalho: el.matches('[data-cabecalho]'),
@@ -656,8 +721,18 @@ export function coletarNaPagina() {
         // G12: os blocos e as mídias aninhados em qualquer profundidade dentro de <main>.
         blocoG12: el.closest('main') !== null && el.tagName !== 'MAIN' && el.matches('[data-bloco], [data-midia], figure'),
         interativo: el.matches('a, button, input, select, textarea, [role="button"]'),
+        // NUM: os números da faixa e o cronômetro em Zilla Slab.
+        numero: el.matches('[data-numero], .t-cronometro, [data-cronometro]'),
       },
       cadeia: cadeiaDe(el),
+    }
+    if (no.m.numero) {
+      no.fonte = {
+        familia: semAspas((cs.fontFamily || '').split(',')[0] ?? ''),
+        peso: cs.fontWeight,
+        tamanho: cs.fontSize,
+        faceCarregada: faceCarregada(cs.fontWeight, cs.fontSize),
+      }
     }
     if (el.matches('[data-midia]')) no.textoDentro = el.textContent
     if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT') no.textoControle = textoDoControle(el)

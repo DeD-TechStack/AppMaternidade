@@ -611,6 +611,27 @@ describe('sistema-base: tipo, forma e espaço do CSS novo', () => {
     expect(corpo('.t-numero')).toMatch(/font-variant-numeric:\s*tabular-nums/)
   })
 
+  it('os números em Zilla Slab pedem algarismos de capitular e tabulares (sem lining-nums o 7 desce e o 2 e o 0 ficam na altura do x)', () => {
+    const corpoDe = (classe: string) => novas.find((r) => r.seletor === classe)!.corpo
+    for (const classe of ['.t-numero', '.t-cronometro']) {
+      const variante = /font-variant-numeric:\s*([^;]+)/.exec(corpoDe(classe))
+      expect(variante, `${classe} declara font-variant-numeric`).not.toBeNull()
+      expect(variante![1], classe).toMatch(/\blining-nums\b/)
+      expect(variante![1], classe).toMatch(/\btabular-nums\b/)
+      expect(variante![1], classe).not.toMatch(/oldstyle-nums/)
+    }
+  })
+
+  it('toda regra do CSS e dos componentes que põe número na Zilla Slab pede lining-nums', () => {
+    // `--fonte-sb-slab` é o único caminho para a Zilla Slab; quem o usa tem de pedir lining-nums.
+    const usam = regras(semComentarios).filter((r) => /var\(--fonte-sb-slab\)/.test(r.corpo))
+    expect(usam.map((r) => r.seletor).sort()).toEqual(['.t-cronometro', '.t-numero'])
+    for (const { seletor, corpo } of usam) expect(corpo, seletor).toMatch(/font-variant-numeric:[^;]*\blining-nums\b/)
+    // Nenhum componente nomeia a família nem a variável: a fonte dos números vem só das duas classes.
+    const fora = arquivosTsx.filter((f) => /fonte-sb-slab|fontFamily|font-\[/.test(f.texto)).map((f) => f.nome)
+    expect(fora).toEqual([])
+  })
+
   it('sem sombra, sem filtro de fundo e com raio só em 0, 4, 8 e 50%', () => {
     expect(valoresDe('box-shadow')).toEqual([])
     expect(valoresDe('backdrop-filter')).toEqual([])
