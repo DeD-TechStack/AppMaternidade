@@ -984,6 +984,93 @@ describe('rodada 3: faixa de números, abertura e linhas (regras de CSS)', () =>
     })
   })
 
+  // Rodada de correção 2, parte 15 (V5): abaixo de 768, da base da mídia ao topo do rótulo da 1ª linha são
+  // 48 ±8 px (o espaço "mídia → linhas" do contrato 2.4). O `margin-top` do bloco (48) e o `padding-top` do
+  // rótulo da linha (48) se somavam em 96. Só a 1ª linha do bloco que vem depois da mídia perde o recuo de
+  // cima; as outras linhas da pilha ficam como estavam. De 768 para cima nada muda.
+  describe('V5: da mídia ao rótulo da 1ª linha são 48 px abaixo de 768', () => {
+    const SELETOR_DA_PRIMEIRA = '.sb-mt-midia-linhas > .grade-10:first-child .sb-linha-rotulo'
+    const numero = (corpo: string, propriedade: string) =>
+      Number(new RegExp(`(?:^|[\\s;])${propriedade}:\\s*(-?\\d+(?:\\.\\d+)?)(?:px)?\\s*(?:;|$)`).exec(corpo)?.[1] ?? Number.NaN)
+    const variavel = (corpo: string, nome: string) => Number(new RegExp(`${nome}:\\s*(\\d+)px`).exec(corpo)?.[1] ?? Number.NaN)
+    const montar = (html: string) => {
+      const raiz = document.createElement('div')
+      raiz.innerHTML = html
+      return raiz
+    }
+    const LINHA = (nome: string) =>
+      `<div class="grade-10"><div class="sb-linha col-c2-c8"><h2 class="sb-linha-rotulo t-rotulo">${nome}</h2><div class="sb-linha-texto"><p>Texto.</p></div></div></div>`
+    const MIDIA = '<div class="sb-area sb-mt-numeros-midia"><div class="sb-midia" data-midia=""></div></div>'
+    const GALERIA = '<div class="sb-area sb-mt-midia-linhas"><div class="sb-galeria"><div class="sb-midia" data-midia=""></div></div></div>'
+    const DEPOIS_DA_MIDIA = `${MIDIA}<section class="sb-area sb-mt-midia-linhas">${LINHA('Grade')}${LINHA('Tipo')}${LINHA('Cor')}</section>`
+    const DEPOIS_DA_GALERIA = `${GALERIA}<section class="sb-area sb-mt-midia-linhas">${LINHA('Primeira')}${LINHA('Segunda')}</section>`
+    const SOZINHA = `${MIDIA}<section class="sb-area sb-mt-midia-linhas">${LINHA('Só')}</section>`
+    const FORA = `<section class="sb-area">${LINHA('Solta')}${LINHA('Outra')}</section>`
+
+    it('abaixo de 768, o rótulo da 1ª linha do bloco "mídia → linhas" não tem recuo de cima (padding-top: 0)', () => {
+      const regra = regras(celular).find((r) => r.seletor === SELETOR_DA_PRIMEIRA)
+      expect(regra, SELETOR_DA_PRIMEIRA).toBeDefined()
+      expect(regra!.corpo).toMatch(/padding-top:\s*0\s*;/)
+      // Só tira o recuo de cima: nada de margem negativa nem de mexer no embaixo.
+      expect(regra!.corpo).not.toMatch(/margin|padding-bottom|padding-block|padding:/)
+    })
+
+    it('o seletor casa só o rótulo da 1ª linha do bloco que vem depois de uma mídia ou de uma galeria, e nenhum outro', () => {
+      for (const html of [DEPOIS_DA_MIDIA, DEPOIS_DA_GALERIA, SOZINHA]) {
+        const raiz = montar(html)
+        const rotulos = [...raiz.querySelectorAll('.sb-linha-rotulo')]
+        const casados = rotulos.filter((rotulo) => rotulo.matches(SELETOR_DA_PRIMEIRA))
+        expect(casados, html.slice(0, 60)).toHaveLength(1)
+        expect(casados[0]).toBe(rotulos[0])
+      }
+      const meio = montar(DEPOIS_DA_MIDIA).querySelectorAll('.sb-linha-rotulo')
+      expect(meio[1].matches(SELETOR_DA_PRIMEIRA), 'a linha do meio da pilha').toBe(false)
+      expect(meio[2].matches(SELETOR_DA_PRIMEIRA), 'a última da pilha').toBe(false)
+      for (const rotulo of montar(FORA).querySelectorAll('.sb-linha-rotulo')) {
+        expect(rotulo.matches(SELETOR_DA_PRIMEIRA), 'linha fora de um bloco depois de mídia').toBe(false)
+      }
+    })
+
+    it('a conta (390): margem do bloco + recuo de cima do rótulo dá 48 ±8 para a 1ª linha, e o topo da linha não passa de 56', () => {
+      const margemDoBloco = variavel(corpoCelular(':root'), '--e-midia-linhas')
+      expect(margemDoBloco).toBe(48)
+      expect(corpoBase('.sb-mt-midia-linhas')).toMatch(/margin-top:\s*var\(--e-midia-linhas\)/)
+      // O recuo de cima do rótulo da 1ª linha: o da regra de contexto, ou (sem ela) o do ritmo (--e-linhas = 48).
+      const regraDaPrimeira = regras(celular).find((r) => r.seletor === SELETOR_DA_PRIMEIRA)
+      const recuoDaPrimeira = regraDaPrimeira ? numero(regraDaPrimeira.corpo, 'padding-top') : variavel(corpoCelular(':root'), '--e-linhas')
+      expect(Number.isFinite(recuoDaPrimeira), 'padding-top da 1ª linha').toBe(true)
+      const ateOTopoDoRotulo = margemDoBloco + recuoDaPrimeira
+      expect(ateOTopoDoRotulo).toBeGreaterThanOrEqual(40)
+      expect(ateOTopoDoRotulo).toBeLessThanOrEqual(56)
+      expect(margemDoBloco).toBeLessThanOrEqual(56)
+      // Valores da escala do contrato (8, 16, 24, 32, 48, 64, 96, 128, 160, 192).
+      expect([8, 16, 24, 32, 48, 64, 96, 128, 160, 192]).toContain(margemDoBloco)
+    })
+
+    it('as outras linhas de 390 não mudam: o rótulo da linha do meio segue com o recuo de cima do ritmo (48) e 8 px embaixo, o texto com o espaço de baixo', () => {
+      expect(variavel(corpoCelular(':root'), '--e-linhas')).toBe(48)
+      expect(corpoBase('.sb-linha-rotulo')).toMatch(/padding-block:\s*var\(--e-linhas\)/)
+      expect(corpoCelular('.sb-linha-rotulo')).toMatch(/padding-bottom:\s*8px/)
+      expect(corpoCelular('.sb-linha-rotulo')).not.toMatch(/padding-top/)
+      expect(corpoCelular('.sb-linha-texto')).toMatch(/padding:\s*0 0 var\(--e-linhas\)/)
+      expect(corpoCelular('.sb-linha')).toMatch(/display:\s*block/)
+    })
+
+    it('de 768 para cima nada muda: 160 + 32 do contrato, e a regra da 1ª linha só existe abaixo de 768', () => {
+      expect(variavel(corpoBase(':root'), '--e-midia-linhas')).toBe(160)
+      expect(variavel(corpoBase(':root'), '--e-linhas')).toBe(32)
+      expect(regras(base).some((r) => r.seletor.includes('.sb-mt-midia-linhas >'))).toBe(false)
+      expect(corpoBase('.sb-linha-rotulo')).toMatch(/padding-block:\s*var\(--e-linhas\)/)
+    })
+
+    it('vale nos dois temas: nenhuma regra do bloco depende de `data-tema`', () => {
+      const doBloco = regras(semComentarios).filter((r) => r.seletor.includes('.sb-mt-midia-linhas'))
+      expect(doBloco.length).toBeGreaterThan(0)
+      for (const regra of doBloco) expect(regra.seletor).not.toMatch(/data-tema/)
+      expect(temaCss).not.toMatch(/sb-mt-midia-linhas/)
+    })
+  })
+
   // Rodada de correção 2, parte 14: o Campo de 768 para cima segue a composição da linha rótulo + texto:
   // fio horizontal de c2 ao início de c9 (a borda de baixo da própria linha), fio vertical em x de c4 do
   // topo + 32 até o fio de baixo, linhas encostadas, e altura de 112 px mesmo com erro ou ajuda (o valor

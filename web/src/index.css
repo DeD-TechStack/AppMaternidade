@@ -2334,6 +2334,13 @@
       padding-bottom: 8px;
     }
 
+    /* V5: a 1ª linha do bloco que vem depois da mídia (o espaço "mídia → linhas", 48 abaixo de 768)
+       não tem o recuo de cima do rótulo: o `margin-top` do bloco (48) e o `padding-top` do rótulo (48)
+       se somavam em 96 px da mídia ao rótulo. Só essa linha: as do meio da pilha ficam com os 48 do ritmo. */
+    .sb-mt-midia-linhas > .grade-10:first-child .sb-linha-rotulo {
+      padding-top: 0;
+    }
+
     .sb-linha-texto {
       max-width: none;
       margin-top: 0;

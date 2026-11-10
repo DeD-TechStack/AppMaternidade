@@ -1068,6 +1068,26 @@ describe('rota /sistema', () => {
     }
   })
 
+  it('V5: na amostra, a 1ª linha é a primeira do bloco "mídia → linhas" (logo depois da mídia larga), e as outras 2 estão no meio da pilha', async () => {
+    const { container } = renderizarRota('/sistema')
+    await screen.findByRole('heading', { level: 1 })
+
+    const bloco = container.querySelector<HTMLElement>('.sb-mt-midia-linhas')!
+    expect(bloco.querySelector('.sb-linha')).not.toBeNull()
+    expect(bloco.previousElementSibling!.querySelector('[data-midia]')).not.toBeNull()
+    const grades = [...bloco.children]
+    expect(grades).toHaveLength(3)
+    for (const grade of grades) expect(grade.className).toBe('grade-10')
+    const rotulos = grades.map((grade) => grade.querySelector<HTMLElement>('.sb-linha-rotulo')!)
+    expect(rotulos.map((rotulo) => rotulo.textContent)).toEqual(['Grade', 'Tipo', 'Cor'])
+    // O seletor de CSS "primeira linha do bloco depois da mídia" casa só a 1ª; as outras não perdem o recuo.
+    const seletor = '.sb-mt-midia-linhas > .grade-10:first-child .sb-linha-rotulo'
+    expect(rotulos.map((rotulo) => rotulo.matches(seletor))).toEqual([true, false, false])
+    // A galeria (que também usa o espaço "mídia → linhas") não tem linha nenhuma.
+    const galeria = [...container.querySelectorAll('.sb-mt-midia-linhas')].find((no) => no.querySelector('.sb-galeria'))!
+    expect(galeria.querySelector('.sb-linha')).toBeNull()
+  })
+
   it('D2: a faixa de números tem 3 itens, cada um com o número em Zilla Slab e a legenda, na ordem 7, 2, 0', async () => {
     const { container } = renderizarRota('/sistema')
     await screen.findByRole('heading', { level: 1 })
