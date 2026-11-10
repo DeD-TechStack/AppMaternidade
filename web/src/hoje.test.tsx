@@ -482,7 +482,7 @@ describe('Hoje: o CSS do bloco /* 44d-2 */ (lido como texto)', () => {
   it('nenhum font-size fora do conjunto da escala, nenhuma caixa alta, nenhuma transição acima de 150 ms e nenhum raio fora de 0, 4, 8 e 50%', () => {
     const conjunto = new Set([15, 17, 20, 24, 28, 32, 36, 48, 56, 72, 80, 88, 96, 112, 224])
     expect(semComentarios).not.toMatch(/text-transform/)
-    const tamanhos = [...semComentarios.matchAll(/font-size:\s*([\d.]+)(rem|px)\s*;/g)]
+    const tamanhos = [...semComentarios.matchAll(/font-size:\s*([\d.]+)(rem|px)(?:\s*!important)?\s*;/g)]
     expect(tamanhos.length).toBeGreaterThan(0)
     for (const [, numero, unidade] of tamanhos) {
       expect(conjunto.has(Number(numero) * (unidade === 'rem' ? 16 : 1)), `${numero}${unidade}`).toBe(true)
@@ -697,6 +697,34 @@ describe('Hoje: o CSS do bloco /* 44d-2 */ (lido como texto)', () => {
     expect(tipo.classList.contains('ha-painel-grupo')).toBe(false)
     expect(screen.getByRole('status').contains(tipo)).toBe(true)
     expect(container.querySelectorAll('.ha-painel-grupo')).toHaveLength(0)
+  })
+
+  // ---- Volta 1, E1: os números de Últimos em 390 nunca passam do número do bloco Em andamento (56).
+
+  it('E1 (390): abaixo de 768 todo número de Últimos fica em 56 (!important, porque o FaixaNumeros grava o tamanho inline) e a regra de 1440 não muda', () => {
+    // O `FaixaNumeros` escolhe 112, 96, 72 ou 56 por `style.fontSize`; só `!important` vence o inline. A regra
+    // vale para a classe do defeito: o seletor pega os três números da seção, em qualquer largura < 768.
+    const celular = regraEm(emMedia767(), '[data-ultimos] .sb-numeros-valor')
+    expect(celular).toMatch(/font-size:\s*3\.5rem\s*!important/)
+    // A linha acompanha o número (o `t-numero` tem 90 px de linha para 112 de fonte; 45 para 56), senão
+    // sobra vazio estranho entre o número e a legenda.
+    expect(celular).toMatch(/line-height:\s*2\.8125rem/)
+    // De 768 para cima nada muda: nenhuma regra do bloco fora do celular mexe no tamanho desse número...
+    const foraDoCelular = semComentarios.replace(emMedia767(), '')
+    expect(regraEm(foraDoCelular, '[data-ultimos] .sb-numeros-valor')).not.toMatch(/font-size/)
+    // ... e o `t-numero` continua em 7rem (112 px).
+    expect(css).toMatch(/\.t-numero\s*\{[^}]*font-size:\s*7rem/)
+    // 56 é o tamanho do número do bloco Em andamento em 390 (o maior que `BlocoEmAndamento` usa abaixo de 768).
+    expect(56).toBe(3.5 * 16)
+  })
+
+  it('E1: os três números de Últimos estão dentro de `#ultimos[data-ultimos]`, que é onde a regra de 56 pega', () => {
+    const { container } = renderizarRota('/app/hoje')
+    const numeros = [...ultimos(container).querySelectorAll('[data-numero]')]
+    expect(numeros).toHaveLength(3)
+    for (const numero of numeros) expect(numero.classList.contains('sb-numeros-valor')).toBe(true)
+    // O número do Em andamento não está em Últimos: a regra de 56 não o alcança.
+    expect(ultimos(container).contains(andamento(container))).toBe(false)
   })
 
   it('E (M-1): o Hoje marca o main com ha-tela e o item do link da lateral com ha-li-link', () => {

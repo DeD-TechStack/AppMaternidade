@@ -2783,6 +2783,16 @@ body:has([data-barra-registrar]) [data-rodape] {
     padding: 24px;
   }
 
+  /* VOLTA1 E1: em 390 os números de Últimos (112 e 96 px) eram maiores que o do bloco Em andamento (56) e
+     tiravam dele o primeiro ponto de atenção. Abaixo de 768 todos os três ficam em 56 (da escala `numero`),
+     com a linha na proporção do `t-numero` (45 para 56, como 90 para 112) para não sobrar vazio entre o
+     número e a legenda. O `FaixaNumeros` grava o tamanho em `style.fontSize` (112, 96, 72 ou 56): só o
+     `!important` vence o estilo inline, e a base não se edita. De 768 para cima nada muda (112). */
+  [data-ultimos] .sb-numeros-valor {
+    font-size: 3.5rem !important;
+    line-height: 2.8125rem;
+  }
+
   /* Em 390 os dois botões do bloco Em andamento dividem a linha: duas colunas iguais com 8 de gap, 64 de
      altura. O recuo do primário aperta para 16 e o miolo da moldura para 8, e o rótulo pode quebrar em
      2 linhas dentro dos 64. */
