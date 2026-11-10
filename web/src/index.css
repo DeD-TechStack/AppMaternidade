@@ -2719,19 +2719,24 @@
   /* De 768 para cima o índice acompanha a rolagem (`position: sticky`, logo abaixo do cabeçalho de 64
      px). O sticky só anda dentro do `main` se a caixa dele for do tamanho da lista: o `nav` tem a
      altura do recuo de cima (a do `h1`) mais as 6 âncoras de 32, e uma margem de baixo negativa de
-     tanto puxa o resto da página, então ele não ocupa espaço. A caixa de 64 sobe sob o cabeçalho; a
-     lista fica 64 abaixo dela, na altura do `h1`, e prende em 72. O `nav` não pega clique: só a lista. */
+     tanto puxa o resto da página, então ele não ocupa espaço. A caixa sobe sob o cabeçalho; a lista
+     fica um recuo abaixo dela, na altura do `h1`, e prende em 64 + 8 (cabeçalho e ar). O recuo é o
+     `padding-top` do `nav`, nunca a margem de cima da lista: a margem de um primeiro filho colapsa
+     para fora do `nav` e leva o `top` do sticky junto (a lista prendia em 8, sob o cabeçalho). O
+     recuo é a variável do `h1`, então acompanha cada faixa. O `nav` não pega clique: só a lista. */
   @media (min-width: 768px) {
     .conta-indice-ao-lado {
       position: sticky;
       top: calc(var(--e-cabecalho) + 8px - var(--e-cab-h1));
+      box-sizing: border-box;
       height: calc(var(--e-cab-h1) + 192px);
+      padding-top: var(--e-cab-h1);
       margin-bottom: calc(-1 * (var(--e-cab-h1) + 192px));
       pointer-events: none;
     }
 
     .conta-indice-ao-lado > .conta-indice-lista {
-      margin: var(--e-cab-h1) 0 0 80%;
+      margin: 0 0 0 80%;
       pointer-events: auto;
     }
 

@@ -1,5 +1,7 @@
+import { readFileSync } from 'node:fs'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { pastaSrcDe } from '../../teste/fontes.ts'
 import { renderizarComDados } from '../../teste/renderizarComDados.tsx'
 import { margemDoIndice } from './indice.ts'
 
@@ -607,5 +609,50 @@ describe('onde o índice mora', () => {
     act(() => observador.avisar([secao('perfil')]))
 
     expect(atual()).toBe('Privacidade')
+  })
+})
+
+// O sticky do índice (MAT-44d-3, passo 4). O jsdom não tem layout, então o comportamento real (o
+// primeiro item preso em 72, nenhum link coberto pelo cabeçalho) é das sondas no Chrome. Aqui se
+// proíbe a CAUSA do defeito medido: o recuo de cima da lista era a margem dela, que colapsa para fora
+// do `nav` (sem padding, borda nem contexto de bloco), e o `nav` prendia no `top` sem o recuo: a
+// lista ficava em y = 8, sob o cabeçalho de 64 px.
+describe('o CSS do índice sticky', () => {
+  const css = readFileSync(pastaSrcDe(import.meta.url) + '../../index.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
+
+  /** As declarações da regra de seletor exato, na faixa de 768 para cima (a que tem o sticky). */
+  function declaracoes(seletor: string) {
+    const achados = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter((m) => m[1].trim() === seletor)
+    const regra = achados.find((m) => m[2].includes('margin') || m[2].includes('position'))
+    expect(regra, `regra ${seletor}`).toBeDefined()
+    return Object.fromEntries(
+      regra![2]
+        .split(';')
+        .map((d) => d.split(/:(.*)/s).map((p) => p.trim()))
+        .filter((par) => par[0]),
+    ) as Record<string, string>
+  }
+
+  const nav = declaracoes('.conta-indice-ao-lado')
+  const lista = declaracoes('.conta-indice-ao-lado > .conta-indice-lista')
+
+  it('o recuo de cima é o padding do nav, na variável do h1, e não a margem da lista', () => {
+    expect(nav.position).toBe('sticky')
+    expect(nav['padding-top']).toBe('var(--e-cab-h1)')
+    expect(nav['box-sizing']).toBe('border-box')
+    // A margem de cima da lista tem de ser 0: qualquer valor ali colapsa para fora do nav.
+    expect(lista['margin-top'] ?? lista.margin.split(/\s+/)[0]).toBe('0')
+    expect(lista.margin).not.toMatch(/--e-cab-h1/)
+  })
+
+  it('o top prende o recuo sob o cabeçalho (cabeçalho + 8 − recuo) e a altura soma o recuo e as 6 âncoras', () => {
+    expect(nav.top).toBe('calc(var(--e-cabecalho) + 8px - var(--e-cab-h1))')
+    expect(nav.height).toBe('calc(var(--e-cab-h1) + 192px)')
+    expect(nav['margin-bottom']).toBe('calc(-1 * (var(--e-cab-h1) + 192px))')
+  })
+
+  it('nenhum valor do recuo é um número fixo: acompanha o h1 em todas as faixas', () => {
+    expect(nav.top).not.toMatch(/(?<![\w-])\d+px\s*-\s*\d+px/)
+    expect(nav['padding-top']).not.toMatch(/\d+px/)
   })
 })
