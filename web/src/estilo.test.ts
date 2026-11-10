@@ -1099,6 +1099,105 @@ describe('rodada 4: cabeçalho, desativado, modo madrugada, rodapé em 390 e ró
     })
   })
 
+  // Rodada de correção 2, parte 12 (V3): em 1440 o último link termina em c9 e o botão ocupa de c9 + 32
+  // até a margem direita (2 colunas menos a folga). Para caber, o rótulo do botão passa a 20 px (com o
+  // recuo de 24 px o botão tinha 262,6 px e só 240,2 cabem). Abaixo de 768 nada muda.
+  describe('V3: o último link do cabeçalho termina em c9 e o botão vai de c9 + 32 à margem direita', () => {
+    const BORDAS_DO_BOTAO = 2 + 6 + 2 // borda da moldura, padding de 3 px dos dois lados e borda do miolo
+    const ROTULO_A_24 = 204.6 // "Modo madrugada" em Fraunces 600 24 px (medido: botão de 262,6 = 10 + 48 + 204,6)
+    const miolo = corpoBase('.sb-cab-miolo')
+    const folgaCss = /--cab-folga-acao:\s*([^;]+);/.exec(miolo)?.[1]
+    const recuoCss = /--cab-recuo-acao:\s*([^;]+);/.exec(miolo)?.[1]
+    const tamanhoDoRotulo = () => {
+      const rem = /font-size:\s*(\d+(?:\.\d+)?)rem/.exec(corpoBase('.sb-cab-acao .sb-moldura-miolo'))?.[1]
+      return rem === undefined ? Number.NaN : Number(rem) * 16
+    }
+    const minimoCss = () => /min-width:\s*calc\(\s*(\d+)%\s*-\s*var\(--cab-folga-acao\)\s*\)/.exec(corpoBase('.sb-cab-acao'))?.[1]
+
+    /** O botão e o fim do último link, em relação a c9, numa largura de janela (barra de 15 px ou sem). */
+    function cabecalhoEm(largura: number, barra: number) {
+      const margem = largura >= 992 ? 32 : 24
+      const area = Math.min(largura - barra - 2 * margem, 1600)
+      const folga = avaliarClamp(folgaCss!, largura)
+      const recuo = avaliarClamp(recuoCss!, largura)
+      const conteudo = BORDAS_DO_BOTAO + 2 * recuo + (ROTULO_A_24 * tamanhoDoRotulo()) / 24
+      const minimo = (Number(minimoCss()) / 100) * area - folga
+      const botao = Math.max(conteudo, minimo)
+      // Tudo medido a partir da borda direita da área útil: c9 fica a 2 colunas (20% da área) dela.
+      return { area, folga, conteudo, minimo, botao, fimDoLinkAteC9: 0.2 * area - folga - botao }
+    }
+
+    it('o botão ocupa de c9 + a folga até a margem direita: `min-width` de 2 colunas (20%) menos a folga, com a folga de antes', () => {
+      const acao = corpoBase('.sb-cab-acao')
+      expect(minimoCss(), 'min-width: calc(20% - var(--cab-folga-acao))').toBe('20')
+      expect(acao).toMatch(/margin-left:\s*var\(--cab-folga-acao\)/)
+      expect(acao).toMatch(/flex:\s*none/)
+      // A folga em 1440 é a de 32 px do contrato (o fio vertical da abertura está em c9), com 0,1 px a mais:
+      // o navegador trunca o 20% a 1/64 px e a sonda mede o botão a 0,1 px, e sem esse décimo a folga
+      // medida sai 31,99. Nunca mais que 32,1, para o último link continuar terminando em c9 (±2).
+      expect(avaliarClamp(folgaCss!, 1440)).toBeGreaterThanOrEqual(32)
+      expect(avaliarClamp(folgaCss!, 1440)).toBeLessThanOrEqual(32.1)
+      expect(avaliarClamp(folgaCss!, 992)).toBeGreaterThanOrEqual(31.9)
+    })
+
+    it('o rótulo do botão passa de 24 para 20 px (conjunto do contrato) com o recuo de 24 px em 1440, sem mexer no recuo', () => {
+      const corpo = corpoBase('.sb-cab-acao .sb-moldura-miolo')
+      expect(tamanhoDoRotulo()).toBe(20)
+      expect(corpo).toMatch(/line-height:\s*1\.5rem/)
+      expect(corpo).toMatch(/padding:\s*0 var\(--cab-recuo-acao\)/)
+      expect(avaliarClamp(recuoCss!, 1440)).toBe(24)
+    })
+
+    it('a conta fecha só com o rótulo de 20 px: com 24 px, ou só com o recuo de 16 px, o botão passa dos 240,1 px que cabem em 1440', () => {
+      const cabem = 0.2 * (1440 - 15 - 64) - avaliarClamp(folgaCss!, 1440) // 240,1
+      expect(cabem).toBeCloseTo(240.1, 1)
+      expect(BORDAS_DO_BOTAO + 2 * 24 + ROTULO_A_24).toBeGreaterThan(cabem) // como estava
+      expect(BORDAS_DO_BOTAO + 2 * 16 + ROTULO_A_24).toBeGreaterThan(cabem) // recuo de 16 sozinho
+      expect(BORDAS_DO_BOTAO + 2 * 24 + (ROTULO_A_24 * tamanhoDoRotulo()) / 24).toBeLessThanOrEqual(cabem)
+    })
+
+    it('de 1440 a 1920, com e sem barra de rolagem: o último link termina em c9 e a folga até o botão é de pelo menos 32 px', () => {
+      expect(Number.isFinite(tamanhoDoRotulo()) && minimoCss() !== undefined, 'valores lidos do CSS').toBe(true)
+      for (const barra of [0, 15]) {
+        for (let largura = 1440; largura <= 1920; largura += 8) {
+          const c = cabecalhoEm(largura, barra)
+          expect(c.fimDoLinkAteC9, `${largura} px, barra ${barra}`).toBeCloseTo(0, 6)
+          expect(c.folga, `${largura} px`).toBeGreaterThanOrEqual(32)
+          expect(c.minimo, `o botão cabe em ${largura} px`).toBeGreaterThanOrEqual(c.conteudo)
+        }
+      }
+    })
+
+    it('de 768 a 1439 o botão nunca é menor que o conteúdo, o último link nunca passa de c9, e a folga é de pelo menos 16 px', () => {
+      expect(Number.isFinite(tamanhoDoRotulo()) && minimoCss() !== undefined, 'valores lidos do CSS').toBe(true)
+      for (const barra of [0, 15]) {
+        for (let largura = 768; largura < 1440; largura += 4) {
+          const c = cabecalhoEm(largura, barra)
+          expect(c.botao, `${largura} px`).toBeGreaterThanOrEqual(c.conteudo)
+          expect(c.fimDoLinkAteC9, `${largura} px`).toBeLessThanOrEqual(1e-6)
+          expect(c.folga, `${largura} px`).toBeGreaterThanOrEqual(16)
+        }
+      }
+      // E o botão encolhido nunca é maior que o de antes (24 px de rótulo), então a folga em 768 só cresce.
+      expect(cabecalhoEm(768, 15).conteudo).toBeLessThan(BORDAS_DO_BOTAO + 2 * 12 + ROTULO_A_24)
+    })
+
+    it('abaixo de 768 nada muda: o botão volta ao rótulo de 17 px, sem largura mínima de 2 colunas, e a grade segue', () => {
+      expect(corpoCelular('.sb-cab-acao')).toMatch(/min-width:\s*0/)
+      expect(corpoCelular('.sb-cab-acao')).toMatch(/margin-left:\s*0/)
+      const miolo = corpoCelular('.sb-cab-acao .sb-moldura-miolo')
+      expect(miolo).toMatch(/font-size:\s*1\.0625rem/)
+      expect(miolo).toMatch(/padding:\s*0 12px/)
+      expect(corpoCelular('.sb-cab-miolo')).toMatch(/grid-template-columns:\s*44px minmax\(0, 1fr\) auto/)
+    })
+
+    it('na madrugada o botão segue com a altura de alvo de 56 px (a altura vem do `min-height` da moldura, não do rótulo)', () => {
+      expect(corpoBase('.sb-moldura')).toMatch(/min-height:\s*max\(48px, var\(--alvo-toque\)\)/)
+      expect(corpoBase('.sb-cab-acao .sb-moldura-miolo')).not.toMatch(/(?:^|[^-])height:/)
+      expect(corpoBase('.sb-cab-acao')).not.toMatch(/(?:^|[^-])height:/)
+    })
+  })
+
   describe('D6: o botão desativado da madrugada não é mais claro que o primário', () => {
     it('o botão desativado lê o fundo e o texto de variáveis do tema, sem opacidade nem tracejado', () => {
       const corpo = regras(base).find((r) => r.seletor.includes(".sb-botao[aria-disabled='true']"))!.corpo

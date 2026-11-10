@@ -1367,7 +1367,7 @@
      links, então ali a folga é de 16 px. Abaixo de 768 o cabeçalho é uma grade (menu, nome, botão). */
   .sb-cab-miolo {
     --cab-gap-links: clamp(16px, calc(16px + (100vw - 768px) * 0.1429), 48px);
-    --cab-folga-acao: clamp(16px, calc(16px + (100vw - 768px) * 0.0714), 32px);
+    --cab-folga-acao: clamp(16px, calc(16px + (100vw - 768px) * 0.0714), 32.1px);
     --cab-recuo-acao: clamp(12px, calc(12px + (100vw - 768px) * 0.0536), 24px);
     display: flex;
     align-items: center;
@@ -1401,13 +1401,20 @@
     flex: none;
   }
 
+  /* O botão vai de c9 + a folga até a margem direita: 2 colunas (20% da área útil) menos a folga. Em
+     1440 são 240,2 px (com a barra de rolagem), e o último link termina em c9. O botão nunca é menor
+     que o conteúdo: em larguras menores o `min-width` perde para o rótulo. O rótulo é de 20 px (o de
+     24 px dava um botão de 262,6 px, que não cabe nos 240,2). */
   .sb-cab-acao {
     flex: none;
+    min-width: calc(20% - var(--cab-folga-acao));
     margin-left: var(--cab-folga-acao);
   }
 
   .sb-cab-acao .sb-moldura-miolo {
     padding: 0 var(--cab-recuo-acao);
+    font-size: 1.25rem;
+    line-height: 1.5rem;
   }
 
   .sb-cab-menu {
@@ -1472,6 +1479,7 @@
 
     .sb-cab-acao {
       grid-column: 3;
+      min-width: 0;
       margin-left: 0;
     }
   }
