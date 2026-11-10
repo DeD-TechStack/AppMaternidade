@@ -1793,8 +1793,24 @@
     color: var(--cor-fundo);
   }
 
+  /* Ligado (o botão "Modo madrugada" com aria-pressed): o botão inteiro se enche de destaque, com o
+     texto sobre-destaque, e a moldura dupla se inverte (a linha de dentro passa a ser da cor do
+     texto). Distingue-se do desligado pelo fundo cheio e pela moldura, e não só pela cor. */
+  .sb-moldura[data-ligado] {
+    border-color: var(--cor-destaque);
+    background-color: var(--cor-destaque);
+    color: var(--cor-sobre-destaque);
+  }
+
   .sb-moldura[data-ligado] .sb-moldura-miolo {
-    background-color: var(--cor-papel-fundo);
+    border-color: var(--cor-sobre-destaque);
+    background-color: transparent;
+  }
+
+  /* Com o mouse em cima, a inversão se inverte de novo: miolo escuro e texto no destaque. */
+  .sb-moldura[data-ligado]:hover .sb-moldura-miolo {
+    background-color: var(--cor-sobre-destaque);
+    color: var(--cor-destaque);
   }
 
   /* O quadro de moldura dupla que não é botão (o painel do submenu). */
@@ -1843,8 +1859,7 @@
       line-height: 1.5rem;
     }
 
-    .sb-cab-acao:hover .sb-moldura-miolo,
-    .sb-cab-acao[data-ligado] .sb-moldura-miolo {
+    .sb-cab-acao:hover .sb-moldura-miolo {
       background-color: color-mix(in srgb, var(--cor-destaque) 85%, var(--cor-texto));
       color: var(--cor-sobre-destaque);
     }
