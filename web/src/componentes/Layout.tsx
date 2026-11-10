@@ -1,5 +1,6 @@
 import { Outlet, useLocation } from 'react-router'
 import { Cabecalho } from './casca/Cabecalho.tsx'
+import { FaixaEstado } from './offline/FaixaEstado.tsx'
 import { Rodape } from './casca/Rodape.tsx'
 import type { Contexto } from './casca/textos.ts'
 import { ProvedorPrototipo } from '../prototipo/ProvedorPrototipo.tsx'
@@ -24,6 +25,7 @@ function Casca() {
         madrugada={estado.madrugada}
         aoAlternarMadrugada={() => dispatch({ tipo: 'definirMadrugada', valor: !estado.madrugada })}
       />
+      <FaixaEstado />
       <Outlet />
       <Rodape />
     </div>
