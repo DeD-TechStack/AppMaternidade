@@ -2436,16 +2436,19 @@
    faixas estreitas o trocam depois. Só os espaços da escala 8, 16, 24, 32, 64, 96, 128, 160, 192
    (a exceção é o vão de 12 px entre a mídia do cartão e o título dele). */
 @layer components {
-  /* O aviso de demonstração, quando o Início o mostra, é filho direto da casca: ele segue a margem
-     da área útil (32, 24 ou 16 px) em vez de colar na borda da janela. */
-  [data-aviso='demonstracao']:has(+ .vt-inicio) {
-    box-sizing: border-box;
-    /* No máximo 40ch de largura (o aviso tem 109 caracteres: numa linha só passaria dos 65 do G10). */
-    max-width: min(40ch, calc(100% - 2 * var(--margem)));
-    margin-left: max(var(--margem), calc((100% - var(--area-util)) / 2));
-    /* 15 px, o menor tamanho da escala (G4). O `text-sm` do componente é de uma camada mais nova: só o
-       `!important` de uma camada anterior o vence. */
-    font-size: 0.9375rem !important;
+  /* A lateral da abertura do Início (volta 1, itens 2, 3 e 6). Em 1440 a coluna estica até o fio
+     horizontal (a grade termina 32 px acima dele; a margem negativa devolve esses 32 px) e o último
+     item, o link "Ver o protótipo", ocupa os 80 px finais, o mesmo trecho do fio vertical: o centro
+     do link fica a 40 px do fio, entre o começo do vertical e o horizontal. O aviso de demonstração
+     é uma etiqueta a mais, entre as 4 etiquetas e o link. */
+  .vt-inicio .sb-abertura-lateral {
+    align-self: stretch;
+    margin-bottom: -32px;
+  }
+
+  .vt-inicio .sb-abertura-lateral > li:last-child {
+    margin-top: auto;
+    min-height: 80px;
   }
 
   /* Colunas c3–c9 (a seção escura). */
@@ -2471,9 +2474,13 @@
     margin: 0;
   }
 
-  /* Citação: o texto em c1–c6, centrado na altura do retrato (c8–c10). */
+  /* Citação: o texto em c1–c6 estica à altura do retrato (c8–c10), com a frase no topo e a legenda na
+     base, as duas coladas nas bordas do retrato (volta 1, itens 1 e 9). */
   .vt-citacao-texto {
-    align-self: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-self: stretch;
     margin: 0;
   }
 
@@ -2536,8 +2543,9 @@
     letter-spacing: 0;
   }
 
-  /* Pergunta e CTA: a pergunta centrada; o círculo urucum de 480 px no centro da janela e, à direita, o
-     círculo de contorno de 240 px. O contorno é um anel (::before) e não uma borda do elemento. */
+  /* Pergunta e CTA: a pergunta centrada; o círculo urucum de 480 px no centro da janela, com o rótulo em
+     56/67 (o texto fica entre 50% e 75% do diâmetro), e, à direita, o círculo de contorno de 240 px, com o rótulo em 32/38. O contorno é um anel
+     (::before) e não uma borda do elemento. Abaixo de 768 o de contorno sai e fica um círculo só. */
   .vt-pergunta {
     text-align: center;
   }
@@ -2571,6 +2579,8 @@
     margin-inline: auto;
     background-color: var(--cor-destaque);
     color: var(--cor-sobre-destaque);
+    font-size: 3.5rem;
+    line-height: 4.1875rem;
   }
 
   .vt-cta:hover {
@@ -2584,6 +2594,8 @@
     width: 240px;
     height: 240px;
     color: var(--cor-texto);
+    font-size: 2rem;
+    line-height: 2.375rem;
   }
 
   .vt-cta-contorno::before {
@@ -2599,7 +2611,8 @@
     color: var(--cor-fundo);
   }
 
-  /* As 4 palavras grandes: de x=32 a 1408, com o espaço sobrando entre elas. */
+  /* As 4 palavras grandes: de x=32 a 1408, com o espaço sobrando entre elas. Abaixo de 768 ficam
+     empilhadas: linha de 56 e vão de 32, passo de 88. */
   .vt-nav-lista {
     display: flex;
     flex-wrap: wrap;
@@ -2659,6 +2672,17 @@
     }
   }
 
+  /* De 768 a 1439 a coluna lateral (c9–c10, menos o recuo) é mais estreita que a etiqueta do aviso
+     (239 px, `nowrap` na base): sem isto ela passaria da margem e, perto de 1200, da janela. Só a
+     etiqueta do aviso pode quebrar linha; as outras e o computador de 1440 ficam como estão. */
+  @media (min-width: 768px) and (max-width: 1439px) {
+    .vt-inicio [data-aviso] .sb-etiqueta {
+      height: auto;
+      min-height: 26px;
+      white-space: normal;
+    }
+  }
+
   /* Abaixo de 768: uma coluna. */
   @media (max-width: 767px) {
     .vt-col-c3-c9 {
@@ -2667,6 +2691,22 @@
 
     .vt-apresentacao-texto {
       margin-top: 24px;
+    }
+
+    /* A lateral da abertura em celular (item 6): as etiquetas em linha, com quebra e vão de 8, e o
+       link numa linha só dele, depois delas. Volta ao tamanho do conteúdo. */
+    .vt-inicio .sb-abertura-lateral {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-self: auto;
+      margin-bottom: 0;
+    }
+
+    .vt-inicio .sb-abertura-lateral > li:last-child {
+      flex-basis: 100%;
+      margin-top: 0;
+      min-height: 32px;
     }
 
     .vt-citacao-texto {
@@ -2692,11 +2732,19 @@
     .vt-cta {
       width: 322px;
       height: 322px;
+      font-size: 2.25rem;
+      line-height: 2.6875rem;
+    }
+
+    /* Um círculo só: o de contorno sai, e o palco fica com os 322 px do círculo cheio. */
+    .vt-cta-contorno {
+      display: none;
     }
 
     .vt-nav-lista {
       flex-direction: column;
       justify-content: flex-start;
+      gap: 32px;
     }
 
     .vt-escura-texto {
