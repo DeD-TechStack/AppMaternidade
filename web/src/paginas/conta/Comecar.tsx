@@ -1,25 +1,35 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Navigate, useLocation, useSearchParams } from 'react-router'
-import { Campo, SeletorFuso } from '../../componentes/conta/Campos.tsx'
+import { CampoAcesso } from '../../componentes/conta/CampoAcesso.tsx'
 import { destinoDepoisDeEntrar, voltaValida } from '../../componentes/conta/destino.ts'
 import { useEnvio } from '../../componentes/conta/envio.ts'
-import { useFocoNoResumo, useFocoNoTitulo } from '../../componentes/conta/foco.ts'
+import { useFocoNoResumo } from '../../componentes/conta/foco.ts'
 import { fusoDoAparelho } from '../../componentes/conta/fusos.ts'
-import { MolduraLogada } from '../../componentes/conta/MolduraLogada.tsx'
-import { BOTAO_PRINCIPAL, RegiaoStatus, ResumoErro } from '../../componentes/conta/Partes.tsx'
+import { MolduraPublica } from '../../componentes/conta/MolduraPublica.tsx'
+import {
+  BlocoDoFormulario,
+  BotaoEnvio,
+  ItemAvisoDeDemonstracao,
+  ItemEtiquetaPrototipo,
+  LinhasDeExplicacao,
+  RegiaoStatusAcesso,
+  ResumoErroAcesso,
+} from '../../componentes/conta/PartesAcesso.tsx'
+import { SeletorFusoAcesso } from '../../componentes/conta/SeletorFusoAcesso.tsx'
 import { useDadosConta, useSessao } from '../../componentes/conta/sessao.tsx'
+import { Etiqueta } from '../../componentes/base/Etiqueta.tsx'
 import { COMECAR, COMUM, TITULOS, textoDaPassagem, textoDoErro } from '../../conteudo/conta.ts'
 
 // /app/comecar, passo "Seu nome" (RF-14): só com conta incompleta. "Salvar" cria a conta e segue
 // para o destino do RF-10. Com a conta completa, a rota leva ao destino, que nunca é o próprio
-// Começar (na 37a). A mensagem de passagem que chegar (`senha_trocada`) aparece no status.
+// Começar (na 37a). A mensagem de passagem que chegar (`senha_trocada`) aparece no status. Sem
+// "Sair" aqui: ele é só da Conta.
 export function Comecar() {
   const sessao = useSessao()
   const dados = useDadosConta()
   const location = useLocation()
   const [parametros] = useSearchParams()
   const volta = voltaValida(parametros.get('volta'))
-  const titulo = useFocoNoTitulo()
 
   const [nome, setNome] = useState(() => (sessao.usuario?.nomeMetadados ?? '').trim())
   const [fuso, setFuso] = useState(fusoDoAparelho)
@@ -61,55 +71,59 @@ export function Comecar() {
   }
 
   return (
-    <MolduraLogada>
-      <h1 ref={titulo} tabIndex={-1} className="titulo-tela alvo-foco">
-        {TITULOS.comecar}
-      </h1>
-      <RegiaoStatus mensagem={textoDaPassagem(location.state)} />
-      <section
-        aria-labelledby="titulo-seu-nome"
-        className="mt-8 grid gap-10 min-[60rem]:grid-cols-[5fr_7fr] min-[60rem]:gap-16"
-      >
-        <div className="flex flex-col gap-4">
-          <h2 id="titulo-seu-nome" className="titulo-linha">
-            {COMECAR.titulo}
-          </h2>
-          <p className="texto-medida">{COMECAR.frase}</p>
-        </div>
-        <form onSubmit={aoSalvar} noValidate className="flex max-w-[28rem] flex-col gap-5">
+    <MolduraPublica
+      titulo={TITULOS.comecar}
+      subtitulo={COMECAR.frase}
+      lateral={
+        <>
+          <li>
+            <Etiqueta>{COMECAR.passo}</Etiqueta>
+          </li>
+          <ItemEtiquetaPrototipo />
+          <ItemAvisoDeDemonstracao />
+        </>
+      }
+    >
+      <BlocoDoFormulario>
+        <RegiaoStatusAcesso mensagem={textoDaPassagem(location.state)} />
+        <form onSubmit={aoSalvar} noValidate>
           {erroDoEnvio && !campoDoErro ? (
-            <ResumoErro
+            <ResumoErroAcesso
               erro={erroDoEnvio}
               repetivel={estado.fase === 'erro' && estado.tentarDeNovo}
               aoTentarDeNovo={() => void tentarDeNovo()}
               refResumo={resumo}
             />
           ) : null}
-          <Campo
-            rotulo={COMUM.rotuloNome}
-            ajuda={COMUM.ajudaNome}
-            autoComplete="name"
-            valor={nome}
-            aoMudar={(valor) => {
-              setNome(valor)
-              setErroNome(null)
-            }}
-            erro={erroNome ?? (campoDoErro === 'nome' && erroDoEnvio ? textoDoErro(erroDoEnvio) : null)}
-            refEntrada={nomeRef}
-          />
-          <SeletorFuso
-            rotulo={COMECAR.fuso}
-            ajuda={COMECAR.ajudaFuso}
-            valor={fuso}
-            aoMudar={setFuso}
-            erro={campoDoErro === 'fuso' && erroDoEnvio ? textoDoErro(erroDoEnvio) : null}
-            refEntrada={fusoRef}
-          />
-          <button type="submit" disabled={enviando} className={BOTAO_PRINCIPAL}>
-            {enviando ? COMUM.salvando : COMECAR.botao}
-          </button>
+          <div className="sb-acesso-campos conta-campos-compactos">
+            <CampoAcesso
+              rotulo={COMUM.rotuloNome}
+              ajuda={COMUM.ajudaNome}
+              autoComplete="name"
+              valor={nome}
+              aoMudar={(valor) => {
+                setNome(valor)
+                setErroNome(null)
+              }}
+              erro={erroNome ?? (campoDoErro === 'nome' && erroDoEnvio ? textoDoErro(erroDoEnvio) : null)}
+              refEntrada={nomeRef}
+            />
+            <SeletorFusoAcesso
+              rotulo={COMECAR.fuso}
+              ajuda={COMECAR.ajudaFuso}
+              valor={fuso}
+              aoMudar={setFuso}
+              erro={campoDoErro === 'fuso' && erroDoEnvio ? textoDoErro(erroDoEnvio) : null}
+              refEntrada={fusoRef}
+            />
+          </div>
+          <div className="sb-acesso-acao">
+            <BotaoEnvio enviando={enviando}>{enviando ? COMUM.salvando : COMECAR.botao}</BotaoEnvio>
+          </div>
         </form>
-      </section>
-    </MolduraLogada>
+      </BlocoDoFormulario>
+
+      <LinhasDeExplicacao tema={COMECAR.explicacao.tema} linhas={COMECAR.explicacao.linhas} />
+    </MolduraPublica>
   )
 }

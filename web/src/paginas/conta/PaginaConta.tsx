@@ -1,5 +1,6 @@
 import { Fragment, useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
+import { Botao } from '../../componentes/base/Botao.tsx'
 import { baixarJson, nomeDoArquivoDeDados } from '../../componentes/conta/arquivo.ts'
 import {
   apagarChave,
@@ -7,18 +8,16 @@ import {
   CHAVE_FAMILIA_ATUAL,
   CHAVE_RECUPERACAO,
 } from '../../componentes/conta/armazenamento.ts'
-import { Campo, SeletorFuso } from '../../componentes/conta/Campos.tsx'
+import { CampoAcesso } from '../../componentes/conta/CampoAcesso.tsx'
 import { DialogoExcluirConta } from '../../componentes/conta/DialogoExcluirConta.tsx'
 import { useEnvio } from '../../componentes/conta/envio.ts'
-import { useFocoNoResumo, useFocoNoTitulo } from '../../componentes/conta/foco.ts'
-import { BotaoSair, MolduraLogada } from '../../componentes/conta/MolduraLogada.tsx'
-import {
-  BOTAO_PRINCIPAL,
-  BOTAO_SECUNDARIO,
-  LINK_ALVO,
-  RegiaoStatus,
-  ResumoErro,
-} from '../../componentes/conta/Partes.tsx'
+import { useFocoNoResumo } from '../../componentes/conta/foco.ts'
+import { useIndiceAoLado, useSecaoAtiva } from '../../componentes/conta/indice.ts'
+import { IndiceDaConta, type ItemDoIndice } from '../../componentes/conta/IndiceDaConta.tsx'
+import { MolduraPublica } from '../../componentes/conta/MolduraPublica.tsx'
+import { AcaoDaLinha, LinhaDaConta, SecaoDaConta } from '../../componentes/conta/PartesConta.tsx'
+import { BotaoEnvio, RegiaoStatusAcesso, ResumoErroAcesso } from '../../componentes/conta/PartesAcesso.tsx'
+import { SeletorFusoAcesso } from '../../componentes/conta/SeletorFusoAcesso.tsx'
 import { useDadosConta, useSessao } from '../../componentes/conta/sessao.tsx'
 import { COMUM, CONTA, TITULOS, textoDaPassagem, textoDoErro } from '../../conteudo/conta.ts'
 import type { ErroDados } from '../../dados/comum.ts'
@@ -28,26 +27,62 @@ type LeituraDosImpedimentos =
   | { fase: 'erro'; erro: ErroDados }
   | { fase: 'pronto'; bloqueadoras: string[] }
 
-const SECOES_DO_INDICE = [
-  ['perfil', CONTA.secoes.perfil],
-  ['id-conta', CONTA.secoes.id],
-  ['exportar', CONTA.secoes.dados],
-  ['excluir-conta', CONTA.secoes.excluir],
-  ['privacidade', CONTA.secoes.privacidade],
-] as const
+// As 6 seções da tela, na ordem em que aparecem: cada âncora do índice leva a uma que existe.
+const ITENS_DO_INDICE: readonly ItemDoIndice[] = [
+  { id: 'perfil', rotulo: CONTA.secoes.perfil },
+  { id: 'id-conta', rotulo: CONTA.secoes.id },
+  { id: 'exportar', rotulo: CONTA.secoes.dados },
+  { id: 'privacidade', rotulo: CONTA.secoes.privacidade },
+  { id: 'sair', rotulo: CONTA.secoes.sair },
+  { id: 'excluir-conta', rotulo: CONTA.secoes.excluir },
+]
+const IDS_DAS_SECOES = ITENS_DO_INDICE.map((item) => item.id)
 
-// /app/conta (RF-16): perfil, id da conta, exportação, exclusão, privacidade e sair, numa coluna
-// com o índice das seções à esquerda a partir de 60 rem.
+/** O `id` de um `#hash` que é de uma das seções, ou nulo. */
+function secaoDoHash(hash: string): string | null {
+  let id = hash.slice(1)
+  try {
+    id = decodeURIComponent(id)
+  } catch {
+    /* o hash cru serve */
+  }
+  return IDS_DAS_SECOES.includes(id) ? id : null
+}
+
+// /app/conta (RF-16): perfil, id da conta, exportação, privacidade, sair e exclusão, em seções
+// de título em c2 e linhas rótulo + texto, com o índice das seções na coluna lateral da abertura.
 export function PaginaConta() {
   const sessao = useSessao()
   const dados = useDadosConta()
   const location = useLocation()
   const navigate = useNavigate()
-  const titulo = useFocoNoTitulo()
   const { conta, usuario } = sessao
 
   // Uma região de status só: a confirmação da última ação (ou a mensagem de passagem recebida).
   const [status, setStatus] = useState<string | null>(() => textoDaPassagem(location.state))
+
+  // ---- índice ----
+  const aoLado = useIndiceAoLado()
+  const [ativo, escolherSecao] = useSecaoAtiva(IDS_DAS_SECOES, Boolean(conta && usuario))
+
+  // Um clique no índice, ou a entrada por `#id`, rola até a seção e foca o título dela. O destino fica
+  // travado até a pessoa rolar por conta própria (R6); o `scroll` da navegação não o desfaz.
+  const irParaSecao = useCallback(
+    (id: string) => {
+      escolherSecao(id)
+      void navigate({ hash: `#${id}` })
+    },
+    [escolherSecao, navigate],
+  )
+  const { hash, key } = location
+  useEffect(() => {
+    const id = secaoDoHash(hash)
+    const alvo = id ? document.getElementById(id) : null
+    if (!id || !alvo) return
+    escolherSecao(id)
+    alvo.scrollIntoView?.()
+    alvo.focus({ preventScroll: true })
+  }, [hash, key, escolherSecao])
 
   // ---- perfil ----
   const [nome, setNome] = useState(conta?.nome ?? '')
@@ -73,12 +108,17 @@ export function PaginaConta() {
   const exportacao = useEnvio()
   const resumoDaExportacao = useFocoNoResumo(exportacao.estado.fase === 'erro' ? exportacao.estado : null)
 
+  // ---- sair ----
+  const [saindo, setSaindo] = useState(false)
+  const [falhaAoSair, setFalhaAoSair] = useState<ErroDados | null>(null)
+  const resumoDaSaida = useFocoNoResumo(falhaAoSair)
+
   // ---- exclusão ----
   const [leitura, setLeitura] = useState<LeituraDosImpedimentos>({ fase: 'lendo' })
   const [aberto, setAberto] = useState(false)
   const [senha, setSenha] = useState('')
   const [erroSenha, setErroSenha] = useState<string | null>(null)
-  const botaoExcluir = useRef<HTMLButtonElement>(null)
+  const acaoDeExcluir = useRef<HTMLDivElement>(null)
   const senhaConferida = useRef(false)
   const aoDesmontar = useRef<(() => void) | null>(null)
   const exclusao = useEnvio()
@@ -116,15 +156,6 @@ export function PaginaConta() {
   useEffect(() => {
     queueMicrotask(() => void ler())
   }, [ler])
-
-  // `/app/conta#exportar` rola até a seção e foca o título dela.
-  const { hash, key } = location
-  useEffect(() => {
-    if (hash !== '#exportar') return
-    const alvo = document.getElementById('exportar')
-    alvo?.scrollIntoView?.()
-    alvo?.focus()
-  }, [hash, key])
 
   if (!conta || !usuario) return null
 
@@ -180,6 +211,16 @@ export function PaginaConta() {
     })
   }
 
+  async function sairDaConta() {
+    if (saindo) return
+    setSaindo(true)
+    setFalhaAoSair(null)
+    const resultado = await sessao.sair()
+    // Com sucesso, a guarda leva a /entrar e esta tela sai do ar.
+    if (!resultado.ok) setFalhaAoSair(resultado.erro)
+    setSaindo(false)
+  }
+
   function fecharDialogo() {
     senhaConferida.current = false
     exclusao.limpar()
@@ -226,176 +267,181 @@ export function PaginaConta() {
 
   const bloqueadoras = leitura.fase === 'pronto' ? leitura.bloqueadoras : []
   const botaoDesativado = leitura.fase !== 'pronto' || bloqueadoras.length > 0
+  const motivoDoBotao =
+    leitura.fase === 'lendo'
+      ? CONTA.excluir.lendo
+      : leitura.fase === 'erro'
+        ? CONTA.excluir.naoConferiu
+        : bloqueadoras.length > 0
+          ? CONTA.excluir.impedimento.motivo
+          : undefined
+
+  const indice = <IndiceDaConta itens={ITENS_DO_INDICE} ativo={ativo} aoEscolher={irParaSecao} aoLado={aoLado} />
 
   return (
-    <MolduraLogada>
-      <h1 ref={titulo} tabIndex={-1} className="titulo-tela alvo-foco">
-        {TITULOS.conta}
-      </h1>
-      <p className="wrap-anywhere">{CONTA.resumo(conta.nome, conta.email)}</p>
-      <RegiaoStatus mensagem={status} />
-
-      <div className="mt-8 grid gap-6 min-[60rem]:grid-cols-[13rem_minmax(0,1fr)] min-[60rem]:gap-12">
-        <nav
-          aria-label={CONTA.indice}
-          className="hidden min-[60rem]:sticky min-[60rem]:top-4 min-[60rem]:block min-[60rem]:self-start"
-        >
-          <ol className="m-0 list-none border-l p-0">
-            {SECOES_DO_INDICE.map(([id, rotulo]) => (
-              <li key={id}>
-                <a href={`#${id}`} className="alvo-toque flex items-center px-3 no-underline hover:underline">
-                  {rotulo}
-                </a>
-              </li>
-            ))}
-          </ol>
-        </nav>
-
-        <div className="flex min-w-0 flex-col">
-          <section aria-labelledby="perfil" className="pb-8">
-            <h2 id="perfil" className="titulo-linha mb-4">
-              {CONTA.perfil.titulo}
-            </h2>
-            <form onSubmit={salvarPerfil} noValidate className="flex max-w-[28rem] flex-col gap-5">
-              {erroDoPerfil && !campoDoPerfil ? (
-                <ResumoErro
-                  erro={erroDoPerfil}
-                  repetivel={perfil.estado.fase === 'erro' && perfil.estado.tentarDeNovo}
-                  aoTentarDeNovo={() => void perfil.tentarDeNovo()}
-                  refResumo={resumoDoPerfil}
-                />
-              ) : null}
-              <Campo
-                rotulo={CONTA.perfil.nome}
-                autoComplete="name"
-                valor={nome}
-                aoMudar={(valor) => {
-                  setNome(valor)
-                  setErroNome(null)
-                }}
-                erro={erroNome ?? (campoDoPerfil === 'nome' && erroDoPerfil ? textoDoErro(erroDoPerfil) : null)}
-                refEntrada={nomeRef}
-              />
-              <Campo rotulo={CONTA.perfil.email} tipo="email" valor={conta.email} aoMudar={() => undefined} somenteLeitura />
-              <SeletorFuso
-                rotulo={CONTA.perfil.fuso}
-                valor={fuso}
-                aoMudar={setFuso}
-                guardado={conta.fuso}
-                erro={campoDoPerfil === 'fuso' && erroDoPerfil ? textoDoErro(erroDoPerfil) : null}
-                refEntrada={fusoRef}
-              />
-              <button type="submit" disabled={perfil.enviando} className={BOTAO_PRINCIPAL}>
-                {perfil.enviando ? COMUM.salvando : CONTA.perfil.botao}
-              </button>
-            </form>
-          </section>
-
-          <section aria-labelledby="id-conta" className="flex flex-col items-start gap-3 border-t py-8">
-            <h2 id="id-conta" className="titulo-linha">
-              {CONTA.id.titulo}
-            </h2>
-            <p ref={idRef} data-id-conta className="tabular font-semibold">
-              {conta.id.split('-').map((bloco, posicao, blocos) => (
-                <Fragment key={posicao}>
-                  {posicao < blocos.length - 1 ? `${bloco}-` : bloco}
-                  {posicao < blocos.length - 1 ? <wbr /> : null}
-                </Fragment>
-              ))}
-            </p>
-            <button type="button" className={BOTAO_SECUNDARIO} onClick={() => void copiarId()}>
-              {CONTA.id.botao}
-            </button>
-            <p className="texto-medida">{CONTA.id.frase}</p>
-          </section>
-
-          <section aria-labelledby="exportar" className="flex flex-col items-start gap-3 border-t py-8">
-            <h2 id="exportar" tabIndex={-1} className="titulo-linha alvo-foco">
-              {CONTA.exportar.titulo}
-            </h2>
-            <p className="texto-medida">{CONTA.exportar.frase}</p>
-            {exportacao.estado.fase === 'erro' ? (
-              <ResumoErro
-                erro={exportacao.estado.erro}
-                repetivel={exportacao.estado.tentarDeNovo}
-                aoTentarDeNovo={() => void exportacao.tentarDeNovo()}
-                refResumo={resumoDaExportacao}
-              />
-            ) : null}
-            <button type="button" disabled={exportacao.enviando} className={BOTAO_SECUNDARIO} onClick={baixarDados}>
-              {exportacao.enviando ? COMUM.preparandoArquivo : CONTA.exportar.botao}
-            </button>
-          </section>
-
-          <section aria-labelledby="excluir-conta" className="flex flex-col items-start gap-3 border-t py-8">
-            <h2 id="excluir-conta" className="titulo-linha">
-              {CONTA.excluir.titulo}
-            </h2>
-            <p className="texto-medida">{CONTA.excluir.explicacao}</p>
-            {leitura.fase === 'lendo' ? <p>{CONTA.excluir.lendo}</p> : null}
-            {leitura.fase === 'erro' ? (
-              <ResumoErro
-                erro={leitura.erro}
-                repetivel
-                aoTentarDeNovo={() => {
-                  setLeitura({ fase: 'lendo' })
-                  void ler()
-                }}
-                refResumo={resumoDaLeitura}
-              />
-            ) : null}
-            {bloqueadoras.length > 0 ? (
-              <div id="impedimento-exclusao" className="texto-medida">
-                <p>{CONTA.excluir.impedimento}</p>
-                <ul className="mt-2 list-disc pl-6">
-                  {bloqueadoras.map((familia) => (
-                    <li key={familia}>
-                      <strong className="wrap-anywhere">{familia}</strong>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-            <button
-              ref={botaoExcluir}
-              type="button"
-              disabled={botaoDesativado}
-              aria-describedby={bloqueadoras.length > 0 ? 'impedimento-exclusao' : undefined}
-              className={BOTAO_SECUNDARIO}
-              onClick={() => setAberto(true)}
-            >
-              {CONTA.excluir.botao}
-            </button>
-          </section>
-
-          <section aria-labelledby="privacidade" className="flex flex-col items-start gap-2 border-t py-8">
-            <h2 id="privacidade" className="titulo-linha mb-2">
-              {CONTA.privacidade.titulo}
-            </h2>
-            <p>
-              {CONTA.privacidade.contato.antes}
-              <span data-contato className="wrap-anywhere">
-                {CONTA.privacidade.contato.valor}
-              </span>
-              {CONTA.privacidade.contato.depois}
-            </p>
-            <p>
-              {CONTA.privacidade.encarregado.antes}
-              <span data-encarregado className="wrap-anywhere">
-                {CONTA.privacidade.encarregado.valor}
-              </span>
-              {CONTA.privacidade.encarregado.depois}
-            </p>
-            <Link to="/privacidade" className={LINK_ALVO}>
-              {CONTA.privacidade.politica}
-            </Link>
-          </section>
-
-          <div className="border-t pt-8">
-            <BotaoSair />
+    <MolduraPublica
+      titulo={TITULOS.conta}
+      subtitulo={CONTA.resumo(conta.nome, conta.email)}
+      quebraLonga
+      antes={aoLado ? indice : null}
+      colunaLateral={aoLado ? null : indice}
+    >
+      <SecaoDaConta id="perfil" titulo={CONTA.perfil.titulo} primeira>
+        <RegiaoStatusAcesso mensagem={status} />
+        <form onSubmit={salvarPerfil} noValidate>
+          {erroDoPerfil && !campoDoPerfil ? (
+            <ResumoErroAcesso
+              erro={erroDoPerfil}
+              repetivel={perfil.estado.fase === 'erro' && perfil.estado.tentarDeNovo}
+              aoTentarDeNovo={() => void perfil.tentarDeNovo()}
+              refResumo={resumoDoPerfil}
+            />
+          ) : null}
+          <div className="sb-acesso-campos">
+            <CampoAcesso
+              rotulo={CONTA.perfil.nome}
+              autoComplete="name"
+              valor={nome}
+              aoMudar={(valor) => {
+                setNome(valor)
+                setErroNome(null)
+              }}
+              erro={erroNome ?? (campoDoPerfil === 'nome' && erroDoPerfil ? textoDoErro(erroDoPerfil) : null)}
+              refEntrada={nomeRef}
+            />
+            <CampoAcesso rotulo={CONTA.perfil.email} tipo="email" valor={conta.email} aoMudar={() => undefined} somenteLeitura />
+            <SeletorFusoAcesso
+              rotulo={CONTA.perfil.fuso}
+              valor={fuso}
+              aoMudar={setFuso}
+              guardado={conta.fuso}
+              erro={campoDoPerfil === 'fuso' && erroDoPerfil ? textoDoErro(erroDoPerfil) : null}
+              refEntrada={fusoRef}
+            />
           </div>
-        </div>
-      </div>
+          <div className="sb-acesso-acao">
+            <BotaoEnvio enviando={perfil.enviando}>{perfil.enviando ? COMUM.salvando : CONTA.perfil.botao}</BotaoEnvio>
+          </div>
+        </form>
+      </SecaoDaConta>
+
+      <SecaoDaConta id="id-conta" titulo={CONTA.id.titulo}>
+        <LinhaDaConta rotulo={CONTA.id.rotulo}>
+          <p ref={idRef} data-id-conta className="tabular font-semibold">
+            {conta.id.split('-').map((bloco, posicao, blocos) => (
+              <Fragment key={posicao}>
+                {posicao < blocos.length - 1 ? `${bloco}-` : bloco}
+                {posicao < blocos.length - 1 ? <wbr /> : null}
+              </Fragment>
+            ))}
+          </p>
+          <p>{CONTA.id.frase}</p>
+          <AcaoDaLinha>
+            <Botao variante="moldura" alto className="alvo-toque" onClick={() => void copiarId()}>
+              {CONTA.id.botao}
+            </Botao>
+          </AcaoDaLinha>
+        </LinhaDaConta>
+      </SecaoDaConta>
+
+      <SecaoDaConta id="exportar" titulo={CONTA.exportar.titulo}>
+        <LinhaDaConta rotulo={CONTA.exportar.rotulo}>
+          <p>{CONTA.exportar.frase}</p>
+          {exportacao.estado.fase === 'erro' ? (
+            <ResumoErroAcesso
+              erro={exportacao.estado.erro}
+              repetivel={exportacao.estado.tentarDeNovo}
+              aoTentarDeNovo={() => void exportacao.tentarDeNovo()}
+              refResumo={resumoDaExportacao}
+            />
+          ) : null}
+          <AcaoDaLinha>
+            <Botao variante="moldura" alto className="alvo-toque" desativado={exportacao.enviando} onClick={baixarDados}>
+              {exportacao.enviando ? COMUM.preparandoArquivo : CONTA.exportar.botao}
+            </Botao>
+          </AcaoDaLinha>
+        </LinhaDaConta>
+      </SecaoDaConta>
+
+      <SecaoDaConta id="privacidade" titulo={CONTA.privacidade.titulo}>
+        <LinhaDaConta rotulo={CONTA.privacidade.rotulo}>
+          <p>
+            {CONTA.privacidade.contato.antes}
+            <span data-contato className="wrap-anywhere">
+              {CONTA.privacidade.contato.valor}
+            </span>
+            {CONTA.privacidade.contato.depois}
+          </p>
+          <p>
+            {CONTA.privacidade.encarregado.antes}
+            <span data-encarregado className="wrap-anywhere">
+              {CONTA.privacidade.encarregado.valor}
+            </span>
+            {CONTA.privacidade.encarregado.depois}
+          </p>
+          <AcaoDaLinha>
+            <Botao to="/privacidade" variante="moldura" alto className="alvo-toque">
+              {CONTA.privacidade.politica}
+            </Botao>
+          </AcaoDaLinha>
+        </LinhaDaConta>
+      </SecaoDaConta>
+
+      <SecaoDaConta id="sair" titulo={CONTA.saida.titulo}>
+        <LinhaDaConta rotulo={CONTA.saida.rotulo}>
+          <p>{CONTA.saida.frase}</p>
+          {falhaAoSair ? (
+            <ResumoErroAcesso erro={falhaAoSair} refResumo={resumoDaSaida} repetivel aoTentarDeNovo={() => void sairDaConta()} />
+          ) : null}
+          <AcaoDaLinha>
+            <Botao variante="moldura" alto className="alvo-toque" desativado={saindo} onClick={() => void sairDaConta()}>
+              {saindo ? COMUM.saindo : CONTA.sair}
+            </Botao>
+          </AcaoDaLinha>
+        </LinhaDaConta>
+      </SecaoDaConta>
+
+      <SecaoDaConta id="excluir-conta" titulo={CONTA.excluir.titulo} perigo>
+        <LinhaDaConta rotulo={CONTA.excluir.rotulo}>
+          <p>{CONTA.excluir.explicacao}</p>
+          {leitura.fase === 'erro' ? (
+            <ResumoErroAcesso
+              erro={leitura.erro}
+              repetivel
+              aoTentarDeNovo={() => {
+                setLeitura({ fase: 'lendo' })
+                void ler()
+              }}
+              refResumo={resumoDaLeitura}
+            />
+          ) : null}
+          {bloqueadoras.length > 0 ? (
+            <div id="impedimento-exclusao">
+              <p>{CONTA.excluir.impedimento.explicacao}</p>
+              <ul className="conta-familias">
+                {bloqueadoras.map((familia) => (
+                  <li key={familia}>
+                    <strong className="wrap-anywhere">{familia}</strong>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          <AcaoDaLinha ref={acaoDeExcluir}>
+            {botaoDesativado ? (
+              // Desativado (2.9): o botão do sistema, de fundo sólido e apagado, com `aria-disabled="true"` e
+              // o motivo ao lado. Nunca tracejado.
+              <Botao desativado motivo={motivoDoBotao} className="alvo-toque">
+                {CONTA.excluir.botao}
+              </Botao>
+            ) : (
+              <Botao variante="moldura" alto className="alvo-toque" onClick={() => setAberto(true)}>
+                {CONTA.excluir.botao}
+              </Botao>
+            )}
+          </AcaoDaLinha>
+        </LinhaDaConta>
+      </SecaoDaConta>
 
       {aberto ? (
         <DialogoExcluirConta
@@ -407,7 +453,7 @@ export function PaginaConta() {
           erroSenha={erroSenha ?? (senhaErrada && erroDaExclusao ? textoDoErro(erroDaExclusao) : null)}
           resumo={
             erroDaExclusao && !senhaErrada && exclusao.estado.fase === 'erro' ? (
-              <ResumoErro
+              <ResumoErroAcesso
                 erro={erroDaExclusao}
                 repetivel={exclusao.estado.tentarDeNovo}
                 aoTentarDeNovo={() => void exclusao.tentarDeNovo()}
@@ -418,10 +464,10 @@ export function PaginaConta() {
           enviando={exclusao.enviando}
           aoConfirmar={confirmarExclusao}
           aoCancelar={fecharDialogo}
-          retorno={botaoExcluir}
+          retorno={acaoDeExcluir}
           refSenha={campoDaSenha}
         />
       ) : null}
-    </MolduraLogada>
+    </MolduraPublica>
   )
 }
