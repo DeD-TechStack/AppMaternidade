@@ -4,6 +4,7 @@ import { Hoje } from './paginas/Hoje.tsx'
 import { Inicio } from './paginas/Inicio.tsx'
 import { NaoEncontrada } from './paginas/NaoEncontrada.tsx'
 import { Sessao } from './paginas/Sessao.tsx'
+import { Sistema } from './paginas/Sistema.tsx'
 import type { EstadoPrototipo } from './prototipo/estado.ts'
 
 // Os testes injetam um estado inicial; no site ele nasce quando a página carrega.
@@ -15,6 +16,7 @@ export function criarRotas(estadoInicial?: EstadoPrototipo): RouteObject[] {
         { index: true, element: <Inicio /> },
         { path: 'app/hoje', element: <Hoje /> },
         { path: 'app/sessao', element: <Sessao /> },
+        { path: 'sistema', element: <Sistema /> },
         { path: '*', element: <NaoEncontrada /> },
       ],
     },
