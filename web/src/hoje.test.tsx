@@ -467,10 +467,24 @@ describe('Hoje: o CSS do bloco /* 44d-2 */ (lido como texto)', () => {
   it('o painel flutua acima da barra: absoluto, a partir de 100%, opaco, sem sombra', () => {
     const painel = regra('.ha-painel')
     expect(painel).toMatch(/position:\s*absolute/)
-    expect(painel).toMatch(/bottom:\s*100%/)
+    expect(painel).toMatch(/bottom:\s*calc\(100% \+ 1px\)\s*;/)
     expect(painel).toMatch(/left:\s*0/)
     expect(painel).toMatch(/right:\s*0/)
     expect(painel).toMatch(/background-color:\s*var\(--cor-fundo\)/)
+  })
+
+  // ---- Volta 2, correção do 1 px: o `bottom: 100%` do painel conta a partir da borda de DENTRO da barra (depois do
+  // fio de 1 px do topo, E3), então o painel cobria o fio. O 1 px a mais o põe antes da barra.
+  it('o painel acaba antes da barra: bottom compensa o fio de 1 px do topo da barra (mesmo valor do border-top), sem sombra nem outline-offset negativo', () => {
+    const fio = Number(/border-top:\s*(\d+)px solid/.exec(regra('.barra-registrar'))?.[1])
+    expect(fio).toBe(1)
+    const painel = regra('.ha-painel')
+    expect(painel).toMatch(new RegExp(`bottom:\\s*calc\\(100% \\+ ${fio}px\\)\\s*;`))
+    // Uma regra só para `.ha-painel` define o bottom (nenhuma outra o sobrepõe).
+    const todas = todasAsRegras().filter((r) => r.seletor === '.ha-painel' && /bottom\s*:/.test(r.corpo))
+    expect(todas).toHaveLength(1)
+    expect(painel).not.toMatch(/box-shadow|outline-offset/)
+    expect(semComentarios).not.toMatch(/outline-offset:\s*-/)
   })
 
   it('E4: o anel de foco contorna o botão inteiro (::after do botão, 2 px na cor do papel, a 4 px ou mais das bordas), e não o rótulo; sem recuo negativo', () => {

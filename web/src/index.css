@@ -2610,7 +2610,9 @@ body:has([data-barra-registrar]) [data-rodape] {
    status continua no DOM). */
 .ha-painel {
   position: absolute;
-  bottom: 100%;
+  /* O `100%` conta da borda de DENTRO da barra, depois do fio de 1 px do topo (E3): sem o 1 px a mais o painel
+     cobria o fio. Com ele o painel acaba no topo da barra. */
+  bottom: calc(100% + 1px);
   left: 0;
   right: 0;
   border-radius: 8px 8px 0 0;
