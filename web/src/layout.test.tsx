@@ -246,7 +246,7 @@ describe('R2: a barra de baixo fica fixa em janela de 40 rem ou mais, qualquer q
   const agir = (nome: string) => fireEvent.click(screen.getByRole('button', { name: nome }))
   const estados: Array<[string, () => void]> = [
     ['estado inicial', () => {}],
-    ['painel Fralda aberto', () => agir('Registrar fralda de Heloísa')],
+    ['Fralda registrada, sem tipo', () => agir('Registrar fralda de Heloísa')],
     [
       'Fralda confirmada',
       () => {

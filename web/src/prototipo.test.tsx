@@ -86,42 +86,73 @@ describe('cronômetro', () => {
   })
 })
 
+// E5 (VOLTA1): um toque em Fralda já registra; o tipo é um ajuste opcional do texto da confirmação.
 describe('fralda', () => {
-  function abrirFralda() {
+  function tocarFralda() {
     const gatilho = screen.getByRole('button', { name: 'Registrar fralda de Heloísa' })
     fireEvent.click(gatilho)
     return gatilho
   }
 
-  it('escolher Xixi mostra a confirmação e põe "Fralda agora" em Últimos', () => {
+  it('(a) um toque em Fralda registra na hora: confirmação "Fralda registrada" e "Fralda agora" em Últimos', () => {
     renderizarRota('/app/hoje')
     expect(itensDeUltimos()).toContain('50 min Fralda, tempo desde o registro')
 
-    abrirFralda()
-    fireEvent.click(screen.getByRole('button', { name: 'Xixi' }))
+    tocarFralda()
 
-    expect(screen.getByRole('status').textContent).toContain('Fralda registrada: Xixi')
+    expect(screen.getByRole('status').textContent).toContain('Fralda registrada')
+    expect(screen.getByRole('status').textContent).not.toContain('Fralda registrada:')
     expect(itensDeUltimos()).toContain('agora Fralda')
     expect(itensDeUltimos()).not.toContain('50 min Fralda, tempo desde o registro')
-    expect(screen.queryByRole('button', { name: 'Xixi' })).toBeNull()
   })
 
-  it('a escolha oferece Xixi, Cocô, Ambos e Cancelar', () => {
+  it('(b) a confirmação oferece Desfazer, Fechar e as escolhas Xixi, Cocô e Ambos, sem Cancelar nem o painel antigo', () => {
     renderizarRota('/app/hoje')
-    abrirFralda()
+    tocarFralda()
 
-    const grupo = screen.getByRole('group', { name: 'Fralda de Heloísa' })
-    expect(within(grupo).getAllByRole('button').map((b) => b.textContent)).toEqual([
+    const status = screen.getByRole('status')
+    expect(within(status).getAllByRole('button').map((b) => b.textContent)).toEqual([
+      'Desfazer',
+      'Fechar',
       'Xixi',
       'Cocô',
       'Ambos',
-      'Cancelar',
     ])
+    expect(screen.queryByRole('button', { name: 'Cancelar' })).toBeNull()
+    expect(screen.queryByRole('group', { name: 'Fralda de Heloísa' })).toBeNull()
   })
 
-  it('"Desfazer" devolve Últimos ao que era e limpa a confirmação', () => {
+  it('(c) escolher Xixi troca o texto para "Fralda registrada: Xixi" sem criar um segundo registro', () => {
     renderizarRota('/app/hoje')
-    abrirFralda()
+    tocarFralda()
+    const antes = itensDeUltimos()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Xixi' }))
+
+    expect(screen.getByRole('status').textContent).toContain('Fralda registrada: Xixi')
+    expect(itensDeUltimos()).toEqual(antes)
+    expect(itensDeUltimos().filter((item) => item.endsWith('Fralda'))).toHaveLength(1)
+    expect(screen.getByRole('button', { name: 'Xixi' }).getAttribute('aria-pressed')).toBe('true')
+  })
+
+  it('(c) trocar de tipo troca o texto de novo (Xixi, depois Cocô) e Últimos fica igual', () => {
+    renderizarRota('/app/hoje')
+    tocarFralda()
+    fireEvent.click(screen.getByRole('button', { name: 'Xixi' }))
+    const antes = itensDeUltimos()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cocô' }))
+
+    const frase = screen.getByRole('status').querySelector('p')!.textContent
+    expect(frase).toBe('Fralda registrada: Cocô')
+    expect(screen.getByRole('button', { name: 'Cocô' }).getAttribute('aria-pressed')).toBe('true')
+    expect(screen.getByRole('button', { name: 'Xixi' }).getAttribute('aria-pressed')).toBe('false')
+    expect(itensDeUltimos()).toEqual(antes)
+  })
+
+  it('(d) "Desfazer" depois de escolher o tipo devolve Últimos ao que era antes da fralda e limpa a confirmação', () => {
+    renderizarRota('/app/hoje')
+    tocarFralda()
     fireEvent.click(screen.getByRole('button', { name: 'Cocô' }))
     expect(screen.getByRole('status').textContent).toContain('Fralda registrada: Cocô')
 
@@ -135,10 +166,34 @@ describe('fralda', () => {
     expect(screen.getByRole('status').textContent).toBe('')
   })
 
+  it('(d) "Desfazer" sem ter escolhido o tipo também restaura o estado anterior', () => {
+    renderizarRota('/app/hoje')
+    tocarFralda()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Desfazer' }))
+
+    expect(itensDeUltimos()).toContain('50 min Fralda, tempo desde o registro')
+    expect(screen.getByRole('status').textContent).toBe('')
+  })
+
+  it('(e) o role="status" continua único, na tela vazio, com a fralda e depois de fechar', () => {
+    renderizarRota('/app/hoje')
+    expect(screen.getAllByRole('status')).toHaveLength(1)
+
+    tocarFralda()
+    expect(screen.getAllByRole('status')).toHaveLength(1)
+    fireEvent.click(screen.getByRole('button', { name: 'Ambos' }))
+    expect(screen.getAllByRole('status')).toHaveLength(1)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Fechar' }))
+    expect(screen.getAllByRole('status')).toHaveLength(1)
+    expect(screen.getByRole('status').textContent).toBe('')
+  })
+
   it('a confirmação continua presente depois de 60 s', () => {
     relogioFalso()
     renderizarRota('/app/hoje')
-    abrirFralda()
+    tocarFralda()
     fireEvent.click(screen.getByRole('button', { name: 'Ambos' }))
 
     avancar(60_000)
@@ -149,47 +204,39 @@ describe('fralda', () => {
 
   it('"Fechar" tira a confirmação sem mexer em Últimos', () => {
     renderizarRota('/app/hoje')
-    abrirFralda()
+    tocarFralda()
     fireEvent.click(screen.getByRole('button', { name: 'Xixi' }))
 
     fireEvent.click(screen.getByRole('button', { name: 'Fechar' }))
 
     expect(screen.getByRole('status').textContent).toBe('')
+    expect(screen.queryByRole('button', { name: 'Xixi' })).toBeNull()
     expect(itensDeUltimos()).toContain('agora Fralda')
   })
 
-  it('Esc fecha a escolha e devolve o foco ao botão Fralda', () => {
+  it('(f) Esc fecha a confirmação da fralda e devolve o foco ao botão Fralda', () => {
     renderizarRota('/app/hoje')
-    const gatilho = abrirFralda()
-    expect(gatilho.getAttribute('aria-expanded')).toBe('true')
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Xixi' }))
+    const gatilho = tocarFralda()
+    screen.getByRole('button', { name: 'Xixi' }).focus()
 
     fireEvent.keyDown(document.activeElement!, { key: 'Escape' })
 
-    expect(screen.queryByRole('group', { name: 'Fralda de Heloísa' })).toBeNull()
-    expect(gatilho.getAttribute('aria-expanded')).toBe('false')
-    expect(document.activeElement).toBe(gatilho)
+    expect(screen.queryByRole('button', { name: 'Xixi' })).toBeNull()
     expect(screen.getByRole('status').textContent).toBe('')
-  })
-
-  it('"Cancelar" fecha a escolha, devolve o foco e não registra nada', () => {
-    renderizarRota('/app/hoje')
-    const gatilho = abrirFralda()
-
-    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
-
-    expect(screen.queryByRole('group', { name: 'Fralda de Heloísa' })).toBeNull()
     expect(document.activeElement).toBe(gatilho)
-    expect(itensDeUltimos()).toContain('50 min Fralda, tempo desde o registro')
+    expect(itensDeUltimos()).toContain('agora Fralda')
   })
 
-  it('a confirmação não toma o foco do teclado', () => {
+  it('a confirmação não toma o foco do teclado: tocar em Fralda deixa o foco no botão', () => {
     renderizarRota('/app/hoje')
-    const gatilho = abrirFralda()
-    fireEvent.click(screen.getByRole('button', { name: 'Xixi' }))
+    const gatilho = screen.getByRole('button', { name: 'Registrar fralda de Heloísa' })
+    gatilho.focus()
+
+    fireEvent.click(gatilho)
 
     expect(document.activeElement).toBe(gatilho)
     expect(screen.getByRole('status').contains(document.activeElement)).toBe(false)
+    expect(screen.getByRole('status').hasAttribute('tabindex')).toBe(false)
   })
 
   it('"+ Mais" abre um disclosure e cada item registra com confirmação', () => {
@@ -566,15 +613,28 @@ describe('R3: o foco acompanha ações que removem o controle focado', () => {
         conferirFocoValido(container)
       })
 
-      it('Hoje: Fralda → Xixi devolve o foco ao botão Fralda, e a região status não é focável', () => {
+      it('Hoje: Fralda → Xixi mantém o foco no botão Fralda, e a região status não é focável', () => {
         const { container } = renderizarRota('/app/hoje', { estadoInicial: base() })
         expect(screen.getByRole('status').hasAttribute('tabindex')).toBe(false)
 
+        botao('Registrar fralda de Heloísa').focus()
         fireEvent.click(botao('Registrar fralda de Heloísa'))
         fireEvent.click(botao('Xixi'))
 
         expect(document.activeElement).toBe(botao('Registrar fralda de Heloísa'))
         expect(screen.getByRole('status').hasAttribute('tabindex')).toBe(false)
+        conferirFocoValido(container)
+      })
+
+      it('Hoje: Esc na confirmação da fralda devolve o foco ao botão Fralda (E5)', () => {
+        const { container } = renderizarRota('/app/hoje', { estadoInicial: base() })
+        fireEvent.click(botao('Registrar fralda de Heloísa'))
+        botao('Xixi').focus()
+
+        fireEvent.keyDown(document.activeElement!, { key: 'Escape' })
+
+        expect(document.activeElement).toBe(botao('Registrar fralda de Heloísa'))
+        expect(screen.getByRole('status').textContent).toBe('')
         conferirFocoValido(container)
       })
 

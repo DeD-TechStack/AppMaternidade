@@ -3,6 +3,8 @@ import { Confirmacao } from '../../prototipo/Confirmacao.tsx'
 import {
   ESCOLHAS_FRALDA,
   ITENS_MAIS,
+  TEXTO_FRALDA,
+  ehConfirmacaoDeFralda,
   type EscolhaFralda,
   type ItemMais,
   type TipoSessao,
@@ -10,11 +12,12 @@ import {
 import { useBarraFixa } from '../../prototipo/useBarraFixa.ts'
 import { Botao } from '../base/Botao.tsx'
 
-type Painel = 'fralda' | 'mais'
-
 interface Props {
   aoIniciarSessao: (tipo: TipoSessao) => void
-  aoRegistrarFralda: (escolha: EscolhaFralda) => void
+  /** O toque em Fralda registra na hora (E5): o registro não leva o tipo. */
+  aoRegistrarFralda: () => void
+  /** A escolha opcional do tipo, na confirmação, ajusta o registro já feito (não cria outro). */
+  aoAjustarFralda: (escolha: EscolhaFralda) => void
   aoRegistrarMais: (item: ItemMais) => void
   /** O Hoje leva o foco ao primeiro botão (Sono) quando "Desfazer" e "Fechar" saem da tela. */
   refSono?: Ref<HTMLButtonElement>
@@ -27,16 +30,19 @@ interface Props {
 const BOTAO = 'ha-barra-botao t-botao alvo-toque'
 
 /**
- * A barra Registrar de 1 toque do Hoje (EMENDAS E1): 4 botões iguais, Sono, Mamada, Fralda e Mais,
- * numa barra fixa de 64 px. Sono e Mamada iniciam a sessão na hora. Fralda abre a escolha (Xixi,
- * Cocô, Ambos) e Mais abre a lista (Tummy time, Mamadeira, Alimentação sólida, Observação), um
- * painel por vez. O painel flutua logo acima da barra, dentro do elemento fixo, e leva também a
- * confirmação, cuja região `role="status"` é única e fica sempre no DOM. Esc fecha o painel e devolve
- * o foco ao botão que o abriu. Com a janela de menos de 40 rem de altura a barra volta ao fluxo.
+ * A barra Registrar de 1 toque do Hoje (EMENDAS E1, VOLTA1 E5): 4 botões iguais, Sono, Mamada, Fralda e
+ * Mais, numa barra fixa de 64 px. Sono e Mamada iniciam a sessão na hora, e Fralda também: registra a
+ * fralda num toque e a confirmação traz Desfazer, Fechar e a escolha opcional do tipo (Xixi, Cocô,
+ * Ambos), que só ajusta o texto. Mais abre a lista (Tummy time, Mamadeira, Alimentação sólida,
+ * Observação). O painel flutua logo acima da barra, dentro do elemento fixo, e leva a confirmação, cuja
+ * região `role="status"` é única e fica sempre no DOM. Esc fecha o que estiver aberto: o Mais (foco no
+ * botão Mais) e, depois, a confirmação da fralda (foco no botão Fralda). Com a janela de menos de
+ * 40 rem de altura a barra volta ao fluxo.
  */
 export function BarraRegistrar({
   aoIniciarSessao,
   aoRegistrarFralda,
+  aoAjustarFralda,
   aoRegistrarMais,
   refSono,
   texto,
@@ -44,50 +50,61 @@ export function BarraRegistrar({
   aoFechar,
 }: Props) {
   const { barra, fixa } = useBarraFixa()
-  const [painel, setPainel] = useState<Painel | null>(null)
+  const [maisAberto, setMaisAberto] = useState(false)
   const botaoFralda = useRef<HTMLButtonElement>(null)
   const botaoMais = useRef<HTMLButtonElement>(null)
-  const grupoFralda = useRef<HTMLDivElement>(null)
-  const idFralda = useId()
   const idMais = useId()
+  const fraldaNaTela = ehConfirmacaoDeFralda(texto)
 
   useEffect(() => {
-    if (!painel) return
-    if (painel === 'fralda') grupoFralda.current?.querySelector('button')?.focus()
+    if (!maisAberto && !fraldaNaTela) return
 
-    const gatilho = painel === 'fralda' ? botaoFralda : botaoMais
     function aoTeclar(evento: KeyboardEvent) {
       if (evento.key !== 'Escape') return
-      setPainel(null)
-      gatilho.current?.focus()
+      if (maisAberto) {
+        setMaisAberto(false)
+        botaoMais.current?.focus()
+        return
+      }
+      aoFechar()
+      botaoFralda.current?.focus()
     }
     document.addEventListener('keydown', aoTeclar)
     return () => document.removeEventListener('keydown', aoTeclar)
-  }, [painel])
+  }, [maisAberto, fraldaNaTela, aoFechar])
 
   function iniciar(tipo: TipoSessao) {
-    setPainel(null)
+    setMaisAberto(false)
     aoIniciarSessao(tipo)
   }
 
-  function escolherFralda(escolha: EscolhaFralda) {
-    setPainel(null)
-    botaoFralda.current?.focus()
-    aoRegistrarFralda(escolha)
+  // Um toque, um registro: o painel do Mais, se aberto, fecha. O foco fica no botão tocado.
+  function registrarFralda() {
+    setMaisAberto(false)
+    aoRegistrarFralda()
   }
 
   function escolherMais(item: ItemMais) {
-    setPainel(null)
+    setMaisAberto(false)
     botaoMais.current?.focus()
     aoRegistrarMais(item)
   }
 
-  function cancelarFralda() {
-    setPainel(null)
-    botaoFralda.current?.focus()
-  }
+  // O tipo vigente é o do fim do texto ("Fralda registrada: Xixi"); sem tipo, nenhum fica marcado.
+  const tipoEscolhido = fraldaNaTela && texto && texto !== TEXTO_FRALDA ? texto.slice(TEXTO_FRALDA.length + 2) : null
+  const escolhas = fraldaNaTela
+    ? {
+        rotulo: 'Tipo da fralda',
+        opcoes: ESCOLHAS_FRALDA,
+        escolhida: tipoEscolhido,
+        aoEscolher: (opcao: string) => {
+          const tipo = ESCOLHAS_FRALDA.find((escolha) => escolha === opcao)
+          if (tipo) aoAjustarFralda(tipo)
+        },
+      }
+    : undefined
 
-  const aberto = texto !== null || painel !== null
+  const aberto = texto !== null || maisAberto
 
   return (
     <section
@@ -97,28 +114,9 @@ export function BarraRegistrar({
       className={fixa ? 'registro-rapido barra-registrar barra-fixa' : 'registro-rapido barra-registrar'}
     >
       <div className="ha-painel" data-painel="" data-aberto={aberto ? '' : undefined}>
-        <Confirmacao texto={texto} aoDesfazer={aoDesfazer} aoFechar={aoFechar} />
+        <Confirmacao texto={texto} aoDesfazer={aoDesfazer} aoFechar={aoFechar} escolhas={escolhas} />
 
-        {painel === 'fralda' ? (
-          <div
-            ref={grupoFralda}
-            id={idFralda}
-            role="group"
-            aria-label="Fralda de Heloísa"
-            className="ha-painel-grupo"
-          >
-            {ESCOLHAS_FRALDA.map((escolha) => (
-              <Botao key={escolha} variante="moldura" className="alvo-toque" onClick={() => escolherFralda(escolha)}>
-                {escolha}
-              </Botao>
-            ))}
-            <Botao variante="moldura" className="alvo-toque" onClick={cancelarFralda}>
-              Cancelar
-            </Botao>
-          </div>
-        ) : null}
-
-        {painel === 'mais' ? (
+        {maisAberto ? (
           <div
             id={idMais}
             role="group"
@@ -160,10 +158,8 @@ export function BarraRegistrar({
           ref={botaoFralda}
           type="button"
           aria-label="Registrar fralda de Heloísa"
-          aria-expanded={painel === 'fralda'}
-          aria-controls={painel === 'fralda' ? idFralda : undefined}
           className={BOTAO}
-          onClick={() => setPainel(painel === 'fralda' ? null : 'fralda')}
+          onClick={registrarFralda}
         >
           <span>Fralda</span>
         </button>
@@ -171,10 +167,10 @@ export function BarraRegistrar({
           ref={botaoMais}
           type="button"
           aria-label="Mais registros"
-          aria-expanded={painel === 'mais'}
-          aria-controls={painel === 'mais' ? idMais : undefined}
+          aria-expanded={maisAberto}
+          aria-controls={maisAberto ? idMais : undefined}
           className={BOTAO}
-          onClick={() => setPainel(painel === 'mais' ? null : 'mais')}
+          onClick={() => setMaisAberto(!maisAberto)}
         >
           <span>Mais</span>
         </button>

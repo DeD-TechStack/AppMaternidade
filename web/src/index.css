@@ -2868,4 +2868,25 @@ body:has([data-barra-registrar]) [data-rodape] {
   .ha-painel[data-aberto] {
     padding: 16px;
   }
+
+  /* VOLTA1 E5: rótulo de 20 px (do conjunto da escala) nas 3 escolhas do tipo da fralda, como o da barra. */
+  .ha-confirmacao-escolhas .sb-moldura {
+    font-size: 1.25rem;
+    line-height: 1.25rem;
+  }
+}
+
+/* VOLTA1 E5: a escolha opcional do tipo da fralda (Xixi, Cocô, Ambos) mora na confirmação, que é flex com
+   quebra: ocupa uma linha inteira, abaixo do texto e do Desfazer/Fechar, em 3 colunas de largura igual.
+   Os botões são os de moldura das outras escolhas do painel, com o alvo de toque do sistema (44 de dia,
+   56 na madrugada), opacos e sem sombra. O miolo perde o recuo de 24 para os 3 caberem em 390. */
+.ha-confirmacao-escolhas {
+  display: grid;
+  flex: 1 1 100%;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.ha-confirmacao-escolhas .sb-moldura-miolo {
+  padding: 0 8px;
 }

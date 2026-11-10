@@ -670,7 +670,7 @@ describe('Hoje: o CSS do bloco /* 44d-2 */ (lido como texto)', () => {
     expect(regraEm(foraDoCelular, '.ha-andamento .sb-botao, .ha-andamento .sb-moldura')).not.toMatch(/font-size/)
   })
 
-  it('P3: as escolhas dos painéis (Fralda e Mais) têm larguras iguais: grade de 2 colunas, 4 de 1200 em diante, e o Mais, de rótulos longos, em 1 coluna abaixo de 768', () => {
+  it('P3: as escolhas do painel do Mais têm larguras iguais: grade de 2 colunas, 4 de 1200 em diante, e o Mais, de rótulos longos, em 1 coluna abaixo de 768', () => {
     const grupo = regra('.ha-painel-grupo')
     expect(grupo).toMatch(/display:\s*grid/)
     expect(grupo).toMatch(/grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/)
@@ -681,15 +681,20 @@ describe('Hoje: o CSS do bloco /* 44d-2 */ (lido como texto)', () => {
     expect(regraEm(emMedia767(), ".ha-painel-grupo[data-largos]")).toMatch(/grid-template-columns:\s*minmax\(0,\s*1fr\)/)
   })
 
-  it('P3: o grupo do Mais leva data-largos e o da Fralda não', () => {
+  it('P3: o grupo do Mais leva data-largos; tocar em Fralda fecha o Mais e a escolha do tipo (na confirmação) não é desse grupo', () => {
     const { container } = renderizarRota('/app/hoje')
     fireEvent.click(screen.getByRole('button', { name: 'Mais registros' }))
     const mais = screen.getByRole('group', { name: 'Outros registros de Heloísa' })
     expect(mais.hasAttribute('data-largos')).toBe(true)
-    fireEvent.click(screen.getByRole('button', { name: 'Registrar fralda de Heloísa' }))
-    const fralda = screen.getByRole('group', { name: 'Fralda de Heloísa' })
-    expect(fralda.hasAttribute('data-largos')).toBe(false)
     expect(container.querySelectorAll('.ha-painel-grupo')).toHaveLength(1)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Registrar fralda de Heloísa' })) // registra e fecha o Mais
+    expect(screen.queryByRole('group', { name: 'Outros registros de Heloísa' })).toBeNull()
+    const tipo = screen.getByRole('group', { name: 'Tipo da fralda' })
+    expect(tipo.hasAttribute('data-largos')).toBe(false)
+    expect(tipo.classList.contains('ha-painel-grupo')).toBe(false)
+    expect(screen.getByRole('status').contains(tipo)).toBe(true)
+    expect(container.querySelectorAll('.ha-painel-grupo')).toHaveLength(0)
   })
 
   it('E (M-1): o Hoje marca o main com ha-tela e o item do link da lateral com ha-li-link', () => {

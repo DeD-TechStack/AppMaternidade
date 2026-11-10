@@ -12,6 +12,7 @@ const NOMES = ['Iniciar sono de Heloísa', 'Iniciar mamada de Heloísa', 'Regist
 function montar(sobrescritas: Partial<Parameters<typeof BarraRegistrar>[0]> = {}) {
   const aoIniciarSessao = vi.fn()
   const aoRegistrarFralda = vi.fn()
+  const aoAjustarFralda = vi.fn()
   const aoRegistrarMais = vi.fn()
   const aoDesfazer = vi.fn()
   const aoFechar = vi.fn()
@@ -20,6 +21,7 @@ function montar(sobrescritas: Partial<Parameters<typeof BarraRegistrar>[0]> = {}
     <BarraRegistrar
       aoIniciarSessao={aoIniciarSessao}
       aoRegistrarFralda={aoRegistrarFralda}
+      aoAjustarFralda={aoAjustarFralda}
       aoRegistrarMais={aoRegistrarMais}
       refSono={refSono}
       texto={null}
@@ -29,8 +31,20 @@ function montar(sobrescritas: Partial<Parameters<typeof BarraRegistrar>[0]> = {}
     />,
   )
   const barra = resultado.container.querySelector<HTMLElement>('[data-barra-registrar]')!
-  return { ...resultado, barra, aoIniciarSessao, aoRegistrarFralda, aoRegistrarMais, aoDesfazer, aoFechar, refSono }
+  return {
+    ...resultado,
+    barra,
+    aoIniciarSessao,
+    aoRegistrarFralda,
+    aoAjustarFralda,
+    aoRegistrarMais,
+    aoDesfazer,
+    aoFechar,
+    refSono,
+  }
 }
+
+const TIPOS = ['Xixi', 'Cocô', 'Ambos']
 
 const botao = (nome: string) => screen.getByRole('button', { name: nome })
 
@@ -95,64 +109,222 @@ describe('BarraRegistrar: a barra e os 4 botões', () => {
   })
 })
 
-describe('BarraRegistrar: Fralda', () => {
-  it('abre o grupo "Fralda de Heloísa" com Xixi, Cocô, Ambos e Cancelar, e leva o foco ao primeiro', () => {
-    montar()
-    const gatilho = botao('Registrar fralda de Heloísa')
+// E5 (VOLTA1): Fralda com 1 toque. O toque registra na hora; a confirmação (com Desfazer e Fechar) traz
+// a escolha opcional do tipo, que só ajusta o texto do registro já feito.
+describe('BarraRegistrar: Fralda com 1 toque (E5)', () => {
+  it('(a) um clique em "Registrar fralda de Heloísa" chama o registro uma vez, sem tipo e sem painel de escolha', () => {
+    const { aoRegistrarFralda, aoAjustarFralda } = montar()
 
-    fireEvent.click(gatilho)
-
-    const grupo = screen.getByRole('group', { name: 'Fralda de Heloísa' })
-    expect(within(grupo).getAllByRole('button').map((b) => b.textContent)).toEqual(['Xixi', 'Cocô', 'Ambos', 'Cancelar'])
-    expect(document.activeElement).toBe(within(grupo).getByRole('button', { name: 'Xixi' }))
-  })
-
-  it('a escolha chama aoRegistrarFralda, fecha o painel e devolve o foco ao botão Fralda', () => {
-    const { aoRegistrarFralda } = montar()
-    const gatilho = botao('Registrar fralda de Heloísa')
-    fireEvent.click(gatilho)
-
-    fireEvent.click(botao('Cocô'))
+    fireEvent.click(botao('Registrar fralda de Heloísa'))
 
     expect(aoRegistrarFralda).toHaveBeenCalledTimes(1)
-    expect(aoRegistrarFralda).toHaveBeenCalledWith('Cocô')
+    expect(aoRegistrarFralda).toHaveBeenCalledWith()
+    expect(aoAjustarFralda).not.toHaveBeenCalled()
     expect(screen.queryByRole('group', { name: 'Fralda de Heloísa' })).toBeNull()
-    expect(gatilho.getAttribute('aria-expanded')).toBe('false')
-    expect(document.activeElement).toBe(gatilho)
+    expect(screen.queryByRole('button', { name: 'Cancelar' })).toBeNull()
+    for (const tipo of TIPOS) expect(screen.queryByRole('button', { name: tipo })).toBeNull()
   })
 
-  it('cada uma das três escolhas chama aoRegistrarFralda com o próprio nome', () => {
+  it('(a) cada clique é um registro: três cliques, três chamadas', () => {
     const { aoRegistrarFralda } = montar()
 
-    for (const escolha of ['Xixi', 'Cocô', 'Ambos']) {
-      fireEvent.click(botao('Registrar fralda de Heloísa'))
-      fireEvent.click(botao(escolha))
-      expect(aoRegistrarFralda).toHaveBeenLastCalledWith(escolha)
-    }
+    for (let i = 0; i < 3; i++) fireEvent.click(botao('Registrar fralda de Heloísa'))
+
     expect(aoRegistrarFralda).toHaveBeenCalledTimes(3)
   })
 
-  it('Cancelar fecha, devolve o foco e não registra nada', () => {
-    const { aoRegistrarFralda } = montar()
-    const gatilho = botao('Registrar fralda de Heloísa')
-    fireEvent.click(gatilho)
+  it('o botão Fralda age na hora: não abre nada, então não leva aria-expanded nem aria-controls', () => {
+    montar()
+    const fralda = botao('Registrar fralda de Heloísa')
 
-    fireEvent.click(botao('Cancelar'))
+    fireEvent.click(fralda)
 
-    expect(screen.queryByRole('group', { name: 'Fralda de Heloísa' })).toBeNull()
-    expect(document.activeElement).toBe(gatilho)
+    expect(fralda.hasAttribute('aria-expanded')).toBe(false)
+    expect(fralda.hasAttribute('aria-controls')).toBe(false)
+  })
+
+  it('(b) a confirmação da fralda mostra Desfazer, Fechar e as 3 escolhas de tipo, nesta ordem', () => {
+    montar({ texto: 'Fralda registrada' })
+
+    const status = screen.getByRole('status')
+    expect(within(status).getAllByRole('button').map((b) => b.textContent)).toEqual(['Desfazer', 'Fechar', ...TIPOS])
+    const grupo = within(status).getByRole('group', { name: 'Tipo da fralda' })
+    expect(within(grupo).getAllByRole('button').map((b) => b.textContent)).toEqual(TIPOS)
+    expect(grupo.hasAttribute('data-largos')).toBe(false)
+  })
+
+  it('(b) com o tipo já escolhido ("Fralda registrada: Xixi") as escolhas continuam na tela', () => {
+    montar({ texto: 'Fralda registrada: Xixi' })
+
+    const grupo = screen.getByRole('group', { name: 'Tipo da fralda' })
+    expect(within(grupo).getAllByRole('button').map((b) => b.textContent)).toEqual(TIPOS)
+  })
+
+  it('(b) as escolhas são alvos de toque do sistema (alvo-toque) e botões de moldura', () => {
+    montar({ texto: 'Fralda registrada' })
+
+    for (const tipo of TIPOS) {
+      const b = botao(tipo)
+      expect(b.classList.contains('alvo-toque'), b.outerHTML).toBe(true)
+      expect(b.classList.contains('sb-moldura'), b.outerHTML).toBe(true)
+      expect(b.getAttribute('type')).toBe('button')
+    }
+  })
+
+  it('só a confirmação da fralda traz as escolhas: Mamadeira, sessão encerrada e sem texto, não', () => {
+    const { rerender, container, ...resto } = montar({ texto: 'Mamadeira registrada' })
+    expect(screen.queryByRole('group', { name: 'Tipo da fralda' })).toBeNull()
+    for (const tipo of TIPOS) expect(screen.queryByRole('button', { name: tipo })).toBeNull()
+    expect(within(screen.getByRole('status')).getAllByRole('button').map((b) => b.textContent)).toEqual(['Desfazer', 'Fechar'])
+
+    for (const texto of ['Sessão encerrada: 1 h 12 min', null]) {
+      rerender(
+        <BarraRegistrar
+          aoIniciarSessao={resto.aoIniciarSessao}
+          aoRegistrarFralda={resto.aoRegistrarFralda}
+          aoAjustarFralda={resto.aoAjustarFralda}
+          aoRegistrarMais={resto.aoRegistrarMais}
+          refSono={resto.refSono}
+          texto={texto}
+          aoDesfazer={resto.aoDesfazer}
+          aoFechar={resto.aoFechar}
+        />,
+      )
+      expect(screen.queryByRole('group', { name: 'Tipo da fralda' }), String(texto)).toBeNull()
+    }
+    expect(container.querySelector('[role="status"]')).not.toBeNull()
+  })
+
+  it('(e) o role="status" continua único e no DOM, vazio ou com a confirmação da fralda e as escolhas', () => {
+    const vazio = montar()
+    expect(screen.getAllByRole('status')).toHaveLength(1)
+    expect(screen.getByRole('status').textContent).toBe('')
+    vazio.unmount()
+
+    const { barra } = montar({ texto: 'Fralda registrada: Xixi' })
+    const regioes = screen.getAllByRole('status')
+    expect(regioes).toHaveLength(1)
+    expect(barra.querySelectorAll('[role="status"]')).toHaveLength(1)
+    expect(regioes[0].textContent).toContain('Fralda registrada: Xixi')
+    expect(regioes[0].contains(screen.getByRole('group', { name: 'Tipo da fralda' }))).toBe(true)
+    expect(regioes[0].hasAttribute('tabindex')).toBe(false)
+  })
+
+  it('(c) escolher Xixi chama aoAjustarFralda("Xixi") uma vez e não chama o registro de novo', () => {
+    const { aoRegistrarFralda, aoAjustarFralda } = montar({ texto: 'Fralda registrada' })
+
+    fireEvent.click(botao('Xixi'))
+
+    expect(aoAjustarFralda).toHaveBeenCalledTimes(1)
+    expect(aoAjustarFralda).toHaveBeenCalledWith('Xixi')
     expect(aoRegistrarFralda).not.toHaveBeenCalled()
   })
 
-  it('um segundo toque no Fralda fecha o painel', () => {
-    montar()
-    const gatilho = botao('Registrar fralda de Heloísa')
+  it('(c) cada uma das três escolhas ajusta com o próprio nome, e nenhuma registra', () => {
+    const { aoRegistrarFralda, aoAjustarFralda } = montar({ texto: 'Fralda registrada' })
 
-    fireEvent.click(gatilho)
-    fireEvent.click(gatilho)
+    for (const tipo of TIPOS) {
+      fireEvent.click(botao(tipo))
+      expect(aoAjustarFralda).toHaveBeenLastCalledWith(tipo)
+    }
+    expect(aoAjustarFralda).toHaveBeenCalledTimes(3)
+    expect(aoRegistrarFralda).not.toHaveBeenCalled()
+  })
 
-    expect(screen.queryByRole('group', { name: 'Fralda de Heloísa' })).toBeNull()
-    expect(gatilho.getAttribute('aria-expanded')).toBe('false')
+  it('(c) a escolha vigente aparece marcada (aria-pressed e data-ligado) e as outras não', () => {
+    montar({ texto: 'Fralda registrada: Cocô' })
+
+    expect(TIPOS.map((tipo) => botao(tipo).getAttribute('aria-pressed'))).toEqual(['false', 'true', 'false'])
+    expect(TIPOS.map((tipo) => botao(tipo).hasAttribute('data-ligado'))).toEqual([false, true, false])
+  })
+
+  it('sem tipo escolhido nenhuma escolha está marcada', () => {
+    montar({ texto: 'Fralda registrada' })
+
+    expect(TIPOS.map((tipo) => botao(tipo).getAttribute('aria-pressed'))).toEqual(['false', 'false', 'false'])
+    expect(TIPOS.map((tipo) => botao(tipo).hasAttribute('data-ligado'))).toEqual([false, false, false])
+  })
+
+  it('escolher o tipo não tira Desfazer nem Fechar, e os dois chamam o que a página deu', () => {
+    const { aoDesfazer, aoFechar } = montar({ texto: 'Fralda registrada: Xixi' })
+
+    fireEvent.click(botao('Desfazer'))
+    fireEvent.click(botao('Fechar'))
+
+    expect(aoDesfazer).toHaveBeenCalledTimes(1)
+    expect(aoFechar).toHaveBeenCalledTimes(1)
+  })
+
+  it('(f) Esc fecha a confirmação da fralda (aoFechar) e devolve o foco ao botão Fralda', () => {
+    const { aoFechar } = montar({ texto: 'Fralda registrada' })
+    const fralda = botao('Registrar fralda de Heloísa')
+    const xixi = botao('Xixi')
+    xixi.focus()
+    expect(document.activeElement).toBe(xixi)
+
+    fireEvent.keyDown(document.activeElement!, { key: 'Escape' })
+
+    expect(aoFechar).toHaveBeenCalledTimes(1)
+    expect(document.activeElement).toBe(fralda)
+  })
+
+  it('(f) Esc com o foco em outro botão da barra também leva o foco ao Fralda', () => {
+    const { aoFechar } = montar({ texto: 'Fralda registrada: Ambos' })
+    botao('Iniciar mamada de Heloísa').focus()
+
+    fireEvent.keyDown(document.activeElement!, { key: 'Escape' })
+
+    expect(aoFechar).toHaveBeenCalledTimes(1)
+    expect(document.activeElement).toBe(botao('Registrar fralda de Heloísa'))
+  })
+
+  it('(f) com o painel Mais aberto por cima, o primeiro Esc fecha o Mais (foco no Mais) e o segundo fecha a confirmação (foco no Fralda)', () => {
+    const { aoFechar } = montar({ texto: 'Fralda registrada' })
+    const mais = botao('Mais registros')
+    fireEvent.click(mais)
+
+    fireEvent.keyDown(document.body, { key: 'Escape' })
+    expect(screen.queryByRole('group', { name: 'Outros registros de Heloísa' })).toBeNull()
+    expect(document.activeElement).toBe(mais)
+    expect(aoFechar).not.toHaveBeenCalled()
+
+    fireEvent.keyDown(document.body, { key: 'Escape' })
+    expect(aoFechar).toHaveBeenCalledTimes(1)
+    expect(document.activeElement).toBe(botao('Registrar fralda de Heloísa'))
+  })
+
+  it('(f) Esc não fecha uma confirmação que não é da fralda, nem mexe no foco', () => {
+    const { aoFechar } = montar({ texto: 'Mamadeira registrada' })
+    const sono = botao('Iniciar sono de Heloísa')
+    sono.focus()
+
+    fireEvent.keyDown(sono, { key: 'Escape' })
+
+    expect(aoFechar).not.toHaveBeenCalled()
+    expect(document.activeElement).toBe(sono)
+  })
+
+  it('(f) Esc sem confirmação e sem painel não chama nada', () => {
+    const { aoFechar } = montar()
+    const sono = botao('Iniciar sono de Heloísa')
+    sono.focus()
+
+    fireEvent.keyDown(sono, { key: 'Escape' })
+
+    expect(aoFechar).not.toHaveBeenCalled()
+    expect(document.activeElement).toBe(sono)
+  })
+
+  it('tocar em Fralda com o painel Mais aberto fecha o Mais e registra', () => {
+    const { aoRegistrarFralda } = montar()
+    fireEvent.click(botao('Mais registros'))
+    expect(screen.getByRole('group', { name: 'Outros registros de Heloísa' })).toBeTruthy()
+
+    fireEvent.click(botao('Registrar fralda de Heloísa'))
+
+    expect(screen.queryByRole('group', { name: 'Outros registros de Heloísa' })).toBeNull()
+    expect(botao('Mais registros').getAttribute('aria-expanded')).toBe('false')
+    expect(aoRegistrarFralda).toHaveBeenCalledTimes(1)
   })
 })
 
@@ -210,18 +382,6 @@ describe('BarraRegistrar: Mais', () => {
 })
 
 describe('BarraRegistrar: teclado e estado dos painéis', () => {
-  it('Esc fecha a escolha de fralda e devolve o foco ao botão que abriu', () => {
-    montar()
-    const gatilho = botao('Registrar fralda de Heloísa')
-    fireEvent.click(gatilho)
-    expect(document.activeElement).not.toBe(gatilho)
-
-    fireEvent.keyDown(document.activeElement!, { key: 'Escape' })
-
-    expect(screen.queryByRole('group', { name: 'Fralda de Heloísa' })).toBeNull()
-    expect(document.activeElement).toBe(gatilho)
-  })
-
   it('Esc fecha a lista do Mais e devolve o foco ao botão Mais', () => {
     montar()
     const gatilho = botao('Mais registros')
@@ -246,35 +406,33 @@ describe('BarraRegistrar: teclado e estado dos painéis', () => {
     expect(document.activeElement).toBe(sono)
   })
 
-  it('aria-expanded acompanha o painel e aria-controls aponta para o grupo aberto', () => {
+  it('aria-expanded acompanha o painel do Mais e aria-controls aponta para o grupo aberto', () => {
     montar()
-    const fralda = botao('Registrar fralda de Heloísa')
     const mais = botao('Mais registros')
-    expect([fralda, mais].map((b) => b.getAttribute('aria-expanded'))).toEqual(['false', 'false'])
-    expect(fralda.hasAttribute('aria-controls')).toBe(false)
-
-    fireEvent.click(fralda)
-    expect(fralda.getAttribute('aria-expanded')).toBe('true')
     expect(mais.getAttribute('aria-expanded')).toBe('false')
-    expect(document.getElementById(fralda.getAttribute('aria-controls')!)).toBe(screen.getByRole('group', { name: 'Fralda de Heloísa' }))
+    expect(mais.hasAttribute('aria-controls')).toBe(false)
 
     fireEvent.click(mais)
-    expect(fralda.getAttribute('aria-expanded')).toBe('false')
     expect(mais.getAttribute('aria-expanded')).toBe('true')
     expect(document.getElementById(mais.getAttribute('aria-controls')!)).toBe(screen.getByRole('group', { name: 'Outros registros de Heloísa' }))
+
+    fireEvent.click(mais)
+    expect(mais.getAttribute('aria-expanded')).toBe('false')
+    expect(mais.hasAttribute('aria-controls')).toBe(false)
   })
 
-  it('só um painel fica aberto por vez, nos dois sentidos', () => {
+  it('o painel do Mais é o único painel aberto pela barra: um segundo toque fecha, e Fralda não abre outro', () => {
     montar()
 
-    fireEvent.click(botao('Registrar fralda de Heloísa'))
     fireEvent.click(botao('Mais registros'))
-    expect(screen.queryByRole('group', { name: 'Fralda de Heloísa' })).toBeNull()
     expect(screen.getAllByRole('group')).toHaveLength(1)
 
     fireEvent.click(botao('Registrar fralda de Heloísa'))
-    expect(screen.queryByRole('group', { name: 'Outros registros de Heloísa' })).toBeNull()
-    expect(screen.getAllByRole('group')).toHaveLength(1)
+    expect(screen.queryAllByRole('group')).toEqual([])
+
+    fireEvent.click(botao('Mais registros'))
+    fireEvent.click(botao('Mais registros'))
+    expect(screen.queryAllByRole('group')).toEqual([])
   })
 
   it('iniciar uma sessão fecha o painel que estiver aberto', () => {
@@ -320,6 +478,7 @@ describe('BarraRegistrar: a confirmação', () => {
       <BarraRegistrar
         aoIniciarSessao={resto.aoIniciarSessao}
         aoRegistrarFralda={resto.aoRegistrarFralda}
+        aoAjustarFralda={resto.aoAjustarFralda}
         aoRegistrarMais={resto.aoRegistrarMais}
         refSono={resto.refSono}
         texto="Mamadeira registrada"
@@ -356,7 +515,7 @@ describe('BarraRegistrar: a confirmação', () => {
     comTexto.unmount()
 
     const comGrupo = montar()
-    fireEvent.click(botao('Registrar fralda de Heloísa'))
+    fireEvent.click(botao('Mais registros'))
     expect(comGrupo.barra.querySelector('[data-painel]')!.hasAttribute('data-aberto')).toBe(true)
   })
 

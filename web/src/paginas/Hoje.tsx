@@ -11,6 +11,8 @@ import {
   IDADE_BEBE,
   NOME_BEBE,
   ROTULO_SESSAO,
+  TEXTO_FRALDA,
+  textoDaFralda,
   type EscolhaFralda,
   type ItemMais,
   type TipoSessao,
@@ -91,13 +93,14 @@ export function Hoje() {
     primeiroBotao.current?.focus()
   }
 
-  function registrarFralda(escolha: EscolhaFralda) {
-    dispatch({
-      tipo: 'registrar',
-      chave: 'fralda',
-      rotulo: 'Fralda',
-      confirmacao: `Fralda registrada: ${escolha}`,
-    })
+  // Um toque, um registro (E5): o registro não leva o tipo. O tipo é opcional e só ajusta o texto da
+  // confirmação já na tela; `Últimos` e o "Desfazer" não mudam.
+  function registrarFralda() {
+    dispatch({ tipo: 'registrar', chave: 'fralda', rotulo: 'Fralda', confirmacao: TEXTO_FRALDA })
+  }
+
+  function ajustarFralda(escolha: EscolhaFralda) {
+    dispatch({ tipo: 'ajustarConfirmacao', texto: textoDaFralda(escolha) })
   }
 
   function registrarMais(item: ItemMais) {
@@ -154,6 +157,7 @@ export function Hoje() {
         refSono={primeiroBotao}
         aoIniciarSessao={iniciarSessao}
         aoRegistrarFralda={registrarFralda}
+        aoAjustarFralda={ajustarFralda}
         aoRegistrarMais={registrarMais}
         texto={estado.confirmacao?.texto ?? null}
         aoDesfazer={desfazer}
