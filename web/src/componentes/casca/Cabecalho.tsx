@@ -1,5 +1,6 @@
 import { useCallback, useId, useRef, useState } from 'react'
-import { Link, NavLink } from 'react-router'
+import { Link, NavLink, useLocation } from 'react-router'
+import { ENTRAR } from '../../conteudo/conta.ts'
 import { Botao } from '../base/Botao.tsx'
 import { MenuCelular } from './MenuCelular.tsx'
 import { SubmenuEmBreve } from './SubmenuEmBreve.tsx'
@@ -14,6 +15,9 @@ import {
   ROTULO_NAVEGACAO,
   type Contexto,
 } from './textos.ts'
+
+/** O destino do botão do cabeçalho público na rota Entrar (tabela de contexto, 2.6). */
+const DESTINO_CRIAR_CONTA = '/criar-conta'
 
 interface Props {
   /** `publico`: Início · Protótipo · + Em breve e "Entrar". `logado`: Hoje · + Em breve · Conta e "Modo madrugada". */
@@ -31,6 +35,8 @@ export function Cabecalho({ contexto, madrugada, aoAlternarMadrugada }: Props) {
   const botaoMenu = useRef<HTMLButtonElement>(null)
   const idMenu = useId()
   const fecharMenu = useCallback(() => setMenuAberto(false), [])
+  // Na rota Entrar a página já tem o primário "Entrar": o botão do cabeçalho vira "Criar conta".
+  const naRotaEntrar = useLocation().pathname.replace(/\/+$/, '').toLowerCase() === DESTINO_ENTRAR
 
   return (
     <header className="sb-cabecalho" data-cabecalho="">
@@ -81,6 +87,10 @@ export function Cabecalho({ contexto, madrugada, aoAlternarMadrugada }: Props) {
             <span className="sb-cab-rotulo-curto" aria-hidden="true">
               {ROTULO_MADRUGADA_CURTO}
             </span>
+          </Botao>
+        ) : naRotaEntrar ? (
+          <Botao variante="moldura" className="sb-cab-acao" to={DESTINO_CRIAR_CONTA} data-cabecalho-acao="">
+            {ENTRAR.criarConta}
           </Botao>
         ) : (
           <Botao variante="moldura" className="sb-cab-acao" to={DESTINO_ENTRAR} data-cabecalho-acao="">

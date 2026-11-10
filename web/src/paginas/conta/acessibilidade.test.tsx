@@ -262,7 +262,8 @@ describe('foco e rolagem ao trocar de tela', () => {
     const { rolarAoTopo } = renderizarComDados('/entrar')
     await screen.findByRole('button', { name: 'Entrar' })
 
-    fireEvent.click(screen.getByRole('link', { name: 'Criar conta' }))
+    // Em /entrar o botão do cabeçalho também diz "Criar conta" (D2): o link da tela é o do `main`.
+    fireEvent.click(within(screen.getByRole('main')).getByRole('link', { name: 'Criar conta' }))
     const criar = await screen.findByRole('heading', { level: 1, name: 'Criar conta' })
     await waitFor(() => expect(document.activeElement).toBe(criar))
     expect(criar.getAttribute('tabindex')).toBe('-1')

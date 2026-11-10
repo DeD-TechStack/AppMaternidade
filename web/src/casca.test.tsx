@@ -10,6 +10,7 @@ import { LinhaRotuloTexto } from './componentes/base/LinhaRotuloTexto.tsx'
 import { FaixaNumeros } from './componentes/base/FaixaNumeros.tsx'
 import { Cabecalho } from './componentes/casca/Cabecalho.tsx'
 import { ROTULO_MADRUGADA, ROTULO_MADRUGADA_CURTO } from './componentes/casca/textos.ts'
+import { renderizarComDados } from './teste/renderizarComDados.tsx'
 import { renderizarRota } from './teste/renderizarRota.tsx'
 
 // MAT-44d, cartão 1 (SB-4): o cabeçalho, o menu do celular, o submenu "+ Em breve" e as peças de
@@ -973,6 +974,121 @@ describe('casca do site (Layout)', () => {
     fireEvent.click(botao)
     expect(botao.getAttribute('aria-pressed')).toBe('false')
     expect(document.documentElement.hasAttribute('data-tema')).toBe(false)
+  })
+})
+
+// MAT-44d-3, volta 3, D2: na rota Entrar o botão do cabeçalho diz "Criar conta" (tabela de contexto, 2.6),
+// para a primeira dobra não ter dois "Entrar". Nas outras rotas públicas segue "Entrar". O que o jsdom não
+// mede (a caixa do botão em 1440 e 390) está no medidor: `medir-dom.mjs ... entrar`.
+describe('cabeçalho: o botão de acesso na rota Entrar (D2)', () => {
+  function cabecalhoEm(caminho: string) {
+    return render(
+      <MemoryRouter initialEntries={[caminho]}>
+        <Cabecalho contexto="publico" madrugada={false} aoAlternarMadrugada={() => undefined} />
+      </MemoryRouter>,
+    )
+  }
+  const acao = (container: HTMLElement) => container.querySelector<HTMLAnchorElement>('[data-cabecalho-acao]')!
+
+  it('em /entrar o botão do cabeçalho diz "Criar conta" e leva a /criar-conta', () => {
+    const { container } = cabecalhoEm('/entrar')
+
+    expect(container.querySelectorAll('[data-cabecalho-acao]')).toHaveLength(1)
+    expect(acao(container).textContent).toBe('Criar conta')
+    expect(acao(container).getAttribute('href')).toBe('/criar-conta')
+    expect(screen.getByRole('link', { name: 'Criar conta' })).toBe(acao(container))
+  })
+
+  it('em /entrar não existe "Entrar" no cabeçalho (nem link, nem botão, nem texto)', () => {
+    const { container } = cabecalhoEm('/entrar')
+
+    const banner = container.querySelector<HTMLElement>('header[data-cabecalho]')!
+    expect(within(banner).queryByRole('link', { name: 'Entrar' })).toBeNull()
+    expect(within(banner).queryByRole('button', { name: 'Entrar' })).toBeNull()
+    expect(within(banner).queryByText('Entrar')).toBeNull()
+    expect(banner.querySelector('a[href="/entrar"]')).toBeNull()
+  })
+
+  it('em /entrar o botão do cabeçalho segue de moldura (não é o primário urucum)', () => {
+    const { container } = cabecalhoEm('/entrar')
+
+    expect(acao(container).getAttribute('data-botao')).toBe('moldura')
+    expect(acao(container).hasAttribute('data-moldura-dupla')).toBe(true)
+    expect(acao(container).className).toContain('sb-cab-acao')
+  })
+
+  it('em /entrar com ?volta=, o botão também é "Criar conta" (a rota é a mesma)', () => {
+    const { container } = cabecalhoEm('/entrar?volta=%2Fapp%2Fhoje')
+
+    expect(acao(container).textContent).toBe('Criar conta')
+    expect(acao(container).getAttribute('href')).toBe('/criar-conta')
+  })
+
+  for (const caminho of ['/', '/criar-conta', '/recuperar-acesso', '/prototipo', '/sistema', '/entrarx', '/app/hoje']) {
+    it(`em ${caminho} o botão do cabeçalho continua "Entrar" e leva a /entrar`, () => {
+      const { container } = cabecalhoEm(caminho)
+
+      expect(container.querySelectorAll('[data-cabecalho-acao]')).toHaveLength(1)
+      expect(acao(container).textContent).toBe('Entrar')
+      expect(acao(container).getAttribute('href')).toBe('/entrar')
+      expect(within(container).queryByRole('link', { name: 'Criar conta' })).toBeNull()
+    })
+  }
+
+  it('o botão acompanha a rota: ao ir de /entrar para /criar-conta volta a ser "Entrar"', () => {
+    const { container } = renderizarComDados('/entrar')
+    const banner = () => container.querySelector<HTMLElement>('header[data-cabecalho]')!
+
+    return screen.findByRole('button', { name: 'Entrar' }).then(async () => {
+      expect(within(banner()).getByRole('link', { name: 'Criar conta' }).getAttribute('href')).toBe('/criar-conta')
+
+      fireEvent.click(within(screen.getByRole('main')).getByRole('link', { name: 'Criar conta' }))
+      await screen.findByRole('heading', { level: 1, name: 'Criar conta' })
+
+      expect(within(banner()).getByRole('link', { name: 'Entrar' }).getAttribute('href')).toBe('/entrar')
+      expect(within(banner()).queryByRole('link', { name: 'Criar conta' })).toBeNull()
+    })
+  })
+
+  it('na página /entrar há exatamente um elemento urucum com o texto "Entrar" (o do formulário), e o do cabeçalho é de moldura', async () => {
+    const { container } = renderizarComDados('/entrar')
+    await screen.findByRole('button', { name: 'Entrar' })
+
+    // O urucum é o botão primário (`data-botao="primario"`, classe `sb-botao`); a moldura é outra variante.
+    const urucumComEntrar = [...container.querySelectorAll<HTMLElement>('[data-botao="primario"]')].filter(
+      (el) => el.textContent?.trim() === 'Entrar',
+    )
+    expect(urucumComEntrar).toHaveLength(1)
+    expect(urucumComEntrar[0].closest('main')).not.toBeNull()
+    expect(urucumComEntrar[0].closest('header')).toBeNull()
+
+    // A outra ponta: o botão do cabeçalho não é urucum e não diz "Entrar".
+    const doCabecalho = container.querySelector<HTMLElement>('header[data-cabecalho] [data-cabecalho-acao]')!
+    expect(doCabecalho.getAttribute('data-botao')).toBe('moldura')
+    expect(doCabecalho.textContent).toBe('Criar conta')
+    expect(container.querySelectorAll('header[data-cabecalho] [data-botao="primario"]')).toHaveLength(0)
+  })
+
+  it('o menu do celular não tem botão de acesso: nem "Entrar" nem "Criar conta" (só os links do cabeçalho)', () => {
+    larguraDaJanela(390)
+    const { container } = cabecalhoEm('/entrar')
+    fireEvent.click(screen.getByRole('button', { name: 'Menu' }))
+
+    const painel = painelDoMenu(container)
+    expect(within(painel).queryByRole('link', { name: 'Entrar' })).toBeNull()
+    expect(within(painel).queryByRole('link', { name: 'Criar conta' })).toBeNull()
+    expect(painel.querySelector('[data-botao]')).toBeNull()
+  })
+
+  it('o logado não muda: o botão segue "Modo madrugada", mesmo em /entrar', () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={['/entrar']}>
+        <Cabecalho contexto="logado" madrugada={false} aoAlternarMadrugada={() => undefined} />
+      </MemoryRouter>,
+    )
+
+    expect(container.querySelector('[data-cabecalho-acao]')!.getAttribute('aria-label')).toBe('Modo madrugada')
+    expect(screen.queryByRole('link', { name: 'Criar conta' })).toBeNull()
   })
 })
 

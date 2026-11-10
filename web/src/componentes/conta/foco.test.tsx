@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { act, fireEvent, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { renderizarComDados } from '../../teste/renderizarComDados.tsx'
 
 // RN-03, o foco ao trocar de tela: a exceção é só a primeira carga da página (o foco inicial é do
@@ -8,6 +8,9 @@ import { renderizarComDados } from '../../teste/renderizarComDados.tsx'
 // novo: nada pode vazar de um teste para o outro.
 
 const titulo = (nome: string) => screen.findByRole('heading', { level: 1, name: nome })
+
+// Em /entrar o botão do cabeçalho também diz "Criar conta" (MAT-44d-3, D2): o link da tela é o do `main`.
+const linkDaTela = (nome: string) => within(screen.getByRole('main')).getByRole('link', { name: nome })
 
 /** Quem tem o foco, em texto curto ("H1:Entrar"): a falha de um teste diz onde o foco estava. */
 const focado = () => `${document.activeElement?.tagName}:${document.activeElement?.textContent?.slice(0, 40)}`
@@ -32,7 +35,7 @@ describe('a primeira carga da página', () => {
   it('vale de novo em cada montagem nova: o estado de um roteador não vaza para o seguinte', async () => {
     const primeira = renderizarComDados('/entrar')
     await titulo('Entrar')
-    fireEvent.click(screen.getByRole('link', { name: 'Criar conta' }))
+    fireEvent.click(linkDaTela('Criar conta'))
     await titulo('Criar conta')
     primeira.unmount()
 
@@ -47,7 +50,7 @@ describe('Voltar e Avançar do histórico', () => {
   it('Entrar → Criar conta → Voltar: o h1 de Entrar recebe o foco e a rolagem vai ao topo', async () => {
     const { roteador, rolarAoTopo } = renderizarComDados('/entrar')
     await titulo('Entrar')
-    fireEvent.click(screen.getByRole('link', { name: 'Criar conta' }))
+    fireEvent.click(linkDaTela('Criar conta'))
     await titulo('Criar conta')
     await waitFor(() => expect(focado()).toBe('H1:Criar conta'))
     rolarAoTopo.mockClear()
@@ -62,7 +65,7 @@ describe('Voltar e Avançar do histórico', () => {
   it('Voltar e depois Avançar: o h1 de cada tela recebe o foco, e a rolagem vai ao topo nas duas', async () => {
     const { roteador, rolarAoTopo } = renderizarComDados('/entrar')
     await titulo('Entrar')
-    fireEvent.click(screen.getByRole('link', { name: 'Criar conta' }))
+    fireEvent.click(linkDaTela('Criar conta'))
     await titulo('Criar conta')
 
     await irPara(roteador, -1)
@@ -78,7 +81,7 @@ describe('Voltar e Avançar do histórico', () => {
   it('várias telas: Entrar → Criar conta → Recuperar acesso, e Voltar duas vezes até a primeira', async () => {
     const { roteador, rolarAoTopo } = renderizarComDados('/entrar')
     await titulo('Entrar')
-    fireEvent.click(screen.getByRole('link', { name: 'Criar conta' }))
+    fireEvent.click(linkDaTela('Criar conta'))
     await titulo('Criar conta')
     await irPara(roteador, '/recuperar-acesso')
     await titulo('Recuperar acesso')
