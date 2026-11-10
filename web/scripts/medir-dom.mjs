@@ -16,8 +16,13 @@
 // face carregada e lining-nums).
 //
 // As 5 telas novas rodam também os critérios próprios da tela (TELAS.md): E-1 a E-7, C-1 a C-3, R-1
-// a R-2, B-1 a B-3, A-1 a A-6 e, na madrugada da Conta, M-1 a M-6. Os que só um olho decide vão para
+// a R-3, B-1 a B-3, A-1 a A-6 e, na madrugada da Conta, M-1 a M-6. Os que só um olho decide vão para
 // `criterios_manuais` no JSON, com uma frase de o que olhar.
+//
+// O E-7 e o R-3 enviam o formulário (entrar, criar_conta, recuperar_acesso e comecar_seu_nome): leem a
+// geometria antes e depois do envio vazio e, no Recuperar, do envio com o e-mail preenchido (só
+// loopback; a leitura vai em `envio` no JSON). Altura de linha, topo, altura da página e topo do botão
+// de envio têm de ficar iguais.
 //
 // A parte pura (as funções g1 a g12, num, o contraste e o resumo) recebe um JSON de nós e devolve
 // { regra, ok, motivo, nos_com_falha }. Ela falha fechado: nó sem texto onde a regra pede texto,
@@ -874,34 +879,140 @@ export function e6(nos, doc) {
 const FOCO_TINTA = ['#1A1511']
 const FOCO_MADRUGADA = ['#F7EFE2']
 
+/** A tolerância da geometria do envio: meio pixel de arredondamento passa, um pixel inteiro não. */
+const TOL_ENVIO = 0.6
+/** Quantas falhas a mensagem de E-7 e R-3 lista antes de resumir o resto ("e mais N"). */
+const FALHAS_NA_MENSAGEM = 8
+
 /**
- * E-7 (o que o número alcança): o foco tem anel de 2 px (`outline` sólido, offset 2, cor da tinta; na
- * madrugada, `#F7EFE2`) no primeiro controle e no botão de envio. O erro em 17/24 abaixo do campo, sem
- * mudar a altura da linha, exige enviar o formulário: a medição não o envia, e fica para o olho.
+ * Como `resultadoDeTela`, mas o motivo lista as falhas (até `FALHAS_NA_MENSAGEM`), para a mensagem trazer
+ * todos os números que mudaram (altura da linha, da página, topo do botão), e não só o da primeira.
+ */
+function resultadoComNumeros(regra, falhas, motivoOk) {
+  const ok = falhas.length === 0
+  const mostradas = falhas.slice(0, FALHAS_NA_MENSAGEM).map((f) => f.motivo).join('; ')
+  const resto = falhas.length > FALHAS_NA_MENSAGEM ? ` (e mais ${falhas.length - FALHAS_NA_MENSAGEM})` : ''
+  return { regra, ok, motivo: ok ? motivoOk : `${mostradas}${resto}`, nos_com_falha: falhas.map((f) => f.no) }
+}
+
+/** O estado lido por `lerEstadoDeEnvioNaPagina` tem o formato que as regras de geometria usam? */
+const estadoDeEnvioLegivel = (estado) =>
+  Boolean(estado) &&
+  typeof estado === 'object' &&
+  Number.isFinite(estado.pagina) &&
+  Array.isArray(estado.linhas) &&
+  Array.isArray(estado.mensagens) &&
+  Array.isArray(estado.colisoes)
+
+/**
+ * A geometria de um envio (E-7 e R-3): `par` é `{ antes, depois }` do `lerEstadoDeEnvioNaPagina`. Nada muda de
+ * lugar: cada linha de campo mantém altura e topo, a página mantém a altura, o botão de envio mantém o topo; e
+ * depois do envio nenhuma mensagem está cortada, fora da janela ou cobrindo outro elemento. `extra(depois)`
+ * devolve as falhas próprias do critério (a mensagem esperada, o limite de linhas). Falha fechado: leitura
+ * ausente ou incompleta, nenhuma linha de campo antes do envio, botão sem leitura e medida ilegível reprovam.
+ */
+function geometriaDoEnvio(par, nome, extra) {
+  const falhas = []
+  const falhar = (no, motivo) => falhas.push({ no, motivo })
+  if (!par || typeof par !== 'object') return [{ no: 'envio', motivo: `sem a leitura do ${nome}` }]
+  const { antes, depois } = par
+  if (!estadoDeEnvioLegivel(antes) || !estadoDeEnvioLegivel(depois)) {
+    return [{ no: 'envio', motivo: `leitura do ${nome} incompleta (faltam o antes, o depois ou campos da leitura)` }]
+  }
+  if (antes.linhas.length === 0) return [{ no: 'envio', motivo: `nenhuma linha de campo (.sb-campo) antes do ${nome}` }]
+  if (depois.linhas.length !== antes.linhas.length) {
+    falhar('linhas de campo', `linhas de campo: ${antes.linhas.length} antes e ${depois.linhas.length} depois`)
+  }
+  antes.linhas.forEach((linha, i) => {
+    const depoisDela = depois.linhas[i]
+    if (!depoisDela) return
+    const rotulo = `linha ${i + 1}`
+    if (![linha.altura, linha.top, depoisDela.altura, depoisDela.top].every(Number.isFinite)) {
+      falhar(rotulo, `${rotulo}: medida ilegível`)
+      return
+    }
+    if (!perto(linha.altura, depoisDela.altura, TOL_ENVIO)) falhar(rotulo, `${rotulo}: altura ${linha.altura} -> ${depoisDela.altura}`)
+    if (!perto(linha.top, depoisDela.top, TOL_ENVIO)) falhar(rotulo, `${rotulo}: topo ${linha.top} -> ${depoisDela.top}`)
+  })
+  if (!perto(antes.pagina, depois.pagina, TOL_ENVIO)) falhar('página', `página: altura ${antes.pagina} -> ${depois.pagina}`)
+  if (!ehNumero(antes.botao?.top) || !ehNumero(depois.botao?.top)) {
+    falhar('botão de envio', 'botão de envio: sem a leitura do topo (antes ou depois)')
+  } else if (!perto(antes.botao.top, depois.botao.top, TOL_ENVIO)) {
+    falhar('botão de envio', `botão de envio: topo ${antes.botao.top} -> ${depois.botao.top}`)
+  }
+  for (const m of depois.mensagens) {
+    const dela = `"${m.texto ?? ''}"`
+    if (m.cortada) falhar('mensagem', `mensagem cortada: ${dela}`)
+    if (m.foraDaJanela) falhar('mensagem', `mensagem fora da janela: ${dela}`)
+  }
+  for (const k of depois.colisoes) falhar('mensagem', `mensagem "${k.mensagem}" cobre ${k.com} (${k.w} x ${k.h})`)
+  for (const f of extra(depois)) falhas.push(f)
+  return falhas
+}
+
+/** Confere que cada mensagem de `tipos` tem uma das `permitidas` linhas; contagem ilegível reprova. */
+function limiteDeLinhas(depois, tipos, permitidas, limite) {
+  const falhas = []
+  for (const m of depois.mensagens.filter((x) => tipos.includes(x.tipo))) {
+    if (!ehNumero(m.linhas)) falhas.push({ no: 'mensagem', motivo: `mensagem de ${m.tipo}: contagem de linhas ilegível ("${m.texto ?? ''}")` })
+    else if (!permitidas.includes(m.linhas)) {
+      falhas.push({ no: 'mensagem', motivo: `mensagem de ${m.tipo} com ${m.linhas} linhas (o limite é ${limite}): "${m.texto ?? ''}"` })
+    }
+  }
+  return falhas
+}
+
+/**
+ * E-7: (1) o foco tem anel de 2 px (`outline` sólido, offset 2, cor da tinta; na madrugada, `#F7EFE2`) no
+ * primeiro controle e no botão de envio; (2) o erro aparece em 17/24 abaixo do campo, sem mudar a altura da
+ * linha: com o formulário enviado vazio (`doc.envio.vazio`, o antes e o depois), a altura e o topo de cada
+ * linha, a altura da página e o topo do botão de envio não mudam, aparece ao menos uma mensagem de erro, e
+ * cada mensagem de erro ou de ajuda tem 1 linha, sem corte, sem sair da janela, sem cobrir outro elemento.
  */
 export function e7(doc, tema) {
   const foco = doc?.foco
-  if (!foco || typeof foco !== 'object') return falhaFechada('E-7', 'sem a leitura do anel de foco')
   const cores = ehMadrugada(tema) ? FOCO_MADRUGADA : FOCO_TINTA
   const falhas = []
-  for (const [nome, leitura] of [['controle', foco.controle], ['botão de envio', foco.botao]]) {
-    if (!leitura || typeof leitura !== 'object') {
-      falhas.push({ no: nome, motivo: `${nome}: sem a leitura do foco (elemento não achado)` })
-      continue
+  if (!foco || typeof foco !== 'object') falhas.push({ no: 'foco', motivo: 'sem a leitura do anel de foco' })
+  else {
+    for (const [nome, leitura] of [['controle', foco.controle], ['botão de envio', foco.botao]]) {
+      if (!leitura || typeof leitura !== 'object') {
+        falhas.push({ no: nome, motivo: `${nome}: sem a leitura do foco (elemento não achado)` })
+        continue
+      }
+      if (leitura.focou !== true) {
+        falhas.push({ no: nome, motivo: `${nome}: não recebeu foco` })
+        continue
+      }
+      const problemas = []
+      if (leitura.outlineStyle === undefined || leitura.outlineStyle === '' || leitura.outlineStyle === 'none') problemas.push('sem outline')
+      else if (leitura.outlineStyle !== 'solid') problemas.push(`outline ${leitura.outlineStyle}`)
+      if (!perto(px(leitura.outlineWidth), 2, 0.01)) problemas.push(`largura ${leitura.outlineWidth} em vez de 2px`)
+      if (!perto(px(leitura.outlineOffset), 2, 0.01)) problemas.push(`offset ${leitura.outlineOffset} em vez de 2px`)
+      if (!ehCor(parseCor(leitura.outlineColor), cores)) problemas.push(`cor ${leitura.outlineColor} em vez de ${cores[0]}`)
+      if (problemas.length > 0) falhas.push({ no: nome, motivo: `${nome}: ${problemas.join('; ')}` })
     }
-    if (leitura.focou !== true) {
-      falhas.push({ no: nome, motivo: `${nome}: não recebeu foco` })
-      continue
-    }
-    const problemas = []
-    if (leitura.outlineStyle === undefined || leitura.outlineStyle === '' || leitura.outlineStyle === 'none') problemas.push('sem outline')
-    else if (leitura.outlineStyle !== 'solid') problemas.push(`outline ${leitura.outlineStyle}`)
-    if (!perto(px(leitura.outlineWidth), 2, 0.01)) problemas.push(`largura ${leitura.outlineWidth} em vez de 2px`)
-    if (!perto(px(leitura.outlineOffset), 2, 0.01)) problemas.push(`offset ${leitura.outlineOffset} em vez de 2px`)
-    if (!ehCor(parseCor(leitura.outlineColor), cores)) problemas.push(`cor ${leitura.outlineColor} em vez de ${cores[0]}`)
-    if (problemas.length > 0) falhas.push({ no: nome, motivo: `${nome}: ${problemas.join('; ')}` })
   }
-  return resultadoDeTela('E-7', falhas, 'anel de foco de 2 px, offset 2, na cor do tema, no controle e no botão')
+  falhas.push(
+    ...geometriaDoEnvio(doc?.envio?.vazio, 'envio do formulário vazio', (depois) => [
+      ...(depois.mensagens.some((m) => m.tipo === 'erro') ? [] : [{ no: 'mensagem', motivo: 'depois do envio vazio não há mensagem de erro visível' }]),
+      ...limiteDeLinhas(depois, ['erro', 'ajuda'], [1], 1),
+    ]),
+  )
+  return resultadoComNumeros('E-7', falhas, 'anel de foco certo e o envio vazio não muda linha, página nem botão; o erro tem 1 linha')
+}
+
+/**
+ * R-3 (Recuperar): depois do envio com o e-mail preenchido (`doc.envio.enviado`, o antes e o depois), a
+ * mensagem de status está visível com 1 ou 2 linhas, ocupa a mesma linha de campo e a página não muda de
+ * altura; valem as mesmas regras de geometria do E-7 (linha, página, botão, sem corte, sem cobrir).
+ */
+export function r3(doc) {
+  const falhas = geometriaDoEnvio(doc?.envio?.enviado, 'envio com o e-mail preenchido', (depois) => [
+    ...(depois.mensagens.some((m) => m.tipo === 'status') ? [] : [{ no: 'mensagem', motivo: 'depois do envio não há mensagem de status visível' }]),
+    ...limiteDeLinhas(depois, ['status'], [1, 2], '1 ou 2'),
+  ])
+  return resultadoComNumeros('R-3', falhas, 'a confirmação (1 ou 2 linhas) ocupa a mesma linha e a página não muda de altura')
 }
 
 /** C-1: o aviso de demonstração não tem borda nem fundo e tem font-size 15. */
@@ -1383,7 +1494,7 @@ export function m6(nos) {
 export const CRITERIOS_DO_CASO = {
   entrar: ['E-1', 'E-2', 'E-3', 'E-4', 'E-5', 'E-6', 'E-7'],
   criar_conta: ['E-1', 'E-2', 'E-3', 'E-5', 'E-6', 'E-7', 'C-1', 'C-2', 'C-3'],
-  recuperar_acesso: ['E-1', 'E-2', 'E-3', 'E-5', 'E-6', 'E-7', 'R-1', 'R-2'],
+  recuperar_acesso: ['E-1', 'E-2', 'E-3', 'E-5', 'E-6', 'E-7', 'R-1', 'R-2', 'R-3'],
   comecar_seu_nome: ['E-1', 'E-3', 'E-4', 'E-5', 'E-6', 'E-7', 'B-1', 'B-2', 'B-3'],
   conta: ['A-1', 'A-2', 'A-3', 'A-4', 'A-5', 'A-6'],
 }
@@ -1408,6 +1519,7 @@ const REGRAS_DE_TELA = {
   'C-3': ({ nos }) => c3(nos),
   'R-1': ({ nos, doc }) => r1(nos, doc),
   'R-2': ({ nos, doc }) => r2(nos, doc),
+  'R-3': ({ doc }) => r3(doc),
   'B-1': ({ nos, doc }) => b1(nos, doc),
   'B-2': ({ nos, doc }) => b2(nos, doc),
   'B-3': ({ nos }) => b3(nos),
@@ -1426,7 +1538,7 @@ const REGRAS_DE_TELA = {
 }
 
 const OLHAR_E6 = 'coluna vazia ao lado de um bloco: o número mede só o que passa de x de c9 (G8 mede a diferença de altura, não o vazio)'
-const OLHAR_E7 = 'enviar o formulário vazio e olhar o erro em 17/24 abaixo do campo, sem mudar a altura da linha de 112 px (a medição não envia o formulário)'
+const OLHAR_E7 = 'o erro em 17/24 abaixo do campo se lê como erro e não parece apertado nem colado ao fio (a altura da linha, a página e o botão, o medidor confere ao enviar o formulário vazio)'
 const OLHAR_PESO = 'peso visual: o título, o formulário e o botão se leem nessa ordem, sem um bloco que pese mais que o resto'
 
 /** Os critérios que só um olho decide, por caso: o id e uma frase de o que olhar. */
@@ -1444,7 +1556,7 @@ export const MANUAIS_DO_CASO = {
   recuperar_acesso: [
     { id: 'E-6', olhar: OLHAR_E6 },
     { id: 'E-7', olhar: OLHAR_E7 },
-    { id: 'R-3', olhar: 'depois do envio, a mensagem ocupa a mesma linha de 112 px e a página não muda de altura (a medição não envia o formulário)' },
+    { id: 'R-3', olhar: 'a confirmação depois do envio se lê como resposta calma, dentro da linha de 112 px, sem empurrar nada (a altura da linha, a página e o botão, o medidor confere ao enviar com o e-mail preenchido)' },
     { id: 'R-peso', olhar: OLHAR_PESO },
   ],
   comecar_seu_nome: [
@@ -1982,6 +2094,72 @@ export function lerFocoNaPagina() {
   return foco
 }
 
+/**
+ * O estado de envio (E-7 e R-3): a geometria que o envio do formulário pode mexer, nas coordenadas da página
+ * (`getBoundingClientRect()` mais a rolagem). Devolve `{ pagina, linhas: [{ top, altura }], botao: { top } | null,
+ * mensagens: [{ tipo, texto, linhas, cortada, foraDaJanela }], colisoes }`. Roda antes e depois do envio; não
+ * escreve nada na página. Uma mensagem (`.sb-campo-erro`, `.sb-campo-ajuda`, `.sb-campo-status`) só conta se tiver
+ * texto e estiver visível; as linhas são `altura / line-height` (nulas se o line-height não for um número). Na
+ * busca de colisões os elementos sem texto não entram: um `<p role="status">` vazio ocupa a célula da grade e não é
+ * defeito. Sem fechamento: é serializada por `toString()`.
+ */
+export function lerEstadoDeEnvioNaPagina() {
+  const sy = window.scrollY
+  const um = (n) => Math.round(n * 10) / 10
+  const texto = (el) => (el.textContent ?? '').replace(/\s+/g, ' ').trim()
+  const clipZerado = (clip) => /^rect\(\s*0(px)?[\s,]+0(px)?[\s,]+0(px)?[\s,]+0(px)?\s*\)$/.test(clip ?? '')
+  const aparece = (el) => {
+    const r = el.getBoundingClientRect()
+    const cs = getComputedStyle(el)
+    return r.width > 2 && r.height > 2 && cs.visibility !== 'hidden' && cs.display !== 'none' && !clipZerado(cs.clip)
+  }
+  const linhas = [...document.querySelectorAll('.sb-campo')].map((el) => {
+    const r = el.getBoundingClientRect()
+    return { top: um(r.top + sy), altura: um(r.height) }
+  })
+  const botaoEl = document.querySelector('main form button[type="submit"]')
+  const botao = botaoEl ? { top: um(botaoEl.getBoundingClientRect().top + sy) } : null
+  const tipos = [
+    ['erro', '.sb-campo-erro'],
+    ['ajuda', '.sb-campo-ajuda'],
+    ['status', '.sb-campo-status'],
+  ]
+  const vistas = []
+  const mensagens = []
+  for (const [tipo, seletor] of tipos) {
+    for (const el of document.querySelectorAll(seletor)) {
+      const conteudo = texto(el)
+      if (conteudo === '' || !aparece(el)) continue
+      const r = el.getBoundingClientRect()
+      const entrelinha = parseFloat(getComputedStyle(el).lineHeight)
+      vistas.push(el)
+      mensagens.push({
+        tipo,
+        texto: conteudo.slice(0, 90),
+        linhas: Number.isFinite(entrelinha) && entrelinha > 0 ? Math.round(r.height / entrelinha) : null,
+        cortada: el.scrollWidth > el.clientWidth + 1,
+        foraDaJanela: r.right > window.innerWidth + 1 || r.left < -1,
+      })
+    }
+  }
+  const comConteudo = (el) => /^(INPUT|SELECT|BUTTON)$/.test(el.tagName) || texto(el) !== ''
+  const outros = [...document.querySelectorAll('main label, main input, main select, main button, main a, main h1, main h2, main p, main li, main [role="alert"]')].filter(
+    (el) => aparece(el) && comConteudo(el),
+  )
+  const colisoes = []
+  for (const m of vistas) {
+    const a = m.getBoundingClientRect()
+    for (const o of outros) {
+      if (o === m || o.contains(m) || m.contains(o)) continue
+      const b = o.getBoundingClientRect()
+      const w = Math.min(a.right, b.right) - Math.max(a.left, b.left)
+      const h = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)
+      if (w > 1 && h > 1) colisoes.push({ mensagem: texto(m).slice(0, 40), com: `${o.tagName} ${texto(o).slice(0, 30)}`.trim(), w: um(w), h: um(h) })
+    }
+  }
+  return { pagina: document.documentElement.scrollHeight, linhas, botao, mensagens, colisoes }
+}
+
 // ---------------------------------------------------------------------------------------------
 // CDP (só Node 24: fetch e WebSocket)
 
@@ -2173,6 +2351,44 @@ async function abrirCaso(cdp, base, ambiente, pedido) {
   await espera(200)
 }
 
+/** Os casos cujo formulário se envia na medição (E-7 e, no Recuperar, o R-3). */
+export const CASOS_COM_ENVIO = ['entrar', 'criar_conta', 'recuperar_acesso', 'comecar_seu_nome']
+
+/** Lê o estado de envio da página aberta; uma leitura que não volta no formato certo é erro de medição. */
+async function lerEnvio(cdp) {
+  const leitura = await avaliar(cdp, `(${lerEstadoDeEnvioNaPagina.toString()})()`)
+  if (!leitura || typeof leitura !== 'object' || !Array.isArray(leitura.linhas) || !Array.isArray(leitura.mensagens)) {
+    throw new Error('a leitura do estado de envio voltou vazia ou fora do formato')
+  }
+  return leitura
+}
+
+/** Clica no botão de envio do formulário e espera 1,5 s (a resposta e a animação de saída acabam). */
+async function enviarFormulario(cdp) {
+  const enviou = await avaliar(cdp, `(() => { const b = document.querySelector('main form button[type="submit"]'); if (!b) return false; b.click(); return true })()`)
+  if (!enviou) throw new Error('não achei o botão de envio (main form button[type="submit"]) para medir o envio')
+  await espera(1500)
+}
+
+/**
+ * A coleta do envio, depois de todas as outras leituras (o envio muda a página): o formulário vazio (antes e
+ * depois) e, só no Recuperar, o caso aberto de novo com o e-mail preenchido (antes e depois). Erro aqui não é
+ * engolido: vai para o `principal`, que sai com 2.
+ */
+async function coletarEnvio(cdp, base, ambiente, pedido) {
+  const antes = await lerEnvio(cdp)
+  await enviarFormulario(cdp)
+  const envio = { vazio: { antes, depois: await lerEnvio(cdp) } }
+  if (pedido.caso === 'recuperar_acesso') {
+    await abrirCaso(cdp, base, ambiente, pedido)
+    const antesDeEnviar = await lerEnvio(cdp)
+    await preencherPorRotulo(cdp, 'E-mail', 'ana@exemplo.invalid')
+    await enviarFormulario(cdp)
+    envio.enviado = { antes: antesDeEnviar, depois: await lerEnvio(cdp) }
+  }
+  return envio
+}
+
 async function principal(argumentos) {
   let pasta
   let pedidos
@@ -2203,6 +2419,9 @@ async function principal(argumentos) {
         await teclarTab(cdp)
         lido.doc.foco = await avaliar(cdp, `(${lerFocoNaPagina.toString()})()`)
         if (aberto?.blocosClaro) lido.doc.blocosClaro = aberto.blocosClaro
+        // O envio vem por último: muda a página (E-7 e R-3). Vale em qualquer tema, para o E-7 da madrugada
+        // do Começar não reprovar fechado por falta da leitura.
+        if (CASOS_COM_ENVIO.includes(pedido.caso)) lido.doc.envio = await coletarEnvio(cdp, baseUrl, ambiente, pedido)
       }
       const resultados = avaliarTudo({ ...lido, tema: pedido.tema }, pedido.caso)
       const { criterios, criterios_manuais } = avaliarCriterios({ ...lido, tema: pedido.tema }, pedido.caso)
@@ -2215,7 +2434,7 @@ async function principal(argumentos) {
         rodape: lido.nos.find((n) => n.m.rodape)?.rect ?? null,
         nomeRodape: lido.doc.nomeRodape,
         nos: lido.nos.length,
-        ...(novo ? { alturaTotal: lido.doc.alturaTotal, foco: lido.doc.foco ?? null } : {}),
+        ...(novo ? { alturaTotal: lido.doc.alturaTotal, foco: lido.doc.foco ?? null, envio: lido.doc.envio ?? null } : {}),
       }
       fs.writeFileSync(
         path.join(pasta, arquivo),
