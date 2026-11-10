@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import { Link } from 'react-router'
 import { ROTULOS } from '../../conteudo/publicas.ts'
 import type { Secao } from '../../conteudo/publicas.ts'
@@ -14,7 +15,10 @@ export function IndiceDaPagina({ secoes, margem }: { secoes: readonly Secao[]; m
           <div className="sb-linha vp-linha col-c2-c8">
             <p className="sb-linha-rotulo t-rotulo">{ROTULOS.indice}</p>
             <div className="sb-linha-texto vp-texto t-corpo">
-              <ul className="vp-links">
+              <ul
+                className="vp-links vp-links-duplo"
+                style={{ '--linhas': Math.ceil(secoes.length / 2) } as CSSProperties}
+              >
                 {secoes.map(({ titulo, id }) => (
                   <li key={id}>
                     <Link to={`#${id}`} className="alvo-toque">

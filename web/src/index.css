@@ -2782,6 +2782,12 @@
       width: 1px;
       background-color: var(--cor-fio-suave);
     }
+
+    /* O rótulo (c2–c3) termina a 16 px do fio vertical: um rótulo comprido ("Família, papéis e
+       convites") quebra em duas linhas em vez de encostar no fio. */
+    .vp-linha .sb-linha-rotulo {
+      padding-right: 16px;
+    }
   }
 
   /* A coluna lateral da abertura: os avisos ficam a 8 px um do outro (sem isso dois avisos seguidos se
@@ -2850,13 +2856,10 @@
     hyphens: auto;
   }
 
-  /* O subtítulo mais longo ("Sem metas, sem comparação.", 26 caracteres) em 36 px passa dos 343 px da
-     coluna do celular e quebra. Abaixo de 768 ele usa o `rotulo` (32/38), que também está no conjunto. */
-  @media (max-width: 767px) {
-    .vp-subtitulo-longo .sb-abertura-subtitulo {
-      font-size: 2rem;
-      line-height: 2.375rem;
-    }
+  /* As etiquetas da lateral ficam coladas pelo passo de 32 px da base (cada item tem 32 de altura): sem
+     o recuo de 8 px que separa dois avisos. */
+  .vp-pagina .sb-abertura-lateral > .vp-etiqueta-item + .vp-etiqueta-item {
+    margin-top: 0;
   }
 
   /* O parágrafo de apresentação: 40 rem (640 px) dão cerca de 57 caracteres por linha em 28 px. */
@@ -2886,6 +2889,26 @@
 
   .vp-links a[aria-current='page'] {
     font-weight: 600;
+  }
+
+  /* "Páginas do site" e o índice "Nesta página": a partir de 768 os links ficam em 2 colunas dentro da
+     caixa de c4–c8, lidos de cima para baixo (`--linhas` é a metade, arredondada para cima: 5 para os 9
+     links). As colunas têm a largura do link mais longo e encolhem se a caixa for estreita. Abaixo de
+     768, uma coluna. */
+  @media (min-width: 768px) {
+    .vp-links-duplo {
+      display: grid;
+      grid-auto-flow: column;
+      grid-template-columns: repeat(2, minmax(0, max-content));
+      grid-template-rows: repeat(var(--linhas, 5), auto);
+      column-gap: 16px;
+    }
+  }
+
+  @media (min-width: 992px) {
+    .vp-links-duplo {
+      column-gap: 32px;
+    }
   }
 
   /* A ilustração dentro da moldura de mídia: inteira e centrada, com folga dos quatro lados. */

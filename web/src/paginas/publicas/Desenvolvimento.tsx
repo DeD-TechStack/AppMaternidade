@@ -3,14 +3,18 @@ import { AberturaPublica } from '../../componentes/publicas/AberturaPublica.tsx'
 import { LinhaDeLeitura } from '../../componentes/publicas/LinhaDeLeitura.tsx'
 import { MidiaLarga, ParDeMidias } from '../../componentes/publicas/MidiaDePagina.tsx'
 import { PaginasDoSite } from '../../componentes/publicas/PaginasDoSite.tsx'
-import { DESENVOLVIMENTO, H1, SUBTITULOS } from '../../conteudo/publicas.ts'
+import { DESENVOLVIMENTO, ETIQUETAS_LATERAIS, H1, SUBTITULOS } from '../../conteudo/publicas.ts'
 
 /** Desenvolvimento e tummy time: o registro de tummy time e de onde vem o conteúdo, sem metas. */
 export function Desenvolvimento() {
   const { rotina, semMetas, conteudo, profissional } = DESENVOLVIMENTO
   return (
-    <main className="vp-pagina vp-subtitulo-longo">
-      <AberturaPublica titulo={H1.desenvolvimento} subtitulo={SUBTITULOS.desenvolvimento} />
+    <main className="vp-pagina">
+      <AberturaPublica
+        titulo={H1.desenvolvimento}
+        subtitulo={SUBTITULOS.desenvolvimento}
+        etiquetas={ETIQUETAS_LATERAIS.desenvolvimento}
+      />
       <Apresentacao texto={DESENVOLVIMENTO.apresentacao} margem="sb-mt-fio-bloco" />
       <MidiaLarga peca={{ cena: 'tapete', fundo: 'lavanda' }} margem="sb-mt-midia-titulo" />
       <LinhaDeLeitura secao={rotina.secao} blocos={[rotina.texto]} margem="sb-mt-midia-linhas" />

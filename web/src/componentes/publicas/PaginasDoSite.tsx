@@ -16,7 +16,7 @@ export function PaginasDoSite() {
           <div className="sb-linha vp-linha col-c2-c8">
             <p className="sb-linha-rotulo t-rotulo">{ROTULOS.paginas}</p>
             <div className="sb-linha-texto vp-texto t-corpo">
-              <ul className="vp-links">
+              <ul className="vp-links vp-links-duplo">
                 {PAGINAS_DO_SITE.map(({ rotulo, para }) => (
                   <li key={para}>
                     <Link to={para} className="alvo-toque" aria-current={para === atual ? 'page' : undefined}>

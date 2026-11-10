@@ -56,6 +56,13 @@ const H2S: Record<string, string[]> = {
   '/sobre': ['Para quem é', 'O que ele faz', 'O que ele não faz', 'Quem faz'],
 }
 
+// As etiquetas da lateral da abertura (volta visual 1): só estas 3 páginas, antes do aviso de construção.
+const ETIQUETAS: Record<string, readonly string[]> = {
+  '/cuidado-compartilhado': ['Responsável', 'Cuidador', 'Observador'],
+  '/desenvolvimento': ['Tummy time', 'Sem metas', 'Sem comparação'],
+  '/sobre': PILARES,
+}
+
 const NOVAS = Object.keys(H2S)
 const G6 = ['/como-funciona', '/cuidado-compartilhado', '/desenvolvimento', '/sobre']
 
@@ -179,6 +186,24 @@ describe('o main das 9 páginas novas', () => {
     }
   })
 
+  it('os 9 subtítulos têm o mesmo tipo (sem desvio de tamanho) e o de Desenvolvimento é "Sem metas, sem cobrança."', async () => {
+    for (const caminho of NOVAS) {
+      const container = await abrir(caminho)
+      expect(container.querySelector('.vp-subtitulo-longo'), caminho).toBeNull()
+      expect(container.querySelector('main .sb-abertura-subtitulo')!.classList.contains('t-subtitulo'), caminho).toBe(true)
+    }
+    const container = await abrir('/desenvolvimento')
+    expect(container.querySelector('.sb-abertura-subtitulo')!.textContent).toBe('Sem metas, sem cobrança.')
+  })
+
+  it('"Páginas do site" é uma lista de 9 links pronta para 2 colunas a partir de 768, na ordem dos links', async () => {
+    for (const caminho of NOVAS) {
+      const container = await abrir(caminho)
+      const lista = container.querySelector('nav[aria-label="Páginas do site"] ul.vp-links.vp-links-duplo')!
+      expect(lista.querySelectorAll(':scope > li > a'), caminho).toHaveLength(9)
+    }
+  })
+
   it('a lateral começa pelo que a página pede e leva o aviso de construção em `ui`, na cor secundária', async () => {
     for (const caminho of NOVAS) {
       const container = await abrir(caminho)
@@ -188,8 +213,14 @@ describe('o main das 9 páginas novas', () => {
       expect(avisos[0].classList.contains('t-ui'), caminho).toBe(true)
       expect(avisos[0].classList.contains('t-secundario'), caminho).toBe(true)
       expect(avisos[0].closest('.sb-abertura-lateral'), caminho).not.toBeNull()
-      // Sem etiquetas inventadas.
-      expect(container.querySelector('.sb-abertura-lateral .sb-etiqueta'), caminho).toBeNull()
+      // Etiquetas só nas 3 páginas que as pedem (uma por item, antes do aviso), com palavras da página.
+      const etiquetas = [...container.querySelectorAll('.sb-abertura-lateral > li > .sb-etiqueta')]
+      expect(etiquetas.map((e) => e.textContent), caminho).toEqual([...(ETIQUETAS[caminho] ?? [])])
+      expect(container.querySelectorAll('.sb-abertura-lateral .sb-etiqueta'), caminho).toHaveLength(etiquetas.length)
+      for (const etiqueta of etiquetas) {
+        // Cada etiqueta vem antes do aviso (TF-10) na ordem do documento.
+        expect(avisos[0].closest('li')!.compareDocumentPosition(etiqueta) & Node.DOCUMENT_POSITION_PRECEDING, caminho).toBeTruthy()
+      }
     }
   })
 
@@ -210,8 +241,15 @@ describe('o main das 9 páginas novas', () => {
         'Nesta versão de avaliação, use só dados fictícios.',
       ])
     }
-    for (const caminho of ['/cuidado-compartilhado', '/desenvolvimento', '/regras-da-comunidade', '/exclusao-de-conta', '/sobre']) {
+    for (const caminho of ['/regras-da-comunidade', '/exclusao-de-conta']) {
       expect(await lateral(caminho), caminho).toEqual(['Em construção: algumas funções descritas aqui ainda não estão no ar.'])
+    }
+    // Cuidado, Desenvolvimento e Sobre: as etiquetas da página e, depois delas, o aviso (TF-10).
+    for (const caminho of ['/cuidado-compartilhado', '/desenvolvimento', '/sobre']) {
+      expect(await lateral(caminho), caminho).toEqual([
+        ...ETIQUETAS[caminho],
+        'Em construção: algumas funções descritas aqui ainda não estão no ar.',
+      ])
     }
     const contato = await lateral('/contato')
     expect(contato).toHaveLength(2)

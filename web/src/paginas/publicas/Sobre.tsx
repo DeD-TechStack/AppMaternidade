@@ -4,14 +4,14 @@ import { LinhaDeLeitura } from '../../componentes/publicas/LinhaDeLeitura.tsx'
 import { MidiaLarga, ParDeMidias } from '../../componentes/publicas/MidiaDePagina.tsx'
 import { PaginasDoSite } from '../../componentes/publicas/PaginasDoSite.tsx'
 import { Paragrafo } from '../../componentes/publicas/Textos.tsx'
-import { H1, SOBRE, SUBTITULOS } from '../../conteudo/publicas.ts'
+import { ETIQUETAS_LATERAIS, H1, SOBRE, SUBTITULOS } from '../../conteudo/publicas.ts'
 
 /** Sobre o AppMaternidade: para quem é, o que faz (os 4 pilares), o que não faz e quem faz. */
 export function Sobre() {
   const { paraQuem, oQueFaz, oQueNaoFaz, quemFaz } = SOBRE
   return (
     <main className="vp-pagina">
-      <AberturaPublica titulo={H1.sobre} subtitulo={SUBTITULOS.sobre} />
+      <AberturaPublica titulo={H1.sobre} subtitulo={SUBTITULOS.sobre} etiquetas={ETIQUETAS_LATERAIS.sobre} />
       <MidiaLarga peca={{ cena: 'passeio', fundo: 'barro' }} margem="sb-mt-fio-bloco" />
       <Apresentacao texto={SOBRE.apresentacao} margem="sb-mt-midia-titulo" />
       <LinhaDeLeitura secao={paraQuem.secao} blocos={[paraQuem.texto]} margem="sb-mt-par-numeros" />

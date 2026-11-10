@@ -82,13 +82,23 @@ export const H1 = {
 export const SUBTITULOS = {
   comoFunciona: 'Três momentos da rotina.',
   cuidado: 'Um bebê, vários adultos.',
-  desenvolvimento: 'Sem metas, sem comparação.',
+  desenvolvimento: 'Sem metas, sem cobrança.',
   regras: 'Para quando ela abrir.',
   privacidade: 'O que o site vai guardar.',
   termos: 'As regras de uso do site.',
   exclusao: 'Como pedir a exclusão.',
   contato: 'Fale conosco.',
   sobre: 'Quem faz e para quem.',
+} as const
+
+/**
+ * As etiquetas da lateral da abertura (uma por item, antes do aviso de construção). Só palavras da
+ * própria página: os papéis da família, os pontos de Desenvolvimento e os 4 pilares do site.
+ */
+export const ETIQUETAS_LATERAIS = {
+  cuidado: ['Responsável', 'Cuidador', 'Observador'],
+  desenvolvimento: ['Tummy time', 'Sem metas', 'Sem comparação'],
+  sobre: PILARES,
 } as const
 
 export const TITULOS = {
