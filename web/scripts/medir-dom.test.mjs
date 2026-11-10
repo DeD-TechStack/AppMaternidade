@@ -140,13 +140,45 @@ function estadoDeEnvio({ pagina = 2000, alturas = [112, 112], botao, mensagens =
   return { pagina, linhas, botao: botaoLido, mensagens, colisoes }
 }
 
-const ANEL_OK = { focou: true, tag: 'input', outlineStyle: 'solid', outlineWidth: '2px', outlineOffset: '2px', outlineColor: 'rgb(26, 21, 17)' }
+/**
+ * A caixa do primeiro controle em 1440 (o `input` de 56 px, y 383 a 439): o anel de foco (2 px de largura mais 2 de
+ * offset) vai de y 379 a 443. A mensagem do campo (24 px de caixa, 17 px de letra) tem a tinta a partir de
+ * `topoLetra`: 447 é a folga mínima de 4 px; os 445 de hoje (a captura do HEAD) são 2 px.
+ */
+const CAIXA_DO_CONTROLE = { top: 383, bottom: 439, left: 480, right: 1100 }
+const mensagemDoFoco = (extra = {}) => ({
+  tipo: 'ajuda',
+  texto: 'É o nome que a família vai ver.',
+  top: 442,
+  bottom: 466,
+  left: 480,
+  right: 1100,
+  topoLetra: 447,
+  medida: 'tinta',
+  ...extra,
+})
+const ANEL_OK = {
+  focou: true,
+  tag: 'input',
+  outlineStyle: 'solid',
+  outlineWidth: '2px',
+  outlineOffset: '2px',
+  outlineColor: 'rgb(26, 21, 17)',
+  caixa: { ...CAIXA_DO_CONTROLE },
+  mensagens: [mensagemDoFoco()],
+}
 const FOCO_OK = { controle: ANEL_OK, botao: { ...ANEL_OK, tag: 'button' } }
+/** O foco lido depois do envio vazio: o erro no lugar da ajuda, com a mesma folga. */
+const focoDoErro = () => ({
+  controle: { ...ANEL_OK, caixa: { ...CAIXA_DO_CONTROLE }, mensagens: [mensagemDoFoco({ tipo: 'erro', texto: 'Escreva o seu e-mail.' })] },
+  botao: { ...ANEL_OK, tag: 'button' },
+})
 
 /** O estado estável: 1440, o envio vazio não mexe em nada e aparecem os dois erros de uma linha. */
 const vazioEstavel = () => ({
   antes: estadoDeEnvio(),
   depois: estadoDeEnvio({ mensagens: [mensagemDeEnvio(), mensagemDeEnvio({ texto: 'Escreva a sua senha.' })] }),
+  foco: focoDoErro(),
 })
 /** O Recuperar enviado: um campo, e a confirmação (1 linha) ocupa a mesma linha de campo. */
 const enviadoEstavel = () => ({
@@ -1546,7 +1578,7 @@ describe('E-6: nada à direita de x de c9 abaixo da abertura', () => {
 })
 
 describe('E-7: o anel de foco de 2 px', () => {
-  const anel = (extra = {}) => ({ focou: true, tag: 'input', outlineStyle: 'solid', outlineWidth: '2px', outlineOffset: '2px', outlineColor: 'rgb(26, 21, 17)', ...extra })
+  const anel = (extra = {}) => ({ ...ANEL_OK, tag: 'input', mensagens: [mensagemDoFoco()], ...extra })
   // O anel de foco é a parte do E-7 deste bloco; a geometria do envio (estável aqui) tem o bloco dela mais abaixo.
   const doc = (foco = {}) => ({ ...doc1440, foco: { controle: anel(), botao: anel({ tag: 'button' }), ...foco }, envio: { vazio: vazioEstavel() } })
 
@@ -2514,6 +2546,256 @@ describe('E-7: a geometria do envio vazio', () => {
         assert.match(r.motivo, padrao)
       })
     }
+  })
+})
+
+// ---------------------------------------------------------------------------------------------
+// MAT-44d-3, volta da revisão, defeito D-1: o anel de foco do campo encosta no texto de ajuda.
+// A regra: a base do anel (a caixa do controle + outline-offset + outline-width) fica a pelo menos 4 px da tinta
+// de cada mensagem visível do mesmo campo (a ajuda em repouso; o erro depois do envio vazio). A medida é a da
+// tinta (`topoLetra`), não a da caixa de 24 px: a letra de 17 px começa uns 5 px abaixo do topo da caixa, e a
+// caixa daria uma folga que o olho não vê. Hoje: anel y 379-443 e tinta em y 445, folga de 2 px.
+
+describe('D-1: o anel de foco não toca a mensagem do campo (E-7)', () => {
+  // Cada chamada traz a própria caixa: as mutações abaixo mexem nela e não podem vazar para as outras.
+  const controleCom = (mensagens) => ({ ...ANEL_OK, caixa: { ...CAIXA_DO_CONTROLE }, mensagens })
+  const doc = ({ repouso = {}, erro = {} } = {}) => ({
+    ...doc1440,
+    foco: { controle: controleCom([mensagemDoFoco(repouso)]), botao: { ...ANEL_OK, tag: 'button' } },
+    envio: {
+      vazio: {
+        ...vazioEstavel(),
+        foco: { controle: controleCom([mensagemDoFoco({ tipo: 'erro', texto: 'Escreva o seu e-mail.', ...erro })]), botao: { ...ANEL_OK, tag: 'button' } },
+      },
+    },
+  })
+  const reprova = (d, padrao) => {
+    const r = e7(d, 'claro')
+    assert.equal(r.ok, false, `devia reprovar: ${r.motivo}`)
+    if (padrao) assert.match(r.motivo, padrao)
+    return r
+  }
+
+  it('o estado estável passa: anel y 379-443, tinta da ajuda e do erro a partir de y 447 (folga de 4 px)', () => {
+    const r = e7(doc(), 'claro')
+    assert.equal(r.ok, true, r.motivo)
+  })
+
+  it('o comportamento de hoje reprova: anel y 379-443 e a tinta da ajuda em y 445 (2 px), com os números na mensagem', () => {
+    const r = reprova(doc({ repouso: { topoLetra: 445 } }), /controle em repouso: o anel de foco \(base em y=443\.0\) fica a 2\.0 px da letra de ajuda "É o nome que a família vai ver\." \(começa em y=445\.0; o mínimo é 4\)/)
+    assert.deepEqual(r.nos_com_falha, ['controle em repouso'])
+  })
+
+  it('o erro depois do envio vazio também reprova: tinta em y 445 (2 px)', () => {
+    const r = reprova(doc({ erro: { topoLetra: 445 } }), /controle depois do envio vazio: o anel de foco \(base em y=443\.0\) fica a 2\.0 px da letra de erro "Escreva o seu e-mail\."/)
+    assert.deepEqual(r.nos_com_falha, ['controle depois do envio vazio'])
+  })
+
+  it('a borda: 3,75 px passa (a tolerância é de 0,25) e 3,5 px reprova', () => {
+    assert.equal(e7(doc({ repouso: { topoLetra: 446.75 }, erro: { topoLetra: 446.75 } }), 'claro').ok, true)
+    reprova(doc({ repouso: { topoLetra: 446.5 } }), /fica a 3\.5 px/)
+    reprova(doc({ erro: { topoLetra: 446.5 } }), /fica a 3\.5 px/)
+  })
+
+  it('mais folga passa (a regra é um mínimo)', () => {
+    assert.equal(e7(doc({ repouso: { topoLetra: 460 }, erro: { topoLetra: 460 } }), 'claro').ok, true)
+  })
+
+  it('só conta a mensagem que está sob o anel: uma mensagem acima ou ao lado do anel não reprova', () => {
+    const acima = { top: 300, bottom: 324, topoLetra: 305 }
+    assert.equal(e7(doc({ repouso: acima }), 'claro').ok, true)
+    const aoLado = { left: 1200, right: 1400, topoLetra: 445 }
+    assert.equal(e7(doc({ repouso: aoLado }), 'claro').ok, true)
+  })
+
+  it('o campo sem mensagem em repouso passa (Entrar: nada a tocar), mas o erro tem de ser lido', () => {
+    const d = doc()
+    d.foco.controle.mensagens = []
+    assert.equal(e7(d, 'claro').ok, true)
+  })
+
+  it('com duas mensagens, vale a pior (a mais perto do anel)', () => {
+    const d = doc()
+    d.foco.controle.mensagens = [mensagemDoFoco(), mensagemDoFoco({ tipo: 'status', texto: 'Enviamos.', topoLetra: 444 })]
+    reprova(d, /fica a 1\.0 px da letra de status "Enviamos\."/)
+  })
+
+  describe('falha fechada', () => {
+    const quebra = (alterar, padrao) => {
+      const d = doc()
+      alterar(d.foco.controle)
+      reprova(d, padrao)
+    }
+    const quebraDoErro = (alterar, padrao) => {
+      const d = doc()
+      alterar(d.envio.vazio.foco.controle)
+      reprova(d, padrao)
+    }
+
+    it('sem a caixa do controle (retângulo ausente, parcial ou ilegível)', () => {
+      quebra((c) => delete c.caixa, /controle em repouso: sem o retângulo do controle/)
+      quebra((c) => (c.caixa = null), /sem o retângulo do controle/)
+      quebra((c) => (c.caixa = { top: 383, bottom: 439, left: 480 }), /sem o retângulo do controle/)
+      quebra((c) => (c.caixa = { ...CAIXA_DO_CONTROLE, bottom: Number.NaN }), /sem o retângulo do controle/)
+      quebraDoErro((c) => delete c.caixa, /controle depois do envio vazio: sem o retângulo do controle/)
+    })
+
+    it('sem a leitura das mensagens do campo', () => {
+      quebra((c) => delete c.mensagens, /controle em repouso: sem a leitura das mensagens/)
+      quebra((c) => (c.mensagens = 'ajuda'), /sem a leitura das mensagens/)
+      quebraDoErro((c) => delete c.mensagens, /controle depois do envio vazio: sem a leitura das mensagens/)
+    })
+
+    it('mensagem sem retângulo (caixa ou topo da letra ausente ou ilegível)', () => {
+      quebra((c) => (c.mensagens = [mensagemDoFoco({ topoLetra: undefined })]), /ajuda "É o nome que a família vai ver\." sem retângulo/)
+      quebra((c) => (c.mensagens = [mensagemDoFoco({ topoLetra: Number.NaN })]), /sem retângulo/)
+      quebra((c) => (c.mensagens = [mensagemDoFoco({ top: null })]), /sem retângulo/)
+      quebra((c) => (c.mensagens = [mensagemDoFoco({ left: undefined })]), /sem retângulo/)
+      quebra((c) => (c.mensagens = [null]), /sem retângulo/)
+      quebraDoErro((c) => (c.mensagens = [mensagemDoFoco({ tipo: 'erro', topoLetra: undefined })]), /controle depois do envio vazio: erro .* sem retângulo/)
+    })
+
+    it('largura ou offset do anel ilegível não deixa medir a folga', () => {
+      quebra((c) => (c.outlineWidth = 'auto'), /(largura|offset).*(ilegível|em vez de)/)
+      quebra((c) => (c.outlineOffset = undefined), /(largura|offset).*(ilegível|em vez de)/)
+    })
+
+    it('sem a leitura do anel (foco ausente ou que não focou)', () => {
+      assert.equal(e7({ ...doc1440, envio: doc().envio }, 'claro').ok, false)
+      const d = doc()
+      d.foco.controle = { focou: false }
+      reprova(d)
+    })
+
+    it('depois do envio vazio: sem a leitura do foco, sem o controle, que não focou, ou sem nenhuma mensagem', () => {
+      const semFoco = doc()
+      delete semFoco.envio.vazio.foco
+      reprova(semFoco, /controle depois do envio vazio: sem a leitura do foco/)
+      const semControle = doc()
+      semControle.envio.vazio.foco = { controle: null, botao: null }
+      reprova(semControle, /controle depois do envio vazio: sem a leitura do foco/)
+      const naoFocou = doc()
+      naoFocou.envio.vazio.foco = { controle: { focou: false }, botao: null }
+      reprova(naoFocou, /controle depois do envio vazio: não recebeu foco/)
+      const semMensagem = doc()
+      semMensagem.envio.vazio.foco.controle.mensagens = []
+      reprova(semMensagem, /controle depois do envio vazio: o campo não mostra nenhuma mensagem/)
+    })
+  })
+
+  describe('mutação: +1 px do anel ou da mensagem, uma por vez, derruba o critério', () => {
+    const mutacoes = [
+      ['a base do controle desce 1 px (anel +1 px embaixo), em repouso', (d) => (d.foco.controle.caixa.bottom += 1), /controle em repouso: .*fica a 3\.0 px/],
+      ['a base do controle desce 1 px, depois do envio vazio', (d) => (d.envio.vazio.foco.controle.caixa.bottom += 1), /controle depois do envio vazio: .*fica a 3\.0 px/],
+      ['o offset do anel +1 px (3 px de recuo): o anel cresce 1 px de cada lado', (d) => (d.foco.controle.outlineOffset = '3px'), /controle em repouso: .*fica a 3\.0 px/],
+      ['a largura do anel +1 px (3 px): o anel cresce 1 px de cada lado', (d) => (d.foco.controle.outlineWidth = '3px'), /controle em repouso: .*fica a 3\.0 px/],
+      ['a tinta da ajuda sobe 1 px', (d) => (d.foco.controle.mensagens[0].topoLetra -= 1), /controle em repouso: .*fica a 3\.0 px/],
+      ['a tinta do erro sobe 1 px', (d) => (d.envio.vazio.foco.controle.mensagens[0].topoLetra -= 1), /controle depois do envio vazio: .*fica a 3\.0 px/],
+    ]
+    for (const [nome, mutar, padrao] of mutacoes) {
+      it(nome, () => {
+        const d = doc()
+        assert.equal(e7(d, 'claro').ok, true, 'a fixture estável tem de passar antes da mutação')
+        mutar(d)
+        const r = e7(d, 'claro')
+        assert.equal(r.ok, false)
+        assert.match(r.motivo, padrao)
+      })
+    }
+  })
+
+  it('o E-7 do avaliarCriterios leva a folga junto (o critério bloqueia)', () => {
+    const { criterios } = avaliarCriterios({ doc: doc({ repouso: { topoLetra: 445 } }), nos: [], tema: 'claro' }, 'entrar')
+    const c = criterios.find((x) => x.regra === 'E-7')
+    assert.equal(c.ok, false)
+    assert.match(c.motivo, /fica a 2\.0 px da letra/)
+  })
+})
+
+describe('D-1: a leitura do foco traz a caixa do controle e a tinta das mensagens do campo (lerFocoNaPagina)', () => {
+  const CAMPO = `
+    <main><form>
+      <div class="sb-campo">
+        <input id="nome" value="x" data-r="480,383,620,56">
+        <p class="sb-campo-ajuda" data-r="480,440,620,24" style="line-height: 24px; font-size: 17px">É o nome que a família vai ver.</p>
+        <p class="sb-campo-erro" data-r="480,440,620,24" style="line-height: 24px; font-size: 17px">  </p>
+        <p class="sb-campo-status" data-r="480,440,620,24" style="display: none; line-height: 24px; font-size: 17px">Escondida.</p>
+      </div>
+      <button type="submit" data-r="480,700,200,64">Entrar</button>
+    </form></main>`
+
+  /** O jsdom não mede layout nem tem canvas: `data-r` dá a caixa; `canvas` troca o `getContext` por uma medida da tinta. */
+  function lerCampo(html, { canvas, rolagem } = {}) {
+    const dom = new JSDOM(`<!doctype html><html><body>${html}</body></html>`, { runScripts: 'outside-only', virtualConsole: new VirtualConsole() })
+    const { window } = dom
+    const retangulo = function retangulo() {
+      const [x, y, w, h] = (this.getAttribute?.('data-r') ?? '0,0,100,20').split(',').map(Number)
+      return { x, y, left: x, top: y, width: w, height: h, right: x + w, bottom: y + h }
+    }
+    window.Element.prototype.getBoundingClientRect = retangulo
+    window.Range.prototype.getBoundingClientRect = () => ({ x: 480, y: 437, left: 480, top: 437, width: 300, height: 20, right: 780, bottom: 457 })
+    if (canvas) window.HTMLCanvasElement.prototype.getContext = () => ({ font: '', measureText: () => canvas })
+    if (rolagem) Object.defineProperty(window, 'scrollY', { configurable: true, value: rolagem })
+    window.scrollTo = () => undefined
+    try {
+      return JSON.parse(JSON.stringify(window.eval(`(${lerFocoNaPagina.toString()})()`)))
+    } finally {
+      window.close()
+    }
+  }
+
+  it('lê a caixa do controle e só as mensagens visíveis com texto do mesmo campo (a vazia e a escondida ficam de fora)', () => {
+    const foco = lerCampo(CAMPO)
+    assert.deepEqual(foco.controle.caixa, { top: 383, bottom: 439, left: 480, right: 1100 })
+    assert.equal(foco.controle.mensagens.length, 1)
+    const [m] = foco.controle.mensagens
+    assert.equal(m.tipo, 'ajuda')
+    assert.equal(m.texto, 'É o nome que a família vai ver.')
+    assert.deepEqual([m.top, m.bottom, m.left, m.right], [440, 464, 480, 1100])
+  })
+
+  it('sem canvas a letra é estimada pelo em-quadrado da linha: topo da caixa + (24 - 17) / 2', () => {
+    const [m] = lerCampo(CAMPO).controle.mensagens
+    assert.equal(m.medida, 'estimada')
+    assert.equal(m.topoLetra, 443.5)
+  })
+
+  it('com canvas a letra é a tinta: topo do texto + ascendente da fonte - ascendente da tinta', () => {
+    const [m] = lerCampo(CAMPO, { canvas: { fontBoundingBoxAscent: 17, actualBoundingBoxAscent: 13 } }).controle.mensagens
+    assert.equal(m.medida, 'tinta')
+    assert.equal(m.topoLetra, 437 + 17 - 13)
+  })
+
+  it('medida do canvas ilegível volta para a estimativa em vez de passar NaN', () => {
+    const [m] = lerCampo(CAMPO, { canvas: { fontBoundingBoxAscent: undefined, actualBoundingBoxAscent: 13 } }).controle.mensagens
+    assert.equal(m.medida, 'estimada')
+    assert.ok(Number.isFinite(m.topoLetra))
+  })
+
+  it('as coordenadas são as da página: a rolagem entra na caixa e na letra', () => {
+    const foco = lerCampo(CAMPO, { rolagem: 100 })
+    assert.equal(foco.controle.caixa.top, 483)
+    assert.equal(foco.controle.mensagens[0].top, 540)
+    assert.equal(foco.controle.mensagens[0].topoLetra, 543.5)
+  })
+
+  it('o botão de envio, fora de uma linha de campo, volta com a caixa e sem mensagens', () => {
+    const foco = lerCampo(CAMPO)
+    assert.equal(foco.botao.tag, 'button')
+    assert.deepEqual(foco.botao.mensagens, [])
+    assert.equal(foco.botao.caixa.top, 700)
+  })
+
+  it('o que a leitura traz alimenta a regra: a tinta a 2 px do anel reprova e a 4 px passa', () => {
+    const doEstilo = { outlineStyle: 'solid', outlineWidth: '2px', outlineOffset: '2px', outlineColor: 'rgb(26, 21, 17)' }
+    const foco = lerCampo(CAMPO)
+    // O jsdom não calcula o outline: o estilo vem da fixture, a geometria vem da leitura.
+    const comAnel = { controle: { ...foco.controle, ...doEstilo }, botao: { ...foco.botao, ...doEstilo } }
+    const quatro = { ...comAnel, controle: { ...comAnel.controle, mensagens: [{ ...comAnel.controle.mensagens[0], topoLetra: 447 }] } }
+    const dois = { ...comAnel, controle: { ...comAnel.controle, mensagens: [{ ...comAnel.controle.mensagens[0], topoLetra: 445 }] } }
+    const envio = { vazio: vazioEstavel() }
+    assert.equal(e7({ ...doc1440, foco: quatro, envio }, 'claro').ok, true)
+    assert.equal(e7({ ...doc1440, foco: dois, envio }, 'claro').ok, false)
   })
 })
 

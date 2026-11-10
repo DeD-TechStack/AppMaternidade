@@ -465,6 +465,114 @@ describe('o CSS de 44d-3 segue o contrato', () => {
   })
 })
 
+// D-1 (E-7): o anel de foco do campo não encosta no texto de ajuda ou de erro. O anel (2 px, offset 2: 4 px
+// fora do `input`) descia até 4 px abaixo da linha do valor, onde a mensagem começa; a tinta da ajuda ("É o
+// nome...", com acento no É) começava 1 px abaixo da caixa da mensagem, a 3 px de DENTRO do anel. A causa é a
+// geometria: a entrada ocupava os 58 px da linha do valor e a mensagem vinha colada nela. O contrato não muda
+// (linha de 112, valor 48, rótulo 32, mensagem 17/24, anel de 2 px com offset 2). Duas peças, na conta:
+//   - a entrada é mais baixa que a linha do valor (58 px) e fica centrada nela: o anel sobe `(58 - h) / 2` px;
+//   - a mensagem desce `top` px sem sair do lugar no fluxo (`position: relative`: a linha segue com 112 px).
+// A folga entre a base do anel e a tinta é `top + (58 - h) / 2 + OFFSET_DA_TINTA - 4` e tem de ser >= 4 px.
+// A altura real e a folga medida são do medidor (E-7); este teste só impede a volta da causa.
+describe('o anel de foco não encosta na mensagem do campo (D-1)', () => {
+  const MINIMO = 4
+  /** A tinta da ajuda mais alta (o acento do É) começa 1 px abaixo do topo da caixa de 24 px da mensagem. */
+  const OFFSET_DA_TINTA = 1
+  /** O anel passa 4 px (2 de offset + 2 de largura) da caixa da entrada. */
+  const ALCANCE_DO_ANEL = 4
+  const LINHA_DO_VALOR = 58
+
+  /** As regras (seletor e corpo) de dentro de cada `@media` que casa com `faixa`, sem comentários. */
+  function regrasDaFaixa(texto: string, faixa: RegExp) {
+    const regras: Array<{ seletor: string; corpo: string }> = []
+    for (const abertura of texto.matchAll(new RegExp(`@media\\s*\\(${faixa.source}\\)\\s*\\{`, 'g'))) {
+      const comeco = abertura.index + abertura[0].length
+      let profundidade = 1
+      let fim = comeco
+      while (fim < texto.length && profundidade > 0) {
+        if (texto[fim] === '{') profundidade += 1
+        else if (texto[fim] === '}') profundidade -= 1
+        fim += 1
+      }
+      for (const regra of texto.slice(comeco, fim - 1).matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+        // Uma lista de seletores vira uma entrada por seletor, cada uma com o mesmo corpo.
+        for (const seletor of regra[1].split(',')) regras.push({ seletor: seletor.trim(), corpo: regra[2] })
+      }
+    }
+    return regras
+  }
+
+  const bloco = semComentarios(blocoDe44d3)
+  const deComputador = regrasDaFaixa(bloco, /min-width:\s*768px/)
+  const doCelular = regrasDaFaixa(bloco, /max-width:\s*767px/)
+  const px = (corpo: string, propriedade: string) => {
+    const valores = [...corpo.matchAll(new RegExp(`(?:^|[;\\s])${propriedade}\\s*:\\s*(-?\\d*\\.?\\d+)px`, 'g'))]
+    return valores.length > 0 ? Number(valores[valores.length - 1][1]) : undefined
+  }
+  const corpoDe = (regras: Array<{ seletor: string; corpo: string }>, fim: RegExp) =>
+    regras
+      .filter((r) => r.seletor.includes('.sb-acesso-campos') && fim.test(r.seletor))
+      .map((r) => r.corpo)
+      .join(';')
+
+  describe('de 768 para cima (a mensagem mora dentro da linha de 112 px)', () => {
+    it('a entrada é mais baixa que a linha do valor e o seletor é o da entrada de acesso', () => {
+      const altura = px(corpoDe(deComputador, /\.sb-campo-entrada$/), 'height')
+      expect(altura, 'height da .sb-campo-entrada em min-width: 768px').toBeDefined()
+      expect(altura!).toBeLessThan(LINHA_DO_VALOR)
+      // Cabe o valor de 48 px (a tinta tem uns 45): menos que isso corta o descendente.
+      expect(altura!).toBeGreaterThanOrEqual(50)
+    })
+
+    it('a mensagem (erro, ajuda e status) desce sem sair do fluxo: position relative e top', () => {
+      for (const fim of [/\.sb-campo-erro$/, /\.sb-campo-ajuda$/, /\.sb-campo-status$/]) {
+        const corpo = corpoDe(deComputador, fim)
+        expect(corpo, String(fim)).toMatch(/position:\s*relative/)
+        expect(px(corpo, 'top'), `top de ${fim}`).toBeGreaterThan(0)
+        expect(corpo, String(fim)).not.toMatch(/margin|padding|height/)
+      }
+    })
+
+    it('a folga entre a base do anel e a tinta da mensagem é de pelo menos 4 px, nas três mensagens', () => {
+      const altura = px(corpoDe(deComputador, /\.sb-campo-entrada$/), 'height')!
+      for (const fim of [/\.sb-campo-erro$/, /\.sb-campo-ajuda$/, /\.sb-campo-status$/]) {
+        const descida = px(corpoDe(deComputador, fim), 'top')!
+        const folga = descida + (LINHA_DO_VALOR - altura) / 2 + OFFSET_DA_TINTA - ALCANCE_DO_ANEL
+        expect(folga, `folga com ${String(fim)}`).toBeGreaterThanOrEqual(MINIMO)
+      }
+    })
+
+    it('a linha continua com 112 px: nenhuma regra do bloco muda a grade, a altura mínima ou o anel', () => {
+      const todas = deComputador
+        .filter((r) => r.seletor.includes('.sb-campo'))
+        .map((r) => r.corpo)
+        .join(';')
+      expect(todas.length).toBeGreaterThan(0)
+      expect(todas).not.toMatch(/grid-template-rows|min-height|outline|line-height/)
+    })
+
+    it('fica fora da caixa de diálogo da Conta, que não é uma linha de acesso', () => {
+      for (const r of deComputador.filter((x) => /\.sb-campo-(entrada|erro|ajuda|status)$/.test(x.seletor))) {
+        expect(r.seletor, r.seletor).toContain('.sb-acesso-campos')
+        expect(r.seletor, r.seletor).not.toContain('.conta-dialogo')
+      }
+    })
+  })
+
+  describe('abaixo de 768 (o campo é um bloco de 64 px e a mensagem mora no vão)', () => {
+    it('a entrada também é mais baixa que o campo, e o anel sobe: a tinta fica a pelo menos 4 px', () => {
+      // O campo tem 64 px com o fio de 1: a entrada tem 63 e fica centrada. A mensagem começa onde o campo termina
+      // (a tinta do erro, sem acento, 5 px abaixo do topo da caixa): o anel passa (63 - h) / 2 - 4 da base do campo.
+      const altura = px(corpoDe(doCelular, /\.sb-campo-entrada$/), 'height')
+      expect(altura, 'height da .sb-campo-entrada em max-width: 767px').toBeDefined()
+      expect(altura!).toBeLessThan(63)
+      const folga = 5 - (ALCANCE_DO_ANEL - (63 - altura!) / 2)
+      expect(folga).toBeGreaterThanOrEqual(MINIMO)
+      expect(altura!).toBeGreaterThanOrEqual(48)
+    })
+  })
+})
+
 // E-7 (e C-4, R-4, B-4, que o reaproveitam): "o erro aparece em 17/24 abaixo do campo, sem mudar a
 // altura da linha". Abaixo de 768 o campo é um bloco, e um erro que entra no fluxo (com margem) cresce
 // a linha em 32 px e empurra o botão. A causa é o fluxo: o erro precisa sair dele e morar no vão que já
