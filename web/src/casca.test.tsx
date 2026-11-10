@@ -594,6 +594,18 @@ describe('rota /sistema', () => {
     expect(container.querySelector('.sb-numeros')!.textContent).toContain('metas ou comparações')
   })
 
+  it('D2: a faixa de números tem 3 itens, cada um com o número em Zilla Slab e a legenda, na ordem 7, 2, 0', async () => {
+    const { container } = renderizarRota('/sistema')
+    await screen.findByRole('heading', { level: 1 })
+
+    const itens = [...container.querySelectorAll('.sb-numeros > .sb-numeros-item')]
+    expect(itens).toHaveLength(3)
+    expect(itens.map((item) => item.querySelector('[data-numero]')!.textContent)).toEqual(['7', '2', '0'])
+    for (const item of itens) {
+      expect([...item.children].map((filho) => filho.className.split(' ')[0])).toEqual(['sb-numeros-valor', 'sb-numeros-legenda'])
+    }
+  })
+
   it('toda mídia é uma moldura sem texto, com a descrição em aria-label', async () => {
     const { container } = renderizarRota('/sistema')
     await screen.findByRole('heading', { level: 1 })

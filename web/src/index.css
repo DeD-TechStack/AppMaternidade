@@ -2110,13 +2110,24 @@
     margin: 16px 0 0;
   }
 
+  /* Abaixo de 768 os 3 itens empilham, cada um na largura da área útil, com o seu fio no topo (a
+     faixa deixa de ter o fio único), 24 px entre eles e sem fio vertical. A legenda cabe em uma
+     linha e o número fica em 112 px (FaixaNumeros escolhe o maior tamanho que cabe). */
   @media (max-width: 767px) {
+    .sb-numeros {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: 24px;
+      border-top: 0;
+    }
+
     .sb-numeros-item {
-      padding: 16px 8px 16px 0;
+      padding: 16px 0 0;
+      border-top: 1px solid var(--cor-fio-suave);
     }
 
     .sb-numeros-item + .sb-numeros-item {
-      padding-left: 8px;
+      padding-left: 0;
+      border-left: 0;
     }
   }
 
