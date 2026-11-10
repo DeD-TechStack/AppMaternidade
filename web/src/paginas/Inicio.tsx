@@ -35,6 +35,7 @@ import {
   CenaRetrato,
   CenaSessao,
 } from '../componentes/midia/cenas.tsx'
+import { PROPORCOES } from '../componentes/midia/proporcoes.ts'
 import { useEntradaDasMidias } from '../movimento/entradaMidias.ts'
 import { AvisoAbertura } from '../componentes/vitrine/AvisoAbertura.tsx'
 import { CartaoTela } from '../componentes/vitrine/CartaoTela.tsx'
@@ -85,7 +86,7 @@ export function Inicio() {
         />
 
         <div className="sb-area sb-mt-fio-bloco" data-bloco="">
-          <Midia formato="larga" fundo="barro" aria-label={MIDIAS_INICIO.notebook}>
+          <Midia formato="larga" fundo="barro" aria-label={MIDIAS_INICIO.notebook} proporcao={PROPORCOES.notebook}>
             <CenaNotebook />
           </Midia>
         </div>
@@ -106,7 +107,7 @@ export function Inicio() {
         </section>
 
         <div className="sb-area sb-mt-numeros-midia" data-bloco="">
-          <Midia formato="larga" fundo="lavanda" aria-label={MIDIAS_INICIO.celulares}>
+          <Midia formato="larga" fundo="lavanda" aria-label={MIDIAS_INICIO.celulares} proporcao={PROPORCOES.celulares}>
             <CenaCelulares />
           </Midia>
         </div>
@@ -124,10 +125,10 @@ export function Inicio() {
 
         <div className="sb-area sb-mt-midia-linhas">
           <Galeria>
-            <Midia formato="larga" fundo="barro" aria-label={galeria.sessao}>
+            <Midia formato="larga" fundo="barro" aria-label={galeria.sessao} proporcao={PROPORCOES.sessao}>
               <CenaSessao />
             </Midia>
-            <Midia formato="larga" fundo="lavanda" aria-label={galeria.madrugada}>
+            <Midia formato="larga" fundo="lavanda" aria-label={galeria.madrugada} proporcao={PROPORCOES.madrugada}>
               <CenaMadrugada />
             </Midia>
             <Midia formato="par" fundo="barro" aria-label={galeria.ilustracoes[0]}>
@@ -136,7 +137,7 @@ export function Inicio() {
             <Midia formato="par" fundo="lavanda" aria-label={galeria.ilustracoes[1]}>
               <CenaIlustracao qual="mamada" />
             </Midia>
-            <Midia formato="larga" fundo="barro" aria-label={galeria.mosaico}>
+            <Midia formato="larga" fundo="barro" aria-label={galeria.mosaico} proporcao={PROPORCOES.mosaico}>
               <CenaMosaico />
             </Midia>
           </Galeria>
