@@ -21,6 +21,13 @@ Horários em America/Sao_Paulo, tirados do relógio da máquina ou de carimbos d
 
 Uma linha por marco, a mais recente no topo. O estado corrente fica em [Retomada do site](Retomada_Site.md), e o detalhe de cada marco está no cartão Kanban citado.
 
+- 10/11/2026: **44d-2 (área logada) integrada em `int/refazer`.**
+  - Cartão t_6c3e5423. O revisor aprovou na revisão 3, e o eda47ae entrou por ff-only, com push.
+  - Notas do Fable: de 7,8 a 8,3, depois de 8,0 a 8,3 e por fim de 8,0 a 8,2.
+  - A Fralda passou a registrar com 1 toque.
+  - Os pontos P1 a P5 foram para a 44d-6.
+  - A 41a recebeu os SHAs de base e o A4 novo: a FaixaEstado no `Layout.tsx`.
+  - Em paralelo seguem a 44d-3, a 44d-5 e a MAT-36.
 - 10/11/2026: **44d-4 (Início) integrada em `int/refazer`.** É o cartão t_27b74658.
   - O revisor aprovou na revisão 3. O candidato 8a7c89d entrou por ff-only, com push.
   - O Fable deu 7,8/7,5 e depois 8,1/8,0.
