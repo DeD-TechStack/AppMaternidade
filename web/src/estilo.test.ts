@@ -247,6 +247,7 @@ describe('limites do CSS', () => {
       'tailwindcss',
       './styles/tokens.css',
       './styles/tema.css',
+      '@fontsource/fraunces/latin-400.css',
       '@fontsource/fraunces/latin-600.css',
       '@fontsource/fraunces/latin-800.css',
       '@fontsource/fraunces/latin-400-italic.css',
@@ -256,6 +257,31 @@ describe('limites do CSS', () => {
       '@fontsource/instrument-serif/latin-400.css',
       '@fontsource/zilla-slab/latin-700.css',
     ])
+  })
+
+  it('a face Fraunces normal 400 (display-m, 2.2) está carregada, só no subset latin, e o pacote a declara como normal 400', () => {
+    const importados = [...estiloGlobal.matchAll(/@import\s+'([^']+)'/g)].map((m) => m[1])
+    expect(importados).toContain('@fontsource/fraunces/latin-400.css')
+    // Os pesos que já existiam seguem carregados.
+    for (const peso of ['latin-600', 'latin-800', 'latin-400-italic']) {
+      expect(importados, peso).toContain(`@fontsource/fraunces/${peso}.css`)
+    }
+    // Só o subset latin, e nenhuma família de Fraunces fora do que o contrato usa.
+    const fraunces = importados.filter((i) => i.startsWith('@fontsource/fraunces/'))
+    expect(fraunces.every((i) => /\/latin-\d+(-italic)?\.css$/.test(i)), fraunces.join(', ')).toBe(true)
+    const face = readFileSync(pastaSrc + '../node_modules/@fontsource/fraunces/latin-400.css', 'utf8')
+    expect(face).toMatch(/font-family:\s*'Fraunces'/)
+    expect(face).toMatch(/font-style:\s*normal/)
+    expect(face).toMatch(/font-weight:\s*400/)
+  })
+
+  it('o display-m pede Fraunces normal 400, e é essa a face que o import novo entrega', () => {
+    const display = /\.t-display-m\s*\{([^}]*)\}/.exec(semComentarios)
+    expect(display).not.toBeNull()
+    expect(display![1]).toMatch(/font-family:\s*var\(--fonte-sb-titulo\)/)
+    expect(display![1]).toMatch(/font-weight:\s*400/)
+    expect(display![1]).not.toMatch(/font-style:\s*italic/)
+    expect(estiloGlobal.includes("@import '@fontsource/fraunces/latin-400.css';"), 'index.css importa a face 400 normal').toBe(true)
   })
 
   it('há de 3 a 6 ilustrações distintas (data-ilustracao), todas decorativas', () => {
