@@ -746,6 +746,107 @@ describe('R2.4 G12: a escala vale nos dois eixos', () => {
 })
 
 // ---------------------------------------------------------------------------------------------
+// Rodada de correção 2, achado B: G12 reprova o bloco oculto. O jsdom não tem `checkVisibility`:
+// a fixture o modela como o Chrome (`visibilityProperty: true`): `display: none` no nó ou em um
+// ancestral, ou `visibility` calculada `hidden`/`collapse`, deixam o nó invisível.
+describe('B G12: o bloco oculto (visibility/display) reprova, mesmo com opacidade 1 e escala 1', () => {
+  /** Instala no jsdom um `checkVisibility` que lê o CSS calculado, como o navegador. */
+  const comCheckVisibility = (documento) => {
+    const janela = documento.defaultView
+    janela.Element.prototype.checkVisibility = function checkVisibility(opcoes = {}) {
+      for (let no = this; no; no = no.parentElement) {
+        if (janela.getComputedStyle(no).display === 'none') return false
+      }
+      if (opcoes.visibilityProperty) {
+        const visibilidade = janela.getComputedStyle(this).visibility
+        if (visibilidade === 'hidden' || visibilidade === 'collapse') return false
+      }
+      return true
+    }
+  }
+  const coletar = (html) => coletarDe(html, comCheckVisibility)
+  const PAGINA = (estiloDaMidia = '', estiloDoEnvoltorio = '', estiloDoBloco = '') =>
+    `<main><section data-bloco style="${estiloDoBloco}"><p>Texto.</p></section><section><div style="${estiloDoEnvoltorio}"><div data-midia style="${estiloDaMidia}"></div></div></section></main>`
+  const midia = (extra = {}) => criar({ tag: 'div', texto: '', m: { blocoG12: true, midia: true }, ...extra })
+
+  it('controle: a página visível passa, e o coletor entrega visivel true nas mídias', () => {
+    const { nos } = coletar(PAGINA())
+    assert.equal(nos.find((no) => no.m.midia).visivel, true)
+    const r = g12(nos)
+    assert.equal(r.ok, true, r.motivo)
+  })
+
+  it('visibility:hidden na mídia, com opacity 1 e transform none, reprova com o motivo de oculto', () => {
+    const { nos } = coletar(PAGINA('visibility: hidden; opacity: 1; transform: none'))
+    const alvo = nos.find((no) => no.m.midia)
+    assert.equal(alvo.visivel, false)
+    assert.equal(alvo.estilo.opacity, '1')
+    assert.equal(alvo.estilo.transform, 'none')
+    const r = g12(nos)
+    assert.equal(r.ok, false, r.motivo)
+    assert.match(r.motivo, /oculto \(visibility\/display\)/)
+  })
+
+  it('display:none na mídia reprova', () => {
+    const r = g12(coletar(PAGINA('display: none')).nos)
+    assert.equal(r.ok, false, r.motivo)
+    assert.match(r.motivo, /oculto \(visibility\/display\)/)
+  })
+
+  it('a mídia aninhada num envoltório visível, mas com visibility:hidden própria, reprova', () => {
+    const { nos } = coletar(PAGINA('visibility: hidden'))
+    assert.equal(nos.find((no) => no.tag === 'div' && no.m.blocoG12 && !no.m.midia)?.visivel ?? true, true)
+    const r = g12(nos)
+    assert.equal(r.ok, false, r.motivo)
+  })
+
+  it('um ancestral com visibility:hidden e a mídia filha herdando reprova', () => {
+    const { nos } = coletar(PAGINA('', 'visibility: hidden'))
+    assert.equal(nos.find((no) => no.m.midia).visivel, false)
+    const r = g12(nos)
+    assert.equal(r.ok, false, r.motivo)
+    assert.match(r.motivo, /oculto \(visibility\/display\)/)
+  })
+
+  it('um ancestral com display:none e a mídia filha reprova', () => {
+    const r = g12(coletar(PAGINA('', 'display: none')).nos)
+    assert.equal(r.ok, false, r.motivo)
+  })
+
+  it('o próprio [data-bloco] com visibility:hidden reprova', () => {
+    const r = g12(coletar(PAGINA('', '', 'visibility: hidden')).nos)
+    assert.equal(r.ok, false, r.motivo)
+  })
+
+  it('a regra pura: visivel false reprova bloco, mídia aninhada e figura, e o motivo diz "oculto (visibility/display)"', () => {
+    const bloco = criar({ tag: 'section', texto: '', m: { filhoDeMain: true } })
+    for (const oculto of [
+      criar({ tag: 'section', texto: '', m: { filhoDeMain: true }, visivel: false }),
+      criar({ tag: 'section', texto: '', m: { filhoDeBloco: true }, visivel: false }),
+      midia({ visivel: false }),
+      criar({ tag: 'figure', texto: '', m: { blocoG12: true }, visivel: false }),
+    ]) {
+      const r = g12([bloco, oculto])
+      assert.equal(r.ok, false, r.motivo)
+      assert.match(r.motivo, /oculto \(visibility\/display\)/)
+      assert.equal(r.nos_com_falha.length, 1)
+    }
+    assert.equal(g12([bloco, midia()]).ok, true)
+  })
+
+  it('falha fechado: o nó sem o campo visivel (ou com valor que não é true) reprova', () => {
+    const bloco = criar({ tag: 'section', texto: '', m: { filhoDeMain: true } })
+    const semCampo = midia()
+    delete semCampo.visivel
+    for (const leitura of [semCampo, midia({ visivel: undefined }), midia({ visivel: null }), midia({ visivel: 'true' }), midia({ visivel: 1 })]) {
+      const r = g12([bloco, leitura])
+      assert.equal(r.ok, false, r.motivo)
+      assert.match(r.motivo, /oculto \(visibility\/display\)/)
+    }
+  })
+})
+
+// ---------------------------------------------------------------------------------------------
 // D1 (rodada de correção 2): os números em Zilla Slab. A regra NUM falha fechado quando a família,
 // a face carregada ou o `lining-nums` não estão provados. Sem `lining-nums` a Zilla Slab desenha
 // algarismos de texto (o 7 desce, o 2 e o 0 ficam na altura do x).

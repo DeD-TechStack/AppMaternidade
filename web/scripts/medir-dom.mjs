@@ -423,7 +423,8 @@ const numeroDe = (valor) => (typeof valor === 'number' ? valor : typeof valor ==
  * G12: com movimento reduzido, todo bloco aparece com opacidade 1 e escala 1 nos dois eixos. Os
  * blocos são os filhos diretos de `main` e de `[data-bloco]`, o próprio `[data-bloco]` e as mídias
  * e figuras aninhadas em qualquer profundidade. O que está oculto não é descartado: um bloco com
- * `visibility: hidden` ou dentro de um ancestral com opacidade 0 é justamente o que se procura.
+ * `visibility: hidden`, `display: none` (no nó ou num ancestral) ou dentro de um ancestral com
+ * opacidade 0 é justamente o que se procura, e reprova com "oculto (visibility/display)".
  * A leitura `ancestrais` (o produto das opacidades e das escalas dos ancestrais) cobre o wrapper.
  */
 export function g12(nos) {
@@ -432,6 +433,9 @@ export function g12(nos) {
   const falhas = []
   const falhar = (no, motivo) => falhas.push({ no: descrever(no), motivo: `${descrever(no)}: ${motivo}` })
   for (const no of blocos) {
+    // Todo bloco aparece: o coletor entrega `visivel` pelo `checkVisibility` (display, ancestral
+    // oculto e visibility). Só `true` vale: a ausência da leitura também reprova (falha fechado).
+    if (no.visivel !== true) falhar(no, 'oculto (visibility/display)')
     const opacidade = numeroDe(no.estilo?.opacity)
     const escalas = escalasDe(no.estilo?.transform)
     if (!Number.isFinite(opacidade)) falhar(no, 'opacidade ausente')
