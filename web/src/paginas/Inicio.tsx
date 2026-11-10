@@ -19,7 +19,6 @@ import { Aparelho } from '../componentes/Aparelho.tsx'
 import { AvisoDemonstracao } from '../componentes/AvisoDemonstracao.tsx'
 import { TelaReal } from '../componentes/vitrine/TelaReal.tsx'
 import { IlustracaoColo } from '../prototipo/IlustracaoColo.tsx'
-import { IlustracaoMamada } from '../prototipo/IlustracaoMamada.tsx'
 import { usePrototipo } from '../prototipo/contexto.ts'
 
 // A faixa estreita mostra só o começo da legenda das telas (TELAS_ESTREITA); da média para cima o
@@ -41,22 +40,23 @@ export function Inicio() {
   // media query (md:) mede a janela em rem do navegador (16 px) e ignora a fonte ampliada; com o
   // texto em 200% as colunas continuariam lado a lado e o texto não caberia. O padding lateral,
   // abaixo, é a única variante de janela da página: um contêiner não consulta o próprio tamanho.
+  // Esse padding é a margem esquerda única da página: o logo, o rodapé, os campos de cor e o texto
+  // dos cartões sem campo começam no mesmo x (ver .inicio-grade em index.css).
   //
   // break-words (overflow-wrap: break-word) é herdado por todo texto da página: com a fonte
   // ampliada a página tem menos rem, e uma palavra mais larga que a própria caixa quebra em vez de
   // vazar. Só quebra quando a palavra não cabe, então com a fonte em 100% nenhuma linha muda. É a
-  // única regra de quebra do Início, na raiz: o Hoje e a Sessão não a recebem. Sem anywhere (que
-  // muda a largura mínima de itens de grade e flex), sem hífen automático nos títulos e sem
-  // esconder nada.
+  // única regra de quebra do Início, na raiz: o Hoje e a Sessão não a recebem.
   //
   // O <main> é a grade (ver .inicio-grade em index.css): uma coluna na estreita e na média, duas
-  // colunas de mesma largura na larga, com o mesmo padding em todo cartão e o mesmo gap entre eles
-  // em cada faixa. Os seis cartões, nesta ordem: a promessa (papel), as telas (campo de urucum), a
-  // madrugada (campo da noite) e "para que serve" (papel, em par com a madrugada a partir de 80 rem),
-  // os fatos (papel) e a chamada (campo de lavanda). Papel e campo se alternam, com no máximo dois
-  // campos seguidos. Todo texto corrido mora numa coluna de texto de até 32,5 rem (.coluna-texto). Os
-  // aparelhos são as telas de verdade (ver componentes/vitrine), inertes e escondidos do leitor de
-  // tela, com um parágrafo visível ao lado.
+  // colunas de mesma largura na larga (só as seções em par usam uma coluna cada). Os seis cartões,
+  // nesta ordem: a promessa (papel, com o campo do notebook do Hoje de ponta a ponta), as telas
+  // (campo de urucum), a madrugada (campo da noite), "para que serve" (papel, com a ilustração num
+  // cartão de imagem), os fatos (papel) e a chamada (campo de lavanda). Papel e campo se alternam,
+  // com no máximo dois campos seguidos. Todo texto corrido mora numa coluna de texto de até 32,5 rem
+  // (.coluna-texto). Os aparelhos são as telas de verdade (ver componentes/vitrine): inertes,
+  // escondidos do leitor de tela e sem texto de serviço, com um parágrafo visível ao lado. O
+  // celular é uma janela de altura fixa, que mostra o topo da tela e a barra de baixo.
   return (
     <div className="@container/pagina flex min-h-dvh flex-col break-words px-4 md:px-[2%]">
       <AvisoDemonstracao />
@@ -79,40 +79,45 @@ export function Inicio() {
       </header>
 
       <main className="inicio-grade flex-1">
-        {/* Promessa, no papel: os pilares, o título e a apresentação, na coluna de texto, e a
-            ilustração. Até 80 rem: o texto e, embaixo, o desenho centrado no cartão. A partir de
-            80 rem: o texto na coluna 1 e o desenho começando na linha da coluna 2. Em todo caso
-            a base do desenho fica na borda de baixo da área de conteúdo do cartão. */}
+        {/* Promessa, no papel. Larga: o título grande atravessa a grade, a apresentação fica à
+            esquerda e os pilares, numa coluna lateral à direita, uma etiqueta por linha; embaixo,
+            de ponta a ponta, o campo com o notebook do Hoje, grande. Estreita e média: o título, a
+            apresentação, os pilares em linha (quebram por palavra inteira) e o campo com o celular
+            do Hoje. O aparelho que não aparece numa faixa continua no DOM, escondido pelo CSS. */}
         <section aria-labelledby="promessa" className="inicio-promessa inicio-largo entrada">
+          <h1 id="promessa" className="promessa inicio-promessa-titulo">
+            {PROMESSA}
+          </h1>
           <div className="inicio-promessa-texto coluna-texto">
-            <ul className="flex flex-wrap gap-2">
-              {PILARES.map((pilar) => (
-                <li key={pilar} className="etiqueta rotulo">
-                  {pilar}
-                </li>
-              ))}
-            </ul>
-            <h1 id="promessa" className="promessa mt-6">
-              {PROMESSA}
-            </h1>
-            <p className="texto-medida mt-6">{APRESENTACAO}</p>
+            <p className="texto-medida">{APRESENTACAO}</p>
           </div>
-          <IlustracaoColo className="inicio-ilustracao" />
+          <ul className="inicio-pilares flex flex-wrap gap-2">
+            {PILARES.map((pilar) => (
+              <li key={pilar} className="etiqueta rotulo">
+                {pilar}
+              </li>
+            ))}
+          </ul>
+          <div data-campo="field-1" className="inicio-hero">
+            <Aparelho tipo="notebook" tela="hoje" className="aparelho-a-partir-de-60">
+              <TelaReal tela="hoje" />
+            </Aparelho>
+            <Aparelho tipo="celular" tela="hoje" className="aparelho-ate-60">
+              <TelaReal tela="hoje" />
+            </Aparelho>
+          </div>
         </section>
 
-        {/* Telas, no campo de urucum: o título e a legenda, e os aparelhos. A partir de 86 rem o texto
-            fica em cima, à esquerda, com o notebook do Hoje embaixo dele e o celular da Sessão à
-            direita, com a base na do notebook; antes disso tudo empilhado, alinhado à esquerda. Média:
-            os dois celulares, o Hoje e a Sessão. Estreita: só o celular com o Hoje. Os aparelhos que
-            não aparecem numa faixa continuam no DOM, escondidos pelo CSS (.aparelho-*-de-*). O título
-            e o primeiro trecho da legenda são os da faixa estreita; da média para cima entra o resto. */}
+        {/* Telas, no campo de urucum: o título e a legenda, e o celular da Sessão (o Hoje já está
+            no topo). A partir de 80 rem divide a fileira com a madrugada. O título e o primeiro
+            trecho da legenda são os da faixa estreita; da média para cima entra o resto. */}
         <section
           id="secao-telas"
           aria-labelledby="titulo-telas"
           data-campo="accent"
-          className="inicio-telas inicio-largo entrada atraso-1"
+          className="inicio-telas inicio-cartao inicio-par entrada atraso-1"
         >
-          <div className="inicio-telas-texto coluna-texto">
+          <div className="coluna-texto">
             <h2 id="titulo-telas" className="titulo-secao">
               <span className="somente-estreita">{TELAS_ESTREITA.titulo}</span>
               <span className="a-partir-de-46">{TELAS.titulo}</span>
@@ -122,26 +127,20 @@ export function Inicio() {
               <span className="a-partir-de-46">{` ${RESTO_DE_TELAS}`}</span>
             </p>
           </div>
-          <Aparelho tipo="notebook" tela="hoje" className="aparelho-a-partir-de-60">
-            <TelaReal tela="hoje" />
-          </Aparelho>
-          <Aparelho tipo="celular" tela="hoje" className="aparelho-ate-60">
-            <TelaReal tela="hoje" />
-          </Aparelho>
-          <Aparelho tipo="celular" tela="sessao" className="aparelho-a-partir-de-46 inicio-aparelho-lado">
+          <Aparelho tipo="celular" tela="sessao">
             <TelaReal tela="sessao" />
           </Aparelho>
         </section>
 
         {/* Madrugada, no papel fundo escuro: o tema da noite vale só dentro do cartão (invólucro
-            local), nunca no <html>. O título, o texto, o celular com a Sessão da mamada de Heloísa (com o
-            relógio parado) e a legenda ficam empilhados, alinhados à esquerda. */}
+            local), nunca no <html>. O título, o texto, o celular com a Sessão da mamada de Heloísa (com
+            o relógio parado) e a legenda ficam empilhados, alinhados à esquerda. */}
         <section
           id="secao-madrugada"
           aria-labelledby="titulo-madrugada"
           data-campo="night-paper-deep"
           data-tema-local="madrugada"
-          className="inicio-madrugada inicio-par entrada atraso-2"
+          className="inicio-madrugada inicio-cartao inicio-par entrada atraso-2"
         >
           <div className="coluna-texto">
             <h2 id="titulo-madrugada" className="titulo-secao">
@@ -157,30 +156,34 @@ export function Inicio() {
           </div>
         </section>
 
-        {/* Para que serve, no papel: as três linhas da base e, no fim, a segunda ilustração. Cada
-            linha tem o rótulo e o texto lado a lado (média, e larga abaixo de 80 rem) ou o rótulo em
-            cima do texto (estreita, e a partir de 80 rem, em par com a madrugada). */}
+        {/* Para que serve, no papel: as três linhas da base e, ao lado (larga) ou embaixo, a
+            ilustração num cartão de imagem que ela quase enche. Cada linha tem o rótulo e o texto
+            lado a lado (a partir de 46 rem) ou o rótulo em cima do texto (estreita). */}
         <section
           id="secao-serve"
           aria-labelledby="titulo-serve"
-          className="inicio-serve inicio-par entrada atraso-2"
+          className="inicio-serve inicio-largo entrada atraso-2"
         >
-          <h2 id="titulo-serve" className="rotulo">
-            {PARA_QUE_SERVE.titulo}
-          </h2>
-          <div className="inicio-serve-linhas">
-            {PARA_QUE_SERVE.linhas.map((linha) => (
-              <div key={linha.rotulo} className="inicio-serve-linha border-t last:border-b">
-                <h3 className="titulo-linha">{linha.rotulo}</h3>
-                <div className="inicio-serve-texto">
-                  <div className="coluna-texto">
-                    <p className="texto-medida">{linha.texto}</p>
+          <div className="inicio-serve-corpo">
+            <h2 id="titulo-serve" className="rotulo">
+              {PARA_QUE_SERVE.titulo}
+            </h2>
+            <div className="inicio-serve-linhas">
+              {PARA_QUE_SERVE.linhas.map((linha) => (
+                <div key={linha.rotulo} className="inicio-serve-linha border-t last:border-b">
+                  <h3 className="titulo-linha">{linha.rotulo}</h3>
+                  <div className="inicio-serve-texto">
+                    <div className="coluna-texto">
+                      <p className="texto-medida">{linha.texto}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-          <IlustracaoMamada className="inicio-ilustracao" />
+          <div data-campo="field-1" className="inicio-imagem">
+            <IlustracaoColo className="inicio-ilustracao" />
+          </div>
         </section>
 
         {/* Fatos, no papel: um bloco de linhas, o termo grande à esquerda e a explicação à direita,
@@ -201,14 +204,15 @@ export function Inicio() {
           </ul>
         </section>
 
-        {/* Chamada, no campo de lavanda: o título, o texto e o link, na coluna de texto, e embaixo o
-            celular com o Hoje e a legenda dele. Tudo alinhado à esquerda. */}
+        {/* Chamada, no campo de lavanda: o título, o texto e o link, na coluna de texto, e o celular
+            com o Hoje e a legenda dele. Larga: o texto à esquerda e o celular à direita; antes
+            disso, um embaixo do outro. */}
         <section
           aria-labelledby="titulo-chamada"
           data-campo="field-2"
-          className="inicio-chamada inicio-largo entrada atraso-2"
+          className="inicio-chamada inicio-cartao inicio-largo entrada atraso-2"
         >
-          <div className="coluna-texto">
+          <div className="coluna-texto inicio-chamada-texto">
             <h2 id="titulo-chamada" className="titulo-secao [font-size:clamp(2.25rem,5vw,3.5rem)]">
               {CHAMADA.titulo}
             </h2>

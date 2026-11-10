@@ -187,6 +187,7 @@ function CorpoDaSessao({ titulo }: { titulo: RefObject<HTMLHeadingElement | null
           largo a área é o campo de barro da coluna da direita, com a figura no meio dele. */}
       <div
         data-campo={nomeDoCampo('field-1', estado.madrugada)}
+        data-tipo={sessao.tipo}
         className="sessao-ilu relative mt-6 min-h-0 flex-1"
       >
         <IlustracaoDaSessao tipo={sessao.tipo} />
@@ -201,6 +202,8 @@ function CorpoDaSessao({ titulo }: { titulo: RefObject<HTMLHeadingElement | null
 
 /** Sono: o berço. Tummy time: o tapete. Mamada: a poltrona (a mais próxima). */
 function IlustracaoDaSessao({ tipo }: { tipo: TipoSessao }) {
+  // O teto de 16 rem vale no estreito; no layout largo o painel é maior e a figura o preenche
+  // (o CSS do bloco largo, em index.css, tira o teto: .sessao-ilu > svg).
   if (tipo === 'sono') {
     return <IlustracaoBerco className="absolute inset-0 m-auto block h-full max-h-[16rem] w-full max-w-[16rem]" />
   }
@@ -246,7 +249,8 @@ export function Sessao() {
   // ordem do DOM e a do Tab são as mesmas do estreito.
   return (
     <ColunaApp>
-      <FaixaPrototipo />
+      {/* Num aparelho do Início o aviso é um só, o da página: a faixa não se repete na moldura. */}
+      {vitrine ? null : <FaixaPrototipo />}
 
       <main className="sessao-main flex flex-1 flex-col px-4 pb-6 pt-6">
         <div className="sessao-corpo flex w-full flex-1 flex-col">

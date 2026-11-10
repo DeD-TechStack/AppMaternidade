@@ -187,12 +187,13 @@
   /* A etiqueta é só o fundo, o canto e o respiro; a tipografia vem de .rotulo. */
   .etiqueta {
     display: inline-block;
-    /* Nunca passa da largura da linha: com a fonte ampliada uma palavra só ("Desenvolvimento")
-       é mais larga que a página; ela quebra dentro da etiqueta (hífen automático, com o idioma
-       pt-BR do html) sem mudar o texto. */
+    /* Nunca passa da largura da linha. Cada etiqueta é um item da linha que quebra (flex-wrap),
+       então a linha quebra entre etiquetas, por palavra inteira; só uma palavra que sozinha não
+       cabe na linha (fonte muito ampliada) quebra dentro da etiqueta, com hífen automático (o
+       idioma pt-BR do html). */
     max-width: 100%;
     hyphens: auto;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
     border-radius: var(--radius-tag, 3px);
     background-color: var(--cor-papel-fundo);
     padding: 0.375rem 0.5rem;
@@ -457,40 +458,23 @@
     padding-bottom: max(6px, env(safe-area-inset-bottom));
   }
 
-  /* "Em breve" marca, como um colchete, as colunas 2 a 5 (Histórico a Família). No DOM ela vem
-     logo depois de Hoje, a mesma ordem da coluna única; na grade de 5 a posição é explícita. */
+  /* "Em breve" é uma etiqueta discreta sobre as colunas 2 a 5 (Histórico a Família): texto pequeno,
+     em caixa alta e na cor secundária, sem traços verticais. A linha de 1 px embaixo fica, mas não
+     toca nem atravessa os ícones: os itens têm 3 px de borda e 8 px de respiro antes do ícone, e a
+     linha termina 4 px acima do topo dos itens. No DOM ela vem logo depois de Hoje, a mesma ordem
+     da coluna única; na grade de 5 a posição é explícita. */
   .nav-legenda {
     grid-column: 2 / span 4;
     grid-row: 1;
-    position: relative;
-    /* 4 px abaixo do topo da barra, e 4 px de cada lado: o traço da esquerda do colchete fica a
-       4 px da linha de destaque do item Hoje, que acaba na coluna ao lado. */
-    margin: 0.25rem 0.25rem 0;
+    margin: 0.25rem 0.5rem 0.25rem;
     padding-bottom: 0.25rem;
     border-bottom: 1px solid var(--cor-linha);
+    color: var(--cor-info);
     text-align: left;
     font-size: 0.75rem;
     line-height: 1.3;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-  }
-
-  .nav-legenda::before,
-  .nav-legenda::after {
-    content: '';
-    position: absolute;
-    bottom: calc(-0.375rem - 1px);
-    width: 1px;
-    height: 0.375rem;
-    background-color: var(--cor-linha);
-  }
-
-  .nav-legenda::before {
-    left: 0;
-  }
-
-  .nav-legenda::after {
-    right: 0;
   }
 
   /* O ícone fica em cima do rótulo, alinhado pelo topo; o rótulo continua sendo o nome acessível
@@ -578,21 +562,27 @@
   }
 
   /* ----- Início: a grade de cartões -----
-     O <main> é a grade. O padding de todo cartão (--pad) e o gap entre cartões (--gap), igual na
+     O <main> é a grade. O padding de todo cartão (--pad) e o gap entre as seções (--gap), igual na
      linha e entre linhas, mudam com a largura da página (contêiner `pagina`, em rem):
-       estreita (menos de 46 rem): 1 coluna, padding 1 rem (md), gap 1,5 rem (lg);
-       média (46 a menos de 60 rem): 1 coluna, padding 1,5 rem (lg), gap 2,5 rem (xl);
-       larga (60 rem ou mais): 2 colunas de mesma largura, padding 2,5 rem (xl), gap 4 rem (2xl).
+       estreita (menos de 46 rem): 1 coluna, padding 1 rem (md), gap 2,5 rem;
+       média (46 a menos de 60 rem): 1 coluna, padding 1,5 rem (lg), gap 4 rem;
+       larga (60 rem ou mais): 2 colunas de mesma largura, padding 2,5 rem (xl), gap 9,375 rem (150 px).
      Em toda faixa o gap passa do padding lateral em mais de 0,5 rem. Cada cartão ocupa 1 coluna,
-     ou as 2 quando tem a classe .inicio-largo. */
+     ou as 2 quando tem a classe .inicio-largo. Dentro de uma seção os elementos ficam a 2 rem um
+     do outro (--respiro-interno).
+
+     A margem esquerda é uma só: a do padding lateral da página. O logo, o rodapé, a borda
+     esquerda dos campos de cor e o texto das seções sem campo começam no mesmo x; dentro de um
+     campo de cor o texto fica recuado pelo padding do cartão (--pad), igual em todos. */
   .inicio-grade {
     --pad: 1rem;
-    --gap: 1.5rem;
+    --gap: 2.5rem;
+    --respiro-interno: 2rem;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     column-gap: var(--gap);
     row-gap: var(--gap);
-    padding-block: var(--gap);
+    padding-block: var(--respiro-interno);
   }
 
   .inicio-grade > section {
@@ -600,17 +590,22 @@
     padding: var(--pad);
   }
 
+  /* Sem campo de cor, o cartão é papel: o texto dele começa na margem da página, não recuado. */
+  .inicio-grade > section:not([data-campo]) {
+    padding-inline: 0;
+  }
+
   @container pagina (min-width: 46rem) {
     .inicio-grade {
       --pad: 1.5rem;
-      --gap: 2.5rem;
+      --gap: 4rem;
     }
   }
 
   @container pagina (min-width: 60rem) {
     .inicio-grade {
       --pad: 2.5rem;
-      --gap: 4rem;
+      --gap: 9.375rem;
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
@@ -620,9 +615,10 @@
     }
   }
 
-  /* A madrugada e "para que serve" dividem a fileira (uma coluna cada) só a partir de 80 rem; antes
-     disso cada um ocupa as 2 colunas, um depois do outro. */
-  @container pagina (min-width: 80rem) {
+  /* As telas e a madrugada dividem a fileira (uma coluna cada) só a partir de 85 rem, onde a coluna
+     de texto de 32,5 rem cabe inteira no cartão de meia grade ((85 rem − 9,375 rem) ÷ 2 − 5 rem);
+     antes disso cada uma ocupa as 2 colunas, uma depois da outra. */
+  @container pagina (min-width: 85rem) {
     .inicio-grade > .inicio-par {
       grid-column: span 1;
     }
@@ -637,132 +633,130 @@
   }
 
   /* Os cartões que empilham o conteúdo. A trilha é minmax(0, 1fr) para encolher com a página (com
-     a fonte ampliada nada passa da largura); tudo alinhado à esquerda, a um gap um do outro. */
+     a fonte ampliada nada passa da largura); o texto fica à esquerda e cada elemento a 2 rem do
+     seguinte. */
   .inicio-promessa,
   .inicio-telas,
   .inicio-madrugada,
+  .inicio-serve,
   .inicio-chamada,
   .inicio-fatos {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     align-content: start;
-    row-gap: var(--gap);
+    row-gap: var(--respiro-interno);
   }
 
+  /* O aparelho é a peça de imagem do cartão: fica centrado nele, com o texto à esquerda. */
   .inicio-grade .aparelho {
-    justify-self: start;
-  }
-
-  /* As duas ilustrações fora dos aparelhos (promessa e "para que serve") têm a mesma altura em
-     toda faixa e o mesmo viewBox de altura: a mesma escala. A base fica na borda de baixo da área
-     de conteúdo do cartão, e na estreita e na média o desenho fica centrado. */
-  .inicio-ilustracao {
-    display: block;
-    width: auto;
-    height: 14rem;
     justify-self: center;
-    align-self: end;
   }
 
-  @container pagina (min-width: 46rem) {
-    .inicio-ilustracao {
-      height: 16rem;
-    }
+  /* Promessa. O título atravessa a grade. A apresentação fica na coluna de texto e os pilares são
+     etiquetas em linha, que quebram por palavra inteira (sem hífen). Abaixo, de ponta a ponta, o
+     campo com o aparelho do Hoje: o celular (estreita e média) ou o notebook (larga). */
+  .inicio-hero {
+    display: grid;
+    justify-items: center;
+    min-width: 0;
+    padding: var(--pad);
   }
 
-  /* Da faixa larga (60 rem) em diante as duas ilustrações ficam mais altas. Até 80 rem a promessa
-     continua empilhada como na faixa média: o texto na coluna de 32,5 rem e, embaixo, a
-     ilustração centrada no cartão, a um gap do texto e com a base na borda de baixo. */
   @container pagina (min-width: 60rem) {
-    .inicio-ilustracao {
-      height: 26rem;
-    }
-  }
-
-  /* A partir de 80 rem a promessa usa as colunas do <main> (subgrade): a coluna de texto já tem
-     32,5 rem inteiros. O texto fica à esquerda, numa coluna que pode passar um pouco da coluna 1
-     (nunca chega a 1 rem da coluna 2); a ilustração começa exatamente na linha da coluna 2 e se
-     apoia na base do cartão. */
-  @container pagina (min-width: 80rem) {
+    /* Larga: o título nas duas colunas, a apresentação à esquerda e os pilares numa coluna lateral
+       à direita, uma etiqueta por linha, sem quebrar; o campo do notebook embaixo, de ponta a
+       ponta, a 2 rem do texto. */
     .inicio-promessa {
-      grid-template-columns: subgrid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-areas:
+        'titulo titulo'
+        'texto pilares'
+        'hero hero';
+      column-gap: var(--gap);
+    }
+
+    .inicio-promessa-titulo {
+      grid-area: titulo;
     }
 
     .inicio-promessa-texto {
-      grid-column: 1 / -1;
-      grid-row: 1;
-      max-width: min(32.5rem, calc((100% - var(--gap)) / 2 + var(--gap) - 1rem));
+      grid-area: texto;
     }
 
-    .inicio-promessa > .inicio-ilustracao {
-      grid-column: 2;
-      grid-row: 1;
-      justify-self: start;
+    /* A coluna dos pilares é automática (a largura da etiqueta mais larga): nenhuma quebra. */
+    .inicio-pilares {
+      grid-area: pilares;
+      flex-direction: column;
+      align-items: flex-start;
+      align-self: start;
     }
-  }
 
-  /* Larga: a chamada e a madrugada (que, abaixo de 80 rem, ocupa as 2 colunas) empilham o texto, o
-     celular e a legenda numa coluna de 32,5 rem, com o texto alinhado à esquerda dentro dela e o
-     bloco inteiro centrado no cartão: o celular vira o ponto focal e o campo não fica vazio de um
-     lado. */
-  @container pagina (min-width: 60rem) {
-    .inicio-chamada,
-    .inicio-madrugada {
-      grid-template-columns: minmax(0, 32.5rem);
-      justify-content: center;
+    .inicio-hero {
+      grid-area: hero;
     }
   }
 
-  /* O texto da legenda e o aparelho do Hoje, empilhados e alinhados à esquerda. */
+  /* Toda ilustração fora dos aparelhos mora num cartão de imagem (campo de cor, cantos do campo)
+     que ela quase enche. O cartão tem a proporção do desenho (0,8 para 1, com 1 rem de respiro), e
+     o desenho toma a caixa inteira dele, com a base na borda de baixo da área de conteúdo: ocupa
+     cerca de 80% da área do cartão. A figura é posicionada pelas bordas (inset), então a altura
+     dela não depende de uma altura declarada no cartão. */
+  .inicio-imagem {
+    position: relative;
+    width: 100%;
+    max-width: 17rem;
+    min-width: 0;
+    justify-self: center;
+    aspect-ratio: 0.8 / 1;
+  }
+
+  /* Só há respiro em cima: o desenho (preserveAspectRatio xMidYMax) se apoia na base do campo, e o
+     campo, último item da seção, termina na base da área de conteúdo dela. */
+  .inicio-ilustracao {
+    position: absolute;
+    inset: 1rem 0 0 0;
+    display: block;
+    width: 100%;
+    height: calc(100% - 1rem);
+  }
+
+  @container pagina (min-width: 46rem) {
+    .inicio-imagem {
+      max-width: 24rem;
+    }
+  }
+
+  /* Chamada: o texto e o celular com a legenda. Antes de 72 rem um embaixo do outro; depois, o texto
+     à esquerda (centrado na altura do celular) e o celular à direita. Cada lado tem a coluna de
+     texto inteira (2 × 32,5 rem mais o respiro e o padding de 2 × 2,5 rem). */
   .inicio-lado {
     display: grid;
     row-gap: 1rem;
     width: 100%;
     max-width: 32.5rem;
+    justify-self: center;
   }
 
-  /* Telas abaixo da fileira (de 46 a 85,3 rem): o notebook e os celulares ficam centrados no cartão,
-     no mesmo gap um do outro; o texto da seção continua à esquerda. */
-  @container pagina (min-width: 46rem) {
-    .inicio-telas > .aparelho {
-      justify-self: center;
-    }
-  }
-
-  /* Telas, a partir de 85,3 rem de caixa de conteúdo do contêiner (a consulta mede a caixa sem o
-     padding: 1440 com barra de rolagem dá 85,5 rem). É a largura mínima em que a fileira cabe no
-     conteúdo do cartão: notebook (61,5 rem × 0,85) + gap (4 rem) + celular (24 rem) mais o padding
-     de 2 × 2,5 rem = 85,275 rem. O texto fica em cima, à esquerda, e o notebook embaixo dele; o
-     celular da Sessão à direita ocupa as duas linhas, com a base na base do notebook. Antes disso
-     tudo empilhado. */
-  @container pagina (min-width: 85.3rem) {
-    .inicio-telas {
-      grid-template-columns: minmax(0, 1fr) 24rem;
-      column-gap: var(--gap);
+  @container pagina (min-width: 72rem) {
+    .inicio-chamada {
+      grid-template-columns: minmax(0, 32.5rem) minmax(0, 32.5rem);
+      justify-content: space-between;
+      column-gap: var(--respiro-interno);
     }
 
-    .inicio-telas > .inicio-telas-texto {
-      grid-column: 1;
-      grid-row: 1;
+    .inicio-chamada-texto {
+      align-self: center;
     }
 
-    .inicio-telas > .aparelho-notebook {
-      grid-column: 1;
-      grid-row: 2;
-      justify-self: start;
-    }
-
-    .inicio-telas > .inicio-aparelho-lado {
-      grid-column: 2;
-      grid-row: 1 / span 2;
-      align-self: end;
-      justify-self: start;
+    .inicio-lado {
+      max-width: 32.5rem;
+      justify-self: end;
     }
   }
 
   /* Que aparelho aparece em cada faixa (contêiner `pagina`). Um aparelho que não aparece
-     continua no DOM, com display: none. O celular do Hoje do cartão das telas aparece até a faixa
-     média; o celular da Sessão, a partir dela; o notebook, só na larga. */
+     continua no DOM, com display: none. O celular do Hoje do topo aparece até a faixa média e o
+     notebook dele só na larga. */
   .aparelho-a-partir-de-46,
   .aparelho-a-partir-de-60 {
     display: none;
@@ -802,29 +796,21 @@
     }
   }
 
-  /* Para que serve: as três linhas da base e, no fim do cartão, a segunda ilustração. Do 46 rem ao
-     80 rem (cartão de uma coluna da página, ou de duas colunas da grade) cada linha tem o rótulo à
+  /* Para que serve: as três linhas da base e, no fim (estreita e média) ou ao lado (a partir de
+     85 rem), o cartão de imagem com a ilustração. Do 46 rem ao 85 rem cada linha tem o rótulo à
      esquerda (1/4 da largura) e o texto à direita, com uma linha vertical entre eles. Estreita e a
-     partir de 80 rem (cartão de uma coluna da grade, em par com a madrugada): o rótulo em cima do
-     texto. No par as linhas esticam para a altura do cartão da madrugada, e o conteúdo de cada uma
-     fica no meio dela (a folga entre os itens fica a até 2 gaps). */
-  .inicio-serve {
-    display: flex;
-    flex-direction: column;
+     partir de 85 rem (as linhas numa coluna de meia grade): o rótulo em cima do texto. */
+  .inicio-serve-corpo {
+    min-width: 0;
   }
 
   .inicio-serve-linhas {
-    display: flex;
-    flex: 1 1 auto;
-    flex-direction: column;
     margin-top: 1rem;
   }
 
   .inicio-serve-linha {
     display: grid;
-    flex: 1 1 auto;
     grid-template-columns: minmax(0, 1fr);
-    align-content: center;
   }
 
   .inicio-serve-linha > h3 {
@@ -833,11 +819,6 @@
 
   .inicio-serve-texto {
     padding: 0.5rem 0 1rem;
-  }
-
-  .inicio-serve > .inicio-ilustracao {
-    margin-top: var(--gap);
-    align-self: center;
   }
 
   @container pagina (min-width: 46rem) {
@@ -855,7 +836,23 @@
     }
   }
 
-  @container pagina (min-width: 80rem) {
+  @container pagina (min-width: 85rem) {
+    .inicio-serve {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: var(--gap);
+    }
+
+    /* O campo estica até a base da área de conteúdo da seção (a altura do texto ao lado) e encosta
+       na linha da direita da grade; a largura de 25 rem deixa o desenho (mais de 70% do campo) a
+       ocupar quase toda a altura. */
+    .inicio-serve > .inicio-imagem {
+      width: 25rem;
+      max-width: none;
+      aspect-ratio: auto;
+      align-self: stretch;
+      justify-self: end;
+    }
+
     .inicio-serve-linha {
       grid-template-columns: minmax(0, 1fr);
     }
@@ -871,10 +868,13 @@
   }
 
   /* Aparelhos desenhados em CSS, sem sombra. Por dentro vai a tela de verdade (Hoje ou Sessão), em
-     tamanho natural: ela decide o layout pela largura que tem (contêiner `app`). O celular tem a
-     largura natural de 24 rem, ou a da área onde está, e a altura da tela, que aparece inteira; o
-     notebook tem a tela larga (60 rem) e encolhe por escala em degraus. Cantos concêntricos: o raio
-     de fora é o de dentro mais o respiro entre os dois. */
+     tamanho natural: ela decide o layout pela largura que tem (contêiner `app`). O celular é uma
+     janela de altura fixa (33 rem de tela): mostra o topo da tela real (título e primeiro cartão) e
+     tem a barra de baixo presa no pé da janela, como no aparelho de verdade; o resto da tela é
+     cortado pela moldura. A tela tem 22,5 rem (360 px) de largura, mais que os 22 rem em que a
+     navegação cai numa coluna, então a barra vem em linha, com os 5 itens lado a lado. O notebook
+     tem a tela larga (60 rem). Os dois encolhem ou crescem por escala em degraus. Cantos
+     concêntricos: o raio de fora é o de dentro mais o respiro entre os dois. */
   .aparelho {
     flex: none;
   }
@@ -891,23 +891,86 @@
     border-inline: 0;
   }
 
+  /* O celular: 23,5 × 34 rem naturais (tela de 22,5 × 33 rem), escalado de cima para a esquerda
+     como o notebook, com as margens negativas tirando do fluxo o espaço que a escala libera. A
+     escala é a mesma para todos os celulares da página e só muda em degraus, pela largura dela:
+     em 390 px (a página tem 22,4 rem) é 0,86, e o menor texto da tela (13 px na navegação) fica
+     com 11 px ou mais; o celular tem 323 px, com mais de 16 px de folga de cada lado do cartão. */
   .aparelho-celular {
+    --escala-celular: 0.8;
     position: relative;
-    width: min(24rem, 100%);
+    width: 23.5rem;
+    height: 34rem;
+    margin-right: calc(23.5rem * (var(--escala-celular) - 1));
+    margin-bottom: calc(34rem * (var(--escala-celular) - 1));
+    transform: scale(var(--escala-celular));
+    transform-origin: top left;
     border: 2px solid var(--cor-linha);
     border-radius: 2.5rem;
     background-color: var(--cor-linha);
-    padding: 0.5rem;
+    padding: 0.375rem;
+  }
+
+  /* Faixa estreita (390 em 100%: contêiner de 20,4 a 22,4 rem): escala 0,85, e 13 px viram 11,05 px
+     efetivos. Abaixo de 20 rem (fonte e zoom em 200%) fica a base de 0,8, como estava. A moldura é
+     mais fina e a caixa menor para o celular caber na seção com 16 px de folga de cada lado (22,7
+     rem × 0,85 = 309 px) e a tela ter 353 px, mais que os 352 px (22 rem) em que a barra cai numa
+     coluna. A janela visível tem 31,75 rem × 0,85 = 432 px, no máximo 460 px. */
+  @container pagina (min-width: 20rem) and (max-width: 24.99rem) {
+    .aparelho-celular {
+      --escala-celular: 0.85;
+      width: 22.7rem;
+      height: 31.75rem;
+      margin-right: calc(22.7rem * (var(--escala-celular) - 1));
+      margin-bottom: calc(31.75rem * (var(--escala-celular) - 1));
+      padding: 0.1875rem;
+    }
+  }
+
+  @container pagina (min-width: 25rem) {
+    .aparelho-celular {
+      --escala-celular: 0.95;
+    }
+  }
+
+  @container pagina (min-width: 30rem) {
+    .aparelho-celular {
+      --escala-celular: 1;
+    }
   }
 
   .aparelho-celular .aparelho-tela {
-    border-radius: 2rem;
+    height: 100%;
+    border-radius: 2.125rem;
   }
 
-  /* A tela cresce com o conteúdo, mas nunca fica mais curta que isto: a Sessão precisa de altura
-     para a ilustração do tipo da sessão. */
+  .aparelho-celular .app {
+    height: 100%;
+  }
+
+  /* A janela tem altura fixa: a moldura da tela ocupa toda ela, o conteúdo (main) corta no que
+     passa e a barra de baixo fica presa no pé, como no aparelho de verdade. */
   .aparelho-celular .coluna-app {
-    min-height: 46rem;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .aparelho-celular .coluna-app > main {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* Na janela a navegação usa 13 px (12,7 px ou mais): com a escala de 0,867 do celular em 390 px
+     o texto fica com 11 px ou mais. As regras repetem o item, o rótulo dentro dele e o item da aba
+     atual, para nenhuma outra regra de fonte da barra vencer esta só dentro do mockup. Os 5 rótulos
+     (cerca de 290 px a 13 px, mais 4 espaços de 8 px) cabem nos 360 px da tela, sem quebra. */
+  .aparelho-celular .nav-item,
+  .aparelho-celular .nav-inferior .nav-item,
+  .aparelho-celular .nav-inferior .nav-item[aria-current],
+  .aparelho-celular .nav-inferior .nav-item > span,
+  .aparelho-celular .nav-legenda {
+    font-size: 0.8125rem;
   }
 
   /* O furo da câmera, um traço de tinta no alto da tela. */
@@ -926,9 +989,9 @@
   /* O notebook: tamanho natural de 61,5 × 44,25 rem (tela de 60,25 × 41,75 rem), escalado de cima
      para a esquerda. As margens negativas tiram do fluxo o espaço que a escala libera, então a
      caixa ocupa só a largura e a altura já escaladas. A escala só lê a variável: os degraus
-     abaixo só mudam a variável, em larguras da página em que o notebook e o celular ao lado
-     continuam cabendo na mesma linha. No layout largo nenhum texto fica abaixo de 13 px, então
-     com 0,85 o menor texto do notebook tem pelo menos 11 px. */
+     abaixo só mudam a variável, em larguras da página em que o notebook, sozinho no campo do topo
+     (padding de 2 × 2,5 rem), continua cabendo. No layout largo nenhum texto fica abaixo de 13 px,
+     então com 0,85 o menor texto do notebook tem pelo menos 11 px. */
   .aparelho-notebook {
     --escala-notebook: 0.85;
     width: 61.5rem;
@@ -939,21 +1002,21 @@
     transform-origin: top left;
   }
 
-  @container pagina (min-width: 89rem) {
-    .aparelho-notebook {
-      --escala-notebook: 0.9;
-    }
-  }
-
-  @container pagina (min-width: 92rem) {
+  @container pagina (min-width: 66rem) {
     .aparelho-notebook {
       --escala-notebook: 0.95;
     }
   }
 
-  @container pagina (min-width: 95rem) {
+  @container pagina (min-width: 72rem) {
     .aparelho-notebook {
-      --escala-notebook: 1;
+      --escala-notebook: 1.05;
+    }
+  }
+
+  @container pagina (min-width: 80rem) {
+    .aparelho-notebook {
+      --escala-notebook: 1.15;
     }
   }
 
@@ -1001,7 +1064,7 @@
     grid-template-columns: minmax(0, 1fr);
     row-gap: 0.75rem;
     border-top: 1px solid var(--cor-linha);
-    padding-block: 1.5rem;
+    padding-block: 1rem;
   }
 
   @container pagina (min-width: 46rem) {
@@ -1009,6 +1072,7 @@
       grid-template-columns: minmax(max-content, 1fr) minmax(0, 3fr);
       column-gap: 1.5rem;
       align-items: baseline;
+      padding-block: 1.5rem;
     }
   }
 
@@ -1217,6 +1281,8 @@
     display: contents;
   }
 
+  /* O tamanho base do computador (cabe em 1024 × 768 com os botões rápidos à vista). Em telas altas
+     (900 px ou mais) o mesmo conteúdo cresce em escala: ver o bloco @media (min-height) no fim. */
   .hoje-titulo {
     grid-column: 1 / -1;
     grid-row: 1;
@@ -1237,8 +1303,13 @@
     padding: 1.5rem;
   }
 
+  /* O número grande tem a linha mais alta que a caixa da fonte (com line-height 1 o texto sobe
+     sobre o rótulo e desce sobre "por ..."), e margem em cima e embaixo. */
   .coluna-app .numero-grande {
     font-size: clamp(2.5rem, 4.5cqi, 3.5rem);
+    line-height: 1.3;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
   }
 
   .hoje-lateral {
@@ -1330,17 +1401,49 @@
     margin-top: 1.5rem;
   }
 
+  /* O painel da ilustração é um cartão de imagem: a figura o enche (sem o teto de 16 rem do
+     estreito), com 1 rem de respiro. O painel do sono e do estado vazio (figura quadrada) ocupa a
+     altura toda da coluna; o da mamada (figura em pé) fica mais estreito e o do tummy time (figura
+     deitada) mais baixo, para a figura ocupar mais de 70% da área de cada um. */
   .sessao-ilu,
   .sessao-ilu-vazio {
     grid-area: ilu;
-    min-height: 24rem;
+    min-height: 34rem;
     margin: 0;
     border-radius: var(--radius-card, 8px);
-    padding: 2rem;
+    padding: 1rem;
   }
 
   .sessao-ilu {
     background-color: var(--cor-campo-1);
+  }
+
+  .sessao-ilu[data-tipo='mamada'] {
+    justify-self: center;
+    width: 78%;
+  }
+
+  .sessao-ilu[data-tipo='tummy'] {
+    align-self: center;
+    min-height: 0;
+    aspect-ratio: 1.55 / 1;
+  }
+
+  .sessao-ilu > svg {
+    inset: 1rem;
+    width: calc(100% - 2rem);
+    height: calc(100% - 2rem);
+    max-width: none;
+    max-height: none;
+    margin: 0;
+  }
+
+  .sessao-ilu-vazio > svg {
+    flex: 1 1 auto;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    min-height: 0;
   }
 
   .sessao-campo .cronometro {
@@ -1354,6 +1457,72 @@
   width: 100%;
   max-width: none;
   margin-inline: 0;
+}
+
+/* Telas altas (860 px de altura ou mais, como 1440 × 900): o mesmo conteúdo do Hoje e da Sessão do
+   computador cresce em escala (mais respiro, cronômetro maior, botões e linhas mais altos) para
+   ocupar de 75% a 90% da altura, sem nada novo na tela. Em telas baixas (1024 × 768) valem os
+   tamanhos do bloco largo acima, que deixam os botões rápidos à vista sem rolar. Vem depois do
+   bloco largo, com a mesma especificidade, para vencê-lo. */
+@media (min-height: 860px) {
+  @container app (min-width: 60rem) {
+    .hoje-titulo {
+      margin-top: 3rem;
+    }
+
+    .hoje-andamento {
+      margin-top: 2.5rem;
+    }
+
+    .coluna-app .cartao.campo-andamento {
+      padding: 2.5rem;
+    }
+
+    .coluna-app .campo-andamento .botao {
+      min-height: 56px;
+    }
+
+    .coluna-app .numero-grande {
+      font-size: clamp(3.5rem, 6cqi, 5.5rem);
+    }
+
+    .hoje-lateral {
+      margin-top: 2.5rem;
+    }
+
+    .hoje-lateral > .hoje-nota {
+      padding: 2rem;
+    }
+
+    .hoje-lateral > .hoje-ultimos {
+      margin-top: 3rem;
+    }
+
+    .hoje-ultimos li {
+      padding-block: 1.75rem;
+      font-size: 1.375rem;
+    }
+
+    .coluna-app .registro-rapido {
+      margin-top: 2.5rem;
+    }
+
+    .coluna-app .acao-rapida {
+      min-height: 4.5rem;
+    }
+
+    .sessao-main {
+      padding: 3rem 0 4rem;
+    }
+
+    .sessao-campo .campo-sessao {
+      padding: 3rem 2.5rem;
+    }
+
+    .sessao-campo .cronometro {
+      font-size: clamp(4.5rem, 9cqi, 8rem);
+    }
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -122,7 +122,8 @@ export function Hoje() {
 
   return (
     <ColunaApp>
-      <FaixaPrototipo />
+      {/* Num aparelho do Início o aviso é um só, o da página: a faixa não se repete na moldura. */}
+      {vitrine ? null : <FaixaPrototipo />}
 
       <main className="hoje-main flex-1 px-4 pb-8 pt-6">
         <div className="hoje-corpo">

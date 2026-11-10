@@ -14,6 +14,7 @@ export function IlustracaoColo({ className }: { className?: string }) {
   return (
     <svg
       viewBox="40 0 160 222"
+      preserveAspectRatio="xMidYMax meet"
       className={`ilu ${className ?? ''}`}
       aria-hidden="true"
       focusable="false"
