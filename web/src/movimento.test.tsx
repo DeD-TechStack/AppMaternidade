@@ -428,6 +428,133 @@ describe('VIS4-20: a preferência liga no meio da sessão', () => {
 })
 
 // ---------------------------------------------------------------------------
+// Bordas do matchMedia: ausente, e antigo (Safari < 14: só addListener e removeListener).
+
+describe('VIS4-20: sem matchMedia', () => {
+  for (const peca of pecas) {
+    it(`${peca.nome} monta sem erro, mostra o conteúdo e fica no movimento normal`, () => {
+      vi.stubGlobal('matchMedia', undefined)
+      const { container } = render(peca.ui())
+
+      for (const texto of peca.textos) expect(screen.getByText(texto)).toBeTruthy()
+      // Movimento normal por padrão: a peça animada traz o estilo inicial dela; a Cortina aparece.
+      if (peca.animada) expect(peca.animada(container), 'movimento normal').toBe(true)
+      if (peca.nome === 'Cortina') expect(container.firstChild).not.toBeNull()
+    })
+  }
+
+  for (const [nome, ui] of [
+    ['RevelacaoPorBaixo M7', () => <RevelacaoPorBaixo variante="M7"><p>Seção M7</p></RevelacaoPorBaixo>],
+  ] as const) {
+    it(`${nome} monta sem erro, mostra o conteúdo e fica no movimento normal`, () => {
+      vi.stubGlobal('matchMedia', undefined)
+      const { container } = render(ui())
+
+      expect(screen.getByText('Seção M7')).toBeTruthy()
+      expect(comEstilo(container)).toBe(true)
+    })
+  }
+})
+
+type OuvinteAntigo = () => void
+
+/** Um matchMedia de navegador antigo: o MediaQueryList só tem addListener e removeListener. */
+function simularMidiaAntiga(inicial = false) {
+  let reduzido = inicial
+  const ouvintes = new Set<OuvinteAntigo>()
+  const chamadas = { addListener: 0, removeListener: 0 }
+  vi.stubGlobal('matchMedia', (consulta: string) => {
+    const reduz = consulta.includes('prefers-reduced-motion')
+    return {
+      get matches() {
+        return reduz ? reduzido : false
+      },
+      media: consulta,
+      addListener: (ouvinte: OuvinteAntigo) => {
+        if (!reduz) return
+        chamadas.addListener++
+        ouvintes.add(ouvinte)
+      },
+      removeListener: (ouvinte: OuvinteAntigo) => {
+        if (!reduz) return
+        chamadas.removeListener++
+        ouvintes.delete(ouvinte)
+      },
+    }
+  })
+  return {
+    chamadas,
+    ouvintes,
+    definir(valor: boolean) {
+      reduzido = valor
+      act(() => {
+        for (const ouvinte of [...ouvintes]) ouvinte()
+      })
+    },
+  }
+}
+
+function SondaDoReduzido() {
+  return <p data-testid="reduzido">{String(usePrefereMovimentoReduzido())}</p>
+}
+
+describe('VIS4-20: matchMedia antigo (só addListener e removeListener)', () => {
+  it('lê o valor ao montar, sem quebrar', () => {
+    simularMidiaAntiga(true)
+    render(<SondaDoReduzido />)
+
+    expect(screen.getByTestId('reduzido').textContent).toBe('true')
+  })
+
+  it('acompanha a troca no meio da sessão, nos dois sentidos, pelo ouvinte do addListener', () => {
+    const midia = simularMidiaAntiga(false)
+    render(<SondaDoReduzido />)
+    expect(screen.getByTestId('reduzido').textContent).toBe('false')
+    expect(midia.ouvintes.size).toBe(1)
+
+    midia.definir(true)
+    expect(screen.getByTestId('reduzido').textContent).toBe('true')
+    midia.definir(false)
+    expect(screen.getByTestId('reduzido').textContent).toBe('false')
+  })
+
+  it('remove o ouvinte na desmontagem (removeListener chamado e nenhum ouvinte sobra)', () => {
+    const midia = simularMidiaAntiga(false)
+    const { unmount } = render(<SondaDoReduzido />)
+    expect(midia.chamadas.addListener).toBeGreaterThan(0)
+
+    unmount()
+
+    expect(midia.chamadas.removeListener).toBe(midia.chamadas.addListener)
+    expect(midia.ouvintes.size).toBe(0)
+  })
+
+  it('uma peça montada passa ao estado final quando a preferência liga, pelo ouvinte antigo', async () => {
+    const midia = simularMidiaAntiga(false)
+    const { container } = render(
+      <EntradaSuave deslocamentoPx={deslocamentoPx} duracaoMs={duracaoMs} curva={curva}>
+        <p>Bloco antigo</p>
+      </EntradaSuave>,
+    )
+
+    midia.definir(true)
+
+    await esperarEstadoFinal(container, ['Bloco antigo'])
+  })
+
+  it('sem addEventListener nem addListener: não assina, devolve o valor lido e não quebra', () => {
+    vi.stubGlobal('matchMedia', (consulta: string) => ({
+      matches: consulta.includes('prefers-reduced-motion'),
+      media: consulta,
+    }))
+    const { unmount } = render(<SondaDoReduzido />)
+
+    expect(screen.getByTestId('reduzido').textContent).toBe('true')
+    expect(() => unmount()).not.toThrow()
+  })
+})
+
+// ---------------------------------------------------------------------------
 // R1: trocar a preferência de movimento não desmonta o conteúdo, não perde estado nem foco.
 
 function Conteudo() {
