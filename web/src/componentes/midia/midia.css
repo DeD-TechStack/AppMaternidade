@@ -1,0 +1,281 @@
+/* Cenas de mídia do Início (cartão 44d-5): aparelhos e blocos em CSS 3D, sem sombra.
+   A profundidade vem de inclinação (perspective e rotate) e de espessura (faces laterais chapadas,
+   em tinta e em tons de papel). Nada de gradiente, blur, box-shadow nem filter. Toda medida é em
+   cqw, a largura da cena (a moldura): em 1440 e em 390 a mesma cena aparece inteira.
+   Atenção para o 3D: overflow diferente de visible, opacity abaixo de 1 e filter achatam o 3D do
+   próprio nó. Nenhum nó intermediário da cena usa essas propriedades; só a moldura (.sb-midia),
+   que é o recipiente de fora, corta. */
+
+@layer theme, base, components, utilities;
+
+@layer components {
+  .sb-midia:has(> .mc-cena) {
+    position: relative;
+  }
+
+  /* A cena: preenche a moldura e é o contêiner das unidades cqw. O palco guarda a perspectiva. */
+  .mc-cena {
+    position: absolute;
+    inset: 0;
+    container-type: size;
+  }
+
+  .mc-palco {
+    position: absolute;
+    inset: 0;
+    perspective: 120cqw;
+    perspective-origin: 50% 42%;
+  }
+
+  /* O campo escuro (madrugada): um retângulo liso com a perspectiva dele. As variáveis do tema
+     vêm de data-tema-local="madrugada", no próprio campo. */
+  .mc-campo {
+    position: absolute;
+    perspective: 120cqw;
+    perspective-origin: 50% 42%;
+    background-color: var(--cor-fundo);
+    --ap-corpo: var(--cor-papel-fundo);
+    --ap-lado: var(--cor-secundario);
+    --ap-deck: var(--cor-papel-fundo);
+  }
+
+  /* Bloco 3D: cinco faces (frente, dois lados, topo e base); a de trás nunca aparece. A frente fica
+     à frente (translateZ de metade da espessura). */
+  .mc-caixa {
+    position: relative;
+    transform-style: preserve-3d;
+  }
+
+  .mc-face {
+    position: absolute;
+    background-color: var(--c-lado, var(--cor-secundario));
+  }
+
+  .mc-frente {
+    inset: 0;
+    border-radius: var(--raio, 0px);
+    transform: translateZ(calc(var(--esp, 2cqw) / 2));
+    background-color: var(--c-frente, var(--cor-texto));
+  }
+
+  .mc-esq,
+  .mc-dir {
+    top: 0;
+    bottom: 0;
+    width: var(--esp, 2cqw);
+  }
+
+  .mc-esq {
+    left: calc(var(--esp, 2cqw) / -2);
+    transform: rotateY(-90deg);
+  }
+
+  .mc-dir {
+    left: calc(100% - var(--esp, 2cqw) / 2);
+    transform: rotateY(90deg);
+  }
+
+  .mc-topo,
+  .mc-base {
+    left: 0;
+    right: 0;
+    height: var(--esp, 2cqw);
+  }
+
+  .mc-topo {
+    top: calc(var(--esp, 2cqw) / -2);
+    transform: rotateX(90deg);
+    background-color: var(--c-topo, var(--c-lado, var(--cor-secundario)));
+  }
+
+  .mc-base {
+    top: calc(100% - var(--esp, 2cqw) / 2);
+    transform: rotateX(-90deg);
+  }
+
+  /* Objeto da cena: posicionado no palco ou num grupo, com posição (left, top, bottom…) e
+     inclinação (--rx, --ry, --rz, em graus) vindas do estilo de quem o põe. */
+  .ap3d,
+  .mc-obj {
+    position: absolute;
+    transform-style: preserve-3d;
+    transform: translate3d(var(--tx, 0px), var(--ty, 0px), var(--tz, 0px)) rotateX(var(--rx, 0deg))
+      rotateY(var(--ry, 0deg)) rotateZ(var(--rz, 0deg));
+  }
+
+  /* Pedestal: topo de papel, frente de superfície, laterais em tom de tinta clara. */
+  .mc-pedestal {
+    --c-frente: var(--cor-papel-fundo);
+    --c-topo: var(--cor-fundo);
+    --c-lado: var(--cor-secundario);
+  }
+
+  /* Laje: uma placa grossa de papel (ou de tinta) que serve de fundo ou de suporte. */
+  .mc-laje {
+    --c-frente: var(--cor-fundo);
+    --c-topo: var(--cor-papel-fundo);
+    --c-lado: var(--cor-secundario);
+  }
+
+  .mc-laje-tinta {
+    --c-frente: var(--cor-texto);
+    --c-topo: var(--cor-secundario);
+    --c-lado: var(--cor-secundario);
+  }
+
+  .mc-laje-ilu {
+    position: absolute;
+    inset: 9%;
+  }
+
+  .mc-ilu {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Celular: corpo de tinta com a captura de 390 por 844 na tela. A altura segue a largura. */
+  .ap3d-celular {
+    width: var(--aw);
+    height: calc(var(--aw) * 2.071);
+    --esp: calc(var(--aw) * 0.07);
+    --raio: 8px;
+    --c-frente: var(--ap-corpo, var(--cor-texto));
+    --c-lado: var(--ap-lado, var(--cor-secundario));
+  }
+
+  .ap3d-tela {
+    position: absolute;
+    overflow: hidden;
+    border-radius: 4px;
+    background-color: var(--cor-fundo);
+  }
+
+  .ap3d-celular .ap3d-tela {
+    inset: calc(var(--aw) * 0.04);
+  }
+
+  .ap3d-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: cover;
+  }
+
+  /* Notebook: tampa em pé, levemente aberta (--abre), e a base deitada à frente dela. A tampa é
+     um bloco de espessura fina; a base é um bloco girado 90 graus sobre a borda de baixo da tampa. */
+  .ap3d-notebook {
+    width: var(--aw);
+    height: calc(var(--aw) * 0.634);
+  }
+
+  .ap3d-tampa {
+    position: absolute;
+    inset: 0;
+    --esp: calc(var(--aw) * 0.022);
+    --raio: 8px;
+    --c-frente: var(--ap-corpo, var(--cor-texto));
+    --c-lado: var(--ap-lado, var(--cor-secundario));
+    transform-origin: 50% 100%;
+    transform: rotateX(var(--abre, 10deg));
+  }
+
+  .ap3d-notebook .ap3d-tela {
+    inset: calc(var(--aw) * 0.012);
+  }
+
+  .ap3d-base {
+    position: absolute;
+    left: -4%;
+    top: 100%;
+    width: 108%;
+    height: calc(var(--aw) * 0.4);
+    transform-style: preserve-3d;
+    transform-origin: 50% 0;
+    transform: rotateX(90deg);
+  }
+
+  .ap3d-base-caixa {
+    position: absolute;
+    inset: 0;
+    --esp: calc(var(--aw) * 0.03);
+    --raio: 4px;
+    --c-frente: var(--ap-deck, var(--cor-papel-fundo));
+    --c-lado: var(--ap-lado, var(--cor-secundario));
+    transform: translateZ(calc(var(--esp) / -2));
+  }
+
+  /* O teclado (um campo de tinta) e o touchpad sobre o tampo da base: duas formas chapadas, sem texto. */
+  .ap3d-base-caixa .mc-frente::before,
+  .ap3d-base-caixa .mc-frente::after {
+    content: '';
+    position: absolute;
+    border-radius: 4px;
+  }
+
+  .ap3d-base-caixa .mc-frente::before {
+    inset: 10% 7% 40% 7%;
+    background-color: var(--cor-texto);
+  }
+
+  .ap3d-base-caixa .mc-frente::after {
+    left: 35%;
+    right: 35%;
+    bottom: 10%;
+    height: 22%;
+    background-color: var(--cor-secundario);
+  }
+
+  /* Mosaico: uma grade de ladrilhos grossos, deitada e girada. Cada ladrilho é um bloco; três deles
+     mostram um recorte de uma captura (a imagem maior que o ladrilho, deslocada por --ox e --oy). */
+  .mc-grade {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    display: grid;
+    grid-template-columns: repeat(6, 14cqw);
+    grid-template-rows: repeat(3, 14cqw);
+    gap: 1.5cqw;
+    width: 91.5cqw;
+    height: 45cqw;
+    margin-left: -45.75cqw;
+    margin-top: -22.5cqw;
+    transform-style: preserve-3d;
+    transform: rotateX(var(--rx, 42deg)) rotateZ(var(--rz, -20deg));
+  }
+
+  .mc-ladrilho {
+    --esp: 1.6cqw;
+    --c-lado: var(--cor-secundario);
+  }
+
+  .mc-ld-papel {
+    --c-frente: var(--cor-fundo);
+  }
+
+  .mc-ld-superficie {
+    --c-frente: var(--cor-papel-fundo);
+  }
+
+  .mc-ld-tinta {
+    --c-frente: var(--cor-texto);
+  }
+
+  .mc-recorte {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background-color: var(--cor-fundo);
+  }
+
+  .mc-recorte-img {
+    position: absolute;
+    display: block;
+    max-width: none;
+    width: calc(var(--zoom, 1) * 100%);
+    height: auto;
+    left: calc(var(--ox, 0) * -1%);
+    top: calc(var(--oy, 0) * -1%);
+  }
+}
