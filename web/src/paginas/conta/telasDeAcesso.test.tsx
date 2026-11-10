@@ -33,7 +33,10 @@ const TELAS = [
 
 // `pastaSrcDe` devolve a pasta do arquivo de teste (web/src/paginas/conta/): o CSS está duas acima.
 const css = readFileSync(pastaSrcDe(import.meta.url) + '../../index.css', 'utf8')
-const blocoDe44d3 = css.slice(css.indexOf('44d-3:'))
+// O bloco da 44d-3 acaba onde começa o da 44d-4 (o Início), que vem depois dele no arquivo.
+const inicioDe44d3 = css.indexOf('44d-3:')
+const inicioDe44d4 = css.indexOf('/* 44d-4 */')
+const blocoDe44d3 = css.slice(inicioDe44d3, inicioDe44d4 > inicioDe44d3 ? inicioDe44d4 : undefined)
 const semComentarios = (texto: string) => texto.replace(/\/\*[\s\S]*?\*\//g, '')
 
 beforeEach(() => {

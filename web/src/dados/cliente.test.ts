@@ -49,9 +49,14 @@ describe('RF-01: quem cria o cliente e quem lê as variáveis', () => {
     expect(chamam).toEqual(['dados/cliente.ts'])
   })
 
-  it('só dados/cliente.ts e componentes/AvisoDemonstracao.tsx leem as variáveis do banco', () => {
+  it('só dados/cliente.ts e os dois avisos de demonstração leem as variáveis do banco', () => {
     const leem = fontes.filter((f) => /VITE_SUPABASE_(URL|ANON_KEY)/.test(f.texto)).map((f) => f.nome)
-    expect(leem.sort()).toEqual(['componentes/AvisoDemonstracao.tsx', 'dados/cliente.ts'])
+    // O AvisoAbertura (Início, 44d-4) só confere se as variáveis existem, como o AvisoDemonstracao.
+    expect(leem.sort()).toEqual([
+      'componentes/AvisoDemonstracao.tsx',
+      'componentes/vitrine/AvisoAbertura.tsx',
+      'dados/cliente.ts',
+    ])
   })
 
   it('só dados/cliente.ts importa o pacote do Supabase como valor (os demais, só tipos)', () => {
