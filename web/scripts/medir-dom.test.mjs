@@ -27,6 +27,10 @@ import {
   coletarNaPagina,
   contraste,
   criteriosDoCaso,
+  d3Anel,
+  d3Controle,
+  d3Fio,
+  d3Fuso,
   e1,
   e2,
   e3,
@@ -39,6 +43,7 @@ import {
   lerArquivoAmbiente,
   lerEstadoDeEnvioNaPagina,
   lerFocoNaPagina,
+  lerGeometriaDosCamposNaPagina,
   m1,
   m2,
   m3,
@@ -1245,19 +1250,21 @@ describe('44d-3: os casos novos nos argumentos e no bloqueio', () => {
   })
 
   it('os critérios por caso, como na tabela do cartão', () => {
-    assert.deepEqual(criteriosDoCaso('entrar'), ['E-1', 'E-2', 'E-3', 'E-4', 'E-5', 'E-6', 'E-7'])
-    assert.deepEqual(criteriosDoCaso('criar_conta'), ['E-1', 'E-2', 'E-3', 'E-5', 'E-6', 'E-7', 'C-1', 'C-2', 'C-3'])
-    assert.deepEqual(criteriosDoCaso('recuperar_acesso'), ['E-1', 'E-2', 'E-3', 'E-5', 'E-6', 'E-7', 'R-1', 'R-2', 'R-3'])
-    assert.deepEqual(criteriosDoCaso('comecar_seu_nome'), ['E-1', 'E-3', 'E-4', 'E-5', 'E-6', 'E-7', 'B-1', 'B-2', 'B-3'])
-    assert.deepEqual(criteriosDoCaso('conta', 'claro'), ['A-1', 'A-2', 'A-3', 'A-4', 'A-5', 'A-6'])
-    assert.deepEqual(criteriosDoCaso('conta', 'madrugada'), ['A-1', 'A-2', 'A-3', 'A-4', 'A-5', 'A-6', 'M-1', 'M-2', 'M-3', 'M-4', 'M-5', 'M-6'])
+    // Volta 3 (D3): cada tela de formulário soma D3-fio, D3-controle e D3-anel; o fuso (Começar e Conta), o D3-fuso.
+    const D3 = ['D3-fio', 'D3-controle', 'D3-anel']
+    assert.deepEqual(criteriosDoCaso('entrar'), ['E-1', 'E-2', 'E-3', 'E-4', 'E-5', 'E-6', 'E-7', ...D3])
+    assert.deepEqual(criteriosDoCaso('criar_conta'), ['E-1', 'E-2', 'E-3', 'E-5', 'E-6', 'E-7', 'C-1', 'C-2', 'C-3', ...D3])
+    assert.deepEqual(criteriosDoCaso('recuperar_acesso'), ['E-1', 'E-2', 'E-3', 'E-5', 'E-6', 'E-7', 'R-1', 'R-2', 'R-3', ...D3])
+    assert.deepEqual(criteriosDoCaso('comecar_seu_nome'), ['E-1', 'E-3', 'E-4', 'E-5', 'E-6', 'E-7', 'B-1', 'B-2', 'B-3', ...D3, 'D3-fuso'])
+    assert.deepEqual(criteriosDoCaso('conta', 'claro'), ['A-1', 'A-2', 'A-3', 'A-4', 'A-5', 'A-6', ...D3, 'D3-fuso'])
+    assert.deepEqual(criteriosDoCaso('conta', 'madrugada'), ['A-1', 'A-2', 'A-3', 'A-4', 'A-5', 'A-6', ...D3, 'D3-fuso', 'M-1', 'M-2', 'M-3', 'M-4', 'M-5', 'M-6'])
     assert.deepEqual(criteriosDoCaso('hoje'), [])
     assert.deepEqual(criteriosDoCaso('sistema', 'madrugada'), [])
   })
 
   it('avaliarCriterios: sem leitura, todo critério reprova fechado e bloqueia; os manuais vêm junto', () => {
     const { criterios, criterios_manuais: manuais } = avaliarCriterios({ doc: doc1440, nos: [], tema: 'claro' }, 'entrar')
-    assert.equal(criterios.length, 7)
+    assert.equal(criterios.length, 10)
     for (const r of criterios) {
       assert.deepEqual(Object.keys(r).sort(), ['bloqueia', 'motivo', 'nos_com_falha', 'ok', 'regra'])
       assert.equal(r.ok, false, `${r.regra}: ${r.motivo}`)
@@ -3104,5 +3111,551 @@ describe('44d-3 (volta): a leitura em página do estado de envio (lerEstadoDeEnv
 
   it('não tem fechamento: serializada por toString, roda sozinha', () => {
     assert.match(lerEstadoDeEnvioNaPagina.toString(), /^(async )?function lerEstadoDeEnvioNaPagina/)
+  })
+})
+
+// ---------------------------------------------------------------------------------------------
+// MAT-44d-3, volta 3, defeito D3: a ajuda e o erro colavam no fio da linha de campo (1440), o anel de foco passava
+// do fim do fio e o select de fuso mostrava "America/Sao_Paulo". O contrato de acabamento (2.4): nenhum texto a
+// menos de 8 px de um fio. Quatro critérios, lidos nos estados em que há mensagem (a ajuda em repouso e o erro
+// depois do envio vazio):
+//   D3-fio:      fio.top - mensagem.bottom >= 8   (o fio é a borda de baixo da linha: topo = bottom - 1)
+//   D3-controle: mensagem.top - controle.bottom >= 8
+//   D3-anel:     o anel (a caixa do controle + outline-offset + outline-width) fica entre o começo e o fim do fio
+//   D3-fuso:     nenhum texto de <option> do select de fuso, nem o texto visível dele, tem "_"
+// Os números de hoje (a captura do HEAD): controle até y=437, ajuda em y 444-468, fio em 466, anel até x=1136,8.
+
+const FIO_D3 = { top: 466, bottom: 467, left: 170, right: 1133 }
+/** O controle corrigido: base em 426 (8 px até a mensagem em 434) e recuo de 4 px da direita (anel até x=1133). */
+const controleD3 = (extra = {}) => ({
+  tag: 'input',
+  top: 374,
+  bottom: 426,
+  left: 476,
+  right: 1129,
+  focou: true,
+  outlineStyle: 'solid',
+  outlineWidth: '2px',
+  outlineOffset: '2px',
+  ...extra,
+})
+/** A mensagem corrigida: 434 a 458 (8 px do controle e 8 px do fio em 466). */
+const mensagemD3 = (extra = {}) => ({ tipo: 'ajuda', texto: 'É o nome que a família vai ver.', top: 434, bottom: 458, left: 476, right: 1129, ...extra })
+const erroD3 = (extra = {}) => mensagemD3({ tipo: 'erro', texto: 'Escreva o seu nome.', ...extra })
+const campoD3 = ({ fio, controle, mensagens, rotulo = 'Seu nome' } = {}) => ({
+  rotulo,
+  fio: fio === null ? null : { ...FIO_D3, ...(fio ?? {}) },
+  controle: controle === null ? null : controleD3(controle),
+  mensagens: mensagens ?? [mensagemD3()],
+})
+const selectD3 = (extra = {}) => ({
+  rotulo: 'Seu fuso',
+  valor: 'America/Sao_Paulo',
+  textoVisivel: 'São Paulo (Brasília)',
+  opcoes: [
+    { valor: 'America/Sao_Paulo', texto: 'São Paulo (Brasília)' },
+    { valor: 'America/Manaus', texto: 'Manaus' },
+    { valor: 'America/Los_Angeles', texto: 'Los Angeles' },
+  ],
+  ...extra,
+})
+const geometriaD3 = ({ campos = [campoD3()], selects = [] } = {}) => ({ campos, selects })
+/** A leitura em repouso (a ajuda) e a depois do envio vazio (o erro): o estado estável, em 1440. */
+const docD3 = ({ repouso, erro, base = doc1440 } = {}) => ({
+  ...base,
+  geometria: repouso ?? geometriaD3(),
+  envio: { vazio: { geometria: erro ?? geometriaD3({ campos: [campoD3({ mensagens: [erroD3()] })] }) } },
+})
+/** O que o HEAD mede: controle até y=437 e fim do fio em x=1132,8 (o anel passa a 1136,8), ajuda em 444-468, fio em 466. */
+const campoDeHoje = (mensagem = mensagemD3()) =>
+  campoD3({
+    fio: { top: 466, bottom: 467, left: 169.6, right: 1132.8 },
+    controle: { top: 385, bottom: 437, left: 476.8, right: 1132.8 },
+    mensagens: [{ ...mensagem, top: 444, bottom: 468, left: 476.8, right: 1132.8 }],
+  })
+
+// O Perfil da Conta não tem texto de ajuda: lá só o erro depois do envio vazio é exigido.
+const CASOS_COM_AJUDA = ['criar_conta', 'comecar_seu_nome']
+const CASOS_DE_FORMULARIO = ['entrar', 'criar_conta', 'recuperar_acesso', 'comecar_seu_nome', 'conta']
+const CRITERIOS_DA_FOLGA = [
+  ['D3-fio', d3Fio],
+  ['D3-controle', d3Controle],
+  ['D3-anel', (doc) => d3Anel(doc)],
+]
+
+describe('D3: a mensagem, o controle e o anel dentro da linha de campo (1440)', () => {
+  const reprova = (r, padrao) => {
+    assert.equal(r.ok, false, `devia reprovar: ${r.motivo}`)
+    if (padrao) assert.match(r.motivo, padrao)
+    return r
+  }
+
+  describe('o estado estável passa (ajuda em repouso, erro depois do envio vazio)', () => {
+    for (const [regra, criterio] of CRITERIOS_DA_FOLGA) {
+      for (const caso of CASOS_DE_FORMULARIO) {
+        it(`${regra} em ${caso}`, () => {
+          const r = criterio(docD3(), caso)
+          assert.equal(r.ok, true, r.motivo)
+          assert.equal(r.regra, regra)
+          assert.deepEqual(r.nos_com_falha, [])
+        })
+      }
+    }
+  })
+
+  describe('o comportamento de hoje reprova, com os números reais na mensagem', () => {
+    const hoje = () =>
+      docD3({
+        repouso: geometriaD3({ campos: [campoDeHoje()] }),
+        erro: geometriaD3({ campos: [campoDeHoje(erroD3())] }),
+      })
+
+    it('D3-fio: a mensagem termina em y=468 e o fio começa em y=466 (folga de -2)', () => {
+      const r = reprova(d3Fio(hoje(), 'criar_conta'), /a ajuda "É o nome que a família vai ver\." termina em y=468\.0 e o fio da linha começa em y=466\.0: folga de -2\.0 px \(o mínimo é 8\)/)
+      assert.match(r.motivo, /em repouso/)
+      assert.ok(r.nos_com_falha.length >= 2, 'em repouso e depois do envio vazio')
+    })
+
+    it('D3-controle: a mensagem começa em y=444 e o controle termina em y=437 (folga de 7)', () => {
+      reprova(d3Controle(hoje(), 'criar_conta'), /a ajuda "É o nome que a família vai ver\." começa em y=444\.0 e o controle termina em y=437\.0: folga de 7\.0 px \(o mínimo é 8\)/)
+    })
+
+    it('D3-anel: o anel termina em x=1136,8, 3,8 px depois do fim do fio (x=1132,8)', () => {
+      reprova(d3Anel(hoje(), 'criar_conta'), /o anel de foco termina em x=1136\.8, depois do fim do fio \(x=1132\.8\)/)
+    })
+
+    it('o erro depois do envio vazio também reprova, e a mensagem diz em que estado', () => {
+      const d = docD3({ erro: geometriaD3({ campos: [campoDeHoje(erroD3())] }) })
+      reprova(d3Fio(d, 'entrar'), /depois do envio vazio: .*o erro "Escreva o seu nome\."/)
+    })
+  })
+
+  describe('a borda: 8 px passa, 7,75 passa (a tolerância é de 0,25) e 7,5 reprova; mais folga passa', () => {
+    it('D3-fio', () => {
+      const com = (bottom) => d3Fio(docD3({ repouso: geometriaD3({ campos: [campoD3({ mensagens: [mensagemD3({ bottom })] })] }) }), 'criar_conta')
+      assert.equal(com(458).ok, true)
+      assert.equal(com(458.25).ok, true)
+      reprova(com(458.5), /folga de 7\.5 px/)
+      assert.equal(com(440).ok, true)
+    })
+
+    it('D3-controle', () => {
+      const com = (bottom) => d3Controle(docD3({ repouso: geometriaD3({ campos: [campoD3({ controle: { bottom } })] }) }), 'criar_conta')
+      assert.equal(com(426).ok, true)
+      assert.equal(com(426.25).ok, true)
+      reprova(com(426.5), /folga de 7\.5 px/)
+      assert.equal(com(400).ok, true)
+    })
+
+    it('D3-anel: o limite do lado direito é o fim do fio (1133) e o do esquerdo, o começo (170)', () => {
+      const direita = (right) => d3Anel(docD3({ repouso: geometriaD3({ campos: [campoD3({ controle: { right } })] }) }), 'criar_conta')
+      assert.equal(direita(1129).ok, true)
+      assert.equal(direita(1129.25).ok, true)
+      reprova(direita(1129.5), /termina em x=1133\.5/)
+      assert.equal(direita(1100).ok, true)
+      const esquerda = (left) => d3Anel(docD3({ repouso: geometriaD3({ campos: [campoD3({ controle: { left } })] }) }), 'criar_conta')
+      assert.equal(esquerda(174).ok, true)
+      reprova(esquerda(173), /começa em x=169\.0, antes do começo do fio \(x=170\.0\)/)
+    })
+  })
+
+  describe('mutação: +1 px (ou -1 px) numa borda, uma por vez, derruba o critério nos limites 8 e 1133', () => {
+    const mutacoes = [
+      ['D3-fio', 'a base da mensagem desce 1 px, em repouso', d3Fio, (g) => (g.campos[0].mensagens[0].bottom += 1), /em repouso: .*folga de 7\.0 px/],
+      ['D3-fio', 'o fio sobe 1 px, em repouso', d3Fio, (g) => (g.campos[0].fio.top -= 1), /em repouso: .*folga de 7\.0 px/],
+      ['D3-controle', 'a base do controle desce 1 px, em repouso', d3Controle, (g) => (g.campos[0].controle.bottom += 1), /em repouso: .*folga de 7\.0 px/],
+      ['D3-controle', 'o topo da mensagem sobe 1 px, em repouso', d3Controle, (g) => (g.campos[0].mensagens[0].top -= 1), /em repouso: .*folga de 7\.0 px/],
+      ['D3-anel', 'a direita do controle avança 1 px, em repouso', (d) => d3Anel(d), (g) => (g.campos[0].controle.right += 1), /em repouso: .*termina em x=1134\.0/],
+      ['D3-anel', 'o fim do fio recua 1 px, em repouso', (d) => d3Anel(d), (g) => (g.campos[0].fio.right -= 1), /em repouso: .*termina em x=1133\.0, depois do fim do fio \(x=1132\.0\)/],
+      ['D3-anel', 'o offset do anel +1 px (3 px de recuo): o anel cresce 1 px de cada lado', (d) => d3Anel(d), (g) => (g.campos[0].controle.outlineOffset = '3px'), /termina em x=1134\.0/],
+      ['D3-anel', 'a largura do anel +1 px (3 px): o anel cresce 1 px de cada lado', (d) => d3Anel(d), (g) => (g.campos[0].controle.outlineWidth = '3px'), /termina em x=1134\.0/],
+    ]
+    for (const [regra, nome, criterio, mutar, padrao] of mutacoes) {
+      it(`${regra}: ${nome}`, () => {
+        const d = docD3()
+        assert.equal(criterio(d, 'criar_conta').ok, true, 'a fixture estável tem de passar antes da mutação')
+        mutar(d.geometria)
+        reprova(criterio(d, 'criar_conta'), padrao)
+      })
+      it(`${regra}: ${nome}, depois do envio vazio`, () => {
+        const d = docD3()
+        mutar(d.envio.vazio.geometria)
+        reprova(criterio(d, 'criar_conta'), /depois do envio vazio: /)
+      })
+    }
+
+    it('o movimento contrário (1 px a mais de ar) passa', () => {
+      const d = docD3()
+      d.geometria.campos[0].mensagens[0].bottom -= 1
+      d.geometria.campos[0].controle.bottom -= 1
+      d.geometria.campos[0].controle.right -= 1
+      for (const [, criterio] of CRITERIOS_DA_FOLGA) assert.equal(criterio(d, 'criar_conta').ok, true)
+    })
+  })
+
+  describe('várias linhas: vale a pior, e a mensagem diz qual', () => {
+    it('a segunda linha com a mensagem colada reprova e a primeira não é apontada', () => {
+      const ruim = campoD3({ rotulo: 'Senha', mensagens: [mensagemD3({ bottom: 468 })] })
+      const r = reprova(d3Fio(docD3({ repouso: geometriaD3({ campos: [campoD3(), ruim] }) }), 'criar_conta'), /campo 2 \(Senha\)/)
+      assert.doesNotMatch(r.motivo, /campo 1/)
+    })
+
+    it('uma linha sem mensagem (o campo sem ajuda) não reprova nada', () => {
+      const d = docD3({ repouso: geometriaD3({ campos: [campoD3(), campoD3({ mensagens: [] })] }) })
+      for (const [, criterio] of CRITERIOS_DA_FOLGA) assert.equal(criterio(d, 'criar_conta').ok, true)
+    })
+  })
+
+  describe('em 390 não se aplica (o desenho de 390 é de outro passo)', () => {
+    for (const [regra, criterio] of CRITERIOS_DA_FOLGA) {
+      it(`${regra} em 390 é "não aplicável" e passa, mesmo sem leitura`, () => {
+        const r = criterio({ ...doc390 }, 'criar_conta')
+        assert.equal(r.ok, true)
+        assert.match(r.motivo, /não aplicável/)
+        const comLeitura = criterio(docD3({ base: doc390, repouso: geometriaD3({ campos: [campoDeHoje()] }) }), 'criar_conta')
+        assert.equal(comLeitura.ok, true)
+      })
+    }
+  })
+
+  describe('falha fechada', () => {
+    for (const [regra, criterio] of CRITERIOS_DA_FOLGA) {
+      describe(regra, () => {
+        it('sem a leitura da geometria (em repouso ou depois do envio vazio) e sem a largura da janela', () => {
+          reprova(criterio({ ...doc1440 }, 'criar_conta'), /sem a leitura da geometria/)
+          const semRepouso = docD3()
+          delete semRepouso.geometria
+          reprova(criterio(semRepouso, 'criar_conta'), /em repouso: sem a leitura da geometria/)
+          const semErro = docD3()
+          semErro.envio = { vazio: {} }
+          reprova(criterio(semErro, 'criar_conta'), /depois do envio vazio: sem a leitura da geometria/)
+          const semEnvio = docD3()
+          delete semEnvio.envio
+          reprova(criterio(semEnvio, 'criar_conta'), /depois do envio vazio: sem a leitura da geometria/)
+          assert.equal(criterio(undefined, 'criar_conta').ok, false)
+          assert.equal(criterio({ clientWidth: 1425 }, 'criar_conta').ok, false)
+        })
+
+        it('a leitura sem campos (lista ausente, de outro tipo ou vazia)', () => {
+          for (const campos of [undefined, 'campos', null, []]) {
+            const d = docD3({ repouso: { campos, selects: [] } })
+            reprova(criterio(d, 'criar_conta'), /em repouso: nenhuma linha de campo/)
+          }
+        })
+
+        it('uma linha sem o retângulo do fio, do controle ou da mensagem', () => {
+          const sem = (campo, padrao) => reprova(criterio(docD3({ repouso: geometriaD3({ campos: [campo] }) }), 'criar_conta'), padrao)
+          if (regra !== 'D3-controle') {
+            sem(campoD3({ fio: null }), /campo 1 \(Seu nome\): sem o retângulo do fio/)
+            sem(campoD3({ fio: { top: Number.NaN } }), /sem o retângulo do fio/)
+            sem(campoD3({ fio: { right: undefined } }), /sem o retângulo do fio/)
+          }
+          if (regra !== 'D3-fio') {
+            sem(campoD3({ controle: null }), /campo 1 \(Seu nome\): sem o retângulo do controle/)
+            sem(campoD3({ controle: { bottom: undefined } }), /sem o retângulo do controle/)
+            sem(campoD3({ controle: { left: Number.NaN } }), /sem o retângulo do controle/)
+          }
+          if (regra !== 'D3-anel') {
+            sem(campoD3({ mensagens: [mensagemD3({ top: undefined })] }), /ajuda "É o nome que a família vai ver\." sem retângulo/)
+            sem(campoD3({ mensagens: [mensagemD3({ bottom: Number.NaN })] }), /sem retângulo/)
+            sem(campoD3({ mensagens: [null] }), /sem retângulo/)
+          }
+        })
+
+        it('a lista de mensagens de tipo errado', () => {
+          const d = docD3({ repouso: geometriaD3({ campos: [campoD3({ mensagens: 'ajuda' })] }) })
+          reprova(criterio(d, 'criar_conta'), /sem a leitura das mensagens/)
+        })
+      })
+    }
+
+    describe('nenhuma mensagem visível quando o estado exige uma', () => {
+      const semMensagens = () => geometriaD3({ campos: [campoD3({ mensagens: [] })] })
+
+      for (const [regra, criterio] of CRITERIOS_DA_FOLGA.filter(([nome]) => nome !== 'D3-anel')) {
+        for (const caso of CASOS_COM_AJUDA) {
+          it(`${regra} em ${caso}: sem a ajuda em repouso`, () => {
+            reprova(criterio(docD3({ repouso: semMensagens() }), caso), /em repouso: nenhuma mensagem de ajuda visível/)
+          })
+        }
+        for (const caso of CASOS_DE_FORMULARIO) {
+          it(`${regra} em ${caso}: sem o erro depois do envio vazio`, () => {
+            reprova(criterio(docD3({ erro: semMensagens() }), caso), /depois do envio vazio: nenhuma mensagem de erro visível/)
+          })
+        }
+        it(`${regra}: só uma ajuda depois do envio vazio não basta (o estado exige o erro)`, () => {
+          reprova(criterio(docD3({ erro: geometriaD3() }), 'criar_conta'), /nenhuma mensagem de erro visível/)
+          reprova(criterio(docD3({ erro: geometriaD3({ campos: [campoD3({ mensagens: [mensagemD3({ tipo: 'status', texto: 'Enviamos.' })] })] }) }), 'recuperar_acesso'), /nenhuma mensagem de erro visível/)
+        })
+      }
+
+      it('o Entrar, o Recuperar e a Conta em repouso não têm ajuda: sem mensagem passa; mas o erro depois do envio é exigido', () => {
+        for (const [, criterio] of CRITERIOS_DA_FOLGA) {
+          for (const caso of ['entrar', 'recuperar_acesso', 'conta']) {
+            assert.equal(criterio(docD3({ repouso: semMensagens() }), caso).ok, true, caso)
+          }
+        }
+      })
+
+      it('um caso que o medidor não conhece exige só o erro depois do envio', () => {
+        assert.equal(d3Fio(docD3({ repouso: semMensagens() }), 'outro_caso').ok, true)
+        assert.equal(d3Fio(docD3({ erro: semMensagens() }), 'outro_caso').ok, false)
+      })
+    })
+
+    describe('D3-anel: o anel precisa ter sido lido', () => {
+      const comControle = (controle) => docD3({ repouso: geometriaD3({ campos: [campoD3({ controle })] }) })
+
+      it('o controle não recebeu foco, ou não tem outline calculado', () => {
+        reprova(d3Anel(comControle({ focou: false }), 'criar_conta'), /campo 1 \(Seu nome\): não recebeu foco/)
+        reprova(d3Anel(comControle({ outlineStyle: 'none' }), 'criar_conta'), /sem outline/)
+        reprova(d3Anel(comControle({ outlineStyle: '' }), 'criar_conta'), /sem outline/)
+        reprova(d3Anel(comControle({ outlineStyle: undefined }), 'criar_conta'), /sem outline/)
+      })
+
+      it('largura ou offset do anel ilegível não deixa medir', () => {
+        reprova(d3Anel(comControle({ outlineWidth: 'auto' }), 'criar_conta'), /largura ou offset do anel ilegível/)
+        reprova(d3Anel(comControle({ outlineOffset: undefined }), 'criar_conta'), /largura ou offset do anel ilegível/)
+        reprova(d3Anel(comControle({ outlineWidth: '0px' }), 'criar_conta'), /largura ou offset do anel ilegível|sem outline/)
+      })
+    })
+  })
+
+  describe('o avaliarCriterios roda os quatro e eles bloqueiam', () => {
+    it('com a leitura certa, os três critérios de folga passam e bloqueiam, em cada tela de formulário', () => {
+      for (const caso of CASOS_DE_FORMULARIO) {
+        const doc = docD3({ repouso: geometriaD3({ selects: caso === 'comecar_seu_nome' || caso === 'conta' ? [selectD3()] : [] }) })
+        const { criterios } = avaliarCriterios({ doc, nos: [], tema: 'claro' }, caso)
+        for (const regra of ['D3-fio', 'D3-controle', 'D3-anel']) {
+          const c = criterios.find((x) => x.regra === regra)
+          assert.ok(c, `${caso}: falta ${regra}`)
+          if (caso === 'criar_conta' || caso === 'comecar_seu_nome' || caso === 'conta' || caso === 'entrar' || caso === 'recuperar_acesso') assert.equal(c.ok, true, `${caso} ${regra}: ${c.motivo}`)
+          assert.equal(c.bloqueia, true)
+        }
+      }
+    })
+
+    it('com o comportamento de hoje, o avaliarCriterios reprova os três com os números', () => {
+      const doc = docD3({ repouso: geometriaD3({ campos: [campoDeHoje()] }), erro: geometriaD3({ campos: [campoDeHoje(erroD3())] }) })
+      const { criterios } = avaliarCriterios({ doc, nos: [], tema: 'claro' }, 'criar_conta')
+      assert.match(criterios.find((c) => c.regra === 'D3-fio').motivo, /folga de -2\.0 px/)
+      assert.match(criterios.find((c) => c.regra === 'D3-controle').motivo, /folga de 7\.0 px/)
+      assert.match(criterios.find((c) => c.regra === 'D3-anel').motivo, /x=1136\.8/)
+    })
+
+    it('sem leitura nenhuma, os quatro reprovam fechado', () => {
+      const { criterios } = avaliarCriterios({ doc: doc1440, nos: [], tema: 'claro' }, 'conta')
+      for (const regra of ['D3-fio', 'D3-controle', 'D3-anel', 'D3-fuso']) {
+        const c = criterios.find((x) => x.regra === regra)
+        assert.equal(c.ok, false, `${regra}: ${c.motivo}`)
+      }
+    })
+  })
+})
+
+describe('D3-fuso: o select de fuso mostra nomes legíveis, sem "_"', () => {
+  const comSelects = (selects, extra = {}) => docD3({ repouso: geometriaD3({ selects }), ...extra })
+  const reprova = (r, padrao) => {
+    assert.equal(r.ok, false, `devia reprovar: ${r.motivo}`)
+    if (padrao) assert.match(r.motivo, padrao)
+    return r
+  }
+
+  it('o select com nomes legíveis passa (Começar e Conta), nos dois temas', () => {
+    for (const caso of ['comecar_seu_nome', 'conta']) {
+      const r = d3Fuso(comSelects([selectD3()]), caso)
+      assert.equal(r.ok, true, r.motivo)
+      assert.equal(r.regra, 'D3-fuso')
+    }
+  })
+
+  it('o comportamento de hoje reprova: "America/Sao_Paulo" na opção e no texto visível', () => {
+    const hoje = selectD3({
+      textoVisivel: 'America/Sao_Paulo',
+      opcoes: [
+        { valor: 'America/Sao_Paulo', texto: 'America/Sao_Paulo' },
+        { valor: 'America/Manaus', texto: 'America/Manaus' },
+        { valor: 'America/Campo_Grande', texto: 'America/Campo_Grande' },
+      ],
+    })
+    const r = reprova(d3Fuso(comSelects([hoje]), 'comecar_seu_nome'), /select "Seu fuso": o texto visível "America\/Sao_Paulo" tem "_"/)
+    assert.match(r.motivo, /2 de 3 opções com "_" \(a primeira: "America\/Sao_Paulo"\)/)
+  })
+
+  it('um "_" só numa opção da lista reprova, mesmo com o texto visível certo', () => {
+    const s = selectD3({ opcoes: [...selectD3().opcoes, { valor: 'America/Los_Angeles', texto: 'America/Los_Angeles' }] })
+    reprova(d3Fuso(comSelects([s]), 'conta'), /1 de 4 opções com "_" \(a primeira: "America\/Los_Angeles"\)/)
+  })
+
+  it('o `value` pode ter "_" (é o identificador IANA): só o texto conta', () => {
+    const s = selectD3()
+    assert.ok(s.opcoes.some((o) => o.valor.includes('_')))
+    assert.equal(d3Fuso(comSelects([s]), 'conta').ok, true)
+  })
+
+  it('o "_" no texto visível, com a lista certa, reprova (o atual fora da lista)', () => {
+    reprova(d3Fuso(comSelects([selectD3({ textoVisivel: 'Fora_Da_Lista (atual)' })]), 'conta'), /o texto visível "Fora_Da_Lista \(atual\)" tem "_"/)
+  })
+
+  it('opção sem texto, texto visível vazio ou select sem opções reprovam', () => {
+    reprova(d3Fuso(comSelects([selectD3({ opcoes: [{ valor: 'UTC', texto: '' }, { valor: 'America/Manaus', texto: 'Manaus' }] })]), 'conta'), /1 de 2 opções sem texto/)
+    reprova(d3Fuso(comSelects([selectD3({ opcoes: [{ valor: 'UTC', texto: '  ' }] })]), 'conta'), /opções sem texto/)
+    reprova(d3Fuso(comSelects([selectD3({ textoVisivel: '' })]), 'conta'), /sem texto visível/)
+    reprova(d3Fuso(comSelects([selectD3({ opcoes: [] })]), 'conta'), /sem opções/)
+    reprova(d3Fuso(comSelects([selectD3({ opcoes: undefined })]), 'conta'), /sem a leitura das opções/)
+    reprova(d3Fuso(comSelects([selectD3({ textoVisivel: undefined })]), 'conta'), /sem texto visível|texto visível ilegível/)
+  })
+
+  it('dois fusos diferentes com o mesmo texto reprovam (a lista inteira não se repete)', () => {
+    const s = selectD3({ opcoes: [{ valor: 'America/Indiana/Vincennes', texto: 'Vincennes' }, { valor: 'America/Vincennes', texto: 'Vincennes' }] })
+    reprova(d3Fuso(comSelects([s]), 'conta'), /"Vincennes" aparece em 2 opções/)
+  })
+
+  it('falha fechada: sem a leitura dos selects, sem nenhum select na tela de fuso, ou sem a leitura da geometria', () => {
+    reprova(d3Fuso(docD3({ repouso: { campos: [campoD3()] } }), 'conta'), /sem a leitura dos selects/)
+    reprova(d3Fuso(comSelects([]), 'comecar_seu_nome'), /nenhum select de fuso/)
+    reprova(d3Fuso(comSelects([]), 'conta'), /nenhum select de fuso/)
+    reprova(d3Fuso({ ...doc1440 }, 'conta'), /sem a leitura da geometria/)
+    reprova(d3Fuso(undefined, 'conta'))
+    reprova(d3Fuso(comSelects([null]), 'conta'), /select sem leitura/)
+  })
+
+  it('depois do envio vazio o select também é lido, se a leitura veio', () => {
+    const ruim = selectD3({ textoVisivel: 'America/Sao_Paulo' })
+    const d = docD3({ repouso: geometriaD3({ selects: [selectD3()] }), erro: geometriaD3({ selects: [ruim] }) })
+    reprova(d3Fuso(d, 'conta'), /depois do envio vazio: select "Seu fuso"/)
+  })
+
+  it('nas outras telas não se aplica', () => {
+    for (const caso of ['entrar', 'criar_conta', 'recuperar_acesso']) {
+      const r = d3Fuso(docD3(), caso)
+      assert.equal(r.ok, true)
+      assert.match(r.motivo, /não aplicável/)
+    }
+  })
+
+  it('vale também em 390: o texto do select não tem "_" em nenhuma largura', () => {
+    reprova(d3Fuso(docD3({ base: doc390, repouso: geometriaD3({ selects: [selectD3({ textoVisivel: 'America/Sao_Paulo' })] }) }), 'conta'), /tem "_"/)
+    assert.equal(d3Fuso(docD3({ base: doc390, repouso: geometriaD3({ selects: [selectD3()] }) }), 'conta').ok, true)
+  })
+})
+
+describe('D3: a leitura em página da geometria dos campos (lerGeometriaDosCamposNaPagina)', () => {
+  const CAMPOS = `
+    <main><form>
+      <div class="sb-campo" data-r="170,355,963,112">
+        <label data-r="170,371,140,58">Seu nome</label>
+        <div class="sb-campo-controle" data-r="476,371,657,58">
+          <input class="sb-campo-entrada" value="Ana" data-r="476,374,653,52">
+        </div>
+        <p class="sb-campo-ajuda" data-r="476,434,653,24">É o nome que a família vai ver.</p>
+        <p class="sb-campo-erro" data-r="476,434,653,24">   </p>
+        <p class="sb-campo-status" data-oculta data-r="476,434,653,24">Escondida.</p>
+      </div>
+      <div class="sb-campo" data-r="170,467,963,112">
+        <label data-r="170,483,140,58">Seu fuso</label>
+        <div class="sb-campo-controle" data-select data-r="476,483,657,58">
+          <select class="sb-campo-entrada" data-r="476,486,653,52">
+            <option value="America/Sao_Paulo" selected>São Paulo (Brasília)</option>
+            <option value="America/Manaus">Manaus</option>
+          </select>
+        </div>
+        <p class="sb-campo-ajuda" data-r="476,546,653,24">Os horários aparecem neste fuso.</p>
+      </div>
+      <div class="sb-campo" data-r="0,0,0,0">
+        <input class="sb-campo-entrada" data-r="0,0,0,0">
+      </div>
+    </form></main>`
+
+  /** O jsdom não mede layout nem calcula estilo: `data-r` dá a caixa e o `getComputedStyle` é o da fixture. */
+  function lerGeometria(html, { rolagem = 0, estilo = {} } = {}) {
+    const dom = new JSDOM(`<!doctype html><html><body>${html}</body></html>`, { runScripts: 'outside-only', virtualConsole: new VirtualConsole() })
+    const { window } = dom
+    window.Element.prototype.getBoundingClientRect = function retangulo() {
+      const [x, y, w, h] = (this.getAttribute('data-r') ?? '0,0,100,20').split(',').map(Number)
+      return { x, y, left: x, top: y, width: w, height: h, right: x + w, bottom: y + h }
+    }
+    window.getComputedStyle = (el) => ({
+      outlineStyle: 'solid',
+      outlineWidth: '2px',
+      outlineOffset: '2px',
+      borderBottomWidth: el.classList.contains('sb-campo') ? '1px' : '0px',
+      visibility: 'visible',
+      display: el.hasAttribute('data-oculta') ? 'none' : 'block',
+      clip: 'auto',
+      ...estilo,
+    })
+    if (rolagem) Object.defineProperty(window, 'scrollY', { configurable: true, value: rolagem })
+    window.scrollTo = () => undefined
+    try {
+      return JSON.parse(JSON.stringify(window.eval(`(${lerGeometriaDosCamposNaPagina.toString()})()`)))
+    } finally {
+      window.close()
+    }
+  }
+
+  it('devolve uma leitura por linha de campo visível: o fio (a borda de baixo), o controle e as mensagens à vista', () => {
+    const { campos } = lerGeometria(CAMPOS)
+    assert.equal(campos.length, 2, 'a linha de 0 x 0 (a caixa de diálogo fechada) não entra')
+    const [nome] = campos
+    assert.equal(nome.rotulo, 'Seu nome')
+    assert.deepEqual(nome.fio, { top: 466, bottom: 467, left: 170, right: 1133 })
+    assert.equal(nome.controle.tag, 'input')
+    assert.deepEqual([nome.controle.top, nome.controle.bottom, nome.controle.left, nome.controle.right], [374, 426, 476, 1129])
+    assert.equal(nome.mensagens.length, 1, 'a vazia e a escondida ficam de fora')
+    assert.deepEqual(nome.mensagens[0], { tipo: 'ajuda', texto: 'É o nome que a família vai ver.', top: 434, bottom: 458, left: 476, right: 1129 })
+  })
+
+  it('foca cada controle e lê o anel dele (estilo, largura e offset), para o D3-anel medir o anel de cada um', () => {
+    const { campos } = lerGeometria(CAMPOS)
+    for (const campo of campos) {
+      assert.equal(campo.controle.focou, true)
+      assert.equal(campo.controle.outlineStyle, 'solid')
+      assert.equal(campo.controle.outlineWidth, '2px')
+      assert.equal(campo.controle.outlineOffset, '2px')
+    }
+  })
+
+  it('lê o select (a opção escolhida e o texto de todas as opções com o valor) e o select é o controle da linha', () => {
+    const { campos, selects } = lerGeometria(CAMPOS)
+    assert.equal(campos[1].controle.tag, 'select')
+    assert.equal(selects.length, 1)
+    assert.deepEqual(selects[0], {
+      rotulo: 'Seu fuso',
+      valor: 'America/Sao_Paulo',
+      textoVisivel: 'São Paulo (Brasília)',
+      opcoes: [
+        { valor: 'America/Sao_Paulo', texto: 'São Paulo (Brasília)' },
+        { valor: 'America/Manaus', texto: 'Manaus' },
+      ],
+    })
+  })
+
+  it('as coordenadas são as da página: a rolagem entra no fio, no controle e na mensagem', () => {
+    const { campos } = lerGeometria(CAMPOS, { rolagem: 100 })
+    assert.equal(campos[0].fio.top, 566)
+    assert.equal(campos[0].controle.top, 474)
+    assert.equal(campos[0].mensagens[0].top, 534)
+  })
+
+  it('uma linha sem borda de baixo não tem fio (a regra falha fechado); sem controle, o controle é nulo', () => {
+    const semBorda = lerGeometria(CAMPOS, { estilo: { borderBottomWidth: '0px' } })
+    assert.equal(semBorda.campos[0].fio, null)
+    const semControle = lerGeometria('<main><form><div class="sb-campo" data-r="170,355,963,112"><label>Seu nome</label></div></form></main>')
+    assert.equal(semControle.campos[0].controle, null)
+  })
+
+  it('a leitura do anel vem do estilo calculado: sem outline, o D3-anel reprova o que o coletor leu', () => {
+    const { campos } = lerGeometria(CAMPOS, { estilo: { outlineStyle: 'none', outlineWidth: '0px', outlineOffset: '0px' } })
+    const doc = { ...doc1440, geometria: { campos, selects: [] }, envio: { vazio: { geometria: { campos, selects: [] } } } }
+    assert.equal(d3Anel(doc, 'criar_conta').ok, false)
+  })
+
+  it('sem formulário, a leitura é vazia (e os critérios reprovam fechado: nenhuma linha de campo)', () => {
+    assert.deepEqual(lerGeometria('<main><p>Só texto.</p></main>'), { campos: [], selects: [] })
+  })
+
+  it('não tem fechamento: serializada por toString, roda sozinha', () => {
+    assert.match(lerGeometriaDosCamposNaPagina.toString(), /^(async )?function lerGeometriaDosCamposNaPagina/)
   })
 })

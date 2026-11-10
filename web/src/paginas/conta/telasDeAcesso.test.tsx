@@ -539,13 +539,16 @@ describe('o anel de foco não encosta na mensagem do campo (D-1)', () => {
       }
     })
 
-    it('a linha continua com 112 px: nenhuma regra do bloco muda a grade, a altura mínima ou o anel', () => {
+    // Volta 3 (D3): a grade da linha muda UM número, a folga de cima (27 -> 16 px), para o controle subir e a
+    // mensagem ganhar 8 px de ar dos dois lados; a linha do valor (58 px) e a altura de 112 px ficam.
+    it('a linha continua com 112 px: nenhuma regra do bloco muda a altura mínima ou o anel; a grade só muda a folga de cima', () => {
       const todas = deComputador
         .filter((r) => r.seletor.includes('.sb-campo'))
         .map((r) => r.corpo)
         .join(';')
       expect(todas.length).toBeGreaterThan(0)
-      expect(todas).not.toMatch(/grid-template-rows|min-height|outline|line-height/)
+      expect(todas).not.toMatch(/min-height|outline|line-height/)
+      for (const m of todas.matchAll(/grid-template-rows\s*:\s*([^;]+)/g)) expect(m[1].trim(), m[0]).toMatch(/^\d+px\s+58px\s+auto$/)
     })
 
     it('fica fora da caixa de diálogo da Conta, que não é uma linha de acesso', () => {
@@ -651,14 +654,71 @@ describe('o anel de foco não encosta na mensagem do campo (D-1)', () => {
       }
     })
 
-    it('a mensagem não desce além do D-1 (o descendente da letra não chega ao fio de baixo)', () => {
-      for (const fim of [/\.sb-campo-erro$/, /\.sb-campo-ajuda$/, /\.sb-campo-status$/]) {
-        expect(px(corpoDe(deComputador, fim), 'top'), String(fim)).toBeLessThanOrEqual(4)
-      }
-    })
-
     it('nenhuma regra do bloco liga a madrugada por `data-tema`: ela entra pelo token', () => {
       expect(bloco).not.toMatch(/data-tema/)
+    })
+
+    // Volta 3, defeito D3: a ajuda e o erro ficavam 3 a 5 px acima do fio da linha (a caixa de 24 px passava
+    // do fio) e o anel de foco passava 3 a 4 px do fim do fio. O contrato (2.4) não tem passo abaixo de 8: da
+    // mensagem ao fio e do controle à mensagem, 8 px; e o anel (2 px + 2 de offset) termina no fim do fio.
+    // O "top: 4px" do D-1 passa a 5 px (a mensagem sobe 10 com a folga de cima de 27 -> 16 e desce 5 sobre a
+    // grade): o limite de 4 px do D-1 contradizia a regra nova e saiu. As medidas reais são do medidor (D3-*).
+    describe('D3: 8 px de ar acima e abaixo da mensagem, e o anel dentro do fio', () => {
+      const LINHA = 112
+      const FIO = 1
+      const MENSAGEM = 24
+      const AR = 8
+      const MENSAGENS = [/\.sb-campo-erro$/, /\.sb-campo-ajuda$/, /\.sb-campo-status$/]
+
+      /** A folga de cima da grade da linha (o primeiro valor de `27px 58px auto` do D3: 16). */
+      const folgaDeCima = () => {
+        const todas = [...corpoDe(deComputador, /\.sb-campo$/).matchAll(/grid-template-rows\s*:\s*(\d+)px\s+58px\s+auto/g)]
+        return todas.length > 0 ? Number(todas[todas.length - 1][1]) : 27
+      }
+      const descida = (fim: RegExp) => px(corpoDe(deComputador, fim), 'top')!
+
+      it('a folga de cima da grade é menor que os 27 px antigos', () => {
+        expect(folgaDeCima()).toBeLessThan(27)
+      })
+
+      it.each(TEMAS)('o controle fica a pelo menos 8 px da mensagem, no tema %s', (_tema, alvo) => {
+        const baseDoControle = folgaDeCima() + entradaNoTema(alvo).base
+        for (const fim of MENSAGENS) {
+          const topoDaMensagem = folgaDeCima() + LINHA_DO_VALOR + descida(fim)
+          expect(topoDaMensagem - baseDoControle, `controle -> mensagem com ${String(fim)}`).toBeGreaterThanOrEqual(AR)
+        }
+      })
+
+      it('a mensagem termina a pelo menos 8 px do fio de baixo da linha', () => {
+        const topoDoFio = LINHA - FIO
+        for (const fim of MENSAGENS) {
+          const baseDaMensagem = folgaDeCima() + LINHA_DO_VALOR + descida(fim) + MENSAGEM
+          expect(topoDoFio - baseDaMensagem, `mensagem -> fio com ${String(fim)}`).toBeGreaterThanOrEqual(AR)
+        }
+      })
+
+      it('a linha segue com 112 px: o conteúdo (folga + valor + mensagem) cabe nos 111 px acima do fio, sem crescer a linha', () => {
+        expect(folgaDeCima() + LINHA_DO_VALOR + MENSAGEM).toBeLessThanOrEqual(LINHA - FIO)
+      })
+
+      it('o anel termina no fim do fio: a caixa do controle é mais curta que a linha ao menos o alcance do anel (2 + 2 px)', () => {
+        // `width: calc(100% - Npx)`: N não é espaço da escala (não é margin nem padding), é o alcance do anel.
+        const corpo = corpoDe(deComputador, /\.sb-campo-controle$/)
+        const encurta = [...corpo.matchAll(/(?:^|[;\s])width\s*:\s*calc\(\s*100%\s*-\s*(\d+)px\s*\)/g)]
+        expect(encurta.length, 'width: calc(100% - Npx) da .sb-campo-controle em min-width: 768px').toBeGreaterThan(0)
+        expect(Number(encurta[encurta.length - 1][1])).toBeGreaterThanOrEqual(ALCANCE_DO_ANEL)
+        expect(corpo, 'o recuo não é margem nem padding: a escala de espaços do contrato fica como está').not.toMatch(/margin|padding/)
+      })
+
+      it('o encurtar do anel é só de 768 para cima: abaixo de 768 o controle não muda (o desenho de 390 é de outro passo)', () => {
+        for (const r of doCelular.filter((x) => /\.sb-campo-controle$/.test(x.seletor))) {
+          expect(r.corpo, r.seletor).not.toMatch(/width|padding-right|padding-inline/)
+        }
+        for (const fim of MENSAGENS) {
+          expect(corpoDe(doCelular, fim), String(fim)).not.toMatch(/top:\s*5px/)
+        }
+        expect(corpoDe(doCelular, /\.sb-campo$/)).not.toMatch(/grid-template-rows/)
+      })
     })
   })
 })

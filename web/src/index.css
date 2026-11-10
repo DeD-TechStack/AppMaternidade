@@ -3006,6 +3006,48 @@
   }
 }
 
+/* ---------------------------------------------------------------------------------------------
+   44d-3, volta 3, D3: a ajuda e o erro não colam no fio da linha, e o anel não passa do fio. Só se acrescenta aqui.
+   ------------------------------------------------------------------------------------------ */
+@layer components {
+  /* Em 1440 a mensagem (24 px) ficava 3 a 5 px acima do fio da linha, com a caixa passando dele, e o anel de foco
+     (2 px de largura, 2 de offset) passava 4 px do fim do fio. O contrato de acabamento (2.4) não tem passo abaixo
+     de 8 px: nenhum texto a menos de 8 px de um fio. A linha segue com 112 px, o valor com 48, o rótulo com 32, a
+     mensagem com 17/24 e o fio no mesmo lugar; o que muda é onde o controle e a mensagem moram dentro dela. A
+     conta, a partir do topo da linha (o fio de 1 px é a borda de baixo, então o espaço útil vai até 111):
+       - a mensagem termina 8 px acima do fio: 111 - 8 = 103, e ela começa em 103 - 24 = 79;
+       - o controle termina 8 px abaixo dela: 79 - 8 = 71 (hoje 82, ou seja, o controle sobe 11 px).
+     Três peças, todas só de 768 para cima e só nas linhas de acesso e da Conta (`.sb-acesso-campos`):
+     1. A folga de cima da grade cai de 27 para 16 px (`16px 58px auto`): a linha do valor (58 px) sobe 11 px e leva
+        junto o controle (a entrada de 52 px, 56 na madrugada, centrada ou crescida para cima como no D-1: a base
+        dela é a linha do valor + 55), o rótulo (que segue o valor) e o valor. A base do controle fica em 16 + 55 = 71
+        nos dois temas, e o alvo de toque da madrugada (G11, 56 px) segue inteiro. O fio vertical do campo (::before,
+        em x de c4) não se mexe: começa a 32 px do topo e vai até o fio de baixo, como o E-1 mede.
+     2. A mensagem começa em 79 px: a terceira linha da grade começa em 16 + 58 = 74 e o `top` passa de 4 para 5 px
+        (o "4" do D-1 contradizia esta regra: ele deixava a mensagem 7 px do controle). Continua `position: relative`,
+        então nada sai do fluxo: o conteúdo da grade tem 16 + 58 + 24 = 98 px e a linha de 112 px não cresce.
+     3. A caixa do controle fica 4 px mais curta (`width: calc(100% - 4px)` no `.sb-campo-controle`, que começa onde
+        sempre começou): o anel passa 4 px (2 + 2) da caixa e agora termina onde o fio termina (x de c9), em vez de 4
+        px depois. Os 4 px são o alcance do anel, não um espaço da escala (por isso não são `margin` nem `padding`).
+        O fio não encolhe. Vale para a entrada, o seletor de fuso e o botão de mostrar senha, que ficam dentro do
+        controle. */
+  @media (min-width: 768px) {
+    .sb-acesso-campos .sb-campo {
+      grid-template-rows: 16px 58px auto;
+    }
+
+    .sb-acesso-campos .sb-campo-controle {
+      width: calc(100% - 4px);
+    }
+
+    .sb-acesso-campos .sb-campo-erro,
+    .sb-acesso-campos .sb-campo:not([data-erro]) .sb-campo-ajuda,
+    .sb-acesso-campos .sb-campo-status {
+      top: 5px;
+    }
+  }
+}
+
 /* 44d-2 */
 /* A área logada sobre o sistema-base. Parte 1: o Hoje e a barra Registrar. As cores vêm só das
    variáveis de uso (tema.css); os espaços, da escala 8, 16, 24, 32, 64, 96, 128, 160 e 192; os raios,

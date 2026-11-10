@@ -24,6 +24,10 @@
 // loopback; a leitura vai em `envio` no JSON). Altura de linha, topo, altura da página e topo do botão
 // de envio têm de ficar iguais.
 //
+// Volta 3 (D3): D3-fio, D3-controle e D3-anel medem, em 1440, o ar de 8 px entre a mensagem e o fio da linha, entre o
+// controle e a mensagem e o anel de foco dentro do fio; D3-fuso confere que o select de fuso não mostra "_". Leem a
+// geometria dos campos em repouso e depois do envio vazio (na Conta o nome é esvaziado antes de enviar).
+//
 // A parte pura (as funções g1 a g12, num, o contraste e o resumo) recebe um JSON de nós e devolve
 // { regra, ok, motivo, nos_com_falha }. Ela falha fechado: nó sem texto onde a regra pede texto,
 // largura 0, font-size fora do conjunto, fundo transparente sem ancestral opaco e medida ausente
@@ -1076,6 +1080,219 @@ export function r3(doc) {
   return resultadoComNumeros('R-3', falhas, 'a confirmação (1 ou 2 linhas) ocupa a mesma linha e a página não muda de altura')
 }
 
+// ---------------------------------------------------------------------------------------------
+// MAT-44d-3, volta 3, defeito D3: a ajuda e o erro colavam no fio da linha de campo (1440), o anel de foco passava do
+// fim do fio e o select de fuso mostrava "America/Sao_Paulo". O contrato de acabamento (2.4): a escala de espaço tem
+// o menor passo em 8 e nenhum texto fica a menos de 8 px de um fio. Quatro critérios, lidos nos estados em que há
+// mensagem (a ajuda em repouso e o erro depois do envio vazio):
+//   D3-fio:      fio.top - mensagem.bottom >= 8     (o fio é a borda de baixo da linha: topo = bottom - 1)
+//   D3-controle: mensagem.top - controle.bottom >= 8
+//   D3-anel:     o anel (a caixa do controle + outline-offset + outline-width) fica entre o começo e o fim do fio
+//   D3-fuso:     nenhum texto de <option> do select de fuso, nem o texto visível dele, tem "_"
+// Os três primeiros são de 768 para cima ("não aplicável" em 390, que tem outro desenho). Falham fechado: leitura
+// ausente, retângulo ausente ou ilegível, e o estado que exige uma mensagem sem nenhuma à vista reprovam.
+
+/** O ar mínimo entre a base da mensagem e o fio da linha (px). */
+export const FOLGA_FIO_MENSAGEM = 8
+/** O ar mínimo entre a base do controle e o topo da mensagem (px). */
+export const FOLGA_CONTROLE_MENSAGEM = 8
+
+/**
+ * Em que telas a ajuda (em repouso) e o select de fuso existem; o erro depois do envio vazio vale em qualquer uma. O
+ * Perfil da Conta não tem texto de ajuda (só o nome, o e-mail e o fuso, sem `ajuda`): lá só o erro é exigido.
+ */
+const CASOS_COM_AJUDA = ['criar_conta', 'comecar_seu_nome']
+const CASOS_COM_FUSO = ['comecar_seu_nome', 'conta']
+
+/** Os dois estados lidos: o que cada um exige de mensagem, e em quais telas. */
+const ESTADOS_DA_GEOMETRIA = [
+  { nome: 'em repouso', leitura: (doc) => doc?.geometria, exigida: 'ajuda', exigeEm: (caso) => CASOS_COM_AJUDA.includes(caso) },
+  { nome: 'depois do envio vazio', leitura: (doc) => doc?.envio?.vazio?.geometria, exigida: 'erro', exigeEm: () => true },
+]
+
+const NOMES_DE_MENSAGEM = { ajuda: 'a ajuda', erro: 'o erro', status: 'o status' }
+const dizerMensagem = (m) => `${NOMES_DE_MENSAGEM[m?.tipo] ?? 'a mensagem'} "${m?.texto ?? ''}"`
+const caixaLegivel = (c) => Boolean(c) && typeof c === 'object' && [c.top, c.bottom, c.left, c.right].every(ehNumero)
+
+/**
+ * Percorre as linhas de campo de cada estado lido e entrega a `medirCampo` as que têm o que a regra precisa
+ * (`fio`, `controle`, e sempre as mensagens, cada uma com o retângulo inteiro). `exigirMensagem` reprova o estado
+ * que, nesta tela, tem de mostrar uma mensagem e não mostra nenhuma do tipo (a ajuda em repouso, o erro depois do
+ * envio vazio): sem ela a medida estaria cega. Devolve as falhas `{ no, motivo }`.
+ */
+function medirGeometriaDosCampos(doc, caso, { fio = false, controle = false, exigirMensagem = true }, medirCampo) {
+  const falhas = []
+  for (const estado of ESTADOS_DA_GEOMETRIA) {
+    const leitura = estado.leitura(doc)
+    if (!leitura || typeof leitura !== 'object') {
+      falhas.push({ no: estado.nome, motivo: `${estado.nome}: sem a leitura da geometria dos campos` })
+      continue
+    }
+    if (!Array.isArray(leitura.campos) || leitura.campos.length === 0) {
+      falhas.push({ no: estado.nome, motivo: `${estado.nome}: nenhuma linha de campo (.sb-campo) na leitura` })
+      continue
+    }
+    let exigidas = 0
+    leitura.campos.forEach((campo, i) => {
+      const nome = `${estado.nome}: campo ${i + 1} (${campo?.rotulo ?? '?'})`
+      const falhar = (motivo) => falhas.push({ no: `${estado.nome}: campo ${i + 1}`, motivo: `${nome}: ${motivo}` })
+      if (!campo || typeof campo !== 'object') return falhar('sem a leitura da linha')
+      let legivel = true
+      if (fio && !caixaLegivel(campo.fio)) {
+        falhar('sem o retângulo do fio da linha')
+        legivel = false
+      }
+      if (controle && !caixaLegivel(campo.controle)) {
+        falhar('sem o retângulo do controle')
+        legivel = false
+      }
+      if (!Array.isArray(campo.mensagens)) {
+        falhar('sem a leitura das mensagens da linha')
+        return
+      }
+      exigidas += campo.mensagens.filter((m) => m?.tipo === estado.exigida).length
+      if (!legivel) return
+      medirCampo({ campo, estado, falhar })
+    })
+    if (exigirMensagem && estado.exigeEm(caso) && exigidas === 0) {
+      falhas.push({ no: estado.nome, motivo: `${estado.nome}: nenhuma mensagem de ${estado.exigida} visível (o estado exige uma; sem ela não há o que medir)` })
+    }
+  }
+  return falhas
+}
+
+/** D3-fio: do fim da mensagem ao topo do fio da linha, 8 px ou mais. Só de 768 para cima. */
+export function d3Fio(doc, caso) {
+  return comDoc('D3-fio', doc, () => {
+    if (celularDe(doc)) return naoAplicavel('D3-fio', 'o desenho de 390 é de outro passo')
+    const falhas = medirGeometriaDosCampos(doc, caso, { fio: true }, ({ campo, falhar }) => {
+      for (const m of campo.mensagens) {
+        if (!caixaLegivel(m)) {
+          falhar(`${dizerMensagem(m)} sem retângulo (caixa ilegível), sem como medir a folga até o fio`)
+          continue
+        }
+        const folga = campo.fio.top - m.bottom
+        if (folga < FOLGA_FIO_MENSAGEM - TOL_FOLGA) {
+          falhar(`${dizerMensagem(m)} termina em y=${m.bottom.toFixed(1)} e o fio da linha começa em y=${campo.fio.top.toFixed(1)}: folga de ${folga.toFixed(1)} px (o mínimo é ${FOLGA_FIO_MENSAGEM})`)
+        }
+      }
+    })
+    return resultadoComNumeros('D3-fio', falhas, `a mensagem termina a ${FOLGA_FIO_MENSAGEM} px ou mais do fio da linha, em repouso e depois do envio vazio`)
+  })
+}
+
+/** D3-controle: da base do controle ao topo da mensagem, 8 px ou mais. Só de 768 para cima. */
+export function d3Controle(doc, caso) {
+  return comDoc('D3-controle', doc, () => {
+    if (celularDe(doc)) return naoAplicavel('D3-controle', 'o desenho de 390 é de outro passo')
+    const falhas = medirGeometriaDosCampos(doc, caso, { controle: true }, ({ campo, falhar }) => {
+      for (const m of campo.mensagens) {
+        if (!caixaLegivel(m)) {
+          falhar(`${dizerMensagem(m)} sem retângulo (caixa ilegível), sem como medir a folga até o controle`)
+          continue
+        }
+        const folga = m.top - campo.controle.bottom
+        if (folga < FOLGA_CONTROLE_MENSAGEM - TOL_FOLGA) {
+          falhar(`${dizerMensagem(m)} começa em y=${m.top.toFixed(1)} e o controle termina em y=${campo.controle.bottom.toFixed(1)}: folga de ${folga.toFixed(1)} px (o mínimo é ${FOLGA_CONTROLE_MENSAGEM})`)
+        }
+      }
+    })
+    return resultadoComNumeros('D3-controle', falhas, `a mensagem começa a ${FOLGA_CONTROLE_MENSAGEM} px ou mais do controle, em repouso e depois do envio vazio`)
+  })
+}
+
+/**
+ * D3-anel: o anel de foco de cada controle (a caixa dele ampliada por `outline-offset` + `outline-width`, lidos do estilo
+ * calculado com o controle em foco) fica entre o começo e o fim do fio da linha. Só de 768 para cima. A tolerância é a
+ * de `TOL_FOLGA`: 0,25 px de arredondamento passa, um pixel inteiro não.
+ */
+export function d3Anel(doc, caso) {
+  return comDoc('D3-anel', doc, () => {
+    if (celularDe(doc)) return naoAplicavel('D3-anel', 'o desenho de 390 é de outro passo')
+    const falhas = medirGeometriaDosCampos(doc, caso, { fio: true, controle: true, exigirMensagem: false }, ({ campo, falhar }) => {
+      const c = campo.controle
+      if (c.focou !== true) return falhar('não recebeu foco, sem como medir o anel')
+      if (c.outlineStyle === undefined || c.outlineStyle === '' || c.outlineStyle === 'none') return falhar('sem outline no foco (o anel não aparece)')
+      const largura = px(c.outlineWidth)
+      const recuo = px(c.outlineOffset)
+      if (!(largura > 0) || !ehNumero(recuo)) return falhar(`largura ou offset do anel ilegível (${c.outlineWidth} e ${c.outlineOffset}), sem como medir`)
+      const alcance = largura + recuo
+      const direita = c.right + alcance
+      const esquerda = c.left - alcance
+      if (direita > campo.fio.right + TOL_FOLGA) {
+        falhar(`o anel de foco termina em x=${direita.toFixed(1)}, depois do fim do fio (x=${campo.fio.right.toFixed(1)})`)
+      }
+      if (esquerda < campo.fio.left - TOL_FOLGA) {
+        falhar(`o anel de foco começa em x=${esquerda.toFixed(1)}, antes do começo do fio (x=${campo.fio.left.toFixed(1)})`)
+      }
+    })
+    return resultadoComNumeros('D3-anel', falhas, 'o anel de foco de cada controle fica entre o começo e o fim do fio da linha')
+  })
+}
+
+/** As falhas de um select de fuso: opções e texto visível sem "_", com texto, e sem dois fusos com o mesmo texto. */
+function falhasDoSelect(select, prefixo) {
+  if (!select || typeof select !== 'object') return [{ no: `${prefixo}: select`, motivo: `${prefixo}: select sem leitura` }]
+  const nome = `${prefixo}: select "${select.rotulo ?? '?'}"`
+  const falhas = []
+  const falhar = (motivo) => falhas.push({ no: nome, motivo: `${nome}: ${motivo}` })
+  const textoVisivel = typeof select.textoVisivel === 'string' ? select.textoVisivel.trim() : ''
+  if (textoVisivel === '') falhar('sem texto visível')
+  else if (textoVisivel.includes('_')) falhar(`o texto visível "${textoVisivel}" tem "_"`)
+  if (!Array.isArray(select.opcoes)) {
+    falhar('sem a leitura das opções')
+    return falhas
+  }
+  if (select.opcoes.length === 0) {
+    falhar('sem opções')
+    return falhas
+  }
+  const textos = select.opcoes.map((o) => (typeof o?.texto === 'string' ? o.texto.trim() : ''))
+  const vazias = textos.filter((t) => t === '')
+  if (vazias.length > 0) {
+    const primeira = select.opcoes[textos.indexOf('')]
+    falhar(`${vazias.length} de ${textos.length} opções sem texto (a primeira: valor "${primeira?.valor ?? '?'}")`)
+  }
+  const comSublinhado = textos.filter((t) => t.includes('_'))
+  if (comSublinhado.length > 0) falhar(`${comSublinhado.length} de ${textos.length} opções com "_" (a primeira: "${comSublinhado[0]}")`)
+  const contagem = new Map()
+  for (const t of textos.filter((x) => x !== '')) contagem.set(t, (contagem.get(t) ?? 0) + 1)
+  const repetido = [...contagem].find(([, vezes]) => vezes > 1)
+  if (repetido) falhar(`o texto "${repetido[0]}" aparece em ${repetido[1]} opções (dois fusos diferentes têm de mostrar textos diferentes)`)
+  return falhas
+}
+
+/**
+ * D3-fuso: no select de fuso (Começar e Conta) nenhum texto de `<option>` e nenhum texto visível do select tem "_",
+ * nenhum está vazio e nenhum se repete. O `value` pode ter "_": é o identificador IANA (`America/Sao_Paulo`), que
+ * continua sendo o valor guardado. Vale em qualquer largura. Depois do envio vazio o select também é lido, se a
+ * leitura veio.
+ */
+export function d3Fuso(doc, caso) {
+  return comDoc('D3-fuso', doc, () => {
+    if (!CASOS_COM_FUSO.includes(caso)) return naoAplicavel('D3-fuso', 'a tela não tem select de fuso')
+    const falhas = []
+    for (const estado of ESTADOS_DA_GEOMETRIA) {
+      const leitura = estado.leitura(doc)
+      const obrigatoria = estado.nome === 'em repouso'
+      if (!leitura || typeof leitura !== 'object') {
+        if (obrigatoria) falhas.push({ no: estado.nome, motivo: `${estado.nome}: sem a leitura da geometria dos campos` })
+        continue
+      }
+      if (!Array.isArray(leitura.selects)) {
+        if (obrigatoria) falhas.push({ no: estado.nome, motivo: `${estado.nome}: sem a leitura dos selects` })
+        continue
+      }
+      if (leitura.selects.length === 0) {
+        if (obrigatoria) falhas.push({ no: estado.nome, motivo: `${estado.nome}: nenhum select de fuso na tela` })
+        continue
+      }
+      for (const select of leitura.selects) falhas.push(...falhasDoSelect(select, estado.nome))
+    }
+    return resultadoComNumeros('D3-fuso', falhas, 'o select de fuso mostra nomes sem "_", sem repetição, e o valor segue sendo o identificador')
+  })
+}
+
 /** C-1: o aviso de demonstração não tem borda nem fundo e tem font-size 15. */
 export function c1(nos) {
   const avisos = nosVisiveis(nos, 'avisoDemo')
@@ -1613,12 +1830,13 @@ export function m6(nos) {
 }
 
 /** Os critérios de cada caso novo, na ordem; os reaproveitados (C-4, R-4, B-4, A-7) são os mesmos ids. */
+// Volta 3 (D3): as telas de formulário somam a folga da mensagem, do controle e do anel; as de fuso, o texto do fuso.
 export const CRITERIOS_DO_CASO = {
-  entrar: ['E-1', 'E-2', 'E-3', 'E-4', 'E-5', 'E-6', 'E-7'],
-  criar_conta: ['E-1', 'E-2', 'E-3', 'E-5', 'E-6', 'E-7', 'C-1', 'C-2', 'C-3'],
-  recuperar_acesso: ['E-1', 'E-2', 'E-3', 'E-5', 'E-6', 'E-7', 'R-1', 'R-2', 'R-3'],
-  comecar_seu_nome: ['E-1', 'E-3', 'E-4', 'E-5', 'E-6', 'E-7', 'B-1', 'B-2', 'B-3'],
-  conta: ['A-1', 'A-2', 'A-3', 'A-4', 'A-5', 'A-6'],
+  entrar: ['E-1', 'E-2', 'E-3', 'E-4', 'E-5', 'E-6', 'E-7', 'D3-fio', 'D3-controle', 'D3-anel'],
+  criar_conta: ['E-1', 'E-2', 'E-3', 'E-5', 'E-6', 'E-7', 'C-1', 'C-2', 'C-3', 'D3-fio', 'D3-controle', 'D3-anel'],
+  recuperar_acesso: ['E-1', 'E-2', 'E-3', 'E-5', 'E-6', 'E-7', 'R-1', 'R-2', 'R-3', 'D3-fio', 'D3-controle', 'D3-anel'],
+  comecar_seu_nome: ['E-1', 'E-3', 'E-4', 'E-5', 'E-6', 'E-7', 'B-1', 'B-2', 'B-3', 'D3-fio', 'D3-controle', 'D3-anel', 'D3-fuso'],
+  conta: ['A-1', 'A-2', 'A-3', 'A-4', 'A-5', 'A-6', 'D3-fio', 'D3-controle', 'D3-anel', 'D3-fuso'],
 }
 const CRITERIOS_DA_MADRUGADA = ['M-1', 'M-2', 'M-3', 'M-4', 'M-5', 'M-6']
 
@@ -1636,6 +1854,10 @@ const REGRAS_DE_TELA = {
   'E-5': ({ nos, doc }) => e5(nos, doc),
   'E-6': ({ nos, doc }) => e6(nos, doc),
   'E-7': ({ doc, tema }) => e7(doc, tema),
+  'D3-fio': ({ doc, caso }) => d3Fio(doc, caso),
+  'D3-controle': ({ doc, caso }) => d3Controle(doc, caso),
+  'D3-anel': ({ doc, caso }) => d3Anel(doc, caso),
+  'D3-fuso': ({ doc, caso }) => d3Fuso(doc, caso),
   'C-1': ({ nos }) => c1(nos),
   'C-2': ({ nos, doc }) => c2(nos, doc),
   'C-3': ({ nos }) => c3(nos),
@@ -1701,7 +1923,7 @@ export function avaliarCriterios({ doc, nos, tema }, caso) {
   const criterios = ids.map((id) => {
     let r
     try {
-      r = REGRAS_DE_TELA[id]({ doc, nos, tema })
+      r = REGRAS_DE_TELA[id]({ doc, nos, tema, caso })
     } catch (erro) {
       r = falhaFechada(id, `erro ao medir: ${erro.message}`)
     }
@@ -2335,6 +2557,71 @@ export function lerEstadoDeEnvioNaPagina() {
   return { pagina: document.documentElement.scrollHeight, linhas, botao, mensagens, colisoes }
 }
 
+/**
+ * A geometria dos campos (D3): para cada linha de campo visível do `main` (`.sb-campo`), nas coordenadas da página,
+ * o fio (a borda de baixo da linha: o topo é `bottom` menos a espessura), o controle (`.sb-campo-entrada`: caixa e o
+ * anel lido do estilo calculado com o controle em foco) e as mensagens à vista (`erro`, `ajuda`, `status`, com a caixa).
+ * Lê também cada `select` do `main`: a opção escolhida (texto visível) e o texto e o valor de todas as opções. Foca e
+ * tira o foco de cada controle (sem rolar a página): rode depois de uma tecla Tab, para o `:focus-visible` valer. Uma
+ * linha de 0 x 0 (a caixa de diálogo fechada) não entra. Sem fechamento: é serializada por `toString()`.
+ */
+export function lerGeometriaDosCamposNaPagina() {
+  const sx = window.scrollX
+  const sy = window.scrollY
+  const arredondar = (n) => Math.round(n * 100) / 100
+  const colapsar = (t) => String(t ?? '').replace(/\s+/g, ' ').trim()
+  const caixaDe = (r) => ({ top: arredondar(r.top + sy), bottom: arredondar(r.bottom + sy), left: arredondar(r.left + sx), right: arredondar(r.right + sx) })
+  const clipZerado = (clip) => /^rect\(\s*0(px)?[\s,]+0(px)?[\s,]+0(px)?[\s,]+0(px)?\s*\)$/.test(clip ?? '')
+  const mensagemAparece = (el) => {
+    const r = el.getBoundingClientRect()
+    const cs = getComputedStyle(el)
+    return r.width > 2 && r.height > 2 && cs.visibility !== 'hidden' && cs.display !== 'none' && !clipZerado(cs.clip)
+  }
+  const rotuloDe = (campo) => colapsar(campo?.querySelector('label')?.textContent)
+
+  const campos = []
+  for (const campo of document.querySelectorAll('main .sb-campo')) {
+    const r = campo.getBoundingClientRect()
+    if (!(r.width > 0 && r.height > 0)) continue
+    const caixa = caixaDe(r)
+    const espessura = parseFloat(getComputedStyle(campo).borderBottomWidth)
+    const fio = Number.isFinite(espessura) && espessura > 0 ? { top: arredondar(caixa.bottom - espessura), bottom: caixa.bottom, left: caixa.left, right: caixa.right } : null
+    let controle = null
+    const entrada = campo.querySelector('.sb-campo-entrada')
+    if (entrada) {
+      controle = { tag: entrada.tagName.toLowerCase(), ...caixaDe(entrada.getBoundingClientRect()) }
+      entrada.focus({ preventScroll: true })
+      controle.focou = document.activeElement === entrada
+      if (controle.focou) {
+        const estilo = getComputedStyle(entrada)
+        controle.outlineStyle = estilo.outlineStyle
+        controle.outlineWidth = estilo.outlineWidth
+        controle.outlineOffset = estilo.outlineOffset
+        entrada.blur()
+      }
+    }
+    const mensagens = []
+    for (const [tipo, seletor] of [['erro', '.sb-campo-erro'], ['ajuda', '.sb-campo-ajuda'], ['status', '.sb-campo-status']]) {
+      for (const m of campo.querySelectorAll(seletor)) {
+        const texto = colapsar(m.textContent)
+        if (texto === '' || !mensagemAparece(m)) continue
+        mensagens.push({ tipo, texto: texto.slice(0, 90), ...caixaDe(m.getBoundingClientRect()) })
+      }
+    }
+    campos.push({ rotulo: rotuloDe(campo), fio, controle, mensagens })
+  }
+
+  const selects = [...document.querySelectorAll('main select')].map((el) => ({
+    rotulo: rotuloDe(el.closest('.sb-campo')),
+    valor: el.value,
+    textoVisivel: colapsar([...el.selectedOptions].map((opcao) => opcao.textContent).join(' ')),
+    opcoes: [...el.options].map((opcao) => ({ valor: opcao.value, texto: colapsar(opcao.textContent) })),
+  }))
+
+  window.scrollTo(sx, sy)
+  return { campos, selects }
+}
+
 // ---------------------------------------------------------------------------------------------
 // CDP (só Node 24: fetch e WebSocket)
 
@@ -2527,7 +2814,7 @@ async function abrirCaso(cdp, base, ambiente, pedido) {
 }
 
 /** Os casos cujo formulário se envia na medição (E-7 e, no Recuperar, o R-3). */
-export const CASOS_COM_ENVIO = ['entrar', 'criar_conta', 'recuperar_acesso', 'comecar_seu_nome']
+export const CASOS_COM_ENVIO = ['entrar', 'criar_conta', 'recuperar_acesso', 'comecar_seu_nome', 'conta']
 
 /** Lê o estado de envio da página aberta; uma leitura que não volta no formato certo é erro de medição. */
 async function lerEnvio(cdp) {
@@ -2551,12 +2838,16 @@ async function enviarFormulario(cdp) {
  * engolido: vai para o `principal`, que sai com 2.
  */
 async function coletarEnvio(cdp, base, ambiente, pedido) {
+  // A Conta abre com o nome preenchido: o envio "vazio" do Perfil esvazia o nome antes (só o campo, sem enviar).
+  if (pedido.caso === 'conta') await preencherPorRotulo(cdp, 'Seu nome', '')
   const antes = await lerEnvio(cdp)
   await enviarFormulario(cdp)
   const envio = { vazio: { antes, depois: await lerEnvio(cdp) } }
   // O anel de foco com o erro à vista (E-7): o mesmo Tab e a mesma leitura da passada em repouso.
   await teclarTab(cdp)
   envio.vazio.foco = await avaliar(cdp, `(${lerFocoNaPagina.toString()})()`)
+  // A geometria dos campos com o erro à vista (D3): a mensagem, o controle, o fio e o anel de cada linha.
+  envio.vazio.geometria = await avaliar(cdp, `(${lerGeometriaDosCamposNaPagina.toString()})()`)
   if (pedido.caso === 'recuperar_acesso') {
     await abrirCaso(cdp, base, ambiente, pedido)
     const antesDeEnviar = await lerEnvio(cdp)
@@ -2596,6 +2887,8 @@ async function principal(argumentos) {
         // As leituras que dependem de um estado: o foco (depois de um Tab) e os blocos do tema claro.
         await teclarTab(cdp)
         lido.doc.foco = await avaliar(cdp, `(${lerFocoNaPagina.toString()})()`)
+        // A geometria dos campos em repouso (D3): a ajuda, o controle, o fio e o anel de cada linha, e os selects.
+        lido.doc.geometria = await avaliar(cdp, `(${lerGeometriaDosCamposNaPagina.toString()})()`)
         if (aberto?.blocosClaro) lido.doc.blocosClaro = aberto.blocosClaro
         // O envio vem por último: muda a página (E-7 e R-3). Vale em qualquer tema, para o E-7 da madrugada
         // do Começar não reprovar fechado por falta da leitura.
@@ -2612,7 +2905,7 @@ async function principal(argumentos) {
         rodape: lido.nos.find((n) => n.m.rodape)?.rect ?? null,
         nomeRodape: lido.doc.nomeRodape,
         nos: lido.nos.length,
-        ...(novo ? { alturaTotal: lido.doc.alturaTotal, foco: lido.doc.foco ?? null, envio: lido.doc.envio ?? null } : {}),
+        ...(novo ? { alturaTotal: lido.doc.alturaTotal, foco: lido.doc.foco ?? null, geometria: lido.doc.geometria ?? null, envio: lido.doc.envio ?? null } : {}),
       }
       fs.writeFileSync(
         path.join(pasta, arquivo),
