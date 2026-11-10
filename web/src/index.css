@@ -2143,10 +2143,11 @@
   }
 
   /* Linha rótulo + texto (2.1 e 2.3): rótulo em c2–c3, texto em c4–c8 com fio vertical em x de
-     c4 e um fio horizontal embaixo, de c2 a c9. -------------------------------------------- */
+     c4 e um fio horizontal embaixo, de c2 até o fim de c8 (o início de c9, onde termina também o
+     fio do campo). A grade interna tem 7 colunas, as de c2 a c8. ----------------------------- */
   .sb-linha {
     display: grid;
-    grid-template-columns: repeat(8, minmax(0, 1fr));
+    grid-template-columns: repeat(7, minmax(0, 1fr));
     border-bottom: 1px solid var(--cor-fio-suave);
   }
 

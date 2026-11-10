@@ -627,6 +627,23 @@ describe('rota /sistema', () => {
     expect(sem.querySelector('.sb-abertura-base')).not.toBeNull()
   })
 
+  it('D5: a linha rótulo + texto ocupa c2–c8, para o fio de baixo terminar no início de c9, como o do campo', async () => {
+    const { container } = renderizarRota('/sistema')
+    await screen.findByRole('heading', { level: 1 })
+
+    const linhas = [...container.querySelectorAll<HTMLElement>('.sb-linha')]
+    expect(linhas.length).toBeGreaterThanOrEqual(3)
+    for (const linha of linhas) {
+      expect(linha.classList.contains('col-c2-c8'), linha.className).toBe(true)
+      expect(linha.classList.contains('col-c2-c9'), linha.className).toBe(false)
+      expect(linha.parentElement!.classList.contains('grade-10')).toBe(true)
+      // O contrato da linha segue: o rótulo, depois o texto com o fio vertical.
+      expect([...linha.children].map((filho) => filho.className.split(' ')[0])).toEqual(['sb-linha-rotulo', 'sb-linha-texto'])
+    }
+    // O campo ocupa c4–c8 de uma grade de 10 colunas: o fim dele é o início de c9.
+    expect(container.querySelector('.sb-campo-controle')).not.toBeNull()
+  })
+
   it('D2: a faixa de números tem 3 itens, cada um com o número em Zilla Slab e a legenda, na ordem 7, 2, 0', async () => {
     const { container } = renderizarRota('/sistema')
     await screen.findByRole('heading', { level: 1 })
