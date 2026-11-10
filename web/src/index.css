@@ -2558,6 +2558,7 @@ body:has([data-barra-registrar]) [data-rodape] {
 }
 
 .ha-barra-fileira > button {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2586,16 +2587,22 @@ body:has([data-barra-registrar]) [data-rodape] {
   text-underline-offset: 6px;
 }
 
-/* O anel de foco (2 px, na cor do papel) fica dentro do botão, para não sair da barra: é desenhado em
-   volta do rótulo, com recuo para fora do rótulo e para dentro do botão. Assim nenhum recuo de anel é
-   negativo (o botão encostado na borda da janela perderia o anel de fora). */
+/* VOLTA1 E4: o anel de foco (2 px, na cor do papel) contorna o botão inteiro, e não só a palavra, e fica dentro
+   dele (a barra encosta nas bordas da janela). Um `outline-offset` negativo no botão daria isso, mas o teste de
+   estilo só admite duas regras assim no arquivo: o anel é o `outline` de um pseudo-elemento do botão. O
+   `outline` desenha fora da caixa do `::after`: com `inset: 6px` ele ocupa de 4 a 6 px da borda do botão, a 4 px
+   ou mais dos fios verticais e do topo da barra, nos dois temas. */
 .ha-barra-fileira > button:focus-visible {
   outline: none;
 }
 
-.ha-barra-fileira > button:focus-visible > span {
+.ha-barra-fileira > button:focus-visible::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
   outline: 2px solid var(--ha-barra-texto);
-  outline-offset: 4px;
+  outline-offset: 0;
+  pointer-events: none;
 }
 
 /* O painel logo acima da barra, dentro do elemento fixo: a confirmação, a escolha de fralda e a lista
@@ -2895,10 +2902,14 @@ body:has([data-barra-registrar]) [data-rodape] {
     border-radius: 0;
   }
 
-  /* Rótulo de 20 px (do conjunto da escala): em 390 cada botão tem 97,5 px e "Mamada" a 24 não cabe. */
+  /* VOLTA1 E4: rótulo de 17 px (o `t-corpo-p` da escala): em 390 cada botão tem 93,8 px (97,5 sem barra de
+     rolagem) e a 20 "Mamada" ficava apertado, com 10 de folga; a 17 o texto cabe com folga e o anel de foco
+     (a 6 px da borda) não toca a palavra. A 17 e peso 600 (t-botao) "Mamada" mede 71,3 e a folga fica em 22,5,
+     abaixo dos 24 da E4: o peso 500 usa a face de 400 que já está no bundle e estreita o texto (tracking 0). */
   .ha-barra-fileira > button {
-    font-size: 1.25rem;
-    line-height: 1.25rem;
+    font-size: 1.0625rem;
+    line-height: 1.5rem;
+    font-weight: 500;
   }
 
   .ha-painel {

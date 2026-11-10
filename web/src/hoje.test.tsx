@@ -473,15 +473,40 @@ describe('Hoje: o CSS do bloco /* 44d-2 */ (lido como texto)', () => {
     expect(painel).toMatch(/background-color:\s*var\(--cor-fundo\)/)
   })
 
-  it('o foco dos botões da barra é um anel de 2 px na cor do papel, dentro do botão, sem recuo negativo', () => {
-    // Só a fileira: os botões do painel ficam sobre o papel, onde um anel de papel não apareceria. O anel
-    // é do rótulo (o <span>), e não do botão: o recuo negativo da E1 (-4px) é guardado por um teste de
-    // estilo.test.ts que só admite duas regras assim (ver o BLOQUEIO parcial no VISTO.md).
+  it('E4: o anel de foco contorna o botão inteiro (::after do botão, 2 px na cor do papel, a 4 px ou mais das bordas), e não o rótulo; sem recuo negativo', () => {
+    // Só a fileira: os botões do painel ficam sobre o papel, onde um anel de papel não apareceria. O anel é um
+    // pseudo-elemento do botão (e não o `outline` do botão nem o do <span>): o `outline-offset` negativo é
+    // guardado por um teste de estilo.test.ts que só admite duas regras assim.
+    expect(regra('.ha-barra-fileira > button')).toMatch(/position:\s*relative\s*;/)
     expect(regra('.ha-barra-fileira > button:focus-visible')).toMatch(/outline:\s*none/)
-    const anel = regra('.ha-barra-fileira > button:focus-visible > span')
-    expect(anel).toMatch(/outline:\s*2px solid var\(--ha-barra-texto\)/)
-    expect(anel).toMatch(/outline-offset:\s*4px/)
+    const anel = regra('.ha-barra-fileira > button:focus-visible::after')
+    expect(anel).toMatch(/content:\s*''/)
+    expect(anel).toMatch(/position:\s*absolute\s*;/)
+    expect(anel).toMatch(/pointer-events:\s*none/)
+    expect(anel).toMatch(/outline:\s*2px solid var\(--ha-barra-texto\)\s*;/)
+    expect(anel).toMatch(/outline-offset:\s*0\s*;/)
+    // O `outline` desenha fora da caixa do ::after: com `inset: N`, o anel ocupa de N − 2 a N px da borda do
+    // botão. O fio vertical (1 px) e o topo ficam a 4 px ou mais do lado de fora do anel: N ≥ 6.
+    const inset = Number(/inset:\s*(\d+)px\s*;/.exec(anel)?.[1])
+    expect(inset).toBeGreaterThanOrEqual(6)
+    expect(inset - 2).toBeGreaterThanOrEqual(4)
+    // O anel deixou de ser do rótulo.
+    expect(regra('.ha-barra-fileira > button:focus-visible > span')).toBe('')
     expect(semComentarios).not.toMatch(/outline-offset:\s*-/)
+  })
+
+  it('E4: o rótulo dos botões da barra é de 17 px (t-corpo-p) abaixo de 768 e de 24 (o t-botao) de 768 para cima', () => {
+    const celular = regraEm(emMedia767(), '.ha-barra-fileira > button')
+    expect(celular).toMatch(/font-size:\s*1\.0625rem\s*;/)
+    expect(celular).toMatch(/line-height:\s*1\.5rem\s*;/)
+    // A 17 px e peso 600 "Mamada" mede 71,3 px e a célula de 390 (93,8 com a barra de rolagem da sonda) deixa
+    // 22,5 de folga, abaixo dos 24 da E4. O peso 500 cai na face de 400 (a que o bundle já carrega) e estreita
+    // o texto; o tracking segue 0.
+    expect(celular).toMatch(/font-weight:\s*500\s*;/)
+    expect(celular).not.toMatch(/letter-spacing/)
+    // De 768 para cima nenhuma regra do bloco dá tamanho ao rótulo: continua o `t-botao` de 24.
+    const foraDoCelular = semComentarios.replace(emMedia767(), '')
+    expect(regraEm(foraDoCelular, '.ha-barra-fileira > button')).not.toMatch(/font-size/)
   })
 
   it('a barra não cobre o fim do conteúdo: o main ganha 64 px embaixo e o rodapé, 64 px de folga e 128 de margem', () => {
