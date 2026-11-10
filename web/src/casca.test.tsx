@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { Abertura } from './componentes/base/Abertura.tsx'
 import { Botao } from './componentes/base/Botao.tsx'
@@ -20,6 +20,18 @@ function cabecalho(contexto: 'publico' | 'logado', madrugada = false, aoAlternar
 }
 
 const painelDoMenu = (container: HTMLElement) => container.querySelector<HTMLElement>('[data-menu-celular]')!
+
+/**
+ * A largura da janela no jsdom (que parte de 1024 e não faz layout). O menu do celular só existe
+ * abaixo de 768: os testes dele declaram 390. `avisar` dispara o `resize`, como o navegador.
+ * O `afterEach` abaixo devolve 1024 (o valor do jsdom) depois de cada teste deste arquivo.
+ */
+function larguraDaJanela(largura: number, avisar = false) {
+  Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: largura })
+  if (avisar) act(() => void window.dispatchEvent(new Event('resize')))
+}
+
+afterEach(() => larguraDaJanela(1024))
 
 describe('cabeçalho: contexto', () => {
   it('o logado mostra Hoje, + Em breve, Conta e o botão "Modo madrugada" com aria-pressed', () => {
@@ -195,6 +207,8 @@ describe('submenu "+ Em breve"', () => {
 })
 
 describe('menu do celular', () => {
+  beforeEach(() => larguraDaJanela(390))
+
   it('começa fechado, com aria-expanded="false" e aria-controls apontando para o painel', () => {
     const { container } = cabecalho('logado')
     const botao = screen.getByRole('button', { name: 'Menu' })
@@ -297,6 +311,8 @@ describe('menu do celular', () => {
 // R1 (rodada de correção 1): com o menu aberto, o foco gira em volta fechada por TODOS os focáveis
 // visíveis do cabeçalho, na ordem do DOM. Os links de nav.sb-cab-links ficam fora (somem abaixo de 768).
 describe('menu do celular: a volta do foco cobre o cabeçalho inteiro', () => {
+  beforeEach(() => larguraDaJanela(390))
+
   const ESPERADO = {
     publico: { acao: ['link', 'Entrar'], painel: ['Início', 'Protótipo'] },
     logado: { acao: ['button', 'Modo madrugada'], painel: ['Hoje', 'Conta'] },
@@ -416,6 +432,202 @@ describe('menu do celular: a volta do foco cobre o cabeçalho inteiro', () => {
 
     expect(volta[0].getAttribute('aria-expanded')).toBe('false')
     expect(document.activeElement).toBe(volta[0])
+  })
+})
+
+// Rodada de correção 2, achado A: o menu acompanha o ponto de quebra (768). Ao ampliar a janela com o
+// menu aberto, ele fecha, o ouvinte do Tab sai, e o Tab da navegação de computador não é cancelado.
+describe('menu do celular: o ponto de quebra', () => {
+  beforeEach(() => larguraDaJanela(390))
+
+  /** O link da navegação de computador que cada contexto tem (nav.sb-cab-links). */
+  const LINK_DESKTOP = { publico: 'Início', logado: 'Conta' } as const
+
+  type OuvinteDeMidia = (evento: { matches: boolean }) => void
+  /** Um matchMedia que guarda os ouvintes de `change`, para o teste disparar a mudança. */
+  function stubarMatchMedia(ouvintes: Set<OuvinteDeMidia>, consultas: string[] = []) {
+    vi.stubGlobal('matchMedia', (consulta: string) => {
+      consultas.push(consulta)
+      return {
+        matches: false,
+        media: consulta,
+        addEventListener: (_tipo: string, ouvinte: OuvinteDeMidia) => ouvintes.add(ouvinte),
+        removeEventListener: (_tipo: string, ouvinte: OuvinteDeMidia) => ouvintes.delete(ouvinte),
+      }
+    })
+  }
+
+  function abrirEm390(contexto: 'publico' | 'logado') {
+    const { container, unmount } = cabecalho(contexto)
+    const botao = screen.getByRole('button', { name: 'Menu' })
+    fireEvent.click(botao)
+    expect(botao.getAttribute('aria-expanded')).toBe('true')
+    const linkDesktop = within(container.querySelector<HTMLElement>('nav.sb-cab-links')!).getByRole('link', {
+      name: LINK_DESKTOP[contexto],
+    })
+    return { container, unmount, botao, linkDesktop }
+  }
+
+  for (const contexto of ['publico', 'logado'] as const) {
+    it(`${contexto}: 390 → 1440 com o menu aberto: o menu fecha e o Tab e o Shift+Tab no link de computador não são cancelados`, () => {
+      const { container, botao, linkDesktop } = abrirEm390(contexto)
+
+      larguraDaJanela(1440, true)
+
+      expect(botao.getAttribute('aria-expanded')).toBe('false')
+      expect(painelDoMenu(container).hasAttribute('hidden')).toBe(true)
+      expect(painelDoMenu(container).children).toHaveLength(0)
+      linkDesktop.focus()
+      expect(document.activeElement).toBe(linkDesktop)
+      for (const shiftKey of [false, true]) {
+        const evento = new KeyboardEvent('keydown', { key: 'Tab', shiftKey, bubbles: true, cancelable: true })
+        linkDesktop.dispatchEvent(evento)
+        expect(evento.defaultPrevented, shiftKey ? 'Shift+Tab' : 'Tab').toBe(false)
+      }
+      expect(document.activeElement).toBe(linkDesktop)
+    })
+  }
+
+  it('ao sair do ponto de quebra o foco NÃO volta ao botão do menu (ele está oculto)', () => {
+    const { botao } = abrirEm390('logado')
+    expect(document.activeElement).not.toBe(botao)
+
+    larguraDaJanela(1440, true)
+
+    expect(document.activeElement).not.toBe(botao)
+  })
+
+  it('mudar a largura sem abrir o menu antes não quebra nada, e o menu abre normalmente ao voltar a 390', () => {
+    const { container, botao, linkDesktop } = abrirEm390('logado')
+    fireEvent.click(botao) // fecha
+    expect(botao.getAttribute('aria-expanded')).toBe('false')
+
+    larguraDaJanela(1440, true)
+    larguraDaJanela(1100, true)
+    expect(botao.getAttribute('aria-expanded')).toBe('false')
+    linkDesktop.focus()
+    const evento = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true })
+    linkDesktop.dispatchEvent(evento)
+    expect(evento.defaultPrevented).toBe(false)
+
+    larguraDaJanela(390, true)
+    fireEvent.click(botao)
+    expect(botao.getAttribute('aria-expanded')).toBe('true')
+    expect(painelDoMenu(container).hasAttribute('hidden')).toBe(false)
+  })
+
+  it('controle: um resize que continua abaixo de 768 mantém o menu aberto e o ciclo ativo', () => {
+    const { container, botao } = abrirEm390('logado')
+
+    larguraDaJanela(600, true)
+
+    expect(botao.getAttribute('aria-expanded')).toBe('true')
+    const conta = within(painelDoMenu(container)).getByRole('link', { name: 'Conta' })
+    conta.focus()
+    expect(fireEvent.keyDown(conta, { key: 'Tab' })).toBe(false)
+    expect(document.activeElement).toBe(botao)
+  })
+
+  it('390 → 1440 → 390: o menu volta fechado, abre de novo com o foco no primeiro item e o Tab cicla', () => {
+    const { container, botao } = abrirEm390('logado')
+
+    larguraDaJanela(1440, true)
+    larguraDaJanela(390, true)
+
+    expect(botao.getAttribute('aria-expanded')).toBe('false')
+    expect(painelDoMenu(container).hasAttribute('hidden')).toBe(true)
+
+    fireEvent.click(botao)
+
+    expect(botao.getAttribute('aria-expanded')).toBe('true')
+    const painel = painelDoMenu(container)
+    const primeiro = within(painel).getByRole('link', { name: 'Hoje' })
+    const ultimo = within(painel).getByRole('link', { name: 'Conta' })
+    expect(document.activeElement).toBe(primeiro)
+    ultimo.focus()
+    expect(fireEvent.keyDown(ultimo, { key: 'Tab' })).toBe(false)
+    expect(document.activeElement).toBe(botao)
+    expect(fireEvent.keyDown(botao, { key: 'Tab', shiftKey: true })).toBe(false)
+    expect(document.activeElement).toBe(ultimo)
+    fireEvent.keyDown(ultimo, { key: 'Escape' })
+    expect(botao.getAttribute('aria-expanded')).toBe('false')
+    expect(document.activeElement).toBe(botao)
+  })
+
+  it('com matchMedia, o evento change do (min-width: 768px) fecha o menu', () => {
+    const ouvintes = new Set<OuvinteDeMidia>()
+    const consultas: string[] = []
+    stubarMatchMedia(ouvintes, consultas)
+    const { container, botao, linkDesktop } = abrirEm390('logado')
+    expect(consultas).toContain('(min-width: 768px)')
+    expect(ouvintes.size).toBeGreaterThan(0)
+
+    larguraDaJanela(1440)
+    act(() => ouvintes.forEach((ouvinte) => ouvinte({ matches: true })))
+
+    expect(botao.getAttribute('aria-expanded')).toBe('false')
+    expect(painelDoMenu(container).hasAttribute('hidden')).toBe(true)
+    linkDesktop.focus()
+    const evento = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true })
+    linkDesktop.dispatchEvent(evento)
+    expect(evento.defaultPrevented).toBe(false)
+  })
+
+  it('ao desmontar, os ouvintes do resize, do matchMedia e do keydown saem', () => {
+    const ouvintes = new Set<OuvinteDeMidia>()
+    stubarMatchMedia(ouvintes)
+    const noWindow = vi.spyOn(window, 'addEventListener')
+    const foraDoWindow = vi.spyOn(window, 'removeEventListener')
+    const noDocument = vi.spyOn(document, 'addEventListener')
+    const foraDoDocument = vi.spyOn(document, 'removeEventListener')
+    const { unmount } = abrirEm390('logado')
+    const resizes = noWindow.mock.calls.filter(([tipo]) => tipo === 'resize')
+    expect(resizes.length).toBeGreaterThan(0)
+    expect(ouvintes.size).toBeGreaterThan(0)
+
+    unmount()
+
+    for (const [, ouvinte] of resizes) expect(foraDoWindow).toHaveBeenCalledWith('resize', ouvinte)
+    expect(ouvintes.size).toBe(0)
+    const teclas = noDocument.mock.calls.filter(([tipo]) => tipo === 'keydown')
+    expect(teclas.length).toBeGreaterThan(0)
+    for (const [, ouvinte] of teclas) expect(foraDoDocument).toHaveBeenCalledWith('keydown', ouvinte)
+  })
+
+  it('defesa: com a janela já em 1440 e o menu aberto à força, o Tab no link de computador não é cancelado', () => {
+    larguraDaJanela(1440)
+    const { container } = cabecalho('logado')
+    fireEvent.click(screen.getByRole('button', { name: 'Menu' }))
+    const conta = within(container.querySelector<HTMLElement>('nav.sb-cab-links')!).getByRole('link', { name: 'Conta' })
+    conta.focus()
+
+    const evento = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true })
+    conta.dispatchEvent(evento)
+
+    expect(evento.defaultPrevented).toBe(false)
+  })
+
+  it('defesa: a volta do foco só conta focáveis realmente visíveis (checkVisibility), não só os fora de [hidden] e [inert]', () => {
+    const prototipo = Element.prototype as unknown as { checkVisibility?: (this: Element) => boolean }
+    prototipo.checkVisibility = function (this: Element) {
+      return !this.closest('[data-oculto]')
+    }
+    try {
+      const { container } = cabecalho('logado')
+      const botao = screen.getByRole('button', { name: 'Menu' })
+      fireEvent.click(botao)
+      const banner = container.querySelector<HTMLElement>('header[data-cabecalho]')!
+      const nome = within(banner).getByRole('link', { name: 'AppMaternidade' })
+      const acao = within(banner).getByRole('button', { name: 'Modo madrugada' })
+      nome.setAttribute('data-oculto', '')
+
+      botao.focus()
+      expect(fireEvent.keyDown(botao, { key: 'Tab' })).toBe(false)
+
+      expect(document.activeElement).toBe(acao)
+    } finally {
+      delete prototipo.checkVisibility
+    }
   })
 })
 
