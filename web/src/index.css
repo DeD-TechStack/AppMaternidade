@@ -2512,10 +2512,17 @@ body:has([data-barra-registrar]) [data-rodape] {
 .barra-registrar {
   --ha-barra-fundo: var(--cor-texto);
   --ha-barra-texto: var(--cor-fundo);
+  --ha-barra-fio: transparent;
+  box-sizing: border-box;
   position: relative;
   width: min(100% - 2 * var(--margem), var(--area-util));
+  height: 64px;
   margin-inline: auto;
   border: 0;
+  /* VOLTA1 E3: o fio de 1 px no topo. Existe nos dois temas (a mesma geometria, M-1), mas só a madrugada lhe dá
+     cor: a barra escura da madrugada se fundia ao fundo da página. O fundo da barra vai até a borda (border-box),
+     então no claro o 1 px transparente mostra a tinta e nada muda. A altura total segue 64. */
+  border-top: 1px solid var(--ha-barra-fio);
   padding: 0;
   border-radius: 8px 8px 0 0;
   background-color: var(--ha-barra-fundo);
@@ -2525,6 +2532,7 @@ body:has([data-barra-registrar]) [data-rodape] {
 :root[data-tema='madrugada'] .barra-registrar {
   --ha-barra-fundo: var(--cor-campo-sessao);
   --ha-barra-texto: var(--cor-texto);
+  --ha-barra-fio: rgba(227, 214, 195, 0.2);
 }
 
 .barra-registrar.barra-fixa {
@@ -2540,6 +2548,10 @@ body:has([data-barra-registrar]) [data-rodape] {
 .ha-barra-fileira {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
+  /* Sobe o 1 px que a borda do topo da barra ocupa: a fileira de 64 cobre a barra inteira (64 de altura total) e
+     os botões seguem com 64 de alvo; o fio fica visível sob os botões, que não têm fundo. */
+  position: relative;
+  top: -1px;
   height: 64px;
   border-radius: 8px 8px 0 0;
   overflow: hidden;

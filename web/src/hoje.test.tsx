@@ -433,6 +433,37 @@ describe('Hoje: o CSS do bloco /* 44d-2 */ (lido como texto)', () => {
     expect(semComentarios).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
   })
 
+  // ---- Volta 1, E3: o fio de 1 px no topo da barra Registrar, só na madrugada.
+  //
+  // O fio é o `border-top` da própria barra, em uma variável de uso (`--ha-barra-fio`): transparente no claro e
+  // `rgba(227, 214, 195, 0.2)` na madrugada. A regra da madrugada só troca a variável (o teste M-1 acima exige
+  // que nenhuma regra de tema mexa em medida), e a borda de 1 px existe nos dois temas, então os retângulos
+  // são os mesmos (M-1). A barra tem `box-sizing: border-box` e 64 de altura total; a fileira sobe 1 px para
+  // continuar com os botões de 64 (o alvo de toque da E1) sob o fio.
+
+  it('E3: o fio só aparece na madrugada: a variável é transparente na base e rgba(227, 214, 195, 0.2) com data-tema="madrugada"', () => {
+    expect(regra('.barra-registrar')).toMatch(/--ha-barra-fio:\s*transparent\s*;/)
+    const madrugada = regra(":root[data-tema='madrugada'] .barra-registrar")
+    expect(madrugada).toMatch(/--ha-barra-fio:\s*rgba\(227,\s*214,\s*195,\s*0\.2\)\s*;/)
+    // A regra do tema só troca variáveis (cor); o claro não ganha outra regra de fio.
+    expect(regra(":root[data-tema='claro'] .barra-registrar")).toBe('')
+    expect(semComentarios).not.toMatch(/box-shadow/)
+  })
+
+  it('E3: a barra desenha o fio com border-top de 1 px na variável e mantém 64 de altura total (border-box); a fileira sobe 1 px', () => {
+    const barra = regra('.barra-registrar')
+    expect(barra).toMatch(/border-top:\s*1px solid var\(--ha-barra-fio\)\s*;/)
+    expect(barra).toMatch(/box-sizing:\s*border-box\s*;/)
+    expect(barra).toMatch(/height:\s*64px\s*;/)
+    // O fio é o do topo só: nenhuma borda dos outros lados.
+    expect(barra).not.toMatch(/border-(left|right|bottom)\s*:\s*[1-9]/)
+    // A fileira (64 de altura) sobe o 1 px que a borda ocupa, para os botões seguirem em 64 e a barra em 64.
+    expect(regra('.ha-barra-fileira')).toMatch(/position:\s*relative\s*;/)
+    expect(regra('.ha-barra-fileira')).toMatch(/top:\s*-1px\s*;/)
+    expect(regra('.ha-barra-fileira')).toMatch(/height:\s*64px\s*;/)
+    expect(regra('.ha-barra-fileira > button')).toMatch(/height:\s*64px\s*;/)
+  })
+
   it('o painel flutua acima da barra: absoluto, a partir de 100%, opaco, sem sombra', () => {
     const painel = regra('.ha-painel')
     expect(painel).toMatch(/position:\s*absolute/)
