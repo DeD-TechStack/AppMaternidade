@@ -114,8 +114,17 @@ export function contraste(corTexto, cadeiaDeFundos) {
 const visivel = (no) => no.visivel !== false
 const marca = (no, nome) => Boolean(no.m && no.m[nome])
 const temTexto = (no) => typeof no.texto === 'string' && no.texto.trim() !== ''
+// O texto que um controle (input, textarea, select) mostra: o valor, o placeholder visível ou o
+// rótulo da opção escolhida. É a leitura do controle, que não tem nó de texto próprio.
+const temTextoControle = (no) => typeof no.textoControle === 'string' && no.textoControle.trim() !== ''
+// O texto inline de um parágrafo (o dos descendentes, sem o dos parágrafos aninhados).
+const temTextoTotal = (no) => typeof no.textoTotal === 'string' && no.textoTotal.trim() !== ''
 const perto = (a, b, tolerancia) => Number.isFinite(a) && Number.isFinite(b) && Math.abs(a - b) <= tolerancia
-const descrever = (no) => `${no.tag ?? '?'}${temTexto(no) ? ` "${no.texto.trim().slice(0, 40)}"` : ''}`
+const ehNumero = (valor) => typeof valor === 'number' && Number.isFinite(valor)
+const descrever = (no) => {
+  const texto = [no.texto, no.textoTotal, no.textoControle].find((t) => typeof t === 'string' && t.trim() !== '')
+  return `${no.tag ?? '?'}${texto ? ` "${texto.trim().slice(0, 40)}"` : ''}`
+}
 const px = (valor) => {
   if (typeof valor === 'number') return valor
   const m = /^(-?[\d.]+)px$/.exec(String(valor ?? '').trim())
@@ -204,9 +213,13 @@ export function g3(nos, doc) {
   return resultado('G3', falhas, `${filhos.length} filhos de main em x=${x1.toFixed(1)} ou c2=${x2.toFixed(1)}`)
 }
 
-/** G4: todo font-size calculado está no conjunto (mais o nome do rodapé) e nada em caixa alta. */
+/**
+ * G4: todo font-size calculado está no conjunto (mais o nome do rodapé) e nada em caixa alta. Vale
+ * para o texto dos nós e para o dos controles (valor, placeholder visível, rótulo do select), que
+ * têm o font-size do próprio controle.
+ */
 export function g4(nos) {
-  const comTexto = nos.filter((no) => visivel(no) && temTexto(no))
+  const comTexto = nos.filter((no) => visivel(no) && (temTexto(no) || temTextoControle(no)))
   if (comTexto.length === 0) return falhaFechada('G4', 'nenhum nó com texto')
   const falhas = []
   for (const no of comTexto) {
@@ -337,9 +350,12 @@ export function g9(nos, doc) {
   return resultado('G9', falhas, `rodapé em x=0 com ${rodape.rect.w} px`)
 }
 
-/** G10: nenhum parágrafo passa de 65 caracteres por linha renderizada. */
+/**
+ * G10: nenhum parágrafo passa de 65 caracteres por linha renderizada. O parágrafo conta o texto dos
+ * descendentes inline (`<p><span>…</span></p>`), e não só o texto direto.
+ */
 export function g10(nos) {
-  const paragrafos = nos.filter((no) => no.tag === 'p' && visivel(no) && temTexto(no))
+  const paragrafos = nos.filter((no) => no.tag === 'p' && visivel(no) && (temTexto(no) || temTextoTotal(no)))
   if (paragrafos.length === 0) return falhaFechada('G10', 'nenhum parágrafo com texto')
   const falhas = []
   let maior = 0
@@ -387,28 +403,51 @@ export function g11(nos, tema) {
   return resultado('G11', falhas, `${alvos.length} alvos ≥ 44 × ${alturaMinima}; menor contraste ${menor.toFixed(2)}:1`)
 }
 
-function escalaDe(transform) {
-  if (!transform || transform === 'none') return 1
+/** As escalas dos eixos X e Y de um `transform` calculado (`none` ou `matrix(a, b, c, d, e, f)`); nulo se ilegível. */
+function escalasDe(transform) {
+  if (!transform || transform === 'none') return { x: 1, y: 1 }
   const m = /^matrix\(([^)]+)\)$/.exec(transform)
-  if (!m) return Number.NaN
-  const [a, b] = m[1].split(',').map(Number)
-  return Math.hypot(a, b)
+  if (!m) return null
+  const valores = m[1].split(',').map((parte) => (parte.trim() === '' ? Number.NaN : Number(parte)))
+  if (valores.length !== 6 || valores.some((valor) => !Number.isFinite(valor))) return null
+  const [a, b, c, d] = valores
+  return { x: Math.hypot(a, b), y: Math.hypot(c, d) }
 }
 
-/** G12: com movimento reduzido, todo bloco aparece com opacidade 1 e escala 1. */
+const numeroDe = (valor) => (typeof valor === 'number' ? valor : typeof valor === 'string' && valor.trim() !== '' ? Number(valor) : Number.NaN)
+
+/**
+ * G12: com movimento reduzido, todo bloco aparece com opacidade 1 e escala 1 nos dois eixos. Os
+ * blocos são os filhos diretos de `main` e de `[data-bloco]`, o próprio `[data-bloco]` e as mídias
+ * e figuras aninhadas em qualquer profundidade. O que está oculto não é descartado: um bloco com
+ * `visibility: hidden` ou dentro de um ancestral com opacidade 0 é justamente o que se procura.
+ * A leitura `ancestrais` (o produto das opacidades e das escalas dos ancestrais) cobre o wrapper.
+ */
 export function g12(nos) {
-  const blocos = nos.filter((no) => (marca(no, 'filhoDeMain') || marca(no, 'filhoDeBloco')) && visivel(no))
+  const blocos = nos.filter((no) => marca(no, 'filhoDeMain') || marca(no, 'filhoDeBloco') || marca(no, 'blocoG12'))
   if (blocos.length === 0) return falhaFechada('G12', 'nenhum bloco (filho de main ou de [data-bloco])')
   const falhas = []
+  const falhar = (no, motivo) => falhas.push({ no: descrever(no), motivo: `${descrever(no)}: ${motivo}` })
   for (const no of blocos) {
-    const opacidade = Number(no.estilo?.opacity)
-    const escala = escalaDe(no.estilo?.transform)
-    if (!Number.isFinite(opacidade)) falhas.push({ no: descrever(no), motivo: `${descrever(no)}: opacidade ausente` })
-    else if (opacidade !== 1) falhas.push({ no: descrever(no), motivo: `${descrever(no)}: opacidade ${opacidade}` })
-    if (!Number.isFinite(escala)) falhas.push({ no: descrever(no), motivo: `${descrever(no)}: transform ilegível (${no.estilo?.transform})` })
-    else if (Math.abs(escala - 1) > 0.001) falhas.push({ no: descrever(no), motivo: `${descrever(no)}: escala ${escala.toFixed(3)}` })
+    const opacidade = numeroDe(no.estilo?.opacity)
+    const escalas = escalasDe(no.estilo?.transform)
+    if (!Number.isFinite(opacidade)) falhar(no, 'opacidade ausente')
+    else if (opacidade !== 1) falhar(no, `opacidade ${opacidade}`)
+    if (escalas === null) falhar(no, `transform ilegível (${no.estilo?.transform})`)
+    else if (Math.abs(escalas.x - 1) > 0.001 || Math.abs(escalas.y - 1) > 0.001) {
+      falhar(no, `escala ${escalas.x.toFixed(3)} × ${escalas.y.toFixed(3)} (x × y)`)
+    }
+    if (no.ancestrais !== undefined) {
+      const { opacidade: oa, escalaX, escalaY } = no.ancestrais ?? {}
+      if (!ehNumero(oa)) falhar(no, 'opacidade dos ancestrais ilegível')
+      else if (Math.abs(oa - 1) > 0.001) falhar(no, `ancestral com opacidade ${Number(oa.toFixed(3))}`)
+      if (!ehNumero(escalaX) || !ehNumero(escalaY)) falhar(no, 'transform dos ancestrais ilegível')
+      else if (Math.abs(escalaX - 1) > 0.001 || Math.abs(escalaY - 1) > 0.001) {
+        falhar(no, `ancestral com escala ${escalaX.toFixed(3)} × ${escalaY.toFixed(3)} (x × y)`)
+      }
+    }
   }
-  return resultado('G12', falhas, `${blocos.length} blocos com opacidade 1 e escala 1`)
+  return resultado('G12', falhas, `${blocos.length} blocos com opacidade 1 e escala 1 (nos dois eixos)`)
 }
 
 /** SB3 (2.7): o nome gigante do rodapé ocupa de 96% a 100% da área útil. */
@@ -472,7 +511,7 @@ export function verificarLoopback(url) {
 // ---------------------------------------------------------------------------------------------
 // O que roda dentro da página (serializado por `toString`; não pode usar nada de fora)
 
-function coletarNaPagina() {
+export function coletarNaPagina() {
   const ignorar = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE', 'OPTION', 'OPTGROUP'])
   const sx = window.scrollX
   const sy = window.scrollY
@@ -492,13 +531,59 @@ function coletarNaPagina() {
     return cadeia
   }
   const textoProprio = (el) => colapsar([...el.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join(''))
+  // O texto de um controle: o valor, o placeholder (só visível com o valor vazio) ou o rótulo da
+  // opção escolhida. A senha não sai em claro: só a quantidade de caracteres.
+  const textoDoControle = (el) => {
+    const dica = colapsar(el.getAttribute('placeholder') ?? '')
+    if (el.tagName === 'INPUT') {
+      const tipo = (el.getAttribute('type') || 'text').toLowerCase()
+      if (['hidden', 'checkbox', 'radio', 'range', 'color', 'file', 'image'].includes(tipo)) return ''
+      if (tipo === 'password') return el.value !== '' ? '•'.repeat(el.value.length) : dica
+      return el.value !== '' ? colapsar(el.value) : dica
+    }
+    if (el.tagName === 'TEXTAREA') return el.value !== '' ? colapsar(el.value) : dica
+    if (el.tagName === 'SELECT') return colapsar([...el.selectedOptions].map((opcao) => opcao.textContent).join(' '))
+    return ''
+  }
+  // Os nós de texto que pertencem a este parágrafo: os dos descendentes inline, e não os dos
+  // parágrafos aninhados, que são medidos por conta própria (nada conta duas vezes).
+  const textosDoParagrafo = (el) => {
+    const nosDeTexto = []
+    const andador = document.createTreeWalker(el, NodeFilter.SHOW_TEXT)
+    for (let no = andador.nextNode(); no; no = andador.nextNode()) {
+      if (no.parentElement && no.parentElement.closest('p') === el) nosDeTexto.push(no)
+    }
+    return nosDeTexto
+  }
+  // Os produtos das opacidades e das escalas (X e Y) dos ancestrais, até a raiz. Uma leitura que o
+  // coletor não entende (matrix3d, opacidade ilegível) vai como null: a regra falha fechado.
+  const ancestraisDe = (el) => {
+    let opacidade = 1
+    let escalaX = 1
+    let escalaY = 1
+    let legivel = true
+    for (let pai = el.parentElement; pai; pai = pai.parentElement) {
+      const estilo = getComputedStyle(pai)
+      const o = estilo.opacity === '' ? Number.NaN : Number(estilo.opacity)
+      if (Number.isFinite(o)) opacidade *= o
+      else legivel = false
+      if (estilo.transform && estilo.transform !== 'none') {
+        const m = /^matrix\(([^)]+)\)$/.exec(estilo.transform)
+        const v = m ? m[1].split(',').map((parte) => (parte.trim() === '' ? Number.NaN : Number(parte))) : []
+        if (v.length === 6 && v.every(Number.isFinite)) {
+          escalaX *= Math.hypot(v[0], v[1])
+          escalaY *= Math.hypot(v[2], v[3])
+        } else legivel = false
+      }
+    }
+    return legivel ? { opacidade, escalaX, escalaY } : null
+  }
   // Os caracteres do parágrafo na ordem do DOM, que é a ordem das linhas: uma linha nova começa
   // quando o centro vertical do caractere desce mais de 10 px em relação ao da linha atual.
   const linhasDe = (el) => {
     const linhas = []
     let atual = null
-    const andador = document.createTreeWalker(el, NodeFilter.SHOW_TEXT)
-    for (let no = andador.nextNode(); no; no = andador.nextNode()) {
+    for (const no of textosDoParagrafo(el)) {
       const texto = no.textContent
       for (let i = 0; i < texto.length; i += 1) {
         const faixa = document.createRange()
@@ -568,12 +653,20 @@ function coletarNaPagina() {
         andamento: Boolean(el.closest('[data-andamento], .campo-andamento, .campo-sessao')),
         filhoDeMain: el.parentElement !== null && el.parentElement.tagName === 'MAIN',
         filhoDeBloco: el.parentElement !== null && el.parentElement.matches('[data-bloco]'),
+        // G12: os blocos e as mídias aninhados em qualquer profundidade dentro de <main>.
+        blocoG12: el.closest('main') !== null && el.tagName !== 'MAIN' && el.matches('[data-bloco], [data-midia], figure'),
         interativo: el.matches('a, button, input, select, textarea, [role="button"]'),
       },
       cadeia: cadeiaDe(el),
     }
     if (el.matches('[data-midia]')) no.textoDentro = el.textContent
-    if (el.tagName === 'P' && no.texto !== '') no.linhas = linhasDe(el)
+    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT') no.textoControle = textoDoControle(el)
+    if (no.m.filhoDeMain || no.m.filhoDeBloco || no.m.blocoG12) no.ancestrais = ancestraisDe(el)
+    if (el.tagName === 'P') {
+      // O texto do parágrafo inclui o dos descendentes inline (<p><span>…</span></p>).
+      no.textoTotal = colapsar(textosDoParagrafo(el).map((n) => n.textContent).join(''))
+      if (no.textoTotal !== '' || no.texto !== '') no.linhas = linhasDe(el)
+    }
     return no
   })
 

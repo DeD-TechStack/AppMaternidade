@@ -2,10 +2,12 @@
 // um caso que passa, um que falha e um de borda; e os casos em que a medida falha fechado.
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
+import { JSDOM } from 'jsdom'
 import {
   areaUtilDe,
   avaliarTudo,
   bloqueantesDoCaso,
+  coletarNaPagina,
   contraste,
   fundoReal,
   g1,
@@ -491,6 +493,254 @@ describe('avaliarTudo e resumo', () => {
     assert.match(linha, /G1 ok/)
     assert.match(linha, /G2 FALHA/)
     assert.doesNotMatch(linha, /registrada/)
+  })
+})
+
+// ---------------------------------------------------------------------------------------------
+// R2 (rodada de correção 1): o coletor real (o que roda no Chrome) rodando em jsdom com geometria
+// fixa, e a regra pura sobre o que ele coleta, na mesma fixture. O jsdom não mede layout: todo
+// retângulo é 100 × 20 e todo caractere cai na mesma linha, então o que se testa é o que o coletor
+// e a regra DECIDEM com a leitura, não a geometria.
+
+const RETANGULO = { x: 0, y: 0, left: 0, top: 0, width: 100, height: 20, right: 100, bottom: 20 }
+
+/** Monta `html` num jsdom, roda o coletor serializado (como o CDP faz) e devolve `{ doc, nos }`. */
+function coletarDe(html, preparar = () => undefined) {
+  const dom = new JSDOM(
+    `<!doctype html><html><head><style>* { font-size: 20px; opacity: 1; transform: none; text-transform: none; box-shadow: none; }</style></head><body>${html}</body></html>`,
+    { runScripts: 'outside-only' },
+  )
+  const { window } = dom
+  window.Element.prototype.getBoundingClientRect = () => ({ ...RETANGULO })
+  window.Range.prototype.getClientRects = () => [{ ...RETANGULO }]
+  window.Range.prototype.getBoundingClientRect = () => ({ ...RETANGULO })
+  preparar(window.document)
+  try {
+    // Cópia por JSON, como o CDP devolve (returnByValue): sem isso os arrays são de outro realm.
+    return JSON.parse(JSON.stringify(window.eval(`(${coletarNaPagina.toString()})()`)))
+  } finally {
+    window.close()
+  }
+}
+
+const PAGINA_CONFORME = `
+  <main>
+    <section data-bloco><p>Um parágrafo curto e conforme.</p><div data-midia></div></section>
+    <section><figure></figure><label>Nome <input value="Maria"></label></section>
+  </main>`
+
+describe('R2: o coletor em jsdom, numa página conforme', () => {
+  it('passa em G4, G10 e G12 (a fixture não reprova por si só)', () => {
+    const { nos } = coletarDe(PAGINA_CONFORME)
+    for (const regra of [g4, g10, g12]) {
+      const r = regra(nos)
+      assert.equal(r.ok, true, `${r.regra}: ${r.motivo}`)
+    }
+  })
+})
+
+describe('R2.1 G4: o texto e o tamanho dos controles entram na coleta e na regra', () => {
+  const pagina = (controle) => `<main><section><p>Texto comum.</p>${controle}</section></main>`
+
+  it('o coletor lê o valor do input e o font-size do próprio controle', () => {
+    const { nos } = coletarDe(pagina('<input value="Maria" style="font-size: 13px">'))
+    const input = nos.find((no) => no.tag === 'input')
+    assert.equal(input.textoControle, 'Maria')
+    assert.equal(input.estilo.fontSize, '13px')
+  })
+
+  it('G4 reprova um input com valor visível a 13px e passa com 20px, na mesma fixture', () => {
+    const ruim = g4(coletarDe(pagina('<input value="Maria" style="font-size: 13px">')).nos)
+    assert.equal(ruim.ok, false, ruim.motivo)
+    assert.match(ruim.motivo, /13px/)
+    const bom = g4(coletarDe(pagina('<input value="Maria" style="font-size: 20px">')).nos)
+    assert.equal(bom.ok, true, bom.motivo)
+  })
+
+  it('o placeholder só conta quando é visível (valor vazio), e o valor vence o placeholder', () => {
+    const vazio = coletarDe(pagina('<input placeholder="Seu nome" style="font-size: 13px">')).nos.find((no) => no.tag === 'input')
+    assert.equal(vazio.textoControle, 'Seu nome')
+    const cheio = coletarDe(pagina('<input value="Ana" placeholder="Seu nome" style="font-size: 13px">')).nos.find((no) => no.tag === 'input')
+    assert.equal(cheio.textoControle, 'Ana')
+    assert.equal(g4(coletarDe(pagina('<input placeholder="Seu nome" style="font-size: 13px">')).nos).ok, false)
+  })
+
+  it('textarea e o rótulo escolhido do select também entram, cada um com o seu font-size', () => {
+    const area = coletarDe(pagina('<textarea style="font-size: 13px">Recado</textarea>')).nos.find((no) => no.tag === 'textarea')
+    assert.match(`${area.texto}${area.textoControle ?? ''}`, /Recado/)
+    assert.equal(g4(coletarDe(pagina('<textarea style="font-size: 13px">Recado</textarea>')).nos).ok, false)
+
+    const html = '<select style="font-size: 13px"><option value="a">Cuidador</option><option value="b" selected>Responsável</option></select>'
+    const { nos } = coletarDe(pagina(html))
+    assert.equal(nos.find((no) => no.tag === 'select').textoControle, 'Responsável')
+    assert.equal(g4(nos).ok, false)
+  })
+
+  it('o que não mostra texto não entra: hidden, checkbox e input vazio sem placeholder', () => {
+    const html = '<input type="hidden" value="x" style="font-size: 13px"><input type="checkbox" value="y" style="font-size: 13px"><input style="font-size: 13px">'
+    const { nos } = coletarDe(pagina(html))
+    for (const input of nos.filter((no) => no.tag === 'input')) assert.equal(input.textoControle ?? '', '')
+    assert.equal(g4(nos).ok, true)
+  })
+
+  it('a senha não vai para a coleta em claro', () => {
+    const { nos } = coletarDe(pagina('<input type="password" value="segredo123" style="font-size: 20px">'))
+    const senha = nos.find((no) => no.tag === 'input')
+    assert.equal(senha.textoControle.includes('segredo'), false)
+    assert.equal(senha.textoControle.length, 'segredo123'.length)
+  })
+
+  it('a regra pura: um controle com texto de 13px reprova e com 20px passa; caixa alta no controle reprova', () => {
+    const controle = (estilo) => criar({ tag: 'input', texto: '', textoControle: 'Maria', estilo })
+    assert.equal(g4([criar(), controle({ fontSize: '13px' })]).ok, false)
+    assert.equal(g4([criar(), controle({ fontSize: '20px' })]).ok, true)
+    assert.equal(g4([criar(), controle({ fontSize: '20px', textTransform: 'uppercase' })]).ok, false)
+    assert.equal(g4([criar(), controle({ fontSize: undefined })]).ok, false)
+  })
+
+  it('a regra pura: um controle sem texto visível não conta', () => {
+    assert.equal(g4([criar(), criar({ tag: 'input', texto: '', textoControle: '', estilo: { fontSize: '13px' } })]).ok, true)
+  })
+})
+
+describe('R2.2 G10: o parágrafo conta o texto dos descendentes inline', () => {
+  const CEM = 'a'.repeat(100)
+
+  it('o coletor mede as linhas de <p><span>…100 caracteres…</span></p> e a regra reprova', () => {
+    const { nos } = coletarDe(`<main><section><p>Curto.</p><p><span>${CEM}</span></p></section></main>`)
+    const [, dentroDoSpan] = nos.filter((no) => no.tag === 'p')
+    assert.deepEqual(dentroDoSpan.linhas, [100])
+    const r = g10(nos)
+    assert.equal(r.ok, false, r.motivo)
+    assert.match(r.motivo, /100 caracteres/)
+  })
+
+  it('o texto direto e o texto do span somam na mesma linha', () => {
+    const { nos } = coletarDe(`<main><section><p>Curto.</p><p>${'b'.repeat(40)}<em>${'c'.repeat(40)}</em></p></section></main>`)
+    assert.equal(g10(nos).ok, false)
+    assert.deepEqual(nos.filter((no) => no.tag === 'p')[1].linhas, [80])
+  })
+
+  it('um parágrafo aninhado é medido por si e não conta duas vezes no de fora', () => {
+    const { nos } = coletarDe('<main><section><p id="fora">Fora.</p></section></main>', (documento) => {
+      const dentro = documento.createElement('p')
+      dentro.textContent = 'd'.repeat(80)
+      documento.getElementById('fora').append(dentro)
+    })
+    const [fora, dentro] = nos.filter((no) => no.tag === 'p')
+    assert.deepEqual(fora.linhas, [5])
+    assert.deepEqual(dentro.linhas, [80])
+    const r = g10(nos)
+    assert.equal(r.ok, false, r.motivo)
+    assert.equal(r.nos_com_falha.length, 1)
+  })
+
+  it('um parágrafo conforme só com texto em descendentes inline passa', () => {
+    const { nos } = coletarDe('<main><section><p>Curto.</p><p><span>Só o span.</span></p></section></main>')
+    const r = g10(nos)
+    assert.equal(r.ok, true, r.motivo)
+  })
+
+  it('a regra pura: parágrafo sem texto direto mas com 100 caracteres numa linha reprova', () => {
+    const semTextoDireto = criar({ texto: '', textoTotal: CEM, linhas: [100] })
+    assert.equal(g10([criar({ linhas: [20] }), semTextoDireto]).ok, false)
+    assert.equal(g10([criar({ linhas: [20] }), criar({ texto: '', textoTotal: 'Curto.', linhas: [6] })]).ok, true)
+  })
+
+  it('a regra pura falha fechado: parágrafo com texto só nos descendentes e sem a contagem de linhas', () => {
+    const r = g10([criar({ linhas: [20] }), criar({ texto: '', textoTotal: CEM })])
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /sem a contagem de linhas/)
+  })
+
+  it('a regra pura: parágrafo realmente vazio continua de fora', () => {
+    assert.equal(g10([criar({ linhas: [20] }), criar({ texto: '', textoTotal: '' })]).ok, true)
+  })
+})
+
+describe('R2.3 G12: mídias e blocos aninhados também são inspecionados', () => {
+  const ANINHADO = (estiloDaMidia = '', estiloDoEnvoltorio = '') =>
+    `<main><section data-bloco><p>Texto.</p></section><section><div><div style="${estiloDoEnvoltorio}"><div data-midia style="${estiloDaMidia}"></div></div></div></section></main>`
+
+  it('uma mídia com opacity 0 dentro de um envoltório reprova', () => {
+    const { nos } = coletarDe(ANINHADO('opacity: 0'))
+    const r = g12(nos)
+    assert.equal(r.ok, false, r.motivo)
+    assert.match(r.motivo, /opacidade 0/)
+  })
+
+  it('uma mídia dentro de um ancestral com opacity 0 reprova (a opacidade não é herdada, mas esconde)', () => {
+    const r = g12(coletarDe(ANINHADO('', 'opacity: 0')).nos)
+    assert.equal(r.ok, false, r.motivo)
+    assert.match(r.motivo, /ancestral/)
+  })
+
+  it('uma <figure> aninhada com opacity 0.5 reprova, e a mesma fixture em 1 passa', () => {
+    const html = (opacidade) => `<main><section data-bloco><p>Texto.</p></section><section><div><div><figure style="opacity: ${opacidade}"></figure></div></div></section></main>`
+    assert.equal(g12(coletarDe(html('0.5')).nos).ok, false)
+    assert.equal(g12(coletarDe(html('1')).nos).ok, true)
+  })
+
+  it('uma mídia dentro de um ancestral escalado a 0,5 reprova', () => {
+    const r = g12(coletarDe(ANINHADO('', 'transform: matrix(0.5, 0, 0, 0.5, 0, 0)')).nos)
+    assert.equal(r.ok, false, r.motivo)
+  })
+
+  it('um [data-bloco] aninhado (neto de main) com opacity 0 reprova', () => {
+    const html = '<main><section><div><div data-bloco style="opacity: 0"><p>Texto.</p></div></div></section></main>'
+    assert.equal(g12(coletarDe(html).nos).ok, false)
+  })
+
+  it('o conteúdo oculto não é descartado: visibility hidden e display none na mídia aninhada reprovam', () => {
+    const { nos } = coletarDe(ANINHADO('opacity: 0; visibility: hidden'))
+    nos.find((no) => no.m.midia).visivel = false
+    assert.equal(g12(nos).ok, false)
+  })
+
+  it('a mesma fixture, conforme, passa', () => {
+    const r = g12(coletarDe(ANINHADO()).nos)
+    assert.equal(r.ok, true, r.motivo)
+  })
+
+  it('a regra pura: uma mídia aninhada com opacidade efetiva menor que 1 reprova', () => {
+    const midia = (extra) => criar({ tag: 'div', texto: '', m: { blocoG12: true }, ...extra })
+    assert.equal(g12([criar({ tag: 'section', texto: '', m: { filhoDeMain: true } }), midia({ estilo: { opacity: '0' } })]).ok, false)
+    assert.equal(g12([midia({ ancestrais: { opacidade: 0, escalaX: 1, escalaY: 1 } })]).ok, false)
+    assert.equal(g12([midia({ ancestrais: { opacidade: 1, escalaX: 1, escalaY: 2 } })]).ok, false)
+    assert.equal(g12([midia({ ancestrais: { opacidade: 1, escalaX: 1, escalaY: 1 } })]).ok, true)
+    assert.equal(g12([midia({ ancestrais: { opacidade: Number.NaN, escalaX: 1, escalaY: 1 } })]).ok, false)
+  })
+})
+
+describe('R2.4 G12: a escala vale nos dois eixos', () => {
+  const bloco = (transform) => criar({ tag: 'section', texto: '', m: { filhoDeMain: true }, estilo: { transform } })
+
+  it('matrix(1,0,0,2,0,0) (só o eixo Y) reprova', () => {
+    const r = g12([bloco('matrix(1, 0, 0, 2, 0, 0)')])
+    assert.equal(r.ok, false, r.motivo)
+    assert.match(r.motivo, /escala/)
+  })
+
+  it('o eixo X sozinho, o Y sozinho abaixo de 1 e os dois diferentes entre si reprovam', () => {
+    assert.equal(g12([bloco('matrix(2, 0, 0, 1, 0, 0)')]).ok, false)
+    assert.equal(g12([bloco('matrix(1, 0, 0, 0.5, 0, 0)')]).ok, false)
+    assert.equal(g12([bloco('matrix(0.5, 0, 0, 2, 0, 0)')]).ok, false)
+  })
+
+  it('só deslocamento e escala 1 nos dois eixos passam; 1,01 em Y falha', () => {
+    assert.equal(g12([bloco('matrix(1, 0, 0, 1, 0, 12)')]).ok, true)
+    assert.equal(g12([bloco('matrix(1, 0, 0, 1.01, 0, 0)')]).ok, false)
+  })
+
+  it('uma matrix incompleta é ilegível e reprova', () => {
+    assert.equal(g12([bloco('matrix(1, 0, 0)')]).ok, false)
+  })
+
+  it('o coletor lê o transform de um bloco escalado só em Y e a regra reprova', () => {
+    const { nos } = coletarDe('<main><section data-bloco><p>Texto.</p></section><section style="transform: matrix(1, 0, 0, 2, 0, 0)"><p>Outro.</p></section></main>')
+    const r = g12(nos)
+    assert.equal(r.ok, false, r.motivo)
+    assert.match(r.motivo, /escala/)
   })
 })
 
