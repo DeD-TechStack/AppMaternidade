@@ -20,7 +20,7 @@ export function Contato() {
         }
       />
       <LinhaDeLeitura secao={proposito.secao} blocos={[proposito.texto]} margem="sb-mt-fio-bloco" />
-      <MidiaLarga peca={{ cena: 'mamada', fundo: 'barro' }} margem="sb-mt-midia-linhas" />
+      <MidiaLarga peca={{ cena: 'mamada', fundo: 'lavanda' }} margem="sb-mt-midia-linhas" />
       <LinhaDeLeitura secao={urgencia.secao} margem="sb-mt-midia-linhas">
         <Paragrafo texto={urgencia.texto} />
       </LinhaDeLeitura>
