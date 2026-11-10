@@ -566,8 +566,43 @@ describe('Sessão: o CSS do bloco /* 44d-2 */ (lido como texto)', () => {
     }
     // Abaixo de 768 o recuo não entra (o 390 não muda).
     expect(emMedia767()).not.toMatch(/text-indent/)
-    // A caixa não se mexe: nada de margem, padding ou largura novos no cronômetro por causa do recuo.
-    expect(valor).not.toMatch(/margin|padding|width|left|transform/)
+    // A caixa não se mexe: nada de margem, largura, left ou transform novos no cronômetro por causa do recuo. O
+    // único acréscimo é o `padding-right` da correção abaixo, que devolve a largura que o recuo tirou.
+    expect(valor).not.toMatch(/margin|width|left|transform/)
+  })
+
+  // VOLTA2 D3 (correção da largura): a caixa é `width: fit-content` e o `text-indent` negativo entra no cálculo,
+  // então ela encolhia exatamente o recuo (783,1 para 765,9 em 1440). O `padding-right` do mesmo valor, em `em`
+  // (acompanha o 224 e o 160 do longo), devolve a largura. Na mesma regra do `text-indent`, só de 768 para cima.
+  it('D3 (768+): o padding-right do cronômetro é igual, em em, ao recuo do text-indent, na mesma regra, e não vale abaixo de 768', () => {
+    const abertura = /@media\s*\(min-width:\s*768px\)\s*\{/g
+    const faixas: string[] = []
+    for (let m = abertura.exec(bloco44); m; m = abertura.exec(bloco44)) {
+      let nivel = 1
+      let i = abertura.lastIndex
+      while (i < bloco44.length && nivel > 0) {
+        if (bloco44[i] === '{') nivel += 1
+        else if (bloco44[i] === '}') nivel -= 1
+        i += 1
+      }
+      faixas.push(bloco44.slice(abertura.lastIndex, i - 1))
+    }
+    const regras768 = faixas.join('\n')
+    const valor = regraEm(regras768, '.ha-cron-valor')
+    const recuo = /text-indent:\s*-(\d*\.?\d+)em\s*;/.exec(valor)
+    expect(recuo).not.toBeNull()
+    const direita = /padding-right:\s*(\d*\.?\d+)em\s*;/.exec(valor)
+    expect(direita, 'padding-right em em na mesma regra do text-indent').not.toBeNull()
+    expect(Number(direita![1])).toBe(Number(recuo![1]))
+    // Uma regra só, na faixa de 768: nenhuma outra regra do cronômetro (base, normal, longo) leva padding.
+    const comPadding = [...bloco44.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(
+      (m) => /\.ha-cron-valor/.test(m[1]) && /padding/.test(m[2]),
+    )
+    expect(comPadding).toHaveLength(1)
+    // Abaixo de 768 o recuo e o padding não entram, e o `longo` não redeclara nenhum dos dois (o `em` o acompanha).
+    expect(emMedia767()).not.toMatch(/\.ha-cron-valor[^{}]*\{[^}]*padding/)
+    expect(regra(".ha-cron-valor[data-tamanho='longo']")).not.toMatch(/padding|text-indent/)
+    expect(regra('.ha-cron-valor')).not.toMatch(/box-sizing\s*:\s*border-box/)
   })
 
   it('o campo da nota segue o 2.9: sem caixa, fio sólido embaixo na cor do texto do bloco, Instrument Serif 32', () => {

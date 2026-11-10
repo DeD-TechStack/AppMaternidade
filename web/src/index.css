@@ -2719,10 +2719,13 @@ body:has([data-barra-registrar]) [data-rodape] {
    direita do x do rótulo (a caixa já começa nele). O `text-indent` negativo tira esse recuo só da tinta, de forma
    óptica: não mexe no tracking e a caixa fica onde está (mesma altura, mesmo x, e a mesma largura para qualquer
    hora, porque o recuo é o mesmo para todas). Em `em`, para o longo (160) acompanhar. Só de 768 para cima: o 390
-   não entra. */
+   não entra.
+   A caixa é `width: fit-content` e o `text-indent` negativo entra nesse cálculo: ela encolhia exatamente o recuo
+   (783,1 para 765,9 em 1440). O `padding-right` do mesmo valor, na mesma regra, devolve essa largura. */
 @media (min-width: 768px) {
   .ha-cron-valor {
     text-indent: -0.077em;
+    padding-right: 0.077em;
   }
 }
 

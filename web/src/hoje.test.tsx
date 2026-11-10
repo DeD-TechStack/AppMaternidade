@@ -631,6 +631,13 @@ describe('Hoje: o CSS do bloco /* 44d-2 */ (lido como texto)', () => {
         if (meio < 0) continue
         const nome = declaracao.slice(0, meio).trim()
         if (!propriedades.test(nome)) continue
+        // VOLTA2 D3: o `padding-right` em `em` do cronômetro não é espaço de layout: devolve à caixa a largura que o
+        // `text-indent` negativo tirou. Única exceção, e só se for igual ao recuo da mesma regra.
+        if (seletor === '.ha-cron-valor' && nome === 'padding-right') {
+          const recuo = /text-indent:\s*-(\d*\.?\d+)em/.exec(corpo)?.[1]
+          expect(declaracao.slice(meio + 1).trim(), `${seletor} { ${nome} }`).toBe(`${recuo}em`)
+          continue
+        }
         for (const parte of declaracao.slice(meio + 1).trim().split(/\s+/)) {
           conferidos += 1
           if (parte === 'auto') continue
