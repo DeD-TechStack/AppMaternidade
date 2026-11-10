@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Fundo de papel, cobrindo tudo. -->
+  <rect width="512" height="512" fill="#F6EFE3"/>
+  <!-- Um berço (a tigela) e, sobre a borda dele, um disco: um colo e quem está nele. Tudo dentro
+       do círculo central de raio 204 (80% do lado), para o recorte maskable não comer nada. -->
+  <path d="M110 290 A146 146 0 0 0 402 290 Z" fill="#B0401C" stroke="#1A1511" stroke-width="12" stroke-linejoin="round"/>
+  <circle cx="256" cy="222" r="92" fill="#B0401C" stroke="#1A1511" stroke-width="12"/>
+</svg>
