@@ -85,18 +85,16 @@ function conferirTudoDentroDaColuna(container: HTMLElement) {
 }
 
 describe('aviso de demonstração: lugar na tela', () => {
-  it('é a primeira linha dentro do raiz do Início', async () => {
+  it('vem logo depois do cabeçalho do site e logo antes do main do Início', async () => {
     definirBanco('', '')
     const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
 
-    // A raiz é a tela, entre o cabeçalho e o rodapé do site (a casca do Layout, 2.6 e 2.7); depois
-    // do aviso vem a nav das seções, que ocupa o lugar do <header> antigo da página.
-    const raiz = container.querySelector('[class~="@container/pagina"]')!
-    expect(raiz.classList.contains('@container/pagina')).toBe(true)
-    expect(raiz.previousElementSibling!.matches('[data-cabecalho]')).toBe(true)
-    expect(raiz.firstElementChild).toBe(container.querySelector(SELETOR))
-    expect(raiz.firstElementChild!.nextElementSibling!.tagName).toBe('NAV')
+    // O Início é um fragmento na casca do Layout (2.6 e 2.7): o aviso vem logo depois do cabeçalho
+    // do site e logo antes do <main>.
+    const aviso = container.querySelector(SELETOR)!
+    expect(aviso.previousElementSibling!.matches('[data-cabecalho]')).toBe(true)
+    expect(aviso.nextElementSibling!.tagName).toBe('MAIN')
   })
 
   for (const [tela, caminho] of [

@@ -423,16 +423,16 @@ describe('D2: telas logadas numa coluna única', () => {
 // ---------------------------------------------------------------------------
 // D3
 
-describe('D3: faixa de fatos', () => {
-  it('os 4 valores usam a mesma classe de valor e nenhuma outra', async () => {
+describe('D3: faixa de números', () => {
+  it('os 3 valores usam a mesma classe de valor e nenhuma outra', async () => {
     const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
 
-    const secao = screen.getByRole('heading', { name: 'O que o app faz' }).closest('section')!
-    const valores = [...secao.querySelectorAll<HTMLElement>('li > p:first-child')]
-    expect(valores.map((v) => v.textContent)).toEqual(['7', 'Autoria', 'Convites', 'Lembretes'])
-    expect(valores.map((v) => v.className)).toEqual(Array(4).fill('numero-fato'))
-    expect(container.querySelectorAll('.numero-fato')).toHaveLength(4)
+    const secao = screen.getByRole('region', { name: 'O que o app faz' })
+    const valores = [...secao.querySelectorAll<HTMLElement>('[data-numero]')]
+    expect(valores.map((v) => v.textContent)).toEqual(['7', '2', '0'])
+    expect(valores.map((v) => v.className)).toEqual(Array(3).fill('sb-numeros-valor t-numero'))
+    expect(container.querySelectorAll('[data-numero]')).toHaveLength(3)
   })
 })
 
@@ -472,12 +472,11 @@ describe('D4: botões rápidos com a mesma altura', () => {
     })
   }
 
-  it('a miniatura do Início usa a mesma grade', async () => {
+  it('o Início não tem miniatura nem botões rápidos (a mesma grade vale só no Hoje)', async () => {
     const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
 
-    const sono = container.querySelector<HTMLElement>('[inert] button[aria-label="Iniciar sono de Heloísa"]')!
-    conferirGrade(sono.parentElement!)
+    expect(container.querySelector('button[aria-label="Iniciar sono de Heloísa"]')).toBeNull()
   })
 })
 
@@ -522,10 +521,9 @@ function variantesSemContainer(container: HTMLElement): string[] {
 }
 
 describe('R1b: toda variante de contêiner tem um contêiner acima, onde quer que seja montada', () => {
-  it('no Início, incluindo a miniatura inerte', async () => {
+  it('no Início', async () => {
     const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
-    expect(container.querySelector('[inert] button')).not.toBeNull()
 
     expect(variantesSemContainer(container)).toEqual([])
   })
@@ -613,67 +611,45 @@ describe('R1b: BotoesRapidos não depende da janela', () => {
 // ---------------------------------------------------------------------------
 // R4: o Início decide as colunas pelo espaço em rem da página, não pela janela
 
-describe('R4: o Início decide as colunas pela largura da página em rem', () => {
+describe('R4: o Início decide as colunas pelo CSS do sistema-base, não por variantes de classe', () => {
   const rotaDoInicio = async () => {
     const resultado = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
     return resultado.container
   }
-  const raizDaPagina = (container: HTMLElement) => container.querySelector<HTMLElement>('[class~="@container/pagina"]')
   const VARIANTE_DE_JANELA = /(^|:)(sm|md|lg|xl|2xl):/
 
-  it('o div raiz declara o contêiner nomeado @container/pagina', async () => {
+  it('o aviso (se houver), o main e a seção escura são filhos da casca, entre o cabeçalho e o rodapé', async () => {
     const container = await rotaDoInicio()
 
-    const raiz = raizDaPagina(container)
-    expect(raiz, 'nenhum elemento tem @container/pagina').not.toBeNull()
-    // O raiz é a tela, entre o cabeçalho e o rodapé do site (a casca do Layout).
-    expect(raiz!.parentElement!.classList.contains('sb-casca')).toBe(true)
-    expect(raiz!.previousElementSibling!.matches('[data-cabecalho]')).toBe(true)
-    expect(raiz!.nextElementSibling!.matches('[data-rodape]')).toBe(true)
+    const main = container.querySelector('main')!
+    const secao = container.querySelector('[data-secao-escura]')!
+    expect(main.parentElement!.classList.contains('sb-casca')).toBe(true)
+    expect(secao.parentElement).toBe(main.parentElement)
+    const aviso = container.querySelector('[data-aviso]')
+    const antes = aviso ?? main
+    expect(antes.previousElementSibling!.matches('[data-cabecalho]')).toBe(true)
+    expect(secao.nextElementSibling!.matches('[data-rodape]')).toBe(true)
   })
 
-  it('só o raiz tem variante de janela (o padding lateral), inclusive fora da miniatura e dentro dela', async () => {
+  it('nenhum elemento do Início tem variante de janela (sm:, md:, lg:, xl:, 2xl:)', async () => {
     const container = await rotaDoInicio()
-    const raiz = raizDaPagina(container)
 
-    const deJanela = [...container.querySelectorAll<HTMLElement>('[class]')]
-      .filter((elemento) => elemento !== raiz)
-      .flatMap((elemento) => [...elemento.classList].filter((token) => VARIANTE_DE_JANELA.test(token)))
+    const deJanela = [...container.querySelectorAll<HTMLElement>('[class]')].flatMap((elemento) =>
+      [...elemento.classList].filter((token) => VARIANTE_DE_JANELA.test(token)),
+    )
     expect(deJanela).toEqual([])
-    expect(container.querySelector('[inert] [class]')).not.toBeNull()
   })
 
-  it('a única variante de janela do raiz é o padding lateral md:px-[2%]', async () => {
-    const container = await rotaDoInicio()
-
-    const doRaiz = [...(raizDaPagina(container)?.classList ?? [])].filter((token) => VARIANTE_DE_JANELA.test(token))
-    expect(doRaiz).toEqual(['md:px-[2%]'])
-  })
-
-  it('toda variante …/pagina: tem o @container/pagina num ancestral, incluindo a miniatura inerte', async () => {
+  it('o Início não usa variante de contêiner da página (/pagina): as faixas vêm das media queries do CSS', async () => {
     const container = await rotaDoInicio()
 
     const usadas = [...container.querySelectorAll<HTMLElement>('[class]')].flatMap((elemento) =>
       [...elemento.classList].filter((token) => nomeDoContainerExigido(token) === 'pagina'),
     )
-    expect(usadas.length).toBeGreaterThan(10)
+    expect(usadas).toEqual([])
+    expect(container.querySelector('[class~="@container/pagina"]')).toBeNull()
     expect(variantesSemContainer(container)).toEqual([])
-    const dentroDaMiniatura = container.querySelectorAll('[inert] [class*="/pagina:"]')
-    expect(dentroDaMiniatura.length).toBeGreaterThan(0)
-  })
-
-  it('o limiar é 46 rem em todas as variantes nomeadas', async () => {
-    const container = await rotaDoInicio()
-
-    const limiares = new Set(
-      [...container.querySelectorAll<HTMLElement>('[class]')].flatMap((elemento) =>
-        [...elemento.classList]
-          .filter((token) => nomeDoContainerExigido(token) === 'pagina')
-          .map((token) => /^@(?:min|max)-\[([^\]]+)\]/.exec(token)?.[1] ?? token),
-      ),
-    )
-    expect([...limiares]).toEqual(['46rem'])
   })
 
   it('as telas logadas e a rota inexistente não usam o contêiner da página', () => {
@@ -803,10 +779,10 @@ function nomesQueDivergem(container: HTMLElement): string[] {
 }
 
 describe('G3-4: o texto visível está no nome acessível', () => {
-  it('no Início, incluindo a miniatura inerte', async () => {
+  it('no Início', async () => {
     const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
-    expect(container.querySelector('[inert] button')).not.toBeNull()
+    expect(container.querySelectorAll('a').length).toBeGreaterThan(10)
 
     expect(nomesQueDivergem(container)).toEqual([])
   })
@@ -846,10 +822,9 @@ describe('G3-4: o texto visível está no nome acessível', () => {
       .map((controle) => controle.outerHTML)
   }
 
-  it('no Início, incluindo a miniatura, o texto não fica solto ao lado de um aria-hidden', async () => {
+  it('no Início, o texto não fica solto ao lado de um aria-hidden', async () => {
     const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
-    expect(container.querySelector('[inert] [aria-hidden="true"]')).not.toBeNull()
 
     expect(comTextoSoltoAoLadoDeAriaHidden(container)).toEqual([])
   })
@@ -896,13 +871,11 @@ describe('D6: cronômetro', () => {
     expect(cronometro.classList.contains('cronometro-mini')).toBe(false)
   })
 
-  it('o da miniatura do Início usa a mesma classe, com o modificador menor', async () => {
+  it('o Início não tem cronômetro: o da miniatura saiu com os aparelhos', async () => {
     const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
 
-    const cronometro = container.querySelector('[inert] [role="timer"]')!
-    expect(cronometro.classList.contains('cronometro')).toBe(true)
-    expect(cronometro.classList.contains('cronometro-mini')).toBe(true)
+    expect(container.querySelector('[role="timer"]')).toBeNull()
   })
 })
 

@@ -15,29 +15,31 @@ describe('rotas', () => {
     expect(titulos[0].textContent).toBe(PROMESSA)
   })
 
-  it('o Início traz os quatro pilares e o link para o Hoje', async () => {
+  it('o Início traz os quatro pilares e os links "Ver o protótipo" para o Hoje', async () => {
     renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
 
     for (const pilar of ['Rotina', 'Desenvolvimento', 'Cuidado compartilhado', 'Comunidade']) {
       expect(screen.getByText(pilar).className).toContain('etiqueta')
     }
-    const link = screen.getByRole('link', { name: 'Ver o protótipo do Hoje' })
-    expect(link.getAttribute('href')).toBe('/app/hoje')
+    // Um na abertura e o círculo CTA: os dois levam ao Hoje.
+    const links = screen.getAllByRole('link', { name: 'Ver o protótipo' })
+    expect(links).toHaveLength(2)
+    for (const link of links) expect(link.getAttribute('href')).toBe('/app/hoje')
     expect(screen.getByText('Protótipo em construção. Nada aqui é dado real.')).toBeTruthy()
   })
 
-  it('as miniaturas do Início ficam inertes e escondidas do leitor de tela', async () => {
+  it('as molduras de mídia do Início são imagens nomeadas e vazias; não há miniatura inerte', async () => {
     const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
 
-    const miniaturas = container.querySelector('[inert]')
-    expect(miniaturas).not.toBeNull()
-    expect(miniaturas!.getAttribute('aria-hidden')).toBe('true')
-    // Nada dentro é focável por Tab.
-    for (const elemento of miniaturas!.querySelectorAll<HTMLElement>('a, button, input, textarea, select')) {
-      const fora = elemento.tabIndex < 0 || (elemento as HTMLButtonElement).disabled
-      expect(fora, elemento.outerHTML).toBe(true)
+    expect(container.querySelector('[inert]')).toBeNull()
+    const molduras = [...container.querySelectorAll('[data-midia]')]
+    expect(molduras.length).toBeGreaterThan(0)
+    for (const moldura of molduras) {
+      expect(moldura.getAttribute('role')).toBe('img')
+      expect(moldura.getAttribute('aria-label')).toBeTruthy()
+      expect(moldura.textContent).toBe('')
     }
   })
 

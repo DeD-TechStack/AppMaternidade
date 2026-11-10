@@ -1,6 +1,12 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { screen } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
+import { Aparelho } from './componentes/Aparelho.tsx'
+import { IlustracaoBerco } from './prototipo/IlustracaoBerco.tsx'
+import { IlustracaoColo } from './prototipo/IlustracaoColo.tsx'
+import { IlustracaoMamada } from './prototipo/IlustracaoMamada.tsx'
+import { IlustracaoPasseio } from './prototipo/IlustracaoPasseio.tsx'
+import { IlustracaoTapete } from './prototipo/IlustracaoTapete.tsx'
 import { criarEstadoInicial, type EstadoPrototipo } from './prototipo/estado.ts'
 import { renderizarRota } from './teste/renderizarRota.tsx'
 import { listarFontes, pastaSrcDe } from './teste/fontes.ts'
@@ -100,161 +106,108 @@ describe('MAT-44: composição do Início', () => {
     return resultado.container
   }
 
-  it('há pelo menos 3 seções de campo de cor, com token válido, e nunca mais de 2 seguidas', async () => {
+  it('as molduras de mídia usam só o barro e a lavanda como fundo', async () => {
     const container = await inicio()
 
-    const secoes = [...container.querySelectorAll('main > section')]
-    const campos = secoes.filter((secao) => secao.hasAttribute('data-campo'))
-    expect(campos.length).toBeGreaterThanOrEqual(3)
-    for (const campo of campos) {
-      expect(tokens[campo.getAttribute('data-campo')!], campo.outerHTML.slice(0, 80)).toBeDefined()
-    }
-
-    let seguidos = 0
-    for (const secao of secoes) {
-      seguidos = secao.hasAttribute('data-campo') ? seguidos + 1 : 0
-      expect(seguidos, 'campos de cor seguidos').toBeLessThanOrEqual(2)
-    }
-    // Entre os campos há faixas de papel: nem tudo é campo.
-    expect(secoes.length).toBeGreaterThan(campos.length)
+    const usados = new Set([...container.querySelectorAll('[data-midia]')].map((m) => m.getAttribute('data-fundo')))
+    expect([...usados].sort()).toEqual(['barro', 'lavanda'])
+    expect(container.querySelector('[data-campo]')).toBeNull()
   })
 
-  it('os campos usam o urucum, o barro e a lavanda', async () => {
-    const container = await inicio()
-
-    const usados = new Set([...container.querySelectorAll('main > section[data-campo]')].map((s) => s.getAttribute('data-campo')))
-    expect([...usados].sort()).toEqual(['accent', 'field-1', 'field-2'])
-  })
-
-  it('há pelo menos 2 aparelhos, inertes e escondidos do leitor de tela, e um deles é notebook', async () => {
-    const container = await inicio()
-
-    const aparelhos = [...container.querySelectorAll<HTMLElement>('[data-aparelho]')]
-    expect(aparelhos.length).toBeGreaterThanOrEqual(2)
-    for (const aparelho of aparelhos) {
-      expect(['celular', 'notebook']).toContain(aparelho.getAttribute('data-aparelho'))
-      expect(aparelho.hasAttribute('inert'), aparelho.className).toBe(true)
-      expect(aparelho.getAttribute('aria-hidden')).toBe('true')
-    }
-    expect(aparelhos.some((a) => a.getAttribute('data-aparelho') === 'notebook')).toBe(true)
-  })
-
-  it('o primeiro [inert] é o grupo de miniaturas, com os botões rápidos, o cronômetro e as variantes da página', async () => {
-    const container = await inicio()
-
-    const grupo = container.querySelector<HTMLElement>('[inert]')!
-    expect(grupo.getAttribute('aria-hidden')).toBe('true')
-    expect(grupo.querySelector('button[aria-label="Iniciar sono de Heloísa"]')).not.toBeNull()
-    expect(grupo.querySelector('[role="timer"].cronometro-mini')).not.toBeNull()
-    expect(grupo.querySelector('[class*="/pagina:"]')).not.toBeNull()
-  })
-
-  it('as miniaturas usam os mesmos componentes, sem navegação inferior, sem ids e sem efeito no <html>', async () => {
-    const container = await inicio()
-
-    for (const aparelho of container.querySelectorAll('[data-aparelho]')) {
-      expect(aparelho.querySelector('nav'), 'navegação inferior dentro do aparelho').toBeNull()
-      expect(aparelho.querySelector('[id]'), 'id dentro do aparelho').toBeNull()
-    }
-    expect(container.querySelectorAll('[data-aparelho] .campo-andamento').length).toBeGreaterThan(0)
-    expect(container.querySelectorAll('[data-aparelho] .campo-sessao').length).toBeGreaterThan(0)
-    expect(document.documentElement.hasAttribute('data-tema')).toBe(false)
-  })
-
-  it('a miniatura da madrugada usa o invólucro local, não o <html>', async () => {
-    const container = await inicio()
-
-    const locais = container.querySelectorAll('[data-tema-local="madrugada"]')
-    expect(locais).toHaveLength(1)
-    expect(locais[0].closest('[data-aparelho="celular"]')).not.toBeNull()
-    expect(document.documentElement.hasAttribute('data-tema')).toBe(false)
-  })
-
-  it('cada composição de aparelhos tem um parágrafo visível ao lado', async () => {
-    await inicio()
-
-    expect(screen.getByText('Duas telas do protótipo')).toBeTruthy()
-    expect(screen.getByText(/^Na tela Hoje ficam a soneca que Bruno começou/)).toBeTruthy()
-    expect(
-      screen.getByText(
-        'No celular, a mesma sessão de tummy time no modo madrugada: tela escura, cronômetro grande e botões maiores.',
-      ),
-    ).toBeTruthy()
-  })
-
-  it('o cabeçalho é o do site (Layout, 64 px, medido em G2) e os links-âncora da página têm alvo de 44 px', async () => {
+  it('o cabeçalho é o do site (Layout, 64 px, medido em G2) e os links do Início têm alvo de 44 px', async () => {
     const container = await inicio()
 
     expect(container.querySelectorAll('header')).toHaveLength(1)
     const cabecalho = container.querySelector('header')!
     expect(cabecalho.hasAttribute('data-cabecalho')).toBe(true)
     expect(cabecalho.classList.contains('sb-cabecalho')).toBe(true)
-    const links = [...container.querySelectorAll('nav[aria-label="Seções da página"] a')]
-    expect(links).toHaveLength(3)
-    for (const link of links) expect(link.classList.contains('alvo-toque')).toBe(true)
+    const links = [...container.querySelectorAll('main a, [data-secao-escura] a')]
+    expect(links.length).toBeGreaterThanOrEqual(10)
+    for (const link of links) expect(link.classList.contains('alvo-toque'), link.outerHTML).toBe(true)
   })
 
-  it('os fatos mantêm os quatro itens, com o termo grande em Fraunces', async () => {
+  it('os 3 números do Início usam a Zilla Slab em 112 px (t-numero) e as legendas em corpo', async () => {
     const container = await inicio()
 
-    expect([...container.querySelectorAll('.numero-fato')].map((n) => n.textContent)).toEqual([
-      '7',
-      'Autoria',
-      'Convites',
-      'Lembretes',
-    ])
-    // A regra do tamanho é a que declara font-size (o seletor também aparece em outro grupo).
-    const corpo = [...estiloGlobal.matchAll(/\.numero-fato\s*\{([^}]*)\}/g)]
-      .map((m) => m[1])
-      .find((texto) => texto.includes('font-size'))!
-    const [, minimo, , maximo] = /clamp\(\s*([\d.]+)rem\s*,\s*([\d.]+)vw\s*,\s*([\d.]+)rem\s*\)/.exec(corpo)!
-    // Em 390 px vale o mínimo; em 1440 px vale o máximo (o termo central da escala é menor).
-    expect(parseFloat(minimo) * 16).toBeGreaterThanOrEqual(32)
-    expect(parseFloat(maximo) * 16).toBeGreaterThanOrEqual(40)
+    expect([...container.querySelectorAll('[data-numero]')].map((n) => n.textContent)).toEqual(['7', '2', '0'])
+    for (const numero of container.querySelectorAll('[data-numero]')) expect(numero.classList.contains('t-numero')).toBe(true)
+    const corpo = regrasDe(estiloGlobal).find((r) => r.seletor === '.t-numero')!.corpo
+    expect(corpo).toMatch(/font-size:\s*7rem/)
+    expect(corpo).toMatch(/font-family:\s*var\(--fonte-sb-slab\)/)
   })
 
-  it('na página pública não há ícone fora das miniaturas dos aparelhos', async () => {
+  it('o Início não tem ícone', async () => {
     const container = await inicio()
 
-    const fora = [...container.querySelectorAll('svg.lucide')].filter((icone) => icone.closest('[inert]') === null)
-    expect(fora).toEqual([])
+    expect(container.querySelectorAll('svg')).toHaveLength(0)
   })
 })
 
-describe('MAT-44: âncoras do Início (nav "Seções da página", que antes ficava no <header> da página)', () => {
-  it('cada link começa com #, aponta para um id existente e é único', async () => {
+describe('MAT-44d-4: os links do Início levam só às rotas do protótipo', () => {
+  it('cada href é uma rota conhecida', async () => {
     const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
 
-    const hrefs = [...container.querySelectorAll('nav[aria-label="Seções da página"] a')].map((a) => a.getAttribute('href')!)
-    expect(hrefs.length).toBeGreaterThanOrEqual(3)
-    for (const href of hrefs) {
-      expect(href.startsWith('#'), href).toBe(true)
-      expect(href.startsWith('#secao-'), href).toBe(true)
-      expect(container.querySelector(`[id="${href.slice(1)}"]`), `id de ${href}`).not.toBeNull()
-    }
-    expect(new Set(hrefs).size).toBe(hrefs.length)
+    const hrefs = new Set([...container.querySelectorAll('main a, [data-secao-escura] a')].map((a) => a.getAttribute('href')!))
+    expect([...hrefs].sort()).toEqual(['/app/hoje', '/app/sessao', '/criar-conta', '/entrar'])
+    expect(container.querySelector('a[href^="#"]')).toBeNull()
   })
+})
 
-  it('os rótulos são os do texto aprovado, na ordem', async () => {
-    const { container } = renderizarRota('/')
-    await screen.findByRole('heading', { level: 1 })
+describe('MAT-44: o componente Aparelho continua existindo (fora do Início, sem uso nesta fase)', () => {
+  it('o celular e o notebook são inertes e escondidos do leitor de tela, com o tema local da madrugada', () => {
+    const { container } = render(
+      <>
+        <Aparelho tipo="notebook" tela="hoje">
+          <p>Hoje</p>
+        </Aparelho>
+        <Aparelho tipo="celular" tela="sessao" tema="madrugada">
+          <p>Sessão</p>
+        </Aparelho>
+      </>,
+    )
 
-    expect([...container.querySelectorAll('nav[aria-label="Seções da página"] a')].map((a) => a.textContent)).toEqual([
-      'As telas',
-      'Para que serve',
-      'Madrugada',
-    ])
+    const aparelhos = [...container.querySelectorAll<HTMLElement>('[data-aparelho]')]
+    expect(aparelhos.map((a) => a.getAttribute('data-aparelho'))).toEqual(['notebook', 'celular'])
+    for (const aparelho of aparelhos) {
+      expect(aparelho.hasAttribute('inert')).toBe(true)
+      expect(aparelho.getAttribute('aria-hidden')).toBe('true')
+    }
+    expect(container.querySelectorAll('[data-tema-local="madrugada"]')).toHaveLength(1)
+    expect(document.documentElement.hasAttribute('data-tema')).toBe(false)
   })
 })
 
 describe('MAT-44: ilustrações', () => {
+  const comSessao = (tipo: 'sono' | 'mamada' | 'tummy'): EstadoPrototipo => ({
+    ...criarEstadoInicial(Date.now()),
+    sessao: { tipo, inicio: Date.now() - 60_000, pessoa: 'Juliana' },
+  })
+  // O Início não tem ilustração (MAT-44d-4): as ilustrações vivem na Sessão, uma por tipo de sessão.
   const casos: Array<[string, string, EstadoPrototipo]> = [
     ['Início', '/', claro()],
     ['Hoje', '/app/hoje', claro()],
-    ['Sessão', '/app/sessao', claro()],
+    ['Sessão de sono', '/app/sessao', comSessao('sono')],
+    ['Sessão de tummy time', '/app/sessao', comSessao('tummy')],
+    ['Sessão de mamada', '/app/sessao', comSessao('mamada')],
     ['Sessão vazia', '/app/sessao', semSessao()],
   ]
+
+  it('os 5 desenhos continuam: distintos e decorativos', () => {
+    const { container } = render(
+      <>
+        <IlustracaoBerco />
+        <IlustracaoColo />
+        <IlustracaoMamada />
+        <IlustracaoPasseio />
+        <IlustracaoTapete />
+      </>,
+    )
+
+    const figuras = [...container.querySelectorAll<SVGElement>('[data-ilustracao]')]
+    expect(figuras.map((f) => f.getAttribute('data-ilustracao')).sort()).toEqual(['berco', 'colo', 'mamada', 'passeio', 'tapete'])
+    for (const figura of figuras) expect(figura.getAttribute('aria-hidden')).toBe('true')
+  })
 
   it('somam de 3 a 6 ilustrações distintas nas 3 telas, todas decorativas', async () => {
     const nomes = new Set<string>()
@@ -364,7 +317,8 @@ describe('MAT-44: SVG e movimento', () => {
       const { container, unmount } = renderizarRota(caminho, { estadoInicial: estado })
       await screen.findAllByRole('heading')
       const svgs = [...container.querySelectorAll('svg')]
-      expect(svgs.length, caminho).toBeGreaterThan(0)
+      // O Início não tem ilustração nem ícone (MAT-44d-4): zero svg lá.
+      expect(svgs.length, caminho).toBeGreaterThanOrEqual(caminho === '/' ? 0 : 1)
       for (const svg of svgs) {
         const decorativo = svg.getAttribute('aria-hidden') === 'true'
         const nomeado = svg.hasAttribute('aria-label') || svg.hasAttribute('aria-labelledby') || svg.querySelector('title') !== null
@@ -510,58 +464,9 @@ describe('MAT-44 r2 A2: ícones só na navegação inferior e nos botões rápid
 // ---------------------------------------------------------------------------
 // Rodada 2, parte B: composição.
 
-describe('MAT-44 r2 B1: vitrine de aparelhos do Início', () => {
-  async function aparelhosDoTopo() {
-    const { container } = renderizarRota('/')
-    await screen.findByRole('heading', { level: 1 })
-    const palco = container.querySelector<HTMLElement>('.vitrine-palco')!
-    const celulares = [...palco.querySelectorAll<HTMLElement>('[data-aparelho="celular"]')]
-    return { container, palco, notebook: palco.querySelector<HTMLElement>('[data-aparelho="notebook"]')!, celulares }
-  }
-
-  it('o notebook mostra um Hoje de computador, com o cartão, a nota e a lista Últimos', async () => {
-    const { notebook } = await aparelhosDoTopo()
-
-    expect(notebook.querySelector('.campo-andamento')).not.toBeNull()
-    expect(notebook.textContent).toContain('Para você saber')
-    expect(notebook.textContent).toContain('Pomada só à noite.')
-    expect(notebook.textContent).toContain('Últimos')
-    expect(notebook.textContent).toContain('Tummy time')
-    expect(notebook.querySelector('[role="timer"]')).toBeNull()
-  })
-
-  it('há dois celulares e cada um mostra uma tela distinta: um o Hoje, outro a Sessão', async () => {
-    const { celulares, notebook } = await aparelhosDoTopo()
-
-    expect(celulares).toHaveLength(2)
-    const doHoje = celulares.filter((c) => c.querySelector('.campo-andamento') !== null)
-    const daSessao = celulares.filter((c) => c.querySelector('[role="timer"]') !== null)
-    expect(doHoje).toHaveLength(1)
-    expect(daSessao).toHaveLength(1)
-    expect(doHoje[0]).not.toBe(daSessao[0])
-    // O celular do Hoje não repete a nota nem a lista do notebook; o da Sessão não tem o cartão.
-    expect(doHoje[0].textContent).not.toContain('Para você saber')
-    expect(daSessao[0].querySelector('.campo-andamento')).toBeNull()
-    // A tela do notebook é diferente das dos celulares: é a única com a lista Últimos.
-    expect(celulares.every((c) => !c.textContent!.includes('Últimos'))).toBe(true)
-    expect(notebook.querySelector('ul')).not.toBeNull()
-  })
-
-  // R3 (rodada 5): antes o celular da Sessão sumia em página estreita; agora os dois celulares e o
-  // notebook ficam em toda largura, cada um com posição e escala próprias na faixa estreita.
-  it('em página estreita os dois celulares continuam: cada um tem posição e escala sem variante', async () => {
-    const { celulares } = await aparelhosDoTopo()
-
-    expect(celulares).toHaveLength(2)
-    for (const celular of celulares) {
-      const classe = celular.getAttribute('class')!
-      expect(classe).not.toMatch(/(?:^|\s)hidden(?:\s|$)/)
-      expect(classe).toMatch(/(?:^|\s)left-\[[\d.]+rem\]/)
-      expect(classe).toMatch(/(?:^|\s)top-\[[\d.]+rem\]/)
-      expect(classe).toMatch(/(?:^|\s)scale-\[[\d.]+\]/)
-    }
-  })
-
+// A vitrine de aparelhos saiu do Início em MAT-44d-4; o componente e o CSS dela ficam, e o que
+// vale deles está conferido no CSS abaixo.
+describe('MAT-44 r2 B1: CSS da vitrine de aparelhos', () => {
   it('o notebook tem margens laterais largas, que é onde os celulares se sobrepõem', () => {
     const corpo = regrasDe(estiloGlobal).find((r) => r.seletor === '.aparelho-notebook .aparelho-tela')!.corpo
     const [, vertical, lateral] = /padding:\s*([\d.]+)rem\s+([\d.]+)rem/.exec(corpo)!
@@ -588,31 +493,8 @@ describe('MAT-44 r2 B1: vitrine de aparelhos do Início', () => {
   })
 })
 
-describe('MAT-44 r2 B2: cena de ilustrações do campo de barro', () => {
-  // Rodada 6: as figuras não se sobrepõem (antes a regra era "mesma largura e sobrepostas"); a
-  // escala igual das pessoas e a ausência de margem negativa estão no bloco "r6 #2 e #3".
-  it('as três ilustrações ficam no mesmo recipiente, na ordem, e cada uma com largura em porcentagem', async () => {
-    const { container } = renderizarRota('/')
-    await screen.findByRole('heading', { level: 1 })
-
-    const campo = container.querySelector('main > section[data-campo="field-1"]')!
-    const figuras = [...campo.querySelectorAll<SVGElement>('[data-ilustracao]')]
-    expect(figuras.map((f) => f.getAttribute('data-ilustracao'))).toEqual(['colo', 'tapete', 'passeio'])
-    expect(new Set(figuras.map((f) => f.parentElement)).size).toBe(1)
-    for (const figura of figuras) {
-      expect(figura.getAttribute('class')).toMatch(/(?:^|\s)w-\[[\d.]+%\]/)
-      expect(figura.getAttribute('class')).toMatch(/@min-\[46rem\]\/pagina:w-\[[\d.]+%\]/)
-    }
-  })
-
-  it('o campo não tem altura mínima solta: a altura vem das ilustrações', async () => {
-    const { container } = renderizarRota('/')
-    await screen.findByRole('heading', { level: 1 })
-
-    const campo = container.querySelector('main > section[data-campo="field-1"]')!
-    expect(campo.className).not.toMatch(/min-h-/)
-  })
-
+// A cena do campo de barro saiu do Início em MAT-44d-4; os desenhos ficam.
+describe('MAT-44 r2 B2: ilustrações da cena', () => {
   it('o chão de cada ilustração vai de borda a borda do desenho, para formar uma linha só', () => {
     for (const nome of ['Colo', 'Tapete', 'Passeio', 'Mamada', 'Berco']) {
       const texto = lerTexto(`prototipo/Ilustracao${nome}.tsx`)
@@ -669,33 +551,12 @@ describe('MAT-44 r2 B3 e B4: Sessão', () => {
   })
 })
 
-describe('MAT-44 r2 B5: campo da madrugada no Início', () => {
-  async function madrugadaDoInicio() {
-    const { container } = renderizarRota('/')
-    await screen.findByRole('heading', { level: 1 })
-    return container.querySelector<HTMLElement>('#secao-madrugada')!
-  }
-
-  it('a legenda vem logo depois do celular, os dois filhos do mesmo campo', async () => {
-    const secao = await madrugadaDoInicio()
-
-    const celular = secao.querySelector<HTMLElement>('.madrugada-celular')!
-    expect(celular.querySelector('[data-aparelho="celular"]')).not.toBeNull()
-    const legenda = celular.nextElementSibling as HTMLElement
-    expect(legenda.textContent).toMatch(/^No celular,/)
-    expect(legenda.classList.contains('madrugada-legenda')).toBe(true)
-    expect(legenda.parentElement).toBe(secao)
-    expect(celular.parentElement).toBe(secao)
-  })
-
+// O campo da madrugada saiu do Início em MAT-44d-4; o CSS dele fica.
+describe('MAT-44 r2 B5: CSS do campo da madrugada', () => {
   // Rodada 7: a escala do celular deixou de ser uma classe do JSX (0,75 e 0,85 fixos) e passou a ser
   // a variável --celular-escala, trocada em degraus de @container; onde o celular já cabia a
   // escala é a mesma de antes. A conferência de que ele cabe em toda largura está no bloco "r7 #1".
-  it('o celular tem escala de pelo menos 0,75 onde cabe (o texto da miniatura fica com 12 px ou mais) e 0,85 na página larga', async () => {
-    const secao = await madrugadaDoInicio()
-
-    const celular = secao.querySelector('[data-aparelho="celular"]')!
-    expect(celular.getAttribute('class')).toContain('[scale:var(--celular-escala)]')
+  it('o celular tem escala de pelo menos 0,75 onde cabe (o texto da miniatura fica com 12 px ou mais) e 0,85 na página larga', () => {
     const escalas = regrasComContexto(estiloGlobal)
       .filter((r) => r.seletor === '.madrugada-celular' && '--celular-escala' in r.props)
       .map((r) => ({ condicao: r.condicao, escala: parseFloat(r.props['--celular-escala']) }))
@@ -705,15 +566,6 @@ describe('MAT-44 r2 B5: campo da madrugada no Início', () => {
     expect(cabe[0].escala * 16).toBeGreaterThanOrEqual(12)
     expect(larga.length).toBe(1)
     expect(larga[0].escala).toBeGreaterThanOrEqual(0.85)
-  })
-
-  it('a miniatura da madrugada traz o cronômetro e as ações da sessão, em botões grandes', async () => {
-    const secao = await madrugadaDoInicio()
-
-    expect(secao.querySelector('[role="timer"]')).not.toBeNull()
-    const grandes = [...secao.querySelectorAll('[data-aparelho] button.botao-grande')]
-    expect(grandes.map((b) => b.textContent)).toEqual(['Encerrar'])
-    expect(secao.querySelector('[data-aparelho]')!.textContent).toContain('Encerrar e anotar')
   })
 })
 
@@ -815,51 +667,6 @@ describe('MAT-44 r3 #3: aparelhos sem tela vazia', () => {
     expect(corpo).toMatch(/aspect-ratio:\s*9\s*\/\s*14\s*;/)
   })
 
-  it('cada celular termina em botões desativados e fora da ordem de Tab (ações da sessão ou registro rápido)', async () => {
-    const { container } = renderizarRota('/')
-    await screen.findByRole('heading', { level: 1 })
-
-    const celulares = [...container.querySelectorAll<HTMLElement>('[data-aparelho="celular"]')]
-    expect(celulares).toHaveLength(3)
-    for (const celular of celulares) {
-      const botoes = [...celular.querySelectorAll<HTMLButtonElement>('button')]
-      expect(botoes.length).toBeGreaterThanOrEqual(3)
-      const ultimo = botoes[botoes.length - 1]
-      expect(ultimo.disabled).toBe(true)
-      expect(ultimo.tabIndex).toBe(-1)
-      // O último controle é do pé da tela: não sobra tela vazia embaixo dele no DOM.
-      expect(ultimo.closest('.aparelho-tela')!.firstElementChild!.lastElementChild!.contains(ultimo)).toBe(true)
-    }
-  })
-
-  it('os celulares da Sessão mostram as ações da sessão em miniatura: Encerrar, Encerrar e anotar e Descartar', async () => {
-    const { container } = renderizarRota('/')
-    await screen.findByRole('heading', { level: 1 })
-
-    const daSessao = [...container.querySelectorAll<HTMLElement>('[data-aparelho="celular"]')].filter(
-      (c) => c.querySelector('[role="timer"]') !== null,
-    )
-    expect(daSessao).toHaveLength(2)
-    for (const celular of daSessao) {
-      const nomes = [...celular.querySelectorAll('button')].map((b) => b.textContent)
-      expect(nomes).toEqual(['Encerrar', 'Encerrar e anotar', 'Descartar'])
-      for (const botao of celular.querySelectorAll<HTMLButtonElement>('button')) {
-        expect(botao.disabled).toBe(true)
-        expect(botao.tabIndex).toBe(-1)
-      }
-    }
-  })
-
-  it('continuam inertes e sem ids', async () => {
-    const { container } = renderizarRota('/')
-    await screen.findByRole('heading', { level: 1 })
-
-    for (const aparelho of container.querySelectorAll('[data-aparelho]')) {
-      expect(aparelho.hasAttribute('inert')).toBe(true)
-      expect(aparelho.getAttribute('aria-hidden')).toBe('true')
-      expect(aparelho.querySelector('[id]')).toBeNull()
-    }
-  })
 })
 
 describe('MAT-44 r3 #4: campo do cronômetro apertado', () => {
@@ -954,7 +761,9 @@ describe('MAT-44 r4 #1: a Sessão ocupa o vazio com uma ilustração do tipo da 
     expect(cl).toMatch(/\bmax-w-\[16rem\]/)
   })
 
-  it('nenhuma ilustração nova: o total de distintas continua em 5', async () => {
+  // O Início deixou de ter ilustração (MAT-44d-4): colo e passeio só existem como desenho, e as
+  // telas mostram as outras três (berço, tapete e mamada, na Sessão).
+  it('nenhuma ilustração nova: as telas mostram só desenhos dos 5 que existem', async () => {
     const nomes = new Set<string>()
     for (const [caminho, estado] of [
       ['/', claro()],
@@ -969,29 +778,11 @@ describe('MAT-44 r4 #1: a Sessão ocupa o vazio com uma ilustração do tipo da 
       for (const f of container.querySelectorAll('[data-ilustracao]')) nomes.add(f.getAttribute('data-ilustracao')!)
       unmount()
     }
-    expect([...nomes].sort()).toEqual(['berco', 'colo', 'mamada', 'passeio', 'tapete'])
+    expect([...nomes].sort()).toEqual(['berco', 'mamada', 'tapete'])
   })
 })
 
-describe('MAT-44 r4 #2: campo da madrugada recomposto', () => {
-  async function secaoMadrugada() {
-    const { container } = renderizarRota('/')
-    await screen.findByRole('heading', { level: 1 })
-    return container.querySelector<HTMLElement>('#secao-madrugada')!
-  }
-
-  it('em coluna única a ordem é título e texto, ilustração, celular e legenda', async () => {
-    const secao = await secaoMadrugada()
-
-    const filhos = [...secao.children] as HTMLElement[]
-    expect(filhos).toHaveLength(4)
-    expect(filhos[0].querySelector('#titulo-madrugada')).not.toBeNull()
-    expect(filhos[0].textContent).toContain('O modo madrugada escurece a tela')
-    expect(filhos[1].querySelector('[data-ilustracao="mamada"]')).not.toBeNull()
-    expect(filhos[2].classList.contains('madrugada-celular')).toBe(true)
-    expect(filhos[3].classList.contains('madrugada-legenda')).toBe(true)
-  })
-
+describe('MAT-44 r4 #2: CSS do campo da madrugada recomposto', () => {
   it('cada filho tem a sua área da grade, e a grade larga põe o texto no alto e a ilustração na base do celular', () => {
     const css = semComentarios(estiloGlobal)
 
@@ -1014,14 +805,6 @@ describe('MAT-44 r4 #2: campo da madrugada recomposto', () => {
 
     expect(regras).toMatch(/width:\s*0\s*;/)
     expect(regras).toMatch(/min-width:\s*100%/)
-  })
-
-  it('o título e o texto, a ilustração, o celular e a legenda são do mesmo campo', async () => {
-    const secao = await secaoMadrugada()
-
-    expect(secao.classList.contains('madrugada-grade')).toBe(true)
-    expect(secao.querySelector('.madrugada-texto')).not.toBeNull()
-    expect(secao.querySelector('.madrugada-cena [data-ilustracao]')).not.toBeNull()
   })
 })
 
@@ -1063,37 +846,44 @@ describe('MAT-44 r2 A3: texto de interface do Início mora em textos.ts', () => 
     expect(frasesSoltas(`<div className="flex flex-wrap gap-2" aria-label="Seções da página" />`)).toEqual([])
   })
 
-  it('o Início importa os rótulos do cabeçalho e a legenda da madrugada de textos.ts e os renderiza', async () => {
+  it('o Início importa as palavras grandes, os rótulos das mídias e a seção escura de textos.ts e os renderiza', async () => {
     const textos = (await import('./conteudo/textos.ts')) as Record<string, unknown>
-    const navegacao = textos.NAVEGACAO as ReadonlyArray<{ rotulo: string; alvo: string }>
-    const legenda = textos.LEGENDA_MADRUGADA as string
+    const navegacao = textos.NAVEGACAO as ReadonlyArray<{ rotulo: string; destino: string }>
+    const midias = textos.MIDIAS_INICIO as { notebook: string; celulares: string }
     expect(Array.isArray(navegacao)).toBe(true)
-    expect(typeof legenda).toBe('string')
+    expect(typeof midias.notebook).toBe('string')
 
     const inicio = paginas.find((p) => p.nome === 'paginas/Inicio.tsx')!.texto
     expect(inicio).toMatch(/NAVEGACAO[\s\S]*from '\.\.\/conteudo\/textos\.ts'/)
-    expect(inicio).toMatch(/LEGENDA_MADRUGADA[\s\S]*from '\.\.\/conteudo\/textos\.ts'/)
+    expect(inicio).toMatch(/MIDIAS_INICIO[\s\S]*from '\.\.\/conteudo\/textos\.ts'/)
+    expect(inicio).toMatch(/SECAO_ESCURA[\s\S]*from '\.\.\/conteudo\/textos\.ts'/)
 
     const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
-    const ancoras = () => container.querySelectorAll('nav[aria-label="Seções da página"] a')
-    expect([...ancoras()].map((a) => a.textContent)).toEqual(navegacao.map((n) => n.rotulo))
-    expect([...ancoras()].map((a) => a.getAttribute('href'))).toEqual(
-      navegacao.map((n) => `#${n.alvo}`),
-    )
-    expect(screen.getByText(legenda)).toBeTruthy()
+    const palavras = () => container.querySelectorAll('main nav a')
+    expect([...palavras()].map((a) => a.textContent)).toEqual(navegacao.map((n) => n.rotulo))
+    expect([...palavras()].map((a) => a.getAttribute('href'))).toEqual(navegacao.map((n) => n.destino))
+    expect(container.querySelector(`[aria-label="${midias.notebook}"]`)).not.toBeNull()
+    expect(container.querySelector(`[aria-label="${midias.celulares}"]`)).not.toBeNull()
   })
 
-  it('os textos movidos são exatamente os aprovados', async () => {
+  it('os textos novos do Início são exatamente os do contrato', async () => {
     const textos = (await import('./conteudo/textos.ts')) as Record<string, unknown>
     expect((textos.NAVEGACAO as ReadonlyArray<{ rotulo: string }>).map((n) => n.rotulo)).toEqual([
-      'As telas',
-      'Para que serve',
+      'Hoje',
+      'Sessão',
       'Madrugada',
+      'Entrar',
     ])
-    expect(textos.LEGENDA_MADRUGADA).toBe(
-      'No celular, a mesma sessão de tummy time no modo madrugada: tela escura, cronômetro grande e botões maiores.',
-    )
+    expect(textos.PROMESSA).toBe('Quem chega no turno já sabe o que houve.')
+    expect(textos.SUBTITULO_INICIO).toBe('A rotina do bebê, dividida entre quem cuida.')
+    expect((textos.CHAMADA as { titulo: string }).titulo).toBe('Quer ver um dia de Heloísa?')
+    expect(textos.SECAO_ESCURA).toEqual({
+      titulo: 'Crie sua conta',
+      texto: 'Convide quem cuida junto e comece a registrar o dia.',
+      botao: 'Criar conta',
+      destino: '/criar-conta',
+    })
   })
 })
 
@@ -1201,7 +991,9 @@ function vitrineEm(largura: number) {
   return { escala: valores['--escala'], largura: valores['--palco-largura'], altura: valores['--palco-altura'] }
 }
 
-describe('MAT-44 r5 R1: o conjunto de aparelhos cabe no campo, centrado, em toda largura', () => {
+// Os testes da posição de cada aparelho no palco (folga de 2 rem, centrado) liam as classes dos
+// aparelhos do Início; saíram com eles em MAT-44d-4. Ficam as regras de CSS do palco.
+describe('MAT-44 r5 R1: o palco de aparelhos cabe no campo, centrado, em toda largura', () => {
   it('o palco é centrado pela própria largura (não por um valor fixo que a cascata possa trocar)', () => {
     const palco = regrasComContexto(estiloGlobal).filter((r) => r.seletor === '.vitrine-palco')
     expect(palco.every((r) => r.condicao === null)).toBe(true)
@@ -1237,65 +1029,6 @@ describe('MAT-44 r5 R1: o conjunto de aparelhos cabe no campo, centrado, em toda
     expect(altura * escala * 16).toBeLessThanOrEqual(0.95 * 900)
   })
 
-  interface Retangulo { x: number; y: number; largura: number; altura: number }
-
-  const numero = (classe: string, prefixo: string, variante = ''): number | undefined => {
-    const m = new RegExp(`(?:^|\\s)${variante.replace(/[[\]/]/g, '\\$&')}${prefixo}-\\[(-?[\\d.]+)(?:rem)?\\]`).exec(classe)
-    return m ? parseFloat(m[1]) : undefined
-  }
-
-  async function retangulos(faixa: 'estreita' | 'larga'): Promise<{ palco: { largura: number; altura: number }; itens: Array<Retangulo & { tela: string }> }> {
-    const { container } = renderizarRota('/')
-    await screen.findByRole('heading', { level: 1 })
-    const palco = vitrineEm(faixa === 'larga' ? 70 : 30)
-    const largura = parseFloat(/width:\s*([\d.]+)rem/.exec(regrasDe(estiloGlobal).find((r) => r.seletor === '.aparelho-celular')!.corpo)![1])
-    const proporcao = /aspect-ratio:\s*(\d+)\s*\/\s*(\d+)/.exec(regrasDe(estiloGlobal).find((r) => r.seletor === '.aparelho-celular')!.corpo)!
-    const alturaCelular = largura * (parseFloat(proporcao[2]) / parseFloat(proporcao[1]))
-    const larguraNotebook = parseFloat(/width:\s*([\d.]+)rem/.exec(regrasDe(estiloGlobal).find((r) => r.seletor === '.aparelho-notebook')!.corpo)![1])
-    const baseCorpo = regrasDe(estiloGlobal).find((r) => r.seletor === '.aparelho-base')!.corpo
-    // A base do notebook sai da moldura pelos dois lados (margin-inline negativa).
-    const extensaoDaBase = -parseFloat(/margin-inline:\s*(-[\d.]+)rem/.exec(baseCorpo)![1])
-    const alturaBase = parseFloat(/height:\s*([\d.]+)rem/.exec(baseCorpo)![1])
-    const variante = faixa === 'larga' ? '@min-[46rem]/pagina:' : ''
-
-    const itens = [...container.querySelectorAll<HTMLElement>('#secao-telas [data-aparelho]')].map((aparelho) => {
-      const classe = aparelho.getAttribute('class')!
-      const pega = (prefixo: string) => numero(classe, prefixo, variante) ?? numero(classe, prefixo)!
-      const escala = pega('scale')
-      const x = pega('left')
-      const y = pega('top')
-      if (aparelho.getAttribute('data-aparelho') === 'notebook') {
-        const altura = (larguraNotebook * 10) / 16 + alturaBase + 0.25
-        return {
-          tela: aparelho.getAttribute('data-tela')!,
-          x: x - extensaoDaBase * escala,
-          y,
-          largura: (larguraNotebook + 2 * extensaoDaBase) * escala,
-          altura: altura * escala,
-        }
-      }
-      return { tela: aparelho.getAttribute('data-tela')!, x, y, largura: largura * escala, altura: alturaCelular * escala }
-    })
-    return { palco: { largura: palco.largura, altura: palco.altura }, itens }
-  }
-
-  for (const faixa of ['estreita', 'larga'] as const) {
-    it(`faixa ${faixa}: nenhum aparelho passa da borda do palco e há folga de pelo menos 2 rem dos quatro lados`, async () => {
-      const { palco, itens } = await retangulos(faixa)
-
-      expect(itens.length).toBeGreaterThanOrEqual(2)
-      const esquerda = Math.min(...itens.map((i) => i.x))
-      const direita = palco.largura - Math.max(...itens.map((i) => i.x + i.largura))
-      const topo = Math.min(...itens.map((i) => i.y))
-      const base = palco.altura - Math.max(...itens.map((i) => i.y + i.altura))
-      expect(esquerda, 'folga à esquerda').toBeGreaterThanOrEqual(2)
-      expect(direita, 'folga à direita').toBeGreaterThanOrEqual(2)
-      expect(topo, 'folga em cima').toBeGreaterThanOrEqual(2)
-      expect(base, 'folga embaixo').toBeGreaterThanOrEqual(2)
-      // Centrado: as folgas laterais diferem em até 1 rem.
-      expect(Math.abs(esquerda - direita), `esquerda ${esquerda}, direita ${direita}`).toBeLessThanOrEqual(1)
-    })
-  }
 })
 
 describe('MAT-44 r5 R2: nenhum ícone na página pública', () => {
@@ -1317,22 +1050,12 @@ describe('MAT-44 r5 R2: nenhum ícone na página pública', () => {
     })
   }
 
-  it('as miniaturas do Início mostram os mesmos botões rápidos, na mesma ordem e com os mesmos rótulos, sem ícone', async () => {
+  it('o Início não tem botões rápidos, nem em miniatura', async () => {
     const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
 
-    const grades = [...container.querySelectorAll('[inert] button[aria-label="Iniciar sono de Heloísa"]')].map((b) => b.parentElement!)
-    expect(grades.length).toBeGreaterThanOrEqual(2)
-    for (const grade of grades) {
-      expect([...grade.children].map((b) => b.textContent)).toEqual(['Sono', 'Mamada', 'Fralda', 'Tummy time', '+ Mais'])
-      expect([...grade.children].map((b) => b.getAttribute('aria-label'))).toEqual([
-        'Iniciar sono de Heloísa',
-        'Iniciar mamada de Heloísa',
-        'Registrar fralda de Heloísa',
-        'Iniciar tummy time de Heloísa',
-        'Mais registros',
-      ])
-    }
+    expect(container.querySelector('button[aria-label="Iniciar sono de Heloísa"]')).toBeNull()
+    expect(container.querySelector('main button')).toBeNull()
   })
 
   for (const caminho of ['/app/hoje', '/app/sessao']) {
@@ -1370,65 +1093,15 @@ describe('MAT-44 r5 R2: nenhum ícone na página pública', () => {
   }
 })
 
-describe('MAT-44 r5 R3: a vitrine mostra as telas que a legenda anuncia, em toda largura', () => {
-  async function vitrine() {
-    const { container } = renderizarRota('/')
-    await screen.findByRole('heading', { level: 1 })
-    return container.querySelector<HTMLElement>('#secao-telas')!
-  }
-
-  it('cada aparelho diz que tela mostra, e há um notebook, uma tela Hoje e uma tela Sessão', async () => {
-    const secao = await vitrine()
-
-    const aparelhos = [...secao.querySelectorAll<HTMLElement>('[data-aparelho]')]
-    expect(aparelhos.length).toBeGreaterThanOrEqual(2)
-    for (const aparelho of aparelhos) expect(['hoje', 'sessao']).toContain(aparelho.getAttribute('data-tela'))
-    expect(aparelhos.some((a) => a.getAttribute('data-aparelho') === 'notebook')).toBe(true)
-    expect(aparelhos.some((a) => a.getAttribute('data-tela') === 'hoje')).toBe(true)
-    expect(aparelhos.some((a) => a.getAttribute('data-tela') === 'sessao')).toBe(true)
-  })
-
-  it('a tela marcada é a que o aparelho mostra: sessao tem o cronômetro, hoje tem o cartão Em andamento', async () => {
-    const secao = await vitrine()
-
-    for (const aparelho of secao.querySelectorAll<HTMLElement>('[data-aparelho]')) {
-      const tela = aparelho.getAttribute('data-tela')
-      expect(aparelho.querySelector('[role="timer"]') !== null, tela!).toBe(tela === 'sessao')
-      expect(aparelho.querySelector('.campo-andamento') !== null, tela!).toBe(tela === 'hoje')
-    }
-  })
-
-  it('nenhum aparelho, nem ancestral dele dentro da seção, tem classe que o esconda em alguma faixa', async () => {
-    const secao = await vitrine()
-
-    const esconde = /(^|:)(hidden|invisible|sr-only|opacity-0|collapse)$/
-    for (const aparelho of secao.querySelectorAll<HTMLElement>('[data-aparelho]')) {
-      for (let no: HTMLElement | null = aparelho; no && no !== secao.parentElement; no = no.parentElement) {
-        const tokens = [...no.classList].filter((t) => esconde.test(t))
-        expect(tokens, `${no.tagName.toLowerCase()}.${no.className}`).toEqual([])
-      }
-    }
-  })
-
+// Os testes que liam os aparelhos do Início (tela marcada, classes que escondem, largura efetiva em
+// 390) saíram com eles em MAT-44d-4. Fica a regra de CSS: nada da vitrine esconde nada.
+describe('MAT-44 r5 R3: o CSS da vitrine e dos aparelhos não esconde nada', () => {
   it('nenhuma regra do CSS da vitrine ou dos aparelhos esconde o que quer que seja', () => {
     const escondem = regrasComContexto(estiloGlobal)
       .filter((r) => /\.(vitrine|aparelho)/.test(r.seletor))
       .filter((r) => r.props['display'] === 'none' || r.props['visibility'] === 'hidden' || r.props['opacity'] === '0')
       .map((r) => r.seletor)
     expect(escondem).toEqual([])
-  })
-
-  it('em 390 px os celulares são lidos de relance: pelo menos 9 rem de largura efetiva (eram 7,3)', async () => {
-    const secao = await vitrine()
-
-    const { escala } = vitrineEm(22.4)
-    const celulares = [...secao.querySelectorAll<HTMLElement>('[data-aparelho="celular"]')]
-    expect(celulares.length).toBeGreaterThanOrEqual(2)
-    for (const celular of celulares) {
-      const proprio = /(?:^|\s)scale-\[([\d.]+)\]/.exec(celular.getAttribute('class')!)
-      expect(proprio).not.toBeNull()
-      expect(24 * parseFloat(proprio![1]) * escala, celular.getAttribute('data-tela')!).toBeGreaterThanOrEqual(9)
-    }
   })
 })
 
@@ -1437,34 +1110,9 @@ describe('MAT-44 r5 R3: a vitrine mostra as telas que a legenda anuncia, em toda
 // fixadas em teste: são conferidas em captura. Aqui só o que é regra: nenhuma figura cobre outra,
 // as pessoas têm a mesma escala, a ordem do DOM e a estrutura das áreas.
 
-describe('MAT-44 r6 #1: madrugada em duas colunas, sem nada atrás do celular', () => {
-  async function secaoMadrugada() {
-    const { container } = renderizarRota('/')
-    await screen.findByRole('heading', { level: 1 })
-    return container.querySelector<HTMLElement>('#secao-madrugada')!
-  }
-
-  it('a ordem do DOM é título e texto, cena (ilustração), celular e legenda', async () => {
-    const secao = await secaoMadrugada()
-
-    const filhos = [...secao.children] as HTMLElement[]
-    expect(filhos).toHaveLength(4)
-    expect(filhos[0].querySelector('#titulo-madrugada')).not.toBeNull()
-    expect(filhos[1].classList.contains('madrugada-cena')).toBe(true)
-    expect(filhos[1].querySelector('[data-ilustracao="mamada"]')).not.toBeNull()
-    expect(filhos[2].classList.contains('madrugada-celular')).toBe(true)
-    expect(filhos[3].classList.contains('madrugada-legenda')).toBe(true)
-  })
-
-  it('nenhuma parte da ilustração fica atrás do celular: sem margem negativa e sem camada (z-*)', async () => {
-    const secao = await secaoMadrugada()
-
-    for (const seletor of ['.madrugada-cena', '.madrugada-celular', '.madrugada-legenda', '[data-ilustracao="mamada"]']) {
-      const elemento = secao.querySelector(seletor)!
-      const classe = elemento.getAttribute('class')!
-      expect(classe, seletor).not.toMatch(/(?:^|\s|:)-m[trblxy]?-/)
-      expect(classe, seletor).not.toMatch(/(?:^|\s|:)z-/)
-    }
+// O campo da madrugada saiu do Início em MAT-44d-4: ficam as regras de CSS dele e o desenho.
+describe('MAT-44 r6 #1: CSS da madrugada em duas colunas, sem nada atrás do celular', () => {
+  it('nenhuma parte da ilustração fica atrás do celular: sem margem negativa e sem camada (z-*) no CSS', () => {
     const negativas = regrasComContexto(estiloGlobal)
       .filter((r) => r.seletor.includes('.madrugada-') || r.seletor.includes('data-ilustracao'))
       .flatMap((r) => Object.entries(r.props).map(([p, v]) => `${r.seletor} { ${p}: ${v} }`))
@@ -1496,10 +1144,10 @@ describe('MAT-44 r6 #1: madrugada em duas colunas, sem nada atrás do celular', 
     expect(larga.some((r) => r.props['width'] === '100%')).toBe(true)
   })
 
-  it('o desenho termina no chão: o viewBox da ilustração larga acaba na linha do chão, na base do celular', async () => {
-    const secao = await secaoMadrugada()
+  it('o desenho termina no chão: o viewBox da ilustração larga acaba na linha do chão, na base do celular', () => {
+    const { container } = render(<IlustracaoMamada larga />)
 
-    const desenho = secao.querySelector('[data-ilustracao="mamada"]')!
+    const desenho = container.querySelector('[data-ilustracao="mamada"]')!
     const [, , largura, altura] = desenho.getAttribute('viewBox')!.split(/\s+/).map(Number)
     expect(largura / altura).toBeGreaterThan(1.5)
     expect(altura).toBeLessThanOrEqual(223)
@@ -1507,57 +1155,20 @@ describe('MAT-44 r6 #1: madrugada em duas colunas, sem nada atrás do celular', 
   })
 })
 
-describe('MAT-44 r6 #2 e #3: campo de barro com as pessoas na mesma escala e nada sobreposto', () => {
-  async function cenaDoBarro() {
-    const { container } = renderizarRota('/')
-    await screen.findByRole('heading', { level: 1 })
-    const campo = container.querySelector('main > section[data-campo="field-1"]')!
-    const cena = campo.querySelector('[data-ilustracao]')!.parentElement as HTMLElement
-    const figuras = [...cena.querySelectorAll<SVGElement>('[data-ilustracao]')]
-    return { cena, figuras }
-  }
+// A cena do campo de barro (colo, tapete e passeio) saiu do Início em MAT-44d-4. Ficam os desenhos:
+// o viewBox de cada um é justo e termina na linha do chão.
+describe('MAT-44 r6 #2 e #3: os desenhos da cena são cortados rente ao chão', () => {
+  it('o desenho é cortado rente ao chão e à figura (viewBox justo): termina na linha do chão', () => {
+    const { container } = render(
+      <>
+        <IlustracaoColo />
+        <IlustracaoTapete />
+        <IlustracaoPasseio />
+      </>,
+    )
 
-  const larguraDoDesenho = (figura: Element) => Number(figura.getAttribute('viewBox')!.split(/\s+/)[2])
-  const porcento = (figura: Element, variante: string) => {
-    const classe = figura.getAttribute('class')!
-    const re = variante
-      ? /@min-\[46rem\]\/pagina:w-\[([\d.]+)%\]/
-      : /(?:^|\s)w-\[([\d.]+)%\]/
-    return parseFloat(re.exec(classe)![1])
-  }
-
-  it('as três figuras: colo, tapete e passeio, no mesmo recipiente, na ordem', async () => {
-    const { cena, figuras } = await cenaDoBarro()
-
+    const figuras = [...container.querySelectorAll<SVGElement>('[data-ilustracao]')]
     expect(figuras.map((f) => f.getAttribute('data-ilustracao'))).toEqual(['colo', 'tapete', 'passeio'])
-    expect(new Set(figuras.map((f) => f.parentElement)).size).toBe(1)
-    expect(cena.className).toMatch(/\bmx-auto\b/)
-  })
-
-  it('nenhuma figura, nem o recipiente, usa margem negativa em nenhuma faixa (nada cobre nada)', async () => {
-    const { cena, figuras } = await cenaDoBarro()
-
-    for (const elemento of [cena, ...figuras]) {
-      expect(elemento.getAttribute('class'), elemento.getAttribute('data-ilustracao') ?? 'recipiente').not.toMatch(
-        /(?:^|\s|:)-m[trblxy]?-/,
-      )
-    }
-  })
-
-  it('as pessoas têm a mesma escala: a largura de cada figura é proporcional à largura do desenho dela, em cada faixa', async () => {
-    const { figuras } = await cenaDoBarro()
-
-    for (const variante of ['', '@min']) {
-      const escalas = figuras.map((f) => porcento(f, variante) / larguraDoDesenho(f))
-      for (const escala of escalas) {
-        expect(Math.abs(escala / escalas[0] - 1), `faixa ${variante || 'estreita'}: ${escalas.join(', ')}`).toBeLessThan(0.02)
-      }
-    }
-  })
-
-  it('o desenho é cortado rente ao chão e à figura (viewBox justo): termina na linha do chão', async () => {
-    const { figuras } = await cenaDoBarro()
-
     for (const figura of figuras) {
       const [x, y, largura, altura] = figura.getAttribute('viewBox')!.split(/\s+/).map(Number)
       expect(y + altura, figura.getAttribute('data-ilustracao')!).toBeLessThanOrEqual(223)
@@ -1566,24 +1177,6 @@ describe('MAT-44 r6 #2 e #3: campo de barro com as pessoas na mesma escala e nad
       expect(largura).toBeLessThan(240)
       expect(altura).toBeLessThan(200)
     }
-  })
-
-  it('cada linha cabe na largura (sem rolagem horizontal): colo+passeio e o tapete, e as três na faixa larga', async () => {
-    const { figuras } = await cenaDoBarro()
-
-    const [colo, tapete, passeio] = figuras
-    expect(porcento(colo, '') + porcento(passeio, '')).toBeLessThanOrEqual(100)
-    expect(porcento(tapete, '')).toBeLessThanOrEqual(100)
-    expect(figuras.reduce((soma, f) => soma + porcento(f, '@min'), 0)).toBeLessThanOrEqual(100)
-  })
-
-  it('o tapete, sozinho na segunda linha, fica centrado, e as duas linhas ficam próximas (vão de até 16 px)', async () => {
-    const { cena, figuras } = await cenaDoBarro()
-
-    expect(figuras[1].getAttribute('class')).toMatch(/\bmx-auto\b/)
-    const vao = /(?:^|\s)gap-y-(\d+)(?:\s|$)/.exec(cena.className)
-    expect(vao).not.toBeNull()
-    expect(parseInt(vao![1], 10)).toBeLessThanOrEqual(4)
   })
 })
 
@@ -1611,17 +1204,12 @@ describe('MAT-44 r7 #1: o celular da madrugada escala com a largura da página, 
   const larguraNatural = () =>
     parseFloat(/width:\s*([\d.]+)rem/.exec(regrasDe(estiloGlobal).find((r) => r.seletor === '.aparelho-celular')!.corpo)![1])
 
-  async function paddingLateral(): Promise<{ estreita: number; larga: number }> {
-    const { container } = renderizarRota('/')
-    await screen.findByRole('heading', { level: 1 })
-    const classe = container.querySelector('#secao-madrugada')!.getAttribute('class')!
-    const base = /(?:^|\s)px-(\d+)(?:\s|$)/.exec(classe)![1]
-    const larga = /@min-\[46rem\]\/pagina:px-(\d+)/.exec(classe)![1]
-    return { estreita: parseInt(base, 10) / 4, larga: parseInt(larga, 10) / 4 }
-  }
+  // O padding lateral vinha da seção da madrugada do Início (px-6 e px-12 em rem de 4 px: 1,5 e 3 rem),
+  // que saiu em MAT-44d-4: o teste usa os mesmos valores que o CSS do campo tinha.
+  const paddingLateral = { estreita: 1.5, larga: 3 }
 
-  it('de 6 a 140 rem, a caixa do celular mais o padding lateral da seção cabe na largura da página', async () => {
-    const padding = await paddingLateral()
+  it('de 6 a 140 rem, a caixa do celular mais o padding lateral da seção cabe na largura da página', () => {
+    const padding = paddingLateral
 
     for (let largura = 6; largura <= 140; largura += 0.25) {
       const escala = celularEm(largura)
@@ -1667,17 +1255,6 @@ describe('MAT-44 r7 #1: o celular da madrugada escala com a largura da página, 
     expect(parseFloat(altura![1])).toBeCloseTo(alturaNatural, 2)
   })
 
-  it('no JSX não sobra medida fixa em rem nem escala numérica para o celular da madrugada', async () => {
-    const { container } = renderizarRota('/')
-    await screen.findByRole('heading', { level: 1 })
-
-    const caixa = container.querySelector('.madrugada-celular')!
-    expect(caixa.getAttribute('class')).not.toMatch(/(?:^|\s|:)[wh]-\[[\d.]+rem\]/)
-    const celular = caixa.querySelector('[data-aparelho="celular"]')!
-    expect(celular.getAttribute('class')).not.toMatch(/(?:^|\s|:)scale-\[[\d.]+\]/)
-    expect(celular.getAttribute('class')).toContain('[scale:var(--celular-escala)]')
-  })
-
   it('a legenda tem a largura do celular em toda largura: mesma escala e largura máxima pela variável', () => {
     for (let largura = 6; largura <= 140; largura += 0.25) {
       expect(celularEm(largura, '.madrugada-legenda'), `${largura} rem`).toBe(celularEm(largura))
@@ -1697,13 +1274,13 @@ describe('MAT-44 r7 #2: a etiqueta nunca passa da largura da linha', () => {
     expect(props['overflow-wrap']).toMatch(/^(anywhere|break-word)$/)
   })
 
-  it('as etiquetas do Início são itens de uma linha que quebra (flex-wrap), com a classe .etiqueta', async () => {
+  it('as etiquetas do Início são Etiqueta do sistema-base, uma por item da coluna lateral da abertura', async () => {
     const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
 
-    const etiquetas = [...container.querySelectorAll('li.etiqueta')]
+    const etiquetas = [...container.querySelectorAll('.sb-abertura-lateral .sb-etiqueta')]
     expect(etiquetas.map((e) => e.textContent)).toEqual(['Rotina', 'Desenvolvimento', 'Cuidado compartilhado', 'Comunidade'])
-    for (const etiqueta of etiquetas) expect(etiqueta.parentElement!.className).toMatch(/\bflex-wrap\b/)
+    for (const etiqueta of etiquetas) expect(etiqueta.parentElement!.tagName).toBe('LI')
     expect(document.documentElement.getAttribute('lang') ?? 'pt-BR').toBe('pt-BR')
     expect(lerTexto('../index.html')).toContain('lang="pt-BR"')
   })
@@ -1720,12 +1297,12 @@ describe('MAT-44 r7 #3: nenhuma margem negativa leva um item da página pública
     expect(achados).toEqual([])
   })
 
-  it('a navegação do topo continua com os três links e alvos de pelo menos 44 px', async () => {
+  it('a navegação grande do fim tem os 4 links, com alvos de pelo menos 44 px', async () => {
     const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
 
-    const links = [...container.querySelectorAll('nav[aria-label="Seções da página"] a')]
-    expect(links).toHaveLength(3)
+    const links = [...container.querySelectorAll('main nav a')]
+    expect(links).toHaveLength(4)
     for (const link of links) expect(link.classList.contains('alvo-toque')).toBe(true)
     const alvo = regrasComContexto(estiloGlobal).filter((r) => r.seletor === '.alvo-toque').map((r) => r.props)
     expect(alvo.some((p) => p['min-width'] === '44px' && p['min-height'] === '44px')).toBe(true)
@@ -1739,61 +1316,25 @@ describe('MAT-44 r7 #3: nenhuma margem negativa leva um item da página pública
 // sem overflow-wrap: anywhere (que muda a largura mínima de itens de grade e de flex) e sem
 // esconder nada. O Hoje e a Sessão não recebem a regra.
 
-describe('MAT-44 r8: a raiz do Início quebra a palavra que não cabe, e só ela', () => {
-  async function raizDoInicio() {
+// MAT-44d-4: a raiz `break-words` do Início saiu com o contêiner `@container/pagina`. O Início novo
+// não esconde o excesso (a rolagem horizontal é medida em G1 pelo laço de captura) e as classes
+// novas (`vt-*`) não declaram `overflow`, nem escondem nada.
+describe('MAT-44 r8: o Início novo não esconde o excesso, e o Hoje e a Sessão não têm a regra de quebra', () => {
+  it('nenhum elemento do Início usa classe que esconda ou corte o excesso (overflow-hidden, invisible, hidden, sr-only)', async () => {
     const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
-    // A raiz do Início é a tela, entre o cabeçalho e o rodapé do site (a casca do Layout).
-    return container.querySelector('[class~="@container/pagina"]') as HTMLElement
-  }
 
-  /** Os tokens de classe sem a variante (@min-[…]/pagina:, hover:, …). */
-  const semVariante = (token: string) => token.slice(token.lastIndexOf(':') + 1)
-
-  it('o contêiner raiz do Início declara a quebra (break-words) e continua sendo o contêiner da página', async () => {
-    const raiz = await raizDoInicio()
-
-    expect(raiz.matches('[class~="@container/pagina"]')).toBe(true)
-    expect(raiz.classList.contains('break-words')).toBe(true)
-  })
-
-  it('a quebra é a de palavra que não cabe: sem anywhere, sem hífen automático e sem esconder nada na raiz', async () => {
-    const raiz = await raizDoInicio()
-
-    const tokens = [...raiz.classList].map(semVariante)
-    for (const proibido of ['wrap-anywhere', '[overflow-wrap:anywhere]', 'hyphens-auto', '[hyphens:auto]', 'break-all', 'break-keep']) {
-      expect(tokens, proibido).not.toContain(proibido)
-    }
-    expect(tokens.filter((t) => /^overflow(-[xy])?-(hidden|clip)$/.test(t))).toEqual([])
-    expect(tokens.filter((t) => /^(invisible|hidden|sr-only)$/.test(t))).toEqual([])
-  })
-
-  it('nenhum elemento do Início fora dos aparelhos desfaz a quebra pelas classes', async () => {
-    const raiz = await raizDoInicio()
-
-    const desfazem = /^(break-normal|wrap-normal|whitespace-nowrap|text-nowrap|whitespace-pre|\[overflow-wrap:normal\]|\[white-space:nowrap\]|\[word-break:keep-all\])$/
-    const achados = [...raiz.querySelectorAll<HTMLElement>('[class]')]
-      .filter((e) => e.closest('[inert]') === null)
-      .flatMap((e) => [...e.classList].filter((t) => desfazem.test(semVariante(t))).map((t) => `${e.tagName.toLowerCase()} ${t}`))
+    const esconde = /(^|:)(overflow(-[xy])?-(hidden|clip)|invisible|hidden|sr-only)$/
+    const achados = [...container.querySelectorAll<HTMLElement>('main [class], [data-secao-escura] [class]')].flatMap((e) =>
+      [...e.classList].filter((t) => esconde.test(t)).map((t) => `${e.tagName.toLowerCase()} ${t}`),
+    )
     expect(achados).toEqual([])
   })
 
-  it('nenhuma classe do CSS usada no Início, fora dos aparelhos, desfaz a quebra', async () => {
-    const raiz = await raizDoInicio()
-
-    const usadas = new Set(
-      [...raiz.querySelectorAll<HTMLElement>('[class]')]
-        .filter((e) => e.closest('[inert]') === null)
-        .flatMap((e) => [...e.classList]),
-    )
+  it('nenhuma regra vt-* do CSS declara overflow, visibility ou display: none', () => {
     const achados = regrasComContexto(estiloGlobal)
-      .filter((r) => [...r.seletor.matchAll(/\.([\w-]+)/g)].some((m) => usadas.has(m[1])))
-      .filter(
-        (r) =>
-          r.props['overflow-wrap'] === 'normal' ||
-          /^(nowrap|pre)$/.test(r.props['white-space'] ?? '') ||
-          r.props['word-break'] === 'keep-all',
-      )
+      .filter((r) => r.seletor.includes('.vt-'))
+      .filter((r) => 'overflow' in r.props || 'overflow-x' in r.props || r.props['visibility'] === 'hidden' || r.props['display'] === 'none')
       .map((r) => r.seletor)
     expect(achados).toEqual([])
   })
