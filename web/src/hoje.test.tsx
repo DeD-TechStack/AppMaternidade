@@ -387,7 +387,9 @@ describe('Hoje: o foco ao chegar', () => {
 
 describe('Hoje: o CSS do bloco /* 44d-2 */ (lido como texto)', () => {
   const marca = css.indexOf('/* 44d-2 */')
-  const bloco = marca >= 0 ? css.slice(marca) : ''
+  // O bloco termina onde começa o do 44d-4 (o Início), que vem depois dele no arquivo, ou no fim.
+  const fim = css.indexOf('/* 44d-4 */', marca)
+  const bloco = marca >= 0 ? css.slice(marca, fim > marca ? fim : css.length) : ''
   const semComentarios = bloco.replace(/\/\*[\s\S]*?\*\//g, '')
   const regra = (seletor: string) =>
     [...semComentarios.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
@@ -395,7 +397,7 @@ describe('Hoje: o CSS do bloco /* 44d-2 */ (lido como texto)', () => {
       .map((m) => m[2])
       .join('')
 
-  it('o bloco existe, vai até o fim do arquivo e não repete a marca', () => {
+  it('o bloco existe, vai até o bloco do 44d-4 (ou o fim do arquivo) e não repete a marca', () => {
     expect(marca).toBeGreaterThan(0)
     expect(css.indexOf('/* 44d-2 */', marca + 1)).toBe(-1)
   })

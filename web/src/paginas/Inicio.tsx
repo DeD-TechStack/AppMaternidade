@@ -3,128 +3,44 @@ import { Link } from 'react-router'
 import {
   APRESENTACAO,
   CHAMADA,
+  CITACAO_AVISO,
+  CITACAO_TEXTO,
   FATOS,
-  LEGENDA_MADRUGADA,
-  MADRUGADA,
+  LINK_ABERTURA,
+  MIDIAS_INICIO,
   MINIATURAS,
   NAVEGACAO,
   PARA_QUE_SERVE,
   PILARES,
   PROMESSA,
+  ROTULO_ATALHOS,
+  SECAO_ESCURA,
+  SUBTITULO_INICIO,
   TELAS,
+  TITULO_APRESENTACAO,
 } from '../conteudo/textos.ts'
-import { Aparelho } from '../componentes/Aparelho.tsx'
-import { AvisoDemonstracao } from '../componentes/AvisoDemonstracao.tsx'
-import { BotoesRapidos } from '../prototipo/BotoesRapidos.tsx'
-import { CartaoEmAndamento } from '../prototipo/CartaoEmAndamento.tsx'
-import { IlustracaoColo } from '../prototipo/IlustracaoColo.tsx'
-import { IlustracaoMamada } from '../prototipo/IlustracaoMamada.tsx'
-import { IlustracaoPasseio } from '../prototipo/IlustracaoPasseio.tsx'
-import { IlustracaoTapete } from '../prototipo/IlustracaoTapete.tsx'
-import { SessaoInfo } from '../prototipo/SessaoInfo.tsx'
+import { Abertura } from '../componentes/base/Abertura.tsx'
+import { Etiqueta } from '../componentes/base/Etiqueta.tsx'
+import { FaixaNumeros } from '../componentes/base/FaixaNumeros.tsx'
+import { Galeria } from '../componentes/base/Galeria.tsx'
+import { LinhaRotuloTexto } from '../componentes/base/LinhaRotuloTexto.tsx'
+import { Midia } from '../componentes/base/Midia.tsx'
+import { AvisoAbertura } from '../componentes/vitrine/AvisoAbertura.tsx'
+import { CartaoTela } from '../componentes/vitrine/CartaoTela.tsx'
+import { Citacao } from '../componentes/vitrine/Citacao.tsx'
+import { NavegacaoGrande } from '../componentes/vitrine/NavegacaoGrande.tsx'
+import { PerguntaCta } from '../componentes/vitrine/PerguntaCta.tsx'
+import { SecaoEscura } from '../componentes/vitrine/SecaoEscura.tsx'
 import { usePrototipo } from '../prototipo/contexto.ts'
 
-const semAcao = () => undefined
-
-// As telas em miniatura são os mesmos componentes de Hoje e Sessão, com dados fixos (textos.ts) e
-// o relógio parado: sem navegação inferior, sem efeito na página, nada focável. Cada aparelho que
-// as mostra é inerte e escondido do leitor de tela.
-function RegistroRapido() {
-  return (
-    <BotoesRapidos
-      desativado
-      semIcones
-      aoIniciarSessao={semAcao}
-      aoRegistrarFralda={semAcao}
-      aoRegistrarMais={semAcao}
-    />
-  )
-}
-
-/** O Hoje do celular: o cartão em andamento e os botões de registro, de cima para baixo. */
-function TelaHoje() {
-  const { hoje } = MINIATURAS
-  return (
-    <div>
-      <p className="titulo-linha">{hoje.titulo}</p>
-      <p className="mt-1">{hoje.bebe}</p>
-      <div className="mt-4">
-        <CartaoEmAndamento miniatura sessao={hoje.sessao} />
-      </div>
-      <div className="mt-4">
-        <RegistroRapido />
-      </div>
-    </div>
-  )
-}
+const { galeria } = MIDIAS_INICIO
 
 /**
- * O Hoje do computador, mais largo: o cartão em andamento e os botões numa coluna, a nota
- * "Para você saber" e a lista "Últimos" na outra. A coluna da direita é curta de propósito: o
- * celular da frente se apoia no espaço vazio embaixo dela, sem cobrir texto.
+ * O Início, nos 13 blocos do contrato (MAT-44d): abertura, mídia, apresentação, números, mídia,
+ * linhas, galeria, citação, cartões, pergunta com CTA, palavras grandes, seção escura (fora do
+ * `main`, de borda a borda) e o rodapé da casca. As molduras de mídia estão vazias: o conteúdo
+ * delas vem depois. Sem movimento.
  */
-function TelaHojeComputador() {
-  const { hoje } = MINIATURAS
-  return (
-    <div className="grid grid-cols-2 items-start gap-8">
-      <TelaHoje />
-      <div>
-        <p className="rotulo">{hoje.nota.rotulo}</p>
-        <p className="nota-italico mt-2">{hoje.nota.texto}</p>
-        <p className="tabular mt-1 text-sm">{hoje.nota.autor}</p>
-        <p className="rotulo mt-6">{hoje.ultimos.rotulo}</p>
-        <ul className="mt-2 divide-y border-y">
-          {hoje.ultimos.itens.map((item) => (
-            <li key={item.rotulo} className="flex items-baseline justify-between gap-4 py-2">
-              <span>{item.rotulo}</span>
-              <span className="tabular text-right">{item.quando}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  )
-}
-
-/** As ações da Sessão em miniatura, desativadas e fora da ordem de Tab, como as outras miniaturas. */
-function AcoesDaSessaoEmMiniatura() {
-  const [encerrar, anotar, descartar] = MINIATURAS.sessao.acoes
-  return (
-    <div className="mt-6 flex flex-col gap-3">
-      <button type="button" disabled tabIndex={-1} className="botao botao-principal botao-grande">
-        {encerrar}
-      </button>
-      <div className="flex flex-wrap gap-3">
-        <button type="button" disabled tabIndex={-1} className="botao botao-secundario">
-          {anotar}
-        </button>
-        <button type="button" disabled tabIndex={-1} className="botao botao-secundario">
-          {descartar}
-        </button>
-      </div>
-    </div>
-  )
-}
-
-/** A Sessão do celular: o cronômetro com as informações e as ações, como a tela de verdade. */
-function TelaSessao({ madrugada = false }: { madrugada?: boolean }) {
-  const { sessao } = MINIATURAS
-  return (
-    <div>
-      <p className="titulo-linha mb-4">{sessao.titulo}</p>
-      <SessaoInfo
-        miniatura
-        campo={madrugada ? 'night-paper-deep' : 'accent'}
-        cronometro={sessao.cronometro}
-        hora={sessao.hora}
-        pessoa={sessao.pessoa}
-        atividade={sessao.atividade}
-      />
-      <AcoesDaSessaoEmMiniatura />
-    </div>
-  )
-}
-
 export function Inicio() {
   const { dispatch } = usePrototipo()
 
@@ -133,212 +49,112 @@ export function Inicio() {
     dispatch({ tipo: 'definirMadrugada', valor: false })
   }, [dispatch])
 
-  // O raiz é o contêiner da página: as colunas seguem a largura dela em rem da fonte raiz. Uma
-  // media query (md:) mede a janela em rem do navegador (16 px) e ignora a fonte ampliada; com
-  // o texto em 200% as colunas continuariam lado a lado e o texto não caberia. 46 rem é o
-  // conteúdo do raiz em 768 px com fonte 100% (768 − 2 × 2%). O padding lateral, abaixo, é a
-  // única variante de janela da página: um contêiner não consulta o próprio tamanho.
-  //
-  // break-words (overflow-wrap: break-word) é herdado por todo texto da página: com a fonte
-  // ampliada a página tem menos rem, e uma palavra mais larga que a própria caixa quebra em vez de
-  // vazar. Só quebra quando a palavra não cabe, então com a fonte em 100% nenhuma linha muda. É a
-  // única regra de quebra do Início, na raiz: o Hoje e a Sessão não a recebem. Sem anywhere (que
-  // muda a largura mínima de itens de grade e flex), sem hífen automático nos títulos e sem
-  // esconder nada.
-  //
-  // A página alterna campos de cor (data-campo) e faixas de papel, com no máximo dois campos
-  // seguidos. O texto longo fica sempre no papel; sobre os campos só há frases curtas.
   return (
-    <div className="@container/pagina flex min-h-dvh flex-col break-words px-4 md:px-[2%]">
-      <AvisoDemonstracao />
-      {/* O cabeçalho do site vem do Layout; aqui ficam só os links-âncora das seções. */}
-      <nav aria-label="Seções da página" className="flex flex-wrap gap-4 py-3">
-        {NAVEGACAO.map((link) => (
-          <a
-            key={link.alvo}
-            href={`#${link.alvo}`}
-            className="alvo-toque inline-flex items-center justify-center px-2 text-[0.9375rem] font-semibold no-underline first:pl-0 last:pr-0 hover:underline"
-          >
-            {link.rotulo}
-          </a>
-        ))}
-      </nav>
-
-      <main className="flex-1">
-        <section
-          aria-labelledby="promessa"
-          className="entrada grid grid-cols-4 gap-x-6 pb-8 pt-6 @min-[46rem]/pagina:grid-cols-12 @min-[46rem]/pagina:pb-12 @min-[46rem]/pagina:pt-10"
-        >
-          <ul className="col-span-4 mb-6 flex flex-wrap gap-2 @min-[46rem]/pagina:col-span-12">
-            {PILARES.map((pilar) => (
-              <li key={pilar} className="etiqueta rotulo">
-                {pilar}
+    <>
+      <main className="vt-inicio">
+        <Abertura
+          titulo={PROMESSA}
+          subtitulo={SUBTITULO_INICIO}
+          lateral={[
+            ...PILARES.map((pilar) => (
+              <li key={pilar}>
+                <Etiqueta>{pilar}</Etiqueta>
               </li>
-            ))}
-          </ul>
-          <h1 id="promessa" className="promessa col-span-4 @min-[46rem]/pagina:col-span-8">
-            {PROMESSA}
-          </h1>
-          <p className="texto-medida col-span-4 mt-6 @min-[46rem]/pagina:col-span-4 @min-[46rem]/pagina:mt-0 @min-[46rem]/pagina:self-end">
-            {APRESENTACAO}
-          </p>
-        </section>
+            )),
+            <AvisoAbertura key="aviso" />,
+            <li key="link">
+              <Link className="sb-abertura-link t-corpo alvo-toque" to="/app/hoje">
+                {LINK_ABERTURA}
+              </Link>
+            </li>,
+          ]}
+        />
 
-        {/* Campo de urucum: o Hoje de computador no notebook, a Sessão num celular e o Hoje de
-            celular no outro, em toda largura (nada some em página estreita, que só muda a
-            composição). Os celulares se sobrepõem à parte de baixo do notebook, à margem da tela
-            dele e ao espaço vazio sob a coluna da direita, nunca ao que a tela tem de mais
-            importante. As posições e escalas abaixo dão ao conjunto pelo menos 2 rem de folga dos
-            quatro lados do palco, centrado (o palco e a escala estão em .vitrine, no CSS):
-            - abaixo de 46 rem, palco de 54 × 67 rem: notebook a 0,78 no meio e os dois celulares
-              lado a lado, em escala 1, por cima da parte de baixo dele;
-            - a partir de 46 rem, palco de 81 × 56 rem: o notebook entre os dois celulares. */}
-        <section
-          id="secao-telas"
-          aria-labelledby="titulo-telas"
-          data-campo="accent"
-          className="vitrine entrada atraso-1"
-        >
-          <div inert aria-hidden="true" className="vitrine-palco">
-            <Aparelho
-              tipo="notebook"
-              tela="hoje"
-              className="absolute left-[5.2rem] top-[2rem] origin-top-left scale-[0.78] @min-[46rem]/pagina:left-[19rem] @min-[46rem]/pagina:top-[3rem] @min-[46rem]/pagina:scale-[1]"
-            >
-              <TelaHojeComputador />
-            </Aparelho>
-            <Aparelho
-              tipo="celular"
-              tela="sessao"
-              className="absolute left-[2.5rem] top-[24rem] origin-top-left scale-[1] @min-[46rem]/pagina:left-[3rem] @min-[46rem]/pagina:top-[19rem] @min-[46rem]/pagina:scale-[0.9]"
-            >
-              <TelaSessao />
-            </Aparelho>
-            <Aparelho
-              tipo="celular"
-              tela="hoje"
-              className="absolute left-[27.5rem] top-[27rem] origin-top-left scale-[1] @min-[46rem]/pagina:left-[53rem] @min-[46rem]/pagina:top-[23rem] @min-[46rem]/pagina:scale-[0.8]"
-            >
-              <TelaHoje />
-            </Aparelho>
+        <div className="sb-area sb-mt-fio-bloco" data-bloco="">
+          <Midia formato="larga" fundo="barro" aria-label={MIDIAS_INICIO.notebook} />
+        </div>
+
+        <section className="sb-area sb-mt-midia-titulo" data-bloco="">
+          <div className="grade-10">
+            <div className="col-c2-c8">
+              <h2 className="vt-apresentacao-titulo t-subtitulo">{TITULO_APRESENTACAO}</h2>
+              <p className="vt-apresentacao-texto t-corpo-g" data-apresentacao="">
+                {APRESENTACAO}
+              </p>
+            </div>
           </div>
         </section>
 
-        <section className="entrada atraso-1 grid grid-cols-4 gap-4 py-8 @min-[46rem]/pagina:grid-cols-12 @min-[46rem]/pagina:gap-6 @min-[46rem]/pagina:py-12">
-          <h2 id="titulo-telas" className="rotulo col-span-4 @min-[46rem]/pagina:col-span-3">
-            {TELAS.titulo}
-          </h2>
-          <p className="texto-medida col-span-4 @min-[46rem]/pagina:col-span-9 @min-[46rem]/pagina:border-l @min-[46rem]/pagina:pl-6">
-            {TELAS.texto}
-          </p>
+        <section className="sb-area sb-mt-par-numeros" aria-label={FATOS.titulo}>
+          <FaixaNumeros itens={FATOS.itens} />
         </section>
 
-        <section
-          id="secao-serve"
-          aria-labelledby="titulo-serve"
-          className="entrada atraso-2 pb-8 @min-[46rem]/pagina:pb-12"
-        >
-          <h2 id="titulo-serve" className="rotulo mb-4">
-            {PARA_QUE_SERVE.titulo}
-          </h2>
+        <div className="sb-area sb-mt-numeros-midia" data-bloco="">
+          <Midia formato="larga" fundo="lavanda" aria-label={MIDIAS_INICIO.celulares} />
+        </div>
+
+        <section className="sb-area sb-mt-midia-linhas" data-bloco="">
+          <div className="grade-10">
+            <h2 className="vt-linhas-titulo col-c2-c8 t-subtitulo">{PARA_QUE_SERVE.titulo}</h2>
+          </div>
           {PARA_QUE_SERVE.linhas.map((linha) => (
-            <div
-              key={linha.rotulo}
-              className="grid grid-cols-1 border-t last:border-b @min-[46rem]/pagina:grid-cols-12"
-            >
-              <h3 className="titulo-linha pt-5 @min-[46rem]/pagina:col-span-3 @min-[46rem]/pagina:py-6">
-                {linha.rotulo}
-              </h3>
-              <div className="pb-6 pt-2 @min-[46rem]/pagina:col-span-9 @min-[46rem]/pagina:border-l @min-[46rem]/pagina:py-6 @min-[46rem]/pagina:pl-6">
-                <p className="texto-medida">{linha.texto}</p>
-              </div>
-            </div>
+            <LinhaRotuloTexto key={linha.rotulo} rotulo={linha.rotulo}>
+              {linha.texto}
+            </LinhaRotuloTexto>
           ))}
         </section>
 
-        {/* Campo de barro: uma cena só. Cada desenho tem o viewBox justo (só a figura e o chão,
-            que vai de borda a borda do desenho e termina na base dele), então as figuras lado a
-            lado formam um chão contínuo e nenhuma toca a outra: não há sobreposição nem margem
-            negativa. A largura de cada uma é proporcional à do próprio desenho (14 % = 128, 232 e
-            188 unidades), o que dá às pessoas a mesma escala em toda largura.
-            - Em página estreita: colo e passeio na primeira linha, e o tapete centrado embaixo,
-              a um vão de 16 px, o mesmo de entre as figuras.
-            - A partir de 46 rem: as três na mesma linha, centradas no campo. */}
-        <section
-          data-campo="field-1"
-          className="entrada atraso-2 px-6 pb-6 pt-8 @min-[46rem]/pagina:px-12 @min-[46rem]/pagina:pb-8 @min-[46rem]/pagina:pt-10"
-        >
-          <div className="mx-auto flex max-w-[56rem] flex-wrap items-end gap-y-4 @min-[46rem]/pagina:flex-nowrap">
-            <IlustracaoColo className="block h-auto w-[40.4%] flex-none @min-[46rem]/pagina:w-[23.3%]" />
-            <IlustracaoTapete className="order-3 mx-auto block h-auto w-[73.2%] flex-none @min-[46rem]/pagina:order-none @min-[46rem]/pagina:w-[42.2%]" />
-            <IlustracaoPasseio className="block h-auto w-[59.4%] flex-none @min-[46rem]/pagina:w-[34.2%]" />
-          </div>
-        </section>
+        <div className="sb-area sb-mt-midia-linhas">
+          <Galeria>
+            <Midia formato="larga" fundo="barro" aria-label={galeria.sessao} />
+            <Midia formato="larga" fundo="lavanda" aria-label={galeria.madrugada} />
+            <Midia formato="par" fundo="barro" aria-label={galeria.ilustracoes[0]} />
+            <Midia formato="par" fundo="lavanda" aria-label={galeria.ilustracoes[1]} />
+            <Midia formato="larga" fundo="barro" aria-label={galeria.mosaico} />
+          </Galeria>
+        </div>
 
-        {/* Campo de lavanda: a madrugada, com a miniatura nas cores da noite. */}
-        <section
-          id="secao-madrugada"
-          aria-labelledby="titulo-madrugada"
-          data-campo="field-2"
-          className="madrugada-grade entrada atraso-2 mt-4 px-6 py-8 @min-[46rem]/pagina:px-12 @min-[46rem]/pagina:py-12"
-        >
-          {/* Quatro filhos da grade, nesta ordem em coluna única: título e texto, cena (a
-              ilustração), celular e legenda logo abaixo dele, com a largura dele. Nada fica atrás
-              do celular. Na grade larga, duas colunas: à esquerda o texto no alto e a ilustração
-              embaixo, na largura da coluna e com o chão na base do celular; à direita o celular e a
-              legenda (ver .madrugada-* no CSS). */}
-          <div className="madrugada-texto">
-            <h2 id="titulo-madrugada" className="titulo-secao">
-              {MADRUGADA.titulo}
-            </h2>
-            <p className="texto-medida mt-4">{MADRUGADA.texto}</p>
-          </div>
-          <div className="madrugada-cena">
-            <IlustracaoMamada larga className="block" />
-          </div>
-          <div className="madrugada-celular">
-            <Aparelho
-              tipo="celular"
-              tela="sessao"
-              tema="madrugada"
-              className="absolute left-0 top-0 origin-top-left [scale:var(--celular-escala)]"
-            >
-              <TelaSessao madrugada />
-            </Aparelho>
-          </div>
-          <p className="madrugada-legenda">{LEGENDA_MADRUGADA}</p>
-        </section>
+        <Citacao
+          texto={CITACAO_TEXTO}
+          autoria={`${MINIATURAS.hoje.nota.autor} · ${CITACAO_AVISO}`}
+          rotuloRetrato={MIDIAS_INICIO.retrato}
+        />
 
-        <section
-          aria-labelledby="titulo-fatos"
-          className="entrada atraso-2 pt-8 @min-[46rem]/pagina:pt-12"
-        >
-          <h2 id="titulo-fatos" className="rotulo mb-6">
-            {FATOS.titulo}
+        <section className="sb-area sb-mt-midia-linhas vt-cartoes" aria-labelledby="titulo-cartoes" data-bloco="">
+          <h2 id="titulo-cartoes" className="vt-cartoes-titulo t-rotulo">
+            {TELAS.titulo}
           </h2>
-          <ul className="faixa-fatos">
-            {FATOS.itens.map((fato) => (
-              <li key={fato.valor}>
-                <p className="numero-fato">{fato.valor}</p>
-                <p className="mt-3">{fato.legenda}</p>
-              </li>
+          <div className="vt-cartoes-grade">
+            {TELAS.cartoes.map((cartao, i) => (
+              <CartaoTela
+                key={cartao.destino}
+                to={cartao.destino}
+                titulo={cartao.titulo}
+                linha={cartao.linha}
+                rotuloMidia={cartao.rotuloMidia}
+                fundo={i === 0 ? 'barro' : 'lavanda'}
+              />
             ))}
-          </ul>
+          </div>
         </section>
 
-        <section
-          aria-labelledby="titulo-chamada"
-          className="entrada atraso-2 mt-8 flex flex-col items-center border-t py-12 text-center @min-[46rem]/pagina:mt-12 @min-[46rem]/pagina:py-16"
-        >
-          <h2 id="titulo-chamada" className="titulo-secao [font-size:clamp(2.25rem,5vw,3.5rem)]">
-            {CHAMADA.titulo}
-          </h2>
-          <p className="texto-medida mt-4">{CHAMADA.texto}</p>
-          <Link to="/app/hoje" className="botao botao-principal mt-8">
-            {CHAMADA.link}
-          </Link>
-        </section>
+        <PerguntaCta
+          pergunta={CHAMADA.titulo}
+          cta={CHAMADA.link}
+          destinoCta={CHAMADA.destino}
+          contorno={CHAMADA.entrar}
+          destinoContorno={CHAMADA.destinoEntrar}
+        />
+
+        <NavegacaoGrande rotulo={ROTULO_ATALHOS} links={NAVEGACAO} />
       </main>
-    </div>
+
+      <SecaoEscura
+        titulo={SECAO_ESCURA.titulo}
+        texto={SECAO_ESCURA.texto}
+        botao={SECAO_ESCURA.botao}
+        destino={SECAO_ESCURA.destino}
+      />
+    </>
   )
 }

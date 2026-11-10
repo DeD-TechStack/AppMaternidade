@@ -366,11 +366,11 @@ describe('as peças que saíram (EMENDAS E7): ninguém mais as usa', () => {
     }
   })
 
-  it('o que continua sendo usado não foi apagado: BotoesRapidos, CartaoEmAndamento, SessaoInfo, useBarraFixa, barraFixa e AvisoDemonstracao', () => {
+  // CartaoEmAndamento e SessaoInfo só serviam à miniatura do Início, que saiu na 44d-4: ficaram sem uso
+  // (o teste de exportações da base os reprova) e foram apagados na integração com o `int/refazer`.
+  it('o que continua sendo usado não foi apagado: BotoesRapidos, useBarraFixa, barraFixa e AvisoDemonstracao', () => {
     for (const arquivo of [
       'prototipo/BotoesRapidos.tsx',
-      'prototipo/CartaoEmAndamento.tsx',
-      'prototipo/SessaoInfo.tsx',
       'prototipo/useBarraFixa.ts',
       'prototipo/barraFixa.ts',
       'componentes/AvisoDemonstracao.tsx',
@@ -381,7 +381,9 @@ describe('as peças que saíram (EMENDAS E7): ninguém mais as usa', () => {
 })
 
 describe('Sessão: o CSS do bloco /* 44d-2 */ (lido como texto)', () => {
-  const bloco44 = css.slice(css.indexOf('/* 44d-2 */')).replace(/\/\*[\s\S]*?\*\//g, '')
+  const inicio44 = css.indexOf('/* 44d-2 */')
+  const fim44 = css.indexOf('/* 44d-4 */', inicio44)
+  const bloco44 = css.slice(inicio44, fim44 > inicio44 ? fim44 : css.length).replace(/\/\*[\s\S]*?\*\//g, '')
   const regra = (seletor: string) =>
     [...bloco44.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
       .filter((m) => m[1].trim().replace(/\s+/g, ' ') === seletor)

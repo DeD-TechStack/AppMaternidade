@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import axe from 'axe-core'
 import { AvisoDemonstracao } from './componentes/AvisoDemonstracao.tsx'
-import { AVISO_DEMONSTRACAO } from './conteudo/textos.ts'
+import { AVISO_DEMONSTRACAO, ETIQUETA_AVISO } from './conteudo/textos.ts'
 import { criarEstadoInicial, type EstadoPrototipo } from './prototipo/estado.ts'
 import { renderizarRota } from './teste/renderizarRota.tsx'
 
@@ -52,8 +52,14 @@ describe('aviso de demonstração: aparece quando falta uma variável do banco',
         await screen.findByRole('heading', { level: 1 })
 
         expect(container.querySelectorAll(SELETOR), caminho).toHaveLength(aparece ? 1 : 0)
-        expect(screen.queryAllByText(TEXTO), caminho).toHaveLength(aparece ? 1 : 0)
-        expect(screen.queryAllByText(ETIQUETA), caminho).toHaveLength(0)
+        if (caminho === '/') {
+          // O Início não tem a faixa longa: o aviso é uma etiqueta curta na lateral da abertura (44d-4).
+          expect(screen.queryAllByText(TEXTO), caminho).toHaveLength(0)
+          expect(screen.queryAllByText(ETIQUETA_AVISO), caminho).toHaveLength(aparece ? 1 : 0)
+        } else {
+          expect(screen.queryAllByText(TEXTO), caminho).toHaveLength(aparece ? 1 : 0)
+          expect(screen.queryAllByText(ETIQUETA), caminho).toHaveLength(0)
+        }
         unmount()
       }
     })
@@ -123,19 +129,27 @@ describe('aviso de demonstração: a etiqueta da abertura (E6)', () => {
     }
   })
 
-  it('o Início e a rota inexistente não ganham a etiqueta: seguem com o parágrafo "Demonstração sem banco" (sem banco)', async () => {
+  it('a rota inexistente segue com o parágrafo "Demonstração sem banco" (sem banco), sem a etiqueta', async () => {
     definirBanco('', '')
 
-    for (const caminho of ['/', '/qualquer-coisa']) {
-      const { container, unmount } = renderizarRota(caminho)
-      await screen.findByRole('heading', { level: 1 })
+    const { container } = renderizarRota('/qualquer-coisa')
+    await screen.findByRole('heading', { level: 1 })
 
-      const aviso = container.querySelector(SELETOR)!
-      expect(aviso.tagName, caminho).toBe('P')
-      expect(aviso.textContent, caminho).toBe(TEXTO)
-      expect(screen.queryByText(ETIQUETA), caminho).toBeNull()
-      unmount()
-    }
+    const aviso = container.querySelector(SELETOR)!
+    expect(aviso.tagName).toBe('P')
+    expect(aviso.textContent).toBe(TEXTO)
+    expect(screen.queryByText(ETIQUETA)).toBeNull()
+  })
+
+  it('o Início (44d-4) tem o aviso como etiqueta curta na lateral, sem o parágrafo longo (sem banco)', async () => {
+    definirBanco('', '')
+
+    const { container } = renderizarRota('/')
+    await screen.findByRole('heading', { level: 1 })
+
+    expect(screen.queryAllByText(ETIQUETA_AVISO)).toHaveLength(1)
+    expect(screen.queryByText(TEXTO)).toBeNull()
+    expect(container.querySelectorAll(SELETOR)).toHaveLength(1)
   })
 
   it('o Início e a rota inexistente não mostram aviso nem a etiqueta com o banco configurado', async () => {
@@ -212,9 +226,9 @@ describe('aviso de demonstração: variante lateral (coluna da abertura)', () =>
 })
 
 describe('aviso de demonstração: texto e marcador são o mesmo elemento', () => {
-  it('no Início, com as duas variáveis vazias, o data-aviso e o texto exato apontam o mesmo <p>', async () => {
+  it('na rota inexistente, com as duas variáveis vazias, o data-aviso e o texto exato apontam o mesmo <p>', async () => {
     definirBanco('', '')
-    const { container } = renderizarRota('/')
+    const { container } = renderizarRota('/qualquer-coisa')
     await screen.findByRole('heading', { level: 1 })
 
     const marcado = container.querySelector(SELETOR)
@@ -236,18 +250,21 @@ describe('aviso de demonstração: texto e marcador são o mesmo elemento', () =
 })
 
 describe('aviso de demonstração: lugar na tela', () => {
-  it('é a primeira linha dentro do raiz do Início', async () => {
+  it('no Início é uma etiqueta da lateral da abertura, e não há faixa entre o cabeçalho do site e o main', async () => {
     definirBanco('', '')
     const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
 
-    // A raiz é a tela, entre o cabeçalho e o rodapé do site (a casca do Layout, 2.6 e 2.7); depois
-    // do aviso vem a nav das seções, que ocupa o lugar do <header> antigo da página.
-    const raiz = container.querySelector('[class~="@container/pagina"]')!
-    expect(raiz.classList.contains('@container/pagina')).toBe(true)
-    expect(raiz.previousElementSibling!.matches('[data-cabecalho]')).toBe(true)
-    expect(raiz.firstElementChild).toBe(container.querySelector(SELETOR))
-    expect(raiz.firstElementChild!.nextElementSibling!.tagName).toBe('NAV')
+    // O Início é um fragmento na casca do Layout (2.6 e 2.7): o <main> vem logo depois do cabeçalho
+    // do site, e o aviso (um <li data-aviso>) fica na lateral da abertura, depois das etiquetas e
+    // antes do link.
+    const main = container.querySelector('main')!
+    expect(main.previousElementSibling!.matches('[data-cabecalho]')).toBe(true)
+    const aviso = container.querySelector(SELETOR)!
+    expect(main.contains(aviso)).toBe(true)
+    expect(aviso.parentElement!.classList.contains('sb-abertura-lateral')).toBe(true)
+    expect(aviso.nextElementSibling!.querySelector('a')!.textContent).toBe('Ver o protótipo')
+    expect(aviso.textContent).toBe(ETIQUETA_AVISO)
   })
 
   // MAT-44d-2 parte 2: a Sessão também saiu da coluna única; o aviso é um item da lateral da abertura,
@@ -340,8 +357,8 @@ describe('aviso de demonstração: marcação', () => {
   it('é um <p> simples, sem role, sem aria-* e sem classe com variante de janela', async () => {
     definirBanco('', '')
 
-    // O Hoje e a Sessão não têm mais o parágrafo (E6); a marcação vale para o Início e a rota inexistente.
-    for (const caminho of ['/', '/qualquer-coisa']) {
+    // O Início (44d-4), o Hoje e a Sessão (E6) têm o aviso como etiqueta; só a rota inexistente mantém o <p>.
+    for (const caminho of ['/qualquer-coisa']) {
       const { container, unmount } = renderizarRota(caminho)
       await screen.findByRole('heading', { level: 1 })
 
@@ -354,6 +371,20 @@ describe('aviso de demonstração: marcação', () => {
       expect([...aviso.classList].filter((c) => /(^|:)(sm|md|lg|xl|2xl):/.test(c)), caminho).toEqual([])
       unmount()
     }
+  })
+
+  it('no Início é um <li> simples com a Etiqueta do sistema, sem role, sem aria-* e sem classe com variante de janela', async () => {
+    definirBanco('', '')
+    const { container } = renderizarRota('/')
+    await screen.findByRole('heading', { level: 1 })
+
+    const aviso = container.querySelector(SELETOR)!
+    expect(aviso.tagName).toBe('LI')
+    expect(aviso.hasAttribute('role')).toBe(false)
+    expect(aviso.getAttributeNames().filter((nome) => nome.startsWith('aria-'))).toEqual([])
+    expect([...aviso.classList].filter((c) => /(^|:)(sm|md|lg|xl|2xl):/.test(c))).toEqual([])
+    expect(aviso.children).toHaveLength(1)
+    expect(aviso.children[0].classList.contains('sb-etiqueta')).toBe(true)
   })
 })
 
