@@ -291,6 +291,25 @@ Larguras de linha: `corpo-g` até 65ch dentro de c2–c8; texto das linhas em c4
 - **Ritmo vertical:** escala única de 8, 16, 24, 32, 64, 96, 128, 160 e 192. Saem 4 e 40. Cabeçalho para `h1`: 64 (32 no celular). `h1` para subtítulo: 8. Fio da abertura para o primeiro bloco: 32 (16). Mídia para título do bloco: 128 (48). Parágrafo para números: 96 (48). Números para mídia: 128 (48). Mídia para linhas e linhas para galeria: 160 (48). Entre linhas: 32 (48). Entre peças da galeria: 32 (8). Fim do conteúdo para o rodapé: 192.
 - **Fios:** 1 px na tinta (`#1A1511`). Na madrugada, `#E3D6C3` a 20%, que só serve de divisor; o fio de campo de formulário é sólido `#E3D6C3`. Ficam na abertura (horizontal em c1–c10 e vertical em x de c9, só nos 80 px finais), nos números (horizontal no topo e 2 verticais), nas linhas (vertical entre rótulo e texto e horizontal embaixo, de c2 a c9) e antes do bloco de cartões. Proibido: fio sob o cabeçalho, moldura de página e borda nos 4 lados, exceto em botão de moldura dupla.
 
+### Área de conta (MAT-37)
+
+As telas de acesso (entrar, criar conta, recuperar acesso, nova senha, conta excluída) e as telas logadas da conta (Começar e Conta) são superfícies de configurar: formulário curto, validação clara e pouca decoração. Elas usam só os tokens e as classes desta base, sem token novo. Não herdam do Início o campo de cor de ponta a ponta, os aparelhos nem as ilustrações.
+
+Três direções foram montadas como telas estáticas para Entrar e Conta e pontuadas pelo award-bar (UI 40%, UX 30%, inovação 30%), em 390 e 1440:
+
+| Direção | UI | UX | Inovação | Total |
+|---|---|---|---|---|
+| A, Folha única: coluna estreita em toda largura; Conta em bloco de linhas, com o rótulo em caixa alta à esquerda | 7,3 | 7,8 | 6,4 | 7,18 |
+| B, Campo e papel: Entrar com um campo de lavanda ao lado do formulário; Conta com cabeçalho em campo de barro e seções em cartões | 6,8 | 6,9 | 7,0 | 6,89 |
+| C, Índice e régua: Entrar em duas colunas no desktop, com o título grande à esquerda e o formulário à direita; Conta com índice das seções à esquerda no desktop e seções separadas por régua de tinta | 7,6 | 7,7 | 7,0 | 7,45 |
+
+Vence a C, pela maior nota. O título em escala grande e a régua de tinta dão a hierarquia sem caixa nem cor, o índice deixa a Conta navegável no desktop e o formulário fica numa medida de leitura de cerca de 28 rem. No celular a C vira uma coluna só, e o índice sai. A A perdeu em inovação, com a coluna estreita solta em 1440. A B perdeu em UI, pelo campo de cor grande sem conteúdo e pelos cartões empilhados no celular.
+
+Alcance de duas regras gerais desta base na área de conta:
+
+- **"Toda confirmação tem Desfazer"** vale para os registros da rotina. Na área de conta, a ação irreversível (excluir conta, excluir família, remover acesso, sair da família, cancelar convite) pede confirmação antes, numa caixa de diálogo. A ação reversível (mudar o papel de outra pessoa, arquivar, editar) mostra a confirmação na região de status, com o controle inverso na mesma tela. A exceção é rebaixar o próprio papel: quem rebaixa perde os controles de responsável e não tem como desfazer sozinho, então a caixa "mudar papel" aberta na própria linha avisa disso antes do botão de confirmar.
+- **Os 56 px de altura na madrugada** valem para as ações de registro, como na base (`--alvo-rapido`). Na área de conta valem os mínimos gerais: 44 × 44 px em links e controles, 48 px nos botões e 56 px na ação principal de cada formulário, nos dois temas.
+
 ## Elevation & Depth
 
 Plano. Profundidade vem de linha, cor, espaço, escala e, nos aparelhos de mídia, de inclinação em CSS 3D. Nenhum `box-shadow`, nenhum `backdrop-filter` e nenhum `filter: blur`.
