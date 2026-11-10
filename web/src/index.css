@@ -3437,6 +3437,21 @@ body:has([data-barra-registrar]) [data-rodape] {
     hyphens: auto;
   }
 
+  /* O `h1` com o nome do site (AberturaPublica põe um `<wbr>` entre "App" e "Maternidade"): sem hífen no
+     meio do nome, a quebra só no ponto marcado. Os outros `h1` ficam com a hifenização acima. */
+  .vp-pagina h1:has(wbr) {
+    hyphens: manual;
+  }
+
+  /* De 768 para cima o nome cabe numa linha: a caixa em linha o leva inteiro para a linha de baixo em vez
+     de partir "App | Maternidade" no fim da linha de cima. No celular (343 px) ele não cabe e quebra no
+     `<wbr>`. */
+  @media (min-width: 768px) {
+    .vp-pagina h1 .vp-nome {
+      display: inline-block;
+    }
+  }
+
   /* As etiquetas da lateral ficam coladas pelo passo de 32 px da base (cada item tem 32 de altura): sem
      o recuo de 8 px que separa dois avisos. */
   .vp-pagina .sb-abertura-lateral > .vp-etiqueta-item + .vp-etiqueta-item {
@@ -3448,6 +3463,16 @@ body:has([data-barra-registrar]) [data-rodape] {
     max-width: 40rem;
     margin: 0;
     text-wrap: balance;
+  }
+
+  /* A apresentação das páginas com mídia larga logo acima (Como funciona, Cuidado compartilhado, Regras e
+     Sobre): texto corrido em c2–c8, de 55 a 65 caracteres por linha. O `65ch` do contrato (cerca de 860
+     px) dá 69 caracteres por linha em 28 px (o `ch` é a largura do "0", maior que a letra média); 50,5
+     rem (808 px) dão até 65. Sem `balance`, que encurtaria as linhas de um parágrafo de 3 linhas para
+     menos de 55 caracteres. */
+  .vp-apresentacao[data-ampla] {
+    max-width: 50.5rem;
+    text-wrap: pretty;
   }
 
   /* O que vem abaixo de uma linha, de c2 a c8 (uma tabela), a 32 px do fio da linha. */
@@ -3500,6 +3525,13 @@ body:has([data-barra-registrar]) [data-rodape] {
     padding: 64px;
   }
 
+  /* A lua do berço é um disco de tinta com um disco por cima, pintado de barro, que a "recorta". Sobre a
+     moldura lavanda esse disco ficava barro (rosa) sobre o fundo lavanda: ele passa a ter a cor do fundo
+     da moldura. Sobre o barro o disco já tem a cor do fundo e não precisa de regra. */
+  .sb-midia[data-fundo='lavanda'] [data-ilustracao='berco'] circle[cx='97'][cy='37'] {
+    fill: var(--cor-campo-2);
+  }
+
   /* O texto curto do bloco do círculo CTA: centrado, a 24 px do título. */
   .vp-cta-texto {
     max-width: 560px;
@@ -3539,6 +3571,31 @@ body:has([data-barra-registrar]) [data-rodape] {
   /* O nome da coluna repetido na célula só aparece quando a tabela se empilha. */
   .vp-tabela-coluna {
     display: none;
+  }
+
+  /* De 768 para cima a tabela segue o eixo das linhas rótulo + texto: o cabeçalho da linha ocupa c2–c3
+     (2 de 7 colunas da tabela, que vai de c2 a c8) e a 2ª coluna começa em c4 mais 32 px, onde começa o
+     texto das linhas. As colunas seguintes dividem o resto até c8. */
+  @media (min-width: 768px) {
+    .vp-tabela th,
+    .vp-tabela td {
+      box-sizing: border-box;
+    }
+
+    .vp-tabela th:first-child {
+      width: 28.5714%;
+    }
+
+    .vp-tabela th:nth-child(2),
+    .vp-tabela td:nth-child(2) {
+      padding-left: 32px;
+    }
+
+    /* Com o número de 48 px na 2ª coluna, 16 px até o texto da 3ª ficam apertados: 32 px. */
+    .vp-tabela[data-com-numero] th:nth-child(2),
+    .vp-tabela[data-com-numero] td:nth-child(2) {
+      padding-right: 32px;
+    }
   }
 
   /* Os números de ajuda (188, 192, 180 e 100): Zilla Slab 700 (a família vem de `t-numero`), 48 px. */

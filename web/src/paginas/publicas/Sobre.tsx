@@ -17,7 +17,7 @@ export function Sobre() {
         direita={{ cena: 'berco', fundo: 'lavanda' }}
         margem="sb-mt-fio-bloco"
       />
-      <Apresentacao texto={SOBRE.apresentacao} margem="sb-mt-midia-titulo" />
+      <Apresentacao texto={SOBRE.apresentacao} margem="sb-mt-midia-titulo" ampla />
       <LinhaDeLeitura secao={paraQuem.secao} blocos={[paraQuem.texto]} margem="sb-mt-par-numeros" />
       <LinhaDeLeitura secao={oQueFaz.secao}>
         {oQueFaz.pilares.map(({ rotulo, texto }) => (

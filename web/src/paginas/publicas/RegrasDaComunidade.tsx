@@ -12,7 +12,7 @@ export function RegrasDaComunidade() {
   return (
     <main className="vp-pagina">
       <AberturaPublica titulo={H1.regras} subtitulo={SUBTITULOS.regras} />
-      <Apresentacao texto={REGRAS.apresentacao} margem="sb-mt-fio-bloco" />
+      <Apresentacao texto={REGRAS.apresentacao} margem="sb-mt-fio-bloco" ampla />
       <LinhaDeLeitura secao={antes.secao} blocos={antes.blocos} margem="sb-mt-par-numeros" />
       <LinhaDeLeitura secao={sete.secao} blocos={sete.blocos} />
       <MidiaLarga peca={{ cena: 'passeio', fundo: 'barro' }} margem="sb-mt-midia-linhas" />

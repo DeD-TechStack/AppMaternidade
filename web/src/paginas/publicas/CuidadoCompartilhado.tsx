@@ -13,7 +13,7 @@ export function CuidadoCompartilhado() {
     <main className="vp-pagina">
       <AberturaPublica titulo={H1.cuidado} subtitulo={SUBTITULOS.cuidado} etiquetas={ETIQUETAS_LATERAIS.cuidado} />
       <MidiaLarga peca={{ cena: 'mamada', fundo: 'lavanda' }} margem="sb-mt-fio-bloco" />
-      <Apresentacao texto={CUIDADO.apresentacao} margem="sb-mt-midia-titulo" />
+      <Apresentacao texto={CUIDADO.apresentacao} margem="sb-mt-midia-titulo" ampla />
       <LinhaDeLeitura secao={conta.secao} blocos={[conta.texto]} margem="sb-mt-par-numeros" />
       <LinhaDeLeitura
         secao={papeis.secao}

@@ -18,7 +18,7 @@ export function ComoFunciona() {
         depois={<LinkLateral para={telas.para}>{telas.link}</LinkLateral>}
       />
       <MidiaLarga peca={{ cena: 'mamada', fundo: 'lavanda' }} margem="sb-mt-fio-bloco" />
-      <Apresentacao texto={COMO_FUNCIONA.apresentacao} margem="sb-mt-midia-titulo" />
+      <Apresentacao texto={COMO_FUNCIONA.apresentacao} margem="sb-mt-midia-titulo" ampla />
       <LinhaDeLeitura secao={primeiraSemana.secao} blocos={primeiraSemana.textos} margem="sb-mt-par-numeros" />
       <LinhaDeLeitura secao={madrugada.secao} blocos={[madrugada.texto]} />
       <ParDeMidias

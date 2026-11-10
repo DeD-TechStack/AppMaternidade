@@ -1,8 +1,41 @@
-import type { ReactNode } from 'react'
+import { Fragment, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { Abertura } from '../base/Abertura.tsx'
 import { Etiqueta } from '../base/Etiqueta.tsx'
-import { TF } from '../../conteudo/publicas.ts'
+import { NOME_SITE, TF } from '../../conteudo/publicas.ts'
+
+// O nome do site quebra só entre "App" e "Maternidade" (o rodapé da casca quebra no mesmo ponto), nunca com
+// hífen no meio da palavra.
+const [INICIO_DO_NOME, FIM_DO_NOME] = [NOME_SITE.slice(0, 3), NOME_SITE.slice(3)]
+
+/**
+ * O título com um ponto de quebra (`<wbr>`) entre "App" e "Maternidade" onde o nome do site aparece. O
+ * `<wbr>` não é caractere: o `textContent` e o nome acessível do `h1` continuam o título inteiro. O nome
+ * fica num `span.vp-nome` que, de 768 para cima, é uma caixa em linha única: se cabe numa linha, vai
+ * inteiro para ela (o ponto de quebra só vale quando o nome não cabe, como no celular).
+ * A `Abertura` da base tipa o título como `string` mas só o põe dentro do `h1`; o elemento passa pelo tipo
+ * por um `as` porque a base não pode ser editada. Título sem o nome volta como veio.
+ */
+function comQuebraNoNome(titulo: string): string {
+  const partes = titulo.split(NOME_SITE)
+  if (partes.length === 1) return titulo
+  return (
+    <>
+      {partes.map((parte, indice) => (
+        <Fragment key={indice}>
+          {indice > 0 ? (
+            <span className="vp-nome">
+              {INICIO_DO_NOME}
+              <wbr />
+              {FIM_DO_NOME}
+            </span>
+          ) : null}
+          {parte}
+        </Fragment>
+      ))}
+    </>
+  ) as unknown as string
+}
 
 /** Um aviso da coluna lateral: `ui` 15, na cor secundária. */
 export function AvisoLateral({ children, aviso }: { children: ReactNode; aviso?: string }) {
@@ -51,7 +84,7 @@ export function AberturaPublica({ titulo, subtitulo, etiquetas, antes, depois, c
   const temLateral = Boolean(etiquetas?.length) || Boolean(antes) || Boolean(depois) || construcao
   return (
     <Abertura
-      titulo={titulo}
+      titulo={comQuebraNoNome(titulo)}
       subtitulo={subtitulo}
       lateral={
         temLateral ? (
