@@ -21,6 +21,11 @@ Horários em America/Sao_Paulo, tirados do relógio da máquina ou de carimbos d
 
 Uma linha por marco, a mais recente no topo. O estado corrente fica em [Retomada do site](Retomada_Site.md), e o detalhe de cada marco está no cartão Kanban citado.
 
+- 10/11/2026: **44d-5 (imagens do Início) integrada em `int/refazer`.**
+  - Cartão t_cc66cbf8. O revisor aprovou na R2, e o e73e75a entrou por ff-only, com push.
+  - Notas do Fable: 8,1/7,9 e depois 8,3/8,1.
+  - A 44d-6 foi dividida em 6a, 6b e 6c (t_f21ee109, t_6afcc9b3, t_9a4ca6ee), que rodam em paralelo. A 44d-6 ficou só com a conferência final.
+  - Valem as regras de ciclo novas: 1 passada com todas as correções, no máximo 3 sessões do OpenCode por volta e o check completo 1 vez só.
 - 10/11/2026: **PWA adiada por Daniel.** As palavras dele: "eu não pedi pra ter instalavel de nada, só o site".
   - A MAT-41a (t_ab1bd202) parou com `needs_input`.
   - O worktree e os commits foram guardados, e nada foi integrado.
