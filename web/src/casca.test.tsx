@@ -312,6 +312,32 @@ describe('menu do celular', () => {
   })
 })
 
+// Rodada de correção 2, parte 16 (V6): todo elemento focável do painel do menu (links; a área "Em breve" não
+// tem nenhum) está dentro de `.sb-menu-celular`, que é onde o CSS põe o anel de foco para dentro do item.
+describe('menu do celular: o anel de foco dos itens do painel', () => {
+  beforeEach(() => larguraDaJanela(390))
+
+  for (const contexto of ['publico', 'logado'] as const) {
+    it(`${contexto}: todo focável do painel está dentro de .sb-menu-celular (o 1º, o último e o resto), e "Em breve" não tem focável`, () => {
+      const { container } = cabecalho(contexto)
+      fireEvent.click(screen.getByRole('button', { name: 'Menu' }))
+
+      const painel = painelDoMenu(container)
+      expect(painel.classList.contains('sb-menu-celular')).toBe(true)
+      const focaveis = [...painel.querySelectorAll<HTMLElement>('a[href], button, input, select, textarea, [tabindex]')]
+      expect(focaveis.length).toBeGreaterThanOrEqual(2)
+      for (const item of focaveis) {
+        expect(item.closest('.sb-menu-celular'), item.textContent ?? '').toBe(painel)
+        expect(item.className).toContain('sb-menu-link')
+      }
+      for (const emBreve of painel.querySelectorAll('.sb-menu-item')) expect(emBreve.querySelector('a, button')).toBeNull()
+      // O primeiro e o último item do painel são links (onde o painel rola).
+      expect(focaveis[0]).toBe(painel.querySelector('a'))
+      expect(focaveis[focaveis.length - 1].tagName).toBe('A')
+    })
+  }
+})
+
 // R1 (rodada de correção 1): com o menu aberto, o foco gira em volta fechada por TODOS os focáveis
 // visíveis do cabeçalho, na ordem do DOM. Os links de nav.sb-cab-links ficam fora (somem abaixo de 768).
 describe('menu do celular: a volta do foco cobre o cabeçalho inteiro', () => {

@@ -1581,6 +1581,14 @@
     .sb-menu-celular:not([hidden]) {
       display: block;
     }
+
+    /* V6: os itens do painel ocupam a largura inteira e o painel rola (`overflow-y: auto` corta em x e
+       em y): o anel de 2 px com recuo de 2 px para fora perdia 4 px de cada lado. Dentro do painel o
+       recuo é para dentro (o traço fica de 2 a 4 px dentro do item), então os 4 lados aparecem. Só a
+       posição do anel: espessura, estilo e cor são os do foco global, e o foco do resto do site não muda. */
+    .sb-menu-celular :focus-visible {
+      outline-offset: -4px;
+    }
   }
 
   .sb-menu-grupo {

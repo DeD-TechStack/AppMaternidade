@@ -984,6 +984,83 @@ describe('rodada 3: faixa de números, abertura e linhas (regras de CSS)', () =>
     })
   })
 
+  // Rodada de correção 2, parte 16 (V6): o anel de foco dos itens do menu do celular fica com os 4 lados
+  // dentro do painel. Os itens ocupam a largura inteira do painel e o painel rola (`overflow-y: auto`, que
+  // também corta em x): o anel de 2 px com recuo de 2 px para fora perdia 4 px de cada lado. Dentro do painel
+  // o recuo passa a ser para dentro (-4 px, então o traço fica entre 2 e 4 px dentro do item). O foco de
+  // todo o resto do site não muda.
+  describe('V6: o anel de foco do menu do celular tem os 4 lados dentro do painel', () => {
+    const ESPESSURA = 2
+    const PAINEL = '.sb-menu-celular :focus-visible'
+    const recuoDoAnel = () => {
+      const regra = regras(celular).find((r) => r.seletor === PAINEL)
+      const valor = /outline-offset:\s*(-?\d+)px/.exec(regra?.corpo ?? '')?.[1]
+      // Sem a regra do painel vale o foco global (o recuo de 2 px para fora).
+      return valor !== undefined ? Number(valor) : Number(/outline-offset:\s*(-?\d+)px/.exec(regras(base).find((r) => r.seletor === ':focus-visible')?.corpo ?? '')?.[1])
+    }
+
+    it('o foco global não mudou: anel de 2 px na cor de foco, com recuo de 2 px para fora', () => {
+      const global = regras(base).find((r) => r.seletor === ':focus-visible')?.corpo ?? ''
+      expect(global).toMatch(/outline:\s*2px solid var\(--cor-foco\)/)
+      expect(global).toMatch(/outline-offset:\s*2px/)
+    })
+
+    it('dentro do painel do menu o recuo é para dentro (negativo), sem trocar a espessura, o estilo nem a cor do anel', () => {
+      const regra = regras(celular).find((r) => r.seletor === PAINEL)
+      expect(regra, PAINEL).toBeDefined()
+      expect(regra!.corpo).toMatch(/outline-offset:\s*-\d+px/)
+      expect(regra!.corpo).not.toMatch(/outline(?:-width|-style|-color)?:/)
+      expect(regra!.corpo).not.toMatch(/box-shadow|border/)
+    })
+
+    it('o cálculo: o item ocupa a largura inteira do painel e o anel fica com a folga de esquerda, cima, direita e baixo ≥ 0', () => {
+      const recuo = recuoDoAnel()
+      expect(Number.isFinite(recuo)).toBe(true)
+      // O traço do anel começa a `recuo` do item e vai até `recuo + espessura` (positivo = para fora): a borda
+      // de fora do anel está `fora` px além da borda do item (negativo = dentro do item).
+      const fora = recuo + ESPESSURA
+      // Itens a ras das bordas do painel (x de 0 a 375): o 1º no alto do painel e o último embaixo (o painel rola).
+      const painel = { x: 0, y: 60, r: 375, b: 844 }
+      const itens = [
+        { x: 0, y: 60, r: 375, b: 124 }, // o 1º, colado no alto
+        { x: 0, y: 462, r: 375, b: 526 }, // um do meio
+        { x: 0, y: 780, r: 375, b: 844 }, // o último, colado embaixo
+      ]
+      for (const item of itens) {
+        const lados = {
+          esq: item.x - fora - painel.x,
+          topo: item.y - fora - painel.y,
+          dir: painel.r - (item.r + fora),
+          base: painel.b - (item.b + fora),
+        }
+        for (const [lado, valor] of Object.entries(lados)) expect(valor, `${lado} do item em y=${item.y}`).toBeGreaterThanOrEqual(0)
+      }
+    })
+
+    it('o traço fica nítido: a cor de foco tem ≥ 3:1 contra o fundo do painel, nos dois temas', () => {
+      const cores = lerTokens(tokensCss)
+      expect(contraste(cores.focus, cores.neutral)).toBeGreaterThanOrEqual(3)
+      expect(contraste(cores['night-focus'], cores['night-neutral'])).toBeGreaterThanOrEqual(3)
+      expect(corpoCelular('.sb-menu-celular')).toMatch(/background-color:\s*var\(--cor-fundo\)/)
+    })
+
+    it('os itens seguem do tamanho do contrato e centrados (alvo de 64 px, largura inteira), e o painel segue rolando', () => {
+      const link = corpoBase('.sb-menu-link')
+      expect(link).toMatch(/min-height:\s*64px/)
+      expect(link).toMatch(/width:\s*100%/)
+      expect(link).toMatch(/justify-content:\s*center/)
+      expect(corpoBase('.sb-menu-item')).toMatch(/min-height:\s*64px/)
+      expect(corpoCelular('.sb-menu-celular')).toMatch(/overflow-y:\s*auto/)
+      expect(corpoCelular('.sb-menu-celular')).not.toMatch(/overflow(?:-x)?:\s*hidden/)
+    })
+
+    it('só o painel muda: a única outra regra com recuo de anel negativo é a que já existia (o cartão do Hoje), e nada depende do tema', () => {
+      const comRecuoNegativo = regras(semComentarios).filter((r) => /outline-offset:\s*-/.test(r.corpo))
+      expect(comRecuoNegativo.map((r) => r.seletor)).toEqual(['.cartao.campo-andamento:focus-visible', PAINEL])
+      expect(temaCss).not.toMatch(/outline/)
+    })
+  })
+
   // Rodada de correção 2, parte 15 (V5): abaixo de 768, da base da mídia ao topo do rótulo da 1ª linha são
   // 48 ±8 px (o espaço "mídia → linhas" do contrato 2.4). O `margin-top` do bloco (48) e o `padding-top` do
   // rótulo da linha (48) se somavam em 96. Só a 1ª linha do bloco que vem depois da mídia perde o recuo de
