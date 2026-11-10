@@ -1682,13 +1682,15 @@
     margin: 192px 0 0;
   }
 
+  /* Abaixo de 768 nenhum vão do rodapé passa de 96 px (o rodapé fica mais baixo que os cerca de
+     1380 px do contrato: vale a altura que o conteúdo der). Em 1440 os espaços são os de sempre. */
   @media (max-width: 767px) {
     .sb-rodape {
-      padding-block: 160px 64px;
+      padding-block: 96px 64px;
     }
 
     .sb-rodape-nome {
-      margin-top: 128px;
+      margin-top: 96px;
       font-size: calc(100cqw * 0.1585);
     }
 
@@ -1697,7 +1699,7 @@
     }
 
     .sb-rodape-links {
-      margin-top: 160px;
+      margin-top: 96px;
     }
 
     .sb-rodape-colunas {
@@ -1712,7 +1714,7 @@
     }
 
     .sb-rodape-final {
-      margin-top: 192px;
+      margin-top: 96px;
     }
   }
 
