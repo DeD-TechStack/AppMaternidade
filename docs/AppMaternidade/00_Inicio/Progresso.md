@@ -21,6 +21,12 @@ Horários em America/Sao_Paulo, tirados do relógio da máquina ou de carimbos d
 
 Uma linha por marco, a mais recente no topo. O estado corrente fica em [Retomada do site](Retomada_Site.md), e o detalhe de cada marco está no cartão Kanban citado.
 
+- 10/11/2026: **44d-1 integrada em `int/refazer`.**
+  - Cartão t_0288c2c3. O revisor aprovou na revisão 3, e o candidato 1774cc3 entrou por ff-only, com push.
+  - Notas do Fable por rodada: 7,3 a 7,8, depois 8,0 a 8,2, e por fim 8,2 a 8,4.
+  - As capturas comuns foram corrigidas em `_staging/.../ferramentas/captura/`.
+  - Os cartões 44d-2, 44d-3 e 44d-4 estão rodando em paralelo.
+  - A 41a passou a depender da 44d-2, porque a spec dela usa a casca velha. O líder emenda a spec quando a 44d-2 entrar.
 - 10/11/2026: **fila religada à 44d.**
   - Os 6 cartões que dependiam do t_f67d8962 foram religados:
     - MAT-36 (t_b2a55931) depois da 44d-4;
