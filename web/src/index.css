@@ -2239,11 +2239,16 @@
     padding-block: var(--e-linhas);
   }
 
+  /* V4: o fio vertical (border-left) começa no topo do texto, e não no topo da linha. O espaço de cima
+     é `margin-top` (fora da borda) e não `padding-top`: o texto fica onde estava (à altura do rótulo),
+     o vertical nasce 32 px abaixo do fio horizontal de cima e a caixa estica até o fio horizontal de
+     baixo da própria linha (junção em T). Assim o vertical de uma linha nunca emenda no da seguinte. */
   .sb-linha-texto {
     grid-column: 3 / 8;
     box-sizing: border-box;
     max-width: 592px;
-    padding: var(--e-linhas) 0 var(--e-linhas) 32px;
+    margin-top: var(--e-linhas);
+    padding: 0 0 var(--e-linhas) 32px;
     border-left: 1px solid var(--cor-fio-suave);
   }
 
@@ -2262,6 +2267,7 @@
 
     .sb-linha-texto {
       max-width: none;
+      margin-top: 0;
       padding: 0 0 var(--e-linhas);
       border-left: 0;
     }

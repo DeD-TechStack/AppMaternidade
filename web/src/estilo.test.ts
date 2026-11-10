@@ -982,6 +982,93 @@ describe('rodada 3: faixa de números, abertura e linhas (regras de CSS)', () =>
     })
   })
 
+  // Rodada de correção 2, parte 13 (V4): o fio vertical da linha rótulo + texto nasce no topo do texto
+  // (não no topo da linha), com 32 px sem fio vertical depois do fio horizontal anterior, e termina
+  // no fio horizontal da própria linha (junção em T). Assim o vertical de uma linha nunca continua no
+  // da seguinte. O espaço de cima do texto passa de `padding-top` (dentro da borda) a `margin-top` (fora
+  // dela); o texto e o rótulo ficam onde estavam.
+  describe('V4: o fio vertical da linha começa no topo do texto e não emenda na linha seguinte', () => {
+    const espacoDasLinhas = Number(/--e-linhas:\s*(\d+)px/.exec(corpoBase(':root'))?.[1] ?? Number.NaN)
+
+    it('o espaço de cima do texto é `margin-top` (fora da borda): o fio vertical (border-left) começa depois dele', () => {
+      const texto = corpoBase('.sb-linha-texto')
+      expect(texto).toMatch(/margin-top:\s*var\(--e-linhas\)/)
+      expect(texto).toMatch(/padding:\s*0 0 var\(--e-linhas\) 32px/)
+      expect(texto).not.toMatch(/padding-top/)
+      expect(texto).toMatch(/border-left:\s*1px solid var\(--cor-fio-suave\)/)
+      // O que não mudou: coluna c4–c8, 560 px de texto mais o recuo de 32.
+      expect(texto).toMatch(/grid-column:\s*3 \/ 8/)
+      expect(texto).toMatch(/max-width:\s*592px/)
+    })
+
+    it('o texto e o rótulo ficam na mesma altura: o topo do texto (margin-top) e o do rótulo (padding-top) são o mesmo espaço', () => {
+      expect(corpoBase('.sb-linha-rotulo')).toMatch(/padding-block:\s*var\(--e-linhas\)/)
+      expect(corpoBase('.sb-linha-texto')).toMatch(/margin-top:\s*var\(--e-linhas\)/)
+      expect(corpoBase('.sb-linha')).toMatch(/border-bottom:\s*1px solid var\(--cor-fio-suave\)/)
+    })
+
+    it('em qualquer linha (1, 2 ou 3 linhas de texto; a 1ª, a do meio, a última, ou sozinha) o vertical começa a ≥ 32 px do fio de cima e nunca emenda no da seguinte', () => {
+      expect(Number.isFinite(espacoDasLinhas), '--e-linhas no :root').toBe(true)
+      const texto = corpoBase('.sb-linha-texto')
+      // Os dois espaços de cima, lidos do CSS: o `margin-top` fica fora da borda (o fio vertical começa
+      // depois dele) e o `padding-top` fica dentro (o fio vertical começa antes dele).
+      const valorDe = (v: string | undefined) => (v === undefined ? 0 : v.startsWith('var(--e-linhas)') ? espacoDasLinhas : Number.parseFloat(v))
+      const margemDeCima = valorDe(/margin-top:\s*(\S+?);/.exec(texto)?.[1])
+      const paddingDeCima = valorDe(/(?:^|[\s;])padding:\s*(\S+)/.exec(texto)?.[1])
+      const paddingDeBaixo = valorDe(/(?:^|[\s;])padding:\s*\S+\s+\S+\s+(\S+)/.exec(texto)?.[1])
+      const FIO = 1 // o fio horizontal de baixo de cada linha
+      const ROTULO = 38 // t-rotulo 32/38
+      const LINHA_DE_TEXTO = 28 // t-corpo 20/28
+      for (const linhasDeTexto of [1, 2, 3]) {
+        for (const total of [1, 2, 3]) {
+          let topo = 0
+          const verticais: Array<{ ini: number; fim: number; topoDoTexto: number }> = []
+          for (let i = 0; i < total; i += 1) {
+            const corpoDoTexto = paddingDeCima + linhasDeTexto * LINHA_DE_TEXTO + paddingDeBaixo
+            const alturaDaLinha = Math.max(margemDeCima + corpoDoTexto, espacoDasLinhas + ROTULO + espacoDasLinhas)
+            // O vertical é a borda esquerda da caixa do texto: começa depois do margin-top e vai até o fim
+            // da área da linha (a caixa estica até lá), onde está o fio horizontal da própria linha.
+            verticais.push({ ini: topo + margemDeCima, fim: topo + alturaDaLinha, topoDoTexto: topo + margemDeCima + paddingDeCima })
+            topo += alturaDaLinha + FIO
+          }
+          for (let i = 0; i < total; i += 1) {
+            const onde = `linha ${i + 1} de ${total}, texto de ${linhasDeTexto} linha(s)`
+            // O vertical começa no topo do texto (±4), e o texto fica onde o rótulo está (--e-linhas do topo da linha).
+            expect(Math.abs(verticais[i].ini - verticais[i].topoDoTexto), onde).toBeLessThanOrEqual(4)
+            expect(verticais[i].topoDoTexto - (verticais[i].ini - margemDeCima), `texto na altura do rótulo, ${onde}`).toBe(espacoDasLinhas)
+            if (i > 0) {
+              // Entre o fim do vertical anterior e o começo deste há o fio horizontal e ≥ 32 px livres.
+              expect(verticais[i].ini - verticais[i - 1].fim - FIO, `sem fio vertical entre o ${i} e o ${i + 1}`).toBeGreaterThanOrEqual(31)
+              expect(verticais[i].ini - verticais[i - 1].fim, `${onde}: o vertical não emenda no anterior`).toBeGreaterThanOrEqual(32)
+            }
+          }
+        }
+      }
+    })
+
+    it('o espaço sem fio vertical depois do fio horizontal anterior é de pelo menos 32 px (o `--e-linhas` de 768 para cima é 32)', () => {
+      expect(espacoDasLinhas).toBeGreaterThanOrEqual(32)
+    })
+
+    it('abaixo de 768 não há fio vertical nem margem de cima: o rótulo fica sobre o texto e o espaço é o de antes', () => {
+      const texto = corpoCelular('.sb-linha-texto')
+      expect(texto).toMatch(/border-left:\s*0/)
+      expect(texto).toMatch(/margin-top:\s*0/)
+      expect(texto).toMatch(/padding:\s*0 0 var\(--e-linhas\)/)
+      expect(texto).toMatch(/max-width:\s*none/)
+      expect(corpoCelular('.sb-linha')).toMatch(/display:\s*block/)
+      expect(corpoCelular('.sb-linha-rotulo')).toMatch(/padding-bottom:\s*8px/)
+    })
+
+    it('vale nos dois temas: nenhuma regra da linha depende de `data-tema` e o `tema.css` não a redefine (só a cor do fio muda)', () => {
+      const daLinha = regras(semComentarios).filter((r) => /sb-linha/.test(r.seletor))
+      expect(daLinha.length).toBeGreaterThan(0)
+      for (const regra of daLinha) expect(regra.seletor).not.toMatch(/data-tema/)
+      expect(temaCss).not.toMatch(/sb-linha/)
+      expect(corpoBase('.sb-linha-texto')).toMatch(/var\(--cor-fio-suave\)/)
+    })
+  })
+
   describe('D5: o fio da linha rótulo + texto termina no início de c9, como o do campo', () => {
     it('a grade interna da linha tem 7 colunas (c2 a c8), com o rótulo em c2–c3 e o texto em c4–c8 como antes', () => {
       expect(corpoBase('.sb-linha')).toMatch(/grid-template-columns:\s*repeat\(7,\s*minmax\(0,\s*1fr\)\)/)
@@ -990,7 +1077,9 @@ describe('rodada 3: faixa de números, abertura e linhas (regras de CSS)', () =>
       const texto = corpoBase('.sb-linha-texto')
       expect(texto).toMatch(/grid-column:\s*3 \/ 8/)
       expect(texto).toMatch(/max-width:\s*592px/)
-      expect(texto).toMatch(/padding:\s*var\(--e-linhas\) 0 var\(--e-linhas\) 32px/)
+      // V4: o espaço de cima do texto é `margin-top` (o fio vertical nasce no topo do texto), então o
+      // padding perde o topo. Antes: `padding: var(--e-linhas) 0 var(--e-linhas) 32px`.
+      expect(texto).toMatch(/padding:\s*0 0 var\(--e-linhas\) 32px/)
       expect(texto).toMatch(/border-left:\s*1px solid var\(--cor-fio-suave\)/)
     })
 

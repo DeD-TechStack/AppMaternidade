@@ -5,6 +5,7 @@ import { Abertura } from './componentes/base/Abertura.tsx'
 import { Botao } from './componentes/base/Botao.tsx'
 import { Campo } from './componentes/base/Campo.tsx'
 import { Etiqueta } from './componentes/base/Etiqueta.tsx'
+import { LinhaRotuloTexto } from './componentes/base/LinhaRotuloTexto.tsx'
 import { FaixaNumeros } from './componentes/base/FaixaNumeros.tsx'
 import { Cabecalho } from './componentes/casca/Cabecalho.tsx'
 import { ROTULO_MADRUGADA, ROTULO_MADRUGADA_CURTO } from './componentes/casca/textos.ts'
@@ -968,6 +969,36 @@ describe('rota /sistema', () => {
     }
     // O campo ocupa c4–c8 de uma grade de 10 colunas: o fim dele é o início de c9.
     expect(container.querySelector('.sb-campo-controle')).not.toBeNull()
+  })
+
+  it('V4: o fio vertical é da caixa do texto em toda linha, qualquer que seja o tamanho do texto ou a posição na pilha (sem classe nem estilo por posição)', () => {
+    const curto = 'Uma frase curta.'
+    const medio = 'Um texto que ocupa mais de uma linha de texto na coluna de quinhentos e sessenta pixels, com folga para quebrar. '.repeat(2)
+    const longo = 'Um texto longo, de várias linhas, para a caixa do texto ficar mais alta que o rótulo ao lado. '.repeat(6)
+    const sozinha = render(<LinhaRotuloTexto rotulo="Só">{curto}</LinhaRotuloTexto>)
+    const pilha = render(
+      <div>
+        <LinhaRotuloTexto rotulo="Primeira">{curto}</LinhaRotuloTexto>
+        <LinhaRotuloTexto rotulo="Do meio">{medio}</LinhaRotuloTexto>
+        <LinhaRotuloTexto rotulo="Última">{longo}</LinhaRotuloTexto>
+      </div>,
+    )
+
+    const linhas = [
+      ...sozinha.container.querySelectorAll<HTMLElement>('.sb-linha'),
+      ...pilha.container.querySelectorAll<HTMLElement>('.sb-linha'),
+    ]
+    expect(linhas).toHaveLength(4)
+    for (const linha of linhas) {
+      // Estrutura única: o rótulo, depois a caixa do texto (que carrega o fio vertical por CSS) com o parágrafo.
+      expect([...linha.children].map((filho) => filho.className)).toEqual(['sb-linha-rotulo t-rotulo', 'sb-linha-texto t-corpo'])
+      expect(linha.getAttribute('style')).toBeNull()
+      for (const filho of linha.children) expect(filho.getAttribute('style')).toBeNull()
+      const texto = linha.querySelector<HTMLElement>('.sb-linha-texto')!
+      expect([...texto.children].map((filho) => filho.tagName)).toEqual(['P'])
+      expect(linha.parentElement!.className).toBe('grade-10')
+      expect(linha.className).toBe('sb-linha col-c2-c8')
+    }
   })
 
   it('D2: a faixa de números tem 3 itens, cada um com o número em Zilla Slab e a legenda, na ordem 7, 2, 0', async () => {
