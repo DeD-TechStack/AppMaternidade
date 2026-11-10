@@ -1076,6 +1076,41 @@ describe('rodada 4: cabeçalho, desativado, modo madrugada, rodapé em 390 e ró
   })
 })
 
+// ---------------------------------------------------------------------------
+// Rodada de correção 5 (olhar a tela). O submenu "+ Em breve" aberto (sistema_claro_1440_submenu.png)
+// mostrou a etiqueta "Em breve" da linha "Comunidade" passando da moldura de dentro do painel: o
+// painel tinha 224 px fixos e a linha mais larga (texto + etiqueta) pede cerca de 203 px de
+// conteúdo, contra 184 úteis. A largura medida só existe no navegador (`.oc/capturar.mjs`); aqui
+// fica a regra: o painel cresce até caber o conteúdo, com 224 px de mínimo.
+
+describe('rodada 5: o painel do submenu "+ Em breve" cabe o conteúdo', () => {
+  const base = semMedia(semComentarios)
+  const corpo = (seletor: string) => regras(base).filter((r) => r.seletor === seletor).map((r) => r.corpo).join('')
+
+  it('o painel tem 224 px de mínimo e cresce até caber a linha mais larga, em vez de ter 224 px fixos', () => {
+    const painel = corpo('.sb-submenu-painel')
+    expect(painel, 'regra de .sb-submenu-painel').not.toBe('')
+    expect(painel).toMatch(/min-width:\s*224px/)
+    expect(painel).toMatch(/width:\s*max-content/)
+    expect(painel).not.toMatch(/(?:^|[;\s])width:\s*224px/)
+  })
+
+  it('a linha do item não quebra nem encolhe (texto à esquerda, etiqueta à direita), e a lista segue com 8 px entre as linhas', () => {
+    const item = corpo('.sb-submenu-item')
+    expect(item).toMatch(/display:\s*flex/)
+    expect(item).toMatch(/justify-content:\s*space-between/)
+    expect(item).toMatch(/white-space:\s*nowrap/)
+    expect(corpo('.sb-submenu-lista')).toMatch(/gap:\s*8px/)
+  })
+
+  it('o painel continua de moldura dupla, ancorado abaixo do gatilho e sem sombra', () => {
+    const painel = corpo('.sb-submenu-painel')
+    expect(painel).toMatch(/position:\s*absolute/)
+    expect(painel).toMatch(/top:\s*calc\(100% \+ 4px\)/)
+    expect(painel).not.toMatch(/box-shadow/)
+  })
+})
+
 describe('index.html', () => {
   it('declara o idioma e o título', () => {
     expect(indexHtml).toContain('lang="pt-BR"')

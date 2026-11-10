@@ -1530,7 +1530,10 @@
     top: calc(100% + 4px);
     left: 0;
     z-index: 50;
-    width: 224px;
+    /* Cerca de 224 px: o mínimo do contrato. Cresce até caber a linha mais larga (texto + etiqueta),
+       para a etiqueta "Em breve" não passar da moldura de dentro. */
+    min-width: 224px;
+    width: max-content;
   }
 
   .sb-submenu-lista {
@@ -1547,6 +1550,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 8px;
+    white-space: nowrap;
   }
 
   /* Menu do celular: painel de papel abaixo do cabeçalho, de itens centrados. */
