@@ -3,7 +3,8 @@ import { useSyncExternalStore } from 'react'
 // Preferências do navegador que mudam o movimento. Cada consulta é lida pelo matchMedia a cada
 // leitura e acompanhada pelo evento `change`, para a troca no meio da sessão chegar às peças.
 // Sem matchMedia (jsdom puro, renderização no servidor) vale o padrão: movimento normal, com
-// hover, tela estreita.
+// hover, tela estreita. Um MediaQueryList antigo (só addListener) também é acompanhado; sem
+// nenhum dos dois métodos, devolve o valor lido e não assina.
 
 interface Fonte {
   assinar: (aviso: () => void) => () => void
@@ -19,8 +20,16 @@ function fonteDe(consulta: string): Fonte {
     assinar(aviso) {
       if (!temMatchMedia()) return () => {}
       const lista = window.matchMedia(consulta)
-      lista.addEventListener('change', aviso)
-      return () => lista.removeEventListener('change', aviso)
+      if (typeof lista.addEventListener === 'function') {
+        lista.addEventListener('change', aviso)
+        return () => lista.removeEventListener('change', aviso)
+      }
+      // Safari anterior ao 14: o MediaQueryList só tem addListener e removeListener.
+      if (typeof lista.addListener === 'function') {
+        lista.addListener(aviso)
+        return () => lista.removeListener(aviso)
+      }
+      return () => {}
     },
     ler: () => (temMatchMedia() ? window.matchMedia(consulta).matches : false),
   }
