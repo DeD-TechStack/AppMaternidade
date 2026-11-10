@@ -1,13 +1,11 @@
 import { useEffect, useId, useRef, type RefObject } from 'react'
 import { useLocation, useNavigate } from 'react-router'
-import { AvisoDemonstracao } from '../componentes/AvisoDemonstracao.tsx'
 import { Abertura } from '../componentes/base/Abertura.tsx'
-import { Etiqueta } from '../componentes/base/Etiqueta.tsx'
 import { FaixaNumeros } from '../componentes/base/FaixaNumeros.tsx'
 import { LinhaRotuloTexto } from '../componentes/base/LinhaRotuloTexto.tsx'
 import { BarraRegistrar } from '../componentes/registro/BarraRegistrar.tsx'
 import { BlocoEmAndamento } from '../prototipo/BlocoEmAndamento.tsx'
-import { temBanco } from '../prototipo/banco.ts'
+import { ItemAvisoDaAbertura } from '../prototipo/ItemAvisoDaAbertura.tsx'
 import { usePrototipo } from '../prototipo/contexto.ts'
 import {
   IDADE_BEBE,
@@ -118,15 +116,14 @@ export function Hoje() {
 
   return (
     <>
-      <main ref={principal} className="ha-hoje">
+      <main ref={principal} className="ha-tela ha-hoje">
         <Abertura
           titulo="Hoje"
           subtitulo={`${NOME_BEBE}, ${IDADE_BEBE}`}
           lateral={[
-            <li key="aviso">
-              {temBanco() ? <Etiqueta>Protótipo, dados fictícios</Etiqueta> : <AvisoDemonstracao lateral />}
-            </li>,
-            <li key="ultimos">
+            <ItemAvisoDaAbertura key="aviso" />,
+            // O `li` guarda 44 px de layout e o link tem 56 de alvo nos dois temas (ver `.ha-li-link`).
+            <li key="ultimos" className="ha-li-link">
               <a className="sb-abertura-link t-corpo alvo-toque" href="#ultimos">
                 Ir aos últimos
               </a>

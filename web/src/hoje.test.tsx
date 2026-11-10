@@ -492,4 +492,120 @@ describe('Hoje: o CSS do bloco /* 44d-2 */ (lido como texto)', () => {
     }
     for (const [, ms] of semComentarios.matchAll(/transition[^;]*?(\d+)ms/g)) expect(Number(ms)).toBeLessThanOrEqual(150)
   })
+
+  // ---- Item E (parte 2): a geometria medida pela sonda do worker. Cada teste cobre a classe do defeito.
+
+  /** O texto de dentro de cada `@media (max-width: 767px)` do bloco, com as chaves balanceadas. */
+  function emMedia767(): string {
+    const achados: string[] = []
+    const abertura = /@media\s*\(max-width:\s*767px\)\s*\{/g
+    for (let m = abertura.exec(semComentarios); m; m = abertura.exec(semComentarios)) {
+      let nivel = 1
+      let i = abertura.lastIndex
+      while (i < semComentarios.length && nivel > 0) {
+        if (semComentarios[i] === '{') nivel += 1
+        else if (semComentarios[i] === '}') nivel -= 1
+        i += 1
+      }
+      achados.push(semComentarios.slice(abertura.lastIndex, i - 1))
+    }
+    return achados.join('\n')
+  }
+  const regraEm = (texto: string, seletor: string) =>
+    [...texto.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+      .filter((m) => m[1].trim().replace(/\s+/g, ' ') === seletor)
+      .map((m) => m[2])
+      .join('')
+  const todasAsRegras = () =>
+    [...semComentarios.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({
+      seletor: m[1].trim().replace(/\s+/g, ' '),
+      corpo: m[2],
+    }))
+
+  it('E: em 390 os dois botões do bloco Em andamento ficam na mesma fileira: 2 colunas iguais, com gap de 8', () => {
+    const celular = regraEm(emMedia767(), '.ha-andamento-acoes')
+    expect(celular).toMatch(/display:\s*grid/)
+    expect(celular).toMatch(/grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/)
+    expect(celular).toMatch(/gap:\s*8px/)
+    // De 768 para cima ficam como antes: uma fileira flex, cada botão do tamanho que tem.
+    const base = regra('.ha-andamento-acoes')
+    expect(base).toMatch(/display:\s*flex/)
+  })
+
+  it('E: em 390 o rótulo da moldura pode quebrar em 2 linhas dentro dos 64 px e o botão primário aperta o recuo', () => {
+    const miolo = regraEm(emMedia767(), '.ha-andamento .sb-moldura-miolo')
+    expect(miolo).toMatch(/white-space:\s*normal/)
+    expect(miolo).toMatch(/text-align:\s*center/)
+    expect(miolo).toMatch(/padding:\s*0 8px/)
+    expect(regraEm(emMedia767(), '.ha-andamento .ha-encerrar')).toMatch(/padding:\s*0 16px/)
+  })
+
+  it('E: em 1440 o espaço entre o autor e os botões é de 16 (e não 24), para o bloco terminar em y ≤ 800', () => {
+    expect(regra('.ha-andamento-acoes')).toMatch(/margin-top:\s*16px/)
+    // Os outros espaços internos do bloco: 8 entre rótulo, nome, número e autor.
+    for (const classe of ['.ha-andamento-nome', '.ha-andamento-numero', '.ha-andamento-pessoa']) {
+      expect(regra(classe), classe).toMatch(/margin:\s*8px 0 0/)
+    }
+  })
+
+  it('E: todo espaçamento do bloco (margin, padding, gap) usa só valores da escala 8, 16, 24, 32, 64, 96, 128, 160, 192 (ou 0 e auto)', () => {
+    const escala = new Set([0, 8, 16, 24, 32, 64, 96, 128, 160, 192])
+    const propriedades = /^(margin|padding)(-(top|right|bottom|left|inline|block))?$|^(row-|column-)?gap$/
+    let conferidos = 0
+    for (const { seletor, corpo } of todasAsRegras()) {
+      for (const declaracao of corpo.split(';')) {
+        const meio = declaracao.indexOf(':')
+        if (meio < 0) continue
+        const nome = declaracao.slice(0, meio).trim()
+        if (!propriedades.test(nome)) continue
+        for (const parte of declaracao.slice(meio + 1).trim().split(/\s+/)) {
+          conferidos += 1
+          if (parte === 'auto') continue
+          const px = /^(-?\d+)(px)?$/.exec(parte)
+          expect(px, `${seletor} { ${nome}: ${parte} }`).not.toBeNull()
+          expect(escala.has(Number(px![1])), `${seletor} { ${nome}: ${parte} }`).toBe(true)
+        }
+      }
+    }
+    expect(conferidos).toBeGreaterThan(15)
+  })
+
+  it('E (M-1): nenhuma regra da madrugada muda altura, margem, recuo ou tamanho de bloco: só variáveis de cor --ha-*', () => {
+    const daMadrugada = todasAsRegras().filter((r) => /data-tema/.test(r.seletor))
+    expect(daMadrugada.length).toBeGreaterThan(0)
+    for (const { seletor, corpo } of daMadrugada) {
+      for (const declaracao of corpo.split(';')) {
+        const nome = declaracao.slice(0, Math.max(0, declaracao.indexOf(':'))).trim()
+        if (nome === '') continue
+        expect(nome.startsWith('--ha-'), `${seletor} { ${nome} }`).toBe(true)
+      }
+    }
+  })
+
+  it('E (M-1): nenhuma medida do bloco depende de --alvo-toque, que muda de 44 para 56 com o tema', () => {
+    for (const { seletor, corpo } of todasAsRegras()) {
+      for (const declaracao of corpo.split(';')) {
+        if (!/--alvo-toque/.test(declaracao)) continue
+        expect(declaracao.trim(), seletor).toMatch(/^(outline|color|background)/)
+      }
+    }
+  })
+
+  it('E (M-1): o link da lateral tem 56 de alvo nos dois temas e o item da lista guarda 44 de layout, então a abertura não muda de altura com o tema', () => {
+    const link = regra('.ha-tela .sb-abertura-link')
+    expect(link).toMatch(/min-height:\s*56px/)
+    expect(link).not.toMatch(/var\(--alvo-toque\)/)
+    const item = regra('.ha-tela .ha-li-link')
+    expect(item).toMatch(/height:\s*44px/)
+    expect(item).toMatch(/min-height:\s*0/)
+  })
+
+  it('E (M-1): o Hoje marca o main com ha-tela e o item do link da lateral com ha-li-link', () => {
+    const { container } = renderizarRota('/app/hoje')
+
+    expect(principal(container).classList.contains('ha-tela')).toBe(true)
+    const link = screen.getByRole('link', { name: 'Ir aos últimos' })
+    expect(link.parentElement!.tagName).toBe('LI')
+    expect(link.parentElement!.classList.contains('ha-li-link')).toBe(true)
+  })
 })
