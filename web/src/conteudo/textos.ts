@@ -1,16 +1,72 @@
 // Textos do Início. Já passaram pela revisão de copy: não reescrever.
 
-export const PROMESSA = 'Quem chega para o turno já sabe o que aconteceu.'
+export const PROMESSA = 'Quem chega no turno já sabe o que houve.'
+
+// A linha sob o `h1` do Início: 1 linha da escala em 390 e em 1440, sem encolher a fonte (VOLTA1 item 10).
+// No máximo 32 caracteres.
+export const SUBTITULO_INICIO = 'A rotina do bebê, em equipe.'
+
+// A etiqueta do aviso de demonstração na lateral da abertura do Início: aparece só quando falta
+// alguma variável do banco, como o aviso longo das outras telas (`AVISO_DEMONSTRACAO`).
+export const ETIQUETA_AVISO = 'Protótipo com dados de exemplo'
+
+// O link da coluna lateral da abertura.
+export const LINK_ABERTURA = 'Ver o protótipo'
 
 export const PILARES = ['Rotina', 'Desenvolvimento', 'Cuidado compartilhado', 'Comunidade'] as const
+
+export const TITULO_APRESENTACAO = 'Uma rotina, vários cuidadores'
 
 export const APRESENTACAO =
   'Um app para a família registrar a rotina do bebê, dividir os cuidados e acompanhar o desenvolvimento, com uma comunidade separada da rotina privada.'
 
+// O bloco de cartões do Início: cada cartão leva a uma tela do protótipo.
 export const TELAS = {
-  titulo: 'Duas telas do protótipo',
-  texto:
-    'Na tela Hoje ficam a soneca que Bruno começou, a nota que Carla deixou às 22:40 e os botões de registro na parte de baixo, ao alcance do polegar. A tela da sessão mostra o cronômetro, contado a partir da hora de início, e quem começou.',
+  titulo: 'As telas do protótipo',
+  cartoes: [
+    {
+      titulo: 'Hoje',
+      linha: 'Soneca em andamento, nota de Carla e botões de registro.',
+      destino: '/app/hoje',
+      rotuloMidia: 'Tela Hoje do protótipo',
+    },
+    {
+      titulo: 'Sessão',
+      linha: 'Cronômetro contado desde a hora de início.',
+      destino: '/app/sessao',
+      rotuloMidia: 'Tela Sessão do protótipo',
+    },
+  ],
+} as const
+
+// Os rótulos das molduras de mídia do Início (a moldura não tem texto dentro).
+export const MIDIAS_INICIO = {
+  notebook: 'Notebook com a tela Hoje do protótipo',
+  celulares: 'Três celulares sobre pedestais',
+  galeria: {
+    sessao: 'Tela Sessão com o cronômetro',
+    madrugada: 'Modo madrugada, campo escuro',
+    ilustracoes: ['Duas ilustrações do dia a dia, 1 de 2', 'Duas ilustrações do dia a dia, 2 de 2'],
+    mosaico: 'Mosaico de fragmentos da rotina',
+  },
+  retrato: 'Celular em modo madrugada',
+} as const
+
+// A citação do Início: uma nota de passagem de exemplo, escrita por Carla para quem chega no turno
+// (94 caracteres; de 90 a 130; 4 linhas em 390). `MINIATURAS.hoje.nota` é compartilhada com o protótipo e não é esta.
+export const CITACAO_TEXTO = 'Mamou às 22h e dormiu logo. Pomada só à noite, a de dia acabou. Bico na bolsa, se ela acordar.'
+
+// A autoria diz que a citação é um exemplo.
+export const CITACAO_AVISO = 'nota de passagem de exemplo'
+
+// O nome da região da navegação grande do fim do Início (a região da faixa de números usa FATOS.titulo).
+export const ROTULO_ATALHOS = 'Atalhos do protótipo'
+
+export const SECAO_ESCURA = {
+  titulo: 'Crie sua conta',
+  texto: 'Convide quem cuida junto e comece a registrar o dia.',
+  botao: 'Criar conta',
+  destino: '/criar-conta',
 } as const
 
 export const PARA_QUE_SERVE = {
@@ -34,44 +90,34 @@ export const PARA_QUE_SERVE = {
   ],
 } as const
 
+// Os 3 números do Início (decisão D5): cada um é um fato do produto, em uma linha de legenda.
 export const FATOS = {
   titulo: 'O que o app faz',
   itens: [
-    {
-      valor: '7',
-      legenda:
-        'tipos de registro: sono, amamentação, mamadeira, alimentação sólida, fralda, tummy time e observação.',
-    },
-    { valor: 'Autoria', legenda: 'Cada registro mostra quem fez.' },
-    { valor: 'Convites', legenda: 'Cada cuidador entra por convite, com papel e prazo de validade.' },
-    { valor: 'Lembretes', legenda: 'Os lembretes vêm desligados. Você liga os que quiser.' },
+    { valor: '7', legenda: 'tipos de registro' },
+    { valor: '2', legenda: 'toques para registrar' },
+    { valor: '0', legenda: 'metas ou comparações' },
   ],
 } as const
 
-export const MADRUGADA = {
-  titulo: 'De madrugada também',
-  texto:
-    'O modo madrugada escurece a tela, diminui o brilho e aumenta os botões, para registrar com uma mão e a luz apagada.',
-} as const
-
 export const CHAMADA = {
-  titulo: 'Veja um dia de Heloísa',
+  titulo: 'Quer ver um dia de Heloísa?',
   texto: 'Um dia de exemplo com Heloísa, 3 meses, e quem cuida dela: Juliana, Bruno e Carla.',
-  link: 'Ver o protótipo do Hoje',
+  link: 'Ver o protótipo',
+  destino: '/app/hoje',
+  entrar: 'Entrar',
+  destinoEntrar: '/entrar',
 } as const
 
 export const RODAPE = 'Protótipo em construção. Nada aqui é dado real.'
 
-// Links-âncora do cabeçalho do Início: o rótulo e o id da seção para onde cada um leva.
+// As 4 palavras grandes do fim do Início: o rótulo e a rota para onde cada uma leva.
 export const NAVEGACAO = [
-  { rotulo: 'As telas', alvo: 'secao-telas' },
-  { rotulo: 'Para que serve', alvo: 'secao-serve' },
-  { rotulo: 'Madrugada', alvo: 'secao-madrugada' },
+  { rotulo: 'Hoje', destino: '/app/hoje' },
+  { rotulo: 'Sessão', destino: '/app/sessao' },
+  { rotulo: 'Conta', destino: '/criar-conta' },
+  { rotulo: 'Entrar', destino: '/entrar' },
 ] as const
-
-// Parágrafo ao lado do celular da madrugada: diz o que a miniatura mostra.
-export const LEGENDA_MADRUGADA =
-  'No celular, a mesma sessão de tummy time no modo madrugada: tela escura, cronômetro grande e botões maiores.'
 
 // A atividade sugerida do Tummy time, na tela Sessão e na miniatura dela no Início.
 export const ATIVIDADE_TUMMY = 'Espelho no chão'
