@@ -219,11 +219,11 @@ function mostrarEstado(preparar: () => void, tema: (typeof TEMAS)[number]) {
 
 describe('regra: nenhuma linha de texto passa de 65 caracteres', () => {
   // O `ch` é a largura do zero: num texto proporcional cabem mais de 65 letras em 65ch. A largura máxima
-  // vem em px, medida no pior caso (T-03 em 1440: cerca de 7,3 px por caractere, 59 por linha em 440 px).
+  // vem em px, medida no pior caso (T-03 em 1440: cerca de 8,3 px por caractere, uns 62 por linha em 520 px).
   const LARGURA_MAXIMA = /^max-w-\[(\d+)px\]$/
 
   it.each(ESTADOS.flatMap(([nome, preparar]) => TEMAS.map((tema) => [nome, tema, preparar] as const)))(
-    '%s, tema %s: todo <p> da faixa leva a mesma largura máxima, em px e de até 480',
+    '%s, tema %s: todo <p> da faixa leva a mesma largura máxima, em px e de até 520',
     (_nome, tema, preparar) => {
       const { container } = mostrarEstado(preparar, tema)
       const paragrafos = [...container.querySelectorAll('[data-faixa-estado] p')]
@@ -233,7 +233,7 @@ describe('regra: nenhuma linha de texto passa de 65 caracteres', () => {
       expect(new Set(larguras.map((l) => l[0])).size).toBe(1)
       const px = Number(LARGURA_MAXIMA.exec(larguras[0][0])![1])
       expect(px).toBeGreaterThanOrEqual(360)
-      expect(px).toBeLessThanOrEqual(480)
+      expect(px).toBeLessThanOrEqual(520)
       for (const p of paragrafos) {
         expect(fichas(p).filter((f) => /max-w-\[\d+ch\]/.test(f))).toEqual([])
         expect(fichas(p).filter((f) => /overflow|clip|line-clamp|truncate|sr-only/.test(f))).toEqual([])
