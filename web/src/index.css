@@ -1749,10 +1749,12 @@
     background-color: color-mix(in srgb, var(--cor-destaque) 85%, var(--cor-texto));
   }
 
+  /* Desativado: fundo sólido e apagado (de dia, o texto secundário; na madrugada, o bloco escuro,
+     que fica menos claro que o primário). As cores vêm de --cor-desativado-* (tema.css). */
   .sb-botao[aria-disabled='true'],
   .sb-botao[aria-disabled='true']:hover {
-    background-color: var(--cor-secundario);
-    color: var(--cor-fundo);
+    background-color: var(--cor-desativado-fundo);
+    color: var(--cor-desativado-texto);
     cursor: not-allowed;
   }
 

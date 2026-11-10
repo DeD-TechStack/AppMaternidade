@@ -39,6 +39,10 @@
   --fonte-sb-corpo: 'Instrument Sans', system-ui, sans-serif;
   --fonte-sb-slab: 'Zilla Slab', Georgia, serif;
 
+  /* Botão desativado: fundo sólido e apagado, com o texto por cima. De dia, o texto secundário. */
+  --cor-desativado-fundo: var(--color-secondary);
+  --cor-desativado-texto: var(--color-neutral);
+
   /* Alvo de toque: 44 px; na madrugada, 56 px de altura. */
   --alvo-toque: 44px;
 }
@@ -69,6 +73,10 @@
   --alvo-rapido: 56px;
 
   --cor-secundario: var(--color-night-secondary);
+  /* O desativado da madrugada é o bloco escuro (#251E18) com o texto secundário (#BAAF9F, 7,6:1):
+     menos claro que o primário (#C47055), em vez de o texto secundário como fundo (mais claro). */
+  --cor-desativado-fundo: var(--color-night-paper-deep);
+  --cor-desativado-texto: var(--color-night-secondary);
   --cor-rodape: var(--color-night-paper-deep);
   --cor-sobre-rodape: var(--color-night-primary);
   /* Na madrugada os fios são a tinta a 20%: só servem de divisor. */
