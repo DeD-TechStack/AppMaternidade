@@ -11,17 +11,15 @@ import './midia.css'
 // moldura. Nenhum texto dentro. Toda medida é em cqw (a largura da moldura), então em 1440 e em 390
 // a cena é a mesma, inteira. Os ângulos e as posições mudam de uma cena para a outra.
 
-/** O contêiner da cena (cqw) e o palco com a perspectiva. */
-function Palco({ children }: { children: ReactNode }) {
+/** O contêiner da cena (cqw) e o palco com a perspectiva. `classe` liga as variáveis de uma cena
+ *  (a geometria que muda abaixo de 768 fica em midia.css, nas variáveis dessa classe). */
+function Palco({ children, classe = '' }: { children: ReactNode; classe?: string }) {
   return (
     <div className="mc-cena">
-      <div className="mc-palco">{children}</div>
+      <div className={`mc-palco ${classe}`.trim()}>{children}</div>
     </div>
   )
 }
-
-/** A altura de um celular com largura `aw` (cqw): o corpo é 2,071 vezes mais alto que largo. */
-const ALTURA_CELULAR = 2.071
 
 /** I-2: o notebook com a tela Hoje, sobre um pedestal largo e baixo, girado e visto de cima. */
 export function CenaNotebook() {
@@ -48,40 +46,44 @@ export function CenaNotebook() {
   )
 }
 
-/** I-5: três celulares sobre pedestais de alturas diferentes, os de fora virados para o do meio. */
-const TRES: Array<{ captura: ChaveCaptura; tela: 'hoje' | 'sessao'; x: number; alto: number; giro: number }> = [
-  { captura: 'hoje-claro-390', tela: 'hoje', x: 8, alto: 9, giro: 20 },
-  { captura: 'sessao-claro-390', tela: 'sessao', x: 38, alto: 17, giro: 0 },
-  { captura: 'hoje-madrugada-390', tela: 'hoje', x: 68, alto: 3, giro: -20 },
+/** I-5: três celulares sobre pedestais de alturas diferentes, os de fora virados para o do meio.
+ *  A posição (x), a altura do pedestal (alto) e o giro de cada um têm duas versões, a de 768 ou mais
+ *  (`-l`, a geometria de 1440) e a de abaixo de 768 (`-e`, celulares maiores); o CSS escolhe (midia.css,
+ *  `.mc-trio` e `.mc-trio-item`). A largura do celular (`--lw`) e a do pedestal (`--pw`) são do grupo. */
+const TRES: Array<{
+  captura: ChaveCaptura
+  tela: 'hoje' | 'sessao'
+  l: { x: number; alto: number; giro: number }
+  e: { x: number; alto: number; giro: number }
+}> = [
+  { captura: 'hoje-claro-390', tela: 'hoje', l: { x: 8, alto: 9, giro: 20 }, e: { x: 2, alto: 6, giro: 18 } },
+  { captura: 'sessao-claro-390', tela: 'sessao', l: { x: 38, alto: 17, giro: 0 }, e: { x: 34.5, alto: 10, giro: 0 } },
+  { captura: 'hoje-madrugada-390', tela: 'hoje', l: { x: 68, alto: 3, giro: -20 }, e: { x: 67, alto: 2, giro: -18 } },
 ]
-const LARGURA_TRES = 19
 
 export function CenaCelulares() {
   return (
-    <Palco>
-      {TRES.map(({ captura, tela, x, alto, giro }) => (
+    <Palco classe="mc-trio">
+      {TRES.map(({ captura, tela, l, e }) => (
         <div
           key={captura}
-          className="mc-obj"
+          className="mc-obj mc-trio-item"
           style={vars({
-            left: `${x}cqw`,
-            bottom: '4cqw',
-            width: '24cqw',
-            height: `${alto + LARGURA_TRES * ALTURA_CELULAR}cqw`,
-            '--rx': '-8deg',
-            '--ry': `${giro}deg`,
+            '--x-l': `${l.x}cqw`,
+            '--alto-l': `${l.alto}cqw`,
+            '--giro-l': `${l.giro}deg`,
+            '--x-e': `${e.x}cqw`,
+            '--alto-e': `${e.alto}cqw`,
+            '--giro-e': `${e.giro}deg`,
           })}
         >
-          <Caixa
-            className="mc-obj mc-pedestal"
-            style={{ left: 0, bottom: 0, width: '24cqw', height: `${alto}cqw`, '--esp': '13cqw' }}
-          />
+          <Caixa className="mc-obj mc-pedestal" style={{ left: 0, bottom: 0, width: 'var(--pw)', height: 'var(--alto)', '--esp': '13cqw' }} />
           <Aparelho
             tipo="celular"
             tela={tela}
             captura={captura}
-            largura={`${LARGURA_TRES}cqw`}
-            style={{ left: '2.5cqw', bottom: `${alto}cqw` }}
+            largura="var(--lw)"
+            style={{ left: 'calc((var(--pw) - var(--lw)) / 2)', bottom: 'var(--alto)' }}
           />
         </div>
       ))}
@@ -89,7 +91,9 @@ export function CenaCelulares() {
   )
 }
 
-/** I-7a: a tela Sessão num notebook grande, cortado pela direita e por baixo, e um celular cortado embaixo. */
+/** I-7a: a tela Sessão num notebook grande e um celular, os dois inteiros dentro da moldura (a borda
+ *  não cruza uma tela clara). O notebook mostra só o alto da captura, até o cartão do cronômetro
+ *  (`ap3d-corte`): sem a ilustração que a página tem logo abaixo. */
 export function CenaSessao() {
   return (
     <Palco>
@@ -97,9 +101,10 @@ export function CenaSessao() {
         tipo="notebook"
         tela="sessao"
         captura="sessao-claro-1440"
-        largura="76cqw"
+        className="ap3d-corte"
+        largura="70cqw"
         inclinacao={{ x: -8, y: -22, z: -3 }}
-        style={{ left: '23cqw', top: '10cqw', '--abre': '8deg' }}
+        style={{ left: '22cqw', top: '9cqw', '--abre': '8deg' }}
       />
       <Aparelho
         tipo="celular"
@@ -107,7 +112,7 @@ export function CenaSessao() {
         captura="sessao-claro-390"
         largura="22cqw"
         inclinacao={{ x: -4, y: 14, z: 4 }}
-        style={{ left: '8cqw', top: '34cqw', '--tz': '10cqw' }}
+        style={{ left: '8cqw', top: '12cqw', '--tz': '6cqw' }}
       />
     </Palco>
   )
@@ -161,7 +166,7 @@ export function CenaIlustracao({ qual }: { qual: 'berco' | 'mamada' }) {
           style={{ left: '-8cqw', top: '72cqw', width: '34cqw', height: '30cqw', '--esp': '10cqw', '--ry': '16deg', '--rz': '-4deg', '--tz': '-6cqw' }}
         />
         <Caixa
-          className="mc-obj mc-laje"
+          className="mc-obj mc-laje-papel"
           style={{ left: '26cqw', top: '20cqw', width: '78cqw', height: '86cqw', '--esp': '6cqw', '--rx': '-8deg', '--ry': '-16deg', '--rz': '-3deg' }}
         >
           <div className="mc-laje-ilu">
@@ -183,7 +188,7 @@ export function CenaIlustracao({ qual }: { qual: 'berco' | 'mamada' }) {
         />
         <Caixa
           className="mc-obj mc-laje"
-          style={{ left: '8cqw', top: 0, width: '60cqw', height: '64cqw', '--esp': '6cqw' }}
+          style={{ left: 0, top: 0, width: '60cqw', height: '64cqw', '--esp': '6cqw' }}
         >
           <div className="mc-laje-ilu">
             <IlustracaoMamada className="mc-ilu" />
@@ -206,21 +211,40 @@ interface Ladrilho {
    *  imagem troca para a captura de celular da mesma tela (`CELULAR_DE`), com zoom e deslocamentos
    *  próprios, que ficam em midia.css (`.mc-recorte[data-recorte]`). */
   recorte?: { captura: keyof typeof CELULAR_DE; zoom: number; ox: number; oy: number }
+  /** Um recorte pela imagem de fundo CSS (sem tag de imagem, que o limite de 3 por moldura esgotou): a captura
+   *  de computador e, abaixo de 768, a de celular da mesma tela. Em cada uma, `zw` é a largura da
+   *  captura inteira em cqw e `ox`/`oy` o deslocamento do recorte, também em cqw (midia.css, `.mc-recorte-bg`). */
+  fundo?: { captura: keyof typeof CELULAR_DE; l: Medida; e: Medida }
+}
+interface Medida {
+  zw: number
+  ox: number
+  oy: number
 }
 
-// Uma grade de 6 por 3: três recortes das nossas capturas (no máximo 3 imagens) e o resto em tons
-// chapados de papel e de tinta.
+// Uma grade de 6 por 3: três recortes por imagem (o limite por moldura), cinco por imagem de fundo (os
+// mais legíveis: botões, o cartão em andamento, o título, os dígitos do cronômetro) e dois ladrilhos
+// de tinta para o ritmo. Cada recorte de 1440 é o pedaço da captura que cabe no ladrilho: com a
+// escala `s` (cqw por px da captura), zw = 1440 · s, ox = x · s e oy = y · s. Os de celular valem para
+// a captura de 390 por 844, com escala maior (os ladrilhos têm ~50 px abaixo de 768).
 const LADRILHOS: Ladrilho[] = [
   { coluna: 1, linha: 1, largura: 2, altura: 2, recorte: { captura: 'hoje-claro-1440', zoom: 2.3, ox: 4.8, oy: 43.8 } },
-  { coluna: 3, linha: 1, largura: 1, altura: 1, cor: 'superficie' },
+  // Os botões Encerrar e Ver sessão, com o fim do cartão e a barra de baixo (x 80, y 500, 400 px).
+  { coluna: 3, linha: 1, largura: 1, altura: 1, fundo: { captura: 'hoje-claro-1440', l: { zw: 50.4, ox: 2.8, oy: 17.5 }, e: { zw: 54.6, ox: 5.6, oy: 63.7 } } },
   { coluna: 4, linha: 1, largura: 2, altura: 1, cor: 'tinta' },
-  { coluna: 6, linha: 1, largura: 1, altura: 1, cor: 'papel' },
+  // Duração da sessão e os primeiros dígitos do cronômetro (x 90, y 400, 400 px).
+  { coluna: 6, linha: 1, largura: 1, altura: 1, fundo: { captura: 'sessao-claro-1440', l: { zw: 50.4, ox: 3.15, oy: 14 }, e: { zw: 54.6, ox: 1.4, oy: 58.8 } } },
   { coluna: 3, linha: 2, largura: 1, altura: 2, recorte: { captura: 'sessao-claro-1440', zoom: 3.4, ox: 23.6, oy: 0 } },
   { coluna: 4, linha: 2, largura: 2, altura: 1, recorte: { captura: 'hoje-madrugada-1440', zoom: 1.6, ox: 0, oy: 0 } },
-  { coluna: 6, linha: 2, largura: 1, altura: 2, cor: 'superficie' },
+  // O título Hoje, Heloísa, 3 meses, o fio e o cartão em andamento, até antes do fim dele (x 20, y 30,
+  // 360 por 758 px): o canto de baixo, o que encosta na borda da moldura, cai no urucum, não na faixa
+  // de papel entre o cartão e a barra escura.
+  { coluna: 6, linha: 2, largura: 1, altura: 2, fundo: { captura: 'hoje-claro-1440', l: { zw: 56, ox: 0.78, oy: 1.17 }, e: { zw: 54.6, ox: 1.4, oy: 26.6 } } },
   { coluna: 1, linha: 3, largura: 1, altura: 1, cor: 'tinta' },
-  { coluna: 2, linha: 3, largura: 1, altura: 1, cor: 'papel' },
-  { coluna: 4, linha: 3, largura: 2, altura: 1, cor: 'papel' },
+  // Os dois últimos dígitos do cronômetro, os maiores da tela (x 560, y 440, 320 px).
+  { coluna: 2, linha: 3, largura: 1, altura: 1, fundo: { captura: 'sessao-claro-1440', l: { zw: 63, ox: 24.5, oy: 19.25 }, e: { zw: 54.6, ox: 22.4, oy: 58.8 } } },
+  // Sono, o 1 h 12 min e o começo dos botões (x 0, y 480, 780 por 370 px).
+  { coluna: 4, linha: 3, largura: 2, altura: 1, fundo: { captura: 'hoje-claro-1440', l: { zw: 54.46, ox: 0, oy: 18.15 }, e: { zw: 54.6, ox: 5.6, oy: 47.6 } } },
 ]
 
 const CLASSE_COR: Record<Cor, string> = {
@@ -234,8 +258,27 @@ export function CenaMosaico() {
   return (
     <Palco>
       <div className="mc-grade">
-        {LADRILHOS.map(({ coluna, linha, largura, altura, cor, recorte }) => {
+        {LADRILHOS.map(({ coluna, linha, largura, altura, cor, recorte, fundo }) => {
           const estilo: Vars = { gridColumn: `${coluna} / span ${largura}`, gridRow: `${linha} / span ${altura}` }
+          if (fundo) {
+            return (
+              <Caixa key={`${coluna}-${linha}`} className="mc-ladrilho mc-ld-papel" style={estilo}>
+                <div
+                  className="mc-recorte-bg"
+                  style={vars({
+                    '--bg-l': `url("${urlDaCaptura(fundo.captura)}")`,
+                    '--zw-l': fundo.l.zw,
+                    '--ox-l': fundo.l.ox,
+                    '--oy-l': fundo.l.oy,
+                    '--bg-e': `url("${urlDaCaptura(CELULAR_DE[fundo.captura])}")`,
+                    '--zw-e': fundo.e.zw,
+                    '--ox-e': fundo.e.ox,
+                    '--oy-e': fundo.e.oy,
+                  })}
+                />
+              </Caixa>
+            )
+          }
           if (!recorte) {
             return <Caixa key={`${coluna}-${linha}`} className={`mc-ladrilho ${CLASSE_COR[cor ?? 'papel']}`} style={estilo} />
           }
@@ -274,10 +317,12 @@ export function CenaMosaico() {
   )
 }
 
-/** I-8: o celular da madrugada, cortado pela borda de baixo, diante de uma placa de papel. */
+/** I-8: o celular da madrugada, cortado pela borda de baixo, diante de uma placa de papel. A posição,
+ *  a largura e o topo do celular vêm de variáveis (midia.css, `.mc-retrato`): abaixo de 768 o celular
+ *  sobe e cresce, para a folha de trás não aparecer vazia no alto e o celular continuar cortado embaixo. */
 export function CenaRetrato() {
   return (
-    <Palco>
+    <Palco classe="mc-retrato">
       <Caixa
         className="mc-obj mc-laje"
         style={{ left: '8cqw', top: '10cqw', width: '60cqw', height: '86cqw', '--esp': '6cqw', '--ry': '-14deg', '--rz': '-3deg', '--tz': '-8cqw' }}
@@ -286,21 +331,23 @@ export function CenaRetrato() {
         tipo="celular"
         tela="hoje"
         captura="hoje-madrugada-390"
-        largura="74cqw"
+        largura="var(--ph-w)"
         inclinacao={{ x: -3, y: -10, z: 3 }}
-        style={{ left: '13cqw', top: '48cqw' }}
+        style={{ left: 'var(--ph-left)', top: 'var(--ph-top)' }}
       />
     </Palco>
   )
 }
 
-/** I-9: o celular de cada cartão, cortado embaixo, com uma placa atrás e ângulos opostos. */
+/** I-9: o celular de cada cartão, com uma placa atrás e ângulos opostos. A tela é clara, e a borda de
+ *  baixo da moldura não pode cruzá-la (o papel da tela some contra a página): um chão baixo, de papel
+ *  ou de tinta, fica na frente do pé do celular e passa da borda, no lugar do corte pela moldura. */
 export function CenaCartao({ tela }: { tela: 'hoje' | 'sessao' }) {
   const hoje = tela === 'hoje'
   return (
     <Palco>
       <Caixa
-        className={`mc-obj ${hoje ? 'mc-laje' : 'mc-laje-tinta'}`}
+        className={`mc-obj ${hoje ? 'mc-laje-papel' : 'mc-laje-tinta'}`}
         style={
           hoje
             ? { left: '46cqw', top: '10cqw', width: '62cqw', height: '62cqw', '--esp': '8cqw', '--ry': '-12deg', '--rz': '4deg', '--tz': '-10cqw' }
@@ -314,6 +361,10 @@ export function CenaCartao({ tela }: { tela: 'hoje' | 'sessao' }) {
         largura="54cqw"
         inclinacao={hoje ? { x: -5, y: 14, z: -5 } : { x: -5, y: -14, z: 5 }}
         style={hoje ? { left: '16cqw', top: '22cqw' } : { left: '32cqw', top: '24cqw' }}
+      />
+      <Caixa
+        className={`mc-obj mc-chao ${hoje ? 'mc-chao-tinta' : 'mc-chao-papel'}`}
+        style={{ left: '-6cqw', top: '90cqw', width: '112cqw', height: '14cqw', '--esp': '8cqw', '--rx': '-6deg' }}
       />
     </Palco>
   )
