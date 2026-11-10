@@ -569,7 +569,7 @@ async function rodar(ctx, local) {
 
   // dados
   const sql = montarSql(await d.lerModelo(), contaAdmin)
-  const args = local ? ['db', 'query', '-f'] : ['db', 'query', '--remote', '-f']
+  const args = local ? ['db', 'query', '-f'] : ['db', 'query', '--remote', '--yes', '-f']
   const r = await comArquivoTemporario(sql, (caminho) => chamarCli(ctx, [...args, caminho]))
   exigirSucesso(ctx, r)
   d.log(linhaDados(contaAdmin !== null))
