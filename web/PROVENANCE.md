@@ -8,6 +8,8 @@ Cada recurso de terceiros que vai no site tem uma linha aqui: pacote, versão ex
 |---|---|---|---|---|---|
 | Fraunces | `@fontsource/fraunces` | 5.3.0 | SIL Open Font License 1.1 (`OFL-1.1`) | `web/licencas/fontsource-fraunces.txt` | `cd3384cafac6f2bddc3955273958a2e029f97027c8037ac539ef5744a77b579e` |
 | Instrument Sans | `@fontsource/instrument-sans` | 5.3.0 | SIL Open Font License 1.1 (`OFL-1.1`) | `web/licencas/fontsource-instrument-sans.txt` | `c27a3c53c3beed7f5c26853afa15991478ff7145d3754a36b0382f84e10c0d03` |
+| Instrument Serif | `@fontsource/instrument-serif` | 5.3.0 | SIL Open Font License 1.1 (`OFL-1.1`) | `web/licencas/fontsource-instrument-serif.txt` | `b6106a757902d2d412e09d94dc4a226fe3da80485208a98003969f1b8b6b1d74` |
+| Zilla Slab | `@fontsource/zilla-slab` | 5.3.0 | SIL Open Font License 1.1 (`OFL-1.1`) | `web/licencas/fontsource-zilla-slab.txt` | `72758d2190a1f64ac28b0ae6667890f2d9032c58e981a82a76f840b6d037f0ca` |
 
 A cópia da licença é o arquivo `LICENSE` do próprio pacote, sem alteração (mesmo sha256).
 
