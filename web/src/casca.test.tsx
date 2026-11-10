@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { ReactElement } from 'react'
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { Abertura } from './componentes/base/Abertura.tsx'
@@ -701,6 +702,72 @@ describe('Campo', () => {
     expect(select.tagName).toBe('SELECT')
     expect(within(select).getAllByRole('option').map((o) => o.textContent)).toEqual(['Cuidador', 'Responsável'])
     expect(select.closest('.sb-campo-controle')!.hasAttribute('data-select')).toBe(true)
+  })
+})
+
+// Rodada de correção 2, parte 14: o Campo é uma linha `.grade-10 > .sb-campo.col-c2-c8` (rótulo, controle,
+// erro e ajuda como filhos diretos da linha), igual para todo tipo e com ou sem mensagem. O layout (fios,
+// 112 px, mensagem dentro da linha) é CSS: o que o jsdom pode provar é a estrutura e a acessibilidade.
+describe('Campo: a linha em c2–c8', () => {
+  const OPCOES = [
+    { valor: 'a', rotulo: 'Cuidador' },
+    { valor: 'b', rotulo: 'Responsável' },
+  ] as const
+  const CASOS: Array<[string, (mensagens: { erro?: string; ajuda?: string }) => ReactElement]> = [
+    ['texto', (m) => <Campo id="c" rotulo="Nome" {...m} />],
+    ['e-mail', (m) => <Campo id="c" rotulo="E-mail" tipo="email" {...m} />],
+    ['senha', (m) => <Campo id="c" rotulo="Senha" tipo="senha" {...m} />],
+    ['select', (m) => <Campo id="c" rotulo="Papel" tipo="select" opcoes={OPCOES} {...m} />],
+  ]
+  const MENSAGENS: Array<[string, { erro?: string; ajuda?: string }]> = [
+    ['sem mensagem', {}],
+    ['com erro', { erro: 'Falta o arroba.' }],
+    ['com ajuda', { ajuda: 'Como a família chama.' }],
+    ['com erro e ajuda', { erro: 'Falta o arroba.', ajuda: 'Como a família chama.' }],
+  ]
+
+  for (const [tipo, montar] of CASOS) {
+    for (const [nome, mensagens] of MENSAGENS) {
+      it(`${tipo}, ${nome}: a linha é .grade-10 > .sb-campo.col-c2-c8, com o rótulo, o controle e as mensagens como filhos diretos, nessa ordem`, () => {
+        const { container } = render(montar(mensagens))
+
+        const grade = container.firstElementChild as HTMLElement
+        expect(grade.className).toBe('grade-10')
+        expect(grade.children).toHaveLength(1)
+        const linha = grade.firstElementChild as HTMLElement
+        expect(linha.className).toBe('sb-campo col-c2-c8')
+        const esperado = ['sb-campo-rotulo t-rotulo', 'sb-campo-controle']
+        if (mensagens.erro) esperado.push('sb-campo-erro t-corpo-p')
+        if (mensagens.ajuda) esperado.push('sb-campo-ajuda t-corpo-p')
+        expect([...linha.children].map((filho) => filho.className)).toEqual(esperado)
+        expect(linha.hasAttribute('data-erro')).toBe(Boolean(mensagens.erro))
+        expect(linha.getAttribute('style')).toBeNull()
+        // O campo, o botão de senha e o rótulo continuam ligados como antes.
+        const campo = screen.getByLabelText(tipo === 'senha' ? 'Senha' : tipo === 'e-mail' ? 'E-mail' : tipo === 'select' ? 'Papel' : 'Nome')
+        expect(linha.querySelector('.sb-campo-controle')!.contains(campo)).toBe(true)
+        expect(campo.hasAttribute('aria-invalid')).toBe(Boolean(mensagens.erro))
+        const ids = [mensagens.erro ? 'c-erro' : null, mensagens.ajuda ? 'c-ajuda' : null].filter(Boolean).join(' ')
+        expect(campo.getAttribute('aria-describedby') ?? '').toBe(ids)
+        for (const id of ids.split(' ').filter(Boolean)) expect(document.getElementById(id)!.textContent).not.toBe('')
+        // Só a senha tem o botão de mostrar, dentro do controle (no fim do campo).
+        expect(linha.querySelectorAll('.sb-campo-olho')).toHaveLength(tipo === 'senha' ? 1 : 0)
+        if (tipo === 'senha') expect(linha.querySelector('.sb-campo-controle > .sb-campo-olho')).not.toBeNull()
+        expect(linha.querySelector('.sb-campo-controle')!.hasAttribute('data-select')).toBe(tipo === 'select')
+      })
+    }
+  }
+
+  it('duas linhas seguidas ficam encostadas: cada uma é o seu próprio .grade-10, sem espaçador entre elas', () => {
+    const { container } = render(
+      <section className="sb-campos">
+        <Campo id="um" rotulo="Primeiro" />
+        <Campo id="dois" rotulo="Segundo" erro="Falta." />
+      </section>,
+    )
+
+    const secao = container.firstElementChild as HTMLElement
+    expect([...secao.children].map((filho) => filho.className)).toEqual(['grade-10', 'grade-10'])
+    for (const grade of secao.children) expect(grade.getAttribute('style')).toBeNull()
   })
 })
 

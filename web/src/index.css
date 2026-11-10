@@ -1891,23 +1891,47 @@
   }
 
   /* Campos (2.9) ----------------------------------------------------------------------------- */
+  /* O campo de 768 para cima é uma linha de c2 a c8 (como a linha rótulo + texto): o fio horizontal é a
+     borda de baixo da linha (c2 ao início de c9), o vertical é o ::before em x de c4 (2/7 da largura),
+     do topo + 32 px até o fio de baixo. Tudo em --cor-texto: o fio do campo é sólido nos dois temas.
+     A linha tem 112 px (altura mínima): 27 px de ar, o valor (Instrument Serif 48/58) e logo abaixo a
+     mensagem (17/24), 109 px. O valor fica sempre no mesmo lugar, com ou sem mensagem. Sem `overflow`,
+     para o anel de foco não ser cortado. */
   .sb-campo {
+    position: relative;
     display: grid;
-    grid-template-columns: repeat(10, minmax(0, 1fr));
-    align-items: center;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    grid-template-rows: 27px 58px auto;
+    align-content: start;
+    box-sizing: border-box;
+    min-height: 112px;
+    border-bottom: 1px solid var(--cor-texto);
+  }
+
+  .sb-campo::before {
+    content: '';
+    position: absolute;
+    left: calc(100% * 2 / 7);
+    top: 32px;
+    bottom: 0;
+    width: 1px;
+    background-color: var(--cor-texto);
   }
 
   .sb-campo-rotulo {
-    grid-column: 2 / 4;
+    grid-column: 1 / 3;
+    grid-row: 2;
+    align-self: center;
   }
 
   .sb-campo-controle {
     position: relative;
-    grid-column: 4 / 9;
+    grid-column: 3 / 8;
+    grid-row: 2;
     display: flex;
     align-items: center;
-    height: 112px;
-    border-bottom: 1px solid var(--cor-texto);
+    height: 58px;
+    padding-left: 32px;
   }
 
   .sb-campo-entrada {
@@ -1946,15 +1970,33 @@
   }
 
   .sb-campo-erro {
-    grid-column: 4 / 9;
-    margin: 8px 0 0;
+    grid-column: 3 / 8;
+    grid-row: 3;
+    margin: 0;
+    padding-left: 32px;
     color: var(--cor-destaque);
   }
 
   .sb-campo-ajuda {
-    grid-column: 4 / 9;
-    margin: 8px 0 0;
+    grid-column: 3 / 8;
+    grid-row: 3;
+    margin: 0;
+    padding-left: 32px;
     color: var(--cor-secundario);
+  }
+
+  /* Com erro e ajuda ao mesmo tempo só cabe uma mensagem na linha de 112 px: o erro fica à vista e a
+     ajuda sai da vista sem sair do DOM (nem de `display: none`), então o `aria-describedby` continua
+     lendo os dois. Abaixo de 768 as duas ficam empilhadas à vista. */
+  .sb-campo[data-erro] .sb-campo-ajuda {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
   }
 
   /* O botão de mostrar senha: 44 × 44 (56 de altura na madrugada), no fim do campo. */
@@ -2014,6 +2056,12 @@
   @media (max-width: 767px) {
     .sb-campo {
       display: block;
+      min-height: 0;
+      border-bottom: 0;
+    }
+
+    .sb-campo::before {
+      display: none;
     }
 
     .sb-campo-rotulo {
@@ -2023,7 +2071,8 @@
 
     .sb-campo-controle {
       height: 64px;
-      padding-inline: 16px;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--cor-texto);
       border-radius: 4px;
       background-color: var(--cor-papel-fundo);
     }
@@ -2031,6 +2080,26 @@
     .sb-campo-entrada {
       font-size: 2rem;
       line-height: 2.375rem;
+    }
+
+    .sb-campo-erro {
+      padding-left: 0;
+      margin: 8px 0 0;
+    }
+
+    .sb-campo-ajuda {
+      padding-left: 0;
+      margin: 8px 0 0;
+    }
+
+    .sb-campo[data-erro] .sb-campo-ajuda {
+      position: static;
+      width: auto;
+      height: auto;
+      margin: 8px 0 0;
+      overflow: visible;
+      clip: auto;
+      white-space: normal;
     }
   }
 
@@ -2295,10 +2364,16 @@
     height: 32px;
   }
 
+  /* As linhas de campo ficam encostadas de 768 para cima (o fio de uma e o da seguinte, a 0 px). */
   .sb-campos {
     display: flex;
     flex-direction: column;
-    gap: 64px;
+  }
+
+  @media (max-width: 767px) {
+    .sb-campos {
+      gap: 64px;
+    }
   }
 }
 

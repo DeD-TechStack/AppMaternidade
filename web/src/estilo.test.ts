@@ -703,7 +703,9 @@ describe('sistema-base: tipo, forma e espaço do CSS novo', () => {
   })
 
   it('o fio de campo na madrugada é sólido (cor do texto) e os outros fios usam --cor-fio-suave', () => {
-    expect(corposDe('.sb-campo-controle').join('')).toMatch(/border-bottom:\s*1px solid var\(--cor-texto\)/)
+    // P14: o fio do campo (sólido) é a borda de baixo da linha `.sb-campo` (c2 a c9). Antes era a do
+    // `.sb-campo-controle` (c4 a c8).
+    expect(corposDe('.sb-campo').join('')).toMatch(/border-bottom:\s*1px solid var\(--cor-texto\)/)
     expect(corposDe('.sb-fio-h').join('')).toMatch(/background-color:\s*var\(--cor-fio-suave\)/)
     expect(temaCss).toMatch(/--cor-fio-suave:\s*color-mix\(in srgb,\s*var\(--color-night-line\)\s*20%,\s*transparent\)/)
   })
@@ -979,6 +981,128 @@ describe('rodada 3: faixa de números, abertura e linhas (regras de CSS)', () =>
       expect(daFaixa.length).toBeGreaterThan(0)
       for (const regra of daFaixa) expect(regra.seletor).not.toMatch(/data-tema/)
       expect(temaCss).not.toMatch(/sb-numeros/)
+    })
+  })
+
+  // Rodada de correção 2, parte 14: o Campo de 768 para cima segue a composição da linha rótulo + texto:
+  // fio horizontal de c2 ao início de c9 (a borda de baixo da própria linha), fio vertical em x de c4 do
+  // topo + 32 até o fio de baixo, linhas encostadas, e altura de 112 px mesmo com erro ou ajuda (o valor
+  // fica no alto e a mensagem logo abaixo, dentro dos 112). Abaixo de 768 nada muda.
+  describe('P14: o Campo em linha, encostado, com o fio de c2 a c9 e o vertical em c4', () => {
+    const corpoPseudo = (seletor: string) => regras(base).filter((r) => r.seletor === seletor).map((r) => r.corpo).join('')
+    const linha = () => corpoBase('.sb-campo')
+    const px = (corpo: string, propriedade: string) => Number(new RegExp(`(?:^|[\\s;])${propriedade}:\\s*(\\d+(?:\\.\\d+)?)px`).exec(corpo)?.[1] ?? Number.NaN)
+    const linhasDaGrade = () => (/grid-template-rows:\s*([^;]+);/.exec(linha())?.[1] ?? '').trim().split(/\s+/)
+
+    it('a linha é uma grade de 7 colunas (c2 a c8) com o fio horizontal na borda de baixo, a altura mínima de 112 px e sem caixa nem fundo', () => {
+      expect(linha()).toMatch(/display:\s*grid/)
+      expect(linha()).toMatch(/grid-template-columns:\s*repeat\(7,\s*minmax\(0,\s*1fr\)\)/)
+      expect(linha()).toMatch(/border-bottom:\s*1px solid var\(--cor-texto\)/)
+      expect(linha()).toMatch(/min-height:\s*112px/)
+      expect(linha()).toMatch(/box-sizing:\s*border-box/)
+      expect(linha()).toMatch(/position:\s*relative/)
+      expect(linha()).not.toMatch(/background|border-radius|(?:^|[^-])height:/)
+      // O fio de baixo e a altura saíram do controle (o campo em si).
+      expect(corpoBase('.sb-campo-controle')).not.toMatch(/border-bottom|(?:^|[^-])height:\s*112px/)
+    })
+
+    it('o fio vertical é um pseudo-elemento da linha em x de c4 (2/7 da largura), do topo + 32 px até o fio de baixo, na cor do texto (sólido)', () => {
+      const corpo = corpoPseudo('.sb-campo::before')
+      expect(corpo, 'regra de .sb-campo::before').not.toBe('')
+      expect(corpo).toMatch(/content:\s*''/)
+      expect(corpo).toMatch(/position:\s*absolute/)
+      expect(corpo).toMatch(/left:\s*calc\(100%\s*\*\s*2\s*\/\s*7\)/)
+      expect(corpo).toMatch(/top:\s*32px/)
+      expect(corpo).toMatch(/bottom:\s*0/)
+      expect(corpo).toMatch(/width:\s*1px/)
+      expect(corpo).toMatch(/background-color:\s*var\(--cor-texto\)/)
+    })
+
+    it('as linhas ficam encostadas: o `.sb-campos` não tem `gap` de 768 para cima', () => {
+      expect(corpoBase('.sb-campos')).not.toMatch(/gap/)
+    })
+
+    it('a linha de 112 px comporta o valor (58) e uma mensagem (24) sem mudar de altura, com o valor sempre na mesma posição (com e sem erro ou ajuda)', () => {
+      const [antes, valor, mensagem] = linhasDaGrade()
+      expect(linhasDaGrade(), 'grid-template-rows').toHaveLength(3)
+      const [a, v] = [Number.parseFloat(antes), Number.parseFloat(valor)]
+      expect(mensagem).toBe('auto')
+      expect(corpoBase('.sb-campo')).toMatch(/align-content:\s*start/)
+      const FIO = 1
+      const MENSAGEM = 24 // corpo-p 17/24
+      const altura = (linhasDeMensagem: number) => Math.max(px(linha(), 'min-height'), a + v + linhasDeMensagem * MENSAGEM + FIO)
+      for (const mensagens of [0, 1]) expect(altura(mensagens), `${mensagens} mensagem(ns)`).toBe(112)
+      // Erro e ajuda no mesmo lugar: com erro a ajuda sai do fluxo (só visual), então nunca são 2 linhas.
+      expect(a + v + MENSAGEM + FIO).toBeLessThanOrEqual(112)
+      // O vertical começa ≥ 32 px abaixo do topo e dentro do valor (que começa em a e mede v).
+      expect(px(corpoPseudo('.sb-campo::before'), 'top')).toBeGreaterThanOrEqual(32)
+      expect(a).toBeLessThan(32)
+      expect(a + v).toBeGreaterThan(32)
+      // O valor (Instrument Serif 48/58) ocupa a linha de 58, e o rótulo fica na mesma linha da grade.
+      expect(v).toBe(58)
+      expect(corpoBase('.sb-campo-controle')).toMatch(/height:\s*58px/)
+      expect(corpoBase('.sb-campo-rotulo')).toMatch(/grid-row:\s*2/)
+      expect(corpoBase('.sb-campo-controle')).toMatch(/grid-row:\s*2/)
+      expect(corpoBase('.sb-campo-erro')).toMatch(/grid-row:\s*3/)
+      expect(corpoBase('.sb-campo-ajuda')).toMatch(/grid-row:\s*3/)
+    })
+
+    it('o botão de mostrar senha (44 px; 56 na madrugada) cabe na linha do valor sem aumentar a altura', () => {
+      const claro = Number(/--alvo-toque:\s*(\d+)px/.exec(temaCss)?.[1])
+      const noite = Number(/\[data-tema(?:-local)?=['"]madrugada['"]\][^{]*\{[^}]*--alvo-toque:\s*(\d+)px/.exec(temaCss)?.[1])
+      const controle = px(corpoBase('.sb-campo-controle'), 'height')
+      expect(claro).toBe(44)
+      expect(noite).toBe(56)
+      expect(controle).toBeGreaterThanOrEqual(noite)
+      expect(corpoBase('.sb-campo-olho')).toMatch(/height:\s*var\(--alvo-toque\)/)
+    })
+
+    it('o valor e as mensagens começam 32 px à direita do vertical, e o `overflow` não esconde o anel de foco', () => {
+      expect(corpoBase('.sb-campo-controle')).toMatch(/padding-left:\s*32px/)
+      expect(corpoBase('.sb-campo-erro')).toMatch(/padding-left:\s*32px/)
+      expect(corpoBase('.sb-campo-ajuda')).toMatch(/padding-left:\s*32px/)
+      for (const seletor of ['.sb-campo', '.sb-campo-controle', '.sb-campo-entrada', '.sb-campo-erro', '.sb-campo-ajuda']) {
+        expect(corpoBase(seletor), seletor).not.toMatch(/overflow/)
+      }
+    })
+
+    it('com erro, a ajuda continua no DOM para o `aria-describedby`, mas só some da vista (sem `display: none`), para a linha não crescer', () => {
+      const regra = regras(base).find((r) => r.seletor === '.sb-campo[data-erro] .sb-campo-ajuda')
+      expect(regra, "regra de .sb-campo[data-erro] .sb-campo-ajuda").toBeDefined()
+      expect(regra!.corpo).toMatch(/position:\s*absolute/)
+      expect(regra!.corpo).toMatch(/clip(?:-path)?:/)
+      expect(regra!.corpo).not.toMatch(/display:\s*none|visibility:\s*hidden/)
+    })
+
+    it('abaixo de 768 nada muda: rótulo em cima, caixa de 64 px com fundo, raio 4 e fio de tinta embaixo, sem vertical, mensagens abaixo', () => {
+      expect(corpoCelular('.sb-campo')).toMatch(/display:\s*block/)
+      expect(corpoCelular('.sb-campo')).toMatch(/min-height:\s*0/)
+      expect(corpoCelular('.sb-campo')).toMatch(/border-bottom:\s*0/)
+      expect(regras(celular).find((r) => r.seletor === '.sb-campo::before')?.corpo).toMatch(/display:\s*none/)
+      const controle = corpoCelular('.sb-campo-controle')
+      expect(controle).toMatch(/height:\s*64px/)
+      expect(controle).toMatch(/padding:\s*0 16px/)
+      expect(controle).toMatch(/border-radius:\s*4px/)
+      expect(controle).toMatch(/background-color:\s*var\(--cor-papel-fundo\)/)
+      expect(controle).toMatch(/border-bottom:\s*1px solid var\(--cor-texto\)/)
+      expect(corpoCelular('.sb-campo-entrada')).toMatch(/font-size:\s*2rem/)
+      for (const seletor of ['.sb-campo-erro', '.sb-campo-ajuda']) {
+        expect(corpoCelular(seletor), seletor).toMatch(/padding-left:\s*0/)
+        expect(corpoCelular(seletor), seletor).toMatch(/margin:\s*8px 0 0/)
+      }
+      const ajuda = regras(celular).find((r) => r.seletor === '.sb-campo[data-erro] .sb-campo-ajuda')
+      expect(ajuda, 'a ajuda volta à vista abaixo de 768').toBeDefined()
+      expect(ajuda!.corpo).toMatch(/position:\s*static/)
+      expect(corpoCelular('.sb-campos')).toMatch(/gap:\s*64px/)
+    })
+
+    it('vale nos dois temas: o fio do campo é sólido (var(--cor-texto)) e nenhuma regra do campo depende de `data-tema`', () => {
+      const doCampo = regras(semComentarios).filter((r) => /sb-campo(?!s)/.test(r.seletor))
+      expect(doCampo.length).toBeGreaterThan(0)
+      for (const regra of doCampo) expect(regra.seletor).not.toMatch(/data-tema/)
+      expect(temaCss).not.toMatch(/sb-campo/)
+      expect(linha()).not.toMatch(/--cor-fio-suave/)
+      expect(corpoPseudo('.sb-campo::before')).not.toMatch(/--cor-fio-suave/)
     })
   })
 
