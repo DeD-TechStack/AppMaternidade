@@ -91,8 +91,9 @@ export function CenaCelulares() {
   )
 }
 
-/** I-7a: a tela Sessão num notebook grande e um celular, os dois inteiros dentro da moldura (a borda
- *  não cruza uma tela clara). O notebook mostra só o alto da captura, até o cartão do cronômetro
+/** I-7a: a tela Sessão num notebook grande e um celular ao lado dele, os dois inteiros dentro da
+ *  moldura (a borda não cruza uma tela clara) e sem um cobrir o outro: a faixa do celular acaba 2 cqw
+ *  antes da do notebook, para o logo e o título da tela do notebook ficarem inteiros. O notebook mostra só o alto da captura, até o cartão do cronômetro
  *  (`ap3d-corte`): sem a ilustração que a página tem logo abaixo. */
 export function CenaSessao() {
   return (
@@ -102,9 +103,9 @@ export function CenaSessao() {
         tela="sessao"
         captura="sessao-claro-1440"
         className="ap3d-corte"
-        largura="70cqw"
+        largura="62cqw"
         inclinacao={{ x: -8, y: -22, z: -3 }}
-        style={{ left: '22cqw', top: '9cqw', '--abre': '8deg' }}
+        style={{ left: '31cqw', top: '12cqw', '--abre': '8deg' }}
       />
       <Aparelho
         tipo="celular"
@@ -112,7 +113,7 @@ export function CenaSessao() {
         captura="sessao-claro-390"
         largura="22cqw"
         inclinacao={{ x: -4, y: 14, z: 4 }}
-        style={{ left: '8cqw', top: '12cqw', '--tz': '6cqw' }}
+        style={{ left: '6cqw', top: '12cqw', '--tz': '6cqw' }}
       />
     </Palco>
   )

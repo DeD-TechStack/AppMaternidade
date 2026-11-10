@@ -252,6 +252,39 @@ describe('R3: nenhuma folha de papel nem tela clara encosta na borda da moldura'
 })
 
 // ---------------------------------------------------------------------------
+// D-2: na Sessão o celular não cobre o conteúdo da tela do notebook.
+
+describe('D-2: na moldura da Sessão o celular fica ao lado do notebook, sem cobrir o que a tela dele mostra', () => {
+  async function aparelhos() {
+    const container = await inicio()
+    const moldura = molduras(container)[2]
+    const filhos = [...moldura.querySelectorAll<HTMLElement>('.mc-palco > [data-aparelho]')]
+    const faixa = (el: HTMLElement) => {
+      const esquerda = cqw(el.style.left)
+      return { esquerda, direita: esquerda + cqw(el.style.getPropertyValue('--aw')), largura: cqw(el.style.getPropertyValue('--aw')) }
+    }
+    const celular = faixa(filhos.find((a) => a.getAttribute('data-aparelho') === 'celular')!)
+    const notebook = faixa(filhos.find((a) => a.getAttribute('data-aparelho') === 'notebook')!)
+    return { celular, notebook }
+  }
+
+  it('a faixa horizontal do celular acaba pelo menos 2 cqw antes da do notebook (a margem entre o contorno e o texto)', async () => {
+    const { celular, notebook } = await aparelhos()
+
+    expect(celular.direita + 2).toBeLessThanOrEqual(notebook.esquerda)
+  })
+
+  it('os dois cabem em 0..100 cqw, com tamanho legível: celular de 20 cqw ou mais e notebook de 62 cqw ou mais', async () => {
+    const { celular, notebook } = await aparelhos()
+
+    expect(celular.esquerda).toBeGreaterThanOrEqual(0)
+    expect(notebook.direita).toBeLessThanOrEqual(100)
+    expect(celular.largura).toBeGreaterThanOrEqual(20)
+    expect(notebook.largura).toBeGreaterThanOrEqual(62)
+  })
+})
+
+// ---------------------------------------------------------------------------
 // R4: os três celulares maiores em 390.
 
 describe('R4: três celulares legíveis em 390, e a mesma geometria de antes em 1440', () => {
