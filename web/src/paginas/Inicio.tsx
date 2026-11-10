@@ -4,6 +4,7 @@ import {
   APRESENTACAO,
   CHAMADA,
   CITACAO_AVISO,
+  CITACAO_TEXTO,
   FATOS,
   LINK_ABERTURA,
   MIDIAS_INICIO,
@@ -18,13 +19,13 @@ import {
   TELAS,
   TITULO_APRESENTACAO,
 } from '../conteudo/textos.ts'
-import { AvisoDemonstracao } from '../componentes/AvisoDemonstracao.tsx'
 import { Abertura } from '../componentes/base/Abertura.tsx'
 import { Etiqueta } from '../componentes/base/Etiqueta.tsx'
 import { FaixaNumeros } from '../componentes/base/FaixaNumeros.tsx'
 import { Galeria } from '../componentes/base/Galeria.tsx'
 import { LinhaRotuloTexto } from '../componentes/base/LinhaRotuloTexto.tsx'
 import { Midia } from '../componentes/base/Midia.tsx'
+import { AvisoAbertura } from '../componentes/vitrine/AvisoAbertura.tsx'
 import { CartaoTela } from '../componentes/vitrine/CartaoTela.tsx'
 import { Citacao } from '../componentes/vitrine/Citacao.tsx'
 import { NavegacaoGrande } from '../componentes/vitrine/NavegacaoGrande.tsx'
@@ -50,7 +51,6 @@ export function Inicio() {
 
   return (
     <>
-      <AvisoDemonstracao />
       <main className="vt-inicio">
         <Abertura
           titulo={PROMESSA}
@@ -61,6 +61,7 @@ export function Inicio() {
                 <Etiqueta>{pilar}</Etiqueta>
               </li>
             )),
+            <AvisoAbertura key="aviso" />,
             <li key="link">
               <Link className="sb-abertura-link t-corpo alvo-toque" to="/app/hoje">
                 {LINK_ABERTURA}
@@ -114,7 +115,7 @@ export function Inicio() {
         </div>
 
         <Citacao
-          texto={MINIATURAS.hoje.nota.texto}
+          texto={CITACAO_TEXTO}
           autoria={`${MINIATURAS.hoje.nota.autor} · ${CITACAO_AVISO}`}
           rotuloRetrato={MIDIAS_INICIO.retrato}
         />
