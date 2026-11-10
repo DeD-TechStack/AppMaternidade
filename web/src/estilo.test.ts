@@ -709,6 +709,150 @@ describe('sistema-base: tipo, forma e espaço do CSS novo', () => {
   })
 })
 
+// ---------------------------------------------------------------------------
+// Rodada de correção 3 (D2, D3, D5): faixa de números, abertura e fio das linhas. O que depende de
+// geometria (y do fio, x das etiquetas, legenda em 1 linha) é medido no navegador por
+// `.oc/geo.mjs`; aqui ficam as regras de CSS lidas como texto, separando o que vale a partir de 768
+// (fora da media query) do que vale abaixo (dentro de `@media (max-width: 767px)`).
+
+/** O texto de dentro de cada bloco `@media` cuja consulta casa com `consulta` (chaves balanceadas). */
+function blocosDeMedia(css: string, consulta: RegExp): string[] {
+  const achados: string[] = []
+  const abertura = /@media[^{]*\{/g
+  for (let m = abertura.exec(css); m; m = abertura.exec(css)) {
+    let nivel = 1
+    let i = abertura.lastIndex
+    while (i < css.length && nivel > 0) {
+      if (css[i] === '{') nivel += 1
+      else if (css[i] === '}') nivel -= 1
+      i += 1
+    }
+    if (consulta.test(m[0])) achados.push(css.slice(abertura.lastIndex, i - 1))
+  }
+  return achados
+}
+
+/** O CSS sem nenhum bloco `@media`: as regras de base (de 768 para cima, o desktop primeiro). */
+function semMedia(css: string): string {
+  let resto = css
+  for (let m = /@media[^{]*\{/.exec(resto); m; m = /@media[^{]*\{/.exec(resto)) {
+    let nivel = 1
+    let i = m.index + m[0].length
+    while (i < resto.length && nivel > 0) {
+      if (resto[i] === '{') nivel += 1
+      else if (resto[i] === '}') nivel -= 1
+      i += 1
+    }
+    resto = resto.slice(0, m.index) + resto.slice(i)
+  }
+  return resto
+}
+
+describe('rodada 3: faixa de números, abertura e linhas (regras de CSS)', () => {
+  const base = semMedia(semComentarios)
+  const celular = blocosDeMedia(semComentarios, /max-width:\s*767px/).join('\n')
+  const corpoBase = (seletor: string) => regras(base).filter((r) => r.seletor === seletor).map((r) => r.corpo).join('')
+  const corpoCelular = (seletor: string) => regras(celular).filter((r) => r.seletor === seletor).map((r) => r.corpo).join('')
+
+  it('o auxiliar separa o que vale de 768 para cima do que vale abaixo', () => {
+    expect(celular).toMatch(/\.sb-numeros-item/)
+    expect(corpoBase('.sb-numeros')).toMatch(/repeat\(3,\s*minmax\(0,\s*1fr\)\)/)
+    expect(corpoBase('.sb-numeros')).not.toMatch(/@media/)
+  })
+
+  describe('D2: a faixa de números empilha abaixo de 768', () => {
+    it('de 768 para cima não muda: 3 colunas, fio no topo da faixa e 2 verticais entre os itens', () => {
+      expect(corpoBase('.sb-numeros')).toMatch(/border-top:\s*1px solid var\(--cor-fio-suave\)/)
+      expect(corpoBase('.sb-numeros-item')).toMatch(/padding:\s*32px 32px 32px 0/)
+      const vertical = corpoBase('.sb-numeros-item + .sb-numeros-item')
+      expect(vertical).toMatch(/border-left:\s*1px solid var\(--cor-fio-suave\)/)
+      expect(vertical).toMatch(/padding-left:\s*32px/)
+      expect(corpoBase('.sb-numeros-item')).not.toMatch(/border-top/)
+    })
+
+    it('abaixo de 768 os 3 itens ficam numa coluna só, com 24 px entre eles', () => {
+      const faixa = corpoCelular('.sb-numeros')
+      expect(faixa, 'regra de .sb-numeros abaixo de 768').not.toBe('')
+      expect(faixa).toMatch(/grid-template-columns:\s*minmax\(0,\s*1fr\)/)
+      expect(faixa).toMatch(/(?:row-)?gap:\s*24px/)
+    })
+
+    it('abaixo de 768 cada item leva o seu fio no topo, e a faixa deixa de ter o fio único', () => {
+      expect(corpoCelular('.sb-numeros')).toMatch(/border-top:\s*0/)
+      expect(corpoCelular('.sb-numeros-item')).toMatch(/border-top:\s*1px solid var\(--cor-fio-suave\)/)
+    })
+
+    it('abaixo de 768 não há fio vertical nem recuo lateral nos itens', () => {
+      const seguinte = corpoCelular('.sb-numeros-item + .sb-numeros-item')
+      expect(seguinte, 'regra do item seguinte abaixo de 768').not.toBe('')
+      expect(seguinte).toMatch(/border-left:\s*0/)
+      expect(seguinte).toMatch(/padding-left:\s*0/)
+      // O item não reserva 8 px dos lados (era para 3 colunas de 114 px) nem 16 px embaixo: o espaço
+      // entre os itens é só o gap de 24 (24 + 16 daria 40, que está fora da escala).
+      expect(corpoCelular('.sb-numeros-item')).not.toMatch(/padding:\s*16px 8px/)
+      expect(corpoCelular('.sb-numeros-item')).toMatch(/padding:\s*16px 0 0/)
+    })
+  })
+
+  describe('D3: a abertura sobe a coluna lateral para a altura do título', () => {
+    it('o fio horizontal é a borda de baixo do `.sb-abertura-base`, que não tem mais 80 px de altura nem 64 de margem', () => {
+      const corpo = corpoBase('.sb-abertura-base')
+      expect(corpo).toMatch(/border-bottom:\s*1px solid var\(--cor-fio-suave\)/)
+      expect(corpo).toMatch(/margin-top:\s*32px/)
+      expect(corpo).toMatch(/position:\s*relative/)
+      expect(corpo).not.toMatch(/height:\s*80px/)
+      expect(corpo).not.toMatch(/margin-top:\s*64px/)
+    })
+
+    it('o fio vertical é um pseudo-elemento: em x de c9 (80% da área útil), só nos 80 px finais, encostado no horizontal', () => {
+      const corpo = corpoBase('.sb-abertura-base::before')
+      expect(corpo, 'regra de .sb-abertura-base::before').not.toBe('')
+      expect(corpo).toMatch(/content:\s*''/)
+      expect(corpo).toMatch(/position:\s*absolute/)
+      expect(corpo).toMatch(/left:\s*80%/)
+      expect(corpo).toMatch(/bottom:\s*0/)
+      expect(corpo).toMatch(/width:\s*1px/)
+      expect(corpo).toMatch(/height:\s*80px/)
+      expect(corpo).toMatch(/background-color:\s*var\(--cor-fio-suave\)/)
+    })
+
+    it('a coluna lateral não tem mais o fio nem o recuo de 24 px (as etiquetas começam no x de c9) e empilha de cima para baixo', () => {
+      const corpo = corpoBase('.sb-abertura-lateral')
+      expect(corpo).not.toMatch(/border-left/)
+      expect(corpo).not.toMatch(/padding:\s*0 0 0 24px/)
+      expect(corpo).not.toMatch(/justify-content:\s*center/)
+      expect(corpo).toMatch(/margin:\s*0/)
+      expect(corpo).toMatch(/padding:\s*0\s*;/)
+      expect(corpo).toMatch(/align-self:\s*start/)
+      expect(corpoBase('.sb-abertura-lateral > li')).toMatch(/height:\s*32px/)
+    })
+
+    it('abaixo de 768 a abertura segue em uma coluna: o fio vertical some e os espaços de antes ficam (32 antes das etiquetas, 16 até o fio)', () => {
+      expect(corpoCelular('.sb-abertura-base::before')).toMatch(/display:\s*none/)
+      expect(corpoCelular('.sb-abertura-lateral')).toMatch(/margin-top:\s*32px/)
+      expect(corpoCelular('.sb-abertura-base')).toMatch(/margin-top:\s*16px/)
+    })
+  })
+
+  describe('D5: o fio da linha rótulo + texto termina no início de c9, como o do campo', () => {
+    it('a grade interna da linha tem 7 colunas (c2 a c8), com o rótulo em c2–c3 e o texto em c4–c8 como antes', () => {
+      expect(corpoBase('.sb-linha')).toMatch(/grid-template-columns:\s*repeat\(7,\s*minmax\(0,\s*1fr\)\)/)
+      expect(corpoBase('.sb-linha')).toMatch(/border-bottom:\s*1px solid var\(--cor-fio-suave\)/)
+      expect(corpoBase('.sb-linha-rotulo')).toMatch(/grid-column:\s*1 \/ 3/)
+      const texto = corpoBase('.sb-linha-texto')
+      expect(texto).toMatch(/grid-column:\s*3 \/ 8/)
+      expect(texto).toMatch(/max-width:\s*592px/)
+      expect(texto).toMatch(/padding:\s*var\(--e-linhas\) 0 var\(--e-linhas\) 32px/)
+      expect(texto).toMatch(/border-left:\s*1px solid var\(--cor-fio-suave\)/)
+    })
+
+    it('a classe de coluna `.col-c2-c8` existe (2 / 9) e vale em uma coluna abaixo de 768', () => {
+      expect(corpoBase('.col-c2-c8')).toMatch(/grid-column:\s*2 \/ 9/)
+      expect(celular).toMatch(/\.col-c2-c8/)
+    })
+  })
+})
+
 describe('index.html', () => {
   it('declara o idioma e o título', () => {
     expect(indexHtml).toContain('lang="pt-BR"')
