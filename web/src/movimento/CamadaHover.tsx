@@ -1,5 +1,5 @@
-import { useState, type FocusEvent, type ReactNode } from 'react'
-import { motion } from 'motion/react'
+import { useEffect, useState, type FocusEvent, type ReactNode } from 'react'
+import { animate, motion, useMotionValue } from 'motion/react'
 import { cn } from '../componentes/terceiros/cn.ts'
 import { CATALOGO } from './catalogo.ts'
 import { usePrefereMovimentoReduzido, useSemHover } from './reduzido.ts'
@@ -10,7 +10,9 @@ import { usePrefereMovimentoReduzido, useSemHover } from './reduzido.ts'
 // Abre no hover do cartão e quando o foco entra em qualquer focável dentro do cartão, inclusive
 // dentro da própria camada; fecha quando o foco sai do cartão e o ponteiro não está sobre ele.
 // O estado fica em `data-aberta`. Em aparelho de toque (sem hover) o resumo fica sempre visível,
-// abaixo do conteúdo, para nada ficar escondido. Com movimento reduzido a troca é instantânea.
+// abaixo do conteúdo, para nada ficar escondido. A árvore é a mesma com e sem movimento reduzido
+// (o conteúdo, o estado e o foco da camada e do cartão sobrevivem à troca da preferência); com
+// movimento reduzido a troca de opacidade é instantânea (duração 0).
 
 interface Props {
   /** O conteúdo do cartão, sempre visível. */
@@ -39,6 +41,20 @@ export function CamadaHover({ children, camada, className, classeCamada }: Props
   const { duracaoMs, duracaoSaidaMs, curva } = CATALOGO.M13
 
   const aberta = sobre || foco
+  const opacity = useMotionValue(aberta ? 1 : 0)
+
+  useEffect(() => {
+    const alvo = aberta ? 1 : 0
+    if (reduzido) {
+      // Salto: encerra a animação em curso e põe a camada no estado dela de uma vez.
+      opacity.jump(alvo)
+      return
+    }
+    const transicao = { duration: (aberta ? duracaoMs : duracaoSaidaMs) / 1000, ease: curva }
+    const animacao = animate(opacity, alvo, transicao)
+    return () => animacao.stop()
+  }, [reduzido, aberta, opacity, duracaoMs, duracaoSaidaMs, curva])
+
   const aoSairOFoco = (evento: FocusEvent<HTMLDivElement>) => {
     if (!evento.currentTarget.contains(evento.relatedTarget)) setFoco(false)
   }
@@ -66,24 +82,13 @@ export function CamadaHover({ children, camada, className, classeCamada }: Props
       onBlur={aoSairOFoco}
     >
       {children}
-      {reduzido ? (
-        <div data-aberta={aberta} className={sobreposta} style={{ opacity: aberta ? 1 : 0, pointerEvents }}>
-          {camada}
-        </div>
-      ) : (
-        <motion.div
-          data-aberta={aberta}
-          className={sobreposta}
-          style={{ pointerEvents }}
-          initial={false}
-          animate={{
-            opacity: aberta ? 1 : 0,
-            transition: { duration: (aberta ? duracaoMs : duracaoSaidaMs) / 1000, ease: curva },
-          }}
-        >
-          {camada}
-        </motion.div>
-      )}
+      <motion.div
+        data-aberta={aberta}
+        className={sobreposta}
+        style={{ opacity, pointerEvents }}
+      >
+        {camada}
+      </motion.div>
     </div>
   )
 }

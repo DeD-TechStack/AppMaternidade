@@ -4,24 +4,21 @@
 // que desfocam ou mudam a escala e as divisões por palavra e por letra; os parâmetros chegam por
 // props, vindos do catálogo de movimento; o texto inteiro vai num span sr-only dentro do elemento
 // (sem aria-label, que o ARIA não permite em p, div e span) e as linhas animadas ficam escondidas
-// do leitor de tela; com movimento reduzido as linhas são comuns, sem movimento.
-import { motion, type Variants } from 'motion/react'
+// do leitor de tela; a entrada é decidida por useInView (once: false) em vez de whileInView, com o
+// escalonamento calculado por linha, e os valores de cada linha são conduzidos por animate() num
+// efeito, cancelado a cada mudança; a árvore é a mesma com e sem movimento reduzido; com
+// movimento reduzido as linhas nascem no estado final, e se a preferência liga no meio de uma
+// entrada elas vão direto ao estado final, sem terminar a animação.
+import { useEffect, useRef } from 'react'
+import { animate, motion, useInView, useMotionValue } from 'motion/react'
 import { usePrefereMovimentoReduzido } from '../../movimento/reduzido.ts'
 import type { RegistroMovimento } from '../../movimento/catalogo.ts'
 import { cn } from './cn.ts'
 
-const elementos = {
-  h1: motion.h1,
-  h2: motion.h2,
-  h3: motion.h3,
-  p: motion.p,
-  div: motion.div,
-} as const
-
 interface Props {
   /** O texto; cada `\n` começa uma linha nova. */
   children: string
-  as?: keyof typeof elementos
+  as?: 'h1' | 'h2' | 'h3' | 'p' | 'div'
   className?: string
   classeLinha?: string
   /** Quanto cada linha sobe, em px, ao entrar. */
@@ -31,6 +28,42 @@ interface Props {
   /** Intervalo entre uma linha e a seguinte. */
   escalonamentoMs: number
   atrasoMs?: number
+}
+
+interface PropsDaLinha {
+  texto: string
+  className?: string
+  visivel: boolean
+  reduzido: boolean
+  deslocamentoPx: number
+  duracaoMs: number
+  curva: RegistroMovimento['curva']
+  atrasoMs: number
+}
+
+function Linha({ texto, className, visivel, reduzido, deslocamentoPx, duracaoMs, curva, atrasoMs }: PropsDaLinha) {
+  const opacity = useMotionValue(reduzido ? 1 : 0)
+  const y = useMotionValue(reduzido ? 0 : deslocamentoPx)
+
+  useEffect(() => {
+    const alvoOpacity = visivel ? 1 : 0
+    const alvoY = visivel ? 0 : deslocamentoPx
+    if (reduzido) {
+      // Salto: encerra qualquer animação em curso e põe a linha no estado final de uma vez.
+      opacity.jump(alvoOpacity)
+      y.jump(alvoY)
+      return
+    }
+    const transicao = { duration: duracaoMs / 1000, ease: curva, delay: visivel ? atrasoMs / 1000 : 0 }
+    const animacoes = [animate(opacity, alvoOpacity, transicao), animate(y, alvoY, transicao)]
+    return () => animacoes.forEach((animacao) => animacao.stop())
+  }, [reduzido, visivel, deslocamentoPx, duracaoMs, curva, atrasoMs, opacity, y])
+
+  return (
+    <motion.span aria-hidden="true" className={className} style={{ opacity, y }}>
+      {texto}
+    </motion.span>
+  )
 }
 
 export function TextoAnimado({
@@ -45,48 +78,31 @@ export function TextoAnimado({
   atrasoMs = 0,
 }: Props) {
   const reduzido = usePrefereMovimentoReduzido()
+  const ref = useRef<HTMLDivElement>(null)
+  // Sempre observa, também no reduzido, para a volta ao normal saber se o texto já está na tela.
+  const dentro = useInView(ref, { once: false })
+  const visivel = reduzido || dentro
+  const Tag = as
+
   const linhas = children.split('\n')
-  // O texto inteiro, lido pelo leitor de tela uma vez só; as linhas visíveis ficam escondidas dele.
-  const inteiro = <span className="sr-only">{linhas.join(' ')}</span>
-
-  if (reduzido) {
-    const Comum = as
-    return (
-      <Comum className={className}>
-        {inteiro}
-        {linhas.map((linha, i) => (
-          <span key={i} aria-hidden="true" className={cn('block', classeLinha)}>
-            {linha}
-          </span>
-        ))}
-      </Comum>
-    )
-  }
-
-  const Animado = elementos[as]
-  const variantesDoTexto: Variants = {
-    oculto: {},
-    visivel: { transition: { delayChildren: atrasoMs / 1000, staggerChildren: escalonamentoMs / 1000 } },
-  }
-  const variantesDaLinha: Variants = {
-    oculto: { opacity: 0, y: deslocamentoPx },
-    visivel: { opacity: 1, y: 0, transition: { duration: duracaoMs / 1000, ease: curva } },
-  }
 
   return (
-    <Animado
-      className={className}
-      variants={variantesDoTexto}
-      initial="oculto"
-      whileInView="visivel"
-      viewport={{ once: false }}
-    >
-      {inteiro}
+    <Tag ref={ref as never} className={className}>
+      {/* O texto inteiro, lido pelo leitor de tela uma vez só; as linhas visíveis ficam escondidas dele. */}
+      <span className="sr-only">{linhas.join(' ')}</span>
       {linhas.map((linha, i) => (
-        <motion.span key={i} className={cn('block', classeLinha)} variants={variantesDaLinha} aria-hidden="true">
-          {linha}
-        </motion.span>
+        <Linha
+          key={i}
+          texto={linha}
+          className={cn('block', classeLinha)}
+          visivel={visivel}
+          reduzido={reduzido}
+          deslocamentoPx={deslocamentoPx}
+          duracaoMs={duracaoMs}
+          curva={curva}
+          atrasoMs={atrasoMs + i * escalonamentoMs}
+        />
       ))}
-    </Animado>
+    </Tag>
   )
 }
