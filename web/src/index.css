@@ -901,7 +901,9 @@
      com 11,05 px efetivos; o celular tem cerca de 309 px, com cerca de 17 px de folga de cada
      lado da seção. A altura é escolhida para o recorte da janela cair entre duas linhas de texto,
      nunca dentro de uma (medido no navegador, no estado fixo da vitrine): mudar o conteúdo da
-     vitrine pede medir de novo. */
+     vitrine pede medir de novo. A conta vale para 390 px a 100% e para 768 px a 200%, que caem no
+     mesmo degrau (dentro de @container o rem é o da fonte do contêiner), e o recorte tem folga de
+     menos de 1 px nos dois (medido no navegador). */
   .aparelho-celular {
     --escala-celular: 0.8;
     position: relative;
@@ -921,14 +923,14 @@
      efetivos. Abaixo de 20 rem (fonte e zoom em 200%) fica a base de 0,8, como estava. A moldura é
      mais fina e a caixa menor para o celular caber na seção com 16 px de folga de cada lado (22,7
      rem × 0,85 = 309 px) e a tela ter 353 px, mais que os 352 px (22 rem) em que a barra cai numa
-     coluna. A janela visível tem 31,55 rem × 0,85 = 429 px, no máximo 460 px. */
+     coluna. A janela visível tem 31,6 rem × 0,85 = 430 px, no máximo 460 px. */
   @container pagina (min-width: 20rem) and (max-width: 24.99rem) {
     .aparelho-celular {
       --escala-celular: 0.85;
       width: 22.7rem;
-      height: 31.55rem;
+      height: 31.6rem;
       margin-right: calc(22.7rem * (var(--escala-celular) - 1));
-      margin-bottom: calc(31.55rem * (var(--escala-celular) - 1));
+      margin-bottom: calc(31.6rem * (var(--escala-celular) - 1));
       padding: 0.1875rem;
     }
   }

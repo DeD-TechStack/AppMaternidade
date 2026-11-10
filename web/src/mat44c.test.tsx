@@ -883,6 +883,15 @@ describe('MAT-44c-1 rodada 7 #1 e #2: o celular é uma janela de altura fixa, co
       expect(emRem(props['width']) * 16 * 0.85, `${pagina}rem`).toBeLessThanOrEqual(311)
       expect(emRem(props['height']) * 16 * 0.85, `${pagina}rem`).toBeLessThanOrEqual(460)
     }
+    // Um só degrau cobre 390 px a 100% e 768 px a 200% (dentro de @container o rem é o da fonte do contêiner, então
+    // os dois caem em cerca de 22 rem): a mesma altura, 31,6rem, com a margem de baixo lendo a mesma altura.
+    for (const pagina of [20.4, 22, 22.375, 24, 24.9]) {
+      expect(celularEm(pagina)['height'], `${pagina}rem`).toBe('31.6rem')
+    }
+    const faixa = doCelular('.aparelho-celular', '@container pagina (min-width: 20rem) and (max-width: 24.99rem)')
+    expect(faixa.props['margin-bottom']).toBe('calc(31.6rem * (var(--escala-celular) - 1))')
+    // Não há sub-degrau por largura dentro da faixa de 20 a 24,99rem.
+    expect(regras.filter((r) => r.seletor === '.aparelho-celular' && /min-width: 23rem/.test(r.condicao ?? ''))).toEqual([])
     // Das outras faixas nada muda: 0,95 de 25rem e 1 de 30rem, com a moldura da base.
     expect(parseFloat(celularEm(26)['--escala-celular'])).toBe(0.95)
     expect(parseFloat(celularEm(46)['--escala-celular'])).toBe(1)
