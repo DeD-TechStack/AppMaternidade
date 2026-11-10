@@ -1795,6 +1795,12 @@
     color: var(--cor-fundo);
   }
 
+  /* O botão "Modo madrugada" tem dois rótulos de texto: o longo (de 768 para cima) e o curto
+     (abaixo de 768, no bloco @media mais adiante). Fora dessa largura só o longo aparece. */
+  .sb-cab-rotulo-curto {
+    display: none;
+  }
+
   /* Ligado (o botão "Modo madrugada" com aria-pressed): o botão inteiro se enche de destaque, com o
      texto sobre-destaque, e a moldura dupla se inverte (a linha de dentro passa a ser da cor do
      texto). Distingue-se do desligado pelo fundo cheio e pela moldura, e não só pela cor. */
@@ -1848,8 +1854,13 @@
       border-color: transparent;
     }
 
-    .sb-cab-prefixo {
+    /* O rótulo longo não cabe: abaixo de 768 aparece o curto, "Madrugada". */
+    .sb-cab-rotulo-longo {
       display: none;
+    }
+
+    .sb-cab-rotulo-curto {
+      display: inline;
     }
 
     .sb-cab-acao .sb-moldura-miolo {

@@ -7,10 +7,9 @@ import {
   DESTINO_ENTRAR,
   ITENS_DO_CABECALHO,
   NOME_SITE,
-  NUCLEO_MADRUGADA,
-  PREFIXO_MADRUGADA,
   ROTULO_ENTRAR,
   ROTULO_MADRUGADA,
+  ROTULO_MADRUGADA_CURTO,
   ROTULO_MENU,
   ROTULO_NAVEGACAO,
   type Contexto,
@@ -78,9 +77,9 @@ export function Cabecalho({ contexto, madrugada, aoAlternarMadrugada }: Props) {
             data-cabecalho-acao=""
             data-ligado={madrugada ? '' : undefined}
           >
-            <span>
-              <span className="sb-cab-prefixo">{PREFIXO_MADRUGADA}</span>
-              {NUCLEO_MADRUGADA}
+            <span className="sb-cab-rotulo-longo">{ROTULO_MADRUGADA}</span>
+            <span className="sb-cab-rotulo-curto" aria-hidden="true">
+              {ROTULO_MADRUGADA_CURTO}
             </span>
           </Botao>
         ) : (

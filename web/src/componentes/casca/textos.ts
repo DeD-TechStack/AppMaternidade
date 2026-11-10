@@ -10,11 +10,12 @@ export const AVISO_PROTOTIPO = RODAPE
 
 export const ROTULO_EM_BREVE = '+ Em breve'
 export const ETIQUETA_EM_BREVE = 'Em breve'
-// O nome do botão é "Modo madrugada"; abaixo de 768 o prefixo some da vista e fica "madrugada"
-// (o nome acessível continua inteiro).
-export const PREFIXO_MADRUGADA = 'Modo '
-export const NUCLEO_MADRUGADA = 'madrugada'
-export const ROTULO_MADRUGADA = `${PREFIXO_MADRUGADA}${NUCLEO_MADRUGADA}`
+// O nome do botão é "Modo madrugada" (o `aria-label`, em toda largura). De 768 para cima o texto
+// visível é o rótulo longo; abaixo de 768 não cabe e a vista mostra o curto, "Madrugada", com M
+// maiúsculo. Os dois são texto de verdade no botão (o CSS só escolhe qual aparece), e não um
+// `text-transform`, que o sistema-base proíbe em todo o CSS novo.
+export const ROTULO_MADRUGADA = 'Modo madrugada'
+export const ROTULO_MADRUGADA_CURTO = 'Madrugada'
 export const ROTULO_ENTRAR = 'Entrar'
 export const ROTULO_MENU = 'Menu'
 export const ROTULO_NAVEGACAO = 'Site'
