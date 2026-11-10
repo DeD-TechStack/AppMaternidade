@@ -36,6 +36,9 @@ const botao = (nome: string) => screen.getByRole('button', { name: nome })
 const status = () => screen.getByRole('status')
 const caminhoDe = (roteador: { state: { location: { pathname: string } } }) => roteador.state.location.pathname
 const novaMemoria = () => criarDadosContaMemoria(criarFixtureDeTeste(Date.now()))
+// A casca do site (cabeçalho e rodapé) também traz "Entrar", "Início" e "Conta": as ligações da tela
+// são as do `main`.
+const noMain = () => within(screen.getByRole('main'))
 
 function pendente<T>() {
   let liberar!: (valor: T) => void
@@ -136,25 +139,25 @@ describe('o destino depois de entrar (RF-10)', () => {
     const volta = '?volta=%2Fapp%2Fhoje'
     const { roteador, unmount } = renderizarComDados(`/entrar${volta}`)
     await screen.findByRole('button', { name: 'Entrar' })
-    expect(screen.getByRole('link', { name: 'Criar conta' }).getAttribute('href')).toBe(`/criar-conta${volta}`)
-    expect(screen.getByRole('link', { name: 'Esqueci a senha' }).getAttribute('href')).toBe(`/recuperar-acesso${volta}`)
+    expect(noMain().getByRole('link', { name: 'Criar conta' }).getAttribute('href')).toBe(`/criar-conta${volta}`)
+    expect(noMain().getByRole('link', { name: 'Esqueci a senha' }).getAttribute('href')).toBe(`/recuperar-acesso${volta}`)
     unmount()
 
     const criar = renderizarComDados(`/criar-conta${volta}`)
     await screen.findByRole('button', { name: 'Criar conta' })
-    expect(screen.getByRole('link', { name: 'Entrar' }).getAttribute('href')).toBe(`/entrar${volta}`)
+    expect(noMain().getByRole('link', { name: 'Entrar' }).getAttribute('href')).toBe(`/entrar${volta}`)
     criar.unmount()
 
     renderizarComDados(`/recuperar-acesso${volta}`)
-    expect(screen.getByRole('link', { name: 'Entrar' }).getAttribute('href')).toBe(`/entrar${volta}`)
-    expect(screen.getByRole('link', { name: 'Criar conta' }).getAttribute('href')).toBe(`/criar-conta${volta}`)
+    expect(noMain().getByRole('link', { name: 'Entrar' }).getAttribute('href')).toBe(`/entrar${volta}`)
+    expect(noMain().getByRole('link', { name: 'Criar conta' }).getAttribute('href')).toBe(`/criar-conta${volta}`)
     expect(roteador).toBeTruthy()
   })
 
   it('um volta inválido não vai para os links', async () => {
     renderizarComDados('/entrar?volta=%2Fentrar')
     await screen.findByRole('button', { name: 'Entrar' })
-    expect(screen.getByRole('link', { name: 'Criar conta' }).getAttribute('href')).toBe('/criar-conta')
+    expect(noMain().getByRole('link', { name: 'Criar conta' }).getAttribute('href')).toBe('/criar-conta')
   })
 })
 
@@ -308,9 +311,10 @@ describe('/entrar', () => {
     await screen.findByRole('button', { name: 'Entrar' })
 
     for (const nome of ['Criar conta', 'Esqueci a senha']) {
-      expect(screen.getByRole('link', { name: nome }).classList.contains('alvo-toque')).toBe(true)
+      expect(noMain().getByRole('link', { name: nome }).classList.contains('alvo-toque')).toBe(true)
     }
-    expect(screen.getByRole('link', { name: 'Esqueci a senha' }).getAttribute('href')).toBe('/recuperar-acesso')
+    expect(noMain().getByRole('link', { name: 'Esqueci a senha' }).getAttribute('href')).toBe('/recuperar-acesso')
+    // O nome do site é o do cabeçalho do site (a marca própria da tela saiu).
     expect(screen.getByRole('link', { name: 'AppMaternidade' }).getAttribute('href')).toBe('/')
   })
 })
@@ -716,8 +720,8 @@ describe('/conta-excluida', () => {
     const chamada = vi.spyOn(dados, 'minhaConta')
 
     expect(await screen.findByText('Sua conta foi excluída.')).toBeTruthy()
-    expect(screen.getByRole('link', { name: 'Início' }).getAttribute('href')).toBe('/')
-    expect(screen.getByRole('link', { name: 'Criar conta' }).getAttribute('href')).toBe('/criar-conta')
+    expect(noMain().getByRole('link', { name: 'Início' }).getAttribute('href')).toBe('/')
+    expect(noMain().getByRole('link', { name: 'Criar conta' }).getAttribute('href')).toBe('/criar-conta')
     expect(chamada).not.toHaveBeenCalled()
   })
 })

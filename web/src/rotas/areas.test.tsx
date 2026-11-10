@@ -86,14 +86,17 @@ describe('rotasDasAreas: o registro por área', () => {
     expect(tituloDaAba(TITULOS.conta)).toBe('Conta | AppMaternidade')
   })
 
-  it('em rotas.tsx, entra como filho direto do Layout, depois de app/sessao e antes da rota *', () => {
+  it('em rotas.tsx, entra como filho direto do Layout, depois de app/sessao (e de sistema) e antes da rota *', () => {
     const [layout] = criarRotas()
     const filhos = layout.children!
     const indiceDaSessao = filhos.findIndex((rota) => rota.path === 'app/sessao')
+    const indiceDasAreas = filhos.indexOf(rotasDasAreas[0])
 
-    expect(filhos.map(caminhoDe)).toEqual([undefined, 'app/hoje', 'app/sessao', undefined, '*'])
+    // `sistema` (a página de amostra do sistema-base) vem entre `app/sessao` e as áreas.
+    expect(filhos.map(caminhoDe)).toEqual([undefined, 'app/hoje', 'app/sessao', 'sistema', undefined, '*'])
     expect(filhos[0].index).toBe(true)
-    expect(filhos[indiceDaSessao + 1]).toBe(rotasDasAreas[0])
+    expect(indiceDasAreas).toBeGreaterThan(indiceDaSessao)
+    expect(filhos.slice(indiceDaSessao + 1, indiceDasAreas).map(caminhoDe)).toEqual(['sistema'])
     expect(filhos[filhos.length - 1].path).toBe('*')
   })
 })

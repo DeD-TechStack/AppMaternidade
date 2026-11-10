@@ -37,6 +37,8 @@ const CLASSE_DE_ALVO = /(^|\s)(alvo-toque|botao|nav-item)(\s|$)/
 /** Links e controles fora de parágrafo sem a classe que garante 44 × 44 px (como em layout.test.tsx). */
 function semAlvoDe44(container: HTMLElement): string[] {
   return [...container.querySelectorAll<HTMLElement>('a, button, input, select, textarea')]
+    // O alvo do cabeçalho e do rodapé do site vem de --alvo-toque (estilo.test.ts) e é medido em G11.
+    .filter((elemento) => elemento.closest('[data-cabecalho], [data-rodape]') === null)
     .filter((elemento) => elemento.closest('p, [inert]') === null)
     .filter((elemento) => !CLASSE_DE_ALVO.test(elemento.className))
     .map((elemento) => elemento.outerHTML.slice(0, 160))
@@ -266,7 +268,8 @@ describe('foco e rolagem ao trocar de tela', () => {
     expect(criar.getAttribute('tabindex')).toBe('-1')
     expect(rolarAoTopo).toHaveBeenCalledWith(0, 0)
 
-    fireEvent.click(screen.getByRole('link', { name: 'Entrar' }))
+    // Em /criar-conta o cabeçalho do site também tem "Entrar": o link da tela é o do `main`.
+    fireEvent.click(within(screen.getByRole('main')).getByRole('link', { name: 'Entrar' }))
     const entrar = await screen.findByRole('heading', { level: 1, name: 'Entrar' })
     await waitFor(() => expect(document.activeElement).toBe(entrar))
   })
