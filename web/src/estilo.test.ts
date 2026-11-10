@@ -166,8 +166,6 @@ describe('limites do CSS', () => {
     ['blur(', /blur\(/],
     ['classe blur-', /(^|[^\w])blur-/],
     ['classe shadow- (exceto shadow-none)', /(^|[^\w-])shadow-(?!none)/],
-    ['<img', /<img/],
-    ['imagem raster', /\.(png|jpe?g|webp)\b/],
     ['paralaxe ou rolagem ligada à animação', /animation-timeline|scroll-timeline|background-attachment\s*:\s*fixed|scroll-snap/],
     ['rolagem suave sequestrada', /scroll-behavior\s*:\s*smooth/],
   ]
@@ -177,6 +175,34 @@ describe('limites do CSS', () => {
       expect(achados).toEqual([])
     })
   }
+
+  // MAT-44d-5: as capturas das nossas telas entram nos aparelhos e nos recortes do Início. A imagem
+  // só existe onde a mídia é montada (componentes/midia/ e o Aparelho), e só como captura de telas/.
+  const daMidia = (nome: string) => nome.startsWith('componentes/midia/') || nome === 'componentes/Aparelho.tsx'
+
+  it('nenhum arquivo de web/src fora de componentes/midia/ e de Aparelho.tsx usa <img nem imagem raster', () => {
+    const achados = fontes
+      .filter((f) => !daMidia(f.nome))
+      .filter((f) => /<img/.test(f.texto) || /\.(png|jpe?g|webp)\b/.test(f.texto))
+      .map((f) => f.nome)
+    expect(achados).toEqual([])
+  })
+
+  it('dentro deles, todo <img tem alt="" e a única referência a arquivo raster é a lista de capturas de telas/', () => {
+    const dentro = fontes.filter((f) => daMidia(f.nome))
+    expect(dentro.length).toBeGreaterThan(0)
+    for (const { nome, texto } of dentro) {
+      for (const [tag] of texto.matchAll(/<img\b[^>]*>/g)) expect(tag, nome).toMatch(/\balt=""/)
+      const raster = [...texto.matchAll(/[\w./-]+\.(?:png|jpe?g|webp)\b/g)].map((m) => m[0])
+      if (nome !== 'componentes/midia/capturas.ts') expect(raster, nome).toEqual([])
+    }
+    const capturas = dentro.find((f) => f.nome === 'componentes/midia/capturas.ts')!.texto
+    expect(capturas).toContain("`${import.meta.env.BASE_URL}telas/${CAPTURAS[chave].arquivo}`")
+    const nomes = [...capturas.matchAll(/arquivo:\s*'([^']+)'/g)].map((m) => m[1])
+    expect(nomes).toHaveLength(8)
+    for (const nome of nomes) expect(nome, nome).toMatch(/^(hoje|sessao)-(claro|madrugada)-(1440|390)\.png$/)
+    expect(/\.(jpe?g|webp)\b/.test(capturas)).toBe(false)
+  })
 
   it('box-shadow só existe com desfoque de até 4 px', () => {
     for (const { nome, texto } of arquivosCss) {
