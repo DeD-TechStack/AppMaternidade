@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, type FormEvent, type ReactNode, type RefObject } from 'react'
 import { COMUM, CONTA } from '../../conteudo/conta.ts'
-import { CampoSenha } from './Campos.tsx'
-import { BOTAO_PRINCIPAL, BOTAO_SECUNDARIO } from './Partes.tsx'
+import { Botao } from '../base/Botao.tsx'
+import { CampoAcesso } from './CampoAcesso.tsx'
 
 interface Props {
   senha: string
@@ -12,15 +12,16 @@ interface Props {
   enviando: boolean
   aoConfirmar: (evento: FormEvent<HTMLFormElement>) => void
   aoCancelar: () => void
-  /** O botão que abriu a caixa: o foco volta a ele quando ela fecha. */
+  /** Uma caixa que contém o botão que abriu esta: o foco volta ao botão dela quando esta fecha. */
   retorno: RefObject<HTMLElement | null>
   /** O campo de senha: tem o foco ao abrir, e a tela o foca de novo quando a senha é o erro. */
   refSenha: RefObject<HTMLInputElement | null>
 }
 
-// A caixa de diálogo de "Excluir minha conta": o elemento `<dialog>` aberto como modal, com
-// título, foco inicial no primeiro controle (a senha), `Esc` fechando e o foco voltando ao botão
-// que abriu. Só existe no DOM enquanto está aberta.
+// A caixa de diálogo de "Excluir minha conta": o elemento `<dialog>` aberto como modal, no quadro de
+// moldura dupla do sistema, com título, foco inicial no primeiro controle (a senha), `Esc` fechando e
+// o foco voltando ao botão que abriu. Só existe no DOM enquanto está aberta. Sem borda tracejada,
+// sombra nem caixa alta.
 export function DialogoExcluirConta({
   senha,
   aoMudarSenha,
@@ -63,7 +64,7 @@ export function DialogoExcluirConta({
     }
     elemento.addEventListener('cancel', pedirParaFechar)
     elemento.addEventListener('keydown', aoTeclar)
-    const voltarPara = retorno.current
+    const voltarPara = retorno.current?.querySelector<HTMLElement>('button') ?? null
     return () => {
       elemento.removeEventListener('cancel', pedirParaFechar)
       elemento.removeEventListener('keydown', aoTeclar)
@@ -73,35 +74,34 @@ export function DialogoExcluirConta({
   }, [retorno, refSenha])
 
   return (
-    <dialog
-      ref={dialogo}
-      aria-labelledby={tituloId}
-      aria-modal="true"
-      className="m-auto w-[min(32rem,calc(100%_-_2rem))] rounded-[8px] border bg-[var(--cor-fundo)] p-6 text-[var(--cor-texto)] backdrop:bg-[var(--cor-texto)]/40"
-    >
-      <form onSubmit={aoConfirmar} noValidate className="flex flex-col gap-4">
-        <h2 id={tituloId} className="titulo-linha">
-          {CONTA.excluir.dialogo.titulo}
-        </h2>
-        <p>{CONTA.excluir.dialogo.texto}</p>
-        {resumo}
-        <CampoSenha
-          rotulo={CONTA.excluir.dialogo.senha}
-          autoComplete="current-password"
-          valor={senha}
-          aoMudar={aoMudarSenha}
-          erro={erroSenha}
-          refEntrada={refSenha}
-        />
-        <div className="flex flex-col gap-3 min-[30rem]:flex-row-reverse">
-          <button type="submit" disabled={enviando} className={BOTAO_PRINCIPAL}>
-            {enviando ? COMUM.excluindo : CONTA.excluir.dialogo.confirmar}
-          </button>
-          <button type="button" disabled={enviando} className={`${BOTAO_SECUNDARIO} min-[30rem]:w-full`} onClick={aoCancelar}>
-            {CONTA.excluir.dialogo.cancelar}
-          </button>
-        </div>
-      </form>
+    <dialog ref={dialogo} aria-labelledby={tituloId} aria-modal="true" className="sb-quadro conta-dialogo">
+      <div className="sb-quadro-miolo conta-dialogo-miolo">
+        <form onSubmit={aoConfirmar} noValidate className="conta-dialogo-form">
+          <h2 id={tituloId} className="t-subtitulo">
+            {CONTA.excluir.dialogo.titulo}
+          </h2>
+          <p className="t-corpo">{CONTA.excluir.dialogo.texto}</p>
+          {resumo}
+          <CampoAcesso
+            rotulo={CONTA.excluir.dialogo.senha}
+            tipo="password"
+            mostrarSenha
+            autoComplete="current-password"
+            valor={senha}
+            aoMudar={aoMudarSenha}
+            erro={erroSenha}
+            refEntrada={refSenha}
+          />
+          <div className="conta-dialogo-acoes">
+            <Botao variante="moldura" alto className="alvo-toque" desativado={enviando} onClick={aoCancelar}>
+              {CONTA.excluir.dialogo.cancelar}
+            </Botao>
+            <Botao type="submit" className="alvo-toque" desativado={enviando}>
+              {enviando ? COMUM.excluindo : CONTA.excluir.dialogo.confirmar}
+            </Botao>
+          </div>
+        </form>
+      </div>
     </dialog>
   )
 }

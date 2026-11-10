@@ -1,36 +1,37 @@
 import { describe, expect, it } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import { Campo, SeletorFuso } from './Campos.tsx'
+import { CampoAcesso } from './CampoAcesso.tsx'
+import { SeletorFusoAcesso } from './SeletorFusoAcesso.tsx'
 
-// O fundo preenchido de "só leitura" é do campo de texto `readonly` (o e-mail). O `:read-only` do
-// CSS casa também com todo `<select>`, então o seletor de fuso não pode levar essa marca.
+// "Só leitura" é do campo de texto do e-mail. O seletor de fuso é editável: não leva `readonly`. Os
+// dois ficam na linha de campo do sistema (a mesma classe, o mesmo fio e a mesma fonte).
 
 const semEfeito = () => undefined
 
 describe('a marca de só leitura nos campos', () => {
-  it('o campo de texto só leitura leva o atributo readonly e a classe read-only:', () => {
-    render(<Campo rotulo="E-mail" valor="a@exemplo.invalid" aoMudar={semEfeito} somenteLeitura />)
+  it('o campo de texto só leitura leva o atributo readonly', () => {
+    render(<CampoAcesso rotulo="E-mail" valor="a@exemplo.invalid" aoMudar={semEfeito} somenteLeitura />)
 
     const entrada = screen.getByLabelText('E-mail') as HTMLInputElement
     expect(entrada.readOnly).toBe(true)
-    expect(entrada.className).toMatch(/(^|\s)read-only:bg-/)
   })
 
-  it('o seletor de fuso não leva a marca de só leitura, mas leva o mesmo fundo e o mesmo hover do campo editável', () => {
+  it('o seletor de fuso não leva a marca de só leitura e tem a mesma linha e a mesma entrada do campo editável', () => {
     render(
       <>
-        <Campo rotulo="Seu nome" valor="Juliana" aoMudar={semEfeito} />
-        <SeletorFuso rotulo="Seu fuso" valor="America/Sao_Paulo" aoMudar={semEfeito} />
+        <CampoAcesso rotulo="Seu nome" valor="Juliana" aoMudar={semEfeito} />
+        <SeletorFusoAcesso rotulo="Seu fuso" valor="America/Sao_Paulo" aoMudar={semEfeito} />
       </>,
     )
 
     const seletor = screen.getByLabelText('Seu fuso') as HTMLSelectElement
     const nome = screen.getByLabelText('Seu nome') as HTMLInputElement
-    expect(seletor.className).not.toMatch(/read-only:/)
     expect(seletor.hasAttribute('readonly')).toBe(false)
-    for (const token of ['bg-[var(--cor-fundo)]', 'hover:bg-[var(--cor-papel-fundo)]', 'focus:bg-[var(--cor-fundo)]']) {
-      expect(seletor.classList.contains(token), token).toBe(true)
-      expect(nome.classList.contains(token), token).toBe(true)
+    expect(nome.readOnly).toBe(false)
+    for (const controle of [seletor, nome]) {
+      expect(controle.classList.contains('sb-campo-entrada')).toBe(true)
+      expect(controle.closest('.sb-campo')).not.toBeNull()
     }
+    expect(seletor.closest('.sb-campo-controle')!.hasAttribute('data-select')).toBe(true)
   })
 })

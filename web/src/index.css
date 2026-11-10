@@ -2575,3 +2575,240 @@
     }
   }
 }
+
+/* ---------------------------------------------------------------------------------------------
+   44d-3, passo 3: Começar e Conta. Só se acrescenta aqui.
+   ------------------------------------------------------------------------------------------ */
+@layer components {
+  /* Começar: abaixo de 768 a ajuda do campo sai da vista sem sair do DOM (o `aria-describedby` segue
+     lendo), para o botão terminar em y ≤ 660 (B-4). A frase dela está na linha "O que vem depois".
+     De 768 para cima ela fica dentro da linha de 112 px, como a base. */
+  @media (max-width: 767px) {
+    .conta-campos-compactos .sb-campo-ajuda {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+    }
+  }
+
+  /* As seções da Conta: o título em c2 e, a 96 px da seção de cima, o título da seguinte (A-4). As
+     linhas rótulo + texto trazem o próprio recuo de 32 (o rótulo e o texto), então o título só deixa
+     8 px até a primeira. */
+  .conta-secao + .conta-secao {
+    margin-top: 96px;
+  }
+
+  .conta-titulo {
+    margin: 0 0 8px;
+  }
+
+  .conta-excluir .conta-titulo {
+    color: var(--cor-destaque);
+  }
+
+  /* O formulário do Perfil vem direto sob o título (as outras seções têm o recuo de 32 do rótulo da
+     linha): 8 px a mais, para o título não encostar no primeiro rótulo abaixo de 768. */
+  .conta-secao > form {
+    margin-top: 8px;
+  }
+
+  /* A coluna do texto da linha leva mais que um parágrafo: 8 px entre eles e 16 até o botão. */
+  .conta-linha-texto.sb-linha-texto > * + * {
+    margin-top: 8px;
+  }
+
+  .conta-linha-texto.sb-linha-texto > .conta-acao {
+    margin-top: 16px;
+  }
+
+  /* O resumo de erro e a lista de famílias dentro da coluna do texto: a largura é a dela, não a de c2–c8. */
+  .conta-linha-texto .sb-resumo {
+    margin: 0;
+    width: auto;
+  }
+
+  .conta-familias {
+    margin: 8px 0 0;
+    padding: 0 0 0 24px;
+    list-style: disc;
+  }
+
+  /* A coluna do texto vai até o fim de c8 (o texto, não: ele segue em até 560 px), para o motivo do
+     botão desativado caber AO LADO dele. O botão não encolhe; o motivo quebra em linhas. Abaixo de 768
+     não há largura para os dois lado a lado: o motivo desce para baixo do botão. */
+  .conta-linha-texto.sb-linha-texto {
+    max-width: none;
+  }
+
+  .conta-linha-texto.sb-linha-texto > :not(.conta-acao) {
+    max-width: 560px;
+  }
+
+  .conta-linha-texto .sb-botao-grupo {
+    flex-wrap: nowrap;
+  }
+
+  .conta-linha-texto .sb-botao-grupo > :first-child {
+    flex: none;
+  }
+
+  .conta-linha-texto .sb-botao-grupo > :last-child {
+    min-width: 0;
+  }
+
+  @media (max-width: 767px) {
+    .conta-linha-texto .sb-botao-grupo {
+      flex-wrap: wrap;
+      row-gap: 8px;
+    }
+  }
+
+  /* Excluir conta: o botão de moldura dupla em urucum (o título é urucum acima). */
+  .conta-excluir .sb-moldura:not([aria-disabled='true']) {
+    border: 1px solid var(--cor-destaque);
+    color: var(--cor-destaque);
+  }
+
+  .conta-excluir .sb-moldura:not([aria-disabled='true']) .sb-moldura-miolo {
+    border: 1px solid var(--cor-destaque);
+  }
+
+  /* Desativado (2.9): fundo sólido e apagado, nunca tracejado; o motivo vem ao lado. Vale também para
+     o botão de moldura dupla: a moldura continua, com o miolo na cor do texto apagado. */
+  .sb-moldura[aria-disabled='true'],
+  .sb-moldura[aria-disabled='true']:hover {
+    border: 1px solid var(--cor-desativado-fundo);
+    background-color: var(--cor-desativado-fundo);
+    color: var(--cor-desativado-texto);
+    cursor: not-allowed;
+  }
+
+  .sb-moldura[aria-disabled='true'] .sb-moldura-miolo,
+  .sb-moldura[aria-disabled='true']:hover .sb-moldura-miolo {
+    border: 1px solid var(--cor-desativado-texto);
+    background-color: transparent;
+    color: var(--cor-desativado-texto);
+  }
+
+  /* O índice da Conta. Os links vão em linha, com quebra, antes do fio (abaixo de 768). */
+  .conta-indice-lista > li > a[aria-current='location'] {
+    font-weight: 600;
+    text-decoration-thickness: 2px;
+  }
+
+  /* Em linha o item tem a altura do alvo claro (44) nos dois temas: na madrugada o alvo é de 56 e passa
+     6 px para cima e para baixo, então a abertura tem o mesmo retângulo nos dois temas (M-1). */
+  @media (max-width: 767px) {
+    .conta-indice-lista {
+      flex-direction: row;
+      flex-wrap: wrap;
+      column-gap: 24px;
+    }
+
+    .conta-indice-lista > li {
+      height: 44px;
+      min-height: 0;
+    }
+  }
+
+  /* De 768 para cima o índice acompanha a rolagem (`position: sticky`, logo abaixo do cabeçalho de 64
+     px). O sticky só anda dentro do `main` se a caixa dele for do tamanho da lista: o `nav` tem a
+     altura do recuo de cima (a do `h1`) mais as 6 âncoras de 32, e uma margem de baixo negativa de
+     tanto puxa o resto da página, então ele não ocupa espaço. A caixa de 64 sobe sob o cabeçalho; a
+     lista fica 64 abaixo dela, na altura do `h1`, e prende em 72. O `nav` não pega clique: só a lista. */
+  @media (min-width: 768px) {
+    .conta-indice-ao-lado {
+      position: sticky;
+      top: calc(var(--e-cabecalho) + 8px - var(--e-cab-h1));
+      height: calc(var(--e-cab-h1) + 192px);
+      margin-bottom: calc(-1 * (var(--e-cab-h1) + 192px));
+      pointer-events: none;
+    }
+
+    .conta-indice-ao-lado > .conta-indice-lista {
+      margin: var(--e-cab-h1) 0 0 80%;
+      pointer-events: auto;
+    }
+
+    /* Cada âncora ocupa 32 px de passo (A-2) e tem o alvo de toque inteiro (G11): a caixa de 44 (56 na
+       madrugada) passa dos 32 e se sobrepõe à do vizinho; o link de baixo vence na faixa comum. */
+    .conta-indice-lista > li {
+      height: 32px;
+      min-height: 0;
+    }
+  }
+
+  /* A caixa de confirmação da exclusão: o quadro de moldura dupla da base, centrada, com o campo de
+     senha na versão estreita (rótulo em cima, campo de 64 px), que não depende da largura da janela. */
+  .conta-dialogo {
+    width: min(32rem, calc(100% - 32px));
+    margin: auto;
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto);
+  }
+
+  .conta-dialogo::backdrop {
+    background-color: color-mix(in srgb, var(--cor-texto) 40%, transparent);
+  }
+
+  .conta-dialogo-miolo {
+    padding: 24px;
+  }
+
+  .conta-dialogo-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .conta-dialogo-form h2 {
+    margin: 0;
+  }
+
+  .conta-dialogo-form p {
+    margin: 0;
+  }
+
+  .conta-dialogo-acoes {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .conta-dialogo .grade-10 {
+    display: block;
+  }
+
+  .conta-dialogo .sb-campo {
+    display: block;
+    min-height: 0;
+    border-bottom: 0;
+  }
+
+  .conta-dialogo .sb-campo::before {
+    display: none;
+  }
+
+  .conta-dialogo .sb-campo-rotulo {
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .conta-dialogo .sb-campo-controle {
+    height: 64px;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--cor-texto);
+    background-color: var(--cor-papel-fundo);
+  }
+
+  .conta-dialogo .sb-campo-erro {
+    margin: 8px 0 0;
+    padding: 0;
+  }
+}

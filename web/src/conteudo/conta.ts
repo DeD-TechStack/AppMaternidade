@@ -3,7 +3,7 @@ import type { ErroDados } from '../dados/comum.ts'
 // Todos os textos de interface da área de conta (MAT-37a). Já passaram pela revisão de texto
 // (`.oc/textos_MAT-37a.md`): não reescrever. Nenhum arquivo de `paginas/` declara frase em literal.
 
-export const MARCA = 'AppMaternidade'
+const MARCA = 'AppMaternidade'
 
 // O contato provisório da demonstração (decisão de Daniel, 06/11/2026): o e-mail do autor dos
 // commits do repositório. É o único lugar do código em que ele aparece.
@@ -47,13 +47,6 @@ export const COMUM = {
   rotuloSenha: 'Senha',
   rotuloNome: 'Seu nome',
   ajudaNome: 'É o nome que a família vai ver.',
-} as const
-
-export const CABECALHO = {
-  navegacao: 'Conta',
-  conta: 'Conta',
-  prototipo: 'Ver o protótipo do Hoje',
-  sair: 'Sair',
 } as const
 
 /** A etiqueta da abertura das telas de acesso (MAT-44d-3): o aviso curto de protótipo. */
@@ -152,23 +145,35 @@ export const CONTA_EXCLUIDA = {
 } as const
 
 export const COMECAR = {
-  titulo: 'Seu nome',
-  frase: 'Falta pouco. Diga o seu nome e o fuso em que você está.',
+  /** A linha sob o `h1`: uma linha também em 390 (o botão termina em y ≤ 660, B-4). */
+  frase: 'Diga o seu nome e o fuso.',
+  /** A etiqueta da coluna lateral da abertura (B-1). */
+  passo: 'Passo 1 de 2',
   fuso: 'Fuso',
   ajudaFuso: 'Os horários aparecem neste fuso.',
   botao: 'Salvar',
   /** A opção do fuso guardado que não está na lista. */
   fusoAtual: (fuso: string) => `${fuso} (atual)`,
+  explicacao: {
+    tema: 'O que vem depois',
+    linhas: [
+      { rotulo: 'Nome', texto: 'É o nome que a família vê nos registros que você faz.' },
+      { rotulo: 'Fuso', texto: 'Os horários aparecem no fuso que você escolher. Dá para mudar depois, na tela Conta.' },
+      { rotulo: 'Dados', texto: 'Na tela Conta, você baixa os seus dados em JSON e pode excluir a conta.' },
+    ],
+  } satisfies LinhasDoBloco,
 } as const
 
 export const CONTA = {
   indice: 'Nesta página',
+  /** As 6 âncoras do índice, na ordem das seções da tela. */
   secoes: {
     perfil: 'Perfil',
     id: 'Id da conta',
     dados: 'Seus dados',
-    excluir: 'Excluir conta',
     privacidade: 'Privacidade',
+    sair: 'Sair',
+    excluir: 'Excluir conta',
   },
   resumo: (nome: string, email: string) => `${nome} · ${email}`,
   perfil: {
@@ -181,11 +186,13 @@ export const CONTA = {
   },
   id: {
     titulo: 'Id da sua conta',
+    rotulo: 'Número',
     botao: 'Copiar id',
     frase: 'Quem cuida da moderação pode pedir este número para dar a você um papel na equipe.',
   },
   exportar: {
     titulo: 'Seus dados',
+    rotulo: 'Arquivo',
     frase:
       'Baixe um arquivo com os seus dados, em JSON. Quem é responsável recebe a família inteira; os outros papéis recebem os próprios dados.',
     botao: 'Baixar meus dados',
@@ -193,11 +200,17 @@ export const CONTA = {
   },
   excluir: {
     titulo: 'Excluir conta',
+    rotulo: 'O que acontece',
     explicacao:
       'Ao excluir a conta, ela e os seus vínculos com famílias somem. Nos registros que você fez, o autor passa a aparecer como “pessoa removida”. Não dá para desfazer.',
-    impedimento:
-      'Você é a única pessoa responsável destas famílias. Antes de excluir a conta, torne outra pessoa responsável ou exclua a família:',
+    /** O motivo ao lado do botão desativado, e a explicação com a lista das famílias, acima dele. */
+    impedimento: {
+      motivo: 'Você é a única pessoa responsável destas famílias.',
+      explicacao: 'Antes de excluir a conta, torne outra pessoa responsável ou exclua a família:',
+    },
     lendo: 'Conferindo as suas famílias…',
+    /** O motivo ao lado do botão desativado quando a leitura das famílias falhou. */
+    naoConferiu: 'Não deu para conferir as suas famílias.',
     botao: 'Excluir minha conta',
     dialogo: {
       titulo: 'Excluir a sua conta?',
@@ -209,9 +222,16 @@ export const CONTA = {
   },
   privacidade: {
     titulo: 'Privacidade',
+    rotulo: 'Contato',
     contato: { antes: 'Dúvidas sobre seus dados: ', valor: CONTATO_PROVISORIO, depois: '.' },
     encarregado: { antes: 'Encarregado de dados: ', valor: 'Daniel Macedo', depois: '.' },
     politica: 'Política de privacidade',
+  },
+  /** A seção "Sair": o título, o rótulo da linha e a frase; o botão é o único "Sair" do site. */
+  saida: {
+    titulo: 'Sair',
+    rotulo: 'Saída',
+    frase: 'Ao sair, você volta para a tela Entrar.',
   },
   sair: 'Sair',
 } as const
