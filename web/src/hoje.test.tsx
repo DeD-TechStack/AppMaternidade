@@ -766,8 +766,9 @@ describe('Hoje: o CSS do bloco /* 44d-2 */ (lido como texto)', () => {
     // A linha acompanha o número (o `t-numero` tem 90 px de linha para 112 de fonte; 45 para 56), senão
     // sobra vazio estranho entre o número e a legenda.
     expect(celular).toMatch(/line-height:\s*2\.8125rem/)
-    // De 768 para cima nada muda: nenhuma regra do bloco fora do celular mexe no tamanho desse número...
-    const foraDoCelular = semComentarios.replace(emMedia767(), '')
+    // De 768 para cima nada muda, a não ser a faixa de 1400 em diante (VOLTA2 D4, que fixa 112 e tem teste
+    // próprio): nenhuma outra regra do bloco fora do celular mexe no tamanho desse número...
+    const foraDoCelular = semComentarios.replace(emMedia767(), '').replace(emMediaMin(1400), '')
     expect(regraEm(foraDoCelular, '[data-ultimos] .sb-numeros-valor')).not.toMatch(/font-size/)
     // ... e o `t-numero` continua em 7rem (112 px).
     expect(css).toMatch(/\.t-numero\s*\{[^}]*font-size:\s*7rem/)
@@ -782,6 +783,86 @@ describe('Hoje: o CSS do bloco /* 44d-2 */ (lido como texto)', () => {
     for (const numero of numeros) expect(numero.classList.contains('sb-numeros-valor')).toBe(true)
     // O número do Em andamento não está em Últimos: a regra de 56 não o alcança.
     expect(ultimos(container).contains(andamento(container))).toBe(false)
+  })
+
+  // ---- Volta 2 (D1 a D4). A composição aprovada não muda: só a confirmação da Fralda em 768+ (D1), a fileira
+  // Desfazer/Fechar em 390 (D2) e o tamanho fixo dos números de Últimos de 1400 em diante (D4).
+
+  /** O texto de dentro de cada `@media (min-width: Npx)` do bloco, com as chaves balanceadas. */
+  function emMediaMin(largura: number): string {
+    const achados: string[] = []
+    const abertura = new RegExp(`@media\\s*\\(min-width:\\s*${largura}px\\)\\s*\\{`, 'g')
+    for (let m = abertura.exec(semComentarios); m; m = abertura.exec(semComentarios)) {
+      let nivel = 1
+      let i = abertura.lastIndex
+      while (i < semComentarios.length && nivel > 0) {
+        if (semComentarios[i] === '{') nivel += 1
+        else if (semComentarios[i] === '}') nivel -= 1
+        i += 1
+      }
+      achados.push(semComentarios.slice(abertura.lastIndex, i - 1))
+    }
+    return achados.join('\n')
+  }
+
+  it('D1 (768+): a confirmação da Fralda é uma linha só (sem quebra): texto, as 3 escolhas e depois Desfazer/Fechar', () => {
+    const faixa = emMediaMin(768)
+    expect(faixa).not.toBe('')
+    expect(regraEm(faixa, '.ha-confirmacao')).toMatch(/flex-wrap:\s*nowrap\s*;/)
+    // O texto encolhe (min-width: 0) em vez de empurrar os botões para fora do painel.
+    expect(regraEm(faixa, '.ha-confirmacao-texto')).toMatch(/min-width:\s*0\s*;/)
+    // As escolhas deixam de ocupar a linha inteira (era `flex: 1 1 100%`) e vêm antes das ações.
+    const escolhas = regraEm(faixa, '.ha-confirmacao-escolhas')
+    expect(escolhas).not.toMatch(/flex:\s*1 1 100%/)
+    expect(escolhas).toMatch(/flex:\s*0 1 auto\s*;/)
+    const ordemEscolhas = Number(/order:\s*(-?\d+)\s*;/.exec(escolhas)?.[1])
+    const ordemAcoes = Number(/order:\s*(-?\d+)\s*;/.exec(regraEm(faixa, '.ha-confirmacao-acoes'))?.[1])
+    const ordemTexto = Number(/order:\s*(-?\d+)\s*;/.exec(regraEm(faixa, '.ha-confirmacao-texto'))?.[1] ?? 0)
+    expect(ordemEscolhas).toBeGreaterThan(ordemTexto)
+    expect(ordemAcoes).toBeGreaterThan(ordemEscolhas)
+    // Abaixo de 768 a ordem não muda: nenhuma regra de celular usa `order`.
+    expect(emMedia767()).not.toMatch(/\border:/)
+  })
+
+  it('D1 (768+): o recuo vertical do painel aberto é menor que 24 (a base tem 24 nos quatro lados)', () => {
+    expect(regra('.ha-painel[data-aberto]')).toMatch(/padding:\s*24px\s*;/)
+    const painel = regraEm(emMediaMin(768), '.ha-painel[data-aberto]')
+    const recuo = /padding:\s*(\d+)px(?:\s+(\d+)px)?\s*;/.exec(painel)
+    expect(recuo).not.toBeNull()
+    expect(Number(recuo![1])).toBeLessThan(24)
+    // A altura do painel numa linha: 2 x 16 de recuo + 1 de fio + 56 do botão (o maior alvo, na madrugada) = 89.
+    expect(2 * Number(recuo![1]) + 1 + 56).toBeLessThanOrEqual(96)
+  })
+
+  it('D2 (390): Desfazer e Fechar dividem a fileira inteira em 2 colunas iguais (mesmo gap de 16 das escolhas)', () => {
+    const celular = regraEm(emMedia767(), '.ha-confirmacao-acoes')
+    expect(celular).toMatch(/display:\s*grid\s*;/)
+    expect(celular).toMatch(/grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)\s*;/)
+    expect(celular).toMatch(/flex:\s*1 1 100%\s*;/)
+    expect(celular).toMatch(/gap:\s*16px\s*;/)
+    // As 3 escolhas já têm 3 colunas iguais e gap de 16: não se mexe.
+    expect(regra('.ha-confirmacao-escolhas')).toMatch(/grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)\s*;/)
+    expect(regra('.ha-confirmacao-escolhas')).toMatch(/gap:\s*16px\s*;/)
+    // De 768 para cima as ações voltam a ser uma fileira de largura própria (D1), e não esta grade.
+    expect(regraEm(emMediaMin(768), '.ha-confirmacao-acoes')).not.toMatch(/grid-template-columns/)
+  })
+
+  it('D4 (1400+): os números de Últimos têm um tamanho só, 112 (7rem !important), de 1400 de largura em diante; a regra de 56 abaixo de 768 continua', () => {
+    // A base (`FaixaNumeros`) mede `scrollWidth` no primeiro layout e, com a Zilla Slab ainda não carregada, a fonte
+    // de reserva (mais larga) fazia um número cair para 96 em 1425. O `!important` vence o `style.fontSize`.
+    const faixa1400 = regraEm(emMediaMin(1400), '[data-ultimos] .sb-numeros-valor')
+    expect(faixa1400).toMatch(/font-size:\s*7rem\s*!important\s*;/)
+    // Só de 1400 para cima: nenhuma outra regra do bloco fora do celular dá tamanho a esse número...
+    const foraDoCelularE1400 = semComentarios.replace(emMedia767(), '').replace(emMediaMin(1400), '')
+    expect(regraEm(foraDoCelularE1400, '[data-ultimos] .sb-numeros-valor')).not.toMatch(/font-size/)
+    // ... e a regra de 1400 não está misturada com a de 56: o celular segue com 3.5rem, sem 7rem.
+    const celular = regraEm(emMedia767(), '[data-ultimos] .sb-numeros-valor')
+    expect(celular).toMatch(/font-size:\s*3\.5rem\s*!important/)
+    expect(celular).not.toMatch(/7rem/)
+    expect(faixa1400).not.toMatch(/3\.5rem/)
+    // A linha do número fica a do `t-numero` (90 para 112): a regra de 1400 não mexe em `line-height`.
+    expect(faixa1400).not.toMatch(/line-height/)
+    expect(css).toMatch(/\.t-numero\s*\{[^}]*font-size:\s*7rem[^}]*line-height:\s*5\.625rem/)
   })
 
   it('E (M-1): o Hoje marca o main com ha-tela e o item do link da lateral com ha-li-link', () => {

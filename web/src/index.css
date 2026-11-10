@@ -2936,6 +2936,16 @@ body:has([data-barra-registrar]) [data-rodape] {
     font-size: 1.25rem;
     line-height: 1.25rem;
   }
+
+  /* VOLTA2 D2: Desfazer e Fechar ocupam a fileira inteira, em 2 colunas iguais com o mesmo gap de 16 das 3
+     escolhas: as duas fileiras terminam no mesmo x (a largura útil menos 16). Antes cada botão tinha a largura
+     do próprio texto e a fileira acabava 28 px antes da das escolhas. */
+  .ha-confirmacao-acoes {
+    display: grid;
+    flex: 1 1 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
 }
 
 /* VOLTA1 E5: a escolha opcional do tipo da fralda (Xixi, Cocô, Ambos) mora na confirmação, que é flex com
@@ -2951,6 +2961,49 @@ body:has([data-barra-registrar]) [data-rodape] {
 
 .ha-confirmacao-escolhas .sb-moldura-miolo {
   padding: 0 8px;
+}
+
+/* VOLTA2 D1: de 768 para cima a confirmação é uma linha só, acima da barra: o texto, as 3 escolhas e depois
+   Desfazer e Fechar. Em duas linhas o painel tinha 161 de altura e cobria o Encerrar e o Ver sessão do bloco
+   Em andamento. O recuo vertical cai de 24 para 16 (16 + 1 de fio + 56 do alvo da madrugada + 16 = 89). A ordem
+   visual é do `order` do flex: o DOM segue Desfazer, Fechar, escolhas (o Tab não muda). O texto encolhe
+   (`min-width: 0`) em vez de empurrar os botões para fora do painel. */
+@media (min-width: 768px) {
+  .ha-painel[data-aberto] {
+    padding: 16px 24px;
+  }
+
+  .ha-confirmacao {
+    flex-wrap: nowrap;
+  }
+
+  .ha-confirmacao-texto {
+    flex: 1 1 0;
+    min-width: 0;
+    order: 0;
+  }
+
+  .ha-confirmacao-escolhas {
+    flex: 0 1 auto;
+    order: 1;
+  }
+
+  .ha-confirmacao-acoes {
+    flex: 0 0 auto;
+    order: 2;
+  }
+}
+
+/* VOLTA2 D4: de 1400 de largura em diante os três números de Últimos ficam em 112, todos. O `FaixaNumeros` escolhe
+   o tamanho de cada um (112, 96, 72 ou 56) medindo `scrollWidth` no primeiro layout; se a Zilla Slab ainda não
+   carregou, a medida usa a fonte de reserva, mais larga, e um número cai para 96 enquanto os outros ficam em 112
+   (visto em 1425 de largura útil). O resultado dependia da corrida entre a fonte e o layout, e a base não se edita:
+   o `!important` vence o `style.fontSize` que ela grava. A linha continua a do `t-numero` (90). Abaixo de 1400 a base
+   decide (de 768 a 1399, onde 112 não caberia) e abaixo de 768 vale a regra de 56 acima. */
+@media (min-width: 1400px) {
+  [data-ultimos] .sb-numeros-valor {
+    font-size: 7rem !important;
+  }
 }
 
 /* 44d-4 */
