@@ -5,12 +5,25 @@ import { AREAS_EM_BREVE, ETIQUETA_EM_BREVE, ITENS_DO_CABECALHO, type Contexto } 
 
 const FOCAVEIS = 'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])'
 
+/**
+ * A volta do foco com o menu aberto: todos os focáveis visíveis do cabeçalho, na ordem do documento
+ * (que é a ordem do Tab do navegador). Fica de fora o que está em `nav.sb-cab-links` (some abaixo de
+ * 768, que é onde o menu existe) e o que está em `[hidden]` ou `[inert]`. É calculada a cada Tab,
+ * porque o cabeçalho muda (o botão da direita, o painel que acabou de abrir).
+ */
+function voltaDoFoco(cabecalho: Element | null): HTMLElement[] {
+  if (!cabecalho) return []
+  return [...cabecalho.querySelectorAll<HTMLElement>(FOCAVEIS)].filter(
+    (elemento) => elemento.closest('.sb-cab-links, [hidden], [inert]') === null,
+  )
+}
+
 interface Props {
   id: string
   aberto: boolean
   contexto: Contexto
   aoFechar: () => void
-  /** O botão que abre o menu: o foco volta a ele ao fechar, e ele entra na volta do foco. */
+  /** O botão que abre o menu: o foco volta a ele ao fechar, e o cabeçalho que o contém dá a volta do foco. */
   botao: RefObject<HTMLButtonElement | null>
 }
 
@@ -33,8 +46,9 @@ function agrupar(contexto: Contexto): Grupo[] {
 
 /**
  * O menu abaixo de 768: um painel de papel logo abaixo do cabeçalho, com os itens centrados em
- * `subtitulo` e os grupos separados por fios. Prende o foco (Tab volta ao começo), fecha com Esc e
- * devolve o foco ao botão do menu.
+ * `subtitulo` e os grupos separados por fios. Prende o foco numa volta fechada por todos os
+ * focáveis visíveis do cabeçalho (botão do menu, nome do site, botão de ação e itens do painel, na
+ * ordem do DOM), fecha com Esc e devolve o foco ao botão do menu.
  */
 export function MenuCelular({ id, aberto, contexto, aoFechar, botao }: Props) {
   const painel = useRef<HTMLDivElement>(null)
@@ -54,19 +68,18 @@ export function MenuCelular({ id, aberto, contexto, aoFechar, botao }: Props) {
         botao.current?.focus()
         return
       }
-      if (evento.key !== 'Tab' || !painel.current) return
-      const volta = [botao.current, ...painel.current.querySelectorAll<HTMLElement>(FOCAVEIS)].filter(
-        (elemento): elemento is HTMLElement => elemento !== null,
-      )
+      // Ctrl+Tab e Alt+Tab são do navegador e do sistema, não do foco da página.
+      if (evento.key !== 'Tab' || evento.ctrlKey || evento.altKey || evento.metaKey) return
+      const volta = voltaDoFoco(botao.current?.closest('header[data-cabecalho]') ?? null)
       if (volta.length === 0) return
+      // Todo Tab é conduzido: o foco vai ao próximo (ou anterior) da volta, com volta no fim e no
+      // começo. Fora da volta, Tab leva ao primeiro e Shift+Tab ao último.
       const posicao = volta.indexOf(document.activeElement as HTMLElement)
-      if (evento.shiftKey && posicao <= 0) {
-        evento.preventDefault()
-        volta[volta.length - 1].focus()
-      } else if (!evento.shiftKey && (posicao === -1 || posicao === volta.length - 1)) {
-        evento.preventDefault()
-        volta[0].focus()
-      }
+      let destino: number
+      if (posicao === -1) destino = evento.shiftKey ? volta.length - 1 : 0
+      else destino = (posicao + (evento.shiftKey ? -1 : 1) + volta.length) % volta.length
+      evento.preventDefault()
+      volta[destino].focus()
     }
     document.addEventListener('keydown', aoTeclar)
     return () => document.removeEventListener('keydown', aoTeclar)

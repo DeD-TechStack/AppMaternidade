@@ -185,16 +185,18 @@ describe('menu do celular', () => {
     expect(document.activeElement).toBe(ultimo)
   })
 
-  it('no meio da volta o Tab segue livre (só o fim e o começo são presos)', () => {
+  it('no meio da volta o Tab é conduzido, não solto: cancela o padrão e põe o foco no próximo elemento do cabeçalho', () => {
+    // Antes (rodada 4) o Tab no meio da volta seguia livre; o defeito medido no Chrome mostrou que a
+    // lista artificial [botão, ...painel] não é contígua no DOM. Agora todo Tab é explícito.
     const { container } = cabecalho('logado')
     fireEvent.click(screen.getByRole('button', { name: 'Menu' }))
     const primeiro = within(painelDoMenu(container)).getByRole('link', { name: 'Hoje' })
     primeiro.focus()
 
-    const evento = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true })
-    primeiro.dispatchEvent(evento)
+    const naoCancelado = fireEvent.keyDown(primeiro, { key: 'Tab' })
 
-    expect(evento.defaultPrevented).toBe(false)
+    expect(naoCancelado).toBe(false)
+    expect(document.activeElement).toBe(within(painelDoMenu(container)).getByRole('link', { name: 'Conta' }))
   })
 
   it('fecha com Esc e devolve o foco ao botão do menu', () => {
@@ -234,6 +236,131 @@ describe('menu do celular', () => {
     botao.dispatchEvent(evento)
 
     expect(evento.defaultPrevented).toBe(false)
+  })
+})
+
+// R1 (rodada de correção 1): com o menu aberto, o foco gira em volta fechada por TODOS os focáveis
+// visíveis do cabeçalho, na ordem do DOM. Os links de nav.sb-cab-links ficam fora (somem abaixo de 768).
+describe('menu do celular: a volta do foco cobre o cabeçalho inteiro', () => {
+  const ESPERADO = {
+    publico: { acao: ['link', 'Entrar'], painel: ['Início', 'Protótipo'] },
+    logado: { acao: ['button', 'Modo madrugada'], painel: ['Hoje', 'Conta'] },
+  } as const
+
+  /** Abre o menu e devolve os elementos da volta na ordem em que o DOM os apresenta. */
+  function abrirEMontarVolta(contexto: 'publico' | 'logado') {
+    const { container } = cabecalho(contexto)
+    fireEvent.click(screen.getByRole('button', { name: 'Menu' }))
+    const banner = container.querySelector<HTMLElement>('header[data-cabecalho]')!
+    const painel = painelDoMenu(container)
+    const [papelAcao, nomeAcao] = ESPERADO[contexto].acao
+    const volta: HTMLElement[] = [
+      within(banner).getByRole('button', { name: 'Menu' }),
+      within(banner).getByRole('link', { name: 'AppMaternidade' }),
+      within(banner).getByRole(papelAcao, { name: nomeAcao }),
+      ...ESPERADO[contexto].painel.map((nome) => within(painel).getByRole('link', { name: nome })),
+    ]
+    // A lista acima precisa estar na ordem do documento: é a ordem que o Tab do navegador segue.
+    for (let i = 1; i < volta.length; i += 1) {
+      expect(volta[i - 1].compareDocumentPosition(volta[i]) & Node.DOCUMENT_POSITION_FOLLOWING, `posição ${i}`).not.toBe(0)
+    }
+    return { container, volta }
+  }
+
+  const tab = (de: HTMLElement, shiftKey = false) => fireEvent.keyDown(de, { key: 'Tab', shiftKey })
+
+  for (const contexto of ['publico', 'logado'] as const) {
+    it(`${contexto}: de cada elemento, Tab vai ao próximo e Shift+Tab ao anterior, em volta fechada`, () => {
+      const { volta } = abrirEMontarVolta(contexto)
+      const n = volta.length
+
+      volta.forEach((elemento, i) => {
+        elemento.focus()
+        expect(tab(elemento), `Tab em ${i}`).toBe(false)
+        expect(document.activeElement, `Tab em ${i}`).toBe(volta[(i + 1) % n])
+
+        elemento.focus()
+        expect(tab(elemento, true), `Shift+Tab em ${i}`).toBe(false)
+        expect(document.activeElement, `Shift+Tab em ${i}`).toBe(volta[(i - 1 + n) % n])
+      })
+    })
+
+    it(`${contexto}: N Tabs passam por todos os N elementos exatamente uma vez, nos dois sentidos, sem tocar a nav escondida`, () => {
+      const { container, volta } = abrirEMontarVolta(contexto)
+      const n = volta.length
+
+      for (const shiftKey of [false, true]) {
+        volta[0].focus()
+        const vistos: Element[] = []
+        for (let passo = 0; passo < n; passo += 1) {
+          tab(document.activeElement as HTMLElement, shiftKey)
+          const atual = document.activeElement!
+          expect(volta, 'o foco saiu da volta').toContain(atual)
+          expect(atual.closest('.sb-cab-links'), 'o foco entrou em nav.sb-cab-links').toBeNull()
+          vistos.push(atual)
+        }
+        expect(new Set(vistos).size).toBe(n)
+        expect(vistos[n - 1]).toBe(volta[0])
+      }
+      expect(container.querySelector('.sb-cab-links')).not.toBeNull()
+    })
+
+    it(`${contexto}: com o foco fora da volta, Tab leva ao primeiro e Shift+Tab ao último`, () => {
+      const { volta } = abrirEMontarVolta(contexto)
+      const fora = document.createElement('button')
+      document.body.append(fora)
+      try {
+        fora.focus()
+        expect(tab(fora)).toBe(false)
+        expect(document.activeElement).toBe(volta[0])
+
+        fora.focus()
+        expect(tab(fora, true)).toBe(false)
+        expect(document.activeElement).toBe(volta[volta.length - 1])
+      } finally {
+        fora.remove()
+      }
+    })
+  }
+
+  it('o que está [hidden] ou [inert] não entra na volta', () => {
+    const { volta } = abrirEMontarVolta('logado')
+    const [menu, nome, acao, hoje, conta] = volta
+    nome.setAttribute('inert', '')
+    acao.setAttribute('hidden', '')
+
+    menu.focus()
+    tab(menu)
+    expect(document.activeElement).toBe(hoje)
+
+    conta.focus()
+    tab(conta)
+    expect(document.activeElement).toBe(menu)
+
+    hoje.focus()
+    tab(hoje, true)
+    expect(document.activeElement).toBe(menu)
+  })
+
+  it('Ctrl+Tab e Alt+Tab não são interceptados (são do navegador e do sistema)', () => {
+    const { volta } = abrirEMontarVolta('logado')
+    volta[1].focus()
+
+    expect(fireEvent.keyDown(volta[1], { key: 'Tab', ctrlKey: true })).toBe(true)
+    expect(fireEvent.keyDown(volta[1], { key: 'Tab', altKey: true })).toBe(true)
+    expect(document.activeElement).toBe(volta[1])
+  })
+
+  it('preserva o Esc (fecha e devolve o foco ao botão) e o foco no primeiro item ao abrir', () => {
+    const { container, volta } = abrirEMontarVolta('publico')
+    expect(document.activeElement).toBe(volta[3])
+    expect(volta[0].getAttribute('aria-expanded')).toBe('true')
+    expect(volta[0].getAttribute('aria-controls')).toBe(painelDoMenu(container).id)
+
+    fireEvent.keyDown(volta[4], { key: 'Escape' })
+
+    expect(volta[0].getAttribute('aria-expanded')).toBe('false')
+    expect(document.activeElement).toBe(volta[0])
   })
 })
 
