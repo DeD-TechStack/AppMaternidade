@@ -3,7 +3,7 @@ import { IlustracaoBerco } from '../../prototipo/IlustracaoBerco.tsx'
 import { IlustracaoMamada } from '../../prototipo/IlustracaoMamada.tsx'
 import { Aparelho } from '../Aparelho.tsx'
 import { Caixa, vars, type Vars } from './Caixa.tsx'
-import { CAPTURAS, urlDaCaptura, type ChaveCaptura } from './capturas.ts'
+import { CAPTURAS, CELULAR_DE, urlDaCaptura, type ChaveCaptura } from './capturas.ts'
 import './midia.css'
 
 // As cenas das molduras de mídia do Início (cartão 44d-5). Cada uma é filha da moldura `<Midia>`:
@@ -201,9 +201,11 @@ interface Ladrilho {
   largura: number
   altura: number
   cor?: Cor
-  /** Um recorte de captura: `zoom` é quantas vezes a imagem é mais larga que o ladrilho; `ox` e
-   *  `oy` deslocam a imagem, em % do ladrilho, para a esquerda e para cima. */
-  recorte?: { captura: ChaveCaptura; zoom: number; ox: number; oy: number }
+  /** Um recorte de captura de computador: `zoom` é quantas vezes a imagem é mais larga que o ladrilho;
+   *  `ox` e `oy` deslocam a imagem, em % do ladrilho, para a esquerda e para cima. Abaixo de 768 a
+   *  imagem troca para a captura de celular da mesma tela (`CELULAR_DE`), com zoom e deslocamentos
+   *  próprios, que ficam em midia.css (`.mc-recorte[data-recorte]`). */
+  recorte?: { captura: keyof typeof CELULAR_DE; zoom: number; ox: number; oy: number }
 }
 
 // Uma grade de 6 por 3: três recortes das nossas capturas (no máximo 3 imagens) e o resto em tons
@@ -238,18 +240,31 @@ export function CenaMosaico() {
             return <Caixa key={`${coluna}-${linha}`} className={`mc-ladrilho ${CLASSE_COR[cor ?? 'papel']}`} style={estilo} />
           }
           const { largura: w, altura: h } = CAPTURAS[recorte.captura]
+          const celular = CELULAR_DE[recorte.captura]
           return (
             <Caixa key={`${coluna}-${linha}`} className="mc-ladrilho mc-ld-papel" style={estilo}>
-              <div className="mc-recorte" style={vars({ '--zoom': recorte.zoom, '--ox': recorte.ox, '--oy': recorte.oy })}>
-                <img
-                  className="mc-recorte-img"
-                  src={urlDaCaptura(recorte.captura)}
-                  alt=""
-                  width={w}
-                  height={h}
-                  decoding="async"
-                  loading="lazy"
-                />
+              <div
+                className="mc-recorte"
+                data-recorte={recorte.captura}
+                style={vars({ '--zoom': recorte.zoom, '--ox': recorte.ox, '--oy': recorte.oy })}
+              >
+                <picture>
+                  <source
+                    media="(max-width: 767px)"
+                    srcSet={urlDaCaptura(celular)}
+                    width={CAPTURAS[celular].largura}
+                    height={CAPTURAS[celular].altura}
+                  />
+                  <img
+                    className="mc-recorte-img"
+                    src={urlDaCaptura(recorte.captura)}
+                    alt=""
+                    width={w}
+                    height={h}
+                    decoding="async"
+                    loading="lazy"
+                  />
+                </picture>
               </div>
             </Caixa>
           )

@@ -21,6 +21,14 @@ export const CAPTURAS = {
 
 export type ChaveCaptura = keyof typeof CAPTURAS
 
+/** A captura de celular (390 por 844) da mesma tela e do mesmo tema de uma captura de computador. */
+export const CELULAR_DE = {
+  'hoje-claro-1440': 'hoje-claro-390',
+  'hoje-madrugada-1440': 'hoje-madrugada-390',
+  'sessao-claro-1440': 'sessao-claro-390',
+  'sessao-madrugada-1440': 'sessao-madrugada-390',
+} as const satisfies Partial<Record<ChaveCaptura, ChaveCaptura>>
+
 /** O endereço da captura, sob a base do Vite (o site pode estar numa subpasta). */
 export function urlDaCaptura(chave: ChaveCaptura): string {
   return `${import.meta.env.BASE_URL}telas/${CAPTURAS[chave].arquivo}`

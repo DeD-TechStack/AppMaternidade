@@ -157,6 +157,119 @@ describe('MAT-44d-5: as capturas dentro dos aparelhos', () => {
 })
 
 // ---------------------------------------------------------------------------
+// D1: o mosaico em tela estreita usa a captura de celular, para o fragmento ser legível.
+
+describe('MAT-44d-5 D1: os ladrilhos de captura do mosaico trocam para a captura de celular abaixo de 768', () => {
+  const CELULAR_DA_TELA: Record<string, string> = {
+    'hoje-claro-1440': 'hoje-claro-390',
+    'sessao-claro-1440': 'sessao-claro-390',
+    'hoje-madrugada-1440': 'hoje-madrugada-390',
+  }
+  const conhecidos = new Set<string>(Object.values(CAPTURAS).map((c) => c.arquivo))
+  const arquivoDe = (url: string) => url.split('/').pop()!
+
+  async function mosaico() {
+    const container = await inicio()
+    return molduras(container).find((m) => m.getAttribute('aria-label')!.includes('Mosaico'))!
+  }
+
+  it('cada ladrilho com captura é um <picture> com um <source media="(max-width: 767px)"> antes da <img>', async () => {
+    const quadro = await mosaico()
+
+    const figuras = [...quadro.querySelectorAll('picture')]
+    expect(figuras).toHaveLength(3)
+    for (const figura of figuras) {
+      const fontes = figura.querySelectorAll('source')
+      expect(fontes).toHaveLength(1)
+      expect(fontes[0].getAttribute('media')).toBe('(max-width: 767px)')
+      expect(figura.querySelectorAll('img')).toHaveLength(1)
+      expect(fontes[0].nextElementSibling).toBe(figura.querySelector('img'))
+    }
+  })
+
+  it('a <source> aponta para a captura 390 da mesma tela e a <img> de fallback é a de 1440', async () => {
+    const quadro = await mosaico()
+
+    const pares = [...quadro.querySelectorAll('picture')].map((figura) => ({
+      estreita: arquivoDe(figura.querySelector('source')!.getAttribute('srcset')!),
+      larga: arquivoDe(figura.querySelector('img')!.getAttribute('src')!),
+    }))
+    expect(pares.map((p) => p.larga).sort()).toEqual(['hoje-claro-1440.png', 'hoje-madrugada-1440.png', 'sessao-claro-1440.png'])
+    for (const { estreita, larga } of pares) {
+      expect(estreita, larga).toBe(CELULAR_DA_TELA[larga.replace('.png', '')] + '.png')
+    }
+  })
+
+  it('só existem os 8 nomes conhecidos (nas <img> e nas <source>), com a base do Vite e telas/', async () => {
+    const container = await inicio()
+
+    const nomes = [
+      ...[...container.querySelectorAll('[data-midia] img')].map((i) => i.getAttribute('src')!),
+      ...[...container.querySelectorAll('[data-midia] source')].map((s) => s.getAttribute('srcset')!),
+    ]
+    expect(nomes.length).toBeGreaterThan(14)
+    for (const nome of nomes) {
+      expect(nome).toMatch(/telas\/[a-z]+-[a-z]+-(1440|390)\.png$/)
+      expect(conhecidos.has(arquivoDe(nome)), nome).toBe(true)
+    }
+  })
+
+  it('a <img> mantém alt vazio, lazy e o tamanho real de 1440 por 900; a <source> leva o tamanho real de 390 por 844', async () => {
+    const quadro = await mosaico()
+
+    expect(quadro.querySelectorAll('picture')).toHaveLength(3)
+    for (const figura of quadro.querySelectorAll('picture')) {
+      const img = figura.querySelector('img')!
+      expect(img.getAttribute('alt')).toBe('')
+      expect(img.getAttribute('loading')).toBe('lazy')
+      expect(img.getAttribute('decoding')).toBe('async')
+      expect(img.getAttribute('width')).toBe('1440')
+      expect(img.getAttribute('height')).toBe('900')
+      const fonte = figura.querySelector('source')!
+      expect(fonte.getAttribute('width')).toBe('390')
+      expect(fonte.getAttribute('height')).toBe('844')
+    }
+  })
+
+  it('continua 1 imagem por ladrilho: 3 <img> na moldura, e o recorte de 1440 não mudou (--zoom, --ox e --oy inline)', async () => {
+    const quadro = await mosaico()
+
+    expect(quadro.querySelectorAll('img')).toHaveLength(3)
+    const recortes = [...quadro.querySelectorAll<HTMLElement>('.mc-recorte')]
+    expect(recortes.map((r) => [r.style.getPropertyValue('--zoom'), r.style.getPropertyValue('--ox'), r.style.getPropertyValue('--oy')])).toEqual([
+      ['2.3', '4.8', '43.8'],
+      ['3.4', '23.6', '0'],
+      ['1.6', '0', '0'],
+    ])
+    expect(recortes.map((r) => r.getAttribute('data-recorte'))).toEqual(['hoje-claro-1440', 'sessao-claro-1440', 'hoje-madrugada-1440'])
+  })
+
+  it('o CSS dá zoom e deslocamentos próprios ao estreito, só dentro de @media (max-width: 767px)', () => {
+    const css = lerTexto('componentes/midia/midia.css').replace(/\/\*[\s\S]*?\*\//g, '')
+    const abertura = css.indexOf('@media (max-width: 767px)')
+    expect(abertura).toBeGreaterThan(-1)
+    let nivel = 0
+    let fim = css.indexOf('{', abertura)
+    for (let i = fim; i < css.length; i += 1) {
+      if (css[i] === '{') nivel += 1
+      if (css[i] === '}') nivel -= 1
+      if (nivel === 0) {
+        fim = i
+        break
+      }
+    }
+    const estreito = css.slice(abertura, fim)
+    for (const tela of Object.keys(CELULAR_DA_TELA)) {
+      const regra = new RegExp(`\\.mc-recorte\\[data-recorte='${tela}'\\]\\s*\\{([^}]*)\\}`).exec(estreito)
+      expect(regra, tela).not.toBeNull()
+      for (const variavel of ['--zoom-e', '--ox-e', '--oy-e']) expect(regra![1], `${tela} ${variavel}`).toContain(variavel)
+    }
+    // Fora da @media nenhuma variável do estreito é definida.
+    expect(css.replace(estreito, '')).not.toMatch(/--(zoom|ox|oy)-e\s*:/)
+  })
+})
+
+// ---------------------------------------------------------------------------
 // O CSS novo: sem sombra, sem filtro e sem nada que ache o 3D.
 
 describe('MAT-44d-5: midia.css', () => {
