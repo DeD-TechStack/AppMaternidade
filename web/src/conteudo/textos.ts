@@ -2,15 +2,20 @@
 
 export const PROMESSA = 'Quem chega no turno já sabe o que houve.'
 
-// A linha sob o `h1` do Início: cabe em 1 linha em 1440 (SISTEMA 2.2).
-export const SUBTITULO_INICIO = 'A rotina do bebê, dividida entre quem cuida.'
+// A linha sob o `h1` do Início: 1 linha da escala em 390 e em 1440, sem encolher a fonte (VOLTA1 item 10).
+// No máximo 32 caracteres.
+export const SUBTITULO_INICIO = 'A rotina do bebê, em equipe.'
+
+// A etiqueta do aviso de demonstração na lateral da abertura do Início: aparece só quando falta
+// alguma variável do banco, como o aviso longo das outras telas (`AVISO_DEMONSTRACAO`).
+export const ETIQUETA_AVISO = 'Protótipo com dados de exemplo'
 
 // O link da coluna lateral da abertura.
 export const LINK_ABERTURA = 'Ver o protótipo'
 
 export const PILARES = ['Rotina', 'Desenvolvimento', 'Cuidado compartilhado', 'Comunidade'] as const
 
-export const TITULO_APRESENTACAO = 'Um app para cuidar junto'
+export const TITULO_APRESENTACAO = 'Uma rotina, vários cuidadores'
 
 export const APRESENTACAO =
   'Um app para a família registrar a rotina do bebê, dividir os cuidados e acompanhar o desenvolvimento, com uma comunidade separada da rotina privada.'
@@ -47,7 +52,11 @@ export const MIDIAS_INICIO = {
   retrato: 'Celular em modo madrugada',
 } as const
 
-// A citação do Início: o texto é o da nota de exemplo (MINIATURAS.hoje.nota); a autoria diz que é exemplo.
+// A citação do Início: uma nota de passagem de exemplo, escrita por Carla para quem chega no turno
+// (94 caracteres; de 90 a 130; 4 linhas em 390). `MINIATURAS.hoje.nota` é compartilhada com o protótipo e não é esta.
+export const CITACAO_TEXTO = 'Mamou às 22h e dormiu logo. Pomada só à noite, a de dia acabou. Bico na bolsa, se ela acordar.'
+
+// A autoria diz que a citação é um exemplo.
 export const CITACAO_AVISO = 'nota de passagem de exemplo'
 
 // O nome da região da navegação grande do fim do Início (a região da faixa de números usa FATOS.titulo).
@@ -106,7 +115,7 @@ export const RODAPE = 'Protótipo em construção. Nada aqui é dado real.'
 export const NAVEGACAO = [
   { rotulo: 'Hoje', destino: '/app/hoje' },
   { rotulo: 'Sessão', destino: '/app/sessao' },
-  { rotulo: 'Madrugada', destino: '/app/hoje' },
+  { rotulo: 'Conta', destino: '/criar-conta' },
   { rotulo: 'Entrar', destino: '/entrar' },
 ] as const
 
