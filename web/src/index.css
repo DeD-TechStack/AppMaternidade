@@ -2045,22 +2045,32 @@
     margin: var(--e-h1-sub) 0 0;
   }
 
+  /* O `.sb-abertura-base` é só o fio: a borda de baixo é o horizontal (c1–c10), a 32 px do
+     subtítulo, e o ::before é o vertical, em x de c9 (80% da área útil), nos 80 px finais e
+     encostado no horizontal. A coluna lateral (c9–c10) fica na linha do título, não aqui. */
   .sb-abertura-base {
-    display: grid;
-    grid-template-columns: repeat(10, minmax(0, 1fr));
-    height: 80px;
-    margin-top: 64px;
+    position: relative;
+    margin-top: 32px;
     border-bottom: 1px solid var(--cor-fio-suave);
   }
 
+  .sb-abertura-base::before {
+    content: '';
+    position: absolute;
+    left: 80%;
+    bottom: 0;
+    width: 1px;
+    height: 80px;
+    background-color: var(--cor-fio-suave);
+  }
+
+  /* As etiquetas começam no x de c9 e no topo do título, uma sob a outra, a cada 32 px. */
   .sb-abertura-lateral {
-    grid-column: 9 / 11;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    align-self: start;
     margin: 0;
-    padding: 0 0 0 24px;
-    border-left: 1px solid var(--cor-fio-suave);
+    padding: 0;
     list-style: none;
   }
 
@@ -2070,17 +2080,18 @@
     height: 32px;
   }
 
+  /* Abaixo de 768 a abertura é uma coluna: o título, o subtítulo, 32 px, as etiquetas, 16 px e o fio. */
   @media (max-width: 767px) {
     .sb-abertura-base {
-      display: block;
-      height: auto;
-      margin-top: 32px;
-      padding-bottom: 16px;
+      margin-top: 16px;
+    }
+
+    .sb-abertura-base::before {
+      display: none;
     }
 
     .sb-abertura-lateral {
-      padding-left: 0;
-      border-left: 0;
+      margin-top: 32px;
     }
   }
 

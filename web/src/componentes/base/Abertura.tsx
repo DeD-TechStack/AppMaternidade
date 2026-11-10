@@ -10,8 +10,11 @@ interface Props {
 }
 
 /**
- * Abertura de toda tela: título em c1–c8 e coluna lateral em c9–c10. Um fio horizontal em c1–c10
- * e um vertical em x de c9, só nos 80 px finais e terminando no horizontal.
+ * Abertura de toda tela: título em c1–c8 e coluna lateral em c9–c10, na mesma linha da grade (a
+ * primeira etiqueta começa na altura do título). Abaixo de 768 a lateral vai para baixo do subtítulo.
+ * O `.sb-abertura-base` é só o fio: o horizontal em c1–c10 (a borda de baixo) e, por pseudo-elemento,
+ * o vertical em x de c9, nos 80 px finais e terminando no horizontal. O vertical é decoração e some
+ * abaixo de 768.
  */
 export function Abertura({ titulo, subtitulo, lateral }: Props) {
   return (
@@ -21,10 +24,9 @@ export function Abertura({ titulo, subtitulo, lateral }: Props) {
           <h1 className="t-display-xl">{titulo}</h1>
           <p className="sb-abertura-subtitulo t-subtitulo">{subtitulo}</p>
         </div>
+        {lateral ? <ul className="sb-abertura-lateral col-c9-c10">{lateral}</ul> : null}
       </div>
-      <div className="sb-abertura-base">
-        {lateral ? <ul className="sb-abertura-lateral">{lateral}</ul> : null}
-      </div>
+      <div className="sb-abertura-base" aria-hidden="true" />
     </section>
   )
 }

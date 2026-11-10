@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
+import { Abertura } from './componentes/base/Abertura.tsx'
 import { Botao } from './componentes/base/Botao.tsx'
 import { Campo } from './componentes/base/Campo.tsx'
 import { Cabecalho } from './componentes/casca/Cabecalho.tsx'
@@ -592,6 +593,38 @@ describe('rota /sistema', () => {
     expect(container.querySelectorAll('.sb-abertura-lateral .sb-etiqueta')).toHaveLength(2)
     expect([...container.querySelectorAll('[data-numero]')].map((n) => n.textContent)).toEqual(['7', '2', '0'])
     expect(container.querySelector('.sb-numeros')!.textContent).toContain('metas ou comparações')
+  })
+
+  it('D3: a coluna lateral da abertura está na mesma grade do título (c9–c10), e o elemento do fio não a contém', async () => {
+    const { container } = renderizarRota('/sistema')
+    await screen.findByRole('heading', { level: 1 })
+
+    const abertura = container.querySelector('.sb-abertura')!
+    const h1 = abertura.querySelector('h1')!
+    const lateral = abertura.querySelector<HTMLElement>('.sb-abertura-lateral')!
+    expect(lateral.classList.contains('col-c9-c10')).toBe(true)
+    expect(h1.closest('.col-c1-c8')).not.toBeNull()
+    expect(lateral.parentElement).toBe(h1.closest('.grade-10'))
+    expect(lateral.closest('.sb-abertura-base')).toBeNull()
+    // O título vem antes da coluna lateral no DOM (a leitura de tela segue a ordem visual).
+    expect(h1.compareDocumentPosition(lateral) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
+    // O `.sb-abertura-base` só carrega o fio horizontal (e, por pseudo-elemento, o vertical).
+    const baseDoFio = abertura.querySelector('.sb-abertura-base')!
+    expect(baseDoFio.childElementCount).toBe(0)
+    expect(baseDoFio.hasAttribute('aria-hidden')).toBe(true)
+    expect(baseDoFio.compareDocumentPosition(lateral) & Node.DOCUMENT_POSITION_PRECEDING).not.toBe(0)
+  })
+
+  it('D3: as 2 etiquetas da abertura são itens de uma lista, uma sob a outra, e a abertura sem lateral não cria a lista', async () => {
+    const { container, unmount } = renderizarRota('/sistema')
+    await screen.findByRole('heading', { level: 1 })
+    const itens = [...container.querySelectorAll('.sb-abertura-lateral > li')]
+    expect(itens.map((li) => li.textContent)).toEqual(['Base visual', 'Em construção'])
+    unmount()
+
+    const { container: sem } = render(<Abertura titulo="Hoje" subtitulo="A linha sob o título." />)
+    expect(sem.querySelector('.sb-abertura-lateral')).toBeNull()
+    expect(sem.querySelector('.sb-abertura-base')).not.toBeNull()
   })
 
   it('D2: a faixa de números tem 3 itens, cada um com o número em Zilla Slab e a legenda, na ordem 7, 2, 0', async () => {
