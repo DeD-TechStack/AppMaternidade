@@ -94,18 +94,89 @@ describe('Voltar e Avançar do histórico', () => {
     expect(rolarAoTopo).toHaveBeenCalledWith(0, 0)
   })
 
-  it('vale também numa segunda tela: Conta → protótipo do Hoje → Voltar leva o foco ao h1 da Conta', async () => {
+  it('vale também numa segunda tela: Conta → Hoje → Voltar leva o foco ao h1 da Conta', async () => {
     const { roteador, rolarAoTopo } = renderizarComDados('/app/conta', { sessao: 'juliana' })
     await titulo('Conta')
     expect(focado()).not.toBe('H1:Conta')
 
-    fireEvent.click(screen.getByRole('link', { name: 'Ver o protótipo do Hoje' }))
+    await irPara(roteador, '/app/hoje')
     await titulo('Hoje')
     rolarAoTopo.mockClear()
 
     await irPara(roteador, -1)
 
     await titulo('Conta')
+    await waitFor(() => expect(focado()).toBe('H1:Conta'))
+    expect(rolarAoTopo).toHaveBeenCalledWith(0, 0)
+  })
+})
+
+// O link `#id` dentro da mesma tela (o índice da Conta) é uma mudança só de hash: o destino é a
+// seção, e levar a página ao topo e o foco ao `h1` desfazia a rolagem até ela. Só vale quando o `#id`
+// existe na tela; um `#id` sem elemento e toda navegação sem hash seguem a regra geral.
+describe('uma mudança só de hash na mesma tela', () => {
+  it('com o `#id` de uma seção que existe: não chama window.scrollTo(0, 0) e não leva o foco ao h1', async () => {
+    const { roteador, rolarAoTopo } = renderizarComDados('/app/conta', { sessao: 'juliana' })
+    await titulo('Conta')
+    rolarAoTopo.mockClear()
+
+    for (const [hash, titulo2] of [
+      ['#perfil', 'Perfil'],
+      ['#id-conta', 'Id da sua conta'],
+      ['#privacidade', 'Privacidade'],
+      ['#sair', 'Sair'],
+      ['#excluir-conta', 'Excluir conta'],
+    ] as const) {
+      await irPara(roteador, `/app/conta${hash}`)
+      await waitFor(() => expect(focado()).toBe(`H2:${titulo2}`))
+      expect(rolarAoTopo).not.toHaveBeenCalled()
+    }
+  })
+
+  it('com um `#id` sem elemento na tela (tela de acesso ou hash desconhecido): vale a regra geral, scrollTo(0, 0) e o h1', async () => {
+    const { roteador, rolarAoTopo } = renderizarComDados('/entrar')
+    await titulo('Entrar')
+    rolarAoTopo.mockClear()
+
+    await irPara(roteador, '/entrar#qualquer-coisa')
+
+    await waitFor(() => expect(focado()).toBe('H1:Entrar'))
+    expect(rolarAoTopo).toHaveBeenCalledWith(0, 0)
+  })
+
+  it('na Conta, um hash que não é de seção também leva ao topo e ao h1', async () => {
+    const { roteador, rolarAoTopo } = renderizarComDados('/app/conta', { sessao: 'juliana' })
+    await titulo('Conta')
+    rolarAoTopo.mockClear()
+
+    await irPara(roteador, '/app/conta#desconhecido')
+
+    await waitFor(() => expect(focado()).toBe('H1:Conta'))
+    expect(rolarAoTopo).toHaveBeenCalledWith(0, 0)
+  })
+
+  it('outra tela sem hash continua levando a rolagem ao topo e o foco ao h1', async () => {
+    const { roteador, rolarAoTopo } = renderizarComDados('/entrar')
+    await titulo('Entrar')
+    await irPara(roteador, '/entrar#qualquer-coisa')
+    rolarAoTopo.mockClear()
+
+    await irPara(roteador, '/criar-conta')
+
+    await titulo('Criar conta')
+    await waitFor(() => expect(focado()).toBe('H1:Criar conta'))
+    expect(rolarAoTopo).toHaveBeenCalledWith(0, 0)
+  })
+
+  it('Voltar do hash para a mesma tela sem hash leva o foco ao h1 (regra da R2)', async () => {
+    const { roteador, rolarAoTopo } = renderizarComDados('/app/conta', { sessao: 'juliana' })
+    await titulo('Conta')
+    await irPara(roteador, '/app/conta#privacidade')
+    await waitFor(() => expect(focado()).toBe('H2:Privacidade'))
+    rolarAoTopo.mockClear()
+
+    await irPara(roteador, -1)
+
     await waitFor(() => expect(focado()).toBe('H1:Conta'))
     expect(rolarAoTopo).toHaveBeenCalledWith(0, 0)
   })

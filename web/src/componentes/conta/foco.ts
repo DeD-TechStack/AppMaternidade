@@ -24,11 +24,27 @@ function marcadorDe(roteador: RoteadorDeDados) {
   return marcador
 }
 
+/** O `#id` da localização aponta para um elemento que está na tela. */
+function idDoHashExiste(hash: string): boolean {
+  if (hash.length < 2) return false
+  let id = hash.slice(1)
+  try {
+    id = decodeURIComponent(id)
+  } catch {
+    /* o hash cru serve */
+  }
+  return document.getElementById(id) !== null
+}
+
 /**
  * Em toda navegação dentro do site, inclusive Voltar e Avançar do histórico, a rolagem vai ao topo
  * e o foco vai ao `h1` da tela nova. A exceção é a primeira carga da página. O `h1` leva
- * `tabIndex={-1}` e o contorno de foco da base. Em `#exportar` a tela da Conta faz o próprio foco,
- * no título da seção.
+ * `tabIndex={-1}` e o contorno de foco da base.
+ *
+ * Com um `#id` que existe na tela (o índice da Conta, `/app/conta#exportar`) o hook não rola nem
+ * foca: o destino é a seção, e levar a página ao topo e o foco ao `h1` desfazia a rolagem até ela.
+ * Quem tem seções (a Conta) rola e foca o título da seção por conta própria. Um `#id` sem elemento
+ * na tela, e toda navegação sem `#id` (outra tela, Voltar e Avançar), seguem a regra acima.
  */
 export function useFocoNoTitulo() {
   const titulo = useRef<HTMLHeadingElement>(null)
@@ -44,7 +60,7 @@ export function useFocoNoTitulo() {
     jaRodou.current = true
     // Uma navegação que não é Voltar/Avançar já é uma navegação dentro do site.
     if (tipo !== 'POP' && marcador) marcador.valor = true
-    if (primeiraCarga || hash === '#exportar') return
+    if (primeiraCarga || idDoHashExiste(hash)) return
     window.scrollTo(0, 0)
     titulo.current?.focus()
   }, [roteador, tipo, key, hash])
