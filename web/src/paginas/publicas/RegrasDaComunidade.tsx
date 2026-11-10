@@ -15,7 +15,7 @@ export function RegrasDaComunidade() {
       <Apresentacao texto={REGRAS.apresentacao} margem="sb-mt-fio-bloco" ampla />
       <LinhaDeLeitura secao={antes.secao} blocos={antes.blocos} margem="sb-mt-par-numeros" />
       <LinhaDeLeitura secao={sete.secao} blocos={sete.blocos} />
-      <MidiaLarga peca={{ cena: 'passeio', fundo: 'barro' }} margem="sb-mt-midia-linhas" />
+      <MidiaLarga peca={{ cena: 'berco', fundo: 'lavanda' }} margem="sb-mt-midia-linhas" />
       <LinhaDeLeitura secao={denunciar.secao} blocos={denunciar.blocos} margem="sb-mt-midia-linhas" />
       <LinhaDeLeitura secao={moderacao.secao} blocos={moderacao.blocos} />
       <LinhaDeLeitura

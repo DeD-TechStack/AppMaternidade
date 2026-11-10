@@ -214,6 +214,7 @@ export const MIDIAS = {
   colo: 'Ilustração: um adulto sentado no banquinho com o bebê nos braços.',
   passeio: 'Ilustração: um adulto empurra o carrinho, com o bebê espiando sob a capota.',
   tapete: 'Ilustração: o bebê de bruços no tapete, levantando a cabeça, com um adulto ao lado.',
+  passagem: 'Ilustração: um adulto entrega o bebê a outro adulto na passagem de turno, com o relógio na parede.',
 } as const
 
 // ---------------------------------------------------------------------------
