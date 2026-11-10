@@ -270,15 +270,26 @@ Três direções foram montadas como telas estáticas (`.oc/direcoes/A`, `B` e `
 
 Vence a C (7,51 contra 7,39 da A). O texto ao lado do aparelho em cada cartão largo lê melhor que o texto em cima, e a madrugada escura em par mostra o modo noturno sem tomar a largura toda. Na área logada, a faixa lateral em papel fundo separa a navegação sem linha extra, e a Sessão com a ilustração num campo à direita deixa o cronômetro e as ações na coluna da esquerda. A B perdeu em UX: a navegação de 12 rem quebra "Desenvolvimento" e a promessa ao lado da Sessão deixa alturas desiguais. A A perdeu em inovação por repetir o padrão de pares sem um ponto focal.
 
-Distribuição escolhida na faixa larga (6 cartões, 3 com aparelho):
+Distribuição na faixa larga depois do laço visual (6 cartões, 4 com aparelho). Valem a rodada 7 (achados do avaliador independente) e as rodadas 8 a 11 (correções medidas no navegador):
 
-- promessa (2 colunas): a partir de 80 rem, texto na coluna 1 e a ilustração na coluna 2, com a borda esquerda na linha da coluna 2; abaixo disso, o texto e, embaixo, a ilustração centrada;
-- telas (2): a partir de 85,3 rem (quando a fileira notebook + celular cabe no cartão), texto em cima do notebook do Hoje e o celular da Sessão à direita, com as bases alinhadas; abaixo disso, empilhados, com os aparelhos centrados;
-- madrugada e para que serve: a partir de 80 rem, uma coluna cada, em par; abaixo disso, duas colunas cada. "Para que serve" leva a segunda ilustração fora dos aparelhos, centrada no fim do cartão, na mesma escala da primeira, para o par fechar sem vazio;
-- fatos (2): bloco de linhas;
-- chamada (2): texto, link, o celular do Hoje e a legenda, empilhados numa coluna de 32,5rem centrada no cartão (o texto continua alinhado à esquerda dentro dela). A madrugada faz o mesmo quando ocupa as duas colunas.
+- promessa (2 colunas): o título grande atravessa a grade; a apresentação fica na coluna de texto, à esquerda, e os pilares numa coluna lateral à direita, uma etiqueta por linha, sem quebrar. Embaixo, de ponta a ponta, um campo de cor com o notebook do Hoje, grande. Nas faixas média e estreita o topo empilha (título, apresentação, pilares em linha que quebram por palavra inteira) e o campo leva o celular do Hoje;
+- telas (campo de urucum): título, legenda e o celular da Sessão. O notebook é um só no Início, o do topo. A partir de 85 rem a seção divide a fileira com a madrugada;
+- madrugada (papel fundo escuro, tema só dentro do cartão): título, texto, celular com a Sessão da mamada e legenda;
+- para que serve: as três linhas da base e, ao lado (larga) ou embaixo, a ilustração dentro de um campo de imagem que ela enche, com a base na base do campo e o campo na linha direita da grade;
+- fatos: bloco de linhas;
+- chamada (campo de lavanda): texto, link, celular do Hoje e legenda.
 
-Na medição da rodada 1, o texto ao lado de um aparelho alto deixava um vazio maior que duas vezes o gap embaixo do texto. Por isso, nos cartões com celular, o texto fica em cima do aparelho, e lado a lado só ficam peças de altura parecida (notebook com texto ao lado do celular, madrugada ao lado de "para que serve").
+Regras que a rodada 7 fixou:
+
+- **Mockup de celular = janela.** Tela de altura fixa (cerca de 31,75 a 33 rem naturais), com o conteúdo cortado pela moldura e a barra inferior presa no pé, como no aparelho real. A tela tem pelo menos 22 rem de largura interna, para a navegação ficar em linha, com os 5 itens lado a lado. A escala é a mesma em todos os celulares da página e muda em degraus: 0,85 em 390 (celular de 309 px, 17 px de folga de cada lado, texto de 13 px com 11,05 px efetivos), 0,95 e 1 nas faixas maiores. Cada mockup mostra a navegação do aparelho que representa: a barra inferior no celular e a lateral no notebook.
+- **Um aviso só.** O aviso de demonstração e a faixa de protótipo ficam no topo da página; dentro dos mockups não há texto de serviço.
+- **Uma margem esquerda.** O logo, o rodapé, a borda esquerda dos campos de cor e o texto das seções sem campo começam no mesmo x; dentro de um campo o texto fica recuado pelo padding do cartão, igual em todos. Por isso as seções de papel têm padding lateral 0 e as de campo têm o padding do cartão (ver a nota sobre a VIS4-05 no HANDOFF).
+- **Respiro.** Cerca de 150 px entre seções na faixa larga (o gap é igual na linha e entre linhas) e 2 rem entre os elementos de uma seção.
+- **Imagem enche o cartão.** A ilustração fora dos mockups ocupa mais de 70% da área do campo dela, com os mesmos cantos arredondados dos outros cartões de imagem.
+- **Barra inferior "Em breve".** Uma etiqueta discreta (caixa alta, texto secundário) sobre as colunas 2 a 5, sem traços verticais; a linha de 1 px fica 4 px acima dos ícones, sem atravessar rótulos.
+- **Hoje e Sessão altos.** Em telas de 860 px de altura ou mais, o conteúdo cresce (cartão, cronômetro, botões e linhas de "Últimos") para ocupar de 75% a 90% da altura de 900 px. Em 1024 × 768 fica o tamanho menor, que mantém os botões à vista.
+
+Na medição da rodada 1, o texto ao lado de um aparelho alto deixava um vazio maior que duas vezes o gap embaixo do texto. Por isso, nos cartões com celular, o texto fica em cima do aparelho.
 
 ### Direção escolhida (VIS2-00)
 
