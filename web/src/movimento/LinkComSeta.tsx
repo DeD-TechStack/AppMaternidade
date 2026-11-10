@@ -6,8 +6,10 @@ import { usePrefereMovimentoReduzido } from './reduzido.ts'
 
 // M12: no hover e no foco do link a seta desliza 2 px para a direita e 2 px para cima, em 300 ms,
 // e volta. O ícone vem de quem usa a peça (aqui não se importa biblioteca de ícones) e fica
-// escondido do leitor de tela: o nome do link é só o texto. Com movimento reduzido a seta fica
-// parada; o link continua mudando de cor pelo CSS da página.
+// escondido do leitor de tela: o nome do link é só o texto. A árvore é a mesma com e sem movimento
+// reduzido (o foco no link sobrevive à troca da preferência); com movimento reduzido o hover e o
+// foco não ligam a seta, e se a preferência liga com a seta fora do repouso ela volta sem animar.
+// O link continua mudando de cor pelo CSS da página.
 
 type Props = Omit<
   ComponentPropsWithoutRef<'a'>,
@@ -18,22 +20,12 @@ type Props = Omit<
 
 const CLASSE = 'alvo-toque inline-flex items-center gap-1'
 
+const link: Variants = { repouso: {}, ativo: {} }
+
 export function LinkComSeta({ icone, children, className, ...resto }: Props) {
   const reduzido = usePrefereMovimentoReduzido()
   const { deslocamentoPx, duracaoMs, curva } = CATALOGO.M12
 
-  if (reduzido) {
-    return (
-      <a {...resto} className={cn(CLASSE, className)}>
-        {children}
-        <span aria-hidden="true" className="inline-flex">
-          {icone}
-        </span>
-      </a>
-    )
-  }
-
-  const link: Variants = { repouso: {}, ativo: {} }
   const seta: Variants = {
     repouso: { x: 0, y: 0 },
     ativo: { x: deslocamentoPx, y: -deslocamentoPx },
@@ -45,15 +37,16 @@ export function LinkComSeta({ icone, children, className, ...resto }: Props) {
       className={cn(CLASSE, className)}
       variants={link}
       initial="repouso"
-      whileHover="ativo"
-      whileFocus="ativo"
+      animate="repouso"
+      whileHover={reduzido ? undefined : 'ativo'}
+      whileFocus={reduzido ? undefined : 'ativo'}
     >
       {children}
       <motion.span
         aria-hidden="true"
         className="inline-flex"
         variants={seta}
-        transition={{ duration: duracaoMs / 1000, ease: curva }}
+        transition={reduzido ? { duration: 0 } : { duration: duracaoMs / 1000, ease: curva }}
       >
         {icone}
       </motion.span>

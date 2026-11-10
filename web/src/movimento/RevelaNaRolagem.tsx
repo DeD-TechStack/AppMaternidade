@@ -7,13 +7,16 @@ import { usePrefereMovimentoReduzido } from './reduzido.ts'
 // 360 px de rolagem a partir de quando o topo dele entra pela base da janela. A janela é em
 // pixels de rolagem, não uma fração da altura da janela: o fim é o ponto do bloco 360 px abaixo
 // do topo chegando à base da janela. Só lê a rolagem; não a muda nem a intercepta.
+// A árvore e os hooks são os mesmos com e sem movimento reduzido. Com movimento reduzido o estilo
+// são valores fixos (opacidade 1, escala 1) no lugar dos valores presos à rolagem.
 
 interface Props {
   children: ReactNode
   className?: string
 }
 
-function RevelaAnimada({ children, className }: Props) {
+export function RevelaNaRolagem({ children, className }: Props) {
+  const reduzido = usePrefereMovimentoReduzido()
   const { janelaPx, escala, mola } = CATALOGO.M3
   const ref = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', `${janelaPx}px end`] })
@@ -25,14 +28,8 @@ function RevelaAnimada({ children, className }: Props) {
   const opacity = useSpring(opacidadeBruta, suave)
 
   return (
-    <motion.div ref={ref} className={className} style={{ scale, opacity }}>
+    <motion.div ref={ref} className={className} style={reduzido ? { scale: escala.para, opacity: 1 } : { scale, opacity }}>
       {children}
     </motion.div>
   )
-}
-
-export function RevelaNaRolagem(props: Props) {
-  const reduzido = usePrefereMovimentoReduzido()
-  if (reduzido) return <div className={props.className}>{props.children}</div>
-  return <RevelaAnimada {...props} />
 }

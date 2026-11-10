@@ -3,9 +3,12 @@
 // O que mudou: sem nenhum filtro (o original desfoca; aqui só opacidade e deslocamento);
 // deslocamento, duração, curva e atraso chegam por props, vindos do catálogo de movimento;
 // volta ao estado inicial quando o elemento sai da janela (once: false); sem AnimatePresence;
-// com movimento reduzido vira um elemento comum, já no estado final.
-import { useRef, type ReactNode } from 'react'
-import { motion, useInView } from 'motion/react'
+// os valores são conduzidos por animate() num efeito, cancelado a cada mudança; a árvore é a mesma
+// com e sem movimento reduzido (o conteúdo, o estado e o foco dos filhos sobrevivem à troca da
+// preferência); com movimento reduzido o bloco nasce no estado final, e se a preferência liga no
+// meio de uma entrada ele vai direto ao estado final, sem terminar a animação.
+import { useEffect, useRef, type ReactNode } from 'react'
+import { animate, motion, useInView, useMotionValue } from 'motion/react'
 import { usePrefereMovimentoReduzido } from '../../movimento/reduzido.ts'
 import type { RegistroMovimento } from '../../movimento/catalogo.ts'
 
@@ -19,25 +22,33 @@ interface Props {
   atrasoMs?: number
 }
 
-function EntradaAnimada({ children, className, deslocamentoPx, duracaoMs, curva, atrasoMs = 0 }: Props) {
+export function EntradaSuave({ children, className, deslocamentoPx, duracaoMs, curva, atrasoMs = 0 }: Props) {
+  const reduzido = usePrefereMovimentoReduzido()
   const ref = useRef<HTMLDivElement>(null)
+  // Sempre observa, também no reduzido: ao voltar ao normal a peça sabe se já está na tela e não
+  // reinicia a entrada de algo visível.
   const dentro = useInView(ref, { once: false })
+  const visivel = reduzido || dentro
+  const opacity = useMotionValue(reduzido ? 1 : 0)
+  const y = useMotionValue(reduzido ? 0 : deslocamentoPx)
+
+  useEffect(() => {
+    const alvoOpacity = visivel ? 1 : 0
+    const alvoY = visivel ? 0 : deslocamentoPx
+    if (reduzido) {
+      // Salto: encerra qualquer animação em curso e põe o bloco no estado final de uma vez.
+      opacity.jump(alvoOpacity)
+      y.jump(alvoY)
+      return
+    }
+    const transicao = { duration: duracaoMs / 1000, ease: curva, delay: dentro ? atrasoMs / 1000 : 0 }
+    const animacoes = [animate(opacity, alvoOpacity, transicao), animate(y, alvoY, transicao)]
+    return () => animacoes.forEach((animacao) => animacao.stop())
+  }, [reduzido, visivel, dentro, deslocamentoPx, duracaoMs, curva, atrasoMs, opacity, y])
 
   return (
-    <motion.div
-      ref={ref}
-      className={className}
-      initial={{ opacity: 0, y: deslocamentoPx }}
-      animate={dentro ? { opacity: 1, y: 0 } : { opacity: 0, y: deslocamentoPx }}
-      transition={{ duration: duracaoMs / 1000, ease: curva, delay: dentro ? atrasoMs / 1000 : 0 }}
-    >
+    <motion.div ref={ref} className={className} style={{ opacity, y }}>
       {children}
     </motion.div>
   )
-}
-
-export function EntradaSuave(props: Props) {
-  const reduzido = usePrefereMovimentoReduzido()
-  if (reduzido) return <div className={props.className}>{props.children}</div>
-  return <EntradaAnimada {...props} />
 }

@@ -36,8 +36,9 @@ export interface RegistroMovimento {
 }
 
 export const CATALOGO = {
-  // Linha que se desenha: transform scaleX de 0 a 1 a partir da esquerda, 400 ms, linear. Fica
-  // parada 100 ms antes da cortina.
+  // Linha que se desenha por revelação com máscara: um recipiente com overflow hidden e uma linha
+  // dentro que desliza no eixo x (transform translateX) de -100% a 0% da própria largura, 400 ms,
+  // linear. Sem escala e sem clip-path. Fica parada 100 ms antes da cortina.
   M1: {
     id: 'M1',
     tipo: 'tempo',
@@ -48,7 +49,7 @@ export const CATALOGO = {
     escalonamentoMs: 0,
     atrasoMs: 0,
     deslocamentoPx: 0,
-    deslocamentoPct: 0,
+    deslocamentoPct: 100,
     escala: { de: 1, para: 1 },
     rotacaoGraus: 0,
     repetir: false,
