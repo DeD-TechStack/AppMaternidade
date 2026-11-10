@@ -803,14 +803,14 @@ describe('MAT-44c-1 rodada 7 #1 e #2: o celular é uma janela de altura fixa, co
   const doCelular = (seletor: string, condicao: string | null = null) =>
     regras.find((r) => r.seletor === seletor && r.condicao === condicao)!
 
-  it('a janela tem altura fixa (tela de 33rem) e a tela tem mais de 22rem de largura, então a barra vem em linha', () => {
+  it('a janela tem altura fixa (tela de 32,65rem) e a tela tem mais de 22rem de largura, então a barra vem em linha', () => {
     const celular = doCelular('.aparelho-celular')
     const larguraTotal = emRem(celular.props['width'])
     const alturaTotal = emRem(celular.props['height'])
     // Moldura: 2 px de borda e 0,375rem de padding de cada lado.
     const moldura = 2 * (2 / 16 + 0.375)
     expect(larguraTotal - moldura).toBeGreaterThan(22)
-    expect(alturaTotal - moldura).toBeCloseTo(33, 5)
+    expect(alturaTotal - moldura).toBeCloseTo(32.65, 5)
     // A regra de uma coluna da navegação é a de 22rem da barra, e a tela dá a ela mais que isso.
     expect(estiloGlobal).toMatch(/@container \(max-width: 22rem\)/)
     // A tela ocupa a janela inteira, o conteúdo corta no que passa e a barra fica presa no pé.
@@ -887,7 +887,7 @@ describe('MAT-44c-1 rodada 7 #1 e #2: o celular é uma janela de altura fixa, co
     expect(parseFloat(celularEm(26)['--escala-celular'])).toBe(0.95)
     expect(parseFloat(celularEm(46)['--escala-celular'])).toBe(1)
     expect(celularEm(46)['width']).toBe('23.5rem')
-    expect(celularEm(46)['height']).toBe('34rem')
+    expect(celularEm(46)['height']).toBe('33.65rem')
   })
 
   it('com a fonte ampliada o celular encolhe em degraus e cabe na área do cartão', () => {

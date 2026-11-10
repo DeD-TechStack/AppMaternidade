@@ -872,7 +872,7 @@
 
   /* Aparelhos desenhados em CSS, sem sombra. Por dentro vai a tela de verdade (Hoje ou Sessão), em
      tamanho natural: ela decide o layout pela largura que tem (contêiner `app`). O celular é uma
-     janela de altura fixa (33 rem de tela): mostra o topo da tela real (título e primeiro cartão) e
+     janela de altura fixa (32,65 rem de tela): mostra o topo da tela real (título e primeiro cartão) e
      tem a barra de baixo presa no pé da janela, como no aparelho de verdade; o resto da tela é
      cortado pela moldura. A tela tem 22,5 rem (360 px) de largura, mais que os 22 rem em que a
      navegação cai numa coluna, então a barra vem em linha, com os 5 itens lado a lado. O notebook
@@ -894,19 +894,21 @@
     border-inline: 0;
   }
 
-  /* O celular: 23,5 × 34 rem naturais (tela de 22,5 × 33 rem), escalado de cima para a esquerda
+  /* O celular: 23,5 × 33,65 rem naturais (tela de 22,5 × 32,65 rem), escalado de cima para a esquerda
      como o notebook, com as margens negativas tirando do fluxo o espaço que a escala libera. A
      escala é a mesma para todos os celulares da página e só muda em degraus, pela largura dela:
      em 390 px (a página tem 22,4 rem) é 0,85, e o menor texto da tela (13 px na navegação) fica
      com 11,05 px efetivos; o celular tem cerca de 309 px, com cerca de 17 px de folga de cada
-     lado da seção. */
+     lado da seção. A altura é escolhida para o recorte da janela cair entre duas linhas de texto,
+     nunca dentro de uma (medido no navegador, no estado fixo da vitrine): mudar o conteúdo da
+     vitrine pede medir de novo. */
   .aparelho-celular {
     --escala-celular: 0.8;
     position: relative;
     width: 23.5rem;
-    height: 34rem;
+    height: 33.65rem;
     margin-right: calc(23.5rem * (var(--escala-celular) - 1));
-    margin-bottom: calc(34rem * (var(--escala-celular) - 1));
+    margin-bottom: calc(33.65rem * (var(--escala-celular) - 1));
     transform: scale(var(--escala-celular));
     transform-origin: top left;
     border: 2px solid var(--cor-linha);
@@ -919,14 +921,14 @@
      efetivos. Abaixo de 20 rem (fonte e zoom em 200%) fica a base de 0,8, como estava. A moldura é
      mais fina e a caixa menor para o celular caber na seção com 16 px de folga de cada lado (22,7
      rem × 0,85 = 309 px) e a tela ter 353 px, mais que os 352 px (22 rem) em que a barra cai numa
-     coluna. A janela visível tem 31,75 rem × 0,85 = 432 px, no máximo 460 px. */
+     coluna. A janela visível tem 31,55 rem × 0,85 = 429 px, no máximo 460 px. */
   @container pagina (min-width: 20rem) and (max-width: 24.99rem) {
     .aparelho-celular {
       --escala-celular: 0.85;
       width: 22.7rem;
-      height: 31.75rem;
+      height: 31.55rem;
       margin-right: calc(22.7rem * (var(--escala-celular) - 1));
-      margin-bottom: calc(31.75rem * (var(--escala-celular) - 1));
+      margin-bottom: calc(31.55rem * (var(--escala-celular) - 1));
       padding: 0.1875rem;
     }
   }
