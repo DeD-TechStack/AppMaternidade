@@ -243,7 +243,7 @@ export function Sistema() {
         <Secao
           rotulo="Cena de estúdio e cartão flutuante"
           titulo={SECOES.cena}
-          texto="A cena é uma foto de estúdio com a captura das nossas telas; o cartão por cima é HTML de verdade."
+          texto="A cena é uma foto de estúdio com a captura das nossas telas; o cartão por cima é um cartão de verdade, não uma imagem."
         >
           <CenaEstudio
             base="/cenas/sistema/trio-mel"
