@@ -26,28 +26,51 @@
     text-wrap: balance;
   }
 
-  /* Grade: no celular empilha na ordem do DOM (título, painel, texto); a partir de 1100, o título corre pela
+  /* Grade: no celular empilha na ordem do DOM (título, índice, texto); a partir de 1100, o título corre pela
      largura toda e, abaixo dele, o texto na coluna da esquerda (70 caracteres) e o painel na da direita. */
   .pt-grade {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: clamp(32px, 2.857vw + 20.857px, 48px);
+    gap: clamp(24px, 2.857vw + 12.857px, 48px);
     align-items: start;
   }
 
+  /* Abaixo de 1100 px o painel não tem cartão, fundo nem respiro lateral: o índice começa no mesmo x do
+     título, do parágrafo e da figura (a margem da página). */
   .cm-painel.pt-painel {
-    padding: 24px;
+    padding: 0;
+    border-radius: 0;
+    background-color: transparent;
   }
 
-  /* A ilustração enche a largura do painel: 16:9 no celular (no máximo 200 de altura), 4:3 em tela larga
-     (uns 300 de altura), para todos os painéis terem o mesmo peso. */
+  /* A frase de apoio só existe no painel largo. */
+  .pt-apoio {
+    display: none;
+    margin: 0;
+    font-family: var(--fonte-titulo);
+    font-size: 1.5rem;
+    line-height: 1.875rem;
+    font-style: italic;
+    font-weight: 500;
+    text-wrap: balance;
+  }
+
+  /* O desenho aparece uma vez só: solto na leitura (depois da primeira seção) abaixo de 1100 px, no painel
+     de 1100 em diante. `display: none` tira o outro do leitor de tela. */
   .pt-ilustracao {
+    object-fit: contain;
+  }
+
+  .pt-ilustracao.pt-ilustracao-painel {
+    display: none;
+  }
+
+  .pt-leitura > .pt-ilustracao.pt-ilustracao-leitura {
     display: block;
     width: 100%;
-    height: auto;
-    max-height: 200px;
-    aspect-ratio: 16 / 9;
-    object-fit: contain;
+    height: 180px;
+    margin-top: 32px;
+    object-position: left;
   }
 
   @media (min-width: 1100px) {
@@ -75,14 +98,25 @@
       width: 100%;
       max-width: 34rem;
       padding: 32px;
+      border-radius: var(--radius-painel);
+      background-color: var(--color-areia);
     }
 
-    /* 290 de altura: o painel de 8 itens ainda cabe na janela de 900 (para ficar fixo) e, com o painel a 352 px
-       do topo, a primeira tela termina na base do quarto item do índice (a linha de baixo começa em 901). */
-    .pt-ilustracao {
-      height: 290px;
-      max-height: none;
-      aspect-ratio: auto;
+    .pt-apoio {
+      display: block;
+      margin-bottom: 24px;
+    }
+
+    /* 190 de altura: o painel de 10 itens (Privacidade) cabe inteiro na janela de 900, mesmo fixo. */
+    .pt-ilustracao.pt-ilustracao-painel {
+      display: block;
+      width: 100%;
+      height: 190px;
+      margin-top: 24px;
+    }
+
+    .pt-leitura > .pt-ilustracao.pt-ilustracao-leitura {
+      display: none;
     }
   }
 
@@ -106,7 +140,7 @@
 
   /* Índice "Nesta página" */
   .pt-indice {
-    margin-top: 20px;
+    margin: 0;
   }
 
   .pt-indice-rotulo {
@@ -123,9 +157,11 @@
     list-style: none;
   }
 
-  /* Em tela estreita o índice é um <details> fechado: o resumo é uma linha de 44 px com a seta. */
+  /* Em tela estreita o índice é um <details> fechado: o resumo é uma linha de 48 px com a seta, entre dois
+     filetes, sem fundo. */
   .pt-indice-detalhes {
     border-top: 1px solid var(--cor-fio-suave);
+    border-bottom: 1px solid var(--cor-fio-suave);
   }
 
   .pt-indice-resumo {
@@ -149,10 +185,6 @@
 
   .pt-indice-detalhes[open] .pt-indice-seta {
     transform: rotate(180deg);
-  }
-
-  .pt-indice:has(.pt-indice-detalhes) {
-    margin-top: 12px;
   }
 
   .pt-indice-lista > li + li {
@@ -193,14 +225,40 @@
     max-width: none;
   }
 
-  .pt-aviso {
-    margin: 0;
-    padding: 16px 20px;
+  /* Bloco de e-mail (Contato): cartão de papel claro no topo da leitura, sem sombra. */
+  .pt-email {
+    box-sizing: border-box;
+    padding: 24px;
+    border: 1px solid var(--cor-fio-suave);
     border-radius: var(--radius-cartao);
-    background-color: var(--color-areia);
+    background-color: var(--cor-cartao);
     color: var(--color-cacau);
-    font-size: 1rem;
-    line-height: 1.5rem;
+  }
+
+  .pt-email-rotulo {
+    font-family: var(--fonte-texto);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 600;
+  }
+
+  .pt-email-endereco {
+    margin: 4px 0 0;
+    font-family: var(--fonte-texto);
+    font-style: normal;
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  .pt-email > .cm-botao {
+    margin-top: 16px;
+  }
+
+  /* Botão de rota depois do texto (Exclusão de conta). */
+  .pt-texto > .pt-acao {
+    padding-top: 8px;
   }
 
   .pt-leitura > .pt-secao {
@@ -209,8 +267,18 @@
     border-top: 1px solid var(--cor-fio-suave);
   }
 
+  /* Abaixo de 1100 px o filete de baixo do índice já separa: a primeira seção não leva o seu. */
   .pt-leitura > .pt-secao:first-child {
     margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  @media (min-width: 1100px) {
+    .pt-leitura > .pt-secao:first-child {
+      padding-top: 32px;
+      border-top: 1px solid var(--cor-fio-suave);
+    }
   }
 
   /* h2 em Literata: 36/42 em 1440 e 24/30 em 390 (o degrau h3 da escala; o h2 de 56 é de página de venda). */
@@ -256,7 +324,7 @@
 
   /* Link no meio do texto: alvo de 44 x 44 no mínimo. A caixa cresce 8 px para cima e para baixo (28 de linha
      + 16 = 44) e a margem negativa devolve os 8 px, para a altura da linha não mudar. */
-  .pt-texto a {
+  .pt-texto a:not(.cm-botao) {
     display: inline-block;
     box-sizing: border-box;
     min-width: 44px;
@@ -272,7 +340,7 @@
     text-underline-offset: 3px;
   }
 
-  .pt-texto a:hover {
+  .pt-texto a:not(.cm-botao):hover {
     text-decoration-thickness: 3px;
   }
 
@@ -309,20 +377,6 @@
 
   .pt-titulados > div + div {
     margin-top: 20px;
-  }
-
-  /* O e-mail sozinho (Contato): em destaque, em Outfit (o "1" de Literata se confunde com o "l"). */
-  .pt-texto .pt-destaque {
-    font-size: clamp(20px, 0.762vw + 17px, 28px);
-    line-height: 1.4;
-    font-weight: 500;
-    overflow-wrap: anywhere;
-  }
-
-  .pt-texto .pt-destaque a {
-    padding-block: 0;
-    margin-block: 0;
-    color: inherit;
   }
 
   /* Tabela: legenda, cabeçalhos e linhas; rola dentro da própria região em tela estreita. */

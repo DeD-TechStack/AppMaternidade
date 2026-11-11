@@ -66,31 +66,84 @@ describe('páginas públicas de leitura', () => {
         expect(rolar).toHaveBeenCalledTimes(links.length)
       })
 
-      it('tem um só desenho de traço, com texto alternativo, e ele não se repete nas outras páginas', () => {
+      it('tem um só desenho de traço (no painel e, para o celular, solto na leitura), com texto alternativo, e ele não se repete nas outras páginas', () => {
         const { container } = renderizarRota(caminho)
+        const principal = container.querySelector('main')!
         const desenhos = container.querySelectorAll<HTMLImageElement>('main img[data-ilustracao]')
-        expect(desenhos).toHaveLength(1)
-        expect(desenhos[0].getAttribute('alt')).toMatch(/^Desenho de traço: .+/)
-        expect(within(container.querySelector('main')!).getByRole('img', { name: desenhos[0].alt })).toBe(desenhos[0])
+        // O mesmo desenho aparece duas vezes no DOM: o do painel (1100 px ou mais) e a figura solta da leitura
+        // (abaixo de 1100 px); o CSS esconde o que não está em uso (display: none).
+        expect(desenhos).toHaveLength(2)
+        for (const desenho of desenhos) {
+          expect(desenho.getAttribute('data-ilustracao')).toBe(dados.ilustracao)
+          expect(desenho.getAttribute('alt')).toMatch(/^Desenho de traço: .+/)
+        }
+        const noPainel = principal.querySelector<HTMLImageElement>('aside img[data-ilustracao]')!
+        const naLeitura = principal.querySelector<HTMLImageElement>('.pt-leitura img[data-ilustracao]')!
+        expect(noPainel).not.toBeNull()
+        expect(naLeitura).not.toBeNull()
+        expect(noPainel.classList.contains('pt-ilustracao-painel')).toBe(true)
+        expect(naLeitura.classList.contains('pt-ilustracao-leitura')).toBe(true)
+        expect(within(principal).getAllByRole('img', { name: desenhos[0].alt })).toHaveLength(2)
 
         const outros = PAGINAS.filter(([outro]) => outro !== caminho).map(([, , pagina]) => pagina.ilustracao)
         expect(outros).not.toContain(dados.ilustracao)
       })
 
+      it('põe a figura solta na leitura logo depois da primeira seção (da segunda na Exclusão), sem cartão, e a carrega só quando chegar perto', () => {
+        const { container } = renderizarRota(caminho)
+        const principal = container.querySelector('main')!
+        const naLeitura = principal.querySelector<HTMLImageElement>('.pt-leitura img[data-ilustracao]')!
+        const depoisDe = dados.secoes[(dados.figuraDepoisDe ?? 1) - 1].secao
+        expect(naLeitura.getAttribute('loading')).toBe('lazy')
+        expect(naLeitura.parentElement!.classList.contains('pt-leitura')).toBe(true)
+        expect(naLeitura.closest('aside')).toBeNull()
+        expect(naLeitura.previousElementSibling!.querySelector('h2')!.id).toBe(depoisDe.id)
+        expect(naLeitura.nextElementSibling!.tagName).toBe('SECTION')
+      })
+
+      it('mostra a frase de apoio no painel, antes do índice e do desenho', () => {
+        const { container } = renderizarRota(caminho)
+        const painel = container.querySelector('main aside')!
+        const apoio = within(painel as HTMLElement).getByText(dados.apoio)
+        expect(apoio.classList.contains('pt-apoio')).toBe(true)
+        const indice = painel.querySelector('nav')!
+        const desenho = painel.querySelector('img[data-ilustracao]')!
+        expect(apoio.compareDocumentPosition(indice) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+        expect(indice.compareDocumentPosition(desenho) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+        expect(container.querySelector('main .pt-leitura')!.textContent).not.toContain(dados.apoio)
+      })
+
+      it('não tem caixa de aviso (pt-aviso): o único aviso do site é o do casco', () => {
+        const { container } = renderizarRota(caminho)
+        expect(container.querySelector('.pt-aviso')).toBeNull()
+        expect('aviso' in dados).toBe(false)
+      })
+
       it(
         caminho === '/contato'
-          ? 'mostra o e-mail de contato como link de e-mail'
+          ? 'mostra o e-mail de contato num bloco no topo da leitura, com o botão "Escrever para nós" (mailto)'
           : 'não mostra o e-mail de contato (só a página Contato o mostra)',
         () => {
           const { container } = renderizarRota(caminho)
           const principal = container.querySelector('main')!
-          const links = within(principal).queryAllByRole('link', { name: EMAIL_CONTATO })
           if (caminho === '/contato') {
-            expect(links).toHaveLength(1)
-            expect(links[0].getAttribute('href')).toBe(`mailto:${EMAIL_CONTATO}`)
+            const bloco = principal.querySelector('.pt-leitura > .pt-email')!
+            expect(bloco).not.toBeNull()
+            expect(bloco.parentElement!.firstElementChild).toBe(bloco)
+            expect(bloco.textContent).toContain('E-mail')
+            expect(within(bloco as HTMLElement).getByText(EMAIL_CONTATO).closest('a')).toBeNull()
+            expect(principal.textContent!.split(EMAIL_CONTATO)).toHaveLength(2)
+
+            const botao = within(principal).getByRole('link', { name: 'Escrever para nós' })
+            expect(botao.getAttribute('href')).toBe(`mailto:${EMAIL_CONTATO}`)
+            expect(botao.classList.contains('cm-botao')).toBe(true)
+            expect(bloco.contains(botao)).toBe(true)
+            expect(principal.querySelectorAll('a[href^="mailto:"]')).toHaveLength(1)
+            expect(principal.querySelector('.pt-destaque')).toBeNull()
           } else {
             expect(principal.textContent).not.toContain(EMAIL_CONTATO)
             expect(principal.querySelector('a[href^="mailto:"]')).toBeNull()
+            expect(principal.querySelector('.pt-email')).toBeNull()
           }
         },
       )
@@ -270,16 +323,144 @@ describe('painel do índice fixo ao rolar (CSS)', () => {
   })
 })
 
-describe('páginas com aviso de demonstração', () => {
-  it('Privacidade e Termos têm o aviso de dados fictícios uma vez; as outras páginas, nenhum', () => {
-    for (const [caminho, , dados] of PAGINAS) {
+// Um só aviso de "não está pronto" na página: o do casco. A frase de dados fictícios é um parágrafo comum
+// dentro da seção a que se refere, sem caixa nem selo.
+describe('aviso de dados fictícios', () => {
+  const FRASE = 'Nesta versão de avaliação, use só dados fictícios.'
+
+  it('aparece uma vez em Privacidade (em "Onde os dados vão ficar") e uma vez em Termos (em "Sua conta"), como parágrafo comum; nas outras páginas, nenhuma', () => {
+    const ONDE: Record<string, string> = { '/privacidade': 'Onde os dados vão ficar', '/termos': 'Sua conta' }
+    for (const [caminho] of PAGINAS) {
       const { container, unmount } = renderizarRota(caminho)
       const principal = container.querySelector('main')!
-      const ocorrencias = [...principal.querySelectorAll('p')].filter((p) => p.textContent === 'Nesta versão de avaliação, use só dados fictícios.')
-      expect(ocorrencias, caminho).toHaveLength(dados.aviso ? 1 : 0)
+      const ocorrencias = [...principal.querySelectorAll('p')].filter((p) => p.textContent === FRASE)
+      expect(ocorrencias, caminho).toHaveLength(ONDE[caminho] ? 1 : 0)
+      if (ONDE[caminho]) {
+        const [paragrafo] = ocorrencias
+        expect(paragrafo.className, caminho).toBe('')
+        const secao = paragrafo.closest('section')!
+        expect(secao.querySelector('h2')!.textContent, caminho).toBe(ONDE[caminho])
+        // O primeiro parágrafo da seção.
+        expect(secao.querySelector('.pt-texto')!.firstElementChild, caminho).toBe(paragrafo)
+      }
       unmount()
     }
-    expect(PAGINAS_DE_TEXTO.privacidade.aviso).toBeDefined()
-    expect(PAGINAS_DE_TEXTO.termos.aviso).toBeDefined()
+  })
+
+  it('o CSS não tem mais estilo de aviso (pt-aviso) nem o destaque do e-mail (pt-destaque)', () => {
+    const css = readFileSync(join(process.cwd(), 'src/componentes/publicas-texto/publicasTexto.css'), 'utf8')
+    expect(css).not.toMatch(/pt-aviso|pt-destaque/)
+  })
+})
+
+describe('Contato: bloco de e-mail', () => {
+  it('não repete o título "Fale conosco" como seção: o índice lista só as outras seções', () => {
+    const { container } = renderizarRota('/contato')
+    const principal = container.querySelector('main')!
+    expect(within(principal).queryByRole('heading', { level: 2, name: 'Fale conosco' })).toBeNull()
+    const indice = within(principal).getByRole('navigation', { name: ROTULO_INDICE })
+    expect(within(indice).getAllByRole('link').map((link) => link.textContent)).toEqual([
+      'Em uma urgência',
+      'Para que serve este canal',
+    ])
+    expect(principal.querySelector('h1')!.textContent).toBe('Contato')
+    expect(principal.querySelector('h1')!.nextElementSibling!.textContent).toBe('Fale conosco.')
+  })
+
+  it('o botão "Escrever para nós" é um link mailto com o estilo de botão do site (alvo de 44 px)', () => {
+    renderizarRota('/contato')
+    const botao = screen.getByRole('link', { name: 'Escrever para nós' })
+    expect(botao.className).toBe('cm-botao cm-botao-primario alvo-toque')
+  })
+})
+
+describe('Exclusão de conta: página de tarefa', () => {
+  it('as seções vêm na ordem Antes de excluir, Como pedir, O que vai ser apagado, O que pode ficar guardado e Prazo', () => {
+    const { container } = renderizarRota('/exclusao-de-conta')
+    const titulos = within(container.querySelector('main')!).getAllByRole('heading', { level: 2 })
+    expect(titulos.map((titulo) => titulo.textContent)).toEqual([
+      'Antes de excluir',
+      'Como pedir',
+      'O que vai ser apagado',
+      'O que pode ficar guardado',
+      'Prazo',
+    ])
+    const indice = within(container.querySelector('main')!).getByRole('navigation', { name: ROTULO_INDICE })
+    expect(within(indice).getAllByRole('link').map((link) => link.textContent)).toEqual(
+      titulos.map((titulo) => titulo.textContent),
+    )
+  })
+
+  it('o botão "Ir para Contato" vem logo depois do último parágrafo de "Como pedir" e leva a /contato', () => {
+    const { container } = renderizarRota('/exclusao-de-conta')
+    const secao = screen.getByRole('heading', { level: 2, name: 'Como pedir' }).closest('section')!
+    const botao = within(secao).getByRole('link', { name: 'Ir para Contato' })
+    expect(botao.getAttribute('href')).toBe('/contato')
+    expect(botao.className).toBe('cm-botao cm-botao-primario alvo-toque')
+    const texto = secao.querySelector('.pt-texto')!
+    expect(texto.lastElementChild).toBe(botao.parentElement)
+    expect(texto.lastElementChild!.previousElementSibling!.tagName).toBe('P')
+    expect(container.querySelectorAll('main a[href="/contato"]')).toHaveLength(1)
+  })
+
+  it('nenhum desenho solto aparece antes de "Antes de excluir" e "Como pedir": a figura vem depois da segunda seção', () => {
+    const { container } = renderizarRota('/exclusao-de-conta')
+    const leitura = container.querySelector('main .pt-leitura')!
+    const figura = leitura.querySelector('img[data-ilustracao]')!
+    const secoes = [...leitura.querySelectorAll(':scope > section')]
+    expect(leitura.children[0].tagName).toBe('SECTION')
+    expect(figura.previousElementSibling).toBe(secoes[1])
+    expect(figura.nextElementSibling).toBe(secoes[2])
+  })
+})
+
+// O jsdom não mede layout: a margem única, o painel sem cartão no celular e a figura que troca de lugar são
+// lidos do CSS (regras do arquivo, na ordem em que aparecem: a primeira é a do celular; a seguinte, a de 1100 px).
+describe('painel e figura por largura (CSS)', () => {
+  const css = readFileSync(join(process.cwd(), 'src/componentes/publicas-texto/publicasTexto.css'), 'utf8').replace(
+    /\/\*[\s\S]*?\*\//g,
+    '',
+  )
+  const regras = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, seletor, corpo]) => ({ seletor: seletor.trim(), corpo }))
+  const corpos = (seletor: string) => regras.filter((regra) => regra.seletor === seletor).map(({ corpo }) => corpo)
+
+  it('abaixo de 1100 px o painel não tem cartão de areia nem respiro lateral (a margem é a mesma do título)', () => {
+    const [celular, largo] = corpos('.cm-painel.pt-painel')
+    expect(celular).toMatch(/padding:\s*0\s*;/)
+    expect(celular).toMatch(/background-color:\s*transparent/)
+    expect(celular).toMatch(/border-radius:\s*0/)
+    expect(css).toMatch(/@media \(min-width: 1100px\)/)
+    expect(corpos('.cm-painel.pt-painel').some((corpo) => /background-color:\s*var\(--color-areia\)/.test(corpo))).toBe(true)
+    expect(largo).toBeDefined()
+  })
+
+  it('a frase de apoio fica oculta abaixo de 1100 px e aparece no painel de 1100 em diante', () => {
+    const [celular, largo] = corpos('.pt-apoio')
+    expect(celular).toMatch(/display:\s*none/)
+    expect(largo).toMatch(/display:\s*block/)
+    expect(celular).toMatch(/font-style:\s*italic/)
+    expect(celular).toMatch(/font-family:\s*var\(--fonte-titulo\)/)
+  })
+
+  it('o desenho do painel só existe de 1100 em diante (190 px) e a figura solta só abaixo disso (180 px, alinhada à esquerda)', () => {
+    const [painelCelular, painelLargo] = corpos('.pt-ilustracao.pt-ilustracao-painel')
+    expect(painelCelular).toMatch(/display:\s*none/)
+    expect(painelLargo).toMatch(/display:\s*block/)
+    expect(painelLargo).toMatch(/height:\s*190px/)
+
+    const [leituraCelular, leituraLargo] = corpos('.pt-leitura > .pt-ilustracao.pt-ilustracao-leitura')
+    expect(leituraCelular).toMatch(/display:\s*block/)
+    expect(leituraCelular).toMatch(/height:\s*180px/)
+    expect(leituraCelular).toMatch(/object-position:\s*left/)
+    expect(corpos('.pt-ilustracao')[0]).toMatch(/object-fit:\s*contain/)
+    expect(leituraLargo).toMatch(/display:\s*none/)
+  })
+
+  it('o índice recolhido tem filete em cima e embaixo e linha de 48 px, sem fundo', () => {
+    const [detalhes] = corpos('.pt-indice-detalhes')
+    expect(detalhes).toMatch(/border-top:\s*1px solid/)
+    expect(detalhes).toMatch(/border-bottom:\s*1px solid/)
+    expect(detalhes).not.toMatch(/background/)
+    expect(corpos('.pt-indice-resumo')[0]).toMatch(/min-height:\s*48px/)
   })
 })
