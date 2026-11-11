@@ -878,8 +878,9 @@
     min-height: 56px;
   }
 
-  /* Com 56 px de largura o ícone de 26 fica 15 px para dentro: o recuo acompanha, e a borda continua na do conteúdo. */
+  /* Com 56 px de largura a caixa do ícone fica 15 px para dentro e o traço termina 3,25 px antes da borda da
+     caixa: -(15 + 3,25) leva o traço à borda do conteúdo, como no dia. */
   :root[data-tema='madrugada'] .sb-cab-menu {
-    margin-right: -15px;
+    margin-right: -18.25px;
   }
 }

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { act, fireEvent, screen, within } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { COLUNAS_DO_RODAPE, ITENS_DO_CABECALHO } from '../componentes/casca/textos.ts'
 import { renderizarRota } from './renderizarRota.tsx'
 
@@ -192,6 +192,21 @@ describe('rodapé compacto nas rotas /app/*', () => {
   it('não leva o aviso de demonstração para dentro do rodapé compacto', () => {
     const { container } = renderizarRota('/app/hoje')
     expect(container.querySelector('footer[data-rodape] [data-aviso="demonstracao"]')).toBeNull()
+  })
+
+  it('em /app/hoje, sem banco, há exatamente um aviso de demonstração na página e ele não está no rodapé', () => {
+    // Mesmo setup do avisoDemonstracao.test.tsx para o caso em que o aviso aparece: as duas variáveis do banco vazias.
+    vi.stubEnv('VITE_SUPABASE_URL', '')
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', '')
+    try {
+      const { container } = renderizarRota('/app/hoje')
+      const avisos = container.querySelectorAll('[data-aviso="demonstracao"]')
+      expect(avisos).toHaveLength(1)
+      expect(avisos[0].closest('footer[data-rodape]')).toBeNull()
+      expect(container.querySelector('footer[data-rodape]')).not.toBeNull()
+    } finally {
+      vi.unstubAllEnvs()
+    }
   })
 
   it('`comAviso` continua valendo: o rodapé público segue mostrando o aviso', () => {

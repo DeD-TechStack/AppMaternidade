@@ -415,8 +415,9 @@
     justify-content: center;
     width: 48px;
     height: 48px;
-    /* O ícone de 26 px fica 11 px para dentro do botão de 48: o recuo leva a borda do ícone à borda do conteúdo. */
-    margin-right: -11px;
+    /* A caixa do ícone (26 px) fica 11 px para dentro do botão de 48, e o traço do Menu do Lucide (viewBox 24,
+       pontas redondas) termina 3,25 px antes da borda da caixa: -(11 + 3,25) leva o TRAÇO à borda do conteúdo. */
+    margin-right: -14.25px;
     padding: 0;
     border: 0;
     border-radius: var(--radius-pilula);

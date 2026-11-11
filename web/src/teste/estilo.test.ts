@@ -232,11 +232,24 @@ describe('rodapé: marca ajustada ao painel e alvos da casca (MAT-49e)', () => {
     expect(regra![2]).not.toMatch(/!important/)
   })
 
-  it('o botão do menu do cabeçalho não recua mais para fora da margem (o ícone termina na borda do conteúdo)', () => {
+  // O ícone Menu do Lucide (viewBox 24, 26 px, traço 2, pontas redondas) pinta o traço 3,25 px ANTES da borda
+  // direita da caixa do SVG: (24 - 21) / 24 * 26. A caixa fica 11 px para dentro do botão de 48 px (15 px no de
+  // 56 px da madrugada). O recuo leva a borda do TRAÇO, e não a da caixa, à borda do conteúdo.
+  const TRACO_FORA_DA_CAIXA = 3.25
+
+  it('o recuo do botão do menu leva a borda do traço do ícone (e não a da caixa do SVG) à borda do conteúdo: -(11 + 3,25) px', () => {
     const corpo = corpoDaRegra(site, '.sb-cab-menu')
     expect(corpo).toMatch(/width:\s*48px/)
     expect(corpo).toMatch(/height:\s*48px/)
-    expect(corpo).toMatch(/margin-right:\s*(-11px|-11\.\d+px)/)
+    expect(Number.parseFloat(/margin-right:\s*(-?[\d.]+)px/.exec(corpo)?.[1] ?? 'NaN')).toBeCloseTo(-(11 + TRACO_FORA_DA_CAIXA), 5)
+    expect(corpo).toMatch(/margin-right:\s*-14\.25px/)
+  })
+
+  it('na madrugada (botão de 56 px) o recuo do menu é -(15 + 3,25) px, com os 56 px de alvo preservados', () => {
+    const campo = css.find((f) => f.nome === 'styles/campo.css')!.limpo
+    const corpo = corpoDaRegra(campo, ":root[data-tema='madrugada'] .sb-cab-menu")
+    expect(corpo).toMatch(/margin-right:\s*-18\.25px/)
+    expect(campo).toMatch(/:root\[data-tema='madrugada'\] \.sb-cab-menu,[^{}]*\{[^{}]*min-width:\s*56px[^{}]*min-height:\s*56px/)
   })
 
   it('o rodapé compacto tem regra própria', () => {
