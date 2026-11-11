@@ -12,7 +12,35 @@ Esta é a nota de partida da próxima sessão de trabalho no site. Ela registra 
 
 **Site publicado (06/11/2026):** https://ded-techstack.github.io/AppMaternidade/ (MAT-48a, main 2beddee). Ele mostra Início, Hoje e Sessão com o aviso "Demonstração sem banco". As variáveis do banco entram no build com a MAT-37.
 
-## RETOMADA de 10/11/2026 (Hermes v0.23.1): ESTADO VIGENTE
+## VISUAL REFEITO DO ZERO, passo 0 (11/11/2026, 3h20): ESTADO VIGENTE
+
+Este bloco substitui o de 10/11 logo abaixo, que vale só como histórico. Nele, os cartões 44d-3, MAT-36 g2, 6b, 6c e 44d-6 ficaram superados.
+
+- **Por quê.** Às 2h20, Daniel rejeitou o visual do site ("um completo lixo visualmente", "não segue em nada o site referência"). A causa está na auditoria da infra (`C:/OrchestrationLab/exports/Revisao_Geral_20261111/T1_visual/RESULTADO.md`). A spec MAT-44d mandava fazer os aparelhos em 3D de CSS e proibia imagem, sombra e gradiente. A sala limpa tirou da spec a aparência da referência. E o juiz Fable deu nota ao próprio plano.
+- **Regra nova (equipe c93a301).** O código de uma página só começa depois que Daniel aprova uma galeria de direções. O aceite visual é feito por 2 juízes cegos de famílias diferentes, calibrados antes, com no máximo 2 rodadas por página. Quem escreveu a spec não julga. Pausa se faz com `schedule`, não com `block`.
+- **Feito no passo 0.** A galeria está em `C:/OrchestrationLab/projetos/_staging/appmaternidade/DIRECOES_20261111/GALERIA.html`. Cada uma das 3 direções tem um DESIGN.md (paleta com contraste medido, 2 famílias de letra, espaçamento, componentes, o que fazer e o que não fazer, e como se fazem as imagens) e 3 comps do image_gen do Codex, feitas no plano do ChatGPT: a abertura, o Hoje e uma página pública. A referência e as capturas rejeitadas ficam ao lado. O registro de cada imagem está em `PROVENANCE.md`.
+  - A, Estúdio anil: celulares reais fotografados em estúdio sobre anil `#2E4BD8`, com as letras Bricolage Grotesque e Atkinson Hyperlegible Next.
+  - B, Madrugada: abertura noturna com luz de abajur e fotos sem rosto, com as letras Young Serif e Figtree.
+  - C, Bilhete da família: ilustração em guache e bilhetes amarelos, com as letras Shantell Sans e Hanken Grotesk.
+- **Board.**
+  - Arquivados como substituídos: t_5184c99c (44d-3), t_93f3308e (MAT-36 g2), t_b2a55931 (MAT-36), t_f67d8962 (44c-1), t_ab1bd202 (PWA, que Daniel recusou), t_77f83db6 (6b), t_673ee2f7 (6c) e t_1584e47e (44d-6).
+  - Em `scheduled`, a lógica de dados e de acesso: t_915e3632 (37a, com o código aprovado `fad75c0` no ramo `wt/t_915e3632`), t_1757260d (37g), t_11ad28e6 (37b), t_f7bdf7e8 (38a), t_7c491177 (38b), t_55a580e8 (39a), t_c9529365 (39b), t_4c921e60 (40a) e t_359ab800 (40b).
+  - Nenhum cartão está em triage. A 48b já estava concluída (t_fa51c4df e t_0754f01f).
+- **Git.** Nada foi integrado e não houve push para a main. `int/refazer` continua em e73e75a, e o site publicado continua o antigo.
+- **Esperando Daniel (decisor: Daniel), as perguntas da galeria:**
+  1. Qual direção ele escolhe. Recomendo a A, com o modo Madrugada da B nas telas do app à noite.
+  2. Se quem desenha pode ver a referência. Recomendo sim, sem que nada dela entre no repositório ou no site.
+  3. Se libera imagem, sombra e gradiente, só pelos tokens. Recomendo sim.
+  4. Se aceita imagens geradas no site publicado. Recomendo sim, com curadoria e `PROVENANCE.md`.
+  5. Se o Opus escreve as telas que definem a cara do site. Recomendo sim, com o Sonnet nas páginas que só seguem o padrão.
+- **Próximo passo, depois da resposta.** Uma rodada de refinamento da direção escolhida, também em imagem. Depois:
+  - um DESIGN.md final;
+  - os ativos gerados e escolhidos;
+  - um cartão de casca, com os tokens, o cabeçalho, o rodapé e uma página modelo;
+  - um cartão sucessor que integra o `fad75c0` (37a) e refaz as telas de acesso;
+  - antes de qualquer `unblock`, religar a esse sucessor os cartões em `scheduled` que eram filhos da 44d-3 ou da MAT-36 g2.
+
+## RETOMADA de 10/11/2026 (Hermes v0.23.1): histórico, substituído pelo bloco acima
 
 - **Cartões e condutor.** O quadro 9119 (PATCH) devolveu a ready os 4 cartões da pausa: t_f67d8962 (44c-1), t_ecf636f5 (44c-2a), t_915e3632 (37a) e t_fa51c4df (48b). Eles e os filhos t_b2a55931 (MAT-36) e t_1757260d (37g) agora são conduzidos pelo **executor-appmaternidade**, em Sonnet. Os comentários 119 a 122 levam a ordem de trabalho: rebase sobre 41d20d3, só as 2 skills, e os testes de borda que falham fechado (item 8).
 - **Prévia.** Fechei o vite que estava aberto na porta 5175 desde 09/11. Ele era do worktree da 37a.
