@@ -37,6 +37,9 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 
 - [~ t_54db34e0] P-27 Como funciona, Cuidado compartilhado e Desenvolvimento: volta 1 dos juízes cegos (3 rodadas válidas, notas 6,2–7,4, REPROVA volta 1). A MAT-36r-A v2 aplica os itens das páginas e a 49d (P-21) refaz as cenas. Depois, volta 2; se reprovar, vai a Daniel com GALERIA | `juizes/rodadas/DEVOLUCAO_36rA.md`
 
+- [~ t_347d36de] P-28 Acesso e Conta: volta 1 dos juízes cegos (conta_r1 válida nos 2; acesso_r1 válida no Astra, com a calibração do Fable nula e reprovação independente dele; notas 6,2–7,5). A MAT-37r v2 aplica os itens das telas; a 49d refaz a cena de Entrar | `juizes/rodadas/DEVOLUCAO_37r.md`
+- [~ t_5fc82bb8] P-29 MAT-49e: marca gigante do rodapé alinhada ao fio da direita (casco, todas as páginas), depois da 49b g2
+
 ## Dados ligados às telas novas (religados e soltos em 11/11)
 
 - [x] P-09 Corpos dos 6 cartões abaixo reescritos para a base nova antes do claim (prefixo `FINAL/OVERRIDE_DADOS.md`) e soltos em todo, presos aos pais | 11/11 9h50; sem SHA (é board)
