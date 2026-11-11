@@ -67,6 +67,8 @@ describe('G3-1: alvo de toque de 44 px', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Encerrar e anotar' }))
       expect(semAlvoDe44(container)).toEqual([])
 
+      // 6a P1: com o painel da nota aberto o botão Descartar não existe; fecha-se a nota antes.
+      fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
       fireEvent.click(screen.getByRole('button', { name: 'Descartar' }))
       expect(semAlvoDe44(container)).toEqual([])
     })

@@ -1,6 +1,7 @@
 import { useCallback, useId, useRef, useState } from 'react'
 import { Link, NavLink } from 'react-router'
 import { Botao } from '../base/Botao.tsx'
+import '../../prototipo/zoom200.css'
 import { MenuCelular } from './MenuCelular.tsx'
 import { SubmenuEmBreve } from './SubmenuEmBreve.tsx'
 import {

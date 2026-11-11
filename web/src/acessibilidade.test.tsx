@@ -82,6 +82,8 @@ describe('acessibilidade (axe-core)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Encerrar e anotar' }))
     expect(await violacoes(container)).toEqual([])
 
+    // 6a P1: com o painel da nota aberto o botão Descartar não existe; fecha-se a nota antes.
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
     fireEvent.click(screen.getByRole('button', { name: 'Descartar' }))
     expect(screen.getByText('Descartar esta sessão?')).toBeTruthy()
     expect(await violacoes(container)).toEqual([])
