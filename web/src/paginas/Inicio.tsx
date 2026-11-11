@@ -1,16 +1,29 @@
-import { useEffect } from 'react'
-import { Botao } from '../componentes/base/Botao.tsx'
-import { Numeros } from '../componentes/campo/Numeros.tsx'
+import { useEffect, useId } from 'react'
+import { Citacao } from '../componentes/campo/Citacao.tsx'
+import { FaixaSelos } from '../componentes/campo/FaixaSelos.tsx'
+import { DepoimentosInicio } from '../componentes/inicio/DepoimentosInicio.tsx'
+import { FaixaMadrugada } from '../componentes/inicio/FaixaMadrugada.tsx'
+import { Fechamento } from '../componentes/inicio/Fechamento.tsx'
+import { HeroiInicio } from '../componentes/inicio/HeroiInicio.tsx'
+import { NumerosInicio } from '../componentes/inicio/NumerosInicio.tsx'
+import { PerguntasInicio } from '../componentes/inicio/PerguntasInicio.tsx'
+import { SecaoTabela } from '../componentes/inicio/SecaoTabela.tsx'
+import { SecaoTurno } from '../componentes/inicio/SecaoTurno.tsx'
 import { FATOS, INICIO } from '../conteudo/textos.ts'
 import { usePrototipo } from '../prototipo/contexto.ts'
 
 /**
- * O Início, mínimo até o cartão dele (MAT-49c): a promessa em duas linhas (a segunda em itálico), o
- * texto, os dois caminhos e a faixa de números. Usa só as peças do Campo de mel que já existem. O h1
- * não anima: é a primeira coisa da página.
+ * O Início (MAT-49c), na composição F1 "Campo de mel": a abertura com a cena dos três celulares, os
+ * números, os selos, a troca de turno, a faixa de cacau da madrugada, a tabela contra o caderno, a
+ * citação e os relatos, as perguntas e o fechamento de cacau. Peças da base (componentes/campo e
+ * movimento); o que é só do Início fica em componentes/inicio.
  */
 export function Inicio() {
   const { dispatch } = usePrototipo()
+  const idNumeros = useId()
+  const idSelos = useId()
+  const idDepoimentos = useId()
+  const idPerguntas = useId()
 
   // O Início é sempre claro: sair do modo madrugada ao chegar aqui.
   useEffect(() => {
@@ -18,19 +31,36 @@ export function Inicio() {
   }, [dispatch])
 
   return (
-    <main className="cm-area cm-sistema-abertura">
-      <h1 className="cm-h1">
-        {INICIO.titulo[0]}
-        <span className="cm-segunda-linha">{` ${INICIO.titulo[1]}`}</span>
-      </h1>
-      <p className="cm-lide cm-medida">{INICIO.lide}</p>
-      <div className="cm-sistema-acoes">
-        <Botao to={INICIO.primario.destino}>{INICIO.primario.rotulo}</Botao>
-        <Botao variante="texto" to={INICIO.secundario.destino}>
-          {INICIO.secundario.rotulo}
-        </Botao>
+    <main className="in-pagina">
+      <HeroiInicio />
+
+      <section className="cm-area in-numeros" aria-labelledby={idNumeros}>
+        <h2 id={idNumeros} className="sr-only">
+          {INICIO.numeros.titulo}
+        </h2>
+        <NumerosInicio itens={FATOS} />
+      </section>
+
+      {/* Uma lista só: abaixo de 768 o inicio.css para o letreiro e a vira numa grade de 2 colunas. */}
+      <section className="cm-area in-selos" aria-labelledby={idSelos}>
+        <h2 id={idSelos} className="sr-only">
+          {INICIO.selos.titulo}
+        </h2>
+        <FaixaSelos rotulo="Selos do app" />
+      </section>
+
+      <SecaoTurno />
+      <FaixaMadrugada />
+      <SecaoTabela />
+
+      <div className="cm-area in-secao in-citacao">
+        <Citacao texto={INICIO.citacao.texto} autor={INICIO.citacao.autor} />
       </div>
-      <Numeros itens={FATOS} className="cm-cena-numeros" />
+      <DepoimentosInicio id={idDepoimentos} />
+
+      <PerguntasInicio id={idPerguntas} />
+
+      <Fechamento />
     </main>
   )
 }

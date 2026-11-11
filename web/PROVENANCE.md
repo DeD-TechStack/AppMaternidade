@@ -19,6 +19,27 @@ A cópia da licença é o arquivo `LICENSE` do próprio pacote, sem alteração 
 
 A cópia da licença é o arquivo `LICENSE` do pacote instalado do `registry.npmjs.org`, sem alteração (mesmo sha256).
 
+## Cliente do banco
+
+| Pacote | Versão | Licença | Cópia da licença | sha256 da licença | Uso |
+|---|---|---|---|---|---|
+| `@supabase/supabase-js` | 2.119.0 | MIT | `web/licencas/supabase-js-LICENSE.txt` | `334dd6820e2eaeab2064e7c59001b810566728a28a41a7c1dbf69bbee17d0936` | Cliente do Supabase (Auth e banco). Só `web/src/dados/cliente.ts` cria o cliente, e só quando `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` têm valor no build; sem elas o site usa a cópia em memória. Entrou na MAT-37. |
+
+A cópia da licença é o arquivo `LICENSE` do pacote instalado do `registry.npmjs.org`, sem alteração (mesmo sha256).
+
+Pacotes que vieram com ele, fixados no `web/package-lock.json`:
+
+| Pacote | Versão | Licença |
+|---|---|---|
+| `@supabase/auth-js` | 2.119.0 | MIT |
+| `@supabase/functions-js` | 2.119.0 | MIT |
+| `@supabase/postgrest-js` | 2.119.0 | MIT |
+| `@supabase/realtime-js` | 2.119.0 | MIT |
+| `@supabase/storage-js` | 2.119.0 | MIT |
+| `@supabase/phoenix` | 0.4.5 | MIT |
+| `iceberg-js` | 0.8.1 | MIT |
+| `tslib` | 2.8.1 | 0BSD |
+
 ## Ferramentas de desenvolvimento
 
 | Ferramenta | Pacote | Versão | Licença | Uso |
@@ -38,12 +59,13 @@ As ilustrações e as cenas do site são imagens geradas pelo Codex CLI 0.167.0 
 | `web/public/ilustracoes/baba-tapete@1x.webp`, `@2x.webp` | `FINAL/ativos/PROVENANCE.md`, `I_traco subject 5`; idem |
 | `web/public/ilustracoes/mae-noite@1x.webp`, `@2x.webp` | `FINAL/ativos/PROVENANCE.md`, `I_traco subject 6`; idem |
 | `web/public/cenas/sistema/trio-mel@1x.webp`, `@2x.webp` | `FINAL/ativos/PROVENANCE.md`, cena `S1_trio_mel` composta com `compor.py` sobre três capturas reais do site; cópia em `web/public/cenas/sistema/PROVENANCE.md` |
+| `web/public/cenas/acesso/entrar@1x.webp`, `@2x.webp` | cena `S2_unico_mel` (um celular sobre um pedestal de oliva), composição provisória das telas de acesso (MAT-37r); será recomposta com os mesmos nomes, com uma captura real do site |
 
 ## Movimento
 
 | Pacote | Versão | Licença | Cópia da licença | sha256 da licença | Uso |
 |---|---|---|---|---|---|
-| `motion` | 12.43.0 | MIT | `web/licencas/motion-LICENSE.md` | `1bf0dc3f7727723e5a032ed12164a47cf92c05204cb1a3485f123c24e2833ed1` | Animações do Início (MAT-44c-2), importadas só de `motion/react` e só em `web/src/movimento/`, `web/src/componentes/terceiros/`, `web/src/componentes/vitrine/` e `web/src/paginas/Inicio.tsx`. Traz o `framer-motion` 12.43.0 como dependência dele, não do site. |
+| `motion` | 12.43.0 | MIT | `web/licencas/motion-LICENSE.md` | `1bf0dc3f7727723e5a032ed12164a47cf92c05204cb1a3485f123c24e2833ed1` | Animações do Início (MAT-44c-2), importadas só de `motion/react` e só em `web/src/movimento/`, `web/src/componentes/terceiros/`, `web/src/componentes/inicio/` e `web/src/paginas/Inicio.tsx`. Traz o `framer-motion` 12.43.0 como dependência dele, não do site. |
 
 Escolha da versão (MAT-44c-2a, 06/11/2026): `npm view motion@12 version --json` listou até `12.43.0`, a maior da major 12 (D-2 da MAT-44c). Instalado com `npm --prefix web i --save-exact motion@12.43.0`. A cópia da licença é o `LICENSE.md` do pacote instalado, sem alteração (mesmo sha256).
 
