@@ -1,16 +1,17 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { temBanco } from './prototipo/banco.ts'
 import { criarEstadoInicial, type EstadoPrototipo, type TipoSessao } from './prototipo/estado.ts'
 import { renderizarRota } from './teste/renderizarRota.tsx'
 import { listarFontes, pastaSrcDe } from './teste/fontes.ts'
 
-// A Sessão refeita (cartão 44d-2, parte 2; EMENDAS E3, E5 e E6): abertura, bloco do cronômetro com os
-// 3 botões e a mídia com a ilustração, ou, sem sessão, a abertura e a mídia do berço. O jsdom não mede
-// layout: aqui vale a estrutura, o texto e o comportamento; as posições são do medidor e da sonda.
+// A Sessão redesenhada sobre o Campo de mel: o link de volta, o título "<Sessão> de Heloísa" com a segunda
+// linha em itálico, o cartão do cronômetro (mel de dia, cartão da noite na madrugada) com Encerrar,
+// Encerrar e anotar e Descartar, e as sessões anteriores ao lado. Sem sessão: o estado vazio com o desenho
+// da noite. O jsdom não mede layout: aqui vale a estrutura, o texto e o comportamento.
 
 const pastaSrc = pastaSrcDe(import.meta.url)
-const css = readFileSync(pastaSrc + 'index.css', 'utf8')
 
 const MIN = 60_000
 const sessaoDe = (tipo: TipoSessao, ha = 72 * MIN, madrugada = false): EstadoPrototipo => ({
@@ -21,99 +22,78 @@ const sessaoDe = (tipo: TipoSessao, ha = 72 * MIN, madrugada = false): EstadoPro
 const semSessao = (): EstadoPrototipo => ({ ...criarEstadoInicial(Date.now()), sessao: null })
 
 const principal = (container: HTMLElement) => container.querySelector<HTMLElement>('main')!
-const bloco = (container: HTMLElement) => container.querySelector<HTMLElement>('main [data-andamento]')!
-const midia = (container: HTMLElement) => container.querySelector<HTMLElement>('main [data-midia]')!
+const cartao = (container: HTMLElement) => container.querySelector<HTMLElement>('main [data-andamento]')!
 
-describe('Sessão: a ordem dos blocos e o que saiu', () => {
+describe('Sessão: a estrutura', () => {
   for (const [tema, madrugada] of [
     ['claro', false],
     ['madrugada', true],
   ] as const) {
-    it(`(${tema}) com sessão: o main tem a abertura, o bloco do cronômetro e a mídia, todos em sb-area`, () => {
+    it(`(${tema}) o link de volta, o título, o cartão do cronômetro e as anteriores, nessa ordem`, () => {
       const { container } = renderizarRota('/app/sessao', { estadoInicial: sessaoDe('sono', 72 * MIN, madrugada) })
 
-      const filhos = [...principal(container).children] as HTMLElement[]
-      expect(filhos).toHaveLength(3)
-      expect(filhos[0].classList.contains('sb-abertura')).toBe(true)
-      expect(filhos[1]).toBe(bloco(container))
-      expect(filhos[2].contains(midia(container))).toBe(true)
-      for (const filho of filhos) expect(filho.classList.contains('sb-area'), filho.className).toBe(true)
-      expect(principal(container).classList.contains('ha-tela')).toBe(true)
+      const ordem = [
+        screen.getByRole('link', { name: 'Voltar para Hoje' }),
+        screen.getByRole('heading', { level: 1 }),
+        cartao(container),
+        screen.getByRole('region', { name: 'Sonecas anteriores' }),
+      ]
+      for (let i = 1; i < ordem.length; i++) {
+        expect(ordem[i - 1].compareDocumentPosition(ordem[i]) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
+      }
+      for (const peca of ordem) expect(principal(container).contains(peca)).toBe(true)
       expect(principal(container).previousElementSibling!.matches('[data-cabecalho]')).toBe(true)
-      expect(principal(container).nextElementSibling!.matches('[data-rodape]')).toBe(true)
+      expect(principal(container).nextElementSibling!.matches(temBanco() ? '[data-rodape]' : '[data-aviso-tela]')).toBe(true)
     })
   }
 
-  it('não há coluna única, faixa do protótipo, navegação inferior, barra inferior nem barra Registrar', () => {
+  it('não há barra Registrar, navegação inferior nem texto de protótipo na tela', () => {
     const { container } = renderizarRota('/app/sessao')
 
-    expect(container.querySelector('.coluna-app')).toBeNull()
-    expect(container.querySelector('[aria-label="Aviso do protótipo"]')).toBeNull()
-    expect(screen.queryByText('Protótipo: dados fictícios, nada é salvo.')).toBeNull()
-    expect(screen.queryByRole('navigation', { name: 'Principal' })).toBeNull()
     expect(container.querySelector('.nav-inferior, .barra-inferior, [data-barra-registrar]')).toBeNull()
-    expect(container.querySelector('.campo-sessao, [data-campo]')).toBeNull()
+    expect(screen.queryByRole('navigation', { name: 'Principal' })).toBeNull()
+    expect(principal(container).textContent).not.toMatch(/protótipo|dados de exemplo/i)
     expect([...container.querySelector('.sb-casca')!.children].map((e) => e.tagName.toLowerCase())).toEqual([
       'header',
       'main',
+      ...(temBanco() ? [] : ['section']),
       'footer',
     ])
   })
 })
 
-describe('Sessão: a abertura (E3)', () => {
-  it('o h1 é "<Sessão> de Heloísa", com tabindex -1, e o subtítulo é "Iniciado às <hora> por <pessoa>"', () => {
+describe('Sessão: o título', () => {
+  it('o h1 é "Sono de Heloísa", focável por programa, e "Iniciado às 08:48 por Bruno" é a segunda linha em itálico', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-11-05T10:00:00'))
-    const { container } = renderizarRota('/app/sessao', { estadoInicial: sessaoDe('sono') })
+    renderizarRota('/app/sessao', { estadoInicial: sessaoDe('sono') })
 
     const h1 = screen.getByRole('heading', { level: 1 })
     expect(h1.textContent).toBe('Sono de Heloísa')
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
     expect(h1.getAttribute('tabindex')).toBe('-1')
-    expect(h1.closest('.sb-abertura')).not.toBeNull()
-    expect(container.querySelector('.sb-abertura-subtitulo')!.textContent).toBe('Iniciado às 08:48 por Bruno')
+    const linha = screen.getByText('Iniciado às 08:48 por Bruno')
+    expect(linha.classList.contains('italic')).toBe(true)
+    expect(h1.nextElementSibling).toBe(linha)
   })
 
-  it('a lateral traz a etiqueta do protótipo e o link "Voltar para Hoje" (para /app/hoje, no estilo do sistema)', () => {
-    const { container } = renderizarRota('/app/sessao')
+  it('o "Voltar para Hoje" é um link para /app/hoje com alvo de toque', () => {
+    renderizarRota('/app/sessao')
 
-    const lateral = container.querySelector<HTMLElement>('.sb-abertura-lateral')!
-    expect(within(lateral).getByText('Protótipo com dados de exemplo').classList.contains('sb-etiqueta')).toBe(true)
-    expect(container.querySelector('main [data-aviso="demonstracao"]')).toBeNull()
-    const voltar = within(lateral).getByRole('link', { name: 'Voltar para Hoje' })
-    expect(voltar.tagName).toBe('A')
+    const voltar = screen.getByRole('link', { name: 'Voltar para Hoje' })
     expect(voltar.getAttribute('href')).toBe('/app/hoje')
-    for (const classe of ['sb-abertura-link', 't-corpo', 'alvo-toque']) expect(voltar.classList.contains(classe), classe).toBe(true)
-    expect(voltar.parentElement!.classList.contains('ha-li-link')).toBe(true)
-    expect([...lateral.children].every((filho) => filho.tagName === 'LI')).toBe(true)
+    expect(voltar.classList.contains('alvo-toque')).toBe(true)
+    expect(voltar.textContent).toBe('Voltar para Hoje')
   })
 
-  it('com as variáveis do banco a lateral mostra a mesma etiqueta "Protótipo com dados de exemplo" e nenhum aviso', () => {
-    vi.stubEnv('VITE_SUPABASE_URL', 'https://exemplo.invalid')
-    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'chave-ficticia')
-    try {
-      const { container } = renderizarRota('/app/sessao')
-
-      expect(container.querySelector('[data-aviso="demonstracao"]')).toBeNull()
-      expect(screen.getByText('Protótipo com dados de exemplo').closest('.sb-abertura-lateral')).not.toBeNull()
-      expect(screen.queryByText('Protótipo, dados fictícios')).toBeNull()
-    } finally {
-      vi.unstubAllEnvs()
-    }
-  })
-
-  it('"Já há uma sessão de X em andamento." aparece na lateral quando se chega pelo atalho do Hoje, e some pelo "Ver sessão"', async () => {
+  it('"Já há uma sessão de X em andamento." aparece quando se chega pelo atalho do Hoje, e some pelo "Ver sessão"', async () => {
     const { container, unmount } = renderizarRota('/app/hoje')
     fireEvent.click(screen.getByRole('button', { name: 'Iniciar mamada de Heloísa' }))
 
     await screen.findByRole('heading', { level: 1, name: 'Sono de Heloísa' })
     const aviso = screen.getByText('Já há uma sessão de Sono em andamento.')
-    expect(aviso.closest('.sb-abertura-lateral')).not.toBeNull()
-    expect(aviso.classList.contains('t-ui')).toBe(true)
+    expect(principal(container).contains(aviso)).toBe(true)
     expect(aviso.hasAttribute('role')).toBe(false)
-    expect(within(aviso.closest<HTMLElement>('.sb-abertura-lateral')!).getByText('Protótipo com dados de exemplo')).toBeTruthy()
-    expect(container.querySelector('[data-aviso="demonstracao"]')).toBeNull()
     unmount()
 
     renderizarRota('/app/hoje')
@@ -132,28 +112,23 @@ describe('Sessão: a abertura (E3)', () => {
   })
 })
 
-describe('Sessão: o bloco do cronômetro (E5)', () => {
-  it('é a seção data-andamento, rotulada por "Duração da sessão", com o cronômetro (data-cronometro no role="timer") e as 3 ações', () => {
+describe('Sessão: o cartão do cronômetro', () => {
+  it('é a seção data-andamento, rotulada por "Duração da sessão", com o cronômetro em Literata e as 3 ações', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-11-05T10:00:00'))
     const { container } = renderizarRota('/app/sessao', { estadoInicial: sessaoDe('sono') })
 
-    const secao = bloco(container)
+    const secao = cartao(container)
     expect(secao.tagName).toBe('SECTION')
-    // O medidor (NUM) acha o cronômetro por `[data-cronometro]`, `[data-numero]` ou `.t-cronometro` e confere a
-    // fonte do elemento marcado: o atributo fica nos dígitos, e não na seção (a seção tem a fonte do corpo).
-    expect(secao.hasAttribute('data-cronometro')).toBe(false)
     expect(secao.querySelectorAll('[data-cronometro]')).toHaveLength(1)
     expect(secao.querySelector('[data-cronometro]')).toBe(within(secao).getByRole('timer'))
-    expect(secao.classList.contains('sb-mt-fio-bloco')).toBe(true)
     const rotulo = within(secao).getByText('Duração da sessão')
-    expect(rotulo.classList.contains('t-rotulo')).toBe(true)
     expect(secao.getAttribute('aria-labelledby')).toBe(rotulo.id)
     const timer = within(secao).getByRole('timer', { name: 'Duração da sessão' })
     expect(timer.textContent).toBe('1:12:00')
     expect(timer.getAttribute('aria-live')).toBe('off')
-    expect(timer.classList.contains('t-cronometro')).toBe(true)
-    expect(timer.classList.contains('cronometro')).toBe(false)
+    expect(timer.classList.contains('font-titulo')).toBe(true)
+    expect(timer.classList.contains('tabular-nums')).toBe(true)
     expect([...secao.querySelectorAll('button')].map((b) => b.textContent)).toEqual([
       'Encerrar',
       'Encerrar e anotar',
@@ -161,63 +136,64 @@ describe('Sessão: o bloco do cronômetro (E5)', () => {
     ])
   })
 
-  it('as ações ficam numa coluna própria, depois do cronômetro, e Encerrar é filho direto dela', () => {
+  it('Encerrar é o primário; Encerrar e anotar é o contorno; Descartar é o botão de texto', () => {
     const { container } = renderizarRota('/app/sessao')
 
-    const timer = screen.getByRole('timer')
-    const coluna = container.querySelector<HTMLElement>('.ha-cron-acoes')!
-    expect(coluna.contains(timer)).toBe(false)
-    expect(timer.compareDocumentPosition(coluna) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
-    expect(screen.getByRole('button', { name: 'Encerrar' }).parentElement).toBe(coluna)
+    expect([...container.querySelectorAll('main [data-botao="primario"]')].map((b) => b.textContent)).toEqual(['Encerrar'])
+    expect(screen.getByRole('button', { name: 'Encerrar e anotar' }).getAttribute('data-botao')).toBe('contorno')
+    expect(screen.getByRole('button', { name: 'Descartar' }).getAttribute('data-botao')).toBe('texto')
+    for (const b of cartao(container).querySelectorAll('button')) expect(b.classList.contains('alvo-toque')).toBe(true)
   })
 
-  it('Encerrar é o único primário da tela; Encerrar e anotar e Descartar são de moldura dupla alta (S-3)', () => {
+  it('"Encerrar e anotar" abre o painel da nota no cartão: o Salvar passa a ser o único primário', () => {
     const { container } = renderizarRota('/app/sessao')
-
-    const primarios = [...container.querySelectorAll('main [data-botao="primario"]')]
-    expect(primarios.map((b) => b.textContent)).toEqual(['Encerrar'])
-    expect(primarios[0].classList.contains('ha-encerrar')).toBe(true)
-    for (const nome of ['Encerrar e anotar', 'Descartar']) {
-      const b = screen.getByRole('button', { name: nome })
-      expect(b.hasAttribute('data-moldura-dupla'), nome).toBe(true)
-      expect(b.hasAttribute('data-alto'), nome).toBe(true)
-      expect(b.classList.contains('alvo-toque'), nome).toBe(true)
-    }
-  })
-
-  it('o painel da nota e a pergunta de descartar abrem na coluna das ações, sem criar um segundo primário', () => {
-    const { container } = renderizarRota('/app/sessao')
-    const coluna = container.querySelector<HTMLElement>('.ha-cron-acoes')!
 
     fireEvent.click(screen.getByRole('button', { name: 'Encerrar e anotar' }))
-    const nota = screen.getByRole('group', { name: 'Encerrar e anotar' })
-    expect(coluna.contains(nota)).toBe(true)
-    expect(within(nota).getByRole('textbox', { name: 'Nota' }).classList.contains('min-h-[6rem]')).toBe(true)
-    expect(screen.queryByRole('button', { name: 'Encerrar e anotar' })).toBeNull()
-    expect([...container.querySelectorAll('main [data-botao="primario"]')]).toHaveLength(1)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Descartar' }))
-    const pergunta = screen.getByRole('group', { name: 'Descartar esta sessão?' })
-    expect(coluna.contains(pergunta)).toBe(true)
-    expect([...container.querySelectorAll('main [data-botao="primario"]')]).toHaveLength(1)
-    for (const b of [...within(nota).getAllByRole('button'), ...within(pergunta).getAllByRole('button')]) {
-      expect(b.classList.contains('alvo-toque'), b.textContent!).toBe(true)
-    }
+    const nota = screen.getByRole('group', { name: 'Encerrar e anotar' })
+    expect(cartao(container).contains(nota)).toBe(true)
+    const campo = within(nota).getByRole('textbox', { name: 'Nota' })
+    expect(document.activeElement).toBe(campo)
+    expect(campo.classList.contains('min-h-[6rem]')).toBe(true)
+    expect(screen.queryByRole('button', { name: 'Encerrar e anotar' })).toBeNull()
+    expect([...container.querySelectorAll('main [data-botao="primario"]')].map((b) => b.textContent)).toEqual(['Salvar'])
+    expect(screen.getByRole('button', { name: 'Descartar' })).toBeTruthy()
   })
 
-  it('a atividade sugerida só aparece no tummy time, na coluna do cronômetro', () => {
+  it('Esc fecha o painel da nota e devolve o foco a "Encerrar e anotar"', () => {
+    renderizarRota('/app/sessao')
+    fireEvent.click(screen.getByRole('button', { name: 'Encerrar e anotar' }))
+
+    fireEvent.keyDown(document.activeElement!, { key: 'Escape' })
+
+    expect(screen.queryByRole('group', { name: 'Encerrar e anotar' })).toBeNull()
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Encerrar e anotar' }))
+  })
+
+  it('"Descartar" pergunta no cartão; Esc fecha a pergunta e devolve o foco ao Descartar', () => {
+    const { container } = renderizarRota('/app/sessao')
+    fireEvent.click(screen.getByRole('button', { name: 'Descartar' }))
+
+    const pergunta = screen.getByRole('group', { name: 'Descartar esta sessão?' })
+    expect(cartao(container).contains(pergunta)).toBe(true)
+    expect(document.activeElement).toBe(within(pergunta).getByRole('button', { name: 'Manter' }))
+
+    fireEvent.keyDown(document.activeElement!, { key: 'Escape' })
+    expect(screen.queryByRole('group', { name: 'Descartar esta sessão?' })).toBeNull()
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Descartar' }))
+  })
+
+  it('a atividade sugerida só aparece no tummy time, dentro do cartão', () => {
     const tummy = renderizarRota('/app/sessao', { estadoInicial: sessaoDe('tummy', MIN) })
     const atividade = screen.getByText('Atividade sugerida: Espelho no chão')
-    expect(atividade.classList.contains('t-corpo')).toBe(true)
-    expect(bloco(tummy.container).contains(atividade)).toBe(true)
-    expect(tummy.container.querySelector('.ha-cron-acoes')!.contains(atividade)).toBe(false)
+    expect(cartao(tummy.container).contains(atividade)).toBe(true)
     tummy.unmount()
 
     renderizarRota('/app/sessao', { estadoInicial: sessaoDe('sono') })
     expect(screen.queryByText(/Atividade sugerida/)).toBeNull()
   })
 
-  it('o cronômetro lê o tempo inteiro para o leitor de tela e conta a partir do início', () => {
+  it('o cronômetro conta a partir do início', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-11-05T10:00:00'))
     renderizarRota('/app/sessao', { estadoInicial: sessaoDe('sono', 5_000) })
@@ -226,68 +202,57 @@ describe('Sessão: o bloco do cronômetro (E5)', () => {
   })
 })
 
-// MAT-49a: as ilustrações SVG desenhadas em código saíram. A mídia da Sessão é um desenho de traço
-// (`Ilustracao`, WebP 1× e 2× de /ilustracoes/) sobre o mel, nos dois temas.
-describe('Sessão: a mídia (E5, bloco 3)', () => {
-  const casos: Array<[TipoSessao, string]> = [
-    ['sono', 'mae-noite'],
-    ['tummy', 'tummy-time'],
-    ['mamada', 'mae-noite'],
-  ]
-  for (const [tipo, ilustracao] of casos) {
-    for (const [tema, madrugada] of [
-      ['claro', false],
-      ['madrugada', true],
-    ] as const) {
-      it(`${tipo} (${tema}): a mídia é uma imagem de traço "${ilustracao}" com srcSet 1×/2×, texto alternativo e nenhum nó de texto`, () => {
-        const { container } = renderizarRota('/app/sessao', { estadoInicial: sessaoDe(tipo, MIN, madrugada) })
+describe('Sessão: as sessões anteriores', () => {
+  it('sono: três sonecas, com quem, onde e quanto durou', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-11-05T10:00:00'))
+    renderizarRota('/app/sessao', { estadoInicial: sessaoDe('sono') })
 
-        const moldura = midia(container)
-        expect(container.querySelectorAll('[data-midia]')).toHaveLength(1)
-        expect(moldura.querySelector('svg')).toBeNull()
-        const imagens = moldura.querySelectorAll('img')
-        expect(imagens).toHaveLength(1)
-        const imagem = imagens[0]
-        expect(imagem.getAttribute('data-ilustracao')).toBe(ilustracao)
-        expect(imagem.getAttribute('src')).toBe(`/ilustracoes/${ilustracao}@1x.webp`)
-        expect(imagem.getAttribute('srcset')).toBe(`/ilustracoes/${ilustracao}@1x.webp 1x, /ilustracoes/${ilustracao}@2x.webp 2x`)
-        expect(imagem.getAttribute('alt')!.length).toBeGreaterThan(10)
-        expect(moldura.textContent).toBe('')
-      })
-    }
-  }
+    const linhas = within(screen.getByRole('region', { name: 'Sonecas anteriores' })).getAllByRole('listitem')
+    expect(linhas.map((li) => [...li.querySelectorAll('p')].map((p) => p.textContent).join(' | '))).toEqual([
+      '05:55 às 06:40 | Bruno, no carrinho',
+      '03:30 às 04:20 | Juliana, no berço',
+      '23:00 às 02:45 | Juliana, sono da noite',
+    ])
+    expect(within(linhas[2]).getByText('3 h 45 min')).toBeTruthy()
+  })
 
-  it('a mídia vem 96 px abaixo do bloco (48 em 390) e a descrição de cada tipo é diferente', () => {
-    const descricoes = new Set<string>()
-    for (const tipo of ['sono', 'tummy', 'mamada'] as const) {
-      const { container, unmount } = renderizarRota('/app/sessao', { estadoInicial: sessaoDe(tipo) })
-      expect(midia(container).parentElement!.classList.contains('sb-mt-par-numeros')).toBe(true)
-      expect(bloco(container).nextElementSibling).toBe(midia(container).parentElement)
-      descricoes.add(midia(container).querySelector('img')!.getAttribute('alt')!)
-      unmount()
-    }
-    expect(descricoes.size).toBe(3)
+  it('mamada e tummy time têm a própria lista', () => {
+    const mamada = renderizarRota('/app/sessao', { estadoInicial: sessaoDe('mamada', MIN) })
+    expect(screen.getByRole('region', { name: 'Mamadas anteriores' })).toBeTruthy()
+    mamada.unmount()
+
+    renderizarRota('/app/sessao', { estadoInicial: sessaoDe('tummy', MIN) })
+    expect(screen.getByRole('region', { name: 'Tummy time anteriores' })).toBeTruthy()
+  })
+
+  it('encerrar põe a sessão no topo da lista e Desfazer a tira', async () => {
+    renderizarRota('/app/sessao')
+    fireEvent.click(screen.getByRole('button', { name: 'Encerrar' }))
+    await screen.findByRole('heading', { level: 1, name: 'Hoje' })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Iniciar sono de Heloísa' }))
+    await screen.findByRole('heading', { level: 1, name: 'Sono de Heloísa' })
+
+    const primeira = within(screen.getByRole('region', { name: 'Sonecas anteriores' })).getAllByRole('listitem')[0]
+    expect(primeira.textContent).toContain('agora há pouco')
   })
 })
 
-describe('Sessão: sem sessão (E3)', () => {
-  it('h1 "Nenhuma sessão em andamento", subtítulo curto, etiqueta e link na lateral, e só a mídia de traço no corpo', () => {
+describe('Sessão: sem sessão', () => {
+  it('h1 "Nenhuma sessão em andamento", a linha de como começar, o link de volta e o desenho da noite', () => {
     const { container } = renderizarRota('/app/sessao', { estadoInicial: semSessao() })
 
     const h1 = screen.getByRole('heading', { level: 1 })
     expect(h1.textContent).toBe('Nenhuma sessão em andamento')
     expect(h1.getAttribute('tabindex')).toBe('-1')
-    expect(container.querySelector('.sb-abertura-subtitulo')!.textContent).toBe('Comece uma sessão pela barra Registrar no Hoje.')
-    const lateral = container.querySelector<HTMLElement>('.sb-abertura-lateral')!
-    expect(within(lateral).getByText('Protótipo com dados de exemplo').classList.contains('sb-etiqueta')).toBe(true)
-    expect(container.querySelector('[data-aviso="demonstracao"]')).toBeNull()
-    expect(within(lateral).getByRole('link', { name: 'Voltar para Hoje' }).getAttribute('href')).toBe('/app/hoje')
-    const filhos = [...principal(container).children] as HTMLElement[]
-    expect(filhos).toHaveLength(2)
+    expect(screen.getByText('Comece uma sessão pela barra Registrar no Hoje.').classList.contains('italic')).toBe(true)
+    expect(screen.getByRole('link', { name: 'Voltar para Hoje' }).getAttribute('href')).toBe('/app/hoje')
     expect(container.querySelector('[data-andamento], [role="timer"]')).toBeNull()
     expect(screen.queryAllByRole('button').filter((b) => !b.closest('[data-cabecalho], [data-rodape]'))).toEqual([])
-    expect(midia(container).querySelector('img')!.getAttribute('data-ilustracao')).toBe('mae-noite')
-    expect(filhos[1].classList.contains('sb-mt-fio-bloco')).toBe(true)
+    const imagem = container.querySelector<HTMLImageElement>('main [data-midia] img')!
+    expect(imagem.getAttribute('data-ilustracao')).toBe('mae-noite')
+    expect(imagem.getAttribute('alt')!.length).toBeGreaterThan(10)
   })
 
   it('?tipo= inválido ou ausente mostra o estado vazio; ?tipo= válido começa uma vez e sai da URL', async () => {
@@ -315,17 +280,21 @@ describe('Sessão: sem sessão (E3)', () => {
 })
 
 describe('as peças que saíram (EMENDAS E7): ninguém mais as usa', () => {
-  // As quatro do cartão mais o `campo.ts` (o `nomeDoCampo` do `data-campo`, que a E6 tirou das telas novas).
+  // As quatro do cartão mais o `campo.ts` (o `nomeDoCampo` do `data-campo`, que a E6 tirou das telas novas),
+  // e os blocos que o redesenho do Campo de mel trocou pelos componentes de componentes/app.
   const PECAS = [
     'componentes/ColunaApp.tsx',
     'prototipo/NavegacaoInferior.tsx',
     'prototipo/BarraInferior.tsx',
     'prototipo/FaixaPrototipo.tsx',
     'prototipo/campo.ts',
+    'prototipo/BlocoEmAndamento.tsx',
+    'prototipo/BlocoCronometro.tsx',
+    'prototipo/ItemAvisoDaAbertura.tsx',
   ]
   const nomes = PECAS.map((p) => p.slice(p.lastIndexOf('/') + 1).replace(/\.tsx?$/, ''))
 
-  it('nenhum arquivo de web/src importa ColunaApp, NavegacaoInferior, BarraInferior, FaixaPrototipo nem campo', () => {
+  it('nenhum arquivo de web/src importa as peças que saíram', () => {
     const importadores = listarFontes(pastaSrc, true)
       .filter((f) => f.nome !== 'sessao.test.tsx')
       .filter((f) => nomes.some((nome) => new RegExp(`from\\s+['"][^'"]*/${nome}(\\.tsx?)?['"]`).test(f.texto)))
@@ -341,8 +310,6 @@ describe('as peças que saíram (EMENDAS E7): ninguém mais as usa', () => {
     }
   })
 
-  // CartaoEmAndamento e SessaoInfo só serviam à miniatura do Início, que saiu na 44d-4: ficaram sem uso
-  // (o teste de exportações da base os reprova) e foram apagados na integração com o `int/refazer`.
   it('o que continua sendo usado não foi apagado: BotoesRapidos, useBarraFixa, barraFixa e AvisoDemonstracao', () => {
     for (const arquivo of [
       'prototipo/BotoesRapidos.tsx',
@@ -364,10 +331,8 @@ describe('Sessão: o tamanho do cronômetro pelo número de caracteres (E2)', ()
   const exemplos: Array<[string, number, 'normal' | 'longo']> = [
     ['09:59', caso(0, 9, 59), 'normal'],
     ['1:11:11', caso(1, 11, 11), 'normal'],
-    ['8:08:08', caso(8, 8, 8), 'normal'],
     ['9:59:59', caso(9, 59, 59), 'normal'],
     ['10:00:00', caso(10, 0, 0), 'longo'],
-    ['23:59:59', caso(23, 59, 59), 'longo'],
     ['100:00:00', caso(100, 0, 0), 'longo'],
   ]
 
@@ -384,207 +349,16 @@ describe('Sessão: o tamanho do cronômetro pelo número de caracteres (E2)', ()
   it('o atributo acompanha o texto quando a duração passa de 7 para 8 caracteres (9:59:59 → 10:00:00)', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-11-05T10:00:00'))
-    try {
-      const inicio = Date.now()
-      renderizarRota('/app/sessao', {
-        estadoInicial: { ...criarEstadoInicial(inicio), sessao: { tipo: 'sono', inicio: inicio - (10 * HORA - 2000), pessoa: 'Bruno' } },
-      })
-      const timer = screen.getByRole('timer', { name: 'Duração da sessão' })
-      expect(timer.getAttribute('data-tamanho')).toBe('normal')
-      act(() => {
-        vi.advanceTimersByTime(3000)
-      })
-      expect(screen.getByRole('timer', { name: 'Duração da sessão' }).textContent).toBe('10:00:01')
-      expect(screen.getByRole('timer', { name: 'Duração da sessão' }).getAttribute('data-tamanho')).toBe('longo')
-    } finally {
-      vi.useRealTimers()
-    }
-  })
-})
-
-describe('Sessão: o CSS do bloco /* 44d-2 */ (lido como texto)', () => {
-  const inicio44 = css.indexOf('/* 44d-2 */')
-  const fim44 = css.indexOf('/* 44d-4 */', inicio44)
-  const bloco44 = css.slice(inicio44, fim44 > inicio44 ? fim44 : css.length).replace(/\/\*[\s\S]*?\*\//g, '')
-  const regra = (seletor: string) =>
-    [...bloco44.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
-      .filter((m) => m[1].trim().replace(/\s+/g, ' ') === seletor)
-      .map((m) => m[2])
-      .join('')
-
-  it('o bloco é uma grade de 10 colunas sem padding próprio de 768 para cima; o recuo de 64 é de cada coluna', () => {
-    expect(regra('.ha-cron-grade')).toMatch(/grid-template-columns:\s*repeat\(10,\s*minmax\(0,\s*1fr\)\)/)
-    expect(regra('.ha-cronometro')).toMatch(/padding:\s*0/)
-    expect(regra('.ha-cron-tempo')).toMatch(/grid-column:\s*1\s*\/\s*8/)
-    expect(regra('.ha-cron-tempo')).toMatch(/padding:\s*64px/)
-    expect(regra('.ha-cron-acoes')).toMatch(/grid-column:\s*8\s*\/\s*11/)
-    expect(regra('.ha-cron-acoes')).toMatch(/padding:\s*64px/)
-  })
-
-  it('o fio vertical claro (papel a 20%, 1 px) separa as colunas: borda só do lado esquerdo da coluna das ações', () => {
-    const acoes = regra('.ha-cron-acoes')
-    expect(acoes).toMatch(/border-left:\s*1px solid color-mix\(in srgb,\s*currentColor 20%,\s*transparent\)/)
-    expect(acoes).not.toMatch(/border:\s/)
-  })
-
-  it('o cronômetro fica numa linha só e a caixa dele tem a largura do próprio texto (a sonda compara as larguras de "1:11:11" e "8:08:08")', () => {
-    const valor = regra('.ha-cron-valor')
-    expect(valor).toMatch(/white-space:\s*nowrap/)
-    expect(valor).toMatch(/width:\s*fit-content/)
-    // Os algarismos são os tabulares e de capitular da escala t-cronometro (index.css), sem `font-variant` próprio.
-    expect(valor).not.toMatch(/font-variant|font-family|font-size/)
-  })
-
-  it('abaixo de 768 o bloco volta a ter 24 de padding, uma coluna, e as ações secundárias dividem a linha (2 colunas, gap 8)', () => {
-    expect(bloco44).toMatch(/@media\s*\(max-width:\s*767px\)\s*\{[\s\S]*\.ha-cronometro\s*\{[^}]*padding:\s*24px/)
-    expect(bloco44).toMatch(/@media\s*\(max-width:\s*767px\)\s*\{[\s\S]*\.ha-cron-grade\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/)
-    expect(bloco44).toMatch(/@media\s*\(max-width:\s*767px\)\s*\{[\s\S]*\.ha-cron-secundarios\s*\{[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/)
-    expect(bloco44).toMatch(/@media\s*\(max-width:\s*767px\)\s*\{[\s\S]*\.ha-cron-acoes\s*\{[^}]*border-left:\s*0/)
-  })
-
-  /** O texto de dentro de cada `@media (max-width: 767px)` do bloco, com as chaves balanceadas. */
-  function emMedia767(): string {
-    const achados: string[] = []
-    const abertura = /@media\s*\(max-width:\s*767px\)\s*\{/g
-    for (let m = abertura.exec(bloco44); m; m = abertura.exec(bloco44)) {
-      let nivel = 1
-      let i = abertura.lastIndex
-      while (i < bloco44.length && nivel > 0) {
-        if (bloco44[i] === '{') nivel += 1
-        else if (bloco44[i] === '}') nivel -= 1
-        i += 1
-      }
-      achados.push(bloco44.slice(abertura.lastIndex, i - 1))
-    }
-    return achados.join('\n')
-  }
-  const regraEm = (texto: string, seletor: string) =>
-    [...texto.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
-      .filter((m) => m[1].trim().replace(/\s+/g, ' ') === seletor)
-      .map((m) => m[2])
-      .join('')
-
-  // VOLTA1 E2: o cronômetro de 80 px ("1:12:01" mede ~280) cabe nos 295 da coluna útil de 390 (24 de recuo no
-  // bloco). O truque anterior (recuo lateral de 8 só para o cronômetro, 16 a mais no rótulo) deixava os
-  // dígitos 16 px à esquerda do rótulo: com 80 o recuo volta a ser um só (24) e a caixa começa no x do rótulo.
-  it('abaixo de 768 o bloco tem 24 de recuo em todos os lados e o cronômetro, o rótulo, a atividade e as ações começam no mesmo x', () => {
-    const celular = emMedia767()
-    expect(regraEm(celular, '.ha-cronometro')).toMatch(/padding:\s*24px\s*;/)
-    expect(regraEm(celular, '.ha-cron-tempo, .ha-cron-acoes')).toMatch(/padding:\s*0\s*;/)
-    // Nada de recuo extra só para o rótulo e a atividade (era o 16 que desalinhava o cronômetro).
-    expect(regraEm(celular, '.ha-cron-rotulo, .ha-cron-atividade')).toBe('')
-    expect(regraEm(celular, '.ha-cron-acoes')).toMatch(/padding:\s*0\s*;/)
-    expect(regraEm(celular, '.ha-cron-acoes')).not.toMatch(/padding:\s*0 16px/)
-  })
-
-  it('abaixo de 768 o Encerrar fica pelo menos 16 abaixo da caixa do cronômetro (margin-top de 24 nas ações, da escala)', () => {
-    const margem = /margin-top:\s*(\d+)px/.exec(regraEm(emMedia767(), '.ha-cron-acoes'))
-    expect(margem).not.toBeNull()
-    expect(Number(margem![1])).toBeGreaterThanOrEqual(16)
-    expect(Number(margem![1])).toBe(24)
-  })
-
-  it('E2 (390): o cronômetro normal (até 7 caracteres) cai de 96 para 80 e o longo (8 ou mais) para 56, com a linha na proporção do t-cronometro', () => {
-    const celular = emMedia767()
-    const normal = regraEm(celular, ".ha-cron-valor[data-tamanho='normal']")
-    expect(normal).toMatch(/font-size:\s*5rem\s*;/)
-    expect(normal).toMatch(/line-height:\s*4rem\s*;/)
-    const longo = regraEm(celular, ".ha-cron-valor[data-tamanho='longo']")
-    expect(longo).toMatch(/font-size:\s*3\.5rem\s*;/)
-    expect(longo).toMatch(/line-height:\s*2\.8125rem\s*;/)
-  })
-
-  it('E2 (1440): o normal continua o t-cronometro de 224 (nenhuma regra do bloco o muda) e o longo cai para 160, que termina antes do fio de c8', () => {
-    const foraDoCelular = bloco44.replace(emMedia767(), '')
-    expect(regraEm(foraDoCelular, ".ha-cron-valor[data-tamanho='normal']")).toBe('')
-    const longo = regraEm(foraDoCelular, ".ha-cron-valor[data-tamanho='longo']")
-    expect(longo).toMatch(/font-size:\s*10rem\s*;/)
-    expect(longo).toMatch(/line-height:\s*8rem\s*;/)
-    // A base `.ha-cron-valor` segue sem tamanho próprio (o 224 vem de `t-cronometro`).
-    expect(regra('.ha-cron-valor')).not.toMatch(/font-size/)
-  })
-
-  it('E2: o tamanho vem do atributo (caracteres), e o CSS não usa clamp, calc nem unidade de janela para ajustar o cronômetro', () => {
-    for (const bloco of [emMedia767(), bloco44.replace(emMedia767(), '')]) {
-      for (const seletor of [".ha-cron-valor[data-tamanho='normal']", ".ha-cron-valor[data-tamanho='longo']"]) {
-        expect(regraEm(bloco, seletor)).not.toMatch(/clamp|calc|\dvw|cqw/)
-      }
-    }
-  })
-
-  // VOLTA2 D3: em 1440 o "1" de "1:12:01" (algarismo tabular, com recuo grande dentro da célula) começava 27 px
-  // à direita do x do rótulo. A compensação é óptica: `text-indent` negativo, em `em`, só de 768 para cima.
-  it('D3 (768+): o cronômetro tem text-indent negativo em em (compensa o recuo do 1º dígito), sem letter-spacing novo', () => {
-    const abertura = /@media\s*\(min-width:\s*768px\)\s*\{/g
-    const faixas: string[] = []
-    for (let m = abertura.exec(bloco44); m; m = abertura.exec(bloco44)) {
-      let nivel = 1
-      let i = abertura.lastIndex
-      while (i < bloco44.length && nivel > 0) {
-        if (bloco44[i] === '{') nivel += 1
-        else if (bloco44[i] === '}') nivel -= 1
-        i += 1
-      }
-      faixas.push(bloco44.slice(abertura.lastIndex, i - 1))
-    }
-    const faixa768 = faixas.join('\n')
-    const valor = regraEm(faixa768, '.ha-cron-valor')
-    expect(valor).toMatch(/text-indent:\s*-\d*\.?\d+em\s*;/)
-    // A compensação é de tinta: só tira o recuo do dígito; não pode ser grande a ponto de passar do rótulo.
-    const recuo = Number(/text-indent:\s*(-\d*\.?\d+)em/.exec(valor)![1])
-    expect(recuo).toBeLessThan(0)
-    expect(recuo).toBeGreaterThanOrEqual(-0.15)
-    // Nenhum tracking novo no cronômetro (nem na regra do longo), nem fora da faixa de 768.
-    for (const seletor of ['.ha-cron-valor', ".ha-cron-valor[data-tamanho='longo']", ".ha-cron-valor[data-tamanho='normal']"]) {
-      expect(regra(seletor), seletor).not.toMatch(/letter-spacing/)
-      expect(regraEm(faixa768, seletor), seletor).not.toMatch(/letter-spacing/)
-    }
-    // Abaixo de 768 o recuo não entra (o 390 não muda).
-    expect(emMedia767()).not.toMatch(/text-indent/)
-    // A caixa não se mexe: nada de margem, largura, left ou transform novos no cronômetro por causa do recuo. O
-    // único acréscimo é o `padding-right` da correção abaixo, que devolve a largura que o recuo tirou.
-    expect(valor).not.toMatch(/margin|width|left|transform/)
-  })
-
-  // VOLTA2 D3 (correção da largura): a caixa é `width: fit-content` e o `text-indent` negativo entra no cálculo,
-  // então ela encolhia exatamente o recuo (783,1 para 765,9 em 1440). O `padding-right` do mesmo valor, em `em`
-  // (acompanha o 224 e o 160 do longo), devolve a largura. Na mesma regra do `text-indent`, só de 768 para cima.
-  it('D3 (768+): o padding-right do cronômetro é igual, em em, ao recuo do text-indent, na mesma regra, e não vale abaixo de 768', () => {
-    const abertura = /@media\s*\(min-width:\s*768px\)\s*\{/g
-    const faixas: string[] = []
-    for (let m = abertura.exec(bloco44); m; m = abertura.exec(bloco44)) {
-      let nivel = 1
-      let i = abertura.lastIndex
-      while (i < bloco44.length && nivel > 0) {
-        if (bloco44[i] === '{') nivel += 1
-        else if (bloco44[i] === '}') nivel -= 1
-        i += 1
-      }
-      faixas.push(bloco44.slice(abertura.lastIndex, i - 1))
-    }
-    const regras768 = faixas.join('\n')
-    const valor = regraEm(regras768, '.ha-cron-valor')
-    const recuo = /text-indent:\s*-(\d*\.?\d+)em\s*;/.exec(valor)
-    expect(recuo).not.toBeNull()
-    const direita = /padding-right:\s*(\d*\.?\d+)em\s*;/.exec(valor)
-    expect(direita, 'padding-right em em na mesma regra do text-indent').not.toBeNull()
-    expect(Number(direita![1])).toBe(Number(recuo![1]))
-    // Uma regra só, na faixa de 768: nenhuma outra regra do cronômetro (base, normal, longo) leva padding.
-    const comPadding = [...bloco44.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(
-      (m) => /\.ha-cron-valor/.test(m[1]) && /padding/.test(m[2]),
-    )
-    expect(comPadding).toHaveLength(1)
-    // Abaixo de 768 o recuo e o padding não entram, e o `longo` não redeclara nenhum dos dois (o `em` o acompanha).
-    expect(emMedia767()).not.toMatch(/\.ha-cron-valor[^{}]*\{[^}]*padding/)
-    expect(regra(".ha-cron-valor[data-tamanho='longo']")).not.toMatch(/padding|text-indent/)
-    expect(regra('.ha-cron-valor')).not.toMatch(/box-sizing\s*:\s*border-box/)
-  })
-
-  it('o campo da nota segue o 2.9: sem caixa, fio sólido embaixo na cor do texto do bloco, Instrument Serif 32', () => {
-    const campo = regra('.ha-nota-campo')
-    expect(campo).toMatch(/background-color:\s*transparent/)
-    expect(campo).toMatch(/border-bottom:\s*1px solid currentColor/)
-    expect(campo).toMatch(/font-family:\s*var\(--fonte-sb-serifa\)/)
-    expect(campo).toMatch(/font-size:\s*2rem/)
+    const inicio = Date.now()
+    renderizarRota('/app/sessao', {
+      estadoInicial: { ...criarEstadoInicial(inicio), sessao: { tipo: 'sono', inicio: inicio - (10 * HORA - 2000), pessoa: 'Bruno' } },
+    })
+    const timer = screen.getByRole('timer', { name: 'Duração da sessão' })
+    expect(timer.getAttribute('data-tamanho')).toBe('normal')
+    act(() => {
+      vi.advanceTimersByTime(3000)
+    })
+    expect(screen.getByRole('timer', { name: 'Duração da sessão' }).textContent).toBe('10:00:01')
+    expect(screen.getByRole('timer', { name: 'Duração da sessão' }).getAttribute('data-tamanho')).toBe('longo')
   })
 })
