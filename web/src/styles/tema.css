@@ -1,86 +1,85 @@
-/* Variáveis de uso. Os componentes leem só estas; as cores de verdade ficam em tokens.css. */
+/* Variáveis de uso. Os componentes leem só estas; as cores de verdade ficam em tokens.css.
+   Os nomes antigos (--cor-fundo, --cor-destaque, --fonte-sb-*...) continuam como apelidos da paleta nova:
+   as telas do app (Hoje, Sessão, barra Registrar) são redesenhadas noutro cartão e ainda os leem. */
 :root {
-  --cor-fundo: var(--color-neutral);
-  --cor-texto: var(--color-primary);
-  --cor-destaque: var(--color-accent);
-  --cor-sobre-destaque: var(--color-on-accent);
-  --cor-info: var(--color-info);
-  --cor-linha: var(--color-line);
-  --cor-foco: var(--color-focus);
-  --cor-papel-fundo: var(--color-paper-deep);
+  /* As duas famílias. */
+  --fonte-titulo: var(--font-titulo);
+  --fonte-texto: var(--font-texto);
 
-  /* Campos de cor do Início: o barro e a lavanda. Sobre eles o texto é sempre a tinta. */
-  --cor-campo-1: var(--color-field-1);
-  --cor-campo-2: var(--color-field-2);
+  /* Papéis do site. */
+  --cor-fundo: var(--color-papel);
+  --cor-texto: var(--color-cacau);
+  --cor-texto-2: var(--color-texto-2);
+  --cor-link: var(--color-oliva-tinta);
+  --cor-foco: var(--color-cacau);
+  --cor-fio-suave: color-mix(in srgb, var(--color-cacau) 20%, transparent);
+  --cor-cartao: var(--color-branco);
+  /* O rodapé é um painel de mel; na madrugada, o cartão da noite. */
+  --cor-painel-rodape: var(--color-mel);
+  --cor-sobre-painel-rodape: var(--color-cacau);
 
-  /* Campo do cronômetro na Sessão e do cartão Em andamento no Hoje */
-  --cor-campo-sessao: var(--color-accent);
-  --cor-numero-sessao: var(--color-on-accent);
+  /* Apelidos das telas do app: primário antigo → cacau, neutro → papel, destaque → mel (com cacau por cima). */
+  --cor-destaque: var(--color-mel);
+  --cor-sobre-destaque: var(--color-cacau);
+  --cor-info: var(--color-oliva-tinta);
+  --cor-linha: var(--color-cacau);
+  --cor-papel-fundo: var(--color-areia);
+  --cor-campo-1: var(--color-areia);
+  --cor-campo-2: var(--color-areia);
+  --cor-campo-sessao: var(--color-mel);
+  --cor-numero-sessao: var(--color-cacau);
   --borda-campo: none;
+  --cor-botao-campo: var(--color-cacau);
+  --cor-texto-botao-campo: var(--color-papel);
+  --cor-secundario: var(--color-texto-2);
+  --cor-rodape: var(--color-mel);
+  --cor-sobre-rodape: var(--color-cacau);
+  --cor-desativado-fundo: var(--color-areia);
+  --cor-desativado-texto: var(--color-texto-2);
 
-  /* Botão principal dentro de um campo: o urucum do botão sumiria no urucum do campo. */
-  --cor-botao-campo: var(--color-on-accent);
-  --cor-texto-botao-campo: var(--color-accent);
-
-  --fonte-exibicao: 'Fraunces', Georgia, serif;
-  --fonte-texto: 'Instrument Sans', system-ui, sans-serif;
+  --fonte-exibicao: var(--font-titulo);
+  --fonte-sb-titulo: var(--font-titulo);
+  --fonte-sb-serifa: var(--font-titulo);
+  --fonte-sb-corpo: var(--font-texto);
+  --fonte-sb-slab: var(--font-titulo);
 
   --alvo-rapido: 48px;
-
-  /* Sistema-base (MAT-44d): cores de uso do cabeçalho, do rodapé, dos fios e do texto de apoio. */
-  --cor-secundario: var(--color-secondary);
-  --cor-rodape: var(--color-accent);
-  --cor-sobre-rodape: var(--color-on-accent);
-  --cor-fio-suave: var(--color-line);
-
-  /* Famílias do sistema-base, uma por papel (o tipo está em index.css, nas classes .t-*). */
-  --fonte-sb-titulo: 'Fraunces', Georgia, serif;
-  --fonte-sb-serifa: 'Instrument Serif', Georgia, serif;
-  --fonte-sb-corpo: 'Instrument Sans', system-ui, sans-serif;
-  --fonte-sb-slab: 'Zilla Slab', Georgia, serif;
-
-  /* Botão desativado: fundo sólido e apagado, com o texto por cima. De dia, o texto secundário. */
-  --cor-desativado-fundo: var(--color-secondary);
-  --cor-desativado-texto: var(--color-neutral);
-
   /* Alvo de toque: 44 px; na madrugada, 56 px de altura. */
   --alvo-toque: 44px;
 }
 
-/* A madrugada vale para a página inteira (data-tema no html) ou só para um invólucro local, como
-   a miniatura da madrugada no Início (data-tema-local). Um bloco só, para os dois não divergirem. */
+/* Madrugada (DESIGN.md 4, de F3): fundo da noite, cartões da noite, destaque mel. Vale para a página inteira
+   (data-tema no html) ou só para um invólucro local (data-tema-local). Um bloco só, para não divergirem. */
 [data-tema-local='madrugada'],
 :root[data-tema='madrugada'] {
-  --cor-fundo: var(--color-night-neutral);
-  --cor-texto: var(--color-night-primary);
-  --cor-destaque: var(--color-night-accent);
-  --cor-sobre-destaque: var(--color-night-on-accent);
-  --cor-info: var(--color-night-info);
-  --cor-linha: var(--color-night-line);
-  --cor-foco: var(--color-night-focus);
-  --cor-papel-fundo: var(--color-night-paper-deep);
+  --cor-fundo: var(--color-noite);
+  --cor-texto: var(--color-papel);
+  --cor-texto-2: var(--color-noite-2);
+  --cor-link: var(--color-noite-2);
+  --cor-foco: var(--color-mel);
+  --cor-fio-suave: color-mix(in srgb, var(--color-papel) 20%, transparent);
+  --cor-cartao: var(--color-noite-cartao);
+  --cor-painel-rodape: var(--color-noite-cartao);
+  --cor-sobre-painel-rodape: var(--color-papel);
 
-  --cor-campo-1: var(--color-night-field-1);
-  --cor-campo-2: var(--color-night-field-2);
-
-  --cor-campo-sessao: var(--color-night-paper-deep);
-  --cor-numero-sessao: var(--color-night-primary);
-  --borda-campo: 1px solid var(--color-night-line);
-
-  --cor-botao-campo: var(--color-night-accent);
-  --cor-texto-botao-campo: var(--color-night-on-accent);
+  --cor-destaque: var(--color-mel);
+  --cor-sobre-destaque: var(--color-cacau);
+  --cor-info: var(--color-noite-2);
+  --cor-linha: var(--color-papel);
+  --cor-papel-fundo: var(--color-noite-cartao);
+  --cor-campo-1: var(--color-noite-cartao);
+  --cor-campo-2: var(--color-noite-cartao);
+  --cor-campo-sessao: var(--color-noite-cartao);
+  --cor-numero-sessao: var(--color-papel);
+  --borda-campo: 1px solid color-mix(in srgb, var(--color-papel) 20%, transparent);
+  --cor-botao-campo: var(--color-mel);
+  --cor-texto-botao-campo: var(--color-cacau);
+  --cor-secundario: var(--color-noite-2);
+  --cor-rodape: var(--color-noite-cartao);
+  --cor-sobre-rodape: var(--color-papel);
+  --cor-desativado-fundo: var(--color-noite-cartao);
+  --cor-desativado-texto: var(--color-noite-2);
 
   --alvo-rapido: 56px;
-
-  --cor-secundario: var(--color-night-secondary);
-  /* O desativado da madrugada é o bloco escuro (#251E18) com o texto secundário (#BAAF9F, 7,6:1):
-     menos claro que o primário (#C47055), em vez de o texto secundário como fundo (mais claro). */
-  --cor-desativado-fundo: var(--color-night-paper-deep);
-  --cor-desativado-texto: var(--color-night-secondary);
-  --cor-rodape: var(--color-night-paper-deep);
-  --cor-sobre-rodape: var(--color-night-primary);
-  /* Na madrugada os fios são a tinta a 20%: só servem de divisor. */
-  --cor-fio-suave: color-mix(in srgb, var(--color-night-line) 20%, transparent);
-
   --alvo-toque: 56px;
 }

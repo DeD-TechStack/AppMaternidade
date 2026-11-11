@@ -1,100 +1,45 @@
-/* Gerado de web/DESIGN.md por designmd export; não editar à mão */
-@theme {
-  --color-primary: #1a1511;
-  --color-neutral: #f6efe3;
-  --color-accent: #b0401c;
-  --color-on-accent: #fff8ee;
-  --color-secondary: #5e554c;
-  --color-info: #2b5c70;
-  --color-line: #1a1511;
-  --color-focus: #1a1511;
-  --color-paper-deep: #ebe1d0;
-  --color-field-1: #c9a39a;
-  --color-field-2: #b8adc4;
-  --color-night-primary: #e3d6c3;
-  --color-night-neutral: #17120e;
-  --color-night-accent: #c47055;
-  --color-night-on-accent: #17120e;
-  --color-night-secondary: #baaf9f;
-  --color-night-info: #8fb0bf;
-  --color-night-line: #e3d6c3;
-  --color-night-focus: #f7efe2;
-  --color-night-paper-deep: #251e18;
-  --color-night-field-1: #3a2723;
-  --color-night-field-2: #2c2733;
-  --font-display-xl: "Fraunces";
-  --font-display-m: "Fraunces";
-  --font-citacao: "Fraunces";
-  --font-secao: "Instrument Serif";
-  --font-subtitulo: "Instrument Serif";
-  --font-rotulo: "Instrument Serif";
-  --font-nav-grande: "Instrument Serif";
-  --font-corpo-g: "Instrument Sans";
-  --font-corpo: "Instrument Sans";
-  --font-corpo-p: "Instrument Sans";
-  --font-ui: "Instrument Sans";
-  --font-numero: "Zilla Slab";
-  --font-cronometro: "Zilla Slab";
-  --font-botao: "Fraunces";
-  --text-display-xl: 6rem;
-  --text-display-m: 4.5rem;
-  --text-citacao: 3rem;
-  --text-secao: 3.5rem;
-  --text-subtitulo: 3rem;
-  --text-rotulo: 2rem;
-  --text-nav-grande: 5.5rem;
-  --text-corpo-g: 1.75rem;
-  --text-corpo: 1.25rem;
-  --text-corpo-p: 1.0625rem;
-  --text-ui: 0.9375rem;
-  --text-numero: 7rem;
-  --text-cronometro: 14rem;
-  --text-botao: 1.5rem;
-  --leading-display-xl: 6rem;
-  --leading-display-m: 4.5rem;
-  --leading-citacao: 3.625rem;
-  --leading-secao: 4.1875rem;
-  --leading-subtitulo: 3.625rem;
-  --leading-rotulo: 2.375rem;
-  --leading-nav-grande: 5.5rem;
-  --leading-corpo-g: 2.4375rem;
-  --leading-corpo: 1.75rem;
-  --leading-corpo-p: 1.5rem;
-  --leading-ui: 1.3125rem;
-  --leading-numero: 5.625rem;
-  --leading-cronometro: 11.25rem;
-  --leading-botao: 1.5rem;
-  --font-weight-display-xl: 600;
-  --font-weight-display-m: 400;
-  --font-weight-citacao: 400;
-  --font-weight-secao: 400;
-  --font-weight-subtitulo: 400;
-  --font-weight-rotulo: 400;
-  --font-weight-nav-grande: 400;
-  --font-weight-corpo-g: 400;
-  --font-weight-corpo: 400;
-  --font-weight-corpo-p: 400;
-  --font-weight-ui: 400;
-  --font-weight-numero: 700;
-  --font-weight-cronometro: 700;
-  --font-weight-botao: 600;
-  --radius-tag: 4px;
-  --radius-inner: 4px;
-  --radius-control: 8px;
-  --radius-media: 8px;
-  --spacing-s8: 8px;
-  --spacing-s16: 16px;
-  --spacing-s24: 24px;
-  --spacing-s32: 32px;
-  --spacing-s64: 64px;
-  --spacing-s96: 96px;
-  --spacing-s128: 128px;
-  --spacing-s160: 160px;
-  --spacing-s192: 192px;
-  --spacing-margin-wide: 32px;
-  --spacing-margin-mid: 24px;
-  --spacing-margin-narrow: 16px;
-  --spacing-measure: 65ch;
-  --spacing-target: 44px;
-  --spacing-target-night: 56px;
+/* Tokens do site "Campo de mel" (.oc/contrato/DESIGN.md v1, 11/11/2026, seções 1 a 3). Escritos à mão:
+   é o único arquivo de web/src com cor em hexadecimal ou rgb(). Todo o resto lê estas variáveis.
+   `static`: todas as variáveis saem no CSS, também as que só a amostra da /sistema lê por `var()`. */
+@theme static {
+  /* Duas famílias só: Literata e Outfit (DESIGN.md 2 e 8). As famílias padrão do Tailwind (sans, serif,
+     mono) apontam para elas, para nenhuma outra família (nem monospace) chegar ao CSS gerado. */
+  --font-titulo: 'Literata Variable', serif;
+  --font-texto: 'Outfit Variable', system-ui, sans-serif;
+  --font-sans: var(--font-texto);
+  --font-serif: var(--font-titulo);
+  --font-mono: var(--font-texto);
+  --default-font-family: var(--font-texto);
+  --default-mono-font-family: var(--font-texto);
+
+  /* 1. Paleta (papéis; nomes do tema do Tailwind) */
+  --color-*: initial;
+  --color-papel: #F8F6EB;
+  --color-mel: #F2C14E;
+  --color-mel-claro: #F7D684;
+  --color-oliva: #697255;
+  --color-oliva-tinta: #4F5740;
+  --color-cacau: #2B2320;
+  --color-areia: #EADDC5;
+  --color-texto-2: #6E6560;
+  --color-branco: #FFFFFF;
+  --color-noite: #2B2320;
+  --color-noite-cartao: #3A302B;
+  --color-noite-2: #B9C09F;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  /* 3. Raios */
+  --radius-painel: 24px;
+  --radius-cartao: 20px;
+  --radius-pilula: 999px;
+  --radius-campo: 14px;
+}
+
+:root {
+  /* 3. As duas sombras e os dois gradientes permitidos, com os valores do DESIGN.md. */
+  --sombra-flutuante: 0 2px 4px rgb(43 35 32 / .08), 0 18px 40px rgb(43 35 32 / .16);
+  --sombra-cartao: 0 1px 2px rgb(43 35 32 / .06), 0 8px 24px rgb(43 35 32 / .06);
+  --luz-estudio: radial-gradient(120% 90% at 15% 10%, #F7D684 0%, #F2C14E 60%);
+  --brilho-mel: radial-gradient(closest-side, rgb(242 193 78 / .22), transparent);
 }

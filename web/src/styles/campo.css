@@ -1,0 +1,862 @@
+/* Peças do "Campo de mel" (componentes/campo, DESIGN.md 3 e 4) e a página /sistema. */
+@layer components {
+  /* PainelCampo: largura da janela menos 32 px de cada lado (12 em 390), raio 24, respiro 64/24. */
+  .cm-painel {
+    position: relative;
+    box-sizing: border-box;
+    width: min(100% - 2 * var(--cm-recuo-painel), 1376px);
+    margin-inline: auto;
+    padding: var(--cm-respiro-painel);
+    border-radius: var(--radius-painel);
+  }
+
+  /* Dentro de uma grade (amostra lado a lado), o painel ocupa a célula. */
+  .cm-painel[data-largura='celula'] {
+    width: auto;
+    margin-inline: 0;
+  }
+
+  .cm-painel-mel {
+    background-color: var(--color-mel);
+    color: var(--color-cacau);
+  }
+
+  .cm-painel-luz {
+    background-image: var(--luz-estudio);
+  }
+
+  .cm-painel-oliva {
+    background-color: var(--color-oliva);
+    color: var(--color-papel);
+  }
+
+  .cm-painel-areia {
+    background-color: var(--color-areia);
+    color: var(--color-cacau);
+  }
+
+  .cm-painel-cacau {
+    background-color: var(--color-cacau);
+    color: var(--color-papel);
+  }
+
+  /* Nos painéis escuros o anel de foco é o papel (14:1 no cacau, 4,7:1 na oliva). */
+  .cm-painel-oliva :focus-visible,
+  .cm-painel-cacau :focus-visible,
+  .cm-painel-cacau [data-forcar='foco'] {
+    outline-color: var(--color-papel);
+  }
+
+  .cm-painel-mel :focus-visible,
+  .cm-painel-areia :focus-visible {
+    outline-color: var(--color-cacau);
+  }
+
+  /* CenaEstudio: a imagem ocupa o painel de mel com a luz de estúdio, sem respiro. */
+  .cm-cena {
+    padding: 0;
+  }
+
+  .cm-cena-midia {
+    overflow: hidden;
+    border-radius: inherit;
+  }
+
+  .cm-cena-midia img {
+    display: block;
+    width: 100%;
+    height: auto;
+    /* Enquanto a imagem não chega, o mel do painel aparece por trás, sem texto alternativo à vista. */
+    color: transparent;
+  }
+
+  /* CartaoFlutuante: cartão branco de verdade, raio 20, sombra flutuante, girado de leve. */
+  .cm-flutuante {
+    position: absolute;
+    z-index: 2;
+    width: min(340px, 78%);
+  }
+
+  .cm-flutuante[data-posicao='baixo-esquerda'] {
+    left: clamp(16px, 4.571vw - 1.829px, 64px);
+    bottom: clamp(-48px, -1.524vw - 26.057px, -32px);
+  }
+
+  .cm-flutuante[data-posicao='baixo-direita'] {
+    right: clamp(16px, 4.571vw - 1.829px, 64px);
+    bottom: clamp(-48px, -1.524vw - 26.057px, -32px);
+  }
+
+  .cm-flutuante[data-posicao='topo-direita'] {
+    right: clamp(16px, 4.571vw - 1.829px, 64px);
+    top: clamp(-48px, -1.524vw - 26.057px, -32px);
+  }
+
+  .cm-flutuante-cartao {
+    box-sizing: border-box;
+    padding: 20px 24px;
+    border-radius: var(--radius-cartao);
+    background-color: var(--color-branco);
+    color: var(--color-cacau);
+    box-shadow: var(--sombra-flutuante);
+  }
+
+  /* O painel que recebe um cartão por baixo guarda o espaço da sobra. */
+  .cm-com-flutuante {
+    margin-bottom: 48px;
+  }
+
+  /* No celular a cena 3:2 fica baixa (244 px em 390) e o cartão cobria quase metade dela. A cena
+     ganha altura num recorte 5:4 centrado (os aparelhos ficam inteiros), o cartão encolhe ao
+     conteúdo e sobra 40 px da borda: cobre só o chão e a base dos pedestais. */
+  @media (max-width: 767px) {
+    /* 40 px de sobra do cartão mais 56 de papel até o que vem depois. */
+    .cm-com-flutuante {
+      margin-bottom: 96px;
+    }
+
+    .cm-com-flutuante .cm-cena-midia img {
+      aspect-ratio: 5 / 4;
+      object-fit: cover;
+    }
+
+    .cm-com-flutuante .cm-flutuante {
+      width: auto;
+      max-width: 72%;
+    }
+
+    .cm-com-flutuante .cm-flutuante[data-posicao^='baixo'] {
+      bottom: -40px;
+    }
+
+    .cm-com-flutuante .cm-flutuante-cartao {
+      padding: 14px 18px;
+    }
+
+    .cm-com-flutuante .cm-cartao-sessao-rotulo,
+    .cm-com-flutuante .cm-cartao-sessao-quem {
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+    }
+
+    .cm-com-flutuante .cm-cartao-sessao-tempo {
+      font-size: 28px;
+    }
+
+    .cm-com-flutuante .cm-cartao-sessao-quem {
+      margin-top: 2px;
+    }
+  }
+
+  /* Números: 3 figuras em Literata 64 (40 em 390), fios verticais de cacau a 20 %. */
+  .cm-numeros {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cm-numeros-item {
+    display: flex;
+    justify-content: center;
+    padding: 8px 24px;
+  }
+
+  .cm-numeros-item + .cm-numeros-item {
+    border-left: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  }
+
+  .cm-numeros-linha {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: center;
+    column-gap: 14px;
+  }
+
+  .cm-numeros-valor {
+    font-family: var(--fonte-titulo);
+    font-size: clamp(40px, 2.286vw + 31.086px, 64px);
+    line-height: 1;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+
+  .cm-numeros-legenda {
+    font-family: var(--fonte-texto);
+    font-size: clamp(18px, 0.381vw + 16.514px, 22px);
+    line-height: 1.3;
+  }
+
+  @media (max-width: 767px) {
+    .cm-numeros {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .cm-numeros-item {
+      justify-content: flex-start;
+      padding: 20px 0;
+      border-top: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+    }
+
+    .cm-numeros-item:last-child {
+      border-bottom: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+    }
+
+    .cm-numeros-item + .cm-numeros-item {
+      border-left: 0;
+    }
+
+    .cm-numeros-linha {
+      justify-content: flex-start;
+    }
+  }
+
+  /* Ilustração: traço preto sobre papel ou mel. */
+  .cm-ilustracao {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Citação: Literata itálico 48/56 (30/36 em 390). */
+  .cm-citacao {
+    margin: 0;
+  }
+
+  .cm-citacao blockquote {
+    margin: 0;
+  }
+
+  .cm-citacao-texto {
+    margin: 0;
+    font-family: var(--fonte-titulo);
+    font-size: clamp(30px, 1.714vw + 23.314px, 48px);
+    line-height: clamp(36px, 1.905vw + 28.571px, 56px);
+    font-style: italic;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  .cm-citacao-autor {
+    margin-top: 24px;
+    font-family: var(--fonte-texto);
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  /* FaixaCacau: cacau com o papel por cima; o brilho de mel fica atrás, à direita. */
+  .cm-faixa-cacau {
+    overflow: hidden;
+  }
+
+  .cm-faixa-brilho {
+    position: absolute;
+    top: 50%;
+    right: -10%;
+    width: min(720px, 90vw);
+    aspect-ratio: 1;
+    translate: 0 -50%;
+    background-image: var(--brilho-mel);
+    pointer-events: none;
+  }
+
+  /* O recipiente da revelação corta o que sobe: 8 px de folga para não cortar o anel de foco. */
+  .cm-faixa-conteudo {
+    position: relative;
+    margin: -8px;
+    padding: 8px;
+  }
+
+  /* FaixaSelos: letreiro de selos de oliva, 60 s por volta. */
+  .cm-selos {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cm-selos-janela {
+    overflow: hidden;
+    padding-block: 4px;
+  }
+
+  .cm-selos-trilho {
+    display: flex;
+    width: max-content;
+    animation: cm-letreiro 60s linear infinite;
+  }
+
+  .cm-selos:hover .cm-selos-trilho,
+  .cm-selos:focus-within .cm-selos-trilho,
+  .cm-selos-trilho[data-pausado] {
+    animation-play-state: paused;
+  }
+
+  .cm-selos-lista {
+    display: flex;
+    gap: 16px;
+    margin: 0;
+    padding: 0 16px 0 0;
+    list-style: none;
+  }
+
+  .cm-selo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 52px;
+    padding: 0 24px 0 18px;
+    border-radius: var(--radius-pilula);
+    background-color: var(--color-oliva);
+    color: var(--color-papel);
+    font-size: 1.125rem;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .cm-selo svg {
+    flex: none;
+    width: 22px;
+    height: 22px;
+  }
+
+  .cm-selos-pausa {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
+  }
+
+  @keyframes cm-letreiro {
+    from {
+      transform: translateX(0);
+    }
+
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cm-selos-trilho {
+      width: auto;
+      animation: none;
+    }
+
+    .cm-selos-lista {
+      flex-wrap: wrap;
+      padding: 0;
+    }
+
+    .cm-selos-lista[aria-hidden='true'],
+    .cm-selos-pausa {
+      display: none;
+    }
+  }
+
+  /* TabelaComparacao: tabela de verdade num painel de oliva, texto de papel. */
+  .cm-tabela-rolagem {
+    overflow-x: auto;
+  }
+
+  .cm-tabela {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--fonte-texto);
+  }
+
+  .cm-tabela caption {
+    margin-bottom: 24px;
+    text-align: left;
+  }
+
+  .cm-tabela th,
+  .cm-tabela td {
+    padding: 18px 16px;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-papel) 28%, transparent);
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  .cm-tabela thead th {
+    padding-top: 0;
+    font-family: var(--fonte-titulo);
+    font-size: clamp(17px, 0.476vw + 15.143px, 22px);
+    line-height: 1.25;
+    font-weight: 600;
+  }
+
+  .cm-tabela tbody th {
+    font-size: clamp(16px, 0.381vw + 14.514px, 20px);
+    line-height: 1.35;
+    font-weight: 400;
+  }
+
+  .cm-tabela th:first-child,
+  .cm-tabela td:first-child {
+    padding-left: 0;
+  }
+
+  .cm-tabela td,
+  .cm-tabela thead th + th {
+    width: 22%;
+    text-align: center;
+    border-left: 1px solid color-mix(in srgb, var(--color-papel) 28%, transparent);
+  }
+
+  .cm-tabela tbody tr:last-child > * {
+    border-bottom: 0;
+  }
+
+  .cm-tabela svg {
+    display: inline-block;
+    width: 28px;
+    height: 28px;
+    vertical-align: middle;
+  }
+
+  @media (max-width: 767px) {
+    .cm-tabela th,
+    .cm-tabela td {
+      padding: 14px 8px;
+    }
+
+    .cm-tabela td,
+    .cm-tabela thead th + th {
+      width: 24%;
+    }
+
+    .cm-tabela svg {
+      width: 22px;
+      height: 22px;
+    }
+  }
+
+  /* Depoimento: seção de areia, cartões brancos de raio 20. */
+  .cm-depoimentos-aviso {
+    margin-top: 24px;
+  }
+
+  .cm-depoimentos-lista {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    margin: 32px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cm-depoimento {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 24px;
+    height: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 28px;
+    border-radius: var(--radius-cartao);
+    background-color: var(--color-branco);
+    color: var(--color-cacau);
+  }
+
+  .cm-depoimento blockquote {
+    margin: 0;
+  }
+
+  .cm-depoimento-texto {
+    margin: 0;
+    font-family: var(--fonte-titulo);
+    font-size: 1.375rem;
+    line-height: 1.95rem;
+    font-style: italic;
+    font-weight: 500;
+  }
+
+  .cm-depoimento-nome {
+    display: block;
+    font-weight: 600;
+  }
+
+  @media (min-width: 900px) {
+    .cm-depoimentos-lista {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 24px;
+    }
+  }
+
+  /* Acordeão: linhas de 1 px, botão de altura cheia e o sinal de mais que vira x. */
+  .cm-acordeao {
+    border-top: 1px solid var(--cor-fio-suave);
+  }
+
+  .cm-acordeao-item {
+    border-bottom: 1px solid var(--cor-fio-suave);
+  }
+
+  .cm-acordeao-titulo {
+    margin: 0;
+  }
+
+  .cm-acordeao-gatilho {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    width: 100%;
+    min-height: 72px;
+    padding: 16px 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font-family: var(--fonte-titulo);
+    font-size: clamp(20px, 0.381vw + 18.514px, 24px);
+    line-height: 1.3;
+    font-weight: 600;
+    text-align: left;
+  }
+
+  .cm-acordeao-icone {
+    flex: none;
+    width: 28px;
+    height: 28px;
+    transition: rotate 150ms ease-out;
+  }
+
+  .cm-acordeao-gatilho[aria-expanded='true'] .cm-acordeao-icone {
+    rotate: 45deg;
+  }
+
+  .cm-acordeao-resposta {
+    max-width: 44rem;
+    padding: 0 0 28px;
+  }
+
+  .cm-acordeao-resposta > p {
+    margin: 0;
+  }
+
+  /* Página /sistema --------------------------------------------------------------------------- */
+  .cm-sistema-secao {
+    margin-top: var(--cm-entre-secoes);
+  }
+
+  .cm-sistema-cabeca {
+    display: grid;
+    gap: 16px;
+    margin-bottom: clamp(32px, 1.524vw + 26.057px, 48px);
+  }
+
+  .cm-sistema-cabeca .cm-rotulo {
+    color: var(--cor-link);
+  }
+
+  .cm-sistema-abertura {
+    padding-top: clamp(40px, 5.333vw + 19.2px, 96px);
+  }
+
+  .cm-sistema-abertura .cm-lide {
+    max-width: 36rem;
+    margin-top: 24px;
+  }
+
+  /* Abertura: o título à esquerda e o painel de mel da paleta à direita (empilhados abaixo de 1100). */
+  .cm-sistema-heroi {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 48px;
+    align-items: center;
+  }
+
+  .cm-sistema-heroi-texto .cm-lide {
+    max-width: 34rem;
+    margin-top: 24px;
+  }
+
+  .cm-paleta-titulo {
+    margin: 4px 0 24px;
+  }
+
+  @media (min-width: 1100px) {
+    .cm-sistema-heroi {
+      grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
+      gap: 48px;
+    }
+  }
+
+  .cm-sistema-rotulo-solto {
+    margin-bottom: 16px;
+    color: var(--cor-link);
+  }
+
+  .cm-amostra-botao {
+    display: grid;
+    justify-items: start;
+    gap: 8px;
+  }
+
+  .cm-amostra-botao > p {
+    margin: 0;
+  }
+
+  .cm-sistema-mel {
+    margin-top: 32px;
+  }
+
+  .cm-sistema-mel .cm-texto-2 {
+    color: var(--color-areia);
+  }
+
+  .cm-sistema-mel .cm-rotulo {
+    color: var(--color-papel);
+  }
+
+  .cm-campos {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    margin-top: 48px;
+  }
+
+  @media (min-width: 900px) {
+    .cm-campos {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      align-items: start;
+    }
+  }
+
+  .cm-ilustracoes-nota {
+    margin-top: 16px;
+  }
+
+  .cm-sistema-acoes {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px 24px;
+    margin-top: 32px;
+  }
+
+  .cm-paleta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cm-amostra-cor {
+    display: grid;
+    align-content: start;
+    gap: 2px;
+  }
+
+  .cm-amostra-cor-bloco {
+    height: clamp(56px, 1.524vw + 50.057px, 72px);
+    margin-bottom: 10px;
+    box-sizing: border-box;
+    border: 1px solid color-mix(in srgb, var(--color-cacau) 18%, transparent);
+    border-radius: 16px;
+  }
+
+  .cm-amostra-cor-nome {
+    font-weight: 600;
+  }
+
+  .cm-amostra-cor-hex {
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (min-width: 768px) {
+    .cm-paleta {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1100px) {
+    .cm-paleta {
+      gap: 24px 20px;
+    }
+  }
+
+  .cm-tabular-amostra {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 40px;
+  }
+
+  .cm-tipos {
+    display: grid;
+    gap: 40px;
+  }
+
+  .cm-tipo-linha {
+    display: grid;
+    gap: 8px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--cor-fio-suave);
+  }
+
+  .cm-tipo-textos {
+    display: grid;
+    gap: 16px;
+  }
+
+  @media (min-width: 1100px) {
+    .cm-tipo-linha {
+      grid-template-columns: 200px minmax(0, 1fr);
+      gap: 32px;
+      align-items: baseline;
+    }
+  }
+
+  .cm-grade-botoes {
+    display: grid;
+    gap: 24px;
+  }
+
+  .cm-fila {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px 20px;
+  }
+
+  .cm-fila-rotulo {
+    width: 100%;
+  }
+
+  @media (min-width: 1100px) {
+    .cm-fila-rotulo {
+      width: 120px;
+    }
+  }
+
+  .cm-grade-paineis {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .cm-grade-paineis .cm-painel {
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 32px;
+  }
+
+  @media (min-width: 768px) {
+    .cm-grade-paineis {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 24px;
+    }
+  }
+
+  .cm-cartao-sessao-rotulo {
+    margin: 0;
+    font-size: 0.9375rem;
+    line-height: 1.375rem;
+    font-weight: 500;
+  }
+
+  .cm-cartao-sessao-tempo {
+    margin: 4px 0 0;
+    font-family: var(--fonte-titulo);
+    font-size: clamp(34px, 0.952vw + 30.286px, 44px);
+    line-height: 1.1;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+
+  .cm-cartao-sessao-quem {
+    margin: 6px 0 0;
+    color: var(--color-texto-2);
+    font-size: 0.9375rem;
+  }
+
+  .cm-ilustracoes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cm-ilustracao-cartao {
+    display: block;
+    height: 100%;
+    border-radius: var(--radius-cartao);
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .cm-ilustracao-cartao:focus-visible {
+    outline-offset: 3px;
+  }
+
+  /* O quadro é quadrado e o desenho cabe nele, centrado, com 10 % de respiro em volta. */
+  .cm-ilustracao-quadro {
+    position: relative;
+    display: block;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: var(--radius-cartao);
+  }
+
+  .cm-ilustracao-quadro[data-fundo='mel'] {
+    background-color: var(--color-mel);
+  }
+
+  .cm-ilustracao-quadro[data-fundo='papel'] {
+    border: 1px solid color-mix(in srgb, var(--color-cacau) 14%, transparent);
+    background-color: var(--color-papel);
+  }
+
+  .cm-ilustracao-quadro img {
+    position: absolute;
+    inset: 10%;
+    width: 80%;
+    height: 80%;
+    max-width: none;
+    object-fit: contain;
+  }
+
+  .cm-ilustracao-legenda {
+    display: block;
+    padding: 12px 4px 0;
+  }
+
+  .cm-camada-resumo {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 24px;
+  }
+
+  @media (min-width: 768px) {
+    .cm-ilustracoes {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 24px;
+    }
+  }
+
+  .cm-faixa-texto {
+    max-width: 34rem;
+  }
+
+  .cm-faixa-texto > * + * {
+    margin-top: 24px;
+  }
+
+  .cm-faixa-texto .cm-botao {
+    margin-top: 40px;
+  }
+
+  .cm-cena-numeros {
+    margin-top: clamp(64px, 3.048vw + 52.114px, 96px);
+  }
+}

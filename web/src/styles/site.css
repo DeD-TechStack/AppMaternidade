@@ -1,0 +1,651 @@
+/* Site "Campo de mel" (DESIGN.md 2 a 4): tipo, área, botões, cabeçalho, menu do celular e rodapé.
+   As medidas entre 390 e 1440 crescem em linha reta (clamp) e batem com as duas escalas do contrato
+   nas duas pontas. Classes `cm-*`. */
+@layer components {
+  :root {
+    /* Margem da área de conteúdo: 20 em 390, 64 em 1440. */
+    --cm-margem: clamp(20px, 3.619vw + 5.886px, 64px);
+    /* Recuo do painel de campo até a borda da janela: 12 em 390, 32 em 1440. */
+    --cm-recuo-painel: clamp(12px, 1.905vw + 4.571px, 32px);
+    /* Respiro interno do painel: 24 em 390, 64 em 1440. */
+    --cm-respiro-painel: clamp(24px, 3.81vw + 9.143px, 64px);
+    /* Respiro de papel entre dois painéis: 64 em 390, 128 em 1440. */
+    --cm-entre-secoes: clamp(64px, 6.095vw + 40.229px, 128px);
+    --cm-cabecalho: 72px;
+    --cor-primario-fundo: var(--color-cacau);
+    --cor-primario-texto: var(--color-papel);
+  }
+
+  :root[data-tema='madrugada'] {
+    --cor-primario-fundo: var(--color-mel);
+    --cor-primario-texto: var(--color-cacau);
+  }
+
+  @media (min-width: 1100px) {
+    :root {
+      --cm-cabecalho: 88px;
+    }
+  }
+
+  /* Área de conteúdo: 12 colunas na grade de 1440 (margem 64, máximo 1312). */
+  .cm-area {
+    width: min(100% - 2 * var(--cm-margem), 1312px);
+    margin-inline: auto;
+  }
+
+  /* Tipo ------------------------------------------------------------------------------------ */
+  .cm-h1,
+  .cm-h2,
+  .cm-h3,
+  .cm-h4,
+  .cm-marca {
+    margin: 0;
+    font-family: var(--fonte-titulo);
+    font-weight: 600;
+    text-wrap: balance;
+  }
+
+  /* h1 84/88 em 1440, 42/46 em 390. */
+  .cm-h1 {
+    font-size: clamp(42px, 4vw + 26.4px, 84px);
+    line-height: clamp(46px, 4vw + 30.4px, 88px);
+    letter-spacing: -0.02em;
+  }
+
+  /* h2 56/62 e 32/38. */
+  .cm-h2 {
+    font-size: clamp(32px, 2.286vw + 23.086px, 56px);
+    line-height: clamp(38px, 2.286vw + 29.086px, 62px);
+    letter-spacing: -0.015em;
+  }
+
+  /* h3 36/42 e 24/30. */
+  .cm-h3 {
+    font-size: clamp(24px, 1.143vw + 19.543px, 36px);
+    line-height: clamp(30px, 1.143vw + 25.543px, 42px);
+    letter-spacing: -0.01em;
+  }
+
+  /* h4 24/30 e 20/26. */
+  .cm-h4 {
+    font-size: clamp(20px, 0.381vw + 18.514px, 24px);
+    line-height: clamp(26px, 0.381vw + 24.514px, 30px);
+  }
+
+  /* A ênfase do título é a segunda linha inteira em itálico, nunca uma palavra solta. */
+  .cm-segunda-linha {
+    display: block;
+    font-style: italic;
+  }
+
+  .cm-corpo {
+    font-family: var(--fonte-texto);
+    font-size: 1.125rem;
+    line-height: 1.6875rem;
+    text-wrap: pretty;
+  }
+
+  /* Texto de abertura, logo abaixo do h1: 18/27 em 390, 24/34 em 1440. */
+  .cm-lide {
+    margin: 0;
+    font-family: var(--fonte-texto);
+    font-size: clamp(18px, 0.571vw + 15.771px, 24px);
+    line-height: clamp(27px, 0.667vw + 24.4px, 34px);
+    text-wrap: pretty;
+  }
+
+  .cm-pequeno {
+    font-family: var(--fonte-texto);
+    font-size: 0.9375rem;
+    line-height: 1.375rem;
+  }
+
+  /* Rótulo curto em caixa normal (nunca caixa alta). */
+  .cm-rotulo {
+    margin: 0;
+    font-family: var(--fonte-texto);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 500;
+  }
+
+  .cm-texto-2 {
+    color: var(--cor-texto-2);
+  }
+
+  .cm-tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cm-medida {
+    max-width: 38rem;
+  }
+
+  /* Botões (DESIGN.md 4) ---------------------------------------------------------------------- */
+  .cm-botao {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-sizing: border-box;
+    min-width: 44px;
+    min-height: 56px;
+    padding: 0 28px;
+    border: 1.5px solid transparent;
+    border-radius: var(--radius-pilula);
+    background-color: transparent;
+    color: inherit;
+    font-family: var(--fonte-texto);
+    font-size: 1.125rem;
+    font-weight: 500;
+    line-height: 1.2;
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    /* Só a escala do toque anima; a troca de cor do hover é instantânea (DESIGN.md 5). */
+    transition-property: scale;
+    transition-duration: 120ms;
+    transition-timing-function: ease-out;
+  }
+
+  .cm-botao:active:not([aria-disabled='true']) {
+    scale: 0.96;
+  }
+
+  .cm-botao[data-tamanho='app'] {
+    min-height: 48px;
+    padding: 0 22px;
+    font-size: 1.0625rem;
+  }
+
+  .cm-botao:focus-visible,
+  .cm-botao[data-forcar='foco'] {
+    outline: 2px solid var(--cor-foco);
+    outline-offset: 3px;
+  }
+
+  /* Primário: pílula de cacau. No hover inverte na hora para papel com o contorno de 1,5 px. */
+  .cm-botao-primario {
+    border-color: var(--cor-primario-fundo);
+    background-color: var(--cor-primario-fundo);
+    color: var(--cor-primario-texto);
+  }
+
+  .cm-botao-primario:hover,
+  .cm-botao-primario[data-forcar='hover'] {
+    background-color: var(--cor-primario-texto);
+    color: var(--cor-primario-fundo);
+  }
+
+  /* Mel: o primário sobre o cacau. No hover vira o contorno de mel. */
+  .cm-botao-mel {
+    border-color: var(--color-mel);
+    background-color: var(--color-mel);
+    color: var(--color-cacau);
+  }
+
+  .cm-botao-mel:hover,
+  .cm-botao-mel[data-forcar='hover'] {
+    background-color: var(--color-cacau);
+    color: var(--color-mel);
+  }
+
+  /* Contorno: 1,5 px na cor do texto; no hover se enche. */
+  .cm-botao-contorno {
+    border-color: currentColor;
+  }
+
+  .cm-botao-contorno:hover,
+  .cm-botao-contorno[data-forcar='hover'] {
+    border-color: var(--cor-texto);
+    background-color: var(--cor-texto);
+    color: var(--cor-fundo);
+  }
+
+  .cm-botao-contorno[aria-pressed='true'] {
+    border-color: var(--cor-texto);
+    background-color: var(--cor-texto);
+    color: var(--cor-fundo);
+  }
+
+  /* Texto: sem caixa; o sublinhado aparece no hover. */
+  /* Os 4 px de respiro são do anel de foco; a margem negativa devolve o texto à borda da coluna
+     (no celular ele quebra para baixo do primário e ficava 4 px para dentro). */
+  .cm-botao-texto {
+    min-height: 44px;
+    margin-inline: -4px;
+    padding: 0 4px;
+    border: 0;
+    border-radius: 6px;
+    text-decoration-line: underline;
+    text-decoration-color: transparent;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 6px;
+  }
+
+  .cm-botao-texto:hover,
+  .cm-botao-texto[data-forcar='hover'] {
+    text-decoration-color: currentColor;
+  }
+
+  /* Desativado: areia com o texto apagado, e nada muda no hover. */
+  .cm-botao[aria-disabled='true'],
+  .cm-botao[aria-disabled='true']:hover {
+    border-color: var(--cor-desativado-fundo);
+    background-color: var(--cor-desativado-fundo);
+    color: var(--cor-desativado-texto);
+    text-decoration-color: transparent;
+    cursor: not-allowed;
+  }
+
+  .cm-botao-texto[aria-disabled='true'],
+  .cm-botao-texto[aria-disabled='true']:hover {
+    background-color: transparent;
+  }
+
+  .cm-botao-icone {
+    flex: none;
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Campo (raio 14) ---------------------------------------------------------------------------- */
+  .cm-campo {
+    display: grid;
+    gap: 8px;
+    max-width: 28rem;
+  }
+
+  .cm-campo-rotulo {
+    font-weight: 500;
+  }
+
+  .cm-campo-controle {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .cm-campo-entrada {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 56px;
+    padding: 0 18px;
+    border: 1.5px solid var(--cor-texto-2);
+    border-radius: var(--radius-campo);
+    background-color: var(--cor-cartao);
+    color: var(--cor-texto);
+    font-size: 1.0625rem;
+    appearance: none;
+  }
+
+  .cm-campo-entrada:hover {
+    border-color: var(--cor-texto);
+  }
+
+  .cm-campo-entrada:focus-visible {
+    border-color: var(--cor-texto);
+    outline-offset: 2px;
+  }
+
+  .cm-campo-entrada[aria-invalid='true'] {
+    border-width: 2px;
+    border-color: var(--cor-texto);
+  }
+
+  .cm-campo-controle[data-select] .cm-campo-entrada {
+    padding-right: 48px;
+    cursor: pointer;
+  }
+
+  .cm-campo-seta {
+    position: absolute;
+    right: 16px;
+    width: 20px;
+    height: 20px;
+    pointer-events: none;
+  }
+
+  .cm-campo-olho {
+    position: absolute;
+    right: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 10px;
+    background: none;
+    color: inherit;
+  }
+
+  .cm-campo-controle[data-senha] .cm-campo-entrada {
+    padding-right: 56px;
+  }
+
+  .cm-campo-mensagem {
+    margin: 0;
+  }
+
+  .cm-campo-erro {
+    font-weight: 500;
+  }
+
+  /* Cabeçalho ------------------------------------------------------------------------------- */
+  .cm-cabecalho {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    height: var(--cm-cabecalho);
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto);
+  }
+
+  .cm-cab-miolo {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    height: 100%;
+  }
+
+  .cm-marca {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: inherit;
+    font-size: 1.5rem;
+    line-height: 1.5rem;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .cm-cab-links {
+    display: none;
+  }
+
+  .cm-cab-acoes {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+  }
+
+  .cm-cab-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 4px;
+    border-radius: 6px;
+    color: inherit;
+    font-size: 1.0625rem;
+    text-decoration-line: underline;
+    text-decoration-color: transparent;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 8px;
+    white-space: nowrap;
+  }
+
+  .cm-cab-link:hover,
+  .cm-cab-link[aria-current='page'] {
+    text-decoration-color: currentColor;
+  }
+
+  /* Entrar e Criar conta ficam no menu abaixo de 1100; Criar conta volta ao topo a partir de 640. */
+  .cm-cab-entrar,
+  .cm-cab-criar {
+    display: none;
+  }
+
+  .cm-cab-criar {
+    min-height: 48px;
+    padding: 0 22px;
+    font-size: 1.0625rem;
+  }
+
+  .sb-cab-menu {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    margin-right: -4px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-pilula);
+    background: none;
+    color: inherit;
+  }
+
+  .sb-cab-menu:hover {
+    background-color: color-mix(in srgb, currentColor 8%, transparent);
+  }
+
+  .cm-cab-madrugada .cm-rotulo-longo {
+    display: none;
+  }
+
+  /* Abaixo de 480 o botão da madrugada fica só com a lua (o nome acessível continua "Modo madrugada"),
+     para o nome do site, a lua e o menu caberem na linha de 390. */
+  @media (max-width: 479px) {
+    .cm-cab-madrugada {
+      width: 48px;
+      padding: 0;
+    }
+
+    .cm-cab-madrugada .cm-rotulo-curto {
+      display: none;
+    }
+  }
+
+  @media (min-width: 640px) {
+    .cm-cab-criar {
+      display: inline-flex;
+    }
+
+    .cm-cab-madrugada .cm-rotulo-longo {
+      display: inline;
+    }
+
+    .cm-cab-madrugada .cm-rotulo-curto {
+      display: none;
+    }
+  }
+
+  @media (min-width: 1100px) {
+    .cm-cab-miolo {
+      gap: 24px;
+    }
+
+    .cm-cab-links {
+      display: flex;
+      align-items: center;
+      gap: clamp(16px, 2.6vw - 12px, 36px);
+      margin-left: auto;
+    }
+
+    .cm-cab-acoes {
+      gap: 20px;
+      margin-left: clamp(16px, 2.6vw - 12px, 36px);
+    }
+
+    .cm-cab-entrar {
+      display: inline-flex;
+    }
+
+    .sb-cab-menu {
+      display: none;
+    }
+  }
+
+  /* Menu do celular: painel de altura cheia abaixo do cabeçalho. */
+  .cm-menu-celular {
+    position: fixed;
+    top: var(--cm-cabecalho);
+    right: 0;
+    bottom: 0;
+    left: 0;
+    overflow-y: auto;
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto);
+  }
+
+  .cm-menu-celular[hidden] {
+    display: none;
+  }
+
+  /* O painel rola: o anel de foco fica para dentro do item, onde não é cortado. */
+  .cm-menu-celular :focus-visible {
+    outline-offset: -4px;
+  }
+
+  .cm-menu-lista {
+    margin: 0;
+    padding: 16px 0;
+    list-style: none;
+  }
+
+  .cm-menu-lista > li + li {
+    border-top: 1px solid var(--cor-fio-suave);
+  }
+
+  .cm-menu-link {
+    display: flex;
+    align-items: center;
+    min-height: 72px;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .cm-menu-link[aria-current='page'] {
+    text-decoration: underline;
+    text-underline-offset: 8px;
+  }
+
+  .cm-menu-acoes {
+    display: grid;
+    gap: 12px;
+    padding: 16px 0 48px;
+  }
+
+  .cm-menu-acoes .cm-botao {
+    width: 100%;
+  }
+
+  /* Rodapé: painel de mel com o nome em tamanho de exibição ------------------------------------- */
+  .cm-rodape {
+    margin-top: var(--cm-entre-secoes);
+    padding-bottom: var(--cm-recuo-painel);
+  }
+
+  .cm-rodape-painel {
+    background-color: var(--cor-painel-rodape);
+    color: var(--cor-sobre-painel-rodape);
+    container-type: inline-size;
+  }
+
+  /* O recipiente da revelação corta o que sobe: 8 px de folga para não cortar o anel de foco dos links. */
+  .cm-rodape-painel > .overflow-hidden {
+    margin: -8px;
+    padding: 8px;
+  }
+
+  .cm-rodape-topo {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 40px;
+  }
+
+  .cm-rodape-frase {
+    max-width: 22ch;
+  }
+
+  .cm-rodape-colunas {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 32px 24px;
+  }
+
+  .cm-rodape-titulo {
+    margin: 0 0 8px;
+    font-family: var(--fonte-texto);
+    font-size: 0.9375rem;
+    line-height: 1.375rem;
+    font-weight: 600;
+  }
+
+  .cm-rodape-lista {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cm-rodape-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: inherit;
+    text-decoration-line: underline;
+    text-decoration-color: transparent;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 6px;
+  }
+
+  .cm-rodape-link:hover {
+    text-decoration-color: currentColor;
+  }
+
+  /* O nome: até 160 px em 1440, na largura do painel (1cqi = 1% dela). */
+  .cm-rodape-nome {
+    margin: clamp(48px, 4.571vw + 30.171px, 96px) 0 0;
+    font-family: var(--fonte-titulo);
+    font-size: min(160px, 12.2cqi);
+    line-height: 1.05;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    white-space: nowrap;
+  }
+
+  .cm-rodape-base {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px 32px;
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  }
+
+  .cm-rodape-base > p {
+    margin: 0;
+  }
+
+  @media (min-width: 768px) {
+    .cm-rodape-colunas {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1100px) {
+    .cm-rodape-topo {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      gap: 64px;
+    }
+  }
+
+  /* Páginas simples (as públicas que ainda não têm conteúdo e a rota inexistente). ------------ */
+  .cm-pagina-simples {
+    padding-top: clamp(48px, 7.619vw + 18.286px, 128px);
+  }
+
+  .cm-pagina-simples > * + * {
+    margin-top: 24px;
+  }
+
+  .cm-pagina-simples .cm-botao {
+    margin-top: 40px;
+  }
+}
