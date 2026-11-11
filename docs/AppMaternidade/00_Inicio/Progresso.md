@@ -21,6 +21,7 @@ Horários em America/Sao_Paulo, tirados do relógio da máquina ou de carimbos d
 
 Uma linha por marco, a mais recente no topo. O estado corrente fica em [Retomada do site](Retomada_Site.md), e o detalhe de cada marco está no cartão Kanban citado.
 
+- 11/11/2026, às 1h35: **retomada.** A MAT-36 foi para o g2 t_93f3308e por ESCALA-2R. A 6b e a 6c foram refeitas com 2 skills (t_77f83db6 e t_673ee2f7). O detalhe está em [Retomada do site](Retomada_Site.md).
 - 10/11/2026, às 20h15: **PAUSA pedida por Daniel.** `int/refazer` está em e73e75a. O detalhe por cartão está em [Retomada do site](Retomada_Site.md). PAUSA_OK appmaternidade 2026-11-10T20:20-03:00
 - 10/11/2026: **44d-5 (imagens do Início) integrada em `int/refazer`.**
   - Cartão t_cc66cbf8. O revisor aprovou na R2, e o e73e75a entrou por ff-only, com push.
