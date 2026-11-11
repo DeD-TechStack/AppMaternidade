@@ -1,0 +1,413 @@
+/* Início (MAT-49c): a composição F1 "Campo de mel" sobre as peças da base (componentes/campo).
+   Só tokens: cores, sombras e gradientes vêm de styles/tokens.css e styles/tema.css. Classes `in-*`. */
+:root {
+  /* Respiro de papel entre as partes do Início: 48 em 390, 96 em 1440. */
+  --in-respiro: clamp(48px, 4.571vw + 30.171px, 96px);
+  /* Largura de um painel de campo (a janela menos o recuo de cada lado). */
+  --in-largura-painel: min(100% - 2 * var(--cm-recuo-painel), 1376px);
+  /* A babá do fechamento: 150 em 390, 220 em 1440. */
+  --in-arte-fechamento: clamp(150px, 6.667vw + 124px, 220px);
+}
+
+.in-secao {
+  margin-top: var(--in-respiro);
+}
+
+/* Dentro de uma grade, o painel de campo ocupa a célula. */
+.in-celula.cm-painel {
+  width: auto;
+  margin-inline: 0;
+}
+
+/* 1. Abertura -------------------------------------------------------------------------------- */
+/* A grade tem a largura do painel: a cena chega ao recuo do painel e o texto fica na margem da
+   área de conteúdo. */
+.in-heroi {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 28px;
+  width: var(--in-largura-painel);
+  margin-inline: auto;
+  padding-top: clamp(20px, 3.429vw + 6.629px, 56px);
+}
+
+.in-heroi-texto {
+  padding-inline: calc(var(--cm-margem) - var(--cm-recuo-painel));
+}
+
+.in-heroi-lide {
+  max-width: 34rem;
+  margin-top: clamp(16px, 0.762vw + 13.029px, 24px);
+}
+
+.in-heroi-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 28px;
+  margin-top: clamp(24px, 1.524vw + 18.057px, 40px);
+}
+
+/* O link secundário: sempre sublinhado, para parecer o que é. */
+.in-link-secundario.cm-botao-texto {
+  text-decoration-color: currentColor;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 7px;
+}
+
+.in-link-secundario.cm-botao-texto:hover {
+  text-decoration-thickness: 3px;
+}
+
+/* A cena ocupa a coluna dela (CenaEstudio é um painel de largura cheia). No celular ganha altura
+   num recorte 9:8 centrado (os três aparelhos ficam inteiros) e a primeira dobra de 390 × 844
+   termina nela, inteira, sem meia linha dos números embaixo. */
+.in-heroi-cena .cm-painel {
+  width: auto;
+  margin-inline: 0;
+}
+
+.in-heroi-cena .cm-cena-midia img {
+  aspect-ratio: 9 / 8;
+  object-fit: cover;
+}
+
+@media (min-width: 768px) {
+  .in-heroi-cena .cm-cena-midia img {
+    aspect-ratio: 3 / 2;
+  }
+}
+
+/* No largo: 7 colunas de texto e 5 de cena; a cena vira um quadrado (os três aparelhos cabem no
+   recorte central) e o bloco de texto fica centrado na altura dela. */
+@media (min-width: 1100px) {
+  .in-heroi {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: 48px;
+    align-items: center;
+  }
+
+  .in-heroi-texto {
+    padding-inline-end: 0;
+  }
+
+  /* A linha em itálico ("dividida com carinho.") cabe inteira nas 7 colunas: o h1 acompanha a
+     largura da coluna (71 px em 1440) em vez de quebrar em três linhas. */
+  .in-heroi .cm-h1 {
+    font-size: min(84px, 4.9vw);
+    line-height: 1.06;
+  }
+
+  .in-heroi-cena .cm-cena-midia img {
+    aspect-ratio: 1;
+  }
+}
+
+/* 2 e 3. Números e selos ---------------------------------------------------------------------- */
+.in-numeros {
+  margin-top: clamp(40px, 2.286vw + 31.086px, 64px);
+}
+
+.in-selos {
+  margin-top: clamp(40px, 2.286vw + 31.086px, 64px);
+}
+
+/* 4. Troca de turno --------------------------------------------------------------------------- */
+.in-turno {
+  margin-top: var(--in-respiro);
+}
+
+.in-turno-grade {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 32px;
+}
+
+.in-turno-texto .cm-corpo {
+  max-width: 30rem;
+  margin: 24px 0 0;
+}
+
+/* O desenho fica no alto da coluna; embaixo, o espaço que o cartão ocupa dentro do painel. */
+.in-turno-arte {
+  padding-bottom: 196px;
+}
+
+.in-turno-arte .cm-ilustracao {
+  width: min(100%, 420px);
+}
+
+/* O cartão "Desde que você saiu": a lista inteira cabe sem quebrar a hora. */
+.in-turno .cm-flutuante {
+  width: min(384px, calc(100% - 48px));
+}
+
+@media (max-width: 767px) {
+  .in-turno.cm-com-flutuante .cm-flutuante {
+    right: 20px;
+    left: 20px;
+    width: auto;
+    max-width: none;
+  }
+}
+
+@media (min-width: 960px) {
+  .in-turno-grade {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: 48px;
+    align-items: center;
+  }
+
+  .in-turno-arte {
+    padding-bottom: 168px;
+  }
+
+  .in-turno-arte .cm-ilustracao {
+    width: min(100%, 470px);
+  }
+}
+
+.in-cartao-titulo {
+  margin: 0;
+  font-family: var(--fonte-titulo);
+  font-size: 1.5rem;
+  line-height: 1.875rem;
+  font-weight: 600;
+}
+
+.in-cartao-lista {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.in-cartao-item {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--cor-fio-suave);
+}
+
+.in-cartao-item:first-child {
+  border-top: 0;
+}
+
+.in-cartao-item:last-child {
+  padding-bottom: 0;
+}
+
+.in-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-pilula);
+  background-color: var(--color-mel);
+  color: var(--color-cacau);
+  font-family: var(--fonte-titulo);
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.in-avatar[data-tom='oliva'] {
+  background-color: var(--color-oliva);
+  color: var(--color-papel);
+}
+
+.in-avatar[data-tom='areia'] {
+  background-color: var(--color-areia);
+  color: var(--color-cacau);
+}
+
+.in-cartao-evento {
+  display: block;
+  font-size: 1.0625rem;
+  line-height: 1.375rem;
+  font-weight: 500;
+}
+
+.in-cartao-quem {
+  display: block;
+  color: var(--color-texto-2);
+  font-size: 0.9375rem;
+  line-height: 1.25rem;
+}
+
+.in-cartao-hora {
+  font-size: 1.0625rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* 5. Faixa de cacau --------------------------------------------------------------------------- */
+.in-faixa {
+  margin-top: var(--in-respiro);
+}
+
+.in-faixa-grade {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 40px;
+  align-items: center;
+}
+
+.in-faixa-grade .cm-faixa-texto {
+  max-width: 30rem;
+}
+
+@media (min-width: 960px) {
+  .in-faixa-grade {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: 48px;
+  }
+}
+
+/* Foto de cena escrita aqui (sem o painel de mel da CenaEstudio). */
+.in-foto-quadro {
+  display: block;
+}
+
+.in-foto {
+  display: block;
+  width: 100%;
+  height: auto;
+  color: transparent;
+}
+
+/* O fundo da foto é um cacau um pouco mais quente que o da faixa: o fio de papel e o raio fazem
+   dela um quadro de propósito, não uma mancha. */
+.in-faixa-grade .in-foto {
+  border-radius: var(--radius-cartao);
+  outline: 1px solid color-mix(in srgb, var(--color-papel) 14%, transparent);
+  outline-offset: -1px;
+}
+
+/* 6. Tabela ----------------------------------------------------------------------------------- */
+.in-tabela-cabeca {
+  margin-bottom: clamp(32px, 1.524vw + 26.057px, 48px);
+}
+
+.in-tabela-grade {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  width: var(--in-largura-painel);
+  margin-inline: auto;
+}
+
+.in-tabela-foto {
+  overflow: hidden;
+  padding: 0;
+}
+
+/* As três colunas cabem sem rolar de lado em toda largura: o nome do app (uma palavra só) dita a
+   largura da segunda, "Caderno e mensagens" quebra em duas linhas e a necessidade fica com o resto.
+   As larguras vão em em, pelo tamanho do cabeçalho em cada faixa. */
+.in-tabela-grade .cm-tabela {
+  table-layout: fixed;
+}
+
+.in-tabela-grade .cm-tabela thead th:nth-child(2) {
+  width: 8.6em;
+}
+
+.in-tabela-grade .cm-tabela thead th:nth-child(3) {
+  width: 5.8em;
+}
+
+@media (max-width: 479px) {
+  .in-tabela-grade .cm-painel-oliva {
+    padding-inline: 14px;
+  }
+
+  .in-tabela-grade .cm-tabela thead th {
+    font-size: 0.875rem;
+  }
+
+  .in-tabela-grade .cm-tabela td,
+  .in-tabela-grade .cm-tabela thead th + th {
+    padding-inline: 4px;
+  }
+
+  .in-tabela-grade .cm-tabela tbody th {
+    padding-right: 8px;
+    font-size: 0.9375rem;
+  }
+}
+
+/* Lado a lado só a partir de 1200: abaixo disso a tabela em 7 colunas espremeria a necessidade. */
+@media (min-width: 1200px) {
+  .in-tabela-grade {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: 24px;
+  }
+
+  /* A foto acompanha a altura da tabela, num recorte centrado no celular. */
+  .in-tabela-foto {
+    position: relative;
+    min-height: 360px;
+  }
+
+  .in-tabela-foto .in-foto-quadro {
+    position: absolute;
+    inset: 0;
+  }
+
+  .in-tabela-foto .in-foto {
+    height: 100%;
+    object-fit: cover;
+    object-position: 45% 50%;
+  }
+}
+
+/* 7. Citação e depoimentos -------------------------------------------------------------------- */
+/* A citação fica no centro da área, para não deixar meia página vazia ao lado dela. */
+.in-citacao .cm-citacao {
+  max-width: 56rem;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.in-depoimentos {
+  margin-top: clamp(40px, 2.286vw + 31.086px, 64px);
+}
+
+/* 8. Perguntas -------------------------------------------------------------------------------- */
+.in-perguntas {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 32px;
+}
+
+@media (min-width: 960px) {
+  .in-perguntas {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 48px;
+    align-items: start;
+  }
+}
+
+/* 9. Fechamento ------------------------------------------------------------------------------- */
+/* O papel de cima guarda a altura da babá que sai do painel (ela entra 48 px nele). */
+.in-fechamento {
+  margin-top: calc(var(--in-arte-fechamento) - 48px + var(--in-respiro) / 2);
+  padding-top: calc(var(--cm-respiro-painel) + 48px);
+  text-align: center;
+}
+
+.in-fechamento .cm-botao {
+  margin-top: clamp(28px, 1.143vw + 23.543px, 40px);
+}
+
+.in-fechamento-arte.cm-ilustracao {
+  position: absolute;
+  z-index: 1;
+  bottom: calc(100% - 48px);
+  left: clamp(16px, 7.619vw - 13.714px, 96px);
+  width: var(--in-arte-fechamento);
+}
