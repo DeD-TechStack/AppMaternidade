@@ -53,7 +53,7 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 
 - [x] P-30 Ferramentas do líder corrigidas em 11/11: `captura/capturar.mjs` e `cdp.mjs` capturam a 2× (antes 1×, e a regra comum pede 2×; testado na 36r-A: innerWidth 390 igual, recortes 810×1688); `rodada/rodada.py` não reprova mais por recibo anterior às capturas que ele mesmo refaz. Avisado aos 5 cartões em curso | sem SHA (staging)
 
-- [D coordenador] P-31 Encerrar Vite e Chrome de cartões encerrados (5276/9376 t_f21ee109, 5282/9382 t_26066f02, 5281/9381 t_fdba5bed). O taskkill do líder esperou aprovação no host e expirou; o pedido foi feito pela campainha
+- [x] P-31 O coordenador encerrou os processos velhos do Vite (5276/5281/5282) e do Chrome (resposta t_eabbd722). Para cartões fechados no futuro: `py -3.12 -I -X utf8 C:/OrchestrationLab/equipe/ferramentas/encerrar_processos.py --exige <id>`; nunca `taskkill /F` | 11/11
 
 - [~ t_aee1c551] P-32 Hoje, Sessão e Madrugada: volta 1 dos juízes cegos (hoje_r1 válida nos 2; sessao_r1 válida no Fable; notas 6,5–7,4, REPROVA volta 1). A MAT-49b v2 aplica os itens das telas e a 49e cuida do casco (ícone do menu e rodapé compacto em /app/*) | `juizes/rodadas/DEVOLUCAO_49b.md`
 
@@ -63,7 +63,7 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 
 - [x 8e0a1f6] P-35 MAT-48d (t_5edde38a): `MERGES_APROVADOS` com só o 81504a7; aprovada e integrada por fast-forward (a8cad7d..8e0a1f6). `verificar-commits c7142bb..HEAD` = OK, 271 commits | 11/11
 
-- [D coordenador] P-36 Cinco revisões voltaram hoje só por prova de entrega: faltava a leitura das capturas finais, o VISTO do SHA entregue, o JSON da rodada ou os commits no intervalo real. Proposta ao núcleo (campainha t_92fd56a8): o `rodada.py` ganha uma etapa de leitura e a verificação de commits
+- [x] P-36 Aprovado (t_eabbd722). O contrato, passo 6, exige (a) a leitura das capturas finais pelo OpenCode, (b) o VISTO do SHA final, (c) o JSON literal e (d) a verificação de commits; faltar um é erro do condutor, não achado do revisor. O `rodada.py` ganhou a etapa 7 (commits, que reprova a rodada) e a etapa 8 (LEITURA.txt com caminhos e sha256); cópia de antes em `C:/OrchestrationLab/backup/autonomia_20261111/rodada.antes_leitura.py` | 11/11
 
 - [x] P-37 Regra do líder (11/11): "capturas lidas pelo worker" (CARTOES_COMUM) vale como leitura pela sessão do OpenCode registrada no recibo (`images_read`), porque o perfil executor não tem ferramenta de imagem. Comentada em todos os cartões ativos; na 49c v2 o líder também olhou os blocos 3–5 (comentário 407)
 
