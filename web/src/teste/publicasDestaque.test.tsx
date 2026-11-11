@@ -51,9 +51,24 @@ describe('as três páginas públicas em destaque', () => {
       const texto = container.querySelector('main')!.textContent!
       expect(texto).not.toMatch(/rascunho|revisor|nota para|pendente|quanto mais, melhor/i)
       expect(texto).not.toMatch(/\b(Lia|Ana)\b/)
-      for (const cartao of container.querySelectorAll('main .cm-flutuante')) {
+      for (const cartao of container.querySelectorAll('main .cm-flutuante, main [data-cartao-plano]')) {
         expect(cartao.textContent).not.toMatch(/protótipo|dados de exemplo/i)
       }
+    })
+
+    it(`${caminho}: no máximo um cartão flutuante, nunca sobre uma cena (aparelho e pedestal)`, () => {
+      const { container } = renderizarRota(caminho)
+      expect(container.querySelectorAll('main .cm-flutuante').length).toBeLessThanOrEqual(1)
+      for (const cena of container.querySelectorAll('main img[data-cena]')) {
+        expect(cena.closest('[data-painel]')!.querySelector('.cm-flutuante')).toBeNull()
+      }
+    })
+
+    it(`${caminho}: exatamente um aviso no main, fora das cenas, dos cartões e dos painéis`, () => {
+      const { container } = renderizarRota(caminho)
+      const avisos = container.querySelectorAll('main [data-aviso]')
+      expect(avisos).toHaveLength(1)
+      expect(avisos[0].closest('.cm-flutuante, [data-cartao-plano], picture, [data-painel]')).toBeNull()
     })
   }
 })
@@ -118,19 +133,17 @@ describe('os CTAs das três páginas cabem quando ampliados', () => {
 })
 
 describe('Como funciona', () => {
-  it('a primeira dobra tem a cena de estúdio com texto alternativo e tamanho 1×, e a última mamada num cartão de HTML', () => {
+  it('a primeira dobra tem a cena de estúdio com texto alternativo e tamanho 1×, sem cartão por cima', () => {
     const { container } = renderizarRota('/como-funciona')
     const cena = container.querySelector<HTMLImageElement>('main img[data-cena]')!
     expect(cena.getAttribute('alt')).toBe(COMO_FUNCIONA_DESTAQUE.cena.alt)
     expect(cena.getAttribute('src')).toBe('/cenas/publicas/como-funciona@1x.webp')
     expect(cena.getAttribute('width')).toBe('512')
     expect(cena.getAttribute('height')).toBe('768')
-    const cartao = cena.closest('[data-painel]')!.querySelector('.cm-flutuante')!
-    expect(cartao.textContent).toContain(COMO_FUNCIONA_DESTAQUE.ultimaMamada.hora)
-    expect(cartao.textContent).toContain('Juliana')
+    expect(cena.closest('[data-painel]')!.querySelector('.cm-flutuante, [data-cartao-plano]')).toBeNull()
   })
 
-  it('os três passos vêm em ordem, numa lista ordenada, cada um com a sua tela de exemplo', () => {
+  it('os três passos vêm em ordem, numa lista ordenada, cada um com a sua tela de exemplo; só a madrugada flutua', () => {
     const { container } = renderizarRota('/como-funciona')
     const itens = [...container.querySelectorAll('ol[data-passos] > li')]
     expect(itens.map((li) => within(li as HTMLElement).getByRole('heading', { level: 3 }).textContent)).toEqual([
@@ -138,7 +151,8 @@ describe('Como funciona', () => {
       'De madrugada',
       'Na troca de turno',
     ])
-    for (const li of itens) expect(li.querySelector('.cm-flutuante'), li.id).not.toBeNull()
+    for (const li of itens) expect(li.querySelector('.cm-flutuante, [data-cartao-plano]'), li.id).not.toBeNull()
+    expect(itens.map((li) => li.querySelector('.cm-flutuante') !== null)).toEqual([false, true, false])
     expect(itens[2].textContent).toContain('Bruno')
     expect(itens[2].textContent).toContain(COMO_FUNCIONA_DESTAQUE.desdeQueSaiu.andamento.rotulo)
   })
@@ -195,6 +209,36 @@ describe('Cuidado compartilhado', () => {
     expect(screen.getByRole('heading', { level: 2, name: 'Quando alguém para de cuidar.' })).toBeTruthy()
     expect(screen.getAllByText(CUIDADO_DESTAQUE.aviso)).toHaveLength(1)
   })
+
+  it('a abertura tem o primário para o protótipo, e o fim da página tem a mesma ação', () => {
+    const { container } = renderizarRota('/cuidado-compartilhado')
+    const abertura = container.querySelector('main .pd-abertura')!
+    expect(within(abertura as HTMLElement).getByRole('link', { name: CUIDADO_DESTAQUE.primario.rotulo }).getAttribute('href')).toBe(
+      COMO_FUNCIONA_DESTAQUE.fechamento.acao.destino,
+    )
+    const parar = screen.getByRole('region', { name: 'Quando alguém para de cuidar.' })
+    expect(within(parar).getByRole('link', { name: CUIDADO_DESTAQUE.primario.rotulo }).getAttribute('href')).toBe(
+      COMO_FUNCIONA_DESTAQUE.fechamento.acao.destino,
+    )
+  })
+
+  it('cada bloco curto traz um exemplo com uma pessoa da família, e o texto dos papéis não repete os blocos', () => {
+    const { container } = renderizarRota('/cuidado-compartilhado')
+    const exemplos = [...container.querySelectorAll('[data-blocos] [data-exemplo]')].map((p) => p.textContent)
+    expect(exemplos).toHaveLength(3)
+    CUIDADO_DESTAQUE.blocos.forEach((bloco, i) => expect(exemplos[i]).toContain(bloco.exemplo.quem))
+    for (const bloco of CUIDADO_DESTAQUE.blocos) expect(CUIDADO_DESTAQUE.papeis.texto).not.toContain(bloco.texto)
+    expect(CUIDADO_DESTAQUE.papeis.texto).not.toMatch(/cuidador até domingo/)
+  })
+
+  it('o painel de areia mostra quem fez cada registro da tarde, e a que horas', () => {
+    const { container } = renderizarRota('/cuidado-compartilhado')
+    const cartao = container.querySelector('.pd-registro [data-cartao-plano]')!
+    for (const item of CUIDADO_DESTAQUE.tarde.itens) {
+      expect(cartao.textContent).toContain(item.quem)
+      expect(cartao.textContent).toContain(item.hora)
+    }
+  })
 })
 
 describe('Desenvolvimento', () => {
@@ -212,13 +256,14 @@ describe('Desenvolvimento', () => {
     }
   })
 
-  it('o aviso de saúde aparece perto do topo e de novo no fim, com o texto exato, e o 192 no fim', () => {
+  it('o aviso de saúde aparece uma vez, perto do topo, com o texto exato, e o 192 no fim', () => {
     const { container } = renderizarRota('/desenvolvimento')
     const avisos = screen.getAllByText(AVISO_SAUDE)
-    expect(avisos).toHaveLength(2)
+    expect(avisos).toHaveLength(1)
     const abertura = container.querySelector('main .pd-abertura')!
     expect(abertura.contains(avisos[0])).toBe(true)
-    expect(avisos[1].closest('[data-painel="cacau"]')).not.toBeNull()
+    expect(avisos[0].closest('[data-painel]')).toBeNull()
+    expect(container.querySelector('main [data-painel="cacau"] [data-cartao-plano], main [data-painel="cacau"] .cm-flutuante')).toBeNull()
     expect(screen.getByRole('heading', { level: 2, name: 'Em urgência de saúde, ligue 192.' })).toBeTruthy()
     expect(screen.getByText(DESENVOLVIMENTO_DESTAQUE.urgencia.texto)).toBeTruthy()
     // Nenhuma palavra em caixa alta de 4 letras ou mais (a porta CAIXA do medidor só aceita RN, SBP, LGPD e OMS).
@@ -285,10 +330,11 @@ describe('Desenvolvimento', () => {
     expect(screen.getByText(QUANTO_TEMPO.semMeta)).toBeTruthy()
   })
 
-  it('o desenho do tummy time fica sobre o mel, e os links da abertura levam às seções', () => {
+  it('o desenho da seção do tummy time (a babá no chão) fica sobre o mel, e os links da abertura levam às seções', () => {
     const { container } = renderizarRota('/desenvolvimento')
-    const desenho = container.querySelector('img[data-ilustracao="tummy-time"]')!
+    const desenho = container.querySelector('#tummy-time img[data-ilustracao="baba-tapete"]')!
     expect(desenho.closest('[data-painel]')!.getAttribute('data-painel')).toBe('mel')
+    expect(desenho.closest('.pd-chao')).not.toBeNull()
     expect(screen.getByRole('link', { name: DESENVOLVIMENTO_DESTAQUE.primario.rotulo }).getAttribute('href')).toBe('#ideias')
     expect(screen.getByRole('link', { name: DESENVOLVIMENTO_DESTAQUE.secundario.rotulo }).getAttribute('href')).toBe(
       '#tummy-time',
