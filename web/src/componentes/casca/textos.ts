@@ -1,82 +1,74 @@
-import { RODAPE } from '../../conteudo/textos.ts'
-
 // Textos da casca do site: o nome, o cabeçalho, o menu e o rodapé. O texto de interface fica
 // aqui, e não nos componentes.
 
 export const NOME_SITE = 'AppMaternidade'
 
-/** O aviso de protótipo da linha final do rodapé. */
-export const AVISO_PROTOTIPO = RODAPE
-
-export const ROTULO_EM_BREVE = '+ Em breve'
-export const ETIQUETA_EM_BREVE = 'Em breve'
-// O nome do botão é "Modo madrugada" (o `aria-label`, em toda largura). De 768 para cima o texto
-// visível é o rótulo longo; abaixo de 768 não cabe e a vista mostra o curto, "Madrugada", com M
-// maiúsculo. Os dois são texto de verdade no botão (o CSS só escolhe qual aparece), e não um
-// `text-transform`, que o sistema-base proíbe em todo o CSS novo.
+// O nome do botão é "Modo madrugada" (o `aria-label`, em toda largura). De 640 para cima o texto
+// visível é o longo; abaixo, o curto, "Madrugada". Os dois são texto de verdade no botão.
 export const ROTULO_MADRUGADA = 'Modo madrugada'
 export const ROTULO_MADRUGADA_CURTO = 'Madrugada'
 export const ROTULO_ENTRAR = 'Entrar'
+export const ROTULO_CRIAR_CONTA = 'Criar conta'
 export const ROTULO_MENU = 'Menu'
 export const ROTULO_NAVEGACAO = 'Site'
 export const ROTULO_NAVEGACAO_RODAPE = 'Rodapé'
 
-/** As áreas futuras, na ordem do submenu "+ Em breve". */
-export const AREAS_EM_BREVE = ['Comunidade', 'Lembretes', 'Convites', 'Relatórios'] as const
-
 export type Contexto = 'publico' | 'logado'
 
-/** Um item do cabeçalho: um link, ou o submenu das áreas futuras. */
-type ItemCabecalho = { tipo: 'link'; rotulo: string; para: string } | { tipo: 'em-breve' }
-
-// Alvos: Início "/", Protótipo e Hoje "/app/hoje", Conta "/app/conta". As rotas Conta e Entrar vêm
-// em outros cartões; até lá a rota 404 as atende. "Sair" fica na Conta, e não no cabeçalho.
-export const ITENS_DO_CABECALHO: Record<Contexto, readonly ItemCabecalho[]> = {
-  publico: [
-    { tipo: 'link', rotulo: 'Início', para: '/' },
-    { tipo: 'link', rotulo: 'Protótipo', para: '/app/hoje' },
-    { tipo: 'em-breve' },
-  ],
-  logado: [
-    { tipo: 'link', rotulo: 'Hoje', para: '/app/hoje' },
-    { tipo: 'em-breve' },
-    { tipo: 'link', rotulo: 'Conta', para: '/app/conta' },
-  ],
+interface Link {
+  rotulo: string
+  para: string
 }
 
-export const DESTINO_ENTRAR = '/entrar'
+// As telas de acesso ainda não existem: Entrar e Criar conta levam ao Contato até elas chegarem.
+export const DESTINO_ENTRAR = '/contato'
+export const DESTINO_CRIAR_CONTA = '/contato'
+
+export const ITENS_DO_CABECALHO: Record<Contexto, readonly Link[]> = {
+  publico: [
+    { rotulo: 'Como funciona', para: '/como-funciona' },
+    { rotulo: 'Cuidado compartilhado', para: '/cuidado-compartilhado' },
+    { rotulo: 'Desenvolvimento', para: '/desenvolvimento' },
+    { rotulo: 'Comunidade', para: '/regras-da-comunidade' },
+  ],
+  logado: [
+    { rotulo: 'Hoje', para: '/app/hoje' },
+    { rotulo: 'Sessão', para: '/app/sessao' },
+  ],
+}
 
 interface ColunaDoRodape {
   titulo: string
-  links: ReadonlyArray<{ rotulo: string; para: string }>
+  links: readonly Link[]
 }
 
-// Três colunas, em x=32, 208 e 384 (1440), mais um bloco em c7.
+// As três colunas do rodapé: toda rota pública aparece uma vez.
 export const COLUNAS_DO_RODAPE: readonly ColunaDoRodape[] = [
   {
-    titulo: 'Site',
+    titulo: 'Produto',
     links: [
-      { rotulo: 'Início', para: '/' },
-      { rotulo: 'Sistema', para: '/sistema' },
+      { rotulo: 'Como funciona', para: '/como-funciona' },
+      { rotulo: 'Cuidado compartilhado', para: '/cuidado-compartilhado' },
+      { rotulo: 'Desenvolvimento', para: '/desenvolvimento' },
     ],
   },
   {
-    titulo: 'Protótipo',
+    titulo: 'Ajuda',
     links: [
-      { rotulo: 'Hoje', para: '/app/hoje' },
-      { rotulo: 'Sessão', para: '/app/sessao' },
+      { rotulo: 'Regras da comunidade', para: '/regras-da-comunidade' },
+      { rotulo: 'Contato', para: '/contato' },
+      { rotulo: 'Sobre', para: '/sobre' },
     ],
   },
   {
-    titulo: 'Conta',
+    titulo: 'Legal',
     links: [
-      { rotulo: 'Entrar', para: '/entrar' },
-      { rotulo: 'Conta', para: '/app/conta' },
+      { rotulo: 'Privacidade', para: '/privacidade' },
+      { rotulo: 'Termos', para: '/termos' },
+      { rotulo: 'Exclusão de conta', para: '/exclusao-de-conta' },
     ],
   },
 ]
 
-export const BLOCO_DO_RODAPE = {
-  titulo: 'Próximas áreas',
-  texto: 'Comunidade, lembretes, convites e relatórios chegam depois do protótipo.',
-} as const
+/** A frase do rodapé, com a segunda linha em itálico. */
+export const FRASE_DO_RODAPE = ['A rotina do bebê,', 'dividida por quem cuida.'] as const

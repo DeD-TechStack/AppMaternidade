@@ -6,9 +6,9 @@ import { ProvedorPrototipo } from '../prototipo/ProvedorPrototipo.tsx'
 import { usePrototipo } from '../prototipo/contexto.ts'
 import type { EstadoPrototipo } from '../prototipo/estado.ts'
 
-/** A área logada (/app/*) e a página de amostra do sistema usam o cabeçalho logado; o resto, o público. */
+/** A área logada (/app/*) usa o cabeçalho logado, com o modo madrugada; o resto, o público. */
 function contextoDoCaminho(caminho: string): Contexto {
-  return caminho === '/app' || caminho.startsWith('/app/') || caminho === '/sistema' ? 'logado' : 'publico'
+  return caminho === '/app' || caminho.startsWith('/app/') ? 'logado' : 'publico'
 }
 
 // A casca do site: cabeçalho, a tela e o rodapé, em todas as rotas. Sem altura mínima própria: o
@@ -16,22 +16,25 @@ function contextoDoCaminho(caminho: string): Contexto {
 function Casca() {
   const { pathname } = useLocation()
   const { estado, dispatch } = usePrototipo()
+  const contexto = contextoDoCaminho(pathname)
 
+  // `sb-casca` continua como marcador da casca para os testes das telas do app.
   return (
-    <div className="sb-casca">
+    <div className="sb-casca cm-casca">
       <Cabecalho
-        contexto={contextoDoCaminho(pathname)}
+        contexto={contexto}
         madrugada={estado.madrugada}
         aoAlternarMadrugada={() => dispatch({ tipo: 'definirMadrugada', valor: !estado.madrugada })}
       />
       <Outlet />
-      <Rodape />
+      {/* As telas do app já trazem a etiqueta do protótipo: o aviso de demonstração fica só no site público. */}
+      <Rodape comAviso={contexto === 'publico'} />
     </div>
   )
 }
 
-// Layout raiz: guarda o estado do protótipo para o Início, o Hoje e a Sessão compartilharem e
-// monta a casca. Cada tela monta o próprio <main>.
+// Layout raiz: guarda o estado do protótipo para o Hoje e a Sessão compartilharem e monta a casca.
+// Cada tela monta o próprio <main>.
 export function Layout({ estadoInicial }: { estadoInicial?: EstadoPrototipo }) {
   return (
     <ProvedorPrototipo estadoInicial={estadoInicial}>

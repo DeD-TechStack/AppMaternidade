@@ -1,21 +1,27 @@
-import { useEffect, useRef, type ReactNode, type RefObject } from 'react'
+import { useEffect, useRef, type RefObject } from 'react'
 import { NavLink } from 'react-router'
-import { Etiqueta } from '../base/Etiqueta.tsx'
-import { AREAS_EM_BREVE, ETIQUETA_EM_BREVE, ITENS_DO_CABECALHO, type Contexto } from './textos.ts'
+import { Botao } from '../base/Botao.tsx'
+import {
+  DESTINO_CRIAR_CONTA,
+  DESTINO_ENTRAR,
+  ITENS_DO_CABECALHO,
+  ROTULO_CRIAR_CONTA,
+  ROTULO_ENTRAR,
+  type Contexto,
+} from './textos.ts'
 
 const FOCAVEIS = 'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])'
 
-/** O ponto de quebra do cabeçalho: de 768 para cima valem os links de computador, e o menu não existe. */
-const PONTO_DE_QUEBRA = 768
+/** O ponto de quebra do cabeçalho: de 1100 para cima valem os links de computador, e o menu não existe. */
+const PONTO_DE_QUEBRA = 1100
 const CONSULTA_COMPUTADOR = `(min-width: ${PONTO_DE_QUEBRA}px)`
 
-/** A janela já passou do ponto de quebra móvel? No jsdom (sem layout) é a largura que decide. */
+/** A janela já passou do ponto de quebra? No jsdom (sem layout) é a largura que decide. */
 const naLarguraDeComputador = () => window.innerWidth >= PONTO_DE_QUEBRA
 
 /**
  * O elemento está realmente visível? Com `checkVisibility` (navegadores atuais) vale o que o layout
- * mostra: `display: none` no nó ou num ancestral, e `visibility`. Sem ele (jsdom), não há o que ler
- * além de `[hidden]` e `[inert]`, que o chamador confere à parte.
+ * mostra; sem ele (jsdom), só `[hidden]` e `[inert]`, que o chamador confere à parte.
  */
 function estaVisivel(elemento: Element): boolean {
   const alvo = elemento as Element & { checkVisibility?: (opcoes?: { visibilityProperty?: boolean }) => boolean }
@@ -23,16 +29,14 @@ function estaVisivel(elemento: Element): boolean {
 }
 
 /**
- * A volta do foco com o menu aberto: todos os focáveis realmente visíveis do cabeçalho, na ordem do
- * documento (que é a ordem do Tab do navegador). Fica de fora o que está em `nav.sb-cab-links` (some
- * abaixo de 768, que é onde o menu existe), o que está em `[hidden]` ou `[inert]` e o que o
- * navegador não mostra (`checkVisibility`). É calculada a cada Tab, porque o cabeçalho muda (o botão
- * da direita, o painel que acabou de abrir).
+ * A volta do foco com o menu aberto: os focáveis visíveis do cabeçalho, na ordem do documento. Ficam de
+ * fora os links de computador (`.cm-cab-links`, ocultos aqui), o que está em `[hidden]` ou `[inert]` e
+ * o que o navegador não mostra. É calculada a cada Tab, porque o cabeçalho muda.
  */
 function voltaDoFoco(cabecalho: Element | null): HTMLElement[] {
   if (!cabecalho) return []
   return [...cabecalho.querySelectorAll<HTMLElement>(FOCAVEIS)].filter(
-    (elemento) => elemento.closest('.sb-cab-links, [hidden], [inert]') === null && estaVisivel(elemento),
+    (elemento) => elemento.closest('.cm-cab-links, [hidden], [inert]') === null && estaVisivel(elemento),
   )
 }
 
@@ -45,29 +49,10 @@ interface Props {
   botao: RefObject<HTMLButtonElement | null>
 }
 
-type Grupo = { tipo: 'links'; itens: Array<{ rotulo: string; para: string }> } | { tipo: 'em-breve' }
-
-/** Parte a lista do cabeçalho em grupos: os links seguidos, e o grupo das áreas futuras. */
-function agrupar(contexto: Contexto): Grupo[] {
-  const grupos: Grupo[] = []
-  for (const item of ITENS_DO_CABECALHO[contexto]) {
-    if (item.tipo === 'em-breve') {
-      grupos.push({ tipo: 'em-breve' })
-      continue
-    }
-    const ultimo = grupos[grupos.length - 1]
-    if (ultimo?.tipo === 'links') ultimo.itens.push(item)
-    else grupos.push({ tipo: 'links', itens: [item] })
-  }
-  return grupos
-}
-
 /**
- * O menu abaixo de 768: um painel de papel logo abaixo do cabeçalho, com os itens centrados em
- * `subtitulo` e os grupos separados por fios. Prende o foco numa volta fechada por todos os
- * focáveis visíveis do cabeçalho (botão do menu, nome do site, botão de ação e itens do painel, na
- * ordem do DOM), fecha com Esc e devolve o foco ao botão do menu. Ao ampliar a janela até 768 ou mais
- * o menu fecha sozinho (sem devolver o foco: o botão está oculto) e o Tab deixa de ser conduzido.
+ * O menu abaixo de 1100 px: um painel de papel de altura cheia logo abaixo do cabeçalho, com os links em
+ * Literata e, no site público, Entrar e "Criar conta". Prende o foco numa volta pelos focáveis visíveis
+ * do cabeçalho, fecha com Esc devolvendo o foco ao botão do menu e fecha sozinho ao passar de 1100.
  */
 export function MenuCelular({ id, aberto, contexto, aoFechar, botao }: Props) {
   const painel = useRef<HTMLDivElement>(null)
@@ -78,9 +63,7 @@ export function MenuCelular({ id, aberto, contexto, aoFechar, botao }: Props) {
     painel.current?.querySelector<HTMLElement>(FOCAVEIS)?.focus()
   }, [aberto])
 
-  // O menu só existe abaixo de 768: ao passar do ponto de quebra ele fecha (e os ouvintes saem junto,
-  // porque dependem de `aberto`). O foco não volta ao botão do menu, que está oculto ali. Ouve o
-  // `change` do matchMedia (quando existe) e o `resize`, que no jsdom lê a `innerWidth`.
+  // Ao passar do ponto de quebra o menu fecha (o foco não volta ao botão, que some ali).
   useEffect(() => {
     if (!aberto) return
     const aoRedimensionar = () => {
@@ -91,12 +74,10 @@ export function MenuCelular({ id, aberto, contexto, aoFechar, botao }: Props) {
     }
     const consulta = typeof window.matchMedia === 'function' ? window.matchMedia(CONSULTA_COMPUTADOR) : null
     if (consulta && typeof consulta.addEventListener === 'function') consulta.addEventListener('change', aoMudarConsulta)
-    else if (consulta && typeof consulta.addListener === 'function') consulta.addListener(aoMudarConsulta)
     window.addEventListener('resize', aoRedimensionar)
     return () => {
       window.removeEventListener('resize', aoRedimensionar)
       if (consulta && typeof consulta.removeEventListener === 'function') consulta.removeEventListener('change', aoMudarConsulta)
-      else if (consulta && typeof consulta.removeListener === 'function') consulta.removeListener(aoMudarConsulta)
     }
   }, [aberto, aoFechar])
 
@@ -109,14 +90,10 @@ export function MenuCelular({ id, aberto, contexto, aoFechar, botao }: Props) {
         botao.current?.focus()
         return
       }
-      // Ctrl+Tab e Alt+Tab são do navegador e do sistema, não do foco da página.
       if (evento.key !== 'Tab' || evento.ctrlKey || evento.altKey || evento.metaKey) return
-      // Sem o botão do menu à vista (de 768 para cima, ou oculto) não há volta a conduzir: o Tab é do navegador.
       if (naLarguraDeComputador() || !botao.current || !estaVisivel(botao.current)) return
       const volta = voltaDoFoco(botao.current?.closest('header[data-cabecalho]') ?? null)
       if (volta.length === 0) return
-      // Todo Tab é conduzido: o foco vai ao próximo (ou anterior) da volta, com volta no fim e no
-      // começo. Fora da volta, Tab leva ao primeiro e Shift+Tab ao último.
       const posicao = volta.indexOf(document.activeElement as HTMLElement)
       let destino: number
       if (posicao === -1) destino = evento.shiftKey ? volta.length - 1 : 0
@@ -128,35 +105,29 @@ export function MenuCelular({ id, aberto, contexto, aoFechar, botao }: Props) {
     return () => document.removeEventListener('keydown', aoTeclar)
   }, [aberto, aoFechar, botao])
 
-  let conteudo: ReactNode = null
-  if (aberto) {
-    conteudo = agrupar(contexto).map((grupo, indice) =>
-      grupo.tipo === 'links' ? (
-        <ul key={`links-${indice}`} className="sb-menu-grupo">
-          {grupo.itens.map((item) => (
-            <li key={item.para + item.rotulo}>
-              <NavLink to={item.para} end className="sb-menu-link t-subtitulo" onClick={aoFechar}>
-                {item.rotulo}
-              </NavLink>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <ul key="em-breve" className="sb-menu-grupo">
-          {AREAS_EM_BREVE.map((area) => (
-            <li key={area} className="sb-menu-item t-subtitulo">
-              <span>{area}</span>
-              <Etiqueta>{ETIQUETA_EM_BREVE}</Etiqueta>
-            </li>
-          ))}
-        </ul>
-      ),
-    )
-  }
-
   return (
-    <div id={id} ref={painel} className="sb-menu-celular" data-menu-celular="" hidden={!aberto}>
-      {conteudo}
+    <div id={id} ref={painel} className="cm-menu-celular" data-menu-celular="" hidden={!aberto}>
+      {aberto ? (
+        <div className="cm-area">
+          <ul className="cm-menu-lista">
+            {ITENS_DO_CABECALHO[contexto].map((item) => (
+              <li key={item.para}>
+                <NavLink to={item.para} end className="cm-menu-link cm-h3" onClick={aoFechar}>
+                  {item.rotulo}
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+          {contexto === 'publico' ? (
+            <div className="cm-menu-acoes">
+              <Botao to={DESTINO_CRIAR_CONTA}>{ROTULO_CRIAR_CONTA}</Botao>
+              <Botao variante="contorno" to={DESTINO_ENTRAR}>
+                {ROTULO_ENTRAR}
+              </Botao>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   )
 }
