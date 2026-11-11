@@ -216,7 +216,8 @@ describe('G11: alvo de toque e contraste', () => {
     })
 
     it('quando o texto é o placeholder, vale o estilo do ::placeholder (estiloTexto), não o do input', () => {
-      const dica = (estiloTexto) => controle({ textoControle: 'Seu nome', estiloTexto: { origem: 'placeholder', fontSize: '20px', fontWeight: '400', ...estiloTexto } })
+      const dica = (estiloTexto) =>
+        controle({ textoControle: 'Seu nome', estiloTexto: { origem: 'placeholder', fontSize: '20px', fontWeight: '400', opacity: '1', opacidadeCadeia: 1, ...estiloTexto } })
       assert.equal(g11([alvo(44, 44), dica({ color: TINTA })], 'claro').ok, true)
       // O input tem a cor boa; o placeholder, não: reprova.
       const r = g11([alvo(44, 44), dica({ color: 'rgb(200, 200, 200)' })], 'claro')
@@ -259,8 +260,8 @@ describe('G11: alvo de toque e contraste', () => {
 
     it('o controle que mostra o placeholder sem o tamanho do ::placeholder reprova', () => {
       const dica = (estiloTexto) => criar({ tag: 'input', texto: '', textoControle: 'Seu nome', rect: { x: 0, y: 0, w: 200, h: 48 }, m: { interativo: true }, estiloTexto })
-      assert.equal(g11([alvoBom, dica({ color: TINTA, fontSize: '20px', fontWeight: '400' })], 'claro').ok, true)
-      assert.equal(g11([alvoBom, dica({ color: TINTA, fontWeight: '400' })], 'claro').ok, false)
+      assert.equal(g11([alvoBom, dica({ color: TINTA, fontSize: '20px', fontWeight: '400', opacity: '1', opacidadeCadeia: 1 })], 'claro').ok, true)
+      assert.equal(g11([alvoBom, dica({ color: TINTA, fontWeight: '400', opacity: '1', opacidadeCadeia: 1 })], 'claro').ok, false)
     })
   })
 })
@@ -969,6 +970,186 @@ describe('R1 (coletor): o texto dos controles entra no contraste do G11', () => 
   it('com valor preenchido o estilo do ::placeholder não entra (estiloTexto ausente)', () => {
     const { nos } = coletar('<input value="Ana" placeholder="Seu nome">')
     assert.equal(nos.find((no) => no.tag === 'input').estiloTexto, undefined)
+  })
+})
+
+// O ::placeholder tem estilo próprio: opacidade, família e caixa. O que se vê no campo vazio é o dele,
+// e o coletor o lê por getComputedStyle(el, '::placeholder') (no jsdom, `interceptarEstilo` o simula).
+const ESTILO_DA_DICA = {
+  origem: 'placeholder',
+  color: TINTA,
+  fontSize: '20px',
+  fontWeight: '400',
+  fontFamily: '"Outfit Variable", system-ui, sans-serif',
+  textTransform: 'none',
+  opacity: '1',
+  opacidadeCadeia: 1,
+}
+/** Um input vazio que mostra o placeholder, com o estilo do ::placeholder em `estiloTexto`. */
+const campoComDica = (estiloTexto = {}, extra = {}) =>
+  criar({ tag: 'input', texto: '', textoControle: 'Seu nome', rect: { x: 0, y: 0, w: 200, h: 48 }, m: { interativo: true }, estiloTexto: { ...ESTILO_DA_DICA, ...estiloTexto }, ...extra })
+/** O que o navegador entregaria para `input::placeholder`: `mapa` (kebab) vale por cima; o resto vem do campo. */
+const dicaCom = (mapa) => interceptarEstilo((elemento, pseudo) => (pseudo === '::placeholder' ? mapa : null))
+const paginaComCampo = (campo) => `<main><section><button>Ver sessão</button><p>Texto.</p>${campo}</section></main>`
+const coletarCampo = (campo, preparar) => coletarDe(paginaComCampo(campo), juntar(alvosGrandes, preparar ?? (() => undefined)))
+const DICA_BOA = { color: 'rgb(43, 35, 32)', opacity: '1' }
+
+describe('R1 (placeholder): o contraste usa a opacidade efetiva do ::placeholder', () => {
+  const alvoBom = criar({ tag: 'button', rect: { x: 32, y: 0, w: 44, h: 44 }, m: { interativo: true } })
+
+  it('regra: opacidade 1 passa; 0,1 reprova com o contraste efetivo (~1,21:1), não com o da cor (14,20:1)', () => {
+    assert.equal(g11([alvoBom, campoComDica()], 'claro').ok, true)
+    const r = g11([alvoBom, campoComDica({ opacity: '0.1' })], 'claro')
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /input "Seu nome": contraste 1\.2\d:1/)
+  })
+
+  it('regra: a opacidade compõe com o alfa da cor e com a cadeia de opacidade do controle', () => {
+    // Cor com alfa 0,5 e opacidade 0,2: alfa efetivo 0,1.
+    assert.equal(g11([alvoBom, campoComDica({ color: 'rgba(43, 35, 32, 0.5)', opacity: '0.2' })], 'claro').ok, false)
+    assert.equal(g11([alvoBom, campoComDica({ color: 'rgba(43, 35, 32, 0.9)', opacity: '1' })], 'claro').ok, true)
+    assert.equal(g11([alvoBom, campoComDica({ color: 'rgba(43, 35, 32, 0.5)', opacity: '1' })], 'claro').ok, false)
+    // Opacidade do ::placeholder 1 e a do controle (com os ancestrais) 0,2: reprova; 1: passa.
+    assert.equal(g11([alvoBom, campoComDica({ opacidadeCadeia: 0.2 })], 'claro').ok, false)
+    assert.equal(g11([alvoBom, campoComDica({ opacidadeCadeia: 1 })], 'claro').ok, true)
+    // As duas juntas: 0,5 × 0,5 = 0,25.
+    assert.equal(g11([alvoBom, campoComDica({ opacity: '0.5', opacidadeCadeia: 0.5 })], 'claro').ok, false)
+  })
+
+  it('regra: opacidade ausente, vazia, ilegível ou fora de 0 a 1 reprova com o motivo', () => {
+    for (const opacity of [undefined, '', '   ', 'abc', 'NaN', '1.5', '-0.2']) {
+      const r = g11([alvoBom, campoComDica({ opacity })], 'claro')
+      assert.equal(r.ok, false, String(opacity))
+      assert.match(r.motivo, /opacity do ::placeholder ausente ou ilegível/)
+    }
+    for (const opacidadeCadeia of [undefined, null, Number.NaN, 'x', -1, 3]) {
+      const r = g11([alvoBom, campoComDica({ opacidadeCadeia })], 'claro')
+      assert.equal(r.ok, false, String(opacidadeCadeia))
+      assert.match(r.motivo, /opacidade da cadeia do controle ilegível/)
+    }
+  })
+
+  it('regra: o campo preenchido (sem estiloTexto) conta como antes, sem opacidade do placeholder', () => {
+    const preenchido = criar({ tag: 'input', texto: '', textoControle: 'Maria', rect: { x: 0, y: 0, w: 200, h: 48 }, m: { interativo: true } })
+    assert.equal(g11([alvoBom, preenchido], 'claro').ok, true)
+  })
+
+  it('coletor: placeholder com opacity 0,1 reprova; com opacity 1 passa, e o coletor entrega a opacidade', () => {
+    const bom = coletarCampo('<input placeholder="Seu nome">', dicaCom(DICA_BOA))
+    const campoBom = bom.nos.find((no) => no.tag === 'input')
+    assert.equal(campoBom.estiloTexto.opacity, '1')
+    assert.equal(campoBom.estiloTexto.opacidadeCadeia, 1)
+    assert.equal(g11(bom.nos, 'claro').ok, true)
+
+    const ruim = coletarCampo('<input placeholder="Seu nome">', dicaCom({ ...DICA_BOA, opacity: '0.1' }))
+    assert.equal(ruim.nos.find((no) => no.tag === 'input').estiloTexto.opacity, '0.1')
+    const r = g11(ruim.nos, 'claro')
+    assert.equal(r.ok, false, r.motivo)
+    assert.match(r.motivo, /input "Seu nome": contraste 1\.2\d:1/)
+  })
+
+  it('coletor: a opacidade do próprio campo e a de um ancestral entram na cadeia', () => {
+    const doCampo = coletarCampo('<input placeholder="Seu nome" style="opacity: 0.2">', dicaCom(DICA_BOA))
+    assert.equal(doCampo.nos.find((no) => no.tag === 'input').estiloTexto.opacidadeCadeia, 0.2)
+    assert.equal(g11(doCampo.nos, 'claro').ok, false)
+    const doAncestral = coletarCampo('<div style="opacity: 0.2"><input placeholder="Seu nome"></div>', dicaCom(DICA_BOA))
+    assert.equal(doAncestral.nos.find((no) => no.tag === 'input').estiloTexto.opacidadeCadeia, 0.2)
+    assert.equal(g11(doAncestral.nos, 'claro').ok, false)
+    const dosDois = coletarCampo('<div style="opacity: 0.5"><input placeholder="Seu nome" style="opacity: 0.5"></div>', dicaCom(DICA_BOA))
+    assert.equal(dosDois.nos.find((no) => no.tag === 'input').estiloTexto.opacidadeCadeia, 0.25)
+    assert.equal(g11(coletarCampo('<div style="opacity: 1"><input placeholder="Seu nome"></div>', dicaCom(DICA_BOA)).nos, 'claro').ok, true)
+  })
+
+  it('coletor: opacity do ::placeholder ausente ou ilegível falha fechado', () => {
+    for (const opacity of ['', 'abc']) {
+      const r = g11(coletarCampo('<input placeholder="Seu nome">', dicaCom({ ...DICA_BOA, opacity })).nos, 'claro')
+      assert.equal(r.ok, false, opacity)
+      assert.match(r.motivo, /opacity do ::placeholder ausente ou ilegível/)
+    }
+  })
+
+  it('coletor: com o campo preenchido o placeholder não é visível e a opacidade dele não conta', () => {
+    const { nos } = coletarCampo('<input value="Ana" placeholder="Seu nome">', dicaCom({ ...DICA_BOA, opacity: '0.1' }))
+    assert.equal(nos.find((no) => no.tag === 'input').estiloTexto, undefined)
+    assert.equal(g11(nos, 'claro').ok, true)
+  })
+})
+
+describe('R7 (placeholder): a família do ::placeholder também é FONTES', () => {
+  it('regra: Outfit passa; Georgia, Zilla Slab depois de Outfit e Literata com fora da lista reprovam', () => {
+    assert.equal(fontes([criar(), campoComDica()]).ok, true)
+    assert.equal(fontes([criar(), campoComDica({ fontFamily: '"Literata Variable", serif' })]).ok, true)
+    const r = fontes([criar(), campoComDica({ fontFamily: 'Georgia, serif' })])
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /Georgia/)
+    assert.equal(r.nos_com_falha.length, 1)
+    assert.equal(fontes([criar(), campoComDica({ fontFamily: '"Outfit Variable", "Zilla Slab", sans-serif' })]).ok, false)
+  })
+
+  it('regra: font-family ausente do placeholder visível falha fechado, com o motivo', () => {
+    for (const fontFamily of [undefined, '', '   ', ' , ']) {
+      const r = fontes([criar(), campoComDica({ fontFamily })])
+      assert.equal(r.ok, false, JSON.stringify(fontFamily))
+      assert.match(r.motivo, /font-family do ::placeholder ausente/)
+    }
+  })
+
+  it('coletor: placeholder com Georgia reprova, com Outfit passa, sem família falha fechado', () => {
+    assert.equal(fontes(coletarCampo('<input placeholder="Seu nome">', dicaCom({ 'font-family': "'Outfit Variable', system-ui, sans-serif" })).nos).ok, true)
+    const georgia = coletarCampo('<input placeholder="Seu nome">', dicaCom({ 'font-family': 'Georgia, serif' }))
+    assert.match(georgia.nos.find((no) => no.tag === 'input').estiloTexto.fontFamily, /Georgia/)
+    const r = fontes(georgia.nos)
+    assert.equal(r.ok, false, r.motivo)
+    assert.match(r.motivo, /Georgia/)
+    const semFamilia = fontes(coletarCampo('<input placeholder="Seu nome">', dicaCom({ 'font-family': '' })).nos)
+    assert.equal(semFamilia.ok, false, semFamilia.motivo)
+    assert.match(semFamilia.motivo, /font-family do ::placeholder ausente/)
+  })
+
+  it('coletor: com o campo preenchido a família do placeholder não conta', () => {
+    const { nos } = coletarCampo('<input value="Ana" placeholder="Seu nome">', dicaCom({ 'font-family': 'Georgia, serif' }))
+    assert.equal(fontes(nos).ok, true)
+  })
+})
+
+describe('R8 (placeholder): o text-transform do ::placeholder também é CAIXA', () => {
+  it('regra: none e capitalize passam; uppercase reprova mesmo com o texto em minúsculas', () => {
+    for (const textTransform of ['none', 'capitalize', 'lowercase']) assert.equal(caixa([criar(), campoComDica({ textTransform })]).ok, true, textTransform)
+    const r = caixa([criar(), campoComDica({ textTransform: 'uppercase' })])
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /input "Seu nome": text-transform uppercase \(::placeholder\)/)
+    assert.equal(r.nos_com_falha.length, 1)
+  })
+
+  it('regra: text-transform ausente ou vazio do placeholder visível falha fechado, com o motivo', () => {
+    for (const textTransform of [undefined, '', '   ']) {
+      const r = caixa([criar(), campoComDica({ textTransform })])
+      assert.equal(r.ok, false, JSON.stringify(textTransform))
+      assert.match(r.motivo, /text-transform do ::placeholder ausente/)
+    }
+  })
+
+  it('regra: a grafia em caixa alta do placeholder continua valendo (siglas da lista à parte)', () => {
+    assert.equal(caixa([criar(), campoComDica({}, { textoControle: 'MARIA' })]).ok, false)
+    assert.equal(caixa([criar(), campoComDica({}, { textoControle: 'Informe a LGPD' })]).ok, true)
+  })
+
+  it('coletor: placeholder com text-transform uppercase reprova (MARIA em maiúsculas), com none passa', () => {
+    const bom = coletarCampo('<input placeholder="Maria">', dicaCom({ 'text-transform': 'none' }))
+    assert.equal(bom.nos.find((no) => no.tag === 'input').estiloTexto.textTransform, 'none')
+    assert.equal(caixa(bom.nos).ok, true)
+    const ruim = coletarCampo('<input placeholder="Maria">', dicaCom({ 'text-transform': 'uppercase' }))
+    const r = caixa(ruim.nos)
+    assert.equal(r.ok, false, r.motivo)
+    assert.match(r.motivo, /text-transform uppercase \(::placeholder\)/)
+  })
+
+  it('coletor: text-transform vazio do placeholder falha fechado; com o campo preenchido não conta', () => {
+    const vazio = caixa(coletarCampo('<input placeholder="Maria">', dicaCom({ 'text-transform': '' })).nos)
+    assert.equal(vazio.ok, false, vazio.motivo)
+    assert.match(vazio.motivo, /text-transform do ::placeholder ausente/)
+    const preenchido = coletarCampo('<input value="Ana" placeholder="Maria">', dicaCom({ 'text-transform': 'uppercase' })).nos
+    assert.equal(caixa(preenchido).ok, true)
   })
 })
 

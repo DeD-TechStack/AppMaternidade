@@ -116,11 +116,15 @@ function luminancia({ r, g, b }) {
   return 0.2126 * rl + 0.7152 * gl + 0.0722 * bl
 }
 
-/** O contraste WCAG 2.x entre o texto e o fundo; nulo se faltar cor ou se o fundo não for opaco. */
-export function contraste(corTexto, cadeiaDeFundos) {
+/**
+ * O contraste WCAG 2.x entre o texto e o fundo; nulo se faltar cor ou se o fundo não for opaco.
+ * `opacidade` (0 a 1, padrão 1) multiplica o alfa da cor: é a opacidade efetiva do texto.
+ */
+export function contraste(corTexto, cadeiaDeFundos, opacidade = 1) {
   const fundo = fundoReal(cadeiaDeFundos)
-  const texto = parseCor(corTexto)
-  if (!fundo || !texto) return null
+  const cor = parseCor(corTexto)
+  if (!fundo || !cor || !Number.isFinite(opacidade)) return null
+  const texto = { ...cor, a: cor.a * opacidade }
   const sobreFundo = texto.a < 1 ? sobrepor(texto, fundo) : texto
   const [clara, escura] = [luminancia(sobreFundo), luminancia(fundo)].sort((x, y) => y - x)
   return (clara + 0.05) / (escura + 0.05)
@@ -209,7 +213,23 @@ export function g11(nos, tema) {
       falhas.push({ no: descrever(no), motivo: `${descrever(no)}: font-weight ausente ou ilegível (${estiloDoTexto?.fontWeight})` })
       continue
     }
-    const razao = contraste(estiloDoTexto?.color, no.cadeia)
+    // O placeholder tem opacidade própria (::placeholder) e herda a do controle e dos ancestrais: o
+    // alfa efetivo do texto é a cor × a opacidade do pseudo × a cadeia. Sem as duas leituras, reprova.
+    let opacidade = 1
+    if (no.estiloTexto) {
+      const daDica = numeroDe(no.estiloTexto.opacity)
+      if (!(daDica >= 0 && daDica <= 1)) {
+        falhas.push({ no: descrever(no), motivo: `${descrever(no)}: opacity do ::placeholder ausente ou ilegível (${no.estiloTexto.opacity})` })
+        continue
+      }
+      const cadeia = no.estiloTexto.opacidadeCadeia
+      if (!ehNumero(cadeia) || cadeia < 0 || cadeia > 1.001) {
+        falhas.push({ no: descrever(no), motivo: `${descrever(no)}: opacidade da cadeia do controle ilegível (${cadeia})` })
+        continue
+      }
+      opacidade = daDica * cadeia
+    }
+    const razao = contraste(estiloDoTexto?.color, no.cadeia, opacidade)
     if (razao === null) {
       falhas.push({ no: descrever(no), motivo: `${descrever(no)}: contraste incalculável (fundo transparente sem ancestral opaco, ou cor ilegível)` })
       continue
@@ -342,12 +362,8 @@ export function fontes(nos) {
   const falhas = []
   const achadas = new Map() // minúscula → nome como veio
   const foraDoSet = new Map()
-  for (const no of comTexto) {
-    const familias = familiasDe(no.estilo?.fontFamily)
-    if (familias.length === 0) {
-      falhas.push({ no: descrever(no), motivo: `${descrever(no)}: font-family ausente` })
-      continue
-    }
+  // As famílias nomeadas de uma pilha: devolve as que ficam fora de Literata e Outfit.
+  const foraDaPilha = (familias) => {
     const fora = []
     for (const familia of familias) {
       if (ehGenerica(familia)) continue
@@ -358,7 +374,24 @@ export function fontes(nos) {
         fora.push(familia)
       }
     }
-    if (fora.length > 0) falhas.push({ no: descrever(no), motivo: `${descrever(no)}: família ${fora.join(', ')}` })
+    return fora
+  }
+  for (const no of comTexto) {
+    const familias = familiasDe(no.estilo?.fontFamily)
+    if (familias.length === 0) falhas.push({ no: descrever(no), motivo: `${descrever(no)}: font-family ausente` })
+    else {
+      const fora = foraDaPilha(familias)
+      if (fora.length > 0) falhas.push({ no: descrever(no), motivo: `${descrever(no)}: família ${fora.join(', ')}` })
+    }
+    // O controle que mostra o placeholder desenha com a pilha do ::placeholder, que também vale.
+    if (no.estiloTexto) {
+      const daDica = familiasDe(no.estiloTexto.fontFamily)
+      if (daDica.length === 0) falhas.push({ no: descrever(no), motivo: `${descrever(no)}: font-family do ::placeholder ausente` })
+      else {
+        const fora = foraDaPilha(daDica)
+        if (fora.length > 0) falhas.push({ no: descrever(no), motivo: `${descrever(no)}: família ${fora.join(', ')} (::placeholder)` })
+      }
+    }
   }
   if (falhas.length === 0 && achadas.size === 0) {
     return falhaFechada('FONTES', 'nenhuma família não genérica medida nos nós de texto')
@@ -406,6 +439,14 @@ export function caixa(nos) {
     }
     if (no.estilo.textTransform.trim() === 'uppercase') {
       falhas.push({ no: descrever(no), motivo: `${descrever(no)}: text-transform uppercase` })
+    }
+    // O controle que mostra o placeholder o desenha com o text-transform do ::placeholder.
+    if (no.estiloTexto) {
+      if (!lido(no.estiloTexto.textTransform)) {
+        falhas.push({ no: descrever(no), motivo: `${descrever(no)}: text-transform do ::placeholder ausente` })
+      } else if (no.estiloTexto.textTransform.trim() === 'uppercase') {
+        falhas.push({ no: descrever(no), motivo: `${descrever(no)}: text-transform uppercase (::placeholder)` })
+      }
     }
     const palavras = [...palavrasEmCaixaAlta(no.texto), ...palavrasEmCaixaAlta(no.textoControle)]
     if (palavras.length > 0) {
@@ -759,6 +800,18 @@ export function coletarNaPagina() {
     if (el.tagName === 'SELECT') return colapsar([...el.selectedOptions].map((opcao) => opcao.textContent).join(' '))
     return ''
   }
+  // O produto das opacidades do elemento e de todos os ancestrais (a cadeia que também apaga o
+  // placeholder); nulo se alguma leitura é ausente ou ilegível.
+  const opacidadeDaCadeia = (el) => {
+    let produto = 1
+    for (let atual = el; atual; atual = atual.parentElement) {
+      const o = getComputedStyle(atual).opacity
+      const n = o === '' ? Number.NaN : Number(o)
+      if (!Number.isFinite(n)) return null
+      produto *= n
+    }
+    return produto
+  }
   // A propriedade individual `scale` (`none`, `s`, `sx sy` ou `sx sy sz`); nulo se ausente ou ilegível.
   const escalaIndividual = (valor) => {
     const t = String(valor ?? '').trim()
@@ -847,7 +900,16 @@ export function coletarNaPagina() {
       // Com o valor vazio o que se vê é o placeholder, e ele tem estilo próprio (::placeholder).
       if (no.textoControle !== '' && el.tagName !== 'SELECT' && el.value === '') {
         const dica = getComputedStyle(el, '::placeholder')
-        no.estiloTexto = { color: dica.color, fontSize: dica.fontSize, fontWeight: dica.fontWeight, origem: 'placeholder' }
+        no.estiloTexto = {
+          color: dica.color,
+          fontSize: dica.fontSize,
+          fontWeight: dica.fontWeight,
+          fontFamily: dica.fontFamily,
+          textTransform: dica.textTransform,
+          opacity: dica.opacity,
+          opacidadeCadeia: opacidadeDaCadeia(el),
+          origem: 'placeholder',
+        }
       }
     }
     if (no.m.filhoDeMain || no.m.filhoDeBloco || no.m.blocoG12) no.ancestrais = ancestraisDe(el)
