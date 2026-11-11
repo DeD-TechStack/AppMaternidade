@@ -198,7 +198,9 @@ export function Sessao() {
     const autor = nomeDoAutor(sessao.criadoPor, sessao.familiaId)
     return (
       <>
-        <main ref={principal} className="pb-16 text-[17px] leading-[25px]" data-tela="sessao">
+        {/* O pé de papel é largo: o painel de mel do cronômetro e o painel de mel do rodapé nunca ficam
+            quase encostados (DESIGN.md 7, papel entre os painéis). */}
+        <main ref={principal} className="pb-24 text-[17px] leading-[25px] lg:pb-32" data-tela="sessao">
           <TituloRotina
             antes={VOLTAR_PARA_HOJE}
             titulo={SESSAO.titulo(rotulo, bebeDaSessao.bebe.nome)}
@@ -225,9 +227,12 @@ export function Sessao() {
             <ConfirmacaoRotina confirmacao={confirmacao} aoAcionar={acionar} />
           </div>
 
-          <div className="cm-area mt-6 grid grid-cols-1 gap-6 lg:mt-10 lg:grid-cols-12 lg:items-start lg:gap-8">
+          {/* Em 1440 o painel e o cartão das anteriores terminam na mesma linha (stretch: os dois fundos
+              alinhados). O cronômetro ocupa a altura que sobra na coluna dele. */}
+          <div className="cm-area mt-6 grid grid-cols-1 gap-6 lg:mt-10 lg:grid-cols-12 lg:items-stretch lg:gap-8">
             <div className="flex flex-col gap-4 lg:col-span-7">
               <CronometroSessao
+                className="lg:flex-1"
                 cronometro={formatarCronometro(agora - inicio)}
                 atividade={sessao.tipo === 'tummy' ? ATIVIDADE_TUMMY : undefined}
                 acoes={{ encerrar: gravacaoLiberada, descartar: podeAlterar(sessao) }}
@@ -273,7 +278,7 @@ export function Sessao() {
 
   return (
     <>
-      <main ref={principal} className="pb-16 text-[17px] leading-[25px]" data-tela="sessao" aria-busy={carregando ? 'true' : undefined}>
+      <main ref={principal} className="pb-24 text-[17px] leading-[25px] lg:pb-32" data-tela="sessao" aria-busy={carregando ? 'true' : undefined}>
         {carregando || iniciandoPelaUrl ? (
           <p className="cm-area pt-10">{iniciandoPelaUrl ? null : COMUM.carregando}</p>
         ) : (

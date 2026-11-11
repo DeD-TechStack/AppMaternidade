@@ -62,7 +62,8 @@ describe('estrutura da tela', () => {
     expect(cabecalho.getByRole('link', { name: 'Conta' }).getAttribute('aria-current')).toBe('page')
     expect(cabecalho.getByRole('link', { name: 'Ir para o Hoje' }).getAttribute('href')).toBe('/app/hoje')
     expect(cabecalho.getByRole('button', { name: 'Sair' })).toBeTruthy()
-    expect(screen.getAllByRole('button', { name: 'Sair' })).toHaveLength(2)
+    // Um só "Sair" na página (o da barra): o do fim da página saiu.
+    expect(screen.getAllByRole('button', { name: 'Sair' })).toHaveLength(1)
     // Não monta a navegação inferior do protótipo.
     expect(screen.queryByRole('navigation', { name: 'Principal' })).toBeNull()
   })
@@ -426,7 +427,7 @@ describe('excluir conta: falha na leitura dos impedimentos', () => {
     expect((screen.getByRole('button', { name: 'Salvar' }) as HTMLButtonElement).disabled).toBe(false)
     expect((screen.getByRole('button', { name: 'Copiar id' }) as HTMLButtonElement).disabled).toBe(false)
     expect((screen.getByRole('button', { name: 'Baixar meus dados' }) as HTMLButtonElement).disabled).toBe(false)
-    expect(screen.getAllByRole('button', { name: 'Sair' })).toHaveLength(2)
+    expect(screen.getAllByRole('button', { name: 'Sair' })).toHaveLength(1)
 
     fireEvent.click(within(alerta).getByRole('button', { name: 'Tentar de novo' }))
     await waitFor(() => expect(screen.queryByRole('alert')).toBeNull())
@@ -696,10 +697,10 @@ describe('privacidade e sair', () => {
     expect(familia.classList.contains('wrap-anywhere')).toBe(true)
   })
 
-  it('o botão Sair do fim da página faz a mesma saída do cabeçalho', async () => {
+  it('o único botão Sair da página, o da barra, encerra a sessão', async () => {
     const { roteador } = await abrirConta()
 
-    fireEvent.click(screen.getAllByRole('button', { name: 'Sair' })[1])
+    fireEvent.click(screen.getByRole('button', { name: 'Sair' }))
     await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.entrar })
     expect(caminhoDe(roteador)).toBe('/entrar')
     expect(status().textContent).toBe('Você saiu da conta.')

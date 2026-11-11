@@ -1,5 +1,4 @@
 import { Botao } from '../../componentes/base/Botao.tsx'
-import { CartaoFlutuante } from '../../componentes/campo/CartaoFlutuante.tsx'
 import { FaixaCacau } from '../../componentes/campo/FaixaCacau.tsx'
 import { Ilustracao } from '../../componentes/campo/Ilustracao.tsx'
 import { PainelCampo } from '../../componentes/campo/PainelCampo.tsx'
@@ -7,7 +6,7 @@ import { Titulo } from '../../componentes/campo/Titulo.tsx'
 import { Abertura } from '../../componentes/publicas-destaque/Abertura.tsx'
 import { AvisoSaude } from '../../componentes/publicas-destaque/AvisoSaude.tsx'
 import { CabecaDeSecao } from '../../componentes/publicas-destaque/CabecaDeSecao.tsx'
-import { CartaoTummy } from '../../componentes/publicas-destaque/CartoesApp.tsx'
+import { CartaoPlano, CartaoTummy } from '../../componentes/publicas-destaque/CartoesApp.tsx'
 import { CenaCacau } from '../../componentes/publicas-destaque/CenaCacau.tsx'
 import { FontesDoItem } from '../../componentes/publicas-destaque/FontesDoItem.tsx'
 import { PartesDoArtigo } from '../../componentes/publicas-destaque/PartesDoArtigo.tsx'
@@ -21,10 +20,11 @@ import { DESENVOLVIMENTO_DESTAQUE as T, ROTULOS_FONTES } from '../../conteudo/de
 const ANTES_DA_TABELA = 3
 
 /**
- * /desenvolvimento: a abertura com a cena de cacau (dois tablets) e o aviso de saúde, as ideias para
- * brincar por fase (abas), o que as fontes dizem sobre tummy time (com a tabela das fontes, sem meta),
- * os marcos sem cobrança e a faixa de cacau com o SAMU e o aviso de saúde de novo. Cada item mostra as
- * fontes e a data da consulta.
+ * /desenvolvimento: a abertura com a cena de cacau (dois tablets, sem nada por cima) e, abaixo dela, o
+ * registro do tummy time num cartão no fluxo; o aviso de saúde, uma vez, no texto da abertura; as
+ * ideias para brincar por fase (abas), o que as fontes dizem sobre tummy time (com a tabela das
+ * fontes, sem meta), os marcos sem cobrança e a faixa de cacau com o SAMU. Cada item mostra as fontes
+ * e a data da consulta.
  */
 export function Desenvolvimento() {
   return (
@@ -45,11 +45,12 @@ export function Desenvolvimento() {
           </>
         }
         midia={
-          <CenaCacau base={T.cena.base} largura={T.cena.largura} altura={T.cena.altura} alt={T.cena.alt} prioritaria>
-            <CartaoFlutuante giro={-2} posicao="baixo-esquerda">
+          <>
+            <CenaCacau base={T.cena.base} largura={T.cena.largura} altura={T.cena.altura} alt={T.cena.alt} prioritaria />
+            <CartaoPlano className="pd-cartao-legenda">
               <CartaoTummy />
-            </CartaoFlutuante>
-          </CenaCacau>
+            </CartaoPlano>
+          </>
         }
       />
 
@@ -82,7 +83,9 @@ export function Desenvolvimento() {
         <div className="cm-area pd-tummy">
           <PartesDoArtigo partes={TUMMY_TIME.itens.slice(0, ANTES_DA_TABELA)} />
           <PainelCampo variante="mel" className="pd-celula pd-tummy-desenho">
-            <Ilustracao nome="tummy-time" carregamento="eager" />
+            <div className="pd-chao">
+              <Ilustracao nome="baba-tapete" carregamento="eager" />
+            </div>
           </PainelCampo>
         </div>
         <TabelaTexto
@@ -117,7 +120,6 @@ export function Desenvolvimento() {
             </div>
             <div className="pd-faixa-lado">
               <p className="cm-lide">{T.urgencia.texto}</p>
-              <AvisoSaude />
             </div>
           </div>
         </FaixaCacau>

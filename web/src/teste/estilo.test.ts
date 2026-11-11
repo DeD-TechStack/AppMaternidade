@@ -198,6 +198,65 @@ describe('sombra, gradiente e filtro só pelos tokens (DESIGN.md 3 e 8)', () => 
   })
 })
 
+/** O corpo da primeira regra de `texto` cujo seletor é exatamente `seletor`. */
+function corpoDaRegra(texto: string, seletor: string): string {
+  const regra = [...texto.matchAll(/([^{}]+)\{([^{}]*)\}/g)].find((m) => m[1].trim() === seletor)
+  return regra?.[2] ?? ''
+}
+
+describe('rodapé: marca ajustada ao painel e alvos da casca (MAT-49e)', () => {
+  const site = css.find((f) => f.nome === 'styles/site.css')!.limpo
+
+  it('o nome do rodapé tem o tamanho preso à largura do painel (cqi), sem teto de 160 px, sem transform nem mexida no tracking', () => {
+    const corpo = corpoDaRegra(site, '.cm-rodape-nome')
+    expect(corpo).not.toBe('')
+    const tamanho = /font-size:\s*([^;]+);/.exec(corpo)?.[1] ?? ''
+    expect(tamanho).toMatch(/cqi/)
+    expect(tamanho).not.toMatch(/min\(\s*160px/)
+    expect(tamanho).not.toMatch(/160px/)
+    expect(corpo).not.toMatch(/transform|scale/)
+    expect(corpo.match(/letter-spacing:\s*([^;]+);/g)).toEqual(['letter-spacing: -0.03em;'])
+  })
+
+  it('o fator da largura do texto é declarado uma vez, como propriedade própria', () => {
+    expect(site.match(/--cm-fator-marca:\s*[\d.]+;/g)).toHaveLength(1)
+    expect(corpoDaRegra(site, '.cm-rodape-nome')).toMatch(/var\(--cm-fator-marca\)/)
+  })
+
+  it('.alvo-toque é só um piso de especificidade zero (:where), sem !important, para não vencer o .cm-botao de 56 px', () => {
+    const index = semComentariosCss(indexCss)
+    const regra = [...index.matchAll(/([^{}]+)\{([^{}]*)\}/g)].find((m) => /alvo-toque/.test(m[1]) && /min-height:\s*44px/.test(m[2]))
+    expect(regra, 'regra do piso de 44 px').toBeDefined()
+    expect(regra![1]).toMatch(/:where\(\s*\.alvo-toque\s*\)/)
+    expect(regra![1]).not.toMatch(/(^|[\s,])\.alvo-toque/)
+    expect(regra![2]).not.toMatch(/!important/)
+  })
+
+  // O ícone Menu do Lucide (viewBox 24, 26 px, traço 2, pontas redondas) pinta o traço 3,25 px ANTES da borda
+  // direita da caixa do SVG: (24 - 21) / 24 * 26. A caixa fica 11 px para dentro do botão de 48 px (15 px no de
+  // 56 px da madrugada). O recuo leva a borda do TRAÇO, e não a da caixa, à borda do conteúdo.
+  const TRACO_FORA_DA_CAIXA = 3.25
+
+  it('o recuo do botão do menu leva a borda do traço do ícone (e não a da caixa do SVG) à borda do conteúdo: -(11 + 3,25) px', () => {
+    const corpo = corpoDaRegra(site, '.sb-cab-menu')
+    expect(corpo).toMatch(/width:\s*48px/)
+    expect(corpo).toMatch(/height:\s*48px/)
+    expect(Number.parseFloat(/margin-right:\s*(-?[\d.]+)px/.exec(corpo)?.[1] ?? 'NaN')).toBeCloseTo(-(11 + TRACO_FORA_DA_CAIXA), 5)
+    expect(corpo).toMatch(/margin-right:\s*-14\.25px/)
+  })
+
+  it('na madrugada (botão de 56 px) o recuo do menu é -(15 + 3,25) px, com os 56 px de alvo preservados', () => {
+    const campo = css.find((f) => f.nome === 'styles/campo.css')!.limpo
+    const corpo = corpoDaRegra(campo, ":root[data-tema='madrugada'] .sb-cab-menu")
+    expect(corpo).toMatch(/margin-right:\s*-18\.25px/)
+    expect(campo).toMatch(/:root\[data-tema='madrugada'\] \.sb-cab-menu,[^{}]*\{[^{}]*min-width:\s*56px[^{}]*min-height:\s*56px/)
+  })
+
+  it('o rodapé compacto tem regra própria', () => {
+    expect(site).toMatch(/\.cm-rodape-compacto\s*\{/)
+  })
+})
+
 describe('movimento reduzido (DESIGN.md 5)', () => {
   it('o CSS desliga animações e transições com prefers-reduced-motion', () => {
     expect(indexCss).toMatch(

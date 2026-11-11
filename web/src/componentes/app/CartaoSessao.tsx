@@ -3,6 +3,7 @@ import { Link } from 'react-router'
 import { Baby, Milk, Moon } from 'lucide-react'
 import { Botao } from '../base/Botao.tsx'
 import { ALVO_APP } from './alvo.ts'
+import { recuoOptico } from './recuoOptico.ts'
 import { Ilustracao, type NomeIlustracao } from '../campo/Ilustracao.tsx'
 import { ROTULO_SESSAO, type TipoSessao } from '../../prototipo/estado.ts'
 import { formatarCronometro, formatarHora } from '../../prototipo/formatar.ts'
@@ -56,6 +57,14 @@ export function CartaoSessao({ sessao, agora, aoEncerrar, podeEncerrar = true, o
     )
   }
 
+  const tempo = formatarCronometro(agora - sessao.inicio)
+
+  // De dia, em 1440, o desenho é uma coluna da altura do cartão inteiro, colada ao tempo (sem faixa morta
+  // entre os dois). Na madrugada o desenho sai e o tempo e as ações dividem a largura: as ações vão para
+  // a direita, alinhadas pela base do tempo.
+  const NOITE_EM_LINHA =
+    'lg:[[data-tema=madrugada]_&]:flex-row lg:[[data-tema=madrugada]_&]:flex-wrap lg:[[data-tema=madrugada]_&]:items-end lg:[[data-tema=madrugada]_&]:justify-between'
+
   return (
     <section
       ref={ref}
@@ -63,59 +72,80 @@ export function CartaoSessao({ sessao, agora, aoEncerrar, podeEncerrar = true, o
       tabIndex={-1}
       data-andamento=""
       data-tipo={sessao.tipo}
-      className={`alvo-foco relative overflow-hidden rounded-cartao bg-(--cor-campo-sessao) p-6 text-(--cor-numero-sessao) lg:p-10 ${className ?? ''}`}
+      className={`alvo-foco relative flex overflow-hidden rounded-cartao bg-(--cor-campo-sessao) p-6 text-(--cor-numero-sessao) [border:var(--borda-campo)] lg:items-stretch lg:gap-10 lg:p-10 ${className ?? ''}`}
     >
-      <div className="relative z-10 flex items-center gap-2.5">
-        <span
-          aria-hidden="true"
-          className="inline-flex size-8 items-center justify-center rounded-full bg-cacau text-mel"
-        >
-          <Icone className="size-4" strokeWidth={2} aria-hidden="true" />
-        </span>
-        <h2 id={idTitulo} className="text-[15px] leading-[22px] font-medium">
-          Em andamento
-        </h2>
-      </div>
-
-      <div className="relative z-10 mt-4 lg:max-w-[62%]">
-        <p className="font-titulo text-[24px] leading-[30px] font-semibold">{ROTULO_SESSAO[sessao.tipo]}</p>
-        <p
-          role="timer"
-          aria-live="off"
-          aria-label={`Tempo de ${ROTULO_SESSAO[sessao.tipo].toLowerCase()}`}
-          data-numero=""
-          className="mt-1 font-titulo text-[64px] leading-none font-semibold tracking-[-0.02em] whitespace-nowrap tabular-nums lg:text-[104px]"
-        >
-          {formatarCronometro(agora - sessao.inicio)}
-        </p>
-        <p className="mt-3 text-[15px] leading-[22px]">
-          {`Iniciado às ${formatarHora(sessao.inicio)} `}
-          <span>{`por ${sessao.pessoa}`}</span>
-        </p>
-
-        <div className="mt-6 flex flex-wrap items-center gap-3">
-          {podeEncerrar ? (
-            <Botao tamanho="app" className={`min-w-[8.5rem] ${ALVO_APP}`} desativado={ocupado} onClick={aoEncerrar}>
-              Encerrar
-            </Botao>
-          ) : null}
-          <Link
-            to={sessao.id ? `/app/sessao?id=${sessao.id}` : '/app/sessao'}
-            state={{ foco: 'titulo' }}
-            className={`cm-botao cm-botao-contorno alvo-toque ${ALVO_APP}`}
-            data-botao="contorno"
-            data-tamanho="app"
+      <div className="relative z-10 min-w-0 flex-1 lg:flex-none lg:[[data-tema=madrugada]_&]:flex-1">
+        <div className="flex items-center gap-2.5">
+          <span
+            aria-hidden="true"
+            className="inline-flex size-8 items-center justify-center rounded-full bg-cacau text-mel"
           >
-            Ver sessão
-          </Link>
+            <Icone className="size-4" strokeWidth={2} aria-hidden="true" />
+          </span>
+          <h2 id={idTitulo} className="text-[15px] leading-[22px] font-medium">
+            Em andamento
+          </h2>
+        </div>
+
+        <div className={`mt-4 flex flex-col gap-6 lg:gap-8 ${NOITE_EM_LINHA}`}>
+          <div>
+            <p className="font-titulo text-[24px] leading-[30px] font-semibold">{ROTULO_SESSAO[sessao.tipo]}</p>
+            <p
+              role="timer"
+              aria-live="off"
+              aria-label={`Tempo de ${ROTULO_SESSAO[sessao.tipo].toLowerCase()}`}
+              data-numero=""
+              className={`mt-1 font-titulo text-[64px] leading-none font-semibold tracking-[-0.02em] whitespace-nowrap tabular-nums lg:text-[120px] ${recuoOptico(tempo)}`}
+            >
+              {tempo}
+            </p>
+            <p className="mt-3 text-[15px] leading-[22px]">
+              {`Iniciado às ${formatarHora(sessao.inicio)} `}
+              <span>{`por ${sessao.pessoa}`}</span>
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            {podeEncerrar ? (
+              <Botao tamanho="app" className={`min-w-[8.5rem] ${ALVO_APP}`} desativado={ocupado} onClick={aoEncerrar}>
+                Encerrar
+              </Botao>
+            ) : null}
+            <Link
+              to={sessao.id ? `/app/sessao?id=${sessao.id}` : '/app/sessao'}
+              state={{ foco: 'titulo' }}
+              className={`cm-botao cm-botao-contorno alvo-toque ${ALVO_APP}`}
+              data-botao="contorno"
+              data-tamanho="app"
+            >
+              Ver sessão
+            </Link>
+          </div>
         </div>
       </div>
 
+      {/* O traço fica mais pesado sem filtro: o desenho ocupa a altura toda do cartão (o traço cresce com
+          ele) e duas cópias deslocadas em 1 px engrossam a linha. As cópias são só enfeite. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute right-6 bottom-0 hidden h-[86%] w-[34%] items-end justify-end lg:flex [[data-tema=madrugada]_&]:hidden"
+        data-desenho=""
+        className="pointer-events-none relative -mb-10 hidden min-w-[9rem] flex-1 lg:block [[data-tema=madrugada]_&]:hidden"
       >
-        <Ilustracao nome={DESENHO[sessao.tipo]} decorativa carregamento="eager" className="max-h-full w-auto object-contain" />
+        <span className="absolute inset-y-0 left-0 block">
+          <Ilustracao nome={DESENHO[sessao.tipo]} decorativa carregamento="eager" className="h-full w-auto max-w-none" />
+          <Ilustracao
+            nome={DESENHO[sessao.tipo]}
+            decorativa
+            carregamento="eager"
+            className="absolute inset-y-0 left-0 h-full w-auto max-w-none translate-x-px"
+          />
+          <Ilustracao
+            nome={DESENHO[sessao.tipo]}
+            decorativa
+            carregamento="eager"
+            className="absolute inset-y-0 left-0 h-full w-auto max-w-none translate-y-px"
+          />
+        </span>
       </div>
     </section>
   )
