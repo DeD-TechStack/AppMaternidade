@@ -1,4 +1,4 @@
-import { useEffect, useId } from 'react'
+import { useId } from 'react'
 import { Acordeao } from '../componentes/campo/Acordeao.tsx'
 import { Citacao } from '../componentes/campo/Citacao.tsx'
 import { Depoimento } from '../componentes/campo/Depoimento.tsx'
@@ -11,7 +11,6 @@ import { HeroiInicio } from '../componentes/inicio/HeroiInicio.tsx'
 import { SecaoTabela } from '../componentes/inicio/SecaoTabela.tsx'
 import { SecaoTurno } from '../componentes/inicio/SecaoTurno.tsx'
 import { FATOS, INICIO } from '../conteudo/textos.ts'
-import { usePrototipo } from '../prototipo/contexto.ts'
 
 /**
  * O Início (MAT-49c), na composição F1 "Campo de mel": a abertura com a cena dos três celulares, os
@@ -20,16 +19,10 @@ import { usePrototipo } from '../prototipo/contexto.ts'
  * movimento); o que é só do Início fica em componentes/inicio.
  */
 export function Inicio() {
-  const { dispatch } = usePrototipo()
   const idNumeros = useId()
   const idSelos = useId()
   const idDepoimentos = useId()
   const idPerguntas = useId()
-
-  // O Início é sempre claro: sair do modo madrugada ao chegar aqui.
-  useEffect(() => {
-    dispatch({ tipo: 'definirMadrugada', valor: false })
-  }, [dispatch])
 
   return (
     <main className="in-pagina">

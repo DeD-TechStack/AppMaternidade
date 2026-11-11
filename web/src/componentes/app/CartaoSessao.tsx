@@ -8,10 +8,15 @@ import { ROTULO_SESSAO, type TipoSessao } from '../../prototipo/estado.ts'
 import { formatarCronometro, formatarHora } from '../../prototipo/formatar.ts'
 
 interface Props {
-  sessao: { tipo: TipoSessao; inicio: number; pessoa: string } | null
+  /** Com `id`, o "Ver sessão" abre aquela sessão (`/app/sessao?id=`); sem ele, a mais recente. */
+  sessao: { tipo: TipoSessao; inicio: number; pessoa: string; id?: string } | null
   /** O instante atual (o Hoje o atualiza a cada segundo): o tempo é sempre `agora - inicio`. */
   agora: number
   aoEncerrar: () => void
+  /** Quem não pode encerrar (observador, bebê arquivado) não vê o botão. */
+  podeEncerrar?: boolean
+  /** Uma escrita em curso: o `Encerrar` fica com `aria-disabled="true"` e o toque não faz nada. */
+  ocupado?: boolean
   /** O Hoje guarda o cartão para levar o foco até ele depois de encerrar (tabindex="-1"). */
   ref?: Ref<HTMLElement>
   className?: string
@@ -27,7 +32,7 @@ const DESENHO: Record<TipoSessao, NomeIlustracao> = { sono: 'pai-colo', mamada: 
  * madrugada; o tempo correndo em Literata com algarismos tabulares, a pílula de cacau "Encerrar" (de mel
  * na madrugada) e o link "Ver sessão". Sem sessão, diz "Nenhuma sessão em andamento." e como começar.
  */
-export function CartaoSessao({ sessao, agora, aoEncerrar, ref, className }: Props) {
+export function CartaoSessao({ sessao, agora, aoEncerrar, podeEncerrar = true, ocupado = false, ref, className }: Props) {
   const idTitulo = useId()
   const Icone = sessao ? ICONE[sessao.tipo] : Moon
 
@@ -89,11 +94,13 @@ export function CartaoSessao({ sessao, agora, aoEncerrar, ref, className }: Prop
         </p>
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
-          <Botao tamanho="app" className={`min-w-[8.5rem] ${ALVO_APP}`} onClick={aoEncerrar}>
-            Encerrar
-          </Botao>
+          {podeEncerrar ? (
+            <Botao tamanho="app" className={`min-w-[8.5rem] ${ALVO_APP}`} desativado={ocupado} onClick={aoEncerrar}>
+              Encerrar
+            </Botao>
+          ) : null}
           <Link
-            to="/app/sessao"
+            to={sessao.id ? `/app/sessao?id=${sessao.id}` : '/app/sessao'}
             state={{ foco: 'titulo' }}
             className={`cm-botao cm-botao-contorno alvo-toque ${ALVO_APP}`}
             data-botao="contorno"

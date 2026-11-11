@@ -60,7 +60,7 @@ describe('estrutura da tela', () => {
 
     const cabecalho = within(screen.getByRole('navigation', { name: 'Conta' }))
     expect(cabecalho.getByRole('link', { name: 'Conta' }).getAttribute('aria-current')).toBe('page')
-    expect(cabecalho.getByRole('link', { name: 'Ver o protótipo do Hoje' }).getAttribute('href')).toBe('/app/hoje')
+    expect(cabecalho.getByRole('link', { name: 'Ir para o Hoje' }).getAttribute('href')).toBe('/app/hoje')
     expect(cabecalho.getByRole('button', { name: 'Sair' })).toBeTruthy()
     expect(screen.getAllByRole('button', { name: 'Sair' })).toHaveLength(2)
     // Não monta a navegação inferior do protótipo.
@@ -112,7 +112,7 @@ describe('barra da conta', () => {
     expect(barra.classList.contains('justify-between')).toBe(true)
     expect([...barra.querySelectorAll('a, button')].map((filho) => filho.textContent)).toEqual([
       'Conta',
-      'Ver o protótipo do Hoje',
+      'Ir para o Hoje',
       'Sair',
     ])
   })

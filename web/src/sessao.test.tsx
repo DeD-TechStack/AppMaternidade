@@ -1,12 +1,13 @@
 import { existsSync, readFileSync } from 'node:fs'
-import { describe, expect, it, vi } from 'vitest'
-import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, fireEvent, screen, within } from '@testing-library/react'
 import { temBanco } from './prototipo/banco.ts'
-import { criarEstadoInicial, type EstadoPrototipo, type TipoSessao } from './prototipo/estado.ts'
-import { renderizarRota } from './teste/renderizarRota.tsx'
+import { PESSOAS } from './teste/renderizarComDados.tsx'
+import { aguardarCarga, renderizarRotaPronta } from './teste/renderizarRota.tsx'
 import { listarFontes, pastaSrcDe } from './teste/fontes.ts'
+import { comSessaoEmAndamento, semSessaoEmAndamento } from './teste/rotina.fixture.ts'
 
-// A Sessão redesenhada sobre o Campo de mel: o link de volta, o título "<Sessão> de Heloísa" com a segunda
+// A Sessão com os dados da rotina (MAT-38a): o link de volta, o título "<Sessão> de Heloísa" com a segunda
 // linha em itálico, o cartão do cronômetro (mel de dia, cartão da noite na madrugada) com Encerrar,
 // Encerrar e anotar e Descartar, e as sessões anteriores ao lado. Sem sessão: o estado vazio com o desenho
 // da noite. O jsdom não mede layout: aqui vale a estrutura, o texto e o comportamento.
@@ -14,12 +15,14 @@ import { listarFontes, pastaSrcDe } from './teste/fontes.ts'
 const pastaSrc = pastaSrcDe(import.meta.url)
 
 const MIN = 60_000
-const sessaoDe = (tipo: TipoSessao, ha = 72 * MIN, madrugada = false): EstadoPrototipo => ({
-  ...criarEstadoInicial(Date.now()),
-  sessao: { tipo, inicio: Date.now() - ha, pessoa: tipo === 'sono' ? 'Bruno' : 'Juliana' },
-  madrugada,
+const INSTANTE = new Date('2026-11-05T10:00:00')
+
+beforeEach(() => {
+  vi.useFakeTimers()
+  vi.setSystemTime(INSTANTE)
 })
-const semSessao = (): EstadoPrototipo => ({ ...criarEstadoInicial(Date.now()), sessao: null })
+
+const sessaoDe = comSessaoEmAndamento
 
 const principal = (container: HTMLElement) => container.querySelector<HTMLElement>('main')!
 const cartao = (container: HTMLElement) => container.querySelector<HTMLElement>('main [data-andamento]')!
@@ -29,8 +32,8 @@ describe('Sessão: a estrutura', () => {
     ['claro', false],
     ['madrugada', true],
   ] as const) {
-    it(`(${tema}) o link de volta, o título, o cartão do cronômetro e as anteriores, nessa ordem`, () => {
-      const { container } = renderizarRota('/app/sessao', { estadoInicial: sessaoDe('sono', 72 * MIN, madrugada) })
+    it(`(${tema}) o link de volta, o título, o cartão do cronômetro e as anteriores, nessa ordem`, async () => {
+      const { container } = await renderizarRotaPronta('/app/sessao', { madrugada })
 
       const ordem = [
         screen.getByRole('link', { name: 'Voltar para Hoje' }),
@@ -47,12 +50,13 @@ describe('Sessão: a estrutura', () => {
     })
   }
 
-  it('não há barra Registrar, navegação inferior nem texto de protótipo na tela', () => {
-    const { container } = renderizarRota('/app/sessao')
+  it('não há barra Registrar, navegação inferior nem texto de protótipo na tela', async () => {
+    const { container } = await renderizarRotaPronta('/app/sessao')
 
     expect(container.querySelector('.nav-inferior, .barra-inferior, [data-barra-registrar]')).toBeNull()
     expect(screen.queryByRole('navigation', { name: 'Principal' })).toBeNull()
     expect(principal(container).textContent).not.toMatch(/protótipo|dados de exemplo/i)
+    expect(document.body.textContent).not.toContain('Protótipo: dados fictícios, nada é salvo.')
     expect([...container.querySelector('.sb-casca')!.children].map((e) => e.tagName.toLowerCase())).toEqual([
       'header',
       'main',
@@ -63,10 +67,8 @@ describe('Sessão: a estrutura', () => {
 })
 
 describe('Sessão: o título', () => {
-  it('o h1 é "Sono de Heloísa", focável por programa, e "Iniciado às 08:48 por Bruno" é a segunda linha em itálico', () => {
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date('2026-11-05T10:00:00'))
-    renderizarRota('/app/sessao', { estadoInicial: sessaoDe('sono') })
+  it('o h1 é "Sono de Heloísa", focável por programa, e "Iniciado às 08:48 por Bruno" é a segunda linha em itálico', async () => {
+    await renderizarRotaPronta('/app/sessao')
 
     const h1 = screen.getByRole('heading', { level: 1 })
     expect(h1.textContent).toBe('Sono de Heloísa')
@@ -77,8 +79,8 @@ describe('Sessão: o título', () => {
     expect(h1.nextElementSibling).toBe(linha)
   })
 
-  it('o "Voltar para Hoje" é um link para /app/hoje com alvo de toque', () => {
-    renderizarRota('/app/sessao')
+  it('o "Voltar para Hoje" é um link para /app/hoje com alvo de toque', async () => {
+    await renderizarRotaPronta('/app/sessao')
 
     const voltar = screen.getByRole('link', { name: 'Voltar para Hoje' })
     expect(voltar.getAttribute('href')).toBe('/app/hoje')
@@ -86,37 +88,38 @@ describe('Sessão: o título', () => {
     expect(voltar.textContent).toBe('Voltar para Hoje')
   })
 
-  it('"Já há uma sessão de X em andamento." aparece quando se chega pelo atalho do Hoje, e some pelo "Ver sessão"', async () => {
-    const { container, unmount } = renderizarRota('/app/hoje')
+  it('"Já há uma sessão de X em andamento." aparece pelo atalho do Hoje, e some pelo "Ver sessão"', async () => {
+    const primeira = await renderizarRotaPronta('/app/hoje')
     fireEvent.click(screen.getByRole('button', { name: 'Iniciar mamada de Heloísa' }))
+    await aguardarCarga()
 
-    await screen.findByRole('heading', { level: 1, name: 'Sono de Heloísa' })
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Sono de Heloísa')
     const aviso = screen.getByText('Já há uma sessão de Sono em andamento.')
-    expect(principal(container).contains(aviso)).toBe(true)
+    expect(principal(primeira.container).contains(aviso)).toBe(true)
     expect(aviso.hasAttribute('role')).toBe(false)
-    unmount()
+    primeira.unmount()
 
-    renderizarRota('/app/hoje')
+    await renderizarRotaPronta('/app/hoje')
     fireEvent.click(screen.getByRole('link', { name: 'Ver sessão' }))
-    await screen.findByRole('heading', { level: 1, name: 'Sono de Heloísa' })
+    await aguardarCarga()
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Sono de Heloísa')
     expect(screen.queryByText(/Já há uma sessão/)).toBeNull()
   })
 
   it('"Voltar para Hoje" leva ao Hoje com o foco no h1', async () => {
-    renderizarRota('/app/sessao')
+    await renderizarRotaPronta('/app/sessao')
 
     fireEvent.click(screen.getByRole('link', { name: 'Voltar para Hoje' }))
+    await aguardarCarga()
 
-    const h1 = await screen.findByRole('heading', { level: 1, name: 'Hoje' })
-    await waitFor(() => expect(document.activeElement).toBe(h1))
+    const h1 = screen.getByRole('heading', { level: 1, name: 'Hoje' })
+    expect(document.activeElement).toBe(h1)
   })
 })
 
 describe('Sessão: o cartão do cronômetro', () => {
-  it('é a seção data-andamento, rotulada por "Duração da sessão", com o cronômetro em Literata e as 3 ações', () => {
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date('2026-11-05T10:00:00'))
-    const { container } = renderizarRota('/app/sessao', { estadoInicial: sessaoDe('sono') })
+  it('é a seção data-andamento, rotulada por "Duração da sessão", com o cronômetro em Literata e as 3 ações', async () => {
+    const { container } = await renderizarRotaPronta('/app/sessao')
 
     const secao = cartao(container)
     expect(secao.tagName).toBe('SECTION')
@@ -129,15 +132,11 @@ describe('Sessão: o cartão do cronômetro', () => {
     expect(timer.getAttribute('aria-live')).toBe('off')
     expect(timer.classList.contains('font-titulo')).toBe(true)
     expect(timer.classList.contains('tabular-nums')).toBe(true)
-    expect([...secao.querySelectorAll('button')].map((b) => b.textContent)).toEqual([
-      'Encerrar',
-      'Encerrar e anotar',
-      'Descartar',
-    ])
+    expect([...secao.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Encerrar', 'Encerrar e anotar', 'Descartar'])
   })
 
-  it('Encerrar é o primário; Encerrar e anotar é o contorno; Descartar é o botão de texto', () => {
-    const { container } = renderizarRota('/app/sessao')
+  it('Encerrar é o primário; Encerrar e anotar é o contorno; Descartar é o botão de texto', async () => {
+    const { container } = await renderizarRotaPronta('/app/sessao')
 
     expect([...container.querySelectorAll('main [data-botao="primario"]')].map((b) => b.textContent)).toEqual(['Encerrar'])
     expect(screen.getByRole('button', { name: 'Encerrar e anotar' }).getAttribute('data-botao')).toBe('contorno')
@@ -145,8 +144,8 @@ describe('Sessão: o cartão do cronômetro', () => {
     for (const b of cartao(container).querySelectorAll('button')) expect(b.classList.contains('alvo-toque')).toBe(true)
   })
 
-  it('"Encerrar e anotar" abre o painel da nota no cartão: o Salvar passa a ser o único primário', () => {
-    const { container } = renderizarRota('/app/sessao')
+  it('"Encerrar e anotar" abre o painel da nota no cartão: o Salvar passa a ser o único primário', async () => {
+    const { container } = await renderizarRotaPronta('/app/sessao')
 
     fireEvent.click(screen.getByRole('button', { name: 'Encerrar e anotar' }))
 
@@ -160,8 +159,8 @@ describe('Sessão: o cartão do cronômetro', () => {
     expect(screen.getByRole('button', { name: 'Descartar' })).toBeTruthy()
   })
 
-  it('Esc fecha o painel da nota e devolve o foco a "Encerrar e anotar"', () => {
-    renderizarRota('/app/sessao')
+  it('Esc fecha o painel da nota e devolve o foco a "Encerrar e anotar"', async () => {
+    await renderizarRotaPronta('/app/sessao')
     fireEvent.click(screen.getByRole('button', { name: 'Encerrar e anotar' }))
 
     fireEvent.keyDown(document.activeElement!, { key: 'Escape' })
@@ -170,8 +169,8 @@ describe('Sessão: o cartão do cronômetro', () => {
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Encerrar e anotar' }))
   })
 
-  it('"Descartar" pergunta no cartão; Esc fecha a pergunta e devolve o foco ao Descartar', () => {
-    const { container } = renderizarRota('/app/sessao')
+  it('"Descartar" pergunta no cartão; Esc fecha a pergunta e devolve o foco ao Descartar', async () => {
+    const { container } = await renderizarRotaPronta('/app/sessao')
     fireEvent.click(screen.getByRole('button', { name: 'Descartar' }))
 
     const pergunta = screen.getByRole('group', { name: 'Descartar esta sessão?' })
@@ -183,30 +182,38 @@ describe('Sessão: o cartão do cronômetro', () => {
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Descartar' }))
   })
 
-  it('a atividade sugerida só aparece no tummy time, dentro do cartão', () => {
-    const tummy = renderizarRota('/app/sessao', { estadoInicial: sessaoDe('tummy', MIN) })
+  it('a atividade sugerida só aparece no tummy time, dentro do cartão', async () => {
+    const tummy = await renderizarRotaPronta('/app/sessao', { ajustarRotina: sessaoDe('tummy', MIN, PESSOAS.juliana.id) })
     const atividade = screen.getByText('Atividade sugerida: Espelho no chão')
     expect(cartao(tummy.container).contains(atividade)).toBe(true)
     tummy.unmount()
 
-    renderizarRota('/app/sessao', { estadoInicial: sessaoDe('sono') })
+    await renderizarRotaPronta('/app/sessao')
     expect(screen.queryByText(/Atividade sugerida/)).toBeNull()
   })
 
-  it('o cronômetro conta a partir do início', () => {
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date('2026-11-05T10:00:00'))
-    renderizarRota('/app/sessao', { estadoInicial: sessaoDe('sono', 5_000) })
+  it('o cronômetro conta a partir do início gravado', async () => {
+    await renderizarRotaPronta('/app/sessao', { ajustarRotina: sessaoDe('sono', 5_000) })
 
     expect(screen.getByRole('timer', { name: 'Duração da sessão' }).textContent).toBe('00:05')
+  })
+
+  it('observador e bebê arquivado veem a sessão sem as três ações, com o texto do papel', async () => {
+    const observador = await renderizarRotaPronta('/app/sessao', { sessao: 'davi', papelDeDavi: 'observador' })
+    expect(screen.queryByRole('button', { name: 'Encerrar' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Descartar' })).toBeNull()
+    expect(screen.getByText('Seu papel nesta família permite só ver os registros.')).toBeTruthy()
+    observador.unmount()
+
+    await renderizarRotaPronta('/app/sessao', { bebeArquivado: true })
+    expect(screen.queryByRole('button', { name: 'Encerrar' })).toBeNull()
+    expect(screen.getByText('Este bebê está arquivado. Os registros ficam só para leitura.')).toBeTruthy()
   })
 })
 
 describe('Sessão: as sessões anteriores', () => {
-  it('sono: três sonecas, com quem, onde e quanto durou', () => {
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date('2026-11-05T10:00:00'))
-    renderizarRota('/app/sessao', { estadoInicial: sessaoDe('sono') })
+  it('sono: três sonecas, com quem, onde e quanto durou', async () => {
+    await renderizarRotaPronta('/app/sessao')
 
     const linhas = within(screen.getByRole('region', { name: 'Sonecas anteriores' })).getAllByRole('listitem')
     expect(linhas.map((li) => [...li.querySelectorAll('p')].map((p) => p.textContent).join(' | '))).toEqual([
@@ -217,31 +224,33 @@ describe('Sessão: as sessões anteriores', () => {
     expect(within(linhas[2]).getByText('3 h 45 min')).toBeTruthy()
   })
 
-  it('mamada e tummy time têm a própria lista', () => {
-    const mamada = renderizarRota('/app/sessao', { estadoInicial: sessaoDe('mamada', MIN) })
+  it('mamada e tummy time têm a própria lista', async () => {
+    const mamada = await renderizarRotaPronta('/app/sessao', { ajustarRotina: sessaoDe('mamada', MIN, PESSOAS.juliana.id) })
     expect(screen.getByRole('region', { name: 'Mamadas anteriores' })).toBeTruthy()
     mamada.unmount()
 
-    renderizarRota('/app/sessao', { estadoInicial: sessaoDe('tummy', MIN) })
+    await renderizarRotaPronta('/app/sessao', { ajustarRotina: sessaoDe('tummy', MIN, PESSOAS.juliana.id) })
     expect(screen.getByRole('region', { name: 'Tummy time anteriores' })).toBeTruthy()
   })
 
-  it('encerrar põe a sessão no topo da lista e Desfazer a tira', async () => {
-    renderizarRota('/app/sessao')
+  it('encerrar põe a sessão no topo da lista da próxima sessão do mesmo tipo', async () => {
+    await renderizarRotaPronta('/app/sessao')
     fireEvent.click(screen.getByRole('button', { name: 'Encerrar' }))
-    await screen.findByRole('heading', { level: 1, name: 'Hoje' })
+    await aguardarCarga()
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Hoje')
 
     fireEvent.click(screen.getByRole('button', { name: 'Iniciar sono de Heloísa' }))
-    await screen.findByRole('heading', { level: 1, name: 'Sono de Heloísa' })
+    await aguardarCarga()
 
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Sono de Heloísa')
     const primeira = within(screen.getByRole('region', { name: 'Sonecas anteriores' })).getAllByRole('listitem')[0]
-    expect(primeira.textContent).toContain('agora há pouco')
+    expect(primeira.textContent).toContain('08:48 às 10:00')
   })
 })
 
 describe('Sessão: sem sessão', () => {
-  it('h1 "Nenhuma sessão em andamento", a linha de como começar, o link de volta e o desenho da noite', () => {
-    const { container } = renderizarRota('/app/sessao', { estadoInicial: semSessao() })
+  it('h1 "Nenhuma sessão em andamento", a linha de como começar, o link de volta e o desenho da noite', async () => {
+    const { container } = await renderizarRotaPronta('/app/sessao', { ajustarRotina: semSessaoEmAndamento })
 
     const h1 = screen.getByRole('heading', { level: 1 })
     expect(h1.textContent).toBe('Nenhuma sessão em andamento')
@@ -255,27 +264,57 @@ describe('Sessão: sem sessão', () => {
     expect(imagem.getAttribute('alt')!.length).toBeGreaterThan(10)
   })
 
-  it('?tipo= inválido ou ausente mostra o estado vazio; ?tipo= válido começa uma vez e sai da URL', async () => {
-    const vazio = renderizarRota('/app/sessao?tipo=banho', { estadoInicial: semSessao() })
-    expect((await screen.findByRole('heading', { level: 1 })).textContent).toBe('Nenhuma sessão em andamento')
+  it('id que não é UUID, de sessão encerrada, de pontual ou sem acesso mostra o estado vazio', async () => {
+    const { fixture, unmount: sairDaPrimeira } = await renderizarRotaPronta('/app/sessao?id=banana')
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Nenhuma sessão em andamento')
+    sairDaPrimeira()
+    const encerrada = fixture.registros.find((r) => r.tipo === 'sono' && r.fim !== null)!
+    const pontual = fixture.registros.find((r) => r.tipo === 'fralda')!
+    for (const id of [encerrada.id, pontual.id, 'c3333333-3333-4333-8333-333333333333']) {
+      const outra = await renderizarRotaPronta(`/app/sessao?id=${id}`)
+      expect(screen.getByRole('heading', { level: 1 }).textContent, id).toBe('Nenhuma sessão em andamento')
+      outra.unmount()
+    }
+  })
+
+  it('?id= abre a sessão em andamento daquele registro, e fechar a aba e abrir a mesma URL mostra a mesma sessão', async () => {
+    const primeira = await renderizarRotaPronta('/app/sessao')
+    const alvo = primeira.fixture.registros.find((r) => r.tipo === 'sono' && r.fim === null)!
+    primeira.unmount()
+
+    await renderizarRotaPronta(`/app/sessao?id=${alvo.id}`, { mundo: primeira })
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Sono de Heloísa')
+    expect(screen.getByRole('timer', { name: 'Duração da sessão' }).textContent).toBe('1:12:00')
+  })
+
+  it('?tipo= inválido ou ausente mostra o estado vazio; ?tipo= válido começa uma vez e a URL passa a ter o id', async () => {
+    const vazio = await renderizarRotaPronta('/app/sessao?tipo=banho', { ajustarRotina: semSessaoEmAndamento })
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Nenhuma sessão em andamento')
     vazio.unmount()
 
-    const { roteador } = renderizarRota('/app/sessao?tipo=tummy', { estadoInicial: semSessao() })
-    const h1 = await screen.findByRole('heading', { level: 1, name: 'Tummy time de Heloísa' })
+    const { roteador } = await renderizarRotaPronta('/app/sessao?tipo=tummy', { ajustarRotina: semSessaoEmAndamento })
+    const h1 = screen.getByRole('heading', { level: 1, name: 'Tummy time de Heloísa' })
     expect(screen.getAllByRole('timer')).toHaveLength(1)
     expect(screen.getByText('Atividade sugerida: Espelho no chão')).toBeTruthy()
-    await waitFor(() => expect(roteador.state.location.search).toBe(''))
+    expect(roteador.state.location.search).toMatch(/^\?id=[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/)
     // O h1 que aparece depois do primeiro render também é alvo de foco por programa.
     expect(h1.getAttribute('tabindex')).toBe('-1')
   })
 
+  it('?tipo= com id ou com sessão em andamento é ignorado', async () => {
+    const { roteador } = await renderizarRotaPronta('/app/sessao?tipo=mamada')
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Sono de Heloísa')
+    expect(roteador.state.location.search).toBe('?tipo=mamada')
+  })
+
   it('"Ver sessão" no Hoje leva o foco ao h1 da Sessão', async () => {
-    renderizarRota('/app/hoje')
+    await renderizarRotaPronta('/app/hoje')
 
     fireEvent.click(screen.getByRole('link', { name: 'Ver sessão' }))
+    await aguardarCarga()
 
-    const h1 = await screen.findByRole('heading', { level: 1, name: 'Sono de Heloísa' })
-    await waitFor(() => expect(document.activeElement).toBe(h1))
+    const h1 = screen.getByRole('heading', { level: 1, name: 'Sono de Heloísa' })
+    expect(document.activeElement).toBe(h1)
   })
 })
 
@@ -337,8 +376,8 @@ describe('Sessão: o tamanho do cronômetro pelo número de caracteres (E2)', ()
   ]
 
   for (const [texto, ms, tamanho] of exemplos) {
-    it(`"${texto}" (${texto.length} caracteres) leva data-tamanho="${tamanho}" no role="timer"`, () => {
-      renderizarRota('/app/sessao', { estadoInicial: sessaoDe('sono', ms) })
+    it(`"${texto}" (${texto.length} caracteres) leva data-tamanho="${tamanho}" no role="timer"`, async () => {
+      await renderizarRotaPronta('/app/sessao', { ajustarRotina: sessaoDe('sono', ms) })
 
       const timer = screen.getByRole('timer', { name: 'Duração da sessão' })
       expect(timer.textContent).toBe(texto)
@@ -346,18 +385,15 @@ describe('Sessão: o tamanho do cronômetro pelo número de caracteres (E2)', ()
     })
   }
 
-  it('o atributo acompanha o texto quando a duração passa de 7 para 8 caracteres (9:59:59 → 10:00:00)', () => {
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date('2026-11-05T10:00:00'))
-    const inicio = Date.now()
-    renderizarRota('/app/sessao', {
-      estadoInicial: { ...criarEstadoInicial(inicio), sessao: { tipo: 'sono', inicio: inicio - (10 * HORA - 2000), pessoa: 'Bruno' } },
-    })
+  it('o atributo acompanha o texto quando a duração passa de 7 para 8 caracteres (9:59:59 → 10:00:00)', async () => {
+    await renderizarRotaPronta('/app/sessao', { ajustarRotina: sessaoDe('sono', 10 * HORA - 2000) })
     const timer = screen.getByRole('timer', { name: 'Duração da sessão' })
     expect(timer.getAttribute('data-tamanho')).toBe('normal')
+
     act(() => {
       vi.advanceTimersByTime(3000)
     })
+
     expect(screen.getByRole('timer', { name: 'Duração da sessão' }).textContent).toBe('10:00:01')
     expect(screen.getByRole('timer', { name: 'Duração da sessão' }).getAttribute('data-tamanho')).toBe('longo')
   })

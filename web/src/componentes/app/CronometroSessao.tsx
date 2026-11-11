@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { NotebookPen } from 'lucide-react'
+import { COMUM, SESSOES } from '../../conteudo/rotina.ts'
 import { Botao } from '../base/Botao.tsx'
 import { ALVO_APP } from './alvo.ts'
 import { tamanhoDoCronometro } from '../../prototipo/formatar.ts'
@@ -10,11 +11,18 @@ interface Props {
   /** "mm:ss" ou "h:mm:ss", já formatado. O leitor de tela lê o tempo inteiro. */
   cronometro: string
   atividade?: string
-  /** Encerrar a sessão; `comNota` é verdadeiro quando a nota salva tem texto. */
-  aoEncerrar: (comNota: boolean) => void
+  /** Encerrar a sessão com o texto da nota já cortado nas pontas; `''` encerra sem nota. */
+  aoEncerrar: (nota: string) => void
   aoDescartar: () => void
+  /** Quais ações a pessoa pode fazer nesta sessão (matriz de papéis); a que não pode não aparece. */
+  acoes?: { encerrar: boolean; descartar: boolean }
+  /** Uma escrita em curso: as ações ficam com `aria-disabled="true"` e o toque não faz nada. */
+  ocupado?: boolean
   className?: string
 }
+
+// A nota cabe em 500 caracteres depois de cortar as pontas (o limite do banco).
+const LIMITE_DA_NOTA = 500
 
 // O tamanho do número cai com 8 ou mais caracteres ("10:00:00"): os algarismos são tabulares, então a
 // largura só depende de quantos são.
@@ -29,12 +37,22 @@ const TAMANHO = {
  * Descartar (texto). A nota e a pergunta de descartar abrem no próprio cartão, abaixo das ações: o foco
  * entra no painel ao abrir e volta ao botão que o abriu ao fechar (também com Esc).
  */
-export function CronometroSessao({ cronometro, atividade, aoEncerrar, aoDescartar, className }: Props) {
+export function CronometroSessao({
+  cronometro,
+  atividade,
+  aoEncerrar,
+  aoDescartar,
+  acoes = { encerrar: true, descartar: true },
+  ocupado = false,
+  className,
+}: Props) {
   const idRotulo = useId()
   const idCampo = useId()
   const idDica = useId()
+  const idErro = useId()
   const idPergunta = useId()
   const [painel, setPainel] = useState<Painel | null>(null)
+  const [erroDaNota, setErroDaNota] = useState<string | null>(null)
   const painelAnterior = useRef<Painel | null>(null)
   const cartao = useRef<HTMLElement>(null)
   const campoNota = useRef<HTMLTextAreaElement>(null)
@@ -49,9 +67,18 @@ export function CronometroSessao({ cronometro, atividade, aoEncerrar, aoDescarta
     painelAnterior.current = painel
   }, [painel])
 
+  // A nota é validada antes da 1ª chamada: acima de 500, a mensagem fica no campo, nada é enviado e a
+  // sessão continua em andamento, com o texto no campo para corrigir.
   function salvarNota() {
-    // O texto da nota não é guardado nem mostrado: o protótipo só registra que ela existe.
-    aoEncerrar((campoNota.current?.value.trim() ?? '') !== '')
+    if (ocupado) return
+    const texto = (campoNota.current?.value ?? '').trim()
+    if (texto.length > LIMITE_DA_NOTA) {
+      setErroDaNota(SESSOES.notaLonga)
+      campoNota.current?.focus()
+      return
+    }
+    setErroDaNota(null)
+    aoEncerrar(texto)
   }
 
   // Esc fecha o painel aberto (a nota ou a pergunta); o efeito acima devolve o foco ao botão que o abriu.
@@ -106,12 +133,19 @@ export function CronometroSessao({ cronometro, atividade, aoEncerrar, aoDescarta
             ref={campoNota}
             id={idCampo}
             rows={3}
-            aria-describedby={idDica}
+            aria-describedby={erroDaNota ? `${idErro} ${idDica}` : idDica}
+            aria-invalid={erroDaNota ? true : undefined}
+            readOnly={ocupado}
             className="mt-3 block min-h-[6rem] w-full resize-y rounded-campo border-[1.5px] border-(--cor-texto-2) bg-(--cor-cartao) px-4 py-3 text-[17px] leading-[25px] text-(--cor-texto) hover:border-(--cor-texto) focus-visible:border-(--cor-texto)"
           />
+          {erroDaNota ? (
+            <p id={idErro} className="mt-2 text-[15px] leading-[22px] font-medium" data-erro-da-nota="">
+              {erroDaNota}
+            </p>
+          ) : null}
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            <Botao tamanho="app" className={`min-w-[8.5rem] ${ALVO_APP}`} onClick={salvarNota}>
-              Salvar
+            <Botao tamanho="app" className={`min-w-[8.5rem] ${ALVO_APP}`} desativado={ocupado} onClick={salvarNota}>
+              {ocupado ? COMUM.salvando : COMUM.salvar}
             </Botao>
             <Botao variante="texto" tamanho="app" className={ALVO_APP} onClick={() => setPainel(null)}>
               Cancelar
@@ -121,12 +155,17 @@ export function CronometroSessao({ cronometro, atividade, aoEncerrar, aoDescarta
       ) : null}
 
       <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 lg:mt-10" data-acoes="">
-        {painel !== 'nota' ? (
-          <Botao tamanho="app" className={`w-full sm:w-auto sm:min-w-[8.5rem] ${ALVO_APP}`} onClick={() => aoEncerrar(false)}>
+        {painel !== 'nota' && acoes.encerrar ? (
+          <Botao
+            tamanho="app"
+            className={`w-full sm:w-auto sm:min-w-[8.5rem] ${ALVO_APP}`}
+            desativado={ocupado}
+            onClick={() => aoEncerrar('')}
+          >
             Encerrar
           </Botao>
         ) : null}
-        {painel !== 'nota' ? (
+        {painel !== 'nota' && acoes.encerrar ? (
           <Botao
             variante="contorno"
             tamanho="app"
@@ -138,7 +177,7 @@ export function CronometroSessao({ cronometro, atividade, aoEncerrar, aoDescarta
             <span>Encerrar e anotar</span>
           </Botao>
         ) : null}
-        {painel !== 'descartar' ? (
+        {painel !== 'descartar' && acoes.descartar ? (
           <Botao
             variante="texto"
             tamanho="app"
@@ -163,7 +202,7 @@ export function CronometroSessao({ cronometro, atividade, aoEncerrar, aoDescarta
           </p>
           <p className="mt-0.5 text-[15px] leading-[22px] text-(--cor-texto-2)">O tempo não vai para o dia nem para o histórico.</p>
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            <Botao variante="contorno" tamanho="app" className={ALVO_APP} onClick={aoDescartar}>
+            <Botao variante="contorno" tamanho="app" className={ALVO_APP} desativado={ocupado} onClick={aoDescartar}>
               Descartar
             </Botao>
             <Botao variante="texto" tamanho="app" className={ALVO_APP} data-acao="manter" onClick={() => setPainel(null)}>

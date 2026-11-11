@@ -84,7 +84,7 @@ export function MolduraLogada({ ocupado = false, children }: Props) {
               {CABECALHO.conta}
             </NavLink>
             <Link to="/app/hoje" className={LINK_DA_BARRA}>
-              {CABECALHO.prototipo}
+              {CABECALHO.irParaHoje}
             </Link>
           </div>
           <BotaoSair />
