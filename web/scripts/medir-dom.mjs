@@ -1636,6 +1636,54 @@ export function a2(nos, doc) {
   })
 }
 
+/** O ar mínimo entre a base do texto da última âncora do índice e o fio da abertura, em 1440 (px). */
+export const FOLGA_ULTIMA_ANCORA_FIO = 16
+
+/**
+ * A-2b (volta 3, só 1440, no topo da página): (1) o texto da última âncora do índice (o retângulo do texto do `<a>`, e não a caixa de
+ * toque) termina a `FOLGA_ULTIMA_ANCORA_FIO` px ou mais do fio da abertura; (2) a caixa de toque da última âncora (44 px, 56 na
+ * madrugada) não passa do fio (base da caixa <= topo do fio). O fio é a borda de baixo do `.sb-abertura-base`, o que fecha a abertura:
+ * o topo dele é a base da caixa menos a espessura da borda. A "última" é a de maior `y`, esteja onde estiver na lista. Abaixo de 992
+ * não se aplica (o índice em linha de 390 tem o A-2, de espaço entre os textos). Falha fechada: nenhuma âncora, âncora sem o
+ * retângulo de caixa, a última sem o retângulo do texto, sem o fio da abertura e fio sem a espessura da borda lida reprovam.
+ */
+export function a2b(nos, doc) {
+  return comDoc('A-2b', doc, () => {
+    if (doc.largura < 992) return naoAplicavel('A-2b', 'o critério é de 1440: o índice abaixo de 992 fica em linha e o A-2 mede o espaço entre os textos')
+    const ancoras = nosVisiveis(nos, 'ancoraLateral')
+    if (ancoras.length === 0) return falhaFechada('A-2b', 'nenhuma âncora do índice na coluna lateral (.sb-abertura-lateral a[href^="#"])')
+    const semCaixa = ancoras.find((a) => !rectValido(a.rect))
+    if (semCaixa) return falhaFechada('A-2b', `${descrever(semCaixa)}: âncora sem o retângulo da caixa (rect), sem como achar a última`)
+    const ultima = [...ancoras].sort((a, b) => a.rect.y - b.rect.y || a.rect.x - b.rect.x).at(-1)
+    const texto = ultima.rectTexto
+    if (!rectValido(texto) || !(texto.h > 0)) {
+      return falhaFechada('A-2b', `${descrever(ultima)}: sem o retângulo do texto da última âncora (rectTexto), sem como medir a folga até o fio`)
+    }
+    const base = nosVisiveis(nos, 'aberturaBase').find((no) => rectValido(no.rect))
+    if (!base) return falhaFechada('A-2b', 'nenhum fio da abertura (.sb-abertura-base) com retângulo')
+    const espessura = px(base.estilo?.borderBottomWidth)
+    if (!(espessura > 0)) return falhaFechada('A-2b', `fio da abertura sem a borda de baixo lida (border-bottom-width ${JSON.stringify(base.estilo?.borderBottomWidth ?? null)})`)
+    const topoDoFio = base.rect.y + base.rect.h - espessura
+    const falhas = []
+    const baseDoTexto = texto.y + texto.h
+    const folga = topoDoFio - baseDoTexto
+    if (folga < FOLGA_ULTIMA_ANCORA_FIO - TOL_FOLGA) {
+      falhas.push({
+        no: descrever(ultima),
+        motivo: `o texto da última âncora (${descrever(ultima)}) termina em y=${baseDoTexto.toFixed(1)} e o fio da abertura começa em y=${topoDoFio.toFixed(1)}: folga de ${folga.toFixed(1)} px (o mínimo é ${FOLGA_ULTIMA_ANCORA_FIO})`,
+      })
+    }
+    const baseDaCaixa = ultima.rect.y + ultima.rect.h
+    if (baseDaCaixa > topoDoFio + TOL_FOLGA) {
+      falhas.push({
+        no: `${descrever(ultima)} (caixa de toque)`,
+        motivo: `a caixa de toque da última âncora (${descrever(ultima)}) termina em y=${baseDaCaixa.toFixed(1)} e o fio da abertura começa em y=${topoDoFio.toFixed(1)}: passa ${(baseDaCaixa - topoDoFio).toFixed(1)} px do fio (não pode passar)`,
+      })
+    }
+    return resultadoComNumeros('A-2b', falhas, `o texto da última âncora fica a ${folga.toFixed(1)} px do fio da abertura (mínimo ${FOLGA_ULTIMA_ANCORA_FIO}) e a caixa de toque dela não passa do fio`)
+  })
+}
+
 /** A-3: todo título de seção tem 48 px (36 em 390), em Instrument Serif, e começa em x de c2 (169,6). */
 export function a3(nos, doc) {
   return comDoc('A-3', doc, () => {
@@ -1706,16 +1754,40 @@ export function a5(nos) {
   return resultadoDeTela('A-5', falhas, 'nenhum border-style dashed; o botão Excluir, quando desativado, tem aria-disabled="true"')
 }
 
-/** A-6: a altura total em 1440, com o rodapé, é ≤ 3.200 px. */
+/** O teto do A-6 (px): a altura do `<main>` em 1440. */
+export const ALTURA_MAXIMA_DO_MAIN = 3200
+
+/**
+ * A-6: a altura do `<main>` em 1440 (a caixa do elemento, sem o rodapé) é ≤ 3.200 px. Decisão do líder (volta 3): o rodapé
+ * (≈ 895 px, da casca congelada) não conta; o limite de antes (a altura total, com o rodapé) era inalcançável sem cortar seção.
+ * A leitura antiga (o maior entre a altura do documento e o fim do rodapé: 3.967 claro, 3.991 madrugada no HEAD) segue no
+ * resultado (`leitura_antiga` e no motivo) só como informação: nunca reprova, e sem ela o veredito é o mesmo. Falha fechada:
+ * documento de 1440 sem `<main>` visível, ou com `<main>` sem altura medida, reprova. Em 390 não se aplica.
+ */
 export function a6(nos, doc) {
   return comDoc('A-6', doc, () => {
     if (doc.largura < 992) return naoAplicavel('A-6', 'o critério é de 1440')
+    const mains = nosDaLista(nos).filter((no) => no?.tag === 'main' && visivel(no))
+    if (mains.length === 0) return falhaFechada('A-6', 'nenhum <main> no documento (a altura medida é a do main, sem o rodapé)')
+    const principal = mains.find((no) => ehNumero(no.rect?.h) && no.rect.h > 0)
+    if (!principal) return falhaFechada('A-6', 'sem a altura medida do main (retângulo ausente, ilegível ou de altura nula)')
+    const altura = principal.rect.h
     const rodape = nosDaLista(nos).find((no) => marca(no, 'rodape') && rectValido(no.rect))
-    const candidatas = [doc.alturaTotal, rodape ? rodape.rect.y + rodape.rect.h : undefined].filter(Number.isFinite)
-    if (candidatas.length === 0) return falhaFechada('A-6', 'altura total não medida')
-    const total = Math.max(...candidatas)
-    const ok = total <= 3200.5
-    return { regra: 'A-6', ok, motivo: `altura total de ${total.toFixed(0)} px (máximo 3200)`, nos_com_falha: ok ? [] : ['documento'] }
+    const antigas = [doc.alturaTotal, rodape ? rodape.rect.y + rodape.rect.h : undefined].filter(Number.isFinite)
+    const ok = altura <= ALTURA_MAXIMA_DO_MAIN + 0.5
+    const resultadoDoMain = {
+      regra: 'A-6',
+      ok,
+      motivo: `altura do main de ${altura.toFixed(0)} px (máximo ${ALTURA_MAXIMA_DO_MAIN})`,
+      nos_com_falha: ok ? [] : ['main'],
+    }
+    if (antigas.length === 0) return resultadoDoMain
+    const antiga = Math.max(...antigas)
+    return {
+      ...resultadoDoMain,
+      motivo: `${resultadoDoMain.motivo}; leitura antiga, só informação: altura total com o rodapé de ${antiga.toFixed(0)} px (não reprova)`,
+      leitura_antiga: antiga,
+    }
   })
 }
 
@@ -1887,11 +1959,11 @@ export function m6(nos) {
 /** Os critérios de cada caso novo, na ordem; os reaproveitados (C-4, R-4, B-4, A-7) são os mesmos ids. */
 // Volta 3 (D3): as telas de formulário somam a folga da mensagem, do controle e do anel; as de fuso, o texto do fuso.
 export const CRITERIOS_DO_CASO = {
-  entrar: ['E-1', 'E-2', 'E-3', 'E-4', 'E-5', 'E-6', 'E-7', 'D3-fio', 'D3-controle', 'D3-anel'],
-  criar_conta: ['E-1', 'E-2', 'E-3', 'E-5', 'E-6', 'E-7', 'C-1', 'C-2', 'C-3', 'D3-fio', 'D3-controle', 'D3-anel'],
-  recuperar_acesso: ['E-1', 'E-2', 'E-3', 'E-5', 'E-6', 'E-7', 'R-1', 'R-2', 'R-3', 'D3-fio', 'D3-controle', 'D3-anel', 'D4-vao'],
-  comecar_seu_nome: ['E-1', 'E-3', 'E-4', 'E-5', 'E-6', 'E-7', 'B-1', 'B-2', 'B-3', 'D3-fio', 'D3-controle', 'D3-anel', 'D3-fuso'],
-  conta: ['A-1', 'A-2', 'A-3', 'A-4', 'A-5', 'A-6', 'D3-fio', 'D3-controle', 'D3-anel', 'D3-fuso'],
+  entrar: ['E-1', 'E-2', 'E-3', 'E-4', 'E-5', 'E-6', 'E-7', 'D3-fio', 'D3-controle', 'D3-anel', 'D5-erro', 'D5-anel', 'D6-selecao'],
+  criar_conta: ['E-1', 'E-2', 'E-3', 'E-5', 'E-6', 'E-7', 'C-1', 'C-2', 'C-3', 'D3-fio', 'D3-controle', 'D3-anel', 'D5-erro', 'D5-anel', 'D6-selecao'],
+  recuperar_acesso: ['E-1', 'E-2', 'E-3', 'E-5', 'E-6', 'E-7', 'R-1', 'R-2', 'R-3', 'D3-fio', 'D3-controle', 'D3-anel', 'D4-vao', 'D5-erro', 'D5-anel', 'D6-selecao'],
+  comecar_seu_nome: ['E-1', 'E-3', 'E-4', 'E-5', 'E-6', 'E-7', 'B-1', 'B-2', 'B-3', 'D3-fio', 'D3-controle', 'D3-anel', 'D3-fuso', 'D5-erro', 'D5-anel', 'D6-selecao'],
+  conta: ['A-1', 'A-2', 'A-2b', 'A-3', 'A-4', 'A-5', 'A-6', 'D3-fio', 'D3-controle', 'D3-anel', 'D3-fuso', 'D5-erro', 'D5-anel', 'D6-selecao'],
 }
 const CRITERIOS_DA_MADRUGADA = ['M-1', 'M-2', 'M-3', 'M-4', 'M-5', 'M-6']
 
@@ -1914,6 +1986,9 @@ const REGRAS_DE_TELA = {
   'D3-anel': ({ doc, caso }) => d3Anel(doc, caso),
   'D3-fuso': ({ doc, caso }) => d3Fuso(doc, caso),
   'D4-vao': ({ doc }) => d4Vao(doc),
+  'D5-erro': ({ doc }) => d5Erro(doc),
+  'D5-anel': ({ doc }) => d5Anel(doc),
+  'D6-selecao': ({ doc }) => d6Selecao(doc),
   'C-1': ({ nos }) => c1(nos),
   'C-2': ({ nos, doc }) => c2(nos, doc),
   'C-3': ({ nos }) => c3(nos),
@@ -1925,6 +2000,7 @@ const REGRAS_DE_TELA = {
   'B-3': ({ nos }) => b3(nos),
   'A-1': ({ nos, doc }) => a1(nos, doc),
   'A-2': ({ nos, doc }) => a2(nos, doc),
+  'A-2b': ({ nos, doc }) => a2b(nos, doc),
   'A-3': ({ nos, doc }) => a3(nos, doc),
   'A-4': ({ nos }) => a4(nos),
   'A-5': ({ nos }) => a5(nos),
@@ -2345,6 +2421,8 @@ export function coletarNaPagina() {
         // O miolo de um botão de moldura dupla é parte do botão (M-3).
         dentroDeBotao: el.parentElement !== null && el.parentElement.closest('button, [data-botao], [role="button"]') !== null,
         ancoraLateral: el.matches('.sb-abertura-lateral a[href^="#"]'),
+        // Volta 3 (A-2b): o fio que fecha a abertura (a borda de baixo do `.sb-abertura-base`).
+        aberturaBase: el.matches('.sb-abertura-base'),
         etiqueta: el.matches('.sb-etiqueta'),
         avisoDemo: el.matches('[data-aviso="demonstracao"], [data-aviso="banco-de-demonstracao"]'),
         linha: el.matches('.sb-linha'),
@@ -2687,6 +2765,271 @@ export function lerGeometriaDosCamposNaPagina() {
 }
 
 // ---------------------------------------------------------------------------------------------
+// MAT-44d-3, volta 3, defeito D5 (só em 390): o erro do campo ficava apertado contra o que vem depois (0 px até o rótulo da
+// linha seguinte, 8 px até o botão) e o anel de foco do campo era mais estreito que o campo (a entrada ocupava x 32–358 num
+// campo de x 16–374, e o anel passa 4 px: 28–362).
+//   D5-erro: com o erro à vista (depois do envio vazio), próximo.top - erro.bottom >= 16, onde `erro` é a caixa do
+//            `.sb-campo-erro` e `próximo` é o primeiro elemento visível depois dele na página (o rótulo da linha seguinte, o
+//            aceite dos termos ou o botão de envio).
+//   D5-anel: com o foco no controle, a caixa do anel (a do controle + outline-offset + outline-width) é a do campo: x de 16 a
+//            374 (a área útil de 358 px), com 1 px de tolerância.
+// Os dois são "não aplicável" de 768 para cima (o desenho de 1440 é de outro passo) e reprovam fechado abaixo de 768 numa largura
+// que não é a de 390. Falham fechado: leitura ausente, nenhum erro visível, erro sem caixa, sem próximo elemento, controle sem
+// retângulo, sem foco, sem outline.
+
+/** O ar mínimo entre a base do erro do campo e o topo do que vem depois dele (px). */
+export const FOLGA_DEPOIS_DO_ERRO = 16
+/** A diferença que o anel pode ter da caixa do campo, em cada lado (px). */
+export const TOLERANCIA_DO_ANEL = 1
+/** A largura da janela em que o D5 vale (o celular de referência). */
+const LARGURA_DO_D5 = 390
+
+/** Fora de 390 o D5 não mede: de 768 para cima não se aplica, e abaixo de 768 numa largura diferente reprova fechado. */
+function foraDoD5(regra, doc) {
+  if (!celularDe(doc)) return naoAplicavel(regra, 'o desenho de 1440 é de outro passo: a mensagem mora dentro da linha de 112 px')
+  if (doc.largura !== LARGURA_DO_D5) {
+    return falhaFechada(regra, `a largura da janela é ${doc.largura} px: o critério só vale em ${LARGURA_DO_D5} (o desenho de 358 px de área útil)`)
+  }
+  return null
+}
+
+/**
+ * D5-erro: depois do envio vazio (`doc.envio.vazio.erros`, lido por `lerErrosDeCampoNaPagina`), cada erro de campo tem 16 px ou
+ * mais até o topo do primeiro elemento visível depois dele. A medida é a da caixa do `.sb-campo-erro` (24 px de linha) até o topo
+ * do próximo, não a da tinta.
+ */
+export function d5Erro(doc) {
+  return comDoc('D5-erro', doc, () => {
+    const fora = foraDoD5('D5-erro', doc)
+    if (fora) return fora
+    const erros = doc.envio?.vazio?.erros
+    if (!Array.isArray(erros)) return falhaFechada('D5-erro', 'sem a leitura dos erros depois do envio vazio (doc.envio.vazio.erros)')
+    if (erros.length === 0) return falhaFechada('D5-erro', 'nenhum erro visível depois do envio vazio (sem ele não há o que medir)')
+    const falhas = []
+    erros.forEach((erro, i) => {
+      const nome = `erro ${i + 1}`
+      if (!erro || typeof erro !== 'object' || !ehNumero(erro.top) || !ehNumero(erro.bottom)) {
+        falhas.push({ no: nome, motivo: `${nome}: sem a caixa do erro (topo ou base ilegível)` })
+        return
+      }
+      const dele = `o erro "${erro.texto ?? ''}"`
+      const proximo = erro.proximo
+      if (!proximo || typeof proximo !== 'object' || !ehNumero(proximo.top)) {
+        falhas.push({ no: nome, motivo: `${dele} sem o próximo elemento (nenhum elemento visível depois dele, ou o topo dele ilegível)` })
+        return
+      }
+      const folga = proximo.top - erro.bottom
+      if (folga < FOLGA_DEPOIS_DO_ERRO - TOL_FOLGA) {
+        falhas.push({
+          no: nome,
+          motivo: `${dele} termina em y=${erro.bottom.toFixed(1)} e ${proximo.descricao ?? 'o próximo elemento'} começa em y=${proximo.top.toFixed(1)}: folga de ${folga.toFixed(1)} px (o mínimo é ${FOLGA_DEPOIS_DO_ERRO})`,
+        })
+      }
+    })
+    return resultadoComNumeros('D5-erro', falhas, `cada erro de campo tem ${FOLGA_DEPOIS_DO_ERRO} px ou mais até o elemento seguinte, depois do envio vazio`)
+  })
+}
+
+/**
+ * D5-anel: o anel de foco de cada controle (a caixa dele ampliada por `outline-offset` + `outline-width`, lidos do estilo
+ * calculado com o controle em foco) é a caixa do campo: da borda esquerda à borda direita da área útil (x de 16 a 374 em 390),
+ * com `TOLERANCIA_DO_ANEL` de diferença em cada lado. Mede em repouso e depois do envio vazio, em cada linha de campo.
+ */
+export function d5Anel(doc) {
+  return comDoc('D5-anel', doc, () => {
+    const fora = foraDoD5('D5-anel', doc)
+    if (fora) return fora
+    const esquerda = xDaColuna(1, doc.largura, doc.clientWidth)
+    const direita = esquerda + areaUtilDe(doc.largura, doc.clientWidth)
+    const falhas = medirGeometriaDosCampos(doc, '', { controle: true, exigirMensagem: false }, ({ campo, falhar }) => {
+      const c = campo.controle
+      if (c.focou !== true) return falhar('não recebeu foco, sem como medir o anel')
+      if (c.outlineStyle === undefined || c.outlineStyle === '' || c.outlineStyle === 'none') return falhar('sem outline no foco (o anel não aparece)')
+      const largura = px(c.outlineWidth)
+      const recuo = px(c.outlineOffset)
+      if (!(largura > 0) || !ehNumero(recuo)) return falhar(`largura ou offset do anel ilegível (${c.outlineWidth} e ${c.outlineOffset}), sem como medir`)
+      const alcance = largura + recuo
+      const lado = (nome, anel, campoX, paraFora) => {
+        const diferenca = anel - campoX
+        if (Math.abs(diferenca) <= TOLERANCIA_DO_ANEL + 0.01) return
+        const sentido = paraFora(diferenca) ? 'para fora' : 'para dentro'
+        falhar(`o anel de foco ${nome} em x=${anel.toFixed(1)} e o campo em x=${campoX.toFixed(1)} (${Math.abs(diferenca).toFixed(1)} px ${sentido}; a tolerância é de ${TOLERANCIA_DO_ANEL})`)
+      }
+      lado('começa', c.left - alcance, esquerda, (d) => d < 0)
+      lado('termina', c.right + alcance, direita, (d) => d > 0)
+    })
+    return resultadoComNumeros('D5-anel', falhas, `o anel de foco de cada controle é a caixa do campo (x de ${esquerda.toFixed(1)} a ${direita.toFixed(1)}, ±${TOLERANCIA_DO_ANEL} px)`)
+  })
+}
+
+/**
+ * Os erros de campo à vista (D5-erro): para cada `.sb-campo-erro` com texto e visível, a caixa dele (`top`, `bottom`, nas coordenadas
+ * da página) e o primeiro elemento visível depois dele (`proximo`: `{ descricao, top }`, nulo se não houver). O "depois" é o que
+ * começa a partir do topo do erro (o que está acima dele, como o controle da mesma linha, não entra) e o próximo é o de menor topo.
+ * O topo de um elemento em linha (a ligação do aceite dos termos, com recuo vertical) é o do texto dele, e não o da caixa com o
+ * recuo. Candidatos: os de `main` que o E-7 também olha (rótulo, controle, botão, ligação, título, parágrafo, item, alerta), com
+ * conteúdo e visíveis. Não escreve nada na página. Sem fechamento: é serializada por `toString()`.
+ */
+export function lerErrosDeCampoNaPagina() {
+  const sy = window.scrollY
+  const um = (n) => Math.round(n * 10) / 10
+  const texto = (el) => (el.textContent ?? '').replace(/\s+/g, ' ').trim()
+  const clipZerado = (clip) => /^rect\(\s*0(px)?[\s,]+0(px)?[\s,]+0(px)?[\s,]+0(px)?\s*\)$/.test(clip ?? '')
+  const aparece = (el) => {
+    const r = el.getBoundingClientRect()
+    const cs = getComputedStyle(el)
+    return r.width > 2 && r.height > 2 && cs.visibility !== 'hidden' && cs.display !== 'none' && !clipZerado(cs.clip)
+  }
+  const topoDe = (el) => {
+    if (getComputedStyle(el).display === 'inline') {
+      const faixa = document.createRange()
+      faixa.selectNodeContents(el)
+      const r = faixa.getBoundingClientRect()
+      if (r.width > 0 || r.height > 0) return r.top
+    }
+    return el.getBoundingClientRect().top
+  }
+  const comConteudo = (el) => /^(INPUT|SELECT|BUTTON)$/.test(el.tagName) || texto(el) !== ''
+  const candidatos = [...document.querySelectorAll('main label, main input, main select, main button, main a, main h1, main h2, main p, main li, main [role="alert"]')].filter(
+    (el) => aparece(el) && comConteudo(el),
+  )
+  const erros = []
+  for (const el of document.querySelectorAll('.sb-campo-erro')) {
+    const conteudo = texto(el)
+    if (conteudo === '' || !aparece(el)) continue
+    const r = el.getBoundingClientRect()
+    let proximo = null
+    for (const o of candidatos) {
+      if (o === el || o.contains(el) || el.contains(o)) continue
+      const topo = topoDe(o)
+      if (topo < r.top - 0.5) continue
+      if (proximo === null || topo < proximo.topo) proximo = { o, topo }
+    }
+    erros.push({
+      texto: conteudo.slice(0, 90),
+      top: um(r.top + sy),
+      bottom: um(r.bottom + sy),
+      proximo: proximo ? { descricao: `${proximo.o.tagName} ${texto(proximo.o).slice(0, 30)}`.trim(), top: um(proximo.topo + sy) } : null,
+    })
+  }
+  return { erros }
+}
+
+// ---------------------------------------------------------------------------------------------
+// MAT-44d-3, volta 3, defeito D6 (seleção de texto): a seleção nas telas de acesso e na Conta usava o azul padrão do navegador, fora da
+// paleta. Decisão do líder: `::selection` com a paleta (variáveis de uso do tema), sem azul e sem amarelo.
+//   D6-selecao: nas cinco telas (qualquer largura, os dois temas), `getComputedStyle(el, '::selection')` (`backgroundColor` e `color`) de
+//               um elemento do corpo (um parágrafo do `main`) e de um `input`: o fundo tem alfa > 0 (o padrão do navegador reporta
+//               `rgba(0, 0, 0, 0)`) e o contraste do texto sobre o fundo da seleção é >= 4,5 (AA), pelas funções que o medidor já tem.
+// Falha fechada: leitura ausente, elemento sem retângulo, sem estilo lido, cor que não se interpreta e contraste incalculável reprovam.
+
+/** O contraste mínimo do texto da seleção sobre o fundo dela (WCAG AA, texto normal). */
+export const CONTRASTE_MINIMO_DA_SELECAO = 4.5
+const ELEMENTOS_DA_SELECAO = [
+  ['corpo', 'o corpo', 'nenhum parágrafo visível no main'],
+  ['controle', 'o input', 'nenhum input visível no main'],
+]
+
+/** D6-selecao: ver o bloco acima. Lê `doc.selecao` (`lerSelecaoNaPagina`: `{ corpo, controle }`). */
+export function d6Selecao(doc) {
+  return comDoc('D6-selecao', doc, () => {
+    const lida = doc.selecao
+    if (!lida || typeof lida !== 'object') return falhaFechada('D6-selecao', 'sem a leitura da seleção (doc.selecao)')
+    const falhas = []
+    const ok = []
+    for (const [chave, nome, vazio] of ELEMENTOS_DA_SELECAO) {
+      const falhar = (motivo) => falhas.push({ no: nome, motivo: `${nome}: ${motivo}` })
+      const el = lida[chave]
+      if (!el || typeof el !== 'object') {
+        falhar(`sem a leitura do elemento (${vazio})`)
+        continue
+      }
+      if (!rectValido(el.rect) || !(el.rect.w > 0) || !(el.rect.h > 0)) {
+        falhar('sem o retângulo do elemento (caixa ausente, ilegível ou de largura ou altura nula)')
+        continue
+      }
+      const estilo = el.selecao
+      const textoDe = (v) => typeof v === 'string' && v.trim() !== ''
+      if (!estilo || typeof estilo !== 'object' || !textoDe(estilo.backgroundColor) || !textoDe(estilo.color)) {
+        falhar('sem o estilo da seleção lido (`::selection` sem fundo ou sem cor)')
+        continue
+      }
+      const fundo = parseCor(estilo.backgroundColor)
+      if (!fundo) {
+        falhar(`o fundo da seleção "${estilo.backgroundColor}" não se interpreta como cor`)
+        continue
+      }
+      const cor = parseCor(estilo.color)
+      if (!cor) {
+        falhar(`o texto da seleção "${estilo.color}" não se interpreta como cor`)
+        continue
+      }
+      if (!(fundo.a > 0)) {
+        falhar(`o fundo da seleção é transparente (${estilo.backgroundColor}): o padrão do navegador, sem \`::selection\` da paleta`)
+        continue
+      }
+      const cadeia = [estilo.backgroundColor, ...(Array.isArray(el.cadeia) ? el.cadeia : [])]
+      const razao = contraste(estilo.color, cadeia)
+      if (!ehNumero(razao)) {
+        falhar(`sem como calcular o contraste (fundo ${estilo.backgroundColor} translúcido sem um fundo opaco por baixo)`)
+        continue
+      }
+      if (razao < CONTRASTE_MINIMO_DA_SELECAO) {
+        falhar(`contraste de ${razao.toFixed(2)}:1 entre o texto ${estilo.color} e o fundo ${estilo.backgroundColor} da seleção (o mínimo é ${CONTRASTE_MINIMO_DA_SELECAO})`)
+        continue
+      }
+      ok.push(`${nome.replace(/^o /, '')}: fundo ${estilo.backgroundColor}, texto ${estilo.color}, contraste ${razao.toFixed(2)}:1`)
+    }
+    return resultadoComNumeros('D6-selecao', falhas, `a seleção é da paleta e tem contraste AA (${ok.join('; ')})`)
+  })
+}
+
+/**
+ * A seleção de texto (D6-selecao): lê o `::selection` calculado de um elemento do corpo (o primeiro `<p>` visível com texto no `main`) e do
+ * primeiro `input` visível do `main` (fora os que não têm texto: hidden, checkbox etc.). Devolve `{ corpo, controle }`, cada um `{ tag, texto,
+ * rect, selecao: { backgroundColor, color } | null, cadeia }` (nulo se a página não tem o elemento): `rect` nas coordenadas da página,
+ * `selecao` nulo se o navegador não entrega o `::selection` (a leitura lança) e `cadeia` os fundos do elemento até a raiz, para compor um
+ * fundo translúcido. Não escreve nada na página. Sem fechamento: é serializada por `toString()`.
+ */
+export function lerSelecaoNaPagina() {
+  const sx = window.scrollX
+  const sy = window.scrollY
+  const colapsar = (t) => String(t ?? '').replace(/\s+/g, ' ').trim()
+  const aparece = (el) => {
+    const r = el.getBoundingClientRect()
+    const cs = getComputedStyle(el)
+    return r.width > 2 && r.height > 2 && cs.visibility !== 'hidden' && cs.display !== 'none'
+  }
+  const cadeiaDe = (el) => {
+    const cadeia = []
+    for (let atual = el; atual; atual = atual.parentElement) cadeia.push(getComputedStyle(atual).backgroundColor)
+    return cadeia
+  }
+  const ler = (el) => {
+    if (!el) return null
+    const r = el.getBoundingClientRect()
+    let selecao = null
+    try {
+      const s = getComputedStyle(el, '::selection')
+      selecao = { backgroundColor: s.backgroundColor, color: s.color }
+    } catch {
+      selecao = null
+    }
+    return {
+      tag: el.tagName.toLowerCase(),
+      texto: colapsar(el.textContent).slice(0, 60),
+      rect: { x: r.x + sx, y: r.y + sy, w: r.width, h: r.height },
+      selecao,
+      cadeia: cadeiaDe(el),
+    }
+  }
+  const tiposSemTexto = ['hidden', 'checkbox', 'radio', 'range', 'color', 'file', 'image', 'submit', 'button', 'reset']
+  const corpo = [...document.querySelectorAll('main p')].find((el) => colapsar(el.textContent) !== '' && aparece(el))
+  const controle = [...document.querySelectorAll('main input')].find((el) => !tiposSemTexto.includes((el.getAttribute('type') || 'text').toLowerCase()) && aparece(el))
+  return { corpo: ler(corpo), controle: ler(controle) }
+}
+
+// ---------------------------------------------------------------------------------------------
 // CDP (só Node 24: fetch e WebSocket)
 
 const espera = (ms) => new Promise((resolver) => setTimeout(resolver, ms))
@@ -2912,6 +3255,8 @@ async function coletarEnvio(cdp, base, ambiente, pedido) {
   envio.vazio.foco = await avaliar(cdp, `(${lerFocoNaPagina.toString()})()`)
   // A geometria dos campos com o erro à vista (D3): a mensagem, o controle, o fio e o anel de cada linha.
   envio.vazio.geometria = await avaliar(cdp, `(${lerGeometriaDosCamposNaPagina.toString()})()`)
+  // O vão depois de cada erro (D5-erro): a caixa do erro e o topo do elemento seguinte, com o erro à vista.
+  envio.vazio.erros = (await avaliar(cdp, `(${lerErrosDeCampoNaPagina.toString()})()`)).erros
   if (pedido.caso === 'recuperar_acesso') {
     await abrirCaso(cdp, base, ambiente, pedido)
     const antesDeEnviar = await lerEnvio(cdp)
@@ -2953,6 +3298,8 @@ async function principal(argumentos) {
         lido.doc.foco = await avaliar(cdp, `(${lerFocoNaPagina.toString()})()`)
         // A geometria dos campos em repouso (D3): a ajuda, o controle, o fio e o anel de cada linha, e os selects.
         lido.doc.geometria = await avaliar(cdp, `(${lerGeometriaDosCamposNaPagina.toString()})()`)
+        // A seleção de texto (D6): o `::selection` calculado de um parágrafo do corpo e de um input.
+        lido.doc.selecao = await avaliar(cdp, `(${lerSelecaoNaPagina.toString()})()`)
         if (aberto?.blocosClaro) lido.doc.blocosClaro = aberto.blocosClaro
         // O envio vem por último: muda a página (E-7 e R-3). Vale em qualquer tema, para o E-7 da madrugada
         // do Começar não reprovar fechado por falta da leitura.
@@ -2969,7 +3316,7 @@ async function principal(argumentos) {
         rodape: lido.nos.find((n) => n.m.rodape)?.rect ?? null,
         nomeRodape: lido.doc.nomeRodape,
         nos: lido.nos.length,
-        ...(novo ? { alturaTotal: lido.doc.alturaTotal, foco: lido.doc.foco ?? null, geometria: lido.doc.geometria ?? null, envio: lido.doc.envio ?? null } : {}),
+        ...(novo ? { alturaTotal: lido.doc.alturaTotal, foco: lido.doc.foco ?? null, geometria: lido.doc.geometria ?? null, selecao: lido.doc.selecao ?? null, envio: lido.doc.envio ?? null } : {}),
       }
       fs.writeFileSync(
         path.join(pasta, arquivo),

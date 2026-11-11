@@ -9,6 +9,7 @@ import { JSDOM, VirtualConsole } from 'jsdom'
 import {
   a1,
   a2,
+  a2b,
   a3,
   a4,
   a5,
@@ -32,6 +33,9 @@ import {
   d3Fio,
   d3Fuso,
   d4Vao,
+  d5Anel,
+  d5Erro,
+  d6Selecao,
   e1,
   e2,
   e3,
@@ -42,9 +46,11 @@ import {
   escolherAmbiente,
   fundoReal,
   lerArquivoAmbiente,
+  lerErrosDeCampoNaPagina,
   lerEstadoDeEnvioNaPagina,
   lerFocoNaPagina,
   lerGeometriaDosCamposNaPagina,
+  lerSelecaoNaPagina,
   m1,
   m2,
   m3,
@@ -1253,23 +1259,30 @@ describe('44d-3: os casos novos nos argumentos e no bloqueio', () => {
   it('os critérios por caso, como na tabela do cartão', () => {
     // Volta 3 (D3): cada tela de formulário soma D3-fio, D3-controle e D3-anel; o fuso (Começar e Conta), o D3-fuso.
     const D3 = ['D3-fio', 'D3-controle', 'D3-anel']
-    assert.deepEqual(criteriosDoCaso('entrar'), ['E-1', 'E-2', 'E-3', 'E-4', 'E-5', 'E-6', 'E-7', ...D3])
-    assert.deepEqual(criteriosDoCaso('criar_conta'), ['E-1', 'E-2', 'E-3', 'E-5', 'E-6', 'E-7', 'C-1', 'C-2', 'C-3', ...D3])
+    // Volta 3 (D5): as cinco telas somam, no fim, o vão depois do erro e o anel igual ao campo, em 390.
+    const D5 = ['D5-erro', 'D5-anel']
+    // Volta 3 (A-2b): só a Conta soma a folga da última âncora do índice até o fio da abertura, logo depois do A-2.
+    // Volta 3 (D6): as cinco telas somam, no fim, a seleção de texto da paleta (D6-selecao).
+    const D6 = ['D6-selecao']
+    assert.deepEqual(criteriosDoCaso('entrar'), ['E-1', 'E-2', 'E-3', 'E-4', 'E-5', 'E-6', 'E-7', ...D3, ...D5, ...D6])
+    assert.deepEqual(criteriosDoCaso('criar_conta'), ['E-1', 'E-2', 'E-3', 'E-5', 'E-6', 'E-7', 'C-1', 'C-2', 'C-3', ...D3, ...D5, ...D6])
     // Volta 3 (D4): só o Recuperar soma o vão do fio do campo ao botão (D4-vao), em 390.
-    assert.deepEqual(criteriosDoCaso('recuperar_acesso'), ['E-1', 'E-2', 'E-3', 'E-5', 'E-6', 'E-7', 'R-1', 'R-2', 'R-3', ...D3, 'D4-vao'])
-    assert.deepEqual(criteriosDoCaso('comecar_seu_nome'), ['E-1', 'E-3', 'E-4', 'E-5', 'E-6', 'E-7', 'B-1', 'B-2', 'B-3', ...D3, 'D3-fuso'])
-    assert.deepEqual(criteriosDoCaso('conta', 'claro'), ['A-1', 'A-2', 'A-3', 'A-4', 'A-5', 'A-6', ...D3, 'D3-fuso'])
-    assert.deepEqual(criteriosDoCaso('conta', 'madrugada'), ['A-1', 'A-2', 'A-3', 'A-4', 'A-5', 'A-6', ...D3, 'D3-fuso', 'M-1', 'M-2', 'M-3', 'M-4', 'M-5', 'M-6'])
+    assert.deepEqual(criteriosDoCaso('recuperar_acesso'), ['E-1', 'E-2', 'E-3', 'E-5', 'E-6', 'E-7', 'R-1', 'R-2', 'R-3', ...D3, 'D4-vao', ...D5, ...D6])
+    assert.deepEqual(criteriosDoCaso('comecar_seu_nome'), ['E-1', 'E-3', 'E-4', 'E-5', 'E-6', 'E-7', 'B-1', 'B-2', 'B-3', ...D3, 'D3-fuso', ...D5, ...D6])
+    assert.deepEqual(criteriosDoCaso('conta', 'claro'), ['A-1', 'A-2', 'A-2b', 'A-3', 'A-4', 'A-5', 'A-6', ...D3, 'D3-fuso', ...D5, ...D6])
+    assert.deepEqual(criteriosDoCaso('conta', 'madrugada'), ['A-1', 'A-2', 'A-2b', 'A-3', 'A-4', 'A-5', 'A-6', ...D3, 'D3-fuso', ...D5, ...D6, 'M-1', 'M-2', 'M-3', 'M-4', 'M-5', 'M-6'])
     assert.deepEqual(criteriosDoCaso('hoje'), [])
     assert.deepEqual(criteriosDoCaso('sistema', 'madrugada'), [])
   })
 
   it('avaliarCriterios: sem leitura, todo critério reprova fechado e bloqueia; os manuais vêm junto', () => {
     const { criterios, criterios_manuais: manuais } = avaliarCriterios({ doc: doc1440, nos: [], tema: 'claro' }, 'entrar')
-    assert.equal(criterios.length, 10)
+    assert.equal(criterios.length, 13)
     for (const r of criterios) {
       assert.deepEqual(Object.keys(r).sort(), ['bloqueia', 'motivo', 'nos_com_falha', 'ok', 'regra'])
-      assert.equal(r.ok, false, `${r.regra}: ${r.motivo}`)
+      // Volta 3 (D5): os dois critérios de 390 não se aplicam em 1440 (passam como "não aplicável"); o resto reprova fechado.
+      if (r.regra.startsWith('D5-')) assert.match(r.motivo, /não aplicável/)
+      else assert.equal(r.ok, false, `${r.regra}: ${r.motivo}`)
       assert.equal(r.bloqueia, true)
     }
     assert.ok(manuais.some((m) => m.id === 'E-6' && m.olhar.length > 20))
@@ -2066,28 +2079,138 @@ describe('A-5: nada tracejado e o botão Excluir desativado com aria-disabled', 
   })
 })
 
-describe('A-6: a altura total em 1440 é ≤ 3.200 px', () => {
+// MAT-44d-3, volta 3 (item 2): o A-6 passa a medir só o `<main>`. Decisão do líder: o rodapé (≈ 895 px, da casca congelada) não
+// conta, porque o limite de 3.200 px com ele era inalcançável sem cortar seção (o `main` da Conta tem 2.816 px e acaba em y≈2.880, o
+// rodapé começa em y=3072 e o documento tem 3.967 claro / 3.991 madrugada). A leitura antiga (a altura total, com o rodapé) segue no resultado como informação.
+describe('A-6: a altura do <main> em 1440 é ≤ 3.200 px (o rodapé não conta)', () => {
   const rodape = (y, h) => criar({ tag: 'footer', texto: '', rect: { x: 0, y, w: 1425, h }, m: { rodape: true } })
+  const principal = (h, extra = {}) => criar({ tag: 'main', texto: '', rect: { x: 0, y: 64, w: 1425, h }, ...extra })
+  const reprova = (r, padrao) => {
+    assert.equal(r.ok, false, `devia reprovar: ${r.motivo}`)
+    if (padrao) assert.match(r.motivo, padrao)
+    return r
+  }
+  /**
+   * A Conta de hoje, como o Chrome lê: o `main` em y=64 com 2.816 px de altura (acaba em y≈2.880; o rodapé começa em y=3072, 192 px
+   * depois), o rodapé com 895 e o documento com 3.967 (claro).
+   */
+  const contaDeHoje = () => [principal(2816), rodape(3072, 895)]
+  const docHoje = { ...doc1440, alturaTotal: 3967 }
 
-  it('passa com 3.000 px (pelo rodapé ou pela altura do documento)', () => {
-    assert.equal(a6([rodape(2100, 900)], doc1440).ok, true)
-    assert.equal(a6([], { ...doc1440, alturaTotal: 3000 }).ok, true)
+  it('a Conta de hoje passa pelo `main` (2.816 px), mesmo com 3.967 px com o rodapé (a leitura de antes reprovava)', () => {
+    const r = a6(contaDeHoje(), docHoje)
+    assert.equal(r.ok, true, r.motivo)
+    assert.equal(r.regra, 'A-6')
+    assert.deepEqual(r.nos_com_falha, [])
+    assert.match(r.motivo, /altura do main de 2816 px \(máximo 3200\)/)
   })
 
-  it('falha com 3.465 px (a Conta antiga, com o rodapé)', () => {
-    assert.equal(a6([rodape(2565, 900)], doc1440).ok, false)
-    assert.equal(a6([rodape(100, 100)], { ...doc1440, alturaTotal: 3400 }).ok, false)
+  it('a leitura antiga vai no resultado, num campo próprio e no motivo, marcada como informação: 3.967 claro e 3.991 madrugada', () => {
+    const claro = a6(contaDeHoje(), docHoje)
+    assert.equal(claro.leitura_antiga, 3967)
+    assert.match(claro.motivo, /leitura antiga, só informação: altura total com o rodapé de 3967 px \(não reprova\)/)
+    const madrugada = a6([principal(3072), rodape(3072, 919)], { ...doc1440, alturaTotal: 3991 })
+    assert.equal(madrugada.ok, true, madrugada.motivo)
+    assert.equal(madrugada.leitura_antiga, 3991)
+    assert.match(madrugada.motivo, /3991 px/)
   })
 
-  it('borda: 3.200 passa, 3.201 falha; em 390 não se aplica', () => {
-    assert.equal(a6([rodape(2300, 900)], doc1440).ok, true)
-    assert.equal(a6([rodape(2301, 900)], doc1440).ok, false)
-    assert.match(a6([rodape(5000, 900)], doc390).motivo, /não aplicável/)
+  it('a leitura antiga é o maior entre a altura do documento e o fim do rodapé, como a regra antiga a lia', () => {
+    assert.equal(a6([principal(3072), rodape(3072, 895)], { ...doc1440, alturaTotal: 3000 }).leitura_antiga, 3967)
+    assert.equal(a6([principal(3072), rodape(100, 100)], { ...doc1440, alturaTotal: 3900 }).leitura_antiga, 3900)
   })
 
-  it('falha fechado: sem rodapé nem altura e sem largura', () => {
-    assert.equal(a6([], doc1440).ok, false)
-    assert.equal(a6([rodape(2100, 900)], undefined).ok, false)
+  it('a leitura antiga não reprova: com o rodapé gigante o critério segue ok, e passa a reprovar só pelo `main`', () => {
+    const r = a6([principal(3000), rodape(3000, 5000)], { ...doc1440, alturaTotal: 8000 })
+    assert.equal(r.ok, true, r.motivo)
+    assert.equal(r.leitura_antiga, 8000)
+    reprova(a6([principal(3201), rodape(3201, 100)], { ...doc1440, alturaTotal: 3301 }), /altura do main de 3201 px \(máximo 3200\)/)
+  })
+
+  it('a leitura antiga ausente não vira aprovação nem reprovação: só some a informação', () => {
+    const sem = a6([principal(3072)], doc1440)
+    assert.equal(sem.ok, true, sem.motivo)
+    assert.equal('leitura_antiga' in sem, false)
+    assert.doesNotMatch(sem.motivo, /leitura antiga/)
+    const semEReprova = a6([principal(3300)], doc1440)
+    assert.equal(semEReprova.ok, false)
+    assert.equal('leitura_antiga' in semEReprova, false)
+    // Altura do documento ilegível (texto, NaN): também some a informação, sem mudar o veredito.
+    const ilegivel = a6([principal(3072), rodape(3072, 895)], { ...doc1440, alturaTotal: 'alto' })
+    assert.equal(ilegivel.ok, true)
+    assert.equal(ilegivel.leitura_antiga, 3967, 'o fim do rodapé ainda a dá')
+  })
+
+  it('a borda: 3.200 passa, 3.200,5 passa (a tolerância é de 0,5) e 3.201 reprova', () => {
+    assert.equal(a6([principal(3200)], doc1440).ok, true)
+    assert.equal(a6([principal(3200.5)], doc1440).ok, true)
+    reprova(a6([principal(3201)], doc1440), /altura do main de 3201 px/)
+  })
+
+  describe('mutação: 1 px em cada medida, uma por vez, em torno do limite 3.200', () => {
+    it('o `main` com 1 px a mais (3.201) reprova e com 1 px a menos (3.199) passa', () => {
+      assert.equal(a6([principal(3199)], doc1440).ok, true)
+      reprova(a6([principal(3201)], doc1440), /3201 px/)
+    })
+
+    it('o rodapé e a altura do documento não mexem no veredito (só na informação)', () => {
+      for (const [y, h, total] of [[3072, 895, 3967], [3072, 1895, 4967], [100, 100, 9999], [0, 0, 0]]) {
+        assert.equal(a6([principal(3200), rodape(y, h)], { ...doc1440, alturaTotal: total }).ok, true, `${y} ${h} ${total}`)
+        reprova(a6([principal(3201), rodape(y, h)], { ...doc1440, alturaTotal: total }))
+      }
+    })
+  })
+
+  it('a largura: 992 já é 1440 (aplica), 991 e 390 não se aplicam, mesmo com o `main` de 5.000 px', () => {
+    reprova(a6([], { ...doc1440, largura: 992 }), /nenhum <main>/)
+    for (const largura of [991, 767, 390]) {
+      const r = a6([principal(5000)], { ...doc1440, largura })
+      assert.equal(r.ok, true)
+      assert.match(r.motivo, /não aplicável/)
+    }
+    assert.match(a6([principal(5000), rodape(100, 100)], doc390).motivo, /não aplicável/)
+  })
+
+  describe('falha fechada', () => {
+    it('sem doc, sem a largura da janela ou sem a clientWidth', () => {
+      assert.equal(a6([principal(3000)], undefined).ok, false)
+      assert.equal(a6([principal(3000)], {}).ok, false)
+      assert.equal(a6([principal(3000)], { largura: 1440 }).ok, false)
+    })
+
+    it('sem `<main>` no documento reprova em 1440, mesmo com o rodapé e a altura total pequenos', () => {
+      reprova(a6([], doc1440), /nenhum <main>/)
+      reprova(a6([rodape(2100, 900)], doc1440), /nenhum <main>/)
+      reprova(a6([], { ...doc1440, alturaTotal: 3000 }), /nenhum <main>/)
+      reprova(a6(undefined, doc1440), /nenhum <main>/)
+    })
+
+    it('o `main` sem altura medida (sem retângulo, altura nula, ilegível ou não numérica) reprova', () => {
+      for (const rect of [undefined, null, {}, { x: 0, y: 64, w: 1425 }, { x: 0, y: 64, w: 1425, h: Number.NaN }, { x: 0, y: 64, w: 1425, h: '3072' }, { x: 0, y: 64, w: 1425, h: 0 }]) {
+        reprova(a6([principal(3072, { rect })], doc1440), /sem a altura medida do main|nenhum <main>/)
+      }
+    })
+
+    it('um `main` que não está visível não conta', () => {
+      reprova(a6([principal(3072, { visivel: false })], doc1440), /nenhum <main>/)
+    })
+
+    it('um elemento que não é `main` (um `div` com a altura certa) não serve de `main`', () => {
+      reprova(a6([criar({ tag: 'div', texto: '', rect: { x: 0, y: 64, w: 1425, h: 3000 } })], doc1440), /nenhum <main>/)
+    })
+
+    it('com mais de um `main`, o primeiro com altura medida é o que vale', () => {
+      assert.equal(a6([principal(3072), principal(9000)], doc1440).ok, true)
+    })
+  })
+
+  it('dentro do avaliarCriterios a Conta em 1440 passa o A-6 pelo `main` e traz a leitura antiga no JSON', () => {
+    const { criterios } = avaliarCriterios({ doc: docHoje, nos: contaDeHoje(), tema: 'claro' }, 'conta')
+    const a = criterios.find((x) => x.regra === 'A-6')
+    assert.equal(a.ok, true, a.motivo)
+    assert.equal(a.bloqueia, true)
+    assert.equal(a.leitura_antiga, 3967)
+    assert.equal(JSON.parse(JSON.stringify(a)).leitura_antiga, 3967, 'sobrevive ao JSON do medidor')
   })
 })
 
@@ -3921,5 +4044,829 @@ describe('D3: a leitura em página da geometria dos campos (lerGeometriaDosCampo
 
   it('não tem fechamento: serializada por toString, roda sozinha', () => {
     assert.match(lerGeometriaDosCamposNaPagina.toString(), /^(async )?function lerGeometriaDosCamposNaPagina/)
+  })
+})
+
+// =============================================================================================
+// MAT-44d-3, volta 3, defeito D5 (item 1): em 390 o erro do campo ficava apertado contra o que vem depois (0 px até o
+// rótulo da linha seguinte, 8 px até o botão) e o anel de foco do campo era mais estreito que o campo (a entrada ocupa
+// x 32–358 num campo de x 16–374, e o anel passa 4 px: 28–362). Dois critérios, só em 390:
+//   D5-erro: com o erro à vista (depois do envio vazio), próximo.top - erro.bottom >= 16, onde `erro` é a caixa do
+//            `.sb-campo-erro` e `próximo` é o primeiro elemento visível depois dele na página.
+//   D5-anel: com o foco no controle, a caixa do anel (a do controle + outline-offset + outline-width, 2 + 2 px) é a
+//            do campo: x de 16 a 374 (a área útil de 358 px), com 1 px de tolerância.
+// =============================================================================================
+
+describe('D5: o vão depois do erro e o anel igual ao campo, em 390', () => {
+  const doc390real = { largura: 390, altura: 844, clientWidth: 390, scrollWidth: 390, grupos: [] }
+  const reprova = (r, padrao) => {
+    assert.equal(r.ok, false, `devia reprovar: ${r.motivo}`)
+    if (padrao) assert.match(r.motivo, padrao)
+    return r
+  }
+
+  // --- D5-erro -------------------------------------------------------------------------------
+  /** O erro do e-mail (433 a 457) e o rótulo da senha a `vao1` px dele; o erro da senha (558 a 582) e o botão a `vao2`. */
+  const errosD5 = ({ vao1 = 16, vao2 = 16 } = {}) => [
+    { texto: 'Escreva o seu e-mail.', top: 433, bottom: 457, proximo: { descricao: 'LABEL Senha', top: 457 + vao1 } },
+    { texto: 'Escreva a sua senha.', top: 558, bottom: 582, proximo: { descricao: 'BUTTON Entrar', top: 582 + vao2 } },
+  ]
+  const docD5Erro = (erros = errosD5(), base = doc390real) => ({ ...base, envio: { vazio: { erros } } })
+
+  describe('D5-erro', () => {
+    it('o estado de hoje reprova com os números: 0 px até o rótulo e 8 px até o botão', () => {
+      const r = reprova(d5Erro(docD5Erro(errosD5({ vao1: 0, vao2: 8 }))), /o erro "Escreva o seu e-mail\." termina em y=457\.0 e LABEL Senha começa em y=457\.0: folga de 0\.0 px \(o mínimo é 16\)/)
+      assert.match(r.motivo, /o erro "Escreva a sua senha\." termina em y=582\.0 e BUTTON Entrar começa em y=590\.0: folga de 8\.0 px/)
+      assert.equal(r.regra, 'D5-erro')
+      assert.equal(r.nos_com_falha.length, 2)
+    })
+
+    it('com 16 px depois de cada erro passa, e com mais também', () => {
+      const r = d5Erro(docD5Erro())
+      assert.equal(r.ok, true, r.motivo)
+      assert.deepEqual(r.nos_com_falha, [])
+      assert.equal(d5Erro(docD5Erro(errosD5({ vao1: 24, vao2: 40 }))).ok, true)
+    })
+
+    it('a borda: 16 passa, 15,75 passa (a tolerância é de 0,25) e 15,5 reprova', () => {
+      assert.equal(d5Erro(docD5Erro(errosD5({ vao1: 15.75 }))).ok, true)
+      reprova(d5Erro(docD5Erro(errosD5({ vao1: 15.5 }))), /folga de 15\.5 px/)
+    })
+
+    describe('mutação: 1 px em cada medida, uma por vez, derruba o critério no limite 16', () => {
+      const mutacoes = [
+        ['o próximo elemento sobe 1 px', (e) => (e[0].proximo.top -= 1), /folga de 15\.0 px/],
+        ['o erro desce 1 px (a base)', (e) => (e[1].bottom += 1), /folga de 15\.0 px/],
+      ]
+      for (const [nome, mutar, padrao] of mutacoes) {
+        it(nome, () => {
+          const e = errosD5()
+          assert.equal(d5Erro(docD5Erro(e)).ok, true, 'a fixture estável tem de passar antes da mutação')
+          mutar(e)
+          reprova(d5Erro(docD5Erro(e)), padrao)
+        })
+      }
+
+      it('o movimento contrário (1 px a mais de folga) passa', () => {
+        const e = errosD5()
+        e[0].proximo.top += 1
+        assert.equal(d5Erro(docD5Erro(e)).ok, true)
+      })
+    })
+
+    it('lê o estado depois do envio vazio: a leitura de antes do envio não entra na conta', () => {
+      const d = docD5Erro()
+      d.envio.vazio.antes = { pagina: 1, erros: errosD5({ vao1: 0 }) }
+      assert.equal(d5Erro(d).ok, true)
+    })
+
+    describe('largura', () => {
+      it('de 768 para cima não se aplica (a mensagem mora dentro da linha de 112 px), mesmo com o vão de 0', () => {
+        const r = d5Erro(docD5Erro(errosD5({ vao1: 0 }), doc1440))
+        assert.equal(r.ok, true)
+        assert.match(r.motivo, /não aplicável/)
+      })
+
+      it('abaixo de 768 e diferente de 390 reprova fechado: o critério só vale em 390', () => {
+        for (const largura of [375, 360, 320, 767]) {
+          reprova(d5Erro(docD5Erro(errosD5(), { ...doc390real, largura, clientWidth: largura })), new RegExp(`${largura} px.*só vale em 390`))
+        }
+      })
+    })
+
+    describe('falha fechada', () => {
+      it('sem doc, sem a largura da janela ou sem a clientWidth', () => {
+        assert.equal(d5Erro(undefined).ok, false)
+        assert.equal(d5Erro({ clientWidth: 390 }).ok, false)
+        assert.equal(d5Erro({ largura: 390 }).ok, false)
+      })
+
+      it('sem a leitura dos erros (sem envio, sem o vazio, sem `erros` ou `erros` que não é lista)', () => {
+        reprova(d5Erro({ ...doc390real }), /sem a leitura dos erros/)
+        reprova(d5Erro({ ...doc390real, envio: {} }), /sem a leitura dos erros/)
+        reprova(d5Erro({ ...doc390real, envio: { vazio: {} } }), /sem a leitura dos erros/)
+        reprova(d5Erro({ ...doc390real, envio: { vazio: { erros: 'x' } } }), /sem a leitura dos erros/)
+        reprova(d5Erro({ ...doc390real, envio: { vazio: { erros: null } } }), /sem a leitura dos erros/)
+      })
+
+      it('sem erro visível: a lista vazia não é aprovação (o envio vazio tem de mostrar o erro)', () => {
+        reprova(d5Erro(docD5Erro([])), /nenhum erro visível/)
+      })
+
+      it('sem próximo elemento (nulo, sem topo ou com topo ilegível)', () => {
+        for (const proximo of [null, undefined, {}, { top: Number.NaN }, { top: '600' }, 'BUTTON']) {
+          const e = errosD5()
+          e[1].proximo = proximo
+          reprova(d5Erro(docD5Erro(e)), /sem o próximo elemento/)
+        }
+      })
+
+      it('o erro sem a caixa (topo ou base nulos, ilegíveis ou fora de ordem)', () => {
+        for (const mudar of [(x) => delete x.bottom, (x) => (x.bottom = Number.NaN), (x) => (x.top = '433'), (x) => (x.bottom = undefined), (x) => (x.top = null)]) {
+          const e = errosD5()
+          mudar(e[0])
+          reprova(d5Erro(docD5Erro(e)), /sem a caixa|ilegível/)
+        }
+      })
+
+      it('um erro que falha entre erros que passam reprova o critério', () => {
+        const e = errosD5()
+        e[1].proximo.top = 590
+        reprova(d5Erro(docD5Erro(e)), /BUTTON Entrar começa em y=590\.0/)
+      })
+
+      it('um item da lista que não é objeto reprova', () => {
+        reprova(d5Erro(docD5Erro([null])), /sem a caixa|ilegível/)
+      })
+    })
+
+    it('entra como critério bloqueante nas cinco telas, e o avaliarCriterios lê o depois do envio vazio', () => {
+      for (const caso of ['entrar', 'criar_conta', 'recuperar_acesso', 'comecar_seu_nome', 'conta']) {
+        const { criterios } = avaliarCriterios({ doc: docD5Erro(), nos: [], tema: 'claro' }, caso)
+        const c = criterios.find((x) => x.regra === 'D5-erro')
+        assert.ok(c, `falta D5-erro em ${caso}`)
+        assert.equal(c.ok, true, c.motivo)
+        assert.equal(c.bloqueia, true)
+      }
+      const hoje = avaliarCriterios({ doc: docD5Erro(errosD5({ vao1: 0, vao2: 8 })), nos: [], tema: 'claro' }, 'entrar')
+      assert.match(hoje.criterios.find((x) => x.regra === 'D5-erro').motivo, /folga de 0\.0 px/)
+      const sem = avaliarCriterios({ doc: { ...doc390real }, nos: [], tema: 'claro' }, 'entrar')
+      assert.equal(sem.criterios.find((x) => x.regra === 'D5-erro').ok, false)
+    })
+  })
+
+  // --- D5-anel -------------------------------------------------------------------------------
+  /** O controle de 390: o `input` de 56 px a `recuo` px de cada lado do campo (x 16 a 374). Sem recuo, o anel é o campo. */
+  const campoD5 = ({ esquerda = 20, direita = 370, controle, rotulo = 'E-mail' } = {}) =>
+    campoD3({ fio: null, rotulo, mensagens: [], controle: controle === null ? null : { top: 372.5, bottom: 428.5, left: esquerda, right: direita, ...(controle ?? {}) } })
+  const docD5Anel = ({ campos, erro, base = doc390real } = {}) =>
+    docD3({ base, repouso: geometriaD3({ campos: campos ?? [campoD5()] }), erro: geometriaD3({ campos: erro ?? campos ?? [campoD5()] }) })
+
+  describe('D5-anel', () => {
+    it('o estado de hoje reprova com os números: a entrada em x 32–358 dá um anel de 28 a 362, 12 px mais estreito de cada lado', () => {
+      const r = reprova(
+        d5Anel(docD5Anel({ campos: [campoD5({ esquerda: 32, direita: 358 })] })),
+        /o anel de foco começa em x=28\.0 e o campo em x=16\.0 \(12\.0 px para dentro; a tolerância é de 1\)/,
+      )
+      assert.match(r.motivo, /o anel de foco termina em x=362\.0 e o campo em x=374\.0 \(12\.0 px para dentro; a tolerância é de 1\)/)
+      assert.equal(r.regra, 'D5-anel')
+      assert.ok(r.nos_com_falha.length >= 2, 'em repouso e depois do envio vazio')
+    })
+
+    it('o anel igual ao campo (entrada em x 20–370, anel 16–374) passa nas duas leituras', () => {
+      const r = d5Anel(docD5Anel())
+      assert.equal(r.ok, true, r.motivo)
+      assert.deepEqual(r.nos_com_falha, [])
+    })
+
+    it('a borda: 1 px de diferença passa, 1,25 reprova, e o anel que passa do campo também reprova', () => {
+      const com = (esquerda, direita) => d5Anel(docD5Anel({ campos: [campoD5({ esquerda, direita })] }))
+      assert.equal(com(21, 369).ok, true)
+      assert.equal(com(19, 371).ok, true)
+      reprova(com(21.25, 370), /começa em x=17\.3/)
+      reprova(com(20, 368.75), /termina em x=372\.8/)
+      reprova(com(18, 370), /começa em x=14\.0 e o campo em x=16\.0 \(2\.0 px para fora/)
+      reprova(com(20, 372), /termina em x=376\.0 e o campo em x=374\.0 \(2\.0 px para fora/)
+    })
+
+    describe('mutação: 2 px em cada medida, uma por vez, derruba o critério', () => {
+      const mutacoes = [
+        ['a entrada começa 2 px à direita', { esquerda: 22 }, /começa em x=18\.0/],
+        ['a entrada começa 2 px à esquerda', { esquerda: 18 }, /começa em x=14\.0/],
+        ['a entrada termina 2 px à esquerda', { direita: 368 }, /termina em x=372\.0/],
+        ['a entrada termina 2 px à direita', { direita: 372 }, /termina em x=376\.0/],
+      ]
+      for (const [nome, mudanca, padrao] of mutacoes) {
+        it(nome, () => {
+          assert.equal(d5Anel(docD5Anel()).ok, true, 'a fixture estável tem de passar antes da mutação')
+          reprova(d5Anel(docD5Anel({ campos: [campoD5(mudanca)] })), padrao)
+        })
+      }
+    })
+
+    it('o anel vem da largura e do offset lidos (não de 4 px fixos): outline de 4 px com offset 2 sai 2 px do campo', () => {
+      const largo = { outlineWidth: '4px', outlineOffset: '2px' }
+      reprova(d5Anel(docD5Anel({ campos: [campoD5({ controle: largo })] })), /começa em x=14\.0 e o campo em x=16\.0 \(2\.0 px para fora/)
+      assert.equal(d5Anel(docD5Anel({ campos: [campoD5({ esquerda: 22, direita: 368, controle: largo })] })).ok, true)
+    })
+
+    it('mede cada campo e cada estado: um campo fora entre campos certos reprova, e a mensagem diz qual', () => {
+      const campos = [campoD5({ rotulo: 'E-mail' }), campoD5({ rotulo: 'Senha', direita: 314 })]
+      const r = reprova(d5Anel(docD5Anel({ campos })), /campo 2 \(Senha\)/)
+      assert.match(r.motivo, /termina em x=318\.0/)
+      reprova(d5Anel(docD5Anel({ erro: campos, campos: [campoD5()] })), /depois do envio vazio: campo 2 \(Senha\)/)
+    })
+
+    describe('largura', () => {
+      it('de 768 para cima não se aplica (o anel de 1440 é o do D3-anel, dentro do fio)', () => {
+        const r = d5Anel(docD5Anel({ base: doc1440, campos: [campoD5({ esquerda: 480, direita: 1100 })] }))
+        assert.equal(r.ok, true)
+        assert.match(r.motivo, /não aplicável/)
+      })
+
+      it('abaixo de 768 e diferente de 390 reprova fechado: o critério só vale em 390', () => {
+        for (const largura of [375, 360, 320, 767]) {
+          reprova(d5Anel(docD5Anel({ base: { ...doc390real, largura, clientWidth: largura } })), new RegExp(`${largura} px.*só vale em 390`))
+        }
+      })
+    })
+
+    describe('falha fechada', () => {
+      it('sem doc, sem a largura da janela ou sem a clientWidth', () => {
+        assert.equal(d5Anel(undefined).ok, false)
+        assert.equal(d5Anel({ clientWidth: 390 }).ok, false)
+        assert.equal(d5Anel({ largura: 390 }).ok, false)
+      })
+
+      it('sem a leitura da geometria (em repouso ou depois do envio vazio)', () => {
+        reprova(d5Anel({ ...doc390real }), /sem a leitura da geometria dos campos/)
+        reprova(d5Anel({ ...doc390real, geometria: geometriaD3({ campos: [campoD5()] }) }), /depois do envio vazio: sem a leitura da geometria/)
+      })
+
+      it('sem linha de campo na leitura', () => {
+        reprova(d5Anel(docD5Anel({ campos: [] })), /nenhuma linha de campo/)
+      })
+
+      it('o controle sem retângulo (nulo, sem lado ou ilegível) reprova', () => {
+        reprova(d5Anel(docD5Anel({ campos: [campoD5({ controle: null })] })), /sem o retângulo do controle/)
+        for (const lado of ['left', 'right', 'top', 'bottom']) {
+          reprova(d5Anel(docD5Anel({ campos: [campoD5({ controle: { [lado]: Number.NaN } })] })), /sem o retângulo do controle/)
+        }
+      })
+
+      it('o controle que não recebeu foco, sem outline ou com largura ou offset ilegível reprova', () => {
+        reprova(d5Anel(docD5Anel({ campos: [campoD5({ controle: { focou: false } })] })), /não recebeu foco/)
+        reprova(d5Anel(docD5Anel({ campos: [campoD5({ controle: { outlineStyle: 'none' } })] })), /sem outline/)
+        reprova(d5Anel(docD5Anel({ campos: [campoD5({ controle: { outlineStyle: undefined } })] })), /sem outline/)
+        reprova(d5Anel(docD5Anel({ campos: [campoD5({ controle: { outlineWidth: 'medium' } })] })), /largura ou offset do anel ilegível/)
+        reprova(d5Anel(docD5Anel({ campos: [campoD5({ controle: { outlineOffset: undefined } })] })), /largura ou offset do anel ilegível/)
+      })
+    })
+
+    it('entra como critério bloqueante nas cinco telas: passa com o anel igual ao campo e reprova com o de hoje', () => {
+      for (const caso of ['entrar', 'criar_conta', 'recuperar_acesso', 'comecar_seu_nome', 'conta']) {
+        const { criterios } = avaliarCriterios({ doc: docD5Anel(), nos: [], tema: 'claro' }, caso)
+        const c = criterios.find((x) => x.regra === 'D5-anel')
+        assert.ok(c, `falta D5-anel em ${caso}`)
+        assert.equal(c.ok, true, c.motivo)
+        assert.equal(c.bloqueia, true)
+      }
+      const hoje = avaliarCriterios({ doc: docD5Anel({ campos: [campoD5({ esquerda: 32, direita: 358 })] }), nos: [], tema: 'claro' }, 'entrar')
+      assert.match(hoje.criterios.find((x) => x.regra === 'D5-anel').motivo, /começa em x=28\.0/)
+    })
+  })
+
+  describe('a leitura em página dos erros de campo (lerErrosDeCampoNaPagina)', () => {
+    /** O jsdom não mede layout: `data-r="x,y,w,h"` dá a caixa; o display vem do `style` do elemento. */
+    function lerErros(html, { rolagem = 0 } = {}) {
+      const dom = new JSDOM(`<!doctype html><html><body>${html}</body></html>`, { runScripts: 'outside-only', virtualConsole: new VirtualConsole() })
+      const { window } = dom
+      const caixa = (el) => {
+        const [x, y, w, h] = (el.getAttribute('data-r') ?? '0,0,100,20').split(',').map(Number)
+        return { x, y, left: x, top: y, width: w, height: h, right: x + w, bottom: y + h }
+      }
+      window.Element.prototype.getBoundingClientRect = function retangulo() {
+        return caixa(this)
+      }
+      // O Range do texto de um elemento em linha: a caixa de `data-rt` (o texto), e não a do elemento com o recuo.
+      window.Range.prototype.getBoundingClientRect = function retanguloDoTexto() {
+        const dono = this.commonAncestorContainer.nodeType === 1 ? this.commonAncestorContainer : this.commonAncestorContainer.parentElement
+        const [x, y, w, h] = (dono.getAttribute('data-rt') ?? dono.getAttribute('data-r') ?? '0,0,0,0').split(',').map(Number)
+        return { x, y, left: x, top: y, width: w, height: h, right: x + w, bottom: y + h }
+      }
+      if (rolagem) Object.defineProperty(window, 'scrollY', { configurable: true, value: rolagem })
+      try {
+        return JSON.parse(JSON.stringify(window.eval(`(${lerErrosDeCampoNaPagina.toString()})()`)))
+      } finally {
+        window.close()
+      }
+    }
+
+    const FORM = `
+      <main><form>
+        <div class="sb-campo" data-r="16,332,358,101"><label data-r="16,332,358,29">E-mail</label>
+          <div class="sb-campo-controle" data-r="16,369,358,64"><input data-r="32,372,326,56"></div>
+          <p class="sb-campo-erro" data-r="16,433,358,24">Escreva o seu e-mail.</p></div>
+        <div class="sb-campo" data-r="16,497,358,101"><label data-r="16,497,358,29">Senha</label>
+          <div class="sb-campo-controle" data-r="16,534,358,64"><input data-r="32,537,326,56"><button type="button" data-r="314,543,44,44">Ver</button></div>
+          <p class="sb-campo-erro" data-r="16,598,358,24">Escreva a sua senha.</p></div>
+        <button type="submit" data-r="16,638,358,64">Entrar</button>
+      </form></main>`
+
+    it('devolve, por erro visível, a caixa (topo e base) e o primeiro elemento visível depois dele, com o topo', () => {
+      const { erros } = lerErros(FORM)
+      assert.equal(erros.length, 2)
+      assert.deepEqual(erros[0], { texto: 'Escreva o seu e-mail.', top: 433, bottom: 457, proximo: { descricao: 'LABEL Senha', top: 497 } })
+      assert.deepEqual(erros[1], { texto: 'Escreva a sua senha.', top: 598, bottom: 622, proximo: { descricao: 'BUTTON Entrar', top: 638 } })
+    })
+
+    it('as coordenadas são as da página: somam a rolagem', () => {
+      const { erros } = lerErros(FORM, { rolagem: 50 })
+      assert.equal(erros[0].top, 483)
+      assert.equal(erros[0].proximo.top, 547)
+    })
+
+    it('o elemento acima do erro (o controle da mesma linha) não é o próximo', () => {
+      const { erros } = lerErros(FORM)
+      assert.notEqual(erros[1].proximo.descricao, 'BUTTON Ver')
+      assert.notEqual(erros[1].proximo.descricao, 'INPUT')
+    })
+
+    it('uma ligação em linha vale pelo texto, e não pela caixa com o recuo vertical (o aceite dos termos)', () => {
+      const html = `<main><form>
+        <div class="sb-campo" data-r="16,332,358,101"><p class="sb-campo-erro" data-r="16,433,358,24">Escreva o seu e-mail.</p></div>
+        <p data-r="16,481,358,48"><a style="display: inline" data-r="16,461,300,60" data-rt="16,483,300,24">Li os termos</a></p>
+      </form></main>`
+      const { erros } = lerErros(html)
+      assert.equal(erros[0].proximo.top, 481, 'o parágrafo (481) é o próximo, e a ligação vale pelo texto (483), nunca pela caixa com recuo (461)')
+    })
+
+    it('ignora a mensagem vazia ou escondida e a ajuda; sem erro visível a lista é vazia (o critério reprova fechado)', () => {
+      const html = `<main><form>
+        <p class="sb-campo-erro" data-r="0,100,400,24">   </p>
+        <p class="sb-campo-erro" style="visibility: hidden" data-r="0,200,400,24">Escondida.</p>
+        <p class="sb-campo-erro" style="display: none" data-r="0,300,400,24">Escondida.</p>
+        <p class="sb-campo-erro" data-r="0,400,1,1">Fina demais.</p>
+        <p class="sb-campo-ajuda" data-r="0,500,400,24">Ajuda.</p>
+      </form></main>`
+      assert.deepEqual(lerErros(html).erros, [])
+    })
+
+    it('sem elemento depois do erro, o próximo é nulo (o critério reprova fechado)', () => {
+      const { erros } = lerErros('<main><form><p class="sb-campo-erro" data-r="0,900,400,24">Escreva.</p></form></main>')
+      assert.equal(erros.length, 1)
+      assert.equal(erros[0].proximo, null)
+    })
+
+    it('não tem fechamento: serializada por toString, roda sozinha', () => {
+      assert.match(lerErrosDeCampoNaPagina.toString(), /^(async )?function lerErrosDeCampoNaPagina/)
+    })
+  })
+})
+
+// =============================================================================================
+// MAT-44d-3, volta 3, item 3: o índice da Conta (1440) ficava a ≈ 12 px do fio da abertura, e a caixa de toque da última âncora
+// (44 px, 56 na madrugada) chegava ao fio. Critério A-2b, só 1440, no topo da página:
+//   fio.top - (base do texto da última âncora) >= 16      (o texto: Range do texto do `<a>`, não a caixa de toque)
+//   base da caixa de toque da última âncora <= fio.top    (a caixa de toque não passa do fio)
+// O fio é a borda de baixo do `.sb-abertura-base` (o que fecha a abertura, em y=322 em 1440).
+// =============================================================================================
+
+describe('A-2b: 16 px entre o texto da última âncora do índice e o fio da abertura (1440)', () => {
+  const FIO_Y = 322
+  const reprova = (r, padrao) => {
+    assert.equal(r.ok, false, `devia reprovar: ${r.motivo}`)
+    if (padrao) assert.match(r.motivo, padrao)
+    return r
+  }
+  const fio = (extra = {}) =>
+    criar({ tag: 'div', texto: '', rect: { x: 16, y: FIO_Y, w: 1393, h: 1 }, estilo: { borderBottomWidth: '1px' }, m: { aberturaBase: true }, ...extra })
+  /**
+   * As 6 âncoras do índice na coluna lateral, de 32 em 32, com o texto de 20 px de altura (a base da última a `folga` px do fio) e a
+   * caixa de toque (`alvo` de altura) centrada no texto. Com folga 12 e alvo 44, a caixa chega ao fio (base em y=322, 0 px): o de hoje.
+   */
+  const indice = ({ folga = 20, alvo = 44, fioY = FIO_Y, ajuste = () => ({}) } = {}) => {
+    const baseDaUltima = fioY - folga
+    return Array.from({ length: 6 }, (_, i) => {
+      const base = baseDaUltima - (5 - i) * 32
+      const centro = base - 10
+      return criar({
+        tag: 'a',
+        texto: `Seção ${i + 1}`,
+        rect: { x: 1165, y: centro - alvo / 2, w: 120, h: alvo },
+        rectTexto: { x: 1165, y: base - 20, w: 80, h: 20 },
+        m: { ancoraLateral: true },
+        ...ajuste(i),
+      })
+    })
+  }
+  const pagina = (opcoes = {}) => [...indice(opcoes), fio({ rect: { x: 16, y: opcoes.fioY ?? FIO_Y, w: 1393, h: 1 } })]
+
+  it('o estado de hoje reprova com os números: a base do texto em y=310, o fio em y=322 (folga de 12)', () => {
+    const r = reprova(a2b(pagina({ folga: 12 }), doc1440), /o texto da última âncora \(a "Seção 6"\) termina em y=310\.0 e o fio da abertura começa em y=322\.0: folga de 12\.0 px \(o mínimo é 16\)/)
+    assert.equal(r.regra, 'A-2b')
+    assert.equal(r.nos_com_falha.length, 1)
+  })
+
+  it('o estado de hoje tem a caixa de toque encostada no fio (0 px): isso passa, é o que o líder pediu para manter (≤ 0)', () => {
+    const nos = pagina({ folga: 12 })
+    const ultima = nos[5]
+    assert.equal(ultima.rect.y + ultima.rect.h, FIO_Y, 'a fixture de hoje: a caixa de toque termina no fio')
+    assert.doesNotMatch(a2b(nos, doc1440).motivo, /caixa de toque/)
+  })
+
+  it('corrigido (20 px de folga) passa, no claro (alvo de 44) e na madrugada (56)', () => {
+    for (const alvo of [44, 56]) {
+      const r = a2b(pagina({ alvo }), doc1440)
+      assert.equal(r.ok, true, `${alvo}: ${r.motivo}`)
+      assert.deepEqual(r.nos_com_falha, [])
+    }
+  })
+
+  it('a borda: 16 passa, 15,75 passa (a tolerância é de 0,25) e 15,5 reprova', () => {
+    assert.equal(a2b(pagina({ folga: 16 }), doc1440).ok, true)
+    assert.equal(a2b(pagina({ folga: 15.75 }), doc1440).ok, true)
+    reprova(a2b(pagina({ folga: 15.5 }), doc1440), /folga de 15\.5 px/)
+    assert.equal(a2b(pagina({ folga: 40 }), doc1440).ok, true)
+  })
+
+  describe('mutação: 1 px em cada medida, uma por vez, derruba o critério nos limites 16 (texto) e 0 (caixa de toque)', () => {
+    it('o fio sobe 1 px (folga 17 -> 16 passa; 16 -> 15 reprova)', () => {
+      assert.equal(a2b([...indice({ folga: 16 }), fio({ rect: { x: 16, y: FIO_Y, w: 1393, h: 1 } })], doc1440).ok, true, 'a fixture de 16 passa antes da mutação')
+      reprova(a2b([...indice({ folga: 16 }), fio({ rect: { x: 16, y: FIO_Y - 1, w: 1393, h: 1 } })], doc1440), /folga de 15\.0 px/)
+    })
+
+    it('o texto da última âncora desce 1 px reprova', () => {
+      const nos = pagina({ folga: 16 })
+      assert.equal(a2b(nos, doc1440).ok, true)
+      nos[5].rectTexto = { ...nos[5].rectTexto, y: nos[5].rectTexto.y + 1 }
+      reprova(a2b(nos, doc1440), /folga de 15\.0 px/)
+    })
+
+    it('a caixa de toque desce 1 px: de 0 px de sobreposição (passa) a 1 px (reprova, e o texto segue com folga)', () => {
+      // Madrugada (56): com 18 px de folga a base do alvo termina exatamente no fio.
+      const nos = pagina({ folga: 18, alvo: 56 })
+      assert.equal(nos[5].rect.y + nos[5].rect.h, FIO_Y)
+      assert.equal(a2b(nos, doc1440).ok, true)
+      nos[5].rect = { ...nos[5].rect, y: nos[5].rect.y + 1 }
+      reprova(a2b(nos, doc1440), /a caixa de toque da última âncora \(a "Seção 6"\) termina em y=323\.0 e o fio da abertura começa em y=322\.0: passa 1\.0 px do fio/)
+    })
+
+    it('o movimento contrário (1 px a mais de ar) passa', () => {
+      assert.equal(a2b(pagina({ folga: 17 }), doc1440).ok, true)
+    })
+  })
+
+  it('a caixa de toque que passa do fio reprova mesmo com o texto folgado: madrugada, 16 px de folga e alvo de 56 (passa 2 px)', () => {
+    const r = reprova(a2b(pagina({ folga: 16, alvo: 56 }), doc1440), /a caixa de toque da última âncora \(a "Seção 6"\) termina em y=324\.0 e o fio da abertura começa em y=322\.0: passa 2\.0 px do fio/)
+    assert.doesNotMatch(r.motivo, /folga de/)
+  })
+
+  it('texto e caixa de toque reprovando juntos listam os dois números', () => {
+    const r = reprova(a2b(pagina({ folga: 8, alvo: 56 }), doc1440), /folga de 8\.0 px/)
+    assert.match(r.motivo, /passa 10\.0 px do fio/)
+  })
+
+  it('a última âncora é a de maior y, não a última do vetor', () => {
+    const nos = pagina({ folga: 20 })
+    const embaralhado = [nos[3], nos[5], nos[0], nos[6], nos[1], nos[4], nos[2]]
+    assert.equal(a2b(embaralhado, doc1440).ok, true)
+    // A de baixo com o texto colado no fio reprova, esteja onde estiver no vetor.
+    const colada = pagina({ folga: 12 })
+    reprova(a2b([colada[5], ...colada.slice(0, 5), colada[6]], doc1440), /folga de 12\.0 px/)
+  })
+
+  it('só a última âncora conta: uma de cima colada no fio não reprova', () => {
+    const nos = pagina({ folga: 20, ajuste: (i) => (i === 2 ? { rectTexto: { x: 1165, y: 300, w: 80, h: 20 } } : {}) })
+    assert.equal(a2b(nos, doc1440).ok, true)
+  })
+
+  it('o fio é o do `.sb-abertura-base` (a borda de baixo da caixa de 1 px), não a borda de cima nem a base da caixa', () => {
+    // Fio de 1 px em y=322: o topo é 322. Uma caixa mais alta com a borda de baixo de 1 px tem o topo da borda em y + h - 1.
+    const alto = [...indice({ folga: 16 }), fio({ rect: { x: 16, y: 290, w: 1393, h: 33 } })]
+    assert.equal(a2b(alto, doc1440).ok, true, 'a borda de baixo de 1 px de uma caixa de y=290 a 323 começa em 322')
+    // Uma borda de baixo de 2 px (de 321 a 323) começa em 321: o topo do fio sobe 1 px e a folga de 16 vira 15.
+    const dois = [...indice({ folga: 16 }), fio({ rect: { x: 16, y: 321, w: 1393, h: 2 }, estilo: { borderBottomWidth: '2px' } })]
+    reprova(a2b(dois, doc1440), /o fio da abertura começa em y=321\.0: folga de 15\.0 px/)
+  })
+
+  describe('largura', () => {
+    it('abaixo de 992 não se aplica (o índice em linha de 390 tem o A-2 de espaço entre textos), mesmo sem leitura', () => {
+      for (const d of [doc390, { ...doc1440, largura: 991 }, { ...doc1440, largura: 767 }]) {
+        const r = a2b(pagina({ folga: 0 }), d)
+        assert.equal(r.ok, true)
+        assert.match(r.motivo, /não aplicável/)
+      }
+      assert.match(a2b([], doc390).motivo, /não aplicável/)
+    })
+
+    it('992 já é 1440: sem a leitura, reprova', () => {
+      reprova(a2b([], { ...doc1440, largura: 992 }), /nenhuma âncora/)
+    })
+  })
+
+  describe('falha fechada', () => {
+    it('sem doc, sem a largura da janela ou sem a clientWidth', () => {
+      assert.equal(a2b(pagina(), undefined).ok, false)
+      assert.equal(a2b(pagina(), {}).ok, false)
+      assert.equal(a2b(pagina(), { largura: 1440 }).ok, false)
+    })
+
+    it('sem nenhuma âncora do índice (lista vazia, ausente ou só âncoras invisíveis)', () => {
+      reprova(a2b([fio()], doc1440), /nenhuma âncora do índice/)
+      reprova(a2b(undefined, doc1440), /nenhuma âncora do índice/)
+      reprova(a2b([...indice().map((n) => ({ ...n, visivel: false })), fio()], doc1440), /nenhuma âncora do índice/)
+    })
+
+    it('sem o retângulo do texto da última âncora (ausente, vazio, ilegível ou com altura nula)', () => {
+      for (const rectTexto of [undefined, null, {}, { x: 1, y: Number.NaN, w: 10, h: 10 }, { x: 1, y: 300, w: 10 }, { x: 1, y: '300', w: 10, h: 20 }]) {
+        const nos = pagina()
+        nos[5] = { ...nos[5], rectTexto }
+        reprova(a2b(nos, doc1440), /sem o retângulo do texto da última âncora/)
+      }
+    })
+
+    it('o texto de uma âncora de cima sem retângulo não esconde a última: mede a última', () => {
+      const nos = pagina({ folga: 12, ajuste: (i) => (i === 1 ? { rectTexto: undefined } : {}) })
+      reprova(a2b(nos, doc1440), /folga de 12\.0 px/)
+    })
+
+    it('uma âncora sem retângulo de caixa (a de baixo) reprova, e não deixa outra virar a última', () => {
+      const nos = pagina({ folga: 20 })
+      nos[5] = { ...nos[5], rect: undefined }
+      reprova(a2b(nos, doc1440), /âncora sem o retângulo/)
+      const ilegivel = pagina({ folga: 20 })
+      ilegivel[5] = { ...ilegivel[5], rect: { x: 1, y: Number.NaN, w: 1, h: 1 } }
+      reprova(a2b(ilegivel, doc1440), /âncora sem o retângulo/)
+    })
+
+    it('sem o fio da abertura (nenhum `.sb-abertura-base`, invisível ou sem retângulo)', () => {
+      reprova(a2b(indice(), doc1440), /nenhum fio da abertura/)
+      reprova(a2b([...indice(), fio({ visivel: false })], doc1440), /nenhum fio da abertura/)
+      reprova(a2b([...indice(), fio({ rect: undefined })], doc1440), /nenhum fio da abertura/)
+      reprova(a2b([...indice(), fio({ rect: { x: 0, y: Number.NaN, w: 1, h: 1 } })], doc1440), /nenhum fio da abertura/)
+      reprova(a2b([...indice(), criar({ tag: 'div', texto: '', rect: { x: 16, y: FIO_Y, w: 1393, h: 1 }, estilo: { borderBottomWidth: '1px' } })], doc1440), /nenhum fio da abertura/)
+    })
+
+    it('o fio sem a espessura da borda de baixo lida (ausente, nula, "auto" ou ilegível)', () => {
+      for (const borderBottomWidth of [undefined, '0px', 'auto', 'fino', '']) {
+        reprova(a2b([...indice(), fio({ estilo: { borderBottomWidth } })], doc1440), /fio da abertura sem a borda de baixo lida/)
+      }
+    })
+  })
+
+  describe('dentro do avaliarCriterios', () => {
+    it('a Conta soma o A-2b como critério bloqueante, logo depois do A-2; passa com a leitura certa e reprova com a de hoje', () => {
+      const bom = avaliarCriterios({ doc: doc1440, nos: pagina(), tema: 'claro' }, 'conta')
+      const c = bom.criterios.find((x) => x.regra === 'A-2b')
+      assert.ok(c, 'falta A-2b na Conta')
+      assert.equal(c.ok, true, c.motivo)
+      assert.equal(c.bloqueia, true)
+      const ids = bom.criterios.map((x) => x.regra)
+      assert.equal(ids.indexOf('A-2b'), ids.indexOf('A-2') + 1)
+      const hoje = avaliarCriterios({ doc: doc1440, nos: pagina({ folga: 12 }), tema: 'claro' }, 'conta')
+      assert.match(hoje.criterios.find((x) => x.regra === 'A-2b').motivo, /folga de 12\.0 px/)
+      const madrugada = avaliarCriterios({ doc: doc1440, nos: pagina({ alvo: 56 }), tema: 'madrugada' }, 'conta')
+      assert.equal(madrugada.criterios.find((x) => x.regra === 'A-2b').ok, true)
+    })
+
+    it('só a Conta tem o A-2b: as telas de acesso não o têm', () => {
+      for (const caso of ['entrar', 'criar_conta', 'recuperar_acesso', 'comecar_seu_nome']) {
+        assert.equal(criteriosDoCaso(caso).includes('A-2b'), false, caso)
+      }
+    })
+  })
+
+  it('o coletor marca o fio da abertura (`.sb-abertura-base`) para o critério achá-lo, e só ele', () => {
+    const { nos } = coletarDe('<main><section class="sb-abertura" data-bloco><h1>Conta</h1><div class="sb-abertura-base" aria-hidden="true"></div></section><p>Outro</p></main>')
+    const marcados = nos.filter((n) => n.m.aberturaBase)
+    assert.equal(marcados.length, 1)
+    assert.equal(marcados[0].tag, 'div')
+    assert.equal(marcados[0].estilo.borderBottomWidth !== undefined, true, 'o estilo da borda de baixo vem junto')
+  })
+})
+
+// =============================================================================================
+// MAT-44d-3, volta 3, item 4 (D6-selecao): a seleção de texto nas telas de acesso e na Conta usava o azul padrão do navegador, fora da
+// paleta. Decisão do líder: `::selection` com a paleta (variáveis de uso do tema), sem azul e sem amarelo. Critério, nas cinco telas, em
+// qualquer largura e nos dois temas (a madrugada onde a tela tem): `getComputedStyle(el, '::selection')` (`backgroundColor` e `color`) de um
+// elemento do corpo (um parágrafo do `main`) e de um `input`: o fundo tem alfa > 0 (o padrão do navegador reporta `rgba(0, 0, 0, 0)`) e o
+// contraste do texto sobre o fundo da seleção é >= 4,5 (AA), pelas funções que o medidor já tem (`parseCor`, `contraste`).
+// =============================================================================================
+
+describe('D6-selecao: a seleção de texto é da paleta e tem contraste AA', () => {
+  const reprova = (r, padrao) => {
+    assert.equal(r.ok, false, `devia reprovar: ${r.motivo}`)
+    if (padrao) assert.match(r.motivo, padrao)
+    return r
+  }
+  // A paleta do dia: o urucum (--cor-destaque, #B0401C) com o texto sobre ele (--cor-sobre-destaque, #FFF8EE); a da madrugada: #C47055 e #17120E.
+  const URUCUM_DIA = { backgroundColor: 'rgb(176, 64, 28)', color: 'rgb(255, 248, 238)' }
+  const URUCUM_MADRUGADA = { backgroundColor: 'rgb(196, 112, 85)', color: 'rgb(23, 18, 14)' }
+  const PADRAO_DO_NAVEGADOR = { backgroundColor: 'rgba(0, 0, 0, 0)', color: 'rgb(26, 21, 17)' }
+  const leitura = (tag, selecao = URUCUM_DIA, extra = {}) => ({
+    tag,
+    texto: tag === 'input' ? '' : 'Use o e-mail e a senha.',
+    rect: { x: 16, y: 148, w: 358, h: 43 },
+    selecao: selecao === null ? null : { ...selecao },
+    cadeia: ['rgba(0, 0, 0, 0)', 'rgb(246, 239, 227)'],
+    ...extra,
+  })
+  const docSel = ({ corpo, controle, base = doc1440 } = {}) => ({ ...base, selecao: { corpo: corpo === undefined ? leitura('p') : corpo, controle: controle === undefined ? leitura('input') : controle } })
+
+  it('o padrão do navegador reprova: o fundo da seleção é transparente (rgba(0, 0, 0, 0)), no corpo e no input', () => {
+    const r = reprova(
+      d6Selecao(docSel({ corpo: leitura('p', PADRAO_DO_NAVEGADOR), controle: leitura('input', PADRAO_DO_NAVEGADOR) })),
+      /o corpo: o fundo da seleção é transparente \(rgba\(0, 0, 0, 0\)\): o padrão do navegador, sem `::selection` da paleta/,
+    )
+    assert.match(r.motivo, /o input: o fundo da seleção é transparente/)
+    assert.equal(r.regra, 'D6-selecao')
+    assert.equal(r.nos_com_falha.length, 2)
+  })
+
+  it('a paleta passa: o urucum com o texto sobre ele, no dia (5,5:1) e na madrugada, no corpo e no input', () => {
+    for (const selecao of [URUCUM_DIA, URUCUM_MADRUGADA]) {
+      const r = d6Selecao(docSel({ corpo: leitura('p', selecao), controle: leitura('input', selecao) }))
+      assert.equal(r.ok, true, r.motivo)
+      assert.deepEqual(r.nos_com_falha, [])
+    }
+  })
+
+  it('o motivo da aprovação traz os valores lidos e o contraste, para o JSON mostrar o que foi lido', () => {
+    const r = d6Selecao(docSel())
+    assert.match(r.motivo, /corpo: fundo rgb\(176, 64, 28\), texto rgb\(255, 248, 238\), contraste \d\.\d{2}:1/)
+    assert.match(r.motivo, /input: fundo rgb\(176, 64, 28\)/)
+  })
+
+  describe('a borda do contraste: 4,5 passa e 4,4 reprova (texto branco sobre cinza: #767676 dá 4,54 e #777777 dá 4,48)', () => {
+    const branco = 'rgb(255, 255, 255)'
+    const com = (fundo) => d6Selecao(docSel({ corpo: leitura('p', { backgroundColor: fundo, color: branco }), controle: leitura('input') }))
+
+    it('4,54 passa e 4,48 reprova, com o número na mensagem', () => {
+      assert.equal(com('rgb(118, 118, 118)').ok, true)
+      reprova(com('rgb(119, 119, 119)'), /o corpo: contraste de 4\.48:1 entre o texto rgb\(255, 255, 255\) e o fundo rgb\(119, 119, 119\) da seleção \(o mínimo é 4\.5\)/)
+    })
+
+    it('mutação: 1 nível de cinza no fundo flipa o veredito (118 passa, 119 reprova, 117 passa), nos dois elementos', () => {
+      for (const nivel of [100, 117, 118]) assert.equal(com(`rgb(${nivel}, ${nivel}, ${nivel})`).ok, true, String(nivel))
+      for (const nivel of [119, 120, 140, 200]) reprova(com(`rgb(${nivel}, ${nivel}, ${nivel})`))
+      const noInput = d6Selecao(docSel({ corpo: leitura('p'), controle: leitura('input', { backgroundColor: 'rgb(119, 119, 119)', color: branco }) }))
+      reprova(noInput, /o input: contraste de 4\.48:1/)
+    })
+  })
+
+  it('só um dos dois reprova: o corpo certo e o input no padrão (e o contrário) reprovam, apontando o que falhou', () => {
+    const r1 = reprova(d6Selecao(docSel({ controle: leitura('input', PADRAO_DO_NAVEGADOR) })), /o input: o fundo da seleção é transparente/)
+    assert.doesNotMatch(r1.motivo, /o corpo:/)
+    assert.equal(r1.nos_com_falha.length, 1)
+    const r2 = reprova(d6Selecao(docSel({ corpo: leitura('p', PADRAO_DO_NAVEGADOR) })), /o corpo: o fundo da seleção é transparente/)
+    assert.doesNotMatch(r2.motivo, /o input:/)
+  })
+
+  it('o fundo translúcido compõe sobre o fundo do elemento antes do contraste (alfa 0,5 de urucum sobre o papel clareia e reprova com o texto claro)', () => {
+    const translucido = { backgroundColor: 'rgba(176, 64, 28, 0.5)', color: 'rgb(255, 248, 238)' }
+    const r = reprova(d6Selecao(docSel({ corpo: leitura('p', translucido) })), /o corpo: contraste de \d\.\d{2}:1/)
+    assert.match(r.motivo, /\(o mínimo é 4\.5\)/)
+    // O mesmo urucum opaco passa: a regra compôs a translucidez, não a ignorou.
+    assert.equal(d6Selecao(docSel()).ok, true)
+  })
+
+  it('o fundo translúcido sem cadeia de fundos opaca reprova fechado (não há como compor)', () => {
+    reprova(d6Selecao(docSel({ corpo: leitura('p', { backgroundColor: 'rgba(176, 64, 28, 0.5)', color: 'rgb(255, 248, 238)' }, { cadeia: ['rgba(0, 0, 0, 0)'] }) })), /sem como calcular o contraste/)
+    reprova(d6Selecao(docSel({ corpo: leitura('p', { backgroundColor: 'rgba(176, 64, 28, 0.5)', color: 'rgb(255, 248, 238)' }, { cadeia: undefined }) })), /sem como calcular o contraste/)
+  })
+
+  describe('falha fechada', () => {
+    it('sem doc, sem a largura da janela ou sem a clientWidth', () => {
+      assert.equal(d6Selecao(undefined).ok, false)
+      assert.equal(d6Selecao({ clientWidth: 1425 }).ok, false)
+      assert.equal(d6Selecao({ largura: 1440 }).ok, false)
+    })
+
+    it('sem a leitura da seleção (doc.selecao ausente, nula ou de outro tipo)', () => {
+      for (const selecao of [undefined, null, 'x', 42]) reprova(d6Selecao({ ...doc1440, selecao }), /sem a leitura da seleção \(doc\.selecao\)/)
+    })
+
+    it('sem o elemento do corpo ou sem o input (nulo ou ausente): a tela tem de ter os dois', () => {
+      reprova(d6Selecao(docSel({ corpo: null })), /o corpo: sem a leitura do elemento \(nenhum parágrafo visível no main\)/)
+      reprova(d6Selecao(docSel({ controle: null })), /o input: sem a leitura do elemento \(nenhum input visível no main\)/)
+      reprova(d6Selecao({ ...doc1440, selecao: { corpo: leitura('p') } }), /o input: sem a leitura do elemento/)
+    })
+
+    it('o elemento sem retângulo (ausente, vazio, ilegível ou de largura ou altura nula) reprova', () => {
+      for (const rect of [undefined, null, {}, { x: 1, y: Number.NaN, w: 10, h: 10 }, { x: 0, y: 0, w: 0, h: 20 }, { x: 0, y: 0, w: 20, h: 0 }, { x: 0, y: 0, w: '20', h: 20 }]) {
+        reprova(d6Selecao(docSel({ corpo: leitura('p', URUCUM_DIA, { rect }) })), /o corpo: sem o retângulo do elemento/)
+      }
+    })
+
+    it('sem o estilo da seleção lido (nulo, vazio, sem fundo ou sem cor, de tipo errado) reprova', () => {
+      for (const selecao of [null, undefined, {}, { color: 'rgb(255, 248, 238)' }, { backgroundColor: 'rgb(176, 64, 28)' }, { backgroundColor: 42, color: 'rgb(0, 0, 0)' }, { backgroundColor: '', color: '' }]) {
+        const el = { ...leitura('p'), selecao }
+        reprova(d6Selecao(docSel({ corpo: el })), /o corpo: sem o estilo da seleção lido/)
+      }
+    })
+
+    it('a cor do fundo ou do texto que não se interpreta reprova, apontando qual', () => {
+      reprova(d6Selecao(docSel({ corpo: leitura('p', { backgroundColor: 'azul', color: 'rgb(255, 248, 238)' }) })), /o corpo: o fundo da seleção "azul" não se interpreta como cor/)
+      reprova(d6Selecao(docSel({ corpo: leitura('p', { backgroundColor: 'rgb(176, 64, 28)', color: 'highlighttext' }) })), /o corpo: o texto da seleção "highlighttext" não se interpreta como cor/)
+      reprova(d6Selecao(docSel({ controle: leitura('input', { backgroundColor: 'rgb(1, 2)', color: 'rgb(0, 0, 0)' }) })), /o input: o fundo da seleção "rgb\(1, 2\)" não se interpreta como cor/)
+    })
+  })
+
+  describe('dentro do avaliarCriterios', () => {
+    it('as cinco telas somam o D6-selecao como critério bloqueante, e ele passa com a paleta e reprova com o padrão do navegador', () => {
+      for (const caso of ['entrar', 'criar_conta', 'recuperar_acesso', 'comecar_seu_nome', 'conta']) {
+        const { criterios } = avaliarCriterios({ doc: docSel(), nos: [], tema: 'claro' }, caso)
+        const c = criterios.find((x) => x.regra === 'D6-selecao')
+        assert.ok(c, `falta D6-selecao em ${caso}`)
+        assert.equal(c.ok, true, `${caso}: ${c.motivo}`)
+        assert.equal(c.bloqueia, true)
+        const hoje = avaliarCriterios({ doc: docSel({ corpo: leitura('p', PADRAO_DO_NAVEGADOR) }), nos: [], tema: 'claro' }, caso)
+        assert.equal(hoje.criterios.find((x) => x.regra === 'D6-selecao').ok, false, caso)
+      }
+    })
+
+    it('vale em 390 e em 1440, e na madrugada da Conta', () => {
+      for (const base of [doc390, doc1440]) assert.equal(d6Selecao(docSel({ base })).ok, true)
+      const { criterios } = avaliarCriterios({ doc: docSel({ corpo: leitura('p', URUCUM_MADRUGADA), controle: leitura('input', URUCUM_MADRUGADA) }), nos: [], tema: 'madrugada' }, 'conta')
+      assert.equal(criterios.find((x) => x.regra === 'D6-selecao').ok, true)
+    })
+
+    it('sem a leitura, reprova fechado', () => {
+      const { criterios } = avaliarCriterios({ doc: doc1440, nos: [], tema: 'claro' }, 'entrar')
+      assert.equal(criterios.find((x) => x.regra === 'D6-selecao').ok, false)
+    })
+  })
+
+  describe('a leitura em página da seleção (lerSelecaoNaPagina)', () => {
+    /**
+     * O jsdom não mede layout nem calcula o `::selection`: `data-r="x,y,w,h"` dá a caixa; o `getComputedStyle(el, '::selection')` é o de
+     * `selecao` (por tag), e o sem pseudo-elemento traz o fundo de `data-fundo` e `visibility` e `display` do elemento.
+     */
+    function lerSelecao(html, { selecao = { p: URUCUM_DIA, input: URUCUM_DIA }, pseudoLanca = false, rolagem = 0 } = {}) {
+      const dom = new JSDOM(`<!doctype html><html><body>${html}</body></html>`, { runScripts: 'outside-only', virtualConsole: new VirtualConsole() })
+      const { window } = dom
+      window.Element.prototype.getBoundingClientRect = function retangulo() {
+        const [x, y, w, h] = (this.getAttribute('data-r') ?? '0,0,100,20').split(',').map(Number)
+        return { x, y, left: x, top: y, width: w, height: h, right: x + w, bottom: y + h }
+      }
+      window.getComputedStyle = (el, pseudo) => {
+        if (pseudo) {
+          if (pseudoLanca) throw new Error('pseudo-elemento não suportado')
+          return { ...(selecao[el.tagName.toLowerCase()] ?? {}) }
+        }
+        return {
+          backgroundColor: el.getAttribute('data-fundo') ?? 'rgba(0, 0, 0, 0)',
+          visibility: el.hasAttribute('data-oculto') ? 'hidden' : 'visible',
+          display: el.hasAttribute('data-nenhum') ? 'none' : 'block',
+        }
+      }
+      if (rolagem) Object.defineProperty(window, 'scrollY', { configurable: true, value: rolagem })
+      try {
+        return JSON.parse(JSON.stringify(window.eval(`(${lerSelecaoNaPagina.toString()})()`)))
+      } finally {
+        window.close()
+      }
+    }
+
+    const PAGINA = `
+      <p data-r="16,10,300,20">Fora do main: não conta.</p>
+      <main data-fundo="rgb(246, 239, 227)">
+        <h1 data-r="16,92,358,48">Entrar</h1>
+        <p data-oculto data-r="16,140,358,24">Oculto.</p>
+        <p data-nenhum data-r="16,140,358,24">Sem caixa.</p>
+        <p data-r="16,170,1,1">Fina demais.</p>
+        <p data-r="16,148,358,43">Use o e-mail e a senha.</p>
+        <form>
+          <input type="hidden" data-r="16,200,300,56">
+          <input type="email" data-oculto data-r="16,260,300,56">
+          <input type="email" data-r="20,372,350,56">
+        </form>
+      </main>`
+
+    it('lê o primeiro parágrafo visível do main e o primeiro input visível, com a caixa, o ::selection e a cadeia de fundos', () => {
+      const { corpo, controle } = lerSelecao(PAGINA)
+      assert.equal(corpo.tag, 'p')
+      assert.equal(corpo.texto, 'Use o e-mail e a senha.')
+      assert.deepEqual(corpo.rect, { x: 16, y: 148, w: 358, h: 43 })
+      assert.deepEqual(corpo.selecao, { backgroundColor: URUCUM_DIA.backgroundColor, color: URUCUM_DIA.color })
+      assert.ok(Array.isArray(corpo.cadeia) && corpo.cadeia.length >= 2, 'a cadeia vai do elemento até a raiz')
+      assert.ok(corpo.cadeia.includes('rgb(246, 239, 227)'), 'o fundo do main entra na cadeia')
+      assert.equal(controle.tag, 'input')
+      assert.deepEqual(controle.rect, { x: 20, y: 372, w: 350, h: 56 })
+      assert.deepEqual(controle.selecao, { backgroundColor: URUCUM_DIA.backgroundColor, color: URUCUM_DIA.color })
+    })
+
+    it('as coordenadas são as da página: a rolagem entra na caixa', () => {
+      const { corpo, controle } = lerSelecao(PAGINA, { rolagem: 100 })
+      assert.equal(corpo.rect.y, 248)
+      assert.equal(controle.rect.y, 472)
+    })
+
+    it('o ::selection lido é o de cada elemento: o padrão do navegador volta como transparente e o critério reprova', () => {
+      const lido = lerSelecao(PAGINA, { selecao: { p: PADRAO_DO_NAVEGADOR, input: PADRAO_DO_NAVEGADOR } })
+      assert.equal(lido.corpo.selecao.backgroundColor, 'rgba(0, 0, 0, 0)')
+      reprova(d6Selecao({ ...doc1440, selecao: lido }), /o fundo da seleção é transparente/)
+      assert.equal(d6Selecao({ ...doc1440, selecao: lerSelecao(PAGINA) }).ok, true, 'a leitura da paleta passa o critério inteiro')
+    })
+
+    it('sem parágrafo ou sem input visível no main, o elemento é nulo (o critério reprova fechado)', () => {
+      const semInput = lerSelecao('<main><p data-r="0,0,100,20">Só texto.</p></main>')
+      assert.equal(semInput.controle, null)
+      assert.equal(semInput.corpo.tag, 'p')
+      const semParagrafo = lerSelecao('<main><input data-r="0,0,100,20"></main>')
+      assert.equal(semParagrafo.corpo, null)
+      reprova(d6Selecao({ ...doc1440, selecao: semInput }), /o input: sem a leitura do elemento/)
+    })
+
+    it('um navegador que não entrega o ::selection (a leitura lança) volta com a seleção nula, e não como aprovação', () => {
+      const lido = lerSelecao(PAGINA, { pseudoLanca: true })
+      assert.equal(lido.corpo.selecao, null)
+      reprova(d6Selecao({ ...doc1440, selecao: lido }), /sem o estilo da seleção lido/)
+    })
+
+    it('não tem fechamento: serializada por toString, roda sozinha', () => {
+      assert.match(lerSelecaoNaPagina.toString(), /^(async )?function lerSelecaoNaPagina/)
+    })
   })
 })
