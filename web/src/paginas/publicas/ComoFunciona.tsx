@@ -19,8 +19,8 @@ import { COMO_FUNCIONA_DESTAQUE as T } from '../../conteudo/publicas-destaque.ts
 /**
  * /como-funciona: a abertura com a cena de estúdio (sem nada por cima do aparelho), os três momentos
  * da rotina (um painel de campo por passo, com a tela de exemplo de cada um; só a madrugada flutua),
- * o "para começar" e a faixa de cacau que leva ao protótipo, com os números ao lado. O aviso honesto
- * fica uma vez só, fora das imagens.
+ * o "para começar" e a faixa de cacau que leva ao protótipo, com os números ao lado. O aviso de
+ * demonstração é o do rodapé da casca: a página não repete outro.
  */
 export function ComoFunciona() {
   return (
@@ -37,9 +37,6 @@ export function ComoFunciona() {
                 {T.secundario.rotulo}
               </Botao>
             </div>
-            <p className="cm-pequeno pd-aviso" data-aviso="">
-              {T.aviso}
-            </p>
           </>
         }
         midia={

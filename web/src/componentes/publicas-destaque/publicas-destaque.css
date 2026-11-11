@@ -37,8 +37,8 @@
   margin-top: 24px;
 }
 
-/* Empilhado: o título encosta no texto (24 px), e a mídia vem 40 px depois. O aviso desce para
-   depois da mídia, para a tela de verdade subir para a primeira dobra. */
+/* Empilhado: o título encosta no texto (24 px), e a mídia vem 40 px depois. O aviso de saúde desce
+   para depois da mídia, para a tela de verdade subir para a primeira dobra. */
 @media (max-width: 1099px) {
   .pd-abertura {
     gap: 24px;
@@ -55,8 +55,7 @@
   }
 
   /* Em "título e texto" o texto não se desmancha na grade: as ações guardam a distância do lide. */
-  .pd-abertura[data-disposicao='titulo-lide'] .pd-abertura-texto > .pd-acoes,
-  .pd-abertura[data-disposicao='titulo-lide'] .pd-abertura-texto > .pd-aviso {
+  .pd-abertura[data-disposicao='titulo-lide'] .pd-abertura-texto > .pd-acoes {
     margin-top: 24px;
   }
 
@@ -65,8 +64,7 @@
     margin-top: 16px;
   }
 
-  /* O aviso, depois da mídia (ou das ações), com folga dos dois lados: nunca encosta num título. */
-  .pd-abertura .pd-abertura-texto > .pd-aviso,
+  /* O aviso de saúde, depois da mídia, com folga dos dois lados: nunca encosta num título. */
   .pd-abertura .pd-abertura-texto > .pd-aviso-saude {
     order: 2;
     margin-top: 16px;
@@ -111,12 +109,6 @@
 
 .pd-link.cm-botao-texto:hover {
   text-decoration-thickness: 2.5px;
-}
-
-.pd-aviso {
-  max-width: 34rem;
-  margin: 32px 0 0;
-  color: var(--cor-texto-2);
 }
 
 @media (min-width: 1100px) {
@@ -333,6 +325,14 @@
 }
 
 /* Cartões de interface (HTML de verdade, com a família fictícia) ---------------------------- */
+/* Cada tela de exemplo é um contêiner: as linhas se reorganizam pela largura do próprio cartão (ver
+   o @container abaixo), não pela janela. A largura do cartão vem de fora (célula, coluna, `width`),
+   nunca do conteúdo. Palavra que não cabe quebra em vez de vazar. */
+.pd-cartao {
+  container-type: inline-size;
+  overflow-wrap: anywhere;
+}
+
 .pd-cartao > * {
   margin: 0;
 }
@@ -411,6 +411,7 @@
 .pd-linha-texto {
   flex: 1 1 auto;
   min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .pd-linha-texto > span {
@@ -434,6 +435,31 @@
   font-size: 1.0625rem;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
+}
+
+/* Cartão estreito (a 195 px, ou a 390 com a fonte raiz a 200%): a coluna do texto sumia entre o
+   avatar e a hora, e o nome passava por cima do horário. Abaixo de 15rem de largura útil (em rem,
+   acompanha a fonte), a linha quebra: avatar e hora em cima, o texto numa linha inteira embaixo. O
+   cabeçalho com selo também quebra. A 390 e a 1440 comuns os cartões têm 16,9rem ou mais e ficam
+   como estão. */
+@container (max-width: 15rem) {
+  .pd-linha {
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+
+  .pd-linha-texto {
+    order: 3;
+    flex: 1 1 100%;
+  }
+
+  .pd-linha-hora {
+    margin-left: auto;
+  }
+
+  .pd-cartao-cabeca {
+    flex-wrap: wrap;
+  }
 }
 
 .pd-avatar {
@@ -964,7 +990,8 @@
   .pd-seletor > .pd-abas > .pd-aba {
     justify-content: flex-start;
     min-height: 52px;
-    padding: 0 24px;
+    padding-inline: 24px;
+    text-align: start;
   }
 
   .pd-seletor-lateral {
@@ -991,17 +1018,19 @@
   color: currentColor;
 }
 
-/* Seletor de fase: as abas em pílula, numa grade de colunas iguais (2 no celular, 3 no meio, 1 coluna
-   no largo): as 6 fases fecham as linhas, sem sobra torta à direita. */
+/* Seletor de fase: as abas em pílula, numa grade de colunas iguais que se ajusta ao espaço medido em
+   rem (acompanha a fonte raiz): 2 colunas no celular comum, 3 no meio e 1 coluna no largo. Com a
+   fonte a 200% ou a 195 px, as colunas caem para 1 (o `min(100%, …)` nunca passa da largura), e o
+   rótulo quebra linha dentro da pílula em vez de vazar para a vizinha. */
 .pd-abas {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
   gap: 8px;
 }
 
 @media (min-width: 600px) {
   .pd-abas {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
   }
 }
 
@@ -1013,6 +1042,8 @@
   min-width: 44px;
   min-height: 44px;
   padding: 0 18px;
+  padding-block: 8px;
+  text-align: center;
   border: 1.5px solid var(--color-cacau);
   border-radius: var(--radius-pilula);
   background-color: transparent;
@@ -1020,7 +1051,7 @@
   font-size: 1rem;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
-  white-space: nowrap;
+  white-space: normal;
   cursor: pointer;
   /* Como no cm-botao: só a escala do toque anima; a cor muda na hora. */
   transition-property: scale;
@@ -1070,7 +1101,7 @@
 
 @media (max-width: 479px) {
   .pd-aba {
-    padding: 0 14px;
+    padding-inline: 14px;
   }
 }
 

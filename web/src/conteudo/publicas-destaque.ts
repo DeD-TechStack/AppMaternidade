@@ -2,10 +2,10 @@
 // antigo das páginas públicas (MAT-36), às vezes enxutas, com o mesmo sentido e o futuro ("vai", "o
 // plano é") onde a função ainda não está no ar. As páginas não declaram frase em literal: tiram daqui.
 
-const HOJE = '/app/hoje'
+// O aviso de demonstração mora só no rodapé da casca (AVISO_DEMONSTRACAO): estas páginas não
+// repetem que é demonstração, que a família é fictícia, que a conta não está no ar nem que nada é salvo.
 
-const CONTA_INDISPONIVEL = 'Criar conta e entrar ainda não estão disponíveis neste site.'
-const TELAS_FICTICIAS = 'As telas mostradas aqui são exemplos com uma família fictícia.'
+const HOJE = '/app/hoje'
 
 /** O rótulo do primário que abre o protótipo (o mesmo nas duas pontas da página). */
 const ABRIR_PROTOTIPO = 'Abrir o protótipo de Hoje e Sessão'
@@ -18,8 +18,6 @@ export const COMO_FUNCIONA_DESTAQUE = {
   lide: 'Três momentos da rotina mostram o que o site vai fazer pela família: a primeira semana, a madrugada e a troca de turno.',
   primario: { rotulo: ABRIR_PROTOTIPO, destino: HOJE },
   secundario: { rotulo: 'Ver os três momentos', destino: '#tres-momentos' },
-  /** O único aviso da página, fora das imagens e dos cartões. */
-  aviso: `${CONTA_INDISPONIVEL} ${TELAS_FICTICIAS}`,
   cena: {
     base: '/cenas/publicas/como-funciona',
     largura: 512,
@@ -87,7 +85,7 @@ export const COMO_FUNCIONA_DESTAQUE = {
   },
   fechamento: {
     titulo: ['Veja as telas', 'por dentro.'],
-    texto: 'O protótipo de Hoje e Sessão já pode ser aberto, com uma família fictícia e sem salvar nada.',
+    texto: 'O protótipo de Hoje e Sessão já pode ser aberto no navegador, sem instalar nada.',
     acao: { rotulo: ABRIR_PROTOTIPO, destino: HOJE },
   },
   numeros: [
@@ -105,8 +103,6 @@ export const CUIDADO_DESTAQUE = {
   lide: 'Mães, pais, avós, babás e outros adultos autorizados vão poder cuidar do mesmo bebê pelo site, cada um com a própria conta e o próprio papel.',
   /** O primário da primeira dobra e o do fim da página: o mesmo destino do fechamento de Como funciona. */
   primario: { rotulo: ABRIR_PROTOTIPO, destino: HOJE },
-  /** O único aviso da página, fora das imagens e dos cartões. */
-  aviso: TELAS_FICTICIAS,
   familia: {
     descricao: 'Exemplo da tela Família, com a família fictícia da Heloísa',
     titulo: 'Família',

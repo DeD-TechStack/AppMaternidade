@@ -64,11 +64,23 @@ describe('as três páginas públicas em destaque', () => {
       }
     })
 
-    it(`${caminho}: exatamente um aviso no main, fora das cenas, dos cartões e dos painéis`, () => {
+    // Na página inteira (casca incluída), um aviso de demonstração só: o do rodapé da casca. Nenhum
+    // outro parágrafo repete que é demonstração, que a família é fictícia, que a conta não está no ar
+    // ou que nada é salvo. O aviso médico (AvisoSaude) é outra coisa e não conta.
+    it(`${caminho}: um aviso de demonstração no documento inteiro, o do rodapé`, () => {
       const { container } = renderizarRota(caminho)
-      const avisos = container.querySelectorAll('main [data-aviso]')
-      expect(avisos).toHaveLength(1)
-      expect(avisos[0].closest('.cm-flutuante, [data-cartao-plano], picture, [data-painel]')).toBeNull()
+      const marcados = [...container.querySelectorAll('[data-aviso]')]
+      expect(marcados).toHaveLength(1)
+      expect(marcados[0].getAttribute('data-aviso')).toBe('demonstracao')
+      expect(marcados[0].closest('footer[data-rodape]')).not.toBeNull()
+      const DEMONSTRACAO = /fictíci|demonstração|não estão disponíveis|não (é|são) salv|nada do que você registra|sem salvar/i
+      const porTexto = [...container.querySelectorAll('p, li, span, small, div')].filter(
+        (no) => no.children.length === 0 && DEMONSTRACAO.test(no.textContent ?? ''),
+      )
+      expect(porTexto).toEqual([marcados[0]])
+      for (const saude of container.querySelectorAll('[data-aviso-saude]')) {
+        expect(saude.hasAttribute('data-aviso')).toBe(false)
+      }
     })
   }
 })
@@ -132,6 +144,66 @@ describe('os CTAs das três páginas cabem quando ampliados', () => {
   }
 })
 
+/** As regras de um seletor exato (o último composto, sem contexto), em qualquer @media. */
+const regrasDoSeletor = (alvo: RegExp) => regras.filter((r) => r.seletores.some((s) => alvo.test(s)))
+
+/** Os blocos @container: a condição e as regras de dentro. */
+const blocosContainer = [...cssDestaque.matchAll(/@container\s*([^{]*)\{((?:[^{}]*\{[^{}]*\})*)\s*\}/g)].map(
+  ([, condicao, corpo]) => ({
+    condicao: condicao.trim(),
+    regras: [...corpo.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, seletor, decl]) => ({
+      seletor: seletor.trim().replace(/\s+/g, ' '),
+      decl: decl.replace(/\s+/g, ' '),
+    })),
+  }),
+)
+
+/** Nenhuma regra esconde, corta ou trava em uma linha o texto do alvo. */
+function semCorteNemTrava(alvo: RegExp) {
+  for (const regra of regrasDoSeletor(alvo)) {
+    const onde = regra.seletores.join(', ')
+    expect(regra.declaracoes['white-space'], onde).not.toBe('nowrap')
+    expect(regra.declaracoes, onde).not.toHaveProperty('overflow')
+    expect(regra.declaracoes, onde).not.toHaveProperty('text-overflow')
+    expect(regra.declaracoes, onde).not.toHaveProperty('height')
+  }
+}
+
+// R2/R3: a 195 px e com a fonte raiz a 200% os rótulos das abas e as linhas dos cartões não podem se
+// sobrepor. O jsdom não faz layout: aqui ficam as regras (lidas do disco), e a largura real fica para
+// as capturas.
+describe('as abas de fase e as linhas dos cartões refluem quando falta largura', () => {
+  it('as abas: grade de colunas iguais que vira uma coluna (medida em rem), rótulo que quebra linha', () => {
+    const grades = regrasDoSeletor(/^\.pd-abas$/)
+      .map((r) => r.declaracoes['grid-template-columns'])
+      .filter(Boolean)
+    expect(grades.length).toBeGreaterThan(0)
+    for (const grade of grades) {
+      expect(grade).toMatch(/^repeat\(auto-fit, minmax\(min\(100%, [\d.]+rem\), 1fr\)\)$/)
+    }
+    semCorteNemTrava(/\.pd-abas?(?![\w-])/)
+    const aba = Object.assign({}, ...regrasDoSeletor(/^\.pd-aba$/).map((r) => r.declaracoes)) as Record<string, string>
+    expect(aba['white-space']).toBe('normal')
+    expect(aba['min-height']).toBe('44px')
+    expect(aba['padding-block']).toBeDefined()
+  })
+
+  it('as linhas dos cartões: cada cartão é um contêiner e, estreito (em rem), o texto desce para uma linha inteira', () => {
+    const cartao = Object.assign({}, ...regrasDoSeletor(/^\.pd-cartao$/).map((r) => r.declaracoes)) as Record<string, string>
+    expect(cartao['container-type']).toBe('inline-size')
+    const estreito = blocosContainer.find((b) => /max-width:\s*[\d.]+rem/.test(b.condicao))
+    expect(estreito, 'um @container (max-width: …rem)').toBeDefined()
+    const regra = (alvo: string) => estreito!.regras.find((r) => r.seletor === alvo)?.decl ?? ''
+    expect(regra('.pd-linha')).toMatch(/flex-wrap: wrap/)
+    expect(regra('.pd-linha-texto')).toMatch(/flex: 1 1 100%/)
+    expect(regra('.pd-linha-texto')).toMatch(/order: 3/)
+    const texto = Object.assign({}, ...regrasDoSeletor(/^\.pd-linha-texto$/).map((r) => r.declaracoes)) as Record<string, string>
+    expect(texto['min-width']).toBe('0')
+    expect(texto['overflow-wrap']).toBe('anywhere')
+    semCorteNemTrava(/\.pd-linha(-[\w-]+)?$/)
+  })
+})
+
 describe('Como funciona', () => {
   it('a primeira dobra tem a cena de estúdio com texto alternativo e tamanho 1×, sem cartão por cima', () => {
     const { container } = renderizarRota('/como-funciona')
@@ -155,14 +227,6 @@ describe('Como funciona', () => {
     expect(itens.map((li) => li.querySelector('.cm-flutuante') !== null)).toEqual([false, true, false])
     expect(itens[2].textContent).toContain('Bruno')
     expect(itens[2].textContent).toContain(COMO_FUNCIONA_DESTAQUE.desdeQueSaiu.andamento.rotulo)
-  })
-
-  it('o aviso honesto aparece uma vez, fora das imagens e dos cartões', () => {
-    const { container } = renderizarRota('/como-funciona')
-    const avisos = screen.getAllByText(COMO_FUNCIONA_DESTAQUE.aviso)
-    expect(avisos).toHaveLength(1)
-    expect(avisos[0].closest('.cm-flutuante, picture, [data-painel]')).toBeNull()
-    expect(container.querySelectorAll('main [data-aviso]')).toHaveLength(1)
   })
 
   it('os dois primários levam ao protótipo e o secundário leva aos três momentos', async () => {
@@ -207,7 +271,6 @@ describe('Cuidado compartilhado', () => {
     expect(screen.getByRole('heading', { level: 2, name: 'Quem fez cada registro' })).toBeTruthy()
     expect(screen.getByRole('heading', { level: 2, name: 'Na passagem de turno' })).toBeTruthy()
     expect(screen.getByRole('heading', { level: 2, name: 'Quando alguém para de cuidar.' })).toBeTruthy()
-    expect(screen.getAllByText(CUIDADO_DESTAQUE.aviso)).toHaveLength(1)
   })
 
   it('a abertura tem o primário para o protótipo, e o fim da página tem a mesma ação', () => {
@@ -260,6 +323,7 @@ describe('Desenvolvimento', () => {
     const { container } = renderizarRota('/desenvolvimento')
     const avisos = screen.getAllByText(AVISO_SAUDE)
     expect(avisos).toHaveLength(1)
+    expect(container.querySelectorAll('[data-aviso-saude]')).toHaveLength(1)
     const abertura = container.querySelector('main .pd-abertura')!
     expect(abertura.contains(avisos[0])).toBe(true)
     expect(avisos[0].closest('[data-painel]')).toBeNull()

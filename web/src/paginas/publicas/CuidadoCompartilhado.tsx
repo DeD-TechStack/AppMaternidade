@@ -22,7 +22,7 @@ const ICONES = [UserPlus, CalendarClock, UserMinus] as const
  * Família e, ao lado, o convite com prazo e a avó do carrinho num chão de oliva (a composição F1), os
  * três blocos curtos (convite, prazo, revogação) com o exemplo de cada um, a tabela dos papéis, o
  * painel de areia com a tarde da Heloísa (quem fez cada registro, e quando) e o que acontece quando
- * alguém para de cuidar, com a ação para o protótipo.
+ * alguém para de cuidar, com a ação para o protótipo. O aviso de demonstração é o do rodapé da casca.
  */
 export function CuidadoCompartilhado() {
   return (
@@ -36,9 +36,6 @@ export function CuidadoCompartilhado() {
             <div className="pd-acoes">
               <Botao to={T.primario.destino}>{T.primario.rotulo}</Botao>
             </div>
-            <p className="cm-pequeno pd-aviso" data-aviso="">
-              {T.aviso}
-            </p>
           </>
         }
       />
