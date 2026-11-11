@@ -1,4 +1,5 @@
 import { CalendarClock, UserMinus, UserPlus } from 'lucide-react'
+import { Botao } from '../../componentes/base/Botao.tsx'
 import { CartaoFlutuante } from '../../componentes/campo/CartaoFlutuante.tsx'
 import { Ilustracao } from '../../componentes/campo/Ilustracao.tsx'
 import { PainelCampo } from '../../componentes/campo/PainelCampo.tsx'
@@ -8,8 +9,8 @@ import { CabecaDeSecao } from '../../componentes/publicas-destaque/CabecaDeSecao
 import {
   CartaoConviteComPrazo,
   CartaoFamilia,
-  CartaoNota,
-  CartaoSoneca,
+  CartaoPlano,
+  CartaoTarde,
 } from '../../componentes/publicas-destaque/CartoesApp.tsx'
 import { TabelaTexto } from '../../componentes/publicas-destaque/TabelaTexto.tsx'
 import { CUIDADO_DESTAQUE as T } from '../../conteudo/publicas-destaque.ts'
@@ -17,9 +18,11 @@ import { CUIDADO_DESTAQUE as T } from '../../conteudo/publicas-destaque.ts'
 const ICONES = [UserPlus, CalendarClock, UserMinus] as const
 
 /**
- * /cuidado-compartilhado: o painel de mel com a tela Família e a avó do carrinho (a composição F1),
- * os três blocos curtos (convite, prazo, revogação), a tabela dos papéis, o painel de areia com quem
- * fez cada registro e a passagem de turno, e o que acontece quando alguém para de cuidar.
+ * /cuidado-compartilhado: a abertura com o primário na primeira dobra, o painel de mel com a tela
+ * Família e, ao lado, o convite com prazo e a avó do carrinho num chão de oliva (a composição F1), os
+ * três blocos curtos (convite, prazo, revogação) com o exemplo de cada um, a tabela dos papéis, o
+ * painel de areia com a tarde da Heloísa (quem fez cada registro, e quando) e o que acontece quando
+ * alguém para de cuidar, com a ação para o protótipo. O aviso de demonstração é o do rodapé da casca.
  */
 export function CuidadoCompartilhado() {
   return (
@@ -30,24 +33,24 @@ export function CuidadoCompartilhado() {
         texto={
           <>
             <p className="cm-lide">{T.lide}</p>
-            <p className="cm-pequeno pd-aviso" data-aviso="">
-              {T.aviso}
-            </p>
+            <div className="pd-acoes">
+              <Botao to={T.primario.destino}>{T.primario.rotulo}</Botao>
+            </div>
           </>
         }
       />
 
       <PainelCampo variante="mel" luz como="figure" aria-label={T.familia.descricao} className="pd-familia">
-        <div className="pd-familia-cartoes">
-          <CartaoFlutuante giro={-2} className="pd-em-fluxo">
-            <CartaoFamilia />
-          </CartaoFlutuante>
-          <CartaoFlutuante giro={4} className="pd-em-fluxo">
+        <CartaoPlano className="pd-familia-tela">
+          <CartaoFamilia />
+        </CartaoPlano>
+        <div className="pd-familia-lado">
+          <CartaoFlutuante giro={2} className="pd-em-fluxo pd-familia-convite">
             <CartaoConviteComPrazo />
           </CartaoFlutuante>
-        </div>
-        <div className="pd-familia-desenho">
-          <Ilustracao nome="avo-carrinho" carregamento="eager" />
+          <div className="pd-chao pd-familia-desenho">
+            <Ilustracao nome="avo-carrinho" carregamento="eager" />
+          </div>
         </div>
       </PainelCampo>
 
@@ -61,6 +64,15 @@ export function CuidadoCompartilhado() {
               </span>
               <h2 className="cm-h4">{bloco.titulo}</h2>
               <p className="cm-corpo">{bloco.texto}</p>
+              <p className="pd-tres-exemplo" data-exemplo="">
+                <span className="pd-avatar" aria-hidden="true">
+                  {bloco.exemplo.inicial}
+                </span>
+                <span className="pd-linha-texto">
+                  <span className="pd-linha-nome">{bloco.exemplo.quem}</span>
+                  <span className="pd-linha-detalhe">{bloco.exemplo.oQue}</span>
+                </span>
+              </p>
             </li>
           )
         })}
@@ -82,21 +94,16 @@ export function CuidadoCompartilhado() {
         <div className="pd-registro-texto">
           <div>
             <h2 className="cm-h3">{T.registro.titulo}</h2>
-            <p className="cm-lide">{T.registro.texto}</p>
+            <p className="cm-corpo">{T.registro.texto}</p>
           </div>
           <div>
             <h2 className="cm-h3">{T.passagem.titulo}</h2>
-            <p className="cm-lide">{T.passagem.texto}</p>
+            <p className="cm-corpo">{T.passagem.texto}</p>
           </div>
         </div>
-        <div className="pd-pilha">
-          <CartaoFlutuante giro={-2} className="pd-em-fluxo">
-            <CartaoSoneca />
-          </CartaoFlutuante>
-          <CartaoFlutuante giro={2} className="pd-em-fluxo">
-            <CartaoNota />
-          </CartaoFlutuante>
-        </div>
+        <CartaoPlano className="pd-registro-cartao">
+          <CartaoTarde />
+        </CartaoPlano>
       </PainelCampo>
 
       <section className="pd-secao cm-area pd-duas" aria-labelledby="cuidado-parar">
@@ -107,6 +114,9 @@ export function CuidadoCompartilhado() {
               {texto}
             </p>
           ))}
+          <div className="pd-acoes">
+            <Botao to={T.primario.destino}>{T.primario.rotulo}</Botao>
+          </div>
         </div>
       </section>
     </main>
