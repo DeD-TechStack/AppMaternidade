@@ -10,6 +10,8 @@ regra: kanban-leader-cycle, seção 0 "Lista durável de pendências"
 MANDATO (Daniel, 05/11/2026; visual refeito em 11/11): o site inteiro funcionando de ponta a ponta (RF-01 a RF-14), com o visual Campo de mel aprovado em 11/11, publicado para o professor entrar e usar tudo com dados fictícios. Fonte: [Retomada do site](Retomada_Site.md), seção "Roteiro do site completo".
 ESTADO: ATIVO
 
+Paralelo (Daniel, 05/11): até 5 cartões por projeto; só fica em série o que tem dependência real.
+
 Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA]` feito. O id `P-nn` não muda. Em toda wake sem cartão `ready`, `running` ou em revisão, o líder abre no mesmo turno o próximo `[ ]` (spec ou cartão), ou marca `[D]` ou PAUSA.
 
 ## Visual novo (Campo de mel)
@@ -20,8 +22,11 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 - [~ t_26066f02] P-04 MAT-49b Hoje, Sessão e Madrugada | depende de P-02
 - [~ t_e1d0eaa8] P-05 MAT-36r-B: as 6 páginas de texto | depende de P-02
 - [~ t_d63c932a] P-06 MAT-37r: traz o fad75c0 (dados, sessão, Auth) e refaz Entrar, Criar conta, Recuperar, Começar e Conta | depende de P-02
-- [~ t_3c6e3a0c] P-07 MAT-49c Início com cenas das telas reais | depende de P-02 e P-04
-- [~ t_ee526db4] P-08 MAT-36r-A: Como funciona, Cuidado compartilhado e Desenvolvimento | depende de P-02 e P-04
+- [~ t_3c6e3a0c] P-07 MAT-49c Início com cenas | depende só de P-02 desde 11/11 10h15 (cenas compostas com capturas das próprias páginas; P-21 troca pelas telas novas)
+- [~ t_ee526db4] P-08 MAT-36r-A: Como funciona, Cuidado compartilhado e Desenvolvimento | depende só de P-02 desde 11/11 10h15
+
+- [~ t_0aecd8d2] P-21 MAT-49d: recompor as cenas de marketing com as telas novas de Hoje, Sessão e Madrugada (só imagens, mesmos nomes de arquivo) | depende de P-04, P-06, P-07 e P-08
+- [ ] P-22 Calibração dos juízes: a rodada 0 (`DIRECOES_20261111/juizes/CALIBRACAO0.md`) é nula porque a rubrica reprova a própria referência em F6 e F9; a proposta de ajuste vai ao coordenador, dono da rubrica | sem ela, nenhuma nota de candidato vale
 
 ## Dados ligados às telas novas (religados e soltos em 11/11)
 
