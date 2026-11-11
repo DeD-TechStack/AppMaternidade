@@ -33,7 +33,8 @@ describe('Sessão: a estrutura', () => {
     ['madrugada', true],
   ] as const) {
     it(`(${tema}) o link de volta, o título, o cartão do cronômetro e as anteriores, nessa ordem`, async () => {
-      const { container } = await renderizarRotaPronta('/app/sessao', { madrugada })
+      // As sonecas anteriores vêm da variação "dia completo": a fixture de teste não tem sono concluído.
+      const { container } = await renderizarRotaPronta('/app/sessao', { madrugada, diaCompleto: true })
 
       const ordem = [
         screen.getByRole('link', { name: 'Voltar para Hoje' }),
@@ -252,7 +253,7 @@ describe('Sessão: o cartão do cronômetro', () => {
 
 describe('Sessão: as sessões anteriores', () => {
   it('sono: três sonecas, com quem, onde e quanto durou', async () => {
-    await renderizarRotaPronta('/app/sessao')
+    await renderizarRotaPronta('/app/sessao', { diaCompleto: true })
 
     const linhas = within(screen.getByRole('region', { name: 'Sonecas anteriores' })).getAllByRole('listitem')
     expect(linhas.map((li) => [...li.querySelectorAll('p')].map((p) => p.textContent).join(' | '))).toEqual([
@@ -304,13 +305,13 @@ describe('Sessão: sem sessão', () => {
   })
 
   it('id que não é UUID, de sessão encerrada, de pontual ou sem acesso mostra o estado vazio', async () => {
-    const { fixture, unmount: sairDaPrimeira } = await renderizarRotaPronta('/app/sessao?id=banana')
+    const { fixture, unmount: sairDaPrimeira } = await renderizarRotaPronta('/app/sessao?id=banana', { diaCompleto: true })
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Nenhuma sessão em andamento')
     sairDaPrimeira()
     const encerrada = fixture.registros.find((r) => r.tipo === 'sono' && r.fim !== null)!
     const pontual = fixture.registros.find((r) => r.tipo === 'fralda')!
     for (const id of [encerrada.id, pontual.id, 'c3333333-3333-4333-8333-333333333333']) {
-      const outra = await renderizarRotaPronta(`/app/sessao?id=${id}`)
+      const outra = await renderizarRotaPronta(`/app/sessao?id=${id}`, { diaCompleto: true })
       expect(screen.getByRole('heading', { level: 1 }).textContent, id).toBe('Nenhuma sessão em andamento')
       outra.unmount()
     }

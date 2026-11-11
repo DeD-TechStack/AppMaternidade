@@ -13,12 +13,24 @@ beforeEach(() => {
 
 describe('Hoje: o fio vertical do bloco Últimos', () => {
   it('o primeiro item de cada linha de 3 colunas fica sem fio e sem recuo', async () => {
-    const { container } = await renderizarRotaPronta('/app/hoje')
+    const { container } = await renderizarRotaPronta('/app/hoje', { diaCompleto: true })
 
     const secao = container.querySelector('[data-ultimos]')!
     expect(secao.querySelectorAll('.sb-numeros-item')).toHaveLength(5)
     const classes = secao.className.split(/\s+/)
     expect(classes).toContain('lg:[&_.sb-numeros-item:nth-child(3n+1)]:border-l-0')
     expect(classes).toContain('lg:[&_.sb-numeros-item:nth-child(3n+1)]:pl-0')
+  })
+})
+
+// R9 da revisão do 38a (R38-13): o Hoje desenha os Últimos pelo componente com o encaixe da marca de envio e
+// nunca passa a marca em produção (a MAT-41, ponto M4, é quem passa).
+describe('R9: os Últimos do Hoje e o lugar da marca de envio', () => {
+  it('R9: no Hoje real, nenhuma coluna dos Últimos tem o span data-marca-envio', async () => {
+    const { container } = await renderizarRotaPronta('/app/hoje', { diaCompleto: true })
+
+    expect(container.querySelectorAll('[data-ultimos] .sb-numeros-item').length).toBeGreaterThan(0)
+    expect(container.querySelector('[data-ultimos] [data-marca-envio]')).toBeNull()
+    expect(container.querySelector('[data-marca-envio]')).toBeNull()
   })
 })

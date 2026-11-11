@@ -23,7 +23,7 @@ const comSessaoConcluida =
   (tipo: 'mamada' | 'sono', autor: string, haMs: number) =>
   (fixture: FixtureRotina): FixtureRotina => {
     const base = semSessaoEmAndamento(fixture)
-    const modelo = base.registros.find((r) => r.tipo === 'sono' && r.fim !== null)!
+    const modelo = base.registros.find((r) => r.tipo === 'mamada' && r.fim !== null)!
     const inicio = new Date(Date.now() - haMs).toISOString()
     const fim = new Date(Date.now() - haMs + 2 * MIN).toISOString()
     return {
