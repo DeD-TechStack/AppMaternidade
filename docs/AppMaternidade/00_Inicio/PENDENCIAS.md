@@ -26,7 +26,7 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 - [x 98c50de] P-02 MAT-49a base (g1 t_fdba5bed + g2 t_836284e3): revisão R3 aprovada, integrada por fast-forward em `int/refazer` (e73e75a..98c50de) | 11/11 12h30
 - [x 98c50de] P-02 MAT-49a base (g1 t_fdba5bed + g2 t_836284e3): revisão R3 aprovada, integrada por fast-forward em `int/refazer` (e73e75a..98c50de) | 11/11 12h30
 
-- [~ t_0aecd8d2] P-21 MAT-49d: recompor as cenas de marketing com as telas novas de Hoje, Sessão e Madrugada (só imagens, mesmos nomes de arquivo) | depende de P-04, P-06, P-07 e P-08
+- [~ t_0aecd8d2] P-21 MAT-49d: recompor as cenas de marketing com as telas novas de Hoje, Sessão e Madrugada (só imagens, mesmos nomes de arquivo) | revisão R1 pediu mudanças (h1 84/88, botões 56 px no CSS do Início, movimento M3, capturas a 2×, 4 testes autorizados no comentário 369); de volta ao executor
 - [x] P-22 Calibração dos juízes válida nos 2 (rodada 0 e base49a_r1), com a F7 de até 2 destaques (equipe 14e47ed) | 11/11 11h20, sem SHA (staging)
 
 - [ ] P-23 Limpeza depois das páginas: apagar `web/src/paginas/publicas/PaginaSimples.tsx` (usada pelas 9 páginas públicas até a 36r-A e a 36r-B integrarem) e `web/src/componentes/casca/SubmenuEmBreve.tsx` (sem uso desde a base), com `apagar:` no cartão | depende de P-08 e da 36r-B
@@ -38,7 +38,7 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 - [~ t_54db34e0] P-27 Como funciona, Cuidado compartilhado e Desenvolvimento: volta 1 dos juízes cegos (3 rodadas válidas, notas 6,2–7,4, REPROVA volta 1). A MAT-36r-A v2 aplica os itens das páginas e a 49d (P-21) refaz as cenas. Depois, volta 2; se reprovar, vai a Daniel com GALERIA | `juizes/rodadas/DEVOLUCAO_36rA.md`
 
 - [~ t_347d36de] P-28 Acesso e Conta: volta 1 dos juízes cegos (conta_r1 válida nos 2; acesso_r1 válida no Astra, com a calibração do Fable nula e reprovação independente dele; notas 6,2–7,5). A MAT-37r v2 aplica os itens das telas; a 49d refaz a cena de Entrar | `juizes/rodadas/DEVOLUCAO_37r.md`
-- [~ t_5fc82bb8] P-29 MAT-49e: marca gigante do rodapé alinhada ao fio da direita (casco, todas as páginas), depois da 49b g2
+- [~ t_5fc82bb8] P-29 MAT-49e (casco, todas as páginas): marca gigante do rodapé alinhada ao fio da direita e botões primários com 56 px (o `.alvo-toque` do index.css derrubava para 44 px; achado na revisão R1 da 49c) | depois da 49b g2
 
 ## Dados ligados às telas novas (religados e soltos em 11/11)
 
