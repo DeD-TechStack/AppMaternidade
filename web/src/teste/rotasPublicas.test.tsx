@@ -32,12 +32,21 @@ describe('rotas públicas', () => {
   }
 })
 
-describe('Início mínimo (até o MAT-49c)', () => {
-  it('tem um h1 de duas linhas, com a segunda em itálico, e o primário para Como funciona', () => {
+describe('Início (MAT-49c)', () => {
+  it('tem um h1 de duas linhas, com a segunda em itálico, e o primário para /app/hoje', () => {
     const { container } = renderizarRota('/')
     const h1 = screen.getByRole('heading', { level: 1 })
     expect(h1.textContent).toBe(PROMESSA)
-    expect(h1.querySelector('.cm-segunda-linha')!.textContent!.trim()).toBe('já sabe o que houve.')
+    expect(h1.firstChild!.textContent).toBe('A rotina do bebê,')
+    const segunda = h1.querySelector('.cm-segunda-linha')!
+    expect(segunda.textContent!.trim()).toBe('dividida com carinho.')
+    const primarios = screen.getAllByRole('link', { name: 'Começar grátis' })
+    expect(primarios.length).toBeGreaterThan(0)
+    for (const primario of primarios) {
+      expect(primario.getAttribute('href')).toBe('/app/hoje')
+      expect(primario.getAttribute('data-botao')).toBe('primario')
+    }
+    expect(h1.closest('section')!.contains(primarios[0])).toBe(true)
     expect(screen.getByRole('link', { name: 'Ver como funciona' }).getAttribute('href')).toBe('/como-funciona')
     expect(container.querySelector('main [data-numeros]')!.querySelectorAll('li')).toHaveLength(3)
   })
