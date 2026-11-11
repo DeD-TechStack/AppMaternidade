@@ -1,0 +1,8 @@
+# PROVENANCE of the composed scenes of the public pages (11/11/2026)
+
+| file | source | model | date | prompt id |
+|---|---|---|---|---|
+| como-funciona@1x.webp, como-funciona@2x.webp | `brutos/S2_unico_mel.png` (sha256 e3557a14de3efbd2e00c619cfecf94dd9f5493d3670a8d4ad859ca7a435b8f94), green-key scene composited by `DIRECOES_20261111/ferramentas/compor.py` with one real capture of this site at 390x844, scale 2 (`/como-funciona` scrolled 1100 px) | Codex image_gen (ChatGPT plan) for the scene; the screen is our own capture | 2026-11-11 | S2_unico_mel |
+| desenvolvimento@1x.webp, desenvolvimento@2x.webp | `brutos/S3_tablets_cacau.png` (sha256 8d72fa3432647217545f9387bacfa310ce167c7592ec6a1554ed6521ea3d261d), same compositor with two real captures of this site at 390x844, scale 2 (`/desenvolvimento` scrolled 1100 px and 2600 px) | Codex image_gen (ChatGPT plan) for the scene; the screens are our own captures | 2026-11-11 | S3_tablets_cacau |
+
+Output sha256: `como-funciona@1x.webp` 26ac2d4cd38c7f3b753abcfc2ec20fc96121ae5ffc0d11b8afbad83b212983e7, `como-funciona@2x.webp` 080f5022d36bbb0f3ce7bd3e5c238601ac959af970c354d652333c01947ee19a, `desenvolvimento@1x.webp` 0df7d94fc5bb0c3aef7ae8e9542dfdbf80b20fd145b57acc30c53f49ab9b383c, `desenvolvimento@2x.webp` b1c092365c2098579c7101b11ed9f405cb82d9d2403f447d784f2b7f934d9db9. `compor.py` reported `verde_restante: 0` for both. The captures carry no "Protótipo" or "dados de exemplo" text (checked on the visible DOM text of each capture). The files keep these fixed names; card MAT-49d recomposes them later with the new app screens, with no code change.
