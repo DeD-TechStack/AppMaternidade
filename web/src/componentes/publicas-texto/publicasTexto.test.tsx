@@ -123,6 +123,35 @@ describe('Regras da comunidade: canais de ajuda', () => {
   })
 })
 
+describe('índice "Nesta página" em tela estreita', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('vira um <details> fechado, com resumo de 44 px, e o link leva o foco ao título da seção', () => {
+    vi.stubGlobal('matchMedia', (consulta: string) => ({
+      matches: consulta.includes('max-width'),
+      media: consulta,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    }))
+    const { container } = renderizarRota('/regras-da-comunidade')
+    const indice = within(container.querySelector('main')!).getByRole('navigation', { name: ROTULO_INDICE })
+    const detalhes = indice.querySelector('details')!
+    expect(detalhes).not.toBeNull()
+    expect(detalhes.open).toBe(false)
+    const resumo = detalhes.querySelector('summary')!
+    expect(resumo.textContent).toBe(ROTULO_INDICE)
+    expect(resumo.classList.contains('alvo-toque')).toBe(true)
+
+    const { id, titulo } = PAGINAS_DE_TEXTO.regras.secoes[1].secao
+    const link = within(indice).getAllByRole('link', { hidden: true })[1]
+    expect(link.getAttribute('href')).toBe(`#${id}`)
+    fireEvent.click(link)
+    expect(document.activeElement).toBe(screen.getByRole('heading', { level: 2, name: titulo }))
+  })
+})
+
 describe('Contato: urgência', () => {
   it('o link para os canais oficiais leva ao título "Se você precisa de ajuda agora" nas Regras, com o foco nele', async () => {
     const { container } = renderizarRota('/contato')
