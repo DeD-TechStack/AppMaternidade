@@ -12,7 +12,30 @@ Esta é a nota de partida da próxima sessão de trabalho no site. Ela registra 
 
 **Site publicado (06/11/2026):** https://ded-techstack.github.io/AppMaternidade/ (MAT-48a, main 2beddee). Ele mostra Início, Hoje e Sessão com o aviso "Demonstração sem banco". As variáveis do banco entram no build com a MAT-37.
 
-## DIREÇÃO ESCOLHIDA (11/11/2026, 9h03): ESTADO VIGENTE
+## CONSTRUÇÃO EM CURSO (11/11/2026, 9h25): ESTADO VIGENTE
+
+- **Spec:** `C:/OrchestrationLab/projetos/_staging/appmaternidade/DIRECOES_20261111/FINAL/DESIGN.md` (sha256 e504df37). As regras comuns dos cartões ficam em `FINAL/CARTOES_COMUM.md` (sha256 626371ab).
+- **Ativos gerados pelo Codex no plano do ChatGPT:**
+  - 4 cenas de estúdio com a tela em verde, que serão compostas com capturas reais pelo `ferramentas/compor.py`, já testado;
+  - 6 ilustrações de traço;
+  - o registro de cada um em `FINAL/ativos/PROVENANCE.md`.
+- **Cartões:**
+  - t_fdba5bed MAT-49a, base: tokens, fontes, cabeçalho, rodapé, componentes, movimento e `/sistema`. Em Opus, **rodando**, com prévia em http://127.0.0.1:5281/sistema.
+  - t_26066f02 MAT-49b: Hoje, Sessão e Madrugada. Em Opus, espera a base.
+  - t_3c6e3a0c MAT-49c: Início com as cenas. Em Opus, espera a 49a e a 49b.
+  - t_ee526db4 MAT-36r-A: Como funciona, Cuidado compartilhado e Desenvolvimento. Em Opus, espera a 49a e a 49b.
+  - t_e1d0eaa8 MAT-36r-B: 6 páginas de texto. Em Sonnet, espera a base.
+  - t_d63c932a MAT-37r: traz o fad75c0 (37a) e refaz as telas de acesso. Em Sonnet, espera a base.
+- **Arquivados como substituídos:** t_915e3632 (37a, que tem o MAT-37r como sucessor) e t_55a580e8 (39a, coberto pela 36r-A).
+- **Religados e ainda em `scheduled`:**
+  - 37b t_11ad28e6 e 37g t_1757260d, agora presos ao 37r;
+  - 38a t_f7bdf7e8, que também espera a 49b;
+  - 39b t_c9529365, agora preso à 36r-A;
+  - 40a t_4c921e60, agora preso ao 37r.
+  - O corpo deles será reescrito para a base nova antes do `unblock`.
+- **Aceite visual:** depois que o revisor aprovar cada cartão, passa por 2 juízes cegos de famílias diferentes, calibrados antes, e então vai para a galeria do Daniel.
+
+## DIREÇÃO ESCOLHIDA (11/11/2026, 9h03): histórico
 
 - **Decisões de Daniel (11/11, de manhã), repassadas pelo coordenador** (`C:/OrchestrationLab/exports/Revisao_Geral_20261111/retomada_lideres/APPMATERNIDADE_V2.md` e `V2b.md`):
   - nenhuma das direções A/B/C;

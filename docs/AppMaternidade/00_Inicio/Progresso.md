@@ -21,6 +21,12 @@ Horários em America/Sao_Paulo, tirados do relógio da máquina ou de carimbos d
 
 Uma linha por marco, a mais recente no topo. O estado corrente fica em [Retomada do site](Retomada_Site.md), e o detalhe de cada marco está no cartão Kanban citado.
 
+- 11/11/2026, às 9h25: **construção aberta.**
+  - Spec final: `FINAL/DESIGN.md` (sha256 e504df37). Os ativos foram gerados e escolhidos.
+  - A base t_fdba5bed (MAT-49a, Opus) está rodando.
+  - Na fila, presos à base: t_26066f02 (49b), t_3c6e3a0c (49c), t_ee526db4 (36r-A), t_e1d0eaa8 (36r-B) e t_d63c932a (37r, que traz o fad75c0).
+  - Arquivados: t_915e3632 e t_55a580e8.
+  - Os cartões de dados que estavam em `scheduled` foram religados aos sucessores.
 - 11/11/2026, às 9h03: **direção escolhida.** Daniel escolheu na `DIRECOES_20261111/GALERIA2.html` a F1 Campo de mel, com a tabela, os selos e os depoimentos da F2 e o modo Madrugada da F3. As 3 fusões juntam a Pato Jack e a Becky. Imagem, sombra e gradiente estão liberados pelos tokens, imagens geradas podem ir ao site publicado e o Opus escreve as telas que definem a cara do site. O detalhe está em [Retomada do site](Retomada_Site.md).
 - 11/11/2026, às 3h20: **visual refeito do zero, passo 0.** Daniel rejeitou o visual do site às 2h20. Saiu a galeria com 3 direções (A Estúdio anil, B Madrugada, C Bilhete da família), cada uma com DESIGN.md e 3 comps do image_gen do Codex, em `C:/OrchestrationLab/projetos/_staging/appmaternidade/DIRECOES_20261111/GALERIA.html`. No board, 8 cartões foram arquivados como substituídos: t_5184c99c, t_93f3308e, t_b2a55931, t_f67d8962, t_ab1bd202 (PWA), t_77f83db6, t_673ee2f7 e t_1584e47e. Outros 9 cartões de dados ficaram em `scheduled`: t_915e3632, t_1757260d, t_11ad28e6, t_f7bdf7e8, t_7c491177, t_55a580e8, t_c9529365, t_4c921e60 e t_359ab800. Nenhum cartão ficou em triage. Não houve código nem integração; `int/refazer` continua em e73e75a. Esperando Daniel: a direção e 4 perguntas, listadas em [Retomada do site](Retomada_Site.md).
 - 11/11/2026, às 1h35: **retomada.** A MAT-36 foi para o g2 t_93f3308e por ESCALA-2R. A 6b e a 6c foram refeitas com 2 skills (t_77f83db6 e t_673ee2f7). O detalhe está em [Retomada do site](Retomada_Site.md).
