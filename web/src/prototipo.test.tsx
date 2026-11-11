@@ -138,11 +138,10 @@ describe('fralda', () => {
 
     await clicar(botao('Desfazer'))
 
+    // O que a base conferia (R38-31, item 5): Fralda há 50 min, Mamada há 2 h 10 min, Tummy time ontem 17:30.
     expect(itensDeUltimos()).toEqual([
       '50 min Fralda, tempo desde o registro',
       '2 h 10 Mamada, tempo desde o registro',
-      '3 h 20 Sono, tempo desde o registro',
-      '8 h Mamadeira, tempo desde o registro',
       '17:30 Tummy time, ontem',
     ])
     expect(status().textContent).toBe('')

@@ -354,6 +354,7 @@ describe('leituras', () => {
   })
 
   it('ultimosConcluidos: um por tipo, pelo momento (fim nas sessões), do mais recente ao mais antigo', async () => {
+    montar({ diaCompleto: true })
     const lista = await rotina.ultimosConcluidos(ID_BEBE)
     if (!lista.ok) throw new Error('leitura falhou')
     // Fralda há 50 min, mamada (fim) há 2 h 10, sono (fim, o em andamento não entra) há 3 h 20, mamadeira
@@ -363,6 +364,8 @@ describe('leituras', () => {
   })
 
   it('desdeMeuUltimo: o marco é o registro da conta com o maior recebido_em; os novos são de outras pessoas', async () => {
+    // Juliana só tem registro próprio na variação "dia completo" (R38-33).
+    montar({ diaCompleto: true })
     const lista = await rotina.desdeMeuUltimo(ID_BEBE, PESSOAS.juliana.id)
     if (!lista.ok) throw new Error('leitura falhou')
     expect(lista.valor.marco?.criadoPor).toBe(PESSOAS.juliana.id)
@@ -412,6 +415,7 @@ describe('leituras', () => {
   })
 
   it('sessoesDaJanela traz as sessões concluídas que cruzam a janela, só sono e tummy por padrão', async () => {
+    montar({ diaCompleto: true })
     const lista = await rotina.sessoesDaJanela(ID_BEBE, iso(-5 * HORA), iso(0))
     if (!lista.ok) throw new Error('leitura falhou')
     expect(lista.valor.itens.every((r) => r.tipo === 'sono' || r.tipo === 'tummy')).toBe(true)

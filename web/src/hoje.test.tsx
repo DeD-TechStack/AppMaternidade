@@ -28,7 +28,8 @@ const colunasDeUltimos = (container: HTMLElement) =>
 
 describe('Hoje: a ordem dos blocos', () => {
   it('(claro) cartão, Hoje até agora (no topo da área da lista), Para você saber, Desde o seu último registro e Últimos, nessa ordem; a barra vem depois do main', async () => {
-    const { container } = await renderizarRotaPronta('/app/hoje')
+    // "Desde o seu último registro" só existe com marco (R38-05): a variação dá um registro a Juliana.
+    const { container } = await renderizarRotaPronta('/app/hoje', { diaCompleto: true })
 
     const ordem = [
       cartao(container),
@@ -59,11 +60,12 @@ describe('Hoje: a ordem dos blocos', () => {
     expect(principal(container).contains(botao)).toBe(true)
     expect(cartao(container).compareDocumentPosition(botao) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
     expect(botao.compareDocumentPosition(regiao('Para você saber')) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
-    expect(screen.getByText('Última mamada às 07:32, com Juliana')).toBeTruthy()
+    // A mamada da fixture de teste é de Bruno (R38-33); antes, o texto dizia "com Juliana".
+    expect(screen.getByText('Última mamada às 07:32, com Bruno')).toBeTruthy()
   })
 
   it('(madrugada) o histórico vem antes dos números do dia, para a primeira linha subir no celular', async () => {
-    await renderizarRotaPronta('/app/hoje', { madrugada: true })
+    await renderizarRotaPronta('/app/hoje', { madrugada: true, diaCompleto: true })
 
     const historico = regiao('Desde o seu último registro, às 07:50')
     expect(regiao('Para você saber').compareDocumentPosition(historico) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
@@ -227,7 +229,7 @@ describe('Hoje: Para você saber e Desde o seu último registro', () => {
 
     const nota = within(regiao('Para você saber'))
     expect(nota.getByText('Pomada só à noite.')).toBeTruthy()
-    expect(nota.getByText('Carla, 06:40')).toBeTruthy()
+    expect(nota.getByText('Carla, 22:40')).toBeTruthy()
   })
 
   it('a nota sem destaque (vencido) não aparece, e sem nota em destaque o texto diz isso', async () => {
@@ -244,7 +246,7 @@ describe('Hoje: Para você saber e Desde o seu último registro', () => {
   // os dados da rotina o Hoje desenha `DesdeUltimoRegistro` (o título "Desde o seu último registro, às
   // HH:MM" é exato), na mesma linguagem de fios finos; aqui vale o que a linha dele promete.
   it('o histórico é uma lista de linhas com fio fino, sem cartão, e a linha da sessão some ao encerrar', async () => {
-    const { container } = await renderizarRotaPronta('/app/hoje')
+    const { container } = await renderizarRotaPronta('/app/hoje', { diaCompleto: true })
 
     const secao = container.querySelector<HTMLElement>('main [data-desde]')!
     expect(secao.classList.contains('rounded-cartao')).toBe(false)
@@ -259,7 +261,7 @@ describe('Hoje: Para você saber e Desde o seu último registro', () => {
   })
 
   it('a hora do marco é o recebido_em do último registro de Juliana; os novos são de outras pessoas, do mais recente ao mais antigo', async () => {
-    await renderizarRotaPronta('/app/hoje')
+    await renderizarRotaPronta('/app/hoje', { diaCompleto: true })
 
     const lista = within(regiao('Desde o seu último registro, às 07:50')).getAllByRole('listitem')
     expect(lista.map((li) => li.querySelector('p')!.textContent)).toEqual(['Fralda, Xixi', 'Sono, em andamento'])
@@ -282,11 +284,18 @@ describe('Hoje: Para você saber e Desde o seu último registro', () => {
     await renderizarRotaPronta('/app/hoje', { semRegistros: true })
     expect(screen.queryByRole('region', { name: /Desde o seu último registro/ })).toBeNull()
   })
+
+  it('na fixture de teste Juliana não tem registro próprio: sem marco, o bloco "Desde o seu último registro" não aparece (R38-33)', async () => {
+    await renderizarRotaPronta('/app/hoje')
+
+    expect(screen.queryByRole('region', { name: /Desde o seu último registro/ })).toBeNull()
+    expect(screen.queryByText('Nada novo desde o seu último registro.')).toBeNull()
+  })
 })
 
 describe('Hoje: os números do dia', () => {
   it('três figuras: Mamadas (sessões e mamadeiras), Fraldas e Sono, só do dia da família', async () => {
-    await renderizarRotaPronta('/app/hoje')
+    await renderizarRotaPronta('/app/hoje', { diaCompleto: true })
 
     const itens = within(regiao('Hoje até agora')).getAllByRole('listitem')
     expect(itens.map((li) => [...li.querySelectorAll('span')].map((s) => s.textContent))).toEqual([
@@ -297,7 +306,7 @@ describe('Hoje: os números do dia', () => {
   })
 
   it('a fralda registrada soma uma fralda e o Desfazer devolve o número', async () => {
-    await renderizarRotaPronta('/app/hoje')
+    await renderizarRotaPronta('/app/hoje', { diaCompleto: true })
     const fraldas = () => within(regiao('Hoje até agora')).getAllByRole('listitem')[1].querySelector('span')!.textContent
 
     fireEvent.click(screen.getByRole('button', { name: 'Registrar fralda de Heloísa' }))
@@ -334,6 +343,17 @@ describe('Hoje: Últimos', () => {
     expect(secao.tagName).toBe('SECTION')
     const titulo = within(secao).getByRole('heading', { name: 'Últimos' })
     expect(secao.getAttribute('aria-labelledby')).toBe(titulo.id)
+    // Os valores da base (R38-31, item 5): Fralda há 50 min, Mamada há 2 h 10 min, Tummy time ontem 17:30.
+    expect(colunasDeUltimos(container)).toEqual([
+      '50 min Fralda, tempo desde o registro',
+      '2 h 10 Mamada, tempo desde o registro',
+      '17:30 Tummy time, ontem',
+    ])
+  })
+
+  it('com o dia completo (cinco tipos concluídos) há uma coluna por tipo, do mais recente ao mais antigo', async () => {
+    const { container } = await renderizarRotaPronta('/app/hoje', { diaCompleto: true })
+
     expect(colunasDeUltimos(container)).toEqual([
       '50 min Fralda, tempo desde o registro',
       '2 h 10 Mamada, tempo desde o registro',
@@ -344,7 +364,7 @@ describe('Hoje: Últimos', () => {
   })
 
   it('a sessão em andamento não entra, e o último concluído do mesmo tipo continua aparecendo', async () => {
-    const { container } = await renderizarRotaPronta('/app/hoje')
+    const { container } = await renderizarRotaPronta('/app/hoje', { diaCompleto: true })
 
     expect(colunasDeUltimos(container).some((coluna) => coluna.includes('Sono'))).toBe(true)
     expect(colunasDeUltimos(container).some((coluna) => coluna.startsWith('1 h 12'))).toBe(false)
@@ -531,7 +551,7 @@ describe('Hoje: madrugada', () => {
   })
 
   it('no celular, com o sono em andamento, o histórico sobe: grade com 20 px entre blocos e 16 px sob o título (antes 32 e 24)', async () => {
-    const { container } = await renderizarRotaPronta('/app/hoje', { madrugada: true })
+    const { container } = await renderizarRotaPronta('/app/hoje', { madrugada: true, diaCompleto: true })
 
     const grade = container.querySelector<HTMLElement>('main [data-grade-do-hoje]')!
     expect(grade.contains(cartao(container))).toBe(true)

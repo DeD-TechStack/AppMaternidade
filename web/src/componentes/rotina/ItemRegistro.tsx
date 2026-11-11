@@ -17,6 +17,15 @@ interface Props {
   marca?: ReactNode
 }
 
+/**
+ * O encaixe da marca de envio (R38-13, ponto M4 da MAT-41): o `span` com `data-marca-envio`, que vai logo depois
+ * da hora. Sem marca (`undefined` ou `null`), o `span` não existe. Toda lista da rotina que mostra uma hora
+ * (`ItemRegistro`, os Últimos do Hoje) usa este mesmo encaixe.
+ */
+export function MarcaDeEnvio({ marca }: { marca?: ReactNode }) {
+  return marca !== undefined && marca !== null ? <span data-marca-envio="">{marca}</span> : null
+}
+
 /** Um item de registro: o avatar de quem registrou, o rótulo e o resumo, o autor e a hora do início. */
 export function ItemRegistro({ registro, fuso, autor, marca }: Props) {
   const resumo = resumoDoRegistro(registro, fuso)
@@ -32,7 +41,7 @@ export function ItemRegistro({ registro, fuso, autor, marca }: Props) {
       </div>
       <div className="flex shrink-0 items-center gap-2 text-[15px] leading-[22px] text-(--cor-texto-2)">
         <span className="whitespace-nowrap tabular-nums">{formatarHora(Date.parse(registro.inicio))}</span>
-        {marca !== undefined && marca !== null ? <span data-marca-envio="">{marca}</span> : null}
+        <MarcaDeEnvio marca={marca} />
       </div>
     </li>
   )

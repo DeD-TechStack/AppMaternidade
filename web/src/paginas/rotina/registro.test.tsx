@@ -307,7 +307,7 @@ describe('os avisos que não bloqueiam: "Salvar assim" e "Corrigir"', () => {
   })
 
   it('uma sessão que termina quando a outra começa (06:40) encosta e não pede confirmação', async () => {
-    const { rotina } = await renderizarRotaPronta('/app/registro/novo?tipo=sono')
+    const { rotina } = await renderizarRotaPronta('/app/registro/novo?tipo=sono', { diaCompleto: true })
     digitar('Início: hora', '06:40')
     digitarFim('07:00')
 
@@ -318,7 +318,7 @@ describe('os avisos que não bloqueiam: "Salvar assim" e "Corrigir"', () => {
   })
 
   it('com mais de uma sobreposição, a frase cita a de início mais cedo e acrescenta "E mais N."', async () => {
-    await renderizarRotaPronta('/app/registro/novo?tipo=sono')
+    await renderizarRotaPronta('/app/registro/novo?tipo=sono', { diaCompleto: true })
     digitar('Início: hora', '03:00')
     digitarFim('09:00')
 
@@ -433,7 +433,7 @@ describe('a edição', () => {
   })
 
   it('sessão encerrada: o fim é obrigatório; apagá-lo mostra a mensagem no campo e não envia', async () => {
-    const primeira = await renderizarRotaPronta('/app/hoje')
+    const primeira = await renderizarRotaPronta('/app/hoje', { diaCompleto: true })
     const alvo = primeira.fixture.registros.find((r) => r.tipo === 'sono' && r.fim !== null)!
     primeira.unmount()
     const { rotina } = await renderizarRotaPronta(`/app/registro/${alvo.id}/editar`, { mundo: primeira })
@@ -449,7 +449,7 @@ describe('a edição', () => {
   })
 
   it('o cuidador não abre o registro de outra pessoa: vê o texto do papel e o link de volta', async () => {
-    const primeira = await renderizarRotaPronta('/app/hoje')
+    const primeira = await renderizarRotaPronta('/app/hoje', { diaCompleto: true })
     const alvo = registroDe(primeira.fixture, 'fralda', PESSOAS.juliana.id)
     primeira.unmount()
     primeira.conta.sessaoParaTeste(PESSOAS.bruno.email)

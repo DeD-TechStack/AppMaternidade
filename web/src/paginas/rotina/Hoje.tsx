@@ -5,7 +5,6 @@ import { AvisoDaTela } from '../../componentes/app/AvisoDaTela.tsx'
 import { BotaoIniciarMamada } from '../../componentes/app/BotaoIniciarMamada.tsx'
 import { CartaoSessao } from '../../componentes/app/CartaoSessao.tsx'
 import { ResumoDoDia } from '../../componentes/app/ResumoDoDia.tsx'
-import { Ultimos } from '../../componentes/app/Ultimos.tsx'
 import { ALVO_APP } from '../../componentes/app/alvo.ts'
 import { Botao } from '../../componentes/base/Botao.tsx'
 import { Etiqueta } from '../../componentes/base/Etiqueta.tsx'
@@ -17,6 +16,7 @@ import { SecaoDoHoje } from '../../componentes/rotina/SecaoDoHoje.tsx'
 import { SeletorBebe } from '../../componentes/rotina/SeletorBebe.tsx'
 import { SessoesEmParalelo } from '../../componentes/rotina/SessoesEmParalelo.tsx'
 import { TituloRotina } from '../../componentes/rotina/TituloRotina.tsx'
+import { UltimosDoHoje, type ItemDosUltimos } from '../../componentes/rotina/UltimosDoHoje.tsx'
 import { type AcaoDaConfirmacao, type BebeAtivo, useRotina } from '../../componentes/rotina/contexto.ts'
 import { formatarQuando, momentoDoRegistro } from '../../componentes/rotina/formatos.ts'
 import { useMadrugada } from '../../componentes/rotina/madrugada.ts'
@@ -374,12 +374,14 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
             </section>
           )
         }
-        // Três colunas sempre: os mais recentes, e o travessão nas que faltam.
-        const colunas = concluidos.map((registro) =>
-          formatarUltimo(ROTULO_TIPO[registro.tipo], formatarQuando(momentoDoRegistro(registro), agora)),
-        )
+        // Três colunas sempre: os mais recentes, e o travessão nas que faltam. Cada coluna leva o registro
+        // dela, para o encaixe da marca de envio (R38-13); a MAT-38 não passa marca nenhuma.
+        const colunas: ItemDosUltimos[] = concluidos.map((registro) => ({
+          ...formatarUltimo(ROTULO_TIPO[registro.tipo], formatarQuando(momentoDoRegistro(registro), agora)),
+          registro,
+        }))
         const itens = [...colunas, ...Array.from({ length: Math.max(0, 3 - colunas.length) }, () => ({ valor: SEM_RESULTADO, legenda: SEM_RESULTADO }))]
-        return <Ultimos itens={itens} className={REGRA_DAS_LINHAS_DE_ULTIMOS} />
+        return <UltimosDoHoje itens={itens} className={REGRA_DAS_LINHAS_DE_ULTIMOS} />
       }}
     </SecaoDoHoje>
   )

@@ -179,14 +179,14 @@ describe('R7: "Esta lista mostra só os primeiros N itens." em cada seção que 
   })
 
   it('R7: a Sessão com mais de 500 sessões anteriores na janela (501: as 3 da fixture mais 498) avisa "500 itens" junto da lista', async () => {
-    await renderizarRotaPronta('/app/sessao', { ajustarRotina: sessoesConcluidas(498) })
+    await renderizarRotaPronta('/app/sessao', { diaCompleto: true, ajustarRotina: sessoesConcluidas(498) })
 
     expect(avisosDeLista()).toEqual([['anteriores', LIMITE_DAS_ANTERIORES]])
     expect(screen.getAllByText(LIMITE_DAS_ANTERIORES)).toHaveLength(1)
   })
 
   it('R7: a Sessão com exatamente 500 anteriores (as 3 da fixture mais 497; no limite) não avisa', async () => {
-    await renderizarRotaPronta('/app/sessao', { ajustarRotina: sessoesConcluidas(497) })
+    await renderizarRotaPronta('/app/sessao', { diaCompleto: true, ajustarRotina: sessoesConcluidas(497) })
     expect(avisosDeLista()).toEqual([])
   })
 
@@ -262,7 +262,7 @@ describe('R8: aviso visível e "Tentar de novo" junto dos dados', () => {
   })
 
   it('R8: Sessão, as anteriores que falham na releitura também mostram o aviso e a lista antiga continua', async () => {
-    const mundo = await renderizarRotaPronta('/app/sessao')
+    const mundo = await renderizarRotaPronta('/app/sessao', { diaCompleto: true })
     const itens = document.querySelectorAll('[data-anteriores] li').length
     expect(itens).toBeGreaterThan(0)
     simularFalhaRotina(mundo.rotina, 'sessoesDaJanela', 'rede')
