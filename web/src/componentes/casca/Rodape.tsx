@@ -1,8 +1,25 @@
-import { Link } from 'react-router'
+import { Link, useLocation } from 'react-router'
 import { AvisoDemonstracao } from '../AvisoDemonstracao.tsx'
 import { PainelCampo } from '../campo/PainelCampo.tsx'
 import { RevelacaoPorBaixo } from '../../movimento/RevelacaoPorBaixo.tsx'
 import { COLUNAS_DO_RODAPE, FRASE_DO_RODAPE, NOME_SITE, ROTULO_NAVEGACAO_RODAPE } from './textos.ts'
+
+/** O rodapé das rotas /app/*: todos os links do rodapé numa linha que quebra, sem o painel de mel. */
+function RodapeCompacto() {
+  return (
+    <footer className="cm-rodape cm-rodape-compacto" data-rodape="" id="rodape">
+      <div className="cm-area">
+        <nav aria-label={ROTULO_NAVEGACAO_RODAPE} className="cm-rodape-compacto-nav">
+          {COLUNAS_DO_RODAPE.flatMap((coluna) => coluna.links).map((link) => (
+            <Link key={link.para} to={link.para} className="cm-rodape-link">
+              {link.rotulo}
+            </Link>
+          ))}
+        </nav>
+      </div>
+    </footer>
+  )
+}
 
 /**
  * O rodapé do site (DESIGN.md 4): um painel de mel com a frase, as colunas Produto, Ajuda e Legal (todo
@@ -11,6 +28,11 @@ import { COLUNAS_DO_RODAPE, FRASE_DO_RODAPE, NOME_SITE, ROTULO_NAVEGACAO_RODAPE 
  * conteúdo sai de baixo, de -30 % a 0, preso à rolagem (M7).
  */
 export function Rodape({ comAviso = true }: { comAviso?: boolean }) {
+  // Nas rotas /app/* o rodapé é uma linha só de links: sem o nome grande, sem a frase nem o painel de mel.
+  // O aviso não entra aqui (as telas do app trazem o delas).
+  const { pathname } = useLocation()
+  if (pathname === '/app' || pathname.startsWith('/app/')) return <RodapeCompacto />
+
   return (
     <footer className="cm-rodape" data-rodape="" id="rodape">
       <PainelCampo className="cm-rodape-painel">
