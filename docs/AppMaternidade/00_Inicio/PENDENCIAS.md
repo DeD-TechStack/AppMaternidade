@@ -59,6 +59,8 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 
 - [~ t_31f10932] P-33 Páginas de texto: volta 1 dos juízes cegos (texto_r1 válida nos 2, notas 5,5–7,1, REPROVA volta 1). A MAT-36r-B v2 trata a margem no celular, os avisos na primeira dobra, a coluna vazia, o painel lateral, o e-mail do Contato, a ordem da Exclusão e o SAMU | `juizes/rodadas/DEVOLUCAO_36rB.md`
 
+- [~ t_48aa413e] P-34 CI de `int/refazer` vermelha desde 10/11 só porque `verificar-commits` reprova merges, e a rota de integração faz merge de `int/refazer` nos ramos dos cartões. A MAT-48c aceita só os merges "Traz/Integra o int/refazer" de Daniel. Bloqueia a publicação (P-19, passo 1)
+
 ## Dados ligados às telas novas (religados e soltos em 11/11)
 
 - [x] P-09 Corpos dos 6 cartões abaixo reescritos para a base nova antes do claim (prefixo `FINAL/OVERRIDE_DADOS.md`) e soltos em todo, presos aos pais | 11/11 9h50; sem SHA (é board)
