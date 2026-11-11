@@ -77,6 +77,8 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 
 - [~ galeria] P-42 Volta 2 dos juízes em Hoje, Sessão e Madrugada sobre o integrado cdf6219: não passa. No Hoje, o Fable deu 6,4 a 7,3 e o Astra 6,4 a 7,6, mas o Astra reprovou F9 (frase de valor no alto) numa tela de uso; mandei ao coordenador (campainha) a proposta de F9 n/a em `/app/*`. Na Sessão, vale só o Astra (6,5 a 7,4), porque o Fable falhou a calibração. Detalhe em `juizes/rodadas/RESULTADO_R2_app.md`. Vai para a galeria do Daniel
 
+- [x 5247510] P-43 37r v2 (t_347d36de), a volta 1 dos juízes em Entrar, Criar conta, Recuperar, Começar e Conta: aprovada (3735be4) e integrada (cdf6219..5247510, check 1356 testes na segunda execução, commits OK, 310). Na primeira execução, 1 teste de `acesso.test.tsx` estourou os 5 s por carga da máquina; isolado, passou 2 vezes, e a execução completa seguinte passou. A volta 2 dos juízes vem a seguir | 11/11
+
 ## Dados ligados às telas novas (religados e soltos em 11/11)
 
 - [x] P-09 Corpos dos 6 cartões abaixo reescritos para a base nova antes do claim (prefixo `FINAL/OVERRIDE_DADOS.md`) e soltos em todo, presos aos pais | 11/11 9h50; sem SHA (é board)
