@@ -859,4 +859,22 @@
   .cm-cena-numeros {
     margin-top: clamp(64px, 3.048vw + 52.114px, 96px);
   }
+
+  /* Madrugada: todo alvo da casca tem 56 px de altura (DESIGN.md 8). Só min-height/min-width: a
+     tipografia e o tema do dia não mudam. O cabeçalho (72 px) comporta alvos de 56. */
+  :root[data-tema='madrugada'] .cm-marca,
+  :root[data-tema='madrugada'] .cm-cab-link,
+  :root[data-tema='madrugada'] .cm-cab-entrar,
+  :root[data-tema='madrugada'] .cm-cab-criar,
+  :root[data-tema='madrugada'] .cm-cab-madrugada,
+  :root[data-tema='madrugada'] .cm-rodape-link {
+    min-height: 56px;
+  }
+
+  /* Os dois botões quadrados do cabeçalho (menu e lua) ficam 56 x 56. */
+  :root[data-tema='madrugada'] .sb-cab-menu,
+  :root[data-tema='madrugada'] .cm-cab-madrugada {
+    min-width: 56px;
+    min-height: 56px;
+  }
 }
