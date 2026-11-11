@@ -11,17 +11,34 @@ import { listaDeFusos } from './fusos.ts'
 // do CSS casa também com todo `<select>`, que é editável e usa o mesmo fundo do campo de nome.
 const SOMENTE_LEITURA = 'read-only:bg-[var(--cor-papel-fundo)]'
 
+// O estado de erro se vê sem depender da cor: a caixa do campo ganha borda de 3 px (o foco é um anel de
+// 2 px por fora, e as duas coisas se distinguem), e a mensagem vem numa faixa de areia com barra de 4 px
+// à esquerda, ícone e palavras em semibold, no tamanho de legenda (15/22). A cor é a `--cor-erro` do tema,
+// quando existir; sem ela, a tinta do texto.
+// (As classes são literais inteiros: o Tailwind só gera o que lê escrito.)
+const ERRO_CAIXA = 'aria-invalid:border-[3px] aria-invalid:border-[var(--cor-erro,var(--cor-texto))]'
+const ERRO_MENSAGEM =
+  'cm-campo-mensagem cm-campo-erro cm-pequeno flex items-start gap-2 rounded-[var(--radius-campo)] ' +
+  'border-l-4 border-[var(--cor-erro,var(--cor-texto))] bg-[var(--cor-papel-fundo)] px-3 py-2 font-semibold ' +
+  'text-[var(--cor-erro,var(--cor-texto))]'
+
+// O tamanho da caixa vem de `.cm-campo-entrada` (site.css: 56 px), sem `alvo-toque` (o index.css baixaria
+// para 44 px). Nas telas do app (Começar e Conta) o campo é de 48 px: `min-h-12` (utilitário) vence o
+// `min-height` do sistema.
+type TamanhoDoCampo = 'site' | 'app'
+const caixa = (tamanho: TamanhoDoCampo) => (tamanho === 'app' ? 'cm-campo-entrada min-h-12' : 'cm-campo-entrada')
+
 function Descricoes({ id, ajuda, erro }: { id: string; ajuda?: string; erro?: string | null }) {
   return (
     <>
       {erro ? (
-        <p id={`${id}-erro`} className="cm-campo-mensagem cm-campo-erro cm-pequeno flex items-start gap-2">
-          <CircleAlert size={18} aria-hidden="true" className="mt-0.5 shrink-0" />
+        <p id={`${id}-erro`} className={ERRO_MENSAGEM}>
+          <CircleAlert size={20} aria-hidden="true" className="mt-px shrink-0" />
           <span>{erro}</span>
         </p>
       ) : null}
       {ajuda ? (
-        <p id={`${id}-ajuda`} className="cm-campo-mensagem cm-pequeno text-[var(--cor-texto-2)]">
+        <p id={`${id}-ajuda`} className="cm-campo-mensagem cm-pequeno text-[var(--cor-texto)]">
           {ajuda}
         </p>
       ) : null}
@@ -44,6 +61,8 @@ interface CampoProps {
   refEntrada?: Ref<HTMLInputElement>
   /** Um controle dentro do campo, à direita (o botão de mostrar a senha). */
   complemento?: ReactNode
+  /** `site` (56 px, telas públicas) ou `app` (48 px, Começar e Conta). */
+  tamanho?: TamanhoDoCampo
 }
 
 export function Campo({
@@ -57,10 +76,11 @@ export function Campo({
   somenteLeitura = false,
   refEntrada,
   complemento,
+  tamanho = 'site',
 }: CampoProps) {
   const id = useId()
   return (
-    <div className="cm-campo">
+    <div className="cm-campo max-w-none">
       <label htmlFor={id} className="cm-campo-rotulo">
         {rotulo}
       </label>
@@ -75,7 +95,7 @@ export function Campo({
           readOnly={somenteLeitura}
           aria-invalid={erro ? true : undefined}
           aria-describedby={ligar(id, ajuda, erro)}
-          className={`cm-campo-entrada alvo-toque ${SOMENTE_LEITURA}`}
+          className={`${caixa(tamanho)} ${SOMENTE_LEITURA} ${ERRO_CAIXA}`}
         />
         {complemento}
       </div>
@@ -115,10 +135,11 @@ interface SeletorFusoProps {
   ajuda?: string
   erro?: string | null
   refEntrada?: Ref<HTMLSelectElement>
+  tamanho?: TamanhoDoCampo
 }
 
 /** O controle de fuso das telas Começar, Família e Conta. */
-export function SeletorFuso({ rotulo, valor, aoMudar, guardado, ajuda, erro, refEntrada }: SeletorFusoProps) {
+export function SeletorFuso({ rotulo, valor, aoMudar, guardado, ajuda, erro, refEntrada, tamanho = 'site' }: SeletorFusoProps) {
   const id = useId()
   const { opcoes, foraDaLista } = useMemo(() => {
     const lista = listaDeFusos()
@@ -127,7 +148,7 @@ export function SeletorFuso({ rotulo, valor, aoMudar, guardado, ajuda, erro, ref
   }, [guardado])
 
   return (
-    <div className="cm-campo">
+    <div className="cm-campo max-w-none">
       <label htmlFor={id} className="cm-campo-rotulo">
         {rotulo}
       </label>
@@ -139,7 +160,7 @@ export function SeletorFuso({ rotulo, valor, aoMudar, guardado, ajuda, erro, ref
           onChange={(evento) => aoMudar(evento.target.value)}
           aria-invalid={erro ? true : undefined}
           aria-describedby={ligar(id, ajuda, erro)}
-          className="cm-campo-entrada alvo-toque"
+          className={`${caixa(tamanho)} ${ERRO_CAIXA}`}
         >
           {opcoes.map((fuso) => (
             <option key={fuso} value={fuso}>

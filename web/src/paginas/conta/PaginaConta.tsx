@@ -1,4 +1,5 @@
 import { Fragment, useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { Trash2 } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { baixarJson, nomeDoArquivoDeDados } from '../../componentes/conta/arquivo.ts'
 import {
@@ -11,8 +12,10 @@ import { Campo, SeletorFuso } from '../../componentes/conta/Campos.tsx'
 import { DialogoExcluirConta } from '../../componentes/conta/DialogoExcluirConta.tsx'
 import { useEnvio } from '../../componentes/conta/envio.ts'
 import { useFocoNoResumo, useFocoNoTitulo } from '../../componentes/conta/foco.ts'
-import { BotaoSair, MolduraLogada } from '../../componentes/conta/MolduraLogada.tsx'
+import { IndiceDaConta } from '../../componentes/conta/IndiceDaConta.tsx'
+import { MolduraLogada } from '../../componentes/conta/MolduraLogada.tsx'
 import {
+  BOTAO_PERIGO,
   BOTAO_PRINCIPAL,
   BOTAO_SECUNDARIO,
   LINK_ALVO,
@@ -37,10 +40,13 @@ const SECOES_DO_INDICE = [
 ] as const
 
 // Cada seção é uma linha de duas colunas (o texto, depois os controles) sobre um fio de 1 px; a
-// zona de perigo (excluir a conta) é um cartão de raio 20 com contorno de 1,5 px.
-const SECAO_GRADE = 'grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-12'
-const SECAO = `${SECAO_GRADE} border-t border-[var(--cor-fio-suave)] py-8`
-const TEXTO_DA_SECAO = 'flex min-w-0 flex-col gap-3'
+// zona de perigo (excluir a conta) é um cartão de raio 20 com contorno, separado das outras. No celular
+// (uma página de tarefa) os grupos ficam mais juntos.
+const SECAO_GRADE = 'grid gap-3 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-12'
+const SECAO = `${SECAO_GRADE} border-t border-[var(--cor-fio-suave)] py-5 lg:py-8`
+const TEXTO_DA_SECAO = 'flex min-w-0 flex-col gap-2 lg:gap-3'
+// Os controles de uma seção (campos, caixa do id) têm todos a mesma largura: a borda direita se alinha.
+const COLUNA_DOS_CONTROLES = 'w-full max-w-[28rem]'
 
 // /app/conta (RF-16): perfil, id da conta, exportação, exclusão, privacidade e sair, numa coluna
 // com o índice das seções à esquerda a partir de 64 rem.
@@ -235,7 +241,11 @@ export function PaginaConta() {
 
   return (
     <MolduraLogada>
-      <h1 ref={titulo} tabIndex={-1} className="cm-h2 alvo-foco">
+      <h1
+        ref={titulo}
+        tabIndex={-1}
+        className="cm-h1 alvo-foco wrap-anywhere max-sm:text-[48px] max-sm:leading-[52px]"
+      >
         {TITULOS.conta}
       </h1>
       <p className="cm-lide mt-3 wrap-anywhere text-[var(--cor-texto-2)]">{CONTA.resumo(conta.nome, conta.email)}</p>
@@ -243,18 +253,8 @@ export function PaginaConta() {
         <RegiaoStatus mensagem={status} />
       </div>
 
-      <div className="mt-10 grid gap-6 lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-12">
-        <nav aria-label={CONTA.indice} className="hidden lg:sticky lg:top-28 lg:block lg:self-start">
-          <ol className="m-0 list-none border-l border-[var(--cor-fio-suave)] p-0">
-            {SECOES_DO_INDICE.map(([id, rotulo]) => (
-              <li key={id}>
-                <a href={`#${id}`} className={`${LINK_ALVO} px-3`}>
-                  {rotulo}
-                </a>
-              </li>
-            ))}
-          </ol>
-        </nav>
+      <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-4 lg:mt-10 lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-12">
+        <IndiceDaConta secoes={SECOES_DO_INDICE} />
 
         <div className="flex min-w-0 flex-col">
           <section aria-labelledby="perfil" className={SECAO}>
@@ -264,7 +264,7 @@ export function PaginaConta() {
               </h2>
               <p className="cm-medida">{CONTA.perfil.frase}</p>
             </div>
-            <form onSubmit={salvarPerfil} noValidate className="flex max-w-[28rem] flex-col gap-5">
+            <form onSubmit={salvarPerfil} noValidate className={`flex ${COLUNA_DOS_CONTROLES} flex-col gap-5`}>
               {erroDoPerfil && !campoDoPerfil ? (
                 <ResumoErro
                   erro={erroDoPerfil}
@@ -276,6 +276,7 @@ export function PaginaConta() {
               <Campo
                 rotulo={CONTA.perfil.nome}
                 autoComplete="name"
+                tamanho="app"
                 valor={nome}
                 aoMudar={(valor) => {
                   setNome(valor)
@@ -284,12 +285,20 @@ export function PaginaConta() {
                 erro={erroNome ?? (campoDoPerfil === 'nome' && erroDoPerfil ? textoDoErro(erroDoPerfil) : null)}
                 refEntrada={nomeRef}
               />
-              <Campo rotulo={CONTA.perfil.email} tipo="email" valor={conta.email} aoMudar={() => undefined} somenteLeitura />
+              <Campo
+                rotulo={CONTA.perfil.email}
+                tipo="email"
+                valor={conta.email}
+                aoMudar={() => undefined}
+                somenteLeitura
+                tamanho="app"
+              />
               <SeletorFuso
                 rotulo={CONTA.perfil.fuso}
                 valor={fuso}
                 aoMudar={setFuso}
                 guardado={conta.fuso}
+                tamanho="app"
                 erro={campoDoPerfil === 'fuso' && erroDoPerfil ? textoDoErro(erroDoPerfil) : null}
                 refEntrada={fusoRef}
               />
@@ -310,7 +319,7 @@ export function PaginaConta() {
               <p
                 ref={idRef}
                 data-id-conta
-                className="tabular rounded-campo bg-[var(--cor-papel-fundo)] px-4 py-3 font-medium"
+                className={`tabular box-border rounded-campo bg-[var(--cor-papel-fundo)] px-4 py-3 font-medium ${COLUNA_DOS_CONTROLES}`}
               >
                 {conta.id.split('-').map((bloco, posicao, blocos) => (
                   <Fragment key={posicao}>
@@ -319,7 +328,7 @@ export function PaginaConta() {
                   </Fragment>
                 ))}
               </p>
-              <button type="button" className={BOTAO_SECUNDARIO} onClick={() => void copiarId()}>
+              <button type="button" className={BOTAO_SECUNDARIO} data-tamanho="app" onClick={() => void copiarId()}>
                 {CONTA.id.botao}
               </button>
             </div>
@@ -341,7 +350,7 @@ export function PaginaConta() {
                   refResumo={resumoDaExportacao}
                 />
               ) : null}
-              <button type="button" disabled={exportacao.enviando} className={BOTAO_SECUNDARIO} onClick={baixarDados}>
+              <button type="button" disabled={exportacao.enviando} className={BOTAO_SECUNDARIO} data-tamanho="app" onClick={baixarDados}>
                 {exportacao.enviando ? COMUM.preparandoArquivo : CONTA.exportar.botao}
               </button>
             </div>
@@ -349,7 +358,7 @@ export function PaginaConta() {
 
           <section
             aria-labelledby="excluir-conta"
-            className={`${SECAO_GRADE} my-8 rounded-cartao border-[1.5px] border-[var(--cor-texto)] p-6 lg:p-8`}
+            className={`${SECAO_GRADE} my-5 rounded-cartao border-[1.5px] border-[var(--cor-erro,var(--cor-texto))] bg-[var(--cor-papel-fundo)] p-5 lg:my-10 lg:p-8`}
           >
             <div className={TEXTO_DA_SECAO}>
               <h2 id="excluir-conta" className="cm-h4">
@@ -387,9 +396,11 @@ export function PaginaConta() {
                 type="button"
                 disabled={botaoDesativado}
                 aria-describedby={bloqueadoras.length > 0 ? 'impedimento-exclusao' : undefined}
-                className={BOTAO_SECUNDARIO}
+                className={BOTAO_PERIGO}
+                data-tamanho="app"
                 onClick={() => setAberto(true)}
               >
+                <Trash2 size={20} aria-hidden="true" />
                 {CONTA.excluir.botao}
               </button>
             </div>
@@ -422,9 +433,6 @@ export function PaginaConta() {
             </div>
           </section>
 
-          <div className="border-t border-[var(--cor-fio-suave)] pt-8">
-            <BotaoSair />
-          </div>
         </div>
       </div>
 

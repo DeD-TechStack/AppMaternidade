@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState, type Ref } from 'react'
+import { Droplets, Ellipsis, Milk, Moon } from 'lucide-react'
 import { Confirmacao } from '../../prototipo/Confirmacao.tsx'
 import {
   ESCOLHAS_FRALDA,
@@ -11,6 +12,7 @@ import {
 } from '../../prototipo/estado.ts'
 import { useBarraFixa } from '../../prototipo/useBarraFixa.ts'
 import { Botao } from '../base/Botao.tsx'
+import { ALVO_APP } from '../app/alvo.ts'
 
 interface Props {
   aoIniciarSessao: (tipo: TipoSessao) => void
@@ -25,20 +27,30 @@ interface Props {
   texto: string | null
   aoDesfazer: () => void
   aoFechar: () => void
+  /** O tipo da sessão em andamento: o botão dele fica em mel, como no cartão. */
+  sessaoAtiva?: TipoSessao | null
 }
 
-const BOTAO = 'ha-barra-botao t-botao alvo-toque'
+// Cada botão tem 56 px de altura (DESIGN.md 4: BarraRegistrar ≥ 56): ícone sobre o rótulo no celular,
+// ao lado dele de 1024 para cima. As cores vêm das variáveis do tema: areia e cacau de dia, o cartão da
+// noite e o papel na madrugada. O hover inverte na hora.
+const BOTAO =
+  'alvo-toque flex h-14 min-w-0 flex-col items-center justify-center gap-0.5 rounded-cartao px-1 text-[15px] leading-[20px] font-medium transition-[scale] duration-100 ease-out active:scale-[0.96] lg:flex-row lg:gap-2.5 lg:text-[17px] lg:leading-[25px]'
+const NEUTRO =
+  'bg-(--cor-papel-fundo) text-(--cor-texto) hover:bg-(--cor-texto) hover:text-(--cor-fundo) aria-expanded:bg-(--cor-texto) aria-expanded:text-(--cor-fundo)'
+const ATIVO = 'bg-mel text-cacau hover:bg-(--cor-texto) hover:text-(--cor-fundo)'
+const ICONE = 'size-6 shrink-0'
 
 /**
- * A barra Registrar de 1 toque do Hoje (EMENDAS E1, VOLTA1 E5): 4 botões iguais, Sono, Mamada, Fralda e
- * Mais, numa barra fixa de 64 px. Sono e Mamada iniciam a sessão na hora, e Fralda também: registra a
- * fralda num toque e a confirmação traz Desfazer, Fechar e a escolha opcional do tipo (Xixi, Cocô,
- * Ambos), que só ajusta o texto. Mais abre a lista (Tummy time, Mamadeira, Alimentação sólida,
- * Observação); ao abrir, o foco vai à 1ª opção (E8). O painel flutua logo acima da barra, dentro do elemento
- * fixo, mas vem depois da fileira no DOM (o Tab dos botões chega a ele); leva a confirmação, cuja
- * região `role="status"` é única e fica sempre no DOM. Esc fecha o que estiver aberto: o Mais (foco no
- * botão Mais) e, depois, a confirmação da fralda (foco no botão Fralda). Com a janela de menos de
- * 40 rem de altura a barra volta ao fluxo.
+ * A barra Registrar de 1 toque do Hoje (DESIGN.md 4; EMENDAS E1, VOLTA1 E5): 4 botões iguais, Sono,
+ * Mamada, Fralda e Mais, com ícone, numa barra fixa embaixo. Sono e Mamada iniciam a sessão na hora, e
+ * Fralda também: registra a fralda num toque e a confirmação traz Desfazer, Fechar e a escolha opcional
+ * do tipo (Xixi, Cocô, Ambos), que só ajusta o texto. Mais abre a lista (Tummy time, Mamadeira,
+ * Alimentação sólida, Observação); ao abrir, o foco vai à 1ª opção (E8). O cartão flutuante fica logo
+ * acima da barra, mas vem depois da fileira no DOM (o Tab dos botões chega a ele); leva a confirmação,
+ * cuja região `role="status"` é única e fica sempre no DOM. Esc fecha o que estiver aberto: o Mais (foco
+ * no botão Mais) e, depois, a confirmação da fralda (foco no botão Fralda). Com a janela de menos de 40
+ * rem de altura a barra volta ao fluxo.
  */
 export function BarraRegistrar({
   aoIniciarSessao,
@@ -49,6 +61,7 @@ export function BarraRegistrar({
   texto,
   aoDesfazer,
   aoFechar,
+  sessaoAtiva = null,
 }: Props) {
   const { barra, fixa } = useBarraFixa()
   const [maisAberto, setMaisAberto] = useState(false)
@@ -119,79 +132,107 @@ export function BarraRegistrar({
     : undefined
 
   const aberto = texto !== null || maisAberto
+  const cor = (tipo: TipoSessao) => (sessaoAtiva === tipo ? ATIVO : NEUTRO)
 
   return (
     <section
       ref={barra}
       aria-label="Registro rápido"
       data-barra-registrar=""
-      className={fixa ? 'registro-rapido barra-registrar barra-fixa' : 'registro-rapido barra-registrar'}
+      className={`registro-rapido border-t border-(--cor-fio-suave) bg-(--cor-fundo) px-0 pt-3 pb-3 text-(--cor-texto) lg:pt-4 lg:pb-4 ${
+        fixa ? 'barra-fixa fixed inset-x-0 bottom-0 z-30' : 'relative'
+      }`}
     >
-      <div className="ha-barra-fileira" data-fileira="">
-        <button
-          ref={refSono}
-          type="button"
-          aria-label="Iniciar sono de Heloísa"
-          className={BOTAO}
-          onClick={() => iniciar('sono')}
-        >
-          <span>Sono</span>
-        </button>
-        <button type="button" aria-label="Iniciar mamada de Heloísa" className={BOTAO} onClick={() => iniciar('mamada')}>
-          <span>Mamada</span>
-        </button>
-        <button
-          ref={botaoFralda}
-          type="button"
-          aria-label="Registrar fralda de Heloísa"
-          className={BOTAO}
-          onClick={registrarFralda}
-        >
-          <span>Fralda</span>
-        </button>
-        <button
-          ref={botaoMais}
-          type="button"
-          aria-label="Mais registros"
-          aria-expanded={maisAberto}
-          aria-controls={maisAberto ? idMais : undefined}
-          className={BOTAO}
-          onClick={alternarMais}
-        >
-          <span>Mais</span>
-        </button>
-      </div>
-
-      {/* O painel vem DEPOIS da fileira no DOM, para o Tab do gatilho (Fralda e Mais) chegar a ele e às
-          suas opções, uma a uma, antes de sair da barra. Visualmente continua logo acima dela: `.ha-painel`
-          é `position: absolute; bottom: 100%`, e a posição não depende da ordem do DOM. */}
-      <div className="ha-painel" data-painel="" data-aberto={aberto ? '' : undefined}>
-        <Confirmacao texto={texto} aoDesfazer={aoDesfazer} aoFechar={aoFechar} escolhas={escolhas} />
-
-        {maisAberto ? (
-          <div
-            ref={grupoMais}
-            id={idMais}
-            role="group"
-            aria-label="Outros registros de Heloísa"
-            className="ha-painel-grupo"
-            data-largos=""
+      <div className="relative mx-auto w-[min(100%-24px,1312px)]" data-barra-miolo="">
+        <div className="grid grid-cols-4 gap-2" data-fileira="">
+          <button
+            ref={refSono}
+            type="button"
+            aria-label="Iniciar sono de Heloísa"
+            data-ativo={sessaoAtiva === 'sono' ? '' : undefined}
+            className={`${BOTAO} ${cor('sono')}`}
+            onClick={() => iniciar('sono')}
           >
-            <Botao
-              variante="moldura"
-              className="alvo-toque"
-              aria-label="Iniciar tummy time de Heloísa"
-              onClick={() => iniciar('tummy')}
-            >
-              Tummy time
-            </Botao>
-            {ITENS_MAIS.map((item) => (
-              <Botao key={item.chave} variante="moldura" className="alvo-toque" onClick={() => escolherMais(item)}>
-                {item.rotulo}
-              </Botao>
-            ))}
+            <Moon aria-hidden="true" className={ICONE} strokeWidth={1.75} />
+            <span>Sono</span>
+          </button>
+          <button
+            type="button"
+            aria-label="Iniciar mamada de Heloísa"
+            data-ativo={sessaoAtiva === 'mamada' ? '' : undefined}
+            className={`${BOTAO} ${cor('mamada')}`}
+            onClick={() => iniciar('mamada')}
+          >
+            <Milk aria-hidden="true" className={ICONE} strokeWidth={1.75} />
+            <span>Mamada</span>
+          </button>
+          <button
+            ref={botaoFralda}
+            type="button"
+            aria-label="Registrar fralda de Heloísa"
+            className={`${BOTAO} ${NEUTRO}`}
+            onClick={registrarFralda}
+          >
+            <Droplets aria-hidden="true" className={ICONE} strokeWidth={1.75} />
+            <span>Fralda</span>
+          </button>
+          <button
+            ref={botaoMais}
+            type="button"
+            aria-label="Mais registros"
+            aria-expanded={maisAberto}
+            aria-controls={maisAberto ? idMais : undefined}
+            className={`${BOTAO} ${NEUTRO}`}
+            onClick={alternarMais}
+          >
+            <Ellipsis aria-hidden="true" className={ICONE} strokeWidth={1.75} />
+            <span>Mais</span>
+          </button>
+        </div>
+
+        {/* O painel vem DEPOIS da fileira no DOM, para o Tab do gatilho (Fralda e Mais) chegar a ele e às
+            suas opções, uma a uma, antes de sair da barra. Na tela, flutua logo acima dela. */}
+        <div
+          data-painel=""
+          data-aberto={aberto ? '' : undefined}
+          className={aberto ? 'absolute inset-x-0 bottom-full pb-3' : 'absolute inset-x-0 bottom-full'}
+        >
+          <div
+            className={
+              aberto
+                ? 'mx-auto max-h-[calc(100dvh-160px)] w-[min(100%,40rem)] overflow-y-auto rounded-cartao border border-(--cor-fio-suave) bg-(--cor-cartao) p-4 [box-shadow:var(--sombra-flutuante)] lg:p-5'
+                : undefined
+            }
+          >
+            <Confirmacao texto={texto} aoDesfazer={aoDesfazer} aoFechar={aoFechar} escolhas={escolhas} />
+
+            {maisAberto ? (
+              <div
+                ref={grupoMais}
+                id={idMais}
+                role="group"
+                aria-label="Outros registros de Heloísa"
+                className={`grid grid-cols-1 gap-2 sm:grid-cols-2 ${texto !== null ? 'mt-4 border-t border-(--cor-fio-suave) pt-4' : ''}`}
+                data-largos=""
+              >
+                <Botao
+                  variante="contorno"
+                  tamanho="app"
+                  className={ALVO_APP}
+                  aria-label="Iniciar tummy time de Heloísa"
+                  onClick={() => iniciar('tummy')}
+                >
+                  Tummy time
+                </Botao>
+                {ITENS_MAIS.map((item) => (
+                  <Botao key={item.chave} variante="contorno" tamanho="app" className={ALVO_APP} onClick={() => escolherMais(item)}>
+                    {item.rotulo}
+                  </Botao>
+                ))}
+              </div>
+            ) : null}
           </div>
-        ) : null}
+        </div>
       </div>
     </section>
   )

@@ -21,6 +21,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  vi.unstubAllEnvs()
   Reflect.deleteProperty(navigator, 'clipboard')
   Reflect.deleteProperty(Element.prototype, 'scrollIntoView')
   Reflect.deleteProperty(URL, 'createObjectURL')
@@ -61,7 +62,8 @@ describe('estrutura da tela', () => {
     expect(cabecalho.getByRole('link', { name: 'Conta' }).getAttribute('aria-current')).toBe('page')
     expect(cabecalho.getByRole('link', { name: 'Ver o protótipo do Hoje' }).getAttribute('href')).toBe('/app/hoje')
     expect(cabecalho.getByRole('button', { name: 'Sair' })).toBeTruthy()
-    expect(screen.getAllByRole('button', { name: 'Sair' })).toHaveLength(2)
+    // Um só "Sair" na página (o da barra): o do fim da página saiu.
+    expect(screen.getAllByRole('button', { name: 'Sair' })).toHaveLength(1)
     // Não monta a navegação inferior do protótipo.
     expect(screen.queryByRole('navigation', { name: 'Principal' })).toBeNull()
   })
@@ -81,19 +83,32 @@ describe('estrutura da tela', () => {
 })
 
 describe('barra da conta', () => {
-  it('é uma barra fina dentro da casca: sem marca, sem aviso próprio, e quebra a linha quando os controles não cabem', async () => {
-    const { container } = await abrirConta()
+  it('é uma barra fina dentro da casca: sem marca própria, com um só aviso de demonstração, e quebra a linha quando os controles não cabem', async () => {
+    const { container, unmount } = await abrirConta()
 
     // Cabeçalho e rodapé são os da casca: um só de cada, e a tela não desenha outro.
     expect(container.querySelectorAll('header')).toHaveLength(1)
     expect(container.querySelectorAll('footer')).toHaveLength(1)
     expect(container.querySelectorAll('[data-nome-site]')).toHaveLength(1)
-    expect(container.querySelectorAll('[data-aviso="demonstracao"]')).toHaveLength(0)
+    // Em modo memória, UM aviso (o do rodapé não vale no app): acima da barra, fora do <main>.
+    expect(container.querySelectorAll('[data-aviso="demonstracao"]')).toHaveLength(1)
+    expect(container.querySelectorAll('main [data-aviso="demonstracao"]')).toHaveLength(0)
+    unmount()
+
+    // Com o banco (as duas variáveis), nenhum.
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://exemplo.invalid')
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'chave-ficticia')
+    const comBanco = await abrirConta()
+    expect(comBanco.container.querySelectorAll('[data-aviso="demonstracao"]')).toHaveLength(0)
+    comBanco.unmount()
+    vi.unstubAllEnvs()
+    const memoria = await abrirConta()
+    const container2 = memoria.container
 
     // A barra: a navegação "Conta", com o link da Conta, o do protótipo e o Sair, antes do <main>.
     const barra = screen.getByRole('navigation', { name: 'Conta' })
     expect(barra.closest('header')).toBeNull()
-    expect(barra.compareDocumentPosition(container.querySelector('main')!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(barra.compareDocumentPosition(container2.querySelector('main')!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(barra.classList.contains('flex-wrap')).toBe(true)
     expect(barra.classList.contains('justify-between')).toBe(true)
     expect([...barra.querySelectorAll('a, button')].map((filho) => filho.textContent)).toEqual([
@@ -313,7 +328,7 @@ describe('exportação', () => {
 
   it('explica o que cada papel recebe e leva a âncora #exportar no título da seção', async () => {
     await abrirConta()
-    expect(screen.getByText(/^Baixe um arquivo com os seus dados, em JSON\. Quem é responsável recebe a família inteira/)).toBeTruthy()
+    expect(screen.getByText(/^Baixe um arquivo com os seus dados, para guardar\. Quem é responsável recebe a família inteira/)).toBeTruthy()
     expect(screen.getByRole('heading', { level: 2, name: 'Seus dados' }).id).toBe('exportar')
   })
 
@@ -412,7 +427,7 @@ describe('excluir conta: falha na leitura dos impedimentos', () => {
     expect((screen.getByRole('button', { name: 'Salvar' }) as HTMLButtonElement).disabled).toBe(false)
     expect((screen.getByRole('button', { name: 'Copiar id' }) as HTMLButtonElement).disabled).toBe(false)
     expect((screen.getByRole('button', { name: 'Baixar meus dados' }) as HTMLButtonElement).disabled).toBe(false)
-    expect(screen.getAllByRole('button', { name: 'Sair' })).toHaveLength(2)
+    expect(screen.getAllByRole('button', { name: 'Sair' })).toHaveLength(1)
 
     fireEvent.click(within(alerta).getByRole('button', { name: 'Tentar de novo' }))
     await waitFor(() => expect(screen.queryByRole('alert')).toBeNull())
@@ -682,10 +697,10 @@ describe('privacidade e sair', () => {
     expect(familia.classList.contains('wrap-anywhere')).toBe(true)
   })
 
-  it('o botão Sair do fim da página faz a mesma saída do cabeçalho', async () => {
+  it('o único botão Sair da página, o da barra, encerra a sessão', async () => {
     const { roteador } = await abrirConta()
 
-    fireEvent.click(screen.getAllByRole('button', { name: 'Sair' })[1])
+    fireEvent.click(screen.getByRole('button', { name: 'Sair' }))
     await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.entrar })
     expect(caminhoDe(roteador)).toBe('/entrar')
     expect(status().textContent).toBe('Você saiu da conta.')

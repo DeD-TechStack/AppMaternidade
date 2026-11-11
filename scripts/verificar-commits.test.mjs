@@ -6,7 +6,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -64,7 +64,7 @@ function criarRepo(t) {
   }
 
   function verificar(...argumentos) {
-    const r = spawnSync(process.execPath, [SCRIPT, ...argumentos], {
+    const r = spawnSync(process.execPath, [opcoesVerificar.script ?? SCRIPT, ...argumentos], {
       cwd: opcoesVerificar.cwd ?? repo,
       encoding: 'utf8',
       env: ambiente,
@@ -214,6 +214,140 @@ test('13. merge reprova em merge', (t) => {
   assert.equal(saida.status, 1)
   assert.deepEqual(regras(saida.stderr), ['merge'])
   assert.match(saida.stderr, / merge: Junta o lado\n$/)
+})
+
+// Prepara duas linhas divergentes (principal e lado) prontas para um merge sem conflito.
+function prepararDivergencia(r, ramos = ['lado']) {
+  for (const ramo of ramos) {
+    r.git(['checkout', '-q', '-b', ramo, r.base])
+    r.alterar(`${ramo}.txt`)
+    r.commitar(`Muda o ${ramo}`)
+  }
+  r.git(['checkout', '-q', 'principal'])
+  r.alterar('principal.txt')
+  r.commitar('Muda o principal')
+}
+
+for (const titulo of ['Traz o int/refazer para o ramo do cartão', 'Integra o int/refazer no ramo']) {
+  test(`13a. merge com 2 pais e título "${titulo}" passa`, (t) => {
+    const r = criarRepo(t)
+    prepararDivergencia(r)
+    r.git(['merge', '-q', '--no-ff', '-m', titulo, 'lado'])
+    const saida = r.verificar(`${r.base}..HEAD`)
+    assert.equal(saida.status, 0, saida.stderr)
+    assert.equal(saida.stdout, `OK: 3 commits verificados em ${r.base}..HEAD\n`)
+  })
+}
+
+test('13b. merge aceito com título acima de 72 pontos de código passa', (t) => {
+  const r = criarRepo(t)
+  const titulo = 'Traz o int/refazer ' + 'x'.repeat(60)
+  assert.ok([...titulo].length > 72)
+  prepararDivergencia(r)
+  r.git(['merge', '-q', '--no-ff', '-m', titulo, 'lado'])
+  const saida = r.verificar(`${r.base}..HEAD`)
+  assert.equal(saida.status, 0, saida.stderr)
+})
+
+test('13c. merge com outro título reprova em merge', (t) => {
+  const r = criarRepo(t)
+  prepararDivergencia(r)
+  r.git(['merge', '-q', '--no-ff', '-m', 'Integra o outro ramo', 'lado'])
+  const saida = r.verificar(`${r.base}..HEAD`)
+  assert.equal(saida.status, 1)
+  assert.deepEqual(regras(saida.stderr), ['merge'])
+  assert.match(saida.stderr, / merge: Integra o outro ramo\n$/)
+})
+
+test('13d. octopus de 3 pais com título aceito reprova em merge', (t) => {
+  const r = criarRepo(t)
+  prepararDivergencia(r, ['lado', 'outro'])
+  r.git(['merge', '-q', '--no-ff', '-m', 'Traz o int/refazer em octopus', 'lado', 'outro'])
+  const pais = r.git(['show', '-s', '--format=%P', 'HEAD']).split(' ')
+  assert.equal(pais.length, 3)
+  const saida = r.verificar(`${r.base}..HEAD`)
+  assert.equal(saida.status, 1)
+  assert.deepEqual(regras(saida.stderr), ['merge'])
+})
+
+test('13e. merge aceito com autor errado reprova em autor', (t) => {
+  const r = criarRepo(t)
+  prepararDivergencia(r)
+  r.git(['merge', '-q', '--no-ff', '-m', 'Traz o int/refazer para o ramo', 'lado'], {
+    autor: { nome: 'Outra Pessoa', email: DANIEL.email },
+    committer: DANIEL,
+  })
+  const saida = r.verificar(`${r.base}..HEAD`)
+  assert.equal(saida.status, 1)
+  assert.deepEqual(regras(saida.stderr), ['autor'])
+})
+
+test('13f. merge aceito com committer errado reprova em autor', (t) => {
+  const r = criarRepo(t)
+  prepararDivergencia(r)
+  r.git(['merge', '-q', '--no-ff', '-m', 'Integra o int/refazer no ramo', 'lado'], {
+    autor: DANIEL,
+    committer: { nome: 'Robô', email: 'robo@exemplo.invalid' },
+  })
+  const saida = r.verificar(`${r.base}..HEAD`)
+  assert.equal(saida.status, 1)
+  assert.deepEqual(regras(saida.stderr), ['autor'])
+})
+
+test('13g. merge com prefixo aceito em minúscula reprova em merge e maiúscula', (t) => {
+  const r = criarRepo(t)
+  prepararDivergencia(r)
+  r.git(['merge', '-q', '--no-ff', '-m', 'traz o int/refazer para o ramo', 'lado'])
+  const saida = r.verificar(`${r.base}..HEAD`)
+  assert.equal(saida.status, 1)
+  assert.deepEqual(regras(saida.stderr), ['merge', 'maiúscula'])
+})
+
+// Allowlist de merges (MERGES_APROVADOS). O SHA real não pode ser forjado: nos casos que
+// precisam dele, roda-se uma CÓPIA do script com o texto do SHA real trocado pelo SHA do
+// merge criado. O script de produção não tem gancho de teste.
+const SHA_APROVADO = '81504a7a34fb803cd2108e64f1eb4756c052fe4d'
+const TITULO_APROVADO = 'Traz a camada de dados, sessão e Auth aprovada da 37a'
+
+function usarCopiaComSha(r, sha) {
+  const original = readFileSync(SCRIPT, 'utf8')
+  assert.equal(original.split(SHA_APROVADO).length - 1, 1, 'SHA real deve aparecer uma vez')
+  const copia = join(r.pasta, 'verificar-commits-copia.mjs')
+  writeFileSync(copia, original.replace(SHA_APROVADO, sha))
+  r.opcoesVerificar.script = copia
+}
+
+test('19. merge com SHA da allowlist passa', (t) => {
+  const r = criarRepo(t)
+  prepararDivergencia(r)
+  r.git(['merge', '-q', '--no-ff', '-m', TITULO_APROVADO, 'lado'])
+  usarCopiaComSha(r, r.git(['rev-parse', 'HEAD']))
+  const saida = r.verificar(`${r.base}..HEAD`)
+  assert.equal(saida.status, 0, saida.stderr)
+  assert.equal(saida.stdout, `OK: 3 commits verificados em ${r.base}..HEAD\n`)
+})
+
+test('20. outro SHA com o mesmo título reprova em merge', (t) => {
+  const r = criarRepo(t)
+  prepararDivergencia(r)
+  r.git(['merge', '-q', '--no-ff', '-m', TITULO_APROVADO, 'lado'])
+  const saida = r.verificar(`${r.base}..HEAD`)
+  assert.equal(saida.status, 1)
+  assert.deepEqual(regras(saida.stderr), ['merge'])
+  assert.match(saida.stderr, new RegExp(` merge: ${TITULO_APROVADO}\\n$`))
+})
+
+test('21. merge da allowlist com autor errado reprova em autor', (t) => {
+  const r = criarRepo(t)
+  prepararDivergencia(r)
+  r.git(['merge', '-q', '--no-ff', '-m', TITULO_APROVADO, 'lado'], {
+    autor: { nome: 'Outra Pessoa', email: DANIEL.email },
+    committer: DANIEL,
+  })
+  usarCopiaComSha(r, r.git(['rev-parse', 'HEAD']))
+  const saida = r.verificar(`${r.base}..HEAD`)
+  assert.equal(saida.status, 1)
+  assert.deepEqual(regras(saida.stderr), ['autor'])
 })
 
 test('14. intervalo sem commits passa com 0 commits', (t) => {

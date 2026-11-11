@@ -62,6 +62,7 @@ export function Entrar() {
       manchete={MANCHETES.entrar}
       frase={ENTRAR.frase}
       ocupado={carregando}
+      ilustracao="mae-noite"
       ligacoes={
         <>
           <span>{ENTRAR.semConta}</span>
@@ -78,7 +79,7 @@ export function Entrar() {
       ) : sessao.estado === 'erro' && sessao.erro ? (
         <ResumoErro erro={sessao.erro} repetivel aoTentarDeNovo={() => void sessao.recarregarConta()} />
       ) : (
-        <form onSubmit={aoEnviar} noValidate className="flex flex-col gap-5">
+        <form onSubmit={aoEnviar} noValidate className="flex flex-col gap-4">
           {estado.fase === 'erro' ? (
             <ResumoErro
               erro={estado.erro}

@@ -1,15 +1,22 @@
 import type { ReactNode } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router'
+import { AvisoDemonstracao } from '../AvisoDemonstracao.tsx'
 import { Carregando, ResumoErro } from './Partes.tsx'
 import { useSessao } from './sessao.tsx'
 
-// O estado carregando e o erro da guarda: só o `<main>` na área de conteúdo, dentro do cabeçalho e do
-// rodapé da casca (que também trazem o aviso de demonstração).
+// O estado carregando e o erro da guarda: o aviso de demonstração (só sem banco) e o `<main>` na área
+// de conteúdo, dentro do cabeçalho e do rodapé da casca (o rodapé do app não traz o aviso).
 function Casca({ ocupado = false, children }: { ocupado?: boolean; children: ReactNode }) {
   return (
-    <main aria-busy={ocupado || undefined} className="cm-area pt-10">
-      <div className="max-w-[28rem]">{children}</div>
-    </main>
+    <>
+      {/* Um só aviso de demonstração (só sem banco), acima do <main>. */}
+      <div className="cm-area pt-3 empty:hidden">
+        <AvisoDemonstracao lateral />
+      </div>
+      <main aria-busy={ocupado || undefined} className="cm-area pt-10">
+        <div className="max-w-[28rem]">{children}</div>
+      </main>
+    </>
   )
 }
 

@@ -1,6 +1,7 @@
-import { PaginaSimples } from './PaginaSimples.tsx'
+import { PaginaDeLeitura } from '../../componentes/publicas-texto/PaginaDeLeitura.tsx'
+import { PAGINAS_DE_TEXTO } from '../../conteudo/publicas-texto.ts'
 
-/** /regras-da-comunidade: as regras da comunidade. Conteúdo no cartão da página. */
+/** /regras-da-comunidade: as regras que valem quando a comunidade abrir, a moderação e os canais de ajuda. */
 export function RegrasDaComunidade() {
-  return <PaginaSimples titulo="Regras da comunidade" />
+  return <PaginaDeLeitura pagina={PAGINAS_DE_TEXTO.regras} />
 }

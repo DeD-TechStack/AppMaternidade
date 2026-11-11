@@ -91,7 +91,7 @@ export function RedefinirSenha() {
           </Link>
         </div>
       ) : (
-        <form onSubmit={aoEnviar} noValidate className="flex flex-col gap-5">
+        <form onSubmit={aoEnviar} noValidate className="flex flex-col gap-4">
           {erroDoEnvio && !noCampo ? (
             <ResumoErro
               erro={erroDoEnvio}

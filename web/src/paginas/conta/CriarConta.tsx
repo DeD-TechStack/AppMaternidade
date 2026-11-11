@@ -86,6 +86,7 @@ export function CriarConta() {
       manchete={MANCHETES.criarConta}
       frase={CRIAR_CONTA.frase}
       ocupado={carregando}
+      ilustracao="maos-celular"
       ligacoes={
         <>
           <span>{CRIAR_CONTA.jaTemConta}</span>
@@ -111,7 +112,7 @@ export function CriarConta() {
       ) : sessao.estado === 'erro' && sessao.erro ? (
         <ResumoErro erro={sessao.erro} repetivel aoTentarDeNovo={() => void sessao.recarregarConta()} />
       ) : (
-        <form onSubmit={aoEnviar} noValidate className="flex flex-col gap-5">
+        <form onSubmit={aoEnviar} noValidate className="flex flex-col gap-4">
           {erroDoEnvio && !campoDoErro ? (
             <ResumoErro
               erro={erroDoEnvio}
