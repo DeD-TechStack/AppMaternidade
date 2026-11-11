@@ -59,6 +59,7 @@ As ilustrações e as cenas do site são imagens geradas pelo Codex CLI 0.167.0 
 | `web/public/ilustracoes/baba-tapete@1x.webp`, `@2x.webp` | `FINAL/ativos/PROVENANCE.md`, `I_traco subject 5`; idem |
 | `web/public/ilustracoes/mae-noite@1x.webp`, `@2x.webp` | `FINAL/ativos/PROVENANCE.md`, `I_traco subject 6`; idem |
 | `web/public/cenas/sistema/trio-mel@1x.webp`, `@2x.webp` | `FINAL/ativos/PROVENANCE.md`, cena `S1_trio_mel` composta com `compor.py` sobre três capturas reais do site; cópia em `web/public/cenas/sistema/PROVENANCE.md` |
+| `web/public/cenas/acesso/entrar@1x.webp`, `@2x.webp` | cena `S2_unico_mel` (um celular sobre um pedestal de oliva), composição provisória das telas de acesso (MAT-37r); será recomposta com os mesmos nomes, com uma captura real do site |
 
 ## Movimento
 

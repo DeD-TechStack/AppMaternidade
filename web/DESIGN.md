@@ -293,17 +293,13 @@ Larguras de linha: `corpo-g` até 65ch dentro de c2–c8; texto das linhas em c4
 
 ### Área de conta (MAT-37)
 
-As telas de acesso (entrar, criar conta, recuperar acesso, nova senha, conta excluída) e as telas logadas da conta (Começar e Conta) são superfícies de configurar: formulário curto, validação clara e pouca decoração. Elas usam só os tokens e as classes desta base, sem token novo. Não herdam do Início o campo de cor de ponta a ponta, os aparelhos nem as ilustrações.
+As telas de acesso (Entrar, Criar conta, Recuperar acesso, Nova senha e Conta excluída) e a de Começar usam o Campo de mel: o cabeçalho e o rodapé são os da casca, e o aviso de demonstração mora no rodapé. A moldura de cada tela não desenha marca, cabeçalho nem aviso próprios.
 
-Três direções foram montadas como telas estáticas para Entrar e Conta e pontuadas pelo award-bar (UI 40%, UX 30%, inovação 30%), em 390 e 1440:
-
-| Direção | UI | UX | Inovação | Total |
-|---|---|---|---|---|
-| A, Folha única: coluna estreita em toda largura; Conta em bloco de linhas, com o rótulo em caixa alta à esquerda | 7,3 | 7,8 | 6,4 | 7,18 |
-| B, Campo e papel: Entrar com um campo de lavanda ao lado do formulário; Conta com cabeçalho em campo de barro e seções em cartões | 6,8 | 6,9 | 7,0 | 6,89 |
-| C, Índice e régua: Entrar em duas colunas no desktop, com o título grande à esquerda e o formulário à direita; Conta com índice das seções à esquerda no desktop e seções separadas por régua de tinta | 7,6 | 7,7 | 7,0 | 7,45 |
-
-Vence a C, pela maior nota. O título em escala grande e a régua de tinta dão a hierarquia sem caixa nem cor, o índice deixa a Conta navegável no desktop e o formulário fica numa medida de leitura de cerca de 28 rem. No celular a C vira uma coluna só, e o índice sai. A A perdeu em inovação, com a coluna estreita solta em 1440. A B perdeu em UI, pelo campo de cor grande sem conteúdo e pelos cartões empilhados no celular.
+- **Telas de acesso, em 1440 (a partir de 64 rem):** duas colunas, 5/6 da grade e 64 px entre elas. À esquerda, o formulário no papel: `h1` em Literata 600 na escala do h2 (56/62), porque mora numa coluna de formulário, com a segunda linha inteira em itálico; depois a frase, os campos de 56 px com raio 14, a pílula primária de largura cheia e, sobre um fio de 1 px, os links secundários, sempre sublinhados e com alvo de 44 px. À direita, um painel de mel com a luz de estúdio e a cena `web/public/cenas/acesso/entrar` (512 × 768 em 1×, cortada por cima e por baixo para encher a altura da coluna). A coluna do formulário se centra na altura do painel, sem sobra vazia ao lado. O painel começa no alto da primeira dobra.
+- **Em 390:** uma coluna só, o formulário primeiro e o painel com a cena depois, com 352 px de altura.
+- **Começar:** a mesma moldura de duas colunas; o passo "Seu nome" fica num cartão branco de raio 20, sem sombra, ao lado da cena.
+- **Conta:** sem cena. Índice das seções à esquerda a partir de 64 rem (sai no celular) e, à direita, cada seção numa linha de duas colunas (texto e controles) separada por um fio de 1 px. A zona de perigo (excluir a conta) é um cartão de raio 20 com contorno de 1,5 px. Uma barra fina logo abaixo do cabeçalho traz o link da Conta, o do protótipo do Hoje e o "Sair".
+- **Erros e estados:** o erro de campo e o resumo de erro levam ícone e palavras, nunca só a cor; a confirmação de uma ação aparece numa região de status com ícone. Os campos, os botões, a madrugada e o foco são os da base (`cm-campo-*`, `cm-botao-*`, variáveis `--cor-*`); nenhuma tela desta área traz token, sombra, gradiente ou ilustração à mão fora deles.
 
 Alcance de duas regras gerais desta base na área de conta:
 
