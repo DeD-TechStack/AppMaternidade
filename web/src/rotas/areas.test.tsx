@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, screen } from '@testing-library/react'
 import type { RouteObject } from 'react-router'
-import { TITULOS, tituloDaAba } from '../conteudo/conta.ts'
+import { NOMES_DO_H1, TITULOS, tituloDaAba } from '../conteudo/conta.ts'
 import { criarDadosContaMemoria } from '../dados/conta.memoria.ts'
 import { criarRotas } from '../rotas.tsx'
 import { criarFixtureDeTeste, renderizarComDados } from '../teste/renderizarComDados.tsx'
@@ -86,15 +86,21 @@ describe('rotasDasAreas: o registro por área', () => {
     expect(tituloDaAba(TITULOS.conta)).toBe('Conta | AppMaternidade')
   })
 
-  it('em rotas.tsx, entra como filho direto do Layout, depois de app/sessao e antes da rota *', () => {
+  it('em rotas.tsx, entra como filho direto do Layout, depois das rotas do site e do protótipo e antes da rota *', () => {
     const [layout] = criarRotas()
     const filhos = layout.children!
     const indiceDaSessao = filhos.findIndex((rota) => rota.path === 'app/sessao')
+    const indiceDasAreas = filhos.indexOf(rotasDasAreas[0])
 
-    expect(filhos.map(caminhoDe)).toEqual([undefined, 'app/hoje', 'app/sessao', undefined, '*'])
+    // A base nova tem as páginas públicas e o /sistema entre a sessão e as áreas: a ordem fixa que
+    // importa é que as áreas venham depois de app/sessao e logo antes da rota `*`.
     expect(filhos[0].index).toBe(true)
-    expect(filhos[indiceDaSessao + 1]).toBe(rotasDasAreas[0])
+    expect(filhos.filter((rota) => rota.element === rotasDasAreas[0].element)).toHaveLength(1)
+    expect(indiceDasAreas).toBeGreaterThan(indiceDaSessao)
+    expect(indiceDasAreas).toBe(filhos.length - 2)
+    expect(caminhoDe(filhos[indiceDasAreas])).toBeUndefined()
     expect(filhos[filhos.length - 1].path).toBe('*')
+    expect(filhos.map(caminhoDe)).toEqual(expect.arrayContaining(['app/hoje', 'app/sessao']))
   })
 })
 
@@ -143,7 +149,7 @@ describe('as rotas logadas só abrem com sessão; as públicas, sempre', () => {
   it('cada rota logada sem sessão vai a /entrar?volta=<caminho>', async () => {
     for (const caminho of ['/app/conta', '/app/comecar']) {
       const { roteador, unmount } = renderizarComDados(caminho)
-      await screen.findByRole('heading', { level: 1, name: 'Entrar' })
+      await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.entrar })
       expect(roteador.state.location.pathname).toBe('/entrar')
       expect(roteador.state.location.search).toBe(`?volta=${encodeURIComponent(caminho)}`)
       unmount()
@@ -151,19 +157,20 @@ describe('as rotas logadas só abrem com sessão; as públicas, sempre', () => {
   })
 
   it('cada rota tem um único main e um único h1, com o texto fixo e o título da aba', async () => {
-    const casos: Array<[string, string, 'juliana' | null]> = [
-      ['/entrar', 'Entrar', null],
-      ['/criar-conta', 'Criar conta', null],
-      ['/recuperar-acesso', 'Recuperar acesso', null],
-      ['/redefinir-senha', 'Nova senha', null],
-      ['/conta-excluida', 'Conta excluída', null],
-      ['/app/conta', 'Conta', 'juliana'],
+    // [caminho, título da aba, texto do h1, sessão]: nas telas de acesso o h1 é a manchete de duas linhas.
+    const casos: Array<[string, string, string, 'juliana' | null]> = [
+      ['/entrar', TITULOS.entrar, NOMES_DO_H1.entrar, null],
+      ['/criar-conta', TITULOS.criarConta, NOMES_DO_H1.criarConta, null],
+      ['/recuperar-acesso', TITULOS.recuperarAcesso, NOMES_DO_H1.recuperarAcesso, null],
+      ['/redefinir-senha', TITULOS.redefinirSenha, NOMES_DO_H1.redefinirSenha, null],
+      ['/conta-excluida', TITULOS.contaExcluida, NOMES_DO_H1.contaExcluida, null],
+      ['/app/conta', TITULOS.conta, 'Conta', 'juliana'],
     ]
-    for (const [caminho, h1, sessao] of casos) {
+    for (const [caminho, titulo, h1, sessao] of casos) {
       const { unmount, container } = renderizarComDados(caminho, { sessao })
       // Sem a marca de recuperação, /redefinir-senha mostra o link vencido, mas o h1 é o da rota.
       expect((await screen.findByRole('heading', { level: 1 })).textContent).toBe(h1)
-      expect(document.title).toBe(tituloDaAba(h1))
+      expect(document.title).toBe(tituloDaAba(titulo))
       expect(container.querySelectorAll('main')).toHaveLength(1)
       expect(container.querySelectorAll('h1')).toHaveLength(1)
       unmount()
@@ -175,7 +182,7 @@ describe('as rotas logadas só abrem com sessão; as públicas, sempre', () => {
     await dados.criarUsuario('nova@exemplo.invalid', 'senha-nova', 'Nova', 'x')
     const { container, roteador } = renderizarComDados('/app/comecar', { dados })
 
-    expect((await screen.findByRole('heading', { level: 1 })).textContent).toBe('Começar')
+    expect((await screen.findByRole('heading', { level: 1 })).textContent).toBe(NOMES_DO_H1.comecar)
     expect(roteador.state.location.pathname).toBe('/app/comecar')
     expect(document.title).toBe('Começar | AppMaternidade')
     expect(container.querySelectorAll('main')).toHaveLength(1)

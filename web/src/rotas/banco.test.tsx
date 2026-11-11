@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, render, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { createClient } from '@supabase/supabase-js'
-import { AVISO_BANCO_DEMONSTRACAO, TEXTOS_ERRO } from '../conteudo/conta.ts'
+import { AVISO_BANCO_DEMONSTRACAO, NOMES_DO_H1, TEXTOS_ERRO } from '../conteudo/conta.ts'
 import { criarRotas } from '../rotas.tsx'
 import { CHAVE_RECUPERACAO } from '../componentes/conta/armazenamento.ts'
 import { criarClienteFalso, USUARIO_FALSO } from '../teste/renderizarComDados.tsx'
@@ -314,7 +314,7 @@ describe('com as duas variáveis (cliente falso): o banco', () => {
     falso.cliente = vencida.cliente
     definirBanco()
     const primeira = abrir('/app/conta')
-    await screen.findByRole('heading', { level: 1, name: 'Entrar' })
+    await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.entrar })
     expect(screen.getByRole('status').textContent).toBe(TEXTOS_ERRO.sessao_encerrada)
     primeira.unmount()
 
