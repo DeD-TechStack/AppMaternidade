@@ -78,6 +78,13 @@ describe('Início: números e selos', () => {
     expect(within(secao).getByRole('heading', { level: 2 }).classList.contains('sr-only')).toBe(true)
     const itens = within(secao).getAllByRole('listitem')
     expect(itens.map((item) => textoLido(item))).toEqual(['7 tipos de registro', '2 toques', '0 metas ou comparações'])
+    // O número é uma peça própria (a figura de exibição), separada da legenda.
+    expect(itens.map((item) => item.querySelector('.in-numeros-valor')!.textContent)).toEqual(['7', '2', '0'])
+    expect(itens.map((item) => item.querySelector('.in-numeros-legenda')!.textContent)).toEqual([
+      'tipos de registro',
+      'toques',
+      'metas ou comparações',
+    ])
   })
 
   it('os selos ficam numa seção com o h2 "O que o app promete" e trazem os cinco selos uma vez para o leitor', () => {
@@ -87,6 +94,9 @@ describe('Início: números e selos', () => {
     const visiveis = within(secao)
       .getAllByRole('list')
       .flatMap((lista) => within(lista).getAllByRole('listitem'))
+    expect(visiveis).toHaveLength(5)
+    // Uma lista só para o leitor: a cópia do letreiro fica escondida dele.
+    expect(secao.querySelectorAll('.cm-selos-lista:not([aria-hidden="true"])')).toHaveLength(1)
     expect(visiveis.map((item) => item.textContent)).toEqual([
       'Sem metas',
       'Sem comparações',
@@ -228,8 +238,8 @@ describe('Início: citação e depoimentos', () => {
     expect(screen.getByText('Carla, avó da Heloísa, na nota das 22:40')).toBeTruthy()
 
     const secao = screen.getByRole('region', { name: 'Quem cuida conta como é.' })
-    expect(secao.getAttribute('data-painel')).toBe('areia')
     expect(citacao.compareDocumentPosition(secao) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(within(secao).getByRole('heading', { level: 2 }).id).toBe(secao.getAttribute('aria-labelledby'))
 
     const relatos = within(secao).getAllByRole('figure')
     expect(
@@ -251,6 +261,23 @@ describe('Início: citação e depoimentos', () => {
       ],
     ])
     expect(within(main).getAllByText('Relatos ilustrativos')).toHaveLength(1)
+  })
+
+  it('o relato da Marina é o grande, num painel de areia; os outros dois ficam fora dele, e cada um tem o seu desenho', () => {
+    abrirInicio()
+    const secao = screen.getByRole('region', { name: 'Quem cuida conta como é.' })
+    const [grande, ...menores] = within(secao).getAllByRole('figure')
+    expect(grande.getAttribute('data-painel')).toBe('areia')
+    expect(grande.querySelector('.in-relato-grande-texto')).not.toBeNull()
+    for (const menor of menores) expect(menor.closest('[data-painel]')).toBeNull()
+
+    const desenhos = [grande, ...menores].map((relato) => relato.querySelector('img[data-ilustracao]')!)
+    expect(desenhos.map((img) => img.getAttribute('data-ilustracao'))).toEqual(['mae-noite', 'pai-colo', 'tummy-time'])
+    // Enfeite: o nome e o papel já dizem quem fala.
+    expect(desenhos.map((img) => img.getAttribute('alt'))).toEqual(['', '', ''])
+    expect(
+      [grande, ...menores].map((relato) => relato.querySelector('figcaption > span:last-child')!.textContent),
+    ).toEqual(['Mãe de primeira viagem', 'Avô, cuida às terças', 'Babá de meio período'])
   })
 })
 
@@ -287,15 +314,40 @@ describe('Início: perguntas', () => {
       expect(botao.getAttribute('aria-expanded')).toBe('true')
       expect(regiao.hidden).toBe(false)
       expect(within(secao).getByRole('region', { name: pergunta }).textContent).toBe(resposta)
+
+      fireEvent.click(botao)
+
+      expect(botao.getAttribute('aria-expanded')).toBe('false')
+      expect(regiao.hidden).toBe(true)
     }
+  })
+
+  it('cada pergunta é um botão num h3, sem números (não é uma sequência), e a seção tem o desenho da avó', () => {
+    abrirInicio()
+    const secao = screen.getByRole('region', { name: 'Perguntas de quem chega agora.' })
+    const h3s = within(secao).getAllByRole('heading', { level: 3 })
+    expect(h3s).toHaveLength(4)
+    for (const h3 of h3s) {
+      const botao = within(h3).getByRole('button')
+      expect(botao.getAttribute('type')).toBe('button')
+    }
+    // DESIGN.md 7: nada de marcador numerado; as perguntas não são uma sequência.
+    expect(secao.querySelector('.in-faq-num')).toBeNull()
+    expect(secao.textContent).not.toMatch(/\b0[1-4]\b/)
+    // O desenho é da seção (em toda largura), antes da lista, e só enfeite.
+    const avo = secao.querySelector('img[data-ilustracao="avo-carrinho"]')!
+    expect(avo.getAttribute('alt')).toBe('')
+    expect(avo.getAttribute('loading')).toBe('eager')
+    const lista = secao.querySelector('[data-acordeao]')!
+    expect(avo.compareDocumentPosition(lista) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 })
 
 describe('Início: fechamento', () => {
-  it('é um painel de mel com uma frase e um só clicável, "Começar grátis", e a babá no tapete', () => {
+  it('é um painel de cacau (não se funde com o rodapé de mel) com uma frase e um só clicável, "Começar grátis", e a babá no tapete', () => {
     abrirInicio()
     const painel = screen.getByRole('region', { name: 'Sua família inteira no mesmo dia.' })
-    expect(painel.getAttribute('data-painel')).toBe('mel')
+    expect(painel.getAttribute('data-painel')).toBe('cacau')
     const clicaveis = painel.querySelectorAll('a, button, input, select, textarea, [tabindex]')
     expect(clicaveis).toHaveLength(1)
     const primario = within(painel).getByRole('link', { name: 'Começar grátis' })
@@ -306,8 +358,11 @@ describe('Início: fechamento', () => {
     expect(baba.getAttribute('data-ilustracao')).toBe('baba-tapete')
     // Carrega na hora: sem ela, sobraria só o papel vazio acima do painel.
     expect(baba.getAttribute('loading')).toBe('eager')
-    // A babá é a primeira coisa do painel: fica por cima da borda de cima, antes do título.
-    expect(painel.firstElementChild).toBe(baba)
+    // A babá é a primeira coisa do painel, num disco de mel por cima da borda de cima, antes do título:
+    // o traço preto nunca fica sobre o cacau.
+    const disco = painel.firstElementChild!
+    expect(disco.classList.contains('in-fechamento-disco')).toBe(true)
+    expect(disco.firstElementChild).toBe(baba)
   })
 
   it('"Começar grátis" aparece duas vezes, na abertura e no fechamento, sempre para /app/hoje', () => {
@@ -316,7 +371,8 @@ describe('Início: fechamento', () => {
     expect(links).toHaveLength(2)
     expect(links.map((link) => link.getAttribute('href'))).toEqual(['/app/hoje', '/app/hoje'])
     expect(links[0].closest('section')!.contains(screen.getByRole('heading', { level: 1 }))).toBe(true)
-    expect(links[1].closest('[data-painel="mel"]')!.textContent).toContain('Sua família inteira')
+    expect(links[1].closest('[data-painel="cacau"]')!.textContent).toContain('Sua família inteira')
+    expect(links[1].getAttribute('data-botao')).toBe('primario')
   })
 })
 

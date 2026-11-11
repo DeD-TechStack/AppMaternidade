@@ -69,7 +69,8 @@
   }
 
   /* Alvo de toque: todo botão e link fora de parágrafo tem pelo menos 44 × 44 px. */
-  .alvo-toque,
+  /* Piso de especificidade zero: não vence o min-height de 56 px do .cm-botao nem do .cm-campo-entrada. */
+  :where(.alvo-toque),
   .botao {
     min-width: 44px;
     min-height: 44px;

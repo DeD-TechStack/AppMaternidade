@@ -11,6 +11,17 @@ const AUTOR_EMAIL = 'danielmacedosilva11@gmail.com'
 const LIMITE_TITULO = 72
 // Único merge aceito: 2 pais e título com um destes prefixos (autor e committer = Daniel).
 const PREFIXOS_MERGE = ['Traz o int/refazer', 'Integra o int/refazer']
+// Allowlist de merges extras aceitos pelo SHA completo (40 caracteres, nunca abreviado),
+// além dos merges com prefixo acima. Cada entrada é `{ sha, motivo }`; o motivo registra
+// quem pediu e quando. O merge da lista continua sujeito às demais regras (autor, committer,
+// título com maiúscula etc.) e precisa ter exatamente 2 pais. Qualquer outro merge segue
+// reprovado.
+const MERGES_APROVADOS = [
+  {
+    sha: '81504a7a34fb803cd2108e64f1eb4756c052fe4d',
+    motivo: 'merge da 37a aprovada pedido pelo líder na MAT-37r, 11/11/2026',
+  },
+]
 
 function erro(mensagem) {
   process.stderr.write(`erro: ${mensagem}\n`)
@@ -82,16 +93,18 @@ for (const sha of commits) {
   const merge = quantidadePais > 1
   const mergeAceito =
     quantidadePais === 2 && PREFIXOS_MERGE.some((prefixo) => titulo.startsWith(prefixo))
+  const mergeAprovado =
+    quantidadePais === 2 && MERGES_APROVADOS.some((aprovado) => aprovado.sha === sha)
 
   if (nome !== AUTOR_NOME || email !== AUTOR_EMAIL) {
     regras.push('autor')
-  } else if (mergeAceito && (nomeCommitter !== AUTOR_NOME || emailCommitter !== AUTOR_EMAIL)) {
+  } else if ((mergeAceito || mergeAprovado) && (nomeCommitter !== AUTOR_NOME || emailCommitter !== AUTOR_EMAIL)) {
     // O committer só é conferido nos merges aceitos.
     regras.push('autor')
   }
 
   if (merge) {
-    if (!mergeAceito) regras.push('merge')
+    if (!mergeAceito && !mergeAprovado) regras.push('merge')
   } else {
     const arquivos = gitOk(
       ['diff-tree', '--root', '--no-commit-id', '-r', '--name-only', sha],

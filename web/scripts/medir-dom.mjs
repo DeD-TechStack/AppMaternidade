@@ -23,7 +23,7 @@ import { pathToFileURL } from 'node:url'
 // Parte pura
 
 /** As siglas que podem aparecer em caixa alta (lista fechada). */
-export const SIGLAS_PERMITIDAS = ['RN', 'SBP', 'LGPD', 'OMS']
+export const SIGLAS_PERMITIDAS = ['RN', 'SBP', 'LGPD', 'OMS', 'SAMU']
 
 /** As duas famílias do site (o nome da família variável, "Literata Variable", conta como Literata). */
 export const FAMILIAS_PERMITIDAS = ['Literata', 'Outfit']

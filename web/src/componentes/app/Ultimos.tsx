@@ -21,19 +21,21 @@ export function Ultimos({ itens, className }: Props) {
       id="ultimos"
       data-ultimos=""
       aria-labelledby={idTitulo}
-      className={`rounded-cartao border border-(--cor-fio-suave) bg-(--cor-cartao) px-5 pt-5 pb-2 [box-shadow:var(--sombra-cartao)] lg:px-7 lg:pt-7 lg:pb-6 ${className ?? ''}`}
+      className={className}
     >
       <h2 id={idTitulo} className="cm-h4">
         Últimos
       </h2>
-      <div className="mt-2 lg:mt-4 lg:grid lg:grid-cols-3">
+      {/* A mesma linguagem do histórico: linhas com fio fino, sem cartão. Em 1440, três colunas entre os
+          mesmos fios. */}
+      <div className="mt-3 border-y border-(--cor-fio-suave) lg:mt-4 lg:grid lg:grid-cols-3">
         {itens.map((item, posicao) => {
           const desde = item.legenda.endsWith(DESDE)
           const nome = desde ? item.legenda.slice(0, -DESDE.length) : item.legenda
           return (
             <div
               key={posicao}
-              className="sb-numeros-item flex flex-row-reverse items-baseline justify-between gap-4 border-t border-l-0 border-(--cor-fio-suave) px-0 py-3.5 first:border-t-0 lg:flex-col-reverse lg:items-start lg:justify-end lg:gap-1 lg:border-t-0 lg:border-l lg:py-1 lg:pl-5 lg:first:border-l-0 lg:first:pl-0"
+              className="sb-numeros-item flex min-h-14 flex-row-reverse items-center justify-between gap-4 border-t border-l-0 border-(--cor-fio-suave) px-0 py-2 first:border-t-0 lg:flex-col-reverse lg:items-start lg:justify-end lg:gap-1 lg:border-t-0 lg:border-l lg:py-5 lg:pl-6 lg:first:border-l-0 lg:first:pl-0"
             >
               <div className="flex items-baseline gap-1.5 whitespace-nowrap">
                 {desde ? (

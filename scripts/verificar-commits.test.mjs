@@ -6,7 +6,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -64,7 +64,7 @@ function criarRepo(t) {
   }
 
   function verificar(...argumentos) {
-    const r = spawnSync(process.execPath, [SCRIPT, ...argumentos], {
+    const r = spawnSync(process.execPath, [opcoesVerificar.script ?? SCRIPT, ...argumentos], {
       cwd: opcoesVerificar.cwd ?? repo,
       encoding: 'utf8',
       env: ambiente,
@@ -301,6 +301,53 @@ test('13g. merge com prefixo aceito em minúscula reprova em merge e maiúscula'
   const saida = r.verificar(`${r.base}..HEAD`)
   assert.equal(saida.status, 1)
   assert.deepEqual(regras(saida.stderr), ['merge', 'maiúscula'])
+})
+
+// Allowlist de merges (MERGES_APROVADOS). O SHA real não pode ser forjado: nos casos que
+// precisam dele, roda-se uma CÓPIA do script com o texto do SHA real trocado pelo SHA do
+// merge criado. O script de produção não tem gancho de teste.
+const SHA_APROVADO = '81504a7a34fb803cd2108e64f1eb4756c052fe4d'
+const TITULO_APROVADO = 'Traz a camada de dados, sessão e Auth aprovada da 37a'
+
+function usarCopiaComSha(r, sha) {
+  const original = readFileSync(SCRIPT, 'utf8')
+  assert.equal(original.split(SHA_APROVADO).length - 1, 1, 'SHA real deve aparecer uma vez')
+  const copia = join(r.pasta, 'verificar-commits-copia.mjs')
+  writeFileSync(copia, original.replace(SHA_APROVADO, sha))
+  r.opcoesVerificar.script = copia
+}
+
+test('19. merge com SHA da allowlist passa', (t) => {
+  const r = criarRepo(t)
+  prepararDivergencia(r)
+  r.git(['merge', '-q', '--no-ff', '-m', TITULO_APROVADO, 'lado'])
+  usarCopiaComSha(r, r.git(['rev-parse', 'HEAD']))
+  const saida = r.verificar(`${r.base}..HEAD`)
+  assert.equal(saida.status, 0, saida.stderr)
+  assert.equal(saida.stdout, `OK: 3 commits verificados em ${r.base}..HEAD\n`)
+})
+
+test('20. outro SHA com o mesmo título reprova em merge', (t) => {
+  const r = criarRepo(t)
+  prepararDivergencia(r)
+  r.git(['merge', '-q', '--no-ff', '-m', TITULO_APROVADO, 'lado'])
+  const saida = r.verificar(`${r.base}..HEAD`)
+  assert.equal(saida.status, 1)
+  assert.deepEqual(regras(saida.stderr), ['merge'])
+  assert.match(saida.stderr, new RegExp(` merge: ${TITULO_APROVADO}\\n$`))
+})
+
+test('21. merge da allowlist com autor errado reprova em autor', (t) => {
+  const r = criarRepo(t)
+  prepararDivergencia(r)
+  r.git(['merge', '-q', '--no-ff', '-m', TITULO_APROVADO, 'lado'], {
+    autor: { nome: 'Outra Pessoa', email: DANIEL.email },
+    committer: DANIEL,
+  })
+  usarCopiaComSha(r, r.git(['rev-parse', 'HEAD']))
+  const saida = r.verificar(`${r.base}..HEAD`)
+  assert.equal(saida.status, 1)
+  assert.deepEqual(regras(saida.stderr), ['autor'])
 })
 
 test('14. intervalo sem commits passa com 0 commits', (t) => {

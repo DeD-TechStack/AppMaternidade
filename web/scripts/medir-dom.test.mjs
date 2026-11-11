@@ -411,7 +411,16 @@ describe('CAIXA: nada em caixa alta', () => {
       criar({ tag: 'input', texto: '', textoControle: 'Maria' }),
     ])
     assert.equal(r.ok, true, r.motivo)
-    assert.deepEqual(SIGLAS_PERMITIDAS, ['RN', 'SBP', 'LGPD', 'OMS'])
+    assert.deepEqual(SIGLAS_PERMITIDAS, ['RN', 'SBP', 'LGPD', 'OMS', 'SAMU'])
+  })
+
+  it('passa com a sigla SAMU (telefone de emergência) e continua falhando com ATENÇÃO', () => {
+    const r = caixa([criar({ texto: 'Em emergência, ligue para o SAMU 192' })])
+    assert.equal(r.ok, true, r.motivo)
+    assert.deepEqual(palavrasEmCaixaAlta('SAMU 192'), [])
+    const falha = caixa([criar({ texto: 'SAMU 192: ATENÇÃO ao horário' })])
+    assert.equal(falha.ok, false)
+    assert.match(falha.motivo, /ATENÇÃO/)
   })
 
   it('falha com text-transform uppercase, mesmo com o texto em minúsculas', () => {
@@ -471,7 +480,7 @@ describe('CAIXA: nada em caixa alta', () => {
       assert.equal(caixa([criar({ texto })]).ok, false, texto)
     }
     assert.deepEqual(palavrasEmCaixaAlta('Cena de HTML pura'), ['HTML'])
-    assert.deepEqual(SIGLAS_PERMITIDAS, ['RN', 'SBP', 'LGPD', 'OMS'])
+    assert.deepEqual(SIGLAS_PERMITIDAS, ['RN', 'SBP', 'LGPD', 'OMS', 'SAMU'])
   })
 
   it('falha fechado: nenhum nó com texto, text-transform ausente e nó sem estilo', () => {

@@ -4,9 +4,6 @@ import type { Papel } from '../../dados/comum.ts'
 import { AvisoDeErro } from './AvisoDeErro.tsx'
 import type { Secao } from './useSecao.ts'
 
-const CARTAO =
-  'rounded-cartao border border-(--cor-fio-suave) bg-(--cor-cartao) px-5 pt-5 pb-5 [box-shadow:var(--sombra-cartao)] lg:px-7 lg:pt-7'
-
 interface Props<T> {
   secao: Secao<T>
   titulo: string
@@ -29,7 +26,7 @@ export function SecaoDoHoje<T>({ secao, titulo, papel, className, children }: Pr
         aria-labelledby={idTitulo}
         aria-busy={secao.estado === 'carregando' ? 'true' : undefined}
         data-secao-estado={secao.estado}
-        className={`${CARTAO} ${className ?? ''}`}
+        className={className}
       >
         <h2 id={idTitulo} className="cm-h4">
           {titulo}

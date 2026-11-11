@@ -1,6 +1,7 @@
-import { PaginaSimples } from './PaginaSimples.tsx'
+import { PaginaDeLeitura } from '../../componentes/publicas-texto/PaginaDeLeitura.tsx'
+import { PAGINAS_DE_TEXTO } from '../../conteudo/publicas-texto.ts'
 
-/** /exclusao-de-conta: como pedir a exclusão da conta e dos dados. Conteúdo no cartão da página. */
+/** /exclusao-de-conta: como pedir, o que vai ser apagado, o que pode ficar guardado e o prazo. */
 export function ExclusaoDeConta() {
-  return <PaginaSimples titulo="Exclusão de conta" />
+  return <PaginaDeLeitura pagina={PAGINAS_DE_TEXTO.exclusao} />
 }

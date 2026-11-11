@@ -27,16 +27,21 @@ const colunasDeUltimos = (container: HTMLElement) =>
   )
 
 describe('Hoje: a ordem dos blocos', () => {
-  it('(claro) cartão, Para você saber, Desde o seu último registro, Hoje até agora e Últimos, nessa ordem; a barra vem depois do main', async () => {
+  it('(claro) cartão, Hoje até agora (no topo da área da lista), Para você saber, Desde o seu último registro e Últimos, nessa ordem; a barra vem depois do main', async () => {
     const { container } = await renderizarRotaPronta('/app/hoje')
 
     const ordem = [
       cartao(container),
+      regiao('Hoje até agora'),
       regiao('Para você saber'),
       regiao('Desde o seu último registro, às 07:50'),
-      regiao('Hoje até agora'),
       ultimos(container),
     ]
+    // Os números e o histórico formam uma área só (a coluna da direita em 1440), e os números abrem essa área.
+    const area = container.querySelector<HTMLElement>('main [data-area-lista]')!
+    expect(area.firstElementChild!.firstElementChild).toBe(regiao('Hoje até agora'))
+    expect(area.contains(regiao('Para você saber'))).toBe(true)
+    expect(area.contains(regiao('Desde o seu último registro, às 07:50'))).toBe(true)
     for (let i = 1; i < ordem.length; i++) {
       expect(ordem[i - 1].compareDocumentPosition(ordem[i]) & Node.DOCUMENT_POSITION_FOLLOWING, `bloco ${i}`).not.toBe(0)
     }
@@ -55,6 +60,14 @@ describe('Hoje: a ordem dos blocos', () => {
     expect(cartao(container).compareDocumentPosition(botao) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
     expect(botao.compareDocumentPosition(regiao('Para você saber')) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
     expect(screen.getByText('Última mamada às 07:32, com Juliana')).toBeTruthy()
+  })
+
+  it('(madrugada) o histórico vem antes dos números do dia, para a primeira linha subir no celular', async () => {
+    await renderizarRotaPronta('/app/hoje', { madrugada: true })
+
+    const historico = regiao('Desde o seu último registro, às 07:50')
+    expect(regiao('Para você saber').compareDocumentPosition(historico) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
+    expect(historico.compareDocumentPosition(regiao('Hoje até agora')) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
   })
 
   it('(claro) não há botão redondo de mamada: ele é só da madrugada', async () => {
@@ -224,6 +237,25 @@ describe('Hoje: Para você saber e Desde o seu último registro', () => {
 
     expect(screen.queryByText('Pomada só à noite.')).toBeNull()
     expect(within(regiao('Para você saber')).getByText('Nenhuma nota em destaque.')).toBeTruthy()
+  })
+
+  // No int/refazer, as linhas do histórico (hora e tipo à esquerda, duração à direita, texto inteiro ao
+  // alcance do toque) eram do `DesdeQueVoceSaiu`, e o contrato dele segue em `appComponentes.test.tsx`. Com
+  // os dados da rotina o Hoje desenha `DesdeUltimoRegistro` (o título "Desde o seu último registro, às
+  // HH:MM" é exato), na mesma linguagem de fios finos; aqui vale o que a linha dele promete.
+  it('o histórico é uma lista de linhas com fio fino, sem cartão, e a linha da sessão some ao encerrar', async () => {
+    const { container } = await renderizarRotaPronta('/app/hoje')
+
+    const secao = container.querySelector<HTMLElement>('main [data-desde]')!
+    expect(secao.classList.contains('rounded-cartao')).toBe(false)
+    const lista = within(secao).getByRole('list')
+    expect(lista.classList.contains('border-y')).toBe(true)
+    expect(within(lista).getByText('Sono, em andamento')).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Encerrar' }))
+    await aguardarCarga()
+
+    expect(within(container.querySelector<HTMLElement>('main [data-desde]')!).queryByText('Sono, em andamento')).toBeNull()
   })
 
   it('a hora do marco é o recebido_em do último registro de Juliana; os novos são de outras pessoas, do mais recente ao mais antigo', async () => {
@@ -483,6 +515,38 @@ describe('Hoje: madrugada', () => {
 
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Sono de Heloísa')
     expect(screen.getByText('Já há uma sessão de Sono em andamento.')).toBeTruthy()
+  })
+
+  it('com o sono em andamento a sessão é o destaque: o botão redondo fica na versão compacta; sem sessão, grande', async () => {
+    const comSono = await renderizarRotaPronta('/app/hoje', { madrugada: true })
+    const pequeno = screen.getByRole('button', { name: 'Iniciar mamada' })
+    expect(pequeno.closest('[data-iniciar-mamada]')!.hasAttribute('data-compacto')).toBe(true)
+    expect(pequeno.classList.contains('size-[7rem]')).toBe(true)
+    comSono.unmount()
+
+    await renderizarRotaPronta('/app/hoje', { madrugada: true, ajustarRotina: semSessaoEmAndamento })
+    const grande = screen.getByRole('button', { name: 'Iniciar mamada' })
+    expect(grande.closest('[data-iniciar-mamada]')!.hasAttribute('data-compacto')).toBe(false)
+    expect(grande.classList.contains('size-[13rem]')).toBe(true)
+  })
+
+  it('no celular, com o sono em andamento, o histórico sobe: grade com 20 px entre blocos e 16 px sob o título (antes 32 e 24)', async () => {
+    const { container } = await renderizarRotaPronta('/app/hoje', { madrugada: true })
+
+    const grade = container.querySelector<HTMLElement>('main [data-grade-do-hoje]')!
+    expect(grade.contains(cartao(container))).toBe(true)
+    expect(grade.contains(regiao('Desde o seu último registro, às 07:50'))).toBe(true)
+    for (const classe of ['gap-5', 'mt-4', 'lg:mt-10', 'lg:gap-y-12']) expect(grade.classList.contains(classe), classe).toBe(true)
+    for (const classe of ['gap-8', 'mt-6']) expect(grade.classList.contains(classe), classe).toBe(false)
+    // Nenhum alvo encolhe: o círculo continua com 7 rem e o Encerrar com o alvo do app.
+    expect(screen.getByRole('button', { name: 'Iniciar mamada' }).classList.contains('size-[7rem]')).toBe(true)
+  })
+
+  it('o ajuste é só da madrugada com sessão: de dia a grade mantém 40 px entre blocos', async () => {
+    const { container } = await renderizarRotaPronta('/app/hoje')
+
+    const grade = container.querySelector<HTMLElement>('main [data-grade-do-hoje]')!
+    for (const classe of ['gap-10', 'mt-6']) expect(grade.classList.contains(classe), classe).toBe(true)
   })
 
   it('com uma mamada em andamento o botão redondo some (o cartão já mostra a mamada)', async () => {

@@ -415,7 +415,9 @@
     justify-content: center;
     width: 48px;
     height: 48px;
-    margin-right: -4px;
+    /* A caixa do ícone (26 px) fica 11 px para dentro do botão de 48, e o traço do Menu do Lucide (viewBox 24,
+       pontas redondas) termina 3,25 px antes da borda da caixa: -(11 + 3,25) leva o TRAÇO à borda do conteúdo. */
+    margin-right: -14.25px;
     padding: 0;
     border: 0;
     border-radius: var(--radius-pilula);
@@ -601,11 +603,14 @@
     text-decoration-color: currentColor;
   }
 
-  /* O nome: até 160 px em 1440, na largura do painel (1cqi = 1% dela). */
+  /* O nome ocupa a largura inteira do miolo do painel, da margem esquerda à régua da direita. O texto
+     (Literata 600, tracking -0.03em) mede 7,966 vezes o corpo da letra (medido, linear no tamanho); 100cqi
+     é a largura do miolo do .cm-rodape-painel (o recipiente). Sem teto, sem transform, sem mexer no tracking. */
   .cm-rodape-nome {
+    --cm-fator-marca: 7.966;
     margin: clamp(48px, 4.571vw + 30.171px, 96px) 0 0;
     font-family: var(--fonte-titulo);
-    font-size: min(160px, 12.2cqi);
+    font-size: calc(100cqi / var(--cm-fator-marca));
     line-height: 1.05;
     font-weight: 600;
     letter-spacing: -0.03em;
@@ -624,6 +629,20 @@
 
   .cm-rodape-base > p {
     margin: 0;
+  }
+
+  /* Rodapé das rotas /app/*: uma linha de links que quebra, sobre uma régua fina; sem painel de mel. */
+  .cm-rodape-compacto {
+    margin-top: 32px;
+    padding-bottom: 24px;
+  }
+
+  .cm-rodape-compacto-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 24px;
+    padding-top: 8px;
+    border-top: 1px solid var(--cor-fio-suave);
   }
 
   @media (min-width: 768px) {

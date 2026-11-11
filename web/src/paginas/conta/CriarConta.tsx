@@ -86,6 +86,7 @@ export function CriarConta() {
       manchete={MANCHETES.criarConta}
       frase={CRIAR_CONTA.frase}
       ocupado={carregando}
+      ilustracao="maos-celular"
       ligacoes={
         <>
           <span>{CRIAR_CONTA.jaTemConta}</span>

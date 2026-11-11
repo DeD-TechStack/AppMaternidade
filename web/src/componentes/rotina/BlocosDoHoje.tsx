@@ -6,8 +6,9 @@ import { Avatar } from '../app/Avatar.tsx'
 import { horaDaNota } from './formatos.ts'
 import { ItemRegistro } from './ItemRegistro.tsx'
 
-const CARTAO =
-  'rounded-cartao border border-(--cor-fio-suave) bg-(--cor-cartao) px-5 pt-5 pb-2 [box-shadow:var(--sombra-cartao)] lg:px-7 lg:pt-7'
+// A linguagem da área da lista do Hoje (a 49b v2): linhas separadas por um fio fino, sem cartão branco.
+const LISTA = 'mt-3 border-y border-(--cor-fio-suave) lg:mt-4'
+const VAZIO = 'mt-3 border-y border-(--cor-fio-suave) py-4 text-(--cor-texto-2) lg:mt-4'
 
 interface NotasProps {
   /** As notas em destaque (`destaque_ate` depois de agora), da mais nova à mais antiga, até 3. */
@@ -21,14 +22,14 @@ interface NotasProps {
 export function ParaVoceSaber({ notas, autorDe, agora, className }: NotasProps) {
   const idTitulo = useId()
   return (
-    <section aria-labelledby={idTitulo} data-notas="" className={`${CARTAO} ${className ?? ''}`}>
+    <section aria-labelledby={idTitulo} data-notas="" className={className}>
       <h2 id={idTitulo} className="cm-h4">
         {HOJE.paraVoceSaber}
       </h2>
       {notas.length === 0 ? (
-        <p className="py-4 text-(--cor-texto-2)">{HOJE.semNotaEmDestaque}</p>
+        <p className={VAZIO}>{HOJE.semNotaEmDestaque}</p>
       ) : (
-        <ul className="mt-2">
+        <ul className={LISTA}>
           {notas.map((nota) => {
             const autor = autorDe(nota)
             return (
@@ -65,14 +66,14 @@ interface DesdeProps {
 export function DesdeUltimoRegistro({ marcoEm, registros, fuso, autorDe, className }: DesdeProps) {
   const idTitulo = useId()
   return (
-    <section aria-labelledby={idTitulo} data-desde="" className={`${CARTAO} ${className ?? ''}`}>
+    <section aria-labelledby={idTitulo} data-desde="" className={className}>
       <h2 id={idTitulo} className="cm-h4">
         {HOJE.desdeOUltimo(formatarHora(marcoEm))}
       </h2>
       {registros.length === 0 ? (
-        <p className="py-4 text-(--cor-texto-2)">{HOJE.nadaNovo}</p>
+        <p className={VAZIO}>{HOJE.nadaNovo}</p>
       ) : (
-        <ul className="mt-2">
+        <ul className={LISTA}>
           {registros.map((registro) => (
             <ItemRegistro key={registro.id} registro={registro} fuso={fuso} autor={autorDe(registro)} />
           ))}

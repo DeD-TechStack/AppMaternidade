@@ -139,7 +139,7 @@ export function BarraRegistrar({
       ref={barra}
       aria-label="Registro rápido"
       data-barra-registrar=""
-      className={`registro-rapido border-t border-(--cor-fio-suave) bg-(--cor-fundo) px-0 pt-[3px] pb-1 text-(--cor-texto) ${
+      className={`registro-rapido border-t border-(--cor-fio-suave) bg-(--cor-fundo) px-0 pt-3 pb-3 text-(--cor-texto) lg:pt-4 lg:pb-4 ${
         fixa ? 'barra-fixa fixed inset-x-0 bottom-0 z-30' : 'relative'
       }`}
     >

@@ -40,9 +40,9 @@ function dataPorExtenso(instante: number): string {
 }
 
 // Em 1440 o bloco "Últimos" é uma grade de 3 colunas: o primeiro item de cada linha (o 1º e o 4º) não leva fio
-// vertical nem recuo à esquerda, e a segunda linha ganha um respiro. O componente da base só trata o 1º item.
+// vertical nem recuo à esquerda. O componente da base só trata o 1º item (o 4º ganhava um fio solto).
 const REGRA_DAS_LINHAS_DE_ULTIMOS =
-  'lg:[&_.sb-numeros-item:nth-child(3n+1)]:border-l-0 lg:[&_.sb-numeros-item:nth-child(3n+1)]:pl-0 lg:[&_.sb-numeros-item:nth-child(n+4)]:mt-3'
+  'lg:[&_.sb-numeros-item:nth-child(3n+1)]:border-l-0 lg:[&_.sb-numeros-item:nth-child(3n+1)]:pl-0'
 
 const formatarSono = (minutos: number) => HOJE.umaHoraEMinutos(Math.floor(minutos / 60), minutos % 60)
 
@@ -220,10 +220,203 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
   const lidos = [emAndamento, ultimos, desde, notas, dia].map((secao) => secao.lidoEm)
   const lidoEm = lidos.every((valor) => valor !== null) ? Math.min(...(lidos as number[])) : null
   const fusoDiferente = aparelho !== fuso
+  const comSessao = principalSessao !== null
+
+  // ---- os blocos; a composição (a grade) escolhe a ordem e a posição de cada um --------------------------
+
+  const blocoCartao = (classe: string) => (
+    <div className={`flex flex-col gap-4 ${classe}`}>
+      {emAndamento.estado === 'carregando' || (emAndamento.estado === 'erro' && emAndamento.dados === null) ? (
+        <section
+          ref={cartao}
+          tabIndex={-1}
+          data-andamento=""
+          aria-busy={emAndamento.estado === 'carregando' ? 'true' : undefined}
+          className="alvo-foco rounded-cartao border border-(--cor-fio-suave) bg-(--cor-cartao) p-6 lg:p-8"
+        >
+          <h2 className="text-[15px] leading-[22px] font-medium text-(--cor-texto-2)">{HOJE.emAndamento}</h2>
+          {emAndamento.erro ? (
+            <AvisoDeErro erro={emAndamento.erro} papel={ativo.papel} aoTentarDeNovo={emAndamento.recarregar} className="mt-3" />
+          ) : (
+            <p className="mt-3 text-(--cor-texto-2)">{COMUM.carregando}</p>
+          )}
+        </section>
+      ) : (
+        <>
+          {emAndamento.erro ? (
+            <AvisoDeErro erro={emAndamento.erro} papel={ativo.papel} aoTentarDeNovo={emAndamento.recarregar} />
+          ) : null}
+          <CartaoSessao
+            ref={cartao}
+            sessao={
+              principalSessao
+                ? {
+                    id: principalSessao.id,
+                    tipo: principalSessao.tipo as 'sono' | 'mamada' | 'tummy',
+                    inicio: Date.parse(principalSessao.inicio),
+                    pessoa: autorDoRegistro(principalSessao),
+                  }
+                : null
+            }
+            agora={agora}
+            podeEncerrar={gravacaoLiberada}
+            ocupado={encerrando}
+            aoEncerrar={encerrarPrincipal}
+          />
+        </>
+      )}
+      <SessoesEmParalelo
+        sessoes={sessoes}
+        agora={agora}
+        autorDe={autorDoRegistro}
+        podeEncerrar={gravacaoLiberada}
+        podeUnir={(grupo) => gravacaoLiberada && acoes.podeUnir(grupo)}
+        textoDoPapel={textoDoPapel}
+        ocupado={encerrando}
+        relogioAtrasDe={relogioAtrasDe}
+        aoEncerrar={(sessao) => void encerrar(sessao)}
+        aoEncerrarEm={(sessao, momento) => void encerrar(sessao, momento)}
+        aoUnir={(grupo) => acoes.unir(grupo)}
+      />
+    </div>
+  )
+
+  const blocoBotaoMamada = (classe: string, compacto: boolean) => (
+    <BotaoIniciarMamada
+      compacto={compacto}
+      aoIniciar={() => iniciar('mamada')}
+      ultima={
+        ultimaMamada && ultimaMamada.fim
+          ? HOJE.ultimaMamada(formatarHora(Date.parse(ultimaMamada.inicio)), autorDoRegistro(ultimaMamada))
+          : undefined
+      }
+      className={classe}
+    />
+  )
+
+  // O histórico: as notas em destaque e o que as outras pessoas registraram depois do marco.
+  const blocoHistorico = (classe: string, espaco: string) => (
+    <div data-historico="" className={`flex flex-col ${espaco} ${classe}`}>
+      <SecaoDoHoje secao={notas} titulo={HOJE.paraVoceSaber} papel={ativo.papel}>
+        {(lista) => (
+          <ParaVoceSaber
+            notas={lista.itens.filter((nota) => nota.destaqueAte !== null && Date.parse(nota.destaqueAte) > agora).slice(0, 3)}
+            agora={agora}
+            autorDe={(nota) => acoes.nomeDoAutor(nota.criadoPor, nota.familiaId)}
+          />
+        )}
+      </SecaoDoHoje>
+      <SecaoDoHoje secao={desde} titulo={HOJE.desdeCarregando} papel={ativo.papel}>
+        {(lido) =>
+          lido.marco ? (
+            <DesdeUltimoRegistro marcoEm={Date.parse(lido.marco.recebidoEm)} registros={lido.novos} fuso={fuso} autorDe={autorDoRegistro} />
+          ) : null
+        }
+      </SecaoDoHoje>
+    </div>
+  )
+
+  const blocoResumo = (classe?: string) => (
+    <SecaoDoHoje secao={dia} titulo={HOJE.hojeAteAgora} papel={ativo.papel} className={classe}>
+      {(doDia) => {
+        if (doDia.registros.incompleta || doDia.sessoes.incompleta) {
+          return (
+            <section aria-labelledby="hoje-ate-agora" data-resumo="">
+              <h2 id="hoje-ate-agora" className="cm-h4">
+                {HOJE.hojeAteAgora}
+              </h2>
+              <p className="mt-3 text-(--cor-texto-2)">{ESTADOS.demaisParaSomar}</p>
+            </section>
+          )
+        }
+        const totais = totaisDoDia(doDia.registros.itens, doDia.sessoes.itens, Date.parse(janela.de), Date.parse(janela.ate))
+        return (
+          <ResumoDoDia
+            itens={[
+              { rotulo: HOJE.mamadas, valor: String(totais.mamadas) },
+              { rotulo: HOJE.fraldas, valor: String(totais.fraldas) },
+              { rotulo: HOJE.sono, valor: formatarSono(totais.sonoMin) },
+            ]}
+          />
+        )
+      }}
+    </SecaoDoHoje>
+  )
+
+  const blocoUltimos = (classe?: string) => (
+    <SecaoDoHoje secao={ultimos} titulo={HOJE.ultimos} papel={ativo.papel} className={classe}>
+      {(concluidos) => {
+        if (concluidos.length === 0) {
+          return (
+            <section id="ultimos" data-ultimos="" aria-labelledby="ultimos-titulo">
+              <h2 id="ultimos-titulo" className="cm-h4">
+                {HOJE.ultimos}
+              </h2>
+              <p className="mt-3 border-y border-(--cor-fio-suave) py-4 text-(--cor-texto-2) lg:mt-4">
+                {sessoes.length === 0 ? HOJE.semRegistros : HOJE.semConcluidos}
+              </p>
+            </section>
+          )
+        }
+        // Três colunas sempre: os mais recentes, e o travessão nas que faltam.
+        const colunas = concluidos.map((registro) =>
+          formatarUltimo(ROTULO_TIPO[registro.tipo], formatarQuando(momentoDoRegistro(registro), agora)),
+        )
+        const itens = [...colunas, ...Array.from({ length: Math.max(0, 3 - colunas.length) }, () => ({ valor: SEM_RESULTADO, legenda: SEM_RESULTADO }))]
+        return <Ultimos itens={itens} className={REGRA_DAS_LINHAS_DE_ULTIMOS} />
+      }}
+    </SecaoDoHoje>
+  )
+
+  // De dia: o cartão à esquerda e a área da lista à direita, que abre com os números do dia em Literata
+  // grande e segue com o histórico; "Últimos" fica embaixo do cartão. Tudo em linhas com fio fino.
+  const composicaoDoDia = (
+    <div
+      data-grade-do-hoje=""
+      className="cm-area mt-6 grid grid-cols-1 gap-10 lg:mt-10 lg:grid-cols-12 lg:items-start lg:gap-x-8 lg:gap-y-12"
+    >
+      {blocoCartao('lg:col-span-6 lg:col-start-1 lg:row-start-1')}
+      <div data-area-lista="" className="flex flex-col gap-10 lg:col-span-6 lg:col-start-7 lg:row-span-2 lg:row-start-1">
+        {blocoResumo()}
+        {blocoHistorico('', 'gap-10')}
+      </div>
+      {blocoUltimos('lg:col-span-6 lg:col-start-1 lg:row-start-2')}
+    </div>
+  )
+
+  // Madrugada com sessão em andamento: a sessão é o destaque (o círculo encolhe e vai para baixo dela), o
+  // histórico sobe para logo depois do botão (no celular a primeira linha aparece antes da dobra) e os
+  // números vêm depois dele. 16 px sob o título e 20 px entre os blocos, para a primeira linha inteira
+  // terminar acima da barra fixa.
+  const composicaoDaMadrugadaComSessao = (
+    <div
+      data-grade-do-hoje=""
+      className="cm-area mt-4 grid grid-cols-1 gap-5 lg:mt-10 lg:grid-cols-12 lg:items-start lg:gap-x-8 lg:gap-y-12"
+    >
+      {blocoCartao('lg:col-span-8 lg:col-start-1 lg:row-start-1')}
+      {noite ? blocoBotaoMamada('lg:col-span-4 lg:col-start-9 lg:row-start-2', true) : null}
+      {blocoHistorico('lg:col-span-8 lg:col-start-1 lg:row-start-2', 'gap-5')}
+      {blocoResumo('lg:col-span-4 lg:col-start-9 lg:row-start-1 lg:self-center')}
+      {blocoUltimos('lg:col-span-8 lg:col-start-1 lg:row-start-3')}
+    </div>
+  )
+
+  const composicaoDaMadrugadaSemSessao = (
+    <div
+      data-grade-do-hoje=""
+      className="cm-area mt-6 grid grid-cols-1 gap-8 lg:mt-10 lg:grid-cols-12 lg:items-start lg:gap-x-8 lg:gap-y-12"
+    >
+      {blocoCartao('lg:col-span-7 lg:col-start-1 lg:row-start-1')}
+      {blocoBotaoMamada('lg:col-span-5 lg:col-start-8 lg:row-start-1 lg:self-center', false)}
+      {blocoHistorico('lg:col-span-7 lg:col-start-1 lg:row-span-2 lg:row-start-2', 'gap-8')}
+      {blocoResumo('lg:col-span-5 lg:col-start-8 lg:row-start-2')}
+      {blocoUltimos('lg:col-span-5 lg:col-start-8 lg:row-start-3')}
+    </div>
+  )
 
   return (
     <>
-      <main ref={principal} className="pb-10 text-[17px] leading-[25px]" data-tela="hoje">
+      <main ref={principal} className="pb-12 text-[17px] leading-[25px]" data-tela="hoje">
         <TituloRotina
           titulo={TITULOS.hoje}
           linha={linha}
@@ -260,163 +453,7 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
           </div>
         ) : null}
 
-        <div className="cm-area mt-6 grid grid-cols-1 gap-6 lg:mt-10 lg:grid-cols-12 lg:items-start lg:gap-8">
-          <div className="flex flex-col gap-4 lg:col-span-7 lg:col-start-1 lg:row-start-1">
-            {emAndamento.estado === 'carregando' || (emAndamento.estado === 'erro' && emAndamento.dados === null) ? (
-              <section
-                ref={cartao}
-                tabIndex={-1}
-                data-andamento=""
-                aria-busy={emAndamento.estado === 'carregando' ? 'true' : undefined}
-                className="alvo-foco rounded-cartao border border-(--cor-fio-suave) bg-(--cor-cartao) p-6 lg:p-8"
-              >
-                <h2 className="text-[15px] leading-[22px] font-medium text-(--cor-texto-2)">{HOJE.emAndamento}</h2>
-                {emAndamento.erro ? (
-                  <AvisoDeErro erro={emAndamento.erro} papel={ativo.papel} aoTentarDeNovo={emAndamento.recarregar} className="mt-3" />
-                ) : (
-                  <p className="mt-3 text-(--cor-texto-2)">{COMUM.carregando}</p>
-                )}
-              </section>
-            ) : (
-              <>
-                {emAndamento.erro ? (
-                  <AvisoDeErro erro={emAndamento.erro} papel={ativo.papel} aoTentarDeNovo={emAndamento.recarregar} />
-                ) : null}
-                <CartaoSessao
-                  ref={cartao}
-                  sessao={
-                    principalSessao
-                      ? {
-                          id: principalSessao.id,
-                          tipo: principalSessao.tipo as 'sono' | 'mamada' | 'tummy',
-                          inicio: Date.parse(principalSessao.inicio),
-                          pessoa: autorDoRegistro(principalSessao),
-                        }
-                      : null
-                  }
-                  agora={agora}
-                  podeEncerrar={gravacaoLiberada}
-                  ocupado={encerrando}
-                  aoEncerrar={encerrarPrincipal}
-                />
-              </>
-            )}
-            <SessoesEmParalelo
-              sessoes={sessoes}
-              agora={agora}
-              autorDe={autorDoRegistro}
-              podeEncerrar={gravacaoLiberada}
-              podeUnir={(grupo) => gravacaoLiberada && acoes.podeUnir(grupo)}
-              textoDoPapel={textoDoPapel}
-              ocupado={encerrando}
-              relogioAtrasDe={relogioAtrasDe}
-              aoEncerrar={(sessao) => void encerrar(sessao)}
-              aoEncerrarEm={(sessao, momento) => void encerrar(sessao, momento)}
-              aoUnir={(grupo) => acoes.unir(grupo)}
-            />
-          </div>
-
-          {noite ? (
-            <BotaoIniciarMamada
-              aoIniciar={() => iniciar('mamada')}
-              ultima={
-                ultimaMamada && ultimaMamada.fim
-                  ? HOJE.ultimaMamada(formatarHora(Date.parse(ultimaMamada.inicio)), autorDoRegistro(ultimaMamada))
-                  : undefined
-              }
-              className="lg:col-span-5 lg:col-start-8 lg:row-start-1 lg:self-center"
-            />
-          ) : null}
-
-          <div
-            className={`flex flex-col gap-6 ${
-              noite ? 'lg:col-span-7 lg:col-start-1 lg:row-span-2 lg:row-start-2' : 'lg:col-span-5 lg:col-start-8 lg:row-start-1'
-            }`}
-          >
-            <SecaoDoHoje secao={notas} titulo={HOJE.paraVoceSaber} papel={ativo.papel}>
-              {(lista) => (
-                <ParaVoceSaber
-                  notas={lista.itens.filter((nota) => nota.destaqueAte !== null && Date.parse(nota.destaqueAte) > agora).slice(0, 3)}
-                  agora={agora}
-                  autorDe={(nota) => acoes.nomeDoAutor(nota.criadoPor, nota.familiaId)}
-                />
-              )}
-            </SecaoDoHoje>
-            <SecaoDoHoje secao={desde} titulo={HOJE.desdeCarregando} papel={ativo.papel}>
-              {(lido) =>
-                lido.marco ? (
-                  <DesdeUltimoRegistro
-                    marcoEm={Date.parse(lido.marco.recebidoEm)}
-                    registros={lido.novos}
-                    fuso={fuso}
-                    autorDe={autorDoRegistro}
-                  />
-                ) : null
-              }
-            </SecaoDoHoje>
-          </div>
-
-          <SecaoDoHoje
-            secao={dia}
-            titulo={HOJE.hojeAteAgora}
-            papel={ativo.papel}
-            className={noite ? 'pt-2 lg:col-span-5 lg:col-start-8 lg:row-start-2 lg:pt-0' : 'pt-2 lg:col-span-7 lg:col-start-1 lg:row-start-2 lg:pt-4'}
-          >
-            {(doDia) => {
-              if (doDia.registros.incompleta || doDia.sessoes.incompleta) {
-                return (
-                  <section aria-labelledby="hoje-ate-agora" data-resumo="">
-                    <h2 id="hoje-ate-agora" className="cm-h4">
-                      {HOJE.hojeAteAgora}
-                    </h2>
-                    <p className="mt-3 text-(--cor-texto-2)">{ESTADOS.demaisParaSomar}</p>
-                  </section>
-                )
-              }
-              const totais = totaisDoDia(doDia.registros.itens, doDia.sessoes.itens, Date.parse(janela.de), Date.parse(janela.ate))
-              return (
-                <ResumoDoDia
-                  itens={[
-                    { rotulo: HOJE.mamadas, valor: String(totais.mamadas) },
-                    { rotulo: HOJE.fraldas, valor: String(totais.fraldas) },
-                    { rotulo: HOJE.sono, valor: formatarSono(totais.sonoMin) },
-                  ]}
-                />
-              )
-            }}
-          </SecaoDoHoje>
-
-          <SecaoDoHoje
-            secao={ultimos}
-            titulo={HOJE.ultimos}
-            papel={ativo.papel}
-            className={noite ? 'lg:col-span-5 lg:col-start-8 lg:row-start-3' : 'lg:col-span-5 lg:col-start-8 lg:row-start-2'}
-          >
-            {(concluidos) => {
-              if (concluidos.length === 0) {
-                return (
-                  <section
-                    id="ultimos"
-                    data-ultimos=""
-                    aria-labelledby="ultimos-titulo"
-                    className="rounded-cartao border border-(--cor-fio-suave) bg-(--cor-cartao) px-5 pt-5 pb-5 [box-shadow:var(--sombra-cartao)] lg:px-7 lg:pt-7"
-                  >
-                    <h2 id="ultimos-titulo" className="cm-h4">
-                      {HOJE.ultimos}
-                    </h2>
-                    <p className="mt-3 text-(--cor-texto-2)">{sessoes.length === 0 ? HOJE.semRegistros : HOJE.semConcluidos}</p>
-                  </section>
-                )
-              }
-              // Três colunas sempre: os mais recentes, e o travessão nas que faltam.
-              const colunas = concluidos.map((registro) =>
-                formatarUltimo(ROTULO_TIPO[registro.tipo], formatarQuando(momentoDoRegistro(registro), agora)),
-              )
-              const itens = [...colunas, ...Array.from({ length: Math.max(0, 3 - colunas.length) }, () => ({ valor: SEM_RESULTADO, legenda: SEM_RESULTADO }))]
-              return <Ultimos itens={itens} className={REGRA_DAS_LINHAS_DE_ULTIMOS} />
-            }}
-          </SecaoDoHoje>
-        </div>
+        {!madrugada ? composicaoDoDia : noite && !comSessao ? composicaoDaMadrugadaSemSessao : composicaoDaMadrugadaComSessao}
       </main>
 
       <BarraRegistroRapido
