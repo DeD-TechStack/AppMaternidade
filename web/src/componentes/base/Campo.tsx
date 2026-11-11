@@ -1,4 +1,5 @@
 import { useState, type ChangeEventHandler } from 'react'
+import { ChevronDown, Eye, EyeOff } from 'lucide-react'
 
 interface Opcao {
   valor: string
@@ -8,9 +9,9 @@ interface Opcao {
 interface Comum {
   id: string
   rotulo: string
-  /** Texto de erro: `corpo-p` em urucum abaixo do campo, ligado ao campo por `aria-describedby`. */
+  /** Texto de erro abaixo do campo, ligado a ele por `aria-describedby`; marca `aria-invalid`. */
   erro?: string
-  /** Ajuda: `corpo-p` secundário abaixo do campo. */
+  /** Ajuda abaixo do campo, em texto secundário. */
   ajuda?: string
   name?: string
   required?: boolean
@@ -26,11 +27,9 @@ type Props =
 const ROTULO_MOSTRAR_SENHA = 'Mostrar senha'
 
 /**
- * Campo do sistema-base. Em 768 ou mais, uma linha de c2 a c8 (como a linha rótulo + texto): rótulo
- * em c2–c3 e campo em c4–c8, sem caixa, com o fio horizontal de c2 ao início de c9 embaixo e o fio
- * vertical em x de c4 (do topo + 32 px até o fio de baixo). A linha tem 112 px, e a mensagem de erro
- * ou de ajuda fica dentro dela, abaixo do valor. Abaixo de 768, o rótulo fica em cima e o campo é uma
- * caixa de 64 px. A senha traz o botão de mostrar/ocultar de 44 × 44 (`aria-pressed`).
+ * Campo do site: rótulo em cima e a caixa de 56 px com raio 14, contorno de 1,5 px no texto secundário
+ * (5,25:1 no papel). Estados: hover (contorno cacau), foco visível (anel de 2 px), erro (contorno de
+ * 2 px e a mensagem). A senha traz o botão de mostrar/ocultar de 44 × 44 (`aria-pressed`).
  */
 export function Campo(props: Props) {
   const { id, rotulo, erro, ajuda, name, required, autoComplete, defaultValue, value } = props
@@ -46,7 +45,7 @@ export function Campo(props: Props) {
     autoComplete,
     defaultValue,
     value,
-    className: 'sb-campo-entrada',
+    className: 'cm-campo-entrada',
     'aria-invalid': erro ? true : undefined,
     'aria-describedby': descricao,
   }
@@ -55,13 +54,13 @@ export function Campo(props: Props) {
   const senha = props.tipo === 'senha'
 
   return (
-    <div className="grade-10">
-      <div className="sb-campo col-c2-c8" data-erro={erro ? '' : undefined}>
-        <label htmlFor={id} className="sb-campo-rotulo t-rotulo">
-          {rotulo}
-        </label>
-        <div className="sb-campo-controle" data-select={select ? '' : undefined}>
-          {props.tipo === 'select' ? (
+    <div className="cm-campo" data-erro={erro ? '' : undefined}>
+      <label htmlFor={id} className="cm-campo-rotulo">
+        {rotulo}
+      </label>
+      <div className="cm-campo-controle" data-select={select ? '' : undefined} data-senha={senha ? '' : undefined}>
+        {props.tipo === 'select' ? (
+          <>
             <select {...comuns} onChange={props.onChange}>
               {props.opcoes.map((opcao) => (
                 <option key={opcao.valor} value={opcao.valor}>
@@ -69,36 +68,37 @@ export function Campo(props: Props) {
                 </option>
               ))}
             </select>
-          ) : (
-            <input
-              {...comuns}
-              type={senha ? (senhaVisivel ? 'text' : 'password') : props.tipo === 'email' ? 'email' : 'text'}
-              onChange={props.onChange}
-            />
-          )}
-          {senha ? (
-            <button
-              type="button"
-              className="sb-campo-olho"
-              aria-label={ROTULO_MOSTRAR_SENHA}
-              aria-pressed={senhaVisivel}
-              onClick={() => setSenhaVisivel((visivel) => !visivel)}
-            >
-              <span className="sb-olho" aria-hidden="true" />
-            </button>
-          ) : null}
-        </div>
-        {erro ? (
-          <p id={idErro} className="sb-campo-erro t-corpo-p">
-            {erro}
-          </p>
-        ) : null}
-        {ajuda ? (
-          <p id={idAjuda} className="sb-campo-ajuda t-corpo-p">
-            {ajuda}
-          </p>
+            <ChevronDown className="cm-campo-seta" aria-hidden="true" />
+          </>
+        ) : (
+          <input
+            {...comuns}
+            type={senha ? (senhaVisivel ? 'text' : 'password') : props.tipo === 'email' ? 'email' : 'text'}
+            onChange={props.onChange}
+          />
+        )}
+        {senha ? (
+          <button
+            type="button"
+            className="cm-campo-olho"
+            aria-label={ROTULO_MOSTRAR_SENHA}
+            aria-pressed={senhaVisivel}
+            onClick={() => setSenhaVisivel((visivel) => !visivel)}
+          >
+            {senhaVisivel ? <EyeOff size={22} aria-hidden="true" /> : <Eye size={22} aria-hidden="true" />}
+          </button>
         ) : null}
       </div>
+      {erro ? (
+        <p id={idErro} className="cm-campo-mensagem cm-campo-erro cm-pequeno">
+          {erro}
+        </p>
+      ) : null}
+      {ajuda ? (
+        <p id={idAjuda} className="cm-campo-mensagem cm-pequeno cm-texto-2">
+          {ajuda}
+        </p>
+      ) : null}
     </div>
   )
 }
