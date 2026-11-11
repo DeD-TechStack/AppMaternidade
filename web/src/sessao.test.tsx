@@ -226,34 +226,32 @@ describe('Sessão: o bloco do cronômetro (E5)', () => {
   })
 })
 
+// MAT-49a: as ilustrações SVG desenhadas em código saíram. A mídia da Sessão é um desenho de traço
+// (`Ilustracao`, WebP 1× e 2× de /ilustracoes/) sobre o mel, nos dois temas.
 describe('Sessão: a mídia (E5, bloco 3)', () => {
   const casos: Array<[TipoSessao, string]> = [
-    ['sono', 'berco'],
-    ['tummy', 'tapete'],
-    ['mamada', 'mamada'],
+    ['sono', 'mae-noite'],
+    ['tummy', 'tummy-time'],
+    ['mamada', 'mae-noite'],
   ]
   for (const [tipo, ilustracao] of casos) {
     for (const [tema, madrugada] of [
       ['claro', false],
       ['madrugada', true],
     ] as const) {
-      it(`${tipo} (${tema}): [data-midia] larga em barro com a ilustração "${ilustracao}", que cobre a moldura, sem nó de texto`, () => {
+      it(`${tipo} (${tema}): a mídia é uma imagem de traço "${ilustracao}" com srcSet 1×/2×, texto alternativo e nenhum nó de texto`, () => {
         const { container } = renderizarRota('/app/sessao', { estadoInicial: sessaoDe(tipo, MIN, madrugada) })
 
         const moldura = midia(container)
         expect(container.querySelectorAll('[data-midia]')).toHaveLength(1)
-        expect(moldura.getAttribute('data-formato')).toBe('larga')
-        expect(moldura.getAttribute('data-fundo')).toBe('barro')
-        expect(moldura.getAttribute('role')).toBe('img')
-        expect(moldura.getAttribute('aria-label')!.length).toBeGreaterThan(10)
-        const figuras = moldura.querySelectorAll('svg')
-        expect(figuras).toHaveLength(1)
-        expect(figuras[0].getAttribute('data-ilustracao')).toBe(ilustracao)
-        expect(figuras[0].getAttribute('aria-hidden')).toBe('true')
-        expect(figuras[0].getAttribute('preserveAspectRatio')).toMatch(/slice$/)
-        expect(figuras[0].getAttribute('class')).toMatch(/\bh-full\b/)
-        expect(figuras[0].getAttribute('class')).toMatch(/\bw-full\b/)
-        expect(moldura.querySelector('title, desc, text, tspan, foreignObject')).toBeNull()
+        expect(moldura.querySelector('svg')).toBeNull()
+        const imagens = moldura.querySelectorAll('img')
+        expect(imagens).toHaveLength(1)
+        const imagem = imagens[0]
+        expect(imagem.getAttribute('data-ilustracao')).toBe(ilustracao)
+        expect(imagem.getAttribute('src')).toBe(`/ilustracoes/${ilustracao}@1x.webp`)
+        expect(imagem.getAttribute('srcset')).toBe(`/ilustracoes/${ilustracao}@1x.webp 1x, /ilustracoes/${ilustracao}@2x.webp 2x`)
+        expect(imagem.getAttribute('alt')!.length).toBeGreaterThan(10)
         expect(moldura.textContent).toBe('')
       })
     }
@@ -265,38 +263,15 @@ describe('Sessão: a mídia (E5, bloco 3)', () => {
       const { container, unmount } = renderizarRota('/app/sessao', { estadoInicial: sessaoDe(tipo) })
       expect(midia(container).parentElement!.classList.contains('sb-mt-par-numeros')).toBe(true)
       expect(bloco(container).nextElementSibling).toBe(midia(container).parentElement)
-      descricoes.add(midia(container).getAttribute('aria-label')!)
+      descricoes.add(midia(container).querySelector('img')!.getAttribute('alt')!)
       unmount()
     }
     expect(descricoes.size).toBe(3)
   })
-
-  it('P3: o berço da Sessão mostra a figura inteira e o chão: o viewBox tem a proporção da moldura (1,5) e vai de antes do topo da cabeça (y≈80) até depois da linha do chão (y=220)', () => {
-    // Com o viewBox quadrado e `xMidYMax slice`, a moldura de 1,5 só mostrava y de 80 a 240 e cortava o topo
-    // do cabelo da figura em pé (e a porta). O viewBox da Sessão é um recorte de 240 × 160, sem corte nenhum.
-    for (const estado of [sessaoDe('sono', MIN), semSessao()]) {
-      const { container, unmount } = renderizarRota('/app/sessao', { estadoInicial: estado })
-      const figura = midia(container).querySelector('svg')!
-      expect(figura.getAttribute('data-ilustracao')).toBe('berco')
-      const [x, y, largura, altura] = figura.getAttribute('viewBox')!.split(/\s+/).map(Number)
-      expect(x).toBe(0)
-      expect(largura).toBe(240)
-      expect(largura / altura).toBeGreaterThanOrEqual(1.45)
-      expect(largura / altura).toBeLessThanOrEqual(1.55)
-      expect(y, 'o topo do cabelo da figura está em y≈80').toBeLessThanOrEqual(74)
-      expect(y + altura, 'a linha do chão está em y=220 e os pés vão até 219').toBeGreaterThanOrEqual(224)
-      expect(y + altura).toBeLessThanOrEqual(240)
-      unmount()
-    }
-  })
-
-  it('o CSS dá à mídia da Sessão a proporção de 3 para 2 (1,5), dentro de 1,45 a 1,55 (S-4)', () => {
-    expect(css).toMatch(/\.ha-sessao \.sb-midia\[data-formato='larga'\]\s*\{[^}]*aspect-ratio:\s*3\s*\/\s*2/)
-  })
 })
 
 describe('Sessão: sem sessão (E3)', () => {
-  it('h1 "Nenhuma sessão em andamento", subtítulo curto, etiqueta e link na lateral, e só a mídia do berço no corpo', () => {
+  it('h1 "Nenhuma sessão em andamento", subtítulo curto, etiqueta e link na lateral, e só a mídia de traço no corpo', () => {
     const { container } = renderizarRota('/app/sessao', { estadoInicial: semSessao() })
 
     const h1 = screen.getByRole('heading', { level: 1 })
@@ -311,7 +286,7 @@ describe('Sessão: sem sessão (E3)', () => {
     expect(filhos).toHaveLength(2)
     expect(container.querySelector('[data-andamento], [role="timer"]')).toBeNull()
     expect(screen.queryAllByRole('button').filter((b) => !b.closest('[data-cabecalho], [data-rodape]'))).toEqual([])
-    expect(midia(container).querySelector('svg')!.getAttribute('data-ilustracao')).toBe('berco')
+    expect(midia(container).querySelector('img')!.getAttribute('data-ilustracao')).toBe('mae-noite')
     expect(filhos[1].classList.contains('sb-mt-fio-bloco')).toBe(true)
   })
 

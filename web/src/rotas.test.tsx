@@ -15,36 +15,38 @@ describe('rotas', () => {
     expect(titulos[0].textContent).toBe(PROMESSA)
   })
 
-  it('o Início traz os quatro pilares e os links "Ver o protótipo" para o Hoje', async () => {
-    renderizarRota('/')
-    await screen.findByRole('heading', { level: 1 })
-
-    for (const pilar of ['Rotina', 'Desenvolvimento', 'Cuidado compartilhado', 'Comunidade']) {
-      expect(screen.getByText(pilar).className).toContain('etiqueta')
-    }
-    // Um na abertura e o círculo CTA: os dois levam ao Hoje.
-    const links = screen.getAllByRole('link', { name: 'Ver o protótipo' })
-    expect(links).toHaveLength(2)
-    for (const link of links) expect(link.getAttribute('href')).toBe('/app/hoje')
-    expect(screen.getByText('Protótipo em construção. Nada aqui é dado real.')).toBeTruthy()
-  })
-
-  it('as molduras de mídia do Início são imagens nomeadas, sem texto; só os aparelhos de dentro delas são inertes', async () => {
+  // MAT-49a: o Início mínimo (o completo é o MAT-49c) tem o h1 e o primário; nada de pilares nem molduras.
+  it('o Início traz o primário "Ver como funciona" no main, para Como funciona', async () => {
     const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
 
-    // MAT-44d-5: as molduras têm cena; o inerte vale fora de [data-midia] (não há miniatura inerte).
-    for (const inerte of container.querySelectorAll('[inert]')) {
-      expect(inerte.closest('[data-midia]'), inerte.outerHTML.slice(0, 60)).not.toBeNull()
-    }
-    const molduras = [...container.querySelectorAll('[data-midia]')]
-    expect(molduras.length).toBeGreaterThan(0)
-    for (const moldura of molduras) {
-      expect(moldura.getAttribute('role')).toBe('img')
-      expect(moldura.getAttribute('aria-label')).toBeTruthy()
-      expect(moldura.textContent).toBe('')
-    }
+    const primarios = [...container.querySelectorAll<HTMLElement>('main [data-botao="primario"]')]
+    expect(primarios).toHaveLength(1)
+    expect(primarios[0].textContent).toBe('Ver como funciona')
+    expect(primarios[0].getAttribute('href')).toBe('/como-funciona')
+    expect(container.querySelector('[inert]')).toBeNull()
   })
+
+  for (const [caminho, titulo] of [
+    ['/como-funciona', 'Como funciona'],
+    ['/cuidado-compartilhado', 'Cuidado compartilhado'],
+    ['/desenvolvimento', 'Desenvolvimento'],
+    ['/regras-da-comunidade', 'Regras da comunidade'],
+    ['/privacidade', 'Privacidade'],
+    ['/termos', 'Termos de uso'],
+    ['/exclusao-de-conta', 'Exclusão de conta'],
+    ['/contato', 'Contato'],
+    ['/sobre', 'Sobre'],
+    ['/sistema', 'Campo de mel, a base do site.'],
+  ] as const) {
+    it(`${caminho} abre dentro da casca, com o h1 "${titulo}"`, async () => {
+      const { container } = renderizarRota(caminho)
+      const h1 = await screen.findByRole('heading', { level: 1, name: titulo })
+      expect(container.querySelector('header[data-cabecalho]')).not.toBeNull()
+      expect(container.querySelector('footer[data-rodape]')).not.toBeNull()
+      expect(h1.closest('main')).not.toBeNull()
+    })
+  }
 
   it('o Hoje tem o h1 "Hoje" e um único bloco de cor (Em andamento), sem cartão', async () => {
     const { container } = renderizarRota('/app/hoje')

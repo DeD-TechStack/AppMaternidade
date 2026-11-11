@@ -131,20 +131,23 @@ describe('Hoje: Em andamento (E4, bloco 2)', () => {
     expect(andamento(container).contains(links[0])).toBe(true)
   })
 
-  it('o Encerrar é o primário do bloco e o Ver sessão é de moldura dupla alta (64 px)', () => {
+  // MAT-49a: o Encerrar é a pílula primária de cacau do Campo de mel (DESIGN.md 4, CartaoSessao), sem
+  // contorno duplo; o Ver sessão continua o link de contorno do app, alto (64 px).
+  it('o Encerrar é a pílula primária do bloco, sem contorno duplo, e o Ver sessão é o link de contorno alto (64 px)', () => {
     const { container } = renderizarRota('/app/hoje')
 
     const bloco = andamento(container)
     const encerrar = within(bloco).getByRole('button', { name: 'Encerrar' })
-    expect(encerrar.classList.contains('t-botao')).toBe(true)
-    expect(encerrar.classList.contains('alvo-toque')).toBe(true)
     expect(encerrar.matches('[data-botao="primario"]')).toBe(true)
+    expect(encerrar.classList.contains('cm-botao-primario')).toBe(true)
+    expect(encerrar.classList.contains('alvo-toque')).toBe(true)
+    expect(encerrar.hasAttribute('data-moldura-dupla')).toBe(false)
+    expect(encerrar.querySelector('.sb-moldura-miolo')).toBeNull()
     const ver = within(bloco).getByRole('link', { name: 'Ver sessão' })
-    expect(ver.hasAttribute('data-moldura-dupla')).toBe(true)
     expect(ver.hasAttribute('data-alto')).toBe(true)
     expect(ver.classList.contains('sb-moldura')).toBe(true)
     expect(ver.classList.contains('alvo-toque')).toBe(true)
-    expect(ver.querySelector('.sb-moldura-miolo')!.textContent).toBe('Ver sessão')
+    expect(ver.textContent).toBe('Ver sessão')
     expect(bloco.querySelectorAll('button, a')).toHaveLength(2)
   })
 
@@ -435,16 +438,18 @@ describe('Hoje: o CSS do bloco /* 44d-2 */ (lido como texto)', () => {
 
   // ---- Volta 1, E3: o fio de 1 px no topo da barra Registrar, só na madrugada.
   //
-  // O fio é o `border-top` da própria barra, em uma variável de uso (`--ha-barra-fio`): transparente no claro e
-  // `rgba(227, 214, 195, 0.2)` na madrugada. A regra da madrugada só troca a variável (o teste M-1 acima exige
+  // O fio é o `border-top` da própria barra, em uma variável de uso (`--ha-barra-fio`): transparente no claro e,
+  // na madrugada, uma variável de token (MAT-49a: cor solta é proibida fora de tokens.css; hoje é
+  // `var(--cor-fio-suave)`, o papel a 20 %). A regra da madrugada só troca a variável (o teste M-1 acima exige
   // que nenhuma regra de tema mexa em medida), e a borda de 1 px existe nos dois temas, então os retângulos
   // são os mesmos (M-1). A barra tem `box-sizing: border-box` e 64 de altura total; a fileira sobe 1 px para
   // continuar com os botões de 64 (o alvo de toque da E1) sob o fio.
 
-  it('E3: o fio só aparece na madrugada: a variável é transparente na base e rgba(227, 214, 195, 0.2) com data-tema="madrugada"', () => {
+  it('E3: o fio só aparece na madrugada: a variável é transparente na base e uma variável de token com data-tema="madrugada"', () => {
     expect(regra('.barra-registrar')).toMatch(/--ha-barra-fio:\s*transparent\s*;/)
     const madrugada = regra(":root[data-tema='madrugada'] .barra-registrar")
-    expect(madrugada).toMatch(/--ha-barra-fio:\s*rgba\(227,\s*214,\s*195,\s*0\.2\)\s*;/)
+    expect(madrugada).toMatch(/--ha-barra-fio:\s*var\(--cor-[a-z-]+\)\s*;/)
+    expect(madrugada).not.toMatch(/rgba?\(|#[0-9a-fA-F]{3,8}\b/)
     // A regra do tema só troca variáveis (cor); o claro não ganha outra regra de fio.
     expect(regra(":root[data-tema='claro'] .barra-registrar")).toBe('')
     expect(semComentarios).not.toMatch(/box-shadow/)

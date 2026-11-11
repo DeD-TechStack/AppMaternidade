@@ -386,16 +386,61 @@ describe('D2: telas logadas sobre a grade, sem coluna única', () => {
 // ---------------------------------------------------------------------------
 // D3
 
-describe('D3: faixa de números', () => {
-  it('os 3 valores usam a mesma classe de valor e nenhuma outra', async () => {
-    const { container } = renderizarRota('/')
-    await screen.findByRole('heading', { level: 1 })
+// MAT-49a: a faixa de números do Início antigo saiu (o Início é refeito no MAT-49c). Aqui ficam a casca
+// nova e as peças do Campo de mel que valem para qualquer rota.
+describe('D3: a casca do Campo de mel e os números', () => {
+  const ROTAS = [
+    '/',
+    '/como-funciona',
+    '/cuidado-compartilhado',
+    '/desenvolvimento',
+    '/regras-da-comunidade',
+    '/privacidade',
+    '/termos',
+    '/exclusao-de-conta',
+    '/contato',
+    '/sobre',
+    '/sistema',
+    '/app/hoje',
+    '/app/sessao',
+    '/qualquer-coisa',
+  ]
 
-    const secao = screen.getByRole('region', { name: 'O que o app faz' })
-    const valores = [...secao.querySelectorAll<HTMLElement>('[data-numero]')]
-    expect(valores.map((v) => v.textContent)).toEqual(['7', '2', '0'])
-    expect(valores.map((v) => v.className)).toEqual(Array(3).fill('sb-numeros-valor t-numero'))
-    expect(container.querySelectorAll('[data-numero]')).toHaveLength(3)
+  for (const caminho of ROTAS) {
+    it(`${caminho}: cabeçalho, um <main> e o rodapé são irmãos na casca, e há um só <h1>`, () => {
+      const { container, unmount } = renderizarRota(caminho)
+      const casca = container.querySelector('.sb-casca')!
+      const filhos = [...casca.children]
+      expect(filhos[0].matches('header[data-cabecalho]'), caminho).toBe(true)
+      expect(filhos[filhos.length - 1].matches('footer[data-rodape]'), caminho).toBe(true)
+      const mains = container.querySelectorAll('main')
+      expect(mains, caminho).toHaveLength(1)
+      expect(mains[0].parentElement, caminho).toBe(casca)
+      expect(container.querySelectorAll('h1'), caminho).toHaveLength(1)
+      expect(mains[0].contains(container.querySelector('h1')), caminho).toBe(true)
+      unmount()
+    })
+  }
+
+  it('os números (Início e /sistema) são uma lista de 3 itens, cada um com o valor e a legenda', () => {
+    for (const caminho of ['/', '/sistema']) {
+      const { container, unmount } = renderizarRota(caminho)
+      const lista = container.querySelector<HTMLElement>('main ul[data-numeros]')!
+      const itens = [...lista.querySelectorAll(':scope > li')]
+      expect(itens, caminho).toHaveLength(3)
+      expect(itens.map((li) => li.querySelector('.cm-numeros-valor')!.textContent), caminho).toEqual(['7', '2', '0'])
+      expect(itens.every((li) => li.querySelector('.cm-numeros-legenda')!.textContent !== ''), caminho).toBe(true)
+      unmount()
+    }
+  })
+
+  it('na /sistema a faixa de cacau é uma seção nomeada pelo seu h2, com o conteúdo no recipiente da revelação', () => {
+    const { container } = renderizarRota('/sistema')
+    const faixa = container.querySelector<HTMLElement>('main section.cm-faixa-cacau[data-painel="cacau"]')!
+    const titulo = document.getElementById(faixa.getAttribute('aria-labelledby')!)!
+    expect(titulo.tagName).toBe('H2')
+    expect(faixa.contains(titulo)).toBe(true)
+    expect(faixa.querySelector('.cm-faixa-conteudo.overflow-hidden')!.contains(titulo)).toBe(true)
   })
 })
 
@@ -570,16 +615,18 @@ describe('R4: o Início decide as colunas pelo CSS do sistema-base, não por var
   }
   const VARIANTE_DE_JANELA = /(^|:)(sm|md|lg|xl|2xl):/
 
-  it('o main e a seção escura são filhos da casca, entre o cabeçalho e o rodapé; o aviso (se houver) está dentro do main', async () => {
+  // MAT-49a: a seção escura do Início antigo saiu; o aviso de demonstração mora no rodapé, nunca no main.
+  it('o main é filho da casca, entre o cabeçalho e o rodapé; o aviso (se houver) está no rodapé', async () => {
     const container = await rotaDoInicio()
 
     const main = container.querySelector('main')!
-    const secao = container.querySelector('[data-secao-escura]')!
     expect(main.parentElement!.classList.contains('sb-casca')).toBe(true)
-    expect(secao.parentElement).toBe(main.parentElement)
     expect(main.previousElementSibling!.matches('[data-cabecalho]')).toBe(true)
-    for (const aviso of container.querySelectorAll('[data-aviso]')) expect(main.contains(aviso)).toBe(true)
-    expect(secao.nextElementSibling!.matches('[data-rodape]')).toBe(true)
+    expect(main.nextElementSibling!.matches('[data-rodape]')).toBe(true)
+    for (const aviso of container.querySelectorAll('[data-aviso]')) {
+      expect(main.contains(aviso)).toBe(false)
+      expect(aviso.closest('[data-rodape]')).not.toBeNull()
+    }
   })
 
   it('nenhum elemento do Início tem variante de janela (sm:, md:, lg:, xl:, 2xl:)', async () => {
