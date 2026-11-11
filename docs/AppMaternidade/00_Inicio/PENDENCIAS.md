@@ -34,7 +34,7 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 - [x] P-25 49b, 49c, 36r-A e 37r soltos sobre o head d65dfeb com aval do coordenador (t_7326afbf); 5 cartões rodando juntos às 11h30 (4 páginas + revisão R2 da g2) | 11/11, sem SHA (board)
 - [x] P-03 Base mostrada a Daniel cedo: `DIRECOES_20261111/GALERIA_BASE.html` aberta e prévia ao vivo em http://127.0.0.1:5281/sistema | 11/11 10h50, sem SHA
 - [~ t_606fb2fb] P-04 MAT-49b Hoje, Sessão e Madrugada | g1 t_26066f02 (e6fc1c8) caiu em triage no 2º bloqueio (alvos do casco com 44 px na madrugada) e foi arquivada; g2 t_606fb2fb leva os alvos a 56 px só na madrugada e pede revisão; 49d e 38a religados à g2
-- [~ t_e1d0eaa8] P-05 MAT-36r-B: as 6 páginas de texto | depende de P-02
+- [~ t_e1d0eaa8] P-05 MAT-36r-B: as 6 páginas de texto | revisão R1 pediu mudanças (fragmento malformado derruba a página; links do índice que grudam precisam ficar visíveis no foco); de volta ao executor
 - [~ t_d63c932a] P-06 MAT-37r: traz o fad75c0 (dados, sessão, Auth) e refaz Entrar, Criar conta, Recuperar, Começar e Conta | depende de P-02
 
 - [~ t_0aecd8d2] P-21 MAT-49d: recompor as cenas de marketing com telas do app legíveis (Início, Como funciona, Desenvolvimento, Entrar) e a faixa de cacau sem emenda | depende de 49b g2, 49c, 36r-A e 37r
