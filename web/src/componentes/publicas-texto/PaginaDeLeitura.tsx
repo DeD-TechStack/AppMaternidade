@@ -72,6 +72,7 @@ function tituloDoFragmento(hash: string, secoes: PaginaDeTexto['secoes']): HTMLE
 export function PaginaDeLeitura({ pagina }: { pagina: PaginaDeTexto }) {
   const { hash, key } = useLocation()
   const { nome, subtitulo, ilustracao, apoio, acao, itensNaAbertura, painelDepoisDe, blocoDeEmail, apresentacao, secoes } = pagina
+  const { desenhoAteOIndice } = pagina
 
   useEffect(() => {
     const alvo = tituloDoFragmento(hash, secoes)
@@ -89,7 +90,7 @@ export function PaginaDeLeitura({ pagina }: { pagina: PaginaDeTexto }) {
   )
 
   return (
-    <main className="cm-area pt-pagina">
+    <main className="cm-area pt-pagina" data-desenho={desenhoAteOIndice ? 'ate-o-indice' : undefined}>
       <section className="pt-abertura" data-painel={naAbertura ? 'abertura' : 'leitura'}>
         <div className="pt-cabeca">
           <h1 className="cm-h1">{ligarPalavrasCurtas(nome)}</h1>
@@ -108,7 +109,7 @@ export function PaginaDeLeitura({ pagina }: { pagina: PaginaDeTexto }) {
         </div>
         {naAbertura ? painel : null}
       </section>
-      <IndiceDaPagina secoes={secoes.map(({ secao }) => secao)} />
+      <IndiceDaPagina secoes={secoes.map(({ secao }) => secao)} sempreAberto={desenhoAteOIndice} />
       <div className="pt-leitura">
         {apresentacao ? <p className="cm-lide">{apresentacao}</p> : null}
         {secoes.map((dados, indice) => (

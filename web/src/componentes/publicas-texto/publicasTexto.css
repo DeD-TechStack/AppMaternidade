@@ -129,6 +129,23 @@
     }
   }
 
+  /* Sobre (data-desenho="ate-o-indice"): o desenho não passa da altura do bloco do índice. O índice fica aberto nas
+     duas larguras: no celular são o rótulo (39) e 4 linhas de 44, uns 219 px, e o desenho tem 144; em tela larga os
+     links ficam em 2 colunas de 2 linhas, uns 131 px, e o desenho tem 120. */
+  .pt-pagina[data-desenho='ate-o-indice'] .pt-ilustracao {
+    height: 144px;
+  }
+
+  @media (min-width: 1100px) {
+    .pt-pagina[data-desenho='ate-o-indice'] .pt-ilustracao {
+      height: 120px;
+    }
+
+    .pt-pagina[data-desenho='ate-o-indice'] .pt-indice-rotulo + .pt-indice-lista {
+      grid-template-columns: repeat(2, minmax(0, 15rem));
+    }
+  }
+
   /* Índice "Nesta página": corpo pequeno (15/22) e um fio só, no índice inteiro. */
   .pt-indice {
     margin: 0;

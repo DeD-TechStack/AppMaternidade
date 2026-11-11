@@ -548,6 +548,36 @@ describe('Privacidade: abertura', () => {
   })
 })
 
+describe('Sobre: desenho até a altura do índice', () => {
+  it('só a Sobre marca a página (data-desenho) e deixa o índice aberto mesmo em tela estreita; as outras seguem como estavam', () => {
+    vi.stubGlobal('matchMedia', (consulta: string) => ({
+      matches: consulta.includes('max-width'),
+      media: consulta,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    }))
+    try {
+      for (const [caminho, , dados] of PAGINAS) {
+        const { container, unmount } = renderizarRota(caminho)
+        const principal = container.querySelector('main')!
+        const indice = principal.querySelector(':scope > nav.pt-indice')!
+        if (caminho === '/sobre') {
+          expect(dados.desenhoAteOIndice).toBe(true)
+          expect(principal.getAttribute('data-desenho')).toBe('ate-o-indice')
+          expect(indice.querySelector('details')).toBeNull()
+          expect(indice.querySelectorAll('a')).toHaveLength(dados.secoes.length)
+        } else {
+          expect(principal.hasAttribute('data-desenho'), caminho).toBe(false)
+          expect(indice.querySelector('details'), caminho).not.toBeNull()
+        }
+        unmount()
+      }
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+})
+
 describe('listas longas', () => {
   it('uma lista de 4 itens ou mais corre em duas colunas (pt-lista-colunas); as menores, não', () => {
     for (const [caminho] of PAGINAS) {
@@ -595,6 +625,24 @@ describe('painel e figura por largura (CSS)', () => {
     expect(celular).toMatch(/height:\s*144px/)
     expect(celular).toMatch(/object-fit:\s*contain/)
     expect(largo).toMatch(/height:\s*240px/)
+  })
+
+  it('Sobre: o desenho cabe na altura do bloco do índice (144 px contra uns 219 no celular, 120 contra uns 131 em tela larga)', () => {
+    const [celular, largo] = corpos(".pt-pagina[data-desenho='ate-o-indice'] .pt-ilustracao")
+    const altura = (corpo: string) => Number(/height:\s*(\d+)px/.exec(corpo)![1])
+    // Altura mínima do bloco do índice: o rótulo (16 de respiro + 22 de linha + 1 de filete + 4 de margem = 43) e as
+    // linhas de 44 px: 4 linhas no celular (uma coluna), 2 linhas em tela larga (duas colunas).
+    const indiceNoCelular = 43 + 4 * 44
+    const indiceEmTelaLarga = 43 + 2 * 44
+    expect(altura(celular)).toBeLessThanOrEqual(indiceNoCelular)
+    expect(altura(largo)).toBeLessThanOrEqual(indiceEmTelaLarga)
+    expect(corpos(".pt-pagina[data-desenho='ate-o-indice'] .pt-indice-rotulo + .pt-indice-lista")[0]).toMatch(
+      /repeat\(2,/,
+    )
+    // As outras páginas seguem com o desenho de 144 e 240 px.
+    const [padraoCelular, padraoLargo] = corpos('.pt-ilustracao')
+    expect(altura(padraoCelular)).toBe(144)
+    expect(altura(padraoLargo)).toBe(240)
   })
 
   it('o título usa a escala de h1 (cm-h1, 84/88 em 1440); a segunda linha usa só o corpo de h3 (24/30 a 36/42)', () => {

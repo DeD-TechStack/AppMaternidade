@@ -126,6 +126,11 @@ export interface PaginaDeTexto {
    * ao lado do título (1100 px ou mais) ou logo abaixo dele. A página de tarefa (Exclusão) o põe depois do passo a passo.
    */
   painelDepoisDe?: number
+  /**
+   * O desenho não passa da altura do bloco do índice "Nesta página": o índice fica aberto (sem recolher no celular)
+   * e o desenho encolhe para caber nessa altura, nas duas larguras (item 10 da devolução, Sobre).
+   */
+  desenhoAteOIndice?: true
   /** O botão de ação principal, na abertura. Contato não tem: o botão dela é o do bloco de e-mail. */
   acao?: AcaoPrincipal
   /** Os primeiros itens de uma lista da página, mostrados na abertura; a lista inteira fica na sua seção. */
@@ -474,6 +479,7 @@ const SOBRE: PaginaDeTexto = {
   subtitulo: 'Quem faz e para quem.',
   ilustracao: 'tummy-time',
   apoio: 'Feito para o dia a dia do cuidado.',
+  desenhoAteOIndice: true,
   acao: ACAO_CRIAR_CONTA,
   apresentacao:
     'O AppMaternidade quer juntar num lugar só a rotina do bebê, o desenvolvimento, o cuidado dividido entre os adultos e uma comunidade separada da rotina privada.',

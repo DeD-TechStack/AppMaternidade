@@ -38,7 +38,14 @@ function irParaSecao(evento: MouseEvent<HTMLAnchorElement>, id: string) {
  * ele é uma faixa entre a abertura e a leitura, com os links em colunas e um fio só em cima; em tela estreita
  * vira um `<details>` fechado ("Nesta página", 44 px no mínimo), para a primeira tela mostrar o texto.
  */
-export function IndiceDaPagina({ secoes }: { secoes: readonly SecaoDeLeitura['secao'][] }) {
+export function IndiceDaPagina({
+  secoes,
+  sempreAberto = false,
+}: {
+  secoes: readonly SecaoDeLeitura['secao'][]
+  /** Sem recolher em tela estreita: o bloco do índice fica com a altura da lista inteira (página Sobre). */
+  sempreAberto?: boolean
+}) {
   const idRotulo = useId()
   const compacto = useSyncExternalStore(assinar, ler, () => false)
 
@@ -54,7 +61,7 @@ export function IndiceDaPagina({ secoes }: { secoes: readonly SecaoDeLeitura['se
     </ul>
   )
 
-  if (compacto) {
+  if (compacto && !sempreAberto) {
     return (
       <nav className="pt-indice" aria-label={ROTULO_INDICE}>
         <details className="pt-indice-detalhes">
