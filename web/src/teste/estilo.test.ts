@@ -198,6 +198,52 @@ describe('sombra, gradiente e filtro só pelos tokens (DESIGN.md 3 e 8)', () => 
   })
 })
 
+/** O corpo da primeira regra de `texto` cujo seletor é exatamente `seletor`. */
+function corpoDaRegra(texto: string, seletor: string): string {
+  const regra = [...texto.matchAll(/([^{}]+)\{([^{}]*)\}/g)].find((m) => m[1].trim() === seletor)
+  return regra?.[2] ?? ''
+}
+
+describe('rodapé: marca ajustada ao painel e alvos da casca (MAT-49e)', () => {
+  const site = css.find((f) => f.nome === 'styles/site.css')!.limpo
+
+  it('o nome do rodapé tem o tamanho preso à largura do painel (cqi), sem teto de 160 px, sem transform nem mexida no tracking', () => {
+    const corpo = corpoDaRegra(site, '.cm-rodape-nome')
+    expect(corpo).not.toBe('')
+    const tamanho = /font-size:\s*([^;]+);/.exec(corpo)?.[1] ?? ''
+    expect(tamanho).toMatch(/cqi/)
+    expect(tamanho).not.toMatch(/min\(\s*160px/)
+    expect(tamanho).not.toMatch(/160px/)
+    expect(corpo).not.toMatch(/transform|scale/)
+    expect(corpo.match(/letter-spacing:\s*([^;]+);/g)).toEqual(['letter-spacing: -0.03em;'])
+  })
+
+  it('o fator da largura do texto é declarado uma vez, como propriedade própria', () => {
+    expect(site.match(/--cm-fator-marca:\s*[\d.]+;/g)).toHaveLength(1)
+    expect(corpoDaRegra(site, '.cm-rodape-nome')).toMatch(/var\(--cm-fator-marca\)/)
+  })
+
+  it('.alvo-toque é só um piso de especificidade zero (:where), sem !important, para não vencer o .cm-botao de 56 px', () => {
+    const index = semComentariosCss(indexCss)
+    const regra = [...index.matchAll(/([^{}]+)\{([^{}]*)\}/g)].find((m) => /alvo-toque/.test(m[1]) && /min-height:\s*44px/.test(m[2]))
+    expect(regra, 'regra do piso de 44 px').toBeDefined()
+    expect(regra![1]).toMatch(/:where\(\s*\.alvo-toque\s*\)/)
+    expect(regra![1]).not.toMatch(/(^|[\s,])\.alvo-toque/)
+    expect(regra![2]).not.toMatch(/!important/)
+  })
+
+  it('o botão do menu do cabeçalho não recua mais para fora da margem (o ícone termina na borda do conteúdo)', () => {
+    const corpo = corpoDaRegra(site, '.sb-cab-menu')
+    expect(corpo).toMatch(/width:\s*48px/)
+    expect(corpo).toMatch(/height:\s*48px/)
+    expect(corpo).toMatch(/margin-right:\s*(-11px|-11\.\d+px)/)
+  })
+
+  it('o rodapé compacto tem regra própria', () => {
+    expect(site).toMatch(/\.cm-rodape-compacto\s*\{/)
+  })
+})
+
 describe('movimento reduzido (DESIGN.md 5)', () => {
   it('o CSS desliga animações e transições com prefers-reduced-motion', () => {
     expect(indexCss).toMatch(
