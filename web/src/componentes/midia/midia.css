@@ -139,11 +139,22 @@
     --c-lado: var(--cor-secundario);
   }
 
-  /* R3: o chão na frente do pé do celular de um cartão (papel ou tinta): nunca na cor da página. */
+  /* R3: o chão na frente do pé do celular de um cartão (papel ou tinta): nunca na cor da página.
+     6a B1: o chão do cartão da Sessão passa da borda da moldura (o pé do celular cruza a borda de baixo e a tela
+     é clara). A frente em papel-fundo dava 1,13:1 contra a página na linha de dentro da borda; com o tom
+     escuro de lado (o secundário) dá mais de 6:1. O topo, que também aparece na borda, vai no mesmo tom. */
   .mc-chao-papel {
-    --c-frente: var(--cor-papel-fundo);
-    --c-topo: var(--cor-papel-fundo);
+    --c-frente: var(--cor-secundario);
+    --c-topo: var(--cor-secundario);
     --c-lado: var(--cor-secundario);
+  }
+
+  /* 6a B3: nas cenas dos cartões as faces do chão (frente e topo/base) se emendam numa aresta de 3D e, com a
+     antialias, deixava passar um fio de 1 px da captura que está atrás (urucum no Hoje). O topo e a base ganham
+     2 px de profundidade (1 px de cada lado): as faces passam 1 px uma sobre a outra e a emenda some. */
+  .mc-chao .mc-topo,
+  .mc-chao .mc-base {
+    height: calc(var(--esp, 2cqw) + 2px);
   }
 
   .mc-chao-tinta {
@@ -175,9 +186,20 @@
 
   /* R5: o celular do retrato (topo, esquerda e largura), que abaixo de 768 sobe e cresce. */
   .mc-retrato {
-    --ph-top: 48cqw;
+    --ph-top: 51.5cqw;
     --ph-left: 13cqw;
     --ph-w: 74cqw;
+  }
+
+  /* I-7b: os dois celulares do campo escuro: a largura (--mad-w) e a posição (esquerda e topo, dentro do campo)
+     de cada um. 6a B4: abaixo de 768 os celulares crescem de 27 para 33 cqw (mais da moldura) e a posição
+     acompanha. */
+  .mc-madrugada {
+    --mad-w: 27cqw;
+    --mad-l1: 12cqw;
+    --mad-t1: 7cqw;
+    --mad-l2: 41cqw;
+    --mad-t2: 24cqw;
   }
 
   .mc-laje-ilu {
@@ -307,7 +329,7 @@
     gap: 1.5cqw;
     width: 91.5cqw;
     height: 45cqw;
-    margin-left: -45.75cqw;
+    margin-left: -46.25cqw;
     margin-top: -22.5cqw;
     transform-style: preserve-3d;
     transform: rotateX(var(--rx, 42deg)) rotateZ(var(--rz, -20deg));
@@ -398,7 +420,7 @@
     .mc-trio {
       --lw: 26.5cqw;
       --pw: 31cqw;
-      --b: 6cqw;
+      --b: 8.5cqw;
     }
 
     .mc-trio-item {
@@ -407,12 +429,39 @@
       --giro: var(--giro-e);
     }
 
+    /* 6a B4: o notebook da abertura cresce 3% (a propriedade `scale` compõe com o `transform` do objeto e o 3D
+       continua; a origem não muda, porque é também o pivô da inclinação), se desloca 2 cqw para a direita
+       (`--tx`), onde a lateral do pedestal é escura, para o canto do pedestal não encostar na borda da esquerda,
+       e 0,3 cqw para cima (`--ty`). A folga é pequena: com 4% ou com mais deslocamento a tampa chega à borda de
+       cima ou o pedestal à de baixo. Conferida pela linha de dentro da borda (B1). */
+    .mc-notebook > .mc-obj {
+      --tx: 2cqw;
+      --ty: -0.3cqw;
+      scale: 1.03;
+    }
+
+    /* 6a B4: o campo escuro da madrugada tem os dois celulares maiores (33 cqw, eram 27) e mais perto um do outro. */
+    .mc-madrugada {
+      --mad-w: 33cqw;
+      --mad-l1: 6cqw;
+      --mad-t1: 8.5cqw;
+      --mad-l2: 40cqw;
+      --mad-t2: 12cqw;
+    }
+
     /* R5: o celular do retrato sobe (topo da imagem a ~85 px da moldura) e cresce, para continuar cortado
        embaixo. */
     .mc-retrato {
       --ph-top: 20cqw;
       --ph-left: 9cqw;
       --ph-w: 80cqw;
+    }
+
+    /* 6a B1: em 390 a moldura do mosaico é mais alta e a grade girada encostava na borda direita (4 px de papel
+       a menos de 1,5:1 na linha de dentro). Um recuo de escala de 5% a afasta das 4 bordas; de 768 para cima
+       a grade já cabia e não muda. */
+    .mc-grade {
+      scale: 0.95;
     }
 
     /* R6a: o recorte de fundo troca para a captura de celular, com tamanho e deslocamento próprios. */

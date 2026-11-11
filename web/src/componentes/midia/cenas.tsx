@@ -24,14 +24,14 @@ function Palco({ children, classe = '' }: { children: ReactNode; classe?: string
 /** I-2: o notebook com a tela Hoje, sobre um pedestal largo e baixo, girado e visto de cima. */
 export function CenaNotebook() {
   return (
-    <Palco>
+    <Palco classe="mc-notebook">
       <div
         className="mc-obj"
-        style={vars({ left: '8cqw', top: '4cqw', width: '84cqw', height: '52.5cqw', '--rx': '-5deg', '--ry': '-14deg', '--rz': '1deg' })}
+        style={vars({ left: '8cqw', top: '1cqw', width: '84cqw', height: '52.5cqw', '--rx': '-5deg', '--ry': '-14deg', '--rz': '1deg' })}
       >
         <Caixa
           className="mc-obj mc-pedestal"
-          style={{ left: '4cqw', bottom: 0, width: '76cqw', height: '7cqw', '--esp': '32cqw', '--tz': '12cqw' }}
+          style={{ left: '4cqw', bottom: 0, width: '76cqw', height: '7cqw', '--esp': '20cqw', '--tz': '8cqw' }}
         />
         <Aparelho
           tipo="notebook"
@@ -122,14 +122,14 @@ export function CenaSessao() {
 /** I-7b: o campo escuro da madrugada, com dois celulares com a captura da madrugada, e blocos no claro. */
 export function CenaMadrugada() {
   return (
-    <Palco>
+    <Palco classe="mc-madrugada">
       <Caixa
         className="mc-obj mc-pedestal"
-        style={{ left: '3cqw', bottom: '-4cqw', width: '14cqw', height: '40cqw', '--esp': '14cqw', '--ry': '22deg', '--rx': '-6deg' }}
+        style={{ left: '3cqw', bottom: '8.5cqw', width: '14cqw', height: '27.5cqw', '--esp': '14cqw', '--ry': '22deg', '--rx': '-6deg' }}
       />
       <Caixa
         className="mc-obj mc-laje-tinta"
-        style={{ left: '5cqw', bottom: '39cqw', width: '10cqw', height: '10cqw', '--esp': '10cqw', '--ry': '34deg', '--rx': '-6deg' }}
+        style={{ left: '5cqw', bottom: '36.5cqw', width: '10cqw', height: '10cqw', '--esp': '10cqw', '--ry': '34deg', '--rx': '-6deg' }}
       />
       <div
         className="mc-campo"
@@ -140,17 +140,17 @@ export function CenaMadrugada() {
           tipo="celular"
           tela="hoje"
           captura="hoje-madrugada-390"
-          largura="27cqw"
+          largura="var(--mad-w)"
           inclinacao={{ x: -3, y: 16, z: -3 }}
-          style={{ left: '12cqw', top: '7cqw' }}
+          style={{ left: 'var(--mad-l1)', top: 'var(--mad-t1)' }}
         />
         <Aparelho
           tipo="celular"
           tela="sessao"
           captura="sessao-madrugada-390"
-          largura="27cqw"
+          largura="var(--mad-w)"
           inclinacao={{ x: -3, y: -16, z: 3 }}
-          style={{ left: '41cqw', top: '19cqw' }}
+          style={{ left: 'var(--mad-l2)', top: 'var(--mad-t2)' }}
         />
       </div>
     </Palco>
@@ -168,7 +168,7 @@ export function CenaIlustracao({ qual }: { qual: 'berco' | 'mamada' }) {
         />
         <Caixa
           className="mc-obj mc-laje-papel"
-          style={{ left: '26cqw', top: '20cqw', width: '78cqw', height: '86cqw', '--esp': '6cqw', '--rx': '-8deg', '--ry': '-16deg', '--rz': '-3deg' }}
+          style={{ left: '28cqw', top: '16cqw', width: '64cqw', height: '72cqw', '--esp': '6cqw', '--rx': '-8deg', '--ry': '-16deg', '--rz': '-3deg' }}
         >
           <div className="mc-laje-ilu">
             <IlustracaoBerco className="mc-ilu" />
@@ -181,15 +181,15 @@ export function CenaIlustracao({ qual }: { qual: 'berco' | 'mamada' }) {
     <Palco>
       <div
         className="mc-obj"
-        style={vars({ left: '12cqw', top: '10cqw', width: '76cqw', height: '78cqw', '--rx': '-7deg', '--ry': '20deg', '--rz': '2deg' })}
+        style={vars({ left: '15cqw', top: '10cqw', width: '70cqw', height: '70cqw', '--rx': '-7deg', '--ry': '20deg', '--rz': '2deg' })}
       >
         <Caixa
           className="mc-obj mc-pedestal"
-          style={{ left: 0, bottom: 0, width: '76cqw', height: '14cqw', '--esp': '30cqw' }}
+          style={{ left: 0, bottom: 0, width: '70cqw', height: '13cqw', '--esp': '20cqw' }}
         />
         <Caixa
           className="mc-obj mc-laje"
-          style={{ left: 0, top: 0, width: '60cqw', height: '64cqw', '--esp': '6cqw' }}
+          style={{ left: 0, top: 0, width: '55cqw', height: '57cqw', '--esp': '6cqw' }}
         >
           <div className="mc-laje-ilu">
             <IlustracaoMamada className="mc-ilu" />
@@ -351,7 +351,7 @@ export function CenaCartao({ tela }: { tela: 'hoje' | 'sessao' }) {
         className={`mc-obj ${hoje ? 'mc-laje-papel' : 'mc-laje-tinta'}`}
         style={
           hoje
-            ? { left: '46cqw', top: '10cqw', width: '62cqw', height: '62cqw', '--esp': '8cqw', '--ry': '-12deg', '--rz': '4deg', '--tz': '-10cqw' }
+            ? { left: '36cqw', top: '10cqw', width: '58cqw', height: '58cqw', '--esp': '8cqw', '--ry': '-12deg', '--rz': '4deg', '--tz': '-10cqw' }
             : { left: '-10cqw', top: '6cqw', width: '56cqw', height: '56cqw', '--esp': '8cqw', '--ry': '14deg', '--rz': '-4deg', '--tz': '-10cqw' }
         }
       />

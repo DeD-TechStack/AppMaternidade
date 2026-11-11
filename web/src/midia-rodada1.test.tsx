@@ -331,8 +331,8 @@ describe('R4: três celulares legíveis em 390, e a mesma geometria de antes em 
 // R5: o topo do retrato em 390.
 
 describe('R5: o celular do retrato sobe em 390 e continua cortado embaixo', () => {
-  it('o topo do celular (--ph-top) é 48 cqw em 1440 e 22 cqw ou menos abaixo de 768', () => {
-    expect(cqwDe(corposDe(cssLargo, '.mc-retrato'), '--ph-top')).toBe(48)
+  it('o topo do celular (--ph-top) é 51,5 cqw em 1440 (6a B1: eram 48, e o "50 min" da captura ficava na linha da borda de baixo) e 22 cqw ou menos abaixo de 768', () => {
+    expect(cqwDe(corposDe(cssLargo, '.mc-retrato'), '--ph-top')).toBe(51.5)
     expect(cqwDe(corposDe(cssEstreito, '.mc-retrato'), '--ph-top')).toBeLessThanOrEqual(22)
   })
 
