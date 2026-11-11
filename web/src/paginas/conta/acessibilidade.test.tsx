@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import axe from 'axe-core'
-import { CHAVE_RECUPERACAO } from '../../componentes/conta/armazenamento.ts'
+import { CHAVE_CONVITE, CHAVE_RECUPERACAO } from '../../componentes/conta/armazenamento.ts'
 import { NOMES_DO_H1, TEXTOS_ERRO } from '../../conteudo/conta.ts'
-import { SENHA_DEMONSTRACAO } from '../../dados/conta.demonstracao.ts'
-import { criarDadosContaMemoria } from '../../dados/conta.memoria.ts'
+import { CODIGO_CONVITE_PENDENTE, SENHA_DEMONSTRACAO } from '../../dados/conta.demonstracao.ts'
+import { criarDadosContaMemoria, simularFalha } from '../../dados/conta.memoria.ts'
 import { criarEstadoInicial, type EstadoPrototipo } from '../../prototipo/estado.ts'
 import { PESSOAS, criarFixtureDeTeste, renderizarComDados } from '../../teste/renderizarComDados.tsx'
 
@@ -45,6 +45,8 @@ function semAlvoDe44(container: HTMLElement): string[] {
   return telas
     .flatMap((tela) => [...tela.querySelectorAll<HTMLElement>('a, button, input, select, textarea')])
     .filter((elemento) => elemento.closest('p, [inert]') === null)
+    // A opção de papel é um rótulo inteiro (alvo-toque, 44 px) com o botão de opção dentro.
+    .filter((elemento) => !(elemento instanceof HTMLInputElement && elemento.type === 'radio' && elemento.closest('label.alvo-toque')))
     .filter((elemento) => !CLASSE_DE_ALVO.test(elemento.className))
     .map((elemento) => elemento.outerHTML.slice(0, 160))
 }
@@ -82,6 +84,34 @@ const montagens: Array<[string, Montagem]> = [
   ['/app/conta (responsável)', async (estadoInicial) => renderizarComDados('/app/conta', { estadoInicial, sessao: 'juliana' })],
   ['/app/conta (cuidador)', async (estadoInicial) => renderizarComDados('/app/conta', { estadoInicial, sessao: 'bruno' })],
   ['/app/conta (sem família)', async (estadoInicial) => renderizarComDados('/app/conta', { estadoInicial, sessao: 'davi' })],
+  // 37b
+  [
+    '/convite (sem código)',
+    async (estadoInicial) => {
+      sessionStorage.clear()
+      return renderizarComDados('/convite', { estadoInicial, sessao: null })
+    },
+  ],
+  [
+    '/convite (código guardado, sem sessão)',
+    async (estadoInicial) => {
+      sessionStorage.setItem(CHAVE_CONVITE, CODIGO_CONVITE_PENDENTE)
+      return renderizarComDados('/convite', { estadoInicial, sessao: null })
+    },
+  ],
+  [
+    '/convite (prévia)',
+    async (estadoInicial) => renderizarComDados(`/convite#${CODIGO_CONVITE_PENDENTE}`, { estadoInicial, sessao: 'davi' }),
+  ],
+  [
+    '/app/comecar (escolha)',
+    async (estadoInicial) => {
+      sessionStorage.clear()
+      return renderizarComDados('/app/comecar', { estadoInicial, sessao: 'davi' })
+    },
+  ],
+  ['/app/familia (responsável)', async (estadoInicial) => renderizarComDados('/app/familia', { estadoInicial, sessao: 'juliana' })],
+  ['/app/familia (cuidador)', async (estadoInicial) => renderizarComDados('/app/familia', { estadoInicial, sessao: 'bruno' })],
 ]
 
 describe('axe-core, rota por rota, nos dois temas', () => {
@@ -310,15 +340,15 @@ describe('foco e rolagem ao trocar de tela', () => {
     await waitFor(() => expect(document.activeElement).toBe(entrar))
   })
 
-  it('depois de entrar, o foco vai ao h1 da Conta', async () => {
+  it('depois de entrar, o foco vai ao h1 da Família', async () => {
     renderizarComDados('/entrar')
     await screen.findByRole('button', { name: 'Entrar' })
     digitar('E-mail', 'juliana@exemplo.invalid')
     digitar('Senha', SENHA_DEMONSTRACAO)
     fireEvent.click(botao('Entrar'))
 
-    const conta = await screen.findByRole('heading', { level: 1, name: 'Conta' })
-    await waitFor(() => expect(document.activeElement).toBe(conta))
+    const familia = await screen.findByRole('heading', { level: 1, name: 'Família' })
+    await waitFor(() => expect(document.activeElement).toBe(familia))
   })
 
   it('/app/conta#exportar foca o título da seção Exportar, e não o h1', async () => {
@@ -349,11 +379,124 @@ describe('RN-01: nenhuma rota desta tarefa chama a rede', () => {
     digitar('E-mail', 'juliana@exemplo.invalid')
     digitar('Senha', SENHA_DEMONSTRACAO)
     fireEvent.click(botao('Entrar'))
-    await screen.findByRole('heading', { level: 1, name: 'Conta' })
+    await screen.findByRole('heading', { level: 1, name: 'Família' })
     await esperarCarregar()
     fireEvent.click(screen.getAllByRole('button', { name: 'Sair' })[0])
     await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.entrar })
 
     expect(fetchProibido).not.toHaveBeenCalled()
   })
+})
+
+// 37b: as seis caixas de diálogo da Família (remover acesso, mudar papel, sair, excluir família,
+// cancelar convite e arquivar bebê), o foco ao trocar de tela e o axe com um erro no topo.
+const DIALOGOS_DA_FAMILIA: Array<{ nome: string; abre: () => HTMLElement; titulo: string }> = [
+  {
+    nome: 'remover acesso',
+    abre: () => botao('Remover acesso de Bruno'),
+    titulo: 'Remover o acesso de Bruno?',
+  },
+  { nome: 'mudar papel', abre: () => botao('Mudar papel de Bruno'), titulo: 'Mudar o papel de Bruno' },
+  { nome: 'mudar papel (própria linha)', abre: () => botao('Mudar papel de Juliana'), titulo: 'Mudar o seu papel' },
+  { nome: 'sair da família', abre: () => botao('Sair da família'), titulo: 'Sair da família Família Exemplo?' },
+  { nome: 'excluir família', abre: () => botao('Excluir família'), titulo: 'Excluir a família Família Exemplo?' },
+  {
+    nome: 'cancelar convite',
+    abre: () => screen.getAllByRole('button', { name: /^Cancelar convite de / })[0],
+    titulo: 'Cancelar este convite?',
+  },
+  { nome: 'arquivar bebê', abre: () => botao('Arquivar Heloísa'), titulo: 'Arquivar Heloísa?' },
+]
+
+async function abrirFamilia(estadoInicial?: EstadoPrototipo) {
+  const renderizado = renderizarComDados('/app/familia', { estadoInicial, sessao: 'juliana' })
+  await screen.findByRole('heading', { level: 2, name: 'Bebês' })
+  return renderizado
+}
+
+describe('as caixas de diálogo da Família', () => {
+  for (const [tema, estado] of temas) {
+    for (const caixa of DIALOGOS_DA_FAMILIA) {
+      it(`${caixa.nome} (${tema}): sem violações e com alvos de 44 px`, async () => {
+        const { container } = await abrirFamilia(estado())
+        fireEvent.click(caixa.abre())
+
+        expect(screen.getByRole('dialog', { name: caixa.titulo })).toBeTruthy()
+        expect(await violacoes(container)).toEqual([])
+        expect(semAlvoDe44(container)).toEqual([])
+      })
+    }
+  }
+
+  for (const caixa of DIALOGOS_DA_FAMILIA) {
+    it(`${caixa.nome}: <dialog> modal com título, foco inicial no primeiro controle, Esc fecha e o foco volta ao botão que abriu`, async () => {
+      await abrirFamilia()
+      const abridor = caixa.abre()
+      fireEvent.click(abridor)
+
+      const dialogo = screen.getByRole('dialog', { name: caixa.titulo })
+      expect(dialogo.tagName).toBe('DIALOG')
+      expect(dialogo.hasAttribute('open')).toBe(true)
+      expect(dialogo.getAttribute('aria-modal')).toBe('true')
+      expect(within(dialogo).getByRole('heading', { level: 2, name: caixa.titulo })).toBeTruthy()
+      const primeiro = dialogo.querySelector<HTMLElement>('input, select, textarea, button:not([disabled])')!
+      expect(document.activeElement).toBe(primeiro)
+
+      fireEvent.keyDown(document.activeElement!, { key: 'Escape' })
+      expect(screen.queryByRole('dialog')).toBeNull()
+      expect(document.activeElement).toBe(abridor)
+    })
+  }
+
+  it('excluir família: a caixa pede o nome, e o campo e o botão de excluir só se ligam com o nome exato', async () => {
+    await abrirFamilia()
+    fireEvent.click(botao('Excluir família'))
+
+    const dialogo = within(screen.getByRole('dialog'))
+    expect(document.activeElement).toBe(dialogo.getByLabelText('Digite o nome da família para confirmar', { selector: 'input' }))
+    expect((dialogo.getByRole('button', { name: 'Excluir família' }) as HTMLButtonElement).disabled).toBe(true)
+  })
+})
+
+describe('foco e rolagem na 37b', () => {
+  it('ir ao item Família do cabeçalho leva o foco ao h1 da Família', async () => {
+    const { rolarAoTopo } = renderizarComDados('/app/hoje', { sessao: 'juliana' })
+    await screen.findByRole('heading', { level: 1, name: 'Hoje' })
+
+    fireEvent.click(screen.getByRole('link', { name: 'Família' }))
+    const familia = await screen.findByRole('heading', { level: 1, name: 'Família' })
+    await waitFor(() => expect(document.activeElement).toBe(familia))
+    expect(familia.getAttribute('tabindex')).toBe('-1')
+    expect(rolarAoTopo).toHaveBeenCalledWith(0, 0)
+  })
+
+  it('"Tenho um convite" leva o foco ao h1 de /convite', async () => {
+    renderizarComDados('/entrar')
+    await screen.findByRole('button', { name: 'Entrar' })
+
+    fireEvent.click(within(document.querySelector('main')!).getByRole('link', { name: 'Tenho um convite' }))
+    const convite = await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.convite })
+    await waitFor(() => expect(document.activeElement).toBe(convite))
+  })
+})
+
+describe('axe com um erro no topo (37b)', () => {
+  for (const [tema, estado] of temas) {
+    it(`/convite com erro (${tema}) e /app/familia com a frase de sem permissão (${tema}): sem violações`, async () => {
+      sessionStorage.setItem(CHAVE_CONVITE, 'não é um código')
+      const convite = renderizarComDados('/convite#abc', { estadoInicial: estado(), sessao: 'davi' })
+      expect((await screen.findByRole('alert')).textContent).toBe(TEXTOS_ERRO.convite_invalido)
+      expect(await violacoes(convite.container)).toEqual([])
+      convite.unmount()
+
+      const dados = criarDadosContaMemoria(criarFixtureDeTeste(Date.now()))
+      simularFalha(dados, 'revogarConvite', 'sem_permissao')
+      const familia = renderizarComDados('/app/familia', { estadoInicial: estado(), sessao: 'juliana', dados })
+      await screen.findByRole('heading', { level: 2, name: 'Bebês' })
+      fireEvent.click(screen.getAllByRole('button', { name: /^Cancelar convite de / })[0])
+      fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancelar convite' }))
+      expect((await screen.findByRole('alert')).textContent).toBe(TEXTOS_ERRO.sem_permissao)
+      expect(await violacoes(familia.container)).toEqual([])
+    })
+  }
 })

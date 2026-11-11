@@ -68,6 +68,9 @@ export function Entrar() {
           <Link to={caminhoComVolta('/criar-conta', volta)} className={LINK_ALVO}>
             {ENTRAR.criarConta}
           </Link>
+          <Link to="/convite" className={LINK_ALVO}>
+            {ENTRAR.convite}
+          </Link>
         </>
       }
     >

@@ -1,10 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { CHAVE_RECUPERACAO } from '../../componentes/conta/armazenamento.ts'
-import { CONTA, NOMES_DO_H1, TEXTOS_ERRO } from '../../conteudo/conta.ts'
+import { hojeNoFuso, somarDias } from '../../componentes/conta/datas.ts'
+import { COMUM, CONTA, NOMES_DO_H1, TEXTOS_ERRO } from '../../conteudo/conta.ts'
 import type { Resultado } from '../../dados/comum.ts'
 import type { OperacaoConta } from '../../dados/conta.ts'
-import { SENHA_DEMONSTRACAO } from '../../dados/conta.demonstracao.ts'
+import { FAMILIAS_DEMONSTRACAO, SENHA_DEMONSTRACAO } from '../../dados/conta.demonstracao.ts'
 import { classificarErroConta, erroDaChave } from '../../dados/conta.erros.ts'
 import {
   criarDadosContaMemoria,
@@ -272,7 +273,7 @@ describe('rede, "tente de novo" e desconhecido: a frase e "Tentar de novo", que 
 
       expect((await screen.findByRole('alert')).textContent).toContain(TEXTOS_ERRO[chave])
       await tentarDeNovo()
-      await waitFor(() => expect(caminhoDe(roteador)).toBe('/app/conta'))
+      await waitFor(() => expect(caminhoDe(roteador)).toBe('/app/familia'))
     })
 
     it(`/criar-conta, criar usuário (${chave})`, async () => {
@@ -287,7 +288,9 @@ describe('rede, "tente de novo" e desconhecido: a frase e "Tentar de novo", que 
 
       expect((await screen.findByRole('alert')).textContent).toContain(TEXTOS_ERRO[chave])
       await tentarDeNovo()
-      await waitFor(() => expect(caminhoDe(roteador)).toBe('/app/conta'))
+      // Uma conta nova não tem família: a Família leva ao Começar.
+      await waitFor(() => expect(caminhoDe(roteador)).toBe('/app/comecar'))
+      await screen.findByRole('heading', { level: 2, name: 'Como você quer começar?' })
     })
 
     it(`/redefinir-senha, salvar (${chave})`, async () => {
@@ -315,7 +318,9 @@ describe('rede, "tente de novo" e desconhecido: a frase e "Tentar de novo", que 
 
       expect((await screen.findByRole('alert')).textContent).toContain(TEXTOS_ERRO[chave])
       await tentarDeNovo()
-      await waitFor(() => expect(caminhoDe(roteador)).toBe('/app/conta'))
+      // Sem família, o destino é a escolha do Começar.
+      await screen.findByRole('heading', { level: 2, name: 'Como você quer começar?' })
+      expect(caminhoDe(roteador)).toBe('/app/comecar')
     })
 
     it(`/app/conta, salvar o perfil (${chave})`, async () => {
@@ -437,7 +442,8 @@ describe('rede numa escrita: a tela relê e confere o efeito pedido, e não dedu
     expect((await screen.findByRole('alert')).textContent).toContain(TEXTOS_ERRO.rede)
     await tentarDeNovo()
 
-    await waitFor(() => expect(caminhoDe(roteador)).toBe('/app/conta'))
+    await screen.findByRole('heading', { level: 2, name: 'Como você quer começar?' })
+    expect(caminhoDe(roteador)).toBe('/app/comecar')
     expect(criar).toHaveBeenCalledTimes(2)
     const conta = await dados.minhaConta()
     expect(conta.ok && conta.valor).toMatchObject({ nome: 'Nova' })
@@ -801,5 +807,315 @@ describe('criar a própria conta: conferência falsa', () => {
     await waitFor(() => expect(screen.getByRole('alert').textContent).toContain(TEXTOS_ERRO.desconhecido))
     const conta = await dados.minhaConta()
     expect(conta.ok && conta.valor).toBeNull()
+  })
+})
+
+// ---- 37b: as linhas da matriz de /convite (em convite.test.tsx), /app/comecar (escolha e criar) e /app/familia ----
+
+const VINCULO_DO_BRUNO = 'b2222222-2222-4222-8222-222222222222'
+const hoje = () => hojeNoFuso('America/Sao_Paulo')
+
+/** Juliana (responsável) e Bruno (também responsável), para a Juliana poder rebaixar-se. */
+async function memoriaComDoisResponsaveis() {
+  const dados = novaMemoria()
+  dados.sessaoParaTeste(PESSOAS.juliana.email)
+  await dados.mudarPapel(VINCULO_DO_BRUNO, 'responsavel')
+  return dados
+}
+
+async function abrirFamilia(pessoa: keyof typeof PESSOAS = 'juliana', dados: DadosContaMemoria = novaMemoria()) {
+  const renderizado = renderizarComDados('/app/familia', { dados, sessao: pessoa })
+  await screen.findByRole('heading', { level: 2, name: 'Bebês' })
+  return { ...renderizado, dados }
+}
+
+describe('/app/comecar, escolha e criar [37b]', () => {
+  it('carregando (famílias): o main fica ocupado, com o texto, sem as opções, até as famílias chegarem', async () => {
+    const dados = novaMemoria()
+    const lidas = segurar<unknown>(dados, 'minhasFamilias')
+    const { container } = renderizarComDados('/app/comecar', { dados, sessao: 'davi' })
+
+    await waitFor(() => expect(container.querySelector('main')!.getAttribute('aria-busy')).toBe('true'))
+    expect(screen.getByText('Carregando…')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Criar uma família' })).toBeNull()
+
+    lidas.liberar({ ok: true, valor: [] })
+    await screen.findByRole('button', { name: 'Criar uma família' })
+    expect(container.querySelector('main')!.hasAttribute('aria-busy')).toBe(false)
+  })
+
+  it('erro ao ler as famílias: a frase e "Tentar de novo", que lê de novo', async () => {
+    const dados = novaMemoria()
+    simularFalha(dados, 'minhasFamilias', 'rede')
+    renderizarComDados('/app/comecar', { dados, sessao: 'davi' })
+
+    expect((await screen.findByRole('alert')).textContent).toContain(TEXTOS_ERRO.rede)
+    await tentarDeNovo()
+    await screen.findByRole('button', { name: 'Criar uma família' })
+  })
+
+  it('enviando (criar família): o botão desativa, troca o rótulo e um segundo envio não chama o banco', async () => {
+    const dados = novaMemoria()
+    renderizarComDados('/app/comecar', { dados, sessao: 'davi' })
+    fireEvent.click(await screen.findByRole('button', { name: 'Criar uma família' }))
+    digitar('Nome da família', 'Casa Nova')
+    const criar = segurar<string>(dados, 'criarFamilia')
+
+    const formulario = botao('Criar família').closest('form')!
+    fireEvent.submit(formulario)
+    await waitFor(() => expect(botao('Salvando…').disabled).toBe(true))
+    fireEvent.click(botao('Salvando…'))
+    fireEvent.submit(formulario)
+    expect(criar.espiao).toHaveBeenCalledTimes(1)
+
+    criar.liberar(falhaDeNegocio('nome_vazio'))
+    await waitFor(() => expect(botao('Criar família').disabled).toBe(false))
+  })
+
+  it('enviando (salvar bebê): o botão desativa e um segundo envio não chama o banco', async () => {
+    const dados = novaMemoria()
+    renderizarComDados('/app/comecar', { dados, sessao: 'davi' })
+    fireEvent.click(await screen.findByRole('button', { name: 'Criar uma família' }))
+    digitar('Nome da família', 'Casa Nova')
+    fireEvent.click(botao('Criar família'))
+    await screen.findByRole('heading', { level: 2, name: 'Agora, o primeiro bebê' })
+    digitar('Nome ou apelido', 'Mel')
+    digitar('Data de nascimento', somarDias(hoje(), -9))
+    const cadastrar = segurar<unknown>(dados, 'cadastrarBebe')
+
+    const formulario = botao('Salvar bebê').closest('form')!
+    fireEvent.submit(formulario)
+    await waitFor(() => expect(botao('Salvando…').disabled).toBe(true))
+    fireEvent.submit(formulario)
+    expect(cadastrar.espiao).toHaveBeenCalledTimes(1)
+
+    cadastrar.liberar(falhaDeNegocio('nascimento_no_futuro'))
+    await waitFor(() => expect(botao('Salvar bebê').disabled).toBe(false))
+  })
+
+  it('objeto novo (criar família): depois de um `rede`, a tela relê a lista, mostra a frase de conexão caída e "Tentar de novo", que cria outra só se tocado', async () => {
+    const dados = novaMemoria()
+    simularRespostaPerdida(dados, 'criarFamilia')
+    const criar = vi.spyOn(dados, 'criarFamilia')
+    renderizarComDados('/app/comecar', { dados, sessao: 'davi' })
+    fireEvent.click(await screen.findByRole('button', { name: 'Criar uma família' }))
+    digitar('Nome da família', 'Casa Nova')
+    fireEvent.click(botao('Criar família'))
+
+    const alerta = await screen.findByRole('alert')
+    expect(alerta.textContent).toContain(COMUM.conexaoCaiu)
+    expect(alerta.textContent).not.toContain(TEXTOS_ERRO.rede)
+    // A lista relida mostra que a família nasceu: o link para ela aparece abaixo.
+    expect(await screen.findByRole('link', { name: 'Ir para a família' })).toBeTruthy()
+    expect(criar).toHaveBeenCalledTimes(1)
+    const antes = await dados.minhasFamilias()
+    expect(antes.ok && antes.valor).toHaveLength(1)
+
+    fireEvent.click(within(alerta).getByRole('button', { name: 'Tentar de novo' }))
+    await screen.findByRole('heading', { level: 2, name: 'Agora, o primeiro bebê' })
+    expect(criar).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('/app/familia [37b]: enviando', () => {
+  it('mudar papel: o botão desativa com "Salvando…" e um segundo envio não chama o banco', async () => {
+    const { dados } = await abrirFamilia()
+    fireEvent.click(botao('Mudar papel de Bruno'))
+    const dialogo = within(screen.getByRole('dialog'))
+    fireEvent.click(dialogo.getByRole('radio', { name: /Observador/ }))
+    const mudar = segurar<null>(dados, 'mudarPapel')
+
+    const formulario = dialogo.getByRole('button', { name: 'Mudar papel' }).closest('form')!
+    fireEvent.submit(formulario)
+    await waitFor(() => expect((dialogo.getByRole('button', { name: 'Salvando…' }) as HTMLButtonElement).disabled).toBe(true))
+    fireEvent.submit(formulario)
+    expect(mudar.espiao).toHaveBeenCalledTimes(1)
+
+    mudar.liberar({ ok: true, valor: null })
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+  })
+
+  it('criar convite: "Criando…" e um segundo envio não chama o banco', async () => {
+    const { dados } = await abrirFamilia()
+    const criar = segurar<unknown>(dados, 'criarConvite')
+
+    const formulario = botao('Criar convite').closest('form')!
+    fireEvent.submit(formulario)
+    await waitFor(() => expect(botao('Criando…').disabled).toBe(true))
+    fireEvent.submit(formulario)
+    expect(criar.espiao).toHaveBeenCalledTimes(1)
+
+    criar.liberar(falhaDeNegocio('validade_menor'))
+    await waitFor(() => expect(botao('Criar convite').disabled).toBe(false))
+  })
+
+  it('excluir família: "Excluindo…" na caixa', async () => {
+    const { dados } = await abrirFamilia()
+    fireEvent.click(botao('Excluir família'))
+    const dialogo = within(screen.getByRole('dialog'))
+    fireEvent.change(dialogo.getByLabelText('Digite o nome da família para confirmar', { selector: 'input' }), { target: { value: 'Família Exemplo' } })
+    const excluir = segurar<null>(dados, 'excluirFamilia')
+
+    fireEvent.submit(dialogo.getByRole('button', { name: 'Excluir família' }).closest('form')!)
+    await waitFor(() => expect(dialogo.getByRole('button', { name: 'Excluindo…' })).toBeTruthy())
+
+    excluir.liberar(falhaDeNegocio('ultimo_responsavel'))
+    await waitFor(() => expect((dialogo.getByRole('button', { name: 'Excluir família' }) as HTMLButtonElement).disabled).toBe(false))
+    expect(within(screen.getByRole('dialog')).getByRole('alert').textContent).toBe(TEXTOS_ERRO.ultimo_responsavel)
+  })
+})
+
+describe('/app/familia [37b]: rede numa escrita (RF-17)', () => {
+  it('mudar papel: depois da resposta perdida, "Tentar de novo" confere o efeito (a repetição dá papel_igual) e mostra o sucesso, com o papel mudado uma vez só', async () => {
+    const dados = novaMemoria()
+    simularRespostaPerdida(dados, 'mudarPapel')
+    const mudar = vi.spyOn(dados, 'mudarPapel')
+    await abrirFamilia('juliana', dados)
+    fireEvent.click(botao('Mudar papel de Bruno'))
+    const dialogo = within(screen.getByRole('dialog'))
+    fireEvent.click(dialogo.getByRole('radio', { name: /Observador/ }))
+    fireEvent.click(dialogo.getByRole('button', { name: 'Mudar papel' }))
+
+    expect((await dialogo.findByRole('alert')).textContent).toContain(TEXTOS_ERRO.rede)
+    fireEvent.click(dialogo.getByRole('button', { name: 'Tentar de novo' }))
+
+    await waitFor(() => expect(screen.getByRole('status').textContent).toBe('Bruno agora é observador.'))
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(mudar).toHaveBeenCalledTimes(2)
+    const detalhe = await dados.detalheFamilia(FAMILIAS_DEMONSTRACAO.exemplo)
+    expect(detalhe.ok && detalhe.valor.membros.filter((m) => m.papel === 'observador')).toHaveLength(1)
+  })
+
+  it('autorrebaixamento: a repetição dá sem_permissao, a releitura mostra o próprio vínculo com o papel pedido, e é sucesso', async () => {
+    const dados = await memoriaComDoisResponsaveis()
+    simularRespostaPerdida(dados, 'mudarPapel')
+    await abrirFamilia('juliana', dados)
+    fireEvent.click(botao('Mudar papel de Juliana'))
+    const dialogo = within(screen.getByRole('dialog'))
+    fireEvent.click(dialogo.getByRole('radio', { name: /Cuidador/ }))
+    fireEvent.click(dialogo.getByRole('button', { name: 'Mudar papel' }))
+
+    expect((await dialogo.findByRole('alert')).textContent).toContain(TEXTOS_ERRO.rede)
+    fireEvent.click(dialogo.getByRole('button', { name: 'Tentar de novo' }))
+
+    await waitFor(() => expect(screen.getByRole('status').textContent).toBe('Você agora é cuidador.'))
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Adicionar bebê' })).toBeNull())
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
+
+  it('remover acesso: depois da resposta perdida, a conferência vê que a pessoa saiu de Membros: sucesso', async () => {
+    const dados = novaMemoria()
+    simularRespostaPerdida(dados, 'revogarVinculo')
+    await abrirFamilia('juliana', dados)
+    fireEvent.click(botao('Remover acesso de Bruno'))
+    const dialogo = within(screen.getByRole('dialog'))
+    fireEvent.click(dialogo.getByRole('button', { name: 'Remover acesso' }))
+
+    expect((await dialogo.findByRole('alert')).textContent).toContain(TEXTOS_ERRO.rede)
+    fireEvent.click(dialogo.getByRole('button', { name: 'Tentar de novo' }))
+
+    await waitFor(() => expect(screen.getByRole('status').textContent).toBe('O acesso de Bruno foi removido.'))
+    expect(screen.queryByText('Bruno')).toBeNull()
+  })
+
+  it('cancelar convite: depois da resposta perdida, a conferência vê que ele saiu da lista: sucesso', async () => {
+    const dados = novaMemoria()
+    simularRespostaPerdida(dados, 'revogarConvite')
+    await abrirFamilia('juliana', dados)
+    fireEvent.click(screen.getAllByRole('button', { name: /^Cancelar convite de / })[0])
+    const dialogo = within(screen.getByRole('dialog'))
+    fireEvent.click(dialogo.getByRole('button', { name: 'Cancelar convite' }))
+
+    expect((await dialogo.findByRole('alert')).textContent).toContain(TEXTOS_ERRO.rede)
+    fireEvent.click(dialogo.getByRole('button', { name: 'Tentar de novo' }))
+
+    await waitFor(() => expect(screen.getByRole('status').textContent).toBe('O convite foi cancelado.'))
+    expect(screen.getAllByRole('button', { name: /^Cancelar convite de / })).toHaveLength(1)
+  })
+
+  it('a conferência falsa mostra o erro da repetição, pelo catálogo', async () => {
+    const dados = novaMemoria()
+    simularFalha(dados, 'mudarPapel', 'rede')
+    simularFalha(dados, 'mudarPapel', 'desconhecido')
+    await abrirFamilia('juliana', dados)
+    fireEvent.click(botao('Mudar papel de Bruno'))
+    const dialogo = within(screen.getByRole('dialog'))
+    fireEvent.click(dialogo.getByRole('radio', { name: /Observador/ }))
+    fireEvent.click(dialogo.getByRole('button', { name: 'Mudar papel' }))
+
+    expect((await dialogo.findByRole('alert')).textContent).toContain(TEXTOS_ERRO.rede)
+    fireEvent.click(dialogo.getByRole('button', { name: 'Tentar de novo' }))
+
+    await waitFor(() => expect(dialogo.getByRole('alert').textContent).toContain(TEXTOS_ERRO.desconhecido))
+    expect(screen.getByRole('status').textContent).toBe('')
+    const detalhe = await dados.detalheFamilia(FAMILIAS_DEMONSTRACAO.exemplo)
+    expect(detalhe.ok && detalhe.valor.membros.find((m) => m.nome === 'Bruno')?.papel).toBe('cuidador')
+  })
+
+  it('se a própria conferência falhar, a frase dela vem com "Tentar de novo", que repete a conferência, não a escrita', async () => {
+    const dados = novaMemoria()
+    simularFalha(dados, 'revogarVinculo', 'rede')
+    simularFalha(dados, 'revogarVinculo', 'desconhecido')
+    await abrirFamilia('juliana', dados)
+    const remover = vi.spyOn(dados, 'revogarVinculo')
+    fireEvent.click(botao('Remover acesso de Bruno'))
+    const dialogo = within(screen.getByRole('dialog'))
+    fireEvent.click(dialogo.getByRole('button', { name: 'Remover acesso' }))
+    expect((await dialogo.findByRole('alert')).textContent).toContain(TEXTOS_ERRO.rede)
+
+    simularFalha(dados, 'detalheFamilia', 'tente_de_novo')
+    fireEvent.click(dialogo.getByRole('button', { name: 'Tentar de novo' }))
+    await waitFor(() => expect(dialogo.getByRole('alert').textContent).toContain(TEXTOS_ERRO.tente_de_novo))
+    expect(remover).toHaveBeenCalledTimes(2)
+
+    // Repete só a conferência: Bruno segue na lista, então o erro da repetição volta.
+    fireEvent.click(dialogo.getByRole('button', { name: 'Tentar de novo' }))
+    await waitFor(() => expect(dialogo.getByRole('alert').textContent).toContain(TEXTOS_ERRO.desconhecido))
+    expect(remover).toHaveBeenCalledTimes(2)
+  })
+
+  it('objeto novo (criar convite): a frase de conexão caída, a lista relida com o convite criado e "Tentar de novo", que cria outro só se tocado', async () => {
+    const dados = novaMemoria()
+    simularRespostaPerdida(dados, 'criarConvite')
+    const criar = vi.spyOn(dados, 'criarConvite')
+    await abrirFamilia('juliana', dados)
+    const itens = () => within(screen.getByRole('region', { name: 'Convites' })).getAllByRole('listitem')
+    expect(itens()).toHaveLength(2)
+    fireEvent.click(botao('Criar convite'))
+
+    const alerta = await screen.findByRole('alert')
+    expect(alerta.textContent).toContain(COMUM.conexaoCaiu)
+    await waitFor(() => expect(itens()).toHaveLength(3))
+    expect(screen.queryByRole('region', { name: 'Código do convite' })).toBeNull()
+    expect(criar).toHaveBeenCalledTimes(1)
+
+    fireEvent.click(within(alerta).getByRole('button', { name: 'Tentar de novo' }))
+    await waitFor(() => expect(itens()).toHaveLength(4))
+    expect(criar).toHaveBeenCalledTimes(2)
+  })
+
+  it('objeto novo (adicionar bebê): a frase de conexão caída e a lista relida com o bebê', async () => {
+    const dados = novaMemoria()
+    simularRespostaPerdida(dados, 'cadastrarBebe')
+    await abrirFamilia('juliana', dados)
+    fireEvent.click(botao('Adicionar bebê'))
+    digitar('Nome ou apelido', 'Mel')
+    digitar('Data de nascimento', somarDias(hoje(), -12))
+    fireEvent.click(botao('Salvar'))
+
+    const alerta = await screen.findByRole('alert')
+    expect(alerta.textContent).toContain(COMUM.conexaoCaiu)
+    expect(await within(screen.getByRole('region', { name: 'Bebês' })).findByText('Mel')).toBeTruthy()
+    expect(within(alerta).getByRole('button', { name: 'Tentar de novo' })).toBeTruthy()
+  })
+
+  it('a região de status é única por tela, no Começar e na Família', async () => {
+    const { unmount } = await abrirFamilia()
+    expect(screen.getAllByRole('status')).toHaveLength(1)
+    unmount()
+
+    renderizarComDados('/app/comecar', { sessao: 'davi' })
+    await screen.findByRole('button', { name: 'Criar uma família' })
+    expect(screen.getAllByRole('status')).toHaveLength(1)
   })
 })
