@@ -37,7 +37,7 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 - [x 9bb370b] P-05 MAT-36r-B: as 6 páginas de texto, aprovada (4639f84) e, com a 36z (4fc2cd4), integrada por merge "Integra o int/refazer na 36r-B e na 36z aprovadas" (check 1298 testes, commits OK, 283) em `int/refazer` (dae75c3..9bb370b); a volta visual segue na 36r-B v2 (P-33) | 11/11
 - [x a8cad7d] P-06 MAT-37r (t_d63c932a): dados, sessão e Auth da 37a sobre a base nova e as telas de acesso e conta; revisão R3 aprovada (741430e) e integrada por merge "Integra o int/refazer na 37r aprovada" (diff conferido, check 1107 testes) em `int/refazer` (c70c2d3..a8cad7d); a volta visual segue na 37r v2 (P-28) | 11/11
 
-- [~ t_0aecd8d2] P-21 MAT-49d: recompor as cenas de marketing com telas do app legíveis (Início, Como funciona, Desenvolvimento, Entrar) e a faixa de cacau sem emenda | depende de 49b g2, 49c, 36r-A e 37r
+- [x 904a071] P-21 MAT-49d: recompor as cenas de marketing com telas do app legíveis (Início, Como funciona, Desenvolvimento, Entrar) e a faixa de cacau sem emenda | depende de 49b g2, 49c, 36r-A e 37r | 49d integrada 11/11 (bcdc89c..904a071, check 1333, commits OK 296)
 - [x] P-22 Calibração dos juízes válida nos 2 (rodada 0 e base49a_r1), com a F7 de até 2 destaques (equipe 14e47ed) | 11/11 11h20, sem SHA (staging)
 
 - [x 9bb370b] P-23 MAT-36z apagou `PaginaSimples.tsx` (sem uso); `SubmenuEmBreve.tsx` segue sem import e não reprova o teste, e fica para a limpeza final | 11/11
