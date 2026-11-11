@@ -29,7 +29,7 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 - [~ t_0aecd8d2] P-21 MAT-49d: recompor as cenas de marketing com as telas novas de Hoje, Sessão e Madrugada (só imagens, mesmos nomes de arquivo) | revisão R1 pediu mudanças (h1 84/88, botões 56 px no CSS do Início, movimento M3, capturas a 2×, 4 testes autorizados no comentário 369); de volta ao executor
 - [x] P-22 Calibração dos juízes válida nos 2 (rodada 0 e base49a_r1), com a F7 de até 2 destaques (equipe 14e47ed) | 11/11 11h20, sem SHA (staging)
 
-- [ ] P-23 Limpeza depois das páginas: apagar `web/src/paginas/publicas/PaginaSimples.tsx` (usada pelas 9 páginas públicas até a 36r-A e a 36r-B integrarem) e `web/src/componentes/casca/SubmenuEmBreve.tsx` (sem uso desde a base), com `apagar:` no cartão | depende de P-08 e da 36r-B
+- [ ] P-23 Limpeza depois das páginas: apagar `web/src/paginas/publicas/PaginaSimples.tsx` (usada pelas 9 páginas públicas até a 36r-A e a 36r-B integrarem) e `web/src/componentes/casca/SubmenuEmBreve.tsx` (sem uso desde a base), com `apagar:` no cartão | revisão R1 pediu mudanças (CTAs cortados a 390 com fonte 200% e zoom 200%, capturas a 2×, 2 testes autorizados no comentário 370); de volta ao executor
 
 - [x] P-24 /sistema é informativa (coordenador, 11/11): não segura a integração da base; achados dos juízes (6,5–7,0) levados aos corpos dos 5 cartões de página | 11/11 11h20
 
@@ -40,13 +40,15 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 - [~ t_347d36de] P-28 Acesso e Conta: volta 1 dos juízes cegos (conta_r1 válida nos 2; acesso_r1 válida no Astra, com a calibração do Fable nula e reprovação independente dele; notas 6,2–7,5). A MAT-37r v2 aplica os itens das telas; a 49d refaz a cena de Entrar | `juizes/rodadas/DEVOLUCAO_37r.md`
 - [~ t_5fc82bb8] P-29 MAT-49e (casco, todas as páginas): marca gigante do rodapé alinhada ao fio da direita e botões primários com 56 px (o `.alvo-toque` do index.css derrubava para 44 px; achado na revisão R1 da 49c) | depois da 49b g2
 
+- [x] P-30 Ferramentas do líder corrigidas em 11/11: `captura/capturar.mjs` e `cdp.mjs` capturam a 2× (antes 1×, e a regra comum pede 2×; testado na 36r-A: innerWidth 390 igual, recortes 810×1688); `rodada/rodada.py` não reprova mais por recibo anterior às capturas que ele mesmo refaz. Avisado aos 5 cartões em curso | sem SHA (staging)
+
 ## Dados ligados às telas novas (religados e soltos em 11/11)
 
 - [x] P-09 Corpos dos 6 cartões abaixo reescritos para a base nova antes do claim (prefixo `FINAL/OVERRIDE_DADOS.md`) e soltos em todo, presos aos pais | 11/11 9h50; sem SHA (é board)
 - [~ t_11ad28e6] P-10 MAT-37b: navegação pelo registro, convite, Começar completo e Família | depende de P-06 e P-09
 - [~ t_f7bdf7e8] P-11 MAT-38a: dados do Hoje, da Sessão e dos 7 formulários | depende de P-04, P-10 e P-09
 - [~ t_7c491177] P-12 MAT-38b: Histórico, detalhe, lixeira e notas | depende de P-11
-- [~ t_c9529365] P-13 MAT-39b: tummy time ligado à rotina | depende de P-08 e P-11
+- [~ t_c9529365] P-13 MAT-39b: tummy time ligado à rotina | revisão R1 pediu mudanças (CTAs cortados a 390 com fonte 200% e zoom 200%, capturas a 2×, 2 testes autorizados no comentário 370); de volta ao executor
 - [~ t_4c921e60] P-14 MAT-40a: Comunidade ligada ao banco, no sistema Campo de mel aprovado para o site inteiro | depende de P-06
 - [~ t_359ab800] P-15 MAT-40b: painel de moderação | depende de P-14
 - [D] P-16 MAT-37g t_1757260d "Entrar com Google" | espera Daniel decidir o Google OAuth; até lá o site mostra "a definir"
