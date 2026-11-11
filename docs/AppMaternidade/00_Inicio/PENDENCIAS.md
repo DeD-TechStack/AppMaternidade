@@ -17,7 +17,7 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 ## Visual novo (Campo de mel)
 
 - [x] P-01 Passo 0: direção aprovada por Daniel (F1 + F2 + F3), `FINAL/DESIGN.md` e ativos gerados | registro 9157f12 e 6c2fb7e
-- [~ t_836284e3] P-02 MAT-49a base | g1 t_fdba5bed escreveu o código (62eab0f, 534 testes) e caiu em triage porque o medidor de tela media o sistema antigo; a g2 t_836284e3 reescreve o medidor, completa as licenças e pede revisão. A g1 fica em triage até o arquivamento ser autorizado (pedido de aprovação expirou às 10h40) | depois: revisão, 2 juízes e ff em `int/refazer`
+- [~ t_836284e3] P-02 MAT-49a base | g1 t_fdba5bed (arquivada 11/11 com aval do coordenador) escreveu o código; a g2 t_836284e3 (head d65dfeb) está em revisão | depois: revisão, 2 juízes e ff em `int/refazer`
 - [x] P-03 Base mostrada a Daniel cedo: `DIRECOES_20261111/GALERIA_BASE.html` aberta e prévia ao vivo em http://127.0.0.1:5281/sistema | 11/11 10h50, sem SHA
 - [~ t_26066f02] P-04 MAT-49b Hoje, Sessão e Madrugada | depende de P-02
 - [~ t_e1d0eaa8] P-05 MAT-36r-B: as 6 páginas de texto | depende de P-02
@@ -26,7 +26,7 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 - [~ t_ee526db4] P-08 MAT-36r-A: Como funciona, Cuidado compartilhado e Desenvolvimento | depende só de P-02 desde 11/11 10h15
 
 - [~ t_0aecd8d2] P-21 MAT-49d: recompor as cenas de marketing com as telas novas de Hoje, Sessão e Madrugada (só imagens, mesmos nomes de arquivo) | depende de P-04, P-06, P-07 e P-08
-- [ ] P-22 Calibração dos juízes: com a regra nova (equipe 531fac0), o Fable é válido na rodada 0; o Astra continua nulo porque não dá nota a imagem com portão falhando ("sem nota" na seção 1). Proposta ao coordenador: no prompt, nota em toda imagem, e rodar de novo só o Astra (`juizes/CALIBRACAO0.md`) | sem os 2 juízes válidos, nenhuma página passa
+- [D coordenador] P-22 Calibração dos juízes: Fable válido. Astra v2 (prompt d008875) dá nota a tudo, mas reprova no F7 os quadros da referência (amarelo e azul) e a F1_home aprovada (mel e oliva), porque a regra pede 'base + 1 destaque'. Proposta: F7 com até 2 destaques de papel fixo, e n/a nos quadros da referência (`juizes/CALIBRACAO0.md`) | sem os 2 juízes válidos, nenhuma página passa
 
 - [ ] P-23 Limpeza depois das páginas: apagar `web/src/paginas/publicas/PaginaSimples.tsx` (usada pelas 9 páginas públicas até a 36r-A e a 36r-B integrarem) e `web/src/componentes/casca/SubmenuEmBreve.tsx` (sem uso desde a base), com `apagar:` no cartão | depende de P-08 e da 36r-B
 
