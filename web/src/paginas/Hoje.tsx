@@ -199,8 +199,10 @@ export function Hoje() {
 
   // Madrugada: o histórico sobe para logo depois do botão (no celular, a primeira linha aparece antes da
   // dobra), e os números vêm depois dele.
+  // No celular a barra fixa começa em 763 px (844 de altura): 16 px sob o título e 20 px entre os blocos
+  // (antes 24 e 32, 32 px a menos acima do histórico) para a primeira linha inteira terminar acima dela.
   const madrugadaComSessao = (
-    <div className="cm-area mt-6 grid grid-cols-1 gap-8 lg:mt-10 lg:grid-cols-12 lg:items-start lg:gap-x-8 lg:gap-y-12">
+    <div className="cm-area mt-4 grid grid-cols-1 gap-5 lg:mt-10 lg:grid-cols-12 lg:items-start lg:gap-x-8 lg:gap-y-12">
       {blocoCartao('lg:col-span-8 lg:col-start-1 lg:row-start-1')}
       {noite ? (
         <BotaoIniciarMamada

@@ -222,17 +222,20 @@ describe('Hoje: Desde que você saiu', () => {
 
     const linhas = within(within(regiao('Desde que você saiu')).getByRole('list')).getAllByRole('listitem')
     for (const li of linhas) {
-      expect(li.classList.contains('whitespace-nowrap')).toBe(true)
+      const fila = li.querySelector<HTMLElement>('[data-fila]')!
+      expect(fila.classList.contains('whitespace-nowrap')).toBe(true)
       const tipo = li.querySelector('p')!
-      expect(tipo.classList.contains('truncate')).toBe(true)
+      const botao = tipo.querySelector('button[data-abrir-linha]')!
+      expect(botao.classList.contains('truncate')).toBe(true)
       expect(tipo.getAttribute('title')).toBe(tipo.textContent)
     }
     // A mamada: 07:50 à esquerda, "18 min" à direita (enfeite), e o parágrafo diz tudo.
     const mamada = linhas[2]
     expect(mamada.querySelector('p')!.textContent).toBe('Mamada, lado esquerdo, 18 min')
-    expect(within(mamada).getByText('18 min', { selector: '[aria-hidden="true"]' })).toBeTruthy()
-    const filhos = [...mamada.children]
-    expect(filhos.indexOf(within(mamada).getByText('07:50'))).toBeLessThan(filhos.indexOf(within(mamada).getByText('18 min', { selector: '[aria-hidden="true"]' })))
+    const filhos = [...mamada.querySelector('[data-fila]')!.children]
+    const duracao = within(mamada).getByText('18 min', { selector: '[aria-hidden="true"]' })
+    expect(filhos.indexOf(within(mamada).getByText('07:50'))).toBeLessThan(filhos.indexOf(duracao))
+    expect(filhos.at(-1)).toBe(duracao)
   })
 
   it('a duração da sessão na lista sobe a cada minuto e a linha some ao encerrar', () => {
@@ -395,6 +398,24 @@ describe('Hoje: madrugada', () => {
     const grande = screen.getByRole('button', { name: 'Iniciar mamada' })
     expect(grande.closest('[data-iniciar-mamada]')!.hasAttribute('data-compacto')).toBe(false)
     expect(grande.classList.contains('size-[13rem]')).toBe(true)
+  })
+
+  it('no celular, com o sono em andamento, o histórico sobe: grade com 20 px entre blocos e 16 px sob o título (antes 32 e 24)', () => {
+    const { container } = renderizarRota('/app/hoje', { estadoInicial: madrugada() })
+
+    const grade = cartao(container).parentElement!
+    expect(grade.contains(regiao('Desde que você saiu'))).toBe(true)
+    for (const classe of ['gap-5', 'mt-4', 'lg:mt-10', 'lg:gap-y-12']) expect(grade.classList.contains(classe), classe).toBe(true)
+    for (const classe of ['gap-8', 'mt-6']) expect(grade.classList.contains(classe), classe).toBe(false)
+    // Nenhum alvo encolhe: o círculo continua com 7 rem e o Encerrar com o alvo do app.
+    expect(screen.getByRole('button', { name: 'Iniciar mamada' }).classList.contains('size-[7rem]')).toBe(true)
+  })
+
+  it('o ajuste é só da madrugada com sessão: de dia a grade mantém 40 px entre blocos', () => {
+    const { container } = renderizarRota('/app/hoje', { estadoInicial: claro() })
+
+    const grade = cartao(container).parentElement!
+    for (const classe of ['gap-10', 'mt-6']) expect(grade.classList.contains(classe), classe).toBe(true)
   })
 
   it('com uma mamada em andamento o botão redondo some (o cartão já mostra a mamada)', () => {

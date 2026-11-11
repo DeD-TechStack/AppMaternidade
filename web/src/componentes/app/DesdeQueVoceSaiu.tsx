@@ -1,4 +1,4 @@
-import { useId } from 'react'
+import { useId, useState } from 'react'
 import { Avatar } from './Avatar.tsx'
 
 export interface ItemDesde {
@@ -36,6 +36,79 @@ function separarDuracao(texto: string): { tipo: string; duracao: string | null }
 
 const DIREITA = 'shrink-0 text-[15px] leading-[22px] whitespace-nowrap tabular-nums'
 
+// O texto da linha é o controle que abre a linha inteira: botão nativo (Enter e Espaço ativam), com o
+// alvo do app (44 px; 56 px na madrugada, pela --alvo-toque) e o anel de foco do sistema. Fechado, corta
+// com reticências; o nome acessível é o texto inteiro, uma vez só.
+const CONTROLE =
+  'alvo-toque block min-h-[max(44px,var(--alvo-toque))] w-full truncate rounded-[6px] text-left leading-[max(44px,var(--alvo-toque))] font-medium underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--cor-foco)'
+
+/**
+ * Uma linha do histórico. Com `hora`, o leiaute novo: hora e tipo à esquerda e a duração (a do fim do
+ * texto, ou a pílula da sessão) à direita. Sem `hora`, o contrato de antes: o texto inteiro à esquerda e o
+ * `quando` à direita (a pílula de mel na sessão). Nos dois casos, tocar no texto abre, logo abaixo da
+ * fileira e na mesma linguagem de fio fino, o texto inteiro e o detalhe numa linha que quebra.
+ */
+function LinhaDesde({ item }: { item: ItemDesde }) {
+  const [aberta, setAberta] = useState(false)
+  const idAberta = useId()
+  const comHora = item.hora !== undefined
+  // A duração só sai do texto no leiaute com hora; sem hora, o texto fica como veio.
+  const { tipo, duracao } = comHora ? separarDuracao(item.texto) : { tipo: item.texto, duracao: null }
+
+  const direita = item.emAndamento ? (
+    <span className={`${DIREITA} rounded-pilula bg-mel px-2.5 py-0.5 font-medium text-cacau`}>{item.quando}</span>
+  ) : !comHora ? (
+    <span className={`${DIREITA} text-(--cor-texto-2)`}>{item.quando}</span>
+  ) : duracao ? (
+    <span aria-hidden="true" className={`${DIREITA} text-(--cor-texto-2)`}>
+      {duracao}
+    </span>
+  ) : null
+
+  return (
+    <li data-linha-desde="" className="border-b border-(--cor-fio-suave)">
+      <div data-fila="" className="flex min-h-14 items-center gap-2.5 whitespace-nowrap lg:gap-4">
+        <Avatar nome={item.pessoa} />
+        {comHora ? (
+          <span className="w-[2.75rem] shrink-0 text-[15px] leading-[22px] text-(--cor-texto-2) tabular-nums">{item.hora}</span>
+        ) : null}
+        <div className="flex min-w-0 flex-1 items-center gap-2.5">
+          <p className="min-w-0 flex-1 lg:flex-initial" title={item.texto}>
+            <button
+              type="button"
+              data-abrir-linha=""
+              aria-expanded={aberta}
+              aria-controls={aberta ? idAberta : undefined}
+              className={CONTROLE}
+              onClick={() => setAberta(!aberta)}
+            >
+              {tipo}
+              {duracao ? <span className="sr-only">{`, ${duracao}`}</span> : null}
+            </button>
+          </p>
+          <p
+            className="min-w-0 shrink-[2] truncate text-[15px] leading-[22px] text-(--cor-texto-2) max-lg:sr-only"
+            title={item.detalhe}
+          >
+            {item.detalhe}
+          </p>
+        </div>
+        {direita}
+      </div>
+      {aberta ? (
+        <div
+          id={idAberta}
+          data-linha-aberta=""
+          className="pb-3 pl-[2.625rem] text-[15px] leading-[22px] whitespace-normal [overflow-wrap:anywhere] lg:pl-14"
+        >
+          <p className="font-medium text-(--cor-texto)">{item.texto}</p>
+          <p className="text-(--cor-texto-2)">{item.detalhe}</p>
+        </div>
+      ) : null}
+    </li>
+  )
+}
+
 /**
  * "Desde que você saiu" (DESIGN.md 4, telas do app): o que a família registrou, do mais novo ao mais
  * antigo. A mesma linguagem do resto da área da lista: linhas separadas por um fio fino, sem cartão.
@@ -54,44 +127,9 @@ export function DesdeQueVoceSaiu({ itens, className }: Props) {
         <p className="mt-3 border-y border-(--cor-fio-suave) py-4 text-(--cor-texto-2)">Nada novo por aqui.</p>
       ) : (
         <ul className="mt-3 border-t border-(--cor-fio-suave) lg:mt-4">
-          {itens.map((item) => {
-            const { tipo, duracao } = separarDuracao(item.texto)
-            return (
-              <li
-                key={item.chave}
-                data-linha-desde=""
-                className="flex min-h-14 items-center gap-2.5 border-b border-(--cor-fio-suave) py-2 whitespace-nowrap lg:gap-4"
-              >
-                <Avatar nome={item.pessoa} />
-                {item.hora ? (
-                  <span className="w-[2.75rem] shrink-0 text-[15px] leading-[22px] text-(--cor-texto-2) tabular-nums">
-                    {item.hora}
-                  </span>
-                ) : null}
-                <div className="flex min-w-0 flex-1 items-baseline gap-2.5">
-                  <p className="min-w-0 truncate font-medium" title={item.texto}>
-                    {tipo}
-                    {duracao ? <span className="sr-only">{`, ${duracao}`}</span> : null}
-                  </p>
-                  <p
-                    className="min-w-0 shrink-[2] truncate text-[15px] leading-[22px] text-(--cor-texto-2) max-lg:sr-only"
-                    title={item.detalhe}
-                  >
-                    {item.detalhe}
-                  </p>
-                </div>
-                {item.emAndamento ? (
-                  <span className={`${DIREITA} rounded-pilula bg-mel px-2.5 py-0.5 font-medium text-cacau`}>{item.quando}</span>
-                ) : duracao ? (
-                  <span aria-hidden="true" className={`${DIREITA} text-(--cor-texto-2)`}>
-                    {duracao}
-                  </span>
-                ) : item.hora ? null : (
-                  <span className={`${DIREITA} text-(--cor-texto-2)`}>{item.quando}</span>
-                )}
-              </li>
-            )
-          })}
+          {itens.map((item) => (
+            <LinhaDesde key={item.chave} item={item} />
+          ))}
         </ul>
       )}
     </section>
