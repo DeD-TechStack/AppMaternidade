@@ -26,7 +26,7 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 - [~ t_ee526db4] P-08 MAT-36r-A: Como funciona, Cuidado compartilhado e Desenvolvimento | depende só de P-02 desde 11/11 10h15
 
 - [~ t_0aecd8d2] P-21 MAT-49d: recompor as cenas de marketing com as telas novas de Hoje, Sessão e Madrugada (só imagens, mesmos nomes de arquivo) | depende de P-04, P-06, P-07 e P-08
-- [ ] P-22 Calibração dos juízes: a rodada 0 (`DIRECOES_20261111/juizes/CALIBRACAO0.md`) é nula porque a rubrica reprova a própria referência em F6 e F9; a proposta de ajuste vai ao coordenador, dono da rubrica | sem ela, nenhuma nota de candidato vale
+- [ ] P-22 Calibração dos juízes: com a regra nova (equipe 531fac0), o Fable é válido na rodada 0; o Astra continua nulo porque não dá nota a imagem com portão falhando ("sem nota" na seção 1). Proposta ao coordenador: no prompt, nota em toda imagem, e rodar de novo só o Astra (`juizes/CALIBRACAO0.md`) | sem os 2 juízes válidos, nenhuma página passa
 
 ## Dados ligados às telas novas (religados e soltos em 11/11)
 
