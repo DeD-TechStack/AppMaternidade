@@ -326,11 +326,23 @@ export function fontes(nos) {
 // ---------------------------------------------------------------------------------------------
 // CAIXA
 
-/** As palavras do texto com 4 ou mais maiúsculas seguidas (acentuadas também), menos as siglas permitidas. */
+/**
+ * As palavras do texto com 4 ou mais maiúsculas seguidas (acentuadas também), menos as siglas
+ * permitidas. Não são rótulo em caixa alta, e ficam de fora: um código de cor hexadecimal (`#` e 3,
+ * 4, 6 ou 8 dígitos hexa, em qualquer caixa, como item inteiro) e qualquer item com dígito
+ * (`H1`, `A11Y`, `#2B2320`). Os itens são os separados por espaço, sem a pontuação das pontas.
+ */
 export function palavrasEmCaixaAlta(texto) {
   if (typeof texto !== 'string') return []
-  const palavras = texto.match(/[\p{L}\p{M}]+/gu) ?? []
-  return palavras.filter((palavra) => /\p{Lu}{4,}/u.test(palavra) && !SIGLAS_PERMITIDAS.includes(palavra))
+  const achadas = []
+  for (const item of texto.split(/\s+/)) {
+    const limpo = item.replace(/^[^\p{L}\p{N}#]+/u, '').replace(/[^\p{L}\p{N}]+$/u, '')
+    if (limpo === '' || /\p{N}/u.test(limpo) || /^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(limpo)) continue
+    for (const palavra of limpo.match(/[\p{L}\p{M}]+/gu) ?? []) {
+      if (/\p{Lu}{4,}/u.test(palavra) && !SIGLAS_PERMITIDAS.includes(palavra)) achadas.push(palavra)
+    }
+  }
+  return achadas
 }
 
 /** CAIXA: nada em caixa alta, nem por `text-transform: uppercase` nem pela grafia (siglas da lista à parte). */

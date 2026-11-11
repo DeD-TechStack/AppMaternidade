@@ -319,6 +319,22 @@ describe('CAIXA: nada em caixa alta', () => {
     assert.deepEqual(palavrasEmCaixaAlta(undefined), [])
   })
 
+  it('um código de cor hexadecimal e um identificador com dígito não são rótulo em caixa alta', () => {
+    for (const texto of ['#EADDC5', '#FFFFFF', '#fff', '#2B2320', '#ABCDEF', '#ABCD', '#ABCDEF12', 'A11Y', 'H1', 'Cor #F7D684 do mel', 'Cor (#EADDC5), #FFFFFF.']) {
+      const r = caixa([criar({ texto })])
+      assert.equal(r.ok, true, `${texto}: ${r.motivo}`)
+      assert.deepEqual(palavrasEmCaixaAlta(texto), [], texto)
+    }
+  })
+
+  it('uma palavra comum em caixa alta continua reprovando, e a lista de siglas não cresce', () => {
+    for (const texto of ['HTML', 'Cena de HTML pura', 'TEXTO', 'Cor #EADDC5 e TEXTO', '#EADDC5 HTML']) {
+      assert.equal(caixa([criar({ texto })]).ok, false, texto)
+    }
+    assert.deepEqual(palavrasEmCaixaAlta('Cena de HTML pura'), ['HTML'])
+    assert.deepEqual(SIGLAS_PERMITIDAS, ['RN', 'SBP', 'LGPD', 'OMS'])
+  })
+
   it('falha fechado: nenhum nó com texto, text-transform ausente e nó sem estilo', () => {
     assert.equal(caixa([criar({ texto: '' })]).ok, false)
     assert.equal(caixa([]).ok, false)
