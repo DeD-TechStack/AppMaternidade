@@ -64,12 +64,12 @@ export function Comecar() {
 
   return (
     <MolduraLogada>
-      <DuasColunas>
+      <DuasColunas ilustracao="tummy-time">
         <Manchete linhas={MANCHETES.comecar} refTitulo={titulo} />
         <RegiaoStatus mensagem={textoDaPassagem(location.state)} />
         <section
           aria-labelledby="titulo-seu-nome"
-          className="flex max-w-[32rem] flex-col gap-4 rounded-cartao border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)] p-6 lg:p-8"
+          className="mt-2 flex max-w-[32rem] flex-col gap-4 rounded-cartao lg:mt-6 border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)] p-6 lg:p-8"
         >
           <h2 id="titulo-seu-nome" className="cm-h4">
             {COMECAR.titulo}
