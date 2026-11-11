@@ -23,15 +23,15 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 - [~ t_3c6e3a0c] P-07 MAT-49c Início com cenas das telas reais | depende de P-02 e P-04
 - [~ t_ee526db4] P-08 MAT-36r-A: Como funciona, Cuidado compartilhado e Desenvolvimento | depende de P-02 e P-04
 
-## Dados ligados às telas novas (cartões em `scheduled`, religados em 11/11)
+## Dados ligados às telas novas (religados e soltos em 11/11)
 
-- [ ] P-09 Reescrever o corpo de cada cartão abaixo para a base nova, ainda sem claim (`edit --body`), e dar `unblock`
-- [ ] P-10 MAT-37b t_11ad28e6: navegação pelo registro, convite, Começar completo e Família | depende de P-06 e P-09
-- [ ] P-11 MAT-38a t_f7bdf7e8: dados do Hoje, da Sessão e dos 7 formulários | depende de P-04, P-10 e P-09
-- [ ] P-12 MAT-38b t_7c491177: Histórico, detalhe, lixeira e notas | depende de P-11
-- [ ] P-13 MAT-39b t_c9529365: tummy time ligado à rotina | depende de P-08 e P-11
-- [ ] P-14 MAT-40a t_4c921e60: Comunidade ligada ao banco (as telas da Comunidade ainda não têm direção própria: usar o DESIGN.md e mostrar a Daniel antes do código, pela regra do passo 0) | depende de P-06
-- [ ] P-15 MAT-40b t_359ab800: painel de moderação | depende de P-14
+- [x] P-09 Corpos dos 6 cartões abaixo reescritos para a base nova antes do claim (prefixo `FINAL/OVERRIDE_DADOS.md`) e soltos em todo, presos aos pais | 11/11 9h50; sem SHA (é board)
+- [~ t_11ad28e6] P-10 MAT-37b: navegação pelo registro, convite, Começar completo e Família | depende de P-06 e P-09
+- [~ t_f7bdf7e8] P-11 MAT-38a: dados do Hoje, da Sessão e dos 7 formulários | depende de P-04, P-10 e P-09
+- [~ t_7c491177] P-12 MAT-38b: Histórico, detalhe, lixeira e notas | depende de P-11
+- [~ t_c9529365] P-13 MAT-39b: tummy time ligado à rotina | depende de P-08 e P-11
+- [~ t_4c921e60] P-14 MAT-40a: Comunidade ligada ao banco, no sistema Campo de mel aprovado para o site inteiro | depende de P-06
+- [~ t_359ab800] P-15 MAT-40b: painel de moderação | depende de P-14
 - [D] P-16 MAT-37g t_1757260d "Entrar com Google" | espera Daniel decidir o Google OAuth; até lá o site mostra "a definir"
 
 ## Fechamento
