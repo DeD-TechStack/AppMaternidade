@@ -1508,7 +1508,7 @@ describe('E-3: sem borda nos 4 lados e o fio de 1 px de c2 a c9', () => {
   })
 })
 
-describe('E-4: o botão de envio termina em y ≤ 720 (660 em 390)', () => {
+describe('E-4: o botão de envio termina em y ≤ 720 (678 em 390, 666 no Começar; emendados pelo líder em 11/11)', () => {
   it('passa em 1440 (fim em 690) e em 390 (fim em 640)', () => {
     assert.equal(e4([botaoEnvio({ x: 472, y: 610, w: 300, h: 80 })], doc1440).ok, true)
     assert.equal(e4([botaoEnvio({ x: 16, y: 576, w: 343, h: 64 })], doc390).ok, true)
@@ -1522,8 +1522,27 @@ describe('E-4: o botão de envio termina em y ≤ 720 (660 em 390)', () => {
   it('borda: termina em y=720 passa e em 721 falha; o limite de 390 é outro', () => {
     assert.equal(e4([botaoEnvio({ x: 0, y: 640, w: 300, h: 80 })], doc1440).ok, true)
     assert.equal(e4([botaoEnvio({ x: 0, y: 641, w: 300, h: 80 })], doc1440).ok, false)
-    assert.equal(e4([botaoEnvio({ x: 0, y: 596, w: 300, h: 64 })], doc390).ok, true)
-    assert.equal(e4([botaoEnvio({ x: 0, y: 600, w: 300, h: 64 })], doc390).ok, false)
+    assert.equal(e4([botaoEnvio({ x: 0, y: 614, w: 300, h: 64 })], doc390).ok, true)
+    assert.equal(e4([botaoEnvio({ x: 0, y: 615, w: 300, h: 64 })], doc390).ok, false)
+  })
+
+  it('390, E-4/B-4 emendados pelo líder em 11/11: termina em y=678 passa e em 679 falha (o limite antigo, 660, não vale mais)', () => {
+    assert.equal(e4([botaoEnvio({ x: 0, y: 614, w: 300, h: 64 })], doc390, 'entrar').ok, true)
+    assert.equal(e4([botaoEnvio({ x: 0, y: 615, w: 300, h: 64 })], doc390, 'entrar').ok, false)
+    assert.equal(e4([botaoEnvio({ x: 0, y: 596, w: 300, h: 64 })], doc390, 'entrar').ok, true)
+    assert.match(e4([botaoEnvio({ x: 0, y: 614, w: 300, h: 64 })], doc390, 'entrar').motivo, /máximo 678/)
+  })
+
+  it('390 no Começar (B-4): termina em y=666 passa e em 667 falha; o limite do Entrar (678) não vale nele', () => {
+    assert.equal(e4([botaoEnvio({ x: 0, y: 602, w: 300, h: 64 })], doc390, 'comecar_seu_nome').ok, true)
+    assert.equal(e4([botaoEnvio({ x: 0, y: 603, w: 300, h: 64 })], doc390, 'comecar_seu_nome').ok, false)
+    assert.equal(e4([botaoEnvio({ x: 0, y: 614, w: 300, h: 64 })], doc390, 'comecar_seu_nome').ok, false)
+    assert.match(e4([botaoEnvio({ x: 0, y: 602, w: 300, h: 64 })], doc390, 'comecar_seu_nome').motivo, /máximo 666/)
+  })
+
+  it('em 1440 o caso não muda o limite (720)', () => {
+    assert.equal(e4([botaoEnvio({ x: 0, y: 640, w: 300, h: 80 })], doc1440, 'comecar_seu_nome').ok, true)
+    assert.equal(e4([botaoEnvio({ x: 0, y: 641, w: 300, h: 80 })], doc1440, 'comecar_seu_nome').ok, false)
   })
 
   it('falha fechado: sem botão de envio, botão oculto ou sem retângulo', () => {

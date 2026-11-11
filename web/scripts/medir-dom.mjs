@@ -823,12 +823,17 @@ export function e3(nos, doc) {
   })
 }
 
-/** E-4: o botão de envio termina em y ≤ 720 (1440×900) ou y ≤ 660 (390×844). */
-export function e4(nos, doc) {
+/**
+ * E-4 (B-4 no Começar): o botão de envio termina em y ≤ 720 (1440×900) ou, em 390×844, y ≤ 678 (666 no Começar).
+ * E-4/B-4 em 390 emendados pelo líder em 11/11: o vão entre as linhas subiu de 24 para 40 px (e o vão até o botão, de 32 para 40)
+ * para o erro de campo ter 16 px até o que vem depois (D5-erro); o limite era 660 e passa a 678 no Entrar e 666 no Começar.
+ * Sem `caso` (as chamadas antigas) vale o de 678.
+ */
+export function e4(nos, doc, caso) {
   return comDoc('E-4', doc, () => {
     const botao = botaoDoFormulario(nos)
     if (!botao) return falhaFechada('E-4', 'nenhum botão de envio (main form button[type=submit])')
-    const limite = celularDe(doc) ? 660 : 720
+    const limite = celularDe(doc) ? (caso === 'comecar_seu_nome' ? 666 : 678) : 720
     const fim = botao.rect.y + botao.rect.h
     const ok = fim <= limite + 0.5
     return {
@@ -1977,7 +1982,7 @@ const REGRAS_DE_TELA = {
   'E-1': ({ nos, doc }) => e1(nos, doc),
   'E-2': ({ nos, doc }) => e2(nos, doc),
   'E-3': ({ nos, doc }) => e3(nos, doc),
-  'E-4': ({ nos, doc }) => e4(nos, doc),
+  'E-4': ({ nos, doc, caso }) => e4(nos, doc, caso),
   'E-5': ({ nos, doc }) => e5(nos, doc),
   'E-6': ({ nos, doc }) => e6(nos, doc),
   'E-7': ({ doc, tema }) => e7(doc, tema),
