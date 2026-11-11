@@ -425,24 +425,26 @@
   max-width: 30rem;
 }
 
-/* A cena é o painel da própria faixa, não uma caixa solta: ela vai até as bordas da faixa (de baixo
-   e dos lados no celular; de cima, da direita e de baixo no largo). O fundo dela é um cacau um pouco
-   mais quente; colada nas bordas, a troca de tom vira a divisão da faixa em duas metades. O
-   recipiente da revelação passa a cobrir o painel inteiro (o respiro vira padding dele), e o raio
-   e o overflow do painel cortam os cantos. */
+/* No largo (>= 960) a cena é a metade direita da própria faixa: vai até as bordas de cima, da direita
+   e de baixo, e a troca de tom vira a divisão da faixa em duas metades. O recipiente da revelação
+   passa a cobrir o painel inteiro (o respiro vira padding dele), e o raio e o overflow do painel
+   cortam os cantos. Abaixo de 960 a foto fica na coluna do texto (POL:RF-05: começa no x do título),
+   dentro do respiro do painel, com o raio das fotos da página; embaixo sobra o mesmo respiro de cima. */
 .in-faixa .cm-faixa-conteudo {
   margin: calc(-1 * var(--cm-respiro-painel));
   padding: var(--cm-respiro-painel);
-}
-
-.in-faixa-foto {
-  margin: 0 calc(-1 * var(--cm-respiro-painel)) calc(-1 * var(--cm-respiro-painel));
 }
 
 .in-faixa-foto .in-foto {
   aspect-ratio: 3 / 2;
   object-fit: cover;
   object-position: 50% 45%;
+}
+
+@media (max-width: 959px) {
+  .in-faixa-foto .in-foto {
+    border-radius: var(--radius-painel);
+  }
 }
 
 @media (min-width: 960px) {
