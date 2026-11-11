@@ -53,7 +53,7 @@ describe('o passo "Seu nome"', () => {
 
     // Uma coluna no celular (o cartão primeiro, a cena depois); duas a partir de 64 rem.
     const grade = h1.parentElement!.parentElement!
-    for (const classe of ['grid', 'gap-12', 'lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]', 'lg:gap-16']) {
+    for (const classe of ['grid', 'gap-12', 'lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]', 'lg:gap-12']) {
       expect(grade.classList.contains(classe), classe).toBe(true)
     }
     const [esquerda, direita] = [...grade.children]

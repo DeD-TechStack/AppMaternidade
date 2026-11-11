@@ -88,6 +88,7 @@ export function Comecar() {
               rotulo={COMUM.rotuloNome}
               ajuda={COMUM.ajudaNome}
               autoComplete="name"
+              tamanho="app"
               valor={nome}
               aoMudar={(valor) => {
                 setNome(valor)
@@ -99,6 +100,7 @@ export function Comecar() {
             <SeletorFuso
               rotulo={COMECAR.fuso}
               ajuda={COMECAR.ajudaFuso}
+              tamanho="app"
               valor={fuso}
               aoMudar={setFuso}
               erro={campoDoErro === 'fuso' && erroDoEnvio ? textoDoErro(erroDoEnvio) : null}
