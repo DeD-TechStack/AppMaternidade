@@ -34,13 +34,13 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 - [x] P-25 49b, 49c, 36r-A e 37r soltos sobre o head d65dfeb com aval do coordenador (t_7326afbf); 5 cartões rodando juntos às 11h30 (4 páginas + revisão R2 da g2) | 11/11, sem SHA (board)
 - [x] P-03 Base mostrada a Daniel cedo: `DIRECOES_20261111/GALERIA_BASE.html` aberta e prévia ao vivo em http://127.0.0.1:5281/sistema | 11/11 10h50, sem SHA
 - [x b234554] P-04 MAT-49b g2 (t_606fb2fb) Hoje, Sessão e Madrugada: revisão R3 aprovada (aa89a29) e integrada por merge "Integra o int/refazer na 49b g2 aprovada" (diff conferido, check 546 testes; testes de Hoje/Sessão trocados pelo redesenho, revistos) em `int/refazer` (35f95de..b234554); a volta visual segue na 49b v2 (P-32) | 11/11
-- [~ t_e5d2f44a] P-05 MAT-36r-B: revisão R3 aprovada (4639f84); merge de integração c199686 (local, ramo `int/integra-36rB`) espera a MAT-36z para passar no check (1295/1296)
+- [x 9bb370b] P-05 MAT-36r-B: as 6 páginas de texto, aprovada (4639f84) e, com a 36z (4fc2cd4), integrada por merge "Integra o int/refazer na 36r-B e na 36z aprovadas" (check 1298 testes, commits OK, 283) em `int/refazer` (dae75c3..9bb370b); a volta visual segue na 36r-B v2 (P-33) | 11/11
 - [x a8cad7d] P-06 MAT-37r (t_d63c932a): dados, sessão e Auth da 37a sobre a base nova e as telas de acesso e conta; revisão R3 aprovada (741430e) e integrada por merge "Integra o int/refazer na 37r aprovada" (diff conferido, check 1107 testes) em `int/refazer` (c70c2d3..a8cad7d); a volta visual segue na 37r v2 (P-28) | 11/11
 
 - [~ t_0aecd8d2] P-21 MAT-49d: recompor as cenas de marketing com telas do app legíveis (Início, Como funciona, Desenvolvimento, Entrar) e a faixa de cacau sem emenda | depende de 49b g2, 49c, 36r-A e 37r
 - [x] P-22 Calibração dos juízes válida nos 2 (rodada 0 e base49a_r1), com a F7 de até 2 destaques (equipe 14e47ed) | 11/11 11h20, sem SHA (staging)
 
-- [~ t_e5d2f44a] P-23 MAT-36z apaga `PaginaSimples.tsx`, que ficou sem uso depois da 36r-A e da 36r-B; o teste de exportações reprova o merge c199686 da 36r-B sem isso. `SubmenuEmBreve.tsx` continua sem import, mas não reprova no teste; fica para a limpeza final
+- [x 9bb370b] P-23 MAT-36z apagou `PaginaSimples.tsx` (sem uso); `SubmenuEmBreve.tsx` segue sem import e não reprova o teste, e fica para a limpeza final | 11/11
 
 - [x] P-24 /sistema é informativa (coordenador, 11/11): não segura a integração da base; achados dos juízes (6,5–7,0) levados aos corpos dos 5 cartões de página | 11/11 11h20
 
