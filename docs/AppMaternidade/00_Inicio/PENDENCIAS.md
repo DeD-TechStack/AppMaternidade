@@ -61,7 +61,7 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 
 - [x c70c2d3] P-34 MAT-48c (t_48aa413e): política de commits aceita só os merges "Traz/Integra o int/refazer" de Daniel; aprovada (64a8054) e integrada (b234554..c70c2d3). `verificar-commits c7142bb..HEAD` = OK, 252 commits | 11/11
 
-- [~ t_5edde38a] P-35 MAT-48d: a política de commits aceita só o merge aprovado 81504a7 da 37a (lista explícita de SHAs). Sem isso, a CI de `int/refazer` volta a ficar vermelha desde a8cad7d
+- [x 8e0a1f6] P-35 MAT-48d (t_5edde38a): `MERGES_APROVADOS` com só o 81504a7; aprovada e integrada por fast-forward (a8cad7d..8e0a1f6). `verificar-commits c7142bb..HEAD` = OK, 271 commits | 11/11
 
 - [D coordenador] P-36 Cinco revisões voltaram hoje só por prova de entrega: faltava a leitura das capturas finais, o VISTO do SHA entregue, o JSON da rodada ou os commits no intervalo real. Proposta ao núcleo (campainha t_92fd56a8): o `rodada.py` ganha uma etapa de leitura e a verificação de commits
 
