@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
-import { Link, NavLink } from 'react-router'
+import { NavLink } from 'react-router'
 import { CABECALHO, COMUM } from '../../conteudo/conta.ts'
 import type { ErroDados } from '../../dados/comum.ts'
 import { AvisoDemonstracao } from '../AvisoDemonstracao.tsx'
@@ -42,8 +42,8 @@ interface Props {
 // A moldura das telas logadas desta tarefa, dentro do cabeçalho e do rodapé da casca (a marca, o
 // "Modo madrugada" e o resto do cabeçalho são dela; o rodapé do app não traz o aviso de demonstração):
 // o que a conta precisa a mais, o aviso de demonstração (só sem banco), uma barra fina de 1 px embaixo
-// com o link da Conta, o do protótipo do Hoje e o "Sair", o resumo de uma saída que falhou e o `<main>`.
-// Não monta a navegação inferior do protótipo.
+// com o link da Conta e o "Sair", o resumo de uma saída que falhou e o `<main>`. A navegação entre
+// as telas (Hoje, Sessão, Família) é a do cabeçalho do site.
 export function MolduraLogada({ ocupado = false, children }: Props) {
   const { sair } = useSessao()
   const [saindo, setSaindo] = useState(false)
@@ -83,9 +83,6 @@ export function MolduraLogada({ ocupado = false, children }: Props) {
             >
               {CABECALHO.conta}
             </NavLink>
-            <Link to="/app/hoje" className={LINK_DA_BARRA}>
-              {CABECALHO.prototipo}
-            </Link>
           </div>
           <BotaoSair />
         </nav>

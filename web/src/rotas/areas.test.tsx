@@ -55,7 +55,7 @@ describe('rotasDasAreas: o registro por área', () => {
     ])
   })
 
-  it('as cinco áreas exportam as duas listas; só a de conta tem rotas na 37a', () => {
+  it('as cinco áreas exportam as duas listas; só a de conta tem rotas', () => {
     for (const lista of [
       rotasRotinaPublicas,
       rotasRotinaLogadas,
@@ -68,8 +68,15 @@ describe('rotasDasAreas: o registro por área', () => {
     ]) {
       expect(lista).toEqual([])
     }
-    expect(rotasContaPublicas.map(caminhoDe)).toEqual(['entrar', 'criar-conta', 'recuperar-acesso', 'redefinir-senha', 'conta-excluida'])
-    expect(rotasContaLogadas.map(caminhoDe)).toEqual(['app/comecar', 'app/conta'])
+    expect(rotasContaPublicas.map(caminhoDe)).toEqual([
+      'entrar',
+      'criar-conta',
+      'recuperar-acesso',
+      'redefinir-senha',
+      'conta-excluida',
+      'convite',
+    ])
+    expect(rotasContaLogadas.map(caminhoDe)).toEqual(['app/comecar', 'app/conta', 'app/familia'])
   })
 
   it('cada rota tem o título da aba fixo, "<h1> | AppMaternidade"', () => {
@@ -80,8 +87,10 @@ describe('rotasDasAreas: o registro por área', () => {
       'Recuperar acesso | AppMaternidade',
       'Nova senha | AppMaternidade',
       'Conta excluída | AppMaternidade',
+      'Convite | AppMaternidade',
       'Começar | AppMaternidade',
       'Conta | AppMaternidade',
+      'Família | AppMaternidade',
     ])
     expect(tituloDaAba(TITULOS.conta)).toBe('Conta | AppMaternidade')
   })
@@ -131,7 +140,7 @@ describe('as rotas do protótipo continuam fora do provedor e da guarda', () => 
     await screen.findByRole('heading', { level: 1, name: 'Conta' })
     expect(screen.getByText('Juliana · juliana@exemplo.invalid')).toBeTruthy()
 
-    fireEvent.click(screen.getByRole('link', { name: 'Ver o protótipo do Hoje' }))
+    fireEvent.click(screen.getByRole('link', { name: 'Hoje' }))
     expect((await screen.findByRole('heading', { level: 1 })).textContent).toBe('Hoje')
     expect(document.title).toBe('Título de antes')
 
@@ -164,7 +173,9 @@ describe('as rotas logadas só abrem com sessão; as públicas, sempre', () => {
       ['/recuperar-acesso', TITULOS.recuperarAcesso, NOMES_DO_H1.recuperarAcesso, null],
       ['/redefinir-senha', TITULOS.redefinirSenha, NOMES_DO_H1.redefinirSenha, null],
       ['/conta-excluida', TITULOS.contaExcluida, NOMES_DO_H1.contaExcluida, null],
+      ['/convite', TITULOS.convite, NOMES_DO_H1.convite, null],
       ['/app/conta', TITULOS.conta, 'Conta', 'juliana'],
+      ['/app/familia', TITULOS.familia, 'Família', 'juliana'],
     ]
     for (const [caminho, titulo, h1, sessao] of casos) {
       const { unmount, container } = renderizarComDados(caminho, { sessao })
