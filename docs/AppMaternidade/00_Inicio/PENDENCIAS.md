@@ -66,7 +66,7 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 - [~ t_11ad28e6] P-10 MAT-37b: navegação pelo registro, convite, Começar completo e Família | depende de 37r (mesmos arquivos de conta e rotas)
 - [~ t_7c491177] P-12 MAT-38b: Histórico, detalhe, lixeira e notas | depende de P-11
 - [~ t_c9529365] P-13 MAT-39b: tummy time ligado à rotina | depende de 38a e 36r-A
-- [~ t_4c921e60] P-14 MAT-40a: Comunidade ligada ao banco | rodando desde 12h30 sobre o head 4c86d1b da 37r (arquivos sem sobreposição)
+- [~ t_de06bd20] P-14 MAT-40a: Comunidade ligada ao banco | g1 t_4c921e60 bloqueou pela regra de BASE do corpo (o comentário não a sobrepõe) e foi arquivada; a g2 t_de06bd20 tem a base 4c86d1b no corpo
 - [~ t_359ab800] P-15 MAT-40b: painel de moderação | depende de P-14
 - [D] P-16 MAT-37g t_1757260d "Entrar com Google" | espera Daniel decidir o Google OAuth; até lá o site mostra "a definir"
 
