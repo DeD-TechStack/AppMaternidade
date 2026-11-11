@@ -46,7 +46,7 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 
 - [~ t_0aecd8d2] P-26 Início: a 49c v2 aplicou a volta 1 dos juízes, foi aprovada (9a441ba) e integrada (8e0a1f6..dae75c3, check 1109 testes, commits OK). Falta a 49d corrigir as 2 cenas de dois tablets e, depois, a volta 2 dos juízes
 
-- [~ t_54db34e0] P-27 Como funciona, Cuidado compartilhado e Desenvolvimento: volta 1 dos juízes cegos (3 rodadas válidas, notas 6,2–7,4, REPROVA volta 1). A MAT-36r-A v2 aplica os itens das páginas e a 49d (P-21) refaz as cenas. Depois, volta 2; se reprovar, vai a Daniel com GALERIA | `juizes/rodadas/DEVOLUCAO_36rA.md`
+- [~ t_0aecd8d2] P-27 36r-A: a v2 (t_54db34e0) aplicou a volta 1 dos juízes, foi aprovada (b248517) e integrada (9bb370b..7bbe832, check 1308 testes, commits OK, 289). Falta a 49d (cenas de Desenvolvimento) e, depois, a volta 2 dos juízes
 
 - [~ t_347d36de] P-28 Acesso e Conta: volta 1 dos juízes cegos (conta_r1 válida nos 2; acesso_r1 válida no Astra, com a calibração do Fable nula e reprovação independente dele; notas 6,2–7,5). A MAT-37r v2 aplica os itens das telas; a 49d refaz a cena de Entrar | `juizes/rodadas/DEVOLUCAO_37r.md`
 - [~ t_5fc82bb8] P-29 MAT-49e (casco, todas as páginas): marca gigante do rodapé alinhada ao fio da direita, botões e campos com 56 px, SAMU na lista de siglas, ícone do menu alinhado e rodapé compacto em /app/* (o `.alvo-toque` do index.css derrubava para 44 px; achado na revisão R1 da 49c) | depois da 49b g2
