@@ -30,6 +30,8 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 
 - [ ] P-23 Limpeza depois das páginas: apagar `web/src/paginas/publicas/PaginaSimples.tsx` (usada pelas 9 páginas públicas até a 36r-A e a 36r-B integrarem) e `web/src/componentes/casca/SubmenuEmBreve.tsx` (sem uso desde a base), com `apagar:` no cartão | depende de P-08 e da 36r-B
 
+- [D coordenador] P-24 Aceite visual da /sistema: rodada base49a_r1 válida nos 2 juízes, 0 portões, notas 6,5–6,8 (Fable) e 7,0 (Astra), abaixo de 7,5. Perguntado ao coordenador (campainha t_6bb69b92) se o item 7 vale para a página interna /sistema; a integração da base não espera por isso
+
 ## Dados ligados às telas novas (religados e soltos em 11/11)
 
 - [x] P-09 Corpos dos 6 cartões abaixo reescritos para a base nova antes do claim (prefixo `FINAL/OVERRIDE_DADOS.md`) e soltos em todo, presos aos pais | 11/11 9h50; sem SHA (é board)
