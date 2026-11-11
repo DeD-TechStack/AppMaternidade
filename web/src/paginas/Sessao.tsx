@@ -20,7 +20,7 @@ const VOLTAR_PARA_HOJE = (
   <Link
     to="/app/hoje"
     state={{ foco: 'titulo' }}
-    className="alvo-toque -ml-1 mb-3 inline-flex items-center gap-1.5 rounded-pilula px-1 text-[17px] leading-[25px] font-medium no-underline underline-offset-4 hover:underline"
+    className="alvo-toque -ml-1 mb-3 inline-flex min-h-(--alvo-toque) items-center gap-1.5 rounded-pilula px-1 text-[17px] leading-[25px] font-medium no-underline underline-offset-4 hover:underline"
     data-voltar=""
   >
     <ChevronLeft aria-hidden="true" className="size-5" strokeWidth={2} />

@@ -1,4 +1,5 @@
 import { Check, Undo2 } from 'lucide-react'
+import { ALVO_APP } from '../componentes/app/alvo.ts'
 import { Botao } from '../componentes/base/Botao.tsx'
 
 /** Uma escolha opcional que ajusta o registro já feito (a fralda: Xixi, Cocô, Ambos). */
@@ -36,10 +37,16 @@ export function Confirmacao({ texto, aoDesfazer, aoFechar, escolhas }: Props) {
           </span>
           <p className="min-w-0 flex-1 text-[17px] leading-[25px] font-medium">{texto}</p>
           <div className="flex basis-full gap-2 sm:basis-auto">
-            <Botao variante="contorno" tamanho="app" icone={<Undo2 />} className="flex-1 sm:flex-none" onClick={aoDesfazer}>
+            <Botao
+              variante="contorno"
+              tamanho="app"
+              icone={<Undo2 />}
+              className={`flex-1 sm:flex-none ${ALVO_APP}`}
+              onClick={aoDesfazer}
+            >
               <span>Desfazer</span>
             </Botao>
-            <Botao variante="texto" tamanho="app" className="flex-1 sm:flex-none" onClick={aoFechar}>
+            <Botao variante="texto" tamanho="app" className={`flex-1 sm:flex-none ${ALVO_APP}`} onClick={aoFechar}>
               Fechar
             </Botao>
           </div>
@@ -52,7 +59,7 @@ export function Confirmacao({ texto, aoDesfazer, aoFechar, escolhas }: Props) {
                     key={opcao}
                     variante="contorno"
                     tamanho="app"
-                    className="px-3"
+                    className={`px-3 ${ALVO_APP}`}
                     aria-pressed={ligada}
                     data-ligado={ligada ? '' : undefined}
                     onClick={() => escolhas.aoEscolher(opcao)}

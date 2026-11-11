@@ -2,6 +2,7 @@ import { useId, type Ref } from 'react'
 import { Link } from 'react-router'
 import { Baby, Milk, Moon } from 'lucide-react'
 import { Botao } from '../base/Botao.tsx'
+import { ALVO_APP } from './alvo.ts'
 import { Ilustracao, type NomeIlustracao } from '../campo/Ilustracao.tsx'
 import { ROTULO_SESSAO, type TipoSessao } from '../../prototipo/estado.ts'
 import { formatarCronometro, formatarHora } from '../../prototipo/formatar.ts'
@@ -88,13 +89,13 @@ export function CartaoSessao({ sessao, agora, aoEncerrar, ref, className }: Prop
         </p>
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
-          <Botao tamanho="app" className="min-w-[8.5rem]" onClick={aoEncerrar}>
+          <Botao tamanho="app" className={`min-w-[8.5rem] ${ALVO_APP}`} onClick={aoEncerrar}>
             Encerrar
           </Botao>
           <Link
             to="/app/sessao"
             state={{ foco: 'titulo' }}
-            className="cm-botao cm-botao-contorno alvo-toque"
+            className={`cm-botao cm-botao-contorno alvo-toque ${ALVO_APP}`}
             data-botao="contorno"
             data-tamanho="app"
           >

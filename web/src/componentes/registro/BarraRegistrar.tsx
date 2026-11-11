@@ -12,6 +12,7 @@ import {
 } from '../../prototipo/estado.ts'
 import { useBarraFixa } from '../../prototipo/useBarraFixa.ts'
 import { Botao } from '../base/Botao.tsx'
+import { ALVO_APP } from '../app/alvo.ts'
 
 interface Props {
   aoIniciarSessao: (tipo: TipoSessao) => void
@@ -217,13 +218,14 @@ export function BarraRegistrar({
                 <Botao
                   variante="contorno"
                   tamanho="app"
+                  className={ALVO_APP}
                   aria-label="Iniciar tummy time de Heloísa"
                   onClick={() => iniciar('tummy')}
                 >
                   Tummy time
                 </Botao>
                 {ITENS_MAIS.map((item) => (
-                  <Botao key={item.chave} variante="contorno" tamanho="app" onClick={() => escolherMais(item)}>
+                  <Botao key={item.chave} variante="contorno" tamanho="app" className={ALVO_APP} onClick={() => escolherMais(item)}>
                     {item.rotulo}
                   </Botao>
                 ))}

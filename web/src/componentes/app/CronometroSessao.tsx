@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { NotebookPen } from 'lucide-react'
 import { Botao } from '../base/Botao.tsx'
+import { ALVO_APP } from './alvo.ts'
 import { tamanhoDoCronometro } from '../../prototipo/formatar.ts'
 
 type Painel = 'nota' | 'descartar'
@@ -109,10 +110,10 @@ export function CronometroSessao({ cronometro, atividade, aoEncerrar, aoDescarta
             className="mt-3 block min-h-[6rem] w-full resize-y rounded-campo border-[1.5px] border-(--cor-texto-2) bg-(--cor-cartao) px-4 py-3 text-[17px] leading-[25px] text-(--cor-texto) hover:border-(--cor-texto) focus-visible:border-(--cor-texto)"
           />
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            <Botao tamanho="app" className="min-w-[8.5rem]" onClick={salvarNota}>
+            <Botao tamanho="app" className={`min-w-[8.5rem] ${ALVO_APP}`} onClick={salvarNota}>
               Salvar
             </Botao>
-            <Botao variante="texto" tamanho="app" onClick={() => setPainel(null)}>
+            <Botao variante="texto" tamanho="app" className={ALVO_APP} onClick={() => setPainel(null)}>
               Cancelar
             </Botao>
           </div>
@@ -121,7 +122,7 @@ export function CronometroSessao({ cronometro, atividade, aoEncerrar, aoDescarta
 
       <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 lg:mt-10" data-acoes="">
         {painel !== 'nota' ? (
-          <Botao tamanho="app" className="w-full sm:w-auto sm:min-w-[8.5rem]" onClick={() => aoEncerrar(false)}>
+          <Botao tamanho="app" className={`w-full sm:w-auto sm:min-w-[8.5rem] ${ALVO_APP}`} onClick={() => aoEncerrar(false)}>
             Encerrar
           </Botao>
         ) : null}
@@ -129,7 +130,7 @@ export function CronometroSessao({ cronometro, atividade, aoEncerrar, aoDescarta
           <Botao
             variante="contorno"
             tamanho="app"
-            className="w-full sm:w-auto"
+            className={`w-full sm:w-auto ${ALVO_APP}`}
             icone={<NotebookPen />}
             data-acao="anotar"
             onClick={() => setPainel('nota')}
@@ -141,7 +142,7 @@ export function CronometroSessao({ cronometro, atividade, aoEncerrar, aoDescarta
           <Botao
             variante="texto"
             tamanho="app"
-            className="w-full sm:w-auto"
+            className={`w-full sm:w-auto ${ALVO_APP}`}
             data-acao="descartar"
             onClick={() => setPainel('descartar')}
           >
@@ -162,10 +163,10 @@ export function CronometroSessao({ cronometro, atividade, aoEncerrar, aoDescarta
           </p>
           <p className="mt-0.5 text-[15px] leading-[22px] text-(--cor-texto-2)">O tempo não vai para o dia nem para o histórico.</p>
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            <Botao variante="contorno" tamanho="app" onClick={aoDescartar}>
+            <Botao variante="contorno" tamanho="app" className={ALVO_APP} onClick={aoDescartar}>
               Descartar
             </Botao>
-            <Botao variante="texto" tamanho="app" data-acao="manter" onClick={() => setPainel(null)}>
+            <Botao variante="texto" tamanho="app" className={ALVO_APP} data-acao="manter" onClick={() => setPainel(null)}>
               Manter
             </Botao>
           </div>

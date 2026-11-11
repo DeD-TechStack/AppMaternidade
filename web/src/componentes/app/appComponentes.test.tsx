@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import axe from 'axe-core'
+import { ALVO_APP } from './alvo.ts'
 import { BotaoIniciarMamada } from './BotaoIniciarMamada.tsx'
 import { CartaoSessao } from './CartaoSessao.tsx'
 import { DesdeQueVoceSaiu, type ItemDesde } from './DesdeQueVoceSaiu.tsx'
@@ -55,6 +56,15 @@ describe('CartaoSessao', () => {
     expect(aoEncerrar).toHaveBeenCalledTimes(1)
     expect(screen.getByRole('link', { name: 'Ver sessão' }).getAttribute('href')).toBe('/app/sessao')
     expect(screen.getByText('Mamada', { selector: 'p' })).toBeTruthy()
+  })
+
+  it('Encerrar e Ver sessão têm o alvo do app: 48 px de dia e 56 px na madrugada (--alvo-toque, G11)', () => {
+    montarCartao({ tipo: 'sono', inicio: AGORA - MIN, pessoa: 'Bruno' })
+
+    for (const controle of [screen.getByRole('button', { name: 'Encerrar' }), screen.getByRole('link', { name: 'Ver sessão' })]) {
+      expect(controle.classList.contains(ALVO_APP), controle.textContent!).toBe(true)
+    }
+    expect(ALVO_APP).toBe('min-h-[max(48px,var(--alvo-toque))]')
   })
 
   it('o desenho de traço é enfeite (fora da árvore de acessibilidade) e some na madrugada', () => {
