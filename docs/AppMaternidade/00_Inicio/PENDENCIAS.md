@@ -42,6 +42,8 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 
 - [x] P-30 Ferramentas do líder corrigidas em 11/11: `captura/capturar.mjs` e `cdp.mjs` capturam a 2× (antes 1×, e a regra comum pede 2×; testado na 36r-A: innerWidth 390 igual, recortes 810×1688); `rodada/rodada.py` não reprova mais por recibo anterior às capturas que ele mesmo refaz. Avisado aos 5 cartões em curso | sem SHA (staging)
 
+- [D coordenador] P-31 Encerrar Vite e Chrome de cartões encerrados (5276/9376 t_f21ee109, 5282/9382 t_26066f02, 5281/9381 t_fdba5bed). O taskkill do líder esperou aprovação no host e expirou; o pedido foi feito pela campainha
+
 ## Dados ligados às telas novas (religados e soltos em 11/11)
 
 - [x] P-09 Corpos dos 6 cartões abaixo reescritos para a base nova antes do claim (prefixo `FINAL/OVERRIDE_DADOS.md`) e soltos em todo, presos aos pais | 11/11 9h50; sem SHA (é board)
