@@ -26,7 +26,6 @@ export const COMO_FUNCIONA_DESTAQUE = {
     altura: 768,
     alt: 'Um celular sobre um pedestal de oliva, num fundo de mel, com uma tela do site AppMaternidade.',
   },
-  ultimaMamada: { rotulo: 'Última mamada', hora: '03:12', detalhe: 'Lado esquerdo, registrada por Juliana' },
   momentos: {
     titulo: ['Três momentos', 'da rotina.'],
     texto: 'Cada momento vem com uma tela de exemplo, da família de Juliana, Bruno e Carla, que cuidam da Heloísa.',
@@ -104,6 +103,8 @@ export const COMO_FUNCIONA_DESTAQUE = {
 export const CUIDADO_DESTAQUE = {
   titulo: ['Um bebê,', 'vários adultos.'],
   lide: 'Mães, pais, avós, babás e outros adultos autorizados vão poder cuidar do mesmo bebê pelo site, cada um com a própria conta e o próprio papel.',
+  /** O primário da primeira dobra e o do fim da página: o mesmo destino do fechamento de Como funciona. */
+  primario: { rotulo: ABRIR_PROTOTIPO, destino: HOJE },
   /** O único aviso da página, fora das imagens e dos cartões. */
   aviso: TELAS_FICTICIAS,
   familia: {
@@ -123,21 +124,24 @@ export const CUIDADO_DESTAQUE = {
       titulo: 'Convite com papel',
       texto:
         'Cada pessoa vai entrar na família com um papel. E cada adulto entra com a própria conta: ninguém vai precisar dividir uma senha da família.',
+      /** Como a tela Família vai mostrar isso, com a família de exemplo. */
+      exemplo: { inicial: 'B', quem: 'Bruno', oQue: 'Entrou como cuidador, convidado por Juliana' },
     },
     {
       titulo: 'Acesso com prazo',
       texto: 'Qualquer vínculo vai poder ter validade, como “cuidador até domingo”. Vencida a data, o acesso termina.',
+      exemplo: { inicial: 'C', quem: 'Carla', oQue: 'Cuidadora, com acesso até domingo' },
     },
     {
       titulo: 'Revogue quando quiser',
       texto:
         'O responsável vai poder remover o acesso de qualquer pessoa da família. Ela perde o acesso assim que o aparelho dela se conectar à internet.',
+      exemplo: { inicial: 'J', quem: 'Juliana', oQue: 'Removeu o acesso de uma babá antiga' },
     },
   ],
   papeis: {
     titulo: ['Três papéis', 'na família.'],
-    texto:
-      'Cada pessoa vai entrar na família com um papel. Qualquer vínculo vai poder ter validade, como “cuidador até domingo”, e, vencida a data, o acesso termina.',
+    texto: 'Quem convida escolhe o papel, e o papel decide o que a pessoa vai poder fazer.',
     tabela: {
       legenda: 'Papéis na família',
       colunas: ['Papel', 'Para quem é', 'O que vai poder fazer'],
@@ -166,13 +170,21 @@ export const CUIDADO_DESTAQUE = {
     texto:
       'Cada adulto vai ver a mesma sessão no próprio celular ou notebook, como a soneca que Bruno começou. O plano é que quem chega encontre, numa tela só, as notas em destaque deixadas por quem estava antes e tudo o que aconteceu desde que saiu.',
   },
-  soneca: {
-    titulo: 'Soneca da Heloísa',
-    duracao: '1 h 15 min',
-    inicio: { rotulo: 'Começou às 14:05', quem: 'Bruno' },
-    fim: { rotulo: 'Terminou às 15:20', quem: 'Carla' },
+  /** A tarde da Heloísa, como a lista de registros vai mostrar: quem fez o quê, e quando. */
+  tarde: {
+    titulo: 'Tarde da Heloísa',
+    rotulo: 'Hoje, com Bruno e Carla',
+    itens: [
+      { inicial: 'B', quem: 'Bruno', oQue: 'Começou a soneca', hora: '14:05' },
+      { inicial: 'C', quem: 'Carla', oQue: 'Encerrou a soneca, 1 h 15 min', hora: '15:20' },
+      { inicial: 'C', quem: 'Carla', oQue: 'Mamada, lado direito', hora: '15:30' },
+    ],
   },
-  nota: { rotulo: 'Nota em destaque', texto: 'Mamou bem do lado direito às 15:30.', autor: 'Carla, para Juliana' },
+  nota: {
+    rotulo: 'Nota em destaque',
+    texto: 'Dormiu no carrinho e acordou com fome.',
+    autor: 'Carla, para Juliana, às 15:22',
+  },
   parar: {
     titulo: ['Quando alguém', 'para de cuidar.'],
     textos: [
