@@ -1,9 +1,10 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
+import { ArrowUpRight } from 'lucide-react'
 import { Link, NavLink } from 'react-router'
 import { CABECALHO, COMUM } from '../../conteudo/conta.ts'
 import type { ErroDados } from '../../dados/comum.ts'
 import { AvisoDemonstracao } from '../AvisoDemonstracao.tsx'
-import { BOTAO_SECUNDARIO, LINK_ALVO, ResumoErro } from './Partes.tsx'
+import { BOTAO_SECUNDARIO, ResumoErro } from './Partes.tsx'
 import { useSessao } from './sessao.tsx'
 
 interface AcaoSair {
@@ -13,8 +14,8 @@ interface AcaoSair {
 
 const ContextoSair = createContext<AcaoSair | null>(null)
 
-/** O botão "Sair": o da barra da conta e o do fim da Conta fazem a mesma saída. */
-export function BotaoSair() {
+/** O botão "Sair" da barra da conta: o único da página. */
+function BotaoSair() {
   const acao = useContext(ContextoSair)
   if (!acao) return null
   return (
@@ -31,7 +32,10 @@ export function BotaoSair() {
   )
 }
 
-const LINK_DA_BARRA = `${LINK_ALVO} px-1`
+// As abas da barra, sem sublinhado: a da página em que se está é uma pílula de mel; a outra, texto
+// com seta. `alvo-toque` garante os 44 px de altura.
+const LINK_DA_BARRA = 'alvo-toque inline-flex items-center gap-1 rounded-pilula px-4 font-medium no-underline'
+const ABA_ATUAL = 'bg-[var(--cor-destaque)] font-semibold text-[var(--cor-sobre-destaque)]'
 
 interface Props {
   /** Enquanto a tela espera dados, o `<main>` leva `aria-busy`. */
@@ -73,18 +77,19 @@ export function MolduraLogada({ ocupado = false, children }: Props) {
         </div>
         <nav
           aria-label={CABECALHO.navegacao}
-          className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-b border-[var(--cor-fio-suave)] py-2"
+          className="flex flex-wrap items-center justify-between gap-x-3 gap-y-3 border-b border-[var(--cor-fio-suave)] py-4"
         >
-          <div className="flex flex-wrap items-center gap-x-1 min-[30rem]:gap-x-3">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <NavLink
               to="/app/conta"
               end
-              className={({ isActive }) => `${LINK_DA_BARRA} ${isActive ? 'font-semibold' : ''}`}
+              className={({ isActive }) => `${LINK_DA_BARRA} ${isActive ? ABA_ATUAL : ''}`}
             >
               {CABECALHO.conta}
             </NavLink>
             <Link to="/app/hoje" className={LINK_DA_BARRA}>
               {CABECALHO.prototipo}
+              <ArrowUpRight size={18} aria-hidden="true" />
             </Link>
           </div>
           <BotaoSair />
