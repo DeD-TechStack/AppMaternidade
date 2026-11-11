@@ -1,4 +1,5 @@
 import { Botao } from '../componentes/base/Botao.tsx'
+import './ajustes-6a.css'
 
 /** Uma escolha opcional que ajusta o registro já feito (a fralda: Xixi, Cocô, Ambos). */
 interface Escolhas {
@@ -28,14 +29,8 @@ export function Confirmacao({ texto, aoDesfazer, aoFechar, escolhas }: Props) {
       {texto ? (
         <>
           <p className="ha-confirmacao-texto t-corpo">{texto}</p>
-          <div className="ha-confirmacao-acoes">
-            <Botao variante="moldura" className="alvo-toque" onClick={aoDesfazer}>
-              Desfazer
-            </Botao>
-            <Botao variante="moldura" className="alvo-toque" onClick={aoFechar}>
-              Fechar
-            </Botao>
-          </div>
+          {/* 6a P4: o DOM é a ordem da tela (o texto, as escolhas, Desfazer, Fechar), nos dois tamanhos: o Tab
+              vai Xixi, Cocô, Ambos, Desfazer, Fechar, sem `order` no CSS. */}
           {escolhas ? (
             <div role="group" aria-label={escolhas.rotulo} className="ha-confirmacao-escolhas">
               {escolhas.opcoes.map((opcao) => {
@@ -55,6 +50,14 @@ export function Confirmacao({ texto, aoDesfazer, aoFechar, escolhas }: Props) {
               })}
             </div>
           ) : null}
+          <div className="ha-confirmacao-acoes">
+            <Botao variante="moldura" className="alvo-toque" onClick={aoDesfazer}>
+              Desfazer
+            </Botao>
+            <Botao variante="moldura" className="alvo-toque" onClick={aoFechar}>
+              Fechar
+            </Botao>
+          </div>
         </>
       ) : null}
     </div>

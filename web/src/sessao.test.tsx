@@ -195,12 +195,16 @@ describe('Sessão: o bloco do cronômetro (E5)', () => {
     expect(within(nota).getByRole('textbox', { name: 'Nota' }).classList.contains('min-h-[6rem]')).toBe(true)
     expect(screen.queryByRole('button', { name: 'Encerrar e anotar' })).toBeNull()
     expect([...container.querySelectorAll('main [data-botao="primario"]')]).toHaveLength(1)
+    const botoesDaNota = within(nota).getAllByRole('button')
 
+    // 6a P1: com o painel da nota aberto o botão Descartar não existe; a nota se fecha com Cancelar antes.
+    expect(screen.queryByRole('button', { name: 'Descartar' })).toBeNull()
+    fireEvent.click(within(nota).getByRole('button', { name: 'Cancelar' }))
     fireEvent.click(screen.getByRole('button', { name: 'Descartar' }))
     const pergunta = screen.getByRole('group', { name: 'Descartar esta sessão?' })
     expect(coluna.contains(pergunta)).toBe(true)
     expect([...container.querySelectorAll('main [data-botao="primario"]')]).toHaveLength(1)
-    for (const b of [...within(nota).getAllByRole('button'), ...within(pergunta).getAllByRole('button')]) {
+    for (const b of [...botoesDaNota, ...within(pergunta).getAllByRole('button')]) {
       expect(b.classList.contains('alvo-toque'), b.textContent!).toBe(true)
     }
   })

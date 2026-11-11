@@ -143,11 +143,11 @@ describe('BarraRegistrar: Fralda com 1 toque (E5)', () => {
     expect(fralda.hasAttribute('aria-controls')).toBe(false)
   })
 
-  it('(b) a confirmação da fralda mostra Desfazer, Fechar e as 3 escolhas de tipo, nesta ordem', () => {
+  it('(b) a confirmação da fralda mostra as 3 escolhas de tipo, Desfazer e Fechar, nesta ordem (a da tela, 6a P4)', () => {
     montar({ texto: 'Fralda registrada' })
 
     const status = screen.getByRole('status')
-    expect(within(status).getAllByRole('button').map((b) => b.textContent)).toEqual(['Desfazer', 'Fechar', ...TIPOS])
+    expect(within(status).getAllByRole('button').map((b) => b.textContent)).toEqual([...TIPOS, 'Desfazer', 'Fechar'])
     const grupo = within(status).getByRole('group', { name: 'Tipo da fralda' })
     expect(within(grupo).getAllByRole('button').map((b) => b.textContent)).toEqual(TIPOS)
     expect(grupo.hasAttribute('data-largos')).toBe(false)
@@ -691,12 +691,12 @@ describe('BarraRegistrar: o painel Mais e a confirmação no teclado (E8)', () =
     expect(percorrer(1, true)).toEqual(['Mais'])
   })
 
-  it('a confirmação da fralda também vem depois dos botões: o Tab do botão Fralda chega a Desfazer, Fechar, Xixi, Cocô e Ambos, sem pular nenhum', () => {
+  it('a confirmação da fralda também vem depois dos botões: o Tab do botão Fralda chega a Xixi, Cocô, Ambos, Desfazer e Fechar (a ordem da tela, 6a P4), sem pular nenhum', () => {
     montarComRodape({ texto: 'Fralda registrada' })
     botao('Registrar fralda de Heloísa').focus()
 
-    expect(percorrer(7)).toEqual(['Mais', 'Desfazer', 'Fechar', 'Xixi', 'Cocô', 'Ambos', 'Rodapé'])
-    expect(percorrer(6, true)).toEqual(['Ambos', 'Cocô', 'Xixi', 'Fechar', 'Desfazer', 'Mais'])
+    expect(percorrer(7)).toEqual(['Mais', 'Xixi', 'Cocô', 'Ambos', 'Desfazer', 'Fechar', 'Rodapé'])
+    expect(percorrer(6, true)).toEqual(['Fechar', 'Desfazer', 'Ambos', 'Cocô', 'Xixi', 'Mais'])
   })
 
   it('com a confirmação da fralda na tela, o painel Mais aberto ainda tem as 4 opções percorridas em ordem e só depois sai', () => {

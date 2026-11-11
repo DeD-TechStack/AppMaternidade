@@ -111,12 +111,13 @@ describe('fralda', () => {
     tocarFralda()
 
     const status = screen.getByRole('status')
+    // 6a P4: o DOM é a ordem da tela: as escolhas e depois Desfazer e Fechar.
     expect(within(status).getAllByRole('button').map((b) => b.textContent)).toEqual([
-      'Desfazer',
-      'Fechar',
       'Xixi',
       'Cocô',
       'Ambos',
+      'Desfazer',
+      'Fechar',
     ])
     expect(screen.queryByRole('button', { name: 'Cancelar' })).toBeNull()
     expect(screen.queryByRole('group', { name: 'Fralda de Heloísa' })).toBeNull()

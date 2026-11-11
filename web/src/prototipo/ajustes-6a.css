@@ -1,0 +1,73 @@
+/* MAT-44d-6a, parte A: as sobras da área logada (Sessão e Hoje). Arquivo sem camada: vale sobre as regras
+   de `index.css` sem `!important`. Cada bloco leva o id do critério (CRITERIOS_6A.md). As cores vêm só das
+   variáveis de uso (tema.css); os espaços, da escala 8, 16, 24, 32, 64, 96...; os raios, de 0, 4, 8 e 50%.
+   Sem sombra, sem gradiente, sem movimento. */
+
+/* P2: o anel de foco do campo da nota, dentro do bloco de cor, é a cor do papel (de dia o papel; na madrugada
+   o texto claro): 2 px sólido, a 2 px do campo, só em :focus-visible. O anel padrão (a tinta) dava 3,1:1
+   sobre o urucum; o papel dá 5,1:1, e na madrugada o bege claro sobre o bloco escuro passa de 11:1. */
+.ha-cronometro .ha-nota-campo:focus-visible {
+  outline: 2px solid var(--cor-fundo);
+  outline-offset: 2px;
+}
+
+:root[data-tema='madrugada'] .ha-cronometro .ha-nota-campo:focus-visible {
+  outline: 2px solid var(--cor-texto);
+  outline-offset: 2px;
+}
+
+@media (max-width: 767px) {
+  /* P1: abaixo de 768 Salvar e Cancelar dividem a fileira (duas colunas iguais, 8 de gap como os outros
+     pares do bloco), em vez de um botão de meia largura sozinho em cada linha. */
+  .ha-cron-painel-acoes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  /* P2: o campo da nota abaixo de 768 é o campo do 2.9 para o celular: fundo de superfície, texto de tinta,
+     raio 4 e o fio de tinta embaixo. De 768 para cima continua sem caixa, só com o fio de 1 px. O recuo
+     (8 e 16) é para o texto não encostar na borda do fundo. */
+  .ha-cron-painel .ha-nota-campo {
+    padding: 8px 16px;
+    border-radius: 4px;
+    border-bottom: 1px solid var(--cor-texto);
+    background-color: var(--cor-papel-fundo);
+    color: var(--cor-texto);
+  }
+
+  /* P2 (madrugada): o bloco já é o papel-fundo escuro; o campo fica no fundo da página, que é mais escuro
+     que o bloco e deixa o bege claro do texto com 12,99:1. */
+  :root[data-tema='madrugada'] .ha-cron-painel .ha-nota-campo {
+    background-color: var(--cor-fundo);
+  }
+
+  /* P3: em 390 a linha "Carla, 22:40" tinha 48 de ritmo (a seção) e mais 48 de recuo de cima do rótulo,
+     97 px de texto a texto depois de Últimos. Como na 1ª linha depois da mídia (V5), o rótulo perde o recuo
+     de cima: ficam os 48 do ritmo. De 768 para cima nada muda. */
+  .ha-linha-nota .sb-linha-rotulo {
+    padding-top: 0;
+  }
+}
+
+@media (max-width: 359px) {
+  /* P1: numa janela minúscula, um botão por linha. */
+  .ha-cron-painel-acoes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* P5: a confirmação tem botões de 56 de altura nos dois temas (o alvo da madrugada). Sem isso o painel do
+   claro tinha 81 de altura e o da madrugada, 89: o topo do painel mudava com o tema. O seletor leva `.ha-painel`
+   para valer sobre as regras de `index.css` seja qual for a ordem em que o CSS carrega. */
+.ha-painel .ha-confirmacao .sb-moldura {
+  min-height: 56px;
+}
+
+@media (min-width: 768px) {
+  /* P4: de 768 para cima há 32 px entre o fim de "Ambos" e o começo de "Desfazer" (eram 16), e entre o texto
+     e as escolhas. O DOM já está na ordem da tela: texto, Xixi, Cocô, Ambos, Desfazer, Fechar. */
+  .ha-painel .ha-confirmacao {
+    column-gap: 32px;
+  }
+}

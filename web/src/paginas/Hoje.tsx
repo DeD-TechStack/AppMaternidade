@@ -6,6 +6,7 @@ import { LinhaRotuloTexto } from '../componentes/base/LinhaRotuloTexto.tsx'
 import { BarraRegistrar } from '../componentes/registro/BarraRegistrar.tsx'
 import { BlocoEmAndamento } from '../prototipo/BlocoEmAndamento.tsx'
 import { ItemAvisoDaAbertura } from '../prototipo/ItemAvisoDaAbertura.tsx'
+import '../prototipo/ajustes-6a.css'
 import { usePrototipo } from '../prototipo/contexto.ts'
 import {
   IDADE_BEBE,
@@ -145,7 +146,7 @@ export function Hoje() {
           <FaixaNumeros itens={faixa} />
         </section>
 
-        <section aria-labelledby={idSaber} className="sb-area sb-mt-midia-titulo">
+        <section aria-labelledby={idSaber} className="sb-area sb-mt-midia-titulo ha-linha-nota">
           <h2 id={idSaber} className="sr-only">
             Para você saber
           </h2>

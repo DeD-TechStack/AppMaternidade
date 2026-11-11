@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { Botao } from '../componentes/base/Botao.tsx'
 import { tamanhoDoCronometro } from './formatar.ts'
+import './ajustes-6a.css'
 
 type Painel = 'nota' | 'descartar'
 
@@ -83,7 +84,9 @@ export function BlocoCronometro({ cronometro, atividade, aoEncerrar, aoDescartar
                 Encerrar e anotar
               </Botao>
             ) : null}
-            {painel !== 'descartar' ? (
+            {/* 6a P1: com qualquer painel aberto o botão que abre o Descartar não existe (o painel da nota o
+                empurrava para baixo da janela); ele volta quando o painel fecha. */}
+            {painel === null ? (
               <Botao
                 variante="moldura"
                 alto
