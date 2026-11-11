@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { act, fireEvent, screen, within } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   COLUNAS_DO_RODAPE,
   DESTINO_CRIAR_CONTA,
@@ -194,6 +194,56 @@ describe('alvos da casca na madrugada (DESIGN.md 8)', () => {
   })
 })
 
+describe('rodapé compacto nas rotas /app/*', () => {
+  const TODOS_OS_LINKS = COLUNAS_DO_RODAPE.flatMap((c) => c.links)
+
+  it.each(['/app/hoje', '/app/sessao'])('em %s é uma linha só de links, sem o nome grande nem o painel de mel', (caminho) => {
+    const { container } = renderizarRota(caminho)
+    const rodapes = container.querySelectorAll<HTMLElement>('footer[data-rodape]')
+    expect(rodapes).toHaveLength(1)
+    const rodape = rodapes[0]
+    expect(rodape.id).toBe('rodape')
+    expect(rodape.classList.contains('cm-rodape')).toBe(true)
+    expect(rodape.classList.contains('cm-rodape-compacto')).toBe(true)
+    expect(rodape.querySelector('[data-nome-rodape]')).toBeNull()
+    expect(rodape.querySelector('[data-painel="mel"]')).toBeNull()
+    expect(rodape.querySelector('.cm-rodape-frase')).toBeNull()
+    expect(within(rodape).queryAllByRole('heading')).toHaveLength(0)
+    const navs = within(rodape).getAllByRole('navigation')
+    expect(navs).toHaveLength(1)
+    expect(navs[0].getAttribute('aria-label')).toBeTruthy()
+    const links = within(navs[0]).getAllByRole('link')
+    expect(links.map((a) => a.getAttribute('href'))).toEqual(TODOS_OS_LINKS.map((l) => l.para))
+    expect(links.map((a) => a.textContent)).toEqual(TODOS_OS_LINKS.map((l) => l.rotulo))
+    for (const a of links) expect(a.classList.contains('cm-rodape-link')).toBe(true)
+  })
+
+  it('não leva o aviso de demonstração para dentro do rodapé compacto', () => {
+    const { container } = renderizarRota('/app/hoje')
+    expect(container.querySelector('footer[data-rodape] [data-aviso="demonstracao"]')).toBeNull()
+  })
+
+  it('em /app/hoje, sem banco, há exatamente um aviso de demonstração na página e ele não está no rodapé', () => {
+    // Mesmo setup do avisoDemonstracao.test.tsx para o caso em que o aviso aparece: as duas variáveis do banco vazias.
+    vi.stubEnv('VITE_SUPABASE_URL', '')
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', '')
+    try {
+      const { container } = renderizarRota('/app/hoje')
+      const avisos = container.querySelectorAll('[data-aviso="demonstracao"]')
+      expect(avisos).toHaveLength(1)
+      expect(avisos[0].closest('footer[data-rodape]')).toBeNull()
+      expect(container.querySelector('footer[data-rodape]')).not.toBeNull()
+    } finally {
+      vi.unstubAllEnvs()
+    }
+  })
+
+  it('`comAviso` continua valendo: o rodapé público segue mostrando o aviso', () => {
+    const { container } = renderizarRota('/sobre')
+    expect(container.querySelector('footer[data-rodape] [data-aviso="demonstracao"]')).not.toBeNull()
+  })
+})
+
 describe('rodapé de mel', () => {
   it('é um painel de mel com data-rodape, as colunas Produto, Ajuda e Legal e o nome em tamanho de exibição', () => {
     const { container } = renderizarRota('/sobre')
@@ -219,6 +269,19 @@ describe('rodapé de mel', () => {
         fireEvent.click(link)
       })
       expect(container.querySelector('main h1'), destino).not.toBeNull()
+      unmount()
+    }
+  })
+
+  it('nas rotas públicas o rodapé completo não muda: painel de mel, frase, 3 colunas e o nome grande', () => {
+    for (const caminho of ['/', '/sobre', '/contato']) {
+      const { container, unmount } = renderizarRota(caminho)
+      const rodape = container.querySelector<HTMLElement>('footer[data-rodape]')!
+      expect(rodape.classList.contains('cm-rodape-compacto'), caminho).toBe(false)
+      expect(rodape.querySelector('[data-painel="mel"]'), caminho).not.toBeNull()
+      expect(rodape.querySelector('[data-nome-rodape]'), caminho).not.toBeNull()
+      expect(rodape.querySelector('.cm-rodape-frase'), caminho).not.toBeNull()
+      expect(within(rodape).getAllByRole('heading', { level: 2 }), caminho).toHaveLength(3)
       unmount()
     }
   })

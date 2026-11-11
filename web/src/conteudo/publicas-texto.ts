@@ -2,7 +2,7 @@
 // conta, Contato e Sobre. Os parágrafos vêm do site anterior (MAT-36) sem mudar palavra. Os textos fixos
 // (TF-xx) e os rótulos também. Única mudança: o endereço de e-mail só aparece em Contato; nas outras
 // páginas, onde o texto antigo trazia o endereço, entra o link “Contato”. As páginas não declaram frase
-// em literal: tiram tudo daqui.
+// em literal: tiram tudo daqui. A frase de dados fictícios é um parágrafo comum da seção a que se refere.
 
 import type { NomeIlustracao } from '../componentes/campo/Ilustracao.tsx'
 
@@ -31,6 +31,7 @@ function secao(titulo: string, id?: string): Secao {
   return { titulo, id: id ?? `secao-${slug(titulo)}` }
 }
 
+const CAMINHO_CONTA = '/app/conta'
 const CAMINHO_CONTATO = '/contato'
 const CAMINHO_EXCLUSAO = '/exclusao-de-conta'
 const CAMINHO_REGRAS = '/regras-da-comunidade'
@@ -48,7 +49,6 @@ const TF = {
   dadosFicticios: 'Nesta versão de avaliação, use só dados fictícios.',
   semDiagnostico:
     'O AppMaternidade não faz diagnóstico e não substitui a orientação de um profissional de saúde.',
-  faleConosco: 'Fale conosco',
   regiaoDosDados:
     'Nesta fase de avaliação, a demonstração roda num projeto Supabase nos Estados Unidos (região us-east-1), só com dados fictícios.',
 } as const
@@ -66,8 +66,8 @@ const FRASES_DOS_PILARES = [
 // ---------------------------------------------------------------------------
 // Blocos de leitura
 
-/** Um trecho de parágrafo: texto, link para outra página (ou âncora) ou o e-mail de contato. */
-type Trecho = string | { link: string; para: string } | { email: true }
+/** Um trecho de parágrafo: texto ou link para outra página (ou âncora). */
+type Trecho = string | { link: string; para: string }
 
 /** Um parágrafo: um texto só ou uma sequência de trechos. */
 export type Texto = string | readonly Trecho[]
@@ -83,8 +83,14 @@ interface Titulados {
   titulados: ReadonlyArray<{ titulo: string; texto: string }>
 }
 
-/** O que uma seção de leitura pode ter, na ordem: parágrafos, listas e itens com título. */
-export type Bloco = Texto | Lista | Titulados
+/** Um botão de rota logo depois do texto (a ação da página de tarefa). */
+interface Acao {
+  botao: string
+  para: string
+}
+
+/** O que uma seção de leitura pode ter, na ordem: parágrafos, listas, itens com título e um botão de rota. */
+export type Bloco = Texto | Lista | Titulados | Acao
 
 /** Uma tabela: legenda, cabeçalhos das colunas e linhas (a primeira célula é o cabeçalho da linha). */
 export interface DadosDeTabela {
@@ -106,16 +112,18 @@ export interface PaginaDeTexto {
   nome: string
   /** A segunda linha do título, em itálico. */
   subtitulo: string
-  /** O desenho do painel lateral. */
+  /** O desenho: no painel lateral (1100 px ou mais) e, abaixo disso, solto na leitura. */
   ilustracao: NomeIlustracao
-  /** O aviso de demonstração, quando a página tem um (uma linha, fora da mídia). */
-  aviso?: string
+  /** A frase de apoio do painel lateral (só a partir de 1100 px): uma linha curta. */
+  apoio: string
+  /** Depois de qual seção (1 = a primeira, o padrão) o desenho aparece solto, abaixo de 1100 px. */
+  figuraDepoisDe?: number
+  /** A página mostra o bloco de e-mail de contato no topo da leitura. */
+  blocoDeEmail?: true
   /** O parágrafo de abertura, antes das seções. */
   apresentacao?: string
   secoes: readonly SecaoDeLeitura[]
 }
-
-const EMAIL: Trecho = { email: true }
 
 function ligacao(rotulo: string, para: string): Trecho {
   return { link: rotulo, para }
@@ -131,6 +139,7 @@ const REGRAS: PaginaDeTexto = {
   nome: 'Regras da comunidade',
   subtitulo: 'Para quando ela abrir.',
   ilustracao: 'maos-celular',
+  apoio: 'Regras claras para quem participa.',
   apresentacao:
     'A comunidade do AppMaternidade ainda não abriu. Esta página mostra as regras que vão valer quando ela abrir e como a moderação vai funcionar.',
   secoes: [
@@ -218,12 +227,8 @@ const PRIVACIDADE: PaginaDeTexto = {
   nome: 'Privacidade',
   subtitulo: 'O que o site vai guardar.',
   ilustracao: 'mae-noite',
-  aviso: TF.dadosFicticios,
+  apoio: 'Seus dados, explicados sem pressa.',
   secoes: [
-    {
-      secao: secao('Quem responde pelos dados'),
-      blocos: [TF.responsavel, TF.encarregado, ['Para falar sobre os seus dados: ', LINK_CONTATO, '.']],
-    },
     {
       secao: secao('Que dados o site vai guardar'),
       blocos: [
@@ -269,6 +274,7 @@ const PRIVACIDADE: PaginaDeTexto = {
     {
       secao: secao('Onde os dados vão ficar'),
       blocos: [
+        TF.dadosFicticios,
         TF.regiaoDosDados,
         'O plano é que, na produção, os dados fiquem no Supabase, na região de São Paulo. Alguns serviços, como os de notificação e de e-mail, podem tratar dados fora do Brasil, e a lista desses serviços ainda será publicada.',
       ],
@@ -278,6 +284,10 @@ const PRIVACIDADE: PaginaDeTexto = {
       blocos: [
         'A proposta é guardar os dados enquanto a família estiver ativa. Se a lei exigir guardar algum registro, ele vai ficar guardado pelo prazo legal. Os prazos ainda serão definidos e publicados.',
       ],
+    },
+    {
+      secao: secao('Quem responde pelos dados'),
+      blocos: [TF.responsavel, TF.encarregado, ['Para falar sobre os seus dados: ', LINK_CONTATO, '.']],
     },
     {
       secao: secao('Seus direitos'),
@@ -306,7 +316,7 @@ const TERMOS: PaginaDeTexto = {
   nome: 'Termos de uso',
   subtitulo: 'As regras de uso do site.',
   ilustracao: 'pai-colo',
-  aviso: TF.dadosFicticios,
+  apoio: 'Combinados simples para usar o site.',
   secoes: [
     {
       secao: secao('O que é o AppMaternidade'),
@@ -314,14 +324,6 @@ const TERMOS: PaginaDeTexto = {
         'O AppMaternidade vai ser um site para a família registrar a rotina do bebê, dividir os cuidados entre os adultos, acompanhar o desenvolvimento e conversar numa comunidade separada da rotina privada. Hoje existe o protótipo das telas Hoje e Sessão, com uma família fictícia.',
         TF.semDiagnostico,
       ],
-    },
-    {
-      secao: secao('Quem pode usar'),
-      blocos: ['O plano é que só adultos tenham conta. Não vai haver conta de criança.', TF.idadeMinima],
-    },
-    {
-      secao: secao('Sua conta'),
-      blocos: ['O plano é uma conta por pessoa, sem dividir o acesso com ninguém. O acesso vai ser por e-mail e senha.'],
     },
     {
       secao: secao('Família, papéis e convites'),
@@ -338,6 +340,17 @@ const TERMOS: PaginaDeTexto = {
           '. A moderação vai poder ocultar ou remover o que as violar. Usar a denúncia como retaliação também viola as regras.',
         ],
       ],
+    },
+    {
+      secao: secao('Sua conta'),
+      blocos: [
+        TF.dadosFicticios,
+        'O plano é uma conta por pessoa, sem dividir o acesso com ninguém. O acesso vai ser por e-mail e senha.',
+      ],
+    },
+    {
+      secao: secao('Quem pode usar'),
+      blocos: ['O plano é que só adultos tenham conta. Não vai haver conta de criança.', TF.idadeMinima],
     },
     {
       secao: secao('Excluir a conta'),
@@ -367,13 +380,21 @@ const EXCLUSAO: PaginaDeTexto = {
   nome: 'Exclusão de conta',
   subtitulo: 'Como pedir a exclusão.',
   ilustracao: 'avo-carrinho',
+  apoio: 'Você decide o que fica.',
+  // Página de tarefa: o desenho só aparece (abaixo de 1100 px) depois de "Antes de excluir" e "Como pedir".
+  figuraDepoisDe: 2,
   secoes: [
+    {
+      secao: secao('Antes de excluir'),
+      blocos: ['O responsável vai poder exportar os dados da família antes de excluir a conta, na tela Família e conta.'],
+    },
     {
       secao: secao('Como pedir'),
       blocos: [
         TF.pedidoExclusao,
-        TF.responsavel,
         'Esta página abre sem login, para qualquer pessoa ler. O pedido vai exigir que a pessoa confirme que a conta é dela, e o jeito de confirmar ainda será definido.',
+        // A Conta é a rota integrada /app/conta (decisão do líder, 11/11).
+        { botao: 'Ir para a Conta', para: CAMINHO_CONTA },
       ],
     },
     {
@@ -398,11 +419,7 @@ const EXCLUSAO: PaginaDeTexto = {
     },
     {
       secao: secao('Prazo'),
-      blocos: [TF.prazoExclusao, 'O plano é que a pessoa receba um comprovante quando a exclusão terminar.'],
-    },
-    {
-      secao: secao('Antes de excluir'),
-      blocos: ['O responsável vai poder exportar os dados da família antes de excluir a conta, na tela Família e conta.'],
+      blocos: [TF.prazoExclusao, 'O plano é que a pessoa receba um comprovante quando a exclusão terminar.', TF.responsavel],
     },
   ],
 }
@@ -414,9 +431,10 @@ const CONTATO: PaginaDeTexto = {
   nome: 'Contato',
   subtitulo: 'Fale conosco.',
   ilustracao: 'baba-tapete',
+  apoio: 'Um canal para falar com a gente.',
+  // O e-mail vem num bloco próprio no topo da leitura (cartão com o endereço e o botão `mailto:`).
+  blocoDeEmail: true,
   secoes: [
-    // O e-mail sozinho num parágrafo: a página o mostra em destaque, como link `mailto:`.
-    { secao: secao(TF.faleConosco), blocos: [[EMAIL]] },
     {
       secao: secao('Em uma urgência'),
       blocos: [
@@ -441,6 +459,7 @@ const SOBRE: PaginaDeTexto = {
   nome: 'Sobre',
   subtitulo: 'Quem faz e para quem.',
   ilustracao: 'tummy-time',
+  apoio: 'Feito para o dia a dia do cuidado.',
   apresentacao:
     'O AppMaternidade quer juntar num lugar só a rotina do bebê, o desenvolvimento, o cuidado dividido entre os adultos e uma comunidade separada da rotina privada.',
   secoes: [

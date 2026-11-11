@@ -21,6 +21,17 @@ export const BOTAO_PRINCIPAL = `cm-botao cm-botao-primario w-full ${DESATIVADO}`
 /** Ação secundária: pílula de contorno de 1,5 px; no hover se enche. Nas telas do app leva `data-tamanho="app"` (48 px). */
 export const BOTAO_SECUNDARIO = `cm-botao cm-botao-contorno ${DESATIVADO}`
 
+/**
+ * Ação destrutiva (excluir a conta): contorno de 2 px e texto na cor de erro, com o mesmo contraste
+ * também desativada (a regra do negócio a desativa, mas ela não pode parecer apagada). A cor é a variável
+ * `--cor-erro` do tema, quando ela existir; sem ela vale a tinta do texto (cacau, papel na madrugada).
+ * No hover se enche, e desativada o hover não muda nada.
+ */
+export const BOTAO_PERIGO =
+  'cm-botao cm-botao-contorno border-2 font-semibold border-[var(--cor-erro,var(--cor-texto))] ' +
+  'text-[var(--cor-erro,var(--cor-texto))] hover:bg-[var(--cor-erro,var(--cor-texto))] hover:text-[var(--cor-fundo)] ' +
+  'disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[var(--cor-erro,var(--cor-texto))]'
+
 /** Link fora de parágrafo: sublinhado sempre, na cor de link do tema, e alvo de 44 px. */
 export const LINK_ALVO =
   'alvo-toque inline-flex items-center font-medium text-[var(--cor-link)] underline decoration-[1.5px] underline-offset-4 ' +
@@ -98,7 +109,7 @@ export function ResumoErro({
       ref={refResumo}
       role="alert"
       tabIndex={-1}
-      className="alvo-foco flex w-full flex-col items-start gap-3 rounded-campo border-[1.5px] border-[var(--cor-texto)] bg-[var(--cor-cartao)] p-4"
+      className="alvo-foco flex w-full flex-col items-start gap-3 rounded-campo border-2 border-[var(--cor-erro,var(--cor-texto))] bg-[var(--cor-cartao)] p-4"
     >
       <p className="flex items-start gap-3 font-medium wrap-anywhere">
         <CircleAlert size={22} aria-hidden="true" className="mt-0.5 shrink-0" />

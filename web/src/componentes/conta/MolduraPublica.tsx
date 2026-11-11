@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { DuasColunas } from '../acesso/DuasColunas.tsx'
 import { Manchete } from '../acesso/Manchete.tsx'
+import type { NomeIlustracao } from '../campo/Ilustracao.tsx'
 import { useFocoNoTitulo } from './foco.ts'
 
 interface Props {
@@ -16,18 +17,20 @@ interface Props {
   ocupado?: boolean
   /** O formulário (ou o estado da tela). Sem ele, só o `h1`, a frase e os links. */
   children?: ReactNode
+  /** O desenho de traço que acompanha o título no celular (decorativo; ver `DuasColunas`). */
+  ilustracao?: NomeIlustracao
 }
 
 // A moldura das telas públicas de acesso, no cabeçalho e no rodapé da casca (sem marca, sem aviso de
 // demonstração e sem cabeçalho próprios): o `<main>` na área de conteúdo, a coluna do formulário no
 // papel e o painel de mel com a cena (`DuasColunas`). `h1` e frase, o formulário e, por último, os
 // links secundários.
-export function MolduraPublica({ titulo, manchete, frase, ligacoes, ocupado = false, children }: Props) {
+export function MolduraPublica({ titulo, manchete, frase, ligacoes, ocupado = false, children, ilustracao }: Props) {
   const tituloRef = useFocoNoTitulo()
 
   return (
     <main aria-busy={ocupado || undefined} className="cm-area pt-4 lg:pt-6">
-      <DuasColunas>
+      <DuasColunas ilustracao={ilustracao}>
         {manchete ? (
           <Manchete linhas={manchete} refTitulo={tituloRef} />
         ) : (
@@ -35,8 +38,8 @@ export function MolduraPublica({ titulo, manchete, frase, ligacoes, ocupado = fa
             {titulo}
           </h1>
         )}
-        {frase ? <p className="cm-lide cm-medida mt-2">{frase}</p> : null}
-        {children ? <div className="mt-4 flex max-w-[32rem] flex-col gap-4 lg:mt-6">{children}</div> : null}
+        {frase ? <p className="cm-lide cm-medida lg:mt-3">{frase}</p> : null}
+        {children ? <div className="flex max-w-[32rem] flex-col gap-4">{children}</div> : null}
         {ligacoes ? (
           <div className="flex max-w-[32rem] flex-wrap items-center gap-x-4 border-t border-[var(--cor-fio-suave)] pt-4">
             {ligacoes}

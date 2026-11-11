@@ -787,7 +787,7 @@ describe('sair (RF-11)', () => {
     renderizarComDados('/app/conta', { sessao: 'juliana' })
     await screen.findByRole('heading', { level: 1, name: 'Conta' })
 
-    fireEvent.click(screen.getAllByRole('button', { name: 'Sair' })[1])
+    fireEvent.click(screen.getByRole('button', { name: 'Sair' }))
     await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.entrar })
 
     expect(sessionStorage.getItem(CHAVE_RECUPERACAO)).toBeNull()

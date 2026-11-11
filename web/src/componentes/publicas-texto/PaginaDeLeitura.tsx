@@ -3,6 +3,7 @@ import { useLocation } from 'react-router'
 import type { PaginaDeTexto } from '../../conteudo/publicas-texto.ts'
 import { Ilustracao } from '../campo/Ilustracao.tsx'
 import { PainelCampo } from '../campo/PainelCampo.tsx'
+import { BlocoDeEmail } from './BlocoDeEmail.tsx'
 import { IndiceDaPagina } from './IndiceDaPagina.tsx'
 import { SecaoDeTexto } from './SecaoDeTexto.tsx'
 import './publicasTexto.css'
@@ -55,17 +56,18 @@ function tituloDoFragmento(hash: string, secoes: PaginaDeTexto['secoes']): HTMLE
 /**
  * Página pública de leitura longa (Campo de mel). O título tem duas linhas: o nome da página (`h1`) e,
  * logo abaixo, a segunda linha em itálico; em 1440 ele corre pela largura toda. Abaixo dele, a coluna de
- * texto (uns 70 caracteres por linha) fica à esquerda e o painel de areia, com o desenho e o índice
- * "Nesta página", à direita; em 390 tudo empilha na ordem do DOM (título, painel com o índice recolhido,
- * texto). Quem chega por um endereço com `#secao-...` (como o link das Regras, no Contato) cai no título
- * da seção, com o foco nele.
+ * texto (uns 70 caracteres por linha) fica à esquerda e o painel de areia, com a frase de apoio, o índice
+ * "Nesta página" e o desenho, à direita (fixo ao rolar). Abaixo de 1100 px o painel perde o cartão e o
+ * desenho: sobra o índice recolhido, na mesma margem do título, e o desenho vira uma figura solta dentro
+ * da leitura, depois da primeira seção (ou da seção `figuraDepoisDe`). Quem chega por um endereço com
+ * `#secao-...` (como o link das Regras, no Contato) cai no título da seção, com o foco nele.
  *
  * O `h1` leva só o nome da página (o texto exato que as rotas conferem), por isso não usa o `Titulo`
  * animado, cujo texto para leitor de tela repete as linhas; a segunda linha é um parágrafo do mesmo tamanho.
  */
 export function PaginaDeLeitura({ pagina }: { pagina: PaginaDeTexto }) {
   const { hash, key } = useLocation()
-  const { nome, subtitulo, ilustracao, aviso, apresentacao, secoes } = pagina
+  const { nome, subtitulo, ilustracao, apoio, figuraDepoisDe = 1, blocoDeEmail, apresentacao, secoes } = pagina
 
   useEffect(() => {
     const alvo = tituloDoFragmento(hash, secoes)
@@ -82,14 +84,20 @@ export function PaginaDeLeitura({ pagina }: { pagina: PaginaDeTexto }) {
           <p className="pt-segunda-linha">{ligarPalavrasCurtas(subtitulo)}</p>
         </div>
         <PainelCampo como="aside" variante="areia" largura="celula" className="pt-painel">
-          <Ilustracao nome={ilustracao} carregamento="eager" className="pt-ilustracao" />
+          <p className="pt-apoio">{apoio}</p>
           <IndiceDaPagina secoes={secoes.map(({ secao }) => secao)} />
+          <Ilustracao nome={ilustracao} carregamento="eager" className="pt-ilustracao pt-ilustracao-painel" />
         </PainelCampo>
         <div className="pt-leitura">
+          {blocoDeEmail ? <BlocoDeEmail /> : null}
           {apresentacao ? <p className="cm-lide">{apresentacao}</p> : null}
-          {aviso ? <p className="pt-aviso">{aviso}</p> : null}
-          {secoes.map((dados) => (
-            <SecaoDeTexto key={dados.secao.id} dados={dados} />
+          {secoes.map((dados, indice) => (
+            <Fragment key={dados.secao.id}>
+              <SecaoDeTexto dados={dados} />
+              {indice + 1 === figuraDepoisDe ? (
+                <Ilustracao nome={ilustracao} carregamento="lazy" className="pt-ilustracao pt-ilustracao-leitura" />
+              ) : null}
+            </Fragment>
           ))}
         </div>
       </div>
