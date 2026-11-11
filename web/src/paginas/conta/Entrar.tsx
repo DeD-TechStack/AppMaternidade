@@ -8,7 +8,7 @@ import { useFocoNoResumo } from '../../componentes/conta/foco.ts'
 import { MolduraPublica } from '../../componentes/conta/MolduraPublica.tsx'
 import { BOTAO_PRINCIPAL, Carregando, LINK_ALVO, RegiaoStatus, ResumoErro } from '../../componentes/conta/Partes.tsx'
 import { useDadosConta, useSessao } from '../../componentes/conta/sessao.tsx'
-import { COMUM, ENTRAR, TITULOS, textoDaPassagem } from '../../conteudo/conta.ts'
+import { COMUM, ENTRAR, MANCHETES, TITULOS, textoDaPassagem } from '../../conteudo/conta.ts'
 
 // /entrar (RF-12): e-mail e senha. Campo vazio dá erro no próprio campo, sem chamar o banco. Erro
 // do catálogo aparece no topo do formulário, e o foco vai para ele. Quem já tem sessão vai ao
@@ -59,15 +59,16 @@ export function Entrar() {
   return (
     <MolduraPublica
       titulo={TITULOS.entrar}
+      manchete={MANCHETES.entrar}
       frase={ENTRAR.frase}
       ocupado={carregando}
       ligacoes={
-        <p className="texto-medida">
-          {ENTRAR.semConta}{' '}
+        <>
+          <span>{ENTRAR.semConta}</span>
           <Link to={caminhoComVolta('/criar-conta', volta)} className={LINK_ALVO}>
             {ENTRAR.criarConta}
           </Link>
-        </p>
+        </>
       }
     >
       <RegiaoStatus mensagem={textoDaPassagem(location.state)} />
@@ -110,7 +111,7 @@ export function Entrar() {
               erro={erros.senha}
               refEntrada={senhaRef}
             />
-            <Link to={caminhoComVolta('/recuperar-acesso', volta)} className={`${LINK_ALVO} self-end`}>
+            <Link to={caminhoComVolta('/recuperar-acesso', volta)} className={`${LINK_ALVO} self-start`}>
               {ENTRAR.esqueci}
             </Link>
           </div>

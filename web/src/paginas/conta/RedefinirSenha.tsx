@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { CircleAlert } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { apagarChave, CHAVE_RECUPERACAO, lerChave } from '../../componentes/conta/armazenamento.ts'
 import { Campo, CampoSenha } from '../../componentes/conta/Campos.tsx'
@@ -7,7 +8,7 @@ import { useFocoNoResumo } from '../../componentes/conta/foco.ts'
 import { MolduraPublica } from '../../componentes/conta/MolduraPublica.tsx'
 import { BOTAO_PRINCIPAL, Carregando, LINK_ALVO, ResumoErro } from '../../componentes/conta/Partes.tsx'
 import { useDadosConta, useSessao } from '../../componentes/conta/sessao.tsx'
-import { COMUM, REDEFINIR, TEXTOS_ERRO, TITULOS, textoDoErro } from '../../conteudo/conta.ts'
+import { COMUM, MANCHETES, REDEFINIR, TEXTOS_ERRO, TITULOS, textoDoErro } from '../../conteudo/conta.ts'
 
 // /redefinir-senha (RF-12). O formulário só aparece com a marca de recuperação: o provedor de
 // sessão grava no `sessionStorage` o id do usuário da sessão do evento `recuperacao`, e a marca
@@ -71,12 +72,20 @@ export function RedefinirSenha() {
   const vencido = !carregando && (linkVencidoNaUrl || !marcaValida)
 
   return (
-    <MolduraPublica titulo={TITULOS.redefinirSenha} frase={REDEFINIR.frase} ocupado={carregando}>
+    <MolduraPublica
+      titulo={TITULOS.redefinirSenha}
+      manchete={MANCHETES.redefinirSenha}
+      frase={REDEFINIR.frase}
+      ocupado={carregando}
+    >
       {carregando ? (
         <Carregando />
       ) : vencido ? (
         <div className="flex flex-col items-start gap-3">
-          <p className="font-semibold">{TEXTOS_ERRO.link_vencido}</p>
+          <p className="flex items-start gap-3 font-medium">
+            <CircleAlert size={22} aria-hidden="true" className="mt-0.5 shrink-0" />
+            <span>{TEXTOS_ERRO.link_vencido}</span>
+          </p>
           <Link to="/recuperar-acesso" className={LINK_ALVO}>
             {REDEFINIR.pedirOutroLink}
           </Link>

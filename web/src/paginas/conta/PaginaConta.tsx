@@ -36,8 +36,14 @@ const SECOES_DO_INDICE = [
   ['privacidade', CONTA.secoes.privacidade],
 ] as const
 
+// Cada seção é uma linha de duas colunas (o texto, depois os controles) sobre um fio de 1 px; a
+// zona de perigo (excluir a conta) é um cartão de raio 20 com contorno de 1,5 px.
+const SECAO_GRADE = 'grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-12'
+const SECAO = `${SECAO_GRADE} border-t border-[var(--cor-fio-suave)] py-8`
+const TEXTO_DA_SECAO = 'flex min-w-0 flex-col gap-3'
+
 // /app/conta (RF-16): perfil, id da conta, exportação, exclusão, privacidade e sair, numa coluna
-// com o índice das seções à esquerda a partir de 60 rem.
+// com o índice das seções à esquerda a partir de 64 rem.
 export function PaginaConta() {
   const sessao = useSessao()
   const dados = useDadosConta()
@@ -229,21 +235,20 @@ export function PaginaConta() {
 
   return (
     <MolduraLogada>
-      <h1 ref={titulo} tabIndex={-1} className="titulo-tela alvo-foco">
+      <h1 ref={titulo} tabIndex={-1} className="cm-h2 alvo-foco">
         {TITULOS.conta}
       </h1>
-      <p className="wrap-anywhere">{CONTA.resumo(conta.nome, conta.email)}</p>
-      <RegiaoStatus mensagem={status} />
+      <p className="cm-lide mt-3 wrap-anywhere text-[var(--cor-texto-2)]">{CONTA.resumo(conta.nome, conta.email)}</p>
+      <div className={status ? 'mt-6 max-w-[40rem]' : undefined}>
+        <RegiaoStatus mensagem={status} />
+      </div>
 
-      <div className="mt-8 grid gap-6 min-[60rem]:grid-cols-[13rem_minmax(0,1fr)] min-[60rem]:gap-12">
-        <nav
-          aria-label={CONTA.indice}
-          className="hidden min-[60rem]:sticky min-[60rem]:top-4 min-[60rem]:block min-[60rem]:self-start"
-        >
-          <ol className="m-0 list-none border-l p-0">
+      <div className="mt-10 grid gap-6 lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-12">
+        <nav aria-label={CONTA.indice} className="hidden lg:sticky lg:top-28 lg:block lg:self-start">
+          <ol className="m-0 list-none border-l border-[var(--cor-fio-suave)] p-0">
             {SECOES_DO_INDICE.map(([id, rotulo]) => (
               <li key={id}>
-                <a href={`#${id}`} className="alvo-toque flex items-center px-3 no-underline hover:underline">
+                <a href={`#${id}`} className={`${LINK_ALVO} px-3`}>
                   {rotulo}
                 </a>
               </li>
@@ -252,10 +257,13 @@ export function PaginaConta() {
         </nav>
 
         <div className="flex min-w-0 flex-col">
-          <section aria-labelledby="perfil" className="pb-8">
-            <h2 id="perfil" className="titulo-linha mb-4">
-              {CONTA.perfil.titulo}
-            </h2>
+          <section aria-labelledby="perfil" className={SECAO}>
+            <div className={TEXTO_DA_SECAO}>
+              <h2 id="perfil" className="cm-h4">
+                {CONTA.perfil.titulo}
+              </h2>
+              <p className="cm-medida">{CONTA.perfil.frase}</p>
+            </div>
             <form onSubmit={salvarPerfil} noValidate className="flex max-w-[28rem] flex-col gap-5">
               {erroDoPerfil && !campoDoPerfil ? (
                 <ResumoErro
@@ -291,107 +299,130 @@ export function PaginaConta() {
             </form>
           </section>
 
-          <section aria-labelledby="id-conta" className="flex flex-col items-start gap-3 border-t py-8">
-            <h2 id="id-conta" className="titulo-linha">
-              {CONTA.id.titulo}
-            </h2>
-            <p ref={idRef} data-id-conta className="tabular font-semibold">
-              {conta.id.split('-').map((bloco, posicao, blocos) => (
-                <Fragment key={posicao}>
-                  {posicao < blocos.length - 1 ? `${bloco}-` : bloco}
-                  {posicao < blocos.length - 1 ? <wbr /> : null}
-                </Fragment>
-              ))}
-            </p>
-            <button type="button" className={BOTAO_SECUNDARIO} onClick={() => void copiarId()}>
-              {CONTA.id.botao}
-            </button>
-            <p className="texto-medida">{CONTA.id.frase}</p>
+          <section aria-labelledby="id-conta" className={SECAO}>
+            <div className={TEXTO_DA_SECAO}>
+              <h2 id="id-conta" className="cm-h4">
+                {CONTA.id.titulo}
+              </h2>
+              <p className="cm-medida">{CONTA.id.frase}</p>
+            </div>
+            <div className="flex min-w-0 flex-col items-start gap-4">
+              <p
+                ref={idRef}
+                data-id-conta
+                className="tabular rounded-campo bg-[var(--cor-papel-fundo)] px-4 py-3 font-medium"
+              >
+                {conta.id.split('-').map((bloco, posicao, blocos) => (
+                  <Fragment key={posicao}>
+                    {posicao < blocos.length - 1 ? `${bloco}-` : bloco}
+                    {posicao < blocos.length - 1 ? <wbr /> : null}
+                  </Fragment>
+                ))}
+              </p>
+              <button type="button" className={BOTAO_SECUNDARIO} onClick={() => void copiarId()}>
+                {CONTA.id.botao}
+              </button>
+            </div>
           </section>
 
-          <section aria-labelledby="exportar" className="flex flex-col items-start gap-3 border-t py-8">
-            <h2 id="exportar" tabIndex={-1} className="titulo-linha alvo-foco">
-              {CONTA.exportar.titulo}
-            </h2>
-            <p className="texto-medida">{CONTA.exportar.frase}</p>
-            {exportacao.estado.fase === 'erro' ? (
-              <ResumoErro
-                erro={exportacao.estado.erro}
-                repetivel={exportacao.estado.tentarDeNovo}
-                aoTentarDeNovo={() => void exportacao.tentarDeNovo()}
-                refResumo={resumoDaExportacao}
-              />
-            ) : null}
-            <button type="button" disabled={exportacao.enviando} className={BOTAO_SECUNDARIO} onClick={baixarDados}>
-              {exportacao.enviando ? COMUM.preparandoArquivo : CONTA.exportar.botao}
-            </button>
+          <section aria-labelledby="exportar" className={SECAO}>
+            <div className={TEXTO_DA_SECAO}>
+              <h2 id="exportar" tabIndex={-1} className="cm-h4 alvo-foco">
+                {CONTA.exportar.titulo}
+              </h2>
+              <p className="cm-medida">{CONTA.exportar.frase}</p>
+            </div>
+            <div className="flex min-w-0 flex-col items-start gap-4">
+              {exportacao.estado.fase === 'erro' ? (
+                <ResumoErro
+                  erro={exportacao.estado.erro}
+                  repetivel={exportacao.estado.tentarDeNovo}
+                  aoTentarDeNovo={() => void exportacao.tentarDeNovo()}
+                  refResumo={resumoDaExportacao}
+                />
+              ) : null}
+              <button type="button" disabled={exportacao.enviando} className={BOTAO_SECUNDARIO} onClick={baixarDados}>
+                {exportacao.enviando ? COMUM.preparandoArquivo : CONTA.exportar.botao}
+              </button>
+            </div>
           </section>
 
-          <section aria-labelledby="excluir-conta" className="flex flex-col items-start gap-3 border-t py-8">
-            <h2 id="excluir-conta" className="titulo-linha">
-              {CONTA.excluir.titulo}
-            </h2>
-            <p className="texto-medida">{CONTA.excluir.explicacao}</p>
-            {leitura.fase === 'lendo' ? <p>{CONTA.excluir.lendo}</p> : null}
-            {leitura.fase === 'erro' ? (
-              <ResumoErro
-                erro={leitura.erro}
-                repetivel
-                aoTentarDeNovo={() => {
-                  setLeitura({ fase: 'lendo' })
-                  void ler()
-                }}
-                refResumo={resumoDaLeitura}
-              />
-            ) : null}
-            {bloqueadoras.length > 0 ? (
-              <div id="impedimento-exclusao" className="texto-medida">
-                <p>{CONTA.excluir.impedimento}</p>
-                <ul className="mt-2 list-disc pl-6">
-                  {bloqueadoras.map((familia) => (
-                    <li key={familia}>
-                      <strong className="wrap-anywhere">{familia}</strong>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-            <button
-              ref={botaoExcluir}
-              type="button"
-              disabled={botaoDesativado}
-              aria-describedby={bloqueadoras.length > 0 ? 'impedimento-exclusao' : undefined}
-              className={BOTAO_SECUNDARIO}
-              onClick={() => setAberto(true)}
-            >
-              {CONTA.excluir.botao}
-            </button>
+          <section
+            aria-labelledby="excluir-conta"
+            className={`${SECAO_GRADE} my-8 rounded-cartao border-[1.5px] border-[var(--cor-texto)] p-6 lg:p-8`}
+          >
+            <div className={TEXTO_DA_SECAO}>
+              <h2 id="excluir-conta" className="cm-h4">
+                {CONTA.excluir.titulo}
+              </h2>
+              <p className="cm-medida">{CONTA.excluir.explicacao}</p>
+            </div>
+            <div className="flex min-w-0 flex-col items-start gap-4">
+              {leitura.fase === 'lendo' ? <p>{CONTA.excluir.lendo}</p> : null}
+              {leitura.fase === 'erro' ? (
+                <ResumoErro
+                  erro={leitura.erro}
+                  repetivel
+                  aoTentarDeNovo={() => {
+                    setLeitura({ fase: 'lendo' })
+                    void ler()
+                  }}
+                  refResumo={resumoDaLeitura}
+                />
+              ) : null}
+              {bloqueadoras.length > 0 ? (
+                <div id="impedimento-exclusao" className="cm-medida">
+                  <p>{CONTA.excluir.impedimento}</p>
+                  <ul className="mt-2 list-disc pl-6">
+                    {bloqueadoras.map((familia) => (
+                      <li key={familia}>
+                        <strong className="wrap-anywhere">{familia}</strong>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+              <button
+                ref={botaoExcluir}
+                type="button"
+                disabled={botaoDesativado}
+                aria-describedby={bloqueadoras.length > 0 ? 'impedimento-exclusao' : undefined}
+                className={BOTAO_SECUNDARIO}
+                onClick={() => setAberto(true)}
+              >
+                {CONTA.excluir.botao}
+              </button>
+            </div>
           </section>
 
-          <section aria-labelledby="privacidade" className="flex flex-col items-start gap-2 border-t py-8">
-            <h2 id="privacidade" className="titulo-linha mb-2">
-              {CONTA.privacidade.titulo}
-            </h2>
-            <p>
-              {CONTA.privacidade.contato.antes}
-              <span data-contato className="wrap-anywhere">
-                {CONTA.privacidade.contato.valor}
-              </span>
-              {CONTA.privacidade.contato.depois}
-            </p>
-            <p>
-              {CONTA.privacidade.encarregado.antes}
-              <span data-encarregado className="wrap-anywhere">
-                {CONTA.privacidade.encarregado.valor}
-              </span>
-              {CONTA.privacidade.encarregado.depois}
-            </p>
-            <Link to="/privacidade" className={LINK_ALVO}>
-              {CONTA.privacidade.politica}
-            </Link>
+          <section aria-labelledby="privacidade" className={SECAO}>
+            <div className={TEXTO_DA_SECAO}>
+              <h2 id="privacidade" className="cm-h4">
+                {CONTA.privacidade.titulo}
+              </h2>
+            </div>
+            <div className="flex min-w-0 flex-col items-start gap-2">
+              <p>
+                {CONTA.privacidade.contato.antes}
+                <span data-contato className="wrap-anywhere">
+                  {CONTA.privacidade.contato.valor}
+                </span>
+                {CONTA.privacidade.contato.depois}
+              </p>
+              <p>
+                {CONTA.privacidade.encarregado.antes}
+                <span data-encarregado className="wrap-anywhere">
+                  {CONTA.privacidade.encarregado.valor}
+                </span>
+                {CONTA.privacidade.encarregado.depois}
+              </p>
+              <Link to="/privacidade" className={LINK_ALVO}>
+                {CONTA.privacidade.politica}
+              </Link>
+            </div>
           </section>
 
-          <div className="border-t pt-8">
+          <div className="border-t border-[var(--cor-fio-suave)] pt-8">
             <BotaoSair />
           </div>
         </div>

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import axe from 'axe-core'
 import { CHAVE_RECUPERACAO } from '../../componentes/conta/armazenamento.ts'
-import { TEXTOS_ERRO } from '../../conteudo/conta.ts'
+import { NOMES_DO_H1, TEXTOS_ERRO } from '../../conteudo/conta.ts'
 import { SENHA_DEMONSTRACAO } from '../../dados/conta.demonstracao.ts'
 import { criarDadosContaMemoria } from '../../dados/conta.memoria.ts'
 import { criarEstadoInicial, type EstadoPrototipo } from '../../prototipo/estado.ts'
@@ -34,9 +34,14 @@ async function violacoes(container: HTMLElement): Promise<string[]> {
 
 const CLASSE_DE_ALVO = /(^|\s)(alvo-toque|botao|nav-item)(\s|$)/
 
-/** Links e controles fora de parágrafo sem a classe que garante 44 × 44 px (como em layout.test.tsx). */
+/**
+ * Links e controles fora de parágrafo sem a classe que garante 44 × 44 px (como em layout.test.tsx).
+ * Só as telas: o cabeçalho e o rodapé da casca têm os alvos deles (conferidos em layout.test.tsx).
+ */
 function semAlvoDe44(container: HTMLElement): string[] {
-  return [...container.querySelectorAll<HTMLElement>('a, button, input, select, textarea')]
+  const telas = [...container.querySelectorAll<HTMLElement>('main, nav[aria-label="Conta"]')]
+  return telas
+    .flatMap((tela) => [...tela.querySelectorAll<HTMLElement>('a, button, input, select, textarea')])
     .filter((elemento) => elemento.closest('p, [inert]') === null)
     .filter((elemento) => !CLASSE_DE_ALVO.test(elemento.className))
     .map((elemento) => elemento.outerHTML.slice(0, 160))
@@ -250,7 +255,7 @@ describe('a caixa de diálogo de excluir a conta', () => {
 describe('foco e rolagem ao trocar de tela', () => {
   it('na primeira carga da página o foco não se move e a tela não rola', async () => {
     const { rolarAoTopo } = renderizarComDados('/entrar')
-    const titulo = await screen.findByRole('heading', { level: 1, name: 'Entrar' })
+    const titulo = await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.entrar })
 
     expect(document.activeElement).not.toBe(titulo)
     expect(rolarAoTopo).not.toHaveBeenCalled()
@@ -260,14 +265,14 @@ describe('foco e rolagem ao trocar de tela', () => {
     const { rolarAoTopo } = renderizarComDados('/entrar')
     await screen.findByRole('button', { name: 'Entrar' })
 
-    fireEvent.click(screen.getByRole('link', { name: 'Criar conta' }))
-    const criar = await screen.findByRole('heading', { level: 1, name: 'Criar conta' })
+    fireEvent.click(within(document.querySelector('main')!).getByRole('link', { name: 'Criar conta' }))
+    const criar = await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.criarConta })
     await waitFor(() => expect(document.activeElement).toBe(criar))
     expect(criar.getAttribute('tabindex')).toBe('-1')
     expect(rolarAoTopo).toHaveBeenCalledWith(0, 0)
 
-    fireEvent.click(screen.getByRole('link', { name: 'Entrar' }))
-    const entrar = await screen.findByRole('heading', { level: 1, name: 'Entrar' })
+    fireEvent.click(within(document.querySelector('main')!).getByRole('link', { name: 'Entrar' }))
+    const entrar = await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.entrar })
     await waitFor(() => expect(document.activeElement).toBe(entrar))
   })
 
@@ -313,7 +318,7 @@ describe('RN-01: nenhuma rota desta tarefa chama a rede', () => {
     await screen.findByRole('heading', { level: 1, name: 'Conta' })
     await esperarCarregar()
     fireEvent.click(screen.getAllByRole('button', { name: 'Sair' })[0])
-    await screen.findByRole('heading', { level: 1, name: 'Entrar' })
+    await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.entrar })
 
     expect(fetchProibido).not.toHaveBeenCalled()
   })

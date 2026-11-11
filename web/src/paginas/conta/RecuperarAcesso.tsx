@@ -7,7 +7,7 @@ import { useFocoNoResumo } from '../../componentes/conta/foco.ts'
 import { MolduraPublica } from '../../componentes/conta/MolduraPublica.tsx'
 import { BOTAO_PRINCIPAL, LINK_ALVO, RegiaoStatus, ResumoErro } from '../../componentes/conta/Partes.tsx'
 import { useDadosConta } from '../../componentes/conta/sessao.tsx'
-import { COMUM, RECUPERAR, TITULOS, textoDoErro } from '../../conteudo/conta.ts'
+import { COMUM, MANCHETES, RECUPERAR, TITULOS, textoDoErro } from '../../conteudo/conta.ts'
 import type { Resultado } from '../../dados/comum.ts'
 
 // /recuperar-acesso (RF-12). Nenhum resultado depende de a conta existir, então nenhum a revela:
@@ -59,16 +59,17 @@ export function RecuperarAcesso() {
   return (
     <MolduraPublica
       titulo={TITULOS.recuperarAcesso}
+      manchete={MANCHETES.recuperarAcesso}
       frase={RECUPERAR.frase}
       ligacoes={
-        <p className="flex flex-wrap gap-x-4">
+        <>
           <Link to={caminhoComVolta('/entrar', volta)} className={LINK_ALVO}>
             {RECUPERAR.entrar}
           </Link>
           <Link to={caminhoComVolta('/criar-conta', volta)} className={LINK_ALVO}>
             {RECUPERAR.criarConta}
           </Link>
-        </p>
+        </>
       }
     >
       <RegiaoStatus mensagem={mensagem} />

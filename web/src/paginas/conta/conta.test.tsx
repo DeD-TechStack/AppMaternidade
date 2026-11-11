@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { listaDeFusos } from '../../componentes/conta/fusos.ts'
 import { CHAVE_CONVITE, CHAVE_FAMILIA_ATUAL, CHAVE_RECUPERACAO } from '../../componentes/conta/armazenamento.ts'
-import { CONTA, TEXTOS_ERRO } from '../../conteudo/conta.ts'
+import { CONTA, NOMES_DO_H1, TEXTOS_ERRO } from '../../conteudo/conta.ts'
 import { dataNoFuso, fusoValido, type Resultado } from '../../dados/comum.ts'
 import { erroDaChave } from '../../dados/conta.erros.ts'
 import { FAMILIAS_DEMONSTRACAO, SENHA_DEMONSTRACAO } from '../../dados/conta.demonstracao.ts'
@@ -51,7 +51,10 @@ describe('estrutura da tela', () => {
     await abrirConta()
 
     expect(screen.getByText('Juliana · juliana@exemplo.invalid')).toBeTruthy()
-    const secoes = screen.getAllByRole('heading', { level: 2 }).map((titulo) => titulo.textContent)
+    // Só as seções da tela: o rodapé da casca tem os próprios títulos (Produto, Ajuda e Legal).
+    const secoes = within(document.querySelector('main')!)
+      .getAllByRole('heading', { level: 2 })
+      .map((titulo) => titulo.textContent)
     expect(secoes).toEqual(['Perfil', 'Id da sua conta', 'Seus dados', 'Excluir conta', 'Privacidade'])
 
     const cabecalho = within(screen.getByRole('navigation', { name: 'Conta' }))
@@ -77,18 +80,27 @@ describe('estrutura da tela', () => {
   })
 })
 
-describe('cabeçalho da conta', () => {
-  it('a marca nunca encolhe e o cabeçalho em linha quebra a navegação para baixo quando não cabem', async () => {
-    await abrirConta()
+describe('barra da conta', () => {
+  it('é uma barra fina dentro da casca: sem marca, sem aviso próprio, e quebra a linha quando os controles não cabem', async () => {
+    const { container } = await abrirConta()
 
-    const cabecalho = document.querySelector('header')!
-    const marca = cabecalho.querySelector('a.marca')!
-    const classes = cabecalho.classList
-    expect(marca.classList.contains('shrink-0')).toBe(true)
-    expect(classes.contains('min-[40rem]:flex-row')).toBe(true)
-    expect(classes.contains('min-[40rem]:flex-wrap')).toBe(true)
-    // A ordem do DOM é a visual: marca, depois a navegação.
-    expect([...cabecalho.children].map((filho) => filho.tagName)).toEqual(['A', 'NAV'])
+    // Cabeçalho e rodapé são os da casca: um só de cada, e a tela não desenha outro.
+    expect(container.querySelectorAll('header')).toHaveLength(1)
+    expect(container.querySelectorAll('footer')).toHaveLength(1)
+    expect(container.querySelectorAll('[data-nome-site]')).toHaveLength(1)
+    expect(container.querySelectorAll('[data-aviso="demonstracao"]')).toHaveLength(0)
+
+    // A barra: a navegação "Conta", com o link da Conta, o do protótipo e o Sair, antes do <main>.
+    const barra = screen.getByRole('navigation', { name: 'Conta' })
+    expect(barra.closest('header')).toBeNull()
+    expect(barra.compareDocumentPosition(container.querySelector('main')!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(barra.classList.contains('flex-wrap')).toBe(true)
+    expect(barra.classList.contains('justify-between')).toBe(true)
+    expect([...barra.querySelectorAll('a, button')].map((filho) => filho.textContent)).toEqual([
+      'Conta',
+      'Ver o protótipo do Hoje',
+      'Sair',
+    ])
   })
 })
 
@@ -566,7 +578,7 @@ describe('excluir conta: a caixa de confirmação', () => {
 
       fireEvent.click(within(alerta).getByRole('button', { name: 'Tentar de novo' }))
 
-      await screen.findByRole('heading', { level: 1, name: 'Conta excluída' })
+      await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.contaExcluida })
       expect(caminhoDe(roteador)).toBe('/conta-excluida')
       expect(entrar).toHaveBeenCalledTimes(1)
       expect(excluir).toHaveBeenCalledTimes(2)
@@ -616,7 +628,7 @@ describe('excluir conta: a caixa de confirmação', () => {
     fireEvent.change(within(dialogo()).getByLabelText('Senha atual', { selector: 'input' }), { target: { value: SENHA_DEMONSTRACAO } })
     fireEvent.click(within(dialogo()).getByRole('button', { name: 'Excluir conta' }))
 
-    await screen.findByRole('heading', { level: 1, name: 'Conta excluída' })
+    await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.contaExcluida })
     expect(caminhoDe(roteador)).toBe('/conta-excluida')
     expect(screen.getByText('Sua conta foi excluída.')).toBeTruthy()
     expect(screen.queryByRole('dialog')).toBeNull()
@@ -674,7 +686,7 @@ describe('privacidade e sair', () => {
     const { roteador } = await abrirConta()
 
     fireEvent.click(screen.getAllByRole('button', { name: 'Sair' })[1])
-    await screen.findByRole('heading', { level: 1, name: 'Entrar' })
+    await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.entrar })
     expect(caminhoDe(roteador)).toBe('/entrar')
     expect(status().textContent).toBe('Você saiu da conta.')
   })
@@ -692,7 +704,7 @@ describe('privacidade e sair', () => {
     // A saída é da pessoa; a leitura dos impedimentos, que ainda não voltou, chega depois dela.
     fireEvent.click(screen.getAllByRole('button', { name: 'Sair' })[0])
     liberar({ ok: false, erro: erroDaChave('sessao_encerrada') })
-    await screen.findByRole('heading', { level: 1, name: 'Entrar' })
+    await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.entrar })
     await new Promise((resolver) => setTimeout(resolver, 20))
 
     expect(status().textContent).toBe('Você saiu da conta.')

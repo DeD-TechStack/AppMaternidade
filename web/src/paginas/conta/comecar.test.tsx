@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { fusoDoAparelho, listaDeFusos } from '../../componentes/conta/fusos.ts'
-import { TEXTOS_ERRO } from '../../conteudo/conta.ts'
+import { NOMES_DO_H1, TEXTOS_ERRO } from '../../conteudo/conta.ts'
 import { criarDadosContaMemoria, simularFalha } from '../../dados/conta.memoria.ts'
 import { criarFixtureDeTeste, renderizarComDados } from '../../teste/renderizarComDados.tsx'
 
@@ -28,17 +28,20 @@ describe('o passo "Seu nome"', () => {
     const dados = await memoriaSemConta('Nova Pessoa')
     renderizarComDados('/app/comecar', { dados })
 
-    expect((await screen.findByRole('heading', { level: 1 })).textContent).toBe('Começar')
+    expect((await screen.findByRole('heading', { level: 1 })).textContent).toBe(NOMES_DO_H1.comecar)
     expect(screen.getByRole('heading', { level: 2, name: 'Seu nome' })).toBeTruthy()
     expect(screen.getByText('Falta pouco. Diga o seu nome e o fuso em que você está.')).toBeTruthy()
     expect(screen.getByText('É o nome que a família vai ver.')).toBeTruthy()
     expect(screen.getByText('Os horários aparecem neste fuso.')).toBeTruthy()
     expect(campoDeTexto().value).toBe('Nova Pessoa')
     expect(campoDeFuso().value).toBe(fusoDoAparelho())
-    expect(screen.getByRole('button', { name: 'Salvar' }).classList.contains('botao-grande')).toBe(true)
+    // A ação é a pílula primária do "Campo de mel" (cacau, 56 px, largura cheia do formulário).
+    const salvarBotao = screen.getByRole('button', { name: 'Salvar' })
+    expect(salvarBotao.classList.contains('cm-botao-primario')).toBe(true)
+    expect(salvarBotao.classList.contains('w-full')).toBe(true)
   })
 
-  it('a partir de 60 rem usa duas colunas como a moldura pública: h2 e frase à esquerda, formulário à direita, na ordem do DOM', async () => {
+  it('a partir de 64 rem usa as duas colunas das telas de acesso: o h1 e o cartão do passo à esquerda, a cena de mel à direita', async () => {
     const dados = await memoriaSemConta()
     const { container } = renderizarComDados('/app/comecar', { dados })
     const h1 = await screen.findByRole('heading', { level: 1 })
@@ -46,21 +49,21 @@ describe('o passo "Seu nome"', () => {
     const h2 = screen.getByRole('heading', { level: 2, name: 'Seu nome' })
     const frase = screen.getByText('Falta pouco. Diga o seu nome e o fuso em que você está.')
     const formulario = container.querySelector('form')!
-    const grade = h2.closest('section')!
+    const cartao = h2.closest('section')!
 
-    // Uma coluna no celular; duas a partir de 60 rem, com a divisão e os espaços da MolduraPublica.
-    for (const classe of ['grid', 'gap-10', 'min-[60rem]:grid-cols-[5fr_7fr]', 'min-[60rem]:gap-16']) {
+    // Uma coluna no celular (o cartão primeiro, a cena depois); duas a partir de 64 rem.
+    const grade = h1.parentElement!.parentElement!
+    for (const classe of ['grid', 'gap-12', 'lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]', 'lg:gap-16']) {
       expect(grade.classList.contains(classe), classe).toBe(true)
     }
     const [esquerda, direita] = [...grade.children]
-    expect(esquerda.contains(h2) && esquerda.contains(frase)).toBe(true)
-    expect(esquerda.contains(formulario)).toBe(false)
-    expect(direita).toBe(formulario)
-    expect(formulario.classList.contains('max-w-[28rem]')).toBe(true)
+    expect(esquerda.contains(h1) && esquerda.contains(status) && esquerda.contains(cartao)).toBe(true)
+    expect(direita.querySelector('img[data-cena]')).not.toBeNull()
+    expect(cartao.contains(h2) && cartao.contains(frase) && cartao.contains(formulario)).toBe(true)
+    expect(cartao.contains(h1)).toBe(false)
+    expect(cartao.contains(status)).toBe(false)
 
-    // O h1 fica acima das duas colunas e a região de status onde estava, entre o h1 e a grade.
-    expect(grade.contains(h1)).toBe(false)
-    expect(grade.contains(status)).toBe(false)
+    // A ordem do DOM é a visual: o h1, a região de status, o título do passo, a frase e o formulário.
     const antes = (a: Element, b: Element) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)
     expect(antes(h1, status)).toBe(true)
     expect(antes(status, h2)).toBe(true)

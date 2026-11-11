@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { Info } from 'lucide-react'
 import { Link, Navigate, useSearchParams } from 'react-router'
 import { AreaDoLoginSocial } from '../../componentes/conta/AreaDoLoginSocial.tsx'
 import { Campo, CampoSenha } from '../../componentes/conta/Campos.tsx'
@@ -9,7 +10,7 @@ import { fusoDoAparelho } from '../../componentes/conta/fusos.ts'
 import { MolduraPublica } from '../../componentes/conta/MolduraPublica.tsx'
 import { BOTAO_PRINCIPAL, Carregando, LINK_ALVO, RegiaoStatus, ResumoErro } from '../../componentes/conta/Partes.tsx'
 import { useDadosConta, useSessao } from '../../componentes/conta/sessao.tsx'
-import { AVISO_BANCO_DEMONSTRACAO, COMUM, CRIAR_CONTA, TITULOS, textoDoErro } from '../../conteudo/conta.ts'
+import { AVISO_BANCO_DEMONSTRACAO, COMUM, CRIAR_CONTA, MANCHETES, TITULOS, textoDoErro } from '../../conteudo/conta.ts'
 import { modoDados } from '../../dados/comum.ts'
 
 // /criar-conta (RF-12). Cria o usuário no Auth com o nome nos metadados; com sessão devolvida,
@@ -82,20 +83,25 @@ export function CriarConta() {
   return (
     <MolduraPublica
       titulo={TITULOS.criarConta}
+      manchete={MANCHETES.criarConta}
       frase={CRIAR_CONTA.frase}
       ocupado={carregando}
       ligacoes={
-        <p className="texto-medida">
-          {CRIAR_CONTA.jaTemConta}{' '}
+        <>
+          <span>{CRIAR_CONTA.jaTemConta}</span>
           <Link to={caminhoComVolta('/entrar', volta)} className={LINK_ALVO}>
             {CRIAR_CONTA.entrar}
           </Link>
-        </p>
+        </>
       }
     >
       {comBanco ? (
-        <p data-aviso="banco-de-demonstracao" className="texto-info">
-          {AVISO_BANCO_DEMONSTRACAO}
+        <p
+          data-aviso="banco-de-demonstracao"
+          className="cm-pequeno flex items-start gap-3 rounded-campo bg-[var(--cor-papel-fundo)] px-4 py-3"
+        >
+          <Info size={20} aria-hidden="true" className="mt-0.5 shrink-0" />
+          <span>{AVISO_BANCO_DEMONSTRACAO}</span>
         </p>
       ) : null}
       <RegiaoStatus mensagem={confirmacao} />
@@ -114,7 +120,7 @@ export function CriarConta() {
               refResumo={resumo}
             >
               {erroDoEnvio.chave === 'email_em_uso' ? (
-                <div className="flex flex-wrap gap-x-4">
+                <div className="flex flex-wrap gap-x-4 text-[var(--cor-texto)]">
                   <Link to={caminhoComVolta('/entrar', volta)} className={LINK_ALVO}>
                     {TITULOS.entrar}
                   </Link>
@@ -161,11 +167,15 @@ export function CriarConta() {
             erro={erros.senha ?? (campoDoErro === 'senha' && erroDoEnvio ? textoDoErro(erroDoEnvio) : null)}
             refEntrada={senhaRef}
           />
-          <p className="texto-medida">
+          <p className="cm-pequeno text-[var(--cor-texto-2)]">
             {CRIAR_CONTA.termos.antes}
-            <Link to="/termos">{CRIAR_CONTA.termos.termos}</Link>
+            <Link to="/termos" className="text-[var(--cor-link)]">
+              {CRIAR_CONTA.termos.termos}
+            </Link>
             {CRIAR_CONTA.termos.meio}
-            <Link to="/privacidade">{CRIAR_CONTA.termos.privacidade}</Link>
+            <Link to="/privacidade" className="text-[var(--cor-link)]">
+              {CRIAR_CONTA.termos.privacidade}
+            </Link>
             {CRIAR_CONTA.termos.depois}
           </p>
           <button type="submit" disabled={enviando} className={BOTAO_PRINCIPAL}>

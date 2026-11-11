@@ -7,7 +7,7 @@ import {
   CHAVE_RECUPERACAO,
 } from '../../componentes/conta/armazenamento.ts'
 import { destinoDepoisDeEntrar, voltaValida } from '../../componentes/conta/destino.ts'
-import { AVISO_BANCO_DEMONSTRACAO, CRIAR_CONTA, RECUPERAR, TEXTOS_ERRO } from '../../conteudo/conta.ts'
+import { AVISO_BANCO_DEMONSTRACAO, CRIAR_CONTA, NOMES_DO_H1, RECUPERAR, TEXTOS_ERRO } from '../../conteudo/conta.ts'
 import type { Resultado } from '../../dados/comum.ts'
 import type { Usuario } from '../../dados/conta.ts'
 import { SENHA_DEMONSTRACAO } from '../../dados/conta.demonstracao.ts'
@@ -34,6 +34,9 @@ const campo = (rotulo: string) => screen.getByLabelText(rotulo, { selector: 'inp
 const digitar = (rotulo: string, texto: string) => fireEvent.change(campo(rotulo), { target: { value: texto } })
 const botao = (nome: string) => screen.getByRole('button', { name: nome })
 const status = () => screen.getByRole('status')
+// O cabeçalho da casca também tem os links Entrar e Criar conta (levam ao Contato por enquanto): os da
+// tela se buscam dentro do <main>.
+const principal = () => within(document.querySelector('main')!)
 const caminhoDe = (roteador: { state: { location: { pathname: string } } }) => roteador.state.location.pathname
 const novaMemoria = () => criarDadosContaMemoria(criarFixtureDeTeste(Date.now()))
 
@@ -136,25 +139,25 @@ describe('o destino depois de entrar (RF-10)', () => {
     const volta = '?volta=%2Fapp%2Fhoje'
     const { roteador, unmount } = renderizarComDados(`/entrar${volta}`)
     await screen.findByRole('button', { name: 'Entrar' })
-    expect(screen.getByRole('link', { name: 'Criar conta' }).getAttribute('href')).toBe(`/criar-conta${volta}`)
+    expect(principal().getByRole('link', { name: 'Criar conta' }).getAttribute('href')).toBe(`/criar-conta${volta}`)
     expect(screen.getByRole('link', { name: 'Esqueci a senha' }).getAttribute('href')).toBe(`/recuperar-acesso${volta}`)
     unmount()
 
     const criar = renderizarComDados(`/criar-conta${volta}`)
     await screen.findByRole('button', { name: 'Criar conta' })
-    expect(screen.getByRole('link', { name: 'Entrar' }).getAttribute('href')).toBe(`/entrar${volta}`)
+    expect(principal().getByRole('link', { name: 'Entrar' }).getAttribute('href')).toBe(`/entrar${volta}`)
     criar.unmount()
 
     renderizarComDados(`/recuperar-acesso${volta}`)
-    expect(screen.getByRole('link', { name: 'Entrar' }).getAttribute('href')).toBe(`/entrar${volta}`)
-    expect(screen.getByRole('link', { name: 'Criar conta' }).getAttribute('href')).toBe(`/criar-conta${volta}`)
+    expect(principal().getByRole('link', { name: 'Entrar' }).getAttribute('href')).toBe(`/entrar${volta}`)
+    expect(principal().getByRole('link', { name: 'Criar conta' }).getAttribute('href')).toBe(`/criar-conta${volta}`)
     expect(roteador).toBeTruthy()
   })
 
   it('um volta inválido não vai para os links', async () => {
     renderizarComDados('/entrar?volta=%2Fentrar')
     await screen.findByRole('button', { name: 'Entrar' })
-    expect(screen.getByRole('link', { name: 'Criar conta' }).getAttribute('href')).toBe('/criar-conta')
+    expect(principal().getByRole('link', { name: 'Criar conta' }).getAttribute('href')).toBe('/criar-conta')
   })
 })
 
@@ -183,7 +186,7 @@ describe('a guarda das rotas logadas (RF-09)', () => {
     renderizarComDados('/app/conta', { dados })
 
     expect((await screen.findByRole('alert')).textContent).toContain(TEXTOS_ERRO.rede)
-    expect(screen.queryByRole('heading', { level: 1, name: 'Entrar' })).toBeNull()
+    expect(screen.queryByRole('heading', { level: 1, name: NOMES_DO_H1.entrar })).toBeNull()
     fireEvent.click(botao('Tentar de novo'))
     await screen.findByRole('heading', { level: 1, name: 'Conta' })
   })
@@ -202,7 +205,7 @@ describe('a guarda das rotas logadas (RF-09)', () => {
   it('sem sessão: vai a /entrar com o caminho pedido (e a busca), no lugar da entrada do histórico', async () => {
     const { roteador } = renderizarComDados('/app/conta?aba=dados')
 
-    await screen.findByRole('heading', { level: 1, name: 'Entrar' })
+    await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.entrar })
     expect(caminhoDe(roteador)).toBe('/entrar')
     expect(roteador.state.location.search).toBe('?volta=%2Fapp%2Fconta%3Faba%3Ddados')
     expect(roteador.state.historyAction).toBe('REPLACE')
@@ -308,7 +311,7 @@ describe('/entrar', () => {
     await screen.findByRole('button', { name: 'Entrar' })
 
     for (const nome of ['Criar conta', 'Esqueci a senha']) {
-      expect(screen.getByRole('link', { name: nome }).classList.contains('alvo-toque')).toBe(true)
+      expect(principal().getByRole('link', { name: nome }).classList.contains('alvo-toque')).toBe(true)
     }
     expect(screen.getByRole('link', { name: 'Esqueci a senha' }).getAttribute('href')).toBe('/recuperar-acesso')
     expect(screen.getByRole('link', { name: 'AppMaternidade' }).getAttribute('href')).toBe('/')
@@ -717,7 +720,7 @@ describe('/conta-excluida', () => {
 
     expect(await screen.findByText('Sua conta foi excluída.')).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Início' }).getAttribute('href')).toBe('/')
-    expect(screen.getByRole('link', { name: 'Criar conta' }).getAttribute('href')).toBe('/criar-conta')
+    expect(principal().getByRole('link', { name: 'Criar conta' }).getAttribute('href')).toBe('/criar-conta')
     expect(chamada).not.toHaveBeenCalled()
   })
 })
@@ -730,7 +733,7 @@ describe('sair (RF-11)', () => {
     const cabecalho = within(screen.getByRole('navigation', { name: 'Conta' }))
     fireEvent.click(cabecalho.getByRole('button', { name: 'Sair' }))
 
-    await screen.findByRole('heading', { level: 1, name: 'Entrar' })
+    await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.entrar })
     expect(caminhoDe(roteador)).toBe('/entrar')
     expect(roteador.state.location.search).toBe('')
     expect(status().textContent).toBe('Você saiu da conta.')
@@ -741,7 +744,7 @@ describe('sair (RF-11)', () => {
     const { roteador } = renderizarComDados('/app/conta', { sessao: 'juliana' })
     await screen.findByRole('heading', { level: 1, name: 'Conta' })
     fireEvent.click(screen.getAllByRole('button', { name: 'Sair' })[0])
-    await screen.findByRole('heading', { level: 1, name: 'Entrar' })
+    await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.entrar })
 
     await act(async () => {
       await roteador.navigate('/app/conta')
@@ -758,7 +761,7 @@ describe('sair (RF-11)', () => {
     await screen.findByRole('heading', { level: 1, name: 'Conta' })
 
     fireEvent.click(screen.getAllByRole('button', { name: 'Sair' })[1])
-    await screen.findByRole('heading', { level: 1, name: 'Entrar' })
+    await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.entrar })
 
     expect(sessionStorage.getItem(CHAVE_RECUPERACAO)).toBeNull()
     expect(sessionStorage.getItem(CHAVE_CONVITE)).toBe('a'.repeat(64))
@@ -780,7 +783,7 @@ describe('sair (RF-11)', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Conta' })).toBeTruthy()
 
     fireEvent.click(within(alerta).getByRole('button', { name: 'Tentar de novo' }))
-    await screen.findByRole('heading', { level: 1, name: 'Entrar' })
+    await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.entrar })
     expect(status().textContent).toBe('Você saiu da conta.')
   })
 })
@@ -807,7 +810,7 @@ describe('a saída que a pessoa não pediu (RF-11)', () => {
     await act(async () => {
       dados.encerrarSessaoPorFora()
     })
-    await screen.findByRole('heading', { level: 1, name: 'Entrar' })
+    await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.entrar })
     expect(caminhoDe(roteador)).toBe('/entrar')
     expect(roteador.state.location.search).toBe('?volta=%2Fapp%2Fconta')
     expect(status().textContent).toBe(frase)
@@ -818,7 +821,7 @@ describe('a saída que a pessoa não pediu (RF-11)', () => {
     simularFalha(dados, 'minhasFamilias', 'sessao_encerrada')
     const { roteador } = renderizarComDados('/app/conta', { dados, sessao: 'juliana' })
 
-    await screen.findByRole('heading', { level: 1, name: 'Entrar' })
+    await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.entrar })
     expect(roteador.state.location.search).toBe('?volta=%2Fapp%2Fconta')
     expect(status().textContent).toBe(frase)
   })
@@ -828,7 +831,7 @@ describe('a saída que a pessoa não pediu (RF-11)', () => {
     simularFalha(dados, 'sessaoAtual', 'sessao_encerrada')
     const { roteador } = renderizarComDados('/app/conta', { dados, sessao: 'juliana' })
 
-    await screen.findByRole('heading', { level: 1, name: 'Entrar' })
+    await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.entrar })
     expect(caminhoDe(roteador)).toBe('/entrar')
     expect(roteador.state.location.search).toBe('?volta=%2Fapp%2Fconta')
     expect(status().textContent).toBe(frase)
@@ -839,7 +842,7 @@ describe('a saída que a pessoa não pediu (RF-11)', () => {
     simularFalha(dados, 'minhaConta', 'sessao_encerrada')
     const { roteador } = renderizarComDados('/app/conta', { dados, sessao: 'juliana' })
 
-    await screen.findByRole('heading', { level: 1, name: 'Entrar' })
+    await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.entrar })
     expect(roteador.state.location.search).toBe('?volta=%2Fapp%2Fconta')
     expect(status().textContent).toBe(frase)
     expect(screen.queryByRole('heading', { level: 1, name: 'Conta' })).toBeNull()
@@ -854,7 +857,7 @@ describe('a saída que a pessoa não pediu (RF-11)', () => {
     digitar('Seu nome', 'Juliana Souza')
     fireEvent.click(botao('Salvar'))
 
-    await screen.findByRole('heading', { level: 1, name: 'Entrar' })
+    await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.entrar })
     expect(roteador.state.location.search).toBe('?volta=%2Fapp%2Fconta')
     expect(status().textContent).toBe(frase)
     expect(screen.queryByRole('alert')).toBeNull()
@@ -868,7 +871,7 @@ describe('a saída que a pessoa não pediu (RF-11)', () => {
     simularFalha(dados, 'criarMinhaConta', 'sessao_encerrada')
     fireEvent.click(botao('Salvar'))
 
-    await screen.findByRole('heading', { level: 1, name: 'Entrar' })
+    await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.entrar })
     expect(roteador.state.location.search).toBe('?volta=%2Fapp%2Fcomecar')
     expect(status().textContent).toBe(frase)
   })
@@ -888,7 +891,7 @@ describe('a saída que a pessoa não pediu (RF-11)', () => {
 
     dados.sessaoParaTeste(null)
     await voltarAAba()
-    await screen.findByRole('heading', { level: 1, name: 'Entrar' })
+    await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.entrar })
     expect(roteador.state.location.search).toBe('?volta=%2Fapp%2Fconta')
     expect(status().textContent).toBe(frase)
   })

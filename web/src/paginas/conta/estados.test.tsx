@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { CHAVE_RECUPERACAO } from '../../componentes/conta/armazenamento.ts'
-import { CONTA, TEXTOS_ERRO } from '../../conteudo/conta.ts'
+import { CONTA, NOMES_DO_H1, TEXTOS_ERRO } from '../../conteudo/conta.ts'
 import type { Resultado } from '../../dados/comum.ts'
 import type { OperacaoConta } from '../../dados/conta.ts'
 import { SENHA_DEMONSTRACAO } from '../../dados/conta.demonstracao.ts'
@@ -551,7 +551,7 @@ describe('rede numa escrita: a tela relê e confere o efeito pedido, e não dedu
     expect(alerta.textContent).toContain(TEXTOS_ERRO.rede)
     fireEvent.click(within(alerta).getByRole('button', { name: 'Tentar de novo' }))
 
-    await screen.findByRole('heading', { level: 1, name: 'Conta excluída' })
+    await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.contaExcluida })
     expect(caminhoDe(roteador)).toBe('/conta-excluida')
     expect(excluir).toHaveBeenCalledTimes(2)
     // A senha não é pedida nem conferida de novo.
@@ -782,7 +782,7 @@ describe('rede, "tente de novo" e desconhecido nas leituras e na saída', () => 
       expect((await screen.findByRole('alert')).textContent).toContain(TEXTOS_ERRO[chave])
       expect(caminhoDe(roteador)).toBe('/app/conta')
       await tentarDeNovo()
-      await screen.findByRole('heading', { level: 1, name: 'Entrar' })
+      await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.entrar })
     })
   }
 })
