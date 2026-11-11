@@ -17,8 +17,8 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 ## Visual novo (Campo de mel)
 
 - [x] P-01 Passo 0: direção aprovada por Daniel (F1 + F2 + F3), `FINAL/DESIGN.md` e ativos gerados | registro 9157f12 e 6c2fb7e
-- [~ t_fdba5bed] P-02 MAT-49a base: tokens, fontes, cabeçalho, rodapé, componentes, movimento e `/sistema` | depois: revisão, 2 juízes cegos, ff em `int/refazer`
-- [ ] P-03 Mostrar a base a Daniel cedo: GALERIA da base (composição × resultado, 2×) | depende de P-02 aprovada
+- [~ t_836284e3] P-02 MAT-49a base | g1 t_fdba5bed escreveu o código (62eab0f, 534 testes) e caiu em triage porque o medidor de tela media o sistema antigo; a g2 t_836284e3 reescreve o medidor, completa as licenças e pede revisão. A g1 fica em triage até o arquivamento ser autorizado (pedido de aprovação expirou às 10h40) | depois: revisão, 2 juízes e ff em `int/refazer`
+- [x] P-03 Base mostrada a Daniel cedo: `DIRECOES_20261111/GALERIA_BASE.html` aberta e prévia ao vivo em http://127.0.0.1:5281/sistema | 11/11 10h50, sem SHA
 - [~ t_26066f02] P-04 MAT-49b Hoje, Sessão e Madrugada | depende de P-02
 - [~ t_e1d0eaa8] P-05 MAT-36r-B: as 6 páginas de texto | depende de P-02
 - [~ t_d63c932a] P-06 MAT-37r: traz o fad75c0 (dados, sessão, Auth) e refaz Entrar, Criar conta, Recuperar, Começar e Conta | depende de P-02
