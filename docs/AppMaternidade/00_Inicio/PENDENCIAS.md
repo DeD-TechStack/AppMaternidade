@@ -65,6 +65,8 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 
 - [D coordenador] P-36 Cinco revisões voltaram hoje só por prova de entrega: faltava a leitura das capturas finais, o VISTO do SHA entregue, o JSON da rodada ou os commits no intervalo real. Proposta ao núcleo (campainha t_92fd56a8): o `rodada.py` ganha uma etapa de leitura e a verificação de commits
 
+- [x] P-37 Regra do líder (11/11): "capturas lidas pelo worker" (CARTOES_COMUM) vale como leitura pela sessão do OpenCode registrada no recibo (`images_read`), porque o perfil executor não tem ferramenta de imagem. Comentada em todos os cartões ativos; na 49c v2 o líder também olhou os blocos 3–5 (comentário 407)
+
 ## Dados ligados às telas novas (religados e soltos em 11/11)
 
 - [x] P-09 Corpos dos 6 cartões abaixo reescritos para a base nova antes do claim (prefixo `FINAL/OVERRIDE_DADOS.md`) e soltos em todo, presos aos pais | 11/11 9h50; sem SHA (é board)
