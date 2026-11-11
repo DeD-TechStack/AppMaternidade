@@ -10,7 +10,7 @@ import { renderizarRota } from '../../teste/renderizarRota.tsx'
 // Volta visual 1, D4, D5, D7 e D8. Cada defeito é uma classe:
 // D4: a lua do berço (um disco de barro por cima do disco de tinta) tem de se recortar no fundo da
 //     moldura, seja barro ou lavanda.
-// D5: o parágrafo de apresentação de 4 páginas ocupa c2–c8, de 800 a 963 px; Desenvolvimento não muda.
+// D5: o parágrafo de apresentação de 5 páginas (as 4 de antes e Desenvolvimento) ocupa c2–c8, de 800 a 963 px.
 // D7: toda tabela de leitura tem o cabeçalho da linha em c2–c3 e as demais células a partir de c4 + 32.
 // D8: o nome do site num `h1` tem uma quebra só entre "App" e "Maternidade", sem hífen.
 // O jsdom não calcula layout nem lê o `index.css`: a regra de CSS é lida do arquivo (bloco MAT-36) e a
@@ -27,7 +27,13 @@ const NOVAS = [
   '/contato',
   '/sobre',
 ]
-const COM_APRESENTACAO_AMPLA = ['/como-funciona', '/cuidado-compartilhado', '/regras-da-comunidade', '/sobre']
+const COM_APRESENTACAO_AMPLA = [
+  '/como-funciona',
+  '/cuidado-compartilhado',
+  '/desenvolvimento',
+  '/regras-da-comunidade',
+  '/sobre',
+]
 
 interface Regra {
   seletor: string
@@ -123,14 +129,11 @@ describe('D4: a lua do berço se recorta no fundo da moldura', () => {
 })
 
 describe('D5: o parágrafo de apresentação de 4 páginas é largo (800 a 963 px), em c2–c8', () => {
-  it('as 4 páginas levam data-ampla e Desenvolvimento não', async () => {
+  it('as 5 páginas com apresentação (Desenvolvimento entre elas) levam data-ampla', async () => {
     for (const caminho of NOVAS) {
       const container = await abrir(caminho)
       const apresentacoes = container.querySelectorAll('main p[data-apresentacao]')
-      if (caminho === '/desenvolvimento') {
-        expect(apresentacoes, caminho).toHaveLength(1)
-        expect(apresentacoes[0].hasAttribute('data-ampla'), caminho).toBe(false)
-      } else if (COM_APRESENTACAO_AMPLA.includes(caminho)) {
+      if (COM_APRESENTACAO_AMPLA.includes(caminho)) {
         expect(apresentacoes, caminho).toHaveLength(1)
         expect(apresentacoes[0].hasAttribute('data-ampla'), caminho).toBe(true)
         expect(apresentacoes[0].closest('.col-c2-c8'), caminho).not.toBeNull()

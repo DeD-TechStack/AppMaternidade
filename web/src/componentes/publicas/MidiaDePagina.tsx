@@ -12,9 +12,21 @@ type Cena = keyof typeof MIDIAS
 type Fundo = 'barro' | 'lavanda'
 
 /** Uma peça: a cena (uma das 6 ilustrações: as 5 do protótipo e a passagem de turno) e o fundo da moldura. */
-interface Peca {
+export interface Peca {
   cena: Cena
   fundo: Fundo
+}
+
+/**
+ * As cenas que mostram um aparelho (uma tela do protótipo dentro da moldura, `[data-aparelho]`). As 6
+ * cenas das páginas públicas são ilustrações e nenhuma é um aparelho; se uma cena de tela entrar, é aqui
+ * que ela se declara. Quem decide mostrar o TF-12 ("as telas mostradas aqui são exemplos") é esta pergunta.
+ */
+const CENAS_COM_APARELHO: ReadonlySet<Cena> = new Set<Cena>()
+
+/** A página tem um aparelho no meio das mídias que usa? Sem ele, nada nela são "telas mostradas aqui". */
+export function contemAparelho(pecas: readonly Peca[]): boolean {
+  return pecas.some(({ cena }) => CENAS_COM_APARELHO.has(cena))
 }
 
 const DESENHOS: Record<Cena, typeof IlustracaoMamada> = {

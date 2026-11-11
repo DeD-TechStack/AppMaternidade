@@ -4,7 +4,7 @@ interface Props {
   margem: string
   /**
    * Largura de texto corrido (50,5 rem, 808 px, em c2–c8; até 65 caracteres por linha) em vez dos 40 rem da
-   * apresentação curta. As páginas com mídia larga logo acima a usam; Desenvolvimento fica com a medida curta.
+   * apresentação curta. A usam as páginas com mídia larga logo acima e o Desenvolvimento.
    */
   ampla?: boolean
 }

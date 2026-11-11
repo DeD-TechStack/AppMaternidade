@@ -52,7 +52,7 @@ const H2S: Record<string, string[]> = {
     'Contato',
   ],
   '/exclusao-de-conta': ['Como pedir', 'O que vai ser apagado', 'O que pode ficar guardado', 'Prazo', 'Antes de excluir'],
-  '/contato': ['Fale conosco', 'Em uma urgência', 'Para que serve este canal'],
+  '/contato': ['E-mail', 'Em uma urgência', 'Para que serve este canal'],
   '/sobre': ['Para quem é', 'O que ele faz', 'O que ele não faz', 'Quem faz'],
 }
 
@@ -198,12 +198,14 @@ describe('o main das 9 páginas novas', () => {
     expect(container.querySelector('.sb-abertura-subtitulo')!.textContent).toBe('Sem metas, sem cobrança.')
   }, 30000)
 
-  it('"Páginas do site" é uma lista de 9 links pronta para 2 colunas a partir de 768, na ordem dos links', async () => {
+  it('"Páginas do site" no main só existe na 404: lista de 9 links pronta para 2 colunas a partir de 768; as 9 páginas não a têm', async () => {
     for (const caminho of NOVAS) {
       const container = await abrir(caminho)
-      const lista = container.querySelector('nav[aria-label="Páginas do site"] ul.vp-links.vp-links-duplo')!
-      expect(lista.querySelectorAll(':scope > li > a'), caminho).toHaveLength(9)
+      expect(container.querySelector('main nav[aria-label="Páginas do site"]'), caminho).toBeNull()
     }
+    const container = await abrir('/rota-inexistente')
+    const lista = container.querySelector('main nav[aria-label="Páginas do site"] ul.vp-links.vp-links-duplo')!
+    expect(lista.querySelectorAll(':scope > li > a')).toHaveLength(9)
   }, 30000)
 
   it('a lateral começa pelo que a página pede e leva o aviso de construção em `ui`, na cor secundária', async () => {
@@ -226,14 +228,14 @@ describe('o main das 9 páginas novas', () => {
     }
   }, 30000)
 
-  it('a ordem da lateral: Como funciona (TF-12, TF-10, link), Privacidade e Termos (TF-10, TF-09), Contato (só TF-10)', async () => {
+  it('a ordem da lateral: Como funciona (TF-10, link; sem TF-12), Privacidade e Termos (TF-10, TF-09, TF-08), Exclusão (TF-10, TF-08), Contato (só TF-10)', async () => {
     const lateral = async (caminho: string) => {
       const container = await abrir(caminho)
       return [...container.querySelectorAll('.sb-abertura-lateral > li')].map((li) => li.textContent)
     }
 
+    // TF-12 (as telas mostradas) só vale com um aparelho na página, e o Como funciona só tem ilustrações.
     expect(await lateral('/como-funciona')).toEqual([
-      'As telas mostradas aqui são exemplos com uma família fictícia.',
       'Em construção: algumas funções descritas aqui ainda não estão no ar.',
       'Ver o protótipo',
     ])
@@ -241,11 +243,14 @@ describe('o main das 9 páginas novas', () => {
       expect(await lateral(caminho), caminho).toEqual([
         'Em construção: algumas funções descritas aqui ainda não estão no ar.',
         'Nesta versão de avaliação, use só dados fictícios.',
+        'Rascunho, sem revisão jurídica',
       ])
     }
-    for (const caminho of ['/regras-da-comunidade', '/exclusao-de-conta']) {
-      expect(await lateral(caminho), caminho).toEqual(['Em construção: algumas funções descritas aqui ainda não estão no ar.'])
-    }
+    expect(await lateral('/exclusao-de-conta')).toEqual([
+      'Em construção: algumas funções descritas aqui ainda não estão no ar.',
+      'Rascunho, sem revisão jurídica',
+    ])
+    expect(await lateral('/regras-da-comunidade')).toEqual(['Em construção: algumas funções descritas aqui ainda não estão no ar.'])
     // Cuidado, Desenvolvimento e Sobre: as etiquetas da página e, depois delas, o aviso (TF-10).
     for (const caminho of ['/cuidado-compartilhado', '/desenvolvimento', '/sobre']) {
       expect(await lateral(caminho), caminho).toEqual([
@@ -350,14 +355,16 @@ describe('mídia das páginas', () => {
     }
   }, 30000)
 
-  it('nenhuma página tem campo de cor, aparelho, selo ou aviso de rascunho, nem cartão com borda', async () => {
+  it('nenhuma página tem campo de cor, aparelho, selo, nem cartão com borda; o aviso de rascunho (TF-08) é uma linha só da lateral das 3 jurídicas', async () => {
     for (const caminho of NOVAS) {
       const container = await abrir(caminho)
 
       expect(container.querySelector('[data-campo]'), caminho).toBeNull()
       expect(container.querySelector('[data-aparelho]'), caminho).toBeNull()
-      expect(container.querySelector('[data-aviso="rascunho"]'), caminho).toBeNull()
+      expect(container.querySelector('[data-selo]'), caminho).toBeNull()
       expect(container.querySelector('.cartao'), caminho).toBeNull()
+      const rascunho = container.querySelectorAll('[data-aviso="rascunho"]')
+      expect(rascunho, caminho).toHaveLength(['/privacidade', '/termos', '/exclusao-de-conta'].includes(caminho) ? 1 : 0)
     }
   }, 30000)
 })

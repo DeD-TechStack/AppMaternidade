@@ -2,7 +2,6 @@ import { Apresentacao } from '../../componentes/publicas/Apresentacao.tsx'
 import { AberturaPublica } from '../../componentes/publicas/AberturaPublica.tsx'
 import { LinhaDeLeitura } from '../../componentes/publicas/LinhaDeLeitura.tsx'
 import { MidiaLarga, ParDeMidias } from '../../componentes/publicas/MidiaDePagina.tsx'
-import { PaginasDoSite } from '../../componentes/publicas/PaginasDoSite.tsx'
 import { DESENVOLVIMENTO, ETIQUETAS_LATERAIS, H1, SUBTITULOS } from '../../conteudo/publicas.ts'
 
 /** Desenvolvimento e tummy time: o registro de tummy time e de onde vem o conteúdo, sem metas. */
@@ -15,7 +14,7 @@ export function Desenvolvimento() {
         subtitulo={SUBTITULOS.desenvolvimento}
         etiquetas={ETIQUETAS_LATERAIS.desenvolvimento}
       />
-      <Apresentacao texto={DESENVOLVIMENTO.apresentacao} margem="sb-mt-fio-bloco" />
+      <Apresentacao texto={DESENVOLVIMENTO.apresentacao} margem="sb-mt-fio-bloco" ampla />
       <MidiaLarga peca={{ cena: 'tapete', fundo: 'lavanda' }} margem="sb-mt-par-numeros" />
       <LinhaDeLeitura secao={rotina.secao} blocos={[rotina.texto]} margem="sb-mt-midia-linhas" />
       <LinhaDeLeitura secao={semMetas.secao} blocos={semMetas.textos} />
@@ -26,7 +25,6 @@ export function Desenvolvimento() {
         margem="sb-mt-midia-linhas"
       />
       <LinhaDeLeitura secao={profissional.secao} blocos={profissional.textos} margem="sb-mt-midia-linhas" />
-      <PaginasDoSite />
     </main>
   )
 }

@@ -34,14 +34,13 @@ describe('D3: sem mídia nem ilustração nos textos de papel', () => {
     }
   }, 30000)
 
-  it('depois da abertura (e do índice) vêm só as seções de leitura, uma atrás da outra, e no fim "Páginas do site"', async () => {
+  it('depois da abertura (e do índice) vêm só as seções de leitura, uma atrás da outra, sem a lista "Páginas do site" (é a do rodapé)', async () => {
     for (const caminho of DE_PAPEL) {
       const container = await abrir(caminho)
 
       const [abertura, ...demais] = filhosDoMain(container)
       expect(abertura.tagName, caminho).toBe('SECTION')
-      const fim = demais.pop()!
-      expect(fim.querySelector('nav[aria-label="Páginas do site"]'), caminho).not.toBeNull()
+      expect(container.querySelector('main nav[aria-label="Páginas do site"]'), caminho).toBeNull()
       const indice = COM_INDICE.includes(caminho) ? demais.shift()! : null
       if (indice) expect(indice.querySelector('nav[aria-label="Nesta página"]'), caminho).not.toBeNull()
 
@@ -68,11 +67,11 @@ describe('D3: sem mídia nem ilustração nos textos de papel', () => {
     }
   }, 30000)
 
-  it('as três continuam com o índice "Nesta página" (Privacidade e Termos) e com o bloco "Páginas do site"', async () => {
+  it('as três continuam com o índice "Nesta página" (Privacidade e Termos) e já não têm o bloco "Páginas do site" no main', async () => {
     for (const caminho of DE_PAPEL) {
       const container = await abrir(caminho)
 
-      expect(container.querySelectorAll('main nav[aria-label="Páginas do site"]'), caminho).toHaveLength(1)
+      expect(container.querySelectorAll('main nav[aria-label="Páginas do site"]'), caminho).toHaveLength(0)
       expect(container.querySelectorAll('main nav[aria-label="Nesta página"]'), caminho).toHaveLength(COM_INDICE.includes(caminho) ? 1 : 0)
     }
   }, 30000)
