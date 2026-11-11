@@ -13,5 +13,5 @@ Same scene sources and compositor (`compor.py`, `verde_restante: 0`); the screen
 
 - como-funciona@1x.webp: scene `brutos/S2_unico_mel.png`; captures: Hoje (day) 390x1013; 2026-11-11; sha256 df97cd2ad79ebc160ec6a07bc6c19f7ab91276fc97d2a354e2fd586d607e8da4
 - como-funciona@2x.webp: scene `brutos/S2_unico_mel.png`; captures: Hoje (day) 390x1013; 2026-11-11; sha256 21a8ac7792bbbe038567711407952b89ea35eaad5f2be69e8819a6292fa88d1b
-- desenvolvimento@1x.webp: scene `brutos/S3_tablets_cacau.png`; captures: Sessão 900x1023, Hoje (day) 820x1123; 2026-11-11; sha256 76d77a7132bee01d252907db20c88389b9da9178a38ece5d84f4de185c8faec6
-- desenvolvimento@2x.webp: scene `brutos/S3_tablets_cacau.png`; captures: Sessão 900x1023, Hoje (day) 820x1123; 2026-11-11; sha256 51152c448ba6495f94c787323a5f792c01e23e296168d385b9957a424e136bfd
+- desenvolvimento@1x.webp: scene `brutos/S4_celular_linho.png`; captures: Sessão (day) 390x850; one-device fallback, no tablet overlap; 2026-11-11; sha256 039718906c68c1356ca178051da38898b1fda0e2f24d749e4fc34a40615c3cd1
+- desenvolvimento@2x.webp: scene `brutos/S4_celular_linho.png`; captures: Sessão (day) 390x850; one-device fallback, no tablet overlap; 2026-11-11; sha256 6c097b1ec9194e684e39ccee43cff831a5d800eb749910f4e81fc09a226e1c24
