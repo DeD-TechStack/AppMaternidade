@@ -5,6 +5,7 @@
 // em literal: tiram tudo daqui. A frase de dados fictícios é um parágrafo comum da seção a que se refere.
 
 import type { NomeIlustracao } from '../componentes/campo/Ilustracao.tsx'
+import { ROTULO_CRIAR_CONTA } from '../componentes/casca/textos.ts'
 
 /** O endereço de contato de demonstração: uma constante só, usada apenas na página Contato. */
 export const EMAIL_CONTATO = 'danielmacedosilva11@gmail.com'
@@ -32,6 +33,7 @@ function secao(titulo: string, id?: string): Secao {
 }
 
 const CAMINHO_CONTA = '/app/conta'
+const CAMINHO_CRIAR_CONTA = '/criar-conta'
 const CAMINHO_CONTATO = '/contato'
 const CAMINHO_EXCLUSAO = '/exclusao-de-conta'
 const CAMINHO_REGRAS = '/regras-da-comunidade'
@@ -83,14 +85,17 @@ interface Titulados {
   titulados: ReadonlyArray<{ titulo: string; texto: string }>
 }
 
-/** Um botão de rota logo depois do texto (a ação da página de tarefa). */
-interface Acao {
+/** O que uma seção de leitura pode ter, na ordem: parágrafos, listas e itens com título. */
+export type Bloco = Texto | Lista | Titulados
+
+/** O botão de ação principal da abertura: um rótulo que já existe no site e a rota para onde ele leva. */
+interface AcaoPrincipal {
   botao: string
   para: string
 }
 
-/** O que uma seção de leitura pode ter, na ordem: parágrafos, listas, itens com título e um botão de rota. */
-export type Bloco = Texto | Lista | Titulados | Acao
+/** O botão de ação principal das páginas de texto que não são Exclusão nem Contato: "Criar conta". */
+const ACAO_CRIAR_CONTA: AcaoPrincipal = { botao: ROTULO_CRIAR_CONTA, para: CAMINHO_CRIAR_CONTA }
 
 /** Uma tabela: legenda, cabeçalhos das colunas e linhas (a primeira célula é o cabeçalho da linha). */
 export interface DadosDeTabela {
@@ -112,13 +117,20 @@ export interface PaginaDeTexto {
   nome: string
   /** A segunda linha do título, em itálico. */
   subtitulo: string
-  /** O desenho: no painel lateral (1100 px ou mais) e, abaixo disso, solto na leitura. */
+  /** O desenho do painel de mel (a frase de apoio e o desenho): uma peça só por página. */
   ilustracao: NomeIlustracao
-  /** A frase de apoio do painel lateral (só a partir de 1100 px): uma linha curta. */
+  /** A frase de apoio, repetida em itálico no painel de mel: uma linha curta. */
   apoio: string
-  /** Depois de qual seção (1 = a primeira, o padrão) o desenho aparece solto, abaixo de 1100 px. */
-  figuraDepoisDe?: number
-  /** A página mostra o bloco de e-mail de contato no topo da leitura. */
+  /**
+   * Depois de qual seção (1 = a primeira) o painel de mel entra na leitura. Sem isto, o painel fica na abertura,
+   * ao lado do título (1100 px ou mais) ou logo abaixo dele. A página de tarefa (Exclusão) o põe depois do passo a passo.
+   */
+  painelDepoisDe?: number
+  /** O botão de ação principal, na abertura. Contato não tem: o botão dela é o do bloco de e-mail. */
+  acao?: AcaoPrincipal
+  /** Os primeiros itens de uma lista da página, mostrados na abertura; a lista inteira fica na sua seção. */
+  itensNaAbertura?: readonly string[]
+  /** A página mostra o bloco de e-mail de contato na abertura, no lugar do botão de ação. */
   blocoDeEmail?: true
   /** O parágrafo de abertura, antes das seções. */
   apresentacao?: string
@@ -140,6 +152,7 @@ const REGRAS: PaginaDeTexto = {
   subtitulo: 'Para quando ela abrir.',
   ilustracao: 'maos-celular',
   apoio: 'Regras claras para quem participa.',
+  acao: ACAO_CRIAR_CONTA,
   apresentacao:
     'A comunidade do AppMaternidade ainda não abriu. Esta página mostra as regras que vão valer quando ela abrir e como a moderação vai funcionar.',
   secoes: [
@@ -223,30 +236,30 @@ const REGRAS: PaginaDeTexto = {
 // ---------------------------------------------------------------------------
 // Privacidade
 
+/** Os grupos de dados que o site vai guardar: a lista inteira fica na primeira seção; a abertura mostra os 3 primeiros. */
+const DADOS_GUARDADOS = [
+  'da conta do adulto: nome, e-mail e senha de acesso;',
+  'da família: os papéis de cada pessoa e os convites;',
+  'do bebê: o nome ou apelido e a data de nascimento;',
+  'os registros de cuidado dos 7 tipos, com horários, notas e quem fez cada um;',
+  'as notas de passagem de turno;',
+  'da comunidade: o perfil público, os tópicos, as respostas, as denúncias e os bloqueios;',
+  'os registros técnicos de acesso;',
+  'a prova do consentimento: quem deu, quando e em que versão do texto;',
+  'o código de notificação do aparelho, só se a pessoa ligar as notificações.',
+] as const
+
 const PRIVACIDADE: PaginaDeTexto = {
   nome: 'Privacidade',
   subtitulo: 'O que o site vai guardar.',
   ilustracao: 'mae-noite',
   apoio: 'Seus dados, explicados sem pressa.',
+  acao: ACAO_CRIAR_CONTA,
+  itensNaAbertura: DADOS_GUARDADOS.slice(0, 3),
   secoes: [
     {
       secao: secao('Que dados o site vai guardar'),
-      blocos: [
-        'O site vai guardar estes grupos de dados:',
-        {
-          itens: [
-            'da conta do adulto: nome, e-mail e senha de acesso;',
-            'da família: os papéis de cada pessoa e os convites;',
-            'do bebê: o nome ou apelido e a data de nascimento;',
-            'os registros de cuidado dos 7 tipos, com horários, notas e quem fez cada um;',
-            'as notas de passagem de turno;',
-            'da comunidade: o perfil público, os tópicos, as respostas, as denúncias e os bloqueios;',
-            'os registros técnicos de acesso;',
-            'a prova do consentimento: quem deu, quando e em que versão do texto;',
-            'o código de notificação do aparelho, só se a pessoa ligar as notificações.',
-          ],
-        },
-      ],
+      blocos: ['O site vai guardar estes grupos de dados:', { itens: DADOS_GUARDADOS }],
     },
     {
       secao: secao('O que fica de fora'),
@@ -317,6 +330,7 @@ const TERMOS: PaginaDeTexto = {
   subtitulo: 'As regras de uso do site.',
   ilustracao: 'pai-colo',
   apoio: 'Combinados simples para usar o site.',
+  acao: ACAO_CRIAR_CONTA,
   secoes: [
     {
       secao: secao('O que é o AppMaternidade'),
@@ -381,8 +395,10 @@ const EXCLUSAO: PaginaDeTexto = {
   subtitulo: 'Como pedir a exclusão.',
   ilustracao: 'avo-carrinho',
   apoio: 'Você decide o que fica.',
-  // Página de tarefa: o desenho só aparece (abaixo de 1100 px) depois de "Antes de excluir" e "Como pedir".
-  figuraDepoisDe: 2,
+  // Página de tarefa: o botão fica na abertura (a Conta é a rota integrada /app/conta, decisão do líder, 11/11) e o
+  // painel com o desenho só vem depois de "Antes de excluir" e "Como pedir": o passo a passo vem antes do desenho.
+  acao: { botao: 'Ir para a Conta', para: CAMINHO_CONTA },
+  painelDepoisDe: 2,
   secoes: [
     {
       secao: secao('Antes de excluir'),
@@ -393,8 +409,6 @@ const EXCLUSAO: PaginaDeTexto = {
       blocos: [
         TF.pedidoExclusao,
         'Esta página abre sem login, para qualquer pessoa ler. O pedido vai exigir que a pessoa confirme que a conta é dela, e o jeito de confirmar ainda será definido.',
-        // A Conta é a rota integrada /app/conta (decisão do líder, 11/11).
-        { botao: 'Ir para a Conta', para: CAMINHO_CONTA },
       ],
     },
     {
@@ -432,7 +446,7 @@ const CONTATO: PaginaDeTexto = {
   subtitulo: 'Fale conosco.',
   ilustracao: 'baba-tapete',
   apoio: 'Um canal para falar com a gente.',
-  // O e-mail vem num bloco próprio no topo da leitura (cartão com o endereço e o botão `mailto:`).
+  // O e-mail vem num bloco próprio na abertura (cartão com o rótulo, o endereço e o botão `mailto:`).
   blocoDeEmail: true,
   secoes: [
     {
@@ -460,6 +474,7 @@ const SOBRE: PaginaDeTexto = {
   subtitulo: 'Quem faz e para quem.',
   ilustracao: 'tummy-time',
   apoio: 'Feito para o dia a dia do cuidado.',
+  acao: ACAO_CRIAR_CONTA,
   apresentacao:
     'O AppMaternidade quer juntar num lugar só a rotina do bebê, o desenvolvimento, o cuidado dividido entre os adultos e uma comunidade separada da rotina privada.',
   secoes: [
