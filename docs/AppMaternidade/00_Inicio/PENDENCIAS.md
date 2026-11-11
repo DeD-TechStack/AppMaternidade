@@ -27,11 +27,11 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 - [~ t_ee526db4] P-08 MAT-36r-A: Como funciona, Cuidado compartilhado e Desenvolvimento | depende só de P-02 desde 11/11 10h15
 
 - [~ t_0aecd8d2] P-21 MAT-49d: recompor as cenas de marketing com as telas novas de Hoje, Sessão e Madrugada (só imagens, mesmos nomes de arquivo) | depende de P-04, P-06, P-07 e P-08
-- [D coordenador] P-22 Calibração dos juízes: Fable válido. Astra v2 (prompt d008875) dá nota a tudo, mas reprova no F7 os quadros da referência (amarelo e azul) e a F1_home aprovada (mel e oliva), porque a regra pede 'base + 1 destaque'. Proposta: F7 com até 2 destaques de papel fixo, e n/a nos quadros da referência (`juizes/CALIBRACAO0.md`) | sem os 2 juízes válidos, nenhuma página passa
+- [x] P-22 Calibração dos juízes válida nos 2 (rodada 0 e base49a_r1), com a F7 de até 2 destaques (equipe 14e47ed) | 11/11 11h20, sem SHA (staging)
 
 - [ ] P-23 Limpeza depois das páginas: apagar `web/src/paginas/publicas/PaginaSimples.tsx` (usada pelas 9 páginas públicas até a 36r-A e a 36r-B integrarem) e `web/src/componentes/casca/SubmenuEmBreve.tsx` (sem uso desde a base), com `apagar:` no cartão | depende de P-08 e da 36r-B
 
-- [D coordenador] P-24 Aceite visual da /sistema: rodada base49a_r1 válida nos 2 juízes, 0 portões, notas 6,5–6,8 (Fable) e 7,0 (Astra), abaixo de 7,5. Perguntado ao coordenador (campainha t_6bb69b92) se o item 7 vale para a página interna /sistema; a integração da base não espera por isso
+- [x] P-24 /sistema é informativa (coordenador, 11/11): não segura a integração da base; achados dos juízes (6,5–7,0) levados aos corpos dos 5 cartões de página | 11/11 11h20
 
 ## Dados ligados às telas novas (religados e soltos em 11/11)
 
