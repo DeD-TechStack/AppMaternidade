@@ -10,7 +10,15 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     padding-top: clamp(28px, 1.143vw + 23.5px, 40px);
-    padding-bottom: clamp(24px, 1.143vw + 19.5px, 40px);
+    padding-bottom: 24px;
+  }
+
+  /* Em tela larga o respiro de baixo é menor: a faixa vazia entre o fim do conteúdo e o rodapé (POL:RF-03) fica
+     em uns 136 px a 1440, abaixo do limite de 160. No celular continua 24. */
+  @media (min-width: 1100px) {
+    .pt-pagina {
+      padding-bottom: 8px;
+    }
   }
 
   /* Abertura: no celular o título e o painel de mel se empilham (o painel depois do botão); a partir de 1100 px
