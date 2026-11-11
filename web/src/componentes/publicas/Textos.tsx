@@ -8,21 +8,13 @@ import type { Bloco, Lista, Texto } from '../../conteudo/publicas.ts'
 
 /**
  * O e-mail de contato: um link `mailto:` cujo texto é o próprio endereço (a constante `EMAIL_CONTATO`).
- * Um endereço comprido, em tipo grande, quebra depois do "@" (o `<wbr>` não muda o texto do link).
+ * O endereço nunca quebra (nem depois do "@"): o CSS (`.vp-email`) o mantém numa linha só, na fonte do
+ * corpo, e o tamanho se ajusta à coluna.
  */
 export function LinkDeEmail() {
-  const [usuario, ...dominio] = EMAIL_CONTATO.split('@')
   return (
     <a href={`mailto:${EMAIL_CONTATO}`} data-contato="" className="vp-email">
-      {dominio.length === 0 ? (
-        EMAIL_CONTATO
-      ) : (
-        <>
-          {`${usuario}@`}
-          <wbr />
-          {dominio.join('@')}
-        </>
-      )}
+      {EMAIL_CONTATO}
     </a>
   )
 }

@@ -4,9 +4,9 @@ import { EMAIL_CONTATO } from '../../conteudo/publicas.ts'
 import { renderizarRota } from '../../teste/renderizarRota.tsx'
 
 // Volta visual 1, D6: no Contato o canal vem primeiro e a urgência logo depois. A 1ª linha depois da
-// abertura é "Fale conosco" (TF-13), com o e-mail em `subtitulo` na coluna do texto; a 2ª é "Em uma
-// urgência"; depois "Para que serve este canal" e "Páginas do site". Sem mídia. O e-mail só no Contato,
-// nas Regras, na Privacidade e nos Termos.
+// abertura é "E-mail" (TF-13), com o e-mail em `corpo-g` (fonte do corpo) na coluna do texto; a 2ª é "Em
+// uma urgência"; depois "Para que serve este canal". A lista "Páginas do site" é só a do rodapé. Sem
+// mídia. O e-mail só no Contato, nas Regras, na Privacidade e nos Termos.
 
 const NOVAS = [
   '/como-funciona',
@@ -30,23 +30,22 @@ async function abrir(caminho: string): Promise<HTMLElement> {
 const filhosDoMain = (container: HTMLElement) => [...container.querySelector('main')!.children] as HTMLElement[]
 
 describe('D6: o canal primeiro, a urgência logo depois', () => {
-  it('a ordem das linhas: Fale conosco, Em uma urgência, Para que serve este canal, Páginas do site', async () => {
+  it('a ordem das linhas: E-mail, Em uma urgência, Para que serve este canal (a lista de páginas é a do rodapé)', async () => {
     const container = await abrir('/contato')
 
     const [abertura, ...demais] = filhosDoMain(container)
     expect(abertura.querySelector('h1')!.textContent).toBe('Contato')
-    expect(demais).toHaveLength(4)
-    const ultimo = demais.pop()!
-    expect(ultimo.querySelector('nav[aria-label="Páginas do site"]')).not.toBeNull()
+    expect(demais).toHaveLength(3)
+    expect(container.querySelector('main nav[aria-label="Páginas do site"]')).toBeNull()
     expect(demais.map((secao) => secao.tagName)).toEqual(['SECTION', 'SECTION', 'SECTION'])
     expect(demais.map((secao) => secao.querySelector('h2')!.textContent)).toEqual([
-      'Fale conosco',
+      'E-mail',
       'Em uma urgência',
       'Para que serve este canal',
     ])
   })
 
-  it('o canal é um link mailto: da constante, dentro da 1ª linha, em `subtitulo` (48/58, 36/43 no celular), e só ali', async () => {
+  it('o canal é um link mailto: da constante, dentro da 1ª linha, em `corpo-g` (28/39, 20/28 no celular), e só ali', async () => {
     const container = await abrir('/contato')
 
     const [, primeira, ...outras] = filhosDoMain(container)
@@ -58,7 +57,8 @@ describe('D6: o canal primeiro, a urgência logo depois', () => {
     expect(canal.textContent).toBe(EMAIL_CONTATO)
     expect(canal.hasAttribute('data-contato')).toBe(true)
     const paragrafo = canal.closest('p')!
-    expect(paragrafo.classList.contains('t-subtitulo')).toBe(true)
+    expect(paragrafo.classList.contains('t-corpo-g')).toBe(true)
+    expect(paragrafo.classList.contains('t-subtitulo')).toBe(false)
     expect(canal.closest('.sb-linha-texto'), 'na coluna do texto da linha (c4–c8)').not.toBeNull()
     for (const secao of outras) expect(secao.querySelector('a[href^="mailto:"]')).toBeNull()
   })
@@ -89,7 +89,7 @@ describe('D6: o canal primeiro, a urgência logo depois', () => {
     expect(container.querySelectorAll('main [data-midia], main [data-ilustracao], main svg')).toHaveLength(0)
   })
 
-  it('o e-mail continua só no Contato, nas Regras, na Privacidade e nos Termos; os links têm o alvo de 44 px', async () => {
+  it('o e-mail continua só no Contato, nas Regras, na Privacidade e nos Termos; os links do rodapé têm o alvo de 44 px', async () => {
     const COM_EMAIL = ['/contato', '/regras-da-comunidade', '/privacidade', '/termos']
     for (const caminho of NOVAS) {
       const container = await abrir(caminho)
@@ -98,7 +98,9 @@ describe('D6: o canal primeiro, a urgência logo depois', () => {
       expect(presente, caminho).toBe(COM_EMAIL.includes(caminho))
     }
     const container = await abrir('/contato')
-    for (const link of container.querySelectorAll('main nav[aria-label="Páginas do site"] a')) {
+    const links = container.querySelectorAll('footer nav[aria-label="Páginas do site, no rodapé"] a')
+    expect(links).toHaveLength(9)
+    for (const link of links) {
       expect(link.classList.contains('alvo-toque'), link.textContent ?? '').toBe(true)
     }
   }, 30000)

@@ -93,7 +93,8 @@ export const SUBTITULOS = {
 
 /**
  * A Página não encontrada: o `h1`, a linha sob ele (uma linha só, como nas 9 páginas) e o link de volta.
- * Quem aponta as páginas é a linha "Páginas do site", logo abaixo do link.
+ * Quem aponta as páginas é a linha "Páginas do site", logo abaixo do link (só aqui: nas 9 páginas a lista
+ * é a do rodapé).
  */
 export const NAO_ENCONTRADA = {
   h1: 'Página não encontrada',
@@ -142,8 +143,9 @@ export const TF = {
   construcao: 'Em construção: algumas funções descritas aqui ainda não estão no ar.', // TF-10
   semDiagnostico:
     'O AppMaternidade não faz diagnóstico e não substitui a orientação de um profissional de saúde.', // TF-11
-  telasFicticias: 'As telas mostradas aqui são exemplos com uma família fictícia.', // TF-12
-  faleConosco: 'Fale conosco', // TF-13 (o rótulo da 1ª linha do Contato, sobre o e-mail)
+  rascunho: 'Rascunho, sem revisão jurídica', // TF-08 (uma linha da lateral de Privacidade, Termos e Exclusão)
+  telasFicticias: 'As telas mostradas aqui são exemplos com uma família fictícia.', // TF-12 (só com aparelho na página)
+  rotuloEmail: 'E-mail', // TF-13 (o rótulo da 1ª linha do Contato, sobre o e-mail)
   regiaoDosDados:
     'Nesta fase de avaliação, a demonstração roda num projeto Supabase nos Estados Unidos (região us-east-1), só com dados fictícios.', // TF-15
 } as const
@@ -192,7 +194,7 @@ export const ROTULOS = {
   paginas: 'Páginas do site',
 } as const
 
-/** Os 9 links de `PaginasDoSite`, na ordem. */
+/** Os 9 links da lista "Páginas do site" (a do rodapé e a da Página não encontrada), na ordem. */
 export const PAGINAS_DO_SITE: ReadonlyArray<{ rotulo: string; para: string }> = [
   { rotulo: H1.comoFunciona, para: CAMINHOS.comoFunciona },
   { rotulo: H1.cuidado, para: CAMINHOS.cuidado },
@@ -604,9 +606,9 @@ export const EXCLUSAO: readonly SecaoDeLeitura[] = [
 // Contato
 
 export const CONTATO_PAGINA = {
-  /** A 1ª linha: o rótulo é o TF-13 e o texto é o link do e-mail (`LinkDeEmail`). */
+  /** A 1ª linha: o rótulo é o TF-13 ("E-mail") e o texto é o link do e-mail (`LinkDeEmail`). */
   canal: {
-    secao: secao(TF.faleConosco),
+    secao: secao(TF.rotuloEmail),
   },
   proposito: {
     secao: secao('Para que serve este canal'),

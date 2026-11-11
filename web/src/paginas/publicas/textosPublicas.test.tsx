@@ -103,6 +103,7 @@ const TF = {
   construcao: 'Em construção: algumas funções descritas aqui ainda não estão no ar.',
   semDiagnostico: 'O AppMaternidade não faz diagnóstico e não substitui a orientação de um profissional de saúde.',
   telasFicticias: 'As telas mostradas aqui são exemplos com uma família fictícia.',
+  rascunho: 'Rascunho, sem revisão jurídica',
   regiaoDosDados:
     'Nesta fase de avaliação, a demonstração roda num projeto Supabase nos Estados Unidos (região us-east-1), só com dados fictícios.',
 }
@@ -119,10 +120,12 @@ describe('textos fixos nos lugares certos', () => {
     ['TF-05', TF.prazoExclusao, ['/exclusao-de-conta']],
     ['TF-06', TF.pedidoExclusao, ['/exclusao-de-conta']],
     ['TF-07', TF.contaIndisponivel, ['/como-funciona']],
+    ['TF-08', TF.rascunho, ['/privacidade', '/termos', '/exclusao-de-conta']],
     ['TF-09', TF.dadosFicticios, ['/privacidade', '/termos']],
     ['TF-10', TF.construcao, NOVAS],
     ['TF-11', TF.semDiagnostico, ['/desenvolvimento', '/termos', '/sobre']],
-    ['TF-12', TF.telasFicticias, ['/como-funciona']],
+    // TF-12 só vale numa página com aparelho no main (`[data-aparelho]`); nenhuma das 9 tem: em nenhuma.
+    ['TF-12', TF.telasFicticias, []],
     ['TF-15', TF.regiaoDosDados, ['/privacidade']],
   ]
 
@@ -135,11 +138,11 @@ describe('textos fixos nos lugares certos', () => {
     }, 30000)
   }
 
-  it('TF-13 ("Fale conosco") é o rótulo da 1ª linha do Contato, e o texto da linha é só o link de e-mail', async () => {
+  it('TF-13 ("E-mail") é o rótulo da 1ª linha do Contato, e o texto da linha é só o link de e-mail', async () => {
     const container = await abrir('/contato')
 
-    const rotulo = document.getElementById('secao-fale-conosco')!
-    expect(rotulo.textContent).toBe('Fale conosco')
+    const rotulo = document.getElementById('secao-e-mail')!
+    expect(rotulo.textContent).toBe('E-mail')
     const linha = rotulo.closest('section')!
     expect(linha.previousElementSibling).toBe(principal(container).firstElementChild)
     const texto = linha.querySelector('.sb-linha-texto')!
@@ -244,11 +247,12 @@ const FRASES_PROIBIDAS = [
 ]
 
 describe('o que não pode aparecer', () => {
-  it('nenhuma das frases proibidas, nem "rascunho" nem "revisão pendente"', async () => {
+  it('nenhuma das frases proibidas, nem "rascunho" nem "revisão pendente", fora da linha TF-08 da lateral das 3 jurídicas', async () => {
     for (const caminho of NOVAS) {
       const container = await abrir(caminho)
 
-      const texto = textoSemEmail(container).toLowerCase()
+      // O TF-08 ("Rascunho, sem revisão jurídica") é o único trecho que pode dizer "rascunho": sai do texto antes da conferência.
+      const texto = textoSemEmail(container).toLowerCase().split(TF.rascunho.toLowerCase()).join(' ')
       for (const frase of FRASES_PROIBIDAS) expect(texto, `${caminho}: ${frase}`).not.toContain(frase)
     }
   }, 30000)
