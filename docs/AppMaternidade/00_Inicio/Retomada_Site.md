@@ -337,3 +337,5 @@ Depois abra http://localhost:5173/ no navegador.
 
 - D7 (MAT-26), com Daniel.
 - A nota mínima do award-bar (G6) sai na MAT-34.
+
+- 11/11 12h30: base MAT-49a (g1 + g2) aprovada na revisão R3 e integrada por fast-forward em `int/refazer` (e73e75a..98c50de). 36r-B t_e1d0eaa8 liberada.
