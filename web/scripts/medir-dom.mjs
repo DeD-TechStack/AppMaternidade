@@ -1,53 +1,74 @@
-// Medidor do sistema-base (MAT-44d): mede no Chrome, por CDP, os critérios G1 a G12 da seção 2.11
-// do contrato. Só biblioteca padrão do Node 24 (fetch e WebSocket), só loopback.
+// Medidor do site "Campo de mel": mede no Chrome, por CDP, os gates determinísticos da seção 8 do
+// DESIGN.md (.oc/contrato/DESIGN.md). Só biblioteca padrão do Node 24 (fetch e WebSocket), só loopback.
 //
 // Uso: node web/scripts/medir-dom.mjs <pasta> <caso>:<tema>:<LxA> ...
-//   casos: sistema, inicio, hoje, sessao. Temas: claro e madrugada. Ex.: sistema:claro:1440x900
-//   Grava <pasta>/<caso>_<tema>_<L>.json e imprime uma linha "RESUMO <arquivo> G1 ok G2 FALHA ...".
+//   casos: sistema, inicio, hoje, sessao, e qualquer outro nome [a-z0-9_]+ que esteja em CASOS de
+//   .oc/cdp.mjs (a rota vem de lá). Temas: claro e madrugada. Ex.: comofunciona:claro:1440x900
+//   Grava <pasta>/<caso>_<tema>_<L>.json e imprime uma linha "RESUMO <arquivo> G1 ok FONTES FALHA ...".
 //   Saída 0 se mediu (as falhas ficam no JSON e no RESUMO); 2 em erro de uso ou de conexão.
 //   Ambiente: CDP_PORTA (padrão 9344) e BASE_URL (padrão http://127.0.0.1:5244/).
 //
-// Além de G1 a G12 e SB3 (o nome do rodapé), a regra NUM confere os números em Zilla Slab (família,
-// face carregada e lining-nums).
+// Regras (todas bloqueiam em todos os casos): G1 (sem rolagem horizontal), G11 (alvos e contraste),
+// G12 (movimento reduzido), FONTES (só Literata e Outfit), CAIXA (nada em caixa alta), SOMBRA (sombra,
+// gradiente e filtro só pelos tokens) e 3D (sem perspective, preserve-3d nem rotação em X ou Y).
 //
-// A parte pura (as funções g1 a g12, num, o contraste e o resumo) recebe um JSON de nós e devolve
-// { regra, ok, motivo, nos_com_falha }. Ela falha fechado: nó sem texto onde a regra pede texto,
-// largura 0, font-size fora do conjunto, fundo transparente sem ancestral opaco e medida ausente
+// A parte pura recebe um JSON de nós e devolve { regra, ok, motivo, nos_com_falha }. Ela falha
+// fechado: nó sem texto onde a regra pede texto, sem estilo, medida ausente, NaN ou valor ilegível
 // reprovam, em vez de passar por falta de dado.
 import fs from 'node:fs'
 import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 // ---------------------------------------------------------------------------------------------
 // Parte pura
 
-export const FONTES_PERMITIDAS = [15, 17, 20, 24, 28, 32, 36, 48, 56, 72, 80, 88, 96, 112, 224]
-export const RAIOS_PERMITIDOS = ['0', '4px', '8px', '50%']
+/** As siglas que podem aparecer em caixa alta (lista fechada). */
+export const SIGLAS_PERMITIDAS = ['RN', 'SBP', 'LGPD', 'OMS']
 
-// As cores de fundo que o G7 distingue: o urucum (dia e madrugada) e o barro e a lavanda (idem).
-const URUCUM = ['#B0401C', '#C47055']
-const MIDIA = ['#C9A39A', '#B8ADC4', '#3A2723', '#2C2733']
+/** As duas famílias do site (o nome da família variável, "Literata Variable", conta como Literata). */
+export const FAMILIAS_PERMITIDAS = ['Literata', 'Outfit']
 
-const CASOS = ['sistema', 'inicio', 'hoje', 'sessao']
+/** Os valores dos tokens do DESIGN.md (seção 3): a referência quando a página não os entrega. */
+export const TOKENS_DESIGN = {
+  sombraFlutuante: '0 2px 4px rgb(43 35 32 / .08), 0 18px 40px rgb(43 35 32 / .16)',
+  sombraCartao: '0 1px 2px rgb(43 35 32 / .06), 0 8px 24px rgb(43 35 32 / .06)',
+  luzEstudio: 'radial-gradient(120% 90% at 15% 10%, #F7D684 0%, #F2C14E 60%)',
+  brilhoMel: 'radial-gradient(closest-side, rgb(242 193 78 / .22), transparent)',
+}
+
+// O nome do token na página (custom property) de cada valor acima.
+const TOKENS_NA_PAGINA = {
+  sombraFlutuante: '--sombra-flutuante',
+  sombraCartao: '--sombra-cartao',
+  luzEstudio: '--luz-estudio',
+  brilhoMel: '--brilho-mel',
+}
+
+/** As regras, na ordem em que saem. */
+export const REGRAS = ['G1', 'G11', 'G12', 'FONTES', 'CAIXA', 'SOMBRA', '3D']
+
+// Os casos com rota fixa; os outros vêm de CASOS de .oc/cdp.mjs.
+export const CASOS_FIXOS = { sistema: 'sistema', inicio: '', hoje: 'app/hoje', sessao: 'app/hoje' }
 const TEMAS = ['claro', 'madrugada']
 
-/** A margem fixa da grade pela largura da janela (a da media query, com a barra de rolagem). */
-export function margemDe(largura) {
-  if (largura >= 992) return 32
-  if (largura >= 768) return 24
-  return 16
+/** A rota de um caso: a fixa, ou a de `casosCdp[caso].rota`; nulo se não houver (caso desconhecido). */
+export function rotaDoCaso(caso, casosCdp) {
+  if (typeof caso !== 'string' || caso === '') return null
+  if (Object.hasOwn(CASOS_FIXOS, caso)) return CASOS_FIXOS[caso]
+  if (!casosCdp || typeof casosCdp !== 'object' || !Object.hasOwn(casosCdp, caso)) return null
+  const rota = casosCdp[caso]?.rota
+  return typeof rota === 'string' ? rota.replace(/^\/+/, '') : null
 }
 
-/** A largura da área útil: a da janela sem a barra, menos as margens, até o máximo. */
-export function areaUtilDe(largura, larguraSemBarra) {
-  const maximo = largura < 768 ? 640 : 1600
-  return Math.min(larguraSemBarra - 2 * margemDe(largura), maximo)
-}
-
-/** O x de uma coluna cN (1 a 10): `margem + (N−1) × área útil ÷ 10`; abaixo de 768 há 1 coluna. */
-export function xDaColuna(n, largura, larguraSemBarra) {
-  const area = areaUtilDe(largura, larguraSemBarra)
-  const inicio = (larguraSemBarra - area) / 2
-  return largura < 768 ? inicio : inicio + ((n - 1) * area) / 10
+/** As rotas dos pedidos; lança Error se algum caso não tem rota (nunca passa em silêncio). */
+export function rotasDosPedidos(pedidos, casosCdp) {
+  return pedidos.map((pedido) => {
+    const rota = rotaDoCaso(pedido.caso, casosCdp)
+    if (rota === null) {
+      throw new Error(`caso sem rota: ${pedido.caso} (não é ${Object.keys(CASOS_FIXOS).join(', ')} nem está em CASOS de .oc/cdp.mjs)`)
+    }
+    return { ...pedido, rota }
+  })
 }
 
 /** Lê uma cor calculada do Chrome: rgb(), rgba(), a forma com espaços e color(srgb ...). */
@@ -65,15 +86,6 @@ export function parseCor(texto) {
 function alfa(texto) {
   if (texto === undefined) return 1
   return texto.endsWith('%') ? parseFloat(texto) / 100 : parseFloat(texto)
-}
-
-function hexParaRgb(hex) {
-  return [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16))
-}
-
-function ehCor(cor, hexes) {
-  if (!cor || cor.a < 0.99) return false
-  return hexes.some((hex) => hexParaRgb(hex).every((canal, i) => Math.abs(canal - [cor.r, cor.g, cor.b][i]) <= 1.5))
 }
 
 /** Compõe a cor `de` sobre a cor `sobre` (alfa pré-multiplicado, como o navegador pinta). */
@@ -120,12 +132,10 @@ const temTexto = (no) => typeof no.texto === 'string' && no.texto.trim() !== ''
 // O texto que um controle (input, textarea, select) mostra: o valor, o placeholder visível ou o
 // rótulo da opção escolhida. É a leitura do controle, que não tem nó de texto próprio.
 const temTextoControle = (no) => typeof no.textoControle === 'string' && no.textoControle.trim() !== ''
-// O texto inline de um parágrafo (o dos descendentes, sem o dos parágrafos aninhados).
-const temTextoTotal = (no) => typeof no.textoTotal === 'string' && no.textoTotal.trim() !== ''
-const perto = (a, b, tolerancia) => Number.isFinite(a) && Number.isFinite(b) && Math.abs(a - b) <= tolerancia
 const ehNumero = (valor) => typeof valor === 'number' && Number.isFinite(valor)
+const lido = (valor) => typeof valor === 'string' && valor.trim() !== ''
 const descrever = (no) => {
-  const texto = [no.texto, no.textoTotal, no.textoControle].find((t) => typeof t === 'string' && t.trim() !== '')
+  const texto = [no.texto, no.textoControle].find((t) => typeof t === 'string' && t.trim() !== '')
   return `${no.tag ?? '?'}${texto ? ` "${texto.trim().slice(0, 40)}"` : ''}`
 }
 const px = (valor) => {
@@ -133,6 +143,7 @@ const px = (valor) => {
   const m = /^(-?[\d.]+)px$/.exec(String(valor ?? '').trim())
   return m ? parseFloat(m[1]) : Number.NaN
 }
+const semAspas = (texto) => String(texto).trim().replace(/^["']|["']$/g, '').trim()
 
 function resultado(regra, falhas, motivoOk, motivoFalha) {
   const ok = falhas.length === 0
@@ -160,229 +171,18 @@ export function g1(doc) {
   }
 }
 
-/** G2: o cabeçalho tem 64 px (60 abaixo de 768), é sticky em top 0, opaco e sem border-bottom; o nome em x=margem. */
-export function g2(nos, doc) {
-  const cab = nos.find((no) => marca(no, 'cabecalho'))
-  if (!cab) return falhaFechada('G2', 'nenhum [data-cabecalho]')
-  const celular = doc.largura < 768
-  const falhas = []
-  const falhar = (motivo) => falhas.push({ no: descrever(cab), motivo })
-  if (!cab.rect || !(cab.rect.w > 0)) falhar('cabeçalho sem largura')
-  const esperada = celular ? 60 : 64
-  if (!perto(cab.rect?.h, esperada, 0.5)) falhar(`altura ${cab.rect?.h} em vez de ${esperada}`)
-  if (cab.estilo?.position !== 'sticky') falhar(`position ${cab.estilo?.position} em vez de sticky`)
-  if (px(cab.estilo?.top) !== 0) falhar(`top ${cab.estilo?.top} em vez de 0`)
-  const fundo = parseCor(cab.estilo?.backgroundColor)
-  if (!fundo || fundo.a < 0.999) falhar(`fundo não opaco (${cab.estilo?.backgroundColor})`)
-  const largura = px(cab.estilo?.borderBottomWidth)
-  if (Number.isNaN(largura)) falhar('border-bottom ausente')
-  else if (largura > 0 && cab.estilo?.borderBottomStyle !== 'none') falhar(`border-bottom de ${cab.estilo.borderBottomWidth}`)
-  const margem = margemDe(doc.largura)
-  const nome = nos.find((no) => marca(no, 'nomeSite'))
-  if (!nome) falhar('nenhum [data-nome-site]')
-  else if (!celular) {
-    if (!perto(nome.rect?.x, margem, 1)) falhar(`nome do site em x=${nome.rect?.x} em vez de ${margem}`)
-  } else {
-    // Abaixo de 768 (2.6): o botão do menu à esquerda, o nome no meio e o botão à direita. O que
-    // começa em x=16 é o botão do menu; o nome fica entre ele e o botão da direita.
-    const menu = nos.find((no) => marca(no, 'menuBotao') && visivel(no))
-    const acao = nos.find((no) => marca(no, 'acaoCabecalho') && no.tag !== 'span' && visivel(no))
-    if (!menu) falhar('nenhum botão do menu visível abaixo de 768')
-    else {
-      if (!perto(menu.rect?.x, margem, 1)) falhar(`botão do menu em x=${menu.rect?.x} em vez de ${margem}`)
-      const direita = acao?.rect?.x ?? doc.clientWidth
-      if (!(nome.rect?.x >= menu.rect.x + menu.rect.w - 0.5 && nome.rect.x + nome.rect.w <= direita + 0.5)) {
-        falhar('o nome do site não está entre o menu e o botão da direita')
-      }
-    }
-  }
-  return resultado('G2', falhas, `altura ${cab.rect.h}, sticky, top 0, opaco, sem border-bottom`)
-}
-
-/** G3: todo filho direto de `main` começa em x=margem ou no x de c2 (±2). */
-export function g3(nos, doc) {
-  const filhos = nos.filter((no) => marca(no, 'filhoDeMain') && visivel(no))
-  if (filhos.length === 0) return falhaFechada('G3', 'nenhum filho direto de main')
-  const x1 = xDaColuna(1, doc.largura, doc.clientWidth)
-  const x2 = xDaColuna(2, doc.largura, doc.clientWidth)
-  const falhas = []
-  for (const no of filhos) {
-    const x = no.rect?.x
-    if (!Number.isFinite(x)) falhas.push({ no: descrever(no), motivo: 'sem x' })
-    else if (!perto(x, x1, 2) && !perto(x, x2, 2)) {
-      falhas.push({ no: descrever(no), motivo: `${descrever(no)} em x=${x.toFixed(1)} (esperado ${x1.toFixed(1)} ou ${x2.toFixed(1)})` })
-    }
-  }
-  return resultado('G3', falhas, `${filhos.length} filhos de main em x=${x1.toFixed(1)} ou c2=${x2.toFixed(1)}`)
-}
-
 /**
- * G4: todo font-size calculado está no conjunto (mais o nome do rodapé) e nada em caixa alta. Vale
- * para o texto dos nós e para o dos controles (valor, placeholder visível, rótulo do select), que
- * têm o font-size do próprio controle.
+ * G11: alvo de toque de 44 × 44 (56 de altura na BarraRegistrar e na madrugada) e contraste do texto
+ * de 4,5:1, ou de 3:1 para texto grande (≥ 24 px, ou ≥ 18,66 px com peso ≥ 700).
  */
-export function g4(nos) {
-  const comTexto = nos.filter((no) => visivel(no) && (temTexto(no) || temTextoControle(no)))
-  if (comTexto.length === 0) return falhaFechada('G4', 'nenhum nó com texto')
-  const falhas = []
-  for (const no of comTexto) {
-    const tamanho = px(no.estilo?.fontSize)
-    if (Number.isNaN(tamanho)) {
-      falhas.push({ no: descrever(no), motivo: `${descrever(no)}: font-size ausente` })
-      continue
-    }
-    if (!marca(no, 'nomeRodape') && !FONTES_PERMITIDAS.some((f) => Math.abs(f - tamanho) < 0.01)) {
-      falhas.push({ no: descrever(no), motivo: `${descrever(no)}: font-size ${tamanho}px fora do conjunto` })
-    }
-    if (no.estilo?.textTransform === 'uppercase') {
-      falhas.push({ no: descrever(no), motivo: `${descrever(no)}: text-transform uppercase` })
-    }
-  }
-  return resultado('G4', falhas, `${comTexto.length} nós de texto, todos no conjunto, sem caixa alta`)
-}
-
-/** G5: o h1 tem 96/96 (80 de 768 a 991; 48/48 abaixo), peso 600, em x=margem. */
-export function g5(nos, doc) {
-  const h1 = nos.find((no) => no.tag === 'h1' && visivel(no))
-  if (!h1) return falhaFechada('G5', 'nenhum h1')
-  const tamanho = doc.largura >= 992 ? 96 : doc.largura >= 768 ? 80 : 48
-  const falhas = []
-  const falhar = (motivo) => falhas.push({ no: descrever(h1), motivo })
-  const fonte = px(h1.estilo?.fontSize)
-  const linha = px(h1.estilo?.lineHeight)
-  if (!perto(fonte, tamanho, 0.01)) falhar(`font-size ${h1.estilo?.fontSize} em vez de ${tamanho}px`)
-  if (!perto(linha, tamanho, 0.01)) falhar(`line-height ${h1.estilo?.lineHeight} em vez de ${tamanho}px`)
-  if (Number(h1.estilo?.fontWeight) !== 600) falhar(`peso ${h1.estilo?.fontWeight} em vez de 600`)
-  if (!perto(h1.rect?.x, margemDe(doc.largura), 1)) falhar(`x=${h1.rect?.x} em vez de ${margemDe(doc.largura)}`)
-  return resultado('G5', falhas, `h1 ${tamanho}/${tamanho}, peso 600, x=${h1.rect.x}`)
-}
-
-function raioEm(valor) {
-  return String(valor ?? '')
-    .trim()
-    .split(/\s+/)
-    .map((parte) => (parte === '0px' || parte === '0' ? '0' : parte))
-}
-
-/** G6: sem box-shadow; raios em {0, 4, 8, 50%}; borda nos 4 lados só na moldura dupla. */
-export function g6(nos) {
-  const falhas = []
-  const lidos = nos.filter(visivel)
-  if (lidos.length === 0) return falhaFechada('G6', 'nenhum nó')
-  for (const no of lidos) {
-    const e = no.estilo
-    if (!e) {
-      falhas.push({ no: descrever(no), motivo: `${descrever(no)}: sem estilo` })
-      continue
-    }
-    if (e.boxShadow && e.boxShadow !== 'none') falhas.push({ no: descrever(no), motivo: `${descrever(no)}: box-shadow ${e.boxShadow}` })
-    for (const canto of ['borderTopLeftRadius', 'borderTopRightRadius', 'borderBottomRightRadius', 'borderBottomLeftRadius']) {
-      for (const parte of raioEm(e[canto])) {
-        if (!RAIOS_PERMITIDOS.includes(parte)) falhas.push({ no: descrever(no), motivo: `${descrever(no)}: ${canto} ${e[canto]}` })
-      }
-    }
-    const lados = ['Top', 'Right', 'Bottom', 'Left'].every((lado) => px(e[`border${lado}Width`]) > 0 && e[`border${lado}Style`] !== 'none')
-    if (lados && !marca(no, 'moldura')) falhas.push({ no: descrever(no), motivo: `${descrever(no)}: borda nos 4 lados fora da moldura dupla` })
-  }
-  return resultado('G6', falhas, 'sem sombra, raios em {0,4,8,50%}, borda de 4 lados só na moldura dupla')
-}
-
-/** G7: urucum só em botão primário, CTA, "Em andamento", rodapé; barro e lavanda só em [data-midia], sem texto dentro. */
-export function g7(nos) {
-  const falhas = []
-  const lidos = nos.filter(visivel)
-  if (lidos.length === 0) return falhaFechada('G7', 'nenhum nó')
-  for (const no of lidos) {
-    const fundo = parseCor(no.estilo?.backgroundColor)
-    if (no.estilo?.backgroundColor !== undefined && !fundo) {
-      falhas.push({ no: descrever(no), motivo: `${descrever(no)}: fundo ilegível (${no.estilo.backgroundColor})` })
-      continue
-    }
-    if (ehCor(fundo, URUCUM) && !(marca(no, 'botaoPrimario') || marca(no, 'cta') || marca(no, 'andamento') || marca(no, 'doRodape') || marca(no, 'acaoCabecalho'))) {
-      falhas.push({ no: descrever(no), motivo: `${descrever(no)}: fundo urucum fora de botão primário, CTA, "Em andamento" ou rodapé` })
-    }
-    if (ehCor(fundo, MIDIA) && !marca(no, 'midia')) {
-      falhas.push({ no: descrever(no), motivo: `${descrever(no)}: barro ou lavanda fora de [data-midia]` })
-    }
-    if (marca(no, 'midia') && typeof no.textoDentro === 'string' && no.textoDentro.trim() !== '') {
-      falhas.push({ no: descrever(no), motivo: `[data-midia] com texto dentro: "${no.textoDentro.trim().slice(0, 30)}"` })
-    }
-    if (marca(no, 'midia') && typeof no.textoDentro !== 'string') {
-      falhas.push({ no: descrever(no), motivo: '[data-midia] sem a leitura do texto de dentro' })
-    }
-  }
-  return resultado('G7', falhas, 'urucum, barro e lavanda só onde o contrato manda')
-}
-
-/** G8: de um bloco ao seguinte há até 192 px, e colunas lado a lado diferem em até 120 px de altura. */
-export function g8(nos, doc) {
-  const blocos = nos
-    .filter((no) => (marca(no, 'filhoDeMain') || marca(no, 'rodape')) && visivel(no))
-    .filter((no) => Number.isFinite(no.rect?.y) && Number.isFinite(no.rect?.h))
-    .sort((a, b) => a.rect.y - b.rect.y)
-  if (blocos.length < 2) return falhaFechada('G8', 'menos de dois blocos para medir')
-  const falhas = []
-  let maior = 0
-  for (let i = 1; i < blocos.length; i += 1) {
-    const vao = blocos[i].rect.y - (blocos[i - 1].rect.y + blocos[i - 1].rect.h)
-    maior = Math.max(maior, vao)
-    if (vao > 192.5) {
-      falhas.push({ no: descrever(blocos[i]), motivo: `vão de ${vao.toFixed(1)} px antes de ${descrever(blocos[i])} (máximo 192)` })
-    }
-  }
-  const grupos = Array.isArray(doc?.grupos) ? doc.grupos : null
-  if (grupos === null) falhas.push({ no: 'documento', motivo: 'sem a leitura das colunas lado a lado' })
-  else {
-    for (const grupo of grupos) {
-      const alturas = grupo.alturas.filter(Number.isFinite)
-      if (alturas.length < 2) continue
-      const diferenca = Math.max(...alturas) - Math.min(...alturas)
-      if (diferenca > 120.5) falhas.push({ no: grupo.id, motivo: `colunas de ${grupo.id} diferem ${diferenca.toFixed(1)} px de altura (máximo 120)` })
-    }
-  }
-  return resultado('G8', falhas, `maior vão ${maior.toFixed(1)} px; ${grupos ? grupos.length : 0} grupos de colunas`)
-}
-
-/** G9: o rodapé começa em x=0 e tem a largura da janela. */
-export function g9(nos, doc) {
-  const rodape = nos.find((no) => marca(no, 'rodape'))
-  if (!rodape) return falhaFechada('G9', 'nenhum [data-rodape]')
-  const falhas = []
-  if (!perto(rodape.rect?.x, 0, 0.5)) falhas.push({ no: 'rodapé', motivo: `rodapé em x=${rodape.rect?.x}` })
-  if (!perto(rodape.rect?.w, doc.clientWidth, 1)) falhas.push({ no: 'rodapé', motivo: `rodapé com ${rodape.rect?.w} px em vez de ${doc.clientWidth}` })
-  return resultado('G9', falhas, `rodapé em x=0 com ${rodape.rect.w} px`)
-}
-
-/**
- * G10: nenhum parágrafo passa de 65 caracteres por linha renderizada. O parágrafo conta o texto dos
- * descendentes inline (`<p><span>…</span></p>`), e não só o texto direto.
- */
-export function g10(nos) {
-  const paragrafos = nos.filter((no) => no.tag === 'p' && visivel(no) && (temTexto(no) || temTextoTotal(no)))
-  if (paragrafos.length === 0) return falhaFechada('G10', 'nenhum parágrafo com texto')
-  const falhas = []
-  let maior = 0
-  for (const no of paragrafos) {
-    if (!Array.isArray(no.linhas) || no.linhas.length === 0) {
-      falhas.push({ no: descrever(no), motivo: `${descrever(no)}: sem a contagem de linhas` })
-      continue
-    }
-    const maximo = Math.max(...no.linhas)
-    maior = Math.max(maior, maximo)
-    if (maximo > 65) falhas.push({ no: descrever(no), motivo: `${descrever(no)}: ${maximo} caracteres numa linha` })
-  }
-  return resultado('G10', falhas, `${paragrafos.length} parágrafos, no máximo ${maior} caracteres por linha`)
-}
-
-/** G11: alvo de toque de 44 × 44 (56 de altura na madrugada) e contraste de 4,5:1 em todo texto. */
 export function g11(nos, tema) {
   const alvos = nos.filter((no) => marca(no, 'interativo') && visivel(no))
   const textos = nos.filter((no) => visivel(no) && temTexto(no))
   if (alvos.length === 0) return falhaFechada('G11', 'nenhum alvo de toque')
   if (textos.length === 0) return falhaFechada('G11', 'nenhum nó com texto')
-  const alturaMinima = tema === 'madrugada' ? 56 : 44
   const falhas = []
   for (const no of alvos) {
+    const alturaMinima = tema === 'madrugada' || marca(no, 'barraRegistrar') ? 56 : 44
     const { w, h } = no.rect ?? {}
     if (!(w > 0) || !(h > 0)) falhas.push({ no: descrever(no), motivo: `${descrever(no)}: alvo sem tamanho` })
     else if (w < 43.5 || h < alturaMinima - 0.5) {
@@ -401,9 +201,14 @@ export function g11(nos, tema) {
       continue
     }
     menor = Math.min(menor, razao)
-    if (razao < 4.5) falhas.push({ no: descrever(no), motivo: `${descrever(no)}: contraste ${razao.toFixed(2)}:1` })
+    // Texto grande (WCAG 1.4.3): 24 px, ou 18,66 px (14 pt) em negrito, pede só 3:1.
+    const tamanho = px(no.estilo?.fontSize)
+    const peso = Number(no.estilo?.fontWeight)
+    const grande = tamanho >= 24 || (tamanho >= 18.66 && peso >= 700)
+    const minimo = grande ? 3 : 4.5
+    if (razao < minimo) falhas.push({ no: descrever(no), motivo: `${descrever(no)}: contraste ${razao.toFixed(2)}:1 (mínimo ${minimo}:1${grande ? ', texto grande' : ''})` })
   }
-  return resultado('G11', falhas, `${alvos.length} alvos ≥ 44 × ${alturaMinima}; menor contraste ${menor.toFixed(2)}:1`)
+  return resultado('G11', falhas, `${alvos.length} alvos ≥ 44 px; menor contraste ${menor.toFixed(2)}:1`)
 }
 
 /** As escalas dos eixos X e Y de um `transform` calculado (`none` ou `matrix(a, b, c, d, e, f)`); nulo se ilegível. */
@@ -457,71 +262,306 @@ export function g12(nos) {
   return resultado('G12', falhas, `${blocos.length} blocos com opacidade 1 e escala 1 (nos dois eixos)`)
 }
 
-/** SB3 (2.7): o nome gigante do rodapé ocupa de 96% a 100% da área útil. */
-export function sb3(doc) {
-  const nome = doc?.nomeRodape
-  if (!nome || !(nome.areaUtil > 0) || !Number.isFinite(nome.larguraTexto)) return falhaFechada('SB3', 'nome do rodapé não medido')
-  const razao = nome.larguraTexto / nome.areaUtil
-  const ok = razao >= 0.96 && razao <= 1.0005
-  return {
-    regra: 'SB3',
-    ok,
-    motivo: `nome do rodapé com ${(razao * 100).toFixed(1)}% da área útil (${nome.larguraTexto.toFixed(1)} de ${nome.areaUtil.toFixed(1)})`,
-    nos_com_falha: [],
+// ---------------------------------------------------------------------------------------------
+// FONTES
+
+// As famílias genéricas do CSS: não são uma família do site, então não entram na conta.
+const FAMILIAS_GENERICAS = new Set([
+  'serif', 'sans-serif', 'monospace', 'cursive', 'fantasy', 'system-ui', 'emoji', 'math', 'fangsong',
+  'ui-serif', 'ui-sans-serif', 'ui-monospace', 'ui-rounded', '-apple-system', 'blinkmacsystemfont',
+])
+
+/** A primeira família de um `font-family` calculado, sem aspas; nulo se não houver. */
+export function primeiraFamilia(fontFamily) {
+  if (!lido(fontFamily)) return null
+  const lista = dividirNoTopo(fontFamily, ',')
+  const primeira = semAspas(lista[0] ?? '')
+  return primeira === '' ? null : primeira
+}
+
+/** Leva "Literata Variable" a "Literata" e "Outfit Variable" a "Outfit" (a família variável do @fontsource). */
+function familiaBase(nome) {
+  return nome.replace(/\s+variable$/i, '').trim()
+}
+
+/** Os nós com texto visível: o texto dos elementos e o dos controles (valor, placeholder). */
+const nosComTexto = (nos) => nos.filter((no) => visivel(no) && (temTexto(no) || temTextoControle(no)))
+
+/**
+ * FONTES: no máximo duas famílias calculadas nos nós de texto, Literata e Outfit. Vale a primeira
+ * família de cada nó; as genéricas (serif, sans-serif, system-ui...) ficam de fora da conta.
+ */
+export function fontes(nos) {
+  const comTexto = nosComTexto(nos)
+  if (comTexto.length === 0) return falhaFechada('FONTES', 'nenhum nó com texto')
+  const permitidas = new Map(FAMILIAS_PERMITIDAS.map((nome) => [nome.toLowerCase(), nome]))
+  const falhas = []
+  const achadas = new Map() // minúscula → nome como veio
+  const foraDoSet = new Map()
+  for (const no of comTexto) {
+    const familia = primeiraFamilia(no.estilo?.fontFamily)
+    if (familia === null) {
+      falhas.push({ no: descrever(no), motivo: `${descrever(no)}: font-family ausente` })
+      continue
+    }
+    if (FAMILIAS_GENERICAS.has(familia.toLowerCase())) continue
+    const base = familiaBase(familia)
+    achadas.set(base.toLowerCase(), base)
+    if (!permitidas.has(base.toLowerCase())) {
+      foraDoSet.set(familia.toLowerCase(), familia)
+      falhas.push({ no: descrever(no), motivo: `${descrever(no)}: família ${familia}` })
+    }
   }
+  if (falhas.length === 0 && achadas.size === 0) {
+    return falhaFechada('FONTES', 'nenhuma família não genérica medida nos nós de texto')
+  }
+  const lista = [...foraDoSet.values()]
+  const motivoFalha =
+    lista.length > 0
+      ? `famílias fora de ${FAMILIAS_PERMITIDAS.join(' e ')}: ${lista.join(', ')} (${falhas.length} nós)`
+      : `${falhas.length} nós sem font-family: ${falhas[0]?.motivo ?? ''}`
+  return resultado('FONTES', falhas, `${comTexto.length} nós de texto, só ${[...achadas.values()].join(' e ')}`, motivoFalha)
+}
+
+// ---------------------------------------------------------------------------------------------
+// CAIXA
+
+/** As palavras do texto com 4 ou mais maiúsculas seguidas (acentuadas também), menos as siglas permitidas. */
+export function palavrasEmCaixaAlta(texto) {
+  if (typeof texto !== 'string') return []
+  const palavras = texto.match(/[\p{L}\p{M}]+/gu) ?? []
+  return palavras.filter((palavra) => /\p{Lu}{4,}/u.test(palavra) && !SIGLAS_PERMITIDAS.includes(palavra))
+}
+
+/** CAIXA: nada em caixa alta, nem por `text-transform: uppercase` nem pela grafia (siglas da lista à parte). */
+export function caixa(nos) {
+  const comTexto = nosComTexto(nos)
+  if (comTexto.length === 0) return falhaFechada('CAIXA', 'nenhum nó com texto')
+  const falhas = []
+  for (const no of comTexto) {
+    if (!no.estilo || typeof no.estilo.textTransform !== 'string') {
+      falhas.push({ no: descrever(no), motivo: `${descrever(no)}: text-transform ausente` })
+      continue
+    }
+    if (no.estilo.textTransform.trim() === 'uppercase') {
+      falhas.push({ no: descrever(no), motivo: `${descrever(no)}: text-transform uppercase` })
+    }
+    const palavras = [...palavrasEmCaixaAlta(no.texto), ...palavrasEmCaixaAlta(no.textoControle)]
+    if (palavras.length > 0) {
+      falhas.push({ no: descrever(no), motivo: `${descrever(no)}: caixa alta na grafia (${palavras.join(', ')})` })
+    }
+  }
+  return resultado('CAIXA', falhas, `${comTexto.length} nós de texto, sem caixa alta (siglas: ${SIGLAS_PERMITIDAS.join(', ')})`)
+}
+
+// ---------------------------------------------------------------------------------------------
+// SOMBRA: normalização das sombras e dos gradientes para uma forma canônica
+
+/** Divide `texto` em `separador` (',' ou ' ') só fora de parênteses e de aspas. */
+function dividirNoTopo(texto, separador) {
+  const partes = []
+  let profundidade = 0
+  let aspas = null
+  let atual = ''
+  for (const c of String(texto)) {
+    if (aspas) {
+      if (c === aspas) aspas = null
+    } else if (c === '"' || c === "'") aspas = c
+    else if (c === '(') profundidade += 1
+    else if (c === ')') profundidade -= 1
+    const separa = !aspas && profundidade === 0 && (separador === ' ' ? /\s/.test(c) : c === separador)
+    if (separa) {
+      partes.push(atual)
+      atual = ''
+    } else atual += c
+  }
+  partes.push(atual)
+  return partes.map((p) => p.trim()).filter((p) => p !== '')
+}
+
+/** Todas as cores viram `rgb(r g b)` ou `rgb(r g b / a)` (hex, rgb(), rgba(), com vírgula ou barra, `transparent`). */
+function normalizarCores(texto) {
+  const canal = (c) => {
+    const n = c.endsWith('%') ? (parseFloat(c) * 255) / 100 : parseFloat(c)
+    return Number.isFinite(n) ? Math.round(n) : null
+  }
+  let t = texto.toLowerCase()
+  t = t.replace(/\btransparent\b/g, 'rgb(0 0 0 / 0)')
+  t = t.replace(/#([0-9a-f]{8}|[0-9a-f]{6}|[0-9a-f]{4}|[0-9a-f]{3})(?![0-9a-z])/g, (todo, hex) => {
+    const cheio = hex.length <= 4 ? [...hex].map((h) => h + h).join('') : hex
+    const [r, g, b] = [0, 2, 4].map((i) => parseInt(cheio.slice(i, i + 2), 16))
+    const a = cheio.length === 8 ? parseInt(cheio.slice(6, 8), 16) / 255 : 1
+    return `rgb(${r} ${g} ${b}${a < 1 ? ` / ${Number(a.toFixed(2))}` : ''})`
+  })
+  t = t.replace(/rgba?\(([^)]*)\)/g, (todo, dentro) => {
+    const p = dentro.trim().split(/[\s,/]+/).filter(Boolean)
+    if (p.length < 3 || p.length > 4) return todo
+    const [r, g, b] = p.slice(0, 3).map(canal)
+    const a = p.length === 4 ? alfa(p[3]) : 1
+    if ([r, g, b].includes(null) || !Number.isFinite(a)) return todo
+    const alfaCanonico = Number(Math.min(Math.max(a, 0), 1).toFixed(2))
+    return `rgb(${r} ${g} ${b}${alfaCanonico < 1 ? ` / ${alfaCanonico}` : ''})`
+  })
+  return t
+}
+
+/** A forma canônica de um valor de CSS: minúsculas, cores em rgb(), `0px` → `0`, `.5` → `0.5`, espaços colapsados. */
+export function canonico(texto) {
+  if (!lido(texto)) return null
+  let t = normalizarCores(texto)
+  t = t.replace(/(?<![\w.])\.(\d)/g, '0.$1')
+  t = t.replace(/(?<![\w.])-?0(?:\.0+)?px(?![\w])/g, '0')
+  t = t.replace(/\s+/g, ' ').replace(/\s*,\s*/g, ', ').replace(/\(\s+/g, '(').replace(/\s+\)/g, ')')
+  return t.trim()
 }
 
 /**
- * NUM (2.2, `numero` e `cronometro`): cada `[data-numero]`, `.t-cronometro` e `[data-cronometro]`
- * visível (a) tem como primeira família calculada "Zilla Slab", (b) tem a face carregada
- * (`document.fonts.check('<peso> <tamanho> "Zilla Slab"')` e a face registrada e `loaded`, porque
- * `check()` dá `true` para uma família sem @font-face) e (c) pede `lining-nums`: sem ele a Zilla
- * Slab desenha algarismos de texto, o 7 desce e o 2 e o 0 ficam na altura do x. Falha fechado:
- * leitura ausente, nula ou de outro tipo reprova. Sem número nem cronômetro, é "não aplicável".
+ * A forma canônica de um `box-shadow`: camadas em ordem, cada uma como `[inset] x y desfoque espalhamento cor`
+ * (a cor pode vir antes ou depois no original; o espalhamento que falta vira 0). Nulo se ilegível.
  */
-export function num(nos, doc) {
-  const alvos = (Array.isArray(nos) ? nos : []).filter((no) => marca(no, 'numero') && visivel(no))
-  if (alvos.length === 0) {
-    return { regra: 'NUM', ok: true, motivo: 'não aplicável: a página não tem [data-numero] nem cronômetro', nos_com_falha: [] }
+export function sombraCanonica(texto) {
+  const c = canonico(texto)
+  if (c === null) return null
+  if (c === 'none') return 'none'
+  const camadas = []
+  for (const camada of dividirNoTopo(c, ',')) {
+    const tokens = dividirNoTopo(camada, ' ')
+    const cores = tokens.filter((t) => t.startsWith('rgb('))
+    const inset = tokens.includes('inset')
+    const medidas = tokens.filter((t) => !t.startsWith('rgb(') && t !== 'inset')
+    if (cores.length !== 1 || medidas.length < 2 || medidas.length > 4) return null
+    if (!medidas.every((m) => /^-?[\d.]+(?:[a-z%]+)?$/.test(m))) return null
+    while (medidas.length < 4) medidas.push('0')
+    camadas.push([...(inset ? ['inset'] : []), ...medidas, cores[0]].join(' '))
   }
+  return camadas.length === 0 ? null : camadas.join(', ')
+}
+
+/** As imagens de fundo de um `background-image` que são gradientes, em forma canônica. */
+function gradientesDe(valor) {
+  return dividirNoTopo(valor, ',')
+    .filter((parte) => /gradient\(/i.test(parte))
+    .map((parte) => canonico(parte))
+}
+
+/**
+ * SOMBRA: todo `box-shadow` diferente de `none` é uma das duas sombras dos tokens; todo gradiente em
+ * `background-image` é um dos dois gradientes dos tokens; `filter` e `backdrop-filter` só `none`
+ * (sem desfoque). Vale para todos os nós, também os ocultos (um painel fechado ainda é CSS do site).
+ * Os tokens que a página entrega (`doc.tokens`) têm de bater com o DESIGN.md; o que ela não entrega
+ * cai no valor do DESIGN.md.
+ */
+export function sombra(nos, doc) {
+  if (!Array.isArray(nos) || nos.length === 0) return falhaFechada('SOMBRA', 'nenhum nó')
   const falhas = []
-  if (doc?.fontes?.zillaSlab700 !== true) {
-    falhas.push({
-      no: 'documento',
-      motivo: `document.fonts.check('700 112px "Zilla Slab"') não deu true (leitura: ${JSON.stringify(doc?.fontes?.zillaSlab700 ?? null)})`,
-    })
-  }
-  for (const no of alvos) {
-    // Um elemento com mais de um defeito conta uma vez em `nos_com_falha`, com os motivos juntos.
-    const motivos = []
-    const falhar = (motivo) => motivos.push(motivo)
-    const fonte = no.fonte
-    if (typeof fonte?.familia !== 'string' || fonte.familia.trim() === '') falhar('família calculada ausente')
-    else if (fonte.familia !== 'Zilla Slab') falhar(`a primeira família é "${fonte.familia}" em vez de "Zilla Slab"`)
-    if (fonte?.faceCarregada !== true) {
-      falhar(`face Zilla Slab ${fonte?.peso ?? '?'} ${fonte?.tamanho ?? '?'} não carregada (leitura: ${JSON.stringify(fonte?.faceCarregada ?? null)})`)
+  const falhaDoc = (motivo) => falhas.push({ no: 'documento', motivo })
+  // Os tokens: o da página tem de ser igual ao do DESIGN.md.
+  let lidosDaPagina = 0
+  for (const [chave, constante] of Object.entries(TOKENS_DESIGN)) {
+    const daPagina = doc?.tokens?.[chave]
+    if (!lido(daPagina)) continue
+    lidosDaPagina += 1
+    const ehSombra = chave.startsWith('sombra')
+    const a = ehSombra ? sombraCanonica(daPagina) : canonico(daPagina)
+    const b = ehSombra ? sombraCanonica(constante) : canonico(constante)
+    if (a === null || a !== b) {
+      falhaDoc(`token ${TOKENS_NA_PAGINA[chave]} da página (${daPagina.trim()}) difere do DESIGN.md (${constante})`)
     }
-    const variante = no.estilo?.fontVariantNumeric
-    if (typeof variante !== 'string' || variante.trim() === '') falhar('font-variant-numeric ausente (sem lining-nums)')
-    else if (!/(^|\s)lining-nums(\s|$)/.test(variante)) falhar(`font-variant-numeric "${variante}" sem lining-nums`)
-    if (motivos.length > 0) falhas.push({ no: descrever(no), motivo: `${descrever(no)}: ${motivos.join('; ')}` })
   }
-  return resultado('NUM', falhas, `${alvos.length} números ou cronômetros em Zilla Slab com a face carregada e lining-nums`)
+  const sombrasOk = [TOKENS_DESIGN.sombraFlutuante, TOKENS_DESIGN.sombraCartao].map(sombraCanonica)
+  const gradientesOk = [TOKENS_DESIGN.luzEstudio, TOKENS_DESIGN.brilhoMel].map(canonico)
+  for (const no of nos) {
+    const e = no.estilo
+    if (!e) {
+      falhas.push({ no: descrever(no), motivo: `${descrever(no)}: sem estilo` })
+      continue
+    }
+    const falhar = (motivo) => falhas.push({ no: descrever(no), motivo: `${descrever(no)}: ${motivo}` })
+    if (!lido(e.boxShadow)) falhar('box-shadow ausente')
+    else {
+      const canonica = sombraCanonica(e.boxShadow)
+      if (canonica === null) falhar(`box-shadow ilegível (${e.boxShadow})`)
+      else if (canonica !== 'none' && !sombrasOk.includes(canonica)) falhar(`box-shadow fora dos tokens (${e.boxShadow})`)
+    }
+    if (!lido(e.backgroundImage)) falhar('background-image ausente')
+    else {
+      for (const gradiente of gradientesDe(e.backgroundImage)) {
+        if (gradiente === null || !gradientesOk.includes(gradiente)) falhar(`gradiente fora dos tokens (${e.backgroundImage.slice(0, 120)})`)
+      }
+    }
+    for (const [propriedade, nome] of [['filter', 'filter'], ['backdropFilter', 'backdrop-filter']]) {
+      if (!lido(e[propriedade])) falhar(`${nome} ausente`)
+      else if (e[propriedade].trim() !== 'none') falhar(`${nome} ${e[propriedade]} (sem desfoque nem filtro)`)
+    }
+  }
+  return resultado('SOMBRA', falhas, `${nos.length} nós: sombras e gradientes só dos tokens, sem filter (${lidosDaPagina} de 4 tokens lidos da página)`)
 }
 
-/** As regras que bloqueiam em cada caso: em `sistema`, todas; nos outros, só G2 e G9 (as demais só se registram). */
-export function bloqueantesDoCaso(caso) {
-  return caso === 'sistema' ? ['G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7', 'G8', 'G9', 'G10', 'G11', 'G12', 'SB3', 'NUM'] : ['G2', 'G9']
+// ---------------------------------------------------------------------------------------------
+// 3D
+
+/** Lê um `transform` calculado: `{ tridimensional }` ou `{ erro }`. A matrix3d identidade em z passa. */
+function leituraDoTransform(transform) {
+  if (!lido(transform)) return { erro: 'transform ausente' }
+  const t = transform.trim()
+  if (t === 'none') return { tridimensional: false }
+  const numeros = (texto) => texto.split(',').map((parte) => (parte.trim() === '' ? Number.NaN : Number(parte)))
+  let m = /^matrix\(([^)]+)\)$/.exec(t)
+  if (m) {
+    const v = numeros(m[1])
+    return v.length === 6 && v.every(Number.isFinite) ? { tridimensional: false } : { erro: `transform ilegível (${t})` }
+  }
+  m = /^matrix3d\(([^)]+)\)$/.exec(t)
+  if (m) {
+    const v = numeros(m[1])
+    if (v.length !== 16 || !v.every(Number.isFinite)) return { erro: `transform ilegível (${t})` }
+    // Em coluna: m13 m14 = v[2] v[3]; m23 m24 = v[6] v[7]; m31 m32 m33 m34 = v[8] v[9] v[10] v[11].
+    // Uma rotação em X ou em Y mexe nessas entradas; a identidade em z não.
+    const mexeEmZ = [2, 3, 6, 7, 8, 9, 11].some((i) => Math.abs(v[i]) > 1e-6) || Math.abs(v[10] - 1) > 1e-6
+    return { tridimensional: mexeEmZ }
+  }
+  return { erro: `transform ilegível (${t})` }
 }
 
-/** Avalia as regras sobre as leituras de uma página: `{ doc, nos, tema }`. */
-export function avaliarTudo({ doc, nos, tema }, caso = 'sistema') {
-  const bloqueantes = bloqueantesDoCaso(caso)
-  const todas = [g1(doc), g2(nos, doc), g3(nos, doc), g4(nos), g5(nos, doc), g6(nos), g7(nos), g8(nos, doc), g9(nos, doc), g10(nos), g11(nos, tema), g12(nos), sb3(doc), num(nos, doc)]
+/** 3D: nenhum nó com `perspective`, `transform-style: preserve-3d` ou transform 3D (rotação em X ou Y). */
+export function tresD(nos) {
+  if (!Array.isArray(nos) || nos.length === 0) return falhaFechada('3D', 'nenhum nó')
+  const falhas = []
+  for (const no of nos) {
+    const e = no.estilo
+    if (!e) {
+      falhas.push({ no: descrever(no), motivo: `${descrever(no)}: sem estilo` })
+      continue
+    }
+    const falhar = (motivo) => falhas.push({ no: descrever(no), motivo: `${descrever(no)}: ${motivo}` })
+    if (!lido(e.perspective)) falhar('perspective ausente')
+    else if (e.perspective.trim() !== 'none') falhar(`perspective ${e.perspective}`)
+    if (!lido(e.transformStyle)) falhar('transform-style ausente')
+    else if (e.transformStyle.trim() === 'preserve-3d') falhar('transform-style preserve-3d')
+    else if (e.transformStyle.trim() !== 'flat') falhar(`transform-style ilegível (${e.transformStyle})`)
+    const transform = leituraDoTransform(e.transform)
+    if (transform.erro) falhar(transform.erro)
+    else if (transform.tridimensional) falhar(`transform 3D (${e.transform})`)
+  }
+  return resultado('3D', falhas, `${nos.length} nós sem perspective, preserve-3d nem transform 3D`)
+}
+
+// ---------------------------------------------------------------------------------------------
+
+/** As regras que bloqueiam em cada caso: todas, em todos. */
+export function bloqueantesDoCaso() {
+  return [...REGRAS]
+}
+
+/** Avalia as regras sobre as leituras de uma página: `{ doc, nos, tema }`. Todas bloqueiam, em todo caso. */
+export function avaliarTudo({ doc, nos, tema }) {
+  const lista = Array.isArray(nos) ? nos : []
+  const bloqueantes = bloqueantesDoCaso()
+  const todas = [g1(doc), g11(lista, tema), g12(lista), fontes(lista), caixa(lista), sombra(lista, doc), tresD(lista)]
   return todas.map((r) => ({ ...r, bloqueia: bloqueantes.includes(r.regra) }))
 }
 
-/** A linha de resumo: `RESUMO <arquivo> G1 ok G2 FALHA ...`; falha que não bloqueia sai como "registrada". */
+/** A linha de resumo: `RESUMO <arquivo> G1 ok G11 FALHA ...`; falha que não bloqueia sai como "registrada". */
 export function resumo(arquivo, resultados) {
   const partes = resultados.map((r) => `${r.regra} ${r.ok ? 'ok' : r.bloqueia ? 'FALHA' : 'registrada'}`)
   return `RESUMO ${arquivo} ${partes.join(' ')}`
@@ -534,10 +574,9 @@ export function lerArgumentos(argumentos) {
     throw new Error('uso: node web/scripts/medir-dom.mjs <pasta> <caso>:<tema>:<LxA> ...')
   }
   const pedidos = specs.map((spec) => {
-    const m = /^([a-z]+):([a-z]+):(\d+)x(\d+)$/.exec(spec)
-    if (!m) throw new Error(`argumento inválido: ${spec} (esperado <caso>:<tema>:<LxA>)`)
+    const m = /^([a-z0-9_]+):([a-z]+):(\d+)x(\d+)$/.exec(spec)
+    if (!m) throw new Error(`argumento inválido: ${spec} (esperado <caso>:<tema>:<LxA>, caso em [a-z0-9_]+)`)
     const [, caso, tema, largura, altura] = m
-    if (!CASOS.includes(caso)) throw new Error(`caso desconhecido: ${caso} (use ${CASOS.join(', ')})`)
     if (!TEMAS.includes(tema)) throw new Error(`tema desconhecido: ${tema} (use ${TEMAS.join(', ')})`)
     if (caso === 'inicio' && tema === 'madrugada') throw new Error('o Início é sempre claro: não há inicio:madrugada')
     return { caso, tema, largura: Number(largura), altura: Number(altura) }
@@ -566,8 +605,14 @@ export function coletarNaPagina() {
     altura: window.innerHeight,
     clientWidth: raiz.clientWidth,
     scrollWidth: raiz.scrollWidth,
-    grupos: [],
-    nomeRodape: null,
+  }
+  // Os tokens como a página os declara (custom properties em :root); vazio se não existirem.
+  const estiloRaiz = getComputedStyle(raiz)
+  doc.tokens = {
+    sombraFlutuante: estiloRaiz.getPropertyValue('--sombra-flutuante').trim(),
+    sombraCartao: estiloRaiz.getPropertyValue('--sombra-cartao').trim(),
+    luzEstudio: estiloRaiz.getPropertyValue('--luz-estudio').trim(),
+    brilhoMel: estiloRaiz.getPropertyValue('--brilho-mel').trim(),
   }
   const colapsar = (t) => t.replace(/\s+/g, ' ').trim()
   const cadeiaDe = (el) => {
@@ -589,16 +634,6 @@ export function coletarNaPagina() {
     if (el.tagName === 'TEXTAREA') return el.value !== '' ? colapsar(el.value) : dica
     if (el.tagName === 'SELECT') return colapsar([...el.selectedOptions].map((opcao) => opcao.textContent).join(' '))
     return ''
-  }
-  // Os nós de texto que pertencem a este parágrafo: os dos descendentes inline, e não os dos
-  // parágrafos aninhados, que são medidos por conta própria (nada conta duas vezes).
-  const textosDoParagrafo = (el) => {
-    const nosDeTexto = []
-    const andador = document.createTreeWalker(el, NodeFilter.SHOW_TEXT)
-    for (let no = andador.nextNode(); no; no = andador.nextNode()) {
-      if (no.parentElement && no.parentElement.closest('p') === el) nosDeTexto.push(no)
-    }
-    return nosDeTexto
   }
   // Os produtos das opacidades e das escalas (X e Y) dos ancestrais, até a raiz. Uma leitura que o
   // coletor não entende (matrix3d, opacidade ilegível) vai como null: a regra falha fechado.
@@ -623,51 +658,6 @@ export function coletarNaPagina() {
     }
     return legivel ? { opacidade, escalaX, escalaY } : null
   }
-  // Os caracteres do parágrafo na ordem do DOM, que é a ordem das linhas: uma linha nova começa
-  // quando o centro vertical do caractere desce mais de 10 px em relação ao da linha atual.
-  const linhasDe = (el) => {
-    const linhas = []
-    let atual = null
-    for (const no of textosDoParagrafo(el)) {
-      const texto = no.textContent
-      for (let i = 0; i < texto.length; i += 1) {
-        const faixa = document.createRange()
-        faixa.setStart(no, i)
-        faixa.setEnd(no, i + 1)
-        const retangulos = faixa.getClientRects()
-        if (retangulos.length === 0) continue
-        const centro = (retangulos[0].top + retangulos[0].bottom) / 2
-        if (atual === null || centro - atual.centro > 10) {
-          atual = { centro, texto: '' }
-          linhas.push(atual)
-        }
-        atual.texto += texto[i]
-      }
-    }
-    return linhas.map((linha) => linha.texto.trim().length).filter((n) => n > 0)
-  }
-
-  // A Zilla Slab dos números (regra NUM). `document.fonts.check()` dá true para uma família sem
-  // @font-face (cai numa fonte do sistema), então a face também tem de estar registrada e `loaded`.
-  // Sem `document.fonts` (ou se lançar), a leitura é null e a regra falha fechado.
-  const semAspas = (texto) => String(texto).trim().replace(/^["']|["']$/g, '')
-  const pesoCobre = (pesoDaFace, peso) => {
-    const faixa = String(pesoDaFace).split(/\s+/).map(Number).filter(Number.isFinite)
-    const alvo = Number(peso)
-    if (faixa.length === 0 || !Number.isFinite(alvo)) return false
-    return faixa.length === 1 ? faixa[0] === alvo : alvo >= faixa[0] && alvo <= faixa[1]
-  }
-  const faceCarregada = (peso, tamanho) => {
-    if (!document.fonts || typeof document.fonts.check !== 'function') return null
-    try {
-      const passa = document.fonts.check(`${peso} ${tamanho} "Zilla Slab"`) === true
-      const registrada = [...document.fonts].some((face) => semAspas(face.family) === 'Zilla Slab' && face.status === 'loaded' && pesoCobre(face.weight, peso))
-      return passa && registrada
-    } catch {
-      return null
-    }
-  }
-  doc.fontes = { zillaSlab700: faceCarregada('700', '112px') }
 
   const elementos = [...document.body.querySelectorAll('*')].filter((el) => !ignorar.has(el.tagName))
   const nos = elementos.map((el) => {
@@ -681,108 +671,35 @@ export function coletarNaPagina() {
       rect: { x: r.x + sx, y: r.y + sy, w: r.width, h: r.height },
       estilo: {
         fontSize: cs.fontSize,
-        lineHeight: cs.lineHeight,
         fontWeight: cs.fontWeight,
+        fontFamily: cs.fontFamily,
         textTransform: cs.textTransform,
-        letterSpacing: cs.letterSpacing,
         boxShadow: cs.boxShadow,
-        borderTopLeftRadius: cs.borderTopLeftRadius,
-        borderTopRightRadius: cs.borderTopRightRadius,
-        borderBottomRightRadius: cs.borderBottomRightRadius,
-        borderBottomLeftRadius: cs.borderBottomLeftRadius,
-        borderTopWidth: cs.borderTopWidth,
-        borderRightWidth: cs.borderRightWidth,
-        borderBottomWidth: cs.borderBottomWidth,
-        borderLeftWidth: cs.borderLeftWidth,
-        borderTopStyle: cs.borderTopStyle,
-        borderRightStyle: cs.borderRightStyle,
-        borderBottomStyle: cs.borderBottomStyle,
-        borderLeftStyle: cs.borderLeftStyle,
+        backgroundImage: cs.getPropertyValue('background-image'),
         backgroundColor: cs.backgroundColor,
         color: cs.color,
         opacity: cs.opacity,
         transform: cs.transform,
-        position: cs.position,
-        top: cs.top,
-        fontFamily: cs.fontFamily,
-        fontVariantNumeric: cs.fontVariantNumeric,
+        perspective: cs.getPropertyValue('perspective'),
+        transformStyle: cs.getPropertyValue('transform-style'),
+        filter: cs.getPropertyValue('filter'),
+        backdropFilter: cs.getPropertyValue('backdrop-filter'),
       },
       m: {
-        cabecalho: el.matches('[data-cabecalho]'),
-        nomeSite: el.matches('[data-nome-site]'),
-        menuBotao: el.matches('[data-cabecalho] .sb-cab-menu'),
-        acaoCabecalho: Boolean(el.closest('[data-cabecalho-acao]')),
-        rodape: el.matches('[data-rodape]'),
-        doRodape: Boolean(el.closest('[data-rodape]')),
-        nomeRodape: Boolean(el.closest('[data-nome-rodape]')),
-        midia: el.matches('[data-midia]'),
-        moldura: Boolean(el.closest('[data-moldura-dupla]')),
-        botaoPrimario: Boolean(el.closest('[data-botao="primario"]')),
-        cta: Boolean(el.closest('[data-cta]')),
-        andamento: Boolean(el.closest('[data-andamento], .campo-andamento, .campo-sessao')),
         filhoDeMain: el.parentElement !== null && el.parentElement.tagName === 'MAIN',
         filhoDeBloco: el.parentElement !== null && el.parentElement.matches('[data-bloco]'),
         // G12: os blocos e as mídias aninhados em qualquer profundidade dentro de <main>.
         blocoG12: el.closest('main') !== null && el.tagName !== 'MAIN' && el.matches('[data-bloco], [data-midia], figure'),
         interativo: el.matches('a, button, input, select, textarea, [role="button"]'),
-        // NUM: os números da faixa e o cronômetro em Zilla Slab.
-        numero: el.matches('[data-numero], .t-cronometro, [data-cronometro]'),
+        // G11: os controles da BarraRegistrar (o componente rende `.barra-registrar[data-barra-registrar]`).
+        barraRegistrar: el.closest('.barra-registrar, [data-barra-registrar]') !== null,
       },
       cadeia: cadeiaDe(el),
     }
-    if (no.m.numero) {
-      no.fonte = {
-        familia: semAspas((cs.fontFamily || '').split(',')[0] ?? ''),
-        peso: cs.fontWeight,
-        tamanho: cs.fontSize,
-        faceCarregada: faceCarregada(cs.fontWeight, cs.fontSize),
-      }
-    }
-    if (el.matches('[data-midia]')) no.textoDentro = el.textContent
     if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT') no.textoControle = textoDoControle(el)
     if (no.m.filhoDeMain || no.m.filhoDeBloco || no.m.blocoG12) no.ancestrais = ancestraisDe(el)
-    if (el.tagName === 'P') {
-      // O texto do parágrafo inclui o dos descendentes inline (<p><span>…</span></p>).
-      no.textoTotal = colapsar(textosDoParagrafo(el).map((n) => n.textContent).join(''))
-      if (no.textoTotal !== '' || no.texto !== '') no.linhas = linhasDe(el)
-    }
     return no
   })
-
-  // Colunas lado a lado dentro do <main>: filhos de uma grade ou de um flex em linha, com texto.
-  const principal = document.querySelector('main')
-  if (principal) {
-    for (const pai of [principal, ...principal.querySelectorAll('*')]) {
-      const exibicao = getComputedStyle(pai).display
-      if (!/grid|flex/.test(exibicao)) continue
-      const filhos = [...pai.children].filter((f) => f.getBoundingClientRect().width > 0 && f.getBoundingClientRect().height > 0 && colapsar(f.textContent) !== '')
-      if (filhos.length < 2) continue
-      const rects = filhos.map((f) => f.getBoundingClientRect())
-      const ladoALado = rects.some((a, i) => rects.some((b, j) => j > i && a.right <= b.left + 0.5 && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 0))
-      if (!ladoALado) continue
-      doc.grupos.push({ id: `${pai.tagName.toLowerCase()}.${(pai.className || '').toString().split(/\s+/)[0] || '-'}`, alturas: rects.map((x) => x.height) })
-    }
-  }
-
-  // O nome gigante do rodapé: a largura do texto (a mais larga das linhas) contra a área útil.
-  const nome = document.querySelector('[data-nome-rodape]')
-  const area = nome ? nome.closest('.sb-area') : null
-  if (nome && area) {
-    let larguraTexto = 0
-    const andador = document.createTreeWalker(nome, NodeFilter.SHOW_TEXT)
-    for (let no = andador.nextNode(); no; no = andador.nextNode()) {
-      if (colapsar(no.textContent) === '') continue
-      const faixa = document.createRange()
-      faixa.selectNodeContents(no)
-      larguraTexto = Math.max(larguraTexto, faixa.getBoundingClientRect().width)
-    }
-    if (nome.querySelector('span') && getComputedStyle(nome.querySelector('span')).display !== 'block') {
-      const faixa = document.createRange()
-      faixa.selectNodeContents(nome)
-      larguraTexto = faixa.getBoundingClientRect().width
-    }
-    doc.nomeRodape = { larguraTexto, areaUtil: area.getBoundingClientRect().width }
-  }
 
   return { doc, nos }
 }
@@ -855,11 +772,10 @@ async function clicarPorTexto(cdp, seletor, texto) {
   await espera(300)
 }
 
-async function abrirCaso(cdp, base, { caso, tema }) {
+async function abrirCaso(cdp, base, { caso, tema, rota }) {
   // Movimento reduzido sempre (G12): as medidas e as capturas usam o mesmo modo.
   await cdp.enviar('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] })
-  const caminho = { sistema: 'sistema', inicio: '', hoje: 'app/hoje', sessao: 'app/hoje' }[caso]
-  await cdp.enviar('Page.navigate', { url: new URL(caminho, base).href })
+  await cdp.enviar('Page.navigate', { url: new URL(rota, base).href })
   await esperarPronto(cdp)
   if (tema === 'madrugada') {
     const ligou = await avaliar(cdp, `(() => { const b = document.querySelector('[data-cabecalho] button[aria-pressed]'); if (!b) return false; b.click(); return true })()`)
@@ -882,6 +798,16 @@ async function abrirCaso(cdp, base, { caso, tema }) {
   await espera(200)
 }
 
+/** Os CASOS de .oc/cdp.mjs (o caso → { rota }); nulo se o arquivo não existe ou não exporta CASOS. */
+async function carregarCasosCdp() {
+  try {
+    const modulo = await import(pathToFileURL(path.resolve('.oc/cdp.mjs')).href)
+    return modulo.CASOS ?? null
+  } catch {
+    return null
+  }
+}
+
 async function principal(argumentos) {
   let pasta
   let pedidos
@@ -889,6 +815,9 @@ async function principal(argumentos) {
   try {
     ;({ pasta, pedidos } = lerArgumentos(argumentos))
     verificarLoopback(baseUrl)
+    // Só abre o cdp.mjs se algum caso não tem rota fixa; caso sem rota é erro de uso, nunca passa.
+    const precisaDoCdp = pedidos.some((pedido) => rotaDoCaso(pedido.caso, null) === null)
+    pedidos = rotasDosPedidos(pedidos, precisaDoCdp ? await carregarCasosCdp() : null)
   } catch (erro) {
     console.error(erro.message)
     return 2
@@ -901,21 +830,19 @@ async function principal(argumentos) {
     for (const pedido of pedidos) {
       await cdp.enviar('Emulation.setDeviceMetricsOverride', { width: pedido.largura, height: pedido.altura, deviceScaleFactor: 1, mobile: false })
       await abrirCaso(cdp, baseUrl, pedido)
-      const lido = await avaliar(cdp, `(${coletarNaPagina.toString()})()`)
-      const resultados = avaliarTudo({ ...lido, tema: pedido.tema }, pedido.caso)
+      const leitura = await avaliar(cdp, `(${coletarNaPagina.toString()})()`)
+      const resultados = avaliarTudo({ ...leitura, tema: pedido.tema })
       const arquivo = `${pedido.caso}_${pedido.tema}_${pedido.largura}.json`
       const medidas = {
-        largura: lido.doc.largura,
-        clientWidth: lido.doc.clientWidth,
-        h1: lido.nos.find((n) => n.tag === 'h1')?.rect ?? null,
-        cabecalho: lido.nos.find((n) => n.m.cabecalho)?.rect ?? null,
-        rodape: lido.nos.find((n) => n.m.rodape)?.rect ?? null,
-        nomeRodape: lido.doc.nomeRodape,
-        nos: lido.nos.length,
+        largura: leitura.doc.largura,
+        clientWidth: leitura.doc.clientWidth,
+        tokens: leitura.doc.tokens,
+        h1: leitura.nos.find((n) => n.tag === 'h1')?.rect ?? null,
+        nos: leitura.nos.length,
       }
       fs.writeFileSync(
         path.join(pasta, arquivo),
-        JSON.stringify({ caso: pedido.caso, tema: pedido.tema, largura: pedido.largura, altura: pedido.altura, medido_em: new Date().toISOString(), medidas, resultados }, null, 2),
+        JSON.stringify({ caso: pedido.caso, tema: pedido.tema, largura: pedido.largura, altura: pedido.altura, rota: pedido.rota, medido_em: new Date().toISOString(), medidas, resultados }, null, 2),
       )
       console.log(resumo(arquivo, resultados))
     }

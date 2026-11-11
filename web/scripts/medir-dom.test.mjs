@@ -1,47 +1,53 @@
-// Testes da parte pura do medidor (node --test web/scripts/medir-dom.test.mjs). Para cada regra:
-// um caso que passa, um que falha e um de borda; e os casos em que a medida falha fechado.
+// Testes da parte pura do medidor (node --test web/scripts/medir-dom.test.mjs). Para cada regra
+// (G1, G11, G12, FONTES, CAIXA, SOMBRA, 3D): um caso que passa, um que falha e a falha fechada.
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import { JSDOM } from 'jsdom'
 import {
-  areaUtilDe,
+  REGRAS,
+  SIGLAS_PERMITIDAS,
+  TOKENS_DESIGN,
   avaliarTudo,
   bloqueantesDoCaso,
+  caixa,
+  canonico,
   coletarNaPagina,
   contraste,
+  fontes,
   fundoReal,
   g1,
-  g2,
-  g3,
-  g4,
-  g5,
-  g6,
-  g7,
-  g8,
-  g9,
-  g10,
   g11,
   g12,
   lerArgumentos,
-  margemDe,
-  num,
+  palavrasEmCaixaAlta,
   parseCor,
+  primeiraFamilia,
   resumo,
-  sb3,
+  rotaDoCaso,
+  rotasDosPedidos,
+  sombra,
+  sombraCanonica,
+  tresD,
   verificarLoopback,
-  xDaColuna,
 } from './medir-dom.mjs'
 
-const PAPEL = 'rgb(246, 239, 227)'
-const TINTA = 'rgb(26, 21, 17)'
+const PAPEL = 'rgb(248, 246, 235)'
+const TINTA = 'rgb(43, 35, 32)'
+const BRANCO = 'rgb(255, 255, 255)'
 const TRANSPARENTE = 'rgba(0, 0, 0, 0)'
+
+// Os valores como o Chrome os calcula (normalizados), para a SOMBRA.
+const FLUTUANTE_CHROME = 'rgba(43, 35, 32, 0.08) 0px 2px 4px 0px, rgba(43, 35, 32, 0.16) 0px 18px 40px 0px'
+const CARTAO_CHROME = 'rgba(43, 35, 32, 0.06) 0px 1px 2px 0px, rgba(43, 35, 32, 0.06) 0px 8px 24px 0px'
+const LUZ_CHROME = 'radial-gradient(120% 90% at 15% 10%, rgb(247, 214, 132) 0%, rgb(242, 193, 78) 60%)'
+const BRILHO_CHROME = 'radial-gradient(closest-side, rgba(242, 193, 78, 0.22), rgba(0, 0, 0, 0))'
 
 /** Mescla `estilo` e `m` (um nível), para um ajuste fino não apagar o resto do nó. */
 function com(base, extra = {}) {
   return { ...base, ...extra, estilo: { ...base.estilo, ...(extra.estilo ?? {}) }, m: { ...base.m, ...(extra.m ?? {}) } }
 }
 
-/** Um nó de texto comum, sobre o papel, sem nada de especial. */
+/** Um nó de texto comum (Outfit, 20 px, tinta sobre o papel), sem nada de especial. */
 function criar(extra = {}) {
   const base = {
     tag: 'p',
@@ -50,28 +56,19 @@ function criar(extra = {}) {
     rect: { x: 32, y: 100, w: 300, h: 28 },
     estilo: {
       fontSize: '20px',
-      lineHeight: '28px',
       fontWeight: '400',
+      fontFamily: '"Outfit Variable", system-ui, sans-serif',
       textTransform: 'none',
       boxShadow: 'none',
-      borderTopLeftRadius: '0px',
-      borderTopRightRadius: '0px',
-      borderBottomRightRadius: '0px',
-      borderBottomLeftRadius: '0px',
-      borderTopWidth: '0px',
-      borderRightWidth: '0px',
-      borderBottomWidth: '0px',
-      borderLeftWidth: '0px',
-      borderTopStyle: 'none',
-      borderRightStyle: 'none',
-      borderBottomStyle: 'none',
-      borderLeftStyle: 'none',
+      backgroundImage: 'none',
       backgroundColor: TRANSPARENTE,
       color: TINTA,
       opacity: '1',
       transform: 'none',
-      position: 'static',
-      top: 'auto',
+      perspective: 'none',
+      transformStyle: 'flat',
+      filter: 'none',
+      backdropFilter: 'none',
     },
     m: {},
     cadeia: [TRANSPARENTE, PAPEL],
@@ -79,20 +76,7 @@ function criar(extra = {}) {
   return com(base, extra)
 }
 
-const doc1440 = { largura: 1440, altura: 900, clientWidth: 1425, scrollWidth: 1425, grupos: [] }
-const doc390 = { largura: 390, altura: 844, clientWidth: 375, scrollWidth: 375, grupos: [] }
-
-const cabecalho = (extra = {}) =>
-  com(
-    criar({
-      tag: 'header',
-      texto: '',
-      rect: { x: 0, y: 0, w: 1425, h: 64 },
-      estilo: { position: 'sticky', top: '0px', backgroundColor: PAPEL },
-      m: { cabecalho: true },
-    }),
-    extra,
-  )
+const doc1440 = { largura: 1440, altura: 900, clientWidth: 1425, scrollWidth: 1425 }
 
 describe('parseCor, fundoReal e contraste', () => {
   it('lê rgb, rgba, a forma com espaços, color(srgb) e transparent', () => {
@@ -109,9 +93,8 @@ describe('parseCor, fundoReal e contraste', () => {
     assert.equal(parseCor(''), null)
   })
 
-  it('a tinta sobre o papel tem 15,85:1 e o urucum com o texto do botão, 5,54:1', () => {
-    assert.ok(Math.abs(contraste(TINTA, [TRANSPARENTE, PAPEL]) - 15.85) < 0.05)
-    assert.ok(Math.abs(contraste('rgb(255, 248, 238)', ['rgb(176, 64, 28)', PAPEL]) - 5.54) < 0.05)
+  it('o cacau sobre o papel tem 14,2:1 (DESIGN.md seção 1)', () => {
+    assert.ok(Math.abs(contraste(TINTA, [TRANSPARENTE, PAPEL]) - 14.2) < 0.05)
   })
 
   it('compõe o alfa do fundo e do texto sobre o primeiro fundo opaco', () => {
@@ -128,274 +111,27 @@ describe('parseCor, fundoReal e contraste', () => {
   })
 })
 
-describe('a grade', () => {
-  it('a margem é 32, 24 e 16 pelos pontos 992 e 768', () => {
-    assert.deepEqual([1440, 992, 991, 768, 767, 390].map(margemDe), [32, 32, 24, 24, 16, 16])
-  })
-
-  it('a área útil vai a 1600 (640 abaixo de 768) e as colunas seguem a fórmula do glossário', () => {
-    assert.equal(areaUtilDe(1440, 1440), 1376)
-    assert.equal(areaUtilDe(2000, 2000), 1600)
-    assert.equal(areaUtilDe(700, 700), 640)
-    assert.equal(areaUtilDe(390, 375), 343)
-    assert.ok(Math.abs(xDaColuna(2, 1440, 1440) - 169.6) < 1e-9)
-    assert.ok(Math.abs(xDaColuna(9, 1440, 1440) - 1132.8) < 1e-9)
-    assert.equal(xDaColuna(1, 390, 390), 16)
-    assert.equal(xDaColuna(2, 390, 390), 16)
-  })
-})
-
 describe('G1: scrollWidth == clientWidth', () => {
   it('passa quando são iguais', () => assert.equal(g1({ scrollWidth: 1425, clientWidth: 1425 }).ok, true))
-  it('falha com rolagem horizontal', () => assert.equal(g1({ scrollWidth: 1500, clientWidth: 1425 }).ok, false))
-  it('borda: 1 px a mais já falha', () => assert.equal(g1({ scrollWidth: 1426, clientWidth: 1425 }).ok, false))
+  it('falha com rolagem horizontal, mesmo de 1 px', () => {
+    assert.equal(g1({ scrollWidth: 1500, clientWidth: 1425 }).ok, false)
+    assert.equal(g1({ scrollWidth: 1426, clientWidth: 1425 }).ok, false)
+  })
   it('falha fechado sem a medida', () => {
     assert.equal(g1({ clientWidth: 1425 }).ok, false)
     assert.equal(g1({ scrollWidth: 1425 }).ok, false)
+    assert.equal(g1({ scrollWidth: Number.NaN, clientWidth: 1425 }).ok, false)
     assert.equal(g1(undefined).ok, false)
   })
 })
 
-describe('G2: o cabeçalho', () => {
-  const nome = (x) => criar({ tag: 'a', texto: 'AppMaternidade', rect: { x, y: 20, w: 170, h: 44 }, m: { nomeSite: true } })
-
-  it('passa: 64 px, sticky, top 0, opaco, sem border-bottom e o nome em x=32', () => {
-    const r = g2([cabecalho(), nome(32)], doc1440)
-    assert.equal(r.ok, true, r.motivo)
-  })
-
-  it('falha: sem sticky, com border-bottom, fundo transparente ou altura errada', () => {
-    assert.equal(g2([cabecalho({ estilo: { position: 'fixed' } }), nome(32)], doc1440).ok, false)
-    assert.equal(g2([cabecalho({ estilo: { borderBottomWidth: '1px', borderBottomStyle: 'solid' } }), nome(32)], doc1440).ok, false)
-    assert.equal(g2([cabecalho({ estilo: { backgroundColor: TRANSPARENTE } }), nome(32)], doc1440).ok, false)
-    assert.equal(g2([cabecalho({ rect: { x: 0, y: 0, w: 1425, h: 80 } }), nome(32)], doc1440).ok, false)
-    assert.equal(g2([cabecalho(), nome(48)], doc1440).ok, false)
-  })
-
-  it('borda: 64,4 px passa (tolerância de meio pixel) e top 1px falha', () => {
-    assert.equal(g2([cabecalho({ rect: { x: 0, y: 0, w: 1425, h: 64.4 } }), nome(32)], doc1440).ok, true)
-    assert.equal(g2([cabecalho({ estilo: { top: '1px' } }), nome(32)], doc1440).ok, false)
-  })
-
-  it('falha fechado: sem cabeçalho, sem nome ou sem largura', () => {
-    assert.equal(g2([nome(32)], doc1440).ok, false)
-    assert.equal(g2([cabecalho()], doc1440).ok, false)
-    assert.equal(g2([cabecalho({ rect: { x: 0, y: 0, w: 0, h: 64 } }), nome(32)], doc1440).ok, false)
-  })
-
-  it('abaixo de 768: 60 px, o botão do menu em x=16 e o nome entre o menu e o botão da direita', () => {
-    const menu = criar({ tag: 'button', texto: '', rect: { x: 16, y: 8, w: 44, h: 44 }, m: { menuBotao: true } })
-    const acao = criar({ tag: 'button', texto: '', rect: { x: 280, y: 8, w: 79, h: 44 }, m: { acaoCabecalho: true } })
-    const cab = cabecalho({ rect: { x: 0, y: 0, w: 375, h: 60 } })
-    assert.equal(g2([cab, nome(100), menu, acao], doc390).ok, true)
-    assert.equal(g2([cabecalho(), nome(100), menu, acao], doc390).ok, false)
-    assert.equal(g2([cab, nome(300), menu, acao], doc390).ok, false)
-    assert.equal(g2([cab, nome(100), acao], doc390).ok, false)
-  })
-})
-
-describe('G3: os filhos diretos de main', () => {
-  const filho = (x) => criar({ tag: 'section', texto: '', rect: { x, y: 0, w: 100, h: 100 }, m: { filhoDeMain: true } })
-
-  it('passa em x=32 e no x de c2 (169,6; com a barra de rolagem, 168,1)', () => {
-    assert.equal(g3([filho(32), filho(168.1)], doc1440).ok, true)
-  })
-
-  it('falha fora das duas posições', () => {
-    const r = g3([filho(32), filho(100)], doc1440)
-    assert.equal(r.ok, false)
-    assert.equal(r.nos_com_falha.length, 1)
-  })
-
-  it('borda: ±2 px passam e 3 px a mais falham', () => {
-    assert.equal(g3([filho(170.1)], doc1440).ok, true)
-    assert.equal(g3([filho(171.2)], doc1440).ok, false)
-  })
-
-  it('em 390, só x=16', () => {
-    assert.equal(g3([filho(16)], doc390).ok, true)
-    assert.equal(g3([filho(32)], doc390).ok, false)
-  })
-
-  it('falha fechado sem filho de main e com filho sem x', () => {
-    assert.equal(g3([criar()], doc1440).ok, false)
-    assert.equal(g3([criar({ m: { filhoDeMain: true }, rect: {} })], doc1440).ok, false)
-  })
-})
-
-describe('G4: o conjunto de font-size e a caixa alta', () => {
-  it('passa com tamanhos do conjunto, inclusive o 15 e o 224', () => {
-    const r = g4([criar(), criar({ estilo: { fontSize: '15px' } }), criar({ estilo: { fontSize: '224px' } })])
-    assert.equal(r.ok, true, r.motivo)
-  })
-
-  it('falha com um tamanho fora do conjunto e com uppercase', () => {
-    assert.equal(g4([criar({ estilo: { fontSize: '18px' } })]).ok, false)
-    assert.equal(g4([criar({ estilo: { textTransform: 'uppercase' } })]).ok, false)
-  })
-
-  it('o nome gigante do rodapé é fluido e fica de fora do conjunto', () => {
-    assert.equal(g4([criar(), criar({ estilo: { fontSize: '171.3px' }, m: { nomeRodape: true } })]).ok, true)
-    assert.equal(g4([criar({ estilo: { fontSize: '171.3px' } })]).ok, false)
-  })
-
-  it('borda: 14,98 px falha (a tolerância é de 0,01 px) e 15 px passa', () => {
-    assert.equal(g4([criar({ estilo: { fontSize: '14.98px' } })]).ok, false)
-    assert.equal(g4([criar({ estilo: { fontSize: '15px' } })]).ok, true)
-  })
-
-  it('falha fechado: nenhum nó com texto, ou font-size ausente', () => {
-    assert.equal(g4([criar({ texto: '' })]).ok, false)
-    assert.equal(g4([]).ok, false)
-    assert.equal(g4([criar({ estilo: { fontSize: undefined } })]).ok, false)
-  })
-})
-
-describe('G5: o h1', () => {
-  const h1 = (extra = {}) =>
-    com(criar({ tag: 'h1', texto: 'Sistema', rect: { x: 32, y: 0, w: 400, h: 96 }, estilo: { fontSize: '96px', lineHeight: '96px', fontWeight: '600' } }), extra)
-
-  it('passa em 1440 (96/96), de 768 a 991 (80/80) e abaixo de 768 (48/48)', () => {
-    assert.equal(g5([h1()], doc1440).ok, true)
-    assert.equal(g5([h1({ estilo: { fontSize: '80px', lineHeight: '80px' }, rect: { x: 24, y: 0, w: 100, h: 80 } })], { ...doc1440, largura: 800 }).ok, true)
-    assert.equal(g5([h1({ estilo: { fontSize: '48px', lineHeight: '48px' }, rect: { x: 16, y: 0, w: 100, h: 48 } })], doc390).ok, true)
-  })
-
-  it('falha com o tamanho de outra largura, peso diferente, entrelinha diferente ou x errado', () => {
-    assert.equal(g5([h1({ estilo: { fontSize: '80px', lineHeight: '80px' } })], doc1440).ok, false)
-    assert.equal(g5([h1({ estilo: { fontWeight: '700' } })], doc1440).ok, false)
-    assert.equal(g5([h1({ estilo: { lineHeight: '100px' } })], doc1440).ok, false)
-    assert.equal(g5([h1({ rect: { x: 64, y: 0, w: 100, h: 96 } })], doc1440).ok, false)
-  })
-
-  it('borda: x=32,8 passa e x=33,5 falha', () => {
-    assert.equal(g5([h1({ rect: { x: 32.8, y: 0, w: 100, h: 96 } })], doc1440).ok, true)
-    assert.equal(g5([h1({ rect: { x: 33.5, y: 0, w: 100, h: 96 } })], doc1440).ok, false)
-  })
-
-  it('falha fechado: sem h1 e com line-height "normal"', () => {
-    assert.equal(g5([criar()], doc1440).ok, false)
-    assert.equal(g5([h1({ estilo: { lineHeight: 'normal' } })], doc1440).ok, false)
-  })
-})
-
-describe('G6: sombra, raio e borda', () => {
-  const borda4 = { borderTopWidth: '1px', borderRightWidth: '1px', borderBottomWidth: '1px', borderLeftWidth: '1px', borderTopStyle: 'solid', borderRightStyle: 'solid', borderBottomStyle: 'solid', borderLeftStyle: 'solid' }
-  const raio = (v) => ({ borderTopLeftRadius: v, borderTopRightRadius: v, borderBottomRightRadius: v, borderBottomLeftRadius: v })
-
-  it('passa com raios em {0, 4, 8, 50%} e a borda de 4 lados só na moldura dupla (e dentro dela)', () => {
-    const r = g6([
-      criar({ estilo: raio('8px') }),
-      criar({ estilo: raio('4px') }),
-      criar({ estilo: raio('50%') }),
-      criar({ estilo: { ...borda4, ...raio('8px') }, m: { moldura: true } }),
-    ])
-    assert.equal(r.ok, true, r.motivo)
-  })
-
-  it('falha com sombra, com raio de 12 px e com borda de 4 lados fora da moldura', () => {
-    assert.equal(g6([criar({ estilo: { boxShadow: 'rgba(0, 0, 0, 0.2) 0px 2px 4px 0px' } })]).ok, false)
-    assert.equal(g6([criar({ estilo: raio('12px') })]).ok, false)
-    assert.equal(g6([criar({ estilo: borda4 })]).ok, false)
-  })
-
-  it('borda: uma borda só embaixo passa; raio 8px 4px (elíptico) passa, 8px 9px falha', () => {
-    assert.equal(g6([criar({ estilo: { borderBottomWidth: '1px', borderBottomStyle: 'solid' } })]).ok, true)
-    assert.equal(g6([criar({ estilo: { borderTopLeftRadius: '8px 4px' } })]).ok, true)
-    assert.equal(g6([criar({ estilo: { borderTopLeftRadius: '8px 9px' } })]).ok, false)
-  })
-
-  it('falha fechado: sem nós e sem estilo', () => {
-    assert.equal(g6([]).ok, false)
-    assert.equal(g6([{ tag: 'div', visivel: true }]).ok, false)
-  })
-})
-
-describe('G7: onde podem ficar o urucum, o barro e a lavanda', () => {
-  const urucum = 'rgb(176, 64, 28)'
-  const barro = 'rgb(201, 163, 154)'
-
-  it('passa: urucum em botão primário e no rodapé, barro em [data-midia] vazia', () => {
-    const r = g7([
-      criar({ tag: 'button', estilo: { backgroundColor: urucum }, m: { botaoPrimario: true } }),
-      criar({ tag: 'footer', estilo: { backgroundColor: urucum }, m: { doRodape: true, rodape: true } }),
-      criar({ tag: 'div', texto: '', estilo: { backgroundColor: barro }, m: { midia: true }, textoDentro: '' }),
-    ])
-    assert.equal(r.ok, true, r.motivo)
-  })
-
-  it('falha: urucum num cartão, barro fora de mídia e mídia com texto dentro', () => {
-    assert.equal(g7([criar({ estilo: { backgroundColor: urucum } })]).ok, false)
-    assert.equal(g7([criar({ estilo: { backgroundColor: barro } })]).ok, false)
-    assert.equal(g7([criar({ estilo: { backgroundColor: barro }, m: { midia: true }, textoDentro: 'Legenda' })]).ok, false)
-  })
-
-  it('borda: o urucum da madrugada (#C47055) vale o mesmo; uma cor parecida (#B0411C) ainda é urucum; um cinza não', () => {
-    assert.equal(g7([criar({ estilo: { backgroundColor: 'rgb(196, 112, 85)' } })]).ok, false)
-    assert.equal(g7([criar({ estilo: { backgroundColor: 'rgb(176, 65, 28)' } })]).ok, false)
-    assert.equal(g7([criar({ estilo: { backgroundColor: 'rgb(128, 128, 128)' } })]).ok, true)
-  })
-
-  it('falha fechado: mídia sem a leitura do texto de dentro, fundo ilegível e nenhum nó', () => {
-    assert.equal(g7([criar({ m: { midia: true } })]).ok, false)
-    assert.equal(g7([criar({ estilo: { backgroundColor: 'oklch(0.5 0.1 20)' } })]).ok, false)
-    assert.equal(g7([]).ok, false)
-  })
-})
-
-describe('G8: o ritmo vertical e as colunas lado a lado', () => {
-  const bloco = (y, h, extra = {}) => criar({ tag: 'section', texto: '', rect: { x: 32, y, w: 1000, h }, m: { filhoDeMain: true }, ...extra })
-  const rodape = (y) => criar({ tag: 'footer', texto: '', rect: { x: 0, y, w: 1425, h: 900 }, m: { rodape: true } })
-
-  it('passa: vãos de 32, 128, 160 e 192 até o rodapé, e colunas com 100 px de diferença', () => {
-    const nos = [bloco(0, 200), bloco(232, 300), bloco(660, 500), bloco(1320, 400), rodape(1912)]
-    const r = g8(nos, { ...doc1440, grupos: [{ id: 'div.a', alturas: [300, 200] }] })
-    assert.equal(r.ok, true, r.motivo)
-  })
-
-  it('falha: um vão de 200 px, e colunas com 130 px de diferença', () => {
-    assert.equal(g8([bloco(0, 100), bloco(300, 100)], doc1440).ok, false)
-    assert.equal(g8([bloco(0, 100), bloco(132, 100)], { ...doc1440, grupos: [{ id: 'div.b', alturas: [400, 270] }] }).ok, false)
-  })
-
-  it('borda: 192 px passam, 193 não; 120 px de diferença passam', () => {
-    assert.equal(g8([bloco(0, 100), bloco(292, 100)], doc1440).ok, true)
-    assert.equal(g8([bloco(0, 100), bloco(293.6, 100)], doc1440).ok, false)
-    assert.equal(g8([bloco(0, 100), bloco(132, 100)], { ...doc1440, grupos: [{ id: 'div.c', alturas: [320, 200] }] }).ok, true)
-  })
-
-  it('falha fechado: um bloco só, e sem a leitura das colunas', () => {
-    assert.equal(g8([bloco(0, 100)], doc1440).ok, false)
-    assert.equal(g8([bloco(0, 100), bloco(132, 100)], { ...doc1440, grupos: undefined }).ok, false)
-  })
-})
-
-describe('G9: o rodapé de borda a borda', () => {
-  const rodape = (x, w) => criar({ tag: 'footer', texto: '', rect: { x, y: 900, w, h: 900 }, m: { rodape: true } })
-
-  it('passa em x=0 com a largura da janela', () => assert.equal(g9([rodape(0, 1425)], doc1440).ok, true))
-  it('falha com margem ou largura menor', () => {
-    assert.equal(g9([rodape(32, 1361)], doc1440).ok, false)
-    assert.equal(g9([rodape(0, 1360)], doc1440).ok, false)
-  })
-  it('borda: 1 px de diferença na largura passa', () => assert.equal(g9([rodape(0, 1424.2)], doc1440).ok, true))
-  it('falha fechado sem rodapé', () => assert.equal(g9([criar()], doc1440).ok, false))
-})
-
-describe('G10: 65 caracteres por linha', () => {
-  it('passa com linhas de até 65', () => assert.equal(g10([criar({ linhas: [58, 61, 12] })]).ok, true))
-  it('falha com uma linha de 66', () => assert.equal(g10([criar({ linhas: [66, 20] })]).ok, false))
-  it('borda: 65 passa', () => assert.equal(g10([criar({ linhas: [65] })]).ok, true))
-  it('falha fechado: parágrafo sem a contagem e nenhum parágrafo', () => {
-    assert.equal(g10([criar()]).ok, false)
-    assert.equal(g10([criar({ tag: 'div', linhas: [10] })]).ok, false)
-  })
-})
-
 describe('G11: alvo de toque e contraste', () => {
-  const alvo = (w, h, extra = {}) => criar({ tag: 'button', rect: { x: 32, y: 0, w, h }, m: { interativo: true }, ...extra })
+  const alvo = (w, h, extra = {}) => criar({ tag: 'button', rect: { x: 32, y: 0, w, h }, ...extra, m: { interativo: true, ...(extra.m ?? {}) } })
+  // #8A8A8A sobre branco: 3,45:1, entre os dois limites (3 e 4,5).
+  const CINZA_MEDIO = { color: 'rgb(138, 138, 138)' }
+  const sobreBranco = (estilo) => criar({ estilo: { ...CINZA_MEDIO, ...estilo }, cadeia: [BRANCO] })
 
-  it('passa com 44 × 44 e o contraste da tinta sobre o papel', () => {
+  it('passa com 44 × 44 e o contraste do cacau sobre o papel', () => {
     const r = g11([alvo(44, 44)], 'claro')
     assert.equal(r.ok, true, r.motivo)
   })
@@ -411,11 +147,38 @@ describe('G11: alvo de toque e contraste', () => {
     assert.equal(g11([alvo(44, 48)], 'claro').ok, true)
   })
 
+  it('na BarraRegistrar o alvo interativo tem 56 de altura, também no tema claro', () => {
+    const naBarra = { m: { barraRegistrar: true } }
+    const r = g11([alvo(88, 48, naBarra)], 'claro')
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /mínimo 44 × 56/)
+    assert.equal(g11([alvo(88, 56, naBarra)], 'claro').ok, true)
+    // O mesmo botão fora da barra, com 48 de altura, passa; um nó da barra que não é interativo não conta.
+    assert.equal(g11([alvo(88, 48)], 'claro').ok, true)
+    assert.equal(g11([alvo(44, 44), criar({ tag: 'div', rect: { x: 0, y: 0, w: 390, h: 20 }, m: { barraRegistrar: true } })], 'claro').ok, true)
+  })
+
   it('borda: 43,6 px de largura passa (arredondamento) e 43 não; o contraste de 4,5 passa', () => {
     assert.equal(g11([alvo(43.6, 44)], 'claro').ok, true)
     assert.equal(g11([alvo(43, 44)], 'claro').ok, false)
     // #767676 sobre branco tem 4,54:1.
-    assert.equal(g11([alvo(44, 44), criar({ estilo: { color: 'rgb(118, 118, 118)' }, cadeia: ['rgb(255, 255, 255)'] })], 'claro').ok, true)
+    assert.equal(g11([alvo(44, 44), criar({ estilo: { color: 'rgb(118, 118, 118)' }, cadeia: [BRANCO] })], 'claro').ok, true)
+  })
+
+  it('texto grande (≥ 24 px, ou ≥ 18,66 px em negrito) passa com 3:1; o texto comum não', () => {
+    assert.equal(g11([alvo(44, 44), sobreBranco({ fontSize: '20px' })], 'claro').ok, false)
+    assert.equal(g11([alvo(44, 44), sobreBranco({ fontSize: '24px' })], 'claro').ok, true)
+    assert.equal(g11([alvo(44, 44), sobreBranco({ fontSize: '18.66px', fontWeight: '700' })], 'claro').ok, true)
+    assert.equal(g11([alvo(44, 44), sobreBranco({ fontSize: '18.66px', fontWeight: '400' })], 'claro').ok, false)
+    assert.equal(g11([alvo(44, 44), sobreBranco({ fontSize: '18px', fontWeight: '700' })], 'claro').ok, false)
+    assert.equal(g11([alvo(44, 44), sobreBranco({ fontSize: '24px', fontWeight: '600' })], 'claro').ok, true)
+  })
+
+  it('texto grande abaixo de 3:1 também falha', () => {
+    // #AAAAAA sobre branco: 2,32:1.
+    const r = g11([alvo(44, 44), criar({ estilo: { color: 'rgb(170, 170, 170)', fontSize: '48px' }, cadeia: [BRANCO] })], 'claro')
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /mínimo 3:1/)
   })
 
   it('falha fechado: fundo transparente sem ancestral opaco, texto sem largura, nada para medir', () => {
@@ -423,6 +186,7 @@ describe('G11: alvo de toque e contraste', () => {
     assert.equal(g11([alvo(44, 44), criar({ rect: { x: 0, y: 0, w: 0, h: 20 } })], 'claro').ok, false)
     assert.equal(g11([criar()], 'claro').ok, false)
     assert.equal(g11([alvo(44, 44, { texto: '' })], 'claro').ok, false)
+    assert.equal(g11([alvo(44, 44), criar({ estilo: { color: undefined } })], 'claro').ok, false)
   })
 
   it('o que não está visível não conta', () => {
@@ -454,63 +218,324 @@ describe('G12: opacidade 1 e escala 1', () => {
   })
 })
 
-describe('SB3: o nome do rodapé', () => {
-  it('passa de 96% a 100% da área útil', () => {
-    assert.equal(sb3({ nomeRodape: { larguraTexto: 1340, areaUtil: 1376 } }).ok, true)
-    assert.equal(sb3({ nomeRodape: { larguraTexto: 1321, areaUtil: 1376 } }).ok, true)
+describe('FONTES: só Literata e Outfit', () => {
+  const emFamilia = (fontFamily, extra = {}) => criar({ estilo: { fontFamily }, ...extra })
+
+  it('passa com Literata e Outfit (nome da família variável, aspas e caixa à parte) e fallbacks genéricos', () => {
+    const r = fontes([
+      emFamilia('"Literata Variable", serif'),
+      emFamilia('"Outfit Variable", system-ui, sans-serif'),
+      emFamilia('Literata, Georgia, serif'),
+      emFamilia("'OUTFIT VARIABLE', sans-serif"),
+    ])
+    assert.equal(r.ok, true, r.motivo)
   })
-  it('falha abaixo de 96% e acima de 100%', () => {
-    assert.equal(sb3({ nomeRodape: { larguraTexto: 1200, areaUtil: 1376 } }).ok, false)
-    assert.equal(sb3({ nomeRodape: { larguraTexto: 1400, areaUtil: 1376 } }).ok, false)
+
+  it('só vale a primeira família: o que vem depois da vírgula não conta', () => {
+    assert.equal(fontes([emFamilia('"Outfit Variable", "Zilla Slab", Georgia')]).ok, true)
   })
-  it('falha fechado sem a medida', () => {
-    assert.equal(sb3({ nomeRodape: null }).ok, false)
-    assert.equal(sb3({ nomeRodape: { larguraTexto: Number.NaN, areaUtil: 1376 } }).ok, false)
+
+  it('uma família genérica na frente é ignorada, desde que haja uma família do site em outro nó', () => {
+    assert.equal(fontes([emFamilia('"Outfit Variable", sans-serif'), emFamilia('monospace')]).ok, true)
+  })
+
+  it('falha com Zilla Slab e diz o nome da família', () => {
+    const r = fontes([emFamilia('"Outfit Variable", sans-serif'), emFamilia('"Zilla Slab", Georgia, serif')])
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /Zilla Slab/)
+    assert.equal(r.nos_com_falha.length, 1)
+  })
+
+  it('falha listando todas as famílias fora do conjunto, uma vez cada', () => {
+    const r = fontes([emFamilia('Fraunces, serif'), emFamilia('Fraunces, serif'), emFamilia('"Instrument Sans", sans-serif'), emFamilia('"Outfit Variable"')])
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /Fraunces/)
+    assert.match(r.motivo, /Instrument Sans/)
+    assert.equal(r.motivo.match(/Fraunces/g).length, 1)
+  })
+
+  it('o texto de um controle também conta', () => {
+    const controle = criar({ tag: 'input', texto: '', textoControle: 'Maria', estilo: { fontFamily: 'Arial' } })
+    assert.equal(fontes([criar(), controle]).ok, false)
+  })
+
+  it('o que não está visível não conta', () => {
+    assert.equal(fontes([criar(), emFamilia('Georgia', { visivel: false })]).ok, true)
+  })
+
+  it('falha fechado: nenhum nó com texto, font-family ausente, nó sem estilo e só famílias genéricas', () => {
+    assert.equal(fontes([criar({ texto: '' })]).ok, false)
+    assert.equal(fontes([]).ok, false)
+    assert.match(fontes([]).motivo, /nenhum nó com texto/)
+    assert.equal(fontes([criar(), emFamilia(undefined)]).ok, false)
+    assert.equal(fontes([criar(), emFamilia('')]).ok, false)
+    assert.equal(fontes([criar(), { tag: 'p', texto: 'Sem estilo', visivel: true }]).ok, false)
+    assert.equal(fontes([emFamilia('serif'), emFamilia('system-ui, sans-serif')]).ok, false)
+  })
+
+  it('primeiraFamilia tira as aspas e respeita vírgula dentro de aspas', () => {
+    assert.equal(primeiraFamilia('"Literata Variable", serif'), 'Literata Variable')
+    assert.equal(primeiraFamilia("'Fonte, estranha', serif"), 'Fonte, estranha')
+    assert.equal(primeiraFamilia(undefined), null)
+    assert.equal(primeiraFamilia('  '), null)
+  })
+})
+
+describe('CAIXA: nada em caixa alta', () => {
+  it('passa com frase normal, siglas da lista e palavras curtas em maiúsculas', () => {
+    const r = caixa([
+      criar({ texto: 'Sono do bebê' }),
+      criar({ texto: 'Conforme a LGPD e a OMS' }),
+      criar({ texto: 'RN, SBP e SOS' }),
+      criar({ texto: 'LGPD' }),
+      criar({ tag: 'input', texto: '', textoControle: 'Maria' }),
+    ])
+    assert.equal(r.ok, true, r.motivo)
+    assert.deepEqual(SIGLAS_PERMITIDAS, ['RN', 'SBP', 'LGPD', 'OMS'])
+  })
+
+  it('falha com text-transform uppercase, mesmo com o texto em minúsculas', () => {
+    const r = caixa([criar(), criar({ texto: 'Mamada', estilo: { textTransform: 'uppercase' } })])
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /uppercase/)
+    assert.equal(r.nos_com_falha.length, 1)
+  })
+
+  it('falha com uma palavra de 4 ou mais maiúsculas na grafia, com acento também', () => {
+    assert.equal(caixa([criar({ texto: 'ATENÇÃO ao horário' })]).ok, false)
+    assert.equal(caixa([criar({ texto: 'Seu bebê está BEM' })]).ok, true) // 3 letras
+    assert.equal(caixa([criar({ texto: 'Seu bebê está BEMM' })]).ok, false)
+    assert.equal(caixa([criar({ texto: 'AÇÃO' })]).ok, false)
+    assert.equal(caixa([criar({ tag: 'input', texto: '', textoControle: 'DIGITE AQUI' })]).ok, false)
+    const r = caixa([criar({ texto: 'LGPDS e PRÓXIMAS' })])
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /LGPDS/)
+    assert.match(r.motivo, /PRÓXIMAS/)
+  })
+
+  it('palavrasEmCaixaAlta aceita a palavra que é exatamente uma sigla e recusa o resto', () => {
+    assert.deepEqual(palavrasEmCaixaAlta('LGPD e OMS, SBP e RN'), [])
+    assert.deepEqual(palavrasEmCaixaAlta('TEXTO e Texto e texto'), ['TEXTO'])
+    assert.deepEqual(palavrasEmCaixaAlta(undefined), [])
+  })
+
+  it('falha fechado: nenhum nó com texto, text-transform ausente e nó sem estilo', () => {
+    assert.equal(caixa([criar({ texto: '' })]).ok, false)
+    assert.equal(caixa([]).ok, false)
+    assert.match(caixa([]).motivo, /nenhum nó com texto/)
+    assert.equal(caixa([criar({ estilo: { textTransform: undefined } })]).ok, false)
+    assert.equal(caixa([{ tag: 'p', texto: 'Sem estilo', visivel: true }]).ok, false)
+  })
+})
+
+describe('SOMBRA: sombra, gradiente e filtro só pelos tokens', () => {
+  const noCom = (estilo) => criar({ tag: 'div', texto: '', estilo })
+
+  it('passa com none, com as duas sombras (forma do Chrome e a escrita) e com os dois gradientes', () => {
+    const r = sombra(
+      [
+        noCom({}),
+        noCom({ boxShadow: FLUTUANTE_CHROME }),
+        noCom({ boxShadow: CARTAO_CHROME }),
+        noCom({ boxShadow: TOKENS_DESIGN.sombraFlutuante }),
+        noCom({ boxShadow: TOKENS_DESIGN.sombraCartao }),
+        noCom({ backgroundImage: LUZ_CHROME }),
+        noCom({ backgroundImage: BRILHO_CHROME }),
+        noCom({ backgroundImage: TOKENS_DESIGN.luzEstudio }),
+        noCom({ backgroundImage: `url("https://127.0.0.1/cena.avif"), ${BRILHO_CHROME}` }),
+      ],
+      doc1440,
+    )
+    assert.equal(r.ok, true, r.motivo)
+  })
+
+  it('aceita a cor antes ou depois das medidas e sem o espalhamento', () => {
+    const corDepois = '0px 2px 4px 0px rgba(43, 35, 32, 0.08), 0px 18px 40px 0px rgba(43, 35, 32, 0.16)'
+    assert.equal(sombra([noCom({ boxShadow: corDepois })], doc1440).ok, true)
+  })
+
+  it('aceita os tokens da página quando iguais ao DESIGN.md (em outra grafia)', () => {
+    const tokens = { sombraFlutuante: FLUTUANTE_CHROME, sombraCartao: TOKENS_DESIGN.sombraCartao, luzEstudio: LUZ_CHROME, brilhoMel: TOKENS_DESIGN.brilhoMel }
+    const r = sombra([noCom({})], { ...doc1440, tokens })
+    assert.equal(r.ok, true, r.motivo)
+    assert.match(r.motivo, /4 de 4 tokens/)
+  })
+
+  it('falha com uma sombra fora dos tokens, ou só com uma das camadas', () => {
+    const r = sombra([noCom({}), noCom({ boxShadow: 'rgba(0, 0, 0, 0.3) 0px 4px 12px 0px' })], doc1440)
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /box-shadow fora dos tokens/)
+    assert.equal(r.nos_com_falha.length, 1)
+    assert.equal(sombra([noCom({ boxShadow: 'rgba(43, 35, 32, 0.08) 0px 2px 4px 0px' })], doc1440).ok, false)
+    // Os valores da sombra-cartao com o alfa da sombra-flutuante também reprovam.
+    assert.equal(sombra([noCom({ boxShadow: 'rgba(43, 35, 32, 0.08) 0px 1px 2px 0px, rgba(43, 35, 32, 0.06) 0px 8px 24px 0px' })], doc1440).ok, false)
+  })
+
+  it('falha com gradiente fora dos tokens (linear, ou o radial com outra cor)', () => {
+    const r = sombra([noCom({ backgroundImage: 'linear-gradient(rgb(255, 255, 255), rgb(0, 0, 0))' })], doc1440)
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /gradiente fora dos tokens/)
+    assert.equal(sombra([noCom({ backgroundImage: LUZ_CHROME.replace('60%', '70%') })], doc1440).ok, false)
+    assert.equal(sombra([noCom({ backgroundImage: `${BRILHO_CHROME}, linear-gradient(red, blue)` })], doc1440).ok, false)
+  })
+
+  it('falha com filter e backdrop-filter diferentes de none', () => {
+    const f = sombra([noCom({ filter: 'blur(4px)' })], doc1440)
+    assert.equal(f.ok, false)
+    assert.match(f.motivo, /filter blur/)
+    const b = sombra([noCom({ backdropFilter: 'blur(12px)' })], doc1440)
+    assert.equal(b.ok, false)
+    assert.match(b.motivo, /backdrop-filter/)
+  })
+
+  it('falha quando o token da página difere do DESIGN.md', () => {
+    const r = sombra([noCom({})], { ...doc1440, tokens: { sombraFlutuante: '0 4px 8px rgb(0 0 0 / .5)' } })
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /--sombra-flutuante/)
+    assert.equal(sombra([noCom({})], { ...doc1440, tokens: { luzEstudio: 'radial-gradient(red, blue)' } }).ok, false)
+  })
+
+  it('vale para o nó oculto também', () => {
+    assert.equal(sombra([noCom({}), noCom({ boxShadow: 'rgba(0, 0, 0, 0.3) 0px 4px 12px 0px' })].map((no, i) => (i === 1 ? { ...no, visivel: false } : no)), doc1440).ok, false)
+  })
+
+  it('falha fechado: nenhum nó, nó sem estilo e leituras ausentes ou ilegíveis', () => {
+    assert.equal(sombra([], doc1440).ok, false)
+    assert.equal(sombra(undefined, doc1440).ok, false)
+    assert.equal(sombra([{ tag: 'div', visivel: true }], doc1440).ok, false)
+    assert.equal(sombra([noCom({ boxShadow: undefined })], doc1440).ok, false)
+    assert.equal(sombra([noCom({ boxShadow: 'isto não é sombra' })], doc1440).ok, false)
+    assert.equal(sombra([noCom({ backgroundImage: undefined })], doc1440).ok, false)
+    assert.equal(sombra([noCom({ filter: '' })], doc1440).ok, false)
+    assert.equal(sombra([noCom({ backdropFilter: undefined })], doc1440).ok, false)
+  })
+
+  it('a normalização leva as formas do Chrome e as do token à mesma forma canônica', () => {
+    assert.equal(sombraCanonica(FLUTUANTE_CHROME), sombraCanonica(TOKENS_DESIGN.sombraFlutuante))
+    assert.equal(sombraCanonica(CARTAO_CHROME), sombraCanonica(TOKENS_DESIGN.sombraCartao))
+    assert.notEqual(sombraCanonica(CARTAO_CHROME), sombraCanonica(TOKENS_DESIGN.sombraFlutuante))
+    assert.equal(canonico(LUZ_CHROME), canonico(TOKENS_DESIGN.luzEstudio))
+    assert.equal(canonico(BRILHO_CHROME), canonico(TOKENS_DESIGN.brilhoMel))
+    assert.equal(canonico('rgb(43 35 32 / .08)'), canonico('rgba(43, 35, 32, 0.08)'))
+    assert.equal(canonico('#F7D684'), canonico('rgb(247, 214, 132)'))
+    assert.equal(canonico('transparent'), canonico('rgba(0, 0, 0, 0)'))
+    assert.equal(sombraCanonica('none'), 'none')
+    assert.equal(sombraCanonica('inset 0 0 0 1px rgb(0 0 0 / .1)'), 'inset 0 0 0 1px rgb(0 0 0 / 0.1)')
+    assert.equal(sombraCanonica('sem cor 1px 2px'), null)
+    assert.equal(sombraCanonica(undefined), null)
+  })
+})
+
+describe('3D: sem perspective, preserve-3d nem rotação em X ou Y', () => {
+  const noCom = (estilo) => criar({ tag: 'div', texto: '', estilo })
+
+  it('passa com none/flat, com transform 2D e com a matrix3d identidade', () => {
+    const r = tresD([
+      noCom({}),
+      noCom({ transform: 'matrix(1, 0, 0, 1, 0, 12)' }),
+      noCom({ transform: 'matrix(0.9239, 0.3827, -0.3827, 0.9239, 0, 0)' }), // rotate(22.5deg)
+      noCom({ transform: 'matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)' }),
+      noCom({ transform: 'matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 10, 20, 0, 1)' }), // só deslocamento
+    ])
+    assert.equal(r.ok, true, r.motivo)
+  })
+
+  it('falha com perspective diferente de none', () => {
+    const r = tresD([noCom({}), noCom({ perspective: '800px' })])
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /perspective 800px/)
+    assert.equal(r.nos_com_falha.length, 1)
+  })
+
+  it('falha com transform-style preserve-3d', () => {
+    const r = tresD([noCom({ transformStyle: 'preserve-3d' })])
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /preserve-3d/)
+  })
+
+  it('falha com rotação em X, rotação em Y e perspective() dentro do transform', () => {
+    const rotacaoX = 'matrix3d(1, 0, 0, 0, 0, 0.7071, 0.7071, 0, 0, -0.7071, 0.7071, 0, 0, 0, 0, 1)'
+    const rotacaoY = 'matrix3d(0.7071, 0, -0.7071, 0, 0, 1, 0, 0, 0.7071, 0, 0.7071, 0, 0, 0, 0, 1)'
+    const comPerspectiva = 'matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, -0.00125, 0, 0, 0, 1)'
+    for (const transform of [rotacaoX, rotacaoY, comPerspectiva]) {
+      const r = tresD([noCom({ transform })])
+      assert.equal(r.ok, false, transform)
+      assert.match(r.motivo, /transform 3D/)
+    }
+  })
+
+  it('falha fechado: nenhum nó, nó sem estilo, leituras ausentes e transform ilegível', () => {
+    assert.equal(tresD([]).ok, false)
+    assert.equal(tresD(undefined).ok, false)
+    assert.equal(tresD([{ tag: 'div', visivel: true }]).ok, false)
+    assert.equal(tresD([noCom({ perspective: undefined })]).ok, false)
+    assert.equal(tresD([noCom({ perspective: '' })]).ok, false)
+    assert.equal(tresD([noCom({ transformStyle: undefined })]).ok, false)
+    assert.equal(tresD([noCom({ transformStyle: 'strange' })]).ok, false)
+    assert.equal(tresD([noCom({ transform: undefined })]).ok, false)
+    assert.equal(tresD([noCom({ transform: 'rotateX(45deg)' })]).ok, false)
+    assert.equal(tresD([noCom({ transform: 'matrix3d(1, 0, 0)' })]).ok, false)
+    assert.equal(tresD([noCom({ transform: 'matrix(1, 0, NaN, 1, 0, 0)' })]).ok, false)
   })
 })
 
 describe('avaliarTudo e resumo', () => {
-  it('em sistema todas as regras bloqueiam; nos outros casos, só G2 e G9', () => {
-    assert.equal(bloqueantesDoCaso('sistema').length, 14) // G1 a G12, SB3 e NUM
-    assert.deepEqual(bloqueantesDoCaso('hoje'), ['G2', 'G9'])
-    assert.deepEqual(bloqueantesDoCaso('inicio'), ['G2', 'G9'])
-    assert.deepEqual(bloqueantesDoCaso('sessao'), ['G2', 'G9'])
+  const conforme = () => [
+    criar({ tag: 'section', texto: '', m: { filhoDeMain: true } }),
+    criar({ texto: 'Sono do bebê' }),
+    criar({ tag: 'button', texto: 'Ver sessão', rect: { x: 0, y: 0, w: 120, h: 56 }, m: { interativo: true } }),
+  ]
+
+  it('devolve as sete regras na ordem, todas com bloqueia: true', () => {
+    const resultados = avaliarTudo({ doc: doc1440, nos: conforme(), tema: 'claro' })
+    assert.deepEqual(resultados.map((r) => r.regra), ['G1', 'G11', 'G12', 'FONTES', 'CAIXA', 'SOMBRA', '3D'])
+    assert.deepEqual(REGRAS, ['G1', 'G11', 'G12', 'FONTES', 'CAIXA', 'SOMBRA', '3D'])
+    for (const r of resultados) {
+      assert.equal(r.ok, true, `${r.regra}: ${r.motivo}`)
+      assert.equal(r.bloqueia, true)
+      assert.deepEqual(Object.keys(r).sort(), ['bloqueia', 'motivo', 'nos_com_falha', 'ok', 'regra'])
+    }
   })
 
-  it('devolve uma linha RESUMO com ok, FALHA e registrada', () => {
-    const resultados = avaliarTudo({ doc: { ...doc1440, scrollWidth: 1500 }, nos: [], tema: 'claro' }, 'hoje')
-    const linha = resumo('hoje_claro_1440.json', resultados)
-
-    assert.match(linha, /^RESUMO hoje_claro_1440\.json G1 registrada G2 FALHA G3 registrada /)
-    assert.match(linha, /G9 FALHA/)
-    assert.equal(resultados.length, 14)
-    for (const r of resultados) assert.deepEqual(Object.keys(r).sort(), ['bloqueia', 'motivo', 'nos_com_falha', 'ok', 'regra'])
+  it('todas as regras bloqueiam em todos os casos, e a falha nunca sai como "registrada"', () => {
+    for (const caso of ['sistema', 'inicio', 'hoje', 'sessao', 'comofunciona']) assert.deepEqual(bloqueantesDoCaso(caso), REGRAS)
+    const resultados = avaliarTudo({ doc: { ...doc1440, scrollWidth: 1500 }, nos: [], tema: 'claro' })
+    assert.equal(resultados.length, 7)
+    assert.ok(resultados.every((r) => r.bloqueia === true))
+    assert.ok(resultados.every((r) => r.ok === false)) // sem nós, falha fechado, e G1 com rolagem
   })
 
-  it('em sistema, a falha bloqueante sai como FALHA e a que passa, como ok', () => {
-    const resultados = avaliarTudo({ doc: doc1440, nos: [], tema: 'claro' }, 'sistema')
-    const linha = resumo('sistema_claro_1440.json', resultados)
-
-    assert.match(linha, /G1 ok/)
-    assert.match(linha, /G2 FALHA/)
+  it('resumo: uma linha RESUMO com ok e FALHA', () => {
+    const nos = conforme()
+    nos[1].estilo.fontFamily = '"Zilla Slab", serif'
+    const linha = resumo('hoje_claro_1440.json', avaliarTudo({ doc: doc1440, nos, tema: 'claro' }))
+    assert.equal(linha, 'RESUMO hoje_claro_1440.json G1 ok G11 ok G12 ok FONTES FALHA CAIXA ok SOMBRA ok 3D ok')
     assert.doesNotMatch(linha, /registrada/)
+  })
+
+  it('resumo: uma regra que não bloqueia sai como "registrada"', () => {
+    assert.equal(resumo('a.json', [{ regra: 'G1', ok: false, bloqueia: false }, { regra: '3D', ok: false, bloqueia: true }]), 'RESUMO a.json G1 registrada 3D FALHA')
   })
 })
 
 // ---------------------------------------------------------------------------------------------
-// R2 (rodada de correção 1): o coletor real (o que roda no Chrome) rodando em jsdom com geometria
-// fixa, e a regra pura sobre o que ele coleta, na mesma fixture. O jsdom não mede layout: todo
-// retângulo é 100 × 20 e todo caractere cai na mesma linha, então o que se testa é o que o coletor
-// e a regra DECIDEM com a leitura, não a geometria.
+// O coletor real (o que roda no Chrome) rodando em jsdom com geometria fixa, e a regra pura sobre o
+// que ele coleta. O jsdom não mede layout: todo retângulo é 100 × 20, então o que se testa é o que o
+// coletor e as regras DECIDEM com a leitura, não a geometria.
 
 const RETANGULO = { x: 0, y: 0, left: 0, top: 0, width: 100, height: 20, right: 100, bottom: 20 }
+const RETANGULO_DO_ALVO = { ...RETANGULO, width: 120, height: 60, right: 120, bottom: 60 }
+
+// O que um navegador calcula num elemento sem regra própria: fonte, cores e as propriedades das regras novas.
+const BASE_JSDOM = `
+  html { background-color: ${PAPEL}; }
+  * { font-size: 20px; font-family: 'Outfit Variable', system-ui, sans-serif; color: ${TINTA}; background-color: ${TRANSPARENTE};
+      opacity: 1; transform: none; text-transform: none; box-shadow: none; background-image: none;
+      perspective: none; transform-style: flat; filter: none; backdrop-filter: none; }`
 
 /** Monta `html` num jsdom, roda o coletor serializado (como o CDP faz) e devolve `{ doc, nos }`. */
-function coletarDe(html, preparar = () => undefined) {
-  const dom = new JSDOM(
-    `<!doctype html><html><head><style>* { font-size: 20px; opacity: 1; transform: none; text-transform: none; box-shadow: none; }</style></head><body>${html}</body></html>`,
-    { runScripts: 'outside-only' },
-  )
+function coletarDe(html, preparar = () => undefined, css = '') {
+  const dom = new JSDOM(`<!doctype html><html><head><style>${BASE_JSDOM}${css}</style></head><body>${html}</body></html>`, { runScripts: 'outside-only' })
   const { window } = dom
   window.Element.prototype.getBoundingClientRect = () => ({ ...RETANGULO })
   window.Range.prototype.getClientRects = () => [{ ...RETANGULO }]
@@ -524,138 +549,109 @@ function coletarDe(html, preparar = () => undefined) {
   }
 }
 
+/** Os alvos de toque do jsdom ficam com 120 × 60 (a geometria fixa de 20 de altura reprovaria G11). */
+const alvosGrandes = (documento) => {
+  const janela = documento.defaultView
+  janela.Element.prototype.getBoundingClientRect = function medir() {
+    return this.matches('a, button, input') ? { ...RETANGULO_DO_ALVO } : { ...RETANGULO }
+  }
+}
+
+// As duas sombras como custom properties de :root. Os gradientes ficam de fora: o jsdom reescreve o valor
+// de uma custom property sem espaços ("90%at"), o que o Chrome não faz; a leitura dos gradientes é
+// testada na regra pura (doc.tokens).
+const TOKENS_NO_CSS = `
+  :root { --sombra-flutuante: ${TOKENS_DESIGN.sombraFlutuante}; --sombra-cartao: ${TOKENS_DESIGN.sombraCartao}; }`
+
 const PAGINA_CONFORME = `
   <main>
-    <section data-bloco><p>Um parágrafo curto e conforme.</p><div data-midia></div></section>
-    <section><figure></figure><label>Nome <input value="Maria"></label></section>
+    <section data-bloco>
+      <h1 style="font-family: 'Literata Variable', serif; font-style: italic">Sono do bebê</h1>
+      <p>Um parágrafo curto e conforme, com a LGPD e a OMS.</p>
+      <figure style="box-shadow: ${TOKENS_DESIGN.sombraCartao}"></figure>
+      <div data-midia style="background-image: ${TOKENS_DESIGN.luzEstudio}"></div>
+    </section>
+    <section><a href="#">Ver sessão</a><label>Nome <input value="Maria"></label></section>
   </main>`
 
-describe('R2: o coletor em jsdom, numa página conforme', () => {
-  it('passa em G4, G10 e G12 (a fixture não reprova por si só)', () => {
-    const { nos } = coletarDe(PAGINA_CONFORME)
-    for (const regra of [g4, g10, g12]) {
-      const r = regra(nos)
-      assert.equal(r.ok, true, `${r.regra}: ${r.motivo}`)
-    }
-  })
-})
+const PAGINA_FORA_DO_SISTEMA = `
+  <main>
+    <section data-bloco>
+      <h1 style="font-family: 'Zilla Slab', Georgia, serif">Sono do bebê</h1>
+      <h2 style="text-transform: uppercase">Mamada</h2>
+      <p style="box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3)">Um parágrafo.</p>
+      <div style="perspective: 800px"><p>Dentro da perspectiva.</p></div>
+    </section>
+    <section><a href="#">Ver sessão</a></section>
+  </main>`
 
-describe('R2.1 G4: o texto e o tamanho dos controles entram na coleta e na regra', () => {
-  const pagina = (controle) => `<main><section><p>Texto comum.</p>${controle}</section></main>`
-
-  it('o coletor lê o valor do input e o font-size do próprio controle', () => {
-    const { nos } = coletarDe(pagina('<input value="Maria" style="font-size: 13px">'))
-    const input = nos.find((no) => no.tag === 'input')
-    assert.equal(input.textoControle, 'Maria')
-    assert.equal(input.estilo.fontSize, '13px')
-  })
-
-  it('G4 reprova um input com valor visível a 13px e passa com 20px, na mesma fixture', () => {
-    const ruim = g4(coletarDe(pagina('<input value="Maria" style="font-size: 13px">')).nos)
-    assert.equal(ruim.ok, false, ruim.motivo)
-    assert.match(ruim.motivo, /13px/)
-    const bom = g4(coletarDe(pagina('<input value="Maria" style="font-size: 20px">')).nos)
-    assert.equal(bom.ok, true, bom.motivo)
+describe('o coletor em jsdom: o que ele lê e o que as regras novas decidem', () => {
+  it('uma página com Literata, Outfit e as sombras e gradientes dos tokens passa em todas as regras', () => {
+    const lido = coletarDe(PAGINA_CONFORME, alvosGrandes, TOKENS_NO_CSS)
+    assert.equal(sombraCanonica(lido.doc.tokens.sombraFlutuante), sombraCanonica(TOKENS_DESIGN.sombraFlutuante))
+    assert.equal(lido.doc.tokens.brilhoMel, '')
+    const resultados = avaliarTudo({ ...lido, tema: 'claro' })
+    for (const r of resultados) assert.equal(r.ok, true, `${r.regra}: ${r.motivo}`)
+    assert.equal(resultados.length, 7)
+    assert.match(resultados.find((r) => r.regra === 'SOMBRA').motivo, /2 de 4 tokens/)
   })
 
-  it('o placeholder só conta quando é visível (valor vazio), e o valor vence o placeholder', () => {
-    const vazio = coletarDe(pagina('<input placeholder="Seu nome" style="font-size: 13px">')).nos.find((no) => no.tag === 'input')
-    assert.equal(vazio.textoControle, 'Seu nome')
-    const cheio = coletarDe(pagina('<input value="Ana" placeholder="Seu nome" style="font-size: 13px">')).nos.find((no) => no.tag === 'input')
-    assert.equal(cheio.textoControle, 'Ana')
-    assert.equal(g4(coletarDe(pagina('<input placeholder="Seu nome" style="font-size: 13px">')).nos).ok, false)
+  it('uma página com Zilla Slab, caixa alta, sombra fora do token e perspective reprova FONTES, CAIXA, SOMBRA e 3D', () => {
+    const lido = coletarDe(PAGINA_FORA_DO_SISTEMA, alvosGrandes, TOKENS_NO_CSS)
+    const porRegra = Object.fromEntries(avaliarTudo({ ...lido, tema: 'claro' }).map((r) => [r.regra, r]))
+    for (const regra of ['FONTES', 'CAIXA', 'SOMBRA', '3D']) assert.equal(porRegra[regra].ok, false, `${regra}: ${porRegra[regra].motivo}`)
+    assert.match(porRegra.FONTES.motivo, /Zilla Slab/)
+    assert.match(porRegra.CAIXA.motivo, /uppercase/)
+    assert.match(porRegra.SOMBRA.motivo, /box-shadow fora dos tokens/)
+    assert.match(porRegra['3D'].motivo, /perspective 800px/)
+    // O resto não depende disso e continua passando.
+    for (const regra of ['G1', 'G11', 'G12']) assert.equal(porRegra[regra].ok, true, `${regra}: ${porRegra[regra].motivo}`)
   })
 
-  it('textarea e o rótulo escolhido do select também entram, cada um com o seu font-size', () => {
-    const area = coletarDe(pagina('<textarea style="font-size: 13px">Recado</textarea>')).nos.find((no) => no.tag === 'textarea')
-    assert.match(`${area.texto}${area.textoControle ?? ''}`, /Recado/)
-    assert.equal(g4(coletarDe(pagina('<textarea style="font-size: 13px">Recado</textarea>')).nos).ok, false)
-
-    const html = '<select style="font-size: 13px"><option value="a">Cuidador</option><option value="b" selected>Responsável</option></select>'
-    const { nos } = coletarDe(pagina(html))
-    assert.equal(nos.find((no) => no.tag === 'select').textoControle, 'Responsável')
-    assert.equal(g4(nos).ok, false)
+  it('o coletor lê os campos novos do estilo e as marcas', () => {
+    const { nos } = coletarDe('<main><section><p style="perspective: 800px; transform-style: preserve-3d">Texto.</p></section></main>')
+    const p = nos.find((no) => no.tag === 'p')
+    assert.equal(p.estilo.perspective, '800px')
+    assert.equal(p.estilo.transformStyle, 'preserve-3d')
+    assert.equal(p.estilo.filter, 'none')
+    assert.equal(p.estilo.backdropFilter, 'none')
+    assert.equal(p.estilo.boxShadow, 'none')
+    assert.match(p.estilo.fontFamily, /Outfit Variable/)
   })
 
-  it('o que não mostra texto não entra: hidden, checkbox e input vazio sem placeholder', () => {
-    const html = '<input type="hidden" value="x" style="font-size: 13px"><input type="checkbox" value="y" style="font-size: 13px"><input style="font-size: 13px">'
-    const { nos } = coletarDe(pagina(html))
-    for (const input of nos.filter((no) => no.tag === 'input')) assert.equal(input.textoControle ?? '', '')
-    assert.equal(g4(nos).ok, true)
+  it('marca os controles da BarraRegistrar (.barra-registrar e [data-barra-registrar]) e só eles', () => {
+    const html =
+      '<main><section class="barra-registrar" data-barra-registrar=""><button>Sono</button></section><section><button>Fora</button></section></main>'
+    const { nos } = coletarDe(html)
+    const [dentro, fora] = nos.filter((no) => no.tag === 'button')
+    assert.equal(dentro.m.barraRegistrar, true)
+    assert.equal(dentro.m.interativo, true)
+    assert.equal(fora.m.barraRegistrar, false)
+    const soAtributo = coletarDe('<main><div data-barra-registrar=""><a href="#">Mais</a></div></main>').nos.find((no) => no.tag === 'a')
+    assert.equal(soAtributo.m.barraRegistrar, true)
+  })
+
+  it('o texto e o valor de um controle entram na FONTES e na CAIXA', () => {
+    const pagina = (controle) => `<main><section><p>Texto comum.</p>${controle}</section></main>`
+    const { nos } = coletarDe(pagina('<input value="Maria" style="font-family: Georgia">'))
+    assert.equal(nos.find((no) => no.tag === 'input').textoControle, 'Maria')
+    assert.equal(fontes(nos).ok, false)
+    assert.equal(caixa(coletarDe(pagina('<input placeholder="DIGITE AQUI">')).nos).ok, false)
+    assert.equal(caixa(coletarDe(pagina('<input placeholder="Digite aqui">')).nos).ok, true)
   })
 
   it('a senha não vai para a coleta em claro', () => {
-    const { nos } = coletarDe(pagina('<input type="password" value="segredo123" style="font-size: 20px">'))
+    const { nos } = coletarDe('<main><section><p>Texto.</p><input type="password" value="segredo123"></section></main>')
     const senha = nos.find((no) => no.tag === 'input')
     assert.equal(senha.textoControle.includes('segredo'), false)
     assert.equal(senha.textoControle.length, 'segredo123'.length)
   })
 
-  it('a regra pura: um controle com texto de 13px reprova e com 20px passa; caixa alta no controle reprova', () => {
-    const controle = (estilo) => criar({ tag: 'input', texto: '', textoControle: 'Maria', estilo })
-    assert.equal(g4([criar(), controle({ fontSize: '13px' })]).ok, false)
-    assert.equal(g4([criar(), controle({ fontSize: '20px' })]).ok, true)
-    assert.equal(g4([criar(), controle({ fontSize: '20px', textTransform: 'uppercase' })]).ok, false)
-    assert.equal(g4([criar(), controle({ fontSize: undefined })]).ok, false)
-  })
-
-  it('a regra pura: um controle sem texto visível não conta', () => {
-    assert.equal(g4([criar(), criar({ tag: 'input', texto: '', textoControle: '', estilo: { fontSize: '13px' } })]).ok, true)
-  })
-})
-
-describe('R2.2 G10: o parágrafo conta o texto dos descendentes inline', () => {
-  const CEM = 'a'.repeat(100)
-
-  it('o coletor mede as linhas de <p><span>…100 caracteres…</span></p> e a regra reprova', () => {
-    const { nos } = coletarDe(`<main><section><p>Curto.</p><p><span>${CEM}</span></p></section></main>`)
-    const [, dentroDoSpan] = nos.filter((no) => no.tag === 'p')
-    assert.deepEqual(dentroDoSpan.linhas, [100])
-    const r = g10(nos)
+  it('o nó ancestral com perspective é lido, e o filho com rotação 3D reprova a regra 3D', () => {
+    const html = '<main><section><div style="transform: matrix3d(1, 0, 0, 0, 0, 0.7071, 0.7071, 0, 0, -0.7071, 0.7071, 0, 0, 0, 0, 1)"><p>Texto.</p></div></section></main>'
+    const r = tresD(coletarDe(html).nos)
     assert.equal(r.ok, false, r.motivo)
-    assert.match(r.motivo, /100 caracteres/)
-  })
-
-  it('o texto direto e o texto do span somam na mesma linha', () => {
-    const { nos } = coletarDe(`<main><section><p>Curto.</p><p>${'b'.repeat(40)}<em>${'c'.repeat(40)}</em></p></section></main>`)
-    assert.equal(g10(nos).ok, false)
-    assert.deepEqual(nos.filter((no) => no.tag === 'p')[1].linhas, [80])
-  })
-
-  it('um parágrafo aninhado é medido por si e não conta duas vezes no de fora', () => {
-    const { nos } = coletarDe('<main><section><p id="fora">Fora.</p></section></main>', (documento) => {
-      const dentro = documento.createElement('p')
-      dentro.textContent = 'd'.repeat(80)
-      documento.getElementById('fora').append(dentro)
-    })
-    const [fora, dentro] = nos.filter((no) => no.tag === 'p')
-    assert.deepEqual(fora.linhas, [5])
-    assert.deepEqual(dentro.linhas, [80])
-    const r = g10(nos)
-    assert.equal(r.ok, false, r.motivo)
-    assert.equal(r.nos_com_falha.length, 1)
-  })
-
-  it('um parágrafo conforme só com texto em descendentes inline passa', () => {
-    const { nos } = coletarDe('<main><section><p>Curto.</p><p><span>Só o span.</span></p></section></main>')
-    const r = g10(nos)
-    assert.equal(r.ok, true, r.motivo)
-  })
-
-  it('a regra pura: parágrafo sem texto direto mas com 100 caracteres numa linha reprova', () => {
-    const semTextoDireto = criar({ texto: '', textoTotal: CEM, linhas: [100] })
-    assert.equal(g10([criar({ linhas: [20] }), semTextoDireto]).ok, false)
-    assert.equal(g10([criar({ linhas: [20] }), criar({ texto: '', textoTotal: 'Curto.', linhas: [6] })]).ok, true)
-  })
-
-  it('a regra pura falha fechado: parágrafo com texto só nos descendentes e sem a contagem de linhas', () => {
-    const r = g10([criar({ linhas: [20] }), criar({ texto: '', textoTotal: CEM })])
-    assert.equal(r.ok, false)
-    assert.match(r.motivo, /sem a contagem de linhas/)
-  })
-
-  it('a regra pura: parágrafo realmente vazio continua de fora', () => {
-    assert.equal(g10([criar({ linhas: [20] }), criar({ texto: '', textoTotal: '' })]).ok, true)
+    assert.match(r.motivo, /transform 3D/)
   })
 })
 
@@ -692,9 +688,9 @@ describe('R2.3 G12: mídias e blocos aninhados também são inspecionados', () =
     assert.equal(g12(coletarDe(html).nos).ok, false)
   })
 
-  it('o conteúdo oculto não é descartado: visibility hidden e display none na mídia aninhada reprovam', () => {
+  it('o conteúdo oculto não é descartado: a mídia aninhada com visivel false reprova', () => {
     const { nos } = coletarDe(ANINHADO('opacity: 0; visibility: hidden'))
-    nos.find((no) => no.m.midia).visivel = false
+    nos.find((no) => no.m.blocoG12 && no.estilo.opacity === '0').visivel = false
     assert.equal(g12(nos).ok, false)
   })
 
@@ -745,10 +741,9 @@ describe('R2.4 G12: a escala vale nos dois eixos', () => {
   })
 })
 
-// ---------------------------------------------------------------------------------------------
-// Rodada de correção 2, achado B: G12 reprova o bloco oculto. O jsdom não tem `checkVisibility`:
-// a fixture o modela como o Chrome (`visibilityProperty: true`): `display: none` no nó ou em um
-// ancestral, ou `visibility` calculada `hidden`/`collapse`, deixam o nó invisível.
+// G12 reprova o bloco oculto. O jsdom não tem `checkVisibility`: a fixture o modela como o Chrome
+// (`visibilityProperty: true`): `display: none` no nó ou em um ancestral, ou `visibility` calculada
+// `hidden`/`collapse`, deixam o nó invisível.
 describe('B G12: o bloco oculto (visibility/display) reprova, mesmo com opacidade 1 e escala 1', () => {
   /** Instala no jsdom um `checkVisibility` que lê o CSS calculado, como o navegador. */
   const comCheckVisibility = (documento) => {
@@ -771,14 +766,14 @@ describe('B G12: o bloco oculto (visibility/display) reprova, mesmo com opacidad
 
   it('controle: a página visível passa, e o coletor entrega visivel true nas mídias', () => {
     const { nos } = coletar(PAGINA())
-    assert.equal(nos.find((no) => no.m.midia).visivel, true)
+    assert.equal(nos.find((no) => no.m.blocoG12 && no.tag === 'div').visivel, true)
     const r = g12(nos)
     assert.equal(r.ok, true, r.motivo)
   })
 
   it('visibility:hidden na mídia, com opacity 1 e transform none, reprova com o motivo de oculto', () => {
     const { nos } = coletar(PAGINA('visibility: hidden; opacity: 1; transform: none'))
-    const alvo = nos.find((no) => no.m.midia)
+    const alvo = nos.find((no) => no.m.blocoG12 && no.tag === 'div')
     assert.equal(alvo.visivel, false)
     assert.equal(alvo.estilo.opacity, '1')
     assert.equal(alvo.estilo.transform, 'none')
@@ -793,16 +788,9 @@ describe('B G12: o bloco oculto (visibility/display) reprova, mesmo com opacidad
     assert.match(r.motivo, /oculto \(visibility\/display\)/)
   })
 
-  it('a mídia aninhada num envoltório visível, mas com visibility:hidden própria, reprova', () => {
-    const { nos } = coletar(PAGINA('visibility: hidden'))
-    assert.equal(nos.find((no) => no.tag === 'div' && no.m.blocoG12 && !no.m.midia)?.visivel ?? true, true)
-    const r = g12(nos)
-    assert.equal(r.ok, false, r.motivo)
-  })
-
   it('um ancestral com visibility:hidden e a mídia filha herdando reprova', () => {
     const { nos } = coletar(PAGINA('', 'visibility: hidden'))
-    assert.equal(nos.find((no) => no.m.midia).visivel, false)
+    assert.equal(nos.find((no) => no.m.blocoG12 && no.tag === 'div').visivel, false)
     const r = g12(nos)
     assert.equal(r.ok, false, r.motivo)
     assert.match(r.motivo, /oculto \(visibility\/display\)/)
@@ -846,169 +834,42 @@ describe('B G12: o bloco oculto (visibility/display) reprova, mesmo com opacidad
   })
 })
 
-// ---------------------------------------------------------------------------------------------
-// D1 (rodada de correção 2): os números em Zilla Slab. A regra NUM falha fechado quando a família,
-// a face carregada ou o `lining-nums` não estão provados. Sem `lining-nums` a Zilla Slab desenha
-// algarismos de texto (o 7 desce, o 2 e o 0 ficam na altura do x).
+describe('rotaDoCaso e rotasDosPedidos', () => {
+  const CASOS_CDP = { comofunciona: { rota: 'como-funciona' }, pagina_2: { rota: '/pagina-2' }, semrota: {} }
 
-describe('NUM: os números em Zilla Slab 700, com algarismos de capitular', () => {
-  const FONTE_BOA = { familia: 'Zilla Slab', peso: '700', tamanho: '112px', faceCarregada: true }
-  const numero = (extra = {}) =>
-    criar({
-      tag: 'p',
-      texto: '7',
-      m: { numero: true },
-      estilo: { fontFamily: '"Zilla Slab", Georgia, serif', fontWeight: '700', fontSize: '112px', fontVariantNumeric: 'lining-nums tabular-nums' },
-      fonte: FONTE_BOA,
-      ...extra,
-    })
-  const docBom = { ...doc1440, fontes: { zillaSlab700: true } }
-
-  it('passa: Zilla Slab, face carregada e lining-nums, em [data-numero] e no cronômetro', () => {
-    const r = num([numero(), numero({ m: { numero: true, cronometro: true } })], docBom)
-    assert.equal(r.ok, true, r.motivo)
-    assert.equal(r.regra, 'NUM')
-    assert.match(r.motivo, /2 /)
+  it('os casos fixos têm a sua rota, com ou sem CASOS do cdp', () => {
+    assert.equal(rotaDoCaso('sistema', null), 'sistema')
+    assert.equal(rotaDoCaso('inicio', null), '')
+    assert.equal(rotaDoCaso('hoje', CASOS_CDP), 'app/hoje')
+    assert.equal(rotaDoCaso('sessao', undefined), 'app/hoje')
   })
 
-  it('falha: a primeira família calculada não é Zilla Slab', () => {
-    const r = num([numero({ fonte: { ...FONTE_BOA, familia: 'Georgia' } })], docBom)
-    assert.equal(r.ok, false, r.motivo)
-    assert.match(r.motivo, /Georgia/)
-    assert.equal(r.nos_com_falha.length, 1)
+  it('os outros casos vêm de CASOS (a barra inicial cai)', () => {
+    assert.equal(rotaDoCaso('comofunciona', CASOS_CDP), 'como-funciona')
+    assert.equal(rotaDoCaso('pagina_2', CASOS_CDP), 'pagina-2')
   })
 
-  it('falha: a face não está carregada (no elemento ou no documento)', () => {
-    assert.equal(num([numero({ fonte: { ...FONTE_BOA, faceCarregada: false } })], docBom).ok, false)
-    assert.equal(num([numero()], { ...doc1440, fontes: { zillaSlab700: false } }).ok, false)
+  it('caso sem rota é nulo: desconhecido, sem CASOS, entrada sem rota ou nome de protótipo', () => {
+    assert.equal(rotaDoCaso('desconhecido', CASOS_CDP), null)
+    assert.equal(rotaDoCaso('comofunciona', null), null)
+    assert.equal(rotaDoCaso('comofunciona', {}), null)
+    assert.equal(rotaDoCaso('semrota', CASOS_CDP), null)
+    assert.equal(rotaDoCaso('constructor', CASOS_CDP), null)
+    assert.equal(rotaDoCaso('', CASOS_CDP), null)
+    assert.equal(rotaDoCaso(undefined, CASOS_CDP), null)
   })
 
-  it('falha: sem lining-nums, com tabular-nums sozinho, normal ou outra variante', () => {
-    for (const variante of ['tabular-nums', 'normal', 'oldstyle-nums tabular-nums', '']) {
-      const r = num([numero({ estilo: { fontVariantNumeric: variante } })], docBom)
-      assert.equal(r.ok, false, `variante "${variante}": ${r.motivo}`)
-      assert.match(r.motivo, /lining-nums/)
-    }
-  })
-
-  it('falha fechado: dado ausente ou indefinido no resultado do coletor nunca vira ok:true', () => {
-    const semFonte = numero({ fonte: undefined })
-    const semFamilia = numero({ fonte: { peso: '700', tamanho: '112px', faceCarregada: true } })
-    const semFace = numero({ fonte: { familia: 'Zilla Slab', peso: '700', tamanho: '112px' } })
-    const faceNula = numero({ fonte: { ...FONTE_BOA, faceCarregada: null } })
-    const faceTexto = numero({ fonte: { ...FONTE_BOA, faceCarregada: 'true' } })
-    const semVariante = numero({ estilo: { fontVariantNumeric: undefined } })
-    for (const [nome, no] of Object.entries({ semFonte, semFamilia, semFace, faceNula, faceTexto, semVariante })) {
-      const r = num([no], docBom)
-      assert.equal(r.ok, false, `${nome}: ${r.motivo}`)
-    }
-  })
-
-  it('falha fechado: `fontes` ausente, sem o campo, nulo ou o próprio doc ausente', () => {
-    for (const doc of [doc1440, { ...doc1440, fontes: {} }, { ...doc1440, fontes: { zillaSlab700: null } }, { ...doc1440, fontes: { zillaSlab700: undefined } }, { ...doc1440, fontes: null }, undefined, null]) {
-      const r = num([numero()], doc)
-      assert.equal(r.ok, false, `${JSON.stringify(doc?.fontes)}: ${r.motivo}`)
-    }
-  })
-
-  it('não aplicável (ok, no mesmo formato) quando a página não tem número nem cronômetro', () => {
-    const r = num([criar(), criar({ tag: 'h1' })], docBom)
-    assert.deepEqual(Object.keys(r).sort(), ['motivo', 'nos_com_falha', 'ok', 'regra'])
-    assert.equal(r.ok, true)
-    assert.match(r.motivo, /não aplicável/)
-    assert.equal(num([], docBom).ok, true)
-  })
-
-  it('o que não está visível não conta, e um nó que não é número não é medido', () => {
-    assert.equal(num([numero({ visivel: false, fonte: undefined }), criar({ fonte: undefined })], docBom).ok, true)
-  })
-
-  it('é bloqueante em `sistema` e só registrada nos outros casos; entra no resumo', () => {
-    assert.ok(bloqueantesDoCaso('sistema').includes('NUM'))
-    assert.ok(!bloqueantesDoCaso('hoje').includes('NUM'))
-    const nos = [numero({ fonte: { ...FONTE_BOA, familia: 'Georgia' } })]
-    const em = (caso) => avaliarTudo({ doc: docBom, nos, tema: 'claro' }, caso).find((r) => r.regra === 'NUM')
-    assert.equal(em('sistema').ok, false)
-    assert.equal(em('sistema').bloqueia, true)
-    assert.equal(em('hoje').bloqueia, false)
-    assert.match(resumo('sistema_claro_1440.json', avaliarTudo({ doc: docBom, nos, tema: 'claro' }, 'sistema')), /NUM FALHA/)
-  })
-})
-
-describe('NUM: o coletor real em jsdom lê a família, a face e o font-variant-numeric', () => {
-  const ESTILO_BOM = "font-family: 'Zilla Slab', Georgia, serif; font-weight: 700; font-size: 112px; font-variant-numeric: lining-nums tabular-nums"
-  const pagina = (estilo = ESTILO_BOM, extra = '') =>
-    `<main><section data-bloco><p>Texto.</p><p data-numero style="${estilo}">7</p>${extra}</section></main>`
-  const facesCarregadas = (carregada = true) => (documento) => {
-    Object.defineProperty(documento, 'fonts', {
-      configurable: true,
-      value: {
-        check: () => carregada,
-        *[Symbol.iterator]() {
-          yield { family: '"Zilla Slab"', weight: '700', status: carregada ? 'loaded' : 'unloaded' }
-        },
-      },
-    })
-  }
-  const medir = (html, preparar) => {
-    const lido = coletarDe(html, preparar)
-    return { lido, r: num(lido.nos, lido.doc) }
-  }
-
-  it('o caso verde: família, face carregada e lining-nums', () => {
-    const { lido, r } = medir(pagina(), facesCarregadas())
-    const no = lido.nos.find((n) => n.m.numero)
-    assert.equal(no.fonte.familia, 'Zilla Slab')
-    assert.equal(no.fonte.faceCarregada, true)
-    assert.equal(lido.doc.fontes.zillaSlab700, true)
-    assert.match(no.estilo.fontVariantNumeric, /lining-nums/)
-    assert.equal(r.ok, true, r.motivo)
-  })
-
-  it('família errada → ok:false', () => {
-    const { r } = medir(pagina("font-family: Georgia, serif; font-weight: 700; font-size: 112px; font-variant-numeric: lining-nums tabular-nums"), facesCarregadas())
-    assert.equal(r.ok, false, r.motivo)
-  })
-
-  it('face não carregada → ok:false', () => {
-    const { r } = medir(pagina(), facesCarregadas(false))
-    assert.equal(r.ok, false, r.motivo)
-  })
-
-  it('a face só “passa” no check do navegador mas não está registrada → ok:false (check() dá true para fonte sem @font-face)', () => {
-    const { r } = medir(pagina(), (documento) => {
-      Object.defineProperty(documento, 'fonts', { configurable: true, value: { check: () => true, *[Symbol.iterator]() {} } })
-    })
-    assert.equal(r.ok, false, r.motivo)
-  })
-
-  it('sem lining-nums → ok:false', () => {
-    const { r } = medir(pagina("font-family: 'Zilla Slab', Georgia, serif; font-weight: 700; font-size: 112px; font-variant-numeric: tabular-nums"), facesCarregadas())
-    assert.equal(r.ok, false, r.motivo)
-    assert.match(r.motivo, /lining-nums/)
-  })
-
-  it('sem `document.fonts` (o navegador não entrega a leitura) → ok:false, nunca ok:true', () => {
-    const { lido, r } = medir(pagina())
-    assert.equal(lido.nos.find((n) => n.m.numero).fonte.faceCarregada, null)
-    assert.equal(r.ok, false, r.motivo)
-  })
-
-  it('o cronômetro (.t-cronometro e [data-cronometro]) também é medido', () => {
-    const extra =
-      '<p class="t-cronometro" style="font-family: Georgia; font-weight: 700; font-size: 224px; font-variant-numeric: lining-nums">00:05</p>' +
-      '<p data-cronometro style="font-family: \'Zilla Slab\'; font-weight: 700; font-size: 224px; font-variant-numeric: lining-nums">00:06</p>'
-    const { lido, r } = medir(pagina(ESTILO_BOM, extra), facesCarregadas())
-    assert.equal(lido.nos.filter((n) => n.m.numero).length, 3)
-    assert.equal(r.ok, false, r.motivo)
-    assert.equal(r.nos_com_falha.length, 1)
-    assert.match(r.nos_com_falha[0], /00:05/)
-  })
-
-  it('uma página sem número nem cronômetro é “não aplicável”', () => {
-    const { r } = medir('<main><section data-bloco><p>Só texto.</p></section></main>')
-    assert.equal(r.ok, true)
-    assert.match(r.motivo, /não aplicável/)
+  it('rotasDosPedidos junta a rota ao pedido e lança erro (uso) para o caso sem rota', () => {
+    const pedidos = [
+      { caso: 'sistema', tema: 'claro', largura: 1440, altura: 900 },
+      { caso: 'comofunciona', tema: 'claro', largura: 390, altura: 844 },
+    ]
+    assert.deepEqual(
+      rotasDosPedidos(pedidos, CASOS_CDP).map((p) => p.rota),
+      ['sistema', 'como-funciona'],
+    )
+    assert.throws(() => rotasDosPedidos([{ caso: 'nada', tema: 'claro', largura: 1, altura: 1 }], CASOS_CDP), /caso sem rota: nada/)
+    assert.throws(() => rotasDosPedidos(pedidos, null), /caso sem rota: comofunciona/)
   })
 })
 
@@ -1022,10 +883,22 @@ describe('argumentos e loopback', () => {
     ])
   })
 
-  it('recusa caso, tema e formato inválidos, e o Início em madrugada', () => {
-    assert.throws(() => lerArgumentos(['p', 'outro:claro:390x844']), /caso desconhecido/)
+  it('aceita qualquer nome de caso em [a-z0-9_]+', () => {
+    const { pedidos } = lerArgumentos(['p', 'comofunciona:claro:1440x900', 'pagina_2:madrugada:390x844', '2:claro:768x1024'])
+    assert.deepEqual(pedidos, [
+      { caso: 'comofunciona', tema: 'claro', largura: 1440, altura: 900 },
+      { caso: 'pagina_2', tema: 'madrugada', largura: 390, altura: 844 },
+      { caso: '2', tema: 'claro', largura: 768, altura: 1024 },
+    ])
+  })
+
+  it('recusa tema e formato inválidos, e o Início em madrugada', () => {
     assert.throws(() => lerArgumentos(['p', 'sistema:sepia:390x844']), /tema desconhecido/)
     assert.throws(() => lerArgumentos(['p', 'sistema:claro:390']), /argumento inválido/)
+    assert.throws(() => lerArgumentos(['p', 'Sistema:claro:390x844']), /argumento inválido/)
+    assert.throws(() => lerArgumentos(['p', 'como-funciona:claro:390x844']), /argumento inválido/)
+    assert.throws(() => lerArgumentos(['p', ':claro:390x844']), /argumento inválido/)
+    assert.throws(() => lerArgumentos(['p', 'pagina_2:claro2:390x844']), /argumento inválido/)
     assert.throws(() => lerArgumentos(['p', 'inicio:madrugada:1440x900']), /sempre claro/)
     assert.throws(() => lerArgumentos(['p']), /uso:/)
     assert.throws(() => lerArgumentos([]), /uso:/)
