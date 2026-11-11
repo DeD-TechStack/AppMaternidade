@@ -70,8 +70,8 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 ## Dados ligados às telas novas (religados e soltos em 11/11)
 
 - [x] P-09 Corpos dos 6 cartões abaixo reescritos para a base nova antes do claim (prefixo `FINAL/OVERRIDE_DADOS.md`) e soltos em todo, presos aos pais | 11/11 9h50; sem SHA (é board)
-- [~ t_11ad28e6] P-10 MAT-37b: navegação pelo registro, convite, Começar completo e Família | depende de 37r (mesmos arquivos de conta e rotas)
-- [~ t_11ad28e6] P-10 MAT-37b: navegação pelo registro, convite, Começar completo e Família | depende de 37r (mesmos arquivos de conta e rotas)
+- [~ t_f2e2d6d8] P-10 MAT-37b g2: convite, Começar completo e Família, com Família no cabeçalho logado e Entrar/Criar conta do cabeçalho ligados a /entrar e /criar-conta (hoje vão a /contato). A g1 t_11ad28e6 caiu em triage, pedindo uma navegação lateral que o DESIGN novo não tem, e foi arquivada
+- [~ t_f2e2d6d8] P-10 MAT-37b g2: convite, Começar completo e Família, com Família no cabeçalho logado e Entrar/Criar conta do cabeçalho ligados a /entrar e /criar-conta (hoje vão a /contato). A g1 t_11ad28e6 caiu em triage, pedindo uma navegação lateral que o DESIGN novo não tem, e foi arquivada
 - [~ t_7c491177] P-12 MAT-38b: Histórico, detalhe, lixeira e notas | depende de P-11
 - [~ t_c9529365] P-13 MAT-39b: tummy time ligado à rotina | depende de 38a e 36r-A
 - [~ t_de06bd20] P-14 MAT-40a: Comunidade ligada ao banco | g1 t_4c921e60 bloqueou pela regra de BASE do corpo (o comentário não a sobrepõe) e foi arquivada; a g2 t_de06bd20 tem a base 4c86d1b no corpo
