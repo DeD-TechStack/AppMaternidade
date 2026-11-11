@@ -77,10 +77,10 @@ export function DialogoExcluirConta({
       ref={dialogo}
       aria-labelledby={tituloId}
       aria-modal="true"
-      className="m-auto w-[min(32rem,calc(100%_-_2rem))] rounded-[8px] border bg-[var(--cor-fundo)] p-6 text-[var(--cor-texto)] backdrop:bg-[var(--cor-texto)]/40"
+      className="m-auto w-[min(32rem,calc(100%_-_2rem))] rounded-cartao border-[1.5px] border-[var(--cor-texto)] bg-[var(--cor-fundo)] p-6 text-[var(--cor-texto)] backdrop:bg-[var(--cor-texto)]/40 lg:p-8"
     >
       <form onSubmit={aoConfirmar} noValidate className="flex flex-col gap-4">
-        <h2 id={tituloId} className="titulo-linha">
+        <h2 id={tituloId} className="cm-h4">
           {CONTA.excluir.dialogo.titulo}
         </h2>
         <p>{CONTA.excluir.dialogo.texto}</p>

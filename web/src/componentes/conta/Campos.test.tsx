@@ -16,7 +16,7 @@ describe('a marca de só leitura nos campos', () => {
     expect(entrada.className).toMatch(/(^|\s)read-only:bg-/)
   })
 
-  it('o seletor de fuso não leva a marca de só leitura, mas leva o mesmo fundo e o mesmo hover do campo editável', () => {
+  it('o seletor de fuso não leva a marca de só leitura, mas leva a mesma caixa (cm-campo-entrada) do campo editável', () => {
     render(
       <>
         <Campo rotulo="Seu nome" valor="Juliana" aoMudar={semEfeito} />
@@ -28,9 +28,10 @@ describe('a marca de só leitura nos campos', () => {
     const nome = screen.getByLabelText('Seu nome') as HTMLInputElement
     expect(seletor.className).not.toMatch(/read-only:/)
     expect(seletor.hasAttribute('readonly')).toBe(false)
-    for (const token of ['bg-[var(--cor-fundo)]', 'hover:bg-[var(--cor-papel-fundo)]', 'focus:bg-[var(--cor-fundo)]']) {
-      expect(seletor.classList.contains(token), token).toBe(true)
-      expect(nome.classList.contains(token), token).toBe(true)
+    // A caixa vem da base do "Campo de mel" (56 px, raio 14, hover e foco): é a mesma nos dois.
+    for (const classe of ['cm-campo-entrada', 'alvo-toque']) {
+      expect(seletor.classList.contains(classe), classe).toBe(true)
+      expect(nome.classList.contains(classe), classe).toBe(true)
     }
   })
 })

@@ -1,19 +1,27 @@
 import type { ReactNode, Ref } from 'react'
+import { CircleAlert, Info } from 'lucide-react'
 import { COMUM, textoDoErro } from '../../conteudo/conta.ts'
 import type { ErroDados } from '../../dados/comum.ts'
 
-// Peças pequenas e as classes que as telas da área de conta repetem. O visual sai das classes da
-// base (`.botao`, `.alvo-toque`, `.texto-medida`...) e das variáveis `--cor-*` do tema.
+// Peças pequenas e as classes que as telas da área de conta repetem. O visual sai das classes do
+// "Campo de mel" (`.cm-botao`, `.cm-campo-*`...) e das variáveis `--cor-*` do tema, que trocam na
+// madrugada.
 
-/** Ação principal do formulário: 56 px, largura cheia. */
-export const BOTAO_PRINCIPAL =
-  'botao botao-principal botao-grande hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60'
+/** Botão desativado de verdade (`disabled`): areia com o texto apagado, e o hover não muda nada. */
+const DESATIVADO =
+  'disabled:cursor-not-allowed disabled:border-[var(--cor-desativado-fundo)] disabled:bg-[var(--cor-desativado-fundo)] ' +
+  'disabled:text-[var(--cor-desativado-texto)]'
 
-export const BOTAO_SECUNDARIO =
-  'botao botao-secundario hover:bg-[var(--cor-papel-fundo)] disabled:cursor-not-allowed disabled:opacity-60'
+/** Ação principal do formulário: pílula de cacau (mel na madrugada), 56 px, largura cheia. */
+export const BOTAO_PRINCIPAL = `cm-botao cm-botao-primario alvo-toque w-full ${DESATIVADO}`
 
-/** Link fora de parágrafo: alvo de 44 px e o sublinhado da base. */
-export const LINK_ALVO = 'alvo-toque inline-flex items-center font-semibold'
+/** Ação secundária: pílula de contorno de 1,5 px; no hover se enche. */
+export const BOTAO_SECUNDARIO = `cm-botao cm-botao-contorno alvo-toque ${DESATIVADO}`
+
+/** Link fora de parágrafo: sublinhado sempre, na cor de link do tema, e alvo de 44 px. */
+export const LINK_ALVO =
+  'alvo-toque inline-flex items-center font-medium text-[var(--cor-link)] underline decoration-[1.5px] underline-offset-4 ' +
+  'hover:decoration-2'
 
 /** O estado carregando: o texto, sem formulário clicável. */
 export function Carregando() {
@@ -22,11 +30,19 @@ export function Carregando() {
 
 /**
  * A região de status da tela: única, sempre no DOM (para o leitor de tela anunciar o que entra
- * nela), não move o foco e não some sozinha.
+ * nela), não move o foco e não some sozinha. Com texto, leva um ícone: a mensagem nunca é só cor.
  */
 export function RegiaoStatus({ mensagem }: { mensagem: string | null }) {
   return (
-    <div role="status" className={mensagem ? 'texto-info font-semibold wrap-anywhere' : 'sr-only'}>
+    <div
+      role="status"
+      className={
+        mensagem
+          ? 'flex items-start gap-3 rounded-campo bg-[var(--cor-papel-fundo)] px-4 py-3 font-medium wrap-anywhere'
+          : 'sr-only'
+      }
+    >
+      {mensagem ? <Info size={22} aria-hidden="true" className="mt-0.5 shrink-0" /> : null}
       {mensagem}
     </div>
   )
@@ -42,19 +58,25 @@ interface ResumoErroProps {
   children?: ReactNode
 }
 
-/** A frase do catálogo no topo do formulário ou da seção; o foco vai para ele num envio com erro. */
+/**
+ * A frase do catálogo no topo do formulário ou da seção; o foco vai para ele num envio com erro.
+ * Ícone, contorno e palavras: o erro nunca depende só da cor.
+ */
 export function ResumoErro({ erro, aoTentarDeNovo, repetivel = false, refResumo, familiaNome, children }: ResumoErroProps) {
   return (
     <div
       ref={refResumo}
       role="alert"
       tabIndex={-1}
-      className="alvo-foco flex flex-col items-start gap-3 border-l-4 border-[var(--cor-destaque)] py-1 pl-3"
+      className="alvo-foco flex w-full flex-col items-start gap-3 rounded-campo border-[1.5px] border-[var(--cor-texto)] bg-[var(--cor-cartao)] p-4"
     >
-      <p className="wrap-anywhere font-semibold text-[var(--cor-destaque)]">{textoDoErro(erro, familiaNome)}</p>
+      <p className="flex items-start gap-3 font-medium wrap-anywhere">
+        <CircleAlert size={22} aria-hidden="true" className="mt-0.5 shrink-0" />
+        <span>{textoDoErro(erro, familiaNome)}</span>
+      </p>
       {children}
       {repetivel && aoTentarDeNovo ? (
-        <button type="button" className={BOTAO_SECUNDARIO} onClick={aoTentarDeNovo}>
+        <button type="button" className={BOTAO_SECUNDARIO} data-tamanho="app" onClick={aoTentarDeNovo}>
           {COMUM.tentarDeNovo}
         </button>
       ) : null}

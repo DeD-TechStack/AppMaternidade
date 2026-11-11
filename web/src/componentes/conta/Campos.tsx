@@ -1,16 +1,11 @@
 import { useId, useMemo, useState, type ReactNode, type Ref } from 'react'
+import { ChevronDown, CircleAlert, Eye, EyeOff } from 'lucide-react'
 import { COMECAR, COMUM } from '../../conteudo/conta.ts'
 import { listaDeFusos } from './fusos.ts'
-import { BOTAO_SECUNDARIO } from './Partes.tsx'
 
-// Campos de formulário: rótulo visível acima, borda de 1 px na tinta, canto de 6 px, altura mínima
-// de 48 px. Erro e ajuda ficam ligados ao controle por `aria-describedby`.
-
-const ENTRADA =
-  'alvo-toque min-h-12 w-full rounded-[6px] border bg-[var(--cor-fundo)] px-3 py-2.5 text-[var(--cor-texto)] ' +
-  'hover:bg-[var(--cor-papel-fundo)] focus:bg-[var(--cor-fundo)] ' +
-  'disabled:cursor-not-allowed disabled:opacity-60 ' +
-  'aria-invalid:border-2 aria-invalid:border-[var(--cor-destaque)] aria-invalid:px-[calc(0.75rem_-_1px)] aria-invalid:py-[calc(0.625rem_-_1px)]'
+// Campos de formulário no "Campo de mel": rótulo visível acima, caixa de 56 px com raio 14 e contorno
+// de 1,5 px (as classes `cm-campo-*` da base). Erro e ajuda ficam ligados ao controle por
+// `aria-describedby`; o erro leva ícone e palavras, nunca só cor.
 
 // O fundo preenchido do campo de texto `readonly` (o e-mail). Fica só no `<input>`: o `:read-only`
 // do CSS casa também com todo `<select>`, que é editável e usa o mesmo fundo do campo de nome.
@@ -19,14 +14,15 @@ const SOMENTE_LEITURA = 'read-only:bg-[var(--cor-papel-fundo)]'
 function Descricoes({ id, ajuda, erro }: { id: string; ajuda?: string; erro?: string | null }) {
   return (
     <>
-      {ajuda ? (
-        <p id={`${id}-ajuda`} className="text-[0.9375rem]">
-          {ajuda}
+      {erro ? (
+        <p id={`${id}-erro`} className="cm-campo-mensagem cm-campo-erro cm-pequeno flex items-start gap-2">
+          <CircleAlert size={18} aria-hidden="true" className="mt-0.5 shrink-0" />
+          <span>{erro}</span>
         </p>
       ) : null}
-      {erro ? (
-        <p id={`${id}-erro`} className="font-semibold text-[var(--cor-destaque)]">
-          {erro}
+      {ajuda ? (
+        <p id={`${id}-ajuda`} className="cm-campo-mensagem cm-pequeno text-[var(--cor-texto-2)]">
+          {ajuda}
         </p>
       ) : null}
     </>
@@ -34,7 +30,7 @@ function Descricoes({ id, ajuda, erro }: { id: string; ajuda?: string; erro?: st
 }
 
 const ligar = (id: string, ajuda?: string, erro?: string | null) =>
-  [ajuda ? `${id}-ajuda` : null, erro ? `${id}-erro` : null].filter(Boolean).join(' ') || undefined
+  [erro ? `${id}-erro` : null, ajuda ? `${id}-ajuda` : null].filter(Boolean).join(' ') || undefined
 
 interface CampoProps {
   rotulo: string
@@ -46,7 +42,7 @@ interface CampoProps {
   erro?: string | null
   somenteLeitura?: boolean
   refEntrada?: Ref<HTMLInputElement>
-  /** Um controle ao lado do campo (o botão "Mostrar senha"). */
+  /** Um controle dentro do campo, à direita (o botão de mostrar a senha). */
   complemento?: ReactNode
 }
 
@@ -64,11 +60,11 @@ export function Campo({
 }: CampoProps) {
   const id = useId()
   return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="font-semibold">
+    <div className="cm-campo">
+      <label htmlFor={id} className="cm-campo-rotulo">
         {rotulo}
       </label>
-      <div className="flex gap-2">
+      <div className="cm-campo-controle" data-senha={complemento ? '' : undefined}>
         <input
           ref={refEntrada}
           id={id}
@@ -79,7 +75,7 @@ export function Campo({
           readOnly={somenteLeitura}
           aria-invalid={erro ? true : undefined}
           aria-describedby={ligar(id, ajuda, erro)}
-          className={`${ENTRADA} ${SOMENTE_LEITURA} flex-1`}
+          className={`cm-campo-entrada alvo-toque ${SOMENTE_LEITURA}`}
         />
         {complemento}
       </div>
@@ -88,7 +84,7 @@ export function Campo({
   )
 }
 
-/** Campo de senha com o botão "Mostrar senha" (`aria-pressed`). */
+/** Campo de senha com o botão "Mostrar senha" (`aria-pressed`) dentro da caixa. */
 export function CampoSenha(props: Omit<CampoProps, 'tipo' | 'complemento'>) {
   const [visivel, setVisivel] = useState(false)
   return (
@@ -96,8 +92,14 @@ export function CampoSenha(props: Omit<CampoProps, 'tipo' | 'complemento'>) {
       {...props}
       tipo={visivel ? 'text' : 'password'}
       complemento={
-        <button type="button" aria-pressed={visivel} className={BOTAO_SECUNDARIO} onClick={() => setVisivel(!visivel)}>
-          {COMUM.mostrarSenha}
+        <button
+          type="button"
+          aria-label={COMUM.mostrarSenha}
+          aria-pressed={visivel}
+          className="cm-campo-olho alvo-toque"
+          onClick={() => setVisivel(!visivel)}
+        >
+          {visivel ? <EyeOff size={22} aria-hidden="true" /> : <Eye size={22} aria-hidden="true" />}
         </button>
       }
     />
@@ -125,25 +127,28 @@ export function SeletorFuso({ rotulo, valor, aoMudar, guardado, ajuda, erro, ref
   }, [guardado])
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="font-semibold">
+    <div className="cm-campo">
+      <label htmlFor={id} className="cm-campo-rotulo">
         {rotulo}
       </label>
-      <select
-        ref={refEntrada}
-        id={id}
-        value={valor}
-        onChange={(evento) => aoMudar(evento.target.value)}
-        aria-invalid={erro ? true : undefined}
-        aria-describedby={ligar(id, ajuda, erro)}
-        className={ENTRADA}
-      >
-        {opcoes.map((fuso) => (
-          <option key={fuso} value={fuso}>
-            {fuso === foraDaLista ? COMECAR.fusoAtual(fuso) : fuso}
-          </option>
-        ))}
-      </select>
+      <div className="cm-campo-controle" data-select="">
+        <select
+          ref={refEntrada}
+          id={id}
+          value={valor}
+          onChange={(evento) => aoMudar(evento.target.value)}
+          aria-invalid={erro ? true : undefined}
+          aria-describedby={ligar(id, ajuda, erro)}
+          className="cm-campo-entrada alvo-toque"
+        >
+          {opcoes.map((fuso) => (
+            <option key={fuso} value={fuso}>
+              {fuso === foraDaLista ? COMECAR.fusoAtual(fuso) : fuso}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="cm-campo-seta" aria-hidden="true" />
+      </div>
       <Descricoes id={id} ajuda={ajuda} erro={erro} />
     </div>
   )

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { act, fireEvent, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { NOMES_DO_H1 } from '../../conteudo/conta.ts'
 import { renderizarComDados } from '../../teste/renderizarComDados.tsx'
 
 // RN-03, o foco ao trocar de tela: a exceção é só a primeira carga da página (o foco inicial é do
@@ -9,7 +10,10 @@ import { renderizarComDados } from '../../teste/renderizarComDados.tsx'
 
 const titulo = (nome: string) => screen.findByRole('heading', { level: 1, name: nome })
 
-/** Quem tem o foco, em texto curto ("H1:Entrar"): a falha de um teste diz onde o foco estava. */
+// O cabeçalho da casca também tem um link "Criar conta" (para o Contato): o da tela está no <main>.
+const noMain = () => within(document.querySelector('main')!)
+
+/** Quem tem o foco, em texto curto ("H1:Conta"): a falha de um teste diz onde o foco estava. */
 const focado = () => `${document.activeElement?.tagName}:${document.activeElement?.textContent?.slice(0, 40)}`
 
 async function irPara(roteador: ReturnType<typeof renderizarComDados>['roteador'], destino: number | string) {
@@ -23,22 +27,22 @@ async function irPara(roteador: ReturnType<typeof renderizarComDados>['roteador'
 describe('a primeira carga da página', () => {
   it('não força o foco nem a rolagem', async () => {
     const { rolarAoTopo } = renderizarComDados('/entrar')
-    await titulo('Entrar')
+    await titulo(NOMES_DO_H1.entrar)
 
-    expect(focado()).not.toBe('H1:Entrar')
+    expect(focado()).not.toBe(`H1:${NOMES_DO_H1.entrar}`)
     expect(rolarAoTopo).not.toHaveBeenCalled()
   })
 
   it('vale de novo em cada montagem nova: o estado de um roteador não vaza para o seguinte', async () => {
     const primeira = renderizarComDados('/entrar')
-    await titulo('Entrar')
-    fireEvent.click(screen.getByRole('link', { name: 'Criar conta' }))
-    await titulo('Criar conta')
+    await titulo(NOMES_DO_H1.entrar)
+    fireEvent.click(noMain().getByRole('link', { name: 'Criar conta' }))
+    await titulo(NOMES_DO_H1.criarConta)
     primeira.unmount()
 
     const { rolarAoTopo } = renderizarComDados('/entrar')
-    await titulo('Entrar')
-    expect(focado()).not.toBe('H1:Entrar')
+    await titulo(NOMES_DO_H1.entrar)
+    expect(focado()).not.toBe(`H1:${NOMES_DO_H1.entrar}`)
     expect(rolarAoTopo).not.toHaveBeenCalled()
   })
 })
@@ -46,51 +50,51 @@ describe('a primeira carga da página', () => {
 describe('Voltar e Avançar do histórico', () => {
   it('Entrar → Criar conta → Voltar: o h1 de Entrar recebe o foco e a rolagem vai ao topo', async () => {
     const { roteador, rolarAoTopo } = renderizarComDados('/entrar')
-    await titulo('Entrar')
-    fireEvent.click(screen.getByRole('link', { name: 'Criar conta' }))
-    await titulo('Criar conta')
-    await waitFor(() => expect(focado()).toBe('H1:Criar conta'))
+    await titulo(NOMES_DO_H1.entrar)
+    fireEvent.click(noMain().getByRole('link', { name: 'Criar conta' }))
+    await titulo(NOMES_DO_H1.criarConta)
+    await waitFor(() => expect(focado()).toBe(`H1:${NOMES_DO_H1.criarConta}`))
     rolarAoTopo.mockClear()
 
     await irPara(roteador, -1)
 
-    await titulo('Entrar')
-    await waitFor(() => expect(focado()).toBe('H1:Entrar'))
+    await titulo(NOMES_DO_H1.entrar)
+    await waitFor(() => expect(focado()).toBe(`H1:${NOMES_DO_H1.entrar}`))
     expect(rolarAoTopo).toHaveBeenCalledWith(0, 0)
   })
 
   it('Voltar e depois Avançar: o h1 de cada tela recebe o foco, e a rolagem vai ao topo nas duas', async () => {
     const { roteador, rolarAoTopo } = renderizarComDados('/entrar')
-    await titulo('Entrar')
-    fireEvent.click(screen.getByRole('link', { name: 'Criar conta' }))
-    await titulo('Criar conta')
+    await titulo(NOMES_DO_H1.entrar)
+    fireEvent.click(noMain().getByRole('link', { name: 'Criar conta' }))
+    await titulo(NOMES_DO_H1.criarConta)
 
     await irPara(roteador, -1)
-    await waitFor(() => expect(focado()).toBe('H1:Entrar'))
+    await waitFor(() => expect(focado()).toBe(`H1:${NOMES_DO_H1.entrar}`))
     rolarAoTopo.mockClear()
 
     await irPara(roteador, 1)
-    await titulo('Criar conta')
-    await waitFor(() => expect(focado()).toBe('H1:Criar conta'))
+    await titulo(NOMES_DO_H1.criarConta)
+    await waitFor(() => expect(focado()).toBe(`H1:${NOMES_DO_H1.criarConta}`))
     expect(rolarAoTopo).toHaveBeenCalledWith(0, 0)
   })
 
   it('várias telas: Entrar → Criar conta → Recuperar acesso, e Voltar duas vezes até a primeira', async () => {
     const { roteador, rolarAoTopo } = renderizarComDados('/entrar')
-    await titulo('Entrar')
-    fireEvent.click(screen.getByRole('link', { name: 'Criar conta' }))
-    await titulo('Criar conta')
+    await titulo(NOMES_DO_H1.entrar)
+    fireEvent.click(noMain().getByRole('link', { name: 'Criar conta' }))
+    await titulo(NOMES_DO_H1.criarConta)
     await irPara(roteador, '/recuperar-acesso')
-    await titulo('Recuperar acesso')
+    await titulo(NOMES_DO_H1.recuperarAcesso)
 
     await irPara(roteador, -1)
-    await titulo('Criar conta')
-    await waitFor(() => expect(focado()).toBe('H1:Criar conta'))
+    await titulo(NOMES_DO_H1.criarConta)
+    await waitFor(() => expect(focado()).toBe(`H1:${NOMES_DO_H1.criarConta}`))
 
     rolarAoTopo.mockClear()
     await irPara(roteador, -1)
-    await titulo('Entrar')
-    await waitFor(() => expect(focado()).toBe('H1:Entrar'))
+    await titulo(NOMES_DO_H1.entrar)
+    await waitFor(() => expect(focado()).toBe(`H1:${NOMES_DO_H1.entrar}`))
     expect(rolarAoTopo).toHaveBeenCalledWith(0, 0)
   })
 

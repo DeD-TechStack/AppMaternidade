@@ -1,17 +1,15 @@
 import type { ReactNode } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router'
-import { AvisoDemonstracao } from '../AvisoDemonstracao.tsx'
 import { Carregando, ResumoErro } from './Partes.tsx'
 import { useSessao } from './sessao.tsx'
 
+// O estado carregando e o erro da guarda: só o `<main>` na área de conteúdo, dentro do cabeçalho e do
+// rodapé da casca (que também trazem o aviso de demonstração).
 function Casca({ ocupado = false, children }: { ocupado?: boolean; children: ReactNode }) {
   return (
-    <div className="mx-auto w-full max-w-[64rem] px-4 py-8">
-      <AvisoDemonstracao />
-      <main aria-busy={ocupado || undefined} className="mt-8">
-        {children}
-      </main>
-    </div>
+    <main aria-busy={ocupado || undefined} className="cm-area pt-10">
+      <div className="max-w-[28rem]">{children}</div>
+    </main>
   )
 }
 
