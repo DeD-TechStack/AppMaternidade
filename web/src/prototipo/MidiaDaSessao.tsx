@@ -1,30 +1,22 @@
-import { Midia } from '../componentes/base/Midia.tsx'
-import { IlustracaoBerco } from './IlustracaoBerco.tsx'
-import { IlustracaoMamada } from './IlustracaoMamada.tsx'
-import { IlustracaoTapete } from './IlustracaoTapete.tsx'
+import { Ilustracao } from '../componentes/campo/Ilustracao.tsx'
 import type { TipoSessao } from './estado.ts'
 import { DESCRICAO_DA_MIDIA } from './textosSessao.ts'
 
-// A ilustração cobre a moldura (1376 × cerca de 917, proporção 1,5) sem distorcer: `slice` corta o
-// que passa em vez de deixar vão. O berço usa a medida larga (240 × 160, proporção 1,5): não há o que cortar
-// e a figura em pé aparece inteira, do cabelo ao chão.
-const COBRE = 'h-full w-full block'
-
 /**
- * A mídia da Sessão (EMENDAS E5, bloco 3): moldura larga em barro com a ilustração do tipo da sessão
- * (sono: berço; tummy time: tapete; mamada: poltrona) ou, sem sessão, o berço. Sem texto dentro: a
- * descrição fica no `aria-label` da moldura.
+ * A mídia da Sessão: um desenho de traço sobre o mel (nos dois temas: o traço preto nunca vai sobre o
+ * cacau da madrugada). Tummy time: o bebê de bruços no tapete; mamada: a mãe ninando à noite; sono e
+ * sem sessão: o mesmo desenho da noite, com a descrição dele.
  */
 export function MidiaDaSessao({ tipo }: { tipo: TipoSessao | null }) {
   return (
-    <Midia formato="larga" fundo="barro" aria-label={DESCRICAO_DA_MIDIA[tipo ?? 'vazio']}>
+    <div className="ha-midia-sessao" data-midia="">
       {tipo === 'tummy' ? (
-        <IlustracaoTapete className={COBRE} preserveAspectRatio="xMidYMid slice" />
+        <Ilustracao nome="tummy-time" alt={DESCRICAO_DA_MIDIA.tummy} />
       ) : tipo === 'mamada' ? (
-        <IlustracaoMamada larga className={COBRE} preserveAspectRatio="xMidYMid slice" />
+        <Ilustracao nome="mae-noite" alt={DESCRICAO_DA_MIDIA.mamada} />
       ) : (
-        <IlustracaoBerco larga className={COBRE} preserveAspectRatio="xMidYMid slice" />
+        <Ilustracao nome="mae-noite" />
       )}
-    </Midia>
+    </div>
   )
 }
