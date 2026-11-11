@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode 
 import { Link, NavLink } from 'react-router'
 import { CABECALHO, COMUM } from '../../conteudo/conta.ts'
 import type { ErroDados } from '../../dados/comum.ts'
+import { AvisoDemonstracao } from '../AvisoDemonstracao.tsx'
 import { BOTAO_SECUNDARIO, LINK_ALVO, ResumoErro } from './Partes.tsx'
 import { useSessao } from './sessao.tsx'
 
@@ -39,10 +40,10 @@ interface Props {
 }
 
 // A moldura das telas logadas desta tarefa, dentro do cabeçalho e do rodapé da casca (a marca, o
-// "Modo madrugada" e o resto do cabeçalho são dela, e o aviso de demonstração mora no rodapé): só o
-// que a conta precisa a mais, uma barra fina de 1 px embaixo com o link da Conta, o do protótipo do
-// Hoje e o "Sair", o resumo de uma saída que falhou e o `<main>`. Não monta a navegação inferior do
-// protótipo.
+// "Modo madrugada" e o resto do cabeçalho são dela; o rodapé do app não traz o aviso de demonstração):
+// o que a conta precisa a mais, o aviso de demonstração (só sem banco), uma barra fina de 1 px embaixo
+// com o link da Conta, o do protótipo do Hoje e o "Sair", o resumo de uma saída que falhou e o `<main>`.
+// Não monta a navegação inferior do protótipo.
 export function MolduraLogada({ ocupado = false, children }: Props) {
   const { sair } = useSessao()
   const [saindo, setSaindo] = useState(false)
@@ -66,6 +67,10 @@ export function MolduraLogada({ ocupado = false, children }: Props) {
   return (
     <ContextoSair value={{ sair: () => void aoSair(), saindo }}>
       <div className="cm-area pt-2">
+        {/* Um só aviso honesto, acima da barra e fora do <main> e da mídia: só sem banco (`empty:hidden` some com a folga). */}
+        <div className="pt-1 pb-1 empty:hidden">
+          <AvisoDemonstracao lateral />
+        </div>
         <nav
           aria-label={CABECALHO.navegacao}
           className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-b border-[var(--cor-fio-suave)] py-2"
