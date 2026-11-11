@@ -69,6 +69,27 @@
   margin-top: 32px;
 }
 
+/* Os CTAs destas páginas quebram linha quando o texto não cabe (fonte raiz a 200%, zoom de 200%):
+   o `.cm-botao` da base não quebra (`white-space: nowrap`) e o rótulo saía da pílula. A altura
+   acompanha o texto; numa linha só, os 56 px (44 no link) e o desenho da pílula continuam iguais. */
+.pd-acoes > .cm-botao,
+.pd-faixa .cm-botao {
+  height: auto;
+  max-width: 100%;
+  padding-block: 14px;
+  text-align: center;
+  text-wrap: balance;
+  white-space: normal;
+}
+
+/* O link: a largura soma os 2 × 4 px da margem negativa do anel de foco (sem isso quebrava mesmo
+   cabendo), e o texto quebrado fica à esquerda, como o resto da coluna. */
+.pd-acoes > .cm-botao-texto {
+  max-width: calc(100% + 8px);
+  padding-block: 10px;
+  text-align: start;
+}
+
 /* O link secundário tem cara de link: sublinhado sempre, alvo de 44 px. */
 .pd-link.cm-botao-texto {
   text-decoration-color: currentColor;

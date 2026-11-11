@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { fireEvent, screen, within } from '@testing-library/react'
 import axe from 'axe-core'
 import { describe, expect, it } from 'vitest'
@@ -51,6 +53,65 @@ describe('as três páginas públicas em destaque', () => {
       expect(texto).not.toMatch(/\b(Lia|Ana)\b/)
       for (const cartao of container.querySelectorAll('main .cm-flutuante')) {
         expect(cartao.textContent).not.toMatch(/protótipo|dados de exemplo/i)
+      }
+    })
+  }
+})
+
+// Os CTAs ampliados (fonte raiz a 200% ou zoom de 200%, viewport de 195 px) não podem perder texto:
+// o `.cm-botao` da base não quebra linha (`white-space: nowrap`), então o CSS escopado destas páginas
+// libera a quebra nos botões de `.pd-acoes` e `.pd-faixa`. O jsdom não faz layout: a largura real é
+// conferida nas capturas; aqui fica a regra e o fato de todo botão novo morar num desses dois lugares.
+// Lido do disco: no Vitest, importar CSS não devolve o texto (o cwd é web/, como em estilo.test.ts).
+const cssDestaque = readFileSync(
+  join(process.cwd(), 'src', 'componentes', 'publicas-destaque', 'publicas-destaque.css'),
+  'utf8',
+).replace(/\/\*[\s\S]*?\*\//g, '')
+
+/** As regras do CSS (as mais internas, dentro ou fora de @media): seletores e declarações. */
+const regras = [...cssDestaque.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, seletor, corpo]) => ({
+  seletores: seletor.split(',').map((s) => s.trim().replace(/\s+/g, ' ')),
+  declaracoes: Object.fromEntries(
+    corpo
+      .split(';')
+      .map((d) => d.split(':').map((p) => p.trim()))
+      .filter(([p, v]) => p && v)
+      .map(([p, ...v]) => [p, v.join(':')]),
+  ),
+}))
+
+/** As regras com um seletor que começa no contexto e chega a um botão (`exato`: o `.cm-botao` puro). */
+const regrasDe = (contexto: string, exato = false) =>
+  regras.filter((r) =>
+    r.seletores.some((s) => s.startsWith(contexto) && (exato ? /\.cm-botao(?![\w-])/ : /\.cm-botao/).test(s)),
+  )
+
+describe('os CTAs das três páginas cabem quando ampliados', () => {
+  for (const contexto of ['.pd-acoes', '.pd-faixa']) {
+    it(`${contexto}: o botão quebra linha e acompanha o texto, sem esconder nem encolher nada`, () => {
+      const base = regrasDe(contexto, true)
+      expect(base.length, contexto).toBeGreaterThan(0)
+      const juntas = Object.assign({}, ...base.map((r) => r.declaracoes)) as Record<string, string>
+      expect(juntas['white-space']).toBe('normal')
+      expect(juntas['max-width']).toBe('100%')
+      expect(juntas['height']).toBe('auto')
+      expect(juntas['text-align']).toBe('center')
+      expect(juntas['padding-block']).toBeDefined()
+      for (const regra of regrasDe(contexto)) {
+        expect(regra.declaracoes['white-space'], regra.seletores.join(', ')).not.toBe('nowrap')
+        expect(regra.declaracoes, regra.seletores.join(', ')).not.toHaveProperty('overflow')
+        expect(regra.declaracoes, regra.seletores.join(', ')).not.toHaveProperty('text-overflow')
+        expect(regra.declaracoes, regra.seletores.join(', ')).not.toHaveProperty('font-size')
+        expect(regra.declaracoes, regra.seletores.join(', ')).not.toHaveProperty('outline')
+      }
+    })
+  }
+
+  for (const [caminho] of PAGINAS) {
+    it(`${caminho}: todo botão do site dentro do main mora em .pd-acoes ou .pd-faixa`, () => {
+      const { container } = renderizarRota(caminho)
+      for (const botao of container.querySelectorAll('main .cm-botao')) {
+        expect(botao.closest('.pd-acoes, .pd-faixa'), botao.textContent!).not.toBeNull()
       }
     })
   }
