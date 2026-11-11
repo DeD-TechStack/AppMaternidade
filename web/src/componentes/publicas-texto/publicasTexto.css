@@ -86,12 +86,21 @@
     }
   }
 
-  /* O painel acompanha a leitura quando a janela é alta o bastante para ele caber inteiro. Ele fica na
-     célula da leitura (a grade termina antes do rodapé), então nunca passa por cima do rodapé. */
-  @media (min-width: 1100px) and (min-height: 820px) {
+  /* O painel acompanha a leitura, mas só até onde cabe: a altura máxima é a da janela menos o cabeçalho e
+     48 px (24 em cima, 24 embaixo), e o que passar disso rola dentro do painel. Assim todo link do índice,
+     ao receber o foco por Tab, é rolado para a vista (o navegador rola o painel), em qualquer altura de
+     janela e com texto ampliado. Em janela baixa demais (menos de 560 px) o painel não fica fixo e rola
+     com a página. Ele fica na célula da leitura, então nunca passa por cima do rodapé. */
+  @media (min-width: 1100px) and (min-height: 560px) {
     .cm-painel.pt-painel {
       position: sticky;
       top: calc(var(--cm-cabecalho) + 24px);
+      box-sizing: border-box;
+      max-height: calc(100vh - var(--cm-cabecalho) - 48px);
+      max-height: calc(100dvh - var(--cm-cabecalho) - 48px);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scroll-padding-block: 24px;
     }
   }
 

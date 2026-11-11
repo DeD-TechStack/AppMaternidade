@@ -1,4 +1,6 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { EMAIL_CONTATO, PAGINAS_DE_TEXTO, ROTULO_INDICE } from '../../conteudo/publicas-texto.ts'
 import { renderizarRota } from '../../teste/renderizarRota.tsx'
@@ -160,6 +162,111 @@ describe('Contato: urgência', () => {
     const alvo = await screen.findByRole('heading', { level: 2, name: 'Se você precisa de ajuda agora' })
     await waitFor(() => expect(document.activeElement).toBe(alvo))
     expect(rolar).toHaveBeenCalled()
+  })
+})
+
+// R1: o fragmento do endereço (#...) vem de fora. Fragmento inválido ou desconhecido não derruba a página nem
+// move foco ou rolagem; fragmento válido leva ao título da seção.
+describe('fragmento do endereço (#...)', () => {
+  const INVALIDOS = ['#%E0%A4%A', '#%', '#%%', '#%zz', '#abc%', '#%E0%A4%A#x', '#%C0%80']
+  const DESCONHECIDOS = [
+    '#',
+    '#nao-existe',
+    '#secao-ajuda-agora-nao',
+    '#com espaco',
+    '#"><img src=x>',
+    '#a[b]',
+    "#a'b",
+    '#..',
+    '#%20',
+    '#secao-',
+  ]
+  const CAMINHOS = ['/privacidade', '/termos', '/regras-da-comunidade', '/exclusao-de-conta', '/contato', '/sobre']
+
+  for (const caminho of CAMINHOS) {
+    for (const hash of [...INVALIDOS, ...DESCONHECIDOS]) {
+      it(`${caminho}${hash}: a página abre inteira, sem foco nem rolagem`, () => {
+        const { container } = renderizarRota(caminho + hash)
+        expect(within(container.querySelector('main')!).getAllByRole('heading', { level: 1 })).toHaveLength(1)
+        expect(document.activeElement).toBe(document.body)
+        expect(rolar).not.toHaveBeenCalled()
+      })
+    }
+
+    it(`${caminho}: sem fragmento, nada recebe foco nem rolagem`, () => {
+      renderizarRota(caminho)
+      expect(document.activeElement).toBe(document.body)
+      expect(rolar).not.toHaveBeenCalled()
+    })
+
+    it(`${caminho}: trocar para um fragmento inválido com a página aberta não derruba nada`, async () => {
+      const { container, roteador } = renderizarRota(caminho)
+      for (const hash of INVALIDOS) {
+        await act(async () => {
+          await roteador.navigate(caminho + hash)
+        })
+        expect(within(container.querySelector('main')!).getAllByRole('heading', { level: 1 })).toHaveLength(1)
+      }
+      expect(document.activeElement).toBe(document.body)
+      expect(rolar).not.toHaveBeenCalled()
+    })
+  }
+
+  for (const [caminho, , dados] of PAGINAS) {
+    for (const { secao } of dados.secoes) {
+      it(`${caminho}#${secao.id}: foca o título "${secao.titulo}" e rola até ele`, () => {
+        renderizarRota(`${caminho}#${secao.id}`)
+        expect(document.activeElement).toBe(screen.getByRole('heading', { level: 2, name: secao.titulo }))
+        expect(rolar).toHaveBeenCalledTimes(1)
+      })
+    }
+  }
+
+  it('um fragmento válido escrito com porcentagem (%2D no lugar do hífen) também leva ao título', () => {
+    renderizarRota('/regras-da-comunidade#secao-ajuda%2Dagora')
+    expect(document.activeElement).toBe(screen.getByRole('heading', { level: 2, name: 'Se você precisa de ajuda agora' }))
+  })
+
+  it('um fragmento válido vale mesmo depois de um inválido na mesma página', async () => {
+    const { roteador } = renderizarRota('/privacidade#%E0%A4%A')
+    expect(document.activeElement).toBe(document.body)
+    await act(async () => {
+      await roteador.navigate('/privacidade#secao-seus-direitos')
+    })
+    expect(document.activeElement).toBe(screen.getByRole('heading', { level: 2, name: 'Seus direitos' }))
+  })
+})
+
+// R2: o painel de areia fica fixo ao rolar só se cabe na janela. O jsdom não mede layout, então a regra é lida
+// do CSS: todo `position: sticky` do arquivo vem com altura máxima que respeita a janela (o topo mais a altura
+// não passam de 100% dela), rolagem interna e `overscroll-behavior: contain`; assim cada link do índice, ao
+// receber o foco por Tab, é rolado para a vista dentro do painel.
+describe('painel do índice fixo ao rolar (CSS)', () => {
+  const css = readFileSync(join(process.cwd(), 'src/componentes/publicas-texto/publicasTexto.css'), 'utf8').replace(
+    /\/\*[\s\S]*?\*\//g,
+    '',
+  )
+  const regras = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, seletor, corpo]) => ({ seletor: seletor.trim(), corpo }))
+  const fixas = regras.filter(({ corpo }) => /position:\s*sticky/.test(corpo))
+
+  it('há um painel fixo, e todo painel fixo tem altura máxima, rolagem interna e overscroll contido', () => {
+    expect(fixas.length).toBeGreaterThan(0)
+    for (const { seletor, corpo } of fixas) {
+      expect(corpo, seletor).toMatch(/max-height:\s*calc\(\s*100d?vh\s*-/)
+      expect(corpo, seletor).toMatch(/overflow-y:\s*auto/)
+      expect(corpo, seletor).toMatch(/overscroll-behavior:\s*contain/)
+    }
+  })
+
+  it('o topo do painel fixo mais a altura máxima nunca passam da altura da janela', () => {
+    for (const { seletor, corpo } of fixas) {
+      const topo = /top:\s*calc\(\s*var\(--cm-cabecalho\)\s*\+\s*(\d+)px\s*\)/.exec(corpo)
+      const altura = /max-height:\s*calc\(\s*100d?vh\s*-\s*var\(--cm-cabecalho\)\s*-\s*(\d+)px\s*\)/.exec(corpo)
+      expect(topo, `${seletor}: top`).not.toBeNull()
+      expect(altura, `${seletor}: max-height`).not.toBeNull()
+      // topo = cabeçalho + A; altura = 100% - cabeçalho - B; a base fica em 100% - (B - A): B tem de ser ≥ A.
+      expect(Number(altura![1]), seletor).toBeGreaterThanOrEqual(Number(topo![1]))
+    }
   })
 })
 

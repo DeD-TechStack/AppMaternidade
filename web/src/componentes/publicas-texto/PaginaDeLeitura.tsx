@@ -37,6 +37,22 @@ function ligarPalavrasCurtas(texto: string): ReactNode {
 }
 
 /**
+ * O título de seção que o fragmento do endereço (`#...`) aponta, ou `null`. O fragmento vem de fora: pode
+ * ter porcentagem malformada (`%`, `%E0%A4%A`), ser desconhecido ou nem ser desta página. Nesses casos não
+ * há alvo, e portanto nenhuma rolagem, nenhum foco e nenhum erro.
+ */
+function tituloDoFragmento(hash: string, secoes: PaginaDeTexto['secoes']): HTMLElement | null {
+  let id: string
+  try {
+    id = decodeURIComponent(hash.slice(1))
+  } catch {
+    return null
+  }
+  if (!secoes.some(({ secao }) => secao.id === id)) return null
+  return document.getElementById(id)
+}
+
+/**
  * Página pública de leitura longa (Campo de mel). O título tem duas linhas: o nome da página (`h1`) e,
  * logo abaixo, a segunda linha em itálico; em 1440 ele corre pela largura toda. Abaixo dele, a coluna de
  * texto (uns 70 caracteres por linha) fica à esquerda e o painel de areia, com o desenho e o índice
@@ -52,12 +68,11 @@ export function PaginaDeLeitura({ pagina }: { pagina: PaginaDeTexto }) {
   const { nome, subtitulo, ilustracao, aviso, apresentacao, secoes } = pagina
 
   useEffect(() => {
-    const id = decodeURIComponent(hash.slice(1))
-    const alvo = id ? document.getElementById(id) : null
+    const alvo = tituloDoFragmento(hash, secoes)
     if (!alvo) return
     alvo.scrollIntoView?.()
     alvo.focus({ preventScroll: true })
-  }, [hash, key])
+  }, [hash, key, secoes])
 
   return (
     <main className="cm-area pt-pagina">
