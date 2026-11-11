@@ -49,11 +49,13 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 - [~ t_54db34e0] P-27 Como funciona, Cuidado compartilhado e Desenvolvimento: volta 1 dos juízes cegos (3 rodadas válidas, notas 6,2–7,4, REPROVA volta 1). A MAT-36r-A v2 aplica os itens das páginas e a 49d (P-21) refaz as cenas. Depois, volta 2; se reprovar, vai a Daniel com GALERIA | `juizes/rodadas/DEVOLUCAO_36rA.md`
 
 - [~ t_347d36de] P-28 Acesso e Conta: volta 1 dos juízes cegos (conta_r1 válida nos 2; acesso_r1 válida no Astra, com a calibração do Fable nula e reprovação independente dele; notas 6,2–7,5). A MAT-37r v2 aplica os itens das telas; a 49d refaz a cena de Entrar | `juizes/rodadas/DEVOLUCAO_37r.md`
-- [~ t_5fc82bb8] P-29 MAT-49e (casco, todas as páginas): marca gigante do rodapé alinhada ao fio da direita e botões primários com 56 px (o `.alvo-toque` do index.css derrubava para 44 px; achado na revisão R1 da 49c) | depois da 49b g2
+- [~ t_5fc82bb8] P-29 MAT-49e (casco, todas as páginas): marca gigante do rodapé alinhada ao fio da direita, botões e campos com 56 px, SAMU na lista de siglas, ícone do menu alinhado e rodapé compacto em /app/* (o `.alvo-toque` do index.css derrubava para 44 px; achado na revisão R1 da 49c) | depois da 49b g2
 
 - [x] P-30 Ferramentas do líder corrigidas em 11/11: `captura/capturar.mjs` e `cdp.mjs` capturam a 2× (antes 1×, e a regra comum pede 2×; testado na 36r-A: innerWidth 390 igual, recortes 810×1688); `rodada/rodada.py` não reprova mais por recibo anterior às capturas que ele mesmo refaz. Avisado aos 5 cartões em curso | sem SHA (staging)
 
 - [D coordenador] P-31 Encerrar Vite e Chrome de cartões encerrados (5276/9376 t_f21ee109, 5282/9382 t_26066f02, 5281/9381 t_fdba5bed). O taskkill do líder esperou aprovação no host e expirou; o pedido foi feito pela campainha
+
+- [~ t_aee1c551] P-32 Hoje, Sessão e Madrugada: volta 1 dos juízes cegos (hoje_r1 válida nos 2; sessao_r1 válida no Fable; notas 6,5–7,4, REPROVA volta 1). A MAT-49b v2 aplica os itens das telas e a 49e cuida do casco (ícone do menu e rodapé compacto em /app/*) | `juizes/rodadas/DEVOLUCAO_49b.md`
 
 ## Dados ligados às telas novas (religados e soltos em 11/11)
 
