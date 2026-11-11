@@ -9,6 +9,8 @@ import { spawnSync } from 'node:child_process'
 const AUTOR_NOME = 'Daniel Macedo'
 const AUTOR_EMAIL = 'danielmacedosilva11@gmail.com'
 const LIMITE_TITULO = 72
+// Único merge aceito: 2 pais e título com um destes prefixos (autor e committer = Daniel).
+const PREFIXOS_MERGE = ['Traz o int/refazer', 'Integra o int/refazer']
 
 function erro(mensagem) {
   process.stderr.write(`erro: ${mensagem}\n`)
@@ -66,20 +68,30 @@ const commits = gitOk(
 const reprovacoes = []
 
 for (const sha of commits) {
-  // Nome, e-mail e pais numa linha cada; a mensagem inteira (%B) vem por último.
+  // Autor (nome, e-mail), committer (nome, e-mail) e pais numa linha cada; a mensagem
+  // inteira (%B) vem por último.
   const dados = gitOk(
-    ['show', '-s', '--format=%an%n%ae%n%P%n%B', sha],
+    ['show', '-s', '--format=%an%n%ae%n%cn%n%ce%n%P%n%B', sha],
     `o git não leu o commit ${sha}`,
   )
-  const [nome, email, pais, ...mensagem] = dados.split('\n')
+  const [nome, email, nomeCommitter, emailCommitter, pais, ...mensagem] = dados.split('\n')
   const titulo = (mensagem[0] ?? '').trim()
   const regras = []
 
-  if (nome !== AUTOR_NOME || email !== AUTOR_EMAIL) regras.push('autor')
+  const quantidadePais = pais.trim().split(/\s+/).filter(Boolean).length
+  const merge = quantidadePais > 1
+  const mergeAceito =
+    quantidadePais === 2 && PREFIXOS_MERGE.some((prefixo) => titulo.startsWith(prefixo))
 
-  const merge = pais.trim().split(/\s+/).filter(Boolean).length > 1
+  if (nome !== AUTOR_NOME || email !== AUTOR_EMAIL) {
+    regras.push('autor')
+  } else if (mergeAceito && (nomeCommitter !== AUTOR_NOME || emailCommitter !== AUTOR_EMAIL)) {
+    // O committer só é conferido nos merges aceitos.
+    regras.push('autor')
+  }
+
   if (merge) {
-    regras.push('merge')
+    if (!mergeAceito) regras.push('merge')
   } else {
     const arquivos = gitOk(
       ['diff-tree', '--root', '--no-commit-id', '-r', '--name-only', sha],
@@ -91,7 +103,7 @@ for (const sha of commits) {
   if (titulo === '') {
     regras.push('título vazio')
   } else {
-    if ([...titulo].length > LIMITE_TITULO) regras.push('título longo')
+    if (!mergeAceito && [...titulo].length > LIMITE_TITULO) regras.push('título longo')
     if (!/^\p{Lu}/u.test(titulo)) regras.push('maiúscula')
   }
 

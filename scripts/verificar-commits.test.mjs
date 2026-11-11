@@ -216,6 +216,93 @@ test('13. merge reprova em merge', (t) => {
   assert.match(saida.stderr, / merge: Junta o lado\n$/)
 })
 
+// Prepara duas linhas divergentes (principal e lado) prontas para um merge sem conflito.
+function prepararDivergencia(r, ramos = ['lado']) {
+  for (const ramo of ramos) {
+    r.git(['checkout', '-q', '-b', ramo, r.base])
+    r.alterar(`${ramo}.txt`)
+    r.commitar(`Muda o ${ramo}`)
+  }
+  r.git(['checkout', '-q', 'principal'])
+  r.alterar('principal.txt')
+  r.commitar('Muda o principal')
+}
+
+for (const titulo of ['Traz o int/refazer para o ramo do cartão', 'Integra o int/refazer no ramo']) {
+  test(`13a. merge com 2 pais e título "${titulo}" passa`, (t) => {
+    const r = criarRepo(t)
+    prepararDivergencia(r)
+    r.git(['merge', '-q', '--no-ff', '-m', titulo, 'lado'])
+    const saida = r.verificar(`${r.base}..HEAD`)
+    assert.equal(saida.status, 0, saida.stderr)
+    assert.equal(saida.stdout, `OK: 3 commits verificados em ${r.base}..HEAD\n`)
+  })
+}
+
+test('13b. merge aceito com título acima de 72 pontos de código passa', (t) => {
+  const r = criarRepo(t)
+  const titulo = 'Traz o int/refazer ' + 'x'.repeat(60)
+  assert.ok([...titulo].length > 72)
+  prepararDivergencia(r)
+  r.git(['merge', '-q', '--no-ff', '-m', titulo, 'lado'])
+  const saida = r.verificar(`${r.base}..HEAD`)
+  assert.equal(saida.status, 0, saida.stderr)
+})
+
+test('13c. merge com outro título reprova em merge', (t) => {
+  const r = criarRepo(t)
+  prepararDivergencia(r)
+  r.git(['merge', '-q', '--no-ff', '-m', 'Integra o outro ramo', 'lado'])
+  const saida = r.verificar(`${r.base}..HEAD`)
+  assert.equal(saida.status, 1)
+  assert.deepEqual(regras(saida.stderr), ['merge'])
+  assert.match(saida.stderr, / merge: Integra o outro ramo\n$/)
+})
+
+test('13d. octopus de 3 pais com título aceito reprova em merge', (t) => {
+  const r = criarRepo(t)
+  prepararDivergencia(r, ['lado', 'outro'])
+  r.git(['merge', '-q', '--no-ff', '-m', 'Traz o int/refazer em octopus', 'lado', 'outro'])
+  const pais = r.git(['show', '-s', '--format=%P', 'HEAD']).split(' ')
+  assert.equal(pais.length, 3)
+  const saida = r.verificar(`${r.base}..HEAD`)
+  assert.equal(saida.status, 1)
+  assert.deepEqual(regras(saida.stderr), ['merge'])
+})
+
+test('13e. merge aceito com autor errado reprova em autor', (t) => {
+  const r = criarRepo(t)
+  prepararDivergencia(r)
+  r.git(['merge', '-q', '--no-ff', '-m', 'Traz o int/refazer para o ramo', 'lado'], {
+    autor: { nome: 'Outra Pessoa', email: DANIEL.email },
+    committer: DANIEL,
+  })
+  const saida = r.verificar(`${r.base}..HEAD`)
+  assert.equal(saida.status, 1)
+  assert.deepEqual(regras(saida.stderr), ['autor'])
+})
+
+test('13f. merge aceito com committer errado reprova em autor', (t) => {
+  const r = criarRepo(t)
+  prepararDivergencia(r)
+  r.git(['merge', '-q', '--no-ff', '-m', 'Integra o int/refazer no ramo', 'lado'], {
+    autor: DANIEL,
+    committer: { nome: 'Robô', email: 'robo@exemplo.invalid' },
+  })
+  const saida = r.verificar(`${r.base}..HEAD`)
+  assert.equal(saida.status, 1)
+  assert.deepEqual(regras(saida.stderr), ['autor'])
+})
+
+test('13g. merge com prefixo aceito em minúscula reprova em merge e maiúscula', (t) => {
+  const r = criarRepo(t)
+  prepararDivergencia(r)
+  r.git(['merge', '-q', '--no-ff', '-m', 'traz o int/refazer para o ramo', 'lado'])
+  const saida = r.verificar(`${r.base}..HEAD`)
+  assert.equal(saida.status, 1)
+  assert.deepEqual(regras(saida.stderr), ['merge', 'maiúscula'])
+})
+
 test('14. intervalo sem commits passa com 0 commits', (t) => {
   const r = criarRepo(t)
   const saida = r.verificar('HEAD..HEAD')
