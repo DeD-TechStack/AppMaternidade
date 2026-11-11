@@ -17,7 +17,8 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 ## Visual novo (Campo de mel)
 
 - [x] P-01 Passo 0: direção aprovada por Daniel (F1 + F2 + F3), `FINAL/DESIGN.md` e ativos gerados | registro 9157f12 e 6c2fb7e
-- [~ t_836284e3] P-02 MAT-49a base | g1 t_fdba5bed (arquivada 11/11 com aval do coordenador) escreveu o código; a g2 t_836284e3 (head d65dfeb) está em revisão | depois: revisão, 2 juízes e ff em `int/refazer`
+- [~ t_836284e3] P-02 MAT-49a base | g1 t_fdba5bed arquivada; g2 t_836284e3 revisão R1 pediu mudanças só no medidor (6 defeitos, comentário 349), voltou ao executor
+- [D coordenador] P-25 Soltar já 49b, 49c, 36r-A e 37r sobre o head d65dfeb, sem esperar a correção do medidor (campainha t_0467668a); o script que fazia isso ficou esperando aprovação no host e expirou | depois: revisão, 2 juízes e ff em `int/refazer`
 - [x] P-03 Base mostrada a Daniel cedo: `DIRECOES_20261111/GALERIA_BASE.html` aberta e prévia ao vivo em http://127.0.0.1:5281/sistema | 11/11 10h50, sem SHA
 - [~ t_26066f02] P-04 MAT-49b Hoje, Sessão e Madrugada | depende de P-02
 - [~ t_e1d0eaa8] P-05 MAT-36r-B: as 6 páginas de texto | depende de P-02
