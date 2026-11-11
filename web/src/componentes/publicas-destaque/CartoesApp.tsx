@@ -1,11 +1,22 @@
 import { Check, Moon } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { COMO_FUNCIONA_DESTAQUE as CF, CUIDADO_DESTAQUE as CC } from '../../conteudo/publicas-destaque.ts'
 import { DESENVOLVIMENTO_DESTAQUE as DD } from '../../conteudo/desenvolvimento/pagina.ts'
 import './publicas-destaque.css'
 
-// As telas de exemplo das páginas públicas, em HTML de verdade (DESIGN.md 4, CartaoFlutuante), com a
-// família fictícia: Juliana (mãe), Bruno, Carla e a bebê Heloísa. Vão dentro de um CartaoFlutuante.
-// Os botões desenhados aqui são parte da tela de exemplo, não controles desta página.
+// As telas de exemplo das páginas públicas, em HTML de verdade (DESIGN.md 4), com a família fictícia:
+// Juliana (mãe), Bruno, Carla e a bebê Heloísa. Cada página tem no máximo um CartaoFlutuante (girado,
+// com a sombra flutuante); as outras telas vão num CartaoPlano, no fluxo, sem giro e com a sombra de
+// cartão. Os botões desenhados aqui são parte da tela de exemplo, não controles desta página.
+
+/** O cartão de app no fluxo do painel: branco, raio 20, `--sombra-cartao`, sem giro nem sobra. */
+export function CartaoPlano({ children, className }: { children: ReactNode; className?: string }) {
+  return (
+    <div className={['pd-cartao-plano', className].filter(Boolean).join(' ')} data-cartao-plano="">
+      {children}
+    </div>
+  )
+}
 
 interface PropsLinha {
   inicial?: string
@@ -29,18 +40,6 @@ function Linha({ inicial, bebe = false, nome, detalhe, hora }: PropsLinha) {
       </span>
       {hora ? <span className="pd-linha-hora">{hora}</span> : null}
     </li>
-  )
-}
-
-/** Como funciona, abertura: a última mamada, como o Hoje mostra. */
-export function CartaoUltimaMamada() {
-  const c = CF.ultimaMamada
-  return (
-    <div className="pd-cartao">
-      <p className="pd-cartao-rotulo">{c.rotulo}</p>
-      <p className="pd-cartao-hora">{c.hora}</p>
-      <p className="pd-cartao-detalhe">{c.detalhe}</p>
-    </div>
   )
 }
 
@@ -153,29 +152,27 @@ export function CartaoConviteComPrazo() {
   )
 }
 
-/** Cuidado compartilhado: uma soneca começada por um adulto e encerrada por outro. */
-export function CartaoSoneca() {
-  const c = CC.soneca
+/**
+ * Cuidado compartilhado: a tarde da Heloísa, com quem fez cada registro e a que horas (a soneca que
+ * Bruno começou e Carla encerrou), e a nota que Carla deixou para quem chega.
+ */
+export function CartaoTarde() {
+  const c = CC.tarde
+  const nota = CC.nota
   return (
     <div className="pd-cartao">
-      <p className="pd-cartao-rotulo">{c.titulo}</p>
-      <p className="pd-cartao-hora">{c.duracao}</p>
+      <p className="pd-cartao-titulo">{c.titulo}</p>
+      <p className="pd-cartao-detalhe pd-mt-2">{c.rotulo}</p>
       <ul className="pd-linhas">
-        <Linha inicial={c.inicio.quem[0]} nome={c.inicio.quem} detalhe={c.inicio.rotulo} />
-        <Linha inicial={c.fim.quem[0]} nome={c.fim.quem} detalhe={c.fim.rotulo} />
+        {c.itens.map((item) => (
+          <Linha key={item.hora} inicial={item.inicial} nome={item.quem} detalhe={item.oQue} hora={item.hora} />
+        ))}
       </ul>
-    </div>
-  )
-}
-
-/** Cuidado compartilhado: a nota em destaque para quem chega. */
-export function CartaoNota() {
-  const c = CC.nota
-  return (
-    <div className="pd-cartao">
-      <p className="pd-cartao-rotulo">{c.rotulo}</p>
-      <p className="pd-nota-texto">{c.texto}</p>
-      <p className="pd-cartao-detalhe">{c.autor}</p>
+      <div className="pd-nota">
+        <p className="pd-cartao-rotulo">{nota.rotulo}</p>
+        <p className="pd-nota-texto">{nota.texto}</p>
+        <p className="pd-cartao-detalhe">{nota.autor}</p>
+      </div>
     </div>
   )
 }

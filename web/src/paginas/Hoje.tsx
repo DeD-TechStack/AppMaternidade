@@ -52,6 +52,7 @@ function itensDesde(estado: EstadoPrototipo, agora: number): ItemDesde[] {
       texto: evento.texto,
       detalhe: comPapel(evento.pessoa),
       quando: formatarHora(evento.quando),
+      hora: formatarHora(evento.quando),
     },
   }))
   const sessao = estado.sessao
@@ -64,6 +65,7 @@ function itensDesde(estado: EstadoPrototipo, agora: number): ItemDesde[] {
         texto: `${ROTULO_SESSAO[sessao.tipo]} em andamento`,
         detalhe: `${sessao.pessoa}, desde ${formatarHora(sessao.inicio)}`,
         quando: formatarDuracao(agora - sessao.inicio),
+        hora: formatarHora(sessao.inicio),
         emAndamento: true,
       },
     })
@@ -78,6 +80,7 @@ function itensDesde(estado: EstadoPrototipo, agora: number): ItemDesde[] {
       texto: `Nota: ${minusculaInicial(nota.texto)}`,
       detalhe: comPapel(nota.autor),
       quando: nota.hora,
+      hora: nota.hora,
     },
   ]
 }
@@ -94,9 +97,9 @@ function textoDaUltimaMamada(estado: EstadoPrototipo): string | undefined {
 
 /**
  * O Hoje (DESIGN.md 4, telas do app): o título com "Heloísa, 3 meses" em itálico, o cartão de mel da
- * sessão em andamento, "Desde que você saiu", os números do dia e "Últimos"; a barra Registrar fica fora
+ * sessão em andamento, os números do dia, "Desde que você saiu" e "Últimos"; a barra Registrar fica fora
  * do <main>, fixa embaixo. Na madrugada, um botão redondo de mel "Iniciar mamada" entra logo depois do
- * cartão (na metade de baixo da tela do celular). Em 1440 tudo fica em duas colunas (7 + 5).
+ * cartão (menor quando outra sessão está em andamento) e o histórico vem antes dos números.
  */
 export function Hoje() {
   const { estado, dispatch } = usePrototipo()
@@ -167,13 +170,71 @@ export function Hoje() {
     { rotulo: 'Sono', valor: formatarSono(estado.resumo.sonoMin) },
   ]
 
-  // Na madrugada, sem mamada em andamento, o botão redondo entra logo depois do cartão. Em 1440 a
-  // posição de cada bloco na grade de 12 muda com ele: o botão ao lado do cartão, a lista embaixo.
-  const noite = estado.madrugada && estado.sessao?.tipo !== 'mamada'
+  // Na madrugada, sem mamada em andamento, o botão redondo entra logo depois do cartão. Com outra sessão
+  // em andamento (o sono), a sessão é o destaque: o círculo encolhe e vai para baixo dela.
+  const madrugada = estado.madrugada
+  const noite = madrugada && estado.sessao?.tipo !== 'mamada'
+  const comSessao = estado.sessao !== null
+
+  const blocoCartao = (className: string) => (
+    <CartaoSessao ref={cartao} sessao={estado.sessao} agora={agora} aoEncerrar={encerrar} className={className} />
+  )
+  const blocoDesde = (className?: string) => <DesdeQueVoceSaiu itens={itensDesde(estado, agora)} className={className} />
+  const blocoResumo = (className?: string) => <ResumoDoDia itens={numeros} className={className} />
+  const blocoUltimos = (className?: string) => <Ultimos itens={ultimos} className={className} />
+
+  // A grade das duas versões: de dia, o cartão à esquerda e a área da lista à direita, que abre com os
+  // números do dia em Literata grande e segue com o histórico; "Últimos" fica embaixo do cartão. Tudo em
+  // linhas com fio fino, sem cartões brancos.
+  const dia = (
+    <div className="cm-area mt-6 grid grid-cols-1 gap-10 lg:mt-10 lg:grid-cols-12 lg:items-start lg:gap-x-8 lg:gap-y-12">
+      {blocoCartao('lg:col-span-6 lg:col-start-1 lg:row-start-1')}
+      <div data-area-lista="" className="flex flex-col gap-10 lg:col-span-6 lg:col-start-7 lg:row-span-2 lg:row-start-1">
+        {blocoResumo()}
+        {blocoDesde()}
+      </div>
+      {blocoUltimos('lg:col-span-6 lg:col-start-1 lg:row-start-2')}
+    </div>
+  )
+
+  // Madrugada: o histórico sobe para logo depois do botão (no celular, a primeira linha aparece antes da
+  // dobra), e os números vêm depois dele.
+  // No celular a barra fixa começa em 763 px (844 de altura): 16 px sob o título e 20 px entre os blocos
+  // (antes 24 e 32, 32 px a menos acima do histórico) para a primeira linha inteira terminar acima dela.
+  const madrugadaComSessao = (
+    <div className="cm-area mt-4 grid grid-cols-1 gap-5 lg:mt-10 lg:grid-cols-12 lg:items-start lg:gap-x-8 lg:gap-y-12">
+      {blocoCartao('lg:col-span-8 lg:col-start-1 lg:row-start-1')}
+      {noite ? (
+        <BotaoIniciarMamada
+          compacto
+          aoIniciar={() => iniciarSessao('mamada')}
+          ultima={textoDaUltimaMamada(estado)}
+          className="lg:col-span-4 lg:col-start-9 lg:row-start-2"
+        />
+      ) : null}
+      {blocoDesde('lg:col-span-8 lg:col-start-1 lg:row-start-2')}
+      {blocoResumo('lg:col-span-4 lg:col-start-9 lg:row-start-1 lg:self-center')}
+      {blocoUltimos('lg:col-span-8 lg:col-start-1 lg:row-start-3')}
+    </div>
+  )
+
+  const madrugadaSemSessao = (
+    <div className="cm-area mt-6 grid grid-cols-1 gap-8 lg:mt-10 lg:grid-cols-12 lg:items-start lg:gap-x-8 lg:gap-y-12">
+      {blocoCartao('lg:col-span-7 lg:col-start-1 lg:row-start-1')}
+      <BotaoIniciarMamada
+        aoIniciar={() => iniciarSessao('mamada')}
+        ultima={textoDaUltimaMamada(estado)}
+        className="lg:col-span-5 lg:col-start-8 lg:row-start-1 lg:self-center"
+      />
+      {blocoDesde('lg:col-span-7 lg:col-start-1 lg:row-span-2 lg:row-start-2')}
+      {blocoResumo('lg:col-span-5 lg:col-start-8 lg:row-start-2')}
+      {blocoUltimos('lg:col-span-5 lg:col-start-8 lg:row-start-3')}
+    </div>
+  )
 
   return (
     <>
-      <main ref={principal} className="pb-10 text-[17px] leading-[25px]" data-tela="hoje">
+      <main ref={principal} className="pb-12 text-[17px] leading-[25px]" data-tela="hoje">
         <TituloDaTela
           titulo="Hoje"
           linha={`${NOME_BEBE}, ${IDADE_BEBE}`}
@@ -184,46 +245,7 @@ export function Hoje() {
           }
         />
 
-        <div className="cm-area mt-6 grid grid-cols-1 gap-6 lg:mt-10 lg:grid-cols-12 lg:items-start lg:gap-8">
-          <CartaoSessao
-            ref={cartao}
-            sessao={estado.sessao}
-            agora={agora}
-            aoEncerrar={encerrar}
-            className="lg:col-span-7 lg:col-start-1 lg:row-start-1"
-          />
-
-          {noite ? (
-            <BotaoIniciarMamada
-              aoIniciar={() => iniciarSessao('mamada')}
-              ultima={textoDaUltimaMamada(estado)}
-              className="lg:col-span-5 lg:col-start-8 lg:row-start-1 lg:self-center"
-            />
-          ) : null}
-
-          <DesdeQueVoceSaiu
-            itens={itensDesde(estado, agora)}
-            className={
-              noite
-                ? 'lg:col-span-7 lg:col-start-1 lg:row-span-2 lg:row-start-2'
-                : 'lg:col-span-5 lg:col-start-8 lg:row-start-1'
-            }
-          />
-
-          <ResumoDoDia
-            itens={numeros}
-            className={
-              noite
-                ? 'pt-2 lg:col-span-5 lg:col-start-8 lg:row-start-2 lg:pt-0'
-                : 'pt-2 lg:col-span-7 lg:col-start-1 lg:row-start-2 lg:pt-4'
-            }
-          />
-
-          <Ultimos
-            itens={ultimos}
-            className={noite ? 'lg:col-span-5 lg:col-start-8 lg:row-start-3' : 'lg:col-span-5 lg:col-start-8 lg:row-start-2'}
-          />
-        </div>
+        {!madrugada ? dia : noite && !comSessao ? madrugadaSemSessao : madrugadaComSessao}
       </main>
 
       <BarraRegistrar

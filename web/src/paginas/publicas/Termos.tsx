@@ -1,6 +1,7 @@
-import { PaginaSimples } from './PaginaSimples.tsx'
+import { PaginaDeLeitura } from '../../componentes/publicas-texto/PaginaDeLeitura.tsx'
+import { PAGINAS_DE_TEXTO } from '../../conteudo/publicas-texto.ts'
 
-/** /termos: os termos de uso. Conteúdo no cartão da página. */
+/** /termos: o que é o site, quem pode usar, conta, família, comunidade e exclusão. */
 export function Termos() {
-  return <PaginaSimples titulo="Termos de uso" />
+  return <PaginaDeLeitura pagina={PAGINAS_DE_TEXTO.termos} />
 }

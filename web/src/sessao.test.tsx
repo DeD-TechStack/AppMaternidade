@@ -160,6 +160,35 @@ describe('Sessão: o cartão do cronômetro', () => {
     expect(screen.getByRole('button', { name: 'Descartar' })).toBeTruthy()
   })
 
+  it('com a nota aberta, Descartar é botão de texto na mesma fileira do Salvar; o campo não tem alça de redimensionar', () => {
+    const { container } = renderizarRota('/app/sessao')
+    fireEvent.click(screen.getByRole('button', { name: 'Encerrar e anotar' }))
+
+    const nota = screen.getByRole('group', { name: 'Encerrar e anotar' })
+    const salvar = within(nota).getByRole('button', { name: 'Salvar' })
+    const descartar = within(nota).getByRole('button', { name: 'Descartar' })
+    expect(descartar.getAttribute('data-botao')).toBe('texto')
+    expect(descartar.parentElement).toBe(salvar.parentElement)
+    expect([...salvar.parentElement!.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Salvar', 'Cancelar', 'Descartar'])
+    // Nada sobra solto no pé do cartão.
+    expect(cartao(container).querySelector('[data-acoes]')).toBeNull()
+
+    const campo = within(nota).getByRole('textbox', { name: 'Nota' })
+    expect(campo.classList.contains('resize-none')).toBe(true)
+    expect(campo.classList.contains('field-sizing-content')).toBe(true)
+
+    // Descartar dali abre a pergunta, e "Manter" devolve o foco ao Descartar das ações.
+    fireEvent.click(descartar)
+    fireEvent.click(screen.getByRole('button', { name: 'Manter' }))
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Descartar' }))
+  })
+
+  it('o cronômetro tem o recuo óptico: o "1" volta à borda do rótulo e dos botões', () => {
+    renderizarRota('/app/sessao', { estadoInicial: sessaoDe('sono') })
+
+    expect(screen.getByRole('timer', { name: 'Duração da sessão' }).classList.contains('-ml-[0.1em]')).toBe(true)
+  })
+
   it('Esc fecha o painel da nota e devolve o foco a "Encerrar e anotar"', () => {
     renderizarRota('/app/sessao')
     fireEvent.click(screen.getByRole('button', { name: 'Encerrar e anotar' }))
