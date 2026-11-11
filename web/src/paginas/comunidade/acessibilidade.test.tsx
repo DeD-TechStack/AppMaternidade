@@ -18,7 +18,7 @@ async function violacoes(container: HTMLElement): Promise<string[]> {
   return resultado.violations.map((v) => `${v.id}: ${v.help} (${v.nodes.map((n) => n.html.slice(0, 160)).join(' | ')})`)
 }
 
-const CLASSE_DE_ALVO = /(^|\s)(alvo-toque|botao|nav-item)(\s|$)/
+const CLASSE_DE_ALVO = /(^|\s)(alvo-toque|cm-botao|botao|nav-item)(\s|$)/
 
 /** Os controles do conteúdo sem a classe que garante 44 × 44 px (um rótulo com a classe vale para o controle dentro dele). */
 function semAlvoDe44(container: HTMLElement): string[] {
