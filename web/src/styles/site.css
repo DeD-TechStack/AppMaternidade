@@ -374,9 +374,12 @@
     margin-left: auto;
   }
 
+  /* Alvo de 44 x 44 também nos links curtos ("Hoje" media 42,7 px); os longos não mudam. */
   .cm-cab-link {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
+    min-width: 44px;
     min-height: 44px;
     padding: 0 4px;
     border-radius: 6px;

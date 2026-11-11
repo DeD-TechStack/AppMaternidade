@@ -35,7 +35,8 @@
   --cor-rodape: var(--color-mel);
   --cor-sobre-rodape: var(--color-cacau);
   --cor-desativado-fundo: var(--color-areia);
-  --cor-desativado-texto: var(--color-texto-2);
+  /* Oliva tinta sobre areia: ~5,6:1 (o texto-2 sobre areia dava 4,24:1, abaixo do AA). */
+  --cor-desativado-texto: var(--color-oliva-tinta);
 
   --fonte-exibicao: var(--font-titulo);
   --fonte-sb-titulo: var(--font-titulo);
