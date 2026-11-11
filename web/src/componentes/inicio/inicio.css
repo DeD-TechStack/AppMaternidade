@@ -239,9 +239,10 @@
     width: max-content;
   }
 
-  /* Com o vão de 10 px, o terceiro selo aparece uns 30 px antes da borda: a fileira continua. */
+  /* Selos mais justos (vão de 8 px, respiro 12/14, ícone de 20): o terceiro selo aparece uns 40 px
+     antes da borda, a 375 e a 390, e mostra que a fileira continua de lado. */
   .in-selos .cm-selos-lista {
-    gap: 10px;
+    gap: 8px;
   }
 
   .in-selos .cm-selos-lista > li {
@@ -250,8 +251,14 @@
   }
 
   .in-selos .cm-selo {
-    padding-inline: 14px 18px;
+    gap: 8px;
+    padding-inline: 12px 14px;
     font-size: 1rem;
+  }
+
+  .in-selos .cm-selo svg {
+    width: 20px;
+    height: 20px;
   }
 }
 
@@ -520,22 +527,33 @@
   }
 }
 
+/* No celular a primeira coluna precisa caber "Sem metas nem" numa linha (senão o "nem" fica sozinho):
+   as duas colunas de marca ficam justas no texto delas e o respiro encolhe. A quebra é equilibrada. */
 @media (max-width: 479px) {
   .in-tabela-grade {
-    --in-tabela-respiro: 6px;
+    --in-tabela-respiro: 4px;
   }
 
   .in-tabela-grade .cm-painel-oliva {
-    padding-inline: 12px;
+    padding-inline: 10px;
   }
 
   .in-tabela-grade .cm-tabela thead th {
     font-size: 0.875rem;
   }
 
+  .in-tabela-grade .cm-tabela thead th:nth-child(2) {
+    width: calc(8.6em + 2 * var(--in-tabela-respiro));
+  }
+
+  .in-tabela-grade .cm-tabela thead th:nth-child(3) {
+    width: calc(5.6em + 2 * var(--in-tabela-respiro));
+  }
+
   .in-tabela-grade .cm-tabela tbody th {
-    padding-right: 8px;
+    padding-right: 4px;
     font-size: 0.9375rem;
+    text-wrap: balance;
   }
 }
 

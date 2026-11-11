@@ -12,6 +12,10 @@ import { SecaoTurno } from '../componentes/inicio/SecaoTurno.tsx'
 import { FATOS, INICIO } from '../conteudo/textos.ts'
 import { usePrototipo } from '../prototipo/contexto.ts'
 
+// Regra tipográfica, sem mudar o texto: a palavra de uma letra só ("a", "à", "o") fica presa à
+// seguinte por um espaço que não quebra, para nunca sobrar sozinha no fim de uma linha da citação.
+const amarrarMonossilabos = (texto: string) => texto.replace(/(^|\s)(\p{L}) /gu, '$1$2 ')
+
 /**
  * O Início (MAT-49c), na composição F1 "Campo de mel": a abertura com a cena dos três celulares, os
  * números, os selos, a troca de turno, a faixa de cacau da madrugada, a tabela contra o caderno, a
@@ -55,7 +59,7 @@ export function Inicio() {
       <SecaoTabela />
 
       <div className="cm-area in-secao in-citacao">
-        <Citacao texto={INICIO.citacao.texto} autor={INICIO.citacao.autor} />
+        <Citacao texto={amarrarMonossilabos(INICIO.citacao.texto)} autor={INICIO.citacao.autor} />
       </div>
       <DepoimentosInicio id={idDepoimentos} />
 
