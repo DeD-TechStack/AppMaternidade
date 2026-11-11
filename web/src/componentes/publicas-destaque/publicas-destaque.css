@@ -1,0 +1,1349 @@
+/* Peças das páginas Como funciona, Cuidado compartilhado e Desenvolvimento no "Campo de mel"
+   (DESIGN.md 3 e 4). Só tokens e variáveis de uso. Fora de camada de propósito: estas regras ajustam
+   as peças de componentes/campo (que moram na camada components) só dentro destas páginas, sem
+   precisar de seletores mais pesados. Prefixo `pd-`. */
+
+/* Ritmo da página -------------------------------------------------------------------------- */
+.pd-secao {
+  margin-top: var(--cm-entre-secoes);
+}
+
+/* Uma seção que continua a anterior (a explicação e o convite logo depois): metade do respiro. */
+.pd-secao.pd-secao-perto {
+  margin-top: clamp(40px, 2.286vw + 31.086px, 64px);
+}
+
+/* Dentro de uma célula da grade, o painel de campo ocupa a célula. */
+.pd-celula.cm-painel,
+.pd-abertura .cm-painel {
+  width: auto;
+  margin-inline: 0;
+}
+
+/* Abertura --------------------------------------------------------------------------------- */
+.pd-abertura {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 40px;
+  align-items: center;
+  padding-top: clamp(32px, 3.048vw + 20.114px, 64px);
+}
+
+.pd-abertura-texto > .cm-lide {
+  max-width: 36rem;
+}
+
+.pd-abertura-texto > .cm-h1 + .cm-lide {
+  margin-top: 24px;
+}
+
+/* Empilhado: o título encosta no texto (24 px), e a mídia vem 40 px depois. O aviso de saúde desce
+   para depois da mídia, para a tela de verdade subir para a primeira dobra. */
+@media (max-width: 1099px) {
+  .pd-abertura {
+    gap: 24px;
+  }
+
+  .pd-abertura[data-disposicao='lado'] > .pd-abertura-texto,
+  .pd-abertura[data-disposicao='topo'] > .pd-abertura-texto {
+    display: contents;
+  }
+
+  .pd-abertura .pd-abertura-texto > *,
+  .pd-abertura .pd-abertura-texto > .cm-h1 + .cm-lide {
+    margin-top: 0;
+  }
+
+  /* Em "título e texto" o texto não se desmancha na grade: as ações guardam a distância do lide. */
+  .pd-abertura[data-disposicao='titulo-lide'] .pd-abertura-texto > .pd-acoes {
+    margin-top: 24px;
+  }
+
+  .pd-abertura-midia {
+    order: 1;
+    margin-top: 16px;
+  }
+
+  /* O aviso de saúde, depois da mídia, com folga dos dois lados: nunca encosta num título. */
+  .pd-abertura .pd-abertura-texto > .pd-aviso-saude {
+    order: 2;
+    margin-top: 16px;
+    margin-bottom: 8px;
+  }
+}
+
+.pd-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 28px;
+  margin-top: 32px;
+}
+
+/* Os CTAs destas páginas quebram linha quando o texto não cabe (fonte raiz a 200%, zoom de 200%):
+   o `.cm-botao` da base não quebra (`white-space: nowrap`) e o rótulo saía da pílula. A altura
+   acompanha o texto; numa linha só, os 56 px (44 no link) e o desenho da pílula continuam iguais. */
+.pd-acoes > .cm-botao,
+.pd-faixa .cm-botao {
+  height: auto;
+  max-width: 100%;
+  padding-block: 14px;
+  text-align: center;
+  text-wrap: balance;
+  white-space: normal;
+}
+
+/* O link: a largura soma os 2 × 4 px da margem negativa do anel de foco (sem isso quebrava mesmo
+   cabendo), e o texto quebrado fica à esquerda, como o resto da coluna. */
+.pd-acoes > .cm-botao-texto {
+  max-width: calc(100% + 8px);
+  padding-block: 10px;
+  text-align: start;
+}
+
+/* O link secundário tem cara de link: sublinhado sempre, alvo de 44 px. */
+.pd-link.cm-botao-texto {
+  text-decoration-color: currentColor;
+  text-underline-offset: 7px;
+}
+
+.pd-link.cm-botao-texto:hover {
+  text-decoration-thickness: 2.5px;
+}
+
+@media (min-width: 1100px) {
+  .pd-abertura[data-disposicao='lado'] {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: 48px;
+  }
+
+  .pd-abertura[data-disposicao='topo'] {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: 40px 48px;
+    align-items: start;
+  }
+
+  .pd-abertura[data-disposicao='topo'] > .pd-abertura-titulo {
+    grid-column: 1 / -1;
+  }
+
+  .pd-abertura[data-disposicao='topo'] > .pd-abertura-texto {
+    align-self: center;
+  }
+
+  .pd-abertura[data-disposicao='titulo-lide'] {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: 48px;
+    align-items: end;
+    padding-top: 40px;
+  }
+
+  .pd-abertura[data-disposicao='titulo-lide'] .cm-lide {
+    margin-top: 0;
+  }
+}
+
+/* A cena em retrato (512 × 768): recorte 4:5 preso à base, para o aparelho e o pedestal ficarem
+   inteiros e a primeira dobra caber; no celular, quadrado. */
+.pd-cena-retrato .cm-cena-midia img {
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  object-position: 50% 100%;
+}
+
+/* No celular, a tela de mel do aparelho sumia no mel do fundo. A cena ganha um passe-partout de
+   oliva (o material dos pedestais), que dá chão e contraste à mídia, e um recorte quadrado com o
+   aparelho e o pedestal inteiros. Nada flutua por cima (sem a mancha da sombra do cartão). */
+@media (max-width: 767px) {
+  .pd-cena-retrato.cm-painel {
+    padding: 10px;
+    background-color: var(--color-oliva);
+    background-image: none;
+  }
+
+  .pd-cena-retrato .cm-cena-midia {
+    border-radius: calc(var(--radius-painel) - 10px);
+  }
+
+  .pd-cena-retrato .cm-cena-midia img {
+    aspect-ratio: 1 / 1;
+    object-position: 50% 70%;
+  }
+}
+
+/* Cabeça de seção: o título de duas linhas e, ao lado, um texto curto -------------------------- */
+.pd-cabeca {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  margin-bottom: clamp(32px, 1.524vw + 26.057px, 48px);
+}
+
+.pd-cabeca p {
+  max-width: 34rem;
+  margin: 0;
+}
+
+@media (min-width: 900px) {
+  .pd-cabeca {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: 48px;
+    align-items: end;
+  }
+}
+
+/* A cabeça junta: o texto logo abaixo do título, numa coluna só, e o painel logo depois (24 px). A
+   cabeça e os passos se leem como um bloco. */
+.pd-cabeca.pd-cabeca-junta {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.pd-cabeca.pd-cabeca-junta p {
+  max-width: 40rem;
+}
+
+/* Duas colunas: o título à esquerda e o texto à direita --------------------------------------- */
+.pd-duas {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+}
+
+.pd-duas-texto > * + * {
+  margin-top: 20px;
+}
+
+.pd-duas-texto > p {
+  margin-bottom: 0;
+}
+
+@media (min-width: 900px) {
+  .pd-duas {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: 48px;
+  }
+}
+
+/* Passos (Como funciona) --------------------------------------------------------------------- */
+.pd-passos {
+  display: grid;
+  gap: clamp(72px, 2.286vw + 63.086px, 96px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pd-passo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 32px;
+  align-items: center;
+}
+
+.pd-passo-texto > * {
+  margin: 0;
+}
+
+.pd-passo-texto > .cm-h3 {
+  margin-top: 20px;
+}
+
+.pd-passo-texto > .cm-lide {
+  max-width: 34rem;
+  margin-top: 16px;
+}
+
+.pd-passo-numero {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 56px;
+  height: 56px;
+  border: 1.5px solid currentColor;
+  border-radius: var(--radius-pilula);
+  font-family: var(--fonte-titulo);
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: lining-nums;
+}
+
+/* A tela de cada passo fica dentro do painel, alinhada à coluna do texto no celular. Só o cartão
+   flutuante da página (a madrugada) sobra 32 px pela borda de baixo (DESIGN.md 4: 24 a 48). */
+.pd-passo-midia {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.pd-passo-midia:has(> .cm-flutuante) {
+  align-self: end;
+  margin-bottom: calc(-1 * var(--cm-respiro-painel) - 32px);
+}
+
+@media (min-width: 900px) {
+  .pd-passo {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: 48px;
+  }
+
+  .pd-passo-midia {
+    justify-content: center;
+  }
+}
+
+/* O cartão flutuante no fluxo do painel (em vez de preso a um canto). */
+.pd-em-fluxo.cm-flutuante {
+  position: relative;
+  inset: auto;
+  width: min(380px, 100%);
+}
+
+/* O cartão de app no fluxo: sem giro, sem sobra, a sombra curta de cartão. */
+.pd-cartao-plano {
+  box-sizing: border-box;
+  width: min(380px, 100%);
+  padding: 20px 24px;
+  border-radius: var(--radius-cartao);
+  background-color: var(--color-branco);
+  color: var(--color-cacau);
+  box-shadow: var(--sombra-cartao);
+}
+
+/* Duas telas, uma embaixo da outra, sem se cobrir. */
+.pd-pilha {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(400px, 100%);
+}
+
+.pd-pilha > .pd-cartao-plano {
+  width: 100%;
+}
+
+/* Cartões de interface (HTML de verdade, com a família fictícia) ---------------------------- */
+/* Cada tela de exemplo é um contêiner: as linhas se reorganizam pela largura do próprio cartão (ver
+   o @container abaixo), não pela janela. A largura do cartão vem de fora (célula, coluna, `width`),
+   nunca do conteúdo. Palavra que não cabe quebra em vez de vazar. */
+.pd-cartao {
+  container-type: inline-size;
+  overflow-wrap: anywhere;
+}
+
+.pd-cartao > * {
+  margin: 0;
+}
+
+.pd-cartao-rotulo {
+  font-size: 0.9375rem;
+  line-height: 1.375rem;
+  font-weight: 500;
+}
+
+.pd-cartao-titulo {
+  font-family: var(--fonte-titulo);
+  font-size: clamp(22px, 0.381vw + 20.514px, 26px);
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+.pd-cartao-hora {
+  margin-top: 4px;
+  font-family: var(--fonte-titulo);
+  font-size: clamp(34px, 0.952vw + 30.286px, 44px);
+  line-height: 1.1;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.pd-cartao-detalhe {
+  margin-top: 6px;
+  color: var(--color-texto-2);
+  font-size: 0.9375rem;
+  line-height: 1.375rem;
+}
+
+.pd-cartao-cabeca {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pd-selo-ok {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-pilula);
+  background-color: var(--color-mel);
+  color: var(--color-cacau);
+}
+
+.pd-selo-ok svg {
+  width: 22px;
+  height: 22px;
+}
+
+.pd-linhas {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pd-linha {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 8px 0;
+  border-top: 1px solid var(--cor-fio-suave);
+}
+
+.pd-linha:last-child {
+  padding-bottom: 0;
+}
+
+.pd-linha-texto {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.pd-linha-texto > span {
+  display: block;
+}
+
+.pd-linha-nome {
+  font-size: 1.0625rem;
+  line-height: 1.5rem;
+  font-weight: 500;
+}
+
+.pd-linha-detalhe {
+  color: var(--color-texto-2);
+  font-size: 0.9375rem;
+  line-height: 1.375rem;
+}
+
+.pd-linha-hora {
+  flex: none;
+  font-size: 1.0625rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Cartão estreito (a 195 px, ou a 390 com a fonte raiz a 200%): a coluna do texto sumia entre o
+   avatar e a hora, e o nome passava por cima do horário. Abaixo de 15rem de largura útil (em rem,
+   acompanha a fonte), a linha quebra: avatar e hora em cima, o texto numa linha inteira embaixo. O
+   cabeçalho com selo também quebra. A 390 e a 1440 comuns os cartões têm 16,9rem ou mais e ficam
+   como estão. */
+@container (max-width: 15rem) {
+  .pd-linha {
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+
+  .pd-linha-texto {
+    order: 3;
+    flex: 1 1 100%;
+  }
+
+  .pd-linha-hora {
+    margin-left: auto;
+  }
+
+  .pd-cartao-cabeca {
+    flex-wrap: wrap;
+  }
+}
+
+.pd-avatar {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-pilula);
+  background-color: var(--color-areia);
+  color: var(--color-cacau);
+  font-family: var(--fonte-titulo);
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.pd-avatar[data-bebe] {
+  background-color: var(--color-mel);
+}
+
+/* O botão desenhado no cartão: parte da tela de exemplo, não um controle desta página. */
+.pd-botao-falso {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  margin-top: 16px;
+  border-radius: var(--radius-pilula);
+  background-color: var(--color-cacau);
+  color: var(--color-papel);
+  font-size: 1.0625rem;
+  font-weight: 500;
+}
+
+/* Sessão em andamento dentro do cartão: o bloco de mel do Hoje. */
+.pd-andamento {
+  margin-top: 16px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background-color: var(--color-mel);
+  color: var(--color-cacau);
+}
+
+.pd-andamento > * {
+  margin: 0;
+}
+
+.pd-andamento .pd-cartao-hora {
+  margin-top: 2px;
+}
+
+.pd-andamento .pd-cartao-detalhe {
+  color: var(--color-cacau);
+}
+
+.pd-nota {
+  margin-top: 14px;
+  padding: 14px 0 0;
+  border-top: 1px solid var(--cor-fio-suave);
+}
+
+.pd-nota > * {
+  margin: 0;
+}
+
+.pd-nota-texto {
+  margin-top: 4px;
+  font-family: var(--fonte-titulo);
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-style: italic;
+  font-weight: 500;
+}
+
+.pd-cartao > .pd-mt-20 {
+  margin-top: 20px;
+}
+
+.pd-cartao .pd-mt-2 {
+  margin-top: 2px;
+}
+
+/* O cartão da madrugada: o cartão da noite, com o botão redondo de mel. */
+.pd-cartao-noite .cm-flutuante-cartao {
+  background-color: var(--color-noite-cartao);
+  color: var(--color-papel);
+}
+
+.pd-cartao-noite .pd-cartao-detalhe {
+  color: var(--color-noite-2);
+}
+
+.pd-cartao-noite .pd-cartao-cabeca svg {
+  width: 22px;
+  height: 22px;
+  color: var(--color-mel);
+}
+
+/* O rótulo tem 24 px de folga até a borda do círculo, em 390 e em 1440. */
+.pd-botao-redondo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 176px;
+  height: 176px;
+  margin: 24px auto 4px;
+  padding: 24px;
+  border-radius: var(--radius-pilula);
+  background-color: var(--color-mel);
+  color: var(--color-cacau);
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: center;
+}
+
+/* Cena de cacau (Desenvolvimento): a mesma moldura da cena de estúdio, no painel escuro. */
+.pd-cena-cacau .cm-cena-midia img {
+  aspect-ratio: 3 / 2;
+}
+
+/* O registro do tummy time vem logo abaixo da cena, no fluxo, na largura dela: não cobre nenhum
+   aparelho e não deixa um canto vazio. A partir de 600 px, numa linha só, como um registro da lista. */
+.pd-cartao-legenda.pd-cartao-plano {
+  width: 100%;
+  margin-top: 16px;
+}
+
+@media (min-width: 600px) {
+  .pd-cartao-legenda .pd-cartao {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 20px;
+  }
+
+  .pd-cartao-legenda .pd-cartao .pd-cartao-hora,
+  .pd-cartao-legenda .pd-cartao .pd-cartao-detalhe {
+    margin-top: 0;
+  }
+}
+
+/* Cuidado compartilhado: o painel da família --------------------------------------------------- */
+.pd-familia {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 32px;
+  align-items: center;
+  /* A figura não traz as margens do navegador: o painel fica centrado, logo abaixo da abertura. */
+  margin-top: clamp(32px, 0.762vw + 29.029px, 40px);
+  margin-bottom: 0;
+  /* Um pouco mais baixo que o painel comum, para o painel inteiro caber na primeira dobra. */
+  padding-block: clamp(24px, 1.524vw + 18.057px, 40px);
+}
+
+/* A tela Família ocupa a coluna da esquerda; a da direita é o convite e, embaixo, a avó do carrinho
+   de pé num chão de oliva. As duas colunas têm a mesma altura: o painel não guarda canto vazio. */
+.pd-familia-tela.pd-cartao-plano {
+  width: 100%;
+  max-width: 520px;
+}
+
+/* No celular, o desenho vem ao lado do convite, numa linha baixa: o painel não vira um bloco alto
+   com o desenho sozinho. */
+.pd-familia-lado {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 16px;
+  align-items: end;
+}
+
+.pd-familia-lado > .pd-familia-desenho {
+  order: -1;
+}
+
+.pd-familia-convite.cm-flutuante {
+  align-self: center;
+  width: 100%;
+}
+
+.pd-familia-desenho .cm-ilustracao {
+  width: auto;
+  max-height: clamp(160px, 22.857vw + 70.857px, 400px);
+  mix-blend-mode: multiply;
+}
+
+/* No largo, como na F1: a tela Família, o convite no meio e a avó de pé no chão, à direita, na
+   altura toda do painel. */
+@media (min-width: 900px) {
+  .pd-familia {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: 40px;
+    align-items: center;
+  }
+
+  .pd-familia-lado {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 32px;
+    align-self: stretch;
+    align-items: center;
+  }
+
+  .pd-familia-lado > .pd-familia-desenho {
+    order: 0;
+    align-self: stretch;
+  }
+}
+
+/* No celular, a linha do bebê sai e as linhas ficam mais baixas: o painel cabe junto da abertura. */
+@media (max-width: 599px) {
+  .pd-familia [data-linha-bebe] {
+    display: none;
+  }
+
+  .pd-familia.cm-painel {
+    margin-top: 40px;
+  }
+
+  .pd-familia .pd-linha {
+    min-height: 48px;
+    padding-block: 6px;
+  }
+
+  .pd-familia .pd-botao-falso {
+    margin-top: 12px;
+  }
+
+  /* O desenho fica na largura dele; o convite, sem o selo, ganha o resto da linha. */
+  .pd-familia-lado {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .pd-familia-convite .cm-flutuante-cartao {
+    padding: 14px 18px;
+  }
+
+  .pd-familia-convite .pd-selo-ok {
+    display: none;
+  }
+}
+
+/* O chão de um desenho de traço: uma faixa de oliva onde ele se apoia (DESIGN.md: oliva é material,
+   como os pedestais das cenas). O desenho fica preso embaixo, de pé nela. */
+.pd-chao {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.pd-chao::after {
+  content: '';
+  align-self: stretch;
+  height: 12px;
+  margin-top: -10px;
+  border-radius: var(--radius-pilula);
+  background-color: var(--color-oliva);
+}
+
+/* Três blocos curtos, lado a lado -------------------------------------------------------------- */
+/* Só a margem de baixo: a de cima é a da seção e as laterais são as da área. */
+.pd-tres {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 32px;
+  margin-bottom: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pd-tres > li > * {
+  margin: 0;
+}
+
+.pd-tres-icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-pilula);
+  background-color: var(--color-mel);
+  color: var(--color-cacau);
+}
+
+.pd-tres-icone svg {
+  width: 26px;
+  height: 26px;
+}
+
+.pd-tres .cm-h4 {
+  margin-top: 20px;
+}
+
+.pd-tres .cm-corpo {
+  margin-top: 10px;
+  color: var(--cor-texto-2);
+}
+
+/* O exemplo de cada bloco: a linha que a tela Família vai mostrar, com a pessoa e o que mudou. */
+.pd-tres .pd-tres-exemplo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+  padding: 12px 16px;
+  border-radius: var(--radius-cartao);
+  background-color: var(--color-branco);
+  box-shadow: var(--sombra-cartao);
+}
+
+@media (min-width: 900px) {
+  .pd-tres {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 48px;
+  }
+
+  .pd-tres > li + li {
+    padding-left: 48px;
+    border-left: 1px solid var(--cor-fio-suave);
+  }
+}
+
+/* Tabela de texto num painel de oliva ----------------------------------------------------------- */
+/* `separate` (sem espaço) para a faixa do cabeçalho ter as pontas arredondadas. */
+.pd-tabela {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-family: var(--fonte-texto);
+}
+
+.pd-tabela caption {
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+/* 16 px à esquerda em todas as células: as colunas alinham com os rótulos da faixa do cabeçalho. */
+.pd-tabela th,
+.pd-tabela td {
+  padding: 18px 24px 18px 16px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-papel) 30%, transparent);
+  text-align: left;
+  vertical-align: top;
+}
+
+/* O cabeçalho é um rótulo, não um título: Outfit 14/20 em mel, numa faixa de cacau (mel sobre cacau,
+   9,17:1), bem diferente dos nomes das linhas logo abaixo. */
+.pd-tabela thead th {
+  padding: 10px 24px 10px 16px;
+  border-bottom: 0;
+  background-color: var(--color-cacau);
+  color: var(--color-mel);
+  font-family: var(--fonte-texto);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.pd-tabela thead th:first-child {
+  border-start-start-radius: var(--radius-pilula);
+  border-end-start-radius: var(--radius-pilula);
+}
+
+.pd-tabela thead th:last-child {
+  border-start-end-radius: var(--radius-pilula);
+  border-end-end-radius: var(--radius-pilula);
+}
+
+.pd-tabela tbody tr:first-child > * {
+  padding-top: 24px;
+}
+
+/* Os nomes das linhas (a fonte, o papel): Literata 700 em branco (5,07:1 na oliva), contra o corpo
+   em Outfit 400 cor de papel (4,68:1). */
+.pd-tabela tbody th {
+  width: 24%;
+  color: var(--color-branco);
+  font-family: var(--fonte-titulo);
+  font-size: clamp(18px, 0.381vw + 16.514px, 22px);
+  line-height: 1.35;
+  font-weight: 700;
+}
+
+.pd-tabela tbody td {
+  font-size: 1.125rem;
+  line-height: 1.6875rem;
+  font-weight: 400;
+}
+
+.pd-tabela tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.pd-tabela-depois {
+  max-width: 44rem;
+  margin: 32px 0 0;
+}
+
+/* No celular a tabela vira uma lista de blocos: o cabeçalho da linha e, abaixo, cada célula com o
+   nome da coluna. Sem rolagem para o lado. */
+@media (max-width: 767px) {
+  .pd-tabela thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .pd-tabela tbody tr {
+    display: block;
+    padding: 20px 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-papel) 30%, transparent);
+  }
+
+  .pd-tabela tbody tr:first-child {
+    padding-top: 0;
+  }
+
+  .pd-tabela tbody tr:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .pd-tabela tbody th,
+  .pd-tabela tbody td,
+  .pd-tabela tbody tr:first-child > * {
+    display: block;
+    width: auto;
+    padding: 0;
+    border: 0;
+  }
+
+  .pd-tabela tbody td {
+    margin-top: 12px;
+  }
+
+  .pd-tabela tbody td::before {
+    content: attr(data-coluna);
+    display: block;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 600;
+  }
+}
+
+/* O painel de areia: quem fez cada registro e a passagem de turno ----------------------------- */
+.pd-registro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 40px;
+  align-items: center;
+}
+
+.pd-registro-texto > div + div {
+  margin-top: 40px;
+}
+
+/* O texto corrido no corpo do site (18/27, 400): os títulos mandam, o texto acompanha. */
+.pd-registro-texto p {
+  max-width: 34rem;
+  margin: 12px 0 0;
+}
+
+.pd-registro-cartao.pd-cartao-plano {
+  justify-self: center;
+  width: min(440px, 100%);
+}
+
+@media (min-width: 900px) {
+  .pd-registro {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: 48px;
+  }
+}
+
+/* Desenvolvimento -------------------------------------------------------------------------------- */
+/* Seletor de fase no painel de areia: no celular, abas, fase e o que vale para todas, nessa ordem;
+   no largo, as abas em coluna com o que vale para todas abaixo delas, e a fase à direita. */
+.pd-seletor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    'abas'
+    'fase'
+    'lateral';
+  gap: 28px;
+}
+
+.pd-seletor > .pd-abas {
+  grid-area: abas;
+}
+
+.pd-seletor > .pd-fase {
+  grid-area: fase;
+  margin-top: 0;
+}
+
+.pd-seletor-lateral {
+  grid-area: lateral;
+  padding-top: 28px;
+  border-top: 1px solid var(--cor-fio-suave);
+}
+
+.pd-seletor-lateral > .cm-h4 {
+  margin: 0;
+}
+
+@media (min-width: 1100px) {
+  .pd-seletor {
+    grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      'abas fase'
+      'lateral fase';
+    gap: 40px 48px;
+  }
+
+  .pd-seletor > .pd-abas {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pd-seletor > .pd-abas > .pd-aba {
+    justify-content: flex-start;
+    min-height: 52px;
+    padding-inline: 24px;
+    text-align: start;
+  }
+
+  .pd-seletor-lateral {
+    padding-top: 32px;
+  }
+}
+
+/* Uma lista de verdade: o recuo traz o marcador junto (a base zera o list-style das listas). */
+.pd-lista {
+  margin: 16px 0 0;
+  padding: 0 0 0 1.25em;
+  list-style: disc outside;
+}
+
+.pd-lista > li {
+  padding-left: 4px;
+}
+
+.pd-lista > li + li {
+  margin-top: 12px;
+}
+
+.pd-lista > li::marker {
+  color: currentColor;
+}
+
+/* Seletor de fase: as abas em pílula, numa grade de colunas iguais que se ajusta ao espaço medido em
+   rem (acompanha a fonte raiz): 2 colunas no celular comum, 3 no meio e 1 coluna no largo. Com a
+   fonte a 200% ou a 195 px, as colunas caem para 1 (o `min(100%, …)` nunca passa da largura), e o
+   rótulo quebra linha dentro da pílula em vez de vazar para a vizinha. */
+.pd-abas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+  gap: 8px;
+}
+
+@media (min-width: 600px) {
+  .pd-abas {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  }
+}
+
+.pd-aba {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 18px;
+  padding-block: 8px;
+  text-align: center;
+  border: 1.5px solid var(--color-cacau);
+  border-radius: var(--radius-pilula);
+  background-color: transparent;
+  color: var(--color-cacau);
+  font-size: 1rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  white-space: normal;
+  cursor: pointer;
+  /* Como no cm-botao: só a escala do toque anima; a cor muda na hora. */
+  transition-property: scale;
+  transition-duration: 120ms;
+  transition-timing-function: ease-out;
+}
+
+.pd-aba:active {
+  scale: 0.96;
+}
+
+.pd-aba:hover {
+  background-color: color-mix(in srgb, var(--color-cacau) 8%, transparent);
+}
+
+.pd-aba[aria-selected='true'] {
+  background-color: var(--color-cacau);
+  color: var(--color-papel);
+}
+
+.pd-aba:focus-visible {
+  outline: 2px solid var(--color-cacau);
+  outline-offset: 3px;
+}
+
+.pd-fase {
+  margin-top: 32px;
+  padding: clamp(20px, 1.143vw + 15.543px, 32px);
+  border-radius: var(--radius-cartao);
+  background-color: var(--color-branco);
+  color: var(--color-cacau);
+  box-shadow: var(--sombra-cartao);
+}
+
+.pd-fase > .cm-h3 {
+  margin: 0;
+}
+
+.pd-fase .pd-lista {
+  margin-top: 20px;
+}
+
+.pd-fase:focus-visible {
+  outline: 2px solid var(--color-cacau);
+  outline-offset: 3px;
+}
+
+@media (max-width: 479px) {
+  .pd-aba {
+    padding-inline: 14px;
+  }
+}
+
+/* No celular a fase fica direto sobre a areia, sem a caixa branca: a coluna de texto ganha largura. */
+@media (max-width: 599px) {
+  .pd-fase {
+    padding: 0;
+    border-radius: 0;
+    background-color: transparent;
+    box-shadow: none;
+  }
+}
+
+/* Fontes de um item: os nomes com link e a data da consulta. */
+.pd-fontes {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--cor-fio-suave);
+}
+
+.pd-fontes > p {
+  margin: 0;
+}
+
+.pd-fontes-titulo {
+  font-size: 0.9375rem;
+  line-height: 1.375rem;
+  font-weight: 600;
+}
+
+.pd-fontes-lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 20px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pd-fonte {
+  display: inline-flex;
+  align-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  color: inherit;
+  font-size: 0.9375rem;
+  line-height: 1.375rem;
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+.pd-fonte:hover {
+  text-decoration-thickness: 2px;
+}
+
+.pd-fontes-data {
+  margin-top: 4px;
+  font-size: 0.9375rem;
+  line-height: 1.375rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* A faixa de idade fica 24 px abaixo do resumo, separada por um fio: não encosta no parágrafo. */
+.pd-cabeca .pd-faixa-idade {
+  margin-top: 24px;
+  padding-top: 12px;
+  border-top: 1px solid var(--cor-fio-suave);
+  font-weight: 500;
+}
+
+/* Tummy time: o texto e, ao lado, o desenho num painel de mel. */
+.pd-tummy {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 40px;
+  align-items: start;
+}
+
+.pd-partes > div + div {
+  margin-top: 36px;
+}
+
+.pd-partes p {
+  max-width: 40rem;
+  margin: 12px 0 0;
+}
+
+/* O desenho (a babá brincando com o bebê no chão) de pé no chão de oliva, ocupando a largura do
+   painel: sem vão de mel em volta. */
+.pd-tummy-desenho.cm-painel {
+  align-self: start;
+  padding-bottom: clamp(24px, 2.286vw + 15.086px, 48px);
+}
+
+.pd-tummy-desenho .cm-ilustracao {
+  width: 100%;
+  max-width: 420px;
+  mix-blend-mode: multiply;
+}
+
+.pd-tummy-tabela {
+  margin-top: clamp(48px, 3.048vw + 36.114px, 80px);
+}
+
+.pd-tummy-fim {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+  margin-top: clamp(48px, 3.048vw + 36.114px, 80px);
+}
+
+.pd-tummy-fim .pd-fontes {
+  margin-top: 0;
+}
+
+@media (min-width: 1100px) {
+  .pd-tummy,
+  .pd-tummy-fim {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: 48px;
+  }
+
+  .pd-tummy-desenho {
+    position: sticky;
+    top: calc(var(--cm-cabecalho) + 32px);
+  }
+
+  .pd-tummy-fim .pd-fontes {
+    padding-top: 0;
+    padding-left: 48px;
+    border-top: 0;
+    border-left: 1px solid var(--cor-fio-suave);
+  }
+}
+
+/* Marcos: as quatro partes em duas colunas, com as fontes abaixo. */
+.pd-marcos .pd-partes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 36px 48px;
+}
+
+.pd-marcos .pd-partes > div + div {
+  margin-top: 0;
+}
+
+.pd-marcos .pd-fontes {
+  margin-top: 40px;
+}
+
+@media (min-width: 900px) {
+  .pd-marcos .pd-partes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* O aviso de saúde: uma linha honesta numa caixa de fio fino. */
+.pd-aviso-saude {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  max-width: 34rem;
+  margin: 32px 0 0;
+  padding: 16px 20px;
+  border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
+  border-radius: var(--radius-cartao);
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
+.pd-aviso-saude svg {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
+}
+
+/* Faixa de cacau: duas colunas e, abaixo, os números ------------------------------------------- */
+.pd-faixa {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+}
+
+.pd-faixa-lado > * {
+  margin: 0;
+}
+
+.pd-faixa-lado > * + * {
+  margin-top: 24px;
+}
+
+.pd-faixa-numeros {
+  margin-top: clamp(40px, 2.286vw + 31.086px, 64px);
+  padding-top: clamp(24px, 1.524vw + 18.057px, 40px);
+  border-top: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+}
+
+@media (min-width: 900px) {
+  .pd-faixa {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: 48px;
+    align-items: end;
+  }
+}
+
+/* A faixa do fim de Como funciona: o convite e o botão à esquerda, os três números empilhados à
+   direita, com fios entre eles. A metade da direita tem conteúdo; o botão fica no texto. */
+.pd-faixa-com-numeros .pd-faixa-lado .cm-botao {
+  margin-top: 32px;
+}
+
+.pd-faixa-com-numeros .pd-faixa-numeros {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.pd-faixa-com-numeros .cm-numeros-item {
+  justify-content: flex-start;
+  padding: 20px 0;
+  border-top: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+}
+
+.pd-faixa-com-numeros .cm-numeros-item + .cm-numeros-item {
+  border-left: 0;
+}
+
+.pd-faixa-com-numeros .cm-numeros-item:last-child {
+  border-bottom: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+}
+
+.pd-faixa-com-numeros .cm-numeros-linha {
+  justify-content: flex-start;
+}
+
+@media (min-width: 900px) {
+  .pd-faixa-com-numeros {
+    grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+    gap: 64px;
+    align-items: center;
+  }
+}

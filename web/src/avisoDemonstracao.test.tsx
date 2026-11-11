@@ -6,10 +6,11 @@ import { AVISO_DEMONSTRACAO } from './conteudo/textos.ts'
 import { criarEstadoInicial, type EstadoPrototipo } from './prototipo/estado.ts'
 import { renderizarRota } from './teste/renderizarRota.tsx'
 
-// O aviso de demonstração no Campo de mel (MAT-49a, DESIGN.md 4, Rodape): uma linha honesta no rodapé
-// (`[data-rodape]`), só quando falta uma variável do banco, nunca dentro do <main> e nunca numa imagem;
-// no máximo um por página. As telas do app (Hoje, Sessão) trazem a etiqueta "Protótipo com dados de
-// exemplo" na abertura e não repetem o aviso no rodapé.
+// O aviso de demonstração no Campo de mel (MAT-49a, DESIGN.md 4, Rodape): uma linha honesta, só quando falta
+// uma variável do banco, nunca dentro do <main>, de um cartão ou de uma imagem; no máximo um por página. No
+// site público ele mora no rodapé (`[data-rodape]`). As telas do app (Hoje, Sessão), redesenhadas no Campo de
+// mel, não têm mais a etiqueta "Protótipo com dados de exemplo": o aviso fica numa linha própria depois do
+// conteúdo da tela, fora do <main> (o rodapé da casca só o traz no site público).
 
 const TEXTO = 'Demonstração sem banco: nada do que você registra aqui é salvo. Ao recarregar a página, tudo volta ao começo.'
 const SELETOR = '[data-aviso="demonstracao"]'
@@ -89,7 +90,7 @@ describe('aviso de demonstração: uma linha no rodapé do site público', () =>
   })
 })
 
-describe('aviso de demonstração: as telas do app têm a etiqueta, e não o aviso', () => {
+describe('aviso de demonstração: as telas do app têm um aviso fora do conteúdo, e não a etiqueta', () => {
   const telas: Array<[string, string, () => EstadoPrototipo]> = [
     ['o Hoje', '/app/hoje', claro],
     ['o Hoje (madrugada)', '/app/hoje', madrugada],
@@ -99,23 +100,43 @@ describe('aviso de demonstração: as telas do app têm a etiqueta, e não o avi
   ]
 
   for (const [tela, caminho, estado] of telas) {
-    for (const [banco, url, chave] of BANCOS) {
-      it(`${tela}, ${banco}: uma etiqueta na lateral da abertura e nenhum aviso na página`, () => {
+    for (const [banco, url, chave, aparece] of BANCOS) {
+      it(`${tela}, ${banco}: ${aparece ? 'um aviso' : 'nenhum aviso'}, depois do conteúdo e fora do main, e nenhuma etiqueta`, () => {
         definirBanco(url, chave)
         const { container } = renderizarRota(caminho, { estadoInicial: estado() })
 
-        const etiquetas = [...container.querySelectorAll<HTMLElement>('.sb-abertura .sb-etiqueta')]
-        expect(etiquetas.map((e) => e.textContent)).toEqual([ETIQUETA])
-        expect(etiquetas[0].tagName).toBe('SPAN')
-        expect(etiquetas[0].closest('ul.sb-abertura-lateral')).not.toBeNull()
-        expect(etiquetas[0].parentElement!.tagName).toBe('LI')
-        expect(container.querySelector(SELETOR)).toBeNull()
-        expect(screen.queryByText(TEXTO)).toBeNull()
+        const avisos = container.querySelectorAll<HTMLElement>(SELETOR)
+        expect(avisos).toHaveLength(aparece ? 1 : 0)
+        expect(container.querySelector('.sb-abertura')).toBeNull()
+        for (const etiqueta of container.querySelectorAll('.sb-etiqueta')) expect(etiqueta.textContent).not.toBe(ETIQUETA)
+        expect(screen.queryByText(ETIQUETA)).toBeNull()
+        expect(document.body.textContent).not.toMatch(/protótipo|dados de exemplo/i)
+        if (!aparece) {
+          expect(screen.queryByText(TEXTO)).toBeNull()
+          return
+        }
+        const aviso = avisos[0]
+        expect(aviso.textContent).toBe(TEXTO)
+        expect(aviso.tagName).toBe('P')
+        // Fora do conteúdo da tela: nem no <main>, nem num cartão, nem na barra Registrar, nem no rodapé.
+        expect(aviso.closest('main, [data-andamento], .rounded-cartao, [data-barra-registrar], [data-rodape], figure, picture')).toBeNull()
+        // Depois do conteúdo: o <main> vem antes dele na ordem do documento.
+        const main = container.querySelector('main')!
+        expect(main.compareDocumentPosition(aviso) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
       })
     }
   }
 
-  it('a região status da confirmação continua única e não contém aviso nem etiqueta', () => {
+  it('no máximo um aviso por página, em todas as rotas (públicas e do app), sem banco', () => {
+    definirBanco('', '')
+    for (const caminho of [...PUBLICAS, '/app/hoje', '/app/sessao']) {
+      const { container, unmount } = renderizarRota(caminho)
+      expect(container.querySelectorAll(SELETOR).length, caminho).toBeLessThanOrEqual(1)
+      unmount()
+    }
+  })
+
+  it('a região status da confirmação continua única e não contém aviso nem etiqueta; o aviso da página segue único', () => {
     definirBanco('', '')
     const { container } = renderizarRota('/app/hoje')
     fireEvent.click(screen.getByRole('button', { name: 'Registrar fralda de Heloísa' }))
@@ -125,7 +146,8 @@ describe('aviso de demonstração: as telas do app têm a etiqueta, e não o avi
     expect(regioes).toHaveLength(1)
     expect(regioes[0].textContent).not.toContain('Demonstração sem banco')
     expect(regioes[0].textContent).not.toContain(ETIQUETA)
-    expect(container.querySelector(SELETOR)).toBeNull()
+    expect(regioes[0].querySelector(SELETOR)).toBeNull()
+    expect(container.querySelectorAll(SELETOR)).toHaveLength(1)
   })
 })
 
@@ -181,8 +203,9 @@ describe('aviso de demonstração: acessibilidade (axe-core)', () => {
         definirBanco('', '')
         const { container } = renderizarRota(caminho, { estadoInicial: estado() })
         await screen.findByRole('heading', { level: 1 })
-        expect(screen.getByText(ETIQUETA)).toBeTruthy()
-        expect(container.querySelector(SELETOR)).toBeNull()
+        expect(screen.queryByText(ETIQUETA)).toBeNull()
+        expect(container.querySelectorAll(SELETOR)).toHaveLength(1)
+        expect(container.querySelector(`main ${SELETOR}`)).toBeNull()
         expect(document.documentElement.hasAttribute('data-tema')).toBe(tema === 'madrugada')
         expect(await violacoes(container)).toEqual([])
       })

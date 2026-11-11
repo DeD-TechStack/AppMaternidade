@@ -30,11 +30,11 @@ export function tituloDaAba(titulo: string): string {
  * formulário. O título da aba continua o de `TITULOS`.
  */
 export const MANCHETES = {
-  entrar: ['Volte à rotina', 'que vocês dividem.'],
-  criarConta: ['Divida a rotina', 'do bebê com carinho.'],
-  recuperarAcesso: ['Esqueceu a senha?', 'A gente te ajuda.'],
+  entrar: ['Volte à rotina', 'da família.'],
+  criarConta: ['Divida a rotina', 'com carinho.'],
+  recuperarAcesso: ['Esqueceu a senha?', 'A gente ajuda.'],
   redefinirSenha: ['Senha nova,', 'rotina de volta.'],
-  contaExcluida: ['Conta excluída.', 'Foi bom ter você.'],
+  contaExcluida: ['Conta excluída.', 'Até a próxima.'],
   comecar: ['Vamos começar', 'pelo seu nome.'],
 } as const
 
@@ -178,7 +178,7 @@ export const CONTA = {
   exportar: {
     titulo: 'Seus dados',
     frase:
-      'Baixe um arquivo com os seus dados, em JSON. Quem é responsável recebe a família inteira; os outros papéis recebem os próprios dados.',
+      'Baixe um arquivo com os seus dados, para guardar. Quem é responsável recebe a família inteira; os outros papéis recebem os próprios dados.',
     botao: 'Baixar meus dados',
     sucesso: 'Arquivo baixado.',
   },

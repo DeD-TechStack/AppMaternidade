@@ -492,7 +492,7 @@ describe('madrugada', () => {
     await act(async () => {
       await roteador.navigate('/')
     })
-    await screen.findByRole('heading', { level: 1, name: /turno/ })
+    await screen.findByRole('heading', { level: 1, name: /rotina do bebê/ })
     expect(document.documentElement.hasAttribute('data-tema')).toBe(false)
 
     // O modo também desligou: ao voltar ao Hoje, o botão está solto.

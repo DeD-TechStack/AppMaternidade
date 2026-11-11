@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { act, fireEvent, screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { COLUNAS_DO_RODAPE, ITENS_DO_CABECALHO } from '../componentes/casca/textos.ts'
@@ -129,6 +131,37 @@ describe('cabeçalho da área logada', () => {
     const cabecalho = container.querySelector<HTMLElement>('header[data-cabecalho]')!
     expect(within(cabecalho).queryByRole('link', { name: 'Criar conta' })).toBeNull()
     expect(within(cabecalho).queryByRole('link', { name: 'Entrar' })).toBeNull()
+  })
+})
+
+describe('alvos da casca na madrugada (DESIGN.md 8)', () => {
+  const css = readFileSync(join(process.cwd(), 'src', 'styles', 'campo.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
+  const regras = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({ seletor: m[1].trim(), corpo: m[2] }))
+  const daMadrugada = regras.filter((r) => /:root\[data-tema='madrugada'\]/.test(r.seletor))
+
+  const ALVOS = ['.cm-marca', '.cm-cab-link', '.cm-cab-entrar', '.sb-cab-menu', '.cm-cab-criar', '.cm-cab-madrugada', '.cm-rodape-link']
+
+  it('cada alvo da casca tem regra só da madrugada com 56px de altura', () => {
+    for (const alvo of ALVOS) {
+      const regra = daMadrugada.find(
+        (r) => r.seletor.split(',').some((s) => s.trim() === `:root[data-tema='madrugada'] ${alvo}`) && /min-height:\s*56px/.test(r.corpo),
+      )
+      expect(regra, alvo).toBeDefined()
+    }
+  })
+
+  it('os botões quadrados (menu e lua) também têm 56px de largura', () => {
+    for (const alvo of ['.sb-cab-menu', '.cm-cab-madrugada']) {
+      const regra = daMadrugada.find(
+        (r) => r.seletor.split(',').some((s) => s.trim() === `:root[data-tema='madrugada'] ${alvo}`) && /min-width:\s*56px/.test(r.corpo),
+      )
+      expect(regra, alvo).toBeDefined()
+    }
+  })
+
+  it('nenhuma regra da madrugada muda font-size nem line-height', () => {
+    expect(daMadrugada.length).toBeGreaterThan(0)
+    for (const r of daMadrugada) expect(r.corpo, r.seletor).not.toMatch(/font-size|line-height/)
   })
 })
 

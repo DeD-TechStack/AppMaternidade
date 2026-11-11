@@ -235,7 +235,7 @@ export function PaginaConta() {
 
   return (
     <MolduraLogada>
-      <h1 ref={titulo} tabIndex={-1} className="cm-h2 alvo-foco">
+      <h1 ref={titulo} tabIndex={-1} className="cm-h1 alvo-foco wrap-anywhere">
         {TITULOS.conta}
       </h1>
       <p className="cm-lide mt-3 wrap-anywhere text-[var(--cor-texto-2)]">{CONTA.resumo(conta.nome, conta.email)}</p>
@@ -276,6 +276,7 @@ export function PaginaConta() {
               <Campo
                 rotulo={CONTA.perfil.nome}
                 autoComplete="name"
+                tamanho="app"
                 valor={nome}
                 aoMudar={(valor) => {
                   setNome(valor)
@@ -284,12 +285,20 @@ export function PaginaConta() {
                 erro={erroNome ?? (campoDoPerfil === 'nome' && erroDoPerfil ? textoDoErro(erroDoPerfil) : null)}
                 refEntrada={nomeRef}
               />
-              <Campo rotulo={CONTA.perfil.email} tipo="email" valor={conta.email} aoMudar={() => undefined} somenteLeitura />
+              <Campo
+                rotulo={CONTA.perfil.email}
+                tipo="email"
+                valor={conta.email}
+                aoMudar={() => undefined}
+                somenteLeitura
+                tamanho="app"
+              />
               <SeletorFuso
                 rotulo={CONTA.perfil.fuso}
                 valor={fuso}
                 aoMudar={setFuso}
                 guardado={conta.fuso}
+                tamanho="app"
                 erro={campoDoPerfil === 'fuso' && erroDoPerfil ? textoDoErro(erroDoPerfil) : null}
                 refEntrada={fusoRef}
               />
@@ -319,7 +328,7 @@ export function PaginaConta() {
                   </Fragment>
                 ))}
               </p>
-              <button type="button" className={BOTAO_SECUNDARIO} onClick={() => void copiarId()}>
+              <button type="button" className={BOTAO_SECUNDARIO} data-tamanho="app" onClick={() => void copiarId()}>
                 {CONTA.id.botao}
               </button>
             </div>
@@ -341,7 +350,7 @@ export function PaginaConta() {
                   refResumo={resumoDaExportacao}
                 />
               ) : null}
-              <button type="button" disabled={exportacao.enviando} className={BOTAO_SECUNDARIO} onClick={baixarDados}>
+              <button type="button" disabled={exportacao.enviando} className={BOTAO_SECUNDARIO} data-tamanho="app" onClick={baixarDados}>
                 {exportacao.enviando ? COMUM.preparandoArquivo : CONTA.exportar.botao}
               </button>
             </div>
@@ -387,7 +396,7 @@ export function PaginaConta() {
                 type="button"
                 disabled={botaoDesativado}
                 aria-describedby={bloqueadoras.length > 0 ? 'impedimento-exclusao' : undefined}
-                className={BOTAO_SECUNDARIO}
+                className={BOTAO_SECUNDARIO} data-tamanho="app"
                 onClick={() => setAberto(true)}
               >
                 {CONTA.excluir.botao}

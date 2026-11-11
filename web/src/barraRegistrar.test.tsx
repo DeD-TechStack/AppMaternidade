@@ -3,9 +3,9 @@ import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { BarraRegistrar } from './componentes/registro/BarraRegistrar.tsx'
 
-// A barra Registrar de 1 toque (EMENDAS E1): 4 botões numa barra fixa, com o painel (confirmação,
-// escolha de fralda, lista do Mais) acima dela. O jsdom não mede layout: aqui vale o DOM e o
-// comportamento; a geometria (64 px, x, larguras iguais) é do medidor e do CSS.
+// A barra Registrar de 1 toque (EMENDAS E1, redesenho do Campo de mel): 4 botões de 56 px com ícone numa
+// barra fixa, com o cartão flutuante (confirmação, escolha de fralda, lista do Mais) acima dela. O jsdom
+// não mede layout: aqui vale o DOM e o comportamento; a geometria é das capturas.
 
 const NOMES = ['Iniciar sono de Heloísa', 'Iniciar mamada de Heloísa', 'Registrar fralda de Heloísa', 'Mais registros']
 
@@ -49,12 +49,21 @@ const TIPOS = ['Xixi', 'Cocô', 'Ambos']
 const botao = (nome: string) => screen.getByRole('button', { name: nome })
 
 describe('BarraRegistrar: a barra e os 4 botões', () => {
-  it('é um elemento fixo com data-barra-registrar e as classes registro-rapido, barra-registrar e barra-fixa', () => {
+  it('é um elemento fixo com data-barra-registrar e as classes registro-rapido e barra-fixa (a captura a solta por barra-fixa)', () => {
     const { barra, container } = montar()
 
     expect(container.querySelectorAll('[data-barra-registrar]')).toHaveLength(1)
     expect(barra).not.toBeNull()
-    for (const classe of ['registro-rapido', 'barra-registrar', 'barra-fixa']) expect(barra.classList.contains(classe), classe).toBe(true)
+    for (const classe of ['registro-rapido', 'barra-fixa', 'fixed']) expect(barra.classList.contains(classe), classe).toBe(true)
+    // O redesenho saiu das classes antigas da barra.
+    expect([...barra.querySelectorAll('[class]'), barra].flatMap((e) => [...e.classList]).filter((c) => /^ha-|^barra-registrar$/.test(c))).toEqual([])
+  })
+
+  it('tem o respiro do DESIGN.md entre o fio de cima e os botões (12 px no celular, 16 px de 1024 para cima)', () => {
+    const { barra } = montar()
+
+    for (const classe of ['pt-3', 'pb-3', 'lg:pt-4', 'lg:pb-4']) expect(barra.classList.contains(classe), classe).toBe(true)
+    expect(barra.className).not.toContain('pt-[3px]')
   })
 
   it('tem exatamente 4 botões na fileira, Sono, Mamada, Fralda e Mais, com os nomes acessíveis de sempre', () => {
@@ -69,13 +78,29 @@ describe('BarraRegistrar: a barra e os 4 botões', () => {
     expect(botoes.every((b) => b.type === 'button')).toBe(true)
   })
 
-  it('cada botão é um alvo de toque do sistema (classe alvo-toque) e nenhum leva ícone', () => {
+  it('cada botão é um alvo de toque do sistema (alvo-toque), de 56 px (h-14), com um ícone lucide escondido do leitor de tela', () => {
     const { barra } = montar()
 
+    const icones: string[] = []
     for (const b of barra.querySelectorAll('[data-fileira] > button')) {
       expect(b.classList.contains('alvo-toque'), b.outerHTML).toBe(true)
-      expect(b.querySelector('svg'), b.outerHTML).toBeNull()
+      expect(b.classList.contains('h-14'), b.outerHTML).toBe(true)
+      const svg = b.querySelector('svg')!
+      expect(svg.getAttribute('aria-hidden')).toBe('true')
+      icones.push([...svg.classList].find((c) => c.startsWith('lucide-'))!)
     }
+    expect(icones).toEqual(['lucide-moon', 'lucide-milk', 'lucide-droplets', 'lucide-ellipsis'])
+  })
+
+  it('o botão da sessão em andamento fica em mel (data-ativo); sem sessão, nenhum', () => {
+    const ativo = montar({ sessaoAtiva: 'mamada' })
+    expect(botao('Iniciar mamada de Heloísa').hasAttribute('data-ativo')).toBe(true)
+    expect(botao('Iniciar mamada de Heloísa').classList.contains('bg-mel')).toBe(true)
+    expect(botao('Iniciar sono de Heloísa').hasAttribute('data-ativo')).toBe(false)
+    ativo.unmount()
+
+    const { barra } = montar()
+    expect(barra.querySelectorAll('[data-ativo]')).toHaveLength(0)
   })
 
   it('o texto de cada botão fica dentro de um <span>, sem texto solto ao lado de elemento aria-hidden', () => {
@@ -160,13 +185,13 @@ describe('BarraRegistrar: Fralda com 1 toque (E5)', () => {
     expect(within(grupo).getAllByRole('button').map((b) => b.textContent)).toEqual(TIPOS)
   })
 
-  it('(b) as escolhas são alvos de toque do sistema (alvo-toque) e botões de moldura', () => {
+  it('(b) as escolhas são alvos de toque do sistema (alvo-toque) e pílulas de contorno', () => {
     montar({ texto: 'Fralda registrada' })
 
     for (const tipo of TIPOS) {
       const b = botao(tipo)
       expect(b.classList.contains('alvo-toque'), b.outerHTML).toBe(true)
-      expect(b.classList.contains('sb-moldura'), b.outerHTML).toBe(true)
+      expect(b.classList.contains('cm-botao-contorno'), b.outerHTML).toBe(true)
       expect(b.getAttribute('type')).toBe('button')
     }
   })
@@ -491,16 +516,20 @@ describe('BarraRegistrar: a confirmação', () => {
     expect(container.querySelector('[role="status"]')!.contains(document.activeElement)).toBe(false)
   })
 
-  it('o painel e a confirmação ficam num painel flutuante dentro do elemento fixo, depois da fileira no DOM (o Tab chega a eles)', () => {
+  it('o painel e a confirmação ficam num cartão flutuante dentro do elemento fixo, depois da fileira no DOM (o Tab chega a eles)', () => {
     const { barra } = montar({ texto: 'Observação registrada' })
     fireEvent.click(botao('Mais registros'))
 
-    const painel = barra.querySelector('[data-painel]')!
+    const painel = barra.querySelector<HTMLElement>('[data-painel]')!
     const fileira = barra.querySelector('[data-fileira]')!
-    expect(painel.parentElement).toBe(barra)
+    // Os dois são irmãos dentro do miolo posicionado: o painel flutua acima da fileira mesmo quando a
+    // captura de página inteira solta a barra (`.barra-fixa { position: static }`).
+    expect(painel.parentElement).toBe(fileira.parentElement)
+    expect(painel.parentElement!.classList.contains('relative')).toBe(true)
+    expect(barra.contains(painel)).toBe(true)
+    expect(painel.classList.contains('bottom-full')).toBe(true)
     expect(painel.contains(screen.getByRole('status'))).toBe(true)
     expect(painel.contains(screen.getByRole('group', { name: 'Outros registros de Heloísa' }))).toBe(true)
-    expect(fileira.parentElement).toBe(barra)
     expect(fileira.compareDocumentPosition(painel) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
     expect(painel.contains(fileira)).toBe(false)
   })
@@ -746,7 +775,8 @@ describe('BarraRegistrar: fixa ou no fluxo (useBarraFixa)', () => {
         window.dispatchEvent(new Event('resize'))
       })
       expect(barra.classList.contains('barra-fixa')).toBe(false)
-      expect(barra.classList.contains('barra-registrar')).toBe(true)
+      expect(barra.classList.contains('fixed')).toBe(false)
+      expect(barra.classList.contains('registro-rapido')).toBe(true)
       expect(barra.hasAttribute('data-barra-registrar')).toBe(true)
       expect(document.documentElement.style.getPropertyValue('scroll-padding-bottom')).toBe('')
     } finally {

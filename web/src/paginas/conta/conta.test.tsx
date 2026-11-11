@@ -21,6 +21,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  vi.unstubAllEnvs()
   Reflect.deleteProperty(navigator, 'clipboard')
   Reflect.deleteProperty(Element.prototype, 'scrollIntoView')
   Reflect.deleteProperty(URL, 'createObjectURL')
@@ -81,19 +82,32 @@ describe('estrutura da tela', () => {
 })
 
 describe('barra da conta', () => {
-  it('é uma barra fina dentro da casca: sem marca, sem aviso próprio, e quebra a linha quando os controles não cabem', async () => {
-    const { container } = await abrirConta()
+  it('é uma barra fina dentro da casca: sem marca própria, com um só aviso de demonstração, e quebra a linha quando os controles não cabem', async () => {
+    const { container, unmount } = await abrirConta()
 
     // Cabeçalho e rodapé são os da casca: um só de cada, e a tela não desenha outro.
     expect(container.querySelectorAll('header')).toHaveLength(1)
     expect(container.querySelectorAll('footer')).toHaveLength(1)
     expect(container.querySelectorAll('[data-nome-site]')).toHaveLength(1)
-    expect(container.querySelectorAll('[data-aviso="demonstracao"]')).toHaveLength(0)
+    // Em modo memória, UM aviso (o do rodapé não vale no app): acima da barra, fora do <main>.
+    expect(container.querySelectorAll('[data-aviso="demonstracao"]')).toHaveLength(1)
+    expect(container.querySelectorAll('main [data-aviso="demonstracao"]')).toHaveLength(0)
+    unmount()
+
+    // Com o banco (as duas variáveis), nenhum.
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://exemplo.invalid')
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'chave-ficticia')
+    const comBanco = await abrirConta()
+    expect(comBanco.container.querySelectorAll('[data-aviso="demonstracao"]')).toHaveLength(0)
+    comBanco.unmount()
+    vi.unstubAllEnvs()
+    const memoria = await abrirConta()
+    const container2 = memoria.container
 
     // A barra: a navegação "Conta", com o link da Conta, o do protótipo e o Sair, antes do <main>.
     const barra = screen.getByRole('navigation', { name: 'Conta' })
     expect(barra.closest('header')).toBeNull()
-    expect(barra.compareDocumentPosition(container.querySelector('main')!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(barra.compareDocumentPosition(container2.querySelector('main')!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(barra.classList.contains('flex-wrap')).toBe(true)
     expect(barra.classList.contains('justify-between')).toBe(true)
     expect([...barra.querySelectorAll('a, button')].map((filho) => filho.textContent)).toEqual([
@@ -313,7 +327,7 @@ describe('exportação', () => {
 
   it('explica o que cada papel recebe e leva a âncora #exportar no título da seção', async () => {
     await abrirConta()
-    expect(screen.getByText(/^Baixe um arquivo com os seus dados, em JSON\. Quem é responsável recebe a família inteira/)).toBeTruthy()
+    expect(screen.getByText(/^Baixe um arquivo com os seus dados, para guardar\. Quem é responsável recebe a família inteira/)).toBeTruthy()
     expect(screen.getByRole('heading', { level: 2, name: 'Seus dados' }).id).toBe('exportar')
   })
 

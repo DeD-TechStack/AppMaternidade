@@ -1,0 +1,385 @@
+/* Páginas públicas de leitura longa (Regras, Privacidade, Termos, Exclusão, Contato, Sobre).
+   Só valores dos tokens: cores, raios e as duas famílias vêm de tema.css e tokens.css. Classes `pt-*`. */
+@layer components {
+  .pt-pagina {
+    padding-top: clamp(28px, 1.143vw + 23.5px, 40px);
+  }
+
+  /* Título: o nome (h1) e a segunda linha em itálico, no mesmo tamanho (84/88 em 1440, 42/46 em 390). */
+  .pt-cabeca {
+    min-width: 0;
+  }
+
+  /* Palavra curta colada à seguinte (ver `ligarPalavrasCurtas`): a linha não quebra entre as duas. */
+  .pt-junto {
+    white-space: nowrap;
+  }
+
+  .pt-segunda-linha {
+    margin: 0;
+    font-family: var(--fonte-titulo);
+    font-size: clamp(42px, 4vw + 26.4px, 84px);
+    line-height: clamp(46px, 4vw + 30.4px, 88px);
+    font-style: italic;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  /* Grade: no celular empilha na ordem do DOM (título, painel, texto); a partir de 1100, o título corre pela
+     largura toda e, abaixo dele, o texto na coluna da esquerda (70 caracteres) e o painel na da direita. */
+  .pt-grade {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(32px, 2.857vw + 20.857px, 48px);
+    align-items: start;
+  }
+
+  .cm-painel.pt-painel {
+    padding: 24px;
+  }
+
+  /* A ilustração enche a largura do painel: 16:9 no celular (no máximo 200 de altura), 4:3 em tela larga
+     (uns 300 de altura), para todos os painéis terem o mesmo peso. */
+  .pt-ilustracao {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 200px;
+    aspect-ratio: 16 / 9;
+    object-fit: contain;
+  }
+
+  @media (min-width: 1100px) {
+    .pt-grade {
+      grid-template-columns: minmax(0, 49ch) minmax(280px, 34rem);
+      grid-template-rows: auto 1fr;
+      justify-content: space-between;
+      column-gap: 48px;
+    }
+
+    .pt-cabeca {
+      grid-column: 1 / -1;
+      grid-row: 1;
+    }
+
+    .pt-leitura {
+      grid-column: 1;
+      grid-row: 2;
+    }
+
+    .cm-painel.pt-painel {
+      grid-column: 2;
+      grid-row: 2;
+      justify-self: end;
+      width: 100%;
+      max-width: 34rem;
+      padding: 32px;
+    }
+
+    /* 290 de altura: o painel de 8 itens ainda cabe na janela de 900 (para ficar fixo) e, com o painel a 352 px
+       do topo, a primeira tela termina na base do quarto item do índice (a linha de baixo começa em 901). */
+    .pt-ilustracao {
+      height: 290px;
+      max-height: none;
+      aspect-ratio: auto;
+    }
+  }
+
+  /* O painel acompanha a leitura, mas só até onde cabe: a altura máxima é a da janela menos o cabeçalho e
+     48 px (24 em cima, 24 embaixo), e o que passar disso rola dentro do painel. Assim todo link do índice,
+     ao receber o foco por Tab, é rolado para a vista (o navegador rola o painel), em qualquer altura de
+     janela e com texto ampliado. Em janela baixa demais (menos de 560 px) o painel não fica fixo e rola
+     com a página. Ele fica na célula da leitura, então nunca passa por cima do rodapé. */
+  @media (min-width: 1100px) and (min-height: 560px) {
+    .cm-painel.pt-painel {
+      position: sticky;
+      top: calc(var(--cm-cabecalho) + 24px);
+      box-sizing: border-box;
+      max-height: calc(100vh - var(--cm-cabecalho) - 48px);
+      max-height: calc(100dvh - var(--cm-cabecalho) - 48px);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scroll-padding-block: 24px;
+    }
+  }
+
+  /* Índice "Nesta página" */
+  .pt-indice {
+    margin-top: 20px;
+  }
+
+  .pt-indice-rotulo {
+    margin: 0 0 4px;
+    font-family: var(--fonte-texto);
+    font-size: 1rem;
+    line-height: 1.5rem;
+    font-weight: 600;
+  }
+
+  .pt-indice-lista {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Em tela estreita o índice é um <details> fechado: o resumo é uma linha de 44 px com a seta. */
+  .pt-indice-detalhes {
+    border-top: 1px solid var(--cor-fio-suave);
+  }
+
+  .pt-indice-resumo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    box-sizing: border-box;
+    min-height: 48px;
+    font-family: var(--fonte-texto);
+    font-size: 1rem;
+    line-height: 1.5rem;
+    font-weight: 600;
+    list-style: none;
+    cursor: pointer;
+  }
+
+  .pt-indice-resumo::-webkit-details-marker {
+    display: none;
+  }
+
+  .pt-indice-detalhes[open] .pt-indice-seta {
+    transform: rotate(180deg);
+  }
+
+  .pt-indice:has(.pt-indice-detalhes) {
+    margin-top: 12px;
+  }
+
+  .pt-indice-lista > li + li {
+    border-top: 1px solid var(--cor-fio-suave);
+  }
+
+  .pt-indice-link {
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    padding-block: 6px;
+    color: inherit;
+    font-size: 1rem;
+    line-height: 1.375rem;
+    text-decoration-line: underline;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 4px;
+  }
+
+  .pt-indice-link:hover {
+    text-decoration-thickness: 3px;
+  }
+
+  /* Coluna de leitura: Outfit 18/28. O "0" do Outfit é largo (1 ch ≈ 11,8 px, e a letra média ≈ 8,1 px), então
+     70 ch dariam umas 100 letras por linha; 49 ch (uns 580 px) dão as 68 a 72 letras por linha pedidas. */
+  .pt-leitura {
+    max-inline-size: 49ch;
+    font-family: var(--fonte-texto);
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+  }
+
+  .pt-leitura > * + * {
+    margin-top: 24px;
+  }
+
+  .pt-leitura > .cm-lide {
+    max-width: none;
+  }
+
+  .pt-aviso {
+    margin: 0;
+    padding: 16px 20px;
+    border-radius: var(--radius-cartao);
+    background-color: var(--color-areia);
+    color: var(--color-cacau);
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  .pt-leitura > .pt-secao {
+    margin-top: 40px;
+    padding-top: 32px;
+    border-top: 1px solid var(--cor-fio-suave);
+  }
+
+  .pt-leitura > .pt-secao:first-child {
+    margin-top: 0;
+  }
+
+  /* h2 em Literata: 36/42 em 1440 e 24/30 em 390 (o degrau h3 da escala; o h2 de 56 é de página de venda). */
+  .pt-h2,
+  .pt-h3 {
+    margin: 0 0 16px;
+    font-family: var(--fonte-titulo);
+    font-weight: 600;
+    text-wrap: balance;
+  }
+
+  .pt-h2 {
+    font-size: clamp(24px, 1.143vw + 19.543px, 36px);
+    line-height: clamp(30px, 1.143vw + 25.543px, 42px);
+    letter-spacing: -0.01em;
+  }
+
+  .pt-h3 {
+    margin-bottom: 4px;
+    font-size: clamp(20px, 0.381vw + 18.514px, 24px);
+    line-height: clamp(26px, 0.381vw + 24.514px, 30px);
+  }
+
+  /* Texto: Outfit 18/28. */
+  .pt-texto {
+    font-family: var(--fonte-texto);
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+  }
+
+  .pt-texto > * {
+    margin: 0;
+  }
+
+  .pt-texto > * + * {
+    margin-top: 16px;
+  }
+
+  .pt-texto p {
+    text-wrap: pretty;
+    overflow-wrap: break-word;
+  }
+
+  /* Link no meio do texto: alvo de 44 x 44 no mínimo. A caixa cresce 8 px para cima e para baixo (28 de linha
+     + 16 = 44) e a margem negativa devolve os 8 px, para a altura da linha não mudar. */
+  .pt-texto a {
+    display: inline-block;
+    box-sizing: border-box;
+    min-width: 44px;
+    max-width: 100%;
+    min-height: 44px;
+    padding-block: 8px;
+    margin-block: -8px;
+    color: var(--cor-link);
+    line-height: 1.75rem;
+    overflow-wrap: anywhere;
+    text-decoration-line: underline;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 3px;
+  }
+
+  .pt-texto a:hover {
+    text-decoration-thickness: 3px;
+  }
+
+  /* O reset do Tailwind tira os marcadores: aqui voltam (números nas listas ordenadas, bolinhas nas outras),
+     na cor do texto (AA) e com recuo para o marcador ficar à vista. */
+  .pt-texto > .pt-lista {
+    padding-inline-start: 2rem;
+  }
+
+  ol.pt-lista {
+    list-style: decimal outside;
+  }
+
+  ul.pt-lista {
+    list-style: disc outside;
+  }
+
+  .pt-lista > li::marker {
+    color: var(--color-cacau);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .pt-lista > li {
+    padding-inline-start: 0.25rem;
+  }
+
+  .pt-lista > li + li {
+    margin-top: 8px;
+  }
+
+  .pt-titulados p {
+    margin: 0;
+  }
+
+  .pt-titulados > div + div {
+    margin-top: 20px;
+  }
+
+  /* O e-mail sozinho (Contato): em destaque, em Outfit (o "1" de Literata se confunde com o "l"). */
+  .pt-texto .pt-destaque {
+    font-size: clamp(20px, 0.762vw + 17px, 28px);
+    line-height: 1.4;
+    font-weight: 500;
+    overflow-wrap: anywhere;
+  }
+
+  .pt-texto .pt-destaque a {
+    padding-block: 0;
+    margin-block: 0;
+    color: inherit;
+  }
+
+  /* Tabela: legenda, cabeçalhos e linhas; rola dentro da própria região em tela estreita. */
+  .pt-tabela {
+    max-width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--cor-fio-suave);
+    border-radius: var(--radius-cartao);
+    background-color: var(--cor-cartao);
+  }
+
+  .pt-tabela table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  .pt-tabela caption {
+    padding: 16px 16px 8px;
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+    font-weight: 600;
+    text-align: left;
+  }
+
+  .pt-tabela th,
+  .pt-tabela td {
+    padding: 12px 16px;
+    border-top: 1px solid var(--cor-fio-suave);
+    text-align: left;
+    vertical-align: top;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .pt-tabela thead th {
+    border-top: 1.5px solid var(--cor-texto);
+    font-weight: 600;
+  }
+
+  .pt-tabela tbody th {
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .pt-tabela tbody td:nth-child(2) {
+    white-space: nowrap;
+  }
+
+  @media (max-width: 767px) {
+    .pt-tabela caption {
+      padding-inline: 12px;
+    }
+
+    .pt-tabela th,
+    .pt-tabela td {
+      padding: 12px 10px;
+    }
+  }
+}

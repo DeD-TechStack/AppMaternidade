@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { fireEvent, screen } from '@testing-library/react'
+import { fireEvent, screen, within } from '@testing-library/react'
 import { PROMESSA } from './conteudo/textos.ts'
 import { criarEstadoInicial } from './prototipo/estado.ts'
 import { renderizarRota } from './teste/renderizarRota.tsx'
@@ -15,22 +15,28 @@ describe('rotas', () => {
     expect(titulos[0].textContent).toBe(PROMESSA)
   })
 
-  // MAT-49a: o Início mínimo (o completo é o MAT-49c) tem o h1 e o primário; nada de pilares nem molduras.
-  it('o Início traz o primário "Ver como funciona" no main, para Como funciona', async () => {
+  // MAT-49c: o primário "Começar grátis" (abertura e fechamento) vai a /app/hoje; o link de texto
+  // "Ver como funciona", a Como funciona.
+  it('o Início traz o primário "Começar grátis" para /app/hoje e o link "Ver como funciona"', async () => {
     const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
 
     const primarios = [...container.querySelectorAll<HTMLElement>('main [data-botao="primario"]')]
-    expect(primarios).toHaveLength(1)
-    expect(primarios[0].textContent).toBe('Ver como funciona')
-    expect(primarios[0].getAttribute('href')).toBe('/como-funciona')
+    expect(primarios).toHaveLength(2)
+    expect(primarios.map((p) => p.textContent)).toEqual(['Começar grátis', 'Começar grátis'])
+    expect(primarios.map((p) => p.getAttribute('href'))).toEqual(['/app/hoje', '/app/hoje'])
+
+    const main = container.querySelector<HTMLElement>('main')!
+    const secundario = within(main).getByRole('link', { name: 'Ver como funciona' })
+    expect(secundario.getAttribute('href')).toBe('/como-funciona')
+    expect(secundario.getAttribute('data-botao')).toBe('texto')
     expect(container.querySelector('[inert]')).toBeNull()
   })
 
   for (const [caminho, titulo] of [
-    ['/como-funciona', 'Como funciona'],
-    ['/cuidado-compartilhado', 'Cuidado compartilhado'],
-    ['/desenvolvimento', 'Desenvolvimento'],
+    ['/como-funciona', 'Do primeiro dia à troca de turno.'],
+    ['/cuidado-compartilhado', 'Um bebê, vários adultos.'],
+    ['/desenvolvimento', 'Cada fase, no tempo do bebê.'],
     ['/regras-da-comunidade', 'Regras da comunidade'],
     ['/privacidade', 'Privacidade'],
     ['/termos', 'Termos de uso'],

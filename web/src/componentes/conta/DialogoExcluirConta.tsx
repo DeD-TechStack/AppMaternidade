@@ -88,6 +88,7 @@ export function DialogoExcluirConta({
         <CampoSenha
           rotulo={CONTA.excluir.dialogo.senha}
           autoComplete="current-password"
+          tamanho="app"
           valor={senha}
           aoMudar={aoMudarSenha}
           erro={erroSenha}

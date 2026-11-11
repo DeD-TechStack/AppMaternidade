@@ -12,11 +12,14 @@ const DESATIVADO =
   'disabled:cursor-not-allowed disabled:border-[var(--cor-desativado-fundo)] disabled:bg-[var(--cor-desativado-fundo)] ' +
   'disabled:text-[var(--cor-desativado-texto)]'
 
-/** Ação principal do formulário: pílula de cacau (mel na madrugada), 56 px, largura cheia. */
-export const BOTAO_PRINCIPAL = `cm-botao cm-botao-primario alvo-toque w-full ${DESATIVADO}`
+// O tamanho dos botões vem de `.cm-botao` (site.css: 56 px; 48 com `data-tamanho="app"`). Eles não levam
+// `alvo-toque`: a regra dessa classe, no index.css, é mais tardia e baixaria o botão para 44 px.
 
-/** Ação secundária: pílula de contorno de 1,5 px; no hover se enche. */
-export const BOTAO_SECUNDARIO = `cm-botao cm-botao-contorno alvo-toque ${DESATIVADO}`
+/** Ação principal do formulário: pílula de cacau (mel na madrugada), 56 px, largura cheia. */
+export const BOTAO_PRINCIPAL = `cm-botao cm-botao-primario w-full ${DESATIVADO}`
+
+/** Ação secundária: pílula de contorno de 1,5 px; no hover se enche. Nas telas do app leva `data-tamanho="app"` (48 px). */
+export const BOTAO_SECUNDARIO = `cm-botao cm-botao-contorno ${DESATIVADO}`
 
 /** Link fora de parágrafo: sublinhado sempre, na cor de link do tema, e alvo de 44 px. */
 export const LINK_ALVO =
