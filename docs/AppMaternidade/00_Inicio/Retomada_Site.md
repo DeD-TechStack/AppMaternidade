@@ -12,7 +12,25 @@ Esta é a nota de partida da próxima sessão de trabalho no site. Ela registra 
 
 **Site publicado (06/11/2026):** https://ded-techstack.github.io/AppMaternidade/ (MAT-48a, main 2beddee). Ele mostra Início, Hoje e Sessão com o aviso "Demonstração sem banco". As variáveis do banco entram no build com a MAT-37.
 
-## VISUAL REFEITO DO ZERO, passo 0 (11/11/2026, 3h20): ESTADO VIGENTE
+## DIREÇÃO ESCOLHIDA (11/11/2026, 9h03): ESTADO VIGENTE
+
+- **Decisões de Daniel (11/11, de manhã), repassadas pelo coordenador** (`C:/OrchestrationLab/exports/Revisao_Geral_20261111/retomada_lideres/APPMATERNIDADE_V2.md` e `V2b.md`):
+  - nenhuma das direções A/B/C;
+  - quer uma fusão da Pato Jack (paleta e alma) com a Becky/Good Inside (recursos visuais);
+  - quem desenha olha as duas fontes; não entram ativos, textos nem código delas;
+  - imagem, sombra e gradiente liberados, controlados pelos tokens;
+  - imagens geradas no site publicado, com curadoria e `PROVENANCE.md`;
+  - Opus nas telas que definem a cara do site.
+- **Rodada 2.** A galeria `C:/OrchestrationLab/projetos/_staging/appmaternidade/DIRECOES_20261111/GALERIA2.html` traz as 3 fusões, cada uma com DESIGN.md e 3 composições. A análise dos 24 recursos está em `rodada2/ANALISE_FEATURES.md`, com as capturas das duas fontes em 1440 e 390.
+- **Escolha de Daniel, às 9h03:** a **F1 Campo de mel**, que leva a estrutura e o movimento da Becky com as cores da Pato Jack, mais duas peças das outras fusões: da F2, a tabela de comparação, a faixa de selos e os depoimentos; da F3, o modo Madrugada nas telas do app. O registro está em `DIRECOES_20261111/GOSTO_DANIEL.md`.
+- **Próximo passo:**
+  1. Fechar o DESIGN.md final e a lista de ativos.
+  2. Gerar e escolher os ativos: as cenas de estúdio e o traço preto.
+  3. Criar o cartão da base (tokens, casca, componentes), em Opus, e mostrar a base a Daniel cedo.
+  4. Abrir as páginas em paralelo em cima da base.
+  5. Abrir o sucessor que integra o `fad75c0` (37a) e religar os cartões em `scheduled` a ele.
+
+## VISUAL REFEITO DO ZERO, passo 0 (11/11/2026, 3h20): histórico
 
 Este bloco substitui o de 10/11 logo abaixo, que vale só como histórico. Nele, os cartões 44d-3, MAT-36 g2, 6b, 6c e 44d-6 ficaram superados.
 
