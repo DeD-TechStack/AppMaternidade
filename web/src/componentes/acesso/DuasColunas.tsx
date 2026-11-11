@@ -27,7 +27,7 @@ export function DuasColunas({ children, ilustracao }: Props) {
             nome={ilustracao}
             decorativa
             carregamento="eager"
-            className="pointer-events-none absolute top-[46px] right-0 h-auto max-h-[62px] w-auto max-w-[76px] sm:hidden [:root[data-tema=madrugada]_&]:hidden"
+            className="pointer-events-none absolute top-[46px] right-0 h-auto max-h-[58px] w-auto max-w-[60px] sm:hidden [:root[data-tema=madrugada]_&]:hidden"
           />
         ) : null}
         {children}

@@ -21,7 +21,7 @@ function BotaoSair() {
   return (
     <button
       type="button"
-      className={BOTAO_SECUNDARIO}
+      className={`${BOTAO_SECUNDARIO} max-sm:order-2`}
       data-botao="contorno"
       data-tamanho="app"
       disabled={acao.saindo}
@@ -77,17 +77,18 @@ export function MolduraLogada({ ocupado = false, children }: Props) {
         </div>
         <nav
           aria-label={CABECALHO.navegacao}
-          className="flex flex-wrap items-center justify-between gap-x-3 gap-y-3 border-b border-[var(--cor-fio-suave)] py-4"
+          className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-[var(--cor-fio-suave)] py-4 sm:gap-y-3"
         >
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          {/* No celular os três não cabem numa linha: "Conta" e "Sair" ficam juntos na de cima, e o link do protótipo desce sozinho (só a ordem visual muda, a do DOM não). */}
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 max-sm:contents">
             <NavLink
               to="/app/conta"
               end
-              className={({ isActive }) => `${LINK_DA_BARRA} ${isActive ? ABA_ATUAL : ''}`}
+              className={({ isActive }) => `${LINK_DA_BARRA} max-sm:order-1 ${isActive ? ABA_ATUAL : ''}`}
             >
               {CABECALHO.conta}
             </NavLink>
-            <Link to="/app/hoje" className={LINK_DA_BARRA}>
+            <Link to="/app/hoje" className={`${LINK_DA_BARRA} max-sm:order-3`}>
               {CABECALHO.prototipo}
               <ArrowUpRight size={18} aria-hidden="true" />
             </Link>
