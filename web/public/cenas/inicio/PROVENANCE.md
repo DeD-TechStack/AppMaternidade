@@ -16,3 +16,14 @@ Output sha256:
 - faixa-cacau@2x.webp 1f627752cf43caee885dbfefc5f6120a43b81f4bb065479c6dc6599e05c197d9
 - tabela@1x.webp f376e575952336c336d1dea7ef298c5e73da2e6c9d4d2c875db3cd920ad2867b
 - tabela@2x.webp ebe9d4a8374ca0926682183d110befa46121ec689603c28534172f92d41a9dff
+
+## Recomposed by MAT-49d (2026-11-11)
+
+Same scene sources and compositor (`compor.py`, `verde_restante: 0`); the screens are now window captures (not full-page) of the new app screens, deviceScaleFactor 2, reduced motion, from the MAT-49d worktree on base a8cad7d. Each capture height matches the aspect of its green screen, so the top of the screen is shown with no crop distortion. No "Protótipo" or "dados de exemplo" in the visible text of any capture.
+
+- heroi@1x.webp: scene `brutos/S1_trio_mel.png`; captures: Hoje (day) 390x1102, Hoje (Madrugada) 390x853, Sessão 390x1013; 2026-11-11; sha256 6616e183bc01fe4cee471625834535e91b194642a2b5ccf4920b2c78343a9d70
+- heroi@2x.webp: scene `brutos/S1_trio_mel.png`; captures: Hoje (day) 390x1102, Hoje (Madrugada) 390x853, Sessão 390x1013; 2026-11-11; sha256 5bb7e98daf18c80a2728d71fb9d4265195fb5d8158c52ad479cff827a0c63cfc
+- faixa-cacau@1x.webp: scene `brutos/S3_tablets_cacau.png`; captures: Hoje (day) 820x1123, Sessão 900x1023; 2026-11-11; sha256 baaef7cc40ef79eb75e486a57491405ffdf7c88777ba982773855c039868c3d6
+- faixa-cacau@2x.webp: scene `brutos/S3_tablets_cacau.png`; captures: Hoje (day) 820x1123, Sessão 900x1023; 2026-11-11; sha256 78d7e5e496373878e8008e000372d939dae869b07b233693df1b4d4b3f69f5c6
+- tabela@1x.webp: scene `brutos/S4_celular_linho.png`; captures: Hoje (day) 390x850; 2026-11-11; sha256 f65156590a9e7619e516ad662f440835ef0fefd2013cd7264e7d02f6ab12bb47
+- tabela@2x.webp: scene `brutos/S4_celular_linho.png`; captures: Hoje (day) 390x850; 2026-11-11; sha256 ee5fe93871ca5ef51f5739b4e48d9061d40dcf539b354cd2b7aa70e8017f2e84
