@@ -877,4 +877,9 @@
     min-width: 56px;
     min-height: 56px;
   }
+
+  /* Com 56 px de largura o ícone de 26 fica 15 px para dentro: o recuo acompanha, e a borda continua na do conteúdo. */
+  :root[data-tema='madrugada'] .sb-cab-menu {
+    margin-right: -15px;
+  }
 }
