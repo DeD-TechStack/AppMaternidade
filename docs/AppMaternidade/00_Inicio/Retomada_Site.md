@@ -22,8 +22,10 @@ Esta é a nota de partida da próxima sessão de trabalho no site. Ela registra 
 - **Cartões:**
   - t_fdba5bed MAT-49a, base: tokens, fontes, cabeçalho, rodapé, componentes, movimento e `/sistema`. Em Opus, **rodando**, com prévia em http://127.0.0.1:5281/sistema.
   - t_26066f02 MAT-49b: Hoje, Sessão e Madrugada. Em Opus, espera a base.
-  - t_3c6e3a0c MAT-49c: Início com as cenas. Em Opus, espera a 49a e a 49b.
-  - t_ee526db4 MAT-36r-A: Como funciona, Cuidado compartilhado e Desenvolvimento. Em Opus, espera a 49a e a 49b.
+  - t_3c6e3a0c MAT-49c: Início com as cenas. Em Opus, espera só a base desde 11/11 10h15. As cenas são compostas com capturas das próprias páginas.
+  - t_ee526db4 MAT-36r-A: Como funciona, Cuidado compartilhado e Desenvolvimento. Em Opus, espera só a base desde 11/11 10h15.
+  - t_0aecd8d2 MAT-49d: recompõe as cenas com as telas novas de Hoje, Sessão e Madrugada, só nas imagens. Espera a 49b, a 49c, a 36r-A e o 37r.
+  - Depois da base, 5 cartões rodam em paralelo: 49b, 49c, 36r-A, 36r-B e 37r.
   - t_e1d0eaa8 MAT-36r-B: 6 páginas de texto. Em Sonnet, espera a base.
   - t_d63c932a MAT-37r: traz o fad75c0 (37a) e refaz as telas de acesso. Em Sonnet, espera a base.
 - **Arquivados como substituídos:** t_915e3632 (37a, que tem o MAT-37r como sucessor) e t_55a580e8 (39a, coberto pela 36r-A).
