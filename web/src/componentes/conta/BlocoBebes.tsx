@@ -35,8 +35,15 @@ function LinhaDoBebe({ bebe, filhos }: { bebe: Bebe; filhos?: ReactNode }) {
 // arquiva, e vê os arquivados num bloco fechado por padrão, com "Desarquivar".
 export function BlocoBebes({ detalhe, responsavel, acoes }: Props) {
   const dados = useDadosConta()
-  const [adicionando, setAdicionando] = useState(false)
-  const [editando, setEditando] = useState<string | null>(null)
+  const [adicionandoPedido, setAdicionando] = useState(false)
+  const [editandoPedido, setEditando] = useState<string | null>(null)
+  // Sem o papel de responsável (relido depois de uma ação), nenhum formulário de escrita fica aberto.
+  if (!responsavel && (adicionandoPedido || editandoPedido !== null)) {
+    setAdicionando(false)
+    setEditando(null)
+  }
+  const adicionando = responsavel && adicionandoPedido
+  const editando = responsavel ? editandoPedido : null
   const ativos = detalhe.bebes.filter((bebe) => bebe.estado === 'ativo')
   const arquivados = detalhe.bebes.filter((bebe) => bebe.estado === 'arquivado')
   const botaoAdicionar = useRef<HTMLButtonElement>(null)

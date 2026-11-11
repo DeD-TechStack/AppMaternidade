@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router'
 import { apagarChave, CHAVE_CONVITE, gravarChave, lerChave } from '../../componentes/conta/armazenamento.ts'
 import { Campo } from '../../componentes/conta/Campos.tsx'
-import { normalizarCodigo } from '../../componentes/conta/codigoConvite.ts'
+import { codigoDoFragmento, normalizarCodigo } from '../../componentes/conta/codigoConvite.ts'
 import { formatarData, formatarDataEHora } from '../../componentes/conta/datas.ts'
 import { caminhoComVolta } from '../../componentes/conta/destino.ts'
 import { useEnvio } from '../../componentes/conta/envio.ts'
@@ -40,9 +40,16 @@ type Leitura =
  * como sem fragmento: devolve `null`.
  */
 function lerFragmento(hash: string): Entrada | null {
-  const fragmento = hash.replace(/^#/, '')
-  if (!fragmento) return null
-  const codigo = normalizarCodigo(fragmento)
+  const bruto = hash.replace(/^#/, '')
+  if (!bruto) return null
+  let fragmento = bruto
+  try {
+    fragmento = decodeURIComponent(bruto)
+  } catch {
+    // Escape malformado: vale o texto como veio, e ele não será um código.
+  }
+  // Estrito: o fragmento inteiro é o código. Um código dentro de texto maior não vale.
+  const codigo = codigoDoFragmento(fragmento)
   if (codigo) {
     gravarChave('sessao', CHAVE_CONVITE, codigo)
     return { codigo, erro: null }

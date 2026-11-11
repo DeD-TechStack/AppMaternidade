@@ -19,6 +19,16 @@ export function normalizarCodigo(texto: string): string | null {
   return achados?.length === 1 ? achados[0] : null
 }
 
+/**
+ * O código de um fragmento de URL (`#<código>`), de forma estrita: o fragmento inteiro, sem as pontas
+ * em branco e em minúsculas, tem de ser exatamente 64 hexadecimais. Nada é extraído de dentro de
+ * texto maior (diferente de `normalizarCodigo`, do campo de colar o link).
+ */
+export function codigoDoFragmento(fragmento: string): string | null {
+  const limpo = fragmento.trim().toLowerCase()
+  return COMPLETO.test(limpo) ? limpo : null
+}
+
 /** O link do convite: `<origem><subcaminho>convite#<código>`. */
 export function linkDoConvite(codigo: string): string {
   return `${window.location.origin}${import.meta.env.BASE_URL}convite#${codigo}`

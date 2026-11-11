@@ -712,6 +712,45 @@ describe('acesso encerrado, sem permissão e objeto sumido', () => {
     expect(screen.getByRole('heading', { level: 2, name: 'Família Exemplo' })).toBeTruthy()
   })
 
+  it('rebaixado com o editor de bebê aberto: a escrita é negada e o editor some, com "Você é cuidador."', async () => {
+    const dados = await memoriaComDoisResponsaveis()
+    await abrir('bruno', dados)
+    fireEvent.click(botao('Editar Heloísa'))
+    expect(campo('Nome ou apelido').value).toBe('Heloísa')
+    digitar('Nome ou apelido', 'Helô')
+
+    dados.sessaoParaTeste(PESSOAS.juliana.email)
+    await dados.mudarPapel(VINCULO_DO_BRUNO, 'cuidador')
+    dados.sessaoParaTeste(PESSOAS.bruno.email)
+    fireEvent.click(botao('Salvar'))
+
+    expect((await screen.findByRole('alert')).textContent).toBe(TEXTOS_ERRO.sem_permissao)
+    await waitFor(() => expect(screen.getByText('Você é cuidador.')).toBeTruthy())
+    expect(screen.queryByLabelText('Nome ou apelido')).toBeNull()
+    expect(screen.queryByRole('button', { name: /^Salvar/ })).toBeNull()
+    expect(screen.queryAllByRole('button', { name: /Editar|Arquivar|Adicionar bebê/ })).toEqual([])
+    // O bebê não foi alterado.
+    expect(secao('Bebês').getByText('Heloísa')).toBeTruthy()
+  })
+
+  it('rebaixado com o formulário de novo bebê aberto: o formulário some assim que o papel é relido', async () => {
+    const dados = await memoriaComDoisResponsaveis()
+    await abrir('bruno', dados)
+    fireEvent.click(botao('Adicionar bebê'))
+    expect(campo('Nome ou apelido')).toBeTruthy()
+
+    dados.sessaoParaTeste(PESSOAS.juliana.email)
+    await dados.mudarPapel(VINCULO_DO_BRUNO, 'cuidador')
+    dados.sessaoParaTeste(PESSOAS.bruno.email)
+    digitar('Nome ou apelido', 'Mel')
+    digitar('Data de nascimento', somarDias(hojeNoFuso(FUSO), -5))
+    fireEvent.click(botao('Salvar'))
+
+    await waitFor(() => expect(screen.getByText('Você é cuidador.')).toBeTruthy())
+    expect(screen.queryByLabelText('Nome ou apelido')).toBeNull()
+    expect(screen.queryByRole('button', { name: /^Salvar/ })).toBeNull()
+  })
+
   it('P0002 de um convite (já cancelado por outro) com vínculo: a frase do catálogo, a caixa fecha e a lista é relida', async () => {
     const dados = novaMemoria()
     await abrir('juliana', dados)

@@ -135,6 +135,50 @@ describe('sem sessão', () => {
     expect(ver).not.toHaveBeenCalled()
   })
 
+  it('um código válido embutido num fragmento inválido não vale: convite_invalido, sem chamar o banco, e apaga o guardado', async () => {
+    for (const fragmento of [`x${CODIGO}z`, `${CODIGO}z`, `x${CODIGO}`, `abc ${CODIGO}`]) {
+      for (const guardado of [null, 'b'.repeat(64)]) {
+        sessionStorage.clear()
+        if (guardado) sessionStorage.setItem(CHAVE_CONVITE, guardado)
+        const dados = novaMemoria()
+        const ver = vi.spyOn(dados, 'verConvite')
+        const { unmount } = renderizarComDados(`/convite#${encodeURIComponent(fragmento)}`, { dados, sessao: 'davi' })
+
+        expect((await screen.findByRole('alert')).textContent, fragmento).toBe(TEXTOS_ERRO.convite_invalido)
+        expect(campo()).toBeTruthy()
+        expect(screen.queryByRole('button', { name: 'Aceitar convite' })).toBeNull()
+        expect(sessionStorage.getItem(CHAVE_CONVITE)).toBeNull()
+        expect(ver).not.toHaveBeenCalled()
+        unmount()
+      }
+    }
+  })
+
+  it('um fragmento válido em maiúsculas e com espaços nas pontas continua aceito', async () => {
+    renderizarComDados(`/convite#${encodeURIComponent(`  ${CODIGO.toUpperCase()}  `)}`, { sessao: null })
+
+    await screen.findByText(CONVITE.guardado)
+    expect(sessionStorage.getItem(CHAVE_CONVITE)).toBe(CODIGO)
+  })
+
+  it('um fragmento inválido que chega com a página já aberta também não vale, sem chamar o banco', async () => {
+    const dados = novaMemoria()
+    const ver = vi.spyOn(dados, 'verConvite')
+    const { roteador } = renderizarComDados('/convite', { dados, sessao: 'davi' })
+    await screen.findByLabelText(CAMPO)
+    sessionStorage.setItem(CHAVE_CONVITE, 'b'.repeat(64))
+
+    await act(async () => {
+      await roteador.navigate(`/convite#x${CODIGO}z`)
+    })
+
+    expect((await screen.findByRole('alert')).textContent).toBe(TEXTOS_ERRO.convite_invalido)
+    await waitFor(() => expect(roteador.state.location.hash).toBe(''))
+    expect(sessionStorage.getItem(CHAVE_CONVITE)).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Aceitar convite' })).toBeNull()
+    expect(ver).not.toHaveBeenCalled()
+  })
+
   it('um fragmento válido vale sobre o código guardado; um fragmento vazio (só "#") conta como sem fragmento', async () => {
     sessionStorage.setItem(CHAVE_CONVITE, 'b'.repeat(64))
     const primeiro = renderizarComDados(`/convite#${CODIGO}`, { sessao: null })
