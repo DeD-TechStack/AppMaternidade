@@ -60,7 +60,7 @@ describe('estrutura da tela', () => {
 
     const cabecalho = within(screen.getByRole('navigation', { name: 'Conta' }))
     expect(cabecalho.getByRole('link', { name: 'Conta' }).getAttribute('aria-current')).toBe('page')
-    expect(cabecalho.getByRole('link', { name: 'Ver o protótipo do Hoje' }).getAttribute('href')).toBe('/app/hoje')
+    expect(screen.queryByRole('link', { name: 'Ver o protótipo do Hoje' })).toBeNull()
     expect(cabecalho.getByRole('button', { name: 'Sair' })).toBeTruthy()
     expect(screen.getAllByRole('button', { name: 'Sair' })).toHaveLength(2)
     // Não monta a navegação inferior do protótipo.
@@ -104,17 +104,13 @@ describe('barra da conta', () => {
     const memoria = await abrirConta()
     const container2 = memoria.container
 
-    // A barra: a navegação "Conta", com o link da Conta, o do protótipo e o Sair, antes do <main>.
+    // A barra: a navegação "Conta", com o link da Conta e o Sair, antes do <main>.
     const barra = screen.getByRole('navigation', { name: 'Conta' })
     expect(barra.closest('header')).toBeNull()
     expect(barra.compareDocumentPosition(container2.querySelector('main')!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(barra.classList.contains('flex-wrap')).toBe(true)
     expect(barra.classList.contains('justify-between')).toBe(true)
-    expect([...barra.querySelectorAll('a, button')].map((filho) => filho.textContent)).toEqual([
-      'Conta',
-      'Ver o protótipo do Hoje',
-      'Sair',
-    ])
+    expect([...barra.querySelectorAll('a, button')].map((filho) => filho.textContent)).toEqual(['Conta', 'Sair'])
   })
 })
 
@@ -352,7 +348,11 @@ describe('excluir conta: impedimentos', () => {
     const explicacao = document.getElementById(botaoExcluir().getAttribute('aria-describedby')!)!
     expect(explicacao.textContent).toContain('Você é a única pessoa responsável destas famílias.')
     expect(explicacao.textContent).toContain('Família Exemplo')
-    expect([...explicacao.querySelectorAll('strong')].map((forte) => forte.textContent)).toEqual(['Família Exemplo'])
+    // RF-16, item 4 (37b): cada nome é um link para a Família, com a família pedida.
+    const links = [...explicacao.querySelectorAll('a')]
+    expect(links.map((link) => link.textContent)).toEqual(['Família Exemplo'])
+    expect(links[0].getAttribute('href')).toBe(`/app/familia?familia=${FAMILIAS_DEMONSTRACAO.exemplo}`)
+    expect(links[0].classList.contains('alvo-toque')).toBe(true)
     expect(screen.getByText(/^Ao excluir a conta, ela e os seus vínculos com famílias somem/).textContent).toContain('“pessoa removida”')
   })
 
@@ -367,7 +367,7 @@ describe('excluir conta: impedimentos', () => {
     await esperarALeitura()
 
     const explicacao = document.getElementById(botaoExcluir().getAttribute('aria-describedby')!)!
-    expect([...explicacao.querySelectorAll('strong')].map((forte) => forte.textContent)).toEqual(['Solo'])
+    expect([...explicacao.querySelectorAll('a')].map((link) => link.textContent)).toEqual(['Solo'])
   })
 
   it('com outro responsável ativo em cada família, o botão fica ativo', async () => {
@@ -691,7 +691,7 @@ describe('privacidade e sair', () => {
 
     const resumo = screen.getByText(CONTA.resumo(PESSOAS.juliana.nome, PESSOAS.juliana.email))
     expect(resumo.classList.contains('wrap-anywhere')).toBe(true)
-    const familia = document.querySelector('#impedimento-exclusao strong')!
+    const familia = document.querySelector('#impedimento-exclusao a')!
     expect(familia.textContent).toBe('Família Exemplo')
     expect(familia.classList.contains('wrap-anywhere')).toBe(true)
   })

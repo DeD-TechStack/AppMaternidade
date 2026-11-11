@@ -26,7 +26,7 @@ import type { ErroDados } from '../../dados/comum.ts'
 type LeituraDosImpedimentos =
   | { fase: 'lendo' }
   | { fase: 'erro'; erro: ErroDados }
-  | { fase: 'pronto'; bloqueadoras: string[] }
+  | { fase: 'pronto'; bloqueadoras: Array<{ id: string; nome: string }> }
 
 const SECOES_DO_INDICE = [
   ['perfil', CONTA.secoes.perfil],
@@ -109,12 +109,12 @@ export function PaginaConta() {
   const ler = useCallback(async () => {
     const familias = await dados.minhasFamilias()
     if (!familias.ok) return setLeitura({ fase: 'erro', erro: familias.erro })
-    const bloqueadoras: string[] = []
+    const bloqueadoras: Array<{ id: string; nome: string }> = []
     for (const familia of familias.valor.filter((f) => f.meuPapel === 'responsavel')) {
       const detalhe = await dados.detalheFamilia(familia.id)
       if (!detalhe.ok) return setLeitura({ fase: 'erro', erro: detalhe.erro })
       const responsaveis = detalhe.valor.membros.filter((m) => m.papel === 'responsavel')
-      if (responsaveis.every((m) => m.souEu)) bloqueadoras.push(familia.nome)
+      if (responsaveis.every((m) => m.souEu)) bloqueadoras.push({ id: familia.id, nome: familia.nome })
     }
     setLeitura({ fase: 'pronto', bloqueadoras })
   }, [dados])
@@ -384,8 +384,10 @@ export function PaginaConta() {
                   <p>{CONTA.excluir.impedimento}</p>
                   <ul className="mt-2 list-disc pl-6">
                     {bloqueadoras.map((familia) => (
-                      <li key={familia}>
-                        <strong className="wrap-anywhere">{familia}</strong>
+                      <li key={familia.id}>
+                        <Link to={`/app/familia?familia=${encodeURIComponent(familia.id)}`} className={`${LINK_ALVO} wrap-anywhere`}>
+                          {familia.nome}
+                        </Link>
                       </li>
                     ))}
                   </ul>
