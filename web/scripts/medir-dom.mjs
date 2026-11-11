@@ -27,7 +27,31 @@ export const RAIOS_PERMITIDOS = ['0', '4px', '8px', '50%']
 const URUCUM = ['#B0401C', '#C47055']
 const MIDIA = ['#C9A39A', '#B8ADC4', '#3A2723', '#2C2733']
 
-const CASOS = ['sistema', 'inicio', 'hoje', 'sessao']
+/** A rota de cada caso (relativa à BASE_URL). Fonte única: a lista de casos aceitos sai das chaves. */
+export const CAMINHOS_DOS_CASOS = {
+  sistema: 'sistema',
+  inicio: '',
+  hoje: 'app/hoje',
+  sessao: 'app/hoje',
+  comofunciona: 'como-funciona',
+  cuidado: 'cuidado-compartilhado',
+  desenvolvimento: 'desenvolvimento',
+  regras: 'regras-da-comunidade',
+  privacidade: 'privacidade',
+  termos: 'termos',
+  exclusao: 'exclusao-de-conta',
+  contato: 'contato',
+  sobre: 'sobre',
+  naoencontrada: 'rota-que-nao-existe',
+}
+
+/** A rota de um caso; lança `caso desconhecido: <caso>` se o nome não está na tabela. */
+export function caminhoDoCaso(caso) {
+  if (!Object.hasOwn(CAMINHOS_DOS_CASOS, caso)) throw new Error(`caso desconhecido: ${caso}`)
+  return CAMINHOS_DOS_CASOS[caso]
+}
+
+const CASOS = Object.keys(CAMINHOS_DOS_CASOS)
 const TEMAS = ['claro', 'madrugada']
 
 /** A margem fixa da grade pela largura da janela (a da media query, com a barra de rolagem). */
@@ -858,7 +882,7 @@ async function clicarPorTexto(cdp, seletor, texto) {
 async function abrirCaso(cdp, base, { caso, tema }) {
   // Movimento reduzido sempre (G12): as medidas e as capturas usam o mesmo modo.
   await cdp.enviar('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] })
-  const caminho = { sistema: 'sistema', inicio: '', hoje: 'app/hoje', sessao: 'app/hoje' }[caso]
+  const caminho = caminhoDoCaso(caso)
   await cdp.enviar('Page.navigate', { url: new URL(caminho, base).href })
   await esperarPronto(cdp)
   if (tema === 'madrugada') {

@@ -7,6 +7,8 @@ import {
   areaUtilDe,
   avaliarTudo,
   bloqueantesDoCaso,
+  CAMINHOS_DOS_CASOS,
+  caminhoDoCaso,
   coletarNaPagina,
   contraste,
   fundoReal,
@@ -1036,5 +1038,84 @@ describe('argumentos e loopback', () => {
     assert.doesNotThrow(() => verificarLoopback('http://localhost:5244/'))
     assert.throws(() => verificarLoopback('http://exemplo.invalid/'), /só loopback/)
     assert.throws(() => verificarLoopback('http://192.168.0.5:5244/'), /só loopback/)
+  })
+})
+
+describe('os casos das páginas públicas: rota e argumentos', () => {
+  const NOVOS = {
+    comofunciona: 'como-funciona',
+    cuidado: 'cuidado-compartilhado',
+    desenvolvimento: 'desenvolvimento',
+    regras: 'regras-da-comunidade',
+    privacidade: 'privacidade',
+    termos: 'termos',
+    exclusao: 'exclusao-de-conta',
+    contato: 'contato',
+    sobre: 'sobre',
+    naoencontrada: 'rota-que-nao-existe',
+  }
+  const ANTIGOS = { sistema: 'sistema', inicio: '', hoje: 'app/hoje', sessao: 'app/hoje' }
+  const TAMANHOS = [
+    { spec: '1440x900', largura: 1440, altura: 900 },
+    { spec: '390x844', largura: 390, altura: 844 },
+  ]
+
+  it('cada um dos 10 casos novos resolve para a sua rota', () => {
+    assert.equal(Object.keys(NOVOS).length, 10)
+    for (const [caso, rota] of Object.entries(NOVOS)) assert.equal(caminhoDoCaso(caso), rota, caso)
+  })
+
+  it('os 4 casos antigos mantêm a rota (o Início é a raiz, vazia)', () => {
+    for (const [caso, rota] of Object.entries(ANTIGOS)) assert.equal(caminhoDoCaso(caso), rota, caso)
+    assert.equal(caminhoDoCaso('inicio'), '')
+  })
+
+  it('um caso fora da tabela lança "caso desconhecido"', () => {
+    assert.throws(() => caminhoDoCaso('outro'), /caso desconhecido: outro/)
+    assert.throws(() => caminhoDoCaso(undefined), /caso desconhecido/)
+    // Nomes herdados do Object não valem como caso.
+    assert.throws(() => caminhoDoCaso('toString'), /caso desconhecido/)
+    assert.throws(() => caminhoDoCaso('constructor'), /caso desconhecido/)
+  })
+
+  it('a tabela tem exatamente os 14 casos, sem sobra nem falta', () => {
+    assert.deepEqual(Object.keys(CAMINHOS_DOS_CASOS).sort(), [...Object.keys(ANTIGOS), ...Object.keys(NOVOS)].sort())
+  })
+
+  it('lerArgumentos aceita cada caso novo em claro:1440x900 e claro:390x844 e devolve caso, tema e tamanho', () => {
+    for (const caso of Object.keys(NOVOS)) {
+      for (const { spec, largura, altura } of TAMANHOS) {
+        const { pasta, pedidos } = lerArgumentos(['p', `${caso}:claro:${spec}`])
+        assert.equal(pasta, 'p')
+        assert.deepEqual(pedidos, [{ caso, tema: 'claro', largura, altura }], `${caso}:claro:${spec}`)
+      }
+    }
+  })
+
+  it('lerArgumentos ainda recusa um caso desconhecido e inicio:madrugada', () => {
+    assert.throws(() => lerArgumentos(['p', 'outro:claro:1440x900']), /caso desconhecido: outro/)
+    assert.throws(() => lerArgumentos(['p', 'inicio:madrugada:1440x900']), /sempre claro/)
+  })
+
+  it('o tema madrugada vale para as páginas públicas novas; só o Início o recusa', () => {
+    for (const caso of Object.keys(NOVOS)) {
+      const { pedidos } = lerArgumentos(['p', `${caso}:madrugada:1440x900`])
+      assert.deepEqual(pedidos, [{ caso, tema: 'madrugada', largura: 1440, altura: 900 }], caso)
+    }
+    for (const caso of ['sistema', 'hoje', 'sessao']) {
+      assert.doesNotThrow(() => lerArgumentos(['p', `${caso}:madrugada:1440x900`]), caso)
+    }
+    assert.throws(() => lerArgumentos(['p', 'inicio:madrugada:390x844']), /sempre claro/)
+  })
+
+  it('as chaves de CAMINHOS_DOS_CASOS são exatamente os casos que lerArgumentos aceita', () => {
+    for (const caso of Object.keys(CAMINHOS_DOS_CASOS)) {
+      const { pedidos } = lerArgumentos(['p', `${caso}:claro:1440x900`])
+      assert.equal(pedidos[0].caso, caso)
+    }
+    // O inverso: um nome fora da tabela não passa, mesmo que pareça um caso.
+    for (const fora of ['outro', 'Sistema', 'como-funciona', 'app']) {
+      assert.throws(() => lerArgumentos(['p', `${fora}:claro:1440x900`]), /caso desconhecido|argumento inválido/, fora)
+    }
   })
 })
