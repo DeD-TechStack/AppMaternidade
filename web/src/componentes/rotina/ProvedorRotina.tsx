@@ -205,6 +205,13 @@ export function ProvedorRotina() {
 
   return (
     <ContextoDaRotina value={valor}>
+      {/* A releitura do contexto falhou com dados anteriores: a tela continua com o que já tinha (formulário,
+          painel e texto digitado ficam), e o aviso com `Tentar de novo` aparece junto dela (R8). */}
+      {carga.erro ? (
+        <div className="cm-area mt-5 max-w-[28rem]" data-releitura-falhou="contexto">
+          <AvisoDeErro erro={carga.erro} papel={ativo?.papel ?? null} aoTentarDeNovo={atualizar} />
+        </div>
+      ) : null}
       <Outlet />
     </ContextoDaRotina>
   )

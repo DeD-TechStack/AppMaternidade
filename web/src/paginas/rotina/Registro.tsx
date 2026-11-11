@@ -135,6 +135,13 @@ export function RegistroEditar() {
   const linha = `${ROTULO_TIPO[registro.tipo]}, ${dono.bebe.nome}`
   return (
     <Tela titulo={titulo} linha={linha}>
+      {/* Uma releitura que falhou com o registro já na tela: o aviso e `Tentar de novo` ficam junto dele, sem
+          desmontar o formulário nem apagar o que a pessoa digitou (R8). */}
+      {leitura.erro ? (
+        <div className="mb-6 max-w-[28rem]" data-releitura-falhou="">
+          <AvisoDeErro erro={leitura.erro} papel={dono.papel} aoTentarDeNovo={leitura.recarregar} />
+        </div>
+      ) : null}
       {registro.excluidoEm !== null ? (
         <p className="font-medium" data-registro-excluido="">
           {ESTADOS.registroExcluido}

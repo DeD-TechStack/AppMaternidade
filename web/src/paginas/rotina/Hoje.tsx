@@ -10,6 +10,7 @@ import { ALVO_APP } from '../../componentes/app/alvo.ts'
 import { Botao } from '../../componentes/base/Botao.tsx'
 import { Etiqueta } from '../../componentes/base/Etiqueta.tsx'
 import { AvisoDeErro } from '../../componentes/rotina/AvisoDeErro.tsx'
+import { AvisoDeLista } from '../../componentes/rotina/AvisoDeLista.tsx'
 import { BarraRegistroRapido, type BotaoRapido, type ItemDoMais } from '../../componentes/rotina/BarraRegistroRapido.tsx'
 import { DesdeUltimoRegistro, ParaVoceSaber } from '../../componentes/rotina/BlocosDoHoje.tsx'
 import { SecaoDoHoje } from '../../componentes/rotina/SecaoDoHoje.tsx'
@@ -20,12 +21,12 @@ import { type AcaoDaConfirmacao, type BebeAtivo, useRotina } from '../../compone
 import { formatarQuando, momentoDoRegistro } from '../../componentes/rotina/formatos.ts'
 import { useMadrugada } from '../../componentes/rotina/madrugada.ts'
 import { totaisDoDia } from '../../componentes/rotina/totaisDoDia.ts'
-import { useAcoesDaRotina } from '../../componentes/rotina/useAcoesDaRotina.ts'
+import { useAcoesDaRotina, type ResultadoDoEncerramento } from '../../componentes/rotina/useAcoesDaRotina.ts'
 import { useSecao } from '../../componentes/rotina/useSecao.ts'
 import { COMUM, ESTADOS, HOJE, ROTULO_TIPO, SEM_RESULTADO, TITULOS } from '../../conteudo/rotina.ts'
 import type { Resultado } from '../../dados/comum.ts'
 import { diaDaFamilia, formatarIdade, janelaDoDia, lerAparelho } from '../../dados/rotina.dia.ts'
-import { podeEscrever, type Lista, type Registro } from '../../dados/rotina.tipos.ts'
+import { LIMITES, podeEscrever, type Lista, type Registro } from '../../dados/rotina.tipos.ts'
 import { focoDoEstado } from '../../prototipo/foco.ts'
 import { formatarHora, formatarUltimo } from '../../prototipo/formatar.ts'
 import { useAgora } from '../../prototipo/useAgora.ts'
@@ -155,17 +156,20 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
     }
   }
 
+  // Observador e bebê arquivado não criam nada: nenhum atalho (a barra, o botão da madrugada, o "Mais") envia
+  // uma ação de criação, em qualquer tema.
   function iniciar(tipo: 'sono' | 'mamada' | 'tummy') {
-    if (!liberarToque(tipo)) return
+    if (!gravacaoLiberada || !liberarToque(tipo)) return
     void comBotaoOcupado(tipo, () => acoes.iniciarSessao(tipo))
   }
 
   function registrarFralda(conteudo: 'xixi' | 'coco' | 'ambos') {
-    if (!liberarToque('fralda')) return
+    if (!gravacaoLiberada || !liberarToque('fralda')) return
     void comBotaoOcupado('fralda', () => acoes.registrarFralda(conteudo))
   }
 
   function abrirMais(item: ItemDoMais) {
+    if (!gravacaoLiberada) return
     if (item === 'observacao') {
       void navigate('/app/registro/novo?tipo=observacao', { state: { de: 'hoje', foco: 'titulo' } })
     } else if (item === 'outro') {
@@ -189,18 +193,24 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
   // ---- encerrar ----------------------------------------------------------------------------------
 
   // Encerrar tira o botão da tela: o foco vai ao próprio cartão, que passa a dizer "Nenhuma sessão".
-  async function encerrar(sessao: Registro, momento?: number) {
+  // `Tentar de novo` repete o comando original (`repetir`, congelado na 1ª tentativa: o mesmo fim e a mesma
+  // sessão), não um encerramento novo com o relógio de agora.
+  async function conduzirEncerramento(sessaoId: string, rodar: () => Promise<ResultadoDoEncerramento>) {
     if (encerrando) return
     setEncerrando(true)
-    const resultado = await acoes.encerrar(sessao, { momento })
+    const resultado = await rodar()
     setEncerrando(false)
     if (resultado.ok) {
       setRelogioAtrasDe(null)
     } else if (resultado.relogioAtras) {
-      setRelogioAtrasDe(sessao.id)
+      setRelogioAtrasDe(sessaoId)
     } else {
-      acoes.mostrarErro(resultado.erro, () => void encerrar(sessao, momento))
+      acoes.mostrarErro(resultado.erro, () => void conduzirEncerramento(sessaoId, resultado.repetir))
     }
+  }
+
+  function encerrar(sessao: Registro, momento?: number): Promise<void> {
+    return conduzirEncerramento(sessao.id, () => acoes.encerrar(sessao, { momento }))
   }
 
   function encerrarPrincipal() {
@@ -216,6 +226,8 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
   const autorDoRegistro = (registro: Registro) => acoes.nomeDoAutor(registro.criadoPor, registro.familiaId)
 
   const noite = madrugada && principalSessao?.tipo !== 'mamada'
+  // O botão grande da madrugada é uma ação de criação: só para quem pode gravar.
+  const comBotaoDaMamada = gravacaoLiberada
   const ultimaMamada = (ultimos.dados ?? []).find((registro) => registro.tipo === 'mamada')
   const lidos = [emAndamento, ultimos, desde, notas, dia].map((secao) => secao.lidoEm)
   const lidoEm = lidos.every((valor) => valor !== null) ? Math.min(...(lidos as number[])) : null
@@ -278,6 +290,7 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
         aoEncerrarEm={(sessao, momento) => void encerrar(sessao, momento)}
         aoUnir={(grupo) => acoes.unir(grupo)}
       />
+      {emAndamento.dados?.incompleta ? <AvisoDeLista limite={LIMITES.emAndamento} dado="emAndamento" /> : null}
     </div>
   )
 
@@ -299,11 +312,14 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
     <div data-historico="" className={`flex flex-col ${espaco} ${classe}`}>
       <SecaoDoHoje secao={notas} titulo={HOJE.paraVoceSaber} papel={ativo.papel}>
         {(lista) => (
-          <ParaVoceSaber
-            notas={lista.itens.filter((nota) => nota.destaqueAte !== null && Date.parse(nota.destaqueAte) > agora).slice(0, 3)}
-            agora={agora}
-            autorDe={(nota) => acoes.nomeDoAutor(nota.criadoPor, nota.familiaId)}
-          />
+          <>
+            <ParaVoceSaber
+              notas={lista.itens.filter((nota) => nota.destaqueAte !== null && Date.parse(nota.destaqueAte) > agora).slice(0, 3)}
+              agora={agora}
+              autorDe={(nota) => acoes.nomeDoAutor(nota.criadoPor, nota.familiaId)}
+            />
+            {lista.incompleta ? <AvisoDeLista limite={LIMITES.notas} dado="notas" className="mt-3" /> : null}
+          </>
         )}
       </SecaoDoHoje>
       <SecaoDoHoje secao={desde} titulo={HOJE.desdeCarregando} papel={ativo.papel}>
@@ -394,7 +410,7 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
       className="cm-area mt-4 grid grid-cols-1 gap-5 lg:mt-10 lg:grid-cols-12 lg:items-start lg:gap-x-8 lg:gap-y-12"
     >
       {blocoCartao('lg:col-span-8 lg:col-start-1 lg:row-start-1')}
-      {noite ? blocoBotaoMamada('lg:col-span-4 lg:col-start-9 lg:row-start-2', true) : null}
+      {noite && comBotaoDaMamada ? blocoBotaoMamada('lg:col-span-4 lg:col-start-9 lg:row-start-2', true) : null}
       {blocoHistorico('lg:col-span-8 lg:col-start-1 lg:row-start-2', 'gap-5')}
       {blocoResumo('lg:col-span-4 lg:col-start-9 lg:row-start-1 lg:self-center')}
       {blocoUltimos('lg:col-span-8 lg:col-start-1 lg:row-start-3')}
@@ -407,7 +423,7 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
       className="cm-area mt-6 grid grid-cols-1 gap-8 lg:mt-10 lg:grid-cols-12 lg:items-start lg:gap-x-8 lg:gap-y-12"
     >
       {blocoCartao('lg:col-span-7 lg:col-start-1 lg:row-start-1')}
-      {blocoBotaoMamada('lg:col-span-5 lg:col-start-8 lg:row-start-1 lg:self-center', false)}
+      {comBotaoDaMamada ? blocoBotaoMamada('lg:col-span-5 lg:col-start-8 lg:row-start-1 lg:self-center', false) : null}
       {blocoHistorico('lg:col-span-7 lg:col-start-1 lg:row-span-2 lg:row-start-2', 'gap-8')}
       {blocoResumo('lg:col-span-5 lg:col-start-8 lg:row-start-2')}
       {blocoUltimos('lg:col-span-5 lg:col-start-8 lg:row-start-3')}
