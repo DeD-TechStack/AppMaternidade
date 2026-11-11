@@ -1665,8 +1665,10 @@
     white-space: nowrap;
   }
 
+  /* O vão do nome para as colunas de links é de 96 px (era 160): com a linha "Páginas do site" nas
+     mesmas colunas o rodapé em 1440 cabe em 1020 px (eram 1211). */
   .sb-rodape-links {
-    margin-top: 160px;
+    margin-top: 96px;
   }
 
   .sb-rodape-colunas {
@@ -1689,6 +1691,8 @@
     margin: 0;
   }
 
+  /* Com a fonte raiz ampliada (200%) uma palavra pode passar da coluna de 176 px: o link quebra dentro
+     dela (sem cortar nem esconder texto). Em fonte normal nada muda. */
   .sb-rodape-link {
     display: flex;
     align-items: center;
@@ -1696,10 +1700,12 @@
     color: inherit;
     text-decoration: underline;
     text-underline-offset: 4px;
+    overflow-wrap: anywhere;
   }
 
+  /* Do último link à linha final há 64 px (eram 192): no máximo 128. */
   .sb-rodape-final {
-    margin: 192px 0 0;
+    margin: 64px 0 0;
   }
 
   /* Abaixo de 768 nenhum vão do rodapé passa de 96 px (o rodapé fica mais baixo que os cerca de
@@ -3417,16 +3423,45 @@ body:has([data-barra-registrar]) [data-rodape] {
     margin-top: 8px;
   }
 
-  /* O e-mail de contato: um endereço comprido quebra em vez de passar da coluna. */
+  /* A coluna do texto da linha é o contêiner do e-mail: o tamanho dele se mede por ela (`cqw`). Só a
+     largura: o `inline-size` não deixa a coluna crescer com o texto, e ela já é a trilha da grade. */
+  .vp-linha .sb-linha-texto {
+    container-type: inline-size;
+  }
+
+  /* O e-mail de contato nunca quebra (nem depois do "@") e usa a fonte do corpo, não a serifa do título
+     (no "ll" de "11" a serifa lia "ll"). Uma caixa de linha única, `inline-block`, com 44 px de altura e
+     de entrelinha: o alvo de toque é a própria caixa (o recuo vertical de um elemento em linha aumentaria
+     a altura medida). A margem negativa em cima e embaixo tira os 44 px da conta da linha do parágrafo
+     (a margem da caixa fica abaixo de 24 px), e a linha segue com a entrelinha do texto à volta. O tamanho
+     é o do parágrafo (1em); só encolhe, para o endereço (cerca de 14,5 em) caber na coluna, quando a fonte
+     raiz está ampliada: com 6,4% da coluna ele ocupa cerca de 93% dela. */
   .vp-email {
-    overflow-wrap: anywhere;
+    display: inline-block;
+    box-sizing: border-box;
+    min-height: 44px;
+    margin-block: -12px;
+    font-family: var(--fonte-sb-corpo);
+    font-size: min(1em, 6.4cqw);
+    line-height: 44px;
+    white-space: nowrap;
+    vertical-align: baseline;
+  }
+
+  /* O Contato: o e-mail é o texto da 1ª linha, em `corpo-g` (28 px em 1440, 20 px em 390). De 768 a 1199
+     a coluna do texto (328 a 560 px) é estreita para 28 px (o endereço tem cerca de 406 px): ali o
+     parágrafo fica em `corpo` (20 px). */
+  @media (min-width: 768px) and (max-width: 1199px) {
+    .vp-canal {
+      font-size: 1.25rem;
+      line-height: 1.75rem;
+    }
   }
 
   /* Link no meio de um parágrafo: o alvo de toque tem pelo menos 44 px de altura. O recuo vertical de
      um elemento em linha não muda a altura da linha: só estende a área do link (a caixa do texto tem
-     1,2 em de altura). */
-  .vp-texto p a,
-  .vp-email {
+     1,2 em de altura). O e-mail não entra aqui: o alvo dele é a própria caixa (`.vp-email`). */
+  .vp-texto p a:not(.vp-email) {
     padding-block: max(0px, calc((44px - 1.2em) / 2));
   }
 
@@ -3709,32 +3744,25 @@ body:has([data-barra-registrar]) [data-rodape] {
     }
   }
 
-  /* A linha "Páginas do site" do rodapé da casca: a composição de linha do sistema-base (rótulo em
-     c2–c3, os links a partir de c4 mais 32 px, até c8), sobre o urucum, depois das colunas de links
-     e antes da linha final. Os 9 links descem em 2 colunas (5 e 4), lidos de cima para baixo. Sem fios:
-     o fio do topo e o nome do rodapé já dão a estrutura. Abaixo de 768 a grade vira uma coluna, o
-     rótulo fica em cima e os links em coluna única. */
+  /* A linha "Páginas do site" do rodapé da casca, sobre o urucum, depois das colunas de links e antes da
+     linha final. De 768 para cima ela usa a grade das colunas de links (3 × 176 px, como `.sb-rodape-colunas`:
+     x=32, 208 e 384 em 1440): o rótulo na 1ª coluna e os 9 links em duas colunas, a 2ª e a 3ª, lidos de
+     cima para baixo (5 e 4). Cada link quebra dentro da própria coluna de 176 px. Sem fios: o fio do topo e
+     o nome do rodapé já dão a estrutura. Abaixo de 768 a grade vira uma coluna, o rótulo fica em cima e os
+     links em coluna única (como sempre). */
   .vp-rodape-paginas {
-    margin-top: 96px;
+    margin-top: 32px;
   }
 
   /* O rótulo é do mesmo tipo dos títulos das colunas do rodapé (corpo-p) e fica na altura do texto do
      1º link (os links têm o alvo de toque inteiro, com o texto centrado nele). */
   .vp-rodape-rotulo {
-    grid-column: 2 / 4;
     margin: 0;
     padding: calc((var(--alvo-toque) - 24px) / 2) 16px 0 0;
   }
 
   .vp-rodape-lista {
-    grid-column: 4 / 9;
-    display: grid;
-    grid-auto-flow: column;
-    grid-template-columns: repeat(2, minmax(0, max-content));
-    grid-template-rows: repeat(5, auto);
-    column-gap: 32px;
-    max-width: 560px;
-    margin: 0 0 0 32px;
+    margin: 0;
     padding: 0;
     list-style: none;
   }
@@ -3745,10 +3773,32 @@ body:has([data-barra-registrar]) [data-rodape] {
     color: inherit;
     text-decoration: underline;
     text-underline-offset: 4px;
+    overflow-wrap: anywhere;
   }
 
   .vp-rodape-link[aria-current='page'] {
     font-weight: 600;
+  }
+
+  @media (min-width: 768px) {
+    .vp-rodape-paginas {
+      grid-template-columns: repeat(3, 176px);
+    }
+
+    .vp-rodape-rotulo {
+      grid-column: 1;
+    }
+
+    .vp-rodape-lista {
+      grid-column: 2 / 4;
+      display: grid;
+      grid-auto-flow: column;
+      grid-template-columns: repeat(2, 176px);
+      grid-template-rows: repeat(5, auto);
+      /* Um link de duas linhas (a coluna de 176 px quebra "Desenvolvimento e tummy time") não encosta no
+         seguinte. */
+      row-gap: 8px;
+    }
   }
 
   @media (max-width: 767px) {

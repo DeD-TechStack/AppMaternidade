@@ -47,8 +47,8 @@ function limparRegistros() {
   rolagemAoTopo.mockClear()
 }
 
-/** A navegação entre as páginas (no fim de cada página): o rodapé da casca ainda não liga para elas. */
-const paginasDoSite = () => screen.getByRole('navigation', { name: 'Páginas do site' })
+/** A navegação entre as páginas: a lista "Páginas do site" do rodapé da casca (as páginas não a repetem no main). */
+const paginasDoSite = () => screen.getByRole('navigation', { name: 'Páginas do site, no rodapé' })
 
 describe('a tabela de precedência (função pura)', () => {
   const nova = { tipo: 'nova', soAncora: false, ancoraValida: false } as const

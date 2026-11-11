@@ -1873,11 +1873,13 @@ describe('rodada 4: cabeçalho, desativado, modo madrugada, rodapé em 390 e ró
       return declaracao ? [...declaracao[1].matchAll(/(\d+(?:\.\d+)?)px/g)].map((m) => Number(m[1])) : []
     }
 
-    it('os espaços do rodapé em 1440 não mudaram (96, 96, 160, 192, 96 e 32)', () => {
+    it('os espaços do rodapé em 1440 são 96, 96, 96, 64 e 32 (cima, nome, links, linha final e embaixo)', () => {
+      // Antes: 96, 96, 160, 192. Com a linha "Páginas do site" nas colunas de links o rodapé tem de caber em
+      // 1020 px (mede 999,125) e a linha final ficar a, no máximo, 128 px do último link.
       expect(corpoBase('.sb-rodape')).toMatch(/padding-block:\s*96px 32px/)
       expect(corpoBase('.sb-rodape-nome')).toMatch(/margin:\s*96px 0 0/)
-      expect(corpoBase('.sb-rodape-links')).toMatch(/margin-top:\s*160px/)
-      expect(corpoBase('.sb-rodape-final')).toMatch(/margin:\s*192px 0 0/)
+      expect(corpoBase('.sb-rodape-links')).toMatch(/margin-top:\s*96px/)
+      expect(corpoBase('.sb-rodape-final')).toMatch(/margin:\s*64px 0 0/)
     })
 
     it('abaixo de 768 nenhum espaço do rodapé passa de 96 px: o de cima, o do nome, o dos links e o da linha final', () => {

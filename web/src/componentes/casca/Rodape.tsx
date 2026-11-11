@@ -17,8 +17,9 @@ const [TRECHO_1, TRECHO_2] = [NOME_SITE.slice(0, 3), NOME_SITE.slice(3)]
 /**
  * O rodapé do site, o mesmo em todas as telas: de borda a borda, em urucum (na madrugada, o bloco
  * escuro). Um fio interrompido pelo nome no topo, o nome gigante, os links em colunas em x=32, 208
- * e 384 (mais um bloco em c7), a linha "Páginas do site" (rótulo em c2, os 9 links a partir de c4 mais
- * 32 px) e a linha final com o aviso de protótipo.
+ * e 384 (mais um bloco em c7), a linha "Páginas do site" (rótulo em x=32 e os 9 links em duas colunas, em
+ * x=208 e 384, na mesma grade das colunas de links) e a linha final com o aviso de protótipo. É a única
+ * lista de páginas das 9 páginas públicas; só a Página não encontrada leva outra, no main.
  */
 export function Rodape() {
   const { pathname } = useLocation()

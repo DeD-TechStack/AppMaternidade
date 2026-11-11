@@ -76,15 +76,21 @@ describe('a classe "página da MAT-36": a abertura da base, sem restos da tela a
       expect(principal(container).className).not.toMatch(/\bpx-4\b|\bmd:px-/)
     })
 
-    it(`${caminho}: a linha "Páginas do site" tem os 9 links, depois do conteúdo`, async () => {
+    it(`${caminho}: a lista "Páginas do site" com os 9 links está no ${INEXISTENTES.includes(caminho) ? 'main, depois do conteúdo' : 'rodapé, e não no main'}`, async () => {
       const container = await abrir(caminho)
 
       const navs = container.querySelectorAll(`main nav[aria-label="${ROTULOS.paginas}"]`)
-      expect(navs).toHaveLength(1)
-      const links = [...navs[0].querySelectorAll('li > a')]
-      expect(links.map((a) => a.getAttribute('href'))).toEqual(PAGINAS_DO_SITE.map((p) => p.para))
-      const ultimo = filhosDoMain(container).at(-1)!
-      expect(ultimo.contains(navs[0])).toBe(true)
+      if (INEXISTENTES.includes(caminho)) {
+        expect(navs).toHaveLength(1)
+        const links = [...navs[0].querySelectorAll('li > a')]
+        expect(links.map((a) => a.getAttribute('href'))).toEqual(PAGINAS_DO_SITE.map((p) => p.para))
+        const ultimo = filhosDoMain(container).at(-1)!
+        expect(ultimo.contains(navs[0])).toBe(true)
+      } else {
+        // As 9 páginas: a lista é só a do rodapé (a 404 é a única que a mantém no main).
+        expect(navs).toHaveLength(0)
+        expect(container.querySelectorAll('footer nav a')).not.toHaveLength(0)
+      }
     })
   }
 })

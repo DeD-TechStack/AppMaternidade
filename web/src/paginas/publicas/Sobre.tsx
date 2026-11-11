@@ -2,7 +2,6 @@ import { AberturaPublica } from '../../componentes/publicas/AberturaPublica.tsx'
 import { Apresentacao } from '../../componentes/publicas/Apresentacao.tsx'
 import { LinhaDeLeitura } from '../../componentes/publicas/LinhaDeLeitura.tsx'
 import { MidiaLarga, ParDeMidias } from '../../componentes/publicas/MidiaDePagina.tsx'
-import { PaginasDoSite } from '../../componentes/publicas/PaginasDoSite.tsx'
 import { Paragrafo } from '../../componentes/publicas/Textos.tsx'
 import { ETIQUETAS_LATERAIS, H1, SOBRE, SUBTITULOS } from '../../conteudo/publicas.ts'
 
@@ -31,7 +30,6 @@ export function Sobre() {
       <MidiaLarga peca={{ cena: 'tapete', fundo: 'lavanda' }} margem="sb-mt-midia-linhas" />
       <LinhaDeLeitura secao={oQueNaoFaz.secao} blocos={oQueNaoFaz.textos} margem="sb-mt-midia-linhas" />
       <LinhaDeLeitura secao={quemFaz.secao} blocos={quemFaz.textos} />
-      <PaginasDoSite />
     </main>
   )
 }

@@ -2,10 +2,11 @@ import { Link, useLocation } from 'react-router'
 import { PAGINAS_DO_SITE, ROTULOS } from '../../conteudo/publicas.ts'
 
 /**
- * A navegação entre as páginas, no fim de cada página (antes do rodapé): uma linha rótulo + texto, com
- * o rótulo num `<p>` (não é um `h2`) e os 9 links numa lista, com alvos de 44 px. O link da própria
- * página leva `aria-current="page"`. O espaço de cima é o de uma linha depois de uma mídia (160 em 1440),
- * a não ser que a página peça outro (a Página não encontrada, onde só um link vem antes).
+ * A navegação entre as páginas, no fim da Página não encontrada (antes do rodapé): uma linha rótulo +
+ * texto, com o rótulo num `<p>` (não é um `h2`) e os 9 links numa lista, com alvos de 44 px. As 9
+ * páginas públicas não a repetem: a lista delas é a do rodapé da casca. O link da própria página leva
+ * `aria-current="page"`. O espaço de cima é o que a página pedir (na Página não encontrada, onde só um
+ * link vem antes).
  */
 export function PaginasDoSite({ margem = 'sb-mt-midia-linhas' }: { margem?: string }) {
   const { pathname } = useLocation()

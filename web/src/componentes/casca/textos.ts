@@ -78,8 +78,8 @@ export const COLUNAS_DO_RODAPE: readonly ColunaDoRodape[] = [
 ]
 
 // A linha "Páginas do site" do rodapé: os 9 rótulos e destinos e o rótulo visível são os de
-// `conteudo/publicas.ts` (não se repete texto). O nome do landmark é outro: cada página pública já
-// termina com um nav "Páginas do site", e o axe reprova dois landmarks com o mesmo nome.
+// `conteudo/publicas.ts` (não se repete texto). O nome do landmark é outro: a Página não encontrada
+// ainda termina com um nav "Páginas do site" dentro do main, e o axe reprova dois landmarks com o mesmo nome.
 export const ROTULO_PAGINAS_NO_RODAPE = ROTULOS.paginas
 export const ROTULO_NAVEGACAO_PAGINAS_RODAPE = `${ROTULOS.paginas}, no rodapé`
 export const PAGINAS_NO_RODAPE = PAGINAS_DO_SITE

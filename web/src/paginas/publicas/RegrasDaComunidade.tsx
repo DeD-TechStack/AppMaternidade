@@ -2,7 +2,6 @@ import { Apresentacao } from '../../componentes/publicas/Apresentacao.tsx'
 import { AberturaPublica } from '../../componentes/publicas/AberturaPublica.tsx'
 import { LinhaDeLeitura } from '../../componentes/publicas/LinhaDeLeitura.tsx'
 import { MidiaLarga } from '../../componentes/publicas/MidiaDePagina.tsx'
-import { PaginasDoSite } from '../../componentes/publicas/PaginasDoSite.tsx'
 import { TabelaDeLeitura } from '../../componentes/publicas/TabelaDeLeitura.tsx'
 import { H1, REGRAS, SUBTITULOS } from '../../conteudo/publicas.ts'
 
@@ -24,7 +23,6 @@ export function RegrasDaComunidade() {
         depois={<TabelaDeLeitura {...ajuda.tabela} colunaDeDestaque={1} />}
       />
       <LinhaDeLeitura secao={denuncias.secao} blocos={denuncias.blocos} />
-      <PaginasDoSite />
     </main>
   )
 }

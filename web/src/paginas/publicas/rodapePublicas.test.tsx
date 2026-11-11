@@ -173,12 +173,15 @@ describe('rodapé da casca: linha "Páginas do site"', () => {
       }
     })
 
-    it('o rótulo fica em c2 e a lista começa em c4 mais 32 px, como as linhas rótulo + texto', () => {
-      const rotulo = regras.find((r) => r.seletor === '.vp-rodape-rotulo')!
-      expect(rotulo.corpo).toMatch(/grid-column:\s*2\s*\/\s*4/)
-      const lista = regras.find((r) => r.seletor === '.vp-rodape-lista')!
-      expect(lista.corpo).toMatch(/grid-column:\s*4\s*\/\s*9/)
-      expect(lista.corpo).toMatch(/margin(-left)?:\s*(0 0 0 )?32px/)
+    it('o rótulo fica na 1ª coluna (x=32) e a lista nas colunas 2 e 3 (x=208 e 384) da grade de 3 × 176 px dos links do rodapé', () => {
+      // Antes: rótulo em c2 e lista em c4 + 32 px (a linha rótulo + texto das páginas). Agora é a grade das colunas de links.
+      const grade = regras.find((r) => r.seletor === '.vp-rodape-paginas' && /repeat\(3/.test(r.corpo))!
+      expect(grade.corpo).toMatch(/grid-template-columns:\s*repeat\(3,\s*176px\)/)
+      const rotulo = regras.find((r) => r.seletor === '.vp-rodape-rotulo' && /grid-column:\s*1\s*;/.test(r.corpo))!
+      expect(rotulo).toBeDefined()
+      const lista = regras.find((r) => r.seletor === '.vp-rodape-lista' && /grid-column:\s*2\s*\/\s*4/.test(r.corpo))!
+      expect(lista.corpo).toMatch(/grid-template-columns:\s*repeat\(2,\s*176px\)/)
+      expect(lista.corpo).not.toMatch(/margin(-left)?:\s*(0 0 0 )?32px/)
     })
 
     it('abaixo de 768 nenhum vão da linha passa de 96 px e a lista volta a uma coluna', () => {

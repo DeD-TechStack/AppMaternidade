@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, fireEvent, screen, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, screen, within } from '@testing-library/react'
 import axe from 'axe-core'
 import { PROMESSA } from '../../conteudo/textos.ts'
 import { renderizarRota } from '../../teste/renderizarRota.tsx'
@@ -150,7 +150,9 @@ describe('acessibilidade (axe-core) das páginas públicas', () => {
   }
 })
 
-describe('navegação entre as páginas (PaginasDoSite)', () => {
+describe('navegação entre as páginas (a lista "Páginas do site" do rodapé; a 404 mantém a do main)', () => {
+  const NAV_DO_RODAPE = 'Páginas do site, no rodapé'
+
   const LINKS = [
     ['Como funciona', '/como-funciona'],
     ['Cuidado compartilhado', '/cuidado-compartilhado'],
@@ -163,32 +165,46 @@ describe('navegação entre as páginas (PaginasDoSite)', () => {
     ['Sobre', '/sobre'],
   ]
 
-  it('cada página nova termina com a navegação "Páginas do site", com os 9 links, nesta ordem', async () => {
+  it('cada página nova tem a lista "Páginas do site" no rodapé (e não no main), com os 9 links, nesta ordem', async () => {
     for (const caminho of CAMINHOS_NOVOS) {
       const { container, unmount } = renderizarRota(caminho)
       await screen.findAllByRole('heading', { level: 1 })
 
-      const nav = within(container).getByRole('navigation', { name: 'Páginas do site' })
+      expect(container.querySelector('main nav[aria-label="Páginas do site"]'), caminho).toBeNull()
+      const nav = within(container).getByRole('navigation', { name: NAV_DO_RODAPE })
       expect(
         within(nav)
           .getAllByRole('link')
           .map((link) => [link.textContent, link.getAttribute('href')]),
         caminho,
       ).toEqual(LINKS)
-      // É o último bloco do main e fica antes do rodapé.
-      const principal = container.querySelector('main')!
-      expect(principal.lastElementChild!.contains(nav), caminho).toBe(true)
-      expect(nav.compareDocumentPosition(container.querySelector('footer')!) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
+      // Fica dentro do rodapé, depois de todo o main.
+      expect(container.querySelector('footer')!.contains(nav), caminho).toBe(true)
+      expect(container.querySelector('main')!.compareDocumentPosition(nav) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
       unmount()
     }
   }, 30000)
+
+  it('a Página não encontrada mantém a lista no main, com os 9 links, como último bloco', async () => {
+    const { container } = renderizarRota('/rota-inexistente')
+    await screen.findAllByRole('heading', { level: 1 })
+
+    const nav = container.querySelector('main nav[aria-label="Páginas do site"]')!
+    expect(
+      within(nav as HTMLElement)
+        .getAllByRole('link')
+        .map((link) => [link.textContent, link.getAttribute('href')]),
+    ).toEqual(LINKS)
+    expect(container.querySelector('main')!.lastElementChild!.contains(nav)).toBe(true)
+    expect(container.querySelectorAll('main nav[aria-label^="Páginas do site"]')).toHaveLength(1)
+  })
 
   it('só o link da própria página leva aria-current="page"', async () => {
     for (const caminho of CAMINHOS_NOVOS) {
       const { container, unmount } = renderizarRota(caminho)
       await screen.findAllByRole('heading', { level: 1 })
 
-      const nav = container.querySelector('nav[aria-label="Páginas do site"]')!
+      const nav = container.querySelector(`nav[aria-label="${NAV_DO_RODAPE}"]`)!
       const atuais = [...nav.querySelectorAll('a[aria-current]')]
       expect(atuais, caminho).toHaveLength(1)
       expect(atuais[0].getAttribute('aria-current'), caminho).toBe('page')
@@ -197,21 +213,29 @@ describe('navegação entre as páginas (PaginasDoSite)', () => {
     }
   }, 30000)
 
-  it('o rótulo é um parágrafo, não um título, e cada link tem alvo de 44 px (alvo-toque)', async () => {
+  it('o rótulo é um parágrafo, não um título, e cada link tem alvo de 44 px (alvo-toque): no rodapé e na 404', async () => {
     const { container } = renderizarRota('/sobre')
     await screen.findAllByRole('heading', { level: 1 })
 
-    const nav = container.querySelector('nav[aria-label="Páginas do site"]')!
+    const nav = container.querySelector(`nav[aria-label="${NAV_DO_RODAPE}"]`)!
     expect(nav.querySelector('h1, h2, h3')).toBeNull()
-    expect(nav.querySelector('p.t-rotulo')!.textContent).toBe('Páginas do site')
+    expect(nav.querySelector('p.t-corpo-p')!.textContent).toBe('Páginas do site')
     for (const link of nav.querySelectorAll('a')) expect(link.classList.contains('alvo-toque')).toBe(true)
+    cleanup()
+
+    const { container: naoEncontrada } = renderizarRota('/rota-inexistente')
+    await screen.findAllByRole('heading', { level: 1 })
+    const navDoMain = naoEncontrada.querySelector('main nav[aria-label="Páginas do site"]')!
+    expect(navDoMain.querySelector('h1, h2, h3')).toBeNull()
+    expect(navDoMain.querySelector('p.t-rotulo')!.textContent).toBe('Páginas do site')
+    for (const link of navDoMain.querySelectorAll('a')) expect(link.classList.contains('alvo-toque')).toBe(true)
   })
 
-  it('um clique leva à página, com o título da aba dela', async () => {
+  it('um clique no rodapé leva à página, com o título da aba dela', async () => {
     renderizarRota('/sobre')
     await screen.findAllByRole('heading', { level: 1 })
 
-    fireEvent.click(within(screen.getByRole('navigation', { name: 'Páginas do site' })).getByRole('link', { name: 'Contato' }))
+    fireEvent.click(within(screen.getByRole('navigation', { name: NAV_DO_RODAPE })).getByRole('link', { name: 'Contato' }))
 
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Contato')
     expect(document.title).toBe('Contato | AppMaternidade')
@@ -223,7 +247,8 @@ describe('navegação entre as páginas (PaginasDoSite)', () => {
 
     const nomes = [...container.querySelectorAll('nav')].map((nav) => nav.getAttribute('aria-label'))
     expect(new Set(nomes).size).toBe(nomes.length)
-    expect(nomes).toEqual(expect.arrayContaining(['Nesta página', 'Páginas do site']))
+    expect(nomes).toEqual(expect.arrayContaining(['Nesta página', NAV_DO_RODAPE]))
+    expect(nomes).not.toContain('Páginas do site')
   })
 })
 
@@ -248,11 +273,12 @@ describe('links internos', () => {
     return pagina
   }
 
-  it('todo href do main que começa com / leva a uma rota que não é a 404 e a um id existente e único', async () => {
+  it('todo href do main e da lista "Páginas do site" do rodapé que começa com / leva a uma rota que não é a 404 e a um id existente e único', async () => {
     for (const origem of CAMINHOS_NOVOS) {
       const { container, unmount } = renderizarRota(origem)
       await screen.findAllByRole('heading', { level: 1 })
-      const hrefs = [...container.querySelectorAll('main a[href]')]
+      // A lista de páginas saiu do main (Cuidado, Desenvolvimento e Sobre ficaram sem link nele): entra a do rodapé.
+      const hrefs = [...container.querySelectorAll('main a[href], footer nav[aria-label="Páginas do site, no rodapé"] a[href]')]
         .map((a) => a.getAttribute('href')!)
         .filter((href) => !href.startsWith('mailto:'))
       unmount()
