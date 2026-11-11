@@ -33,7 +33,7 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 - [x 98c50de] P-02 MAT-49a base (g1 t_fdba5bed + g2 t_836284e3): revisão R3 aprovada, integrada por fast-forward em `int/refazer` (e73e75a..98c50de) | 11/11 12h30
 - [x] P-25 49b, 49c, 36r-A e 37r soltos sobre o head d65dfeb com aval do coordenador (t_7326afbf); 5 cartões rodando juntos às 11h30 (4 páginas + revisão R2 da g2) | 11/11, sem SHA (board)
 - [x] P-03 Base mostrada a Daniel cedo: `DIRECOES_20261111/GALERIA_BASE.html` aberta e prévia ao vivo em http://127.0.0.1:5281/sistema | 11/11 10h50, sem SHA
-- [~ t_606fb2fb] P-04 MAT-49b Hoje, Sessão e Madrugada | g1 t_26066f02 (e6fc1c8) caiu em triage no 2º bloqueio (alvos do casco com 44 px na madrugada) e foi arquivada; g2 t_606fb2fb leva os alvos a 56 px só na madrugada e pede revisão; 49d e 38a religados à g2
+- [x b234554] P-04 MAT-49b g2 (t_606fb2fb) Hoje, Sessão e Madrugada: revisão R3 aprovada (aa89a29) e integrada por merge "Integra o int/refazer na 49b g2 aprovada" (diff conferido, check 546 testes; testes de Hoje/Sessão trocados pelo redesenho, revistos) em `int/refazer` (35f95de..b234554); a volta visual segue na 49b v2 (P-32) | 11/11
 - [~ t_e1d0eaa8] P-05 MAT-36r-B: as 6 páginas de texto | revisão R1 pediu mudanças (fragmento malformado derruba a página; links do índice que grudam precisam ficar visíveis no foco); de volta ao executor
 - [~ t_d63c932a] P-06 MAT-37r: traz o fad75c0 (dados, sessão, Auth) e refaz Entrar, Criar conta, Recuperar, Começar e Conta | depende de P-02
 
@@ -59,7 +59,7 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 
 - [~ t_31f10932] P-33 Páginas de texto: volta 1 dos juízes cegos (texto_r1 válida nos 2, notas 5,5–7,1, REPROVA volta 1). A MAT-36r-B v2 trata a margem no celular, os avisos na primeira dobra, a coluna vazia, o painel lateral, o e-mail do Contato, a ordem da Exclusão e o SAMU | `juizes/rodadas/DEVOLUCAO_36rB.md`
 
-- [~ t_48aa413e] P-34 CI de `int/refazer` vermelha desde 10/11 só porque `verificar-commits` reprova merges, e a rota de integração faz merge de `int/refazer` nos ramos dos cartões. A MAT-48c aceita só os merges "Traz/Integra o int/refazer" de Daniel. Bloqueia a publicação (P-19, passo 1)
+- [x c70c2d3] P-34 MAT-48c (t_48aa413e): política de commits aceita só os merges "Traz/Integra o int/refazer" de Daniel; aprovada (64a8054) e integrada (b234554..c70c2d3). `verificar-commits c7142bb..HEAD` = OK, 252 commits | 11/11
 
 ## Dados ligados às telas novas (religados e soltos em 11/11)
 
