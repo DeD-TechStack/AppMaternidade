@@ -20,7 +20,7 @@ Esta é a nota de partida da próxima sessão de trabalho no site. Ela registra 
   - 6 ilustrações de traço;
   - o registro de cada um em `FINAL/ativos/PROVENANCE.md`.
 - **Cartões:**
-  - t_fdba5bed MAT-49a g1, base: tokens, fontes, cabeçalho, rodapé, componentes, movimento e `/sistema`. O código ficou pronto (62eab0f), com prévia em http://127.0.0.1:5281/sistema. Caiu em triage porque o medidor de tela media o sistema antigo; aguarda arquivamento.
+  - t_fdba5bed MAT-49a g1, base: tokens, fontes, cabeçalho, rodapé, componentes, movimento e `/sistema`. O código ficou pronto (62eab0f), com prévia em http://127.0.0.1:5281/sistema. Caiu em triage porque o medidor de tela media o sistema antigo; arquivada em 11/11 com o aval do coordenador, porque a g2 leva o código dela.
   - t_836284e3 MAT-49a g2: reescreve o medidor para o DESIGN.md e completa as licenças, depois pede revisão de g1 + g2. É o pai dos 5 cartões de página. Galeria da base: `DIRECOES_20261111/GALERIA_BASE.html`.
   - t_26066f02 MAT-49b: Hoje, Sessão e Madrugada. Em Opus, espera a base.
   - t_3c6e3a0c MAT-49c: Início com as cenas. Em Opus, espera só a base desde 11/11 10h15. As cenas são compostas com capturas das próprias páginas.
