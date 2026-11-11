@@ -28,6 +28,8 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 - [~ t_0aecd8d2] P-21 MAT-49d: recompor as cenas de marketing com as telas novas de Hoje, Sessão e Madrugada (só imagens, mesmos nomes de arquivo) | depende de P-04, P-06, P-07 e P-08
 - [ ] P-22 Calibração dos juízes: com a regra nova (equipe 531fac0), o Fable é válido na rodada 0; o Astra continua nulo porque não dá nota a imagem com portão falhando ("sem nota" na seção 1). Proposta ao coordenador: no prompt, nota em toda imagem, e rodar de novo só o Astra (`juizes/CALIBRACAO0.md`) | sem os 2 juízes válidos, nenhuma página passa
 
+- [ ] P-23 Limpeza depois das páginas: apagar `web/src/paginas/publicas/PaginaSimples.tsx` (usada pelas 9 páginas públicas até a 36r-A e a 36r-B integrarem) e `web/src/componentes/casca/SubmenuEmBreve.tsx` (sem uso desde a base), com `apagar:` no cartão | depende de P-08 e da 36r-B
+
 ## Dados ligados às telas novas (religados e soltos em 11/11)
 
 - [x] P-09 Corpos dos 6 cartões abaixo reescritos para a base nova antes do claim (prefixo `FINAL/OVERRIDE_DADOS.md`) e soltos em todo, presos aos pais | 11/11 9h50; sem SHA (é board)
