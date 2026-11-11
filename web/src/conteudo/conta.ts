@@ -3,7 +3,7 @@ import type { ErroDados } from '../dados/comum.ts'
 // Todos os textos de interface da área de conta (MAT-37a). Já passaram pela revisão de texto
 // (`.oc/textos_MAT-37a.md`): não reescrever. Nenhum arquivo de `paginas/` declara frase em literal.
 
-export const MARCA = 'AppMaternidade'
+const MARCA = 'AppMaternidade'
 
 // O contato provisório da demonstração (decisão de Daniel, 06/11/2026): o e-mail do autor dos
 // commits do repositório. É o único lugar do código em que ele aparece.
@@ -19,10 +19,46 @@ export const TITULOS = {
   conta: 'Conta',
 } as const
 
-/** O título da aba é fixo por rota: "<h1> | AppMaternidade". */
+/** O título da aba é fixo por rota: "<título da rota> | AppMaternidade". */
 export function tituloDaAba(titulo: string): string {
   return `${titulo} | ${MARCA}`
 }
+
+/**
+ * O `h1` das telas com a cena de mel: a primeira linha e a segunda, esta inteira em itálico. Cada uma
+ * diz o que a família ganha, e não o que o site é. Linhas curtas: cada uma cabe numa linha na coluna do
+ * formulário. O título da aba continua o de `TITULOS`.
+ */
+export const MANCHETES = {
+  entrar: ['Volte à rotina', 'que vocês dividem.'],
+  criarConta: ['Divida a rotina', 'do bebê com carinho.'],
+  recuperarAcesso: ['Esqueceu a senha?', 'A gente te ajuda.'],
+  redefinirSenha: ['Senha nova,', 'rotina de volta.'],
+  contaExcluida: ['Conta excluída.', 'Foi bom ter você.'],
+  comecar: ['Vamos começar', 'pelo seu nome.'],
+} as const
+
+/** O nome acessível de cada `h1` acima: as duas linhas, separadas por um espaço. */
+function nomeDoH1(linhas: readonly [string, string]): string {
+  return `${linhas[0]} ${linhas[1]}`
+}
+
+export const NOMES_DO_H1 = {
+  entrar: nomeDoH1(MANCHETES.entrar),
+  criarConta: nomeDoH1(MANCHETES.criarConta),
+  recuperarAcesso: nomeDoH1(MANCHETES.recuperarAcesso),
+  redefinirSenha: nomeDoH1(MANCHETES.redefinirSenha),
+  contaExcluida: nomeDoH1(MANCHETES.contaExcluida),
+  comecar: nomeDoH1(MANCHETES.comecar),
+} as const
+
+/** A cena de mel das telas de acesso: os arquivos de `web/public/cenas/acesso/` (512 × 768 em 1×). */
+export const CENA_ACESSO = {
+  base: '/cenas/acesso/entrar',
+  largura: 512,
+  altura: 768,
+  alt: 'Celular sobre um pedestal de oliva, com uma tela do app AppMaternidade aberta.',
+} as const
 
 export const COMUM = {
   carregando: 'Carregando…',
@@ -124,9 +160,11 @@ export const CONTA = {
     excluir: 'Excluir conta',
     privacidade: 'Privacidade',
   },
-  resumo: (nome: string, email: string) => `${nome} · ${email}`,
+  // Sem nome (conta que ficou com o nome em branco), só o e-mail: nada de ponto solto no começo.
+  resumo: (nome: string, email: string) => (nome.trim() ? `${nome} · ${email}` : email),
   perfil: {
     titulo: 'Perfil',
+    frase: 'Seu nome é o que a família vê. O e-mail é o da entrada e não muda por aqui.',
     nome: 'Seu nome',
     email: 'E-mail',
     fuso: 'Seu fuso',
