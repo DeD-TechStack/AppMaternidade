@@ -204,6 +204,23 @@ describe('Início: tabela', () => {
   })
 })
 
+describe('Início: mídia dos painéis (M3)', () => {
+  it('o desenho do turno e a foto da tabela ficam dentro da revelação na rolagem, no próprio painel', () => {
+    abrirInicio()
+    const turno = screen.getByRole('region', { name: 'Quem chega no turno já sabe o que houve.' })
+    const desenho = turno.querySelector('img[data-ilustracao="maos-celular"]')!
+    const revelaDesenho = desenho.closest('[data-revela]')
+    expect(revelaDesenho).not.toBeNull()
+    expect(revelaDesenho!.closest('.in-turno-arte')).not.toBeNull()
+
+    const tabela = screen.getByRole('region', { name: 'O caderno ajuda. O app divide.' })
+    const foto = within(tabela).getByRole('img', { name: 'Um celular sobre linho com uma tela real do AppMaternidade' })
+    const revelaFoto = foto.closest('[data-revela]')
+    expect(revelaFoto).not.toBeNull()
+    expect(revelaFoto!.closest('.in-tabela-foto')).not.toBeNull()
+  })
+})
+
 describe('Início: citação e depoimentos', () => {
   it('a citação da Carla vem antes dos 3 relatos, e a linha "Relatos ilustrativos" aparece uma vez', () => {
     const { main } = abrirInicio()

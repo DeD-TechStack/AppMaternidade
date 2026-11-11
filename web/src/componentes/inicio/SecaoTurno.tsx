@@ -4,6 +4,7 @@ import { Ilustracao } from '../campo/Ilustracao.tsx'
 import { PainelCampo } from '../campo/PainelCampo.tsx'
 import { Titulo } from '../campo/Titulo.tsx'
 import { INICIO } from '../../conteudo/textos.ts'
+import { RevelaNaRolagem } from '../../movimento/RevelaNaRolagem.tsx'
 import './inicio.css'
 
 // A cor de cada avatar (só tokens): mel, oliva e areia, na ordem da lista.
@@ -26,7 +27,9 @@ export function SecaoTurno() {
           <p className="cm-lide">{texto}</p>
         </div>
         <div className="in-turno-arte">
-          <Ilustracao nome="maos-celular" decorativa />
+          <RevelaNaRolagem className="in-revela">
+            <Ilustracao nome="maos-celular" decorativa />
+          </RevelaNaRolagem>
         </div>
       </div>
       <CartaoFlutuante giro={2} posicao="baixo-direita">

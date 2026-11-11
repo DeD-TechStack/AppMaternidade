@@ -3,6 +3,7 @@ import { PainelCampo } from '../campo/PainelCampo.tsx'
 import { TabelaComparacao } from '../campo/TabelaComparacao.tsx'
 import { Titulo } from '../campo/Titulo.tsx'
 import { INICIO } from '../../conteudo/textos.ts'
+import { RevelaNaRolagem } from '../../movimento/RevelaNaRolagem.tsx'
 import { FotoCena } from './FotoCena.tsx'
 import './inicio.css'
 
@@ -22,7 +23,9 @@ export function SecaoTabela() {
       <div className="in-tabela-grade">
         <TabelaComparacao legenda={legenda} linhas={linhas} className="in-celula" />
         <PainelCampo variante="areia" className="in-celula in-tabela-foto">
-          <FotoCena base={cena.base} largura={768} altura={512} alt={cena.alt} />
+          <RevelaNaRolagem className="in-revela">
+            <FotoCena base={cena.base} largura={768} altura={512} alt={cena.alt} />
+          </RevelaNaRolagem>
         </PainelCampo>
       </div>
     </section>

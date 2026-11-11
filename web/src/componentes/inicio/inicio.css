@@ -13,6 +13,15 @@
   margin-top: var(--in-respiro);
 }
 
+/* Botões do site com 56 px de altura (DESIGN.md 4). O `.alvo-toque` de index.css (44 px) vem depois
+   do `.cm-botao` na mesma camada `components` e o vencia; esta folha não tem camada, então a regra
+   abaixo vence qualquer uma das duas. O link de texto (`cm-botao-texto`, também a pausa dos selos)
+   fica com o alvo de 44 px da base. Fica redundante, e inofensiva, quando a MAT-49e corrigir o
+   `.alvo-toque` em index.css. */
+.in-pagina .cm-botao:not(.cm-botao-texto, [data-tamanho='app']) {
+  min-height: 56px;
+}
+
 /* Dentro de uma grade, o painel de campo ocupa a célula. */
 .in-celula.cm-painel {
   width: auto;
@@ -92,12 +101,8 @@
     padding-inline-end: 0;
   }
 
-  /* A linha em itálico ("dividida com carinho.") cabe inteira nas 7 colunas: o h1 acompanha a
-     largura da coluna (71 px em 1440) em vez de quebrar em três linhas. */
-  .in-heroi .cm-h1 {
-    font-size: min(84px, 4.9vw);
-    line-height: 1.06;
-  }
+  /* O h1 segue a escala da base (84/88 em 1440, DESIGN.md 2); a segunda linha, inteira em itálico,
+     pode quebrar em duas nas 7 colunas. */
 
   .in-heroi-cena .cm-cena-midia img {
     aspect-ratio: 1;
@@ -136,6 +141,13 @@
 
 .in-turno-arte .cm-ilustracao {
   width: min(100%, 420px);
+}
+
+/* O recipiente da M3 (RevelaNaRolagem, DESIGN.md 5) em volta do desenho do turno e da foto da tabela:
+   ocupa a caixa que a mídia ocupava, para a composição não mudar. */
+.in-revela {
+  display: block;
+  width: 100%;
 }
 
 /* O cartão "Desde que você saiu": a lista inteira cabe sem quebrar a hora. */
@@ -404,6 +416,8 @@
     min-height: 360px;
   }
 
+  /* O recipiente da M3 cobre o painel (com a escala ele é o bloco de referência da foto). */
+  .in-tabela-foto .in-revela,
   .in-tabela-foto .in-foto-quadro {
     position: absolute;
     inset: 0;
