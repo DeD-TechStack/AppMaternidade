@@ -3067,6 +3067,95 @@
    mensagem e do erro: 64 passou a 32). Não há regra nova aqui, para a zona não ter dois valores no arquivo. Em 768 ou
    mais nada muda: a mensagem mora dentro da linha de 112 px. */
 
+/* ---------------------------------------------------------------------------------------------
+   44d-3, volta 3, D5: o anel de foco do campo é a caixa do campo, em 390. Só se acrescenta aqui.
+   ------------------------------------------------------------------------------------------ */
+@layer components {
+  /* Em 390 o `.sb-campo-controle` tem 16 px de `padding` de cada lado, então o `input` ocupava x 32–358 num campo de
+     x 16–374, e o anel (2 px de largura, 2 de offset: 4 px fora da caixa) ia de 28 a 362: 12 px mais estreito que o campo
+     de cada lado. O contrato do anel não muda. A causa é o recuo do controle, e a conta é: a caixa do `input` fica 4 px
+     (o alcance do anel) para dentro de cada lado do campo, e então o anel é a caixa do campo (x 16 a 374).
+     Três peças, só abaixo de 768 e só nas linhas de acesso e da Conta (`.sb-acesso-campos`):
+     1. A entrada devolve ao fluxo 16 px do recuo do controle menos os 4 do alcance do anel, de cada lado
+        (`margin-inline: calc(4px - 16px)` = -12 px): a caixa dela passa a x 20–370. O texto digitado não sai de x=32: os
+        mesmos 12 px voltam como `padding-inline`. A altura (56 px), o fundo e o fio do campo não mudam, nem o alvo de
+        toque. Os 4 px são o alcance do anel (2 + 2), não um espaço da escala: por isso vêm de uma variável, e as contas
+        em `margin` e `padding` só têm passos da escala (16, 44 do botão), como o D3 fez com a largura do controle.
+     2. O botão de mostrar senha (`.sb-campo-olho`, 44 de largura) sairia do fluxo da entrada: a entrada precisa
+        passar por baixo dele para o anel fechar na ponta do campo. Ele flutua sobre a ponta (`position: absolute`, a 16
+        px da borda, no mesmo lugar de antes, centrado na altura do controle), e a entrada com o botão reserva a
+        largura dele à direita do valor: 16 + 44 - 4 = 56 px de `padding-right`, para o valor não passar por baixo.
+     3. O seletor de fuso (`data-select`) já reserva a seta com o `padding-right` da base (48 px), que vence aqui.
+     De 768 para cima nada muda: o anel de 1440 é o do D3 (dentro do fio). */
+  @media (max-width: 767px) {
+    .sb-acesso-campos {
+      --alcance-do-anel: 4px;
+      --largura-do-olho: 44px;
+    }
+
+    .sb-acesso-campos .sb-campo-entrada {
+      margin-inline: calc(var(--alcance-do-anel) - 16px);
+      padding-inline: calc(16px - var(--alcance-do-anel));
+    }
+
+    .sb-acesso-campos .sb-campo-olho {
+      position: absolute;
+      right: 16px;
+      top: 0;
+      bottom: 0;
+      margin-block: auto;
+    }
+
+    .sb-acesso-campos .sb-campo-controle:has(> .sb-campo-olho) > .sb-campo-entrada {
+      padding-right: calc(16px + var(--largura-do-olho) - var(--alcance-do-anel));
+    }
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------
+   44d-3, volta 3, índice da Conta: 16 px entre a última âncora e o fio da abertura (A-2b), em 1440. Só se acrescenta aqui.
+   ------------------------------------------------------------------------------------------ */
+@layer components {
+  /* Em 1440 a última âncora do índice ("Excluir conta") terminava a 6 px do fio da abertura (y=322; o texto acabava em y=316,
+     medido no Chrome), e a caixa de toque dela (44 px; 56 na madrugada) chegava ao fio. O fio não se mexe (a abertura é a que o
+     líder aprovou, e os outros critérios medem a partir dele), nem o passo de 32 entre as âncoras, o x delas (c9 + 32), o
+     tamanho do texto, o alvo de toque ou o `sticky` (R6). O índice sobe na coluna lateral: 16 px, o passo da escala que passa
+     dos 16 de ar pedidos (8 px dariam 14, medido) e deixa 6 + 16 = 22 px entre o texto da última âncora e o fio. O recuo de cima
+     do `nav` (hoje a altura do h1) perde esses 16 px (`--e-indice-sobe`), e as três medidas que dependem dele seguem juntas:
+       - `top`: o `nav` prende em `cabeçalho + 8 - recuo`, então a lista presa fica a cabeçalho + 8 = 72 px, como antes
+         (o recuo menor sobe o `top` de 8 para 24 px; o `nav` não chega a subir sob o cabeçalho);
+       - `height`: o recuo mais as 6 âncoras de 32 px (a lista presa anda dentro dessa caixa, sem passar do fim do `main`);
+       - `margin-bottom`: a mesma altura, negativa, para o `nav` seguir sem ocupar espaço (nada mais na página se mexe).
+     Só de 768 para cima, que é onde o índice mora na coluna lateral; em 390 o índice é uma linha antes do fio e não muda. */
+  @media (min-width: 768px) {
+    .conta-indice-ao-lado {
+      --e-indice-sobe: 16px;
+      top: calc(var(--e-cabecalho) + 8px - var(--e-cab-h1) + var(--e-indice-sobe));
+      height: calc(var(--e-cab-h1) - var(--e-indice-sobe) + 192px);
+      padding-top: calc(var(--e-cab-h1) - var(--e-indice-sobe));
+      margin-bottom: calc(-1 * (var(--e-cab-h1) - var(--e-indice-sobe) + 192px));
+    }
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------
+   44d-3, volta 3, selecao: o texto selecionado nas telas de acesso e na Conta usa a paleta do tema. Só se acrescenta aqui.
+   ------------------------------------------------------------------------------------------ */
+@layer components {
+  /* A seleção de texto (do corpo e de dentro dos campos) aparecia no azul padrão do navegador, fora da paleta. Decisão do líder:
+     `::selection` com as variáveis de uso do tema, sem azul e sem amarelo e sem cor nova. É o par do botão primário: o fundo é o
+     destaque (o urucum) e o texto o que vai sobre ele (`--cor-sobre-destaque`): ≈ 5,5:1 no dia e ≈ 5,1:1 na madrugada, acima dos 4,5
+     (AA) nos dois temas (o teste do bloco calcula a razão com os tokens), porque as variáveis seguem o tema em uso, sem regra por tema.
+     Escopo: só dentro das telas (o `main` da `MolduraPublica`, a classe `conta-moldura`: Entrar, Criar conta, Recuperar acesso,
+     Nova senha, Conta excluída, Começar e Conta). Nada de `::selection` global: o cabeçalho, o rodapé e as outras telas são de outros
+     cartões. `.conta-moldura ::selection` cobre os descendentes (o corpo e o `input`); `.conta-moldura::selection`, o próprio `main`. */
+  .conta-moldura::selection,
+  .conta-moldura ::selection {
+    background-color: var(--cor-destaque);
+    color: var(--cor-sobre-destaque);
+  }
+}
+
 /* 44d-2 */
 /* A área logada sobre o sistema-base. Parte 1: o Hoje e a barra Registrar. As cores vêm só das
    variáveis de uso (tema.css); os espaços, da escala 8, 16, 24, 32, 64, 96, 128, 160 e 192; os raios,

@@ -13,7 +13,7 @@ import { margemDoIndice } from './indice.ts'
 
 const ITENS = [
   ['Perfil', 'perfil'],
-  ['Id da conta', 'id-conta'],
+  ['Id da sua conta', 'id-conta'],
   ['Seus dados', 'exportar'],
   ['Privacidade', 'privacidade'],
   ['Sair', 'sair'],
@@ -620,25 +620,37 @@ describe('onde o índice mora', () => {
 describe('o CSS do índice sticky', () => {
   const css = readFileSync(pastaSrcDe(import.meta.url) + '../../index.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
 
-  /** As declarações da regra de seletor exato, na faixa de 768 para cima (a que tem o sticky). */
+  /**
+   * As declarações das regras de seletor exato, na faixa de 768 para cima (a que tem o sticky), na ordem do arquivo: a declaração
+   * de uma regra mais abaixo vence a de cima, como na cascata (a volta 3 sobe o índice 8 px num bloco próprio, que reescreve o
+   * recuo, o `top`, a altura e a margem de baixo do `nav`).
+   */
   function declaracoes(seletor: string) {
     const achados = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter((m) => m[1].trim() === seletor)
-    const regra = achados.find((m) => m[2].includes('margin') || m[2].includes('position'))
-    expect(regra, `regra ${seletor}`).toBeDefined()
+    expect(
+      achados.some((m) => m[2].includes('margin') || m[2].includes('position')),
+      `regra ${seletor}`,
+    ).toBe(true)
     return Object.fromEntries(
-      regra![2]
-        .split(';')
-        .map((d) => d.split(/:(.*)/s).map((p) => p.trim()))
-        .filter((par) => par[0]),
+      achados.flatMap((m) =>
+        m[2]
+          .split(';')
+          .map((d) => d.split(/:(.*)/s).map((p) => p.trim()))
+          .filter((par) => par[0]),
+      ),
     ) as Record<string, string>
   }
 
   const nav = declaracoes('.conta-indice-ao-lado')
   const lista = declaracoes('.conta-indice-ao-lado > .conta-indice-lista')
 
+  // Volta 3 (A-2b): o recuo é o do h1 menos `--e-indice-sobe` (8 px): o índice sobe 8 px na coluna lateral, para a última âncora
+  // ficar a 16 px ou mais do fio da abertura. O recuo vale o mesmo em todas as contas do `nav`.
+  const RECUO = 'calc(var(--e-cab-h1) - var(--e-indice-sobe))'
+
   it('o recuo de cima é o padding do nav, na variável do h1, e não a margem da lista', () => {
     expect(nav.position).toBe('sticky')
-    expect(nav['padding-top']).toBe('var(--e-cab-h1)')
+    expect(nav['padding-top']).toBe(RECUO)
     expect(nav['box-sizing']).toBe('border-box')
     // A margem de cima da lista tem de ser 0: qualquer valor ali colapsa para fora do nav.
     expect(lista['margin-top'] ?? lista.margin.split(/\s+/)[0]).toBe('0')
@@ -646,9 +658,9 @@ describe('o CSS do índice sticky', () => {
   })
 
   it('o top prende o recuo sob o cabeçalho (cabeçalho + 8 − recuo) e a altura soma o recuo e as 6 âncoras', () => {
-    expect(nav.top).toBe('calc(var(--e-cabecalho) + 8px - var(--e-cab-h1))')
-    expect(nav.height).toBe('calc(var(--e-cab-h1) + 192px)')
-    expect(nav['margin-bottom']).toBe('calc(-1 * (var(--e-cab-h1) + 192px))')
+    expect(nav.top).toBe('calc(var(--e-cabecalho) + 8px - var(--e-cab-h1) + var(--e-indice-sobe))')
+    expect(nav.height).toBe('calc(var(--e-cab-h1) - var(--e-indice-sobe) + 192px)')
+    expect(nav['margin-bottom']).toBe('calc(-1 * (var(--e-cab-h1) - var(--e-indice-sobe) + 192px))')
   })
 
   it('nenhum valor do recuo é um número fixo: acompanha o h1 em todas as faixas', () => {

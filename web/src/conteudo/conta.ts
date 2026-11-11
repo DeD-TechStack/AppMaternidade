@@ -168,7 +168,7 @@ export const CONTA = {
   /** As 6 âncoras do índice, na ordem das seções da tela. */
   secoes: {
     perfil: 'Perfil',
-    id: 'Id da conta',
+    id: 'Id da sua conta',
     dados: 'Seus dados',
     privacidade: 'Privacidade',
     sair: 'Sair',

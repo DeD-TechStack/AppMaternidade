@@ -865,3 +865,334 @@ describe('o erro de campo abaixo de 768 não ocupa fluxo (E-7)', () => {
     })
   })
 })
+
+// Volta 3, D5 (anel): em 390 o `input` ocupava x 32–358 num campo de x 16–374 (o `.sb-campo-controle` tem 16 px de
+// `padding` de cada lado), e o anel de foco (2 px de largura, 2 de offset: 4 px fora da caixa) ia de 28 a 362, mais
+// estreito que o campo. A causa é o recuo do controle: a caixa do `input` tem de ficar 4 px para dentro de cada lado do
+// campo, e então o anel é a caixa do campo. O texto digitado não sai de x=32 (o recuo passa de o controle ao próprio
+// `input`, como `padding`), o botão de mostrar senha não sai do lugar (passa a flutuar sobre a ponta da entrada) e o
+// contrato do anel (2 px, offset 2) não muda. A medida real é do medidor (D5-anel); este teste impede a volta da causa.
+describe('o anel de foco é a caixa do campo em 390 (D5)', () => {
+  const ALCANCE_DO_ANEL = 4
+  const inicioDoD5 = blocoDe44d3.indexOf('44d-3, volta 3, D5')
+  // O bloco começa no comentário de cabeçalho (o `/*` que vem antes do marcador) e acaba onde começa o cabeçalho do bloco seguinte
+  // (a volta 3 acrescenta um bloco por item, um depois do outro).
+  const comecoDoD5 = inicioDoD5 >= 0 ? blocoDe44d3.lastIndexOf('/*', inicioDoD5) : -1
+  const fimDoD5 = comecoDoD5 >= 0 ? blocoDe44d3.indexOf('/* ---', comecoDoD5 + 2) : -1
+  const blocoD5 = comecoDoD5 >= 0 ? semComentarios(blocoDe44d3.slice(comecoDoD5, fimDoD5 >= 0 ? fimDoD5 : undefined)) : ''
+
+  /** As regras (seletor e corpo) de dentro dos `@media (max-width: 767px)` do texto, e as de fora deles. */
+  function regrasDe(texto: string) {
+    const dentro: Array<{ seletor: string; corpo: string }> = []
+    let resto = texto
+    for (const abertura of texto.matchAll(/@media\s*\(max-width:\s*767px\)\s*\{/g)) {
+      const comeco = abertura.index + abertura[0].length
+      let profundidade = 1
+      let fim = comeco
+      while (fim < texto.length && profundidade > 0) {
+        if (texto[fim] === '{') profundidade += 1
+        else if (texto[fim] === '}') profundidade -= 1
+        fim += 1
+      }
+      const miolo = texto.slice(comeco, fim - 1)
+      for (const regra of miolo.matchAll(/([^{}]+)\{([^{}]*)\}/g)) dentro.push({ seletor: regra[1].trim(), corpo: regra[2] })
+      resto = resto.replace(texto.slice(abertura.index, fim), '')
+    }
+    const fora = [...resto.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+      .map((r) => ({ seletor: r[1].replace(/@layer\s+components/g, '').trim(), corpo: r[2] }))
+      .filter((r) => r.seletor !== '')
+    return { dentro, fora }
+  }
+  const { dentro, fora } = regrasDe(blocoD5)
+  const corpoDe = (seletor: string) =>
+    dentro
+      .filter((r) => r.seletor === seletor)
+      .map((r) => r.corpo)
+      .join(';')
+  /** As variáveis do bloco (`--alcance-do-anel: 4px`), em px. */
+  const variaveis = new Map([...blocoD5.matchAll(/(--[a-z-]+)\s*:\s*(-?\d*\.?\d+)px/g)].map((m) => [m[1], Number(m[2])] as const))
+  /** O valor de uma propriedade em px: `12px` ou um `calc()` de px e `var()` do bloco (a última declaração vale). */
+  const px = (corpo: string, propriedade: string) => {
+    const todos = [...corpo.matchAll(new RegExp(`(?:^|[;\\s])${propriedade}\\s*:\\s*([^;]+)`, 'g'))]
+    if (todos.length === 0) return undefined
+    const expressao = todos[todos.length - 1][1]
+      .replace(/var\((--[a-z-]+)\)/g, (_t, nome: string) => {
+        if (!variaveis.has(nome)) throw new Error(`variável sem valor no bloco: ${nome}`)
+        return String(variaveis.get(nome))
+      })
+      .replace(/px/g, '')
+      .replace(/calc/g, '')
+      .trim()
+    if (!/^[\d\s+\-*/().]+$/.test(expressao)) return undefined
+    return Number(Function(`"use strict"; return (${expressao})`)())
+  }
+
+  /** O `padding` de cada lado do `.sb-campo-controle` abaixo de 768, da base (`padding: 0 16px`). */
+  const recuoDoControle = Number(/\.sb-campo-controle\s*\{[^}]*padding:\s*0\s+(\d+)px/.exec(css.slice(css.indexOf('@media (max-width: 767px)', css.indexOf('.sb-campo-olho'))))?.[1])
+
+  const ENTRADA = '.sb-acesso-campos .sb-campo-entrada'
+  const ENTRADA_COM_OLHO = '.sb-acesso-campos .sb-campo-controle:has(> .sb-campo-olho) > .sb-campo-entrada'
+  const OLHO = '.sb-acesso-campos .sb-campo-olho'
+
+  it('o bloco da volta 3, D5, existe, e todas as regras dele são só de abaixo de 768 (1440 não muda)', () => {
+    expect(inicioDoD5).toBeGreaterThanOrEqual(0)
+    expect(dentro.length).toBeGreaterThan(0)
+    expect(fora, 'nenhuma regra do D5 fora de `@media (max-width: 767px)`').toEqual([])
+  })
+
+  it('a caixa do `input` fica 4 px para dentro de cada lado do campo: o anel (2 + 2 px) é a caixa do campo', () => {
+    expect(recuoDoControle, 'padding lateral do controle abaixo de 768 (base)').toBeGreaterThan(0)
+    const corpo = corpoDe(ENTRADA)
+    const margem = px(corpo, 'margin-inline')
+    expect(margem, 'margin-inline da entrada de acesso').toBeDefined()
+    expect(margem!).toBeLessThan(0)
+    // O recuo do controle menos o que a margem negativa devolve é a distância da caixa do `input` ao campo.
+    expect(recuoDoControle + margem!).toBe(ALCANCE_DO_ANEL)
+  })
+
+  it('o texto digitado fica onde estava: o recuo que a margem devolveu volta como `padding` do input', () => {
+    const corpo = corpoDe(ENTRADA)
+    expect(px(corpo, 'padding-inline')).toBe(-px(corpo, 'margin-inline')!)
+  })
+
+  it('o contrato do anel não muda: nenhuma regra do D5 mexe no outline', () => {
+    expect(blocoD5).not.toMatch(/outline/)
+  })
+
+  it('o alvo de toque, o fundo e o fio do campo não mudam: nenhuma regra do D5 toca altura, fundo ou borda', () => {
+    expect(blocoD5).not.toMatch(/(^|[;\s{])(height|min-height|max-height|min-block-size|background|background-color|border[a-z-]*)\s*:/)
+  })
+
+  it('o botão de mostrar senha flutua sobre a ponta da entrada, no mesmo lugar (16 px da borda), centrado', () => {
+    const corpo = corpoDe(OLHO)
+    expect(corpo).toMatch(/position:\s*absolute/)
+    expect(px(corpo, 'right')).toBe(recuoDoControle)
+    expect(corpo).toMatch(/top:\s*0/)
+    expect(corpo).toMatch(/bottom:\s*0/)
+    expect(corpo).toMatch(/margin-block:\s*auto/)
+  })
+
+  it('o valor da entrada com o olho não passa por baixo do botão', () => {
+    const olho = px(corpoDe(OLHO), 'right')!
+    const direita = px(corpoDe(ENTRADA_COM_OLHO), 'padding-right')
+    expect(direita, 'padding-right da entrada com o botão de mostrar senha').toBeDefined()
+    // Fim do texto = campo - 4 - padding; começo do botão = campo - olho - 44: o texto acaba onde o botão começa.
+    expect(direita!).toBeGreaterThanOrEqual(olho + 44 - ALCANCE_DO_ANEL)
+  })
+
+  it('nenhuma regra do D5 depende do tema (a madrugada entra pelos tokens)', () => {
+    expect(blocoD5).not.toMatch(/data-tema/)
+    expect(blocoD5).not.toMatch(/#[0-9a-fA-F]{3,8}\b|rgb\(|hsl\(/)
+  })
+
+  it('fica fora da caixa de diálogo da Conta (só as linhas de acesso)', () => {
+    for (const r of dentro) {
+      expect(r.seletor, r.seletor).toContain('.sb-acesso-campos')
+      expect(r.seletor, r.seletor).not.toContain('.conta-dialogo')
+    }
+  })
+})
+
+// Volta 3, índice da Conta (A-2b): em 1440 a última âncora ("Excluir conta") terminava a 6 px do fio da abertura, e a caixa de
+// toque dela (44 px, 56 na madrugada) chegava ao fio. O fio fica em y=322 (aprovado pelo líder e base dos outros critérios), então o
+// índice sobe na coluna lateral: o recuo de cima do `nav` (a altura do h1 menos 8 px). Como o `nav` é `sticky`, o `top` sobe junto,
+// para a lista presa continuar a 8 px do cabeçalho (cabeçalho + 8 = 72) e a altura e a margem de baixo seguirem a do recuo (o `nav`
+// não ocupa espaço). Nada do 390, nem das âncoras (passo de 32, alvo de toque), nem do fio muda. A medida real é do medidor (A-2b);
+// este teste proíbe a volta da causa, as contas do recuo.
+describe('o índice da Conta sobe na coluna lateral: 16 px até o fio da abertura (A-2b)', () => {
+  const marca = '44d-3, volta 3, índice da Conta'
+  const inicio = blocoDe44d3.indexOf(marca)
+  const comeco = inicio >= 0 ? blocoDe44d3.lastIndexOf('/*', inicio) : -1
+  const fim = comeco >= 0 ? blocoDe44d3.indexOf('/* ---', comeco + 2) : -1
+  const bloco = comeco >= 0 ? semComentarios(blocoDe44d3.slice(comeco, fim >= 0 ? fim : undefined)) : ''
+
+  /**
+   * A folga de hoje, medida no Chrome com o recuo de antes (o texto da última âncora termina em y=316 e o fio começa em y=322): 6 px.
+   * O líder pediu 16. (O enunciado dizia ≈ 12 px; subir 8 px dá 14 no medidor, e é por isso que o passo é de 16.)
+   */
+  const FOLGA_DE_HOJE = 6
+  const FOLGA_MINIMA = 16
+  const NAV = '.conta-indice-ao-lado'
+  const CABECALHO = Number(/--e-cabecalho:\s*(\d+)px/.exec(css)?.[1])
+  const ALTURA_DO_H1 = Number(/--e-cab-h1:\s*(\d+)px/.exec(css)?.[1])
+
+  const corpoDoNav = [...bloco.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .filter((m) => m[1].trim() === NAV)
+    .map((m) => m[2])
+    .join(';')
+  const declaracao = (propriedade: string) => {
+    const todas = [...corpoDoNav.matchAll(new RegExp(`(?:^|[;\\s])${propriedade}\\s*:\\s*([^;]+)`, 'g'))]
+    return todas.length > 0 ? todas[todas.length - 1][1].trim() : undefined
+  }
+  const sobe = Number(/--e-indice-sobe:\s*(-?\d*\.?\d+)px/.exec(corpoDoNav)?.[1])
+  /** O valor de uma declaração em px, com as variáveis do cabeçalho, do h1 e do recuo (a faixa de 768 para cima tem as de 64 px). */
+  const valor = (propriedade: string) => {
+    const texto = declaracao(propriedade)
+    if (texto === undefined) return undefined
+    const expressao = texto
+      .replace(/var\(--e-cabecalho\)/g, String(CABECALHO))
+      .replace(/var\(--e-cab-h1\)/g, String(ALTURA_DO_H1))
+      .replace(/var\(--e-indice-sobe\)/g, String(sobe))
+      .replace(/px/g, '')
+      .replace(/calc/g, '')
+    if (!/^[\d\s+\-*/().]+$/.test(expressao)) return undefined
+    return Number(Function(`"use strict"; return (${expressao})`)())
+  }
+
+  it('o bloco existe, é só da faixa de 768 para cima e só mexe no `nav` do índice (390 e as âncoras não mudam)', () => {
+    expect(comeco).toBeGreaterThanOrEqual(0)
+    expect(corpoDoNav.length).toBeGreaterThan(0)
+    expect(bloco).toMatch(/@media\s*\(min-width:\s*768px\)/)
+    expect(bloco).not.toMatch(/max-width/)
+    for (const m of bloco.matchAll(/([^{}]+)\{/g)) {
+      const seletor = m[1].trim()
+      if (seletor.startsWith('@')) continue
+      expect(seletor, seletor).toBe(NAV)
+    }
+  })
+
+  it('o índice sobe pelo menos o que falta para 16 px (6 + sobe), em passo da escala de 8', () => {
+    expect(sobe, 'a variável --e-indice-sobe do nav').toBeGreaterThan(0)
+    expect(FOLGA_DE_HOJE + sobe).toBeGreaterThanOrEqual(FOLGA_MINIMA)
+    expect([8, 16, 24, 32]).toContain(sobe)
+  })
+
+  it('o recuo de cima do nav é a altura do h1 menos o que sobe: a lista começa mais alto', () => {
+    expect(valor('padding-top')).toBe(ALTURA_DO_H1 - sobe)
+  })
+
+  it('com o `sticky`, a lista presa segue a 8 px do cabeçalho: top + recuo = cabeçalho + 8, e o nav não sobe sob o cabeçalho', () => {
+    const topo = valor('top')!
+    expect(topo + valor('padding-top')!).toBe(CABECALHO + 8)
+    expect(topo).toBeGreaterThanOrEqual(0)
+  })
+
+  it('a altura do nav é o recuo mais as 6 âncoras de 32 px, e a margem de baixo a devolve: o nav continua sem ocupar espaço', () => {
+    const altura = valor('height')!
+    expect(altura).toBe(valor('padding-top')! + 6 * 32)
+    expect(valor('margin-bottom')).toBe(-altura)
+  })
+
+  it('nenhuma regra do bloco dá cor, tamanho de letra nem mexe no fio, no passo ou no alvo de toque', () => {
+    expect(bloco).not.toMatch(/(^|[;\s{])(line-height|font-size|color|background[a-z-]*|border[a-z-]*|column-gap|row-gap|gap|min-height)\s*:/)
+    expect(bloco).not.toMatch(/data-tema|#[0-9a-fA-F]{3,8}\b|rgb\(/)
+  })
+})
+
+// Volta 3, D6 (seleção de texto): a seleção nas telas de acesso e na Conta usava o azul padrão do navegador, fora da paleta. Decisão do
+// líder: `::selection` com as variáveis de uso do tema (sem cor nova, sem hex solto, sem azul e sem amarelo), só dentro das telas
+// (a moldura do `<main>` delas), nunca global: as outras telas são de outros cartões. O valor real (o `::selection` calculado de um parágrafo
+// e de um input, o contraste AA nos dois temas) é do medidor (D6-selecao); este teste impede a volta da causa.
+describe('a seleção de texto das telas de acesso e da Conta é da paleta (D6)', () => {
+  const marca = '44d-3, volta 3, selecao'
+  const inicio = blocoDe44d3.indexOf(marca)
+  const comeco = inicio >= 0 ? blocoDe44d3.lastIndexOf('/*', inicio) : -1
+  const fim = comeco >= 0 ? blocoDe44d3.indexOf('/* ---', comeco + 2) : -1
+  const bloco = comeco >= 0 ? semComentarios(blocoDe44d3.slice(comeco, fim >= 0 ? fim : undefined)) : ''
+  const regras = [...bloco.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .map((m) => ({ seletor: m[1].replace(/@layer\s+components/g, '').trim(), corpo: m[2] }))
+    .filter((r) => r.seletor !== '')
+
+  const estilos = '../../styles/'
+  const tokens = readFileSync(pastaSrcDe(import.meta.url) + estilos + 'tokens.css', 'utf8')
+  const tema = readFileSync(pastaSrcDe(import.meta.url) + estilos + 'tema.css', 'utf8')
+  const temaDoDia = /:root\s*\{([^}]*)\}/.exec(tema)?.[1] ?? ''
+  const temaDaMadrugada = /\[data-tema-local=['"]madrugada['"]\][^{]*\{([^}]*)\}/.exec(tema)?.[1] ?? ''
+  /** O hex de uma variável de uso (`--cor-destaque`) num tema: a de uso aponta para uma de tokens.css (`--color-accent: #b0401c`). */
+  function hexDe(variavelDeUso: string, blocoDoTema: string) {
+    const aponta = new RegExp(`${variavelDeUso}:\\s*var\\((--color-[a-z0-9-]+)\\)`).exec(blocoDoTema)?.[1]
+    return aponta ? new RegExp(`${aponta}:\\s*(#[0-9a-fA-F]{6})`).exec(tokens)?.[1] : undefined
+  }
+  function luminancia(hex: string) {
+    const [r, g, b] = [1, 3, 5].map((i) => {
+      const v = parseInt(hex.slice(i, i + 2), 16) / 255
+      return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4
+    })
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+  }
+  const contraste = (a: string, b: string) => {
+    const [claro, escuro] = [luminancia(a), luminancia(b)].sort((x, y) => y - x)
+    return (claro + 0.05) / (escuro + 0.05)
+  }
+  const corpoDe = (regra: { corpo: string }) =>
+    Object.fromEntries(
+      regra.corpo
+        .split(';')
+        .map((d) => d.split(/:(.*)/s).map((p) => p.trim()))
+        .filter((par) => par[0]),
+    ) as Record<string, string>
+
+  it('o bloco da volta 3, seleção, existe, com `::selection` dentro da moldura das telas (`.conta-moldura`)', () => {
+    expect(comeco).toBeGreaterThanOrEqual(0)
+    expect(regras.length).toBeGreaterThan(0)
+    for (const r of regras) {
+      for (const seletor of r.seletor.split(',').map((s) => s.trim())) {
+        expect(seletor, seletor).toMatch(/^\.conta-moldura\s?::selection$/)
+      }
+    }
+  })
+
+  it('a seleção do corpo e a de dentro dos campos (`input`) valem: o seletor cobre os descendentes e o próprio `main`', () => {
+    const seletores = regras.flatMap((r) => r.seletor.split(',').map((s) => s.trim()))
+    expect(seletores).toContain('.conta-moldura ::selection')
+    expect(seletores).toContain('.conta-moldura::selection')
+  })
+
+  it('o fundo e a cor do texto são variáveis de uso do tema que existem (`var(--cor-...)`), e só esses dois', () => {
+    for (const r of regras) {
+      const decl = corpoDe(r)
+      expect(Object.keys(decl).sort(), r.seletor).toEqual(['background-color', 'color'])
+      for (const valor of Object.values(decl)) {
+        const nome = /^var\((--cor-[a-z0-9-]+)\)$/.exec(valor)?.[1]
+        expect(nome, valor).toBeDefined()
+        expect(temaDoDia, `${nome} no tema do dia`).toContain(`${nome}:`)
+        expect(temaDaMadrugada, `${nome} na madrugada`).toContain(`${nome}:`)
+      }
+    }
+  })
+
+  it('sem cor nova, sem hex solto, sem azul e sem amarelo: nem a cor de informação (azul) nem o foco entram', () => {
+    expect(bloco).not.toMatch(/#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(|oklch\(|color-mix\(/)
+    expect(bloco).not.toMatch(/blue|azul|yellow|amarelo|highlight/i)
+    expect(bloco).not.toMatch(/--cor-info|--color-info|--cor-foco/)
+  })
+
+  it('o contraste do texto sobre o fundo é de pelo menos 4,5 (AA), no tema do dia e na madrugada', () => {
+    const decl = corpoDe(regras[0])
+    const fundo = /var\((--cor-[a-z0-9-]+)\)/.exec(decl['background-color'])![1]
+    const texto = /var\((--cor-[a-z0-9-]+)\)/.exec(decl.color)![1]
+    for (const [nome, blocoDoTema] of [
+      ['dia', temaDoDia],
+      ['madrugada', temaDaMadrugada],
+    ] as const) {
+      const fundoHex = hexDe(fundo, blocoDoTema)
+      const textoHex = hexDe(texto, blocoDoTema)
+      expect(fundoHex, `${fundo} em ${nome}`).toBeDefined()
+      expect(textoHex, `${texto} em ${nome}`).toBeDefined()
+      expect(contraste(fundoHex!, textoHex!), `contraste em ${nome}`).toBeGreaterThanOrEqual(4.5)
+    }
+  })
+
+  it('não há `::selection` global: todo `::selection` do arquivo está dentro da moldura das telas', () => {
+    const todos = [...semComentarios(css).matchAll(/([^{}]*::selection[^{}]*)\{/g)].map((m) => m[1].trim())
+    expect(todos.length).toBeGreaterThan(0)
+    for (const seletor of todos) {
+      for (const parte of seletor.split(',').map((s) => s.trim())) expect(parte, parte).toMatch(/^\.conta-moldura\s?::selection$/)
+    }
+  })
+
+  it('a moldura das telas leva a classe `conta-moldura` no `main`: Entrar, Criar conta, Recuperar acesso, Nova senha, Conta excluída e Conta', async () => {
+    const fonte = readFileSync(pastaSrcDe(import.meta.url) + '../../componentes/conta/MolduraPublica.tsx', 'utf8')
+    expect(fonte).toMatch(/<main\s+className="conta-moldura"/)
+    for (const [caminho, titulo] of TELAS) {
+      const { container, unmount } = abrir(caminho)
+      await screen.findByRole('heading', { level: 1, name: titulo })
+      const principal = container.querySelector('main')!
+      expect(principal.classList.contains('conta-moldura'), caminho).toBe(true)
+      expect(container.querySelectorAll('main.conta-moldura'), caminho).toHaveLength(1)
+      // Fora do `main` (o cabeçalho e o rodapé da casca) a classe não existe: a seleção de lá é de outro cartão.
+      expect(container.querySelector('header.conta-moldura, footer.conta-moldura, [data-cabecalho].conta-moldura, [data-rodape].conta-moldura')).toBeNull()
+      unmount()
+    }
+  })
+})

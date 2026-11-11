@@ -84,7 +84,7 @@ describe('estrutura da tela', () => {
     const links = indice.getAllByRole('link')
     expect(links.map((link) => link.textContent)).toEqual([
       'Perfil',
-      'Id da conta',
+      'Id da sua conta',
       'Seus dados',
       'Privacidade',
       'Sair',

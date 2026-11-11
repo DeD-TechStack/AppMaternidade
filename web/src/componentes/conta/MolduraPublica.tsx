@@ -23,7 +23,9 @@ interface Props {
 // As telas de acesso e as logadas desta tarefa no sistema novo: a casca (cabeçalho e rodapé) é do
 // `Layout`, e cada tela monta o próprio `<main>`: a abertura (o `h1`, a linha sob ele e a coluna
 // lateral, com os fios do contrato) e depois os blocos da tela. Sem marca própria, sem régua e sem
-// medida fixa: a grade de 10 colunas cuida do resto.
+// medida fixa: a grade de 10 colunas cuida do resto. O `main` leva `conta-moldura`: é a raiz que o CSS
+// escolhe para o que é só destas telas (hoje a seleção de texto, `::selection` da paleta), sem tocar no
+// cabeçalho, no rodapé nem nas outras telas.
 export function MolduraPublica({
   titulo,
   subtitulo,
@@ -35,7 +37,7 @@ export function MolduraPublica({
   children,
 }: Props) {
   return (
-    <main aria-busy={ocupado || undefined}>
+    <main className="conta-moldura" aria-busy={ocupado || undefined}>
       {antes}
       <AberturaAcesso
         titulo={titulo}
