@@ -123,7 +123,7 @@ function DadosDoPerfil({ perfilId, escritor, definirStatus }: DadosProps) {
   return (
     <section aria-labelledby="perfil" aria-busy={estado.fase === 'carregando' || undefined} className="mt-8 flex flex-col gap-4">
       <h2 id="perfil" className="cm-h4">
-        {PERFIL.titulo}
+        {PERFIL.secao}
       </h2>
       {leitura.esqueleto ? <Esqueleto linhas={2} /> : null}
       {estado.fase === 'erro' ? <ErroDeLeitura erro={estado.erro} aoTentarDeNovo={() => void leitura.recarregar()} /> : null}

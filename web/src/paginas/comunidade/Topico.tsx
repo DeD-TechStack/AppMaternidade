@@ -335,7 +335,7 @@ function TopicoLido({ id }: { id: string }) {
   return (
     <Quadro voltar={espaco ? `/app/comunidade/${espaco.slug}` : '/app/comunidade'} ocupado={carregando}>
       <TituloDaTela>{lido ? lido.topico.titulo : LISTA.titulo}</TituloDaTela>
-      <div className="mt-4 flex flex-col gap-4">
+      <div className="mt-8 flex flex-col gap-4">
         <AvisoDeSaude />
         <Status mensagem={status} refStatus={refStatus} />
       </div>

@@ -121,7 +121,7 @@ export function FormularioDeTopico({ espaco, perfilId, edicao, aoNaoEditavel }: 
   }
 
   return (
-    <form onSubmit={aoVerPrevia} noValidate className="mt-6 flex max-w-[44rem] flex-col gap-5">
+    <form onSubmit={aoVerPrevia} noValidate className="mt-6 flex max-w-[40rem] flex-col gap-5">
       <CampoComContador
         id="campo-titulo"
         rotulo={FORMULARIO_TOPICO.campoTitulo}

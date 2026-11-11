@@ -212,6 +212,7 @@ export const ENTRAR_NA_COMUNIDADE = {
 
 export const PERFIL = {
   titulo: 'Meu perfil público',
+  secao: 'Como você aparece',
   frase: 'É assim que as outras pessoas veem você.',
   salvar: 'Salvar',
   editarPerfil: 'Editar perfil',

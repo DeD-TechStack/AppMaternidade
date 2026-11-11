@@ -591,6 +591,24 @@ describe('C6: meu perfil público', () => {
     return aberta
   }
 
+  it('um h1 só e nenhum título repetido: o h2 da seção não repete o texto do h1', async () => {
+    for (const pessoa of ['autor', 'semAceite', 'semPerfil'] as const) {
+      const { container, unmount } = await abrirPerfil(pessoa)
+      await semCarregando()
+      expect(container.querySelectorAll('h1')).toHaveLength(1)
+      const principal = document.querySelector('main')!
+      const titulos = [...principal.querySelectorAll('h1, h2, h3')].map((t) => t.textContent)
+      expect(new Set(titulos).size, `${pessoa}: ${titulos.join(' | ')}`).toBe(titulos.length)
+      expect(within(principal).getAllByRole('heading', { name: PERFIL.titulo })).toHaveLength(1)
+      unmount()
+    }
+    // A seção do perfil tem nome próprio, ligado ao conteúdo dela.
+    const { unmount } = await abrirPerfil('autor')
+    await screen.findByLabelText(PERFIL.apelidoRotulo)
+    expect(screen.getByRole('region', { name: PERFIL.secao })).toBeTruthy()
+    unmount()
+  })
+
   it('o escritor edita o perfil: apelido, bio e faixa, com TX-26; o apelido de outra pessoa é recusado no campo', async () => {
     const { estado } = await abrirPerfil('autor')
     const apelido = await screen.findByLabelText(PERFIL.apelidoRotulo)

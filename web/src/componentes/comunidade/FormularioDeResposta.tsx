@@ -134,7 +134,7 @@ export function FormularioDeResposta({ topicoId, modo, apelidoProprio, aoTirarCi
   }
 
   return (
-    <form onSubmit={aoEnviarFormulario} noValidate className="flex max-w-[44rem] flex-col gap-4">
+    <form onSubmit={aoEnviarFormulario} noValidate className="flex max-w-[40rem] flex-col gap-4">
       {citando ? (
         <div className="flex flex-col items-start gap-2">
           <Citacao resposta={citando} />

@@ -123,7 +123,7 @@ export function Espaco() {
   return (
     <Quadro voltar="/app/comunidade" ocupado={espacos.estado.fase === 'carregando' || situacao.estado.fase === 'carregando'}>
       <TituloDaTela>{espaco?.nome ?? LISTA.titulo}</TituloDaTela>
-      <div className="mt-4 flex flex-col gap-4">
+      <div className="mt-8 flex flex-col gap-4">
         <AvisoDeSaude />
         <Status mensagem={textoDaPassagemComunidade(location.state)} />
       </div>
