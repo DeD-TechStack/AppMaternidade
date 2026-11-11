@@ -195,7 +195,7 @@ const REGRAS: PaginaDeTexto = {
         colunas: ['Canal', 'Número', 'Quando usar'],
         linhas: [
           ['CVV', '188', 'Sofrimento emocional e pensamentos de suicídio. Atende por telefone, chat e e-mail.'],
-          ['SAMU', '192', 'Urgência de saúde.'],
+          ['Samu', '192', 'Urgência de saúde.'],
           ['Ligue 180', '180', 'Violência contra a mulher.'],
           ['Disque 100', '100', 'Violação de direitos de crianças e adolescentes.'],
         ],
@@ -421,7 +421,7 @@ const CONTATO: PaginaDeTexto = {
       secao: secao('Em uma urgência'),
       blocos: [
         [
-          'Este canal não é atendimento de urgência. Numa urgência de saúde, ligue para o SAMU, no 192. Em sofrimento emocional, o CVV atende no 188. Veja todos os canais oficiais nas ',
+          'Este canal não é atendimento de urgência. Numa urgência de saúde, ligue para o Samu, no 192. Em sofrimento emocional, o CVV atende no 188. Veja todos os canais oficiais nas ',
           ligacao('Regras da comunidade', `${CAMINHO_REGRAS}#secao-ajuda-agora`),
           '.',
         ],

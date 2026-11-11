@@ -107,7 +107,7 @@ describe('Regras da comunidade: canais de ajuda', () => {
     for (const coluna of colunas) expect(coluna.getAttribute('scope')).toBe('col')
 
     const linhas = within(tabela).getAllByRole('rowheader')
-    expect(linhas.map((linha) => linha.textContent)).toEqual(['CVV', 'SAMU', 'Ligue 180', 'Disque 100'])
+    expect(linhas.map((linha) => linha.textContent)).toEqual(['CVV', 'Samu', 'Ligue 180', 'Disque 100'])
     for (const linha of linhas) expect(linha.getAttribute('scope')).toBe('row')
 
     const regiao = screen.getByRole('region', { name: 'Canais oficiais de ajuda' })
