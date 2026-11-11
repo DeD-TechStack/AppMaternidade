@@ -16,7 +16,7 @@ export function Fechamento() {
 
   return (
     <PainelCampo variante="mel" luz como="section" aria-labelledby={id} className="in-fechamento">
-      <Ilustracao nome="baba-tapete" className="in-fechamento-arte" />
+      <Ilustracao nome="baba-tapete" className="in-fechamento-arte" carregamento="eager" />
       <Titulo nivel="h2" id={id} linhas={titulo} />
       <Botao to={primario.destino}>{primario.rotulo}</Botao>
     </PainelCampo>

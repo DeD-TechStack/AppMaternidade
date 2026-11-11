@@ -155,7 +155,12 @@ describe('Início: faixa da madrugada', () => {
       name: 'Dois tablets flutuando sobre o cacau, com telas reais do AppMaternidade',
     })
     expect(cena.getAttribute('src')).toBe('/cenas/inicio/faixa-cacau@1x.webp')
-    expect(cena.getAttribute('loading')).toBe('lazy')
+    // Carrega na hora: a faixa nunca aparece com o painel da cena vazio.
+    expect(cena.getAttribute('loading')).toBe('eager')
+    expect(cena.getAttribute('width')).toBe('768')
+    expect(cena.getAttribute('height')).toBe('512')
+    // A cena é o painel da faixa (vai até as bordas), não uma caixa solta.
+    expect(cena.closest('picture')!.classList.contains('in-faixa-foto')).toBe(true)
     expect(cena.closest('[data-painel="mel"]')).toBeNull()
     expect(faixa.querySelector('[data-ilustracao]')).toBeNull()
   })
@@ -191,7 +196,10 @@ describe('Início: tabela', () => {
 
     const foto = within(secao).getByRole('img', { name: 'Um celular sobre linho com uma tela real do AppMaternidade' })
     expect(foto.getAttribute('src')).toBe('/cenas/inicio/tabela@1x.webp')
-    expect(foto.getAttribute('loading')).toBe('lazy')
+    // Carrega na hora: o painel de areia ao lado da tabela nunca fica vazio.
+    expect(foto.getAttribute('loading')).toBe('eager')
+    expect(foto.getAttribute('width')).toBe('768')
+    expect(foto.getAttribute('height')).toBe('512')
     expect(foto.closest('[data-painel]')!.getAttribute('data-painel')).toBe('areia')
   })
 })
@@ -279,6 +287,8 @@ describe('Início: fechamento', () => {
 
     const baba = within(painel).getByRole('img', { name: DESCRICAO_ILUSTRACAO['baba-tapete'] })
     expect(baba.getAttribute('data-ilustracao')).toBe('baba-tapete')
+    // Carrega na hora: sem ela, sobraria só o papel vazio acima do painel.
+    expect(baba.getAttribute('loading')).toBe('eager')
     // A babá é a primeira coisa do painel: fica por cima da borda de cima, antes do título.
     expect(painel.firstElementChild).toBe(baba)
   })
@@ -309,6 +319,31 @@ describe('Início: ordem e texto da página', () => {
       'Perguntas de quem chega agora.',
       'Sua família inteira no mesmo dia.',
     ])
+  })
+
+  it('em todo título de duas linhas, a segunda linha inteira é um bloco itálico só dela', () => {
+    const { main } = abrirInicio()
+    expect(main.classList.contains('in-pagina')).toBe(true)
+    const segundas: Record<string, string> = {
+      'Quem chega no turno': 'já sabe o que houve.',
+      'De madrugada,': 'com uma mão só.',
+      'O caderno ajuda.': 'O app divide.',
+      'Quem cuida': 'conta como é.',
+      Perguntas: 'de quem chega agora.',
+      'Sua família inteira': 'no mesmo dia.',
+    }
+    const titulos = within(main)
+      .getAllByRole('heading', { level: 2 })
+      .filter((h2) => !h2.classList.contains('sr-only'))
+    expect(titulos).toHaveLength(Object.keys(segundas).length)
+    for (const h2 of titulos) {
+      const linhas = [...h2.querySelectorAll(':scope > [aria-hidden="true"]')]
+      expect(linhas).toHaveLength(2)
+      const [primeira, segunda] = linhas
+      expect(primeira.classList.contains('cm-segunda-linha')).toBe(false)
+      expect(segunda.classList.contains('cm-segunda-linha')).toBe(true)
+      expect(segunda.textContent).toBe(segundas[primeira.textContent!])
+    }
   })
 
   it('não mostra "Protótipo" nem "dados de exemplo" na página', () => {

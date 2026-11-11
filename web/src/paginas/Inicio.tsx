@@ -32,7 +32,7 @@ export function Inicio() {
   }, [dispatch])
 
   return (
-    <main>
+    <main className="in-pagina">
       <HeroiInicio />
 
       <section className="cm-area in-numeros" aria-labelledby={idNumeros}>

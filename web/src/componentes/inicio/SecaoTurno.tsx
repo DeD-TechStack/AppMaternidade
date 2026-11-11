@@ -23,7 +23,7 @@ export function SecaoTurno() {
       <div className="in-turno-grade">
         <div className="in-turno-texto">
           <Titulo nivel="h2" id={id} linhas={titulo} />
-          <p className="cm-corpo">{texto}</p>
+          <p className="cm-lide">{texto}</p>
         </div>
         <div className="in-turno-arte">
           <Ilustracao nome="maos-celular" decorativa />

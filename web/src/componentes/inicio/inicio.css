@@ -124,8 +124,8 @@
   gap: 32px;
 }
 
-.in-turno-texto .cm-corpo {
-  max-width: 30rem;
+.in-turno-texto .cm-lide {
+  max-width: 32rem;
   margin: 24px 0 0;
 }
 
@@ -152,6 +152,15 @@
   }
 }
 
+/* No largo o texto fica centrado na altura do desenho mais o cartão. O desenho ocupa a coluna
+   inteira e o espaço guardado para o cartão é só o que ele não cobre do desenho, para não sobrar um
+   canto vazio embaixo do texto. O cartão sobra 36 px da borda (uns 42 px no canto mais baixo, com o giro). */
+@media (min-width: 768px) {
+  .in-turno.cm-com-flutuante .cm-flutuante[data-posicao='baixo-direita'] {
+    bottom: -36px;
+  }
+}
+
 @media (min-width: 960px) {
   .in-turno-grade {
     grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
@@ -160,11 +169,11 @@
   }
 
   .in-turno-arte {
-    padding-bottom: 168px;
+    padding-bottom: 104px;
   }
 
   .in-turno-arte .cm-ilustracao {
-    width: min(100%, 470px);
+    width: 100%;
   }
 }
 
@@ -260,10 +269,43 @@
   max-width: 30rem;
 }
 
+/* A cena é o painel da própria faixa, não uma caixa solta: ela vai até as bordas da faixa (de baixo
+   e dos lados no celular; de cima, da direita e de baixo no largo). O fundo dela é um cacau um pouco
+   mais quente; colada nas bordas, a troca de tom vira a divisão da faixa em duas metades. O
+   recipiente da revelação passa a cobrir o painel inteiro (o respiro vira padding dele), e o raio
+   e o overflow do painel cortam os cantos. */
+.in-faixa .cm-faixa-conteudo {
+  margin: calc(-1 * var(--cm-respiro-painel));
+  padding: var(--cm-respiro-painel);
+}
+
+.in-faixa-foto {
+  margin: 0 calc(-1 * var(--cm-respiro-painel)) calc(-1 * var(--cm-respiro-painel));
+}
+
+.in-faixa-foto .in-foto {
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  object-position: 50% 45%;
+}
+
 @media (min-width: 960px) {
   .in-faixa-grade {
     grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
     gap: 48px;
+  }
+
+  .in-faixa-foto {
+    align-self: stretch;
+    /* A faixa tem pelo menos 480 px de altura: a cena inteira dos tablets cabe no recorte. */
+    min-height: 480px;
+    margin: calc(-1 * var(--cm-respiro-painel));
+    margin-left: 0;
+  }
+
+  .in-faixa-foto .in-foto {
+    height: 100%;
+    aspect-ratio: auto;
   }
 }
 
@@ -277,14 +319,6 @@
   width: 100%;
   height: auto;
   color: transparent;
-}
-
-/* O fundo da foto é um cacau um pouco mais quente que o da faixa: o fio de papel e o raio fazem
-   dela um quadro de propósito, não uma mancha. */
-.in-faixa-grade .in-foto {
-  border-radius: var(--radius-cartao);
-  outline: 1px solid color-mix(in srgb, var(--color-papel) 14%, transparent);
-  outline-offset: -1px;
 }
 
 /* 6. Tabela ----------------------------------------------------------------------------------- */
@@ -305,33 +339,49 @@
   padding: 0;
 }
 
-/* As três colunas cabem sem rolar de lado em toda largura: o nome do app (uma palavra só) dita a
-   largura da segunda, "Caderno e mensagens" quebra em duas linhas e a necessidade fica com o resto.
-   As larguras vão em em, pelo tamanho do cabeçalho em cada faixa. */
+/* As três colunas cabem sem rolar de lado em toda largura: o nome do app (uma palavra só, ~8,3em em
+   Literata 600) dita a largura da segunda; "Caderno e mensagens" quebra em duas linhas ("mensagens"
+   ~5,4em); a necessidade fica com o resto. A largura é a do texto, em em pelo tamanho do cabeçalho,
+   mais o respiro dos dois lados: o Tailwind põe `box-sizing: border-box` em tudo, e o respiro entra
+   na largura. */
+.in-tabela-grade {
+  --in-tabela-respiro: 16px;
+}
+
 .in-tabela-grade .cm-tabela {
   table-layout: fixed;
 }
 
+.in-tabela-grade .cm-tabela td,
+.in-tabela-grade .cm-tabela thead th + th {
+  padding-inline: var(--in-tabela-respiro);
+}
+
 .in-tabela-grade .cm-tabela thead th:nth-child(2) {
-  width: 8.6em;
+  width: calc(8.8em + 2 * var(--in-tabela-respiro));
 }
 
 .in-tabela-grade .cm-tabela thead th:nth-child(3) {
-  width: 5.8em;
+  width: calc(5.9em + 2 * var(--in-tabela-respiro));
+}
+
+@media (max-width: 767px) {
+  .in-tabela-grade {
+    --in-tabela-respiro: 10px;
+  }
 }
 
 @media (max-width: 479px) {
+  .in-tabela-grade {
+    --in-tabela-respiro: 6px;
+  }
+
   .in-tabela-grade .cm-painel-oliva {
-    padding-inline: 14px;
+    padding-inline: 12px;
   }
 
   .in-tabela-grade .cm-tabela thead th {
     font-size: 0.875rem;
-  }
-
-  .in-tabela-grade .cm-tabela td,
-  .in-tabela-grade .cm-tabela thead th + th {
-    padding-inline: 4px;
   }
 
   .in-tabela-grade .cm-tabela tbody th {
@@ -340,8 +390,9 @@
   }
 }
 
-/* Lado a lado só a partir de 1200: abaixo disso a tabela em 7 colunas espremeria a necessidade. */
-@media (min-width: 1200px) {
+/* Lado a lado só a partir de 1280: abaixo disso a tabela em 7 colunas espremeria a necessidade.
+   A tabela é a coluna larga (7) e o linho a estreita (5). */
+@media (min-width: 1280px) {
   .in-tabela-grade {
     grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
     gap: 24px;
@@ -363,6 +414,14 @@
     object-fit: cover;
     object-position: 45% 50%;
   }
+}
+
+/* Títulos ------------------------------------------------------------------------------------- */
+/* A ênfase é a segunda linha inteira em itálico, num bloco só dela: numa coluna estreita as duas
+   linhas nunca se juntam nem trocam palavras (o text-wrap: balance age dentro de cada linha). */
+.in-pagina .cm-segunda-linha {
+  display: block;
+  font-style: italic;
 }
 
 /* 7. Citação e depoimentos -------------------------------------------------------------------- */

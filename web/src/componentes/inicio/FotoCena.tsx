@@ -9,15 +9,18 @@ interface Props {
   altura: number
   /** O que a cena mostra: as nossas telas, nos aparelhos. */
   alt: string
+  /** Classe a mais da `<picture>` (onde ela fica no painel). */
+  className?: string
 }
 
 /**
  * Uma cena de estúdio sem o painel de mel da `CenaEstudio`: a `<picture>` WebP 1× e 2×, com largura
- * e altura explícitas, que carrega ao chegar perto da janela. Vai sobre o cacau ou num painel de areia.
+ * e altura explícitas. Carrega na hora: são WebPs pequenos, e o painel ao lado nunca pode ficar vazio.
+ * Vai sobre o cacau ou num painel de areia.
  */
-export function FotoCena({ base, largura, altura, alt }: Props) {
+export function FotoCena({ base, largura, altura, alt, className }: Props) {
   return (
-    <picture className="in-foto-quadro">
+    <picture className={['in-foto-quadro', className].filter(Boolean).join(' ')}>
       <source type="image/webp" srcSet={srcSetWebp(base)} />
       <img
         src={urlPublica(`${base}@1x.webp`)}
@@ -25,7 +28,7 @@ export function FotoCena({ base, largura, altura, alt }: Props) {
         width={largura}
         height={altura}
         alt={alt}
-        loading="lazy"
+        loading="eager"
         decoding="async"
         className="in-foto"
       />

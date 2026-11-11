@@ -24,7 +24,7 @@ export function FaixaMadrugada() {
             {botao.rotulo}
           </Botao>
         </div>
-        <FotoCena base={cena.base} largura={768} altura={512} alt={cena.alt} />
+        <FotoCena base={cena.base} largura={768} altura={512} alt={cena.alt} className="in-faixa-foto" />
       </div>
     </FaixaCacau>
   )
