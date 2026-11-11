@@ -68,12 +68,12 @@ export function MolduraLogada({ ocupado = false, children }: Props) {
     <ContextoSair value={{ sair: () => void aoSair(), saindo }}>
       <div className="cm-area pt-2">
         {/* Um só aviso honesto, acima da barra e fora do <main> e da mídia: só sem banco (`empty:hidden` some com a folga). */}
-        <div className="pt-1 pb-1 empty:hidden">
+        <div className="py-2 empty:hidden">
           <AvisoDemonstracao lateral />
         </div>
         <nav
           aria-label={CABECALHO.navegacao}
-          className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-b border-[var(--cor-fio-suave)] py-2"
+          className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-b border-[var(--cor-fio-suave)] py-3"
         >
           <div className="flex flex-wrap items-center gap-x-1 min-[30rem]:gap-x-3">
             <NavLink

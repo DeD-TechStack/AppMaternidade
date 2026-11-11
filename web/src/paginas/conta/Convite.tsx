@@ -245,7 +245,7 @@ export function Convite() {
           aria-labelledby="titulo-previa"
           className="flex flex-col gap-5 rounded-cartao border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)] p-6"
         >
-          <h2 id="titulo-previa" className="cm-h4 wrap-anywhere">
+          <h2 id="titulo-previa" className="cm-h3 wrap-anywhere">
             {pronta.previa.familiaNome}
           </h2>
           <p>

@@ -133,7 +133,7 @@ export function BlocoConvites({ detalhe, acoes }: Props) {
         onSubmit={criar}
         noValidate
         aria-labelledby="novo-convite"
-        className="flex max-w-[32rem] flex-col gap-5 rounded-cartao border border-[var(--cor-fio-suave)] p-5"
+        className="flex flex-col gap-5 rounded-cartao border border-[var(--cor-fio-suave)] p-5 lg:p-6"
       >
         <h3 id="novo-convite" className="cm-h4">
           {FAMILIA.convites.novo}
@@ -168,7 +168,7 @@ export function BlocoConvites({ detalhe, acoes }: Props) {
             refEntrada={validadeRef}
           />
         )}
-        <button type="submit" disabled={enviando} className={BOTAO_PRINCIPAL}>
+        <button type="submit" disabled={enviando} className={`${BOTAO_PRINCIPAL} sm:w-auto sm:self-start sm:px-10`}>
           {enviando ? FAMILIA.convites.criando : FAMILIA.convites.criar}
         </button>
       </form>
@@ -176,7 +176,7 @@ export function BlocoConvites({ detalhe, acoes }: Props) {
       {criado ? (
         <section
           aria-labelledby="codigo-do-convite"
-          className="flex max-w-[32rem] flex-col gap-4 rounded-cartao border-[1.5px] border-[var(--cor-texto)] bg-[var(--cor-cartao)] p-5"
+          className="flex flex-col gap-4 rounded-cartao border-[1.5px] border-[var(--cor-texto)] bg-[var(--cor-cartao)] p-5 lg:p-6"
         >
           <h3 id="codigo-do-convite" className="cm-h4">
             {FAMILIA.convites.codigoTitulo}

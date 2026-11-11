@@ -204,26 +204,28 @@ export function Familia() {
           />
         </div>
       ) : pronto ? (
-        <div className="mt-8 flex max-w-[48rem] flex-col gap-10">
-          <section aria-labelledby="familia-atual" className="flex flex-col gap-1">
+        <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-12">
+          <section aria-labelledby="familia-atual" className="flex min-w-0 flex-col gap-2 lg:sticky lg:top-28 lg:self-start">
             <h2 id="familia-atual" className="cm-h3 wrap-anywhere">
               {pronto.familia.nome}
             </h2>
-            <p>{FAMILIA.fuso(pronto.familia.fuso)}</p>
-            <p>{FAMILIA.voceE(PAPEIS[pronto.familia.meuPapel].minusculo)}</p>
+            <p className="text-[var(--cor-texto-2)]">{FAMILIA.fuso(pronto.familia.fuso)}</p>
+            <p className="font-medium">{FAMILIA.voceE(PAPEIS[pronto.familia.meuPapel].minusculo)}</p>
           </section>
 
-          <div className="flex flex-col gap-10 [&>section]:border-t [&>section]:border-[var(--cor-fio-suave)] [&>section]:pt-8">
-            <BlocoBebes key={`bebes-${pronto.familia.id}`} detalhe={pronto} responsavel={responsavel} acoes={acoes} />
-            <BlocoMembros detalhe={pronto} responsavel={responsavel} acoes={acoes} />
-            {responsavel ? <BlocoConvites key={`convites-${pronto.familia.id}`} detalhe={pronto} acoes={acoes} /> : null}
-            <BlocoAcoes key={`acoes-${pronto.familia.id}`} detalhe={pronto} responsavel={responsavel} acoes={acoes} />
-          </div>
+          <div className="flex min-w-0 flex-col gap-10">
+            <div className="flex flex-col gap-10 [&>section]:border-t [&>section]:border-[var(--cor-fio-suave)] [&>section]:pt-8">
+              <BlocoBebes key={`bebes-${pronto.familia.id}`} detalhe={pronto} responsavel={responsavel} acoes={acoes} />
+              <BlocoMembros detalhe={pronto} responsavel={responsavel} acoes={acoes} />
+              {responsavel ? <BlocoConvites key={`convites-${pronto.familia.id}`} detalhe={pronto} acoes={acoes} /> : null}
+              <BlocoAcoes key={`acoes-${pronto.familia.id}`} detalhe={pronto} responsavel={responsavel} acoes={acoes} />
+            </div>
 
-          <div className="border-t border-[var(--cor-fio-suave)] pt-6">
-            <Link to="/privacidade" className={LINK_ALVO}>
-              {FAMILIA.privacidade}
-            </Link>
+            <div className="border-t border-[var(--cor-fio-suave)] pt-6">
+              <Link to="/privacidade" className={LINK_ALVO}>
+                {FAMILIA.privacidade}
+              </Link>
+            </div>
           </div>
         </div>
       ) : null}

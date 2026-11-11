@@ -25,7 +25,7 @@ type Passo =
   | { tipo: 'bebe'; familia: { id: string; fuso: string } }
 
 const CARTAO =
-  'flex max-w-[32rem] flex-col gap-5 rounded-cartao border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)] p-6 lg:p-8'
+  'mt-4 flex max-w-[32rem] flex-col gap-5 rounded-cartao lg:mt-6 border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)] p-6 lg:p-8'
 
 // /app/comecar com a conta completa (RF-14): "Criar uma família" (nome, fuso e depois o primeiro
 // bebê) ou "Tenho um convite". Com código de convite guardado, vai direto a /convite. A mensagem de

@@ -35,8 +35,8 @@ export function MolduraPublica({ titulo, manchete, frase, ligacoes, ocupado = fa
             {titulo}
           </h1>
         )}
-        {frase ? <p className="cm-lide cm-medida">{frase}</p> : null}
-        {children ? <div className="flex max-w-[32rem] flex-col gap-4">{children}</div> : null}
+        {frase ? <p className="cm-lide cm-medida mt-2">{frase}</p> : null}
+        {children ? <div className="mt-4 flex max-w-[32rem] flex-col gap-4 lg:mt-6">{children}</div> : null}
         {ligacoes ? (
           <div className="flex max-w-[32rem] flex-wrap items-center gap-x-4 border-t border-[var(--cor-fio-suave)] pt-4">
             {ligacoes}
