@@ -31,6 +31,7 @@ function secao(titulo: string, id?: string): Secao {
   return { titulo, id: id ?? `secao-${slug(titulo)}` }
 }
 
+const CAMINHO_CONTA = '/app/conta'
 const CAMINHO_CONTATO = '/contato'
 const CAMINHO_EXCLUSAO = '/exclusao-de-conta'
 const CAMINHO_REGRAS = '/regras-da-comunidade'
@@ -392,8 +393,8 @@ const EXCLUSAO: PaginaDeTexto = {
       blocos: [
         TF.pedidoExclusao,
         'Esta página abre sem login, para qualquer pessoa ler. O pedido vai exigir que a pessoa confirme que a conta é dela, e o jeito de confirmar ainda será definido.',
-        // A tela Família e conta ainda não é rota: o Contato é o único canal real.
-        { botao: 'Ir para Contato', para: CAMINHO_CONTATO },
+        // A Conta é a rota integrada /app/conta (decisão do líder, 11/11).
+        { botao: 'Ir para a Conta', para: CAMINHO_CONTA },
       ],
     },
     {

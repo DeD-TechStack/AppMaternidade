@@ -456,16 +456,25 @@ describe('Exclusão de conta: página de tarefa', () => {
     )
   })
 
-  it('o botão "Ir para Contato" vem logo depois do último parágrafo de "Como pedir" e leva a /contato', () => {
+  it('o botão "Ir para a Conta" vem logo depois do último parágrafo de "Como pedir" e leva a /app/conta', () => {
     const { container } = renderizarRota('/exclusao-de-conta')
     const secao = screen.getByRole('heading', { level: 2, name: 'Como pedir' }).closest('section')!
-    const botao = within(secao).getByRole('link', { name: 'Ir para Contato' })
-    expect(botao.getAttribute('href')).toBe('/contato')
+    const botao = within(secao).getByRole('link', { name: 'Ir para a Conta' })
+    expect(botao.getAttribute('href')).toBe('/app/conta')
     expect(botao.className).toBe('cm-botao cm-botao-primario alvo-toque')
     const texto = secao.querySelector('.pt-texto')!
     expect(texto.lastElementChild).toBe(botao.parentElement)
     expect(texto.lastElementChild!.previousElementSibling!.tagName).toBe('P')
-    expect(container.querySelectorAll('main a[href="/contato"]')).toHaveLength(1)
+    expect(container.querySelectorAll('main a[href="/app/conta"]')).toHaveLength(1)
+  })
+
+  it('o botão leva exatamente a /app/conta e a página não tem mais o link "Ir para Contato"', () => {
+    const { container } = renderizarRota('/exclusao-de-conta')
+    const principal = container.querySelector('main')!
+    expect(within(principal).getByRole('link', { name: 'Ir para a Conta' }).getAttribute('href')).toBe('/app/conta')
+    expect(within(principal).queryByRole('link', { name: 'Ir para Contato' })).toBeNull()
+    expect(principal.textContent).not.toContain('Ir para Contato')
+    expect(principal.querySelector('a[href="/contato"]')).toBeNull()
   })
 
   it('nenhum desenho solto aparece antes de "Antes de excluir" e "Como pedir": a figura vem depois da segunda seção', () => {
