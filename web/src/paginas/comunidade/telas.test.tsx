@@ -547,6 +547,35 @@ describe('publicar um tópico com prévia e confirmação (MAT-40:RF-04)', () =>
     expect((await screen.findAllByRole('status')).some((s) => s.textContent === TX.tx26)).toBe(true)
   })
 
+  it('o autor sem aceite vigente dos termos abre a rota de edição: sem formulário, só a entrada da C5', async () => {
+    // Controle: com o aceite vigente, o formulário de edição aparece habilitado.
+    const comAceite = cena('autor', `${topico(CONTEUDO.topicoDoAutor)}/editar`)
+    await aguardarH1('Editar tópico')
+    expect((document.getElementById('campo-titulo') as HTMLInputElement).disabled).toBe(false)
+    expect(screen.queryByText(LISTA.paraPublicarFrase)).toBeNull()
+    comAceite.unmount()
+
+    // Sem nenhum aceite da conta do autor (o tópico continua sendo dele e visível).
+    const semAceite = cena('autor', `${topico(CONTEUDO.topicoDoAutor)}/editar`, (estado) => {
+      estado.aceites = estado.aceites.filter((a) => a.contaId !== ELENCO.autor.conta)
+    })
+    await aguardarH1('Editar tópico')
+    expect(await screen.findByText(LISTA.paraPublicarFrase)).toBeTruthy()
+    expect(screen.getByRole('link', { name: LISTA.entrar })).toBeTruthy()
+    expect(document.getElementById('campo-titulo')).toBeNull()
+    expect(screen.queryByLabelText('Título')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Ver prévia' })).toBeNull()
+    semAceite.unmount()
+
+    // Aceite só de uma versão antiga: o mesmo resultado.
+    cena('autor', `${topico(CONTEUDO.topicoDoAutor)}/editar`, (estado) => {
+      for (const aceite of estado.aceites) if (aceite.contaId === ELENCO.autor.conta) aceite.versao = '2026-01-01'
+    })
+    await aguardarH1('Editar tópico')
+    expect(await screen.findByText(LISTA.paraPublicarFrase)).toBeTruthy()
+    expect(document.getElementById('campo-titulo')).toBeNull()
+  })
+
   it('"Editar" só aparece para o autor e só com o tópico visível; a rota de edição dos outros é "não encontrado"', async () => {
     const { unmount } = cena('autor', topico(CONTEUDO.topicoDoAutor))
     await aguardarH1('Tópico do autor')

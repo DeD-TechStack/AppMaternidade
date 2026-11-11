@@ -32,7 +32,7 @@ function EdicaoLida({ id }: { id: string }) {
       )}
       {pronto && lida && !ehEscritor(lida) ? <ParaEntrar destino={`/app/comunidade/topico/${id}/editar`} /> : null}
       {pronto && lida && ehEscritor(lida) && !editavel ? <NaoEncontrado /> : null}
-      {lido && lida && editavel && lida.perfilId && espaco ? (
+      {lido && lida && editavel && ehEscritor(lida) && lida.perfilId && espaco ? (
         <FormularioDeTopico
           espaco={espaco}
           perfilId={lida.perfilId}
