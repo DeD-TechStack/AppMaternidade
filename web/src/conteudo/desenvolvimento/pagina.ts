@@ -1,6 +1,6 @@
 // A página Desenvolvimento: título, abertura, avisos e rótulos. Os itens ficam em itens.ts.
 
-/** O aviso de saúde: aparece perto do topo do conteúdo e de novo no fim, com este texto exato. */
+/** O aviso de saúde: aparece uma vez, perto do topo do conteúdo, com este texto exato. */
 export const AVISO_SAUDE =
   'Este conteúdo é informativo e não substitui orientação médica. Em caso de dúvida, fale com o pediatra.'
 

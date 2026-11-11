@@ -16,3 +16,14 @@ Output sha256:
 - faixa-cacau@2x.webp 1f627752cf43caee885dbfefc5f6120a43b81f4bb065479c6dc6599e05c197d9
 - tabela@1x.webp f376e575952336c336d1dea7ef298c5e73da2e6c9d4d2c875db3cd920ad2867b
 - tabela@2x.webp ebe9d4a8374ca0926682183d110befa46121ec689603c28534172f92d41a9dff
+
+## Recomposed by MAT-49d (2026-11-11)
+
+Same scene sources and compositor (`compor.py`, `verde_restante: 0`); the screens are now window captures (not full-page) of the new app screens, deviceScaleFactor 2, reduced motion, from the MAT-49d worktree on base a8cad7d. Each capture height matches the aspect of its green screen, so the top of the screen is shown with no crop distortion. No "Protótipo" or "dados de exemplo" in the visible text of any capture.
+
+- heroi@1x.webp: scene `brutos/S1_trio_mel.png`; captures: Hoje (day) 390x1102, Hoje (Madrugada) 390x853, Sessão 390x1013 (demonstration notice hidden at capture time, so none is inside the media; MAT-49d round 3); 2026-11-11; sha256 8dea22ae9ee659fad7661dd6940d369d297743ef9c8f5ee97e1d045a3c7b5fd8
+- heroi@2x.webp: scene `brutos/S1_trio_mel.png`; captures: Hoje (day) 390x1102, Hoje (Madrugada) 390x853, Sessão 390x1013 (demonstration notice hidden at capture time, so none is inside the media; MAT-49d round 3); 2026-11-11; sha256 5ae0c9255be82e588d153da02506826be9888050c73f50210cf46d9a54b01538
+- faixa-cacau@1x.webp: scene `brutos/S4_celular_linho.png`; captures: Hoje (Madrugada active, session running) 390x850; one-device fallback because the S3 two-tablet scene overlaps the tablets; 2026-11-11; sha256 d229af61d325b7a30b9257fda053ee9be4162c05a13e410b3bb581b4b3f8c839
+- faixa-cacau@2x.webp: scene `brutos/S4_celular_linho.png`; captures: Hoje (Madrugada active, session running) 390x850; one-device fallback because the S3 two-tablet scene overlaps the tablets; 2026-11-11; sha256 a794f2c63da93261c31850f2faaff85ffdaa1585082ddb1405fe4bc686971c65
+- tabela@1x.webp: scene `brutos/S4_celular_linho.png`; captures: Hoje (day) 390x850; 2026-11-11; sha256 f65156590a9e7619e516ad662f440835ef0fefd2013cd7264e7d02f6ab12bb47
+- tabela@2x.webp: scene `brutos/S4_celular_linho.png`; captures: Hoje (day) 390x850; 2026-11-11; sha256 ee5fe93871ca5ef51f5739b4e48d9061d40dcf539b354cd2b7aa70e8017f2e84
