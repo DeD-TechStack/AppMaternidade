@@ -1,34 +1,27 @@
 import { Fragment } from 'react'
 import { Link } from 'react-router'
-import { EMAIL_CONTATO, type Bloco, type Texto } from '../../conteudo/publicas-texto.ts'
+import { type Bloco, type Texto } from '../../conteudo/publicas-texto.ts'
+import { Botao } from '../base/Botao.tsx'
 
-/** Um parágrafo: texto simples ou uma sequência de trechos (texto, link de rota ou o e-mail de contato). */
+/** Um parágrafo: texto simples ou uma sequência de trechos (texto ou link de rota). */
 function Paragrafo({ texto }: { texto: Texto }) {
   if (typeof texto === 'string') return <p>{texto}</p>
-  // O e-mail sozinho no parágrafo (a página Contato) aparece em destaque, em Literata.
-  const soEmail = texto.length === 1 && typeof texto[0] !== 'string' && 'email' in texto[0]
   return (
-    <p className={soEmail ? 'pt-destaque' : undefined}>
-      {texto.map((trecho, indice) => {
-        if (typeof trecho === 'string') return <Fragment key={indice}>{trecho}</Fragment>
-        if ('email' in trecho) {
-          return (
-            <a key={indice} href={`mailto:${EMAIL_CONTATO}`}>
-              {EMAIL_CONTATO}
-            </a>
-          )
-        }
-        return (
+    <p>
+      {texto.map((trecho, indice) =>
+        typeof trecho === 'string' ? (
+          <Fragment key={indice}>{trecho}</Fragment>
+        ) : (
           <Link key={indice} to={trecho.para}>
             {trecho.link}
           </Link>
-        )
-      })}
+        ),
+      )}
     </p>
   )
 }
 
-/** Um bloco de leitura: parágrafo, lista (ordenada ou não) ou itens com título (`h3` e parágrafo). */
+/** Um bloco de leitura: parágrafo, lista (ordenada ou não), itens com título (`h3` e parágrafo) ou botão de rota. */
 export function BlocoDeLeitura({ bloco }: { bloco: Bloco }) {
   if (typeof bloco === 'string') return <Paragrafo texto={bloco} />
   if ('itens' in bloco) {
@@ -50,6 +43,13 @@ export function BlocoDeLeitura({ bloco }: { bloco: Bloco }) {
             <p>{texto}</p>
           </div>
         ))}
+      </div>
+    )
+  }
+  if ('botao' in bloco) {
+    return (
+      <div className="pt-acao">
+        <Botao to={bloco.para}>{bloco.botao}</Botao>
       </div>
     )
   }
