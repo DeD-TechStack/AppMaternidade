@@ -1,17 +1,40 @@
 import type { ReactNode } from 'react'
+import { Ilustracao, type NomeIlustracao } from '../campo/Ilustracao.tsx'
 import { CenaAcesso } from './CenaAcesso.tsx'
+
+interface Props {
+  children: ReactNode
+  /**
+   * Um desenho de traço pequeno, só no celular (abaixo de 640 px), ao lado da segunda linha do título.
+   * É enfeite (`alt` vazio): fica fora da leitura de tela, e some na madrugada (o traço é de cacau).
+   */
+  ilustracao?: NomeIlustracao
+}
 
 /**
  * A tela de acesso em duas colunas: o formulário no papel, à esquerda, e o painel de mel com a cena,
- * à direita (7/5 da grade, a partir de 64 rem: o título de 84 px precisa de uma coluna de ~730 px, e o
- * painel de ~530 px com a cena 2:3 quase não é cortado). No celular é uma coluna só: o formulário primeiro, a
- * cena depois. A coluna do formulário se centra na altura do painel, sem sobra vazia ao lado.
+ * à direita (7/5 da grade, a partir de 64 rem: o título de 84 px precisa de uma coluna de ~730 px).
+ * As duas colunas começam no mesmo topo: o painel tem proporção fixa (não estica com a altura do
+ * formulário) e, com o formulário mais alto que a janela, fica preso logo abaixo do cabeçalho
+ * (`sticky`). No celular é uma coluna só: o formulário primeiro, a cena depois.
  */
-export function DuasColunas({ children }: { children: ReactNode }) {
+export function DuasColunas({ children, ilustracao }: Props) {
   return (
-    <div className="grid gap-12 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-12">
-      <div className="flex min-w-0 flex-col gap-4 lg:justify-center">{children}</div>
-      <CenaAcesso />
+    <div className="grid gap-12 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-start lg:gap-12">
+      <div className="relative flex min-w-0 flex-col gap-4">
+        {ilustracao ? (
+          <Ilustracao
+            nome={ilustracao}
+            decorativa
+            carregamento="eager"
+            className="pointer-events-none absolute top-[46px] right-0 h-auto max-h-[58px] w-auto max-w-[60px] sm:hidden [:root[data-tema=madrugada]_&]:hidden"
+          />
+        ) : null}
+        {children}
+      </div>
+      <div className="lg:sticky lg:top-[calc(var(--cm-cabecalho)+16px)]">
+        <CenaAcesso />
+      </div>
     </div>
   )
 }
