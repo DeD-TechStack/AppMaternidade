@@ -451,3 +451,35 @@ Etapa APP-001 concluída pelo coordenador. Aguardando Daniel:
 - responder às decisões D1 a D7 (MAT-20 a MAT-26). A D7 precisa de resposta antes do primeiro push.
 
 Nenhuma tarefa de implementação (MAT-17 a MAT-19) começa sem pedido dele.
+
+- **11/11 15h20:** Sessão nova do líder (local-5f45c001). Daniel pediu rodada de polimento visual; itens P-45 a P-52 no PENDENCIAS (por grupo de página, escopo disjunto do caminho crítico). Rodando 38a t_f7bdf7e8, 40a g2 t_de06bd20, 37b g2 t_f2e2d6d8; int/refazer e731af5. ETA publicar ~20h30. Pedido t_f01de894 ao coordenador: religar t_f2e2d6d8.
+
+- **11/11 15h32:** Polimento: spec POLIMENTO/SPEC_POLIMENTO.md v1 (faixa média, POL:RF-01..10) e devoluções de Início, destaque e texto escritas; explique de volta R1 por subagente (deleg_f24a9767). Volta 2 de texto/acesso/conta consolidada (RESULTADO_R2_texto_acesso_conta.md); conta_r2 nula pelo quadro de calibração com F3, pedido t_2bfef9a4 ao coordenador.
+
+- **11/11 15h40:** Decisão do líder na 40a t_de06bd20 (revisão r2, run 303, causa teste): D1 RF-14 vale para o código da Comunidade, e pedidos de cuidado iniciados pelo casco da MAT-37 são listados em CASCO_RF14 com prova do iniciador (novo item P-54); D2 medidas logadas por .oc/medir_logado.mjs sobre as funções puras do medir-dom, sem editar a ferramenta. Comentário 460. 37b t_f2e2d6d8 também volta para a rodada de correção 2/2 (comentário 458).
+
+- **11/11 15h53:** Polimento: spec SPEC_POLIMENTO v2 aprovada (sha 88a1f004 antes do registro dos ids; explique de volta R1 3B/18M/7N corrigidos). Cartões: POL-INI t_8c0b72d8 (rodando), POL-TXT t_890d1590 (pronto), POL-DES t_89539427 (schedule, teto de 5). Skills: opencode-executor + omh-design-quality-gate; --tela web na Execução.
+
+- **11/11 16h04:** 38a t_f7bdf7e8 revisão R1 (run 308) devolveu, causa implementacao, R1-R10; rodada de correção 1/2 com merge do int/refazer primeiro e decisões D1/D2 do líder (comentário 470). ETA publicar revisto para ~22h.
+
+- **11/11 16h10:** Pedido do coordenador t_552fb3ec: antes de pedir o 'pode' da publicação, 4 checagens com skills (dogfood, omh-accessibility-audit, omh-production-audit, omh-verification-gate), itens P-55 a P-58, relatórios em _staging/appmaternidade/PRE_LANCAMENTO/; P-59 release-cut e deploy-and-monitor na publicação.
+
+- **11/11 16h24:** 37b g2 t_f2e2d6d8 escalada (ESCALA-2R, revisão 3 run 314, head 4e370c9): R1/R2/R5 fechados, R3/R4 abertos. Decisão do líder: g2 arquivada, sucessora g3 t_6aeda4a9 sobre 4e370c9 só com a evidência faltante (D1 estouro no casco para P-50; D2-D5 sem dispensa).
+
+- **11/11 16h46:** Regra nova (Daniel ~16h40, equipe 536ee95): evidência pendente não devolve cartão (APPROVED_WITH_LIMITS). Itens P-60 a P-62 no PENDENCIAS; 37b g3 t_6aeda4a9 replanejada (comentário 497: defeitos de produto primeiro, resto em evidencia_pendente). POL-TXT t_890d1590 e POL-INI t_8c0b72d8 na correção 1/2 (comentários 481 e 495). ETA ~21h30.
+
+- **11/11 17h10:** Disco C: cheio às 16h54 derrubou a revisão da 40a t_de06bd20 (gave_up, Errno 28). Líder removeu 28 worktrees de cartões integrados (48,9 GB livres; 10 presos por processo ficaram) e pediu redespacho ao coordenador (t_d1da2819).
+
+- **11/11 17h18:** POL-TXT t_890d1590 APPROVED_WITH_LIMITS e integrada por ff em int/refazer (e731af5..cd11c59; check 1409; recibo comentário 506). Juízes pol_texto_r1 lançados. preparar.py dos juízes passou a usar o quadro de calibração recortado (cópia antes em preparar.py.antes_corte). 37b g3 t_6aeda4a9 também gave_up pelo disco; redespacho pedido (t_219f4a49).
+
+- **11/11 17h24:** Coordenador (t_2e6fe5ac): disco cheio por 54 Vite e ~200 Chrome órfãos (pagefile 56 GB) e cache; Docker voltou 17h20; 40a e 37b g3 desbloqueados; cron encerrar-orfaos novo. Líder encerrou os 4 servidores _int* (64 processos) e apagou 10 pastas de worktree integrados presas; C: 58,8 GB livres. 37b g3 e 38a avisados para refazer checagens de 16h24-17h20.
+
+- **11/11 17h28:** POL-INI t_8c0b72d8 APPROVED_WITH_LIMITS (93cc522) integrada pelo merge 386cf35 (int/refazer cd11c59..386cf35; check 1409; recibo comentário 512). Juízes pol_inicio_r1 lançados.
+
+- **11/11 17h34:** Juízes pol_texto_r1: 0/13, 5,5-7,0 (F8). Cartão POL-TXT v2 t_736b76c5 (última volta) com DEVOLUCAO_POL_texto_r1.md sha 448bcb9a. P-63 [D] e-mail de contato Gmail pessoal para a galeria.
+
+- **11/11 17h45:** 40a g2 t_de06bd20 APPROVED_WITH_LIMITS (526c396) integrada pelo merge 22ff7cb (int/refazer 386cf35..22ff7cb; check 1679; recibo comentário 518). Evidência pendente em P-62.
+
+- **11/11 17h52:** Juízes pol_inicio_r1 (Astra refeito uma vez): 2/10, 6,5-7,8. Cartão POL-INI v2 t_9e230273 (última volta) com DEVOLUCAO_POL_inicio_r1.md sha 25ba9887.
+
+- **11/11 18h14:** PAUSA por ordem de Daniel (~18h20, t_3508163c): cartões bloqueados (38a caiu em triage), cron retorno-oc pausado (cacefbc1849d), int/refazer em 22ff7cb; bloco RETOMAR no PENDENCIAS.

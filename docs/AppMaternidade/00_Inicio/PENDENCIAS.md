@@ -8,9 +8,31 @@ regra: kanban-leader-cycle, seção 0 "Lista durável de pendências"
 # Pendências do AppMaternidade
 
 MANDATO (Daniel, 05/11/2026; visual refeito em 11/11): o site inteiro funcionando de ponta a ponta (RF-01 a RF-14), com o visual Campo de mel aprovado em 11/11, publicado para o professor entrar e usar tudo com dados fictícios. Fonte: [Retomada do site](Retomada_Site.md), seção "Roteiro do site completo".
-ESTADO: ATIVO
+ESTADO: PAUSA Daniel ate ele pedir (11/11 ~18h20, ordem de Daniel pelo coordenador, resposta t_3508163c)
 
-Paralelo (Daniel, 05/11): até 5 cartões por projeto; só fica em série o que tem dependência real.
+## RETOMAR (escrito em 11/11 ~18h25 para uma sessão NOVA do líder; não há como voltar a esta sessão)
+
+Estado do ramo: `origin/int/refazer` = **22ff7cb** (POL-TXT v1 cd11c59, POL-INI v1 386cf35 e 40a g2 22ff7cb integradas hoje). `main` não foi tocada. Nada foi apagado; os worktrees ficam como estão.
+
+Como a pausa foi feita: `block --kind needs_input "[decisor: Daniel] pausa de 11/11"` nos cartões que aceitavam. O cron `retorno-oc-appmaternidade` (id cacefbc1849d, perfil do líder) foi **pausado** para não acordar os dois cartões em `scheduled` com OC_RUN. Na retomada: `hermes cron resume cacefbc1849d`, e só depois soltar os cartões.
+
+Por cartão aberto (worktree em `C:/Projetos/AppMaternidade/.worktrees/<id>`):
+- **t_f7bdf7e8 MAT-38a** (caminho crítico): caiu em **triage** no bloqueio da pausa (2º bloqueio). Ramo `wt/t_f7bdf7e8` em **1542137**, sem sujeira: rodada de correção 1 de 2 feita (merge do int antigo a46e42c, R1–R10 em 994fed6 e 1542137); faltava rodar `rodada.py` e pedir revisão. Último OpenCode: `.oc/12` (receipt presente). Não contém o int atual 22ff7cb: antes do HANDOFF, `merge --no-ff origin/int/refazer`. O merge a46e42c tem o título "Merge remote-tracking branch ..." que a política de commits pode recusar: conferir `node scripts/verificar-commits.mjs`. Saída da triage pela regra do COMUM (sucessor com o mesmo corpo, base `wt/t_f7bdf7e8`, religar 38b e 39b ao sucessor, arquivar), ou pedir ao coordenador. Decisões D1/D2 do líder no comentário 470.
+- **t_6aeda4a9 MAT-37b g3** (caminho crítico): blocked. Base 4e370c9; **5 arquivos sem commit** (`guarda.tsx`, `conta.ts`, `PaginaConta.tsx`, `medidas.test.tsx`; `supabase/config.toml` isolado, nunca em commit). Último OpenCode `.oc/5`. Próximo passo: comentário 497 (defeitos de produto primeiro, resto em `evidencia_pendente`) e 509 (refazer checagens de 16h24–17h20). Depois dele: P-48 (polimento de Acesso/Conta) e P-50 (casco).
+- **t_359ab800 MAT-40b** (caminho crítico): `scheduled` com OC_RUN `.oc/1` (receipt presente). Base 526c396; 2 arquivos sem commit (`rotas/moderacao.tsx`; `supabase/config.toml` isolado). Próximo: com o cron retomado, o comentário OC_RETORNO sai e o dispatcher segue; ou `unblock` à mão depois de conferir o receipt.
+- **t_7c491177 MAT-38b** e **t_c9529365 MAT-39b** (caminho crítico): `todo`, presos à 38a. Se a 38a ganhar sucessor, religar os dois a ele (`hermes kanban --board appmaternidade link/unlink`).
+- **t_89539427 POL-DES** (polimento das páginas de destaque, v1): blocked. Base e731af5; **14 arquivos sem commit** (cenas de `cenas/publicas/`, `publicas-destaque/**`, as 3 páginas e o teste). Último OpenCode `.oc/1`. Próximo: commit, `merge --no-ff origin/int/refazer`, `rodada.py`, pedir revisão (comentário 476).
+- **t_736b76c5 POL-TXT v2** (última volta das 6 páginas de texto): blocked. Ramo em **f4074aa**, sem sujeira, já contém 22ff7cb. Último OpenCode `.oc/5`. Próximo: `rodada.py` no SHA final e pedir revisão. Devolução `POLIMENTO/DEVOLUCAO_POL_texto_r1.md`.
+- **t_9e230273 POL-INI v2** (última volta do Início): `scheduled` com OC_RUN `.oc/1` (receipt presente). Ramo em c2de6ed (herói recomposto a 3x), 7 arquivos sem commit em `componentes/inicio/**`, `Inicio.tsx` e `inicio.test.tsx`. Devolução `POLIMENTO/DEVOLUCAO_POL_inicio_r1.md`.
+- **t_1757260d MAT-37g** (Entrar com Google): segue em `scheduled`, espera Daniel (P-16). Não mexer.
+
+Caminho crítico até a publicação (P-19): 38a → 38b e 39b; 37b g3; 40b. Depois: integração final em `int/refazer`, passeio RF-01 a RF-14, as 4 checagens P-55 a P-58 (dogfood, omh-accessibility-audit, omh-production-audit, omh-verification-gate; relatórios em `_staging/appmaternidade/PRE_LANCAMENTO/`), a evidência pendente P-60 a P-62, a galeria final para Daniel (P-52, com P-63 do e-mail) e o "pode" dele. Polimento em paralelo: POL-DES v1, POL-TXT v2 e POL-INI v2; depois P-48, P-49, P-50 e P-51. Spec do polimento: `DIRECOES_20261111/POLIMENTO/SPEC_POLIMENTO.md` v2 (sha 88a1f004; não editar, porque os cartões conferem o hash; anotações em `MEDIDA_POS_CARTAO.md`, `CARTOES_IDS.md` e `PEDIDOS_CASCO.md`). Juízes: `juizes/preparar.py <rodada> <capturas>` e `rodadas/<rodada>/rodar_juizes.sh`; resumo com `py -3.12 -I -X utf8 juizes/resumir.py <saida.md> <titulo> <rodada>`; limpeza de worktrees integrados com `_staging/appmaternidade/ferramentas/limpar_wt.py` (sem `--aplicar` só lista). ETA antes da pausa: ~21h30 pronto para publicar.
+
+Limpeza pendente (aprovação expirou às ~17h40, não repetir sem Daniel): worktrees `t_8c0b72d8`, `t_890d1590`, `_intPOLINI`, `_int40a`, `t_8c0b72d8_base` e os `claude_pids` desses cartões.
+
+Paralelo (Daniel, 05/11): até 5 cartões por projeto; só fica em série o que tem dependência real. **Atualizado (Daniel, 11/11 ~16h20, resposta t_627d5a0a): até 8 cartões rodando neste board** quando acelera o mandato (teto do host 10); preferir mais cartões em paralelo a sessões longas; sem frente de pesquisa.
+
+Plano paralelo (11/11 17h15): rodando 37b (revisão), 40a (correção 2/2), 38a (correção 1/2, com merge), POL-INI, POL-TXT e POL-DES = 6. Ao fechar a 37b: P-48 (Acesso e Conta) e P-50 (casco). Ao fechar a 40a: 40b. Ao fechar a 38a: 38b e 39b juntas, e P-49 depois da 38b. Só a integração é serial. **ETA pronto para publicar: ~22h** (18h10, com a regra da evidência pendente, que corta voltas de revisão: **~21h30**) (38a integrada ~19h, 38b/39b/40b ~20h30, integração final e passeio ~21h15, checagens P-55 a P-58 ~22h).
 
 Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA]` feito. O id `P-nn` não muda. Em toda wake sem cartão `ready`, `running` ou em revisão, o líder abre no mesmo turno o próximo `[ ]` (spec ou cartão), ou marca `[D]` ou PAUSA.
 
@@ -26,6 +48,26 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 8. P-19, publicação: checklist pronto abaixo; falta só o "pode" de Daniel | ~20h
 
 **ETA do MANDATO pronto para publicar: ~20h de hoje** (o maior risco é a cota semanal do Claude).
+
+Atualização 11/11 15h20 (sessão nova do líder, local-5f45c001): itens 1, 2 e 6 feitos (P-04, P-06, P-38 a P-44). Rodando: 38a t_f7bdf7e8 (desde 13h45), 40a g2 t_de06bd20 (14h27) e 37b g2 t_f2e2d6d8 (15h17). Em todo, presos aos pais: 38b, 39b, 40b. **ETA revisto: ~20h30 pronto para publicar.** 17h: **~22h**, porque a 38a voltou com 10 achados e precisa do merge do int/refazer, e a 38b e a 39b esperam por ela. O polimento (P-45 a P-51) corre ao lado e não segura a publicação.
+
+## Polimento visual (Daniel, 11/11 ~15h: "achei bom mas tem como ficar mais polido o visual")
+
+Rodada nova sobre o Campo de mel aprovado (não muda a direção). Regras da rodada (`retomada_lideres/APPMATERNIDADE_V3.md`). Spec `DIRECOES_20261111/POLIMENTO/SPEC_POLIMENTO.md` v2 APROVADA (explique de volta R1: 3 Blocker, 18 Major e 7 Nit, todos corrigidos no lugar; `EXPLIQUE_R1.md`; v1 guardada em `SPEC_POLIMENTO_v1.md`); cartões t_8c0b72d8 (Início, rodando), t_890d1590 (texto, pronto) e t_89539427 (destaque, em schedule até abrir vaga no teto de 5) e as devoluções `POLIMENTO/DEVOLUCAO_POL_{inicio,destaque,texto}.md`:
+- Spec só depois de carregar `portao-especificacao` e `before-you-code` (escopo primeiro: todo arquivo, teste e captura que a mudança alcança). Faixa média (S1 arquivos, S3 pedido de uma frase): portão enxuto, 1 explique de volta, derivada da spec da base.
+- Cartão de tela: `skills` = `opencode-executor` + `omh-design-quality-gate`; o prompt do OpenCode nomeia `make-interfaces-feel-better` (passe de polimento) e `frontend-design`. Desde equipe 4f22edb (resposta t_5562f2e0), a Execução de todo cartão de tela leva `preparar_oc.py ... --tela web` (as duas skills entram como instrução nativa do OpenCode, e o `oc_run --screen` recusa rodada sem elas ou sem leitura das próprias capturas); o coordenador confere os recibos dos primeiros cartões.
+- Aceite: juízes cegos de duas famílias com calibração, `omh-visual-qa` no veredito e `omh-award-bar-score` contra Becky/Good Inside e Pato Jack; no máximo 2 voltas por página nesta rodada; quem reprovar na 2ª vai para a galeria de Daniel. Em `/app/*` vale a F9 nova (título com o estado e a ação principal como botão na 1ª dobra; `nucleo/rubrica_visual.md`, equipe 9127c78).
+- Escopo de escrita disjunto dos cartões do caminho crítico: grupo cuja página um cartão de dados ainda toca espera esse cartão como `parent`.
+
+- [~ t_9e230273] P-45 Polimento do Início: POL-INI t_8c0b72d8 APPROVED_WITH_LIMITS (93cc522), integrada pelo merge 386cf35 (recibo no comentário 512). Volta 1 `pol_inicio_r1` (Astra refeito uma vez): 2 de 10 passam (1440_03 e 1440_07), 6,5–7,8. Volta 2, a última: POL-INI v2 t_9e230273 com `POLIMENTO/DEVOLUCAO_POL_inicio_r1.md`. Evidência pendente E1–E3 em P-61
+- [~ t_89539427] P-46 Polimento de Como funciona, Cuidado compartilhado e Desenvolvimento (`componentes/publicas-destaque/`) | livre agora; conferir na spec se a 39b toca Desenvolvimento
+- [~ t_736b76c5] P-47 Polimento das 6 páginas de texto: POL-TXT t_890d1590 APPROVED_WITH_LIMITS (cd11c59) e integrada por fast-forward (e731af5..cd11c59, check 1409 testes, commits OK; recibo no comentário 506). Volta 1 dos juízes `pol_texto_r1` (válida nos 2): 0 de 13 passam, 5,5–7,0, F8 (composição) do Astra em todos (`juizes/rodadas/RESULTADO_POL_texto_r1.md`). Volta 2, a última automática: POL-TXT v2 t_736b76c5 com `POLIMENTO/DEVOLUCAO_POL_texto_r1.md` (ilustração que enche o painel, coluna vazia, índice único, dobra a 390, lista repetida na Privacidade). Evidência pendente do RF-03 em P-61
+- [ ] P-48 Polimento de Entrar, Criar conta, Recuperar, Começar e Conta (`componentes/acesso/`, `componentes/conta/`, `paginas/conta/`) | depois da 37b t_f2e2d6d8
+- [ ] P-49 Polimento de Hoje, Sessão e Madrugada (`paginas/Hoje.tsx`, `paginas/Sessao.tsx`, `componentes/app/`, `prototipo/`) | depois da 38a t_f7bdf7e8 e da 38b t_7c491177
+- [ ] P-50 Polimento do casco (cabeçalho, rodapé, `index.css`, tokens): cartão pequeno e comum | depois da 37b (mexe no cabeçalho); ajuste comum pedido pelos grupos P-45 a P-49 vem para cá; lista viva em `DIRECOES_20261111/POLIMENTO/PEDIDOS_CASCO.md` (17h50: 3 pedidos da POL-INI, nenhum da POL-TXT, estouros a 200% do cabeçalho da 37b g3)
+- [ ] P-51 Polimento das telas novas dos cartões de dados (Comunidade, Histórico, Família, moderação) | depois de 40a, 38b, 37b e 40b
+- [~ galeria] P-53 Volta 2 dos juízes em texto (e731af5), Acesso e Conta (5247510), consolidada pelo líder às 15h40 em `juizes/rodadas/RESULTADO_R2_texto_acesso_conta.md`. Texto: válida nos 2, 0 de 12 recortes passam (5,8–7,0; F9 no celular em 5 páginas). Acesso: só o Fable vale, 1 de 8 passa (6,2–7,5). Conta: nula nos 2, porque o quadro positivo de calibração `d1440_tela_02_y1950.png` tem o cabeçalho sobre os números e os juízes reprovam F3 nele. Quadro trocado pelo coordenador (t_81f75bb7, equipe b77e9bd): agora `d1440_tela_02_y1950_corte.png`. Decisão do líder: não refazer a conta_r2, porque a Conta entra no polimento P-48 e será julgada de novo com o quadro novo; refazer agora gastaria juiz numa tela que vai mudar. As 3 vão para a galeria e entram como achados de entrada no polimento P-47 e P-48
+- [ ] P-52 Galeria antes/depois da rodada de polimento (telas inteiras, 2×) para Daniel | no fim de cada grupo
 
 ## Visual novo (Campo de mel)
 
@@ -84,21 +126,35 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 ## Dados ligados às telas novas (religados e soltos em 11/11)
 
 - [x] P-09 Corpos dos 6 cartões abaixo reescritos para a base nova antes do claim (prefixo `FINAL/OVERRIDE_DADOS.md`) e soltos em todo, presos aos pais | 11/11 9h50; sem SHA (é board)
-- [~ t_f2e2d6d8] P-10 MAT-37b g2: convite, Começar completo e Família, com Família no cabeçalho logado e Entrar/Criar conta do cabeçalho ligados a /entrar e /criar-conta (hoje vão a /contato). A g1 t_11ad28e6 caiu em triage, pedindo uma navegação lateral que o DESIGN novo não tem, e foi arquivada
-- [~ t_f2e2d6d8] P-10 MAT-37b g2: convite, Começar completo e Família, com Família no cabeçalho logado e Entrar/Criar conta do cabeçalho ligados a /entrar e /criar-conta (hoje vão a /contato). A g1 t_11ad28e6 caiu em triage, pedindo uma navegação lateral que o DESIGN novo não tem, e foi arquivada
+- [~ t_6aeda4a9] P-10 MAT-37b: convite, Começar completo e Família, com Família no cabeçalho logado e Entrar/Criar conta ligados às telas. g2 t_f2e2d6d8 fechou R1, R2 e R5 (1553 testes), mas a revisão 3 (17h25) escalou por ESCALA-2R com R3 (30 estouros a 200%, diálogos, teclado, prova fail-closed) e R4 (G4/G5/G7, leitura final) abertos. g2 arquivada; sucessora g3 t_6aeda4a9 sobre o head 4e370c9, só para fechar R3/R4, com as decisões D1 a D5 no corpo (estouro no casco vai para a P-50, nada dispensado)
+- [~ t_f7bdf7e8] P-11 MAT-38a: Hoje, Sessão e os 7 formulários ligados ao banco; entregue fd3e747 sobre a8cad7d, em revisão (16h45). Não entra por fast-forward: conflita com o int/refazer (e731af5) em 8 arquivos, com Hoje.tsx e Sessao.tsx movidos para `paginas/rotina/` contra o visual da 49b v2. A integração exige `merge --no-ff origin/int/refazer` no ramo do cartão, levando o visual da 49b v2 para `paginas/rotina/` (comentário 464): na rodada de correção, se houver; se a revisão aprovar, num cartão pequeno de merge. Revisão R1 (17h) devolveu com `causa: implementacao` (R1–R10: repetição de Descartar/Encerrar e do formulário, madrugada vazando para /app/conta, política de papel nos atalhos, memória sem as regras do banco, fixture errada, limites não anunciados, releitura com falha, Últimos fora da base, fluxos R38-34). Rodada de correção 1 de 2: primeiro o merge do int/refazer, depois R1–R10 com teste da classe; decisões D1 (madrugada só na Rotina, Layout.tsx volta à base) e D2 (medida logada por `.oc/medir_logado.mjs`) no comentário 470
 - [~ t_7c491177] P-12 MAT-38b: Histórico, detalhe, lixeira e notas | depende de P-11
 - [~ t_c9529365] P-13 MAT-39b: tummy time ligado à rotina | depende de 38a e 36r-A
-- [~ t_de06bd20] P-14 MAT-40a: Comunidade ligada ao banco | g1 t_4c921e60 bloqueou pela regra de BASE do corpo (o comentário não a sobrepõe) e foi arquivada; a g2 t_de06bd20 tem a base 4c86d1b no corpo
+- [x 22ff7cb] P-14 MAT-40a g2 t_de06bd20: Comunidade ligada ao banco, APPROVED_WITH_LIMITS (526c396) e integrada pelo merge 22ff7cb (diff idêntico ao revisado, check 1679 testes, commits OK; recibo no comentário 518). Evidência pendente em P-62; pedidos de cuidado da página Conta em P-54 | 11/11
+- [ ] P-54 (dado da 40a: na página /app/conta, a PaginaConta.tsx da MAT-37 faz 20 GET bebes, 20 convites e 68 vinculos num passeio; nada na Comunidade) Minimização de dados no casco logado: a SessaoInterna/minhaConta (MAT-37) pede `bebes`, `vinculos` e `convites` também nas páginas da Comunidade. Não é leitura da Comunidade (decisão D1 do líder na 40a, comentário 460), mas o casco deve pedir só o que a página mostra. Avaliar depois da 40a com a lista `CASCO_RF14` do HANDOFF dela
 - [~ t_359ab800] P-15 MAT-40b: painel de moderação | depende de P-14
 - [D] P-16 MAT-37g t_1757260d "Entrar com Google" | espera Daniel decidir o Google OAuth; até lá o site mostra "a definir"
 
 ## Fechamento
 
-- [D] P-19 MAT-48 publicação | espera só o "pode" de Daniel. Checklist pronto:
+Evidência pendente (regra nova, Daniel 11/11 ~16h40, `nucleo/revisao_integracao.md` item 3, equipe 536ee95, resposta t_378ed4b4): falta só de evidência, com a checagem independente do revisor verde, não devolve mais o cartão. O revisor aprova `APPROVED_WITH_LIMITS` com `metadata.evidencia_pendente`; o líder integra e completa a evidência em paralelo, antes da galeria e da publicação. Todo cartão novo leva essa regra no texto do pedido de revisão. Itens (dono entre parênteses):
+- [ ] P-60 37b: registros de diálogos (fonte e geometria), estados que faltam, percurso de teclado, 63 contrastes inconclusivos, G4/G5/G7 (g3 t_6aeda4a9 entrega o que couber; o resto vai num cartão [doc] de evidência do líder)
+- [ ] P-61 POL-INI e POL-TXT (POL-INI: E1 resumo JSON literal no HANDOFF, E2 tabela RF-01 dos 9 itens com antes/depois, E3 bbox inteiras do RF-02; POL-TXT: pares y de/até dos 3 maiores vãos no resumo do HANDOFF e hash do manifesto; já em `trabalho/pol-txt/medidas/rf.json`): o que ficar em `evidencia_pendente` na aprovação (o próprio cartão ou o cartão [doc] de evidência)
+- [ ] P-62 40a t_de06bd20: prova de geometria por caixa de texto e Shift+Tab; estados C2 Banho vazio, C4 prévia em Banho, C6 com bloqueio, C7 de Carla com denúncia, estados e diálogos a 200% e PNG madrugada; PROVA tabela C pela matriz logada, texto G7/G8 do HANDOFF, JSON em UTF-8 (dono: cartão [doc] de evidência do líder). Qualquer outro `evidencia_pendente` de aprovação com limites: entra aqui com o id e o dono no dia da aprovação
+
+Checagens antes de pedir o "pode" (coordenador, resposta t_552fb3ec): rodam sobre o `int/refazer` final, depois da integração de todos os cartões (item 7 do caminho crítico). Relatórios em `C:/OrchestrationLab/projetos/_staging/appmaternidade/PRE_LANCAMENTO/`; cada achado vira cartão (com `--tela web` se mexer em tela) ou `[x]`; cada item diz a skill que produziu a evidência.
+- [ ] P-55 QA exploratório do site inteiro, RF-01 a RF-14, com dados fictícios e bugs com evidência | skill `dogfood`
+- [ ] P-56 Auditoria de acessibilidade (teclado, foco, leitor de tela) nas páginas públicas e na área logada | skill `omh-accessibility-audit`
+- [ ] P-57 Veredito de prontidão para lançar | skill `omh-production-audit`
+- [ ] P-58 Prova de que cada item está feito antes do merge na main | skill `omh-verification-gate`
+- [ ] P-59 Na publicação: corte da versão e acompanhamento depois do deploy | skills `omh-release-cut` e `omh-deploy-and-monitor` (sem tag nem release sem pedido de Daniel)
+
+- [D] P-19 MAT-48 publicação | espera só o "pode" de Daniel, depois de P-55 a P-58. Checklist pronto:
   1. `int/refazer` com todos os cartões integrados, `npm --prefix web run check` com exit 0 e a CI verde no último SHA (ci.yml, Ubuntu e Windows);
   2. `git merge-base --is-ancestor origin/main origin/int/refazer` com exit 0 e o diff `main..int/refazer` conferido (sem `.env`, sem segredo, sem caminho de usuário);
   3. com o "pode" de Daniel: `git push origin <SHA>:refs/heads/main`, só fast-forward;
   4. o `pages.yml` roda no push da main e publica no GitHub Pages; o `banco-nuvem.yml` aplica as migrações no Supabase com os secrets que existem desde 05/11 (SUPABASE_ACCESS_TOKEN e os demais). O primeiro admin é opcional, pelo `workflow_dispatch`;
   5. conferência pós-publicação: abrir o endereço do Pages, criar uma conta fictícia, registrar uma mamada e ver o Hoje; anotar o SHA e o horário no cofre.
+- [D] P-63 O e-mail de contato do site é um Gmail pessoal (os juízes apontam que tira o ar profissional). Decisão de Daniel: manter ou usar um endereço do projeto; vai na galeria
 - [D] P-16 continua "a definir" (Entrar com Google), sem bloquear a publicação.
 - [x] P-20 MAT-41 PWA | cancelado: Daniel decidiu "sem PWA" (cartão t_ab1bd202 arquivado em 11/11); sem SHA
