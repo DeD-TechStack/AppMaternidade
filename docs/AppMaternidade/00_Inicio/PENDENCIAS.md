@@ -35,6 +35,8 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 
 - [~ t_889376b8] P-26 Início volta 1 dos juízes cegos (rodada inicio_r1 válida, notas 5,8–7,5, REPROVA volta 1): MAT-49c v2 refaz números e selos no celular, depoimentos e fechamento x rodapé; a 49d (P-21) refaz as cenas com telas do app legíveis e a faixa de cacau sem emenda. Depois, volta 2 dos juízes; se reprovar, vai a Daniel com GALERIA | `juizes/rodadas/inicio_r1/DEVOLUCAO.md`
 
+- [~ t_54db34e0] P-27 Como funciona, Cuidado compartilhado e Desenvolvimento: volta 1 dos juízes cegos (3 rodadas válidas, notas 6,2–7,4, REPROVA volta 1). A MAT-36r-A v2 aplica os itens das páginas e a 49d (P-21) refaz as cenas. Depois, volta 2; se reprovar, vai a Daniel com GALERIA | `juizes/rodadas/DEVOLUCAO_36rA.md`
+
 ## Dados ligados às telas novas (religados e soltos em 11/11)
 
 - [x] P-09 Corpos dos 6 cartões abaixo reescritos para a base nova antes do claim (prefixo `FINAL/OVERRIDE_DADOS.md`) e soltos em todo, presos aos pais | 11/11 9h50; sem SHA (é board)
