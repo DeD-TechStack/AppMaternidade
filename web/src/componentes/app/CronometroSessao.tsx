@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { NotebookPen } from 'lucide-react'
 import { Botao } from '../base/Botao.tsx'
 import { ALVO_APP } from './alvo.ts'
+import { recuoOptico } from './recuoOptico.ts'
 import { tamanhoDoCronometro } from '../../prototipo/formatar.ts'
 
 type Painel = 'nota' | 'descartar'
@@ -64,12 +65,25 @@ export function CronometroSessao({ cronometro, atividade, aoEncerrar, aoDescarta
     return () => document.removeEventListener('keydown', aoTeclar)
   }, [painel])
 
+  // A nota cresce com o texto, sem a alça de redimensionar: `field-sizing: content` onde existe e, onde
+  // não existe, a altura acompanha o conteúdo a cada tecla. Só aparência: o texto e o estado não mudam.
+  function ajustarAltura() {
+    const campo = campoNota.current
+    if (!campo || (typeof CSS !== 'undefined' && CSS.supports?.('field-sizing', 'content'))) return
+    campo.style.height = 'auto'
+    campo.style.height = `${campo.scrollHeight}px`
+  }
+
+  // O fundo do cartão: com o botão de texto Descartar por último (alvo de 56 px na madrugada, com o
+  // próprio respiro), o padding de baixo encolhe para o espaço sob as ações não sobrar.
+  const fundo = painel === null ? 'pb-3' : 'pb-6'
+
   return (
     <section
       ref={cartao}
       aria-labelledby={idRotulo}
       data-andamento=""
-      className={`rounded-cartao bg-(--cor-campo-sessao) p-6 text-(--cor-numero-sessao) lg:p-12 ${className ?? ''}`}
+      className={`rounded-cartao bg-(--cor-campo-sessao) px-6 pt-6 ${fundo} text-(--cor-numero-sessao) [border:var(--borda-campo)] lg:p-12 ${className ?? ''}`}
     >
       <p id={idRotulo} className="text-[15px] leading-[22px] font-medium">
         Duração da sessão
@@ -81,7 +95,7 @@ export function CronometroSessao({ cronometro, atividade, aoEncerrar, aoDescarta
         aria-labelledby={idRotulo}
         data-cronometro=""
         data-tamanho={tamanhoDoCronometro(cronometro)}
-        className={`t-cronometro mt-2 font-titulo leading-none font-semibold tracking-[-0.02em] whitespace-nowrap tabular-nums ${TAMANHO[tamanhoDoCronometro(cronometro)]}`}
+        className={`t-cronometro mt-2 font-titulo leading-none font-semibold tracking-[-0.02em] whitespace-nowrap tabular-nums ${TAMANHO[tamanhoDoCronometro(cronometro)]} ${recuoOptico(cronometro)}`}
       >
         {cronometro}
       </div>
@@ -94,7 +108,7 @@ export function CronometroSessao({ cronometro, atividade, aoEncerrar, aoDescarta
           role="group"
           aria-label="Encerrar e anotar"
           data-painel-sessao="nota"
-          className="mt-6 rounded-campo bg-(--cor-fundo) p-4 text-(--cor-texto) lg:mt-8 lg:p-6"
+          className="-mx-2 mt-6 rounded-campo bg-(--cor-fundo) p-4 text-(--cor-texto) sm:mx-0 lg:mt-8 lg:p-6"
         >
           <label htmlFor={idCampo} className="block font-medium">
             Nota
@@ -107,26 +121,37 @@ export function CronometroSessao({ cronometro, atividade, aoEncerrar, aoDescarta
             id={idCampo}
             rows={3}
             aria-describedby={idDica}
-            className="mt-3 block min-h-[6rem] w-full resize-y rounded-campo border-[1.5px] border-(--cor-texto-2) bg-(--cor-cartao) px-4 py-3 text-[17px] leading-[25px] text-(--cor-texto) hover:border-(--cor-texto) focus-visible:border-(--cor-texto)"
+            onInput={ajustarAltura}
+            data-sem-alca=""
+            className="mt-3 block min-h-[6rem] w-full resize-none field-sizing-content rounded-campo border-[1.5px] border-(--cor-texto-2) bg-(--cor-cartao) px-4 py-3 text-[17px] leading-[25px] text-(--cor-texto) hover:border-(--cor-texto) focus-visible:border-(--cor-texto)"
           />
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            <Botao tamanho="app" className={`min-w-[8.5rem] ${ALVO_APP}`} onClick={salvarNota}>
+          {/* Salvar, Cancelar e Descartar numa fileira só: Descartar é botão de texto ao lado do Salvar, e
+              não fica mais solto no pé do cartão (a ordem do Tab é a mesma de antes). */}
+          <div className="mt-4 flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-3" data-acoes-nota="">
+            <Botao tamanho="app" className={`px-5 sm:min-w-[8.5rem] ${ALVO_APP}`} onClick={salvarNota}>
               Salvar
             </Botao>
-            <Botao variante="texto" tamanho="app" className={ALVO_APP} onClick={() => setPainel(null)}>
+            <Botao variante="texto" tamanho="app" className={`mx-0 px-2 sm:px-3 ${ALVO_APP}`} onClick={() => setPainel(null)}>
               Cancelar
+            </Botao>
+            <Botao
+              variante="texto"
+              tamanho="app"
+              className={`mx-0 px-2 sm:px-3 ${ALVO_APP}`}
+              data-acao="descartar"
+              onClick={() => setPainel('descartar')}
+            >
+              Descartar
             </Botao>
           </div>
         </div>
       ) : null}
 
-      <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 lg:mt-10" data-acoes="">
-        {painel !== 'nota' ? (
+      {painel !== 'nota' ? (
+        <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 lg:mt-10" data-acoes="">
           <Botao tamanho="app" className={`w-full sm:w-auto sm:min-w-[8.5rem] ${ALVO_APP}`} onClick={() => aoEncerrar(false)}>
             Encerrar
           </Botao>
-        ) : null}
-        {painel !== 'nota' ? (
           <Botao
             variante="contorno"
             tamanho="app"
@@ -137,19 +162,19 @@ export function CronometroSessao({ cronometro, atividade, aoEncerrar, aoDescarta
           >
             <span>Encerrar e anotar</span>
           </Botao>
-        ) : null}
-        {painel !== 'descartar' ? (
-          <Botao
-            variante="texto"
-            tamanho="app"
-            className={`w-full sm:w-auto ${ALVO_APP}`}
-            data-acao="descartar"
-            onClick={() => setPainel('descartar')}
-          >
-            Descartar
-          </Botao>
-        ) : null}
-      </div>
+          {painel !== 'descartar' ? (
+            <Botao
+              variante="texto"
+              tamanho="app"
+              className={`w-full sm:w-auto ${ALVO_APP}`}
+              data-acao="descartar"
+              onClick={() => setPainel('descartar')}
+            >
+              Descartar
+            </Botao>
+          ) : null}
+        </div>
+      ) : null}
 
       {painel === 'descartar' ? (
         <div

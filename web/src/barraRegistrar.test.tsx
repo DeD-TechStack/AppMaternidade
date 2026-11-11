@@ -59,6 +59,13 @@ describe('BarraRegistrar: a barra e os 4 botões', () => {
     expect([...barra.querySelectorAll('[class]'), barra].flatMap((e) => [...e.classList]).filter((c) => /^ha-|^barra-registrar$/.test(c))).toEqual([])
   })
 
+  it('tem o respiro do DESIGN.md entre o fio de cima e os botões (12 px no celular, 16 px de 1024 para cima)', () => {
+    const { barra } = montar()
+
+    for (const classe of ['pt-3', 'pb-3', 'lg:pt-4', 'lg:pb-4']) expect(barra.classList.contains(classe), classe).toBe(true)
+    expect(barra.className).not.toContain('pt-[3px]')
+  })
+
   it('tem exatamente 4 botões na fileira, Sono, Mamada, Fralda e Mais, com os nomes acessíveis de sempre', () => {
     const { barra } = montar()
 

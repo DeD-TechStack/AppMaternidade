@@ -77,6 +77,25 @@ describe('CartaoSessao', () => {
     expect(moldura.className).toContain('[[data-tema=madrugada]_&]:hidden')
   })
 
+  it('o desenho tem a altura do cartão e o traço engrossado por cópias deslocadas, todas fora da árvore de acessibilidade', () => {
+    const { container } = montarCartao({ tipo: 'sono', inicio: AGORA - MIN, pessoa: 'Bruno' })
+
+    const desenho = container.querySelector<HTMLElement>('[data-desenho]')!
+    expect(desenho.getAttribute('aria-hidden')).toBe('true')
+    const imagens = [...desenho.querySelectorAll('img')]
+    expect(imagens).toHaveLength(3)
+    for (const img of imagens) {
+      expect(img.getAttribute('alt')).toBe('')
+      expect(img.classList.contains('h-full')).toBe(true)
+    }
+  })
+
+  it('o tempo tem o recuo óptico do primeiro algarismo', () => {
+    montarCartao({ tipo: 'sono', inicio: AGORA - 38 * MIN, pessoa: 'Juliana' })
+
+    expect(screen.getByRole('timer', { name: 'Tempo de sono' }).classList.contains('-ml-[0.045em]')).toBe(true)
+  })
+
   it('sem sessão: "Nenhuma sessão em andamento." e como começar, sem botões nem links', () => {
     montarCartao(null)
 
@@ -138,6 +157,30 @@ describe('DesdeQueVoceSaiu', () => {
     expect(screen.getByText('04:05').classList.contains('bg-mel')).toBe(false)
   })
 
+  it('com a hora, cada linha fica numa linha só: hora e tipo à esquerda, a pílula da duração à direita', () => {
+    const comHora = ITENS.map((item) => ({ ...item, hora: item.emAndamento ? '03:50' : item.quando }))
+    render(<DesdeQueVoceSaiu itens={comHora} />)
+
+    const linhas = screen.getAllByRole('listitem')
+    for (const li of linhas) {
+      expect(li.classList.contains('whitespace-nowrap')).toBe(true)
+      expect(li.querySelector('p')!.classList.contains('truncate')).toBe(true)
+    }
+    const sessao = linhas[1]
+    expect(within(sessao).getByText('03:50')).toBeTruthy()
+    expect(sessao.lastElementChild!.textContent).toBe('38 min')
+    // A hora não se repete à direita: ela já está à esquerda.
+    expect(within(linhas[0]).getAllByText('04:05')).toHaveLength(1)
+  })
+
+  it('a lista não é um cartão: linhas com fio fino, sem fundo nem sombra', () => {
+    render(<DesdeQueVoceSaiu itens={ITENS} />)
+
+    const regiao = screen.getByRole('region', { name: 'Desde que você saiu' })
+    expect(regiao.className).not.toMatch(/bg-|sombra|rounded-cartao/)
+    for (const li of screen.getAllByRole('listitem')) expect(li.classList.contains('border-b')).toBe(true)
+  })
+
   it('sem registros, diz que não há nada novo, sem lista vazia', () => {
     render(<DesdeQueVoceSaiu itens={[]} />)
 
@@ -163,6 +206,14 @@ describe('BotaoIniciarMamada', () => {
     fireEvent.click(botao)
     expect(aoIniciar).toHaveBeenCalledTimes(1)
     expect(screen.getByText('Última mamada às 07:50, com Juliana')).toBeTruthy()
+  })
+
+  it('compacto: o mesmo botão, menor, com alvo de toque e a linha da última mamada ao lado', () => {
+    render(<BotaoIniciarMamada compacto aoIniciar={() => undefined} ultima="Última mamada às 07:50, com Juliana" />)
+
+    const botao = screen.getByRole('button', { name: 'Iniciar mamada' })
+    for (const classe of ['rounded-full', 'bg-mel', 'alvo-toque', 'size-[7rem]']) expect(botao.classList.contains(classe), classe).toBe(true)
+    expect(botao.parentElement!.classList.contains('flex-row')).toBe(true)
   })
 
   it('o texto do botão fica em elementos (nada solto ao lado do ícone)', () => {

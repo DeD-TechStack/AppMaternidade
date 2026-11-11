@@ -66,7 +66,9 @@ function SessaoEmAndamento({
         </div>
       ) : null}
 
-      <div className="cm-area mt-6 grid grid-cols-1 gap-6 lg:mt-10 lg:grid-cols-12 lg:items-start lg:gap-8">
+      {/* Em 1440 o painel e o cartão das anteriores terminam na mesma linha (stretch: os dois fundos
+          alinhados). */}
+      <div className="cm-area mt-6 grid grid-cols-1 gap-6 lg:mt-10 lg:grid-cols-12 lg:items-stretch lg:gap-8">
         <CronometroSessao
           className="lg:col-span-7"
           cronometro={formatarCronometro(agora - inicio)}
@@ -130,7 +132,9 @@ export function Sessao() {
 
   return (
     <>
-      <main ref={principal} className="pb-16 text-[17px] leading-[25px]" data-tela="sessao">
+      {/* O pé de papel é largo: o painel de mel do cronômetro e o painel de mel do rodapé nunca ficam
+          quase encostados (DESIGN.md 7, papel entre os painéis). */}
+      <main ref={principal} className="pb-24 text-[17px] leading-[25px] lg:pb-32" data-tela="sessao">
         {sessao ? (
           <SessaoEmAndamento
             tipo={sessao.tipo}
