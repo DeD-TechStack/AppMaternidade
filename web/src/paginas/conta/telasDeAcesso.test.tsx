@@ -1196,3 +1196,113 @@ describe('a seleção de texto das telas de acesso e da Conta é da paleta (D6)'
     }
   })
 })
+
+// Volta 3 (final), D5-erro em 390: o erro de campo (24 px de linha, fora do fluxo, ancorado em `top: 100%`) terminava a 0 px do rótulo
+// da linha seguinte e a 8 px do botão de envio. O mínimo é 16 px. Decisão do líder: o vão entre as linhas sobe de 24 para 40 px
+// (16 px de `margin-bottom` na linha, nas que não reservam a zona de mensagem) e o vão até o botão, de 32 para 40 px (8 px na última
+// linha), e E-4 e B-4 em 390 passam a máximo 678 e 666. A altura real, a folga e os limites são do medidor; este teste impede a volta da
+// causa: as contas do vão. Em 1440 nada muda (nenhuma regra fora de `@media (max-width: 767px)`).
+describe('o vão depois do erro de campo em 390: 16 px até o rótulo ou o botão seguinte (D5-erro)', () => {
+  const FOLGA_MINIMA = 16
+  const LINHA_DO_ERRO = 24 // 17/24: a caixa do erro, que começa no fio do campo (`top: 100%`)
+  const marca = '44d-3, volta 3, vão do erro'
+  const inicio = blocoDe44d3.indexOf(marca)
+  const comeco = inicio >= 0 ? blocoDe44d3.lastIndexOf('/*', inicio) : -1
+  const fim = comeco >= 0 ? blocoDe44d3.indexOf('/* ---', comeco + 2) : -1
+  const bloco = comeco >= 0 ? semComentarios(blocoDe44d3.slice(comeco, fim >= 0 ? fim : undefined)) : ''
+
+  /** As regras (seletor e corpo) de dentro dos `@media (max-width: 767px)` do bloco, e o que sobra fora deles. */
+  const dentro: Array<{ seletor: string; corpo: string }> = []
+  let resto = bloco
+  for (const abertura of bloco.matchAll(/@media\s*\(max-width:\s*767px\)\s*\{/g)) {
+    const inicioDoMiolo = abertura.index + abertura[0].length
+    let profundidade = 1
+    let fimDoMiolo = inicioDoMiolo
+    while (fimDoMiolo < bloco.length && profundidade > 0) {
+      if (bloco[fimDoMiolo] === '{') profundidade += 1
+      else if (bloco[fimDoMiolo] === '}') profundidade -= 1
+      fimDoMiolo += 1
+    }
+    for (const regra of bloco.slice(inicioDoMiolo, fimDoMiolo - 1).matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+      dentro.push({ seletor: regra[1].trim(), corpo: regra[2] })
+    }
+    resto = resto.replace(bloco.slice(abertura.index, fimDoMiolo), '')
+  }
+  const fora = [...resto.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .map((r) => ({ seletor: r[1].replace(/@layer\s+components/g, '').trim(), corpo: r[2] }))
+    .filter((r) => r.seletor !== '')
+
+  const margemInferior = (corpo: string) => {
+    const valores = [...corpo.matchAll(/margin-bottom:\s*(\d+)px/g)].map((m) => Number(m[1]))
+    return valores.length > 0 ? valores[valores.length - 1] : undefined
+  }
+  /** As regras com `margin-bottom` do bloco: as da última linha (têm `:last-child`) e as das outras. */
+  const comMargem = dentro.filter((r) => margemInferior(r.corpo) !== undefined)
+  const daUltima = comMargem.filter((r) => r.seletor.includes(':last-child'))
+  const dasOutras = comMargem.filter((r) => !r.seletor.includes(':last-child'))
+
+  // O vão base entre as linhas (`gap`) e a margem do botão: do CSS, não repetidos aqui.
+  const semComentariosDoCss = semComentarios(css)
+  const gapEntreLinhas = Number(
+    /@media\s*\(max-width:\s*767px\)\s*\{[^@]*?\.sb-acesso-campos\s*\{\s*gap:\s*(\d+)px/.exec(semComentariosDoCss)?.[1],
+  )
+  const margemDoBotao = Number(
+    /@media\s*\(max-width:\s*767px\)\s*\{[^@]*?\.sb-acesso-campos\s*\+\s*\.sb-acesso-acao\s*\{\s*margin-top:\s*(\d+)px/.exec(semComentariosDoCss)?.[1],
+  )
+
+  it('o bloco existe, e todas as regras dele são só de abaixo de 768 (1440 não muda)', () => {
+    expect(comeco).toBeGreaterThanOrEqual(0)
+    expect(dentro.length).toBeGreaterThan(0)
+    expect(fora, 'nenhuma regra fora de `@media (max-width: 767px)`').toEqual([])
+  })
+
+  it('as linhas sem a reserva da ajuda ou do status dão 16 px de margem embaixo: o vão entre linhas vai a 40 px', () => {
+    const daLinha = dasOutras.filter((r) => r.seletor.includes('.sb-acesso-campos .sb-campo:not([data-ajuda]):not([data-status])'))
+    expect(daLinha.length).toBeGreaterThan(0)
+    for (const r of daLinha) expect(margemInferior(r.corpo), r.seletor).toBe(16)
+    expect(gapEntreLinhas, 'o `gap` entre as linhas (base de 390)').toBeGreaterThan(0)
+    // Do fio do campo ao topo do rótulo seguinte: a margem + o `gap`; a caixa do erro termina 24 px abaixo do fio.
+    expect(16 + gapEntreLinhas).toBe(40)
+    expect(16 + gapEntreLinhas - LINHA_DO_ERRO).toBeGreaterThanOrEqual(FOLGA_MINIMA)
+  })
+
+  it('no Começar (a ajuda sai da vista e não reserva lugar) a linha com ajuda dá os mesmos 16 px', () => {
+    const compactas = dasOutras.filter((r) => r.seletor.includes('.conta-campos-compactos .sb-campo[data-ajuda]'))
+    expect(compactas.length).toBeGreaterThan(0)
+    for (const r of compactas) expect(margemInferior(r.corpo), r.seletor).toBe(16)
+  })
+
+  it('a última linha dá 8 px: com os 32 px da margem do botão são 40, e o botão fica 16 px depois da caixa do erro', () => {
+    expect(daUltima.length).toBeGreaterThan(0)
+    for (const r of daUltima) {
+      expect(margemInferior(r.corpo), r.seletor).toBe(8)
+      expect(r.seletor, r.seletor).toContain('.sb-acesso-campos > :last-child')
+    }
+    expect(margemDoBotao, 'margem do botão abaixo das linhas').toBeGreaterThan(0)
+    expect(8 + margemDoBotao - LINHA_DO_ERRO).toBeGreaterThanOrEqual(FOLGA_MINIMA)
+  })
+
+  it('a última linha tem uma regra para o campo de texto e outra para o Começar (as duas pelo `:last-child`)', () => {
+    expect(daUltima.some((r) => r.seletor.includes(':not([data-ajuda]):not([data-status])'))).toBe(true)
+    expect(daUltima.some((r) => r.seletor.includes('.conta-campos-compactos > :last-child .sb-campo[data-ajuda]'))).toBe(true)
+  })
+
+  it('a linha que reserva a zona do status (Recuperar) não ganha margem: o D4-vao fica como está', () => {
+    for (const r of comMargem) expect(r.seletor, r.seletor).not.toMatch(/(?<!:not\()\[data-status\]/)
+  })
+
+  it('a altura da linha não muda com o erro (E-7): nenhuma regra do bloco depende de `data-erro` nem mexe no erro', () => {
+    expect(bloco).not.toMatch(/data-erro/)
+    expect(bloco).not.toMatch(/sb-campo-erro/)
+    expect(bloco).not.toMatch(/(^|[;\s{])(height|min-height|max-height|padding[a-z-]*|position|top|bottom)\s*:/)
+  })
+
+  it('só abaixo de 768 e só nas linhas de acesso e da Conta; nada da casca nem da abertura lateral, e nada depende do tema', () => {
+    for (const r of dentro) {
+      expect(r.seletor, r.seletor).toMatch(/\.sb-acesso-campos|\.conta-campos-compactos/)
+      expect(r.seletor, r.seletor).not.toContain('.conta-dialogo')
+    }
+    expect(bloco).not.toMatch(/sb-abertura-lateral/)
+    expect(bloco).not.toMatch(/data-tema/)
+  })
+})

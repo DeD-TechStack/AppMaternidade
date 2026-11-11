@@ -3156,6 +3156,36 @@
   }
 }
 
+/* ---------------------------------------------------------------------------------------------
+   44d-3, volta 3, vão do erro (D5-erro): 16 px entre o erro de campo e o rótulo ou o botão seguinte, em 390. Só se acrescenta aqui.
+   ------------------------------------------------------------------------------------------ */
+@layer components {
+  /* Em 390 o erro (17/24, fora do fluxo) começa no fio do campo (`top: 100%`) e a caixa de 24 px termina 24 px abaixo dele. O vão
+     até o rótulo da linha seguinte era o `gap` de 24 px (folga de 0) e, até o botão, os 32 px da margem dele (folga de 8). O
+     contrato de acabamento pede 16 px entre o erro e o que vem depois. Decisão do líder: o vão entre as linhas sobe de 24 para 40 px
+     e o vão até o botão, de 32 para 40 px, e E-4 e B-4 em 390 passam a máximo 678 (Entrar) e 666 (Começar), emendados pelo líder em
+     11/11. A conta, do fio do campo ao que vem depois, menos os 24 px da caixa do erro:
+       - entre linhas: 16 de `margin-bottom` na linha + 24 de `gap` = 40, e 40 - 24 = 16 px até o rótulo;
+       - até o botão: 8 de `margin-bottom` na última linha + 32 de margem do botão = 40, e 40 - 24 = 16 px até o botão.
+     A margem é da linha (`.sb-campo`, item da grade `.grade-10`: não colapsa), não do erro: o erro segue fora do fluxo, a linha
+     tem a mesma altura com ou sem ele (E-7), e o fio, o anel (D5-anel) e a entrada não mudam. Ficam de fora as linhas que já
+     reservam a zona das mensagens (a ajuda de Criar conta e Nova senha: `padding-bottom` de 32 px e o erro 8 px acima da base, 32 px
+     de vão; e o status do Recuperar: D4-vao, 64 px do fio ao botão). No Começar a ajuda sai da vista e não reserva lugar, então a
+     linha com ajuda dá a margem como as outras. A última linha é a do último filho de `.sb-acesso-campos`. Só abaixo de 768: em
+     1440 a mensagem mora dentro da linha de 112 px e nada muda. */
+  @media (max-width: 767px) {
+    .sb-acesso-campos .sb-campo:not([data-ajuda]):not([data-status]),
+    .conta-campos-compactos .sb-campo[data-ajuda] {
+      margin-bottom: 16px;
+    }
+
+    .sb-acesso-campos > :last-child .sb-campo:not([data-ajuda]):not([data-status]),
+    .conta-campos-compactos > :last-child .sb-campo[data-ajuda] {
+      margin-bottom: 8px;
+    }
+  }
+}
+
 /* 44d-2 */
 /* A área logada sobre o sistema-base. Parte 1: o Hoje e a barra Registrar. As cores vêm só das
    variáveis de uso (tema.css); os espaços, da escala 8, 16, 24, 32, 64, 96, 128, 160 e 192; os raios,
