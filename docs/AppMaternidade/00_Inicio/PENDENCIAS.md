@@ -67,6 +67,8 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 
 - [x] P-37 Regra do líder (11/11): "capturas lidas pelo worker" (CARTOES_COMUM) vale como leitura pela sessão do OpenCode registrada no recibo (`images_read`), porque o perfil executor não tem ferramenta de imagem. Comentada em todos os cartões ativos; na 49c v2 o líder também olhou os blocos 3–5 (comentário 407)
 
+- [~ t_5fc82bb8] P-38 49b v2 (t_aee1c551): volta 1 dos juízes em Hoje, Sessão e Madrugada, aprovada (b11edc8) e integrada (7bbe832..bcdc89c, check 1333 testes, commits OK, 292). A volta 2 dos juízes espera a 49e (casco)
+
 ## Dados ligados às telas novas (religados e soltos em 11/11)
 
 - [x] P-09 Corpos dos 6 cartões abaixo reescritos para a base nova antes do claim (prefixo `FINAL/OVERRIDE_DADOS.md`) e soltos em todo, presos aos pais | 11/11 9h50; sem SHA (é board)
