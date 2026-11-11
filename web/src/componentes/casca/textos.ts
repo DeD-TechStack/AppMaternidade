@@ -34,6 +34,7 @@ export const ITENS_DO_CABECALHO: Record<Contexto, readonly Link[]> = {
   logado: [
     { rotulo: 'Hoje', para: '/app/hoje' },
     { rotulo: 'Sessão', para: '/app/sessao' },
+    { rotulo: 'Comunidade', para: '/app/comunidade' },
   ],
 }
 
