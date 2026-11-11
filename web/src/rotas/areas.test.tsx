@@ -55,19 +55,28 @@ describe('rotasDasAreas: o registro por área', () => {
     ])
   })
 
-  it('as cinco áreas exportam as duas listas; só a de conta tem rotas na 37a', () => {
+  it('as cinco áreas exportam as duas listas; só as de conta e as logadas da Comunidade têm rotas', () => {
     for (const lista of [
       rotasRotinaPublicas,
       rotasRotinaLogadas,
       rotasDesenvolvimentoPublicas,
       rotasDesenvolvimentoLogadas,
       rotasComunidadePublicas,
-      rotasComunidadeLogadas,
       rotasModeracaoPublicas,
       rotasModeracaoLogadas,
     ]) {
       expect(lista).toEqual([])
     }
+    expect(rotasComunidadeLogadas.map(caminhoDe)).toEqual([
+      'app/comunidade',
+      'app/comunidade/entrar',
+      'app/comunidade/perfil',
+      'app/comunidade/denuncias',
+      'app/comunidade/topico/:id',
+      'app/comunidade/topico/:id/editar',
+      'app/comunidade/:slug',
+      'app/comunidade/:slug/novo',
+    ])
     expect(rotasContaPublicas.map(caminhoDe)).toEqual(['entrar', 'criar-conta', 'recuperar-acesso', 'redefinir-senha', 'conta-excluida'])
     expect(rotasContaLogadas.map(caminhoDe)).toEqual(['app/comecar', 'app/conta'])
   })
