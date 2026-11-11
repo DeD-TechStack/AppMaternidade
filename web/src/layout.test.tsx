@@ -11,7 +11,8 @@ const claro = (): EstadoPrototipo => criarEstadoInicial(Date.now())
 const madrugada = (): EstadoPrototipo => ({ ...criarEstadoInicial(Date.now()), madrugada: true })
 const semSessao = (): EstadoPrototipo => ({ ...criarEstadoInicial(Date.now()), sessao: null })
 
-const CLASSE_DE_ALVO = /(^|\s)(alvo-toque|botao|nav-item)(\s|$)/
+// `cm-acordeao-gatilho`: o gatilho do acordeão tem min-height de 72 px em styles/campo.css.
+const CLASSE_DE_ALVO = /(^|\s)(alvo-toque|botao|nav-item|cm-acordeao-gatilho)(\s|$)/
 
 // ---------------------------------------------------------------------------
 // G3-1
@@ -781,7 +782,13 @@ describe('G3-4: o texto visível está no nome acessível', () => {
   // controle que tem descendente aria-hidden fica dentro de um único elemento inline.
   function comTextoSoltoAoLadoDeAriaHidden(container: HTMLElement): string[] {
     return [...container.querySelectorAll('button, a, [role="button"]')]
-      .filter((controle) => controle.querySelector('[aria-hidden="true"]') !== null)
+      // O ícone do Botao (`.cm-botao-icone`, aria-hidden, com o svg dentro) não leva glifo de texto: o
+      // texto ao lado é o nome inteiro. Só os outros aria-hidden contam.
+      .filter((controle) =>
+        [...controle.querySelectorAll('[aria-hidden="true"]')].some(
+          (escondido) => escondido.closest('.cm-botao-icone') === null,
+        ),
+      )
       .filter((controle) =>
         [...controle.childNodes].some(
           (no) => no.nodeType === Node.TEXT_NODE && (no.textContent ?? '').trim() !== '',
