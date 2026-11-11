@@ -1,4 +1,4 @@
-import { useId } from 'react'
+import { useId, type ReactNode } from 'react'
 import { HOJE } from '../../conteudo/rotina.ts'
 import type { Nota, Registro } from '../../dados/rotina.tipos.ts'
 import { formatarHora } from '../../prototipo/formatar.ts'
@@ -59,11 +59,17 @@ interface DesdeProps {
   registros: readonly Registro[]
   fuso: string
   autorDe: (registro: Registro) => string
+  /**
+   * O lugar da marca de envio de cada item (R38-13, ponto M4 da MAT-41): repassada ao `ItemRegistro`, que a
+   * desenha logo depois da hora. A MAT-38 nunca passa esta função em produção: sem ela, os itens não têm o
+   * `span` da marca.
+   */
+  marcaDe?: (registro: Registro) => ReactNode
   className?: string
 }
 
 /** "Desde o seu último registro" (RF-07): o que as outras pessoas registraram depois do marco, até 5. */
-export function DesdeUltimoRegistro({ marcoEm, registros, fuso, autorDe, className }: DesdeProps) {
+export function DesdeUltimoRegistro({ marcoEm, registros, fuso, autorDe, marcaDe, className }: DesdeProps) {
   const idTitulo = useId()
   return (
     <section aria-labelledby={idTitulo} data-desde="" className={className}>
@@ -75,7 +81,7 @@ export function DesdeUltimoRegistro({ marcoEm, registros, fuso, autorDe, classNa
       ) : (
         <ul className={LISTA}>
           {registros.map((registro) => (
-            <ItemRegistro key={registro.id} registro={registro} fuso={fuso} autor={autorDe(registro)} />
+            <ItemRegistro key={registro.id} registro={registro} fuso={fuso} autor={autorDe(registro)} marca={marcaDe?.(registro)} />
           ))}
         </ul>
       )}

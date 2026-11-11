@@ -2,6 +2,7 @@ import { dataNoFuso, fusoValido, type ErroDados, type Resultado } from './comum.
 import type { DadosConta } from './conta.ts'
 import { lerAparelho, type Aparelho } from './rotina.dia.ts'
 import { classificarErroRotina, erroRotinaDaChave, type ChaveErroRotina } from './rotina.erros.ts'
+import { ehUuidV7 } from './rotina.uuid.ts'
 import {
   LIMITES,
   lerContextoDaConta,
@@ -88,6 +89,13 @@ function valoresDosDetalhes(tipo: TipoRegistro, detalhes: DetalhesRegistro): boo
   if (alimento !== undefined && (alimento.length < 1 || alimento.length > 100 || alimento.trim() === '')) return false
   return true
 }
+
+/**
+ * O id das entidades da rotina é um UUID v7 (`registros_id_uuidv7_check` e `notas_cuidado_id_uuidv7_check`):
+ * 15º caractere `7` e 20º `8`, `9`, `a` ou `b`. Fora desse formato o banco recusa com `23514`; um texto que
+ * nem é UUID a memória trata do mesmo modo (`valor_invalido`).
+ */
+const idValido = (id: string) => ehUuidV7(id)
 
 /** As regras de valor das constraints (`23514`). */
 function valoresValidos(
@@ -319,7 +327,7 @@ export function criarDadosRotinaMemoria(conta: DadosConta, fixture: FixtureRotin
       if (noFuturo(entrada.inicio) || (fim !== null && noFuturo(fim))) return falhaPg('23514', 'horario no futuro')
       const detalhes = entrada.detalhes ?? {}
       const nota = entrada.nota ?? null
-      if (!valoresValidos(entrada.tipo, entrada.inicio, fim, detalhes, nota, dispositivo.deslocamentoMin)) {
+      if (!idValido(entrada.id) || !valoresValidos(entrada.tipo, entrada.inicio, fim, detalhes, nota, dispositivo.deslocamentoMin)) {
         return falhaPg('23514', 'new row violates check constraint')
       }
       const instante = iso(agora())
@@ -460,7 +468,9 @@ export function criarDadosRotinaMemoria(conta: DadosConta, fixture: FixtureRotin
       if (bebeId !== null && !bebe) return falhaPg('P0002', 'bebe inexistente')
       if (!podeEscrever(familia.meuPapel)) return falhaPg('42501', 'sem permissao')
       if (bebe?.estado === 'arquivado') return falhaPg('P0001', 'bebe arquivado')
-      if (entrada.texto.length < 1 || entrada.texto.length > 500) return falhaPg('23514', 'new row violates check constraint')
+      if (!idValido(entrada.id) || entrada.texto.length < 1 || entrada.texto.length > 500) {
+        return falhaPg('23514', 'new row violates check constraint')
+      }
       const instante = iso(agora())
       const nova: Nota = {
         id: entrada.id,

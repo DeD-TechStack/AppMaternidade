@@ -10,13 +10,14 @@ import type { AcaoDaConfirmacao } from '../../componentes/rotina/contexto.ts'
 import { SessoesEmParalelo } from '../../componentes/rotina/SessoesEmParalelo.tsx'
 import { TituloRotina } from '../../componentes/rotina/TituloRotina.tsx'
 import { useRotina } from '../../componentes/rotina/contexto.ts'
-import { useAcoesDaRotina } from '../../componentes/rotina/useAcoesDaRotina.ts'
+import { AvisoDeLista } from '../../componentes/rotina/AvisoDeLista.tsx'
+import { useAcoesDaRotina, type ResultadoDoDescarte, type ResultadoDoEncerramento } from '../../componentes/rotina/useAcoesDaRotina.ts'
 import { useSecao } from '../../componentes/rotina/useSecao.ts'
 import { COMUM, ESTADOS, FORMATOS, ROTULO_TIPO, SESSAO, SESSOES } from '../../conteudo/rotina.ts'
 import { ATIVIDADE_TUMMY } from '../../conteudo/textos.ts'
 import type { ErroDados, Resultado } from '../../dados/comum.ts'
 import { ehUuid } from '../../dados/rotina.uuid.ts'
-import { ehTipoDeSessao, podeEscrever, type Lista, type Registro, type TipoSessao } from '../../dados/rotina.tipos.ts'
+import { ehTipoDeSessao, LIMITES, podeEscrever, type Lista, type Registro, type TipoSessao } from '../../dados/rotina.tipos.ts'
 import { MidiaDaSessao } from '../../prototipo/MidiaDaSessao.tsx'
 import { focoDoEstado } from '../../prototipo/foco.ts'
 import { ehTipoSessao, type SessaoAnterior } from '../../prototipo/estado.ts'
@@ -45,6 +46,14 @@ interface Leitura {
   sessao: Registro | null
 }
 
+interface Pendencia {
+  erro: ErroDados
+  nota: string
+  repetir: () => void
+}
+
+type ResultadoDaEscrita = ResultadoDoEncerramento | ResultadoDoDescarte
+
 /** O detalhe de uma sessão anterior: a nota, o lado da mamada ou, sem nada disso, o tipo. */
 function detalheDaSessao(registro: Registro): string {
   if (registro.nota) return registro.nota
@@ -60,7 +69,7 @@ function detalheDaSessao(registro: Registro): string {
  */
 export function Sessao() {
   const rotina = useRotina()
-  const { dados, ativo, bebes, escolherBebe, podeAlterar, nomeDoAutor, atualizar, confirmacao, fecharConfirmacao } = rotina
+  const { dados, ativo, bebes, escolherBebe, podeAlterar, nomeDoAutor, confirmacao, fecharConfirmacao } = rotina
   const acoes = useAcoesDaRotina()
   const navigate = useNavigate()
   const location = useLocation()
@@ -68,7 +77,9 @@ export function Sessao() {
   const agora = useAgora(1000)
   const { principal, focarTitulo } = useTituloDaTela()
   const [ocupado, setOcupado] = useState(false)
-  const [erro, setErro] = useState<ErroDados | null>(null)
+  // Uma escrita que falhou: o erro, o texto da nota (para a pessoa não perdê-lo) e o comando ORIGINAL para
+  // `Tentar de novo`. Fica na tela mesmo quando a releitura já mostra a sessão encerrada ou excluída.
+  const [pendencia, setPendencia] = useState<Pendencia | null>(null)
   const [relogioAtrasDe, setRelogioAtrasDe] = useState<string | null>(null)
   const jaIniciouPelaUrl = useRef(false)
 
@@ -96,6 +107,7 @@ export function Sessao() {
   const sessao = idInvalido ? null : (leitura.dados?.sessao ?? null)
   const carregando = !idInvalido && leitura.estado === 'carregando'
   const bebeDaSessao = (sessao ? bebes.find((candidato) => candidato.bebe.id === sessao.bebeId) : undefined) ?? ativo
+  const gravacaoLiberada = bebeDaSessao ? podeEscrever(bebeDaSessao.papel) && !bebeDaSessao.arquivado : false
 
   // Abrir por link uma sessão de outro bebê visível troca o bebê ativo para o dele (R38-03, item 1).
   const bebeDaSessaoId = sessao?.bebeId ?? null
@@ -122,13 +134,15 @@ export function Sessao() {
   useEffect(() => {
     acoesAtuais.current = acoes
   })
+  // Quem não pode gravar (observador, bebê arquivado) abre a tela sem que nada seja iniciado: o `?tipo=` é uma
+  // ação de criação como o botão da barra.
   useEffect(() => {
-    if (jaIniciouPelaUrl.current || idDaUrl !== null || tipoDaUrl === null || !semSessaoLida) return
+    if (jaIniciouPelaUrl.current || idDaUrl !== null || tipoDaUrl === null || !semSessaoLida || !gravacaoLiberada) return
     jaIniciouPelaUrl.current = true
     void acoesAtuais.current.iniciarSessao(tipoDaUrl, { aPartirDaUrl: true })
-  }, [idDaUrl, tipoDaUrl, semSessaoLida])
+  }, [idDaUrl, tipoDaUrl, semSessaoLida, gravacaoLiberada])
 
-  const iniciandoPelaUrl = idDaUrl === null && tipoDaUrl !== null && (carregando || semSessaoLida)
+  const iniciandoPelaUrl = idDaUrl === null && tipoDaUrl !== null && gravacaoLiberada && (carregando || semSessaoLida)
   const tipoDasAnteriores: TipoSessao = sessao && ehTipoDeSessao(sessao.tipo) ? sessao.tipo : 'sono'
   const bebeDasAnterioresId = bebeDaSessao?.bebe.id ?? null
   const anteriores = useSecao<Lista<Registro>>(
@@ -149,36 +163,58 @@ export function Sessao() {
       detalhe: detalheDaSessao(registro),
     }))
 
-  const gravacaoLiberada = bebeDaSessao ? podeEscrever(bebeDaSessao.papel) && !bebeDaSessao.arquivado : false
   const textoDoPapel = bebeDaSessao?.arquivado ? ESTADOS.arquivado : bebeDaSessao?.papel === 'cuidador' ? ESTADOS.cuidador : ESTADOS.observador
 
   // ---- ações ---------------------------------------------------------------------------------------
 
-  async function encerrar(registro: Registro, nota: string, momento?: number) {
+  // Toda escrita da Sessão passa por aqui. Na falha, `Tentar de novo` chama `repetir`, o comando original
+  // congelado pela ação (a mesma sessão, o mesmo fim, a mesma nota e o mesmo id da nota), e não um comando
+  // novo montado com o relógio de agora. A recuperação fica em `pendencia`, que não depende de a releitura
+  // ainda mostrar a sessão.
+  async function conduzir(sessaoId: string, nota: string, rodar: () => Promise<ResultadoDaEscrita>) {
     if (ocupado) return
     setOcupado(true)
-    setErro(null)
-    const resultado = await acoes.encerrar(registro, { nota, momento })
+    setPendencia(null)
+    const resultado = await rodar()
     setOcupado(false)
     if (resultado.ok) {
-      // Encerrar tira esta tela do ar: o foco vai ao cartão da sessão do Hoje.
+      // Encerrar e descartar tiram esta tela do ar: o foco vai ao cartão da sessão do Hoje.
       void navigate('/app/hoje', { state: { foco: 'cartao' } })
     } else if (resultado.relogioAtras) {
-      setRelogioAtrasDe(registro.id)
+      setRelogioAtrasDe(sessaoId)
     } else {
-      setErro(resultado.erro)
+      const repetir = resultado.repetir
+      setPendencia({ erro: resultado.erro, nota, repetir: () => void conduzir(sessaoId, nota, repetir) })
     }
   }
 
-  async function descartar(registro: Registro) {
-    if (ocupado) return
-    setOcupado(true)
-    setErro(null)
-    const resultado = await acoes.descartar(registro)
-    setOcupado(false)
-    if (resultado.ok) void navigate('/app/hoje', { state: { foco: 'cartao' } })
-    else setErro(resultado.erro)
+  function encerrar(registro: Registro, nota: string, momento?: number) {
+    return conduzir(registro.id, nota, () => acoes.encerrar(registro, { nota, momento }))
   }
+
+  function descartar(registro: Registro) {
+    return conduzir(registro.id, '', () => acoes.descartar(registro))
+  }
+
+  const avisoDaPendencia = pendencia ? (
+    <AvisoDeErro erro={pendencia.erro} escrita papel={ativo?.papel ?? null} aoTentarDeNovo={pendencia.repetir} className="max-w-[28rem]">
+      {pendencia.nota !== '' ? (
+        <p className="w-full rounded-campo bg-(--cor-papel-fundo) px-4 py-3 wrap-anywhere" data-texto-da-nota="">
+          {pendencia.nota}
+        </p>
+      ) : null}
+    </AvisoDeErro>
+  ) : null
+
+  // As releituras que falharam com dados anteriores na tela: o aviso e `Tentar de novo` ficam junto dos dados,
+  // sem desmontar o cartão, o painel da nota nem o texto digitado (R8). A lista que passou do limite diz o N.
+  const avisosDasAnteriores =
+    anteriores.erro || anteriores.dados?.incompleta ? (
+      <div className="flex flex-col gap-3 lg:col-span-12" data-avisos-das-anteriores="">
+        {anteriores.erro ? <AvisoDeErro erro={anteriores.erro} papel={ativo?.papel ?? null} aoTentarDeNovo={anteriores.recarregar} /> : null}
+        {anteriores.dados?.incompleta ? <AvisoDeLista limite={LIMITES.sessoesDaJanela} dado="anteriores" /> : null}
+      </div>
+    ) : null
 
   // "Manter os dois" e "Fechar" fecham a confirmação; "Excluir este" também e leva ao Hoje, porque a sessão
   // que acabou de começar deixa de existir. "Tentar de novo" fica na tela até dar certo.
@@ -227,6 +263,12 @@ export function Sessao() {
             <ConfirmacaoRotina confirmacao={confirmacao} aoAcionar={acionar} />
           </div>
 
+          {leitura.erro ? (
+            <div className="cm-area mt-5 max-w-[28rem]" data-releitura-falhou="">
+              <AvisoDeErro erro={leitura.erro} papel={bebeDaSessao.papel} aoTentarDeNovo={leitura.recarregar} />
+            </div>
+          ) : null}
+
           {/* Em 1440 o painel e o cartão das anteriores terminam na mesma linha (stretch: os dois fundos
               alinhados). O cronômetro ocupa a altura que sobra na coluna dele. */}
           <div className="cm-area mt-6 grid grid-cols-1 gap-6 lg:mt-10 lg:grid-cols-12 lg:items-stretch lg:gap-8">
@@ -241,17 +283,7 @@ export function Sessao() {
                 aoDescartar={() => void descartar(sessao)}
               />
               {!gravacaoLiberada ? <p className="text-[15px] leading-[22px] text-(--cor-texto-2)">{textoDoPapel}</p> : null}
-              {erro ? (
-                <AvisoDeErro
-                  erro={erro}
-                  escrita
-                  papel={bebeDaSessao.papel}
-                  aoTentarDeNovo={() => {
-                    atualizar()
-                    void encerrar(sessao, '')
-                  }}
-                />
-              ) : null}
+              {avisoDaPendencia}
               <SessoesEmParalelo
                 sessoes={[sessao]}
                 agora={agora}
@@ -267,6 +299,7 @@ export function Sessao() {
               />
             </div>
             <SessoesAnteriores className="lg:col-span-5" tipo={sessao.tipo} itens={itensAnteriores} />
+            {avisosDasAnteriores}
           </div>
         </main>
 
@@ -289,9 +322,13 @@ export function Sessao() {
                 <AvisoDeErro erro={leitura.erro} papel={ativo.papel} aoTentarDeNovo={leitura.recarregar} />
               </div>
             ) : null}
+            {/* A sessão pode ter acabado de ser encerrada ou descartada, mas a escrita falhou sem resposta: a
+                recuperação (`Tentar de novo` e a nota) continua aqui, mesmo com a releitura já sem a sessão. */}
+            {pendencia ? <div className="cm-area mt-5">{avisoDaPendencia}</div> : null}
             <div className="cm-area mt-6 grid grid-cols-1 gap-6 lg:mt-10 lg:grid-cols-12 lg:items-start lg:gap-8">
               <MidiaDaSessao className="lg:col-span-7" />
               <SessoesAnteriores className="lg:col-span-5" tipo="sono" itens={itensAnteriores} />
+              {avisosDasAnteriores}
             </div>
           </>
         )}

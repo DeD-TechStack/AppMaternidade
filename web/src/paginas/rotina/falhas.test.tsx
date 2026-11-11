@@ -1,9 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, screen, within } from '@testing-library/react'
+import { act, fireEvent, screen, within } from '@testing-library/react'
 import { CHAVES_ERRO_ROTINA, type ChaveErroRotina } from '../../dados/rotina.erros.ts'
 import { simularFalhaRotina, simularRespostaPerdidaRotina } from '../../dados/rotina.memoria.ts'
+import type { Registro } from '../../dados/rotina.tipos.ts'
+import { uuidV7 } from '../../dados/rotina.uuid.ts'
+import { simularAparelho } from '../../dados/rotina.aparelho.simulado.ts'
 import { aguardarCarga, renderizarRotaPronta } from '../../teste/renderizarRota.tsx'
-import { FUSO_DO_APARELHO, ID_BEBE, ID_FAMILIA } from '../../teste/rotina.fixture.ts'
+import { FUSO_DO_APARELHO, ID_BEBE, ID_FAMILIA, criarMundoDeTeste, semSessaoEmAndamento } from '../../teste/rotina.fixture.ts'
 import { PESSOAS } from '../../teste/renderizarComDados.tsx'
 
 // Os caminhos que falham fechados (R38-32, item 6), com o relógio falso às 10:00 de 5/11/2026 (hora do
@@ -273,5 +276,256 @@ describe('o encerramento em si falha', () => {
     expect(within(alerta).queryByRole('button', { name: 'Tentar de novo' }) !== null).toBe(repete)
     const lido = await mundo.rotina.registro(id)
     expect(lido.ok && lido.valor && lido.valor.fim).toBeNull()
+  })
+})
+
+// ---- R10 (R38-32, item 6): o aparelho, o fuso, a virada do dia e as corridas com outra pessoa ----------
+
+/** Faz o aparelho dos testes parecer o de Tóquio: o fuso do `Intl` e o deslocamento de +540 minutos. */
+const aparelhoEmToquio = () => simularAparelho('Asia/Tokyo', 540)
+
+describe('R10: aparelho em Tóquio com a família em São Paulo', () => {
+  it('R10: o Hoje avisa os dois fusos e o dia segue o da família', async () => {
+    aparelhoEmToquio()
+    await renderizarRotaPronta('/app/hoje', { fusoDaFamilia: 'America/Sao_Paulo' })
+
+    const aviso = document.querySelector('[data-fuso-diferente]')!
+    expect(aviso.textContent).toBe('Horários no fuso deste aparelho (Asia/Tokyo). O dia segue o fuso da família (America/Sao_Paulo).')
+    expect(screen.getByRole('region', { name: 'Hoje até agora' })).toBeTruthy()
+  })
+
+  it('R10: sem diferença entre o aparelho e a família, o aviso não existe', async () => {
+    await renderizarRotaPronta('/app/hoje')
+    expect(document.querySelector('[data-fuso-diferente]')).toBeNull()
+  })
+
+  it('R10: um registro novo grava Asia/Tokyo e o deslocamento de +540 minutos (a leste de UTC)', async () => {
+    aparelhoEmToquio()
+    const mundo = await renderizarRotaPronta('/app/registro/novo?tipo=fralda', { fusoDaFamilia: 'America/Sao_Paulo' })
+    digitar('Conteúdo', 'xixi')
+
+    fireEvent.click(botao('Salvar'))
+    await aguardarCarga()
+
+    const lista = await mundo.rotina.doIntervalo(ID_BEBE, new Date(Date.now() - 60 * 60_000).toISOString(), new Date(Date.now() + 60 * 60_000).toISOString())
+    const novo = lista.ok ? lista.valor.itens.find((r) => r.origem === 'retroativo') : undefined
+    expect(novo).toMatchObject({ fuso: 'Asia/Tokyo', deslocamentoMin: 540 })
+  })
+
+  it('R10: encerrar uma sessão com o aparelho em Tóquio não troca o fuso nem o deslocamento gravados no início', async () => {
+    const mundo = await renderizarRotaPronta('/app/sessao', { fusoDaFamilia: 'America/Sao_Paulo' })
+    const id = idDoSonoEmAndamento(mundo)
+    const antes = await mundo.rotina.registro(id)
+    aparelhoEmToquio()
+
+    fireEvent.click(botao('Encerrar'))
+    await aguardarCarga()
+
+    const depois = await mundo.rotina.registro(id)
+    expect(antes.ok && depois.ok && depois.valor && antes.valor && [depois.valor.fuso, depois.valor.deslocamentoMin]).toEqual(
+      antes.ok && antes.valor && [antes.valor.fuso, antes.valor.deslocamentoMin],
+    )
+  })
+})
+
+describe('R10: fuso da família inválido não quebra a tela', () => {
+  it('R10: o Hoje abre, a seção do dia mostra a frase do catálogo com "Tentar de novo" e as outras seções funcionam', async () => {
+    await renderizarRotaPronta('/app/hoje', { fusoDaFamilia: 'Marte/Olimpo' })
+
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Hoje')
+    const erro = document.querySelector('[data-erro-rotina="fuso_da_familia_invalido"]')!
+    expect(erro.textContent).toContain('O fuso da família está inválido. Peça a um responsável para corrigir em Família.')
+    expect(erro.textContent).not.toMatch(CODIGOS)
+    expect(within(erro as HTMLElement).getByRole('button', { name: 'Tentar de novo' })).toBeTruthy()
+    // As outras seções seguem: o cartão da sessão e a barra Registrar.
+    expect(botao('Encerrar')).toBeTruthy()
+    expect(botao('Registrar fralda de Heloísa')).toBeTruthy()
+    expect(document.querySelectorAll('[data-erro-rotina]')).toHaveLength(1)
+  })
+
+  it('R10: a Sessão abre com o fuso inválido, sem erro', async () => {
+    await renderizarRotaPronta('/app/sessao', { fusoDaFamilia: 'Marte/Olimpo' })
+    expect(botao('Encerrar')).toBeTruthy()
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
+
+  it('R10: o formulário abre e salva com o fuso da família inválido (o que vale na gravação é o do aparelho)', async () => {
+    const mundo = await renderizarRotaPronta('/app/registro/novo?tipo=fralda', { fusoDaFamilia: 'Marte/Olimpo' })
+    digitar('Conteúdo', 'coco')
+    fireEvent.click(botao('Salvar'))
+    await aguardarCarga()
+    expect(mundo.roteador.state.location.pathname).toBe('/app/hoje')
+  })
+})
+
+describe('R10: a virada da meia-noite com a releitura do Hoje', () => {
+  const fraldasDeHoje = () => {
+    const regiao = screen.getByRole('region', { name: 'Hoje até agora' })
+    return within(regiao).getByText('Fraldas').previousElementSibling!.textContent
+  }
+
+  it('R10: depois da meia-noite, "Atualizar" lê o dia novo: as fraldas de ontem saem dos números de hoje', async () => {
+    vi.setSystemTime(new Date('2026-11-05T23:58:00'))
+    await renderizarRotaPronta('/app/hoje', {
+      ajustarRotina: () => {
+        const fralda = criarModeloDeFralda()
+        return { notas: [], registros: [fralda('23:30:00'), fralda('23:50:00')] }
+      },
+    })
+    expect(fraldasDeHoje()).toBe('2')
+
+    vi.setSystemTime(new Date('2026-11-06T00:05:00'))
+    act(() => {
+      vi.advanceTimersByTime(1000)
+    })
+    fireEvent.click(botao('Atualizar'))
+    await aguardarCarga()
+
+    expect(fraldasDeHoje()).toBe('0')
+  })
+
+  it('R10: antes da meia-noite a mesma releitura continua contando as duas fraldas', async () => {
+    vi.setSystemTime(new Date('2026-11-05T23:58:00'))
+    await renderizarRotaPronta('/app/hoje', {
+      ajustarRotina: () => {
+        const fralda = criarModeloDeFralda()
+        return { notas: [], registros: [fralda('23:30:00'), fralda('23:50:00')] }
+      },
+    })
+    vi.setSystemTime(new Date('2026-11-05T23:59:30'))
+    fireEvent.click(botao('Atualizar'))
+    await aguardarCarga()
+    expect(fraldasDeHoje()).toBe('2')
+  })
+})
+
+/** Uma fralda de Juliana na família de teste, em um horário do dia 5/11 (hora do aparelho). */
+function criarModeloDeFralda() {
+  let numero = 0
+  return (hora: string): Registro => {
+    numero += 1
+    const inicio = new Date(`2026-11-05T${hora}`).toISOString()
+    return {
+      id: `d1000000-0000-7000-8000-${String(numero).padStart(12, '0')}`,
+      familiaId: ID_FAMILIA,
+      bebeId: ID_BEBE,
+      tipo: 'fralda',
+      inicio,
+      fim: null,
+      detalhes: { conteudo: 'xixi' },
+      nota: null,
+      origem: 'ao_vivo',
+      fuso: FUSO_DO_APARELHO,
+      deslocamentoMin: 0,
+      criadoPor: PESSOAS.juliana.id,
+      encerradoPor: null,
+      versao: 1,
+      recebidoEm: inicio,
+      atualizadoEm: inicio,
+      excluidoEm: null,
+      excluidoPor: null,
+    }
+  }
+}
+
+describe('R10: as corridas com outra pessoa', () => {
+  const comoBruno = (mundo: { conta: Mundo['conta'] }, fazer: () => Promise<unknown>) =>
+    (async () => {
+      mundo.conta.sessaoParaTeste(PESSOAS.bruno.email)
+      try {
+        await fazer()
+      } finally {
+        mundo.conta.sessaoParaTeste(PESSOAS.juliana.email)
+      }
+    })()
+
+  it('R10: o Desfazer de um registro que outra pessoa já excluiu não dá erro e deixa a exclusão da outra pessoa', async () => {
+    const mundo = await renderizarRotaPronta('/app/hoje', { sessao: 'bruno' })
+    fireEvent.click(botao('Registrar fralda de Heloísa'))
+    fireEvent.click(botao('Xixi'))
+    await aguardarCarga()
+    const lista = await mundo.rotina.doIntervalo(ID_BEBE, new Date(Date.now() - 5 * 60_000).toISOString(), new Date(Date.now() + 5 * 60_000).toISOString())
+    const criado = lista.ok ? lista.valor.itens.find((r) => r.origem === 'ao_vivo' && r.criadoPor === PESSOAS.bruno.id) : undefined
+    expect(criado).toBeTruthy()
+    // Juliana (responsável) exclui o registro de Bruno por outro aparelho, antes do Desfazer dele.
+    mundo.conta.sessaoParaTeste(PESSOAS.juliana.email)
+    expect((await mundo.rotina.excluirRegistro(criado!.id)).ok).toBe(true)
+    mundo.conta.sessaoParaTeste(PESSOAS.bruno.email)
+
+    fireEvent.click(botao('Desfazer'))
+    await aguardarCarga()
+
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(status().textContent).toBe('')
+    const lixeira = await mundo.rotina.lixeira(ID_BEBE)
+    expect(lixeira.ok && lixeira.valor.itens.filter((r) => r.id === criado!.id)).toMatchObject([{ excluidoPor: PESSOAS.juliana.id }])
+  })
+
+  it('R10: "Encerrar" numa sessão que outra pessoa excluiu mostra a frase de registro excluído, sem "Tentar de novo", e a tela se atualiza', async () => {
+    const mundo = await renderizarRotaPronta('/app/hoje')
+    const id = idDoSonoEmAndamento(mundo)
+    await comoBruno(mundo, async () => expect((await mundo.rotina.excluirRegistro(id)).ok).toBe(true))
+
+    fireEvent.click(botao('Encerrar'))
+    await aguardarCarga()
+
+    expect(status().querySelector('p')!.textContent).toBe('Este registro foi excluído e não pode ser mudado.')
+    expect(screen.queryByRole('button', { name: 'Tentar de novo' })).toBeNull()
+    expect(status().textContent).not.toMatch(CODIGOS)
+    // A releitura tirou o cartão da sessão excluída.
+    expect(screen.queryByRole('button', { name: 'Encerrar' })).toBeNull()
+  })
+
+  it('R10: "Descartar" de uma sessão que outra pessoa já excluiu não dá erro (a exclusão é idempotente) e leva ao Hoje', async () => {
+    const mundo = await renderizarRotaPronta('/app/sessao')
+    const id = idDoSonoEmAndamento(mundo)
+    await comoBruno(mundo, async () => expect((await mundo.rotina.excluirRegistro(id)).ok).toBe(true))
+
+    fireEvent.click(botao('Descartar'))
+    fireEvent.click(within(screen.getByRole('group', { name: 'Descartar esta sessão?' })).getByRole('button', { name: 'Descartar' }))
+    await aguardarCarga()
+
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(mundo.roteador.state.location.pathname).toBe('/app/hoje')
+  })
+
+  it('R10: a mamada que outra pessoa já começou: o toque abre a dela, com o aviso, e nada novo é gravado', async () => {
+    const mundo = criarMundoDeTeste({ ajustarRotina: semSessaoEmAndamento })
+    const tela = await renderizarRotaPronta('/app/hoje', { mundo })
+    const gravar = vi.spyOn(mundo.rotina, 'gravarRegistro')
+    const idDeBruno = uuidV7()
+    await comoBruno(mundo, async () => {
+      const gravada = await mundo.rotina.gravarRegistro({ id: idDeBruno, bebeId: ID_BEBE, tipo: 'mamada', inicio: new Date(Date.now() - 2 * 60_000).toISOString() })
+      expect(gravada.ok).toBe(true)
+    })
+    gravar.mockClear()
+
+    fireEvent.click(botao('Iniciar mamada de Heloísa'))
+    await aguardarCarga()
+
+    expect(gravar).not.toHaveBeenCalled()
+    expect(tela.roteador.state.location.pathname).toBe('/app/sessao')
+    expect(tela.roteador.state.location.search).toBe(`?id=${idDeBruno}`)
+    expect(screen.getByText('Já há uma sessão de Mamada em andamento.')).toBeTruthy()
+  })
+
+  it('R10: a mamada de outra pessoa que chega entre a leitura e a gravação vira a pergunta do duplicado, com as duas ficando', async () => {
+    const mundo = criarMundoDeTeste({ ajustarRotina: semSessaoEmAndamento })
+    const tela = await renderizarRotaPronta('/app/hoje', { mundo })
+    await comoBruno(mundo, async () => {
+      const gravada = await mundo.rotina.gravarRegistro({ id: uuidV7(), bebeId: ID_BEBE, tipo: 'mamada', inicio: new Date(Date.now() - 2 * 60_000).toISOString() })
+      expect(gravada.ok).toBe(true)
+    })
+    // A conferência de "já há uma sessão" ainda viu a lista vazia: a gravação de Juliana é que encontra a de Bruno.
+    vi.spyOn(mundo.rotina, 'emAndamento').mockResolvedValueOnce({ ok: true, valor: { itens: [], incompleta: false } })
+
+    fireEvent.click(botao('Iniciar mamada de Heloísa'))
+    await aguardarCarga()
+
+    expect(tela.roteador.state.location.pathname).toBe('/app/sessao')
+    expect(status().querySelector('p')!.textContent).toBe('Bruno registrou mamada às 09:58.')
+    expect(within(status()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Manter os dois', 'Excluir este', 'Fechar'])
+    const abertas = await mundo.rotina.emAndamento(ID_BEBE)
+    expect(abertas.ok && abertas.valor.itens).toHaveLength(2)
   })
 })

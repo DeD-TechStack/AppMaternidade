@@ -1,10 +1,10 @@
 import { useNavigate } from 'react-router'
 import { COMUM, CONFIRMACAO, ESCOLHAS_FRALDA, REGISTRO_RAPIDO, ROTULO_TIPO, SESSOES, textoDoErro, ehErroRepetivel } from '../../conteudo/rotina.ts'
 import type { ErroDados, Resultado } from '../../dados/comum.ts'
-import type { ConteudoFralda, DetalhesRegistro, Registro, TipoSessao } from '../../dados/rotina.tipos.ts'
+import { podeEscrever, type ConteudoFralda, type DetalhesRegistro, type Registro, type TipoSessao } from '../../dados/rotina.tipos.ts'
 import { uuidV7 } from '../../dados/rotina.uuid.ts'
 import { formatarDuracao, formatarHora } from '../../prototipo/formatar.ts'
-import type { NovaConfirmacao } from './contexto.ts'
+import type { BebeAtivo, NovaConfirmacao } from './contexto.ts'
 import { useRotina } from './contexto.ts'
 
 // As escritas da rotina que o Hoje e a Sessão compartilham: iniciar sessão, registro rápido, Desfazer,
@@ -19,26 +19,46 @@ const DESTAQUE_DA_NOTA = 24 * 60 * MINUTO
 const iso = (instante: number) => new Date(instante).toISOString()
 const minusculo = (texto: string) => texto.charAt(0).toLocaleLowerCase('pt-BR') + texto.slice(1)
 
-type ResultadoDoEncerramento =
+/**
+ * O que o encerramento devolve. Na falha de escrita, `repetir` é o comando ORIGINAL congelado (a mesma sessão,
+ * o mesmo fim, a mesma nota com o mesmo id): `Tentar de novo` chama ele, nunca outro comando nem outro momento.
+ */
+export type ResultadoDoEncerramento =
   | { ok: true }
-  | { ok: false; erro: ErroDados; relogioAtras?: undefined }
-  | { ok: false; relogioAtras: true; erro?: undefined }
+  | { ok: false; erro: ErroDados; repetir: () => Promise<ResultadoDoEncerramento>; relogioAtras?: undefined }
+  | { ok: false; relogioAtras: true; erro?: undefined; repetir?: undefined }
+
+/** O resultado do descarte; na falha, `repetir` repete o mesmo descarte. */
+export type ResultadoDoDescarte =
+  | { ok: true; valor: null }
+  | { ok: false; erro: ErroDados; repetir: () => Promise<ResultadoDoDescarte>; relogioAtras?: undefined }
 
 interface OpcoesDoEncerramento {
   /** O fim escolhido ("Encerrar em outro horário"); sem ele vale o relógio do navegador no clique. */
   momento?: number
   /** O texto da nota já cortado nas pontas; vazio ou ausente encerra sem nota. */
   nota?: string
+  /** Só nas repetições: o id da nota e o fim do destaque dela, congelados na 1ª tentativa. */
+  idDaNota?: string
+  destaqueAte?: string
 }
+
+/** Criar (iniciar sessão, registro rápido) é do responsável e do cuidador, com o bebê não arquivado. */
+const podeCriar = (ativo: BebeAtivo) => podeEscrever(ativo.papel) && !ativo.arquivado
 
 export function useAcoesDaRotina() {
   const navigate = useNavigate()
   const rotina = useRotina()
   const { dados, ativo, atualizar, mostrarConfirmacao, fecharConfirmacao, podeAlterar, nomeDoAutor, contaId } = rotina
 
-  /** Depois de uma recusa de acesso, ou de um resultado incerto, a tela relê (e o contexto também). */
+  /**
+   * Depois de uma recusa de acesso, de um resultado incerto ou de a outra pessoa ter excluído o registro (a tela
+   * mostra algo que já não existe), a tela relê (e o contexto também).
+   */
   function aposErro(erro: ErroDados) {
-    if (erro.classe === 'nao_encontrado' || erro.classe === 'sem_permissao' || ehErroRepetivel(erro)) atualizar()
+    if (erro.classe === 'nao_encontrado' || erro.classe === 'sem_permissao' || erro.chave === 'registro_excluido' || ehErroRepetivel(erro)) {
+      atualizar()
+    }
   }
 
   /** A confirmação de um erro de escrita: a frase do catálogo e, se repetível, `Tentar de novo`. */
@@ -89,7 +109,7 @@ export function useAcoesDaRotina() {
    * mesma chamada com o mesmo id.
    */
   async function iniciarSessao(tipo: TipoSessao, opcoes: { aPartirDaUrl?: boolean } = {}): Promise<void> {
-    if (!ativo) return
+    if (!ativo || !podeCriar(ativo)) return
     const bebeId = ativo.bebe.id
     const lidas = await dados.emAndamento(bebeId)
     if (!lidas.ok) {
@@ -160,7 +180,7 @@ export function useAcoesDaRotina() {
    * `Desfazer` e `Fechar`. Um erro de rede repete a mesma chamada com o mesmo id.
    */
   async function registrarPontual(tipo: 'fralda' | 'mamadeira' | 'solido', detalhes: DetalhesRegistro, textoBase: string): Promise<void> {
-    if (!ativo) return
+    if (!ativo || !podeCriar(ativo)) return
     const entrada = { id: uuidV7(), bebeId: ativo.bebe.id, tipo, inicio: iso(Date.now()), detalhes, origem: 'ao_vivo' as const }
     const tentar = async (): Promise<void> => {
       const gravada = await dados.gravarRegistro(entrada)
@@ -215,10 +235,18 @@ export function useAcoesDaRotina() {
     const inicio = Date.parse(registro.inicio)
     if (escolhido < inicio) return { ok: false, relogioAtras: true }
 
+    // O comando congelado na 1ª tentativa: o fim, o texto, o id da nota e o destaque dela. Repetir não lê o
+    // relógio de novo nem gera outro id, também depois de a tela reler e achar a sessão já encerrada.
+    const congelado: OpcoesDoEncerramento = {
+      momento: escolhido,
+      nota: opcoes.nota,
+      idDaNota: opcoes.idDaNota ?? uuidV7(),
+      destaqueAte: opcoes.destaqueAte ?? iso(Date.now() + DESTAQUE_DA_NOTA),
+    }
     const resposta = await dados.encerrarSessao(registro.id, iso(escolhido))
     if (!resposta.ok) {
       aposErro(resposta.erro)
-      return { ok: false, erro: resposta.erro }
+      return { ok: false, erro: resposta.erro, repetir: () => encerrar(registro, congelado) }
     }
     const fim = Date.parse(resposta.valor)
     atualizar()
@@ -249,11 +277,11 @@ export function useAcoesDaRotina() {
     }
 
     const entradaDaNota = {
-      id: uuidV7(),
+      id: congelado.idDaNota as string,
       familiaId: registro.familiaId,
       texto: nota,
       bebeId: registro.bebeId,
-      destaqueAte: iso(Date.now() + DESTAQUE_DA_NOTA),
+      destaqueAte: congelado.destaqueAte as string,
     }
     const gravarNota = async (): Promise<void> => {
       const gravada = await dados.gravarNota(entradaDaNota)
@@ -273,12 +301,15 @@ export function useAcoesDaRotina() {
 
   // ---- descartar e unir -------------------------------------------------------------------------------
 
-  /** Descartar exclui a sessão (ela vai para a lixeira). */
-  async function descartar(registro: Registro): Promise<Resultado<null>> {
+  /** Descartar exclui a sessão (ela vai para a lixeira). Na falha, `repetir` repete o mesmo descarte. */
+  async function descartar(registro: Registro): Promise<ResultadoDoDescarte> {
     const resultado = await dados.excluirRegistro(registro.id)
-    if (resultado.ok) atualizar()
-    else aposErro(resultado.erro)
-    return resultado
+    if (resultado.ok) {
+      atualizar()
+      return resultado
+    }
+    aposErro(resultado.erro)
+    return { ok: false, erro: resultado.erro, repetir: () => descartar(registro) }
   }
 
   /**

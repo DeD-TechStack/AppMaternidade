@@ -42,6 +42,27 @@ interface Props {
 
 const minusculo = (texto: string) => texto.charAt(0).toLocaleLowerCase('pt-BR') + texto.slice(1)
 
+/**
+ * A chamada de escrita COMPLETA, congelada quando a pessoa envia: o id, o tipo, o bebê e os valores. `Tentar de
+ * novo` e `Salvar assim` repetem exatamente esta chamada (a 2ª tentativa é a mesma operação da 1ª); mexer nos
+ * campos depois da falha não a altera. Salvar os valores corrigidos é outro envio, e na criação é outra
+ * criação, com outro id.
+ */
+interface Chamada {
+  id: string
+  tipo: TipoRegistro
+  bebeId: string
+  entrada: EntradaValidada
+}
+
+const mesmosValores = (a: Chamada, b: Chamada) =>
+  a.tipo === b.tipo &&
+  a.bebeId === b.bebeId &&
+  a.entrada.inicio === b.entrada.inicio &&
+  a.entrada.fim === b.entrada.fim &&
+  a.entrada.nota === b.entrada.nota &&
+  JSON.stringify(a.entrada.detalhes) === JSON.stringify(b.entrada.detalhes)
+
 interface PropsDoControle {
   id: string
   'aria-invalid'?: true
@@ -159,7 +180,7 @@ export function FormularioRegistro({ modo, ativo, tipoInicial, registro }: Props
   const [erroDeLeitura, setErroDeLeitura] = useState<ErroDados | null>(null)
   const [erroDeEnvio, setErroDeEnvio] = useState<ErroDados | null>(null)
   const [enviando, setEnviando] = useState(false)
-  const entradaPendente = useRef<EntradaValidada | null>(null)
+  const chamadaPendente = useRef<Chamada | null>(null)
 
   const emAndamento = registro !== undefined && registro.fim === null && ehTipoDeSessao(registro.tipo)
   const tipo = campos.tipo
@@ -210,24 +231,38 @@ export function FormularioRegistro({ modo, ativo, tipoInicial, registro }: Props
     return { avisos: mensagens }
   }
 
-  async function gravar(entrada: EntradaValidada) {
-    if (tipo === '') return
-    entradaPendente.current = entrada
+  /**
+   * A chamada deste envio: com os mesmos valores da anterior (que falhou ou ficou esperando a confirmação), é a
+   * mesma chamada e o mesmo id; com valores corrigidos, na criação é outro id (a criação anterior pode ter sido
+   * gravada sem a resposta chegar, e o mesmo id devolveria a linha antiga em vez de salvar o que foi corrigido).
+   */
+  function prepararChamada(entrada: EntradaValidada, tipoDoEnvio: TipoRegistro): Chamada {
+    const nova: Chamada = { id, tipo: tipoDoEnvio, bebeId: ativo.bebe.id, entrada }
+    const anterior = chamadaPendente.current
+    if (modo === 'novo' && anterior !== null) {
+      return mesmosValores(anterior, nova) ? anterior : { ...nova, id: uuidV7() }
+    }
+    return nova
+  }
+
+  async function gravar(chamada: Chamada) {
+    const { entrada } = chamada
+    chamadaPendente.current = chamada
     setEnviando(true)
     setErroDeEnvio(null)
     const resultado =
       modo === 'novo'
         ? await dados.gravarRegistro({
-            id,
-            bebeId: ativo.bebe.id,
-            tipo,
+            id: chamada.id,
+            bebeId: chamada.bebeId,
+            tipo: chamada.tipo,
             inicio: entrada.inicio,
             fim: entrada.fim,
             detalhes: entrada.detalhes,
             nota: entrada.nota,
             origem: 'retroativo',
           })
-        : await dados.editarRegistro(id, { inicio: entrada.inicio, fim: entrada.fim, detalhes: entrada.detalhes, nota: entrada.nota })
+        : await dados.editarRegistro(chamada.id, { inicio: entrada.inicio, fim: entrada.fim, detalhes: entrada.detalhes, nota: entrada.nota })
     setEnviando(false)
     if (!resultado.ok) {
       setPasso('editando')
@@ -241,7 +276,7 @@ export function FormularioRegistro({ modo, ativo, tipoInicial, registro }: Props
       texto: CONFIRMACAO.registroSalvo,
       acoes:
         modo === 'novo'
-          ? [{ chave: 'desfazer', rotulo: COMUM.desfazer, executar: () => void acoes.excluir(id) }, fechar]
+          ? [{ chave: 'desfazer', rotulo: COMUM.desfazer, executar: () => void acoes.excluir(chamada.id) }, fechar]
           : [fechar],
     })
     void navigate(destino, { state: { foco: 'titulo' } })
@@ -255,27 +290,29 @@ export function FormularioRegistro({ modo, ativo, tipoInicial, registro }: Props
       setTentativas((anterior) => anterior + 1)
       return
     }
+    if (tipo === '') return
     setErros({})
     setErroDeLeitura(null)
     setErroDeEnvio(null)
-    if (!forcar && tipo !== '' && ehTipoDeSessao(tipo)) {
+    const chamada = prepararChamada(entrada, tipo)
+    if (!forcar && ehTipoDeSessao(tipo)) {
       setEnviando(true)
       const conferencia = await conferir(entrada, tipo)
       setEnviando(false)
       if (conferencia.erro) {
         // Se a leitura falhar, nada é enviado: o erro aparece acima dos botões e `Tentar de novo` relê.
-        entradaPendente.current = entrada
+        chamadaPendente.current = chamada
         setErroDeLeitura(conferencia.erro)
         return
       }
       if (conferencia.avisos.length > 0) {
-        entradaPendente.current = entrada
+        chamadaPendente.current = chamada
         setAvisos(conferencia.avisos)
         setPasso('confirmando')
         return
       }
     }
-    await gravar(entrada)
+    await gravar(chamada)
   }
 
   function aoEnviar(evento: FormEvent) {
@@ -435,7 +472,7 @@ export function FormularioRegistro({ modo, ativo, tipoInicial, registro }: Props
           escrita
           papel={ativo.papel}
           aoTentarDeNovo={() => {
-            if (entradaPendente.current) void gravar(entradaPendente.current)
+            if (chamadaPendente.current) void gravar(chamadaPendente.current)
           }}
         />
       ) : null}
@@ -453,7 +490,7 @@ export function FormularioRegistro({ modo, ativo, tipoInicial, registro }: Props
               className={ALVO_APP}
               desativado={enviando}
               onClick={() => {
-                if (entradaPendente.current) void gravar(entradaPendente.current)
+                if (chamadaPendente.current) void gravar(chamadaPendente.current)
               }}
             >
               {enviando ? COMUM.salvando : FORMULARIO.salvarAssim}
