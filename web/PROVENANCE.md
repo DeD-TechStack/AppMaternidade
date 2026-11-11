@@ -6,10 +6,8 @@ Cada recurso de terceiros que vai no site tem uma linha aqui: pacote, versão ex
 
 | Família | Pacote | Versão | Licença | Cópia da licença | sha256 da licença |
 |---|---|---|---|---|---|
-| Fraunces | `@fontsource/fraunces` | 5.3.0 | SIL Open Font License 1.1 (`OFL-1.1`) | `web/licencas/fontsource-fraunces.txt` | `cd3384cafac6f2bddc3955273958a2e029f97027c8037ac539ef5744a77b579e` |
-| Instrument Sans | `@fontsource/instrument-sans` | 5.3.0 | SIL Open Font License 1.1 (`OFL-1.1`) | `web/licencas/fontsource-instrument-sans.txt` | `c27a3c53c3beed7f5c26853afa15991478ff7145d3754a36b0382f84e10c0d03` |
-| Instrument Serif | `@fontsource/instrument-serif` | 5.3.0 | SIL Open Font License 1.1 (`OFL-1.1`) | `web/licencas/fontsource-instrument-serif.txt` | `b6106a757902d2d412e09d94dc4a226fe3da80485208a98003969f1b8b6b1d74` |
-| Zilla Slab | `@fontsource/zilla-slab` | 5.3.0 | SIL Open Font License 1.1 (`OFL-1.1`) | `web/licencas/fontsource-zilla-slab.txt` | `72758d2190a1f64ac28b0ae6667890f2d9032c58e981a82a76f840b6d037f0ca` |
+| Literata | `@fontsource-variable/literata` | 5.3.0 | SIL Open Font License 1.1 (`OFL-1.1`) | `web/licencas/fontsource-variable-literata.txt` | `9895ebc015226accf416b758ac1ca02a2fb4f83a89d316791ef697c3dc0852aa` |
+| Outfit | `@fontsource-variable/outfit` | 5.3.0 | SIL Open Font License 1.1 (`OFL-1.1`) | `web/licencas/fontsource-variable-outfit.txt` | `0e5fcef5d93bfcae273c11c00f0bb453d3b5491860e1ac8b658767b7577c938f` |
 
 A cópia da licença é o arquivo `LICENSE` do próprio pacote, sem alteração (mesmo sha256).
 
@@ -29,7 +27,17 @@ A cópia da licença é o arquivo `LICENSE` do pacote instalado do `registry.npm
 
 ## Ilustrações
 
-As ilustrações do site são SVG desenhados para o projeto, sem acervo de terceiros.
+As ilustrações e as cenas do site são imagens geradas pelo Codex CLI 0.167.0 (`image_gen` embutido, plano ChatGPT de Daniel, sem chave de API, sem imagem de referência), curadas pelo `lider-appmaternidade`, em 11/11/2026. Origem, sha256 dos brutos, modelo, data e id do prompt de cada arquivo estão em `_staging/appmaternidade/DIRECOES_20261111/FINAL/ativos/PROVENANCE.md` (cópia do mesmo registro ao lado dos arquivos). Nenhum rosto de pessoa real; nada vem dos sites de referência.
+
+| Arquivo | Registro |
+|---|---|
+| `web/public/ilustracoes/avo-carrinho@1x.webp`, `@2x.webp` | `FINAL/ativos/PROVENANCE.md`, `I_traco subject 1`; cópia em `web/public/ilustracoes/PROVENANCE.md` |
+| `web/public/ilustracoes/pai-colo@1x.webp`, `@2x.webp` | `FINAL/ativos/PROVENANCE.md`, `I_traco subject 2`; idem |
+| `web/public/ilustracoes/tummy-time@1x.webp`, `@2x.webp` | `FINAL/ativos/PROVENANCE.md`, `I_traco subject 3`; idem |
+| `web/public/ilustracoes/maos-celular@1x.webp`, `@2x.webp` | `FINAL/ativos/PROVENANCE.md`, `I_traco subject 4`; idem |
+| `web/public/ilustracoes/baba-tapete@1x.webp`, `@2x.webp` | `FINAL/ativos/PROVENANCE.md`, `I_traco subject 5`; idem |
+| `web/public/ilustracoes/mae-noite@1x.webp`, `@2x.webp` | `FINAL/ativos/PROVENANCE.md`, `I_traco subject 6`; idem |
+| `web/public/cenas/sistema/trio-mel@1x.webp`, `@2x.webp` | `FINAL/ativos/PROVENANCE.md`, cena `S1_trio_mel` composta com `compor.py` sobre três capturas reais do site; cópia em `web/public/cenas/sistema/PROVENANCE.md` |
 
 ## Movimento
 
