@@ -73,6 +73,8 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 
 - [x cdf6219] P-40 MAT-49e (casco: marca do rodapé, `.alvo-toque` 56, SAMU, menu 390, rodapé compacto em /app/*) aprovada (b8d69f0) e integrada (904a071..cdf6219, check 1345 testes, commits OK, 305) | 11/11
 
+- [ ] P-41 (depois da publicação; resposta t_8f03f81c) Cortar o contexto do AGENTS.md: hoje a linha 3 manda ler a pasta 00_Inicio inteira (cerca de 146 KB). O arquivo novo, que aponta só para o PENDENCIAS.md e para o cartão, está em `C:/OrchestrationLab/exports/Lote_Posts_20261111/F_autonomia/units/U-CONTEXTO/aplicar/item5_revisor/novo/AGENTS.md`. Revisar o diff e fazer o commit eu mesmo
+
 ## Dados ligados às telas novas (religados e soltos em 11/11)
 
 - [x] P-09 Corpos dos 6 cartões abaixo reescritos para a base nova antes do claim (prefixo `FINAL/OVERRIDE_DADOS.md`) e soltos em todo, presos aos pais | 11/11 9h50; sem SHA (é board)
