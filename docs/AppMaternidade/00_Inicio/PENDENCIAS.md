@@ -14,6 +14,19 @@ Paralelo (Daniel, 05/11): até 5 cartões por projeto; só fica em série o que 
 
 Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA]` feito. O id `P-nn` não muda. Em toda wake sem cartão `ready`, `running` ou em revisão, o líder abre no mesmo turno o próximo `[ ]` (spec ou cartão), ou marca `[D]` ou PAUSA.
 
+## Caminho crítico até o MANDATO (11/11 12h30; ETA por item, com 5 cartões rodando)
+
+1. 49b g2 t_606fb2fb aprovada e integrada em `int/refazer` | ~13h15
+2. 37r t_d63c932a (volta R1 da revisão) aprovada e integrada | ~14h15
+3. 38a t_f7bdf7e8 e 37b t_11ad28e6 em paralelo, sobre 1 e 2 | ~16h45
+4. 38b t_7c491177 e 39b t_c9529365 sobre a 38a (39b também sobre a 36r-A) | ~19h
+5. 40a t_4c921e60 (rodando) e depois 40b t_359ab800 | ~15h, ~17h
+6. Visual, em paralelo e fora do caminho crítico: 49c v2, 36r-A v2, 37r v2, 36r-B v2, 49d e 49e, com no máximo 2 rodadas de juízes por página; a página que reprovar na 2ª vai para a galeria de Daniel | ~17h30
+7. Integração final em `int/refazer`, `npm run check`, um passeio de ponta a ponta (RF-01 a RF-14) com dados fictícios e a GALERIA final do site para Daniel | ~19h30
+8. P-19, publicação: checklist pronto abaixo; falta só o "pode" de Daniel | ~20h
+
+**ETA do MANDATO pronto para publicar: ~20h de hoje** (o maior risco é a cota semanal do Claude).
+
 ## Visual novo (Campo de mel)
 
 - [x] P-01 Passo 0: direção aprovada por Daniel (F1 + F2 + F3), `FINAL/DESIGN.md` e ativos gerados | registro 9157f12 e 6c2fb7e
@@ -23,13 +36,11 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 - [~ t_606fb2fb] P-04 MAT-49b Hoje, Sessão e Madrugada | g1 t_26066f02 (e6fc1c8) caiu em triage no 2º bloqueio (alvos do casco com 44 px na madrugada) e foi arquivada; g2 t_606fb2fb leva os alvos a 56 px só na madrugada e pede revisão; 49d e 38a religados à g2
 - [~ t_e1d0eaa8] P-05 MAT-36r-B: as 6 páginas de texto | depende de P-02
 - [~ t_d63c932a] P-06 MAT-37r: traz o fad75c0 (dados, sessão, Auth) e refaz Entrar, Criar conta, Recuperar, Começar e Conta | depende de P-02
-- [x 98c50de] P-02 MAT-49a base (g1 t_fdba5bed + g2 t_836284e3): revisão R3 aprovada, integrada por fast-forward em `int/refazer` (e73e75a..98c50de) | 11/11 12h30
-- [x 98c50de] P-02 MAT-49a base (g1 t_fdba5bed + g2 t_836284e3): revisão R3 aprovada, integrada por fast-forward em `int/refazer` (e73e75a..98c50de) | 11/11 12h30
 
-- [~ t_0aecd8d2] P-21 MAT-49d: recompor as cenas de marketing com as telas novas de Hoje, Sessão e Madrugada (só imagens, mesmos nomes de arquivo) | revisão R1 pediu mudanças (h1 84/88, botões 56 px no CSS do Início, movimento M3, capturas a 2×, 4 testes autorizados no comentário 369); de volta ao executor
+- [~ t_0aecd8d2] P-21 MAT-49d: recompor as cenas de marketing com telas do app legíveis (Início, Como funciona, Desenvolvimento, Entrar) e a faixa de cacau sem emenda | depende de 49b g2, 49c, 36r-A e 37r
 - [x] P-22 Calibração dos juízes válida nos 2 (rodada 0 e base49a_r1), com a F7 de até 2 destaques (equipe 14e47ed) | 11/11 11h20, sem SHA (staging)
 
-- [ ] P-23 Limpeza depois das páginas: apagar `web/src/paginas/publicas/PaginaSimples.tsx` (usada pelas 9 páginas públicas até a 36r-A e a 36r-B integrarem) e `web/src/componentes/casca/SubmenuEmBreve.tsx` (sem uso desde a base), com `apagar:` no cartão | revisão R1 pediu mudanças (CTAs cortados a 390 com fonte 200% e zoom 200%, capturas a 2×, 2 testes autorizados no comentário 370); de volta ao executor
+- [ ] P-23 Limpeza depois das páginas: apagar `web/src/paginas/publicas/PaginaSimples.tsx` e `web/src/componentes/casca/SubmenuEmBreve.tsx`, com `apagar:` no cartão | depois da 36r-A e da 36r-B integradas
 
 - [x] P-24 /sistema é informativa (coordenador, 11/11): não segura a integração da base; achados dos juízes (6,5–7,0) levados aos corpos dos 5 cartões de página | 11/11 11h20
 
@@ -47,17 +58,21 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 ## Dados ligados às telas novas (religados e soltos em 11/11)
 
 - [x] P-09 Corpos dos 6 cartões abaixo reescritos para a base nova antes do claim (prefixo `FINAL/OVERRIDE_DADOS.md`) e soltos em todo, presos aos pais | 11/11 9h50; sem SHA (é board)
-- [~ t_11ad28e6] P-10 MAT-37b: navegação pelo registro, convite, Começar completo e Família | depende de P-06 e P-09
-- [~ t_f7bdf7e8] P-11 MAT-38a: dados do Hoje, da Sessão e dos 7 formulários | depende de P-04, P-10 e P-09
+- [~ t_11ad28e6] P-10 MAT-37b: navegação pelo registro, convite, Começar completo e Família | depende de 37r (mesmos arquivos de conta e rotas)
+- [~ t_11ad28e6] P-10 MAT-37b: navegação pelo registro, convite, Começar completo e Família | depende de 37r (mesmos arquivos de conta e rotas)
 - [~ t_7c491177] P-12 MAT-38b: Histórico, detalhe, lixeira e notas | depende de P-11
-- [~ t_c9529365] P-13 MAT-39b: tummy time ligado à rotina | revisão R1 pediu mudanças (CTAs cortados a 390 com fonte 200% e zoom 200%, capturas a 2×, 2 testes autorizados no comentário 370); de volta ao executor
-- [~ t_4c921e60] P-14 MAT-40a: Comunidade ligada ao banco, no sistema Campo de mel aprovado para o site inteiro | depende de P-06
+- [~ t_c9529365] P-13 MAT-39b: tummy time ligado à rotina | depende de 38a e 36r-A
+- [~ t_4c921e60] P-14 MAT-40a: Comunidade ligada ao banco | rodando desde 12h30 sobre o head 4c86d1b da 37r (arquivos sem sobreposição)
 - [~ t_359ab800] P-15 MAT-40b: painel de moderação | depende de P-14
 - [D] P-16 MAT-37g t_1757260d "Entrar com Google" | espera Daniel decidir o Google OAuth; até lá o site mostra "a definir"
 
 ## Fechamento
 
-- [x 98c50de] P-02 MAT-49a base (g1 t_fdba5bed + g2 t_836284e3): revisão R3 aprovada, integrada por fast-forward em `int/refazer` (e73e75a..98c50de) | 11/11 12h30
-- [x 98c50de] P-02 MAT-49a base (g1 t_fdba5bed + g2 t_836284e3): revisão R3 aprovada, integrada por fast-forward em `int/refazer` (e73e75a..98c50de) | 11/11 12h30
-- [D] P-19 MAT-48 publicação: merge de `int/refazer` na main e publicação no Pages (os secrets e o projeto Supabase já existem desde 05/11) | espera a decisão de Daniel no fim, depois de P-18
+- [D] P-19 MAT-48 publicação | espera só o "pode" de Daniel. Checklist pronto:
+  1. `int/refazer` com todos os cartões integrados, `npm --prefix web run check` com exit 0 e a CI verde no último SHA (ci.yml, Ubuntu e Windows);
+  2. `git merge-base --is-ancestor origin/main origin/int/refazer` com exit 0 e o diff `main..int/refazer` conferido (sem `.env`, sem segredo, sem caminho de usuário);
+  3. com o "pode" de Daniel: `git push origin <SHA>:refs/heads/main`, só fast-forward;
+  4. o `pages.yml` roda no push da main e publica no GitHub Pages; o `banco-nuvem.yml` aplica as migrações no Supabase com os secrets que existem desde 05/11 (SUPABASE_ACCESS_TOKEN e os demais). O primeiro admin é opcional, pelo `workflow_dispatch`;
+  5. conferência pós-publicação: abrir o endereço do Pages, criar uma conta fictícia, registrar uma mamada e ver o Hoje; anotar o SHA e o horário no cofre.
+- [D] P-16 continua "a definir" (Entrar com Google), sem bloquear a publicação.
 - [x] P-20 MAT-41 PWA | cancelado: Daniel decidiu "sem PWA" (cartão t_ab1bd202 arquivado em 11/11); sem SHA
