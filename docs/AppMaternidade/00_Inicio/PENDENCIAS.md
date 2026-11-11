@@ -67,13 +67,15 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 
 - [x] P-37 Regra do líder (11/11): "capturas lidas pelo worker" (CARTOES_COMUM) vale como leitura pela sessão do OpenCode registrada no recibo (`images_read`), porque o perfil executor não tem ferramenta de imagem. Comentada em todos os cartões ativos; na 49c v2 o líder também olhou os blocos 3–5 (comentário 407)
 
-- [~ volta2] P-38 49b v2 (t_aee1c551): volta 1 dos juízes em Hoje, Sessão e Madrugada, aprovada (b11edc8) e integrada (7bbe832..bcdc89c, check 1333 testes, commits OK, 292). A volta 2 dos juízes espera a 49e (casco)
+- [~ galeria] P-38 49b v2 (t_aee1c551): volta 1 dos juízes em Hoje, Sessão e Madrugada, aprovada (b11edc8) e integrada (7bbe832..bcdc89c, check 1333 testes, commits OK, 292). A volta 2 dos juízes espera a 49e (casco)
 
 - [~ galeria] P-39 Volta 2 dos juízes cegos (a última automática) no Início, em Como funciona, em Cuidado e em Desenvolvimento, sobre o integrado 904a071. A calibração foi válida nos dois juízes; só o Fable não respondeu a uma imagem de Desenvolvimento, que vale pelo Astra. Nenhuma das 4 páginas passa: as notas ficaram entre 5,5 e 8,0, quase todas entre 7,0 e 7,5. No Início, 3 de 10 recortes passam; nas outras, nenhum. Na volta 1 elas iam de 5,8 a 7,5. Pela regra, vão para a galeria final do Daniel junto com as outras páginas. Detalhe em `DIRECOES_20261111/juizes/rodadas/RESULTADO_R2_publicas.md`
 
 - [x cdf6219] P-40 MAT-49e (casco: marca do rodapé, `.alvo-toque` 56, SAMU, menu 390, rodapé compacto em /app/*) aprovada (b8d69f0) e integrada (904a071..cdf6219, check 1345 testes, commits OK, 305) | 11/11
 
 - [ ] P-41 (depois da publicação; resposta t_8f03f81c) Cortar o contexto do AGENTS.md: hoje a linha 3 manda ler a pasta 00_Inicio inteira (cerca de 146 KB). O arquivo novo, que aponta só para o PENDENCIAS.md e para o cartão, está em `C:/OrchestrationLab/exports/Lote_Posts_20261111/F_autonomia/units/U-CONTEXTO/aplicar/item5_revisor/novo/AGENTS.md`. Revisar o diff e fazer o commit eu mesmo
+
+- [~ galeria] P-42 Volta 2 dos juízes em Hoje, Sessão e Madrugada sobre o integrado cdf6219: não passa. No Hoje, o Fable deu 6,4 a 7,3 e o Astra 6,4 a 7,6, mas o Astra reprovou F9 (frase de valor no alto) numa tela de uso; mandei ao coordenador (campainha) a proposta de F9 n/a em `/app/*`. Na Sessão, vale só o Astra (6,5 a 7,4), porque o Fable falhou a calibração. Detalhe em `juizes/rodadas/RESULTADO_R2_app.md`. Vai para a galeria do Daniel
 
 ## Dados ligados às telas novas (religados e soltos em 11/11)
 
