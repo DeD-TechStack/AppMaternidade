@@ -374,7 +374,72 @@ describe('Contato: bloco de e-mail', () => {
   })
 })
 
+// Os "a definir" ficam só no item a que se referem, fora da primeira dobra: nenhum bloco com "a definir"
+// entra nas duas primeiras seções de Privacidade e de Termos (só o aviso do casco aparece no alto).
+describe('"a definir" fora do alto das páginas', () => {
+  const titulosDe = (caminho: string) => {
+    const { container } = renderizarRota(caminho)
+    return within(container.querySelector('main')!)
+      .getAllByRole('heading', { level: 2 })
+      .map((titulo) => titulo.textContent)
+  }
+
+  it('Privacidade: a primeira seção é "Que dados o site vai guardar" e "Quem responde pelos dados" vem logo antes de "Seus direitos"', () => {
+    const titulos = titulosDe('/privacidade')
+    expect(titulos[0]).toBe('Que dados o site vai guardar')
+    expect(titulos.indexOf('Quem responde pelos dados')).toBe(titulos.indexOf('Seus direitos') - 1)
+    expect(PAGINAS_DE_TEXTO.privacidade.secoes.map(({ secao }) => secao.id)).toContain('secao-quem-responde-pelos-dados')
+  })
+
+  it('Termos: as seções vêm em ordem; "Sua conta" e "Quem pode usar" ficam juntas, logo antes de "Excluir a conta"', () => {
+    expect(titulosDe('/termos')).toEqual([
+      'O que é o AppMaternidade',
+      'Família, papéis e convites',
+      'Comunidade',
+      'Sua conta',
+      'Quem pode usar',
+      'Excluir a conta',
+      'Mudanças nos termos',
+      'Contato',
+    ])
+  })
+
+  for (const caminho of ['/privacidade', '/termos']) {
+    it(`${caminho}: nenhum parágrafo com "a definir" está nas duas primeiras seções`, () => {
+      const { container } = renderizarRota(caminho)
+      const secoes = [...container.querySelectorAll('main .pt-leitura > section')]
+      const comADefinir = secoes.flatMap((secao, posicao) =>
+        [...secao.querySelectorAll('p')].filter((p) => /a definir/.test(p.textContent ?? '')).map(() => posicao),
+      )
+      expect(comADefinir.length).toBeGreaterThan(0)
+      for (const posicao of comADefinir) expect(posicao).toBeGreaterThanOrEqual(2)
+      for (const secao of secoes.slice(0, 2)) expect(secao.textContent).not.toMatch(/a definir/)
+    })
+
+    it(`${caminho}: "Nesta versão de avaliação" não está nas duas primeiras seções, mas aparece mais abaixo`, () => {
+      const { container } = renderizarRota(caminho)
+      const secoes = [...container.querySelectorAll('main .pt-leitura > section')]
+      const posicoes = secoes.flatMap((secao, posicao) =>
+        [...secao.querySelectorAll('p')].filter((p) => /Nesta versão de avaliação/.test(p.textContent ?? '')).map(() => posicao),
+      )
+      expect(posicoes.length).toBeGreaterThan(0)
+      for (const posicao of posicoes) expect(posicao).toBeGreaterThanOrEqual(2)
+      for (const secao of secoes.slice(0, 2)) expect(secao.textContent).not.toMatch(/Nesta versão de avaliação/)
+    })
+  }
+})
+
 describe('Exclusão de conta: página de tarefa', () => {
+  it('"Responsável pelo AppMaternidade: a definir." é o último bloco de "Prazo" e não está em "Como pedir"', () => {
+    renderizarRota('/exclusao-de-conta')
+    const pedir = screen.getByRole('heading', { level: 2, name: 'Como pedir' }).closest('section')!
+    expect(pedir.textContent).not.toContain('a definir')
+    const prazo = screen.getByRole('heading', { level: 2, name: 'Prazo' }).closest('section')!
+    expect(prazo.querySelector('.pt-texto')!.lastElementChild!.textContent).toBe('Responsável pelo AppMaternidade: a definir.')
+    const primeiros = PAGINAS_DE_TEXTO.exclusao.secoes[1].blocos
+    expect(primeiros).toHaveLength(3)
+  })
+
   it('as seções vêm na ordem Antes de excluir, Como pedir, O que vai ser apagado, O que pode ficar guardado e Prazo', () => {
     const { container } = renderizarRota('/exclusao-de-conta')
     const titulos = within(container.querySelector('main')!).getAllByRole('heading', { level: 2 })

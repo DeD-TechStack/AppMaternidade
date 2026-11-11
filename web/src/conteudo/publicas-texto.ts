@@ -229,10 +229,6 @@ const PRIVACIDADE: PaginaDeTexto = {
   apoio: 'Seus dados, explicados sem pressa.',
   secoes: [
     {
-      secao: secao('Quem responde pelos dados'),
-      blocos: [TF.responsavel, TF.encarregado, ['Para falar sobre os seus dados: ', LINK_CONTATO, '.']],
-    },
-    {
       secao: secao('Que dados o site vai guardar'),
       blocos: [
         'O site vai guardar estes grupos de dados:',
@@ -289,6 +285,10 @@ const PRIVACIDADE: PaginaDeTexto = {
       ],
     },
     {
+      secao: secao('Quem responde pelos dados'),
+      blocos: [TF.responsavel, TF.encarregado, ['Para falar sobre os seus dados: ', LINK_CONTATO, '.']],
+    },
+    {
       secao: secao('Seus direitos'),
       blocos: [
         'O site vai permitir pedir a confirmação de que seus dados são tratados, o acesso a eles, a correção e a eliminação, além de revogar o consentimento. Levar os dados para outro serviço ainda está em avaliação, porque depende de regulamentação.',
@@ -325,17 +325,6 @@ const TERMOS: PaginaDeTexto = {
       ],
     },
     {
-      secao: secao('Quem pode usar'),
-      blocos: ['O plano é que só adultos tenham conta. Não vai haver conta de criança.', TF.idadeMinima],
-    },
-    {
-      secao: secao('Sua conta'),
-      blocos: [
-        TF.dadosFicticios,
-        'O plano é uma conta por pessoa, sem dividir o acesso com ninguém. O acesso vai ser por e-mail e senha.',
-      ],
-    },
-    {
       secao: secao('Família, papéis e convites'),
       blocos: [
         'O responsável vai poder convidar outras pessoas, mudar o papel delas e remover o acesso. Só o pai, a mãe ou o responsável legal vai poder cadastrar o bebê.',
@@ -350,6 +339,17 @@ const TERMOS: PaginaDeTexto = {
           '. A moderação vai poder ocultar ou remover o que as violar. Usar a denúncia como retaliação também viola as regras.',
         ],
       ],
+    },
+    {
+      secao: secao('Sua conta'),
+      blocos: [
+        TF.dadosFicticios,
+        'O plano é uma conta por pessoa, sem dividir o acesso com ninguém. O acesso vai ser por e-mail e senha.',
+      ],
+    },
+    {
+      secao: secao('Quem pode usar'),
+      blocos: ['O plano é que só adultos tenham conta. Não vai haver conta de criança.', TF.idadeMinima],
     },
     {
       secao: secao('Excluir a conta'),
@@ -391,7 +391,6 @@ const EXCLUSAO: PaginaDeTexto = {
       secao: secao('Como pedir'),
       blocos: [
         TF.pedidoExclusao,
-        TF.responsavel,
         'Esta página abre sem login, para qualquer pessoa ler. O pedido vai exigir que a pessoa confirme que a conta é dela, e o jeito de confirmar ainda será definido.',
         // A tela Família e conta ainda não é rota: o Contato é o único canal real.
         { botao: 'Ir para Contato', para: CAMINHO_CONTATO },
@@ -419,7 +418,7 @@ const EXCLUSAO: PaginaDeTexto = {
     },
     {
       secao: secao('Prazo'),
-      blocos: [TF.prazoExclusao, 'O plano é que a pessoa receba um comprovante quando a exclusão terminar.'],
+      blocos: [TF.prazoExclusao, 'O plano é que a pessoa receba um comprovante quando a exclusão terminar.', TF.responsavel],
     },
   ],
 }
