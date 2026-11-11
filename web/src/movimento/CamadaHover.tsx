@@ -24,14 +24,12 @@ interface Props {
   classeCamada?: string
 }
 
-// A cor de foco do tema (--cor-foco) é igual ou quase igual à do fundo da camada (--cor-texto) nos
-// dois temas, então o anel de foco dos focáveis de dentro dela some. Dentro da camada o contorno
-// usa a cor do papel (--cor-fundo), que contrasta com o fundo da camada. O contorno de 2 px e o
-// afastamento de 2 px continuam os da regra global.
+// A camada é de cacau com o texto de papel (DESIGN.md 5, hover). O anel de foco de cacau sumiria
+// nela: dentro da camada o contorno usa o papel. O contorno de 2 px e o afastamento de 2 px
+// continuam os da regra global.
 // A camada herda o arredondamento do cartão (rounded-[inherit]); o cartão não leva overflow
 // hidden, que cortaria o anel de foco dos focáveis de dentro.
-const BASE_DA_CAMADA =
-  'rounded-[inherit] bg-[var(--cor-texto)] text-[color:var(--cor-fundo)] [&_:focus-visible]:outline-[color:var(--cor-fundo)]'
+const BASE_DA_CAMADA = 'rounded-[inherit] bg-cacau text-papel [&_:focus-visible]:outline-papel'
 
 export function CamadaHover({ children, camada, className, classeCamada }: Props) {
   const reduzido = usePrefereMovimentoReduzido()

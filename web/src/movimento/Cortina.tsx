@@ -2,15 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import { motion } from 'motion/react'
 import { CATALOGO } from './catalogo.ts'
 import { usePrefereMovimentoReduzido, useTelaLarga } from './reduzido.ts'
-import { TracoDesenhado } from './TracoDesenhado.tsx'
 
-// M2: a cortina de abertura. Colunas verticais com duas camadas (a de cima na cor do texto, a de
-// baixo na cor de destaque) sobem uma depois da outra, da esquerda para a direita, e revelam a
-// página. A sobreposição é fixa, não pega clique e fica acima da página sem mudar o layout de
-// nada. Roda uma vez por sessão do navegador: a marca fica em sessionStorage, então uma segunda
-// montagem, ou a volta de uma aba em segundo plano, não a repete. Com movimento reduzido, ou
-// quando já rodou, não renderiza nada. `aoTerminar` é chamado quando a cortina some do DOM, e
-// também quando ela nem chegou a aparecer, para quem espera por ela não ficar parado.
+// M2: a cortina do primeiro carregamento. Colunas verticais (6 no largo, 4 no estreito) com duas
+// camadas: a de cima, de cacau, sobe primeiro; a de baixo, de mel, sobe 120 ms depois, e a página
+// aparece. A sobreposição é fixa, não pega clique e não muda o layout de nada. Sem tela de abertura:
+// a página já está montada por baixo. Roda uma vez por sessão do navegador (a marca fica em
+// sessionStorage). Com movimento reduzido, ou quando já rodou, não renderiza nada. `aoTerminar` é
+// chamado quando a cortina some, e também quando ela nem chegou a aparecer.
 
 const MARCA = 'cortina-vista'
 
@@ -32,12 +30,10 @@ function marcarComoVista(): void {
 
 interface Props {
   aoTerminar?: () => void
-  /** Mostra o traço desenhado no centro, antes de as colunas subirem. */
-  comTraco?: boolean
 }
 
-export function Cortina({ aoTerminar, comTraco = false }: Props) {
-  const { duracaoMs, curva, escalonamentoMs, atrasoMs, deslocamentoPct, colunas, atrasoCamadaMs } = CATALOGO.M2
+export function Cortina({ aoTerminar }: Props) {
+  const { duracaoMs, curva, escalonamentoMs, deslocamentoPct, colunas, atrasoCamadaMs } = CATALOGO.M2
   const reduzido = usePrefereMovimentoReduzido()
   const largo = useTelaLarga()
   const [ativa, setAtiva] = useState(() => !jaFoiVista())
@@ -57,43 +53,31 @@ export function Cortina({ aoTerminar, comTraco = false }: Props) {
 
   if (pular) return null
 
-  // Sem o traço não há o que esperar: as colunas começam logo.
-  const inicioMs = comTraco ? atrasoMs : 0
   const subida = { y: `-${deslocamentoPct}%` }
   const transicao = (atraso: number) => ({ duration: duracaoMs / 1000, ease: curva, delay: atraso / 1000 })
 
   return (
-    <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-50 flex overflow-hidden">
+    <div aria-hidden="true" data-cortina="" className="pointer-events-none fixed inset-0 z-50 flex overflow-hidden">
       {Array.from({ length: quantas }, (_, i) => {
         const ultima = i === quantas - 1
         return (
           <div key={i} className="relative flex-1">
             <motion.div
-              className="absolute inset-0 bg-[var(--cor-destaque)]"
+              className="absolute inset-0 bg-mel"
               initial={{ y: '0%' }}
               animate={subida}
-              transition={transicao(inicioMs + i * escalonamentoMs + atrasoCamadaMs)}
+              transition={transicao(i * escalonamentoMs + atrasoCamadaMs)}
               onAnimationComplete={ultima ? () => setAtiva(false) : undefined}
             />
             <motion.div
-              className="absolute inset-0 bg-[var(--cor-texto)]"
+              className="absolute inset-0 bg-cacau"
               initial={{ y: '0%' }}
               animate={subida}
-              transition={transicao(inicioMs + i * escalonamentoMs)}
+              transition={transicao(i * escalonamentoMs)}
             />
           </div>
         )
       })}
-      {comTraco && (
-        <motion.div
-          className="absolute inset-0 grid place-items-center text-[color:var(--cor-fundo)]"
-          initial={{ y: '0%' }}
-          animate={subida}
-          transition={transicao(inicioMs)}
-        >
-          <TracoDesenhado className="w-48" />
-        </motion.div>
-      )}
     </div>
   )
 }
