@@ -167,17 +167,21 @@ export function CriarConta() {
             erro={erros.senha ?? (campoDoErro === 'senha' && erroDoEnvio ? textoDoErro(erroDoEnvio) : null)}
             refEntrada={senhaRef}
           />
-          <p className="cm-pequeno text-[var(--cor-texto-2)]">
-            {CRIAR_CONTA.termos.antes}
-            <Link to="/termos" className="text-[var(--cor-link)]">
-              {CRIAR_CONTA.termos.termos}
-            </Link>
-            {CRIAR_CONTA.termos.meio}
-            <Link to="/privacidade" className="text-[var(--cor-link)]">
-              {CRIAR_CONTA.termos.privacidade}
-            </Link>
-            {CRIAR_CONTA.termos.depois}
-          </p>
+          <div>
+            <p className="cm-pequeno text-[var(--cor-texto-2)]">{CRIAR_CONTA.termos.frase}</p>
+            <ul className="m-0 flex list-none flex-wrap gap-x-5 p-0">
+              <li>
+                <Link to="/termos" className={`${LINK_ALVO} cm-pequeno`}>
+                  {CRIAR_CONTA.termos.termos}
+                </Link>
+              </li>
+              <li>
+                <Link to="/privacidade" className={`${LINK_ALVO} cm-pequeno`}>
+                  {CRIAR_CONTA.termos.privacidade}
+                </Link>
+              </li>
+            </ul>
+          </div>
           <button type="submit" disabled={enviando} className={BOTAO_PRINCIPAL}>
             {enviando ? COMUM.criandoConta : CRIAR_CONTA.botao}
           </button>

@@ -433,9 +433,8 @@ describe('/criar-conta', () => {
     expect(screen.getByText('É o nome que a família vai ver.')).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Termos de uso' }).getAttribute('href')).toBe('/termos')
     expect(screen.getByRole('link', { name: 'Política de privacidade' }).getAttribute('href')).toBe('/privacidade')
-    expect(screen.getByText(/^Ao criar a conta, você concorda com os/).textContent).toBe(
-      'Ao criar a conta, você concorda com os Termos de uso e a Política de privacidade.',
-    )
+    // Os dois links saem da frase (alvo de 44 px cada um): a frase termina em dois pontos.
+    expect(screen.getByText(/^Ao criar a conta, você concorda com/).textContent).toBe('Ao criar a conta, você concorda com:')
   })
 
   it('o aviso do banco de demonstração só aparece no modo Supabase, e o da MAT-48a só no modo memória', async () => {

@@ -129,6 +129,38 @@ describe('axe-core, rota por rota, nos dois temas', () => {
   }
 })
 
+describe('alvos de 44 px nos links', () => {
+  it('todo link das telas, também o que está dentro de um parágrafo, leva a classe de alvo (alvo-toque)', async () => {
+    const semClasse: string[] = []
+    for (const [nome, montar] of montagens) {
+      const { container, unmount } = await montar(claro())
+      await screen.findByRole('heading', { level: 1 })
+      await esperarCarregar()
+      for (const tela of container.querySelectorAll<HTMLElement>('main, nav[aria-label="Conta"]')) {
+        for (const link of tela.querySelectorAll<HTMLElement>('a')) {
+          if (!CLASSE_DE_ALVO.test(link.className)) semClasse.push(`${nome}: ${link.outerHTML.slice(0, 120)}`)
+        }
+      }
+      unmount()
+    }
+    expect(semClasse).toEqual([])
+  })
+
+  it('/criar-conta: os links dos Termos e da Política ficam fora da frase, cada um com alvo de 44 px na mesma lista', async () => {
+    renderizarComDados('/criar-conta')
+    await screen.findByRole('button', { name: 'Criar conta' })
+
+    const termos = screen.getByRole('link', { name: 'Termos de uso' })
+    const politica = screen.getByRole('link', { name: 'Política de privacidade' })
+    for (const link of [termos, politica]) {
+      expect(link.classList.contains('alvo-toque')).toBe(true)
+      expect(link.closest('p')).toBeNull()
+    }
+    expect(screen.getByText(/^Ao criar a conta, você concorda com/).textContent).toBe('Ao criar a conta, você concorda com:')
+    expect(termos.closest('ul')).toBe(politica.closest('ul'))
+  })
+})
+
 describe('rótulos e erros ligados aos campos', () => {
   it('todo campo de toda rota tem um rótulo visível ligado a ele', async () => {
     for (const [nome, montar] of montagens) {

@@ -105,12 +105,11 @@ export const CRIAR_CONTA = {
   botao: 'Criar conta',
   jaTemConta: 'Já tem conta?',
   entrar: 'Entrar',
+  // A frase termina em dois pontos e cada documento é um link em linha própria (alvo de 44 px).
   termos: {
-    antes: 'Ao criar a conta, você concorda com os ',
+    frase: 'Ao criar a conta, você concorda com:',
     termos: 'Termos de uso',
-    meio: ' e a ',
     privacidade: 'Política de privacidade',
-    depois: '.',
   },
   confirmacao: (email: string) => `Enviamos um link de confirmação para ${email}. Abra o link para entrar.`,
 } as const
