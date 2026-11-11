@@ -69,6 +69,8 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 
 - [~ t_5fc82bb8] P-38 49b v2 (t_aee1c551): volta 1 dos juízes em Hoje, Sessão e Madrugada, aprovada (b11edc8) e integrada (7bbe832..bcdc89c, check 1333 testes, commits OK, 292). A volta 2 dos juízes espera a 49e (casco)
 
+- [~ galeria] P-39 Volta 2 dos juízes cegos (a última automática) no Início, em Como funciona, em Cuidado e em Desenvolvimento, sobre o integrado 904a071. A calibração foi válida nos dois juízes; só o Fable não respondeu a uma imagem de Desenvolvimento, que vale pelo Astra. Nenhuma das 4 páginas passa: as notas ficaram entre 5,5 e 8,0, quase todas entre 7,0 e 7,5. No Início, 3 de 10 recortes passam; nas outras, nenhum. Na volta 1 elas iam de 5,8 a 7,5. Pela regra, vão para a galeria final do Daniel junto com as outras páginas. Detalhe em `DIRECOES_20261111/juizes/rodadas/RESULTADO_R2_publicas.md`
+
 ## Dados ligados às telas novas (religados e soltos em 11/11)
 
 - [x] P-09 Corpos dos 6 cartões abaixo reescritos para a base nova antes do claim (prefixo `FINAL/OVERRIDE_DADOS.md`) e soltos em todo, presos aos pais | 11/11 9h50; sem SHA (é board)
