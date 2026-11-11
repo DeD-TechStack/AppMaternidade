@@ -33,6 +33,8 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 
 - [x] P-24 /sistema é informativa (coordenador, 11/11): não segura a integração da base; achados dos juízes (6,5–7,0) levados aos corpos dos 5 cartões de página | 11/11 11h20
 
+- [~ t_889376b8] P-26 Início volta 1 dos juízes cegos (rodada inicio_r1 válida, notas 5,8–7,5, REPROVA volta 1): MAT-49c v2 refaz números e selos no celular, depoimentos e fechamento x rodapé; a 49d (P-21) refaz as cenas com telas do app legíveis e a faixa de cacau sem emenda. Depois, volta 2 dos juízes; se reprovar, vai a Daniel com GALERIA | `juizes/rodadas/inicio_r1/DEVOLUCAO.md`
+
 ## Dados ligados às telas novas (religados e soltos em 11/11)
 
 - [x] P-09 Corpos dos 6 cartões abaixo reescritos para a base nova antes do claim (prefixo `FINAL/OVERRIDE_DADOS.md`) e soltos em todo, presos aos pais | 11/11 9h50; sem SHA (é board)
