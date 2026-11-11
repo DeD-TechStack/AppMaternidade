@@ -34,18 +34,12 @@ function irParaSecao(evento: MouseEvent<HTMLAnchorElement>, id: string) {
 }
 
 /**
- * O índice "Nesta página": um link sublinhado, de 44 px no mínimo, para cada `h2` da página. Em tela larga
- * ele é uma faixa entre a abertura e a leitura, com os links em colunas e um fio só em cima; em tela estreita
- * vira um `<details>` fechado ("Nesta página", 44 px no mínimo), para a primeira tela mostrar o texto.
+ * O índice "Nesta página": um link sublinhado, de 44 px no mínimo, para cada `h2` da página, numa lista
+ * vertical só, igual nas seis páginas. Em tela larga ele fica entre a abertura e a leitura, na coluna de
+ * leitura; em tela estreita vira um `<details>` fechado ("Nesta página", 44 px no mínimo), para a primeira
+ * tela mostrar o texto.
  */
-export function IndiceDaPagina({
-  secoes,
-  sempreAberto = false,
-}: {
-  secoes: readonly SecaoDeLeitura['secao'][]
-  /** Sem recolher em tela estreita: o bloco do índice fica com a altura da lista inteira (página Sobre). */
-  sempreAberto?: boolean
-}) {
+export function IndiceDaPagina({ secoes }: { secoes: readonly SecaoDeLeitura['secao'][] }) {
   const idRotulo = useId()
   const compacto = useSyncExternalStore(assinar, ler, () => false)
 
@@ -61,7 +55,7 @@ export function IndiceDaPagina({
     </ul>
   )
 
-  if (compacto && !sempreAberto) {
+  if (compacto) {
     return (
       <nav className="pt-indice" aria-label={ROTULO_INDICE}>
         <details className="pt-indice-detalhes">

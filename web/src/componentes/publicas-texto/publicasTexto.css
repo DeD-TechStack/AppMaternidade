@@ -1,21 +1,26 @@
 /* Páginas públicas de leitura longa (Regras, Privacidade, Termos, Exclusão, Contato, Sobre).
    Só valores dos tokens: cores, raios e as duas famílias vêm de tema.css e tokens.css. Classes `pt-*`.
-   Ordem da página: abertura (título, segunda linha, botão e painel de mel), índice, leitura. */
+   Ordem da página: abertura (título, segunda linha, botão e painel de mel), índice, leitura.
+   A leitura é uma coluna só, centrada, de 680 px (índice e seções); o mesmo fio abre cada bloco. */
 @layer components {
-  /* A página é uma pilha de três partes, com um respiro de papel entre elas (32 em 390, 48 em 1440). */
+  /* A página é uma pilha de três partes; o respiro de papel entre elas é de 40 (390) a 64 (1440). */
   .pt-pagina {
+    --pt-respiro: clamp(40px, 1.524vw + 34.06px, 64px);
+    --pt-coluna: 680px;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    row-gap: clamp(32px, 1.524vw + 26.06px, 48px);
     padding-top: clamp(28px, 1.143vw + 23.5px, 40px);
+    padding-bottom: clamp(24px, 1.143vw + 19.5px, 40px);
   }
 
-  /* Abertura: no celular o título e o painel de mel se empilham; a partir de 1100 px ficam lado a lado. */
+  /* Abertura: no celular o título e o painel de mel se empilham (o painel depois do botão); a partir de 1100 px
+     ficam lado a lado, o texto à esquerda e o painel à direita. */
   .pt-abertura {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: 24px;
     align-items: start;
+    margin-bottom: var(--pt-respiro);
   }
 
   .pt-cabeca {
@@ -39,28 +44,36 @@
     text-wrap: balance;
   }
 
-  /* Os primeiros itens de uma lista (Privacidade): a lista inteira vem depois, na sua seção. */
-  .pt-cabeca > .pt-abertura-lista {
-    margin-top: 24px;
-  }
-
   /* O botão de ação principal e o cartão de e-mail: logo depois do texto da abertura. */
   .pt-cabeca > .pt-acao,
   .pt-cabeca > .pt-email {
     margin-top: 24px;
   }
 
-  /* Painel de mel: a frase de apoio repetida em Literata itálica e o desenho da página. Uma peça só por página.
-     No celular o respiro é de 24; em tela larga, de 40. */
-  .cm-painel.pt-painel {
+  /* Figura da abertura: o painel de mel e, logo abaixo dele, a frase de apoio. */
+  .pt-figura {
+    display: grid;
+    justify-items: start;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  /* Painel de mel: só o desenho, do tamanho do desenho. A figura tem a altura fixa (220 no celular, 300 em tela
+     larga) e a largura que o traço pedir (se não couber, o traço encolhe dentro da caixa); o painel é a figura mais o
+     respiro de 24 e abraça a figura nas duas larguras. No celular o painel tem uns 270 px de altura, abaixo de 40% da
+     janela de 844 px. */
+  .pt-figura > .cm-painel.pt-painel {
+    inline-size: fit-content;
+    max-inline-size: 100%;
     padding: 24px;
   }
 
+  /* A frase de apoio, no degrau h4 da escala (20/26 em 390, 24/30 em 1440), embaixo do painel. */
   .pt-apoio {
     margin: 0;
     font-family: var(--fonte-titulo);
-    font-size: 1.5rem;
-    line-height: 1.875rem;
+    font-size: 1.25rem;
+    line-height: 1.625rem;
     font-style: italic;
     font-weight: 500;
     text-wrap: balance;
@@ -69,30 +82,18 @@
   /* O desenho é um traço preto sobre o mel: inteiro dentro da caixa, centrado, sem recorte. */
   .pt-ilustracao {
     display: block;
-    width: 100%;
-    height: 144px;
-    margin-top: 16px;
+    width: auto;
+    max-width: 100%;
+    height: 220px;
+    margin: 0 auto;
     object-fit: contain;
     object-position: center;
   }
 
-  /* Na leitura (Exclusão, depois do passo a passo) o painel tem a largura do texto e mais respiro em volta. */
-  .pt-leitura > .cm-painel.pt-painel {
-    max-inline-size: 40rem;
-    margin-top: 40px;
-  }
-
-  .pt-leitura > .cm-painel.pt-painel .pt-ilustracao {
-    height: 200px;
-  }
-
   @media (min-width: 1100px) {
     .pt-abertura {
-      gap: 48px;
-    }
-
-    .pt-abertura[data-painel='abertura'] {
       grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+      gap: 48px;
       align-items: center;
     }
 
@@ -101,60 +102,58 @@
     }
 
     .pt-cabeca > .pt-acao,
-    .pt-cabeca > .pt-email,
-    .pt-cabeca > .pt-abertura-lista {
-      margin-top: 32px;
+    .pt-cabeca > .pt-email {
+      margin-top: 48px;
     }
 
-    .pt-cabeca > .pt-abertura-lista + .pt-acao {
-      margin-top: 24px;
-    }
-
-    .cm-painel.pt-painel {
-      padding: 40px;
+    /* À direita, alinhada à margem da página. A frase de apoio não alarga a figura (largura 0 com mínimo de 100%):
+       ela quebra na largura do painel, com pelo menos 240 px. */
+    .pt-figura {
+      inline-size: fit-content;
+      min-inline-size: min(100%, 240px);
+      max-inline-size: 100%;
+      justify-self: end;
+      justify-items: end;
+      gap: 16px;
     }
 
     .pt-apoio {
-      font-size: 1.875rem;
-      line-height: 2.25rem;
+      inline-size: 0;
+      min-inline-size: 100%;
+      font-size: 1.5rem;
+      line-height: 1.875rem;
+      text-align: end;
     }
 
     .pt-ilustracao {
-      height: 240px;
-      margin-top: 24px;
-    }
-
-    .pt-leitura > .cm-painel.pt-painel .pt-ilustracao {
-      height: 240px;
+      height: 300px;
     }
   }
 
-  /* Sobre (data-desenho="ate-o-indice"): o desenho não passa da altura do bloco do índice. O índice fica aberto nas
-     duas larguras: no celular são o rótulo (39) e 4 linhas de 44, uns 219 px, e o desenho tem 144; em tela larga os
-     links ficam em 2 colunas de 2 linhas, uns 131 px, e o desenho tem 120. */
-  .pt-pagina[data-desenho='ate-o-indice'] .pt-ilustracao {
-    height: 144px;
+  /* A coluna de leitura: o índice e a leitura têm a mesma largura e o mesmo eixo, no meio da página. */
+  .pt-indice,
+  .pt-leitura {
+    box-sizing: border-box;
+    inline-size: 100%;
+    max-inline-size: var(--pt-coluna);
+    margin-inline: auto;
   }
 
-  @media (min-width: 1100px) {
-    .pt-pagina[data-desenho='ate-o-indice'] .pt-ilustracao {
-      height: 120px;
-    }
-
-    .pt-pagina[data-desenho='ate-o-indice'] .pt-indice-rotulo + .pt-indice-lista {
-      grid-template-columns: repeat(2, minmax(0, 15rem));
-    }
+  /* O mesmo fio abre o índice, o parágrafo de abertura e cada seção: nenhum fio por bloco a mais, nenhum a menos. */
+  .pt-indice,
+  .pt-leitura > .cm-lide,
+  .pt-leitura > .pt-secao {
+    border-top: 1px solid var(--cor-fio-suave);
+    padding-top: 32px;
   }
 
-  /* Índice "Nesta página": corpo pequeno (15/22) e um fio só, no índice inteiro. */
+  /* Índice "Nesta página": corpo pequeno (15/22), uma lista vertical só nas seis páginas. */
   .pt-indice {
-    margin: 0;
+    margin-block: 0;
   }
 
   .pt-indice-rotulo {
     margin: 0;
-    padding-top: 16px;
-    border-top: 1px solid var(--cor-fio-suave);
     font-family: var(--fonte-texto);
     font-size: 0.9375rem;
     line-height: 1.375rem;
@@ -162,24 +161,15 @@
   }
 
   .pt-indice-lista {
-    margin: 0;
+    margin: 4px 0 0;
     padding: 0;
     list-style: none;
   }
 
-  /* Em tela larga os links correm em colunas (4 em 1440), na ordem da página, de linha em linha. */
-  .pt-indice-rotulo + .pt-indice-lista {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
-    column-gap: 32px;
-    margin-top: 4px;
-  }
-
-  /* Em tela estreita o índice é um <details> fechado: o resumo é uma linha de 48 px com a seta, entre dois
-     filetes, sem fundo. */
-  .pt-indice-detalhes {
-    border-top: 1px solid var(--cor-fio-suave);
-    border-bottom: 1px solid var(--cor-fio-suave);
+  /* Em tela estreita o índice é um <details> fechado: o resumo é uma linha de 48 px com a seta, sem fundo.
+     O fio de cima é o do próprio índice. */
+  .pt-indice:has(> .pt-indice-detalhes) {
+    padding-top: 0;
   }
 
   .pt-indice-resumo {
@@ -223,20 +213,17 @@
     text-decoration-thickness: 3px;
   }
 
-  /* Leitura: Outfit 18/28. O texto corre à esquerda em 49 ch (o "0" do Outfit é largo, 1 ch ≈ 11,8 px e a letra
-     média ≈ 8,1 px: 49 ch dão as 68 a 72 letras por linha pedidas); os fios das seções vão de ponta a ponta. */
+  /* Leitura: Outfit 18/28 numa coluna de 680 px (uns 80 letras por linha), centrada. As seções se separam por
+     40 de papel e o fio de cima (acima). */
   .pt-leitura {
+    margin-top: var(--pt-respiro);
     font-family: var(--fonte-texto);
     font-size: 1.125rem;
     line-height: 1.75rem;
   }
 
   .pt-leitura > * + * {
-    margin-top: 24px;
-  }
-
-  .pt-leitura > .cm-lide {
-    max-width: 40rem;
+    margin-top: 40px;
   }
 
   /* Cartão de e-mail (Contato): o rótulo, o endereço e o botão, e mais nada. Texto e botão lado a lado quando
@@ -276,19 +263,6 @@
     overflow-wrap: anywhere;
   }
 
-  .pt-leitura > .pt-secao {
-    margin-top: 40px;
-    padding-top: 32px;
-    border-top: 1px solid var(--cor-fio-suave);
-  }
-
-  /* A primeira seção vem logo depois do índice, que já tem o seu fio: ela não leva o dela. */
-  .pt-leitura > .pt-secao:first-child {
-    margin-top: 0;
-    padding-top: 0;
-    border-top: 0;
-  }
-
   /* h2 em Literata: 36/42 em 1440 e 24/30 em 390 (o degrau h3 da escala; o h2 de 56 é de página de venda). */
   .pt-h2,
   .pt-h3 {
@@ -323,12 +297,6 @@
 
   .pt-texto > * + * {
     margin-top: 16px;
-  }
-
-  .pt-texto > p,
-  .pt-texto > .pt-lista,
-  .pt-texto > .pt-titulados {
-    max-inline-size: 49ch;
   }
 
   .pt-texto p {
@@ -385,13 +353,12 @@
     margin-top: 8px;
   }
 
-  /* Lista de 4 itens ou mais: em tela larga corre em duas colunas, de ponta a ponta da leitura, e não mais numa
-     tira fina à esquerda. As colunas se equilibram sozinhas (a diferença é de um item no máximo). */
-  @media (min-width: 900px) {
-    .pt-texto > .pt-lista.pt-lista-colunas {
-      max-inline-size: none;
+  /* Lista de 4 itens ou mais e só de itens curtos: corre em duas colunas dentro da coluna de leitura (a ordem
+     segue de cima para baixo e as colunas se equilibram). Lista de itens longos fica numa coluna só. */
+  @media (min-width: 640px) {
+    .pt-lista.pt-lista-colunas {
       columns: 2;
-      column-gap: 64px;
+      column-gap: 40px;
     }
 
     .pt-lista-colunas > li {
@@ -422,10 +389,6 @@
     border: 1px solid var(--cor-fio-suave);
     border-radius: var(--radius-cartao);
     background-color: var(--cor-cartao);
-  }
-
-  .pt-texto > .pt-tabela {
-    max-inline-size: 60rem;
   }
 
   .pt-tabela table {
