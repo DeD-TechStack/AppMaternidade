@@ -43,7 +43,7 @@ As ilustrações e as cenas do site são imagens geradas pelo Codex CLI 0.167.0 
 
 | Pacote | Versão | Licença | Cópia da licença | sha256 da licença | Uso |
 |---|---|---|---|---|---|
-| `motion` | 12.43.0 | MIT | `web/licencas/motion-LICENSE.md` | `1bf0dc3f7727723e5a032ed12164a47cf92c05204cb1a3485f123c24e2833ed1` | Animações do Início (MAT-44c-2), importadas só de `motion/react` e só em `web/src/movimento/`, `web/src/componentes/terceiros/`, `web/src/componentes/vitrine/` e `web/src/paginas/Inicio.tsx`. Traz o `framer-motion` 12.43.0 como dependência dele, não do site. |
+| `motion` | 12.43.0 | MIT | `web/licencas/motion-LICENSE.md` | `1bf0dc3f7727723e5a032ed12164a47cf92c05204cb1a3485f123c24e2833ed1` | Animações do Início (MAT-44c-2), importadas só de `motion/react` e só em `web/src/movimento/`, `web/src/componentes/terceiros/`, `web/src/componentes/inicio/` e `web/src/paginas/Inicio.tsx`. Traz o `framer-motion` 12.43.0 como dependência dele, não do site. |
 
 Escolha da versão (MAT-44c-2a, 06/11/2026): `npm view motion@12 version --json` listou até `12.43.0`, a maior da major 12 (D-2 da MAT-44c). Instalado com `npm --prefix web i --save-exact motion@12.43.0`. A cópia da licença é o `LICENSE.md` do pacote instalado, sem alteração (mesmo sha256).
 
