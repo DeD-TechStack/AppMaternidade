@@ -44,7 +44,7 @@ Legenda: `[ ]` aberto · `[~ t_id]` em cartão · `[D]` espera Daniel · `[x SHA
 
 - [x] P-24 /sistema é informativa (coordenador, 11/11): não segura a integração da base; achados dos juízes (6,5–7,0) levados aos corpos dos 5 cartões de página | 11/11 11h20
 
-- [~ t_889376b8] P-26 Início volta 1 dos juízes cegos (rodada inicio_r1 válida, notas 5,8–7,5, REPROVA volta 1): MAT-49c v2 refaz números e selos no celular, depoimentos e fechamento x rodapé; a 49d (P-21) refaz as cenas com telas do app legíveis e a faixa de cacau sem emenda. Depois, volta 2 dos juízes; se reprovar, vai a Daniel com GALERIA | `juizes/rodadas/inicio_r1/DEVOLUCAO.md`
+- [~ t_0aecd8d2] P-26 Início: a 49c v2 aplicou a volta 1 dos juízes, foi aprovada (9a441ba) e integrada (8e0a1f6..dae75c3, check 1109 testes, commits OK). Falta a 49d corrigir as 2 cenas de dois tablets e, depois, a volta 2 dos juízes
 
 - [~ t_54db34e0] P-27 Como funciona, Cuidado compartilhado e Desenvolvimento: volta 1 dos juízes cegos (3 rodadas válidas, notas 6,2–7,4, REPROVA volta 1). A MAT-36r-A v2 aplica os itens das páginas e a 49d (P-21) refaz as cenas. Depois, volta 2; se reprovar, vai a Daniel com GALERIA | `juizes/rodadas/DEVOLUCAO_36rA.md`
 
