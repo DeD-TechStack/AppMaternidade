@@ -199,6 +199,14 @@
     gap: 8px;
   }
 
+  /* C1, menu do celular: as linhas "Em breve" (nome da área + etiqueta) passavam do painel em 15 px a 195. A linha
+     quebra e a etiqueta desce para baixo do nome quando não cabe; recuo de 8 de cada lado e gaps da escala. */
+  .sb-menu-item {
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    padding-inline: 8px;
+  }
+
   /* C1, as etiquetas empilhadas (item de 32 de altura): se o rótulo quebrar, o item cresce e não se sobrepõe. */
   .sb-pilha > li {
     height: auto;

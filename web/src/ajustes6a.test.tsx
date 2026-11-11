@@ -306,4 +306,12 @@ describe('C1: o zoom de 200% (zoom200.css)', () => {
     expect(corpos(minusculo, '.vt-cta').join('\n')).toMatch(/max-width:\s*100%\s*;/)
     expect(corpos(minusculo, '.sb-moldura-miolo').join('\n')).toMatch(/white-space:\s*normal\s*;/)
   })
+
+  it('as linhas "Em breve" do menu do celular quebram (flex-wrap) para a etiqueta descer sem passar do painel', () => {
+    const minusculo = emMedia(css, 'max-width: 359px')
+    const regra = corpos(minusculo, '.sb-menu-item').join('\n')
+    expect(regra).toMatch(/flex-wrap:\s*wrap\s*;/)
+    expect(regra).toMatch(/gap:\s*4px\s+8px\s*;/)
+    expect(regra).toMatch(/padding-inline:\s*8px\s*;/)
+  })
 })
