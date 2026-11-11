@@ -2,7 +2,7 @@
 // (G1, G11, G12, FONTES, CAIXA, SOMBRA, 3D): um caso que passa, um que falha e a falha fechada.
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { JSDOM } from 'jsdom'
+import { JSDOM, VirtualConsole } from 'jsdom'
 import {
   REGRAS,
   SIGLAS_PERMITIDAS,
@@ -13,6 +13,7 @@ import {
   canonico,
   coletarNaPagina,
   contraste,
+  familiasDe,
   fontes,
   fundoReal,
   g1,
@@ -65,6 +66,8 @@ function criar(extra = {}) {
       color: TINTA,
       opacity: '1',
       transform: 'none',
+      rotate: 'none',
+      scale: 'none',
       perspective: 'none',
       transformStyle: 'flat',
       filter: 'none',
@@ -192,10 +195,109 @@ describe('G11: alvo de toque e contraste', () => {
   it('o que não está visível não conta', () => {
     assert.equal(g11([alvo(44, 44), alvo(10, 10, { visivel: false })], 'claro').ok, true)
   })
+
+  describe('R1: o texto dos controles entra no contraste', () => {
+    const controle = (extra = {}) =>
+      criar({ tag: 'input', texto: '', textoControle: 'Maria', rect: { x: 32, y: 0, w: 200, h: 48 }, m: { interativo: true }, ...extra })
+
+    it('um input com texto legível passa, e o mesmo input com a cor do texto igual ao fundo (1:1) falha', () => {
+      assert.equal(g11([alvo(44, 44), controle()], 'claro').ok, true)
+      const r = g11([alvo(44, 44), controle({ estilo: { color: PAPEL, backgroundColor: PAPEL }, cadeia: [PAPEL] })], 'claro')
+      assert.equal(r.ok, false)
+      assert.match(r.motivo, /input "Maria": contraste 1\.00:1/)
+      assert.equal(r.nos_com_falha.length, 1)
+    })
+
+    it('textarea e select também contam', () => {
+      const ruim = { estilo: { color: PAPEL }, cadeia: [PAPEL] }
+      assert.equal(g11([alvo(44, 44), controle({ tag: 'textarea', ...ruim })], 'claro').ok, false)
+      assert.equal(g11([alvo(44, 44), controle({ tag: 'select', ...ruim })], 'claro').ok, false)
+      assert.equal(g11([alvo(44, 44), controle({ tag: 'select' })], 'claro').ok, true)
+    })
+
+    it('quando o texto é o placeholder, vale o estilo do ::placeholder (estiloTexto), não o do input', () => {
+      const dica = (estiloTexto) => controle({ textoControle: 'Seu nome', estiloTexto: { origem: 'placeholder', fontSize: '20px', fontWeight: '400', ...estiloTexto } })
+      assert.equal(g11([alvo(44, 44), dica({ color: TINTA })], 'claro').ok, true)
+      // O input tem a cor boa; o placeholder, não: reprova.
+      const r = g11([alvo(44, 44), dica({ color: 'rgb(200, 200, 200)' })], 'claro')
+      assert.equal(r.ok, false)
+      assert.match(r.motivo, /contraste/)
+    })
+
+    it('o controle sem texto visível (vazio) e o que não está visível não contam', () => {
+      assert.equal(g11([alvo(44, 44), controle({ textoControle: '', estilo: { color: PAPEL }, cadeia: [PAPEL] })], 'claro').ok, true)
+      assert.equal(g11([alvo(44, 44), controle({ visivel: false, estilo: { color: PAPEL }, cadeia: [PAPEL] })], 'claro').ok, true)
+    })
+
+    it('o limite de texto grande vale para o controle, e a largura 0 reprova', () => {
+      const cinza = { color: 'rgb(138, 138, 138)' }
+      assert.equal(g11([alvo(44, 44), controle({ estilo: cinza, cadeia: [BRANCO] })], 'claro').ok, false)
+      assert.equal(g11([alvo(44, 44), controle({ estilo: { ...cinza, fontSize: '24px' }, cadeia: [BRANCO] })], 'claro').ok, true)
+      assert.equal(g11([alvo(44, 44), controle({ rect: { x: 0, y: 0, w: 0, h: 48 } })], 'claro').ok, false)
+    })
+  })
+
+  describe('R2a: tamanho e peso ausentes ou ilegíveis falham fechado', () => {
+    const alvoBom = alvo(44, 44)
+
+    it('o nó completo passa; sem font-size ou sem font-weight falha com o motivo concreto', () => {
+      assert.equal(g11([alvoBom, criar()], 'claro').ok, true)
+      const semTamanho = g11([alvoBom, criar({ estilo: { fontSize: undefined } })], 'claro')
+      assert.equal(semTamanho.ok, false)
+      assert.match(semTamanho.motivo, /font-size ausente/)
+      const semPeso = g11([alvoBom, criar({ estilo: { fontWeight: undefined } })], 'claro')
+      assert.equal(semPeso.ok, false)
+      assert.match(semPeso.motivo, /font-weight ausente/)
+    })
+
+    it('valor vazio, NaN e unidade que não é px também reprovam', () => {
+      for (const estilo of [{ fontSize: '' }, { fontSize: 'NaNpx' }, { fontSize: 'large' }, { fontWeight: '' }, { fontWeight: 'bold' }]) {
+        const r = g11([alvoBom, criar({ estilo })], 'claro')
+        assert.equal(r.ok, false, JSON.stringify(estilo))
+      }
+    })
+
+    it('o controle que mostra o placeholder sem o tamanho do ::placeholder reprova', () => {
+      const dica = (estiloTexto) => criar({ tag: 'input', texto: '', textoControle: 'Seu nome', rect: { x: 0, y: 0, w: 200, h: 48 }, m: { interativo: true }, estiloTexto })
+      assert.equal(g11([alvoBom, dica({ color: TINTA, fontSize: '20px', fontWeight: '400' })], 'claro').ok, true)
+      assert.equal(g11([alvoBom, dica({ color: TINTA, fontWeight: '400' })], 'claro').ok, false)
+    })
+  })
 })
 
 describe('G12: opacidade 1 e escala 1', () => {
   const bloco = (estilo = {}, m = { filhoDeMain: true }) => criar({ tag: 'section', texto: '', m, estilo })
+
+  it('R2b: transform ausente ou vazio falha com o motivo; none continua valendo', () => {
+    assert.equal(g12([bloco({ transform: 'none' })]).ok, true)
+    for (const transform of [undefined, '', '   ']) {
+      const r = g12([bloco({ transform })])
+      assert.equal(r.ok, false, JSON.stringify(transform))
+      assert.match(r.motivo, /transform ausente/)
+    }
+  })
+
+  it('R6: a propriedade scale diferente de 1 falha (número, par, porcentagem); none e 1 valem', () => {
+    for (const scale of ['none', '1', '1 1', '1 1 1', '100%']) assert.equal(g12([bloco({ scale })]).ok, true, scale)
+    for (const scale of ['1.2', '1 2', '0.9 0.9', '120%']) assert.equal(g12([bloco({ scale })]).ok, false, scale)
+    assert.match(g12([bloco({ scale: '1.2' })]).motivo, /escala 1\.200 × 1\.200 \(x × y, propriedade scale\)/)
+  })
+
+  it('R6: scale ausente, vazio ou ilegível falha fechado', () => {
+    for (const scale of [undefined, '', 'grande', 'NaN', '1 abc', '1 1 1 1']) {
+      const r = g12([bloco({ scale })])
+      assert.equal(r.ok, false, String(scale))
+      assert.match(r.motivo, /scale (ausente|ilegível)/)
+    }
+  })
+
+  it('R6: a escala efetiva dos ancestrais (transform e scale) conta; o neutro passa', () => {
+    const comAncestrais = (ancestrais) => g12([criar({ tag: 'div', texto: '', m: { blocoG12: true }, ancestrais })])
+    assert.equal(comAncestrais({ opacidade: 1, escalaX: 1, escalaY: 1 }).ok, true)
+    assert.equal(comAncestrais({ opacidade: 1, escalaX: 1.2, escalaY: 1.2 }).ok, false)
+    assert.equal(comAncestrais({ opacidade: 1, escalaX: 1, escalaY: 0.5 }).ok, false)
+    assert.equal(comAncestrais(null).ok, false)
+  })
 
   it('passa com opacidade 1 e sem transform, em filho de main e em filho de [data-bloco]', () => {
     assert.equal(g12([bloco(), bloco({}, { filhoDeBloco: true })]).ok, true)
@@ -225,14 +327,24 @@ describe('FONTES: só Literata e Outfit', () => {
     const r = fontes([
       emFamilia('"Literata Variable", serif'),
       emFamilia('"Outfit Variable", system-ui, sans-serif'),
-      emFamilia('Literata, Georgia, serif'),
+      emFamilia('Literata, serif'),
       emFamilia("'OUTFIT VARIABLE', sans-serif"),
+      emFamilia('"Outfit Variable", ui-rounded, cursive, fantasy, emoji, math, fangsong, -apple-system, ui-sans-serif'),
     ])
     assert.equal(r.ok, true, r.motivo)
   })
 
-  it('só vale a primeira família: o que vem depois da vírgula não conta', () => {
-    assert.equal(fontes([emFamilia('"Outfit Variable", "Zilla Slab", Georgia')]).ok, true)
+  it('R4: vale toda família nomeada da pilha, não só a primeira', () => {
+    for (const pilha of ['"Outfit Variable", "Zilla Slab", Georgia, sans-serif', '"Literata Variable", serif, Georgia', 'serif, "Zilla Slab"', 'sans-serif, Arial, "Outfit Variable"']) {
+      const r = fontes([criar(), emFamilia(pilha)])
+      assert.equal(r.ok, false, pilha)
+    }
+    const r = fontes([emFamilia('"Outfit Variable", "Zilla Slab", Georgia, sans-serif')])
+    assert.match(r.motivo, /Zilla Slab/)
+    assert.match(r.motivo, /Georgia/)
+    assert.equal(r.nos_com_falha.length, 1)
+    // O controle: a mesma pilha sem as famílias de fora passa.
+    assert.equal(fontes([emFamilia('"Outfit Variable", system-ui, sans-serif')]).ok, true)
   })
 
   it('uma família genérica na frente é ignorada, desde que haja uma família do site em outro nó', () => {
@@ -271,6 +383,13 @@ describe('FONTES: só Literata e Outfit', () => {
     assert.equal(fontes([criar(), emFamilia('')]).ok, false)
     assert.equal(fontes([criar(), { tag: 'p', texto: 'Sem estilo', visivel: true }]).ok, false)
     assert.equal(fontes([emFamilia('serif'), emFamilia('system-ui, sans-serif')]).ok, false)
+  })
+
+  it('familiasDe lista todas as famílias da pilha, sem aspas', () => {
+    assert.deepEqual(familiasDe('"Outfit Variable", "Zilla Slab", Georgia, sans-serif'), ['Outfit Variable', 'Zilla Slab', 'Georgia', 'sans-serif'])
+    assert.deepEqual(familiasDe("'Fonte, estranha', serif"), ['Fonte, estranha', 'serif'])
+    assert.deepEqual(familiasDe(undefined), [])
+    assert.deepEqual(familiasDe(' , '), [])
   })
 
   it('primeiraFamilia tira as aspas e respeita vírgula dentro de aspas', () => {
@@ -319,12 +438,31 @@ describe('CAIXA: nada em caixa alta', () => {
     assert.deepEqual(palavrasEmCaixaAlta(undefined), [])
   })
 
-  it('um código de cor hexadecimal e um identificador com dígito não são rótulo em caixa alta', () => {
-    for (const texto of ['#EADDC5', '#FFFFFF', '#fff', '#2B2320', '#ABCDEF', '#ABCD', '#ABCDEF12', 'A11Y', 'H1', 'Cor #F7D684 do mel', 'Cor (#EADDC5), #FFFFFF.']) {
+  it('um código de cor hexadecimal completo não é rótulo em caixa alta', () => {
+    for (const texto of ['#EADDC5', '#FFFFFF', '#fff', '#2B2320', '#ABCDEF', '#ABCD', '#ABCDEF12', 'Cor #F7D684 do mel', 'Cor (#EADDC5), #FFFFFF.']) {
       const r = caixa([criar({ texto })])
       assert.equal(r.ok, true, `${texto}: ${r.motivo}`)
       assert.deepEqual(palavrasEmCaixaAlta(texto), [], texto)
     }
+  })
+
+  it('R3: um item com dígito não é isento: só passa se não tiver 4 maiúsculas seguidas', () => {
+    // H1 e A11Y passam por terem no máximo 1 maiúscula seguida; CADASTRAR2 e afins reprovam.
+    for (const texto of ['H1', 'A11Y', 'Seção H2 e A11Y']) assert.equal(caixa([criar({ texto })]).ok, true, texto)
+    for (const texto of ['CADASTRAR2', 'ADMIN1', 'Botão CADASTRAR2', 'A11YYYY', '2FATOR', 'ABCDE12']) {
+      const r = caixa([criar({ texto })])
+      assert.equal(r.ok, false, texto)
+      assert.match(r.motivo, /caixa alta na grafia/)
+    }
+    assert.deepEqual(palavrasEmCaixaAlta('CADASTRAR2'), ['CADASTRAR'])
+  })
+
+  it('R3: só o código hexadecimal completo é isento (3, 4, 6 ou 8 dígitos, com #, em qualquer caixa)', () => {
+    for (const texto of ['#ABCDE', '#ABCDEFG', '#ABCDEF1', 'ABCDEF', 'EADDC5', '# ABCDEF', '#ABCDEF#ABCDEF']) {
+      assert.equal(caixa([criar({ texto })]).ok, false, texto)
+    }
+    assert.equal(caixa([criar({ texto: '#abc' })]).ok, true)
+    assert.equal(caixa([criar({ texto: '#ABC' })]).ok, true)
   })
 
   it('uma palavra comum em caixa alta continua reprovando, e a lista de siglas não cresce', () => {
@@ -341,6 +479,15 @@ describe('CAIXA: nada em caixa alta', () => {
     assert.match(caixa([]).motivo, /nenhum nó com texto/)
     assert.equal(caixa([criar({ estilo: { textTransform: undefined } })]).ok, false)
     assert.equal(caixa([{ tag: 'p', texto: 'Sem estilo', visivel: true }]).ok, false)
+  })
+
+  it('R2c: text-transform vazio falha com o motivo; none e capitalize continuam valendo', () => {
+    for (const textTransform of ['none', 'capitalize', 'lowercase']) assert.equal(caixa([criar({ estilo: { textTransform } })]).ok, true, textTransform)
+    for (const textTransform of ['', '   ']) {
+      const r = caixa([criar({ estilo: { textTransform } })])
+      assert.equal(r.ok, false, JSON.stringify(textTransform))
+      assert.match(r.motivo, /text-transform ausente/)
+    }
   })
 })
 
@@ -426,6 +573,22 @@ describe('SOMBRA: sombra, gradiente e filtro só pelos tokens', () => {
     assert.equal(sombra([noCom({ backdropFilter: undefined })], doc1440).ok, false)
   })
 
+  it('R2d: um background-image ilegível falha com o motivo; none, url() e os gradientes dos tokens valem', () => {
+    for (const backgroundImage of ['none', 'url("https://127.0.0.1/a.avif")', LUZ_CHROME, `url("a.webp"), none, ${BRILHO_CHROME}`]) {
+      assert.equal(sombra([noCom({ backgroundImage })], doc1440).ok, true, backgroundImage)
+    }
+    for (const backgroundImage of ['garbage', 'none garbage', 'linear-gradient(red, blue', 'url(a.png', 'foo(bar)', '()', 'none, lixo']) {
+      const r = sombra([noCom({ backgroundImage })], doc1440)
+      assert.equal(r.ok, false, backgroundImage)
+      assert.match(r.motivo, /background-image ilegível/)
+    }
+  })
+
+  it('R2d: um gradiente escondido em image-set() ou cross-fade() não passa como imagem comum', () => {
+    assert.equal(sombra([noCom({ backgroundImage: `image-set(${LUZ_CHROME} 1x)` })], doc1440).ok, false)
+    assert.equal(sombra([noCom({ backgroundImage: 'image-set(url(a.avif) 1x, url(b.avif) 2x)' })], doc1440).ok, true)
+  })
+
   it('a normalização leva as formas do Chrome e as do token à mesma forma canônica', () => {
     assert.equal(sombraCanonica(FLUTUANTE_CHROME), sombraCanonica(TOKENS_DESIGN.sombraFlutuante))
     assert.equal(sombraCanonica(CARTAO_CHROME), sombraCanonica(TOKENS_DESIGN.sombraCartao))
@@ -477,6 +640,25 @@ describe('3D: sem perspective, preserve-3d nem rotação em X ou Y', () => {
       const r = tresD([noCom({ transform })])
       assert.equal(r.ok, false, transform)
       assert.match(r.motivo, /transform 3D/)
+    }
+  })
+
+  it('R6: a propriedade rotate em 2D passa (none, ângulo, eixo z); em X ou Y falha', () => {
+    for (const rotate of ['none', '30deg', '0.5turn', '-1.2rad', '45grad', '0', 'z 30deg', '0 0 1 30deg', '0 0 -1 30deg']) {
+      assert.equal(tresD([noCom({ rotate })]).ok, true, rotate)
+    }
+    for (const rotate of ['x 30deg', 'y 30deg', 'X 30deg', '1 0 0 30deg', '0 1 0 30deg', '1 1 0 30deg', '1 1 1 30deg', '0 -1 0 0.5turn']) {
+      const r = tresD([noCom({ rotate })])
+      assert.equal(r.ok, false, rotate)
+      assert.match(r.motivo, /rotate 3D/)
+    }
+  })
+
+  it('R6: rotate ausente, vazio ou ilegível falha fechado', () => {
+    for (const rotate of [undefined, '', 'tombado', '30', 'x', 'w 30deg', '1 0 30deg', '1 0 0 0 30deg', 'x y 30deg', 'NaNdeg']) {
+      const r = tresD([noCom({ rotate })])
+      assert.equal(r.ok, false, String(rotate))
+      assert.match(r.motivo, /rotate (ausente|ilegível)/)
     }
   })
 
@@ -545,17 +727,89 @@ const RETANGULO_DO_ALVO = { ...RETANGULO, width: 120, height: 60, right: 120, bo
 // O que um navegador calcula num elemento sem regra própria: fonte, cores e as propriedades das regras novas.
 const BASE_JSDOM = `
   html { background-color: ${PAPEL}; }
-  * { font-size: 20px; font-family: 'Outfit Variable', system-ui, sans-serif; color: ${TINTA}; background-color: ${TRANSPARENTE};
-      opacity: 1; transform: none; text-transform: none; box-shadow: none; background-image: none;
+  * { font-size: 20px; font-weight: 400; font-family: 'Outfit Variable', system-ui, sans-serif; color: ${TINTA}; background-color: ${TRANSPARENTE};
+      opacity: 1; transform: none; rotate: none; scale: none; text-transform: none; box-shadow: none; background-image: none;
       perspective: none; transform-style: flat; filter: none; backdrop-filter: none; }`
+
+/**
+ * Um `preparar` que muda o que o navegador entrega: `resolver(elemento, pseudo)` devolve um mapa
+ * `propriedade-em-kebab → valor` (ou nulo) que vale por cima do estilo calculado. Serve para o que o
+ * jsdom não calcula (::placeholder) e para simular uma leitura ausente ('') ou ilegível.
+ */
+function interceptarEstilo(resolver) {
+  return (documento) => {
+    const janela = documento.defaultView
+    const original = janela.getComputedStyle.bind(janela)
+    janela.getComputedStyle = (elemento, pseudo) => {
+      const cs = original(elemento) // sem o pseudo: o jsdom não o implementa
+      const mapa = resolver(elemento, pseudo)
+      if (!mapa) return cs
+      return new Proxy(cs, {
+        get(alvo, chave) {
+          if (chave === 'getPropertyValue') return (nome) => (nome in mapa ? mapa[nome] : alvo.getPropertyValue(nome))
+          if (typeof chave === 'string') {
+            const kebab = chave.replace(/[A-Z]/g, (letra) => `-${letra.toLowerCase()}`)
+            if (kebab in mapa) return mapa[kebab]
+          }
+          const valor = Reflect.get(alvo, chave)
+          return typeof valor === 'function' ? valor.bind(alvo) : valor
+        },
+      })
+    }
+  }
+}
+
+/**
+ * Faz o getComputedStyle do jsdom se comportar como o do Chrome no que o cssstyle não calcula: as
+ * propriedades `rotate`, `scale` e um gradiente em `background-image`. A declaração inline do
+ * elemento vale (como na cascata); sem ela, o valor calculado; sem nenhum, o padrão do navegador.
+ */
+function modelarNavegador(documento) {
+  const janela = documento.defaultView
+  const original = janela.getComputedStyle.bind(janela)
+  const PADRAO = { rotate: 'none', scale: 'none', 'background-image': 'none' }
+  janela.getComputedStyle = (elemento) => {
+    const cs = original(elemento)
+    const inline = typeof elemento.getAttribute === 'function' ? (elemento.getAttribute('style') ?? '') : ''
+    const ler = (nome) => {
+      const declarado = new RegExp(`(?:^|;)\\s*${nome}\\s*:\\s*([^;]+)`, 'i').exec(inline)
+      if (declarado) return declarado[1].trim()
+      const calculado = cs.getPropertyValue(nome)
+      return calculado !== '' ? calculado : PADRAO[nome]
+    }
+    return new Proxy(cs, {
+      get(alvo, chave) {
+        if (chave === 'getPropertyValue') return (nome) => (nome in PADRAO ? ler(nome) : alvo.getPropertyValue(nome))
+        if (chave === 'rotate' || chave === 'scale') return ler(chave)
+        if (chave === 'backgroundImage') return ler('background-image')
+        const valor = Reflect.get(alvo, chave)
+        return typeof valor === 'function' ? valor.bind(alvo) : valor
+      },
+    })
+  }
+}
+
+/** Troca a leitura de `mapa` nos elementos que casam com `seletor` (só o estilo do próprio elemento). */
+const comLeitura = (seletor, mapa) => interceptarEstilo((elemento, pseudo) => (!pseudo && elemento.matches(seletor) ? mapa : null))
+
+/** Junta vários `preparar` em um, na ordem. */
+const juntar =
+  (...funcoes) =>
+  (documento) => {
+    for (const funcao of funcoes) funcao(documento)
+  }
 
 /** Monta `html` num jsdom, roda o coletor serializado (como o CDP faz) e devolve `{ doc, nos }`. */
 function coletarDe(html, preparar = () => undefined, css = '') {
-  const dom = new JSDOM(`<!doctype html><html><head><style>${BASE_JSDOM}${css}</style></head><body>${html}</body></html>`, { runScripts: 'outside-only' })
+  const dom = new JSDOM(`<!doctype html><html><head><style>${BASE_JSDOM}${css}</style></head><body>${html}</body></html>`, {
+    runScripts: 'outside-only',
+    virtualConsole: new VirtualConsole(), // sem o aviso "not implemented" do ::placeholder
+  })
   const { window } = dom
   window.Element.prototype.getBoundingClientRect = () => ({ ...RETANGULO })
   window.Range.prototype.getClientRects = () => [{ ...RETANGULO }]
   window.Range.prototype.getBoundingClientRect = () => ({ ...RETANGULO })
+  modelarNavegador(window.document)
   preparar(window.document)
   try {
     // Cópia por JSON, como o CDP devolve (returnByValue): sem isso os arrays são de outro realm.
@@ -569,7 +823,7 @@ function coletarDe(html, preparar = () => undefined, css = '') {
 const alvosGrandes = (documento) => {
   const janela = documento.defaultView
   janela.Element.prototype.getBoundingClientRect = function medir() {
-    return this.matches('a, button, input') ? { ...RETANGULO_DO_ALVO } : { ...RETANGULO }
+    return this.matches('a, button, input, select, textarea') ? { ...RETANGULO_DO_ALVO } : { ...RETANGULO }
   }
 }
 
@@ -668,6 +922,233 @@ describe('o coletor em jsdom: o que ele lê e o que as regras novas decidem', ()
     const r = tresD(coletarDe(html).nos)
     assert.equal(r.ok, false, r.motivo)
     assert.match(r.motivo, /transform 3D/)
+  })
+})
+
+// Os seis achados da revisão, cada um pelo coletor (jsdom) e pela regra, com um controle conforme e
+// um caso que falha. `comLeitura` e `interceptarEstilo` simulam o que o navegador entregaria quando
+// a leitura vem ausente ('') ou ilegível, e o ::placeholder, que o jsdom não calcula.
+describe('R1 (coletor): o texto dos controles entra no contraste do G11', () => {
+  const pagina = (controle) => `<main><section><button>Ver sessão</button>${controle}</section></main>`
+  const coletar = (controle, preparar) => coletarDe(pagina(controle), juntar(alvosGrandes, preparar ?? (() => undefined)))
+
+  it('controle: o input com o texto em cacau sobre o papel passa', () => {
+    const r = g11(coletar('<input value="Maria">').nos, 'claro')
+    assert.equal(r.ok, true, r.motivo)
+  })
+
+  it('o input com a cor do texto igual à do fundo (1:1) falha, pelo coletor e pela regra', () => {
+    const { nos } = coletar('<input value="Maria" style="color: rgb(248, 246, 235); background-color: rgb(248, 246, 235)">')
+    const input = nos.find((no) => no.tag === 'input')
+    assert.equal(input.textoControle, 'Maria')
+    const r = g11(nos, 'claro')
+    assert.equal(r.ok, false, r.motivo)
+    assert.match(r.motivo, /input "Maria": contraste 1\.00:1/)
+  })
+
+  it('o select e o textarea com o mesmo defeito também falham', () => {
+    const ruim = 'style="color: rgb(248, 246, 235); background-color: rgb(248, 246, 235)"'
+    assert.equal(g11(coletar(`<select ${ruim}><option selected>Mãe</option></select>`).nos, 'claro').ok, false)
+    assert.equal(g11(coletar(`<textarea ${ruim}>Recado</textarea>`).nos, 'claro').ok, false)
+  })
+
+  it('o placeholder lê o estilo do ::placeholder: com cor legível passa e com cor igual ao fundo falha', () => {
+    const dica = (cor) => interceptarEstilo((elemento, pseudo) => (pseudo === '::placeholder' ? { color: cor, 'font-size': '20px', 'font-weight': '400' } : null))
+    const bom = coletar('<input placeholder="Seu nome">', dica('rgb(43, 35, 32)'))
+    const input = bom.nos.find((no) => no.tag === 'input')
+    assert.equal(input.textoControle, 'Seu nome')
+    assert.equal(input.estiloTexto.origem, 'placeholder')
+    assert.equal(input.estiloTexto.color, 'rgb(43, 35, 32)')
+    assert.equal(g11(bom.nos, 'claro').ok, true)
+    const ruim = coletar('<input placeholder="Seu nome">', dica('rgb(248, 246, 235)'))
+    const r = g11(ruim.nos, 'claro')
+    assert.equal(r.ok, false, r.motivo)
+    assert.match(r.motivo, /input "Seu nome": contraste 1\.00:1/)
+  })
+
+  it('com valor preenchido o estilo do ::placeholder não entra (estiloTexto ausente)', () => {
+    const { nos } = coletar('<input value="Ana" placeholder="Seu nome">')
+    assert.equal(nos.find((no) => no.tag === 'input').estiloTexto, undefined)
+  })
+})
+
+describe('R2 (coletor): leitura ausente ou ilegível falha, e o valor válido passa', () => {
+  const PAGINA = '<main><section data-bloco><p>Texto.</p><a href="#">Ver</a></section></main>'
+
+  it('G11: fontSize ou fontWeight ausentes no coletor falham; o controle conforme passa', () => {
+    assert.equal(g11(coletarDe(PAGINA, alvosGrandes).nos, 'claro').ok, true)
+    const semTamanho = g11(coletarDe(PAGINA, juntar(alvosGrandes, comLeitura('p', { 'font-size': '' }))).nos, 'claro')
+    assert.equal(semTamanho.ok, false)
+    assert.match(semTamanho.motivo, /font-size ausente/)
+    const semPeso = g11(coletarDe(PAGINA, juntar(alvosGrandes, comLeitura('p', { 'font-weight': '' }))).nos, 'claro')
+    assert.equal(semPeso.ok, false)
+    assert.match(semPeso.motivo, /font-weight ausente/)
+  })
+
+  it('G12: transform ausente no coletor falha; none passa', () => {
+    assert.equal(g12(coletarDe(PAGINA).nos).ok, true)
+    const r = g12(coletarDe(PAGINA, comLeitura('section', { transform: '' })).nos)
+    assert.equal(r.ok, false, r.motivo)
+    assert.match(r.motivo, /transform ausente/)
+  })
+
+  it('CAIXA: text-transform vazio no coletor falha; none passa', () => {
+    assert.equal(caixa(coletarDe(PAGINA).nos).ok, true)
+    const r = caixa(coletarDe(PAGINA, comLeitura('p', { 'text-transform': '' })).nos)
+    assert.equal(r.ok, false, r.motivo)
+    assert.match(r.motivo, /text-transform ausente/)
+  })
+
+  it('SOMBRA: background-image ilegível no coletor falha; none e gradiente do token passam', () => {
+    assert.equal(sombra(coletarDe(PAGINA).nos, doc1440).ok, true)
+    const comToken = coletarDe(PAGINA.replace('<p>', `<p style="background-image: ${TOKENS_DESIGN.luzEstudio}">`))
+    assert.match(comToken.nos.find((no) => no.tag === 'p').estilo.backgroundImage, /radial-gradient/)
+    assert.equal(sombra(comToken.nos, doc1440).ok, true)
+    const r = sombra(coletarDe(PAGINA, comLeitura('p', { 'background-image': 'garbage' })).nos, doc1440)
+    assert.equal(r.ok, false, r.motivo)
+    assert.match(r.motivo, /background-image ilegível/)
+  })
+})
+
+describe('R3 (coletor): caixa alta com dígito reprova; código hexadecimal e H1/A11Y passam', () => {
+  const com = (texto) => coletarDe(`<main><section><p>${texto}</p></section></main>`).nos
+
+  it('controle: #EADDC5, #2B2320, H1 e A11Y passam', () => {
+    for (const texto of ['#EADDC5', '#2B2320', '#fff', 'H1', 'A11Y']) assert.equal(caixa(com(texto)).ok, true, texto)
+  })
+
+  it('CADASTRAR2 falha, também dentro de uma frase', () => {
+    for (const texto of ['CADASTRAR2', 'Toque em CADASTRAR2 agora']) {
+      const r = caixa(com(texto))
+      assert.equal(r.ok, false, texto)
+      assert.match(r.motivo, /CADASTRAR/)
+    }
+  })
+})
+
+describe('R4 (coletor): toda família da pilha conta', () => {
+  const com = (pilha) => coletarDe(`<main><section><p>Texto.</p><p style="font-family: ${pilha}">Outro.</p></section></main>`).nos
+
+  it('controle: Outfit com fallbacks genéricos passa', () => {
+    const r = fontes(com("'Outfit Variable', system-ui, sans-serif"))
+    assert.equal(r.ok, true, r.motivo)
+  })
+
+  it('Outfit seguida de Zilla Slab e Georgia falha, e o motivo cita as duas', () => {
+    const nos = com("'Outfit Variable', 'Zilla Slab', Georgia, sans-serif")
+    assert.deepEqual(familiasDe(nos.filter((no) => no.tag === 'p')[1].estilo.fontFamily).filter((nome) => !/Outfit/.test(nome)).slice(0, 2), ['Zilla Slab', 'Georgia'])
+    const r = fontes(nos)
+    assert.equal(r.ok, false, r.motivo)
+    assert.match(r.motivo, /Zilla Slab/)
+    assert.match(r.motivo, /Georgia/)
+  })
+})
+
+describe('R5 (coletor): o html e o body entram na coleta', () => {
+  const PAGINA = '<main><section data-bloco><p>Texto.</p><a href="#">Ver</a></section></main>'
+  const nosDe = (preparar, css) => coletarDe(PAGINA, juntar(alvosGrandes, preparar ?? (() => undefined)), css).nos
+  const noRaiz = (nos, tag) => nos.find((no) => no.tag === tag)
+  const estiloEmLinha = (tag, estilo) => (documento) => {
+    const el = tag === 'html' ? documento.documentElement : documento.body
+    el.setAttribute('style', estilo)
+  }
+
+  it('controle: com as raízes na coleta, todas as regras continuam passando e elas não viram bloco nem alvo', () => {
+    const nos = nosDe()
+    assert.deepEqual(nos.slice(0, 2).map((no) => no.tag), ['html', 'body'])
+    for (const tag of ['html', 'body']) {
+      const raiz = noRaiz(nos, tag)
+      assert.ok(raiz.estilo, tag)
+      assert.equal(raiz.m.interativo || raiz.m.filhoDeMain || raiz.m.filhoDeBloco || raiz.m.blocoG12, false, tag)
+      assert.equal(raiz.ancestrais, undefined, tag)
+    }
+    const resultados = avaliarTudo({ doc: { ...doc1440, scrollWidth: 0, clientWidth: 0 }, nos, tema: 'claro' })
+    for (const r of resultados) assert.equal(r.ok, true, `${r.regra}: ${r.motivo}`)
+  })
+
+  it('body com perspective falha a regra 3D; html com perspective também', () => {
+    for (const tag of ['body', 'html']) {
+      const r = tresD(nosDe(undefined, `${tag} { perspective: 800px; }`))
+      assert.equal(r.ok, false, `${tag}: ${r.motivo}`)
+      assert.match(r.motivo, new RegExp(`^${tag}: perspective 800px`))
+    }
+  })
+
+  it('sombra e gradiente fora dos tokens no html ou no body falham a SOMBRA; a sombra do token passa', () => {
+    for (const tag of ['html', 'body']) {
+      const sombraRuim = sombra(nosDe(estiloEmLinha(tag, 'box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3)')), doc1440)
+      assert.equal(sombraRuim.ok, false, `${tag}: ${sombraRuim.motivo}`)
+      assert.match(sombraRuim.motivo, new RegExp(`^${tag}: box-shadow fora dos tokens`))
+      const gradienteRuim = sombra(nosDe(estiloEmLinha(tag, 'background-image: linear-gradient(rgb(255, 255, 255), rgb(0, 0, 0))')), doc1440)
+      assert.equal(gradienteRuim.ok, false, `${tag}: ${gradienteRuim.motivo}`)
+      assert.match(gradienteRuim.motivo, new RegExp(`^${tag}: gradiente fora dos tokens`))
+      const doToken = sombra(nosDe(estiloEmLinha(tag, `box-shadow: ${TOKENS_DESIGN.sombraCartao}; background-image: ${TOKENS_DESIGN.luzEstudio}`)), doc1440)
+      assert.equal(doToken.ok, true, `${tag}: ${doToken.motivo}`)
+    }
+  })
+
+  it('texto solto no body entra na FONTES: pilha fora do conjunto falha, Outfit passa', () => {
+    const solto = (estilo) =>
+      coletarDe('<main><section data-bloco><p>Texto.</p></section></main>', (documento) => {
+        documento.body.insertBefore(documento.createTextNode('Rodapé solto'), documento.body.firstChild)
+        documento.body.setAttribute('style', estilo)
+      }).nos
+    const ruim = solto("font-family: 'Zilla Slab', Georgia, serif")
+    assert.equal(noRaiz(ruim, 'body').texto, 'Rodapé solto')
+    assert.equal(fontes(ruim).ok, false)
+    assert.equal(fontes(solto("font-family: 'Outfit Variable', sans-serif")).ok, true)
+  })
+})
+
+describe('R6 (coletor): as propriedades individuais rotate e scale', () => {
+  const PAGINA = (estiloDoBloco = '', estiloDoEnvoltorio = '') =>
+    `<main><section data-bloco><p>Texto.</p></section><section><div style="${estiloDoEnvoltorio}"><div data-midia style="${estiloDoBloco}"></div></div></section></main>`
+  const nosDe = (estiloDoBloco, estiloDoEnvoltorio) => coletarDe(PAGINA(estiloDoBloco, estiloDoEnvoltorio)).nos
+  const midia = (nos) => nos.find((no) => no.tag === 'div' && no.m.blocoG12 && no.rect)
+
+  it('controle: sem rotate nem scale (none) todas as regras de transformação passam', () => {
+    const nos = nosDe()
+    assert.equal(midia(nos).estilo.scale, 'none')
+    assert.equal(midia(nos).estilo.rotate, 'none')
+    assert.equal(g12(nos).ok, true)
+    assert.equal(tresD(nos).ok, true)
+  })
+
+  it('rotate em X ou Y falha a regra 3D; rotate 2D passa', () => {
+    for (const rotate of ['x 30deg', 'y 45deg', '1 0 0 30deg', '0 1 0 30deg']) {
+      const r = tresD(nosDe(`rotate: ${rotate}`))
+      assert.equal(r.ok, false, rotate)
+      assert.match(r.motivo, /rotate 3D/)
+    }
+    for (const rotate of ['30deg', 'z 30deg', '0 0 1 30deg']) assert.equal(tresD(nosDe(`rotate: ${rotate}`)).ok, true, rotate)
+  })
+
+  it('scale diferente de 1 no próprio bloco falha o G12; scale: 1 passa', () => {
+    const r = g12(nosDe('scale: 1.2'))
+    assert.equal(r.ok, false, r.motivo)
+    assert.match(r.motivo, /propriedade scale/)
+    assert.equal(g12(nosDe('scale: 1')).ok, true)
+  })
+
+  it('o scale de um ancestral conta como escala efetiva do bloco (e o transform dele também)', () => {
+    const doAncestral = g12(nosDe('', 'scale: 0.5'))
+    assert.equal(doAncestral.ok, false, doAncestral.motivo)
+    assert.match(doAncestral.motivo, /ancestral com escala 0\.500 × 0\.500/)
+    const doTransform = g12(nosDe('', 'transform: matrix(0.5, 0, 0, 0.5, 0, 0)'))
+    assert.equal(doTransform.ok, false)
+    assert.equal(g12(nosDe('', 'scale: 1')).ok, true)
+  })
+
+  it('falha fechado quando o valor não dá para ler: scale e rotate ausentes ou ilegíveis', () => {
+    const ilegivel = g12(coletarDe(PAGINA(), comLeitura('[data-midia]', { scale: 'enorme' })).nos)
+    assert.equal(ilegivel.ok, false, ilegivel.motivo)
+    assert.match(ilegivel.motivo, /scale ilegível/)
+    const doAncestral = g12(coletarDe(PAGINA(), comLeitura('div:not([data-midia])', { scale: 'enorme' })).nos)
+    assert.equal(doAncestral.ok, false, doAncestral.motivo)
+    assert.match(doAncestral.motivo, /ancestrais ilegível/)
+    const semRotate = tresD(coletarDe(PAGINA(), comLeitura('[data-midia]', { rotate: 'tombado' })).nos)
+    assert.equal(semRotate.ok, false, semRotate.motivo)
+    assert.match(semRotate.motivo, /rotate ilegível/)
   })
 })
 

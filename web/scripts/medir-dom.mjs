@@ -177,7 +177,8 @@ export function g1(doc) {
  */
 export function g11(nos, tema) {
   const alvos = nos.filter((no) => marca(no, 'interativo') && visivel(no))
-  const textos = nos.filter((no) => visivel(no) && temTexto(no))
+  // O texto dos controles (valor, placeholder, rótulo do select) conta como o dos demais nós.
+  const textos = nos.filter((no) => visivel(no) && (temTexto(no) || temTextoControle(no)))
   if (alvos.length === 0) return falhaFechada('G11', 'nenhum alvo de toque')
   if (textos.length === 0) return falhaFechada('G11', 'nenhum nó com texto')
   const falhas = []
@@ -195,15 +196,26 @@ export function g11(nos, tema) {
       falhas.push({ no: descrever(no), motivo: `${descrever(no)}: texto com largura 0` })
       continue
     }
-    const razao = contraste(no.estilo?.color, no.cadeia)
+    // O estilo do texto que se vê: o do nó, ou (controle que mostra o placeholder) o do ::placeholder.
+    const estiloDoTexto = no.estiloTexto ?? no.estilo
+    // Sem tamanho ou peso legíveis não há como saber o limite (4,5 ou 3): reprova, não adivinha.
+    const tamanho = px(estiloDoTexto?.fontSize)
+    const peso = numeroDe(estiloDoTexto?.fontWeight)
+    if (Number.isNaN(tamanho)) {
+      falhas.push({ no: descrever(no), motivo: `${descrever(no)}: font-size ausente ou ilegível (${estiloDoTexto?.fontSize})` })
+      continue
+    }
+    if (!Number.isFinite(peso)) {
+      falhas.push({ no: descrever(no), motivo: `${descrever(no)}: font-weight ausente ou ilegível (${estiloDoTexto?.fontWeight})` })
+      continue
+    }
+    const razao = contraste(estiloDoTexto?.color, no.cadeia)
     if (razao === null) {
       falhas.push({ no: descrever(no), motivo: `${descrever(no)}: contraste incalculável (fundo transparente sem ancestral opaco, ou cor ilegível)` })
       continue
     }
     menor = Math.min(menor, razao)
     // Texto grande (WCAG 1.4.3): 24 px, ou 18,66 px (14 pt) em negrito, pede só 3:1.
-    const tamanho = px(no.estilo?.fontSize)
-    const peso = Number(no.estilo?.fontWeight)
     const grande = tamanho >= 24 || (tamanho >= 18.66 && peso >= 700)
     const minimo = grande ? 3 : 4.5
     if (razao < minimo) falhas.push({ no: descrever(no), motivo: `${descrever(no)}: contraste ${razao.toFixed(2)}:1 (mínimo ${minimo}:1${grande ? ', texto grande' : ''})` })
@@ -213,8 +225,9 @@ export function g11(nos, tema) {
 
 /** As escalas dos eixos X e Y de um `transform` calculado (`none` ou `matrix(a, b, c, d, e, f)`); nulo se ilegível. */
 function escalasDe(transform) {
-  if (!transform || transform === 'none') return { x: 1, y: 1 }
-  const m = /^matrix\(([^)]+)\)$/.exec(transform)
+  if (!lido(transform)) return null
+  if (transform.trim() === 'none') return { x: 1, y: 1 }
+  const m = /^matrix\(([^)]+)\)$/.exec(transform.trim())
   if (!m) return null
   const valores = m[1].split(',').map((parte) => (parte.trim() === '' ? Number.NaN : Number(parte)))
   if (valores.length !== 6 || valores.some((valor) => !Number.isFinite(valor))) return null
@@ -223,6 +236,23 @@ function escalasDe(transform) {
 }
 
 const numeroDe = (valor) => (typeof valor === 'number' ? valor : typeof valor === 'string' && valor.trim() !== '' ? Number(valor) : Number.NaN)
+
+const NUMERO = String.raw`-?(?:\d+\.?\d*|\.\d+)(?:e-?\d+)?`
+
+/**
+ * As escalas X e Y da propriedade individual `scale` (`none`, `s`, `sx sy` ou `sx sy sz`, com número
+ * ou porcentagem); nulo se ausente ou ilegível.
+ */
+function escalaIndividualDe(valor) {
+  if (!lido(valor)) return null
+  const t = valor.trim()
+  if (t === 'none') return { x: 1, y: 1 }
+  const partes = t.split(/\s+/)
+  if (partes.length > 3) return null
+  const numeros = partes.map((parte) => (new RegExp(`^${NUMERO}%?$`, 'i').test(parte) ? (parte.endsWith('%') ? parseFloat(parte) / 100 : Number(parte)) : Number.NaN))
+  if (!numeros.every(Number.isFinite)) return null
+  return { x: numeros[0], y: numeros.length > 1 ? numeros[1] : numeros[0] }
+}
 
 /**
  * G12: com movimento reduzido, todo bloco aparece com opacidade 1 e escala 1 nos dois eixos. Os
@@ -245,9 +275,17 @@ export function g12(nos) {
     const escalas = escalasDe(no.estilo?.transform)
     if (!Number.isFinite(opacidade)) falhar(no, 'opacidade ausente')
     else if (opacidade !== 1) falhar(no, `opacidade ${opacidade}`)
-    if (escalas === null) falhar(no, `transform ilegível (${no.estilo?.transform})`)
+    if (!lido(no.estilo?.transform)) falhar(no, 'transform ausente')
+    else if (escalas === null) falhar(no, `transform ilegível (${no.estilo?.transform})`)
     else if (Math.abs(escalas.x - 1) > 0.001 || Math.abs(escalas.y - 1) > 0.001) {
       falhar(no, `escala ${escalas.x.toFixed(3)} × ${escalas.y.toFixed(3)} (x × y)`)
+    }
+    // A propriedade individual `scale` também escala o bloco (e some com `none`).
+    const individual = escalaIndividualDe(no.estilo?.scale)
+    if (!lido(no.estilo?.scale)) falhar(no, 'scale ausente')
+    else if (individual === null) falhar(no, `scale ilegível (${no.estilo.scale})`)
+    else if (Math.abs(individual.x - 1) > 0.001 || Math.abs(individual.y - 1) > 0.001) {
+      falhar(no, `escala ${individual.x.toFixed(3)} × ${individual.y.toFixed(3)} (x × y, propriedade scale)`)
     }
     if (no.ancestrais !== undefined) {
       const { opacidade: oa, escalaX, escalaY } = no.ancestrais ?? {}
@@ -271,13 +309,18 @@ const FAMILIAS_GENERICAS = new Set([
   'ui-serif', 'ui-sans-serif', 'ui-monospace', 'ui-rounded', '-apple-system', 'blinkmacsystemfont',
 ])
 
+/** Todas as famílias nomeadas de um `font-family` calculado, sem aspas e na ordem; vazio se não houver. */
+export function familiasDe(fontFamily) {
+  if (!lido(fontFamily)) return []
+  return dividirNoTopo(fontFamily, ',').map(semAspas).filter((nome) => nome !== '')
+}
+
 /** A primeira família de um `font-family` calculado, sem aspas; nulo se não houver. */
 export function primeiraFamilia(fontFamily) {
-  if (!lido(fontFamily)) return null
-  const lista = dividirNoTopo(fontFamily, ',')
-  const primeira = semAspas(lista[0] ?? '')
-  return primeira === '' ? null : primeira
+  return familiasDe(fontFamily)[0] ?? null
 }
+
+const ehGenerica = (nome) => FAMILIAS_GENERICAS.has(nome.toLowerCase()) || /^ui-/i.test(nome)
 
 /** Leva "Literata Variable" a "Literata" e "Outfit Variable" a "Outfit" (a família variável do @fontsource). */
 function familiaBase(nome) {
@@ -288,8 +331,9 @@ function familiaBase(nome) {
 const nosComTexto = (nos) => nos.filter((no) => visivel(no) && (temTexto(no) || temTextoControle(no)))
 
 /**
- * FONTES: no máximo duas famílias calculadas nos nós de texto, Literata e Outfit. Vale a primeira
- * família de cada nó; as genéricas (serif, sans-serif, system-ui...) ficam de fora da conta.
+ * FONTES: no máximo duas famílias calculadas nos nós de texto, Literata e Outfit. Vale TODA família
+ * nomeada da pilha de cada nó (não só a primeira: `"Outfit Variable", "Zilla Slab"` reprova); só as
+ * genéricas (serif, sans-serif, system-ui, ui-*...) ficam de fora da conta.
  */
 export function fontes(nos) {
   const comTexto = nosComTexto(nos)
@@ -299,18 +343,22 @@ export function fontes(nos) {
   const achadas = new Map() // minúscula → nome como veio
   const foraDoSet = new Map()
   for (const no of comTexto) {
-    const familia = primeiraFamilia(no.estilo?.fontFamily)
-    if (familia === null) {
+    const familias = familiasDe(no.estilo?.fontFamily)
+    if (familias.length === 0) {
       falhas.push({ no: descrever(no), motivo: `${descrever(no)}: font-family ausente` })
       continue
     }
-    if (FAMILIAS_GENERICAS.has(familia.toLowerCase())) continue
-    const base = familiaBase(familia)
-    achadas.set(base.toLowerCase(), base)
-    if (!permitidas.has(base.toLowerCase())) {
-      foraDoSet.set(familia.toLowerCase(), familia)
-      falhas.push({ no: descrever(no), motivo: `${descrever(no)}: família ${familia}` })
+    const fora = []
+    for (const familia of familias) {
+      if (ehGenerica(familia)) continue
+      const base = familiaBase(familia)
+      achadas.set(base.toLowerCase(), base)
+      if (!permitidas.has(base.toLowerCase())) {
+        foraDoSet.set(familia.toLowerCase(), familia)
+        fora.push(familia)
+      }
     }
+    if (fora.length > 0) falhas.push({ no: descrever(no), motivo: `${descrever(no)}: família ${fora.join(', ')}` })
   }
   if (falhas.length === 0 && achadas.size === 0) {
     return falhaFechada('FONTES', 'nenhuma família não genérica medida nos nós de texto')
@@ -328,16 +376,17 @@ export function fontes(nos) {
 
 /**
  * As palavras do texto com 4 ou mais maiúsculas seguidas (acentuadas também), menos as siglas
- * permitidas. Não são rótulo em caixa alta, e ficam de fora: um código de cor hexadecimal (`#` e 3,
- * 4, 6 ou 8 dígitos hexa, em qualquer caixa, como item inteiro) e qualquer item com dígito
- * (`H1`, `A11Y`, `#2B2320`). Os itens são os separados por espaço, sem a pontuação das pontas.
+ * permitidas. A única outra exceção é o código de cor hexadecimal completo (`#` e 3, 4, 6 ou 8
+ * dígitos hexa, em qualquer caixa, como item inteiro: `#EADDC5`, `#fff`). Um item com dígito não é
+ * isento: `CADASTRAR2` reprova; `H1` e `A11Y` passam por não terem 4 maiúsculas seguidas. Os itens
+ * são os separados por espaço, sem a pontuação das pontas.
  */
 export function palavrasEmCaixaAlta(texto) {
   if (typeof texto !== 'string') return []
   const achadas = []
   for (const item of texto.split(/\s+/)) {
     const limpo = item.replace(/^[^\p{L}\p{N}#]+/u, '').replace(/[^\p{L}\p{N}]+$/u, '')
-    if (limpo === '' || /\p{N}/u.test(limpo) || /^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(limpo)) continue
+    if (limpo === '' || /^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(limpo)) continue
     for (const palavra of limpo.match(/[\p{L}\p{M}]+/gu) ?? []) {
       if (/\p{Lu}{4,}/u.test(palavra) && !SIGLAS_PERMITIDAS.includes(palavra)) achadas.push(palavra)
     }
@@ -351,7 +400,7 @@ export function caixa(nos) {
   if (comTexto.length === 0) return falhaFechada('CAIXA', 'nenhum nó com texto')
   const falhas = []
   for (const no of comTexto) {
-    if (!no.estilo || typeof no.estilo.textTransform !== 'string') {
+    if (!lido(no.estilo?.textTransform)) {
       falhas.push({ no: descrever(no), motivo: `${descrever(no)}: text-transform ausente` })
       continue
     }
@@ -449,11 +498,42 @@ export function sombraCanonica(texto) {
   return camadas.length === 0 ? null : camadas.join(', ')
 }
 
-/** As imagens de fundo de um `background-image` que são gradientes, em forma canônica. */
-function gradientesDe(valor) {
-  return dividirNoTopo(valor, ',')
-    .filter((parte) => /gradient\(/i.test(parte))
-    .map((parte) => canonico(parte))
+/** Os parênteses (fora de aspas) abrem e fecham na conta certa. */
+function parentesesBalanceados(texto) {
+  let profundidade = 0
+  let aspas = null
+  for (const c of texto) {
+    if (aspas) {
+      if (c === aspas) aspas = null
+    } else if (c === '"' || c === "'") aspas = c
+    else if (c === '(') profundidade += 1
+    else if (c === ')') {
+      profundidade -= 1
+      if (profundidade < 0) return false
+    }
+  }
+  return profundidade === 0 && aspas === null
+}
+
+/**
+ * Lê um `background-image` calculado: `{ gradientes }` (cada gradiente em forma canônica, ou nulo se
+ * não dá para canonizar) ou `{ erro }` se o valor não é `none`, `url()`, `image-set()` nem gradiente.
+ */
+function leituraDeImagens(valor) {
+  if (!lido(valor)) return { erro: 'background-image ausente' }
+  const t = valor.trim()
+  if (!parentesesBalanceados(t)) return { erro: `background-image ilegível (${t.slice(0, 120)})` }
+  const gradientes = []
+  for (const parte of dividirNoTopo(t, ',')) {
+    if (parte === 'none') continue
+    if (/^(?:-webkit-)?(?:repeating-)?(?:linear|radial|conic)-gradient\(.*\)$/is.test(parte) || /^-webkit-gradient\(.*\)$/is.test(parte)) {
+      gradientes.push(canonico(parte))
+    } else if (/^(?:-webkit-)?(?:url|image-set|cross-fade|element|image)\(.*\)$/is.test(parte)) {
+      // Um gradiente escondido dentro de image-set() ou cross-fade() também vale como gradiente.
+      if (/gradient\(/i.test(parte)) gradientes.push(null)
+    } else return { erro: `background-image ilegível (${t.slice(0, 120)})` }
+  }
+  return { gradientes }
 }
 
 /**
@@ -495,9 +575,10 @@ export function sombra(nos, doc) {
       if (canonica === null) falhar(`box-shadow ilegível (${e.boxShadow})`)
       else if (canonica !== 'none' && !sombrasOk.includes(canonica)) falhar(`box-shadow fora dos tokens (${e.boxShadow})`)
     }
-    if (!lido(e.backgroundImage)) falhar('background-image ausente')
+    const imagens = leituraDeImagens(e.backgroundImage)
+    if (imagens.erro) falhar(imagens.erro)
     else {
-      for (const gradiente of gradientesDe(e.backgroundImage)) {
+      for (const gradiente of imagens.gradientes) {
         if (gradiente === null || !gradientesOk.includes(gradiente)) falhar(`gradiente fora dos tokens (${e.backgroundImage.slice(0, 120)})`)
       }
     }
@@ -535,7 +616,35 @@ function leituraDoTransform(transform) {
   return { erro: `transform ilegível (${t})` }
 }
 
-/** 3D: nenhum nó com `perspective`, `transform-style: preserve-3d` ou transform 3D (rotação em X ou Y). */
+/**
+ * Lê a propriedade individual `rotate` calculada: `{ tridimensional }` ou `{ erro }`. `none`, o
+ * ângulo sozinho e a rotação em torno de z (`z 30deg`, `0 0 1 30deg`) são 2D; um eixo em x ou y
+ * (`x 30deg`, `y 30deg`, `1 0 0 30deg`, `1 1 0 30deg`) é 3D.
+ */
+function leituraDoRotate(valor) {
+  if (!lido(valor)) return { erro: 'rotate ausente' }
+  const t = valor.trim()
+  if (t === 'none') return { tridimensional: false }
+  const ilegivel = { erro: `rotate ilegível (${t})` }
+  const partes = t.split(/\s+/)
+  const angulo = partes[partes.length - 1]
+  const ehAngulo = new RegExp(`^${NUMERO}(?:deg|grad|rad|turn)$`, 'i').test(angulo) || /^-?0(?:\.0+)?$/.test(angulo)
+  if (!ehAngulo) return ilegivel
+  const eixo = partes.slice(0, -1)
+  if (eixo.length === 0) return { tridimensional: false }
+  if (eixo.length === 1) {
+    const nome = eixo[0].toLowerCase()
+    if (nome === 'z') return { tridimensional: false }
+    return nome === 'x' || nome === 'y' ? { tridimensional: true } : ilegivel
+  }
+  if (eixo.length === 3 && eixo.every((parte) => new RegExp(`^${NUMERO}$`, 'i').test(parte))) {
+    const [x, y] = eixo.map(Number)
+    return { tridimensional: x !== 0 || y !== 0 }
+  }
+  return ilegivel
+}
+
+/** 3D: nenhum nó com `perspective`, `transform-style: preserve-3d`, transform 3D ou `rotate` em X ou Y. */
 export function tresD(nos) {
   if (!Array.isArray(nos) || nos.length === 0) return falhaFechada('3D', 'nenhum nó')
   const falhas = []
@@ -554,8 +663,11 @@ export function tresD(nos) {
     const transform = leituraDoTransform(e.transform)
     if (transform.erro) falhar(transform.erro)
     else if (transform.tridimensional) falhar(`transform 3D (${e.transform})`)
+    const rotate = leituraDoRotate(e.rotate)
+    if (rotate.erro) falhar(rotate.erro)
+    else if (rotate.tridimensional) falhar(`rotate 3D (${e.rotate})`)
   }
-  return resultado('3D', falhas, `${nos.length} nós sem perspective, preserve-3d nem transform 3D`)
+  return resultado('3D', falhas, `${nos.length} nós sem perspective, preserve-3d, transform 3D nem rotate em X ou Y`)
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -647,8 +759,20 @@ export function coletarNaPagina() {
     if (el.tagName === 'SELECT') return colapsar([...el.selectedOptions].map((opcao) => opcao.textContent).join(' '))
     return ''
   }
-  // Os produtos das opacidades e das escalas (X e Y) dos ancestrais, até a raiz. Uma leitura que o
-  // coletor não entende (matrix3d, opacidade ilegível) vai como null: a regra falha fechado.
+  // A propriedade individual `scale` (`none`, `s`, `sx sy` ou `sx sy sz`); nulo se ausente ou ilegível.
+  const escalaIndividual = (valor) => {
+    const t = String(valor ?? '').trim()
+    if (t === '') return null
+    if (t === 'none') return { x: 1, y: 1 }
+    const partes = t.split(/\s+/)
+    if (partes.length > 3) return null
+    const numeros = partes.map((p) => (/^-?(?:\d+\.?\d*|\.\d+)(?:e-?\d+)?%?$/i.test(p) ? (p.endsWith('%') ? parseFloat(p) / 100 : Number(p)) : Number.NaN))
+    if (!numeros.every(Number.isFinite)) return null
+    return { x: numeros[0], y: numeros.length > 1 ? numeros[1] : numeros[0] }
+  }
+  // Os produtos das opacidades e das escalas (X e Y, do `transform` e da propriedade `scale`) dos
+  // ancestrais, até a raiz. Uma leitura que o coletor não entende (matrix3d, opacidade ou scale
+  // ilegível ou ausente) vai como null: a regra falha fechado.
   const ancestraisDe = (el) => {
     let opacidade = 1
     let escalaX = 1
@@ -659,7 +783,8 @@ export function coletarNaPagina() {
       const o = estilo.opacity === '' ? Number.NaN : Number(estilo.opacity)
       if (Number.isFinite(o)) opacidade *= o
       else legivel = false
-      if (estilo.transform && estilo.transform !== 'none') {
+      if (!estilo.transform) legivel = false
+      else if (estilo.transform !== 'none') {
         const m = /^matrix\(([^)]+)\)$/.exec(estilo.transform)
         const v = m ? m[1].split(',').map((parte) => (parte.trim() === '' ? Number.NaN : Number(parte))) : []
         if (v.length === 6 && v.every(Number.isFinite)) {
@@ -667,11 +792,18 @@ export function coletarNaPagina() {
           escalaY *= Math.hypot(v[2], v[3])
         } else legivel = false
       }
+      const individual = escalaIndividual(estilo.getPropertyValue('scale'))
+      if (individual) {
+        escalaX *= individual.x
+        escalaY *= individual.y
+      } else legivel = false
     }
     return legivel ? { opacidade, escalaX, escalaY } : null
   }
 
-  const elementos = [...document.body.querySelectorAll('*')].filter((el) => !ignorar.has(el.tagName))
+  // O html e o body entram na coleta (3D, sombra, gradiente, fonte e o resto valem para eles também);
+  // as marcas de bloco e de controle não os alcançam, então as regras de bloco e de controle não mudam.
+  const elementos = [raiz, document.body, ...document.body.querySelectorAll('*')].filter((el) => el && !ignorar.has(el.tagName))
   const nos = elementos.map((el) => {
     const cs = getComputedStyle(el)
     const r = el.getBoundingClientRect()
@@ -692,6 +824,8 @@ export function coletarNaPagina() {
         color: cs.color,
         opacity: cs.opacity,
         transform: cs.transform,
+        rotate: cs.getPropertyValue('rotate'),
+        scale: cs.getPropertyValue('scale'),
         perspective: cs.getPropertyValue('perspective'),
         transformStyle: cs.getPropertyValue('transform-style'),
         filter: cs.getPropertyValue('filter'),
@@ -708,7 +842,14 @@ export function coletarNaPagina() {
       },
       cadeia: cadeiaDe(el),
     }
-    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT') no.textoControle = textoDoControle(el)
+    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT') {
+      no.textoControle = textoDoControle(el)
+      // Com o valor vazio o que se vê é o placeholder, e ele tem estilo próprio (::placeholder).
+      if (no.textoControle !== '' && el.tagName !== 'SELECT' && el.value === '') {
+        const dica = getComputedStyle(el, '::placeholder')
+        no.estiloTexto = { color: dica.color, fontSize: dica.fontSize, fontWeight: dica.fontWeight, origem: 'placeholder' }
+      }
+    }
     if (no.m.filhoDeMain || no.m.filhoDeBloco || no.m.blocoG12) no.ancestrais = ancestraisDe(el)
     return no
   })
