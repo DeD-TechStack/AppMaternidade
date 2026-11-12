@@ -1317,44 +1317,34 @@
   margin-top: clamp(32px, 2.286vw + 23.086px, 56px);
 }
 
+@media (min-width: 1100px) {
+  .pd-tummy {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: 48px;
+    align-items: stretch;
+  }
+}
+
+/* O fecho do tummy time é uma pilha, não duas colunas: o texto curto ("Se o bebê reclamar", cerca de
+   96 px) ao lado do cartão de fontes (cerca de 262 px) dava colunas de conteúdo desiguais (RF-07 b).
+   O texto fica numa largura de leitura e, abaixo dele, sob um fio, as fontes em duas colunas de
+   nomes (a lista, não o bloco) por toda a largura. Nada de fio lateral nem grade de 7fr/5fr. */
 .pd-tummy-fim {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 24px;
+  gap: 0;
   margin-top: clamp(32px, 2.286vw + 23.086px, 56px);
 }
 
 .pd-tummy-fim .pd-fontes {
-  margin-top: 0;
+  margin-top: clamp(24px, 1.524vw + 18.057px, 36px);
 }
 
-@media (min-width: 1100px) {
-  .pd-tummy,
-  .pd-tummy-fim {
-    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-    gap: 48px;
-  }
-
-  .pd-tummy {
-    align-items: stretch;
-  }
-
-  /* O cartão das fontes tem a altura do próprio conteúdo: os nomes em duas colunas, a data embaixo. */
-  .pd-tummy-fim {
-    align-items: start;
-  }
-
-  .pd-tummy-fim .pd-fontes {
-    padding-top: 0;
-    padding-left: 32px;
-    border-top: 0;
-    border-left: 1px solid var(--cor-fio-suave);
-  }
-
+@media (min-width: 900px) {
   .pd-tummy-fim .pd-fontes-lista {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0 24px;
+    gap: 0 48px;
   }
 }
 

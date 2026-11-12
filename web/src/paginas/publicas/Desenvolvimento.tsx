@@ -81,7 +81,7 @@ export function Desenvolvimento() {
         </CabecaDeSecao>
         <div className="cm-area pd-tummy">
           <PartesDoArtigo partes={TUMMY_TIME.itens.slice(0, ANTES_DA_TABELA)} />
-          <PainelCampo variante="mel" className="pd-celula pd-tummy-desenho">
+          <PainelCampo variante="mel" luz className="pd-celula pd-tummy-desenho">
             <div className="pd-chao">
               <Ilustracao nome="baba-tapete" carregamento="eager" />
             </div>

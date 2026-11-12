@@ -256,6 +256,52 @@ describe('cartões flutuantes e painéis: sem palavra partida, sem painel vazio,
   })
 })
 
+// Rodada de revisão 1: o painel de mel do desenho da babá ficava liso (sem `--luz-estudio`) e o fecho de
+// Desenvolvimento tinha duas colunas de conteúdo muito desiguais (RF-07 b). O jsdom não faz layout:
+// aqui ficam a classe que o `luz` produz e a estrutura/regras que impedem a composição lado a lado.
+describe('painéis de mel com luz e blocos de fim de seção sem colunas desiguais', () => {
+  for (const [caminho] of PAGINAS) {
+    it(`${caminho}: todo painel de mel carrega a luz de estúdio (cm-painel-luz); os de areia, oliva e cacau não`, () => {
+      const { container } = renderizarRota(caminho)
+      const meis = [...container.querySelectorAll<HTMLElement>('main [data-painel="mel"]')]
+      expect(meis.length, caminho).toBeGreaterThan(0)
+      for (const painel of meis) {
+        expect(painel.classList.contains('cm-painel-luz'), `${caminho}: ${painel.className}`).toBe(true)
+      }
+      for (const painel of container.querySelectorAll<HTMLElement>('main [data-painel]:not([data-painel="mel"])')) {
+        expect(painel.classList.contains('cm-painel-luz'), `${caminho}: ${painel.className}`).toBe(false)
+      }
+    })
+  }
+
+  it('o painel de mel do desenho da babá (tummy time) tem a luz de estúdio', () => {
+    const { container } = renderizarRota('/desenvolvimento')
+    const painel = container.querySelector('#tummy-time img[data-ilustracao="baba-tapete"]')!.closest('[data-painel]')!
+    expect(painel.getAttribute('data-painel')).toBe('mel')
+    expect(painel.classList.contains('cm-painel-luz')).toBe(true)
+  })
+
+  it('o fecho do tummy time (o texto e as fontes) é uma pilha: o texto, depois as fontes, sem duas colunas de alturas desiguais', () => {
+    const { container } = renderizarRota('/desenvolvimento')
+    const fim = container.querySelector('#tummy-time .pd-tummy-fim')!
+    expect([...fim.children].map((el) => el.className)).toEqual(['pd-partes', 'pd-fontes'])
+    expect(fim.querySelector('.pd-fontes')!.hasAttribute('data-fontes')).toBe(true)
+    // Nenhuma regra põe duas colunas (grade de 7fr/5fr, lado a lado) no bloco, em largura nenhuma.
+    // (A lista dos nomes das fontes, dentro do cartão, pode ter duas colunas: é a lista, não o bloco.)
+    const regrasDoFim = regrasDoSeletor(/^\.pd-tummy-fim( \.pd-fontes)?$/)
+    expect(regrasDoFim.length).toBeGreaterThan(0)
+    for (const regra of regrasDoFim) {
+      const colunas = regra.declaracoes['grid-template-columns']
+      if (colunas !== undefined) expect(colunas, regra.seletores.join(', ')).toBe('minmax(0, 1fr)')
+      expect(regra.declaracoes, regra.seletores.join(', ')).not.toHaveProperty('border-left')
+    }
+    // O cartão de fontes não volta ao fio lateral da composição anterior.
+    for (const regra of regrasDoSeletor(/^\.pd-tummy-fim \.pd-fontes$/)) {
+      expect(regra.declaracoes, regra.seletores.join(', ')).not.toHaveProperty('border-left')
+    }
+  })
+})
+
 describe('Como funciona', () => {
   it('a primeira dobra tem a cena de estúdio com texto alternativo e tamanho 1×, sem cartão por cima', () => {
     const { container } = renderizarRota('/como-funciona')
