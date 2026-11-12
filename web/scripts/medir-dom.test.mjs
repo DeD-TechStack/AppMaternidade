@@ -23,6 +23,7 @@ import {
   g11,
   g12,
   lerArgumentos,
+  linhaNaoSeAplica,
   palavrasEmCaixaAlta,
   parseCor,
   primeiraFamilia,
@@ -197,6 +198,126 @@ describe('G11: alvo de toque e contraste', () => {
 
   it('o que não está visível não conta', () => {
     assert.equal(g11([alvo(44, 44), alvo(10, 10, { visivel: false })], 'claro').ok, true)
+  })
+
+  describe('MAT-48e: o alvo do radio e do checkbox é o rótulo (WCAG 2.5.8)', () => {
+    // O input de 13 × 13 dentro de um <label> de `w` × `h`; sem `rotulo`, o input não tem rótulo.
+    const caixaDeMarcar = (tipo, w, h, rotulo = { rect: { x: 0, y: 0, w, h } }) =>
+      criar({
+        tag: 'input',
+        texto: '',
+        tipo,
+        rect: { x: 8, y: 8, w: 13, h: 13 },
+        m: { interativo: true },
+        ...(rotulo ? { rotulo } : {}),
+      })
+
+    for (const tipo of ['radio', 'checkbox']) {
+      it(`${tipo} de 13 × 13 num rótulo de 44 × 44 passa (o rótulo é o alvo)`, () => {
+        const r = g11([alvo(44, 44), caixaDeMarcar(tipo, 44, 44)], 'claro')
+        assert.equal(r.ok, true, r.motivo)
+      })
+
+      it(`${tipo} com rótulo de 30 × 30 falha, e a falha nomeia o rótulo`, () => {
+        const r = g11([alvo(44, 44), caixaDeMarcar(tipo, 30, 30)], 'claro')
+        assert.equal(r.ok, false)
+        assert.match(r.motivo, new RegExp(`label de input ${tipo}: alvo de 30\\.0 × 30\\.0`))
+        assert.match(r.motivo, /mínimo 44 × 44/)
+        assert.equal(r.nos_com_falha.length, 1)
+      })
+
+      it(`${tipo} sem rótulo é medido como hoje e falha com 13 × 13`, () => {
+        const r = g11([alvo(44, 44), caixaDeMarcar(tipo, 0, 0, null)], 'claro')
+        assert.equal(r.ok, false)
+        assert.match(r.motivo, /alvo de 13\.0 × 13\.0/)
+        assert.doesNotMatch(r.motivo, /label de/)
+      })
+    }
+
+    it('o rótulo sem tamanho reprova como "alvo sem tamanho"', () => {
+      const r = g11([alvo(44, 44), caixaDeMarcar('radio', 0, 0)], 'claro')
+      assert.equal(r.ok, false)
+      assert.match(r.motivo, /label de input radio: alvo sem tamanho/)
+    })
+
+    it('rotulo sem rect não vale: o input é medido', () => {
+      const r = g11([alvo(44, 44), caixaDeMarcar('radio', 0, 0, {})], 'claro')
+      assert.equal(r.ok, false)
+      assert.match(r.motivo, /alvo de 13\.0 × 13\.0/)
+    })
+
+    it('na madrugada o rótulo precisa de 56 de altura; no claro 44 bastam', () => {
+      assert.equal(g11([alvo(44, 56), caixaDeMarcar('radio', 44, 48)], 'madrugada').ok, false)
+      assert.equal(g11([alvo(44, 56), caixaDeMarcar('radio', 44, 56)], 'madrugada').ok, true)
+      assert.equal(g11([alvo(44, 44), caixaDeMarcar('radio', 44, 48)], 'claro').ok, true)
+      const r = g11([alvo(44, 56), caixaDeMarcar('checkbox', 44, 48)], 'madrugada')
+      assert.match(r.motivo, /label de input checkbox: alvo de 44\.0 × 48\.0 \(mínimo 44 × 56\)/)
+    })
+
+    it('a tolerância de 43,5 vale para o rótulo', () => {
+      assert.equal(g11([alvo(44, 44), caixaDeMarcar('radio', 43.6, 44)], 'claro').ok, true)
+      assert.equal(g11([alvo(44, 44), caixaDeMarcar('radio', 43, 44)], 'claro').ok, false)
+    })
+
+    describe('o resultado mostra o que foi medido pelo rótulo (alvos_por_rotulo e o fragmento do motivo)', () => {
+      it('(1) um radio num rótulo de 44 × 44: o motivo cita 1 radio/checkbox e o menor rótulo, e alvos_por_rotulo traz a caixa', () => {
+        const r = g11([alvo(44, 44), caixaDeMarcar('radio', 44, 44)], 'claro')
+        assert.equal(r.ok, true, r.motivo)
+        assert.match(r.motivo, /; 1 radio\/checkbox medidos pelo rótulo \(44\.0 × 44\.0\)$/)
+        assert.match(r.motivo, /^2 alvos ≥ 44 px; menor contraste \d+\.\d\d:1; /)
+        assert.deepEqual(r.alvos_por_rotulo, [{ no: 'input', w: 44, h: 44 }])
+      })
+
+      it('a falha também leva o fragmento e a lista; a decisão e o motivo da falha seguem iguais', () => {
+        const r = g11([alvo(44, 44), caixaDeMarcar('checkbox', 30, 30)], 'claro')
+        assert.equal(r.ok, false)
+        assert.match(r.motivo, /^label de input checkbox: alvo de 30\.0 × 30\.0 \(mínimo 44 × 44\); 1 radio\/checkbox medidos pelo rótulo \(30\.0 × 30\.0\)$/)
+        assert.deepEqual(r.alvos_por_rotulo, [{ no: 'input', w: 30, h: 30 }])
+        assert.equal(r.nos_com_falha.length, 1)
+      })
+
+      it('com vários, a contagem é do total e o menor rótulo (menor área) é o citado; o que não tem rótulo não entra', () => {
+        const r = g11([alvo(44, 44), caixaDeMarcar('radio', 200, 48), caixaDeMarcar('checkbox', 44.04, 44.04), caixaDeMarcar('radio', 0, 0, null)], 'claro')
+        assert.equal(r.ok, false) // o radio sem rótulo (13 × 13) falha como antes
+        assert.match(r.motivo, /; 2 radio\/checkbox medidos pelo rótulo \(44\.0 × 44\.0\)$/)
+        assert.deepEqual(r.alvos_por_rotulo, [
+          { no: 'input', w: 200, h: 48 },
+          { no: 'input', w: 44.04, h: 44.04 },
+        ])
+      })
+
+      it('o rótulo sem tamanho ainda conta como medido pelo rótulo e o fragmento não quebra', () => {
+        const r = g11([alvo(44, 44), caixaDeMarcar('radio', 0, 0)], 'claro')
+        assert.equal(r.ok, false)
+        assert.match(r.motivo, /^label de input radio: alvo sem tamanho; 1 radio\/checkbox medidos pelo rótulo \(0\.0 × 0\.0\)$/)
+        assert.deepEqual(r.alvos_por_rotulo, [{ no: 'input', w: 0, h: 0 }])
+      })
+
+      it('(2) sem radio nem checkbox medido pelo rótulo: o motivo fica como hoje e alvos_por_rotulo é []', () => {
+        const ok = g11([alvo(44, 44)], 'claro')
+        assert.equal(ok.ok, true)
+        assert.match(ok.motivo, /^1 alvos ≥ 44 px; menor contraste \d+\.\d\d:1$/)
+        assert.doesNotMatch(ok.motivo, /rótulo/)
+        assert.deepEqual(ok.alvos_por_rotulo, [])
+        const falha = g11([alvo(40, 44)], 'claro')
+        assert.equal(falha.motivo, 'button "Olá": alvo de 40.0 × 44.0 (mínimo 44 × 44)')
+        assert.deepEqual(falha.alvos_por_rotulo, [])
+        // O radio sem rótulo é medido pelo próprio tamanho: não entra na lista nem no fragmento.
+        const semRotulo = g11([alvo(44, 44), caixaDeMarcar('radio', 0, 0, null)], 'claro')
+        assert.equal(semRotulo.motivo, 'input: alvo de 13.0 × 13.0 (mínimo 44 × 44)')
+        assert.deepEqual(semRotulo.alvos_por_rotulo, [])
+      })
+
+      it('as falhas fechadas (nenhum alvo, nenhum texto) também trazem alvos_por_rotulo vazio', () => {
+        assert.deepEqual(g11([criar()], 'claro').alvos_por_rotulo, [])
+        assert.deepEqual(g11([alvo(44, 44, { texto: '' })], 'claro').alvos_por_rotulo, [])
+      })
+    })
+
+    it('só radio e checkbox usam o rótulo: um input de texto com rotulo continua medido pelo próprio tamanho', () => {
+      const texto = criar({ tag: 'input', texto: '', tipo: 'text', rect: { x: 0, y: 0, w: 200, h: 30 }, m: { interativo: true }, rotulo: { rect: { x: 0, y: 0, w: 200, h: 60 } } })
+      assert.equal(g11([alvo(44, 44), texto], 'claro').ok, false)
+    })
   })
 
   describe('R1: o texto dos controles entra no contraste', () => {
@@ -704,7 +825,9 @@ describe('avaliarTudo e resumo', () => {
     for (const r of resultados) {
       assert.equal(r.ok, true, `${r.regra}: ${r.motivo}`)
       assert.equal(r.bloqueia, true)
-      assert.deepEqual(Object.keys(r).sort(), ['bloqueia', 'motivo', 'nos_com_falha', 'ok', 'regra'])
+      // O G11 é a única regra com a chave a mais (alvos_por_rotulo); as outras seguem exatas.
+      const chaves = ['bloqueia', 'motivo', 'nos_com_falha', 'ok', 'regra']
+      assert.deepEqual(Object.keys(r).sort(), r.regra === 'G11' ? ['alvos_por_rotulo', ...chaves] : chaves)
     }
   })
 
@@ -921,6 +1044,77 @@ describe('o coletor em jsdom: o que ele lê e o que as regras novas decidem', ()
     assert.equal(fontes(nos).ok, false)
     assert.equal(caixa(coletarDe(pagina('<input placeholder="DIGITE AQUI">')).nos).ok, false)
     assert.equal(caixa(coletarDe(pagina('<input placeholder="Digite aqui">')).nos).ok, true)
+  })
+
+  describe('MAT-48e (coletor): tipo e rótulo do radio e do checkbox', () => {
+    // O jsdom mede 100 × 20 para tudo; o alvo grande do rótulo vem de um getBoundingClientRect por elemento.
+    const medidas = (documento) => {
+      documento.defaultView.Element.prototype.getBoundingClientRect = function medir() {
+        if (this.matches('label')) return { ...RETANGULO, x: 10, y: 20, left: 10, top: 20, width: 200, height: 48, right: 210, bottom: 68 }
+        if (this.matches('input[type=radio], input[type=checkbox]')) return { ...RETANGULO, width: 13, height: 13, right: 13, bottom: 13 }
+        if (this.matches('a, button, select, textarea, input')) return { ...RETANGULO_DO_ALVO }
+        return { ...RETANGULO }
+      }
+    }
+    const medidasDeRotulo = medidas
+    const lerInput = (html, preparar = medidas) => coletarDe(`<main><section><p>Texto.</p>${html}</section></main>`, preparar).nos.find((no) => no.tag === 'input')
+
+    it('radio dentro de <label>: tipo radio e rotulo.rect do rótulo', () => {
+      const no = lerInput('<label class="alvo-toque"><input type="radio" name="a">Mãe</label>')
+      assert.equal(no.tipo, 'radio')
+      assert.deepEqual(no.rotulo, { rect: { x: 10, y: 20, w: 200, h: 48 } })
+      assert.deepEqual(no.rect, { x: 0, y: 0, w: 13, h: 13 })
+    })
+
+    it('label[for] também conta, e o checkbox é marcado como checkbox', () => {
+      const no = lerInput('<input type="checkbox" id="c1"><label for="c1">Aceito</label>')
+      assert.equal(no.tipo, 'checkbox')
+      assert.deepEqual(no.rotulo, { rect: { x: 10, y: 20, w: 200, h: 48 } })
+    })
+
+    it('sem rótulo: tipo marcado e nenhum rotulo', () => {
+      const no = lerInput('<input type="radio" name="b">')
+      assert.equal(no.tipo, 'radio')
+      assert.equal('rotulo' in no, false)
+    })
+
+    it('o rótulo soma a rolagem como o rect do nó', () => {
+      const rolar = (documento) => {
+        medidas(documento)
+        Object.defineProperty(documento.defaultView, 'scrollX', { value: 5, configurable: true })
+        Object.defineProperty(documento.defaultView, 'scrollY', { value: 100, configurable: true })
+      }
+      const no = lerInput('<label><input type="radio" name="c">Mãe</label>', rolar)
+      assert.deepEqual(no.rotulo, { rect: { x: 15, y: 120, w: 200, h: 48 } })
+    })
+
+    it('com mais de um rótulo vale o maior visível', () => {
+      const dois = (documento) => {
+        documento.defaultView.Element.prototype.getBoundingClientRect = function medir() {
+          if (this.matches('label.pequeno')) return { ...RETANGULO, width: 50, height: 20 }
+          if (this.matches('label.grande')) return { ...RETANGULO, width: 200, height: 48 }
+          return { ...RETANGULO }
+        }
+      }
+      const no = lerInput('<input type="radio" id="d1"><label for="d1" class="pequeno">a</label><label for="d1" class="grande">b</label>', dois)
+      assert.equal(no.rotulo.rect.w, 200)
+      assert.equal(no.rotulo.rect.h, 48)
+    })
+
+    it('input de texto não leva tipo nem rotulo', () => {
+      const no = lerInput('<label>Nome <input type="text" value="Ana"></label>')
+      assert.equal('tipo' in no, false)
+      assert.equal('rotulo' in no, false)
+    })
+
+    it('ponta a ponta: o radio de 13 × 13 num rótulo de 200 × 48 passa o G11; sem rótulo, falha', () => {
+      const com = coletarDe('<main><section><button>Ver sessão</button><label><input type="radio" name="e">Mãe</label></section></main>', medidasDeRotulo)
+      assert.equal(g11(com.nos, 'claro').ok, true, g11(com.nos, 'claro').motivo)
+      const sem = coletarDe('<main><section><button>Ver sessão</button><input type="radio" name="e"></section></main>', medidasDeRotulo)
+      const r = g11(sem.nos, 'claro')
+      assert.equal(r.ok, false)
+      assert.match(r.motivo, /alvo de 13\.0 × 13\.0/)
+    })
   })
 
   it('a senha não vai para a coleta em claro', () => {
@@ -1605,8 +1799,15 @@ describe('argumentos e loopback', () => {
 /**
  * Um cdp falso: grava cada chamada de `enviar` e responde ao Runtime.evaluate pela expressão.
  * `entra` diz se o login leva a /app/ (a leitura de location.pathname).
+ * `toggle` diz o que a página tem do modo madrugada, por expressão (o que não está no mapa vale false):
+ *   cabecalho  → `[data-cabecalho] button[aria-pressed]` visível (o clique acontece);
+ *   menuBotao  → o botão Menu `[data-cabecalho] button[aria-controls][aria-expanded="false"]` visível;
+ *   menuToggle → `[data-menu-celular] button[aria-pressed]` visível (só depois de o menu abrir);
+ *   fecha      → o botão Menu aberto (`aria-expanded="true"`) que fecha o menu.
+ * `tema` é o que `data-tema` mostra depois do clique.
  */
-function cdpFalso({ entra = true } = {}) {
+const TOGGLE_NO_CABECALHO = { cabecalho: true, menuBotao: false, menuToggle: false, fecha: true }
+function cdpFalso({ entra = true, toggle = TOGGLE_NO_CABECALHO, tema = 'madrugada' } = {}) {
   const chamadas = []
   let enviou = false
   const cdp = {
@@ -1619,7 +1820,11 @@ function cdpFalso({ entra = true } = {}) {
       let valor = true
       if (e.includes('location.pathname')) valor = enviou && entra
       else if (e.includes('getAnimations')) valor = 0
-      else if (e.includes("getAttribute('data-tema')")) valor = 'madrugada'
+      else if (e.includes("getAttribute('data-tema')")) valor = tema
+      else if (e.includes('[data-menu-celular] button[aria-pressed]')) valor = Boolean(toggle.menuToggle)
+      else if (e.includes('[data-cabecalho] button[aria-controls][aria-expanded="false"]')) valor = Boolean(toggle.menuBotao)
+      else if (e.includes('[data-cabecalho] button[aria-controls][aria-expanded="true"]')) valor = Boolean(toggle.fecha)
+      else if (e.includes('[data-cabecalho] button[aria-pressed]')) valor = Boolean(toggle.cabecalho)
       return { result: { value: valor } }
     },
   }
@@ -1695,5 +1900,116 @@ describe('D3: a rota do app entra com a conta de demonstração, sem recarregar'
     assert.ok(indiceDoPush >= 0)
     assert.ok(indiceDoBotao > indiceDoPush)
     assert.ok(indiceDaSessao > indiceDoBotao)
+  })
+})
+
+describe('MAT-48e: o modo madrugada pelo cabeçalho, pelo menu do celular ou "não se aplica"', () => {
+  const BASE = 'http://127.0.0.1:5244/'
+  const BOTAO_DO_CABECALHO = '[data-cabecalho] button[aria-pressed]'
+  const BOTAO_DO_MENU = '[data-cabecalho] button[aria-controls][aria-expanded="false"]'
+  const FECHA_O_MENU = '[data-cabecalho] button[aria-controls][aria-expanded="true"]'
+  const BOTAO_NO_MENU = '[data-menu-celular] button[aria-pressed]'
+  const indiceDe = (expressoes, trecho) => expressoes.findIndex((e) => e.includes(trecho))
+
+  it('1440: o botão visível do cabeçalho é clicado e o menu do celular nem é tocado', async () => {
+    const cdp = cdpFalso()
+    const r = await abrirCaso(cdp, BASE, { caso: 'sistema', tema: 'madrugada', rota: 'sistema' })
+    assert.equal(r?.naoSeAplica, undefined)
+    const expressoes = avaliadas(cdp)
+    assert.ok(indiceDe(expressoes, BOTAO_DO_CABECALHO) >= 0)
+    for (const trecho of [BOTAO_DO_MENU, BOTAO_NO_MENU, FECHA_O_MENU]) assert.equal(indiceDe(expressoes, trecho), -1, trecho)
+    // O botão só vale se aparece: a expressão confere o checkVisibility e o tamanho.
+    const clique = expressoes[indiceDe(expressoes, BOTAO_DO_CABECALHO)]
+    assert.match(clique, /checkVisibility/)
+    assert.match(clique, /getBoundingClientRect/)
+  })
+
+  it('390: sem o botão visível no cabeçalho, abre o Menu, clica o botão do menu e fecha o menu', async () => {
+    const cdp = cdpFalso({ toggle: { cabecalho: false, menuBotao: true, menuToggle: true, fecha: true } })
+    const r = await abrirCaso(cdp, BASE, { caso: 'sistema', tema: 'madrugada', rota: 'sistema' })
+    assert.equal(r?.naoSeAplica, undefined)
+    const expressoes = avaliadas(cdp)
+    const iCabecalho = indiceDe(expressoes, BOTAO_DO_CABECALHO)
+    const iAbre = indiceDe(expressoes, BOTAO_DO_MENU)
+    const iToggle = indiceDe(expressoes, BOTAO_NO_MENU)
+    const iFecha = indiceDe(expressoes, FECHA_O_MENU)
+    const iTema = indiceDe(expressoes, "getAttribute('data-tema')")
+    assert.ok(iCabecalho >= 0 && iAbre > iCabecalho && iToggle > iAbre && iFecha > iToggle && iTema > iFecha, JSON.stringify({ iCabecalho, iAbre, iToggle, iFecha, iTema }))
+    assert.match(expressoes[iToggle], /checkVisibility/)
+    assert.match(expressoes[iAbre], /checkVisibility/)
+  })
+
+  it('390: o menu que abre sem botão de tema é fechado de novo, e a rota pública fica "não se aplica"', async () => {
+    const cdp = cdpFalso({ toggle: { cabecalho: false, menuBotao: true, menuToggle: false, fecha: true } })
+    const r = await abrirCaso(cdp, BASE, { caso: 'comofunciona', tema: 'madrugada', rota: 'como-funciona' })
+    assert.ok(typeof r?.naoSeAplica === 'string')
+    const expressoes = avaliadas(cdp)
+    const iAbre = indiceDe(expressoes, BOTAO_DO_MENU)
+    const iToggle = indiceDe(expressoes, BOTAO_NO_MENU)
+    const iFecha = indiceDe(expressoes, FECHA_O_MENU)
+    assert.ok(iAbre >= 0 && iToggle > iAbre && iFecha > iToggle)
+  })
+
+  it('o menu que abre sem botão de tema numa rota logada fecha o menu e reprova', async () => {
+    const cdp = cdpFalso({ toggle: { cabecalho: false, menuBotao: true, menuToggle: false, fecha: true } })
+    await assert.rejects(abrirCaso(cdp, BASE, { caso: 'hoje', tema: 'madrugada', rota: 'app/hoje' }), /Modo madrugada/)
+    assert.ok(indiceDe(avaliadas(cdp), FECHA_O_MENU) > indiceDe(avaliadas(cdp), BOTAO_NO_MENU))
+  })
+
+  it('rota pública sem botão em lugar nenhum: devolve { naoSeAplica } com o caso e a rota, sem lançar nem mexer no tema', async () => {
+    const cdp = cdpFalso({ toggle: { cabecalho: false, menuBotao: false, menuToggle: false, fecha: false } })
+    const r = await abrirCaso(cdp, BASE, { caso: 'comofunciona', tema: 'madrugada', rota: 'como-funciona' })
+    assert.equal(typeof r.naoSeAplica, 'string')
+    assert.match(r.naoSeAplica, /comofunciona/)
+    assert.match(r.naoSeAplica, /como-funciona/)
+    assert.equal(indiceDe(avaliadas(cdp), "getAttribute('data-tema')"), -1)
+    assert.ok(!avaliadas(cdp).some((e) => e.includes("setAttribute('data-tema'")))
+  })
+
+  it('rota logada (app/) em que nada é achado: falha fechado com o motivo e a rota', async () => {
+    const cdp = cdpFalso({ toggle: { cabecalho: false, menuBotao: false, menuToggle: false, fecha: false } })
+    await assert.rejects(
+      abrirCaso(cdp, BASE, { caso: 'hoje', tema: 'madrugada', rota: 'app/hoje' }),
+      /não achei o botão "Modo madrugada" nem no cabeçalho nem no menu do celular numa rota logada \(app\/hoje\)/,
+    )
+  })
+
+  it('depois do clique, o data-tema que não virou madrugada continua reprovando', async () => {
+    const cdp = cdpFalso({ tema: 'claro' })
+    await assert.rejects(abrirCaso(cdp, BASE, { caso: 'sistema', tema: 'madrugada', rota: 'sistema' }), /o tema não virou madrugada/)
+  })
+
+  it('o tema claro não procura botão nenhum', async () => {
+    const cdp = cdpFalso()
+    const r = await abrirCaso(cdp, BASE, { caso: 'sistema', tema: 'claro', rota: 'sistema' })
+    assert.equal(r?.naoSeAplica, undefined)
+    const expressoes = avaliadas(cdp)
+    for (const trecho of [BOTAO_DO_CABECALHO, BOTAO_DO_MENU, BOTAO_NO_MENU]) assert.equal(indiceDe(expressoes, trecho), -1)
+  })
+
+  it('nunca emite uma expressão que põe o data-tema direto, e toda expressão é JavaScript válido', async () => {
+    const cenarios = [
+      { toggle: TOGGLE_NO_CABECALHO, rota: 'sistema' },
+      { toggle: { cabecalho: false, menuBotao: true, menuToggle: true, fecha: true }, rota: 'sistema' },
+      { toggle: { cabecalho: false, menuBotao: true, menuToggle: false, fecha: true }, rota: 'sistema' },
+      { toggle: { cabecalho: false, menuBotao: false, menuToggle: false, fecha: false }, rota: 'sistema' },
+      { toggle: { cabecalho: false, menuBotao: false, menuToggle: false, fecha: false }, rota: 'app/hoje' },
+    ]
+    for (const { toggle, rota } of cenarios) {
+      const cdp = cdpFalso({ toggle })
+      await abrirCaso(cdp, BASE, { caso: 'x', tema: 'madrugada', rota }).catch(() => undefined)
+      for (const e of avaliadas(cdp)) {
+        assert.ok(!e.includes("setAttribute('data-tema'"), e)
+        assert.ok(!e.includes('setAttribute("data-tema"'), e)
+        assert.doesNotThrow(() => new Function(`return ${e}`), e)
+      }
+    }
+  })
+
+  it('linhaNaoSeAplica: NAO_SE_APLICA <caso>_<tema>_<largura>: <mensagem>', () => {
+    assert.equal(
+      linhaNaoSeAplica({ caso: 'comofunciona', tema: 'madrugada', largura: 390 }, 'sem botão'),
+      'NAO_SE_APLICA comofunciona_madrugada_390: sem botão',
+    )
   })
 })
