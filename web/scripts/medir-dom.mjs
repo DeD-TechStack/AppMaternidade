@@ -183,15 +183,22 @@ export function g11(nos, tema) {
   const alvos = nos.filter((no) => marca(no, 'interativo') && visivel(no))
   // O texto dos controles (valor, placeholder, rótulo do select) conta como o dos demais nós.
   const textos = nos.filter((no) => visivel(no) && (temTexto(no) || temTextoControle(no)))
-  if (alvos.length === 0) return falhaFechada('G11', 'nenhum alvo de toque')
-  if (textos.length === 0) return falhaFechada('G11', 'nenhum nó com texto')
+  if (alvos.length === 0) return { ...falhaFechada('G11', 'nenhum alvo de toque'), alvos_por_rotulo: [] }
+  if (textos.length === 0) return { ...falhaFechada('G11', 'nenhum nó com texto'), alvos_por_rotulo: [] }
   const falhas = []
+  // Os radios e checkboxes medidos pela caixa do rótulo: o resultado os mostra, para a conferência.
+  const alvosPorRotulo = []
   for (const no of alvos) {
     const alturaMinima = tema === 'madrugada' || marca(no, 'barraRegistrar') ? 56 : 44
-    const { w, h } = no.rect ?? {}
-    if (!(w > 0) || !(h > 0)) falhas.push({ no: descrever(no), motivo: `${descrever(no)}: alvo sem tamanho` })
+    // Radio e checkbox: o alvo de toque é o rótulo (WCAG 2.5.8), não o controle nu de 13 × 13.
+    // Sem rótulo medido, o próprio input é o alvo.
+    const pelaCaixa = (no.tipo === 'radio' || no.tipo === 'checkbox') && no.rotulo?.rect
+    const { w, h } = (pelaCaixa ? no.rotulo.rect : no.rect) ?? {}
+    const nome = pelaCaixa ? `label de ${no.tag ?? 'input'} ${no.tipo}` : descrever(no)
+    if (pelaCaixa) alvosPorRotulo.push({ no: descrever(no), w, h })
+    if (!(w > 0) || !(h > 0)) falhas.push({ no: descrever(no), motivo: `${nome}: alvo sem tamanho` })
     else if (w < 43.5 || h < alturaMinima - 0.5) {
-      falhas.push({ no: descrever(no), motivo: `${descrever(no)}: alvo de ${w.toFixed(1)} × ${h.toFixed(1)} (mínimo 44 × ${alturaMinima})` })
+      falhas.push({ no: descrever(no), motivo: `${nome}: alvo de ${w.toFixed(1)} × ${h.toFixed(1)} (mínimo 44 × ${alturaMinima})` })
     }
   }
   let menor = Infinity
@@ -240,7 +247,17 @@ export function g11(nos, tema) {
     const minimo = grande ? 3 : 4.5
     if (razao < minimo) falhas.push({ no: descrever(no), motivo: `${descrever(no)}: contraste ${razao.toFixed(2)}:1 (mínimo ${minimo}:1${grande ? ', texto grande' : ''})` })
   }
-  return resultado('G11', falhas, `${alvos.length} alvos ≥ 44 px; menor contraste ${menor.toFixed(2)}:1`)
+  // O fragmento (e só ele) é novo: a decisão e o resto do motivo não mudam. Sem radio ou checkbox
+  // medido pelo rótulo, o motivo fica exatamente como era.
+  let fragmento = ''
+  if (alvosPorRotulo.length > 0) {
+    const area = (a) => (Number.isFinite(a.w) && Number.isFinite(a.h) ? a.w * a.h : 0)
+    const menorCaixa = alvosPorRotulo.reduce((menorAteAqui, a) => (area(a) < area(menorAteAqui) ? a : menorAteAqui))
+    const uma = (v) => (Number.isFinite(v) ? v.toFixed(1) : '?')
+    fragmento = `; ${alvosPorRotulo.length} radio/checkbox medidos pelo rótulo (${uma(menorCaixa.w)} × ${uma(menorCaixa.h)})`
+  }
+  const medido = resultado('G11', falhas, `${alvos.length} alvos ≥ 44 px; menor contraste ${menor.toFixed(2)}:1`)
+  return { ...medido, motivo: `${medido.motivo}${fragmento}`, alvos_por_rotulo: alvosPorRotulo }
 }
 
 /** As escalas dos eixos X e Y de um `transform` calculado (`none` ou `matrix(a, b, c, d, e, f)`); nulo se ilegível. */
@@ -743,7 +760,6 @@ export function lerArgumentos(argumentos) {
     if (!m) throw new Error(`argumento inválido: ${spec} (esperado <caso>:<tema>:<LxA>, caso em [a-z0-9_]+)`)
     const [, caso, tema, largura, altura] = m
     if (!TEMAS.includes(tema)) throw new Error(`tema desconhecido: ${tema} (use ${TEMAS.join(', ')})`)
-    if (caso === 'inicio' && tema === 'madrugada') throw new Error('o Início é sempre claro: não há inicio:madrugada')
     return { caso, tema, largura: Number(largura), altura: Number(altura) }
   })
   return { pasta, pedidos }
@@ -912,6 +928,22 @@ export function coletarNaPagina() {
         }
       }
     }
+    // G11: no radio e no checkbox o alvo de toque é o rótulo (`el.labels` cobre o <label> que envolve e
+    // o label[for]); vale o maior visível. Sem rótulo visível, não há `rotulo` e o input é medido.
+    if (el.tagName === 'INPUT') {
+      const tipo = (el.getAttribute('type') || 'text').toLowerCase()
+      if (tipo === 'radio' || tipo === 'checkbox') {
+        no.tipo = tipo
+        let maior = null
+        for (const rotulo of el.labels ?? []) {
+          const rr = rotulo.getBoundingClientRect()
+          const aparece = typeof rotulo.checkVisibility === 'function' ? rotulo.checkVisibility({ visibilityProperty: true }) : rr.width > 0 && rr.height > 0
+          if (!aparece || !(rr.width > 0) || !(rr.height > 0)) continue
+          if (maior === null || rr.width * rr.height > maior.w * maior.h) maior = { x: rr.x + sx, y: rr.y + sy, w: rr.width, h: rr.height }
+        }
+        if (maior !== null) no.rotulo = { rect: maior }
+      }
+    }
     if (no.m.filhoDeMain || no.m.filhoDeBloco || no.m.blocoG12) no.ancestrais = ancestraisDe(el)
     return no
   })
@@ -1038,6 +1070,45 @@ async function irPelaSpa(cdp, base, rota) {
   await esperarPronto(cdp)
 }
 
+/**
+ * A expressão que clica o primeiro elemento VISÍVEL (`checkVisibility` e largura e altura > 0) de
+ * `seletor` e devolve true; false se não há nenhum. O seletor não pode ter aspas simples.
+ */
+function clicarVisivel(seletor) {
+  return `(() => { const aparece = (e) => { if (!e.checkVisibility({ visibilityProperty: true })) return false; const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 }; const b = [...document.querySelectorAll('${seletor}')].find(aparece); if (!b) return false; b.click(); return true })()`
+}
+
+/**
+ * Liga o modo madrugada como a pessoa faz: o botão visível do cabeçalho; senão o Menu do celular
+ * (abre, clica o botão dentro dele e fecha o menu de novo). Nunca põe `data-tema` direto. Devolve
+ * true se clicou o botão, false se não achou em lugar nenhum (o menu que abriu é fechado).
+ */
+async function ligarMadrugada(cdp) {
+  if (await avaliar(cdp, clicarVisivel('[data-cabecalho] button[aria-pressed]'))) return true
+  if (!(await avaliar(cdp, clicarVisivel('[data-cabecalho] button[aria-controls][aria-expanded="false"]')))) return false
+  await espera(300)
+  const clicou = await avaliar(cdp, clicarVisivel('[data-menu-celular] button[aria-pressed]'))
+  await avaliar(cdp, clicarVisivel('[data-cabecalho] button[aria-controls][aria-expanded="true"]'))
+  return Boolean(clicou)
+}
+
+/** A linha de stdout de um pedido que não se aplica à página: `NAO_SE_APLICA <caso>_<tema>_<largura>: <mensagem>`. */
+export function linhaNaoSeAplica({ caso, tema, largura }, mensagem) {
+  return `NAO_SE_APLICA ${caso}_${tema}_${largura}: ${mensagem}`
+}
+
+/**
+ * O pedido que não se aplica sem nem abrir a página: o Início em madrugada (o Início é sempre claro,
+ * é público e não tem o botão "Modo madrugada"). Devolve a mensagem, ou nulo se o pedido segue.
+ * Nunca liga a madrugada nem mexe em `data-tema`: só o pedido deixa de existir.
+ */
+export function naoSeAplicaSemAbrir({ caso, tema, rota }) {
+  if (tema === 'madrugada' && caso === 'inicio') {
+    return `o caso inicio em madrugada não se aplica: o Início é sempre claro, é público (rota "${rota ?? ''}") e não tem o botão "Modo madrugada"`
+  }
+  return null
+}
+
 export async function abrirCaso(cdp, base, { caso, tema, rota }) {
   // Movimento reduzido sempre (G12): as medidas e as capturas usam o mesmo modo.
   await cdp.enviar('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] })
@@ -1049,8 +1120,12 @@ export async function abrirCaso(cdp, base, { caso, tema, rota }) {
     await esperarPronto(cdp)
   }
   if (tema === 'madrugada') {
-    const ligou = await avaliar(cdp, `(() => { const b = document.querySelector('[data-cabecalho] button[aria-pressed]'); if (!b) return false; b.click(); return true })()`)
-    if (!ligou) throw new Error('não achei o botão "Modo madrugada" no cabeçalho')
+    if (!(await ligarMadrugada(cdp))) {
+      const procurado = 'o botão "Modo madrugada" nem no cabeçalho nem no menu do celular'
+      // Fail closed: numa rota logada o botão tem de existir; só a rota pública pode não tê-lo.
+      if (rotaExigeSessao(rota)) throw new Error(`não achei ${procurado} numa rota logada (${rota})`)
+      return { naoSeAplica: `o caso ${caso} em madrugada não se aplica: a rota pública "${rota}" não tem ${procurado}` }
+    }
     await espera(300)
     const atual = await avaliar(cdp, `document.documentElement.getAttribute('data-tema')`)
     if (atual !== 'madrugada') throw new Error('o tema não virou madrugada')
@@ -1097,10 +1172,21 @@ async function principal(argumentos) {
   fs.mkdirSync(pasta, { recursive: true })
   let cdp
   try {
-    cdp = await abrirAlvo(porta)
     for (const pedido of pedidos) {
+      // O que não se aplica sai antes de qualquer página: o Chrome só abre para o primeiro pedido que precisa dele.
+      const semAbrir = naoSeAplicaSemAbrir(pedido)
+      if (semAbrir !== null) {
+        console.log(linhaNaoSeAplica(pedido, semAbrir))
+        continue
+      }
+      cdp ??= await abrirAlvo(porta)
       await cdp.enviar('Emulation.setDeviceMetricsOverride', { width: pedido.largura, height: pedido.altura, deviceScaleFactor: 1, mobile: false })
-      await abrirCaso(cdp, baseUrl, pedido)
+      const aberto = await abrirCaso(cdp, baseUrl, pedido)
+      if (aberto?.naoSeAplica) {
+        // Não é falha nem medida: sem JSON, o pedido segue para o próximo e a saída continua 0.
+        console.log(linhaNaoSeAplica(pedido, aberto.naoSeAplica))
+        continue
+      }
       const leitura = await avaliar(cdp, `(${coletarNaPagina.toString()})()`)
       const resultados = avaliarTudo({ ...leitura, tema: pedido.tema })
       const arquivo = `${pedido.caso}_${pedido.tema}_${pedido.largura}.json`
