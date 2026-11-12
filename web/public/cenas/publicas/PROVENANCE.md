@@ -15,3 +15,10 @@ Same scene sources and compositor (`compor.py`, `verde_restante: 0`); the screen
 - como-funciona@2x.webp: scene `brutos/S2_unico_mel.png`; captures: Hoje (day) 390x1013; 2026-11-11; sha256 21a8ac7792bbbe038567711407952b89ea35eaad5f2be69e8819a6292fa88d1b
 - desenvolvimento@1x.webp: scene `brutos/S4_celular_linho.png`; captures: Sessão (day) 390x850; one-device fallback, no tablet overlap; 2026-11-11; sha256 039718906c68c1356ca178051da38898b1fda0e2f24d749e4fc34a40615c3cd1
 - desenvolvimento@2x.webp: scene `brutos/S4_celular_linho.png`; captures: Sessão (day) 390x850; one-device fallback, no tablet overlap; 2026-11-11; sha256 6c097b1ec9194e684e39ccee43cff831a5d800eb749910f4e81fc09a226e1c24
+
+## Recomposed by POL-DES (2026-11-11)
+
+Same scene sources and compositor (`compor.py`, `verde_restante: 0` for both). The screens are window captures 390 px wide, deviceScaleFactor 2 (780 px wide, at least as wide as the green key: 299 px for S2 and 594 px for S4 in the @2x output), reduced motion, demo notices hidden, from the POL-DES worktree on base e731af5. No "Protótipo" or "dados de exemplo" in the visible text of either capture (checked on the DOM text).
+
+- como-funciona@1x.webp, como-funciona@2x.webp: scene `brutos/S2_unico_mel.png`; capture: Sessão (day, big timer, little small text) 390x1013, sha256 3f424a860c7a2ee9a210e621058a53103dff4215c72ceba181ce4cb2e721e65b; output sha256 @1x 9f0106d86fbecfca1442a26f9b2b8e97ae11525e412aec088c38658a8e82ff89, @2x 05f36ff3bc1f28ceec7e5bce6a046d45399ad256021d41f2afc4eee9cb62c805; 2026-11-11; prompt id S2_unico_mel
+- desenvolvimento@1x.webp, desenvolvimento@2x.webp: scene `brutos/S4_celular_linho.png`; capture: tummy time session screen (`/app/sessao` after starting tummy time in Hoje) 390x850, sha256 ee0e7c2115b99bd323432317781e0c5872e96ccdfa51e92d27cdfe61d6d76bdb; output sha256 @1x 87cee3ba8758acd0dda3b8c25d94dc64cbedb77f80df77d7b9dcf48997bfd351, @2x a54d1a3d55644002ab2e3c3c9998aba5a4f70f09e09e8e77b005e903abe50153; 2026-11-11; prompt id S4_celular_linho
