@@ -134,13 +134,14 @@
 
 /* Números (DESIGN.md 4, `Numeros`): o número lidera, em Literata 64 em 1440 e 40 em 390, e a legenda
    em Outfit vem embaixo dele. Os fios são de cacau a 20 %. Em toda largura os três formam um bloco só,
-   que abre a faixa dos números e dos selos (POL, devolução 6): a fileira de três presa à grade, o
-   número em cima da legenda, cada um na borda esquerda da sua coluna (o primeiro na borda do h1), com
-   fios em cima e embaixo e os fios verticais ligados a eles. No celular a legenda vai no tamanho
-   pequeno (15/22) e quebra em duas linhas dentro do terço dela. */
+   que abre a faixa dos números e dos selos (POL, devolução 6), com fios em cima e embaixo. No celular
+   (abaixo de 768) os três ficam empilhados, numa coluna, separados por fios horizontais, como pede o
+   DESIGN.md 4; cada item é compacto (16 em cima e embaixo) e a legenda vai no tamanho pequeno (15/22).
+   De 768 em diante é a fileira de três presa à grade, cada número na borda esquerda da sua coluna (o
+   primeiro na borda do h1), com os fios verticais ligados aos de cima e de baixo. */
 .in-numeros-lista {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -149,19 +150,11 @@
 }
 
 .in-numeros-item {
-  padding: 18px 12px 20px;
-}
-
-.in-numeros-item:first-child {
-  padding-left: 0;
-}
-
-.in-numeros-item:last-child {
-  padding-right: 0;
+  padding: 16px 0;
 }
 
 .in-numeros-item + .in-numeros-item {
-  border-left: 1px solid var(--cor-fio-suave);
+  border-top: 1px solid var(--cor-fio-suave);
 }
 
 .in-numeros-linha {
@@ -188,8 +181,17 @@
 }
 
 @media (min-width: 768px) {
+  .in-numeros-lista {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .in-numeros-item {
     padding: clamp(20px, 1.143vw + 15.543px, 32px);
+  }
+
+  .in-numeros-item + .in-numeros-item {
+    border-top: 0;
+    border-left: 1px solid var(--cor-fio-suave);
   }
 
   .in-numeros-item:first-child {

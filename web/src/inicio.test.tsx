@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { fireEvent, screen, within } from '@testing-library/react'
 import { DESCRICAO_ILUSTRACAO } from './componentes/campo/Ilustracao.tsx'
@@ -11,6 +13,38 @@ function textoLido(elemento: Element): string {
   const copia = elemento.cloneNode(true) as Element
   for (const escondido of copia.querySelectorAll('[aria-hidden="true"]')) escondido.remove()
   return (copia.textContent ?? '').replace(/\s+/g, ' ').trim()
+}
+
+type RegraCss = { seletores: string[]; midia: string | null; corpo: string }
+
+/** As regras de um CSS sem comentários, cada uma com o @media em que está (null na base). */
+function lerRegrasCss(relativo: string): RegraCss[] {
+  const css = readFileSync(join(process.cwd(), 'src', relativo), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
+  const regras: RegraCss[] = []
+  const midias: string[] = []
+  let inicio = 0
+  for (let i = 0; i < css.length; i++) {
+    if (css[i] === '{') {
+      const preludio = css.slice(inicio, i).trim()
+      if (preludio.startsWith('@')) {
+        midias.push(preludio)
+        inicio = i + 1
+      } else {
+        const fim = css.indexOf('}', i)
+        regras.push({
+          seletores: preludio.split(',').map((seletor) => seletor.trim().replace(/\s+/g, ' ')),
+          midia: midias.length > 0 ? midias[midias.length - 1] : null,
+          corpo: css.slice(i + 1, fim),
+        })
+        i = fim
+        inicio = fim + 1
+      }
+    } else if (css[i] === '}') {
+      midias.pop()
+      inicio = i + 1
+    }
+  }
+  return regras
 }
 
 function abrirInicio() {
@@ -85,6 +119,35 @@ describe('Início: números e selos', () => {
       'toques',
       'metas ou comparações',
     ])
+  })
+
+  it('abaixo de 768 os 3 números ficam empilhados com fios horizontais; a fileira de 3 com fios verticais só de 768 em diante (DESIGN.md 4)', () => {
+    const regras = lerRegrasCss('componentes/inicio/inicio.css')
+    const doSeletor = (seletor: string) => regras.filter((regra) => regra.seletores.includes(seletor))
+    const doTablet = (regra: RegraCss) => regra.midia !== null && /min-width:\s*768px/.test(regra.midia)
+    const colunas = (regra: RegraCss) => /grid-template-columns:\s*([^;]+)/.exec(regra.corpo)?.[1].trim()
+
+    const lista = doSeletor('.in-numeros-lista')
+    const listaBase = lista.filter((regra) => regra.midia === null)
+    expect(listaBase.length).toBeGreaterThan(0)
+    // Na base (o celular), uma coluna só, ou nenhuma grade declarada.
+    for (const regra of listaBase) {
+      const valor = colunas(regra)
+      if (valor !== undefined) expect(valor).toMatch(/^(minmax\(0, 1fr\)|1fr)$/)
+    }
+    // A grade de 3 colunas existe, e só dentro do bloco de 768 em diante.
+    const comTres = lista.filter((regra) => /repeat\(3/.test(regra.corpo))
+    expect(comTres.length).toBeGreaterThan(0)
+    for (const regra of comTres) expect(doTablet(regra)).toBe(true)
+
+    const vizinho = doSeletor('.in-numeros-item + .in-numeros-item')
+    // O fio vertical só de 768 em diante.
+    const comVertical = vizinho.filter((regra) => /border-left:\s*1px solid/.test(regra.corpo))
+    expect(comVertical.length).toBeGreaterThan(0)
+    for (const regra of comVertical) expect(doTablet(regra)).toBe(true)
+    // Na base, o fio horizontal entre um número e o seguinte.
+    const vizinhoBase = vizinho.filter((regra) => regra.midia === null)
+    expect(vizinhoBase.some((regra) => /border-top:\s*1px solid var\(--cor-fio-suave\)/.test(regra.corpo))).toBe(true)
   })
 
   it('os selos ficam numa seção com o h2 "O que o app promete" e trazem os cinco selos uma vez para o leitor', () => {
