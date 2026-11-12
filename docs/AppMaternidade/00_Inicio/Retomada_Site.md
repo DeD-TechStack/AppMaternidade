@@ -12,7 +12,11 @@ Esta é a nota de partida da próxima sessão de trabalho no site. Ela registra 
 
 **Site publicado (06/11/2026):** https://ded-techstack.github.io/AppMaternidade/ (MAT-48a, main 2beddee). Ele mostra Início, Hoje e Sessão com o aviso "Demonstração sem banco". As variáveis do banco entram no build com a MAT-37.
 
-## TROCA DE SESSÃO (12/11/2026, 8h35): ESTADO VIGENTE
+## PAUSA de 12/11/2026 ~07h50 (Daniel, via coordenador, t_8f26b965): ESTADO VIGENTE
+
+Pausa num ponto seguro; Daniel volta em alguns dias (cota do GPT no fim). Cron retorno-oc (cacefbc1849d) pausado; 39b em triage, P-60 bloqueada, P-50 e POL-ABR em scheduled, MAT-40c aprovada sem integrar. O passo a passo da retomada está no bloco RETOMAR de [PENDENCIAS](PENDENCIAS.md).
+
+## TROCA DE SESSÃO (12/11/2026, 7h42): histórico
 
 Daniel, via coordenador (t_64dcb622), depois de ver a galeria do estado atual: a base está boa, mas falta a harmonia de espaço do Pato Jack e da Becky/Good Inside, e o polimento por página não converge. O polimento por página está congelado (POL-ABR t_d04a8a7d estacionado) e entra o item H, sistema de harmonia: medir o espaço e o tipo das duas referências, derivar as escalas e aplicar de forma global. O passo a passo da sessão nova está no bloco RETOMAR de [PENDENCIAS](PENDENCIAS.md).
 
