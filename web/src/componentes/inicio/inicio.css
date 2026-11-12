@@ -238,8 +238,8 @@
 }
 
 /* No celular, com movimento reduzido, a fileira não cabe, e cortada na borda ela não mostra que rola
-   (POL, devolução 6): os selos viram uma grade de 2 colunas de largura igual, com o texto centrado
-   (quebra em duas linhas quando precisa). Cinco selos deixariam um sozinho na última linha: a grade
+   (POL, devolução 6): os selos viram uma grade de 2 colunas de largura igual, com o ícone e o texto
+   à esquerda (o texto quebra em duas linhas quando precisa). Cinco selos deixariam um sozinho na última linha: a grade
    mostra quatro, e "Sem comparações" sai, porque o bloco dos números logo acima já diz "0 metas ou
    comparações" (um subconjunto da lista, sem texto novo). */
 @media (max-width: 767px) and (prefers-reduced-motion: reduce) {
@@ -254,13 +254,16 @@
     display: none;
   }
 
+  /* Um alinhamento só nos quatro selos: o ícone na borda esquerda e o texto alinhado à esquerda logo
+     ao lado dele, quebre ou não em duas linhas. */
   .in-selos .cm-selo {
-    gap: 8px;
+    justify-content: flex-start;
+    gap: 10px;
     min-height: 56px;
-    padding: 8px 14px 8px 12px;
+    padding: 8px 14px 8px 16px;
     font-size: 1rem;
     line-height: 1.25rem;
-    text-align: center;
+    text-align: left;
     white-space: normal;
     text-wrap: balance;
   }
@@ -356,7 +359,10 @@
 }
 
 /* No largo, duas metades: o texto centrado na altura da arte, e a arte (desenho mais cartão) presa
-   ao pé do painel, para o cartão sempre sobrar da borda de baixo. */
+   ao pé do painel, para o cartão sempre sobrar da borda de baixo. As duas colunas ficam de altura
+   parecida (POL:RF-07 b, o texto com pelo menos 58 % da arte): a arte fica mais compacta (o desenho
+   com 320 de largura, 16 entre ele e o cartão, a lista do cartão mais justa) e o título ganha mais ar
+   antes do lide. A 390 nada disso muda. */
 @media (min-width: 960px) {
   .in-turno-grade {
     grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
@@ -364,8 +370,29 @@
     align-items: center;
   }
 
+  .in-turno-texto .cm-lide {
+    margin-top: 40px;
+  }
+
   .in-turno-arte {
     align-self: end;
+    gap: 16px;
+  }
+
+  .in-turno-arte .in-revela {
+    width: min(100%, 320px);
+  }
+
+  .in-turno .in-cartao-lista {
+    margin-top: 8px;
+  }
+
+  .in-turno .in-cartao-item {
+    padding-block: 8px;
+  }
+
+  .in-turno .in-cartao-item:last-child {
+    padding-bottom: 0;
   }
 }
 

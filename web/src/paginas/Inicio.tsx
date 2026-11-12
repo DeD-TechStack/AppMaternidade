@@ -12,9 +12,11 @@ import { SecaoTurno } from '../componentes/inicio/SecaoTurno.tsx'
 import { FATOS, INICIO } from '../conteudo/textos.ts'
 import { usePrototipo } from '../prototipo/contexto.ts'
 
-// Regra tipográfica, sem mudar o texto: a palavra de uma letra só ("a", "à", "o") fica presa à
-// seguinte por um espaço que não quebra, para nunca sobrar sozinha no fim de uma linha da citação.
-const amarrarMonossilabos = (texto: string) => texto.replace(/(^|\s)(\p{L}) /gu, '$1$2 ')
+// Regra tipográfica, sem mudar o texto: a palavra de uma ou duas letras ("a", "à", "o", "Se", "de")
+// fica presa à seguinte por um espaço que não quebra, para nunca sobrar sozinha no fim de uma linha da
+// citação. O lookbehind deixa palavras curtas seguidas ("e a") se amarrarem em cadeia.
+const amarrarMonossilabos = (texto: string) =>
+  texto.replace(/(?<=^|\s)(\p{L}{1,2}) /gu, '$1 ')
 
 /**
  * O Início (MAT-49c), na composição F1 "Campo de mel": a abertura com a cena dos três celulares, os
