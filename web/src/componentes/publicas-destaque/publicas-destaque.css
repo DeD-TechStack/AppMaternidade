@@ -1509,13 +1509,16 @@
   padding: clamp(20px, 2.286vw + 11.086px, 40px);
 }
 
-/* O conteúdo do painel de oliva começa na mesma borda da coluna de texto da página: o painel começa 32
-   px (o recuo) depois da borda da janela e a coluna de texto, 64 (a margem), então o respiro lateral do
-   painel é a diferença (32 em 1440). Antes eram 40 px, 8 a mais que o texto da página. */
-@media (min-width: 1100px) {
-  .pd-tummy-tabela.cm-painel {
-    padding-inline: max(24px, calc(var(--cm-margem) - var(--cm-recuo-painel)));
-  }
+/* O conteúdo do painel de oliva começa na mesma borda da coluna de texto da página (POL:RF-05). A coluna
+   é `cm-area` (largura menos duas margens, no máximo 1312) e o painel tem a largura menos dois recuos
+   (no máximo 1376): o respiro lateral é a metade da diferença entre as duas larguras (32 em 1440, 8 em
+   390). Não vale `margem - recuo`: a margem é uma reta que só chega a 64 em 1601 px (58 em 1440) e a
+   coluna já está travada em 1312, então a conta dava 26 e não 32. O padding em % é medido na largura do
+   pai do painel, a mesma das duas larguras. Vale em todas as larguras, sem piso. */
+.pd-tummy-tabela.cm-painel {
+  padding-inline: calc(
+    (min(100% - 2 * var(--cm-recuo-painel), 1376px) - min(100% - 2 * var(--cm-margem), 1312px)) / 2
+  );
 }
 
 .pd-tummy-tabela .pd-tabela caption {

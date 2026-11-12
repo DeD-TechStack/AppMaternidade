@@ -697,9 +697,12 @@ describe('polimento, volta 2', () => {
     expect(abertura).toContain('34rem')
   })
 
-  it('o painel de oliva do tummy time começa na mesma borda da coluna de texto da página (margem menos recuo)', () => {
+  it('o painel de oliva do tummy time começa na mesma borda da coluna de texto da página (metade da diferença das larguras)', () => {
     const preenchimento = decl(/^\.pd-tummy-tabela\.cm-painel$/).map((d) => d['padding-inline'])
-    expect(preenchimento).toContain('max(24px, calc(var(--cm-margem) - var(--cm-recuo-painel)))')
+    const semEspaco = preenchimento.join(' ').replace(/\s+/g, '')
+    expect(semEspaco).toContain(
+      'calc((min(100%-2*var(--cm-recuo-painel),1376px)-min(100%-2*var(--cm-margem),1312px))/2)',
+    )
   })
 
   it('o trecho dos marcos tem uma frase de destaque, repetida do próprio texto (T-1: nada de texto novo)', () => {
