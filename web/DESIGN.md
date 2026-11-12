@@ -315,6 +315,16 @@ Alcance de duas regras gerais desta base na área de conta:
 - **Sem token novo:** campos, botões, madrugada e foco são os da base; nenhuma tela traz sombra, gradiente ou ilustração à mão.
 - **Direção:** vem do DESIGN.md aprovado em 11/11; esta tela não tem nota própria do worker. O aceite visual é dos juízes cegos do líder.
 
+### Comunidade (MAT-40a)
+
+As sete telas da Comunidade (Comunidade, Espaço, Tópico, Novo tópico e edição, Entrar na comunidade, Meu perfil público e Minhas denúncias) moram na moldura das telas logadas e usam só o que a base já tem: o cabeçalho e o rodapé da casca, os campos e botões `cm-campo-*` e `cm-botao-*`, e as variáveis `--cor-*`. Nenhuma tela desta área traz token, sombra, gradiente, ícone ou ilustração à mão fora deles.
+
+- **Selo e aviso de saúde:** toda tela abre com o selo de texto da comunidade; Comunidade, Espaço e Tópico levam também o aviso de saúde com o link "Onde pedir ajuda agora".
+- **Texto publicado:** todo tópico e toda resposta, novo ou editado, passa por prévia e confirmação; nada vai ao banco antes do segundo toque. A resposta cita uma resposta de um nível só.
+- **Estados:** carregando, vazio, erro com frase fixa e "Tente de novo", e envio com resultado incerto, que confere antes de reenviar. O apelido é sempre texto, nunca link; o autor removido aparece como "pessoa removida".
+- **Exceção ao "Desfazer":** publicar é irreversível para quem lê, então a confirmação vem antes (prévia), e o Desfazer não existe depois. Editar e excluir o que é seu seguem a regra geral.
+- **Tema e movimento:** as telas seguem o `data-tema` e o `prefers-reduced-motion` da base, com alvos de 44 px e foco visível.
+
 ## Elevation & Depth
 
 Plano. Profundidade vem de linha, cor, espaço, escala e, nos aparelhos de mídia, de inclinação em CSS 3D. Nenhum `box-shadow`, nenhum `backdrop-filter` e nenhum `filter: blur`.

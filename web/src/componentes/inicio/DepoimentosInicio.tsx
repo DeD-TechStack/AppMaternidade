@@ -4,9 +4,10 @@ import { Titulo } from '../campo/Titulo.tsx'
 import { INICIO } from '../../conteudo/textos.ts'
 import './inicio.css'
 
-// O desenho de traço ao lado de cada pessoa, na ordem dos relatos (mãe, avô, babá). É só enfeite: o
-// nome e o papel já dizem quem fala. Carregam na hora: sem eles, a coluna do desenho fica vazia.
-const DESENHOS: readonly NomeIlustracao[] = ['mae-noite', 'pai-colo', 'tummy-time']
+// O desenho de traço ao lado de cada pessoa, na ordem dos relatos (mãe, avô, babá): a babá é a que
+// brinca no tapete. É só enfeite: o nome e o papel já dizem quem fala. Carregam na hora: sem eles, a
+// coluna do desenho fica vazia.
+const DESENHOS: readonly NomeIlustracao[] = ['mae-noite', 'pai-colo', 'baba-tapete']
 
 interface Props {
   id: string
@@ -15,7 +16,8 @@ interface Props {
 /**
  * Os relatos do Início: um grande, em Literata itálico num painel de areia com o desenho da mãe, e os
  * outros dois menores ao lado (a partir de 1100) ou embaixo, cada um com o seu desenho e um fio de
- * cacau em cima. A linha "Relatos ilustrativos" fica logo abaixo do título.
+ * cacau em cima. A linha "Relatos ilustrativos" fica logo abaixo do título. A grade (7 + 5 colunas) é
+ * a mesma das perguntas: a coluna dos relatos menores e a lista de perguntas começam na mesma borda.
  */
 export function DepoimentosInicio({ id }: Props) {
   const { titulo, relatos } = INICIO.depoimentos

@@ -3,7 +3,7 @@
 // "Em breve".
 
 export interface ItemNavegacao {
-  chave: 'hoje' | 'sessao' | 'familia'
+  chave: 'hoje' | 'sessao' | 'comunidade' | 'familia'
   rotulo: string
   /** A posição no cabeçalho: menor vem primeiro. */
   ordem: number
