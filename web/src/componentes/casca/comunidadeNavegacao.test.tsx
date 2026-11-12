@@ -9,7 +9,7 @@ describe('cabeçalho logado: item Comunidade', () => {
     const { container } = renderizarRota('/app/hoje')
     const cabecalho = container.querySelector<HTMLElement>('header[data-cabecalho]')!
     const nav = within(cabecalho).getByRole('navigation', { name: 'Site' })
-    expect(within(nav).getAllByRole('link').map((l) => l.textContent)).toEqual(['Hoje', 'Sessão', 'Comunidade'])
+    expect(within(nav).getAllByRole('link').map((l) => l.textContent)).toEqual(['Hoje', 'Sessão', 'Desenvolvimento', 'Comunidade'])
     expect(within(nav).getByRole('link', { name: 'Comunidade' }).getAttribute('href')).toBe('/app/comunidade')
   })
 })

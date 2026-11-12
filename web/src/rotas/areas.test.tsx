@@ -59,13 +59,14 @@ describe('rotasDasAreas: o registro por área', () => {
     for (const lista of [
       rotasRotinaPublicas,
       rotasDesenvolvimentoPublicas,
-      rotasDesenvolvimentoLogadas,
       rotasComunidadePublicas,
       rotasModeracaoPublicas,
       rotasModeracaoLogadas,
     ]) {
       expect(lista).toEqual([])
     }
+    // MAT-39a: a página logada Desenvolvimento passou a ter rotas.
+    expect(rotasDesenvolvimentoLogadas.map(caminhoDe)).toContain('app/desenvolvimento')
     expect(rotasComunidadeLogadas.map(caminhoDe)).toEqual([
       'app/comunidade',
       'app/comunidade/entrar',
