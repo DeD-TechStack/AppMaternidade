@@ -13,7 +13,8 @@ const TONS = ['mel', 'oliva', 'areia'] as const
 /**
  * A troca de turno: o painel de mel com o texto à esquerda e, à direita, as duas mãos passando o
  * celular. O cartão "Desde que você saiu" é HTML de verdade (a lista do app, com avatar, nome e
- * hora) e sobra da borda de baixo do painel.
+ * hora): fica na coluna do desenho, embaixo dele (um nunca cobre o outro), e sobra da borda de baixo
+ * do painel.
  */
 export function SecaoTurno() {
   const id = useId()
@@ -30,27 +31,27 @@ export function SecaoTurno() {
           <RevelaNaRolagem className="in-revela">
             <Ilustracao nome="maos-celular" decorativa />
           </RevelaNaRolagem>
+          <CartaoFlutuante giro={2} posicao="baixo-direita">
+            <h3 className="in-cartao-titulo">{cartao.titulo}</h3>
+            <ul className="in-cartao-lista" data-desde-que-saiu="">
+              {cartao.itens.map((item, i) => (
+                <li key={item.hora} className="in-cartao-item">
+                  <span className="in-avatar" data-tom={TONS[i % TONS.length]} aria-hidden="true">
+                    {item.pessoa.charAt(0)}
+                  </span>
+                  <span>
+                    <span className="in-cartao-evento">{item.texto}</span>
+                    <span className="in-cartao-quem">{item.pessoa}</span>
+                  </span>
+                  <time className="in-cartao-hora" dateTime={item.hora}>
+                    {item.hora}
+                  </time>
+                </li>
+              ))}
+            </ul>
+          </CartaoFlutuante>
         </div>
       </div>
-      <CartaoFlutuante giro={2} posicao="baixo-direita">
-        <h3 className="in-cartao-titulo">{cartao.titulo}</h3>
-        <ul className="in-cartao-lista" data-desde-que-saiu="">
-          {cartao.itens.map((item, i) => (
-            <li key={item.hora} className="in-cartao-item">
-              <span className="in-avatar" data-tom={TONS[i % TONS.length]} aria-hidden="true">
-                {item.pessoa.charAt(0)}
-              </span>
-              <span>
-                <span className="in-cartao-evento">{item.texto}</span>
-                <span className="in-cartao-quem">{item.pessoa}</span>
-              </span>
-              <time className="in-cartao-hora" dateTime={item.hora}>
-                {item.hora}
-              </time>
-            </li>
-          ))}
-        </ul>
-      </CartaoFlutuante>
     </PainelCampo>
   )
 }
