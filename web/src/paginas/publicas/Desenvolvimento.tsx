@@ -19,12 +19,21 @@ import { DESENVOLVIMENTO_DESTAQUE as T, ROTULOS_FONTES } from '../../conteudo/de
 // última ("se o bebê reclamar") vem depois dela.
 const ANTES_DA_TABELA = 3
 
+// O tamanho 1× da cena de cacau recomposta (@2x: 800 × 880). Vem daqui e não de `T.cena`: o conteúdo
+// de Desenvolvimento é só leitura nesta rodada.
+const CENA_LARGURA = 400
+const CENA_ALTURA = 440
+
+// A frase de destaque do trecho dos marcos: uma frase de `MARCOS.itens[0]`, repetida como citação.
+const DESTAQUE_MARCOS = 'Cada criança chega lá no seu próprio ritmo.'
+
 /**
  * /desenvolvimento: a abertura com a cena de cacau (dois tablets, sem nada por cima) e, abaixo dela, o
  * registro do tummy time num cartão no fluxo; o aviso de saúde, uma vez, no texto da abertura; as
- * ideias para brincar por fase (abas), o que as fontes dizem sobre tummy time (com a tabela das
- * fontes, sem meta), os marcos sem cobrança e a faixa de cacau com o SAMU. Cada item mostra as fontes
- * e a data da consulta.
+ * ideias para brincar por fase (abas), o que as fontes dizem sobre tummy time (o título e, ao lado
+ * dele, o desenho do bebê de bruços; depois o texto, a tabela das fontes, sem meta), os marcos sem
+ * cobrança (com uma frase de destaque) e a faixa de cacau com o SAMU. Cada item mostra as fontes e a
+ * data da consulta.
  */
 export function Desenvolvimento() {
   return (
@@ -45,7 +54,7 @@ export function Desenvolvimento() {
         }
         midia={
           <>
-            <CenaCacau base={T.cena.base} largura={T.cena.largura} altura={T.cena.altura} alt={T.cena.alt} prioritaria />
+            <CenaCacau base={T.cena.base} largura={CENA_LARGURA} altura={CENA_ALTURA} alt={T.cena.alt} prioritaria />
             <CartaoPlano className="pd-cartao-legenda">
               <CartaoTummy />
             </CartaoPlano>
@@ -75,17 +84,19 @@ export function Desenvolvimento() {
       </section>
 
       <section id="tummy-time" className="pd-secao" aria-labelledby="desenv-tummy" data-item={TUMMY_TIME.id}>
-        <CabecaDeSecao id="desenv-tummy" titulo={T.tummyTitulo}>
-          <p className="cm-lide">{TUMMY_TIME.resumo}</p>
-          <p className="cm-pequeno pd-faixa-idade">{`${ROTULOS_FONTES.faixa} ${TUMMY_TIME.faixa}`}</p>
-        </CabecaDeSecao>
-        <div className="cm-area pd-tummy">
-          <PartesDoArtigo partes={TUMMY_TIME.itens.slice(0, ANTES_DA_TABELA)} />
+        <div className="cm-area pd-tummy-cima">
+          <CabecaDeSecao id="desenv-tummy" titulo={T.tummyTitulo}>
+            <p className="cm-lide">{TUMMY_TIME.resumo}</p>
+            <p className="cm-pequeno pd-faixa-idade">{`${ROTULOS_FONTES.faixa} ${TUMMY_TIME.faixa}`}</p>
+          </CabecaDeSecao>
           <PainelCampo variante="mel" luz className="pd-celula pd-tummy-desenho">
             <div className="pd-chao">
-              <Ilustracao nome="baba-tapete" carregamento="eager" />
+              <Ilustracao nome="tummy-time" carregamento="eager" />
             </div>
           </PainelCampo>
+        </div>
+        <div className="cm-area pd-tummy-partes">
+          <PartesDoArtigo partes={TUMMY_TIME.itens.slice(0, ANTES_DA_TABELA)} />
         </div>
         <TabelaTexto
           legenda={QUANTO_TEMPO.titulo}
@@ -106,6 +117,9 @@ export function Desenvolvimento() {
           <p className="cm-pequeno pd-faixa-idade">{`${ROTULOS_FONTES.faixa} ${MARCOS.faixa}`}</p>
         </CabecaDeSecao>
         <div className="cm-area pd-marcos">
+          <blockquote className="pd-destaque" data-destaque="">
+            <p>{DESTAQUE_MARCOS}</p>
+          </blockquote>
           <PartesDoArtigo partes={MARCOS.itens} />
           <FontesDoItem fontes={MARCOS.fontes} consultadoEm={MARCOS.consultadoEm} />
         </div>

@@ -316,6 +316,26 @@ As sete telas da Comunidade (Comunidade, Espaço, Tópico, Novo tópico e ediç�
 - **Exceção ao "Desfazer":** publicar é irreversível para quem lê, então a confirmação vem antes (prévia), e o Desfazer não existe depois. Editar e excluir o que é seu seguem a regra geral.
 - **Tema e movimento:** as telas seguem o `data-tema` e o `prefers-reduced-motion` da base, com alvos de 44 px e foco visível.
 
+### Desenvolvimento (MAT-39)
+
+A página logada `/app/desenvolvimento` e as rotas de item (`/app/desenvolvimento/conteudo/<id>`) moram na moldura das telas logadas, com o cabeçalho da casca (item "Desenvolvimento" entre Sessão e Comunidade), o `PainelCampo` (`data-painel="mel"`) e as variáveis `--cor-*` da base. Nenhum token, sombra, gradiente ou ícone novo.
+
+- **Primeira dobra:** título "Desenvolvimento" com a linha do bebê e da fase, o seletor de bebê quando há mais de um, e logo abaixo o lugar do bloco de tummy time (MAT-39b) com a ação principal como botão.
+- **Blocos:** "Ideias para brincar nesta fase", "Todas as fases" e "Para ler". Todo conteúdo vem de `conteudo/desenvolvimento`, publicado, com fonte com link e o aviso de que não substitui orientação médica.
+- **Estados:** carregando, erro com "Tente de novo", sem família, sem bebê, fuso inválido, bebê arquivado e item que não existe, cada um com frase fixa.
+- **Tema e alvos:** segue o `data-tema` (madrugada incluída) e o `prefers-reduced-motion`; alvos de 56 px nas ações e 44 px nos links.
+
+### Painel de moderação (MAT-40b)
+
+As cinco telas do painel (Fila, Denúncia, Conteúdo, Auditoria e Papéis) moram na mesma moldura das telas logadas e usam só o que a base e a Comunidade já têm: casca, campos `cm-campo-*`, botões `cm-botao-*`, cartões e as variáveis `--cor-*`. Nenhum token, sombra, gradiente ou ícone novo.
+
+- **Selo e abas:** toda tela abre com o selo de uso interno e as abas Fila, Auditoria e Papéis (a aba Papéis só para admin), com a aba atual em destaque.
+- **Ação e decisão separadas:** na Denúncia e no Conteúdo, as ações sobre o conteúdo (ocultar, remover, restaurar) e a decisão sobre a denúncia (em análise, procedente, improcedente) ficam em seções distintas, cada uma com sua caixa de diálogo e o motivo de 1 a 300 caracteres.
+- **Exceção ao "Desfazer":** as ações do painel são reversíveis pela própria tela (restaurar, conceder de novo), mas nenhuma tem Desfazer. A confirmação vem antes, na caixa de diálogo, e o resultado fica na auditoria, que é a trilha oficial.
+- **Estados:** carregando, vazio, erro com frase fixa e "Tentar de novo", e envio com resultado incerto, que confere o banco antes de reenviar. Sem permissão, a tela mostra só a frase fixa e o link para a Comunidade.
+- **Papéis:** conceder, renovar e revogar partem do "Id da sua conta" que a pessoa copia da tela Conta; o aviso do último admin aparece na lista e na caixa de revogar.
+- **Tema e movimento:** seguem o `data-tema` e o `prefers-reduced-motion` da base, com alvos de 44 px e foco visível.
+
 ## Elevation & Depth
 
 Plano. Profundidade vem de linha, cor, espaço, escala e, nos aparelhos de mídia, de inclinação em CSS 3D. Nenhum `box-shadow`, nenhum `backdrop-filter` e nenhum `filter: blur`.
