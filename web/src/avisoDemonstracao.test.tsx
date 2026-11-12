@@ -3,8 +3,8 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import axe from 'axe-core'
 import { AvisoDemonstracao } from './componentes/AvisoDemonstracao.tsx'
 import { AVISO_DEMONSTRACAO } from './conteudo/textos.ts'
-import { criarEstadoInicial, type EstadoPrototipo } from './prototipo/estado.ts'
-import { renderizarRota } from './teste/renderizarRota.tsx'
+import { aguardarCarga, renderizarRota, renderizarRotaPronta, type OpcoesRota } from './teste/renderizarRota.tsx'
+import { semSessaoEmAndamento } from './teste/rotina.fixture.ts'
 
 // O aviso de demonstração no Campo de mel (MAT-49a, DESIGN.md 4, Rodape): uma linha honesta, só quando falta
 // uma variável do banco, nunca dentro do <main>, de um cartão ou de uma imagem; no máximo um por página. No
@@ -19,8 +19,8 @@ const URL_FICTICIA = 'https://exemplo.invalid'
 const CHAVE_FICTICIA = 'chave-ficticia'
 const PUBLICAS = ['/', '/como-funciona', '/sobre', '/sistema', '/qualquer-coisa']
 
-const claro = (): EstadoPrototipo => criarEstadoInicial(Date.now())
-const madrugada = (): EstadoPrototipo => ({ ...criarEstadoInicial(Date.now()), madrugada: true })
+const claro: OpcoesRota = {}
+const madrugada: OpcoesRota = { madrugada: true }
 
 // O setup.ts não desfaz variáveis de ambiente: este arquivo desfaz as suas.
 afterEach(() => {
@@ -91,19 +91,19 @@ describe('aviso de demonstração: uma linha no rodapé do site público', () =>
 })
 
 describe('aviso de demonstração: as telas do app têm um aviso fora do conteúdo, e não a etiqueta', () => {
-  const telas: Array<[string, string, () => EstadoPrototipo]> = [
+  const telas: Array<[string, string, OpcoesRota]> = [
     ['o Hoje', '/app/hoje', claro],
     ['o Hoje (madrugada)', '/app/hoje', madrugada],
     ['a Sessão', '/app/sessao', claro],
     ['a Sessão (madrugada)', '/app/sessao', madrugada],
-    ['a Sessão sem sessão', '/app/sessao', () => ({ ...claro(), sessao: null })],
+    ['a Sessão sem sessão', '/app/sessao', { ajustarRotina: semSessaoEmAndamento }],
   ]
 
-  for (const [tela, caminho, estado] of telas) {
+  for (const [tela, caminho, opcoes] of telas) {
     for (const [banco, url, chave, aparece] of BANCOS) {
-      it(`${tela}, ${banco}: ${aparece ? 'um aviso' : 'nenhum aviso'}, depois do conteúdo e fora do main, e nenhuma etiqueta`, () => {
+      it(`${tela}, ${banco}: ${aparece ? 'um aviso' : 'nenhum aviso'}, depois do conteúdo e fora do main, e nenhuma etiqueta`, async () => {
         definirBanco(url, chave)
-        const { container } = renderizarRota(caminho, { estadoInicial: estado() })
+        const { container } = await renderizarRotaPronta(caminho, opcoes)
 
         const avisos = container.querySelectorAll<HTMLElement>(SELETOR)
         expect(avisos).toHaveLength(aparece ? 1 : 0)
@@ -127,20 +127,22 @@ describe('aviso de demonstração: as telas do app têm um aviso fora do conteú
     }
   }
 
-  it('no máximo um aviso por página, em todas as rotas (públicas e do app), sem banco', () => {
+  it('no máximo um aviso por página, em todas as rotas (públicas e do app), sem banco', async () => {
     definirBanco('', '')
     for (const caminho of [...PUBLICAS, '/app/hoje', '/app/sessao']) {
       const { container, unmount } = renderizarRota(caminho)
+      await aguardarCarga()
       expect(container.querySelectorAll(SELETOR).length, caminho).toBeLessThanOrEqual(1)
       unmount()
     }
   })
 
-  it('a região status da confirmação continua única e não contém aviso nem etiqueta; o aviso da página segue único', () => {
+  it('a região status da confirmação continua única e não contém aviso nem etiqueta; o aviso da página segue único', async () => {
     definirBanco('', '')
-    const { container } = renderizarRota('/app/hoje')
+    const { container } = await renderizarRotaPronta('/app/hoje')
     fireEvent.click(screen.getByRole('button', { name: 'Registrar fralda de Heloísa' }))
     fireEvent.click(screen.getByRole('button', { name: 'Xixi' }))
+    await aguardarCarga()
 
     const regioes = screen.getAllByRole('status')
     expect(regioes).toHaveLength(1)
@@ -194,15 +196,14 @@ describe('aviso de demonstração: acessibilidade (axe-core)', () => {
     })
   }
 
-  for (const [tema, estado] of [
+  for (const [tema, opcoes] of [
     ['claro', claro],
     ['madrugada', madrugada],
   ] as const) {
     for (const caminho of ['/app/hoje', '/app/sessao']) {
       it(`não tem violações em ${caminho} (${tema})`, async () => {
         definirBanco('', '')
-        const { container } = renderizarRota(caminho, { estadoInicial: estado() })
-        await screen.findByRole('heading', { level: 1 })
+        const { container } = await renderizarRotaPronta(caminho, opcoes)
         expect(screen.queryByText(ETIQUETA)).toBeNull()
         expect(container.querySelectorAll(SELETOR)).toHaveLength(1)
         expect(container.querySelector(`main ${SELETOR}`)).toBeNull()
