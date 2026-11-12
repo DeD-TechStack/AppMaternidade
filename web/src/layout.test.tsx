@@ -1,15 +1,22 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { BotoesRapidos } from './prototipo/BotoesRapidos.tsx'
-import { criarEstadoInicial, type EstadoPrototipo } from './prototipo/estado.ts'
-import { renderizarRota } from './teste/renderizarRota.tsx'
+import { aguardarCarga, renderizarRota, type OpcoesRota } from './teste/renderizarRota.tsx'
+import { semSessaoEmAndamento } from './teste/rotina.fixture.ts'
 
 // O jsdom não mede layout. Estes testes conferem a regra no código: a classe aplicada,
 // a estrutura do DOM e as medidas simuladas. O que o navegador pinta fica para o portão visual.
 
-const claro = (): EstadoPrototipo => criarEstadoInicial(Date.now())
-const madrugada = (): EstadoPrototipo => ({ ...criarEstadoInicial(Date.now()), madrugada: true })
-const semSessao = (): EstadoPrototipo => ({ ...criarEstadoInicial(Date.now()), sessao: null })
+const claro = (): OpcoesRota => ({})
+const madrugada = (): OpcoesRota => ({ madrugada: true })
+const semSessao = (): OpcoesRota => ({ ajustarRotina: semSessaoEmAndamento })
+
+/** O mesmo que `renderizarRota` para as telas do app, depois de esperar a primeira carga das leituras. */
+async function renderizarApp(caminho: string, opcoes: { estadoInicial?: OpcoesRota } = {}) {
+  const resultado = renderizarRota(caminho, opcoes.estadoInicial)
+  await aguardarCarga()
+  return resultado
+}
 
 // `cm-acordeao-gatilho`: o gatilho do acordeão tem min-height de 72 px em styles/campo.css.
 const CLASSE_DE_ALVO = /(^|\s)(alvo-toque|botao|nav-item|cm-acordeao-gatilho)(\s|$)/
@@ -49,20 +56,22 @@ describe('G3-1: alvo de toque de 44 px', () => {
     ['claro', claro],
     ['madrugada', madrugada],
   ] as const) {
-    it(`no Hoje (${tema}), com a escolha de fralda e o "+ Mais" abertos`, () => {
-      const { container } = renderizarRota('/app/hoje', { estadoInicial: estado() })
+    it(`no Hoje (${tema}), com a escolha de fralda, a confirmação e o "+ Mais" abertos`, async () => {
+      const { container } = await renderizarApp('/app/hoje', { estadoInicial: estado() })
       expect(semAlvoDe44(container)).toEqual([])
 
       fireEvent.click(screen.getByRole('button', { name: 'Registrar fralda de Heloísa' }))
       expect(semAlvoDe44(container)).toEqual([])
 
       fireEvent.click(screen.getByRole('button', { name: 'Xixi' }))
+      await aguardarCarga()
+      expect(semAlvoDe44(container)).toEqual([])
       fireEvent.click(screen.getByRole('button', { name: 'Mais registros' }))
       expect(semAlvoDe44(container)).toEqual([])
     })
 
-    it(`na Sessão (${tema}), com a nota e a pergunta de descarte abertas`, () => {
-      const { container } = renderizarRota('/app/sessao', { estadoInicial: estado() })
+    it(`na Sessão (${tema}), com a nota e a pergunta de descarte abertas`, async () => {
+      const { container } = await renderizarApp('/app/sessao', { estadoInicial: estado() })
       expect(semAlvoDe44(container)).toEqual([])
 
       fireEvent.click(screen.getByRole('button', { name: 'Encerrar e anotar' }))
@@ -73,8 +82,8 @@ describe('G3-1: alvo de toque de 44 px', () => {
     })
   }
 
-  it('na Sessão vazia', () => {
-    const { container } = renderizarRota('/app/sessao', { estadoInicial: semSessao() })
+  it('na Sessão vazia', async () => {
+    const { container } = await renderizarApp('/app/sessao', { estadoInicial: semSessao() })
 
     expect(semAlvoDe44(container)).toEqual([])
   })
@@ -145,8 +154,8 @@ describe('R2: a barra de baixo fica fixa em janela de 40 rem ou mais, qualquer q
   // A barra de baixo é só a barra Registrar do Hoje (a Sessão não tem barra desde o 44d-2).
   for (const [tela, caminho] of [['Hoje', '/app/hoje']] as const) {
     describe(tela, () => {
-      it('janela de 844 px com fonte de 16 px: fixa, e reserva a altura medida mais 8 px de rolagem', () => {
-        const { container } = renderizarRota(caminho)
+      it('janela de 844 px com fonte de 16 px: fixa, e reserva a altura medida mais 8 px de rolagem', async () => {
+        const { container } = await renderizarApp(caminho)
 
         medir(170, 844)
 
@@ -154,8 +163,8 @@ describe('R2: a barra de baixo fica fixa em janela de 40 rem ou mais, qualquer q
         expect(paddingDeRolagem()).toBe('178px')
       })
 
-      it('uma barra de 766 px numa janela de 844 px com fonte de 16 px continua fixa', () => {
-        const { container } = renderizarRota(caminho)
+      it('uma barra de 766 px numa janela de 844 px com fonte de 16 px continua fixa', async () => {
+        const { container } = await renderizarApp(caminho)
 
         medir(766, 844)
 
@@ -163,8 +172,8 @@ describe('R2: a barra de baixo fica fixa em janela de 40 rem ou mais, qualquer q
         expect(paddingDeRolagem()).toBe('774px')
       })
 
-      it('fonte raiz em 200% (32 px) numa janela de 844 px: estática e sem reserva de rolagem', () => {
-        const { container } = renderizarRota(caminho)
+      it('fonte raiz em 200% (32 px) numa janela de 844 px: estática e sem reserva de rolagem', async () => {
+        const { container } = await renderizarApp(caminho)
         medir(170, 844)
         expect(estaFixa(container)).toBe(true)
 
@@ -175,8 +184,8 @@ describe('R2: a barra de baixo fica fixa em janela de 40 rem ou mais, qualquer q
         expect(paddingDeRolagem()).toBe('')
       })
 
-      it('fonte raiz em 200% numa janela de 900 px: estática', () => {
-        const { container } = renderizarRota(caminho)
+      it('fonte raiz em 200% numa janela de 900 px: estática', async () => {
+        const { container } = await renderizarApp(caminho)
         definirFonteRaiz('32px')
 
         medir(370, 900)
@@ -184,8 +193,8 @@ describe('R2: a barra de baixo fica fixa em janela de 40 rem ou mais, qualquer q
         expect(estaFixa(container)).toBe(false)
       })
 
-      it('zoom de 200% em 1440 × 900 (janela de 450 px com fonte de 16 px): estática', () => {
-        const { container } = renderizarRota(caminho)
+      it('zoom de 200% em 1440 × 900 (janela de 450 px com fonte de 16 px): estática', async () => {
+        const { container } = await renderizarApp(caminho)
 
         medir(170, 450)
 
@@ -193,16 +202,16 @@ describe('R2: a barra de baixo fica fixa em janela de 40 rem ou mais, qualquer q
         expect(paddingDeRolagem()).toBe('')
       })
 
-      it('1440 × 900 com fonte de 16 px: fixa', () => {
-        const { container } = renderizarRota(caminho)
+      it('1440 × 900 com fonte de 16 px: fixa', async () => {
+        const { container } = await renderizarApp(caminho)
 
         medir(170, 900)
 
         expect(estaFixa(container)).toBe(true)
       })
 
-      it('volta a ficar fixa quando a fonte volta a 16 px', () => {
-        const { container } = renderizarRota(caminho)
+      it('volta a ficar fixa quando a fonte volta a 16 px', async () => {
+        const { container } = await renderizarApp(caminho)
         definirFonteRaiz('32px')
         medir(300, 844)
         expect(estaFixa(container)).toBe(false)
@@ -214,8 +223,8 @@ describe('R2: a barra de baixo fica fixa em janela de 40 rem ou mais, qualquer q
         expect(paddingDeRolagem()).toBe('308px')
       })
 
-      it('mede de novo quando a janela muda de tamanho (resize)', () => {
-        const { container } = renderizarRota(caminho)
+      it('mede de novo quando a janela muda de tamanho (resize)', async () => {
+        const { container } = await renderizarApp(caminho)
         alturaDaBarra = 170
         definirAlturaDaJanela(844)
         act(() => {
@@ -231,8 +240,8 @@ describe('R2: a barra de baixo fica fixa em janela de 40 rem ou mais, qualquer q
         expect(estaFixa(container)).toBe(false)
       })
 
-      it('ao sair da tela, remove a reserva de rolagem', () => {
-        const { unmount } = renderizarRota(caminho)
+      it('ao sair da tela, remove a reserva de rolagem', async () => {
+        const { unmount } = await renderizarApp(caminho)
         medir(170, 844)
         expect(paddingDeRolagem()).toBe('178px')
 
@@ -244,39 +253,50 @@ describe('R2: a barra de baixo fica fixa em janela de 40 rem ou mais, qualquer q
   }
 
   // A barra de 420 px (mais de 35% de 844 px) é a medida de uma confirmação com o painel aberto.
-  const agir = (nome: string) => fireEvent.click(screen.getByRole('button', { name: nome }))
-  const estados: Array<[string, () => void]> = [
-    ['estado inicial', () => {}],
-    ['Fralda registrada, sem tipo', () => agir('Registrar fralda de Heloísa')],
+  const agir = async (nome: string) => {
+    fireEvent.click(screen.getByRole('button', { name: nome }))
+    await aguardarCarga()
+  }
+  const estados: Array<[string, () => Promise<void>]> = [
+    ['estado inicial', async () => {}],
+    ['painel da fralda aberto', () => agir('Registrar fralda de Heloísa')],
     [
       'Fralda confirmada',
-      () => {
-        agir('Registrar fralda de Heloísa')
-        agir('Xixi')
+      async () => {
+        await agir('Registrar fralda de Heloísa')
+        await agir('Xixi')
       },
     ],
     ['"+ Mais" aberto', () => agir('Mais registros')],
-    ...['Mamadeira', 'Alimentação sólida', 'Observação'].map((item): [string, () => void] => [
+    ...['Mamadeira', 'Alimentação sólida'].map((item): [string, () => Promise<void>] => [
       `${item} confirmada`,
-      () => {
-        agir('Mais registros')
-        agir(item)
+      async () => {
+        await agir('Mais registros')
+        await agir(item)
       },
     ]),
     ['depois de Encerrar', () => agir('Encerrar')],
     [
+      'depois de Encerrar e Fechar',
+      async () => {
+        await agir('Encerrar')
+        await agir('Fechar')
+      },
+    ],
+    [
       'depois de Desfazer',
-      () => {
-        agir('Encerrar')
-        agir('Desfazer')
+      async () => {
+        await agir('Mais registros')
+        await agir('Mamadeira')
+        await agir('Desfazer')
       },
     ],
     [
       'depois de Fechar',
-      () => {
-        agir('Mais registros')
-        agir('Mamadeira')
-        agir('Fechar')
+      async () => {
+        await agir('Mais registros')
+        await agir('Mamadeira')
+        await agir('Fechar')
       },
     ],
   ]
@@ -286,18 +306,18 @@ describe('R2: a barra de baixo fica fixa em janela de 40 rem ou mais, qualquer q
     ['madrugada', madrugada],
   ] as const) {
     for (const [nome, preparar] of estados) {
-      it(`Hoje (${tema}), ${nome}: a barra continua fixa (barra de 420 px, janela de 844 px, fonte de 16 px)`, () => {
-        const { container } = renderizarRota('/app/hoje', { estadoInicial: estado() })
+      it(`Hoje (${tema}), ${nome}: a barra continua fixa (barra de 420 px, janela de 844 px, fonte de 16 px)`, async () => {
+        const { container } = await renderizarApp('/app/hoje', { estadoInicial: estado() })
 
-        preparar()
+        await preparar()
         avisarOObservador()
 
         expect(estaFixa(container)).toBe(true)
       })
     }
 
-    it(`Hoje (${tema}), com fonte raiz de 32 px, a barra não é fixa`, () => {
-      const { container } = renderizarRota('/app/hoje', { estadoInicial: estado() })
+    it(`Hoje (${tema}), com fonte raiz de 32 px, a barra não é fixa`, async () => {
+      const { container } = await renderizarApp('/app/hoje', { estadoInicial: estado() })
       definirFonteRaiz('32px')
 
       avisarOObservador()
@@ -306,9 +326,9 @@ describe('R2: a barra de baixo fica fixa em janela de 40 rem ou mais, qualquer q
     })
   }
 
-  it('sem ResizeObserver (jsdom, navegadores muito antigos) a barra continua fixa', () => {
+  it('sem ResizeObserver (jsdom, navegadores muito antigos) a barra continua fixa', async () => {
     vi.unstubAllGlobals()
-    const { container } = renderizarRota('/app/hoje')
+    const { container } = await renderizarApp('/app/hoje')
 
     expect(estaFixa(container)).toBe(true)
   })
@@ -329,8 +349,8 @@ describe('R1: navegação inferior', () => {
       ['claro', claro],
       ['madrugada', madrugada],
     ] as const) {
-      it(`${tela} (${tema}) não tem navegação inferior, barra inferior, legenda "Em breve" nem itens desativados`, () => {
-        const { container } = renderizarRota(caminho, { estadoInicial: estado() })
+      it(`${tela} (${tema}) não tem navegação inferior, barra inferior, legenda "Em breve" nem itens desativados`, async () => {
+        const { container } = await renderizarApp(caminho, { estadoInicial: estado() })
 
         expect(screen.queryByRole('navigation', { name: 'Principal' })).toBeNull()
         expect(container.querySelector('.barra-inferior, nav.nav-inferior, .nav-item, .nav-legenda')).toBeNull()
@@ -349,15 +369,15 @@ describe('R1: navegação inferior', () => {
 // MAT-44d-2: o Hoje e a Sessão saíram da coluna única (abertura, blocos em `sb-area` sobre a grade).
 // Só o Hoje tem a barra Registrar; a Sessão não tem barra nenhuma.
 describe('D2: telas logadas sobre a grade, sem coluna única', () => {
-  const casos: Array<[string, string, () => EstadoPrototipo]> = [
+  const casos: Array<[string, string, () => OpcoesRota]> = [
     ['Hoje', '/app/hoje', claro],
     ['Sessão com sessão', '/app/sessao', claro],
     ['Sessão vazia', '/app/sessao', semSessao],
   ]
 
   for (const [nome, caminho, estado] of casos) {
-    it(`${nome}: sem .coluna-app, e a tela é cabeçalho, um main e o rodapé (mais a barra Registrar só no Hoje)`, () => {
-      const { container } = renderizarRota(caminho, { estadoInicial: estado() })
+    it(`${nome}: sem .coluna-app, e a tela é cabeçalho, um main e o rodapé (mais a barra Registrar só no Hoje)`, async () => {
+      const { container } = await renderizarApp(caminho, { estadoInicial: estado() })
 
       expect(container.querySelector('.coluna-app')).toBeNull()
       expect(container.querySelectorAll('main')).toHaveLength(1)
@@ -369,8 +389,8 @@ describe('D2: telas logadas sobre a grade, sem coluna única', () => {
     })
   }
 
-  it('o Hoje não tem coluna única nem navegação inferior: a barra Registrar fica fora do main, depois dele', () => {
-    const { container } = renderizarRota('/app/hoje')
+  it('o Hoje não tem coluna única nem navegação inferior: a barra Registrar fica fora do main, depois dele', async () => {
+    const { container } = await renderizarApp('/app/hoje')
 
     expect(container.querySelector('.coluna-app')).toBeNull()
     expect(container.querySelector('.barra-inferior')).toBeNull()
@@ -408,8 +428,8 @@ describe('D3: a casca do Campo de mel e os números', () => {
   ]
 
   for (const caminho of ROTAS) {
-    it(`${caminho}: cabeçalho, um <main> e o rodapé são irmãos na casca, e há um só <h1>`, () => {
-      const { container, unmount } = renderizarRota(caminho)
+    it(`${caminho}: cabeçalho, um <main> e o rodapé são irmãos na casca, e há um só <h1>`, async () => {
+      const { container, unmount } = await renderizarApp(caminho)
       const casca = container.querySelector('.sb-casca')!
       const filhos = [...casca.children]
       expect(filhos[0].matches('header[data-cabecalho]'), caminho).toBe(true)
@@ -456,8 +476,8 @@ describe('D4: botões rápidos com a mesma altura', () => {
     // A grade de 6 colunas (2+2+2 e 3+3) é a do `BotoesRapidos`, que o Início usa na miniatura. A
     // barra Registrar do Hoje tem uma fileira de 4 botões iguais: o DOM é o mesmo nos dois temas e a
     // igualdade de largura é do CSS (`repeat(4, minmax(0, 1fr))`) e do medidor.
-    it(`no Hoje (${tema}) a barra Registrar é uma fileira de 4 botões, sem a grade de 6 colunas`, () => {
-      renderizarRota('/app/hoje', { estadoInicial: estado() })
+    it(`no Hoje (${tema}) a barra Registrar é uma fileira de 4 botões, sem a grade de 6 colunas`, async () => {
+      await renderizarApp('/app/hoje', { estadoInicial: estado() })
 
       const fileira = screen.getByRole('button', { name: 'Iniciar sono de Heloísa' }).parentElement!
       expect(fileira.hasAttribute('data-fileira')).toBe(true)
@@ -529,8 +549,8 @@ describe('R1b: toda variante de contêiner tem um contêiner acima, onde quer qu
     ['claro', claro],
     ['madrugada', madrugada],
   ] as const) {
-    it(`no Hoje (${tema}), com a escolha de fralda e depois o "+ Mais" abertos`, () => {
-      const { container } = renderizarRota('/app/hoje', { estadoInicial: estado() })
+    it(`no Hoje (${tema}), com a escolha de fralda e depois o "+ Mais" abertos`, async () => {
+      const { container } = await renderizarApp('/app/hoje', { estadoInicial: estado() })
       expect(variantesSemContainer(container)).toEqual([])
 
       fireEvent.click(screen.getByRole('button', { name: 'Registrar fralda de Heloísa' }))
@@ -540,8 +560,8 @@ describe('R1b: toda variante de contêiner tem um contêiner acima, onde quer qu
       expect(variantesSemContainer(container)).toEqual([])
     })
 
-    it(`na Sessão (${tema})`, () => {
-      const { container } = renderizarRota('/app/sessao', { estadoInicial: estado() })
+    it(`na Sessão (${tema})`, async () => {
+      const { container } = await renderizarApp('/app/sessao', { estadoInicial: estado() })
 
       expect(variantesSemContainer(container)).toEqual([])
     })
@@ -650,9 +670,9 @@ describe('R4: o Início decide as colunas pelo CSS do sistema-base, não por var
     expect(variantesSemContainer(container)).toEqual([])
   })
 
-  it('as telas logadas e a rota inexistente não usam o contêiner da página', () => {
+  it('as telas logadas e a rota inexistente não usam o contêiner da página', async () => {
     for (const caminho of ['/app/hoje', '/app/sessao', '/qualquer-coisa']) {
-      const { container, unmount } = renderizarRota(caminho)
+      const { container, unmount } = await renderizarApp(caminho)
       expect(container.querySelector('[class*="/pagina"]'), caminho).toBeNull()
       unmount()
     }
@@ -760,8 +780,8 @@ describe('G3-4: o texto visível está no nome acessível', () => {
     ['claro', claro],
     ['madrugada', madrugada],
   ] as const) {
-    it(`no Hoje (${tema}), com a escolha de fralda e depois o "+ Mais" abertos`, () => {
-      const { container } = renderizarRota('/app/hoje', { estadoInicial: estado() })
+    it(`no Hoje (${tema}), com a escolha de fralda e depois o "+ Mais" abertos`, async () => {
+      const { container } = await renderizarApp('/app/hoje', { estadoInicial: estado() })
       expect(nomesQueDivergem(container)).toEqual([])
 
       fireEvent.click(screen.getByRole('button', { name: 'Registrar fralda de Heloísa' }))
@@ -771,8 +791,13 @@ describe('G3-4: o texto visível está no nome acessível', () => {
       expect(nomesQueDivergem(container)).toEqual([])
     })
 
-    it(`na Sessão (${tema})`, () => {
-      const { container } = renderizarRota('/app/sessao', { estadoInicial: estado() })
+    it(`na Sessão (${tema})`, async () => {
+      const { container } = await renderizarApp('/app/sessao', { estadoInicial: estado() })
+      expect(nomesQueDivergem(container)).toEqual([])
+    })
+
+    it(`no formulário de registro (${tema})`, async () => {
+      const { container } = await renderizarApp('/app/registro/novo?tipo=mamada', { estadoInicial: estado() })
       expect(nomesQueDivergem(container)).toEqual([])
     })
   }
@@ -809,8 +834,8 @@ describe('G3-4: o texto visível está no nome acessível', () => {
     ['madrugada', madrugada],
   ] as const) {
     for (const caminho of ['/app/hoje', '/app/sessao']) {
-      it(`${caminho} (${tema}): o texto não fica solto ao lado de um aria-hidden`, () => {
-        const { container } = renderizarRota(caminho, { estadoInicial: estado() })
+      it(`${caminho} (${tema}): o texto não fica solto ao lado de um aria-hidden`, async () => {
+        const { container } = await renderizarApp(caminho, { estadoInicial: estado() })
 
         expect(comTextoSoltoAoLadoDeAriaHidden(container)).toEqual([])
       })
@@ -819,8 +844,8 @@ describe('G3-4: o texto visível está no nome acessível', () => {
 
   // Na barra Registrar o botão é só "Mais" (sem o sinal "+"). O sinal "+" continua no `BotoesRapidos`
   // da miniatura do Início, e o texto visível ignorando o aria-hidden é conferido nele.
-  it('o botão "Mais registros" do Hoje mostra exatamente "Mais"', () => {
-    renderizarRota('/app/hoje')
+  it('o botão "Mais registros" do Hoje mostra exatamente "Mais"', async () => {
+    await renderizarApp('/app/hoje')
 
     const mais = screen.getByRole('button', { name: 'Mais registros' })
     expect((mais.textContent ?? '').replace(/\s+/g, ' ').trim()).toBe('Mais')
@@ -842,8 +867,8 @@ describe('G3-4: o texto visível está no nome acessível', () => {
 describe('D6: cronômetro', () => {
   // MAT-44d-2: o cronômetro da Sessão é o `t-cronometro` do sistema-base (Zilla Slab 224/180; em 390 cai
   // para 80 e, com 8 ou mais caracteres, para 56: VOLTA1 E2), e não mais a classe `.cronometro` (clamp de 4,5 a 8 rem), que só a miniatura do Início usa.
-  it('o da Sessão usa a escala t-cronometro do sistema-base, sem a classe .cronometro nem o modificador de miniatura', () => {
-    renderizarRota('/app/sessao')
+  it('o da Sessão usa a escala t-cronometro do sistema-base, sem a classe .cronometro nem o modificador de miniatura', async () => {
+    await renderizarApp('/app/sessao')
 
     const cronometro = screen.getByRole('timer', { name: 'Duração da sessão' })
     expect(cronometro.classList.contains('t-cronometro')).toBe(true)

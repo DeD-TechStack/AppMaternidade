@@ -6,6 +6,9 @@ import { JSDOM, VirtualConsole } from 'jsdom'
 import {
   REGRAS,
   SIGLAS_PERMITIDAS,
+  abrirCaso,
+  entrarNaDemonstracao,
+  rotaExigeSessao,
   TOKENS_DESIGN,
   avaliarTudo,
   bloqueantesDoCaso,
@@ -1596,5 +1599,101 @@ describe('argumentos e loopback', () => {
     assert.doesNotThrow(() => verificarLoopback('http://localhost:5244/'))
     assert.throws(() => verificarLoopback('http://exemplo.invalid/'), /só loopback/)
     assert.throws(() => verificarLoopback('http://192.168.0.5:5244/'), /só loopback/)
+  })
+})
+
+/**
+ * Um cdp falso: grava cada chamada de `enviar` e responde ao Runtime.evaluate pela expressão.
+ * `entra` diz se o login leva a /app/ (a leitura de location.pathname).
+ */
+function cdpFalso({ entra = true } = {}) {
+  const chamadas = []
+  let enviou = false
+  const cdp = {
+    chamadas,
+    enviar: async (metodo, params = {}) => {
+      chamadas.push({ metodo, params })
+      if (metodo !== 'Runtime.evaluate') return {}
+      const e = String(params.expression)
+      if (e.includes('requestSubmit')) enviou = true
+      let valor = true
+      if (e.includes('location.pathname')) valor = enviou && entra
+      else if (e.includes('getAnimations')) valor = 0
+      else if (e.includes("getAttribute('data-tema')")) valor = 'madrugada'
+      return { result: { value: valor } }
+    },
+  }
+  return cdp
+}
+
+const avaliadas = (cdp) => cdp.chamadas.filter((c) => c.metodo === 'Runtime.evaluate').map((c) => String(c.params.expression))
+
+describe('D3: a rota do app entra com a conta de demonstração, sem recarregar', () => {
+  it('rotaExigeSessao: só o que começa com app/', () => {
+    assert.equal(rotaExigeSessao('app/hoje'), true)
+    assert.equal(rotaExigeSessao('app/registro/novo'), true)
+    assert.equal(rotaExigeSessao(''), false)
+    assert.equal(rotaExigeSessao('sistema'), false)
+    assert.equal(rotaExigeSessao('entrar'), false)
+    assert.equal(rotaExigeSessao('apple/app/hoje'), false)
+  })
+
+  it('(a) rota pública faz só Page.navigate para a URL da rota e nenhum login', async () => {
+    const cdp = cdpFalso()
+    await abrirCaso(cdp, 'http://127.0.0.1:5244/', { caso: 'sistema', tema: 'claro', rota: 'sistema' })
+    const navegacoes = cdp.chamadas.filter((c) => c.metodo === 'Page.navigate')
+    assert.deepEqual(navegacoes.map((c) => c.params.url), ['http://127.0.0.1:5244/sistema'])
+    const expressoes = avaliadas(cdp)
+    assert.ok(!expressoes.some((e) => e.includes('requestSubmit')))
+    assert.ok(!expressoes.some((e) => e.includes('pushState')))
+  })
+
+  it('(b) app/hoje navega para entrar, faz o login e só então o pushState para /app/hoje', async () => {
+    const cdp = cdpFalso()
+    await abrirCaso(cdp, 'http://127.0.0.1:5244/', { caso: 'hoje', tema: 'claro', rota: 'app/hoje' })
+    const navegacoes = cdp.chamadas.filter((c) => c.metodo === 'Page.navigate')
+    assert.deepEqual(navegacoes.map((c) => c.params.url), ['http://127.0.0.1:5244/entrar'])
+
+    const indiceDoNavigate = cdp.chamadas.findIndex((c) => c.metodo === 'Page.navigate')
+    const indiceDoLogin = cdp.chamadas.findIndex((c) => c.metodo === 'Runtime.evaluate' && String(c.params.expression).includes('requestSubmit'))
+    const indiceDoPush = cdp.chamadas.findIndex((c) => c.metodo === 'Runtime.evaluate' && String(c.params.expression).includes('pushState'))
+    assert.ok(indiceDoNavigate >= 0 && indiceDoLogin > indiceDoNavigate && indiceDoPush > indiceDoLogin)
+
+    const login = String(cdp.chamadas[indiceDoLogin].params.expression)
+    assert.ok(login.includes('juliana@exemplo.invalid'))
+    assert.ok(login.includes('senha-local-ficticia'))
+    assert.ok(login.includes('input[type=password]'))
+    assert.ok(login.includes("new Event('input', {bubbles:true})") || login.includes("new Event('input', { bubbles: true })"))
+
+    const push = String(cdp.chamadas[indiceDoPush].params.expression)
+    assert.ok(push.includes('/app/hoje'))
+    assert.ok(push.includes('popstate'))
+  })
+
+  it('o pushState usa o caminho da base quando ela não é a raiz', async () => {
+    const cdp = cdpFalso()
+    await abrirCaso(cdp, 'http://127.0.0.1:5244/site/', { caso: 'hoje', tema: 'claro', rota: 'app/hoje' })
+    const push = avaliadas(cdp).find((e) => e.includes('pushState'))
+    assert.ok(push.includes('/site/app/hoje'))
+    const navegacoes = cdp.chamadas.filter((c) => c.metodo === 'Page.navigate').map((c) => c.params.url)
+    assert.deepEqual(navegacoes, ['http://127.0.0.1:5244/site/entrar'])
+  })
+
+  it('(c) login que não chega a /app/ falha com erro claro e não navega dentro da SPA', async () => {
+    const cdp = cdpFalso({ entra: false })
+    await assert.rejects(entrarNaDemonstracao(cdp, 'http://127.0.0.1:5244/', { voltas: 3 }), /não consegui entrar na demonstração/)
+    assert.ok(!avaliadas(cdp).some((e) => e.includes('pushState')))
+  })
+
+  it('(d) app/sessao em madrugada ainda clica o botão do cabeçalho, depois da entrada', async () => {
+    const cdp = cdpFalso()
+    await abrirCaso(cdp, 'http://127.0.0.1:5244/', { caso: 'sessao', tema: 'madrugada', rota: 'app/sessao' })
+    const expressoes = avaliadas(cdp)
+    const indiceDoPush = expressoes.findIndex((e) => e.includes('pushState'))
+    const indiceDoBotao = expressoes.findIndex((e) => e.includes('[data-cabecalho] button[aria-pressed]'))
+    const indiceDaSessao = expressoes.findIndex((e) => e.includes('Ver sessão'))
+    assert.ok(indiceDoPush >= 0)
+    assert.ok(indiceDoBotao > indiceDoPush)
+    assert.ok(indiceDaSessao > indiceDoBotao)
   })
 })

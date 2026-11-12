@@ -46,8 +46,8 @@ interface Props {
 // A moldura das telas logadas desta tarefa, dentro do cabeçalho e do rodapé da casca (a marca, o
 // "Modo madrugada" e o resto do cabeçalho são dela; o rodapé do app não traz o aviso de demonstração):
 // o que a conta precisa a mais, o aviso de demonstração (só sem banco), uma barra fina de 1 px embaixo
-// com o link da Conta, o do protótipo do Hoje e o "Sair", o resumo de uma saída que falhou e o `<main>`.
-// Não monta a navegação inferior do protótipo.
+// com o link da Conta, o de ir para o Hoje e o "Sair", o resumo de uma saída que falhou e o `<main>`.
+// Não monta navegação inferior.
 export function MolduraLogada({ ocupado = false, children }: Props) {
   const { sair } = useSessao()
   const [saindo, setSaindo] = useState(false)
@@ -79,7 +79,7 @@ export function MolduraLogada({ ocupado = false, children }: Props) {
           aria-label={CABECALHO.navegacao}
           className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-[var(--cor-fio-suave)] py-4 sm:gap-y-3"
         >
-          {/* No celular os três não cabem numa linha: "Conta" e "Sair" ficam juntos na de cima, e o link do protótipo desce sozinho (só a ordem visual muda, a do DOM não). */}
+          {/* No celular os três não cabem numa linha: "Conta" e "Sair" ficam juntos na de cima, e o link do Hoje desce sozinho (só a ordem visual muda, a do DOM não). */}
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 max-sm:contents">
             <NavLink
               to="/app/conta"
@@ -89,7 +89,7 @@ export function MolduraLogada({ ocupado = false, children }: Props) {
               {CABECALHO.conta}
             </NavLink>
             <Link to="/app/hoje" className={`${LINK_DA_BARRA} max-sm:order-3`}>
-              {CABECALHO.prototipo}
+              {CABECALHO.irParaHoje}
               <ArrowUpRight size={18} aria-hidden="true" />
             </Link>
           </div>

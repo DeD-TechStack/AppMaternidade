@@ -5,7 +5,6 @@ import { createMemoryRouter, RouterProvider } from 'react-router'
 import { ProvedorDadosConta } from '../componentes/conta/sessao.tsx'
 import { PESSOAS_DEMONSTRACAO, criarFixtureDemonstracao } from '../dados/conta.demonstracao.ts'
 import { criarDadosContaMemoria, type DadosContaMemoria, type FixtureConta } from '../dados/conta.memoria.ts'
-import type { EstadoPrototipo } from '../prototipo/estado.ts'
 import { criarRotas } from '../rotas.tsx'
 
 // As pessoas dos testes de tela: os mesmos ids e papéis da fixture de demonstração
@@ -105,8 +104,6 @@ interface Opcoes {
    * dada a deixou (numa memória nova, ninguém entrou).
    */
   sessao?: keyof typeof PESSOAS | null
-  /** Estado inicial do protótipo; a madrugada se liga com `madrugada: true`. */
-  estadoInicial?: EstadoPrototipo
 }
 
 // Renderiza as rotas reais num roteador em memória, dentro do `ProvedorDadosConta`. O provedor de
@@ -121,7 +118,7 @@ export function renderizarComDados(caminho: string, opcoes: Opcoes = {}) {
   const rolarAoTopo = vi.fn()
   vi.stubGlobal('scrollTo', rolarAoTopo)
 
-  const roteador = createMemoryRouter(criarRotas(opcoes.estadoInicial), { initialEntries: [caminho] })
+  const roteador = createMemoryRouter(criarRotas(), { initialEntries: [caminho] })
   const resultado = render(
     <ProvedorDadosConta dados={dados}>
       <RouterProvider router={roteador} />

@@ -5,19 +5,29 @@ import { CHAVE_RECUPERACAO } from '../../componentes/conta/armazenamento.ts'
 import { NOMES_DO_H1, TEXTOS_ERRO } from '../../conteudo/conta.ts'
 import { SENHA_DEMONSTRACAO } from '../../dados/conta.demonstracao.ts'
 import { criarDadosContaMemoria } from '../../dados/conta.memoria.ts'
-import { criarEstadoInicial, type EstadoPrototipo } from '../../prototipo/estado.ts'
-import { PESSOAS, criarFixtureDeTeste, renderizarComDados } from '../../teste/renderizarComDados.tsx'
+import { PESSOAS, criarFixtureDeTeste, renderizarComDados as renderizarComDadosReal } from '../../teste/renderizarComDados.tsx'
 
 // RN-03: axe-core nas rotas desta tarefa, nos dois temas, com sessão de responsável e de cuidador
 // nas logadas e com a caixa de diálogo aberta; rótulos e erros ligados aos campos; foco no erro;
 // foco e rolagem ao trocar de tela; e a garantia de que nada aqui chama a rede (RN-01).
 
-const claro = (): EstadoPrototipo => criarEstadoInicial(Date.now())
-const madrugada = (): EstadoPrototipo => ({ ...criarEstadoInicial(Date.now()), madrugada: true })
-const temas: Array<[string, () => EstadoPrototipo]> = [
+// O tema: a madrugada é o `data-tema` do <html>, que o layout põe na área logada e que o teste põe antes de
+// montar quando a tela é pública.
+interface Tema {
+  madrugada: boolean
+}
+const claro = (): Tema => ({ madrugada: false })
+const madrugada = (): Tema => ({ madrugada: true })
+const temas: Array<[string, () => Tema]> = [
   ['claro', claro],
   ['madrugada', madrugada],
 ]
+
+function renderizarComDados(caminho: string, opcoes: Parameters<typeof renderizarComDadosReal>[1] & { estadoInicial?: Tema } = {}) {
+  const { estadoInicial, ...resto } = opcoes
+  if (estadoInicial?.madrugada) document.documentElement.setAttribute('data-tema', 'madrugada')
+  return renderizarComDadosReal(caminho, resto)
+}
 
 beforeEach(() => {
   sessionStorage.clear()
@@ -60,7 +70,7 @@ async function memoriaSemConta() {
   return dados
 }
 
-type Montagem = (estado: EstadoPrototipo) => Promise<{ container: HTMLElement; unmount: () => void }>
+type Montagem = (estado: Tema) => Promise<{ container: HTMLElement; unmount: () => void }>
 
 const montagens: Array<[string, Montagem]> = [
   ['/entrar', async (estadoInicial) => renderizarComDados('/entrar', { estadoInicial })],
