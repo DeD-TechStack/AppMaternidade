@@ -330,6 +330,15 @@
   width: 88%;
 }
 
+/* Até 899 px a pilha fica centrada no painel e o convite girado (-2 deg, sobra de uns 6 px por lado)
+   entra 8 px na coluna dela, centrado: a caixa girada não passa do respiro do painel. */
+@media (max-width: 899px) {
+  .pd-pilha > .pd-em-fluxo.cm-flutuante {
+    max-width: calc(100% - 16px);
+    margin-inline: auto;
+  }
+}
+
 /* No celular o cartão do convite ocupa a coluna inteira da pilha e o ícone fica em cima do texto:
    nenhuma palavra ("Bruno", "Responsável", "convidado") parte ao meio. */
 @media (max-width: 599px) {
@@ -357,6 +366,12 @@
   justify-content: flex-end;
   gap: 32px;
   width: 100%;
+}
+
+@media (max-width: 899px) {
+  .pd-passo-um {
+    justify-content: center;
+  }
 }
 
 .pd-passo-desenho {
@@ -651,8 +666,18 @@
    passo continua sendo o que manda na seção, e o cartão não passa da borda do painel (a sobra de 32 px
    só existe lado a lado). */
 @media (max-width: 899px) {
+  /* O giro de 2 deg faz a caixa girada passar uns 6 px do cartão para cada lado (e uns 5 em cima e
+     embaixo). O respiro do painel (24) precisa cobrir essa sobra: o cartão fica centrado, 8 px para
+     dentro de cada lado da coluna e com 8 px de folga embaixo, então a caixa girada fica a 24 px ou
+     mais da borda do painel. */
+  .pd-passo-midia:has(> .pd-cartao-noite) {
+    justify-content: center;
+  }
+
   .pd-passo-midia > .pd-cartao-noite.cm-flutuante {
-    width: min(296px, 100%);
+    width: min(296px, calc(100% - 16px));
+    margin-inline: 8px;
+    margin-bottom: 8px;
   }
 
   .pd-cartao-noite .cm-flutuante-cartao {
@@ -796,6 +821,17 @@
   margin-right: 0;
 }
 
+/* Até 899 px o convite (2 deg, sobra de uns 6 px de cada lado) fica centrado na coluna e 8 px para
+   dentro de cada lado: a caixa girada não passa do respiro do painel. Só os lados contam: embaixo ele
+   sobra do painel de propósito. */
+@media (max-width: 899px) {
+  .pd-familia-convite.cm-flutuante {
+    align-self: center;
+    width: min(84%, calc(100% - 16px));
+    margin-inline: 8px;
+  }
+}
+
 .pd-familia-desenho .cm-ilustracao {
   width: 100%;
   max-height: 420px;
@@ -845,8 +881,8 @@
 
   .pd-familia-convite.cm-flutuante {
     align-self: auto;
-    width: 100%;
-    margin: 0;
+    width: calc(100% - 16px);
+    margin: 0 8px;
   }
 
   .pd-familia-convite .cm-flutuante-cartao {
