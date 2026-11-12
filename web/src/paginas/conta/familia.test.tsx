@@ -544,7 +544,8 @@ describe('bebês', () => {
 
     await waitFor(() => expect(campo('Data de nascimento').getAttribute('aria-invalid')).toBe('true'))
     expect(screen.getByText(TEXTOS_ERRO.nascimento_no_futuro)).toBeTruthy()
-    expect(document.activeElement).toBe(campo('Data de nascimento'))
+    // O foco vai ao campo num efeito depois da renderização do erro: com a máquina carregada ele chegava depois da asserção.
+    await waitFor(() => expect(document.activeElement).toBe(campo('Data de nascimento')))
   })
 
   it('editar: o formulário traz os dados, e salvar mostra a confirmação e o novo nome', async () => {
