@@ -3,11 +3,11 @@ import { Link } from 'react-router'
 import { Etiqueta } from '../../componentes/base/Etiqueta.tsx'
 import { Esqueleto } from '../../componentes/comunidade/Avisos.tsx'
 import { usePaginas } from '../../componentes/comunidade/useLeitura.ts'
-import { BOTAO_SECUNDARIO } from '../../componentes/conta/Partes.tsx'
 import { ErroDeLeituraNoPainel } from '../../componentes/moderacao/Avisos.tsx'
 import { usePainel } from '../../componentes/moderacao/contexto.ts'
 import { useDadosModeracao } from '../../componentes/moderacao/dados.ts'
 import { Escolha } from '../../componentes/moderacao/Escolha.tsx'
+import { BOTAO_SECUNDARIO_QUEBRA, ETIQUETAS_QUEBRAM } from '../../componentes/moderacao/estilos.ts'
 import { Painel } from '../../componentes/moderacao/Painel.tsx'
 import { ROTULO_ESTADO_DENUNCIA, ROTULO_MOTIVO, COMUM_COMUNIDADE } from '../../conteudo/comunidade.ts'
 import { COMUM_MODERACAO, FILA, NOMES_DAS_TELAS, TX } from '../../conteudo/moderacao.ts'
@@ -74,7 +74,7 @@ function ListaDaFila() {
             ))}
           </div>
         </fieldset>
-        <div className="cm-campo max-w-[24rem]">
+        <div className="cm-campo grid-cols-[minmax(0,1fr)] min-w-0 max-w-[24rem]">
           <label htmlFor="filtro-motivo" className="cm-campo-rotulo">
             {FILA.filtroMotivo}
           </label>
@@ -83,7 +83,7 @@ function ListaDaFila() {
               id="filtro-motivo"
               value={motivo ?? ''}
               onChange={(evento) => setMotivo(evento.target.value === '' ? null : (evento.target.value as MotivoDenuncia))}
-              className="cm-campo-entrada alvo-toque"
+              className="cm-campo-entrada alvo-toque min-w-0"
             >
               <option value="">{FILA.todosOsMotivos}</option>
               {MOTIVOS.map((opcao) => (
@@ -107,7 +107,7 @@ function ListaDaFila() {
             {lista.itens.map((denuncia) => (
               <li key={denuncia.id}>
                 <Link to={`/moderacao/denuncia/${denuncia.id}`} className={`${CARTAO} alvo-toque no-underline`}>
-                  <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <span className={`flex flex-wrap items-center gap-x-3 gap-y-1 ${ETIQUETAS_QUEBRAM}`}>
                     <Etiqueta>{FILA.prioridade(prioridadeDoMotivo(denuncia.motivo))}</Etiqueta>
                     <span className="font-semibold">{ROTULO_MOTIVO[denuncia.motivo]}</span>
                     <span className="cm-pequeno text-[var(--cor-texto-2)]">{tipoDoAlvo(denuncia)}</span>
@@ -132,7 +132,7 @@ function ListaDaFila() {
             <button
               type="button"
               disabled={lista.maisEmCurso}
-              className={BOTAO_SECUNDARIO}
+              className={BOTAO_SECUNDARIO_QUEBRA}
               data-tamanho="app"
               onClick={() => void fila.carregarMais()}
             >

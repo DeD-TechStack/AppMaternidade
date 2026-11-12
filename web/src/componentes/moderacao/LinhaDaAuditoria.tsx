@@ -4,7 +4,7 @@ import { AUDITORIA, COMUM_MODERACAO, ROTULO_ESTADO_CONTEUDO, ROTULO_PAPEL } from
 import { formatarDataHora } from '../../dados/comunidade.ts'
 import type { LinhaDeAuditoria } from '../../dados/moderacao.ts'
 import { Texto } from '../comunidade/Itens.tsx'
-import { LINK_ALVO } from '../conta/Partes.tsx'
+import { LINK_ALVO_DO_PAINEL } from './estilos.ts'
 
 /** O rótulo de um estado guardado na auditoria: de conteúdo, de denúncia ou de papel. */
 function rotuloDoEstado(valor: string | null): string {
@@ -24,18 +24,18 @@ function AlvoDaLinha({ linha }: { linha: LinhaDeAuditoria }) {
   }
   if (linha.alvoTipo === 'denuncia') {
     return (
-      <Link to={`/moderacao/denuncia/${linha.alvoId}`} className={LINK_ALVO}>
+      <Link to={`/moderacao/denuncia/${linha.alvoId}`} className={LINK_ALVO_DO_PAINEL}>
         {AUDITORIA.abrirDenuncia}
       </Link>
     )
   }
   return (
     <>
-      <Link to={`/moderacao/conteudo/${linha.alvoTipo}/${linha.alvoId}`} className={LINK_ALVO}>
+      <Link to={`/moderacao/conteudo/${linha.alvoTipo}/${linha.alvoId}`} className={LINK_ALVO_DO_PAINEL}>
         {AUDITORIA.abrirConteudo(AUDITORIA.alvoConteudo[linha.alvoTipo])}
       </Link>
       {linha.denunciaId ? (
-        <Link to={`/moderacao/denuncia/${linha.denunciaId}`} className={LINK_ALVO}>
+        <Link to={`/moderacao/denuncia/${linha.denunciaId}`} className={LINK_ALVO_DO_PAINEL}>
           {AUDITORIA.verDenuncia}
         </Link>
       ) : null}

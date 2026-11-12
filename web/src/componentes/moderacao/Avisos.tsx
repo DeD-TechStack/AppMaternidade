@@ -3,7 +3,7 @@ import { COMUM_COMUNIDADE } from '../../conteudo/comunidade.ts'
 import { NAO_ENCONTRADO, SEM_PERMISSAO, TX, textoDoErroModeracao } from '../../conteudo/moderacao.ts'
 import type { ErroDados } from '../../dados/comum.ts'
 import { ResumoDeErro } from '../comunidade/Avisos.tsx'
-import { LINK_ALVO } from '../conta/Partes.tsx'
+import { LINK_ALVO_DO_PAINEL } from './estilos.ts'
 
 // As peças de aviso do painel. O visual é o das peças da Comunidade (`ResumoDeErro`, `Esqueleto`).
 
@@ -12,7 +12,7 @@ export function NaoEncontradoNoPainel() {
   return (
     <div className="flex flex-col items-start gap-3" data-estado="nao-encontrado">
       <p className="font-medium">{NAO_ENCONTRADO.frase}</p>
-      <Link to="/moderacao" className={LINK_ALVO}>
+      <Link to="/moderacao" className={LINK_ALVO_DO_PAINEL}>
         {NAO_ENCONTRADO.link}
       </Link>
     </div>
@@ -29,7 +29,7 @@ export function SemPermissao({ frasePerdida }: { frasePerdida?: string | null })
         </p>
       ) : null}
       <p className="font-medium">{TX.tx12}</p>
-      <Link to="/app/comunidade" className={LINK_ALVO}>
+      <Link to="/app/comunidade" className={LINK_ALVO_DO_PAINEL}>
         {SEM_PERMISSAO.link}
       </Link>
     </div>

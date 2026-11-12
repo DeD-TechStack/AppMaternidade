@@ -5,7 +5,6 @@ import { useFocoPendente } from '../../componentes/comunidade/foco.ts'
 import { Status } from '../../componentes/comunidade/Status.tsx'
 import { useLeitura } from '../../componentes/comunidade/useLeitura.ts'
 import { useFocoNoResumo } from '../../componentes/conta/foco.ts'
-import { BOTAO_PRINCIPAL, BOTAO_SECUNDARIO } from '../../componentes/conta/Partes.tsx'
 import { Etiqueta } from '../../componentes/base/Etiqueta.tsx'
 import { ErroDeLeituraNoPainel } from '../../componentes/moderacao/Avisos.tsx'
 import { usePainel } from '../../componentes/moderacao/contexto.ts'
@@ -13,6 +12,7 @@ import { TextoCopiavel } from '../../componentes/moderacao/Copiar.tsx'
 import { useDadosModeracao } from '../../componentes/moderacao/dados.ts'
 import { DialogoDeMotivo } from '../../componentes/moderacao/DialogoDeMotivo.tsx'
 import { Escolha } from '../../componentes/moderacao/Escolha.tsx'
+import { BOTAO_PRINCIPAL_QUEBRA, BOTAO_SECUNDARIO_QUEBRA, ETIQUETAS_QUEBRAM } from '../../componentes/moderacao/estilos.ts'
 import { useEscritaModeracao } from '../../componentes/moderacao/escrita.ts'
 import { quemAgiu } from '../../componentes/moderacao/LinhaDaAuditoria.tsx'
 import { Painel } from '../../componentes/moderacao/Painel.tsx'
@@ -47,7 +47,7 @@ interface CampoProps {
 function CampoSimples({ id, rotulo, valor, aoMudar, tipo = 'text', erro, ajuda }: CampoProps) {
   const ligados = [erro ? `${id}-erro` : null, ajuda ? `${id}-ajuda` : null].filter(Boolean).join(' ')
   return (
-    <div className="cm-campo max-w-[40rem]">
+    <div className="cm-campo grid-cols-[minmax(0,1fr)] min-w-0 max-w-[40rem]">
       <label htmlFor={id} className="cm-campo-rotulo">
         {rotulo}
       </label>
@@ -60,16 +60,16 @@ function CampoSimples({ id, rotulo, valor, aoMudar, tipo = 'text', erro, ajuda }
           onChange={(evento) => aoMudar(evento.target.value)}
           aria-invalid={erro ? true : undefined}
           aria-describedby={ligados || undefined}
-          className="cm-campo-entrada alvo-toque"
+          className="cm-campo-entrada alvo-toque min-w-0"
         />
       </div>
       {erro ? (
-        <p id={`${id}-erro`} className="cm-campo-mensagem cm-campo-erro cm-pequeno">
+        <p id={`${id}-erro`} className="cm-campo-mensagem cm-campo-erro cm-pequeno wrap-anywhere">
           {erro}
         </p>
       ) : null}
       {ajuda ? (
-        <p id={`${id}-ajuda`} className="cm-campo-mensagem cm-pequeno text-[var(--cor-texto-2)]">
+        <p id={`${id}-ajuda`} className="cm-campo-mensagem cm-pequeno wrap-anywhere text-[var(--cor-texto-2)]">
           {ajuda}
         </p>
       ) : null}
@@ -200,30 +200,30 @@ function ListaDePapeis() {
                       mensagemFalha={PAPEIS.copieManualmente}
                     />
                   )}
-                  <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <p className={`flex flex-wrap items-center gap-x-3 gap-y-1 ${ETIQUETAS_QUEBRAM}`}>
                     <Etiqueta>{ROTULO_PAPEL[linha.papel]}</Etiqueta>
                     <Etiqueta>{vigente ? PAPEIS.vigente : PAPEIS.vencido}</Etiqueta>
                   </p>
-                  <dl className="cm-pequeno m-0 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
-                    <dt className="text-[var(--cor-texto-2)]">{PAPEIS.concedidoPor}</dt>
-                    <dd className="m-0 wrap-anywhere">
+                  <dl className="cm-pequeno m-0 grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1">
+                    <dt className="min-w-0 wrap-anywhere text-[var(--cor-texto-2)]">{PAPEIS.concedidoPor}</dt>
+                    <dd className="m-0 min-w-0 wrap-anywhere">
                       {linha.concedidoPor === null ? COMUM_MODERACAO.semRegistro : quemAgiu(linha.concedidoPor, painel.contaId)}
                     </dd>
-                    <dt className="text-[var(--cor-texto-2)]">{PAPEIS.concedidoEm}</dt>
-                    <dd className="tabular m-0">{formatarDataHora(linha.concedidoEm)}</dd>
-                    <dt className="text-[var(--cor-texto-2)]">{PAPEIS.validade}</dt>
-                    <dd className="tabular m-0">
+                    <dt className="min-w-0 wrap-anywhere text-[var(--cor-texto-2)]">{PAPEIS.concedidoEm}</dt>
+                    <dd className="tabular m-0 min-w-0 wrap-anywhere">{formatarDataHora(linha.concedidoEm)}</dd>
+                    <dt className="min-w-0 wrap-anywhere text-[var(--cor-texto-2)]">{PAPEIS.validade}</dt>
+                    <dd className="tabular m-0 min-w-0 wrap-anywhere">
                       {linha.validoAte === null ? COMUM_MODERACAO.semValidade : formatarDataHora(linha.validoAte)}
                     </dd>
                   </dl>
                   <div className="flex flex-wrap gap-3">
-                    <button type="button" className={BOTAO_SECUNDARIO} data-tamanho="app" onClick={() => renovar(linha)}>
+                    <button type="button" className={BOTAO_SECUNDARIO_QUEBRA} data-tamanho="app" onClick={() => renovar(linha)}>
                       {PAPEIS.renovar}
                     </button>
                     <button
                       id={idDoBotao(linha)}
                       type="button"
-                      className={BOTAO_SECUNDARIO}
+                      className={BOTAO_SECUNDARIO_QUEBRA}
                       data-tamanho="app"
                       onClick={(evento) => {
                         origem.current = evento.currentTarget
@@ -314,7 +314,7 @@ function ListaDePapeis() {
             ajuda={PAPEIS.dicaDaValidade}
           />
           <div className="max-w-[24rem]">
-            <button type="submit" disabled={envio.enviando} className={BOTAO_PRINCIPAL}>
+            <button type="submit" disabled={envio.enviando} className={BOTAO_PRINCIPAL_QUEBRA}>
               {envio.enviando ? COMUM_COMUNIDADE.enviando : PAPEIS.conceder}
             </button>
           </div>

@@ -1,9 +1,9 @@
 import { Esqueleto } from '../../componentes/comunidade/Avisos.tsx'
 import { usePaginas } from '../../componentes/comunidade/useLeitura.ts'
-import { BOTAO_SECUNDARIO } from '../../componentes/conta/Partes.tsx'
 import { ErroDeLeituraNoPainel } from '../../componentes/moderacao/Avisos.tsx'
 import { usePainel } from '../../componentes/moderacao/contexto.ts'
 import { useDadosModeracao } from '../../componentes/moderacao/dados.ts'
+import { BOTAO_SECUNDARIO_QUEBRA } from '../../componentes/moderacao/estilos.ts'
 import { LinhaDaAuditoria } from '../../componentes/moderacao/LinhaDaAuditoria.tsx'
 import { Painel } from '../../componentes/moderacao/Painel.tsx'
 import { COMUM_COMUNIDADE } from '../../conteudo/comunidade.ts'
@@ -45,7 +45,7 @@ function ListaDaAuditoria() {
           <button
             type="button"
             disabled={lidas.maisEmCurso}
-            className={BOTAO_SECUNDARIO}
+            className={BOTAO_SECUNDARIO_QUEBRA}
             data-tamanho="app"
             onClick={() => void lista.carregarMais()}
           >

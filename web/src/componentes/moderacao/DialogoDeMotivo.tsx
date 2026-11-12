@@ -8,9 +8,9 @@ import { ResumoDeErro } from '../comunidade/Avisos.tsx'
 import { CampoComContador } from '../comunidade/Campos.tsx'
 import { Dialogo } from '../comunidade/Dialogo.tsx'
 import { useFocoNoResumo } from '../conta/foco.ts'
-import { BOTAO_PRINCIPAL, BOTAO_SECUNDARIO } from '../conta/Partes.tsx'
 import { usePainel } from './contexto.ts'
 import { useEscritaModeracao } from './escrita.ts'
+import { BOTAO_PRINCIPAL_QUEBRA, BOTAO_SECUNDARIO_QUEBRA } from './estilos.ts'
 
 const ID_DO_MOTIVO = 'motivo-da-acao'
 
@@ -93,13 +93,13 @@ export function DialogoDeMotivo({ titulo, confirmar, origem, aoFechar, enviar, c
           />
         </div>
         <div className="flex flex-col gap-3 min-[30rem]:flex-row-reverse">
-          <button type="submit" disabled={envio.enviando} className={BOTAO_PRINCIPAL}>
+          <button type="submit" disabled={envio.enviando} className={BOTAO_PRINCIPAL_QUEBRA}>
             {envio.enviando ? COMUM_COMUNIDADE.enviando : confirmar}
           </button>
           <button
             type="button"
             disabled={envio.enviando}
-            className={`${BOTAO_SECUNDARIO} min-[30rem]:w-full`}
+            className={`${BOTAO_SECUNDARIO_QUEBRA} min-[30rem]:w-full`}
             onClick={aoFechar}
           >
             {COMUM_COMUNIDADE.cancelar}
