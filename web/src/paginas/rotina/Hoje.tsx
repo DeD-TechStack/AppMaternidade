@@ -23,7 +23,9 @@ import { useMadrugada } from '../../componentes/rotina/madrugada.ts'
 import { totaisDoDia } from '../../componentes/rotina/totaisDoDia.ts'
 import { useAcoesDaRotina, type ResultadoDoEncerramento } from '../../componentes/rotina/useAcoesDaRotina.ts'
 import { useSecao } from '../../componentes/rotina/useSecao.ts'
-import { COMUM, ESTADOS, HOJE, ROTULO_TIPO, SEM_RESULTADO, TITULOS } from '../../conteudo/rotina.ts'
+import { LinkDaRotina } from '../../componentes/rotina/LinkDaRotina.tsx'
+import { ORIGEM_HOJE } from '../../componentes/rotina/origemDasNotas.ts'
+import { COMUM, ESTADOS, HOJE, LIGACOES, ROTULO_TIPO, SEM_RESULTADO, TITULOS } from '../../conteudo/rotina.ts'
 import type { Resultado } from '../../dados/comum.ts'
 import { diaDaFamilia, formatarIdade, janelaDoDia, lerAparelho } from '../../dados/rotina.dia.ts'
 import { LIMITES, podeEscrever, type Lista, type Registro } from '../../dados/rotina.tipos.ts'
@@ -317,6 +319,11 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
               notas={lista.itens.filter((nota) => nota.destaqueAte !== null && Date.parse(nota.destaqueAte) > agora).slice(0, 3)}
               agora={agora}
               autorDe={(nota) => acoes.nomeDoAutor(nota.criadoPor, nota.familiaId)}
+              rodape={
+                <LinkDaRotina to="/app/notas" state={{ origem: ORIGEM_HOJE }} className="mt-1">
+                  {LIGACOES.verNotas}
+                </LinkDaRotina>
+              }
             />
             {lista.incompleta ? <AvisoDeLista limite={LIMITES.notas} dado="notas" className="mt-3" /> : null}
           </>
@@ -325,7 +332,18 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
       <SecaoDoHoje secao={desde} titulo={HOJE.desdeCarregando} papel={ativo.papel}>
         {(lido) =>
           lido.marco ? (
-            <DesdeUltimoRegistro marcoEm={Date.parse(lido.marco.recebidoEm)} registros={lido.novos} fuso={fuso} autorDe={autorDoRegistro} />
+            <DesdeUltimoRegistro
+              marcoEm={Date.parse(lido.marco.recebidoEm)}
+              registros={lido.novos}
+              fuso={fuso}
+              autorDe={autorDoRegistro}
+              paraDetalhe={(registro) => `/app/registro/${registro.id}`}
+              rodape={
+                <LinkDaRotina to="/app/historico" className="mt-1">
+                  {LIGACOES.verNoHistorico}
+                </LinkDaRotina>
+              }
+            />
           ) : null
         }
       </SecaoDoHoje>

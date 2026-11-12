@@ -1,3 +1,4 @@
+import { Link } from 'react-router'
 import { Check, Undo2 } from 'lucide-react'
 import { ALVO_APP } from '../app/alvo.ts'
 import { Botao } from '../base/Botao.tsx'
@@ -27,7 +28,20 @@ export function ConfirmacaoRotina({ confirmacao, aoAcionar }: Props) {
             </p>
           ) : null}
           <div className="flex basis-full flex-wrap gap-2 sm:basis-auto">
-            {confirmacao.acoes.map((acao) => (
+            {confirmacao.acoes.map((acao) =>
+              acao.para ? (
+                <Link
+                  key={acao.chave}
+                  to={acao.para}
+                  state={{ foco: 'titulo' }}
+                  data-botao="texto"
+                  data-tamanho="app"
+                  className={`cm-botao cm-botao-texto alvo-toque flex-1 sm:flex-none ${ALVO_APP}`}
+                  onClick={() => aoAcionar(acao)}
+                >
+                  {acao.rotulo}
+                </Link>
+              ) : (
               <Botao
                 key={acao.chave}
                 variante={acao.chave === 'fechar' ? 'texto' : 'contorno'}
@@ -38,7 +52,8 @@ export function ConfirmacaoRotina({ confirmacao, aoAcionar }: Props) {
               >
                 {acao.chave === 'desfazer' ? <span>{acao.rotulo}</span> : acao.rotulo}
               </Botao>
-            ))}
+              ),
+            )}
           </div>
         </>
       ) : null}

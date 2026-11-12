@@ -10,6 +10,12 @@ export const TITULOS = {
   sessao: 'Sessão',
   registroNovo: 'Novo registro',
   registroEditar: 'Editar registro',
+  registro: 'Registro',
+  historico: 'Histórico',
+  lixeira: 'Lixeira',
+  notas: 'Notas',
+  notaNova: 'Nova nota',
+  notaEditar: 'Editar nota',
 } as const
 
 export const ROTULO_TIPO: Readonly<Record<TipoRegistro, string>> = {
@@ -33,6 +39,7 @@ export const COMUM = {
   salvar: 'Salvar',
   salvando: 'Salvando…',
   voltarParaHoje: 'Voltar para Hoje',
+  voltarParaORegistro: 'Voltar para o registro',
   pessoaRemovida: 'pessoa removida',
   exMembro: 'ex-membro da família',
   semNomeDoBebe: 'Bebê',
@@ -53,6 +60,7 @@ export const ESTADOS = {
   listaIncompleta: (limite: number) => `Esta lista mostra só os primeiros ${limite} itens.`,
   demaisParaSomar: 'Há registros demais para somar aqui.',
   naoEncontrado: 'Não encontramos este registro. Ele pode ter sido removido, ou você não tem mais acesso.',
+  naoEncontradaNota: 'Não encontramos esta nota. Ela pode ter sido removida, ou você não tem mais acesso.',
   registroExcluido: 'Este registro foi excluído e não pode ser mudado.',
   redeNaLeitura: 'Não foi possível falar com o servidor. Verifique a conexão.',
   redeNaEscrita: 'Não deu para confirmar com o servidor. Tente de novo: se já tiver sido salvo, não duplica.',
@@ -280,3 +288,138 @@ export const LIMITES_DE_DURACAO_MIN: Readonly<Record<'sono' | 'mamada' | 'tummy'
   mamada: 2 * 60,
   tummy: 60,
 }
+
+// ---- MAT-38b: links do Hoje, Histórico, detalhe, lixeira e notas -----------------------------------------
+
+export const LIGACOES = {
+  verNotas: 'Ver notas',
+  verNoHistorico: 'Ver no Histórico',
+  abrirALixeira: 'Abrir a lixeira',
+} as const
+
+/** `DD/MM às HH:MM`: o formato das datas de autoria, de exclusão e de prazo. */
+export const DATA_E_HORA = {
+  as: (dia: string, hora: string) => `${dia} às ${hora}`,
+} as const
+
+export const HISTORICO = {
+  linhaDoBebe: (nome: string, dia: string) => `${nome}, ${dia}`,
+  linhaDaSemana: (nome: string, de: string, ate: string) => `${nome}, de ${de} a ${ate}`,
+  hoje: 'Hoje',
+  ontem: 'Ontem',
+  diaPorExtenso: (extenso: string, relativo: 'hoje' | 'ontem' | null) =>
+    relativo === 'hoje' ? `Hoje, ${extenso}` : relativo === 'ontem' ? `Ontem, ${extenso}` : extenso,
+  lixeira: 'Lixeira',
+  vistas: 'Vista',
+  dia: 'Dia',
+  semana: 'Semana',
+  diaAnterior: 'Dia anterior',
+  diaSeguinte: 'Dia seguinte',
+  escolherDia: 'Escolher o dia',
+  seteDias: 'Últimos 7 dias',
+  diaDaFila: (sigla: string, numero: string) => `${sigla} ${numero}`,
+  filtros: 'Mostrar tipos',
+  todos: 'Todos',
+  registrosDoDia: 'Registros do dia',
+  semRegistros: 'Nenhum registro neste dia.',
+  resumoDoDia: 'Resumo do dia',
+  resumoDaSemana: 'Resumo da semana',
+  semRegistrosNaSemana: 'Nenhum registro nesta semana.',
+  verDia: (rotuloDoDia: string) => `Ver o dia ${rotuloDoDia}`,
+} as const
+
+/** Os rótulos dos totais do resumo do dia e da semana (R38-20, R38-21). */
+export const TOTAIS = {
+  sono: 'Sono',
+  tummy: 'Tummy time',
+  mamadas: 'Mamadas',
+  mamadeiras: 'Mamadeiras',
+  mamadasEMamadeiras: 'Mamadas e mamadeiras',
+  fraldas: 'Fraldas',
+  solidos: 'Alimentação sólida',
+  observacoes: 'Observações',
+  mamadeirasComMl: (quantidade: number, ml: number) => `${quantidade}, somando ${ml} ml`,
+  fraldasPorTipo: (total: number, xixi: number, coco: number, ambos: number) =>
+    `${total}: ${xixi} xixi, ${coco} cocô, ${ambos} ambos`,
+} as const
+
+export const DETALHE = {
+  inicio: 'Início',
+  fim: 'Fim',
+  horario: 'Horário',
+  duracao: 'Duração',
+  detalhes: 'Detalhes',
+  nota: 'Nota',
+  origem: 'Origem',
+  origemAoVivo: 'registrado na hora',
+  origemRetroativo: 'registrado depois',
+  iniciadoPor: (autor: string) => `iniciado por ${autor}`,
+  encerradoPor: (autor: string) => `encerrado por ${autor}`,
+  registradoPor: (autor: string) => `registrado por ${autor}`,
+  lado: 'Lado',
+  quantidade: 'Quantidade',
+  conteudo: 'Conteúdo',
+  alimento: 'Alimento',
+  editar: 'Editar',
+  excluir: 'Excluir',
+  excluido: 'Registro excluído.',
+  naLixeira: 'Este registro está na lixeira.',
+  restaurar: 'Restaurar',
+  restaurado: 'Registro restaurado.',
+  voltarParaHistorico: 'Voltar para o Histórico',
+  historicoDeAlteracoes: 'Histórico de alterações',
+  semAlteracoes: 'Nenhuma alteração registrada.',
+  operacoes: { criacao: 'Criado', edicao: 'Editado', exclusao: 'Excluído', restauracao: 'Restaurado' },
+  linhaDaAlteracao: (operacao: string, autor: string, quando: string) => `${operacao} por ${autor}, ${quando}`,
+  mudou: (campo: string, antes: string, depois: string) => `${campo}: ${antes} → ${depois}`,
+  semValor: 'vazio',
+  semNota: 'sem nota',
+  acaoSobre: (acao: string, rotulo: string) => `${acao} ${rotulo.charAt(0).toLocaleLowerCase('pt-BR')}${rotulo.slice(1)}`,
+} as const
+
+export const LIXEIRA = {
+  intro: 'Os registros excluídos ficam aqui por 30 dias.',
+  vazia: 'A lixeira está vazia.',
+  lista: 'Registros excluídos',
+  restaurar: 'Restaurar',
+  restaurado: 'Registro restaurado.',
+  excluidoPor: (autor: string, quando: string) => `excluído por ${autor} em ${quando}`,
+  podeSerRestauradoAte: (quando: string) => `pode ser restaurado até ${quando}`,
+  restaurarItem: (rotulo: string, hora: string) => `Restaurar ${rotulo.charAt(0).toLocaleLowerCase('pt-BR')}${rotulo.slice(1)} de ${hora}`,
+  voltarParaHistorico: 'Voltar para o Histórico',
+} as const
+
+export const NOTAS = {
+  lista: 'Notas da família',
+  nova: 'Nova nota',
+  editar: 'Editar',
+  excluir: 'Excluir',
+  manter: 'Manter',
+  vazia: 'Nenhuma nota.',
+  sobre: (nome: string) => `Sobre ${nome}`,
+  sobreAFamiliaToda: 'Sobre a família toda',
+  autorEm: (autor: string, quando: string) => `${autor}, ${quando}`,
+  emDestaqueAte: (quando: string) => `em destaque até ${quando}`,
+  confirmarExclusao: 'Excluir esta nota? Ela não poderá ser restaurada.',
+  salva: 'Nota salva.',
+  excluida: 'Nota excluída.',
+  voltarParaHoje: 'Voltar para Hoje',
+  voltarParaNotas: 'Voltar para as notas',
+  campoTexto: 'Texto da nota',
+  limiteDoTexto: 'Até 500 caracteres.',
+  campoSobre: 'Sobre',
+  familiaToda: 'A família toda',
+  campoDestaque: 'Destaque',
+  semDestaque: 'Sem destaque',
+  por12Horas: 'Por 12 horas',
+  por24Horas: 'Por 24 horas',
+  por3Dias: 'Por 3 dias',
+  manterAte: (quando: string) => `Manter até ${quando}`,
+  erroTextoObrigatorio: 'Escreva o texto da nota.',
+  erroTextoLongo: 'O texto passa de 500 caracteres.',
+  salvar: 'Salvar',
+  cancelar: 'Cancelar',
+  editarNota: (resumo: string) => `Editar nota: ${resumo}`,
+  excluirNota: (resumo: string) => `Excluir nota: ${resumo}`,
+  grupoDaExclusao: 'Excluir a nota',
+} as const

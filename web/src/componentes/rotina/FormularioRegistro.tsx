@@ -70,7 +70,7 @@ interface PropsDoControle {
 }
 
 /** Rótulo visível acima, o controle e a mensagem ligada por `aria-describedby` (ícone e palavras, nunca só cor). */
-function Controle({
+export function Controle({
   rotulo,
   erro,
   ajuda,
@@ -104,7 +104,7 @@ function Controle({
   )
 }
 
-function Selecao<T extends string>({
+export function Selecao<T extends string>({
   rotulo,
   valor,
   opcoes,
@@ -185,7 +185,9 @@ export function FormularioRegistro({ modo, ativo, tipoInicial, registro }: Props
   const emAndamento = registro !== undefined && registro.fim === null && ehTipoDeSessao(registro.tipo)
   const tipo = campos.tipo
   const mostraFim = temCampoDeFim(tipo, { modo, emAndamento, agora: 0 })
-  const destino = (location.state as { de?: string } | null)?.de === 'sessao' ? '/app/sessao' : '/app/hoje'
+  const origem = (location.state as { de?: string } | null)?.de
+  // No 38b, `Editar` do detalhe volta ao detalhe (R38-22).
+  const destino = origem === 'sessao' ? '/app/sessao' : origem === 'detalhe' && registro ? `/app/registro/${registro.id}` : '/app/hoje'
 
   // O foco vai ao primeiro campo com erro (na ordem do DOM) a cada validação que falha.
   useEffect(() => {

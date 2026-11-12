@@ -16,17 +16,20 @@ import { useTituloDaTela } from '../../prototipo/useTituloDaTela.ts'
 
 const PREFIXO = 'registro:'
 
-const VOLTAR = (
-  <Link
-    to="/app/hoje"
-    state={{ foco: 'titulo' }}
-    className="alvo-toque -ml-1 mb-3 inline-flex min-h-(--alvo-toque) items-center gap-1.5 rounded-pilula px-1 text-[17px] leading-[25px] font-medium no-underline underline-offset-4 hover:underline"
-    data-voltar=""
-  >
-    <ChevronLeft aria-hidden="true" className="size-5" strokeWidth={2} />
-    <span>{COMUM.voltarParaHoje}</span>
-  </Link>
-)
+/** O link de volta: ao Hoje, ou ao detalhe do registro quando o formulário foi aberto por `Editar` (R38-22). */
+function Voltar({ para, texto }: { para: string; texto: string }) {
+  return (
+    <Link
+      to={para}
+      state={{ foco: 'titulo' }}
+      className="alvo-toque -ml-1 mb-3 inline-flex min-h-(--alvo-toque) items-center gap-1.5 rounded-pilula px-1 text-[17px] leading-[25px] font-medium no-underline underline-offset-4 hover:underline"
+      data-voltar=""
+    >
+      <ChevronLeft aria-hidden="true" className="size-5" strokeWidth={2} />
+      <span>{texto}</span>
+    </Link>
+  )
+}
 
 /** O texto que ocupa o lugar do formulário para quem não pode criar nem alterar (R38-11). */
 function textoDoPapel(ativo: BebeAtivo): string {
@@ -37,15 +40,18 @@ function textoDoPapel(ativo: BebeAtivo): string {
 /** A casca das telas de formulário: o link de volta, o título e o `<main>` único, com o aviso de demonstração. */
 function Tela({ titulo, linha, children }: { titulo: string; linha: string; children: ReactNode }) {
   const location = useLocation()
+  const { id } = useParams()
   const { principal, focarTitulo } = useTituloDaTela()
   const foco = focoDoEstado(location.state)
   useEffect(() => {
     if (foco === 'titulo') focarTitulo()
   }, [foco, location.key, focarTitulo])
+  const doDetalhe = (location.state as { de?: string } | null)?.de === 'detalhe' && ehUuid(id)
+  const voltar = doDetalhe ? <Voltar para={`/app/registro/${id}`} texto={COMUM.voltarParaORegistro} /> : <Voltar para="/app/hoje" texto={COMUM.voltarParaHoje} />
   return (
     <>
       <main ref={principal} className="pb-16 text-[17px] leading-[25px]" data-tela="registro">
-        <TituloRotina antes={VOLTAR} titulo={titulo} linha={linha} />
+        <TituloRotina antes={voltar} titulo={titulo} linha={linha} />
         <div className="cm-area mt-6 lg:mt-10">{children}</div>
       </main>
       <AvisoDaTela />

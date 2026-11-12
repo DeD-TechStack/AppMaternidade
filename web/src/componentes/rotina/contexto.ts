@@ -18,9 +18,20 @@ export type SituacaoDaRotina = 'bebe' | 'familia_sem_bebe' | 'sem_familia'
 
 export interface AcaoDaConfirmacao {
   /** Identifica a ação para o foco e para os testes. */
-  chave: 'desfazer' | 'fechar' | 'manter_os_dois' | 'excluir_este' | 'editar_horario' | 'detalhes' | 'tentar_de_novo'
+  chave:
+    | 'desfazer'
+    | 'fechar'
+    | 'manter_os_dois'
+    | 'excluir_este'
+    | 'editar_horario'
+    | 'detalhes'
+    | 'tentar_de_novo'
+    | 'ver_no_historico'
+    | 'abrir_a_lixeira'
   rotulo: string
   executar: () => void
+  /** No 38b, uma ação que é link: a rota de destino (o foco vai ao `h1` dela). */
+  para?: string
 }
 
 export interface ConfirmacaoDaRotina {

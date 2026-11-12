@@ -1,8 +1,9 @@
 import type { ReactNode, Ref } from 'react'
+import { Link } from 'react-router'
 import { CircleAlert } from 'lucide-react'
-import { COMUM, ehErroRepetivel, textoDoErro } from '../../conteudo/rotina.ts'
+import { COMUM, LIGACOES, ehErroRepetivel, textoDoErro } from '../../conteudo/rotina.ts'
 import type { ErroDados, Papel } from '../../dados/comum.ts'
-import { BOTAO_SECUNDARIO } from '../conta/Partes.tsx'
+import { BOTAO_SECUNDARIO, LINK_ALVO } from '../conta/Partes.tsx'
 
 interface Props {
   erro: ErroDados
@@ -34,6 +35,11 @@ export function AvisoDeErro({ erro, escrita = false, papel = null, aoTentarDeNov
         <span>{textoDoErro(erro, { escrita, papel })}</span>
       </p>
       {children}
+      {erro.chave === 'registro_excluido' ? (
+        <Link to="/app/lixeira" state={{ foco: 'titulo' }} className={LINK_ALVO}>
+          {LIGACOES.abrirALixeira}
+        </Link>
+      ) : null}
       {aoTentarDeNovo && ehErroRepetivel(erro) ? (
         <button type="button" className={BOTAO_SECUNDARIO} data-botao="contorno" data-tamanho="app" onClick={aoTentarDeNovo}>
           {COMUM.tentarDeNovo}

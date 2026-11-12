@@ -1,11 +1,25 @@
 import { useNavigate } from 'react-router'
-import { COMUM, CONFIRMACAO, ESCOLHAS_FRALDA, REGISTRO_RAPIDO, ROTULO_TIPO, SESSOES, textoDoErro, ehErroRepetivel } from '../../conteudo/rotina.ts'
+import {
+  COMUM,
+  CONFIRMACAO,
+  DETALHE,
+  ESCOLHAS_FRALDA,
+  LIGACOES,
+  LIXEIRA,
+  REGISTRO_RAPIDO,
+  ROTULO_TIPO,
+  SESSOES,
+  textoDoErro,
+  ehErroRepetivel,
+} from '../../conteudo/rotina.ts'
 import type { ErroDados, Resultado } from '../../dados/comum.ts'
+import { diaDaFamilia, lerAparelho } from '../../dados/rotina.dia.ts'
 import { podeEscrever, type ConteudoFralda, type DetalhesRegistro, type Registro, type TipoSessao } from '../../dados/rotina.tipos.ts'
 import { uuidV7 } from '../../dados/rotina.uuid.ts'
 import { formatarDuracao, formatarHora } from '../../prototipo/formatar.ts'
 import type { BebeAtivo, NovaConfirmacao } from './contexto.ts'
 import { useRotina } from './contexto.ts'
+import { urlDoHistoricoDoDia } from './parametrosHistorico.ts'
 
 // As escritas da rotina que o Hoje e a Sessão compartilham: iniciar sessão, registro rápido, Desfazer,
 // encerrar (com nota ou em outro horário), descartar e unir. Toda escrita passa pelas funções da camada de
@@ -67,6 +81,10 @@ export function useAcoesDaRotina() {
     if (repetir && ehErroRepetivel(erro)) {
       acoes.push({ chave: 'tentar_de_novo', rotulo: COMUM.tentarDeNovo, executar: repetir })
     }
+    // No 38b, a frase de `registro_excluido` ganha o link para a lixeira (R38-22).
+    if (erro.chave === 'registro_excluido') {
+      acoes.push({ chave: 'abrir_a_lixeira', rotulo: LIGACOES.abrirALixeira, executar: () => undefined, para: '/app/lixeira' })
+    }
     acoes.push({ chave: 'fechar', rotulo: COMUM.fechar, executar: () => undefined })
     return { texto: textoDoErro(erro, { escrita: true, papel: ativo?.papel }), acoes, textoDaNota }
   }
@@ -77,6 +95,59 @@ export function useAcoesDaRotina() {
   }
 
   const fechar = { chave: 'fechar', rotulo: COMUM.fechar, executar: () => undefined } as const
+
+  // ---- 38b: dia do registro, restaurar e excluir com Desfazer ---------------------------------------------
+
+  /** O dia da família em que o registro começou (a rota do Histórico abre nesse dia). */
+  function diaDoRegistro(registro: Registro): string {
+    const fuso = rotina.contexto.familias.find((familia) => familia.id === registro.familiaId)?.fuso ?? lerAparelho().fuso
+    return diaDaFamilia(Date.parse(registro.inicio), fuso)
+  }
+
+  /**
+   * Restaura o registro. Com `confirmar`, mostra `Registro restaurado.` com o link `Ver no Histórico`; sem ele
+   * (o `Desfazer` de uma exclusão), só relê. Falha: a frase do catálogo e, se incerta, `Tentar de novo` com o
+   * mesmo id. Prazo vencido entre a leitura e o toque: a frase e a releitura, que tira o item da lista.
+   */
+  async function restaurar(registro: Registro, opcoes: { confirmar: boolean }, repeticao = false): Promise<boolean> {
+    const resultado = await dados.restaurarRegistro(registro.id)
+    if (!resultado.ok) {
+      mostrarErro(resultado.erro, () => void restaurar(registro, opcoes, true))
+      if (resultado.erro.chave === 'prazo_encerrado') atualizar()
+      return false
+    }
+    atualizar()
+    if (opcoes.confirmar) {
+      mostrarConfirmacao({
+        texto: LIXEIRA.restaurado,
+        acoes: [
+          { chave: 'ver_no_historico', rotulo: LIGACOES.verNoHistorico, executar: () => undefined, para: urlDoHistoricoDoDia(diaDoRegistro(registro)) },
+          fechar,
+        ],
+      })
+    } else if (repeticao) {
+      fecharConfirmacao()
+    }
+    return true
+  }
+
+  /**
+   * Exclui o registro a partir do detalhe: sem confirmação prévia; depois, `Registro excluído.` com `Desfazer`
+   * (restaura) e `Fechar`, e `aoConcluir` leva ao Histórico. Falha: a frase e, se incerta, `Tentar de novo`.
+   */
+  async function excluirDoDetalhe(registro: Registro, aoConcluir: () => void): Promise<void> {
+    const resultado = await dados.excluirRegistro(registro.id)
+    if (!resultado.ok) {
+      mostrarErro(resultado.erro, () => void excluirDoDetalhe(registro, aoConcluir))
+      return
+    }
+    atualizar()
+    mostrarConfirmacao({
+      texto: DETALHE.excluido,
+      acoes: [{ chave: 'desfazer', rotulo: COMUM.desfazer, executar: () => void restaurar(registro, { confirmar: false }) }, fechar],
+    })
+    aoConcluir()
+  }
 
   // ---- Desfazer ---------------------------------------------------------------------------------------
 
@@ -344,6 +415,9 @@ export function useAcoesDaRotina() {
     descartar,
     unir,
     podeUnir,
+    restaurar,
+    excluirDoDetalhe,
+    diaDoRegistro,
     confirmacaoDeErro,
     mostrarErro,
     aposErro,
