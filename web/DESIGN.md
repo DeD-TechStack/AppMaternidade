@@ -348,12 +348,19 @@ Só 0, 4, 8 e 50%. Etiqueta e campo no celular: 4. Botão, moldura dupla e mídi
 - **CTA circular:** 480 (322 abaixo de 768), urucum. Um segundo círculo, só de contorno, de 240.
 - **Mídia e galeria:** peça larga de 1376 × 888 a 1056; par de 2 × 672 × 672; retrato em c8–c10 de 413 × 734. Moldura com raio 8 (4 abaixo de 768), `overflow: hidden`, sem sombra, sem borda, `object-fit: cover`. Sem texto dentro: a descrição vai no `alt` ou no `aria-label`. Barro e lavanda só como fundo. A legenda fica só nos cartões "As telas".
 - **Barra Registrar (área logada):** 64 px, `position: fixed; bottom: 0`, 4 botões iguais (Sono, Mamada, Fralda e Mais). Não é navegação.
+- **Confirmação:** linha de tinta no topo, texto da confirmação e as ações dela: "Desfazer" e "Fechar" depois de um registro novo; "Editar horário" (para quem pode alterar) e "Fechar" depois de encerrar uma sessão. Não some sozinha.
+- **Seletor de bebê (Rotina, 38a):** aparece no título do Hoje só quando a família tem mais de um bebê ativo; com um só, o nome do bebê é texto. É um select nativo com o nome como rótulo visível, alvo de pelo menos 48 px, sem ícone desenhado. Bebê arquivado não entra na lista.
+- **Barra de registro rápido (Rotina, 38a):** os botões de registro do Hoje com Sono, Mamada, Fralda e Mais (Tummy time, Mamadeira, Alimentação sólida, Observação e "Outro horário…"). A fralda abre Xixi, Cocô, Ambos e Cancelar, porque o conteúdo é obrigatório. O toque repetido no mesmo botão em menos de 1 s não registra de novo.
+- **Item de registro (Rotina, 38a):** uma linha com a hora, o tipo e os detalhes em texto, a marca de quem registrou e o link para editar. Sem cartão com borda; fio fino entre as linhas.
+- **Sessões em paralelo (Rotina, 38a):** quando há mais de uma sessão em andamento, cada uma é um cartão do Hoje com o cronômetro e "Encerrar" próprios. A sessão encerrada por outra pessoa mostra quem encerrou e a hora.
+- **Formulário de registro (Rotina, 38a):** campos do tipo escolhido com rótulo visível acima, horários com data, hora e os botões "−5 min" e "+5 min" ao lado. A mensagem de erro fica ao lado do campo, ligada por `aria-describedby`, e o foco vai ao primeiro erro. Os avisos que não bloqueiam (duração acima do limite, sobreposição) pedem "Salvar assim" ou "Corrigir". O envio mostra "Salvando…" com `aria-disabled`.
+- **Estados da Rotina (38a):** carregando (texto, sem rodar sozinho), vazio, sem acesso, sem bebê e erro. O erro usa a frase do catálogo, nunca o código nem a mensagem do banco, acima dos botões em `role="alert"`; "Tentar de novo" só aparece quando repetir é seguro e repete a chamada com o mesmo id.
 
 ## Do's and Don'ts
 
 - Faça: registro em até 2 toques a partir de Hoje; alvos de pelo menos 44 × 44 px, 56 px de altura na madrugada (Fluxos §1).
 - Faça: tema escuro de pouco brilho na madrugada, sem fundo branco.
-- Faça: erro reversível. Toda confirmação tem "Desfazer".
+- Faça: erro reversível. Todo registro novo tem "Desfazer"; uma sessão encerrada não volta a ficar em andamento, e a correção é "Editar horário". A confirmação só sai quando a pessoa fecha ou faz outro registro (Fluxos §1).
 - Faça: rótulos completos para leitor de tela e texto ampliável até 200% sem corte.
 - Não faça: linguagem de cobrança. Nada de "atrasado", metas, pontos ou rankings.
 - Não faça: caixa alta, tracking diferente de 0, texto menor que 15 px.

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import { renderizarComDados } from '../teste/renderizarComDados.tsx'
 import { itensNavegacao } from './areas.tsx'
 
@@ -35,8 +35,8 @@ describe('itensNavegacao: o registro das áreas', () => {
 
 describe('o cabeçalho lê o registro', () => {
   const telas: Array<[string, 'juliana' | null]> = [
-    ['/app/hoje', null],
-    ['/app/sessao', null],
+    ['/app/hoje', 'juliana'],
+    ['/app/sessao', 'juliana'],
     ['/app/familia', 'juliana'],
     ['/app/conta', 'juliana'],
   ]
@@ -67,12 +67,8 @@ describe('o cabeçalho lê o registro', () => {
     expect(cabecalho.getByRole('link', { name: 'Hoje' }).hasAttribute('aria-current')).toBe(false)
   })
 
-  it('sem sessão, tocar "Família" no Hoje leva a /entrar?volta=%2Fapp%2Ffamilia', async () => {
-    const { roteador } = renderizarComDados('/app/hoje')
-    await screen.findByRole('heading', { level: 1, name: 'Hoje' })
-
-    fireEvent.click(screen.getByRole('link', { name: 'Família' }))
-
+  it('sem sessão, o Hoje e a Família levam a /entrar com a volta pedida (a guarda da área logada)', async () => {
+    const { roteador } = renderizarComDados('/app/familia')
     await waitFor(() => expect(roteador.state.location.pathname).toBe('/entrar'))
     expect(roteador.state.location.search).toBe('?volta=%2Fapp%2Ffamilia')
   })

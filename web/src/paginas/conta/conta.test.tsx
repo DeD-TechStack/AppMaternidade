@@ -60,7 +60,7 @@ describe('estrutura da tela', () => {
 
     const cabecalho = within(screen.getByRole('navigation', { name: 'Conta' }))
     expect(cabecalho.getByRole('link', { name: 'Conta' }).getAttribute('aria-current')).toBe('page')
-    expect(screen.queryByRole('link', { name: 'Ver o protótipo do Hoje' })).toBeNull()
+    expect(cabecalho.getByRole('link', { name: 'Ir para o Hoje' }).getAttribute('href')).toBe('/app/hoje')
     expect(cabecalho.getByRole('button', { name: 'Sair' })).toBeTruthy()
     // Um só "Sair" na página (o da barra): o do fim da página saiu.
     expect(screen.getAllByRole('button', { name: 'Sair' })).toHaveLength(1)
@@ -111,7 +111,11 @@ describe('barra da conta', () => {
     expect(barra.compareDocumentPosition(container2.querySelector('main')!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(barra.classList.contains('flex-wrap')).toBe(true)
     expect(barra.classList.contains('justify-between')).toBe(true)
-    expect([...barra.querySelectorAll('a, button')].map((filho) => filho.textContent)).toEqual(['Conta', 'Sair'])
+    expect([...barra.querySelectorAll('a, button')].map((filho) => filho.textContent)).toEqual([
+      'Conta',
+      'Ir para o Hoje',
+      'Sair',
+    ])
   })
 })
 

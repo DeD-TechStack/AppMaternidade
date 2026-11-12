@@ -98,12 +98,12 @@ describe('Voltar e Avançar do histórico', () => {
     expect(rolarAoTopo).toHaveBeenCalledWith(0, 0)
   })
 
-  it('vale também numa segunda tela: Conta → Hoje (cabeçalho do site) → Voltar leva o foco ao h1 da Conta', async () => {
+  it('vale também numa segunda tela: Conta → Hoje → Voltar leva o foco ao h1 da Conta', async () => {
     const { roteador, rolarAoTopo } = renderizarComDados('/app/conta', { sessao: 'juliana' })
     await titulo('Conta')
     expect(focado()).not.toBe('H1:Conta')
 
-    fireEvent.click(screen.getByRole('link', { name: 'Hoje' }))
+    fireEvent.click(screen.getByRole('link', { name: 'Ir para o Hoje' }))
     await titulo('Hoje')
     rolarAoTopo.mockClear()
 

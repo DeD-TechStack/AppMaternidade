@@ -190,9 +190,8 @@ describe('o passo "Seu nome"', () => {
     await screen.findByRole('heading', { level: 2, name: 'Seu nome' })
 
     const barra = within(screen.getByRole('navigation', { name: 'Conta' }))
-    expect(barra.getAllByRole('link').map((link) => link.textContent)).toEqual(['Conta'])
-    expect(barra.getByRole('button', { name: 'Sair' })).toBeTruthy()
-    expect(screen.queryByRole('link', { name: 'Ver o protótipo do Hoje' })).toBeNull()
+    expect(screen.getByRole('link', { name: 'Ir para o Hoje' }).getAttribute('href')).toBe('/app/hoje')
+    expect(screen.getByRole('button', { name: 'Sair' })).toBeTruthy()
     expect(screen.queryByRole('navigation', { name: 'Principal' })).toBeNull()
     expect(barra.getByRole('link', { name: 'Conta' }).hasAttribute('aria-current')).toBe(false)
     const site = within(screen.getByRole('navigation', { name: 'Site' }))

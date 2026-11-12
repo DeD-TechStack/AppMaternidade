@@ -99,6 +99,7 @@ export const COMUM = {
 export const CABECALHO = {
   navegacao: 'Conta',
   conta: 'Conta',
+  irParaHoje: 'Ir para o Hoje',
   sair: 'Sair',
 } as const
 

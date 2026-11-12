@@ -1,4 +1,4 @@
-import { useEffect, useId } from 'react'
+import { useId } from 'react'
 import { Citacao } from '../componentes/campo/Citacao.tsx'
 import { FaixaSelos } from '../componentes/campo/FaixaSelos.tsx'
 import { DepoimentosInicio } from '../componentes/inicio/DepoimentosInicio.tsx'
@@ -10,7 +10,6 @@ import { PerguntasInicio } from '../componentes/inicio/PerguntasInicio.tsx'
 import { SecaoTabela } from '../componentes/inicio/SecaoTabela.tsx'
 import { SecaoTurno } from '../componentes/inicio/SecaoTurno.tsx'
 import { FATOS, INICIO } from '../conteudo/textos.ts'
-import { usePrototipo } from '../prototipo/contexto.ts'
 
 // Regra tipográfica, sem mudar o texto: a palavra de uma letra só ("a", "à", "o") fica presa à
 // seguinte por um espaço que não quebra, para nunca sobrar sozinha no fim de uma linha da citação.
@@ -23,16 +22,10 @@ const amarrarMonossilabos = (texto: string) => texto.replace(/(^|\s)(\p{L}) /gu,
  * movimento); o que é só do Início fica em componentes/inicio.
  */
 export function Inicio() {
-  const { dispatch } = usePrototipo()
   const idNumeros = useId()
   const idSelos = useId()
   const idDepoimentos = useId()
   const idPerguntas = useId()
-
-  // O Início é sempre claro: sair do modo madrugada ao chegar aqui.
-  useEffect(() => {
-    dispatch({ tipo: 'definirMadrugada', valor: false })
-  }, [dispatch])
 
   return (
     <main className="in-pagina">

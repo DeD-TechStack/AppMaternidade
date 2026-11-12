@@ -4,7 +4,6 @@ import { vi } from 'vitest'
 import { ProvedorDadosConta } from '../../componentes/conta/sessao.tsx'
 import { ELENCO } from '../../dados/comunidade.elenco.ts'
 import { ProvedorDadosComunidade, type DadosComunidade } from '../../dados/comunidade.ts'
-import { criarEstadoInicial } from '../../prototipo/estado.ts'
 import { criarRotas } from '../../rotas.tsx'
 import type { criarFixtureDeTeste } from '../../teste/renderizarComDados.tsx'
 
@@ -39,8 +38,8 @@ export function renderizarComunidade(caminho: string, { contas, comunidade, base
   // O jsdom não implementa `window.scrollTo`: a rolagem ao topo vira um espião.
   const rolarAoTopo = vi.fn()
   vi.stubGlobal('scrollTo', rolarAoTopo)
-  const estadoInicial = madrugada ? { ...criarEstadoInicial(Date.now()), madrugada: true } : undefined
-  const roteador = createMemoryRouter(criarRotas(estadoInicial), {
+  if (madrugada) document.documentElement.setAttribute('data-tema', 'madrugada')
+  const roteador = createMemoryRouter(criarRotas(), {
     initialEntries: [basename ? `${basename}${caminho}` : caminho],
     basename,
   })
