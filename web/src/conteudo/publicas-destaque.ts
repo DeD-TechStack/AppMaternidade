@@ -7,8 +7,12 @@
 
 const HOJE = '/app/hoje'
 
-/** O rótulo do primário que abre o protótipo (o mesmo nas duas pontas da página). */
-const ABRIR_PROTOTIPO = 'Abrir o protótipo de Hoje e Sessão'
+/**
+ * O rótulo do primário que leva ao Hoje (o mesmo nas duas pontas da página). É o rótulo que o Início já
+ * usa para essa ação (`conteudo/textos.ts`, "Começar grátis", destino `/app/hoje`): o aviso de
+ * demonstração já está na tela, então o botão não repete a palavra "protótipo" (rodada POL, item 6).
+ */
+const ABRIR_PROTOTIPO = 'Começar grátis'
 
 // ---------------------------------------------------------------------------------------------
 // Como funciona
@@ -20,8 +24,9 @@ export const COMO_FUNCIONA_DESTAQUE = {
   secundario: { rotulo: 'Ver os três momentos', destino: '#tres-momentos' },
   cena: {
     base: '/cenas/publicas/como-funciona',
-    largura: 512,
-    altura: 768,
+    // 1× do recorte em retrato em volta do celular (@2x: 680 × 1050).
+    largura: 340,
+    altura: 525,
     alt: 'Um celular sobre um pedestal de oliva, num fundo de mel, com uma tela do site AppMaternidade.',
   },
   momentos: {
