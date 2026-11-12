@@ -308,7 +308,7 @@ Alcance de duas regras gerais desta base na área de conta:
 
 #### Família, convite e navegação (MAT-37b)
 
-- **Navegação logada:** é a do cabeçalho da casca, com Hoje, Sessão e Família (`/app/familia`), lida do registro de áreas (`rotas/navegacao.ts`). Não há barra inferior, faixa lateral nem item "Em breve": cada tela nova acrescenta o seu item quando existir. Entrar e Criar conta do cabeçalho levam a `/entrar` e `/criar-conta`.
+- **Navegação logada:** é a do cabeçalho da casca, com Hoje, Sessão, Comunidade e Família (`/app/familia`), lida do registro de áreas (`rotas/navegacao.ts`). Não há barra inferior, faixa lateral nem item "Em breve": cada tela nova acrescenta o seu item quando existir. Entrar e Criar conta do cabeçalho levam a `/entrar` e `/criar-conta`.
 - **Convite (`/convite`):** a moldura pública de duas colunas da área de conta, com a prévia (família, quem convidou e papel) no cartão branco de raio 20, sem sombra, e a ação principal em `cm-botao`, largura cheia. Fragmento inválido é recusado por inteiro, sem consulta ao banco.
 - **Começar (escolha):** "Criar uma família" e "Tenho um convite" como duas opções de mesmo peso, na moldura de duas colunas; criar família pede nome, fuso e o primeiro bebê.
 - **Família (responsável):** seções em linhas de duas colunas separadas por fio de 1 px (membros, bebês, convites, ações). Controles de responsável ficam ausentes do DOM para o cuidador e seguem o papel relido. Ação irreversível pede caixa de diálogo; o aviso de autorrebaixamento vale como na área de conta.
