@@ -46,7 +46,7 @@ function Tela({ titulo, linha, children }: { titulo: string; linha: string; chil
   const voltar = <Voltar para={destino.para} texto={destino.texto} />
   return (
     <>
-      <main ref={principal} className="pb-16 text-[17px] leading-[25px]" data-tela="registro">
+      <main ref={principal} className="rotina-principal pb-16 text-[17px] leading-[25px]" data-tela="registro">
         <TituloRotina antes={voltar} titulo={titulo} linha={linha} />
         <div className="cm-area mt-6 lg:mt-10">{children}</div>
       </main>

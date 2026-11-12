@@ -47,7 +47,7 @@ export function TelaRotina({ tela, principal, acionar, titulo, linha, antes, lat
   const { confirmacao, acessoPerdido } = useRotina()
   return (
     <>
-      <main ref={principal} className="pb-16 text-[17px] leading-[25px]" data-tela={tela} aria-busy={ocupada ? 'true' : undefined}>
+      <main ref={principal} className="rotina-principal pb-16 text-[17px] leading-[25px]" data-tela={tela} aria-busy={ocupada ? 'true' : undefined}>
         <TituloRotina antes={antes} titulo={titulo} linha={semQuebraNoHifen(linha)} lateral={lateral} />
         {acessoPerdido ? (
           <div className="cm-area mt-5">

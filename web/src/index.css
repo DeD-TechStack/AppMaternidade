@@ -1315,6 +1315,6 @@ body:has([data-barra-registrar]) [data-rodape] {
 }
 
 /* Madrugada: todo alvo das telas da rotina tem 56 px de altura (G11); --alvo-toque já vale 56 neste tema. */
-:root[data-tema='madrugada'] main[data-tela] :is(a, button, select, textarea, input:not([type='checkbox'], [type='radio'])) {
+:root[data-tema='madrugada'] main.rotina-principal :is(a, button, select, textarea, input:not([type='checkbox'], [type='radio'])) {
   min-height: var(--alvo-toque);
 }
