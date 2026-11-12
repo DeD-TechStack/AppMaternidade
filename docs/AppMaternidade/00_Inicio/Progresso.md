@@ -515,3 +515,5 @@ Nenhuma tarefa de implementação (MAT-17 a MAT-19) começa sem pedido dele.
 - **12/11 04h41:** POL-DES v2 t_3fd302a6 APPROVED_WITH_LIMITS (cb9e1e1) integrada por ff 48ba136..cb9e1e1 (check 2300, commits OK 374, push; recibo 650). Juízes pol_destaque_r2 (última volta) rodando.
 
 - **12/11 04h45:** P-61 t_bc1629ca APPROVED_WITH_LIMITS (pacote de evidência POL-INI v2 e POL-TXT v2; sem SHA). Líder conferiu o host: worktree limpo, portas 5396/9496 livres, nenhum processo do cartão (`encerramento_lider.txt`). Sobra para a galeria: releitura das capturas novas e decisões de Daniel. Horas das entradas de 12/11 corrigidas para as dos commits (antes estavam adiantadas por estimativa).
+
+- **12/11 04h55:** 39a g2 t_30ad7504 APPROVED_WITH_LIMITS (9142ef1) integrada pelo merge eebd1c5 (cb9e1e1..eebd1c5, check 2423, commits OK 381, push; recibo 655). 39b t_c9529365 começou (base no comentário 654).
