@@ -5,16 +5,14 @@ import './publicas-destaque.css'
 interface Props {
   id: string
   titulo: readonly [string] | readonly [string, string]
-  /** O texto curto ao lado do título (abaixo dele no celular). */
+  /** O texto curto, logo abaixo do título e na mesma borda esquerda dele. */
   children: ReactNode
-  /** `junta`: o texto logo abaixo do título, colado ao que vem depois (sem a coluna da direita). */
-  junta?: boolean
 }
 
-/** A cabeça de uma seção: o h2 de duas linhas de um lado e o texto curto do outro, sem lado vazio. */
-export function CabecaDeSecao({ id, titulo, children, junta = false }: Props) {
+/** A cabeça de uma seção: o h2 de duas linhas e, colado a ele, o texto curto, numa coluna só. */
+export function CabecaDeSecao({ id, titulo, children }: Props) {
   return (
-    <div className={['cm-area', 'pd-cabeca', junta ? 'pd-cabeca-junta' : null].filter(Boolean).join(' ')}>
+    <div className="cm-area pd-cabeca">
       <Titulo nivel="h2" id={id} linhas={titulo} />
       <div>{children}</div>
     </div>
