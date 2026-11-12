@@ -17,8 +17,9 @@ import { CUIDADO_DESTAQUE as T } from '../../conteudo/publicas-destaque.ts'
 /**
  * /cuidado-compartilhado: a abertura (o título, o texto e o primário de um lado; do outro, o painel de
  * mel com a tela Família, o convite com prazo por cima da borda dela e a avó do carrinho; no celular,
- * o registro compartilhado num cartão flutuante), os três blocos curtos numa lista com fios, a
- * tabela dos papéis, o painel de areia com a tarde da Heloísa (quem fez cada registro, e quando) e o
+ * a avó ocupa o painel e o convite pousa sobre a borda de baixo dele), os três blocos curtos numa
+ * lista com fios, a tabela dos papéis, o painel de areia com a tarde da Heloísa (quem fez cada
+ * registro, e quando; o cartão aparece em todas as larguras) e o
  * que acontece quando alguém para de cuidar, com a ação para o protótipo e as duas mãos passando o
  * celular. O aviso de demonstração é o do rodapé da casca.
  */
@@ -51,9 +52,6 @@ export function CuidadoCompartilhado() {
                 <Ilustracao nome="avo-carrinho" carregamento="eager" />
               </div>
             </div>
-            <CartaoFlutuante giro={-2} className="pd-em-fluxo pd-familia-tarde">
-              <CartaoTarde />
-            </CartaoFlutuante>
           </PainelCampo>
         }
       />
@@ -87,6 +85,7 @@ export function CuidadoCompartilhado() {
           legendaOculta
           colunas={T.papeis.tabela.colunas}
           linhas={T.papeis.tabela.linhas}
+          className="pd-painel-papeis"
         />
       </section>
 
