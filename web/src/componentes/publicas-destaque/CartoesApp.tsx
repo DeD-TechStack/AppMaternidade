@@ -2,6 +2,7 @@ import { Check, Moon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { COMO_FUNCIONA_DESTAQUE as CF, CUIDADO_DESTAQUE as CC } from '../../conteudo/publicas-destaque.ts'
 import { DESENVOLVIMENTO_DESTAQUE as DD } from '../../conteudo/desenvolvimento/pagina.ts'
+import { SemQuebra } from './SemQuebra.tsx'
 import './publicas-destaque.css'
 
 // As telas de exemplo das páginas públicas, em HTML de verdade (DESIGN.md 4), com a família fictícia:
@@ -36,7 +37,9 @@ function Linha({ inicial, bebe = false, nome, detalhe, hora }: PropsLinha) {
       ) : null}
       <span className="pd-linha-texto">
         <span className="pd-linha-nome">{nome}</span>
-        <span className="pd-linha-detalhe">{detalhe}</span>
+        <span className="pd-linha-detalhe">
+          <SemQuebra texto={detalhe} />
+        </span>
       </span>
       {hora ? <span className="pd-linha-hora">{hora}</span> : null}
     </li>
@@ -101,7 +104,9 @@ export function CartaoDesdeQueSaiu() {
       <div className="pd-andamento">
         <p className="pd-cartao-rotulo">{c.andamento.rotulo}</p>
         <p className="pd-cartao-hora">{c.andamento.tempo}</p>
-        <p className="pd-cartao-detalhe">{c.andamento.detalhe}</p>
+        <p className="pd-cartao-detalhe">
+          <SemQuebra texto={c.andamento.detalhe} />
+        </p>
       </div>
       <ul className="pd-linhas">
         {c.itens.map((item) => (
@@ -111,7 +116,9 @@ export function CartaoDesdeQueSaiu() {
       <div className="pd-nota">
         <p className="pd-cartao-rotulo">{c.nota.rotulo}</p>
         <p className="pd-nota-texto">{c.nota.texto}</p>
-        <p className="pd-cartao-detalhe">{c.nota.autor}</p>
+        <p className="pd-cartao-detalhe">
+          <SemQuebra texto={c.nota.autor} />
+        </p>
       </div>
     </div>
   )
@@ -169,7 +176,9 @@ export function CartaoTarde() {
       <div className="pd-nota">
         <p className="pd-cartao-rotulo">{nota.rotulo}</p>
         <p className="pd-nota-texto">{nota.texto}</p>
-        <p className="pd-cartao-detalhe">{nota.autor}</p>
+        <p className="pd-cartao-detalhe">
+          <SemQuebra texto={nota.autor} />
+        </p>
       </div>
     </div>
   )
@@ -182,7 +191,9 @@ export function CartaoTummy() {
     <div className="pd-cartao">
       <p className="pd-cartao-rotulo">{c.rotulo}</p>
       <p className="pd-cartao-hora">{c.valor}</p>
-      <p className="pd-cartao-detalhe">{c.detalhe}</p>
+      <p className="pd-cartao-detalhe">
+        <SemQuebra texto={c.detalhe} />
+      </p>
     </div>
   )
 }
