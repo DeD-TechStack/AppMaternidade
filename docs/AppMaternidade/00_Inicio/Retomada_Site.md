@@ -2,7 +2,7 @@
 tipo: progresso
 status: em andamento
 responsavel: lider-appmaternidade
-revisado_em: 2026-11-03
+revisado_em: 2026-11-12
 fontes_principais: board Kanban appmaternidade; itsaplan MAT-27 a MAT-43; git main
 ---
 
@@ -12,7 +12,16 @@ Esta é a nota de partida da próxima sessão de trabalho no site. Ela registra 
 
 **Site publicado (06/11/2026):** https://ded-techstack.github.io/AppMaternidade/ (MAT-48a, main 2beddee). Ele mostra Início, Hoje e Sessão com o aviso "Demonstração sem banco". As variáveis do banco entram no build com a MAT-37.
 
-## CONSTRUÇÃO EM CURSO (11/11/2026, 9h25): ESTADO VIGENTE
+## TROCA DE SESSÃO (12/11/2026, 8h35): ESTADO VIGENTE
+
+Daniel, via coordenador (t_64dcb622), depois de ver a galeria do estado atual: a base está boa, mas falta a harmonia de espaço do Pato Jack e da Becky/Good Inside, e o polimento por página não converge. O polimento por página está congelado (POL-ABR t_d04a8a7d estacionado) e entra o item H, sistema de harmonia: medir o espaço e o tipo das duas referências, derivar as escalas e aplicar de forma global. O passo a passo da sessão nova está no bloco RETOMAR de [PENDENCIAS](PENDENCIAS.md).
+
+- `origin/int/refazer` = 9091c13 (10 integrações em 12/11: 38a g2, POL-DES v1 e v2, POL-TXT v2, POL-INI v2, 40b, 39a g2, MAT-48e, 37b g3, 38b). `main` intocada; publicação só com o "pode" (P-19).
+- Abertos: MAT-40c t_ec79b067 aprovada (5ff67f6), falta integrar; MAT-39b t_c9529365 em correção 1/2; P-60 t_ca45d30f (evidência da 37b) e P-50 t_2af603f6 (casco) rodando.
+- Decisões de Daniel em 12/11: Gmail no Contato fica por enquanto e troca antes de divulgar (P-63); limpeza de worktrees ainda espera "pode limpar".
+- Achado do dia: a ferramenta de captura usava DSF 1 com recorte ampliado e as cenas saíam borradas para os juízes; corrigida (DSF 2 real). Com ela, Como funciona, Cuidado e Desenvolvimento passaram de 2/15 para 10/15 e o Início de 4/10 para 6/10; as páginas de texto ficaram em 0/13.
+
+## CONSTRUÇÃO EM CURSO (11/11/2026, 9h25): histórico
 
 - **Spec:** `C:/OrchestrationLab/projetos/_staging/appmaternidade/DIRECOES_20261111/FINAL/DESIGN.md` (sha256 e504df37). As regras comuns dos cartões ficam em `FINAL/CARTOES_COMUM.md` (sha256 626371ab).
 - **Ativos gerados pelo Codex no plano do ChatGPT:**
