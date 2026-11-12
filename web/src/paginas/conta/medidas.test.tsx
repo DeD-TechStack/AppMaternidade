@@ -142,6 +142,10 @@ describe('/app/conta quebra linha com a fonte a 200% (D-2)', () => {
       if (alvo.classList.contains('whitespace-nowrap')) achados.push(`nowrap em ${alvo.textContent}`)
       if (/(^|\s)w-\[\d/.test(alvo.className)) achados.push(`largura fixa em ${alvo.textContent}`)
     }
+    // O id da conta (UUID): a quebra preferida é depois do hífen (`<wbr>`), mas o último bloco (12 caracteres) a 200% e
+    // 1024 px não cabe na coluna (~90 px) e alargava a página: `wrap-anywhere` só quebra dentro do bloco quando precisa.
+    const idDaConta = container.querySelector('[data-id-conta]')!
+    if (!idDaConta.classList.contains('wrap-anywhere')) achados.push('id da conta sem wrap-anywhere')
     const explicacao = screen.getByText(/única pessoa responsável/)
     const encarregado = container.querySelector('[data-encarregado]')!.parentElement!
     for (const paragrafo of [explicacao, encarregado]) {

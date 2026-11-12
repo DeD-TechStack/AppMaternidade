@@ -323,7 +323,7 @@ export function PaginaConta() {
               <p
                 ref={idRef}
                 data-id-conta
-                className={`tabular box-border rounded-campo bg-[var(--cor-papel-fundo)] px-4 py-3 font-medium ${COLUNA_DOS_CONTROLES}`}
+                className={`tabular wrap-anywhere box-border rounded-campo bg-[var(--cor-papel-fundo)] px-4 py-3 font-medium ${COLUNA_DOS_CONTROLES}`}
               >
                 {conta.id.split('-').map((bloco, posicao, blocos) => (
                   <Fragment key={posicao}>

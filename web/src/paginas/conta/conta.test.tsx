@@ -211,7 +211,9 @@ describe('id da conta', () => {
     const id = document.querySelector('[data-id-conta]')!
     expect(id.textContent).toBe(PESSOAS.juliana.id)
     expect(id.classList.contains('tabular')).toBe(true)
-    expect(id.className).not.toMatch(/break-all|wrap-anywhere/)
+    // A quebra preferida é depois do hífen; `wrap-anywhere` (g3, 200% a 1024 px) só quebra dentro do bloco se ele não couber.
+    expect(id.className).not.toMatch(/break-all/)
+    expect(id.classList.contains('wrap-anywhere')).toBe(true)
 
     // Uma oportunidade de quebra (`<wbr>`) logo depois de cada hífen, e em mais nenhum lugar.
     const hifens = PESSOAS.juliana.id.split('-').length - 1
