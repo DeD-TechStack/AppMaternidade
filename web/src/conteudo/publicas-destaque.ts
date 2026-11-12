@@ -83,9 +83,10 @@ export const COMO_FUNCIONA_DESTAQUE = {
       'Para a conta, o plano é este: o acesso vai ser por e-mail e senha, e depois a pessoa escolhe entre criar a família ou entrar por um convite. Do bebê, o site vai pedir só o nome ou apelido e a data de nascimento. Os termos de uso e o consentimento para os dados do bebê vão aparecer em telas separadas.',
     ],
   },
+  // A frase que explicava o botão ("O protótipo de Hoje e Sessão já pode ser aberto…") saiu: repetia a
+  // palavra "protótipo" do botão, na mesma faixa (rodada de polimento POL, item 4).
   fechamento: {
     titulo: ['Veja as telas', 'por dentro.'],
-    texto: 'O protótipo de Hoje e Sessão já pode ser aberto no navegador, sem instalar nada.',
     acao: { rotulo: ABRIR_PROTOTIPO, destino: HOJE },
   },
   numeros: [

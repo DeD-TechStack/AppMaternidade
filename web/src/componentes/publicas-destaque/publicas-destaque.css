@@ -4,13 +4,27 @@
    precisar de seletores mais pesados. Prefixo `pd-`. */
 
 /* Ritmo da página -------------------------------------------------------------------------- */
+.pd-pagina {
+  /* O respiro de papel entre as seções destas páginas: 56 em 390, 96 em 1440 (o da base é 64 a 128 e
+     deixava vãos de papel acima de cada título). */
+  --pd-entre: clamp(56px, 3.81vw + 41.143px, 96px);
+}
+
 .pd-secao {
-  margin-top: var(--cm-entre-secoes);
+  margin-top: var(--pd-entre);
 }
 
 /* Uma seção que continua a anterior (a explicação e o convite logo depois): metade do respiro. */
 .pd-secao.pd-secao-perto {
-  margin-top: clamp(40px, 2.286vw + 31.086px, 64px);
+  margin-top: clamp(32px, 1.905vw + 24.571px, 48px);
+}
+
+/* O rodapé da casca guarda 128 px de papel acima dele em 1440: a página puxa 32 para o respiro do
+   fim ficar igual ao das seções (96). No celular o da casca (64) já basta. */
+@media (min-width: 768px) {
+  .pd-pagina {
+    margin-bottom: -32px;
+  }
 }
 
 /* Dentro de uma célula da grade, o painel de campo ocupa a célula. */
@@ -26,7 +40,7 @@
   grid-template-columns: minmax(0, 1fr);
   gap: 40px;
   align-items: center;
-  padding-top: clamp(32px, 3.048vw + 20.114px, 64px);
+  padding-top: clamp(24px, 1.524vw + 18.057px, 40px);
 }
 
 .pd-abertura-texto > .cm-lide {
@@ -37,15 +51,14 @@
   margin-top: 24px;
 }
 
-/* Empilhado: o título encosta no texto (24 px), e a mídia vem 40 px depois. O aviso de saúde desce
+/* Empilhado: o título encosta no texto (24 px), e a mídia vem logo depois. O aviso de saúde desce
    para depois da mídia, para a tela de verdade subir para a primeira dobra. */
 @media (max-width: 1099px) {
   .pd-abertura {
     gap: 24px;
   }
 
-  .pd-abertura[data-disposicao='lado'] > .pd-abertura-texto,
-  .pd-abertura[data-disposicao='topo'] > .pd-abertura-texto {
+  .pd-abertura > .pd-abertura-texto {
     display: contents;
   }
 
@@ -54,21 +67,16 @@
     margin-top: 0;
   }
 
-  /* Em "título e texto" o texto não se desmancha na grade: as ações guardam a distância do lide. */
-  .pd-abertura[data-disposicao='titulo-lide'] .pd-abertura-texto > .pd-acoes {
-    margin-top: 24px;
-  }
-
   .pd-abertura-midia {
     order: 1;
-    margin-top: 16px;
+    margin-top: 0;
   }
 
   /* O aviso de saúde, depois da mídia, com folga dos dois lados: nunca encosta num título. */
   .pd-abertura .pd-abertura-texto > .pd-aviso-saude {
     order: 2;
-    margin-top: 16px;
-    margin-bottom: 8px;
+    margin-top: 0;
+    margin-bottom: 0;
   }
 }
 
@@ -117,91 +125,46 @@
     gap: 48px;
   }
 
-  .pd-abertura[data-disposicao='topo'] {
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-    gap: 40px 48px;
-    align-items: start;
-  }
-
-  .pd-abertura[data-disposicao='topo'] > .pd-abertura-titulo {
-    grid-column: 1 / -1;
-  }
-
-  .pd-abertura[data-disposicao='topo'] > .pd-abertura-texto {
-    align-self: center;
-  }
-
-  .pd-abertura[data-disposicao='titulo-lide'] {
-    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-    gap: 48px;
-    align-items: end;
-    padding-top: 40px;
-  }
-
-  .pd-abertura[data-disposicao='titulo-lide'] .cm-lide {
-    margin-top: 0;
+  .pd-abertura[data-proporcao='meio'] {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 40px;
   }
 }
 
 /* A cena em retrato (512 × 768): recorte 4:5 preso à base, para o aparelho e o pedestal ficarem
-   inteiros e a primeira dobra caber; no celular, quadrado. */
+   inteiros e a primeira dobra caber. */
+.pd-cena-retrato .cm-cena-midia {
+  max-width: 512px;
+  margin-inline: auto;
+}
+
 .pd-cena-retrato .cm-cena-midia img {
   aspect-ratio: 4 / 5;
   object-fit: cover;
   object-position: 50% 100%;
 }
 
-/* No celular, a tela de mel do aparelho sumia no mel do fundo. A cena ganha um passe-partout de
-   oliva (o material dos pedestais), que dá chão e contraste à mídia, e um recorte quadrado com o
-   aparelho e o pedestal inteiros. Nada flutua por cima (sem a mancha da sombra do cartão). */
+/* No celular o recorte é mais largo que alto (8:7), o aparelho e o pedestal inteiros: a cena acaba
+   antes da dobra de 844 px e nenhuma imagem é cortada por ela. O mel do painel fica com a luz de
+   estúdio (sem moldura de cor lisa em volta). */
 @media (max-width: 767px) {
-  .pd-cena-retrato.cm-painel {
-    padding: 10px;
-    background-color: var(--color-oliva);
-    background-image: none;
-  }
-
-  .pd-cena-retrato .cm-cena-midia {
-    border-radius: calc(var(--radius-painel) - 10px);
-  }
-
   .pd-cena-retrato .cm-cena-midia img {
-    aspect-ratio: 1 / 1;
-    object-position: 50% 70%;
+    aspect-ratio: 8 / 7;
+    object-position: 50% 62%;
   }
 }
 
-/* Cabeça de seção: o título de duas linhas e, ao lado, um texto curto -------------------------- */
+/* Cabeça de seção: o título de duas linhas e, logo abaixo, o texto curto, na mesma borda --------- */
 .pd-cabeca {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 20px;
-  margin-bottom: clamp(32px, 1.524vw + 26.057px, 48px);
+  gap: 16px;
+  margin-bottom: clamp(24px, 1.524vw + 18.057px, 40px);
 }
 
 .pd-cabeca p {
-  max-width: 34rem;
-  margin: 0;
-}
-
-@media (min-width: 900px) {
-  .pd-cabeca {
-    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-    gap: 48px;
-    align-items: end;
-  }
-}
-
-/* A cabeça junta: o texto logo abaixo do título, numa coluna só, e o painel logo depois (24 px). A
-   cabeça e os passos se leem como um bloco. */
-.pd-cabeca.pd-cabeca-junta {
-  grid-template-columns: minmax(0, 1fr);
-  gap: 12px;
-  margin-bottom: 24px;
-}
-
-.pd-cabeca.pd-cabeca-junta p {
   max-width: 40rem;
+  margin: 0;
 }
 
 /* Duas colunas: o título à esquerda e o texto à direita --------------------------------------- */
@@ -211,12 +174,22 @@
   gap: 24px;
 }
 
+.pd-duas-titulo > * + * {
+  margin-top: 20px;
+}
+
 .pd-duas-texto > * + * {
   margin-top: 20px;
 }
 
-.pd-duas-texto > p {
+.pd-duas-texto > p,
+.pd-duas-titulo > p {
   margin-bottom: 0;
+}
+
+/* O texto corrido mais denso fica numa largura de leitura de 640 px no máximo. */
+.pd-duas-texto {
+  max-width: 640px;
 }
 
 @media (min-width: 900px) {
@@ -229,16 +202,21 @@
 /* Passos (Como funciona) --------------------------------------------------------------------- */
 .pd-passos {
   display: grid;
-  gap: clamp(72px, 2.286vw + 63.086px, 96px);
+  gap: clamp(20px, 1.524vw + 14.057px, 32px);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
+/* O cartão da madrugada sobra 32 px pela borda de baixo do painel: o painel seguinte espera. */
+.pd-passos > li:has(.pd-passo-midia > .cm-flutuante) {
+  margin-bottom: 32px;
+}
+
 .pd-passo {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 32px;
+  gap: 24px;
   align-items: center;
 }
 
@@ -247,12 +225,21 @@
 }
 
 .pd-passo-texto > .cm-h3 {
-  margin-top: 20px;
+  margin-top: 16px;
 }
 
 .pd-passo-texto > .cm-lide {
   max-width: 34rem;
-  margin-top: 16px;
+  margin-top: 12px;
+}
+
+/* A escala de 390 do DESIGN.md (corpo do site 18/27 é demais numa coluna de 318 px): o texto do passo
+   desce para a escala do app (17/25), e o número fica menor. */
+@media (max-width: 599px) {
+  .pd-passo-texto > .cm-lide {
+    font-size: 1.0625rem;
+    line-height: 1.5625rem;
+  }
 }
 
 .pd-passo-numero {
@@ -260,12 +247,12 @@
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  width: 56px;
-  height: 56px;
+  width: clamp(44px, 0.762vw + 41px, 52px);
+  height: clamp(44px, 0.762vw + 41px, 52px);
   border: 1.5px solid currentColor;
   border-radius: var(--radius-pilula);
   font-family: var(--fonte-titulo);
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 600;
   line-height: 1;
   font-variant-numeric: lining-nums;
@@ -312,16 +299,48 @@
   box-shadow: var(--sombra-cartao);
 }
 
-/* Duas telas, uma embaixo da outra, sem se cobrir. */
+/* Duas telas, uma embaixo da outra, sem se cobrir: o convite (girado, com a sombra flutuante) e,
+   abaixo, os primeiros registros. */
 .pd-pilha {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 24px;
   width: min(400px, 100%);
 }
 
 .pd-pilha > .pd-cartao-plano {
   width: 100%;
+}
+
+.pd-pilha > .pd-em-fluxo.cm-flutuante {
+  width: 88%;
+}
+
+/* Primeira semana: o pai com o bebê no colo ao lado das duas telas, num chão de oliva (só no largo:
+   no celular a coluna do painel só comporta as telas). */
+.pd-passo-um {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 32px;
+  width: 100%;
+}
+
+.pd-passo-desenho {
+  display: none;
+  flex: none;
+}
+
+.pd-passo-desenho .cm-ilustracao {
+  width: auto;
+  max-height: 300px;
+  mix-blend-mode: multiply;
+}
+
+@media (min-width: 1100px) {
+  .pd-passo-desenho {
+    display: flex;
+  }
 }
 
 /* Cartões de interface (HTML de verdade, com a família fictícia) ---------------------------- */
@@ -516,6 +535,19 @@
   color: var(--color-cacau);
 }
 
+/* Quebra de linha: títulos e notas equilibrados; legendas e avisos sem linha órfã. */
+.pd-cartao-titulo,
+.pd-nota-texto {
+  text-wrap: balance;
+}
+
+.pd-cartao-detalhe,
+.pd-linha-detalhe,
+.pd-aviso-saude,
+.pd-fontes-data {
+  text-wrap: pretty;
+}
+
 .pd-nota {
   margin-top: 14px;
   padding: 14px 0 0;
@@ -605,93 +637,83 @@
 }
 
 /* Cuidado compartilhado: o painel da família --------------------------------------------------- */
-.pd-familia {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 32px;
-  align-items: center;
-  /* A figura não traz as margens do navegador: o painel fica centrado, logo abaixo da abertura. */
-  margin-top: clamp(32px, 0.762vw + 29.029px, 40px);
-  margin-bottom: 0;
-  /* Um pouco mais baixo que o painel comum, para o painel inteiro caber na primeira dobra. */
-  padding-block: clamp(24px, 1.524vw + 18.057px, 40px);
+/* O painel de mel da abertura (na coluna ao lado do título, 6/12): a tela Família, o convite por cima
+   da borda dela (girado, com a sombra flutuante) e a avó do carrinho de pé, à direita. */
+.pd-familia.cm-painel {
+  padding: clamp(24px, 1.524vw + 18.057px, 32px);
 }
 
-/* A tela Família ocupa a coluna da esquerda; a da direita é o convite e, embaixo, a avó do carrinho
-   de pé num chão de oliva. As duas colunas têm a mesma altura: o painel não guarda canto vazio. */
-.pd-familia-tela.pd-cartao-plano {
-  width: 100%;
-  max-width: 520px;
-}
-
-/* No celular, o desenho vem ao lado do convite, numa linha baixa: o painel não vira um bloco alto
-   com o desenho sozinho. */
-.pd-familia-lado {
+.pd-familia-cena {
   display: grid;
-  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
   gap: 16px;
   align-items: end;
 }
 
-.pd-familia-lado > .pd-familia-desenho {
-  order: -1;
+.pd-familia-coluna {
+  display: flex;
+  flex-direction: column;
 }
 
-.pd-familia-convite.cm-flutuante {
-  align-self: center;
+.pd-familia-tela.pd-cartao-plano {
   width: 100%;
+  max-width: 420px;
+  /* Folga embaixo do botão Convidar: o convite que sobra por cima cobre só esse respiro. */
+  padding-bottom: 52px;
+}
+
+/* O convite cobre 32 px da tela Família, no canto de baixo (sem tapar o botão Convidar inteiro): a
+   mesma peça de cima da F1. */
+.pd-familia-convite.cm-flutuante {
+  align-self: flex-end;
+  width: 84%;
+  margin-top: -32px;
+  margin-right: -20px;
 }
 
 .pd-familia-desenho .cm-ilustracao {
-  width: auto;
-  max-height: clamp(160px, 22.857vw + 70.857px, 400px);
+  width: 100%;
+  max-height: 420px;
   mix-blend-mode: multiply;
+  object-fit: contain;
 }
 
-/* No largo, como na F1: a tela Família, o convite no meio e a avó de pé no chão, à direita, na
-   altura toda do painel. */
-@media (min-width: 900px) {
-  .pd-familia {
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-    gap: 40px;
-    align-items: center;
-  }
-
-  .pd-familia-lado {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 32px;
-    align-self: stretch;
-    align-items: center;
-  }
-
-  .pd-familia-lado > .pd-familia-desenho {
-    order: 0;
-    align-self: stretch;
-  }
+/* O registro compartilhado do celular: um cartão flutuante com a tarde da Heloísa; no largo a tela
+   Família faz esse papel e este não aparece. */
+.pd-familia-tarde.cm-flutuante {
+  display: none;
 }
 
-/* No celular, a linha do bebê sai e as linhas ficam mais baixas: o painel cabe junto da abertura. */
+/* No celular, a linha do bebê sai, a tela Família dá lugar ao registro compartilhado (a tarde da
+   Heloísa, num cartão flutuante) e o desenho vem ao lado do convite, numa linha baixa: a avó e o
+   convite ficam inteiros acima da dobra de 844 px. */
 @media (max-width: 599px) {
-  .pd-familia [data-linha-bebe] {
+  .pd-familia.cm-painel {
+    padding: 24px;
+  }
+
+  .pd-familia-cena {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .pd-familia-desenho {
+    order: -1;
+  }
+
+  .pd-familia-desenho .cm-ilustracao {
+    max-height: clamp(150px, 22.857vw + 62px, 190px);
+    width: auto;
+  }
+
+  .pd-familia-tela.pd-cartao-plano {
     display: none;
   }
 
-  .pd-familia.cm-painel {
-    margin-top: 40px;
-  }
-
-  .pd-familia .pd-linha {
-    min-height: 48px;
-    padding-block: 6px;
-  }
-
-  .pd-familia .pd-botao-falso {
-    margin-top: 12px;
-  }
-
-  /* O desenho fica na largura dele; o convite, sem o selo, ganha o resto da linha. */
-  .pd-familia-lado {
-    grid-template-columns: auto minmax(0, 1fr);
+  .pd-familia-convite.cm-flutuante {
+    align-self: auto;
+    width: 100%;
+    margin: 0;
   }
 
   .pd-familia-convite .cm-flutuante-cartao {
@@ -700,6 +722,16 @@
 
   .pd-familia-convite .pd-selo-ok {
     display: none;
+  }
+
+  .pd-familia-tarde.cm-flutuante {
+    display: block;
+    width: 100%;
+    margin-top: 24px;
+  }
+
+  .pd-familia-tarde .pd-linha {
+    min-height: 48px;
   }
 }
 
@@ -721,67 +753,64 @@
   background-color: var(--color-oliva);
 }
 
-/* Três blocos curtos, lado a lado -------------------------------------------------------------- */
+/* Os três blocos curtos: uma lista com fios, um bloco por linha (o título e o texto de um lado, o
+   exemplo da tela Família do outro), em vez de três cartões iguais lado a lado. -------------------- */
 /* Só a margem de baixo: a de cima é a da seção e as laterais são as da área. */
-.pd-tres {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 32px;
+.pd-regras {
   margin-bottom: 0;
   padding: 0;
   list-style: none;
+  border-bottom: 1px solid var(--cor-fio-suave);
 }
 
-.pd-tres > li > * {
+.pd-regras > li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  padding: 28px 0;
+  border-top: 1px solid var(--cor-fio-suave);
+}
+
+.pd-regra-texto > * {
   margin: 0;
 }
 
-.pd-tres-icone {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  border-radius: var(--radius-pilula);
-  background-color: var(--color-mel);
-  color: var(--color-cacau);
-}
-
-.pd-tres-icone svg {
-  width: 26px;
-  height: 26px;
-}
-
-.pd-tres .cm-h4 {
-  margin-top: 20px;
-}
-
-.pd-tres .cm-corpo {
-  margin-top: 10px;
+.pd-regra-texto > .cm-corpo {
+  max-width: 36rem;
+  margin-top: 12px;
   color: var(--cor-texto-2);
 }
 
-/* O exemplo de cada bloco: a linha que a tela Família vai mostrar, com a pessoa e o que mudou. */
-.pd-tres .pd-tres-exemplo {
+/* O exemplo: a linha que a tela Família vai mostrar, com a pessoa e o que mudou, numa faixa de areia
+   que acompanha a altura do bloco (raio 12: uma faixa, não um cartão). */
+.pd-regra-exemplo {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-top: 20px;
-  padding: 12px 16px;
-  border-radius: var(--radius-cartao);
-  background-color: var(--color-branco);
-  box-shadow: var(--sombra-cartao);
+  margin: 0;
+  padding: 14px 20px;
+  border-radius: 12px;
+  background-color: var(--color-areia);
+  color: var(--color-cacau);
+}
+
+.pd-regra-exemplo .pd-avatar {
+  background-color: var(--color-papel);
+}
+
+.pd-regra-exemplo .pd-linha-detalhe {
+  color: var(--color-cacau);
 }
 
 @media (min-width: 900px) {
-  .pd-tres {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .pd-regras > li {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
     gap: 48px;
+    padding: 36px 0;
   }
 
-  .pd-tres > li + li {
-    padding-left: 48px;
-    border-left: 1px solid var(--cor-fio-suave);
+  .pd-regra-exemplo {
+    align-self: stretch;
   }
 }
 
@@ -929,13 +958,69 @@
   margin: 12px 0 0;
 }
 
+/* O cartão encosta na borda direita do painel, a mesma da tabela dos papéis logo acima. */
 .pd-registro-cartao.pd-cartao-plano {
-  justify-self: center;
-  width: min(440px, 100%);
+  justify-self: end;
+  width: min(480px, 100%);
 }
 
 @media (min-width: 900px) {
   .pd-registro {
+    grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
+    gap: 48px;
+  }
+}
+
+/* No celular o cartão da tarde já está na abertura (o registro compartilhado flutuante): o painel de
+   areia, sem cartão, deixa de ser um campo de cor lisa e o texto fica direto sobre o papel. */
+@media (max-width: 599px) {
+  .pd-registro.cm-painel {
+    padding: 0;
+    background-color: transparent;
+  }
+
+  .pd-registro-cartao.pd-cartao-plano {
+    display: none;
+  }
+}
+
+/* O fecho: o texto de um lado e, do outro, as duas mãos passando o celular num painel de mel. ----- */
+.pd-parar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 32px;
+  align-items: stretch;
+}
+
+.pd-parar-texto > * + * {
+  margin-top: 20px;
+}
+
+.pd-parar-texto > .cm-lide {
+  max-width: 40rem;
+}
+
+.pd-parar-texto > .pd-acoes {
+  margin-top: 32px;
+}
+
+.pd-parar .pd-parar-painel.cm-painel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  margin-inline: 0;
+  padding: clamp(24px, 3.048vw + 12.114px, 48px);
+}
+
+.pd-parar-painel .cm-ilustracao {
+  width: 100%;
+  max-width: 380px;
+  mix-blend-mode: multiply;
+}
+
+@media (min-width: 900px) {
+  .pd-parar {
     grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
     gap: 48px;
   }
@@ -944,6 +1029,11 @@
 /* Desenvolvimento -------------------------------------------------------------------------------- */
 /* Seletor de fase no painel de areia: no celular, abas, fase e o que vale para todas, nessa ordem;
    no largo, as abas em coluna com o que vale para todas abaixo delas, e a fase à direita. */
+/* O painel de areia do seletor é mais fino que o painel comum: menos preenchimento em volta. */
+.pd-painel-fino.cm-painel {
+  padding: clamp(20px, 1.524vw + 14.057px, 32px);
+}
+
 .pd-seletor {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -951,7 +1041,7 @@
     'abas'
     'fase'
     'lateral';
-  gap: 28px;
+  gap: 20px;
 }
 
 .pd-seletor > .pd-abas {
@@ -965,7 +1055,7 @@
 
 .pd-seletor-lateral {
   grid-area: lateral;
-  padding-top: 28px;
+  padding-top: 20px;
   border-top: 1px solid var(--cor-fio-suave);
 }
 
@@ -980,7 +1070,7 @@
     grid-template-areas:
       'abas fase'
       'lateral fase';
-    gap: 40px 48px;
+    gap: 28px 40px;
   }
 
   .pd-seletor > .pd-abas {
@@ -989,13 +1079,12 @@
 
   .pd-seletor > .pd-abas > .pd-aba {
     justify-content: flex-start;
-    min-height: 52px;
-    padding-inline: 24px;
+    padding-inline: 18px;
     text-align: start;
   }
 
   .pd-seletor-lateral {
-    padding-top: 32px;
+    padding-top: 24px;
   }
 }
 
@@ -1025,7 +1114,7 @@
 .pd-abas {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
-  gap: 8px;
+  gap: 6px;
 }
 
 @media (min-width: 600px) {
@@ -1041,10 +1130,10 @@
   box-sizing: border-box;
   min-width: 44px;
   min-height: 44px;
-  padding: 0 18px;
-  padding-block: 8px;
+  padding: 0 16px;
+  padding-block: 6px;
   text-align: center;
-  border: 1.5px solid var(--color-cacau);
+  border: 1px solid var(--color-cacau);
   border-radius: var(--radius-pilula);
   background-color: transparent;
   color: var(--color-cacau);
@@ -1078,12 +1167,11 @@
 }
 
 .pd-fase {
-  margin-top: 32px;
-  padding: clamp(20px, 1.143vw + 15.543px, 32px);
+  margin-top: 24px;
+  padding: clamp(16px, 0.762vw + 13px, 24px) clamp(16px, 1.143vw + 11.5px, 28px);
   border-radius: var(--radius-cartao);
   background-color: var(--color-branco);
   color: var(--color-cacau);
-  box-shadow: var(--sombra-cartao);
 }
 
 .pd-fase > .cm-h3 {
@@ -1190,28 +1278,35 @@
   margin: 12px 0 0;
 }
 
-/* O desenho (a babá brincando com o bebê no chão) de pé no chão de oliva, ocupando a largura do
-   painel: sem vão de mel em volta. */
+/* O desenho (a babá brincando com o bebê no chão) de pé no chão de oliva, no painel de mel. No largo
+   o painel tem a altura do texto ao lado (o desenho fica no meio dele): nenhuma das duas colunas
+   sobra vazia. */
 .pd-tummy-desenho.cm-painel {
-  align-self: start;
-  padding-bottom: clamp(24px, 2.286vw + 15.086px, 48px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(24px, 2.286vw + 15.086px, 48px);
+}
+
+.pd-tummy-desenho .pd-chao {
+  width: 100%;
+  max-width: 420px;
 }
 
 .pd-tummy-desenho .cm-ilustracao {
   width: 100%;
-  max-width: 420px;
   mix-blend-mode: multiply;
 }
 
 .pd-tummy-tabela {
-  margin-top: clamp(48px, 3.048vw + 36.114px, 80px);
+  margin-top: clamp(32px, 2.286vw + 23.086px, 56px);
 }
 
 .pd-tummy-fim {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 24px;
-  margin-top: clamp(48px, 3.048vw + 36.114px, 80px);
+  margin-top: clamp(32px, 2.286vw + 23.086px, 56px);
 }
 
 .pd-tummy-fim .pd-fontes {
@@ -1225,17 +1320,52 @@
     gap: 48px;
   }
 
-  .pd-tummy-desenho {
-    position: sticky;
-    top: calc(var(--cm-cabecalho) + 32px);
+  .pd-tummy {
+    align-items: stretch;
+  }
+
+  /* O cartão das fontes tem a altura do próprio conteúdo: os nomes em duas colunas, a data embaixo. */
+  .pd-tummy-fim {
+    align-items: start;
   }
 
   .pd-tummy-fim .pd-fontes {
     padding-top: 0;
-    padding-left: 48px;
+    padding-left: 32px;
     border-top: 0;
     border-left: 1px solid var(--cor-fio-suave);
   }
+
+  .pd-tummy-fim .pd-fontes-lista {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 24px;
+  }
+}
+
+/* A tabela de comparação das fontes, mais leve: menos respiro no painel e nas linhas; as cores e os
+   papéis (oliva de apoio, mel no cabeçalho) ficam como estão. */
+.pd-tummy-tabela.cm-painel {
+  padding: clamp(20px, 2.286vw + 11.086px, 40px);
+}
+
+.pd-tummy-tabela .pd-tabela caption {
+  margin-bottom: 16px;
+}
+
+@media (min-width: 768px) {
+  .pd-tummy-tabela .pd-tabela tbody th,
+  .pd-tummy-tabela .pd-tabela tbody td {
+    padding-block: 12px;
+  }
+
+  .pd-tummy-tabela .pd-tabela tbody tr:first-child > * {
+    padding-top: 18px;
+  }
+}
+
+.pd-tummy-tabela .pd-tabela-depois {
+  margin-top: 20px;
 }
 
 /* Marcos: as quatro partes em duas colunas, com as fontes abaixo. */
@@ -1295,22 +1425,13 @@
   margin-top: 24px;
 }
 
-.pd-faixa-numeros {
-  margin-top: clamp(40px, 2.286vw + 31.086px, 64px);
-  padding-top: clamp(24px, 1.524vw + 18.057px, 40px);
-  border-top: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+/* Uma coluna de texto só (o título e, logo abaixo, a frase), numa largura de leitura. */
+.pd-faixa-texto .pd-faixa-lado {
+  max-width: 44rem;
 }
 
-@media (min-width: 900px) {
-  .pd-faixa {
-    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-    gap: 48px;
-    align-items: end;
-  }
-}
-
-/* A faixa do fim de Como funciona: o convite e o botão à esquerda, os três números empilhados à
-   direita, com fios entre eles. A metade da direita tem conteúdo; o botão fica no texto. */
+/* A faixa do fim de Como funciona: o título e o botão à esquerda, os três números empilhados à
+   direita, com fios entre eles. A metade da direita tem conteúdo; o botão fica logo abaixo do título. */
 .pd-faixa-com-numeros .pd-faixa-lado .cm-botao {
   margin-top: 32px;
 }
@@ -1322,9 +1443,18 @@
   grid-template-columns: minmax(0, 1fr);
 }
 
+/* A escala de Numeros (DESIGN.md 4): Literata 64 em 1440, 40 em 390, e a legenda em Outfit 22/18. */
+.pd-faixa-com-numeros .cm-numeros-valor {
+  font-size: clamp(40px, 2.286vw + 31.086px, 64px);
+}
+
+.pd-faixa-com-numeros .cm-numeros-legenda {
+  font-size: clamp(18px, 0.381vw + 16.514px, 22px);
+}
+
 .pd-faixa-com-numeros .cm-numeros-item {
   justify-content: flex-start;
-  padding: 20px 0;
+  padding: clamp(16px, 0.762vw + 13px, 24px) 0;
   border-top: 1px solid color-mix(in srgb, currentColor 20%, transparent);
 }
 

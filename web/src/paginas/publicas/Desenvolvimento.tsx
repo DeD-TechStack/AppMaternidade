@@ -30,7 +30,6 @@ export function Desenvolvimento() {
   return (
     <main className="pd-pagina">
       <Abertura
-        disposicao="topo"
         titulo={T.titulo}
         texto={
           <>
@@ -58,7 +57,7 @@ export function Desenvolvimento() {
         <CabecaDeSecao id="desenv-ideias" titulo={IDEIAS.titulo}>
           <p className="cm-lide">{IDEIAS.texto}</p>
         </CabecaDeSecao>
-        <PainelCampo variante="areia">
+        <PainelCampo variante="areia" className="pd-painel-fino">
           <SeletorDeFase
             fases={FASES}
             lateral={
@@ -113,12 +112,10 @@ export function Desenvolvimento() {
       </section>
 
       <div className="pd-secao">
-        <FaixaCacau brilho aria-labelledby="desenv-urgencia">
-          <div className="pd-faixa">
+        <FaixaCacau aria-labelledby="desenv-urgencia">
+          <div className="pd-faixa pd-faixa-texto">
             <div className="pd-faixa-lado">
               <Titulo nivel="h2" id="desenv-urgencia" linhas={T.urgencia.titulo} />
-            </div>
-            <div className="pd-faixa-lado">
               <p className="cm-lide">{T.urgencia.texto}</p>
             </div>
           </div>

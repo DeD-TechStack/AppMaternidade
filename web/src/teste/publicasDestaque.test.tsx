@@ -56,12 +56,21 @@ describe('as três páginas públicas em destaque', () => {
       }
     })
 
-    it(`${caminho}: no máximo um cartão flutuante, nunca sobre uma cena (aparelho e pedestal)`, () => {
+    it(`${caminho}: no máximo dois cartões flutuantes (giro fixo do contrato), nunca sobre uma cena (aparelho e pedestal)`, () => {
       const { container } = renderizarRota(caminho)
-      expect(container.querySelectorAll('main .cm-flutuante').length).toBeLessThanOrEqual(1)
+      const flutuantes = [...container.querySelectorAll<HTMLElement>('main .cm-flutuante')]
+      expect(flutuantes.length).toBeLessThanOrEqual(2)
+      for (const cartao of flutuantes) expect(['-4', '-2', '2', '4']).toContain(cartao.getAttribute('data-giro'))
       for (const cena of container.querySelectorAll('main img[data-cena]')) {
         expect(cena.closest('[data-painel]')!.querySelector('.cm-flutuante')).toBeNull()
       }
+    })
+
+    // O brilho de mel (`--brilho-mel`) fazia uma mancha turva no painel escuro: nenhuma das três
+    // páginas o liga mais.
+    it(`${caminho}: nenhuma faixa de cacau com a mancha do brilho de mel`, () => {
+      const { container } = renderizarRota(caminho)
+      expect(container.querySelector('main [data-brilho]')).toBeNull()
     })
 
     // Na página inteira (casca incluída), um aviso de demonstração só: o do rodapé da casca. Nenhum
@@ -215,7 +224,7 @@ describe('Como funciona', () => {
     expect(cena.closest('[data-painel]')!.querySelector('.cm-flutuante, [data-cartao-plano]')).toBeNull()
   })
 
-  it('os três passos vêm em ordem, numa lista ordenada, cada um com a sua tela de exemplo; só a madrugada flutua', () => {
+  it('os três passos vêm em ordem, numa lista ordenada, cada um com a sua tela de exemplo; o convite e a madrugada flutuam (giros diferentes)', () => {
     const { container } = renderizarRota('/como-funciona')
     const itens = [...container.querySelectorAll('ol[data-passos] > li')]
     expect(itens.map((li) => within(li as HTMLElement).getByRole('heading', { level: 3 }).textContent)).toEqual([
@@ -224,9 +233,34 @@ describe('Como funciona', () => {
       'Na troca de turno',
     ])
     for (const li of itens) expect(li.querySelector('.cm-flutuante, [data-cartao-plano]'), li.id).not.toBeNull()
-    expect(itens.map((li) => li.querySelector('.cm-flutuante') !== null)).toEqual([false, true, false])
+    expect(itens.map((li) => li.querySelector('.cm-flutuante') !== null)).toEqual([true, true, false])
+    expect(itens.map((li) => li.querySelector('.cm-flutuante')?.getAttribute('data-giro') ?? null)).toEqual([
+      '-2',
+      '2',
+      null,
+    ])
     expect(itens[2].textContent).toContain('Bruno')
     expect(itens[2].textContent).toContain(COMO_FUNCIONA_DESTAQUE.desdeQueSaiu.andamento.rotulo)
+  })
+
+  it('o convite alinha o papel pelo nome (na mesma coluna), e a faixa de cacau repete "protótipo" só no botão', () => {
+    const { container } = renderizarRota('/como-funciona')
+    const convite = container.querySelector('#passo-primeira-semana .cm-flutuante .pd-cartao')!
+    const coluna = convite.querySelector('.pd-cartao-titulo')!.parentElement!
+    expect(coluna.textContent).toContain(COMO_FUNCIONA_DESTAQUE.convite.papel)
+    const faixa = screen.getByRole('region', { name: COMO_FUNCIONA_DESTAQUE.fechamento.titulo.join(' ') })
+    expect(faixa.textContent!.match(/protótipo/gi)).toHaveLength(1)
+    expect(within(faixa).getByRole('link', { name: COMO_FUNCIONA_DESTAQUE.fechamento.acao.rotulo })).toBeTruthy()
+    for (const numero of COMO_FUNCIONA_DESTAQUE.numeros) expect(faixa.textContent).toContain(numero.legenda)
+  })
+
+  it('o "para começar" põe a primeira frase sob o título e o texto denso na outra coluna', () => {
+    const { container } = renderizarRota('/como-funciona')
+    const secao = container.querySelector('section[aria-labelledby="como-comecar"]')!
+    const [esquerda, direita] = [...secao.children]
+    expect(esquerda.querySelector('h2')).not.toBeNull()
+    expect(esquerda.textContent).toContain(COMO_FUNCIONA_DESTAQUE.comecar.textos[0])
+    expect(direita.textContent).toBe(COMO_FUNCIONA_DESTAQUE.comecar.textos[1])
   })
 
   it('os dois primários levam ao protótipo e o secundário leva aos três momentos', async () => {
@@ -301,6 +335,32 @@ describe('Cuidado compartilhado', () => {
       expect(cartao.textContent).toContain(item.quem)
       expect(cartao.textContent).toContain(item.hora)
     }
+  })
+
+  it('a abertura leva o painel de mel ao lado do título, com um cartão flutuante do registro compartilhado (celular)', () => {
+    const { container } = renderizarRota('/cuidado-compartilhado')
+    const abertura = container.querySelector('main .pd-abertura')!
+    expect(abertura.querySelector('h1')).not.toBeNull()
+    expect(abertura.querySelector('figure[data-painel="mel"]')).not.toBeNull()
+    const tarde = abertura.querySelector('.pd-familia-tarde')!
+    expect(tarde.classList.contains('cm-flutuante')).toBe(true)
+    for (const item of CUIDADO_DESTAQUE.tarde.itens) expect(tarde.textContent).toContain(item.quem)
+  })
+
+  it('os três blocos são uma lista com fios (um bloco por linha), sem cartões iguais lado a lado', () => {
+    const { container } = renderizarRota('/cuidado-compartilhado')
+    const lista = container.querySelector('[data-blocos]')!
+    expect(lista.tagName).toBe('UL')
+    expect(lista.querySelectorAll('.cm-flutuante, [data-cartao-plano]')).toHaveLength(0)
+    expect(lista.children).toHaveLength(3)
+  })
+
+  it('o fecho tem as duas mãos passando o celular num painel de mel, ao lado do texto e do primário', () => {
+    renderizarRota('/cuidado-compartilhado')
+    const parar = screen.getByRole('region', { name: 'Quando alguém para de cuidar.' })
+    const desenho = parar.querySelector('img[data-ilustracao="maos-celular"]')!
+    expect(desenho.closest('[data-painel]')!.getAttribute('data-painel')).toBe('mel')
+    for (const texto of CUIDADO_DESTAQUE.parar.textos) expect(parar.textContent).toContain(texto)
   })
 })
 
@@ -405,5 +465,25 @@ describe('Desenvolvimento', () => {
     )
     expect(document.getElementById('ideias')).not.toBeNull()
     expect(document.getElementById('tummy-time')).not.toBeNull()
+  })
+
+  it('a abertura põe o título, o texto e as ações numa coluna só, e a cena ao lado; o painel do seletor é fino', () => {
+    const { container } = renderizarRota('/desenvolvimento')
+    const abertura = container.querySelector('main .pd-abertura')!
+    const texto = abertura.querySelector('.pd-abertura-texto')!
+    expect(texto.querySelector('h1')).not.toBeNull()
+    expect(texto.querySelector('.cm-lide')).not.toBeNull()
+    expect(texto.querySelector('.pd-acoes')).not.toBeNull()
+    expect(abertura.querySelector('.pd-abertura-midia img[data-cena]')).not.toBeNull()
+    expect(container.querySelector('#ideias [data-painel="areia"]')!.classList.contains('pd-painel-fino')).toBe(true)
+  })
+
+  it('a faixa do 192 guarda o título e a frase na mesma coluna', () => {
+    renderizarRota('/desenvolvimento')
+    const faixa = screen.getByRole('region', { name: 'Em urgência de saúde, ligue 192.' })
+    const colunas = faixa.querySelectorAll('.pd-faixa-lado')
+    expect(colunas).toHaveLength(1)
+    expect(colunas[0].querySelector('h2')).not.toBeNull()
+    expect(colunas[0].textContent).toContain(DESENVOLVIMENTO_DESTAQUE.urgencia.texto)
   })
 })

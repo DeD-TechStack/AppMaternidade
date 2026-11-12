@@ -5,34 +5,26 @@ import './publicas-destaque.css'
 interface Props {
   /** O h1 da página: a segunda linha, inteira, em itálico. */
   titulo: readonly [string, string]
-  /**
-   * `lado`: o título e o texto de um lado, a mídia do outro. `topo`: o título ocupa a linha de cima e,
-   * abaixo, o texto e a mídia. `titulo-lide`: o título de um lado e o texto do outro, sem mídia (a
-   * mídia vem logo abaixo, num painel de campo).
-   */
-  disposicao: 'lado' | 'topo' | 'titulo-lide'
-  /** A abertura, as ações e o aviso. */
+  /** O texto de abertura, as ações e o aviso: ficam na mesma coluna do título (a mesma borda esquerda). */
   texto: ReactNode
-  midia?: ReactNode
+  /** A mídia (cena ou painel de campo): na coluna ao lado no largo, abaixo do texto no celular. */
+  midia: ReactNode
+  /** `meio`: título e mídia em metades iguais (a mídia é um painel com mais de uma peça). */
+  proporcao?: 'texto' | 'meio'
 }
 
-/** A primeira dobra de uma página pública: o h1, o texto e, quando há, a mídia de verdade. */
-export function Abertura({ titulo, disposicao, texto, midia }: Props) {
-  const h1 = <Titulo nivel="h1" linhas={titulo} className={disposicao === 'lado' ? undefined : 'pd-abertura-titulo'} />
+/**
+ * A primeira dobra de uma página pública: de um lado o h1, o texto e a ação, todos na mesma borda
+ * esquerda; do outro, a mídia de verdade. Empilhada no celular, a mídia vem depois do texto.
+ */
+export function Abertura({ titulo, texto, midia, proporcao = 'texto' }: Props) {
   return (
-    <div className="cm-area pd-abertura" data-disposicao={disposicao}>
-      {disposicao === 'lado' ? (
-        <div className="pd-abertura-texto">
-          {h1}
-          {texto}
-        </div>
-      ) : (
-        <>
-          {h1}
-          <div className="pd-abertura-texto">{texto}</div>
-        </>
-      )}
-      {midia ? <div className="pd-abertura-midia">{midia}</div> : null}
+    <div className="cm-area pd-abertura" data-disposicao="lado" data-proporcao={proporcao}>
+      <div className="pd-abertura-texto">
+        <Titulo nivel="h1" linhas={titulo} />
+        {texto}
+      </div>
+      <div className="pd-abertura-midia">{midia}</div>
     </div>
   )
 }
