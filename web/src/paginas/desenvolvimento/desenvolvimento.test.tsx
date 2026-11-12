@@ -371,9 +371,23 @@ describe('DES-09 (R1): fora do estado pronto, os blocos estáticos continuam', (
   it('carregando', async () => {
     relogioEm()
     const mundo = await mundoComBebeDe(100)
+    // A leitura fica pendente até as asserções terminarem: sem corrida com o estado de carga.
+    const original = vi.mocked(mundo.conta.detalheFamilia).getMockImplementation()
+    if (!original) throw new Error('A fixture não define detalheFamilia.')
+    let liberar: () => void = () => {}
+    const portao = new Promise<void>((resolver) => {
+      liberar = resolver
+    })
+    vi.mocked(mundo.conta.detalheFamilia).mockImplementationOnce(async (familiaId: string) => {
+      await portao
+      return original(familiaId)
+    })
     renderizarRota('/app/desenvolvimento', { mundo })
-    await screen.findByText('Carregando…')
+    // Espera a página montar (a casca pode mostrar outro "Carregando…" antes); a leitura segue pendente.
+    await screen.findByRole('heading', { level: 2, name: 'Todas as fases' })
+    expect(screen.getByText('Carregando…')).toBeTruthy()
     conferirBlocosEstaticos()
+    liberar()
     await aguardarCarga()
   })
 
