@@ -187,10 +187,17 @@ describe('a fase pela idade em dias (janelas com limites inclusivos)', () => {
     expect(within(ideias).getByRole('heading', { level: 2, name: 'Ideias para brincar nesta fase' })).toBeTruthy()
     expect(within(ideias).getByText(ABERTURA_DAS_IDEIAS)).toBeTruthy()
     expect(within(ideias).getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['Valem para todas as fases'])
-    // T-66 aparece uma vez só, dentro da seção.
+    // DES-02: T-66 duas vezes, uma logo abaixo da linha do bebê (cabeçalho) e uma na seção de ideias.
     const avisos = screen.getAllByText('A data de nascimento está depois de hoje. Confira em Família.')
-    expect(avisos).toHaveLength(1)
-    expect(ideias.contains(avisos[0])).toBe(true)
+    expect(avisos).toHaveLength(2)
+    const dentro = avisos.filter((aviso) => ideias.contains(aviso))
+    const fora = avisos.filter((aviso) => !ideias.contains(aviso))
+    expect(dentro).toHaveLength(1)
+    expect(fora).toHaveLength(1)
+    const titulo = document.querySelector('[data-titulo-tela]')!
+    expect(titulo.compareDocumentPosition(fora[0]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(document.querySelector('[data-grade-do-desenvolvimento]')!.contains(fora[0])).toBe(false)
+    expect(fora[0].closest('[data-aviso-estado="nascimento-futuro"]')).not.toBeNull()
   })
 
   it('a idade só se renova ao voltar à aba (visibilitychange), sem temporizador', async () => {
@@ -587,6 +594,30 @@ describe('DES-06 item 5: a publicação', () => {
     expect(within(secao('[data-para-ler]', 'Para ler')).getAllByText(EM_REVISAO)).toHaveLength(1)
     expect(within(secao('[data-todas-as-fases]', 'Todas as fases')).queryByText(EM_REVISAO)).toBeNull()
     expect(within(secao('#ideias', 'Ideias para brincar nesta fase')).queryByText(EM_REVISAO)).toBeNull()
+  })
+
+  it('em produção, só o item 2 recolhido: as ideias da fase ficam, o título do item 2 e a abertura somem', async () => {
+    relogioEm()
+    const mundo = await mundoComBebeDe(100)
+    const itens = recolher((item) => item.id === 'desenv-ideias-todas-as-fases')
+    renderizarCustom({ mundo, caminho: '/app/desenvolvimento', itens, siteDeProducao: true })
+    await aguardarCarga()
+    const ideias = secao('#ideias', 'Ideias para brincar nesta fase')
+    expect(within(ideias).getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['De uns 2 a 4 meses'])
+    expect(within(ideias).queryByText('Valem para todas as fases')).toBeNull()
+    expect(within(ideias).queryByText(ABERTURA_DAS_IDEIAS)).toBeNull()
+    expect(within(ideias).queryByText(EM_REVISAO)).toBeNull()
+  })
+
+  it('fora de produção, o item 2 "recolhido" segue visível e a abertura fica', async () => {
+    relogioEm()
+    const mundo = await mundoComBebeDe(100)
+    const itens = recolher((item) => item.id === 'desenv-ideias-todas-as-fases')
+    renderizarCustom({ mundo, caminho: '/app/desenvolvimento', itens, siteDeProducao: false })
+    await aguardarCarga()
+    const ideias = secao('#ideias', 'Ideias para brincar nesta fase')
+    expect(within(ideias).getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['De uns 2 a 4 meses', 'Valem para todas as fases'])
+    expect(within(ideias).getByText(ABERTURA_DAS_IDEIAS)).toBeTruthy()
   })
 
   it('em produção, ideias esvaziadas (item 2 e a fase do bebê recolhidos): h2 e T-50, sem a abertura; as outras fases seguem na lista', async () => {

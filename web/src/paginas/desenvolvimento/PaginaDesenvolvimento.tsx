@@ -135,6 +135,7 @@ function ConteudoDoBebe({ contexto }: { contexto: Pronto }) {
         }
       />
 
+      {nascimentoDepoisDeHoje ? <AvisoDeEstado dado="nascimento-futuro">{T.nascimentoDepoisDeHoje}</AvisoDeEstado> : null}
       {arquivado ? (
         <AvisoDeEstado dado="arquivado">{bebeArquivado(bebe.nome)}</AvisoDeEstado>
       ) : papel === 'observador' ? (
@@ -170,7 +171,7 @@ function ConteudoDoBebe({ contexto }: { contexto: Pronto }) {
         </div>
 
         <div className="flex flex-col gap-12 lg:col-span-12">
-          <IdeiasDaFase itens={ideias} nascimentoDepoisDeHoje={nascimentoDepoisDeHoje} />
+          <IdeiasDaFase itens={ideias} comAbertura={valemParaTodas !== undefined} nascimentoDepoisDeHoje={nascimentoDepoisDeHoje} />
           <ParaLer artigos={artigos} />
         </div>
       </div>

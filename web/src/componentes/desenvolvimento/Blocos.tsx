@@ -61,18 +61,27 @@ export function TodasAsFases({
 }
 
 /**
- * "Ideias para brincar nesta fase" (T-03): a seção fica sempre, com o `h2`. Com itens, a frase de abertura e
- * cada um inteiro, com título em `h3`. Sem itens (tudo recolhido), só T-50. Com o nascimento depois de hoje,
+ * "Ideias para brincar nesta fase" (T-03): a seção fica sempre, com o `h2`. A frase de abertura acompanha a
+ * publicação do item 2 (`comAbertura`); com itens, cada um inteiro, com título em `h3`. Sem itens (tudo recolhido), só T-50. Com o nascimento depois de hoje,
  * T-66 ocupa o lugar dos itens por fase e ficam só as ideias que valem para todas.
  */
-export function IdeiasDaFase({ itens, nascimentoDepoisDeHoje = false }: { itens: readonly ItemDeConteudo[]; nascimentoDepoisDeHoje?: boolean }) {
+export function IdeiasDaFase({
+  itens,
+  comAbertura,
+  nascimentoDepoisDeHoje = false,
+}: {
+  itens: readonly ItemDeConteudo[]
+  /** A frase de abertura é parte do item 2: só aparece quando ele está publicado (visível). */
+  comAbertura: boolean
+  nascimentoDepoisDeHoje?: boolean
+}) {
   return (
     <section id="ideias" aria-labelledby="desenv-ideias" data-ideias="" className="scroll-mt-6 flex flex-col gap-6">
       <div className="flex flex-col gap-2">
         <h2 id="desenv-ideias" className="cm-h3">
           {T.ideias}
         </h2>
-        {itens.length > 0 ? <p className="m-0 max-w-[65ch] text-[var(--cor-texto-2)]">{ABERTURA_DAS_IDEIAS}</p> : null}
+        {comAbertura ? <p className="m-0 max-w-[65ch] text-[var(--cor-texto-2)]">{ABERTURA_DAS_IDEIAS}</p> : null}
       </div>
       {nascimentoDepoisDeHoje ? (
         <p
