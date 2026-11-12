@@ -213,6 +213,49 @@ describe('as abas de fase e as linhas dos cartões refluem quando falta largura'
   })
 })
 
+// Rodada de olhar 2: palavra partida ao meio nos cartões estreitos, painel de mel vazio e rótulo ao lado
+// do valor. O jsdom não faz layout: aqui ficam as regras (lidas do disco) e o que o React entrega.
+describe('cartões flutuantes e painéis: sem palavra partida, sem painel vazio, rótulo sobre o valor', () => {
+  it('o cartão de app só quebra palavra como último recurso e a coluna do cabeçalho não encolhe abaixo da palavra mais longa', () => {
+    const cartao = Object.assign({}, ...regrasDoSeletor(/^\.pd-cartao$/).map((r) => r.declaracoes)) as Record<string, string>
+    expect(cartao['overflow-wrap']).toBe('break-word')
+    const cabeca = Object.assign({}, ...regrasDoSeletor(/^\.pd-cartao-cabeca$/).map((r) => r.declaracoes)) as Record<string, string>
+    expect(cabeca['flex-wrap']).toBe('wrap')
+    const coluna = Object.assign({}, ...regrasDoSeletor(/^\.pd-cartao-cabeca > div$/).map((r) => r.declaracoes)) as Record<string, string>
+    expect(coluna['min-width']).toBe('min-content')
+  })
+
+  it('no celular o convite da primeira semana ocupa a coluna inteira e o ícone fica em cima do texto', () => {
+    const largura = regrasDoSeletor(/^\.pd-pilha > \.pd-em-fluxo\.cm-flutuante$/).map((r) => r.declaracoes.width)
+    expect(largura).toContain('100%')
+    const pilha = Object.assign({}, ...regrasDoSeletor(/^\.pd-pilha \.pd-cartao-cabeca$/).map((r) => r.declaracoes)) as Record<string, string>
+    expect(pilha['flex-direction']).toBe('column')
+  })
+
+  it('os desenhos dos painéis e dos passos carregam na hora (sem tamanho próprio, o painel ficaria vazio até a rolagem)', () => {
+    const cuidado = renderizarRota('/cuidado-compartilhado').container
+    const desenho = cuidado.querySelector<HTMLImageElement>('.pd-parar-painel img[data-ilustracao="maos-celular"]')!
+    expect(desenho.getAttribute('loading')).toBe('eager')
+  })
+
+  it('o painel do fecho de Cuidado compartilhado não é um painel de cor lisa: tem o desenho dentro', () => {
+    const { container } = renderizarRota('/cuidado-compartilhado')
+    const painel = container.querySelector('.pd-parar-painel')!
+    expect(painel.querySelector('img[data-ilustracao="maos-celular"]')).not.toBeNull()
+  })
+
+  it('o registro do tummy time empilha o rótulo sobre o valor em qualquer largura (sem linha única a partir de 600 px)', () => {
+    for (const regra of regrasDoSeletor(/^\.pd-cartao-legenda/)) {
+      expect(regra.declaracoes.display, regra.seletores.join(', ')).not.toBe('flex')
+      expect(regra.declaracoes['align-items'], regra.seletores.join(', ')).not.toBe('baseline')
+    }
+    const { container } = renderizarRota('/desenvolvimento')
+    const cartao = container.querySelector('.pd-cartao-legenda .pd-cartao')!
+    const filhos = [...cartao.children].map((el) => el.className)
+    expect(filhos).toEqual(['pd-cartao-rotulo', 'pd-cartao-hora', 'pd-cartao-detalhe'])
+  })
+})
+
 describe('Como funciona', () => {
   it('a primeira dobra tem a cena de estúdio com texto alternativo e tamanho 1×, sem cartão por cima', () => {
     const { container } = renderizarRota('/como-funciona')

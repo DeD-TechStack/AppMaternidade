@@ -119,7 +119,9 @@ export function CuidadoCompartilhado() {
           </div>
         </div>
         <PainelCampo variante="mel" luz className="pd-parar-painel">
-          <Ilustracao nome="maos-celular" />
+          {/* Eager: um desenho sem tamanho próprio, carregado só ao rolar, deixa o painel de mel vazio
+              (altura 0) até chegar na janela. */}
+          <Ilustracao nome="maos-celular" carregamento="eager" />
         </PainelCampo>
       </section>
     </main>

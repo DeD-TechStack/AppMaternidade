@@ -316,6 +316,25 @@
   width: 88%;
 }
 
+/* No celular o cartão do convite ocupa a coluna inteira da pilha e o ícone fica em cima do texto:
+   nenhuma palavra ("Bruno", "Responsável", "convidado") parte ao meio. */
+@media (max-width: 599px) {
+  .pd-pilha > .pd-em-fluxo.cm-flutuante {
+    width: 100%;
+  }
+
+  .pd-pilha .pd-cartao-cabeca {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .pd-pilha .pd-cartao-cabeca > div {
+    flex: none;
+    width: 100%;
+  }
+}
+
 /* Primeira semana: o pai com o bebê no colo ao lado das duas telas, num chão de oliva (só no largo:
    no celular a coluna do painel só comporta as telas). */
 .pd-passo-um {
@@ -346,10 +365,12 @@
 /* Cartões de interface (HTML de verdade, com a família fictícia) ---------------------------- */
 /* Cada tela de exemplo é um contêiner: as linhas se reorganizam pela largura do próprio cartão (ver
    o @container abaixo), não pela janela. A largura do cartão vem de fora (célula, coluna, `width`),
-   nunca do conteúdo. Palavra que não cabe quebra em vez de vazar. */
+   nunca do conteúdo. Palavra que não cabe quebra em vez de vazar, mas só como último recurso:
+   `break-word` (e não `anywhere`) mantém a palavra mais longa como largura mínima, então uma coluna
+   de texto ao lado de um ícone nunca encolhe a ponto de partir "Bruno" ao meio. */
 .pd-cartao {
   container-type: inline-size;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .pd-cartao > * {
@@ -387,8 +408,16 @@
 
 .pd-cartao-cabeca {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
+}
+
+/* A coluna de texto do cabeçalho (ícone + texto) nunca fica mais estreita que a palavra mais longa:
+   se não couber ao lado do ícone, ela quebra para baixo dele (ver `flex-wrap` abaixo). */
+.pd-cartao-cabeca > div {
+  flex: 1 1 8rem;
+  min-width: min-content;
 }
 
 .pd-selo-ok {
@@ -616,24 +645,10 @@
 }
 
 /* O registro do tummy time vem logo abaixo da cena, no fluxo, na largura dela: não cobre nenhum
-   aparelho e não deixa um canto vazio. A partir de 600 px, numa linha só, como um registro da lista. */
+   aparelho e não deixa um canto vazio. O rótulo fica sempre em cima do valor, em qualquer largura. */
 .pd-cartao-legenda.pd-cartao-plano {
   width: 100%;
   margin-top: 16px;
-}
-
-@media (min-width: 600px) {
-  .pd-cartao-legenda .pd-cartao {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    column-gap: 20px;
-  }
-
-  .pd-cartao-legenda .pd-cartao .pd-cartao-hora,
-  .pd-cartao-legenda .pd-cartao .pd-cartao-detalhe {
-    margin-top: 0;
-  }
 }
 
 /* Cuidado compartilhado: o painel da família --------------------------------------------------- */

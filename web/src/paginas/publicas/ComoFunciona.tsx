@@ -60,7 +60,7 @@ export function ComoFunciona() {
           midias={[
             <div key="primeira-semana" className="pd-passo-um">
               <div className="pd-chao pd-passo-desenho">
-                <Ilustracao nome="pai-colo" />
+                <Ilustracao nome="pai-colo" carregamento="eager" />
               </div>
               <div className="pd-pilha">
                 <CartaoFlutuante giro={-2} className="pd-em-fluxo">
