@@ -133,14 +133,17 @@ function ListaDePapeis() {
 
     void envio.enviar({
       escrever: () => dados.concederPapel(contaLimpa, papel, motivo, validoAte),
-      // Achou = a linha com a conta, o papel e a validade pedidos.
+      // Achou = a linha com a conta, o papel e a validade pedidos. A conferência passa pela guarda do painel;
+      // sem a linha, a guarda relê a situação antes de a conferência dizer "não achou".
       conferir: async () => {
-        const lidos = await dados.papeis()
-        if (!lidos.ok) return lidos
-        const achada = lidos.valor.some(
-          (linha) => linha.contaId === contaLimpa && linha.papel === papel && mesmaValidade(linha.validoAte, validoAte),
+        const ehAPedida = (linha: PapelDaLista) =>
+          linha.contaId === contaLimpa && linha.papel === papel && mesmaValidade(linha.validoAte, validoAte)
+        const lidos = await painel.conferir(
+          () => dados.papeis(),
+          (linhas) => !linhas.some(ehAPedida),
         )
-        return { ok: true, valor: achada ? { valor: null } : null }
+        if (!lidos.ok) return lidos
+        return { ok: true, valor: lidos.valor.some(ehAPedida) ? { valor: null } : null }
       },
       aoErro: (falha) => painel.aoErroDeAcao(falha),
       aoSucesso: async (_valor, porConferencia) => {
@@ -326,10 +329,16 @@ function ListaDePapeis() {
           aoFechar={() => setRevogando(null)}
           enviar={(texto) => dados.revogarPapel(revogando.linha.contaId, revogando.linha.papel, texto)}
           conferir={async () => {
-            const lidos = await dados.papeis()
-            if (!lidos.ok) return lidos
             const { contaId, papel: papelRevogado } = revogando.linha
-            return { ok: true, valor: !lidos.valor.some((linha) => linha.contaId === contaId && linha.papel === papelRevogado) }
+            const aindaTem = (linha: PapelDaLista) => linha.contaId === contaId && linha.papel === papelRevogado
+            // A linha ausente é o que confirma a revogação, e também o que uma leitura sem papel devolveria:
+            // a guarda relê a situação antes de a conferência confiar nisso.
+            const lidos = await painel.conferir(
+              () => dados.papeis(),
+              (linhas) => !linhas.some(aindaTem),
+            )
+            if (!lidos.ok) return lidos
+            return { ok: true, valor: !lidos.valor.some(aindaTem) }
           }}
           aoConcluir={async (porConferencia) => {
             const { proximo } = revogando

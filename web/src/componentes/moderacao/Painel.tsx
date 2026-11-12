@@ -119,7 +119,9 @@ export function Painel({ titulo, comVoltar = true, exigeAdmin = false, children 
     if (lida) ultima.current = lida
   }, [lida])
 
-  const ler = useCallback(
+  // Uma só guarda para toda leitura do painel: as telas leem por `ler` e a conferência de um envio incerto
+  // confere por `conferir`, que é a mesma função (RF-10 vale para as duas).
+  const guardada = useCallback(
     async <T,>(corpo: () => Promise<Resultado<T>>, ehVazio?: (valor: T) => boolean): Promise<Resultado<T>> => {
       const perdida = (): Resultado<T> => {
         setPerdeu('leitura')
@@ -153,8 +155,15 @@ export function Painel({ titulo, comVoltar = true, exigeAdmin = false, children 
   const admin = lida?.papeis.includes('admin') ?? false
 
   const contexto = useMemo(
-    () => ({ ler, aoErroDeAcao, perfilId: () => ultima.current?.perfilId ?? null, contaId, admin }),
-    [ler, aoErroDeAcao, contaId, admin],
+    () => ({
+      ler: guardada,
+      conferir: guardada,
+      aoErroDeAcao,
+      perfilId: () => ultima.current?.perfilId ?? null,
+      contaId,
+      admin,
+    }),
+    [guardada, aoErroDeAcao, contaId, admin],
   )
 
   return (

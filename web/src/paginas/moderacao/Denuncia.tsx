@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import { useParams } from 'react-router'
 import { Etiqueta } from '../../componentes/base/Etiqueta.tsx'
 import { Esqueleto } from '../../componentes/comunidade/Avisos.tsx'
@@ -19,6 +19,7 @@ import {
   lerDenunciaComContexto,
   type DenunciaComContexto,
 } from '../../componentes/moderacao/leituras.ts'
+import { useLeituraMantida } from '../../componentes/moderacao/mantida.ts'
 import { Painel } from '../../componentes/moderacao/Painel.tsx'
 import { ROTULO_ESTADO_DENUNCIA, ROTULO_MOTIVO } from '../../conteudo/comunidade.ts'
 import { COMUM_MODERACAO, DENUNCIA, FILA, NOMES_DAS_TELAS, TX } from '../../conteudo/moderacao.ts'
@@ -44,7 +45,14 @@ function DenunciaLida({ id }: { id: string }) {
   const refStatus = useRef<HTMLDivElement>(null)
   const pedirFoco = useFocoPendente()
 
-  const lida = leitura.estado.fase === 'pronto' ? leitura.estado.valor : null
+  // A última leitura que valeu continua na tela (e a caixa aberta com ela) enquanto a releitura está em curso
+  // ou falhou por erro passageiro; o erro aparece com o "Tentar de novo", também dentro da caixa (RF-15).
+  const mantida = useLeituraMantida(leitura.estado)
+  const lida = mantida?.valor ?? null
+  const erroDaLeitura =
+    leitura.estado.fase === 'erro' ? (
+      <ErroDeLeituraNoPainel erro={leitura.estado.erro} aoTentarDeNovo={() => void leitura.recarregar()} />
+    ) : null
 
   async function aoFeito({ porConferencia, origem }: AcaoFeita) {
     await leitura.reler()
@@ -58,12 +66,10 @@ function DenunciaLida({ id }: { id: string }) {
   return (
     <div className="flex flex-col gap-8" aria-busy={leitura.estado.fase === 'carregando' || undefined}>
       <Status mensagem={status} refStatus={refStatus} />
-      {leitura.esqueleto ? <Esqueleto linhas={3} /> : null}
-      {leitura.estado.fase === 'erro' ? (
-        <ErroDeLeituraNoPainel erro={leitura.estado.erro} aoTentarDeNovo={() => void leitura.recarregar()} />
-      ) : null}
+      {leitura.esqueleto && mantida === null ? <Esqueleto linhas={3} /> : null}
+      {erroDaLeitura}
       {leitura.estado.fase === 'pronto' && lida === null ? <NaoEncontradoNoPainel /> : null}
-      {lida ? <Corpo lida={lida} aoFeito={aoFeito} aoErro={aoErro} /> : null}
+      {lida ? <Corpo lida={lida} aoFeito={aoFeito} aoErro={aoErro} avisoDeLeitura={erroDaLeitura} /> : null}
     </div>
   )
 }
@@ -72,9 +78,11 @@ interface CorpoProps {
   lida: DenunciaComContexto
   aoFeito: (feita: AcaoFeita) => Promise<void>
   aoErro: () => void
+  /** O erro da releitura, repetido dentro das caixas de ação (a caixa modal deixa a tela atrás dela inerte). */
+  avisoDeLeitura: ReactNode
 }
 
-function Corpo({ lida, aoFeito, aoErro }: CorpoProps) {
+function Corpo({ lida, aoFeito, aoErro, avisoDeLeitura }: CorpoProps) {
   const painel = usePainel()
   const { denuncia, conteudo, perfil } = lida
   const final = denuncia.estado === 'procedente' || denuncia.estado === 'improcedente'
@@ -137,6 +145,7 @@ function Corpo({ lida, aoFeito, aoErro }: CorpoProps) {
             denunciaId={denuncia.id}
             aoFeito={aoFeito}
             aoErro={aoErro}
+            avisoDeLeitura={avisoDeLeitura}
           />
         </section>
       ) : null}
@@ -148,7 +157,13 @@ function Corpo({ lida, aoFeito, aoErro }: CorpoProps) {
         {final ? (
           <p className="font-medium">{denuncia.decididaEm ? DENUNCIA.decididaEm(formatarDataHora(denuncia.decididaEm)) : null}</p>
         ) : (
-          <AcoesDaDecisao denunciaId={denuncia.id} estadoAtual={denuncia.estado} aoFeito={aoFeito} aoErro={aoErro} />
+          <AcoesDaDecisao
+            denunciaId={denuncia.id}
+            estadoAtual={denuncia.estado}
+            aoFeito={aoFeito}
+            aoErro={aoErro}
+            avisoDeLeitura={avisoDeLeitura}
+          />
         )}
       </section>
 

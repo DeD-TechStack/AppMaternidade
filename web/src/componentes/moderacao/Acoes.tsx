@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import { ACAO_NO_CONTEUDO, DECISAO, TEXTOS_ERRO_MODERACAO } from '../../conteudo/moderacao.ts'
 import type { EstadoDenuncia, EstadoModeracao } from '../../dados/comunidade.regras.ts'
 import type { AlvoModeravel } from '../../dados/moderacao.ts'
@@ -27,11 +27,13 @@ interface ConteudoProps {
   aoFeito: (feita: AcaoFeita) => Promise<void>
   /** O banco recusou: a tela relê a denúncia e o conteúdo. */
   aoErro: () => void
+  /** O erro da releitura da tela (com o "Tentar de novo"), mostrado dentro da caixa aberta (RF-15). */
+  avisoDeLeitura?: ReactNode
 }
 
 // As ações da moderação sobre um conteúdo (M2 e M3): só aparecem as que mudam o estado atual. No lugar
 // delas, o conflito de interesse mostra a frase do catálogo (o conteúdo é do próprio perfil).
-export function AcoesDoConteudo({ alvo, estadoAtual, autorId, denunciaId, aoFeito, aoErro }: ConteudoProps) {
+export function AcoesDoConteudo({ alvo, estadoAtual, autorId, denunciaId, aoFeito, aoErro, avisoDeLeitura }: ConteudoProps) {
   const painel = usePainel()
   const dados = useDadosModeracao()
   const [aberta, setAberta] = useState<EstadoModeracao | null>(null)
@@ -68,7 +70,11 @@ export function AcoesDoConteudo({ alvo, estadoAtual, autorId, denunciaId, aoFeit
           aoFechar={() => setAberta(null)}
           enviar={(motivo) => dados.moderarConteudo(alvo, aberta, motivo, denunciaId)}
           conferir={async () => {
-            const lido = await dados.lerConteudo(alvo.tipo, alvo.id)
+            // Conteúdo ausente é o resultado vazio: a guarda relê a situação antes de a conferência confiar nele.
+            const lido = await painel.conferir(
+              () => dados.lerConteudo(alvo.tipo, alvo.id),
+              (valor) => valor === null,
+            )
             if (!lido.ok) return lido
             const atual = lido.valor === null ? null : lido.valor.tipo === 'topico' ? lido.valor.topico.estado : lido.valor.resposta.estado
             return { ok: true, valor: atual === aberta }
@@ -79,7 +85,9 @@ export function AcoesDoConteudo({ alvo, estadoAtual, autorId, denunciaId, aoFeit
             setAberta(null)
             await aoFeito({ porConferencia, origem: botao })
           }}
-        />
+        >
+          {avisoDeLeitura}
+        </DialogoDeMotivo>
       ) : null}
     </>
   )
@@ -90,13 +98,16 @@ interface DecisaoProps {
   estadoAtual: EstadoDenuncia
   aoFeito: (feita: AcaoFeita) => Promise<void>
   aoErro: () => void
+  /** O erro da releitura da tela (com o "Tentar de novo"), mostrado dentro da caixa aberta (RF-15). */
+  avisoDeLeitura?: ReactNode
 }
 
 type DecisaoDaTela = (typeof DECISOES)[number]
 
 // A decisão sobre a denúncia (só na M2): "Em análise" só com a denúncia aberta; as decisões finais ficam
 // até a denúncia ser decidida.
-export function AcoesDaDecisao({ denunciaId, estadoAtual, aoFeito, aoErro }: DecisaoProps) {
+export function AcoesDaDecisao({ denunciaId, estadoAtual, aoFeito, aoErro, avisoDeLeitura }: DecisaoProps) {
+  const painel = usePainel()
   const dados = useDadosModeracao()
   const [aberta, setAberta] = useState<DecisaoDaTela | null>(null)
   const origem = useRef<HTMLElement | null>(null)
@@ -130,7 +141,10 @@ export function AcoesDaDecisao({ denunciaId, estadoAtual, aoFeito, aoErro }: Dec
           aoFechar={() => setAberta(null)}
           enviar={(motivo) => dados.decidirDenuncia(denunciaId, aberta, motivo)}
           conferir={async () => {
-            const lida = await dados.lerDenuncia(denunciaId)
+            const lida = await painel.conferir(
+              () => dados.lerDenuncia(denunciaId),
+              (valor) => valor === null,
+            )
             if (!lida.ok) return lida
             return { ok: true, valor: lida.valor?.estado === aberta }
           }}
@@ -140,7 +154,9 @@ export function AcoesDaDecisao({ denunciaId, estadoAtual, aoFeito, aoErro }: Dec
             setAberta(null)
             await aoFeito({ porConferencia, origem: botao })
           }}
-        />
+        >
+          {avisoDeLeitura}
+        </DialogoDeMotivo>
       ) : null}
     </>
   )

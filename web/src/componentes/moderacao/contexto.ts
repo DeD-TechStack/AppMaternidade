@@ -9,6 +9,14 @@ export interface ContextoDoPainel {
    * Sem papel vigente (ou sem admin, na M5) o painel passa ao estado "sem permissão".
    */
   ler: <T>(corpo: () => Promise<Resultado<T>>, ehVazio?: (valor: T) => boolean) => Promise<Resultado<T>>
+  /**
+   * A conferência de um envio incerto (RF-19) é uma leitura como qualquer outra e passa pela mesma guarda
+   * (RF-10): a situação da conta é relida antes; `ehVazio` marca o resultado em que a leitura não achou a
+   * linha (conteúdo ou denúncia ausente, papel que não está na lista), e então a situação é relida de novo
+   * antes de a conferência confiar nele. Sem papel, ou com `sem_permissao`, o painel passa a "sem permissão"
+   * e a caixa ou o formulário fecham. Com o papel vigente, o resultado da leitura volta sem mudança.
+   */
+  conferir: <T>(corpo: () => Promise<Resultado<T>>, ehVazio?: (valor: T) => boolean) => Promise<Resultado<T>>
   /** Uma ação que o banco recusou com `sem papel de plataforma` leva o painel ao estado "sem permissão". */
   aoErroDeAcao: (erro: ErroDados) => void
   /** O id do perfil público próprio, como a última leitura da situação o devolveu. */

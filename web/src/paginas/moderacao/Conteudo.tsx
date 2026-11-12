@@ -17,6 +17,7 @@ import {
   lerConteudoComContexto,
   type ConteudoComContexto,
 } from '../../componentes/moderacao/leituras.ts'
+import { useLeituraMantida } from '../../componentes/moderacao/mantida.ts'
 import { Painel } from '../../componentes/moderacao/Painel.tsx'
 import { COMUM_MODERACAO, CONTEUDO, DENUNCIA, NOMES_DAS_TELAS, TX } from '../../conteudo/moderacao.ts'
 import { ehUuid } from '../../dados/comunidade.regras.ts'
@@ -42,7 +43,14 @@ function ConteudoLido({ tipo, id }: { tipo: TipoDeConteudo; id: string }) {
   const refStatus = useRef<HTMLDivElement>(null)
   const pedirFoco = useFocoPendente()
 
-  const lido = leitura.estado.fase === 'pronto' ? leitura.estado.valor : null
+  // A última leitura que valeu continua na tela (e a caixa aberta com ela) enquanto a releitura está em curso
+  // ou falhou por erro passageiro; o erro aparece com o "Tentar de novo", também dentro da caixa (RF-15).
+  const mantida = useLeituraMantida(leitura.estado)
+  const lido = mantida?.valor ?? null
+  const erroDaLeitura =
+    leitura.estado.fase === 'erro' ? (
+      <ErroDeLeituraNoPainel erro={leitura.estado.erro} aoTentarDeNovo={() => void leitura.recarregar()} />
+    ) : null
 
   async function aoFeito({ porConferencia, origem }: AcaoFeita) {
     await leitura.reler()
@@ -54,10 +62,8 @@ function ConteudoLido({ tipo, id }: { tipo: TipoDeConteudo; id: string }) {
   return (
     <div className="flex flex-col gap-8" aria-busy={leitura.estado.fase === 'carregando' || undefined}>
       <Status mensagem={status} refStatus={refStatus} />
-      {leitura.esqueleto ? <Esqueleto linhas={3} /> : null}
-      {leitura.estado.fase === 'erro' ? (
-        <ErroDeLeituraNoPainel erro={leitura.estado.erro} aoTentarDeNovo={() => void leitura.recarregar()} />
-      ) : null}
+      {leitura.esqueleto && mantida === null ? <Esqueleto linhas={3} /> : null}
+      {erroDaLeitura}
       {leitura.estado.fase === 'pronto' && lido === null ? <NaoEncontradoNoPainel /> : null}
       {lido ? (
         <>
@@ -84,6 +90,7 @@ function ConteudoLido({ tipo, id }: { tipo: TipoDeConteudo; id: string }) {
               denunciaId={null}
               aoFeito={aoFeito}
               aoErro={() => void leitura.reler()}
+              avisoDeLeitura={erroDaLeitura}
             />
           </section>
           {lido.historico ? (
