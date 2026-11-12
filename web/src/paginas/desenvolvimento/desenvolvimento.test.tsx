@@ -1,10 +1,13 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { act, configure, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import axe from 'axe-core'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { describe, expect, it, vi } from 'vitest'
 import { GuardaSessao } from '../../componentes/conta/guarda.tsx'
 import { ProvedorDadosConta, ProvedorSessao } from '../../componentes/conta/sessao.tsx'
 import { ProvedorDoConteudo } from '../../componentes/desenvolvimento/conteudo.tsx'
-import { ITENS_DE_CONTEUDO, type ItemDeConteudo } from '../../componentes/desenvolvimento/itens.ts'
+import { ABERTURA_DAS_IDEIAS, ITENS_DE_CONTEUDO, type ItemDeConteudo } from '../../componentes/desenvolvimento/itens.ts'
 import { aguardarCarga, renderizarRota } from '../../teste/renderizarRota.tsx'
 import { criarMundoDeTeste, ID_BEBE, type Mundo, type OpcoesMundo } from '../../teste/rotina.fixture.ts'
 import { CorpoDaPagina } from './PaginaDesenvolvimento.tsx'
@@ -169,14 +172,25 @@ describe('a fase pela idade em dias (janelas com limites inclusivos)', () => {
     })
   }
 
-  it('um nascimento depois de hoje mostra T-66 e nenhuma fase', async () => {
+  it('um nascimento depois de hoje: T-66 no lugar dos itens por fase; a seção de ideias fica com o item 2, sem idade nem fase (R2)', async () => {
     relogioEm()
     const mundo = await mundoComBebeDe(-1)
     renderizarRota('/app/desenvolvimento', { mundo })
     await aguardarCarga()
-    expect(screen.getByText('A data de nascimento está depois de hoje. Confira em Família.')).toBeTruthy()
     expect(faseDaTela()).toBeNull()
     expect(screen.queryByText('As ideias deste site vão até os 12 meses.')).toBeNull()
+    expect(document.querySelector('[data-titulo-tela]')?.textContent).toContain('Heloísa')
+    expect(document.querySelector('[data-titulo-tela]')?.textContent).not.toMatch(/·|dias|-1/)
+
+    const ideias = document.getElementById('ideias')!
+    expect(ideias).not.toBeNull()
+    expect(within(ideias).getByRole('heading', { level: 2, name: 'Ideias para brincar nesta fase' })).toBeTruthy()
+    expect(within(ideias).getByText(ABERTURA_DAS_IDEIAS)).toBeTruthy()
+    expect(within(ideias).getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['Valem para todas as fases'])
+    // T-66 aparece uma vez só, dentro da seção.
+    const avisos = screen.getAllByText('A data de nascimento está depois de hoje. Confira em Família.')
+    expect(avisos).toHaveLength(1)
+    expect(ideias.contains(avisos[0])).toBe(true)
   })
 
   it('a idade só se renova ao voltar à aba (visibilitychange), sem temporizador', async () => {
@@ -331,6 +345,76 @@ describe('DES-09: os estados do contexto', () => {
   })
 })
 
+/** Os blocos estáticos (R1): presentes, sem nenhum dado do bebê (idade, fase, tummy, ideias por fase). */
+function conferirBlocosEstaticos() {
+  expect(screen.getByRole('heading', { level: 2, name: 'Todas as fases' })).toBeTruthy()
+  expect(screen.getByRole('heading', { level: 2, name: 'Para ler' })).toBeTruthy()
+  const bloco = document.querySelector<HTMLElement>('[data-todas-as-fases]')!
+  expect(within(bloco).getAllByRole('link')).toHaveLength(6)
+  expect(within(bloco).queryByText('nesta fase')).toBeNull()
+  expect(bloco.querySelector('[aria-current]')).toBeNull()
+  expect(within(document.querySelector<HTMLElement>('[data-para-ler]')!).getAllByRole('link')).toHaveLength(2)
+  expect(faseDaTela()).toBeNull()
+  expect(document.getElementById('ideias')).toBeNull()
+  expect(document.querySelector('[data-lugar-do-tummy]')).toBeNull()
+  expect(document.querySelector('[data-titulo-tela]')?.textContent).toBe('Desenvolvimento')
+}
+
+describe('DES-09 (R1): fora do estado pronto, os blocos estáticos continuam', () => {
+  it('carregando', async () => {
+    relogioEm()
+    const mundo = await mundoComBebeDe(100)
+    renderizarRota('/app/desenvolvimento', { mundo })
+    await screen.findByText('Carregando…')
+    conferirBlocosEstaticos()
+    await aguardarCarga()
+  })
+
+  it('erro de leitura, com "Tentar de novo"', async () => {
+    relogioEm()
+    const mundo = await mundoComBebeDe(100)
+    vi.mocked(mundo.conta.detalheFamilia).mockResolvedValueOnce({
+      ok: false,
+      erro: { classe: 'rede', chave: 'rede', codigo: 'rede', mensagemOriginal: 'x' },
+    })
+    renderizarRota('/app/desenvolvimento', { mundo })
+    await aguardarCarga()
+    expect(screen.getByRole('button', { name: 'Tentar de novo' })).toBeTruthy()
+    conferirBlocosEstaticos()
+  })
+
+  it('fuso inválido (2b)', async () => {
+    relogioEm()
+    const mundo = await mundoComBebeDe(100)
+    const familias = await mundo.conta.minhasFamilias()
+    if (!familias.ok) throw new Error('A fixture não leu as famílias.')
+    vi.spyOn(mundo.conta, 'minhasFamilias').mockResolvedValue({
+      ok: true,
+      valor: familias.valor.map((familia) => ({ ...familia, fuso: 'Marte/Olimpo' })),
+    })
+    renderizarRota('/app/desenvolvimento', { mundo })
+    await aguardarCarga()
+    expect(screen.getByRole('link', { name: 'Ir para Família' })).toBeTruthy()
+    conferirBlocosEstaticos()
+  })
+
+  it('sem família', async () => {
+    relogioEm()
+    renderizarRota('/app/desenvolvimento', { sessao: 'davi' })
+    await aguardarCarga()
+    expect(screen.getByRole('link', { name: 'Começar' })).toBeTruthy()
+    conferirBlocosEstaticos()
+  })
+
+  it('sem bebê', async () => {
+    relogioEm()
+    renderizarRota('/app/desenvolvimento', { semBebes: true })
+    await aguardarCarga()
+    expect(screen.getByText('Nenhum bebê cadastrado nesta família.')).toBeTruthy()
+    conferirBlocosEstaticos()
+  })
+})
+
 describe('DES-02 e DES-03: o seletor de bebê', () => {
   const TEO = { id: 'b7777777-7777-4777-8777-777777777777', nome: 'Teo', nascimento: '2026-10-01', estado: 'ativo' as const }
 
@@ -466,6 +550,81 @@ describe('DES-06 item 5: a publicação', () => {
     expect(document.querySelector('[data-todas-as-fases]')!.textContent).toContain('De uns 2 a 4 meses')
   })
 
+  // R4: uma seção esvaziada pela publicação mantém o h2 e mostra T-50, uma vez só.
+  const EM_REVISAO = 'Este conteúdo está em revisão profissional e aparece aqui quando a revisão terminar.'
+  const recolher = (recolhido: (item: ItemDeConteudo) => boolean) =>
+    ITENS_DE_CONTEUDO.map((item) => (recolhido(item) ? { ...item, publicado: false } : item))
+  const secao = (seletor: string, titulo: string) => {
+    const bloco = document.querySelector<HTMLElement>(seletor)!
+    expect(bloco, seletor).not.toBeNull()
+    expect(within(bloco).getByRole('heading', { level: 2, name: titulo })).toBeTruthy()
+    return bloco
+  }
+
+  it('em produção, com tudo recolhido, as três seções mantêm o h2 e mostram T-50 uma vez; a abertura das ideias some', async () => {
+    relogioEm()
+    const mundo = await mundoComBebeDe(100)
+    renderizarCustom({ mundo, caminho: '/app/desenvolvimento', itens: recolher(() => true), siteDeProducao: true })
+    await aguardarCarga()
+    for (const [seletor, titulo] of [
+      ['#ideias', 'Ideias para brincar nesta fase'],
+      ['[data-todas-as-fases]', 'Todas as fases'],
+      ['[data-para-ler]', 'Para ler'],
+    ] as const) {
+      const bloco = secao(seletor, titulo)
+      expect(within(bloco).getAllByText(EM_REVISAO), seletor).toHaveLength(1)
+      expect(within(bloco).queryAllByRole('link'), seletor).toHaveLength(0)
+    }
+    expect(within(document.getElementById('ideias')!).queryByText(ABERTURA_DAS_IDEIAS)).toBeNull()
+  })
+
+  it('em produção, só "Para ler" recolhido: só ela mostra T-50', async () => {
+    relogioEm()
+    const mundo = await mundoComBebeDe(100)
+    const itens = recolher((item) => item.tipo === 'artigo')
+    renderizarCustom({ mundo, caminho: '/app/desenvolvimento', itens, siteDeProducao: true })
+    await aguardarCarga()
+    expect(within(secao('[data-para-ler]', 'Para ler')).getAllByText(EM_REVISAO)).toHaveLength(1)
+    expect(within(secao('[data-todas-as-fases]', 'Todas as fases')).queryByText(EM_REVISAO)).toBeNull()
+    expect(within(secao('#ideias', 'Ideias para brincar nesta fase')).queryByText(EM_REVISAO)).toBeNull()
+  })
+
+  it('em produção, ideias esvaziadas (item 2 e a fase do bebê recolhidos): h2 e T-50, sem a abertura; as outras fases seguem na lista', async () => {
+    relogioEm()
+    const mundo = await mundoComBebeDe(100)
+    const itens = recolher((item) => item.id === 'desenv-ideias-todas-as-fases' || item.id === 'desenv-ideias-2-4m')
+    renderizarCustom({ mundo, caminho: '/app/desenvolvimento', itens, siteDeProducao: true })
+    await aguardarCarga()
+    const ideias = secao('#ideias', 'Ideias para brincar nesta fase')
+    expect(within(ideias).getAllByText(EM_REVISAO)).toHaveLength(1)
+    expect(within(ideias).queryByText(ABERTURA_DAS_IDEIAS)).toBeNull()
+    expect(within(secao('[data-todas-as-fases]', 'Todas as fases')).getAllByRole('link')).toHaveLength(5)
+  })
+
+  it('em produção, "Todas as fases" esvaziada (as 6 fases recolhidas): h2 e T-50; o item 2 mantém as ideias', async () => {
+    relogioEm()
+    const mundo = await mundoComBebeDe(100)
+    const itens = recolher((item) => item.fase)
+    renderizarCustom({ mundo, caminho: '/app/desenvolvimento', itens, siteDeProducao: true })
+    await aguardarCarga()
+    const todas = secao('[data-todas-as-fases]', 'Todas as fases')
+    expect(within(todas).getAllByText(EM_REVISAO)).toHaveLength(1)
+    const ideias = secao('#ideias', 'Ideias para brincar nesta fase')
+    expect(within(ideias).queryByText(EM_REVISAO)).toBeNull()
+    expect(within(ideias).getByText(ABERTURA_DAS_IDEIAS)).toBeTruthy()
+  })
+
+  it('fora de produção, nenhuma seção mostra T-50: o conteúdo recolhido segue visível', async () => {
+    relogioEm()
+    const mundo = await mundoComBebeDe(100)
+    renderizarCustom({ mundo, caminho: '/app/desenvolvimento', itens: recolher(() => true), siteDeProducao: false })
+    await aguardarCarga()
+    expect(screen.queryByText(EM_REVISAO)).toBeNull()
+    expect(within(secao('[data-todas-as-fases]', 'Todas as fases')).getAllByRole('link')).toHaveLength(6)
+    expect(within(secao('[data-para-ler]', 'Para ler')).getAllByRole('link')).toHaveLength(2)
+    expect(within(secao('#ideias', 'Ideias para brincar nesta fase')).getByText(ABERTURA_DAS_IDEIAS)).toBeTruthy()
+  })
+
   it('fora do site de produção, o item recolhido aparece inteiro', async () => {
     relogioEm()
     const mundo = await mundoComBebeDe(100)
@@ -490,6 +649,179 @@ describe('DES-13 11: a madrugada', () => {
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Desenvolvimento')
     expect(container.querySelector('[data-painel="mel"]')).not.toBeNull()
   })
+
+  // O jsdom não carrega o CSS: o efeito do tema se confere no que o `tema.css` declara e no que a página lê.
+  const css = readFileSync(join(process.cwd(), 'src', 'styles', 'tema.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
+  const declaracoes = (corpo: string) => new Map([...corpo.matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)].map((m) => [m[1], m[2].trim()]))
+  const claro = declaracoes(/:root\s*\{([^}]*)\}/.exec(css)![1])
+  const madrugada = declaracoes(/:root\[data-tema='madrugada'\]\s*\{([^}]*)\}/.exec(css)![1])
+
+  it('a página lê só tokens do tema e vários deles têm valor diferente na madrugada', async () => {
+    relogioEm()
+    const mundo = await mundoComBebeDe(100, { bebesExtras: [{ id: 'b7777777-7777-4777-8777-777777777777', nome: 'Teo', nascimento: '2026-10-01', estado: 'ativo' }] })
+    const { container } = renderizarRota('/app/desenvolvimento', { mundo })
+    await aguardarCarga()
+    const lidos = new Set([...container.innerHTML.matchAll(/var\((--cor-[\w-]+)(,?)/g)].filter((m) => m[2] === '').map((m) => m[1]))
+    expect(lidos.size).toBeGreaterThanOrEqual(5)
+    // Todo token lido existe no tema claro (o tema da madrugada só sobrepõe).
+    expect([...lidos].filter((nome) => !claro.has(nome))).toEqual([])
+    const mudam = [...lidos].filter((nome) => madrugada.has(nome) && madrugada.get(nome) !== claro.get(nome))
+    for (const essencial of ['--cor-cartao', '--cor-texto', '--cor-texto-2', '--cor-papel-fundo', '--cor-fio-suave']) {
+      expect(mudam, essencial).toContain(essencial)
+    }
+    // Os valores da madrugada, escritos aqui: cartão da noite e texto de papel.
+    expect(madrugada.get('--cor-cartao')).toBe('var(--color-noite-cartao)')
+    expect(madrugada.get('--cor-texto')).toBe('var(--color-papel)')
+    expect(claro.get('--cor-cartao')).toBe('var(--color-branco)')
+  })
+})
+
+// DES-13 10: axe nos estados do DES-09, em cada tema, na rota do item e no item recolhido.
+async function violacoes(container: HTMLElement): Promise<string[]> {
+  // O jsdom não calcula cor nem layout: o contraste é conferido em estilo.test.ts. `region` não vale fora da casca.
+  const resultado = await axe.run(container, { rules: { 'color-contrast': { enabled: false }, region: { enabled: false } } })
+  return resultado.violations.map((v) => `${v.id}: ${v.help} (${v.nodes.map((n) => n.html).join(' | ')})`)
+}
+
+const CAMINHO = '/app/desenvolvimento'
+const CENARIOS: ReadonlyArray<readonly [string, () => Promise<HTMLElement>]> = [
+  [
+    '1 carregando',
+    async () => {
+      const { container } = renderizarRota(CAMINHO, { mundo: await mundoComBebeDe(100) })
+      await screen.findByText('Carregando…')
+      return container
+    },
+  ],
+  [
+    '2 erro de leitura',
+    async () => {
+      const mundo = await mundoComBebeDe(100)
+      vi.mocked(mundo.conta.detalheFamilia).mockResolvedValueOnce({
+        ok: false,
+        erro: { classe: 'rede', chave: 'rede', codigo: 'rede', mensagemOriginal: 'x' },
+      })
+      const { container } = renderizarRota(CAMINHO, { mundo })
+      await aguardarCarga()
+      return container
+    },
+  ],
+  [
+    '2b fuso inválido',
+    async () => {
+      const mundo = await mundoComBebeDe(100)
+      const familias = await mundo.conta.minhasFamilias()
+      if (!familias.ok) throw new Error('A fixture não leu as famílias.')
+      vi.spyOn(mundo.conta, 'minhasFamilias').mockResolvedValue({
+        ok: true,
+        valor: familias.valor.map((familia) => ({ ...familia, fuso: 'Marte/Olimpo' })),
+      })
+      const { container } = renderizarRota(CAMINHO, { mundo })
+      await aguardarCarga()
+      return container
+    },
+  ],
+  [
+    '3 sem família',
+    async () => {
+      const { container } = renderizarRota(CAMINHO, { sessao: 'davi' })
+      await aguardarCarga()
+      return container
+    },
+  ],
+  [
+    '4 sem bebê',
+    async () => {
+      const { container } = renderizarRota(CAMINHO, { semBebes: true })
+      await aguardarCarga()
+      return container
+    },
+  ],
+  [
+    '5 bebê arquivado',
+    async () => {
+      const { container } = renderizarRota(CAMINHO, { mundo: await mundoComBebeDe(100, { bebeArquivado: true }) })
+      await aguardarCarga()
+      return container
+    },
+  ],
+  [
+    '6 observador',
+    async () => {
+      const { container } = renderizarRota(CAMINHO, { mundo: await mundoComBebeDe(100, { papelDeDavi: 'observador', sessao: 'davi' }) })
+      await aguardarCarga()
+      return container
+    },
+  ],
+  [
+    '7 pronto, com dois bebês (seletor)',
+    async () => {
+      const teo = { id: 'b7777777-7777-4777-8777-777777777777', nome: 'Teo', nascimento: '2026-10-01', estado: 'ativo' as const }
+      const { container } = renderizarRota(CAMINHO, { mundo: await mundoComBebeDe(100, { bebesExtras: [teo] }) })
+      await aguardarCarga()
+      return container
+    },
+  ],
+  [
+    'nascimento depois de hoje',
+    async () => {
+      const { container } = renderizarRota(CAMINHO, { mundo: await mundoComBebeDe(-1) })
+      await aguardarCarga()
+      return container
+    },
+  ],
+  [
+    'item 1 (tummy time, com tabela)',
+    async () => {
+      const { container } = renderizarRota(`${CAMINHO}/conteudo/desenv-tummy-time-fontes`, { mundo: await mundoComBebeDe(100) })
+      await aguardarCarga()
+      return container
+    },
+  ],
+  [
+    'item que não existe',
+    async () => {
+      const { container } = renderizarRota(`${CAMINHO}/conteudo/nao-existe`, { mundo: await mundoComBebeDe(100) })
+      await aguardarCarga()
+      return container
+    },
+  ],
+  [
+    'item recolhido (produção)',
+    async () => {
+      const itens = ITENS_DE_CONTEUDO.map((item) => ({ ...item, publicado: false }))
+      const { container } = renderizarCustom({
+        mundo: await mundoComBebeDe(100),
+        caminho: `${CAMINHO}/conteudo/desenv-ideias-2-4m`,
+        itens,
+        siteDeProducao: true,
+      })
+      await aguardarCarga()
+      return container
+    },
+  ],
+  [
+    'página com todas as seções recolhidas (produção)',
+    async () => {
+      const itens = ITENS_DE_CONTEUDO.map((item) => ({ ...item, publicado: false }))
+      const { container } = renderizarCustom({ mundo: await mundoComBebeDe(100), caminho: CAMINHO, itens, siteDeProducao: true })
+      await aguardarCarga()
+      return container
+    },
+  ],
+]
+
+describe('DES-13 10: sem violações do axe, nos dois temas', () => {
+  for (const tema of ['claro', 'madrugada'] as const) {
+    for (const [nome, preparar] of CENARIOS) {
+      it(`${nome} (${tema})`, async () => {
+        relogioEm()
+        if (tema === 'madrugada') document.documentElement.setAttribute('data-tema', 'madrugada')
+        const container = await preparar()
+        expect(await violacoes(container)).toEqual([])
+      })
+    }
+  }
 })
 
 describe('DES-13 18: a navegação interna', () => {

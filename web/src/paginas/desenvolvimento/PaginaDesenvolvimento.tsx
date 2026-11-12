@@ -66,7 +66,23 @@ export function CorpoDaPagina() {
   )
 }
 
+/** Os blocos que não dependem do bebê (DES-09): as fases e os artigos que a publicação deixa ver. */
+function useBlocosEstaticos() {
+  const conteudo = useConteudo()
+  return {
+    conteudo,
+    todasAsFases: conteudo.visiveis.filter((item) => item.fase),
+    artigos: [ID_TUMMY_TIME, ID_MARCOS].flatMap((id) => conteudo.visivel(id) ?? []),
+  }
+}
+
+/**
+ * Fora do estado pronto (carregando, erro, fuso inválido, sem família, sem bebê): o título, o aviso do estado
+ * com a ação dele e, depois, "Todas as fases" e "Para ler" sem nenhum dado do bebê (sem idade, fase nem
+ * tummy time).
+ */
 function SemBebe({ contexto }: { contexto: Exclude<ContextoDoBebe, { fase: 'pronto' }> }) {
+  const { todasAsFases, artigos } = useBlocosEstaticos()
   return (
     <>
       <TituloRotina titulo={T.titulo} linha={null} />
@@ -75,13 +91,17 @@ function SemBebe({ contexto }: { contexto: Exclude<ContextoDoBebe, { fase: 'pron
       {contexto.fase === 'fuso_invalido' ? <EstadoDeFusoInvalido /> : null}
       {contexto.fase === 'sem_familia' ? <EstadoSemFamilia /> : null}
       {contexto.fase === 'sem_bebe' ? <EstadoSemBebe /> : null}
+      <div data-blocos-estaticos="" className="cm-area mt-12 flex flex-col gap-12">
+        <TodasAsFases fases={todasAsFases} />
+        <ParaLer artigos={artigos} />
+      </div>
     </>
   )
 }
 
 function ConteudoDoBebe({ contexto }: { contexto: Pronto }) {
   const { pendente } = usePendencia()
-  const conteudo = useConteudo()
+  const { conteudo, todasAsFases, artigos } = useBlocosEstaticos()
   const { familia, bebe, bebes, papel, agora } = contexto
 
   const hoje = diaDaFamilia(agora, familia.fuso)
@@ -95,11 +115,10 @@ function ConteudoDoBebe({ contexto }: { contexto: Pronto }) {
   const fasesVisiveis = fasesDoBebe.filter((fase) => conteudo.visivel(fase.id))
   const linhaFase = comIdade ? (fasesDoBebe.length === 0 ? T.semFase : linhaDaFase(fasesVisiveis.map((fase) => fase.titulo))) : null
 
+  // Sem idade (nascimento depois de hoje ou data impossível) não há fase: ficam só as ideias de todas as fases.
   const valemParaTodas = conteudo.visivel(ID_TODAS_AS_FASES)
-  const ideias: ItemDeConteudo[] = comIdade ? [...fasesVisiveis, ...(valemParaTodas ? [valemParaTodas] : [])] : []
-  const todasAsFases = conteudo.visiveis.filter((item) => item.fase)
+  const ideias: ItemDeConteudo[] = [...fasesVisiveis, ...(valemParaTodas ? [valemParaTodas] : [])]
   const atuais = new Set(fasesVisiveis.map((fase) => fase.id))
-  const artigos = [ID_TUMMY_TIME, ID_MARCOS].flatMap((id) => conteudo.visivel(id) ?? [])
 
   const aparelho = lerAparelho(agora).fuso
   const arquivado = bebe.estado === 'arquivado'
@@ -108,7 +127,7 @@ function ConteudoDoBebe({ contexto }: { contexto: Pronto }) {
     <>
       <TituloRotina
         titulo={T.titulo}
-        linha={linhaDoBebe(bebe.nome, idade === '' ? null : idade)}
+        linha={linhaDoBebe(bebe.nome, idade)}
         lateral={
           bebes.length > 1 ? (
             <SeletorDeBebe bebes={bebes} escolhido={bebe.id} aoEscolher={contexto.escolher} pendente={pendente} />
@@ -121,7 +140,6 @@ function ConteudoDoBebe({ contexto }: { contexto: Pronto }) {
       ) : papel === 'observador' ? (
         <AvisoDeEstado dado="observador">{T.soVer}</AvisoDeEstado>
       ) : null}
-      {nascimentoDepoisDeHoje ? <AvisoDeEstado dado="nascimento-futuro">{T.nascimentoDepoisDeHoje}</AvisoDeEstado> : null}
       {aparelho !== familia.fuso ? <AvisoDeFuso>{avisoDeFuso(aparelho, familia.fuso)}</AvisoDeFuso> : null}
 
       <div
@@ -152,7 +170,7 @@ function ConteudoDoBebe({ contexto }: { contexto: Pronto }) {
         </div>
 
         <div className="flex flex-col gap-12 lg:col-span-12">
-          <IdeiasDaFase itens={ideias} />
+          <IdeiasDaFase itens={ideias} nascimentoDepoisDeHoje={nascimentoDepoisDeHoje} />
           <ParaLer artigos={artigos} />
         </div>
       </div>

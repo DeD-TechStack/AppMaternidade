@@ -105,8 +105,17 @@ function Corpo({ item, nivel }: { item: ItemDeConteudo; nivel: Props['nivel'] })
 function Fontes({ item, nivel }: { item: ItemDeConteudo; nivel: Props['nivel'] }) {
   const titulo = useId()
   const Titulo = nivel === 'pagina' ? 'h2' : 'h4'
+  // Na página principal há uma "Fontes" por item: um `<section>` nomeado repetido seria um marco repetido
+  // (axe `landmark-unique`). Dentro da seção de ideias, a lista vira um grupo com nome; na rota do item,
+  // que tem uma só, segue como seção.
+  const Raiz = nivel === 'pagina' ? 'section' : 'div'
   return (
-    <section aria-labelledby={titulo} data-fontes="" className="flex flex-col gap-2">
+    <Raiz
+      aria-labelledby={titulo}
+      role={nivel === 'pagina' ? undefined : 'group'}
+      data-fontes=""
+      className="flex flex-col gap-2"
+    >
       <Titulo id={titulo} className="cm-h4">
         {T.fontes}
       </Titulo>
@@ -120,7 +129,7 @@ function Fontes({ item, nivel }: { item: ItemDeConteudo; nivel: Props['nivel'] }
           </li>
         ))}
       </ol>
-    </section>
+    </Raiz>
   )
 }
 
