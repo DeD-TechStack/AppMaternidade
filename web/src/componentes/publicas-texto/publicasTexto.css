@@ -1,11 +1,36 @@
 /* Páginas públicas de leitura longa (Regras, Privacidade, Termos, Exclusão, Contato, Sobre).
-   Só valores dos tokens: cores, raios e as duas famílias vêm de tema.css e tokens.css. Classes `pt-*`. */
+   Só valores dos tokens: cores, raios e as duas famílias vêm de tema.css e tokens.css. Classes `pt-*`.
+   Ordem da página: abertura (título, segunda linha, botão e painel de mel), índice, leitura.
+   A leitura é uma coluna só, centrada, de 680 px (índice e seções); o mesmo fio abre cada bloco. */
 @layer components {
+  /* A página é uma pilha de três partes; o respiro de papel entre elas é de 40 (390) a 64 (1440). */
   .pt-pagina {
+    --pt-respiro: clamp(40px, 1.524vw + 34.06px, 64px);
+    --pt-coluna: 680px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
     padding-top: clamp(28px, 1.143vw + 23.5px, 40px);
+    padding-bottom: 24px;
   }
 
-  /* Título: o nome (h1) e a segunda linha em itálico, no mesmo tamanho (84/88 em 1440, 42/46 em 390). */
+  /* Em tela larga o respiro de baixo é menor: a faixa vazia entre o fim do conteúdo e o rodapé (POL:RF-03) fica
+     em uns 136 px a 1440, abaixo do limite de 160. No celular continua 24. */
+  @media (min-width: 1100px) {
+    .pt-pagina {
+      padding-bottom: 8px;
+    }
+  }
+
+  /* Abertura: no celular o título e o painel de mel se empilham (o painel depois do botão); a partir de 1100 px
+     ficam lado a lado, o texto à esquerda e o painel à direita. */
+  .pt-abertura {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+    margin-bottom: var(--pt-respiro);
+  }
+
   .pt-cabeca {
     min-width: 0;
   }
@@ -15,153 +40,146 @@
     white-space: nowrap;
   }
 
+  /* Segunda linha do título: o corpo de h3 (24/30 em 390, 36/42 em 1440) em itálico. A escala de h1 é só do nome. */
   .pt-segunda-linha {
-    margin: 0;
+    margin: 12px 0 0;
     font-family: var(--fonte-titulo);
-    font-size: clamp(42px, 4vw + 26.4px, 84px);
-    line-height: clamp(46px, 4vw + 30.4px, 88px);
+    font-size: clamp(24px, 1.143vw + 19.543px, 36px);
+    line-height: clamp(30px, 1.143vw + 25.543px, 42px);
     font-style: italic;
-    font-weight: 600;
-    letter-spacing: -0.02em;
+    font-weight: 500;
+    letter-spacing: -0.01em;
     text-wrap: balance;
   }
 
-  /* Grade: no celular empilha na ordem do DOM (título, índice, texto); a partir de 1100, o título corre pela
-     largura toda e, abaixo dele, o texto na coluna da esquerda (70 caracteres) e o painel na da direita. */
-  .pt-grade {
+  /* O botão de ação principal e o cartão de e-mail: logo depois do texto da abertura. */
+  .pt-cabeca > .pt-acao,
+  .pt-cabeca > .pt-email {
+    margin-top: 24px;
+  }
+
+  /* Figura da abertura: o painel de mel e, logo abaixo dele, a frase de apoio. */
+  .pt-figura {
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: clamp(24px, 2.857vw + 12.857px, 48px);
-    align-items: start;
+    justify-items: stretch;
+    gap: 12px;
+    min-width: 0;
   }
 
-  /* Abaixo de 1100 px o painel não tem cartão, fundo nem respiro lateral: o índice começa no mesmo x do
-     título, do parágrafo e da figura (a margem da página). */
-  .cm-painel.pt-painel {
-    padding: 0;
-    border-radius: 0;
-    background-color: transparent;
+  /* Painel de mel: só o desenho, e do tamanho dele. O painel abraça a figura (fit-content): largura da figura mais o
+     respiro de 24 de cada lado, no máximo a da coluna, e fica centrado nela (a coluna toda no celular, a da direita
+     da abertura em tela larga), o mesmo nas seis páginas. Sem largura mínima, sem respiro a mais: a figura ocupa a
+     área interna inteira. A figura tem a altura fixa (220 no celular, 300 em tela larga) e a largura que o traço
+     pedir (se não couber, encolhe dentro da caixa, sem recorte). No celular o painel tem uns 268 px de altura,
+     abaixo de 40% da janela de 844 px. */
+  .pt-figura > .cm-painel.pt-painel {
+    box-sizing: border-box;
+    inline-size: fit-content;
+    max-inline-size: 100%;
+    justify-self: center;
+    padding: 24px;
   }
 
-  /* A frase de apoio só existe no painel largo. */
+  /* A frase de apoio, no degrau h4 da escala (20/26 em 390, 24/30 em 1440), embaixo do painel. */
   .pt-apoio {
-    display: none;
     margin: 0;
     font-family: var(--fonte-titulo);
-    font-size: 1.5rem;
-    line-height: 1.875rem;
+    font-size: 1.25rem;
+    line-height: 1.625rem;
     font-style: italic;
     font-weight: 500;
     text-wrap: balance;
   }
 
-  /* O desenho aparece uma vez só: solto na leitura (depois da primeira seção) abaixo de 1100 px, no painel
-     de 1100 em diante. `display: none` tira o outro do leitor de tela. */
+  /* O desenho é um traço preto sobre o mel: inteiro dentro da caixa, centrado, sem recorte. */
   .pt-ilustracao {
-    object-fit: contain;
-  }
-
-  .pt-ilustracao.pt-ilustracao-painel {
-    display: none;
-  }
-
-  .pt-leitura > .pt-ilustracao.pt-ilustracao-leitura {
     display: block;
-    width: 100%;
-    height: 180px;
-    margin-top: 32px;
-    object-position: left;
+    width: auto;
+    max-width: 100%;
+    height: 220px;
+    margin: 0 auto;
+    object-fit: contain;
+    object-position: center;
   }
 
   @media (min-width: 1100px) {
-    .pt-grade {
-      grid-template-columns: minmax(0, 49ch) minmax(280px, 34rem);
-      grid-template-rows: auto 1fr;
-      justify-content: space-between;
-      column-gap: 48px;
+    .pt-abertura {
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+      gap: 48px;
+      align-items: center;
     }
 
-    .pt-cabeca {
-      grid-column: 1 / -1;
-      grid-row: 1;
+    .pt-segunda-linha {
+      margin-top: 16px;
     }
 
-    .pt-leitura {
-      grid-column: 1;
-      grid-row: 2;
+    .pt-cabeca > .pt-acao,
+    .pt-cabeca > .pt-email {
+      margin-top: 48px;
     }
 
-    .cm-painel.pt-painel {
-      grid-column: 2;
-      grid-row: 2;
-      justify-self: end;
-      width: 100%;
-      max-width: 34rem;
-      padding: 32px;
-      border-radius: var(--radius-painel);
-      background-color: var(--color-areia);
+    /* A figura preenche a coluna da direita da abertura; a frase de apoio fica à direita, embaixo do painel. */
+    .pt-figura {
+      gap: 16px;
     }
 
     .pt-apoio {
-      display: block;
-      margin-bottom: 24px;
+      font-size: 1.5rem;
+      line-height: 1.875rem;
+      text-align: end;
     }
 
-    /* 190 de altura: o painel de 10 itens (Privacidade) cabe inteiro na janela de 900, mesmo fixo. */
-    .pt-ilustracao.pt-ilustracao-painel {
-      display: block;
-      width: 100%;
-      height: 190px;
-      margin-top: 24px;
-    }
-
-    .pt-leitura > .pt-ilustracao.pt-ilustracao-leitura {
-      display: none;
+    .pt-ilustracao {
+      height: 300px;
     }
   }
 
-  /* O painel acompanha a leitura, mas só até onde cabe: a altura máxima é a da janela menos o cabeçalho e
-     48 px (24 em cima, 24 embaixo), e o que passar disso rola dentro do painel. Assim todo link do índice,
-     ao receber o foco por Tab, é rolado para a vista (o navegador rola o painel), em qualquer altura de
-     janela e com texto ampliado. Em janela baixa demais (menos de 560 px) o painel não fica fixo e rola
-     com a página. Ele fica na célula da leitura, então nunca passa por cima do rodapé. */
-  @media (min-width: 1100px) and (min-height: 560px) {
-    .cm-painel.pt-painel {
-      position: sticky;
-      top: calc(var(--cm-cabecalho) + 24px);
-      box-sizing: border-box;
-      max-height: calc(100vh - var(--cm-cabecalho) - 48px);
-      max-height: calc(100dvh - var(--cm-cabecalho) - 48px);
-      overflow-y: auto;
-      overscroll-behavior: contain;
-      scroll-padding-block: 24px;
-    }
+  /* A coluna de leitura: o índice e a leitura têm a mesma largura e o mesmo eixo, no meio da página. */
+  .pt-indice,
+  .pt-leitura {
+    box-sizing: border-box;
+    inline-size: 100%;
+    max-inline-size: var(--pt-coluna);
+    margin-inline: auto;
   }
 
-  /* Índice "Nesta página" */
+  /* O mesmo fio abre o índice, o parágrafo de abertura e cada seção: nenhum fio por bloco a mais, nenhum a menos. */
+  .pt-indice,
+  .pt-leitura > .cm-lide,
+  .pt-leitura > .pt-secao {
+    border-top: 1px solid var(--cor-fio-suave);
+    padding-top: 32px;
+  }
+
+  /* Índice "Nesta página": corpo pequeno (15/22), uma lista vertical só nas seis páginas. */
   .pt-indice {
-    margin: 0;
+    margin-block: 0;
   }
 
   .pt-indice-rotulo {
-    margin: 0 0 4px;
+    margin: 0;
     font-family: var(--fonte-texto);
-    font-size: 1rem;
-    line-height: 1.5rem;
+    font-size: 0.9375rem;
+    line-height: 1.375rem;
     font-weight: 600;
   }
 
   .pt-indice-lista {
-    margin: 0;
+    margin: 4px 0 0;
     padding: 0;
     list-style: none;
   }
 
-  /* Em tela estreita o índice é um <details> fechado: o resumo é uma linha de 48 px com a seta, entre dois
-     filetes, sem fundo. */
-  .pt-indice-detalhes {
-    border-top: 1px solid var(--cor-fio-suave);
-    border-bottom: 1px solid var(--cor-fio-suave);
+  /* Em tela estreita o índice é um <details> fechado: o resumo é uma linha de 48 px com a seta, sem fundo.
+     O fio de cima é o do próprio índice. */
+  .pt-indice:has(> .pt-indice-detalhes) {
+    padding-top: 0;
+  }
+
+  /* Com o índice recolhido, o fio do bloco seguinte vem logo depois da linha de 48 px: o respiro entre os dois é o
+     da própria linha, e não mais 40 de papel a mais (sobrava uma faixa vazia de uns 70 px). */
+  .pt-indice:has(> .pt-indice-detalhes) + .pt-leitura {
+    margin-top: 0;
   }
 
   .pt-indice-resumo {
@@ -172,8 +190,8 @@
     box-sizing: border-box;
     min-height: 48px;
     font-family: var(--fonte-texto);
-    font-size: 1rem;
-    line-height: 1.5rem;
+    font-size: 0.9375rem;
+    line-height: 1.375rem;
     font-weight: 600;
     list-style: none;
     cursor: pointer;
@@ -187,17 +205,14 @@
     transform: rotate(180deg);
   }
 
-  .pt-indice-lista > li + li {
-    border-top: 1px solid var(--cor-fio-suave);
-  }
-
   .pt-indice-link {
     display: flex;
     align-items: center;
     box-sizing: border-box;
     padding-block: 6px;
     color: inherit;
-    font-size: 1rem;
+    font-family: var(--fonte-texto);
+    font-size: 0.9375rem;
     line-height: 1.375rem;
     text-decoration-line: underline;
     text-decoration-thickness: 1.5px;
@@ -208,31 +223,37 @@
     text-decoration-thickness: 3px;
   }
 
-  /* Coluna de leitura: Outfit 18/28. O "0" do Outfit é largo (1 ch ≈ 11,8 px, e a letra média ≈ 8,1 px), então
-     70 ch dariam umas 100 letras por linha; 49 ch (uns 580 px) dão as 68 a 72 letras por linha pedidas. */
+  /* Leitura: Outfit 18/28 numa coluna de 680 px (uns 80 letras por linha), centrada. As seções se separam por
+     40 de papel e o fio de cima (acima). */
   .pt-leitura {
-    max-inline-size: 49ch;
+    margin-top: var(--pt-respiro);
     font-family: var(--fonte-texto);
     font-size: 1.125rem;
     line-height: 1.75rem;
   }
 
   .pt-leitura > * + * {
-    margin-top: 24px;
+    margin-top: 40px;
   }
 
-  .pt-leitura > .cm-lide {
-    max-width: none;
-  }
-
-  /* Bloco de e-mail (Contato): cartão de papel claro no topo da leitura, sem sombra. */
+  /* Cartão de e-mail (Contato): o rótulo, o endereço e o botão, e mais nada. Texto e botão lado a lado quando
+     cabem; senão, um sobre o outro. */
   .pt-email {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px 24px;
     box-sizing: border-box;
-    padding: 24px;
+    padding: 20px 24px;
     border: 1px solid var(--cor-fio-suave);
     border-radius: var(--radius-cartao);
     background-color: var(--cor-cartao);
     color: var(--color-cacau);
+  }
+
+  .pt-email-dados {
+    min-width: 0;
   }
 
   .pt-email-rotulo {
@@ -243,42 +264,13 @@
   }
 
   .pt-email-endereco {
-    margin: 4px 0 0;
+    margin: 2px 0 0;
     font-family: var(--fonte-texto);
     font-style: normal;
     font-size: 1.125rem;
     line-height: 1.75rem;
     font-weight: 700;
     overflow-wrap: anywhere;
-  }
-
-  .pt-email > .cm-botao {
-    margin-top: 16px;
-  }
-
-  /* Botão de rota depois do texto (Exclusão de conta). */
-  .pt-texto > .pt-acao {
-    padding-top: 8px;
-  }
-
-  .pt-leitura > .pt-secao {
-    margin-top: 40px;
-    padding-top: 32px;
-    border-top: 1px solid var(--cor-fio-suave);
-  }
-
-  /* Abaixo de 1100 px o filete de baixo do índice já separa: a primeira seção não leva o seu. */
-  .pt-leitura > .pt-secao:first-child {
-    margin-top: 0;
-    padding-top: 0;
-    border-top: 0;
-  }
-
-  @media (min-width: 1100px) {
-    .pt-leitura > .pt-secao:first-child {
-      padding-top: 32px;
-      border-top: 1px solid var(--cor-fio-suave);
-    }
   }
 
   /* h2 em Literata: 36/42 em 1440 e 24/30 em 390 (o degrau h3 da escala; o h2 de 56 é de página de venda). */
@@ -369,6 +361,27 @@
 
   .pt-lista > li + li {
     margin-top: 8px;
+  }
+
+  /* Lista de 4 itens ou mais e só de itens curtos: corre em duas colunas dentro da coluna de leitura (a ordem
+     segue de cima para baixo e as colunas se equilibram). Lista de itens longos fica numa coluna só. */
+  @media (min-width: 640px) {
+    .pt-lista.pt-lista-colunas {
+      columns: 2;
+      column-gap: 40px;
+    }
+
+    .pt-lista-colunas > li {
+      break-inside: avoid;
+    }
+
+    .pt-lista-colunas > li + li {
+      margin-top: 0;
+    }
+
+    .pt-lista-colunas > li:not(:last-child) {
+      margin-bottom: 8px;
+    }
   }
 
   .pt-titulados p {

@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { fireEvent, screen, within } from '@testing-library/react'
 import { DESCRICAO_ILUSTRACAO } from './componentes/campo/Ilustracao.tsx'
@@ -11,6 +13,38 @@ function textoLido(elemento: Element): string {
   const copia = elemento.cloneNode(true) as Element
   for (const escondido of copia.querySelectorAll('[aria-hidden="true"]')) escondido.remove()
   return (copia.textContent ?? '').replace(/\s+/g, ' ').trim()
+}
+
+type RegraCss = { seletores: string[]; midia: string | null; corpo: string }
+
+/** As regras de um CSS sem comentários, cada uma com o @media em que está (null na base). */
+function lerRegrasCss(relativo: string): RegraCss[] {
+  const css = readFileSync(join(process.cwd(), 'src', relativo), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
+  const regras: RegraCss[] = []
+  const midias: string[] = []
+  let inicio = 0
+  for (let i = 0; i < css.length; i++) {
+    if (css[i] === '{') {
+      const preludio = css.slice(inicio, i).trim()
+      if (preludio.startsWith('@')) {
+        midias.push(preludio)
+        inicio = i + 1
+      } else {
+        const fim = css.indexOf('}', i)
+        regras.push({
+          seletores: preludio.split(',').map((seletor) => seletor.trim().replace(/\s+/g, ' ')),
+          midia: midias.length > 0 ? midias[midias.length - 1] : null,
+          corpo: css.slice(i + 1, fim),
+        })
+        i = fim
+        inicio = fim + 1
+      }
+    } else if (css[i] === '}') {
+      midias.pop()
+      inicio = i + 1
+    }
+  }
+  return regras
 }
 
 function abrirInicio() {
@@ -87,6 +121,35 @@ describe('Início: números e selos', () => {
     ])
   })
 
+  it('abaixo de 768 os 3 números ficam empilhados com fios horizontais; a fileira de 3 com fios verticais só de 768 em diante (DESIGN.md 4)', () => {
+    const regras = lerRegrasCss('componentes/inicio/inicio.css')
+    const doSeletor = (seletor: string) => regras.filter((regra) => regra.seletores.includes(seletor))
+    const doTablet = (regra: RegraCss) => regra.midia !== null && /min-width:\s*768px/.test(regra.midia)
+    const colunas = (regra: RegraCss) => /grid-template-columns:\s*([^;]+)/.exec(regra.corpo)?.[1].trim()
+
+    const lista = doSeletor('.in-numeros-lista')
+    const listaBase = lista.filter((regra) => regra.midia === null)
+    expect(listaBase.length).toBeGreaterThan(0)
+    // Na base (o celular), uma coluna só, ou nenhuma grade declarada.
+    for (const regra of listaBase) {
+      const valor = colunas(regra)
+      if (valor !== undefined) expect(valor).toMatch(/^(minmax\(0, 1fr\)|1fr)$/)
+    }
+    // A grade de 3 colunas existe, e só dentro do bloco de 768 em diante.
+    const comTres = lista.filter((regra) => /repeat\(3/.test(regra.corpo))
+    expect(comTres.length).toBeGreaterThan(0)
+    for (const regra of comTres) expect(doTablet(regra)).toBe(true)
+
+    const vizinho = doSeletor('.in-numeros-item + .in-numeros-item')
+    // O fio vertical só de 768 em diante.
+    const comVertical = vizinho.filter((regra) => /border-left:\s*1px solid/.test(regra.corpo))
+    expect(comVertical.length).toBeGreaterThan(0)
+    for (const regra of comVertical) expect(doTablet(regra)).toBe(true)
+    // Na base, o fio horizontal entre um número e o seguinte.
+    const vizinhoBase = vizinho.filter((regra) => regra.midia === null)
+    expect(vizinhoBase.some((regra) => /border-top:\s*1px solid var\(--cor-fio-suave\)/.test(regra.corpo))).toBe(true)
+  })
+
   it('os selos ficam numa seção com o h2 "O que o app promete" e trazem os cinco selos uma vez para o leitor', () => {
     abrirInicio()
     const secao = screen.getByRole('region', { name: 'O que o app promete' })
@@ -125,6 +188,11 @@ describe('Início: troca de turno', () => {
     expect(cartao.getAttribute('data-giro')).toBe('2')
     expect(['baixo-direita', 'topo-direita']).toContain(cartao.getAttribute('data-posicao'))
     expect(cartao.querySelector('img')).toBeNull()
+    // POL, devolução 2: o cartão é da coluna do desenho, embaixo dele (um não cobre o outro).
+    const arte = painel.querySelector('.in-turno-arte')!
+    expect(cartao.parentElement).toBe(arte)
+    const desenho = arte.querySelector('img[data-ilustracao="maos-celular"]')!
+    expect(desenho.compareDocumentPosition(cartao) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
 
     const linhas = within(cartao).getAllByRole('listitem')
     expect(
@@ -272,7 +340,8 @@ describe('Início: citação e depoimentos', () => {
     for (const menor of menores) expect(menor.closest('[data-painel]')).toBeNull()
 
     const desenhos = [grande, ...menores].map((relato) => relato.querySelector('img[data-ilustracao]')!)
-    expect(desenhos.map((img) => img.getAttribute('data-ilustracao'))).toEqual(['mae-noite', 'pai-colo', 'tummy-time'])
+    // A babá do relato é a que brinca no tapete (POL, devolução item 6), não a figura do bebê.
+    expect(desenhos.map((img) => img.getAttribute('data-ilustracao'))).toEqual(['mae-noite', 'pai-colo', 'baba-tapete'])
     // Enfeite: o nome e o papel já dizem quem fala.
     expect(desenhos.map((img) => img.getAttribute('alt'))).toEqual(['', '', ''])
     expect(
@@ -340,11 +409,15 @@ describe('Início: perguntas', () => {
     expect(avo.getAttribute('loading')).toBe('eager')
     const lista = secao.querySelector('[data-acordeao]')!
     expect(avo.compareDocumentPosition(lista) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    // POL, devolução 4: o retrato abre a cabeça da seção, antes do título, no mesmo bloco dele.
+    const titulo = within(secao).getByRole('heading', { level: 2 })
+    expect(avo.parentElement).toBe(titulo.parentElement)
+    expect(avo.compareDocumentPosition(titulo) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 })
 
 describe('Início: fechamento', () => {
-  it('é um painel de cacau (não se funde com o rodapé de mel) com uma frase e um só clicável, "Começar grátis", e a babá no tapete', () => {
+  it('é um painel de cacau (não se funde com o rodapé de mel) com uma frase e um só clicável, "Começar grátis", e o bebê no tapete', () => {
     abrirInicio()
     const painel = screen.getByRole('region', { name: 'Sua família inteira no mesmo dia.' })
     expect(painel.getAttribute('data-painel')).toBe('cacau')
@@ -354,15 +427,21 @@ describe('Início: fechamento', () => {
     expect(primario.getAttribute('href')).toBe('/app/hoje')
     expect(primario.getAttribute('data-botao')).toBe('primario')
 
-    const baba = within(painel).getByRole('img', { name: DESCRICAO_ILUSTRACAO['baba-tapete'] })
-    expect(baba.getAttribute('data-ilustracao')).toBe('baba-tapete')
-    // Carrega na hora: sem ela, sobraria só o papel vazio acima do painel.
-    expect(baba.getAttribute('loading')).toBe('eager')
-    // A babá é a primeira coisa do painel, num disco de mel por cima da borda de cima, antes do título:
-    // o traço preto nunca fica sobre o cacau.
+    // A babá no tapete está nos relatos; aqui vai o desenho que sobra, para nenhum se repetir na página.
+    const desenho = within(painel).getByRole('img', { name: DESCRICAO_ILUSTRACAO['tummy-time'] })
+    expect(desenho.getAttribute('data-ilustracao')).toBe('tummy-time')
+    // Carrega na hora: sem ele, sobraria só o disco vazio na borda do painel.
+    expect(desenho.getAttribute('loading')).toBe('eager')
+    // O desenho é a primeira coisa do painel, num disco de mel por cima da borda de cima, antes do
+    // título: o traço preto nunca fica sobre o cacau.
     const disco = painel.firstElementChild!
     expect(disco.classList.contains('in-fechamento-disco')).toBe(true)
-    expect(disco.firstElementChild).toBe(baba)
+    expect(disco.firstElementChild).toBe(desenho)
+    // Os seis desenhos da página são todos diferentes.
+    const nomes = [...screen.getByRole('main').querySelectorAll('img[data-ilustracao]')].map((img) =>
+      img.getAttribute('data-ilustracao'),
+    )
+    expect(new Set(nomes).size).toBe(nomes.length)
   })
 
   it('"Começar grátis" aparece duas vezes, na abertura e no fechamento, sempre para /app/hoje', () => {

@@ -34,9 +34,10 @@ function irParaSecao(evento: MouseEvent<HTMLAnchorElement>, id: string) {
 }
 
 /**
- * O índice "Nesta página": um link sublinhado, de 44 px no mínimo, para cada `h2` da página. Em tela larga
- * ele fica inteiro à vista; em tela estreita vira um `<details>` fechado ("Nesta página", 44 px no mínimo),
- * para a primeira tela mostrar o texto.
+ * O índice "Nesta página": um link sublinhado, de 44 px no mínimo, para cada `h2` da página, numa lista
+ * vertical só, igual nas seis páginas. Em tela larga ele fica entre a abertura e a leitura, na coluna de
+ * leitura; em tela estreita vira um `<details>` fechado ("Nesta página", 44 px no mínimo), para a primeira
+ * tela mostrar o texto.
  */
 export function IndiceDaPagina({ secoes }: { secoes: readonly SecaoDeLeitura['secao'][] }) {
   const idRotulo = useId()

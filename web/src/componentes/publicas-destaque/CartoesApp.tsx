@@ -43,21 +43,19 @@ function Linha({ inicial, bebe = false, nome, detalhe, hora }: PropsLinha) {
   )
 }
 
-/** Passo 1: o convite aceito. */
+/** Passo 1: o convite aceito. O papel fica na coluna do nome, alinhado a ele e não ao selo. */
 export function CartaoConvite() {
   const c = CF.convite
   return (
-    <div className="pd-cartao">
-      <div className="pd-cartao-cabeca">
-        <span className="pd-selo-ok" aria-hidden="true">
-          <Check strokeWidth={2.25} />
-        </span>
-        <div>
-          <p className="pd-cartao-rotulo">{c.rotulo}</p>
-          <p className="pd-cartao-titulo">{c.pessoa}</p>
-        </div>
+    <div className="pd-cartao pd-cartao-cabeca">
+      <span className="pd-selo-ok" aria-hidden="true">
+        <Check strokeWidth={2.25} />
+      </span>
+      <div>
+        <p className="pd-cartao-rotulo">{c.rotulo}</p>
+        <p className="pd-cartao-titulo">{c.pessoa}</p>
+        <p className="pd-cartao-detalhe pd-mt-2">{c.papel}</p>
       </div>
-      <p className="pd-cartao-detalhe">{c.papel}</p>
     </div>
   )
 }

@@ -1,11 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { fireEvent, screen } from '@testing-library/react'
 import axe from 'axe-core'
-import { criarEstadoInicial, type EstadoPrototipo } from './prototipo/estado.ts'
-import { renderizarRota } from './teste/renderizarRota.tsx'
-
-const claro = (): EstadoPrototipo => criarEstadoInicial(Date.now())
-const madrugada = (): EstadoPrototipo => ({ ...criarEstadoInicial(Date.now()), madrugada: true })
+import { renderizarRota, renderizarRotaPronta, aguardarCarga } from './teste/renderizarRota.tsx'
+import { semSessaoEmAndamento } from './teste/rotina.fixture.ts'
 
 async function violacoes(container: HTMLElement): Promise<string[]> {
   const resultado = await axe.run(container, {
@@ -34,50 +31,54 @@ describe('acessibilidade (axe-core)', () => {
     expect(await violacoes(container)).toEqual([])
   })
 
-  const temas: Array<[string, () => EstadoPrototipo]> = [
-    ['claro', claro],
-    ['madrugada', madrugada],
+  const temas: Array<[string, boolean]> = [
+    ['claro', false],
+    ['madrugada', true],
   ]
 
-  for (const [tema, estado] of temas) {
+  for (const [tema, madrugada] of temas) {
     it(`não tem violações no Hoje (${tema})`, async () => {
-      const { container } = renderizarRota('/app/hoje', { estadoInicial: estado() })
-      await screen.findByRole('heading', { level: 1 })
-      expect(document.documentElement.hasAttribute('data-tema')).toBe(tema === 'madrugada')
+      const { container } = await renderizarRotaPronta('/app/hoje', { madrugada })
+      expect(document.documentElement.hasAttribute('data-tema')).toBe(madrugada)
 
       expect(await violacoes(container)).toEqual([])
     })
 
     it(`não tem violações na Sessão (${tema})`, async () => {
-      const { container } = renderizarRota('/app/sessao', { estadoInicial: estado() })
-      await screen.findByRole('heading', { level: 1 })
-      expect(document.documentElement.hasAttribute('data-tema')).toBe(tema === 'madrugada')
+      const { container } = await renderizarRotaPronta('/app/sessao', { madrugada })
+      expect(document.documentElement.hasAttribute('data-tema')).toBe(madrugada)
+
+      expect(await violacoes(container)).toEqual([])
+    })
+
+    it(`não tem violações no formulário de registro (${tema})`, async () => {
+      const { container } = await renderizarRotaPronta('/app/registro/novo?tipo=mamadeira', { madrugada })
 
       expect(await violacoes(container)).toEqual([])
     })
   }
 
   it('não tem violações na Sessão vazia', async () => {
-    const { container } = renderizarRota('/app/sessao', { estadoInicial: { ...claro(), sessao: null } })
-    await screen.findByRole('heading', { level: 1 })
+    const { container } = await renderizarRotaPronta('/app/sessao', { ajustarRotina: semSessaoEmAndamento })
 
     expect(await violacoes(container)).toEqual([])
   })
 
-  it('não tem violações no Hoje com a fralda registrada (confirmação e escolha do tipo) e o Mais aberto', async () => {
-    const { container } = renderizarRota('/app/hoje')
+  it('não tem violações no Hoje com o painel da fralda, a fralda registrada (confirmação) e o Mais aberto', async () => {
+    const { container } = await renderizarRotaPronta('/app/hoje')
     fireEvent.click(screen.getByRole('button', { name: 'Registrar fralda de Heloísa' }))
-    expect(screen.getByRole('group', { name: 'Tipo da fralda' })).toBeTruthy()
+    expect(screen.getByRole('group', { name: 'Fralda de Heloísa' })).toBeTruthy()
     expect(await violacoes(container)).toEqual([])
 
     fireEvent.click(screen.getByRole('button', { name: 'Xixi' }))
+    await aguardarCarga()
     expect(screen.getByRole('status').textContent).toContain('Fralda registrada: Xixi')
     fireEvent.click(screen.getByRole('button', { name: 'Mais registros' }))
     expect(await violacoes(container)).toEqual([])
   })
 
   it('não tem violações na Sessão com a nota e com a pergunta de descarte abertas', async () => {
-    const { container } = renderizarRota('/app/sessao')
+    const { container } = await renderizarRotaPronta('/app/sessao')
 
     fireEvent.click(screen.getByRole('button', { name: 'Encerrar e anotar' }))
     expect(await violacoes(container)).toEqual([])

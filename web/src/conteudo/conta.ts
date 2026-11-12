@@ -88,7 +88,7 @@ export const COMUM = {
 export const CABECALHO = {
   navegacao: 'Conta',
   conta: 'Conta',
-  prototipo: 'Ver o protótipo do Hoje',
+  irParaHoje: 'Ir para o Hoje',
   sair: 'Sair',
 } as const
 

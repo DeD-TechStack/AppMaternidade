@@ -2,6 +2,7 @@ import { Botao } from '../../componentes/base/Botao.tsx'
 import { CartaoFlutuante } from '../../componentes/campo/CartaoFlutuante.tsx'
 import { CenaEstudio } from '../../componentes/campo/CenaEstudio.tsx'
 import { FaixaCacau } from '../../componentes/campo/FaixaCacau.tsx'
+import { Ilustracao } from '../../componentes/campo/Ilustracao.tsx'
 import { Numeros } from '../../componentes/campo/Numeros.tsx'
 import { Titulo } from '../../componentes/campo/Titulo.tsx'
 import { Abertura } from '../../componentes/publicas-destaque/Abertura.tsx'
@@ -18,15 +19,14 @@ import { COMO_FUNCIONA_DESTAQUE as T } from '../../conteudo/publicas-destaque.ts
 
 /**
  * /como-funciona: a abertura com a cena de estúdio (sem nada por cima do aparelho), os três momentos
- * da rotina (um painel de campo por passo, com a tela de exemplo de cada um; só a madrugada flutua),
- * o "para começar" e a faixa de cacau que leva ao protótipo, com os números ao lado. O aviso de
- * demonstração é o do rodapé da casca: a página não repete outro.
+ * da rotina (um painel de campo por passo, com a tela de exemplo de cada um; o convite e a madrugada
+ * são cartões girados), o "para começar" e a faixa de cacau que leva ao protótipo, com os números ao
+ * lado. O aviso de demonstração é o do rodapé da casca: a página não repete outro.
  */
 export function ComoFunciona() {
   return (
     <main className="pd-pagina">
       <Abertura
-        disposicao="lado"
         titulo={T.titulo}
         texto={
           <>
@@ -52,19 +52,24 @@ export function ComoFunciona() {
       />
 
       <section id="tres-momentos" className="pd-secao" aria-labelledby="como-momentos">
-        <CabecaDeSecao id="como-momentos" titulo={T.momentos.titulo} junta>
+        <CabecaDeSecao id="como-momentos" titulo={T.momentos.titulo}>
           <p className="cm-corpo cm-texto-2">{T.momentos.texto}</p>
         </CabecaDeSecao>
         <ListaDePassos
           passos={T.passos}
           midias={[
-            <div key="primeira-semana" className="pd-pilha">
-              <CartaoPlano>
-                <CartaoConvite />
-              </CartaoPlano>
-              <CartaoPlano>
-                <CartaoPrimeirosRegistros />
-              </CartaoPlano>
+            <div key="primeira-semana" className="pd-passo-um">
+              <div className="pd-chao pd-passo-desenho">
+                <Ilustracao nome="pai-colo" carregamento="eager" />
+              </div>
+              <div className="pd-pilha">
+                <CartaoFlutuante giro={-2} className="pd-em-fluxo">
+                  <CartaoConvite />
+                </CartaoFlutuante>
+                <CartaoPlano>
+                  <CartaoPrimeirosRegistros />
+                </CartaoPlano>
+              </div>
             </div>,
             <CartaoFlutuante key="madrugada" giro={2} className="pd-em-fluxo pd-cartao-noite">
               <CartaoMadrugada />
@@ -77,22 +82,20 @@ export function ComoFunciona() {
       </section>
 
       <section className="pd-secao cm-area pd-duas" aria-labelledby="como-comecar">
-        <Titulo nivel="h2" id="como-comecar" linhas={T.comecar.titulo} />
+        <div className="pd-duas-titulo">
+          <Titulo nivel="h2" id="como-comecar" linhas={T.comecar.titulo} />
+          <p className="cm-lide">{T.comecar.textos[0]}</p>
+        </div>
         <div className="pd-duas-texto">
-          {T.comecar.textos.map((texto) => (
-            <p key={texto} className="cm-lide">
-              {texto}
-            </p>
-          ))}
+          <p className="cm-lide">{T.comecar.textos[1]}</p>
         </div>
       </section>
 
       <div className="pd-secao pd-secao-perto">
-        <FaixaCacau brilho aria-labelledby="como-fechamento">
+        <FaixaCacau aria-labelledby="como-fechamento">
           <div className="pd-faixa pd-faixa-com-numeros">
             <div className="pd-faixa-lado">
               <Titulo nivel="h2" id="como-fechamento" linhas={T.fechamento.titulo} />
-              <p className="cm-lide">{T.fechamento.texto}</p>
               <Botao variante="mel" to={T.fechamento.acao.destino}>
                 {T.fechamento.acao.rotulo}
               </Botao>
