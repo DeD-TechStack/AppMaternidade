@@ -511,3 +511,5 @@ Nenhuma tarefa de implementação (MAT-17 a MAT-19) começa sem pedido dele.
 - **12/11 06h00:** P-61 t_bc1629ca em revisão (evidência POL-INI v2 e POL-TXT v2 no 48ba136; nenhum defeito de produto confirmado; candidatos I-1, I-2, T-1 para o revisor). Ferramenta `ferramentas/captura/capturar.mjs` agora rola a página e espera as imagens antes da página inteira (achado I-4: ilustrações lazy saíam em branco). Rodapé "Legal" sozinho a 390 levado à P-50.
 
 - **12/11 06h30:** 38b r2: R1-R6 fechados (20/20 sondas); R7 voltou 2ª vez -> correção 2/2 com a lista exata do líder (comentário 645), R7b oráculo de sono por janela. MAT-48e r1 devolvida (madrugada em rota pública sai exit 2; comentário 644). 37b g3 e 38b dependem da MAT-48e para a rodada de madrugada a 390.
+
+- **12/11 06h50:** POL-DES v2 t_3fd302a6 APPROVED_WITH_LIMITS (cb9e1e1) integrada por ff 48ba136..cb9e1e1 (check 2300, commits OK 374, push; recibo 650). Juízes pol_destaque_r2 (última volta) rodando.
