@@ -360,3 +360,17 @@ Só 0, 4, 8 e 50%. Etiqueta e campo no celular: 4. Botão, moldura dupla e mídi
 - Não faça: copiar layout, texto, imagem, marca ou cor de outro site. Só a estrutura é estudada.
 - Não faça: número de "prova social" sem fonte real nem depoimento inventado.
 - Não faça: fonte sem licença nem texto essencial dentro de imagem.
+
+## MAT-38b
+
+Histórico, detalhe do registro, lixeira e notas. Nenhuma direção nova: as telas usam os tokens, o `h1` com foco programático, o item de registro e a confirmação do 38a. Cores só por token (`--cor-*`, `--color-oliva`, `--color-mel`), sem sombra, gradiente, filtro nem caixa alta.
+
+- **Linha do dia (Histórico):** hora em `tabular-nums`, ícone do tipo (`lucide-react`, `aria-hidden`) com o texto do tipo e dos detalhes, e "por <nome>". O link do texto cobre a linha inteira (`.rotina-link-esticado`), então o alvo passa de 44 px. Fio fino entre as linhas, sem cartão.
+- **Seletor de dia:** "Dia anterior", "Dia seguinte" (com `aria-disabled` em hoje, sem navegar), o campo de data com máximo em hoje e a fila dos 7 dias que terminam no dia escolhido (`.rotina-fila-de-dias`, sete colunas iguais, sem rolagem horizontal em 390 px). O dia escolhido leva `aria-current="date"` e contorno de tinta.
+- **Filtros:** botões de alternância com `aria-pressed`, um por tipo, mais "Todos". Nunca há zero tipos: desligar o último volta a "Todos". Só na vista do dia. Estado na URL (`dia`, `tipos`, `vista`), nessa ordem.
+- **Totais do dia:** lista de definição com Sono, Mamadas, Mamadeiras (com os ml) e Fraldas (com a divisão). Só totais, sem meta nem comparação.
+- **Semana:** uma linha por dia (`.rotina-semana-linha`): em 390 px o dia em cima e os totais em duas colunas; a partir de 768, uma linha só. A barra do sono (`.rotina-barra`, oliva; mel na madrugada) é decorativa, `aria-hidden`, e o valor sempre aparece em texto.
+- **Detalhe do registro:** lista de definição (início, fim, duração, detalhes, origem), autoria de quem criou e de quem encerrou, histórico de alterações e as ações Editar e Excluir. Excluir não pede confirmação: mostra "Registro excluído." com "Desfazer" e "Fechar" e leva ao Histórico.
+- **Lixeira:** lista do mais recente para o mais antigo, com quem excluiu, quando e até quando pode ser restaurado. "Restaurar" só para quem pode alterar o registro e mostra "Registro restaurado." com o link "Ver no Histórico".
+- **Notas:** a lista da família (texto, sobre quem, autor e data, "em destaque até"), com "Editar" e "Excluir" só para quem pode. Excluir pede a confirmação em grupo ("Excluir" e "Manter"), porque a nota não vai para a lixeira. O formulário tem Texto, Sobre (só na criação), Destaque e os botões Salvar e Cancelar; voltar, cancelar e salvar levam à origem (`/app/notas` ou `/app/hoje`).
+- **Foco e anúncios:** depois de Excluir, Desfazer, Fechar, Restaurar e Salvar o foco vai ao `h1` da tela; as confirmações aparecem na região `role="status"`.

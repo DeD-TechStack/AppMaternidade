@@ -88,6 +88,12 @@ describe('rotasDasAreas: o registro por área', () => {
       'app/sessao',
       'app/registro/novo',
       'app/registro/:id/editar',
+      'app/registro/:id',
+      'app/historico',
+      'app/lixeira',
+      'app/notas',
+      'app/notas/nova',
+      'app/notas/:id/editar',
     ])
   })
 
