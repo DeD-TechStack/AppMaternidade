@@ -325,6 +325,17 @@ A página logada `/app/desenvolvimento` e as rotas de item (`/app/desenvolviment
 - **Estados:** carregando, erro com "Tente de novo", sem família, sem bebê, fuso inválido, bebê arquivado e item que não existe, cada um com frase fixa.
 - **Tema e alvos:** segue o `data-tema` (madrugada incluída) e o `prefers-reduced-motion`; alvos de 56 px nas ações e 44 px nos links.
 
+### Painel de moderação (MAT-40b)
+
+As cinco telas do painel (Fila, Denúncia, Conteúdo, Auditoria e Papéis) moram na mesma moldura das telas logadas e usam só o que a base e a Comunidade já têm: casca, campos `cm-campo-*`, botões `cm-botao-*`, cartões e as variáveis `--cor-*`. Nenhum token, sombra, gradiente ou ícone novo.
+
+- **Selo e abas:** toda tela abre com o selo de uso interno e as abas Fila, Auditoria e Papéis (a aba Papéis só para admin), com a aba atual em destaque.
+- **Ação e decisão separadas:** na Denúncia e no Conteúdo, as ações sobre o conteúdo (ocultar, remover, restaurar) e a decisão sobre a denúncia (em análise, procedente, improcedente) ficam em seções distintas, cada uma com sua caixa de diálogo e o motivo de 1 a 300 caracteres.
+- **Exceção ao "Desfazer":** as ações do painel são reversíveis pela própria tela (restaurar, conceder de novo), mas nenhuma tem Desfazer. A confirmação vem antes, na caixa de diálogo, e o resultado fica na auditoria, que é a trilha oficial.
+- **Estados:** carregando, vazio, erro com frase fixa e "Tentar de novo", e envio com resultado incerto, que confere o banco antes de reenviar. Sem permissão, a tela mostra só a frase fixa e o link para a Comunidade.
+- **Papéis:** conceder, renovar e revogar partem do "Id da sua conta" que a pessoa copia da tela Conta; o aviso do último admin aparece na lista e na caixa de revogar.
+- **Tema e movimento:** seguem o `data-tema` e o `prefers-reduced-motion` da base, com alvos de 44 px e foco visível.
+
 ## Elevation & Depth
 
 Plano. Profundidade vem de linha, cor, espaço, escala e, nos aparelhos de mídia, de inclinação em CSS 3D. Nenhum `box-shadow`, nenhum `backdrop-filter` e nenhum `filter: blur`.
