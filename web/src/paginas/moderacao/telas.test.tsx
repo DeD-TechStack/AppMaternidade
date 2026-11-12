@@ -396,7 +396,7 @@ describe('M2: a denúncia e as ações (MAT-40:RF-04 e RF-05)', () => {
     expect(screen.queryByRole('dialog')).toBeNull()
     expect(moderar).toHaveBeenCalledTimes(1)
     expect(moderar).toHaveBeenCalledWith({ tipo: 'topico', id: CONTEUDO.topicoDoAutor }, 'oculto', 'Motivo da ocultação', id)
-    expect(document.activeElement).not.toBe(document.body)
+    await waitFor(() => expect(document.activeElement).not.toBe(document.body))
   })
 
   it('o estado do conteúdo muda na memória, a auditoria tem a linha, e o botão "Ocultar" dá lugar a "Restaurar"', async () => {
