@@ -1,7 +1,12 @@
 // Testes da parte pura do medidor (node --test web/scripts/medir-dom.test.mjs). Para cada regra
 // (G1, G11, G12, FONTES, CAIXA, SOMBRA, 3D): um caso que passa, um que falha e a falha fechada.
 import assert from 'node:assert/strict'
-import { describe, it } from 'node:test'
+import { spawnSync } from 'node:child_process'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { after, describe, it } from 'node:test'
 import { JSDOM, VirtualConsole } from 'jsdom'
 import {
   REGRAS,
@@ -24,6 +29,7 @@ import {
   g12,
   lerArgumentos,
   linhaNaoSeAplica,
+  naoSeAplicaSemAbrir,
   palavrasEmCaixaAlta,
   parseCor,
   primeiraFamilia,
@@ -1776,14 +1782,22 @@ describe('argumentos e loopback', () => {
     ])
   })
 
-  it('recusa tema e formato inválidos, e o Início em madrugada', () => {
+  it('o Início em madrugada não é mais erro de uso: o pedido é aceito (o "não se aplica" vem depois)', () => {
+    const { pedidos } = lerArgumentos(['p', 'inicio:madrugada:1440x900', 'inicio:madrugada:390x844', 'inicio:claro:390x844'])
+    assert.deepEqual(pedidos, [
+      { caso: 'inicio', tema: 'madrugada', largura: 1440, altura: 900 },
+      { caso: 'inicio', tema: 'madrugada', largura: 390, altura: 844 },
+      { caso: 'inicio', tema: 'claro', largura: 390, altura: 844 },
+    ])
+  })
+
+  it('recusa tema e formato inválidos e o uso sem pedidos', () => {
     assert.throws(() => lerArgumentos(['p', 'sistema:sepia:390x844']), /tema desconhecido/)
     assert.throws(() => lerArgumentos(['p', 'sistema:claro:390']), /argumento inválido/)
     assert.throws(() => lerArgumentos(['p', 'Sistema:claro:390x844']), /argumento inválido/)
     assert.throws(() => lerArgumentos(['p', 'como-funciona:claro:390x844']), /argumento inválido/)
     assert.throws(() => lerArgumentos(['p', ':claro:390x844']), /argumento inválido/)
     assert.throws(() => lerArgumentos(['p', 'pagina_2:claro2:390x844']), /argumento inválido/)
-    assert.throws(() => lerArgumentos(['p', 'inicio:madrugada:1440x900']), /sempre claro/)
     assert.throws(() => lerArgumentos(['p']), /uso:/)
     assert.throws(() => lerArgumentos([]), /uso:/)
   })
@@ -1793,6 +1807,96 @@ describe('argumentos e loopback', () => {
     assert.doesNotThrow(() => verificarLoopback('http://localhost:5244/'))
     assert.throws(() => verificarLoopback('http://exemplo.invalid/'), /só loopback/)
     assert.throws(() => verificarLoopback('http://192.168.0.5:5244/'), /só loopback/)
+  })
+})
+
+describe('MAT-48e: naoSeAplicaSemAbrir (o que não precisa nem de página)', () => {
+  it('inicio em madrugada: mensagem clara com o caso e a rota; o resto é nulo', () => {
+    const msg = naoSeAplicaSemAbrir({ caso: 'inicio', tema: 'madrugada', rota: '' })
+    assert.equal(typeof msg, 'string')
+    assert.match(msg, /inicio/)
+    assert.match(msg, /madrugada/)
+    assert.match(msg, /sempre claro|sem o botão|não tem/)
+    assert.equal(naoSeAplicaSemAbrir({ caso: 'inicio', tema: 'claro', rota: '' }), null)
+    assert.equal(naoSeAplicaSemAbrir({ caso: 'sistema', tema: 'madrugada', rota: 'sistema' }), null)
+    assert.equal(naoSeAplicaSemAbrir({ caso: 'hoje', tema: 'madrugada', rota: 'app/hoje' }), null)
+    assert.equal(naoSeAplicaSemAbrir({ caso: 'comofunciona', tema: 'madrugada', rota: 'como-funciona' }), null)
+  })
+})
+
+// A entrada real: o script como o worker o roda (processo novo, argv, stdout, stderr e código de saída).
+// CDP_PORTA aponta para uma porta sem Chrome: o que não precisa de página tem de terminar sem ele.
+describe('MAT-48e: o CLI de verdade (spawn)', () => {
+  const SCRIPT = fileURLToPath(new URL('./medir-dom.mjs', import.meta.url))
+  const temporarias = []
+  const pastaTemporaria = (prefixo) => {
+    const pasta = fs.mkdtempSync(path.join(os.tmpdir(), prefixo))
+    temporarias.push(pasta)
+    return pasta
+  }
+  after(() => {
+    for (const pasta of temporarias) fs.rmSync(pasta, { recursive: true, force: true })
+  })
+  const rodar = (argumentos, { cwd } = {}) => {
+    const env = { ...process.env, CDP_PORTA: '1' }
+    delete env.BASE_URL
+    return spawnSync(process.execPath, [SCRIPT, ...argumentos], { cwd: cwd ?? pastaTemporaria('medir-dom-cwd-'), env, encoding: 'utf8', timeout: 60000 })
+  }
+  const jsonsEm = (pasta) => fs.readdirSync(pasta).filter((nome) => nome.endsWith('.json'))
+
+  it('inicio:madrugada:390x844 → saída 0, uma linha NAO_SE_APLICA, nenhum JSON e stderr vazio (sem Chrome)', () => {
+    const saida = pastaTemporaria('medir-dom-saida-')
+    const r = rodar([saida, 'inicio:madrugada:390x844'])
+    assert.equal(r.status, 0, `${r.stdout}\n${r.stderr}`)
+    const linhas = r.stdout.split(/\r?\n/).filter(Boolean)
+    assert.equal(linhas.length, 1, r.stdout)
+    assert.match(linhas[0], /^NAO_SE_APLICA inicio_madrugada_390: .+/)
+    assert.deepEqual(jsonsEm(saida), [])
+    assert.equal(r.stderr, '')
+  })
+
+  it('dois pedidos do Início em madrugada → saída 0 e uma linha por pedido', () => {
+    const saida = pastaTemporaria('medir-dom-saida-')
+    const r = rodar([saida, 'inicio:madrugada:390x844', 'inicio:madrugada:1440x900'])
+    assert.equal(r.status, 0, `${r.stdout}\n${r.stderr}`)
+    const linhas = r.stdout.split(/\r?\n/).filter(Boolean)
+    assert.equal(linhas.length, 2, r.stdout)
+    assert.match(linhas[0], /^NAO_SE_APLICA inicio_madrugada_390: /)
+    assert.match(linhas[1], /^NAO_SE_APLICA inicio_madrugada_1440: /)
+    assert.deepEqual(jsonsEm(saida), [])
+    assert.equal(r.stderr, '')
+  })
+
+  it('o Chrome só é aberto quando um pedido precisa de página: o "não se aplica" sai antes, e a falha de conexão dá saída 2', () => {
+    const saida = pastaTemporaria('medir-dom-saida-')
+    const r = rodar([saida, 'inicio:madrugada:390x844', 'sistema:claro:390x844'])
+    assert.equal(r.status, 2, `${r.stdout}\n${r.stderr}`)
+    assert.match(r.stdout, /^NAO_SE_APLICA inicio_madrugada_390: /m)
+    assert.match(r.stderr, /erro de medição/)
+    assert.deepEqual(jsonsEm(saida), [])
+  })
+
+  it('o que continua erro de uso dá saída 2 e mensagem em stderr, sem NAO_SE_APLICA', () => {
+    const saida = pastaTemporaria('medir-dom-saida-')
+    const casos = [
+      [[saida, 'sistema:sepia:390x844'], /tema desconhecido/],
+      [[saida, 'sistema:claro:390'], /argumento inválido/],
+      [[saida], /uso:/],
+      [[saida, 'semrota:claro:390x844'], /caso sem rota: semrota/],
+    ]
+    for (const [argumentos, mensagem] of casos) {
+      const r = rodar(argumentos) // cwd temporário, sem .oc/cdp.mjs
+      assert.equal(r.status, 2, `${argumentos.join(' ')}: ${r.stdout}\n${r.stderr}`)
+      assert.match(r.stderr, mensagem)
+      assert.doesNotMatch(r.stdout, /NAO_SE_APLICA/)
+    }
+    assert.deepEqual(jsonsEm(saida), [])
+  })
+
+  it('um erro de uso no meio dos pedidos vale para todos: nada de "não se aplica" parcial', () => {
+    const r = rodar([pastaTemporaria('medir-dom-saida-'), 'inicio:madrugada:390x844', 'sistema:sepia:390x844'])
+    assert.equal(r.status, 2)
+    assert.doesNotMatch(r.stdout, /NAO_SE_APLICA/)
   })
 })
 

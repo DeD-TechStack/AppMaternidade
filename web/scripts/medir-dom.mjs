@@ -760,7 +760,6 @@ export function lerArgumentos(argumentos) {
     if (!m) throw new Error(`argumento inválido: ${spec} (esperado <caso>:<tema>:<LxA>, caso em [a-z0-9_]+)`)
     const [, caso, tema, largura, altura] = m
     if (!TEMAS.includes(tema)) throw new Error(`tema desconhecido: ${tema} (use ${TEMAS.join(', ')})`)
-    if (caso === 'inicio' && tema === 'madrugada') throw new Error('o Início é sempre claro: não há inicio:madrugada')
     return { caso, tema, largura: Number(largura), altura: Number(altura) }
   })
   return { pasta, pedidos }
@@ -1098,6 +1097,18 @@ export function linhaNaoSeAplica({ caso, tema, largura }, mensagem) {
   return `NAO_SE_APLICA ${caso}_${tema}_${largura}: ${mensagem}`
 }
 
+/**
+ * O pedido que não se aplica sem nem abrir a página: o Início em madrugada (o Início é sempre claro,
+ * é público e não tem o botão "Modo madrugada"). Devolve a mensagem, ou nulo se o pedido segue.
+ * Nunca liga a madrugada nem mexe em `data-tema`: só o pedido deixa de existir.
+ */
+export function naoSeAplicaSemAbrir({ caso, tema, rota }) {
+  if (tema === 'madrugada' && caso === 'inicio') {
+    return `o caso inicio em madrugada não se aplica: o Início é sempre claro, é público (rota "${rota ?? ''}") e não tem o botão "Modo madrugada"`
+  }
+  return null
+}
+
 export async function abrirCaso(cdp, base, { caso, tema, rota }) {
   // Movimento reduzido sempre (G12): as medidas e as capturas usam o mesmo modo.
   await cdp.enviar('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] })
@@ -1161,8 +1172,14 @@ async function principal(argumentos) {
   fs.mkdirSync(pasta, { recursive: true })
   let cdp
   try {
-    cdp = await abrirAlvo(porta)
     for (const pedido of pedidos) {
+      // O que não se aplica sai antes de qualquer página: o Chrome só abre para o primeiro pedido que precisa dele.
+      const semAbrir = naoSeAplicaSemAbrir(pedido)
+      if (semAbrir !== null) {
+        console.log(linhaNaoSeAplica(pedido, semAbrir))
+        continue
+      }
+      cdp ??= await abrirAlvo(porta)
       await cdp.enviar('Emulation.setDeviceMetricsOverride', { width: pedido.largura, height: pedido.altura, deviceScaleFactor: 1, mobile: false })
       const aberto = await abrirCaso(cdp, baseUrl, pedido)
       if (aberto?.naoSeAplica) {
