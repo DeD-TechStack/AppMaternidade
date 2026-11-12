@@ -495,3 +495,5 @@ Nenhuma tarefa de implementação (MAT-17 a MAT-19) começa sem pedido dele.
 - **12/11 03h10:** POL-TXT v2 t_736b76c5 APPROVED_WITH_LIMITS (1d7cf9f) integrada pelo merge 93517e4 (da39492..93517e4, check 2065, commits OK 353, push).
 
 - **12/11 03h30:** Juízes pol_destaque_r1 válidos nos 2: 0/15 (6,0-7,8). POL-DES v2 t_3fd302a6 (última volta) com DEVOLUCAO_POL_destaque_r1.md sha 7a451efb. conferir.py corrigido (não sobrescreve a tabela principal com a 2ª tabela da resposta).
+
+- **12/11 03h45:** POL-INI v2 t_9e230273 APPROVED_WITH_LIMITS (c317c8f) integrada pelo merge c9e3580 (93517e4..c9e3580, check 2066, commits OK 359, push). Juízes pol_inicio_r2 (última volta) rodando.
