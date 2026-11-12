@@ -36,7 +36,7 @@ export function ConfirmacaoRotina({ confirmacao, aoAcionar }: Props) {
                   state={{ foco: 'titulo' }}
                   data-botao="texto"
                   data-tamanho="app"
-                  className={`cm-botao cm-botao-texto alvo-toque flex-1 sm:flex-none ${ALVO_APP}`}
+                  className={`cm-botao cm-botao-texto alvo-toque rotina-link-quebra flex-1 sm:flex-none ${ALVO_APP}`}
                   onClick={() => aoAcionar(acao)}
                 >
                   {acao.rotulo}
