@@ -123,6 +123,50 @@ describe('campos: 56 px nas telas públicas e 48 px nas do app', () => {
   })
 })
 
+describe('/app/conta quebra linha com a fonte a 200% (D-2)', () => {
+  it('botões e parágrafos da Conta podem quebrar linha e a coluna deixa encolher', async () => {
+    const { container, unmount } = await abrir(TELAS.find((t) => t.nome === '/app/conta')!)
+    const achados: string[] = []
+
+    for (const nome of ['Copiar id', 'Baixar meus dados', 'Excluir minha conta']) {
+      const botao = screen.getByRole('button', { name: nome })
+      for (const necessaria of ['whitespace-normal', 'max-w-full', 'wrap-anywhere']) {
+        if (!botao.classList.contains(necessaria)) achados.push(`${nome}: falta ${necessaria}`)
+      }
+      if (botao.classList.contains('whitespace-nowrap')) achados.push(`${nome}: whitespace-nowrap`)
+      if (/(^|\s)w-\[\d/.test(botao.className)) achados.push(`${nome}: largura fixa`)
+    }
+
+    // Todo parágrafo e link dentro das seções quebra: nenhum nowrap e nenhuma largura fixa.
+    for (const alvo of container.querySelectorAll<HTMLElement>('main section p, main section a')) {
+      if (alvo.classList.contains('whitespace-nowrap')) achados.push(`nowrap em ${alvo.textContent}`)
+      if (/(^|\s)w-\[\d/.test(alvo.className)) achados.push(`largura fixa em ${alvo.textContent}`)
+    }
+    // O id da conta (UUID): a quebra preferida é depois do hífen (`<wbr>`), mas o último bloco (12 caracteres) a 200% e
+    // 1024 px não cabe na coluna (~90 px) e alargava a página: `wrap-anywhere` só quebra dentro do bloco quando precisa.
+    const idDaConta = container.querySelector('[data-id-conta]')!
+    if (!idDaConta.classList.contains('wrap-anywhere')) achados.push('id da conta sem wrap-anywhere')
+    const explicacao = screen.getByText(/única pessoa responsável/)
+    const encarregado = container.querySelector('[data-encarregado]')!.parentElement!
+    for (const paragrafo of [explicacao, encarregado]) {
+      if (!paragrafo.classList.contains('wrap-anywhere')) achados.push(`falta wrap-anywhere em ${paragrafo.textContent}`)
+    }
+
+    // As seções são uma coluna que encolhe (minmax(0,1fr)) e cada coluna interna tem min-w-0.
+    for (const secao of container.querySelectorAll<HTMLElement>('main section')) {
+      if (!secao.className.includes('grid-cols-[minmax(0,1fr)]')) achados.push(`seção sem coluna encolhível: ${secao.getAttribute('aria-labelledby')}`)
+      for (const filho of secao.children) {
+        if (!filho.classList.contains('min-w-0')) achados.push(`filho sem min-w-0 em ${secao.getAttribute('aria-labelledby')}`)
+      }
+      // A coluna do texto da seção (títulos e frases) quebra palavra longa: a 200% e a 1024 px ela fica com ~90 px.
+      const texto = secao.children[0]
+      if (texto && !texto.classList.contains('wrap-anywhere')) achados.push(`coluna do texto sem wrap-anywhere em ${secao.getAttribute('aria-labelledby')}`)
+    }
+    expect(achados).toEqual([])
+    unmount()
+  })
+})
+
 describe('h1 na escala do DESIGN.md (cm-h1)', () => {
   it('todo h1 de acesso e de conta leva cm-h1, e o das manchetes tem a segunda linha em itálico', async () => {
     for (const tela of TELAS) {

@@ -1,7 +1,7 @@
 import type { ReactNode, Ref } from 'react'
 import { CircleAlert, Info } from 'lucide-react'
-import { COMUM, textoDoErro } from '../../conteudo/conta.ts'
-import type { ErroDados } from '../../dados/comum.ts'
+import { AVISO_BANCO_DEMONSTRACAO, COMUM, textoDoErro } from '../../conteudo/conta.ts'
+import { modoDados, type ErroDados } from '../../dados/comum.ts'
 
 // Peças pequenas e as classes que as telas da área de conta repetem. O visual sai das classes do
 // "Campo de mel" (`.cm-botao`, `.cm-campo-*`...) e das variáveis `--cor-*` do tema, que trocam na
@@ -37,6 +37,23 @@ export const LINK_ALVO =
   'alvo-toque inline-flex items-center font-medium text-[var(--cor-link)] underline decoration-[1.5px] underline-offset-4 ' +
   'hover:decoration-2'
 
+/**
+ * O aviso do banco de demonstração, acima dos formulários que gravam dados da família e do bebê.
+ * Só no modo Supabase: sem banco, o aviso do site (AvisoDemonstracao) já está na tela.
+ */
+export function AvisoDoBanco() {
+  if (modoDados() !== 'supabase') return null
+  return (
+    <p
+      data-aviso="banco-de-demonstracao"
+      className="cm-pequeno flex items-start gap-3 rounded-campo bg-[var(--cor-papel-fundo)] px-4 py-3"
+    >
+      <Info size={20} aria-hidden="true" className="mt-0.5 shrink-0" />
+      <span>{AVISO_BANCO_DEMONSTRACAO}</span>
+    </p>
+  )
+}
+
 /** O estado carregando: o texto, sem formulário clicável. */
 export function Carregando() {
   return <p className="py-2">{COMUM.carregando}</p>
@@ -69,6 +86,8 @@ interface ResumoErroProps {
   repetivel?: boolean
   refResumo?: Ref<HTMLDivElement>
   familiaNome?: string
+  /** Uma frase no lugar da do catálogo (a da regra "rede numa escrita" de objeto novo). */
+  texto?: string
   children?: ReactNode
 }
 
@@ -76,7 +95,15 @@ interface ResumoErroProps {
  * A frase do catálogo no topo do formulário ou da seção; o foco vai para ele num envio com erro.
  * Ícone, contorno e palavras: o erro nunca depende só da cor.
  */
-export function ResumoErro({ erro, aoTentarDeNovo, repetivel = false, refResumo, familiaNome, children }: ResumoErroProps) {
+export function ResumoErro({
+  erro,
+  aoTentarDeNovo,
+  repetivel = false,
+  refResumo,
+  familiaNome,
+  texto,
+  children,
+}: ResumoErroProps) {
   return (
     <div
       ref={refResumo}
@@ -86,7 +113,7 @@ export function ResumoErro({ erro, aoTentarDeNovo, repetivel = false, refResumo,
     >
       <p className="flex items-start gap-3 font-medium wrap-anywhere">
         <CircleAlert size={22} aria-hidden="true" className="mt-0.5 shrink-0" />
-        <span>{textoDoErro(erro, familiaNome)}</span>
+        <span>{texto ?? textoDoErro(erro, familiaNome)}</span>
       </p>
       {children}
       {repetivel && aoTentarDeNovo ? (

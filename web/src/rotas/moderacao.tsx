@@ -1,4 +1,5 @@
 import type { RouteObject } from 'react-router'
+import type { ItemNavegacao } from './navegacao.ts'
 import { TITULO_DA_ABA_MODERACAO } from '../conteudo/moderacao.ts'
 import { AuditoriaDoPainel } from '../paginas/moderacao/Auditoria.tsx'
 import { ConteudoNoPainel } from '../paginas/moderacao/Conteudo.tsx'
@@ -17,3 +18,4 @@ export const rotasModeracaoLogadas: RouteObject[] = [
   { path: 'moderacao/auditoria', element: <AuditoriaDoPainel />, handle },
   { path: 'moderacao/papeis', element: <PapeisDaPlataforma />, handle },
 ]
+export const navegacaoModeracao: ItemNavegacao[] = []

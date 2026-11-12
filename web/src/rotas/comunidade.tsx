@@ -8,6 +8,7 @@ import { MeuPerfil } from '../paginas/comunidade/MeuPerfil.tsx'
 import { MinhasDenuncias } from '../paginas/comunidade/MinhasDenuncias.tsx'
 import { NovoTopico } from '../paginas/comunidade/NovoTopico.tsx'
 import { Topico } from '../paginas/comunidade/Topico.tsx'
+import type { ItemNavegacao } from './navegacao.ts'
 
 // As rotas da área Comunidade. O título da aba é fixo (`handle.titulo`), aplicado pelo provedor de
 // sessão. As rotas fixas (`entrar`, `perfil`, `denuncias`, `topico/...`) têm precedência sobre `:slug`.
@@ -23,4 +24,9 @@ export const rotasComunidadeLogadas: RouteObject[] = [
   { path: 'app/comunidade/topico/:id/editar', element: <EditarTopico />, handle },
   { path: 'app/comunidade/:slug', element: <Espaco />, handle },
   { path: 'app/comunidade/:slug/novo', element: <NovoTopico />, handle },
+]
+
+// O item do cabeçalho logado (MAT-40a, RF-18): logo depois de Hoje e Sessão.
+export const navegacaoComunidade: ItemNavegacao[] = [
+  { chave: 'comunidade', rotulo: 'Comunidade', ordem: 30, destino: '/app/comunidade', atualEm: ['/app/comunidade'] },
 ]

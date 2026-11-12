@@ -63,10 +63,13 @@ async function entrarComo(email: string, senha: string) {
 }
 
 describe('o destino depois de entrar (RF-10)', () => {
-  it('voltaValida aceita só caminho interno de /app/ que não seja o Começar', () => {
+  it('voltaValida aceita só caminho interno de /app/ que não seja o Começar, ou /convite', () => {
     expect(voltaValida('/app/conta')).toBe('/app/conta')
     expect(voltaValida('/app/hoje?tipo=sono')).toBe('/app/hoje?tipo=sono')
     expect(voltaValida('/app/sessao')).toBe('/app/sessao')
+    expect(voltaValida('/convite')).toBe('/convite')
+    // O código do convite (o fragmento) nunca viaja num `volta`.
+    expect(voltaValida(`/convite#${'a'.repeat(64)}`)).toBe('/convite')
     for (const invalido of [
       null,
       undefined,
@@ -78,7 +81,8 @@ describe('o destino depois de entrar (RF-10)', () => {
       '/app/comecar',
       '/app/comecar?volta=/app/hoje',
       '/app/comecar/',
-      '/convite',
+      '/convite/outro',
+      '/conviteX',
       'app/conta',
       '/app/../entrar',
       '/app/\\evil.example',
@@ -87,12 +91,18 @@ describe('o destino depois de entrar (RF-10)', () => {
     }
   })
 
-  it('destinoDepoisDeEntrar: a Conta por padrão, o volta válido e, com conta incompleta, o passo "Seu nome" antes', () => {
-    expect(destinoDepoisDeEntrar(null, true)).toBe('/app/conta')
+  it('destinoDepoisDeEntrar: o volta válido; /convite com código guardado; senão a Família; com conta incompleta, o passo "Seu nome" antes', () => {
+    expect(destinoDepoisDeEntrar(null, true)).toBe('/app/familia')
     expect(destinoDepoisDeEntrar('/app/hoje', true)).toBe('/app/hoje')
-    expect(destinoDepoisDeEntrar('/entrar', true)).toBe('/app/conta')
+    expect(destinoDepoisDeEntrar('/entrar', true)).toBe('/app/familia')
+    expect(destinoDepoisDeEntrar('/convite', true)).toBe('/convite')
     expect(destinoDepoisDeEntrar('/app/hoje', false)).toBe('/app/comecar?volta=%2Fapp%2Fhoje')
-    expect(destinoDepoisDeEntrar(null, false)).toBe('/app/comecar?volta=%2Fapp%2Fconta')
+    expect(destinoDepoisDeEntrar(null, false)).toBe('/app/comecar?volta=%2Fapp%2Ffamilia')
+
+    sessionStorage.setItem(CHAVE_CONVITE, 'a'.repeat(64))
+    expect(destinoDepoisDeEntrar(null, true)).toBe('/convite')
+    expect(destinoDepoisDeEntrar('/app/hoje', true)).toBe('/app/hoje')
+    expect(destinoDepoisDeEntrar(null, false)).toBe('/app/comecar?volta=%2Fconvite')
   })
 
   it('entrar com um volta válido leva a ele', async () => {
@@ -103,16 +113,33 @@ describe('o destino depois de entrar (RF-10)', () => {
     expect((await screen.findByRole('heading', { level: 1 })).textContent).toBe('Hoje')
   })
 
-  it('um volta com outro formato é ignorado, sem erro, e a pessoa vai à Conta', async () => {
-    for (const volta of ['//evil.example', 'http://evil.example', '/entrar', '/app/comecar', '/convite']) {
+  it('um volta com outro formato é ignorado, sem erro, e a pessoa com família vai à Família', async () => {
+    for (const volta of ['//evil.example', 'http://evil.example', '/entrar', '/app/comecar', '/convite/outro']) {
       const { roteador, unmount } = renderizarComDados(`/entrar?volta=${encodeURIComponent(volta)}`)
       await entrarComo('juliana@exemplo.invalid', SENHA_DEMONSTRACAO)
 
-      await waitFor(() => expect(caminhoDe(roteador)).toBe('/app/conta'), { timeout: 3000 })
-      await screen.findByRole('heading', { level: 1, name: 'Conta' })
+      await waitFor(() => expect(caminhoDe(roteador)).toBe('/app/familia'), { timeout: 3000 })
+      await screen.findByRole('heading', { level: 1, name: 'Família' })
       expect(screen.queryByRole('alert')).toBeNull()
       unmount()
     }
+  })
+
+  it('RF-10: o volta /convite vale; sem volta, o código guardado leva a /convite; sem família, a Família leva a /app/comecar', async () => {
+    const comVolta = renderizarComDados('/entrar?volta=%2Fconvite')
+    await entrarComo('juliana@exemplo.invalid', SENHA_DEMONSTRACAO)
+    await waitFor(() => expect(caminhoDe(comVolta.roteador)).toBe('/convite'))
+    comVolta.unmount()
+
+    sessionStorage.setItem(CHAVE_CONVITE, 'a'.repeat(64))
+    const comCodigo = renderizarComDados('/entrar', { sessao: 'bruno' })
+    await waitFor(() => expect(caminhoDe(comCodigo.roteador)).toBe('/convite'))
+    comCodigo.unmount()
+    sessionStorage.clear()
+
+    const semFamilia = renderizarComDados('/entrar', { sessao: 'davi' })
+    await waitFor(() => expect(caminhoDe(semFamilia.roteador)).toBe('/app/comecar'))
+    await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.comecarFamilia })
   })
 
   it('quem já tem sessão e abre /entrar ou /criar-conta vai ao destino', async () => {
@@ -255,13 +282,13 @@ describe('a guarda das rotas logadas (RF-09)', () => {
 })
 
 describe('/entrar', () => {
-  it('entra com e-mail e senha e vai à Conta', async () => {
+  it('entra com e-mail e senha e vai à Família', async () => {
     const { roteador, dados } = renderizarComDados('/entrar')
     const entrar = vi.spyOn(dados, 'entrar')
     await entrarComo(' juliana@exemplo.invalid ', SENHA_DEMONSTRACAO)
 
-    await waitFor(() => expect(caminhoDe(roteador)).toBe('/app/conta'))
-    await screen.findByRole('heading', { level: 1, name: 'Conta' })
+    await waitFor(() => expect(caminhoDe(roteador)).toBe('/app/familia'))
+    await screen.findByRole('heading', { level: 1, name: 'Família' })
     expect(entrar).toHaveBeenCalledWith('juliana@exemplo.invalid', SENHA_DEMONSTRACAO)
     expect(entrar).toHaveBeenCalledTimes(1)
   })
@@ -310,9 +337,10 @@ describe('/entrar', () => {
     renderizarComDados('/entrar')
     await screen.findByRole('button', { name: 'Entrar' })
 
-    for (const nome of ['Criar conta', 'Esqueci a senha']) {
+    for (const nome of ['Criar conta', 'Esqueci a senha', 'Tenho um convite']) {
       expect(principal().getByRole('link', { name: nome }).classList.contains('alvo-toque')).toBe(true)
     }
+    expect(principal().getByRole('link', { name: 'Tenho um convite' }).getAttribute('href')).toBe('/convite')
     expect(screen.getByRole('link', { name: 'Esqueci a senha' }).getAttribute('href')).toBe('/recuperar-acesso')
     expect(screen.getByRole('link', { name: 'AppMaternidade' }).getAttribute('href')).toBe('/')
   })
@@ -332,9 +360,9 @@ describe('/criar-conta', () => {
     const criarUsuario = vi.spyOn(dados, 'criarUsuario')
     await preencher('  Nova  ')
 
-    await waitFor(() => expect(caminhoDe(roteador)).toBe('/app/conta'))
-    await screen.findByRole('heading', { level: 1, name: 'Conta' })
-    expect(screen.getByText(`Nova · ${EMAIL_NOVO}`)).toBeTruthy()
+    // Uma conta nova não tem família: a Família leva ao Começar, que oferece criar uma.
+    await waitFor(() => expect(caminhoDe(roteador)).toBe('/app/comecar'))
+    await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.comecarFamilia })
 
     const [email, , nome, voltarPara] = criarUsuario.mock.calls[0]
     expect(email).toBe(EMAIL_NOVO)

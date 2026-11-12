@@ -11,16 +11,31 @@ import { MolduraLogada } from '../../componentes/conta/MolduraLogada.tsx'
 import { BOTAO_PRINCIPAL, RegiaoStatus, ResumoErro } from '../../componentes/conta/Partes.tsx'
 import { useDadosConta, useSessao } from '../../componentes/conta/sessao.tsx'
 import { COMECAR, COMUM, MANCHETES, textoDaPassagem, textoDoErro } from '../../conteudo/conta.ts'
+import { EscolhaDeFamilia } from './EscolhaDeFamilia.tsx'
 
-// /app/comecar, passo "Seu nome" (RF-14): só com conta incompleta. "Salvar" cria a conta e segue
-// para o destino do RF-10. Com a conta completa, a rota leva ao destino, que nunca é o próprio
-// Começar (na 37a). A mensagem de passagem que chegar (`senha_trocada`) aparece no status.
+// /app/comecar (RF-14). Com conta incompleta, o passo "Seu nome": "Salvar" cria a conta e segue para
+// o destino do RF-10. Com a conta completa, a escolha entre criar uma família e usar um convite; um
+// `volta` válido (que só chega depois do passo "Seu nome") leva direto ao destino.
 export function Comecar() {
+  const sessao = useSessao()
+  const [parametros] = useSearchParams()
+  const volta = voltaValida(parametros.get('volta'))
+  // O passo "Seu nome" acabou de salvar: o RF-10 vale de novo, já com a conta completa.
+  const [salvouNome, setSalvouNome] = useState(false)
+
+  if (sessao.conta) {
+    if (salvouNome || volta) return <Navigate to={destinoDepoisDeEntrar(volta, true)} replace />
+    return <EscolhaDeFamilia conta={sessao.conta} />
+  }
+  return <PassoSeuNome aoSalvar={() => setSalvouNome(true)} />
+}
+
+// O passo "Seu nome" (só com conta incompleta): nome (preenchido com o dos metadados) e fuso.
+// A mensagem de passagem que chegar (`senha_trocada`) aparece no status.
+function PassoSeuNome({ aoSalvar }: { aoSalvar: () => void }) {
   const sessao = useSessao()
   const dados = useDadosConta()
   const location = useLocation()
-  const [parametros] = useSearchParams()
-  const volta = voltaValida(parametros.get('volta'))
   const titulo = useFocoNoTitulo()
 
   const [nome, setNome] = useState(() => (sessao.usuario?.nomeMetadados ?? '').trim())
@@ -41,9 +56,7 @@ export function Comecar() {
     if (campoDoErro === 'fuso') fusoRef.current?.focus()
   }, [estado, campoDoErro, erroDoEnvio])
 
-  if (sessao.conta) return <Navigate to={destinoDepoisDeEntrar(volta, true)} replace />
-
-  function aoSalvar(evento: FormEvent<HTMLFormElement>) {
+  function aoEnviar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault()
     const nomeLimpo = nome.trim()
     if (!nomeLimpo) {
@@ -57,8 +70,11 @@ export function Comecar() {
         const lida = await dados.minhaConta()
         return lida.ok ? { ok: true, valor: lida.valor !== null } : lida
       },
-      // Com a conta lida, esta tela vira o redirecionamento do destino.
-      aoSucesso: () => sessao.recarregarConta(),
+      // Com a conta lida, o `Comecar` vira o redirecionamento do destino.
+      aoSucesso: async () => {
+        aoSalvar()
+        await sessao.recarregarConta()
+      },
     })
   }
 
@@ -75,7 +91,7 @@ export function Comecar() {
             {COMECAR.titulo}
           </h2>
           <p>{COMECAR.frase}</p>
-          <form onSubmit={aoSalvar} noValidate className="flex flex-col gap-5">
+          <form onSubmit={aoEnviar} noValidate className="flex flex-col gap-5">
             {erroDoEnvio && !campoDoErro ? (
               <ResumoErro
                 erro={erroDoEnvio}
