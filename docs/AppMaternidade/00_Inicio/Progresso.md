@@ -501,3 +501,5 @@ Nenhuma tarefa de implementação (MAT-17 a MAT-19) começa sem pedido dele.
 - **12/11 03h50:** Juízes pol_texto_r2 (última volta das páginas de texto) válidos nos 2: 0/13, 6,0-7,4 (r1: 5,5-7,0). Vão para a galeria de Daniel.
 
 - **12/11 04h00:** Juízes pol_inicio_r2 (última volta do Início) válidos nos 2: 4/10, 6,5-8,0 (r1: 2/10). F2 (nitidez das telas nos aparelhos) se repete. Vai para a galeria de Daniel.
+
+- **12/11 04h40:** MAT-40b t_359ab800 APPROVED_WITH_LIMITS (48ba136) integrada por ff c9e3580..48ba136 (check 2283, commits OK 368, push; recibo 618). Devolvidas para correção 1/2: 39a g2 t_30ad7504 (R1-R5) e 38b t_7c491177 (R1-R7; R6 item Histórico no cabeçalho, decisão do líder).
