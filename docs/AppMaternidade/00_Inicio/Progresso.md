@@ -541,3 +541,5 @@ Nenhuma tarefa de implementação (MAT-17 a MAT-19) começa sem pedido dele.
 - **12/11 07h40:** Daniel respondeu: quer ver a galeria pública antes de decidir o aceite; "Pode abrir" o cartão das aberturas (criado POL-ABR t_d04a8a7d, DEVOLUCAO_POL_aberturas.md sha256 db01fbb1…); Gmail fica por enquanto e troca antes de divulgar (P-63).
 
 - **12/11 07h55:** Pedido de Daniel via coordenador (t_ee511ea1, fechado sem dono): galeria de como o site está agora em `_staging/appmaternidade/GALERIA_ATUAL/index.html` (36 capturas DSF 2: públicas 4010bbb, Entrar e Conta c7f26cc), aberta no navegador dele; coordenador avisado (t_1040703f).
+
+- **12/11 08h05:** 38b t_7c491177 APPROVED_WITH_LIMITS (94dedbc) integrada pelo merge 9091c13 (c7f26cc..9091c13). Conflito com a 37b resolvido pelo líder: o cabeçalho logado agora vem do registro de áreas; Histórico declarado em `rotas/rotina.tsx` (ordem 22) e as 4 listas de teste com Hoje, Sessão, Histórico, Desenvolvimento, Comunidade, Família. Check 2720 (na 3ª passada: 2 listas corrigidas, depois um timeout de carga em exportacoes.test), commits OK 417, push; recibo 704. Rotina completa. Próximos: P-50 casca e P-49 Hoje/Sessão.
