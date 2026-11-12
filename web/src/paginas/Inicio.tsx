@@ -11,9 +11,11 @@ import { SecaoTabela } from '../componentes/inicio/SecaoTabela.tsx'
 import { SecaoTurno } from '../componentes/inicio/SecaoTurno.tsx'
 import { FATOS, INICIO } from '../conteudo/textos.ts'
 
-// Regra tipográfica, sem mudar o texto: a palavra de uma letra só ("a", "à", "o") fica presa à
-// seguinte por um espaço que não quebra, para nunca sobrar sozinha no fim de uma linha da citação.
-const amarrarMonossilabos = (texto: string) => texto.replace(/(^|\s)(\p{L}) /gu, '$1$2 ')
+// Regra tipográfica, sem mudar o texto: a palavra de uma ou duas letras ("a", "à", "o", "Se", "de")
+// fica presa à seguinte por um espaço que não quebra, para nunca sobrar sozinha no fim de uma linha da
+// citação. O lookbehind deixa palavras curtas seguidas ("e a") se amarrarem em cadeia.
+const amarrarMonossilabos = (texto: string) =>
+  texto.replace(/(?<=^|\s)(\p{L}{1,2}) /gu, '$1 ')
 
 /**
  * O Início (MAT-49c), na composição F1 "Campo de mel": a abertura com a cena dos três celulares, os
@@ -39,7 +41,7 @@ export function Inicio() {
       </section>
 
       {/* O letreiro da base (60 s, pausa no hover e no foco). Com movimento reduzido o inicio.css faz
-          a fileira ocupar a largura do conteúdo; abaixo de 768, uma fileira só, com rolagem e encaixe. */}
+          a fileira ocupar a largura do conteúdo; abaixo de 768, uma grade de 2 colunas com quatro selos. */}
       <section className="cm-area in-selos" aria-labelledby={idSelos}>
         <h2 id={idSelos} className="sr-only">
           {INICIO.selos.titulo}
