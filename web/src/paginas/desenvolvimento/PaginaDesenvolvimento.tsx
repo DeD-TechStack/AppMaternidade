@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router'
 import { AvisoDaTela } from '../../componentes/app/AvisoDaTela.tsx'
 import { Botao } from '../../componentes/base/Botao.tsx'
@@ -37,30 +37,60 @@ import { ProvedorDaPendencia, usePendencia } from './pendencia.tsx'
  * de tummy time (MAT-39b) entra no lugar marcado abaixo e liga a pendência da página (`definirPendente`).
  */
 export function PaginaDesenvolvimento() {
+  // O contexto do bebê (`useContextoDoBebe`) só se relê a partir da fase de erro. Quando o bloco de tummy time
+  // descobre que o vínculo acabou (DES-09, estado 3), a página refaz a leitura inteira: o corpo é remontado,
+  // lê as famílias de novo e, ao terminar, leva o foco ao título. Uma vez por abertura da página, para a
+  // releitura não virar laço se o contexto ainda mostrar o bebê.
+  const [leitura, setLeitura] = useState({ numero: 0, focarTitulo: false })
+  const relida = useRef(false)
+  const aoPerderAcesso = useCallback(() => {
+    if (relida.current) return
+    relida.current = true
+    setLeitura((anterior) => ({ numero: anterior.numero + 1, focarTitulo: true }))
+  }, [])
+
   return (
     <ProvedorDaPendencia>
-      <CorpoDaPagina />
+      <CorpoDaPagina key={leitura.numero} focarTituloAoCarregar={leitura.focarTitulo} aoPerderAcesso={aoPerderAcesso} />
     </ProvedorDaPendencia>
   )
 }
 
 type Pronto = Extract<ContextoDoBebe, { fase: 'pronto' }>
 
-export function CorpoDaPagina() {
+interface PropsDoCorpo {
+  /** A página foi remontada porque o vínculo acabou: ao terminar de carregar, o foco vai ao `h1`. */
+  focarTituloAoCarregar?: boolean
+  aoPerderAcesso?: () => void
+}
+
+export function CorpoDaPagina({ focarTituloAoCarregar = false, aoPerderAcesso }: PropsDoCorpo = {}) {
   const contexto = useContextoDoBebe()
   const { principal, focarTitulo } = useTituloDaTela()
   const location = useLocation()
   const foco = focoDoEstado(location.state)
+  const focadoAoCarregar = useRef(false)
+  const carregando = contexto.fase === 'carregando'
 
   // Chegando por navegação interna que pede o título, o foco vai ao `h1`; pela URL não se move.
   useEffect(() => {
     if (foco === 'titulo') focarTitulo()
   }, [foco, location.key, focarTitulo])
 
+  useEffect(() => {
+    if (!focarTituloAoCarregar || carregando || focadoAoCarregar.current) return
+    focadoAoCarregar.current = true
+    focarTitulo()
+  }, [focarTituloAoCarregar, carregando, focarTitulo])
+
   return (
     <>
       <main ref={principal} className="pb-12 text-[17px] leading-[25px]" data-tela="desenvolvimento">
-        {contexto.fase === 'pronto' ? <ConteudoDoBebe contexto={contexto} /> : <SemBebe contexto={contexto} />}
+        {contexto.fase === 'pronto' ? (
+          <ConteudoDoBebe contexto={contexto} aoPerderAcesso={aoPerderAcesso} />
+        ) : (
+          <SemBebe contexto={contexto} />
+        )}
       </main>
       <AvisoDaTela />
     </>
@@ -100,7 +130,7 @@ function SemBebe({ contexto }: { contexto: Exclude<ContextoDoBebe, { fase: 'pron
   )
 }
 
-function ConteudoDoBebe({ contexto }: { contexto: Pronto }) {
+function ConteudoDoBebe({ contexto, aoPerderAcesso }: { contexto: Pronto; aoPerderAcesso?: () => void }) {
   const { pendente } = usePendencia()
   const { conteudo, todasAsFases, artigos } = useBlocosEstaticos()
   const { familia, bebe, bebes, papel, agora } = contexto
@@ -168,7 +198,7 @@ function ConteudoDoBebe({ contexto }: { contexto: Pronto }) {
         </div>
 
         <div key={`${familia.id}:${bebe.id}`} data-lugar-do-tummy="" className="lg:col-span-12 empty:hidden">
-          <BlocoTummy bebe={bebe} familia={familia} papel={papel} />
+          <BlocoTummy bebe={bebe} familia={familia} papel={papel} aoPerderAcesso={aoPerderAcesso} />
         </div>
 
         <div className="flex flex-col gap-12 lg:col-span-12">

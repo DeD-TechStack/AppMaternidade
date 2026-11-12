@@ -75,19 +75,25 @@ export function intervaloDoFormulario(entrada: EntradaDoPainel, fusoDoAparelho: 
 /** As duas confirmações que não bloqueiam, na ordem em que aparecem. */
 export type Passo = 'longa' | 'sobreposicao'
 
-/** Os intervalos só se sobrepõem quando se cruzam de verdade: dois que apenas se encostam não pedem confirmação. */
-function sobrepoe(intervalo: Intervalo, registros: readonly Registro[]): boolean {
+/**
+ * Os intervalos só se sobrepõem quando se cruzam de verdade: dois que apenas se encostam não pedem confirmação.
+ * Um registro sem duração (início = fim) é um ponto e só conta se cair estritamente dentro do outro. A sessão em
+ * andamento termina em `agora`, o instante da validação: nunca no infinito.
+ */
+function sobrepoe(intervalo: Intervalo, registros: readonly Registro[], agora: number): boolean {
+  const ponto = intervalo.inicio === intervalo.fim
   return registros.some((registro) => {
     const inicio = Date.parse(registro.inicio)
-    const fim = registro.fim === null ? Number.POSITIVE_INFINITY : Date.parse(registro.fim)
+    const fim = registro.fim === null ? agora : Date.parse(registro.fim)
+    if (ponto) return inicio < intervalo.inicio && intervalo.inicio < fim
     return intervalo.inicio < fim && inicio < intervalo.fim
   })
 }
 
-/** A primeira confirmação que ainda falta (T-26, depois T-27), ou nenhuma. Sessão em andamento vale como sem fim. */
-export function proximoPasso(intervalo: Intervalo, lidas: readonly Registro[], confirmados: readonly Passo[]): Passo | null {
+/** A primeira confirmação que ainda falta (T-26, depois T-27), ou nenhuma. Sessão em andamento vale até `agora`. */
+export function proximoPasso(intervalo: Intervalo, lidas: readonly Registro[], confirmados: readonly Passo[], agora: number): Passo | null {
   if (!confirmados.includes('longa') && intervalo.fim - intervalo.inicio > LIMITE_SEM_PERGUNTAR) return 'longa'
-  if (!confirmados.includes('sobreposicao') && sobrepoe(intervalo, lidas)) return 'sobreposicao'
+  if (!confirmados.includes('sobreposicao') && sobrepoe(intervalo, lidas, agora)) return 'sobreposicao'
   return null
 }
 

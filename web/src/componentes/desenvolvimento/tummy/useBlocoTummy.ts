@@ -137,6 +137,8 @@ interface Entrada {
   papel: Papel
   /** O elemento do bloco: o foco procura os controles dentro dele. */
   raiz: RefObject<HTMLElement | null>
+  /** A releitura do contexto mostrou que o vínculo com a família acabou: a página relê o dela (DES-09, estado 3). */
+  aoPerderAcesso?: () => void
 }
 
 interface BlocoTummyEstado {
@@ -192,9 +194,14 @@ interface BlocoTummyEstado {
   }
 }
 
-export function useBlocoTummy({ bebe, familia, papel, raiz }: Entrada): BlocoTummyEstado {
+export function useBlocoTummy({ bebe, familia, papel, raiz, aoPerderAcesso }: Entrada): BlocoTummyEstado {
   const dados = useDadosDesenvolvimento()
   const { definirPendente } = usePendencia()
+
+  const perderAcesso = useRef(aoPerderAcesso)
+  useEffect(() => {
+    perderAcesso.current = aoPerderAcesso
+  }, [aoPerderAcesso])
 
   const vivo = useRef(false)
   const pedido = useRef(0)
@@ -255,6 +262,8 @@ export function useBlocoTummy({ bebe, familia, papel, raiz }: Entrada): BlocoTum
         setContexto(novo)
         setLido(null)
         setLeitura('ok')
+        // O contexto da página ainda mostra o bebê: ela o relê, e o bloco sai da tela com o estado 3.
+        perderAcesso.current?.()
         return 'ok'
       }
       if (!bloco.ok) return falhou()
@@ -448,7 +457,7 @@ export function useBlocoTummy({ bebe, familia, papel, raiz }: Entrada): BlocoTum
       }
       setErroDeCampo(null)
       const { intervalo } = resultado
-      const proximo = proximoPasso(intervalo, [...lido.bloco.emAndamento, ...lido.bloco.sessoes], confirmados)
+      const proximo = proximoPasso(intervalo, [...lido.bloco.emAndamento, ...lido.bloco.sessoes], confirmados, agora)
       if (proximo) {
         setPasso({ passo: proximo, confirmados, entrada })
         pedirFoco([CHAVE.confirmar])
@@ -556,7 +565,8 @@ export function useBlocoTummy({ bebe, familia, papel, raiz }: Entrada): BlocoTum
     encerradas,
     comDados: visivel,
     incompleta: visivel ? lido.bloco.incompleta : false,
-    vazio: visivel && emAndamento.length === 0 && encerradas.length === 0,
+    // Uma leitura incompleta nunca vale como "vazio": o que falta pode ser justamente o tummy time (T-63, não T-22).
+    vazio: visivel && !lido.bloco.incompleta && emAndamento.length === 0 && encerradas.length === 0,
     agoraDaLeitura: lido?.agora ?? 0,
     membros: contexto?.membros ?? [],
     contaId: contexto?.contaId ?? '',

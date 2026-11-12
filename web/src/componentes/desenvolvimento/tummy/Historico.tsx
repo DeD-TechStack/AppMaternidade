@@ -12,7 +12,7 @@ interface Props {
   encerradas: readonly Registro[]
   /** Qualquer das duas leituras passou do limite: sem resumo do dia, e T-63 acima da lista. */
   incompleta: boolean
-  /** Nada foi lido (nem em andamento, nem na janela): T-22 no lugar da fila e da lista. */
+  /** Leitura completa e nada lido (nem em andamento, nem na janela): T-22 no lugar da fila e da lista. */
   vazio: boolean
   /** Os dias da fila e as horas das linhas saem do fuso da família e do aparelho, como no DES-04. */
   fusoDaFamilia: string

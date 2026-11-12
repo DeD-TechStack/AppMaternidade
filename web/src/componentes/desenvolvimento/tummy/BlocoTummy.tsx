@@ -22,6 +22,8 @@ interface Props {
   familia: FamiliaResumo
   /** O papel que a página leu; o bloco o troca pelo da releitura quando ele mudou com a página aberta. */
   papel: Papel
+  /** O vínculo com a família acabou com a página aberta: a página relê o contexto do bebê e tira o bloco. */
+  aoPerderAcesso?: () => void
 }
 
 const FAIXA_DE_ESTADO = 'm-0 max-w-[65ch] rounded-campo bg-[var(--cor-papel-fundo)] px-4 py-3 font-medium wrap-anywhere'
@@ -31,9 +33,9 @@ const FAIXA_DE_ESTADO = 'm-0 max-w-[65ch] rounded-campo bg-[var(--cor-papel-fund
  * com cronômetro, "Fizemos agora", outro horário e o histórico de 7 dias. Os dados vêm da `DadosRotina` pela
  * camada da área; nada é guardado no aparelho. O texto de segurança e o aviso de saúde ficam sempre à vista.
  */
-export function BlocoTummy({ bebe, familia, papel }: Props) {
+export function BlocoTummy({ bebe, familia, papel, aoPerderAcesso }: Props) {
   const raiz = useRef<HTMLElement>(null)
-  const bloco = useBlocoTummy({ bebe, familia, papel, raiz })
+  const bloco = useBlocoTummy({ bebe, familia, papel, raiz, aoPerderAcesso })
   const conteudo = useConteudo()
   const idTitulo = useId()
   const { acoes } = bloco

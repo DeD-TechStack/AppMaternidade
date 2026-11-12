@@ -2,6 +2,7 @@ import { act, configure, fireEvent, renderHook, screen, waitFor, within } from '
 import type { ReactNode } from 'react'
 import axe from 'axe-core'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { proximoPasso } from '../../componentes/desenvolvimento/tummy/regras.ts'
 import { TT } from '../../conteudo/desenvolvimento/textosTummy.ts'
 import { T } from '../../conteudo/desenvolvimento/textosLogada.ts'
 import type { ErroDados, Resultado } from '../../dados/comum.ts'
@@ -13,7 +14,15 @@ import { OPERACOES_ROTINA, type DadosRotina, type OperacaoRotina, type Registro 
 import { ehUuidV7 } from '../../dados/rotina.uuid.ts'
 import { PESSOAS } from '../../teste/renderizarComDados.tsx'
 import { aguardarCarga, renderizarRota } from '../../teste/renderizarRota.tsx'
-import { FUSO_DO_APARELHO, ID_BEBE, ID_FAMILIA, criarMundoDeTeste, type Mundo, type OpcoesMundo } from '../../teste/rotina.fixture.ts'
+import {
+  FUSO_DO_APARELHO,
+  ID_BEBE,
+  ID_FAMILIA,
+  criarMundoDeTeste,
+  semSessaoEmAndamento,
+  type Mundo,
+  type OpcoesMundo,
+} from '../../teste/rotina.fixture.ts'
 
 // MAT-39b, DES-13 (testes 12 a 15, 17 e 19): o bloco "Tummy time" da página logada, na rota real, com a `DadosRotina`
 // em memória e a fixture de teste (Juliana, Heloísa). Os valores esperados estão escritos aqui, não calculados do
@@ -710,24 +719,53 @@ describe('DES-13 15: papéis e erros', () => {
     expect(document.activeElement).toBe(alerta)
   })
 
-  it('acesso removido com a página aberta: a escrita dá T-43, o histórico lido some e o foco vai à mensagem', async () => {
-    relogioEm()
-    const m = mundo({ sessao: 'bruno' }, sessao({ inicio: HOJE.getTime() - 20 * MINUTO, fim: null }), sessao({ inicio: em(0, 9, 0), fim: em(0, 9, 10) }))
-    await abrir(m)
-    const familia = await m.conta.detalheFamilia(ID_FAMILIA)
-    const vinculo = familia.ok ? familia.valor.membros.find((membro) => membro.contaId === PESSOAS.bruno.id)!.vinculoId : ''
-    mudarDeSessao(m, 'juliana')
-    await m.conta.revogarVinculo(vinculo)
-    mudarDeSessao(m, 'bruno')
+  // DES-09 estado 3 e DES-13 item 15: com o vínculo revogado, a escrita volta P0002; a página relê o contexto do
+  // bebê (que agora não tem família), o bloco some e o foco vai ao título da página.
+  const ACOES_COM_VINCULO_REVOGADO: ReadonlyArray<{ nome: string; sessoes: () => Registro[]; agir: () => Promise<void> }> = [
+    {
+      nome: 'Encerrar',
+      sessoes: () => [sessao({ inicio: HOJE.getTime() - 20 * MINUTO, fim: null }), sessao({ inicio: em(0, 9, 0), fim: em(0, 9, 10) })],
+      agir: () => clicar(botao('Encerrar tummy time de Heloísa')),
+    },
+    {
+      nome: 'Iniciar',
+      sessoes: () => [sessao({ inicio: em(0, 9, 0), fim: em(0, 9, 10) })],
+      agir: () => clicar(botao('Iniciar tummy time de Heloísa')),
+    },
+    {
+      nome: 'Descartar',
+      sessoes: () => [sessao({ inicio: HOJE.getTime() - 20 * MINUTO, fim: null, autor: PESSOAS.bruno.id })],
+      agir: () => clicar(botao('Descartar')),
+    },
+    {
+      nome: 'Fizemos agora',
+      sessoes: () => [],
+      agir: async () => {
+        digitar(await abrirAgora(), '10')
+        await salvar()
+      },
+    },
+  ]
 
-    await clicar(botao('Encerrar tummy time de Heloísa'))
-    const alerta = within(bloco()).getByRole('alert')
-    expect(alerta.textContent).toContain('Não encontrado. O registro pode ter sido apagado, ou o seu acesso mudou.')
-    expect(bloco().querySelector('[data-fila-de-dias]')).toBeNull()
-    expect(within(bloco()).queryByRole('timer')).toBeNull()
-    for (const nome of ESCRITA) expect(talvezBotao(nome), String(nome)).toBeNull()
-    expect(document.activeElement).toBe(alerta)
-  })
+  for (const caso of ACOES_COM_VINCULO_REVOGADO) {
+    it(`vínculo revogado com a página aberta (${caso.nome}): a página relê o contexto (T-56), o bloco some e o foco vai ao h1`, async () => {
+      relogioEm()
+      const m = mundo({ sessao: 'bruno' }, ...caso.sessoes())
+      await abrir(m)
+      const familia = await m.conta.detalheFamilia(ID_FAMILIA)
+      const vinculo = familia.ok ? familia.valor.membros.find((membro) => membro.contaId === PESSOAS.bruno.id)!.vinculoId : ''
+      mudarDeSessao(m, 'juliana')
+      await m.conta.revogarVinculo(vinculo)
+      mudarDeSessao(m, 'bruno')
+
+      await caso.agir()
+      await waitFor(() => expect(screen.getByText('Você ainda não faz parte de uma família.')).toBeTruthy())
+      expect(document.querySelector('[data-tummy]')).toBeNull()
+      expect(document.querySelector('[data-grade-do-desenvolvimento]')).toBeNull()
+      expect(screen.getByRole('link', { name: 'Começar' }).getAttribute('href')).toBe('/app/comecar')
+      await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('heading', { level: 1 })))
+    })
+  }
 
   it('bebê arquivado: T-40 uma vez e sem controles de escrita', async () => {
     relogioEm()
@@ -1313,5 +1351,114 @@ describe('DES-13 19: o fail-closed do 39b', () => {
     await aguardarCarga()
     expect(within(bloco()).queryByRole('timer')).toBeNull()
     expect(textoDoBloco()).toContain('Nenhum tummy time nos últimos 7 dias.')
+  })
+})
+
+// ---------------------------------------------------------------------------------------------------------------
+// R2: uma sessão em andamento termina, para a conta da sobreposição, no instante da validação (nunca no infinito).
+describe('R2: a sobreposição com a sessão em andamento', () => {
+  const AGORA = HOJE.getTime()
+  const aberta = (inicio: number) => sessao({ inicio, fim: null })
+  const fechada = (inicio: number, fim: number) => sessao({ inicio, fim })
+  const passo = (inicio: number, fim: number, lidas: Registro[]) => proximoPasso({ inicio, fim }, lidas, [], AGORA)
+
+  it('sem duração (início = fim = agora) com uma sessão aberta há 10 min: nenhuma confirmação', () => {
+    expect(passo(AGORA, AGORA, [aberta(AGORA - 10 * MINUTO)])).toBeNull()
+  })
+
+  it('2 min de duração dentro de uma sessão aberta há 10 min: T-27 (sobreposição real)', () => {
+    expect(passo(AGORA - 2 * MINUTO, AGORA, [aberta(AGORA - 10 * MINUTO)])).toBe('sobreposicao')
+  })
+
+  it('bordas: a sessão aberta que começa exatamente no fim do intervalo apenas encosta; em ponto no meio dela, é contenção estrita', () => {
+    expect(passo(AGORA - 2 * MINUTO, AGORA, [aberta(AGORA)])).toBeNull()
+    expect(passo(AGORA - 5 * MINUTO, AGORA - 5 * MINUTO, [aberta(AGORA - 10 * MINUTO)])).toBe('sobreposicao')
+    expect(passo(AGORA - 10 * MINUTO, AGORA - 10 * MINUTO, [aberta(AGORA - 10 * MINUTO)])).toBeNull()
+  })
+
+  it('a mesma regra vale para a sessão encerrada: ponto no meio avisa, ponto nas pontas não', () => {
+    const lida = [fechada(AGORA - 10 * MINUTO, AGORA - 5 * MINUTO)]
+    expect(passo(AGORA - 7 * MINUTO, AGORA - 7 * MINUTO, lida)).toBe('sobreposicao')
+    expect(passo(AGORA - 5 * MINUTO, AGORA - 5 * MINUTO, lida)).toBeNull()
+    expect(passo(AGORA - 10 * MINUTO, AGORA - 10 * MINUTO, lida)).toBeNull()
+    expect(passo(AGORA - 5 * MINUTO, AGORA, lida)).toBeNull()
+    expect(passo(AGORA - 6 * MINUTO, AGORA, lida)).toBe('sobreposicao')
+  })
+
+  it('na tela, com a memória real: "Fizemos agora" sem duração ao lado de uma sessão aberta há 10 min grava direto, sem T-27', async () => {
+    relogioEm()
+    const m = mundo({}, aberta(AGORA - 10 * MINUTO))
+    await abrir(m)
+    await abrirAgora()
+    await salvar()
+    expect(within(bloco()).queryByText(TT.sobreposicao)).toBeNull()
+    expect(within(bloco()).getByText(TT.registrado)).toBeTruthy()
+    const gravados = await tummyGravado(m)
+    expect(gravados.filter((registro) => registro.origem === 'retroativo')).toHaveLength(1)
+  })
+
+  it('na tela, com a memória real: 2 min de duração ao lado da sessão aberta mantém T-27 e só grava depois de "Salvar mesmo assim"', async () => {
+    relogioEm()
+    const m = mundo({}, aberta(AGORA - 10 * MINUTO))
+    await abrir(m)
+    digitar(await abrirAgora(), '2')
+    await salvar()
+    expect(within(bloco()).getByText(TT.sobreposicao)).toBeTruthy()
+    expect((await tummyGravado(m)).filter((registro) => registro.origem === 'retroativo')).toHaveLength(0)
+  })
+})
+
+// ---------------------------------------------------------------------------------------------------------------
+// R3: leitura incompleta nunca vira "vazio".
+describe('R3: a leitura incompleta sem nenhum tummy time', () => {
+  const sono = (inicio: number): Registro => ({ ...sessao({ inicio, fim: null }), tipo: 'sono' })
+  // Só estas sessões abertas (a de sono de Bruno, da fixture, sai): o limite de `emAndamento` é 20.
+  const comAbertasDeSono = (quantas: number) =>
+    criarMundoDeTeste({
+      ajustarRotina: (fixture) => {
+        const base = semSessaoEmAndamento(comTummy()(fixture))
+        const abertas = Array.from({ length: quantas }, (_, indice) => sono(HOJE.getTime() - (indice + 1) * MINUTO))
+        return { ...base, registros: [...base.registros, ...abertas] }
+      },
+    })
+
+  it('21 sessões abertas de sono e nenhuma de tummy (a leitura passou do limite): T-63, sem T-22 e sem resumo', async () => {
+    relogioEm()
+    await abrir(comAbertasDeSono(21))
+    expect(within(bloco()).getByText(TT.listaIncompleta)).toBeTruthy()
+    expect(bloco().querySelector('[data-historico-vazio]')).toBeNull()
+    expect(textoDoBloco()).not.toContain(TT.vazio)
+    expect(bloco().querySelector('[data-resumo-do-dia]')).toBeNull()
+    expect(textoDoBloco()).not.toMatch(/no total|nenhuma sessão registrada/)
+  })
+
+  it('no limite exato (20 abertas): a leitura é completa e vale o estado vazio T-22', async () => {
+    relogioEm()
+    await abrir(comAbertasDeSono(20))
+    expect(within(bloco()).getByText(TT.vazio)).toBeTruthy()
+    expect(within(bloco()).queryByText(TT.listaIncompleta)).toBeNull()
+  })
+
+  it('a leitura da janela incompleta (sem tummy nenhum): também T-63, nunca T-22', async () => {
+    relogioEm()
+    const m = mundo()
+    await abrir(
+      m,
+      interceptar(m.rotina, async (operacao, _args, seguir) => {
+        const resposta = await seguir()
+        return operacao === 'sessoesDaJanela' && resposta.ok ? { ok: true, valor: { ...(resposta.valor as object), incompleta: true } } : resposta
+      }),
+    )
+    expect(within(bloco()).getByText(TT.listaIncompleta)).toBeTruthy()
+    expect(textoDoBloco()).not.toContain(TT.vazio)
+    expect(bloco().querySelector('[data-resumo-do-dia]')).toBeNull()
+  })
+
+  it('a fila de 7 dias continua escolhível com T-63, e o dia escolhido também não afirma "nenhuma sessão"', async () => {
+    relogioEm()
+    await abrir(comAbertasDeSono(21))
+    await clicar(within(bloco()).getByRole('button', { name: 'Ontem' }))
+    expect(within(bloco()).getByText(TT.listaIncompleta)).toBeTruthy()
+    expect(textoDoBloco()).not.toMatch(/no total|nenhuma sessão registrada/)
   })
 })
