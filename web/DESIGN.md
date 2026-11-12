@@ -316,6 +316,15 @@ As sete telas da Comunidade (Comunidade, Espaço, Tópico, Novo tópico e ediç�
 - **Exceção ao "Desfazer":** publicar é irreversível para quem lê, então a confirmação vem antes (prévia), e o Desfazer não existe depois. Editar e excluir o que é seu seguem a regra geral.
 - **Tema e movimento:** as telas seguem o `data-tema` e o `prefers-reduced-motion` da base, com alvos de 44 px e foco visível.
 
+### Desenvolvimento (MAT-39)
+
+A página logada `/app/desenvolvimento` e as rotas de item (`/app/desenvolvimento/conteudo/<id>`) moram na moldura das telas logadas, com o cabeçalho da casca (item "Desenvolvimento" entre Sessão e Comunidade), o `PainelCampo` (`data-painel="mel"`) e as variáveis `--cor-*` da base. Nenhum token, sombra, gradiente ou ícone novo.
+
+- **Primeira dobra:** título "Desenvolvimento" com a linha do bebê e da fase, o seletor de bebê quando há mais de um, e logo abaixo o lugar do bloco de tummy time (MAT-39b) com a ação principal como botão.
+- **Blocos:** "Ideias para brincar nesta fase", "Todas as fases" e "Para ler". Todo conteúdo vem de `conteudo/desenvolvimento`, publicado, com fonte com link e o aviso de que não substitui orientação médica.
+- **Estados:** carregando, erro com "Tente de novo", sem família, sem bebê, fuso inválido, bebê arquivado e item que não existe, cada um com frase fixa.
+- **Tema e alvos:** segue o `data-tema` (madrugada incluída) e o `prefers-reduced-motion`; alvos de 56 px nas ações e 44 px nos links.
+
 ## Elevation & Depth
 
 Plano. Profundidade vem de linha, cor, espaço, escala e, nos aparelhos de mídia, de inclinação em CSS 3D. Nenhum `box-shadow`, nenhum `backdrop-filter` e nenhum `filter: blur`.
