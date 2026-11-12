@@ -488,28 +488,30 @@ Nenhuma tarefa de implementação (MAT-17 a MAT-19) começa sem pedido dele.
 
 - **12/11 02h15:** P-62 t_ee893936 APPROVED_WITH_LIMITS (só evidência da 40a, sem SHA). DEF-62-1 (falta o link de pular conteúdo) vai para a P-50. Em correção: POL-INI v2, POL-TXT v2; em revisão: 38a g2 (7509958), POL-DES (4157e18).
 
-- **12/11 02h35:** 38a g2 t_197241f9 APPROVED_WITH_LIMITS (7509958) integrada por ff em int/refazer (22ff7cb..7509958, check 2042, commits OK 341, push; recibo comentário 574). 39b bloqueou: a página logada /app/desenvolvimento (39a) nunca foi feita; criada a 39a g2 t_30ad7504 sobre 7509958, 39b religada a ela (comentário 577). 38b liberada.
+- **12/11 02h30:** 38a g2 t_197241f9 APPROVED_WITH_LIMITS (7509958) integrada por ff em int/refazer (22ff7cb..7509958, check 2042, commits OK 341, push; recibo comentário 574). 39b bloqueou: a página logada /app/desenvolvimento (39a) nunca foi feita; criada a 39a g2 t_30ad7504 sobre 7509958, 39b religada a ela (comentário 577). 38b liberada.
 
-- **12/11 02h55:** POL-DES t_89539427 APPROVED_WITH_LIMITS (4157e18) integrada pelo merge da39492 (7509958..da39492, check 2062, commits OK 347, push). Evidência pendente em P-61.
+- **12/11 02h35:** POL-DES t_89539427 APPROVED_WITH_LIMITS (4157e18) integrada pelo merge da39492 (7509958..da39492, check 2062, commits OK 347, push). Evidência pendente em P-61.
 
-- **12/11 03h10:** POL-TXT v2 t_736b76c5 APPROVED_WITH_LIMITS (1d7cf9f) integrada pelo merge 93517e4 (da39492..93517e4, check 2065, commits OK 353, push).
+- **12/11 02h42:** POL-TXT v2 t_736b76c5 APPROVED_WITH_LIMITS (1d7cf9f) integrada pelo merge 93517e4 (da39492..93517e4, check 2065, commits OK 353, push).
 
-- **12/11 03h30:** Juízes pol_destaque_r1 válidos nos 2: 0/15 (6,0-7,8). POL-DES v2 t_3fd302a6 (última volta) com DEVOLUCAO_POL_destaque_r1.md sha 7a451efb. conferir.py corrigido (não sobrescreve a tabela principal com a 2ª tabela da resposta).
+- **12/11 02h51:** Juízes pol_destaque_r1 válidos nos 2: 0/15 (6,0-7,8). POL-DES v2 t_3fd302a6 (última volta) com DEVOLUCAO_POL_destaque_r1.md sha 7a451efb. conferir.py corrigido (não sobrescreve a tabela principal com a 2ª tabela da resposta).
 
-- **12/11 03h45:** POL-INI v2 t_9e230273 APPROVED_WITH_LIMITS (c317c8f) integrada pelo merge c9e3580 (93517e4..c9e3580, check 2066, commits OK 359, push). Juízes pol_inicio_r2 (última volta) rodando.
+- **12/11 02h59:** POL-INI v2 t_9e230273 APPROVED_WITH_LIMITS (c317c8f) integrada pelo merge c9e3580 (93517e4..c9e3580, check 2066, commits OK 359, push). Juízes pol_inicio_r2 (última volta) rodando.
 
-- **12/11 03h50:** Juízes pol_texto_r2 (última volta das páginas de texto) válidos nos 2: 0/13, 6,0-7,4 (r1: 5,5-7,0). Vão para a galeria de Daniel.
+- **12/11 03h00:** Juízes pol_texto_r2 (última volta das páginas de texto) válidos nos 2: 0/13, 6,0-7,4 (r1: 5,5-7,0). Vão para a galeria de Daniel.
 
-- **12/11 04h00:** Juízes pol_inicio_r2 (última volta do Início) válidos nos 2: 4/10, 6,5-8,0 (r1: 2/10). F2 (nitidez das telas nos aparelhos) se repete. Vai para a galeria de Daniel.
+- **12/11 03h04:** Juízes pol_inicio_r2 (última volta do Início) válidos nos 2: 4/10, 6,5-8,0 (r1: 2/10). F2 (nitidez das telas nos aparelhos) se repete. Vai para a galeria de Daniel.
 
-- **12/11 04h40:** MAT-40b t_359ab800 APPROVED_WITH_LIMITS (48ba136) integrada por ff c9e3580..48ba136 (check 2283, commits OK 368, push; recibo 618). Devolvidas para correção 1/2: 39a g2 t_30ad7504 (R1-R5) e 38b t_7c491177 (R1-R7; R6 item Histórico no cabeçalho, decisão do líder).
+- **12/11 03h55:** MAT-40b t_359ab800 APPROVED_WITH_LIMITS (48ba136) integrada por ff c9e3580..48ba136 (check 2283, commits OK 368, push; recibo 618). Devolvidas para correção 1/2: 39a g2 t_30ad7504 (R1-R5) e 38b t_7c491177 (R1-R7; R6 item Histórico no cabeçalho, decisão do líder).
 
-- **12/11 05h10:** 37b g3 t_6aeda4a9 em revisão (cbaee66): rodada de 8 casos exit 1 só por G11 do radio dentro do rótulo e madrugada abortada no medidor a 390 = defeitos do medidor; cartão MAT-48e t_54fc85f7 para o medir-dom. Nota ao revisor no comentário 620 (véu do diálogo na madrugada é defeito de produto; G4/G5/G7 não rodados, D2 vale). 39a g2 (23352c0) e POL-DES v2 (d9a94a9) em revisão.
+- **12/11 04h00:** 37b g3 t_6aeda4a9 em revisão (cbaee66): rodada de 8 casos exit 1 só por G11 do radio dentro do rótulo e madrugada abortada no medidor a 390 = defeitos do medidor; cartão MAT-48e t_54fc85f7 para o medir-dom. Nota ao revisor no comentário 620 (véu do diálogo na madrugada é defeito de produto; G4/G5/G7 não rodados, D2 vale). 39a g2 (23352c0) e POL-DES v2 (d9a94a9) em revisão.
 
-- **12/11 05h40:** Devoluções: 37b g3 r1 (R1 primeiro bebê medido como escolha, R2 rodada completa depende da MAT-48e, R3 aceito pelo líder como desvio registrado; comentário 630), 39a g2 r2 (correção 2/2, regra R4 fixada pelo líder; comentário 624), POL-DES v2 r1 (folga do cartão girado; comentário 623). Ordem final do cabeçalho logado a conferir na integração: Hoje, Sessão, Histórico, Desenvolvimento, Comunidade, Família.
+- **12/11 04h14:** Devoluções: 37b g3 r1 (R1 primeiro bebê medido como escolha, R2 rodada completa depende da MAT-48e, R3 aceito pelo líder como desvio registrado; comentário 630), 39a g2 r2 (correção 2/2, regra R4 fixada pelo líder; comentário 624), POL-DES v2 r1 (folga do cartão girado; comentário 623). Ordem final do cabeçalho logado a conferir na integração: Hoje, Sessão, Histórico, Desenvolvimento, Comunidade, Família.
 
-- **12/11 06h00:** P-61 t_bc1629ca em revisão (evidência POL-INI v2 e POL-TXT v2 no 48ba136; nenhum defeito de produto confirmado; candidatos I-1, I-2, T-1 para o revisor). Ferramenta `ferramentas/captura/capturar.mjs` agora rola a página e espera as imagens antes da página inteira (achado I-4: ilustrações lazy saíam em branco). Rodapé "Legal" sozinho a 390 levado à P-50.
+- **12/11 04h27:** P-61 t_bc1629ca em revisão (evidência POL-INI v2 e POL-TXT v2 no 48ba136; nenhum defeito de produto confirmado; candidatos I-1, I-2, T-1 para o revisor). Ferramenta `ferramentas/captura/capturar.mjs` agora rola a página e espera as imagens antes da página inteira (achado I-4: ilustrações lazy saíam em branco). Rodapé "Legal" sozinho a 390 levado à P-50.
 
-- **12/11 06h30:** 38b r2: R1-R6 fechados (20/20 sondas); R7 voltou 2ª vez -> correção 2/2 com a lista exata do líder (comentário 645), R7b oráculo de sono por janela. MAT-48e r1 devolvida (madrugada em rota pública sai exit 2; comentário 644). 37b g3 e 38b dependem da MAT-48e para a rodada de madrugada a 390.
+- **12/11 04h34:** 38b r2: R1-R6 fechados (20/20 sondas); R7 voltou 2ª vez -> correção 2/2 com a lista exata do líder (comentário 645), R7b oráculo de sono por janela. MAT-48e r1 devolvida (madrugada em rota pública sai exit 2; comentário 644). 37b g3 e 38b dependem da MAT-48e para a rodada de madrugada a 390.
 
-- **12/11 06h50:** POL-DES v2 t_3fd302a6 APPROVED_WITH_LIMITS (cb9e1e1) integrada por ff 48ba136..cb9e1e1 (check 2300, commits OK 374, push; recibo 650). Juízes pol_destaque_r2 (última volta) rodando.
+- **12/11 04h41:** POL-DES v2 t_3fd302a6 APPROVED_WITH_LIMITS (cb9e1e1) integrada por ff 48ba136..cb9e1e1 (check 2300, commits OK 374, push; recibo 650). Juízes pol_destaque_r2 (última volta) rodando.
+
+- **12/11 04h45:** P-61 t_bc1629ca APPROVED_WITH_LIMITS (pacote de evidência POL-INI v2 e POL-TXT v2; sem SHA). Líder conferiu o host: worktree limpo, portas 5396/9496 livres, nenhum processo do cartão (`encerramento_lider.txt`). Sobra para a galeria: releitura das capturas novas e decisões de Daniel. Horas das entradas de 12/11 corrigidas para as dos commits (antes estavam adiantadas por estimativa).
