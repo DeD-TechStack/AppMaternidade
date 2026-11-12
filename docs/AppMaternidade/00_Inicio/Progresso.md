@@ -525,3 +525,5 @@ Nenhuma tarefa de implementação (MAT-17 a MAT-19) começa sem pedido dele.
 - **12/11 05h25:** P-61b t_89840cb9 APPROVED_WITH_LIMITS (evidência POL-DES v1 e v2, sem SHA). Líder conferiu o host (worktree limpo, portas livres, sem processos). Candidatos D-1 a D-8 vão para a galeria.
 
 - **12/11 05h45:** P-62b t_61cd86f9 em revisão (40b: 96 execuções reais; 38a g2). Defeitos de produto da moderação a 390/200% e hover -> MAT-40c t_ec79b067; os da casca -> P-50. Galeria P-52a t_2045f1be em revisão.
+
+- **12/11 05h55:** P-62b t_61cd86f9 APPROVED_WITH_LIMITS (evidência 40b e 38a g2, sem SHA; worktree limpo e sem processos conferidos pelo líder). Madrugada da moderação passa a ser medida pelo botão real na MAT-40c (comentário 667). P-52a devolvida r1 (galeria cortada a 1400 px e captura sem DSF real; comentário 666).
