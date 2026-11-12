@@ -17,6 +17,7 @@ import { SeletorDeBebe } from '../../componentes/desenvolvimento/SeletorDeBebe.t
 import { useConteudo } from '../../componentes/desenvolvimento/conteudo.tsx'
 import { fasesDaIdade, idadeEmDias, idadeEscrita } from '../../componentes/desenvolvimento/fase.ts'
 import { ID_MARCOS, ID_TODAS_AS_FASES, ID_TUMMY_TIME, type ItemDeConteudo } from '../../componentes/desenvolvimento/itens.ts'
+import { BlocoTummy } from '../../componentes/desenvolvimento/tummy/BlocoTummy.tsx'
 import { useContextoDoBebe, type ContextoDoBebe } from '../../componentes/desenvolvimento/useContextoDoBebe.ts'
 import { TituloRotina } from '../../componentes/rotina/TituloRotina.tsx'
 import {
@@ -167,7 +168,7 @@ function ConteudoDoBebe({ contexto }: { contexto: Pronto }) {
         </div>
 
         <div key={`${familia.id}:${bebe.id}`} data-lugar-do-tummy="" className="lg:col-span-12 empty:hidden">
-          {/* Lugar do bloco Tummy time (MAT-39b) */}
+          <BlocoTummy bebe={bebe} familia={familia} papel={papel} />
         </div>
 
         <div className="flex flex-col gap-12 lg:col-span-12">

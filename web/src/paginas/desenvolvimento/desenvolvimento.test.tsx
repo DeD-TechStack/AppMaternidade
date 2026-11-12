@@ -261,14 +261,14 @@ describe('a fase pela idade em dias (janelas com limites inclusivos)', () => {
     ])
   })
 
-  it('deixa o lugar do bloco de tummy time (MAT-39b) vazio, sem texto de tummy fora dos itens', async () => {
+  it('mantém o lugar do bloco de tummy time (MAT-39b), agora ocupado pelo bloco', async () => {
     relogioEm()
     const mundo = await mundoComBebeDe(100)
     renderizarRota('/app/desenvolvimento', { mundo })
     await aguardarCarga()
     const lugar = document.querySelector<HTMLElement>('[data-lugar-do-tummy]')!
-    expect(lugar.textContent).toBe('')
-    expect(lugar.children).toHaveLength(0)
+    expect(lugar).toBeTruthy()
+    expect(lugar.children.length).toBeGreaterThan(0)
   })
 })
 
