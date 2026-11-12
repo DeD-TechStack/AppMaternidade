@@ -517,3 +517,5 @@ Nenhuma tarefa de implementação (MAT-17 a MAT-19) começa sem pedido dele.
 - **12/11 04h45:** P-61 t_bc1629ca APPROVED_WITH_LIMITS (pacote de evidência POL-INI v2 e POL-TXT v2; sem SHA). Líder conferiu o host: worktree limpo, portas 5396/9496 livres, nenhum processo do cartão (`encerramento_lider.txt`). Sobra para a galeria: releitura das capturas novas e decisões de Daniel. Horas das entradas de 12/11 corrigidas para as dos commits (antes estavam adiantadas por estimativa).
 
 - **12/11 04h55:** 39a g2 t_30ad7504 APPROVED_WITH_LIMITS (9142ef1) integrada pelo merge eebd1c5 (cb9e1e1..eebd1c5, check 2423, commits OK 381, push; recibo 655). 39b t_c9529365 começou (base no comentário 654).
+
+- **12/11 05h00:** Juízes pol_destaque_r2 (última volta) válidos nos 2: 2/15, 6,3-7,9 (r1: 0/15). F2 das telas nos aparelhos se repete no Início e nestas páginas: proposta de um cartão único das cenas vai para a galeria. Vão para a galeria de Daniel.
