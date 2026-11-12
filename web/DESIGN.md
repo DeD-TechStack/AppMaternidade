@@ -324,6 +324,8 @@ A página logada `/app/desenvolvimento` e as rotas de item (`/app/desenvolviment
 - **Blocos:** "Ideias para brincar nesta fase", "Todas as fases" e "Para ler". Todo conteúdo vem de `conteudo/desenvolvimento`, publicado, com fonte com link e o aviso de que não substitui orientação médica.
 - **Estados:** carregando, erro com "Tente de novo", sem família, sem bebê, fuso inválido, bebê arquivado e item que não existe, cada um com frase fixa.
 - **Tema e alvos:** segue o `data-tema` (madrugada incluída) e o `prefers-reduced-motion`; alvos de 56 px nas ações e 44 px nos links.
+- **Exceção ao "Desfazer" (tummy time):** encerrar uma sessão não tem Desfazer, porque no banco o `fim` preenchido não volta a nulo. A confirmação tem só \"Fechar\". A exceção vale só para o bloco de tummy time; descartar e registrar \"Fizemos agora\" continuam com Desfazer dentro do prazo.
+- **Regra do envio (tummy time):** enquanto uma gravação está em andamento, as ações do bloco ficam desativadas com o motivo ao lado e o seletor de bebê fica travado. Resultado desconhecido nunca vira \"nada foi salvo\": o bloco confere o banco antes de oferecer reenviar.
 
 ### Painel de moderação (MAT-40b)
 
