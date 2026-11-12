@@ -503,3 +503,5 @@ Nenhuma tarefa de implementação (MAT-17 a MAT-19) começa sem pedido dele.
 - **12/11 04h00:** Juízes pol_inicio_r2 (última volta do Início) válidos nos 2: 4/10, 6,5-8,0 (r1: 2/10). F2 (nitidez das telas nos aparelhos) se repete. Vai para a galeria de Daniel.
 
 - **12/11 04h40:** MAT-40b t_359ab800 APPROVED_WITH_LIMITS (48ba136) integrada por ff c9e3580..48ba136 (check 2283, commits OK 368, push; recibo 618). Devolvidas para correção 1/2: 39a g2 t_30ad7504 (R1-R5) e 38b t_7c491177 (R1-R7; R6 item Histórico no cabeçalho, decisão do líder).
+
+- **12/11 05h10:** 37b g3 t_6aeda4a9 em revisão (cbaee66): rodada de 8 casos exit 1 só por G11 do radio dentro do rótulo e madrugada abortada no medidor a 390 = defeitos do medidor; cartão MAT-48e t_54fc85f7 para o medir-dom. Nota ao revisor no comentário 620 (véu do diálogo na madrugada é defeito de produto; G4/G5/G7 não rodados, D2 vale). 39a g2 (23352c0) e POL-DES v2 (d9a94a9) em revisão.
