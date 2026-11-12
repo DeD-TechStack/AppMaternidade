@@ -145,9 +145,9 @@ describe('sem sessão', () => {
         const { unmount } = renderizarComDados(`/convite#${encodeURIComponent(fragmento)}`, { dados, sessao: 'davi' })
 
         expect((await screen.findByRole('alert')).textContent, fragmento).toBe(TEXTOS_ERRO.convite_invalido)
-        expect(campo()).toBeTruthy()
+        await waitFor(() => expect(campo()).toBeTruthy())
         expect(screen.queryByRole('button', { name: 'Aceitar convite' })).toBeNull()
-        expect(sessionStorage.getItem(CHAVE_CONVITE)).toBeNull()
+        await waitFor(() => expect(sessionStorage.getItem(CHAVE_CONVITE)).toBeNull())
         expect(ver).not.toHaveBeenCalled()
         unmount()
       }
@@ -349,8 +349,8 @@ describe('os erros do convite (fail-closed)', () => {
   const alertaDe = async (texto: string) => {
     expect((await screen.findByRole('alert')).textContent).toBe(texto)
     // No lugar da prévia, o campo para tentar outro; e o código morto sai do sessionStorage.
-    expect(campo()).toBeTruthy()
-    expect(sessionStorage.getItem(CHAVE_CONVITE)).toBeNull()
+    await waitFor(() => expect(campo()).toBeTruthy())
+    await waitFor(() => expect(sessionStorage.getItem(CHAVE_CONVITE)).toBeNull())
     expect(screen.queryByRole('button', { name: 'Aceitar convite' })).toBeNull()
   }
 
