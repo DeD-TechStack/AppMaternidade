@@ -185,7 +185,7 @@ describe('o passo "Seu nome"', () => {
     await screen.findByRole('heading', { level: 2, name: 'Seu nome' })
 
     expect(screen.getByRole('navigation', { name: 'Conta' })).toBeTruthy()
-    expect(screen.getByRole('link', { name: 'Ver o protótipo do Hoje' }).getAttribute('href')).toBe('/app/hoje')
+    expect(screen.getByRole('link', { name: 'Ir para o Hoje' }).getAttribute('href')).toBe('/app/hoje')
     expect(screen.getByRole('button', { name: 'Sair' })).toBeTruthy()
     expect(screen.queryByRole('navigation', { name: 'Principal' })).toBeNull()
     expect(screen.getByRole('link', { name: 'Conta' }).hasAttribute('aria-current')).toBe(false)

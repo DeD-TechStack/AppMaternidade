@@ -55,10 +55,9 @@ describe('rotasDasAreas: o registro por área', () => {
     ])
   })
 
-  it('as cinco áreas exportam as duas listas; só as de conta e as logadas da Comunidade têm rotas', () => {
+  it('as cinco áreas exportam as duas listas; só as rotas de conta, as logadas da rotina e as logadas da Comunidade têm rotas', () => {
     for (const lista of [
       rotasRotinaPublicas,
-      rotasRotinaLogadas,
       rotasDesenvolvimentoPublicas,
       rotasDesenvolvimentoLogadas,
       rotasComunidadePublicas,
@@ -79,6 +78,17 @@ describe('rotasDasAreas: o registro por área', () => {
     ])
     expect(rotasContaPublicas.map(caminhoDe)).toEqual(['entrar', 'criar-conta', 'recuperar-acesso', 'redefinir-senha', 'conta-excluida'])
     expect(rotasContaLogadas.map(caminhoDe)).toEqual(['app/comecar', 'app/conta'])
+
+    // A rotina: uma rota sem caminho (o provedor da área), pai das quatro telas do 38a.
+    expect(rotasRotinaLogadas).toHaveLength(1)
+    expect(rotasRotinaLogadas[0].path).toBeUndefined()
+    expect(rotasRotinaLogadas[0].element).toBeTruthy()
+    expect(rotasRotinaLogadas[0].children!.map(caminhoDe)).toEqual([
+      'app/hoje',
+      'app/sessao',
+      'app/registro/novo',
+      'app/registro/:id/editar',
+    ])
   })
 
   it('cada rota tem o título da aba fixo, "<h1> | AppMaternidade"', () => {
@@ -95,34 +105,44 @@ describe('rotasDasAreas: o registro por área', () => {
     expect(tituloDaAba(TITULOS.conta)).toBe('Conta | AppMaternidade')
   })
 
-  it('em rotas.tsx, entra como filho direto do Layout, depois das rotas do site e do protótipo e antes da rota *', () => {
+  it('em rotas.tsx, entra como filho direto do Layout, depois das rotas do site e antes da rota *', () => {
     const [layout] = criarRotas()
     const filhos = layout.children!
-    const indiceDaSessao = filhos.findIndex((rota) => rota.path === 'app/sessao')
     const indiceDasAreas = filhos.indexOf(rotasDasAreas[0])
 
-    // A base nova tem as páginas públicas e o /sistema entre a sessão e as áreas: a ordem fixa que
-    // importa é que as áreas venham depois de app/sessao e logo antes da rota `*`.
+    // A base nova tem as páginas públicas e o /sistema antes das áreas: a ordem fixa que importa é que as
+    // áreas venham logo antes da rota `*`. O Hoje e a Sessão saíram daqui: moram em `rotasRotinaLogadas`.
     expect(filhos[0].index).toBe(true)
     expect(filhos.filter((rota) => rota.element === rotasDasAreas[0].element)).toHaveLength(1)
-    expect(indiceDasAreas).toBeGreaterThan(indiceDaSessao)
     expect(indiceDasAreas).toBe(filhos.length - 2)
     expect(caminhoDe(filhos[indiceDasAreas])).toBeUndefined()
     expect(filhos[filhos.length - 1].path).toBe('*')
-    expect(filhos.map(caminhoDe)).toEqual(expect.arrayContaining(['app/hoje', 'app/sessao']))
+    expect(filhos.map(caminhoDe)).not.toEqual(expect.arrayContaining(['app/hoje']))
+    expect(filhos.map(caminhoDe)).not.toEqual(expect.arrayContaining(['app/sessao']))
   })
 })
 
-describe('as rotas do protótipo continuam fora do provedor e da guarda', () => {
-  it('/app/hoje e /app/sessao abrem sem sessão, sem redirecionar e sem mexer no título da aba', async () => {
-    for (const [caminho, titulo] of [
-      ['/app/hoje', /^Hoje$/],
-      ['/app/sessao', /^Sono de /],
-    ] as const) {
+describe('o Hoje e a Sessão ficam sob a guarda e sob o provedor da área (R38-30)', () => {
+  it('/app/hoje, /app/sessao e os formulários, sem sessão de login, vão a /entrar?volta=<caminho>', async () => {
+    for (const caminho of ['/app/hoje', '/app/sessao', '/app/registro/novo']) {
       const { roteador, unmount } = renderizarComDados(caminho)
-      expect((await screen.findByRole('heading', { level: 1 })).textContent).toMatch(titulo)
+      await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.entrar })
+      expect(roteador.state.location.pathname, caminho).toBe('/entrar')
+      expect(roteador.state.location.search, caminho).toBe(`?volta=${encodeURIComponent(caminho)}`)
+      unmount()
+    }
+  })
+
+  it('com sessão, abrem com o título da aba fixo de cada rota', async () => {
+    for (const [caminho, titulo, h1] of [
+      ['/app/hoje', 'Hoje | AppMaternidade', /^Hoje$/],
+      ['/app/sessao', 'Sessão | AppMaternidade', /^Sono de /],
+      ['/app/registro/novo', 'Novo registro | AppMaternidade', /^Novo registro$/],
+    ] as const) {
+      const { roteador, unmount } = renderizarComDados(caminho, { sessao: 'juliana' })
+      expect((await screen.findByRole('heading', { level: 1 })).textContent).toMatch(h1)
       expect(roteador.state.location.pathname).toBe(caminho)
-      expect(document.title).toBe('Título de antes')
+      expect(document.title).toBe(titulo)
       unmount()
     }
   })
@@ -140,9 +160,9 @@ describe('as rotas do protótipo continuam fora do provedor e da guarda', () => 
     await screen.findByRole('heading', { level: 1, name: 'Conta' })
     expect(screen.getByText('Juliana · juliana@exemplo.invalid')).toBeTruthy()
 
-    fireEvent.click(screen.getByRole('link', { name: 'Ver o protótipo do Hoje' }))
+    fireEvent.click(screen.getByRole('link', { name: 'Ir para o Hoje' }))
     expect((await screen.findByRole('heading', { level: 1 })).textContent).toBe('Hoje')
-    expect(document.title).toBe('Título de antes')
+    expect(document.title).toBe('Hoje | AppMaternidade')
 
     await act(async () => {
       await roteador.navigate('/app/conta')

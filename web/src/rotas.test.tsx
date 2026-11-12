@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { fireEvent, screen, within } from '@testing-library/react'
 import { PROMESSA } from './conteudo/textos.ts'
-import { criarEstadoInicial } from './prototipo/estado.ts'
 import { renderizarRota } from './teste/renderizarRota.tsx'
+import { semSessaoEmAndamento } from './teste/rotina.fixture.ts'
 
-const semSessao = () => ({ ...criarEstadoInicial(Date.now()), sessao: null })
+const semSessao = () => ({ ajustarRotina: semSessaoEmAndamento })
 
 describe('rotas', () => {
   it('o Início tem um único h1, igual à promessa', async () => {
@@ -65,7 +65,7 @@ describe('rotas', () => {
   })
 
   it('a Sessão com ?tipo=tummy e sem sessão começa um Tummy time', async () => {
-    renderizarRota('/app/sessao?tipo=tummy', { estadoInicial: semSessao() })
+    renderizarRota('/app/sessao?tipo=tummy', semSessao())
 
     const titulo = await screen.findByRole('heading', { level: 1 })
     expect(titulo.textContent).toBe('Tummy time de Heloísa')
@@ -74,7 +74,7 @@ describe('rotas', () => {
   })
 
   it('a Sessão sem sessão e sem tipo mostra o estado vazio', async () => {
-    renderizarRota('/app/sessao', { estadoInicial: semSessao() })
+    renderizarRota('/app/sessao', semSessao())
 
     const titulo = await screen.findByRole('heading', { level: 1 })
     expect(titulo.textContent).toBe('Nenhuma sessão em andamento')
@@ -83,7 +83,7 @@ describe('rotas', () => {
   })
 
   it('a Sessão ignora um ?tipo= inválido', async () => {
-    renderizarRota('/app/sessao?tipo=banho', { estadoInicial: semSessao() })
+    renderizarRota('/app/sessao?tipo=banho', semSessao())
 
     const titulo = await screen.findByRole('heading', { level: 1 })
     expect(titulo.textContent).toBe('Nenhuma sessão em andamento')

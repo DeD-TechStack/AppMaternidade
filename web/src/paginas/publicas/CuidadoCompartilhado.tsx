@@ -1,4 +1,3 @@
-import { CalendarClock, UserMinus, UserPlus } from 'lucide-react'
 import { Botao } from '../../componentes/base/Botao.tsx'
 import { CartaoFlutuante } from '../../componentes/campo/CartaoFlutuante.tsx'
 import { Ilustracao } from '../../componentes/campo/Ilustracao.tsx'
@@ -15,20 +14,19 @@ import {
 import { TabelaTexto } from '../../componentes/publicas-destaque/TabelaTexto.tsx'
 import { CUIDADO_DESTAQUE as T } from '../../conteudo/publicas-destaque.ts'
 
-const ICONES = [UserPlus, CalendarClock, UserMinus] as const
-
 /**
- * /cuidado-compartilhado: a abertura com o primário na primeira dobra, o painel de mel com a tela
- * Família e, ao lado, o convite com prazo e a avó do carrinho num chão de oliva (a composição F1), os
- * três blocos curtos (convite, prazo, revogação) com o exemplo de cada um, a tabela dos papéis, o
- * painel de areia com a tarde da Heloísa (quem fez cada registro, e quando) e o que acontece quando
- * alguém para de cuidar, com a ação para o protótipo. O aviso de demonstração é o do rodapé da casca.
+ * /cuidado-compartilhado: a abertura (o título, o texto e o primário de um lado; do outro, o painel de
+ * mel com a tela Família, o convite com prazo por cima da borda dela e a avó do carrinho; no celular,
+ * o registro compartilhado num cartão flutuante), os três blocos curtos numa lista com fios, a
+ * tabela dos papéis, o painel de areia com a tarde da Heloísa (quem fez cada registro, e quando) e o
+ * que acontece quando alguém para de cuidar, com a ação para o protótipo e as duas mãos passando o
+ * celular. O aviso de demonstração é o do rodapé da casca.
  */
 export function CuidadoCompartilhado() {
   return (
     <main className="pd-pagina">
       <Abertura
-        disposicao="titulo-lide"
+        proporcao="meio"
         titulo={T.titulo}
         texto={
           <>
@@ -38,44 +36,46 @@ export function CuidadoCompartilhado() {
             </div>
           </>
         }
+        midia={
+          <PainelCampo variante="mel" luz como="figure" aria-label={T.familia.descricao} className="pd-familia">
+            <div className="pd-familia-cena">
+              <div className="pd-familia-coluna">
+                <CartaoPlano className="pd-familia-tela">
+                  <CartaoFamilia />
+                </CartaoPlano>
+                <CartaoFlutuante giro={2} className="pd-em-fluxo pd-familia-convite">
+                  <CartaoConviteComPrazo />
+                </CartaoFlutuante>
+              </div>
+              <div className="pd-chao pd-familia-desenho">
+                <Ilustracao nome="avo-carrinho" carregamento="eager" />
+              </div>
+            </div>
+            <CartaoFlutuante giro={-2} className="pd-em-fluxo pd-familia-tarde">
+              <CartaoTarde />
+            </CartaoFlutuante>
+          </PainelCampo>
+        }
       />
 
-      <PainelCampo variante="mel" luz como="figure" aria-label={T.familia.descricao} className="pd-familia">
-        <CartaoPlano className="pd-familia-tela">
-          <CartaoFamilia />
-        </CartaoPlano>
-        <div className="pd-familia-lado">
-          <CartaoFlutuante giro={2} className="pd-em-fluxo pd-familia-convite">
-            <CartaoConviteComPrazo />
-          </CartaoFlutuante>
-          <div className="pd-chao pd-familia-desenho">
-            <Ilustracao nome="avo-carrinho" carregamento="eager" />
-          </div>
-        </div>
-      </PainelCampo>
-
-      <ul className="pd-secao cm-area pd-tres" data-blocos="">
-        {T.blocos.map((bloco, i) => {
-          const Icone = ICONES[i]
-          return (
-            <li key={bloco.titulo}>
-              <span className="pd-tres-icone" aria-hidden="true">
-                <Icone strokeWidth={1.75} />
-              </span>
-              <h2 className="cm-h4">{bloco.titulo}</h2>
+      <ul className="pd-secao cm-area pd-regras" data-blocos="">
+        {T.blocos.map((bloco) => (
+          <li key={bloco.titulo}>
+            <div className="pd-regra-texto">
+              <h2 className="cm-h3">{bloco.titulo}</h2>
               <p className="cm-corpo">{bloco.texto}</p>
-              <p className="pd-tres-exemplo" data-exemplo="">
-                <span className="pd-avatar" aria-hidden="true">
-                  {bloco.exemplo.inicial}
-                </span>
-                <span className="pd-linha-texto">
-                  <span className="pd-linha-nome">{bloco.exemplo.quem}</span>
-                  <span className="pd-linha-detalhe">{bloco.exemplo.oQue}</span>
-                </span>
-              </p>
-            </li>
-          )
-        })}
+            </div>
+            <p className="pd-regra-exemplo" data-exemplo="">
+              <span className="pd-avatar" aria-hidden="true">
+                {bloco.exemplo.inicial}
+              </span>
+              <span className="pd-linha-texto">
+                <span className="pd-linha-nome">{bloco.exemplo.quem}</span>
+                <span className="pd-linha-detalhe">{bloco.exemplo.oQue}</span>
+              </span>
+            </p>
+          </li>
+        ))}
       </ul>
 
       <section className="pd-secao" aria-labelledby="cuidado-papeis">
@@ -106,9 +106,9 @@ export function CuidadoCompartilhado() {
         </CartaoPlano>
       </PainelCampo>
 
-      <section className="pd-secao cm-area pd-duas" aria-labelledby="cuidado-parar">
-        <Titulo nivel="h2" id="cuidado-parar" linhas={T.parar.titulo} />
-        <div className="pd-duas-texto">
+      <section className="pd-secao cm-area pd-parar" aria-labelledby="cuidado-parar">
+        <div className="pd-parar-texto">
+          <Titulo nivel="h2" id="cuidado-parar" linhas={T.parar.titulo} />
           {T.parar.textos.map((texto) => (
             <p key={texto} className="cm-lide">
               {texto}
@@ -118,6 +118,11 @@ export function CuidadoCompartilhado() {
             <Botao to={T.primario.destino}>{T.primario.rotulo}</Botao>
           </div>
         </div>
+        <PainelCampo variante="mel" luz className="pd-parar-painel">
+          {/* Eager: um desenho sem tamanho próprio, carregado só ao rolar, deixa o painel de mel vazio
+              (altura 0) até chegar na janela. */}
+          <Ilustracao nome="maos-celular" carregamento="eager" />
+        </PainelCampo>
       </section>
     </main>
   )
