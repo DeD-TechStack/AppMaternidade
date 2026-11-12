@@ -441,4 +441,22 @@ describe('os erros do convite (fail-closed)', () => {
     expect(familias.ok && familias.valor).toHaveLength(1)
     expect(sessionStorage.getItem(CHAVE_CONVITE)).toBeNull()
   })
+
+  it('resposta perdida sem efeito no banco: a conferência não acha família nova e o aceite NÃO vale como sucesso', async () => {
+    const dados = novaMemoria()
+    simularFalha(dados, 'aceitarConvite', 'rede')
+    simularFalha(dados, 'aceitarConvite', 'rede')
+    const { roteador } = renderizarComDados(`/convite#${CODIGO}`, { dados, sessao: 'davi' })
+    await esperarAPrevia()
+    fireEvent.click(botao('Aceitar convite'))
+
+    const alerta = await screen.findByRole('alert')
+    fireEvent.click(within(alerta).getByRole('button', { name: 'Tentar de novo' }))
+
+    await waitFor(() => expect(screen.getByRole('alert').textContent).toContain(TEXTOS_ERRO.rede))
+    expect(caminhoDe(roteador)).toBe('/convite')
+    const familias = await dados.minhasFamilias()
+    expect(familias.ok && familias.valor).toHaveLength(0)
+    expect(screen.queryByRole('status')).toBeNull()
+  })
 })

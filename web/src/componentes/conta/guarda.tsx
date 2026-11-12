@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router'
 import { AvisoDemonstracao } from '../AvisoDemonstracao.tsx'
+import { TITULOS } from '../../conteudo/conta.ts'
 import { Carregando, ResumoErro } from './Partes.tsx'
 import { useSessao } from './sessao.tsx'
 
@@ -42,6 +43,7 @@ export function GuardaSessao() {
   if (sessao.estado === 'erro' && sessao.erro) {
     return (
       <Casca>
+        <h1 className="cm-h1 wrap-anywhere mb-6 max-sm:text-[48px] max-sm:leading-[52px]">{TITULOS.erroDaConta}</h1>
         <ResumoErro erro={sessao.erro} repetivel aoTentarDeNovo={() => void sessao.recarregarConta()} />
       </Casca>
     )

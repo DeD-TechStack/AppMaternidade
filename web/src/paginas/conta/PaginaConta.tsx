@@ -42,11 +42,15 @@ const SECOES_DO_INDICE = [
 // Cada seção é uma linha de duas colunas (o texto, depois os controles) sobre um fio de 1 px; a
 // zona de perigo (excluir a conta) é um cartão de raio 20 com contorno, separado das outras. No celular
 // (uma página de tarefa) os grupos ficam mais juntos.
-const SECAO_GRADE = 'grid gap-3 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-12'
+// A coluna única do celular é `minmax(0,1fr)`: sem isso a trilha cresce até o texto mais largo (o botão,
+// o id) e a página rola de lado com a fonte a 200%.
+const SECAO_GRADE = 'grid grid-cols-[minmax(0,1fr)] gap-3 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-12'
+// Os botões de uma seção quebram o rótulo dentro da coluna em vez de passar dela (`.cm-botao` é nowrap).
+const QUEBRA_DO_BOTAO = 'max-w-full whitespace-normal wrap-anywhere'
 const SECAO = `${SECAO_GRADE} border-t border-[var(--cor-fio-suave)] py-5 lg:py-8`
-const TEXTO_DA_SECAO = 'flex min-w-0 flex-col gap-2 lg:gap-3'
+const TEXTO_DA_SECAO = 'flex min-w-0 flex-col gap-2 wrap-anywhere lg:gap-3'
 // Os controles de uma seção (campos, caixa do id) têm todos a mesma largura: a borda direita se alinha.
-const COLUNA_DOS_CONTROLES = 'w-full max-w-[28rem]'
+const COLUNA_DOS_CONTROLES = 'w-full min-w-0 max-w-[28rem]'
 
 // /app/conta (RF-16): perfil, id da conta, exportação, exclusão, privacidade e sair, numa coluna
 // com o índice das seções à esquerda a partir de 64 rem.
@@ -328,7 +332,7 @@ export function PaginaConta() {
                   </Fragment>
                 ))}
               </p>
-              <button type="button" className={BOTAO_SECUNDARIO} data-tamanho="app" onClick={() => void copiarId()}>
+              <button type="button" className={`${BOTAO_SECUNDARIO} ${QUEBRA_DO_BOTAO}`} data-tamanho="app" onClick={() => void copiarId()}>
                 {CONTA.id.botao}
               </button>
             </div>
@@ -350,7 +354,7 @@ export function PaginaConta() {
                   refResumo={resumoDaExportacao}
                 />
               ) : null}
-              <button type="button" disabled={exportacao.enviando} className={BOTAO_SECUNDARIO} data-tamanho="app" onClick={baixarDados}>
+              <button type="button" disabled={exportacao.enviando} className={`${BOTAO_SECUNDARIO} ${QUEBRA_DO_BOTAO}`} data-tamanho="app" onClick={baixarDados}>
                 {exportacao.enviando ? COMUM.preparandoArquivo : CONTA.exportar.botao}
               </button>
             </div>
@@ -380,8 +384,8 @@ export function PaginaConta() {
                 />
               ) : null}
               {bloqueadoras.length > 0 ? (
-                <div id="impedimento-exclusao" className="cm-medida">
-                  <p>{CONTA.excluir.impedimento}</p>
+                <div id="impedimento-exclusao" className="cm-medida min-w-0 wrap-anywhere">
+                  <p className="wrap-anywhere">{CONTA.excluir.impedimento}</p>
                   <ul className="mt-2 list-disc pl-6">
                     {bloqueadoras.map((familia) => (
                       <li key={familia.id}>
@@ -398,7 +402,7 @@ export function PaginaConta() {
                 type="button"
                 disabled={botaoDesativado}
                 aria-describedby={bloqueadoras.length > 0 ? 'impedimento-exclusao' : undefined}
-                className={BOTAO_PERIGO}
+                className={`${BOTAO_PERIGO} ${QUEBRA_DO_BOTAO}`}
                 data-tamanho="app"
                 onClick={() => setAberto(true)}
               >
@@ -415,21 +419,21 @@ export function PaginaConta() {
               </h2>
             </div>
             <div className="flex min-w-0 flex-col items-start gap-2">
-              <p>
+              <p className="wrap-anywhere">
                 {CONTA.privacidade.contato.antes}
                 <span data-contato className="wrap-anywhere">
                   {CONTA.privacidade.contato.valor}
                 </span>
                 {CONTA.privacidade.contato.depois}
               </p>
-              <p>
+              <p className="wrap-anywhere">
                 {CONTA.privacidade.encarregado.antes}
                 <span data-encarregado className="wrap-anywhere">
                   {CONTA.privacidade.encarregado.valor}
                 </span>
                 {CONTA.privacidade.encarregado.depois}
               </p>
-              <Link to="/privacidade" className={LINK_ALVO}>
+              <Link to="/privacidade" className={`${LINK_ALVO} wrap-anywhere`}>
                 {CONTA.privacidade.politica}
               </Link>
             </div>

@@ -19,6 +19,8 @@ export const TITULOS = {
   conta: 'Conta',
   convite: 'Convite',
   familia: 'Família',
+  /** O `h1` do erro da guarda: a tela não abriu, e ainda assim tem um título. */
+  erroDaConta: 'Não foi possível abrir a sua conta.',
 } as const
 
 /** O título da aba é fixo por rota: "<título da rota> | AppMaternidade". */
