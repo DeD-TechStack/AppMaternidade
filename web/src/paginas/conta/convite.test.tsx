@@ -57,7 +57,7 @@ describe('sem sessão', () => {
     expect((await screen.findByRole('heading', { level: 1 })).textContent).toBe(NOMES_DO_H1.convite)
     expect(NOMES_DO_H1.convite).toBe('Convite para uma família')
     expect(document.title).toBe('Convite | AppMaternidade')
-    expect(campo()).toBeTruthy()
+    await waitFor(() => expect(campo()).toBeTruthy())
     expect(botao('Continuar')).toBeTruthy()
     expect(principal().queryByRole('button', { name: 'Descartar convite' })).toBeNull()
     expect(ver).not.toHaveBeenCalled()
