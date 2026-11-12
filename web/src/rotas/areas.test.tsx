@@ -62,10 +62,16 @@ describe('rotasDasAreas: o registro por área', () => {
       rotasDesenvolvimentoLogadas,
       rotasComunidadePublicas,
       rotasModeracaoPublicas,
-      rotasModeracaoLogadas,
     ]) {
       expect(lista).toEqual([])
     }
+    expect(rotasModeracaoLogadas.map(caminhoDe)).toEqual([
+      'moderacao',
+      'moderacao/denuncia/:id',
+      'moderacao/conteudo/:tipo/:id',
+      'moderacao/auditoria',
+      'moderacao/papeis',
+    ])
     expect(rotasComunidadeLogadas.map(caminhoDe)).toEqual([
       'app/comunidade',
       'app/comunidade/entrar',
