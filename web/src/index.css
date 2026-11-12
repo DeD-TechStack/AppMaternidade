@@ -1313,3 +1313,8 @@ body:has([data-barra-registrar]) [data-rodape] {
 :root[data-tema='madrugada'] .rotina-barra {
   background-color: var(--color-mel);
 }
+
+/* Madrugada: todo alvo das telas da rotina tem 56 px de altura (G11); --alvo-toque já vale 56 neste tema. */
+:root[data-tema='madrugada'] main[data-tela] :is(a, button, select, textarea, input:not([type='checkbox'], [type='radio'])) {
+  min-height: var(--alvo-toque);
+}
