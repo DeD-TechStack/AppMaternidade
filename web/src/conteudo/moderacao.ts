@@ -244,4 +244,3 @@ export const NOMES_DAS_TELAS = {
   auditoria: 'Auditoria',
   papeis: 'Papéis',
 } as const
-
