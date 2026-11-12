@@ -521,3 +521,5 @@ Nenhuma tarefa de implementação (MAT-17 a MAT-19) começa sem pedido dele.
 - **12/11 05h00:** Juízes pol_destaque_r2 (última volta) válidos nos 2: 2/15, 6,3-7,9 (r1: 0/15). F2 das telas nos aparelhos se repete no Início e nestas páginas: proposta de um cartão único das cenas vai para a galeria. Vão para a galeria de Daniel.
 
 - **12/11 05h05:** MAT-48e t_54fc85f7 APPROVED_WITH_LIMITS (4010bbb) integrada por ff eebd1c5..4010bbb (check 2423, medir-dom 199 testes, commits OK 384, push). 38b desbloqueada; 37b g3 avisada. Falta o JSON real do rótulo da Família depois da 37b.
+
+- **12/11 05h25:** P-61b t_89840cb9 APPROVED_WITH_LIMITS (evidência POL-DES v1 e v2, sem SHA). Líder conferiu o host (worktree limpo, portas livres, sem processos). Candidatos D-1 a D-8 vão para a galeria.
