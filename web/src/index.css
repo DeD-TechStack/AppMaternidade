@@ -1171,8 +1171,17 @@ body:has([data-barra-registrar]) [data-rodape] {
 
 /* MAT-38b: Histórico, detalhe, lixeira e notas. Só acréscimo; as cores vêm dos tokens e das variáveis de uso. */
 
-/* O link do texto cobre a linha inteira (o item pai é `relative`); o alvo passa de 44 px. */
+/* O link do texto cobre a linha inteira (o item pai é `relative`) e a própria caixa do `<a>` também tem 44 × 44 px
+   no mínimo: o respiro vertical é padding, e a margem negativa de mesmo tamanho devolve a linha de 25 px ao
+   tamanho de antes. Texto de duas linhas cresce para dentro da margem, sem cobrir a linha de baixo. */
 .rotina-link-esticado {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  margin-block: -0.59375rem;
+  padding-block: 0.59375rem;
   text-decoration: none;
 }
 
