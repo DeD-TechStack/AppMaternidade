@@ -46,7 +46,7 @@ export function Inicio() {
       </section>
 
       {/* O letreiro da base (60 s, pausa no hover e no foco). Com movimento reduzido o inicio.css faz
-          a fileira ocupar a largura do conteúdo; abaixo de 768, uma fileira só, com rolagem e encaixe. */}
+          a fileira ocupar a largura do conteúdo; abaixo de 768, uma grade de 2 colunas com quatro selos. */}
       <section className="cm-area in-selos" aria-labelledby={idSelos}>
         <h2 id={idSelos} className="sr-only">
           {INICIO.selos.titulo}

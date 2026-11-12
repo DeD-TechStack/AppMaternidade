@@ -125,6 +125,11 @@ describe('Início: troca de turno', () => {
     expect(cartao.getAttribute('data-giro')).toBe('2')
     expect(['baixo-direita', 'topo-direita']).toContain(cartao.getAttribute('data-posicao'))
     expect(cartao.querySelector('img')).toBeNull()
+    // POL, devolução 2: o cartão é da coluna do desenho, embaixo dele (um não cobre o outro).
+    const arte = painel.querySelector('.in-turno-arte')!
+    expect(cartao.parentElement).toBe(arte)
+    const desenho = arte.querySelector('img[data-ilustracao="maos-celular"]')!
+    expect(desenho.compareDocumentPosition(cartao) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
 
     const linhas = within(cartao).getAllByRole('listitem')
     expect(
@@ -341,6 +346,10 @@ describe('Início: perguntas', () => {
     expect(avo.getAttribute('loading')).toBe('eager')
     const lista = secao.querySelector('[data-acordeao]')!
     expect(avo.compareDocumentPosition(lista) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    // POL, devolução 4: o retrato abre a cabeça da seção, antes do título, no mesmo bloco dele.
+    const titulo = within(secao).getByRole('heading', { level: 2 })
+    expect(avo.parentElement).toBe(titulo.parentElement)
+    expect(avo.compareDocumentPosition(titulo) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 })
 
