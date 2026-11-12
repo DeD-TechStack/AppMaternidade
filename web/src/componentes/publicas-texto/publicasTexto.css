@@ -66,13 +66,17 @@
     min-width: 0;
   }
 
-  /* Painel de mel: só o desenho. O painel ocupa a largura inteira da coluna em que está (a coluna toda no celular, a
-     coluna da direita da abertura em tela larga), o mesmo nas seis páginas; a figura fica centrada dentro dele, com a
-     altura fixa (220 no celular, 300 em tela larga) e a largura que o traço pedir (se não couber, o traço encolhe
-     dentro da caixa, sem recorte). O respiro é de 24. No celular o painel tem uns 270 px de altura, abaixo de 40% da
-     janela de 844 px. */
+  /* Painel de mel: só o desenho, e do tamanho dele. O painel abraça a figura (fit-content): largura da figura mais o
+     respiro de 24 de cada lado, no máximo a da coluna, e fica centrado nela (a coluna toda no celular, a da direita
+     da abertura em tela larga), o mesmo nas seis páginas. Sem largura mínima, sem respiro a mais: a figura ocupa a
+     área interna inteira. A figura tem a altura fixa (220 no celular, 300 em tela larga) e a largura que o traço
+     pedir (se não couber, encolhe dentro da caixa, sem recorte). No celular o painel tem uns 268 px de altura,
+     abaixo de 40% da janela de 844 px. */
   .pt-figura > .cm-painel.pt-painel {
-    inline-size: 100%;
+    box-sizing: border-box;
+    inline-size: fit-content;
+    max-inline-size: 100%;
+    justify-self: center;
     padding: 24px;
   }
 

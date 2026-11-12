@@ -434,7 +434,7 @@ const EXCLUSAO: PaginaDeTexto = {
 const CONTATO: PaginaDeTexto = {
   nome: 'Contato',
   subtitulo: 'Fale conosco.',
-  ilustracao: 'baba-tapete',
+  ilustracao: 'maos-celular',
   apoio: 'Um canal para falar com a gente.',
   // O e-mail vem num bloco próprio na abertura (cartão com o rótulo, o endereço e o botão `mailto:`).
   blocoDeEmail: true,

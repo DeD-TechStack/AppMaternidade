@@ -33,6 +33,11 @@ const BOTAO_DA_ABERTURA: Record<string, readonly [string, string]> = {
 // O jsdom não implementa a rolagem: o código a chama só se ela existir, e aqui ela é observada.
 const rolar = vi.fn()
 
+// O CSS é lido do disco e comparado com seletores de várias linhas escritos com `\n`: numa cópia com CRLF
+// (checkout no Windows) a comparação falharia, então a quebra de linha é normalizada aqui, uma vez.
+const lerCss = () =>
+  readFileSync(join(process.cwd(), 'src/componentes/publicas-texto/publicasTexto.css'), 'utf8').replace(/\r\n/g, '\n')
+
 beforeEach(() => {
   rolar.mockClear()
   Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', { value: rolar, configurable: true, writable: true })
@@ -78,7 +83,7 @@ describe('páginas públicas de leitura', () => {
         expect(rolar).toHaveBeenCalledTimes(links.length)
       })
 
-      it('tem um só desenho de traço, dentro do painel de mel, com texto alternativo, e ele não se repete nas outras páginas', () => {
+      it('tem um só desenho de traço, dentro do painel de mel, com texto alternativo, sem repetir a mesma figura na própria página', () => {
         const { container } = renderizarRota(caminho)
         const principal = container.querySelector('main')!
         const desenhos = container.querySelectorAll<HTMLImageElement>('main img[data-ilustracao]')
@@ -90,8 +95,9 @@ describe('páginas públicas de leitura', () => {
         expect(principal.querySelectorAll('aside.pt-painel')).toHaveLength(1)
         expect(within(principal).getAllByRole('img', { name: desenhos[0].alt })).toHaveLength(1)
 
-        const outros = PAGINAS.filter(([outro]) => outro !== caminho).map(([, , pagina]) => pagina.ilustracao)
-        expect(outros).not.toContain(dados.ilustracao)
+        // A regra é por página: uma só peça nela, e nenhuma outra imagem da página repete a figura do painel.
+        expect(principal.querySelectorAll(`img[data-ilustracao="${dados.ilustracao}"]`)).toHaveLength(1)
+        expect(principal.querySelectorAll('img[data-ilustracao]')).toHaveLength(1)
       })
 
       it('põe o painel de mel na abertura, depois do bloco do título, e carrega o desenho na hora', () => {
@@ -247,6 +253,17 @@ describe('índice "Nesta página" em tela estreita', () => {
   })
 })
 
+describe('Contato: desenho', () => {
+  it('usa "maos-celular", do mesmo conjunto das outras páginas, com o texto alternativo que a peça já tem', () => {
+    const { container } = renderizarRota('/contato')
+    const desenho = container.querySelector<HTMLImageElement>('main img[data-ilustracao]')!
+    expect(PAGINAS_DE_TEXTO.contato.ilustracao).toBe('maos-celular')
+    expect(desenho.getAttribute('data-ilustracao')).toBe('maos-celular')
+    expect(desenho.getAttribute('alt')).toBe('Desenho de traço: duas mãos passam um celular de uma pessoa para outra.')
+    expect(container.querySelector('main img[data-ilustracao="baba-tapete"]')).toBeNull()
+  })
+})
+
 describe('Contato: urgência', () => {
   it('o link para os canais oficiais leva ao título "Se você precisa de ajuda agora" nas Regras, com o foco nele', async () => {
     const { container } = renderizarRota('/contato')
@@ -333,10 +350,7 @@ describe('fragmento do endereço (#...)', () => {
 // Nada fica fixo ao rolar: o painel lateral com o índice foi embora (um painel que só gruda deixava meia tela em
 // branco nos recortes da página inteira). O jsdom não mede layout, então a regra é lida do CSS.
 describe('nada fixo ao rolar (CSS)', () => {
-  const css = readFileSync(join(process.cwd(), 'src/componentes/publicas-texto/publicasTexto.css'), 'utf8').replace(
-    /\/\*[\s\S]*?\*\//g,
-    '',
-  )
+  const css = lerCss().replace(/\/\*[\s\S]*?\*\//g, '')
 
   it('o CSS das páginas de leitura não tem position: sticky nem rolagem interna de painel', () => {
     expect(css).not.toMatch(/position:\s*(sticky|fixed)/)
@@ -369,7 +383,7 @@ describe('aviso de dados fictícios', () => {
   })
 
   it('o CSS não tem mais estilo de aviso (pt-aviso) nem o destaque do e-mail (pt-destaque)', () => {
-    const css = readFileSync(join(process.cwd(), 'src/componentes/publicas-texto/publicasTexto.css'), 'utf8')
+    const css = lerCss()
     expect(css).not.toMatch(/pt-aviso|pt-destaque/)
   })
 })
@@ -586,25 +600,67 @@ describe('listas longas', () => {
 // O jsdom não mede layout: a coluna única, o painel do tamanho do desenho e a lista do índice são lidos do CSS
 // (regras do arquivo, na ordem em que aparecem: a primeira é a do celular; a seguinte, a de 1100 px).
 describe('painel e figura por largura (CSS)', () => {
-  const css = readFileSync(join(process.cwd(), 'src/componentes/publicas-texto/publicasTexto.css'), 'utf8').replace(
-    /\/\*[\s\S]*?\*\//g,
-    '',
-  )
+  const css = lerCss().replace(/\/\*[\s\S]*?\*\//g, '')
   const regras = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, seletor, corpo]) => ({ seletor: seletor.trim(), corpo }))
   const corpos = (seletor: string) => regras.filter((regra) => regra.seletor === seletor).map(({ corpo }) => corpo)
 
   const altura = (corpo: string) => Number(/height:\s*(\d+)px/.exec(corpo)![1])
 
-  it('o painel de mel não tem fundo próprio no CSS (a cor vem do PainelCampo) e é a figura mais o respiro de 24 nas duas larguras', () => {
+  it('o painel de mel não tem fundo próprio no CSS (a cor vem do PainelCampo) e abraça a figura: figura mais o respiro de 24, centrado na coluna, nas duas larguras', () => {
     const [celular] = corpos('.pt-figura > .cm-painel.pt-painel')
     expect(celular).toMatch(/padding:\s*24px/)
-    // O painel ocupa a largura inteira da coluna (a coluna toda no celular, a da direita da abertura em tela larga).
-    expect(celular).toMatch(/inline-size:\s*100%/)
-    expect(css).not.toMatch(/fit-content/)
+    // O painel tem a largura da figura (fit-content), no máximo a da coluna, e fica centrado nela.
+    expect(celular).toMatch(/(^|[\s;])inline-size:\s*fit-content/)
+    expect(celular).toMatch(/(^|[\s;])max-inline-size:\s*100%/)
+    expect(celular).toMatch(/box-sizing:\s*border-box/)
+    expect(celular).toMatch(/justify-self:\s*center/)
+    expect(celular).not.toMatch(/(^|[\s;])inline-size:\s*100%/)
     expect(css).toMatch(/@media \(min-width: 1100px\)/)
     expect(css).not.toMatch(/background-color:\s*var\(--color-areia\)/)
     // Nada mais dá respiro ao painel em tela larga: o painel continua figura + 24.
     expect(css).not.toMatch(/\.cm-painel\.pt-painel\s*\{[^}]*padding:\s*40px/)
+  })
+
+  it('o painel nunca é mais largo que a figura mais 48 (24 de cada lado) e a figura ocupa pelo menos 70% da altura e 60% da largura da área interna', () => {
+    const declara = (corpo: string, propriedade: string) =>
+      new RegExp(`(^|[\\s;])${propriedade}\\s*:`).test(corpo)
+
+    // Nenhuma regra de painel dá largura mínima ou fixa ao painel nem altura própria: ele é o conteúdo mais o respiro.
+    const doPainel = regras.filter(({ seletor }) => seletor.includes('.pt-painel'))
+    expect(doPainel.length).toBeGreaterThan(0)
+    for (const { corpo } of doPainel) {
+      for (const propriedade of ['width', 'min-width', 'min-inline-size', 'height', 'min-height', 'block-size', 'min-block-size', 'aspect-ratio']) {
+        expect(declara(corpo, propriedade), propriedade).toBe(false)
+      }
+      expect(corpo).toMatch(/(^|[\s;])inline-size:\s*fit-content/)
+      expect(corpo).toMatch(/(^|[\s;])max-inline-size:\s*100%/)
+      expect(corpo).toMatch(/padding:\s*24px/)
+      expect(corpo).toMatch(/box-sizing:\s*border-box/)
+    }
+
+    // A caixa da figura (a imagem): bloco, largura automática limitada à do painel, sem respiro, borda nem largura mínima.
+    const doDesenho = regras.filter(({ seletor }) => seletor === '.pt-ilustracao').map(({ corpo }) => corpo)
+    expect(doDesenho.length).toBeGreaterThan(0)
+    for (const corpo of doDesenho) {
+      expect(declara(corpo, 'min-width')).toBe(false)
+      expect(declara(corpo, 'min-inline-size')).toBe(false)
+      expect(declara(corpo, 'inline-size')).toBe(false)
+      expect(declara(corpo, 'padding')).toBe(false)
+      expect(declara(corpo, 'border')).toBe(false)
+    }
+    const [imagem] = doDesenho
+    expect(imagem).toMatch(/display:\s*block/)
+    expect(imagem).toMatch(/width:\s*auto/)
+    expect(imagem).toMatch(/max-width:\s*100%/)
+    expect(imagem).toMatch(/object-fit:\s*contain/)
+
+    // Por construção: a largura do painel é a da figura mais 48 (padding de 24 dos dois lados) e a altura é a da figura
+    // mais 48; a figura ocupa h / (h + 48 - 48) = 100% da altura e da largura da área interna (mínimo exigido: 70% e 60%).
+    for (const corpo of doDesenho) {
+      const h = altura(corpo)
+      const areaInterna = h + 48 - 2 * 24
+      expect(h / areaInterna).toBeGreaterThanOrEqual(0.7)
+    }
   })
 
   it('a frase de apoio fica sempre à vista, em Literata itálica, no degrau h4 (20/26 no celular, 24/30 em tela larga), embaixo do painel', () => {
