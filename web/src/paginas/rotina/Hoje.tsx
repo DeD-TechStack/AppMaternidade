@@ -9,6 +9,7 @@ import { ALVO_APP } from '../../componentes/app/alvo.ts'
 import { Botao } from '../../componentes/base/Botao.tsx'
 import { Etiqueta } from '../../componentes/base/Etiqueta.tsx'
 import { AvisoDeErro } from '../../componentes/rotina/AvisoDeErro.tsx'
+import { AvisoDeFuso } from '../../componentes/rotina/AvisoDeFuso.tsx'
 import { AvisoDeLista } from '../../componentes/rotina/AvisoDeLista.tsx'
 import { BarraRegistroRapido, type BotaoRapido, type ItemDoMais } from '../../componentes/rotina/BarraRegistroRapido.tsx'
 import { DesdeUltimoRegistro, ParaVoceSaber } from '../../componentes/rotina/BlocosDoHoje.tsx'
@@ -481,11 +482,7 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
                 {ESTADOS.acessoPerdido}
               </p>
             ) : null}
-            {fusoDiferente ? (
-              <p className="text-[15px] leading-[22px] text-(--cor-texto-2)" data-fuso-diferente="">
-                {COMUM.fusoDiferente(aparelho, fuso)}
-              </p>
-            ) : null}
+            {fusoDiferente ? <AvisoDeFuso aparelho={aparelho} familia={fuso} /> : null}
           </div>
         ) : null}
 

@@ -3,6 +3,7 @@ import { ChevronLeft, Undo2 } from 'lucide-react'
 import { ALVO_APP } from '../../componentes/app/alvo.ts'
 import { Botao } from '../../componentes/base/Botao.tsx'
 import { AvisoDeLista } from '../../componentes/rotina/AvisoDeLista.tsx'
+import { AvisoDoPapel } from '../../componentes/rotina/AvisoDoPapel.tsx'
 import { IconeDoTipo } from '../../componentes/rotina/IconeDoTipo.tsx'
 import { LinkDaRotina } from '../../componentes/rotina/LinkDaRotina.tsx'
 import { SecaoDoHoje } from '../../componentes/rotina/SecaoDoHoje.tsx'
@@ -10,6 +11,7 @@ import { TelaRotina } from '../../componentes/rotina/TelaRotina.tsx'
 import { useRotina, type BebeAtivo } from '../../componentes/rotina/contexto.ts'
 import { dataEHora, prazoDaRestauracao } from '../../componentes/rotina/datasDaRotina.ts'
 import { resumoDoRegistro } from '../../componentes/rotina/formatos.ts'
+import { textoDoPapel } from '../../componentes/rotina/textoDoPapel.ts'
 import { useAcoesDaRotina } from '../../componentes/rotina/useAcoesDaRotina.ts'
 import { useSecao } from '../../componentes/rotina/useSecao.ts'
 import { useTelaDaRotina } from '../../componentes/rotina/useTelaDaRotina.ts'
@@ -32,6 +34,7 @@ function LixeiraDoBebe({ ativo }: { ativo: BebeAtivo }) {
   const { principal, acionar, focarTitulo } = useTelaDaRotina()
   const [ocupados, setOcupados] = useState<ReadonlySet<string>>(new Set())
   const lixeira = useSecao(ativo.bebe.id, (bebe) => dados.lixeira(bebe))
+  const somenteLeitura = ativo.arquivado || ativo.papel === 'observador'
 
   async function restaurar(registro: Registro) {
     if (ocupados.has(registro.id)) return
@@ -65,6 +68,7 @@ function LixeiraDoBebe({ ativo }: { ativo: BebeAtivo }) {
     >
       <div className="flex max-w-[40rem] flex-col gap-6">
         <p>{LIXEIRA.intro}</p>
+        {somenteLeitura ? <AvisoDoPapel texto={textoDoPapel(ativo)} /> : null}
         <SecaoDoHoje secao={lixeira} titulo={LIXEIRA.lista} papel={ativo.papel}>
           {(lista) => {
             const itens = [...lista.itens].sort(maisRecenteDaExclusao)
@@ -74,6 +78,8 @@ function LixeiraDoBebe({ ativo }: { ativo: BebeAtivo }) {
                   {LIXEIRA.lista}
                 </h2>
                 {lista.incompleta ? <AvisoDeLista limite={LIMITES.lixeira} dado="lixeira" className="mt-3" /> : null}
+                {/* O cuidador restaura só o que ele mesmo excluiu: uma frase, se há item de outra pessoa na lista. */}
+                {!somenteLeitura && itens.some((registro) => !podeAlterar(registro)) ? <AvisoDoPapel texto={textoDoPapel(ativo)} className="mt-3" /> : null}
                 {itens.length === 0 ? (
                   <p className="mt-3 border-y border-(--cor-fio-suave) py-4 text-(--cor-texto-2)">{LIXEIRA.vazia}</p>
                 ) : (

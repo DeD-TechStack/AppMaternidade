@@ -40,6 +40,7 @@ export const COMUM = {
   salvando: 'Salvando…',
   voltarParaHoje: 'Voltar para Hoje',
   voltarParaORegistro: 'Voltar para o registro',
+  voltarParaSessao: 'Voltar para a Sessão',
   pessoaRemovida: 'pessoa removida',
   exMembro: 'ex-membro da família',
   semNomeDoBebe: 'Bebê',

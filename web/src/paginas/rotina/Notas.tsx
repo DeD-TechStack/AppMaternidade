@@ -9,6 +9,7 @@ import { AvisoDeLista } from '../../componentes/rotina/AvisoDeLista.tsx'
 import { FormularioNota } from '../../componentes/rotina/FormularioNota.tsx'
 import { LinkDaRotina } from '../../componentes/rotina/LinkDaRotina.tsx'
 import { SecaoDoHoje } from '../../componentes/rotina/SecaoDoHoje.tsx'
+import { textoDoPapel } from '../../componentes/rotina/textoDoPapel.ts'
 import { TelaRotina } from '../../componentes/rotina/TelaRotina.tsx'
 import { useRotina, type BebeAtivo } from '../../componentes/rotina/contexto.ts'
 import { dataEHora } from '../../componentes/rotina/datasDaRotina.ts'
@@ -43,10 +44,6 @@ function VoltarDasNotas({ origem }: { origem: typeof ORIGEM_NOTAS | typeof ORIGE
   )
 }
 
-/** O texto do papel no lugar do que a pessoa não pode fazer (R38-11). */
-const textoDoPapel = (ativo: BebeAtivo): string =>
-  ativo.arquivado ? ESTADOS.arquivado : ativo.papel === 'cuidador' ? ESTADOS.cuidador : ESTADOS.observador
-
 // ---- /app/notas -------------------------------------------------------------------------------------------
 
 export function Notas() {
@@ -65,6 +62,8 @@ function ListaDeNotas({ ativo }: { ativo: BebeAtivo }) {
   const familiaId = ativo.familia.id
   const notas = useSecao(ativo.bebe.id, (bebe) => dados.notas(familiaId, bebe))
   const podeCriar = podeEscrever(ativo.papel)
+  // A origem que a lista recebeu (Hoje, via state) segue para o formulário; sem state, o formulário volta à lista.
+  const origem = origemDoEstado(useLocation().state)
 
   /** Exclui a nota (sem lixeira, DR-15). Falha: a frase e, se incerta, `Tentar de novo` com o mesmo id. */
   async function excluir(nota: Nota) {
@@ -98,7 +97,7 @@ function ListaDeNotas({ ativo }: { ativo: BebeAtivo }) {
       <div className="flex max-w-[40rem] flex-col gap-6">
         {podeCriar ? (
           <div>
-            <LinkDaRotina to="/app/notas/nova" state={{ origem: ORIGEM_NOTAS }} variante="contorno" icone={<Plus />}>
+            <LinkDaRotina to="/app/notas/nova" state={{ origem }} variante="contorno" icone={<Plus />}>
               {NOTAS.nova}
             </LinkDaRotina>
           </div>
@@ -156,7 +155,7 @@ function ListaDeNotas({ ativo }: { ativo: BebeAtivo }) {
                               <div className="flex flex-wrap gap-3">
                                 <LinkDaRotina
                                   to={`/app/notas/${nota.id}/editar`}
-                                  state={{ origem: ORIGEM_NOTAS }}
+                                  state={{ origem }}
                                   variante="contorno"
                                   icone={<Pencil />}
                                   aria-label={NOTAS.editarNota(resumo)}
@@ -269,12 +268,21 @@ function EdicaoDaNota({ ativo }: { ativo: BebeAtivo }) {
   }
   if (nota === null) return tela(<p aria-busy="true">{COMUM.carregando}</p>, true)
   return tela(
-    podeAlterar(nota) ? (
-      <FormularioNota key={nota.id} modo="editar" ativo={ativo} nota={nota} origem={origem} />
-    ) : (
-      <p className="font-medium" data-sem-permissao="">
-        {textoDoPapel(ativo)}
-      </p>
-    ),
+    <>
+      {/* Uma releitura que falhou com a nota já na tela: o aviso e `Tentar de novo` ficam junto do formulário, que
+          não é desmontado e não perde o rascunho (R38-11/12). */}
+      {leitura.erro ? (
+        <div className="mb-6 max-w-[28rem]" data-releitura-falhou="">
+          <AvisoDeErro erro={leitura.erro} papel={ativo.papel} aoTentarDeNovo={leitura.recarregar} />
+        </div>
+      ) : null}
+      {podeAlterar(nota) ? (
+        <FormularioNota key={nota.id} modo="editar" ativo={ativo} nota={nota} origem={origem} />
+      ) : (
+        <p className="font-medium" data-sem-permissao="">
+          {textoDoPapel(ativo)}
+        </p>
+      )}
+    </>,
   )
 }

@@ -20,6 +20,7 @@ import { Botao } from '../base/Botao.tsx'
 import { AvisoDeErro } from './AvisoDeErro.tsx'
 import { CampoHorario } from './CampoHorario.tsx'
 import { useRotina, type BebeAtivo } from './contexto.ts'
+import { destinoDoFormulario } from './destinoDoFormulario.ts'
 import { useAcoesDaRotina } from './useAcoesDaRotina.ts'
 import {
   camposDoRegistro,
@@ -185,9 +186,8 @@ export function FormularioRegistro({ modo, ativo, tipoInicial, registro }: Props
   const emAndamento = registro !== undefined && registro.fim === null && ehTipoDeSessao(registro.tipo)
   const tipo = campos.tipo
   const mostraFim = temCampoDeFim(tipo, { modo, emAndamento, agora: 0 })
-  const origem = (location.state as { de?: string } | null)?.de
-  // No 38b, `Editar` do detalhe volta ao detalhe (R38-22).
-  const destino = origem === 'sessao' ? '/app/sessao' : origem === 'detalhe' && registro ? `/app/registro/${registro.id}` : '/app/hoje'
+  // A mesma regra do link superior da tela; a edição aberta pela URL, sem `state`, volta ao detalhe (R38-10, R38-22).
+  const destino = destinoDoFormulario(location.state, registro?.id ?? null).para
 
   // O foco vai ao primeiro campo com erro (na ordem do DOM) a cada validação que falha.
   useEffect(() => {

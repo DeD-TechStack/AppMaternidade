@@ -5,7 +5,9 @@ import { AvisoDaTela } from '../../componentes/app/AvisoDaTela.tsx'
 import { AvisoDeErro } from '../../componentes/rotina/AvisoDeErro.tsx'
 import { FormularioRegistro } from '../../componentes/rotina/FormularioRegistro.tsx'
 import { TituloRotina } from '../../componentes/rotina/TituloRotina.tsx'
-import { useRotina, type BebeAtivo } from '../../componentes/rotina/contexto.ts'
+import { useRotina } from '../../componentes/rotina/contexto.ts'
+import { destinoDoFormulario } from '../../componentes/rotina/destinoDoFormulario.ts'
+import { textoDoPapel } from '../../componentes/rotina/textoDoPapel.ts'
 import { useSecao } from '../../componentes/rotina/useSecao.ts'
 import { COMUM, ESTADOS, ROTULO_TIPO, TITULOS } from '../../conteudo/rotina.ts'
 import type { Resultado } from '../../dados/comum.ts'
@@ -31,12 +33,6 @@ function Voltar({ para, texto }: { para: string; texto: string }) {
   )
 }
 
-/** O texto que ocupa o lugar do formulário para quem não pode criar nem alterar (R38-11). */
-function textoDoPapel(ativo: BebeAtivo): string {
-  if (ativo.arquivado) return ESTADOS.arquivado
-  return ativo.papel === 'cuidador' ? ESTADOS.cuidador : ESTADOS.observador
-}
-
 /** A casca das telas de formulário: o link de volta, o título e o `<main>` único, com o aviso de demonstração. */
 function Tela({ titulo, linha, children }: { titulo: string; linha: string; children: ReactNode }) {
   const location = useLocation()
@@ -46,8 +42,8 @@ function Tela({ titulo, linha, children }: { titulo: string; linha: string; chil
   useEffect(() => {
     if (foco === 'titulo') focarTitulo()
   }, [foco, location.key, focarTitulo])
-  const doDetalhe = (location.state as { de?: string } | null)?.de === 'detalhe' && ehUuid(id)
-  const voltar = doDetalhe ? <Voltar para={`/app/registro/${id}`} texto={COMUM.voltarParaORegistro} /> : <Voltar para="/app/hoje" texto={COMUM.voltarParaHoje} />
+  const destino = destinoDoFormulario(location.state, ehUuid(id) ? id : null)
+  const voltar = <Voltar para={destino.para} texto={destino.texto} />
   return (
     <>
       <main ref={principal} className="pb-16 text-[17px] leading-[25px]" data-tela="registro">

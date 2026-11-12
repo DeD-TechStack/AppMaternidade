@@ -5,6 +5,7 @@ import { ALVO_APP } from '../../componentes/app/alvo.ts'
 import { Botao } from '../../componentes/base/Botao.tsx'
 import { AvisoDeErro } from '../../componentes/rotina/AvisoDeErro.tsx'
 import { AvisoDeLista } from '../../componentes/rotina/AvisoDeLista.tsx'
+import { AvisoDoPapel } from '../../componentes/rotina/AvisoDoPapel.tsx'
 import { ItemRegistro } from '../../componentes/rotina/ItemRegistro.tsx'
 import { LinkDaRotina } from '../../componentes/rotina/LinkDaRotina.tsx'
 import { SecaoDoHoje } from '../../componentes/rotina/SecaoDoHoje.tsx'
@@ -14,6 +15,7 @@ import { useRotina } from '../../componentes/rotina/contexto.ts'
 import { dataEHora, ehRestauravel } from '../../componentes/rotina/datasDaRotina.ts'
 import { camposDoDetalhe } from '../../componentes/rotina/detalhesDoRegistro.ts'
 import { urlDoHistoricoDoDia } from '../../componentes/rotina/parametrosHistorico.ts'
+import { textoDoPapel } from '../../componentes/rotina/textoDoPapel.ts'
 import { useAcoesDaRotina } from '../../componentes/rotina/useAcoesDaRotina.ts'
 import { useBebeDoRegistro } from '../../componentes/rotina/useBebeDoRegistro.ts'
 import { useSecao } from '../../componentes/rotina/useSecao.ts'
@@ -177,6 +179,10 @@ function DetalheDoRegistro() {
           <li>{sessao ? DETALHE.iniciadoPor(autorDe(registro.criadoPor)) : DETALHE.registradoPor(autorDe(registro.criadoPor))}</li>
           {sessao && registro.fim !== null ? <li>{DETALHE.encerradoPor(autorDe(registro.encerradoPor))}</li> : null}
         </ul>
+
+        {/* Uma frase só, pelo papel, pelo item (cuidador em registro de outra pessoa) ou pelo bebê arquivado; as ações
+            proibidas ficam ocultas (R38-11). */}
+        {!alteravel || dono.arquivado ? <AvisoDoPapel texto={textoDoPapel(dono)} /> : null}
 
         {!excluido && alteravel ? (
           <div className="flex flex-wrap gap-3" data-acoes-do-registro="">

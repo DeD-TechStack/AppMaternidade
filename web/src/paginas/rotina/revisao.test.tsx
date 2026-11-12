@@ -334,21 +334,22 @@ describe('R8: aviso visível e "Tentar de novo" junto dos dados', () => {
     expect((screen.getByLabelText('Nota') as HTMLTextAreaElement).value).toBe('Muito')
   })
 
-  it('R8: Registro, escrita certa seguida de releitura errada: salvar leva ao Hoje, e a seção do dia que falha mostra o aviso e "Tentar de novo"', async () => {
+  it('R8: Registro, escrita certa seguida de releitura errada: salvar (edição aberta pela URL) leva ao detalhe, e a leitura do histórico de alterações que falha mostra o aviso e "Tentar de novo"', async () => {
     const { mundo } = await abrirEdicao()
     fireEvent.change(screen.getByLabelText('Nota'), { target: { value: 'Muito' } })
-    simularFalhaRotina(mundo.rotina, 'doDia', 'rede')
+    simularFalhaRotina(mundo.rotina, 'alteracoes', 'rede')
 
     fireEvent.click(botao('Salvar'))
     await aguardarCarga()
 
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Hoje')
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Registro')
     expect(screen.getByRole('alert').textContent).toContain(FRASE_DE_LEITURA)
     expect(screen.getByRole('status').textContent).toContain('Registro salvo')
     fireEvent.click(botao('Tentar de novo'))
     await aguardarCarga()
     expect(screen.queryByRole('alert')).toBeNull()
-    expect(screen.getByRole('region', { name: 'Hoje até agora' })).toBeTruthy()
+    expect(document.querySelector('[data-cabecalho-do-registro]')).not.toBeNull()
+    expect(screen.getByRole('region', { name: 'Histórico de alterações' })).toBeTruthy()
   })
 
   it('R8: o contexto que falha na releitura mostra o aviso e "Tentar de novo", e a tela com o formulário segue de pé', async () => {

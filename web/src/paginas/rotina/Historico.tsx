@@ -3,7 +3,9 @@ import { useLocation, useNavigate } from 'react-router'
 import { Trash2 } from 'lucide-react'
 import { ALVO_APP } from '../../componentes/app/alvo.ts'
 import { Botao } from '../../componentes/base/Botao.tsx'
+import { AvisoDeFuso } from '../../componentes/rotina/AvisoDeFuso.tsx'
 import { AvisoDeLista } from '../../componentes/rotina/AvisoDeLista.tsx'
+import { AvisoDoPapel } from '../../componentes/rotina/AvisoDoPapel.tsx'
 import { FiltrosDoHistorico } from '../../componentes/rotina/FiltrosDoHistorico.tsx'
 import { LinhaDoDia } from '../../componentes/rotina/LinhaDoDia.tsx'
 import { LinkDaRotina } from '../../componentes/rotina/LinkDaRotina.tsx'
@@ -16,12 +18,13 @@ import { useRotina, type BebeAtivo } from '../../componentes/rotina/contexto.ts'
 import { diaPorExtenso, seteDiasAte, somarDias } from '../../componentes/rotina/diasDoHistorico.ts'
 import { CHAVES_DO_FILTRO, lerParametros, urlDoHistorico, type Vista } from '../../componentes/rotina/parametrosHistorico.ts'
 import { temAlgoParaSomar, totaisDoPeriodo, type DiaDaSemana } from '../../componentes/rotina/totaisHistorico.ts'
+import { textoDoPapel } from '../../componentes/rotina/textoDoPapel.ts'
 import { useAcoesDaRotina } from '../../componentes/rotina/useAcoesDaRotina.ts'
 import { useSecao } from '../../componentes/rotina/useSecao.ts'
 import { useTelaDaRotina } from '../../componentes/rotina/useTelaDaRotina.ts'
 import { ESTADOS, HISTORICO, TITULOS } from '../../conteudo/rotina.ts'
 import type { Resultado } from '../../dados/comum.ts'
-import { diaDaFamilia, janelaDoDia } from '../../dados/rotina.dia.ts'
+import { diaDaFamilia, janelaDoDia, lerAparelho } from '../../dados/rotina.dia.ts'
 import { LIMITES, type Lista, type Registro, type TipoRegistro } from '../../dados/rotina.tipos.ts'
 import { useAgora } from '../../prototipo/useAgora.ts'
 
@@ -55,6 +58,9 @@ function HistoricoDoBebe({ ativo }: { ativo: BebeAtivo }) {
   const bebeId = ativo.bebe.id
   const fuso = ativo.familia.fuso
   const hoje = diaDaFamilia(agora, fuso)
+  const aparelho = lerAparelho(agora).fuso
+  // Quem só vê (observador) ou lê um bebê arquivado recebe o texto do papel; ninguém grava neste histórico.
+  const somenteLeitura = ativo.arquivado || ativo.papel === 'observador'
   const { dia, tipos, vista, canonica } = lerParametros(location.search, hoje)
 
   // Qualquer parâmetro que não vale vira o padrão, e a URL é trocada pela forma canônica (substitui a entrada).
@@ -178,6 +184,12 @@ function HistoricoDoBebe({ ativo }: { ativo: BebeAtivo }) {
       }
     >
       <div className="flex flex-col gap-8">
+        {somenteLeitura || aparelho !== fuso ? (
+          <div className="flex flex-col gap-3">
+            {somenteLeitura ? <AvisoDoPapel texto={textoDoPapel(ativo)} /> : null}
+            {aparelho !== fuso ? <AvisoDeFuso aparelho={aparelho} familia={fuso} /> : null}
+          </div>
+        ) : null}
         <div className="flex flex-col gap-5">
           <div role="group" aria-label={HISTORICO.vistas} className="flex flex-wrap gap-2" data-vistas="">
             <Botao variante={vista === 'dia' ? 'primario' : 'contorno'} tamanho="app" className={ALVO_APP} aria-pressed={vista === 'dia'} onClick={() => ir({ vista: 'dia' })}>
