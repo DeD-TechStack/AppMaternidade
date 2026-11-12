@@ -483,3 +483,5 @@ Nenhuma tarefa de implementação (MAT-17 a MAT-19) começa sem pedido dele.
 - **11/11 17h52:** Juízes pol_inicio_r1 (Astra refeito uma vez): 2/10, 6,5-7,8. Cartão POL-INI v2 t_9e230273 (última volta) com DEVOLUCAO_POL_inicio_r1.md sha 25ba9887.
 
 - **11/11 18h14:** PAUSA por ordem de Daniel (~18h20, t_3508163c): cartões bloqueados (38a caiu em triage), cron retorno-oc pausado (cacefbc1849d), int/refazer em 22ff7cb; bloco RETOMAR no PENDENCIAS.
+
+- **12/11 01h15:** RETOMADA (sessão nova do líder, pedido de Daniel): ESTADO ATIVO; cron retorno-oc retomado; 37b g3 t_6aeda4a9, POL-DES t_89539427, POL-TXT v2 t_736b76c5 e POL-INI v2 t_9e230273 rodando; 40b t_359ab800 ready. 38a: sucessora t_197241f9 sobre base/38a-g2 4c4b1d4 (árvore de 1542137, merge refeito no título aceito), 38b/39b religadas, t_f7bdf7e8 arquivada. int/refazer segue em 22ff7cb; main intocada.
