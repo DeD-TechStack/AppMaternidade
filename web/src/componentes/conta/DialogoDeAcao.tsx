@@ -84,7 +84,7 @@ export function DialogoDeAcao({
       ref={dialogo}
       aria-labelledby={tituloId}
       aria-modal="true"
-      className="m-auto w-[min(32rem,calc(100%_-_2rem))] rounded-cartao border-[1.5px] border-[var(--cor-texto)] bg-[var(--cor-fundo)] p-6 text-[var(--cor-texto)] backdrop:bg-[var(--cor-texto)]/40 lg:p-8"
+      className="m-auto w-[min(32rem,calc(100%_-_2rem))] rounded-cartao border-[1.5px] border-[var(--cor-texto)] bg-[var(--cor-fundo)] p-6 text-[var(--cor-texto)] backdrop:bg-[var(--color-cacau)]/60 lg:p-8"
     >
       <form onSubmit={aoConfirmar} noValidate className="flex flex-col gap-4">
         <h2 id={tituloId} className="cm-h4 wrap-anywhere">
