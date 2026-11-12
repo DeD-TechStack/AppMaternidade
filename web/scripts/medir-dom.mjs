@@ -987,11 +987,67 @@ async function clicarPorTexto(cdp, seletor, texto) {
   await espera(300)
 }
 
-async function abrirCaso(cdp, base, { caso, tema, rota }) {
+/** A conta de demonstração é fictícia e só existe na memória da página. */
+const EMAIL_DEMONSTRACAO = 'juliana@exemplo.invalid'
+const SENHA_DEMONSTRACAO = 'senha-local-ficticia'
+
+/** As rotas do app (app/...) pedem sessão; as públicas abrem direto. */
+export function rotaExigeSessao(rota) {
+  return typeof rota === 'string' && rota.startsWith('app/')
+}
+
+/**
+ * Entra com a conta de demonstração em modo memória: abre /entrar, preenche e envia o formulário
+ * e espera a SPA chegar a /app/. Sem recarregar depois, a sessão (só em memória) continua viva.
+ */
+export async function entrarNaDemonstracao(cdp, base, { voltas = 80 } = {}) {
+  await cdp.enviar('Page.navigate', { url: new URL('entrar', base).href })
+  await esperarPronto(cdp)
+  const preencheu = await avaliar(
+    cdp,
+    `(async () => {
+      const email = document.querySelector('input[type=email], input[name=email], input[autocomplete=username]')
+      const senha = document.querySelector('input[type=password]')
+      if (!email || !senha) return false
+      const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set
+      setter.call(email, ${JSON.stringify(EMAIL_DEMONSTRACAO)})
+      email.dispatchEvent(new Event('input', {bubbles:true}))
+      setter.call(senha, ${JSON.stringify(SENHA_DEMONSTRACAO)})
+      senha.dispatchEvent(new Event('input', {bubbles:true}))
+      await new Promise((r) => setTimeout(r, 100))
+      senha.form.requestSubmit()
+      return true
+    })()`,
+  )
+  if (!preencheu) throw new Error('não consegui entrar na demonstração: não achei os campos de e-mail e senha em /entrar')
+  for (let i = 0; i < voltas; i += 1) {
+    if (await avaliar(cdp, `location.pathname.includes('/app/')`)) {
+      await esperarPronto(cdp)
+      return
+    }
+    await espera(100)
+  }
+  throw new Error('não consegui entrar na demonstração: o login não levou a /app/')
+}
+
+/** Vai à rota do app dentro da SPA, sem recarregar (a sessão em memória não sobrevive a um reload). */
+async function irPelaSpa(cdp, base, rota) {
+  const caminho = new URL(rota, base).pathname
+  await avaliar(cdp, `(() => { history.pushState({}, '', ${JSON.stringify(caminho)}); dispatchEvent(new PopStateEvent('popstate')); return true })()`)
+  await espera(400)
+  await esperarPronto(cdp)
+}
+
+export async function abrirCaso(cdp, base, { caso, tema, rota }) {
   // Movimento reduzido sempre (G12): as medidas e as capturas usam o mesmo modo.
   await cdp.enviar('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] })
-  await cdp.enviar('Page.navigate', { url: new URL(rota, base).href })
-  await esperarPronto(cdp)
+  if (rotaExigeSessao(rota)) {
+    await entrarNaDemonstracao(cdp, base)
+    await irPelaSpa(cdp, base, rota)
+  } else {
+    await cdp.enviar('Page.navigate', { url: new URL(rota, base).href })
+    await esperarPronto(cdp)
+  }
   if (tema === 'madrugada') {
     const ligou = await avaliar(cdp, `(() => { const b = document.querySelector('[data-cabecalho] button[aria-pressed]'); if (!b) return false; b.click(); return true })()`)
     if (!ligou) throw new Error('não achei o botão "Modo madrugada" no cabeçalho')

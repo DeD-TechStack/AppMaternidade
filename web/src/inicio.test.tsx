@@ -272,7 +272,8 @@ describe('Início: citação e depoimentos', () => {
     for (const menor of menores) expect(menor.closest('[data-painel]')).toBeNull()
 
     const desenhos = [grande, ...menores].map((relato) => relato.querySelector('img[data-ilustracao]')!)
-    expect(desenhos.map((img) => img.getAttribute('data-ilustracao'))).toEqual(['mae-noite', 'pai-colo', 'tummy-time'])
+    // A babá do relato é a que brinca no tapete (POL, devolução item 6), não a figura do bebê.
+    expect(desenhos.map((img) => img.getAttribute('data-ilustracao'))).toEqual(['mae-noite', 'pai-colo', 'baba-tapete'])
     // Enfeite: o nome e o papel já dizem quem fala.
     expect(desenhos.map((img) => img.getAttribute('alt'))).toEqual(['', '', ''])
     expect(
@@ -344,7 +345,7 @@ describe('Início: perguntas', () => {
 })
 
 describe('Início: fechamento', () => {
-  it('é um painel de cacau (não se funde com o rodapé de mel) com uma frase e um só clicável, "Começar grátis", e a babá no tapete', () => {
+  it('é um painel de cacau (não se funde com o rodapé de mel) com uma frase e um só clicável, "Começar grátis", e o bebê no tapete', () => {
     abrirInicio()
     const painel = screen.getByRole('region', { name: 'Sua família inteira no mesmo dia.' })
     expect(painel.getAttribute('data-painel')).toBe('cacau')
@@ -354,15 +355,21 @@ describe('Início: fechamento', () => {
     expect(primario.getAttribute('href')).toBe('/app/hoje')
     expect(primario.getAttribute('data-botao')).toBe('primario')
 
-    const baba = within(painel).getByRole('img', { name: DESCRICAO_ILUSTRACAO['baba-tapete'] })
-    expect(baba.getAttribute('data-ilustracao')).toBe('baba-tapete')
-    // Carrega na hora: sem ela, sobraria só o papel vazio acima do painel.
-    expect(baba.getAttribute('loading')).toBe('eager')
-    // A babá é a primeira coisa do painel, num disco de mel por cima da borda de cima, antes do título:
-    // o traço preto nunca fica sobre o cacau.
+    // A babá no tapete está nos relatos; aqui vai o desenho que sobra, para nenhum se repetir na página.
+    const desenho = within(painel).getByRole('img', { name: DESCRICAO_ILUSTRACAO['tummy-time'] })
+    expect(desenho.getAttribute('data-ilustracao')).toBe('tummy-time')
+    // Carrega na hora: sem ele, sobraria só o disco vazio na borda do painel.
+    expect(desenho.getAttribute('loading')).toBe('eager')
+    // O desenho é a primeira coisa do painel, num disco de mel por cima da borda de cima, antes do
+    // título: o traço preto nunca fica sobre o cacau.
     const disco = painel.firstElementChild!
     expect(disco.classList.contains('in-fechamento-disco')).toBe(true)
-    expect(disco.firstElementChild).toBe(baba)
+    expect(disco.firstElementChild).toBe(desenho)
+    // Os seis desenhos da página são todos diferentes.
+    const nomes = [...screen.getByRole('main').querySelectorAll('img[data-ilustracao]')].map((img) =>
+      img.getAttribute('data-ilustracao'),
+    )
+    expect(new Set(nomes).size).toBe(nomes.length)
   })
 
   it('"Começar grátis" aparece duas vezes, na abertura e no fechamento, sempre para /app/hoje', () => {
