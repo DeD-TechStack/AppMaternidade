@@ -27,3 +27,11 @@ Same scene sources and compositor (`compor.py`, `verde_restante: 0`); the screen
 - faixa-cacau@2x.webp: scene `brutos/S4_celular_linho.png`; captures: Hoje (Madrugada active, session running) 390x850; one-device fallback because the S3 two-tablet scene overlaps the tablets; 2026-11-11; sha256 a794f2c63da93261c31850f2faaff85ffdaa1585082ddb1405fe4bc686971c65
 - tabela@1x.webp: scene `brutos/S4_celular_linho.png`; captures: Hoje (day) 390x850; 2026-11-11; sha256 f65156590a9e7619e516ad662f440835ef0fefd2013cd7264e7d02f6ab12bb47
 - tabela@2x.webp: scene `brutos/S4_celular_linho.png`; captures: Hoje (day) 390x850; 2026-11-11; sha256 ee5fe93871ca5ef51f5739b4e48d9061d40dcf539b354cd2b7aa70e8017f2e84
+
+
+## Recomposed by POL-INI (2026-11-11)
+
+Polish round (spec SPEC_POLIMENTO v2, item 1 of the Início return). Same raw scenes and compositor (`compor.py`, `verde_restante: 0`); fresh window captures of this build's own screens at 390 px wide, deviceScaleFactor 2 (780 px wide, wider than the green boxes in the 1536x1024 scene), reduced motion, demonstration notice hidden at capture time, no "Protótipo" or "dados de exemplo" text. Model "Codex image_gen (ChatGPT plan)" for the raw scenes; the scene files are not regenerated.
+
+- heroi@1x.webp, heroi@2x.webp: scene `brutos/S1_trio_mel.png` (sha256 1fb08107bd0b7ec6368f528325cd98a0efaf4db582c0859bbcc0587ca3d91d53), prompt id S1_trio_mel; three different screens: Hoje (day) 390x1057, Hoje (Madrugada) 390x849, Sessão 390x1022; sha256 heroi@1x 1e7c47395f629d5c86a19ca8e809af71d84b3f2d629af34ceb7de00ddee51d50, heroi@2x dee22d647b18d34280d1c6e1c093881b2c99d7c59912ad4de183f381bc5fa90a
+- tabela@1x.webp, tabela@2x.webp: scene `brutos/S4_celular_linho.png` (sha256 569aeaa94ec46e63c08640f4476cb12da6ff93e133c822c870fdf76691844b60), prompt id S4_celular_linho; screen: Sessão (day) 390x850; sha256 tabela@1x d95e3ac7332b9a26fa8ee03e1283aacb3a216a2c3ae6245bd54f97d7e9a4c3c0, tabela@2x 3ac3d9bfebc5438da551213b161b4e9c04c3eb28a838a55f99e66516d55d3325

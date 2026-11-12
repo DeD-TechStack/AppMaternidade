@@ -1,9 +1,11 @@
 import { Fragment, useEffect, type ReactNode } from 'react'
 import { useLocation } from 'react-router'
 import type { PaginaDeTexto } from '../../conteudo/publicas-texto.ts'
+import { Botao } from '../base/Botao.tsx'
 import { Ilustracao } from '../campo/Ilustracao.tsx'
 import { PainelCampo } from '../campo/PainelCampo.tsx'
 import { BlocoDeEmail } from './BlocoDeEmail.tsx'
+import { BlocoDeLeitura } from './BlocoDeLeitura.tsx'
 import { IndiceDaPagina } from './IndiceDaPagina.tsx'
 import { SecaoDeTexto } from './SecaoDeTexto.tsx'
 import './publicasTexto.css'
@@ -54,20 +56,23 @@ function tituloDoFragmento(hash: string, secoes: PaginaDeTexto['secoes']): HTMLE
 }
 
 /**
- * Página pública de leitura longa (Campo de mel). O título tem duas linhas: o nome da página (`h1`) e,
- * logo abaixo, a segunda linha em itálico; em 1440 ele corre pela largura toda. Abaixo dele, a coluna de
- * texto (uns 70 caracteres por linha) fica à esquerda e o painel de areia, com a frase de apoio, o índice
- * "Nesta página" e o desenho, à direita (fixo ao rolar). Abaixo de 1100 px o painel perde o cartão e o
- * desenho: sobra o índice recolhido, na mesma margem do título, e o desenho vira uma figura solta dentro
- * da leitura, depois da primeira seção (ou da seção `figuraDepoisDe`). Quem chega por um endereço com
- * `#secao-...` (como o link das Regras, no Contato) cai no título da seção, com o foco nele.
+ * Página pública de leitura longa (Campo de mel). Cinco partes, de cima para baixo:
+ * 1. a abertura: o nome da página (`h1`, na escala de título), logo abaixo a segunda linha em itálico (corpo de
+ *    `h3`), os primeiros itens de uma lista quando a página pede e o botão de ação principal. Em 1100 px ou mais,
+ *    o painel de mel (a frase de apoio repetida em itálico, mais o desenho) fica ao lado; abaixo disso, embaixo;
+ * 2. o índice "Nesta página", em corpo pequeno e com um fio só;
+ * 3. o parágrafo de abertura, quando há, e as seções de leitura (uns 70 caracteres por linha, à esquerda).
+ * A página de tarefa (Exclusão) põe o painel de mel depois do passo a passo, na leitura, e não na abertura.
+ * Quem chega por um endereço com `#secao-...` (como o link das Regras, no Contato) cai no título da seção,
+ * com o foco nele.
  *
  * O `h1` leva só o nome da página (o texto exato que as rotas conferem), por isso não usa o `Titulo`
- * animado, cujo texto para leitor de tela repete as linhas; a segunda linha é um parágrafo do mesmo tamanho.
+ * animado, cujo texto para leitor de tela repete as linhas; a segunda linha é um parágrafo logo depois dele.
  */
 export function PaginaDeLeitura({ pagina }: { pagina: PaginaDeTexto }) {
   const { hash, key } = useLocation()
-  const { nome, subtitulo, ilustracao, apoio, figuraDepoisDe = 1, blocoDeEmail, apresentacao, secoes } = pagina
+  const { nome, subtitulo, ilustracao, apoio, acao, itensNaAbertura, painelDepoisDe, blocoDeEmail, apresentacao, secoes } = pagina
+  const { desenhoAteOIndice } = pagina
 
   useEffect(() => {
     const alvo = tituloDoFragmento(hash, secoes)
@@ -76,30 +81,43 @@ export function PaginaDeLeitura({ pagina }: { pagina: PaginaDeTexto }) {
     alvo.focus({ preventScroll: true })
   }, [hash, key, secoes])
 
+  const naAbertura = painelDepoisDe === undefined
+  const painel = (
+    <PainelCampo como="aside" variante="mel" largura="celula" className="pt-painel">
+      <p className="pt-apoio">{apoio}</p>
+      <Ilustracao nome={ilustracao} carregamento={naAbertura ? 'eager' : 'lazy'} className="pt-ilustracao" />
+    </PainelCampo>
+  )
+
   return (
-    <main className="cm-area pt-pagina">
-      <div className="pt-grade">
+    <main className="cm-area pt-pagina" data-desenho={desenhoAteOIndice ? 'ate-o-indice' : undefined}>
+      <section className="pt-abertura" data-painel={naAbertura ? 'abertura' : 'leitura'}>
         <div className="pt-cabeca">
           <h1 className="cm-h1">{ligarPalavrasCurtas(nome)}</h1>
           <p className="pt-segunda-linha">{ligarPalavrasCurtas(subtitulo)}</p>
-        </div>
-        <PainelCampo como="aside" variante="areia" largura="celula" className="pt-painel">
-          <p className="pt-apoio">{apoio}</p>
-          <IndiceDaPagina secoes={secoes.map(({ secao }) => secao)} />
-          <Ilustracao nome={ilustracao} carregamento="eager" className="pt-ilustracao pt-ilustracao-painel" />
-        </PainelCampo>
-        <div className="pt-leitura">
+          {itensNaAbertura ? (
+            <div className="pt-texto pt-abertura-lista">
+              <BlocoDeLeitura bloco={{ itens: itensNaAbertura }} />
+            </div>
+          ) : null}
           {blocoDeEmail ? <BlocoDeEmail /> : null}
-          {apresentacao ? <p className="cm-lide">{apresentacao}</p> : null}
-          {secoes.map((dados, indice) => (
-            <Fragment key={dados.secao.id}>
-              <SecaoDeTexto dados={dados} />
-              {indice + 1 === figuraDepoisDe ? (
-                <Ilustracao nome={ilustracao} carregamento="lazy" className="pt-ilustracao pt-ilustracao-leitura" />
-              ) : null}
-            </Fragment>
-          ))}
+          {acao ? (
+            <div className="pt-acao">
+              <Botao to={acao.para}>{acao.botao}</Botao>
+            </div>
+          ) : null}
         </div>
+        {naAbertura ? painel : null}
+      </section>
+      <IndiceDaPagina secoes={secoes.map(({ secao }) => secao)} sempreAberto={desenhoAteOIndice} />
+      <div className="pt-leitura">
+        {apresentacao ? <p className="cm-lide">{apresentacao}</p> : null}
+        {secoes.map((dados, indice) => (
+          <Fragment key={dados.secao.id}>
+            <SecaoDeTexto dados={dados} />
+            {indice + 1 === painelDepoisDe ? painel : null}
+          </Fragment>
+        ))}
       </div>
     </main>
   )

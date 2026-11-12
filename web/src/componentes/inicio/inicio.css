@@ -71,7 +71,14 @@
 
 /* A cena ocupa a coluna dela (CenaEstudio é um painel de largura cheia). No celular ganha altura
    num recorte 9:8 centrado (os três aparelhos ficam inteiros) e a primeira dobra de 390 × 844
-   termina nela, inteira, sem meia linha dos números embaixo. */
+   termina nela, inteira, sem meia linha dos números embaixo.
+   Nitidez (POL:RF-02): o @2x tem 1536 × 1024, então a imagem nunca é desenhada com mais de 768 px
+   CSS de largura. Com `object-fit: cover`, a largura desenhada é a maior entre a da caixa e 1,5 × a
+   altura dela: a caixa fica com no máximo 768 de largura e 512 de altura. */
+.in-heroi-cena {
+  max-width: 768px;
+}
+
 .in-heroi-cena .cm-painel {
   width: auto;
   margin-inline: 0;
@@ -88,8 +95,9 @@
   }
 }
 
-/* No largo: 7 colunas de texto e 5 de cena; a cena vira um quadrado (os três aparelhos cabem no
-   recorte central) e o bloco de texto fica centrado na altura dela. */
+/* No largo: 7 colunas de texto e 5 de cena, com o bloco de texto centrado na altura dela. O recorte
+   10:9 (553 × 498 em 1440) é desenhado a 747 px de largura: os três aparelhos ficam inteiros e a tela
+   de cada um sai nítida. */
 @media (min-width: 1100px) {
   .in-heroi {
     grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
@@ -105,7 +113,7 @@
      pode quebrar em duas nas 7 colunas. */
 
   .in-heroi-cena .cm-cena-midia img {
-    aspect-ratio: 1;
+    aspect-ratio: 10 / 9;
   }
 }
 
@@ -114,63 +122,61 @@
   margin-top: clamp(40px, 2.286vw + 31.086px, 64px);
 }
 
-/* Números: no celular, uma figura de exibição por linha (Literata 88), a legenda em Outfit embaixo e
-   um fio fino de cacau entre as linhas; do tablet em diante, a fileira de três com fios verticais. */
+/* Números (DESIGN.md 4, `Numeros`): o número lidera, em Literata 64 em 1440 e 40 em 390, e a legenda
+   em Outfit vem depois dele. Os fios são de cacau a 20 %. No celular: uma linha por número, o número e
+   a legenda lado a lado na mesma linha de base, com fios em cima, entre e embaixo (a faixa toda cabe em
+   uns 220 px). Do tablet em diante: a fileira de três presa à grade, o número em cima da legenda, cada
+   um na borda esquerda da sua coluna (o primeiro na borda do h1), com os fios verticais ligados ao fio
+   de cima e ao de baixo. */
 .in-numeros-lista {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   margin: 0;
   padding: 0;
   list-style: none;
+  border-bottom: 1px solid var(--cor-fio-suave);
 }
 
 .in-numeros-item {
-  padding: 22px 0 26px;
-  border-top: 1px solid var(--color-cacau);
-}
-
-.in-numeros-item:first-child {
-  padding-top: 0;
-  border-top: 0;
-}
-
-.in-numeros-item:last-child {
-  padding-bottom: 0;
+  padding: 14px 0 16px;
+  border-top: 1px solid var(--cor-fio-suave);
 }
 
 .in-numeros-linha {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  flex-flow: row wrap;
+  align-items: baseline;
+  gap: 0 14px;
 }
 
 .in-numeros-valor {
   font-family: var(--fonte-titulo);
-  font-size: 88px;
-  line-height: 0.82;
+  font-size: clamp(40px, 2.286vw + 31.086px, 64px);
+  line-height: 1;
   font-weight: 600;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums lining-nums;
 }
 
 .in-numeros-legenda {
   font-family: var(--fonte-texto);
-  font-size: 1.25rem;
-  line-height: 1.625rem;
+  font-size: clamp(18px, 0.381vw + 16.514px, 22px);
+  line-height: 1.3;
 }
 
 @media (min-width: 768px) {
   .in-numeros-lista {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-top: 1px solid var(--cor-fio-suave);
   }
 
-  .in-numeros-item,
-  .in-numeros-item:first-child,
-  .in-numeros-item:last-child {
-    display: flex;
-    justify-content: center;
-    padding: 8px 24px;
+  .in-numeros-item {
+    padding: clamp(20px, 1.143vw + 15.543px, 32px) clamp(20px, 1.143vw + 15.543px, 32px);
     border-top: 0;
+  }
+
+  .in-numeros-item:first-child {
+    padding-left: 0;
   }
 
   .in-numeros-item + .in-numeros-item {
@@ -178,65 +184,81 @@
   }
 
   .in-numeros-linha {
-    flex-flow: row wrap;
-    align-items: baseline;
-    justify-content: center;
-    gap: 0 14px;
-  }
-
-  .in-numeros-valor {
-    font-size: clamp(48px, 2.286vw + 31.086px, 64px);
-    line-height: 1;
-    letter-spacing: -0.01em;
-  }
-
-  .in-numeros-legenda {
-    font-size: clamp(18px, 0.381vw + 16.514px, 22px);
-    line-height: 1.3;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
   }
 }
 
 .in-selos {
-  margin-top: clamp(48px, 1.524vw + 42.057px, 64px);
+  margin-top: clamp(32px, 1.524vw + 26.057px, 48px);
 }
 
-/* Selos no celular: o letreiro para e a única lista lida vira uma grade de 2 colunas de largura igual
-   (o quinto selo fica no centro, com a mesma largura). A cópia escondida e a pausa somem: não há o que
-   pausar. Do tablet em diante, o letreiro da base. */
-@media (max-width: 767px) {
-  .in-selos .cm-selos-trilho {
-    width: auto;
-    animation: none;
-  }
-
-  .in-selos .cm-selos-lista[aria-hidden='true'],
-  .in-selos .cm-selos-pausa {
-    display: none;
-  }
-
+/* Selos (DESIGN.md 4 e 5). Com movimento, em toda largura, o letreiro da base (60 s, pausa no hover,
+   no foco e pelo botão). Com movimento reduzido a base mostra uma fileira parada que quebra linha e
+   deixava sobra à direita (e, no celular, um selo sozinho): aqui a fileira única ocupa a largura do
+   conteúdo, com os cinco selos esticados por igual e o texto centrado. */
+@media (prefers-reduced-motion: reduce) {
+  /* A lista é um item flex do trilho: sem crescer, ela ficava do tamanho dos selos. */
   .in-selos .cm-selos-lista {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-    padding: 0;
+    flex: 1 1 auto;
+    flex-wrap: nowrap;
   }
 
-  .in-selos .cm-selos-lista > li:last-child:nth-child(odd) {
-    grid-column: 1 / -1;
-    justify-self: center;
-    width: calc(50% - 5px);
+  .in-selos .cm-selos-lista > li {
+    display: flex;
+    flex: 1 1 auto;
   }
 
   .in-selos .cm-selo {
     box-sizing: border-box;
-    display: flex;
+    justify-content: center;
     width: 100%;
-    height: 100%;
-    min-height: 64px;
-    padding: 10px 16px 10px 14px;
+  }
+}
+
+/* No celular, com movimento reduzido, a fileira não cabe: ela vira uma faixa de ponta a ponta da
+   janela, com rolagem de lado e encaixe em cada selo. O primeiro selo começa na margem do conteúdo
+   e o último, cortado na borda, mostra que a fileira continua. */
+@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+  .in-selos .cm-selos {
+    overflow: visible;
+  }
+
+  .in-selos .cm-selos-janela {
+    margin-inline: calc(-1 * var(--cm-margem));
+    padding-inline: var(--cm-margem);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--cm-margem);
+    scrollbar-width: none;
+  }
+
+  .in-selos .cm-selos-trilho {
+    width: max-content;
+  }
+
+  /* Selos mais justos (vão de 8 px, respiro 12/14, ícone de 20): o terceiro selo aparece uns 40 px
+     antes da borda, a 375 e a 390, e mostra que a fileira continua de lado. */
+  .in-selos .cm-selos-lista {
+    gap: 8px;
+  }
+
+  .in-selos .cm-selos-lista > li {
+    flex: none;
+    scroll-snap-align: start;
+  }
+
+  .in-selos .cm-selo {
+    gap: 8px;
+    padding-inline: 12px 14px;
     font-size: 1rem;
-    line-height: 1.25rem;
-    white-space: normal;
+  }
+
+  .in-selos .cm-selo svg {
+    width: 20px;
+    height: 20px;
   }
 }
 
@@ -403,24 +425,26 @@
   max-width: 30rem;
 }
 
-/* A cena é o painel da própria faixa, não uma caixa solta: ela vai até as bordas da faixa (de baixo
-   e dos lados no celular; de cima, da direita e de baixo no largo). O fundo dela é um cacau um pouco
-   mais quente; colada nas bordas, a troca de tom vira a divisão da faixa em duas metades. O
-   recipiente da revelação passa a cobrir o painel inteiro (o respiro vira padding dele), e o raio
-   e o overflow do painel cortam os cantos. */
+/* No largo (>= 960) a cena é a metade direita da própria faixa: vai até as bordas de cima, da direita
+   e de baixo, e a troca de tom vira a divisão da faixa em duas metades. O recipiente da revelação
+   passa a cobrir o painel inteiro (o respiro vira padding dele), e o raio e o overflow do painel
+   cortam os cantos. Abaixo de 960 a foto fica na coluna do texto (POL:RF-05: começa no x do título),
+   dentro do respiro do painel, com o raio das fotos da página; embaixo sobra o mesmo respiro de cima. */
 .in-faixa .cm-faixa-conteudo {
   margin: calc(-1 * var(--cm-respiro-painel));
   padding: var(--cm-respiro-painel);
-}
-
-.in-faixa-foto {
-  margin: 0 calc(-1 * var(--cm-respiro-painel)) calc(-1 * var(--cm-respiro-painel));
 }
 
 .in-faixa-foto .in-foto {
   aspect-ratio: 3 / 2;
   object-fit: cover;
   object-position: 50% 45%;
+}
+
+@media (max-width: 959px) {
+  .in-faixa-foto .in-foto {
+    border-radius: var(--radius-painel);
+  }
 }
 
 @media (min-width: 960px) {
@@ -505,37 +529,87 @@
   }
 }
 
+/* No celular a primeira coluna precisa caber "Sem metas nem" numa linha (senão o "nem" fica sozinho):
+   as duas colunas de marca ficam justas no texto delas e o respiro encolhe. A quebra é equilibrada. */
 @media (max-width: 479px) {
   .in-tabela-grade {
-    --in-tabela-respiro: 6px;
+    --in-tabela-respiro: 4px;
   }
 
   .in-tabela-grade .cm-painel-oliva {
-    padding-inline: 12px;
+    padding-inline: 10px;
   }
 
   .in-tabela-grade .cm-tabela thead th {
     font-size: 0.875rem;
   }
 
+  .in-tabela-grade .cm-tabela thead th:nth-child(2) {
+    width: calc(8.6em + 2 * var(--in-tabela-respiro));
+  }
+
+  .in-tabela-grade .cm-tabela thead th:nth-child(3) {
+    width: calc(5.6em + 2 * var(--in-tabela-respiro));
+  }
+
   .in-tabela-grade .cm-tabela tbody th {
-    padding-right: 8px;
+    padding-right: 4px;
     font-size: 0.9375rem;
+    text-wrap: balance;
   }
 }
 
-/* Lado a lado só a partir de 1280: abaixo disso a tabela em 7 colunas espremeria a necessidade.
-   A tabela é a coluna larga (7) e o linho a estreita (5). */
+/* A marca do produto na tabela: a coluna do AppMaternidade é uma faixa de mel dentro do painel de
+   oliva, do cabeçalho à última linha (cacau sobre mel, 9,17:1; o visto segue a cor do texto). Para a
+   faixa ter os cantos arredondados, a tabela passa ao modelo de bordas separadas, sem espaço entre as
+   células (as bordas da base são só a de baixo e a da esquerda: nada dobra). Os fios dentro do mel são
+   de cacau a 20 %, e os dois fios verticais junto da faixa somem: o mel já separa as colunas. */
+.in-tabela-grade .cm-tabela {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.in-tabela-grade .cm-tabela thead th {
+  padding-top: 18px;
+}
+
+.in-tabela-grade .cm-tabela tr > :nth-child(2) {
+  border-left-color: transparent;
+  border-bottom-color: var(--cor-fio-suave);
+  background-color: var(--color-mel);
+  color: var(--color-cacau);
+}
+
+.in-tabela-grade .cm-tabela tr > :nth-child(3) {
+  border-left-color: transparent;
+}
+
+.in-tabela-grade .cm-tabela thead th:nth-child(2) {
+  border-start-start-radius: var(--radius-campo);
+  border-start-end-radius: var(--radius-campo);
+}
+
+.in-tabela-grade .cm-tabela tbody tr:last-child > :nth-child(2) {
+  border-end-start-radius: var(--radius-campo);
+  border-end-end-radius: var(--radius-campo);
+}
+
+/* Lado a lado só a partir de 1280: abaixo disso a tabela espremeria a necessidade. A tabela é a coluna
+   larga (8) e cada necessidade cabe numa linha; o linho fica na estreita (4), com a altura dele, não a
+   da tabela: os dois blocos deixam de ser um par igual. Nitidez (POL:RF-02): a foto é desenhada com
+   1,5 × a altura do quadro, e o quadro tem no máximo 507 px de altura (8:9 em 451 de largura), então a
+   imagem sai com no máximo 761 px CSS, abaixo dos 768 do @2x. */
 @media (min-width: 1280px) {
   .in-tabela-grade {
-    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    grid-template-columns: minmax(0, 8fr) minmax(0, 4fr);
     gap: 24px;
+    align-items: start;
   }
 
-  /* A foto acompanha a altura da tabela, num recorte centrado no celular. */
   .in-tabela-foto {
     position: relative;
-    min-height: 360px;
+    aspect-ratio: 8 / 9;
+    max-height: 507px;
   }
 
   /* O recipiente da M3 cobre o painel (com a escala ele é o bloco de referência da foto). */
@@ -548,7 +622,7 @@
   .in-tabela-foto .in-foto {
     height: 100%;
     object-fit: cover;
-    object-position: 45% 50%;
+    object-position: 50% 50%;
   }
 }
 
@@ -561,11 +635,23 @@
 }
 
 /* 7. Citação e depoimentos -------------------------------------------------------------------- */
-/* A citação fica no centro da área, para não deixar meia página vazia ao lado dela. */
+/* A citação domina: fica no centro da área, sozinha no papel, e a oliva vira só o pedestal em que ela
+   fica de pé, como os aparelhos nas cenas: uma faixa estreita da largura da citação, de cantos retos
+   (não é botão nem cartão), com a linha do autor (papel sobre oliva, 4,68:1). */
 .in-citacao .cm-citacao {
+  display: flex;
+  flex-direction: column;
   max-width: 56rem;
   margin-inline: auto;
   text-align: center;
+}
+
+.in-citacao .cm-citacao-autor {
+  margin-top: clamp(24px, 0.762vw + 21.029px, 32px);
+  padding: 10px 16px;
+  background-color: var(--color-oliva);
+  color: var(--color-papel);
+  font-weight: 500;
 }
 
 /* Relatos: um grande num painel de areia, dois menores ao lado (>= 1100) ou embaixo, no papel. */
@@ -658,8 +744,8 @@
   object-position: 50% 6%;
 }
 
-.in-relato-arte[data-ilustracao='tummy-time'] {
-  object-position: 62% 50%;
+.in-relato-arte[data-ilustracao='baba-tapete'] {
+  object-position: 30% 50%;
 }
 
 .in-relato-corpo {
@@ -697,121 +783,106 @@
 }
 
 /* 8. Perguntas -------------------------------------------------------------------------------- */
+/* A mesma grade dos relatos: no largo (>= 1100) o título fica nas 7 colunas e a lista nas 5, e a lista
+   começa na mesma borda que a coluna dos relatos menores (os dois com o fio de cacau em cima). */
 .in-perguntas {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 32px;
 }
 
-/* O desenho da avó é da seção. No celular: um retrato redondo de areia (o mesmo dos relatos), entre o
-   título e a lista; o recorte mostra a avó e o carrinho com o bebê. O padding deixa o recorte do
-   desenho concêntrico ao círculo. */
+/* O desenho da avó é a ilustração pequena da seção: o retrato redondo de areia dos relatos, do mesmo
+   tamanho (84 no celular, 112 no largo), embaixo do título; o recorte mostra a avó e o carrinho com o
+   bebê. O padding deixa o recorte do desenho concêntrico ao círculo. */
 .in-perguntas-arte.cm-ilustracao {
   box-sizing: border-box;
-  width: 128px;
+  width: 84px;
   aspect-ratio: 1;
   margin-top: 24px;
-  padding: 8px;
+  padding: 6px;
   border-radius: 50%;
   background-color: var(--color-areia);
   object-fit: cover;
   object-position: 50% 42%;
 }
 
-/* No largo: o desenho inteiro, embaixo do título, ao lado da lista. */
-@media (min-width: 960px) {
+@media (min-width: 1100px) {
   .in-perguntas {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 48px;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    column-gap: 48px;
     align-items: start;
   }
 
   .in-perguntas-arte.cm-ilustracao {
-    width: min(100%, 184px);
-    aspect-ratio: auto;
-    margin-top: 40px;
-    padding: 0;
-    border-radius: 0;
-    background-color: transparent;
-    object-fit: contain;
+    width: 112px;
+    margin-top: 32px;
   }
 }
 
-.in-faq {
+/* O `Acordeao` da base com as marcas da página: o fio de cacau em cima e embaixo da lista (o mesmo dos
+   relatos menores), o fio fino (cacau a 20 %) entre as linhas, a pergunta sublinhada no hover e o
+   sinal de mais num círculo de 44 px, com traço de 2 px como o peso 600 da pergunta. O giro de 45° da
+   base (150 ms, só de `rotate`) leva o mais ao x; aberta, o círculo fica cacau. */
+.in-faq.cm-acordeao {
   border-top: 1px solid var(--color-cacau);
 }
 
-.in-faq-item {
-  border-bottom: 1px solid var(--color-cacau);
+.in-faq .cm-acordeao-item {
+  border-bottom: 1px solid var(--cor-fio-suave);
 }
 
-.in-faq-titulo {
-  margin: 0;
+.in-faq .cm-acordeao-item:last-child {
+  border-bottom-color: var(--color-cacau);
 }
 
-.in-faq-pergunta {
-  text-wrap: balance;
-}
-
-.in-faq-gatilho {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.in-faq .cm-acordeao-gatilho {
   gap: 16px;
-  width: 100%;
   min-height: 80px;
-  padding: 16px 0;
-  border: 0;
   border-radius: 6px;
-  background: none;
-  color: inherit;
-  font-family: var(--fonte-titulo);
-  font-size: clamp(20px, 0.381vw + 18.514px, 24px);
-  line-height: 1.3;
-  font-weight: 600;
-  text-align: left;
   cursor: pointer;
 }
 
-.in-faq-gatilho:focus-visible {
+.in-faq .cm-acordeao-gatilho > span {
+  text-wrap: balance;
+}
+
+.in-faq .cm-acordeao-gatilho:focus-visible {
   outline: 2px solid var(--cor-foco);
   outline-offset: 2px;
 }
 
-.in-faq-gatilho:hover .in-faq-pergunta {
+.in-faq .cm-acordeao-gatilho:hover > span {
   text-decoration: underline;
   text-decoration-thickness: 1.5px;
   text-underline-offset: 6px;
 }
 
-.in-faq-sinal {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
+.in-faq .cm-acordeao-icone {
+  box-sizing: content-box;
+  width: 20px;
+  height: 20px;
+  padding: 10.5px;
   border: 1.5px solid var(--color-cacau);
   border-radius: var(--radius-pilula);
+  stroke-width: 2;
 }
 
 /* Hover: o círculo ganha a areia, na hora (sem transição: o estado muda a cada clique). */
-.in-faq-gatilho:hover .in-faq-sinal {
+.in-faq .cm-acordeao-gatilho:hover .cm-acordeao-icone {
   background-color: var(--color-areia);
 }
 
-.in-faq-gatilho[aria-expanded='true'] .in-faq-sinal {
+.in-faq .cm-acordeao-gatilho[aria-expanded='true'] .cm-acordeao-icone {
   background-color: var(--color-cacau);
   color: var(--color-papel);
 }
 
-.in-faq-resposta {
+.in-faq .cm-acordeao-resposta {
   max-width: 40rem;
   padding: 0 60px 28px 0;
 }
 
-.in-faq-resposta > p {
-  margin: 0;
+.in-faq .cm-acordeao-resposta > p {
   font-family: var(--fonte-texto);
   font-size: 1.125rem;
   line-height: 1.6875rem;
@@ -819,32 +890,41 @@
 }
 
 @media (min-width: 768px) {
-  .in-faq-gatilho {
+  .in-faq .cm-acordeao-gatilho {
     min-height: 88px;
   }
 }
 
 /* 9. Fechamento ------------------------------------------------------------------------------- */
 /* Painel de cacau, para não se fundir com o rodapé de mel; o primário do cacau é a pílula de mel
-   (cacau sobre mel 9,17:1; no hover inverte). O papel de cima guarda a altura do disco que sai do
-   painel (entra 48 px nele). */
+   (cacau sobre mel 9,17:1; no hover inverte). O disco de mel morde a borda de cima do painel: no
+   celular entra 48 px nele (o título centrado ocupa a largura toda); do tablet largo em diante entra
+   dois terços dele, ao lado do título, e o papel de cima guarda só o terço que sobra mais meio respiro:
+   o trecho vazio acima do painel fecha. */
 .in-fechamento {
   --cor-primario-fundo: var(--color-mel);
   --cor-primario-texto: var(--color-cacau);
-  margin-top: calc(var(--in-arte-fechamento) - 48px + var(--in-respiro) / 2);
+  --in-mordida: 48px;
+  margin-top: calc(var(--in-arte-fechamento) - var(--in-mordida) + var(--in-respiro) / 2);
   padding-top: calc(var(--cm-respiro-painel) + 48px);
   text-align: center;
+}
+
+@media (min-width: 960px) {
+  .in-fechamento {
+    --in-mordida: calc(var(--in-arte-fechamento) * 2 / 3);
+  }
 }
 
 .in-fechamento .cm-botao {
   margin-top: clamp(28px, 1.143vw + 23.543px, 40px);
 }
 
-/* A babá vai num disco de mel: o traço preto nunca fica sobre o cacau. */
+/* O desenho vai num disco de mel: o traço preto nunca fica sobre o cacau. */
 .in-fechamento-disco {
   position: absolute;
   z-index: 1;
-  bottom: calc(100% - 48px);
+  bottom: calc(100% - var(--in-mordida));
   left: clamp(16px, 7.619vw - 13.714px, 96px);
   display: grid;
   place-items: center;

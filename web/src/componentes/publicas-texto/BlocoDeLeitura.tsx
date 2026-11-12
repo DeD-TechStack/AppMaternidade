@@ -1,7 +1,6 @@
 import { Fragment } from 'react'
 import { Link } from 'react-router'
 import { type Bloco, type Texto } from '../../conteudo/publicas-texto.ts'
-import { Botao } from '../base/Botao.tsx'
 
 /** Um parágrafo: texto simples ou uma sequência de trechos (texto ou link de rota). */
 function Paragrafo({ texto }: { texto: Texto }) {
@@ -21,13 +20,17 @@ function Paragrafo({ texto }: { texto: Texto }) {
   )
 }
 
-/** Um bloco de leitura: parágrafo, lista (ordenada ou não), itens com título (`h3` e parágrafo) ou botão de rota. */
+/** Uma lista com este número de itens ou mais corre em duas colunas em tela larga (a ordem segue de cima para baixo). */
+const ITENS_PARA_DUAS_COLUNAS = 4
+
+/** Um bloco de leitura: parágrafo, lista (ordenada ou não) ou itens com título (`h3` e parágrafo). */
 export function BlocoDeLeitura({ bloco }: { bloco: Bloco }) {
   if (typeof bloco === 'string') return <Paragrafo texto={bloco} />
   if ('itens' in bloco) {
     const Lista = bloco.ordenada ? 'ol' : 'ul'
+    const emColunas = bloco.itens.length >= ITENS_PARA_DUAS_COLUNAS
     return (
-      <Lista className="pt-lista">
+      <Lista className={emColunas ? 'pt-lista pt-lista-colunas' : 'pt-lista'}>
         {bloco.itens.map((item) => (
           <li key={item}>{item}</li>
         ))}
@@ -43,13 +46,6 @@ export function BlocoDeLeitura({ bloco }: { bloco: Bloco }) {
             <p>{texto}</p>
           </div>
         ))}
-      </div>
-    )
-  }
-  if ('botao' in bloco) {
-    return (
-      <div className="pt-acao">
-        <Botao to={bloco.para}>{bloco.botao}</Botao>
       </div>
     )
   }
