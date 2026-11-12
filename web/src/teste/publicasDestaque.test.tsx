@@ -7,6 +7,7 @@ import { FASES, MARCOS, QUANTO_TEMPO, TUMMY_TIME } from '../conteudo/desenvolvim
 import { CONSULTADO_EM } from '../conteudo/desenvolvimento/fontes.ts'
 import { AVISO_SAUDE, DESENVOLVIMENTO_DESTAQUE } from '../conteudo/desenvolvimento/pagina.ts'
 import { COMO_FUNCIONA_DESTAQUE, CUIDADO_DESTAQUE } from '../conteudo/publicas-destaque.ts'
+import { INICIO } from '../conteudo/textos.ts'
 import { renderizarRota } from './renderizarRota.tsx'
 
 // Como funciona, Cuidado compartilhado e Desenvolvimento no "Campo de mel": títulos, passos, avisos,
@@ -209,7 +210,10 @@ describe('as abas de fase e as linhas dos cartões refluem quando falta largura'
     const texto = Object.assign({}, ...regrasDoSeletor(/^\.pd-linha-texto$/).map((r) => r.declaracoes)) as Record<string, string>
     expect(texto['min-width']).toBe('0')
     expect(texto['overflow-wrap']).toBe('anywhere')
-    semCorteNemTrava(/\.pd-linha(-[\w-]+)?$/)
+    // A hora ("14:05") é uma peça só e não quebra (nowrap, rodada POL item 7); o resto da linha nunca trava.
+    semCorteNemTrava(/\.pd-linha(?!-hora)(-[\w-]+)?$/)
+    const hora = Object.assign({}, ...regrasDoSeletor(/^\.pd-linha-hora$/).map((r) => r.declaracoes)) as Record<string, string>
+    expect(hora['white-space']).toBe('nowrap')
   })
 })
 
@@ -274,9 +278,9 @@ describe('painéis de mel com luz e blocos de fim de seção sem colunas desigua
     })
   }
 
-  it('o painel de mel do desenho da babá (tummy time) tem a luz de estúdio', () => {
+  it('o painel de mel do desenho do tummy time (o bebê de bruços) tem a luz de estúdio', () => {
     const { container } = renderizarRota('/desenvolvimento')
-    const painel = container.querySelector('#tummy-time img[data-ilustracao="baba-tapete"]')!.closest('[data-painel]')!
+    const painel = container.querySelector('#tummy-time img[data-ilustracao="tummy-time"]')!.closest('[data-painel]')!
     expect(painel.getAttribute('data-painel')).toBe('mel')
     expect(painel.classList.contains('cm-painel-luz')).toBe(true)
   })
@@ -308,8 +312,9 @@ describe('Como funciona', () => {
     const cena = container.querySelector<HTMLImageElement>('main img[data-cena]')!
     expect(cena.getAttribute('alt')).toBe(COMO_FUNCIONA_DESTAQUE.cena.alt)
     expect(cena.getAttribute('src')).toBe('/cenas/publicas/como-funciona@1x.webp')
-    expect(cena.getAttribute('width')).toBe('512')
-    expect(cena.getAttribute('height')).toBe('768')
+    // O recorte em retrato em volta do celular: 340 × 525 em 1× (o @2x tem 680 × 1050).
+    expect(cena.getAttribute('width')).toBe('340')
+    expect(cena.getAttribute('height')).toBe('525')
     expect(cena.closest('[data-painel]')!.querySelector('.cm-flutuante, [data-cartao-plano]')).toBeNull()
   })
 
@@ -332,13 +337,13 @@ describe('Como funciona', () => {
     expect(itens[2].textContent).toContain(COMO_FUNCIONA_DESTAQUE.desdeQueSaiu.andamento.rotulo)
   })
 
-  it('o convite alinha o papel pelo nome (na mesma coluna), e a faixa de cacau repete "protótipo" só no botão', () => {
+  it('o convite alinha o papel pelo nome (na mesma coluna), e a faixa de cacau tem o botão sem a palavra "protótipo"', () => {
     const { container } = renderizarRota('/como-funciona')
     const convite = container.querySelector('#passo-primeira-semana .cm-flutuante .pd-cartao')!
     const coluna = convite.querySelector('.pd-cartao-titulo')!.parentElement!
     expect(coluna.textContent).toContain(COMO_FUNCIONA_DESTAQUE.convite.papel)
     const faixa = screen.getByRole('region', { name: COMO_FUNCIONA_DESTAQUE.fechamento.titulo.join(' ') })
-    expect(faixa.textContent!.match(/protótipo/gi)).toHaveLength(1)
+    expect(faixa.textContent).not.toMatch(/protótipo/i)
     expect(within(faixa).getByRole('link', { name: COMO_FUNCIONA_DESTAQUE.fechamento.acao.rotulo })).toBeTruthy()
     for (const numero of COMO_FUNCIONA_DESTAQUE.numeros) expect(faixa.textContent).toContain(numero.legenda)
   })
@@ -426,14 +431,18 @@ describe('Cuidado compartilhado', () => {
     }
   })
 
-  it('a abertura leva o painel de mel ao lado do título, com um cartão flutuante do registro compartilhado (celular)', () => {
+  it('a abertura leva o painel de mel ao lado do título, com o convite flutuante por cima da borda; a tarde da Heloísa mora só no painel de areia', () => {
     const { container } = renderizarRota('/cuidado-compartilhado')
     const abertura = container.querySelector('main .pd-abertura')!
     expect(abertura.querySelector('h1')).not.toBeNull()
     expect(abertura.querySelector('figure[data-painel="mel"]')).not.toBeNull()
-    const tarde = abertura.querySelector('.pd-familia-tarde')!
-    expect(tarde.classList.contains('cm-flutuante')).toBe(true)
-    for (const item of CUIDADO_DESTAQUE.tarde.itens) expect(tarde.textContent).toContain(item.quem)
+    const convite = abertura.querySelector('.pd-familia-convite')!
+    expect(convite.classList.contains('cm-flutuante')).toBe(true)
+    expect(convite.textContent).toContain(CUIDADO_DESTAQUE.convite.titulo)
+    // Sem a cópia da tarde no painel de mel: a avó é a peça do painel (70% da altura no celular).
+    expect(abertura.querySelector('.pd-familia-tarde')).toBeNull()
+    expect(abertura.textContent).not.toContain(CUIDADO_DESTAQUE.tarde.titulo)
+    expect(container.querySelectorAll('main .pd-registro [data-cartao-plano]')).toHaveLength(1)
   })
 
   it('os três blocos são uma lista com fios (um bloco por linha), sem cartões iguais lado a lado', () => {
@@ -459,8 +468,9 @@ describe('Desenvolvimento', () => {
     const cena = container.querySelector<HTMLImageElement>('main img[data-cena]')!
     expect(cena.getAttribute('alt')).toBe(DESENVOLVIMENTO_DESTAQUE.cena.alt)
     expect(cena.getAttribute('src')).toBe('/cenas/publicas/desenvolvimento@1x.webp')
-    expect(cena.getAttribute('width')).toBe('768')
-    expect(cena.getAttribute('height')).toBe('512')
+    // O celular inclinado com a sessão de tummy time: 400 × 440 em 1× (o @2x tem 800 × 880).
+    expect(cena.getAttribute('width')).toBe('400')
+    expect(cena.getAttribute('height')).toBe('440')
     expect(cena.closest('[data-painel]')!.getAttribute('data-painel')).toBe('cacau')
     // Nada de traço preto sobre o cacau.
     for (const painel of container.querySelectorAll('[data-painel="cacau"]')) {
@@ -543,9 +553,9 @@ describe('Desenvolvimento', () => {
     expect(screen.getByText(QUANTO_TEMPO.semMeta)).toBeTruthy()
   })
 
-  it('o desenho da seção do tummy time (a babá no chão) fica sobre o mel, e os links da abertura levam às seções', () => {
+  it('o desenho da seção do tummy time (o bebê de bruços) fica sobre o mel, e os links da abertura levam às seções', () => {
     const { container } = renderizarRota('/desenvolvimento')
-    const desenho = container.querySelector('#tummy-time img[data-ilustracao="baba-tapete"]')!
+    const desenho = container.querySelector('#tummy-time img[data-ilustracao="tummy-time"]')!
     expect(desenho.closest('[data-painel]')!.getAttribute('data-painel')).toBe('mel')
     expect(desenho.closest('.pd-chao')).not.toBeNull()
     expect(screen.getByRole('link', { name: DESENVOLVIMENTO_DESTAQUE.primario.rotulo }).getAttribute('href')).toBe('#ideias')
@@ -574,5 +584,151 @@ describe('Desenvolvimento', () => {
     expect(colunas).toHaveLength(1)
     expect(colunas[0].querySelector('h2')).not.toBeNull()
     expect(colunas[0].textContent).toContain(DESENVOLVIMENTO_DESTAQUE.urgencia.texto)
+  })
+})
+
+// Rodada de polimento POL, volta 2 (I-POL-DES v2): uma classe de correção por teste. O jsdom não faz
+// layout: aqui ficam o que o React entrega e as regras do CSS (lidas do disco); as medidas reais saem
+// das capturas.
+const decl = (alvo: RegExp) =>
+  regrasDoSeletor(alvo).map((r) => r.declaracoes) as Array<Record<string, string>>
+
+describe('polimento, volta 2', () => {
+  it('horas e durações nunca quebram: viram uma peça só (span sem quebra), com o texto intacto', () => {
+    const { container } = renderizarRota('/cuidado-compartilhado')
+    const pecas = [...container.querySelectorAll('main .pd-nq')].map((el) => el.textContent)
+    expect(pecas).toContain('1 h 15 min')
+    const detalhe = [...container.querySelectorAll('.pd-linha-detalhe')].find((el) => el.textContent?.includes('1 h 15 min'))!
+    expect(detalhe.textContent).toBe('Encerrou a soneca, 1 h 15 min')
+    for (const alvo of [/^\.pd-nq$/, /^\.pd-linha-hora$/, /^\.pd-cartao-hora$/]) {
+      const juntas = Object.assign({}, ...decl(alvo)) as Record<string, string>
+      expect(juntas['white-space'], String(alvo)).toBe('nowrap')
+    }
+  })
+
+  it('Como funciona e Desenvolvimento: "às 14:05" e "às 10:20" também são uma peça só', () => {
+    const como = renderizarRota('/como-funciona').container
+    expect([...como.querySelectorAll('main .pd-nq')].map((el) => el.textContent)).toContain('às 14:05')
+  })
+
+  it('Desenvolvimento: "às 10:20" do registro "Fizemos" é uma peça só', () => {
+    const dev = renderizarRota('/desenvolvimento').container
+    expect([...dev.querySelectorAll('main .pd-nq')].map((el) => el.textContent)).toContain('às 10:20')
+  })
+
+  for (const [caminho] of PAGINAS) {
+    it(`${caminho}: nenhum botão diz "protótipo" (o aviso de demonstração já está na tela)`, () => {
+      const { container } = renderizarRota(caminho)
+      for (const botao of container.querySelectorAll('main .cm-botao')) {
+        expect(botao.textContent, caminho).not.toMatch(/protótipo/i)
+      }
+    })
+  }
+
+  it('o primário de Como funciona e de Cuidado compartilhado usa o rótulo que o Início já tem para a mesma ação', () => {
+    expect(COMO_FUNCIONA_DESTAQUE.primario.rotulo).toBe(INICIO.heroi.primario.rotulo)
+    expect(CUIDADO_DESTAQUE.primario.rotulo).toBe(INICIO.heroi.primario.rotulo)
+    expect(COMO_FUNCIONA_DESTAQUE.primario.destino).toBe(INICIO.heroi.primario.destino)
+    expect(COMO_FUNCIONA_DESTAQUE.fechamento.acao.rotulo).toBe(INICIO.heroi.primario.rotulo)
+  })
+
+  it('o painel de cada cena tem a largura do arquivo em 1× (340 e 400): o 2× nunca é ampliado (RF-02 b)', () => {
+    for (const [alvo, maximo] of [
+      [/^\.pd-abertura \.pd-cena-retrato\.cm-painel$/, 340],
+      [/^\.pd-abertura \.pd-cena-cacau\.cm-painel$/, 400],
+    ] as const) {
+      const larguras = decl(alvo)
+        .map((d) => d.width)
+        .filter(Boolean)
+      expect(larguras.length, String(alvo)).toBeGreaterThan(0)
+      for (const largura of larguras) {
+        expect(largura, String(alvo)).toMatch(new RegExp(`^min\\(${maximo}px, 100%`))
+      }
+      // A imagem entra na proporção do arquivo, sem recorte.
+      const sem = Object.assign({}, ...decl(/^\.pd-cena-(retrato|cacau) \.cm-cena-midia img$/)) as Record<string, string>
+      expect(sem['aspect-ratio']).toBe('auto')
+      expect(sem).not.toHaveProperty('object-fit')
+    }
+  })
+
+  it('a faixa de oliva dos papéis tem um destaque só (os nomes): o cabeçalho é um rótulo sem faixa escura', () => {
+    const cabeca = Object.assign({}, ...decl(/^\.pd-tabela thead th$/)) as Record<string, string>
+    expect(cabeca).not.toHaveProperty('background-color')
+    expect(cabeca['font-size']).toBe('0.875rem')
+    const corpo = Object.assign({}, ...decl(/^\.pd-tabela tbody td$/)) as Record<string, string>
+    expect(corpo['font-size']).toBe('1.125rem')
+    expect(corpo['line-height']).toBe('1.6875rem')
+    const { container } = renderizarRota('/cuidado-compartilhado')
+    expect(container.querySelector('.pd-painel-papeis table.pd-tabela')).not.toBeNull()
+    // No celular o último campo de cada bloco é o item em destaque (fio de mel), só nessa tabela.
+    const destaque = Object.assign({}, ...decl(/^\.pd-painel-papeis \.pd-tabela tbody tr > td:last-child$/)) as Record<string, string>
+    expect(destaque['border-left']).toBe('3px solid var(--color-mel)')
+  })
+
+  it('o fecho de Cuidado compartilhado é um painel do tamanho do desenho: não estica nem deixa resto de mel liso', () => {
+    const grade = Object.assign({}, ...decl(/^\.pd-parar$/)) as Record<string, string>
+    expect(grade['align-items']).toBe('center')
+    const { container } = renderizarRota('/cuidado-compartilhado')
+    expect(container.querySelectorAll('main .pd-parar-painel')).toHaveLength(1)
+  })
+
+  it('no celular as caixas das listas e dos painéis usam a mesma margem lateral (a do painel de campo)', () => {
+    const lista = decl(/^\.pd-regras\.cm-area$/).map((d) => d.width)
+    expect(lista).toContain('min(100% - 2 * var(--cm-recuo-painel), 1376px)')
+  })
+
+  it('o desenho da avó ocupa 64% da largura interna do painel no celular, sem altura máxima (sem recorte)', () => {
+    const desenho = decl(/^\.pd-familia-desenho$/).map((d) => d.width)
+    expect(desenho).toContain('64%')
+    const img = decl(/^\.pd-familia-desenho \.cm-ilustracao$/).map((d) => d['max-height'])
+    expect(img).toContain('none')
+  })
+
+  it('o tummy time abre com o título e, ao lado, o desenho do bebê de bruços (peça aprovada), na mesma grade', () => {
+    const { container } = renderizarRota('/desenvolvimento')
+    const cima = container.querySelector('#tummy-time .pd-tummy-cima')!
+    expect(cima.querySelector('#desenv-tummy')).not.toBeNull()
+    const desenho = cima.querySelector('img[data-ilustracao="tummy-time"]')!
+    expect(desenho.closest('[data-painel]')!.classList.contains('cm-painel-luz')).toBe(true)
+    // O texto de leitura fica numa medida de no máximo 68 caracteres por linha (36rem em 18 px ≈ 65).
+    const medida = decl(/^\.pd-partes p$/).map((d) => d['max-width'])
+    expect(medida).toContain('36rem')
+    const abertura = decl(/^\.pd-tummy-cima \.pd-cabeca p$/).map((d) => d['max-width'])
+    expect(abertura).toContain('34rem')
+  })
+
+  it('o painel de oliva do tummy time começa na mesma borda da coluna de texto da página (margem menos recuo)', () => {
+    const preenchimento = decl(/^\.pd-tummy-tabela\.cm-painel$/).map((d) => d['padding-inline'])
+    expect(preenchimento).toContain('max(24px, calc(var(--cm-margem) - var(--cm-recuo-painel)))')
+  })
+
+  it('o trecho dos marcos tem uma frase de destaque, repetida do próprio texto (T-1: nada de texto novo)', () => {
+    const { container } = renderizarRota('/desenvolvimento')
+    const destaque = container.querySelector('#marcos blockquote[data-destaque]')!
+    expect(destaque).not.toBeNull()
+    expect(MARCOS.itens[0].textos[0]).toContain(destaque.textContent!)
+  })
+
+  it('o registro "Fizemos" ocupa o cartão: duas colunas (valor com o rótulo em cima, e o detalhe), na largura da cena', () => {
+    const cartao = Object.assign({}, ...decl(/^\.pd-cartao-legenda \.pd-cartao$/)) as Record<string, string>
+    expect(cartao.display).toBe('grid')
+    expect(cartao['grid-template-columns']).toBe('auto minmax(0, 1fr)')
+    const largura = decl(/^\.pd-cartao-legenda\.pd-cartao-plano$/).map((d) => d.width)
+    expect(largura).toContain('min(400px, 100%)')
+  })
+
+  it('os passos vão colados à borda interna da direita do painel (a mesma nos três), e o cartão da madrugada só sobra para fora lado a lado', () => {
+    const { container } = renderizarRota('/como-funciona')
+    expect(container.querySelectorAll('#tres-momentos .pd-passo-midia')).toHaveLength(3)
+    const alinhamento = decl(/^\.pd-passo-midia$/).map((d) => d['justify-content'])
+    expect(alinhamento).toContain('flex-end')
+    // A sobra (margem negativa de baixo) só existe dentro de uma regra @media (900 px para cima): fora
+    // dela, no celular, o cartão da madrugada fica inteiro dentro do painel.
+    const posicao = cssDestaque.indexOf('.pd-passo-midia:has(> .cm-flutuante)')
+    expect(posicao).toBeGreaterThan(0)
+    const antes = cssDestaque.slice(0, posicao)
+    const profundidade = (antes.match(/\{/g) ?? []).length - (antes.match(/\}/g) ?? []).length
+    expect(profundidade).toBe(1)
+    expect(antes.slice(antes.lastIndexOf('@media'))).toMatch(/^@media \(min-width: 900px\)/)
   })
 })
