@@ -61,18 +61,18 @@
   /* Figura da abertura: o painel de mel e, logo abaixo dele, a frase de apoio. */
   .pt-figura {
     display: grid;
-    justify-items: start;
+    justify-items: stretch;
     gap: 12px;
     min-width: 0;
   }
 
-  /* Painel de mel: só o desenho, do tamanho do desenho. A figura tem a altura fixa (220 no celular, 300 em tela
-     larga) e a largura que o traço pedir (se não couber, o traço encolhe dentro da caixa); o painel é a figura mais o
-     respiro de 24 e abraça a figura nas duas larguras. No celular o painel tem uns 270 px de altura, abaixo de 40% da
+  /* Painel de mel: só o desenho. O painel ocupa a largura inteira da coluna em que está (a coluna toda no celular, a
+     coluna da direita da abertura em tela larga), o mesmo nas seis páginas; a figura fica centrada dentro dele, com a
+     altura fixa (220 no celular, 300 em tela larga) e a largura que o traço pedir (se não couber, o traço encolhe
+     dentro da caixa, sem recorte). O respiro é de 24. No celular o painel tem uns 270 px de altura, abaixo de 40% da
      janela de 844 px. */
   .pt-figura > .cm-painel.pt-painel {
-    inline-size: fit-content;
-    max-inline-size: 100%;
+    inline-size: 100%;
     padding: 24px;
   }
 
@@ -114,20 +114,12 @@
       margin-top: 48px;
     }
 
-    /* À direita, alinhada à margem da página. A frase de apoio não alarga a figura (largura 0 com mínimo de 100%):
-       ela quebra na largura do painel, com pelo menos 240 px. */
+    /* A figura preenche a coluna da direita da abertura; a frase de apoio fica à direita, embaixo do painel. */
     .pt-figura {
-      inline-size: fit-content;
-      min-inline-size: min(100%, 240px);
-      max-inline-size: 100%;
-      justify-self: end;
-      justify-items: end;
       gap: 16px;
     }
 
     .pt-apoio {
-      inline-size: 0;
-      min-inline-size: 100%;
       font-size: 1.5rem;
       line-height: 1.875rem;
       text-align: end;
@@ -178,6 +170,12 @@
      O fio de cima é o do próprio índice. */
   .pt-indice:has(> .pt-indice-detalhes) {
     padding-top: 0;
+  }
+
+  /* Com o índice recolhido, o fio do bloco seguinte vem logo depois da linha de 48 px: o respiro entre os dois é o
+     da própria linha, e não mais 40 de papel a mais (sobrava uma faixa vazia de uns 70 px). */
+  .pt-indice:has(> .pt-indice-detalhes) + .pt-leitura {
+    margin-top: 0;
   }
 
   .pt-indice-resumo {

@@ -598,20 +598,22 @@ describe('painel e figura por largura (CSS)', () => {
   it('o painel de mel não tem fundo próprio no CSS (a cor vem do PainelCampo) e é a figura mais o respiro de 24 nas duas larguras', () => {
     const [celular] = corpos('.pt-figura > .cm-painel.pt-painel')
     expect(celular).toMatch(/padding:\s*24px/)
-    expect(celular).toMatch(/inline-size:\s*fit-content/)
+    // O painel ocupa a largura inteira da coluna (a coluna toda no celular, a da direita da abertura em tela larga).
+    expect(celular).toMatch(/inline-size:\s*100%/)
+    expect(css).not.toMatch(/fit-content/)
     expect(css).toMatch(/@media \(min-width: 1100px\)/)
     expect(css).not.toMatch(/background-color:\s*var\(--color-areia\)/)
     // Nada mais dá respiro ao painel em tela larga: o painel continua figura + 24.
     expect(css).not.toMatch(/\.cm-painel\.pt-painel\s*\{[^}]*padding:\s*40px/)
   })
 
-  it('a frase de apoio fica sempre à vista, em Literata itálica, no degrau h4 (20/26 no celular, 24/30 em tela larga), sem alargar a figura', () => {
+  it('a frase de apoio fica sempre à vista, em Literata itálica, no degrau h4 (20/26 no celular, 24/30 em tela larga), embaixo do painel', () => {
     const [celular, largo] = corpos('.pt-apoio')
     expect(celular).not.toMatch(/display:\s*none/)
     expect(celular).toMatch(/font-style:\s*italic/)
     expect(celular).toMatch(/font-family:\s*var\(--fonte-titulo\)/)
     expect(celular).toMatch(/font-size:\s*1\.25rem/)
-    expect(largo).toMatch(/inline-size:\s*0/)
+    expect(largo).toMatch(/text-align:\s*end/)
     expect(largo).toMatch(/font-size:\s*1\.5rem/)
     expect(largo).toMatch(/line-height:\s*1\.875rem/)
   })
