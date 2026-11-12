@@ -1,6 +1,8 @@
 // Textos da casca do site: o nome, o cabeçalho, o menu e o rodapé. O texto de interface fica
 // aqui, e não nos componentes.
 
+import { itensNavegacao } from '../../rotas/areas.tsx'
+
 export const NOME_SITE = 'AppMaternidade'
 
 // O nome do botão é "Modo madrugada" (o `aria-label`, em toda largura). De 640 para cima o texto
@@ -20,9 +22,8 @@ interface Link {
   para: string
 }
 
-// As telas de acesso ainda não existem: Entrar e Criar conta levam ao Contato até elas chegarem.
-export const DESTINO_ENTRAR = '/contato'
-export const DESTINO_CRIAR_CONTA = '/contato'
+export const DESTINO_ENTRAR = '/entrar'
+export const DESTINO_CRIAR_CONTA = '/criar-conta'
 
 export const ITENS_DO_CABECALHO: Record<Contexto, readonly Link[]> = {
   publico: [
@@ -31,13 +32,8 @@ export const ITENS_DO_CABECALHO: Record<Contexto, readonly Link[]> = {
     { rotulo: 'Desenvolvimento', para: '/desenvolvimento' },
     { rotulo: 'Comunidade', para: '/regras-da-comunidade' },
   ],
-  logado: [
-    { rotulo: 'Hoje', para: '/app/hoje' },
-    { rotulo: 'Sessão', para: '/app/sessao' },
-    { rotulo: 'Histórico', para: '/app/historico' },
-    { rotulo: 'Desenvolvimento', para: '/app/desenvolvimento' },
-    { rotulo: 'Comunidade', para: '/app/comunidade' },
-  ],
+  // Cada área declara os próprios itens (`rotas/<area>.tsx`); a junção vem de `itensNavegacao`.
+  logado: itensNavegacao.map((item) => ({ rotulo: item.rotulo, para: item.destino })),
 }
 
 interface ColunaDoRodape {

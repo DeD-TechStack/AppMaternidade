@@ -2,7 +2,12 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { act, fireEvent, screen, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
-import { COLUNAS_DO_RODAPE, ITENS_DO_CABECALHO } from '../componentes/casca/textos.ts'
+import {
+  COLUNAS_DO_RODAPE,
+  DESTINO_CRIAR_CONTA,
+  DESTINO_ENTRAR,
+  ITENS_DO_CABECALHO,
+} from '../componentes/casca/textos.ts'
 import { renderizarRota } from './renderizarRota.tsx'
 
 // A casca do Campo de mel (MAT-49a): cabeçalho, menu de altura cheia e rodapé de mel. Substitui o
@@ -39,12 +44,21 @@ describe('cabeçalho público', () => {
     expect(criar.classList.contains('cm-botao-primario')).toBe(true)
   })
 
+  it('Entrar leva a /entrar e "Criar conta" leva a /criar-conta (as telas de acesso existem)', () => {
+    expect(DESTINO_ENTRAR).toBe('/entrar')
+    expect(DESTINO_CRIAR_CONTA).toBe('/criar-conta')
+    const { container } = renderizarRota('/como-funciona')
+    const cabecalho = container.querySelector<HTMLElement>('header[data-cabecalho]')!
+    expect(within(cabecalho).getByRole('link', { name: 'Entrar' }).getAttribute('href')).toBe('/entrar')
+    expect(within(cabecalho).getByRole('link', { name: 'Criar conta' }).getAttribute('href')).toBe('/criar-conta')
+  })
+
   it('todo destino do cabeçalho é uma rota que existe (nenhuma rota inventada)', () => {
     for (const item of ITENS_DO_CABECALHO.publico) expect(ROTAS_PUBLICAS).toContain(item.para)
     const { container } = renderizarRota('/')
     for (const link of container.querySelectorAll<HTMLAnchorElement>('header[data-cabecalho] a')) {
       const destino = link.getAttribute('href')!
-      expect(['/', ...ROTAS_PUBLICAS], destino).toContain(destino)
+      expect(['/', ...ROTAS_PUBLICAS, '/entrar', '/criar-conta'], destino).toContain(destino)
     }
   })
 
@@ -131,6 +145,31 @@ describe('cabeçalho da área logada', () => {
     const cabecalho = container.querySelector<HTMLElement>('header[data-cabecalho]')!
     expect(within(cabecalho).queryByRole('link', { name: 'Criar conta' })).toBeNull()
     expect(within(cabecalho).queryByRole('link', { name: 'Entrar' })).toBeNull()
+  })
+
+  it('a navegação é Hoje, Sessão, Histórico, Desenvolvimento, Comunidade e Família, na ordem, vinda do registro das áreas, com o item Família ativo em /app/familia', () => {
+    const { container } = renderizarRota('/app/hoje')
+    const nav = within(container.querySelector<HTMLElement>('header[data-cabecalho]')!).getByRole('navigation', { name: 'Site' })
+    const links = within(nav).getAllByRole('link')
+    expect(links.map((link) => [link.textContent, link.getAttribute('href')])).toEqual([
+      ['Hoje', '/app/hoje'],
+      ['Sessão', '/app/sessao'],
+      ['Histórico', '/app/historico'],
+      ['Desenvolvimento', '/app/desenvolvimento'],
+      ['Comunidade', '/app/comunidade'],
+      ['Família', '/app/familia'],
+    ])
+    expect(ITENS_DO_CABECALHO.logado.map((item) => item.para)).toEqual([
+      '/app/hoje',
+      '/app/sessao',
+      '/app/historico',
+      '/app/desenvolvimento',
+      '/app/comunidade',
+      '/app/familia',
+    ])
+    expect(links[0].getAttribute('aria-current')).toBe('page')
+    // Nenhum item "Em breve" nem faixa lateral: só o que tem tela.
+    expect(screen.queryByText(/Em breve/)).toBeNull()
   })
 })
 

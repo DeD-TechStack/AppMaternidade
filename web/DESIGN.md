@@ -306,6 +306,15 @@ Alcance de duas regras gerais desta base na área de conta:
 - **"Toda confirmação tem Desfazer"** vale para os registros da rotina. Na área de conta, a ação irreversível (excluir conta, excluir família, remover acesso, sair da família, cancelar convite) pede confirmação antes, numa caixa de diálogo. A ação reversível (mudar o papel de outra pessoa, arquivar, editar) mostra a confirmação na região de status, com o controle inverso na mesma tela. A exceção é rebaixar o próprio papel: quem rebaixa perde os controles de responsável e não tem como desfazer sozinho, então a caixa "mudar papel" aberta na própria linha avisa disso antes do botão de confirmar.
 - **Os 56 px de altura na madrugada** valem para as ações de registro, como na base (`--alvo-rapido`). Na área de conta valem os mínimos gerais: 44 × 44 px em links e controles, 48 px nos botões e 56 px na ação principal de cada formulário, nos dois temas.
 
+#### Família, convite e navegação (MAT-37b)
+
+- **Navegação logada:** é a do cabeçalho da casca, com Hoje, Sessão, Comunidade e Família (`/app/familia`), lida do registro de áreas (`rotas/navegacao.ts`). Não há barra inferior, faixa lateral nem item "Em breve": cada tela nova acrescenta o seu item quando existir. Entrar e Criar conta do cabeçalho levam a `/entrar` e `/criar-conta`.
+- **Convite (`/convite`):** a moldura pública de duas colunas da área de conta, com a prévia (família, quem convidou e papel) no cartão branco de raio 20, sem sombra, e a ação principal em `cm-botao`, largura cheia. Fragmento inválido é recusado por inteiro, sem consulta ao banco.
+- **Começar (escolha):** "Criar uma família" e "Tenho um convite" como duas opções de mesmo peso, na moldura de duas colunas; criar família pede nome, fuso e o primeiro bebê.
+- **Família (responsável):** seções em linhas de duas colunas separadas por fio de 1 px (membros, bebês, convites, ações). Controles de responsável ficam ausentes do DOM para o cuidador e seguem o papel relido. Ação irreversível pede caixa de diálogo; o aviso de autorrebaixamento vale como na área de conta.
+- **Sem token novo:** campos, botões, madrugada e foco são os da base; nenhuma tela traz sombra, gradiente ou ilustração à mão.
+- **Direção:** vem do DESIGN.md aprovado em 11/11; esta tela não tem nota própria do worker. O aceite visual é dos juízes cegos do líder.
+
 ### Comunidade (MAT-40a)
 
 As sete telas da Comunidade (Comunidade, Espaço, Tópico, Novo tópico e edição, Entrar na comunidade, Meu perfil público e Minhas denúncias) moram na moldura das telas logadas e usam só o que a base já tem: o cabeçalho e o rodapé da casca, os campos e botões `cm-campo-*` e `cm-botao-*`, e as variáveis `--cor-*`. Nenhuma tela desta área traz token, sombra, gradiente, ícone ou ilustração à mão fora deles.

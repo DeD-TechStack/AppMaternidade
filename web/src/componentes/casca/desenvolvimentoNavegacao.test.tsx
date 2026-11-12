@@ -6,7 +6,7 @@ import { ITENS_DO_CABECALHO } from './textos.ts'
 // MAT-39a, DES-01 item 4: o cabeçalho logado tem o item "Desenvolvimento", entre Sessão e Comunidade, e ele
 // leva a /app/desenvolvimento. A ordem esperada está escrita aqui, não calculada do código.
 
-const ORDEM_ESPERADA = ['Hoje', 'Sessão', 'Histórico', 'Desenvolvimento', 'Comunidade']
+const ORDEM_ESPERADA = ['Hoje', 'Sessão', 'Histórico', 'Desenvolvimento', 'Comunidade', 'Família']
 
 describe('cabeçalho logado: item Desenvolvimento', () => {
   it('a lista do cabeçalho logado tem Desenvolvimento depois de Sessão e antes de Comunidade', () => {

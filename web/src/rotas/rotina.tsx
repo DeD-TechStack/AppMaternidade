@@ -1,4 +1,5 @@
 import type { RouteObject } from 'react-router'
+import type { ItemNavegacao } from './navegacao.ts'
 import { AREA_DA_ROTINA } from '../componentes/rotina/madrugada.ts'
 import { ProvedorRotina } from '../componentes/rotina/ProvedorRotina.tsx'
 import { TITULOS } from '../conteudo/rotina.ts'
@@ -15,7 +16,6 @@ import { Sessao } from '../paginas/rotina/Sessao.tsx'
 // sem caminho, pai de todas elas, que marca a área em `handle.area` para a madrugada, R38-04). O título da aba
 // é fixo por rota (`handle.titulo`).
 export const rotasRotinaPublicas: RouteObject[] = []
-
 export const rotasRotinaLogadas: RouteObject[] = [
   {
     element: <ProvedorRotina />,
@@ -33,4 +33,10 @@ export const rotasRotinaLogadas: RouteObject[] = [
       { path: 'app/notas/:id/editar', element: <NotaEditar />, handle: { titulo: tituloDaAba(TITULOS.notaEditar) } },
     ],
   },
+]
+
+export const navegacaoRotina: ItemNavegacao[] = [
+  { chave: 'hoje', rotulo: 'Hoje', ordem: 10, destino: '/app/hoje', atualEm: ['/app/hoje'] },
+  { chave: 'sessao', rotulo: 'Sessão', ordem: 20, destino: '/app/sessao', atualEm: ['/app/sessao'] },
+  { chave: 'historico', rotulo: 'Histórico', ordem: 22, destino: '/app/historico', atualEm: ['/app/historico'] },
 ]

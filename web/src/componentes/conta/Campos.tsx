@@ -53,7 +53,10 @@ interface CampoProps {
   rotulo: string
   valor: string
   aoMudar: (valor: string) => void
-  tipo?: 'text' | 'email' | 'password'
+  tipo?: 'text' | 'email' | 'password' | 'date'
+  /** Só nos campos de data: o limite (`AAAA-MM-DD`). */
+  min?: string
+  max?: string
   autoComplete?: string
   ajuda?: string
   erro?: string | null
@@ -70,6 +73,8 @@ export function Campo({
   valor,
   aoMudar,
   tipo = 'text',
+  min,
+  max,
   autoComplete,
   ajuda,
   erro,
@@ -89,6 +94,8 @@ export function Campo({
           ref={refEntrada}
           id={id}
           type={tipo}
+          min={min}
+          max={max}
           value={valor}
           onChange={(evento) => aoMudar(evento.target.value)}
           autoComplete={autoComplete}
@@ -123,6 +130,36 @@ export function CampoSenha(props: Omit<CampoProps, 'tipo' | 'complemento'>) {
         </button>
       }
     />
+  )
+}
+
+interface SeletorDeOpcoesProps {
+  rotulo: string
+  valor: string
+  opcoes: ReadonlyArray<{ valor: string; texto: string }>
+  aoMudar: (valor: string) => void
+  tamanho?: TamanhoDoCampo
+}
+
+/** Uma escolha entre poucas opções (o seletor "Família" do alto da tela Família). */
+export function SeletorDeOpcoes({ rotulo, valor, opcoes, aoMudar, tamanho = 'app' }: SeletorDeOpcoesProps) {
+  const id = useId()
+  return (
+    <div className="cm-campo max-w-none">
+      <label htmlFor={id} className="cm-campo-rotulo">
+        {rotulo}
+      </label>
+      <div className="cm-campo-controle" data-select="">
+        <select id={id} value={valor} onChange={(evento) => aoMudar(evento.target.value)} className={caixa(tamanho)}>
+          {opcoes.map((opcao) => (
+            <option key={opcao.valor} value={opcao.valor}>
+              {opcao.texto}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="cm-campo-seta" aria-hidden="true" />
+      </div>
+    </div>
   )
 }
 

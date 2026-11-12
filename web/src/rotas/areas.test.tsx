@@ -83,8 +83,15 @@ describe('rotasDasAreas: o registro por área', () => {
       'app/comunidade/:slug',
       'app/comunidade/:slug/novo',
     ])
-    expect(rotasContaPublicas.map(caminhoDe)).toEqual(['entrar', 'criar-conta', 'recuperar-acesso', 'redefinir-senha', 'conta-excluida'])
-    expect(rotasContaLogadas.map(caminhoDe)).toEqual(['app/comecar', 'app/conta'])
+    expect(rotasContaPublicas.map(caminhoDe)).toEqual([
+      'entrar',
+      'criar-conta',
+      'recuperar-acesso',
+      'redefinir-senha',
+      'conta-excluida',
+      'convite',
+    ])
+    expect(rotasContaLogadas.map(caminhoDe)).toEqual(['app/comecar', 'app/conta', 'app/familia'])
 
     // A rotina: uma rota sem caminho (o provedor da área), pai das quatro telas do 38a.
     expect(rotasRotinaLogadas).toHaveLength(1)
@@ -112,8 +119,10 @@ describe('rotasDasAreas: o registro por área', () => {
       'Recuperar acesso | AppMaternidade',
       'Nova senha | AppMaternidade',
       'Conta excluída | AppMaternidade',
+      'Convite | AppMaternidade',
       'Começar | AppMaternidade',
       'Conta | AppMaternidade',
+      'Família | AppMaternidade',
     ])
     expect(tituloDaAba(TITULOS.conta)).toBe('Conta | AppMaternidade')
   })
@@ -206,7 +215,9 @@ describe('as rotas logadas só abrem com sessão; as públicas, sempre', () => {
       ['/recuperar-acesso', TITULOS.recuperarAcesso, NOMES_DO_H1.recuperarAcesso, null],
       ['/redefinir-senha', TITULOS.redefinirSenha, NOMES_DO_H1.redefinirSenha, null],
       ['/conta-excluida', TITULOS.contaExcluida, NOMES_DO_H1.contaExcluida, null],
+      ['/convite', TITULOS.convite, NOMES_DO_H1.convite, null],
       ['/app/conta', TITULOS.conta, 'Conta', 'juliana'],
+      ['/app/familia', TITULOS.familia, 'Família', 'juliana'],
     ]
     for (const [caminho, titulo, h1, sessao] of casos) {
       const { unmount, container } = renderizarComDados(caminho, { sessao })
