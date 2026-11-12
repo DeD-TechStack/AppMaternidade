@@ -487,3 +487,5 @@ Nenhuma tarefa de implementação (MAT-17 a MAT-19) começa sem pedido dele.
 - **12/11 01h15:** RETOMADA (sessão nova do líder, pedido de Daniel): ESTADO ATIVO; cron retorno-oc retomado; 37b g3 t_6aeda4a9, POL-DES t_89539427, POL-TXT v2 t_736b76c5 e POL-INI v2 t_9e230273 rodando; 40b t_359ab800 ready. 38a: sucessora t_197241f9 sobre base/38a-g2 4c4b1d4 (árvore de 1542137, merge refeito no título aceito), 38b/39b religadas, t_f7bdf7e8 arquivada. int/refazer segue em 22ff7cb; main intocada.
 
 - **12/11 02h15:** P-62 t_ee893936 APPROVED_WITH_LIMITS (só evidência da 40a, sem SHA). DEF-62-1 (falta o link de pular conteúdo) vai para a P-50. Em correção: POL-INI v2, POL-TXT v2; em revisão: 38a g2 (7509958), POL-DES (4157e18).
+
+- **12/11 02h35:** 38a g2 t_197241f9 APPROVED_WITH_LIMITS (7509958) integrada por ff em int/refazer (22ff7cb..7509958, check 2042, commits OK 341, push; recibo comentário 574). 39b bloqueou: a página logada /app/desenvolvimento (39a) nunca foi feita; criada a 39a g2 t_30ad7504 sobre 7509958, 39b religada a ela (comentário 577). 38b liberada.
