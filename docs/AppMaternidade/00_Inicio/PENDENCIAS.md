@@ -89,8 +89,8 @@ Rodada nova sobre o Campo de mel aprovado (não muda a direção). Regras da rod
 
 Medidas: `C:/OrchestrationLab/projetos/_staging/appmaternidade/HARMONIA/MEDIDAS.md` (todo cartão de spec ou de tela cita). Spec: `HARMONIA/SPEC_H.md`.
 - [x MEDIDAS.md] P-67 H-1 medir Pato Jack e Good Inside (getComputedStyle, 1440 e 390; nosso site com o mesmo script) | 13/11
-- [ ] P-68 H-2 escalas de espaço e tipo em `web/DESIGN.md` (design-md, lint, tema gerado e teste de deriva) | spec H em explique de volta
-- [ ] P-69 H-3 um cartão aplica as primitivas (seção, contêiner, pilha) no site inteiro e tira os valores soltos | depois da H-2 e da P-50
+- [~ t_f0c6ccb7] P-68 H-2 escalas de espaço e tipo em `web/DESIGN.md` (design-md, lint, tema gerado e teste de deriva; eslint-plugin-better-tailwindcss + stylelint em modo relatório, resposta da infra t_7d4a75ef) | SPEC_H v3 parte 1 APROVADA depois de 2 explique de volta (R1: 3 Blocker; R2: 1 Blocker, da parte 2); MEDIDAS corrigido (vão entre seções comparado com vão; `espaco-secao` 80/48)
+- [ ] P-69 H-3 um cartão aplica as primitivas (seção, quadro, pilha, colunas, cartão) no site inteiro e torna o lint bloqueante | spec própria `HARMONIA/SPEC_H3.md` em explique de volta R1; depois da H-2 e da P-50
 - [ ] P-70 H-4 números (medir.js) e replica-diff contra as referências; só então juízes e GALERIA_ATUAL recapturada para Daniel | depois da H-3
 - [D t_d04a8a7d estacionado] P-66 POL-ABR (12/11 07h42: estacionado pela diretiva de Daniel, substituído pelo item H): aberturas das 6 páginas de texto e mídia estreita a 390 (Daniel 12/11 "Pode abrir", depois do rejulgamento com a captura corrigida; DEVOLUCAO_POL_aberturas.md)
 - [D substituído pelo item H, 12/11] P-51 Polimento das telas novas dos cartões de dados (Comunidade, Histórico, Família, moderação, Desenvolvimento logado; 12/11: na madrugada o botão do painel mel da página logada de Desenvolvimento fica sem fundo escuro) | depois de 40a, 38b, 37b e 40b
