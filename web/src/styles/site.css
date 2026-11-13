@@ -121,6 +121,33 @@
     max-width: 38rem;
   }
 
+  /* /sistema: tamanho e entrelinha vêm da tabela do DESIGN.md (família, peso e tracking seguem os de `.cm-*`).
+     As regras globais acima ficam como estão até o H-3g. */
+  .cm-sistema .cm-h1 {
+    font-size: var(--texto-exibicao-tamanho);
+    line-height: var(--texto-exibicao-entrelinha);
+  }
+
+  .cm-sistema .cm-h2 {
+    font-size: var(--texto-titulo-2-tamanho);
+    line-height: var(--texto-titulo-2-entrelinha);
+  }
+
+  .cm-sistema .cm-lide {
+    font-size: var(--texto-abertura-tamanho);
+    line-height: var(--texto-abertura-entrelinha);
+  }
+
+  .cm-sistema .cm-rotulo {
+    font-size: var(--texto-sobretitulo-tamanho);
+    line-height: var(--texto-sobretitulo-entrelinha);
+  }
+
+  .cm-sistema .cm-corpo {
+    font-size: var(--texto-corpo-tamanho);
+    line-height: var(--texto-corpo-entrelinha);
+  }
+
   /* Botões (DESIGN.md 4) ---------------------------------------------------------------------- */
   .cm-botao {
     display: inline-flex;
@@ -628,6 +655,8 @@
 
   .cm-rodape-frase {
     max-width: 22ch;
+    font-size: var(--texto-titulo-2-tamanho);
+    line-height: var(--texto-titulo-2-entrelinha);
   }
 
   /* Até duas colunas de links abaixo de 768, e só quando cabem: cada coluna tem no mínimo 8 rem (a palavra mais
