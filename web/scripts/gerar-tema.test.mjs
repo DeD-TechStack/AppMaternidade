@@ -98,7 +98,7 @@ describe('gerarTema', () => {
     assert.match(css, /^ {2}--quadro-largura: 1200px;$/m)
     assert.match(css, /^ {2}--quadro-calha: clamp\(20px, calc\(20px \+ \(100vw - 390px\) \* 12 \/ 1050\), 32px\);$/m)
     assert.match(css, /^ {2}--medio: 880px;$/m)
-    assert.match(css, /^ {2}--leitura: 680px;$/m)
+    assert.match(css, /^ {2}--leitura: 640px;$/m)
   })
 
   it('cada variável vale o valor de 390 em 390 e o de 1440 em 1440, como no DESIGN.md', () => {

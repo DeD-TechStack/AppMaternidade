@@ -537,55 +537,21 @@
   }
 
   /* Página /sistema --------------------------------------------------------------------------- */
-  .cm-sistema-secao {
-    margin-top: var(--cm-entre-secoes);
-  }
-
-  .cm-sistema-cabeca {
-    display: grid;
-    gap: 16px;
-    margin-bottom: clamp(32px, 1.524vw + 26.057px, 48px);
-  }
-
+  /* O espaço entre as partes, o cabeçalho de cada parte e as colunas vêm das primitivas de layout
+     (componentes/base/layout): aqui ficam só as cores e o interior das peças. */
   .cm-sistema-cabeca .cm-rotulo {
     color: var(--cor-link);
   }
 
-  .cm-sistema-abertura {
-    padding-top: clamp(40px, 5.333vw + 19.2px, 96px);
-  }
-
-  .cm-sistema-abertura .cm-lide {
-    max-width: 36rem;
-    margin-top: 24px;
-  }
-
-  /* Abertura: o título à esquerda e o painel de mel da paleta à direita (empilhados abaixo de 1100). */
-  .cm-sistema-heroi {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 48px;
-    align-items: center;
-  }
-
   .cm-sistema-heroi-texto .cm-lide {
     max-width: 34rem;
-    margin-top: 24px;
   }
 
   .cm-paleta-titulo {
     margin: 4px 0 24px;
   }
 
-  @media (min-width: 1100px) {
-    .cm-sistema-heroi {
-      grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
-      gap: 48px;
-    }
-  }
-
   .cm-sistema-rotulo-solto {
-    margin-bottom: 16px;
     color: var(--cor-link);
   }
 
@@ -599,10 +565,6 @@
     margin: 0;
   }
 
-  .cm-sistema-mel {
-    margin-top: 32px;
-  }
-
   .cm-sistema-mel .cm-texto-2 {
     color: var(--color-areia);
   }
@@ -611,30 +573,18 @@
     color: var(--color-papel);
   }
 
-  .cm-campos {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 24px;
-    margin-top: 48px;
-  }
-
-  @media (min-width: 900px) {
-    .cm-campos {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      align-items: start;
-    }
-  }
-
-  .cm-ilustracoes-nota {
-    margin-top: 16px;
-  }
-
   .cm-sistema-acoes {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 16px 24px;
-    margin-top: 32px;
+  }
+
+  /* A barra de um papel de espaço: o quadrado tem a largura e a altura do token (definidas na peça). */
+  .cm-espaco-barra {
+    box-sizing: border-box;
+    background-color: var(--color-oliva);
+    border-radius: var(--radius-campo);
   }
 
   .cm-paleta {
@@ -688,7 +638,7 @@
 
   .cm-tipos {
     display: grid;
-    gap: 40px;
+    gap: var(--espaco-bloco);
   }
 
   .cm-tipo-linha {
@@ -711,11 +661,6 @@
     }
   }
 
-  .cm-grade-botoes {
-    display: grid;
-    gap: 24px;
-  }
-
   .cm-fila {
     display: flex;
     flex-wrap: wrap;
@@ -733,25 +678,12 @@
     }
   }
 
-  .cm-grade-paineis {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 16px;
-  }
-
   .cm-grade-paineis .cm-painel {
     min-height: 220px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     gap: 32px;
-  }
-
-  @media (min-width: 768px) {
-    .cm-grade-paineis {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 24px;
-    }
   }
 
   .cm-cartao-sessao-rotulo {
@@ -854,10 +786,6 @@
 
   .cm-faixa-texto .cm-botao {
     margin-top: 40px;
-  }
-
-  .cm-cena-numeros {
-    margin-top: clamp(64px, 3.048vw + 52.114px, 96px);
   }
 
   /* Madrugada: todo alvo da casca tem 56 px de altura (DESIGN.md 8). Só min-height/min-width: a
