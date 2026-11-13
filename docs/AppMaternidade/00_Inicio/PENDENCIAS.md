@@ -8,7 +8,7 @@ regra: kanban-leader-cycle, seção 0 "Lista durável de pendências"
 # Pendências do AppMaternidade
 
 MANDATO (Daniel, 05/11/2026; visual refeito em 11/11): o site inteiro funcionando de ponta a ponta (RF-01 a RF-14), com o visual Campo de mel aprovado em 11/11, publicado para o professor entrar e usar tudo com dados fictícios. Fonte: [Retomada do site](Retomada_Site.md), seção "Roteiro do site completo".
-ESTADO: ATIVO (13/11 ~19h: foco total, até 8 cartões no board; frente principal = item H dividido por área; P-54/P-55/P-56 em paralelo; polimento por página CONGELADO; publicação e push na main só com o "pode", P-19). Estado vigente no bloco RETOMAR abaixo.
+ESTADO: PAUSA (13/11 ~21h45, Daniel desligou o PC; infra t_6323c243). Antes: ATIVO (13/11 ~19h: foco total, até 8 cartões no board; frente principal = item H dividido por área; P-54/P-55/P-56 em paralelo; polimento por página CONGELADO; publicação e push na main só com o "pode", P-19). Estado vigente no bloco RETOMAR abaixo.
 
 Retomada 13/11 (sessão nova): cron `retorno-oc` (cacefbc1849d) retomado; P-50 t_2af603f6 reduzida a C-1/C-3/C-4 (comentário 711; C-2/C-5/C-6 e todo espaço/ritmo vão para o H); POL-ABR t_d04a8a7d estacionada e congelada (comentário 712). Medidas do H em `C:/OrchestrationLab/projetos/_staging/appmaternidade/HARMONIA/MEDIDAS.md` (caminho dado por Daniel em 13/11; todo cartão de spec ou de tela cita esse arquivo, regra `portao-medidas`).
 
@@ -33,7 +33,20 @@ Retomada 12/11 ~01h15 (sessão nova do líder): cron `retorno-oc` retomado; 37b 
 
 `main` está intocada (P-19). Worktree de integração: `.worktrees/_int40a`, em 38f0784, limpa; logs em `.oc/lider_verif/`. O checkout principal só tem commits locais de registro (docs), sem push. A MAT-48g t_0bfed15d foi fechada sem código.
 
-**Estado dos cartões na troca de sessão (13/11 ~21h30; infra t_2b53ab3f):**
+**PAUSA de 13/11 ~21h45 (Daniel, PC desligado; infra t_6323c243, substitui a troca de sessão):**
+- **Como foi feita:** `hermes kanban block --kind needs_input "[decisor: Daniel] pausa de 13/11 …"` em t_e9313367, t_1dcaa165, t_6544886b e t_506d9c94. As duas primeiras caíram em **triage** (laço de bloqueio); as duas últimas ficaram `blocked`. A A11Y-F2 t_a37f1086 não aceitou o bloqueio: está `scheduled` com OC_RUN `.oc/1`, e o OpenCode morre no desligamento, então na retomada a rodada é refeita. O cron `retorno-oc-appmaternidade` **cacefbc1849d** está pausado. Os `todo` têm pais abertos e não despacham sozinhos. MAT-37g e POL-ABR seguem estacionados.
+- **Na retomada, nesta ordem:**
+  1. `hermes cron resume cacefbc1849d`;
+  2. tirar t_e9313367 e t_1dcaa165 da triage por PATCH (browser 127.0.0.1:9119, header `X-Hermes-Session-Token`, `{status:'ready', assignee}`): H-3a com assignee **executor-appmaternidade** (correção 1/2 da R1, se a revisão ainda não terminou; confira os runs antes) e QA-F2 com executor;
+  3. `unblock` t_6544886b e t_506d9c94 (revisões da rodada 2 de P-55 e P-56);
+  4. A11Y-F2: refazer a rodada do OpenCode, ou deixar o worker religar.
+- **Medida do marco 10 (4b), infra:** taxa de devolução 54% (7 de 13 revisões devolvidas). O diagnóstico está na infra, `deleg_2554a5ee`. Antes de criar cartões, ler esse diagnóstico.
+- **Regras que valem na volta:**
+  - laço repetido de teste com no máximo 2 suítes completas em paralelo;
+  - contexto do líder: delegar leitura e investigação a subagentes, leituras curtas e no máximo ~250 mil tokens por chamada; sessão nova a cada marco grande;
+  - cada cartão instala o próprio `node_modules`, nunca ligado ao de outro worktree.
+
+**Estado dos cartões no momento da pausa (13/11 ~21h45):**
 - **H-3a t_e9313367:** devolvida na R1 (causa: codigo: falso negativo de `max-w-leitura` no critério (e) do `medir_h.js` e 3 alertas do `layout.css`), correção 1/2 com o executor. Ao aprovar: integrar, depois soltar H-3b..f e QA-F1 t_e983505a, que bloqueiam como `transient` até lá.
 - **QA-F2 t_1dcaa165:** de volta à fila depois da triagem. O EPERM vinha da P-56, que tinha ligado o `node_modules` dela ao da QA-F2; o Vite PID 10028 foi encerrado (comentários 798/799). A rodada 2 do código está pronta e falta testar e pedir revisão. A11Y-F1 t_35476306 espera por ela.
 - **A11Y-F2 t_a37f1086:** solta sobre 38f0784 (comentários 786, 792, 803).
