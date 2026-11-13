@@ -60,7 +60,8 @@ Retomada 12/11 ~01h15 (sessão nova do líder): cron `retorno-oc` retomado; 37b 
   - H-3b..f, depois da H-3a;
   - H-3g t_b27d2b91, depois das áreas;
   - H-4 t_e53dea70.
-- **Spec RF-12:** um subagente (deleg_ecf36e88) escreve `_staging/appmaternidade/RF12/SPEC_RF12.md`. Depois: explique de volta (outro subagente) → cartões.
+- **Spec RF-12:** `_staging/appmaternidade/RF12/SPEC_RF12.md` v1 em rascunho (faixa grande, RF12:RF-01..17 e RN-01..07, premissas P1-P6 à vista de Daniel). Explique de volta R1 por outra família (codex gpt-6-astra, só leitura) rodando, com a saída em `RF12/EXPLIQUE_R1_codex.md`. Depois: corrigir, rodar o painel EGM (7 revisores + síntese, portão completo) → APROVADA → cartões I-RF12-1 → I-RF12-2 → J-RF12-1.
+- **P-54 t_0dc61db7:** aprovada em d8287bf; ff em `_int40a` (HEAD d8287bf); verificação do líder em `.oc/lider_verif/p54_exits.txt`. Se estiver verde: push do SHA completo, recibo, PENDENCIAS.
 - **Decisões de Daniel em aberto:** P-74 RF-12 (padrão: fazer), P-75 RF-14 (nada começa sem ele), P-76 "Revisão pendente" (padrão: manter).
 - **Relatórios:** `C:/OrchestrationLab/projetos/_staging/appmaternidade/PRE_LANCAMENTO/QA/RELATORIO.md` e `.../A11Y/RELATORIO.md`.
 
