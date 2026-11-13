@@ -1314,7 +1314,17 @@ body:has([data-barra-registrar]) [data-rodape] {
   background-color: var(--color-mel);
 }
 
-/* Madrugada: todo alvo das telas da rotina tem 56 px de altura (G11); --alvo-toque já vale 56 neste tema. */
-:root[data-tema='madrugada'] main.rotina-principal :is(a, button, select, textarea, input:not([type='checkbox'], [type='radio'])) {
+/* Madrugada: todo alvo do conteúdo da rotina tem 56 px de altura e 44 px de largura (G11); --alvo-toque já vale 56
+   neste tema. Hoje e Sessão montam um <main> sem `.rotina-principal` (só `data-tela`), por isso a regra anterior,
+   presa a `main.rotina-principal`, não os alcançava e o `.alvo-toque` do dia (44 px) continuava valendo neles. */
+:root[data-tema='madrugada'] main:is(.rotina-principal, [data-tela='hoje'], [data-tela='sessao']) :is(a, button, select, textarea, input:not([type='checkbox'], [type='radio'])) {
+  min-width: 2.75rem;
   min-height: var(--alvo-toque);
+}
+
+/* O link esticado ganha os 56 px dentro da própria linha: padding e margem negativa de mesmo tamanho (a linha
+   de texto tem 25 px), como os 44 px do dia, para a altura da linha e do que vem em volta não mudar. */
+:root[data-tema='madrugada'] main:is(.rotina-principal, [data-tela='hoje'], [data-tela='sessao']) .rotina-link-esticado {
+  margin-block: calc((1.5625rem - var(--alvo-toque)) / 2);
+  padding-block: calc((var(--alvo-toque) - 1.5625rem) / 2);
 }
