@@ -12,6 +12,7 @@ import type {
   FamiliaResumo,
   Membro,
   OperacaoConta,
+  OpcoesDeFamilias,
   PreviaConvite,
   Usuario,
 } from './conta.ts'
@@ -380,13 +381,32 @@ export function criarDadosContaMemoria(fixture: FixtureConta, opcoes: OpcoesMemo
     return ok(paraConta(conta, usuario.email))
   }
 
-  function minhasFamilias(): Resultado<FamiliaResumo[]> {
+  /** Os membros com vínculo vigente de uma família, vistos por `pessoa`, na ordem de `criado_em` e conta. */
+  function membrosDaFamilia(familiaId: string, pessoa: string): Membro[] {
+    const visiveis = contasVisiveis(pessoa)
+    return ordenarPor(
+      vinculos.filter((v) => v.familiaId === familiaId && vale(v)),
+      (v) => [v.criadoEm, v.contaId],
+    ).map((v) => ({
+      vinculoId: v.id,
+      contaId: v.contaId,
+      nome: nomeDaConta(v.contaId, visiveis) ?? '',
+      papel: v.papel,
+      validoAte: v.validoAte,
+      souEu: v.contaId === pessoa,
+    }))
+  }
+
+  function minhasFamilias(opcoes?: OpcoesDeFamilias): Resultado<FamiliaResumo[]> {
     const usuario = usuarioAtual()
     if (!usuario) return falhaAuth('sessao_encerrada')
     const minhas = vinculos.filter((v) => v.contaId === usuario.id && vale(v))
     const lista = minhas.flatMap((v) => {
       const familia = familias.find((f) => f.id === v.familiaId)
-      return familia ? [resumo(familia, v)] : []
+      if (!familia) return []
+      const linha = resumo(familia, v)
+      // Com `comMembros`, só as famílias em que a pessoa é responsável trazem os membros (como no banco).
+      return [opcoes?.comMembros && linha.meuPapel === 'responsavel' ? { ...linha, membros: membrosDaFamilia(familia.id, usuario.id) } : linha]
     })
     return ok(ordenarPor(lista, (f) => [f.criadaEm, f.id]))
   }
@@ -399,17 +419,7 @@ export function criarDadosContaMemoria(fixture: FixtureConta, opcoes: OpcoesMemo
     const { familia, meu } = achado.valor
     const visiveis = contasVisiveis(usuario.id)
 
-    const membros: Membro[] = ordenarPor(
-      vinculos.filter((v) => v.familiaId === familiaId && vale(v)),
-      (v) => [v.criadoEm, v.contaId],
-    ).map((v) => ({
-      vinculoId: v.id,
-      contaId: v.contaId,
-      nome: nomeDaConta(v.contaId, visiveis) ?? '',
-      papel: v.papel,
-      validoAte: v.validoAte,
-      souEu: v.contaId === usuario.id,
-    }))
+    const membros = membrosDaFamilia(familiaId, usuario.id)
 
     // Só os membros: nem bebês nem convites são lidos (como no banco).
     if (escopo === 'membros') return ok({ familia: resumo(familia, meu), bebes: [], membros, convites: null })

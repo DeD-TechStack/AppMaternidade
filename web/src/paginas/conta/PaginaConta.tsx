@@ -114,21 +114,27 @@ export function PaginaConta() {
   useEffect(() => avisarDesmontagem, [avisarDesmontagem])
   const resumoDaLeitura = useFocoNoResumo(leitura.fase === 'erro' ? leitura : null)
 
-  // Lê as famílias e, de cada uma em que a pessoa é responsável, os membros (a tela não mostra
-  // bebês nem convites, então não os pede). Uma leitura parcial nunca conta como "sem impedimento".
+  // Lê as famílias e, na mesma leitura, os membros das que a pessoa é responsável (a tela não mostra
+  // bebês nem convites, então não os pede): uma requisição de vínculos, qualquer que seja o número
+  // de famílias. Se uma família responsável vier sem membros (uma fonte que não os traz), os lê dela
+  // à parte. Uma leitura parcial nunca conta como "sem impedimento".
   // Uma leitura em andamento é compartilhada: pedir de novo antes de ela voltar (o efeito que roda
   // duas vezes, "Tentar de novo" clicado em dobro) não repete as requisições.
   const emAndamento = useRef<{ dados: typeof dados; leitura: Promise<void> } | null>(null)
   const ler = useCallback((): Promise<void> => {
     if (emAndamento.current?.dados === dados) return emAndamento.current.leitura
     const leitura = (async () => {
-      const familias = await dados.minhasFamilias()
+      const familias = await dados.minhasFamilias({ comMembros: true })
       if (!familias.ok) return setLeitura({ fase: 'erro', erro: familias.erro })
       const bloqueadoras: Array<{ id: string; nome: string }> = []
       for (const familia of familias.valor.filter((f) => f.meuPapel === 'responsavel')) {
-        const detalhe = await dados.detalheFamilia(familia.id, 'membros')
-        if (!detalhe.ok) return setLeitura({ fase: 'erro', erro: detalhe.erro })
-        const responsaveis = detalhe.valor.membros.filter((m) => m.papel === 'responsavel')
+        let membros = familia.membros
+        if (!membros) {
+          const detalhe = await dados.detalheFamilia(familia.id, 'membros')
+          if (!detalhe.ok) return setLeitura({ fase: 'erro', erro: detalhe.erro })
+          membros = detalhe.valor.membros
+        }
+        const responsaveis = membros.filter((m) => m.papel === 'responsavel')
         if (responsaveis.every((m) => m.souEu)) bloqueadoras.push({ id: familia.id, nome: familia.nome })
       }
       setLeitura({ fase: 'pronto', bloqueadoras })

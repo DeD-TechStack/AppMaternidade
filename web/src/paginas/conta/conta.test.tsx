@@ -441,9 +441,9 @@ describe('excluir conta: falha na leitura dos impedimentos', () => {
     expect(botaoExcluir().disabled).toBe(false)
   })
 
-  it('uma leitura parcial nunca conta como "sem impedimento": se o detalhe de uma família falhar, o botão segue desativado', async () => {
+  it('uma leitura parcial nunca conta como "sem impedimento": se a leitura das famílias e dos membros falhar, o botão segue desativado', async () => {
     const dados = novaMemoria()
-    simularFalha(dados, 'detalheFamilia', 'tente_de_novo')
+    simularFalha(dados, 'minhasFamilias', 'tente_de_novo')
     await abrirConta('juliana', dados)
 
     const alerta = await screen.findByRole('alert')
@@ -454,6 +454,24 @@ describe('excluir conta: falha na leitura dos impedimentos', () => {
     fireEvent.click(within(alerta).getByRole('button', { name: 'Tentar de novo' }))
     await waitFor(() => expect(document.getElementById('impedimento-exclusao')).not.toBeNull())
     expect(botaoExcluir().disabled).toBe(true)
+    expect(document.getElementById('impedimento-exclusao')!.textContent).toContain('Família Exemplo')
+  })
+
+  it('uma família responsável que vem sem membros é lida à parte, e o detalhe que falhar mantém o botão desativado', async () => {
+    const dados = novaMemoria()
+    const original = dados.minhasFamilias.bind(dados)
+    // Uma fonte que não traz os membros junto: a página relê os da família com `detalheFamilia`.
+    vi.spyOn(dados, 'minhasFamilias').mockImplementation(async () => original())
+    simularFalha(dados, 'detalheFamilia', 'tente_de_novo')
+    await abrirConta('juliana', dados)
+
+    const alerta = await screen.findByRole('alert')
+    expect(alerta.textContent).toContain(TEXTOS_ERRO.tente_de_novo)
+    expect(botaoExcluir().disabled).toBe(true)
+    expect(document.getElementById('impedimento-exclusao')).toBeNull()
+
+    fireEvent.click(within(alerta).getByRole('button', { name: 'Tentar de novo' }))
+    await waitFor(() => expect(document.getElementById('impedimento-exclusao')).not.toBeNull())
     expect(document.getElementById('impedimento-exclusao')!.textContent).toContain('Família Exemplo')
   })
 })

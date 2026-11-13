@@ -30,6 +30,8 @@ interface LinhaFamilia {
   nome: string
   fuso: string
   criada_em: string
+  /** Só quando a consulta embute os vínculos da família (`minhasFamilias({ comMembros: true })`). */
+  vinculos?: LinhaVinculo[] | null
 }
 interface LinhaVinculo {
   id: string
@@ -37,6 +39,7 @@ interface LinhaVinculo {
   papel: Papel
   estado: string
   valido_ate: string | null
+  criado_em?: string
 }
 interface LinhaVinculoComFamilia {
   id: string
@@ -61,6 +64,7 @@ interface LinhaConvite {
 
 const COLUNAS_CONTA = 'id, nome_privado, fuso, criada_em'
 const COLUNAS_FAMILIA = 'id, nome, fuso, criada_em'
+const COLUNAS_VINCULO = 'id, conta_id, papel, estado, valido_ate, criado_em'
 const COLUNAS_BEBE = 'id, familia_id, nome, nascimento, estado'
 
 const SESSAO_AUSENTE = { name: 'AuthSessionMissingError', code: 'session_not_found', message: 'Auth session missing!' }
@@ -80,6 +84,9 @@ function dataSimples(texto: string): string {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(texto) || new Date(texto).toISOString().slice(0, 10) !== texto) inesperada('nascimento')
   return texto
 }
+/** A ordem do banco (`order criado_em, conta_id`) para os vínculos embutidos. */
+const ordemDoVinculo = (a: LinhaVinculo, b: LinhaVinculo) =>
+  Date.parse(a.criado_em ?? '') - Date.parse(b.criado_em ?? '') || (a.conta_id < b.conta_id ? -1 : a.conta_id > b.conta_id ? 1 : 0)
 const isoOuNulo = (texto: string | null) => (texto === null ? null : iso(texto))
 const vale = (validoAte: string | null) => validoAte === null || Date.parse(validoAte) > Date.now()
 
@@ -182,18 +189,25 @@ export function criarDadosContaSupabase(cliente: SupabaseClient): DadosConta {
     return data ? paraConta(data as LinhaConta, email) : null
   }
 
-  async function familiasDaPessoa(id: string): Promise<FamiliaResumo[]> {
+  /**
+   * As famílias da pessoa: uma consulta de `vinculos`. Com `comMembros`, a mesma consulta embute os
+   * vínculos de cada família (`familias(..., vinculos(...))`) e uma de `contas` dá os nomes; os membros
+   * ficam só nas famílias em que a pessoa é responsável. Nunca lê `bebes` nem `convites`.
+   */
+  async function familiasDaPessoa(id: string, comMembros = false): Promise<FamiliaResumo[]> {
+    const embutidos = comMembros ? `, vinculos(${COLUNAS_VINCULO})` : ''
     const { data, error } = await cliente
       .from('vinculos')
-      .select(`id, papel, valido_ate, familias(${COLUNAS_FAMILIA})`)
+      .select(`id, papel, valido_ate, familias(${COLUNAS_FAMILIA}${embutidos})`)
       .eq('conta_id', id)
       .eq('estado', 'ativo')
     if (error) throw error
     const lista: FamiliaResumo[] = []
+    const dosMembros: Array<{ resumo: FamiliaResumo; brutos: LinhaVinculo[] }> = []
     for (const linha of (data ?? []) as unknown as LinhaVinculoComFamilia[]) {
       const familia = Array.isArray(linha.familias) ? linha.familias[0] : linha.familias
       if (!familia || !vale(linha.valido_ate)) continue
-      lista.push({
+      const resumo: FamiliaResumo = {
         id: familia.id,
         nome: familia.nome,
         fuso: familia.fuso,
@@ -201,7 +215,19 @@ export function criarDadosContaSupabase(cliente: SupabaseClient): DadosConta {
         meuPapel: linha.papel,
         meuVinculoId: linha.id,
         meuAcessoAte: isoOuNulo(linha.valido_ate),
-      })
+      }
+      lista.push(resumo)
+      // Sem a lista embutida (resposta fora da forma), a família segue sem `membros`: quem pediu relê.
+      if (comMembros && linha.papel === 'responsavel' && Array.isArray(familia.vinculos)) {
+        const brutos = familia.vinculos
+          .filter((v) => v.estado === 'ativo' && vale(v.valido_ate))
+          .sort((a, b) => ordemDoVinculo(a, b))
+        dosMembros.push({ resumo, brutos })
+      }
+    }
+    if (dosMembros.length > 0) {
+      const nomes = await nomesDasContas([...new Set(dosMembros.flatMap(({ brutos }) => brutos.map((v) => v.conta_id)))])
+      for (const { resumo, brutos } of dosMembros) resumo.membros = brutos.map((v) => paraMembro(v, nomes, id))
     }
     return lista.sort((a, b) => (a.criadaEm < b.criadaEm ? -1 : a.criadaEm > b.criadaEm ? 1 : a.id < b.id ? -1 : 1))
   }
@@ -406,10 +432,10 @@ export function criarDadosContaSupabase(cliente: SupabaseClient): DadosConta {
         return paraConta(linhas[0], usuario.email)
       }),
 
-    minhasFamilias: () =>
+    minhasFamilias: (opcoes) =>
       executar(async () => {
         const usuario = await meuUsuario()
-        return familiasDaPessoa(usuario.id)
+        return familiasDaPessoa(usuario.id, opcoes?.comMembros === true)
       }),
 
     detalheFamilia: (familiaId, escopo = 'completo') =>
