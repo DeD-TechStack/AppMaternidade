@@ -1,20 +1,83 @@
 ---
 tipo: pendencias
 responsavel: lider-appmaternidade
-revisado_em: 2026-11-12
+revisado_em: 2026-11-13
 regra: kanban-leader-cycle, seção 0 "Lista durável de pendências"
 ---
 
 # Pendências do AppMaternidade
 
 MANDATO (Daniel, 05/11/2026; visual refeito em 11/11): o site inteiro funcionando de ponta a ponta (RF-01 a RF-14), com o visual Campo de mel aprovado em 11/11, publicado para o professor entrar e usar tudo com dados fictícios. Fonte: [Retomada do site](Retomada_Site.md), seção "Roteiro do site completo".
-ESTADO: ATIVO (13/11, sessão nova do líder: retomada pelo bloco RETOMAR; frente principal = item H, sistema de harmonia; polimento por página CONGELADO; cartões de dados seguem; publicação e push na main só com o "pode", P-19)
+ESTADO: ATIVO (13/11 ~19h: foco total, até 8 cartões no board; frente principal = item H dividido por área; P-54/P-55/P-56 em paralelo; polimento por página CONGELADO; publicação e push na main só com o "pode", P-19). Estado vigente no bloco RETOMAR abaixo.
 
 Retomada 13/11 (sessão nova): cron `retorno-oc` (cacefbc1849d) retomado; P-50 t_2af603f6 reduzida a C-1/C-3/C-4 (comentário 711; C-2/C-5/C-6 e todo espaço/ritmo vão para o H); POL-ABR t_d04a8a7d estacionada e congelada (comentário 712). Medidas do H em `C:/OrchestrationLab/projetos/_staging/appmaternidade/HARMONIA/MEDIDAS.md` (caminho dado por Daniel em 13/11; todo cartão de spec ou de tela cita esse arquivo, regra `portao-medidas`).
 
 Retomada 12/11 ~01h15 (sessão nova do líder): cron `retorno-oc` retomado; 37b g3, POL-DES, POL-TXT v2 e POL-INI v2 voltaram a rodar. A 38a saiu da triage pelo sucessor **t_197241f9 (MAT-38a g2)**, sobre a base `base/38a-g2` = 4c4b1d4 (a mesma árvore de 1542137, com o merge local a46e42c refeito no título aceito, "Traz o int/refazer para a 38a"; `verificar-commits c7142bb..4c4b1d4` OK, 322); decisões D3 (o medidor entra logado nas rotas /app) e D4 (commits) no corpo; 38b e 39b religadas a ele; t_f7bdf7e8 arquivada. A 40b espera o retorno do `.oc/2` pelo cron.
 
-## RETOMAR (escrito em 12/11 ~07h50 para uma sessão NOVA do líder, na pausa pedida por Daniel via coordenador, t_8f26b965; substitui o bloco de t_64dcb622 e guarda o conteúdo dele)
+## RETOMAR (escrito em 13/11 ~19h, atualizado a cada marco; vale para uma sessão NOVA do líder)
+
+**Diretivas de Daniel em vigor:**
+- 12/11 (GALERIA_ATUAL): falta harmonia; o polimento por página está CONGELADO; a frente é o item H.
+- 13/11 ~16h40 (t_99ba9793): H-3 dividido em cartões por área.
+- 13/11 (chat): "abra quantas frentes forem necessárias".
+- 13/11 ~18h50 (t_ed69e09b): foco total no AppMaternidade; teto do host de 10 (o board aceita 8, `max_spawn`); abrir toda frente independente com spec pronta, priorizando fechar o site; laço repetido de teste intermitente com no máximo 2 suítes em paralelo; disco C ≥ 25 GB livres; pausa (desligar o PC) pode vir a qualquer hora.
+
+**Ramo:** `origin/int/refazer` = **3c03656e1e0af0118b92447933f8a373a12890f4**. Integrações de 13/11, com recibo em cada cartão:
+- 40c a003fe4;
+- 39b fcf47fc;
+- P-50 0f35191 (ff);
+- H-2 2a55145;
+- MAT-48f 3c03656.
+
+`main` intocada (P-19). Worktree de integração: `.worktrees/_int40a`, em 3c03656, limpa; logs em `.oc/lider_verif/`. O checkout principal só tem commits locais de registro (docs), sem push.
+
+**Item H** (specs em `C:/OrchestrationLab/projetos/_staging/appmaternidade/HARMONIA/`: MEDIDAS.md, SPEC_H.md v3, SPEC_H3.md v2, cartoes/H3_COMUM.md):
+- H-2: integrada. Utilitários com prefixo `esp-`, como `p-esp-secao`.
+- H-3a **t_e9313367**: rodando (primitivas, casco, /sistema, `medir_h.js`, leitura 640).
+- Áreas, filhas da H-3a, entram juntas quando ela integrar:
+  - H-3b t_b4446ca7 Início;
+  - H-3c t_04e1a709 páginas públicas;
+  - H-3d t_5866d349 Acesso e Conta;
+  - H-3e t_b8d3d400 Rotina;
+  - H-3f t_e72eacf8 Comunidade/Desenvolvimento logado/Moderação.
+- H-3g **t_b27d2b91**: lint bloqueante, CSS comum, `PEDIDOS_COMUNS.md`, medida das 9 rotas.
+- H-4 **t_e53dea70**: números → replica-diff → juízes → `HARMONIA/trabalho/h4/GALERIA.html` para Daniel.
+
+**Em paralelo (antecipados em 13/11):**
+- P-55 **t_6544886b**: QA do site inteiro.
+- P-56 **t_506d9c94**: acessibilidade.
+- P-54 **t_0dc61db7**: pedidos repetidos ao banco no casco logado.
+
+Achados `must` da P-55 e da P-56 viram cartões de correção, com escopo fora dos cartões de área (ou, se cair dentro, comentário no cartão da área).
+
+**Outros:**
+- MAT-48g t_0bfed15d: em revisão, sem código (não reproduziu); se aceita, fechar sem integrar.
+- MAT-37g t_1757260d: espera o Google (Daniel).
+- POL-ABR t_d04a8a7d: estacionado.
+
+**Regras de integração (sem exceção):**
+- `INTEGRANDO` no cartão.
+- No `_int40a`: ff, ou merge `--no-ff` com conferência de que as linhas +/− são iguais às revisadas.
+- `npm ci`, check, `verificar-commits c7142bb..HEAD`.
+- Push com o SHA completo para `refs/heads/int/refazer`.
+- Recibo no cartão em forma de sinal (sinal | esperado | observado | observador).
+- Soltar os filhos que esperam (eles bloqueiam como `transient` até a integração).
+
+**Atalhos e contornos deste host:**
+- O `preparar_oc.py` marca como tela todo cartão que mexe em web/src (pedido t_830d0730 na infra); cartão só de teste ou de dados tira à mão a linha `extratos/tela-*` do `opencode.json`.
+- Sair da triage: PATCH pelo browser (memória).
+
+**Como pausar:**
+- `block --kind needs_input "[decisor: Daniel] pausa"` nos cartões que aceitam.
+- `hermes cron pause cacefbc1849d`.
+- Atualizar este bloco.
+
+**Na retomada:**
+- `hermes cron resume cacefbc1849d`.
+- Ler o board.
+- Soltar os cartões.
+
+## RETOMAR anterior (12/11 ~07h50; histórico, não usar como estado)
 
 **Pausa de 12/11 (Daniel, ~07h45):** pausar tudo num ponto seguro; Daniel volta em alguns dias (a cota do GPT está no fim, e as revisões falhariam). Nada foi apagado; worktrees e trabalho sem commit ficam como estão.
 
