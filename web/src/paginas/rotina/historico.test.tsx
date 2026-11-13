@@ -138,7 +138,8 @@ describe('R38-20: o seletor de dia', () => {
 })
 
 describe('R38-20: os filtros', () => {
-  it('Todos liga os sete; desligar um tipo o tira da lista e do resumo, e a URL guarda os que sobram', async () => {
+  // QA-05 (TESTES_TROCADOS): com todos ligados, o primeiro toque num tipo deixa só ele (antes, o desligava).
+  it('Todos liga os sete; o primeiro toque num tipo deixa só ele na lista e no resumo, e a URL guarda só ele', async () => {
     const mundo = await renderizarRotaPronta('/app/historico', { diaCompleto: true })
     expect(botao('Todos').getAttribute('aria-pressed')).toBe('true')
     expect(botao('Sono').getAttribute('aria-pressed')).toBe('true')
@@ -146,12 +147,13 @@ describe('R38-20: os filtros', () => {
     fireEvent.click(botao('Sono'))
     await aguardarCarga()
 
-    expect(busca(mundo)).toBe('?dia=2026-11-05&tipos=mamada,mamadeira,fralda,tummy,solido,observacao')
+    expect(busca(mundo)).toBe('?dia=2026-11-05&tipos=sono')
     expect(botao('Todos').getAttribute('aria-pressed')).toBe('false')
-    expect(botao('Sono').getAttribute('aria-pressed')).toBe('false')
-    expect(linhas()).toHaveLength(6)
-    expect(linhas().some((l) => l.texto.startsWith('Sono'))).toBe(false)
-    expect(resumo().some((linha) => linha.startsWith('Sono'))).toBe(false)
+    expect(botao('Sono').getAttribute('aria-pressed')).toBe('true')
+    expect(botao('Fralda').getAttribute('aria-pressed')).toBe('false')
+    expect(linhas()).toHaveLength(3)
+    expect(linhas().every((l) => l.texto.startsWith('Sono'))).toBe(true)
+    expect(resumo().every((linha) => linha.startsWith('Sono'))).toBe(true)
 
     fireEvent.click(botao('Todos'))
     await aguardarCarga()
@@ -171,6 +173,75 @@ describe('R38-20: os filtros', () => {
     expect(busca(mundo)).toBe('?dia=2026-11-05')
     expect(botao('Todos').getAttribute('aria-pressed')).toBe('true')
     expect(linhas()).toHaveLength(9)
+  })
+
+  // QA-05: os toques em sequência. Com todos ligados o toque escolhe só aquele; com a seleção parcial, alterna.
+  it('toque em A e depois em B: os dois ligados, na ordem canônica da URL', async () => {
+    const mundo = await renderizarRotaPronta('/app/historico', { diaCompleto: true })
+
+    fireEvent.click(botao('Fralda'))
+    await aguardarCarga()
+    expect(busca(mundo)).toBe('?dia=2026-11-05&tipos=fralda')
+
+    fireEvent.click(botao('Sono'))
+    await aguardarCarga()
+
+    expect(busca(mundo)).toBe('?dia=2026-11-05&tipos=sono,fralda')
+    expect(botao('Sono').getAttribute('aria-pressed')).toBe('true')
+    expect(botao('Fralda').getAttribute('aria-pressed')).toBe('true')
+    expect(botao('Mamada').getAttribute('aria-pressed')).toBe('false')
+    expect(botao('Todos').getAttribute('aria-pressed')).toBe('false')
+    expect(linhas()).toHaveLength(6)
+  })
+
+  it('toque em A, B e de novo em B: sobra só A; tocar em A de novo volta a Todos', async () => {
+    const mundo = await renderizarRotaPronta('/app/historico', { diaCompleto: true })
+    fireEvent.click(botao('Fralda'))
+    await aguardarCarga()
+    fireEvent.click(botao('Sono'))
+    await aguardarCarga()
+
+    fireEvent.click(botao('Sono'))
+    await aguardarCarga()
+    expect(busca(mundo)).toBe('?dia=2026-11-05&tipos=fralda')
+    expect(botao('Sono').getAttribute('aria-pressed')).toBe('false')
+    expect(botao('Fralda').getAttribute('aria-pressed')).toBe('true')
+    expect(linhas().every((l) => l.texto.startsWith('Fralda'))).toBe(true)
+
+    fireEvent.click(botao('Fralda'))
+    await aguardarCarga()
+    expect(busca(mundo)).toBe('?dia=2026-11-05')
+    expect(botao('Todos').getAttribute('aria-pressed')).toBe('true')
+    expect(botao('Sono').getAttribute('aria-pressed')).toBe('true')
+    expect(linhas()).toHaveLength(9)
+  })
+
+  it('Todos depois de uma seleção parcial liga os sete', async () => {
+    const mundo = await renderizarRotaPronta('/app/historico', { diaCompleto: true })
+    fireEvent.click(botao('Fralda'))
+    await aguardarCarga()
+    fireEvent.click(botao('Mamada'))
+    await aguardarCarga()
+    expect(busca(mundo)).toBe('?dia=2026-11-05&tipos=mamada,fralda')
+
+    fireEvent.click(botao('Todos'))
+    await aguardarCarga()
+
+    expect(busca(mundo)).toBe('?dia=2026-11-05')
+    expect(botao('Todos').getAttribute('aria-pressed')).toBe('true')
+    expect(botao('Mamada').getAttribute('aria-pressed')).toBe('true')
+    expect(botao('Sono').getAttribute('aria-pressed')).toBe('true')
+    expect(linhas()).toHaveLength(9)
+  })
+
+  it('a partir de uma seleção parcial da URL, tocar num tipo desligado o liga', async () => {
+    const mundo = await renderizarRotaPronta('/app/historico?tipos=sono,fralda', { diaCompleto: true })
+
+    fireEvent.click(botao('Mamada'))
+    await aguardarCarga()
+
+    expect(busca(mundo)).toBe('?dia=2026-11-05&tipos=sono,mamada,fralda')
+    expect(botao('Mamada').getAttribute('aria-pressed')).toBe('true')
   })
 
   it('alternar filtro substitui a entrada do histórico; trocar o dia empilha uma nova', async () => {

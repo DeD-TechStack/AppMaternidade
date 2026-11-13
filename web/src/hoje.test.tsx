@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, screen, within } from '@testing-library/react'
 import { temBanco } from './prototipo/banco.ts'
+import { PESSOAS } from './teste/renderizarComDados.tsx'
 import { ID_BEBE, semSessaoEmAndamento } from './teste/rotina.fixture.ts'
 import { aguardarCarga, renderizarRotaPronta } from './teste/renderizarRota.tsx'
 
@@ -273,6 +274,45 @@ describe('Hoje: Para você saber e Desde o seu último registro', () => {
     expect(document.querySelector('[data-marca-envio]')).toBeNull()
   })
 
+  // QA-08: o mais novo primeiro, pela hora que a linha mostra; os de ontem levam "ontem" antes da hora, como em Últimos.
+  it('QA-08: itens de ontem e de hoje: do mais novo ao mais antigo e com "ontem" antes da hora dos de ontem', async () => {
+    const ontemAs = (hora: number, minuto: number) => new Date(2026, 10, 4, hora, minuto).toISOString()
+    await renderizarRotaPronta('/app/hoje', {
+      ajustarRotina: (f) => {
+        const modelo = f.registros.find((r) => r.tipo === 'fralda')!
+        const novo = (numero: number, autor: string, inicio: string, recebidoEm: string, conteudo: 'xixi' | 'coco' | 'ambos') => ({
+          ...modelo,
+          id: `a0000000-0000-7000-8000-${String(4000 + numero).padStart(12, '0')}`,
+          criadoPor: autor,
+          inicio,
+          recebidoEm,
+          atualizadoEm: recebidoEm,
+          detalhes: { conteudo },
+        })
+        return {
+          ...f,
+          registros: [
+            ...f.registros,
+            // O marco de Juliana: ontem às 20:00.
+            novo(1, PESSOAS.juliana.id, ontemAs(20, 0), ontemAs(20, 0), 'xixi'),
+            novo(2, PESSOAS.bruno.id, ontemAs(22, 30), ontemAs(22, 30), 'ambos'),
+            // Lançada hoje às 09:30, mas com a hora de ontem às 23:00: a linha mostra 23:00 de ontem.
+            novo(3, PESSOAS.bruno.id, ontemAs(23, 0), new Date(2026, 10, 5, 9, 30).toISOString(), 'coco'),
+          ],
+        }
+      },
+    })
+
+    const lista = within(regiao('Desde o seu último registro, às 20:00')).getAllByRole('listitem')
+    expect(lista.map((li) => [li.querySelector('p')!.textContent, li.querySelector('.tabular-nums')!.textContent])).toEqual([
+      ['Fralda, Xixi', '09:10'],
+      ['Sono, em andamento', '08:48'],
+      ['Mamada, 18 min · lado esquerdo', '07:32'],
+      ['Fralda, Cocô', 'ontem 23:00'],
+      ['Fralda, Ambos', 'ontem 22:30'],
+    ])
+  })
+
   it('sem registro de outra pessoa depois do marco: "Nada novo desde o seu último registro."; sem marco, o bloco não aparece', async () => {
     const nada = await renderizarRotaPronta('/app/hoje', {
       sessao: 'bruno',
@@ -294,20 +334,53 @@ describe('Hoje: Para você saber e Desde o seu último registro', () => {
 })
 
 describe('Hoje: os números do dia', () => {
-  it('três figuras: Mamadas (sessões e mamadeiras), Fraldas e Sono, só do dia da família', async () => {
+  // QA-09 (TESTES_TROCADOS): antes eram três figuras, com as mamadeiras somadas às mamadas ("3 Mamadas").
+  it('quatro figuras: Mamadas (só as sessões), Mamadeiras, Fraldas e Sono, só do dia da família', async () => {
     await renderizarRotaPronta('/app/hoje', { diaCompleto: true })
 
     const itens = within(regiao('Hoje até agora')).getAllByRole('listitem')
     expect(itens.map((li) => [...li.querySelectorAll('span')].map((s) => s.textContent))).toEqual([
-      ['3', 'Mamadas'],
+      ['2', 'Mamadas'],
+      ['1', 'Mamadeiras'],
       ['3', 'Fraldas'],
       ['4 h 20', 'Sono'],
     ])
   })
 
+  it('QA-09: as contagens de Mamadas e Mamadeiras do Hoje são as do resumo do dia do Histórico', async () => {
+    const hoje = await renderizarRotaPronta('/app/hoje', { diaCompleto: true })
+    const doHoje = (rotulo: string) =>
+      within(regiao('Hoje até agora')).getByText(rotulo).previousElementSibling!.textContent
+    const contagensDoHoje = [doHoje('Mamadas'), doHoje('Mamadeiras')]
+    hoje.unmount()
+
+    await renderizarRotaPronta('/app/historico', { diaCompleto: true })
+    const doHistorico = (rotulo: string) => {
+      const dt = [...document.querySelectorAll('[data-resumo-do-dia] dt')].find((item) => item.textContent === rotulo)!
+      return dt.nextElementSibling!.textContent!.split(',')[0]
+    }
+
+    expect(contagensDoHoje).toEqual([doHistorico('Mamadas'), doHistorico('Mamadeiras')])
+    expect(contagensDoHoje).toEqual(['2', '1'])
+  })
+
+  it('QA-09: a mamada em andamento não conta, e uma mamadeira sozinha não vira mamada', async () => {
+    await renderizarRotaPronta('/app/hoje', {
+      ajustarRotina: (f) => {
+        const modelo = f.registros.find((r) => r.tipo === 'mamadeira' || r.tipo === 'fralda')!
+        const mamadeira = { ...modelo, id: 'a0000000-0000-7000-8000-000000003001', tipo: 'mamadeira' as const, detalhes: { ml: 60 } }
+        return { ...f, registros: [...f.registros.filter((r) => r.tipo !== 'mamada'), mamadeira] }
+      },
+    })
+
+    const doHoje = (rotulo: string) => within(regiao('Hoje até agora')).getByText(rotulo).previousElementSibling!.textContent
+    expect(doHoje('Mamadas')).toBe('0')
+    expect(doHoje('Mamadeiras')).toBe('1')
+  })
+
   it('a fralda registrada soma uma fralda e o Desfazer devolve o número', async () => {
     await renderizarRotaPronta('/app/hoje', { diaCompleto: true })
-    const fraldas = () => within(regiao('Hoje até agora')).getAllByRole('listitem')[1].querySelector('span')!.textContent
+    const fraldas = () => within(regiao('Hoje até agora')).getByText('Fraldas').previousElementSibling!.textContent
 
     fireEvent.click(screen.getByRole('button', { name: 'Registrar fralda de Heloísa' }))
     fireEvent.click(screen.getByRole('button', { name: 'Xixi' }))

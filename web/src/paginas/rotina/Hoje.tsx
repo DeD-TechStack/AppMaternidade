@@ -19,14 +19,14 @@ import { SessoesEmParalelo } from '../../componentes/rotina/SessoesEmParalelo.ts
 import { TituloRotina } from '../../componentes/rotina/TituloRotina.tsx'
 import { UltimosDoHoje, type ItemDosUltimos } from '../../componentes/rotina/UltimosDoHoje.tsx'
 import { type AcaoDaConfirmacao, type BebeAtivo, useRotina } from '../../componentes/rotina/contexto.ts'
-import { formatarQuando, momentoDoRegistro } from '../../componentes/rotina/formatos.ts'
+import { formatarQuando, maisNovoPrimeiro, momentoDoRegistro } from '../../componentes/rotina/formatos.ts'
 import { useMadrugada } from '../../componentes/rotina/madrugada.ts'
 import { totaisDoDia } from '../../componentes/rotina/totaisDoDia.ts'
 import { useAcoesDaRotina, type ResultadoDoEncerramento } from '../../componentes/rotina/useAcoesDaRotina.ts'
 import { useSecao } from '../../componentes/rotina/useSecao.ts'
 import { LinkDaRotina } from '../../componentes/rotina/LinkDaRotina.tsx'
 import { ORIGEM_HOJE } from '../../componentes/rotina/origemDasNotas.ts'
-import { COMUM, ESTADOS, HOJE, LIGACOES, ROTULO_TIPO, SEM_RESULTADO, TITULOS } from '../../conteudo/rotina.ts'
+import { COMUM, ESTADOS, HOJE, LIGACOES, ROTULO_TIPO, SEM_RESULTADO, TITULOS, TOTAIS } from '../../conteudo/rotina.ts'
 import type { Resultado } from '../../dados/comum.ts'
 import { diaDaFamilia, formatarIdade, janelaDoDia, lerAparelho } from '../../dados/rotina.dia.ts'
 import { LIMITES, podeEscrever, type Lista, type Registro } from '../../dados/rotina.tipos.ts'
@@ -335,7 +335,8 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
           lido.marco ? (
             <DesdeUltimoRegistro
               marcoEm={Date.parse(lido.marco.recebidoEm)}
-              registros={lido.novos}
+              registros={[...lido.novos].sort(maisNovoPrimeiro)}
+              agora={agora}
               fuso={fuso}
               autorDe={autorDoRegistro}
               paraDetalhe={(registro) => `/app/registro/${registro.id}`}
@@ -369,6 +370,7 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
           <ResumoDoDia
             itens={[
               { rotulo: HOJE.mamadas, valor: String(totais.mamadas) },
+              { rotulo: TOTAIS.mamadeiras, valor: String(totais.mamadeiras) },
               { rotulo: HOJE.fraldas, valor: String(totais.fraldas) },
               { rotulo: HOJE.sono, valor: formatarSono(totais.sonoMin) },
             ]}
