@@ -39,13 +39,15 @@ import { ProvedorDaPendencia, usePendencia } from './pendencia.tsx'
 export function PaginaDesenvolvimento() {
   // O contexto do bebê (`useContextoDoBebe`) só se relê a partir da fase de erro. Quando o bloco de tummy time
   // descobre que o vínculo acabou (DES-09, estado 3), a página refaz a leitura inteira: o corpo é remontado,
-  // lê as famílias de novo e, ao terminar, leva o foco ao título. Uma vez por abertura da página, para a
-  // releitura não virar laço se o contexto ainda mostrar o bebê.
+  // lê as famílias de novo e, ao terminar, leva o foco ao título. A proteção contra laço é por IDENTIDADE do
+  // contexto (`familia.id:bebe.id`): a mesma identidade já invalidada não invalida de novo (a releitura não vira
+  // laço se o contexto ainda mostrar o bebê), e uma identidade diferente, como a da outra família para onde a
+  // página trocou sozinha, invalida outra vez.
   const [leitura, setLeitura] = useState({ numero: 0, focarTitulo: false })
-  const relida = useRef(false)
-  const aoPerderAcesso = useCallback(() => {
-    if (relida.current) return
-    relida.current = true
+  const ultimaInvalidada = useRef<string | null>(null)
+  const aoPerderAcesso = useCallback((identidade: string) => {
+    if (ultimaInvalidada.current === identidade) return
+    ultimaInvalidada.current = identidade
     setLeitura((anterior) => ({ numero: anterior.numero + 1, focarTitulo: true }))
   }, [])
 
@@ -61,7 +63,8 @@ type Pronto = Extract<ContextoDoBebe, { fase: 'pronto' }>
 interface PropsDoCorpo {
   /** A página foi remontada porque o vínculo acabou: ao terminar de carregar, o foco vai ao `h1`. */
   focarTituloAoCarregar?: boolean
-  aoPerderAcesso?: () => void
+  /** O bloco perdeu o acesso ao contexto de identidade `familia.id:bebe.id`. */
+  aoPerderAcesso?: (identidade: string) => void
 }
 
 export function CorpoDaPagina({ focarTituloAoCarregar = false, aoPerderAcesso }: PropsDoCorpo = {}) {
@@ -130,10 +133,11 @@ function SemBebe({ contexto }: { contexto: Exclude<ContextoDoBebe, { fase: 'pron
   )
 }
 
-function ConteudoDoBebe({ contexto, aoPerderAcesso }: { contexto: Pronto; aoPerderAcesso?: () => void }) {
+function ConteudoDoBebe({ contexto, aoPerderAcesso }: { contexto: Pronto; aoPerderAcesso?: (identidade: string) => void }) {
   const { pendente } = usePendencia()
   const { conteudo, todasAsFases, artigos } = useBlocosEstaticos()
   const { familia, bebe, bebes, papel, agora } = contexto
+  const identidade = `${familia.id}:${bebe.id}`
 
   const hoje = diaDaFamilia(agora, familia.fuso)
   const dias = idadeEmDias(bebe.nascimento, hoje)
@@ -197,8 +201,13 @@ function ConteudoDoBebe({ contexto, aoPerderAcesso }: { contexto: Pronto; aoPerd
           <TodasAsFases fases={todasAsFases} atuais={atuais} />
         </div>
 
-        <div key={`${familia.id}:${bebe.id}`} data-lugar-do-tummy="" className="lg:col-span-12 empty:hidden">
-          <BlocoTummy bebe={bebe} familia={familia} papel={papel} aoPerderAcesso={aoPerderAcesso} />
+        <div key={identidade} data-lugar-do-tummy="" className="lg:col-span-12 empty:hidden">
+          <BlocoTummy
+            bebe={bebe}
+            familia={familia}
+            papel={papel}
+            aoPerderAcesso={aoPerderAcesso ? () => aoPerderAcesso(identidade) : undefined}
+          />
         </div>
 
         <div className="flex flex-col gap-12 lg:col-span-12">
