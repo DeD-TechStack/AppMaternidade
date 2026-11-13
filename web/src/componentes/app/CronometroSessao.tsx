@@ -3,15 +3,13 @@ import { NotebookPen } from 'lucide-react'
 import { COMUM, SESSAO, SESSOES } from '../../conteudo/rotina.ts'
 import { Botao } from '../base/Botao.tsx'
 import { ALVO_APP } from './alvo.ts'
+import { LIMITE_DA_SESSAO_CURTA_MS } from './PerguntaSessaoCurta.tsx'
 import { recuoOptico } from './recuoOptico.ts'
 import { tamanhoDoCronometro } from '../../prototipo/formatar.ts'
 
 // `curta`: a pergunta de uma sessão com menos de 1 minuto (QA-10); `origem` diz qual botão a abriu.
 type Painel = 'nota' | 'descartar' | 'curta'
 type Origem = 'encerrar' | 'anotar'
-
-/** Menos que isto, encerrar pergunta antes (QA-10). */
-const LIMITE_DA_SESSAO_CURTA_MS = 60_000
 
 interface Props {
   /** "mm:ss" ou "h:mm:ss", já formatado. O leitor de tela lê o tempo inteiro. */

@@ -5,6 +5,7 @@ import { AvisoDaTela } from '../../componentes/app/AvisoDaTela.tsx'
 import { BotaoIniciarMamada } from '../../componentes/app/BotaoIniciarMamada.tsx'
 import { CartaoSessao } from '../../componentes/app/CartaoSessao.tsx'
 import { ResumoDoDia } from '../../componentes/app/ResumoDoDia.tsx'
+import { PerguntaSessaoCurta, sessaoCurta } from '../../componentes/app/PerguntaSessaoCurta.tsx'
 import { ALVO_APP } from '../../componentes/app/alvo.ts'
 import { Botao } from '../../componentes/base/Botao.tsx'
 import { Etiqueta } from '../../componentes/base/Etiqueta.tsx'
@@ -82,6 +83,8 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
   const [ocupados, setOcupados] = useState<ReadonlySet<BotaoRapido>>(new Set())
   const [encerrando, setEncerrando] = useState(false)
   const [relogioAtrasDe, setRelogioAtrasDe] = useState<string | null>(null)
+  // A sessão do cartão cuja pergunta de "menos de 1 minuto" está aberta (QA-10).
+  const [curtaDe, setCurtaDe] = useState<string | null>(null)
 
   const bebeId = ativo.bebe.id
   const familiaId = ativo.familia.id
@@ -218,8 +221,39 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
 
   function encerrarPrincipal() {
     if (!principalSessao || encerrando) return
+    setCurtaDe(null)
     cartao.current?.focus()
     void encerrar(principalSessao)
+  }
+
+  // QA-10: com menos de 1 minuto, "Encerrar" pergunta antes; com 1 minuto ou mais, encerra de uma vez.
+  function pedirEncerrarPrincipal() {
+    if (!principalSessao || encerrando) return
+    if (sessaoCurta(agora, Date.parse(principalSessao.inicio))) setCurtaDe(principalSessao.id)
+    else encerrarPrincipal()
+  }
+
+  // Esc fecha a pergunta e devolve o foco ao "Encerrar" do cartão.
+  function fecharPerguntaDoCartao() {
+    setCurtaDe(null)
+    cartao.current?.querySelector<HTMLElement>('[data-acao="encerrar"]')?.focus()
+  }
+
+  // "Descartar" da pergunta: o descarte de sempre (a sessão vai para a lixeira), sem confirmação nem Desfazer.
+  async function descartarSessao(sessao: Registro) {
+    if (encerrando) return
+    setEncerrando(true)
+    const resultado = await acoes.descartar(sessao)
+    setEncerrando(false)
+    if (resultado.ok) setRelogioAtrasDe(null)
+    else acoes.mostrarErro(resultado.erro, () => void descartarSessao(sessao))
+  }
+
+  function descartarPrincipal() {
+    if (!principalSessao || encerrando) return
+    setCurtaDe(null)
+    cartao.current?.focus()
+    void descartarSessao(principalSessao)
   }
 
   // ---- os números do dia e "Últimos" ----------------------------------------------------------------
@@ -276,7 +310,19 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
             agora={agora}
             podeEncerrar={gravacaoLiberada}
             ocupado={encerrando}
-            aoEncerrar={encerrarPrincipal}
+            aoEncerrar={pedirEncerrarPrincipal}
+            painel={
+              principalSessao && curtaDe === principalSessao.id ? (
+                <PerguntaSessaoCurta
+                  className="w-full"
+                  ocupado={encerrando}
+                  podeDescartar={rotina.podeAlterar(principalSessao)}
+                  aoSalvar={encerrarPrincipal}
+                  aoDescartar={descartarPrincipal}
+                  aoFechar={fecharPerguntaDoCartao}
+                />
+              ) : null
+            }
           />
         </>
       )}
@@ -290,6 +336,8 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
         ocupado={encerrando}
         relogioAtrasDe={relogioAtrasDe}
         aoEncerrar={(sessao) => void encerrar(sessao)}
+        podeDescartar={(sessao) => rotina.podeAlterar(sessao)}
+        aoDescartar={(sessao) => void descartarSessao(sessao)}
         aoEncerrarEm={(sessao, momento) => void encerrar(sessao, momento)}
         aoUnir={(grupo) => acoes.unir(grupo)}
       />

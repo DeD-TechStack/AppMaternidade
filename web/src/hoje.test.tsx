@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, screen, within } from '@testing-library/react'
 import { temBanco } from './prototipo/banco.ts'
 import { PESSOAS } from './teste/renderizarComDados.tsx'
-import { ID_BEBE, semSessaoEmAndamento } from './teste/rotina.fixture.ts'
+import type { FixtureRotina } from './dados/rotina.memoria.ts'
+import { ID_BEBE, comSessaoEmAndamento, semSessaoEmAndamento } from './teste/rotina.fixture.ts'
 import { aguardarCarga, renderizarRotaPronta } from './teste/renderizarRota.tsx'
 
 // O Hoje com os dados da rotina (MAT-38a) sobre o Campo de mel (DESIGN.md 4, telas do app): o título com a
@@ -221,6 +222,142 @@ describe('Hoje: o cartão da sessão', () => {
 
     expect(cartao(container).textContent).toContain('Nenhuma sessão em andamento.')
     expect(screen.getByRole('status').textContent).toContain('Sessão encerrada: 1 h 12 min')
+  })
+})
+
+// QA-10 no Hoje: "Encerrar" do cartão e o das outras sessões perguntam antes quando a sessão tem menos de 1 minuto.
+describe('Hoje: a pergunta da sessão curta (QA-10)', () => {
+  const PERGUNTA = 'A sessão durou menos de 1 minuto. Salvar mesmo assim?'
+  const pergunta = () => screen.getByRole('group', { name: PERGUNTA })
+  const semPergunta = () => expect(screen.queryByRole('group', { name: PERGUNTA })).toBeNull()
+
+  // Uma segunda sessão, mais antiga que a principal (a de início mais recente é a do cartão).
+  const comMamadaEmParalelo = (haMs: number) => (fixture: FixtureRotina): FixtureRotina => {
+    const modelo = fixture.registros.find((r) => r.tipo === 'sono' && r.fim === null)!
+    const inicio = new Date(Date.now() - haMs).toISOString()
+    return {
+      ...fixture,
+      registros: [
+        ...fixture.registros,
+        { ...modelo, id: 'a0000000-0000-7000-8000-000000005001', tipo: 'mamada' as const, inicio, recebidoEm: inicio },
+      ],
+    }
+  }
+
+  it('com 30 s, "Encerrar" do cartão pergunta no cartão, com "Salvar" e "Descartar", e não encerra nada', async () => {
+    const { container } = await renderizarRotaPronta('/app/hoje', { ajustarRotina: comSessaoEmAndamento('sono', 30_000) })
+
+    fireEvent.click(within(cartao(container)).getByRole('button', { name: 'Encerrar' }))
+
+    expect(cartao(container).contains(pergunta())).toBe(true)
+    expect(within(pergunta()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Salvar', 'Descartar'])
+    expect(document.activeElement).toBe(within(pergunta()).getByRole('button', { name: 'Salvar' }))
+    expect(screen.getByRole('timer')).toBeTruthy()
+    expect(screen.getByRole('status').textContent).toBe('')
+  })
+
+  it('"Salvar" encerra como sempre: o cartão passa a dizer "Nenhuma sessão" e a confirmação aparece', async () => {
+    const { container } = await renderizarRotaPronta('/app/hoje', { ajustarRotina: comSessaoEmAndamento('sono', 30_000) })
+    fireEvent.click(within(cartao(container)).getByRole('button', { name: 'Encerrar' }))
+
+    fireEvent.click(within(pergunta()).getByRole('button', { name: 'Salvar' }))
+    await aguardarCarga()
+
+    semPergunta()
+    expect(cartao(container).textContent).toContain('Nenhuma sessão em andamento.')
+    expect(screen.getByRole('status').textContent).toContain('Sessão encerrada')
+  })
+
+  it('"Descartar" usa o descarte de sempre: a sessão vai para a lixeira e nada é encerrado', async () => {
+    const { container, rotina } = await renderizarRotaPronta('/app/hoje', { ajustarRotina: comSessaoEmAndamento('sono', 30_000) })
+    fireEvent.click(within(cartao(container)).getByRole('button', { name: 'Encerrar' }))
+
+    fireEvent.click(within(pergunta()).getByRole('button', { name: 'Descartar' }))
+    await aguardarCarga()
+
+    semPergunta()
+    expect(cartao(container).textContent).toContain('Nenhuma sessão em andamento.')
+    expect(screen.getByRole('status').textContent).not.toContain('Sessão encerrada')
+    const lixeira = await rotina.lixeira(ID_BEBE)
+    expect(lixeira.ok && lixeira.valor.itens.map((r) => r.tipo)).toEqual(['sono'])
+  })
+
+  it('Esc fecha a pergunta e devolve o foco ao "Encerrar" que a abriu', async () => {
+    const { container } = await renderizarRotaPronta('/app/hoje', { ajustarRotina: comSessaoEmAndamento('sono', 30_000) })
+    const encerrar = within(cartao(container)).getByRole('button', { name: 'Encerrar' })
+    fireEvent.click(encerrar)
+
+    fireEvent.keyDown(document.activeElement!, { key: 'Escape' })
+
+    semPergunta()
+    expect(document.activeElement).toBe(encerrar)
+    expect(screen.getByRole('timer')).toBeTruthy()
+  })
+
+  it('com 59 s ainda pergunta; com 60 s ou mais, "Encerrar" encerra de uma vez, sem pergunta', async () => {
+    const curta = await renderizarRotaPronta('/app/hoje', { ajustarRotina: comSessaoEmAndamento('sono', 59_000) })
+    fireEvent.click(within(cartao(curta.container)).getByRole('button', { name: 'Encerrar' }))
+    expect(pergunta()).toBeTruthy()
+    curta.unmount()
+
+    const longa = await renderizarRotaPronta('/app/hoje', { ajustarRotina: comSessaoEmAndamento('sono', 60_000) })
+    fireEvent.click(within(cartao(longa.container)).getByRole('button', { name: 'Encerrar' }))
+    await aguardarCarga()
+
+    semPergunta()
+    expect(screen.getByRole('status').textContent).toContain('Sessão encerrada: 1 min')
+  })
+
+  it('o "Encerrar" de outra sessão em paralelo com menos de 1 minuto também pergunta; "Salvar" encerra só ela', async () => {
+    await renderizarRotaPronta('/app/hoje', {
+      ajustarRotina: (f) => comMamadaEmParalelo(40_000)(comSessaoEmAndamento('sono', 10_000)(f)),
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Encerrar mamada' }))
+    expect(within(screen.getByRole('region', { name: 'Outras sessões em andamento' })).getByRole('group', { name: PERGUNTA })).toBeTruthy()
+    expect(document.activeElement).toBe(within(pergunta()).getByRole('button', { name: 'Salvar' }))
+
+    fireEvent.click(within(pergunta()).getByRole('button', { name: 'Salvar' }))
+    await aguardarCarga()
+
+    semPergunta()
+    expect(screen.queryByRole('region', { name: 'Outras sessões em andamento' })).toBeNull()
+    expect(screen.getByRole('timer')).toBeTruthy()
+    expect(screen.getByRole('status').textContent).toContain('Sessão encerrada')
+  })
+
+  it('o "Descartar" da pergunta de outra sessão descarta só ela (vai para a lixeira)', async () => {
+    const { rotina } = await renderizarRotaPronta('/app/hoje', {
+      ajustarRotina: (f) => comMamadaEmParalelo(40_000)(comSessaoEmAndamento('sono', 10_000)(f)),
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Encerrar mamada' }))
+
+    fireEvent.click(within(pergunta()).getByRole('button', { name: 'Descartar' }))
+    await aguardarCarga()
+
+    semPergunta()
+    expect(screen.getByRole('timer')).toBeTruthy()
+    const lixeira = await rotina.lixeira(ID_BEBE)
+    expect(lixeira.ok && lixeira.valor.itens.map((r) => r.tipo)).toEqual(['mamada'])
+  })
+
+  it('com 60 s ou mais, o "Encerrar" de outra sessão encerra de uma vez', async () => {
+    await renderizarRotaPronta('/app/hoje', {
+      ajustarRotina: (f) => comMamadaEmParalelo(5 * 60_000)(comSessaoEmAndamento('sono', 2 * 60_000)(f)),
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Encerrar mamada' }))
+    await aguardarCarga()
+
+    semPergunta()
+    expect(screen.getByRole('status').textContent).toContain('Sessão encerrada')
+  })
+
+  it('observador não tem "Encerrar" e, portanto, nenhuma pergunta', async () => {
+    await renderizarRotaPronta('/app/hoje', { sessao: 'davi', papelDeDavi: 'observador', ajustarRotina: comSessaoEmAndamento('sono', 30_000) })
+
+    expect(screen.queryByRole('button', { name: 'Encerrar' })).toBeNull()
+    semPergunta()
   })
 })
 
