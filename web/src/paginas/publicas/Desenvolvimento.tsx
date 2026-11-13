@@ -14,6 +14,8 @@ import { SeletorDeFase } from '../../componentes/publicas-destaque/SeletorDeFase
 import { TabelaTexto } from '../../componentes/publicas-destaque/TabelaTexto.tsx'
 import { FASES, IDEIAS, MARCOS, QUANTO_TEMPO, TUMMY_TIME } from '../../conteudo/desenvolvimento/itens.ts'
 import { DESENVOLVIMENTO_DESTAQUE as T, ROTULOS_FONTES } from '../../conteudo/desenvolvimento/pagina.ts'
+import { NOMES_DE_PAGINA } from '../../conteudo/publicas-texto.ts'
+import { useTituloDaPagina } from './useTitulo.ts'
 
 // As partes do tummy time antes da tabela "quanto tempo" (o que é, segurança, quando começar); a
 // última ("se o bebê reclamar") vem depois dela.
@@ -36,6 +38,7 @@ const DESTAQUE_MARCOS = 'Cada criança chega lá no seu próprio ritmo.'
  * data da consulta.
  */
 export function Desenvolvimento() {
+  useTituloDaPagina(NOMES_DE_PAGINA.desenvolvimento)
   return (
     <main className="pd-pagina">
       <Abertura

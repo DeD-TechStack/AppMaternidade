@@ -722,7 +722,7 @@ describe('erro do banco: a frase da linha do catálogo, no campo ou no topo', ()
     const dialogo = within(screen.getByRole('dialog'))
     fireEvent.change(dialogo.getByLabelText('Senha atual', { selector: 'input' }), { target: { value: 'errada' } })
     fireEvent.click(dialogo.getByRole('button', { name: 'Excluir conta' }))
-    await waitFor(() => expect(dialogo.getByText(TEXTOS_ERRO.credenciais)).toBeTruthy())
+    await waitFor(() => expect(dialogo.getByText('A senha não confere.')).toBeTruthy())
 
     simularFalha(dados, 'excluirConta', 'ultimo_responsavel')
     fireEvent.change(dialogo.getByLabelText('Senha atual', { selector: 'input' }), { target: { value: SENHA_DEMONSTRACAO } })

@@ -13,6 +13,8 @@ import {
 } from '../../componentes/publicas-destaque/CartoesApp.tsx'
 import { TabelaTexto } from '../../componentes/publicas-destaque/TabelaTexto.tsx'
 import { CUIDADO_DESTAQUE as T } from '../../conteudo/publicas-destaque.ts'
+import { NOMES_DE_PAGINA } from '../../conteudo/publicas-texto.ts'
+import { useTituloDaPagina } from './useTitulo.ts'
 
 /**
  * /cuidado-compartilhado: a abertura (o título, o texto e o primário de um lado; do outro, o painel de
@@ -24,6 +26,7 @@ import { CUIDADO_DESTAQUE as T } from '../../conteudo/publicas-destaque.ts'
  * celular. O aviso de demonstração é o do rodapé da casca.
  */
 export function CuidadoCompartilhado() {
+  useTituloDaPagina(NOMES_DE_PAGINA.cuidadoCompartilhado)
   return (
     <main className="pd-pagina">
       <Abertura

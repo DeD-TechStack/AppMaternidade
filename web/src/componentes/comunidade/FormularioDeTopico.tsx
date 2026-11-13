@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useId, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
 import { COMUM_COMUNIDADE, FORMULARIO_TOPICO, TX } from '../../conteudo/comunidade.ts'
 import type { Resultado } from '../../dados/comum.ts'
@@ -42,7 +42,17 @@ export function FormularioDeTopico({ espaco, perfilId, edicao, aoNaoEditavel }: 
   }, perfilId)
   const apelido = eu.estado.fase === 'pronto' ? (eu.estado.valor?.apelido ?? '') : ''
 
-  const valido = conferirLimite(titulo, LIMITES.titulo) === 'ok' && conferirLimite(corpo, LIMITES.corpoTopico) === 'ok'
+  const tituloOk = conferirLimite(titulo, LIMITES.titulo) === 'ok'
+  const corpoOk = conferirLimite(corpo, LIMITES.corpoTopico) === 'ok'
+  const valido = tituloOk && corpoOk
+  const dicaId = useId()
+  const dica = valido
+    ? null
+    : tituloOk
+      ? FORMULARIO_TOPICO.dicaPrevia.texto
+      : corpoOk
+        ? FORMULARIO_TOPICO.dicaPrevia.titulo
+        : FORMULARIO_TOPICO.dicaPrevia.ambos
   const botaoDoErro =
     erro?.acao === 'conferir' ? COMUM_COMUNIDADE.conferir : erro?.acao ? COMUM_COMUNIDADE.tentarDeNovo : undefined
 
@@ -141,9 +151,14 @@ export function FormularioDeTopico({ espaco, perfilId, edicao, aoNaoEditavel }: 
       />
       <EscolhaDeFaixa rotulo={COMUM_COMUNIDADE.faixaOpcional} valor={faixa} aoMudar={setFaixa} />
       <div>
-        <button type="submit" disabled={!valido} className={BOTAO_PRINCIPAL}>
+        <button type="submit" disabled={!valido} aria-describedby={dica ? dicaId : undefined} className={BOTAO_PRINCIPAL}>
           {FORMULARIO_TOPICO.verPrevia}
         </button>
+        {dica ? (
+          <p id={dicaId} className="cm-pequeno mt-2 text-[var(--cor-texto-2)]">
+            {dica}
+          </p>
+        ) : null}
       </div>
     </form>
   )

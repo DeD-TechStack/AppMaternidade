@@ -16,6 +16,8 @@ import {
 } from '../../componentes/publicas-destaque/CartoesApp.tsx'
 import { ListaDePassos } from '../../componentes/publicas-destaque/Passos.tsx'
 import { COMO_FUNCIONA_DESTAQUE as T } from '../../conteudo/publicas-destaque.ts'
+import { NOMES_DE_PAGINA } from '../../conteudo/publicas-texto.ts'
+import { useTituloDaPagina } from './useTitulo.ts'
 
 /**
  * /como-funciona: a abertura com a cena de estúdio (sem nada por cima do aparelho), os três momentos
@@ -24,6 +26,7 @@ import { COMO_FUNCIONA_DESTAQUE as T } from '../../conteudo/publicas-destaque.ts
  * lado. O aviso de demonstração é o do rodapé da casca: a página não repete outro.
  */
 export function ComoFunciona() {
+  useTituloDaPagina(NOMES_DE_PAGINA.comoFunciona)
   return (
     <main className="pd-pagina">
       <Abertura
