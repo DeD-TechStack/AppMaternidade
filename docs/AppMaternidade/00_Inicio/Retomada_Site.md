@@ -12,7 +12,15 @@ Esta é a nota de partida da próxima sessão de trabalho no site. Ela registra 
 
 **Site publicado (06/11/2026):** https://ded-techstack.github.io/AppMaternidade/ (MAT-48a, main 2beddee). Ele mostra Início, Hoje e Sessão com o aviso "Demonstração sem banco". As variáveis do banco entram no build com a MAT-37.
 
-## PAUSA de 12/11/2026 ~07h50 (Daniel, via coordenador, t_8f26b965): ESTADO VIGENTE
+## RETOMADA de 13/11/2026 (sessão nova do líder): ESTADO VIGENTE
+
+ESTADO: ATIVO. Frente principal: item H, sistema de harmonia (polimento por página congelado).
+- MAT-40c integrada: `origin/int/refazer` = a003fe4 (merge do 5ff67f6 revisado, diff idêntico, check 2734 testes na 3ª execução; as duas primeiras caíram no teste intermitente DES-09 "carregando", que vira o cartão MAT-48f t_dfbff632). Recibo no comentário 721.
+- MAT-39b t_c9529365 rodando na correção 2/2 (comentário 713); P-60 t_ca45d30f aprovada com limites (evidência da 37b); P-50 t_2af603f6 reduzida a C-1, C-3 e C-4 (comentário 711); POL-ABR t_d04a8a7d estacionada (comentário 712).
+- H passo 1 feito: `C:/OrchestrationLab/projetos/_staging/appmaternidade/HARMONIA/MEDIDAS.md` (Pato Jack, Good Inside no Rare Days e goodinside.com, 1440 e 390, getComputedStyle; nosso site medido com o mesmo script). Achados: nós somamos margem de seção 96 com painel 64 (160 entre conteúdos; 108 a 161 no celular, o dobro ou o triplo da referência), temos 3 margens esquerdas por página e a escala de títulos sem razão fixa (84/56/48/36).
+- H passo 2 em spec: `HARMONIA/SPEC_H.md` v1 (portão enxuto, explique de volta R1). Depois: H-2 (DESIGN.md e tema gerado), H-3 (primitivas globais, um cartão), H-4 (números e replica-diff antes dos juízes).
+
+## PAUSA de 12/11/2026 ~07h50 (Daniel, via coordenador, t_8f26b965): histórico
 
 Pausa num ponto seguro; Daniel volta em alguns dias (cota do GPT no fim). Cron retorno-oc (cacefbc1849d) pausado; 39b em triage, P-60 bloqueada, P-50 e POL-ABR em scheduled, MAT-40c aprovada sem integrar. O passo a passo da retomada está no bloco RETOMAR de [PENDENCIAS](PENDENCIAS.md).
 
