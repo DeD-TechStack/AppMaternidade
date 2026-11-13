@@ -615,7 +615,8 @@ describe('C6: meu perfil público', () => {
     fireEvent.change(apelido, { target: { value: 'OUTRA_PESSOA' } })
     fireEvent.click(botao(PERFIL.salvar))
     expect(await screen.findByText(TEXTOS_ERRO_COMUNIDADE.apelido_em_uso)).toBeTruthy()
-    expect(document.activeElement).toBe(apelido)
+    // O foco vem de um efeito do formulário, que pode rodar depois de o texto do erro aparecer.
+    await waitFor(() => expect(document.activeElement).toBe(apelido))
 
     fireEvent.change(apelido, { target: { value: 'apelido_novo' } })
     fireEvent.change(screen.getByLabelText(PERFIL.bioRotulo), { target: { value: 'Uma bio' } })
