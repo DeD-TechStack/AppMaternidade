@@ -14,6 +14,7 @@ export const ROTULO_CRIAR_CONTA = 'Criar conta'
 export const ROTULO_MENU = 'Menu'
 export const ROTULO_NAVEGACAO = 'Site'
 export const ROTULO_NAVEGACAO_RODAPE = 'Rodapé'
+export const ROTULO_PULAR = 'Pular para o conteúdo'
 
 export type Contexto = 'publico' | 'logado'
 

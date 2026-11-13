@@ -58,7 +58,8 @@ describe('cabeçalho público', () => {
     const { container } = renderizarRota('/')
     for (const link of container.querySelectorAll<HTMLAnchorElement>('header[data-cabecalho] a')) {
       const destino = link.getAttribute('href')!
-      expect(['/', ...ROTAS_PUBLICAS, '/entrar', '/criar-conta'], destino).toContain(destino)
+      // O link de pular para o conteúdo (WCAG 2.4.1) é âncora da própria página, e não uma rota.
+      expect(['/', ...ROTAS_PUBLICAS, '/entrar', '/criar-conta', '#conteudo'], destino).toContain(destino)
     }
   })
 

@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation } from 'react-router'
 import { Menu, Moon, X } from 'lucide-react'
 import { Botao } from '../base/Botao.tsx'
 import { MenuCelular } from './MenuCelular.tsx'
+import { PularParaConteudo } from './PularParaConteudo.tsx'
 import {
   DESTINO_CRIAR_CONTA,
   DESTINO_ENTRAR,
@@ -40,6 +41,8 @@ export function Cabecalho({ contexto, madrugada, aoAlternarMadrugada }: Props) {
 
   return (
     <header className="cm-cabecalho" data-cabecalho="">
+      {/* O primeiro Tab de toda página: pula o cabeçalho e vai ao <main> (WCAG 2.4.1). */}
+      <PularParaConteudo />
       <div className="cm-area cm-cab-miolo">
         <Link to="/" className="cm-marca" data-nome-site="">
           {NOME_SITE}

@@ -333,12 +333,47 @@
     font-weight: 500;
   }
 
+  /* Link de pular para o conteúdo (WCAG 2.4.1): o primeiro Tab da página. Fixo no topo e fora da janela até o
+     foco; com foco, papel sobre cacau (as cores do texto e do fundo trocam na madrugada) acima do cabeçalho. */
+  .cm-pular {
+    position: fixed;
+    top: 8px;
+    left: 8px;
+    display: inline-flex;
+    align-items: center;
+    box-sizing: border-box;
+    min-height: var(--alvo-toque);
+    padding: 0 24px;
+    border-radius: var(--radius-pilula);
+    background-color: var(--cor-texto);
+    color: var(--cor-fundo);
+    font-size: 1.0625rem;
+    font-weight: 500;
+    text-decoration: none;
+    transform: translateY(calc(-100% - 16px));
+  }
+
+  .cm-pular:focus {
+    z-index: 60;
+    transform: none;
+    outline: 2px solid var(--cor-foco);
+    outline-offset: 3px;
+  }
+
+  /* O <main> recebe o foco por programa (tabindex="-1") ao pular: não é um controle, sem anel. */
+  main[tabindex='-1']:focus {
+    outline: none;
+  }
+
   /* Cabeçalho ------------------------------------------------------------------------------- */
   .cm-cabecalho {
     position: sticky;
     top: 0;
     z-index: 40;
     height: var(--cm-cabecalho);
+    /* Nunca passa da janela (fonte a 200 %): o que sobrar na horizontal é cortado aqui, e não rola a página. */
+    max-width: 100%;
+    overflow-x: clip;
     background-color: var(--cor-fundo);
     color: var(--cor-texto);
   }
@@ -348,15 +383,18 @@
     align-items: center;
     gap: 16px;
     height: 100%;
+    min-width: 0;
   }
 
+  /* A marca acompanha a janela: 24 px a 100 % (em 390, 6,4 vw = 25 px), e com a raiz a 200 % (1,5 rem = 48 px)
+     fica em ~25 px em vez de 380 px de largura, que empurravam a lua e o menu para fora (DEF-62b-7). */
   .cm-marca {
     flex: none;
     display: inline-flex;
     align-items: center;
     min-height: 44px;
     color: inherit;
-    font-size: 1.5rem;
+    font-size: min(1.5rem, 6.4vw);
     line-height: 1.5rem;
     letter-spacing: -0.01em;
     text-decoration: none;
@@ -371,6 +409,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    min-width: 0;
     margin-left: auto;
   }
 
@@ -457,6 +496,16 @@
 
     .cm-cab-madrugada .cm-rotulo-curto {
       display: none;
+    }
+
+    /* De 640 para cima a marca e o rótulo longo da lua também acompanham a janela com a raiz a 200 %: a 100 %
+       valem 24 e 17 px (4,4 vw >= 28 px, 2,7 vw >= 17,3 px em 640). */
+    .cm-marca {
+      font-size: min(1.5rem, 4.4vw);
+    }
+
+    .cm-cab-madrugada[data-tamanho='app'] {
+      font-size: min(1.0625rem, 2.7vw);
     }
   }
 

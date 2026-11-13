@@ -871,6 +871,14 @@
     min-height: 56px;
   }
 
+  /* Todo link e botão do cabeçalho e da barra de navegação da área logada (Conta, Ir para o Hoje, Sair, que a
+     MolduraLogada monta fora do <header>): 56 px. A madrugada só existe nas rotas da Rotina (data-tema no
+     <html>), então a regra só vale lá; no dia o piso continua 44 px (`.alvo-toque`). */
+  :root[data-tema='madrugada'] header[data-cabecalho] :is(a, button),
+  :root[data-tema='madrugada'] .cm-area > nav :is(a, button) {
+    min-height: 56px;
+  }
+
   /* Os dois botões quadrados do cabeçalho (menu e lua) ficam 56 x 56. */
   :root[data-tema='madrugada'] .sb-cab-menu,
   :root[data-tema='madrugada'] .cm-cab-madrugada {

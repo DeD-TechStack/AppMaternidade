@@ -36,7 +36,7 @@ function estaVisivel(elemento: Element): boolean {
 function voltaDoFoco(cabecalho: Element | null): HTMLElement[] {
   if (!cabecalho) return []
   return [...cabecalho.querySelectorAll<HTMLElement>(FOCAVEIS)].filter(
-    (elemento) => elemento.closest('.cm-cab-links, [hidden], [inert]') === null && estaVisivel(elemento),
+    (elemento) => elemento.closest('.cm-cab-links, .cm-pular, [hidden], [inert]') === null && estaVisivel(elemento),
   )
 }
 
