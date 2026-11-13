@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router'
 import { AvisoDaTela } from '../../componentes/app/AvisoDaTela.tsx'
 import { Botao } from '../../componentes/base/Botao.tsx'
@@ -17,6 +17,7 @@ import { SeletorDeBebe } from '../../componentes/desenvolvimento/SeletorDeBebe.t
 import { useConteudo } from '../../componentes/desenvolvimento/conteudo.tsx'
 import { fasesDaIdade, idadeEmDias, idadeEscrita } from '../../componentes/desenvolvimento/fase.ts'
 import { ID_MARCOS, ID_TODAS_AS_FASES, ID_TUMMY_TIME, type ItemDeConteudo } from '../../componentes/desenvolvimento/itens.ts'
+import { BlocoTummy } from '../../componentes/desenvolvimento/tummy/BlocoTummy.tsx'
 import { useContextoDoBebe, type ContextoDoBebe } from '../../componentes/desenvolvimento/useContextoDoBebe.ts'
 import { TituloRotina } from '../../componentes/rotina/TituloRotina.tsx'
 import {
@@ -36,30 +37,63 @@ import { ProvedorDaPendencia, usePendencia } from './pendencia.tsx'
  * de tummy time (MAT-39b) entra no lugar marcado abaixo e liga a pendência da página (`definirPendente`).
  */
 export function PaginaDesenvolvimento() {
+  // O contexto do bebê (`useContextoDoBebe`) só se relê a partir da fase de erro. Quando o bloco de tummy time
+  // descobre que o vínculo acabou (DES-09, estado 3), a página refaz a leitura inteira: o corpo é remontado,
+  // lê as famílias de novo e, ao terminar, leva o foco ao título. A proteção contra laço é por IDENTIDADE do
+  // contexto (`familia.id:bebe.id`): a mesma identidade já invalidada não invalida de novo (a releitura não vira
+  // laço se o contexto ainda mostrar o bebê), e uma identidade diferente, como a da outra família para onde a
+  // página trocou sozinha, invalida outra vez.
+  const [leitura, setLeitura] = useState({ numero: 0, focarTitulo: false })
+  const ultimaInvalidada = useRef<string | null>(null)
+  const aoPerderAcesso = useCallback((identidade: string) => {
+    if (ultimaInvalidada.current === identidade) return
+    ultimaInvalidada.current = identidade
+    setLeitura((anterior) => ({ numero: anterior.numero + 1, focarTitulo: true }))
+  }, [])
+
   return (
     <ProvedorDaPendencia>
-      <CorpoDaPagina />
+      <CorpoDaPagina key={leitura.numero} focarTituloAoCarregar={leitura.focarTitulo} aoPerderAcesso={aoPerderAcesso} />
     </ProvedorDaPendencia>
   )
 }
 
 type Pronto = Extract<ContextoDoBebe, { fase: 'pronto' }>
 
-export function CorpoDaPagina() {
+interface PropsDoCorpo {
+  /** A página foi remontada porque o vínculo acabou: ao terminar de carregar, o foco vai ao `h1`. */
+  focarTituloAoCarregar?: boolean
+  /** O bloco perdeu o acesso ao contexto de identidade `familia.id:bebe.id`. */
+  aoPerderAcesso?: (identidade: string) => void
+}
+
+export function CorpoDaPagina({ focarTituloAoCarregar = false, aoPerderAcesso }: PropsDoCorpo = {}) {
   const contexto = useContextoDoBebe()
   const { principal, focarTitulo } = useTituloDaTela()
   const location = useLocation()
   const foco = focoDoEstado(location.state)
+  const focadoAoCarregar = useRef(false)
+  const carregando = contexto.fase === 'carregando'
 
   // Chegando por navegação interna que pede o título, o foco vai ao `h1`; pela URL não se move.
   useEffect(() => {
     if (foco === 'titulo') focarTitulo()
   }, [foco, location.key, focarTitulo])
 
+  useEffect(() => {
+    if (!focarTituloAoCarregar || carregando || focadoAoCarregar.current) return
+    focadoAoCarregar.current = true
+    focarTitulo()
+  }, [focarTituloAoCarregar, carregando, focarTitulo])
+
   return (
     <>
       <main ref={principal} className="pb-12 text-[17px] leading-[25px]" data-tela="desenvolvimento">
-        {contexto.fase === 'pronto' ? <ConteudoDoBebe contexto={contexto} /> : <SemBebe contexto={contexto} />}
+        {contexto.fase === 'pronto' ? (
+          <ConteudoDoBebe contexto={contexto} aoPerderAcesso={aoPerderAcesso} />
+        ) : (
+          <SemBebe contexto={contexto} />
+        )}
       </main>
       <AvisoDaTela />
     </>
@@ -99,10 +133,11 @@ function SemBebe({ contexto }: { contexto: Exclude<ContextoDoBebe, { fase: 'pron
   )
 }
 
-function ConteudoDoBebe({ contexto }: { contexto: Pronto }) {
+function ConteudoDoBebe({ contexto, aoPerderAcesso }: { contexto: Pronto; aoPerderAcesso?: (identidade: string) => void }) {
   const { pendente } = usePendencia()
   const { conteudo, todasAsFases, artigos } = useBlocosEstaticos()
   const { familia, bebe, bebes, papel, agora } = contexto
+  const identidade = `${familia.id}:${bebe.id}`
 
   const hoje = diaDaFamilia(agora, familia.fuso)
   const dias = idadeEmDias(bebe.nascimento, hoje)
@@ -166,8 +201,13 @@ function ConteudoDoBebe({ contexto }: { contexto: Pronto }) {
           <TodasAsFases fases={todasAsFases} atuais={atuais} />
         </div>
 
-        <div key={`${familia.id}:${bebe.id}`} data-lugar-do-tummy="" className="lg:col-span-12 empty:hidden">
-          {/* Lugar do bloco Tummy time (MAT-39b) */}
+        <div key={identidade} data-lugar-do-tummy="" className="lg:col-span-12 empty:hidden">
+          <BlocoTummy
+            bebe={bebe}
+            familia={familia}
+            papel={papel}
+            aoPerderAcesso={aoPerderAcesso ? () => aoPerderAcesso(identidade) : undefined}
+          />
         </div>
 
         <div className="flex flex-col gap-12 lg:col-span-12">
