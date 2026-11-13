@@ -130,9 +130,10 @@ describe('/app/desenvolvimento: a página', () => {
   it('DES-13 1: mostra "Carregando…" com aria-busy enquanto lê o contexto', async () => {
     relogioEm()
     const mundo = await mundoComBebeDe(100)
-    renderizarRota('/app/desenvolvimento', { mundo })
-    const carregando = await screen.findByText('Carregando…')
+    const { liberar } = await renderizarCarregando(mundo)
+    const carregando = screen.getByText('Carregando…')
     expect(carregando.closest('[aria-busy="true"]')).not.toBeNull()
+    liberar()
     await aguardarCarga()
     expect(screen.queryByText('Carregando…')).toBeNull()
   })
@@ -367,13 +368,50 @@ function conferirBlocosEstaticos() {
   expect(document.querySelector('[data-titulo-tela]')?.textContent).toBe('Desenvolvimento')
 }
 
+/**
+ * Renderiza /app/desenvolvimento com a leitura da família pendente até `liberar()` e espera a PÁGINA montar e
+ * mostrar o seu próprio "Carregando…". Não basta `findByText('Carregando…')`: a guarda de sessão (casca de
+ * rota logada) tem o mesmo texto e, sob carga, é ela que casa, antes de a página existir. Com `guardaLenta`, a
+ * leitura da sessão demora de propósito, para provar que a espera acompanha a página.
+ */
+async function renderizarCarregando(mundo: Mundo, { guardaLenta = false } = {}) {
+  const lerFamilia = vi.mocked(mundo.conta.detalheFamilia).getMockImplementation()
+  if (!lerFamilia) throw new Error('A fixture não define detalheFamilia.')
+  let liberar: () => void = () => {}
+  const portao = new Promise<void>((resolver) => {
+    liberar = resolver
+  })
+  vi.mocked(mundo.conta.detalheFamilia).mockImplementationOnce(async (familiaId: string) => {
+    await portao
+    return lerFamilia(familiaId)
+  })
+  if (guardaLenta) {
+    const lerSessao = mundo.conta.sessaoAtual.bind(mundo.conta)
+    vi.spyOn(mundo.conta, 'sessaoAtual').mockImplementationOnce(async () => {
+      await new Promise((resolver) => setTimeout(resolver, 50))
+      return lerSessao()
+    })
+  }
+  const resultado = renderizarRota('/app/desenvolvimento', { mundo })
+  await screen.findByRole('heading', { level: 2, name: 'Todas as fases' })
+  expect(screen.getByText('Carregando…')).toBeTruthy()
+  return { ...resultado, liberar }
+}
+
 describe('DES-09 (R1): fora do estado pronto, os blocos estáticos continuam', () => {
   it('carregando', async () => {
     relogioEm()
-    const mundo = await mundoComBebeDe(100)
-    renderizarRota('/app/desenvolvimento', { mundo })
-    await screen.findByText('Carregando…')
+    const { liberar } = await renderizarCarregando(await mundoComBebeDe(100))
     conferirBlocosEstaticos()
+    liberar()
+    await aguardarCarga()
+  })
+
+  it('carregando, com a guarda de sessão lenta (a espera é a da página, não a da guarda)', async () => {
+    relogioEm()
+    const { liberar } = await renderizarCarregando(await mundoComBebeDe(100), { guardaLenta: true })
+    conferirBlocosEstaticos()
+    liberar()
     await aguardarCarga()
   })
 
@@ -719,8 +757,7 @@ const CENARIOS: ReadonlyArray<readonly [string, () => Promise<HTMLElement>]> = [
   [
     '1 carregando',
     async () => {
-      const { container } = renderizarRota(CAMINHO, { mundo: await mundoComBebeDe(100) })
-      await screen.findByText('Carregando…')
+      const { container } = await renderizarCarregando(await mundoComBebeDe(100))
       return container
     },
   ],
