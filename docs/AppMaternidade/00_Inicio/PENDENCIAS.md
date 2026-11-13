@@ -52,7 +52,6 @@ Retomada 12/11 ~01h15 (sessão nova do líder): cron `retorno-oc` retomado; 37b 
   - QA-F3 t_b12ec1f4 (1d774bb; o comentário 781 foi para a A11Y-F2, 785/786).
 - **Rodando:**
   - QA-F2 t_1dcaa165 (Rotina);
-  - MAT-48g t_0bfed15d (sem código; se aceita, fechar sem integrar).
 - **Esperando o pai:**
   - A11Y-F1 t_35476306, depois da QA-F2;
   - A11Y-F2 t_a37f1086, depois da QA-F3;
@@ -159,7 +158,7 @@ Rodada nova sobre o Campo de mel aprovado (não muda a direção). Regras da rod
 - [x fcf47fc] MAT-39b tummy time ligado à camada de dados (13/11: APPROVED_WITH_LIMITS R3 em 1623572; merge fcf47fc no int/refazer, diff dos 18 arquivos idêntico ao revisado; check 2882, commits OK 429; recibo 732, push)
 - [ ] P-73 Pendências de evidência da 39b (matriz G3 completa, reconciliação da leitura das capturas, HANDOFF/VISTO desatualizado, aparência B4/B5/B11/B12 e histórico) | entram na medição do H-4 e na GALERIA_ATUAL; não reabrem a 39b
 - [x 3c03656] P-71 MAT-48f (13/11: APPROVED_WITH_LIMITS R2 em 38ffb1d; merge 3c03656, diff idêntico, check 2926, commits OK 438, push): teste intermitente DES-09 "carregando" (caiu em 2 de 3 checks de 13/11; pode casar o "Carregando…" da guarda de sessão) | depois da 39b. R1 13/11 CHANGES_REQUIRED (causa: processo: base sem a 39b e sem OpenCode); correção 1/2 sobre fcf47fc, primeiro a rota sem código (comentário do líder); escopo + `comunidade/topico.test.tsx:618` (foco do apelido, caiu no check completo do revisor, passa sozinho). 13/11: DES-09 20/20 sem código na base com a 39b; topico 19/20 → 20/20 em 38ffb1d; o portão de rodada disparou porque o opencode.json foi preparado com `--tela`: refazer sem `--tela` (comentário 751)
-- [~ t_0bfed15d] MAT-48g teste intermitente `conta/familia.test.tsx:443` (foco; 1 falha em 2 checks) | filho da MAT-48f
+- [x t_0bfed15d sem código] MAT-48g teste intermitente `conta/familia.test.tsx:443` (foco; 1 falha em 2 checks) | filho da MAT-48f
 
 ## Item H, sistema de harmonia (Daniel 12/11 e 13/11; substitui o polimento por página)
 
