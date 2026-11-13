@@ -3,10 +3,10 @@ import { ACAO_NO_CONTEUDO, DECISAO, TEXTOS_ERRO_MODERACAO } from '../../conteudo
 import type { EstadoDenuncia, EstadoModeracao } from '../../dados/comunidade.regras.ts'
 import type { AlvoModeravel } from '../../dados/moderacao.ts'
 import { DECISOES } from '../../dados/moderacao.regras.ts'
-import { BOTAO_SECUNDARIO } from '../conta/Partes.tsx'
 import { usePainel } from './contexto.ts'
 import { useDadosModeracao } from './dados.ts'
 import { DialogoDeMotivo } from './DialogoDeMotivo.tsx'
+import { BOTAO_SECUNDARIO_QUEBRA } from './estilos.ts'
 
 /** O que a tela faz depois de uma ação que valeu: reler, mostrar a confirmação e levar o foco. */
 export interface AcaoFeita {
@@ -50,7 +50,7 @@ export function AcoesDoConteudo({ alvo, estadoAtual, autorId, denunciaId, aoFeit
             key={estado}
             id={`acao-${estado}`}
             type="button"
-            className={BOTAO_SECUNDARIO}
+            className={BOTAO_SECUNDARIO_QUEBRA}
             data-tamanho="app"
             onClick={(evento) => {
               origem.current = evento.currentTarget
@@ -121,7 +121,7 @@ export function AcoesDaDecisao({ denunciaId, estadoAtual, aoFeito, aoErro, aviso
             key={decisao}
             id={`decisao-${decisao}`}
             type="button"
-            className={BOTAO_SECUNDARIO}
+            className={BOTAO_SECUNDARIO_QUEBRA}
             data-tamanho="app"
             onClick={(evento) => {
               origem.current = evento.currentTarget

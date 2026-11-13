@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { BOTAO_SECUNDARIO } from '../conta/Partes.tsx'
+import { BOTAO_SECUNDARIO_QUEBRA } from './estilos.ts'
 
 interface Props {
   /** O texto inteiro, que fica à vista e selecionável. */
@@ -46,7 +46,7 @@ export function TextoCopiavel({ texto, rotulo, mensagemOk, mensagemFalha }: Prop
       <span ref={alvo} className="tabular max-w-full select-all wrap-anywhere">
         {texto}
       </span>
-      <button type="button" className={BOTAO_SECUNDARIO} data-tamanho="app" onClick={() => void copiar()}>
+      <button type="button" className={BOTAO_SECUNDARIO_QUEBRA} data-tamanho="app" onClick={() => void copiar()}>
         {rotulo}
       </button>
       <span aria-live="polite" className="cm-pequeno wrap-anywhere">
