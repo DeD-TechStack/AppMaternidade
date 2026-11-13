@@ -12,11 +12,11 @@ import { useDadosComunidade } from '../comunidade/dados.ts'
 import { TituloDaTela } from '../comunidade/Quadro.tsx'
 import { useLeitura } from '../comunidade/useLeitura.ts'
 import { MolduraLogada } from '../conta/MolduraLogada.tsx'
-import { LINK_ALVO } from '../conta/Partes.tsx'
 import { useSessao } from '../conta/sessao.tsx'
 import { ErroDeLeituraNoPainel, SemPermissao } from './Avisos.tsx'
 import { ContextoDoPainel } from './contexto.ts'
 import { useDadosModeracao } from './dados.ts'
+import { ATUAL, ETIQUETAS_QUEBRAM, HOVER_DA_ABA, LINK_ALVO_DO_PAINEL, LINK_DO_PAINEL } from './estilos.ts'
 import { VerificacaoEmDuasEtapas } from './VerificacaoEmDuasEtapas.tsx'
 
 // O quadro do painel de moderação (MAT-40:RF-10 e RF-20): a moldura logada com o link "Voltar" e o selo
@@ -36,9 +36,6 @@ function useForaDosBuscadores() {
   }, [])
 }
 
-const LINK_DO_PAINEL = 'alvo-toque inline-flex items-center rounded-pilula px-4 font-medium no-underline'
-const ATUAL = 'bg-[var(--cor-destaque)] font-semibold text-[var(--cor-sobre-destaque)]'
-
 const semBarraFinal = (caminho: string) => (caminho.length > 1 ? caminho.replace(/\/+$/, '') : caminho)
 
 /** A navegação do painel. A fila é a atual também nas telas de uma denúncia e de um conteúdo. */
@@ -57,7 +54,7 @@ function NavegacaoDoPainel({ admin }: { admin: boolean }) {
       <ul className="m-0 flex list-none flex-wrap gap-x-2 gap-y-1 p-0">
         {itens.map((item) => (
           <li key={item.para}>
-            <Link to={item.para} aria-current={item.atual ? 'page' : undefined} className={`${LINK_DO_PAINEL} ${item.atual ? ATUAL : ''}`}>
+            <Link to={item.para} aria-current={item.atual ? 'page' : undefined} className={`${LINK_DO_PAINEL} ${item.atual ? ATUAL : HOVER_DA_ABA}`}>
               {item.rotulo}
             </Link>
           </li>
@@ -168,9 +165,9 @@ export function Painel({ titulo, comVoltar = true, exigeAdmin = false, children 
 
   return (
     <MolduraLogada ocupado={situacao.estado.fase === 'carregando'}>
-      <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1">
+      <div className={`mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 ${ETIQUETAS_QUEBRAM}`}>
         {comVoltar ? (
-          <Link to="/moderacao" className={LINK_ALVO}>
+          <Link to="/moderacao" className={LINK_ALVO_DO_PAINEL}>
             {COMUM_COMUNIDADE.voltar}
           </Link>
         ) : null}

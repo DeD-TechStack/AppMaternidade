@@ -6,7 +6,7 @@ import type { EstadoModeracao } from '../../dados/comunidade.regras.ts'
 import type { ConteudoLido, HistoricoDoPerfil } from '../../dados/moderacao.ts'
 import { Etiqueta } from '../base/Etiqueta.tsx'
 import { Meta, Texto } from '../comunidade/Itens.tsx'
-import { LINK_ALVO } from '../conta/Partes.tsx'
+import { ETIQUETAS_QUEBRAM, LINK_ALVO_DO_PAINEL } from './estilos.ts'
 import { LinhaDaAuditoria } from './LinhaDaAuditoria.tsx'
 
 export const CARTAO = 'flex flex-col gap-3 rounded-cartao border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)] p-5'
@@ -14,7 +14,7 @@ export const CARTAO = 'flex flex-col gap-3 rounded-cartao border border-[var(--c
 /** O estado atual do conteúdo, sempre com a etiqueta (também `visivel`), e o motivo de moderação. */
 function EstadoDoConteudo({ estado, motivo }: { estado: EstadoModeracao; motivo: string | null }) {
   return (
-    <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
+    <p className={`flex flex-wrap items-center gap-x-3 gap-y-1 ${ETIQUETAS_QUEBRAM}`}>
       <Etiqueta>{ROTULO_ESTADO_CONTEUDO[estado]}</Etiqueta>
       {motivo ? <span className="cm-pequeno wrap-anywhere">{COMUM_COMUNIDADE.motivoDaModeracao(motivo)}</span> : null}
     </p>
@@ -44,7 +44,7 @@ export function CartaoDoConteudo({ lido, autor, comLink = false, idDoTitulo }: C
         <EstadoDoConteudo estado={topico.estado} motivo={topico.motivoModeracao} />
         <Texto>{topico.corpo}</Texto>
         {comLink ? (
-          <Link to={`/moderacao/conteudo/topico/${topico.id}`} className={LINK_ALVO}>
+          <Link to={`/moderacao/conteudo/topico/${topico.id}`} className={LINK_ALVO_DO_PAINEL}>
             {DENUNCIA.verConteudo}
           </Link>
         ) : null}
@@ -59,7 +59,7 @@ export function CartaoDoConteudo({ lido, autor, comLink = false, idDoTitulo }: C
       </h3>
       {topicoTitulo ? (
         <p className="wrap-anywhere">
-          <Link to={`/moderacao/conteudo/topico/${resposta.topicoId}`} className={LINK_ALVO}>
+          <Link to={`/moderacao/conteudo/topico/${resposta.topicoId}`} className={LINK_ALVO_DO_PAINEL}>
             {CONTEUDO.topicoDaResposta(topicoTitulo)}
           </Link>
         </p>
@@ -70,7 +70,7 @@ export function CartaoDoConteudo({ lido, autor, comLink = false, idDoTitulo }: C
       <EstadoDoConteudo estado={resposta.estado} motivo={resposta.motivoModeracao} />
       <Texto>{resposta.corpo}</Texto>
       {comLink ? (
-        <Link to={`/moderacao/conteudo/resposta/${resposta.id}`} className={LINK_ALVO}>
+        <Link to={`/moderacao/conteudo/resposta/${resposta.id}`} className={LINK_ALVO_DO_PAINEL}>
           {DENUNCIA.verConteudo}
         </Link>
       ) : null}
@@ -84,7 +84,7 @@ export function CartaoDoPerfil({ perfil }: { perfil: PerfilPublico }) {
     <div className={CARTAO}>
       <p className="font-medium wrap-anywhere">{perfil.apelido}</p>
       {perfil.bio ? <p className="wrap-anywhere">{perfil.bio}</p> : null}
-      <p className="cm-pequeno flex flex-wrap items-center gap-x-4 gap-y-1 text-[var(--cor-texto-2)]">
+      <p className={`cm-pequeno flex flex-wrap items-center gap-x-4 gap-y-1 text-[var(--cor-texto-2)] ${ETIQUETAS_QUEBRAM}`}>
         {perfil.faixa ? <Etiqueta>{ROTULO_FAIXA[perfil.faixa]}</Etiqueta> : null}
         <time dateTime={perfil.criadoEm} className="tabular">
           {DENUNCIA.perfilDesde(formatarDataHora(perfil.criadoEm))}
@@ -113,7 +113,7 @@ export function HistoricoDoPerfilVista({ historico, semOId, contaId }: Historico
           <ul className="m-0 flex list-none flex-col gap-3 p-0">
             {conteudos.map((item) => (
               <li key={`${item.tipo}-${item.id}`} className={CARTAO}>
-                <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <p className={`flex flex-wrap items-center gap-x-3 gap-y-1 ${ETIQUETAS_QUEBRAM}`}>
                   <Etiqueta>{COMUM_MODERACAO.tipoDoAlvo[item.tipo]}</Etiqueta>
                   <Etiqueta>{ROTULO_ESTADO_CONTEUDO[item.estado]}</Etiqueta>
                   <time dateTime={item.criadoEm} className="cm-pequeno tabular text-[var(--cor-texto-2)]">
@@ -124,7 +124,7 @@ export function HistoricoDoPerfilVista({ historico, semOId, contaId }: Historico
                 {item.motivoModeracao ? (
                   <p className="cm-pequeno wrap-anywhere">{COMUM_COMUNIDADE.motivoDaModeracao(item.motivoModeracao)}</p>
                 ) : null}
-                <Link to={`/moderacao/conteudo/${item.tipo}/${item.id}`} className={LINK_ALVO}>
+                <Link to={`/moderacao/conteudo/${item.tipo}/${item.id}`} className={LINK_ALVO_DO_PAINEL}>
                   {AUDITORIA.abrirConteudo(AUDITORIA.alvoConteudo[item.tipo])}
                 </Link>
               </li>

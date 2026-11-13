@@ -7,10 +7,10 @@ import { FORMATO_DO_CODIGO } from '../../dados/moderacao.regras.ts'
 import { ResumoDeErro, Esqueleto } from '../comunidade/Avisos.tsx'
 import { useLeitura } from '../comunidade/useLeitura.ts'
 import { useFocoNoResumo } from '../conta/foco.ts'
-import { BOTAO_PRINCIPAL, BOTAO_SECUNDARIO } from '../conta/Partes.tsx'
 import { ErroDeLeituraNoPainel } from './Avisos.tsx'
 import { TextoCopiavel } from './Copiar.tsx'
 import { useDadosModeracao } from './dados.ts'
+import { BOTAO_PRINCIPAL_QUEBRA, BOTAO_SECUNDARIO_QUEBRA } from './estilos.ts'
 
 const ID_DO_CODIGO = 'mfa-codigo'
 
@@ -103,7 +103,7 @@ export function VerificacaoEmDuasEtapas({ aoVerificar }: Props) {
 
       {pedeCadastro ? (
         <div>
-          <button type="button" disabled={cadastrando} className={BOTAO_SECUNDARIO} data-tamanho="app" onClick={() => void cadastrar()}>
+          <button type="button" disabled={cadastrando} className={BOTAO_SECUNDARIO_QUEBRA} data-tamanho="app" onClick={() => void cadastrar()}>
             {cadastrando ? MFA.cadastrando : MFA.cadastrar}
           </button>
         </div>
@@ -119,7 +119,7 @@ export function VerificacaoEmDuasEtapas({ aoVerificar }: Props) {
 
       {pedeCodigo ? (
         <form noValidate onSubmit={(evento) => void confirmar(evento)} className="flex flex-col gap-4">
-          <div className="cm-campo max-w-[20rem]">
+          <div className="cm-campo grid-cols-[minmax(0,1fr)] min-w-0 max-w-[20rem]">
             <label htmlFor={ID_DO_CODIGO} className="cm-campo-rotulo">
               {MFA.campoCodigo}
             </label>
@@ -137,17 +137,17 @@ export function VerificacaoEmDuasEtapas({ aoVerificar }: Props) {
                   setCodigo(evento.target.value)
                   setErroDoCampo(null)
                 }}
-                className="cm-campo-entrada alvo-toque tabular"
+                className="cm-campo-entrada alvo-toque min-w-0 tabular"
               />
             </div>
             {erroDoCampo ? (
-              <p id={`${ID_DO_CODIGO}-erro`} className="cm-campo-mensagem cm-campo-erro cm-pequeno">
+              <p id={`${ID_DO_CODIGO}-erro`} className="cm-campo-mensagem cm-campo-erro cm-pequeno wrap-anywhere">
                 {erroDoCampo}
               </p>
             ) : null}
           </div>
           <div className="max-w-[20rem]">
-            <button type="submit" disabled={confirmando} className={BOTAO_PRINCIPAL}>
+            <button type="submit" disabled={confirmando} className={BOTAO_PRINCIPAL_QUEBRA}>
               {confirmando ? MFA.verificando : MFA.confirmar}
             </button>
           </div>

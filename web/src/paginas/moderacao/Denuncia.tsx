@@ -12,6 +12,7 @@ import { ErroDeLeituraNoPainel, NaoEncontradoNoPainel } from '../../componentes/
 import { CARTAO, CartaoDoConteudo, CartaoDoPerfil, HistoricoDoPerfilVista } from '../../componentes/moderacao/Conteudo.tsx'
 import { usePainel } from '../../componentes/moderacao/contexto.ts'
 import { useDadosModeracao } from '../../componentes/moderacao/dados.ts'
+import { ETIQUETAS_QUEBRAM } from '../../componentes/moderacao/estilos.ts'
 import {
   autorDoConteudo,
   estadoDoConteudo,
@@ -96,7 +97,7 @@ function Corpo({ lida, aoFeito, aoErro, avisoDeLeitura }: CorpoProps) {
           {DENUNCIA.secaoDenuncia}
         </h2>
         <div className={CARTAO}>
-          <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <p className={`flex flex-wrap items-center gap-x-3 gap-y-1 ${ETIQUETAS_QUEBRAM}`}>
             <Etiqueta>{FILA.prioridade(prioridadeDoMotivo(denuncia.motivo))}</Etiqueta>
             <span className="font-semibold">{ROTULO_MOTIVO[denuncia.motivo]}</span>
             <Etiqueta>{ROTULO_ESTADO_DENUNCIA[denuncia.estado]}</Etiqueta>
