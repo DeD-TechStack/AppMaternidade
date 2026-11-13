@@ -239,6 +239,10 @@ Evidência pendente (regra nova, Daniel 11/11 ~16h40, `nucleo/revisao_integracao
 
 Checagens antes de pedir o "pode" (coordenador, resposta t_552fb3ec): rodam sobre o `int/refazer` final, depois da integração de todos os cartões (item 7 do caminho crítico). Relatórios em `C:/OrchestrationLab/projetos/_staging/appmaternidade/PRE_LANCAMENTO/`; cada achado vira cartão (com `--tela web` se mexer em tela) ou `[x]`; cada item diz a skill que produziu a evidência.
 - [~ t_6544886b] P-55 (13/11: antecipado, roda já em paralelo ao item H; depois do H só se refaz o que falhou) QA exploratório do site inteiro, RF-01 a RF-14, com dados fictícios e bugs com evidência | skill `dogfood`
+  - 13/11 ~20h: P-55 entregue (0 must, 7 should, 7 nice; `PRE_LANCAMENTO/QA/RELATORIO.md`). Cartões de correção: QA-F2 t_1dcaa165 (Rotina: QA-01/05/08/09/10), QA-F3 t_b12ec1f4 (textos e validação: QA-06/11/12/13), QA-F1 t_e983505a (cabeçalho logado: QA-02/03/04; filho da H-3a); QA-14 (radios) em comentários na H-3d e na H-3f.
+- [ ] P-74 [decisor: Daniel] RF-12 (compartilhar resumo da rotina na Comunidade, ação consciente com prévia) não existe no site. Pergunta feita em 13/11 ~20h, sem resposta em 60 min. Padrão do líder pelo MANDATO (RF-01 a RF-14): fazer; spec em `_staging/appmaternidade/RF12/SPEC_RF12.md`
+- [ ] P-75 [decisor: Daniel] RF-14 (notificações entre cuidadores e lembretes) dependia de Web Push, e Daniel decidiu "sem PWA" em 11/11. Opções: aviso dentro do site ligável na Conta, sem lembretes (recomendado); tirar o RF-14; ou Web Push. Sem resposta; nada começa sem ele
+- [ ] P-76 [decisor: Daniel] QA-07: conteúdos de Desenvolvimento dizem "Revisão profissional: pendente". Padrão do líder: manter (é verdade; dados fictícios)
 - [~ t_506d9c94] P-56 (13/11: antecipado; contraste e 200% refeitos depois do H) Auditoria de acessibilidade (teclado, foco, leitor de tela) nas páginas públicas e na área logada | skill `omh-accessibility-audit`
 - [ ] P-57 Veredito de prontidão para lançar | skill `omh-production-audit`
 - [ ] P-58 Prova de que cada item está feito antes do merge na main | skill `omh-verification-gate`
