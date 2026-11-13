@@ -265,6 +265,24 @@ O espaço vem de uma escala de oito papéis (`junto`, `pilha`, `grupo`, `bloco`,
 
 Todos os valores são os de `MEDIDAS.md` §7. Nenhum foi mudado pelo H-2. Duas leituras de §1 e §4 já estavam corrigidas lá (revisão de 13/11): `secao` é 80/48 (e não 96/56) porque §1 compara padding com padding; `sobretitulo` perdeu a caixa alta e `pequeno` em 390 subiu de 14 para 15 px pela regra de 15 px.
 
+### Classes do Tailwind
+
+O tema gerado (`web/src/styles/harmonia.gerado.css`) liga cada papel de espaço a utilitários reais do Tailwind. Todo papel leva o mesmo prefixo `esp-`, sem exceção, para nenhum utilitário colidir com uma classe escrita à mão: as páginas de texto já têm `.pt-junto`, `.pt-secao` e `.pt-painel` (`web/src/componentes/publicas-texto/publicasTexto.css:39,75,149`; `PaginaDeLeitura.tsx:24,97`; `SecaoDeTexto.tsx:12`), e um apelido sem prefixo faria o Tailwind gerar um `padding-top` para elas. O H-3 usa exatamente estes nomes. Um teste do `gerar-tema` compila o tema com o Tailwind instalado e confere cada papel e cada família.
+
+| Papel | Sufixo da classe | Variável | Exemplos |
+|---|---|---|---|
+| `junto` | `esp-junto` | `--espaco-junto` | `gap-esp-junto`, `mb-esp-junto` |
+| `pilha` | `esp-pilha` | `--espaco-pilha` | `gap-esp-pilha`, `space-y-esp-pilha` |
+| `grupo` | `esp-grupo` | `--espaco-grupo` | `gap-esp-grupo`, `mt-esp-grupo` |
+| `bloco` | `esp-bloco` | `--espaco-bloco` | `gap-esp-bloco`, `gap-x-esp-bloco` |
+| `midia` | `esp-midia` | `--espaco-midia` | `gap-esp-midia`, `gap-y-esp-midia` |
+| `secao` | `esp-secao` | `--espaco-secao` | `py-esp-secao`, `pt-esp-secao`, `pb-esp-secao` |
+| `secao-ampla` | `esp-secao-ampla` | `--espaco-secao-ampla` | `pt-esp-secao-ampla`, `pb-esp-secao-ampla` |
+| `painel` | `esp-painel` | `--espaco-painel` | `p-esp-painel`, `px-esp-painel` |
+| `quadro-calha` (calha do quadro) | `esp-quadro-calha` | `--quadro-calha` | `px-esp-quadro-calha` |
+
+A classe é `<família>-<sufixo>`, e a família é qualquer utilitário de espaço do Tailwind: `p`, `px`, `py`, `pt`, `pr`, `pb`, `pl`, `m`, `mx`, `my`, `mt`, `mr`, `mb`, `ml`, `gap`, `gap-x`, `gap-y`, `space-x` e `space-y`. Os nomes sem prefixo (`p-secao`, `gap-bloco`...) não existem. O tipo segue como `text-<nível>` (`text-exibicao`, `text-titulo-1` a `text-titulo-4`, `text-abertura`, `text-corpo`, `text-pequeno`, `text-sobretitulo`), e os contêineres, como `max-w-medio`, `max-w-leitura` e `max-w-quadro`.
+
 ### Quadro e contêineres
 
 - `quadro-largura`: 1200 px, fixo.
@@ -347,20 +365,33 @@ Quatro raios, em `tokens.css`: **painel 24** (painéis de cor), **cartão 20** (
 
 ## Components
 
-Estes itens estão como na versão anterior deste arquivo (H:RF-01). Onde um raio, uma família ou um tamanho daqui difere de Shapes, de Typography ou das pílulas de `web/src/styles/site.css`, vale Shapes, Typography e o código. A reconciliação item a item com a direção aprovada fica com o líder.
+Cada item abaixo descreve o que o código faz hoje, com o arquivo e a linha. A direção aprovada (FINAL, 11/11) entrou aqui por inteiro; onde ela e uma regra mais antiga deste arquivo diziam coisas diferentes, valeu o que o código faz, e a regra que perdeu está em "Divergências com a FINAL", no fim. Todo controle tem os estados hover, `:focus-visible` (anel de 2 px, 3:1 ou mais) e desativado.
 
-- **Cabeçalho e menu (um componente só):** em 1440, 64 px, `position: sticky; top: 0`, fundo papel opaco, sem `border-bottom`. O nome do site em x=32, em Literata 600 (marca do cabeçalho, fora da escala). De 3 a 4 links em `corpo`, com 48 px entre eles e o último terminando na borda direita do quadro. À direita, um botão de moldura dupla de 48 px, encostado na borda direita. Submenu "+ Em breve": painel de cerca de 224 × 120, moldura dupla, raio 8, abre na hora. Abaixo de 768: 60 px, botão de menu 44 × 44 à esquerda, nome no meio, botão preenchido à direita; o menu é um painel de papel abaixo do cabeçalho, com os itens centrados em `titulo-3`, grupos separados por fios, foco preso, Esc fecha e devolve o foco. Sem navegação inferior.
-- **Rodapé (todas as telas):** de x=0 e com a largura da janela, em painel (madrugada `noite-cartao`). Topo com fio interrompido pelo nome do site. Nome gigante fluido (marca do rodapé, fora da escala) com largura de texto ≥ 96% da área útil. Links em colunas, mais um bloco à direita, em `corpo` sublinhado. Linha final em `pequeno` com o aviso de protótipo.
-- **Seção escura (só no Início):** fundo `cacau`, texto papel (14:1), conteúdo em `medio` e o botão "Criar conta".
-- **Primário:** altura 80 (64 abaixo de 768), padding 0 32, raio 8, texto `papel`, 24/24 600. A troca de fundo é na hora.
-- **Moldura dupla:** altura 48 (64 ao lado de um primário), raio 8 por fora e 4 por dentro. A inversão é na hora.
-- **Etiqueta:** `pequeno`, fundo `areia`, raio 4, padding 2/6, altura 26. Empilhadas a cada `grupo`.
-- **Campo:** a partir de 768, linha rótulo + campo com rótulo em `titulo-3`, altura 112, sem caixa, fio de 1 px embaixo. Abaixo de 768, rótulo em cima e campo de 64 px com fundo `areia`, raio 4, fio de tinta embaixo. O select tem a mesma altura, fio e fonte. O botão de mostrar senha é de ícone, 44 × 44 no fim do campo, com `aria-label` e `aria-pressed`.
-- **Foco:** anel de 2 px na cor de foco com `outline-offset: 2px`, só em `:focus-visible`. O `h1` com foco programático (`tabIndex=-1`) não mostra contorno.
+- **Botão (`Botao`, `web/src/componentes/base/Botao.tsx`; estilos em `web/src/styles/site.css:125-245`):** pílula (raio `pilula`), contorno de 1,5 px, altura mínima de 56 px no site e de 48 px no app (`data-tamanho='app'`, `site.css:156-160`), Outfit 500. Quatro variantes. `primario`: cacau com texto de papel; na madrugada, mel com texto de cacau (`site.css:19-22`). `mel`: mel com texto de cacau, para uso sobre o cacau. `contorno`: contorno de 1,5 px na cor do texto, que enche no hover. `texto`: sem caixa, sublinhado no hover, alvo de 44 px. No hover o primário inverte na hora, para papel com contorno de cacau. Só a escala do toque anima (`scale: 0.96` no `:active`, 120 ms). Não há moldura dupla no site.
+- **Moldura (variante `moldura`, só nas telas Hoje e Sessão):** o contorno antigo do app, pílula de 1 px na cor do texto, com um miolo que enche no hover; altura mínima de 48 px (64 px com `data-alto`, ao lado de um primário do app). Fica até essas telas serem redesenhadas (`Botao.tsx:9-12` e `72-99`, `web/src/index.css:421-467`). Tela nova usa as quatro variantes acima.
+- **Cabeçalho e menu (`web/src/componentes/casca/Cabecalho.tsx`, `MenuCelular.tsx`; `site.css:337-541`):** fixo no topo (`position: sticky`), fundo papel opaco, sem fio embaixo, 72 px de altura abaixo de 1100 px e 88 px a partir dele (`site.css:14` e `24-28`). O nome do site em Literata 600 (marca do cabeçalho, fora da escala). A partir de 1100 px: os links em `corpo`, o link "Entrar" e o primário "Criar conta" de 48 px. Abaixo de 1100 px os links vão para o menu: botão de 48 × 48 no fim da linha, e o menu é um painel de papel de altura cheia logo abaixo do cabeçalho, com os itens em Literata separados por fios, foco preso, Esc fecha e devolve o foco ao botão. "Criar conta" volta ao topo a partir de 640 px. Na área logada o cabeçalho traz Hoje, Sessão e os demais itens do registro de áreas, e o botão "Modo madrugada" (a lua) liga o tema escuro. Não há submenu "Em breve" nem navegação inferior.
+- **Rodapé (`Rodape.tsx`; `site.css:543-659`):** painel de campo de mel (na madrugada, `noite-cartao`, `tema.css:63`) com a frase de duas linhas, as colunas Produto, Ajuda e Legal, o nome do site em Literata 600 ocupando a largura útil do painel (`calc(100cqi / 7,966)`; marca do rodapé, fora da escala) e o aviso de demonstração numa linha só, em `pequeno`, sobre um fio de 1 px. O conteúdo sobe preso à rolagem (M7). Nas rotas `/app/*` o rodapé é só uma linha de links que quebra, sem painel e sem aviso (`Rodape.tsx:7-22`).
+- **Painel de campo (`PainelCampo`; `web/src/styles/campo.css:4-53`):** a largura da janela menos o recuo do painel (32 px em 1440, 12 px em 390), no máximo 1376 px, centrado; raio `painel`; respiro interno que vai de 24 a 64 px. Quatro variantes: `mel` (campo de mídia e destaque), `oliva` (pedestal, selos e tabela), `areia` (descanso entre painéis e depoimentos) e `cacau` (faixa escura). A luz de estúdio só entra no mel. O anel de foco é de papel no cacau e na oliva e de cacau no mel e na areia.
+- **Cena de estúdio (`CenaEstudio`; `CenaEstudio.tsx:26-45`, `campo.css:56-71`):** um `<picture>` com largura e altura explícitas dentro de um painel de mel com a luz de estúdio, sem respiro. Moldura = a do painel (raio `painel`), `overflow: hidden`, sem sombra e sem borda. A descrição vai no `alt`; nenhum texto dentro da imagem. Abaixo de 768 px, quando há cartão flutuante, a cena é recortada em 5:4 para os aparelhos ficarem inteiros (`campo.css:112-121`).
+- **Cartão flutuante (`CartaoFlutuante`; `campo.css:74-102`, `CartaoFlutuante.tsx:5-35`):** cartão de HTML de verdade, branco, raio `cartao`, `--sombra-flutuante`, girado por um valor fixo entre −4, −2, 2 e 4 graus (`rotate`, nunca 3D), com 340 px de largura no máximo, sobrando da borda do painel (32 px em 390 e 48 px em 1440, em linha reta; 40 px no celular quando a cena é recortada, `campo.css:128-130`). Chega 120 ms depois da mídia do painel (M3).
+- **Números (`Numeros`; `campo.css:152-215`):** três itens em Literata (64 px em 1440, 40 px em 390) com a legenda em Outfit, separados por fios verticais de cacau a 20% (fios horizontais, empilhados, até 767 px). Conteúdo: "7 tipos de registro", "2 toques", "0 metas ou comparações", cada um lido inteiro. Os números sobem e aparecem ao entrar na janela (M4).
+- **Citação (`Citacao`; `campo.css:224-248`):** Literata itálico 48/56 em 1440 e 30/36 em 390, cacau, com a linha do autor em Outfit.
+- **Faixa de cacau (`FaixaCacau`; `campo.css:251-271`):** painel de cacau com texto de papel, usado para os números ou para a cena de tablets, com o brilho de mel (`--brilho-mel`) atrás, à direita. O conteúdo sai de baixo, preso à rolagem (M6).
+- **Faixa de selos (`FaixaSelos`; `campo.css:274-355`):** letreiro de pílulas de oliva com texto de papel e ícone lucide de 22 px: "Sem metas", "Sem comparações", "Dados só da família", "Funciona de madrugada" e "Avó, pai e babá juntos". Uma volta a cada 60 s; para no hover, quando o foco entra e pelo botão "Pausar selos". Com movimento reduzido vira uma fileira parada que quebra linha, sem a cópia do letreiro.
+- **Tabela de comparação (`TabelaComparacao`; `TabelaComparacao.tsx:38-67`, `campo.css:357-433`):** uma `<table>` de verdade num painel de oliva com texto de papel, legenda e cabeçalhos de coluna e de linha: "O que você precisa", "AppMaternidade" e "Caderno e mensagens". O visto e o traço levam "Sim" e "Não" para o leitor de tela. Rola na horizontal dentro do próprio painel, nunca na página.
+- **Depoimentos (`Depoimento`; `Depoimento.tsx:23-46`, `campo.css:435-486`):** painel de areia com cartões brancos de raio `cartao`; a frase em Literata itálico (`abertura`), o nome e o papel em Outfit. Uma linha "Relatos ilustrativos" acima do grupo, enquanto não houver relatos reais.
+- **Acordeão (`Acordeao`; `Acordeao.tsx:16-40`, `campo.css:488-520`):** linhas de perguntas separadas por fio de 1 px; cada pergunta é um botão com `aria-expanded` e `aria-controls`, num título de nível 3 ou 4, e a resposta numa região ligada ao botão.
+- **Ilustração (`Ilustracao`; `Ilustracao.tsx:36-53`):** desenho de traço preto, em WebP 1× e 2×; os seis desenhos de `web/public/ilustracoes`. Vai sobre papel, mel ou areia e também sobre o painel de cacau do fechamento do Início (`Fechamento.tsx:21-23`). Sem `alt` próprio, vale a descrição padrão do desenho; ao lado de texto que já diz o mesmo, `alt` vazio.
+- **Cartão do app e telas reais:** as peças do app que aparecem no site são HTML de verdade, nunca imagem de tela desenhada à mão. O cartão da sessão é de mel com o cronômetro em Literata e a pílula "Encerrar" de cacau; a lista "Desde que você saiu" tem avatares redondos; a barra Registrar tem quatro botões grandes. Nenhuma captura ou cena mostra "Protótipo" ou "dados de exemplo" dentro da imagem.
+- **Composição das telas reais (`web/src/paginas/Inicio.tsx:32-64`):** o Início tem, nesta ordem, o herói (texto e a cena do trio de aparelhos sobre mel, `CenaEstudio`), os números, o letreiro de selos, o turno (painel de mel com a luz de estúdio, o desenho das mãos e o cartão flutuante "Desde que você saiu", `SecaoTurno.tsx:24-55`), a faixa de cacau com a cena dos tablets, a tabela de comparação (com a foto da cena num painel de areia), a citação, os depoimentos, as perguntas e o fechamento (painel de cacau com um desenho de traço). Cada dobra tem um painel saturado com algo real dentro (cena ou interface), e o papel respira entre os painéis. As páginas públicas de texto usam o painel de mel com um desenho de traço ao lado. As telas de acesso usam a cena `web/public/cenas/acesso/entrar` (veja Área de conta).
+- **Hover de mídia (`CamadaHover`; `web/src/movimento/CamadaHover.tsx:7-15`):** ao passar o cursor ou focar um cartão de mídia, uma camada de cacau com o resumo aparece só em opacidade, em 100 ms (110 ms para sair; M13). Com movimento reduzido a troca é instantânea; em aparelho sem hover o resumo fica sempre visível abaixo do conteúdo. Hoje só a página `/sistema` o usa.
+- **Madrugada:** o botão da lua no cabeçalho do app liga `data-tema="madrugada"` (`Cabecalho.tsx:57-72`). Fundo `noite`, cartões `noite-cartao`, destaque mel. Os alvos sobem para 56 px (`tema.css:84-85`). Na tela Hoje, na madrugada, há um botão grande e redondo, de mel, com "Iniciar mamada" e a linha da última mamada, na metade de baixo da tela, logo acima da barra Registrar (`BotaoIniciarMamada.tsx:15-19`); com outra sessão em andamento ele encolhe e a sessão vira o destaque.
+- **Etiqueta (`web/src/index.css:385-395`):** pílula em Outfit `pequeno`, fundo `areia` (`noite-cartao` na madrugada), altura mínima de 28 px, sem caixa alta.
+- **Campo (`site.css:253-330`):** rótulo visível acima (peso 500) e, abaixo, o controle de 56 px de altura mínima, raio `campo`, contorno de 1,5 px em `texto-2` e fundo de cartão (branco de dia), na coluna de até 28 rem. O select tem a mesma altura, contorno e fonte, com a seta de 20 px. O botão de mostrar senha é de ícone, 44 × 44 no fim do campo, com `aria-label` e `aria-pressed`.
+- **Foco:** anel de 2 px na cor de foco com `outline-offset: 2px`, só em `:focus-visible` (`web/src/index.css:56-60`); o botão usa 3 px (`site.css:162-166`). O `h1` com foco programático (`tabIndex=-1`) não mostra contorno.
 - **Erro:** `corpo`, em cor de erro, abaixo do campo, sem mudar a altura da linha.
 - **Desativado:** fundo sólido em texto secundário apagado, nunca tracejado, com `aria-disabled="true"` e o motivo ao lado.
-- **CTA circular:** 480 (322 abaixo de 768). Um segundo círculo, só de contorno, de 240.
-- **Mídia e galeria:** peça larga de 1376 × 888 a 1056; par de 2 × 672 × 672; retrato de 413 × 734. Moldura com raio 8 (4 abaixo de 768), `overflow: hidden`, sem sombra, sem borda, `object-fit: cover`. Sem texto dentro: a descrição vai no `alt` ou no `aria-label`. A legenda fica só nos cartões "As telas".
+- **Mídia e imagens:** toda imagem tem largura e altura explícitas, `alt` que descreve a nossa tela ou o desenho, e nenhum texto dentro. A legenda fica só nos cartões "As telas". A imagem da primeira dobra carrega na hora; as outras, só ao chegar perto da janela.
 - **Barra Registrar (área logada):** 64 px, `position: fixed; bottom: 0`, 4 botões iguais (Sono, Mamada, Fralda e Mais). Não é navegação.
 - **Confirmação:** linha de tinta no topo, texto da confirmação e as ações dela: "Desfazer" e "Fechar" depois de um registro novo; "Editar horário" (para quem pode alterar) e "Fechar" depois de encerrar uma sessão. Não some sozinha.
 - **Seletor de bebê (Rotina, 38a):** aparece no título do Hoje só quando a família tem mais de um bebê ativo; com um só, o nome do bebê é texto. É um select nativo com o nome como rótulo visível, alvo de pelo menos 48 px, sem ícone desenhado. Bebê arquivado não entra na lista.
@@ -377,12 +408,18 @@ Estes itens estão como na versão anterior deste arquivo (H:RF-01). Onde um rai
 - Faça: erro reversível. Todo registro novo tem "Desfazer"; uma sessão encerrada não volta a ficar em andamento, e a correção é "Editar horário". A confirmação só sai quando a pessoa fecha ou faz outro registro (Fluxos §1).
 - Faça: rótulos completos para leitor de tela e texto ampliável até 200% sem corte.
 - Faça: todo vão e todo tamanho de letra pelo token do papel ou do nível (Layout e Typography).
+- Faça: um painel de mel por dobra, com algo real dentro (cena ou interface), e papel respirando entre os painéis.
+- Faça: a chamada principal sempre como botão; a ênfase de um título é a segunda linha inteira em itálico.
+- Faça: nenhuma cor fora das doze do `tokens.css`; sombra, gradiente e filtro só pelas variáveis de Elevation & Depth.
+- Faça: rolagem horizontal nenhuma em 390, 768, 1024 e 1440 px nem com zoom de 200%; contraste AA; foco visível; alvos de 44 px ou mais (56 px na barra Registrar); `prefers-reduced-motion` respeitado.
 - Não faça: linguagem de cobrança. Nada de "atrasado", metas, pontos ou rankings.
-- Não faça: caixa alta e texto menor que 15 px.
-- Não faça: sombra, gradiente ou raio que não seja um dos dois e dos dois tokens de Elevation & Depth e de Shapes; vidro fosco; fio sob o cabeçalho ou moldura de página.
-- Não faça: copiar layout, texto, imagem, marca ou cor de outro site. Só a estrutura é estudada.
-- Não faça: número de "prova social" sem fonte real nem depoimento inventado.
-- Não faça: fonte sem licença nem texto essencial dentro de imagem.
+- Não faça: caixa alta e texto menor que 15 px (o código ainda tem o rótulo de 14 px, que o H-3 leva para `pequeno`).
+- Não faça: sombra, gradiente ou raio que não venha dos tokens de Elevation & Depth e de Shapes; vidro fosco; fio sob o cabeçalho ou moldura de página; `filter`, `perspective`, `rotateX`, `rotateY` ou `preserve-3d`.
+- Não faça: aparelho desenhado em CSS ou em SVG pelo agente; a cena entra pronta, como imagem, com a nossa tela real dentro.
+- Não faça: mais de duas famílias de fonte; "A · B · C" em lista de itens; seta colada ao texto de botão; numeração de marcador que não seja uma sequência real; painel pastel sem função.
+- Não faça: copiar layout, texto, imagem, marca ou cor de outro site. Só a estrutura é estudada. Nenhum rosto de pessoa real.
+- Não faça: número de "prova social" sem fonte real nem depoimento inventado; os relatos ilustrativos levam a linha que os diz.
+- Não faça: fonte sem licença nem texto essencial dentro de imagem; "Protótipo" ou "dados de exemplo" dentro de uma cena ou captura de vitrine.
 
 ## MAT-38b
 
@@ -400,8 +437,47 @@ Histórico, detalhe do registro, lixeira e notas. Nenhuma direção nova: as tel
 
 ## Motion
 
-Curto e sem surpresa. Só a escala do toque anima nos botões (`scale: 0.96` no `:active`, 120 ms, `ease-out`); a troca de cor do hover é instantânea (`web/src/styles/site.css:146-154`). Com `prefers-reduced-motion: reduce`, toda animação e toda transição é desligada (`web/src/index.css:648-655`). O letreiro dos selos dura 60 s e, com movimento reduzido, para (`web/src/styles/campo.css`, `cm-letreiro`). Nenhuma animação de entrada na primeira carga.
+Curto e sem surpresa, com a biblioteca `motion` (`motion/react`, versão fixa no `package.json`). Todos os parâmetros moram num catálogo só, `web/src/movimento/catalogo.ts`, e nenhuma peça tem número de movimento solto. Só animam `transform` e `opacity`. Com `prefers-reduced-motion: reduce`, tudo para: o CSS desliga toda animação e toda transição (`web/src/index.css:649-656`) e as peças leem `usePrefereMovimentoReduzido` e nascem no estado final.
+
+| Onde | Movimento (catálogo) | Movimento reduzido |
+|---|---|---|
+| Primeira carga | Cortina em colunas (M2, `catalogo.ts:35-48`, `Cortina.tsx:6-12`): 6 colunas em 1440 e 4 em 390, uma camada de cacau e depois a de mel (120 ms depois), cada uma de 0 a −100% em `y`, 0,5 s, curva `[0.16, 1, 0.3, 1]`, uma coluna a cada 90 ms. Sem tela de abertura: a página já está montada por baixo. Roda uma vez por sessão do navegador (marca em `sessionStorage`). | A página aparece direto |
+| Herói | A cena sobe de 0,94 a 1 e aparece, 0,8 s, depois da cortina (M8, `catalogo.ts:103-115`, `HeroiInicio.tsx:36-38`) | Parada |
+| Números e títulos de seção | As linhas sobem 48 px e aparecem, 1,25 s, curva `[0.165, 0.84, 0.44, 1]`, uma a cada 250 ms, ao entrar na janela (M4, `catalogo.ts:64-76`) | Já no lugar |
+| Painel com mídia | A mídia vai de 0,9 a 1 nos primeiros 360 px de rolagem, com mola (rigidez 120, amortecimento 30); o cartão flutuante chega 120 ms depois, subindo 24 px (M3, `catalogo.ts:49-63`) | Parada |
+| Faixa de cacau e rodapé | O conteúdo sai de baixo, preso à rolagem: de −50% a 0 na faixa (M6) e de −30% a 0 no rodapé (M7, `catalogo.ts:77-102`) | Parada |
+| Hover | O primário inverte na hora; a camada de cacau com o resumo do cartão de mídia aparece em 100 ms, também com foco (M13, `catalogo.ts:116-129`). A escala do toque nos botões é 0,96 no `:active`, 120 ms, `ease-out`, e só ela anima (`web/src/styles/site.css:146-154`). | Igual, sem deslocamento |
+| Selos | Letreiro de 60 s por volta, em CSS (M14, `campo.css:284-295`); para no hover, no foco e pelo botão | Fileira parada |
+
+Os componentes de `web/src/movimento/` (`Cortina`, `EntradaCena`, `RevelaNaRolagem`, `LinhasEscalonadas`, `RevelacaoPorBaixo`, `CamadaHover`) implementam essas receitas e são os que se reutilizam.
 
 ## Images
 
-As cenas e os desenhos são WebP em 1× e 2×, em `web/public/cenas`, com o registro de origem em `web/PROVENANCE.md`. Imagem sem texto dentro: a descrição vai no `alt` ou no `aria-label`. A moldura de uma cena é a do painel (raio 24), sem sombra e com `object-fit: cover`. Cenas de painel de mel usam a luz de estúdio; as dos outros painéis, não.
+As cenas e os desenhos são WebP em 1× e 2× (sem AVIF), em `web/public/cenas` e `web/public/ilustracoes`. O registro de origem de cada grupo fica no `PROVENANCE.md` da própria pasta (`cenas/inicio`, `cenas/publicas`, `cenas/acesso`, `cenas/sistema` e `ilustracoes`), e o de fontes, ícones e bibliotecas em `web/PROVENANCE.md`. Imagem sem texto dentro: a descrição vai no `alt` ou no `aria-label`. A moldura de uma cena é a do painel (raio 24), sem sombra e com `object-fit: cover`. Cenas de painel de mel usam a luz de estúdio; as dos outros painéis, não.
+
+- **Cenas de aparelho:** a direção aprovada define quatro cenas: três celulares sobre pedestais de oliva em mel (herói do Início), um celular sobre pedestal em mel (acesso, páginas públicas), dois tablets sobre cacau com um círculo de mel (faixa de cacau e Desenvolvimento) e um celular sobre linho de areia (seção da tabela). Os arquivos em uso estão em `web/public/cenas`. Os aparelhos são imagens prontas; a tela de dentro é uma captura real nossa (2×), composta fora do código, e a chave verde da composição nunca fica à mostra. Nunca há aparelho em CSS (sem `perspective`, `rotateX` ou `preserve-3d`).
+- **Desenhos de traço:** seis desenhos pretos de linha (avó com carrinho, pai com o bebê no colo, tummy time, duas mãos passando um celular, babá no tapete e mãe ninando de noite). São gerados e curados, nunca desenhados à mão em SVG pelo agente.
+- **Origem e uso:** imagem gerada pode ir ao site publicado, curada e com registro de origem; nenhum rosto de pessoa real; nada vem dos sites de referência (arquivo, texto ou código).
+- **Proibido:** texto essencial dentro da imagem; "Protótipo" ou "dados de exemplo" dentro de qualquer cena ou captura de vitrine; imagem sem `alt` (a decorativa leva `alt` vazio).
+
+## Divergências com a FINAL (para a galeria do item H)
+
+Cada linha é uma regra que perdeu para o código na base (a003fe4, sem mudança de visual no H-2). As que vêm de "regra antiga" estavam neste arquivo antes do H-2; as demais são da FINAL. Nenhuma está em vigor acima.
+
+- **Botão primário.** Regra antiga: altura 80 (64 abaixo de 768), padding 0 32, raio 8, texto 24/24. O código faz: pílula, altura mínima 56 (48 no app), padding 28 (22), 18 px (17 no app), `site.css:125-160`. A FINAL concorda com o código (56 e 48); o CSS legado `.sb-botao` de 64 px abaixo de 768 não tem uso em `.tsx` (`index.css:398-418` e `476-479`).
+- **Moldura dupla.** Regra antiga: altura 48 (64 ao lado de um primário), raio 8 por fora e 4 por dentro. A FINAL diz "nenhum contorno duplo em lugar nenhum". O código faz: a variante `moldura` do app, pílula de 1 px com miolo, nas telas Hoje e Sessão até o redesenho, `Botao.tsx:9-12` e `index.css:421-467`.
+- **Cabeçalho.** Regra antiga: 64 px (60 abaixo de 768), submenu "+ Em breve", botão de moldura dupla, quebra em 768. O código faz: 72 px abaixo de 1100 e 88 px a partir dele, menu de altura cheia abaixo de 1100, sem submenu, `site.css:14`, `24-28` e `463-487`; o teste `casca.test.tsx:65` exige que o "Em breve" não exista.
+- **Rodapé.** Regra antiga: de x=0 com a largura da janela, nome com ≥ 96% da área útil, aviso de protótipo, sem recuo. A FINAL diz painel de mel com o nome até 160 px em 1440. O código faz: painel de mel com recuo de 32 px (12 em 390) e o nome pela largura do painel, `calc(100cqi / 7,966)`, sem teto, `site.css:543-618`; nas rotas `/app/*`, uma linha de links sem painel, `Rodape.tsx:7-22`.
+- **Seção escura só no Início, com "Criar conta".** Regra antiga. O código faz: a faixa de cacau com a cena dos tablets (`FaixaMadrugada.tsx:18-29`) e o painel de cacau do fechamento com um desenho de traço (`Fechamento.tsx:21-27`).
+- **Etiqueta.** Regra antiga: raio 4, padding 2/6, altura 26. O código faz: pílula, padding 2/12, altura mínima 28, `index.css:385-395`.
+- **Campo.** Regra antiga: a partir de 768, linha de rótulo e campo de 112 px sem caixa; abaixo, campo de 64 px com fundo `areia` e raio 4. A FINAL diz campo de raio 14. O código faz: campo de 56 px com raio 14, contorno de 1,5 px e rótulo acima nas duas larguras, `site.css:253-281`.
+- **CTA circular.** Regra antiga: círculo de 480 px (322 abaixo de 768) e outro, só de contorno, de 240, no site. O código faz: nenhum CTA circular no site; o único círculo é o botão "Iniciar mamada" da madrugada, de 13 rem (15 rem em telas grandes) ou 7 rem (9 rem) quando há outra sessão em andamento, `BotaoIniciarMamada.tsx:20-27`.
+- **Mídia e galeria.** Regra antiga: peças de 1376 × 888 a 1056, par de 672 × 672, retrato de 413 × 734, moldura de raio 8 (4 abaixo de 768). A FINAL diz painel de raio 24. O código faz: painel de até 1376 px de largura com raio `painel` e a cena com `border-radius: inherit`, `campo.css:4-11` e `60-63`.
+- **Movimento: "nenhuma animação de entrada na primeira carga".** Regra antiga. A FINAL §5 diz cortina de colunas, entrada do herói e linhas que sobem. O código faz: a cortina (`Cortina.tsx:35-82`, `catalogo.ts:35-48`), a entrada da cena (`catalogo.ts:103-115`) e as linhas (`catalogo.ts:64-76`).
+- **Movimento reduzido nos números e títulos.** A FINAL diz "só opacidade, 150 ms". O código faz: a peça nasce no estado final, sem transição, `EntradaSuave.tsx:34-44`.
+- **Escala de tipo e corpo.** A FINAL §2 diz h1 84/88, h2 56/62, h3 36/42, h4 24/30, corpo do site 18/27 e rótulo 14/20. A SPEC H e o front matter deste arquivo trocam isso pela escala de nove níveis (corpo 18/28, nada abaixo de 15 px). O código faz: a escala antiga, `site.css:48-110` (`.cm-corpo` 18/27, `.cm-rotulo` 14/20), até o H-3 aplicar.
+- **Grade e padding de painel.** A FINAL §3 diz grade de 12 colunas, margem 64, conteúdo máximo 1312 e padding de painel 64. A SPEC H e o Layout acima trocam isso pelo quadro de 1200 px com calha de 20 a 32 px e o papel `painel`. O código faz: `.cm-area` de 1312 px com margem de 20 a 64 px e respiro de painel de 24 a 64 px, `site.css:6-34`, até o H-3 aplicar.
+- **Ilustração nunca sobre o cacau.** A FINAL §4 proíbe. O código faz: o fechamento do Início põe o desenho `tummy-time` no painel de cacau, `Fechamento.tsx:21-23`.
+- **Cena em AVIF e WebP.** A FINAL §4 diz `<picture>` com AVIF e WebP em 1× e 2×. O código faz: só WebP, `CenaEstudio.tsx:30-34` e `Ilustracao.tsx:41-46`.
+- **Acordeão em Radix ou shadcn.** A FINAL §4. O código faz: botões nativos com `aria-expanded`, sem biblioteca, `Acordeao.tsx:16-40`.
+- **Registro de origem em `web/PROVENANCE.md`.** A FINAL §6 diz um arquivo só para as cenas. O código faz: um `PROVENANCE.md` por pasta de cena e de desenho (`web/public/cenas/*/PROVENANCE.md`, `web/public/ilustracoes/PROVENANCE.md`); o `web/PROVENANCE.md` cobre fontes, ícones, bibliotecas e movimento.

@@ -6,9 +6,9 @@
    e cresce em linha reta no meio. Espaço em px; tipo em rem (com a fonte a 100% as pontas batem exato).
    Largura útil do quadro: min(var(--quadro-largura), 100vw - 2 * var(--quadro-calha)).
 
-   Apelidos do Tailwind (segundo bloco): espaço (padding, margin, gap...), tipo (text-<nível>) e largura
-   máxima (max-w-<nome>: medio, leitura, quadro). Sem apelido de espaço, por colisão com classes `pt-*` do
-   site: junto (pt-junto), secao (pt-secao), painel (pt-painel). */
+   Apelidos do Tailwind (segundo bloco): espaço (padding, margin, gap...) com o prefixo único `esp-` em todo
+   papel (p-esp-secao, gap-esp-bloco, pt-esp-painel...), para não colidir com classes `pt-*` do site; tipo
+   (text-<nível>) e largura máxima (max-w-<nome>: medio, leitura, quadro). */
 @theme static {
   --espaco-junto: clamp(8px, calc(8px + (100vw - 390px) * 4 / 1050), 12px);
   --espaco-pilha: 16px;
@@ -43,12 +43,15 @@
 }
 
 @theme inline {
-  --spacing-pilha: var(--espaco-pilha);
-  --spacing-grupo: var(--espaco-grupo);
-  --spacing-bloco: var(--espaco-bloco);
-  --spacing-midia: var(--espaco-midia);
-  --spacing-secao-ampla: var(--espaco-secao-ampla);
-  --spacing-quadro-calha: var(--quadro-calha);
+  --spacing-esp-junto: var(--espaco-junto);
+  --spacing-esp-pilha: var(--espaco-pilha);
+  --spacing-esp-grupo: var(--espaco-grupo);
+  --spacing-esp-bloco: var(--espaco-bloco);
+  --spacing-esp-midia: var(--espaco-midia);
+  --spacing-esp-secao: var(--espaco-secao);
+  --spacing-esp-secao-ampla: var(--espaco-secao-ampla);
+  --spacing-esp-painel: var(--espaco-painel);
+  --spacing-esp-quadro-calha: var(--quadro-calha);
   --text-exibicao: var(--texto-exibicao-tamanho);
   --text-exibicao--line-height: var(--texto-exibicao-entrelinha);
   --text-titulo-1: var(--texto-titulo-1-tamanho);

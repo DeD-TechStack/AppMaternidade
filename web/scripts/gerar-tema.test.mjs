@@ -2,21 +2,24 @@
 import assert from 'node:assert/strict'
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { describe, it } from 'node:test'
+import { before, describe, it } from 'node:test'
+import { compile } from 'tailwindcss'
 import {
   CAMINHO_DESIGN,
   CAMINHO_SAIDA,
   NIVEIS,
   PAPEIS,
-  SEM_APELIDO_DE_ESPACO,
   fluido,
   gerarTema,
   lerFrontMatter,
   lerYaml,
 } from './gerar-tema.mjs'
 
-const design = readFileSync(CAMINHO_DESIGN, 'utf8')
+/** O que o Windows entrega (CRLF) e o que o Linux entrega (LF) são o mesmo DESIGN.md: todo fixture parte do texto em LF. */
 const sem = (texto) => texto.replaceAll('\r\n', '\n')
+const comCrlf = (texto) => sem(texto).replaceAll('\n', '\r\n')
+const designBruto = readFileSync(CAMINHO_DESIGN, 'utf8')
+const design = sem(designBruto)
 
 /** Avalia `clamp(piso, calc(base + (100vw - 390px) * d / 1050), teto)` num viewport, em px (1 rem = 16 px). */
 function avaliar(css, viewport) {
@@ -40,7 +43,10 @@ describe('lerYaml', () => {
   })
 
   it('lê o front matter do DESIGN.md com CRLF igual ao com LF', () => {
-    assert.deepEqual(lerFrontMatter(design.replaceAll('\n', '\r\n')), lerFrontMatter(design))
+    assert.ok(!design.includes('\r'), 'o fixture em LF não pode ter CR')
+    assert.ok(comCrlf(design).includes('\r\n') && !comCrlf(design).includes('\r\r'), 'o fixture em CRLF tem só CRLF')
+    assert.deepEqual(lerFrontMatter(comCrlf(design)), lerFrontMatter(design))
+    assert.deepEqual(lerFrontMatter(designBruto), lerFrontMatter(design))
   })
 })
 
@@ -78,7 +84,9 @@ describe('gerarTema', () => {
 
   it('é determinístico: duas gerações dão os mesmos bytes', () => {
     assert.equal(gerarTema(design), css)
-    assert.equal(gerarTema(design.replaceAll('\n', '\r\n')), css)
+    assert.equal(gerarTema(comCrlf(design)), css)
+    assert.equal(gerarTema(designBruto), css, 'o arquivo do checkout (CRLF ou LF) gera os mesmos bytes')
+    assert.ok(!css.includes('\r'), 'a saída é sempre LF')
   })
 
   it('traz uma variável por papel de espaço, por nível de tipo e as do quadro', () => {
@@ -126,33 +134,96 @@ describe('gerarTema', () => {
   })
 })
 
-describe('apelidos do Tailwind sem colisão com classes do site', () => {
-  /** Todos os arquivos de texto de web/src com uma das extensões do site. */
+describe('utilitários de espaço do Tailwind (todo papel com o mesmo prefixo `esp-`)', () => {
+  /** Os nomes finais das classes, os mesmos que a seção Layout do DESIGN.md lista para o H-3. */
+  const PREFIXO = 'esp'
+  const SUFIXOS = [...PAPEIS, 'quadro-calha'].map((papel) => ({ papel, sufixo: `${PREFIXO}-${papel}` }))
+  /** Família de utilitário → declaração que ela precisa gerar com a variável do papel. */
+  const FAMILIAS = {
+    p: 'padding',
+    px: 'padding-inline',
+    py: 'padding-block',
+    pt: 'padding-top',
+    pb: 'padding-bottom',
+    m: 'margin',
+    gap: 'gap',
+  }
+  const ESCAPA = (texto) => texto.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+  /** A variável de espaço que o papel liga (o quadro-calha tem a dele). */
+  const variavel = (papel) => (papel === 'quadro-calha' ? '--quadro-calha' : `--espaco-${papel}`)
+
+  /** Todos os arquivos de texto de web/src com uma das extensões do site, menos o tema gerado. */
   function fontes() {
     const pasta = join(CAMINHO_DESIGN, '..', 'src')
     return readdirSync(pasta, { recursive: true, encoding: 'utf8' })
-      .filter((caminho) => /\.(tsx?|css)$/.test(caminho))
+      .filter((caminho) => /\.(tsx?|css)$/.test(caminho) && !caminho.endsWith('harmonia.gerado.css'))
       .map((caminho) => ({ caminho, texto: readFileSync(join(pasta, caminho), 'utf8') }))
   }
 
-  it('cada papel sem apelido ainda tem a classe que colide; ao renomear, esvazie SEM_APELIDO_DE_ESPACO', () => {
-    const todas = fontes()
-    for (const [papel, classe] of Object.entries(SEM_APELIDO_DE_ESPACO)) {
-      assert.ok(
-        todas.some(({ texto }) => texto.includes(classe)),
-        `a classe ${classe} sumiu: o papel ${papel} já pode ter apelido de espaço`,
-      )
+  let compilado = ''
+  before(async () => {
+    // O Tailwind instalado (o mesmo do Vite), sem dependência nova: só os utilitários e o tema gerado.
+    const candidatas = []
+    for (const { sufixo, papel } of SUFIXOS) {
+      for (const familia of [...Object.keys(FAMILIAS), 'space-x', 'space-y', 'gap-x', 'gap-y']) {
+        candidatas.push(`${familia}-${sufixo}`, `${familia}-${papel}`)
+      }
+    }
+    for (const nivel of NIVEIS) candidatas.push(`text-${nivel}`)
+    candidatas.push('max-w-medio', 'max-w-leitura', 'max-w-quadro')
+    const compilador = await compile(`@tailwind utilities;\n${gerarTema(design)}`)
+    compilado = compilador.build(candidatas)
+  })
+
+  it('gera a classe de cada família para os 8 papéis e para a calha do quadro', () => {
+    for (const { papel, sufixo } of SUFIXOS) {
+      for (const [familia, propriedade] of Object.entries(FAMILIAS)) {
+        const regra = new RegExp(`\\.${ESCAPA(`${familia}-${sufixo}`)}\\s*\\{[^}]*?\\b${propriedade}:\\s*var\\(${variavel(papel)}\\)`)
+        assert.ok(regra.test(compilado), `faltou ${familia}-${sufixo} → ${propriedade}: var(${variavel(papel)})`)
+      }
+      for (const familia of ['space-x', 'space-y', 'gap-x', 'gap-y']) {
+        assert.ok(new RegExp(`\\.${ESCAPA(`${familia}-${sufixo}`)}(?![\\w-])`).test(compilado), `faltou ${familia}-${sufixo}`)
+      }
     }
   })
 
-  it('os papéis com apelido não colidem com nenhuma classe `<prefixo de espaço>-<papel>` escrita em .tsx', () => {
-    const css = gerarTema(design)
-    const prefixos = '(?:p|px|py|pt|pr|pb|pl|ps|pe|m|mx|my|mt|mr|mb|ml|ms|me|gap|gap-x|gap-y|space-x|space-y|inset|top|right|bottom|left|w|h|size|min-w|max-w|min-h|max-h|basis)'
-    const tsx = fontes().filter(({ caminho }) => caminho.endsWith('.tsx') && !caminho.endsWith('.test.tsx'))
-    for (const papel of PAPEIS) {
-      if (!new RegExp(`^  --spacing-${papel}: `, 'm').test(css)) continue
-      const colisao = new RegExp(`(?<![\\w-])${prefixos}-${papel}(?![\\w-])`)
-      for (const { caminho, texto } of tsx) assert.doesNotMatch(texto, colisao, `${caminho} usa uma classe ${papel} que o apelido ligaria ao Tailwind`)
+  it('nenhum nome sem prefixo é gerado: `p-secao`, `pt-junto`, `gap-painel`... ficam livres para as classes do site', () => {
+    for (const { papel } of SUFIXOS) {
+      for (const familia of [...Object.keys(FAMILIAS), 'space-x', 'space-y', 'gap-x', 'gap-y']) {
+        assert.ok(!new RegExp(`\\.${ESCAPA(`${familia}-${papel}`)}(?![\\w-])`).test(compilado), `${familia}-${papel} não pode ser gerado`)
+      }
+    }
+    assert.doesNotMatch(css(), /^ {2}--spacing-(?!esp-)/m, 'todo apelido de espaço leva o prefixo esp-')
+  })
+
+  it('os utilitários de tipo e de largura continuam gerados', () => {
+    for (const nivel of NIVEIS) {
+      assert.ok(new RegExp(`\\.text-${nivel}\\s*\\{[^}]*font-size:\\s*var\\(--texto-${nivel}-tamanho\\)`).test(compilado), `text-${nivel}`)
+      assert.ok(new RegExp(`\\.text-${nivel}\\s*\\{[^}]*line-height:[^;]*var\\(--texto-${nivel}-entrelinha\\)`).test(compilado), `text-${nivel} entrelinha`)
+    }
+    for (const [classe, valor] of [['medio', '--medio'], ['leitura', '--leitura'], ['quadro', '--quadro-largura']]) {
+      assert.ok(new RegExp(`\\.max-w-${classe}\\s*\\{[^}]*max-width:\\s*var\\(${valor}\\)`).test(compilado), `max-w-${classe}`)
     }
   })
+
+  it('nenhuma classe escrita à mão no CSS do site tem o nome de um utilitário `<família>-esp-*`', () => {
+    const familias = '(?:p|px|py|pt|pr|pb|pl|ps|pe|m|mx|my|mt|mr|mb|ml|ms|me|gap|gap-x|gap-y|space-x|space-y)'
+    const colisao = new RegExp(`\\.${familias}-${PREFIXO}-`)
+    for (const { caminho, texto } of fontes().filter(({ caminho }) => caminho.endsWith('.css'))) {
+      assert.doesNotMatch(texto, colisao, `${caminho} define uma classe que o Tailwind também geraria`)
+    }
+  })
+
+  it('as classes antigas das páginas (`pt-junto`, `pt-secao`, `pt-painel`) seguem só no CSS do site', () => {
+    const css = fontes()
+      .filter(({ caminho }) => caminho.endsWith('.css'))
+      .map(({ texto }) => texto)
+      .join('\n')
+    for (const classe of ['pt-junto', 'pt-secao', 'pt-painel']) assert.match(css, new RegExp(`\\.${classe}(?![\\w-])`), classe)
+  })
+
+  function css() {
+    return gerarTema(design)
+  }
 })

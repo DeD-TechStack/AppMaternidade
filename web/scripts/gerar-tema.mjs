@@ -26,16 +26,13 @@ export const PAPEIS = ['junto', 'pilha', 'grupo', 'bloco', 'midia', 'secao', 'se
 export const NIVEIS = ['exibicao', 'titulo-1', 'titulo-2', 'titulo-3', 'titulo-4', 'abertura', 'corpo', 'pequeno', 'sobretitulo']
 
 /**
- * Papéis sem apelido de espaço do Tailwind por enquanto. O apelido (`--spacing-<papel>`) liga a classe `pt-<papel>`,
- * e o CSS próprio de web/src/componentes/publicas-texto já tem classes `pt-junto`, `pt-secao` e `pt-painel` (seletores
- * de classe do site, escritos à mão). Com o apelido, o Tailwind passaria a gerar um padding-top para elas e mudaria a
- * tela. O cartão H-3 renomeia as classes e esvazia esta lista. O teste de gerar-tema confere que cada colisão existe.
+ * Prefixo único dos utilitários de espaço do Tailwind: o papel `secao` vira `--spacing-esp-secao` e as classes
+ * `p-esp-secao`, `pt-esp-secao`, `gap-esp-secao`... Todo papel leva o mesmo prefixo, para nenhum utilitário gerado
+ * colidir com uma classe escrita à mão (o CSS de web/src/componentes/publicas-texto tem `.pt-junto`, `.pt-secao` e
+ * `.pt-painel`, e um apelido sem prefixo faria o Tailwind gerar um padding-top para elas). O teste de gerar-tema
+ * compila o tema com o Tailwind instalado e confere cada papel e cada família de utilitário.
  */
-export const SEM_APELIDO_DE_ESPACO = {
-  junto: 'pt-junto',
-  secao: 'pt-secao',
-  painel: 'pt-painel',
-}
+export const PREFIXO_DE_ESPACO = 'esp'
 
 // ---------------------------------------------------------------------------------------------------------------
 // Leitura do front matter
@@ -152,7 +149,7 @@ export function gerarTema(textoDoDesign) {
     const a = emPx(exigir(design, `spacing.${papel}-390`), `spacing.${papel}-390`)
     const b = emPx(exigir(design, `spacing.${papel}-1440`), `spacing.${papel}-1440`)
     espaco.push(`  --espaco-${papel}: ${fluido(a, b, 'px')};`)
-    if (!Object.hasOwn(SEM_APELIDO_DE_ESPACO, papel)) apelidosDeEspaco.push(`  --spacing-${papel}: var(--espaco-${papel});`)
+    apelidosDeEspaco.push(`  --spacing-${PREFIXO_DE_ESPACO}-${papel}: var(--espaco-${papel});`)
   }
 
   const calha390 = emPx(exigir(design, 'spacing.quadro-calha-390'), 'spacing.quadro-calha-390')
@@ -167,7 +164,7 @@ export function gerarTema(textoDoDesign) {
     `  --medio: ${numero(medio)}px;`,
     `  --leitura: ${numero(leitura)}px;`,
   ]
-  apelidosDeEspaco.push('  --spacing-quadro-calha: var(--quadro-calha);')
+  apelidosDeEspaco.push(`  --spacing-${PREFIXO_DE_ESPACO}-quadro-calha: var(--quadro-calha);`)
 
   for (const nivel of NIVEIS) {
     const tamanho390 = emPx(exigir(design, `typography.${nivel}-390.fontSize`), `typography.${nivel}-390.fontSize`)
@@ -180,10 +177,6 @@ export function gerarTema(textoDoDesign) {
     apelidosDeTipo.push(`  --text-${nivel}--line-height: var(--texto-${nivel}-entrelinha);`)
   }
 
-  const semApelido = Object.entries(SEM_APELIDO_DE_ESPACO)
-    .map(([papel, classe]) => `${papel} (${classe})`)
-    .join(', ')
-
   return [
     '/* GERADO por web/scripts/gerar-tema.mjs a partir do front matter de web/DESIGN.md. NÃO EDITE À MÃO.',
     '   Para mudar um valor, edite web/DESIGN.md e rode `npm --prefix web run tema`.',
@@ -193,9 +186,9 @@ export function gerarTema(textoDoDesign) {
     '   e cresce em linha reta no meio. Espaço em px; tipo em rem (com a fonte a 100% as pontas batem exato).',
     '   Largura útil do quadro: min(var(--quadro-largura), 100vw - 2 * var(--quadro-calha)).',
     '',
-    '   Apelidos do Tailwind (segundo bloco): espaço (padding, margin, gap...), tipo (text-<nível>) e largura',
-    '   máxima (max-w-<nome>: medio, leitura, quadro). Sem apelido de espaço, por colisão com classes `pt-*` do',
-    `   site: ${semApelido}. */`,
+    '   Apelidos do Tailwind (segundo bloco): espaço (padding, margin, gap...) com o prefixo único `esp-` em todo',
+    '   papel (p-esp-secao, gap-esp-bloco, pt-esp-painel...), para não colidir com classes `pt-*` do site; tipo',
+    '   (text-<nível>) e largura máxima (max-w-<nome>: medio, leitura, quadro). */',
     '@theme static {',
     ...espaco,
     ...quadro,
