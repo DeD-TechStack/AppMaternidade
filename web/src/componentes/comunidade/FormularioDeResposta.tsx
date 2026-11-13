@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useId, useState, type FormEvent } from 'react'
 import { COMUM_COMUNIDADE, TOPICO, TX } from '../../conteudo/comunidade.ts'
 import { LIMITES, conferirLimite } from '../../dados/comunidade.regras.ts'
 import { useFocoNoResumo } from '../conta/foco.ts'
@@ -52,6 +52,7 @@ export function FormularioDeResposta({ topicoId, modo, apelidoProprio, aoTirarCi
   const erro = envio.estado.fase === 'erro' ? envio.estado : null
   const resumo = useFocoNoResumo(erro)
   const valido = conferirLimite(texto, LIMITES.resposta) === 'ok'
+  const dicaId = useId()
   const citando = modo.tipo === 'nova' ? modo.citando : null
 
   function publicar() {
@@ -156,9 +157,14 @@ export function FormularioDeResposta({ topicoId, modo, apelidoProprio, aoTirarCi
         linhas={5}
       />
       <div>
-        <button type="submit" disabled={!valido} className={BOTAO_PRINCIPAL}>
+        <button type="submit" disabled={!valido} aria-describedby={valido ? undefined : dicaId} className={BOTAO_PRINCIPAL}>
           {TOPICO.verPrevia}
         </button>
+        {valido ? null : (
+          <p id={dicaId} className="cm-pequeno mt-2 text-[var(--cor-texto-2)]">
+            {TOPICO.dicaPrevia}
+          </p>
+        )}
       </div>
     </form>
   )

@@ -30,6 +30,8 @@ interface LinhaFamilia {
   nome: string
   fuso: string
   criada_em: string
+  /** Só quando a consulta embute os vínculos da família (`minhasFamilias({ comMembros: true })`). */
+  vinculos?: LinhaVinculo[] | null
 }
 interface LinhaVinculo {
   id: string
@@ -37,6 +39,7 @@ interface LinhaVinculo {
   papel: Papel
   estado: string
   valido_ate: string | null
+  criado_em?: string
 }
 interface LinhaVinculoComFamilia {
   id: string
@@ -61,6 +64,7 @@ interface LinhaConvite {
 
 const COLUNAS_CONTA = 'id, nome_privado, fuso, criada_em'
 const COLUNAS_FAMILIA = 'id, nome, fuso, criada_em'
+const COLUNAS_VINCULO = 'id, conta_id, papel, estado, valido_ate, criado_em'
 const COLUNAS_BEBE = 'id, familia_id, nome, nascimento, estado'
 
 const SESSAO_AUSENTE = { name: 'AuthSessionMissingError', code: 'session_not_found', message: 'Auth session missing!' }
@@ -80,6 +84,9 @@ function dataSimples(texto: string): string {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(texto) || new Date(texto).toISOString().slice(0, 10) !== texto) inesperada('nascimento')
   return texto
 }
+/** A ordem do banco (`order criado_em, conta_id`) para os vínculos embutidos. */
+const ordemDoVinculo = (a: LinhaVinculo, b: LinhaVinculo) =>
+  Date.parse(a.criado_em ?? '') - Date.parse(b.criado_em ?? '') || (a.conta_id < b.conta_id ? -1 : a.conta_id > b.conta_id ? 1 : 0)
 const isoOuNulo = (texto: string | null) => (texto === null ? null : iso(texto))
 const vale = (validoAte: string | null) => validoAte === null || Date.parse(validoAte) > Date.now()
 
@@ -182,18 +189,25 @@ export function criarDadosContaSupabase(cliente: SupabaseClient): DadosConta {
     return data ? paraConta(data as LinhaConta, email) : null
   }
 
-  async function familiasDaPessoa(id: string): Promise<FamiliaResumo[]> {
+  /**
+   * As famílias da pessoa: uma consulta de `vinculos`. Com `comMembros`, a mesma consulta embute os
+   * vínculos de cada família (`familias(..., vinculos(...))`) e uma de `contas` dá os nomes; os membros
+   * ficam só nas famílias em que a pessoa é responsável. Nunca lê `bebes` nem `convites`.
+   */
+  async function familiasDaPessoa(id: string, comMembros = false): Promise<FamiliaResumo[]> {
+    const embutidos = comMembros ? `, vinculos(${COLUNAS_VINCULO})` : ''
     const { data, error } = await cliente
       .from('vinculos')
-      .select(`id, papel, valido_ate, familias(${COLUNAS_FAMILIA})`)
+      .select(`id, papel, valido_ate, familias(${COLUNAS_FAMILIA}${embutidos})`)
       .eq('conta_id', id)
       .eq('estado', 'ativo')
     if (error) throw error
     const lista: FamiliaResumo[] = []
+    const dosMembros: Array<{ resumo: FamiliaResumo; brutos: LinhaVinculo[] }> = []
     for (const linha of (data ?? []) as unknown as LinhaVinculoComFamilia[]) {
       const familia = Array.isArray(linha.familias) ? linha.familias[0] : linha.familias
       if (!familia || !vale(linha.valido_ate)) continue
-      lista.push({
+      const resumo: FamiliaResumo = {
         id: familia.id,
         nome: familia.nome,
         fuso: familia.fuso,
@@ -201,9 +215,71 @@ export function criarDadosContaSupabase(cliente: SupabaseClient): DadosConta {
         meuPapel: linha.papel,
         meuVinculoId: linha.id,
         meuAcessoAte: isoOuNulo(linha.valido_ate),
-      })
+      }
+      lista.push(resumo)
+      // Sem a lista embutida (resposta fora da forma), a família segue sem `membros`: quem pediu relê.
+      if (comMembros && linha.papel === 'responsavel' && Array.isArray(familia.vinculos)) {
+        const brutos = familia.vinculos
+          .filter((v) => v.estado === 'ativo' && vale(v.valido_ate))
+          .sort((a, b) => ordemDoVinculo(a, b))
+        dosMembros.push({ resumo, brutos })
+      }
+    }
+    if (dosMembros.length > 0) {
+      const nomes = await nomesDasContas([...new Set(dosMembros.flatMap(({ brutos }) => brutos.map((v) => v.conta_id)))])
+      for (const { resumo, brutos } of dosMembros) resumo.membros = brutos.map((v) => paraMembro(v, nomes, id))
     }
     return lista.sort((a, b) => (a.criadaEm < b.criadaEm ? -1 : a.criadaEm > b.criadaEm ? 1 : a.id < b.id ? -1 : 1))
+  }
+
+  async function nomesDasContas(ids: string[]): Promise<Map<string, string>> {
+    const { data, error } = await cliente.from('contas').select('id, nome_privado').in('id', ids)
+    if (error) throw error
+    return new Map(((data ?? []) as Array<{ id: string; nome_privado: string }>).map((c) => [c.id, c.nome_privado]))
+  }
+
+  const paraMembro = (v: LinhaVinculo, nomes: Map<string, string>, pessoa: string): Membro => ({
+    vinculoId: v.id,
+    contaId: v.conta_id,
+    nome: nomes.get(v.conta_id) ?? '',
+    papel: v.papel,
+    validoAte: isoOuNulo(v.valido_ate),
+    souEu: v.conta_id === pessoa,
+  })
+
+  /**
+   * O detalhe só com os membros (`escopo: 'membros'`): uma consulta de `vinculos` que traz, junto, a
+   * família (o resumo vem do vínculo da própria pessoa), e uma de `contas` para os nomes. Não lê
+   * `bebes` nem `convites`, nem relê os vínculos da pessoa.
+   */
+  async function detalheDosMembros(familiaId: string, pessoa: string): Promise<DetalheFamilia> {
+    const { data, error } = await cliente
+      .from('vinculos')
+      .select(`id, conta_id, papel, estado, valido_ate, criado_em, familias(${COLUNAS_FAMILIA})`)
+      .eq('familia_id', familiaId)
+      .eq('estado', 'ativo')
+      .order('criado_em')
+      .order('conta_id')
+    if (error) throw error
+    const brutos = ((data ?? []) as unknown as Array<LinhaVinculo & { familias?: LinhaFamilia | LinhaFamilia[] | null }>).filter((v) =>
+      vale(v.valido_ate),
+    )
+    const meu = brutos.find((v) => v.conta_id === pessoa)
+    const embutida = meu?.familias
+    const familia = Array.isArray(embutida) ? embutida[0] : embutida
+    if (!meu || !familia) throw { code: 'P0002', message: 'familia inexistente' }
+
+    const nomes = await nomesDasContas([...new Set(brutos.map((v) => v.conta_id))])
+    const resumo: FamiliaResumo = {
+      id: familia.id,
+      nome: familia.nome,
+      fuso: familia.fuso,
+      criadaEm: iso(familia.criada_em),
+      meuPapel: meu.papel,
+      meuVinculoId: meu.id,
+      meuAcessoAte: isoOuNulo(meu.valido_ate),
+    }
+    return { familia: resumo, bebes: [], membros: brutos.map((v) => paraMembro(v, nomes, pessoa)), convites: null }
   }
 
   /** Depois de uma escrita direta barrada: a família existe para a pessoa (42501) ou não (P0002)? */
@@ -356,15 +432,16 @@ export function criarDadosContaSupabase(cliente: SupabaseClient): DadosConta {
         return paraConta(linhas[0], usuario.email)
       }),
 
-    minhasFamilias: () =>
+    minhasFamilias: (opcoes) =>
       executar(async () => {
         const usuario = await meuUsuario()
-        return familiasDaPessoa(usuario.id)
+        return familiasDaPessoa(usuario.id, opcoes?.comMembros === true)
       }),
 
-    detalheFamilia: (familiaId) =>
+    detalheFamilia: (familiaId, escopo = 'completo') =>
       executar(async (): Promise<DetalheFamilia> => {
         const usuario = await meuUsuario()
+        if (escopo === 'membros') return detalheDosMembros(familiaId, usuario.id)
         const resumo = (await familiasDaPessoa(usuario.id)).find((f) => f.id === familiaId)
         if (!resumo) throw { code: 'P0002', message: 'familia inexistente' }
 
@@ -398,21 +475,11 @@ export function criarDadosContaSupabase(cliente: SupabaseClient): DadosConta {
 
         const membrosBrutos = ((vinculosR.data ?? []) as LinhaVinculo[]).filter((v) => vale(v.valido_ate))
         const convitesBrutos = (convitesR.data ?? null) as LinhaConvite[] | null
-        const ids = [
+        const nomes = await nomesDasContas([
           ...new Set([...membrosBrutos.map((v) => v.conta_id), ...(convitesBrutos ?? []).flatMap((c) => (c.criado_por ? [c.criado_por] : []))]),
-        ]
-        const contasR = await cliente.from('contas').select('id, nome_privado').in('id', ids)
-        if (contasR.error) throw contasR.error
-        const nomes = new Map(((contasR.data ?? []) as Array<{ id: string; nome_privado: string }>).map((c) => [c.id, c.nome_privado]))
+        ])
 
-        const membros: Membro[] = membrosBrutos.map((v) => ({
-          vinculoId: v.id,
-          contaId: v.conta_id,
-          nome: nomes.get(v.conta_id) ?? '',
-          papel: v.papel,
-          validoAte: isoOuNulo(v.valido_ate),
-          souEu: v.conta_id === usuario.id,
-        }))
+        const membros = membrosBrutos.map((v) => paraMembro(v, nomes, usuario.id))
         const convites: ConviteResumo[] | null = convitesBrutos
           ? convitesBrutos.map((c) => ({
               id: c.id,

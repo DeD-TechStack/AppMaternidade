@@ -28,6 +28,11 @@ export function tituloDaAba(titulo: string): string {
   return `${titulo} | ${MARCA}`
 }
 
+/** O título da aba das páginas públicas, da 404 e de /sistema: "<nome da página> · AppMaternidade". */
+export function tituloPublico(nome: string): string {
+  return `${nome} · ${MARCA}`
+}
+
 /**
  * O `h1` das telas com a cena de mel: a primeira linha e a segunda, esta inteira em itálico. Cada uma
  * diz o que a família ganha, e não o que o site é. Linhas curtas: cada uma cabe numa linha na coluna do
@@ -395,6 +400,8 @@ export const CONTA = {
       titulo: 'Excluir a sua conta?',
       texto: 'Para confirmar, digite a senha da conta.',
       senha: 'Senha atual',
+      // Só neste campo: o login segue com TEXTOS_ERRO.credenciais ("E-mail ou senha não conferem.").
+      senhaErrada: 'A senha não confere.',
       confirmar: 'Excluir conta',
       cancelar: 'Cancelar',
     },

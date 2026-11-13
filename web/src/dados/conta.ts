@@ -30,6 +30,17 @@ export interface FamiliaResumo {
   meuPapel: Papel
   meuVinculoId: string
   meuAcessoAte: string | null
+  /**
+   * Os membros da família. Só vem com `minhasFamilias({ comMembros: true })` e só nas famílias em que
+   * a pessoa é responsável; sem a opção, a chave não existe.
+   */
+  membros?: Membro[]
+}
+
+/** As opções de `minhasFamilias`. */
+export interface OpcoesDeFamilias {
+  /** Traz, na mesma leitura, os membros das famílias em que a pessoa é responsável (sem bebês nem convites). */
+  comMembros?: boolean
 }
 
 export interface Bebe {
@@ -81,6 +92,9 @@ export interface PreviaConvite {
   bebes: string[]
 }
 
+/** O que `detalheFamilia` lê: tudo (bebês, membros, convites) ou só os membros. */
+export type EscopoDoDetalhe = 'completo' | 'membros'
+
 export type EventoSessao = 'entrou' | 'saiu' | 'recuperacao' | 'renovou' | 'usuario_atualizado'
 
 /**
@@ -103,8 +117,13 @@ export interface DadosConta {
   minhaConta(): Promise<Resultado<Conta | null>>
   criarMinhaConta(nome: string, fuso: string): Promise<Resultado<Conta>>
   atualizarMinhaConta(nome: string, fuso: string): Promise<Resultado<Conta>>
-  minhasFamilias(): Promise<Resultado<FamiliaResumo[]>>
-  detalheFamilia(familiaId: string): Promise<Resultado<DetalheFamilia>>
+  minhasFamilias(opcoes?: OpcoesDeFamilias): Promise<Resultado<FamiliaResumo[]>>
+  /**
+   * O detalhe de uma família. Com `escopo: 'membros'` lê só os membros (a tela que só precisa saber
+   * quem é responsável, como a Conta): `bebes` volta vazio e `convites` volta `null`, sem pedir as
+   * duas tabelas. Sem escopo, vale `'completo'`.
+   */
+  detalheFamilia(familiaId: string, escopo?: EscopoDoDetalhe): Promise<Resultado<DetalheFamilia>>
   criarFamilia(nome: string, fuso: string): Promise<Resultado<string>>
   atualizarFamilia(familiaId: string, nome: string, fuso: string): Promise<Resultado<FamiliaResumo>>
   cadastrarBebe(familiaId: string, nome: string, nascimento: string): Promise<Resultado<Bebe>>

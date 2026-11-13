@@ -14,6 +14,7 @@ import { Numeros } from '../componentes/campo/Numeros.tsx'
 import { PainelCampo, type VariantePainel } from '../componentes/campo/PainelCampo.tsx'
 import { TabelaComparacao } from '../componentes/campo/TabelaComparacao.tsx'
 import { Titulo } from '../componentes/campo/Titulo.tsx'
+import { NOMES_DE_PAGINA } from '../conteudo/publicas-texto.ts'
 import { FATOS } from '../conteudo/textos.ts'
 import {
   ILUSTRACOES_DA_AMOSTRA,
@@ -27,6 +28,7 @@ import { CamadaHover } from '../movimento/CamadaHover.tsx'
 import { Cortina } from '../movimento/Cortina.tsx'
 import { EntradaCena } from '../movimento/EntradaCena.tsx'
 import { LinhasEscalonadas } from '../movimento/LinhasEscalonadas.tsx'
+import { useTituloDaPagina } from './publicas/useTitulo.ts'
 
 interface PropsSecao {
   /** Âncora da seção na página. */
@@ -97,6 +99,7 @@ const PAINEIS: ReadonlyArray<{ variante: VariantePainel; nome: string; uso: stri
  * visita, e o painel da abertura entra quando ela sobe.
  */
 export function Sistema() {
+  useTituloDaPagina(NOMES_DE_PAGINA.sistema)
   const [cortinaFeita, setCortinaFeita] = useState(false)
   const aoTerminarCortina = useCallback(() => setCortinaFeita(true), [])
   const idPaleta = useId()

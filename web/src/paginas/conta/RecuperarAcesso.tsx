@@ -8,7 +8,8 @@ import { useFocoNoResumo } from '../../componentes/conta/foco.ts'
 import { MolduraPublica } from '../../componentes/conta/MolduraPublica.tsx'
 import { BOTAO_PRINCIPAL, BOTAO_SECUNDARIO, LINK_ALVO, RegiaoStatus, ResumoErro } from '../../componentes/conta/Partes.tsx'
 import { useDadosConta } from '../../componentes/conta/sessao.tsx'
-import { COMUM, MANCHETES, RECUPERAR, TITULOS, textoDoErro } from '../../conteudo/conta.ts'
+import { COMUM, MANCHETES, RECUPERAR, TEXTOS_ERRO, TITULOS, textoDoErro } from '../../conteudo/conta.ts'
+import { emailComFormatoValido } from '../../conteudo/email.ts'
 import type { Resultado } from '../../dados/comum.ts'
 
 // /recuperar-acesso (RF-12). Nenhum resultado depende de a conta existir, então nenhum a revela:
@@ -35,8 +36,8 @@ export function RecuperarAcesso() {
 
   function aoEnviar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault()
-    if (!email.trim()) {
-      setErroLocal(COMUM.escrevaEmail)
+    if (!email.trim() || !emailComFormatoValido(email)) {
+      setErroLocal(email.trim() ? TEXTOS_ERRO.email_invalido : COMUM.escrevaEmail)
       return emailRef.current?.focus()
     }
     setErroLocal(null)
