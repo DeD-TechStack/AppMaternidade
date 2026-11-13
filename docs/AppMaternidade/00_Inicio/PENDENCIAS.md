@@ -43,17 +43,26 @@ Retomada 12/11 ~01h15 (sessão nova do líder): cron `retorno-oc` retomado; 37b 
 - H-3g **t_b27d2b91**: lint bloqueante, CSS comum, `PEDIDOS_COMUNS.md`, medida das 9 rotas.
 - H-4 **t_e53dea70**: números → replica-diff → juízes → `HARMONIA/trabalho/h4/GALERIA.html` para Daniel.
 
-**Em paralelo (antecipados em 13/11):**
-- P-55 **t_6544886b**: QA do site inteiro.
-- P-56 **t_506d9c94**: acessibilidade.
-- P-54 **t_0dc61db7**: pedidos repetidos ao banco no casco logado.
-
-Achados `must` da P-55 e da P-56 viram cartões de correção, com escopo fora dos cartões de área (ou, se cair dentro, comentário no cartão da área).
-
-**Outros:**
-- MAT-48g t_0bfed15d: em revisão, sem código (não reproduziu); se aceita, fechar sem integrar.
-- MAT-37g t_1757260d: espera o Google (Daniel).
-- POL-ABR t_d04a8a7d: estacionado.
+**Estado dos cartões (13/11 ~21h, troca de sessão pedida pela infra, t_19ee8097):**
+- **H-3a t_e9313367:** feito em 526a75c; o líder autorizou 2 testes (680→640) e o `--base 3c03656` (comentário 784); vai pedir revisão. Ao integrar: soltar H-3b..f e QA-F1 t_e983505a.
+- **Em revisão** (integrar na aprovação; conferir as linhas +/− contra o revisado):
+  - P-54 t_0dc61db7 (179e84f);
+  - P-55 t_6544886b (só relatório);
+  - P-56 t_506d9c94 (só relatório);
+  - QA-F3 t_b12ec1f4 (1d774bb; o comentário 781 foi para a A11Y-F2, 785/786).
+- **Rodando:**
+  - QA-F2 t_1dcaa165 (Rotina);
+  - MAT-48g t_0bfed15d (sem código; se aceita, fechar sem integrar).
+- **Esperando o pai:**
+  - A11Y-F1 t_35476306, depois da QA-F2;
+  - A11Y-F2 t_a37f1086, depois da QA-F3;
+  - QA-F1 t_e983505a, depois da H-3a;
+  - H-3b..f, depois da H-3a;
+  - H-3g t_b27d2b91, depois das áreas;
+  - H-4 t_e53dea70.
+- **Spec RF-12:** um subagente (deleg_ecf36e88) escreve `_staging/appmaternidade/RF12/SPEC_RF12.md`. Depois: explique de volta (outro subagente) → cartões.
+- **Decisões de Daniel em aberto:** P-74 RF-12 (padrão: fazer), P-75 RF-14 (nada começa sem ele), P-76 "Revisão pendente" (padrão: manter).
+- **Relatórios:** `C:/OrchestrationLab/projetos/_staging/appmaternidade/PRE_LANCAMENTO/QA/RELATORIO.md` e `.../A11Y/RELATORIO.md`.
 
 **Regras de integração (sem exceção):**
 - `INTEGRANDO` no cartão.
