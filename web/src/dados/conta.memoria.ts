@@ -7,6 +7,7 @@ import type {
   ConviteResumo,
   DadosConta,
   DetalheFamilia,
+  EscopoDoDetalhe,
   EventoSessao,
   FamiliaResumo,
   Membro,
@@ -390,7 +391,7 @@ export function criarDadosContaMemoria(fixture: FixtureConta, opcoes: OpcoesMemo
     return ok(ordenarPor(lista, (f) => [f.criadaEm, f.id]))
   }
 
-  function detalheFamilia(familiaId: string): Resultado<DetalheFamilia> {
+  function detalheFamilia(familiaId: string, escopo: EscopoDoDetalhe = 'completo'): Resultado<DetalheFamilia> {
     const usuario = usuarioAtual()
     if (!usuario) return falhaAuth('sessao_encerrada')
     const achado = alcance(familiaId, usuario.id, 'familia inexistente', false)
@@ -409,6 +410,9 @@ export function criarDadosContaMemoria(fixture: FixtureConta, opcoes: OpcoesMemo
       validoAte: v.validoAte,
       souEu: v.contaId === usuario.id,
     }))
+
+    // Só os membros: nem bebês nem convites são lidos (como no banco).
+    if (escopo === 'membros') return ok({ familia: resumo(familia, meu), bebes: [], membros, convites: null })
 
     const listaDeBebes = ordenarPor(
       bebes.filter((b) => b.familiaId === familiaId),

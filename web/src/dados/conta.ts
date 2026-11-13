@@ -81,6 +81,9 @@ export interface PreviaConvite {
   bebes: string[]
 }
 
+/** O que `detalheFamilia` lê: tudo (bebês, membros, convites) ou só os membros. */
+export type EscopoDoDetalhe = 'completo' | 'membros'
+
 export type EventoSessao = 'entrou' | 'saiu' | 'recuperacao' | 'renovou' | 'usuario_atualizado'
 
 /**
@@ -104,7 +107,12 @@ export interface DadosConta {
   criarMinhaConta(nome: string, fuso: string): Promise<Resultado<Conta>>
   atualizarMinhaConta(nome: string, fuso: string): Promise<Resultado<Conta>>
   minhasFamilias(): Promise<Resultado<FamiliaResumo[]>>
-  detalheFamilia(familiaId: string): Promise<Resultado<DetalheFamilia>>
+  /**
+   * O detalhe de uma família. Com `escopo: 'membros'` lê só os membros (a tela que só precisa saber
+   * quem é responsável, como a Conta): `bebes` volta vazio e `convites` volta `null`, sem pedir as
+   * duas tabelas. Sem escopo, vale `'completo'`.
+   */
+  detalheFamilia(familiaId: string, escopo?: EscopoDoDetalhe): Promise<Resultado<DetalheFamilia>>
   criarFamilia(nome: string, fuso: string): Promise<Resultado<string>>
   atualizarFamilia(familiaId: string, nome: string, fuso: string): Promise<Resultado<FamiliaResumo>>
   cadastrarBebe(familiaId: string, nome: string, nascimento: string): Promise<Resultado<Bebe>>
