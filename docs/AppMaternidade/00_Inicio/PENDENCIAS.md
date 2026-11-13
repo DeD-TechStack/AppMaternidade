@@ -37,7 +37,7 @@ Retomada 12/11 ~01h15 (sessão nova do líder): cron `retorno-oc` retomado; 37b 
 - **Como foi feita:** `hermes kanban block --kind needs_input "[decisor: Daniel] pausa de 13/11 …"` em t_e9313367, t_1dcaa165, t_6544886b e t_506d9c94. As duas primeiras caíram em **triage** (laço de bloqueio); as duas últimas ficaram `blocked`. A A11Y-F2 t_a37f1086 não aceitou o bloqueio: está `scheduled` com OC_RUN `.oc/1`, e o OpenCode morre no desligamento, então na retomada a rodada é refeita. O cron `retorno-oc-appmaternidade` **cacefbc1849d** está pausado. Os `todo` têm pais abertos e não despacham sozinhos. MAT-37g e POL-ABR seguem estacionados.
 - **Na retomada, nesta ordem:**
   1. `hermes cron resume cacefbc1849d`;
-  2. tirar t_e9313367 e t_1dcaa165 da triage por PATCH (browser 127.0.0.1:9119, header `X-Hermes-Session-Token`, `{status:'ready', assignee}`): H-3a com assignee **executor-appmaternidade** (correção 1/2 da R1, se a revisão ainda não terminou; confira os runs antes) e QA-F2 com executor;
+  2. tirar t_e9313367 e t_1dcaa165 da triage por PATCH (browser 127.0.0.1:9119, header `X-Hermes-Session-Token`, `{status:'ready', assignee}`): H-3a com assignee **revisor-appmaternidade**: a correção 1/2 já foi entregue antes da pausa, com R1 e R2 resolvidos; o código de produto continua o HEAD 526a75c e só o `medir_h.js` do staging mudou; o pre_revisao estava ok. Falta a revisão da rodada 2 e QA-F2 com executor;
   3. `unblock` t_6544886b e t_506d9c94 (revisões da rodada 2 de P-55 e P-56);
   4. A11Y-F2: refazer a rodada do OpenCode, ou deixar o worker religar.
 - **Medida do marco 10 (4b), infra:** taxa de devolução 54% (7 de 13 revisões devolvidas). O diagnóstico está na infra, `deleg_2554a5ee`. Antes de criar cartões, ler esse diagnóstico.
