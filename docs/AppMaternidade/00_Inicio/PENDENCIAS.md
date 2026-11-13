@@ -22,7 +22,7 @@ Retomada 12/11 ~01h15 (sessão nova do líder): cron `retorno-oc` retomado; 37b 
 - 13/11 (chat): "abra quantas frentes forem necessárias".
 - 13/11 ~18h50 (t_ed69e09b): foco total no AppMaternidade; teto do host de 10 (o board aceita 8, `max_spawn`); abrir toda frente independente com spec pronta, priorizando fechar o site; laço repetido de teste intermitente com no máximo 2 suítes em paralelo; disco C ≥ 25 GB livres; pausa (desligar o PC) pode vir a qualquer hora.
 
-**Ramo:** `origin/int/refazer` = **3c03656e1e0af0118b92447933f8a373a12890f4**. Integrações de 13/11, com recibo em cada cartão:
+**Ramo:** `origin/int/refazer` = **d8287bf3edf5504a98ec5e2cce1524ad0cf58d7c** (P-54, ff sobre 3c03656). Integrações de 13/11, com recibo em cada cartão:
 - 40c a003fe4;
 - 39b fcf47fc;
 - P-50 0f35191 (ff);
@@ -61,7 +61,7 @@ Retomada 12/11 ~01h15 (sessão nova do líder): cron `retorno-oc` retomado; 37b 
   - H-3g t_b27d2b91, depois das áreas;
   - H-4 t_e53dea70.
 - **Spec RF-12:** `_staging/appmaternidade/RF12/SPEC_RF12.md` v1 em rascunho (faixa grande, RF12:RF-01..17 e RN-01..07, premissas P1-P6 à vista de Daniel). Explique de volta R1 por outra família (codex gpt-6-astra, só leitura) rodando, com a saída em `RF12/EXPLIQUE_R1_codex.md`. Depois: corrigir, rodar o painel EGM (7 revisores + síntese, portão completo) → APROVADA → cartões I-RF12-1 → I-RF12-2 → J-RF12-1.
-- **P-54 t_0dc61db7:** aprovada em d8287bf; ff em `_int40a` (HEAD d8287bf); verificação do líder em `.oc/lider_verif/p54_exits.txt`. Se estiver verde: push do SHA completo, recibo, PENDENCIAS.
+- **P-54 t_0dc61db7:** INTEGRADA (ff d8287bf, check 2944, commits OK 440, recibo 793). `origin/int/refazer` = **d8287bf3edf5504a98ec5e2cce1524ad0cf58d7c**.
 - **Decisões de Daniel em aberto:** P-74 RF-12 (padrão: fazer), P-75 RF-14 (nada começa sem ele), P-76 "Revisão pendente" (padrão: manter).
 - **Relatórios:** `C:/OrchestrationLab/projetos/_staging/appmaternidade/PRE_LANCAMENTO/QA/RELATORIO.md` e `.../A11Y/RELATORIO.md`.
 
@@ -236,7 +236,7 @@ Medidas: `C:/OrchestrationLab/projetos/_staging/appmaternidade/HARMONIA/MEDIDAS.
 - [x eebd1c5] P-64 MAT-39a g2 (APPROVED_WITH_LIMITS na r3, 9142ef1, integrada pelo merge eebd1c5, check 2423, commits OK 381, recibo 655; evidência pendente: madrugada com o botão do painel mel sem fundo escuro, levado à P-51, e a matriz DES-09/larguras/temas): a página logada /app/desenvolvimento (rotas, item no cabeçalho logado, os 9 itens de conteúdo da base) nunca foi feita, porque a 36r-A só refez a página pública; sucessora de t_55a580e8 sobre 7509958 (12/11)
 - [x fcf47fc] P-13 MAT-39b: tummy time ligado à rotina | depende de 38a (integrada) e da 39a g2 t_30ad7504 (comentário 577 com a base)
 - [x 22ff7cb] P-14 MAT-40a g2 t_de06bd20: Comunidade ligada ao banco, APPROVED_WITH_LIMITS (526c396) e integrada pelo merge 22ff7cb (diff idêntico ao revisado, check 1679 testes, commits OK; recibo no comentário 518). Evidência pendente em P-62; pedidos de cuidado da página Conta em P-54 | 11/11
-- [~ t_0dc61db7] P-54 (13/11: aberto em paralelo ao item H, pedido de Daniel "abrir quantas frentes forem necessárias") (dado da 40a: na página /app/conta, a PaginaConta.tsx da MAT-37 faz 20 GET bebes, 20 convites e 68 vinculos num passeio; nada na Comunidade) Minimização de dados no casco logado: a SessaoInterna/minhaConta (MAT-37) pede `bebes`, `vinculos` e `convites` também nas páginas da Comunidade. Não é leitura da Comunidade (decisão D1 do líder na 40a, comentário 460), mas o casco deve pedir só o que a página mostra. Avaliar depois da 40a com a lista `CASCO_RF14` do HANDOFF dela
+- [x d8287bf] P-54 (13/11: aberto em paralelo ao item H, pedido de Daniel "abrir quantas frentes forem necessárias") (dado da 40a: na página /app/conta, a PaginaConta.tsx da MAT-37 faz 20 GET bebes, 20 convites e 68 vinculos num passeio; nada na Comunidade) Minimização de dados no casco logado: a SessaoInterna/minhaConta (MAT-37) pede `bebes`, `vinculos` e `convites` também nas páginas da Comunidade. Não é leitura da Comunidade (decisão D1 do líder na 40a, comentário 460), mas o casco deve pedir só o que a página mostra. Avaliar depois da 40a com a lista `CASCO_RF14` do HANDOFF dela
 - [x 48ba136] P-15 MAT-40b t_359ab800: painel de moderação (M1 a M5) ligado ao banco, APPROVED_WITH_LIMITS na r2 e integrada por fast-forward c9e3580..48ba136 (check 2283 testes, commits OK 368; recibo no comentário 618). Evidência pendente em P-62 (medida de M2, temas/larguras/estados no navegador, geometria a 200%, teclado reverso, variantes M3/M4 depois do F5, HANDOFF e PROVA B) | 12/11
 - [D] P-16 MAT-37g t_1757260d "Entrar com Google" | espera Daniel decidir o Google OAuth; até lá o site mostra "a definir"
 
