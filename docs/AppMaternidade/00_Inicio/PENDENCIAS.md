@@ -22,47 +22,39 @@ Retomada 12/11 ~01h15 (sessão nova do líder): cron `retorno-oc` retomado; 37b 
 - 13/11 (chat): "abra quantas frentes forem necessárias".
 - 13/11 ~18h50 (t_ed69e09b): foco total no AppMaternidade; teto do host de 10 (o board aceita 8, `max_spawn`); abrir toda frente independente com spec pronta, priorizando fechar o site; laço repetido de teste intermitente com no máximo 2 suítes em paralelo; disco C ≥ 25 GB livres; pausa (desligar o PC) pode vir a qualquer hora.
 
-**Ramo:** `origin/int/refazer` = **d8287bf3edf5504a98ec5e2cce1524ad0cf58d7c** (P-54, ff sobre 3c03656). Integrações de 13/11, com recibo em cada cartão:
+**Ramo:** `origin/int/refazer` = **38f07848677f4c9840226d19c8b2680a513d31d3** (13/11 ~21h30). Integrações de 13/11, com recibo no cartão:
 - 40c a003fe4;
 - 39b fcf47fc;
-- P-50 0f35191 (ff);
+- P-50 0f35191;
 - H-2 2a55145;
-- MAT-48f 3c03656.
+- MAT-48f 3c03656;
+- P-54 d8287bf;
+- QA-F3 38f0784.
 
-`main` intocada (P-19). Worktree de integração: `.worktrees/_int40a`, em 3c03656, limpa; logs em `.oc/lider_verif/`. O checkout principal só tem commits locais de registro (docs), sem push.
+`main` está intocada (P-19). Worktree de integração: `.worktrees/_int40a`, em 38f0784, limpa; logs em `.oc/lider_verif/`. O checkout principal só tem commits locais de registro (docs), sem push. A MAT-48g t_0bfed15d foi fechada sem código.
 
-**Item H** (specs em `C:/OrchestrationLab/projetos/_staging/appmaternidade/HARMONIA/`: MEDIDAS.md, SPEC_H.md v3, SPEC_H3.md v2, cartoes/H3_COMUM.md):
-- H-2: integrada. Utilitários com prefixo `esp-`, como `p-esp-secao`.
-- H-3a **t_e9313367**: rodando (primitivas, casco, /sistema, `medir_h.js`, leitura 640).
-- Áreas, filhas da H-3a, entram juntas quando ela integrar:
-  - H-3b t_b4446ca7 Início;
-  - H-3c t_04e1a709 páginas públicas;
-  - H-3d t_5866d349 Acesso e Conta;
-  - H-3e t_b8d3d400 Rotina;
-  - H-3f t_e72eacf8 Comunidade/Desenvolvimento logado/Moderação.
-- H-3g **t_b27d2b91**: lint bloqueante, CSS comum, `PEDIDOS_COMUNS.md`, medida das 9 rotas.
-- H-4 **t_e53dea70**: números → replica-diff → juízes → `HARMONIA/trabalho/h4/GALERIA.html` para Daniel.
-
-**Estado dos cartões (13/11 ~21h, troca de sessão pedida pela infra, t_19ee8097):**
-- **H-3a t_e9313367:** feito em 526a75c; o líder autorizou 2 testes (680→640) e o `--base 3c03656` (comentário 784); vai pedir revisão. Ao integrar: soltar H-3b..f e QA-F1 t_e983505a.
-- **Em revisão** (integrar na aprovação; conferir as linhas +/− contra o revisado):
-  - P-54 t_0dc61db7 (179e84f);
-  - P-55 t_6544886b (só relatório);
-  - P-56 t_506d9c94 (só relatório);
-  - QA-F3 t_b12ec1f4 (1d774bb; o comentário 781 foi para a A11Y-F2, 785/786).
-- **Rodando:**
-  - QA-F2 t_1dcaa165 (Rotina);
+**Estado dos cartões na troca de sessão (13/11 ~21h30; infra t_2b53ab3f):**
+- **H-3a t_e9313367:** devolvida na R1 (causa: codigo: falso negativo de `max-w-leitura` no critério (e) do `medir_h.js` e 3 alertas do `layout.css`), correção 1/2 com o executor. Ao aprovar: integrar, depois soltar H-3b..f e QA-F1 t_e983505a, que bloqueiam como `transient` até lá.
+- **QA-F2 t_1dcaa165:** de volta à fila depois da triagem. O EPERM vinha da P-56, que tinha ligado o `node_modules` dela ao da QA-F2; o Vite PID 10028 foi encerrado (comentários 798/799). A rodada 2 do código está pronta e falta testar e pedir revisão. A11Y-F1 t_35476306 espera por ela.
+- **A11Y-F2 t_a37f1086:** solta sobre 38f0784 (comentários 786, 792, 803).
+- **P-55 t_6544886b e P-56 t_506d9c94:** rodada 2 em revisão, só relatórios. Na aprovação: abrir cartão para cada `must`/`should` novo sem cartão, que o HANDOFF lista.
 - **Esperando o pai:**
-  - A11Y-F1 t_35476306, depois da QA-F2;
-  - A11Y-F2 t_a37f1086, depois da QA-F3;
+  - H-3b t_b4446ca7, H-3c t_04e1a709, H-3d t_5866d349, H-3e t_b8d3d400 e H-3f t_e72eacf8, depois da H-3a;
   - QA-F1 t_e983505a, depois da H-3a;
-  - H-3b..f, depois da H-3a;
   - H-3g t_b27d2b91, depois das áreas;
-  - H-4 t_e53dea70.
-- **Spec RF-12:** `_staging/appmaternidade/RF12/SPEC_RF12.md` v1 em rascunho (faixa grande, RF12:RF-01..17 e RN-01..07, premissas P1-P6 à vista de Daniel). Explique de volta R1 por outra família (codex gpt-6-astra) FEITO: **Blocker 0, Major 8, Nit 4** (`RF12/EXPLIQUE_R1_codex.md`). PRÓXIMO PASSO da sessão nova: corrigir os 8 Majors na spec (v2) e rodar o painel EGM. Depois: corrigir, rodar o painel EGM (7 revisores + síntese, portão completo) → APROVADA → cartões I-RF12-1 → I-RF12-2 → J-RF12-1.
-- **P-54 t_0dc61db7:** INTEGRADA (ff d8287bf, check 2944, commits OK 440, recibo 793). `origin/int/refazer` = **d8287bf3edf5504a98ec5e2cce1524ad0cf58d7c**.
-- **Decisões de Daniel em aberto:** P-74 RF-12 (padrão: fazer), P-75 RF-14 (nada começa sem ele), P-76 "Revisão pendente" (padrão: manter).
+  - H-4 t_e53dea70, depois da H-3g.
+- **Spec RF-12:** `_staging/appmaternidade/RF12/SPEC_RF12.md` v1, rascunho, faixa grande. O explique de volta R1 pela outra família (codex) deu Blocker 0, Major 8, Nit 4 (`RF12/EXPLIQUE_R1_codex.md`). Próximo: v2 com os 8 Majors, depois o painel EGM (7 revisores + síntese), APROVADA e os cartões I-RF12-1 → I-RF12-2 → J-RF12-1. Premissas P1 a P6 à vista de Daniel.
+- **Decisões de Daniel em aberto:**
+  - P-74 RF-12: padrão fazer, a spec já anda;
+  - P-75 RF-14 (sem PWA): nada começa sem ele;
+  - P-76 "Revisão profissional: pendente": padrão manter.
 - **Relatórios:** `C:/OrchestrationLab/projetos/_staging/appmaternidade/PRE_LANCAMENTO/QA/RELATORIO.md` e `.../A11Y/RELATORIO.md`.
+- **Depois do item H e das correções:**
+  - P-57, prontidão;
+  - P-58, prova antes da main;
+  - refazer o contraste e os 200% da P-56;
+  - galeria do H-4 para Daniel;
+  - o "pode" de Daniel (P-19).
 
 **Regras de integração (sem exceção):**
 - `INTEGRANDO` no cartão.
