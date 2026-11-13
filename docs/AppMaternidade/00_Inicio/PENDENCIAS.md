@@ -60,7 +60,7 @@ Retomada 12/11 ~01h15 (sessão nova do líder): cron `retorno-oc` retomado; 37b 
   - H-3b..f, depois da H-3a;
   - H-3g t_b27d2b91, depois das áreas;
   - H-4 t_e53dea70.
-- **Spec RF-12:** `_staging/appmaternidade/RF12/SPEC_RF12.md` v1 em rascunho (faixa grande, RF12:RF-01..17 e RN-01..07, premissas P1-P6 à vista de Daniel). Explique de volta R1 por outra família (codex gpt-6-astra, só leitura) rodando, com a saída em `RF12/EXPLIQUE_R1_codex.md`. Depois: corrigir, rodar o painel EGM (7 revisores + síntese, portão completo) → APROVADA → cartões I-RF12-1 → I-RF12-2 → J-RF12-1.
+- **Spec RF-12:** `_staging/appmaternidade/RF12/SPEC_RF12.md` v1 em rascunho (faixa grande, RF12:RF-01..17 e RN-01..07, premissas P1-P6 à vista de Daniel). Explique de volta R1 por outra família (codex gpt-6-astra) FEITO: **Blocker 0, Major 8, Nit 4** (`RF12/EXPLIQUE_R1_codex.md`). PRÓXIMO PASSO da sessão nova: corrigir os 8 Majors na spec (v2) e rodar o painel EGM. Depois: corrigir, rodar o painel EGM (7 revisores + síntese, portão completo) → APROVADA → cartões I-RF12-1 → I-RF12-2 → J-RF12-1.
 - **P-54 t_0dc61db7:** INTEGRADA (ff d8287bf, check 2944, commits OK 440, recibo 793). `origin/int/refazer` = **d8287bf3edf5504a98ec5e2cce1524ad0cf58d7c**.
 - **Decisões de Daniel em aberto:** P-74 RF-12 (padrão: fazer), P-75 RF-14 (nada começa sem ele), P-76 "Revisão pendente" (padrão: manter).
 - **Relatórios:** `C:/OrchestrationLab/projetos/_staging/appmaternidade/PRE_LANCAMENTO/QA/RELATORIO.md` e `.../A11Y/RELATORIO.md`.
