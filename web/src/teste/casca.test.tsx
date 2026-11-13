@@ -147,13 +147,14 @@ describe('cabeçalho da área logada', () => {
     expect(within(cabecalho).queryByRole('link', { name: 'Entrar' })).toBeNull()
   })
 
-  it('a navegação é Hoje, Sessão, Desenvolvimento, Comunidade e Família, na ordem, vinda do registro das áreas, com o item Família ativo em /app/familia', () => {
+  it('a navegação é Hoje, Sessão, Histórico, Desenvolvimento, Comunidade e Família, na ordem, vinda do registro das áreas, com o item Família ativo em /app/familia', () => {
     const { container } = renderizarRota('/app/hoje')
     const nav = within(container.querySelector<HTMLElement>('header[data-cabecalho]')!).getByRole('navigation', { name: 'Site' })
     const links = within(nav).getAllByRole('link')
     expect(links.map((link) => [link.textContent, link.getAttribute('href')])).toEqual([
       ['Hoje', '/app/hoje'],
       ['Sessão', '/app/sessao'],
+      ['Histórico', '/app/historico'],
       ['Desenvolvimento', '/app/desenvolvimento'],
       ['Comunidade', '/app/comunidade'],
       ['Família', '/app/familia'],
@@ -161,6 +162,7 @@ describe('cabeçalho da área logada', () => {
     expect(ITENS_DO_CABECALHO.logado.map((item) => item.para)).toEqual([
       '/app/hoje',
       '/app/sessao',
+      '/app/historico',
       '/app/desenvolvimento',
       '/app/comunidade',
       '/app/familia',

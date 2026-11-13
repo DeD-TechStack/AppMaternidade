@@ -20,6 +20,7 @@ import { Botao } from '../base/Botao.tsx'
 import { AvisoDeErro } from './AvisoDeErro.tsx'
 import { CampoHorario } from './CampoHorario.tsx'
 import { useRotina, type BebeAtivo } from './contexto.ts'
+import { destinoDoFormulario } from './destinoDoFormulario.ts'
 import { useAcoesDaRotina } from './useAcoesDaRotina.ts'
 import {
   camposDoRegistro,
@@ -70,7 +71,7 @@ interface PropsDoControle {
 }
 
 /** Rótulo visível acima, o controle e a mensagem ligada por `aria-describedby` (ícone e palavras, nunca só cor). */
-function Controle({
+export function Controle({
   rotulo,
   erro,
   ajuda,
@@ -104,7 +105,7 @@ function Controle({
   )
 }
 
-function Selecao<T extends string>({
+export function Selecao<T extends string>({
   rotulo,
   valor,
   opcoes,
@@ -185,7 +186,8 @@ export function FormularioRegistro({ modo, ativo, tipoInicial, registro }: Props
   const emAndamento = registro !== undefined && registro.fim === null && ehTipoDeSessao(registro.tipo)
   const tipo = campos.tipo
   const mostraFim = temCampoDeFim(tipo, { modo, emAndamento, agora: 0 })
-  const destino = (location.state as { de?: string } | null)?.de === 'sessao' ? '/app/sessao' : '/app/hoje'
+  // A mesma regra do link superior da tela; a edição aberta pela URL, sem `state`, volta ao detalhe (R38-10, R38-22).
+  const destino = destinoDoFormulario(location.state, registro?.id ?? null).para
 
   // O foco vai ao primeiro campo com erro (na ordem do DOM) a cada validação que falha.
   useEffect(() => {

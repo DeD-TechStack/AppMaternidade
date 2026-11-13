@@ -1168,3 +1168,153 @@ body:has([data-barra-registrar]) [data-rodape] {
     font-size: 7rem !important;
   }
 }
+
+/* MAT-38b: Histórico, detalhe, lixeira e notas. Só acréscimo; as cores vêm dos tokens e das variáveis de uso. */
+
+/* O link do texto cobre a linha inteira (o item pai é `relative`) e a própria caixa do `<a>` também tem 44 × 44 px
+   no mínimo: o respiro vertical é padding, e a margem negativa de mesmo tamanho devolve a linha de 25 px ao
+   tamanho de antes. Texto de duas linhas cresce para dentro da margem, sem cobrir a linha de baixo. */
+.rotina-link-esticado {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  margin-block: -0.59375rem;
+  padding-block: 0.59375rem;
+  text-decoration: none;
+}
+
+.rotina-link-esticado:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.rotina-link-esticado::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+/* A fila dos 7 dias que terminam no dia escolhido: sete colunas iguais, sem rolagem horizontal em 390 px. */
+.rotina-fila-de-dias {
+  display: grid;
+  max-width: 30rem;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rotina-dia-da-fila {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.25rem 0;
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-campo);
+  background-color: transparent;
+  color: var(--cor-texto);
+}
+
+.rotina-dia-da-fila:hover {
+  border-color: var(--cor-linha);
+}
+
+.rotina-dia-da-fila[aria-current='date'] {
+  border-color: var(--cor-texto);
+  background-color: var(--cor-papel-fundo);
+}
+
+/* A semana: no celular, o dia ocupa a linha de cima e os totais ficam em duas colunas. */
+.rotina-semana-linha {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.25rem 1rem;
+  box-sizing: border-box;
+  padding: 0.875rem 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.rotina-semana-linha > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.rotina-semana-linha > :first-child {
+  grid-column: 1 / -1;
+  white-space: normal;
+}
+
+.rotina-semana-linha:hover {
+  background-color: var(--cor-papel-fundo);
+}
+
+/* Cada total da semana: o rótulo em cima (não quebra a linha do grid) e o valor embaixo. */
+.rotina-semana-celula {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.rotina-semana-rotulo {
+  font-size: 0.9375rem;
+  line-height: 1.375rem;
+  color: var(--cor-texto-2);
+  overflow-wrap: anywhere;
+}
+
+.rotina-semana-valor {
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+/* Em rem, para a grade de cinco colunas acompanhar o tamanho da fonte: com a raiz em 200%, 64rem já são 2048 px. */
+@media (min-width: 64rem) {
+  .rotina-semana-linha {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.4fr) repeat(3, minmax(0, 1fr));
+    align-items: center;
+  }
+
+  .rotina-semana-linha > :first-child {
+    grid-column: auto;
+  }
+}
+
+/* O link de texto da confirmação ("Ver no Histórico"): com a fonte grande o texto quebra dentro do botão
+   em vez de passar da caixa e da janela. O alvo de toque continua o mesmo (min-height do `.cm-botao`). */
+.cm-botao.rotina-link-quebra {
+  height: auto;
+  min-width: 0;
+  max-width: 100%;
+  padding-block: 0.5rem;
+  white-space: normal;
+  text-align: start;
+  overflow-wrap: anywhere;
+}
+
+/* A barra decorativa do sono da semana: largura em % na própria barra; o valor sempre aparece em texto. */
+.rotina-barra {
+  display: block;
+  height: 0.5rem;
+  margin-top: 0.25rem;
+  border-radius: var(--radius-pilula);
+  background-color: var(--color-oliva);
+}
+
+:root[data-tema='madrugada'] .rotina-barra {
+  background-color: var(--color-mel);
+}
+
+/* Madrugada: todo alvo das telas da rotina tem 56 px de altura (G11); --alvo-toque já vale 56 neste tema. */
+:root[data-tema='madrugada'] main.rotina-principal :is(a, button, select, textarea, input:not([type='checkbox'], [type='radio'])) {
+  min-height: var(--alvo-toque);
+}

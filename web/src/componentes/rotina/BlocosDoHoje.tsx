@@ -16,10 +16,12 @@ interface NotasProps {
   autorDe: (nota: Nota) => string
   agora: number
   className?: string
+  /** No 38b, o link `Ver notas`, logo abaixo da lista. */
+  rodape?: ReactNode
 }
 
 /** "Para você saber": as notas em destaque da família, com o autor e a hora (R38-05). */
-export function ParaVoceSaber({ notas, autorDe, agora, className }: NotasProps) {
+export function ParaVoceSaber({ notas, autorDe, agora, className, rodape }: NotasProps) {
   const idTitulo = useId()
   return (
     <section aria-labelledby={idTitulo} data-notas="" className={className}>
@@ -49,6 +51,7 @@ export function ParaVoceSaber({ notas, autorDe, agora, className }: NotasProps) 
           })}
         </ul>
       )}
+      {rodape}
     </section>
   )
 }
@@ -66,10 +69,14 @@ interface DesdeProps {
    */
   marcaDe?: (registro: Registro) => ReactNode
   className?: string
+  /** No 38b: a rota do detalhe de cada item (o item vira link). Sem ela, os itens são só texto. */
+  paraDetalhe?: (registro: Registro) => string
+  /** No 38b, o link `Ver no Histórico`, abaixo dos itens. */
+  rodape?: ReactNode
 }
 
 /** "Desde o seu último registro" (RF-07): o que as outras pessoas registraram depois do marco, até 5. */
-export function DesdeUltimoRegistro({ marcoEm, registros, fuso, autorDe, marcaDe, className }: DesdeProps) {
+export function DesdeUltimoRegistro({ marcoEm, registros, fuso, autorDe, marcaDe, className, paraDetalhe, rodape }: DesdeProps) {
   const idTitulo = useId()
   return (
     <section aria-labelledby={idTitulo} data-desde="" className={className}>
@@ -81,10 +88,18 @@ export function DesdeUltimoRegistro({ marcoEm, registros, fuso, autorDe, marcaDe
       ) : (
         <ul className={LISTA}>
           {registros.map((registro) => (
-            <ItemRegistro key={registro.id} registro={registro} fuso={fuso} autor={autorDe(registro)} marca={marcaDe?.(registro)} />
+            <ItemRegistro
+              key={registro.id}
+              registro={registro}
+              fuso={fuso}
+              autor={autorDe(registro)}
+              marca={marcaDe?.(registro)}
+              para={paraDetalhe?.(registro)}
+            />
           ))}
         </ul>
       )}
+      {rodape}
     </section>
   )
 }

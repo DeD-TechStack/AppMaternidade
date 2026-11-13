@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Link } from 'react-router'
 import { HOJE, ROTULO_TIPO, SESSOES } from '../../conteudo/rotina.ts'
 import type { Registro } from '../../dados/rotina.tipos.ts'
 import { formatarHora } from '../../prototipo/formatar.ts'
@@ -15,6 +16,8 @@ interface Props {
    * `span` com `data-marca-envio`. A MAT-38 nunca a passa. Sem `marca`, o `span` não existe.
    */
   marca?: ReactNode
+  /** No 38b: a rota do detalhe. Com ela, o texto do item é um link que cobre a linha inteira; sem ela, é só texto. */
+  para?: string
 }
 
 /**
@@ -27,16 +30,25 @@ export function MarcaDeEnvio({ marca }: { marca?: ReactNode }) {
 }
 
 /** Um item de registro: o avatar de quem registrou, o rótulo e o resumo, o autor e a hora do início. */
-export function ItemRegistro({ registro, fuso, autor, marca }: Props) {
+export function ItemRegistro({ registro, fuso, autor, marca, para }: Props) {
   const resumo = resumoDoRegistro(registro, fuso)
+  const texto = resumo ? HOJE.rotuloEResumo(ROTULO_TIPO[registro.tipo], resumo) : ROTULO_TIPO[registro.tipo]
   return (
     <li
       data-registro={registro.id}
-      className="flex items-center gap-3 border-t border-(--cor-fio-suave) py-3.5 first:border-t-0 lg:gap-4"
+      className="relative flex items-center gap-3 border-t border-(--cor-fio-suave) py-3.5 first:border-t-0 lg:gap-4"
     >
       <Avatar nome={autor} />
       <div className="min-w-0 flex-1">
-        <p className="font-medium">{resumo ? HOJE.rotuloEResumo(ROTULO_TIPO[registro.tipo], resumo) : ROTULO_TIPO[registro.tipo]}</p>
+        <p className="font-medium">
+          {para ? (
+            <Link to={para} state={{ foco: 'titulo' }} className="rotina-link-esticado">
+              {texto}
+            </Link>
+          ) : (
+            texto
+          )}
+        </p>
         <p className="text-[15px] leading-[22px] text-(--cor-texto-2)">{SESSOES.porAutor(autor)}</p>
       </div>
       <div className="flex shrink-0 items-center gap-2 text-[15px] leading-[22px] text-(--cor-texto-2)">

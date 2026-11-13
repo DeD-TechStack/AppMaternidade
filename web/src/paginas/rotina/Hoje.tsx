@@ -9,6 +9,7 @@ import { ALVO_APP } from '../../componentes/app/alvo.ts'
 import { Botao } from '../../componentes/base/Botao.tsx'
 import { Etiqueta } from '../../componentes/base/Etiqueta.tsx'
 import { AvisoDeErro } from '../../componentes/rotina/AvisoDeErro.tsx'
+import { AvisoDeFuso } from '../../componentes/rotina/AvisoDeFuso.tsx'
 import { AvisoDeLista } from '../../componentes/rotina/AvisoDeLista.tsx'
 import { BarraRegistroRapido, type BotaoRapido, type ItemDoMais } from '../../componentes/rotina/BarraRegistroRapido.tsx'
 import { DesdeUltimoRegistro, ParaVoceSaber } from '../../componentes/rotina/BlocosDoHoje.tsx'
@@ -23,7 +24,9 @@ import { useMadrugada } from '../../componentes/rotina/madrugada.ts'
 import { totaisDoDia } from '../../componentes/rotina/totaisDoDia.ts'
 import { useAcoesDaRotina, type ResultadoDoEncerramento } from '../../componentes/rotina/useAcoesDaRotina.ts'
 import { useSecao } from '../../componentes/rotina/useSecao.ts'
-import { COMUM, ESTADOS, HOJE, ROTULO_TIPO, SEM_RESULTADO, TITULOS } from '../../conteudo/rotina.ts'
+import { LinkDaRotina } from '../../componentes/rotina/LinkDaRotina.tsx'
+import { ORIGEM_HOJE } from '../../componentes/rotina/origemDasNotas.ts'
+import { COMUM, ESTADOS, HOJE, LIGACOES, ROTULO_TIPO, SEM_RESULTADO, TITULOS } from '../../conteudo/rotina.ts'
 import type { Resultado } from '../../dados/comum.ts'
 import { diaDaFamilia, formatarIdade, janelaDoDia, lerAparelho } from '../../dados/rotina.dia.ts'
 import { LIMITES, podeEscrever, type Lista, type Registro } from '../../dados/rotina.tipos.ts'
@@ -317,6 +320,11 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
               notas={lista.itens.filter((nota) => nota.destaqueAte !== null && Date.parse(nota.destaqueAte) > agora).slice(0, 3)}
               agora={agora}
               autorDe={(nota) => acoes.nomeDoAutor(nota.criadoPor, nota.familiaId)}
+              rodape={
+                <LinkDaRotina to="/app/notas" state={{ origem: ORIGEM_HOJE }} className="mt-1">
+                  {LIGACOES.verNotas}
+                </LinkDaRotina>
+              }
             />
             {lista.incompleta ? <AvisoDeLista limite={LIMITES.notas} dado="notas" className="mt-3" /> : null}
           </>
@@ -325,7 +333,18 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
       <SecaoDoHoje secao={desde} titulo={HOJE.desdeCarregando} papel={ativo.papel}>
         {(lido) =>
           lido.marco ? (
-            <DesdeUltimoRegistro marcoEm={Date.parse(lido.marco.recebidoEm)} registros={lido.novos} fuso={fuso} autorDe={autorDoRegistro} />
+            <DesdeUltimoRegistro
+              marcoEm={Date.parse(lido.marco.recebidoEm)}
+              registros={lido.novos}
+              fuso={fuso}
+              autorDe={autorDoRegistro}
+              paraDetalhe={(registro) => `/app/registro/${registro.id}`}
+              rodape={
+                <LinkDaRotina to="/app/historico" className="mt-1">
+                  {LIGACOES.verNoHistorico}
+                </LinkDaRotina>
+              }
+            />
           ) : null
         }
       </SecaoDoHoje>
@@ -463,11 +482,7 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
                 {ESTADOS.acessoPerdido}
               </p>
             ) : null}
-            {fusoDiferente ? (
-              <p className="text-[15px] leading-[22px] text-(--cor-texto-2)" data-fuso-diferente="">
-                {COMUM.fusoDiferente(aparelho, fuso)}
-              </p>
-            ) : null}
+            {fusoDiferente ? <AvisoDeFuso aparelho={aparelho} familia={fuso} /> : null}
           </div>
         ) : null}
 

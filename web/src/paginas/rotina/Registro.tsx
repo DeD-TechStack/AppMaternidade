@@ -5,7 +5,9 @@ import { AvisoDaTela } from '../../componentes/app/AvisoDaTela.tsx'
 import { AvisoDeErro } from '../../componentes/rotina/AvisoDeErro.tsx'
 import { FormularioRegistro } from '../../componentes/rotina/FormularioRegistro.tsx'
 import { TituloRotina } from '../../componentes/rotina/TituloRotina.tsx'
-import { useRotina, type BebeAtivo } from '../../componentes/rotina/contexto.ts'
+import { useRotina } from '../../componentes/rotina/contexto.ts'
+import { destinoDoFormulario } from '../../componentes/rotina/destinoDoFormulario.ts'
+import { textoDoPapel } from '../../componentes/rotina/textoDoPapel.ts'
 import { useSecao } from '../../componentes/rotina/useSecao.ts'
 import { COMUM, ESTADOS, ROTULO_TIPO, TITULOS } from '../../conteudo/rotina.ts'
 import type { Resultado } from '../../dados/comum.ts'
@@ -16,36 +18,36 @@ import { useTituloDaTela } from '../../prototipo/useTituloDaTela.ts'
 
 const PREFIXO = 'registro:'
 
-const VOLTAR = (
-  <Link
-    to="/app/hoje"
-    state={{ foco: 'titulo' }}
-    className="alvo-toque -ml-1 mb-3 inline-flex min-h-(--alvo-toque) items-center gap-1.5 rounded-pilula px-1 text-[17px] leading-[25px] font-medium no-underline underline-offset-4 hover:underline"
-    data-voltar=""
-  >
-    <ChevronLeft aria-hidden="true" className="size-5" strokeWidth={2} />
-    <span>{COMUM.voltarParaHoje}</span>
-  </Link>
-)
-
-/** O texto que ocupa o lugar do formulário para quem não pode criar nem alterar (R38-11). */
-function textoDoPapel(ativo: BebeAtivo): string {
-  if (ativo.arquivado) return ESTADOS.arquivado
-  return ativo.papel === 'cuidador' ? ESTADOS.cuidador : ESTADOS.observador
+/** O link de volta: ao Hoje, ou ao detalhe do registro quando o formulário foi aberto por `Editar` (R38-22). */
+function Voltar({ para, texto }: { para: string; texto: string }) {
+  return (
+    <Link
+      to={para}
+      state={{ foco: 'titulo' }}
+      className="alvo-toque -ml-1 mb-3 inline-flex min-h-(--alvo-toque) items-center gap-1.5 rounded-pilula px-1 text-[17px] leading-[25px] font-medium no-underline underline-offset-4 hover:underline"
+      data-voltar=""
+    >
+      <ChevronLeft aria-hidden="true" className="size-5" strokeWidth={2} />
+      <span>{texto}</span>
+    </Link>
+  )
 }
 
 /** A casca das telas de formulário: o link de volta, o título e o `<main>` único, com o aviso de demonstração. */
 function Tela({ titulo, linha, children }: { titulo: string; linha: string; children: ReactNode }) {
   const location = useLocation()
+  const { id } = useParams()
   const { principal, focarTitulo } = useTituloDaTela()
   const foco = focoDoEstado(location.state)
   useEffect(() => {
     if (foco === 'titulo') focarTitulo()
   }, [foco, location.key, focarTitulo])
+  const destino = destinoDoFormulario(location.state, ehUuid(id) ? id : null)
+  const voltar = <Voltar para={destino.para} texto={destino.texto} />
   return (
     <>
-      <main ref={principal} className="pb-16 text-[17px] leading-[25px]" data-tela="registro">
-        <TituloRotina antes={VOLTAR} titulo={titulo} linha={linha} />
+      <main ref={principal} className="rotina-principal pb-16 text-[17px] leading-[25px]" data-tela="registro">
+        <TituloRotina antes={voltar} titulo={titulo} linha={linha} />
         <div className="cm-area mt-6 lg:mt-10">{children}</div>
       </main>
       <AvisoDaTela />

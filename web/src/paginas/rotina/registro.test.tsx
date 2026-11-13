@@ -405,7 +405,7 @@ describe('a edição', () => {
     const alvo = registroDe(primeira.fixture, 'fralda', PESSOAS.bruno.id)
     primeira.unmount()
 
-    const { rotina, roteador } = await renderizarRotaPronta(`/app/registro/${alvo.id}/editar`, { mundo: primeira })
+    const { rotina } = await renderizarRotaPronta(`/app/registro/${alvo.id}/editar`, { mundo: primeira })
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Editar registro')
     expect((campo('Conteúdo') as HTMLSelectElement).value).toBe('xixi')
     expect(screen.queryByLabelText('Tipo do registro')).toBeNull()
@@ -414,7 +414,8 @@ describe('a edição', () => {
     digitar('Nota', 'Muito')
     await enviar()
 
-    expect(roteador.state.location.pathname).toBe('/app/hoje')
+    // Aberta pela URL, sem `state`, a edição volta ao detalhe do registro (R38-10, rodada 5).
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Registro')
     expect(status().querySelector('p')!.textContent).toBe('Registro salvo.')
     expect(within(status()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Fechar'])
     const lido = await rotina.registro(alvo.id)
@@ -458,7 +459,7 @@ describe('a edição', () => {
 
     expect(screen.getByText('Seu papel nesta família permite mudar só os registros que você fez.')).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'Salvar' })).toBeNull()
-    expect(screen.getByRole('link', { name: 'Voltar para Hoje' }).getAttribute('href')).toBe('/app/hoje')
+    expect(screen.getByRole('link', { name: 'Voltar para o registro' }).getAttribute('href')).toBe(`/app/registro/${alvo.id}`)
   })
 
   it('o observador e o bebê arquivado não abrem o formulário novo nem a edição', async () => {

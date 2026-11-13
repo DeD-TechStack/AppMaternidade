@@ -195,7 +195,7 @@ describe('o passo "Seu nome"', () => {
     expect(screen.queryByRole('navigation', { name: 'Principal' })).toBeNull()
     expect(barra.getByRole('link', { name: 'Conta' }).hasAttribute('aria-current')).toBe(false)
     const site = within(screen.getByRole('navigation', { name: 'Site' }))
-    expect(site.getAllByRole('link').map((link) => link.textContent)).toEqual(['Hoje', 'Sessão', 'Desenvolvimento', 'Comunidade', 'Família'])
+    expect(site.getAllByRole('link').map((link) => link.textContent)).toEqual(['Hoje', 'Sessão', 'Histórico', 'Desenvolvimento', 'Comunidade', 'Família'])
   })
 })
 

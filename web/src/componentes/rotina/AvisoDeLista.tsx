@@ -4,7 +4,7 @@ interface Props {
   /** O limite de linhas da leitura (`LIMITES`): o N da frase. */
   limite: number
   /** Qual lista passou do limite; fica no DOM para os testes e para a depuração. */
-  dado: 'emAndamento' | 'notas' | 'anteriores'
+  dado: 'emAndamento' | 'notas' | 'anteriores' | 'doDia' | 'sessoes' | 'semana' | 'lixeira' | 'alteracoes'
   className?: string
 }
 
