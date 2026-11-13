@@ -64,7 +64,7 @@ Achados `must` da P-55 e da P-56 viram cartões de correção, com escopo fora d
 - Soltar os filhos que esperam (eles bloqueiam como `transient` até a integração).
 
 **Atalhos e contornos deste host:**
-- O `preparar_oc.py` marca como tela todo cartão que mexe em web/src (pedido t_830d0730 na infra); cartão só de teste ou de dados tira à mão a linha `extratos/tela-*` do `opencode.json`.
+- O `preparar_oc.py` já não marca como tela os cartões só de teste ou de dados (infra, t_830d0730, equipe 2ec5bc7); há também `--sem-tela`. Não editar o `opencode.json` à mão.
 - Sair da triage: PATCH pelo browser (memória).
 
 **Como pausar:**
