@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, type FormEvent, type ReactNode, type RefObject } from 'react'
-import { COMUM, CONTA } from '../../conteudo/conta.ts'
+import { COMUM, CONTA, TEXTOS_ERRO } from '../../conteudo/conta.ts'
 import { CampoSenha } from './Campos.tsx'
 import { BOTAO_PRINCIPAL, BOTAO_SECUNDARIO } from './Partes.tsx'
 
@@ -91,7 +91,7 @@ export function DialogoExcluirConta({
           tamanho="app"
           valor={senha}
           aoMudar={aoMudarSenha}
-          erro={erroSenha}
+          erro={erroSenha === TEXTOS_ERRO.credenciais ? CONTA.excluir.dialogo.senhaErrada : erroSenha}
           refEntrada={refSenha}
         />
         <div className="flex flex-col gap-3 min-[30rem]:flex-row-reverse">

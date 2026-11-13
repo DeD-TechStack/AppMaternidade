@@ -495,6 +495,19 @@ const SOBRE: PaginaDeTexto = {
   ],
 }
 
+/**
+ * O nome curto, para o título da aba, das páginas que não são de leitura (as de leitura trazem o `nome`
+ * delas). "Como funciona" é o nome do link do site: o `h1` da página é a frase "Do primeiro dia à troca de
+ * turno.".
+ */
+export const NOMES_DE_PAGINA = {
+  comoFunciona: 'Como funciona',
+  cuidadoCompartilhado: 'Cuidado compartilhado',
+  desenvolvimento: 'Desenvolvimento',
+  naoEncontrada: 'Página não encontrada',
+  sistema: 'Sistema',
+} as const
+
 /** As seis páginas, pela chave que cada arquivo de página usa. */
 export const PAGINAS_DE_TEXTO = {
   regras: REGRAS,

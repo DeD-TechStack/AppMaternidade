@@ -503,14 +503,18 @@ describe('excluir conta: a caixa de confirmação', () => {
     expect(excluir).not.toHaveBeenCalled()
   })
 
-  it('senha errada: credenciais no campo, a caixa continua aberta e a conta fica intacta', async () => {
+  it('senha errada: "A senha não confere." no campo (QA-11), a caixa continua aberta e a conta fica intacta', async () => {
     const { dados } = await abrirDialogo()
     const excluir = vi.spyOn(dados, 'excluirConta')
 
     fireEvent.change(within(dialogo()).getByLabelText('Senha atual', { selector: 'input' }), { target: { value: 'errada' } })
     fireEvent.click(within(dialogo()).getByRole('button', { name: 'Excluir conta' }))
 
-    await waitFor(() => expect(within(dialogo()).getByText(TEXTOS_ERRO.credenciais)).toBeTruthy())
+    await waitFor(() => expect(within(dialogo()).getByText('A senha não confere.')).toBeTruthy())
+    expect(CONTA.excluir.dialogo.senhaErrada).toBe('A senha não confere.')
+    // O texto do login não muda: a mensagem nova é só deste campo.
+    expect(within(dialogo()).queryByText(TEXTOS_ERRO.credenciais)).toBeNull()
+    expect(TEXTOS_ERRO.credenciais).toBe('E-mail ou senha não conferem.')
     expect(within(dialogo()).getByLabelText('Senha atual', { selector: 'input' }).getAttribute('aria-invalid')).toBe('true')
     expect(excluir).not.toHaveBeenCalled()
     expect((await dados.minhaConta()).ok).toBe(true)

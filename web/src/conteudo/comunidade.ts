@@ -177,6 +177,8 @@ export const TOPICO = {
   editandoResposta: 'Editar resposta',
   citacaoDe: (trecho: string) => `“${trecho}”`,
   erroLimiteResposta: 'A resposta precisa ter de 1 a 2000 caracteres.',
+  // Aparece enquanto "Ver prévia" está desabilitado, ligada ao botão por `aria-describedby`.
+  dicaPrevia: 'Escreva um texto para ver a prévia.',
   acoes: 'Ações',
   oculto: 'Oculto',
 } as const
@@ -194,6 +196,12 @@ export const FORMULARIO_TOPICO = {
   espaco: 'Espaço',
   erroTitulo: 'O título precisa ter de 3 a 120 caracteres.',
   erroCorpo: 'O texto precisa ter de 1 a 5000 caracteres.',
+  // Aparece enquanto "Ver prévia" está desabilitado, conforme o que falta.
+  dicaPrevia: {
+    ambos: 'Escreva um título e um texto para ver a prévia.',
+    titulo: 'Escreva um título para ver a prévia.',
+    texto: 'Escreva um texto para ver a prévia.',
+  },
 } as const
 
 export const ENTRAR_NA_COMUNIDADE = {
