@@ -5,6 +5,7 @@ import { CONTEUDO, ELENCO, criarElenco, type PessoaDoElenco } from '../../dados/
 import { criarDadosComunidadeMemoria } from '../../dados/comunidade.memoria.ts'
 import { criarDadosContaMemoria } from '../../dados/conta.memoria.ts'
 import { criarFixtureDeTeste } from '../../teste/renderizarComDados.tsx'
+import { pressionar, paradasDeTab, tabular } from '../conta/tabular.ts'
 import { fixtureDeContasDoElenco, renderizarComunidade } from './apoio.tsx'
 
 // A11Y-006 (foco inicial no botão seguro dos diálogos destrutivos), A11Y-008 (campos obrigatórios da
@@ -85,60 +86,166 @@ describe('A11Y-008: campos obrigatórios da Comunidade', () => {
   })
 })
 
-describe('A11Y-005: "Ver prévia" alcançável por Tab, sem `disabled`', () => {
-  const previa = () => screen.getByRole('button', { name: FORMULARIO_TOPICO.verPrevia }) as HTMLButtonElement
+// O Tab e o Enter/Espaço são modelados como no navegador (`../conta/tabular.ts`): um grupo de botões de
+// opção é uma parada só, e `disabled`, `hidden` e `tabindex="-1"` ficam fora da ordem.
+describe('A11Y-005: "Ver prévia" alcançável por Tab e ativável pelo teclado, sem `disabled`', () => {
+  const COMPOSITORES = [
+    {
+      nome: 'novo tópico (FormularioDeTopico)',
+      abrir: async () => {
+        cena('outro', '/app/comunidade/sono/novo')
+        await screen.findByRole('heading', { level: 1, name: 'Novo tópico' })
+        await semCarregando()
+      },
+      rotuloDoBotao: FORMULARIO_TOPICO.verPrevia,
+      dica: FORMULARIO_TOPICO.dicaPrevia.ambos,
+      preencher: () => {
+        digitar('campo-titulo', 'Um título bom')
+        digitar('campo-corpo', 'Corpo do tópico')
+      },
+      previa: '[data-previa="topico"]',
+      // O último campo de texto antes do botão; entre os dois fica o grupo da faixa (uma parada só).
+      ultimoCampo: 'campo-corpo',
+    },
+    {
+      nome: 'resposta (FormularioDeResposta)',
+      abrir: () => abrirTopico(),
+      rotuloDoBotao: TOPICO.verPrevia,
+      dica: TOPICO.dicaPrevia,
+      preencher: () => digitar('campo-resposta', 'Minha resposta'),
+      previa: '[data-previa="resposta"]',
+      ultimoCampo: 'campo-resposta',
+    },
+  ]
 
-  it('novo tópico: inválido, o botão recebe foco, é aria-disabled, mantém a dica e click/Enter/envio não abrem a prévia', async () => {
-    cena('outro', '/app/comunidade/sono/novo')
-    await screen.findByRole('heading', { level: 1, name: 'Novo tópico' })
-    await semCarregando()
+  for (const compositor of COMPOSITORES) {
+    const botaoDaPrevia = () => screen.getByRole('button', { name: compositor.rotuloDoBotao }) as HTMLButtonElement
+    const paradasAntes = (botao: HTMLElement) =>
+      paradasDeTab(false).filter((parada) => botao.compareDocumentPosition(parada) & Node.DOCUMENT_POSITION_PRECEDING)
 
-    const botao = previa()
-    expect(botao.disabled).toBe(false)
-    expect(botao.getAttribute('aria-disabled')).toBe('true')
-    expect(botao.tabIndex).toBeGreaterThanOrEqual(0)
-    botao.focus()
-    expect(document.activeElement).toBe(botao)
-    const dica = document.getElementById(botao.getAttribute('aria-describedby')!)
-    expect(dica?.textContent).toBe(FORMULARIO_TOPICO.dicaPrevia.ambos)
+    describe(compositor.nome, () => {
+      it('inválido: o Tab, vindo do controle anterior, para no botão; ele é aria-disabled e leva a dica; o Shift+Tab volta ao controle anterior', async () => {
+        await compositor.abrir()
+        const botao = botaoDaPrevia()
+        expect(botao.disabled).toBe(false)
+        expect(botao.getAttribute('aria-disabled')).toBe('true')
+        expect(document.getElementById(botao.getAttribute('aria-describedby')!)?.textContent).toBe(compositor.dica)
 
-    fireEvent.click(botao)
-    fireEvent.keyDown(botao, { key: 'Enter' })
-    fireEvent.submit(botao.closest('form')!)
-    expect(document.querySelector('[data-previa="topico"]')).toBeNull()
-    expect(campoPorId('campo-titulo')).toBeTruthy()
-  })
+        const anteriores = paradasAntes(botao)
+        const anterior = anteriores[anteriores.length - 1]
+        expect(anterior, 'há um controle antes do botão na ordem do Tab').toBeTruthy()
+        anterior.focus()
+        expect(tabular(), 'o Tab chega ao botão "Ver prévia"').toBe(botao)
+        expect(tabular(true)).toBe(anterior)
 
-  it('novo tópico: válido, o botão não é aria-disabled e abre a prévia', async () => {
-    cena('outro', '/app/comunidade/sono/novo')
-    await screen.findByRole('heading', { level: 1, name: 'Novo tópico' })
-    await semCarregando()
-    digitar('campo-titulo', 'Um título bom')
-    digitar('campo-corpo', 'Corpo do tópico')
+        // Do último campo de texto, no máximo duas paradas (o grupo da faixa conta uma) até o botão.
+        campoPorId(compositor.ultimoCampo).focus()
+        const percurso = [tabular(), tabular()]
+        expect(percurso).toContain(botao)
+      })
 
-    expect(previa().hasAttribute('aria-disabled')).toBe(false)
-    expect(previa().hasAttribute('aria-describedby')).toBe(false)
-    fireEvent.click(previa())
-    expect(document.querySelector('[data-previa="topico"]')).not.toBeNull()
-  })
+      for (const tecla of ['Enter', ' '] as const) {
+        it(`inválido: Tab até o botão e ${tecla === ' ' ? 'Espaço' : 'Enter'} não abrem a prévia, nem tiram o foco ou o aria-disabled`, async () => {
+          await compositor.abrir()
+          const botao = botaoDaPrevia()
+          const anteriores = paradasAntes(botao)
+          anteriores[anteriores.length - 1].focus()
+          expect(tabular()).toBe(botao)
 
-  it('resposta: inválida, o botão recebe foco, é aria-disabled e click/envio não abrem a prévia; válida, abre', async () => {
-    await abrirTopico()
-    const botao = screen.getByRole('button', { name: TOPICO.verPrevia }) as HTMLButtonElement
+          pressionar(botao, tecla)
 
-    expect(botao.disabled).toBe(false)
-    expect(botao.getAttribute('aria-disabled')).toBe('true')
-    botao.focus()
-    expect(document.activeElement).toBe(botao)
-    expect(document.getElementById(botao.getAttribute('aria-describedby')!)?.textContent).toBe(TOPICO.dicaPrevia)
+          expect(document.querySelector(compositor.previa)).toBeNull()
+          expect(document.activeElement).toBe(botao)
+          expect(botao.getAttribute('aria-disabled')).toBe('true')
+          expect(botao.hasAttribute('aria-describedby')).toBe(true)
+          expect(botao.disabled).toBe(false)
+        })
+      }
 
-    fireEvent.click(botao)
-    fireEvent.submit(botao.closest('form')!)
-    expect(document.querySelector('[data-previa="resposta"]')).toBeNull()
+      it('inválido: o clique e o envio do formulário não abrem a prévia', async () => {
+        await compositor.abrir()
+        const botao = botaoDaPrevia()
+        fireEvent.click(botao)
+        fireEvent.submit(botao.closest('form')!)
+        expect(document.querySelector(compositor.previa)).toBeNull()
+        expect(botao.getAttribute('aria-disabled')).toBe('true')
+      })
 
-    digitar('campo-resposta', 'Minha resposta')
-    expect(botao.hasAttribute('aria-disabled')).toBe(false)
-    fireEvent.click(botao)
-    expect(document.querySelector('[data-previa="resposta"]')).not.toBeNull()
-  })
+      for (const tecla of ['Enter', ' '] as const) {
+        it(`válido: Tab até o botão e ${tecla === ' ' ? 'Espaço' : 'Enter'} abrem a prévia`, async () => {
+          await compositor.abrir()
+          compositor.preencher()
+          const botao = botaoDaPrevia()
+          expect(botao.hasAttribute('aria-disabled')).toBe(false)
+          expect(botao.hasAttribute('aria-describedby')).toBe(false)
+
+          const anteriores = paradasAntes(botao)
+          anteriores[anteriores.length - 1].focus()
+          expect(tabular()).toBe(botao)
+          expect(document.querySelector(compositor.previa)).toBeNull()
+
+          pressionar(botao, tecla)
+
+          expect(document.querySelector(compositor.previa)).not.toBeNull()
+        })
+      }
+
+      it('válido: o clique abre a prévia', async () => {
+        await compositor.abrir()
+        compositor.preencher()
+        fireEvent.click(botaoDaPrevia())
+        expect(document.querySelector(compositor.previa)).not.toBeNull()
+      })
+    })
+  }
+})
+
+// O mesmo Tab preso, agora no diálogo da Comunidade (`Dialogo`) que tem um grupo de botões de opção, e que abre
+// com nenhuma opção marcada.
+describe('A11Y-007: o grupo de motivos de "Denunciar" é uma parada só do Tab', () => {
+  const ESTADOS = [
+    { nome: 'nenhum motivo marcado', marcar: null },
+    { nome: 'primeiro motivo marcado', marcar: 0 },
+    { nome: 'último motivo marcado', marcar: -1 },
+  ]
+
+  for (const estado of ESTADOS) {
+    it(`${estado.nome}: Shift+Tab da primeira parada e Tab da última dão a volta; 10 Tab e 10 Shift+Tab sem escapar`, async () => {
+      await abrirTopico()
+      fireEvent.click(
+        within(document.getElementById(`resposta-${CONTEUDO.respostaDoAutor}`)!).getByRole('button', { name: TOPICO.denunciar }),
+      )
+      const dialogo = screen.getByRole('dialog')
+      const radios = within(dialogo).getAllByRole('radio') as HTMLInputElement[]
+      if (estado.marcar !== null) fireEvent.click(radios.at(estado.marcar)!)
+      const cancelar = within(dialogo).getByRole('button', { name: COMUM_COMUNIDADE.cancelar })
+      const dentro = (lista: HTMLElement[]) => lista.filter((parada) => dialogo.contains(parada))
+      const nome = (elemento: HTMLElement) =>
+        elemento === cancelar ? 'Cancelar' : radios.includes(elemento as HTMLInputElement) ? 'grupo' : dialogo.contains(elemento) ? 'dentro' : 'FORA'
+
+      const adiante = dentro(paradasDeTab(false))
+      const atras = dentro(paradasDeTab(true))
+      // Uma só opção do grupo é parada, em cada sentido, e o último botão é o Cancelar.
+      expect(adiante.filter((parada) => nome(parada) === 'grupo')).toHaveLength(1)
+      expect(atras.filter((parada) => nome(parada) === 'grupo')).toHaveLength(1)
+      expect(nome(adiante[0])).toBe('grupo')
+      expect(adiante[adiante.length - 1]).toBe(cancelar)
+      expect(atras[atras.length - 1]).toBe(cancelar)
+
+      // Shift+Tab da primeira parada (em qualquer sentido) vai ao Cancelar; Tab do Cancelar vai à primeira parada.
+      adiante[0].focus()
+      expect(tabular(true)).toBe(cancelar)
+      atras[0].focus()
+      expect(tabular(true)).toBe(cancelar)
+      cancelar.focus()
+      expect(tabular()).toBe(adiante[0])
+
+      cancelar.focus()
+      for (let tab = 1; tab <= 10; tab += 1) expect(nome(tabular()), `Tab ${tab}`).not.toBe('FORA')
+      for (let tab = 1; tab <= 10; tab += 1) expect(nome(tabular(true)), `Shift+Tab ${tab}`).not.toBe('FORA')
+
+      fireEvent.keyDown(document.activeElement!, { key: 'Escape' })
+      expect(screen.queryByRole('dialog')).toBeNull()
+    })
+  }
 })

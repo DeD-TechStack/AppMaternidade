@@ -56,23 +56,54 @@ export function useFocoNoTitulo() {
 export const CONTROLES_FOCAVEIS =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
+function ehRadio(elemento: Element | null): elemento is HTMLInputElement {
+  return elemento instanceof HTMLInputElement && elemento.type === 'radio'
+}
+
+function mesmoGrupo(a: HTMLInputElement, b: HTMLInputElement) {
+  return a.name !== '' && a.name === b.name && a.form === b.form
+}
+
 /**
- * O Tab fica dentro da caixa de diálogo (A11Y-007): do último controle volta ao primeiro, e Shift+Tab do
- * primeiro vai ao último. Chame no `keydown` da caixa; só age na tecla Tab.
+ * As paradas reais do Tab dentro da caixa, na ordem do documento. Um grupo de botões de opção (mesmo `name`
+ * e mesmo formulário) é UMA parada só: a opção marcada; sem nenhuma marcada, a primeira se o Tab vai adiante
+ * e a última se ele volta. Por isso a primeira e a última parada nem sempre são o primeiro e o último
+ * controle da caixa.
+ */
+function paradasDeTab(caixa: HTMLElement, retroceder: boolean): HTMLElement[] {
+  const todos = [...caixa.querySelectorAll<HTMLElement>(CONTROLES_FOCAVEIS)]
+  const radios = todos.filter(ehRadio)
+  const paradaDoGrupo = (radio: HTMLInputElement) => {
+    const grupo = radios.filter((outro) => mesmoGrupo(outro, radio))
+    return grupo.find((outro) => outro.checked) ?? grupo[retroceder ? grupo.length - 1 : 0]
+  }
+  return todos.filter((elemento) => !ehRadio(elemento) || elemento.name === '' || paradaDoGrupo(elemento) === elemento)
+}
+
+/**
+ * O Tab fica dentro da caixa de diálogo (A11Y-007): da última parada volta à primeira, e Shift+Tab da
+ * primeira vai à última. As paradas são as do navegador (ver `paradasDeTab`), vistas no sentido da tecla.
+ * Chame no `keydown` da caixa; só age na tecla Tab.
  */
 export function prenderOTab(evento: KeyboardEvent, caixa: HTMLElement): void {
   if (evento.key !== 'Tab') return
-  const dentro = [...caixa.querySelectorAll<HTMLElement>(CONTROLES_FOCAVEIS)]
-  if (dentro.length === 0) return evento.preventDefault()
-  const primeiro = dentro[0]
-  const ultimo = dentro[dentro.length - 1]
+  const paradas = paradasDeTab(caixa, evento.shiftKey)
+  if (paradas.length === 0) return evento.preventDefault()
+  const primeira = paradas[0]
+  const ultima = paradas[paradas.length - 1]
   const ativo = document.activeElement
-  if (evento.shiftKey && (ativo === primeiro || !caixa.contains(ativo))) {
+  // Uma opção sem marca em foco vale pela parada do seu grupo.
+  const aqui = paradas.includes(ativo as HTMLElement)
+    ? ativo
+    : ehRadio(ativo)
+      ? paradas.find((parada) => ehRadio(parada) && mesmoGrupo(parada, ativo))
+      : undefined
+  if (evento.shiftKey && (aqui === primeira || !caixa.contains(ativo))) {
     evento.preventDefault()
-    ultimo.focus()
-  } else if (!evento.shiftKey && (ativo === ultimo || !caixa.contains(ativo))) {
+    ultima.focus()
+  } else if (!evento.shiftKey && (aqui === ultima || !caixa.contains(ativo))) {
     evento.preventDefault()
-    primeiro.focus()
+    primeira.focus()
   }
 }
 
