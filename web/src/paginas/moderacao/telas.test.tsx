@@ -271,6 +271,88 @@ describe('M1: a fila (MAT-40:RF-03)', () => {
     expect(await screen.findByText(TX.tx13)).toBeTruthy()
   })
 
+  describe('o anúncio do resultado filtrado (A11Y-016)', () => {
+    const anuncio = () => screen.getByRole('status')
+    const anuncioDiz = (texto: string) => waitFor(() => expect(anuncio().textContent).toBe(texto))
+
+    it('uma região `status` polida, sempre montada e fora dos controles de filtro, diz a contagem depois da leitura', async () => {
+      cena('moderador', painel, (estado) => {
+        novaDenuncia(estado, { motivo: 'outro' })
+        novaDenuncia(estado, { motivo: 'spam_venda', estado: 'em_analise' })
+      })
+      // Sempre montada, fora dos filtros.
+      const regiao = await screen.findByRole('status')
+      expect(regiao.closest('fieldset')).toBeNull()
+      expect(regiao.contains(screen.getByLabelText(FILA.filtroMotivo))).toBe(false)
+      await aguardarH1()
+      await anuncioDiz(FILA.contagem(2, false))
+      expect(FILA.contagem(2, false)).toBe('2 denúncias')
+      expect(anuncio()).toBe(regiao)
+      expect(regiao.getAttribute('aria-live') ?? 'polite').toBe('polite')
+    })
+
+    it('marcar "Procedente" anuncia a nova contagem sem mover o foco; o singular vale para 1', async () => {
+      cena('moderador', painel, (estado) => {
+        novaDenuncia(estado, { motivo: 'outro' })
+        novaDenuncia(estado, { motivo: 'outro', estado: 'procedente', decididaEm: '2026-11-04T10:00:00.000Z' })
+      })
+      await aguardarH1()
+      await anuncioDiz('1 denúncia')
+
+      const caixa = screen.getByLabelText(FILA.estados.procedente)
+      caixa.focus()
+      fireEvent.click(caixa)
+      await anuncioDiz('2 denúncias')
+      expect(document.activeElement).toBe(caixa)
+    })
+
+    it('escolher o motivo anuncia a contagem do filtro; sem resultado, o texto TX-13 vive na própria região, uma só vez', async () => {
+      cena('moderador', painel, (estado) => {
+        novaDenuncia(estado, { motivo: 'outro' })
+        novaDenuncia(estado, { motivo: 'ataque_assedio' })
+        novaDenuncia(estado, { motivo: 'ataque_assedio' })
+      })
+      await aguardarH1()
+      await anuncioDiz('3 denúncias')
+
+      const motivo = screen.getByLabelText(FILA.filtroMotivo)
+      motivo.focus()
+      fireEvent.change(motivo, { target: { value: 'ataque_assedio' } })
+      await anuncioDiz('2 denúncias')
+      expect(document.activeElement).toBe(motivo)
+
+      fireEvent.change(motivo, { target: { value: 'risco_autolesao' } })
+      await anuncioDiz(TX.tx13)
+      expect(screen.getAllByText(TX.tx13)).toHaveLength(1)
+      expect(document.activeElement).toBe(motivo)
+
+      fireEvent.change(motivo, { target: { value: 'outro' } })
+      await anuncioDiz('1 denúncia')
+      expect(screen.queryByText(TX.tx13)).toBeNull()
+    })
+
+    it('com mais de uma página, o anúncio diz quantas foram carregadas e que há mais; "Carregar mais" atualiza', async () => {
+      cena('moderador', painel, (estado) => {
+        for (let n = 0; n < 55; n++) novaDenuncia(estado)
+      })
+      await aguardarH1()
+      await anuncioDiz('50 denúncias carregadas; há mais.')
+      expect(FILA.contagem(50, true)).toBe('50 denúncias carregadas; há mais.')
+
+      fireEvent.click(botao(FILA.carregarMais))
+      await anuncioDiz('55 denúncias')
+    })
+
+    it('uma leitura que falha não anuncia contagem nem "nenhuma denúncia"', async () => {
+      const { moderacao } = cena('moderador', painel, (estado) => {
+        novaDenuncia(estado)
+      })
+      simularFalhaModeracao(moderacao, 'filaDeDenuncias', 'rede')
+      await screen.findByRole('alert')
+      expect(anuncio().textContent).toBe('')
+    })
+  })
+
   it('55 denúncias: 50 por página, "Carregar mais" traz o resto sem repetir', async () => {
     cena('moderador', painel, (estado) => {
       for (let n = 0; n < 55; n++) novaDenuncia(estado)

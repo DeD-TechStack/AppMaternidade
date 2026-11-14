@@ -109,7 +109,15 @@ function ListaDaFila() {
         {fila.estado.fase === 'erro' ? (
           <ErroDeLeituraNoPainel erro={fila.estado.erro} aoTentarDeNovo={() => void fila.recarregar()} />
         ) : null}
-        {lista && lista.itens.length === 0 ? <p>{TX.tx13}</p> : null}
+        {/* O anúncio do resultado (A11Y-016): sempre montada, fora dos filtros, vazia enquanto lê. Sem resultado, o
+            parágrafo da TX-13 mora dentro dela (uma só vez); com itens, ela só fala (sr-only). */}
+        <div role="status" className={lista && lista.itens.length === 0 ? undefined : 'sr-only'}>
+          {lista && lista.itens.length === 0 ? (
+            <p>{TX.tx13}</p>
+          ) : lista ? (
+            FILA.contagem(lista.itens.length, lista.haMais && !lista.erroDaPagina)
+          ) : null}
+        </div>
         {lista && lista.itens.length > 0 ? (
           <Pilha as="ul" vao="grupo" className="m-0 list-none p-0">
             {lista.itens.map((denuncia) => (
