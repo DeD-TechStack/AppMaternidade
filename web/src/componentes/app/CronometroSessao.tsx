@@ -5,6 +5,7 @@ import { Botao } from '../base/Botao.tsx'
 import { ALVO_APP } from './alvo.ts'
 import { LIMITE_DA_SESSAO_CURTA_MS } from './PerguntaSessaoCurta.tsx'
 import { recuoOptico } from './recuoOptico.ts'
+import { TextoDoCronometro } from './TextoDoCronometro.tsx'
 import { tamanhoDoCronometro } from '../../prototipo/formatar.ts'
 
 // `curta`: a pergunta de uma sessão com menos de 1 minuto (QA-10); `origem` diz qual botão a abriu.
@@ -162,7 +163,7 @@ export function CronometroSessao({
         data-tamanho={tamanhoDoCronometro(cronometro)}
         className={`t-cronometro mt-2 font-titulo leading-none font-semibold tracking-[-0.02em] whitespace-nowrap tabular-nums ${TAMANHO[tamanhoDoCronometro(cronometro)]} ${recuoOptico(cronometro)}`}
       >
-        {cronometro}
+        <TextoDoCronometro tempo={cronometro} />
       </div>
       {atividade ? <p className="mt-4 text-[17px] leading-[25px]">{`Atividade sugerida: ${atividade}`}</p> : null}
 

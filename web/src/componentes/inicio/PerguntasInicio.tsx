@@ -1,3 +1,7 @@
+import { Coluna, Colunas } from '../base/layout/Colunas.tsx'
+import { Pilha } from '../base/layout/Pilha.tsx'
+import { QuadroLayout } from '../base/layout/QuadroLayout.tsx'
+import { Secao } from '../base/layout/Secao.tsx'
 import { Acordeao } from '../campo/Acordeao.tsx'
 import { Ilustracao } from '../campo/Ilustracao.tsx'
 import { Titulo } from '../campo/Titulo.tsx'
@@ -19,12 +23,21 @@ interface Props {
 export function PerguntasInicio({ id }: Props) {
   const { titulo, itens } = INICIO.perguntas
   return (
-    <section className="cm-area in-secao in-perguntas" aria-labelledby={id}>
-      <div className="in-perguntas-cabeca">
-        <Ilustracao nome="avo-carrinho" decorativa carregamento="eager" className="in-perguntas-arte" />
-        <Titulo nivel="h2" id={id} linhas={titulo} />
-      </div>
-      <Acordeao itens={itens} className="in-faq" />
-    </section>
+    <Secao className="in-perguntas" aria-labelledby={id}>
+      <QuadroLayout>
+        {/* Título (7fr) e lista (5fr) a partir de 1100, como os relatos; `bloco` entre as duas colunas. */}
+        <Colunas fracoes="7fr 5fr" vao="bloco" aPartirDe={1100} alinhar="inicio">
+          <Coluna>
+            <Pilha vao="pilha" className="in-perguntas-cabeca">
+              <Ilustracao nome="avo-carrinho" decorativa carregamento="eager" className="in-perguntas-arte" />
+              <Titulo nivel="h2" id={id} linhas={titulo} />
+            </Pilha>
+          </Coluna>
+          <Coluna>
+            <Acordeao itens={itens} className="in-faq" />
+          </Coluna>
+        </Colunas>
+      </QuadroLayout>
+    </Secao>
   )
 }

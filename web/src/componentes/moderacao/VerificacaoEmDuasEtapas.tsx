@@ -4,7 +4,9 @@ import { MFA, textoDoErroModeracao } from '../../conteudo/moderacao.ts'
 import type { ErroDados } from '../../dados/comum.ts'
 import type { FatorNovo } from '../../dados/moderacao.ts'
 import { FORMATO_DO_CODIGO } from '../../dados/moderacao.regras.ts'
+import { Pilha } from '../base/layout/Pilha.tsx'
 import { ResumoDeErro, Esqueleto } from '../comunidade/Avisos.tsx'
+import { Faixa } from '../comunidade/Faixa.tsx'
 import { useLeitura } from '../comunidade/useLeitura.ts'
 import { useFocoNoResumo } from '../conta/foco.ts'
 import { ErroDeLeituraNoPainel } from './Avisos.tsx'
@@ -82,44 +84,47 @@ export function VerificacaoEmDuasEtapas({ aoVerificar }: Props) {
   const pedeCodigo = fatores.estado.fase === 'pronto' && fatorId !== null
 
   return (
-    <section aria-labelledby="mfa-titulo" aria-busy={fatores.estado.fase === 'carregando' || undefined} className="flex max-w-[34rem] flex-col gap-5">
-      <h2 id="mfa-titulo" className="cm-h4">
-        {MFA.titulo}
-      </h2>
-      <p>{MFA.frase}</p>
+    <Faixa aria-labelledby="mfa-titulo" aria-busy={fatores.estado.fase === 'carregando' || undefined}>
+      <Pilha vao="grupo" className="max-w-[34rem]">
+        <Pilha vao="pilha">
+          <h2 id="mfa-titulo" className="cm-h4 text-titulo-4">
+            {MFA.titulo}
+          </h2>
+          <p>{MFA.frase}</p>
+        </Pilha>
 
-      {fatores.esqueleto ? <Esqueleto linhas={1} /> : null}
-      {fatores.estado.fase === 'erro' ? (
-        <ErroDeLeituraNoPainel erro={fatores.estado.erro} aoTentarDeNovo={() => void fatores.recarregar()} />
-      ) : null}
-      {erro ? (
-        <ResumoDeErro
-          texto={erro.texto}
-          rotuloDaAcao={repetivel ? COMUM_COMUNIDADE.tentarDeNovo : undefined}
-          aoAgir={tentarDeNovo}
-          refResumo={resumo}
-        />
-      ) : null}
+        {fatores.esqueleto ? <Esqueleto linhas={1} /> : null}
+        {fatores.estado.fase === 'erro' ? (
+          <ErroDeLeituraNoPainel erro={fatores.estado.erro} aoTentarDeNovo={() => void fatores.recarregar()} />
+        ) : null}
+        {erro ? (
+          <ResumoDeErro
+            texto={erro.texto}
+            rotuloDaAcao={repetivel ? COMUM_COMUNIDADE.tentarDeNovo : undefined}
+            aoAgir={tentarDeNovo}
+            refResumo={resumo}
+          />
+        ) : null}
 
-      {pedeCadastro ? (
-        <div>
-          <button type="button" disabled={cadastrando} className={BOTAO_SECUNDARIO_QUEBRA} data-tamanho="app" onClick={() => void cadastrar()}>
-            {cadastrando ? MFA.cadastrando : MFA.cadastrar}
-          </button>
-        </div>
-      ) : null}
+        {pedeCadastro ? (
+          <div>
+            <button type="button" disabled={cadastrando} className={BOTAO_SECUNDARIO_QUEBRA} data-tamanho="app" onClick={() => void cadastrar()}>
+              {cadastrando ? MFA.cadastrando : MFA.cadastrar}
+            </button>
+          </div>
+        ) : null}
 
-      {novo ? (
-        <div className="flex flex-col items-start gap-3">
-          <img src={novo.qr} alt={MFA.altDoQr} width={192} height={192} className="size-48 rounded-campo border border-[var(--cor-fio-suave)] bg-white" />
-          <p>{MFA.ouDigite}</p>
-          <TextoCopiavel texto={novo.chave} rotulo={MFA.copiarChave} mensagemOk={MFA.chaveCopiada} mensagemFalha={MFA.copieAChave} />
-        </div>
-      ) : null}
+        {novo ? (
+          <Pilha vao="pilha" className="items-start">
+            <img src={novo.qr} alt={MFA.altDoQr} width={192} height={192} className="size-48 rounded-campo border border-[var(--cor-fio-suave)] bg-white" />
+            <p>{MFA.ouDigite}</p>
+            <TextoCopiavel texto={novo.chave} rotulo={MFA.copiarChave} mensagemOk={MFA.chaveCopiada} mensagemFalha={MFA.copieAChave} />
+          </Pilha>
+        ) : null}
 
-      {pedeCodigo ? (
-        <form noValidate onSubmit={(evento) => void confirmar(evento)} className="flex flex-col gap-4">
-          <div className="cm-campo grid-cols-[minmax(0,1fr)] min-w-0 max-w-[20rem]">
+        {pedeCodigo ? (
+          <form noValidate onSubmit={(evento) => void confirmar(evento)} className="flex flex-col gap-esp-pilha">
+            <div className="cm-campo grid-cols-[minmax(0,1fr)] min-w-0 max-w-[20rem]">
             <label htmlFor={ID_DO_CODIGO} className="cm-campo-rotulo">
               {MFA.campoCodigo}
             </label>
@@ -153,6 +158,7 @@ export function VerificacaoEmDuasEtapas({ aoVerificar }: Props) {
           </div>
         </form>
       ) : null}
-    </section>
+      </Pilha>
+    </Faixa>
   )
 }

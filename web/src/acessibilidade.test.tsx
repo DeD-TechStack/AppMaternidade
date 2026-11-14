@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { fireEvent, screen } from '@testing-library/react'
-import axe from 'axe-core'
+import { rodarAxe } from './teste/axe.ts'
 import { renderizarRota, renderizarRotaPronta, aguardarCarga } from './teste/renderizarRota.tsx'
 import { semSessaoEmAndamento } from './teste/rotina.fixture.ts'
 
 async function violacoes(container: HTMLElement): Promise<string[]> {
-  const resultado = await axe.run(container, {
+  const resultado = await rodarAxe(container, {
     rules: {
       // O jsdom não calcula cores nem layout, então a regra de contraste do axe
       // não tem como avaliar a página. O contraste é conferido em estilo.test.ts.

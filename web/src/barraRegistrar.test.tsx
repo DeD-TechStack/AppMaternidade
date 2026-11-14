@@ -1,4 +1,4 @@
-import { createRef } from 'react'
+import { createRef, useState } from 'react'
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { BarraRegistrar } from './componentes/registro/BarraRegistrar.tsx'
@@ -746,6 +746,119 @@ describe('BarraRegistrar: o painel Mais e a confirmação no teclado (E8)', () =
     expect(screen.getAllByRole('status')).toHaveLength(1)
     expect(barra.querySelectorAll('[role="status"]')).toHaveLength(1)
     expect(screen.getByRole('status').hasAttribute('tabindex')).toBe(false)
+  })
+})
+
+// A11Y-004: o "Desfazer" da barra do protótipo anuncia `Registro desfeito: <tipo>.` (só com Fechar, sem sumir
+// sozinho) e leva o foco ao botão que criou o registro: Fralda, ou Mais para o que nasce do painel Mais.
+describe('BarraRegistrar: o aviso e o foco depois de Desfazer (A11Y-004)', () => {
+  const frase = () => screen.getByRole('status').querySelector('p')!.textContent
+  const botoesDoStatus = () => within(screen.getByRole('status')).getAllByRole('button').map((b) => b.textContent)
+
+  // A página de verdade: o texto vem dela, e Desfazer e Fechar o limpam.
+  function Pagina() {
+    const [texto, definirTexto] = useState<string | null>(null)
+    return (
+      <BarraRegistrar
+        aoIniciarSessao={() => undefined}
+        aoRegistrarFralda={() => definirTexto('Fralda registrada')}
+        aoAjustarFralda={(escolha) => definirTexto(`Fralda registrada: ${escolha}`)}
+        aoRegistrarMais={(item) => definirTexto(`${item.rotulo} registrada`)}
+        texto={texto}
+        aoDesfazer={() => definirTexto(null)}
+        aoFechar={() => definirTexto(null)}
+      />
+    )
+  }
+
+  it('Fralda: "Desfazer" anuncia `Registro desfeito: fralda.` só com Fechar e leva o foco ao botão Fralda', () => {
+    render(<Pagina />)
+    fireEvent.click(botao('Registrar fralda de Heloísa'))
+    botao('Desfazer').focus()
+
+    fireEvent.click(botao('Desfazer'))
+
+    expect(frase()).toBe('Registro desfeito: fralda.')
+    expect(botoesDoStatus()).toEqual(['Fechar'])
+    expect(screen.getAllByRole('status')).toHaveLength(1)
+    expect(screen.queryByRole('group', { name: 'Tipo da fralda' })).toBeNull()
+    expect(document.activeElement).toBe(botao('Registrar fralda de Heloísa'))
+    expect(document.activeElement).not.toBe(botao('Iniciar sono de Heloísa'))
+  })
+
+  it('o aviso não some sozinho (continua depois de 10 s) e só sai com "Fechar"', () => {
+    vi.useFakeTimers()
+    try {
+      render(<Pagina />)
+      fireEvent.click(botao('Registrar fralda de Heloísa'))
+      fireEvent.click(botao('Desfazer'))
+
+      act(() => {
+        vi.advanceTimersByTime(10_000)
+      })
+
+      expect(frase()).toBe('Registro desfeito: fralda.')
+      fireEvent.click(botao('Fechar'))
+      expect(screen.getByRole('status').textContent).toBe('')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('Mais: "Desfazer" depois de Mamadeira anuncia `Registro desfeito: mamadeira.` e leva o foco ao botão Mais', () => {
+    render(<Pagina />)
+    fireEvent.click(botao('Mais registros'))
+    fireEvent.click(botao('Mamadeira'))
+
+    fireEvent.click(botao('Desfazer'))
+
+    expect(frase()).toBe('Registro desfeito: mamadeira.')
+    expect(botoesDoStatus()).toEqual(['Fechar'])
+    expect(document.activeElement).toBe(botao('Mais registros'))
+  })
+
+  it('Mais: Alimentação sólida fala "alimentação sólida"', () => {
+    render(<Pagina />)
+    fireEvent.click(botao('Mais registros'))
+    fireEvent.click(botao('Alimentação sólida'))
+
+    fireEvent.click(botao('Desfazer'))
+
+    expect(frase()).toBe('Registro desfeito: alimentação sólida.')
+    expect(document.activeElement).toBe(botao('Mais registros'))
+  })
+
+  it('com a confirmação já na tela (sem toque nesta barra), a frase da fralda ainda leva o foco ao botão Fralda', () => {
+    const { aoDesfazer } = montar({ texto: 'Fralda registrada: Xixi' })
+
+    fireEvent.click(botao('Desfazer'))
+
+    expect(aoDesfazer).toHaveBeenCalledTimes(1)
+    expect(frase()).toBe('Registro desfeito: fralda.')
+    expect(document.activeElement).toBe(botao('Registrar fralda de Heloísa'))
+  })
+
+  it('um registro novo troca o aviso pela confirmação dele', () => {
+    render(<Pagina />)
+    fireEvent.click(botao('Registrar fralda de Heloísa'))
+    fireEvent.click(botao('Desfazer'))
+
+    fireEvent.click(botao('Registrar fralda de Heloísa'))
+
+    expect(frase()).toBe('Fralda registrada')
+    expect(botoesDoStatus()).toEqual(['Desfazer', 'Fechar', ...TIPOS])
+  })
+
+  it('Esc fecha o aviso e devolve o foco ao botão Fralda', () => {
+    render(<Pagina />)
+    fireEvent.click(botao('Registrar fralda de Heloísa'))
+    fireEvent.click(botao('Desfazer'))
+    botao('Fechar').focus()
+
+    fireEvent.keyDown(document.activeElement!, { key: 'Escape' })
+
+    expect(screen.getByRole('status').textContent).toBe('')
+    expect(document.activeElement).toBe(botao('Registrar fralda de Heloísa'))
   })
 })
 

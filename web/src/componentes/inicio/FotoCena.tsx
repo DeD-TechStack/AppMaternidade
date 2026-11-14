@@ -11,6 +11,8 @@ interface Props {
   alt: string
   /** Classe a mais da `<picture>` (onde ela fica no painel). */
   className?: string
+  /** O `data-h` da `<picture>` quando ela é filha direta de uma `Colunas` (`"coluna"`). */
+  dataH?: string
 }
 
 /**
@@ -18,9 +20,9 @@ interface Props {
  * e altura explícitas. Carrega na hora: são WebPs pequenos, e o painel ao lado nunca pode ficar vazio.
  * Vai sobre o cacau ou num painel de areia.
  */
-export function FotoCena({ base, largura, altura, alt, className }: Props) {
+export function FotoCena({ base, largura, altura, alt, className, dataH }: Props) {
   return (
-    <picture className={['in-foto-quadro', className].filter(Boolean).join(' ')}>
+    <picture className={['in-foto-quadro', className].filter(Boolean).join(' ')} data-h={dataH}>
       <source type="image/webp" srcSet={srcSetWebp(base)} />
       <img
         src={urlPublica(`${base}@1x.webp`)}

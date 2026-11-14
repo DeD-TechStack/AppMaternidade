@@ -1,29 +1,30 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 import { T } from '../../conteudo/desenvolvimento/textosLogada.ts'
+import { Pilha } from '../base/layout/Pilha.tsx'
 import { BOTAO_SECUNDARIO } from '../conta/Partes.tsx'
 
 // Os avisos de estado da página: texto na tinta do tema, faixa de papel e, no erro, o contorno do tema. O
 // aviso nunca depende só da cor: tem sempre a frase inteira. Sem ícone (a página não traz ícones novos).
 
-const FAIXA = 'cm-area mt-6 flex flex-col items-start gap-3'
-const TEXTO = 'm-0 max-w-[65ch] rounded-campo bg-[var(--cor-papel-fundo)] px-4 py-3 font-medium wrap-anywhere'
+const TEXTO = 'm-0 max-w-[65ch] self-start rounded-campo bg-[var(--cor-papel-fundo)] px-4 py-3 font-medium wrap-anywhere'
 
-/** Uma frase de estado (arquivado, só ver, nascimento depois de hoje): região de status, sem mover o foco. */
+/**
+ * Uma frase de estado (arquivado, só ver, nascimento depois de hoje): região de status, sem mover o foco. Ela é um
+ * bloco da `Pilha` do cabeçalho da página: o espaço em volta é o da pilha, sem margem.
+ */
 export function AvisoDeEstado({ children, dado }: { children: ReactNode; dado: string }) {
   return (
-    <div className={FAIXA}>
-      <p role="status" data-aviso-estado={dado} className={TEXTO}>
-        {children}
-      </p>
-    </div>
+    <p role="status" data-aviso-estado={dado} className={TEXTO}>
+      {children}
+    </p>
   )
 }
 
 /** T-06: o dia segue o fuso da família. Texto pequeno, sem faixa. */
 export function AvisoDeFuso({ children }: { children: ReactNode }) {
   return (
-    <p data-fuso-diferente="" className="cm-area cm-pequeno cm-texto-2 mt-4">
+    <p data-fuso-diferente="" className="cm-pequeno cm-texto-2">
       {children}
     </p>
   )
@@ -44,7 +45,7 @@ function EstadoDaPagina({
   acao?: ReactNode
 }) {
   return (
-    <div className="cm-area mt-8 flex max-w-[40rem] flex-col items-start gap-4" data-estado-da-pagina={dado} aria-busy={ocupado ? 'true' : undefined}>
+    <Pilha vao="grupo" className="max-w-[40rem] items-start" data-estado-da-pagina={dado} aria-busy={ocupado ? 'true' : undefined}>
       <p
         role={alerta ? 'alert' : 'status'}
         className={`m-0 w-full rounded-campo px-4 py-3 font-medium wrap-anywhere ${
@@ -54,7 +55,7 @@ function EstadoDaPagina({
         {children}
       </p>
       {acao}
-    </div>
+    </Pilha>
   )
 }
 

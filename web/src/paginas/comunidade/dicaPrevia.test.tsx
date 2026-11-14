@@ -5,7 +5,7 @@ import { CONTEUDO, ELENCO, criarElenco, type PessoaDoElenco } from '../../dados/
 import { criarDadosComunidadeMemoria } from '../../dados/comunidade.memoria.ts'
 import { criarDadosContaMemoria } from '../../dados/conta.memoria.ts'
 import { criarFixtureDeTeste } from '../../teste/renderizarComDados.tsx'
-import { fixtureDeContasDoElenco, renderizarComunidade } from './apoio.tsx'
+import { comObrigatorio, fixtureDeContasDoElenco, renderizarComunidade } from './apoio.tsx'
 
 // QA-12: enquanto "Ver prévia" está desabilitado, uma dica ligada ao botão por `aria-describedby` diz o
 // que falta. Habilitado, o botão não aponta para dica nenhuma.
@@ -18,7 +18,9 @@ function cena(pessoa: PessoaDoElenco, caminho: string) {
 }
 
 const botaoPrevia = () => screen.getByRole('button', { name: 'Ver prévia' }) as HTMLButtonElement
-const campo = (rotulo: string) => screen.getByLabelText(rotulo) as HTMLInputElement | HTMLTextAreaElement
+// A11Y-005: o botão não usa mais `disabled` (Tab chega a ele); o estado vai em `aria-disabled`.
+const semPrevia = () => botaoPrevia().getAttribute('aria-disabled') === 'true'
+const campo = (rotulo: string) => screen.getByLabelText(comObrigatorio(rotulo)) as HTMLInputElement | HTMLTextAreaElement
 const digitar = (rotulo: string, texto: string) => fireEvent.change(campo(rotulo), { target: { value: texto } })
 const semCarregando = () => waitFor(() => expect(document.querySelector('[aria-busy="true"]')).toBeNull())
 
@@ -40,7 +42,7 @@ describe('novo tópico: a dica do "Ver prévia"', () => {
 
   it('título e texto vazios: a dica pede os dois', async () => {
     await abrir()
-    expect(botaoPrevia().disabled).toBe(true)
+    expect(semPrevia()).toBe(true)
     expect(dicaDoBotao()).toBe('Escreva um título e um texto para ver a prévia.')
     expect(FORMULARIO_TOPICO.dicaPrevia.ambos).toBe('Escreva um título e um texto para ver a prévia.')
   })
@@ -69,7 +71,7 @@ describe('novo tópico: a dica do "Ver prévia"', () => {
     await abrir()
     digitar('Título', 'Um título bom')
     digitar('Texto do tópico', 'Corpo do tópico')
-    expect(botaoPrevia().disabled).toBe(false)
+    expect(semPrevia()).toBe(false)
     expect(botaoPrevia().hasAttribute('aria-describedby')).toBe(false)
     expect(screen.queryByText(/para ver a prévia\.$/)).toBeNull()
   })
@@ -84,12 +86,12 @@ describe('resposta: a dica do "Ver prévia"', () => {
 
   it('texto vazio: a dica pede o texto; com texto, some junto com o aria-describedby', async () => {
     await abrir()
-    expect(botaoPrevia().disabled).toBe(true)
+    expect(semPrevia()).toBe(true)
     expect(dicaDoBotao()).toBe('Escreva um texto para ver a prévia.')
     expect(TOPICO.dicaPrevia).toBe('Escreva um texto para ver a prévia.')
 
     digitar(TOPICO.campoResposta, 'Minha resposta')
-    expect(botaoPrevia().disabled).toBe(false)
+    expect(semPrevia()).toBe(false)
     expect(botaoPrevia().hasAttribute('aria-describedby')).toBe(false)
     expect(screen.queryByText(TOPICO.dicaPrevia)).toBeNull()
   })

@@ -215,7 +215,7 @@ describe('gravar um registro novo', () => {
     expect(new Date(novo.inicio).getHours()).toBe(9)
   })
 
-  it('"Desfazer" exclui o registro salvo (vai para a lixeira) e limpa a confirmação', async () => {
+  it('"Desfazer" exclui o registro salvo (vai para a lixeira) e troca a confirmação pelo aviso `Registro desfeito: fralda.`', async () => {
     const { rotina } = await renderizarRotaPronta('/app/registro/novo?tipo=fralda')
     digitar('Conteúdo', 'ambos')
     await enviar()
@@ -223,7 +223,8 @@ describe('gravar um registro novo', () => {
     fireEvent.click(botao('Desfazer'))
     await aguardarCarga()
 
-    expect(status().textContent).toBe('')
+    expect(status().querySelector('p')!.textContent).toBe('Registro desfeito: fralda.')
+    expect(within(status()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Fechar'])
     const lixeira = await rotina.lixeira(ID_BEBE)
     expect(lixeira.ok && lixeira.valor.itens.map((r) => r.tipo)).toEqual(['fralda'])
   })

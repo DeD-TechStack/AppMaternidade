@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, screen, within } from '@testing-library/react'
 import { simularFalhaRotina } from '../../dados/rotina.memoria.ts'
+import { relogioDoTeste } from '../../teste/relogio.ts'
 import { PESSOAS } from '../../teste/renderizarComDados.tsx'
 import { aguardarCarga, renderizarRotaPronta } from '../../teste/renderizarRota.tsx'
 import { criarMundoDeTeste } from '../../teste/rotina.fixture.ts'
@@ -171,11 +172,12 @@ describe('R38-22: quem pode alterar', () => {
 
 describe('R38-22: o Histórico de alterações', () => {
   it('uma linha por alteração, da mais antiga à mais nova, com o que o campo mudou', async () => {
+    const mudarRelogio = relogioDoTeste()
     const mundo = criarMundoDeTeste()
     const lido = await mundo.rotina.registro(MAMADA)
     if (!lido.ok || !lido.valor) throw new Error('fixture sem a mamada')
     await mundo.rotina.editarRegistro(MAMADA, { inicio: lido.valor.inicio, fim: new Date('2026-11-05T07:55:00').toISOString(), detalhes: lido.valor.detalhes, nota: null })
-    vi.setSystemTime(new Date('2026-11-05T10:30:00'))
+    mudarRelogio(new Date('2026-11-05T10:30:00'))
     await mundo.rotina.excluirRegistro(MAMADA)
     await renderizarRotaPronta(`/app/registro/${MAMADA}`, { mundo })
 
@@ -228,7 +230,7 @@ describe('R38-22: Excluir e Desfazer', () => {
     expect(document.querySelector(`[data-registro="${MAMADA}"]`)).toBeNull()
   })
 
-  it('Desfazer restaura, fecha a confirmação e leva o foco ao h1; Fechar só fecha', async () => {
+  it('Desfazer restaura, troca a confirmação pelo aviso `Registro desfeito: mamada.` (só com Fechar) e leva o foco ao h1; Fechar só fecha', async () => {
     await renderizarRotaPronta(`/app/registro/${MAMADA}`)
     fireEvent.click(botao('Excluir'))
     await aguardarCarga()
@@ -237,7 +239,8 @@ describe('R38-22: Excluir e Desfazer', () => {
     await aguardarCarga()
 
     expect(document.querySelector(`[data-registro="${MAMADA}"]`)).not.toBeNull()
-    expect(status().textContent).toBe('')
+    expect(status().querySelector('p')!.textContent).toBe('Registro desfeito: mamada.')
+    expect(within(status()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Fechar'])
     expect(document.activeElement).toBe(h1())
   })
 
@@ -256,9 +259,10 @@ describe('R38-22: Excluir e Desfazer', () => {
 
 describe('R38-22: o registro excluído e o prazo de 30 dias', () => {
   async function abrirExcluido(depoisDe: number) {
+    const mudarRelogio = relogioDoTeste()
     const mundo = criarMundoDeTeste()
     expect((await mundo.rotina.excluirRegistro(MAMADA)).ok).toBe(true)
-    vi.setSystemTime(new Date(INSTANTE.getTime() + depoisDe))
+    mudarRelogio(new Date(INSTANTE.getTime() + depoisDe))
     return renderizarRotaPronta(`/app/registro/${MAMADA}`, { mundo })
   }
 

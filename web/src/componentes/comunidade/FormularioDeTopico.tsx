@@ -4,6 +4,8 @@ import { COMUM_COMUNIDADE, FORMULARIO_TOPICO, TX } from '../../conteudo/comunida
 import type { Resultado } from '../../dados/comum.ts'
 import type { Espaco, PerfilPublico } from '../../dados/comunidade.ts'
 import { LIMITES, conferirLimite, type FaixaBebe } from '../../dados/comunidade.regras.ts'
+import { Cartao } from '../base/layout/Cartao.tsx'
+import { Pilha } from '../base/layout/Pilha.tsx'
 import { useFocoNoResumo } from '../conta/foco.ts'
 import { BOTAO_PRINCIPAL, BOTAO_SECUNDARIO } from '../conta/Partes.tsx'
 import { ResumoDeErro, Selo } from './Avisos.tsx'
@@ -95,18 +97,20 @@ export function FormularioDeTopico({ espaco, perfilId, edicao, aoNaoEditavel }: 
 
   if (previa) {
     return (
-      <div className="mt-6 flex max-w-[44rem] flex-col gap-4" data-previa="topico">
-        <h2 className="cm-h4">{FORMULARIO_TOPICO.previa}</h2>
-        <p>{TX.tx05}</p>
-        <article className="flex flex-col gap-3 rounded-cartao border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)] p-5">
+      <Pilha vao="grupo" className="max-w-[44rem]" data-previa="topico">
+        <Pilha vao="pilha">
+          <h2 className="cm-h4 text-titulo-4">{FORMULARIO_TOPICO.previa}</h2>
+          <p>{TX.tx05}</p>
+        </Pilha>
+        <Cartao as="article" className="flex flex-col gap-3 border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)]">
           <Selo />
           <p className="cm-pequeno text-[var(--cor-texto-2)]">
             {FORMULARIO_TOPICO.espaco}: <span className="font-medium text-[var(--cor-texto)]">{espaco.nome}</span>
           </p>
-          <h3 className="cm-h4 wrap-anywhere">{titulo}</h3>
+          <h3 className="cm-h4 text-titulo-4 wrap-anywhere">{titulo}</h3>
           <Meta apelido={apelido} faixa={faixa} />
           <Texto>{corpo}</Texto>
-        </article>
+        </Cartao>
         {erro ? (
           <ResumoDeErro texto={erro.texto} rotuloDaAcao={botaoDoErro} aoAgir={() => void envio.tentarDeNovo()} refResumo={resumo} />
         ) : null}
@@ -126,12 +130,12 @@ export function FormularioDeTopico({ espaco, perfilId, edicao, aoNaoEditavel }: 
             {FORMULARIO_TOPICO.voltarEEditar}
           </button>
         </div>
-      </div>
+      </Pilha>
     )
   }
 
   return (
-    <form onSubmit={aoVerPrevia} noValidate className="mt-6 flex max-w-[40rem] flex-col gap-5">
+    <form onSubmit={aoVerPrevia} noValidate className="flex max-w-[40rem] flex-col gap-esp-pilha">
       <CampoComContador
         id="campo-titulo"
         rotulo={FORMULARIO_TOPICO.campoTitulo}
@@ -139,6 +143,7 @@ export function FormularioDeTopico({ espaco, perfilId, edicao, aoNaoEditavel }: 
         aoMudar={setTitulo}
         limite={LIMITES.titulo}
         mensagemDoLimite={FORMULARIO_TOPICO.erroTitulo}
+        obrigatorio
       />
       <CampoComContador
         id="campo-corpo"
@@ -148,14 +153,24 @@ export function FormularioDeTopico({ espaco, perfilId, edicao, aoNaoEditavel }: 
         limite={LIMITES.corpoTopico}
         mensagemDoLimite={FORMULARIO_TOPICO.erroCorpo}
         linhas={8}
+        obrigatorio
       />
       <EscolhaDeFaixa rotulo={COMUM_COMUNIDADE.faixaOpcional} valor={faixa} aoMudar={setFaixa} />
       <div>
-        <button type="submit" disabled={!valido} aria-describedby={dica ? dicaId : undefined} className={BOTAO_PRINCIPAL}>
+        {/* `aria-disabled` em vez de `disabled`: o Tab chega ao botão e a dica ligada a ele é lida (A11Y-005). */}
+        <button
+          type="submit"
+          aria-disabled={valido ? undefined : 'true'}
+          aria-describedby={dica ? dicaId : undefined}
+          className={BOTAO_PRINCIPAL}
+          onClick={(evento) => {
+            if (!valido) evento.preventDefault()
+          }}
+        >
           {FORMULARIO_TOPICO.verPrevia}
         </button>
         {dica ? (
-          <p id={dicaId} className="cm-pequeno mt-2 text-[var(--cor-texto-2)]">
+          <p id={dicaId} className="cm-pequeno pt-2 text-[var(--cor-texto-2)]">
             {dica}
           </p>
         ) : null}

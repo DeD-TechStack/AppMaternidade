@@ -1,6 +1,7 @@
 import { useParams } from 'react-router'
 import { ErroDeLeitura, Esqueleto, NaoEncontrado, ParaEntrar } from '../../componentes/comunidade/Avisos.tsx'
 import { useDadosComunidade } from '../../componentes/comunidade/dados.ts'
+import { Faixa } from '../../componentes/comunidade/Faixa.tsx'
 import { FormularioDeTopico } from '../../componentes/comunidade/FormularioDeTopico.tsx'
 import { Quadro, TituloDaTela } from '../../componentes/comunidade/Quadro.tsx'
 import { ehEscritor, useSituacao } from '../../componentes/comunidade/situacao.ts'
@@ -22,23 +23,32 @@ function EdicaoLida({ id }: { id: string }) {
   const editavel = lido !== null && lida !== null && lido.estado === 'visivel' && lido.autorId !== null && lido.autorId === lida.perfilId
 
   return (
-    <Quadro voltar={`/app/comunidade/topico/${id}`} ocupado={leituras.some((leitura) => leitura.estado.fase === 'carregando')}>
-      <TituloDaTela>{FORMULARIO_TOPICO.tituloEditar}</TituloDaTela>
-      <div className="mt-6">{leituras.some((leitura) => leitura.esqueleto) ? <Esqueleto linhas={2} /> : null}</div>
-      {leituras.map((leitura, indice) =>
-        leitura.estado.fase === 'erro' ? (
-          <ErroDeLeitura key={indice} erro={leitura.estado.erro} aoTentarDeNovo={() => void leitura.recarregar()} />
-        ) : null,
-      )}
-      {pronto && lida && !ehEscritor(lida) ? <ParaEntrar destino={`/app/comunidade/topico/${id}/editar`} /> : null}
-      {pronto && lida && ehEscritor(lida) && !editavel ? <NaoEncontrado /> : null}
+    <Quadro
+      voltar={`/app/comunidade/topico/${id}`}
+      ocupado={leituras.some((leitura) => leitura.estado.fase === 'carregando')}
+      titulo={<TituloDaTela>{FORMULARIO_TOPICO.tituloEditar}</TituloDaTela>}
+      cabeca={
+        <>
+          {leituras.some((leitura) => leitura.esqueleto) ? <Esqueleto linhas={2} /> : null}
+          {leituras.map((leitura, indice) =>
+            leitura.estado.fase === 'erro' ? (
+              <ErroDeLeitura key={indice} erro={leitura.estado.erro} aoTentarDeNovo={() => void leitura.recarregar()} />
+            ) : null,
+          )}
+          {pronto && lida && !ehEscritor(lida) ? <ParaEntrar destino={`/app/comunidade/topico/${id}/editar`} /> : null}
+          {pronto && lida && ehEscritor(lida) && !editavel ? <NaoEncontrado /> : null}
+        </>
+      }
+    >
       {lido && lida && editavel && ehEscritor(lida) && lida.perfilId && espaco ? (
-        <FormularioDeTopico
-          espaco={espaco}
-          perfilId={lida.perfilId}
-          edicao={{ id: lido.id, titulo: lido.titulo, corpo: lido.corpo, faixa: lido.faixa }}
-          aoNaoEditavel={() => void topico.reler()}
-        />
+        <Faixa>
+          <FormularioDeTopico
+            espaco={espaco}
+            perfilId={lida.perfilId}
+            edicao={{ id: lido.id, titulo: lido.titulo, corpo: lido.corpo, faixa: lido.faixa }}
+            aoNaoEditavel={() => void topico.reler()}
+          />
+        </Faixa>
       ) : null}
     </Quadro>
   )
@@ -50,10 +60,7 @@ export function EditarTopico() {
   const { id } = useParams()
   if (!ehUuid(id)) {
     return (
-      <Quadro voltar="/app/comunidade">
-        <TituloDaTela>{LISTA.titulo}</TituloDaTela>
-        <NaoEncontrado />
-      </Quadro>
+      <Quadro voltar="/app/comunidade" titulo={<TituloDaTela>{LISTA.titulo}</TituloDaTela>} cabeca={<NaoEncontrado />} />
     )
   }
   return <EdicaoLida key={id} id={id} />

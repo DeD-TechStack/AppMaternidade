@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, screen, within } from '@testing-library/react'
 import { simularFalhaRotina } from '../../dados/rotina.memoria.ts'
 import type { FixtureRotina } from '../../dados/rotina.memoria.ts'
+import { relogioDoTeste } from '../../teste/relogio.ts'
 import { PESSOAS } from '../../teste/renderizarComDados.tsx'
 import { aguardarCarga, renderizarRotaPronta } from '../../teste/renderizarRota.tsx'
 import { criarMundoDeTeste } from '../../teste/rotina.fixture.ts'
@@ -163,10 +164,11 @@ describe('R38-23: restaurar', () => {
   })
 
   it('o prazo vence entre a leitura e o toque: a frase do catálogo e o item sai da lista', async () => {
+    const mudarRelogio = relogioDoTeste()
     await renderizarRotaPronta('/app/lixeira', { ajustarRotina: excluindo({ 3: { por: PESSOAS.juliana.id, haMs: 30 * DIA - 60_000 } }) })
     expect(idsDaLista()).toEqual([id(3)])
 
-    vi.setSystemTime(new Date(INSTANTE.getTime() + 2 * 60_000))
+    mudarRelogio(new Date(INSTANTE.getTime() + 2 * 60_000))
     fireEvent.click(screen.getByRole('button', { name: /^Restaurar / }))
     await aguardarCarga()
 
