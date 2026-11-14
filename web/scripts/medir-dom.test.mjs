@@ -41,6 +41,8 @@ import {
   tresD,
   verificarLoopback,
 } from './medir-dom.mjs'
+// MED-AUTH: as peças novas pelo namespace, para que a falta de uma delas reprove só o teste dela.
+import * as medir from './medir-dom.mjs'
 
 const PAPEL = 'rgb(248, 246, 235)'
 const TINTA = 'rgb(43, 35, 32)'
@@ -1911,7 +1913,9 @@ describe('MAT-48e: o CLI de verdade (spawn)', () => {
  * `tema` é o que `data-tema` mostra depois do clique.
  */
 const TOGGLE_NO_CABECALHO = { cabecalho: true, menuBotao: false, menuToggle: false, fecha: true }
-function cdpFalso({ entra = true, toggle = TOGGLE_NO_CABECALHO, tema = 'madrugada' } = {}) {
+// MED-AUTH: `pagina` é o que a conferência do caminho e do h1 lê (a expressão com `h1_texto`), e
+// `leitura` é o que o coletor devolve (a expressão com `coletarNaPagina`).
+function cdpFalso({ entra = true, toggle = TOGGLE_NO_CABECALHO, tema = 'madrugada', pagina = null, leitura = null } = {}) {
   const chamadas = []
   let enviou = false
   const cdp = {
@@ -1922,7 +1926,9 @@ function cdpFalso({ entra = true, toggle = TOGGLE_NO_CABECALHO, tema = 'madrugad
       const e = String(params.expression)
       if (e.includes('requestSubmit')) enviou = true
       let valor = true
-      if (e.includes('location.pathname')) valor = enviou && entra
+      if (e.includes('h1_texto')) valor = pagina
+      else if (e.includes('coletarNaPagina')) valor = leitura
+      else if (e.includes('location.pathname')) valor = enviou && entra
       else if (e.includes('getAnimations')) valor = 0
       else if (e.includes("getAttribute('data-tema')")) valor = tema
       else if (e.includes('[data-menu-celular] button[aria-pressed]')) valor = Boolean(toggle.menuToggle)
@@ -2115,5 +2121,248 @@ describe('MAT-48e: o modo madrugada pelo cabeçalho, pelo menu do celular ou "n�
       linhaNaoSeAplica({ caso: 'comofunciona', tema: 'madrugada', largura: 390 }, 'sem botão'),
       'NAO_SE_APLICA comofunciona_madrugada_390: sem botão',
     )
+  })
+})
+
+// ---------------------------------------------------------------------------------------------
+// MED-AUTH: a moderação entra com o moderador da demonstração, e todo caso confere o caminho final e
+// o h1 antes de medir (falha fechado).
+
+const BASE_MED = 'http://127.0.0.1:5244/'
+
+/** Uma leitura mínima do coletor, para o caminho feliz do medirPedido no cdp falso. */
+const leituraMinima = () => ({ doc: { ...doc1440, tokens: {} }, nos: [criar({ tag: 'h1', texto: 'Denúncias' })] })
+
+describe('MED-AUTH:RF-01 rotaExigeSessao: app/... e moderacao[/...]', () => {
+  it("app/..., moderacao e moderacao/... pedem sessão; '', sistema, entrar, apple/app/hoje, moderacaox e x/moderacao não", () => {
+    for (const rota of ['app/hoje', 'app/registro/novo', 'moderacao', 'moderacao/auditoria', 'moderacao/denuncia/1']) {
+      assert.equal(medir.rotaExigeSessao(rota), true, rota)
+    }
+    for (const rota of ['', 'sistema', 'entrar', 'apple/app/hoje', 'moderacaox', 'x/moderacao']) {
+      assert.equal(medir.rotaExigeSessao(rota), false, rota)
+    }
+  })
+})
+
+describe('MED-AUTH:RF-03 as contas da medição vêm de conta.demonstracao.ts', () => {
+  it('os e-mails e a senha das constantes são os de PESSOAS_DEMONSTRACAO e SENHA_DEMONSTRACAO', async () => {
+    const fonte = await import('../src/dados/conta.demonstracao.ts')
+    assert.ok(fonte.PESSOAS_DEMONSTRACAO.moderador, 'PESSOAS_DEMONSTRACAO.moderador ausente')
+    assert.equal(medir.CONTAS_DE_MEDICAO?.responsavel?.email, fonte.PESSOAS_DEMONSTRACAO.responsavel.email)
+    assert.equal(medir.CONTAS_DE_MEDICAO?.moderador?.email, fonte.PESSOAS_DEMONSTRACAO.moderador.email)
+    assert.equal(medir.SENHA_DE_MEDICAO, fonte.SENHA_DEMONSTRACAO)
+    assert.deepEqual(Object.keys(medir.CONTAS_DE_MEDICAO).sort(), ['moderador', 'responsavel'])
+  })
+
+  it('a conta padrão: moderador na moderação, responsável no app, nenhuma na rota pública', () => {
+    const casos = { fila: { rota: 'moderacao' }, papeis: { rota: '/moderacao/papeis' }, comofunciona: { rota: 'como-funciona' } }
+    const pedidos = ['hoje', 'fila', 'papeis', 'comofunciona', 'sistema'].map((caso) => ({ caso, tema: 'claro', largura: 390, altura: 844 }))
+    assert.deepEqual(
+      medir.rotasDosPedidos(pedidos, casos).map((p) => p.conta),
+      ['responsavel', 'moderador', 'moderador', null, null],
+    )
+  })
+
+  it("conta: 'responsavel' ou 'moderador' no caso troca a padrão; qualquer outro valor é erro de uso", () => {
+    const pedido = (caso) => [{ caso, tema: 'claro', largura: 390, altura: 844 }]
+    const casos = {
+      comojuliana: { rota: 'moderacao', conta: 'responsavel' },
+      comodiego: { rota: 'app/hoje', conta: 'moderador' },
+      admin: { rota: 'moderacao', conta: 'admin' },
+      vazia: { rota: 'moderacao', conta: '' },
+      numero: { rota: 'app/hoje', conta: 1 },
+      nula: { rota: 'app/hoje', conta: null },
+    }
+    assert.equal(medir.rotasDosPedidos(pedido('comojuliana'), casos)[0].conta, 'responsavel')
+    assert.equal(medir.rotasDosPedidos(pedido('comodiego'), casos)[0].conta, 'moderador')
+    for (const caso of ['admin', 'vazia', 'numero', 'nula']) {
+      assert.throws(() => medir.rotasDosPedidos(pedido(caso), casos), /conta inválida/, caso)
+    }
+  })
+
+  it('a moderação entra com o e-mail do moderador e a senha da demonstração, e só depois vai a /moderacao', async () => {
+    const cdp = cdpFalso()
+    await medir.abrirCaso(cdp, BASE_MED, { caso: 'fila', tema: 'claro', rota: 'moderacao', conta: 'moderador' })
+    const expressoes = avaliadas(cdp)
+    const login = expressoes.find((e) => e.includes('requestSubmit'))
+    assert.ok(login, 'não fez o login')
+    assert.ok(login.includes('diego.moderador@exemplo.invalid'))
+    assert.ok(!login.includes('juliana@exemplo.invalid'))
+    assert.ok(login.includes(medir.SENHA_DE_MEDICAO ?? '<sem senha>'))
+    const push = expressoes.findIndex((e) => e.includes('pushState'))
+    assert.ok(push > expressoes.indexOf(login))
+    assert.ok(expressoes[push].includes("'/moderacao'") || expressoes[push].includes('"/moderacao"'))
+  })
+
+  it('sem conta no pedido, a rota da moderação usa o moderador e a do app a responsável', async () => {
+    const fila = cdpFalso()
+    await medir.abrirCaso(fila, BASE_MED, { caso: 'fila', tema: 'claro', rota: 'moderacao' })
+    assert.ok(avaliadas(fila).find((e) => e.includes('requestSubmit')).includes('diego.moderador@exemplo.invalid'))
+    const hoje = cdpFalso()
+    await medir.abrirCaso(hoje, BASE_MED, { caso: 'hoje', tema: 'claro', rota: 'app/hoje' })
+    assert.ok(avaliadas(hoje).find((e) => e.includes('requestSubmit')).includes('juliana@exemplo.invalid'))
+  })
+
+  it("conta 'responsavel' na moderação entra como Juliana (o estado SemPermissao do NEW-D)", async () => {
+    const cdp = cdpFalso()
+    await medir.abrirCaso(cdp, BASE_MED, { caso: 'fila', tema: 'claro', rota: 'moderacao', conta: 'responsavel' })
+    const login = avaliadas(cdp).find((e) => e.includes('requestSubmit'))
+    assert.ok(login.includes('juliana@exemplo.invalid'))
+    assert.ok(!login.includes('diego.moderador@exemplo.invalid'))
+  })
+
+  it('entrarNaDemonstracao recusa uma conta desconhecida antes de abrir /entrar', async () => {
+    const cdp = cdpFalso()
+    await assert.rejects(medir.entrarNaDemonstracao(cdp, BASE_MED, { conta: 'admin' }), /conta inválida/)
+    assert.equal(cdp.chamadas.length, 0)
+  })
+})
+
+describe('MED-AUTH:RF-04 caminhoEsperado e verificarPagina', () => {
+  it('caminhoEsperado: a rota do caso, o caminho quando o caso o define, /app/sessao para a sessão, sem busca', () => {
+    assert.equal(medir.caminhoEsperado({ caso: 'hoje', rota: 'app/hoje' }, BASE_MED), '/app/hoje')
+    assert.equal(medir.caminhoEsperado({ caso: 'sistema', rota: 'sistema' }, BASE_MED), '/sistema')
+    assert.equal(medir.caminhoEsperado({ caso: 'inicio', rota: '' }, BASE_MED), '/')
+    assert.equal(medir.caminhoEsperado({ caso: 'sessao', rota: 'app/hoje' }, BASE_MED), '/app/sessao')
+    assert.equal(medir.caminhoEsperado({ caso: 'fila', rota: 'moderacao' }, BASE_MED), '/moderacao')
+    assert.equal(medir.caminhoEsperado({ caso: 'x', rota: 'app/hoje', caminho: 'app/historico' }, BASE_MED), '/app/historico')
+    assert.equal(medir.caminhoEsperado({ caso: 'x', rota: 'app/hoje', caminho: '/app/historico' }, BASE_MED), '/app/historico')
+    assert.equal(medir.caminhoEsperado({ caso: 'x', rota: 'app/hoje?aba=2' }, BASE_MED), '/app/hoje')
+    assert.equal(medir.caminhoEsperado({ caso: 'x', rota: 'moderacao' }, 'http://127.0.0.1:5244/site/'), '/site/moderacao')
+  })
+
+  it('rotasDosPedidos leva o caminho do caso, e um caminho que não é texto é erro de uso', () => {
+    const casos = { hist: { rota: 'app/hoje', caminho: 'app/historico' }, ruim: { rota: 'app/hoje', caminho: 3 } }
+    assert.equal(medir.rotasDosPedidos([{ caso: 'hist', tema: 'claro', largura: 1, altura: 1 }], casos)[0].caminho, 'app/historico')
+    assert.throws(() => medir.rotasDosPedidos([{ caso: 'ruim', tema: 'claro', largura: 1, altura: 1 }], casos), /caminho inválido/)
+  })
+
+  it('MANCHETE_LOGIN é MANCHETES.entrar de web/src/conteudo/conta.ts, unida por um espaço', async () => {
+    const { MANCHETES } = await import('../src/conteudo/conta.ts')
+    assert.equal(medir.MANCHETE_LOGIN, MANCHETES.entrar.join(' '))
+  })
+
+  it('verificarPagina passa com o caminho certo e um h1 que não é o do login, e devolve o que viu', async () => {
+    const cdp = cdpFalso({ pagina: { caminho: '/moderacao', h1_texto: '  Denúncias \n' } })
+    assert.deepEqual(await medir.verificarPagina(cdp, '/moderacao'), { caminho: '/moderacao', h1_texto: 'Denúncias' })
+  })
+
+  it('verificarPagina reprova o caminho diferente (a guarda levou a /entrar, ou a rota errada)', async () => {
+    const naEntrada = cdpFalso({ pagina: { caminho: '/entrar', h1_texto: 'Denúncias' } })
+    await assert.rejects(medir.verificarPagina(naEntrada, '/moderacao'), /caminho \/entrar, esperado \/moderacao/)
+    const outra = cdpFalso({ pagina: { caminho: '/app/hoje', h1_texto: 'Hoje' } })
+    await assert.rejects(medir.verificarPagina(outra, '/app/historico'), /caminho \/app\/hoje, esperado \/app\/historico/)
+  })
+
+  it('verificarPagina reprova a página sem h1 e o h1 do login, com ou sem espaço entre as linhas', async () => {
+    await assert.rejects(medir.verificarPagina(cdpFalso({ pagina: { caminho: '/entrar', h1_texto: null } }), '/entrar'), /sem h1/)
+    await assert.rejects(medir.verificarPagina(cdpFalso({ pagina: { caminho: '/entrar', h1_texto: '   ' } }), '/entrar'), /sem h1/)
+    for (const h1 of ['Volte à rotina da família.', 'Volte à rotinada família.', '\n Volte à rotina\n  da família. ']) {
+      const cdp = cdpFalso({ pagina: { caminho: '/entrar', h1_texto: h1 } })
+      await assert.rejects(medir.verificarPagina(cdp, '/entrar'), /h1 do login/, JSON.stringify(h1))
+    }
+  })
+
+  it('verificarPagina reprova a leitura ilegível (sem objeto ou sem caminho)', async () => {
+    await assert.rejects(medir.verificarPagina(cdpFalso({ pagina: null }), '/moderacao'), /caminho/)
+    await assert.rejects(medir.verificarPagina(cdpFalso({ pagina: { h1_texto: 'Denúncias' } }), '/moderacao'), /caminho/)
+  })
+})
+
+describe('MED-AUTH:RF-05 medirPedido falha fechado e não grava JSON', () => {
+  const temporarias = []
+  after(() => {
+    for (const pasta of temporarias) fs.rmSync(pasta, { recursive: true, force: true })
+  })
+  const pastaNova = () => {
+    const pasta = fs.mkdtempSync(path.join(os.tmpdir(), 'medir-dom-med-'))
+    temporarias.push(pasta)
+    return pasta
+  }
+  const pedidoFila = { caso: 'fila', tema: 'claro', largura: 1440, altura: 900, rota: 'moderacao', conta: 'moderador' }
+
+  it('caminho diferente do esperado: lança com o caso e o motivo, sem coletar nem gravar', async () => {
+    const pasta = pastaNova()
+    const cdp = cdpFalso({ pagina: { caminho: '/app/hoje', h1_texto: 'Hoje' }, leitura: leituraMinima() })
+    await assert.rejects(medir.medirPedido(cdp, BASE_MED, { ...pedidoFila, caso: 'x', rota: 'app/hoje', caminho: 'app/historico', conta: 'responsavel' }, pasta), /x: .*caminho \/app\/hoje, esperado \/app\/historico/)
+    assert.deepEqual(fs.readdirSync(pasta), [])
+    assert.ok(!avaliadas(cdp).some((e) => e.includes('coletarNaPagina')))
+  })
+
+  it('o h1 do login (a rota entrar): lança e não grava', async () => {
+    const pasta = pastaNova()
+    const cdp = cdpFalso({ pagina: { caminho: '/entrar', h1_texto: 'Volte à rotina da família.' }, leitura: leituraMinima() })
+    await assert.rejects(medir.medirPedido(cdp, BASE_MED, { caso: 'login', tema: 'claro', largura: 1440, altura: 900, rota: 'entrar', conta: null }, pasta), /login: .*h1 do login/)
+    assert.deepEqual(fs.readdirSync(pasta), [])
+  })
+
+  it('o login que não sai de /entrar: lança com o caso e não grava', async () => {
+    const pasta = pastaNova()
+    const cdp = cdpFalso({ entra: false, pagina: { caminho: '/entrar', h1_texto: 'Volte à rotina da família.' }, leitura: leituraMinima() })
+    await assert.rejects(medir.medirPedido(cdp, BASE_MED, pedidoFila, pasta, { voltas: 3 }), /fila: .*não consegui entrar na demonstração/)
+    assert.deepEqual(fs.readdirSync(pasta), [])
+  })
+
+  it('caminho e h1 certos: grava o JSON com a rota, medidas.caminho e medidas.h1_texto', async () => {
+    const pasta = pastaNova()
+    const cdp = cdpFalso({ pagina: { caminho: '/moderacao', h1_texto: 'Denúncias' }, leitura: leituraMinima() })
+    const r = await medir.medirPedido(cdp, BASE_MED, pedidoFila, pasta)
+    assert.equal(r.arquivo, 'fila_claro_1440.json')
+    const json = JSON.parse(fs.readFileSync(path.join(pasta, 'fila_claro_1440.json'), 'utf8'))
+    assert.equal(json.rota, 'moderacao')
+    assert.equal(json.medidas.caminho, '/moderacao')
+    assert.equal(json.medidas.h1_texto, 'Denúncias')
+    assert.ok(Array.isArray(json.resultados) && json.resultados.length === REGRAS.length)
+    // A conferência vem antes da coleta.
+    const expressoes = avaliadas(cdp)
+    assert.ok(expressoes.findIndex((e) => e.includes('h1_texto')) < expressoes.findIndex((e) => e.includes('coletarNaPagina')))
+  })
+})
+
+describe('MED-AUTH:RF-03/RF-05 o CLI de verdade (spawn)', () => {
+  const SCRIPT = fileURLToPath(new URL('./medir-dom.mjs', import.meta.url))
+  const SENHA = 'senha-local-ficticia'
+  const temporarias = []
+  after(() => {
+    for (const pasta of temporarias) fs.rmSync(pasta, { recursive: true, force: true })
+  })
+  const pastaNova = (prefixo) => {
+    const pasta = fs.mkdtempSync(path.join(os.tmpdir(), prefixo))
+    temporarias.push(pasta)
+    return pasta
+  }
+  const rodar = (argumentos, cwd) => {
+    const env = { ...process.env, CDP_PORTA: '1' }
+    delete env.BASE_URL
+    return spawnSync(process.execPath, [SCRIPT, ...argumentos], { cwd, env, encoding: 'utf8', timeout: 60000 })
+  }
+  const comCdp = (casos) => {
+    const cwd = pastaNova('medir-dom-med-cwd-')
+    fs.mkdirSync(path.join(cwd, '.oc'))
+    fs.writeFileSync(path.join(cwd, '.oc', 'cdp.mjs'), `export const CASOS = ${JSON.stringify(casos)}\n`)
+    return cwd
+  }
+
+  it("conta desconhecida em CASOS: saída 2 de uso, sem Chrome, sem JSON e sem a senha na saída", () => {
+    const cwd = comCdp({ fila: { rota: 'moderacao', conta: 'admin' } })
+    const saida = pastaNova('medir-dom-med-saida-')
+    const r = rodar([saida, 'fila:claro:1440x900'], cwd)
+    assert.equal(r.status, 2, `${r.stdout}\n${r.stderr}`)
+    assert.match(r.stderr, /conta inválida/)
+    assert.doesNotMatch(r.stderr, /erro de medição/)
+    assert.deepEqual(fs.readdirSync(saida), [])
+    assert.ok(!`${r.stdout}${r.stderr}`.includes(SENHA))
+  })
+
+  it('o JSON velho do caso é apagado antes de medir: a falha deixa a pasta sem ele, e o erro diz o caso', () => {
+    const cwd = comCdp({ fila: { rota: 'moderacao' } })
+    const saida = pastaNova('medir-dom-med-saida-')
+    fs.writeFileSync(path.join(saida, 'fila_claro_1440.json'), '{"velho":true}')
+    fs.writeFileSync(path.join(saida, 'outro_claro_1440.json'), '{"de_outro_caso":true}')
+    const r = rodar([saida, 'fila:claro:1440x900'], cwd)
+    assert.equal(r.status, 2, `${r.stdout}\n${r.stderr}`)
+    assert.match(r.stderr, /^erro de medição: fila: /m)
+    assert.deepEqual(fs.readdirSync(saida), ['outro_claro_1440.json'])
+    assert.ok(!`${r.stdout}${r.stderr}`.includes(SENHA))
   })
 })
