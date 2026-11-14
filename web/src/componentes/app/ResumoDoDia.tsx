@@ -26,7 +26,7 @@ export function ResumoDoDia({ itens, className }: Props) {
         {itens.map((item) => (
           <li
             key={item.rotulo}
-            className="flex min-w-0 flex-row-reverse items-baseline justify-between gap-4 border-t border-(--cor-fio-suave) py-3 @min-[18rem]/resumo:flex-col-reverse @min-[18rem]/resumo:items-stretch @min-[18rem]/resumo:justify-end @min-[18rem]/resumo:gap-1.5 @min-[18rem]/resumo:border-t-0 @min-[18rem]/resumo:border-l @min-[18rem]/resumo:py-4 @min-[18rem]/resumo:pl-4 @min-[18rem]/resumo:first:border-l-0 @min-[18rem]/resumo:first:pl-0 lg:@min-[18rem]/resumo:py-5 lg:@min-[18rem]/resumo:pl-6"
+            className="flex min-w-0 flex-row-reverse items-baseline justify-between gap-4 border-t border-(--cor-fio-suave) py-3 @min-[18rem]/resumo:flex-col-reverse @min-[18rem]/resumo:items-stretch @min-[18rem]/resumo:justify-end @min-[18rem]/resumo:gap-1.5 @min-[18rem]/resumo:border-t-0 @min-[18rem]/resumo:border-l @min-[18rem]/resumo:py-4 @min-[18rem]/resumo:pr-esp-junto @min-[18rem]/resumo:pl-4 @min-[18rem]/resumo:first:border-l-0 @min-[18rem]/resumo:first:pl-0 lg:@min-[18rem]/resumo:py-5 lg:@min-[18rem]/resumo:pl-6"
           >
             <span
               data-numero-do-dia=""
