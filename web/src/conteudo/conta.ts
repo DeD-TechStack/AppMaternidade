@@ -1,4 +1,5 @@
 import type { ErroDados } from '../dados/comum.ts'
+import { rotuloDoFuso } from '../componentes/conta/fusos.ts'
 
 // Todos os textos de interface da área de conta (MAT-37a). Já passaram pela revisão de texto
 // (`.oc/textos_MAT-37a.md`): não reescrever. A LOC-04 trocou as frases dos achados C01 a C15 da
@@ -248,7 +249,8 @@ export const CONVITE = {
 export const FAMILIA = {
   seletor: 'Família',
   voceE: (papel: string) => `Você é ${papel}.`,
-  fuso: (fuso: string) => `Fuso: ${fuso}`,
+  /** O fuso da família em pt-BR ("Fuso: Horário de Brasília (UTC−3)"), nunca o identificador IANA. */
+  fuso: (fuso: string) => `Fuso: ${rotuloDoFuso(fuso)}`,
   carregando: 'Carregando a família…',
   bebes: {
     titulo: 'Bebês',
