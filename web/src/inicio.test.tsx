@@ -452,6 +452,18 @@ describe('Início: fechamento', () => {
     expect(new Set(nomes).size).toBe(nomes.length)
   })
 
+  it('a caixa de cor do fechamento não sobrescreve o padding da primitiva; a coluna do disco é reservada no conteúdo', () => {
+    const regras = lerRegrasCss('componentes/inicio/inicio.css')
+    // Contrato H-3: o padding inline da caixa é espaco-painel, sem override da página.
+    const daCaixa = regras.filter((regra) => regra.seletores.some((seletor) => seletor.startsWith('.in-fechamento-caixa')))
+    expect(daCaixa.length).toBeGreaterThan(0)
+    for (const regra of daCaixa) expect(regra.corpo).not.toMatch(/(^|[\s;])padding(-right|-left|-inline[a-z-]*)?\s*:/)
+    const conteudo = regras.find(
+      (regra) => regra.midia === '@media (min-width: 960px)' && regra.seletores.includes('.in-fechamento-conteudo'),
+    )!
+    expect(conteudo.corpo).toContain('padding-right: var(--in-reserva-conteudo)')
+  })
+
   it('"Começar grátis" aparece duas vezes, na abertura e no fechamento, sempre para /app/hoje', () => {
     const { main } = abrirInicio()
     const links = within(main).getAllByRole('link', { name: 'Começar grátis' })

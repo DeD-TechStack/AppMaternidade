@@ -903,6 +903,7 @@
   --in-mordida: calc(var(--in-arte-fechamento) - var(--espaco-secao));
   --in-recuo: calc(var(--in-mordida) - var(--espaco-secao) + var(--espaco-grupo));
   --in-reserva-arte: calc(2 * var(--espaco-painel) + var(--in-arte-fechamento));
+  --in-reserva-conteudo: calc(var(--espaco-painel) + var(--in-arte-fechamento));
   position: relative;
   text-align: left;
 }
@@ -916,12 +917,11 @@
 }
 
 @media (min-width: 960px) {
-  .in-fechamento-caixa {
-    padding-right: var(--in-reserva-arte);
-  }
-
+  /* A caixa de cor guarda o padding da primitiva (espaco-painel dos lados); a coluna do disco é reservada aqui,
+     no conteúdo, pelo que falta para `--in-reserva-arte` (`--in-reserva-conteudo`). */
   .in-fechamento-conteudo {
     padding-top: 0;
+    padding-right: var(--in-reserva-conteudo);
   }
 }
 
