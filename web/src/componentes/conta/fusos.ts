@@ -36,6 +36,47 @@ export function listaDeFusos(): string[] {
   return [...new Set([...brasil, ...resto])]
 }
 
+// O nome da cidade de cada fuso do Brasil, com acento (o identificador IANA não tem).
+const CIDADES_DO_BRASIL: Readonly<Record<string, string>> = {
+  'America/Sao_Paulo': 'São Paulo',
+  'America/Cuiaba': 'Cuiabá',
+  'America/Belem': 'Belém',
+  'America/Maceio': 'Maceió',
+  'America/Araguaina': 'Araguaína',
+  'America/Santarem': 'Santarém',
+  'America/Noronha': 'Fernando de Noronha',
+  'America/Eirunepe': 'Eirunepé',
+}
+
+const parteDoNome = (fuso: string, timeZoneName: 'longGeneric' | 'shortOffset') =>
+  new Intl.DateTimeFormat('pt-BR', { timeZone: fuso, timeZoneName }).formatToParts(new Date()).find((p) => p.type === 'timeZoneName')?.value ?? ''
+
+const ROTULOS = new Map<string, string>()
+
+/**
+ * O fuso em pt-BR para a lista: o nome do horário, a diferença para o UTC e a cidade, como
+ * "Horário Padrão de Brasília (UTC−3, São Paulo)". O valor guardado continua o identificador IANA.
+ * Fuso sem nome próprio (`UTC`, `Etc/GMT+3`) mostra só a diferença; identificador inválido volta como veio.
+ */
+export function rotuloDoFuso(fuso: string): string {
+  const pronto = ROTULOS.get(fuso)
+  if (pronto) return pronto
+  let rotulo = fuso
+  try {
+    const diferenca = parteDoNome(fuso, 'shortOffset').replace(/^GMT(\+0)?/, 'UTC').replace('-', '−')
+    const nome = parteDoNome(fuso, 'longGeneric')
+    const semCidade = fuso === 'UTC' || fuso.startsWith('Etc/') || !fuso.includes('/')
+    const cidade = semCidade ? '' : (CIDADES_DO_BRASIL[fuso] ?? fuso.slice(fuso.lastIndexOf('/') + 1).replaceAll('_', ' '))
+    const temNome = nome !== '' && !nome.startsWith('GMT') && !nome.startsWith('UTC')
+    if (temNome) rotulo = cidade ? `${nome} (${diferenca}, ${cidade})` : `${nome} (${diferenca})`
+    else rotulo = cidade ? `${cidade} (${diferenca})` : diferenca
+  } catch {
+    // Identificador que o navegador não conhece: fica o identificador.
+  }
+  ROTULOS.set(fuso, rotulo)
+  return rotulo
+}
+
 /** O fuso do aparelho, ou `America/Sao_Paulo` se ele não estiver na lista. */
 export function fusoDoAparelho(): string {
   const lista = listaDeFusos()
