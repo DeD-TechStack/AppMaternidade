@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { ESLint, type Linter } from 'eslint'
 import stylelint from 'stylelint'
+import ts from 'typescript'
 import { describe, expect, it, vi } from 'vitest'
 
 // H3:RF-03 da SPEC_H3 (cartão H-3g): as duas ferramentas de lint da harmonia são bloqueantes. Este arquivo
@@ -24,23 +25,44 @@ interface Excecao {
 
 // ---------- 1. style={{}} ----------
 
-const CHAVE_DE_ESPACO_OU_TIPO = /(?:^|[\s,{'"])(?:margin|padding)[\w-]*['"]?\s*:|(?:^|[\s,{'"])(?:gap|rowGap|columnGap|row-gap|column-gap|fontSize|font-size|lineHeight|line-height)['"]?\s*:/
+const CHAVE_DE_ESPACO_OU_TIPO = /^(?:(?:margin|padding)[\w-]*|gap|rowGap|columnGap|row-gap|column-gap|fontSize|font-size|lineHeight|line-height)$/
 
-// Cada `style={{ ... }}` do texto cujo objeto traz margin*, padding*, gap, fontSize ou lineHeight, com a linha.
-function estilosSoltos(texto: string): number[] {
-  const linhas: number[] = []
-  for (const achado of texto.matchAll(/style=\{\{/g)) {
-    const abre = achado.index + achado[0].length - 1
-    let fundo = 0
-    let fim = abre
-    for (; fim < texto.length; fim += 1) {
-      if (texto[fim] === '{') fundo += 1
-      else if (texto[fim] === '}' && --fundo === 0) break
-    }
-    const objeto = texto.slice(abre + 1, fim)
-    const chave = CHAVE_DE_ESPACO_OU_TIPO.exec(objeto)
-    if (chave) linhas.push(texto.slice(0, abre + 1 + chave.index).split('\n').length)
+// O objeto de `style={...}` sem parênteses, `as` e `satisfies`, ou `null` se a expressão não é um objeto literal.
+function objetoDoStyle(expressao: ts.Expression): ts.ObjectLiteralExpression | null {
+  let atual = expressao
+  while (ts.isParenthesizedExpression(atual) || ts.isAsExpression(atual) || ts.isSatisfiesExpression(atual)) atual = atual.expression
+  return ts.isObjectLiteralExpression(atual) ? atual : null
+}
+
+function nomeDaChave(nome: ts.PropertyName): string | null {
+  if (ts.isIdentifier(nome) || ts.isStringLiteral(nome) || ts.isNoSubstitutionTemplateLiteral(nome)) return nome.text
+  if (ts.isComputedPropertyName(nome)) {
+    const dentro = nome.expression
+    return ts.isStringLiteral(dentro) || ts.isNoSubstitutionTemplateLiteral(dentro) ? dentro.text : null
   }
+  return null
+}
+
+// Cada `style={{ ... }}` com uma propriedade margin*, padding*, gap, fontSize ou lineHeight: a linha (1-based) da primeira.
+// Lê o texto com o compilador do TypeScript: espaço e quebra de linha no JSX, texto e comentário não enganam.
+function estilosSoltos(texto: string): number[] {
+  const arvore = ts.createSourceFile('exemplo.tsx', texto, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
+  const linhas: number[] = []
+  const visitar = (no: ts.Node): void => {
+    if (ts.isJsxAttribute(no) && ts.isIdentifier(no.name) && no.name.text === 'style' && no.initializer && ts.isJsxExpression(no.initializer)) {
+      const objeto = no.initializer.expression ? objetoDoStyle(no.initializer.expression) : null
+      for (const propriedade of objeto?.properties ?? []) {
+        if (!propriedade.name) continue
+        const nome = nomeDaChave(propriedade.name)
+        if (nome !== null && CHAVE_DE_ESPACO_OU_TIPO.test(nome)) {
+          linhas.push(arvore.getLineAndCharacterOfPosition(propriedade.getStart(arvore)).line + 1)
+          break
+        }
+      }
+    }
+    ts.forEachChild(no, visitar)
+  }
+  visitar(arvore)
   return linhas
 }
 
@@ -54,6 +76,23 @@ describe('harmonia: style={{}} (H3:RF-03)', () => {
     expect(estilosSoltos('<p style={{ fontSize: `${x}px`, lineHeight: 1 }} />')).toEqual([1])
     expect(estilosSoltos('<p style={{ opacity, width: `${largura}%`, display: "block" }} />')).toEqual([])
     expect(estilosSoltos('<p style={{ backgroundColor: `var(--color-${papel.token})` }} />')).toEqual([])
+  })
+
+  it('a varredura não depende da formatação do JSX e ignora texto e comentário', () => {
+    expect(estilosSoltos('<div style = {{ marginTop: 37 }} />')).toEqual([1])
+    expect(estilosSoltos('<div\n  style=\n  {{ marginTop: 37 }} />')).toEqual([3])
+    expect(estilosSoltos('<div style={\n{\n  opacity: 1,\n  marginTop: 37,\n}\n} />')).toEqual([4])
+    expect(estilosSoltos('<main>\n<section>\n<div style={{ padding: 4 }} />\n</section>\n</main>')).toEqual([3])
+    expect(estilosSoltos('<div style={({ marginTop: 37 })} />')).toEqual([1])
+    expect(estilosSoltos('<div style={{ marginTop: 37 } as CSSProperties} />')).toEqual([1])
+    expect(estilosSoltos('<div style={{ marginTop: 37 } satisfies CSSProperties} />')).toEqual([1])
+    expect(estilosSoltos('<div style={{ "padding-inline": 4 }} />')).toEqual([1])
+    expect(estilosSoltos('<div style={{ ["row-gap"]: 4 }} />')).toEqual([1])
+    expect(estilosSoltos('<div style={{ opacity: 1, width: "10%" }} />')).toEqual([])
+    expect(estilosSoltos('<div style={{ backgroundColor: "var(--x)" }} />')).toEqual([])
+    expect(estilosSoltos('const t = "<div style={{ marginTop: 1 }} />"')).toEqual([])
+    expect(estilosSoltos("const t = '<div style={{ marginTop: 1 }} />'")).toEqual([])
+    expect(estilosSoltos('// <div style={{ marginTop: 1 }} />\n/* <p style={{ gap: 2 }} /> */\nconst a = 1')).toEqual([])
   })
 
   it('nenhum .tsx de produto de src/ traz style={{}} com margin*, padding*, gap, fontSize ou lineHeight', () => {
@@ -142,6 +181,69 @@ describe('harmonia: ESLint de classes (H3:RF-03, parte 1)', () => {
     expect(mensagens.sort()).toEqual(
       ['mt-10', 'gap-12', 'py-20', 'pl-14', 'p-3.5', 'text-xs', 'mb-9', 'p-[3px]', 'text-lg', 'mt-11', 'pt-13', 'pb-15', 'gap-x-14', '-mt-17', 'ml-18'].sort(),
     )
+  })
+
+  it('alias: constante usada como classe é resolvida (literal, membro de objeto, template, cn) e acusada na definição', async () => {
+    const alvo = async (codigo: string) => (await lintarClasses(codigo)).map((m) => /"([^"]+)"/.exec(m)?.[1])
+    const literal = await lintarClasses('const T = "mt-[37px]"; export const A = () => <div className={T} />')
+    expect(literal).toHaveLength(1)
+    expect(literal[0]).toContain('espaco-grupo')
+    const membro = await lintarClasses('const M = { a: "gap-12" }; export const A = () => <div className={M.a} />')
+    expect(membro).toHaveLength(1)
+    expect(membro[0]).toContain('"gap-12"')
+    expect(await alvo('const M = { a: "gap-12" }; export const A = () => <div className={M["a"]} />')).toEqual(['gap-12'])
+    const modelo = await lintarClasses('const T = "p-[3px]"; export const A = () => <div className={`flex ${T}`} />')
+    expect(modelo).toHaveLength(1)
+    expect(modelo[0]).toContain('espaco-junto')
+    const chamada = await lintarClasses('const T = "mt-[37px]"; export const A = () => <div className={cn(T)} />')
+    expect(chamada).toHaveLength(1)
+    expect(chamada[0]).toContain('espaco-grupo')
+    expect(await alvo('const T = "mt-[37px]"; export const A = () => <div class={T} />')).toEqual(['mt-[37px]'])
+  })
+
+  it('alias: usado em dois lugares é acusado uma vez só, e a cadeia de aliases e o objeto inteiro são seguidos', async () => {
+    const alvo = async (codigo: string) => (await lintarClasses(codigo)).map((m) => /"([^"]+)"/.exec(m)?.[1])
+    expect(await alvo('const T = "mt-[37px]"; export const A = () => <><div className={T} /><p className={cn(T, "flex")} /></>')).toEqual(['mt-[37px]'])
+    expect(await alvo('const T = "mt-[37px]"; const U = T; export const A = () => <div className={U} />')).toEqual(['mt-[37px]'])
+    expect(await alvo('const M = { a: "gap-12", b: "p-10" }; export const A = () => <div className={cn(M)} />')).toEqual(['gap-12', 'p-10'])
+  })
+
+  it('alias: sem consumidor de classe, escala permitida, import, parâmetro, chamada e ciclo não geram diagnóstico', async () => {
+    expect(await lintarClasses('const n = "mt-[37px]"; console.log(n)')).toEqual([])
+    expect(await lintarClasses('const T = "mt-4"; export const A = () => <div className={T} />')).toEqual([])
+    expect(await lintarClasses('import { T } from "./t"; export const A = () => <div className={T} />')).toEqual([])
+    expect(await lintarClasses('export const A = ({ t }: { t: string }) => <div className={t} />')).toEqual([])
+    expect(await lintarClasses('const T = f("mt-[37px]"); export const A = () => <div className={T} />')).toEqual([])
+    expect(await lintarClasses('const M = { a: "gap-12" }; export const A = () => <div className={M.b} />')).toEqual([])
+    expect(await lintarClasses('let T = T; export const A = () => <div className={T} />')).toEqual([])
+    expect(await lintarClasses('const A = B; const B = A; export const C = () => <div className={A} />')).toEqual([])
+  })
+
+  it('alias: exceção por (arquivo, alvo) dispensa a classe da constante', async () => {
+    const codigo = 'const T = "mt-[37px] p-10"; export const A = () => <div className={T} />'
+    expect(await lintarClasses(codigo)).toHaveLength(2)
+    const excecao: Excecao = { arquivo: 'src/exemplo.tsx', alvo: 'mt-[37px]', motivo: 'teste do mecanismo' }
+    const com = await lintarClasses(codigo, { excecoes: [excecao] })
+    expect(com).toHaveLength(1)
+    expect(com[0]).toContain('"p-10"')
+    expect(await lintarClasses(codigo, { excecoes: [{ ...excecao, arquivo: 'src/outro.tsx' }] })).toHaveLength(2)
+  })
+
+  it('exceção com lista: um `alvo` com várias classes separadas por espaço dispensa cada uma delas naquele arquivo', async () => {
+    const codigo = 'const T = "mt-[37px] p-[3px]"; export const A = () => <div className={T} />'
+    const lista: Excecao = { arquivo: 'src/exemplo.tsx', alvo: 'mt-[37px] p-[3px]', motivo: 'teste do mecanismo' }
+    expect(await lintarClasses(codigo)).toHaveLength(2)
+    // (a) a lista inteira dispensa as duas classes.
+    expect(await lintarClasses(codigo, { excecoes: [lista] })).toEqual([])
+    // (b) a lista só com `mt-[37px]` deixa `p-[3px]` de fora: ainda é acusada.
+    const parcial = await lintarClasses(codigo, { excecoes: [{ ...lista, alvo: 'mt-[37px]' }] })
+    expect(parcial).toHaveLength(1)
+    expect(parcial[0]).toContain('"p-[3px]"')
+    // (c) outro arquivo não dispensa nada.
+    expect(await lintarClasses(codigo, { excecoes: [{ ...lista, arquivo: 'src/outro.tsx' }] })).toHaveLength(2)
+    // alvo sem espaço continua sendo o caso antigo (uma classe só); classe fora da lista continua acusada.
+    expect(await lintarClasses(codigo, { excecoes: [{ ...lista, alvo: 'p-[3px]' }] })).toHaveLength(1)
+    expect(await lintarClasses(`${codigo}\nconst U = "gap-12"; export const B = () => <p className={U} />`, { excecoes: [lista] })).toHaveLength(1)
   })
 
   it('pedaço de template colado a ${} não vira classe falsa', async () => {

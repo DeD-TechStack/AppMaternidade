@@ -17,6 +17,12 @@
     { "arquivo": "src/componentes/app/CartaoSessao.tsx", "alvo": "lg:text-[120px]", "motivo": "Tempo do cartão da sessão em 1440 (`numero`, fora da escala): 120 px; pinado por appComponentes.test.tsx." },
     { "arquivo": "src/componentes/app/ResumoDoDia.tsx", "alvo": "text-[clamp(28px,12.5cqi,52px)]", "motivo": "Números do dia (`numero`, fora da escala): seguem a largura do contêiner (cqi), 28 a 52 px; clamp com cqi não tem token." },
     { "arquivo": "src/componentes/app/DesdeQueVoceSaiu.tsx", "alvo": "pl-[2.625rem]", "motivo": "Recuo da linha aberta alinhado ao texto da fileira: avatar de 32 px + vão de 10 px = 42 px; não é papel de espaço (PEDIDOS_COMUNS H-3e)." },
-    { "arquivo": "src/componentes/app/DesdeQueVoceSaiu.tsx", "alvo": "lg:pl-14", "motivo": "Mesmo recuo em 1440: avatar de 40 px + vão de 16 px = 56 px; só vira papel se avatar e vão virarem token (PEDIDOS_COMUNS H-3e)." }
+    { "arquivo": "src/componentes/app/DesdeQueVoceSaiu.tsx", "alvo": "lg:pl-14", "motivo": "Mesmo recuo em 1440: avatar de 40 px + vão de 16 px = 56 px; só vira papel se avatar e vão virarem token (PEDIDOS_COMUNS H-3e)." },
+    { "arquivo": "src/componentes/app/BotaoIniciarMamada.tsx", "alvo": "text-[17px] leading-[20px] lg:text-[21px] lg:leading-[25px]", "motivo": "Texto do botão de iniciar a mamada no tamanho normal (tipografia de botão fora da escala do DESIGN.md): 17/20 px no celular e 21/25 px a partir de lg." },
+    { "arquivo": "src/componentes/app/BotaoIniciarMamada.tsx", "alvo": "text-[26px] leading-[30px] lg:text-[30px] lg:leading-[34px]", "motivo": "Texto do botão de iniciar a mamada no tamanho grande (tipografia de botão fora da escala do DESIGN.md): 26/30 px no celular e 30/34 px a partir de lg." },
+    { "arquivo": "src/componentes/app/CronometroSessao.tsx", "alvo": "text-[72px] lg:text-[160px]", "motivo": "Numeral do cronômetro da sessão no tamanho normal (fora da escala do DESIGN.md): 72 px no celular e 160 px a partir de lg." },
+    { "arquivo": "src/componentes/app/CronometroSessao.tsx", "alvo": "text-[56px] lg:text-[120px]", "motivo": "Numeral do cronômetro da sessão no modo longo (fora da escala do DESIGN.md): 56 px no celular e 120 px a partir de lg, para caber a hora longa." },
+    { "arquivo": "src/componentes/desenvolvimento/tummy/SessaoEmAndamento.tsx", "alvo": "text-[56px] lg:text-[96px]", "motivo": "Numeral do cronômetro da sessão em andamento no tamanho normal (fora da escala do DESIGN.md): 56 px no celular e 96 px a partir de lg." },
+    { "arquivo": "src/componentes/desenvolvimento/tummy/SessaoEmAndamento.tsx", "alvo": "text-[48px] lg:text-[72px]", "motivo": "Numeral do cronômetro da sessão em andamento no modo longo (fora da escala do DESIGN.md): 48 px no celular e 72 px a partir de lg." }
   ]
 }

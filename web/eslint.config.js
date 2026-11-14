@@ -24,7 +24,10 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 // Fora da regra: `max-w-*`, `w-*`, `h-*`, `auto`, as classes `esp-*` e `[var(--x)]`.
 //
 // Exceção: uma entrada de `harmonia-excecoes.json` com o mesmo `arquivo` (relativo a web/, com `/`) e o `alvo`
-// igual à classe inteira (variantes incluídas) dispensa aquele par. Uma entrada = um par (arquivo, alvo).
+// igual à classe inteira (variantes incluídas) dispensa aquele par. O `alvo` pode listar várias classes separadas
+// por um espaço, como aparecem juntas num literal (`"text-[72px] lg:text-[160px]"`): cada uma da lista é dispensada
+// naquele arquivo e a que não está na lista continua acusada. Uma entrada = um par, ou uma lista de classes de um
+// único literal (o teto de 30 vale para entradas).
 const PASTA_WEB = dirname(fileURLToPath(import.meta.url))
 
 function lerExcecoes() {
@@ -118,11 +121,16 @@ const RE_VARIAVEL = /^(?:classNames?|classes|styles?)$|(?:Classes?|CLASSES?|CLAS
 
 // Percorre uma expressão e entrega cada texto que pode ser lista de classes: literal, pedaço de template,
 // os dois lados de `?:`, `&&`, `||`, `+`, itens de array e chaves e valores de objeto. Não entra em chamadas
-// (as de `cn`/`clsx`... têm a sua própria visita) nem em identificadores.
-function varrer(no, achar) {
+// (as de `cn`/`clsx`... têm a sua própria visita). Identificador e membro (`OBJ.chave`, `OBJ["chave"]`) só são
+// seguidos se `seguir` existir: ele devolve os nós que a constante resolvida guarda (a acusação fica na definição).
+function varrer(no, achar, seguir) {
   if (!no) return
-  const entrar = (filho) => varrer(filho, achar)
+  const entrar = (filho) => varrer(filho, achar, seguir)
   switch (no.type) {
+    case 'Identifier':
+    case 'MemberExpression':
+      if (seguir) seguir(no).forEach(entrar)
+      return
     case 'Literal':
       if (typeof no.value === 'string') achar(no, no.value, true, true)
       return
@@ -169,6 +177,27 @@ function varrer(no, achar) {
   }
 }
 
+const ENVOLTORIOS_TS = new Set(['TSAsExpression', 'TSSatisfiesExpression', 'TSNonNullExpression', 'TSTypeAssertion', 'ChainExpression'])
+const LIMITE_DA_CADEIA = 20
+
+function desembrulhar(no) {
+  let atual = no
+  while (ENVOLTORIOS_TS.has(atual.type)) atual = atual.expression
+  return atual
+}
+
+// O nome estático da chave de `OBJ.chave` / `OBJ["chave"]`, ou `null` (`OBJ[x]`).
+function nomeDoMembro(membro) {
+  if (!membro.computed) return membro.property.type === 'Identifier' ? membro.property.name : null
+  return membro.property.type === 'Literal' && typeof membro.property.value === 'string' ? membro.property.value : null
+}
+
+function nomeDaPropriedade(propriedade) {
+  if (propriedade.type !== 'Property') return null
+  if (!propriedade.computed && propriedade.key.type === 'Identifier') return propriedade.key.name
+  return propriedade.key.type === 'Literal' ? String(propriedade.key.value) : null
+}
+
 const regraClassesSoltas = {
   meta: {
     type: 'problem',
@@ -184,7 +213,7 @@ const regraClassesSoltas = {
     // `excecoes` na opção só existe para o teste do mecanismo (lista em memória); sem ela vale o arquivo.
     const excecoes = context.options[0]?.excecoes ?? EXCECOES
     const arquivo = relative(PASTA_WEB, context.filename).replaceAll('\\', '/')
-    const alvos = new Set(excecoes.filter((e) => e.arquivo === arquivo).map((e) => e.alvo))
+    const alvos = new Set(excecoes.filter((e) => e.arquivo === arquivo).flatMap((e) => e.alvo.split(' ').filter(Boolean)))
     const codigo = context.sourceCode
     const vistos = new Set()
 
@@ -210,15 +239,57 @@ const regraClassesSoltas = {
       }
     }
 
+    // O `init` da `const` que o identificador nomeia (pelo escopo mais próximo), ou `null`: importação,
+    // parâmetro, `let`/`var`, função e declaração sem valor não se resolvem.
+    const initDaConst = (identificador) => {
+      for (let escopo = codigo.getScope(identificador); escopo; escopo = escopo.upper) {
+        const variavel = escopo.set.get(identificador.name)
+        if (!variavel) continue
+        const [def] = variavel.defs
+        if (variavel.defs.length !== 1 || def.type !== 'Variable' || def.parent?.kind !== 'const') return null
+        return def.node.id.type === 'Identifier' ? def.node.init : null
+      }
+      return null
+    }
+
+    // O nó que um identificador ou membro nomeia, seguindo `const U = T` e `OBJ.chave`; `null` se não se resolve.
+    const resolver = (no, passos = 0) => {
+      const atual = desembrulhar(no)
+      if (passos > LIMITE_DA_CADEIA) return null
+      if (atual.type === 'Identifier') {
+        const init = initDaConst(atual)
+        return init ? resolver(init, passos + 1) : null
+      }
+      if (atual.type !== 'MemberExpression') return atual
+      const objeto = resolver(atual.object, passos + 1)
+      if (!objeto || desembrulhar(objeto).type !== 'ObjectExpression') return null
+      const raiz = desembrulhar(objeto)
+      const nome = nomeDoMembro(atual)
+      // `OBJ[x]`: a chave não é estática, vale o objeto inteiro.
+      if (nome === null) return raiz
+      const propriedade = raiz.properties.findLast((p) => nomeDaPropriedade(p) === nome)
+      return propriedade ? resolver(propriedade.value, passos + 1) : null
+    }
+
+    // Cada nó resolvido é varrido uma vez só (evita ciclo e acusação repetida de um alias usado em dois lugares).
+    const seguidos = new Set()
+    const seguir = (no) => {
+      const alvo = resolver(no)
+      if (!alvo || seguidos.has(alvo)) return []
+      seguidos.add(alvo)
+      return [alvo]
+    }
+    const varrerClasses = (no) => varrer(no, achar, seguir)
+
     return {
       JSXAttribute(no) {
-        if (no.name.type === 'JSXIdentifier' && (no.name.name === 'className' || no.name.name === 'class')) varrer(no.value, achar)
+        if (no.name.type === 'JSXIdentifier' && (no.name.name === 'className' || no.name.name === 'class')) varrerClasses(no.value)
       },
       CallExpression(no) {
-        if (no.callee.type === 'Identifier' && CHAMADAS.has(no.callee.name)) no.arguments.forEach((a) => varrer(a, achar))
+        if (no.callee.type === 'Identifier' && CHAMADAS.has(no.callee.name)) no.arguments.forEach(varrerClasses)
       },
       VariableDeclarator(no) {
-        if (no.id.type === 'Identifier' && RE_VARIAVEL.test(no.id.name)) varrer(no.init, achar)
+        if (no.id.type === 'Identifier' && RE_VARIAVEL.test(no.id.name)) varrerClasses(no.init)
       },
     }
   },
