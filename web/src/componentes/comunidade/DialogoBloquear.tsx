@@ -1,4 +1,4 @@
-import type { RefObject } from 'react'
+import { useEffect, useRef, type RefObject } from 'react'
 import { COMUM_COMUNIDADE, DIALOGO_BLOQUEIO, TX } from '../../conteudo/comunidade.ts'
 import { useFocoNoResumo } from '../conta/foco.ts'
 import { BOTAO_PRINCIPAL, BOTAO_SECUNDARIO } from '../conta/Partes.tsx'
@@ -25,13 +25,33 @@ export function DialogoBloquear({ autor, moderacao, origem, aoFechar, aoBloquead
   const erro = envio.estado.fase === 'erro' ? envio.estado : null
   const resumo = useFocoNoResumo(erro)
 
+  // A11Y-F4: o foco que a tela pede enquanto a caixa modal está aberta não pega (a página fica inerte), e o botão
+  // de origem pode sumir com o item bloqueado. Quando a caixa fecha sem foco, ele vai ao botão de origem, se existe,
+  // ou à confirmação em `role="status"` (a regra de foco da MAT-40:RF-15).
+  const bloqueou = useRef(false)
+  useEffect(
+    () => () => {
+      if (!bloqueou.current) return
+      queueMicrotask(() => {
+        const ativo = document.activeElement
+        if (ativo && ativo !== document.body && ativo.isConnected) return
+        const alvos = [origem.current, document.querySelector<HTMLElement>('[role="status"][tabindex="-1"]'), document.querySelector<HTMLElement>('main h1')]
+        alvos.find((alvo) => alvo?.isConnected)?.focus()
+      })
+    },
+    [origem],
+  )
+
   function confirmar() {
     void envio.enviar({
       escrever: async () => {
         const feita = await dados.bloquear(autor.id)
         return !feita.ok && feita.erro.codigo === '23505' ? { ok: true, valor: null } : feita
       },
-      aoSucesso: () => aoBloqueado(),
+      aoSucesso: () => {
+        bloqueou.current = true
+        return aoBloqueado()
+      },
     })
   }
 

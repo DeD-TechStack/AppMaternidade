@@ -2,6 +2,7 @@ import { useRef, useState, type ReactNode } from 'react'
 import { COMUM, FAMILIA } from '../../conteudo/conta.ts'
 import { Cartao, Pilha } from '../base/layout/index.ts'
 import type { Bebe, DetalheFamilia } from '../../dados/conta.ts'
+import { useFocoPendente } from '../comunidade/foco.ts'
 import { familiaMudou, useAoFalharNaFamilia, type AcoesDaFamilia } from './acoesFamilia.ts'
 import { formatarNascimento } from './datas.ts'
 import { useEnvio } from './envio.ts'
@@ -48,6 +49,12 @@ export function BlocoBebes({ detalhe, responsavel, acoes }: Props) {
   const ativos = detalhe.bebes.filter((bebe) => bebe.estado === 'ativo')
   const arquivados = detalhe.bebes.filter((bebe) => bebe.estado === 'arquivado')
   const botaoAdicionar = useRef<HTMLButtonElement>(null)
+  // A11Y-F4: o formulário inline some ao cancelar ou salvar, e o botão que o abriu só volta na renderização
+  // seguinte: o foco é pedido para depois dela (o botão de origem; senão, o título do bloco).
+  const pedirFoco = useFocoPendente()
+  const botoesEditar = useRef(new Map<string, HTMLButtonElement | null>())
+  const voltarAoEditar = (id: string) =>
+    pedirFoco([() => botoesEditar.current.get(id), () => document.getElementById('bebes')])
 
   const desarquivo = useEnvio()
   const erroDoDesarquivo = desarquivo.estado.fase === 'erro' ? desarquivo.estado.erro : null
@@ -68,7 +75,7 @@ export function BlocoBebes({ detalhe, responsavel, acoes }: Props) {
 
   return (
     <Pilha as="section" aria-labelledby="bebes" vao="pilha">
-      <h2 id="bebes" className="cm-h4">
+      <h2 id="bebes" tabIndex={-1} className="cm-h4">
         {FAMILIA.bebes.titulo}
       </h2>
 
@@ -85,10 +92,14 @@ export function BlocoBebes({ detalhe, responsavel, acoes }: Props) {
                   bebe={bebe}
                   rotuloSalvar={FAMILIA.bebes.salvar}
                   rotuloSecundario={FAMILIA.bebes.cancelar}
-                  aoSecundario={() => setEditando(null)}
+                  aoSecundario={() => {
+                    setEditando(null)
+                    voltarAoEditar(bebe.id)
+                  }}
                   aoFalharNaFamilia={(erro) => void acoes.aposFalha(erro)}
                   aoSalvo={async (_salvo, nome) => {
                     setEditando(null)
+                    voltarAoEditar(bebe.id)
                     await acoes.aposAcao(FAMILIA.bebes.editado(nome))
                   }}
                 />
@@ -101,6 +112,9 @@ export function BlocoBebes({ detalhe, responsavel, acoes }: Props) {
                     responsavel ? (
                       <div className="flex flex-wrap gap-2">
                         <button
+                          ref={(botao) => {
+                            botoesEditar.current.set(bebe.id, botao)
+                          }}
                           type="button"
                           className={BOTAO_SECUNDARIO}
                           data-tamanho="app"
@@ -137,12 +151,13 @@ export function BlocoBebes({ detalhe, responsavel, acoes }: Props) {
             rotuloSecundario={FAMILIA.bebes.cancelar}
             aoSecundario={() => {
               setAdicionando(false)
-              botaoAdicionar.current?.focus()
+              pedirFoco([() => botaoAdicionar.current])
             }}
             aoPerderResposta={acoes.relerDetalhe}
             aoFalharNaFamilia={(erro) => void acoes.aposFalha(erro)}
             aoSalvo={async (_salvo, nome) => {
               setAdicionando(false)
+              pedirFoco([() => botaoAdicionar.current])
               await acoes.aposAcao(FAMILIA.bebes.adicionado(nome))
             }}
             comAviso

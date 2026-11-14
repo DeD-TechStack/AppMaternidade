@@ -17,8 +17,8 @@ import { TelaRotina } from '../../componentes/rotina/TelaRotina.tsx'
 import { TotaisDoDia } from '../../componentes/rotina/TotaisDoDia.tsx'
 import { useRotina, type BebeAtivo } from '../../componentes/rotina/contexto.ts'
 import { diaPorExtenso, seteDiasAte, somarDias } from '../../componentes/rotina/diasDoHistorico.ts'
-import { CHAVES_DO_FILTRO, lerParametros, urlDoHistorico, type Vista } from '../../componentes/rotina/parametrosHistorico.ts'
-import { temAlgoParaSomar, totaisDoPeriodo, type DiaDaSemana } from '../../componentes/rotina/totaisHistorico.ts'
+import { lerParametros, urlDoHistorico, type Vista } from '../../componentes/rotina/parametrosHistorico.ts'
+import { temAlgoParaSomar, totaisDoPeriodo, totaisPorDiaDaSemana } from '../../componentes/rotina/totaisHistorico.ts'
 import { textoDoPapel } from '../../componentes/rotina/textoDoPapel.ts'
 import { useAcoesDaRotina } from '../../componentes/rotina/useAcoesDaRotina.ts'
 import { useSecao } from '../../componentes/rotina/useSecao.ts'
@@ -146,11 +146,7 @@ function HistoricoDoBebe({ ativo }: { ativo: BebeAtivo }) {
 
   function conteudoDaSemana(lido: DoDia) {
     const incompleta = lido.registros.incompleta || lido.sessoes.incompleta
-    const dias: DiaDaSemana[] = semana.map((diaDaLinha) => {
-      const janela = janelaDoDia(diaDaLinha, fuso)
-      const doDiaDaLinha = lido.registros.itens.filter((registro) => diaDaFamilia(Date.parse(registro.inicio), fuso) === diaDaLinha)
-      return { dia: diaDaLinha, totais: totaisDoPeriodo(doDiaDaLinha, lido.sessoes.itens, Date.parse(janela.de), Date.parse(janela.ate), CHAVES_DO_FILTRO) }
-    })
+    const dias = totaisPorDiaDaSemana(lido.registros.itens, lido.sessoes.itens, semana, fuso)
     const vazia = lido.registros.itens.length === 0 && lido.sessoes.itens.length === 0
     return (
       <Pilha vao="pilha">

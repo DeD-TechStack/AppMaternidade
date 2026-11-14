@@ -4,7 +4,8 @@ import { camposMudados } from './alteracoesDoRegistro.ts'
 import { ehRestauravel, prazoDaRestauracao } from './datasDaRotina.ts'
 import { diaCurto, ehDiaDoHistorico, numeroDoDia, seteDiasAte, somarDias } from './diasDoHistorico.ts'
 import { CHAVES_DO_FILTRO, lerParametros, urlDoHistorico, urlDoHistoricoDoDia } from './parametrosHistorico.ts'
-import { larguraDaBarra, linhasDoResumo, temAlgoParaSomar, totaisDoPeriodo } from './totaisHistorico.ts'
+import { janelaDoDia } from '../../dados/rotina.dia.ts'
+import { larguraDaBarra, linhasDoResumo, temAlgoParaSomar, totaisDoPeriodo, totaisPorDiaDaSemana } from './totaisHistorico.ts'
 
 // A lógica pura do Histórico (R38-20, R38-21): parâmetros da URL, contas de calendário, totais e o que a edição mudou.
 
@@ -158,6 +159,49 @@ describe('R38-20 e R38-21: os totais', () => {
     expect(larguraDaBarra(0, 120)).toBe(0)
     expect(larguraDaBarra(120, 120)).toBe(100)
     expect(larguraDaBarra(60, 120)).toBe(50)
+  })
+})
+
+describe('RF12:A1: o total diário da vista Semana (função compartilhada com o resumo da Comunidade)', () => {
+  const utc = (dia: string, h: number, m = 0) => Date.UTC(Number(dia.slice(0, 4)), Number(dia.slice(5, 7)) - 1, Number(dia.slice(8, 10)), h, m)
+  const dias = seteDiasAte(HOJE)
+
+  it('devolve os 7 dias em ordem, cada um com os totais de todos os tipos, e o sono que atravessa a meia-noite se divide', () => {
+    const noite = registro({ id: 'a0000000-0000-7000-8000-000000000010', tipo: 'sono', inicio: iso(utc('2026-11-04', 23)), fim: iso(utc(HOJE, 2, 45)) })
+    const registros = [
+      registro({ tipo: 'mamada', inicio: iso(utc('2026-11-03', 10)), fim: iso(utc('2026-11-03', 10, 20)) }),
+      registro({ tipo: 'fralda', inicio: iso(utc(HOJE, 8)), detalhes: { conteudo: 'xixi' } }),
+      registro({ tipo: 'observacao', inicio: iso(utc(HOJE, 9)), nota: 'ok' }),
+      noite,
+    ]
+    const semana = totaisPorDiaDaSemana(registros, [noite], dias, 'UTC')
+    expect(semana.map((d) => d.dia)).toEqual(dias)
+    expect(semana[4].totais).toMatchObject({ mamadas: 1, sonoMin: 0 })
+    expect(semana[5].totais.sonoMin).toBe(60)
+    expect(semana[6].totais).toMatchObject({ sonoMin: 165, fraldas: 1, observacoes: 1 })
+  })
+
+  it('cada dia é igual ao totaisDoPeriodo da janela dele, com todos os tipos ligados', () => {
+    const registros = dias.flatMap((dia, indice) => [
+      registro({ tipo: 'mamadeira', inicio: iso(utc(dia, 7)), detalhes: { ml: 60 + indice } }),
+      registro({ tipo: 'solido', inicio: iso(utc(dia, 12)) }),
+    ])
+    const sessoes = [registro({ tipo: 'tummy', inicio: iso(utc('2026-11-02', 22)), fim: iso(utc('2026-11-03', 1)) })]
+    const semana = totaisPorDiaDaSemana(registros, sessoes, dias, 'UTC')
+    for (const { dia, totais } of semana) {
+      const janela = janelaDoDia(dia, 'UTC')
+      const doDia = registros.filter((r) => r.inicio.slice(0, 10) === dia)
+      expect(totais, dia).toEqual(totaisDoPeriodo(doDia, sessoes, Date.parse(janela.de), Date.parse(janela.ate), CHAVES_DO_FILTRO))
+    }
+    expect(semana[3].totais.tummyMin).toBe(120)
+    expect(semana[4].totais.tummyMin).toBe(60)
+  })
+
+  it('o dia é o da família: um registro às 23:30 em São Paulo pertence ao dia de lá, mesmo que seja o dia seguinte em UTC', () => {
+    const tarde = registro({ tipo: 'fralda', inicio: iso(utc(HOJE, 2, 30)), detalhes: { conteudo: 'coco' } })
+    const semana = totaisPorDiaDaSemana([tarde], [], dias, 'America/Sao_Paulo')
+    expect(semana[5].totais.fraldas).toBe(1)
+    expect(semana[6].totais.fraldas).toBe(0)
   })
 })
 

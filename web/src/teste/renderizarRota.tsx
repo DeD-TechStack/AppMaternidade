@@ -4,6 +4,7 @@ import { vi } from 'vitest'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { ProvedorDadosConta } from '../componentes/conta/sessao.tsx'
 import { ProvedorDadosRotina } from '../componentes/rotina/dadosRotina.tsx'
+import { ProvedorDadosComunidade, type DadosComunidade } from '../dados/comunidade.ts'
 import { criarRotas } from '../rotas.tsx'
 import { criarMundoDeTeste, type Mundo, type OpcoesMundo } from './rotina.fixture.ts'
 
@@ -17,6 +18,12 @@ export interface OpcoesRota extends OpcoesMundo {
   /** Liga o modo madrugada na primeira tela. */
   madrugada?: boolean
   strict?: boolean
+  /**
+   * Uma Comunidade em memória que o teste montou (`criarComunidadeDeTeste`, em `teste/comunidade.fixture.ts`). Só
+   * quando vem, a árvore ganha o `ProvedorDadosComunidade` entre a conta e a rotina; sem ela, a Comunidade usa a
+   * instância global de demonstração, como sempre usou, e nada muda.
+   */
+  comunidade?: DadosComunidade
 }
 
 export function renderizarRota(caminho: string, opcoes: OpcoesRota = {}) {
@@ -25,11 +32,15 @@ export function renderizarRota(caminho: string, opcoes: OpcoesRota = {}) {
   vi.stubGlobal('scrollTo', vi.fn())
 
   const roteador = createMemoryRouter(criarRotas(), { initialEntries: [caminho] })
+  // A ordem da árvore: conta → Comunidade (só se o teste deu uma) → rotina → roteador.
+  const comRotina = (
+    <ProvedorDadosRotina dados={mundo.rotina}>
+      <RouterProvider router={roteador} />
+    </ProvedorDadosRotina>
+  )
   const arvore = (
     <ProvedorDadosConta dados={mundo.conta}>
-      <ProvedorDadosRotina dados={mundo.rotina}>
-        <RouterProvider router={roteador} />
-      </ProvedorDadosRotina>
+      {opcoes.comunidade ? <ProvedorDadosComunidade dados={opcoes.comunidade}>{comRotina}</ProvedorDadosComunidade> : comRotina}
     </ProvedorDadosConta>
   )
   const resultado = render(opcoes.strict ? <StrictMode>{arvore}</StrictMode> : arvore)
