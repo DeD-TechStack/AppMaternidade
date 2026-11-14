@@ -12,9 +12,22 @@ import { aguardarCarga, renderizarRota } from '../../teste/renderizarRota.tsx'
 // arquivo html que liga o CSS já construído (web/dist/assets/*.css), e o Chrome sem janela mede cada item
 // com getBoundingClientRect depois que as fontes carregam. Layout real, nada simulado. O teste só roda com o
 // Chrome instalado e o build feito (`npm run build`); sem um dos dois, pula e diz por quê. O `check` faz o
-// build antes de testar; em CI no Windows, Chrome ou build ausente falha em vez de pular.
+// build antes de testar; em CI (qualquer sistema), Chrome ou build ausente falha em vez de pular.
 
-const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe'
+const CANDIDATOS_DO_CHROME: Record<string, string[]> = {
+  win32: [
+    'C:/Program Files/Google/Chrome/Application/chrome.exe',
+    'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
+  ],
+  linux: ['/usr/bin/google-chrome', '/usr/bin/google-chrome-stable', '/usr/bin/chromium', '/usr/bin/chromium-browser'],
+  darwin: ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'],
+}
+const CHROME_DO_AMBIENTE = process.env.CHROME_PATH
+const BUSCADOS = [
+  ...(CHROME_DO_AMBIENTE ? [CHROME_DO_AMBIENTE] : []),
+  ...(CANDIDATOS_DO_CHROME[process.platform] ?? []),
+]
+const CHROME: string = BUSCADOS.find((caminho) => existsSync(caminho)) ?? BUSCADOS[0] ?? 'chrome'
 const PASTA_DIST = resolve(import.meta.dirname, '..', '..', '..', 'dist')
 const PASTA_CSS = join(PASTA_DIST, 'assets')
 const LARGURAS = [390, 768, 1024, 1100, 1280, 1440]
@@ -30,12 +43,12 @@ function arquivosCss(): string[] {
 }
 
 const motivoDoPulo: string | null = !existsSync(CHROME)
-  ? `Chrome não encontrado em ${CHROME}`
+  ? `Chrome não encontrado (buscado em: ${BUSCADOS.join(', ') || 'nenhum caminho para ' + process.platform}; defina CHROME_PATH)`
   : arquivosCss().length === 0
     ? 'sem web/dist/assets/*.css: rode `npm run build` antes'
     : null
 
-const exigirNoCI = Boolean(process.env.CI) && process.platform === 'win32'
+const exigirNoCI = Boolean(process.env.CI)
 
 interface Caixa {
   rotulo: string
@@ -182,7 +195,7 @@ describe(`a geometria do cabeçalho logado no Chrome${motivoDoPulo ? ` (pulado: 
   })
 
   if (exigirNoCI && motivoDoPulo !== null) {
-    it('a geometria roda em CI no Windows', () => {
+    it('a geometria roda em CI', () => {
       throw new Error('geometria exigida em CI e não pôde rodar: ' + motivoDoPulo)
     })
   }
