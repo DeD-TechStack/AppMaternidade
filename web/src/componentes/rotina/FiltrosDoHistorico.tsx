@@ -12,13 +12,18 @@ interface Props {
 }
 
 /**
- * Os filtros do dia (R38-20): um botão alternável por tipo (`aria-pressed`) e `Todos`. `Todos` liga todos; clicar
- * num tipo liga ou desliga a pertença; desligar o último ligado volta a `Todos` (nunca há zero tipos).
+ * Os filtros do dia (R38-20): um botão alternável por tipo (`aria-pressed`) e `Todos`. `Todos` liga todos. Com todos
+ * ligados, o primeiro toque num tipo deixa só ele (QA-05); com a seleção parcial, tocar liga ou desliga a pertença, e
+ * desligar o último ligado volta a `Todos` (nunca há zero tipos).
  */
 export function FiltrosDoHistorico({ tipos, aoMudar }: Props) {
   const todos = tipos.length === CHAVES_DO_FILTRO.length
 
   function alternar(tipo: TipoRegistro) {
+    if (todos) {
+      aoMudar([tipo])
+      return
+    }
     const ligado = tipos.includes(tipo)
     const proximos = ligado ? tipos.filter((candidato) => candidato !== tipo) : [...tipos, tipo]
     aoMudar(proximos.length === 0 ? [...CHAVES_DO_FILTRO] : CHAVES_DO_FILTRO.filter((chave) => proximos.includes(chave)))

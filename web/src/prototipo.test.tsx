@@ -404,6 +404,7 @@ describe('sessões', () => {
     expect(screen.getByRole('heading', { name: 'Mamada de Heloísa' })).toBeTruthy()
 
     await clicar(botao('Encerrar'))
+    await clicar(within(screen.getByRole('group', { name: 'A sessão durou menos de 1 minuto. Salvar mesmo assim?' })).getByRole('button', { name: 'Salvar' }))
 
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Hoje')
     expect(roteador.state.location.pathname).toBe('/app/hoje')

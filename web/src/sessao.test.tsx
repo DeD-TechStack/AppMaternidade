@@ -401,6 +401,97 @@ describe('as peças que saíram (EMENDAS E7): ninguém mais as usa', () => {
   })
 })
 
+// QA-10: uma sessão com menos de 1 minuto pergunta antes de encerrar. A pergunta aparece nos dois botões
+// ("Encerrar" e "Encerrar e anotar"); com 60 s ou mais nada muda.
+describe('Sessão: a pergunta da sessão curta (QA-10)', () => {
+  const PERGUNTA = 'A sessão durou menos de 1 minuto. Salvar mesmo assim?'
+  const pergunta = () => screen.getByRole('group', { name: PERGUNTA })
+  const botao = (nome: string) => screen.getByRole('button', { name: nome })
+
+  it('"Encerrar" com 30 s pergunta, com "Salvar" e "Descartar", e ainda não encerra nada', async () => {
+    const { container } = await renderizarRotaPronta('/app/sessao', { ajustarRotina: sessaoDe('sono', 30_000) })
+
+    fireEvent.click(botao('Encerrar'))
+
+    expect(cartao(container).contains(pergunta())).toBe(true)
+    expect(within(pergunta()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Salvar', 'Descartar'])
+    expect(document.activeElement).toBe(within(pergunta()).getByRole('button', { name: 'Salvar' }))
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Sono de Heloísa')
+  })
+
+  it('"Salvar" segue o encerramento normal: volta ao Hoje com "Sessão encerrada"', async () => {
+    const { rotina } = await renderizarRotaPronta('/app/sessao', { ajustarRotina: sessaoDe('sono', 30_000) })
+    fireEvent.click(botao('Encerrar'))
+
+    fireEvent.click(within(pergunta()).getByRole('button', { name: 'Salvar' }))
+    await aguardarCarga()
+
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Hoje')
+    expect(screen.getByRole('status').textContent).toContain('Sessão encerrada')
+    const lixeira = await rotina.lixeira('c1111111-1111-4111-8111-111111111111')
+    expect(lixeira.ok && lixeira.valor.itens).toHaveLength(0)
+  })
+
+  it('"Descartar" usa o descarte de sempre: a sessão vai para a lixeira e volta ao Hoje', async () => {
+    const { rotina } = await renderizarRotaPronta('/app/sessao', { ajustarRotina: sessaoDe('sono', 30_000) })
+    fireEvent.click(botao('Encerrar'))
+
+    fireEvent.click(within(pergunta()).getByRole('button', { name: 'Descartar' }))
+    await aguardarCarga()
+
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Hoje')
+    expect(screen.getByText('Nenhuma sessão em andamento.')).toBeTruthy()
+    const lixeira = await rotina.lixeira('c1111111-1111-4111-8111-111111111111')
+    expect(lixeira.ok && lixeira.valor.itens.map((r) => r.tipo)).toEqual(['sono'])
+  })
+
+  it('"Encerrar e anotar" com 30 s pergunta primeiro; "Salvar" abre o campo da nota', async () => {
+    await renderizarRotaPronta('/app/sessao', { ajustarRotina: sessaoDe('sono', 30_000) })
+
+    fireEvent.click(botao('Encerrar e anotar'))
+    expect(screen.queryByRole('textbox', { name: 'Nota' })).toBeNull()
+    fireEvent.click(within(pergunta()).getByRole('button', { name: 'Salvar' }))
+
+    expect(screen.queryByRole('group', { name: PERGUNTA })).toBeNull()
+    expect(screen.getByRole('textbox', { name: 'Nota' })).toBeTruthy()
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Sono de Heloísa')
+  })
+
+  it('Esc fecha a pergunta e devolve o foco ao botão que a abriu', async () => {
+    await renderizarRotaPronta('/app/sessao', { ajustarRotina: sessaoDe('sono', 30_000) })
+    fireEvent.click(botao('Encerrar'))
+
+    fireEvent.keyDown(document.activeElement!, { key: 'Escape' })
+
+    expect(screen.queryByRole('group', { name: PERGUNTA })).toBeNull()
+    expect(document.activeElement).toBe(botao('Encerrar'))
+  })
+
+  it('com 59 s ainda pergunta; com 60 s ou mais, "Encerrar" encerra direto e não há pergunta', async () => {
+    const curta = await renderizarRotaPronta('/app/sessao', { ajustarRotina: sessaoDe('sono', 59_000) })
+    fireEvent.click(botao('Encerrar'))
+    expect(screen.getByRole('group', { name: PERGUNTA })).toBeTruthy()
+    curta.unmount()
+
+    await renderizarRotaPronta('/app/sessao', { ajustarRotina: sessaoDe('sono', 60_000) })
+    fireEvent.click(botao('Encerrar'))
+    await aguardarCarga()
+
+    expect(screen.queryByRole('group', { name: PERGUNTA })).toBeNull()
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Hoje')
+    expect(screen.getByRole('status').textContent).toContain('Sessão encerrada: 1 min')
+  })
+
+  it('com 60 s ou mais, "Encerrar e anotar" abre a nota direto, sem pergunta', async () => {
+    await renderizarRotaPronta('/app/sessao', { ajustarRotina: sessaoDe('sono', 90_000) })
+
+    fireEvent.click(botao('Encerrar e anotar'))
+
+    expect(screen.queryByRole('group', { name: PERGUNTA })).toBeNull()
+    expect(screen.getByRole('textbox', { name: 'Nota' })).toBeTruthy()
+  })
+})
+
 // VOLTA1 E2: o tamanho do cronômetro depende do número de caracteres da duração (atributo `data-tamanho` no
 // `role="timer"`), e não de uma largura medida em JavaScript.
 describe('Sessão: o tamanho do cronômetro pelo número de caracteres (E2)', () => {

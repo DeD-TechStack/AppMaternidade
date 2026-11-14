@@ -4,7 +4,7 @@ import { HOJE, ROTULO_TIPO, SESSOES } from '../../conteudo/rotina.ts'
 import type { Registro } from '../../dados/rotina.tipos.ts'
 import { formatarHora } from '../../prototipo/formatar.ts'
 import { Avatar } from '../app/Avatar.tsx'
-import { resumoDoRegistro } from './formatos.ts'
+import { horaDoItem, resumoDoRegistro } from './formatos.ts'
 
 interface Props {
   registro: Registro
@@ -18,6 +18,11 @@ interface Props {
   marca?: ReactNode
   /** No 38b: a rota do detalhe. Com ela, o texto do item é um link que cobre a linha inteira; sem ela, é só texto. */
   para?: string
+  /**
+   * O instante atual (QA-08): com ele, o item de um dia anterior leva a data antes da hora (`ontem 07:58`). Sem
+   * ele, a hora é só `HH:MM`, como antes.
+   */
+  agora?: number
 }
 
 /**
@@ -30,7 +35,9 @@ export function MarcaDeEnvio({ marca }: { marca?: ReactNode }) {
 }
 
 /** Um item de registro: o avatar de quem registrou, o rótulo e o resumo, o autor e a hora do início. */
-export function ItemRegistro({ registro, fuso, autor, marca, para }: Props) {
+export function ItemRegistro({ registro, fuso, autor, marca, para, agora }: Props) {
+  const inicio = Date.parse(registro.inicio)
+  const hora = agora === undefined ? formatarHora(inicio) : horaDoItem(inicio, agora)
   const resumo = resumoDoRegistro(registro, fuso)
   const texto = resumo ? HOJE.rotuloEResumo(ROTULO_TIPO[registro.tipo], resumo) : ROTULO_TIPO[registro.tipo]
   return (
@@ -52,7 +59,7 @@ export function ItemRegistro({ registro, fuso, autor, marca, para }: Props) {
         <p className="text-[15px] leading-[22px] text-(--cor-texto-2)">{SESSOES.porAutor(autor)}</p>
       </div>
       <div className="flex shrink-0 items-center gap-2 text-[15px] leading-[22px] text-(--cor-texto-2)">
-        <span className="whitespace-nowrap tabular-nums">{formatarHora(Date.parse(registro.inicio))}</span>
+        <span className="whitespace-nowrap tabular-nums">{hora}</span>
         <MarcaDeEnvio marca={marca} />
       </div>
     </li>
