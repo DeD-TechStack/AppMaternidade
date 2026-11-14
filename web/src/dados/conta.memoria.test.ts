@@ -10,6 +10,8 @@ import {
 } from './conta.demonstracao.ts'
 import { criarDadosContaMemoria, simularFalha, simularRespostaPerdida } from './conta.memoria.ts'
 import { PESSOAS, criarFixtureDeTeste } from '../teste/renderizarComDados.tsx'
+import { ID_BEBE, ID_FAMILIA, criarMundoDeTeste } from '../teste/rotina.fixture.ts'
+import type { Nota, Registro } from './rotina.tipos.ts'
 
 // A memória reproduz as regras do banco que a tela usa, com os mesmos códigos e mensagens
 // (RF-03 e RF-04). Os casos seguem a ordem da MAT-45: parâmetro obrigatório, conta, existência e
@@ -637,7 +639,7 @@ describe('exportação e exclusão da conta', () => {
 
   it('exportarDados do responsável: a forma exata do formato v1, com listas e sem codigo_hash', async () => {
     const json = (await valor(como('juliana').exportarDados())) as Record<string, unknown>
-    expect(Object.keys(json)).toEqual(['formato', 'gerado_em', 'conta', 'vinculos', 'familias'])
+    expect(Object.keys(json)).toEqual(['formato', 'gerado_em', 'conta', 'vinculos', 'familias', 'registros', 'notas'])
     expect(json.formato).toBe('appmaternidade-exportacao-v1')
     expect(json.gerado_em).toMatch(DATA_E_HORA)
 
@@ -652,7 +654,12 @@ describe('exportação e exclusão da conta', () => {
 
     const familias = json.familias as Array<Record<string, unknown>>
     expect(familias).toHaveLength(1)
-    expect(Object.keys(familias[0])).toEqual(['id', 'nome', 'fuso', 'criada_em', 'membros', 'bebes', 'convites'])
+    expect(Object.keys(familias[0])).toEqual(['id', 'nome', 'fuso', 'criada_em', 'membros', 'bebes', 'convites', 'registros', 'notas'])
+    // Sem a rotina ligada a esta memória, a família sai com as duas listas vazias (nunca nulas).
+    expect(familias[0].registros).toEqual([])
+    expect(familias[0].notas).toEqual([])
+    expect(json.registros).toEqual([])
+    expect(json.notas).toEqual([])
     const membros = familias[0].membros as Array<Record<string, unknown>>
     expect(membros.map((m) => m.nome_privado)).toEqual(['Juliana', 'Bruno'])
     expect(Object.keys(membros[0])).toEqual(['conta_id', 'nome_privado', 'papel', 'valido_ate'])
@@ -717,6 +724,243 @@ describe('exportação e exclusão da conta', () => {
 
     const json = (await valor(como('bruno', dados).exportarDados())) as { familias: Array<{ convites: Array<{ estado: string }> }> }
     expect(json.familias[0].convites.map((c) => c.estado).sort()).toEqual(['aceito', 'revogado'])
+  })
+})
+
+// RF-13: a exportação leva os registros e as notas da rotina. O responsável recebe os da família inteira
+// (lixeira inclusive) dentro de `familias[]`; quem não é responsável recebe, no topo, só o que ele mesmo
+// criou. O que o responsável criou em família onde ele não é responsável ativo também vai para o topo, e
+// nunca se repete o que já está dentro de `familias[]`. Item de outra família nunca aparece.
+describe('exportação com a rotina (RF-13)', () => {
+  const T1 = '2026-11-05T10:00:00.000Z'
+  const T2 = '2026-11-05T11:00:00.000Z'
+  const T3 = '2026-11-05T12:00:00.000Z'
+  const T4 = '2026-11-05T13:00:00.000Z'
+  const micro = (instante: string) => instante.replace('.000Z', '.000000Z')
+  const idRotina = (numero: number) => `a0000000-0000-7000-8000-${String(numero).padStart(12, '0')}`
+  const BEBE_DA_TESTE = 'bebe0000-0000-4000-8000-0000000000aa'
+
+  const CHAVES_REGISTRO = [
+    'id', 'familia_id', 'bebe_id', 'tipo', 'inicio', 'fim', 'detalhes', 'nota', 'origem', 'fuso', 'deslocamento_min',
+    'criado_por', 'encerrado_por', 'versao', 'recebido_em', 'atualizado_em', 'excluido_em', 'excluido_por',
+  ]
+  const CHAVES_NOTA = [
+    'id', 'familia_id', 'bebe_id', 'texto', 'destaque_ate', 'criado_por', 'criada_em', 'versao', 'atualizado_em',
+    'excluida_em', 'excluida_por',
+  ]
+
+  function registro(numero: number, autor: string, recebidoEm: string, resto: Partial<Registro> = {}): Registro {
+    return {
+      id: idRotina(numero),
+      familiaId: ID_FAMILIA,
+      bebeId: ID_BEBE,
+      tipo: 'fralda',
+      inicio: recebidoEm,
+      fim: null,
+      detalhes: { conteudo: 'xixi' },
+      nota: null,
+      origem: 'ao_vivo',
+      fuso: 'America/Sao_Paulo',
+      deslocamentoMin: -180,
+      criadoPor: autor,
+      encerradoPor: null,
+      versao: 1,
+      recebidoEm,
+      atualizadoEm: recebidoEm,
+      excluidoEm: null,
+      excluidoPor: null,
+      ...resto,
+    }
+  }
+
+  function nota(numero: number, autor: string, criadaEm: string, resto: Partial<Nota> = {}): Nota {
+    return {
+      id: idRotina(numero),
+      familiaId: ID_FAMILIA,
+      bebeId: null,
+      texto: `Nota ${numero}`,
+      destaqueAte: null,
+      criadoPor: autor,
+      criadaEm,
+      versao: 1,
+      atualizadoEm: criadaEm,
+      excluidaEm: null,
+      excluidaPor: null,
+      ...resto,
+    }
+  }
+
+  const { juliana, bruno, carla } = PESSOAS
+  const NA_TESTE = { familiaId: TESTE, bebeId: BEBE_DA_TESTE }
+
+  // Na Família Exemplo, Juliana é responsável e Bruno e Carla são cuidadores; na Família Teste, só Carla tem
+  // vínculo (responsável). Cada lista está fora de ordem, de propósito.
+  function itens() {
+    return {
+      registros: [
+        // Lixeira: do Bruno, excluído pela Juliana.
+        registro(4, bruno.id, T3, { excluidoEm: T4, excluidoPor: juliana.id, versao: 2, atualizadoEm: T4 }),
+        registro(3, bruno.id, T2),
+        // Empata com o 1 em recebido_em: o id desempata.
+        registro(2, carla.id, T1, { tipo: 'observacao', detalhes: {}, nota: 'Dormiu bem' }),
+        registro(1, juliana.id, T1),
+        // Outra família: o da Carla nunca aparece; o da Juliana e o do Bruno vão para o topo (autoria).
+        registro(10, carla.id, T1, NA_TESTE),
+        registro(11, juliana.id, T2, NA_TESTE),
+        registro(12, bruno.id, T1, NA_TESTE),
+      ],
+      notas: [
+        nota(910, carla.id, T2),
+        nota(909, bruno.id, T2),
+        // A mais antiga, na lixeira, e com bebê.
+        nota(911, bruno.id, T1, { bebeId: ID_BEBE, excluidaEm: T4, excluidaPor: juliana.id, versao: 2, atualizadoEm: T4 }),
+        nota(920, carla.id, T1, { familiaId: TESTE }),
+        nota(921, juliana.id, T3, { familiaId: TESTE }),
+        nota(922, bruno.id, T3, { familiaId: TESTE }),
+      ],
+    }
+  }
+
+  function mundo(sessao: 'juliana' | 'bruno' | 'carla') {
+    return criarMundoDeTeste({
+      sessao,
+      semRegistros: true,
+      bebesExtras: [{ id: BEBE_DA_TESTE, familiaId: TESTE, nome: 'Bebê da Teste', nascimento: '2026-08-01', estado: 'ativo' }],
+      ajustarRotina: () => itens(),
+    }).conta
+  }
+
+  type Exportacao = {
+    familias: Array<{ registros: Array<Record<string, unknown>>; notas: Array<Record<string, unknown>> }>
+    registros: Array<Record<string, unknown>>
+    notas: Array<Record<string, unknown>>
+  }
+  const exportar = async (dados: ReturnType<typeof mundo>) => (await valor(dados.exportarDados())) as Exportacao
+  const ids = (lista: Array<Record<string, unknown>>) => lista.map((item) => item.id)
+
+  it('o responsável recebe os registros da família, lixeira inclusive, por recebido_em e depois id', async () => {
+    const json = await exportar(mundo('juliana'))
+
+    expect(json.familias).toHaveLength(1)
+    const registros = json.familias[0].registros
+    expect(ids(registros)).toEqual([idRotina(1), idRotina(2), idRotina(3), idRotina(4)])
+    for (const item of registros) expect(Object.keys(item).sort()).toEqual([...CHAVES_REGISTRO].sort())
+
+    expect(registros[3]).toEqual({
+      id: idRotina(4),
+      familia_id: ID_FAMILIA,
+      bebe_id: ID_BEBE,
+      tipo: 'fralda',
+      inicio: micro(T3),
+      fim: null,
+      detalhes: { conteudo: 'xixi' },
+      nota: null,
+      origem: 'ao_vivo',
+      fuso: 'America/Sao_Paulo',
+      deslocamento_min: -180,
+      criado_por: bruno.id,
+      encerrado_por: null,
+      versao: 2,
+      recebido_em: micro(T3),
+      atualizado_em: micro(T4),
+      excluido_em: micro(T4),
+      excluido_por: juliana.id,
+    })
+    // Os que não estão na lixeira levam excluido_em e excluido_por nulos, e as datas saem no formato do banco.
+    expect(registros[0]).toMatchObject({ excluido_em: null, excluido_por: null, recebido_em: micro(T1) })
+    expect(registros[1]).toMatchObject({ tipo: 'observacao', nota: 'Dormiu bem', detalhes: {} })
+  })
+
+  it('o responsável recebe as notas da família, lixeira inclusive, por criada_em e depois id', async () => {
+    const json = await exportar(mundo('juliana'))
+
+    const notas = json.familias[0].notas
+    expect(ids(notas)).toEqual([idRotina(911), idRotina(909), idRotina(910)])
+    for (const item of notas) expect(Object.keys(item).sort()).toEqual([...CHAVES_NOTA].sort())
+    expect(notas[0]).toEqual({
+      id: idRotina(911),
+      familia_id: ID_FAMILIA,
+      bebe_id: ID_BEBE,
+      texto: 'Nota 911',
+      destaque_ate: null,
+      criado_por: bruno.id,
+      criada_em: micro(T1),
+      versao: 2,
+      atualizado_em: micro(T4),
+      excluida_em: micro(T4),
+      excluida_por: juliana.id,
+    })
+    expect(notas[1]).toMatchObject({ bebe_id: null, excluida_em: null, excluida_por: null, criada_em: micro(T2) })
+  })
+
+  it('o responsável recebe no topo só o que criou em família onde não é responsável, sem repetir o de familias[]', async () => {
+    const json = await exportar(mundo('juliana'))
+
+    // O registro 1 e as notas dela na Família Exemplo já estão dentro de familias[]: não se repetem no topo.
+    expect(ids(json.registros)).toEqual([idRotina(11)])
+    expect(ids(json.notas)).toEqual([idRotina(921)])
+    expect(json.registros[0]).toMatchObject({ familia_id: TESTE, bebe_id: BEBE_DA_TESTE, criado_por: juliana.id })
+    expect(json.notas[0]).toMatchObject({ familia_id: TESTE, criado_por: juliana.id })
+  })
+
+  it('item de outra família nunca aparece para o responsável', async () => {
+    const texto = JSON.stringify(await exportar(mundo('juliana')))
+    for (const numero of [10, 12, 920, 922]) expect(texto).not.toContain(idRotina(numero))
+  })
+
+  it('o cuidador recebe no topo só os itens que criou, lixeira inclusive, e nada da família', async () => {
+    const json = await exportar(mundo('bruno'))
+
+    expect(json.familias).toEqual([])
+    // recebido_em: 12 (T1, Teste), 3 (T2) e 4 (T3, lixeira).
+    expect(ids(json.registros)).toEqual([idRotina(12), idRotina(3), idRotina(4)])
+    for (const item of json.registros) expect(Object.keys(item).sort()).toEqual([...CHAVES_REGISTRO].sort())
+    expect(json.registros.every((item) => item.criado_por === bruno.id)).toBe(true)
+    expect(json.registros[2]).toMatchObject({ excluido_em: micro(T4), excluido_por: juliana.id })
+
+    // criada_em: 911 (T1, lixeira), 909 (T2) e 922 (T3, Teste).
+    expect(ids(json.notas)).toEqual([idRotina(911), idRotina(909), idRotina(922)])
+    for (const item of json.notas) expect(Object.keys(item).sort()).toEqual([...CHAVES_NOTA].sort())
+    expect(json.notas.every((item) => item.criado_por === bruno.id)).toBe(true)
+
+    const texto = JSON.stringify(json)
+    for (const numero of [1, 2, 10, 11, 910, 920, 921]) expect(texto).not.toContain(idRotina(numero))
+    expect(texto).not.toContain('Dormiu bem')
+  })
+
+  it('quem é responsável numa família e cuidador em outra recebe a primeira em familias[] e só o que criou na segunda, no topo', async () => {
+    const json = await exportar(mundo('carla'))
+
+    // A Família Teste (Carla responsável) inteira, de todos os autores.
+    expect(json.familias).toHaveLength(1)
+    expect(ids(json.familias[0].registros)).toEqual([idRotina(10), idRotina(12), idRotina(11)])
+    expect(ids(json.familias[0].notas)).toEqual([idRotina(920), idRotina(921), idRotina(922)])
+    // Na Família Exemplo (Carla cuidadora): só o dela; o resto da família não vem.
+    expect(ids(json.registros)).toEqual([idRotina(2)])
+    expect(ids(json.notas)).toEqual([idRotina(910)])
+    const texto = JSON.stringify(json)
+    for (const numero of [1, 3, 4, 909, 911]) expect(texto).not.toContain(idRotina(numero))
+  })
+
+  it('quem não tem vínculo nem criou nada recebe as três listas vazias', async () => {
+    const davi = mundo('juliana')
+    davi.sessaoParaTeste(PESSOAS.davi.email)
+    const vazio = await exportar(davi)
+    expect(vazio).toMatchObject({ familias: [], registros: [], notas: [] })
+  })
+
+  it('o empate em recebido_em e em criada_em se resolve pelo id, qualquer que seja a ordem de entrada', async () => {
+    const dados = criarMundoDeTeste({
+      sessao: 'juliana',
+      semRegistros: true,
+      ajustarRotina: () => ({
+        registros: [registro(7, juliana.id, T1), registro(5, bruno.id, T1), registro(6, carla.id, T1)],
+        notas: [nota(808, juliana.id, T1), nota(806, bruno.id, T1), nota(807, carla.id, T1)],
+      }),
+    }).conta
+    const json = await exportar(dados)
+    expect(ids(json.familias[0].registros)).toEqual([idRotina(5), idRotina(6), idRotina(7)])
+    expect(ids(json.familias[0].notas)).toEqual([idRotina(806), idRotina(807), idRotina(808)])
   })
 })
 

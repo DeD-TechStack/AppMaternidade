@@ -1,5 +1,6 @@
 import { dataNoFuso, fusoValido, type ErroDados, type Papel, type Resultado } from './comum.ts'
 import { classificarErroConta, erroDaChave, type ChaveErro } from './conta.erros.ts'
+import type { Nota, Registro } from './rotina.tipos.ts'
 import type {
   Bebe,
   Conta,
@@ -156,6 +157,70 @@ function novoId(): string {
 function paraJson(texto: string | null): string | null {
   if (texto === null) return null
   return new Date(texto).toISOString().replace(/\.(\d{3})Z$/, '.$1000Z')
+}
+
+/**
+ * Quem leva os registros e as notas da rotina para a exportação (RF-13). A memória da rotina se registra aqui
+ * com `registrarFonteDeExportacao(conta, ...)`, chaveada pelo objeto da conta; sem rotina ligada, as listas
+ * saem vazias. A assinatura de `exportarDados` não muda.
+ */
+interface FonteDeExportacao {
+  registros: () => readonly Registro[]
+  notas: () => readonly Nota[]
+}
+
+const SEM_ROTINA: FonteDeExportacao = { registros: () => [], notas: () => [] }
+const fontesDeExportacao = new WeakMap<object, FonteDeExportacao>()
+
+export function registrarFonteDeExportacao(conta: object, fonte: FonteDeExportacao): void {
+  fontesDeExportacao.set(conta, fonte)
+}
+
+const compararTexto = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
+
+/** Registros no formato do JSON do banco: chaves em snake_case, por `recebido_em` e depois id. */
+function registrosEmJson(lista: readonly Registro[]) {
+  return [...lista]
+    .sort((a, b) => Date.parse(a.recebidoEm) - Date.parse(b.recebidoEm) || compararTexto(a.id, b.id))
+    .map((r) => ({
+      id: r.id,
+      familia_id: r.familiaId,
+      bebe_id: r.bebeId,
+      tipo: r.tipo,
+      inicio: paraJson(r.inicio),
+      fim: paraJson(r.fim),
+      detalhes: { ...r.detalhes },
+      nota: r.nota,
+      origem: r.origem,
+      fuso: r.fuso,
+      deslocamento_min: r.deslocamentoMin,
+      criado_por: r.criadoPor,
+      encerrado_por: r.encerradoPor,
+      versao: r.versao,
+      recebido_em: paraJson(r.recebidoEm),
+      atualizado_em: paraJson(r.atualizadoEm),
+      excluido_em: paraJson(r.excluidoEm),
+      excluido_por: r.excluidoPor,
+    }))
+}
+
+/** Notas no formato do JSON do banco: chaves em snake_case, por `criada_em` e depois id. */
+function notasEmJson(lista: readonly Nota[]) {
+  return [...lista]
+    .sort((a, b) => Date.parse(a.criadaEm) - Date.parse(b.criadaEm) || compararTexto(a.id, b.id))
+    .map((n) => ({
+      id: n.id,
+      familia_id: n.familiaId,
+      bebe_id: n.bebeId,
+      texto: n.texto,
+      destaque_ate: paraJson(n.destaqueAte),
+      criado_por: n.criadoPor,
+      criada_em: paraJson(n.criadaEm),
+      versao: n.versao,
+      atualizado_em: paraJson(n.atualizadoEm),
+      excluida_em: paraJson(n.excluidaEm),
+      excluida_por: n.excluidaPor,
+    }))
 }
 
 const ordenarPor = <T>(lista: T[], chave: (item: T) => [string, string]): T[] =>
@@ -720,6 +785,8 @@ export function criarDadosContaMemoria(fixture: FixtureConta, opcoes: OpcoesMemo
       familias.filter((f) => vinculos.some((v) => v.familiaId === f.id && v.contaId === conta.id && v.papel === 'responsavel' && vale(v))),
       (f) => [f.criadaEm, f.id],
     )
+    const idsDasFamilias = new Set(familiasDoResponsavel.map((f) => f.id))
+    const fonte = fontesDeExportacao.get(dados) ?? SEM_ROTINA
 
     return ok({
       formato: 'appmaternidade-exportacao-v1',
@@ -776,7 +843,12 @@ export function criarDadosContaMemoria(fixture: FixtureConta, opcoes: OpcoesMemo
           criado_em: paraJson(c.criadoEm),
           aceito_em: paraJson(c.aceitoEm),
         })),
+        registros: registrosEmJson(fonte.registros().filter((r) => r.familiaId === f.id)),
+        notas: notasEmJson(fonte.notas().filter((n) => n.familiaId === f.id)),
       })),
+      // O que a conta criou onde não é responsável ativa; onde é, já está dentro de familias[].
+      registros: registrosEmJson(fonte.registros().filter((r) => r.criadoPor === conta.id && !idsDasFamilias.has(r.familiaId))),
+      notas: notasEmJson(fonte.notas().filter((n) => n.criadoPor === conta.id && !idsDasFamilias.has(n.familiaId))),
     })
   }
 
