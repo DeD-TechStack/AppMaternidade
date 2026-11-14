@@ -54,6 +54,8 @@ export const COMUM = {
 export const ESTADOS = {
   semFamilia: 'Você ainda não faz parte de uma família.',
   familiaSemBebe: 'Esta família ainda não tem bebê cadastrado.',
+  /** O botão da família sem bebê (QA-01): leva à tela Família, onde fica "Adicionar bebê". */
+  cadastrarBebe: 'Cadastrar o bebê',
   acessoPerdido: 'Você não tem mais acesso a este bebê.',
   observador: 'Seu papel nesta família permite só ver os registros.',
   cuidador: 'Seu papel nesta família permite mudar só os registros que você fez.',
@@ -226,6 +228,10 @@ export const CONFIRMACAO = {
 export const SESSAO = {
   titulo: (rotulo: string, nome: string) => `${rotulo} de ${nome}`,
   descartarPergunta: 'Descartar esta sessão?',
+  /** QA-10: a pergunta antes de encerrar uma sessão com menos de 1 minuto. */
+  curtaPergunta: 'A sessão durou menos de 1 minuto. Salvar mesmo assim?',
+  curtaSalvar: 'Salvar',
+  curtaDescartar: 'Descartar',
 } as const
 
 // ---- formulário de registro (R38-10) -------------------------------------------------------------------
