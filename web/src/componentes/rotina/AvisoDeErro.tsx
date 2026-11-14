@@ -27,8 +27,9 @@ export function AvisoDeErro({ erro, escrita = false, papel = null, aoTentarDeNov
       ref={refAviso}
       role="alert"
       tabIndex={-1}
+      data-h="cartao"
       data-erro-rotina={erro.chave}
-      className={`alvo-foco flex w-full flex-col items-start gap-3 rounded-campo border-[1.5px] border-(--cor-texto) bg-(--cor-cartao) p-4 ${className ?? ''}`}
+      className={`alvo-foco flex w-full flex-col items-start gap-3 border-[1.5px] border-(--cor-texto) bg-(--cor-cartao) ${className ?? ''}`}
     >
       <p className="flex items-start gap-3 font-medium wrap-anywhere">
         <CircleAlert size={22} aria-hidden="true" className="mt-0.5 shrink-0" />

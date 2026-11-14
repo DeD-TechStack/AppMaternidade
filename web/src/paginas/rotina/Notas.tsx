@@ -141,7 +141,7 @@ function ListaDeNotas({ ativo }: { ativo: BebeAtivo }) {
                           </div>
                           {podeAlterar(nota) ? (
                             excluindo === nota.id ? (
-                              <Pilha vao="pilha" role="group" aria-label={NOTAS.grupoDaExclusao} className="rounded-campo bg-(--cor-papel-fundo) p-4" data-confirmar-exclusao="">
+                              <Pilha vao="pilha" dataH="cartao" role="group" aria-label={NOTAS.grupoDaExclusao} className="bg-(--cor-papel-fundo)" data-confirmar-exclusao="">
                                 <p className="font-medium">{NOTAS.confirmarExclusao}</p>
                                 <div className="flex flex-wrap gap-3">
                                   <Botao tamanho="app" className={ALVO_APP} desativado={ocupada === nota.id} onClick={() => void excluir(nota)}>

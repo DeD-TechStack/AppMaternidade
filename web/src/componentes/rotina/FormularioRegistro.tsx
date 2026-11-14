@@ -481,7 +481,7 @@ export function FormularioRegistro({ modo, ativo, tipoInicial, registro }: Props
       ) : null}
 
       {passo === 'confirmando' ? (
-        <Pilha vao="pilha" role="group" aria-label={FORMULARIO.confirmarGrupo} className="rounded-campo bg-(--cor-papel-fundo) p-4" data-avisos="">
+        <Pilha vao="pilha" dataH="cartao" role="group" aria-label={FORMULARIO.confirmarGrupo} className="bg-(--cor-papel-fundo)" data-avisos="">
           {avisos.map((aviso) => (
             <p key={aviso} className="font-medium">
               {aviso}

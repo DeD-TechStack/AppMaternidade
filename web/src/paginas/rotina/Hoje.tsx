@@ -283,7 +283,7 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
           data-h="cartao"
           data-andamento=""
           aria-busy={emAndamento.estado === 'carregando' ? 'true' : undefined}
-          className="alvo-foco flex flex-col gap-esp-pilha rounded-cartao border border-(--cor-fio-suave) bg-(--cor-cartao) p-6 lg:p-8"
+          className="alvo-foco flex flex-col gap-esp-pilha rounded-cartao border border-(--cor-fio-suave) bg-(--cor-cartao)"
         >
           <h2 className="text-pequeno font-medium text-(--cor-texto-2)">{HOJE.emAndamento}</h2>
           {emAndamento.erro ? (

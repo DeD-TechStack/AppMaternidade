@@ -39,10 +39,11 @@ export function PainelFimEmOutroHorario({ inicio, aoConfirmar, aoCancelar, ocupa
   return (
     <Pilha
       vao="pilha"
+      dataH="cartao"
       role="group"
       aria-label={SESSOES.encerrarOutroHorario}
       data-painel-sessao="outro-horario"
-      className="rounded-campo bg-(--cor-fundo) p-4 text-(--cor-texto) lg:p-6"
+      className="bg-(--cor-fundo) text-(--cor-texto)"
     >
       <CampoHorario
         rotulo={FORMULARIO.fim}

@@ -50,8 +50,9 @@ export function PerguntaSessaoCurta({ aoSalvar, aoDescartar, podeDescartar, ocup
       ref={painel}
       role="group"
       aria-labelledby={idPergunta}
+      data-h="cartao"
       data-painel-sessao="curta"
-      className={`rounded-campo bg-(--cor-fundo) p-4 text-(--cor-texto) lg:p-6 ${className ?? ''}`}
+      className={`bg-(--cor-fundo) text-(--cor-texto) ${className ?? ''}`}
     >
       <Pilha vao="pilha">
         <p id={idPergunta} className="font-medium">

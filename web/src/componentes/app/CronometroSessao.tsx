@@ -175,10 +175,11 @@ export function CronometroSessao({
       {painel === 'nota' ? (
         <Pilha
           vao="pilha"
+          dataH="cartao"
           role="group"
           aria-label="Encerrar e anotar"
           data-painel-sessao="nota"
-          className="-mx-2 rounded-campo bg-(--cor-fundo) p-4 text-(--cor-texto) sm:mx-0 lg:p-6"
+          className="-mx-2 bg-(--cor-fundo) text-(--cor-texto) sm:mx-0"
         >
           <Pilha vao="junto">
             <label htmlFor={idCampo} className="block font-medium">
@@ -270,10 +271,11 @@ export function CronometroSessao({
       {painel === 'curta' ? (
         <Pilha
           vao="pilha"
+          dataH="cartao"
           role="group"
           aria-labelledby={idCurta}
           data-painel-sessao="curta"
-          className="rounded-campo bg-(--cor-fundo) p-4 text-(--cor-texto) lg:p-6"
+          className="bg-(--cor-fundo) text-(--cor-texto)"
         >
           <p id={idCurta} className="font-medium">
             {SESSAO.curtaPergunta}
@@ -294,10 +296,11 @@ export function CronometroSessao({
       {painel === 'descartar' ? (
         <Pilha
           vao="pilha"
+          dataH="cartao"
           role="group"
           aria-labelledby={idPergunta}
           data-painel-sessao="descartar"
-          className="rounded-campo bg-(--cor-fundo) p-4 text-(--cor-texto) lg:p-6"
+          className="bg-(--cor-fundo) text-(--cor-texto)"
         >
           <Pilha vao="junto">
             <p id={idPergunta} className="font-medium">

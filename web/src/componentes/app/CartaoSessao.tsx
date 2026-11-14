@@ -48,7 +48,7 @@ export function CartaoSessao({ sessao, agora, aoEncerrar, podeEncerrar = true, o
         tabIndex={-1}
         data-h="cartao"
         data-andamento=""
-        className={`alvo-foco flex flex-col gap-esp-junto rounded-cartao border border-(--cor-fio-suave) bg-(--cor-cartao) p-6 lg:p-8 ${className ?? ''}`}
+        className={`alvo-foco flex flex-col gap-esp-junto rounded-cartao border border-(--cor-fio-suave) bg-(--cor-cartao) ${className ?? ''}`}
       >
         <h2 id={idTitulo} className="text-pequeno font-medium text-(--cor-texto-2)">
           Em andamento

@@ -109,8 +109,9 @@ export function SessoesEmParalelo({
         <Pilha
           key={tipo}
           vao="pilha"
+          dataH="cartao"
           data-uniao={tipo}
-          className="rounded-cartao border border-(--cor-fio-suave) bg-(--cor-cartao) p-4 [box-shadow:var(--sombra-cartao)]"
+          className="border border-(--cor-fio-suave) bg-(--cor-cartao) [box-shadow:var(--sombra-cartao)]"
         >
           <p className="font-medium">{SESSOES.duasDoMesmoTipo(grupo.length, minusculo(ROTULO_TIPO[tipo]))}</p>
           {podeUnir(grupo) ? (
@@ -137,9 +138,10 @@ export function SessoesEmParalelo({
         <Pilha
           as="section"
           vao="junto"
+          dataH="cartao"
           aria-label={SESSOES.outras}
           data-outras-sessoes=""
-          className="rounded-cartao border border-(--cor-fio-suave) bg-(--cor-cartao) px-5 pt-4 pb-2 [box-shadow:var(--sombra-cartao)]"
+          className="border border-(--cor-fio-suave) bg-(--cor-cartao) [box-shadow:var(--sombra-cartao)]"
         >
           <h3 className="cm-h4">{SESSOES.outras}</h3>
           <ul ref={lista}>
@@ -210,8 +212,9 @@ export function SessoesEmParalelo({
             <Pilha
               key={sessao.id}
               vao="pilha"
+              dataH="cartao"
               data-esquecida={sessao.id}
-              className="rounded-cartao border border-(--cor-fio-suave) bg-(--cor-cartao) p-4 [box-shadow:var(--sombra-cartao)]"
+              className="border border-(--cor-fio-suave) bg-(--cor-cartao) [box-shadow:var(--sombra-cartao)]"
             >
               <p className="font-medium">
                 {sessao.id === relogioAtrasDe ? SESSOES.relogioAtras : SESSOES.esquecida(formatarDuracao(agora - Date.parse(sessao.inicio)))}

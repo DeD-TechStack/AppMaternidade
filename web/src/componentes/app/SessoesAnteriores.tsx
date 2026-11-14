@@ -23,10 +23,10 @@ export function SessoesAnteriores({ tipo, itens, className }: Props) {
     <Pilha
       as="section"
       vao="junto"
-      dataH="coluna"
+      dataH="coluna cartao"
       aria-labelledby={idTitulo}
       data-anteriores=""
-      className={`rounded-cartao border border-(--cor-fio-suave) bg-(--cor-cartao) px-5 pt-5 pb-2 [box-shadow:var(--sombra-cartao)] lg:px-7 lg:pt-7 ${className ?? ''}`}
+      className={`border border-(--cor-fio-suave) bg-(--cor-cartao) [box-shadow:var(--sombra-cartao)] ${className ?? ''}`}
     >
       <h2 id={idTitulo} className="cm-h4">
         {TITULO[tipo]}

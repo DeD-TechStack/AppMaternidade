@@ -195,9 +195,10 @@ export function BarraRegistroRapido({
           className={confirmacao !== null || painel !== null ? 'absolute inset-x-0 bottom-full pb-3' : 'absolute inset-x-0 bottom-full'}
         >
           <div
+            data-h={confirmacao !== null || painel !== null ? 'cartao' : undefined}
             className={
               confirmacao !== null || painel !== null
-                ? 'mx-auto max-h-[calc(100dvh-160px)] w-[min(100%,40rem)] overflow-y-auto rounded-cartao border border-(--cor-fio-suave) bg-(--cor-cartao) p-4 [box-shadow:var(--sombra-flutuante)] lg:p-5'
+                ? 'mx-auto max-h-[calc(100dvh-160px)] w-[min(100%,40rem)] overflow-y-auto border border-(--cor-fio-suave) bg-(--cor-cartao) [box-shadow:var(--sombra-flutuante)]'
                 : undefined
             }
           >
