@@ -3,8 +3,10 @@ import { act, fireEvent, screen, within } from '@testing-library/react'
 import { temBanco } from './prototipo/banco.ts'
 import { PESSOAS } from './teste/renderizarComDados.tsx'
 import type { FixtureRotina } from './dados/rotina.memoria.ts'
-import { ID_BEBE, comSessaoEmAndamento, semSessaoEmAndamento } from './teste/rotina.fixture.ts'
-import { aguardarCarga, renderizarRotaPronta } from './teste/renderizarRota.tsx'
+import { simularFalhaRotina } from './dados/rotina.memoria.ts'
+import { ID_BEBE, comSessaoEmAndamento, criarMundoDeTeste, semSessaoEmAndamento } from './teste/rotina.fixture.ts'
+import { adiarRotina } from './teste/adiado.ts'
+import { aguardarCarga, renderizarRota, renderizarRotaPronta } from './teste/renderizarRota.tsx'
 
 // O Hoje com os dados da rotina (MAT-38a) sobre o Campo de mel (DESIGN.md 4, telas do app): o título com a
 // segunda linha em itálico, o cartão de mel da sessão, "Para você saber", "Desde o seu último registro", os
@@ -237,6 +239,150 @@ describe('Hoje: o cartão da sessão', () => {
 
     expect(cartao(container).textContent).toContain('Nenhuma sessão em andamento.')
     expect(screen.getByRole('status').textContent).toContain('Sessão encerrada: 1 h 12 min')
+  })
+})
+
+// A leitura da sessão em andamento que falha não é "nenhuma sessão": o cartão mostra o erro de leitura (a mesma
+// regra da Sessão) e só diz "Nenhuma sessão em andamento." quando a leitura deu certo e veio vazia.
+describe('Hoje: o cartão da sessão quando a leitura falha', () => {
+  const VAZIO = 'Nenhuma sessão em andamento.'
+
+  it('falha da leitura: o erro (role=alert) e "Tentar de novo" ficam no cartão, e "Nenhuma sessão em andamento." não aparece em lugar nenhum', async () => {
+    const mundo = criarMundoDeTeste()
+    simularFalhaRotina(mundo.rotina, 'emAndamento', 'rede')
+    const { container } = await renderizarRotaPronta('/app/hoje', { mundo })
+
+    const bloco = cartao(container)
+    expect(principal(container).contains(bloco)).toBe(true)
+    expect(within(bloco).getByRole('heading', { name: 'Em andamento' })).toBeTruthy()
+    expect(within(bloco).getByRole('alert')).toBeTruthy()
+    expect(within(bloco).getByRole('button', { name: 'Tentar de novo' })).toBeTruthy()
+    expect(bloco.hasAttribute('aria-busy')).toBe(false)
+    expect(document.body.textContent).not.toContain(VAZIO)
+    expect(within(bloco).queryByRole('timer')).toBeNull()
+  })
+
+  it('"Tentar de novo" lê outra vez: com sessão aberta o cartão passa a mostrar o tempo, e o erro some', async () => {
+    const mundo = criarMundoDeTeste()
+    simularFalhaRotina(mundo.rotina, 'emAndamento', 'rede')
+    const { container } = await renderizarRotaPronta('/app/hoje', { mundo })
+
+    fireEvent.click(within(cartao(container)).getByRole('button', { name: 'Tentar de novo' }))
+    await aguardarCarga()
+
+    const bloco = cartao(container)
+    expect(within(bloco).queryByRole('alert')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Tentar de novo' })).toBeNull()
+    expect(digitos(within(bloco).getByRole('timer'))).toBe('1:12:00')
+    expect(within(bloco).getByRole('button', { name: 'Encerrar' })).toBeTruthy()
+    expect(document.body.textContent).not.toContain(VAZIO)
+  })
+
+  it('"Tentar de novo" lê outra vez: sem sessão aberta, só então o cartão diz "Nenhuma sessão em andamento."', async () => {
+    const mundo = criarMundoDeTeste({ ajustarRotina: semSessaoEmAndamento })
+    simularFalhaRotina(mundo.rotina, 'emAndamento', 'rede')
+    const { container } = await renderizarRotaPronta('/app/hoje', { mundo })
+    expect(document.body.textContent).not.toContain(VAZIO)
+
+    fireEvent.click(within(cartao(container)).getByRole('button', { name: 'Tentar de novo' }))
+    await aguardarCarga()
+
+    expect(within(cartao(container)).getByText(VAZIO)).toBeTruthy()
+    expect(within(cartao(container)).queryByRole('alert')).toBeNull()
+  })
+
+  it('com sessão aberta (leitura certa): o tempo, "Encerrar" e "Ver sessão", sem erro e sem a frase de vazio', async () => {
+    const { container } = await renderizarRotaPronta('/app/hoje')
+
+    const bloco = cartao(container)
+    expect(within(bloco).getByRole('timer')).toBeTruthy()
+    expect(within(bloco).getByRole('button', { name: 'Encerrar' })).toBeTruthy()
+    expect(within(bloco).getByRole('link', { name: 'Ver sessão' })).toBeTruthy()
+    expect(within(bloco).queryByRole('alert')).toBeNull()
+    expect(document.body.textContent).not.toContain(VAZIO)
+  })
+
+  it('sem sessão aberta (leitura certa e vazia): "Nenhuma sessão em andamento." e nenhum erro', async () => {
+    const { container } = await renderizarRotaPronta('/app/hoje', { ajustarRotina: semSessaoEmAndamento })
+
+    expect(within(cartao(container)).getByText(VAZIO)).toBeTruthy()
+    expect(within(cartao(container)).queryByRole('alert')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Tentar de novo' })).toBeNull()
+  })
+
+  // P78-R1-01: a leitura vazia deu certo, e a releitura ("Atualizar") falha: o `useSecao` guarda os dados
+  // anteriores e põe o erro. O cartão não pode voltar a dizer "Nenhuma sessão" com um erro de leitura em pé.
+  it('P78-R1-01: leitura vazia certa e "Atualizar" com falha de rede: o cartão mostra o erro e "Tentar de novo", e nunca a frase de vazio', async () => {
+    const mundo = criarMundoDeTeste({ ajustarRotina: semSessaoEmAndamento })
+    const { container } = await renderizarRotaPronta('/app/hoje', { mundo })
+    expect(within(cartao(container)).getByText(VAZIO)).toBeTruthy()
+
+    simularFalhaRotina(mundo.rotina, 'emAndamento', 'rede')
+    fireEvent.click(screen.getByRole('button', { name: 'Atualizar' }))
+    await aguardarCarga()
+
+    const bloco = cartao(container)
+    expect(within(bloco).getByRole('heading', { name: 'Em andamento' })).toBeTruthy()
+    expect(within(bloco).getByRole('alert')).toBeTruthy()
+    expect(within(bloco).getByRole('button', { name: 'Tentar de novo' })).toBeTruthy()
+    expect(screen.getAllByRole('alert')).toHaveLength(1)
+    expect(document.body.textContent).not.toContain(VAZIO)
+    expect(bloco.getAttribute('tabindex')).toBe('-1')
+  })
+
+  it('P78-R1-01: sessão aberta lida e "Atualizar" com falha: a sessão continua no cartão (tempo e Encerrar) e o erro aparece', async () => {
+    const mundo = criarMundoDeTeste()
+    const { container } = await renderizarRotaPronta('/app/hoje', { mundo })
+
+    simularFalhaRotina(mundo.rotina, 'emAndamento', 'rede')
+    fireEvent.click(screen.getByRole('button', { name: 'Atualizar' }))
+    await aguardarCarga()
+
+    const bloco = cartao(container)
+    expect(digitos(within(bloco).getByRole('timer'))).toBe('1:12:00')
+    expect(within(bloco).getByRole('button', { name: 'Encerrar' })).toBeTruthy()
+    expect(within(principal(container)).getByRole('alert')).toBeTruthy()
+    expect(within(principal(container)).getByRole('button', { name: 'Tentar de novo' })).toBeTruthy()
+    expect(document.body.textContent).not.toContain(VAZIO)
+  })
+
+  it('P78-R1-01: depois da falha da releitura, "Tentar de novo" dá certo: a frase de vazio volta e o erro some', async () => {
+    const mundo = criarMundoDeTeste({ ajustarRotina: semSessaoEmAndamento })
+    const { container } = await renderizarRotaPronta('/app/hoje', { mundo })
+    simularFalhaRotina(mundo.rotina, 'emAndamento', 'rede')
+    fireEvent.click(screen.getByRole('button', { name: 'Atualizar' }))
+    await aguardarCarga()
+    expect(document.body.textContent).not.toContain(VAZIO)
+
+    fireEvent.click(within(cartao(container)).getByRole('button', { name: 'Tentar de novo' }))
+    await aguardarCarga()
+
+    expect(within(cartao(container)).getByText(VAZIO)).toBeTruthy()
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Tentar de novo' })).toBeNull()
+  })
+
+  it('carregando: o cartão tem aria-busy e não diz "Nenhuma sessão em andamento." até a leitura terminar', async () => {
+    const mundo = criarMundoDeTeste({ ajustarRotina: semSessaoEmAndamento })
+    const adiada = adiarRotina(mundo.rotina)
+    adiada.adiar('emAndamento')
+    const { container } = renderizarRota('/app/hoje', { mundo: { ...mundo, rotina: adiada.dados } })
+    for (let passo = 0; passo < 50 && adiada.presas('emAndamento') === 0; passo++) {
+      await act(async () => {
+        await Promise.resolve()
+      })
+    }
+    expect(adiada.presas('emAndamento')).toBe(1)
+
+    expect(cartao(container).getAttribute('aria-busy')).toBe('true')
+    expect(within(cartao(container)).getByText('Carregando…')).toBeTruthy()
+    expect(document.body.textContent).not.toContain(VAZIO)
+
+    adiada.liberarTodas('emAndamento')
+    await aguardarCarga()
+
+    expect(cartao(container).hasAttribute('aria-busy')).toBe(false)
+    expect(within(cartao(container)).getByText(VAZIO)).toBeTruthy()
   })
 })
 
