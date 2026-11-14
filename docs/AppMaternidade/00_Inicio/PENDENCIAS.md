@@ -26,7 +26,7 @@ Retomada 12/11 ~01h15 (sessão nova do líder): cron `retorno-oc` retomado; 37b 
 - 13/11 (chat): "abra quantas frentes forem necessárias".
 - 13/11 ~18h50 (t_ed69e09b): foco total no AppMaternidade; teto do host de 10 (o board aceita 8, `max_spawn`); abrir toda frente independente com spec pronta, priorizando fechar o site; laço repetido de teste intermitente com no máximo 2 suítes em paralelo; disco C ≥ 25 GB livres; pausa (desligar o PC) pode vir a qualquer hora.
 
-**Ramo:** `origin/int/refazer` = **38f07848677f4c9840226d19c8b2680a513d31d3** (13/11 ~21h30). Integrações de 13/11, com recibo no cartão:
+**Ramo:** `origin/int/refazer` = **0e57c084982ba6843a6537ba1df90b6b692cc996** (14/11 ~02h20; H-3a 7824d56, QA-F2 0e57c08). Antes: 38f0784 (13/11 ~21h30). Integrações de 13/11, com recibo no cartão:
 - 40c a003fe4;
 - 39b fcf47fc;
 - P-50 0f35191;
