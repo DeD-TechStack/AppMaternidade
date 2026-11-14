@@ -28,6 +28,7 @@ ESTADO: ATIVO (14/11 ~08h35; session switch requested by the infra coordinator f
 - Done today: QA-F5, H-3d, CI-DES06 (integrated), QA-F4 (approved, integration in flight), RF12-SPEC-v2 t_c7dc9f31 (approved R3 documentally). P-56 t_506d9c94 archived with an explicit scope cut (leader decision after R3 escalation); successor P-56b.
 
 **Arrived after SWITCH_OK (handle first in the new session):** A11Y-F2 t_a37f1086 R2 returned (causa: teste, F2-R2-01 must: finish the AX/keyboard proof already asked in F2-R1-01/03; the JSON covers only 8 Família entries). It is the SAME finding a second time: write the leader return comment as correction 2/2 (last), listing "already tried", and escalate if it comes back a third time.
+- AUD-SITE t_c948c5f8 BLOCKED (capability): executor-appmaternidade has no vision tool, so it cannot do R1-01 (look at each PNG); it says browser re-runs also lack tooling (but its S1/S5/S6 sweeps ran Chrome via terminal node scripts, so browser via terminal is possible). Options for the new session: (a) coordinator enables vision for executor-appmaternidade; (b) the card uses the existing headless visual judge route (`claude -p --model claude-fable-5-2[1m]` reading a PROMPT_AVALIADOR*.md and the captures, as in the item-H judges) for the visual pass, and terminal node+CDP scripts for the browser re-runs. Coordinator notified (avisar_coordenador, 14/11 ~08h45).
 
 **Correction counts (2 max; 3rd time the same finding = leader escalates):** H-3b 1/2, H-3f 1/2, QA-F1 1/2, QA-F6 1/2, AUD-SITE 1/2, A11Y-F2 1/2 in review.
 
