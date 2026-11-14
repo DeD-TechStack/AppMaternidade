@@ -406,7 +406,7 @@ describe('sessões', () => {
     await clicar(within(screen.getByRole('group', { name: 'Descartar esta sessão?' })).getByRole('button', { name: 'Descartar' }))
 
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Hoje')
-    expect(status().textContent).toBe('')
+    expect(status().textContent).toContain('Esta sessão foi descartada.')
     expect(screen.getByText('Nenhuma sessão em andamento.')).toBeTruthy()
     const lixeira = await rotina.lixeira('c1111111-1111-4111-8111-111111111111')
     expect(lixeira.ok && lixeira.valor.itens.map((r) => r.tipo)).toEqual(['sono'])
