@@ -1,6 +1,7 @@
 import { useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { IDEIAS } from '../../conteudo/desenvolvimento/itens.ts'
 import type { Fase } from '../../conteudo/desenvolvimento/tipos.ts'
+import { Pilha } from '../base/layout/index.ts'
 import { FontesDoItem } from './FontesDoItem.tsx'
 import './publicas-destaque.css'
 
@@ -72,16 +73,22 @@ export function SeletorDeFase({ fases, lateral }: { fases: readonly Fase[]; late
           className="pd-fase"
           data-fase={fase.id}
         >
-          <h3 className="cm-h3">{fase.titulo}</h3>
-          <ul className="pd-lista cm-corpo">
-            {fase.itens.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-          <FontesDoItem fontes={fase.fontes} consultadoEm={fase.consultadoEm} />
+          <Pilha vao="grupo">
+            <h3 className="cm-h3">{fase.titulo}</h3>
+            <ul className="pd-lista cm-corpo">
+              {fase.itens.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+            <FontesDoItem fontes={fase.fontes} consultadoEm={fase.consultadoEm} />
+          </Pilha>
         </div>
       ))}
-      {lateral ? <div className="pd-seletor-lateral">{lateral}</div> : null}
+      {lateral ? (
+        <Pilha vao="pilha" className="pd-seletor-lateral">
+          {lateral}
+        </Pilha>
+      ) : null}
     </div>
   )
 }

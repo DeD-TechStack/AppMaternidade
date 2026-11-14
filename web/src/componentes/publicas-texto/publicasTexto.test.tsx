@@ -134,15 +134,18 @@ describe('páginas públicas de leitura', () => {
       it('tem o índice entre a abertura e a leitura, fora do painel de mel', () => {
         const { container } = renderizarRota(caminho)
         const principal = container.querySelector('main')!
-        const indice = principal.querySelector(':scope > nav.pt-indice')!
-        expect(indice.previousElementSibling!.classList.contains('pt-abertura')).toBe(true)
-        expect(indice.nextElementSibling!.classList.contains('pt-leitura')).toBe(true)
+        const indice = principal.querySelector('.pt-leitura > nav.pt-indice')!
+        const secaoDaLeitura = indice.closest('main > [data-h~="secao"]')!
+        expect(secaoDaLeitura.previousElementSibling!.querySelector('.pt-abertura')).not.toBeNull()
+        expect(indice.previousElementSibling).toBeNull()
+        expect(indice.nextElementSibling).not.toBeNull()
+        expect(indice.parentElement!.classList.contains('pt-leitura')).toBe(true)
         expect(indice.closest('aside')).toBeNull()
       })
 
       it(`tem na abertura, depois do título e da segunda linha, o botão de ação principal "${BOTAO_DA_ABERTURA[caminho][0]}" (${BOTAO_DA_ABERTURA[caminho][1]})`, () => {
         const { container } = renderizarRota(caminho)
-        const abertura = container.querySelector('main > .pt-abertura')!
+        const abertura = container.querySelector('main .pt-abertura')!
         const titulo = abertura.querySelector('h1')!
         const botoes = [...abertura.querySelectorAll<HTMLAnchorElement>('.pt-cabeca a.cm-botao')]
         expect(botoes).toHaveLength(1)
@@ -172,7 +175,7 @@ describe('páginas públicas de leitura', () => {
             const bloco = principal.querySelector('.pt-abertura > .pt-cabeca > .pt-email')!
             expect(bloco).not.toBeNull()
             expect(principal.querySelectorAll('.pt-email')).toHaveLength(1)
-            expect(bloco.previousElementSibling!.tagName).toBe('P')
+            expect(bloco.previousElementSibling!.tagName).toBe('DIV')
             expect(bloco.textContent).toContain('E-mail')
             // O cartão tem só o rótulo, o endereço e o botão.
             expect([...bloco.querySelectorAll('.pt-email-dados > *')].map((no) => no.textContent)).toEqual(['E-mail', EMAIL_CONTATO])
@@ -493,12 +496,12 @@ describe('Exclusão de conta: página de tarefa', () => {
 
   it('o botão "Ir para a Conta" fica na abertura, logo depois da segunda linha do título, e leva a /app/conta', () => {
     const { container } = renderizarRota('/exclusao-de-conta')
-    const cabeca = container.querySelector('main > .pt-abertura > .pt-cabeca')!
+    const cabeca = container.querySelector('main .pt-abertura > .pt-cabeca')!
     const botao = within(cabeca as HTMLElement).getByRole('link', { name: 'Ir para a Conta' })
     expect(botao.getAttribute('href')).toBe('/app/conta')
     expect(botao.className).toBe('cm-botao cm-botao-primario alvo-toque')
     expect(cabeca.lastElementChild).toBe(botao.parentElement)
-    expect(cabeca.lastElementChild!.previousElementSibling!.tagName).toBe('P')
+    expect(cabeca.lastElementChild!.previousElementSibling!.tagName).toBe('DIV')
     expect(container.querySelectorAll('main a[href="/app/conta"]')).toHaveLength(1)
     // O botão saiu do texto de "Como pedir": ali sobram só os dois parágrafos.
     const pedir = screen.getByRole('heading', { level: 2, name: 'Como pedir' }).closest('section')!
@@ -528,7 +531,7 @@ describe('Exclusão de conta: página de tarefa', () => {
 describe('Privacidade: lista de dados', () => {
   it('mostra os grupos de dados uma vez só, na sua seção, e nada de lista na abertura', () => {
     const { container } = renderizarRota('/privacidade')
-    const abertura = container.querySelector('main > .pt-abertura')!
+    const abertura = container.querySelector('main .pt-abertura')!
     expect(abertura.querySelector('li')).toBeNull()
     expect(container.querySelector('.pt-abertura-lista')).toBeNull()
     const primeiraSecao = screen.getByRole('heading', { level: 2, name: 'Que dados o site vai guardar' }).closest('section')!
@@ -542,7 +545,7 @@ describe('Privacidade: lista de dados', () => {
   it('as outras páginas também não têm lista na abertura', () => {
     for (const [caminho] of PAGINAS) {
       const { container, unmount } = renderizarRota(caminho)
-      expect(container.querySelector('main > .pt-abertura li'), caminho).toBeNull()
+      expect(container.querySelector('main .pt-abertura li'), caminho).toBeNull()
       unmount()
     }
   })
@@ -561,7 +564,7 @@ describe('índice igual nas seis páginas', () => {
         const { container, unmount } = renderizarRota(caminho)
         const principal = container.querySelector('main')!
         expect(principal.hasAttribute('data-desenho'), caminho).toBe(false)
-        const indice = principal.querySelector(':scope > nav.pt-indice')!
+        const indice = principal.querySelector('.pt-leitura > nav.pt-indice')!
         const detalhes = indice.querySelector('details')
         expect(detalhes, caminho).not.toBeNull()
         expect(detalhes!.open, caminho).toBe(false)
@@ -574,7 +577,7 @@ describe('índice igual nas seis páginas', () => {
     }
     for (const [caminho, , dados] of PAGINAS) {
       const { container, unmount } = renderizarRota(caminho)
-      const indice = container.querySelector('main > nav.pt-indice')!
+      const indice = container.querySelector('main .pt-leitura > nav.pt-indice')!
       expect(indice.querySelector('details'), caminho).toBeNull()
       expect(indice.querySelectorAll('ul'), caminho).toHaveLength(1)
       expect(indice.querySelectorAll('li'), caminho).toHaveLength(dados.secoes.length)
@@ -613,7 +616,7 @@ describe('painel e figura por largura (CSS)', () => {
     expect(celular).toMatch(/(^|[\s;])inline-size:\s*fit-content/)
     expect(celular).toMatch(/(^|[\s;])max-inline-size:\s*100%/)
     expect(celular).toMatch(/box-sizing:\s*border-box/)
-    expect(celular).toMatch(/justify-self:\s*center/)
+    expect(celular).toMatch(/align-self:\s*center/)
     expect(celular).not.toMatch(/(^|[\s;])inline-size:\s*100%/)
     expect(css).toMatch(/@media \(min-width: 1100px\)/)
     expect(css).not.toMatch(/background-color:\s*var\(--color-areia\)/)
@@ -687,12 +690,10 @@ describe('painel e figura por largura (CSS)', () => {
     expect(24 + altura(celular) + 24).toBeLessThanOrEqual(0.4 * 844)
   })
 
-  it('uma coluna de leitura de 680 px, centrada, para o índice e para toda a leitura; o mesmo fio abre cada bloco', () => {
-    expect(corpos('.pt-pagina')[0]).toMatch(/--pt-coluna:\s*680px/)
-    const [coluna] = corpos('.pt-indice,\n  .pt-leitura')
-    expect(coluna).toMatch(/max-inline-size:\s*var\(--pt-coluna\)/)
-    expect(coluna).toMatch(/margin-inline:\s*auto/)
-    const [fio] = corpos('.pt-indice,\n  .pt-leitura > .cm-lide,\n  .pt-leitura > .pt-secao')
+  it('uma coluna de leitura de 640 px (QuadroLayout), à esquerda, para o índice e para toda a leitura; o mesmo fio abre cada bloco', () => {
+    expect(css).not.toMatch(/--pt-coluna/)
+    expect(css).not.toMatch(/\.pt-pagina/)
+    const [fio] = corpos('.pt-leitura > .pt-indice,\n  .pt-leitura > .cm-lide,\n  .pt-leitura > .pt-secao')
     expect(fio).toMatch(/border-top:\s*1px solid/)
     // Nenhuma regra dá fio só a uma seção ou a um bloco de dentro dela.
     expect(css).not.toMatch(/\.pt-secao:first-child/)

@@ -1,7 +1,7 @@
 import { Botao } from '../../componentes/base/Botao.tsx'
+import { Coluna, Colunas, Pilha, QuadroLayout, Secao } from '../../componentes/base/layout/index.ts'
 import { CartaoFlutuante } from '../../componentes/campo/CartaoFlutuante.tsx'
 import { CenaEstudio } from '../../componentes/campo/CenaEstudio.tsx'
-import { FaixaCacau } from '../../componentes/campo/FaixaCacau.tsx'
 import { Ilustracao } from '../../componentes/campo/Ilustracao.tsx'
 import { Numeros } from '../../componentes/campo/Numeros.tsx'
 import { Titulo } from '../../componentes/campo/Titulo.tsx'
@@ -17,6 +17,7 @@ import {
 import { ListaDePassos } from '../../componentes/publicas-destaque/Passos.tsx'
 import { COMO_FUNCIONA_DESTAQUE as T } from '../../conteudo/publicas-destaque.ts'
 import { NOMES_DE_PAGINA } from '../../conteudo/publicas-texto.ts'
+import { RevelacaoPorBaixo } from '../../movimento/RevelacaoPorBaixo.tsx'
 import { useTituloDaPagina } from './useTitulo.ts'
 
 /**
@@ -28,7 +29,7 @@ import { useTituloDaPagina } from './useTitulo.ts'
 export function ComoFunciona() {
   useTituloDaPagina(NOMES_DE_PAGINA.comoFunciona)
   return (
-    <main className="pd-pagina">
+    <main>
       <Abertura
         titulo={T.titulo}
         texto={
@@ -54,59 +55,69 @@ export function ComoFunciona() {
         }
       />
 
-      <section id="tres-momentos" className="pd-secao" aria-labelledby="como-momentos">
-        <CabecaDeSecao id="como-momentos" titulo={T.momentos.titulo}>
-          <p className="cm-corpo cm-texto-2">{T.momentos.texto}</p>
-        </CabecaDeSecao>
-        <ListaDePassos
-          passos={T.passos}
-          midias={[
-            <div key="primeira-semana" className="pd-passo-um">
-              <div className="pd-chao pd-passo-desenho">
-                <Ilustracao nome="pai-colo" carregamento="eager" />
-              </div>
-              <div className="pd-pilha">
-                <CartaoFlutuante giro={-2} className="pd-em-fluxo">
-                  <CartaoConvite />
-                </CartaoFlutuante>
-                <CartaoPlano>
-                  <CartaoPrimeirosRegistros />
-                </CartaoPlano>
-              </div>
-            </div>,
-            <CartaoFlutuante key="madrugada" giro={2} className="pd-em-fluxo pd-cartao-noite">
-              <CartaoMadrugada />
-            </CartaoFlutuante>,
-            <CartaoPlano key="troca-de-turno">
-              <CartaoDesdeQueSaiu />
-            </CartaoPlano>,
-          ]}
-        />
-      </section>
+      <Secao id="tres-momentos" aria-labelledby="como-momentos">
+        <Pilha vao="bloco">
+          <CabecaDeSecao id="como-momentos" titulo={T.momentos.titulo}>
+            <p className="cm-corpo cm-texto-2">{T.momentos.texto}</p>
+          </CabecaDeSecao>
+          <QuadroLayout>
+            <ListaDePassos
+              passos={T.passos}
+              midias={[
+                <div key="primeira-semana" className="pd-passo-um">
+                  <div className="pd-chao pd-passo-desenho">
+                    <Ilustracao nome="pai-colo" carregamento="eager" />
+                  </div>
+                  <Pilha vao="grupo" className="pd-pilha">
+                    <CartaoFlutuante giro={-2} className="pd-em-fluxo">
+                      <CartaoConvite />
+                    </CartaoFlutuante>
+                    <CartaoPlano>
+                      <CartaoPrimeirosRegistros />
+                    </CartaoPlano>
+                  </Pilha>
+                </div>,
+                <CartaoFlutuante key="madrugada" giro={2} className="pd-em-fluxo pd-cartao-noite">
+                  <CartaoMadrugada />
+                </CartaoFlutuante>,
+                <CartaoPlano key="troca-de-turno">
+                  <CartaoDesdeQueSaiu />
+                </CartaoPlano>,
+              ]}
+            />
+          </QuadroLayout>
+        </Pilha>
+      </Secao>
 
-      <section className="pd-secao cm-area pd-duas" aria-labelledby="como-comecar">
-        <div className="pd-duas-titulo">
-          <Titulo nivel="h2" id="como-comecar" linhas={T.comecar.titulo} />
-          <p className="cm-lide">{T.comecar.textos[0]}</p>
-        </div>
-        <div className="pd-duas-texto">
-          <p className="cm-lide">{T.comecar.textos[1]}</p>
-        </div>
-      </section>
+      <Secao aria-labelledby="como-comecar">
+        <QuadroLayout>
+          <Colunas fracoes="5fr 7fr" aPartirDe={900} vao="bloco" className="pd-duas">
+            <Pilha vao="grupo" dataH="coluna" className="pd-duas-titulo">
+              <Titulo nivel="h2" id="como-comecar" linhas={T.comecar.titulo} />
+              <p className="cm-lide">{T.comecar.textos[0]}</p>
+            </Pilha>
+            <Pilha vao="grupo" dataH="coluna" className="pd-duas-texto">
+              <p className="cm-lide">{T.comecar.textos[1]}</p>
+            </Pilha>
+          </Colunas>
+        </QuadroLayout>
+      </Secao>
 
-      <div className="pd-secao pd-secao-perto">
-        <FaixaCacau aria-labelledby="como-fechamento">
-          <div className="pd-faixa pd-faixa-com-numeros">
-            <div className="pd-faixa-lado">
+      <Secao variante="painel" painel="cacau" classeCaixa="cm-faixa-cacau" aria-labelledby="como-fechamento">
+        <RevelacaoPorBaixo variante="M6" className="cm-faixa-conteudo">
+          <Colunas fracoes="6fr 5fr" aPartirDe={900} vao="midia" alinhar="centro" className="pd-faixa pd-faixa-com-numeros">
+            <Pilha vao="grupo" dataH="coluna" className="pd-faixa-lado">
               <Titulo nivel="h2" id="como-fechamento" linhas={T.fechamento.titulo} />
               <Botao variante="mel" to={T.fechamento.acao.destino}>
                 {T.fechamento.acao.rotulo}
               </Botao>
-            </div>
-            <Numeros itens={T.numeros} className="pd-faixa-numeros" />
-          </div>
-        </FaixaCacau>
-      </div>
+            </Pilha>
+            <Coluna>
+              <Numeros itens={T.numeros} className="pd-faixa-numeros" />
+            </Coluna>
+          </Colunas>
+        </RevelacaoPorBaixo>
+      </Secao>
     </main>
   )
 }

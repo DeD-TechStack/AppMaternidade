@@ -3,29 +3,8 @@
    as peças de componentes/campo (que moram na camada components) só dentro destas páginas, sem
    precisar de seletores mais pesados. Prefixo `pd-`. */
 
-/* Ritmo da página -------------------------------------------------------------------------- */
-.pd-pagina {
-  /* O respiro de papel entre as seções destas páginas: 56 em 390, 96 em 1440 (o da base é 64 a 128 e
-     deixava vãos de papel acima de cada título). */
-  --pd-entre: clamp(56px, 3.81vw + 41.143px, 96px);
-}
-
-.pd-secao {
-  margin-top: var(--pd-entre);
-}
-
-/* Uma seção que continua a anterior (a explicação e o convite logo depois): metade do respiro. */
-.pd-secao.pd-secao-perto {
-  margin-top: clamp(32px, 1.905vw + 24.571px, 48px);
-}
-
-/* O rodapé da casca guarda 128 px de papel acima dele em 1440: a página puxa 32 para o respiro do
-   fim ficar igual ao das seções (96). No celular o da casca (64) já basta. */
-@media (min-width: 768px) {
-  .pd-pagina {
-    margin-bottom: -32px;
-  }
-}
+/* O espaço entre as peças destas páginas vem das primitivas de layout (H-3a): `Secao` entre as seções, `Pilha`
+   entre os blocos, `Colunas` entre texto e mídia. Aqui ficam só os ajustes das peças, sem margem entre blocos. */
 
 /* Dentro de uma célula da grade, o painel de campo ocupa a célula. */
 .pd-celula.cm-painel,
@@ -34,58 +13,52 @@
   margin-inline: 0;
 }
 
-/* Abertura --------------------------------------------------------------------------------- */
-.pd-abertura {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 40px;
-  align-items: center;
-  padding-top: clamp(24px, 1.524vw + 18.057px, 40px);
+/* Os painéis de campo dentro de uma seção têm o respiro do painel (24 em 390, 48 em 1440), o mesmo da caixa de cor
+   da `Secao` de variante painel. A cena da abertura (`cm-cena`) não tem respiro: a imagem ocupa o painel. */
+.pd-passo.cm-painel,
+.pd-painel-fino.cm-painel,
+.pd-painel-papeis.cm-painel,
+.pd-tummy-tabela.cm-painel,
+.pd-tummy-desenho.cm-painel,
+.pd-parar-painel.cm-painel,
+.pd-familia.cm-painel {
+  padding: var(--espaco-painel);
 }
 
+/* Abertura --------------------------------------------------------------------------------- */
+/* O `Colunas` (vão midia, 7fr 5fr ou metades, lado a lado a partir de 1100 px) vem da primitiva. */
 .pd-abertura-texto > .cm-lide {
   max-width: 36rem;
 }
 
-.pd-abertura-texto > .cm-h1 + .cm-lide {
-  margin-top: 24px;
-}
-
-/* Empilhado: o título encosta no texto (24 px), e a mídia vem logo depois. O aviso de saúde desce
-   para depois da mídia, para a tela de verdade subir para a primeira dobra. */
+/* Empilhado (até 1099 px): a coluna do texto "se abre" (`display: contents`) para a mídia entrar entre as ações e
+   o aviso de saúde, e a tela de verdade subir para a primeira dobra. O vão de cada peça é o do papel `grupo`, o
+   mesmo da `Pilha` do texto em tela larga. */
 @media (max-width: 1099px) {
   .pd-abertura {
-    gap: 24px;
+    gap: var(--espaco-grupo);
   }
 
   .pd-abertura > .pd-abertura-texto {
     display: contents;
   }
 
-  .pd-abertura .pd-abertura-texto > *,
-  .pd-abertura .pd-abertura-texto > .cm-h1 + .cm-lide {
-    margin-top: 0;
-  }
-
   .pd-abertura-midia {
     order: 1;
-    margin-top: 0;
   }
 
-  /* O aviso de saúde, depois da mídia, com folga dos dois lados: nunca encosta num título. */
+  /* O aviso de saúde desce para depois da mídia: nunca encosta num título. */
   .pd-abertura .pd-abertura-texto > .pd-aviso-saude {
     order: 2;
-    margin-top: 0;
-    margin-bottom: 0;
   }
 }
 
+/* As ações: uma fileira de botões que quebra (componente, não coluna). */
 .pd-acoes {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px 28px;
-  margin-top: 32px;
+  gap: var(--espaco-junto) var(--espaco-grupo);
 }
 
 /* Os CTAs destas páginas quebram linha quando o texto não cabe (fonte raiz a 200%, zoom de 200%):
@@ -119,18 +92,6 @@
   text-decoration-thickness: 2.5px;
 }
 
-@media (min-width: 1100px) {
-  .pd-abertura[data-disposicao='lado'] {
-    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-    gap: 48px;
-  }
-
-  .pd-abertura[data-proporcao='meio'] {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 40px;
-  }
-}
-
 /* A cena em retrato: o recorte de 340 × 525 em 1× (680 × 1050 em 2×) em volta do celular, com o pedestal
    embaixo. O painel tem exatamente a largura da imagem (340 no máximo, o que o arquivo em 2× comporta:
    RF-02 b), então não sobra faixa de mel mais clara em volta e a imagem entra inteira, sem recorte. O
@@ -162,77 +123,27 @@
 }
 
 /* Cabeça de seção: o título de duas linhas e, logo abaixo, o texto curto, na mesma borda --------- */
-.pd-cabeca {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 16px;
-  margin-bottom: clamp(24px, 1.524vw + 18.057px, 40px);
-}
-
 .pd-cabeca p {
   max-width: 40rem;
   margin: 0;
 }
 
-/* Duas colunas: o título à esquerda e o texto à direita --------------------------------------- */
-.pd-duas {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 24px;
-}
-
-.pd-duas-titulo > * + * {
-  margin-top: 20px;
-}
-
-.pd-duas-texto > * + * {
-  margin-top: 20px;
-}
-
-.pd-duas-texto > p,
-.pd-duas-titulo > p {
-  margin-bottom: 0;
-}
-
+/* Duas colunas: o título à esquerda e o texto à direita (`Colunas` de vão bloco, 5fr 7fr) ------- */
 /* O texto corrido mais denso fica numa largura de leitura de 640 px no máximo. */
 .pd-duas-texto {
   max-width: 640px;
 }
 
-@media (min-width: 900px) {
-  .pd-duas {
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-    gap: 48px;
-  }
-}
-
 /* Passos (Como funciona) --------------------------------------------------------------------- */
+/* A lista é uma `Pilha` de vão bloco; cada passo é um painel com um `Colunas` de vão midia dentro. */
 .pd-passos {
-  display: grid;
-  gap: clamp(20px, 1.524vw + 14.057px, 32px);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.pd-passo {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 24px;
-  align-items: center;
-}
-
-.pd-passo-texto > * {
-  margin: 0;
-}
-
-.pd-passo-texto > .cm-h3 {
-  margin-top: 16px;
-}
-
 .pd-passo-texto > .cm-lide {
   max-width: 34rem;
-  margin-top: 12px;
 }
 
 /* A escala de 390 do DESIGN.md (corpo do site 18/27 é demais numa coluna de 318 px): o texto do passo
@@ -272,18 +183,13 @@
    página (a madrugada) sobra 32 px pela borda de baixo (DESIGN.md 4: 24 a 48), e o painel seguinte
    espera por ele. */
 @media (min-width: 900px) {
-  .pd-passo {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 48px;
-  }
-
   .pd-passo-midia {
     justify-content: flex-end;
   }
 
   .pd-passo-midia:has(> .cm-flutuante) {
     align-self: end;
-    margin-bottom: calc(-1 * var(--cm-respiro-painel) - 32px);
+    margin-bottom: calc(-1 * var(--espaco-painel) - 32px);
   }
 
   .pd-passos > li:has(.pd-passo-midia > .cm-flutuante) {
@@ -314,11 +220,8 @@
 }
 
 /* Duas telas, uma embaixo da outra, sem se cobrir: o convite (girado, com a sombra flutuante) e,
-   abaixo, os primeiros registros. */
+   abaixo, os primeiros registros (uma `Pilha` de vão grupo). */
 .pd-pilha {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
   width: min(400px, 100%);
 }
 
@@ -750,7 +653,6 @@
    em cima do valor. */
 .pd-cartao-legenda.pd-cartao-plano {
   width: min(400px, 100%);
-  margin-top: 16px;
 }
 
 @media (min-width: 1100px) {
@@ -787,9 +689,7 @@
 /* Cuidado compartilhado: o painel da família --------------------------------------------------- */
 /* O painel de mel da abertura (na coluna ao lado do título, 6/12): a tela Família, o convite por cima
    da borda dela (girado, com a sombra flutuante) e a avó do carrinho de pé, à direita. */
-.pd-familia.cm-painel {
-  padding: clamp(24px, 1.524vw + 18.057px, 32px);
-}
+/* (O respiro do painel é o `espaco-painel`, na regra dos painéis, no começo do arquivo.) */
 
 /* 32 px entre a coluna do convite e o desenho: o aviso "Convite enviado" nunca encosta na barra de
    chão da avó (no mínimo 16 px, mesmo com o giro do cartão). */
@@ -808,8 +708,8 @@
 .pd-familia-tela.pd-cartao-plano {
   width: 100%;
   max-width: 420px;
-  /* Folga embaixo do botão Convidar: o convite que sobra por cima cobre só esse respiro. */
-  padding-bottom: 52px;
+  /* Folga embaixo do botão Convidar: o convite que sobra por cima (32) cobre só esse respiro. */
+  padding-bottom: calc(32px + var(--espaco-pilha));
 }
 
 /* O convite cobre 32 px da tela Família, no canto de baixo (sem tapar o botão Convidar inteiro): a
@@ -850,7 +750,6 @@
 
   .pd-familia.cm-painel {
     margin-block: 0;
-    padding: 24px;
   }
 
   .pd-familia-cena {
@@ -876,7 +775,7 @@
 
   /* A coluna do convite desce 56 px (24 do respiro do painel e 32 de sobra) para fora do painel. */
   .pd-familia-coluna {
-    margin-bottom: -56px;
+    margin-bottom: calc(-1 * var(--espaco-painel) - 32px);
   }
 
   .pd-familia-convite.cm-flutuante {
@@ -914,29 +813,20 @@
 
 /* Os três blocos curtos: uma lista com fios, um bloco por linha (o título e o texto de um lado, o
    exemplo da tela Família do outro), em vez de três cartões iguais lado a lado. -------------------- */
-/* Só a margem de baixo: a de cima é a da seção e as laterais são as da área. */
+/* A lista é uma `Pilha` de vão bloco; cada bloco tem o fio em cima e, dentro, um `Colunas` de vão midia (7fr 5fr). */
 .pd-regras {
-  margin-bottom: 0;
+  margin: 0;
   padding: 0;
   list-style: none;
-  border-bottom: 1px solid var(--cor-fio-suave);
 }
 
 .pd-regras > li {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 20px;
-  padding: 28px 0;
+  padding-top: var(--espaco-grupo);
   border-top: 1px solid var(--cor-fio-suave);
-}
-
-.pd-regra-texto > * {
-  margin: 0;
 }
 
 .pd-regra-texto > .cm-corpo {
   max-width: 36rem;
-  margin-top: 12px;
   color: var(--cor-texto-2);
 }
 
@@ -961,26 +851,8 @@
   color: var(--color-cacau);
 }
 
-/* No celular as caixas da faixa (o painel de mel, as faixas de exemplo, o painel de oliva e o de areia)
-   usam todas a mesma margem lateral, a do painel de campo (12 px): a lista toma a largura do painel e o
-   texto de cada bloco recua 8 px para ficar na borda de texto da página (20 px). */
-@media (max-width: 767px) {
-  .pd-regras.cm-area {
-    width: min(100% - 2 * var(--cm-recuo-painel), 1376px);
-  }
-
-  .pd-regra-texto {
-    padding-inline: calc(var(--cm-margem) - var(--cm-recuo-painel));
-  }
-}
-
+/* A margem lateral é a do quadro (`--quadro-calha`), a mesma de todas as caixas da página. */
 @media (min-width: 900px) {
-  .pd-regras > li {
-    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-    gap: 48px;
-    padding: 36px 0;
-  }
-
   .pd-regra-exemplo {
     align-self: stretch;
   }
@@ -1109,23 +981,14 @@
 }
 
 /* O painel de areia: quem fez cada registro e a passagem de turno ----------------------------- */
-.pd-registro {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 40px;
-  align-items: center;
-}
-
-.pd-registro-texto > div + div {
-  margin-top: 40px;
-}
+/* É uma `Secao` de variante painel (a caixa de cor); o `Colunas` de vão midia (1fr 1fr) vem da primitiva. */
 
 /* O texto corrido no corpo do site (18/27, 400, o tamanho do DESIGN.md). O destaque do painel é o cartão
    branco (um só): os dois títulos descem um degrau (30/36 em 1440, 24/30 em 390) para o texto e o título
    terem peso próximo e legível, sem competir com o cartão. */
 .pd-registro-texto p {
   max-width: 34rem;
-  margin: 12px 0 0;
+  margin: 0;
   font-size: 1.125rem;
   line-height: 1.6875rem;
 }
@@ -1137,15 +1000,8 @@
 
 /* O cartão encosta na borda direita do painel, a mesma da tabela dos papéis logo acima. */
 .pd-registro-cartao.pd-cartao-plano {
-  justify-self: end;
+  margin-inline-start: auto;
   width: min(480px, 100%);
-}
-
-@media (min-width: 900px) {
-  .pd-registro {
-    grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
-    gap: 48px;
-  }
 }
 
 /* No celular o painel de areia tem o texto e, abaixo, o cartão da tarde, na largura útil do painel. */
@@ -1162,23 +1018,13 @@
 /* O fecho: o texto de um lado e, do outro, as duas mãos passando o celular num painel de mel. ----- */
 /* O painel de mel do fecho tem a altura do desenho mais o respiro (não estica até o fim do texto): nenhum
    resto de painel liso sobra no fim, acima do rodapé. */
+/* O `Colunas` de vão midia (7fr 5fr, a partir de 900 px) vem da primitiva; o painel acompanha o desenho. */
 .pd-parar {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 32px;
   align-items: center;
-}
-
-.pd-parar-texto > * + * {
-  margin-top: 20px;
 }
 
 .pd-parar-texto > .cm-lide {
   max-width: 40rem;
-}
-
-.pd-parar-texto > .pd-acoes {
-  margin-top: 32px;
 }
 
 .pd-parar .pd-parar-painel.cm-painel {
@@ -1187,7 +1033,6 @@
   justify-content: center;
   width: auto;
   margin-inline: 0;
-  padding: clamp(24px, 3.048vw + 12.114px, 48px);
 }
 
 .pd-parar-painel .cm-ilustracao {
@@ -1196,21 +1041,13 @@
   mix-blend-mode: multiply;
 }
 
-@media (min-width: 900px) {
-  .pd-parar {
-    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-    gap: 48px;
-  }
-}
-
 /* Desenvolvimento -------------------------------------------------------------------------------- */
 /* Seletor de fase no painel de areia: no celular, abas, fase e o que vale para todas, nessa ordem;
    no largo, as abas em coluna com o que vale para todas abaixo delas, e a fase à direita. */
 /* O painel de areia do seletor é mais fino que o painel comum: menos preenchimento em volta. */
-.pd-painel-fino.cm-painel {
-  padding: clamp(20px, 1.524vw + 14.057px, 32px);
-}
+/* (O respiro do painel é o `espaco-painel`, na regra dos painéis, no começo do arquivo.) */
 
+/* A grade do seletor tem áreas nomeadas (abas, fase, lateral), que nenhuma primitiva cobre: o vão é o do papel. */
 .pd-seletor {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -1218,7 +1055,7 @@
     'abas'
     'fase'
     'lateral';
-  gap: 20px;
+  gap: var(--espaco-grupo);
 }
 
 .pd-seletor > .pd-abas {
@@ -1227,12 +1064,11 @@
 
 .pd-seletor > .pd-fase {
   grid-area: fase;
-  margin-top: 0;
 }
 
 .pd-seletor-lateral {
   grid-area: lateral;
-  padding-top: 20px;
+  padding-top: var(--espaco-grupo);
   border-top: 1px solid var(--cor-fio-suave);
 }
 
@@ -1247,7 +1083,7 @@
     grid-template-areas:
       'abas fase'
       'lateral fase';
-    gap: 28px 40px;
+    gap: var(--espaco-grupo) var(--espaco-bloco);
   }
 
   .pd-seletor > .pd-abas {
@@ -1260,14 +1096,12 @@
     text-align: start;
   }
 
-  .pd-seletor-lateral {
-    padding-top: 24px;
-  }
 }
 
-/* Uma lista de verdade: o recuo traz o marcador junto (a base zera o list-style das listas). */
+/* Uma lista de verdade: o recuo traz o marcador junto (a base zera o list-style das listas). O vão até o título é
+   o da `Pilha` em volta. */
 .pd-lista {
-  margin: 16px 0 0;
+  margin: 0;
   padding: 0 0 0 1.25em;
   list-style: disc outside;
 }
@@ -1344,19 +1178,10 @@
 }
 
 .pd-fase {
-  margin-top: 24px;
-  padding: clamp(16px, 0.762vw + 13px, 24px) clamp(16px, 1.143vw + 11.5px, 28px);
+  padding: var(--espaco-pilha) var(--espaco-grupo);
   border-radius: var(--radius-cartao);
   background-color: var(--color-branco);
   color: var(--color-cacau);
-}
-
-.pd-fase > .cm-h3 {
-  margin: 0;
-}
-
-.pd-fase .pd-lista {
-  margin-top: 20px;
 }
 
 .pd-fase:focus-visible {
@@ -1381,8 +1206,8 @@
 }
 
 /* Fontes de um item: os nomes com link e a data da consulta. */
+/* O vão de cima é o da `Pilha` em volta. */
 .pd-fontes {
-  margin-top: 28px;
   padding-top: 20px;
   border-top: 1px solid var(--cor-fio-suave);
 }
@@ -1430,45 +1255,35 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* A faixa de idade fica 24 px abaixo do resumo, separada por um fio: não encosta no parágrafo. */
+/* A faixa de idade fica um vão `grupo` abaixo do resumo, separada por um fio: não encosta no parágrafo. */
 .pd-cabeca .pd-faixa-idade {
-  margin-top: 24px;
   padding-top: 12px;
   border-top: 1px solid var(--cor-fio-suave);
   font-weight: 500;
 }
 
 /* Tummy time: no alto da seção, o título com o texto de abertura e, ao lado, o desenho do bebê de
-   bruços num painel de mel que sobe e alinha com o título; depois o texto em três colunas. */
-.pd-tummy-cima {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 32px;
-}
+   bruços num painel de mel que sobe e alinha com o título (`Colunas` de vão midia, 34rem 1fr, a partir de
+   1100 px); depois o texto em três colunas. */
 
-/* A cabeça de seção dentro da coluna: a largura é a da coluna (e não a da área de conteúdo), e o texto
-   de abertura fica numa medida de leitura de no máximo 68 caracteres por linha. */
-.pd-tummy-cima .pd-cabeca {
-  width: auto;
-  margin: 0;
-}
-
+/* O texto de abertura, dentro da coluna, fica numa medida de leitura de no máximo 68 caracteres por linha. */
 .pd-tummy-cima .pd-cabeca p {
   max-width: 34rem;
 }
 
-.pd-partes > div + div {
-  margin-top: 36px;
+/* A coluna do desenho: o painel de mel enche a altura da linha (a do título e do texto ao lado). */
+.pd-tummy-lado {
+  display: flex;
+}
+
+.pd-tummy-lado > .cm-painel {
+  flex: 1;
 }
 
 /* Medida de leitura: 36rem em 18 px dá cerca de 65 caracteres por linha (o máximo é 68). */
 .pd-partes p {
   max-width: 36rem;
-  margin: 12px 0 0;
-}
-
-.pd-tummy-partes {
-  margin-top: clamp(32px, 2.286vw + 23.086px, 56px);
+  margin: 0;
 }
 
 /* O desenho (o bebê de bruços, levantando a cabeça) de pé no chão de oliva, no painel de mel. O painel
@@ -1477,7 +1292,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: clamp(24px, 2.286vw + 15.086px, 48px);
 }
 
 .pd-tummy-desenho .pd-chao {
@@ -1493,70 +1307,26 @@
   mix-blend-mode: multiply;
 }
 
-.pd-tummy-tabela {
-  margin-top: clamp(32px, 2.286vw + 23.086px, 56px);
-}
-
-@media (min-width: 1100px) {
-  .pd-tummy-cima {
-    grid-template-columns: minmax(0, 34rem) minmax(0, 1fr);
-    gap: 64px;
-    align-items: stretch;
-  }
-
-  /* As três partes lado a lado, cada uma com uma coluna de leitura (cerca de 47 caracteres por linha). */
-  .pd-tummy-partes .pd-partes {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 48px;
-  }
-
-  .pd-tummy-partes .pd-partes > div + div {
-    margin-top: 0;
-  }
-}
-
 /* O fecho do tummy time é uma pilha, não duas colunas: o texto curto ("Se o bebê reclamar", cerca de
    96 px) ao lado do cartão de fontes (cerca de 262 px) dava colunas de conteúdo desiguais (RF-07 b).
    O texto fica numa largura de leitura e, abaixo dele, sob um fio, as fontes em duas colunas de
-   nomes (a lista, não o bloco) por toda a largura. Nada de fio lateral nem grade de 7fr/5fr. */
+   nomes (a lista, não o bloco) por toda a largura. Nada de fio lateral nem grade de 7fr/5fr. A pilha
+   (vão grupo) vem da primitiva. */
 .pd-tummy-fim {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 0;
-  margin-top: clamp(32px, 2.286vw + 23.086px, 56px);
-}
-
-.pd-tummy-fim .pd-fontes {
-  margin-top: clamp(24px, 1.524vw + 18.057px, 36px);
+  min-width: 0;
 }
 
 @media (min-width: 900px) {
   .pd-tummy-fim .pd-fontes-lista {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0 48px;
+    gap: 0 var(--espaco-bloco);
   }
 }
 
-/* A tabela de comparação das fontes, mais leve: menos respiro no painel e nas linhas; as cores e os
-   papéis (oliva de apoio, mel no cabeçalho) ficam como estão. */
-.pd-tummy-tabela.cm-painel {
-  padding: clamp(20px, 2.286vw + 11.086px, 40px);
-}
-
-/* O conteúdo do painel de oliva começa na mesma borda da coluna de texto da página (POL:RF-05). A coluna
-   é `cm-area` (largura menos duas margens, no máximo 1312) e o painel tem a largura menos dois recuos
-   (no máximo 1376): o respiro lateral é a metade da diferença entre as duas larguras (32 em 1440, 8 em
-   390). Não vale `margem - recuo`: a margem é uma reta que só chega a 64 em 1601 px (58 em 1440) e a
-   coluna já está travada em 1312, então a conta dava 26 e não 32. O padding em % é medido na largura do
-   pai do painel, a mesma das duas larguras. Vale em todas as larguras, sem piso. */
-.pd-tummy-tabela.cm-painel {
-  padding-inline: calc(
-    (min(100% - 2 * var(--cm-recuo-painel), 1376px) - min(100% - 2 * var(--cm-margem), 1312px)) / 2
-  );
-}
-
+/* A tabela de comparação das fontes: o painel de oliva está dentro do quadro da seção, com o respiro do painel
+   (a regra dos painéis, no começo do arquivo); as cores e os papéis (oliva de apoio, mel no cabeçalho) ficam
+   como estão. */
 .pd-tummy-tabela .pd-tabela caption {
   margin-bottom: 16px;
 }
@@ -1576,27 +1346,15 @@
   margin-top: 20px;
 }
 
-/* Marcos: as quatro partes em duas colunas, com as fontes abaixo. */
-.pd-marcos .pd-partes {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 36px 48px;
-}
-
-.pd-marcos .pd-partes > div + div {
-  margin-top: 0;
-}
-
-.pd-marcos .pd-fontes {
-  margin-top: 40px;
-}
+/* Marcos: a frase de destaque, as quatro partes em duas colunas (`Colunas`) e as fontes abaixo, numa `Pilha` de vão
+   bloco. */
 
 /* A âncora do trecho de leitura: uma frase do próprio texto, repetida como destaque (Literata itálico,
    a escala de h3, com um fio de mel na borda). Só ela é o destaque da seção. */
 .pd-destaque {
   max-width: 28ch;
-  margin: 0 0 clamp(32px, 2.286vw + 23.086px, 48px);
-  padding: 4px 0 4px clamp(16px, 0.762vw + 13px, 24px);
+  margin: 0;
+  padding: 4px 0 4px var(--espaco-pilha);
   border-left: 4px solid var(--color-mel);
   font-family: var(--fonte-titulo);
   font-size: clamp(26px, 1.143vw + 21.543px, 36px);
@@ -1610,19 +1368,13 @@
   margin: 0;
 }
 
-@media (min-width: 900px) {
-  .pd-marcos .pd-partes {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
 /* O aviso de saúde: uma linha honesta numa caixa de fio fino. */
 .pd-aviso-saude {
   display: flex;
   align-items: flex-start;
   gap: 12px;
   max-width: 34rem;
-  margin: 32px 0 0;
+  margin: 0;
   padding: 16px 20px;
   border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
   border-radius: var(--radius-cartao);
@@ -1637,19 +1389,10 @@
   margin-top: 1px;
 }
 
-/* Faixa de cacau: duas colunas e, abaixo, os números ------------------------------------------- */
-.pd-faixa {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 24px;
-}
-
+/* Faixa de cacau (uma `Secao` de variante painel): a coluna de texto é uma `Pilha` de vão grupo; em Como funciona
+   o `Colunas` de vão midia (6fr 5fr, a partir de 900 px) leva o texto e, ao lado, os números. ---- */
 .pd-faixa-lado > * {
   margin: 0;
-}
-
-.pd-faixa-lado > * + * {
-  margin-top: 24px;
 }
 
 /* Uma coluna de texto só (o título e, logo abaixo, a frase), numa largura de leitura. */
@@ -1660,7 +1403,7 @@
 /* A faixa do fim de Como funciona: o título e o botão à esquerda, os três números empilhados à
    direita, com fios entre eles. A metade da direita tem conteúdo; o botão fica logo abaixo do título. */
 .pd-faixa-com-numeros .pd-faixa-lado .cm-botao {
-  margin-top: 32px;
+  align-self: flex-start;
 }
 
 .pd-faixa-com-numeros .pd-faixa-numeros {
@@ -1681,7 +1424,7 @@
 
 .pd-faixa-com-numeros .cm-numeros-item {
   justify-content: flex-start;
-  padding: clamp(16px, 0.762vw + 13px, 24px) 0;
+  padding: var(--espaco-pilha) 0;
   border-top: 1px solid color-mix(in srgb, currentColor 20%, transparent);
 }
 
@@ -1695,12 +1438,4 @@
 
 .pd-faixa-com-numeros .cm-numeros-linha {
   justify-content: flex-start;
-}
-
-@media (min-width: 900px) {
-  .pd-faixa-com-numeros {
-    grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
-    gap: 64px;
-    align-items: center;
-  }
 }

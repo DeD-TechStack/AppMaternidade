@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Titulo } from '../campo/Titulo.tsx'
+import { Coluna, Colunas, Pilha, QuadroLayout, Secao } from '../base/layout/index.ts'
 import './publicas-destaque.css'
 
 interface Props {
@@ -14,17 +15,30 @@ interface Props {
 }
 
 /**
- * A primeira dobra de uma página pública: de um lado o h1, o texto e a ação, todos na mesma borda
- * esquerda; do outro, a mídia de verdade. Empilhada no celular, a mídia vem depois do texto.
+ * A primeira dobra de uma página pública: uma `Secao` com um `Colunas` de vão `midia`. De um lado o h1, o texto
+ * e a ação (uma `Pilha`, todos na mesma borda esquerda); do outro, a mídia de verdade. Empilhada no celular
+ * (até 1099 px), a mídia vem depois do texto.
  */
 export function Abertura({ titulo, texto, midia, proporcao = 'texto' }: Props) {
   return (
-    <div className="cm-area pd-abertura" data-disposicao="lado" data-proporcao={proporcao}>
-      <div className="pd-abertura-texto">
-        <Titulo nivel="h1" linhas={titulo} />
-        {texto}
-      </div>
-      <div className="pd-abertura-midia">{midia}</div>
-    </div>
+    <Secao>
+      <QuadroLayout>
+        <Colunas
+          fracoes={proporcao === 'meio' ? '1fr 1fr' : '7fr 5fr'}
+          aPartirDe={1100}
+          vao="midia"
+          alinhar="centro"
+          className="pd-abertura"
+          data-disposicao="lado"
+          data-proporcao={proporcao}
+        >
+          <Pilha vao="grupo" dataH="coluna" className="pd-abertura-texto">
+            <Titulo nivel="h1" linhas={titulo} />
+            {texto}
+          </Pilha>
+          <Coluna className="pd-abertura-midia">{midia}</Coluna>
+        </Colunas>
+      </QuadroLayout>
+    </Secao>
   )
 }

@@ -1,6 +1,7 @@
 import { Fragment } from 'react'
 import { Link } from 'react-router'
 import { type Bloco, type Texto } from '../../conteudo/publicas-texto.ts'
+import { Pilha } from '../base/layout/index.ts'
 
 /** Um parágrafo: texto simples ou uma sequência de trechos (texto ou link de rota). */
 function Paragrafo({ texto }: { texto: Texto }) {
@@ -46,14 +47,14 @@ export function BlocoDeLeitura({ bloco }: { bloco: Bloco }) {
   }
   if ('titulados' in bloco) {
     return (
-      <div className="pt-titulados">
+      <Pilha vao="grupo" className="pt-titulados">
         {bloco.titulados.map(({ titulo, texto }) => (
-          <div key={titulo}>
+          <Pilha key={titulo} vao="junto">
             <h3 className="pt-h3">{titulo}</h3>
             <p>{texto}</p>
-          </div>
+          </Pilha>
         ))}
-      </div>
+      </Pilha>
     )
   }
   return <Paragrafo texto={bloco} />
