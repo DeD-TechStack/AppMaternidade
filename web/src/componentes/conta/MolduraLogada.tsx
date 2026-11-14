@@ -4,6 +4,7 @@ import { Link, NavLink } from 'react-router'
 import { CABECALHO, COMUM } from '../../conteudo/conta.ts'
 import type { ErroDados } from '../../dados/comum.ts'
 import { AvisoDemonstracao } from '../AvisoDemonstracao.tsx'
+import { Pilha, QuadroLayout } from '../base/layout/index.ts'
 import { BOTAO_SECUNDARIO, ResumoErro } from './Partes.tsx'
 import { useSessao } from './sessao.tsx'
 
@@ -70,40 +71,40 @@ export function MolduraLogada({ ocupado = false, children }: Props) {
 
   return (
     <ContextoSair value={{ sair: () => void aoSair(), saindo }}>
-      <div className="cm-area pt-2">
-        {/* Um só aviso honesto, acima da barra e fora do <main> e da mídia: só sem banco (`empty:hidden` some com a folga). */}
-        <div className="pt-1 pb-1 empty:hidden">
-          <AvisoDemonstracao lateral />
-        </div>
-        <nav
-          aria-label={CABECALHO.navegacao}
-          className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-[var(--cor-fio-suave)] py-4 sm:gap-y-3"
-        >
-          {/* No celular os três não cabem numa linha: "Conta" e "Sair" ficam juntos na de cima, e o link do Hoje desce sozinho (só a ordem visual muda, a do DOM não). */}
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 max-sm:contents">
-            <NavLink
-              to="/app/conta"
-              end
-              className={({ isActive }) => `${LINK_DA_BARRA} max-sm:order-1 ${isActive ? ABA_ATUAL : ''}`}
-            >
-              {CABECALHO.conta}
-            </NavLink>
-            <Link to="/app/hoje" className={`${LINK_DA_BARRA} max-sm:order-3`}>
-              {CABECALHO.irParaHoje}
-              <ArrowUpRight size={18} aria-hidden="true" />
-            </Link>
+      <QuadroLayout className="pt-2">
+        <Pilha vao="pilha">
+          {/* Um só aviso honesto, acima da barra e fora do <main> e da mídia: só sem banco (`empty:hidden` some com a folga). */}
+          <div className="empty:hidden">
+            <AvisoDemonstracao lateral />
           </div>
-          <BotaoSair />
-        </nav>
-        {falha ? (
-          <div className="mt-4 max-w-[28rem]">
-            <ResumoErro erro={falha} refResumo={resumo} repetivel aoTentarDeNovo={() => void aoSair()} />
-          </div>
-        ) : null}
-        <main aria-busy={ocupado || undefined} className="pb-4 pt-8 lg:pt-12">
-          {children}
-        </main>
-      </div>
+          <nav
+            aria-label={CABECALHO.navegacao}
+            className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-[var(--cor-fio-suave)] py-4 sm:gap-y-3"
+          >
+            {/* No celular os três não cabem numa linha: "Conta" e "Sair" ficam juntos na de cima, e o link do Hoje desce sozinho (só a ordem visual muda, a do DOM não). */}
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 max-sm:contents">
+              <NavLink
+                to="/app/conta"
+                end
+                className={({ isActive }) => `${LINK_DA_BARRA} max-sm:order-1 ${isActive ? ABA_ATUAL : ''}`}
+              >
+                {CABECALHO.conta}
+              </NavLink>
+              <Link to="/app/hoje" className={`${LINK_DA_BARRA} max-sm:order-3`}>
+                {CABECALHO.irParaHoje}
+                <ArrowUpRight size={18} aria-hidden="true" />
+              </Link>
+            </div>
+            <BotaoSair />
+          </nav>
+          {falha ? (
+            <div className="max-w-[28rem]">
+              <ResumoErro erro={falha} refResumo={resumo} repetivel aoTentarDeNovo={() => void aoSair()} />
+            </div>
+          ) : null}
+        </Pilha>
+      </QuadroLayout>
+      <main aria-busy={ocupado || undefined}>{children}</main>
     </ContextoSair>
   )
 }

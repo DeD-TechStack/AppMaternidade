@@ -22,6 +22,7 @@ import {
   RegiaoStatus,
   ResumoErro,
 } from '../../componentes/conta/Partes.tsx'
+import { Cartao, Coluna, Colunas, Pilha, QuadroLayout, Secao } from '../../componentes/base/layout/index.ts'
 import { useDadosConta, useSessao } from '../../componentes/conta/sessao.tsx'
 import { COMUM, CONTA, TITULOS, textoDaPassagem, textoDoErro } from '../../conteudo/conta.ts'
 import type { ErroDados } from '../../dados/comum.ts'
@@ -39,16 +40,13 @@ const SECOES_DO_INDICE = [
   ['privacidade', CONTA.secoes.privacidade],
 ] as const
 
-// Cada seção é uma linha de duas colunas (o texto, depois os controles) sobre um fio de 1 px; a
-// zona de perigo (excluir a conta) é um cartão de raio 20 com contorno, separado das outras. No celular
-// (uma página de tarefa) os grupos ficam mais juntos.
-// A coluna única do celular é `minmax(0,1fr)`: sem isso a trilha cresce até o texto mais largo (o botão,
-// o id) e a página rola de lado com a fonte a 200%.
-const SECAO_GRADE = 'grid grid-cols-[minmax(0,1fr)] gap-3 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-12'
+// Cada seção é uma linha de duas colunas 5/7 (o texto, depois os controles: `Colunas` com o vão de bloco, a
+// partir de 1024) sobre um fio de 1 px, numa pilha de bloco; a zona de perigo (excluir a conta) é um
+// `Cartao` com contorno, separado das outras. As colunas são `minmax(0, Nfr)`: o texto mais largo (o botão,
+// o id) não alarga a trilha nem faz a página rolar de lado com a fonte a 200%.
 // Os botões de uma seção quebram o rótulo dentro da coluna em vez de passar dela (`.cm-botao` é nowrap).
 const QUEBRA_DO_BOTAO = 'max-w-full whitespace-normal wrap-anywhere'
-const SECAO = `${SECAO_GRADE} border-t border-[var(--cor-fio-suave)] py-5 lg:py-8`
-const TEXTO_DA_SECAO = 'flex min-w-0 flex-col gap-2 wrap-anywhere lg:gap-3'
+const SECAO = 'border-t border-[var(--cor-fio-suave)] pt-esp-bloco'
 // Os controles de uma seção (campos, caixa do id) têm todos a mesma largura: a borda direita se alinha.
 const COLUNA_DOS_CONTROLES = 'w-full min-w-0 max-w-[28rem]'
 
@@ -261,29 +259,35 @@ export function PaginaConta() {
 
   return (
     <MolduraLogada>
-      <h1
-        ref={titulo}
-        tabIndex={-1}
-        className="cm-h1 alvo-foco wrap-anywhere max-sm:text-[48px] max-sm:leading-[52px]"
-      >
-        {TITULOS.conta}
-      </h1>
-      <p className="cm-lide mt-3 wrap-anywhere text-[var(--cor-texto-2)]">{CONTA.resumo(conta.nome, conta.email)}</p>
-      <div className={status ? 'mt-6 max-w-[40rem]' : undefined}>
-        <RegiaoStatus mensagem={status} />
-      </div>
+      <Secao as="div">
+        <QuadroLayout>
+          <Pilha vao="bloco">
+            <Pilha vao="grupo" className="max-w-medio">
+              <Pilha vao="pilha">
+                <h1 ref={titulo} tabIndex={-1} className="cm-h1 alvo-foco wrap-anywhere">
+                  {TITULOS.conta}
+                </h1>
+                <p className="cm-lide wrap-anywhere text-[var(--cor-texto-2)]">{CONTA.resumo(conta.nome, conta.email)}</p>
+              </Pilha>
+              <RegiaoStatus mensagem={status} />
+            </Pilha>
 
-      <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-4 lg:mt-10 lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-12">
-        <IndiceDaConta secoes={SECOES_DO_INDICE} />
+            <Colunas fracoes="16rem 1fr" vao="bloco" aPartirDe={1024}>
+              <Coluna>
+                <IndiceDaConta secoes={SECOES_DO_INDICE} />
+              </Coluna>
 
-        <div className="flex min-w-0 flex-col">
+              <Coluna>
+                <Pilha vao="bloco">
           <section aria-labelledby="perfil" className={SECAO}>
-            <div className={TEXTO_DA_SECAO}>
+            <Colunas fracoes="5fr 7fr" vao="bloco" aPartirDe={1024}>
+            <Pilha dataH="coluna" vao="pilha" className="wrap-anywhere">
               <h2 id="perfil" className="cm-h4">
                 {CONTA.perfil.titulo}
               </h2>
               <p className="cm-medida">{CONTA.perfil.frase}</p>
-            </div>
+            </Pilha>
+            <Pilha dataH="coluna" vao="pilha">
             <form onSubmit={salvarPerfil} noValidate className={`flex ${COLUNA_DOS_CONTROLES} flex-col gap-5`}>
               {erroDoPerfil && !campoDoPerfil ? (
                 <ResumoErro
@@ -326,16 +330,19 @@ export function PaginaConta() {
                 {perfil.enviando ? COMUM.salvando : CONTA.perfil.botao}
               </button>
             </form>
+            </Pilha>
+            </Colunas>
           </section>
 
           <section aria-labelledby="id-conta" className={SECAO}>
-            <div className={TEXTO_DA_SECAO}>
+            <Colunas fracoes="5fr 7fr" vao="bloco" aPartirDe={1024}>
+            <Pilha dataH="coluna" vao="pilha" className="wrap-anywhere">
               <h2 id="id-conta" className="cm-h4">
                 {CONTA.id.titulo}
               </h2>
               <p className="cm-medida">{CONTA.id.frase}</p>
-            </div>
-            <div className="flex min-w-0 flex-col items-start gap-4">
+            </Pilha>
+            <Pilha dataH="coluna" vao="pilha" className="items-start">
               <p
                 ref={idRef}
                 data-id-conta
@@ -351,17 +358,19 @@ export function PaginaConta() {
               <button type="button" className={`${BOTAO_SECUNDARIO} ${QUEBRA_DO_BOTAO}`} data-tamanho="app" onClick={() => void copiarId()}>
                 {CONTA.id.botao}
               </button>
-            </div>
+            </Pilha>
+            </Colunas>
           </section>
 
           <section aria-labelledby="exportar" className={SECAO}>
-            <div className={TEXTO_DA_SECAO}>
+            <Colunas fracoes="5fr 7fr" vao="bloco" aPartirDe={1024}>
+            <Pilha dataH="coluna" vao="pilha" className="wrap-anywhere">
               <h2 id="exportar" tabIndex={-1} className="cm-h4 alvo-foco">
                 {CONTA.exportar.titulo}
               </h2>
               <p className="cm-medida">{CONTA.exportar.frase}</p>
-            </div>
-            <div className="flex min-w-0 flex-col items-start gap-4">
+            </Pilha>
+            <Pilha dataH="coluna" vao="pilha" className="items-start">
               {exportacao.estado.fase === 'erro' ? (
                 <ResumoErro
                   erro={exportacao.estado.erro}
@@ -373,20 +382,23 @@ export function PaginaConta() {
               <button type="button" disabled={exportacao.enviando} className={`${BOTAO_SECUNDARIO} ${QUEBRA_DO_BOTAO}`} data-tamanho="app" onClick={baixarDados}>
                 {exportacao.enviando ? COMUM.preparandoArquivo : CONTA.exportar.botao}
               </button>
-            </div>
+            </Pilha>
+            </Colunas>
           </section>
 
-          <section
+          <Cartao
+            as="section"
             aria-labelledby="excluir-conta"
-            className={`${SECAO_GRADE} my-5 rounded-cartao border-[1.5px] border-[var(--cor-erro,var(--cor-texto))] bg-[var(--cor-papel-fundo)] p-5 lg:my-10 lg:p-8`}
+            className="border-[1.5px] border-[var(--cor-erro,var(--cor-texto))] bg-[var(--cor-papel-fundo)]"
           >
-            <div className={TEXTO_DA_SECAO}>
+            <Colunas fracoes="5fr 7fr" vao="bloco" aPartirDe={1024}>
+            <Pilha dataH="coluna" vao="pilha" className="wrap-anywhere">
               <h2 id="excluir-conta" className="cm-h4">
                 {CONTA.excluir.titulo}
               </h2>
               <p className="cm-medida">{CONTA.excluir.explicacao}</p>
-            </div>
-            <div className="flex min-w-0 flex-col items-start gap-4">
+            </Pilha>
+            <Pilha dataH="coluna" vao="pilha" className="items-start">
               {leitura.fase === 'lendo' ? <p>{CONTA.excluir.lendo}</p> : null}
               {leitura.fase === 'erro' ? (
                 <ResumoErro
@@ -400,9 +412,9 @@ export function PaginaConta() {
                 />
               ) : null}
               {bloqueadoras.length > 0 ? (
-                <div id="impedimento-exclusao" className="cm-medida min-w-0 wrap-anywhere">
+                <Pilha id="impedimento-exclusao" vao="junto" className="cm-medida min-w-0 wrap-anywhere">
                   <p className="wrap-anywhere">{CONTA.excluir.impedimento}</p>
-                  <ul className="mt-2 list-disc pl-6">
+                  <ul className="list-disc pl-6">
                     {bloqueadoras.map((familia) => (
                       <li key={familia.id}>
                         <Link to={`/app/familia?familia=${encodeURIComponent(familia.id)}`} className={`${LINK_ALVO} wrap-anywhere`}>
@@ -411,7 +423,7 @@ export function PaginaConta() {
                       </li>
                     ))}
                   </ul>
-                </div>
+                </Pilha>
               ) : null}
               <button
                 ref={botaoExcluir}
@@ -425,16 +437,18 @@ export function PaginaConta() {
                 <Trash2 size={20} aria-hidden="true" />
                 {CONTA.excluir.botao}
               </button>
-            </div>
-          </section>
+            </Pilha>
+            </Colunas>
+          </Cartao>
 
           <section aria-labelledby="privacidade" className={SECAO}>
-            <div className={TEXTO_DA_SECAO}>
+            <Colunas fracoes="5fr 7fr" vao="bloco" aPartirDe={1024}>
+            <Pilha dataH="coluna" vao="pilha" className="wrap-anywhere">
               <h2 id="privacidade" className="cm-h4">
                 {CONTA.privacidade.titulo}
               </h2>
-            </div>
-            <div className="flex min-w-0 flex-col items-start gap-2">
+            </Pilha>
+            <Pilha dataH="coluna" vao="junto" className="items-start">
               <p className="wrap-anywhere">
                 {CONTA.privacidade.contato.antes}
                 <span data-contato className="wrap-anywhere">
@@ -452,11 +466,14 @@ export function PaginaConta() {
               <Link to="/privacidade" className={`${LINK_ALVO} wrap-anywhere`}>
                 {CONTA.privacidade.politica}
               </Link>
-            </div>
+            </Pilha>
+            </Colunas>
           </section>
-
-        </div>
-      </div>
+                </Pilha>
+              </Coluna>
+            </Colunas>
+          </Pilha>
+        </QuadroLayout>
 
       {aberto ? (
         <DialogoExcluirConta
@@ -483,6 +500,7 @@ export function PaginaConta() {
           refSenha={campoDaSenha}
         />
       ) : null}
+      </Secao>
     </MolduraLogada>
   )
 }
