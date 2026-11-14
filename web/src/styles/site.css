@@ -121,6 +121,33 @@
     max-width: 38rem;
   }
 
+  /* /sistema: tamanho e entrelinha vêm da tabela do DESIGN.md (família, peso e tracking seguem os de `.cm-*`).
+     As regras globais acima ficam como estão até o H-3g. */
+  .cm-sistema .cm-h1 {
+    font-size: var(--texto-exibicao-tamanho);
+    line-height: var(--texto-exibicao-entrelinha);
+  }
+
+  .cm-sistema .cm-h2 {
+    font-size: var(--texto-titulo-2-tamanho);
+    line-height: var(--texto-titulo-2-entrelinha);
+  }
+
+  .cm-sistema .cm-lide {
+    font-size: var(--texto-abertura-tamanho);
+    line-height: var(--texto-abertura-entrelinha);
+  }
+
+  .cm-sistema .cm-rotulo {
+    font-size: var(--texto-sobretitulo-tamanho);
+    line-height: var(--texto-sobretitulo-entrelinha);
+  }
+
+  .cm-sistema .cm-corpo {
+    font-size: var(--texto-corpo-tamanho);
+    line-height: var(--texto-corpo-entrelinha);
+  }
+
   /* Botões (DESIGN.md 4) ---------------------------------------------------------------------- */
   .cm-botao {
     display: inline-flex;
@@ -533,6 +560,19 @@
     .sb-cab-menu {
       display: none;
     }
+
+    /* C-2 (P-50): na área logada o cabeçalho tem seis links e o botão "Modo madrugada" na mesma linha, de 1100 px
+       para cima (o ponto onde ele já troca hoje; nenhum ponto novo). Os vãos viram o token `junto` (12 px em 1440)
+       para a linha única caber em 1100 sem cortar item: a altura da navegação é uma linha. */
+    .cm-cabecalho[data-contexto='logado'] .cm-cab-links {
+      flex-wrap: nowrap;
+      gap: var(--espaco-junto);
+    }
+
+    .cm-cabecalho[data-contexto='logado'] .cm-cab-acoes {
+      flex: none;
+      margin-left: var(--espaco-junto);
+    }
   }
 
   /* Menu do celular: painel de altura cheia abaixo do cabeçalho. */
@@ -590,9 +630,15 @@
   }
 
   /* Rodapé: painel de mel com o nome em tamanho de exibição ------------------------------------- */
+  /* O rodapé do site é um painel (Secao): a caixa externa dá metade de espaco-bloco em cima e embaixo, e a caixa de
+     cor tem a largura do quadro. Enquanto uma página não termina numa Secao (as áreas do H-3b a H-3f), o respiro do
+     fim dela continua sendo esta margem; quando termina, o `secao-ampla` da última seção já cobre. */
   .cm-rodape {
     margin-top: var(--cm-entre-secoes);
-    padding-bottom: var(--cm-recuo-painel);
+  }
+
+  main:has(> [data-h~='secao']:last-child) ~ .cm-rodape:not(.cm-rodape-compacto) {
+    margin-top: 0;
   }
 
   .cm-rodape-painel {
@@ -607,20 +653,19 @@
     padding: 8px;
   }
 
-  .cm-rodape-topo {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 40px;
-  }
-
   .cm-rodape-frase {
     max-width: 22ch;
+    font-size: var(--texto-titulo-2-tamanho);
+    line-height: var(--texto-titulo-2-entrelinha);
   }
 
+  /* Até duas colunas de links abaixo de 768, e só quando cabem: cada coluna tem no mínimo 8 rem (a palavra mais
+     longa, "compartilhado", cabe nela a 100 %) e não menos que metade do painel menos o vão. Com a fonte a 200 %
+     em 390 não cabem duas e vira uma coluna, em vez de uma palavra passar por cima da coluna do lado. */
   .cm-rodape-colunas {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 32px 24px;
+    grid-template-columns: repeat(auto-fit, minmax(max(8rem, calc(50% - var(--espaco-bloco))), 1fr));
+    gap: var(--espaco-grupo) var(--espaco-bloco);
   }
 
   .cm-rodape-titulo {
@@ -641,6 +686,8 @@
     display: inline-flex;
     align-items: center;
     min-height: 44px;
+    /* Uma palavra mais larga que a coluna quebra, nunca passa por cima da coluna do lado (fonte a 200 %). */
+    overflow-wrap: anywhere;
     color: inherit;
     text-decoration-line: underline;
     text-decoration-color: transparent;
@@ -697,13 +744,6 @@
   @media (min-width: 768px) {
     .cm-rodape-colunas {
       grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-  }
-
-  @media (min-width: 1100px) {
-    .cm-rodape-topo {
-      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-      gap: 64px;
     }
   }
 
