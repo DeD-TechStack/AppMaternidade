@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router'
+import { Colunas, Pilha, QuadroLayout, Secao } from '../../componentes/base/layout/index.ts'
 import { familiaMudou, useAoFalharNaFamilia, type AcoesDaFamilia, type DialogoAberto } from '../../componentes/conta/acoesFamilia.ts'
 import { BlocoAcoes } from '../../componentes/conta/BlocoAcoes.tsx'
 import { BlocoBebes } from '../../componentes/conta/BlocoBebes.tsx'
@@ -162,83 +163,94 @@ export function Familia() {
 
   return (
     <MolduraLogada ocupado={carregando}>
-      <h1 ref={titulo} tabIndex={-1} className="cm-h1 alvo-foco wrap-anywhere">
-        {TITULOS.familia}
-      </h1>
-      <div className={status ? 'mt-6 max-w-[40rem]' : undefined}>
-        <RegiaoStatus mensagem={status} />
-      </div>
-      {erroDaPagina ? (
-        <div className="mt-6 max-w-[40rem]">
-          <ResumoErro erro={erroDaPagina} refResumo={resumoDaPagina} />
-        </div>
-      ) : null}
+      <Secao as="div">
+        <QuadroLayout>
+          <Pilha vao="bloco">
+            <Pilha vao="grupo" className="max-w-medio">
+              <h1 ref={titulo} tabIndex={-1} className="cm-h1 alvo-foco wrap-anywhere">
+                {TITULOS.familia}
+              </h1>
+              <RegiaoStatus mensagem={status} />
+              {erroDaPagina ? (
+                <div className="max-w-[40rem]">
+                  <ResumoErro erro={erroDaPagina} refResumo={resumoDaPagina} />
+                </div>
+              ) : null}
+            </Pilha>
 
-      {/* O seletor fica fora do que carrega: trocar de família deixa o foco nele. */}
-      {atual && familias.familias.length > 1 ? (
-        <div className="mt-8 max-w-[24rem]">
-          <SeletorDeOpcoes
-            rotulo={FAMILIA.seletor}
-            valor={atual.id}
-            opcoes={familias.familias.map((familia) => ({ valor: familia.id, texto: familia.nome }))}
-            aoMudar={escolher}
+            {/* O seletor fica fora do que carrega: trocar de família deixa o foco nele. */}
+            {atual && familias.familias.length > 1 ? (
+              <div className="max-w-[24rem]">
+                <SeletorDeOpcoes
+                  rotulo={FAMILIA.seletor}
+                  valor={atual.id}
+                  opcoes={familias.familias.map((familia) => ({ valor: familia.id, texto: familia.nome }))}
+                  aoMudar={escolher}
+                />
+              </div>
+            ) : null}
+
+            {familias.estado === 'erro' && familias.erro ? (
+              <div className="max-w-[40rem]">
+                <ResumoErro erro={familias.erro} repetivel aoTentarDeNovo={() => void recarregarFamilias()} />
+              </div>
+            ) : carregando ? (
+              <Carregando />
+            ) : erroDaLeitura && !familiaMudou(erroDaLeitura) ? (
+              <div className="max-w-[40rem]">
+                <ResumoErro
+                  erro={erroDaLeitura}
+                  repetivel
+                  aoTentarDeNovo={() => atualId && void carregarDetalhe(atualId)}
+                  refResumo={resumoDaLeitura}
+                />
+              </div>
+            ) : pronto ? (
+              <Colunas fracoes="5fr 7fr" vao="bloco" aPartirDe={1024}>
+                <Pilha
+                  as="section"
+                  dataH="coluna"
+                  vao="junto"
+                  aria-labelledby="familia-atual"
+                  className="lg:sticky lg:top-28 lg:self-start"
+                >
+                  <h2 id="familia-atual" className="cm-h3 wrap-anywhere">
+                    {pronto.familia.nome}
+                  </h2>
+                  <p className="text-[var(--cor-texto-2)]">{FAMILIA.fuso(pronto.familia.fuso)}</p>
+                  <p className="font-medium">{FAMILIA.voceE(PAPEIS[pronto.familia.meuPapel].minusculo)}</p>
+                </Pilha>
+
+                <Pilha
+                  dataH="coluna"
+                  vao="bloco"
+                  className="[&>*]:border-t [&>*]:border-[var(--cor-fio-suave)] [&>*]:pt-esp-bloco"
+                >
+                  <BlocoBebes key={`bebes-${pronto.familia.id}`} detalhe={pronto} responsavel={responsavel} acoes={acoes} />
+                  <BlocoMembros detalhe={pronto} responsavel={responsavel} acoes={acoes} />
+                  {responsavel ? <BlocoConvites key={`convites-${pronto.familia.id}`} detalhe={pronto} acoes={acoes} /> : null}
+                  <BlocoAcoes key={`acoes-${pronto.familia.id}`} detalhe={pronto} responsavel={responsavel} acoes={acoes} />
+                  <div>
+                    <Link to="/privacidade" className={LINK_ALVO}>
+                      {FAMILIA.privacidade}
+                    </Link>
+                  </div>
+                </Pilha>
+              </Colunas>
+            ) : null}
+          </Pilha>
+        </QuadroLayout>
+
+        {dialogo && pronto ? (
+          <DialogoDaFamilia
+            dialogo={dialogo}
+            detalhe={pronto}
+            acoes={acoes}
+            aoFechar={() => setDialogo(null)}
+            retorno={retorno}
           />
-        </div>
-      ) : null}
-
-      {familias.estado === 'erro' && familias.erro ? (
-        <div className="mt-8 max-w-[40rem]">
-          <ResumoErro erro={familias.erro} repetivel aoTentarDeNovo={() => void recarregarFamilias()} />
-        </div>
-      ) : carregando ? (
-        <div className="mt-8">
-          <Carregando />
-        </div>
-      ) : erroDaLeitura && !familiaMudou(erroDaLeitura) ? (
-        <div className="mt-8 max-w-[40rem]">
-          <ResumoErro
-            erro={erroDaLeitura}
-            repetivel
-            aoTentarDeNovo={() => atualId && void carregarDetalhe(atualId)}
-            refResumo={resumoDaLeitura}
-          />
-        </div>
-      ) : pronto ? (
-        <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-12">
-          <section aria-labelledby="familia-atual" className="flex min-w-0 flex-col gap-2 lg:sticky lg:top-28 lg:self-start">
-            <h2 id="familia-atual" className="cm-h3 wrap-anywhere">
-              {pronto.familia.nome}
-            </h2>
-            <p className="text-[var(--cor-texto-2)]">{FAMILIA.fuso(pronto.familia.fuso)}</p>
-            <p className="font-medium">{FAMILIA.voceE(PAPEIS[pronto.familia.meuPapel].minusculo)}</p>
-          </section>
-
-          <div className="flex min-w-0 flex-col gap-10">
-            <div className="flex flex-col gap-10 [&>section]:border-t [&>section]:border-[var(--cor-fio-suave)] [&>section]:pt-8">
-              <BlocoBebes key={`bebes-${pronto.familia.id}`} detalhe={pronto} responsavel={responsavel} acoes={acoes} />
-              <BlocoMembros detalhe={pronto} responsavel={responsavel} acoes={acoes} />
-              {responsavel ? <BlocoConvites key={`convites-${pronto.familia.id}`} detalhe={pronto} acoes={acoes} /> : null}
-              <BlocoAcoes key={`acoes-${pronto.familia.id}`} detalhe={pronto} responsavel={responsavel} acoes={acoes} />
-            </div>
-
-            <div className="border-t border-[var(--cor-fio-suave)] pt-6">
-              <Link to="/privacidade" className={LINK_ALVO}>
-                {FAMILIA.privacidade}
-              </Link>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      {dialogo && pronto ? (
-        <DialogoDaFamilia
-          dialogo={dialogo}
-          detalhe={pronto}
-          acoes={acoes}
-          aoFechar={() => setDialogo(null)}
-          retorno={retorno}
-        />
-      ) : null}
+        ) : null}
+      </Secao>
     </MolduraLogada>
   )
 }

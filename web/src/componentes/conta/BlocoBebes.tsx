@@ -1,5 +1,6 @@
 import { useRef, useState, type ReactNode } from 'react'
 import { COMUM, FAMILIA } from '../../conteudo/conta.ts'
+import { Cartao, Pilha } from '../base/layout/index.ts'
 import type { Bebe, DetalheFamilia } from '../../dados/conta.ts'
 import { familiaMudou, useAoFalharNaFamilia, type AcoesDaFamilia } from './acoesFamilia.ts'
 import { formatarNascimento } from './datas.ts'
@@ -66,7 +67,7 @@ export function BlocoBebes({ detalhe, responsavel, acoes }: Props) {
   }
 
   return (
-    <section aria-labelledby="bebes" className="flex flex-col gap-4">
+    <Pilha as="section" aria-labelledby="bebes" vao="pilha">
       <h2 id="bebes" className="cm-h4">
         {FAMILIA.bebes.titulo}
       </h2>
@@ -128,7 +129,7 @@ export function BlocoBebes({ detalhe, responsavel, acoes }: Props) {
       )}
 
       {responsavel && adicionando ? (
-        <div className="max-w-[32rem] rounded-cartao border border-[var(--cor-fio-suave)] p-5">
+        <Cartao className="max-w-[32rem] border border-[var(--cor-fio-suave)]">
           <FormularioBebe
             familiaId={detalhe.familia.id}
             fuso={detalhe.familia.fuso}
@@ -146,7 +147,7 @@ export function BlocoBebes({ detalhe, responsavel, acoes }: Props) {
             }}
             comAviso
           />
-        </div>
+        </Cartao>
       ) : null}
 
       {responsavel && !adicionando ? (
@@ -166,39 +167,41 @@ export function BlocoBebes({ detalhe, responsavel, acoes }: Props) {
       {responsavel && arquivados.length > 0 ? (
         <details className="border-t border-[var(--cor-fio-suave)] pt-3">
           <summary className="alvo-toque flex cursor-pointer items-center font-medium">{FAMILIA.bebes.arquivados}</summary>
-          {erroDoDesarquivo && !familiaMudou(erroDoDesarquivo) ? (
-            <div className="my-3 max-w-[32rem]">
-              <ResumoErro
-                erro={erroDoDesarquivo}
-                repetivel={desarquivo.estado.fase === 'erro' && desarquivo.estado.tentarDeNovo}
-                aoTentarDeNovo={() => void desarquivo.tentarDeNovo()}
-                refResumo={resumoDoDesarquivo}
-              />
-            </div>
-          ) : null}
-          <ul className="m-0 list-none p-0">
-            {arquivados.map((bebe) => (
-              <li key={bebe.id} className={LINHA}>
-                <LinhaDoBebe
-                  bebe={bebe}
-                  filhos={
-                    <button
-                      type="button"
-                      disabled={desarquivo.enviando}
-                      className={BOTAO_SECUNDARIO}
-                      data-tamanho="app"
-                      aria-label={`${FAMILIA.bebes.desarquivar} ${bebe.nome}`}
-                      onClick={() => desarquivar(bebe)}
-                    >
-                      {desarquivo.enviando ? COMUM.salvando : FAMILIA.bebes.desarquivar}
-                    </button>
-                  }
+          <Pilha vao="pilha" className={erroDoDesarquivo && !familiaMudou(erroDoDesarquivo) ? 'pt-3' : undefined}>
+            {erroDoDesarquivo && !familiaMudou(erroDoDesarquivo) ? (
+              <div className="max-w-[32rem]">
+                <ResumoErro
+                  erro={erroDoDesarquivo}
+                  repetivel={desarquivo.estado.fase === 'erro' && desarquivo.estado.tentarDeNovo}
+                  aoTentarDeNovo={() => void desarquivo.tentarDeNovo()}
+                  refResumo={resumoDoDesarquivo}
                 />
-              </li>
-            ))}
-          </ul>
+              </div>
+            ) : null}
+            <ul className="m-0 list-none p-0">
+              {arquivados.map((bebe) => (
+                <li key={bebe.id} className={LINHA}>
+                  <LinhaDoBebe
+                    bebe={bebe}
+                    filhos={
+                      <button
+                        type="button"
+                        disabled={desarquivo.enviando}
+                        className={BOTAO_SECUNDARIO}
+                        data-tamanho="app"
+                        aria-label={`${FAMILIA.bebes.desarquivar} ${bebe.nome}`}
+                        onClick={() => desarquivar(bebe)}
+                      >
+                        {desarquivo.enviando ? COMUM.salvando : FAMILIA.bebes.desarquivar}
+                      </button>
+                    }
+                  />
+                </li>
+              ))}
+            </ul>
+          </Pilha>
         </details>
       ) : null}
-    </section>
+    </Pilha>
   )
 }
