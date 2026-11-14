@@ -69,7 +69,7 @@ export function RegiaoStatus({ mensagem }: { mensagem: string | null }) {
       role="status"
       className={
         mensagem
-          ? 'flex items-start gap-3 rounded-campo bg-[var(--cor-papel-fundo)] px-4 py-3 font-medium wrap-anywhere'
+          ? 'flex max-w-[40rem] items-start gap-3 rounded-campo bg-[var(--cor-papel-fundo)] px-4 py-3 font-medium wrap-anywhere'
           : 'sr-only'
       }
     >
