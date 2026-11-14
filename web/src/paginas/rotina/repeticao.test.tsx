@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, screen, within } from '@testing-library/react'
 import { simularRespostaPerdidaRotina } from '../../dados/rotina.memoria.ts'
+import { relogioDoTeste } from '../../teste/relogio.ts'
 import { aguardarCarga, renderizarRotaPronta } from '../../teste/renderizarRota.tsx'
 import { ID_BEBE } from '../../teste/rotina.fixture.ts'
 
@@ -27,10 +28,11 @@ const status = () => screen.getByRole('status')
 
 type Mundo = Awaited<ReturnType<typeof renderizarRotaPronta>>
 const idDoSono = (mundo: Mundo) => mundo.fixture.registros.find((r) => r.tipo === 'sono' && r.fim === null)!.id
-const depoisDeUmTempo = () => vi.setSystemTime(new Date('2026-11-05T10:03:00'))
+const depoisDeUmTempo = (mudarRelogio: (data: Date) => void) => mudarRelogio(new Date('2026-11-05T10:03:00'))
 
 describe('R1: a Sessão repete o comando original', () => {
   it('R1: Encerrar e anotar, com a resposta perdida: repete o mesmo fim e a mesma nota, e a nota continua visível depois da releitura', async () => {
+    const mudarRelogio = relogioDoTeste()
     const mundo = await renderizarRotaPronta('/app/sessao')
     const encerrar = vi.spyOn(mundo.rotina, 'encerrarSessao')
     const gravarNota = vi.spyOn(mundo.rotina, 'gravarNota')
@@ -47,7 +49,7 @@ describe('R1: a Sessão repete o comando original', () => {
     expect(mundo.roteador.state.location.pathname).toBe('/app/sessao')
     expect(gravarNota).not.toHaveBeenCalled()
 
-    depoisDeUmTempo()
+    depoisDeUmTempo(mudarRelogio)
     fireEvent.click(botao('Tentar de novo'))
     await aguardarCarga()
 
@@ -60,6 +62,7 @@ describe('R1: a Sessão repete o comando original', () => {
   })
 
   it('R1: com a nota perdida junto, a nota é gravada uma vez só e com o mesmo id nas duas tentativas', async () => {
+    const mudarRelogio = relogioDoTeste()
     const mundo = await renderizarRotaPronta('/app/sessao')
     const gravarNota = vi.spyOn(mundo.rotina, 'gravarNota')
     simularRespostaPerdidaRotina(mundo.rotina, 'encerrarSessao')
@@ -69,7 +72,7 @@ describe('R1: a Sessão repete o comando original', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Nota' }), { target: { value: 'Mamou pouco' } })
     fireEvent.click(botao('Salvar'))
     await aguardarCarga()
-    depoisDeUmTempo()
+    depoisDeUmTempo(mudarRelogio)
     fireEvent.click(botao('Tentar de novo'))
     await aguardarCarga()
     expect(status().querySelector('p')!.textContent).toBe(FRASE_DE_REDE)
@@ -83,6 +86,7 @@ describe('R1: a Sessão repete o comando original', () => {
   })
 
   it('R1: Encerrar (sem nota), com a resposta perdida: repete o mesmo fim, e a tela não diz "já tinha sido encerrada"', async () => {
+    const mudarRelogio = relogioDoTeste()
     const mundo = await renderizarRotaPronta('/app/sessao')
     const encerrar = vi.spyOn(mundo.rotina, 'encerrarSessao')
     simularRespostaPerdidaRotina(mundo.rotina, 'encerrarSessao')
@@ -90,7 +94,7 @@ describe('R1: a Sessão repete o comando original', () => {
     fireEvent.click(botao('Encerrar'))
     await aguardarCarga()
     expect(screen.getByRole('alert').textContent).toContain(FRASE_DE_REDE)
-    depoisDeUmTempo()
+    depoisDeUmTempo(mudarRelogio)
     fireEvent.click(botao('Tentar de novo'))
     await aguardarCarga()
 
@@ -100,11 +104,12 @@ describe('R1: a Sessão repete o comando original', () => {
   })
 
   it('R1: Encerrar em outro horário, com a resposta perdida: repete o horário escolhido, não o relógio de agora', async () => {
+    const mudarRelogio = relogioDoTeste()
     const mundo = await renderizarRotaPronta('/app/sessao')
     const id = idDoSono(mundo)
     const encerrar = vi.spyOn(mundo.rotina, 'encerrarSessao')
     // O aparelho marca 08:45; a sessão começou às 08:48: abre o painel do outro horário.
-    vi.setSystemTime(new Date('2026-11-05T08:45:00'))
+    mudarRelogio(new Date('2026-11-05T08:45:00'))
     fireEvent.click(botao('Encerrar'))
     await aguardarCarga()
     fireEvent.click(botao('Encerrar em outro horário, sono'))
@@ -114,7 +119,7 @@ describe('R1: a Sessão repete o comando original', () => {
     await aguardarCarga()
 
     expect(screen.getByRole('alert').textContent).toContain(FRASE_DE_REDE)
-    vi.setSystemTime(new Date('2026-11-05T08:50:00'))
+    mudarRelogio(new Date('2026-11-05T08:50:00'))
     fireEvent.click(botao('Tentar de novo'))
     await aguardarCarga()
 
@@ -164,6 +169,7 @@ describe('R1: a Sessão repete o comando original', () => {
 
 describe('R1: o Hoje repete o comando original', () => {
   it('R1: Encerrar no cartão, com a resposta perdida: repete o mesmo fim e conclui com "Sessão encerrada"', async () => {
+    const mudarRelogio = relogioDoTeste()
     const mundo = await renderizarRotaPronta('/app/hoje')
     const encerrar = vi.spyOn(mundo.rotina, 'encerrarSessao')
     simularRespostaPerdidaRotina(mundo.rotina, 'encerrarSessao')
@@ -171,7 +177,7 @@ describe('R1: o Hoje repete o comando original', () => {
     fireEvent.click(botao('Encerrar'))
     await aguardarCarga()
     expect(status().querySelector('p')!.textContent).toBe(FRASE_DE_REDE)
-    depoisDeUmTempo()
+    depoisDeUmTempo(mudarRelogio)
     fireEvent.click(botao('Tentar de novo'))
     await aguardarCarga()
 
@@ -182,6 +188,7 @@ describe('R1: o Hoje repete o comando original', () => {
   })
 
   it('R1: a recuperação continua na barra depois da releitura, e repetir de novo depois de outra falha usa ainda o mesmo fim', async () => {
+    const mudarRelogio = relogioDoTeste()
     const mundo = await renderizarRotaPronta('/app/hoje')
     const encerrar = vi.spyOn(mundo.rotina, 'encerrarSessao')
     simularRespostaPerdidaRotina(mundo.rotina, 'encerrarSessao')
@@ -189,11 +196,11 @@ describe('R1: o Hoje repete o comando original', () => {
 
     fireEvent.click(botao('Encerrar'))
     await aguardarCarga()
-    depoisDeUmTempo()
+    depoisDeUmTempo(mudarRelogio)
     fireEvent.click(botao('Tentar de novo'))
     await aguardarCarga()
     expect(status().querySelector('p')!.textContent).toBe(FRASE_DE_REDE)
-    vi.setSystemTime(new Date('2026-11-05T10:06:00'))
+    mudarRelogio(new Date('2026-11-05T10:06:00'))
     fireEvent.click(botao('Tentar de novo'))
     await aguardarCarga()
 

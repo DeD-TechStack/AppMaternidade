@@ -155,6 +155,7 @@ export function DialogoDenunciar({ alvo, titulo, autor, origem, aoFechar, aoBloq
           <button
             type="button"
             disabled={envio.enviando}
+            data-foco-inicial=""
             className={`${BOTAO_SECUNDARIO} min-[30rem]:w-full`}
             onClick={aoFechar}
           >

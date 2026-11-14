@@ -182,6 +182,9 @@ export function FormularioRegistro({ modo, ativo, tipoInicial, registro }: Props
   const [erroDeEnvio, setErroDeEnvio] = useState<ErroDados | null>(null)
   const [enviando, setEnviando] = useState(false)
   const chamadaPendente = useRef<Chamada | null>(null)
+  const grupoDeAvisos = useRef<HTMLDivElement>(null)
+  const voltouDaConfirmacao = useRef(false)
+  const idDosAvisos = useId()
 
   const emAndamento = registro !== undefined && registro.fim === null && ehTipoDeSessao(registro.tipo)
   const tipo = campos.tipo
@@ -193,6 +196,17 @@ export function FormularioRegistro({ modo, ativo, tipoInicial, registro }: Props
   useEffect(() => {
     if (tentativas > 0) formulario.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()
   }, [tentativas])
+
+  // O foco acompanha o passo: ao pedir a confirmação vai ao grupo dos avisos (o botão `Salvar` que o tinha
+  // sumiu); ao `Corrigir` volta ao primeiro campo de horário (`Início`/`Horário`).
+  useEffect(() => {
+    if (passo === 'confirmando') {
+      grupoDeAvisos.current?.focus()
+    } else if (voltouDaConfirmacao.current) {
+      voltouDaConfirmacao.current = false
+      formulario.current?.querySelector<HTMLElement>('[data-horario] input')?.focus()
+    }
+  }, [passo])
 
   function mudar(parcial: Partial<CamposDoRegistro>) {
     setCampos((anteriores) => ({ ...anteriores, ...parcial }))
@@ -482,9 +496,17 @@ export function FormularioRegistro({ modo, ativo, tipoInicial, registro }: Props
       ) : null}
 
       {passo === 'confirmando' ? (
-        <div role="group" aria-label={FORMULARIO.confirmarGrupo} className="rounded-campo bg-(--cor-papel-fundo) p-4" data-avisos="">
-          {avisos.map((aviso) => (
-            <p key={aviso} className="font-medium">
+        <div
+          ref={grupoDeAvisos}
+          role="group"
+          aria-label={FORMULARIO.confirmarGrupo}
+          aria-describedby={avisos.map((_, indice) => `${idDosAvisos}-${indice}`).join(' ') || undefined}
+          tabIndex={-1}
+          className="rounded-campo bg-(--cor-papel-fundo) p-4"
+          data-avisos=""
+        >
+          {avisos.map((aviso, indice) => (
+            <p key={aviso} id={`${idDosAvisos}-${indice}`} className="font-medium">
               {aviso}
             </p>
           ))}
@@ -499,7 +521,15 @@ export function FormularioRegistro({ modo, ativo, tipoInicial, registro }: Props
             >
               {enviando ? COMUM.salvando : FORMULARIO.salvarAssim}
             </Botao>
-            <Botao variante="contorno" tamanho="app" className={ALVO_APP} onClick={() => setPasso('editando')}>
+            <Botao
+              variante="contorno"
+              tamanho="app"
+              className={ALVO_APP}
+              onClick={() => {
+                voltouDaConfirmacao.current = true
+                setPasso('editando')
+              }}
+            >
               {FORMULARIO.corrigir}
             </Botao>
           </div>

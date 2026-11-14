@@ -121,10 +121,11 @@ export function FormularioNota({ modo, ativo, nota, origem }: Props) {
 
   return (
     <form ref={formulario} noValidate onSubmit={aoEnviar} className="flex max-w-[40rem] flex-col gap-6" data-formulario-nota={modo}>
-      <Controle rotulo={NOTAS.campoTexto} erro={erroDoTexto} ajuda={NOTAS.limiteDoTexto}>
+      <Controle rotulo={NOTAS.campoTextoObrigatorio} erro={erroDoTexto} ajuda={NOTAS.limiteDoTexto}>
         {(propriedades) => (
           <textarea
             {...propriedades}
+            aria-required="true"
             rows={4}
             value={texto}
             readOnly={enviando}

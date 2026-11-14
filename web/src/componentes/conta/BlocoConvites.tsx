@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { COMUM, FAMILIA, PAPEIS, textoDoErro } from '../../conteudo/conta.ts'
 import type { Papel } from '../../dados/comum.ts'
 import type { ConviteCriado, DetalheFamilia } from '../../dados/conta.ts'
+import { Cartao, Pilha } from '../base/layout/index.ts'
 import { familiaMudou, useAoFalharNaFamilia, type AcoesDaFamilia } from './acoesFamilia.ts'
 import { Campo } from './Campos.tsx'
 import { linkDoConvite } from './codigoConvite.ts'
@@ -85,7 +86,7 @@ export function BlocoConvites({ detalhe, acoes }: Props) {
   }
 
   return (
-    <section aria-labelledby="convites" className="flex flex-col gap-5">
+    <Pilha as="section" aria-labelledby="convites" vao="grupo">
       <h2 id="convites" className="cm-h4">
         {FAMILIA.convites.titulo}
       </h2>
@@ -129,12 +130,8 @@ export function BlocoConvites({ detalhe, acoes }: Props) {
         </ul>
       )}
 
-      <form
-        onSubmit={criar}
-        noValidate
-        aria-labelledby="novo-convite"
-        className="flex flex-col gap-5 rounded-cartao border border-[var(--cor-fio-suave)] p-5 lg:p-6"
-      >
+      <Cartao className="border border-[var(--cor-fio-suave)]">
+      <form onSubmit={criar} noValidate aria-labelledby="novo-convite" className="flex flex-col gap-5">
         <h3 id="novo-convite" className="cm-h4">
           {FAMILIA.convites.novo}
         </h3>
@@ -168,21 +165,24 @@ export function BlocoConvites({ detalhe, acoes }: Props) {
             refEntrada={validadeRef}
           />
         )}
-        <button type="submit" disabled={enviando} className={`${BOTAO_PRINCIPAL} sm:w-auto sm:self-start sm:px-10`}>
+        <button type="submit" disabled={enviando} className={`${BOTAO_PRINCIPAL} sm:w-auto sm:self-start sm:px-8`}>
           {enviando ? FAMILIA.convites.criando : FAMILIA.convites.criar}
         </button>
       </form>
+      </Cartao>
 
       {criado ? (
-        <section
+        <Cartao
+          as="section"
           aria-labelledby="codigo-do-convite"
-          className="flex flex-col gap-4 rounded-cartao border-[1.5px] border-[var(--cor-texto)] bg-[var(--cor-cartao)] p-5 lg:p-6"
+          className="border-[1.5px] border-[var(--cor-texto)] bg-[var(--cor-cartao)]"
         >
+         <Pilha vao="pilha">
           <h3 id="codigo-do-convite" className="cm-h4">
             {FAMILIA.convites.codigoTitulo}
           </h3>
           <p>{FAMILIA.convites.codigoAviso}</p>
-          <div className="flex min-w-0 flex-col gap-1">
+          <Pilha vao="junto" className="min-w-0">
             <p className="cm-rotulo">{FAMILIA.convites.linkRotulo}</p>
             <p
               ref={linkRef}
@@ -191,8 +191,8 @@ export function BlocoConvites({ detalhe, acoes }: Props) {
             >
               {linkDoConvite(criado.codigo)}
             </p>
-          </div>
-          <div className="flex min-w-0 flex-col gap-1">
+          </Pilha>
+          <Pilha vao="junto" className="min-w-0">
             <p className="cm-rotulo">{FAMILIA.convites.codigoRotulo}</p>
             <p
               ref={codigoRef}
@@ -201,7 +201,7 @@ export function BlocoConvites({ detalhe, acoes }: Props) {
             >
               {criado.codigo}
             </p>
-          </div>
+          </Pilha>
           <p className="tabular">{FAMILIA.convites.venceEm(formatarDataEHora(criado.expiraEm, fuso))}</p>
           <div className="flex flex-wrap gap-3">
             <button
@@ -221,8 +221,9 @@ export function BlocoConvites({ detalhe, acoes }: Props) {
               {FAMILIA.convites.copiarCodigo}
             </button>
           </div>
-        </section>
+         </Pilha>
+        </Cartao>
       ) : null}
-    </section>
+    </Pilha>
   )
 }

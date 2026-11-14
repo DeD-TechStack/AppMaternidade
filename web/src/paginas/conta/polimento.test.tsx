@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { criarDadosContaMemoria } from '../../dados/conta.memoria.ts'
 import { criarFixtureDeTeste, renderizarComDados } from '../../teste/renderizarComDados.tsx'
+import { comObrigatorio } from './obrigatorio.ts'
 
 // Devolutiva dos juízes, rodada 1: cena de proporção fixa, desenho decorativo no celular, hierarquia dos
 // links de Recuperar, estado de erro dos campos, índice e zona de perigo da Conta. Sem folha de estilo no
@@ -45,7 +46,7 @@ describe('telas de acesso: cena e desenho', () => {
       expect(cena.className).not.toMatch(/min-h-/)
       // O painel fica preso no alto da coluna, e a coluna do formulário não se centra na altura dele.
       expect(cena.parentElement!.classList.contains('lg:sticky')).toBe(true)
-      expect(cena.parentElement!.parentElement!.classList.contains('lg:items-start')).toBe(true)
+      expect(cena.parentElement!.parentElement!.getAttribute('data-h-alinhar')).toBe('inicio')
     })
   }
 
@@ -82,7 +83,7 @@ describe('estado de erro dos campos', () => {
     await screen.findByRole('button', { name: 'Criar conta' })
     fireEvent.click(botao('Criar conta'))
 
-    const nome = screen.getByLabelText('Seu nome', { selector: 'input' }) as HTMLInputElement
+    const nome = screen.getByLabelText(comObrigatorio('Seu nome'), { selector: 'input' }) as HTMLInputElement
     expect(nome.getAttribute('aria-invalid')).toBe('true')
     expect(nome.className).toMatch(/aria-invalid:border-\[3px\]/)
     const ids = nome.getAttribute('aria-describedby')!.split(' ')
@@ -100,10 +101,10 @@ describe('estado de erro dos campos', () => {
   it('/app/comecar: o campo de nome vazio recebe o mesmo tratamento de erro', async () => {
     renderizarComDados('/app/comecar', { dados: await memoriaSemConta() })
     await screen.findByRole('heading', { level: 2, name: 'Seu nome' })
-    fireEvent.change(screen.getByLabelText('Seu nome', { selector: 'input' }), { target: { value: '' } })
+    fireEvent.change(screen.getByLabelText(comObrigatorio('Seu nome'), { selector: 'input' }), { target: { value: '' } })
     fireEvent.click(botao('Salvar'))
 
-    const nome = screen.getByLabelText('Seu nome', { selector: 'input' })
+    const nome = screen.getByLabelText(comObrigatorio('Seu nome'), { selector: 'input' })
     expect(nome.getAttribute('aria-invalid')).toBe('true')
     const erro = document.getElementById(nome.getAttribute('aria-describedby')!.split(' ')[0])!
     expect(erro.textContent).toBe('Escreva o seu nome.')
@@ -130,8 +131,8 @@ describe('/app/conta: índice, barra e zona de perigo', () => {
   it('o título sobe para 48/52 no celular e a caixa do id tem a largura dos campos', async () => {
     renderizarComDados('/app/conta', { sessao: 'juliana' })
     const titulo = await screen.findByRole('heading', { level: 1, name: 'Conta' })
-    expect(titulo.className).toMatch(/max-sm:text-\[48px\]/)
-    expect(titulo.className).toMatch(/max-sm:leading-\[52px\]/)
+    expect(titulo.classList.contains('cm-h1')).toBe(true)
+    expect(titulo.className).not.toMatch(/max-sm:(text|leading)-\[/)
 
     const caixa = document.querySelector('[data-id-conta]')!
     const formulario = document.querySelector('#perfil')!.closest('section')!.querySelector('form')!
@@ -156,7 +157,7 @@ describe('/app/conta: índice, barra e zona de perigo', () => {
     const explicacao = document.getElementById('impedimento-exclusao')!
     expect(Boolean(explicacao.compareDocumentPosition(excluir) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true)
     // A zona de perigo é um grupo próprio, com contorno de 1,5 px.
-    expect(excluir.closest('section')!.className).toMatch(/rounded-cartao/)
+    expect(excluir.closest('section')!.getAttribute('data-h')).toMatch(/cartao/)
     expect(excluir.closest('section')!.className).toMatch(/border-\[1\.5px\]/)
   })
 

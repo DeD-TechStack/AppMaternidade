@@ -16,7 +16,7 @@ import { criarDadosComunidadeMemoria, simularFalha, simularRespostaPerdida } fro
 import { MOTIVOS } from '../../dados/comunidade.regras.ts'
 import { criarDadosContaMemoria } from '../../dados/conta.memoria.ts'
 import { criarFixtureDeTeste } from '../../teste/renderizarComDados.tsx'
-import { fixtureDeContasDoElenco, renderizarComunidade } from './apoio.tsx'
+import { comObrigatorio, fixtureDeContasDoElenco, renderizarComunidade } from './apoio.tsx'
 
 // MAT-40a: a C3 (tópico, respostas, citação, edição), o diálogo de denúncia, o bloqueio, a C6 e a C7.
 
@@ -36,7 +36,7 @@ function cena(pessoa: PessoaDoElenco, caminho: string, ajustar?: (estado: Return
 
 const topico = (id: string) => `/app/comunidade/topico/${id}`
 const botao = (nome: string | RegExp) => screen.getByRole('button', { name: nome }) as HTMLButtonElement
-const campo = (rotulo: string | RegExp) => screen.getByLabelText(rotulo) as HTMLInputElement | HTMLTextAreaElement
+const campo = (rotulo: string | RegExp) => screen.getByLabelText(comObrigatorio(rotulo)) as HTMLInputElement | HTMLTextAreaElement
 const digitar = (rotulo: string | RegExp, texto: string) => fireEvent.change(campo(rotulo), { target: { value: texto } })
 const resposta = (id: string) => document.getElementById(`resposta-${id}`)!
 const semCarregando = () => waitFor(() => expect(document.querySelector('[aria-busy="true"]')).toBeNull())
@@ -157,7 +157,7 @@ describe('responder, citar e editar (MAT-40:RF-05)', () => {
   it('prévia exata com confirmação: nada grava antes de "Publicar resposta"; "Voltar e editar" mantém o texto', async () => {
     const { estado } = await abrir('outro', CONTEUDO.topicoDoAutor)
     const total = estado.respostas.length
-    expect(botao(TOPICO.verPrevia).disabled).toBe(true)
+    expect(botao(TOPICO.verPrevia).getAttribute('aria-disabled')).toBe('true')
     digitar(TOPICO.campoResposta, 'Minha resposta')
     expect(screen.getByText('14 de 2000')).toBeTruthy()
     fireEvent.click(botao(TOPICO.verPrevia))
@@ -222,10 +222,10 @@ describe('responder, citar e editar (MAT-40:RF-05)', () => {
   it('o limite da resposta: 1 a 2000 caracteres, e a prévia só abre dentro dele', async () => {
     await abrir('outro', CONTEUDO.topicoDoAutor)
     digitar(TOPICO.campoResposta, 'a'.repeat(2001))
-    expect(botao(TOPICO.verPrevia).disabled).toBe(true)
+    expect(botao(TOPICO.verPrevia).getAttribute('aria-disabled')).toBe('true')
     expect(screen.getByText(TOPICO.erroLimiteResposta)).toBeTruthy()
     digitar(TOPICO.campoResposta, 'a'.repeat(2000))
-    expect(botao(TOPICO.verPrevia).disabled).toBe(false)
+    expect(botao(TOPICO.verPrevia).hasAttribute('aria-disabled')).toBe(false)
   })
 
   it('`42501` ao responder: a frase `sem_permissao` perto do botão, com o texto mantido', async () => {
@@ -604,14 +604,14 @@ describe('C6: meu perfil público', () => {
     }
     // A seção do perfil tem nome próprio, ligado ao conteúdo dela.
     const { unmount } = await abrirPerfil('autor')
-    await screen.findByLabelText(PERFIL.apelidoRotulo)
+    await screen.findByLabelText(comObrigatorio(PERFIL.apelidoRotulo))
     expect(screen.getByRole('region', { name: PERFIL.secao })).toBeTruthy()
     unmount()
   })
 
   it('o escritor edita o perfil: apelido, bio e faixa, com TX-26; o apelido de outra pessoa é recusado no campo', async () => {
     const { estado } = await abrirPerfil('autor')
-    const apelido = await screen.findByLabelText(PERFIL.apelidoRotulo)
+    const apelido = await screen.findByLabelText(comObrigatorio(PERFIL.apelidoRotulo))
     fireEvent.change(apelido, { target: { value: 'OUTRA_PESSOA' } })
     fireEvent.click(botao(PERFIL.salvar))
     expect(await screen.findByText(TEXTOS_ERRO_COMUNIDADE.apelido_em_uso)).toBeTruthy()
@@ -649,7 +649,7 @@ describe('C6: meu perfil público', () => {
     })
     await screen.findByText(PERFIL.somenteLeitura)
     expect(screen.getByText('sem_aceite_novo')).toBeTruthy()
-    expect(screen.queryByLabelText(PERFIL.apelidoRotulo)).toBeNull()
+    expect(screen.queryByLabelText(comObrigatorio(PERFIL.apelidoRotulo))).toBeNull()
     expect(screen.getByRole('link', { name: PERFIL.editarPerfil }).getAttribute('href')).toBe(`/app/comunidade/entrar?volta=${encodeURIComponent('/app/comunidade/perfil')}`)
     fireEvent.click(await screen.findByRole('button', { name: PERFIL.desbloquear }))
     expect(await screen.findByText(TX.tx18)).toBeTruthy()

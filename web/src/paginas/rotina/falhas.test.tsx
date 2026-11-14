@@ -7,6 +7,7 @@ import { uuidV7 } from '../../dados/rotina.uuid.ts'
 import { simularAparelho } from '../../dados/rotina.aparelho.simulado.ts'
 import { aguardarCarga, renderizarRotaPronta } from '../../teste/renderizarRota.tsx'
 import { FUSO_DO_APARELHO, ID_BEBE, ID_FAMILIA, criarMundoDeTeste, semSessaoEmAndamento } from '../../teste/rotina.fixture.ts'
+import { relogioDoTeste } from '../../teste/relogio.ts'
 import { PESSOAS } from '../../teste/renderizarComDados.tsx'
 
 // Os caminhos que falham fechados (R38-32, item 6), com o relógio falso às 10:00 de 5/11/2026 (hora do
@@ -58,11 +59,12 @@ describe('a sessão que outra pessoa já encerrou', () => {
 
 describe('o relógio do aparelho atrás do início da sessão', () => {
   it('"Encerrar" não envia nada: mostra a frase e "Encerrar em outro horário", e o horário escolhido é o enviado', async () => {
+    const mudarRelogio = relogioDoTeste()
     const mundo = await renderizarRotaPronta('/app/sessao')
     const id = idDoSonoEmAndamento(mundo)
     const encerrar = vi.spyOn(mundo.rotina, 'encerrarSessao')
     // O aparelho marca 08:45; a sessão começou às 08:48.
-    vi.setSystemTime(new Date('2026-11-05T08:45:00'))
+    mudarRelogio(new Date('2026-11-05T08:45:00'))
 
     fireEvent.click(botao('Encerrar'))
     await aguardarCarga()
@@ -94,9 +96,10 @@ describe('o relógio do aparelho atrás do início da sessão', () => {
   })
 
   it('o fim mais de 5 minutos adiante do relógio do aparelho não é enviado', async () => {
+    const mudarRelogio = relogioDoTeste()
     const mundo = await renderizarRotaPronta('/app/sessao')
     const encerrar = vi.spyOn(mundo.rotina, 'encerrarSessao')
-    vi.setSystemTime(new Date('2026-11-05T08:45:00'))
+    mudarRelogio(new Date('2026-11-05T08:45:00'))
     fireEvent.click(botao('Encerrar'))
     await aguardarCarga()
     fireEvent.click(botao('Encerrar em outro horário, sono'))
@@ -367,6 +370,7 @@ describe('R10: a virada da meia-noite com a releitura do Hoje', () => {
   }
 
   it('R10: depois da meia-noite, "Atualizar" lê o dia novo: as fraldas de ontem saem dos números de hoje', async () => {
+    const mudarRelogio = relogioDoTeste()
     vi.setSystemTime(new Date('2026-11-05T23:58:00'))
     await renderizarRotaPronta('/app/hoje', {
       ajustarRotina: () => {
@@ -376,7 +380,7 @@ describe('R10: a virada da meia-noite com a releitura do Hoje', () => {
     })
     expect(fraldasDeHoje()).toBe('2')
 
-    vi.setSystemTime(new Date('2026-11-06T00:05:00'))
+    mudarRelogio(new Date('2026-11-06T00:05:00'))
     act(() => {
       vi.advanceTimersByTime(1000)
     })
@@ -387,6 +391,7 @@ describe('R10: a virada da meia-noite com a releitura do Hoje', () => {
   })
 
   it('R10: antes da meia-noite a mesma releitura continua contando as duas fraldas', async () => {
+    const mudarRelogio = relogioDoTeste()
     vi.setSystemTime(new Date('2026-11-05T23:58:00'))
     await renderizarRotaPronta('/app/hoje', {
       ajustarRotina: () => {
@@ -394,7 +399,7 @@ describe('R10: a virada da meia-noite com a releitura do Hoje', () => {
         return { notas: [], registros: [fralda('23:30:00'), fralda('23:50:00')] }
       },
     })
-    vi.setSystemTime(new Date('2026-11-05T23:59:30'))
+    mudarRelogio(new Date('2026-11-05T23:59:30'))
     fireEvent.click(botao('Atualizar'))
     await aguardarCarga()
     expect(fraldasDeHoje()).toBe('2')

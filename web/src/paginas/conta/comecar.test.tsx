@@ -55,10 +55,11 @@ describe('o passo "Seu nome"', () => {
     const cartao = h2.closest('section')!
 
     // Uma coluna no celular (o cartão primeiro, a cena depois); duas a partir de 64 rem.
-    const grade = h1.parentElement!.parentElement!
-    for (const classe of ['grid', 'gap-12', 'lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]', 'lg:gap-12']) {
-      expect(grade.classList.contains(classe), classe).toBe(true)
-    }
+    const grade = h1.closest('[data-h~="colunas"]')!
+    expect(grade.getAttribute('data-h')).toContain('colunas')
+    expect(grade.getAttribute('data-h-vao')).toBe('midia')
+    expect((grade as HTMLElement).style.getPropertyValue('--h-colunas')).toBe('minmax(0, 7fr) minmax(0, 5fr)')
+    expect(grade.getAttribute('data-h-quebra')).toBe('1024')
     const [esquerda, direita] = [...grade.children]
     expect(esquerda.contains(h1) && esquerda.contains(status) && esquerda.contains(cartao)).toBe(true)
     expect(direita.querySelector('img[data-cena]')).not.toBeNull()

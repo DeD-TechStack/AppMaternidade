@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, screen, within } from '@testing-library/react'
 import { FAMILIAS_DEMONSTRACAO } from '../dados/conta.demonstracao.ts'
 import { simularFalhaRotina } from '../dados/rotina.memoria.ts'
+import { relogioDoTeste } from '../teste/relogio.ts'
 import { PESSOAS } from '../teste/renderizarComDados.tsx'
 import { aguardarCarga, renderizarRotaPronta } from '../teste/renderizarRota.tsx'
 import { ID_BEBE, ID_FAMILIA, comSessaoEmAndamento } from '../teste/rotina.fixture.ts'
@@ -174,10 +175,11 @@ describe('R38-12: a atualização', () => {
   })
 
   it('"Atualizado às HH:MM" mostra a hora da última leitura completa', async () => {
+    const mudarRelogio = relogioDoTeste()
     await renderizarRotaPronta('/app/hoje')
     expect(screen.getByText('Atualizado às 10:00')).toBeTruthy()
 
-    vi.setSystemTime(new Date('2026-11-05T10:07:00'))
+    mudarRelogio(new Date('2026-11-05T10:07:00'))
     fireEvent.click(botao('Atualizar'))
     await aguardarCarga()
 
