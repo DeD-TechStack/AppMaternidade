@@ -310,6 +310,58 @@ describe('Hoje: o cartão da sessão quando a leitura falha', () => {
     expect(screen.queryByRole('button', { name: 'Tentar de novo' })).toBeNull()
   })
 
+  // P78-R1-01: a leitura vazia deu certo, e a releitura ("Atualizar") falha: o `useSecao` guarda os dados
+  // anteriores e põe o erro. O cartão não pode voltar a dizer "Nenhuma sessão" com um erro de leitura em pé.
+  it('P78-R1-01: leitura vazia certa e "Atualizar" com falha de rede: o cartão mostra o erro e "Tentar de novo", e nunca a frase de vazio', async () => {
+    const mundo = criarMundoDeTeste({ ajustarRotina: semSessaoEmAndamento })
+    const { container } = await renderizarRotaPronta('/app/hoje', { mundo })
+    expect(within(cartao(container)).getByText(VAZIO)).toBeTruthy()
+
+    simularFalhaRotina(mundo.rotina, 'emAndamento', 'rede')
+    fireEvent.click(screen.getByRole('button', { name: 'Atualizar' }))
+    await aguardarCarga()
+
+    const bloco = cartao(container)
+    expect(within(bloco).getByRole('heading', { name: 'Em andamento' })).toBeTruthy()
+    expect(within(bloco).getByRole('alert')).toBeTruthy()
+    expect(within(bloco).getByRole('button', { name: 'Tentar de novo' })).toBeTruthy()
+    expect(screen.getAllByRole('alert')).toHaveLength(1)
+    expect(document.body.textContent).not.toContain(VAZIO)
+    expect(bloco.getAttribute('tabindex')).toBe('-1')
+  })
+
+  it('P78-R1-01: sessão aberta lida e "Atualizar" com falha: a sessão continua no cartão (tempo e Encerrar) e o erro aparece', async () => {
+    const mundo = criarMundoDeTeste()
+    const { container } = await renderizarRotaPronta('/app/hoje', { mundo })
+
+    simularFalhaRotina(mundo.rotina, 'emAndamento', 'rede')
+    fireEvent.click(screen.getByRole('button', { name: 'Atualizar' }))
+    await aguardarCarga()
+
+    const bloco = cartao(container)
+    expect(digitos(within(bloco).getByRole('timer'))).toBe('1:12:00')
+    expect(within(bloco).getByRole('button', { name: 'Encerrar' })).toBeTruthy()
+    expect(within(principal(container)).getByRole('alert')).toBeTruthy()
+    expect(within(principal(container)).getByRole('button', { name: 'Tentar de novo' })).toBeTruthy()
+    expect(document.body.textContent).not.toContain(VAZIO)
+  })
+
+  it('P78-R1-01: depois da falha da releitura, "Tentar de novo" dá certo: a frase de vazio volta e o erro some', async () => {
+    const mundo = criarMundoDeTeste({ ajustarRotina: semSessaoEmAndamento })
+    const { container } = await renderizarRotaPronta('/app/hoje', { mundo })
+    simularFalhaRotina(mundo.rotina, 'emAndamento', 'rede')
+    fireEvent.click(screen.getByRole('button', { name: 'Atualizar' }))
+    await aguardarCarga()
+    expect(document.body.textContent).not.toContain(VAZIO)
+
+    fireEvent.click(within(cartao(container)).getByRole('button', { name: 'Tentar de novo' }))
+    await aguardarCarga()
+
+    expect(within(cartao(container)).getByText(VAZIO)).toBeTruthy()
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Tentar de novo' })).toBeNull()
+  })
+
   it('carregando: o cartão tem aria-busy e não diz "Nenhuma sessão em andamento." até a leitura terminar', async () => {
     const mundo = criarMundoDeTeste({ ajustarRotina: semSessaoEmAndamento })
     const adiada = adiarRotina(mundo.rotina)
