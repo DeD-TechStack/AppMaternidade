@@ -25,6 +25,15 @@ describe('EscolhaDePapel: o alvo de cada opção tem 44 px de altura', () => {
     }
   })
 
+  it('A11Y-003: a caixa do botão de opção tem pelo menos 24 × 24 px (size-6) e o flex não a espreme (shrink-0)', () => {
+    render(<EscolhaDePapel legenda="Papel" valor="cuidador" aoMudar={() => undefined} />)
+
+    for (const radio of screen.getAllByRole('radio')) {
+      expect(radio.classList.contains('size-6'), 'size-6 = 24 × 24 px').toBe(true)
+      expect(radio.classList.contains('shrink-0')).toBe(true)
+    }
+  })
+
   it('o rótulo inteiro é clicável: tocar no texto da opção marca o botão de opção', () => {
     const aoMudar = vi.fn()
     render(<EscolhaDePapel legenda="Papel" valor="cuidador" aoMudar={aoMudar} />)
