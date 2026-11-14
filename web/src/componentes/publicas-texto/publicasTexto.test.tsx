@@ -528,6 +528,54 @@ describe('Exclusão de conta: página de tarefa', () => {
   })
 })
 
+// A exclusão e o pedido de dados já existem na tela Conta (/app/conta): as páginas públicas não dizem mais que
+// "ainda não pode" nem apontam para uma tela "Família e conta" que não existe.
+describe('páginas públicas: exclusão e dados na tela Conta', () => {
+  const textoDe = (caminho: string) => {
+    const { container } = renderizarRota(caminho)
+    return container.querySelector('main')!.textContent ?? ''
+  }
+
+  it('I-1 Exclusão de conta: sem "ainda não pode ser feito por este site" nem "Família e conta"; cita /app/conta, "Baixar meus dados" e "Excluir minha conta"', () => {
+    const texto = textoDe('/exclusao-de-conta')
+    expect(texto).not.toContain('ainda não pode ser feito por este site')
+    expect(texto).not.toContain('Família e conta')
+    expect(texto).toContain('/app/conta')
+    expect(texto).toContain('Baixar meus dados')
+    expect(texto).toContain('Excluir minha conta')
+  })
+
+  it('I-2 Privacidade: sem "Família e conta" e com a tela Conta', () => {
+    const texto = textoDe('/privacidade')
+    expect(texto).not.toContain('Família e conta')
+    expect(texto).toContain('tela Conta')
+  })
+
+  it('I-3 Privacidade mantém o bloco "Para falar sobre os seus dados" com o link para /contato e o Encarregado', () => {
+    const { container } = renderizarRota('/privacidade')
+    const principal = container.querySelector('main')!
+    const paragrafo = [...principal.querySelectorAll('p')].find((p) => p.textContent?.startsWith('Para falar sobre os seus dados: '))!
+    expect(paragrafo).toBeDefined()
+    expect(paragrafo.querySelector('a')!.getAttribute('href')).toBe('/contato')
+    expect(principal.textContent).toContain('Encarregado pelo tratamento de dados: Daniel Macedo.')
+  })
+
+  it('I-4 os marcadores legais continuam nas páginas que os têm', () => {
+    const exclusao = textoDe('/exclusao-de-conta')
+    expect(exclusao).toContain('Responsável pelo AppMaternidade: a definir.')
+    expect(exclusao).toContain('O prazo da exclusão ainda será definido')
+    expect(textoDe('/privacidade')).toContain('Responsável pelo AppMaternidade: a definir.')
+    const termos = textoDe('/termos')
+    expect(termos).toContain('Responsável pelo AppMaternidade: a definir.')
+    expect(termos).toContain('Idade mínima para usar o AppMaternidade: a definir.')
+  })
+
+  it('I-5 nenhuma das duas páginas fala em CSV', () => {
+    expect(textoDe('/exclusao-de-conta')).not.toContain('CSV')
+    expect(textoDe('/privacidade')).not.toContain('CSV')
+  })
+})
+
 describe('Privacidade: lista de dados', () => {
   it('mostra os grupos de dados uma vez só, na sua seção, e nada de lista na abertura', () => {
     const { container } = renderizarRota('/privacidade')
