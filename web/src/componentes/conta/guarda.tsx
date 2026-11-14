@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router'
 import { AvisoDemonstracao } from '../AvisoDemonstracao.tsx'
+import { Pilha, QuadroLayout, Secao } from '../base/layout/index.ts'
 import { TITULOS } from '../../conteudo/conta.ts'
 import { Carregando, ResumoErro } from './Partes.tsx'
 import { useSessao } from './sessao.tsx'
@@ -11,11 +12,15 @@ function Casca({ ocupado = false, children }: { ocupado?: boolean; children: Rea
   return (
     <>
       {/* Um só aviso de demonstração (só sem banco), acima do <main>. */}
-      <div className="cm-area pt-3 empty:hidden">
+      <QuadroLayout className="pt-3 empty:hidden">
         <AvisoDemonstracao lateral />
-      </div>
-      <main aria-busy={ocupado || undefined} className="cm-area pt-10">
-        <div className="max-w-[28rem]">{children}</div>
+      </QuadroLayout>
+      <main aria-busy={ocupado || undefined}>
+        <Secao as="div">
+          <QuadroLayout>
+            <div className="max-w-[28rem]">{children}</div>
+          </QuadroLayout>
+        </Secao>
       </main>
     </>
   )
@@ -43,8 +48,10 @@ export function GuardaSessao() {
   if (sessao.estado === 'erro' && sessao.erro) {
     return (
       <Casca>
-        <h1 className="cm-h1 wrap-anywhere mb-6 max-sm:text-[48px] max-sm:leading-[52px]">{TITULOS.erroDaConta}</h1>
-        <ResumoErro erro={sessao.erro} repetivel aoTentarDeNovo={() => void sessao.recarregarConta()} />
+        <Pilha vao="grupo">
+          <h1 className="cm-h1 wrap-anywhere">{TITULOS.erroDaConta}</h1>
+          <ResumoErro erro={sessao.erro} repetivel aoTentarDeNovo={() => void sessao.recarregarConta()} />
+        </Pilha>
       </Casca>
     )
   }
