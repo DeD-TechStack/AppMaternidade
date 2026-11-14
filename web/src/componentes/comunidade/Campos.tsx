@@ -53,7 +53,7 @@ export function CampoComContador({
   }
 
   return (
-    <div className="cm-campo max-w-leitura">
+    <div className="cm-campo max-w-[40rem]">
       <label htmlFor={id} className="cm-campo-rotulo">
         {rotulo}
       </label>

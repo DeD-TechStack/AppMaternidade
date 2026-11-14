@@ -63,7 +63,7 @@ function PassoDosTermos({ versao, aoMudar }: PassoProps) {
   }
 
   return (
-    <form onSubmit={aoAceitar} noValidate aria-labelledby="passo-termos" className="max-w-leitura">
+    <form onSubmit={aoAceitar} noValidate aria-labelledby="passo-termos" className="max-w-[34rem]">
       <Cartao className="flex flex-col gap-esp-pilha border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)]">
         <h2 id="passo-termos" className="cm-h4 text-titulo-4">
           {ENTRAR_NA_COMUNIDADE.termosTitulo}
@@ -163,7 +163,7 @@ function PassoDoPerfil({ aoMudar }: Pick<PassoProps, 'aoMudar'>) {
   }
 
   return (
-    <form onSubmit={aoCriar} noValidate aria-labelledby="passo-perfil" className="max-w-leitura">
+    <form onSubmit={aoCriar} noValidate aria-labelledby="passo-perfil" className="max-w-[34rem]">
       <Cartao className="flex flex-col gap-esp-pilha border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)]">
         <h2 id="passo-perfil" className="cm-h4 text-titulo-4">
           {ENTRAR_NA_COMUNIDADE.perfilTitulo}
@@ -244,7 +244,7 @@ export function EntrarNaComunidade() {
           {situacao.estado.fase === 'erro' ? (
             <ErroDeLeitura erro={situacao.estado.erro} aoTentarDeNovo={() => void situacao.recarregar()} />
           ) : null}
-          {semTermos ? <p className="max-w-leitura font-medium">{TEXTOS_ERRO_COMUNIDADE.termos_indisponiveis}</p> : null}
+          {semTermos ? <p className="max-w-[34rem] font-medium">{TEXTOS_ERRO_COMUNIDADE.termos_indisponiveis}</p> : null}
         </>
       }
     >

@@ -85,7 +85,7 @@ export function VerificacaoEmDuasEtapas({ aoVerificar }: Props) {
 
   return (
     <Faixa aria-labelledby="mfa-titulo" aria-busy={fatores.estado.fase === 'carregando' || undefined}>
-      <Pilha vao="grupo" className="max-w-leitura">
+      <Pilha vao="grupo" className="max-w-[34rem]">
         <Pilha vao="pilha">
           <h2 id="mfa-titulo" className="cm-h4 text-titulo-4">
             {MFA.titulo}
@@ -124,7 +124,7 @@ export function VerificacaoEmDuasEtapas({ aoVerificar }: Props) {
 
         {pedeCodigo ? (
           <form noValidate onSubmit={(evento) => void confirmar(evento)} className="flex flex-col gap-esp-pilha">
-            <div className="cm-campo grid-cols-[minmax(0,1fr)] min-w-0 max-w-[40ch]">
+            <div className="cm-campo grid-cols-[minmax(0,1fr)] min-w-0 max-w-[20rem]">
             <label htmlFor={ID_DO_CODIGO} className="cm-campo-rotulo">
               {MFA.campoCodigo}
             </label>
@@ -151,7 +151,7 @@ export function VerificacaoEmDuasEtapas({ aoVerificar }: Props) {
               </p>
             ) : null}
           </div>
-          <div className="max-w-[40ch]">
+          <div className="max-w-[20rem]">
             <button type="submit" disabled={confirmando} className={BOTAO_PRINCIPAL_QUEBRA}>
               {confirmando ? MFA.verificando : MFA.confirmar}
             </button>

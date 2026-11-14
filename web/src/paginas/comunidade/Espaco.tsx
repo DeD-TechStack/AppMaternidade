@@ -134,12 +134,12 @@ export function Espaco() {
           </Pilha>
           {espacos.esqueleto ? <Esqueleto /> : null}
           {espacos.estado.fase === 'erro' ? (
-            <div className="max-w-leitura">
+            <div className="max-w-[40rem]">
               <ErroDeLeitura erro={espacos.estado.erro} aoTentarDeNovo={() => void espacos.recarregar()} />
             </div>
           ) : null}
           {situacao.estado.fase === 'erro' ? (
-            <div className="max-w-leitura">
+            <div className="max-w-[40rem]">
               <ErroDeLeitura erro={situacao.estado.erro} aoTentarDeNovo={() => void situacao.recarregar()} />
             </div>
           ) : null}

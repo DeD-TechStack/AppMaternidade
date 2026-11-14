@@ -68,7 +68,7 @@ function FormularioDoPerfil({ perfil, aoSalvar }: FormularioProps) {
   }
 
   return (
-    <form onSubmit={salvar} noValidate className="flex max-w-leitura flex-col gap-esp-pilha">
+    <form onSubmit={salvar} noValidate className="flex max-w-[34rem] flex-col gap-esp-pilha">
       {erro && !apelidoEmUso ? (
         <ResumoDeErro
           texto={erro.texto}
@@ -141,7 +141,7 @@ function DadosDoPerfil({ perfilId, escritor, definirStatus }: DadosProps) {
           />
         ) : null}
         {estado.fase === 'pronto' && estado.valor && !escritor ? (
-          <Pilha vao="pilha" className="max-w-leitura items-start">
+          <Pilha vao="pilha" className="max-w-[34rem] items-start">
             <dl className="m-0 flex flex-col gap-3">
               <div>
                 <dt className="cm-pequeno text-[var(--cor-texto-2)]">{PERFIL.apelidoRotulo}</dt>
@@ -264,7 +264,7 @@ export function MeuPerfil() {
           <Status mensagem={status} refStatus={refStatus} />
           {situacao.esqueleto ? <Esqueleto linhas={2} /> : null}
           {situacao.estado.fase === 'erro' ? (
-            <div className="max-w-leitura">
+            <div className="max-w-[40rem]">
               <ErroDeLeitura erro={situacao.estado.erro} aoTentarDeNovo={() => void situacao.recarregar()} />
             </div>
           ) : null}

@@ -33,7 +33,7 @@ interface Props {
 /** A citação: o apelido de quem foi citado e o começo da resposta dele. */
 function Citacao({ resposta }: { resposta: RespostaComAutor }) {
   return (
-    <blockquote className="m-0 flex max-w-leitura flex-col gap-1 border-l-[3px] border-[var(--cor-fio-suave)] pl-4">
+    <blockquote className="m-0 flex max-w-[44rem] flex-col gap-1 border-l-[3px] border-[var(--cor-fio-suave)] pl-4">
       <p className="cm-pequeno font-medium wrap-anywhere">
         {TOPICO.emRespostaA(resposta.autor?.apelido ?? COMUM_COMUNIDADE.pessoaRemovida)}
       </p>
@@ -106,7 +106,7 @@ export function FormularioDeResposta({ topicoId, modo, apelidoProprio, aoTirarCi
 
   if (previa) {
     return (
-      <Pilha vao="grupo" className="max-w-leitura" data-previa="resposta">
+      <Pilha vao="grupo" className="max-w-[44rem]" data-previa="resposta">
         <Pilha vao="pilha">
           <h3 className="cm-h4 text-titulo-4">{TOPICO.previa}</h3>
           <p>{TX.tx05b}</p>
@@ -139,7 +139,7 @@ export function FormularioDeResposta({ topicoId, modo, apelidoProprio, aoTirarCi
   }
 
   return (
-    <form onSubmit={aoEnviarFormulario} noValidate className="flex max-w-leitura flex-col gap-esp-pilha">
+    <form onSubmit={aoEnviarFormulario} noValidate className="flex max-w-[40rem] flex-col gap-esp-pilha">
       {citando ? (
         <div className="flex flex-col items-start gap-2">
           <Citacao resposta={citando} />

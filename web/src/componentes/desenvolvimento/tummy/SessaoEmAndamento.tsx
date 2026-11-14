@@ -7,7 +7,7 @@ import { ALVO_APP } from '../../app/alvo.ts'
 import { recuoOptico } from '../../app/recuoOptico.ts'
 import { Botao } from '../../base/Botao.tsx'
 import { Ilustracao } from '../../campo/Ilustracao.tsx'
-import { PainelCampo } from '../../campo/PainelCampo.tsx'
+import { Cartao } from '../../base/layout/Cartao.tsx'
 import { CHAVE } from './foco.ts'
 import { EnvioEmCurso } from './Mensagens.tsx'
 import { useDeNoite } from './useDeNoite.ts'
@@ -47,12 +47,11 @@ export function SessaoEmAndamento({ sessao, nomeDoBebe, autor, podeEncerrar, pod
   const tempo = formatarCronometro(Math.max(0, agora - inicio))
 
   return (
-    <PainelCampo
-      variante={deNoite ? 'cacau' : 'mel'}
-      largura="celula"
-      className="flex flex-col gap-6 bg-(--cor-campo-sessao) p-5 text-(--cor-numero-sessao) [border:var(--borda-campo)] lg:flex-row lg:items-end lg:justify-between lg:p-8"
+    <Cartao
+      className={`${deNoite ? 'cm-painel-cacau' : 'cm-painel-mel'} relative flex flex-col gap-6 rounded-painel bg-(--cor-campo-sessao) text-(--cor-numero-sessao) [border:var(--borda-campo)] lg:flex-row lg:items-end lg:justify-between`}
       data-sessao-tummy={sessao.id}
       data-campo-cor={deNoite ? 'noite' : 'mel'}
+      data-painel={deNoite ? 'cacau' : 'mel'}
     >
       <div className="relative z-10 flex min-w-0 flex-col items-start gap-4">
         <p className="cm-rotulo">{TT.emAndamento}</p>
@@ -102,6 +101,6 @@ export function SessaoEmAndamento({ sessao, nomeDoBebe, autor, podeEncerrar, pod
       <div aria-hidden="true" className="pointer-events-none hidden shrink-0 lg:block [[data-tema=madrugada]_&]:hidden">
         <Ilustracao nome="tummy-time" decorativa carregamento="eager" className="h-44 w-auto" />
       </div>
-    </PainelCampo>
+    </Cartao>
   )
 }

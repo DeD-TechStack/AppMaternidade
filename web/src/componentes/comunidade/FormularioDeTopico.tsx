@@ -97,7 +97,7 @@ export function FormularioDeTopico({ espaco, perfilId, edicao, aoNaoEditavel }: 
 
   if (previa) {
     return (
-      <Pilha vao="grupo" className="max-w-leitura" data-previa="topico">
+      <Pilha vao="grupo" className="max-w-[44rem]" data-previa="topico">
         <Pilha vao="pilha">
           <h2 className="cm-h4 text-titulo-4">{FORMULARIO_TOPICO.previa}</h2>
           <p>{TX.tx05}</p>
@@ -135,7 +135,7 @@ export function FormularioDeTopico({ espaco, perfilId, edicao, aoNaoEditavel }: 
   }
 
   return (
-    <form onSubmit={aoVerPrevia} noValidate className="flex max-w-leitura flex-col gap-esp-pilha">
+    <form onSubmit={aoVerPrevia} noValidate className="flex max-w-[40rem] flex-col gap-esp-pilha">
       <CampoComContador
         id="campo-titulo"
         rotulo={FORMULARIO_TOPICO.campoTitulo}

@@ -50,7 +50,7 @@ interface CampoProps {
 function CampoSimples({ id, rotulo, valor, aoMudar, tipo = 'text', erro, ajuda }: CampoProps) {
   const ligados = [erro ? `${id}-erro` : null, ajuda ? `${id}-ajuda` : null].filter(Boolean).join(' ')
   return (
-    <div className="cm-campo grid-cols-[minmax(0,1fr)] min-w-0 max-w-leitura">
+    <div className="cm-campo grid-cols-[minmax(0,1fr)] min-w-0 max-w-[40rem]">
       <label htmlFor={id} className="cm-campo-rotulo">
         {rotulo}
       </label>
@@ -241,7 +241,7 @@ function ListaDePapeis() {
             })}
           </Pilha>
         ) : null}
-        <p role="note" className="max-w-leitura font-medium">
+        <p role="note" className="max-w-[40rem] font-medium">
           {TX.tx15}
         </p>
         </Pilha>
@@ -252,7 +252,7 @@ function ListaDePapeis() {
         <h2 id="papel-conceder" className="cm-h4 text-titulo-4">
           {PAPEIS.concederTitulo}
         </h2>
-        <form onSubmit={conceder} noValidate className="flex max-w-leitura flex-col gap-esp-pilha">
+        <form onSubmit={conceder} noValidate className="flex max-w-[40rem] flex-col gap-esp-pilha">
           {erro ? (
             <ResumoDeErro
               texto={erro.texto}
@@ -318,7 +318,7 @@ function ListaDePapeis() {
             erro={erroDaValidade}
             ajuda={PAPEIS.dicaDaValidade}
           />
-          <div className="max-w-[40ch]">
+          <div className="max-w-[24rem]">
             <button type="submit" disabled={envio.enviando} className={BOTAO_PRINCIPAL_QUEBRA}>
               {envio.enviando ? COMUM_COMUNIDADE.enviando : PAPEIS.conceder}
             </button>

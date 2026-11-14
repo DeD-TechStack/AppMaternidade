@@ -45,7 +45,7 @@ function EstadoDaPagina({
   acao?: ReactNode
 }) {
   return (
-    <Pilha vao="grupo" className="max-w-leitura items-start" data-estado-da-pagina={dado} aria-busy={ocupado ? 'true' : undefined}>
+    <Pilha vao="grupo" className="max-w-[40rem] items-start" data-estado-da-pagina={dado} aria-busy={ocupado ? 'true' : undefined}>
       <p
         role={alerta ? 'alert' : 'status'}
         className={`m-0 w-full rounded-campo px-4 py-3 font-medium wrap-anywhere ${

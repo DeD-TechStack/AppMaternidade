@@ -1,14 +1,16 @@
 import { Link } from 'react-router'
 import { T } from '../../conteudo/desenvolvimento/textosLogada.ts'
 import { Etiqueta } from '../base/Etiqueta.tsx'
+import { Cartao } from '../base/layout/Cartao.tsx'
 import { Coluna, Colunas } from '../base/layout/Colunas.tsx'
 import { Pilha } from '../base/layout/Pilha.tsx'
 import { ArtigoDeConteudo } from './ArtigoDeConteudo.tsx'
 import { ABERTURA_DAS_IDEIAS, rotaDoItem, type ItemDeConteudo } from './itens.ts'
 
+// O link é a caixa inteira (a área clicável e o anel de foco); o `Cartao` dentro dele dá o padding e o raio.
+const LINK_DO_CARTAO = 'alvo-toque group block h-full rounded-cartao no-underline'
 const CARTAO =
-  'alvo-toque flex flex-col gap-1 rounded-cartao border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)] p-5 no-underline ' +
-  'hover:border-[var(--cor-texto)]'
+  'flex h-full flex-col gap-1 border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)] group-hover:border-[var(--cor-texto)]'
 
 const SEM_FASE_ATUAL: ReadonlySet<string> = new Set()
 
@@ -124,9 +126,11 @@ export function ParaLer({ artigos }: { artigos: readonly ItemDeConteudo[] }) {
         <Colunas role="list" fracoes="1fr 1fr" aPartirDe={1024}>
           {artigos.map((artigo) => (
             <Coluna as="li" key={artigo.id} className="list-none">
-              <Link to={rotaDoItem(artigo.id)} className={`${CARTAO} h-full`}>
-                <span className="cm-h4 text-titulo-4">{artigo.titulo}</span>
-                {artigo.resumo ? <span className="text-[var(--cor-texto-2)]">{artigo.resumo}</span> : null}
+              <Link to={rotaDoItem(artigo.id)} className={LINK_DO_CARTAO}>
+                <Cartao className={CARTAO}>
+                  <span className="cm-h4 text-titulo-4">{artigo.titulo}</span>
+                  {artigo.resumo ? <span className="text-[var(--cor-texto-2)]">{artigo.resumo}</span> : null}
+                </Cartao>
               </Link>
             </Coluna>
           ))}

@@ -6,6 +6,7 @@ import { lerAparelho } from '../../../dados/rotina.dia.ts'
 import { ALVO_APP } from '../../app/alvo.ts'
 import { Botao } from '../../base/Botao.tsx'
 import { Campo } from '../../base/Campo.tsx'
+import { Cartao } from '../../base/layout/Cartao.tsx'
 import { CHAVE } from './foco.ts'
 import { EnvioEmCurso } from './Mensagens.tsx'
 import { TEXTO_DO_ERRO_DE_CAMPO, rotuloDoDia, type EntradaDoPainel, type ErroDeCampo } from './regras.ts'
@@ -112,17 +113,18 @@ export function PainelDeRegistro({
   ) : null
 
   return (
+    <Cartao className="w-full border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)]">
     <form
       ref={formulario}
       noValidate
       data-painel-tummy={painel.tipo}
       onSubmit={aoEnviar}
-      className="flex w-full flex-col items-start gap-5 rounded-cartao border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)] p-5 lg:p-6"
+      className="flex w-full flex-col items-start gap-5"
     >
       {horario ? (
         <>
           {aparelho !== fusoDaFamilia ? <p className="cm-pequeno cm-texto-2 m-0 max-w-[65ch]">{avisoDeFuso(aparelho, fusoDaFamilia)}</p> : null}
-          <div className="grid w-full max-w-leitura grid-cols-2 gap-x-4 gap-y-4">
+          <div className="grid w-full max-w-[34rem] grid-cols-2 gap-x-4 gap-y-4">
             <div className="col-span-2">
               <fieldset disabled={travado} className="m-0 min-w-0 border-0 p-0">
                 <Campo
@@ -223,5 +225,6 @@ export function PainelDeRegistro({
 
       <EnvioEmCurso ativo={salvando} />
     </form>
+    </Cartao>
   )
 }

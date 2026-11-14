@@ -25,7 +25,7 @@ export function AvisoDeSaude() {
   return (
     <div
       role="note"
-      className="flex max-w-leitura flex-col items-start gap-1 rounded-campo border border-[var(--cor-fio-suave)] bg-[var(--cor-papel-fundo)] px-4 py-3"
+      className="flex max-w-[40rem] flex-col items-start gap-1 rounded-campo border border-[var(--cor-fio-suave)] bg-[var(--cor-papel-fundo)] px-4 py-3"
     >
       <p>{TX.tx02}</p>
       <LinkDeAjuda />
@@ -82,7 +82,7 @@ export function ResumoDeErro({ texto, rotuloDaAcao, aoAgir, refResumo }: ResumoP
 /** Quem não é escritor habilitado: o bloco que leva à entrada na comunidade, com o destino da ação. */
 export function ParaEntrar({ destino }: { destino: string }) {
   return (
-    <Pilha vao="grupo" className="max-w-leitura items-start">
+    <Pilha vao="grupo" className="max-w-[34rem] items-start">
       <p>{LISTA.paraPublicarFrase}</p>
       <Botao to={caminhoDeEntrada(destino)} tamanho="app">
         {LISTA.entrar}

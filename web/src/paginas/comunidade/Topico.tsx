@@ -357,12 +357,12 @@ function TopicoLido({ id }: { id: string }) {
           </Pilha>
           {topico.esqueleto ? <Esqueleto linhas={2} /> : null}
           {topico.estado.fase === 'erro' ? (
-            <div className="max-w-leitura">
+            <div className="max-w-[40rem]">
               <ErroDeLeitura erro={topico.estado.erro} aoTentarDeNovo={() => void topico.recarregar()} />
             </div>
           ) : null}
           {falha && falha !== topico && falha.estado.fase === 'erro' ? (
-            <div className="max-w-leitura">
+            <div className="max-w-[40rem]">
               <ErroDeLeitura
                 erro={falha.estado.erro}
                 aoTentarDeNovo={() => void (falha === situacao ? situacao.recarregar() : bloqueios.recarregar())}

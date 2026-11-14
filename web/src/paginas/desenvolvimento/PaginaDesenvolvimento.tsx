@@ -196,7 +196,7 @@ function ConteudoDoBebe({ contexto, aoPerderAcesso }: { contexto: Pronto; aoPerd
             // Fase de hoje (7 partes) e "Todas as fases" (5 partes), lado a lado a partir de 1024 px (o `lg` de antes).
             <Colunas fracoes="7fr 5fr" aPartirDe={1024} alinhar="inicio">
               <Cartao as="section" aria-labelledby="desenv-fase" dataH="coluna" className="cm-painel-mel rounded-painel" data-painel="mel">
-                <Pilha vao="grupo" className="max-w-leitura items-start">
+                <Pilha vao="grupo" className="max-w-[34rem] items-start">
                   <h2 id="desenv-fase" className="cm-h3 text-titulo-3" data-fase="">
                     {linhaFase}
                   </h2>

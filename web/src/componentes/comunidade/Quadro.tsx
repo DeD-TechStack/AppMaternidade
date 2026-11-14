@@ -48,7 +48,7 @@ export function Quadro({ voltar, ocupado = false, titulo, lide, cabeca, children
               <TopoDaTela voltar={voltar} />
               {titulo}
             </Pilha>
-            {lide ? <p className="cm-lide text-abertura max-w-leitura text-[var(--cor-texto-2)]">{lide}</p> : null}
+            {lide ? <p className="cm-lide text-abertura max-w-[40rem] text-[var(--cor-texto-2)]">{lide}</p> : null}
           </Pilha>
           {cabeca}
         </Pilha>

@@ -196,12 +196,12 @@ export function Painel({ titulo, comVoltar = true, exigeAdmin = false, children 
 
           {situacao.esqueleto ? <Esqueleto linhas={2} /> : null}
           {situacao.estado.fase === 'erro' ? (
-            <div className="max-w-leitura">
+            <div className="max-w-[40rem]">
               <ErroDeLeituraNoPainel erro={situacao.estado.erro} aoTentarDeNovo={() => void situacao.recarregar()} />
             </div>
           ) : null}
           {negado ? (
-            <div className="max-w-leitura">
+            <div className="max-w-[40rem]">
               <SemPermissao frasePerdida={perdeu === 'sem_papel' ? TEXTOS_ERRO_MODERACAO.sem_papel : null} />
             </div>
           ) : null}

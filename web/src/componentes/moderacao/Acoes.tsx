@@ -40,7 +40,7 @@ export function AcoesDoConteudo({ alvo, estadoAtual, autorId, denunciaId, aoFeit
   const origem = useRef<HTMLElement | null>(null)
 
   const doProprio = autorId !== null && autorId === painel.perfilId()
-  if (doProprio) return <p className="max-w-leitura font-medium">{TEXTOS_ERRO_MODERACAO.conflito_de_interesse}</p>
+  if (doProprio) return <p className="max-w-[40rem] font-medium">{TEXTOS_ERRO_MODERACAO.conflito_de_interesse}</p>
 
   return (
     <>

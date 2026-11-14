@@ -76,7 +76,7 @@ export function Historico({ encerradas, incompleta, vazio, fusoDaFamilia, agoraD
       )}
 
       {resumo.linhas.length > 0 ? (
-        <ul data-lista-do-dia="" className="m-0 flex max-w-leitura list-none flex-col gap-2 p-0">
+        <ul data-lista-do-dia="" className="m-0 flex max-w-[44rem] list-none flex-col gap-2 p-0">
           {resumo.linhas.map((linha) => (
             <li
               key={linha.id}
