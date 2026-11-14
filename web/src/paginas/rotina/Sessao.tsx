@@ -320,9 +320,9 @@ export function Sessao() {
   if (leitura.erro && !leitura.dados && !idInvalido) {
     return (
       <>
-        <main ref={principal} className="pb-24 text-[17px] leading-[25px] lg:pb-32" data-tela="sessao">
+        <main ref={principal} className="text-corpo" data-tela="sessao">
           <TituloRotina antes={VOLTAR_PARA_HOJE} titulo={TITULOS.sessao} linha={null} />
-          <div className="cm-area mt-5 max-w-[28rem]">
+          <div className="cm-area mt-5 max-w-md">
             <AvisoDeErro erro={leitura.erro} papel={ativo.papel} aoTentarDeNovo={leitura.recarregar} />
           </div>
           {pendencia ? <div className="cm-area mt-5">{avisoDaPendencia}</div> : null}
