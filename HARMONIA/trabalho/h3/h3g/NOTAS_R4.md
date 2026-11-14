@@ -13,6 +13,8 @@ Resultado final: `comparacao.json` com `lateral_novas: []`, pares da madrugada i
 ## TESTES_TROCADOS
 - `web/src/teste/publicasDestaque.test.tsx` (~603): o pino `white-space: nowrap` de `.pd-cartao-hora` passou a valer só fora do `@container` estreito, onde a regra é `normal`.
 
+- `web/src/teste/publicasDestaque.test.tsx` (~723): `grid-template-columns` do registro "Fizemos" de `auto minmax(0, 1fr)` para `fit-content(55%) minmax(0, 1fr)` (só o valor).
+
 ## PEDIDOS_COMUNS H-3a..d, f
 O lint é verde (as 17 exceções de `harmonia-excecoes.json` bastam); as linhas de H-3a..d e H-3f não exigiram exceção nova.
 

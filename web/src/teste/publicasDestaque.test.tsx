@@ -720,7 +720,7 @@ describe('polimento, volta 2', () => {
   it('o registro "Fizemos" ocupa o cartão: duas colunas (valor com o rótulo em cima, e o detalhe), na largura da cena', () => {
     const cartao = Object.assign({}, ...decl(/^\.pd-cartao-legenda \.pd-cartao$/)) as Record<string, string>
     expect(cartao.display).toBe('grid')
-    expect(cartao['grid-template-columns']).toBe('auto minmax(0, 1fr)')
+    expect(cartao['grid-template-columns']).toBe('fit-content(55%) minmax(0, 1fr)')
     const largura = decl(/^\.pd-cartao-legenda\.pd-cartao-plano$/).map((d) => d.width)
     expect(largura).toContain('min(400px, 100%)')
   })
