@@ -31,7 +31,7 @@ export function EscolhaDePapel({ legenda, valor, aoMudar }: Props) {
             onChange={() => aoMudar(papel)}
             aria-labelledby={`${grupo}-${papel}-nome`}
             aria-describedby={`${grupo}-${papel}-descricao`}
-            className="row-span-2 accent-[var(--cor-texto)]"
+            className="row-span-2 size-6 shrink-0 accent-[var(--cor-texto)]"
           />
           <span id={`${grupo}-${papel}-nome`} className="font-medium">
             {PAPEIS[papel].nome}

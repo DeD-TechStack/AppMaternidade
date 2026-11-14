@@ -121,7 +121,7 @@ export function DialogoDenunciar({ alvo, titulo, autor, origem, aoFechar, aoBloq
                   setMotivo(opcao)
                   envio.limpar()
                 }}
-                className="size-5 shrink-0 accent-[var(--cor-texto)]"
+                className="size-6 shrink-0 accent-[var(--cor-texto)]"
               />
               <span>{ROTULO_MOTIVO[opcao]}</span>
             </label>

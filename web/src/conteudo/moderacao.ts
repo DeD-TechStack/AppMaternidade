@@ -98,6 +98,11 @@ export const FILA = {
   todosOsMotivos: 'Todos',
   carregarMais: 'Carregar mais',
   lista: 'Denúncias na fila',
+  // O anúncio do resultado filtrado (A11Y-016); sem resultado, a frase é a TX-13.
+  contagem: (quantas: number, haMais: boolean) =>
+    haMais
+      ? `${quantas} ${quantas === 1 ? 'denúncia carregada' : 'denúncias carregadas'}; há mais.`
+      : `${quantas} ${quantas === 1 ? 'denúncia' : 'denúncias'}`,
   em: (data: string) => `em ${data}`,
   abrir: (motivo: string) => `Abrir a denúncia de ${motivo}`,
   estados: ROTULO_ESTADO_DENUNCIA,
