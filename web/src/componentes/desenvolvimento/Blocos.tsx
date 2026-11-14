@@ -1,12 +1,16 @@
 import { Link } from 'react-router'
 import { T } from '../../conteudo/desenvolvimento/textosLogada.ts'
 import { Etiqueta } from '../base/Etiqueta.tsx'
+import { Cartao } from '../base/layout/Cartao.tsx'
+import { Coluna, Colunas } from '../base/layout/Colunas.tsx'
+import { Pilha } from '../base/layout/Pilha.tsx'
 import { ArtigoDeConteudo } from './ArtigoDeConteudo.tsx'
 import { ABERTURA_DAS_IDEIAS, rotaDoItem, type ItemDeConteudo } from './itens.ts'
 
+// O link é a caixa inteira (a área clicável e o anel de foco); o `Cartao` dentro dele dá o padding e o raio.
+const LINK_DO_CARTAO = 'alvo-toque group block h-full rounded-cartao no-underline'
 const CARTAO =
-  'alvo-toque flex flex-col gap-1 rounded-cartao border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)] p-5 no-underline ' +
-  'hover:border-[var(--cor-texto)]'
+  'flex h-full flex-col gap-1 border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)] group-hover:border-[var(--cor-texto)]'
 
 const SEM_FASE_ATUAL: ReadonlySet<string> = new Set()
 
@@ -34,8 +38,8 @@ export function TodasAsFases({
   atuais?: ReadonlySet<string>
 }) {
   return (
-    <section aria-labelledby="desenv-todas-as-fases" data-todas-as-fases="" className="flex flex-col gap-3">
-      <h2 id="desenv-todas-as-fases" className="cm-h4">
+    <Pilha as="section" vao="grupo" aria-labelledby="desenv-todas-as-fases" data-todas-as-fases="">
+      <h2 id="desenv-todas-as-fases" className="cm-h4 text-titulo-4">
         {T.todasAsFases}
       </h2>
       {fases.length === 0 ? (
@@ -56,7 +60,7 @@ export function TodasAsFases({
           ))}
         </ul>
       )}
-    </section>
+    </Pilha>
   )
 }
 
@@ -76,13 +80,13 @@ export function IdeiasDaFase({
   nascimentoDepoisDeHoje?: boolean
 }) {
   return (
-    <section id="ideias" aria-labelledby="desenv-ideias" data-ideias="" className="scroll-mt-6 flex flex-col gap-6">
-      <div className="flex flex-col gap-2">
-        <h2 id="desenv-ideias" className="cm-h3">
+    <Pilha as="section" vao="grupo" id="ideias" aria-labelledby="desenv-ideias" data-ideias="" className="scroll-mt-6">
+      <Pilha vao="pilha">
+        <h2 id="desenv-ideias" className="cm-h3 text-titulo-3">
           {T.ideias}
         </h2>
         {comAbertura ? <p className="m-0 max-w-[65ch] text-[var(--cor-texto-2)]">{ABERTURA_DAS_IDEIAS}</p> : null}
-      </div>
+      </Pilha>
       {nascimentoDepoisDeHoje ? (
         <p
           role="status"
@@ -95,37 +99,43 @@ export function IdeiasDaFase({
       {itens.length === 0 ? (
         <EmRevisao />
       ) : (
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-start lg:gap-x-12">
+        // Os itens em duas colunas a partir de 1024 px (o `lg` de antes); abaixo, empilhados.
+        <Colunas fracoes="1fr 1fr" aPartirDe={1024} alinhar="inicio">
           {itens.map((item) => (
-            <ArtigoDeConteudo key={item.id} item={item} nivel="secao" />
+            <Coluna key={item.id}>
+              <ArtigoDeConteudo item={item} nivel="secao" />
+            </Coluna>
           ))}
-        </div>
+        </Colunas>
       )}
-    </section>
+    </Pilha>
   )
 }
 
 /** "Para ler" (T-02): os artigos (tummy time e marcos), um cartão de link com o resumo de cada um. */
 export function ParaLer({ artigos }: { artigos: readonly ItemDeConteudo[] }) {
   return (
-    <section aria-labelledby="desenv-para-ler" data-para-ler="" className="flex flex-col gap-4">
-      <h2 id="desenv-para-ler" className="cm-h3">
+    <Pilha as="section" vao="grupo" aria-labelledby="desenv-para-ler" data-para-ler="">
+      <h2 id="desenv-para-ler" className="cm-h3 text-titulo-3">
         {T.paraLer}
       </h2>
       {artigos.length === 0 ? (
         <EmRevisao />
       ) : (
-        <ul className="m-0 grid list-none grid-cols-1 gap-3 p-0 lg:grid-cols-2">
+        // Os cartões em duas colunas a partir de 1024 px (o `lg` de antes); abaixo, empilhados.
+        <Colunas role="list" fracoes="1fr 1fr" aPartirDe={1024}>
           {artigos.map((artigo) => (
-            <li key={artigo.id}>
-              <Link to={rotaDoItem(artigo.id)} className={`${CARTAO} h-full`}>
-                <span className="cm-h4">{artigo.titulo}</span>
-                {artigo.resumo ? <span className="text-[var(--cor-texto-2)]">{artigo.resumo}</span> : null}
+            <Coluna as="li" key={artigo.id} className="list-none">
+              <Link to={rotaDoItem(artigo.id)} className={LINK_DO_CARTAO}>
+                <Cartao className={CARTAO}>
+                  <span className="cm-h4 text-titulo-4">{artigo.titulo}</span>
+                  {artigo.resumo ? <span className="text-[var(--cor-texto-2)]">{artigo.resumo}</span> : null}
+                </Cartao>
               </Link>
-            </li>
+            </Coluna>
           ))}
-        </ul>
+        </Colunas>
       )}
-    </section>
+    </Pilha>
   )
 }

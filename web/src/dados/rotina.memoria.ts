@@ -1,5 +1,6 @@
 import { dataNoFuso, fusoValido, type ErroDados, type Resultado } from './comum.ts'
 import type { DadosConta } from './conta.ts'
+import { registrarFonteDeExportacao } from './conta.memoria.ts'
 import { lerAparelho, type Aparelho } from './rotina.dia.ts'
 import { classificarErroRotina, erroRotinaDaChave, type ChaveErroRotina } from './rotina.erros.ts'
 import { ehUuidV7 } from './rotina.uuid.ts'
@@ -134,6 +135,8 @@ export function criarDadosRotinaMemoria(conta: DadosConta, fixture: FixtureRotin
   const registros: Registro[] = fixture.registros.map(copiarRegistro)
   const notas: Nota[] = fixture.notas.map(copiarNota)
   const alteracoes: Alteracao[] = []
+  // A exportação da conta (RF-13) lê os registros e as notas daqui, pelo objeto da conta.
+  registrarFonteDeExportacao(conta, { registros: () => registros, notas: () => notas })
   let sequencia = 0
   const controle: Controle = { falhas: new Map(), perdidas: new Map() }
 

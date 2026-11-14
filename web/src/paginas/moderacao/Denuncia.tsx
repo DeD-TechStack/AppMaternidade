@@ -1,14 +1,18 @@
 import { useRef, useState, type ReactNode } from 'react'
 import { useParams } from 'react-router'
 import { Etiqueta } from '../../componentes/base/Etiqueta.tsx'
+import { Cartao } from '../../componentes/base/layout/Cartao.tsx'
+import { Pilha } from '../../componentes/base/layout/Pilha.tsx'
 import { Esqueleto } from '../../componentes/comunidade/Avisos.tsx'
 import { useDadosComunidade } from '../../componentes/comunidade/dados.ts'
+import { Faixa } from '../../componentes/comunidade/Faixa.tsx'
 import { useFocoPendente } from '../../componentes/comunidade/foco.ts'
 import { Texto } from '../../componentes/comunidade/Itens.tsx'
 import { Status } from '../../componentes/comunidade/Status.tsx'
 import { useLeitura } from '../../componentes/comunidade/useLeitura.ts'
 import { AcoesDaDecisao, AcoesDoConteudo, type AcaoFeita } from '../../componentes/moderacao/Acoes.tsx'
 import { ErroDeLeituraNoPainel, NaoEncontradoNoPainel } from '../../componentes/moderacao/Avisos.tsx'
+import { Bloco } from '../../componentes/moderacao/Bloco.tsx'
 import { CARTAO, CartaoDoConteudo, CartaoDoPerfil, HistoricoDoPerfilVista } from '../../componentes/moderacao/Conteudo.tsx'
 import { usePainel } from '../../componentes/moderacao/contexto.ts'
 import { useDadosModeracao } from '../../componentes/moderacao/dados.ts'
@@ -64,15 +68,25 @@ function DenunciaLida({ id }: { id: string }) {
 
   const aoErro = () => void leitura.reler()
 
-  return (
-    <div className="flex flex-col gap-8" aria-busy={leitura.estado.fase === 'carregando' || undefined}>
+  const ocupado = leitura.estado.fase === 'carregando' || undefined
+  // O estado da leitura (confirmação, esqueleto, erro, "não encontrado") vai no alto da primeira seção.
+  const topo = (
+    <>
       <Status mensagem={status} refStatus={refStatus} />
       {leitura.esqueleto && mantida === null ? <Esqueleto linhas={3} /> : null}
       {erroDaLeitura}
       {leitura.estado.fase === 'pronto' && lida === null ? <NaoEncontradoNoPainel /> : null}
-      {lida ? <Corpo lida={lida} aoFeito={aoFeito} aoErro={aoErro} avisoDeLeitura={erroDaLeitura} /> : null}
-    </div>
+    </>
   )
+
+  if (!lida) {
+    return (
+      <Faixa aria-busy={ocupado}>
+        <Pilha vao="grupo">{topo}</Pilha>
+      </Faixa>
+    )
+  }
+  return <Corpo lida={lida} aoFeito={aoFeito} aoErro={aoErro} avisoDeLeitura={erroDaLeitura} topo={topo} ocupado={ocupado} />
 }
 
 interface CorpoProps {
@@ -81,9 +95,12 @@ interface CorpoProps {
   aoErro: () => void
   /** O erro da releitura, repetido dentro das caixas de ação (a caixa modal deixa a tela atrás dela inerte). */
   avisoDeLeitura: ReactNode
+  /** O estado da leitura, no alto da primeira seção. */
+  topo: ReactNode
+  ocupado?: true
 }
 
-function Corpo({ lida, aoFeito, aoErro, avisoDeLeitura }: CorpoProps) {
+function Corpo({ lida, aoFeito, aoErro, avisoDeLeitura, topo, ocupado }: CorpoProps) {
   const painel = usePainel()
   const { denuncia, conteudo, perfil } = lida
   const final = denuncia.estado === 'procedente' || denuncia.estado === 'improcedente'
@@ -92,11 +109,8 @@ function Corpo({ lida, aoFeito, aoErro, avisoDeLeitura }: CorpoProps) {
 
   return (
     <>
-      <section aria-labelledby="sec-denuncia" className="flex flex-col gap-3">
-        <h2 id="sec-denuncia" className="cm-h4">
-          {DENUNCIA.secaoDenuncia}
-        </h2>
-        <div className={CARTAO}>
+      <Bloco id="sec-denuncia" titulo={DENUNCIA.secaoDenuncia} topo={topo} ocupado={ocupado}>
+        <Cartao className={CARTAO}>
           <p className={`flex flex-wrap items-center gap-x-3 gap-y-1 ${ETIQUETAS_QUEBRAM}`}>
             <Etiqueta>{FILA.prioridade(prioridadeDoMotivo(denuncia.motivo))}</Etiqueta>
             <span className="font-semibold">{ROTULO_MOTIVO[denuncia.motivo]}</span>
@@ -108,13 +122,10 @@ function Corpo({ lida, aoFeito, aoErro, avisoDeLeitura }: CorpoProps) {
               {DENUNCIA.enviadaEm(formatarDataHora(denuncia.criadaEm))}
             </time>
           </p>
-        </div>
-      </section>
+        </Cartao>
+      </Bloco>
 
-      <section aria-labelledby="sec-alvo" className="flex flex-col gap-3">
-        <h2 id="sec-alvo" className="cm-h4">
-          {DENUNCIA.secaoAlvo}
-        </h2>
+      <Bloco id="sec-alvo" titulo={DENUNCIA.secaoAlvo}>
         {conteudo ? (
           <CartaoDoConteudo lido={conteudo.lido} autor={conteudo.autor} comLink idDoTitulo={ID_DO_TITULO_DO_ALVO} />
         ) : null}
@@ -123,22 +134,16 @@ function Corpo({ lida, aoFeito, aoErro, avisoDeLeitura }: CorpoProps) {
         {!conteudo && (perfil === null || perfil.autor === null) && denuncia.topicoId === null && denuncia.respostaId === null ? (
           <p>{TX.tx28}</p>
         ) : null}
-      </section>
+      </Bloco>
 
       {conteudo ? (
-        <section aria-labelledby="sec-autor" className="flex flex-col gap-3">
-          <h2 id="sec-autor" className="cm-h4">
-            {DENUNCIA.secaoPerfil}
-          </h2>
+        <Bloco id="sec-autor" titulo={DENUNCIA.secaoPerfil}>
           {conteudo.autor ? <CartaoDoPerfil perfil={conteudo.autor} /> : <p>{COMUM_MODERACAO.pessoaRemovida}</p>}
-        </section>
+        </Bloco>
       ) : null}
 
       {conteudo ? (
-        <section aria-labelledby="sec-acoes-conteudo" className="flex flex-col gap-3">
-          <h2 id="sec-acoes-conteudo" className="cm-h4">
-            {DENUNCIA.acoesDoConteudo}
-          </h2>
+        <Bloco id="sec-acoes-conteudo" titulo={DENUNCIA.acoesDoConteudo}>
           <AcoesDoConteudo
             alvo={{ tipo: conteudo.lido.tipo, id: idDoConteudo(conteudo.lido) }}
             estadoAtual={estadoDoConteudo(conteudo.lido)}
@@ -148,13 +153,10 @@ function Corpo({ lida, aoFeito, aoErro, avisoDeLeitura }: CorpoProps) {
             aoErro={aoErro}
             avisoDeLeitura={avisoDeLeitura}
           />
-        </section>
+        </Bloco>
       ) : null}
 
-      <section aria-labelledby="sec-decisao" className="flex flex-col gap-3">
-        <h2 id="sec-decisao" className="cm-h4">
-          {DENUNCIA.acoesDaDenuncia}
-        </h2>
+      <Bloco id="sec-decisao" titulo={DENUNCIA.acoesDaDenuncia}>
         {final ? (
           <p className="font-medium">{denuncia.decididaEm ? DENUNCIA.decididaEm(formatarDataHora(denuncia.decididaEm)) : null}</p>
         ) : (
@@ -166,15 +168,12 @@ function Corpo({ lida, aoFeito, aoErro, avisoDeLeitura }: CorpoProps) {
             avisoDeLeitura={avisoDeLeitura}
           />
         )}
-      </section>
+      </Bloco>
 
       {historico ? (
-        <section aria-labelledby="sec-historico" className="flex flex-col gap-3">
-          <h2 id="sec-historico" className="cm-h4">
-            {DENUNCIA.secaoHistorico}
-          </h2>
+        <Bloco id="sec-historico" titulo={DENUNCIA.secaoHistorico}>
           <HistoricoDoPerfilVista historico={historico} semOId={semOId} contaId={painel.contaId} />
-        </section>
+        </Bloco>
       ) : null}
     </>
   )
@@ -185,6 +184,14 @@ function Corpo({ lida, aoFeito, aoErro, avisoDeLeitura }: CorpoProps) {
 export function DenunciaNoPainel() {
   const { id } = useParams()
   return (
-    <Painel titulo={NOMES_DAS_TELAS.denuncia}>{ehUuid(id) ? <DenunciaLida key={id} id={id} /> : <NaoEncontradoNoPainel />}</Painel>
+    <Painel titulo={NOMES_DAS_TELAS.denuncia}>
+      {ehUuid(id) ? (
+        <DenunciaLida key={id} id={id} />
+      ) : (
+        <Faixa>
+          <NaoEncontradoNoPainel />
+        </Faixa>
+      )}
+    </Painel>
   )
 }

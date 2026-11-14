@@ -1,7 +1,8 @@
 import { useId } from 'react'
 import { Botao } from '../base/Botao.tsx'
+import { Pilha } from '../base/layout/Pilha.tsx'
+import { Secao } from '../base/layout/Secao.tsx'
 import { Ilustracao } from '../campo/Ilustracao.tsx'
-import { PainelCampo } from '../campo/PainelCampo.tsx'
 import { Titulo } from '../campo/Titulo.tsx'
 import { INICIO } from '../../conteudo/textos.ts'
 import './inicio.css'
@@ -18,12 +19,20 @@ export function Fechamento() {
   const { titulo, primario } = INICIO.fechamento
 
   return (
-    <PainelCampo variante="cacau" como="section" aria-labelledby={id} className="in-fechamento">
+    <Secao
+      variante="painel"
+      painel="cacau"
+      aria-labelledby={id}
+      className="in-fechamento"
+      classeCaixa="in-fechamento-caixa"
+    >
       <span className="in-fechamento-disco">
         <Ilustracao nome="tummy-time" className="in-fechamento-arte" carregamento="eager" />
       </span>
-      <Titulo nivel="h2" id={id} linhas={titulo} />
-      <Botao to={primario.destino}>{primario.rotulo}</Botao>
-    </PainelCampo>
+      <Pilha vao="grupo" className="in-fechamento-conteudo">
+        <Titulo nivel="h2" id={id} linhas={titulo} />
+        <Botao to={primario.destino}>{primario.rotulo}</Botao>
+      </Pilha>
+    </Secao>
   )
 }

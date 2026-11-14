@@ -1,6 +1,5 @@
 import { act, configure, fireEvent, renderHook, screen, waitFor, within } from '@testing-library/react'
 import type { ReactNode } from 'react'
-import axe from 'axe-core'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { proximoPasso } from '../../componentes/desenvolvimento/tummy/regras.ts'
 import { TT } from '../../conteudo/desenvolvimento/textosTummy.ts'
@@ -12,6 +11,8 @@ import type { FixtureRotina } from '../../dados/rotina.memoria.ts'
 import { simularFalhaRotina, simularRespostaPerdidaRotina } from '../../dados/rotina.memoria.ts'
 import { OPERACOES_ROTINA, type DadosRotina, type OperacaoRotina, type Registro } from '../../dados/rotina.tipos.ts'
 import { ehUuidV7 } from '../../dados/rotina.uuid.ts'
+import { rodarAxe } from '../../teste/axe.ts'
+import { relogioDoTeste } from '../../teste/relogio.ts'
 import { PESSOAS } from '../../teste/renderizarComDados.tsx'
 import { aguardarCarga, renderizarRota } from '../../teste/renderizarRota.tsx'
 import {
@@ -39,6 +40,7 @@ const TEO = { id: 'b7777777-7777-4777-8777-777777777777', nome: 'Teo', nasciment
 function relogioEm(data: Date = HOJE) {
   vi.useFakeTimers({ toFake: ['Date'] })
   vi.setSystemTime(data)
+  return relogioDoTeste()
 }
 
 /** `hora:minuto` do dia de hoje mais `dias`, no relógio local. */
@@ -186,7 +188,7 @@ afterEach(() => {
 // ---------------------------------------------------------------------------------------------------------------
 describe('DES-13 12: as ações', () => {
   it('Iniciar e, depois, Encerrar aos 4 min 35 s: cronômetro 04:35, T-17, resumo de hoje com 1 sessão e o foco no Iniciar', async () => {
-    relogioEm()
+    const mudarRelogio = relogioEm()
     const m = mundo()
     await abrir(m)
     expect(textoDoBloco()).toContain('Nenhum tummy time nos últimos 7 dias.')
@@ -196,7 +198,7 @@ describe('DES-13 12: as ações', () => {
     expect(talvezBotao(/^Iniciar tummy time/)).toBeNull()
     await waitFor(() => expect(document.activeElement).toBe(botao('Encerrar tummy time de Heloísa')))
 
-    vi.setSystemTime(new Date(HOJE.getTime() + 4 * MINUTO + 35_000))
+    mudarRelogio(new Date(HOJE.getTime() + 4 * MINUTO + 35_000))
     await waitFor(() => expect(within(bloco()).getByRole('timer').textContent).toBe('04:35'), { timeout: 3000 })
 
     await clicar(botao('Encerrar tummy time de Heloísa'))
@@ -233,14 +235,14 @@ describe('DES-13 12: as ações', () => {
   })
 
   it('"Fizemos agora" sem duração grava só o instante: sem duração', async () => {
-    relogioEm()
+    const mudarRelogio = relogioEm()
     await abrir(mundo())
     await abrirAgora()
     await salvar()
     expect(within(bloco()).getByText('Tummy time registrado.')).toBeTruthy()
     // Com o relógio parado, a sessão de zero minutos começa no próprio instante `ate` da leitura, que fica de fora
     // da janela `[de, ate)`. Alguns segundos depois a leitura a traz.
-    vi.setSystemTime(new Date(HOJE.getTime() + 5000))
+    mudarRelogio(new Date(HOJE.getTime() + 5000))
     await act(async () => {
       document.dispatchEvent(new Event('visibilitychange'))
     })
@@ -1049,7 +1051,7 @@ describe('DES-13 16: a integração com a DadosRotina (na tela)', () => {
 // ---------------------------------------------------------------------------------------------------------------
 async function violacoes(container: HTMLElement): Promise<string[]> {
   // O jsdom não calcula cor nem layout: o contraste é conferido nas capturas. `region` não vale fora da casca.
-  const resultado = await axe.run(container, { rules: { 'color-contrast': { enabled: false }, region: { enabled: false } } })
+  const resultado = await rodarAxe(container, { rules: { 'color-contrast': { enabled: false }, region: { enabled: false } } })
   return resultado.violations.map((v) => `${v.id}: ${v.help} (${v.nodes.map((n) => n.html).join(' | ')})`)
 }
 

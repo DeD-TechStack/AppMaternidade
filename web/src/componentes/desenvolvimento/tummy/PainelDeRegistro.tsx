@@ -6,6 +6,7 @@ import { lerAparelho } from '../../../dados/rotina.dia.ts'
 import { ALVO_APP } from '../../app/alvo.ts'
 import { Botao } from '../../base/Botao.tsx'
 import { Campo } from '../../base/Campo.tsx'
+import { Cartao } from '../../base/layout/Cartao.tsx'
 import { CHAVE } from './foco.ts'
 import { EnvioEmCurso } from './Mensagens.tsx'
 import { TEXTO_DO_ERRO_DE_CAMPO, rotuloDoDia, type EntradaDoPainel, type ErroDeCampo } from './regras.ts'
@@ -112,12 +113,13 @@ export function PainelDeRegistro({
   ) : null
 
   return (
+    <Cartao className="w-full border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)]">
     <form
       ref={formulario}
       noValidate
       data-painel-tummy={painel.tipo}
       onSubmit={aoEnviar}
-      className="flex w-full flex-col items-start gap-5 rounded-cartao border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)] p-5 lg:p-6"
+      className="flex w-full flex-col items-start gap-5"
     >
       {horario ? (
         <>
@@ -223,5 +225,6 @@ export function PainelDeRegistro({
 
       <EnvioEmCurso ativo={salvando} />
     </form>
+    </Cartao>
   )
 }

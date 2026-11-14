@@ -1,12 +1,12 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
-import axe from 'axe-core'
 import { describe, expect, it } from 'vitest'
 import { ENTRAR_NA_COMUNIDADE, TOPICO, TX } from '../../conteudo/comunidade.ts'
 import { CONTEUDO, ELENCO, criarElenco, type PessoaDoElenco } from '../../dados/comunidade.elenco.ts'
 import { criarDadosComunidadeMemoria, simularFalha } from '../../dados/comunidade.memoria.ts'
 import { criarDadosContaMemoria } from '../../dados/conta.memoria.ts'
+import { rodarAxe } from '../../teste/axe.ts'
 import { criarFixtureDeTeste } from '../../teste/renderizarComDados.tsx'
-import { fixtureDeContasDoElenco, renderizarComunidade } from './apoio.tsx'
+import { comObrigatorio, fixtureDeContasDoElenco, renderizarComunidade } from './apoio.tsx'
 
 // MAT-40, teste 9: axe-core em cada tela, em cada estado, nos dois temas e com os diálogos abertos, com as
 // regras do `acessibilidade.test.tsx` da base (o contraste fica de fora: o jsdom não calcula cor).
@@ -14,7 +14,7 @@ import { fixtureDeContasDoElenco, renderizarComunidade } from './apoio.tsx'
 process.env.DEBUG_PRINT_LIMIT = '300'
 
 async function violacoes(container: HTMLElement): Promise<string[]> {
-  const resultado = await axe.run(container, { rules: { 'color-contrast': { enabled: false } } })
+  const resultado = await rodarAxe(container, { rules: { 'color-contrast': { enabled: false } } })
   return resultado.violations.map((v) => `${v.id}: ${v.help} (${v.nodes.map((n) => n.html.slice(0, 160)).join(' | ')})`)
 }
 
@@ -54,7 +54,7 @@ function cena(pessoa: PessoaDoElenco, caminho: string, tema: 'claro' | 'madrugad
 
 const semOcupado = () => waitFor(() => expect(document.querySelector('[aria-busy="true"]')).toBeNull())
 const botao = (nome: string | RegExp) => screen.getByRole('button', { name: nome }) as HTMLButtonElement
-const campo = (rotulo: string | RegExp) => screen.getByLabelText(rotulo) as HTMLInputElement | HTMLTextAreaElement
+const campo = (rotulo: string | RegExp) => screen.getByLabelText(comObrigatorio(rotulo)) as HTMLInputElement | HTMLTextAreaElement
 const digitar = (rotulo: string | RegExp, texto: string) => fireEvent.change(campo(rotulo), { target: { value: texto } })
 
 type Ajuste = (estado: ReturnType<typeof criarElenco>) => void
@@ -133,7 +133,7 @@ for (const tema of ['claro', 'madrugada'] as const) {
 
     it('o formulário de tópico: com erro de limite e com a prévia, sem violações', async () => {
       const { container } = cena('outro', '/app/comunidade/sono/novo', tema)
-      await screen.findByLabelText('Título')
+      await screen.findByLabelText(comObrigatorio('Título'))
       digitar('Título', 'ab')
       digitar('Texto do tópico', 'x')
       expect(await violacoes(container)).toEqual([])

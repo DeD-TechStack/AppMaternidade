@@ -1,6 +1,7 @@
 import { useLocation, useParams } from 'react-router'
 import { ErroDeLeitura, Esqueleto, NaoEncontrado, ParaEntrar } from '../../componentes/comunidade/Avisos.tsx'
 import { useDadosComunidade } from '../../componentes/comunidade/dados.ts'
+import { Faixa } from '../../componentes/comunidade/Faixa.tsx'
 import { FormularioDeTopico } from '../../componentes/comunidade/FormularioDeTopico.tsx'
 import { Quadro, TituloDaTela } from '../../componentes/comunidade/Quadro.tsx'
 import { ehEscritor, useSituacao } from '../../componentes/comunidade/situacao.ts'
@@ -22,22 +23,26 @@ export function NovoTopico() {
     <Quadro
       voltar={espaco ? `/app/comunidade/${espaco.slug}` : '/app/comunidade'}
       ocupado={espacos.estado.fase === 'carregando' || situacao.estado.fase === 'carregando'}
+      titulo={<TituloDaTela>{FORMULARIO_TOPICO.tituloNovo}</TituloDaTela>}
+      cabeca={
+        <>
+          <Status mensagem={textoDaPassagemComunidade(location.state)} />
+          {espacos.esqueleto || situacao.esqueleto ? <Esqueleto linhas={2} /> : null}
+          {espacos.estado.fase === 'erro' ? (
+            <ErroDeLeitura erro={espacos.estado.erro} aoTentarDeNovo={() => void espacos.recarregar()} />
+          ) : null}
+          {situacao.estado.fase === 'erro' ? (
+            <ErroDeLeitura erro={situacao.estado.erro} aoTentarDeNovo={() => void situacao.recarregar()} />
+          ) : null}
+          {espacos.estado.fase === 'pronto' && !espaco ? <NaoEncontrado /> : null}
+          {espaco && lida && !ehEscritor(lida) ? <ParaEntrar destino={`/app/comunidade/${espaco.slug}/novo`} /> : null}
+        </>
+      }
     >
-      <TituloDaTela>{FORMULARIO_TOPICO.tituloNovo}</TituloDaTela>
-      <div className="mt-6">
-        <Status mensagem={textoDaPassagemComunidade(location.state)} />
-      </div>
-      <div className="mt-6">{espacos.esqueleto || situacao.esqueleto ? <Esqueleto linhas={2} /> : null}</div>
-      {espacos.estado.fase === 'erro' ? (
-        <ErroDeLeitura erro={espacos.estado.erro} aoTentarDeNovo={() => void espacos.recarregar()} />
-      ) : null}
-      {situacao.estado.fase === 'erro' ? (
-        <ErroDeLeitura erro={situacao.estado.erro} aoTentarDeNovo={() => void situacao.recarregar()} />
-      ) : null}
-      {espacos.estado.fase === 'pronto' && !espaco ? <NaoEncontrado /> : null}
-      {espaco && lida && !ehEscritor(lida) ? <ParaEntrar destino={`/app/comunidade/${espaco.slug}/novo`} /> : null}
       {espaco && lida && ehEscritor(lida) && lida.perfilId ? (
-        <FormularioDeTopico key={espaco.id} espaco={espaco} perfilId={lida.perfilId} edicao={null} />
+        <Faixa>
+          <FormularioDeTopico key={espaco.id} espaco={espaco} perfilId={lida.perfilId} edicao={null} />
+        </Faixa>
       ) : null}
     </Quadro>
   )

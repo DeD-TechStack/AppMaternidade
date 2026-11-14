@@ -1,5 +1,4 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
-import axe from 'axe-core'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ROTULO_MOTIVO } from '../../conteudo/comunidade.ts'
 import { ACAO_NO_CONTEUDO, DECISAO, MFA, PAPEIS } from '../../conteudo/moderacao.ts'
@@ -7,6 +6,7 @@ import { CONTEUDO, ELENCO, criarElenco, type PessoaDoElenco } from '../../dados/
 import { criarDadosComunidadeMemoria, type EstadoComunidade } from '../../dados/comunidade.memoria.ts'
 import { criarDadosContaMemoria } from '../../dados/conta.memoria.ts'
 import { criarDadosModeracaoMemoria, simularFalhaModeracao } from '../../dados/moderacao.memoria.ts'
+import { rodarAxe } from '../../teste/axe.ts'
 import { criarFixtureDeTeste } from '../../teste/renderizarComDados.tsx'
 import { fixtureDeContasDoElenco, renderizarModeracao } from './apoio.tsx'
 
@@ -31,7 +31,7 @@ afterEach(() => {
 })
 
 async function violacoes(container: HTMLElement): Promise<string[]> {
-  const resultado = await axe.run(container, { rules: { 'color-contrast': { enabled: false } } })
+  const resultado = await rodarAxe(container, { rules: { 'color-contrast': { enabled: false } } })
   return resultado.violations.map((v) => `${v.id}: ${v.help} (${v.nodes.map((n) => n.html.slice(0, 160)).join(' | ')})`)
 }
 
