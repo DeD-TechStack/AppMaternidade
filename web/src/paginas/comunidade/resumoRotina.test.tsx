@@ -54,24 +54,24 @@ const ID_DO_ESPACO_SONO = '47000000-0000-4000-8000-0000000000e1'
 const TOPICO_DA_JULIANA = '47000000-0000-4000-8000-000000000021'
 const RESPOSTA_DA_JULIANA = '47000000-0000-4000-8000-000000000099'
 
-async function cena(caminho: string, opcoes: OpcoesMundo & { registros?: Reg[] } = {}) {
+async function cena(caminho: string, opcoes: OpcoesMundo & { registros?: Reg[]; strict?: boolean } = {}) {
   vi.useFakeTimers({ toFake: ['Date'] })
   vi.setSystemTime(new Date(2026, 10, 14, 12, 0))
-  const { registros, ...doMundo } = opcoes
+  const { registros, strict, ...doMundo } = opcoes
   const mundo = criarMundoDeTeste({ ...doMundo, ...(registros ? { ajustarRotina: comRegistros(registros) } : {}) })
   const adiada = adiarRotina(mundo.rotina)
   const comunidade = criarComunidadeDeTeste(PESSOAS.juliana.id)
   // Uma resposta da própria Juliana no tópico dela, para a edição de resposta.
   const dela = comunidade.estado.perfis.find((perfil) => perfil.contaId === PESSOAS.juliana.id)!
   comunidade.estado.respostas.push({ ...comunidade.estado.respostas[0], id: RESPOSTA_DA_JULIANA, topicoId: TOPICO_DA_JULIANA, autorId: dela.id, corpo: 'Minha resposta antiga', respostaA: null })
-  const tela = renderizarRota(caminho, { mundo: { ...mundo, rotina: adiada.dados }, comunidade: comunidade.dados })
+  const tela = renderizarRota(caminho, { mundo: { ...mundo, rotina: adiada.dados }, comunidade: comunidade.dados, strict })
   await screen.findByRole('heading', { level: 1 })
   await aguardarCarga()
   return { tela, mundo, adiada, comunidade }
 }
 
-const novoTopico = () => cena('/app/comunidade/sono/novo', { registros: HOJE })
-const paginaDoTopico = () => cena(`/app/comunidade/topico/${TOPICO_DA_JULIANA}`, { registros: HOJE })
+const novoTopico = (strict = false) => cena('/app/comunidade/sono/novo', { registros: HOJE, strict })
+const paginaDoTopico = (strict = false) => cena(`/app/comunidade/topico/${TOPICO_DA_JULIANA}`, { registros: HOJE, strict })
 
 const botaoDoResumo = () => screen.getByRole('button', { name: 'Incluir resumo da rotina' })
 const semBotao = () => screen.queryByRole('button', { name: 'Incluir resumo da rotina' })
@@ -338,5 +338,58 @@ describe('compositor: as leituras da rotina (RN-03)', () => {
     await aguardarCaixas().catch(() => undefined)
     await waitFor(() => expect(adiada.contagem('doDia')).toBe(1))
     expect(contagens(adiada)).toMatchObject({ contexto: 2, doDia: 1, sessoes: 1 })
+  })
+
+  // StrictMode é o que o `main.tsx` liga em desenvolvimento: o efeito do painel roda, limpa e roda de novo.
+  it('compositor: em StrictMode, tópico novo e resposta nova, um clique faz 1 contexto e 1 conjunto de números, e o painel chega às escolhas', async () => {
+    for (const abrirPagina of [() => novoTopico(true), () => paginaDoTopico(true)]) {
+      const { adiada, tela } = await abrirPagina()
+      expect(contagens(adiada)).toEqual({ contexto: 0, doDia: 0, doIntervalo: 0, sessoes: 0 })
+      fireEvent.click(botaoDoResumo())
+      await aguardarCaixas()
+      await aguardarCarga()
+      expect(noPainel().getAllByRole('radio').length).toBeGreaterThan(0)
+      expect(noPainel().getByRole('button', { name: 'Inserir no texto' })).toBeTruthy()
+      expect(contagens(adiada)).toEqual({ contexto: 1, doDia: 1, doIntervalo: 0, sessoes: 1 })
+      tela.unmount()
+    }
+  })
+
+  it('compositor: em StrictMode, fechar e reabrir de verdade faz +1 contexto e +1 conjunto de números, sem reaproveitar a abertura anterior', async () => {
+    for (const abrirPagina of [() => novoTopico(true), () => paginaDoTopico(true)]) {
+      const { adiada, tela } = await abrirPagina()
+      fireEvent.click(botaoDoResumo())
+      await aguardarCaixas()
+      await aguardarCarga()
+      expect(contagens(adiada)).toEqual({ contexto: 1, doDia: 1, doIntervalo: 0, sessoes: 1 })
+      fireEvent.click(noPainel().getAllByRole('checkbox')[0])
+
+      fireEvent.click(noPainel().getByRole('button', { name: 'Cancelar' }))
+      expect(screen.queryByRole('group', { name: 'Resumo da rotina' })).toBeNull()
+      await aguardarCarga()
+      expect(contagens(adiada)).toEqual({ contexto: 1, doDia: 1, doIntervalo: 0, sessoes: 1 })
+
+      fireEvent.click(botaoDoResumo())
+      await aguardarCaixas()
+      await aguardarCarga()
+      expect(noPainel().getAllByRole('checkbox').some((caixa) => (caixa as HTMLInputElement).checked)).toBe(false)
+      expect(contagens(adiada)).toEqual({ contexto: 2, doDia: 2, doIntervalo: 0, sessoes: 2 })
+      tela.unmount()
+    }
+  })
+
+  it('compositor: em StrictMode, abrir e fechar no ato, sem esperar a leitura, não lê nada; a abertura seguinte lê 1 vez', async () => {
+    for (const abrirPagina of [() => novoTopico(true), () => paginaDoTopico(true)]) {
+      const { adiada, tela } = await abrirPagina()
+      fireEvent.click(botaoDoResumo())
+      fireEvent.click(noPainel().getByRole('button', { name: 'Cancelar' }))
+      await aguardarCarga()
+      expect(contagens(adiada)).toEqual({ contexto: 0, doDia: 0, doIntervalo: 0, sessoes: 0 })
+      fireEvent.click(botaoDoResumo())
+      await aguardarCaixas()
+      await aguardarCarga()
+      expect(contagens(adiada)).toEqual({ contexto: 1, doDia: 1, doIntervalo: 0, sessoes: 1 })
+      tela.unmount()
+    }
   })
 })

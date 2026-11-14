@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
+import { ESTADOS_DO_RESUMO } from '../../conteudo/resumoRotina.ts'
 import { PAINEL_DO_RESUMO } from '../../conteudo/resumoRotinaPainel.ts'
 import { Cartao } from '../base/layout/Cartao.tsx'
 import { Pilha } from '../base/layout/Pilha.tsx'
@@ -89,10 +90,20 @@ export function PainelDoResumo({ id, idDoTitulo, nivelDoTitulo = 2, aoInserir, a
     fechar.current = aoFechar
   })
 
-  // Abrir é montar: lê o contexto; desmontar (fechar, ou "Ver prévia") descarta a leitura em andamento.
+  // Abrir é montar, mas a leitura não começa dentro do efeito: o React em desenvolvimento (StrictMode) roda o efeito,
+  // limpa e roda de novo, e abrir direto leria o contexto duas vezes (RN-03). A abertura vai numa microtarefa que a
+  // limpeza cancela: preparar, limpar e preparar de novo dá exatamente 1 `abrir()`, e desmontar antes dela dá 0.
+  // Cada montagem de verdade continua sendo uma abertura nova (RF-19 item 1): nada é reaproveitado entre elas. O
+  // `fechar()` da limpeza descarta a leitura em andamento, então nenhuma resposta atrasada muda estado depois.
   useEffect(() => {
-    controlador.abrir()
-    return () => controlador.fechar()
+    let cancelada = false
+    queueMicrotask(() => {
+      if (!cancelada) controlador.abrir()
+    })
+    return () => {
+      cancelada = true
+      controlador.fechar()
+    }
   }, [controlador])
 
   useEffect(() => {
@@ -118,7 +129,10 @@ export function PainelDoResumo({ id, idDoTitulo, nivelDoTitulo = 2, aoInserir, a
 
   const Titulo = nivelDoTitulo === 3 ? 'h3' : 'h2'
   const escolhendo = situacao.opcoes.length > 0
-  const naRegiaoDeStatus = situacao.estado === 'impedido' || situacao.estado === 'sem_bebe_escolhido' ? null : situacao.texto
+  // Montado é aberto: no instante entre montar e a microtarefa que começa a leitura o estado ainda é `fechado`, e o
+  // painel já diz "Lendo" (estado 1), sem um quadro em branco.
+  const lendoDeAbertura = situacao.estado === 'fechado'
+  const naRegiaoDeStatus = lendoDeAbertura ? ESTADOS_DO_RESUMO.lendo : situacao.estado === 'impedido' || situacao.estado === 'sem_bebe_escolhido' ? null : situacao.texto
   const falhou = situacao.estado === 'falha_contexto' || situacao.estado === 'falha_numeros'
 
   return (

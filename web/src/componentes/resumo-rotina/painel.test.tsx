@@ -4,7 +4,7 @@ import { FAMILIAS_DEMONSTRACAO } from '../../dados/conta.demonstracao.ts'
 import type { ErroDados } from '../../dados/comum.ts'
 import { simularFalhaRotina, type FixtureRotina } from '../../dados/rotina.memoria.ts'
 import type { DetalhesRegistro, TipoRegistro } from '../../dados/rotina.tipos.ts'
-import { adiarRotina } from '../../teste/adiado.ts'
+import { adiarRotina, type RotinaAdiada } from '../../teste/adiado.ts'
 import { criarComunidadeDeTeste } from '../../teste/comunidade.fixture.ts'
 import { PESSOAS } from '../../teste/renderizarComDados.tsx'
 import { aguardarCarga, renderizarRota } from '../../teste/renderizarRota.tsx'
@@ -75,13 +75,13 @@ function iniciarRelogio(dia = 14, hora = 12, minuto = 0) {
 /** O nascimento de Heloísa na fixture: 3 meses e 10 dias antes de hoje (14/11/2026). */
 const NASCIMENTO_DA_HELOISA = '2026-08-04'
 
-async function cena(opcoes: OpcoesMundo & { registros?: Reg[] } = {}) {
-  const { registros, ...doMundo } = opcoes
+async function cena(opcoes: OpcoesMundo & { registros?: Reg[]; strict?: boolean } = {}) {
+  const { registros, strict, ...doMundo } = opcoes
   const mundo = criarMundoDeTeste({ ...doMundo, ...(registros ? { ajustarRotina: comRegistros(registros) } : {}) })
   const adiada = adiarRotina(mundo.rotina)
   const conta = doMundo.sessao === undefined || doMundo.sessao === null ? PESSOAS.juliana : PESSOAS[doMundo.sessao]
   const comunidade = criarComunidadeDeTeste(conta.id)
-  const tela = renderizarRota('/app/comunidade/sono/novo', { mundo: { ...mundo, rotina: adiada.dados }, comunidade: comunidade.dados })
+  const tela = renderizarRota('/app/comunidade/sono/novo', { mundo: { ...mundo, rotina: adiada.dados }, comunidade: comunidade.dados, strict })
   await screen.findByRole('heading', { level: 1, name: 'Novo tópico' })
   await aguardarCarga()
   return { tela, mundo, adiada, comunidade }
@@ -100,6 +100,9 @@ const aguardarCaixas = () => waitFor(() => expect(caixas().length).toBeGreaterTh
 const aguardarTexto = (texto: string) => waitFor(() => expect(noPainel().getByRole('status').textContent).toBe(texto))
 const radios = (grupo: string) => within(noPainel().getByRole('group', { name: grupo })).getAllByRole('radio') as HTMLInputElement[]
 const rotuloDe = (radio: HTMLInputElement) => radio.labels?.[0]?.textContent
+
+const leituras = (adiada: RotinaAdiada) => ({ contexto: adiada.contagem('contexto'), doDia: adiada.contagem('doDia'), sessoes: adiada.contagem('sessoesDaJanela') })
+const cancelar = () => fireEvent.click(noPainel().getByRole('button', { name: 'Cancelar' }))
 
 const sessaoVencida: ErroDados = { classe: 'sessao_encerrada', chave: 'sessao_encerrada', codigo: '', mensagemOriginal: '' }
 
@@ -307,6 +310,8 @@ describe('painel: os 9 estados de RF-15', () => {
     expect(noPainel().getByRole('status').textContent).toBe('Lendo a rotina…')
     expect(noPainel().queryAllByRole('radio')).toEqual([])
     expect(noPainel().queryByRole('button', { name: 'Inserir no texto' })).toBeNull()
+    // A leitura começa uma microtarefa depois da montagem: só há o que soltar quando ela estiver presa.
+    await waitFor(() => expect(adiada.presas('contexto')).toBe(1))
     adiada.liberarTodas('contexto')
     await aguardarCaixas()
     expect(noPainel().getAllByRole('status')).toHaveLength(1)
@@ -503,6 +508,7 @@ describe('painel: acesso, leituras e validade dos números (RF-19)', () => {
     abrir()
     expect(noPainel().getByRole('status').textContent).toBe('Lendo a rotina…')
     expect(caixas()).toEqual([])
+    await waitFor(() => expect(adiada.presas('contexto')).toBe(1))
     adiada.liberarTodas('contexto')
     await aguardarCaixas()
     expect(adiada.contagem('contexto')).toBe(2)
@@ -571,13 +577,206 @@ describe('painel: acesso, leituras e validade dos números (RF-19)', () => {
   it('painel: sessão vencida na leitura do contexto, e na dos números, leva a /entrar com volta para a mesma página (RF-19)', async () => {
     iniciarRelogio()
     for (const operacao of ['contexto', 'doDia'] as const) {
-      const { mundo, tela } = await cena({ registros: HOJE_CHEIO })
-      simularFalhaRotina(mundo.rotina, operacao, sessaoVencida)
-      mundo.conta.encerrarSessaoPorFora()
-      abrir()
+      const { mundo, tela, adiada } = await cena({ registros: HOJE_CHEIO })
+      if (operacao === 'contexto') {
+        simularFalhaRotina(mundo.rotina, 'contexto', sessaoVencida)
+        mundo.conta.encerrarSessaoPorFora()
+        abrir()
+      } else {
+        // O contexto é lido com a sessão viva (fica preso); a sessão acaba sem evento, e quem a encontra vencida é a
+        // leitura dos números (`doDia`), não o contexto nem o evento de saída.
+        adiada.adiar('contexto')
+        abrir()
+        await waitFor(() => expect(adiada.presas('contexto')).toBe(1))
+        await aguardarCarga()
+        mundo.conta.sessaoParaTeste(null)
+        adiada.liberarTodas('contexto')
+      }
       await waitFor(() => expect(tela.roteador.state.location.pathname).toBe('/entrar'))
       expect(tela.roteador.state.location.search).toBe(`?volta=${encodeURIComponent('/app/comunidade/sono/novo')}`)
+      if (operacao === 'doDia') expect(adiada.contagem('doDia')).toBeGreaterThan(0)
       tela.unmount()
+    }
+  })
+
+  it('painel: leitura pendente e família excluída por fora: ao soltar vale o que já foi lido, nada é relido e o corpo fica (RF-19)', async () => {
+    iniciarRelogio()
+    const { mundo, adiada } = await cena({ registros: HOJE_CHEIO })
+    fireEvent.change(screen.getByLabelText(/Texto do tópico/), { target: { value: 'meu texto' } })
+    adiada.adiar('doDia')
+    abrir()
+    await waitFor(() => expect(adiada.presas('doDia')).toBe(1))
+    await aguardarCarga()
+    expect((await mundo.conta.excluirFamilia(FAMILIAS_DEMONSTRACAO.exemplo)).ok).toBe(true)
+    adiada.liberarTodas('doDia')
+    // A leitura já tinha acontecido antes da exclusão: o painel não percebe a mudança (spec, "vínculo perdido com o
+    // painel já aberto"), mostra o resultado dela e não relê nada.
+    await aguardarCaixas()
+    expect(nomesDasCaixas()).toContain('Sono: 3 h 30')
+    expect(leituras(adiada)).toEqual({ contexto: 1, doDia: 1, sessoes: 1 })
+    expect((screen.getByLabelText(/Texto do tópico/) as HTMLTextAreaElement).value).toBe('meu texto')
+  })
+
+  it('painel: contexto pendente e família excluída por fora: os números lidos depois não vêm da família excluída, e o corpo fica (RF-19)', async () => {
+    iniciarRelogio()
+    const { mundo, adiada } = await cena({ registros: HOJE_CHEIO })
+    fireEvent.change(screen.getByLabelText(/Texto do tópico/), { target: { value: 'meu texto' } })
+    adiada.adiar('contexto')
+    abrir()
+    await waitFor(() => expect(adiada.presas('contexto')).toBe(1))
+    await aguardarCarga()
+    expect((await mundo.conta.excluirFamilia(FAMILIAS_DEMONSTRACAO.exemplo)).ok).toBe(true)
+    adiada.liberarTodas('contexto')
+    // O contexto lido antes da exclusão ainda traz o bebê; a leitura dos números, feita depois, já não acha a família.
+    await aguardarTexto('Nenhum registro concluído neste período.')
+    expect(caixas()).toEqual([])
+    expect(inserir().disabled).toBe(true)
+    expect(painel().textContent).not.toContain('Sono: 3 h 30')
+    expect((screen.getByLabelText(/Texto do tópico/) as HTMLTextAreaElement).value).toBe('meu texto')
+  })
+})
+
+describe('painel: o ciclo de abertura é seguro a repetições do efeito e a fechar no meio (RN-03, RF-19)', () => {
+  it('painel: em StrictMode, como fora dele, um clique faz 1 leitura de contexto e 1 conjunto de números, e o painel chega às escolhas', async () => {
+    for (const strict of [false, true]) {
+      iniciarRelogio()
+      const { adiada, tela } = await cena({ registros: HOJE_CHEIO, strict })
+      abrir()
+      await aguardarCaixas()
+      expect(nomesDasCaixas()).toContain('Sono: 3 h 30')
+      expect(radios('Bebê')).toHaveLength(1)
+      await aguardarCarga()
+      expect(leituras(adiada), `strict=${strict}`).toEqual({ contexto: 1, doDia: 1, sessoes: 1 })
+      tela.unmount()
+    }
+  })
+
+  it('painel: fechar e reabrir de verdade faz +1 contexto e +1 conjunto a cada abertura, nunca reaproveita, em StrictMode ou não', async () => {
+    for (const strict of [false, true]) {
+      iniciarRelogio()
+      const { adiada, tela } = await cena({ registros: HOJE_CHEIO, strict })
+      for (const abertura of [1, 2, 3]) {
+        abrir()
+        await aguardarCaixas()
+        await aguardarCarga()
+        expect(leituras(adiada), `strict=${strict} abertura=${abertura}`).toEqual({ contexto: abertura, doDia: abertura, sessoes: abertura })
+        cancelar()
+        expect(screen.queryByRole('group', { name: 'Resumo da rotina' })).toBeNull()
+      }
+      tela.unmount()
+    }
+  })
+
+  it('painel: montar e desmontar antes de qualquer leitura = 0 leituras; reabrir depois lê exatamente 1 vez', async () => {
+    for (const strict of [false, true]) {
+      iniciarRelogio()
+      const { adiada, tela } = await cena({ registros: HOJE_CHEIO, strict })
+      abrir()
+      cancelar()
+      await aguardarCarga()
+      expect(leituras(adiada), `fechado no ato, strict=${strict}`).toEqual({ contexto: 0, doDia: 0, sessoes: 0 })
+
+      abrir()
+      tela.unmount()
+      await aguardarCarga()
+      expect(leituras(adiada), `página desmontada no ato, strict=${strict}`).toEqual({ contexto: 0, doDia: 0, sessoes: 0 })
+    }
+    iniciarRelogio()
+    const { adiada } = await cena({ registros: HOJE_CHEIO, strict: true })
+    abrir()
+    cancelar()
+    await aguardarCarga()
+    abrir()
+    await aguardarCaixas()
+    await aguardarCarga()
+    expect(leituras(adiada)).toEqual({ contexto: 1, doDia: 1, sessoes: 1 })
+  })
+
+  it('painel: todos os estados do ciclo, em StrictMode, contam 1 leitura de contexto: carregando, vazio, erro do contexto, erro dos números, preenchido', async () => {
+    iniciarRelogio()
+
+    // Carregando: o contexto preso é lido 1 vez só e o painel diz que está lendo.
+    const carregando = await cena({ registros: HOJE_CHEIO, strict: true })
+    carregando.adiada.adiar('contexto')
+    abrir()
+    await aguardarCarga()
+    expect(noPainel().getByRole('status').textContent).toBe('Lendo a rotina…')
+    expect(carregando.adiada.presas('contexto')).toBe(1)
+    expect(carregando.adiada.contagem('contexto')).toBe(1)
+    carregando.adiada.liberarTodas('contexto')
+    await aguardarCaixas()
+    expect(leituras(carregando.adiada)).toEqual({ contexto: 1, doDia: 1, sessoes: 1 })
+    carregando.tela.unmount()
+
+    // Vazio.
+    const vazio = await cena({ semRegistros: true, strict: true })
+    abrir()
+    await aguardarTexto('Nenhum registro concluído neste período.')
+    expect(leituras(vazio.adiada)).toEqual({ contexto: 1, doDia: 1, sessoes: 1 })
+    vazio.tela.unmount()
+
+    // Erro do contexto: a falha simulada vale para a única leitura; "Tentar de novo" faz +1 contexto.
+    const erroDoContexto = await cena({ registros: HOJE_CHEIO, strict: true })
+    simularFalhaRotina(erroDoContexto.mundo.rotina, 'contexto', 'rede')
+    abrir()
+    await aguardarTexto('Não foi possível ler a rotina agora. O seu texto continua aqui.')
+    expect(erroDoContexto.adiada.contagem('contexto')).toBe(1)
+    fireEvent.click(noPainel().getByRole('button', { name: 'Tentar de novo' }))
+    await aguardarCaixas()
+    expect(erroDoContexto.adiada.contagem('contexto')).toBe(2)
+    erroDoContexto.tela.unmount()
+
+    // Erro dos números: o contexto fica em 1; "Tentar de novo" faz +1 conjunto de números.
+    const erroDosNumeros = await cena({ registros: HOJE_CHEIO, strict: true })
+    simularFalhaRotina(erroDosNumeros.mundo.rotina, 'doDia', 'rede')
+    abrir()
+    await aguardarTexto('Não foi possível ler a rotina agora. O seu texto continua aqui.')
+    expect(leituras(erroDosNumeros.adiada)).toEqual({ contexto: 1, doDia: 1, sessoes: 1 })
+    fireEvent.click(noPainel().getByRole('button', { name: 'Tentar de novo' }))
+    await aguardarCaixas()
+    expect(leituras(erroDosNumeros.adiada)).toEqual({ contexto: 1, doDia: 2, sessoes: 2 })
+    erroDosNumeros.tela.unmount()
+
+    // Preenchido, com marca, e depois a reabertura: +1 e nada da abertura anterior.
+    const cheio = await cena({ registros: HOJE_CHEIO, strict: true })
+    abrir()
+    await aguardarCaixas()
+    marcar('Sono: 3 h 30')
+    expect(bloco()).toBe('Resumo da rotina de hoje até agora:\n- Sono: 3 h 30')
+    cancelar()
+    abrir()
+    await aguardarCaixas()
+    expect(caixas().some((caixa) => caixa.checked)).toBe(false)
+    expect(leituras(cheio.adiada)).toEqual({ contexto: 2, doDia: 2, sessoes: 2 })
+  })
+
+  it('painel: fechar com a leitura pendente (de contexto ou de números) não muda estado nem avisa depois, e reabrir funciona', async () => {
+    const aviso = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    try {
+      for (const strict of [false, true]) {
+        for (const operacao of ['contexto', 'doDia'] as const) {
+          iniciarRelogio()
+          const { adiada, tela } = await cena({ registros: HOJE_CHEIO, strict })
+          adiada.adiar(operacao)
+          abrir()
+          await waitFor(() => expect(adiada.presas(operacao)).toBeGreaterThan(0))
+          cancelar()
+          adiada.liberarTodas(operacao)
+          await aguardarCarga()
+          expect(screen.queryByRole('group', { name: 'Resumo da rotina' }), `${operacao} strict=${strict}`).toBeNull()
+          expect(aviso, `${operacao} strict=${strict}`).not.toHaveBeenCalled()
+          // A leitura de contexto solta depois de fechar não começa os números: nada vai a `doDia`.
+          if (operacao === 'contexto') expect(adiada.contagem('doDia')).toBe(0)
+
+          adiada.deixarDeAdiar(operacao)
+          abrir()
+          await aguardarCaixas()
+          expect(nomesDasCaixas()).toContain('Sono: 3 h 30')
+          tela.unmount()
+        }
+      }
+    } finally {
+      aviso.mockRestore()
     }
   })
 })
