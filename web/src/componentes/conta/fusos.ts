@@ -48,14 +48,19 @@ const CIDADES_DO_BRASIL: Readonly<Record<string, string>> = {
   'America/Eirunepe': 'Eirunepé',
 }
 
+// O fuso que dá nome ao horário dispensa a cidade ("Horário de Brasília" é o de São Paulo): o rótulo fica curto e
+// cabe na caixa do seletor a 390 px. Os outros fusos do mesmo horário levam a cidade, para nenhum rótulo se repetir.
+const PRINCIPAIS = new Set(['America/Sao_Paulo', 'America/Manaus', 'America/Rio_Branco', 'America/Noronha'])
+
 const parteDoNome = (fuso: string, timeZoneName: 'longGeneric' | 'shortOffset') =>
   new Intl.DateTimeFormat('pt-BR', { timeZone: fuso, timeZoneName }).formatToParts(new Date()).find((p) => p.type === 'timeZoneName')?.value ?? ''
 
 const ROTULOS = new Map<string, string>()
 
 /**
- * O fuso em pt-BR para a lista: o nome do horário, a diferença para o UTC e a cidade, como
- * "Horário Padrão de Brasília (UTC−3, São Paulo)". O valor guardado continua o identificador IANA.
+ * O fuso em pt-BR para a lista: o nome genérico do horário e a diferença para o UTC, como
+ * "Horário de Brasília (UTC−3)", e a cidade quando o horário não é dela ("Horário de Brasília (UTC−3, Fortaleza)").
+ * O valor guardado continua o identificador IANA.
  * Fuso sem nome próprio (`UTC`, `Etc/GMT+3`) mostra só a diferença; identificador inválido volta como veio.
  */
 export function rotuloDoFuso(fuso: string): string {
@@ -64,10 +69,12 @@ export function rotuloDoFuso(fuso: string): string {
   let rotulo = fuso
   try {
     const diferenca = parteDoNome(fuso, 'shortOffset').replace(/^GMT(\+0)?/, 'UTC').replace('-', '−')
-    const nome = parteDoNome(fuso, 'longGeneric')
+    // Sem horário de verão, o nome genérico vem como o padrão ("Horário Padrão de Brasília"): fica o genérico.
+    const nome = parteDoNome(fuso, 'longGeneric').replace(/^Horário Padrão /, 'Horário ')
     const semCidade = fuso === 'UTC' || fuso.startsWith('Etc/') || !fuso.includes('/')
-    const cidade = semCidade ? '' : (CIDADES_DO_BRASIL[fuso] ?? fuso.slice(fuso.lastIndexOf('/') + 1).replaceAll('_', ' '))
+    const daCidade = semCidade ? '' : (CIDADES_DO_BRASIL[fuso] ?? fuso.slice(fuso.lastIndexOf('/') + 1).replaceAll('_', ' '))
     const temNome = nome !== '' && !nome.startsWith('GMT') && !nome.startsWith('UTC')
+    const cidade = temNome && (PRINCIPAIS.has(fuso) || nome.includes(daCidade)) ? '' : daCidade
     if (temNome) rotulo = cidade ? `${nome} (${diferenca}, ${cidade})` : `${nome} (${diferenca})`
     else rotulo = cidade ? `${cidade} (${diferenca})` : diferenca
   } catch {
