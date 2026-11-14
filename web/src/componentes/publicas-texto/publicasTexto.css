@@ -108,16 +108,12 @@
   }
 
   /* Em tela estreita o índice é um <details> fechado: o resumo é uma linha de 48 px com a seta, sem fundo.
-     O fio de cima é o do próprio índice. */
+     O fio de cima é o do próprio índice. Fechado, o índice é só essa linha entre o fio dele e o fio do bloco
+     seguinte, que vem depois do vão bloco da pilha: para o rótulo ficar no meio, com o mesmo espaço em cima e
+     embaixo, o índice recebe em cima o mesmo vão bloco que a pilha põe embaixo (sem margem negativa: o vão entre
+     os dois blocos continua o da pilha). */
   .pt-indice:has(> .pt-indice-detalhes) {
-    padding-top: 0;
-  }
-
-  /* Fechado, o índice é só a linha do resumo entre o fio dele e o fio do bloco seguinte. O vão bloco da pilha
-     (48 em tela larga) deixaria o rótulo com 24 em cima e 72 embaixo: o vão se anula, e o rótulo fica no meio, com
-     24 de cada lado. Aberto, a lista volta a ter o vão bloco embaixo. */
-  .pt-indice:has(> .pt-indice-detalhes:not([open])) {
-    margin-block-end: calc(-1 * var(--espaco-bloco));
+    padding-top: var(--espaco-bloco);
   }
 
   .pt-indice-resumo {
@@ -238,8 +234,9 @@
     margin: 0;
   }
 
+  /* Sem `text-wrap: pretty`: ele encurta as linhas para não deixar palavra sozinha no fim, e na coluna de 640 isso
+     leva a mediana para abaixo de 60 letras por linha. As linhas enchem a coluna. */
   .pt-texto p {
-    text-wrap: pretty;
     overflow-wrap: break-word;
   }
 

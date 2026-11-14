@@ -727,6 +727,6 @@ describe('painel e figura por largura (CSS)', () => {
     expect(css).not.toMatch(/\.pt-indice-detalhes\s*\{/)
     expect(corpos('.pt-indice-resumo')[0]).toMatch(/min-height:\s*48px/)
     expect(corpos('.pt-indice-resumo')[0]).not.toMatch(/background/)
-    expect(corpos('.pt-indice:has(> .pt-indice-detalhes)')[0]).toMatch(/padding-top:\s*0/)
+    expect(corpos('.pt-indice:has(> .pt-indice-detalhes)')[0]).toMatch(/padding-top:\s*var\(--espaco-bloco\)/)
   })
 })

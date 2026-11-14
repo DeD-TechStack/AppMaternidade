@@ -31,27 +31,9 @@
   max-width: 36rem;
 }
 
-/* Empilhado (até 1099 px): a coluna do texto "se abre" (`display: contents`) para a mídia entrar entre as ações e
-   o aviso de saúde, e a tela de verdade subir para a primeira dobra. O vão de cada peça é o do papel `grupo`, o
-   mesmo da `Pilha` do texto em tela larga. */
-@media (max-width: 1099px) {
-  .pd-abertura {
-    gap: var(--espaco-grupo);
-  }
-
-  .pd-abertura > .pd-abertura-texto {
-    display: contents;
-  }
-
-  .pd-abertura-midia {
-    order: 1;
-  }
-
-  /* O aviso de saúde desce para depois da mídia: nunca encosta num título. */
-  .pd-abertura .pd-abertura-texto > .pd-aviso-saude {
-    order: 2;
-  }
-}
+/* Empilhado (até 1099 px): `Abertura` põe a mídia dentro da coluna do texto, entre as ações e o aviso de saúde (que
+   nunca encosta num título), e a tela de verdade sobe para a primeira dobra. A coluna do texto continua uma caixa de
+   verdade, com o vão do papel `grupo` entre as peças, o mesmo da tela larga. */
 
 /* As ações: uma fileira de botões que quebra (componente, não coluna). */
 .pd-acoes {

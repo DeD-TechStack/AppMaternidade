@@ -71,6 +71,7 @@ export function SeletorDeFase({ fases, lateral }: { fases: readonly Fase[]; late
           hidden={i !== ativa}
           tabIndex={0}
           className="pd-fase"
+          data-h="coluna"
           data-fase={fase.id}
         >
           <Pilha vao="grupo">
@@ -85,7 +86,7 @@ export function SeletorDeFase({ fases, lateral }: { fases: readonly Fase[]; late
         </div>
       ))}
       {lateral ? (
-        <Pilha vao="pilha" className="pd-seletor-lateral">
+        <Pilha vao="pilha" dataH="coluna" className="pd-seletor-lateral">
           {lateral}
         </Pilha>
       ) : null}

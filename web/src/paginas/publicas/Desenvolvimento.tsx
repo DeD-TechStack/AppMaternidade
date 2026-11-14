@@ -53,9 +53,9 @@ export function Desenvolvimento() {
                 {T.secundario.rotulo}
               </Botao>
             </div>
-            <AvisoSaude />
           </>
         }
+        aviso={<AvisoSaude />}
         midia={
           <Pilha vao="pilha">
             <CenaCacau base={T.cena.base} largura={CENA_LARGURA} altura={CENA_ALTURA} alt={T.cena.alt} prioritaria />
