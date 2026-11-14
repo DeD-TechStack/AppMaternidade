@@ -206,6 +206,14 @@ export const FORMULARIO_TOPICO = {
   },
 } as const
 
+/** O resumo da rotina nos compositores (RF12): o botão, o aviso de status e a frase extra da prévia (RF-01, RF-11, RF-13). */
+export const RESUMO_NA_COMUNIDADE = {
+  botao: 'Incluir resumo da rotina',
+  inserido: 'Resumo inserido no fim do texto. Você pode mudar ou apagar antes de publicar.',
+  avisoNaPrevia:
+    'Este texto tem números da rotina do seu bebê. Todas as pessoas que entraram no site vão ver. É uma cópia: mudar a rotina depois não muda o texto publicado.',
+} as const
+
 export const ENTRAR_NA_COMUNIDADE = {
   manchete: ['Entre na conversa', 'com um apelido.'],
   termosTitulo: 'Termos e regras',
