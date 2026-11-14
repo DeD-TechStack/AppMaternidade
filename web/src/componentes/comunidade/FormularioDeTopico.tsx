@@ -1,4 +1,4 @@
-import { useId, useState, type FormEvent } from 'react'
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
 import { COMUM_COMUNIDADE, FORMULARIO_TOPICO, TX } from '../../conteudo/comunidade.ts'
 import type { Resultado } from '../../dados/comum.ts'
@@ -58,9 +58,21 @@ export function FormularioDeTopico({ espaco, perfilId, edicao, aoNaoEditavel }: 
   const botaoDoErro =
     erro?.acao === 'conferir' ? COMUM_COMUNIDADE.conferir : erro?.acao ? COMUM_COMUNIDADE.tentarDeNovo : undefined
 
+  // A11Y-F4: o passo que some leva o foco com ele; o foco vai ao título da prévia, ou ao primeiro campo na volta.
+  const tituloDaPrevia = useRef<HTMLHeadingElement>(null)
+  const trocouDePasso = useRef(false)
+  useEffect(() => {
+    if (!trocouDePasso.current) return
+    trocouDePasso.current = false
+    if (previa) tituloDaPrevia.current?.focus()
+    else document.getElementById('campo-titulo')?.focus()
+  }, [previa])
+
   function aoVerPrevia(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault()
-    if (valido) setPrevia(true)
+    if (!valido) return
+    trocouDePasso.current = true
+    setPrevia(true)
   }
 
   function gravar() {
@@ -99,7 +111,9 @@ export function FormularioDeTopico({ espaco, perfilId, edicao, aoNaoEditavel }: 
     return (
       <Pilha vao="grupo" className="max-w-[44rem]" data-previa="topico">
         <Pilha vao="pilha">
-          <h2 className="cm-h4 text-titulo-4">{FORMULARIO_TOPICO.previa}</h2>
+          <h2 ref={tituloDaPrevia} tabIndex={-1} className="cm-h4 text-titulo-4">
+            {FORMULARIO_TOPICO.previa}
+          </h2>
           <p>{TX.tx05}</p>
         </Pilha>
         <Cartao as="article" className="flex flex-col gap-3 border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)]">
@@ -124,6 +138,7 @@ export function FormularioDeTopico({ espaco, perfilId, edicao, aoNaoEditavel }: 
             className={BOTAO_SECUNDARIO}
             onClick={() => {
               envio.limpar()
+              trocouDePasso.current = true
               setPrevia(false)
             }}
           >

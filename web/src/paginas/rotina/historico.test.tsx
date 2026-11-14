@@ -1,9 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, screen, within } from '@testing-library/react'
+import { janelaDoDia } from '../../dados/rotina.dia.ts'
 import { simularFalhaRotina, type FixtureRotina } from '../../dados/rotina.memoria.ts'
 import type { Registro } from '../../dados/rotina.tipos.ts'
+import { calcularResumo, type ChaveDoNumero } from '../../componentes/resumo-rotina/calculo.ts'
+import { seteDiasAte } from '../../componentes/rotina/diasDoHistorico.ts'
+import { formatarMinutos, totaisPorDiaDaSemana } from '../../componentes/rotina/totaisHistorico.ts'
 import { aguardarCarga, renderizarRotaPronta } from '../../teste/renderizarRota.tsx'
-import { criarMundoDeTeste } from '../../teste/rotina.fixture.ts'
+import { FUSO_DO_APARELHO, ID_BEBE, criarMundoDeTeste } from '../../teste/rotina.fixture.ts'
 
 // O Histórico (MAT-38b, R38-20 e R38-21), com o relógio falso às 10:00 de 5/11/2026 (hora do aparelho): o dia, a
 // semana, os filtros, os parâmetros da URL e os estados de lista. A fixture "dia completo" tem 9 registros de hoje.
@@ -305,6 +309,43 @@ describe('R38-21: a vista da semana', () => {
     // Ontem: só a parte do sono que cai nele (23:00 a 24:00) e os dois tummy times (18 min).
     expect(dias[5].textContent).toContain('Sono 1 h 00')
     expect(dias[5].textContent).toContain('Tummy time 0 h 18')
+  })
+
+  it('RF12:A1: cada linha da semana mostra o total diário de totaisPorDiaDaSemana, e o de hoje é o do resumo da Comunidade', async () => {
+    const mundo = await renderizarRotaPronta('/app/historico?vista=semana', { diaCompleto: true })
+
+    const dias = seteDiasAte('2026-11-05')
+    const de = janelaDoDia(dias[0], FUSO_DO_APARELHO).de
+    const ate = janelaDoDia(dias[6], FUSO_DO_APARELHO).ate
+    const [registros, sessoes] = await Promise.all([mundo.rotina.doIntervalo(ID_BEBE, de, ate), mundo.rotina.sessoesDaJanela(ID_BEBE, de, ate)])
+    if (!registros.ok || !sessoes.ok) throw new Error('A leitura da semana falhou.')
+    const esperados = totaisPorDiaDaSemana(registros.valor.itens, sessoes.valor.itens, dias, FUSO_DO_APARELHO)
+
+    const linhasDaSemana = [...document.querySelectorAll('[data-dia-da-semana]')]
+    expect(linhasDaSemana).toHaveLength(7)
+    esperados.forEach(({ dia, totais }, indice) => {
+      const texto = linhasDaSemana[indice].textContent ?? ''
+      expect(linhasDaSemana[indice].getAttribute('data-dia-da-semana')).toBe(dia)
+      expect(texto).toContain(`Sono ${formatarMinutos(totais.sonoMin)}`)
+      expect(texto).toContain(`Tummy time ${formatarMinutos(totais.tummyMin)}`)
+      expect(texto).toContain(`Mamadas e mamadeiras ${totais.mamadas + totais.mamadeiras}`)
+      expect(texto).toContain(`Fraldas ${totais.fraldas}`)
+    })
+
+    // O resumo de "Hoje até agora" parte dos mesmos totais: o dia de hoje da semana e o resumo dão os mesmos números.
+    const doDia = await mundo.rotina.doDia(ID_BEBE, dias[6])
+    if (!doDia.ok) throw new Error('A leitura do dia falhou.')
+    const janelaDeHoje = janelaDoDia(dias[6], FUSO_DO_APARELHO)
+    const sessoesDeHoje = await mundo.rotina.sessoesDaJanela(ID_BEBE, janelaDeHoje.de, janelaDeHoje.ate)
+    if (!sessoesDeHoje.ok) throw new Error('A leitura das sessões de hoje falhou.')
+    const hoje = calcularResumo({ periodo: 'hoje', hoje: dias[6], fuso: FUSO_DO_APARELHO, registros: doDia.valor.itens, sessoes: sessoesDeHoje.valor.itens })
+    const valorDe = (chave: ChaveDoNumero) => hoje.numeros.find((numero) => numero.chave === chave)?.valor ?? 0
+    const totaisDeHoje = esperados[6].totais
+    expect(valorDe('sono')).toBe(totaisDeHoje.sonoMin)
+    expect(valorDe('tummy')).toBe(totaisDeHoje.tummyMin)
+    expect(valorDe('mamadas')).toBe(totaisDeHoje.mamadas)
+    expect(valorDe('mamadeiras')).toBe(totaisDeHoje.mamadeiras)
+    expect(valorDe('fraldas')).toBe(totaisDeHoje.fraldas)
   })
 
   it('semana sem registro: a frase acima, sete linhas com zeros e nenhuma barra', async () => {

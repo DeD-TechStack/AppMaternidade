@@ -46,9 +46,12 @@ export function DialogoDeAcao({
   // Os ouvintes leem sempre o valor mais novo, sem reabrir a caixa a cada renderização.
   const fechar = useRef(aoCancelar)
   const ocupado = useRef(enviando)
+  // A11Y-F4: quem confirma pode trocar o destino do foco (o botão some com o item): vale o de quando a caixa fecha.
+  const devolverFoco = useRef(() => {})
   useEffect(() => {
     fechar.current = aoCancelar
     ocupado.current = enviando
+    devolverFoco.current = () => retorno.current?.focus()
   })
 
   useEffect(() => {
@@ -72,14 +75,13 @@ export function DialogoDeAcao({
     }
     elemento.addEventListener('cancel', pedirParaFechar)
     elemento.addEventListener('keydown', aoTeclar)
-    const voltarPara = retorno.current
     return () => {
       elemento.removeEventListener('cancel', pedirParaFechar)
       elemento.removeEventListener('keydown', aoTeclar)
       if (typeof elemento.close === 'function' && elemento.open) elemento.close()
-      voltarPara?.focus()
+      devolverFoco.current()
     }
-  }, [retorno])
+  }, [])
 
   return (
     <dialog

@@ -1,4 +1,4 @@
-import { useId, useState, type FormEvent } from 'react'
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { COMUM_COMUNIDADE, TOPICO, TX } from '../../conteudo/comunidade.ts'
 import { LIMITES, conferirLimite } from '../../dados/comunidade.regras.ts'
 import { Cartao } from '../base/layout/Cartao.tsx'
@@ -96,9 +96,21 @@ export function FormularioDeResposta({ topicoId, modo, apelidoProprio, aoTirarCi
     })
   }
 
+  // A11Y-F4: o passo que some leva o foco com ele; o foco vai ao título da prévia, ou ao campo na volta.
+  const tituloDaPrevia = useRef<HTMLHeadingElement>(null)
+  const trocouDePasso = useRef(false)
+  useEffect(() => {
+    if (!trocouDePasso.current) return
+    trocouDePasso.current = false
+    if (previa) tituloDaPrevia.current?.focus()
+    else document.getElementById(ID_DO_CAMPO_DE_RESPOSTA)?.focus()
+  }, [previa])
+
   function aoEnviarFormulario(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault()
-    if (valido) setPrevia(true)
+    if (!valido) return
+    trocouDePasso.current = true
+    setPrevia(true)
   }
 
   const botaoDoErro =
@@ -108,7 +120,9 @@ export function FormularioDeResposta({ topicoId, modo, apelidoProprio, aoTirarCi
     return (
       <Pilha vao="grupo" className="max-w-[44rem]" data-previa="resposta">
         <Pilha vao="pilha">
-          <h3 className="cm-h4 text-titulo-4">{TOPICO.previa}</h3>
+          <h3 ref={tituloDaPrevia} tabIndex={-1} className="cm-h4 text-titulo-4">
+            {TOPICO.previa}
+          </h3>
           <p>{TX.tx05b}</p>
         </Pilha>
         <Cartao as="article" className="flex flex-col gap-3 border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)]">
@@ -128,6 +142,7 @@ export function FormularioDeResposta({ topicoId, modo, apelidoProprio, aoTirarCi
             className={BOTAO_SECUNDARIO}
             onClick={() => {
               envio.limpar()
+              trocouDePasso.current = true
               setPrevia(false)
             }}
           >

@@ -21,7 +21,7 @@ beforeEach(() => {
 // ---------------------------------------------------------------------------------------------------------------
 
 const PASTA_SRC = join(process.cwd(), 'src') + sep
-const AREA = ['componentes/acesso/', 'componentes/conta/', 'componentes/campo/', 'paginas/conta/']
+const AREA = ['componentes/acesso/', 'componentes/conta/', 'componentes/campo/', 'paginas/conta/', 'componentes/resumo-rotina/']
 const PASSOS_PERMITIDOS = new Set(['0', '0.5', '1', '1.5', '2', '2.5', '3', '4', '5', '6', '7', '8'])
 const ESPACO = /(?:^|:)-?(?:p[xytrbles]?|m[xytrbles]?|gap(?:-[xy])?|space-[xy])-(\[[^\s]*|[\w.]+)$/
 
