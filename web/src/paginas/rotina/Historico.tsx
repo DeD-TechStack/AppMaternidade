@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router'
 import { Trash2 } from 'lucide-react'
 import { ALVO_APP } from '../../componentes/app/alvo.ts'
 import { Botao } from '../../componentes/base/Botao.tsx'
+import { Pilha } from '../../componentes/base/layout/index.ts'
 import { AvisoDeFuso } from '../../componentes/rotina/AvisoDeFuso.tsx'
 import { AvisoDeLista } from '../../componentes/rotina/AvisoDeLista.tsx'
 import { AvisoDoPapel } from '../../componentes/rotina/AvisoDoPapel.tsx'
@@ -112,34 +113,34 @@ function HistoricoDoBebe({ ativo }: { ativo: BebeAtivo }) {
     const incompleta = lido.registros.incompleta || lido.sessoes.incompleta
     const totais = totaisDoPeriodo(lido.registros.itens, lido.sessoes.itens, Date.parse(de), Date.parse(ate), tipos)
     return (
-      <div className="flex flex-col gap-8">
+      <Pilha vao="bloco">
         {lido.registros.incompleta ? <AvisoDeLista limite={LIMITES.doDia} dado="doDia" /> : null}
         {lido.sessoes.incompleta ? <AvisoDeLista limite={LIMITES.sessoesDaJanela} dado="sessoes" /> : null}
         {incompleta ? (
-          <section aria-labelledby="historico-resumo" data-resumo-do-dia="">
+          <Pilha as="section" vao="pilha" aria-labelledby="historico-resumo" data-resumo-do-dia="">
             <h2 id="historico-resumo" className="cm-h4">
               {HISTORICO.resumoDoDia}
             </h2>
-            <p className="mt-3 text-(--cor-texto-2)">{ESTADOS.demaisParaSomar}</p>
-          </section>
+            <p className="text-(--cor-texto-2)">{ESTADOS.demaisParaSomar}</p>
+          </Pilha>
         ) : temAlgoParaSomar(totais) ? (
           <TotaisDoDia totais={totais} />
         ) : null}
-        <section aria-labelledby="historico-registros" data-registros-do-dia="">
+        <Pilha as="section" vao="pilha" aria-labelledby="historico-registros" data-registros-do-dia="">
           <h2 id="historico-registros" className="cm-h4">
             {HISTORICO.registrosDoDia}
           </h2>
           {visiveis.length === 0 ? (
-            <p className="mt-3 border-y border-(--cor-fio-suave) py-4 text-(--cor-texto-2)">{HISTORICO.semRegistros}</p>
+            <p className="border-y border-(--cor-fio-suave) py-4 text-(--cor-texto-2)">{HISTORICO.semRegistros}</p>
           ) : (
-            <ul className="mt-3 border-y border-(--cor-fio-suave)">
+            <ul className="border-y border-(--cor-fio-suave)">
               {visiveis.map((registro) => (
                 <LinhaDoDia key={registro.id} registro={registro} fuso={fuso} autor={autorDe(registro)} para={`/app/registro/${registro.id}`} />
               ))}
             </ul>
           )}
-        </section>
-      </div>
+        </Pilha>
+      </Pilha>
     )
   }
 
@@ -152,7 +153,7 @@ function HistoricoDoBebe({ ativo }: { ativo: BebeAtivo }) {
     })
     const vazia = lido.registros.itens.length === 0 && lido.sessoes.itens.length === 0
     return (
-      <div className="flex flex-col gap-4">
+      <Pilha vao="pilha">
         {lido.registros.incompleta ? <AvisoDeLista limite={LIMITES.doIntervalo} dado="semana" /> : null}
         {lido.sessoes.incompleta ? <AvisoDeLista limite={LIMITES.sessoesDaJanela} dado="sessoes" /> : null}
         {incompleta ? (
@@ -163,7 +164,7 @@ function HistoricoDoBebe({ ativo }: { ativo: BebeAtivo }) {
             <SemanaDoHistorico dias={dias} urlDoDia={(diaDaLinha) => urlDoHistorico({ dia: diaDaLinha, tipos, vista: 'dia' })} />
           </>
         )}
-      </div>
+      </Pilha>
     )
   }
 
@@ -183,14 +184,14 @@ function HistoricoDoBebe({ ativo }: { ativo: BebeAtivo }) {
         </div>
       }
     >
-      <div className="flex flex-col gap-8">
+      <Pilha vao="bloco">
         {somenteLeitura || aparelho !== fuso ? (
-          <div className="flex flex-col gap-3">
+          <Pilha vao="pilha">
             {somenteLeitura ? <AvisoDoPapel texto={textoDoPapel(ativo)} /> : null}
             {aparelho !== fuso ? <AvisoDeFuso aparelho={aparelho} familia={fuso} /> : null}
-          </div>
+          </Pilha>
         ) : null}
-        <div className="flex flex-col gap-5">
+        <Pilha vao="pilha">
           <div role="group" aria-label={HISTORICO.vistas} className="flex flex-wrap gap-2" data-vistas="">
             <Botao variante={vista === 'dia' ? 'primario' : 'contorno'} tamanho="app" className={ALVO_APP} aria-pressed={vista === 'dia'} onClick={() => ir({ vista: 'dia' })}>
               {HISTORICO.dia}
@@ -207,7 +208,7 @@ function HistoricoDoBebe({ ativo }: { ativo: BebeAtivo }) {
           </div>
           <SeletorDeDia dia={dia} hoje={hoje} aoEscolher={(novo) => ir({ dia: novo })} />
           {vista === 'dia' ? <FiltrosDoHistorico tipos={tipos} aoMudar={(novos) => ir({ tipos: novos }, true)} /> : null}
-        </div>
+        </Pilha>
         {vista === 'dia' ? (
           <SecaoDoHoje secao={doDia} titulo={HISTORICO.registrosDoDia} papel={ativo.papel}>
             {conteudoDoDia}
@@ -217,7 +218,7 @@ function HistoricoDoBebe({ ativo }: { ativo: BebeAtivo }) {
             {conteudoDaSemana}
           </SecaoDoHoje>
         )}
-      </div>
+      </Pilha>
     </TelaRotina>
   )
 }

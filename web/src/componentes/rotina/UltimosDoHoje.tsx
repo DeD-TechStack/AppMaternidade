@@ -1,6 +1,7 @@
 import { useId, type ReactNode } from 'react'
 import { HOJE } from '../../conteudo/rotina.ts'
 import type { Registro } from '../../dados/rotina.tipos.ts'
+import { Pilha } from '../base/layout/index.ts'
 import { MarcaDeEnvio } from './ItemRegistro.tsx'
 
 const DESDE = ', tempo desde o registro'
@@ -23,6 +24,8 @@ interface Props {
    */
   marcaDe?: (registro: Registro) => ReactNode
   className?: string
+  /** Valores a somar no `data-h` da Pilha (`coluna`, quando ela é filha de `Colunas`). */
+  dataH?: string
 }
 
 /**
@@ -30,16 +33,16 @@ interface Props {
  * linha a linha, com o encaixe da marca de envio junto da hora. Mesma estrutura, mesmas classes e os mesmos
  * marcadores (`data-ultimos`, `.sb-numeros-item`, `data-numero`); só acrescenta a marca.
  */
-export function UltimosDoHoje({ itens, marcaDe, className }: Props) {
+export function UltimosDoHoje({ itens, marcaDe, className, dataH }: Props) {
   const idTitulo = useId()
   return (
-    <section id="ultimos" data-ultimos="" aria-labelledby={idTitulo} className={className}>
+    <Pilha as="section" vao="pilha" dataH={dataH} id="ultimos" data-ultimos="" aria-labelledby={idTitulo} className={className}>
       <h2 id={idTitulo} className="cm-h4">
         {HOJE.ultimos}
       </h2>
       {/* A mesma linguagem do histórico: linhas com fio fino, sem cartão. Em 1440, três colunas entre os
           mesmos fios. */}
-      <div className="mt-3 border-y border-(--cor-fio-suave) lg:mt-4 lg:grid lg:grid-cols-3">
+      <div className="border-y border-(--cor-fio-suave) lg:grid lg:grid-cols-3">
         {itens.map((item, posicao) => {
           const desde = item.legenda.endsWith(DESDE)
           const nome = desde ? item.legenda.slice(0, -DESDE.length) : item.legenda
@@ -50,16 +53,16 @@ export function UltimosDoHoje({ itens, marcaDe, className }: Props) {
             >
               <div className="flex items-baseline gap-1.5 whitespace-nowrap">
                 {desde ? (
-                  <span aria-hidden="true" className="text-[15px] leading-[22px] text-(--cor-texto-2)">
+                  <span aria-hidden="true" className="text-pequeno text-(--cor-texto-2)">
                     há
                   </span>
                 ) : null}
-                <p data-numero="" className="font-titulo text-[24px] leading-[30px] font-semibold tabular-nums">
+                <p data-numero="" className="font-titulo text-titulo-4 font-semibold tabular-nums">
                   {item.valor}
                 </p>
                 {item.registro && marcaDe ? <MarcaDeEnvio marca={marcaDe(item.registro)} /> : null}
               </div>
-              <p className="min-w-0 font-medium lg:text-[15px] lg:leading-[22px] lg:text-(--cor-texto-2)">
+              <p className="min-w-0 font-medium lg:text-pequeno lg:text-(--cor-texto-2)">
                 {nome}
                 {desde ? <span className="sr-only">{DESDE}</span> : null}
               </p>
@@ -67,6 +70,6 @@ export function UltimosDoHoje({ itens, marcaDe, className }: Props) {
           )
         })}
       </div>
-    </section>
+    </Pilha>
   )
 }

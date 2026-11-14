@@ -3,12 +3,14 @@ import { HOJE } from '../../conteudo/rotina.ts'
 import type { Nota, Registro } from '../../dados/rotina.tipos.ts'
 import { formatarHora } from '../../prototipo/formatar.ts'
 import { Avatar } from '../app/Avatar.tsx'
+import { Pilha } from '../base/layout/index.ts'
 import { horaDaNota } from './formatos.ts'
 import { ItemRegistro } from './ItemRegistro.tsx'
 
 // A linguagem da área da lista do Hoje (a 49b v2): linhas separadas por um fio fino, sem cartão branco.
-const LISTA = 'mt-3 border-y border-(--cor-fio-suave) lg:mt-4'
-const VAZIO = 'mt-3 border-y border-(--cor-fio-suave) py-4 text-(--cor-texto-2) lg:mt-4'
+// O vão entre o título, a lista e o rodapé é o da Pilha (`pilha`): a lista não leva margem.
+const LISTA = 'border-y border-(--cor-fio-suave)'
+const VAZIO = 'border-y border-(--cor-fio-suave) py-4 text-(--cor-texto-2)'
 
 interface NotasProps {
   /** As notas em destaque (`destaque_ate` depois de agora), da mais nova à mais antiga, até 3. */
@@ -16,15 +18,17 @@ interface NotasProps {
   autorDe: (nota: Nota) => string
   agora: number
   className?: string
+  /** Valores a somar no `data-h` da Pilha (`coluna`, quando ela é filha de `Colunas`). */
+  dataH?: string
   /** No 38b, o link `Ver notas`, logo abaixo da lista. */
   rodape?: ReactNode
 }
 
 /** "Para você saber": as notas em destaque da família, com o autor e a hora (R38-05). */
-export function ParaVoceSaber({ notas, autorDe, agora, className, rodape }: NotasProps) {
+export function ParaVoceSaber({ notas, autorDe, agora, className, dataH, rodape }: NotasProps) {
   const idTitulo = useId()
   return (
-    <section aria-labelledby={idTitulo} data-notas="" className={className}>
+    <Pilha as="section" vao="pilha" dataH={dataH} aria-labelledby={idTitulo} data-notas="" className={className}>
       <h2 id={idTitulo} className="cm-h4">
         {HOJE.paraVoceSaber}
       </h2>
@@ -42,7 +46,7 @@ export function ParaVoceSaber({ notas, autorDe, agora, className, rodape }: Nota
                 <Avatar nome={autor} />
                 <div className="min-w-0 flex-1">
                   <p className="font-medium wrap-anywhere">{nota.texto}</p>
-                  <p className="text-[15px] leading-[22px] text-(--cor-texto-2)">
+                  <p className="text-pequeno text-(--cor-texto-2)">
                     {HOJE.notaDe(autor, horaDaNota(Date.parse(nota.criadaEm), agora))}
                   </p>
                 </div>
@@ -52,7 +56,7 @@ export function ParaVoceSaber({ notas, autorDe, agora, className, rodape }: Nota
         </ul>
       )}
       {rodape}
-    </section>
+    </Pilha>
   )
 }
 
@@ -69,6 +73,8 @@ interface DesdeProps {
    */
   marcaDe?: (registro: Registro) => ReactNode
   className?: string
+  /** Valores a somar no `data-h` da Pilha (`coluna`, quando ela é filha de `Colunas`). */
+  dataH?: string
   /** No 38b: a rota do detalhe de cada item (o item vira link). Sem ela, os itens são só texto. */
   paraDetalhe?: (registro: Registro) => string
   /** No 38b, o link `Ver no Histórico`, abaixo dos itens. */
@@ -76,10 +82,10 @@ interface DesdeProps {
 }
 
 /** "Desde o seu último registro" (RF-07): o que as outras pessoas registraram depois do marco, até 5. */
-export function DesdeUltimoRegistro({ marcoEm, registros, fuso, autorDe, marcaDe, className, paraDetalhe, rodape }: DesdeProps) {
+export function DesdeUltimoRegistro({ marcoEm, registros, fuso, autorDe, marcaDe, className, dataH, paraDetalhe, rodape }: DesdeProps) {
   const idTitulo = useId()
   return (
-    <section aria-labelledby={idTitulo} data-desde="" className={className}>
+    <Pilha as="section" vao="pilha" dataH={dataH} aria-labelledby={idTitulo} data-desde="" className={className}>
       <h2 id={idTitulo} className="cm-h4">
         {HOJE.desdeOUltimo(formatarHora(marcoEm))}
       </h2>
@@ -100,6 +106,6 @@ export function DesdeUltimoRegistro({ marcoEm, registros, fuso, autorDe, marcaDe
         </ul>
       )}
       {rodape}
-    </section>
+    </Pilha>
   )
 }

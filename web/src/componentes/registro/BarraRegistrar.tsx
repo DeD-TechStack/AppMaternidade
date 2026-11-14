@@ -35,7 +35,7 @@ interface Props {
 // ao lado dele de 1024 para cima. As cores vêm das variáveis do tema: areia e cacau de dia, o cartão da
 // noite e o papel na madrugada. O hover inverte na hora.
 const BOTAO =
-  'alvo-toque flex h-14 min-w-0 flex-col items-center justify-center gap-0.5 rounded-cartao px-1 text-[15px] leading-[20px] font-medium transition-[scale] duration-100 ease-out active:scale-[0.96] lg:flex-row lg:gap-2.5 lg:text-[17px] lg:leading-[25px]'
+  'alvo-toque flex h-14 min-w-0 flex-col items-center justify-center gap-0.5 rounded-cartao px-1 text-pequeno font-medium transition-[scale] duration-100 ease-out active:scale-[0.96] lg:flex-row lg:gap-2.5 lg:text-corpo'
 const NEUTRO =
   'bg-(--cor-papel-fundo) text-(--cor-texto) hover:bg-(--cor-texto) hover:text-(--cor-fundo) aria-expanded:bg-(--cor-texto) aria-expanded:text-(--cor-fundo)'
 const ATIVO = 'bg-mel text-cacau hover:bg-(--cor-texto) hover:text-(--cor-fundo)'

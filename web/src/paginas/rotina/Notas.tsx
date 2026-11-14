@@ -4,6 +4,7 @@ import { ChevronLeft, Pencil, Plus, Trash2 } from 'lucide-react'
 import { ALVO_APP } from '../../componentes/app/alvo.ts'
 import { Avatar } from '../../componentes/app/Avatar.tsx'
 import { Botao } from '../../componentes/base/Botao.tsx'
+import { Pilha } from '../../componentes/base/layout/index.ts'
 import { AvisoDeErro } from '../../componentes/rotina/AvisoDeErro.tsx'
 import { AvisoDeLista } from '../../componentes/rotina/AvisoDeLista.tsx'
 import { FormularioNota } from '../../componentes/rotina/FormularioNota.tsx'
@@ -36,7 +37,7 @@ function VoltarDasNotas({ origem }: { origem: typeof ORIGEM_NOTAS | typeof ORIGE
   return (
     <LinkDaRotina
       to={origem}
-      className="-ml-1 mb-3 inline-flex items-center gap-1.5 no-underline hover:underline"
+      className="-ml-1 inline-flex items-center gap-1.5 self-start no-underline hover:underline"
       icone={<ChevronLeft className="size-5" strokeWidth={2} />}
     >
       {origem === ORIGEM_HOJE ? NOTAS.voltarParaHoje : NOTAS.voltarParaNotas}
@@ -94,7 +95,7 @@ function ListaDeNotas({ ativo }: { ativo: BebeAtivo }) {
       ocupada={notas.estado === 'carregando'}
       antes={<VoltarDasNotas origem={ORIGEM_HOJE} />}
     >
-      <div className="flex max-w-[40rem] flex-col gap-6">
+      <Pilha vao="bloco" className="max-w-leitura">
         {podeCriar ? (
           <div>
             <LinkDaRotina to="/app/notas/nova" state={{ origem }} variante="contorno" icone={<Plus />}>
@@ -110,15 +111,15 @@ function ListaDeNotas({ ativo }: { ativo: BebeAtivo }) {
           {(lista: Lista<Nota>) => {
             const itens = [...lista.itens].sort(maisNovaPrimeiro)
             return (
-              <section aria-labelledby="notas-lista" data-notas-da-familia="">
+              <Pilha as="section" vao="pilha" aria-labelledby="notas-lista" data-notas-da-familia="">
                 <h2 id="notas-lista" className="cm-h4">
                   {NOTAS.lista}
                 </h2>
-                {lista.incompleta ? <AvisoDeLista limite={LIMITES.notas} dado="notas" className="mt-3" /> : null}
+                {lista.incompleta ? <AvisoDeLista limite={LIMITES.notas} dado="notas" /> : null}
                 {itens.length === 0 ? (
-                  <p className="mt-3 border-y border-(--cor-fio-suave) py-4 text-(--cor-texto-2)">{NOTAS.vazia}</p>
+                  <p className="border-y border-(--cor-fio-suave) py-4 text-(--cor-texto-2)">{NOTAS.vazia}</p>
                 ) : (
-                  <ul className="mt-3 border-y border-(--cor-fio-suave)">
+                  <ul className="border-y border-(--cor-fio-suave)">
                     {itens.map((nota) => {
                       const autor = acoes.nomeDoAutor(nota.criadoPor, nota.familiaId)
                       const resumo = resumoDaNota(nota.texto)
@@ -129,20 +130,20 @@ function ListaDeNotas({ ativo }: { ativo: BebeAtivo }) {
                             <Avatar nome={autor} />
                             <div className="min-w-0 flex-1">
                               <p className="font-medium wrap-anywhere whitespace-pre-line">{nota.texto}</p>
-                              <p className="text-[15px] leading-[22px] text-(--cor-texto-2)">{nomeDoSobre(nota)}</p>
-                              <p className="text-[15px] leading-[22px] text-(--cor-texto-2) wrap-anywhere">
+                              <p className="text-pequeno text-(--cor-texto-2)">{nomeDoSobre(nota)}</p>
+                              <p className="text-pequeno text-(--cor-texto-2) wrap-anywhere">
                                 {NOTAS.autorEm(autor, dataEHora(Date.parse(nota.criadaEm)))}
                               </p>
                               {emDestaque && nota.destaqueAte ? (
-                                <p className="text-[15px] leading-[22px] text-(--cor-texto-2)">{NOTAS.emDestaqueAte(dataEHora(Date.parse(nota.destaqueAte)))}</p>
+                                <p className="text-pequeno text-(--cor-texto-2)">{NOTAS.emDestaqueAte(dataEHora(Date.parse(nota.destaqueAte)))}</p>
                               ) : null}
                             </div>
                           </div>
                           {podeAlterar(nota) ? (
                             excluindo === nota.id ? (
-                              <div role="group" aria-label={NOTAS.grupoDaExclusao} className="rounded-campo bg-(--cor-papel-fundo) p-4" data-confirmar-exclusao="">
+                              <Pilha vao="pilha" role="group" aria-label={NOTAS.grupoDaExclusao} className="rounded-campo bg-(--cor-papel-fundo) p-4" data-confirmar-exclusao="">
                                 <p className="font-medium">{NOTAS.confirmarExclusao}</p>
-                                <div className="mt-4 flex flex-wrap gap-3">
+                                <div className="flex flex-wrap gap-3">
                                   <Botao tamanho="app" className={ALVO_APP} desativado={ocupada === nota.id} onClick={() => void excluir(nota)}>
                                     {NOTAS.excluir}
                                   </Botao>
@@ -150,7 +151,7 @@ function ListaDeNotas({ ativo }: { ativo: BebeAtivo }) {
                                     {NOTAS.manter}
                                   </Botao>
                                 </div>
-                              </div>
+                              </Pilha>
                             ) : (
                               <div className="flex flex-wrap gap-3">
                                 <LinkDaRotina
@@ -180,11 +181,11 @@ function ListaDeNotas({ ativo }: { ativo: BebeAtivo }) {
                     })}
                   </ul>
                 )}
-              </section>
+              </Pilha>
             )
           }}
         </SecaoDoHoje>
-      </div>
+      </Pilha>
     </TelaRotina>
   )
 }
@@ -261,7 +262,7 @@ function EdicaoDaNota({ ativo }: { ativo: BebeAtivo }) {
   }
   if (leitura.estado === 'erro' && leitura.dados === null && leitura.erro) {
     return tela(
-      <div className="max-w-[28rem]">
+      <div className="max-w-md">
         <AvisoDeErro erro={leitura.erro} papel={ativo.papel} aoTentarDeNovo={leitura.recarregar} />
       </div>,
     )
@@ -272,7 +273,7 @@ function EdicaoDaNota({ ativo }: { ativo: BebeAtivo }) {
       {/* Uma releitura que falhou com a nota já na tela: o aviso e `Tentar de novo` ficam junto do formulário, que
           não é desmontado e não perde o rascunho (R38-11/12). */}
       {leitura.erro ? (
-        <div className="mb-6 max-w-[28rem]" data-releitura-falhou="">
+        <div className="max-w-md" data-releitura-falhou="">
           <AvisoDeErro erro={leitura.erro} papel={ativo.papel} aoTentarDeNovo={leitura.recarregar} />
         </div>
       ) : null}

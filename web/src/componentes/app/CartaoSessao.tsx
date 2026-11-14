@@ -2,6 +2,7 @@ import { useId, type Ref } from 'react'
 import { Link } from 'react-router'
 import { Baby, Milk, Moon } from 'lucide-react'
 import { Botao } from '../base/Botao.tsx'
+import { Pilha } from '../base/layout/index.ts'
 import { ALVO_APP } from './alvo.ts'
 import { recuoOptico } from './recuoOptico.ts'
 import { Ilustracao, type NomeIlustracao } from '../campo/Ilustracao.tsx'
@@ -44,13 +45,13 @@ export function CartaoSessao({ sessao, agora, aoEncerrar, podeEncerrar = true, o
         aria-labelledby={idTitulo}
         tabIndex={-1}
         data-andamento=""
-        className={`alvo-foco rounded-cartao border border-(--cor-fio-suave) bg-(--cor-cartao) p-6 lg:p-8 ${className ?? ''}`}
+        className={`alvo-foco flex flex-col gap-esp-junto rounded-cartao border border-(--cor-fio-suave) bg-(--cor-cartao) p-6 lg:p-8 ${className ?? ''}`}
       >
-        <h2 id={idTitulo} className="text-[15px] leading-[22px] font-medium text-(--cor-texto-2)">
+        <h2 id={idTitulo} className="text-pequeno font-medium text-(--cor-texto-2)">
           Em andamento
         </h2>
-        <p className="mt-2 font-titulo text-[24px] leading-[30px] font-semibold">Nenhuma sessão em andamento.</p>
-        <p className="mt-2 text-[15px] leading-[22px] text-(--cor-texto-2)">
+        <p className="font-titulo text-titulo-4 font-semibold">Nenhuma sessão em andamento.</p>
+        <p className="text-pequeno text-(--cor-texto-2)">
           Para começar, toque em Sono ou Mamada na barra Registrar, embaixo.
         </p>
       </section>
@@ -72,9 +73,9 @@ export function CartaoSessao({ sessao, agora, aoEncerrar, podeEncerrar = true, o
       tabIndex={-1}
       data-andamento=""
       data-tipo={sessao.tipo}
-      className={`alvo-foco relative flex overflow-hidden rounded-cartao bg-(--cor-campo-sessao) p-6 text-(--cor-numero-sessao) [border:var(--borda-campo)] lg:items-stretch lg:gap-10 lg:p-10 ${className ?? ''}`}
+      className={`alvo-foco relative flex overflow-hidden rounded-cartao bg-(--cor-campo-sessao) p-esp-painel text-(--cor-numero-sessao) [border:var(--borda-campo)] lg:items-stretch lg:gap-esp-grupo ${className ?? ''}`}
     >
-      <div className="relative z-10 min-w-0 flex-1 lg:flex-none lg:[[data-tema=madrugada]_&]:flex-1">
+      <Pilha vao="pilha" className="relative z-10 min-w-0 flex-1 lg:flex-none lg:[[data-tema=madrugada]_&]:flex-1">
         <div className="flex items-center gap-2.5">
           <span
             aria-hidden="true"
@@ -82,28 +83,28 @@ export function CartaoSessao({ sessao, agora, aoEncerrar, podeEncerrar = true, o
           >
             <Icone className="size-4" strokeWidth={2} aria-hidden="true" />
           </span>
-          <h2 id={idTitulo} className="text-[15px] leading-[22px] font-medium">
+          <h2 id={idTitulo} className="text-pequeno font-medium">
             Em andamento
           </h2>
         </div>
 
-        <div className={`mt-4 flex flex-col gap-6 lg:gap-8 ${NOITE_EM_LINHA}`}>
-          <div>
-            <p className="font-titulo text-[24px] leading-[30px] font-semibold">{ROTULO_SESSAO[sessao.tipo]}</p>
+        <div className={`flex flex-col gap-esp-grupo ${NOITE_EM_LINHA}`}>
+          <Pilha vao="junto">
+            <p className="font-titulo text-titulo-4 font-semibold">{ROTULO_SESSAO[sessao.tipo]}</p>
             <p
               role="timer"
               aria-live="off"
               aria-label={`Tempo de ${ROTULO_SESSAO[sessao.tipo].toLowerCase()}`}
               data-numero=""
-              className={`mt-1 font-titulo text-[64px] leading-none font-semibold tracking-[-0.02em] whitespace-nowrap tabular-nums lg:text-[120px] ${recuoOptico(tempo)}`}
+              className={`font-titulo text-[64px] leading-none font-semibold tracking-[-0.02em] whitespace-nowrap tabular-nums lg:text-[120px] ${recuoOptico(tempo)}`}
             >
               {tempo}
             </p>
-            <p className="mt-3 text-[15px] leading-[22px]">
+            <p className="text-pequeno">
               {`Iniciado às ${formatarHora(sessao.inicio)} `}
               <span>{`por ${sessao.pessoa}`}</span>
             </p>
-          </div>
+          </Pilha>
 
           <div className="flex flex-wrap items-center gap-3">
             {podeEncerrar ? (
@@ -122,14 +123,14 @@ export function CartaoSessao({ sessao, agora, aoEncerrar, podeEncerrar = true, o
             </Link>
           </div>
         </div>
-      </div>
+      </Pilha>
 
       {/* O traço fica mais pesado sem filtro: o desenho ocupa a altura toda do cartão (o traço cresce com
           ele) e duas cópias deslocadas em 1 px engrossam a linha. As cópias são só enfeite. */}
       <div
         aria-hidden="true"
         data-desenho=""
-        className="pointer-events-none relative -mb-10 hidden min-w-[9rem] flex-1 lg:block [[data-tema=madrugada]_&]:hidden"
+        className="pointer-events-none relative -mb-esp-painel hidden min-w-[9rem] flex-1 lg:block [[data-tema=madrugada]_&]:hidden"
       >
         <span className="absolute inset-y-0 left-0 block">
           <Ilustracao nome={DESENHO[sessao.tipo]} decorativa carregamento="eager" className="h-full w-auto max-w-none" />

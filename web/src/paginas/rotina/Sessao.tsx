@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
 import { ChevronLeft, Info } from 'lucide-react'
 import { AvisoDaTela } from '../../componentes/app/AvisoDaTela.tsx'
+import { Colunas, Pilha, QuadroLayout, Secao } from '../../componentes/base/layout/index.ts'
 import { CronometroSessao } from '../../componentes/app/CronometroSessao.tsx'
 import { SessoesAnteriores } from '../../componentes/app/SessoesAnteriores.tsx'
 import { AvisoDeErro } from '../../componentes/rotina/AvisoDeErro.tsx'
@@ -34,7 +35,7 @@ const VOLTAR_PARA_HOJE = (
   <Link
     to="/app/hoje"
     state={{ foco: 'titulo' }}
-    className="alvo-toque -ml-1 mb-3 inline-flex min-h-(--alvo-toque) items-center gap-1.5 rounded-pilula px-1 text-[17px] leading-[25px] font-medium no-underline underline-offset-4 hover:underline"
+    className="alvo-toque -ml-1 inline-flex min-h-(--alvo-toque) items-center gap-1.5 self-start rounded-pilula px-1 text-corpo font-medium no-underline underline-offset-4 hover:underline"
     data-voltar=""
   >
     <ChevronLeft aria-hidden="true" className="size-5" strokeWidth={2} />
@@ -197,7 +198,7 @@ export function Sessao() {
   }
 
   const avisoDaPendencia = pendencia ? (
-    <AvisoDeErro erro={pendencia.erro} escrita papel={ativo?.papel ?? null} aoTentarDeNovo={pendencia.repetir} className="max-w-[28rem]">
+    <AvisoDeErro erro={pendencia.erro} escrita papel={ativo?.papel ?? null} aoTentarDeNovo={pendencia.repetir} className="max-w-md">
       {pendencia.nota !== '' ? (
         <p className="w-full rounded-campo bg-(--cor-papel-fundo) px-4 py-3 wrap-anywhere" data-texto-da-nota="">
           {pendencia.nota}
@@ -210,10 +211,10 @@ export function Sessao() {
   // sem desmontar o cartão, o painel da nota nem o texto digitado (R8). A lista que passou do limite diz o N.
   const avisosDasAnteriores =
     anteriores.erro || anteriores.dados?.incompleta ? (
-      <div className="flex flex-col gap-3 lg:col-span-12" data-avisos-das-anteriores="">
+      <Pilha vao="pilha" dataH="coluna" className="lg:col-span-2" data-avisos-das-anteriores="">
         {anteriores.erro ? <AvisoDeErro erro={anteriores.erro} papel={ativo?.papel ?? null} aoTentarDeNovo={anteriores.recarregar} /> : null}
         {anteriores.dados?.incompleta ? <AvisoDeLista limite={LIMITES.sessoesDaJanela} dado="anteriores" /> : null}
-      </div>
+      </Pilha>
     ) : null
 
   // "Manter os dois" e "Fechar" fecham a confirmação; "Excluir este" também e leva ao Hoje, porque a sessão
@@ -234,73 +235,76 @@ export function Sessao() {
     const autor = nomeDoAutor(sessao.criadoPor, sessao.familiaId)
     return (
       <>
-        {/* O pé de papel é largo: o painel de mel do cronômetro e o painel de mel do rodapé nunca ficam
-            quase encostados (DESIGN.md 7, papel entre os painéis). */}
-        <main ref={principal} className="pb-24 text-[17px] leading-[25px] lg:pb-32" data-tela="sessao">
-          <TituloRotina
-            antes={VOLTAR_PARA_HOJE}
-            titulo={SESSAO.titulo(rotulo, bebeDaSessao.bebe.nome)}
-            linha={SESSOES.iniciadoAs(formatarHora(inicio), autor)}
-          />
+        {/* O pé de papel é largo: a Seção que fecha o <main> tem espaco-secao-ampla embaixo, e o painel de mel do
+            cronômetro e o do rodapé nunca ficam quase encostados (DESIGN.md 7, papel entre os painéis). */}
+        <main ref={principal} className="text-corpo" data-tela="sessao">
+          <Secao>
+            <QuadroLayout>
+              <Pilha vao="bloco">
+                <TituloRotina
+                  antes={VOLTAR_PARA_HOJE}
+                  titulo={SESSAO.titulo(rotulo, bebeDaSessao.bebe.nome)}
+                  linha={SESSOES.iniciadoAs(formatarHora(inicio), autor)}
+                />
 
-          {avisar ? (
-            <div className="cm-area mt-5">
-              <p className="inline-flex items-start gap-2.5 rounded-campo bg-(--cor-papel-fundo) px-4 py-3 font-medium">
-                <Info aria-hidden="true" className="mt-0.5 size-5 shrink-0" strokeWidth={2} />
-                {SESSOES.jaEmAndamento(rotulo)}
-              </p>
-            </div>
-          ) : null}
+                {avisar ? (
+                  <p className="inline-flex items-start gap-2.5 self-start rounded-campo bg-(--cor-papel-fundo) px-4 py-3 font-medium">
+                    <Info aria-hidden="true" className="mt-0.5 size-5 shrink-0" strokeWidth={2} />
+                    {SESSOES.jaEmAndamento(rotulo)}
+                  </p>
+                ) : null}
 
-          {rotina.acessoPerdido ? (
-            <div className="cm-area mt-5">
-              <p className="rounded-campo bg-(--cor-papel-fundo) px-4 py-3 font-medium">{ESTADOS.acessoPerdido}</p>
-            </div>
-          ) : null}
+                {rotina.acessoPerdido ? (
+                  <p className="self-start rounded-campo bg-(--cor-papel-fundo) px-4 py-3 font-medium">{ESTADOS.acessoPerdido}</p>
+                ) : null}
 
-          {/* A confirmação da rotina também vive aqui: o possível duplicado ao iniciar a sessão. Não some sozinha. */}
-          <div className="cm-area mt-5" data-confirmacao-da-sessao="">
-            <ConfirmacaoRotina confirmacao={confirmacao} aoAcionar={acionar} />
-          </div>
+                {/* A confirmação da rotina também vive aqui: o possível duplicado ao iniciar a sessão. Não some
+                    sozinha. Vazia, fica no DOM e fora do fluxo (sr-only): não ocupa vão da pilha. */}
+                <div className={confirmacao ? undefined : 'sr-only'} data-confirmacao-da-sessao="">
+                  <ConfirmacaoRotina confirmacao={confirmacao} aoAcionar={acionar} />
+                </div>
 
-          {leitura.erro ? (
-            <div className="cm-area mt-5 max-w-[28rem]" data-releitura-falhou="">
-              <AvisoDeErro erro={leitura.erro} papel={bebeDaSessao.papel} aoTentarDeNovo={leitura.recarregar} />
-            </div>
-          ) : null}
+                {leitura.erro ? (
+                  <div className="max-w-md" data-releitura-falhou="">
+                    <AvisoDeErro erro={leitura.erro} papel={bebeDaSessao.papel} aoTentarDeNovo={leitura.recarregar} />
+                  </div>
+                ) : null}
 
-          {/* Em 1440 o painel e o cartão das anteriores terminam na mesma linha (stretch: os dois fundos
-              alinhados). O cronômetro ocupa a altura que sobra na coluna dele. */}
-          <div className="cm-area mt-6 grid grid-cols-1 gap-6 lg:mt-10 lg:grid-cols-12 lg:items-stretch lg:gap-8">
-            <div className="flex flex-col gap-4 lg:col-span-7">
-              <CronometroSessao
-                className="lg:flex-1"
-                cronometro={formatarCronometro(agora - inicio)}
-                atividade={sessao.tipo === 'tummy' ? ATIVIDADE_TUMMY : undefined}
-                acoes={{ encerrar: gravacaoLiberada, descartar: podeAlterar(sessao) }}
-                ocupado={ocupado}
-                aoEncerrar={(nota) => void encerrar(sessao, nota)}
-                aoDescartar={() => void descartar(sessao)}
-              />
-              {!gravacaoLiberada ? <p className="text-[15px] leading-[22px] text-(--cor-texto-2)">{textoDoPapel}</p> : null}
-              {avisoDaPendencia}
-              <SessoesEmParalelo
-                sessoes={[sessao]}
-                agora={agora}
-                autorDe={() => autor}
-                podeEncerrar={gravacaoLiberada}
-                podeUnir={() => false}
-                textoDoPapel={textoDoPapel}
-                ocupado={ocupado}
-                relogioAtrasDe={relogioAtrasDe}
-                aoEncerrar={() => undefined}
-                aoEncerrarEm={(registro, momento) => void encerrar(registro, '', momento)}
-                aoUnir={() => Promise.resolve({ ok: true, valor: null })}
-              />
-            </div>
-            <SessoesAnteriores className="lg:col-span-5" tipo={sessao.tipo} itens={itensAnteriores} />
-            {avisosDasAnteriores}
-          </div>
+                {/* Em 1440 o painel e o cartão das anteriores terminam na mesma linha (stretch: os dois fundos
+                    alinhados). O cronômetro ocupa a altura que sobra na coluna dele. Frações de hoje: 7 e 5 de 12. */}
+                <Colunas fracoes="7fr 5fr" aPartirDe={1024} vao="bloco">
+                  <Pilha vao="pilha" dataH="coluna">
+                    <CronometroSessao
+                      className="lg:flex-1"
+                      cronometro={formatarCronometro(agora - inicio)}
+                      atividade={sessao.tipo === 'tummy' ? ATIVIDADE_TUMMY : undefined}
+                      acoes={{ encerrar: gravacaoLiberada, descartar: podeAlterar(sessao) }}
+                      ocupado={ocupado}
+                      aoEncerrar={(nota) => void encerrar(sessao, nota)}
+                      aoDescartar={() => void descartar(sessao)}
+                    />
+                    {!gravacaoLiberada ? <p className="text-pequeno text-(--cor-texto-2)">{textoDoPapel}</p> : null}
+                    {avisoDaPendencia}
+                    <SessoesEmParalelo
+                      sessoes={[sessao]}
+                      agora={agora}
+                      autorDe={() => autor}
+                      podeEncerrar={gravacaoLiberada}
+                      podeUnir={() => false}
+                      textoDoPapel={textoDoPapel}
+                      ocupado={ocupado}
+                      relogioAtrasDe={relogioAtrasDe}
+                      aoEncerrar={() => undefined}
+                      aoEncerrarEm={(registro, momento) => void encerrar(registro, '', momento)}
+                      aoUnir={() => Promise.resolve({ ok: true, valor: null })}
+                    />
+                  </Pilha>
+                  <SessoesAnteriores tipo={sessao.tipo} itens={itensAnteriores} />
+                  {avisosDasAnteriores}
+                </Colunas>
+              </Pilha>
+            </QuadroLayout>
+          </Secao>
         </main>
 
         {/* O aviso honesto de demonstração: fora do <main> e dos cartões, o único da página. */}
@@ -311,27 +315,31 @@ export function Sessao() {
 
   return (
     <>
-      <main ref={principal} className="pb-24 text-[17px] leading-[25px] lg:pb-32" data-tela="sessao" aria-busy={carregando ? 'true' : undefined}>
-        {carregando || iniciandoPelaUrl ? (
-          <p className="cm-area pt-10">{iniciandoPelaUrl ? null : COMUM.carregando}</p>
-        ) : (
-          <>
-            <TituloRotina antes={VOLTAR_PARA_HOJE} titulo={TITULO_SEM_SESSAO} linha={SUBTITULO_SEM_SESSAO} />
-            {leitura.erro ? (
-              <div className="cm-area mt-5 max-w-[28rem]">
-                <AvisoDeErro erro={leitura.erro} papel={ativo.papel} aoTentarDeNovo={leitura.recarregar} />
-              </div>
-            ) : null}
-            {/* A sessão pode ter acabado de ser encerrada ou descartada, mas a escrita falhou sem resposta: a
-                recuperação (`Tentar de novo` e a nota) continua aqui, mesmo com a releitura já sem a sessão. */}
-            {pendencia ? <div className="cm-area mt-5">{avisoDaPendencia}</div> : null}
-            <div className="cm-area mt-6 grid grid-cols-1 gap-6 lg:mt-10 lg:grid-cols-12 lg:items-start lg:gap-8">
-              <MidiaDaSessao className="lg:col-span-7" />
-              <SessoesAnteriores className="lg:col-span-5" tipo="sono" itens={itensAnteriores} />
-              {avisosDasAnteriores}
-            </div>
-          </>
-        )}
+      <main ref={principal} className="text-corpo" data-tela="sessao" aria-busy={carregando ? 'true' : undefined}>
+        <Secao>
+          <QuadroLayout>
+            {carregando || iniciandoPelaUrl ? (
+              <p>{iniciandoPelaUrl ? null : COMUM.carregando}</p>
+            ) : (
+              <Pilha vao="bloco">
+                <TituloRotina antes={VOLTAR_PARA_HOJE} titulo={TITULO_SEM_SESSAO} linha={SUBTITULO_SEM_SESSAO} />
+                {leitura.erro ? (
+                  <div className="max-w-md">
+                    <AvisoDeErro erro={leitura.erro} papel={ativo.papel} aoTentarDeNovo={leitura.recarregar} />
+                  </div>
+                ) : null}
+                {/* A sessão pode ter acabado de ser encerrada ou descartada, mas a escrita falhou sem resposta: a
+                    recuperação (`Tentar de novo` e a nota) continua aqui, mesmo com a releitura já sem a sessão. */}
+                {pendencia ? <div>{avisoDaPendencia}</div> : null}
+                <Colunas fracoes="7fr 5fr" aPartirDe={1024} alinhar="inicio" vao="bloco">
+                  <MidiaDaSessao />
+                  <SessoesAnteriores tipo="sono" itens={itensAnteriores} />
+                  {avisosDasAnteriores}
+                </Colunas>
+              </Pilha>
+            )}
+          </QuadroLayout>
+        </Secao>
       </main>
 
       <AvisoDaTela />

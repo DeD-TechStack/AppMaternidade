@@ -120,7 +120,7 @@ export function FormularioNota({ modo, ativo, nota, origem }: Props) {
   const liberado = modo === 'nova' || (nota !== undefined && podeAlterar(nota))
 
   return (
-    <form ref={formulario} noValidate onSubmit={aoEnviar} className="flex max-w-[40rem] flex-col gap-6" data-formulario-nota={modo}>
+    <form ref={formulario} noValidate onSubmit={aoEnviar} className="flex max-w-leitura flex-col gap-esp-grupo" data-formulario-nota={modo}>
       <Controle rotulo={NOTAS.campoTexto} erro={erroDoTexto} ajuda={NOTAS.limiteDoTexto}>
         {(propriedades) => (
           <textarea
@@ -128,7 +128,7 @@ export function FormularioNota({ modo, ativo, nota, origem }: Props) {
             rows={4}
             value={texto}
             readOnly={enviando}
-            className="block min-h-[6rem] w-full resize-y rounded-campo border-[1.5px] border-(--cor-texto-2) bg-(--cor-cartao) px-4 py-3 text-[17px] leading-[25px] text-(--cor-texto) hover:border-(--cor-texto) focus-visible:border-(--cor-texto)"
+            className="block min-h-[6rem] w-full resize-y rounded-campo border-[1.5px] border-(--cor-texto-2) bg-(--cor-cartao) px-4 py-3 text-corpo text-(--cor-texto) hover:border-(--cor-texto) focus-visible:border-(--cor-texto)"
             onChange={(evento) => setTexto(evento.target.value)}
           />
         )}

@@ -35,7 +35,7 @@ export function Confirmacao({ texto, aoDesfazer, aoFechar, escolhas }: Props) {
           >
             <Check className="size-5" strokeWidth={2.25} aria-hidden="true" />
           </span>
-          <p className="min-w-0 flex-1 text-[17px] leading-[25px] font-medium">{texto}</p>
+          <p className="min-w-0 flex-1 text-corpo font-medium">{texto}</p>
           <div className="flex basis-full gap-2 sm:basis-auto">
             <Botao
               variante="contorno"

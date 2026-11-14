@@ -68,7 +68,7 @@ export function SeletorDeDia({ dia, hoje, aoEscolher }: Props) {
               aria-current={candidato === dia ? 'date' : undefined}
               onClick={() => aoEscolher(candidato)}
             >
-              <span className="text-[15px] leading-[22px]">{siglaDoDia(candidato)}</span>{' '}
+              <span className="text-pequeno">{siglaDoDia(candidato)}</span>{' '}
               <span className="font-medium tabular-nums">{numeroDoDia(candidato)}</span>
             </button>
           </li>

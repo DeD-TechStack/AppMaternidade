@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Pilha } from '../base/layout/index.ts'
 
 interface Props {
   /** O `h1` da tela, em Literata 600 (84/88 em 1440, 42/46 em 390). */
@@ -17,15 +18,15 @@ interface Props {
  */
 export function TituloDaTela({ titulo, linha, antes, lateral }: Props) {
   return (
-    <div className="cm-area pt-6 lg:pt-12" data-titulo-tela="">
+    <Pilha vao="junto" data-titulo-tela="">
       {antes}
-      <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-2">
-        <div className="min-w-0">
+      <div className="flex flex-wrap items-end justify-between gap-x-esp-grupo gap-y-esp-junto">
+        <Pilha vao="junto" className="min-w-0">
           <h1 className="cm-h1">{titulo}</h1>
-          <p className="cm-h3 mt-1 font-medium italic">{linha}</p>
-        </div>
+          <p className="cm-h3 font-medium italic">{linha}</p>
+        </Pilha>
         {lateral}
       </div>
-    </div>
+    </Pilha>
   )
 }

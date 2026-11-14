@@ -17,6 +17,7 @@ import { uuidV7 } from '../../dados/rotina.uuid.ts'
 import { formatarDuracao, formatarHora } from '../../prototipo/formatar.ts'
 import { ALVO_APP } from '../app/alvo.ts'
 import { Botao } from '../base/Botao.tsx'
+import { Pilha } from '../base/layout/index.ts'
 import { AvisoDeErro } from './AvisoDeErro.tsx'
 import { CampoHorario } from './CampoHorario.tsx'
 import { useRotina, type BebeAtivo } from './contexto.ts'
@@ -326,7 +327,7 @@ export function FormularioRegistro({ modo, ativo, tipoInicial, registro }: Props
   const rotuloDoHorario = tipo !== '' && ehTipoDeSessao(tipo) ? FORMULARIO.inicio : FORMULARIO.horario
 
   return (
-    <form ref={formulario} noValidate onSubmit={aoEnviar} className="flex max-w-[40rem] flex-col gap-6" data-formulario-registro={modo}>
+    <form ref={formulario} noValidate onSubmit={aoEnviar} className="flex max-w-leitura flex-col gap-esp-grupo" data-formulario-registro={modo}>
       {modo === 'novo' && tipoInicial === '' ? (
         <Selecao
           rotulo={FORMULARIO.escolhaDoTipo}
@@ -435,7 +436,7 @@ export function FormularioRegistro({ modo, ativo, tipoInicial, registro }: Props
                   rows={4}
                   value={campos.texto}
                   readOnly={bloqueado}
-                  className="block min-h-[6rem] w-full resize-y rounded-campo border-[1.5px] border-(--cor-texto-2) bg-(--cor-cartao) px-4 py-3 text-[17px] leading-[25px] text-(--cor-texto) hover:border-(--cor-texto) focus-visible:border-(--cor-texto)"
+                  className="block min-h-[6rem] w-full resize-y rounded-campo border-[1.5px] border-(--cor-texto-2) bg-(--cor-cartao) px-4 py-3 text-corpo text-(--cor-texto) hover:border-(--cor-texto) focus-visible:border-(--cor-texto)"
                   onChange={(evento) => mudar({ texto: evento.target.value })}
                 />
               )}
@@ -448,7 +449,7 @@ export function FormularioRegistro({ modo, ativo, tipoInicial, registro }: Props
                   rows={3}
                   value={campos.nota}
                   readOnly={bloqueado}
-                  className="block min-h-[6rem] w-full resize-y rounded-campo border-[1.5px] border-(--cor-texto-2) bg-(--cor-cartao) px-4 py-3 text-[17px] leading-[25px] text-(--cor-texto) hover:border-(--cor-texto) focus-visible:border-(--cor-texto)"
+                  className="block min-h-[6rem] w-full resize-y rounded-campo border-[1.5px] border-(--cor-texto-2) bg-(--cor-cartao) px-4 py-3 text-corpo text-(--cor-texto) hover:border-(--cor-texto) focus-visible:border-(--cor-texto)"
                   onChange={(evento) => mudar({ nota: evento.target.value })}
                 />
               )}
@@ -480,13 +481,13 @@ export function FormularioRegistro({ modo, ativo, tipoInicial, registro }: Props
       ) : null}
 
       {passo === 'confirmando' ? (
-        <div role="group" aria-label={FORMULARIO.confirmarGrupo} className="rounded-campo bg-(--cor-papel-fundo) p-4" data-avisos="">
+        <Pilha vao="pilha" role="group" aria-label={FORMULARIO.confirmarGrupo} className="rounded-campo bg-(--cor-papel-fundo) p-4" data-avisos="">
           {avisos.map((aviso) => (
             <p key={aviso} className="font-medium">
               {aviso}
             </p>
           ))}
-          <div className="mt-4 flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3">
             <Botao
               tamanho="app"
               className={ALVO_APP}
@@ -501,7 +502,7 @@ export function FormularioRegistro({ modo, ativo, tipoInicial, registro }: Props
               {FORMULARIO.corrigir}
             </Botao>
           </div>
-        </div>
+        </Pilha>
       ) : (
         <div className="flex flex-wrap gap-3">
           <Botao type="submit" tamanho="app" className={`min-w-[8.5rem] ${ALVO_APP}`} desativado={enviando}>

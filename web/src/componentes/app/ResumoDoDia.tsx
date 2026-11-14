@@ -1,4 +1,5 @@
 import { useId } from 'react'
+import { Pilha } from '../base/layout/index.ts'
 
 interface Props {
   itens: ReadonlyArray<{ rotulo: string; valor: string }>
@@ -14,14 +15,14 @@ interface Props {
 export function ResumoDoDia({ itens, className }: Props) {
   const idTitulo = useId()
   return (
-    <section aria-labelledby={idTitulo} data-resumo="" className={`@container/resumo ${className ?? ''}`}>
+    <Pilha as="section" vao="pilha" aria-labelledby={idTitulo} data-resumo="" className={`@container/resumo ${className ?? ''}`}>
       <h2 id={idTitulo} className="cm-h4">
         Hoje até agora
       </h2>
       {/* A grade decide pelo espaço da própria seção, não pela janela: abaixo de 18 rem (390 a 200 %, fonte
           grande) cada número vira uma linha com fio, rótulo à esquerda; com espaço, três lado a lado. Os
           números seguem a largura (clamp em cqi): 44 px em 390, 52 px em 1440, 28 px no mínimo. */}
-      <ul className="mt-3 grid grid-cols-1 border-b border-(--cor-fio-suave) @min-[18rem]/resumo:grid-cols-[1fr_1fr_1.45fr] @min-[18rem]/resumo:border-t lg:mt-4">
+      <ul className="grid grid-cols-1 border-b border-(--cor-fio-suave) @min-[18rem]/resumo:grid-cols-[1fr_1fr_1.45fr] @min-[18rem]/resumo:border-t">
         {itens.map((item) => (
           <li
             key={item.rotulo}
@@ -33,10 +34,10 @@ export function ResumoDoDia({ itens, className }: Props) {
             >
               {item.valor}
             </span>
-            <span className="text-[15px] leading-[22px] font-medium text-(--cor-texto-2)">{item.rotulo}</span>
+            <span className="text-pequeno font-medium text-(--cor-texto-2)">{item.rotulo}</span>
           </li>
         ))}
       </ul>
-    </section>
+    </Pilha>
   )
 }

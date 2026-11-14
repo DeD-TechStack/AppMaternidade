@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router'
 import { ChevronLeft, Pencil, Trash2, Undo2 } from 'lucide-react'
 import { ALVO_APP } from '../../componentes/app/alvo.ts'
 import { Botao } from '../../componentes/base/Botao.tsx'
+import { Pilha } from '../../componentes/base/layout/index.ts'
 import { AvisoDeErro } from '../../componentes/rotina/AvisoDeErro.tsx'
 import { AvisoDeLista } from '../../componentes/rotina/AvisoDeLista.tsx'
 import { AvisoDoPapel } from '../../componentes/rotina/AvisoDoPapel.tsx'
@@ -77,7 +78,7 @@ function DetalheDoRegistro() {
   const voltar = (dia: string | null) => (
     <LinkDaRotina
       to={dia === null ? '/app/historico' : urlDoHistoricoDoDia(dia)}
-      className="-ml-1 mb-3 inline-flex items-center gap-1.5 no-underline hover:underline"
+      className="-ml-1 inline-flex items-center gap-1.5 self-start no-underline hover:underline"
       data-voltar=""
       icone={<ChevronLeft className="size-5" strokeWidth={2} />}
     >
@@ -97,7 +98,7 @@ function DetalheDoRegistro() {
   if (leitura.estado === 'erro' && leitura.dados === null && leitura.erro) {
     return (
       <TelaRotina tela="registro-detalhe" principal={principal} acionar={acionar} titulo={titulo} linha={ativo.bebe.nome} antes={voltar(null)}>
-        <div className="max-w-[28rem]">
+        <div className="max-w-md">
           <AvisoDeErro erro={leitura.erro} papel={ativo.papel} aoTentarDeNovo={leitura.recarregar} />
         </div>
       </TelaRotina>
@@ -144,7 +145,7 @@ function DetalheDoRegistro() {
       linha={`${ROTULO_TIPO[registro.tipo]}, ${dono.bebe.nome}`}
       antes={voltar(dia)}
     >
-      <div className="flex max-w-[40rem] flex-col gap-8">
+      <Pilha vao="bloco" className="max-w-leitura">
         {leitura.erro ? (
           <div data-releitura-falhou="">
             <AvisoDeErro erro={leitura.erro} papel={dono.papel} aoTentarDeNovo={leitura.recarregar} />
@@ -175,7 +176,7 @@ function DetalheDoRegistro() {
           <Campo rotulo={DETALHE.origem}>{registro.origem === 'ao_vivo' ? DETALHE.origemAoVivo : DETALHE.origemRetroativo}</Campo>
         </dl>
 
-        <ul data-autoria="" className="flex flex-col gap-1 text-[15px] leading-[22px] text-(--cor-texto-2)">
+        <ul data-autoria="" className="flex flex-col gap-1 text-pequeno text-(--cor-texto-2)">
           <li>{sessao ? DETALHE.iniciadoPor(autorDe(registro.criadoPor)) : DETALHE.registradoPor(autorDe(registro.criadoPor))}</li>
           {sessao && registro.fim !== null ? <li>{DETALHE.encerradoPor(autorDe(registro.encerradoPor))}</li> : null}
         </ul>
@@ -206,22 +207,22 @@ function DetalheDoRegistro() {
             {(lista) => {
               const ordenadas = [...lista.itens].sort((a, b) => a.versao - b.versao || (a.recebidaEm < b.recebidaEm ? -1 : 1))
               return (
-                <section aria-labelledby="detalhe-alteracoes" data-historico-de-alteracoes="">
+                <Pilha as="section" vao="pilha" aria-labelledby="detalhe-alteracoes" data-historico-de-alteracoes="">
                   <h2 id="detalhe-alteracoes" className="cm-h4">
                     {DETALHE.historicoDeAlteracoes}
                   </h2>
-                  {lista.incompleta ? <AvisoDeLista limite={LIMITES.alteracoes} dado="alteracoes" className="mt-3" /> : null}
+                  {lista.incompleta ? <AvisoDeLista limite={LIMITES.alteracoes} dado="alteracoes" /> : null}
                   {ordenadas.length === 0 ? (
-                    <p className="mt-3 text-(--cor-texto-2)">{DETALHE.semAlteracoes}</p>
+                    <p className="text-(--cor-texto-2)">{DETALHE.semAlteracoes}</p>
                   ) : (
-                    <ol className="mt-3 border-y border-(--cor-fio-suave)">
+                    <ol className="border-y border-(--cor-fio-suave)">
                       {ordenadas.map((alteracao) => (
                         <li key={alteracao.id} className="border-t border-(--cor-fio-suave) py-3 first:border-t-0">
                           <p className="font-medium wrap-anywhere">
                             {DETALHE.linhaDaAlteracao(DETALHE.operacoes[alteracao.operacao], autorDe(alteracao.autor), dataEHora(Date.parse(alteracao.recebidaEm)))}
                           </p>
                           {camposMudados(alteracao).map((mudado) => (
-                            <p key={mudado.campo} className="text-[15px] leading-[22px] text-(--cor-texto-2) wrap-anywhere">
+                            <p key={mudado.campo} className="text-pequeno text-(--cor-texto-2) wrap-anywhere">
                               {DETALHE.mudou(mudado.campo, mudado.antes, mudado.depois)}
                             </p>
                           ))}
@@ -229,12 +230,12 @@ function DetalheDoRegistro() {
                       ))}
                     </ol>
                   )}
-                </section>
+                </Pilha>
               )
             }}
           </SecaoDoHoje>
         ) : null}
-      </div>
+      </Pilha>
     </TelaRotina>
   )
 }

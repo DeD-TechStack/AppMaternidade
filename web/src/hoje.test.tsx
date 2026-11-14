@@ -550,23 +550,30 @@ describe('Hoje: madrugada', () => {
     expect(grande.classList.contains('size-[13rem]')).toBe(true)
   })
 
-  it('no celular, com o sono em andamento, o histórico sobe: grade com 20 px entre blocos e 16 px sob o título (antes 32 e 24)', async () => {
+  it('no celular, com o sono em andamento, o histórico sobe: a grade é Colunas de bloco (H-3e; antes gap-5 e mt-4 soltos), frações 8/4', async () => {
     const { container } = await renderizarRotaPronta('/app/hoje', { madrugada: true, diaCompleto: true })
 
     const grade = container.querySelector<HTMLElement>('main [data-grade-do-hoje]')!
     expect(grade.contains(cartao(container))).toBe(true)
     expect(grade.contains(regiao('Desde o seu último registro, às 07:50'))).toBe(true)
-    for (const classe of ['gap-5', 'mt-4', 'lg:mt-10', 'lg:gap-y-12']) expect(grade.classList.contains(classe), classe).toBe(true)
+    const contrato: Array<[string, string | null]> = [
+      ['data-h', 'colunas'],
+      ['data-h-vao', 'bloco'],
+      ['data-h-quebra', '1024'],
+      ['data-h-alinhar', 'inicio'],
+    ]
+    for (const [atributo, valor] of contrato) expect(grade.getAttribute(atributo), atributo).toBe(valor)
     for (const classe of ['gap-8', 'mt-6']) expect(grade.classList.contains(classe), classe).toBe(false)
     // Nenhum alvo encolhe: o círculo continua com 7 rem e o Encerrar com o alvo do app.
     expect(screen.getByRole('button', { name: 'Iniciar mamada' }).classList.contains('size-[7rem]')).toBe(true)
   })
 
-  it('o ajuste é só da madrugada com sessão: de dia a grade mantém 40 px entre blocos', async () => {
+  it('o ajuste é só da madrugada com sessão: de dia a grade é Colunas de bloco com as frações 6/6 (antes gap-10 e mt-6 soltos)', async () => {
     const { container } = await renderizarRotaPronta('/app/hoje')
 
     const grade = container.querySelector<HTMLElement>('main [data-grade-do-hoje]')!
-    for (const classe of ['gap-10', 'mt-6']) expect(grade.classList.contains(classe), classe).toBe(true)
+    expect(grade.getAttribute('data-h-vao')).toBe('bloco')
+    expect(grade.style.getPropertyValue('--h-colunas')).toBe('minmax(0, 6fr) minmax(0, 6fr)')
   })
 
   it('com uma mamada em andamento o botão redondo some (o cartão já mostra a mamada)', async () => {

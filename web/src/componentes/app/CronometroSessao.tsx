@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { NotebookPen } from 'lucide-react'
 import { COMUM, SESSOES } from '../../conteudo/rotina.ts'
 import { Botao } from '../base/Botao.tsx'
+import { Pilha } from '../base/layout/index.ts'
 import { ALVO_APP } from './alvo.ts'
 import { recuoOptico } from './recuoOptico.ts'
 import { tamanhoDoCronometro } from '../../prototipo/formatar.ts'
@@ -110,39 +111,44 @@ export function CronometroSessao({
       ref={cartao}
       aria-labelledby={idRotulo}
       data-andamento=""
-      className={`rounded-cartao bg-(--cor-campo-sessao) px-6 pt-6 ${fundo} text-(--cor-numero-sessao) [border:var(--borda-campo)] lg:p-12 ${className ?? ''}`}
+      className={`flex flex-col gap-esp-grupo rounded-cartao bg-(--cor-campo-sessao) px-esp-painel pt-esp-painel ${fundo} text-(--cor-numero-sessao) [border:var(--borda-campo)] lg:p-esp-painel ${className ?? ''}`}
     >
-      <p id={idRotulo} className="text-[15px] leading-[22px] font-medium">
-        Duração da sessão
-      </p>
-      {/* `data-cronometro` mora nos dígitos: é por ele que o medidor acha o cronômetro. */}
-      <div
-        role="timer"
-        aria-live="off"
-        aria-labelledby={idRotulo}
-        data-cronometro=""
-        data-tamanho={tamanhoDoCronometro(cronometro)}
-        className={`t-cronometro mt-2 font-titulo leading-none font-semibold tracking-[-0.02em] whitespace-nowrap tabular-nums ${TAMANHO[tamanhoDoCronometro(cronometro)]} ${recuoOptico(cronometro)}`}
-      >
-        {cronometro}
-      </div>
-      {atividade ? <p className="mt-4 text-[17px] leading-[25px]">{`Atividade sugerida: ${atividade}`}</p> : null}
+      <Pilha vao="junto">
+        <p id={idRotulo} className="text-pequeno font-medium">
+          Duração da sessão
+        </p>
+        {/* `data-cronometro` mora nos dígitos: é por ele que o medidor acha o cronômetro. */}
+        <div
+          role="timer"
+          aria-live="off"
+          aria-labelledby={idRotulo}
+          data-cronometro=""
+          data-tamanho={tamanhoDoCronometro(cronometro)}
+          className={`t-cronometro font-titulo leading-none font-semibold tracking-[-0.02em] whitespace-nowrap tabular-nums ${TAMANHO[tamanhoDoCronometro(cronometro)]} ${recuoOptico(cronometro)}`}
+        >
+          {cronometro}
+        </div>
+        {atividade ? <p className="text-corpo">{`Atividade sugerida: ${atividade}`}</p> : null}
+      </Pilha>
 
       {/* Com a nota aberta, o "Salvar" dela é o primário: o Encerrar e o Encerrar e anotar saem e o painel
           fica logo abaixo do tempo, antes do Descartar (a ordem do Tab segue a da tela). */}
       {painel === 'nota' ? (
-        <div
+        <Pilha
+          vao="pilha"
           role="group"
           aria-label="Encerrar e anotar"
           data-painel-sessao="nota"
-          className="-mx-2 mt-6 rounded-campo bg-(--cor-fundo) p-4 text-(--cor-texto) sm:mx-0 lg:mt-8 lg:p-6"
+          className="-mx-2 rounded-campo bg-(--cor-fundo) p-4 text-(--cor-texto) sm:mx-0 lg:p-6"
         >
-          <label htmlFor={idCampo} className="block font-medium">
-            Nota
-          </label>
-          <p id={idDica} className="mt-0.5 text-[15px] leading-[22px] text-(--cor-texto-2)">
-            O que a família precisa saber sobre esta sessão.
-          </p>
+          <Pilha vao="junto">
+            <label htmlFor={idCampo} className="block font-medium">
+              Nota
+            </label>
+            <p id={idDica} className="text-pequeno text-(--cor-texto-2)">
+              O que a família precisa saber sobre esta sessão.
+            </p>
+          </Pilha>
           <textarea
             ref={campoNota}
             id={idCampo}
@@ -152,16 +158,16 @@ export function CronometroSessao({
             readOnly={ocupado}
             onInput={ajustarAltura}
             data-sem-alca=""
-            className="mt-3 block min-h-[6rem] w-full resize-none field-sizing-content rounded-campo border-[1.5px] border-(--cor-texto-2) bg-(--cor-cartao) px-4 py-3 text-[17px] leading-[25px] text-(--cor-texto) hover:border-(--cor-texto) focus-visible:border-(--cor-texto)"
+            className="block min-h-[6rem] w-full resize-none field-sizing-content rounded-campo border-[1.5px] border-(--cor-texto-2) bg-(--cor-cartao) px-4 py-3 text-corpo text-(--cor-texto) hover:border-(--cor-texto) focus-visible:border-(--cor-texto)"
           />
           {erroDaNota ? (
-            <p id={idErro} className="mt-2 text-[15px] leading-[22px] font-medium" data-erro-da-nota="">
+            <p id={idErro} className="text-pequeno font-medium" data-erro-da-nota="">
               {erroDaNota}
             </p>
           ) : null}
           {/* Salvar, Cancelar e Descartar numa fileira só: Descartar é botão de texto ao lado do Salvar, e
               não fica mais solto no pé do cartão (a ordem do Tab é a mesma de antes). */}
-          <div className="mt-4 flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-3" data-acoes-nota="">
+          <div className="flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-3" data-acoes-nota="">
             <Botao tamanho="app" className={`px-5 sm:min-w-[8.5rem] ${ALVO_APP}`} desativado={ocupado} onClick={salvarNota}>
               {ocupado ? COMUM.salvando : COMUM.salvar}
             </Botao>
@@ -180,11 +186,11 @@ export function CronometroSessao({
               </Botao>
             ) : null}
           </div>
-        </div>
+        </Pilha>
       ) : null}
 
       {painel !== 'nota' ? (
-        <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 lg:mt-10" data-acoes="">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3" data-acoes="">
           {acoes.encerrar ? (
             <Botao
               tamanho="app"
@@ -222,17 +228,20 @@ export function CronometroSessao({
       ) : null}
 
       {painel === 'descartar' ? (
-        <div
+        <Pilha
+          vao="pilha"
           role="group"
           aria-labelledby={idPergunta}
           data-painel-sessao="descartar"
-          className="mt-6 rounded-campo bg-(--cor-fundo) p-4 text-(--cor-texto) lg:p-6"
+          className="rounded-campo bg-(--cor-fundo) p-4 text-(--cor-texto) lg:p-6"
         >
-          <p id={idPergunta} className="font-medium">
-            Descartar esta sessão?
-          </p>
-          <p className="mt-0.5 text-[15px] leading-[22px] text-(--cor-texto-2)">O tempo não vai para o dia nem para o histórico.</p>
-          <div className="mt-4 flex flex-wrap items-center gap-3">
+          <Pilha vao="junto">
+            <p id={idPergunta} className="font-medium">
+              Descartar esta sessão?
+            </p>
+            <p className="text-pequeno text-(--cor-texto-2)">O tempo não vai para o dia nem para o histórico.</p>
+          </Pilha>
+          <div className="flex flex-wrap items-center gap-3">
             <Botao variante="contorno" tamanho="app" className={ALVO_APP} desativado={ocupado} onClick={aoDescartar}>
               Descartar
             </Botao>
@@ -240,7 +249,7 @@ export function CronometroSessao({
               Manter
             </Botao>
           </div>
-        </div>
+        </Pilha>
       ) : null}
     </section>
   )

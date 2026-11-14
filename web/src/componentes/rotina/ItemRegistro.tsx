@@ -49,9 +49,9 @@ export function ItemRegistro({ registro, fuso, autor, marca, para }: Props) {
             texto
           )}
         </p>
-        <p className="text-[15px] leading-[22px] text-(--cor-texto-2)">{SESSOES.porAutor(autor)}</p>
+        <p className="text-pequeno text-(--cor-texto-2)">{SESSOES.porAutor(autor)}</p>
       </div>
-      <div className="flex shrink-0 items-center gap-2 text-[15px] leading-[22px] text-(--cor-texto-2)">
+      <div className="flex shrink-0 items-center gap-2 text-pequeno text-(--cor-texto-2)">
         <span className="whitespace-nowrap tabular-nums">{formatarHora(Date.parse(registro.inicio))}</span>
         <MarcaDeEnvio marca={marca} />
       </div>

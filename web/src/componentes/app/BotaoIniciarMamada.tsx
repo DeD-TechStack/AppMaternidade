@@ -1,4 +1,5 @@
 import { Milk } from 'lucide-react'
+import { Coluna } from '../base/layout/index.ts'
 
 interface Props {
   aoIniciar: () => void
@@ -27,7 +28,7 @@ export function BotaoIniciarMamada({ aoIniciar, ultima, compacto = false, classN
     : 'text-[26px] leading-[30px] lg:text-[30px] lg:leading-[34px]'
 
   return (
-    <div
+    <Coluna
       data-iniciar-mamada=""
       data-compacto={compacto ? '' : undefined}
       className={`flex items-center ${compacto ? 'flex-row gap-5' : 'flex-col justify-center gap-4 py-2'} ${className ?? ''}`}
@@ -43,10 +44,10 @@ export function BotaoIniciarMamada({ aoIniciar, ultima, compacto = false, classN
         </span>
       </button>
       {ultima ? (
-        <p className={`text-[15px] leading-[22px] text-(--cor-texto-2) ${compacto ? 'max-w-[16rem] text-left' : 'text-center'}`}>
+        <p className={`text-pequeno text-(--cor-texto-2) ${compacto ? 'max-w-64 text-left' : 'text-center'}`}>
           {ultima}
         </p>
       ) : null}
-    </div>
+    </Coluna>
   )
 }

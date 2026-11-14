@@ -7,6 +7,7 @@ import { formatarDuracao } from '../../prototipo/formatar.ts'
 import { ALVO_APP } from '../app/alvo.ts'
 import { Avatar } from '../app/Avatar.tsx'
 import { Botao } from '../base/Botao.tsx'
+import { Pilha } from '../base/layout/index.ts'
 import { AvisoDeErro } from './AvisoDeErro.tsx'
 import { PainelFimEmOutroHorario } from './PainelFimEmOutroHorario.tsx'
 
@@ -80,10 +81,11 @@ export function SessoesEmParalelo({
   if (outras.length === 0 && repetidos.length === 0 && esquecidas.length === 0) return null
 
   return (
-    <div className={`flex flex-col gap-4 ${className ?? ''}`} data-sessoes-em-paralelo="">
+    <Pilha vao="pilha" className={className} data-sessoes-em-paralelo="">
       {repetidos.map(([tipo, grupo]) => (
-        <div
+        <Pilha
           key={tipo}
+          vao="pilha"
           data-uniao={tipo}
           className="rounded-cartao border border-(--cor-fio-suave) bg-(--cor-cartao) p-4 [box-shadow:var(--sombra-cartao)]"
         >
@@ -92,7 +94,7 @@ export function SessoesEmParalelo({
             <Botao
               variante="contorno"
               tamanho="app"
-              className={`mt-3 ${ALVO_APP}`}
+              className={`self-start ${ALVO_APP}`}
               desativado={uniao?.unindo === true}
               onClick={() => void unir(tipo, grupo)}
             >
@@ -100,22 +102,24 @@ export function SessoesEmParalelo({
             </Botao>
           ) : null}
           {uniao && uniao.tipo === tipo && uniao.erro ? (
-            <AvisoDeErro erro={uniao.erro} escrita className="mt-3">
+            <AvisoDeErro erro={uniao.erro} escrita>
               <p className="font-medium">{SESSOES.uniaoIncompleta}</p>
             </AvisoDeErro>
           ) : null}
-        </div>
+        </Pilha>
       ))}
-      {algumGrupoSemPermissao ? <p className="text-[15px] leading-[22px] text-(--cor-texto-2)">{textoDoPapel}</p> : null}
+      {algumGrupoSemPermissao ? <p className="text-pequeno text-(--cor-texto-2)">{textoDoPapel}</p> : null}
 
       {outras.length > 0 ? (
-        <section
+        <Pilha
+          as="section"
+          vao="junto"
           aria-label={SESSOES.outras}
           data-outras-sessoes=""
           className="rounded-cartao border border-(--cor-fio-suave) bg-(--cor-cartao) px-5 pt-4 pb-2 [box-shadow:var(--sombra-cartao)]"
         >
           <h3 className="cm-h4">{SESSOES.outras}</h3>
-          <ul className="mt-2">
+          <ul>
             {outras.map((sessao) => {
               const autor = autorDe(sessao)
               return (
@@ -128,7 +132,7 @@ export function SessoesEmParalelo({
                     <p className="font-medium">
                       {ROTULO_TIPO[sessao.tipo]} <span className="tabular-nums">{formatarDuracao(agora - Date.parse(sessao.inicio))}</span>
                     </p>
-                    <p className="text-[15px] leading-[22px] text-(--cor-texto-2)">{SESSOES.porAutor(autor)}</p>
+                    <p className="text-pequeno text-(--cor-texto-2)">{SESSOES.porAutor(autor)}</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {podeEncerrar ? (
@@ -158,13 +162,14 @@ export function SessoesEmParalelo({
               )
             })}
           </ul>
-        </section>
+        </Pilha>
       ) : null}
 
       {podeEncerrar
         ? esquecidas.map((sessao) => (
-            <div
+            <Pilha
               key={sessao.id}
+              vao="pilha"
               data-esquecida={sessao.id}
               className="rounded-cartao border border-(--cor-fio-suave) bg-(--cor-cartao) p-4 [box-shadow:var(--sombra-cartao)]"
             >
@@ -182,16 +187,16 @@ export function SessoesEmParalelo({
                 <Botao
                   variante="contorno"
                   tamanho="app"
-                  className={`mt-3 ${ALVO_APP}`}
+                  className={`self-start ${ALVO_APP}`}
                   aria-label={`${SESSOES.encerrarOutroHorario}, ${minusculo(ROTULO_TIPO[sessao.tipo])}`}
                   onClick={() => setPainelAberto(sessao.id)}
                 >
                   {SESSOES.encerrarOutroHorario}
                 </Botao>
               )}
-            </div>
+            </Pilha>
           ))
         : null}
-    </div>
+    </Pilha>
   )
 }

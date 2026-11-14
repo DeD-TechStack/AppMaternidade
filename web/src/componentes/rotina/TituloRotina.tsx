@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { TituloDaTela } from '../app/TituloDaTela.tsx'
+import { Pilha } from '../base/layout/index.ts'
 
 interface Props {
   titulo: string
@@ -17,15 +18,15 @@ interface Props {
 export function TituloRotina({ titulo, linha, antes, lateral }: Props) {
   if (typeof linha === 'string') return <TituloDaTela titulo={titulo} linha={linha} antes={antes} lateral={lateral} />
   return (
-    <div className="cm-area pt-6 lg:pt-12" data-titulo-tela="">
+    <Pilha vao="junto" data-titulo-tela="">
       {antes}
-      <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-2">
-        <div className="min-w-0">
+      <div className="flex flex-wrap items-end justify-between gap-x-esp-grupo gap-y-esp-junto">
+        <Pilha vao="junto" className="min-w-0">
           <h1 className="cm-h1">{titulo}</h1>
-          <div className="cm-h3 mt-1 font-medium italic">{linha}</div>
-        </div>
+          <div className="cm-h3 font-medium italic">{linha}</div>
+        </Pilha>
         {lateral}
       </div>
-    </div>
+    </Pilha>
   )
 }

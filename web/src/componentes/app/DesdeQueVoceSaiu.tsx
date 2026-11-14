@@ -1,4 +1,5 @@
 import { useId, useState } from 'react'
+import { Pilha } from '../base/layout/index.ts'
 import { Avatar } from './Avatar.tsx'
 
 export interface ItemDesde {
@@ -34,7 +35,7 @@ function separarDuracao(texto: string): { tipo: string; duracao: string | null }
   return achado ? { tipo: achado[1], duracao: achado[2] } : { tipo: texto, duracao: null }
 }
 
-const DIREITA = 'shrink-0 text-[15px] leading-[22px] whitespace-nowrap tabular-nums'
+const DIREITA = 'shrink-0 text-pequeno whitespace-nowrap tabular-nums'
 
 // O texto da linha é o controle que abre a linha inteira: botão nativo (Enter e Espaço ativam), com o
 // alvo do app (44 px; 56 px na madrugada, pela --alvo-toque) e o anel de foco do sistema. Fechado, corta
@@ -70,7 +71,7 @@ function LinhaDesde({ item }: { item: ItemDesde }) {
       <div data-fila="" className="flex min-h-14 items-center gap-2.5 whitespace-nowrap lg:gap-4">
         <Avatar nome={item.pessoa} />
         {comHora ? (
-          <span className="w-[2.75rem] shrink-0 text-[15px] leading-[22px] text-(--cor-texto-2) tabular-nums">{item.hora}</span>
+          <span className="w-[2.75rem] shrink-0 text-pequeno text-(--cor-texto-2) tabular-nums">{item.hora}</span>
         ) : null}
         <div className="flex min-w-0 flex-1 items-center gap-2.5">
           <p className="min-w-0 flex-1 lg:flex-initial" title={item.texto}>
@@ -87,7 +88,7 @@ function LinhaDesde({ item }: { item: ItemDesde }) {
             </button>
           </p>
           <p
-            className="min-w-0 shrink-[2] truncate text-[15px] leading-[22px] text-(--cor-texto-2) max-lg:sr-only"
+            className="min-w-0 shrink-[2] truncate text-pequeno text-(--cor-texto-2) max-lg:sr-only"
             title={item.detalhe}
           >
             {item.detalhe}
@@ -99,7 +100,7 @@ function LinhaDesde({ item }: { item: ItemDesde }) {
         <div
           id={idAberta}
           data-linha-aberta=""
-          className="pb-3 pl-[2.625rem] text-[15px] leading-[22px] whitespace-normal [overflow-wrap:anywhere] lg:pl-14"
+          className="pb-3 pl-[2.625rem] text-pequeno whitespace-normal [overflow-wrap:anywhere] lg:pl-14"
         >
           <p className="font-medium text-(--cor-texto)">{item.texto}</p>
           <p className="text-(--cor-texto-2)">{item.detalhe}</p>
@@ -119,19 +120,19 @@ function LinhaDesde({ item }: { item: ItemDesde }) {
 export function DesdeQueVoceSaiu({ itens, className }: Props) {
   const idTitulo = useId()
   return (
-    <section aria-labelledby={idTitulo} data-desde="" className={className}>
+    <Pilha as="section" vao="pilha" aria-labelledby={idTitulo} data-desde="" className={className}>
       <h2 id={idTitulo} className="cm-h4">
         Desde que você saiu
       </h2>
       {itens.length === 0 ? (
-        <p className="mt-3 border-y border-(--cor-fio-suave) py-4 text-(--cor-texto-2)">Nada novo por aqui.</p>
+        <p className="border-y border-(--cor-fio-suave) py-4 text-(--cor-texto-2)">Nada novo por aqui.</p>
       ) : (
-        <ul className="mt-3 border-t border-(--cor-fio-suave) lg:mt-4">
+        <ul className="border-t border-(--cor-fio-suave)">
           {itens.map((item) => (
             <LinhaDesde key={item.chave} item={item} />
           ))}
         </ul>
       )}
-    </section>
+    </Pilha>
   )
 }
