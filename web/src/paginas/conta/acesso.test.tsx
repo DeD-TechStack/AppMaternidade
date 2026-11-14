@@ -757,7 +757,7 @@ describe('sair (RF-11)', () => {
     const { roteador, dados } = renderizarComDados('/app/conta', { sessao: 'juliana' })
     await screen.findByRole('heading', { level: 1, name: 'Conta' })
 
-    const cabecalho = within(screen.getByRole('navigation', { name: 'Conta' }))
+    const cabecalho = within(document.querySelector<HTMLElement>('header[data-cabecalho]')!)
     fireEvent.click(cabecalho.getByRole('button', { name: 'Sair' }))
 
     await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.entrar })
@@ -796,7 +796,7 @@ describe('sair (RF-11)', () => {
     apagarChave('sessao', CHAVE_CONVITE)
   })
 
-  it('se a saída falhar, a pessoa continua entrada: a frase num alerta abaixo do cabeçalho, com o foco, e "Tentar de novo"', async () => {
+  it('se a saída falhar, a pessoa continua entrada: a frase num alerta no cabeçalho, com o foco, e "Tentar de novo"', async () => {
     const dados = novaMemoria()
     simularFalha(dados, 'sair', 'rede')
     const { roteador } = renderizarComDados('/app/conta', { dados, sessao: 'juliana' })
@@ -804,6 +804,7 @@ describe('sair (RF-11)', () => {
 
     fireEvent.click(screen.getAllByRole('button', { name: 'Sair' })[0])
     const alerta = await screen.findByRole('alert')
+    expect(document.querySelector('header[data-cabecalho]')!.contains(alerta)).toBe(true)
     expect(alerta.textContent).toContain(TEXTOS_ERRO.rede)
     await waitFor(() => expect(document.activeElement).toBe(alerta))
     expect(caminhoDe(roteador)).toBe('/app/conta')

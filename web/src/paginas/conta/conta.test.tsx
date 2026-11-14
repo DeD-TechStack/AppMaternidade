@@ -58,11 +58,15 @@ describe('estrutura da tela', () => {
       .map((titulo) => titulo.textContent)
     expect(secoes).toEqual(['Perfil', 'Id da sua conta', 'Seus dados', 'Excluir conta', 'Privacidade'])
 
-    const cabecalho = within(screen.getByRole('navigation', { name: 'Conta' }))
+    // O "Conta" e o "Sair" são do cabeçalho do site (a sessão); a barra da página só tem "Ir para o Hoje".
+    const cabecalho = within(document.querySelector<HTMLElement>('header[data-cabecalho]')!)
     expect(cabecalho.getByRole('link', { name: 'Conta' }).getAttribute('aria-current')).toBe('page')
-    expect(cabecalho.getByRole('link', { name: 'Ir para o Hoje' }).getAttribute('href')).toBe('/app/hoje')
     expect(cabecalho.getByRole('button', { name: 'Sair' })).toBeTruthy()
-    // Um só "Sair" na página (o da barra): o do fim da página saiu.
+    const barra = within(screen.getByRole('navigation', { name: 'Conta' }))
+    expect(barra.getByRole('link', { name: 'Ir para o Hoje' }).getAttribute('href')).toBe('/app/hoje')
+    expect(barra.queryByRole('link', { name: 'Conta' })).toBeNull()
+    expect(barra.queryByRole('button', { name: 'Sair' })).toBeNull()
+    // Um só "Sair" na página (o do cabeçalho).
     expect(screen.getAllByRole('button', { name: 'Sair' })).toHaveLength(1)
     // Não monta a navegação inferior do protótipo.
     expect(screen.queryByRole('navigation', { name: 'Principal' })).toBeNull()
@@ -105,17 +109,13 @@ describe('barra da conta', () => {
     const memoria = await abrirConta()
     const container2 = memoria.container
 
-    // A barra: a navegação "Conta", com o link da Conta e o Sair, antes do <main>.
+    // A barra: a navegação "Conta", só com o link de ir para o Hoje (o "Conta" e o "Sair" são do cabeçalho), antes do <main>.
     const barra = screen.getByRole('navigation', { name: 'Conta' })
     expect(barra.closest('header')).toBeNull()
     expect(barra.compareDocumentPosition(container2.querySelector('main')!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(barra.classList.contains('flex-wrap')).toBe(true)
     expect(barra.classList.contains('justify-between')).toBe(true)
-    expect([...barra.querySelectorAll('a, button')].map((filho) => filho.textContent)).toEqual([
-      'Conta',
-      'Ir para o Hoje',
-      'Sair',
-    ])
+    expect([...barra.querySelectorAll('a, button')].map((filho) => filho.textContent)).toEqual(['Ir para o Hoje'])
   })
 })
 
@@ -725,7 +725,7 @@ describe('privacidade e sair', () => {
     expect(familia.classList.contains('wrap-anywhere')).toBe(true)
   })
 
-  it('o único botão Sair da página, o da barra, encerra a sessão', async () => {
+  it('o único botão Sair da página, o do cabeçalho, encerra a sessão', async () => {
     const { roteador } = await abrirConta()
 
     fireEvent.click(screen.getByRole('button', { name: 'Sair' }))

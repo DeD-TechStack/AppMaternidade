@@ -15,6 +15,7 @@ beforeEach(() => {
 })
 
 const lua = () => screen.getByRole('button', { name: 'Modo madrugada' })
+const luaOuNada = () => screen.queryByRole('button', { name: 'Modo madrugada' })
 const tema = () => document.documentElement.getAttribute('data-tema')
 
 async function ir(roteador: { navigate: (caminho: string) => Promise<void> }, caminho: string) {
@@ -32,7 +33,7 @@ describe('R3: a madrugada termina ao sair da Rotina e começa limpa ao entrar', 
     expect(texto).not.toMatch(/useState|useEffect|setAttribute|removeAttribute|createContext|ContextoDaMadrugada/)
   })
 
-  it('R3: Hoje em madrugada → /app/conta: sem data-tema, e a lua do cabeçalho volta a "não pressionada"', async () => {
+  it('R3: Hoje em madrugada → /app/conta: sem data-tema, e a lua some do cabeçalho (ela só existe na Rotina)', async () => {
     const { roteador } = await renderizarRotaPronta('/app/hoje', { madrugada: true })
     expect(tema()).toBe('madrugada')
     expect(lua().getAttribute('aria-pressed')).toBe('true')
@@ -40,7 +41,7 @@ describe('R3: a madrugada termina ao sair da Rotina e começa limpa ao entrar', 
     await ir(roteador, '/app/conta')
 
     expect(tema()).toBeNull()
-    expect(lua().getAttribute('aria-pressed')).toBe('false')
+    expect(luaOuNada()).toBeNull()
   })
 
   it('R3: Hoje em madrugada → Início: sem data-tema', async () => {
@@ -63,12 +64,11 @@ describe('R3: a madrugada termina ao sair da Rotina e começa limpa ao entrar', 
     expect(screen.queryByRole('button', { name: 'Iniciar mamada' })).toBeNull()
   })
 
-  it('R3: ligar a lua fora da Rotina (na Conta) não liga nada e não vaza para a próxima entrada', async () => {
+  it('R3: fora da Rotina (na Conta) não há lua para ligar, nada liga e nada vaza para a próxima entrada', async () => {
     const { roteador } = await renderizarRotaPronta('/app/conta')
 
-    fireEvent.click(lua())
+    expect(luaOuNada()).toBeNull()
     expect(tema()).toBeNull()
-    expect(lua().getAttribute('aria-pressed')).toBe('false')
 
     await ir(roteador, '/app/hoje')
     expect(tema()).toBeNull()

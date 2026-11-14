@@ -1,13 +1,18 @@
 import { useEffect, useRef, type RefObject } from 'react'
-import { NavLink } from 'react-router'
+import { Link, NavLink } from 'react-router'
 import { Botao } from '../base/Botao.tsx'
 import {
+  DESTINO_CONTA,
   DESTINO_CRIAR_CONTA,
   DESTINO_ENTRAR,
   ITENS_DO_CABECALHO,
+  ROTULO_CONTA,
   ROTULO_CRIAR_CONTA,
   ROTULO_ENTRAR,
+  ROTULO_SAINDO,
+  ROTULO_SAIR,
   type Contexto,
+  type SituacaoDaConta,
 } from './textos.ts'
 
 const FOCAVEIS = 'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])'
@@ -19,42 +24,26 @@ const CONSULTA_COMPUTADOR = `(min-width: ${PONTO_DE_QUEBRA}px)`
 /** A janela já passou do ponto de quebra? No jsdom (sem layout) é a largura que decide. */
 const naLarguraDeComputador = () => window.innerWidth >= PONTO_DE_QUEBRA
 
-/**
- * O elemento está realmente visível? Com `checkVisibility` (navegadores atuais) vale o que o layout
- * mostra; sem ele (jsdom), só `[hidden]` e `[inert]`, que o chamador confere à parte.
- */
-function estaVisivel(elemento: Element): boolean {
-  const alvo = elemento as Element & { checkVisibility?: (opcoes?: { visibilityProperty?: boolean }) => boolean }
-  return typeof alvo.checkVisibility === 'function' ? alvo.checkVisibility({ visibilityProperty: true }) : true
-}
-
-/**
- * A volta do foco com o menu aberto: os focáveis visíveis do cabeçalho, na ordem do documento. Ficam de
- * fora os links de computador (`.cm-cab-links`, ocultos aqui), o que está em `[hidden]` ou `[inert]` e
- * o que o navegador não mostra. É calculada a cada Tab, porque o cabeçalho muda.
- */
-function voltaDoFoco(cabecalho: Element | null): HTMLElement[] {
-  if (!cabecalho) return []
-  return [...cabecalho.querySelectorAll<HTMLElement>(FOCAVEIS)].filter(
-    (elemento) => elemento.closest('.cm-cab-links, .cm-pular, [hidden], [inert]') === null && estaVisivel(elemento),
-  )
-}
-
 interface Props {
   id: string
   aberto: boolean
   contexto: Contexto
+  /** O espaço da conta: nada enquanto a sessão carrega, "Conta" e "Sair" com sessão, "Entrar" e "Criar conta" sem. */
+  situacao: SituacaoDaConta
+  saindo: boolean
+  aoSair: () => void
   aoFechar: () => void
-  /** O botão que abre o menu: o foco volta a ele ao fechar, e o cabeçalho que o contém dá a volta do foco. */
+  /** O botão que abre o menu: o foco volta a ele ao fechar. */
   botao: RefObject<HTMLButtonElement | null>
 }
 
 /**
  * O menu abaixo de 1100 px: um painel de papel de altura cheia logo abaixo do cabeçalho, com os links em
- * Literata e, no site público, Entrar e "Criar conta". Prende o foco numa volta pelos focáveis visíveis
- * do cabeçalho, fecha com Esc devolvendo o foco ao botão do menu e fecha sozinho ao passar de 1100.
+ * Literata e o espaço da conta (Entrar e "Criar conta" no site público; "Conta" e "Sair" com sessão). É uma
+ * divulgação (disclosure): o foco vai ao primeiro item ao abrir, o Tab segue do último item para a página
+ * (sem prender o foco), o Esc fecha devolvendo o foco ao botão do menu e o menu fecha sozinho ao passar de 1100.
  */
-export function MenuCelular({ id, aberto, contexto, aoFechar, botao }: Props) {
+export function MenuCelular({ id, aberto, contexto, situacao, saindo, aoSair, aoFechar, botao }: Props) {
   const painel = useRef<HTMLDivElement>(null)
 
   // Ao abrir, o foco vai ao primeiro item.
@@ -81,25 +70,14 @@ export function MenuCelular({ id, aberto, contexto, aoFechar, botao }: Props) {
     }
   }, [aberto, aoFechar])
 
+  // Só o Esc é do menu: o Tab segue a ordem natural do documento (o painel é o último do cabeçalho).
   useEffect(() => {
     if (!aberto) return
     function aoTeclar(evento: KeyboardEvent) {
-      if (evento.key === 'Escape') {
-        evento.preventDefault()
-        aoFechar()
-        botao.current?.focus()
-        return
-      }
-      if (evento.key !== 'Tab' || evento.ctrlKey || evento.altKey || evento.metaKey) return
-      if (naLarguraDeComputador() || !botao.current || !estaVisivel(botao.current)) return
-      const volta = voltaDoFoco(botao.current?.closest('header[data-cabecalho]') ?? null)
-      if (volta.length === 0) return
-      const posicao = volta.indexOf(document.activeElement as HTMLElement)
-      let destino: number
-      if (posicao === -1) destino = evento.shiftKey ? volta.length - 1 : 0
-      else destino = (posicao + (evento.shiftKey ? -1 : 1) + volta.length) % volta.length
+      if (evento.key !== 'Escape') return
       evento.preventDefault()
-      volta[destino].focus()
+      aoFechar()
+      botao.current?.focus()
     }
     document.addEventListener('keydown', aoTeclar)
     return () => document.removeEventListener('keydown', aoTeclar)
@@ -118,11 +96,28 @@ export function MenuCelular({ id, aberto, contexto, aoFechar, botao }: Props) {
               </li>
             ))}
           </ul>
-          {contexto === 'publico' ? (
+          {situacao === 'visitante' && contexto === 'publico' ? (
             <div className="cm-menu-acoes">
               <Botao to={DESTINO_CRIAR_CONTA}>{ROTULO_CRIAR_CONTA}</Botao>
               <Botao variante="contorno" to={DESTINO_ENTRAR}>
                 {ROTULO_ENTRAR}
+              </Botao>
+            </div>
+          ) : null}
+          {situacao === 'com_sessao' ? (
+            <div className="cm-menu-acoes">
+              {/* Link do mesmo desenho do botão, para fechar o menu também quando a pessoa já está na Conta. */}
+              <Link
+                to={DESTINO_CONTA}
+                className="cm-botao cm-botao-contorno alvo-toque"
+                data-botao="contorno"
+                data-tamanho="site"
+                onClick={aoFechar}
+              >
+                {ROTULO_CONTA}
+              </Link>
+              <Botao variante="contorno" desativado={saindo} onClick={aoSair}>
+                {saindo ? ROTULO_SAINDO : ROTULO_SAIR}
               </Botao>
             </div>
           ) : null}

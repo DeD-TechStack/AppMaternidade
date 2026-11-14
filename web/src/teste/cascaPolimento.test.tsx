@@ -161,12 +161,11 @@ describe('C-4 alvos de 56 px na madrugada, só no contexto da Rotina', () => {
     expect(soltas.map((r) => r.seletor)).toEqual([])
   })
 
-  it('a madrugada só liga nas rotas da Rotina: a Conta e a Comunidade não trazem data-tema', async () => {
-    for (const caminho of ['/app/conta', '/app/comunidade']) {
+  it('a madrugada só vive nas rotas da Rotina: fora delas o botão nem existe e não há data-tema', async () => {
+    for (const caminho of ['/app/conta', '/app/comunidade', '/app/familia', '/app/desenvolvimento']) {
       const { unmount } = await renderizarRotaPronta(caminho)
       expect(document.documentElement.getAttribute('data-tema'), caminho).toBeNull()
-      fireEvent.click(screen.getByRole('button', { name: 'Modo madrugada' }))
-      expect(document.documentElement.getAttribute('data-tema'), caminho).toBeNull()
+      expect(screen.queryByRole('button', { name: 'Modo madrugada' }), caminho).toBeNull()
       unmount()
     }
     await renderizarRotaPronta('/app/hoje')
