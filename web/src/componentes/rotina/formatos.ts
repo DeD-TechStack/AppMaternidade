@@ -40,6 +40,22 @@ export function formatarQuando(momento: number, agora: number): string {
   return mesmoDiaDoCalendario(dia, ontem) ? FORMATOS.ontem(formatarHora(momento)) : formatarDataEHora(momento)
 }
 
+/**
+ * A hora de um item de lista (QA-08), na hora do aparelho: `HH:MM` no mesmo dia do calendário, `ontem HH:MM` no dia
+ * anterior (o mesmo texto de `formatarQuando`) e `DD/MM HH:MM` antes disso.
+ */
+export function horaDoItem(instante: number, agora: number): string {
+  const dia = new Date(instante)
+  if (mesmoDiaDoCalendario(dia, new Date(agora))) return formatarHora(instante)
+  const ontem = new Date(agora)
+  ontem.setDate(ontem.getDate() - 1)
+  return mesmoDiaDoCalendario(dia, ontem) ? FORMATOS.ontem(formatarHora(instante)) : formatarDataEHora(instante)
+}
+
+/** Ordena do mais novo ao mais antigo pela hora que a linha mostra (o início); o empate cai no id. */
+export const maisNovoPrimeiro = (a: Registro, b: Registro): number =>
+  Date.parse(b.inicio) - Date.parse(a.inicio) || (a.id < b.id ? 1 : a.id > b.id ? -1 : 0)
+
 /** A hora do `quando` das notas: `HH:MM` nas últimas 24 horas e `DD/MM HH:MM` antes disso. */
 export function horaDaNota(criadaEm: number, agora: number): string {
   return agora - criadaEm < 24 * 60 * MINUTO ? formatarHora(criadaEm) : formatarDataEHora(criadaEm)
