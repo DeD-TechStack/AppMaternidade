@@ -32,6 +32,7 @@ ESTADO: ATIVO (14/11 ~08h35; session switch requested by the infra coordinator f
 
 - MAT-48h t_612731f2 R1 returned (causa: implementacao, teste; R1-01 must: web/src/teste/axe.ts:7-12 and setup.ts:11-20 serialize axe calls but do not isolate pending work at test timeout). Write the leader return comment (correction 1/2; rebase on be1e349).
 - A11Y-F1 t_35476306 in review (5c2f7f4 on 0e57c08).
+- RF12-EGM t_454cc48b BLOCKED (capability, recurrences 1): the executor has no delegate_task and its profile forbids `claude -p`/`codex exec`, so it cannot run the 7+1 subagent panel. Recommended for the new session: (a) the leader runs the panel itself with delegate_task (7 REVIEW subagents in parallel + synthesizer; pass paths, not texts; only the synthesis comes back to the leader context), writes the output to RF12/EGM_R1/, then archives t_454cc48b with a comment (do NOT unblock it: a 2nd block sends it to triage). Option (b) 8 child cards is heavier.
 
 **Correction counts (2 max; 3rd time the same finding = leader escalates):** H-3b 1/2, H-3f 1/2, QA-F1 1/2, QA-F6 1/2, AUD-SITE 1/2, A11Y-F2 1/2 in review.
 
