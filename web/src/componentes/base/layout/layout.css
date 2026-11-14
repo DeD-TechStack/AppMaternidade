@@ -1,0 +1,168 @@
+/* Primitivas de layout (SPEC H3, H3:RF-01): Secao, QuadroLayout, Pilha, Colunas e Cartao. Todo valor de espaço
+   vem das variáveis do tema gerado (`harmonia.gerado.css`, a partir do web/DESIGN.md, `## Layout`): nenhum px
+   solto. O marcador de cada peça é o `data-h` (um ou mais valores separados por espaço, por isso o seletor `~=`);
+   as variantes e os vãos ficam em `data-h-*`. A medida do H-3 lê esses atributos. */
+@layer components {
+  /* Seção: filha direta do <main>. As caixas de seções vizinhas se tocam: nenhuma margem e o <main> sem vão. */
+  [data-h~='secao'] {
+    box-sizing: border-box;
+    margin: 0;
+    padding-block: var(--espaco-secao);
+  }
+
+  /* Sem fundo, a primeira filha do <main> abre com secao-ampla no topo e a última fecha com secao-ampla na base.
+     O painel (caixa externa de meio espaco-bloco) fica de fora das duas regras. */
+  main > [data-h~='secao']:first-child:not([data-h-variante='painel']) {
+    padding-top: var(--espaco-secao-ampla);
+  }
+
+  main > [data-h~='secao']:last-child:not([data-h-variante='painel']) {
+    padding-bottom: var(--espaco-secao-ampla);
+  }
+
+  /* Centrada: um título e uma ação, com o texto centrado no quadro. */
+  [data-h~='secao'][data-h-variante='centrada'] {
+    text-align: center;
+  }
+
+  /* Painel: a caixa externa não tem fundo e guarda metade de espaco-bloco em cima e embaixo; com dois painéis
+     seguidos as duas metades dão espaco-bloco entre as caixas de cor. */
+  [data-h~='secao'][data-h-variante='painel'] {
+    padding-block: calc(var(--espaco-bloco) / 2);
+  }
+
+  /* A caixa de cor (as cores vêm das classes cm-painel-* e do data-painel, como no PainelCampo): a largura do
+     quadro, espaco-secao em cima e embaixo, espaco-painel dos lados, e o raio do painel. */
+  [data-h~='caixa-cor'] {
+    box-sizing: border-box;
+    width: min(var(--quadro-largura), 100vw - 2 * var(--quadro-calha));
+    margin-inline: auto;
+    padding-block: var(--espaco-secao);
+    padding-inline: var(--espaco-painel);
+    border-radius: var(--radius-painel);
+  }
+
+  /* QuadroLayout: a largura útil do quadro, centrada. */
+  [data-h~='quadro'] {
+    box-sizing: border-box;
+    width: min(var(--quadro-largura), 100vw - 2 * var(--quadro-calha));
+    margin-inline: auto;
+  }
+
+  /* medio e leitura: largura máxima de bloco de texto, alinhada à borda esquerda do quadro (que é
+     max(calha, (página - quadro) / 2)), nunca centrada. */
+  [data-h~='quadro'][data-h-largura='medio'] {
+    max-width: var(--medio);
+    margin-inline: max(var(--quadro-calha), (100% - var(--quadro-largura)) / 2) auto;
+  }
+
+  [data-h~='quadro'][data-h-largura='leitura'] {
+    max-width: var(--leitura);
+    margin-inline: max(var(--quadro-calha), (100% - var(--quadro-largura)) / 2) auto;
+  }
+
+  /* Pilha: coluna com o vão fixo do papel (`data-h-vao`; padrão pilha). */
+  [data-h~='pilha'] {
+    display: flex;
+    flex-direction: column;
+    gap: var(--espaco-pilha);
+  }
+
+  [data-h~='pilha'][data-h-vao='junto'] {
+    gap: var(--espaco-junto);
+  }
+
+  [data-h~='pilha'][data-h-vao='pilha'] {
+    gap: var(--espaco-pilha);
+  }
+
+  [data-h~='pilha'][data-h-vao='grupo'] {
+    gap: var(--espaco-grupo);
+  }
+
+  [data-h~='pilha'][data-h-vao='bloco'] {
+    gap: var(--espaco-bloco);
+  }
+
+  [data-h~='pilha'][data-h-vao='midia'] {
+    gap: var(--espaco-midia);
+  }
+
+  /* Colunas: empilhadas (uma coluna) até o ponto de quebra; depois, o modelo de `--h-colunas`. O `gap` vale para a
+     linha e para a coluna: o mesmo vão vira vertical ao empilhar. midia = texto e mídia; bloco = colunas de texto
+     ou de cartões. */
+  [data-h~='colunas'] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--espaco-bloco);
+  }
+
+  [data-h~='colunas'][data-h-vao='bloco'] {
+    gap: var(--espaco-bloco);
+  }
+
+  [data-h~='colunas'][data-h-vao='midia'] {
+    gap: var(--espaco-midia);
+  }
+
+  [data-h~='colunas'][data-h-alinhar='inicio'] {
+    align-items: start;
+  }
+
+  [data-h~='colunas'][data-h-alinhar='centro'] {
+    align-items: center;
+  }
+
+  [data-h~='colunas'][data-h-alinhar='fim'] {
+    align-items: end;
+  }
+
+  [data-h~='coluna'] {
+    min-width: 0;
+  }
+
+  /* Os pontos de quebra são os que o código já tem hoje (nenhum criado, nenhum removido): lado a lado a partir
+     de 768 (empilha até 767), 900, 992 (empilha até 991), 1024, 1100 e 1200. */
+  @media (min-width: 768px) {
+    [data-h~='colunas'][data-h-quebra='768'] {
+      grid-template-columns: var(--h-colunas);
+    }
+  }
+
+  @media (min-width: 900px) {
+    [data-h~='colunas'][data-h-quebra='900'] {
+      grid-template-columns: var(--h-colunas);
+    }
+  }
+
+  @media (min-width: 992px) {
+    [data-h~='colunas'][data-h-quebra='992'] {
+      grid-template-columns: var(--h-colunas);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    [data-h~='colunas'][data-h-quebra='1024'] {
+      grid-template-columns: var(--h-colunas);
+    }
+  }
+
+  @media (min-width: 1100px) {
+    [data-h~='colunas'][data-h-quebra='1100'] {
+      grid-template-columns: var(--h-colunas);
+    }
+  }
+
+  @media (min-width: 1200px) {
+    [data-h~='colunas'][data-h-quebra='1200'] {
+      grid-template-columns: var(--h-colunas);
+    }
+  }
+
+  /* Cartão: padding espaco-painel em volta e o raio de hoje (cartão). O fundo ou a borda são de quem usa. */
+  [data-h~='cartao'] {
+    box-sizing: border-box;
+    padding: var(--espaco-painel);
+    border-radius: var(--radius-cartao);
+  }
+}

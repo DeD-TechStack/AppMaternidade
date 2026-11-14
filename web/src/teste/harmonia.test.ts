@@ -79,7 +79,7 @@ describe('harmonia: o front matter do DESIGN.md (H:RF-01)', () => {
     expect(front.spacing['quadro-calha-390']).toBe('20px')
     expect(front.spacing['quadro-calha-1440']).toBe('32px')
     expect(front.spacing.medio).toBe('880px')
-    expect(front.spacing.leitura).toBe('680px')
+    expect(front.spacing.leitura).toBe('640px')
     expect(Object.keys(front.spacing)).toHaveLength(PAPEIS.length * 2 + 5)
   })
 
