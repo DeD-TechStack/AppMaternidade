@@ -13,7 +13,7 @@ import { useRotina } from '../../componentes/rotina/contexto.ts'
 import { AvisoDeLista } from '../../componentes/rotina/AvisoDeLista.tsx'
 import { useAcoesDaRotina, type ResultadoDoDescarte, type ResultadoDoEncerramento } from '../../componentes/rotina/useAcoesDaRotina.ts'
 import { useSecao } from '../../componentes/rotina/useSecao.ts'
-import { COMUM, ESTADOS, FORMATOS, ROTULO_TIPO, SESSAO, SESSOES } from '../../conteudo/rotina.ts'
+import { COMUM, ESTADOS, FORMATOS, ROTULO_TIPO, SESSAO, SESSOES, TITULOS } from '../../conteudo/rotina.ts'
 import { ATIVIDADE_TUMMY } from '../../conteudo/textos.ts'
 import type { ErroDados, Resultado } from '../../dados/comum.ts'
 import { ehUuid } from '../../dados/rotina.uuid.ts'
@@ -305,6 +305,25 @@ export function Sessao() {
         </main>
 
         {/* O aviso honesto de demonstração: fora do <main> e dos cartões, o único da página. */}
+        <AvisoDaTela />
+      </>
+    )
+  }
+
+  // A primeira leitura falhou e não há dado nenhum: não se sabe se há sessão, então o estado vazio (título,
+  // subtítulo, anteriores e desenho) seria uma afirmação falsa. Fica só o título da tela, o link de volta, a
+  // pendência de uma escrita, se houver, e o erro com "Tentar de novo".
+  if (leitura.erro && !leitura.dados && !idInvalido) {
+    return (
+      <>
+        <main ref={principal} className="pb-24 text-[17px] leading-[25px] lg:pb-32" data-tela="sessao">
+          <TituloRotina antes={VOLTAR_PARA_HOJE} titulo={TITULOS.sessao} linha={null} />
+          <div className="cm-area mt-5 max-w-[28rem]">
+            <AvisoDeErro erro={leitura.erro} papel={ativo.papel} aoTentarDeNovo={leitura.recarregar} />
+          </div>
+          {pendencia ? <div className="cm-area mt-5">{avisoDaPendencia}</div> : null}
+        </main>
+
         <AvisoDaTela />
       </>
     )
