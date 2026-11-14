@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
-import axe from 'axe-core'
 import { AvisoDemonstracao } from './componentes/AvisoDemonstracao.tsx'
 import { AVISO_DEMONSTRACAO } from './conteudo/textos.ts'
+import { rodarAxe } from './teste/axe.ts'
 import { aguardarCarga, renderizarRota, renderizarRotaPronta, type OpcoesRota } from './teste/renderizarRota.tsx'
 import { semSessaoEmAndamento } from './teste/rotina.fixture.ts'
 
@@ -33,7 +33,7 @@ function definirBanco(url: string, chave: string) {
 }
 
 async function violacoes(container: HTMLElement): Promise<string[]> {
-  const resultado = await axe.run(container, { rules: { 'color-contrast': { enabled: false } } })
+  const resultado = await rodarAxe(container, { rules: { 'color-contrast': { enabled: false } } })
   return resultado.violations.map((v) => `${v.id}: ${v.help} (${v.nodes.map((n) => n.html).join(' | ')})`)
 }
 
@@ -52,9 +52,9 @@ describe('aviso de demonstração: o texto', () => {
 
 describe('aviso de demonstração: uma linha no rodapé do site público', () => {
   for (const [nome, url, chave, aparece] of BANCOS) {
-    it(`${nome}: ${aparece ? 'um aviso, no rodapé' : 'nenhum aviso'} em cada página pública`, () => {
-      definirBanco(url, chave)
-      for (const caminho of PUBLICAS) {
+    for (const caminho of PUBLICAS) {
+      it(`${nome}: ${aparece ? 'um aviso, no rodapé' : 'nenhum aviso'} em ${caminho}`, () => {
+        definirBanco(url, chave)
         const { container, unmount } = renderizarRota(caminho)
         const avisos = container.querySelectorAll(SELETOR)
         expect(avisos, caminho).toHaveLength(aparece ? 1 : 0)
@@ -64,8 +64,8 @@ describe('aviso de demonstração: uma linha no rodapé do site público', () =>
         }
         expect(container.querySelector(`main ${SELETOR}`), caminho).toBeNull()
         unmount()
-      }
-    })
+      })
+    }
   }
 
   it('nunca fica dentro de uma imagem nem de uma figura', () => {

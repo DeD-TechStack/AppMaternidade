@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fireEvent, screen, within } from '@testing-library/react'
-import axe from 'axe-core'
+import { rodarAxe } from './axe.ts'
 import { describe, expect, it } from 'vitest'
 import { FASES, MARCOS, QUANTO_TEMPO, TUMMY_TIME } from '../conteudo/desenvolvimento/itens.ts'
 import { CONSULTADO_EM } from '../conteudo/desenvolvimento/fontes.ts'
@@ -23,7 +23,7 @@ const PAGINAS = [
 const nomeDoTitulo = (titulo: HTMLElement) => titulo.querySelector('.sr-only')?.textContent ?? titulo.textContent
 
 async function violacoes(container: HTMLElement): Promise<string[]> {
-  const resultado = await axe.run(container, { rules: { 'color-contrast': { enabled: false } } })
+  const resultado = await rodarAxe(container, { rules: { 'color-contrast': { enabled: false } } })
   return resultado.violations.map((v) => `${v.id}: ${v.help} (${v.nodes.map((n) => n.html).join(' | ')})`)
 }
 

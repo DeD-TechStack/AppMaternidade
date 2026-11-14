@@ -1,6 +1,8 @@
 import { useId, useState, type FormEvent } from 'react'
 import { COMUM_COMUNIDADE, TOPICO, TX } from '../../conteudo/comunidade.ts'
 import { LIMITES, conferirLimite } from '../../dados/comunidade.regras.ts'
+import { Cartao } from '../base/layout/Cartao.tsx'
+import { Pilha } from '../base/layout/Pilha.tsx'
 import { useFocoNoResumo } from '../conta/foco.ts'
 import { BOTAO_PRINCIPAL, BOTAO_SECUNDARIO } from '../conta/Partes.tsx'
 import { ResumoDeErro, Selo } from './Avisos.tsx'
@@ -104,15 +106,17 @@ export function FormularioDeResposta({ topicoId, modo, apelidoProprio, aoTirarCi
 
   if (previa) {
     return (
-      <div className="flex max-w-[44rem] flex-col gap-4" data-previa="resposta">
-        <h3 className="cm-h4">{TOPICO.previa}</h3>
-        <p>{TX.tx05b}</p>
-        <article className="flex flex-col gap-3 rounded-cartao border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)] p-5">
+      <Pilha vao="grupo" className="max-w-[44rem]" data-previa="resposta">
+        <Pilha vao="pilha">
+          <h3 className="cm-h4 text-titulo-4">{TOPICO.previa}</h3>
+          <p>{TX.tx05b}</p>
+        </Pilha>
+        <Cartao as="article" className="flex flex-col gap-3 border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)]">
           <Selo />
           <Meta apelido={apelidoProprio} />
           {citando ? <Citacao resposta={citando} /> : null}
           <Texto>{texto}</Texto>
-        </article>
+        </Cartao>
         {erro ? <ResumoDeErro texto={erro.texto} rotuloDaAcao={botaoDoErro} aoAgir={() => void envio.tentarDeNovo()} refResumo={resumo} /> : null}
         <div className="flex flex-col gap-3 min-[30rem]:flex-row-reverse min-[30rem]:justify-end">
           <button type="button" disabled={envio.enviando} className={BOTAO_PRINCIPAL} onClick={publicar}>
@@ -130,12 +134,12 @@ export function FormularioDeResposta({ topicoId, modo, apelidoProprio, aoTirarCi
             {TOPICO.voltarEEditar}
           </button>
         </div>
-      </div>
+      </Pilha>
     )
   }
 
   return (
-    <form onSubmit={aoEnviarFormulario} noValidate className="flex max-w-[40rem] flex-col gap-4">
+    <form onSubmit={aoEnviarFormulario} noValidate className="flex max-w-[40rem] flex-col gap-esp-pilha">
       {citando ? (
         <div className="flex flex-col items-start gap-2">
           <Citacao resposta={citando} />
@@ -157,11 +161,20 @@ export function FormularioDeResposta({ topicoId, modo, apelidoProprio, aoTirarCi
         linhas={5}
       />
       <div>
-        <button type="submit" disabled={!valido} aria-describedby={valido ? undefined : dicaId} className={BOTAO_PRINCIPAL}>
+        {/* `aria-disabled` em vez de `disabled`: o Tab chega ao botão e a dica ligada a ele é lida (A11Y-005). */}
+        <button
+          type="submit"
+          aria-disabled={valido ? undefined : 'true'}
+          aria-describedby={valido ? undefined : dicaId}
+          className={BOTAO_PRINCIPAL}
+          onClick={(evento) => {
+            if (!valido) evento.preventDefault()
+          }}
+        >
           {TOPICO.verPrevia}
         </button>
         {valido ? null : (
-          <p id={dicaId} className="cm-pequeno mt-2 text-[var(--cor-texto-2)]">
+          <p id={dicaId} className="cm-pequeno pt-2 text-[var(--cor-texto-2)]">
             {TOPICO.dicaPrevia}
           </p>
         )}

@@ -1,6 +1,7 @@
 import { useId, type Ref } from 'react'
 import { Link } from 'react-router'
 import { T } from '../../conteudo/desenvolvimento/textosLogada.ts'
+import { Pilha } from '../base/layout/Pilha.tsx'
 import { LINK_ALVO } from '../conta/Partes.tsx'
 import type { BlocoDoCorpo, ItemDeConteudo } from './itens.ts'
 
@@ -19,7 +20,7 @@ function AvisoDeSaudeDoItem() {
   return (
     <p
       role="note"
-      className={`${MEDIDA} rounded-campo border border-[var(--cor-fio-suave)] bg-[var(--cor-papel-fundo)] px-4 py-3 text-[15px] leading-[22px]`}
+      className={`${MEDIDA} rounded-campo border border-[var(--cor-fio-suave)] bg-[var(--cor-papel-fundo)] px-4 py-3 text-pequeno`}
       data-aviso-de-saude=""
     >
       {T.avisoDeSaude}
@@ -38,7 +39,7 @@ function TabelaDoCorpo({ colunas, linhas }: { colunas: readonly string[]; linhas
       tabIndex={0}
       className="alvo-foco max-w-full overflow-x-auto rounded-campo border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)]"
     >
-      <table className="w-full min-w-[34rem] border-collapse text-left text-[15px] leading-[22px]">
+      <table className="w-full min-w-[34rem] border-collapse text-left text-pequeno">
         <thead>
           <tr className="border-b border-[var(--cor-fio-suave)]">
             {colunas.map((coluna) => (
@@ -70,11 +71,11 @@ function TabelaDoCorpo({ colunas, linhas }: { colunas: readonly string[]; linhas
 function Corpo({ item, nivel }: { item: ItemDeConteudo; nivel: Props['nivel'] }) {
   const Subtitulo = nivel === 'pagina' ? 'h2' : 'h4'
   return (
-    <div data-corpo-conteudo={item.id} className="flex flex-col gap-4">
+    <Pilha vao="pilha" data-corpo-conteudo={item.id}>
       {item.corpo.map((bloco: BlocoDoCorpo, indice) => {
         if (bloco.tipo === 'subtitulo') {
           return (
-            <Subtitulo key={indice} className="cm-h4 mt-4 first:mt-0">
+            <Subtitulo key={indice} className="cm-h4 text-titulo-4 pt-4 first:pt-0">
               {bloco.texto}
             </Subtitulo>
           )
@@ -97,7 +98,7 @@ function Corpo({ item, nivel }: { item: ItemDeConteudo; nivel: Props['nivel'] })
         }
         return <TabelaDoCorpo key={indice} colunas={bloco.colunas} linhas={bloco.linhas} />
       })}
-    </div>
+    </Pilha>
   )
 }
 
@@ -110,26 +111,21 @@ function Fontes({ item, nivel }: { item: ItemDeConteudo; nivel: Props['nivel'] }
   // que tem uma só, segue como seção.
   const Raiz = nivel === 'pagina' ? 'section' : 'div'
   return (
-    <Raiz
-      aria-labelledby={titulo}
-      role={nivel === 'pagina' ? undefined : 'group'}
-      data-fontes=""
-      className="flex flex-col gap-2"
-    >
-      <Titulo id={titulo} className="cm-h4">
+    <Pilha as={Raiz} vao="pilha" aria-labelledby={titulo} role={nivel === 'pagina' ? undefined : 'group'} data-fontes="">
+      <Titulo id={titulo} className="cm-h4 text-titulo-4">
         {T.fontes}
       </Titulo>
       <ol className={`${MEDIDA} m-0 flex list-none flex-col gap-1 p-0`}>
         {item.fontes.map((fonte, indice) => (
           <li key={fonte.url} id={`${item.id}-fonte-${indice + 1}`} className="flex flex-col">
-            <a href={fonte.url} target="_blank" rel="noopener noreferrer" className={`${LINK_ALVO} wrap-anywhere`}>
+            <a href={fonte.url} className={`${LINK_ALVO} wrap-anywhere`}>
               {fonte.nome}
             </a>
             <span className="cm-pequeno cm-texto-2">{T.consultadaEm}</span>
           </li>
         ))}
       </ol>
-    </Raiz>
+    </Pilha>
   )
 }
 
@@ -141,17 +137,13 @@ export function ArtigoDeConteudo({ item, nivel, refDoTitulo }: Props) {
   const idDoTitulo = useId()
   const [antes, depois] = T.erroNoConteudo
   return (
-    <article
-      aria-labelledby={idDoTitulo}
-      data-item={item.id}
-      className="flex flex-col gap-5 text-[17px] leading-[25px]"
-    >
+    <Pilha as="article" vao="grupo" aria-labelledby={idDoTitulo} data-item={item.id} className="text-corpo">
       {nivel === 'pagina' ? (
-        <h1 id={idDoTitulo} ref={refDoTitulo} tabIndex={-1} className="cm-h2 alvo-foco wrap-anywhere">
+        <h1 id={idDoTitulo} ref={refDoTitulo} tabIndex={-1} className="cm-h2 text-titulo-1 alvo-foco wrap-anywhere">
           {item.titulo}
         </h1>
       ) : (
-        <h3 id={idDoTitulo} className="cm-h3 wrap-anywhere">
+        <h3 id={idDoTitulo} className="cm-h3 text-titulo-3 wrap-anywhere">
           {item.titulo}
         </h3>
       )}
@@ -161,13 +153,13 @@ export function ArtigoDeConteudo({ item, nivel, refDoTitulo }: Props) {
       </p>
       <Corpo item={item} nivel={nivel} />
       <Fontes item={item} nivel={nivel} />
-      <p className="flex flex-wrap items-center text-[15px] leading-[22px]">
+      <p className="flex flex-wrap items-center text-pequeno">
         <span className="mr-1">{antes}</span>
         <Link to="/contato" className={LINK_ALVO}>
           {T.contato}
         </Link>
         <span>{depois}</span>
       </p>
-    </article>
+    </Pilha>
   )
 }
