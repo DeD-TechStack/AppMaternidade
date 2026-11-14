@@ -431,6 +431,16 @@
       padding: 14px 8px;
     }
 
+    .cm-tabela thead th {
+      font-size: var(--texto-pequeno-tamanho);
+      line-height: var(--texto-pequeno-entrelinha);
+    }
+
+    .cm-tabela th:first-child,
+    .cm-tabela td:first-child {
+      padding-right: var(--espaco-pilha);
+    }
+
     .cm-tabela td,
     .cm-tabela thead th + th {
       width: 24%;
