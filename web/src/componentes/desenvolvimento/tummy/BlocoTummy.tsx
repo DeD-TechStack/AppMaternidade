@@ -53,9 +53,9 @@ export function BlocoTummy({ bebe, familia, papel, aoPerderAcesso }: Props) {
       data-tummy=""
       aria-labelledby={idTitulo}
       aria-busy={bloco.leitura === 'carregando' ? 'true' : undefined}
-      className="flex flex-col items-start gap-6"
+      className="flex flex-col items-start gap-esp-grupo"
     >
-      <h2 id={idTitulo} tabIndex={-1} data-foco={CHAVE.titulo} className="cm-h3 alvo-foco">
+      <h2 id={idTitulo} tabIndex={-1} data-foco={CHAVE.titulo} className="cm-h3 text-titulo-3 alvo-foco">
         {TT.titulo}
       </h2>
 

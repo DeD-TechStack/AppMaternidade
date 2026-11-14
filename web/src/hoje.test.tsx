@@ -23,6 +23,8 @@ const cartao = (container: HTMLElement) => container.querySelector<HTMLElement>(
 const ultimos = (container: HTMLElement) => container.querySelector<HTMLElement>('main #ultimos')!
 const barra = (container: HTMLElement) => container.querySelector<HTMLElement>('[data-barra-registrar]')!
 const regiao = (nome: string) => screen.getByRole('region', { name: nome })
+// A15 (A11Y-010): o `role="timer"` leva os algarismos visíveis (aria-hidden) e o texto falado (sr-only).
+const digitos = (timer: HTMLElement) => timer.querySelector('[aria-hidden="true"]')!.textContent
 const colunasDeUltimos = (container: HTMLElement) =>
   [...ultimos(container).querySelectorAll('.sb-numeros-item')].map((item) =>
     [...item.querySelectorAll('p')].map((p) => p.textContent).join(' '),
@@ -167,7 +169,7 @@ describe('Hoje: o cartão da sessão', () => {
     const titulo = within(bloco).getByRole('heading', { name: 'Em andamento' })
     expect(bloco.getAttribute('aria-labelledby')).toBe(titulo.id)
     expect(within(bloco).getByText('Sono', { selector: 'p' })).toBeTruthy()
-    expect(within(bloco).getByRole('timer').textContent).toBe('1:12:00')
+    expect(digitos(within(bloco).getByRole('timer'))).toBe('1:12:00')
     expect(within(bloco).getByText('por Bruno')).toBeTruthy()
     expect(within(bloco).getByRole('button', { name: 'Encerrar' })).toBeTruthy()
     const emAndamento = fixture.registros.find((r) => r.tipo === 'sono' && r.fim === null)!
@@ -181,7 +183,20 @@ describe('Hoje: o cartão da sessão', () => {
       vi.advanceTimersByTime(5_000)
     })
 
-    expect(within(cartao(container)).getByRole('timer').textContent).toBe('1:12:05')
+    expect(digitos(within(cartao(container)).getByRole('timer'))).toBe('1:12:05')
+  })
+
+  it('A11Y-010: o tempo do cartão também é falado com as unidades ("1 hora, 12 minutos e 5 segundos"), dentro do mesmo role="timer"', async () => {
+    const { container } = await renderizarRotaPronta('/app/hoje')
+
+    act(() => {
+      vi.advanceTimersByTime(5_000)
+    })
+
+    const timer = within(cartao(container)).getByRole('timer', { name: 'Tempo de sono' })
+    expect(timer.getAttribute('aria-live')).toBe('off')
+    expect(timer.querySelector('.sr-only')!.textContent).toBe('1 hora, 12 minutos e 5 segundos')
+    expect(timer.querySelector('[aria-hidden="true"]')!.textContent).toBe('1:12:05')
   })
 
   it('o "Ver sessão" do cartão é um só, um <a> dentro do main', async () => {

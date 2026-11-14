@@ -28,9 +28,9 @@ export function tituloDaAba(titulo: string): string {
   return `${titulo} | ${MARCA}`
 }
 
-/** O título da aba das páginas públicas, da 404 e de /sistema: "<nome da página> · AppMaternidade". */
+/** O título da aba das páginas públicas, da 404 e de /sistema: "<nome da página> | AppMaternidade". */
 export function tituloPublico(nome: string): string {
-  return `${nome} · ${MARCA}`
+  return `${nome} | ${MARCA}`
 }
 
 /**
@@ -74,6 +74,8 @@ export const CENA_ACESSO = {
 } as const
 
 export const COMUM = {
+  /** O sufixo do rótulo de um campo obrigatório (A11Y-008). */
+  obrigatorio: '(obrigatório)',
   carregando: 'Carregando…',
   tentarDeNovo: 'Tentar de novo',
   mostrarSenha: 'Mostrar senha',

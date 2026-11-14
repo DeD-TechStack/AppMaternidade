@@ -1,6 +1,7 @@
 import { useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { IDEIAS } from '../../conteudo/desenvolvimento/itens.ts'
 import type { Fase } from '../../conteudo/desenvolvimento/tipos.ts'
+import { Cartao, Pilha } from '../base/layout/index.ts'
 import { FontesDoItem } from './FontesDoItem.tsx'
 import './publicas-destaque.css'
 
@@ -62,7 +63,7 @@ export function SeletorDeFase({ fases, lateral }: { fases: readonly Fase[]; late
         ))}
       </div>
       {fases.map((fase, i) => (
-        <div
+        <Cartao
           key={fase.id}
           role="tabpanel"
           id={`${base}-fase-${i}`}
@@ -70,18 +71,25 @@ export function SeletorDeFase({ fases, lateral }: { fases: readonly Fase[]; late
           hidden={i !== ativa}
           tabIndex={0}
           className="pd-fase"
+          dataH="coluna"
           data-fase={fase.id}
         >
-          <h3 className="cm-h3">{fase.titulo}</h3>
-          <ul className="pd-lista cm-corpo">
-            {fase.itens.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-          <FontesDoItem fontes={fase.fontes} consultadoEm={fase.consultadoEm} />
-        </div>
+          <Pilha vao="grupo">
+            <h3 className="cm-h3">{fase.titulo}</h3>
+            <ul className="pd-lista cm-corpo">
+              {fase.itens.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+            <FontesDoItem fontes={fase.fontes} consultadoEm={fase.consultadoEm} />
+          </Pilha>
+        </Cartao>
       ))}
-      {lateral ? <div className="pd-seletor-lateral">{lateral}</div> : null}
+      {lateral ? (
+        <Pilha vao="pilha" dataH="coluna" className="pd-seletor-lateral">
+          {lateral}
+        </Pilha>
+      ) : null}
     </div>
   )
 }

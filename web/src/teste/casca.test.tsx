@@ -8,7 +8,7 @@ import {
   DESTINO_ENTRAR,
   ITENS_DO_CABECALHO,
 } from '../componentes/casca/textos.ts'
-import { renderizarRota } from './renderizarRota.tsx'
+import { aguardarCarga, renderizarRota } from './renderizarRota.tsx'
 
 // A casca do Campo de mel (MAT-49a): cabeçalho, menu de altura cheia e rodapé de mel. Substitui o
 // antigo web/src/casca.test.tsx.
@@ -26,8 +26,10 @@ const ROTAS_PUBLICAS = [
 ]
 
 describe('cabeçalho público', () => {
-  it('tem o nome do site, os quatro links, Entrar e o primário "Criar conta"', () => {
-    const { container } = renderizarRota('/como-funciona')
+  it('tem o nome do site, os quatro links, Entrar e o primário "Criar conta"', async () => {
+    const { container } = renderizarRota('/como-funciona', { sessao: null })
+    // Os links de visitante seguem a sessão: só aparecem depois que ela termina de carregar.
+    await aguardarCarga()
     const cabecalho = container.querySelector<HTMLElement>('header[data-cabecalho]')!
     expect(within(cabecalho).getByRole('link', { name: 'AppMaternidade' }).getAttribute('href')).toBe('/')
     const nav = within(cabecalho).getByRole('navigation', { name: 'Site' })
@@ -44,18 +46,20 @@ describe('cabeçalho público', () => {
     expect(criar.classList.contains('cm-botao-primario')).toBe(true)
   })
 
-  it('Entrar leva a /entrar e "Criar conta" leva a /criar-conta (as telas de acesso existem)', () => {
+  it('Entrar leva a /entrar e "Criar conta" leva a /criar-conta (as telas de acesso existem)', async () => {
     expect(DESTINO_ENTRAR).toBe('/entrar')
     expect(DESTINO_CRIAR_CONTA).toBe('/criar-conta')
-    const { container } = renderizarRota('/como-funciona')
+    const { container } = renderizarRota('/como-funciona', { sessao: null })
+    await aguardarCarga()
     const cabecalho = container.querySelector<HTMLElement>('header[data-cabecalho]')!
     expect(within(cabecalho).getByRole('link', { name: 'Entrar' }).getAttribute('href')).toBe('/entrar')
     expect(within(cabecalho).getByRole('link', { name: 'Criar conta' }).getAttribute('href')).toBe('/criar-conta')
   })
 
-  it('todo destino do cabeçalho é uma rota que existe (nenhuma rota inventada)', () => {
+  it('todo destino do cabeçalho é uma rota que existe (nenhuma rota inventada)', async () => {
     for (const item of ITENS_DO_CABECALHO.publico) expect(ROTAS_PUBLICAS).toContain(item.para)
-    const { container } = renderizarRota('/')
+    const { container } = renderizarRota('/', { sessao: null })
+    await aguardarCarga()
     for (const link of container.querySelectorAll<HTMLAnchorElement>('header[data-cabecalho] a')) {
       const destino = link.getAttribute('href')!
       // O link de pular para o conteúdo (WCAG 2.4.1) é âncora da própria página, e não uma rota.
@@ -76,8 +80,9 @@ describe('cabeçalho público', () => {
 })
 
 describe('menu de altura cheia', () => {
-  it('abre pelo botão Menu, leva o foco ao primeiro item, fecha com Esc e devolve o foco ao botão', () => {
-    const { container } = renderizarRota('/')
+  it('abre pelo botão Menu, leva o foco ao primeiro item, fecha com Esc e devolve o foco ao botão', async () => {
+    const { container } = renderizarRota('/', { sessao: null })
+    await aguardarCarga()
     const botao = screen.getByRole('button', { name: 'Menu' })
     const painel = container.querySelector<HTMLElement>('[data-menu-celular]')!
     expect(painel.hidden).toBe(true)
@@ -102,18 +107,63 @@ describe('menu de altura cheia', () => {
     expect(document.activeElement).toBe(botao)
   })
 
-  it('prende o Tab numa volta pelos focáveis do cabeçalho', () => {
+  it('com sessão, o menu traz a seção da conta: o link "Conta" e o botão "Sair", sem Entrar nem "Criar conta"', async () => {
     const { container } = renderizarRota('/')
-    const botao = screen.getByRole('button', { name: 'Menu' })
-    fireEvent.click(botao)
+    await aguardarCarga()
+    fireEvent.click(screen.getByRole('button', { name: 'Menu' }))
     const painel = container.querySelector<HTMLElement>('[data-menu-celular]')!
+
+    expect(within(painel).getAllByRole('link').map((l) => l.textContent)).toEqual([
+      'Como funciona',
+      'Cuidado compartilhado',
+      'Desenvolvimento',
+      'Comunidade',
+      'Conta',
+    ])
+    expect(within(painel).getByRole('link', { name: 'Conta' }).getAttribute('href')).toBe('/app/conta')
+    expect(within(painel).getAllByRole('button').map((b) => b.textContent)).toEqual(['Sair'])
+  })
+
+  // A11Y-012: o menu é uma divulgação, não uma caixa de diálogo: não prende o Tab.
+  it('não prende o Tab: o Tab no último item segue a ordem natural para a página, e o Shift+Tab no primeiro não é desviado', async () => {
+    const { container } = renderizarRota('/', { sessao: null })
+    await aguardarCarga()
+    fireEvent.click(screen.getByRole('button', { name: 'Menu' }))
+    const painel = container.querySelector<HTMLElement>('[data-menu-celular]')!
+    const itens = within(painel).getAllByRole('link')
+    const primeiro = itens[0]
     const ultimo = within(painel).getByRole('link', { name: 'Entrar' })
+    expect(itens[itens.length - 1]).toBe(ultimo)
+
     ultimo.focus()
-    fireEvent.keyDown(document, { key: 'Tab' })
-    // Depois do último item do painel, o foco volta ao começo do cabeçalho (o nome do site).
-    expect(document.activeElement).toBe(screen.getAllByRole('link', { name: 'AppMaternidade' })[0])
-    fireEvent.keyDown(document, { key: 'Tab', shiftKey: true })
+    // `fireEvent` devolve false quando um ouvinte chamou preventDefault: aí o navegador não seguiria a ordem natural.
+    expect(fireEvent.keyDown(ultimo, { key: 'Tab' })).toBe(true)
     expect(document.activeElement).toBe(ultimo)
+    const focaveis = [...document.body.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input, select, textarea')]
+    const proximo = focaveis[focaveis.indexOf(ultimo) + 1]
+    expect(proximo).toBeDefined()
+    expect(container.querySelector('header[data-cabecalho]')!.contains(proximo)).toBe(false)
+
+    primeiro.focus()
+    expect(fireEvent.keyDown(primeiro, { key: 'Tab', shiftKey: true })).toBe(true)
+    expect(document.activeElement).toBe(primeiro)
+  })
+
+  it('o Esc fecha o menu e devolve o foco ao botão Menu, e o aria-expanded acompanha', async () => {
+    const { container } = renderizarRota('/', { sessao: null })
+    await aguardarCarga()
+    const botao = screen.getByRole('button', { name: 'Menu' })
+    const painel = container.querySelector<HTMLElement>('[data-menu-celular]')!
+    expect(botao.getAttribute('aria-expanded')).toBe('false')
+
+    fireEvent.click(botao)
+    expect(botao.getAttribute('aria-expanded')).toBe('true')
+    within(painel).getByRole('link', { name: 'Entrar' }).focus()
+
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(botao.getAttribute('aria-expanded')).toBe('false')
+    expect(painel.hidden).toBe(true)
+    expect(document.activeElement).toBe(botao)
   })
 
   it('fecha sozinho ao navegar por um link dele', async () => {

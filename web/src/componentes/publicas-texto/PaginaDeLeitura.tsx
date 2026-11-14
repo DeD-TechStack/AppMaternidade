@@ -2,6 +2,7 @@ import { Fragment, useEffect, type ReactNode } from 'react'
 import { useLocation } from 'react-router'
 import type { PaginaDeTexto } from '../../conteudo/publicas-texto.ts'
 import { Botao } from '../base/Botao.tsx'
+import { Colunas, Pilha, QuadroLayout, Secao } from '../base/layout/index.ts'
 import { Ilustracao } from '../campo/Ilustracao.tsx'
 import { PainelCampo } from '../campo/PainelCampo.tsx'
 import { BlocoDeEmail } from './BlocoDeEmail.tsx'
@@ -81,32 +82,42 @@ export function PaginaDeLeitura({ pagina }: { pagina: PaginaDeTexto }) {
   }, [hash, key, secoes])
 
   return (
-    <main className="cm-area pt-pagina">
-      <section className="pt-abertura">
-        <div className="pt-cabeca">
-          <h1 className="cm-h1">{ligarPalavrasCurtas(nome)}</h1>
-          <p className="pt-segunda-linha">{ligarPalavrasCurtas(subtitulo)}</p>
-          {blocoDeEmail ? <BlocoDeEmail /> : null}
-          {acao ? (
-            <div className="pt-acao">
-              <Botao to={acao.para}>{acao.botao}</Botao>
-            </div>
-          ) : null}
-        </div>
-        <div className="pt-figura">
-          <PainelCampo como="aside" variante="mel" largura="celula" className="pt-painel">
-            <Ilustracao nome={ilustracao} carregamento="eager" className="pt-ilustracao" />
-          </PainelCampo>
-          <p className="pt-apoio">{apoio}</p>
-        </div>
-      </section>
-      <IndiceDaPagina secoes={secoes.map(({ secao }) => secao)} />
-      <div className="pt-leitura">
-        {apresentacao ? <p className="cm-lide">{apresentacao}</p> : null}
-        {secoes.map((dados) => (
-          <SecaoDeTexto key={dados.secao.id} dados={dados} />
-        ))}
-      </div>
+    <main>
+      <Secao>
+        <QuadroLayout>
+          <Colunas fracoes="1.2fr 1fr" aPartirDe={1100} vao="midia" alinhar="centro" className="pt-abertura">
+            <Pilha vao="grupo" dataH="coluna" className="pt-cabeca max-w-leitura">
+              <Pilha vao="pilha">
+                <h1 className="cm-h1">{ligarPalavrasCurtas(nome)}</h1>
+                <p className="pt-segunda-linha">{ligarPalavrasCurtas(subtitulo)}</p>
+              </Pilha>
+              {blocoDeEmail ? <BlocoDeEmail /> : null}
+              {acao ? (
+                <div className="pt-acao">
+                  <Botao to={acao.para}>{acao.botao}</Botao>
+                </div>
+              ) : null}
+            </Pilha>
+            <Pilha vao="pilha" dataH="coluna" className="pt-figura">
+              <PainelCampo como="aside" variante="mel" largura="celula" className="pt-painel">
+                <Ilustracao nome={ilustracao} carregamento="eager" className="pt-ilustracao" />
+              </PainelCampo>
+              <p className="pt-apoio">{apoio}</p>
+            </Pilha>
+          </Colunas>
+        </QuadroLayout>
+      </Secao>
+      <Secao as="div">
+        <QuadroLayout largura="leitura">
+          <Pilha vao="bloco" className="pt-leitura">
+            <IndiceDaPagina secoes={secoes.map(({ secao }) => secao)} />
+            {apresentacao ? <p className="cm-lide">{apresentacao}</p> : null}
+            {secoes.map((dados) => (
+              <SecaoDeTexto key={dados.secao.id} dados={dados} />
+            ))}
+          </Pilha>
+        </QuadroLayout>
+      </Secao>
     </main>
   )
 }

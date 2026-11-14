@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fireEvent, screen, within } from '@testing-library/react'
-import axe from 'axe-core'
+import { rodarAxe } from './axe.ts'
 import { describe, expect, it } from 'vitest'
 import { FASES, MARCOS, QUANTO_TEMPO, TUMMY_TIME } from '../conteudo/desenvolvimento/itens.ts'
 import { CONSULTADO_EM } from '../conteudo/desenvolvimento/fontes.ts'
@@ -23,7 +23,7 @@ const PAGINAS = [
 const nomeDoTitulo = (titulo: HTMLElement) => titulo.querySelector('.sr-only')?.textContent ?? titulo.textContent
 
 async function violacoes(container: HTMLElement): Promise<string[]> {
-  const resultado = await axe.run(container, { rules: { 'color-contrast': { enabled: false } } })
+  const resultado = await rodarAxe(container, { rules: { 'color-contrast': { enabled: false } } })
   return resultado.violations.map((v) => `${v.id}: ${v.help} (${v.nodes.map((n) => n.html).join(' | ')})`)
 }
 
@@ -350,7 +350,7 @@ describe('Como funciona', () => {
 
   it('o "para começar" põe a primeira frase sob o título e o texto denso na outra coluna', () => {
     const { container } = renderizarRota('/como-funciona')
-    const secao = container.querySelector('section[aria-labelledby="como-comecar"]')!
+    const secao = container.querySelector('section[aria-labelledby="como-comecar"] .pd-duas')!
     const [esquerda, direita] = [...secao.children]
     expect(esquerda.querySelector('h2')).not.toBeNull()
     expect(esquerda.textContent).toContain(COMO_FUNCIONA_DESTAQUE.comecar.textos[0])
@@ -654,10 +654,10 @@ describe('polimento, volta 2', () => {
   it('a faixa de oliva dos papéis tem um destaque só (os nomes): o cabeçalho é um rótulo sem faixa escura', () => {
     const cabeca = Object.assign({}, ...decl(/^\.pd-tabela thead th$/)) as Record<string, string>
     expect(cabeca).not.toHaveProperty('background-color')
-    expect(cabeca['font-size']).toBe('0.875rem')
+    expect(cabeca['font-size']).toBe('var(--texto-pequeno-tamanho)')
     const corpo = Object.assign({}, ...decl(/^\.pd-tabela tbody td$/)) as Record<string, string>
-    expect(corpo['font-size']).toBe('1.125rem')
-    expect(corpo['line-height']).toBe('1.6875rem')
+    expect(corpo['font-size']).toBe('var(--texto-corpo-tamanho)')
+    expect(corpo['line-height']).toBe('var(--texto-corpo-entrelinha)')
     const { container } = renderizarRota('/cuidado-compartilhado')
     expect(container.querySelector('.pd-painel-papeis table.pd-tabela')).not.toBeNull()
     // No celular o último campo de cada bloco é o item em destaque (fio de mel), só nessa tabela.
@@ -672,9 +672,9 @@ describe('polimento, volta 2', () => {
     expect(container.querySelectorAll('main .pd-parar-painel')).toHaveLength(1)
   })
 
-  it('no celular as caixas das listas e dos painéis usam a mesma margem lateral (a do painel de campo)', () => {
-    const lista = decl(/^\.pd-regras\.cm-area$/).map((d) => d.width)
-    expect(lista).toContain('min(100% - 2 * var(--cm-recuo-painel), 1376px)')
+  it('no celular as caixas das listas e dos painéis usam a mesma margem lateral (a do quadro: a lista é filha do QuadroLayout, sem largura própria)', () => {
+    const { container } = renderizarRota('/cuidado-compartilhado')
+    expect(container.querySelector('[data-blocos]')!.closest('[data-h~="quadro"][data-h-largura="quadro"]')).not.toBeNull()
   })
 
   it('o desenho da avó ocupa 64% da largura interna do painel no celular, sem altura máxima (sem recorte)', () => {
@@ -698,11 +698,10 @@ describe('polimento, volta 2', () => {
   })
 
   it('o painel de oliva do tummy time começa na mesma borda da coluna de texto da página (metade da diferença das larguras)', () => {
-    const preenchimento = decl(/^\.pd-tummy-tabela\.cm-painel$/).map((d) => d['padding-inline'])
-    const semEspaco = preenchimento.join(' ').replace(/\s+/g, '')
-    expect(semEspaco).toContain(
-      'calc((min(100%-2*var(--cm-recuo-painel),1376px)-min(100%-2*var(--cm-margem),1312px))/2)',
-    )
+    // O painel é uma célula do mesmo QuadroLayout do texto do tummy time: a borda esquerda é a mesma.
+    const { container } = renderizarRota('/desenvolvimento')
+    const quadroDoPainel = container.querySelector('.pd-tummy-tabela')!.closest('[data-h~="quadro"]')
+    expect(quadroDoPainel).toBe(container.querySelector('.pd-tummy-cima')!.closest('[data-h~="quadro"]'))
   })
 
   it('o trecho dos marcos tem uma frase de destaque, repetida do próprio texto (T-1: nada de texto novo)', () => {

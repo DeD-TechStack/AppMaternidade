@@ -221,6 +221,9 @@ export function Sessao() {
   // que acabou de começar deixa de existir. "Tentar de novo" fica na tela até dar certo.
   function acionar(acao: AcaoDaConfirmacao) {
     if (acao.chave !== 'tentar_de_novo') fecharConfirmacao()
+    // O Desfazer de um registro criado no Hoje (e o Tentar de novo dele): o botão que o criou não está nesta
+    // tela e o aviso sai ao tocar, então o foco vai ao h1 em vez de cair no body (A11Y-004).
+    if (acao.chave === 'desfazer' || (acao.chave === 'tentar_de_novo' && confirmacao?.origem)) focarTitulo()
     acao.executar()
     if (acao.chave === 'excluir_este') void navigate('/app/hoje', { state: { foco: 'titulo' } })
   }

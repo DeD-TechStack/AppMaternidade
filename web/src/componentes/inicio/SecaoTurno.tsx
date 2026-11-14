@@ -1,7 +1,9 @@
 import { useId } from 'react'
+import { Colunas } from '../base/layout/Colunas.tsx'
+import { Pilha } from '../base/layout/Pilha.tsx'
+import { Secao } from '../base/layout/Secao.tsx'
 import { CartaoFlutuante } from '../campo/CartaoFlutuante.tsx'
 import { Ilustracao } from '../campo/Ilustracao.tsx'
-import { PainelCampo } from '../campo/PainelCampo.tsx'
 import { Titulo } from '../campo/Titulo.tsx'
 import { INICIO } from '../../conteudo/textos.ts'
 import { RevelaNaRolagem } from '../../movimento/RevelaNaRolagem.tsx'
@@ -21,13 +23,21 @@ export function SecaoTurno() {
   const { titulo, texto, cartao } = INICIO.turno
 
   return (
-    <PainelCampo variante="mel" luz como="section" aria-labelledby={id} className="in-turno cm-com-flutuante">
-      <div className="in-turno-grade">
-        <div className="in-turno-texto">
+    <Secao
+      variante="painel"
+      painel="mel"
+      luz
+      aria-labelledby={id}
+      className="in-turno"
+      classeCaixa="in-turno-caixa cm-com-flutuante"
+    >
+      {/* Duas metades (6fr/6fr), `midia` entre elas. A primitiva quebra em 992; o inicio.css mantém o 960 de hoje. */}
+      <Colunas fracoes="6fr 6fr" vao="midia" aPartirDe={992} alinhar="centro" className="in-turno-grade">
+        <Pilha vao="pilha" dataH="coluna" className="in-turno-texto">
           <Titulo nivel="h2" id={id} linhas={titulo} />
           <p className="cm-lide">{texto}</p>
-        </div>
-        <div className="in-turno-arte">
+        </Pilha>
+        <Pilha vao="pilha" dataH="coluna" className="in-turno-arte">
           <RevelaNaRolagem className="in-revela">
             <Ilustracao nome="maos-celular" decorativa />
           </RevelaNaRolagem>
@@ -50,8 +60,8 @@ export function SecaoTurno() {
               ))}
             </ul>
           </CartaoFlutuante>
-        </div>
-      </div>
-    </PainelCampo>
+        </Pilha>
+      </Colunas>
+    </Secao>
   )
 }

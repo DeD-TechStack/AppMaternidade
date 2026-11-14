@@ -11,6 +11,10 @@ export const ROTULO_MADRUGADA = 'Modo madrugada'
 export const ROTULO_MADRUGADA_CURTO = 'Madrugada'
 export const ROTULO_ENTRAR = 'Entrar'
 export const ROTULO_CRIAR_CONTA = 'Criar conta'
+// Com sessão, o espaço da conta no cabeçalho (e no menu) traz "Conta" e "Sair" em toda página.
+export const ROTULO_CONTA = 'Conta'
+export const ROTULO_SAIR = 'Sair'
+export const ROTULO_SAINDO = 'Saindo…'
 export const ROTULO_MENU = 'Menu'
 export const ROTULO_NAVEGACAO = 'Site'
 export const ROTULO_NAVEGACAO_RODAPE = 'Rodapé'
@@ -25,6 +29,13 @@ interface Link {
 
 export const DESTINO_ENTRAR = '/entrar'
 export const DESTINO_CRIAR_CONTA = '/criar-conta'
+export const DESTINO_CONTA = '/app/conta'
+
+/**
+ * O que o espaço da conta mostra, pela sessão: `carregando` (nada: sem piscar visitante nem conta),
+ * `com_sessao` ("Conta" e "Sair") e `visitante` (sem sessão ou com erro ao lê-la: "Entrar" e "Criar conta").
+ */
+export type SituacaoDaConta = 'carregando' | 'com_sessao' | 'visitante'
 
 export const ITENS_DO_CABECALHO: Record<Contexto, readonly Link[]> = {
   publico: [

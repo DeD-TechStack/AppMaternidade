@@ -109,6 +109,8 @@ export function textoDaPassagemComunidade(estado: unknown): string | null {
 }
 
 export const COMUM_COMUNIDADE = {
+  /** O sufixo do rótulo de um campo obrigatório (A11Y-008). */
+  obrigatorio: '(obrigatório)',
   voltar: 'Voltar',
   carregando: 'Carregando…',
   enviando: 'Enviando…',

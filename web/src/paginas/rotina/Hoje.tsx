@@ -20,7 +20,7 @@ import { SeletorBebe } from '../../componentes/rotina/SeletorBebe.tsx'
 import { SessoesEmParalelo } from '../../componentes/rotina/SessoesEmParalelo.tsx'
 import { TituloRotina } from '../../componentes/rotina/TituloRotina.tsx'
 import { UltimosDoHoje, type ItemDosUltimos } from '../../componentes/rotina/UltimosDoHoje.tsx'
-import { type AcaoDaConfirmacao, type BebeAtivo, useRotina } from '../../componentes/rotina/contexto.ts'
+import { type AcaoDaConfirmacao, type BebeAtivo, type ConfirmacaoDaRotina, useRotina } from '../../componentes/rotina/contexto.ts'
 import { formatarQuando, maisNovoPrimeiro, momentoDoRegistro } from '../../componentes/rotina/formatos.ts'
 import { useMadrugada } from '../../componentes/rotina/madrugada.ts'
 import { totaisDoDia } from '../../componentes/rotina/totaisDoDia.ts'
@@ -80,6 +80,8 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
   const { principal, focarTitulo } = useTituloDaTela()
   const cartao = useRef<HTMLElement>(null)
   const primeiroBotao = useRef<HTMLButtonElement>(null)
+  const botaoFralda = useRef<HTMLButtonElement>(null)
+  const botaoMais = useRef<HTMLButtonElement>(null)
   const ultimoToque = useRef(new Map<BotaoRapido, number>())
   const [ocupados, setOcupados] = useState<ReadonlySet<BotaoRapido>>(new Set())
   const [encerrando, setEncerrando] = useState(false)
@@ -186,11 +188,22 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
     }
   }
 
-  // "Desfazer", "Fechar" e as escolhas do duplicado somem com a confirmação; o foco vai ao primeiro botão
-  // rápido (Sono) ou, se ele não existe, ao h1. A confirmação nunca recebe o foco.
+  // "Desfazer" (A11Y-004): o foco volta ao botão que criou o registro (Fralda, ou Mais para mamadeira e
+  // alimentação sólida) e, se ele não está na tela ou o registro nasceu em outra tela, ao h1. O mesmo vale
+  // para "Tentar de novo" do erro de um Desfazer: o botão some quando a repetição dá certo.
+  function focarOrigem(origem: ConfirmacaoDaRotina['origem']) {
+    const alvo = origem === 'fralda' ? botaoFralda.current : origem === 'mais' ? botaoMais.current : null
+    if (alvo?.isConnected) alvo.focus()
+    else focarTitulo()
+  }
+
+  // "Fechar" e as escolhas do duplicado somem com a confirmação; o foco vai ao primeiro botão rápido (Sono)
+  // ou, se ele não existe, ao h1. A confirmação nunca recebe o foco.
   function acionar(acao: AcaoDaConfirmacao) {
     if (acao.chave !== 'tentar_de_novo') fecharConfirmacao()
-    if (acao.chave === 'desfazer' || acao.chave === 'fechar' || acao.chave === 'manter_os_dois' || acao.chave === 'excluir_este') {
+    if (acao.chave === 'desfazer' || (acao.chave === 'tentar_de_novo' && confirmacao?.origem)) {
+      focarOrigem(confirmacao?.origem)
+    } else if (acao.chave === 'fechar' || acao.chave === 'manter_os_dois' || acao.chave === 'excluir_este') {
       if (primeiroBotao.current) primeiroBotao.current.focus()
       else focarTitulo()
     }
@@ -541,6 +554,8 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
       <BarraRegistroRapido
         nome={nome}
         refSono={primeiroBotao}
+        refFralda={botaoFralda}
+        refMais={botaoMais}
         textoNoLugarDosBotoes={textoNoLugarDosBotoes}
         carregando={emAndamento.estado === 'carregando'}
         ocupados={ocupados}

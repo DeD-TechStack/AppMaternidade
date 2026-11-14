@@ -292,8 +292,10 @@ export function FormularioRegistro({ modo, ativo, tipoInicial, registro }: Props
       texto: CONFIRMACAO.registroSalvo,
       acoes:
         modo === 'novo'
-          ? [{ chave: 'desfazer', rotulo: COMUM.desfazer, executar: () => void acoes.excluir(chamada.id) }, fechar]
+          ? [{ chave: 'desfazer', rotulo: COMUM.desfazer, executar: () => void acoes.desfazerRegistro({ id: chamada.id, tipo: chamada.tipo }, 'tela') }, fechar]
           : [fechar],
+      // O formulário já saiu da tela: depois de Desfazer, o foco vai ao h1 (A11Y-004).
+      ...(modo === 'novo' ? { origem: 'tela' as const } : {}),
     })
     void navigate(destino, { state: { foco: 'titulo' } })
   }

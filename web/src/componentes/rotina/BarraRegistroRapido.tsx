@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type Ref } from 'react'
+import { useEffect, useId, useRef, useState, type Ref, type RefObject } from 'react'
 import { Droplets, Ellipsis, Milk, Moon } from 'lucide-react'
 import { ESCOLHAS_FRALDA, REGISTRO_RAPIDO, ROTULO_TIPO } from '../../conteudo/rotina.ts'
 import type { ConteudoFralda, TipoSessao } from '../../dados/rotina.tipos.ts'
@@ -26,6 +26,9 @@ interface Props {
   sessaoAtiva: TipoSessao | null
   /** O Hoje leva o foco ao primeiro botão quando a confirmação sai da tela. */
   refSono?: Ref<HTMLButtonElement>
+  /** O Hoje leva o foco ao botão Fralda e ao botão Mais depois de "Desfazer": o que criou o registro (A11Y-004). */
+  refFralda?: RefObject<HTMLButtonElement | null>
+  refMais?: RefObject<HTMLButtonElement | null>
   confirmacao: ConfirmacaoDaRotina | null
   aoIniciar: (tipo: TipoSessao) => void
   aoFralda: (conteudo: ConteudoFralda) => void
@@ -57,6 +60,8 @@ export function BarraRegistroRapido({
   ocupados,
   sessaoAtiva,
   refSono,
+  refFralda,
+  refMais,
   confirmacao,
   aoIniciar,
   aoFralda,
@@ -65,8 +70,10 @@ export function BarraRegistroRapido({
 }: Props) {
   const { barra, fixa } = useBarraFixa()
   const [painel, setPainel] = useState<'fralda' | 'mais' | null>(null)
-  const botaoFralda = useRef<HTMLButtonElement>(null)
-  const botaoMais = useRef<HTMLButtonElement>(null)
+  const fraldaInterno = useRef<HTMLButtonElement>(null)
+  const maisInterno = useRef<HTMLButtonElement>(null)
+  const botaoFralda = refFralda ?? fraldaInterno
+  const botaoMais = refMais ?? maisInterno
   const grupo = useRef<HTMLDivElement>(null)
   const idPainel = useId()
 
@@ -85,7 +92,7 @@ export function BarraRegistroRapido({
     }
     document.addEventListener('keydown', aoTeclar)
     return () => document.removeEventListener('keydown', aoTeclar)
-  }, [painel])
+  }, [painel, botaoFralda, botaoMais])
 
   const desativado = (botao: BotaoRapido) => carregando || ocupados.has(botao)
   const cor = (tipo: TipoSessao) => (sessaoAtiva === tipo ? ATIVO : NEUTRO)

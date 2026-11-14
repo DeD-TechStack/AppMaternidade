@@ -102,6 +102,7 @@ export function Entrar() {
             }}
             erro={erros.email}
             refEntrada={emailRef}
+            obrigatorio
           />
           <div className="flex flex-col gap-1">
             <CampoSenha
@@ -114,6 +115,7 @@ export function Entrar() {
               }}
               erro={erros.senha}
               refEntrada={senhaRef}
+              obrigatorio
             />
             <Link to={caminhoComVolta('/recuperar-acesso', volta)} className={`${LINK_ALVO} self-start`}>
               {ENTRAR.esqueci}

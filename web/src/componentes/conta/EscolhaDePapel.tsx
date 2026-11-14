@@ -22,16 +22,23 @@ export function EscolhaDePapel({ legenda, valor, aoMudar }: Props) {
           key={papel}
           className="alvo-toque grid min-h-11 cursor-pointer grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 rounded-campo border-[1.5px] border-[var(--cor-fio-suave)] p-3 has-[:checked]:border-[var(--cor-texto)]"
         >
+          {/* O nome acessível é só o papel; o que ele permite vai em `aria-describedby` (A11Y-013). */}
           <input
             type="radio"
             name={grupo}
             value={papel}
             checked={valor === papel}
             onChange={() => aoMudar(papel)}
+            aria-labelledby={`${grupo}-${papel}-nome`}
+            aria-describedby={`${grupo}-${papel}-descricao`}
             className="row-span-2 accent-[var(--cor-texto)]"
           />
-          <span className="font-medium">{PAPEIS[papel].nome}</span>
-          <span className="cm-pequeno text-[var(--cor-texto-2)]">{PAPEIS[papel].permite}</span>
+          <span id={`${grupo}-${papel}-nome`} className="font-medium">
+            {PAPEIS[papel].nome}
+          </span>
+          <span id={`${grupo}-${papel}-descricao`} className="cm-pequeno text-[var(--cor-texto-2)]">
+            {PAPEIS[papel].permite}
+          </span>
         </label>
       ))}
     </fieldset>

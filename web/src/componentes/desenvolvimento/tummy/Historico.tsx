@@ -47,7 +47,7 @@ export function Historico({ encerradas, incompleta, vazio, fusoDaFamilia, agoraD
 
   return (
     <section aria-labelledby={idTitulo} data-historico="" className="flex flex-col gap-4">
-      <h3 id={idTitulo} className="cm-h4">
+      <h3 id={idTitulo} className="cm-h4 text-titulo-4">
         {TT.historico}
       </h3>
       <div data-fila-de-dias="" role="group" aria-labelledby={idTitulo} className="flex flex-wrap gap-2">

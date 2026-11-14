@@ -1,4 +1,5 @@
 import { Botao } from '../componentes/base/Botao.tsx'
+import { Pilha, QuadroLayout, Secao } from '../componentes/base/layout/index.ts'
 import { NOMES_DE_PAGINA } from '../conteudo/publicas-texto.ts'
 import { useTituloDaPagina } from './publicas/useTitulo.ts'
 
@@ -6,10 +7,18 @@ import { useTituloDaPagina } from './publicas/useTitulo.ts'
 export function NaoEncontrada() {
   useTituloDaPagina(NOMES_DE_PAGINA.naoEncontrada)
   return (
-    <main className="cm-area cm-pagina-simples">
-      <h1 className="cm-h1">Página não encontrada</h1>
-      <p className="cm-lide cm-medida">O endereço pode ter mudado. Pelo início você chega a todas as páginas do site.</p>
-      <Botao to="/">Voltar ao início</Botao>
+    <main>
+      <Secao>
+        <QuadroLayout largura="medio">
+          <Pilha vao="grupo">
+            <h1 className="cm-h1">Página não encontrada</h1>
+            <p className="cm-lide cm-medida">O endereço pode ter mudado. Pelo início você chega a todas as páginas do site.</p>
+            <Botao to="/" className="self-start">
+              Voltar ao início
+            </Botao>
+          </Pilha>
+        </QuadroLayout>
+      </Secao>
     </main>
   )
 }

@@ -3,6 +3,7 @@ import { fireEvent, screen, within } from '@testing-library/react'
 import { aguardarCarga, renderizarRotaPronta } from '../../teste/renderizarRota.tsx'
 import { simularFalhaRotina } from '../../dados/rotina.memoria.ts'
 import { COMUM, ESTADOS } from '../../conteudo/rotina.ts'
+import { comObrigatorio } from '../conta/obrigatorio.ts'
 
 beforeEach(() => {
   vi.useFakeTimers()
@@ -21,7 +22,7 @@ it.each(['Cancelar', 'Salvar'])('P02 Hoje → Ver notas → Nova nota → %s ret
   await aguardarCarga()
   fireEvent.click(screen.getByRole('link', { name: 'Nova nota' }))
   await aguardarCarga()
-  if (acao === 'Salvar') fireEvent.change(screen.getByRole('textbox', { name: 'Texto da nota' }), { target: { value: 'Nota da sonda de revisão.' } })
+  if (acao === 'Salvar') fireEvent.change(screen.getByRole('textbox', { name: comObrigatorio('Texto da nota') }), { target: { value: 'Nota da sonda de revisão.' } })
   fireEvent.click(screen.getByRole('button', { name: acao }))
   await aguardarCarga()
   expect(roteador.state.location.pathname).toBe('/app/hoje')
@@ -50,7 +51,7 @@ it('P06 edição da nota mantém rascunho e informa falha na releitura ao voltar
   const mundo = await renderizarRotaPronta('/app/notas')
   fireEvent.click(screen.getByRole('link', { name: /^Editar/ }))
   await aguardarCarga()
-  const campo = screen.getByRole('textbox', { name: 'Texto da nota' }) as HTMLTextAreaElement
+  const campo = screen.getByRole('textbox', { name: comObrigatorio('Texto da nota') }) as HTMLTextAreaElement
   fireEvent.change(campo, { target: { value: 'Rascunho preservado.' } })
   const releitura = vi.spyOn(mundo.rotina, 'notas')
   simularFalhaRotina(mundo.rotina, 'notas', 'rede')

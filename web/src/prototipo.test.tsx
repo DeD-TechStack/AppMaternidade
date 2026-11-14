@@ -38,20 +38,25 @@ async function clicar(controle: HTMLElement) {
   await aguardarCarga()
 }
 
+// A15 (A11Y-010): o `role="timer"` leva os algarismos visíveis (aria-hidden) e o texto falado (sr-only).
+const digitos = (timer: HTMLElement) => timer.querySelector('[aria-hidden="true"]')!.textContent
+const falado = (timer: HTMLElement) => timer.querySelector('.sr-only')!.textContent
+
 describe('cronômetro', () => {
   it('mostra 00:59 para uma sessão iniciada há 59 s', async () => {
     await renderizarRotaPronta('/app/sessao', { ajustarRotina: comSessaoEmAndamento('sono', 59_000) })
 
-    expect(screen.getByRole('timer', { name: 'Duração da sessão' }).textContent).toBe('00:59')
+    expect(digitos(screen.getByRole('timer', { name: 'Duração da sessão' }))).toBe('00:59')
   })
 
   it('mostra 1:01:00 para uma sessão iniciada há 61 min, e avançar 10 s leva a 1:01:10, contado a partir do início', async () => {
     await renderizarRotaPronta('/app/sessao', { ajustarRotina: comSessaoEmAndamento('sono', 61 * MIN) })
-    expect(screen.getByRole('timer', { name: 'Duração da sessão' }).textContent).toBe('1:01:00')
+    expect(digitos(screen.getByRole('timer', { name: 'Duração da sessão' }))).toBe('1:01:00')
 
     avancar(10_000)
 
-    expect(screen.getByRole('timer', { name: 'Duração da sessão' }).textContent).toBe('1:01:10')
+    expect(digitos(screen.getByRole('timer', { name: 'Duração da sessão' }))).toBe('1:01:10')
+    expect(falado(screen.getByRole('timer', { name: 'Duração da sessão' }))).toBe('1 hora, 1 minuto e 10 segundos')
   })
 
   it('o cronômetro não é anunciado a cada segundo', async () => {
@@ -69,17 +74,34 @@ describe('cronômetro', () => {
 
   it('o cartão do Hoje conta os minutos a partir do início', async () => {
     await renderizarRotaPronta('/app/hoje')
-    expect(screen.getByRole('timer').textContent).toBe('1:12:00')
+    expect(digitos(screen.getByRole('timer'))).toBe('1:12:00')
 
     avancar(60_000)
 
-    expect(screen.getByRole('timer').textContent).toBe('1:13:00')
+    expect(digitos(screen.getByRole('timer'))).toBe('1:13:00')
+  })
+
+  it('A11Y-010: o cartão do Hoje fala as horas, os minutos e os segundos, e mantém o nome "Tempo de sono" e o aria-live "off"', async () => {
+    await renderizarRotaPronta('/app/hoje')
+
+    const timer = screen.getByRole('timer', { name: 'Tempo de sono' })
+    expect(timer.getAttribute('aria-live')).toBe('off')
+    expect(timer.hasAttribute('data-numero')).toBe(true)
+    expect(digitos(timer)).toBe('1:12:00')
+    expect(falado(timer)).toBe('1 hora e 12 minutos')
+
+    avancar(61_000)
+
+    expect(digitos(screen.getByRole('timer', { name: 'Tempo de sono' }))).toBe('1:13:01')
+    expect(falado(screen.getByRole('timer', { name: 'Tempo de sono' }))).toBe('1 hora, 13 minutos e 1 segundo')
   })
 
   it('o relógio do aparelho atrás do início gravado: o cronômetro mostra 00:00, nunca um valor negativo', async () => {
     await renderizarRotaPronta('/app/sessao', { ajustarRotina: comSessaoEmAndamento('sono', -30 * MIN) })
 
-    expect(screen.getByRole('timer', { name: 'Duração da sessão' }).textContent).toBe('00:00')
+    const timer = screen.getByRole('timer', { name: 'Duração da sessão' })
+    expect(digitos(timer)).toBe('00:00')
+    expect(falado(timer)).toBe('0 segundos')
   })
 })
 
@@ -132,7 +154,7 @@ describe('fralda', () => {
     expect(itensDeUltimos()).toContain('50 min Fralda, tempo desde o registro')
   })
 
-  it('(d) "Desfazer" devolve Últimos ao que era e limpa a confirmação; o registro vai para a lixeira', async () => {
+  it('(d) "Desfazer" devolve Últimos ao que era e troca a confirmação pelo aviso `Registro desfeito: fralda.`; o registro vai para a lixeira', async () => {
     const { rotina } = await renderizarRotaPronta('/app/hoje')
     await registrarFralda('Cocô')
 
@@ -144,7 +166,8 @@ describe('fralda', () => {
       '2 h 10 Mamada, tempo desde o registro',
       '17:30 Tummy time, ontem',
     ])
-    expect(status().textContent).toBe('')
+    expect(status().querySelector('p')!.textContent).toBe('Registro desfeito: fralda.')
+    expect(within(status()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Fechar'])
     const lixeira = await rotina.lixeira('c1111111-1111-4111-8111-111111111111')
     expect(lixeira.ok && lixeira.valor.itens.map((r) => r.tipo)).toEqual(['fralda'])
   })
@@ -439,7 +462,7 @@ describe('madrugada', () => {
     expect(document.documentElement.hasAttribute('data-tema')).toBe(false)
   })
 
-  it('o modo continua na Sessão e sai ao ir para o Início', async () => {
+  it('o modo continua na Sessão, sai ao ir para o Início e a escolha volta com a Rotina', async () => {
     const { roteador } = await renderizarRotaPronta('/app/hoje')
     fireEvent.click(botao('Modo madrugada'))
 
@@ -453,12 +476,12 @@ describe('madrugada', () => {
     await aguardarCarga()
     expect(document.documentElement.hasAttribute('data-tema')).toBe(false)
 
-    // O modo também desligou: ao voltar ao Hoje, o botão está solto.
+    // QA-04: o tema sai com a Rotina, mas a escolha fica: ao voltar ao Hoje, o botão segue pressionado.
     await act(async () => {
       await roteador.navigate('/app/hoje')
     })
     await aguardarCarga()
-    expect(botao('Modo madrugada').getAttribute('aria-pressed')).toBe('false')
+    expect(botao('Modo madrugada').getAttribute('aria-pressed')).toBe('true')
   })
 
   it('começar em madrugada põe o tema logo na primeira tela', async () => {
@@ -534,25 +557,28 @@ describe('R3: o foco acompanha ações que removem o controle focado', () => {
         conferirFocoValido(container)
       })
 
-      it('Hoje: "Desfazer" depois de Mamadeira leva o foco a "Iniciar sono de Heloísa"', async () => {
+      // A11Y-004: o foco volta ao botão que criou o registro, e nunca ao primeiro botão da barra.
+      it('Hoje: "Desfazer" depois de Mamadeira leva o foco a "Mais registros" e anuncia o aviso', async () => {
         const { container } = await renderizarRotaPronta('/app/hoje', { madrugada })
         fireEvent.click(botao('Mais registros'))
         await clicar(botao('Mamadeira'))
 
         await acionarComTeclado(botao('Desfazer'))
 
-        expect(document.activeElement).toBe(botao('Iniciar sono de Heloísa'))
+        expect(document.activeElement).toBe(botao('Mais registros'))
+        expect(status().textContent).toContain('Registro desfeito: mamadeira.')
         conferirFocoValido(container)
       })
 
-      it('Hoje: "Desfazer" depois de Fralda leva o foco a "Iniciar sono de Heloísa"', async () => {
+      it('Hoje: "Desfazer" depois de Fralda leva o foco a "Registrar fralda de Heloísa" e anuncia o aviso', async () => {
         const { container } = await renderizarRotaPronta('/app/hoje', { madrugada })
         await clicar(botao('Registrar fralda de Heloísa'))
         await clicar(botao('Xixi'))
 
         await acionarComTeclado(botao('Desfazer'))
 
-        expect(document.activeElement).toBe(botao('Iniciar sono de Heloísa'))
+        expect(document.activeElement).toBe(botao('Registrar fralda de Heloísa'))
+        expect(status().textContent).toContain('Registro desfeito: fralda.')
         conferirFocoValido(container)
       })
 

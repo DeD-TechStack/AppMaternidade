@@ -4,6 +4,7 @@ import { COMUM, RECUPERAR, TEXTOS_ERRO } from '../../conteudo/conta.ts'
 import { emailComFormatoValido } from '../../conteudo/email.ts'
 import { criarDadosContaMemoria } from '../../dados/conta.memoria.ts'
 import { criarFixtureDeTeste, renderizarComDados } from '../../teste/renderizarComDados.tsx'
+import { comObrigatorio } from './obrigatorio.ts'
 
 // QA-06: o formato do e-mail é conferido antes do envio, em /recuperar-acesso e em /criar-conta.
 
@@ -12,7 +13,7 @@ beforeEach(() => {
   localStorage.clear()
 })
 
-const campo = () => screen.getByLabelText('E-mail', { selector: 'input' }) as HTMLInputElement
+const campo = () => screen.getByLabelText(comObrigatorio('E-mail'), { selector: 'input' }) as HTMLInputElement
 const digitar = (texto: string) => fireEvent.change(campo(), { target: { value: texto } })
 const novaMemoria = () => criarDadosContaMemoria(criarFixtureDeTeste(Date.now()))
 

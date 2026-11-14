@@ -5,11 +5,14 @@ import { formatarDataHora, type PerfilPublico } from '../../dados/comunidade.ts'
 import type { EstadoModeracao } from '../../dados/comunidade.regras.ts'
 import type { ConteudoLido, HistoricoDoPerfil } from '../../dados/moderacao.ts'
 import { Etiqueta } from '../base/Etiqueta.tsx'
+import { Cartao } from '../base/layout/Cartao.tsx'
+import { Pilha } from '../base/layout/Pilha.tsx'
 import { Meta, Texto } from '../comunidade/Itens.tsx'
 import { ETIQUETAS_QUEBRAM, LINK_ALVO_DO_PAINEL } from './estilos.ts'
 import { LinhaDaAuditoria } from './LinhaDaAuditoria.tsx'
 
-export const CARTAO = 'flex flex-col gap-3 rounded-cartao border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)] p-5'
+/** O fundo, a borda e o vão interno do cartão do painel; o padding e o raio são do `Cartao`. */
+export const CARTAO = 'flex flex-col gap-3 border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)]'
 
 /** O estado atual do conteúdo, sempre com a etiqueta (também `visivel`), e o motivo de moderação. */
 function EstadoDoConteudo({ estado, motivo }: { estado: EstadoModeracao; motivo: string | null }) {
@@ -36,8 +39,8 @@ export function CartaoDoConteudo({ lido, autor, comLink = false, idDoTitulo }: C
   if (lido.tipo === 'topico') {
     const { topico } = lido
     return (
-      <article aria-labelledby={idDoTitulo} className={CARTAO}>
-        <h3 id={idDoTitulo} tabIndex={-1} className="cm-h4 alvo-foco wrap-anywhere">
+      <Cartao as="article" aria-labelledby={idDoTitulo} className={CARTAO}>
+        <h3 id={idDoTitulo} tabIndex={-1} className="cm-h4 text-titulo-4 alvo-foco wrap-anywhere">
           {topico.titulo}
         </h3>
         <Meta apelido={apelido} criadoEm={topico.criadoEm} editadoEm={topico.editadoEm} faixa={topico.faixa} />
@@ -48,13 +51,13 @@ export function CartaoDoConteudo({ lido, autor, comLink = false, idDoTitulo }: C
             {DENUNCIA.verConteudo}
           </Link>
         ) : null}
-      </article>
+      </Cartao>
     )
   }
   const { resposta, topicoTitulo } = lido
   return (
-    <article aria-labelledby={idDoTitulo} className={CARTAO}>
-      <h3 id={idDoTitulo} tabIndex={-1} className="cm-h4 alvo-foco wrap-anywhere">
+    <Cartao as="article" aria-labelledby={idDoTitulo} className={CARTAO}>
+      <h3 id={idDoTitulo} tabIndex={-1} className="cm-h4 text-titulo-4 alvo-foco wrap-anywhere">
         {CONTEUDO.tituloDaResposta}
       </h3>
       {topicoTitulo ? (
@@ -74,14 +77,14 @@ export function CartaoDoConteudo({ lido, autor, comLink = false, idDoTitulo }: C
           {DENUNCIA.verConteudo}
         </Link>
       ) : null}
-    </article>
+    </Cartao>
   )
 }
 
 /** O perfil público (do autor ou o denunciado): apelido, bio, faixa e a data de criação. */
 export function CartaoDoPerfil({ perfil }: { perfil: PerfilPublico }) {
   return (
-    <div className={CARTAO}>
+    <Cartao className={CARTAO}>
       <p className="font-medium wrap-anywhere">{perfil.apelido}</p>
       {perfil.bio ? <p className="wrap-anywhere">{perfil.bio}</p> : null}
       <p className={`cm-pequeno flex flex-wrap items-center gap-x-4 gap-y-1 text-[var(--cor-texto-2)] ${ETIQUETAS_QUEBRAM}`}>
@@ -90,7 +93,7 @@ export function CartaoDoPerfil({ perfil }: { perfil: PerfilPublico }) {
           {DENUNCIA.perfilDesde(formatarDataHora(perfil.criadoEm))}
         </time>
       </p>
-    </div>
+    </Cartao>
   )
 }
 
@@ -106,13 +109,13 @@ export function HistoricoDoPerfilVista({ historico, semOId, contaId }: Historico
   const conteudos = historico.conteudos.filter((item) => item.id !== semOId)
   if (conteudos.length === 0 && historico.auditoria.length === 0) return <p>{TX.tx29}</p>
   return (
-    <div className="flex flex-col gap-6">
+    <Pilha vao="grupo">
       {conteudos.length > 0 ? (
-        <div className="flex flex-col gap-3">
+        <Pilha vao="pilha">
           <h3 className="font-medium text-[var(--cor-texto-2)]">{DENUNCIA.secaoConteudos}</h3>
-          <ul className="m-0 flex list-none flex-col gap-3 p-0">
+          <Pilha as="ul" vao="pilha" className="m-0 list-none p-0">
             {conteudos.map((item) => (
-              <li key={`${item.tipo}-${item.id}`} className={CARTAO}>
+              <Cartao as="li" key={`${item.tipo}-${item.id}`} className={CARTAO}>
                 <p className={`flex flex-wrap items-center gap-x-3 gap-y-1 ${ETIQUETAS_QUEBRAM}`}>
                   <Etiqueta>{COMUM_MODERACAO.tipoDoAlvo[item.tipo]}</Etiqueta>
                   <Etiqueta>{ROTULO_ESTADO_CONTEUDO[item.estado]}</Etiqueta>
@@ -127,21 +130,21 @@ export function HistoricoDoPerfilVista({ historico, semOId, contaId }: Historico
                 <Link to={`/moderacao/conteudo/${item.tipo}/${item.id}`} className={LINK_ALVO_DO_PAINEL}>
                   {AUDITORIA.abrirConteudo(AUDITORIA.alvoConteudo[item.tipo])}
                 </Link>
-              </li>
+              </Cartao>
             ))}
-          </ul>
-        </div>
+          </Pilha>
+        </Pilha>
       ) : null}
       {historico.auditoria.length > 0 ? (
-        <div className="flex flex-col gap-3">
+        <Pilha vao="pilha">
           <h3 className="font-medium text-[var(--cor-texto-2)]">{DENUNCIA.secaoAuditoria}</h3>
-          <ul className="m-0 flex list-none flex-col gap-3 p-0">
+          <Pilha as="ul" vao="pilha" className="m-0 list-none p-0">
             {historico.auditoria.map((linha) => (
               <LinhaDaAuditoria key={linha.id} linha={linha} contaId={contaId} />
             ))}
-          </ul>
-        </div>
+          </Pilha>
+        </Pilha>
       ) : null}
-    </div>
+    </Pilha>
   )
 }

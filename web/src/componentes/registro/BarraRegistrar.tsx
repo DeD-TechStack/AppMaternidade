@@ -1,5 +1,7 @@
 import { useEffect, useId, useRef, useState, type Ref } from 'react'
 import { Droplets, Ellipsis, Milk, Moon } from 'lucide-react'
+import { REGISTRO_RAPIDO } from '../../conteudo/rotina.ts'
+import type { TipoRegistro } from '../../dados/rotina.tipos.ts'
 import { Confirmacao } from '../../prototipo/Confirmacao.tsx'
 import {
   ESCOLHAS_FRALDA,
@@ -41,6 +43,26 @@ const NEUTRO =
 const ATIVO = 'bg-mel text-cacau hover:bg-(--cor-texto) hover:text-(--cor-fundo)'
 const ICONE = 'size-6 shrink-0'
 
+/** O registro que a barra acabou de criar e o botão dela que o criou: para onde o foco volta no "Desfazer". */
+interface RegistroDaBarra {
+  tipo: TipoRegistro
+  origem: 'fralda' | 'mais'
+}
+
+const TIPOS_DO_MAIS: readonly TipoRegistro[] = ['mamadeira', 'solido', 'observacao']
+
+const registroDoMais = (item: ItemMais): RegistroDaBarra | null => {
+  const tipo = TIPOS_DO_MAIS.find((candidato) => candidato === item.chave)
+  return tipo ? { tipo, origem: 'mais' } : null
+}
+
+/** Sem toque nesta barra (a confirmação já estava na tela), a frase da confirmação diz o que foi registrado. */
+function registroDaFrase(texto: string | null): RegistroDaBarra | null {
+  if (ehConfirmacaoDeFralda(texto)) return { tipo: 'fralda', origem: 'fralda' }
+  const item = ITENS_MAIS.find((candidato) => texto === `${candidato.rotulo} registrada`)
+  return item ? registroDoMais(item) : null
+}
+
 /**
  * A barra Registrar de 1 toque do Hoje (DESIGN.md 4; EMENDAS E1, VOLTA1 E5): 4 botões iguais, Sono,
  * Mamada, Fralda e Mais, com ícone, numa barra fixa embaixo. Sono e Mamada iniciam a sessão na hora, e
@@ -51,6 +73,9 @@ const ICONE = 'size-6 shrink-0'
  * cuja região `role="status"` é única e fica sempre no DOM. Esc fecha o que estiver aberto: o Mais (foco
  * no botão Mais) e, depois, a confirmação da fralda (foco no botão Fralda). Com a janela de menos de 40
  * rem de altura a barra volta ao fluxo.
+ *
+ * "Desfazer" (A11Y-004): a barra chama `aoDesfazer`, troca a confirmação por `Registro desfeito: <tipo>.` (só
+ * "Fechar", que não some sozinho) e leva o foco ao botão que criou o registro, nunca ao primeiro da barra.
  */
 export function BarraRegistrar({
   aoIniciarSessao,
@@ -69,7 +94,12 @@ export function BarraRegistrar({
   const botaoMais = useRef<HTMLButtonElement>(null)
   const grupoMais = useRef<HTMLDivElement>(null)
   const idMais = useId()
-  const fraldaNaTela = ehConfirmacaoDeFralda(texto)
+  const ultimo = useRef<RegistroDaBarra | null>(null)
+  // O aviso de "Desfazer" vale enquanto a página não põe outra confirmação no lugar (outro texto).
+  const [desfeito, setDesfeito] = useState<(RegistroDaBarra & { texto: string | null }) | null>(null)
+  const mostrandoDesfeito = desfeito !== null && (texto === null || texto === desfeito.texto)
+  const textoNaTela = mostrandoDesfeito ? REGISTRO_RAPIDO.desfeito(desfeito.tipo) : texto
+  const fraldaNaTela = ehConfirmacaoDeFralda(textoNaTela)
 
   // Ao abrir (clique, Enter ou Espaço), o foco vai à 1ª opção: sem isso ele ficava no gatilho e o
   // painel passava despercebido para quem usa o teclado (E8).
@@ -77,8 +107,14 @@ export function BarraRegistrar({
     if (maisAberto) grupoMais.current?.querySelector('button')?.focus()
   }, [maisAberto])
 
+  // "Fechar" e Esc fecham a confirmação e o aviso de "Desfazer".
+  function fechar() {
+    setDesfeito(null)
+    aoFechar()
+  }
+
   useEffect(() => {
-    if (!maisAberto && !fraldaNaTela) return
+    if (!maisAberto && !fraldaNaTela && !mostrandoDesfeito) return
 
     function aoTeclar(evento: KeyboardEvent) {
       if (evento.key !== 'Escape') return
@@ -87,21 +123,27 @@ export function BarraRegistrar({
         botaoMais.current?.focus()
         return
       }
+      const gatilho = mostrandoDesfeito && desfeito.origem === 'mais' ? botaoMais : botaoFralda
+      setDesfeito(null)
       aoFechar()
-      botaoFralda.current?.focus()
+      gatilho.current?.focus()
     }
     document.addEventListener('keydown', aoTeclar)
     return () => document.removeEventListener('keydown', aoTeclar)
-  }, [maisAberto, fraldaNaTela, aoFechar])
+  }, [maisAberto, fraldaNaTela, mostrandoDesfeito, desfeito, aoFechar])
 
   function iniciar(tipo: TipoSessao) {
     setMaisAberto(false)
+    setDesfeito(null)
+    ultimo.current = null
     aoIniciarSessao(tipo)
   }
 
   // Um toque, um registro: o painel do Mais, se aberto, fecha. O foco fica no botão tocado.
   function registrarFralda() {
     setMaisAberto(false)
+    setDesfeito(null)
+    ultimo.current = { tipo: 'fralda', origem: 'fralda' }
     aoRegistrarFralda()
   }
 
@@ -113,8 +155,20 @@ export function BarraRegistrar({
 
   function escolherMais(item: ItemMais) {
     setMaisAberto(false)
+    setDesfeito(null)
+    ultimo.current = registroDoMais(item)
     botaoMais.current?.focus()
     aoRegistrarMais(item)
+  }
+
+  // "Desfazer": o aviso entra no lugar da confirmação e o foco volta ao botão que criou o registro. Sem
+  // origem conhecida (a página não registrou por esta barra e a frase não diz o tipo), o foco vai ao Fralda.
+  function desfazer() {
+    const registro = ultimo.current ?? registroDaFrase(texto)
+    aoDesfazer()
+    if (registro) setDesfeito({ ...registro, texto })
+    const gatilho = registro?.origem === 'mais' ? botaoMais : botaoFralda
+    gatilho.current?.focus()
   }
 
   // O tipo vigente é o do fim do texto ("Fralda registrada: Xixi"); sem tipo, nenhum fica marcado.
@@ -131,7 +185,7 @@ export function BarraRegistrar({
       }
     : undefined
 
-  const aberto = texto !== null || maisAberto
+  const aberto = textoNaTela !== null || maisAberto
   const cor = (tipo: TipoSessao) => (sessaoAtiva === tipo ? ATIVO : NEUTRO)
 
   return (
@@ -205,7 +259,7 @@ export function BarraRegistrar({
                 : undefined
             }
           >
-            <Confirmacao texto={texto} aoDesfazer={aoDesfazer} aoFechar={aoFechar} escolhas={escolhas} />
+            <Confirmacao texto={textoNaTela} aoDesfazer={desfazer} aoFechar={fechar} escolhas={escolhas} semDesfazer={mostrandoDesfeito} />
 
             {maisAberto ? (
               <div
@@ -213,7 +267,7 @@ export function BarraRegistrar({
                 id={idMais}
                 role="group"
                 aria-label="Outros registros de Heloísa"
-                className={`grid grid-cols-1 gap-2 sm:grid-cols-2 ${texto !== null ? 'mt-4 border-t border-(--cor-fio-suave) pt-4' : ''}`}
+                className={`grid grid-cols-1 gap-2 sm:grid-cols-2 ${textoNaTela !== null ? 'mt-4 border-t border-(--cor-fio-suave) pt-4' : ''}`}
                 data-largos=""
               >
                 <Botao
