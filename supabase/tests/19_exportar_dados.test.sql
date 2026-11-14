@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(68);
+select plan(81);
 
 create function pg_temp.chaves(j jsonb) returns text[] language sql as $$
   select array(select k from jsonb_object_keys(j) k order by k);
@@ -572,6 +572,69 @@ select is(
   || (select md5(string_agg(n::text, '|' order by n.id)) from public.notas_cuidado n),
   current_setting('teste.foto'),
   'exportar não mudou nenhum dado (nem épocas)'
+);
+
+-- Exclusão e exportação: o banco apaga em cascata os itens da família excluída e zera a autoria de quem teve a
+-- conta excluída (FK set null). Este bloco muda dados, por isso fica depois da conferência da foto.
+-- Família 3: X, responsável, a exclui; A, cuidador nela, já não recebe nenhum item dela, nem no topo.
+set local role authenticated;
+set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000007", "role": "authenticated"}';
+select lives_ok($$select public.excluir_familia('ffffffff-0000-4000-8000-000000000003')$$,
+  'X, responsável da família 3, exclui a família');
+set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000001", "role": "authenticated"}';
+select lives_ok($$select set_config('teste.a2', public.exportar_dados()::text, true)$$,
+  'A exporta os dados depois da exclusão da família 3');
+reset role;
+
+select is(
+  pg_temp.ids(current_setting('teste.a2')::jsonb -> 'registros', 'id'),
+  array['a1000000-0000-7000-8000-000000000020'],
+  'depois de excluir a família 3, o topo dos registros de A só tem o da família 4'
+);
+select is(
+  pg_temp.ids(current_setting('teste.a2')::jsonb -> 'notas', 'id'),
+  array['a2000000-0000-7000-8000-000000000020'],
+  'depois de excluir a família 3, o topo das notas de A só tem a da família 4'
+);
+select ok(
+  current_setting('teste.a2') !~ '(a1000000-0000-7000-8000-0000000000(10|11)|a2000000-0000-7000-8000-0000000000(10|11)|Nota do X|Nota do A, cuidador)',
+  'nenhum item da família 3 excluída aparece na exportação'
+);
+
+-- Conta do cuidador B excluída: os itens dele ficam na família 1 com a autoria nula, e A (responsável) os recebe.
+set local role authenticated;
+set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000002", "role": "authenticated"}';
+select lives_ok($$select public.excluir_conta()$$, 'o cuidador B exclui a conta');
+set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000001", "role": "authenticated"}';
+select lives_ok($$select set_config('teste.a3', public.exportar_dados()::text, true)$$,
+  'A exporta os dados depois da exclusão da conta de B');
+reset role;
+
+select is(
+  pg_temp.ids(current_setting('teste.a3')::jsonb -> 'familias' -> 0 -> 'registros', 'id'),
+  array['a1000000-0000-7000-8000-000000000004', 'a1000000-0000-7000-8000-000000000001',
+        'a1000000-0000-7000-8000-000000000002', 'a1000000-0000-7000-8000-000000000003'],
+  'os registros da família 1 continuam todos na exportação de A depois da exclusão da conta de B'
+);
+select is(
+  current_setting('teste.a3')::jsonb -> 'familias' -> 0 -> 'registros' -> 2 -> 'criado_por', 'null'::jsonb,
+  'o registro que B criou sai com criado_por nulo'
+);
+select is(
+  current_setting('teste.a3')::jsonb -> 'familias' -> 0 -> 'registros' -> 3 -> 'criado_por', 'null'::jsonb,
+  'o registro que B criou e excluiu sai com criado_por nulo'
+);
+select is(
+  current_setting('teste.a3')::jsonb -> 'familias' -> 0 -> 'registros' -> 3 -> 'excluido_por', 'null'::jsonb,
+  'o registro que B excluiu sai com excluido_por nulo'
+);
+select is(
+  current_setting('teste.a3')::jsonb -> 'familias' -> 0 -> 'notas' -> 2 -> 'criado_por', 'null'::jsonb,
+  'a nota que B criou sai com criado_por nulo'
+);
+select ok(
+  current_setting('teste.a3') !~ 'aaaaaaaa-0000-4000-8000-000000000002',
+  'o id da conta excluída de B não aparece em lugar nenhum da exportação de A'
 );
 
 select * from finish();

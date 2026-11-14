@@ -11,6 +11,7 @@ import {
 import { criarDadosContaMemoria, simularFalha, simularRespostaPerdida } from './conta.memoria.ts'
 import { PESSOAS, criarFixtureDeTeste } from '../teste/renderizarComDados.tsx'
 import { ID_BEBE, ID_FAMILIA, criarMundoDeTeste } from '../teste/rotina.fixture.ts'
+import { criarDadosRotinaMemoria } from './rotina.memoria.ts'
 import type { Nota, Registro } from './rotina.tipos.ts'
 
 // A memória reproduz as regras do banco que a tela usa, com os mesmos códigos e mensagens
@@ -961,6 +962,127 @@ describe('exportação com a rotina (RF-13)', () => {
     const json = await exportar(dados)
     expect(ids(json.familias[0].registros)).toEqual([idRotina(5), idRotina(6), idRotina(7)])
     expect(ids(json.familias[0].notas)).toEqual([idRotina(806), idRotina(807), idRotina(808)])
+  })
+
+  // Exclusão e exportação (R1-01 e R1-02): o banco apaga em cascata os itens da família excluída e zera a
+  // autoria de quem teve a conta excluída; o fim de um vínculo não apaga nada.
+  const SEM_FAMILIA_EXEMPLO = [1, 2, 3, 4, 909, 910, 911]
+
+  it('depois de excluirFamilia, nenhum item da família aparece na exportação de ninguém', async () => {
+    const dados = mundo('juliana')
+    await valor(dados.excluirFamilia(ID_FAMILIA))
+
+    const daJuliana = await exportar(dados)
+    expect(daJuliana.familias).toEqual([])
+    expect(ids(daJuliana.registros)).toEqual([idRotina(11)])
+    expect(ids(daJuliana.notas)).toEqual([idRotina(921)])
+
+    dados.sessaoParaTeste(bruno.email)
+    const doBruno = await exportar(dados)
+    expect(ids(doBruno.registros)).toEqual([idRotina(12)])
+    expect(ids(doBruno.notas)).toEqual([idRotina(922)])
+
+    dados.sessaoParaTeste(carla.email)
+    const texto = JSON.stringify(await exportar(dados))
+    for (const numero of SEM_FAMILIA_EXEMPLO) expect(texto).not.toContain(idRotina(numero))
+  })
+
+  it('depois do excluirConta do cuidador, o responsável recebe os itens da família com a autoria nula', async () => {
+    const dados = criarMundoDeTeste({
+      sessao: 'bruno',
+      semRegistros: true,
+      ajustarRotina: () => ({
+        registros: [
+          registro(21, bruno.id, T1, { encerradoPor: bruno.id }),
+          registro(22, juliana.id, T2, { excluidoEm: T3, excluidoPor: bruno.id, versao: 2, atualizadoEm: T3 }),
+          registro(23, bruno.id, T3),
+        ],
+        notas: [
+          nota(931, bruno.id, T1),
+          nota(932, juliana.id, T2, { excluidaEm: T3, excluidaPor: bruno.id, versao: 2, atualizadoEm: T3 }),
+        ],
+      }),
+    }).conta
+    await valor(dados.excluirConta())
+
+    dados.sessaoParaTeste(juliana.email)
+    const json = await exportar(dados)
+    const [familia] = json.familias
+    expect(ids(familia.registros)).toEqual([idRotina(21), idRotina(22), idRotina(23)])
+    expect(familia.registros[0]).toMatchObject({ criado_por: null, encerrado_por: null })
+    expect(familia.registros[1]).toMatchObject({ criado_por: juliana.id, excluido_por: null })
+    expect(familia.registros[2]).toMatchObject({ criado_por: null })
+    expect(ids(familia.notas)).toEqual([idRotina(931), idRotina(932)])
+    expect(familia.notas[0]).toMatchObject({ criado_por: null })
+    expect(familia.notas[1]).toMatchObject({ criado_por: juliana.id, excluida_por: null })
+    expect(JSON.stringify(json)).not.toContain(bruno.id)
+  })
+
+  it('excluirConta do último membro remove a família e seus itens da exportação', async () => {
+    const FAMILIA_DO_BRUNO = 'fa111111-1111-4111-8111-111111111111'
+    const base = criarFixtureDeTeste(AGORA)
+    const conta = criarDadosContaMemoria(
+      {
+        ...base,
+        familias: [
+          ...base.familias,
+          { id: FAMILIA_DO_BRUNO, nome: 'Família do Bruno', fuso: 'America/Sao_Paulo', criadaEm: '2026-10-01T00:00:00.000Z', criadaPor: bruno.id },
+        ],
+        vinculos: [
+          ...base.vinculos,
+          {
+            id: 'b7777777-7777-4777-8777-777777777777',
+            familiaId: FAMILIA_DO_BRUNO,
+            contaId: bruno.id,
+            papel: 'cuidador',
+            estado: 'ativo',
+            validoAte: null,
+            criadoEm: '2026-10-01T00:00:00.000Z',
+            concedidoPor: null,
+          },
+        ],
+      },
+      { agora: () => AGORA },
+    )
+    criarDadosRotinaMemoria(conta, {
+      registros: [
+        registro(31, bruno.id, T1, { familiaId: FAMILIA_DO_BRUNO }),
+        registro(32, juliana.id, T2, { familiaId: FAMILIA_DO_BRUNO }),
+      ],
+      notas: [nota(941, bruno.id, T1, { familiaId: FAMILIA_DO_BRUNO }), nota(942, juliana.id, T2, { familiaId: FAMILIA_DO_BRUNO })],
+    })
+
+    conta.sessaoParaTeste(bruno.email)
+    await valor(conta.excluirConta())
+
+    conta.sessaoParaTeste(juliana.email)
+    const texto = JSON.stringify(await exportar(conta))
+    for (const numero of [31, 32, 941, 942]) expect(texto).not.toContain(idRotina(numero))
+  })
+
+  it('quem sai da família continua recebendo no topo os itens que criou nela', async () => {
+    const dados = mundo('bruno')
+    await valor(dados.sairDaFamilia(ID_FAMILIA))
+
+    const json = await exportar(dados)
+    expect(json.familias).toEqual([])
+    expect(ids(json.registros)).toEqual([idRotina(12), idRotina(3), idRotina(4)])
+    expect(ids(json.notas)).toEqual([idRotina(911), idRotina(909), idRotina(922)])
+  })
+
+  it('o vínculo revogado não apaga nada: os itens ficam em familias[] do responsável e no topo de quem os criou', async () => {
+    const dados = mundo('juliana')
+    await valor(dados.revogarVinculo(VINCULO_DO_BRUNO))
+
+    const daJuliana = await exportar(dados)
+    expect(ids(daJuliana.familias[0].registros)).toEqual([idRotina(1), idRotina(2), idRotina(3), idRotina(4)])
+    expect(ids(daJuliana.familias[0].notas)).toEqual([idRotina(911), idRotina(909), idRotina(910)])
+
+    dados.sessaoParaTeste(bruno.email)
+    const doBruno = await exportar(dados)
+    expect(doBruno.familias).toEqual([])
+    expect(ids(doBruno.registros)).toEqual([idRotina(12), idRotina(3), idRotina(4)])
+    expect(ids(doBruno.notas)).toEqual([idRotina(911), idRotina(909), idRotina(922)])
   })
 })
 

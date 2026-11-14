@@ -179,7 +179,7 @@ export function registrarFonteDeExportacao(conta: object, fonte: FonteDeExportac
 const compararTexto = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
 
 /** Registros no formato do JSON do banco: chaves em snake_case, por `recebido_em` e depois id. */
-function registrosEmJson(lista: readonly Registro[]) {
+function registrosEmJson(lista: readonly Registro[], autor: (id: string | null) => string | null) {
   return [...lista]
     .sort((a, b) => Date.parse(a.recebidoEm) - Date.parse(b.recebidoEm) || compararTexto(a.id, b.id))
     .map((r) => ({
@@ -194,18 +194,18 @@ function registrosEmJson(lista: readonly Registro[]) {
       origem: r.origem,
       fuso: r.fuso,
       deslocamento_min: r.deslocamentoMin,
-      criado_por: r.criadoPor,
-      encerrado_por: r.encerradoPor,
+      criado_por: autor(r.criadoPor),
+      encerrado_por: autor(r.encerradoPor),
       versao: r.versao,
       recebido_em: paraJson(r.recebidoEm),
       atualizado_em: paraJson(r.atualizadoEm),
       excluido_em: paraJson(r.excluidoEm),
-      excluido_por: r.excluidoPor,
+      excluido_por: autor(r.excluidoPor),
     }))
 }
 
 /** Notas no formato do JSON do banco: chaves em snake_case, por `criada_em` e depois id. */
-function notasEmJson(lista: readonly Nota[]) {
+function notasEmJson(lista: readonly Nota[], autor: (id: string | null) => string | null) {
   return [...lista]
     .sort((a, b) => Date.parse(a.criadaEm) - Date.parse(b.criadaEm) || compararTexto(a.id, b.id))
     .map((n) => ({
@@ -214,12 +214,12 @@ function notasEmJson(lista: readonly Nota[]) {
       bebe_id: n.bebeId,
       texto: n.texto,
       destaque_ate: paraJson(n.destaqueAte),
-      criado_por: n.criadoPor,
+      criado_por: autor(n.criadoPor),
       criada_em: paraJson(n.criadaEm),
       versao: n.versao,
       atualizado_em: paraJson(n.atualizadoEm),
       excluida_em: paraJson(n.excluidaEm),
-      excluida_por: n.excluidaPor,
+      excluida_por: autor(n.excluidaPor),
     }))
 }
 
@@ -241,6 +241,10 @@ export function criarDadosContaMemoria(fixture: FixtureConta, opcoes: OpcoesMemo
   const vinculos: VinculoMem[] = fixture.vinculos.map((v) => ({ ...v, epoca: 1, encerradoEm: null }))
   const bebes: BebeMem[] = fixture.bebes.map((b) => ({ ...b }))
   const convites: ConviteMem[] = fixture.convites.map((c) => ({ ...c, aceitoPor: null, aceitoEm: null }))
+
+  // O que o banco apagou ou zerou em cascata: a exportação não pode mostrar de novo o que já se foi.
+  const familiasApagadas = new Set<string>()
+  const contasApagadas = new Set<string>()
 
   let sessao: string | null = null
   const ouvintes = new Set<Ouvinte>()
@@ -755,6 +759,7 @@ export function criarDadosContaMemoria(fixture: FixtureConta, opcoes: OpcoesMemo
   }
 
   function removerFamilia(familiaId: string) {
+    familiasApagadas.add(familiaId)
     const indice = familias.findIndex((f) => f.id === familiaId)
     if (indice >= 0) familias.splice(indice, 1)
     for (const lista of [vinculos, bebes, convites] as Array<Array<{ familiaId: string }>>) {
@@ -787,6 +792,9 @@ export function criarDadosContaMemoria(fixture: FixtureConta, opcoes: OpcoesMemo
     )
     const idsDasFamilias = new Set(familiasDoResponsavel.map((f) => f.id))
     const fonte = fontesDeExportacao.get(dados) ?? SEM_ROTINA
+    const autor = (id: string | null) => (id !== null && contasApagadas.has(id) ? null : id)
+    const registrosVivos = () => fonte.registros().filter((r) => !familiasApagadas.has(r.familiaId))
+    const notasVivas = () => fonte.notas().filter((n) => !familiasApagadas.has(n.familiaId))
 
     return ok({
       formato: 'appmaternidade-exportacao-v1',
@@ -843,12 +851,12 @@ export function criarDadosContaMemoria(fixture: FixtureConta, opcoes: OpcoesMemo
           criado_em: paraJson(c.criadoEm),
           aceito_em: paraJson(c.aceitoEm),
         })),
-        registros: registrosEmJson(fonte.registros().filter((r) => r.familiaId === f.id)),
-        notas: notasEmJson(fonte.notas().filter((n) => n.familiaId === f.id)),
+        registros: registrosEmJson(registrosVivos().filter((r) => r.familiaId === f.id), autor),
+        notas: notasEmJson(notasVivas().filter((n) => n.familiaId === f.id), autor),
       })),
       // O que a conta criou onde não é responsável ativa; onde é, já está dentro de familias[].
-      registros: registrosEmJson(fonte.registros().filter((r) => r.criadoPor === conta.id && !idsDasFamilias.has(r.familiaId))),
-      notas: notasEmJson(fonte.notas().filter((n) => n.criadoPor === conta.id && !idsDasFamilias.has(n.familiaId))),
+      registros: registrosEmJson(registrosVivos().filter((r) => r.criadoPor === conta.id && !idsDasFamilias.has(r.familiaId)), autor),
+      notas: notasEmJson(notasVivas().filter((n) => n.criadoPor === conta.id && !idsDasFamilias.has(n.familiaId)), autor),
     })
   }
 
@@ -894,6 +902,7 @@ export function criarDadosContaMemoria(fixture: FixtureConta, opcoes: OpcoesMemo
       if (c.criadoPor === eu) c.criadoPor = null
       if (c.aceitoPor === eu) c.aceitoPor = null
     }
+    contasApagadas.add(eu)
     contas.splice(contas.indexOf(conta), 1)
     usuarios.splice(usuarios.indexOf(usuario), 1)
     sessao = null
