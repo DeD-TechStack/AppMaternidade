@@ -11,7 +11,7 @@
     "lint:harmonia": "node -e \"process.env.HARMONIA_LINT='1';const{spawnSync:s}=require('node:child_process');const t=(a,ok)=>{const r=s(process.execPath,a,{stdio:'inherit'});if(!ok.includes(r.status))process.exit(r.status||1)};t(['node_modules/eslint/bin/eslint.js','.'],[0,1]);t(['node_modules/stylelint/bin/stylelint.mjs','src/**/*.css'],[0,2])\"",
     "test": "vitest run",
     "build": "vite build",
-    "check": "npm run typecheck && npm run lint && npm run test && npm run build"
+    "check": "npm run typecheck && npm run lint && npm run build && npm run test"
   },
   "dependencies": {
     "@fontsource-variable/literata": "5.3.0",

@@ -11,7 +11,8 @@ import { aguardarCarga, renderizarRota } from '../../teste/renderizarRota.tsx'
 // largura dos itens nunca foi medida: aqui o `<Cabecalho>` real (a pessoa entrada, em /app/hoje) vira um
 // arquivo html que liga o CSS já construído (web/dist/assets/*.css), e o Chrome sem janela mede cada item
 // com getBoundingClientRect depois que as fontes carregam. Layout real, nada simulado. O teste só roda com o
-// Chrome instalado e o build feito (`npm run build`); sem um dos dois, pula e diz por quê.
+// Chrome instalado e o build feito (`npm run build`); sem um dos dois, pula e diz por quê. O `check` faz o
+// build antes de testar; em CI no Windows, Chrome ou build ausente falha em vez de pular.
 
 const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe'
 const PASTA_DIST = resolve(import.meta.dirname, '..', '..', '..', 'dist')
@@ -33,6 +34,8 @@ const motivoDoPulo: string | null = !existsSync(CHROME)
   : arquivosCss().length === 0
     ? 'sem web/dist/assets/*.css: rode `npm run build` antes'
     : null
+
+const exigirNoCI = Boolean(process.env.CI) && process.platform === 'win32'
 
 interface Caixa {
   rotulo: string
@@ -178,9 +181,15 @@ describe(`a geometria do cabeçalho logado no Chrome${motivoDoPulo ? ` (pulado: 
     Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: LARGURA_ORIGINAL })
   })
 
+  if (exigirNoCI && motivoDoPulo !== null) {
+    it('a geometria roda em CI no Windows', () => {
+      throw new Error('geometria exigida em CI e não pôde rodar: ' + motivoDoPulo)
+    })
+  }
+
   for (const tema of TEMAS) {
     for (const largura of LARGURAS) {
-      it.skipIf(motivoDoPulo !== null)(
+      it.skipIf(motivoDoPulo !== null && !exigirNoCI)(
         `em ${largura} (${tema}): todo item visível cabe na janela, sem corte nem sobreposição, e Conta e Sair estão à vista`,
         async () => {
           // Abaixo do ponto de quebra o jsdom também tem de estar nessa largura (o menu só abre e fica aberto assim).
