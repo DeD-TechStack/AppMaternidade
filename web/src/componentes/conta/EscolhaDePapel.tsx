@@ -20,7 +20,7 @@ export function EscolhaDePapel({ legenda, valor, aoMudar }: Props) {
       {ORDEM_DOS_PAPEIS.map((papel) => (
         <label
           key={papel}
-          className="alvo-toque grid cursor-pointer grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3 rounded-campo border-[1.5px] border-[var(--cor-fio-suave)] p-3 has-[:checked]:border-[var(--cor-texto)]"
+          className="alvo-toque grid min-h-11 cursor-pointer grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 rounded-campo border-[1.5px] border-[var(--cor-fio-suave)] p-3 has-[:checked]:border-[var(--cor-texto)]"
         >
           <input
             type="radio"
@@ -28,7 +28,7 @@ export function EscolhaDePapel({ legenda, valor, aoMudar }: Props) {
             value={papel}
             checked={valor === papel}
             onChange={() => aoMudar(papel)}
-            className="row-span-2 mt-1 accent-[var(--cor-texto)]"
+            className="row-span-2 accent-[var(--cor-texto)]"
           />
           <span className="font-medium">{PAPEIS[papel].nome}</span>
           <span className="cm-pequeno text-[var(--cor-texto-2)]">{PAPEIS[papel].permite}</span>
