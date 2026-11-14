@@ -1,5 +1,17 @@
 import { spawnSync, type SpawnSyncReturns } from 'node:child_process'
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, utimesSync, writeFileSync } from 'node:fs'
+import {
+  closeSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  openSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  utimesSync,
+  writeFileSync,
+} from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -150,7 +162,12 @@ function cssComFontesDoDist(nome: string): string {
   return readFileSync(join(PASTA_CSS, nome), 'utf8').replace(/url\((["']?)\/(?!\/)/g, (_t, aspas: string) => `url(${aspas}${base}`)
 }
 
-function argumentosDoChrome(perfil: string, tela: Tela, alvo: string, saida: string[]): string[] {
+/** A janela da medição (--dump-dom): maior que o iframe, porque a moldura do Chrome sem janela come largura e altura. */
+function janelaDaMedicao(tela: Tela): Tela {
+  return { largura: Math.max(tela.largura, 600) + 16, altura: tela.altura + 300 }
+}
+
+function argumentosDoChrome(perfil: string, janela: Tela, alvo: string, saida: string[]): string[] {
   return [
     '--headless=new',
     '--no-sandbox',
@@ -160,21 +177,19 @@ function argumentosDoChrome(perfil: string, tela: Tela, alvo: string, saida: str
     '--allow-file-access-from-files',
     `--user-data-dir=${perfil}`,
     '--force-device-scale-factor=1',
-    // A janela é maior que o iframe (a moldura do Chrome sem janela come largura e altura): o iframe cabe inteiro.
-    `--window-size=${Math.max(tela.largura, 600) + 16},${tela.altura + 300}`,
+    `--window-size=${janela.largura},${janela.altura}`,
     '--virtual-time-budget=3000',
     ...saida,
     pathToFileURL(alvo).href,
   ]
 }
 
-/**
- * O subprocesso do Chrome tem de ter terminado limpo (status 0, sem sinal, sem erro de spawn). HOJE É FROUXO: não
- * confere nada (a rodada seguinte põe aqui a checagem estrita). Os controles de `o harness falha fechado` a chamam.
- */
+/** O subprocesso do Chrome tem de ter terminado limpo: status 0, sem sinal e sem erro de spawn. Senão, a saída dele não vale. */
 function exigirExecucaoLimpa(resultado: SpawnSyncReturns<string>, rotulo: string): void {
-  void resultado
-  void rotulo
+  if (resultado.status === 0 && !resultado.error && !resultado.signal) return
+  throw new Error(
+    `${rotulo}: o Chrome não terminou limpo (status ${resultado.status}, sinal ${resultado.signal ?? 'nenhum'}, erro ${resultado.error?.message ?? 'nenhum'}): ${resultado.stderr ?? ''}`,
+  )
 }
 
 /** Largura e altura de um PNG, lidas do IHDR (bytes 16..24, inteiros de 32 bits big-endian). */
@@ -183,14 +198,36 @@ function dimensoesDoPng(png: string): { largura: number; altura: number } {
   return { largura: bytes.readUInt32BE(16), altura: bytes.readUInt32BE(20) }
 }
 
-/**
- * A captura tem de ser desta execução e do tamanho da tela. HOJE É FROUXO: só confere que o arquivo existe (a rodada
- * seguinte põe aqui o mtime recente e o tamanho exato).
- */
+/** A captura tem de existir, ser desta execução (mtime a partir de `inicioMs`) e ter exatamente o tamanho da tela. */
 function exigirCapturaFresca(png: string, inicioMs: number, tela: Tela): void {
-  void inicioMs
-  void tela
   if (!existsSync(png)) throw new Error(`O Chrome não gravou a captura ${png}`)
+  const gravadaEm = statSync(png).mtimeMs
+  if (gravadaEm < inicioMs) throw new Error(`A captura ${png} é velha (gravada em ${gravadaEm}, antes do início da captura em ${inicioMs})`)
+  const { largura, altura } = dimensoesDoPng(png)
+  if (largura !== tela.largura || altura !== tela.altura) {
+    throw new Error(`A captura ${png} tem ${largura}x${altura}, e a tela é ${tela.largura}x${tela.altura}`)
+  }
+}
+
+/**
+ * Roda o Chrome com a saída em arquivos, não em pipes: processos filhos do Chrome que sobram vivos seguram o pipe aberto,
+ * e o spawnSync esperava os 45 s do timeout (status 0 com ETIMEDOUT) mesmo com a medida já impressa. Com arquivos, ele
+ * espera só o processo principal sair.
+ */
+function executarChrome(argumentos: string[], pasta: string, nome: string): SpawnSyncReturns<string> {
+  const arquivoDeSaida = join(pasta, `${nome}.stdout.txt`)
+  const arquivoDeErros = join(pasta, `${nome}.stderr.txt`)
+  const saida = openSync(arquivoDeSaida, 'w')
+  const erros = openSync(arquivoDeErros, 'w')
+  try {
+    const resultado = spawnSync(CHROME, argumentos, { stdio: ['ignore', saida, erros], timeout: 45_000, windowsHide: true })
+    const stdout = readFileSync(arquivoDeSaida, 'utf8')
+    const stderr = readFileSync(arquivoDeErros, 'utf8')
+    return { ...resultado, output: [null, stdout, stderr], stdout, stderr }
+  } finally {
+    closeSync(saida)
+    closeSync(erros)
+  }
 }
 
 function medirNoChrome(telaHtml: string, tela: Tela, nomeDaRota: string): { medida: Medida; png: string | null } {
@@ -221,11 +258,7 @@ function medirNoChrome(telaHtml: string, tela: Tela, nomeDaRota: string): { medi
         `<script>addEventListener('message', (e) => { document.getElementById('geometria').textContent = e.data })</script></body></html>`,
       'utf8',
     )
-    const resultado = spawnSync(CHROME, argumentosDoChrome(perfil, tela, alvo, ['--dump-dom']), {
-      encoding: 'utf8',
-      timeout: 45_000,
-      maxBuffer: 64 * 1024 * 1024,
-    })
+    const resultado = executarChrome(argumentosDoChrome(perfil, janelaDaMedicao(tela), alvo, ['--dump-dom']), pasta, 'medicao')
     exigirExecucaoLimpa(resultado, `${nomeDaRota} ${tela.largura}x${tela.altura} --dump-dom`)
     const achado = /<pre id="geometria"[^>]*>([\s\S]*?)<\/pre>/.exec(resultado.stdout ?? '')
     if (!achado) {
@@ -239,12 +272,18 @@ function medirNoChrome(telaHtml: string, tela: Tela, nomeDaRota: string): { medi
       png = resolve(pastaDasCapturas, `${nomeDaRota}_${tela.largura}x${tela.altura}.png`)
       const perfilDaCaptura = join(pasta, 'perfil-captura')
       mkdirSync(perfilDaCaptura)
+      // A captura é só do viewport: um envoltório sem margem, com o iframe exato no canto de cima à esquerda, e a janela
+      // do Chrome do tamanho exato da tela (a janela maior da medição sairia no PNG como 616x1144 / 1456x1200).
+      const envoltorioDaCaptura = join(pasta, 'envoltorio-captura.html')
+      writeFileSync(
+        envoltorioDaCaptura,
+        `<!doctype html><html><body style="margin:0;overflow:hidden"><iframe src="${pathToFileURL(pagina).href}" style="border:0;display:block;position:absolute;top:0;left:0;width:${tela.largura}px;height:${tela.altura}px"></iframe></body></html>`,
+        'utf8',
+      )
+      // Uma captura velha na pasta não pode passar por esta: some antes, e o mtime é conferido depois.
+      rmSync(png, { force: true })
       const inicioDaCaptura = Date.now()
-      const captura = spawnSync(CHROME, argumentosDoChrome(perfilDaCaptura, tela, alvo, [`--screenshot=${png}`]), {
-        encoding: 'utf8',
-        timeout: 45_000,
-        maxBuffer: 64 * 1024 * 1024,
-      })
+      const captura = executarChrome(argumentosDoChrome(perfilDaCaptura, tela, envoltorioDaCaptura, [`--screenshot=${png}`]), pasta, 'captura')
       exigirExecucaoLimpa(captura, `${nomeDaRota} ${tela.largura}x${tela.altura} --screenshot`)
       exigirCapturaFresca(png, inicioDaCaptura, tela)
     }
