@@ -8,7 +8,7 @@ regra: kanban-leader-cycle, seção 0 "Lista durável de pendências"
 # Pendências do AppMaternidade
 
 MANDATO (Daniel, 05/11/2026; visual refeito em 11/11): o site inteiro funcionando de ponta a ponta (RF-01 a RF-14), com o visual Campo de mel aprovado em 11/11, publicado para o professor entrar e usar tudo com dados fictícios. Fonte: [Retomada do site](Retomada_Site.md), seção "Roteiro do site completo".
-ESTADO: ATIVO (14/11 00h40, sessão nova do líder; teto do host de 10 é do AppMaternidade, Investment/BreakInv/Finora parados). GO do coordenador às 01:06 (equipe ca2404b: recibo do oc_run.py para o revisor). Às 01:10 soltos e rodando: H-3a, QA-F2, P-55, P-56, A11Y-F2 e RF12-SPEC-v2 t_db57628a (a H-3a voltou ao executor, porque o board recusa triage→review: 409).
+ESTADO: PAUSE (14/11 ~03h15, Daniel paused everything; he reopens later in new sessions). Current state and release order: block "RETOMAR 14/11 ~03h35" below. Before: ESTADO: ATIVO (14/11 00h40, sessão nova do líder; teto do host de 10 é do AppMaternidade, Investment/BreakInv/Finora parados). GO do coordenador às 01:06 (equipe ca2404b: recibo do oc_run.py para o revisor). Às 01:10 soltos e rodando: H-3a, QA-F2, P-55, P-56, A11Y-F2 e RF12-SPEC-v2 t_db57628a (a H-3a voltou ao executor, porque o board recusa triage→review: 409).
 
 Retomada 14/11 00h40 (preparada, nada solto): board igual ao da pausa; notas do marco 10 (MARCO10_DIAGNOSTICO.md) comentadas nos cartões abertos (comentários 814-827); cartão novo RF12-SPEC-v2 **t_db57628a** [doc] criado `blocked` (spec v2 com os 8 Majors). Ordem no GO: (1) `hermes cron resume cacefbc1849d`; (2) H-3a t_e9313367 sai da triage para a revisão da rodada 2 (PATCH `status:'review'`; se o PATCH recusar, `ready` com assignee executor-appmaternidade e o executor só refaz pre_revisao e pede revisão); (3) QA-F2 t_1dcaa165 PATCH `ready`, executor; (4) `unblock` t_6544886b e t_506d9c94; (5) `unblock` A11Y-F2 t_a37f1086 (refaz a rodada OC); (6) `unblock` t_db57628a. Ficam 6 vivos; H-3b..f e QA-F1 entram ao integrar a H-3a, A11Y-F1 ao integrar a QA-F2, novos cartões dos must/should de P-55/P-56 ao aprovar.
 
@@ -18,7 +18,37 @@ Retomada 13/11 (sessão nova): cron `retorno-oc` (cacefbc1849d) retomado; P-50 t
 
 Retomada 12/11 ~01h15 (sessão nova do líder): cron `retorno-oc` retomado; 37b g3, POL-DES, POL-TXT v2 e POL-INI v2 voltaram a rodar. A 38a saiu da triage pelo sucessor **t_197241f9 (MAT-38a g2)**, sobre a base `base/38a-g2` = 4c4b1d4 (a mesma árvore de 1542137, com o merge local a46e42c refeito no título aceito, "Traz o int/refazer para a 38a"; `verificar-commits c7142bb..4c4b1d4` OK, 322); decisões D3 (o medidor entra logado nas rotas /app) e D4 (commits) no corpo; 38b e 39b religadas a ele; t_f7bdf7e8 arquivada. A 40b espera o retorno do `.oc/2` pelo cron.
 
-## RETOMAR (escrito em 13/11 ~19h, atualizado a cada marco; vale para uma sessão NOVA do líder)
+## RETOMAR 14/11 ~03h35 (PAUSE by Daniel; current state for a NEW leader session; written in English)
+
+**How the pause was done:** cron `retorno-oc-appmaternidade` cacefbc1849d **paused**; running cards got a pause comment and `block --kind needs_input "[decisor: Daniel] pausa de 14/11 …"`; cards whose OpenCode round was in flight stay `scheduled` with OC_RUN (OpenCode dies with the PC: redo the round on resume). No integration, no push after 0e57c08. Worktrees and uncommitted work preserved.
+
+**Branch:** `origin/int/refazer` = **0e57c084982ba6843a6537ba1df90b6b692cc996** (H-3a merge 7824d56, receipt 839; QA-F2 merge 0e57c08, receipt 857). The full local `check` on 0e57c08 went red only on load timeouts (46/3062; serial rerun of the 25 files green, subagent deleg_092cbc63); **GitHub CI on 0e57c08 not yet observed**: check it first. `main` untouched (P-19). Integration worktree `.worktrees/_int40a` at 0e57c08, clean.
+
+**Card state at the pause:**
+- Blocked by the pause (were running): H-3b t_b4446ca7, H-3c t_04e1a709, QA-F4 t_0b58ed8a, QA-F6 t_d0de84c6 (base 7824d56 / 0e57c08).
+- `scheduled` with OpenCode in flight: H-3d t_5866d349, H-3e t_b8d3d400, H-3f t_e72eacf8, A11Y-F1 t_35476306.
+- gave_up in the 02:53/02:55 host event (managed_worker_failed / "owner refused: execution unknown"), not retried, coordinator asked to redispatch (t_b099e936 + complement): A11Y-F2 t_a37f1086 (correction 1/2 of R1, comment 848), P-56 t_506d9c94 (correction 2/2, comment 837), QA-F5 t_19fbae19 (code done aa51b2c; only verify + review left), AUD-SITE t_c948c5f8 (whole-site audit, not started), RF12-SPEC-v2 t_c7dc9f31 (correction 1/2 of 4 must, comment 864), MAT-48h t_612731f2 (test isolation, not started).
+- **triage:** QA-F1 t_e983505a (unblocked 02:0x with decisions D1-D4, comment 853; it fell into triage by block recurrence; reason not read yet). Exit triage by PATCH (memory), then reread its last block reason.
+- Waiting on parents: H-3g t_b27d2b91 (H-3b..f), H-4 t_e53dea70 (H-3g).
+- Parked: POL-ABR t_d04a8a7d (frozen), MAT-37g t_1757260d (Google, P-16).
+- Done this session: P-55 approved R3 (receipt 856); H-3a and QA-F2 integrated.
+
+**Release order on resume:**
+1. Ask the infra coordinator for the host/gateway state (the 02:53 event) and the review quota; then `hermes cron resume cacefbc1849d`.
+2. Check GitHub CI on 0e57c08.
+3. Unblock the pause-blocked cards: H-3b, H-3c, QA-F4, QA-F6; the scheduled OC ones wake by the cron (or redo the round if OpenCode died).
+4. Redispatch the gave_up ones (coordinator decision), in this order: A11Y-F2, P-56, QA-F5, AUD-SITE, RF12-SPEC-v2, MAT-48h.
+5. QA-F1 out of triage (PATCH `{status:'ready', assignee:'executor-appmaternidade'}`), after reading why it fell.
+6. Integrate approved SHAs one by one in `_int40a` (merge --no-ff + line check, npm ci, check, verificar-commits, push full SHA, receipt), then release the children.
+
+**Open problems:**
+- Host load: with 8+ cards the full vitest suite times out at 5000 ms; MAT-48h fixes the clock/axe leaks; keep at most 2 full suites in parallel.
+- Worker deaths at the end of a run ("owner refused: execution unknown") and Codex `thread/start timed out after 60s` (02:13): infra.
+- Pin only skills in the assignee's role catalog (`ferramentas/catalogo_por_papel.py`); the first RF12 card died on leader-only pins.
+- P-78: the privacy doc promises CSV export, RF-13 does not; align before publishing.
+- Daniel decisions open: P-74 RF-12 (default: do it), P-75 RF-14, P-76 (default keep), P-16 Google, P-19 publish.
+
+## RETOMAR anterior de 13/11 (histórico; não usar como estado) — RETOMAR (escrito em 13/11 ~19h, atualizado a cada marco; vale para uma sessão NOVA do líder)
 
 **Diretivas de Daniel em vigor:**
 - 12/11 (GALERIA_ATUAL): falta harmonia; o polimento por página está CONGELADO; a frente é o item H.

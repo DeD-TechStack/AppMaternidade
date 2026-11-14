@@ -571,3 +571,5 @@ Nenhuma tarefa de implementação (MAT-17 a MAT-19) começa sem pedido dele.
 - **14/11 ~02:00:** P-55 t_6544886b aprovada na R3 (3c03656; 0 must, 9 should com dono, recibo 856). QA-F1 desbloqueada com decisões D1-D4 (sessão acima do cabeçalho; comentário 853). QA-F2 0e57c08 com check vermelho em diagnóstico; RF12-SPEC-v2 recriado t_c7dc9f31.
 
 - **14/11 ~02:20:** QA-F2 t_1dcaa165 integrada: merge 0e57c08 (revisado 88c83f7), push, recibo 857. Check completo deu exit 1 por timeouts sob carga (46/3062); rerun serial dos 25 arquivos passou (subagente deleg_092cbc63); CI do int/refazer é o sinal pendente. Soltos QA-F4 e A11Y-F1 com base 0e57c08. Criado MAT-48h t_612731f2 (isolamento de testes sob carga).
+
+- **14/11 ~03h35:** PAUSA de Daniel (~03h15). Cron cacefbc1849d pausado; cartões em execução bloqueados com "[decisor: Daniel] pausa de 14/11"; 6 gave_up do evento de 02:53/02:55 sem nova tentativa; int/refazer 0e57c08. RETOMAR 14/11 no PENDENCIAS.md.
