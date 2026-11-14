@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
-import axe from 'axe-core'
 import { CHAVE_CONVITE, CHAVE_RECUPERACAO } from '../../componentes/conta/armazenamento.ts'
 import { NOMES_DO_H1, TEXTOS_ERRO } from '../../conteudo/conta.ts'
 import { CODIGO_CONVITE_PENDENTE, SENHA_DEMONSTRACAO } from '../../dados/conta.demonstracao.ts'
 import { criarDadosContaMemoria, simularFalha } from '../../dados/conta.memoria.ts'
+import { rodarAxe } from '../../teste/axe.ts'
 import { PESSOAS, criarFixtureDeTeste, renderizarComDados as renderizarComDadosReal } from '../../teste/renderizarComDados.tsx'
 import { comObrigatorio } from './obrigatorio.ts'
 
@@ -36,7 +36,7 @@ beforeEach(() => {
 })
 
 async function violacoes(container: HTMLElement): Promise<string[]> {
-  const resultado = await axe.run(container, {
+  const resultado = await rodarAxe(container, {
     // O jsdom não calcula cores nem layout; o contraste é conferido em estilo.test.ts.
     rules: { 'color-contrast': { enabled: false } },
   })

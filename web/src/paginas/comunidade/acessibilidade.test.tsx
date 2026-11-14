@@ -1,10 +1,10 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
-import axe from 'axe-core'
 import { describe, expect, it } from 'vitest'
 import { ENTRAR_NA_COMUNIDADE, TOPICO, TX } from '../../conteudo/comunidade.ts'
 import { CONTEUDO, ELENCO, criarElenco, type PessoaDoElenco } from '../../dados/comunidade.elenco.ts'
 import { criarDadosComunidadeMemoria, simularFalha } from '../../dados/comunidade.memoria.ts'
 import { criarDadosContaMemoria } from '../../dados/conta.memoria.ts'
+import { rodarAxe } from '../../teste/axe.ts'
 import { criarFixtureDeTeste } from '../../teste/renderizarComDados.tsx'
 import { comObrigatorio, fixtureDeContasDoElenco, renderizarComunidade } from './apoio.tsx'
 
@@ -14,7 +14,7 @@ import { comObrigatorio, fixtureDeContasDoElenco, renderizarComunidade } from '.
 process.env.DEBUG_PRINT_LIMIT = '300'
 
 async function violacoes(container: HTMLElement): Promise<string[]> {
-  const resultado = await axe.run(container, { rules: { 'color-contrast': { enabled: false } } })
+  const resultado = await rodarAxe(container, { rules: { 'color-contrast': { enabled: false } } })
   return resultado.violations.map((v) => `${v.id}: ${v.help} (${v.nodes.map((n) => n.html.slice(0, 160)).join(' | ')})`)
 }
 
