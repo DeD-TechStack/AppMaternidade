@@ -13,8 +13,10 @@ import { aguardarCarga, renderizarRota } from '../../teste/renderizarRota.tsx'
 // com getBoundingClientRect depois que as fontes carregam. Layout real, nada simulado. O teste só roda com o
 // Chrome instalado e o build feito (`npm run build`); sem um dos dois, pula e diz por quê. O `check` faz o
 // build antes de testar; em CI (qualquer sistema), Chrome ou build ausente falha em vez de pular.
-// O Chrome roda com spawn assíncrono, saída em arquivos e grupo de processos próprio, morto inteiro no fim: os filhos
-// dele herdam os pipes e, com spawnSync, travavam o worker do vitest (Linux) mesmo depois do timeout.
+// O Chrome roda com spawn assíncrono, saída em arquivos e grupo de processos próprio, morto inteiro no fim, com todo
+// await limitado no tempo. HIPÓTESE (não provada): no ubuntu do CI o "Killed" veio de um Chrome (ou filhos dele) que
+// ficou vivo e segurou os pipes do spawnSync ou a memória do runner; a mudança elimina esses dois caminhos, mas a causa
+// só se confirma com a telemetria do passo de diagnóstico do job ubuntu (.github/workflows/ci.yml).
 
 const CANDIDATOS_DO_CHROME: Record<string, string[]> = {
   win32: [
@@ -164,6 +166,8 @@ async function medirNoChrome(cabecalhoHtml: string, largura: number, tema: Tema)
     let filho: ChildProcess | null = null
     let terminou: Promise<{ status: number | null; erro: string | null }> | null = null
     let expirou = false
+    // O resultado do filho fica aqui assim que ele termina: depois do limite e da limpeza nunca se espera de novo uma promise pendente.
+    let final: { status: number | null; erro: string | null } | null = null
     try {
       const alvoDoFilho = spawn(
         CHROME,
@@ -194,8 +198,14 @@ async function medirNoChrome(cabecalhoHtml: string, largura: number, tema: Tema)
       )
       filho = alvoDoFilho
       terminou = new Promise((resolver) => {
-        alvoDoFilho.once('error', (erro) => resolver({ status: null, erro: erro.message }))
-        alvoDoFilho.once('exit', (status) => resolver({ status, erro: null }))
+        alvoDoFilho.once('error', (erro) => {
+          final = { status: null, erro: erro.message }
+          resolver(final)
+        })
+        alvoDoFilho.once('exit', (status) => {
+          final = { status, erro: null }
+          resolver(final)
+        })
       })
       let relogio: NodeJS.Timeout | undefined
       const limite = new Promise<'tempo'>((resolver) => {
@@ -217,7 +227,8 @@ async function medirNoChrome(cabecalhoHtml: string, largura: number, tema: Tema)
       closeSync(fdSaida)
       closeSync(fdErro)
     }
-    const resultado = (await terminou) ?? { status: null, erro: null }
+    // Sem await: se o Chrome não emitiu exit nem error mesmo depois do kill e dos 3 s de espera, rejeita aqui (a pasta é limpa no finally externo).
+    const resultado = final ?? { status: null, erro: 'o Chrome não encerrou nem depois do kill (sem exit/error em 3 s)' }
     const achado = /<pre id="geometria"[^>]*>([\s\S]*?)<\/pre>/.exec(readFileSync(arquivoDeSaida, 'utf8'))
     if (!achado) {
       const mensagem = resultado.erro ?? (expirou ? 'tempo esgotado (45000 ms)' : 'nenhum')
@@ -238,7 +249,7 @@ function matarGrupo(pid: number, filho: ChildProcess): void {
       // já terminou
     }
     try {
-      spawnSync('taskkill', ['/pid', String(pid), '/T', '/F'], { windowsHide: true })
+      spawnSync('taskkill', ['/pid', String(pid), '/T', '/F'], { windowsHide: true, timeout: 5_000 })
     } catch {
       // já terminou
     }
