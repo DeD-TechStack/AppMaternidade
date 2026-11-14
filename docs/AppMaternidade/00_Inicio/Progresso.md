@@ -561,3 +561,5 @@ Nenhuma tarefa de implementação (MAT-17 a MAT-19) começa sem pedido dele.
 - **14/11 00h40:** sessão nova do líder, ESTADO ATIVO. Board igual ao da pausa de 13/11; notas do marco 10 nos cartões abertos (comentários 814-827); criado RF12-SPEC-v2 t_db57628a [doc] blocked. Ordem de soltura no PENDENCIAS; nada solto até o "GO cards" do coordenador. int/refazer 38f0784.
 
 - **14/11 01:10:** GO cards (equipe ca2404b). Soltos e rodando: H-3a t_e9313367 (ready/executor; triage→review recusado 409), QA-F2 t_1dcaa165, P-55 t_6544886b, P-56 t_506d9c94, A11Y-F2 t_a37f1086 (testes trocados autorizados, comentário 829), RF12-SPEC-v2 t_db57628a. Comentários 830-832 com o recibo --receipt-from.
+
+- **14/11 01:12:** RF12-SPEC-v2 t_db57628a deu gave_up 2/2 antes de trabalhar ("Kanban owner refused: Kanban execution unknown"); [D coordenador] avisado (t_b317581e), comentário 833. H-3a em revisão; QA-F2, P-55, P-56 e A11Y-F2 rodando.
