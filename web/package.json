@@ -47,5 +47,13 @@
     "typescript-eslint": "8.72.1",
     "vite": "8.3.5",
     "vitest": "5.1.0"
+  },
+  "overrides": {
+    "@google/design.md": {
+      "zod": "4.6.6"
+    },
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "11.0.1"
+    }
   }
 }

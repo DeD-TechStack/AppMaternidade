@@ -97,7 +97,7 @@ function PassoDosTermos({ versao, aoMudar }: PassoProps) {
               onChange={(evento) => setAceito(evento.target.checked)}
               aria-invalid={marcaFaltando ? true : undefined}
               aria-describedby={marcaFaltando ? 'erro-da-marca' : undefined}
-              className="mt-1 size-5 shrink-0 accent-[var(--cor-texto)]"
+              className="size-6 shrink-0 accent-[var(--cor-texto)]"
             />
             <span>{TX.tx03}</span>
           </label>

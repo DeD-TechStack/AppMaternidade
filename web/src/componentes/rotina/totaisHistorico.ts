@@ -1,5 +1,7 @@
 import { HOJE, TOTAIS } from '../../conteudo/rotina.ts'
+import { diaDaFamilia, janelaDoDia } from '../../dados/rotina.dia.ts'
 import { ehTipoDeSessao, type Registro, type TipoRegistro } from '../../dados/rotina.tipos.ts'
+import { CHAVES_DO_FILTRO } from './parametrosHistorico.ts'
 
 // Os totais do Histórico (R38-20, R38-21; D-9: só totais), dentro da janela do dia da família, sem sessões em
 // andamento nem excluídos. Sono e tummy time somam a parte de cada sessão concluída que cai na janela (inclusive
@@ -71,6 +73,24 @@ export const formatarMinutos = (minutos: number): string => HOJE.umaHoraEMinutos
 export interface DiaDaSemana {
   dia: string
   totais: TotaisDoPeriodo
+}
+
+/**
+ * O total diário da vista Semana: para cada dia de `dias`, os totais de todos os tipos (`CHAVES_DO_FILTRO`) dentro
+ * da janela dele no fuso da família. `registros` são os da semana (as contagens caem no dia em que começaram);
+ * `sessoes` são as que cruzam a semana (o sono e o tummy time de cada dia). O resumo da Comunidade usa a mesma função.
+ */
+export function totaisPorDiaDaSemana(
+  registros: readonly Registro[],
+  sessoes: readonly Registro[],
+  dias: readonly string[],
+  fuso: string,
+): DiaDaSemana[] {
+  return dias.map((dia) => {
+    const janela = janelaDoDia(dia, fuso)
+    const doDia = registros.filter((registro) => diaDaFamilia(Date.parse(registro.inicio), fuso) === dia)
+    return { dia, totais: totaisDoPeriodo(doDia, sessoes, Date.parse(janela.de), Date.parse(janela.ate), CHAVES_DO_FILTRO) }
+  })
 }
 
 /** A largura (%) da barra do sono: proporcional ao maior sono da semana; sem sono, ou com o maior zero, nenhuma (0). */

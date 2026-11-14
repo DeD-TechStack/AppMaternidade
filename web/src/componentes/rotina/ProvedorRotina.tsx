@@ -48,7 +48,7 @@ const coletor = new Intl.Collator('pt-BR', { sensitivity: 'base' })
 const comparar = (a: string, b: string) => coletor.compare(a, b) || (a < b ? -1 : a > b ? 1 : 0)
 
 /** Todos os bebês: famílias por nome e, dentro de cada uma, bebês por nome (pt-BR, sem diferença de maiúscula). */
-function listarBebes(contexto: ContextoRotina): BebeAtivo[] {
+export function listarBebes(contexto: ContextoRotina): BebeAtivo[] {
   const familias = [...contexto.familias].sort((a, b) => comparar(a.nome, b.nome) || comparar(a.id, b.id))
   return familias.flatMap((familia) =>
     [...familia.bebes]
@@ -58,7 +58,7 @@ function listarBebes(contexto: ContextoRotina): BebeAtivo[] {
 }
 
 /** O seletor mostra os ativos e, depois, o grupo `Arquivados`. */
-function ordenarParaOSeletor(bebes: BebeAtivo[]): BebeAtivo[] {
+export function ordenarParaOSeletor(bebes: BebeAtivo[]): BebeAtivo[] {
   return [...bebes.filter((b) => !b.arquivado), ...bebes.filter((b) => b.arquivado)]
 }
 
