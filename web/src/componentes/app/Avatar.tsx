@@ -15,7 +15,7 @@ export function Avatar({ nome }: { nome: string }) {
     <span
       aria-hidden="true"
       data-avatar=""
-      className={`inline-flex size-8 shrink-0 items-center justify-center rounded-full font-titulo text-[15px] leading-none lg:size-10 lg:text-[17px] font-semibold ${CORES[nome] ?? 'bg-areia text-cacau'}`}
+      className={`inline-flex size-8 shrink-0 items-center justify-center rounded-full font-titulo text-pequeno leading-none lg:size-10 lg:text-corpo font-semibold ${CORES[nome] ?? 'bg-areia text-cacau'}`}
     >
       {nome.slice(0, 1)}
     </span>

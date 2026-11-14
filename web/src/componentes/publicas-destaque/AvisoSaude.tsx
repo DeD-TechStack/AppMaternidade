@@ -1,5 +1,6 @@
 import { Stethoscope } from 'lucide-react'
 import { AVISO_SAUDE } from '../../conteudo/desenvolvimento/pagina.ts'
+import { Cartao } from '../base/layout/index.ts'
 import './publicas-destaque.css'
 
 /**
@@ -8,9 +9,9 @@ import './publicas-destaque.css'
  */
 export function AvisoSaude() {
   return (
-    <p className="pd-aviso-saude" data-aviso-saude="">
+    <Cartao className="pd-aviso-saude" data-aviso-saude="">
       <Stethoscope aria-hidden="true" strokeWidth={1.75} />
       <span>{AVISO_SAUDE}</span>
-    </p>
+    </Cartao>
   )
 }

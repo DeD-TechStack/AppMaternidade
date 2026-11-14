@@ -1,4 +1,5 @@
 import type { SecaoDeLeitura } from '../../conteudo/publicas-texto.ts'
+import { Pilha } from '../base/layout/index.ts'
 import { BlocoDeLeitura } from './BlocoDeLeitura.tsx'
 import { TabelaDeLeitura } from './TabelaDeLeitura.tsx'
 
@@ -9,16 +10,16 @@ import { TabelaDeLeitura } from './TabelaDeLeitura.tsx'
 export function SecaoDeTexto({ dados }: { dados: SecaoDeLeitura }) {
   const { secao, blocos, tabela } = dados
   return (
-    <section className="pt-secao">
+    <Pilha as="section" vao="pilha" className="pt-secao">
       <h2 id={secao.id} tabIndex={-1} className="pt-h2">
         {secao.titulo}
       </h2>
-      <div className="pt-texto">
+      <Pilha vao="pilha" className="pt-texto">
         {blocos.map((bloco, indice) => (
           <BlocoDeLeitura key={indice} bloco={bloco} />
         ))}
         {tabela ? <TabelaDeLeitura {...tabela} /> : null}
-      </div>
-    </section>
+      </Pilha>
+    </Pilha>
   )
 }

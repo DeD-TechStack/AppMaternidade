@@ -2,6 +2,7 @@ import { useId, type ReactNode } from 'react'
 import { COMUM } from '../../conteudo/rotina.ts'
 import type { Papel } from '../../dados/comum.ts'
 import { AvisoDeErro } from './AvisoDeErro.tsx'
+import { Pilha } from '../base/layout/index.ts'
 import type { Secao } from './useSecao.ts'
 
 interface Props<T> {
@@ -9,6 +10,8 @@ interface Props<T> {
   titulo: string
   papel: Papel
   className?: string
+  /** Valores a somar no `data-h` da Pilha da seção (`coluna`, quando ela é filha de `Colunas`). */
+  dataH?: string
   /** Desenha a seção com os dados; recebe o que a leitura trouxe (de agora ou a anterior). */
   children: (dados: T) => ReactNode
 }
@@ -18,31 +21,34 @@ interface Props<T> {
  * de tela), erro sem dados (a frase e `Tentar de novo`) e erro com dados (eles continuam, com a frase acima
  * da seção). A falha de uma seção não derruba as outras.
  */
-export function SecaoDoHoje<T>({ secao, titulo, papel, className, children }: Props<T>) {
+export function SecaoDoHoje<T>({ secao, titulo, papel, className, dataH, children }: Props<T>) {
   const idTitulo = useId()
   if (secao.estado === 'carregando' || (secao.estado === 'erro' && secao.dados === null)) {
     return (
-      <section
+      <Pilha
+        as="section"
+        vao="pilha"
+        dataH={dataH}
         aria-labelledby={idTitulo}
         aria-busy={secao.estado === 'carregando' ? 'true' : undefined}
         data-secao-estado={secao.estado}
         className={className}
       >
-        <h2 id={idTitulo} className="cm-h4">
+        <h2 id={idTitulo} className="text-titulo-4 font-titulo font-semibold">
           {titulo}
         </h2>
         {secao.estado === 'erro' && secao.erro ? (
-          <AvisoDeErro erro={secao.erro} papel={papel} aoTentarDeNovo={secao.recarregar} className="mt-3" />
+          <AvisoDeErro erro={secao.erro} papel={papel} aoTentarDeNovo={secao.recarregar} />
         ) : (
-          <p className="mt-3 text-(--cor-texto-2)">{COMUM.carregando}</p>
+          <p className="text-(--cor-texto-2)">{COMUM.carregando}</p>
         )}
-      </section>
+      </Pilha>
     )
   }
   return (
-    <div className={className}>
-      {secao.erro ? <AvisoDeErro erro={secao.erro} papel={papel} aoTentarDeNovo={secao.recarregar} className="mb-3" /> : null}
+    <Pilha vao="pilha" dataH={dataH} className={className}>
+      {secao.erro ? <AvisoDeErro erro={secao.erro} papel={papel} aoTentarDeNovo={secao.recarregar} /> : null}
       {secao.dados !== null ? children(secao.dados) : null}
-    </div>
+    </Pilha>
   )
 }

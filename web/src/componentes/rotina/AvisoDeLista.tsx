@@ -15,7 +15,7 @@ interface Props {
  */
 export function AvisoDeLista({ limite, dado, className }: Props) {
   return (
-    <p className={`text-[15px] leading-[22px] text-(--cor-texto-2) ${className ?? ''}`} data-lista-incompleta={dado}>
+    <p className={`text-pequeno text-(--cor-texto-2) ${className ?? ''}`} data-lista-incompleta={dado}>
       {ESTADOS.listaIncompleta(limite)}
     </p>
   )

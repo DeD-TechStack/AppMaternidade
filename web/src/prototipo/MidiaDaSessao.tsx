@@ -1,3 +1,4 @@
+import { Coluna } from '../componentes/base/layout/index.ts'
 import { Ilustracao } from '../componentes/campo/Ilustracao.tsx'
 import { DESCRICAO_DA_MIDIA } from './textosSessao.ts'
 
@@ -7,11 +8,11 @@ import { DESCRICAO_DA_MIDIA } from './textosSessao.ts'
  */
 export function MidiaDaSessao({ className }: { className?: string }) {
   return (
-    <div
+    <Coluna
       data-midia=""
-      className={`flex aspect-[3/2] items-center justify-center rounded-cartao bg-mel p-6 lg:p-12 ${className ?? ''}`}
+      className={`flex aspect-[3/2] items-center justify-center rounded-cartao bg-mel p-esp-painel ${className ?? ''}`}
     >
       <Ilustracao nome="mae-noite" alt={DESCRICAO_DA_MIDIA.vazio} className="h-full w-auto max-w-full object-contain" />
-    </div>
+    </Coluna>
   )
 }

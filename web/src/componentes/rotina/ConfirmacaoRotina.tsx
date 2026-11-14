@@ -21,7 +21,7 @@ export function ConfirmacaoRotina({ confirmacao, aoAcionar }: Props) {
           <span aria-hidden="true" className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-mel text-cacau">
             <Check className="size-5" strokeWidth={2.25} aria-hidden="true" />
           </span>
-          <p className="min-w-0 flex-1 text-[17px] leading-[25px] font-medium wrap-anywhere">{confirmacao.texto}</p>
+          <p className="min-w-0 flex-1 text-corpo font-medium wrap-anywhere">{confirmacao.texto}</p>
           {confirmacao.textoDaNota ? (
             <p className="basis-full rounded-campo bg-(--cor-papel-fundo) px-4 py-3 wrap-anywhere" data-texto-da-nota="">
               {confirmacao.textoDaNota}

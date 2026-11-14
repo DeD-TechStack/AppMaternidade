@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef } from 'react'
 import { SESSAO } from '../../conteudo/rotina.ts'
 import { Botao } from '../base/Botao.tsx'
+import { Pilha } from '../base/layout/index.ts'
 import { ALVO_APP } from './alvo.ts'
 
 /** Menos que isto, encerrar pergunta antes (QA-10). */
@@ -49,22 +50,25 @@ export function PerguntaSessaoCurta({ aoSalvar, aoDescartar, podeDescartar, ocup
       ref={painel}
       role="group"
       aria-labelledby={idPergunta}
+      data-h="cartao"
       data-painel-sessao="curta"
-      className={`rounded-campo bg-(--cor-fundo) p-4 text-(--cor-texto) lg:p-6 ${className ?? ''}`}
+      className={`bg-(--cor-fundo) text-(--cor-texto) ${className ?? ''}`}
     >
-      <p id={idPergunta} className="font-medium">
-        {SESSAO.curtaPergunta}
-      </p>
-      <div className="mt-4 flex flex-wrap items-center gap-3">
-        <Botao tamanho="app" className={ALVO_APP} desativado={ocupado} data-acao="salvar-curta" onClick={aoSalvar}>
-          {SESSAO.curtaSalvar}
-        </Botao>
-        {podeDescartar ? (
-          <Botao variante="contorno" tamanho="app" className={ALVO_APP} desativado={ocupado} onClick={aoDescartar}>
-            {SESSAO.curtaDescartar}
+      <Pilha vao="pilha">
+        <p id={idPergunta} className="font-medium">
+          {SESSAO.curtaPergunta}
+        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <Botao tamanho="app" className={ALVO_APP} desativado={ocupado} data-acao="salvar-curta" onClick={aoSalvar}>
+            {SESSAO.curtaSalvar}
           </Botao>
-        ) : null}
-      </div>
+          {podeDescartar ? (
+            <Botao variante="contorno" tamanho="app" className={ALVO_APP} desativado={ocupado} onClick={aoDescartar}>
+              {SESSAO.curtaDescartar}
+            </Botao>
+          ) : null}
+        </div>
+      </Pilha>
     </div>
   )
 }

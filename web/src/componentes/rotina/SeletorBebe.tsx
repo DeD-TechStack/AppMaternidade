@@ -54,7 +54,7 @@ export function SeletorBebe({ ativo, bebes, agora, aoEscolher }: Props) {
       <button
         type="button"
         aria-current={candidato.bebe.id === ativo.bebe.id ? 'true' : undefined}
-        className={`alvo-toque flex w-full items-center rounded-campo px-3 text-left text-[17px] leading-[25px] font-medium not-italic hover:bg-(--cor-papel-fundo) ${ALVO_APP}`}
+        className={`alvo-toque flex w-full items-center rounded-campo px-3 text-left text-corpo font-medium not-italic hover:bg-(--cor-papel-fundo) ${ALVO_APP}`}
         onClick={() => escolher(candidato.bebe.id)}
       >
         {emVariasFamilias
@@ -83,12 +83,12 @@ export function SeletorBebe({ ativo, bebes, agora, aoEscolher }: Props) {
           id={idLista}
           role="group"
           aria-label={SELETOR.rotulo}
-          className="mt-2 max-w-[28rem] rounded-cartao border border-(--cor-fio-suave) bg-(--cor-cartao) p-2 not-italic [box-shadow:var(--sombra-flutuante)]"
+          className="mt-2 max-w-md rounded-cartao border border-(--cor-fio-suave) bg-(--cor-cartao) p-2 not-italic [box-shadow:var(--sombra-flutuante)]"
         >
           <ul>{ativos.map(item)}</ul>
           {arquivados.length > 0 ? (
             <>
-              <p className="px-3 pt-3 pb-1 text-[15px] leading-[22px] font-medium text-(--cor-texto-2)">{SELETOR.arquivados}</p>
+              <p className="px-3 pt-3 pb-1 text-pequeno font-medium text-(--cor-texto-2)">{SELETOR.arquivados}</p>
               <ul>{arquivados.map(item)}</ul>
             </>
           ) : null}

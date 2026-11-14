@@ -20,7 +20,7 @@ interface Props {
  */
 export function TabelaTexto({ legenda, legendaOculta = false, colunas, linhas, depois, className }: Props) {
   return (
-    <PainelCampo variante="oliva" className={className}>
+    <PainelCampo variante="oliva" largura="celula" className={className}>
       <table className="pd-tabela">
         <caption className={legendaOculta ? 'sr-only' : 'cm-h3'}>{legenda}</caption>
         <thead>

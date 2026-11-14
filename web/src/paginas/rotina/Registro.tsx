@@ -2,6 +2,7 @@ import { useEffect, type ReactNode } from 'react'
 import { Link, useLocation, useParams, useSearchParams } from 'react-router'
 import { ChevronLeft } from 'lucide-react'
 import { AvisoDaTela } from '../../componentes/app/AvisoDaTela.tsx'
+import { Pilha, QuadroLayout, Secao } from '../../componentes/base/layout/index.ts'
 import { AvisoDeErro } from '../../componentes/rotina/AvisoDeErro.tsx'
 import { FormularioRegistro } from '../../componentes/rotina/FormularioRegistro.tsx'
 import { TituloRotina } from '../../componentes/rotina/TituloRotina.tsx'
@@ -24,7 +25,7 @@ function Voltar({ para, texto }: { para: string; texto: string }) {
     <Link
       to={para}
       state={{ foco: 'titulo' }}
-      className="alvo-toque -ml-1 mb-3 inline-flex min-h-(--alvo-toque) items-center gap-1.5 rounded-pilula px-1 text-[17px] leading-[25px] font-medium no-underline underline-offset-4 hover:underline"
+      className="alvo-toque -ml-1 inline-flex min-h-(--alvo-toque) items-center gap-1.5 self-start rounded-pilula px-1 text-corpo font-medium no-underline underline-offset-4 hover:underline"
       data-voltar=""
     >
       <ChevronLeft aria-hidden="true" className="size-5" strokeWidth={2} />
@@ -46,9 +47,15 @@ function Tela({ titulo, linha, children }: { titulo: string; linha: string; chil
   const voltar = <Voltar para={destino.para} texto={destino.texto} />
   return (
     <>
-      <main ref={principal} className="rotina-principal pb-16 text-[17px] leading-[25px]" data-tela="registro">
-        <TituloRotina antes={voltar} titulo={titulo} linha={linha} />
-        <div className="cm-area mt-6 lg:mt-10">{children}</div>
+      <main ref={principal} className="rotina-principal text-corpo" data-tela="registro">
+        <Secao>
+          <QuadroLayout>
+            <Pilha vao="bloco">
+              <TituloRotina antes={voltar} titulo={titulo} linha={linha} />
+              {children}
+            </Pilha>
+          </QuadroLayout>
+        </Secao>
       </main>
       <AvisoDaTela />
     </>
@@ -120,7 +127,7 @@ export function RegistroEditar() {
   if (leitura.estado === 'erro' && leitura.dados === null && leitura.erro) {
     return (
       <Tela titulo={titulo} linha={ativo.bebe.nome}>
-        <div className="max-w-[28rem]">
+        <div className="max-w-md">
           <AvisoDeErro erro={leitura.erro} papel={ativo.papel} aoTentarDeNovo={leitura.recarregar} />
         </div>
       </Tela>
@@ -140,7 +147,7 @@ export function RegistroEditar() {
       {/* Uma releitura que falhou com o registro já na tela: o aviso e `Tentar de novo` ficam junto dele, sem
           desmontar o formulário nem apagar o que a pessoa digitou (R8). */}
       {leitura.erro ? (
-        <div className="mb-6 max-w-[28rem]" data-releitura-falhou="">
+        <div className="max-w-md" data-releitura-falhou="">
           <AvisoDeErro erro={leitura.erro} papel={dono.papel} aoTentarDeNovo={leitura.recarregar} />
         </div>
       ) : null}

@@ -9,6 +9,7 @@ import { PerguntaSessaoCurta, sessaoCurta } from '../../componentes/app/Pergunta
 import { ALVO_APP } from '../../componentes/app/alvo.ts'
 import { Botao } from '../../componentes/base/Botao.tsx'
 import { Etiqueta } from '../../componentes/base/Etiqueta.tsx'
+import { Colunas, Pilha, QuadroLayout, Secao } from '../../componentes/base/layout/index.ts'
 import { AvisoDeErro } from '../../componentes/rotina/AvisoDeErro.tsx'
 import { AvisoDeFuso } from '../../componentes/rotina/AvisoDeFuso.tsx'
 import { AvisoDeLista } from '../../componentes/rotina/AvisoDeLista.tsx'
@@ -287,20 +288,21 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
   // ---- os blocos; a composição (a grade) escolhe a ordem e a posição de cada um --------------------------
 
   const blocoCartao = (classe: string) => (
-    <div className={`flex flex-col gap-4 ${classe}`}>
+    <Pilha vao="pilha" dataH="coluna" className={classe}>
       {emAndamento.estado === 'carregando' || (emAndamento.estado === 'erro' && emAndamento.dados === null) ? (
         <section
           ref={cartao}
           tabIndex={-1}
+          data-h="cartao"
           data-andamento=""
           aria-busy={emAndamento.estado === 'carregando' ? 'true' : undefined}
-          className="alvo-foco rounded-cartao border border-(--cor-fio-suave) bg-(--cor-cartao) p-6 lg:p-8"
+          className="alvo-foco flex flex-col gap-esp-pilha border border-(--cor-fio-suave) bg-(--cor-cartao)"
         >
-          <h2 className="text-[15px] leading-[22px] font-medium text-(--cor-texto-2)">{HOJE.emAndamento}</h2>
+          <h2 className="text-pequeno font-medium text-(--cor-texto-2)">{HOJE.emAndamento}</h2>
           {emAndamento.erro ? (
-            <AvisoDeErro erro={emAndamento.erro} papel={ativo.papel} aoTentarDeNovo={emAndamento.recarregar} className="mt-3" />
+            <AvisoDeErro erro={emAndamento.erro} papel={ativo.papel} aoTentarDeNovo={emAndamento.recarregar} />
           ) : (
-            <p className="mt-3 text-(--cor-texto-2)">{COMUM.carregando}</p>
+            <p className="text-(--cor-texto-2)">{COMUM.carregando}</p>
           )}
         </section>
       ) : (
@@ -355,7 +357,7 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
         aoUnir={(grupo) => acoes.unir(grupo)}
       />
       {emAndamento.dados?.incompleta ? <AvisoDeLista limite={LIMITES.emAndamento} dado="emAndamento" /> : null}
-    </div>
+    </Pilha>
   )
 
   const blocoBotaoMamada = (classe: string, compacto: boolean) => (
@@ -372,8 +374,8 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
   )
 
   // O histórico: as notas em destaque e o que as outras pessoas registraram depois do marco.
-  const blocoHistorico = (classe: string, espaco: string) => (
-    <div data-historico="" className={`flex flex-col ${espaco} ${classe}`}>
+  const blocoHistorico = (dataH?: string, classe?: string) => (
+    <Pilha vao="bloco" dataH={dataH} data-historico="" className={classe}>
       <SecaoDoHoje secao={notas} titulo={HOJE.paraVoceSaber} papel={ativo.papel}>
         {(lista) => (
           <>
@@ -382,12 +384,12 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
               agora={agora}
               autorDe={(nota) => acoes.nomeDoAutor(nota.criadoPor, nota.familiaId)}
               rodape={
-                <LinkDaRotina to="/app/notas" state={{ origem: ORIGEM_HOJE }} className="mt-1">
+                <LinkDaRotina to="/app/notas" state={{ origem: ORIGEM_HOJE }} className="self-start">
                   {LIGACOES.verNotas}
                 </LinkDaRotina>
               }
             />
-            {lista.incompleta ? <AvisoDeLista limite={LIMITES.notas} dado="notas" className="mt-3" /> : null}
+            {lista.incompleta ? <AvisoDeLista limite={LIMITES.notas} dado="notas" /> : null}
           </>
         )}
       </SecaoDoHoje>
@@ -402,7 +404,7 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
               autorDe={autorDoRegistro}
               paraDetalhe={(registro) => `/app/registro/${registro.id}`}
               rodape={
-                <LinkDaRotina to="/app/historico" className="mt-1">
+                <LinkDaRotina to="/app/historico" className="self-start">
                   {LIGACOES.verNoHistorico}
                 </LinkDaRotina>
               }
@@ -410,20 +412,20 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
           ) : null
         }
       </SecaoDoHoje>
-    </div>
+    </Pilha>
   )
 
-  const blocoResumo = (classe?: string) => (
-    <SecaoDoHoje secao={dia} titulo={HOJE.hojeAteAgora} papel={ativo.papel} className={classe}>
+  const blocoResumo = (dataH?: string, classe?: string) => (
+    <SecaoDoHoje secao={dia} titulo={HOJE.hojeAteAgora} papel={ativo.papel} dataH={dataH} className={classe}>
       {(doDia) => {
         if (doDia.registros.incompleta || doDia.sessoes.incompleta) {
           return (
-            <section aria-labelledby="hoje-ate-agora" data-resumo="">
-              <h2 id="hoje-ate-agora" className="cm-h4">
+            <Pilha as="section" vao="pilha" aria-labelledby="hoje-ate-agora" data-resumo="">
+              <h2 id="hoje-ate-agora" className="text-titulo-4 font-titulo font-semibold">
                 {HOJE.hojeAteAgora}
               </h2>
-              <p className="mt-3 text-(--cor-texto-2)">{ESTADOS.demaisParaSomar}</p>
-            </section>
+              <p className="text-(--cor-texto-2)">{ESTADOS.demaisParaSomar}</p>
+            </Pilha>
           )
         }
         const totais = totaisDoDia(doDia.registros.itens, doDia.sessoes.itens, Date.parse(janela.de), Date.parse(janela.ate))
@@ -441,19 +443,19 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
     </SecaoDoHoje>
   )
 
-  const blocoUltimos = (classe?: string) => (
-    <SecaoDoHoje secao={ultimos} titulo={HOJE.ultimos} papel={ativo.papel} className={classe}>
+  const blocoUltimos = (dataH?: string, classe?: string) => (
+    <SecaoDoHoje secao={ultimos} titulo={HOJE.ultimos} papel={ativo.papel} dataH={dataH} className={classe}>
       {(concluidos) => {
         if (concluidos.length === 0) {
           return (
-            <section id="ultimos" data-ultimos="" aria-labelledby="ultimos-titulo">
-              <h2 id="ultimos-titulo" className="cm-h4">
+            <Pilha as="section" vao="pilha" id="ultimos" data-ultimos="" aria-labelledby="ultimos-titulo">
+              <h2 id="ultimos-titulo" className="text-titulo-4 font-titulo font-semibold">
                 {HOJE.ultimos}
               </h2>
-              <p className="mt-3 border-y border-(--cor-fio-suave) py-4 text-(--cor-texto-2) lg:mt-4">
+              <p className="border-y border-(--cor-fio-suave) py-4 text-(--cor-texto-2)">
                 {sessoes.length === 0 ? HOJE.semRegistros : HOJE.semConcluidos}
               </p>
-            </section>
+            </Pilha>
           )
         }
         // Três colunas sempre: os mais recentes, e o travessão nas que faltam. Cada coluna leva o registro
@@ -470,86 +472,83 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
 
   // De dia: o cartão à esquerda e a área da lista à direita, que abre com os números do dia em Literata
   // grande e segue com o histórico; "Últimos" fica embaixo do cartão. Tudo em linhas com fio fino.
+  // As frações são as de hoje em 12 colunas (6/6, 8/4, 7/5); a quebra é a de hoje (1024).
   const composicaoDoDia = (
-    <div
-      data-grade-do-hoje=""
-      className="cm-area mt-6 grid grid-cols-1 gap-10 lg:mt-10 lg:grid-cols-12 lg:items-start lg:gap-x-8 lg:gap-y-12"
-    >
-      {blocoCartao('lg:col-span-6 lg:col-start-1 lg:row-start-1')}
-      <div data-area-lista="" className="flex flex-col gap-10 lg:col-span-6 lg:col-start-7 lg:row-span-2 lg:row-start-1">
+    <Colunas data-grade-do-hoje="" fracoes="6fr 6fr" aPartirDe={1024} alinhar="inicio" vao="bloco">
+      {blocoCartao('lg:col-start-1 lg:row-start-1')}
+      <Pilha vao="bloco" dataH="coluna" data-area-lista="" className="lg:col-start-2 lg:row-span-2 lg:row-start-1">
         {blocoResumo()}
-        {blocoHistorico('', 'gap-10')}
-      </div>
-      {blocoUltimos('lg:col-span-6 lg:col-start-1 lg:row-start-2')}
-    </div>
+        {blocoHistorico()}
+      </Pilha>
+      {blocoUltimos('coluna', 'lg:col-start-1 lg:row-start-2')}
+    </Colunas>
   )
 
   // Madrugada com sessão em andamento: a sessão é o destaque (o círculo encolhe e vai para baixo dela), o
   // histórico sobe para logo depois do botão (no celular a primeira linha aparece antes da dobra) e os
-  // números vêm depois dele. 16 px sob o título e 20 px entre os blocos, para a primeira linha inteira
-  // terminar acima da barra fixa.
+  // números vêm depois dele. O vão entre os blocos é o de `bloco` em todas as composições.
   const composicaoDaMadrugadaComSessao = (
-    <div
-      data-grade-do-hoje=""
-      className="cm-area mt-4 grid grid-cols-1 gap-5 lg:mt-10 lg:grid-cols-12 lg:items-start lg:gap-x-8 lg:gap-y-12"
-    >
-      {blocoCartao('lg:col-span-8 lg:col-start-1 lg:row-start-1')}
-      {noite && comBotaoDaMamada ? blocoBotaoMamada('lg:col-span-4 lg:col-start-9 lg:row-start-2', true) : null}
-      {blocoHistorico('lg:col-span-8 lg:col-start-1 lg:row-start-2', 'gap-5')}
-      {blocoResumo('lg:col-span-4 lg:col-start-9 lg:row-start-1 lg:self-center')}
-      {blocoUltimos('lg:col-span-8 lg:col-start-1 lg:row-start-3')}
-    </div>
+    <Colunas data-grade-do-hoje="" fracoes="8fr 4fr" aPartirDe={1024} alinhar="inicio" vao="bloco">
+      {blocoCartao('lg:col-start-1 lg:row-start-1')}
+      {noite && comBotaoDaMamada ? blocoBotaoMamada('lg:col-start-2 lg:row-start-2', true) : null}
+      {blocoHistorico('coluna', 'lg:col-start-1 lg:row-start-2')}
+      {blocoResumo('coluna', 'lg:col-start-2 lg:row-start-1 lg:self-center')}
+      {blocoUltimos('coluna', 'lg:col-start-1 lg:row-start-3')}
+    </Colunas>
   )
 
   const composicaoDaMadrugadaSemSessao = (
-    <div
-      data-grade-do-hoje=""
-      className="cm-area mt-6 grid grid-cols-1 gap-8 lg:mt-10 lg:grid-cols-12 lg:items-start lg:gap-x-8 lg:gap-y-12"
-    >
-      {blocoCartao('lg:col-span-7 lg:col-start-1 lg:row-start-1')}
-      {comBotaoDaMamada ? blocoBotaoMamada('lg:col-span-5 lg:col-start-8 lg:row-start-1 lg:self-center', false) : null}
-      {blocoHistorico('lg:col-span-7 lg:col-start-1 lg:row-span-2 lg:row-start-2', 'gap-8')}
-      {blocoResumo('lg:col-span-5 lg:col-start-8 lg:row-start-2')}
-      {blocoUltimos('lg:col-span-5 lg:col-start-8 lg:row-start-3')}
-    </div>
+    <Colunas data-grade-do-hoje="" fracoes="7fr 5fr" aPartirDe={1024} alinhar="inicio" vao="bloco">
+      {blocoCartao('lg:col-start-1 lg:row-start-1')}
+      {comBotaoDaMamada ? blocoBotaoMamada('lg:col-start-2 lg:row-start-1 lg:self-center', false) : null}
+      {blocoHistorico('coluna', 'lg:col-start-1 lg:row-span-2 lg:row-start-2')}
+      {blocoResumo('coluna', 'lg:col-start-2 lg:row-start-2')}
+      {blocoUltimos('coluna', 'lg:col-start-2 lg:row-start-3')}
+    </Colunas>
   )
 
   return (
     <>
-      <main ref={principal} className="pb-12 text-[17px] leading-[25px]" data-tela="hoje">
-        <TituloRotina
-          titulo={TITULOS.hoje}
-          linha={linha}
-          lateral={
-            <div className="flex flex-col items-start gap-2 pb-2 lg:items-end">
-              <p className="hidden lg:block" data-data-do-dia="">
-                <Etiqueta>{dataPorExtenso(agora)}</Etiqueta>
-              </p>
-              <div className="flex flex-wrap items-center gap-3" data-atualizacao="">
-                {lidoEm !== null ? (
-                  <p className="text-[15px] leading-[22px] text-(--cor-texto-2) tabular-nums">{COMUM.atualizadoAs(formatarHora(lidoEm))}</p>
-                ) : null}
-                <Botao variante="contorno" tamanho="app" className={ALVO_APP} icone={<RefreshCw />} onClick={atualizar}>
-                  <span>{COMUM.atualizar}</span>
-                </Botao>
-              </div>
-            </div>
-          }
-        />
+      <main ref={principal} className="text-corpo" data-tela="hoje">
+        <Secao>
+          <QuadroLayout>
+            <Pilha vao="bloco">
+              <TituloRotina
+                titulo={TITULOS.hoje}
+                linha={linha}
+                lateral={
+                  <div className="flex flex-col items-start gap-2 pb-2 lg:items-end">
+                    <p className="hidden lg:block" data-data-do-dia="">
+                      <Etiqueta>{dataPorExtenso(agora)}</Etiqueta>
+                    </p>
+                    <div className="flex flex-wrap items-center gap-3" data-atualizacao="">
+                      {lidoEm !== null ? (
+                        <p className="text-pequeno text-(--cor-texto-2) tabular-nums">{COMUM.atualizadoAs(formatarHora(lidoEm))}</p>
+                      ) : null}
+                      <Botao variante="contorno" tamanho="app" className={ALVO_APP} icone={<RefreshCw />} onClick={atualizar}>
+                        <span>{COMUM.atualizar}</span>
+                      </Botao>
+                    </div>
+                  </div>
+                }
+              />
 
-        {acessoPerdido || fusoDiferente ? (
-          <div className="cm-area mt-5 flex flex-col gap-3">
-            {acessoPerdido ? (
-              <p className="inline-flex items-start gap-2.5 rounded-campo bg-(--cor-papel-fundo) px-4 py-3 font-medium">
-                <Info aria-hidden="true" className="mt-0.5 size-5 shrink-0" strokeWidth={2} />
-                {ESTADOS.acessoPerdido}
-              </p>
-            ) : null}
-            {fusoDiferente ? <AvisoDeFuso aparelho={aparelho} familia={fuso} /> : null}
-          </div>
-        ) : null}
+              {acessoPerdido || fusoDiferente ? (
+                <Pilha vao="pilha">
+                  {acessoPerdido ? (
+                    <p className="inline-flex items-start gap-2.5 self-start rounded-campo bg-(--cor-papel-fundo) px-4 py-3 font-medium">
+                      <Info aria-hidden="true" className="mt-0.5 size-5 shrink-0" strokeWidth={2} />
+                      {ESTADOS.acessoPerdido}
+                    </p>
+                  ) : null}
+                  {fusoDiferente ? <AvisoDeFuso aparelho={aparelho} familia={fuso} /> : null}
+                </Pilha>
+              ) : null}
 
-        {!madrugada ? composicaoDoDia : noite && !comSessao ? composicaoDaMadrugadaSemSessao : composicaoDaMadrugadaComSessao}
+              {!madrugada ? composicaoDoDia : noite && !comSessao ? composicaoDaMadrugadaSemSessao : composicaoDaMadrugadaComSessao}
+            </Pilha>
+          </QuadroLayout>
+        </Secao>
       </main>
 
       <BarraRegistroRapido

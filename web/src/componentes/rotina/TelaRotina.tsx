@@ -2,6 +2,7 @@ import type { ReactNode, RefObject } from 'react'
 import { Info } from 'lucide-react'
 import { ESTADOS } from '../../conteudo/rotina.ts'
 import { AvisoDaTela } from '../app/AvisoDaTela.tsx'
+import { Pilha, QuadroLayout, Secao } from '../base/layout/index.ts'
 import { ConfirmacaoRotina } from './ConfirmacaoRotina.tsx'
 import { TituloRotina } from './TituloRotina.tsx'
 import { useRotina, type AcaoDaConfirmacao } from './contexto.ts'
@@ -47,20 +48,25 @@ export function TelaRotina({ tela, principal, acionar, titulo, linha, antes, lat
   const { confirmacao, acessoPerdido } = useRotina()
   return (
     <>
-      <main ref={principal} className="rotina-principal pb-16 text-[17px] leading-[25px]" data-tela={tela} aria-busy={ocupada ? 'true' : undefined}>
-        <TituloRotina antes={antes} titulo={titulo} linha={semQuebraNoHifen(linha)} lateral={lateral} />
-        {acessoPerdido ? (
-          <div className="cm-area mt-5">
-            <p className="inline-flex items-start gap-2.5 rounded-campo bg-(--cor-papel-fundo) px-4 py-3 font-medium">
-              <Info aria-hidden="true" className="mt-0.5 size-5 shrink-0" strokeWidth={2} />
-              {ESTADOS.acessoPerdido}
-            </p>
-          </div>
-        ) : null}
-        <div className={confirmacao ? 'cm-area mt-5' : 'cm-area'} data-confirmacao-da-tela="">
-          <ConfirmacaoRotina confirmacao={confirmacao} aoAcionar={acionar} />
-        </div>
-        <div className="cm-area mt-6 lg:mt-10">{children}</div>
+      <main ref={principal} className="rotina-principal text-corpo" data-tela={tela} aria-busy={ocupada ? 'true' : undefined}>
+        <Secao>
+          <QuadroLayout>
+            <Pilha vao="bloco">
+              <TituloRotina antes={antes} titulo={titulo} linha={semQuebraNoHifen(linha)} lateral={lateral} />
+              {acessoPerdido ? (
+                <p className="inline-flex items-start gap-2.5 self-start rounded-campo bg-(--cor-papel-fundo) px-4 py-3 font-medium">
+                  <Info aria-hidden="true" className="mt-0.5 size-5 shrink-0" strokeWidth={2} />
+                  {ESTADOS.acessoPerdido}
+                </p>
+              ) : null}
+              {/* Vazia, a região fica no DOM (o leitor de tela anuncia o que entra nela) e fora do fluxo: sem vão. */}
+              <div className={confirmacao ? undefined : 'sr-only'} data-confirmacao-da-tela="">
+                <ConfirmacaoRotina confirmacao={confirmacao} aoAcionar={acionar} />
+              </div>
+              {children}
+            </Pilha>
+          </QuadroLayout>
+        </Secao>
       </main>
       <AvisoDaTela />
     </>

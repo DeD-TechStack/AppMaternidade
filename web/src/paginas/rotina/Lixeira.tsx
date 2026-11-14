@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ChevronLeft, Undo2 } from 'lucide-react'
 import { ALVO_APP } from '../../componentes/app/alvo.ts'
 import { Botao } from '../../componentes/base/Botao.tsx'
+import { Pilha } from '../../componentes/base/layout/index.ts'
 import { AvisoDeLista } from '../../componentes/rotina/AvisoDeLista.tsx'
 import { AvisoDoPapel } from '../../componentes/rotina/AvisoDoPapel.tsx'
 import { IconeDoTipo } from '../../componentes/rotina/IconeDoTipo.tsx'
@@ -59,31 +60,31 @@ function LixeiraDoBebe({ ativo }: { ativo: BebeAtivo }) {
       antes={
         <LinkDaRotina
           to="/app/historico"
-          className="-ml-1 mb-3 inline-flex items-center gap-1.5 no-underline hover:underline"
+          className="-ml-1 inline-flex items-center gap-1.5 self-start no-underline hover:underline"
           icone={<ChevronLeft className="size-5" strokeWidth={2} />}
         >
           {LIXEIRA.voltarParaHistorico}
         </LinkDaRotina>
       }
     >
-      <div className="flex max-w-[40rem] flex-col gap-6">
+      <Pilha vao="bloco" className="max-w-leitura">
         <p>{LIXEIRA.intro}</p>
         {somenteLeitura ? <AvisoDoPapel texto={textoDoPapel(ativo)} /> : null}
         <SecaoDoHoje secao={lixeira} titulo={LIXEIRA.lista} papel={ativo.papel}>
           {(lista) => {
             const itens = [...lista.itens].sort(maisRecenteDaExclusao)
             return (
-              <section aria-labelledby="lixeira-lista" data-lixeira="">
-                <h2 id="lixeira-lista" className="cm-h4">
+              <Pilha as="section" vao="pilha" aria-labelledby="lixeira-lista" data-lixeira="">
+                <h2 id="lixeira-lista" className="text-titulo-4 font-titulo font-semibold">
                   {LIXEIRA.lista}
                 </h2>
-                {lista.incompleta ? <AvisoDeLista limite={LIMITES.lixeira} dado="lixeira" className="mt-3" /> : null}
+                {lista.incompleta ? <AvisoDeLista limite={LIMITES.lixeira} dado="lixeira" /> : null}
                 {/* O cuidador restaura só o que ele mesmo excluiu: uma frase, se há item de outra pessoa na lista. */}
-                {!somenteLeitura && itens.some((registro) => !podeAlterar(registro)) ? <AvisoDoPapel texto={textoDoPapel(ativo)} className="mt-3" /> : null}
+                {!somenteLeitura && itens.some((registro) => !podeAlterar(registro)) ? <AvisoDoPapel texto={textoDoPapel(ativo)} /> : null}
                 {itens.length === 0 ? (
-                  <p className="mt-3 border-y border-(--cor-fio-suave) py-4 text-(--cor-texto-2)">{LIXEIRA.vazia}</p>
+                  <p className="border-y border-(--cor-fio-suave) py-4 text-(--cor-texto-2)">{LIXEIRA.vazia}</p>
                 ) : (
-                  <ul className="mt-3 border-y border-(--cor-fio-suave)">
+                  <ul className="border-y border-(--cor-fio-suave)">
                     {itens.map((registro) => {
                       const excluidoEm = Date.parse(registro.excluidoEm ?? '')
                       const resumo = resumoDoRegistro(registro, ativo.familia.fuso)
@@ -100,10 +101,10 @@ function LixeiraDoBebe({ ativo }: { ativo: BebeAtivo }) {
                               <p className="font-medium wrap-anywhere">
                                 {rotulo}, <span className="tabular-nums">{dataEHora(Date.parse(registro.inicio))}</span>
                               </p>
-                              <p className="text-[15px] leading-[22px] text-(--cor-texto-2) wrap-anywhere">
+                              <p className="text-pequeno text-(--cor-texto-2) wrap-anywhere">
                                 {LIXEIRA.excluidoPor(acoes.nomeDoAutor(registro.excluidoPor, registro.familiaId), dataEHora(excluidoEm))}
                               </p>
-                              <p className="text-[15px] leading-[22px] text-(--cor-texto-2)">
+                              <p className="text-pequeno text-(--cor-texto-2)">
                                 {LIXEIRA.podeSerRestauradoAte(dataEHora(prazoDaRestauracao(registro.excluidoEm ?? '')))}
                               </p>
                             </div>
@@ -126,11 +127,11 @@ function LixeiraDoBebe({ ativo }: { ativo: BebeAtivo }) {
                     })}
                   </ul>
                 )}
-              </section>
+              </Pilha>
             )
           }}
         </SecaoDoHoje>
-      </div>
+      </Pilha>
     </TelaRotina>
   )
 }

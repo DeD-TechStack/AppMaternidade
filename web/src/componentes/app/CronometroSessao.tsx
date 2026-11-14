@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { NotebookPen } from 'lucide-react'
 import { COMUM, SESSAO, SESSOES } from '../../conteudo/rotina.ts'
 import { Botao } from '../base/Botao.tsx'
+import { Cartao, Pilha } from '../base/layout/index.ts'
 import { ALVO_APP } from './alvo.ts'
 import { LIMITE_DA_SESSAO_CURTA_MS } from './PerguntaSessaoCurta.tsx'
 import { recuoOptico } from './recuoOptico.ts'
@@ -140,90 +141,93 @@ export function CronometroSessao({
     campo.style.height = `${campo.scrollHeight}px`
   }
 
-  // O fundo do cartão: com o botão de texto Descartar por último (alvo de 56 px na madrugada, com o
-  // próprio respiro), o padding de baixo encolhe para o espaço sob as ações não sobrar.
-  const fundo = painel === null ? 'pb-3' : 'pb-6'
-
   return (
     <section
       ref={cartao}
       aria-labelledby={idRotulo}
+      data-h="cartao"
       data-andamento=""
-      className={`rounded-cartao bg-(--cor-campo-sessao) px-6 pt-6 ${fundo} text-(--cor-numero-sessao) [border:var(--borda-campo)] lg:p-12 ${className ?? ''}`}
+      className={`flex flex-col gap-esp-grupo bg-(--cor-campo-sessao) text-(--cor-numero-sessao) [border:var(--borda-campo)] ${className ?? ''}`}
     >
-      <p id={idRotulo} className="text-[15px] leading-[22px] font-medium">
-        Duração da sessão
-      </p>
-      {/* `data-cronometro` mora nos dígitos: é por ele que o medidor acha o cronômetro. */}
-      <div
-        role="timer"
-        aria-live="off"
-        aria-labelledby={idRotulo}
-        data-cronometro=""
-        data-tamanho={tamanhoDoCronometro(cronometro)}
-        className={`t-cronometro mt-2 font-titulo leading-none font-semibold tracking-[-0.02em] whitespace-nowrap tabular-nums ${TAMANHO[tamanhoDoCronometro(cronometro)]} ${recuoOptico(cronometro)}`}
-      >
-        <TextoDoCronometro tempo={cronometro} />
-      </div>
-      {atividade ? <p className="mt-4 text-[17px] leading-[25px]">{`Atividade sugerida: ${atividade}`}</p> : null}
+      <Pilha vao="junto">
+        <p id={idRotulo} className="text-pequeno font-medium">
+          Duração da sessão
+        </p>
+        {/* `data-cronometro` mora nos dígitos: é por ele que o medidor acha o cronômetro. */}
+        <div
+          role="timer"
+          aria-live="off"
+          aria-labelledby={idRotulo}
+          data-cronometro=""
+          data-tamanho={tamanhoDoCronometro(cronometro)}
+          className={`t-cronometro font-titulo leading-none font-semibold tracking-[-0.02em] whitespace-nowrap tabular-nums ${TAMANHO[tamanhoDoCronometro(cronometro)]} ${recuoOptico(cronometro)}`}
+        >
+          <TextoDoCronometro tempo={cronometro} />
+        </div>
+        {atividade ? <p className="text-corpo">{`Atividade sugerida: ${atividade}`}</p> : null}
+      </Pilha>
 
       {/* Com a nota aberta, o "Salvar" dela é o primário: o Encerrar e o Encerrar e anotar saem e o painel
           fica logo abaixo do tempo, antes do Descartar (a ordem do Tab segue a da tela). */}
       {painel === 'nota' ? (
-        <div
+        <Cartao
           role="group"
           aria-label="Encerrar e anotar"
           data-painel-sessao="nota"
-          className="-mx-2 mt-6 rounded-campo bg-(--cor-fundo) p-4 text-(--cor-texto) sm:mx-0 lg:mt-8 lg:p-6"
+          className="-mx-2 bg-(--cor-fundo) text-(--cor-texto) sm:mx-0"
         >
-          <label htmlFor={idCampo} className="block font-medium">
-            Nota
-          </label>
-          <p id={idDica} className="mt-0.5 text-[15px] leading-[22px] text-(--cor-texto-2)">
-            O que a família precisa saber sobre esta sessão.
-          </p>
-          <textarea
-            ref={campoNota}
-            id={idCampo}
-            rows={3}
-            aria-describedby={erroDaNota ? `${idErro} ${idDica}` : idDica}
-            aria-invalid={erroDaNota ? true : undefined}
-            readOnly={ocupado}
-            onInput={ajustarAltura}
-            data-sem-alca=""
-            className="mt-3 block min-h-[6rem] w-full resize-none field-sizing-content rounded-campo border-[1.5px] border-(--cor-texto-2) bg-(--cor-cartao) px-4 py-3 text-[17px] leading-[25px] text-(--cor-texto) hover:border-(--cor-texto) focus-visible:border-(--cor-texto)"
-          />
-          {erroDaNota ? (
-            <p id={idErro} className="mt-2 text-[15px] leading-[22px] font-medium" data-erro-da-nota="">
-              {erroDaNota}
-            </p>
-          ) : null}
-          {/* Salvar, Cancelar e Descartar numa fileira só: Descartar é botão de texto ao lado do Salvar, e
-              não fica mais solto no pé do cartão (a ordem do Tab é a mesma de antes). */}
-          <div className="mt-4 flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-3" data-acoes-nota="">
-            <Botao tamanho="app" className={`px-5 sm:min-w-[8.5rem] ${ALVO_APP}`} desativado={ocupado} onClick={salvarNota}>
-              {ocupado ? COMUM.salvando : COMUM.salvar}
-            </Botao>
-            <Botao variante="texto" tamanho="app" className={`mx-0 px-2 sm:px-3 ${ALVO_APP}`} onClick={() => setPainel(null)}>
-              Cancelar
-            </Botao>
-            {acoes.descartar ? (
-              <Botao
-                variante="texto"
-                tamanho="app"
-                className={`mx-0 px-2 sm:px-3 ${ALVO_APP}`}
-                data-acao="descartar"
-                onClick={() => setPainel('descartar')}
-              >
-                Descartar
-              </Botao>
+          <Pilha vao="pilha">
+            <Pilha vao="junto">
+              <label htmlFor={idCampo} className="block font-medium">
+                Nota
+              </label>
+              <p id={idDica} className="text-pequeno text-(--cor-texto-2)">
+                O que a família precisa saber sobre esta sessão.
+              </p>
+            </Pilha>
+            <textarea
+              ref={campoNota}
+              id={idCampo}
+              rows={3}
+              aria-describedby={erroDaNota ? `${idErro} ${idDica}` : idDica}
+              aria-invalid={erroDaNota ? true : undefined}
+              readOnly={ocupado}
+              onInput={ajustarAltura}
+              data-sem-alca=""
+              className="block min-h-[6rem] w-full resize-none field-sizing-content rounded-campo border-[1.5px] border-(--cor-texto-2) bg-(--cor-cartao) px-4 py-3 text-corpo text-(--cor-texto) hover:border-(--cor-texto) focus-visible:border-(--cor-texto)"
+            />
+            {erroDaNota ? (
+              <p id={idErro} className="text-pequeno font-medium" data-erro-da-nota="">
+                {erroDaNota}
+              </p>
             ) : null}
-          </div>
-        </div>
+            {/* Salvar, Cancelar e Descartar numa fileira só: Descartar é botão de texto ao lado do Salvar, e
+                não fica mais solto no pé do cartão (a ordem do Tab é a mesma de antes). */}
+            <div className="flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-3" data-acoes-nota="">
+              <Botao tamanho="app" className={`px-5 sm:min-w-[8.5rem] ${ALVO_APP}`} desativado={ocupado} onClick={salvarNota}>
+                {ocupado ? COMUM.salvando : COMUM.salvar}
+              </Botao>
+              <Botao variante="texto" tamanho="app" className={`mx-0 px-2 sm:px-3 ${ALVO_APP}`} onClick={() => setPainel(null)}>
+                Cancelar
+              </Botao>
+              {acoes.descartar ? (
+                <Botao
+                  variante="texto"
+                  tamanho="app"
+                  className={`mx-0 px-2 sm:px-3 ${ALVO_APP}`}
+                  data-acao="descartar"
+                  onClick={() => setPainel('descartar')}
+                >
+                  Descartar
+                </Botao>
+              ) : null}
+            </div>
+          </Pilha>
+        </Cartao>
       ) : null}
 
       {painel !== 'nota' && painel !== 'curta' ? (
-        <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 lg:mt-10" data-acoes="">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3" data-acoes="">
           {acoes.encerrar ? (
             <Botao
               tamanho="app"
@@ -262,48 +266,54 @@ export function CronometroSessao({
       ) : null}
 
       {painel === 'curta' ? (
-        <div
+        <Cartao
           role="group"
           aria-labelledby={idCurta}
           data-painel-sessao="curta"
-          className="mt-6 rounded-campo bg-(--cor-fundo) p-4 text-(--cor-texto) lg:p-6"
+          className="bg-(--cor-fundo) text-(--cor-texto)"
         >
-          <p id={idCurta} className="font-medium">
-            {SESSAO.curtaPergunta}
-          </p>
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            <Botao tamanho="app" className={ALVO_APP} desativado={ocupado} data-acao="salvar-curta" onClick={salvarMesmoCurta}>
-              {SESSAO.curtaSalvar}
-            </Botao>
-            {acoes.descartar ? (
-              <Botao variante="contorno" tamanho="app" className={ALVO_APP} desativado={ocupado} onClick={aoDescartar}>
-                {SESSAO.curtaDescartar}
+          <Pilha vao="pilha">
+            <p id={idCurta} className="font-medium">
+              {SESSAO.curtaPergunta}
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <Botao tamanho="app" className={ALVO_APP} desativado={ocupado} data-acao="salvar-curta" onClick={salvarMesmoCurta}>
+                {SESSAO.curtaSalvar}
               </Botao>
-            ) : null}
-          </div>
-        </div>
+              {acoes.descartar ? (
+                <Botao variante="contorno" tamanho="app" className={ALVO_APP} desativado={ocupado} onClick={aoDescartar}>
+                  {SESSAO.curtaDescartar}
+                </Botao>
+              ) : null}
+            </div>
+          </Pilha>
+        </Cartao>
       ) : null}
 
       {painel === 'descartar' ? (
-        <div
+        <Cartao
           role="group"
           aria-labelledby={idPergunta}
           data-painel-sessao="descartar"
-          className="mt-6 rounded-campo bg-(--cor-fundo) p-4 text-(--cor-texto) lg:p-6"
+          className="bg-(--cor-fundo) text-(--cor-texto)"
         >
-          <p id={idPergunta} className="font-medium">
-            Descartar esta sessão?
-          </p>
-          <p className="mt-0.5 text-[15px] leading-[22px] text-(--cor-texto-2)">O tempo não vai para o dia nem para o histórico.</p>
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            <Botao variante="contorno" tamanho="app" className={ALVO_APP} desativado={ocupado} onClick={aoDescartar}>
-              Descartar
-            </Botao>
-            <Botao variante="texto" tamanho="app" className={ALVO_APP} data-acao="manter" onClick={() => setPainel(null)}>
-              Manter
-            </Botao>
-          </div>
-        </div>
+          <Pilha vao="pilha">
+            <Pilha vao="junto">
+              <p id={idPergunta} className="font-medium">
+                Descartar esta sessão?
+              </p>
+              <p className="text-pequeno text-(--cor-texto-2)">O tempo não vai para o dia nem para o histórico.</p>
+            </Pilha>
+            <div className="flex flex-wrap items-center gap-3">
+              <Botao variante="contorno" tamanho="app" className={ALVO_APP} desativado={ocupado} onClick={aoDescartar}>
+                Descartar
+              </Botao>
+              <Botao variante="texto" tamanho="app" className={ALVO_APP} data-acao="manter" onClick={() => setPainel(null)}>
+                Manter
+              </Botao>
+            </div>
+          </Pilha>
+        </Cartao>
       ) : null}
     </section>
   )

@@ -5,6 +5,7 @@ import type { ConteudoFralda, TipoSessao } from '../../dados/rotina.tipos.ts'
 import { useBarraFixa } from '../../prototipo/useBarraFixa.ts'
 import { ALVO_APP } from '../app/alvo.ts'
 import { Botao } from '../base/Botao.tsx'
+import { QuadroLayout } from '../base/layout/index.ts'
 import { ConfirmacaoRotina } from './ConfirmacaoRotina.tsx'
 import type { AcaoDaConfirmacao, ConfirmacaoDaRotina } from './contexto.ts'
 
@@ -38,7 +39,7 @@ interface Props {
 // Cada botão tem 56 px de altura (DESIGN.md 4: BarraRegistrar ≥ 56): ícone sobre o rótulo no celular, ao
 // lado dele de 1024 para cima. As cores vêm das variáveis do tema, e o hover inverte na hora.
 const BOTAO =
-  'alvo-toque flex h-14 min-w-0 flex-col items-center justify-center gap-0.5 rounded-cartao px-1 text-[15px] leading-[20px] font-medium transition-[scale] duration-100 ease-out active:scale-[0.96] aria-disabled:opacity-60 lg:flex-row lg:gap-2.5 lg:text-[17px] lg:leading-[25px]'
+  'alvo-toque flex h-14 min-w-0 flex-col items-center justify-center gap-0.5 rounded-cartao px-1 text-pequeno font-medium transition-[scale] duration-100 ease-out active:scale-[0.96] aria-disabled:opacity-60 lg:flex-row lg:gap-2.5 lg:text-corpo'
 const NEUTRO =
   'bg-(--cor-papel-fundo) text-(--cor-texto) hover:bg-(--cor-texto) hover:text-(--cor-fundo) aria-expanded:bg-(--cor-texto) aria-expanded:text-(--cor-fundo)'
 const ATIVO = 'bg-mel text-cacau hover:bg-(--cor-texto) hover:text-(--cor-fundo)'
@@ -132,13 +133,13 @@ export function BarraRegistroRapido({
       ref={barra}
       aria-label={REGISTRO_RAPIDO.regiao}
       data-barra-registrar=""
-      className={`registro-rapido border-t border-(--cor-fio-suave) bg-(--cor-fundo) px-0 pt-[3px] pb-1 text-(--cor-texto) ${
+      className={`registro-rapido border-t border-(--cor-fio-suave) bg-(--cor-fundo) px-0 pt-1 pb-1 text-(--cor-texto) ${
         fixa ? 'barra-fixa fixed inset-x-0 bottom-0 z-30' : 'relative'
       }`}
     >
-      <div className="relative mx-auto w-[min(100%-24px,1312px)]" data-barra-miolo="">
+      <QuadroLayout className="relative" data-barra-miolo="">
         {textoNoLugarDosBotoes !== null ? (
-          <p className="px-2 py-3 text-center text-[15px] leading-[22px] font-medium" data-sem-botoes="">
+          <p className="px-2 py-3 text-center text-pequeno font-medium" data-sem-botoes="">
             {textoNoLugarDosBotoes}
           </p>
         ) : (
@@ -201,9 +202,10 @@ export function BarraRegistroRapido({
           className={confirmacao !== null || painel !== null ? 'absolute inset-x-0 bottom-full pb-3' : 'absolute inset-x-0 bottom-full'}
         >
           <div
+            data-h={confirmacao !== null || painel !== null ? 'cartao' : undefined}
             className={
               confirmacao !== null || painel !== null
-                ? 'mx-auto max-h-[calc(100dvh-160px)] w-[min(100%,40rem)] overflow-y-auto rounded-cartao border border-(--cor-fio-suave) bg-(--cor-cartao) p-4 [box-shadow:var(--sombra-flutuante)] lg:p-5'
+                ? 'mx-auto max-h-[calc(100dvh-160px)] w-[min(100%,40rem)] overflow-y-auto border border-(--cor-fio-suave) bg-(--cor-cartao) [box-shadow:var(--sombra-flutuante)]'
                 : undefined
             }
           >
@@ -269,7 +271,7 @@ export function BarraRegistroRapido({
             ) : null}
           </div>
         </div>
-      </div>
+      </QuadroLayout>
     </section>
   )
 }

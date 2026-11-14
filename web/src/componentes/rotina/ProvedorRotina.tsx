@@ -6,6 +6,7 @@ import { OPERACOES_ROTINA, podeAlterarItem } from '../../dados/rotina.tipos.ts'
 import type { ErroDados, Resultado } from '../../dados/comum.ts'
 import { AvisoDaTela } from '../app/AvisoDaTela.tsx'
 import { Botao } from '../base/Botao.tsx'
+import { Pilha, QuadroLayout, Secao } from '../base/layout/index.ts'
 import { useSessao } from '../conta/sessao.tsx'
 import { AvisoDeErro } from './AvisoDeErro.tsx'
 import { nomeDoAutor } from './formatos.ts'
@@ -170,8 +171,12 @@ export function ProvedorRotina() {
   if (carga.estado === 'carregando') {
     return (
       <>
-        <main aria-busy="true" className="cm-area pt-10 pb-10" data-tela="rotina-carregando">
-          <p>{COMUM.carregando}</p>
+        <main aria-busy="true" data-tela="rotina-carregando">
+          <Secao>
+            <QuadroLayout>
+              <p>{COMUM.carregando}</p>
+            </QuadroLayout>
+          </Secao>
         </main>
         <AvisoDaTela />
       </>
@@ -181,8 +186,14 @@ export function ProvedorRotina() {
   if (carga.estado === 'erro' && carga.erro) {
     return (
       <>
-        <main className="cm-area max-w-[28rem] pt-10 pb-10" data-tela="rotina-erro">
-          <AvisoDeErro erro={carga.erro} aoTentarDeNovo={atualizar} />
+        <main data-tela="rotina-erro">
+          <Secao>
+            <QuadroLayout>
+              <div className="max-w-md">
+                <AvisoDeErro erro={carga.erro} aoTentarDeNovo={atualizar} />
+              </div>
+            </QuadroLayout>
+          </Secao>
         </main>
         <AvisoDaTela />
       </>
@@ -199,18 +210,22 @@ export function ProvedorRotina() {
     const comBotao = situacao === 'familia_sem_bebe' && !perdeu && familia !== undefined && familia.meuPapel !== 'observador'
     return (
       <>
-        <main className="pb-10 text-[17px] leading-[25px]" data-tela="rotina-sem-bebe">
-          <TituloRotina
-            titulo={tituloDaRota(pathname)}
-            linha={perdeu ? ESTADOS.acessoPerdido : situacao === 'sem_familia' ? ESTADOS.semFamilia : ESTADOS.familiaSemBebe}
-          />
-          {comBotao ? (
-            <div className="cm-area mt-6">
-              <Botao to={`/app/familia?familia=${familia.id}`} tamanho="app">
-                {ESTADOS.cadastrarBebe}
-              </Botao>
-            </div>
-          ) : null}
+        <main className="text-corpo" data-tela="rotina-sem-bebe">
+          <Secao>
+            <QuadroLayout>
+              <Pilha vao="bloco">
+                <TituloRotina
+                  titulo={tituloDaRota(pathname)}
+                  linha={perdeu ? ESTADOS.acessoPerdido : situacao === 'sem_familia' ? ESTADOS.semFamilia : ESTADOS.familiaSemBebe}
+                />
+                {comBotao ? (
+                  <Botao to={`/app/familia?familia=${familia.id}`} tamanho="app" className="self-start">
+                    {ESTADOS.cadastrarBebe}
+                  </Botao>
+                ) : null}
+              </Pilha>
+            </QuadroLayout>
+          </Secao>
         </main>
         <AvisoDaTela />
       </>
@@ -222,9 +237,11 @@ export function ProvedorRotina() {
       {/* A releitura do contexto falhou com dados anteriores: a tela continua com o que já tinha (formulário,
           painel e texto digitado ficam), e o aviso com `Tentar de novo` aparece junto dela (R8). */}
       {carga.erro ? (
-        <div className="cm-area mt-5 max-w-[28rem]" data-releitura-falhou="contexto">
-          <AvisoDeErro erro={carga.erro} papel={ativo?.papel ?? null} aoTentarDeNovo={atualizar} />
-        </div>
+        <QuadroLayout className="pt-esp-pilha">
+          <div className="max-w-md" data-releitura-falhou="contexto">
+            <AvisoDeErro erro={carga.erro} papel={ativo?.papel ?? null} aoTentarDeNovo={atualizar} />
+          </div>
+        </QuadroLayout>
       ) : null}
       <Outlet />
     </ContextoDaRotina>

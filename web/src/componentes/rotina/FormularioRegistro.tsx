@@ -91,13 +91,13 @@ export function Controle({
       </label>
       {children({ id, 'aria-invalid': erro ? true : undefined, 'aria-describedby': ligados })}
       {erro ? (
-        <p id={`${id}-erro`} className="cm-campo-mensagem cm-campo-erro cm-pequeno flex items-start gap-2">
+        <p id={`${id}-erro`} className="cm-campo-mensagem cm-campo-erro text-pequeno flex items-start gap-2">
           <CircleAlert size={18} aria-hidden="true" className="mt-0.5 shrink-0" />
           <span>{erro}</span>
         </p>
       ) : null}
       {ajuda ? (
-        <p id={`${id}-ajuda`} className="cm-campo-mensagem cm-pequeno text-(--cor-texto-2)">
+        <p id={`${id}-ajuda`} className="cm-campo-mensagem text-pequeno text-(--cor-texto-2)">
           {ajuda}
         </p>
       ) : null}
@@ -342,7 +342,7 @@ export function FormularioRegistro({ modo, ativo, tipoInicial, registro }: Props
   const rotuloDoHorario = tipo !== '' && ehTipoDeSessao(tipo) ? FORMULARIO.inicio : FORMULARIO.horario
 
   return (
-    <form ref={formulario} noValidate onSubmit={aoEnviar} className="flex max-w-[40rem] flex-col gap-6" data-formulario-registro={modo}>
+    <form ref={formulario} noValidate onSubmit={aoEnviar} className="flex max-w-leitura flex-col gap-esp-grupo" data-formulario-registro={modo}>
       {modo === 'novo' && tipoInicial === '' ? (
         <Selecao
           rotulo={FORMULARIO.escolhaDoTipo}
@@ -451,7 +451,7 @@ export function FormularioRegistro({ modo, ativo, tipoInicial, registro }: Props
                   rows={4}
                   value={campos.texto}
                   readOnly={bloqueado}
-                  className="block min-h-[6rem] w-full resize-y rounded-campo border-[1.5px] border-(--cor-texto-2) bg-(--cor-cartao) px-4 py-3 text-[17px] leading-[25px] text-(--cor-texto) hover:border-(--cor-texto) focus-visible:border-(--cor-texto)"
+                  className="block min-h-[6rem] w-full resize-y rounded-campo border-[1.5px] border-(--cor-texto-2) bg-(--cor-cartao) px-4 py-3 text-corpo text-(--cor-texto) hover:border-(--cor-texto) focus-visible:border-(--cor-texto)"
                   onChange={(evento) => mudar({ texto: evento.target.value })}
                 />
               )}
@@ -464,7 +464,7 @@ export function FormularioRegistro({ modo, ativo, tipoInicial, registro }: Props
                   rows={3}
                   value={campos.nota}
                   readOnly={bloqueado}
-                  className="block min-h-[6rem] w-full resize-y rounded-campo border-[1.5px] border-(--cor-texto-2) bg-(--cor-cartao) px-4 py-3 text-[17px] leading-[25px] text-(--cor-texto) hover:border-(--cor-texto) focus-visible:border-(--cor-texto)"
+                  className="block min-h-[6rem] w-full resize-y rounded-campo border-[1.5px] border-(--cor-texto-2) bg-(--cor-cartao) px-4 py-3 text-corpo text-(--cor-texto) hover:border-(--cor-texto) focus-visible:border-(--cor-texto)"
                   onChange={(evento) => mudar({ nota: evento.target.value })}
                 />
               )}
@@ -497,12 +497,13 @@ export function FormularioRegistro({ modo, ativo, tipoInicial, registro }: Props
 
       {passo === 'confirmando' ? (
         <div
+          data-h="cartao"
           ref={grupoDeAvisos}
           role="group"
           aria-label={FORMULARIO.confirmarGrupo}
           aria-describedby={avisos.map((_, indice) => `${idDosAvisos}-${indice}`).join(' ') || undefined}
           tabIndex={-1}
-          className="rounded-campo bg-(--cor-papel-fundo) p-4"
+          className="flex flex-col gap-3 bg-(--cor-papel-fundo)"
           data-avisos=""
         >
           {avisos.map((aviso, indice) => (
@@ -510,7 +511,7 @@ export function FormularioRegistro({ modo, ativo, tipoInicial, registro }: Props
               {aviso}
             </p>
           ))}
-          <div className="mt-4 flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3">
             <Botao
               tamanho="app"
               className={ALVO_APP}

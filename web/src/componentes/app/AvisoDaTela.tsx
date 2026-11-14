@@ -1,4 +1,5 @@
 import { AvisoDemonstracao } from '../AvisoDemonstracao.tsx'
+import { QuadroLayout } from '../base/layout/index.ts'
 import { temBanco } from '../../prototipo/banco.ts'
 
 /**
@@ -9,8 +10,8 @@ import { temBanco } from '../../prototipo/banco.ts'
 export function AvisoDaTela() {
   if (temBanco()) return null
   return (
-    <section aria-label="Aviso de demonstração" data-aviso-tela="" className="cm-area py-2">
+    <QuadroLayout as="section" aria-label="Aviso de demonstração" data-aviso-tela="" className="py-2">
       <AvisoDemonstracao lateral />
-    </section>
+    </QuadroLayout>
   )
 }

@@ -401,6 +401,15 @@ describe('BotaoIniciarMamada', () => {
     expect(botao.parentElement!.classList.contains('flex-row')).toBe(true)
   })
 
+  it('compacto: a linha quebra ao lado ou abaixo do círculo (zoom de texto 200%, sem rolagem horizontal)', () => {
+    render(<BotaoIniciarMamada compacto aoIniciar={() => undefined} ultima="Última mamada às 07:50, com Juliana" />)
+
+    const botao = screen.getByRole('button', { name: 'Iniciar mamada' })
+    expect(botao.parentElement!.classList.contains('flex-wrap')).toBe(true)
+    expect(botao.classList.contains('shrink-0')).toBe(true)
+    expect(screen.getByText('Última mamada às 07:50, com Juliana').classList.contains('min-w-0')).toBe(true)
+  })
+
   it('o texto do botão fica em elementos (nada solto ao lado do ícone)', () => {
     render(<BotaoIniciarMamada aoIniciar={() => undefined} />)
 
