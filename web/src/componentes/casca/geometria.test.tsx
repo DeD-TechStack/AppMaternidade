@@ -48,6 +48,7 @@ interface Caixa {
 interface Medida {
   erro?: string
   innerWidth: number
+  innerHeight: number
   fontes: string
   faces: string[]
   caixas: Caixa[]
@@ -84,6 +85,7 @@ const SCRIPT_DE_MEDIDA = `
     const nav = document.querySelector('.cm-cab-links')
     const texto = JSON.stringify({
       innerWidth: window.innerWidth,
+      innerHeight: window.innerHeight,
       fontes: document.fonts.status,
       faces: [...document.fonts].map((f) => f.family + ':' + f.status),
       caixas,
@@ -93,7 +95,7 @@ const SCRIPT_DE_MEDIDA = `
     saida.textContent = texto
     if (window.parent !== window) window.parent.postMessage(texto, '*')
   } catch (e) {
-    const texto = JSON.stringify({ erro: String(e), innerWidth: 0, fontes: '', faces: [], caixas: [], menuExistentes: [], navegacao: null })
+    const texto = JSON.stringify({ erro: String(e), innerWidth: 0, innerHeight: 0, fontes: '', faces: [], caixas: [], menuExistentes: [], navegacao: null })
     saida.textContent = texto
     if (window.parent !== window) window.parent.postMessage(texto, '*')
   }
@@ -243,6 +245,10 @@ describe(`a geometria do cabeçalho logado no Chrome${motivoDoPulo ? ` (pulado: 
             expect(caixa!.width, `${rotulo}: sem largura`).toBeGreaterThan(0)
             expect(caixa!.bottom, `${rotulo}: sem altura`).toBeGreaterThan(caixa!.y)
             expect(caixa!.y, `${rotulo}: o alto fora da janela`).toBeGreaterThanOrEqual(0)
+            expect(medida.innerHeight, 'a janela sem altura medida').toBeGreaterThan(0)
+            expect(caixa!.bottom, `${rotulo}: a borda de baixo (${caixa!.bottom}) passa da janela de altura ${medida.innerHeight}`).toBeLessThanOrEqual(
+              medida.innerHeight,
+            )
           }
         },
         60_000,
