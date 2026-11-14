@@ -25,6 +25,8 @@ export const TX = {
   tx35: 'Cadastrar app autenticador',
   tx36: 'QR code para cadastrar o app autenticador',
   tx37: 'Código de 6 dígitos',
+  /** O `h1` do estado negado: não carrega o nome de nenhuma tela operacional. */
+  negado: 'Área da equipe de moderação',
   /** O selo de uso interno do painel. */
   selo: 'Moderação · uso interno',
 } as const
