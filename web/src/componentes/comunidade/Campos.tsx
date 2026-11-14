@@ -110,7 +110,7 @@ export function EscolhaDeFaixa({ rotulo, valor, aoMudar }: FaixaProps) {
               name={nome}
               checked={valor === opcao}
               onChange={() => aoMudar(opcao)}
-              className="size-5 accent-[var(--cor-texto)]"
+              className="size-6 shrink-0 accent-[var(--cor-texto)]"
             />
             <span>{opcao === null ? COMUM_COMUNIDADE.semFaixa : ROTULO_FAIXA[opcao]}</span>
           </label>
