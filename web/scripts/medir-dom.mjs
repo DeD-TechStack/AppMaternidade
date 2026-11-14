@@ -47,6 +47,18 @@ const TOKENS_NA_PAGINA = {
 /** As regras, na ordem em que saem. */
 export const REGRAS = ['G1', 'G11', 'G12', 'FONTES', 'CAIXA', 'SOMBRA', '3D']
 
+/**
+ * As contas fictícias da demonstração, que só existem na memória da página (modo memória, sem
+ * Supabase): as de `PESSOAS_DEMONSTRACAO.responsavel` e `.moderador` e a `SENHA_DEMONSTRACAO` de
+ * web/src/dados/conta.demonstracao.ts (o teste confere que são as mesmas). Nenhuma é conta real.
+ */
+export const CONTAS_DE_MEDICAO = {
+  responsavel: { email: 'juliana@exemplo.invalid' },
+  moderador: { email: 'diego.moderador@exemplo.invalid' },
+}
+export const SENHA_DE_MEDICAO = 'senha-local-ficticia'
+const ehContaDeMedicao = (conta) => typeof conta === 'string' && Object.hasOwn(CONTAS_DE_MEDICAO, conta)
+
 // Os casos com rota fixa; os outros vêm de CASOS de .oc/cdp.mjs.
 export const CASOS_FIXOS = { sistema: 'sistema', inicio: '', hoje: 'app/hoje', sessao: 'app/hoje' }
 const TEMAS = ['claro', 'madrugada']
@@ -60,14 +72,28 @@ export function rotaDoCaso(caso, casosCdp) {
   return typeof rota === 'string' ? rota.replace(/^\/+/, '') : null
 }
 
-/** As rotas dos pedidos; lança Error se algum caso não tem rota (nunca passa em silêncio). */
+/**
+ * As rotas dos pedidos, com a conta que entra (`conta`: a do caso em CASOS, senão a padrão da rota;
+ * nula na rota pública) e o `caminho` final do caso, quando CASOS o define. Lança Error (erro de uso)
+ * se algum caso não tem rota, se a `conta` do caso não é `responsavel` nem `moderador` ou se o
+ * `caminho` não é texto: nunca passa em silêncio.
+ */
 export function rotasDosPedidos(pedidos, casosCdp) {
   return pedidos.map((pedido) => {
     const rota = rotaDoCaso(pedido.caso, casosCdp)
     if (rota === null) {
       throw new Error(`caso sem rota: ${pedido.caso} (não é ${Object.keys(CASOS_FIXOS).join(', ')} nem está em CASOS de .oc/cdp.mjs)`)
     }
-    return { ...pedido, rota }
+    // Os casos fixos não leem CASOS (como a rota deles).
+    const entrada = Object.hasOwn(CASOS_FIXOS, pedido.caso) ? {} : (casosCdp[pedido.caso] ?? {})
+    if (Object.hasOwn(entrada, 'conta') && !ehContaDeMedicao(entrada.conta)) {
+      throw new Error(`conta inválida no caso ${pedido.caso}: ${JSON.stringify(entrada.conta)} (use ${Object.keys(CONTAS_DE_MEDICAO).join(' ou ')})`)
+    }
+    if (Object.hasOwn(entrada, 'caminho') && typeof entrada.caminho !== 'string') {
+      throw new Error(`caminho inválido no caso ${pedido.caso}: ${JSON.stringify(entrada.caminho)} (o caminho final é um texto, como a rota)`)
+    }
+    const conta = Object.hasOwn(entrada, 'conta') ? entrada.conta : contaPadrao(rota)
+    return { ...pedido, rota, conta, ...(Object.hasOwn(entrada, 'caminho') ? { caminho: entrada.caminho } : {}) }
   })
 }
 
@@ -1019,20 +1045,54 @@ async function clicarPorTexto(cdp, seletor, texto) {
   await espera(300)
 }
 
-/** A conta de demonstração é fictícia e só existe na memória da página. */
-const EMAIL_DEMONSTRACAO = 'juliana@exemplo.invalid'
-const SENHA_DEMONSTRACAO = 'senha-local-ficticia'
-
-/** As rotas do app (app/...) pedem sessão; as públicas abrem direto. */
+/**
+ * As rotas que pedem sessão: as do app (app/...) e as da moderação (moderacao e moderacao/...). As
+ * públicas abrem direto.
+ */
 export function rotaExigeSessao(rota) {
-  return typeof rota === 'string' && rota.startsWith('app/')
+  return typeof rota === 'string' && (rota.startsWith('app/') || /^moderacao(?:[/?]|$)/.test(rota))
+}
+
+/** A conta padrão da rota: o moderador na moderação, a responsável no app; nula na rota pública. */
+function contaPadrao(rota) {
+  if (!rotaExigeSessao(rota)) return null
+  return rota.startsWith('moderacao') ? 'moderador' : 'responsavel'
+}
+
+/** O h1 da tela de login (`MANCHETES.entrar` de web/src/conteudo/conta.ts, as linhas unidas por um espaço). */
+export const MANCHETE_LOGIN = 'Volte à rotina da família.'
+
+/** O caminho em que o caso tem de terminar: o `caminho` do caso, senão a rota (a sessão termina em /app/sessao). Sem busca. */
+export function caminhoEsperado({ caso, rota, caminho }, base) {
+  if (typeof caminho === 'string') return new URL(caminho.replace(/^\/+/, ''), base).pathname
+  if (caso === 'sessao') return new URL('app/sessao', base).pathname
+  return new URL(rota, base).pathname
 }
 
 /**
- * Entra com a conta de demonstração em modo memória: abre /entrar, preenche e envia o formulário
- * e espera a SPA chegar a /app/. Sem recarregar depois, a sessão (só em memória) continua viva.
+ * Falha fechado antes de medir: `location.pathname` é o esperado e a página tem um h1 que não é o
+ * do login (sem sessão, a guarda leva a /entrar). Devolve o que viu: `{ caminho, h1_texto }`.
  */
-export async function entrarNaDemonstracao(cdp, base, { voltas = 80 } = {}) {
+export async function verificarPagina(cdp, esperado) {
+  const visto = await avaliar(cdp, `(() => { const h1 = document.querySelector('h1'); return { caminho: location.pathname, h1_texto: h1 ? h1.textContent : null } })()`)
+  if (!visto || typeof visto.caminho !== 'string') throw new Error(`não li o caminho da página (${JSON.stringify(visto)})`)
+  if (visto.caminho !== esperado) throw new Error(`caminho ${visto.caminho}, esperado ${esperado} (sem sessão a guarda leva a /entrar)`)
+  const h1 = typeof visto.h1_texto === 'string' ? visto.h1_texto.replace(/\s+/g, ' ').trim() : ''
+  if (h1 === '') throw new Error(`a página ${visto.caminho} está sem h1`)
+  // Sem espaço nenhum na comparação: as duas linhas do h1 do login podem vir sem espaço entre elas.
+  const semEspaco = (texto) => texto.replace(/\s+/g, '')
+  if (semEspaco(h1).includes(semEspaco(MANCHETE_LOGIN))) throw new Error(`o h1 é o h1 do login ("${MANCHETE_LOGIN}") em ${visto.caminho}`)
+  return { caminho: visto.caminho, h1_texto: h1 }
+}
+
+/**
+ * Entra com uma conta de demonstração em modo memória (`conta`: `responsavel`, a padrão, ou
+ * `moderador`): abre /entrar, preenche e envia o formulário e espera a SPA chegar a /app/. Sem
+ * recarregar depois, a sessão (só em memória) continua viva. A senha nunca sai em mensagem.
+ */
+export async function entrarNaDemonstracao(cdp, base, { voltas = 80, conta = 'responsavel' } = {}) {
+  if (!ehContaDeMedicao(conta)) throw new Error(`conta inválida: ${JSON.stringify(conta)} (use ${Object.keys(CONTAS_DE_MEDICAO).join(' ou ')})`)
+  const { email } = CONTAS_DE_MEDICAO[conta]
   await cdp.enviar('Page.navigate', { url: new URL('entrar', base).href })
   await esperarPronto(cdp)
   const preencheu = await avaliar(
@@ -1042,9 +1102,9 @@ export async function entrarNaDemonstracao(cdp, base, { voltas = 80 } = {}) {
       const senha = document.querySelector('input[type=password]')
       if (!email || !senha) return false
       const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set
-      setter.call(email, ${JSON.stringify(EMAIL_DEMONSTRACAO)})
+      setter.call(email, ${JSON.stringify(email)})
       email.dispatchEvent(new Event('input', {bubbles:true}))
-      setter.call(senha, ${JSON.stringify(SENHA_DEMONSTRACAO)})
+      setter.call(senha, ${JSON.stringify(SENHA_DE_MEDICAO)})
       senha.dispatchEvent(new Event('input', {bubbles:true}))
       await new Promise((r) => setTimeout(r, 100))
       senha.form.requestSubmit()
@@ -1109,11 +1169,11 @@ export function naoSeAplicaSemAbrir({ caso, tema, rota }) {
   return null
 }
 
-export async function abrirCaso(cdp, base, { caso, tema, rota }) {
+export async function abrirCaso(cdp, base, { caso, tema, rota, conta }, { voltas } = {}) {
   // Movimento reduzido sempre (G12): as medidas e as capturas usam o mesmo modo.
   await cdp.enviar('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] })
   if (rotaExigeSessao(rota)) {
-    await entrarNaDemonstracao(cdp, base)
+    await entrarNaDemonstracao(cdp, base, { voltas, conta: conta ?? contaPadrao(rota) })
     await irPelaSpa(cdp, base, rota)
   } else {
     await cdp.enviar('Page.navigate', { url: new URL(rota, base).href })
@@ -1144,6 +1204,43 @@ export async function abrirCaso(cdp, base, { caso, tema, rota }) {
   await espera(200)
 }
 
+/** O arquivo da medida de um pedido: `<caso>_<tema>_<largura>.json`. */
+const arquivoDoPedido = ({ caso, tema, largura }) => `${caso}_${tema}_${largura}.json`
+
+/**
+ * Mede um pedido: abre o caso (com a conta, se a rota pede sessão), confere o caminho final e o h1
+ * (`verificarPagina`), coleta, avalia e grava `<pasta>/<caso>_<tema>_<largura>.json`. Devolve
+ * `{ arquivo, resultados }` ou `{ naoSeAplica }`. Qualquer falha lança `<caso>: <motivo>` antes de
+ * gravar: sem JSON.
+ */
+export async function medirPedido(cdp, base, pedido, pasta, opcoes = {}) {
+  try {
+    await cdp.enviar('Emulation.setDeviceMetricsOverride', { width: pedido.largura, height: pedido.altura, deviceScaleFactor: 1, mobile: false })
+    const aberto = await abrirCaso(cdp, base, pedido, opcoes)
+    if (aberto?.naoSeAplica) return { naoSeAplica: aberto.naoSeAplica }
+    const pagina = await verificarPagina(cdp, caminhoEsperado(pedido, base))
+    const leitura = await avaliar(cdp, `(${coletarNaPagina.toString()})()`)
+    const resultados = avaliarTudo({ ...leitura, tema: pedido.tema })
+    const arquivo = arquivoDoPedido(pedido)
+    const medidas = {
+      largura: leitura.doc.largura,
+      clientWidth: leitura.doc.clientWidth,
+      tokens: leitura.doc.tokens,
+      h1: leitura.nos.find((n) => n.tag === 'h1')?.rect ?? null,
+      nos: leitura.nos.length,
+      caminho: pagina.caminho,
+      h1_texto: pagina.h1_texto,
+    }
+    fs.writeFileSync(
+      path.join(pasta, arquivo),
+      JSON.stringify({ caso: pedido.caso, tema: pedido.tema, largura: pedido.largura, altura: pedido.altura, rota: pedido.rota, medido_em: new Date().toISOString(), medidas, resultados }, null, 2),
+    )
+    return { arquivo, resultados }
+  } catch (erro) {
+    throw new Error(`${pedido.caso}: ${erro.message}`)
+  }
+}
+
 /** Os CASOS de .oc/cdp.mjs (o caso → { rota }); nulo se o arquivo não existe ou não exporta CASOS. */
 async function carregarCasosCdp() {
   try {
@@ -1170,6 +1267,9 @@ async function principal(argumentos) {
   }
   const porta = Number(process.env.CDP_PORTA ?? 9344)
   fs.mkdirSync(pasta, { recursive: true })
+  // Falha fechado: o JSON velho de cada pedido sai antes de qualquer medida, então um pedido que
+  // falha (ou que não chega a ser medido) nunca deixa uma medida antiga no lugar da nova.
+  for (const pedido of pedidos) fs.rmSync(path.join(pasta, arquivoDoPedido(pedido)), { force: true })
   let cdp
   try {
     for (const pedido of pedidos) {
@@ -1179,29 +1279,16 @@ async function principal(argumentos) {
         console.log(linhaNaoSeAplica(pedido, semAbrir))
         continue
       }
-      cdp ??= await abrirAlvo(porta)
-      await cdp.enviar('Emulation.setDeviceMetricsOverride', { width: pedido.largura, height: pedido.altura, deviceScaleFactor: 1, mobile: false })
-      const aberto = await abrirCaso(cdp, baseUrl, pedido)
-      if (aberto?.naoSeAplica) {
+      cdp ??= await abrirAlvo(porta).catch((erro) => {
+        throw new Error(`${pedido.caso}: ${erro.message}`)
+      })
+      const medido = await medirPedido(cdp, baseUrl, pedido, pasta)
+      if (medido.naoSeAplica) {
         // Não é falha nem medida: sem JSON, o pedido segue para o próximo e a saída continua 0.
-        console.log(linhaNaoSeAplica(pedido, aberto.naoSeAplica))
+        console.log(linhaNaoSeAplica(pedido, medido.naoSeAplica))
         continue
       }
-      const leitura = await avaliar(cdp, `(${coletarNaPagina.toString()})()`)
-      const resultados = avaliarTudo({ ...leitura, tema: pedido.tema })
-      const arquivo = `${pedido.caso}_${pedido.tema}_${pedido.largura}.json`
-      const medidas = {
-        largura: leitura.doc.largura,
-        clientWidth: leitura.doc.clientWidth,
-        tokens: leitura.doc.tokens,
-        h1: leitura.nos.find((n) => n.tag === 'h1')?.rect ?? null,
-        nos: leitura.nos.length,
-      }
-      fs.writeFileSync(
-        path.join(pasta, arquivo),
-        JSON.stringify({ caso: pedido.caso, tema: pedido.tema, largura: pedido.largura, altura: pedido.altura, rota: pedido.rota, medido_em: new Date().toISOString(), medidas, resultados }, null, 2),
-      )
-      console.log(resumo(arquivo, resultados))
+      console.log(resumo(medido.arquivo, medido.resultados))
     }
     return 0
   } catch (erro) {
