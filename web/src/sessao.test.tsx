@@ -26,6 +26,9 @@ const sessaoDe = comSessaoEmAndamento
 
 const principal = (container: HTMLElement) => container.querySelector<HTMLElement>('main')!
 const cartao = (container: HTMLElement) => container.querySelector<HTMLElement>('main [data-andamento]')!
+// A15 (A11Y-010): o `role="timer"` leva os algarismos visíveis (aria-hidden) e o texto falado (sr-only).
+const digitos = (timer: HTMLElement) => timer.querySelector('[aria-hidden="true"]')!.textContent
+const falado = (timer: HTMLElement) => timer.querySelector('.sr-only')!.textContent
 
 describe('Sessão: a estrutura', () => {
   for (const [tema, madrugada] of [
@@ -129,11 +132,51 @@ describe('Sessão: o cartão do cronômetro', () => {
     const rotulo = within(secao).getByText('Duração da sessão')
     expect(secao.getAttribute('aria-labelledby')).toBe(rotulo.id)
     const timer = within(secao).getByRole('timer', { name: 'Duração da sessão' })
-    expect(timer.textContent).toBe('1:12:00')
+    expect(digitos(timer)).toBe('1:12:00')
     expect(timer.getAttribute('aria-live')).toBe('off')
     expect(timer.classList.contains('font-titulo')).toBe(true)
     expect(timer.classList.contains('tabular-nums')).toBe(true)
     expect([...secao.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Encerrar', 'Encerrar e anotar', 'Descartar'])
+  })
+
+  it('A11Y-010: o cronômetro fala "1 hora, 12 minutos e 7 segundos" sem mudar o nome, o aria-live nem os dígitos visíveis', async () => {
+    const { container } = await renderizarRotaPronta('/app/sessao', { ajustarRotina: sessaoDe('sono', 72 * MIN + 7_000) })
+
+    const timer = within(cartao(container)).getByRole('timer', { name: 'Duração da sessão' })
+    expect(timer.hasAttribute('data-cronometro')).toBe(true)
+    expect(timer.getAttribute('aria-live')).toBe('off')
+    expect(timer.getAttribute('aria-labelledby')).toBe(within(cartao(container)).getByText('Duração da sessão').id)
+    expect(digitos(timer)).toBe('1:12:07')
+    expect(falado(timer)).toBe('1 hora, 12 minutos e 7 segundos')
+    // Os dois textos moram no mesmo elemento, e só o falado é lido: o visível sai da árvore de acessibilidade.
+    expect(timer.textContent).toBe('1:12:071 hora, 12 minutos e 7 segundos')
+    expect(timer.querySelector('.sr-only')!.hasAttribute('aria-hidden')).toBe(false)
+  })
+
+  it.each([
+    [59_000, '00:59', '59 segundos'],
+    [12 * MIN + 7_000, '12:07', '12 minutos e 7 segundos'],
+    [0, '00:00', '0 segundos'],
+    [3_600_000, '1:00:00', '1 hora'],
+    [2 * 3_600_000 + MIN + 1_000, '2:01:01', '2 horas, 1 minuto e 1 segundo'],
+  ])('A11Y-010: com %i ms de sessão, os dígitos são "%s" e o texto falado é "%s"', async (ms, visivel, dito) => {
+    await renderizarRotaPronta('/app/sessao', { ajustarRotina: sessaoDe('sono', ms) })
+
+    const timer = screen.getByRole('timer', { name: 'Duração da sessão' })
+    expect(digitos(timer)).toBe(visivel)
+    expect(falado(timer)).toBe(dito)
+  })
+
+  it('A11Y-010: o texto falado acompanha o relógio a cada segundo', async () => {
+    await renderizarRotaPronta('/app/sessao', { ajustarRotina: sessaoDe('sono', 59_000) })
+    expect(falado(screen.getByRole('timer'))).toBe('59 segundos')
+
+    act(() => {
+      vi.advanceTimersByTime(1000)
+    })
+
+    expect(falado(screen.getByRole('timer'))).toBe('1 minuto')
+    expect(digitos(screen.getByRole('timer'))).toBe('01:00')
   })
 
   it('Encerrar é o primário; Encerrar e anotar é o contorno; Descartar é o botão de texto', async () => {
@@ -235,7 +278,7 @@ describe('Sessão: o cartão do cronômetro', () => {
   it('o cronômetro conta a partir do início gravado', async () => {
     await renderizarRotaPronta('/app/sessao', { ajustarRotina: sessaoDe('sono', 5_000) })
 
-    expect(screen.getByRole('timer', { name: 'Duração da sessão' }).textContent).toBe('00:05')
+    expect(digitos(screen.getByRole('timer', { name: 'Duração da sessão' }))).toBe('00:05')
   })
 
   it('observador e bebê arquivado veem a sessão sem as três ações, com o texto do papel', async () => {
@@ -324,7 +367,7 @@ describe('Sessão: sem sessão', () => {
 
     await renderizarRotaPronta(`/app/sessao?id=${alvo.id}`, { mundo: primeira })
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Sono de Heloísa')
-    expect(screen.getByRole('timer', { name: 'Duração da sessão' }).textContent).toBe('1:12:00')
+    expect(digitos(screen.getByRole('timer', { name: 'Duração da sessão' }))).toBe('1:12:00')
   })
 
   it('?tipo= inválido ou ausente mostra o estado vazio; ?tipo= válido começa uma vez e a URL passa a ter o id', async () => {
@@ -511,7 +554,7 @@ describe('Sessão: o tamanho do cronômetro pelo número de caracteres (E2)', ()
       await renderizarRotaPronta('/app/sessao', { ajustarRotina: sessaoDe('sono', ms) })
 
       const timer = screen.getByRole('timer', { name: 'Duração da sessão' })
-      expect(timer.textContent).toBe(texto)
+      expect(digitos(timer)).toBe(texto)
       expect(timer.getAttribute('data-tamanho')).toBe(tamanho)
     })
   }
@@ -525,7 +568,7 @@ describe('Sessão: o tamanho do cronômetro pelo número de caracteres (E2)', ()
       vi.advanceTimersByTime(3000)
     })
 
-    expect(screen.getByRole('timer', { name: 'Duração da sessão' }).textContent).toBe('10:00:01')
+    expect(digitos(screen.getByRole('timer', { name: 'Duração da sessão' }))).toBe('10:00:01')
     expect(screen.getByRole('timer', { name: 'Duração da sessão' }).getAttribute('data-tamanho')).toBe('longo')
   })
 })

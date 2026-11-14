@@ -66,6 +66,11 @@ interface CampoProps {
   complemento?: ReactNode
   /** `site` (56 px, telas públicas) ou `app` (48 px, Começar e Conta). */
   tamanho?: TamanhoDoCampo
+  /**
+   * Campo obrigatório (A11Y-008): o rótulo ganha "(obrigatório)" e o controle `aria-required="true"`. Não usa o
+   * `required` nativo, que ligaria a validação do navegador: a tela confere e diz o que falta.
+   */
+  obrigatorio?: boolean
 }
 
 export function Campo({
@@ -82,12 +87,13 @@ export function Campo({
   refEntrada,
   complemento,
   tamanho = 'site',
+  obrigatorio = false,
 }: CampoProps) {
   const id = useId()
   return (
     <div className="cm-campo max-w-none">
       <label htmlFor={id} className="cm-campo-rotulo">
-        {rotulo}
+        {obrigatorio ? `${rotulo} ${COMUM.obrigatorio}` : rotulo}
       </label>
       <div className="cm-campo-controle" data-senha={complemento ? '' : undefined}>
         <input
@@ -100,6 +106,7 @@ export function Campo({
           onChange={(evento) => aoMudar(evento.target.value)}
           autoComplete={autoComplete}
           readOnly={somenteLeitura}
+          aria-required={obrigatorio ? true : undefined}
           aria-invalid={erro ? true : undefined}
           aria-describedby={ligar(id, ajuda, erro)}
           className={`${caixa(tamanho)} ${SOMENTE_LEITURA} ${ERRO_CAIXA}`}

@@ -21,6 +21,11 @@ interface CampoProps {
   /** A tela já tentou enviar: o mínimo vale mesmo com o campo ainda vazio. */
   tentou?: boolean
   autoComplete?: string
+  /**
+   * Campo obrigatório (A11Y-008): o rótulo ganha "(obrigatório)" e o controle `aria-required="true"`, sem o
+   * `required` nativo (a tela confere e diz o que falta).
+   */
+  obrigatorio?: boolean
 }
 
 /** Um campo de uma linha ou, com `linhas`, uma caixa de texto. */
@@ -36,6 +41,7 @@ export function CampoComContador({
   linhas,
   tentou = false,
   autoComplete,
+  obrigatorio = false,
 }: CampoProps) {
   const [tocou, setTocou] = useState(false)
   const situacao = conferirLimite(valor, limite)
@@ -48,6 +54,7 @@ export function CampoComContador({
     value: valor,
     onChange: (evento: { target: { value: string } }) => aoMudar(evento.target.value),
     onBlur: () => setTocou(true),
+    'aria-required': obrigatorio ? (true as const) : undefined,
     'aria-invalid': mensagem ? (true as const) : undefined,
     'aria-describedby': ligados,
   }
@@ -55,11 +62,11 @@ export function CampoComContador({
   return (
     <div className="cm-campo max-w-[40rem]">
       <label htmlFor={id} className="cm-campo-rotulo">
-        {rotulo}
+        {obrigatorio ? `${rotulo} ${COMUM_COMUNIDADE.obrigatorio}` : rotulo}
       </label>
       <div className="cm-campo-controle">
         {linhas ? (
-          <textarea {...comum} rows={linhas} className="cm-campo-entrada alvo-toque resize-y py-3 leading-6" />
+          <textarea {...comum} rows={linhas} className="cm-campo-entrada alvo-toque resize-y py-3" />
         ) : (
           <input {...comum} type="text" autoComplete={autoComplete} className="cm-campo-entrada alvo-toque" />
         )}
@@ -97,7 +104,7 @@ export function EscolhaDeFaixa({ rotulo, valor, aoMudar }: FaixaProps) {
       <legend className="cm-campo-rotulo mb-1 p-0">{rotulo}</legend>
       <div className="flex flex-wrap gap-x-6">
         {OPCOES.map((opcao) => (
-          <label key={opcao ?? 'nenhuma'} className="alvo-toque flex cursor-pointer items-center gap-2">
+          <label key={opcao ?? 'nenhuma'} className="alvo-toque flex min-h-11 cursor-pointer items-center gap-3">
             <input
               type="radio"
               name={nome}

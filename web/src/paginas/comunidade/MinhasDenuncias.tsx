@@ -1,6 +1,9 @@
 import { useLocation } from 'react-router'
+import { Cartao } from '../../componentes/base/layout/Cartao.tsx'
+import { Pilha } from '../../componentes/base/layout/Pilha.tsx'
 import { ErroDeLeitura, Esqueleto } from '../../componentes/comunidade/Avisos.tsx'
 import { useDadosComunidade } from '../../componentes/comunidade/dados.ts'
+import { Faixa } from '../../componentes/comunidade/Faixa.tsx'
 import { Quadro, TituloDaTela } from '../../componentes/comunidade/Quadro.tsx'
 import { Status } from '../../componentes/comunidade/Status.tsx'
 import { useLeitura } from '../../componentes/comunidade/useLeitura.ts'
@@ -43,25 +46,31 @@ export function MinhasDenuncias() {
   const { estado } = leitura
 
   return (
-    <Quadro voltar="/app/comunidade" ocupado={estado.fase === 'carregando'}>
-      <TituloDaTela>{DENUNCIAS.titulo}</TituloDaTela>
-      <div className="mt-6">
-        <Status mensagem={textoDaPassagemComunidade(location.state)} />
-      </div>
-      <div className="mt-6 flex flex-col gap-3">
-        {leitura.esqueleto ? <Esqueleto /> : null}
-        {estado.fase === 'erro' ? <ErroDeLeitura erro={estado.erro} aoTentarDeNovo={() => void leitura.recarregar()} /> : null}
-        {estado.fase === 'pronto' && estado.valor.denuncias.length === 0 ? <p>{TX.tx19}</p> : null}
-        {estado.fase === 'pronto' && estado.valor.denuncias.length > 0 ? (
-          <ul className="m-0 flex list-none flex-col gap-3 p-0">
+    <Quadro
+      voltar="/app/comunidade"
+      ocupado={estado.fase === 'carregando'}
+      titulo={<TituloDaTela>{DENUNCIAS.titulo}</TituloDaTela>}
+      cabeca={
+        <>
+          <Status mensagem={textoDaPassagemComunidade(location.state)} />
+          {leitura.esqueleto ? <Esqueleto /> : null}
+          {estado.fase === 'erro' ? <ErroDeLeitura erro={estado.erro} aoTentarDeNovo={() => void leitura.recarregar()} /> : null}
+          {estado.fase === 'pronto' && estado.valor.denuncias.length === 0 ? <p>{TX.tx19}</p> : null}
+        </>
+      }
+    >
+      {estado.fase === 'pronto' && estado.valor.denuncias.length > 0 ? (
+        <Faixa>
+          <Pilha as="ul" vao="grupo" className="m-0 list-none p-0">
             {estado.valor.denuncias.map((denuncia) => (
               <li key={denuncia.id}>
-                <article
+                <Cartao
+                  as="article"
                   aria-labelledby={`denuncia-${denuncia.id}`}
-                  className="flex flex-col gap-3 rounded-cartao border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)] p-5"
+                  className="flex flex-col gap-3 border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)]"
                 >
                   <p className="cm-rotulo text-[var(--cor-texto-2)]">{DENUNCIAS.tipo[tipoDoAlvo(denuncia)]}</p>
-                  <h2 id={`denuncia-${denuncia.id}`} className="cm-h4 wrap-anywhere">
+                  <h2 id={`denuncia-${denuncia.id}`} className="cm-h4 text-titulo-4 wrap-anywhere">
                     {textoDoAlvo(denuncia, estado.valor.alvos)}
                   </h2>
                   <dl className="m-0 flex flex-col gap-2">
@@ -86,12 +95,12 @@ export function MinhasDenuncias() {
                       {DENUNCIAS.decididaEm(formatarDataHora(denuncia.decididaEm))}
                     </p>
                   ) : null}
-                </article>
+                </Cartao>
               </li>
             ))}
-          </ul>
-        ) : null}
-      </div>
+          </Pilha>
+        </Faixa>
+      ) : null}
     </Quadro>
   )
 }
