@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router'
 import { AvisoDemonstracao } from '../AvisoDemonstracao.tsx'
-import { PainelCampo } from '../campo/PainelCampo.tsx'
+import { Coluna, Colunas } from '../base/layout/Colunas.tsx'
+import { Secao } from '../base/layout/Secao.tsx'
 import { RevelacaoPorBaixo } from '../../movimento/RevelacaoPorBaixo.tsx'
 import { COLUNAS_DO_RODAPE, FRASE_DO_RODAPE, NOME_SITE, ROTULO_NAVEGACAO_RODAPE } from './textos.ts'
 
@@ -33,15 +34,27 @@ export function Rodape({ comAviso = true }: { comAviso?: boolean }) {
   const { pathname } = useLocation()
   if (pathname === '/app' || pathname.startsWith('/app/')) return <RodapeCompacto />
 
+  // O rodapé do site é um painel: a caixa externa (`footer`, sem fundo, metade de `espaco-bloco` em cima e embaixo)
+  // e, dentro, a caixa de mel com a largura do quadro. A frase e as colunas de links são duas colunas de texto.
   return (
-    <footer className="cm-rodape" data-rodape="" id="rodape">
-      <PainelCampo className="cm-rodape-painel">
-        <RevelacaoPorBaixo variante="M7">
-          <div className="cm-rodape-topo">
+    <Secao
+      as="footer"
+      variante="painel"
+      painel="mel"
+      className="cm-rodape"
+      classeCaixa="cm-rodape-painel"
+      data-rodape=""
+      id="rodape"
+    >
+      <RevelacaoPorBaixo variante="M7">
+        <Colunas fracoes="5fr 7fr" aPartirDe={1100}>
+          <Coluna>
             <p className="cm-h3 cm-rodape-frase">
               {FRASE_DO_RODAPE[0]}
               <span className="cm-segunda-linha">{FRASE_DO_RODAPE[1]}</span>
             </p>
+          </Coluna>
+          <Coluna>
             <nav aria-label={ROTULO_NAVEGACAO_RODAPE} className="cm-rodape-colunas">
               {COLUNAS_DO_RODAPE.map((coluna) => (
                 <div key={coluna.titulo}>
@@ -58,19 +71,19 @@ export function Rodape({ comAviso = true }: { comAviso?: boolean }) {
                 </div>
               ))}
             </nav>
+          </Coluna>
+        </Colunas>
+
+        <p className="cm-rodape-nome" data-nome-rodape="" aria-hidden="true">
+          {NOME_SITE}
+        </p>
+
+        {comAviso ? (
+          <div className="cm-rodape-base cm-pequeno">
+            <AvisoDemonstracao rodape />
           </div>
-
-          <p className="cm-rodape-nome" data-nome-rodape="" aria-hidden="true">
-            {NOME_SITE}
-          </p>
-
-          {comAviso ? (
-            <div className="cm-rodape-base cm-pequeno">
-              <AvisoDemonstracao rodape />
-            </div>
-          ) : null}
-        </RevelacaoPorBaixo>
-      </PainelCampo>
-    </footer>
+        ) : null}
+      </RevelacaoPorBaixo>
+    </Secao>
   )
 }

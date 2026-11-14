@@ -2,6 +2,7 @@ import { useCallback, useId, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router'
 import { Menu, Moon, X } from 'lucide-react'
 import { Botao } from '../base/Botao.tsx'
+import { QuadroLayout } from '../base/layout/QuadroLayout.tsx'
 import { MenuCelular } from './MenuCelular.tsx'
 import { PularParaConteudo } from './PularParaConteudo.tsx'
 import {
@@ -40,10 +41,11 @@ export function Cabecalho({ contexto, madrugada, aoAlternarMadrugada }: Props) {
   const fecharMenu = useCallback(() => setAbertoEm(null), [])
 
   return (
-    <header className="cm-cabecalho" data-cabecalho="">
+    <header className="cm-cabecalho" data-cabecalho="" data-contexto={contexto}>
       {/* O primeiro Tab de toda página: pula o cabeçalho e vai ao <main> (WCAG 2.4.1). */}
       <PularParaConteudo />
-      <div className="cm-area cm-cab-miolo">
+      {/* O conteúdo do cabeçalho se alinha à borda do quadro; a altura e o padding vertical continuam os de hoje. */}
+      <QuadroLayout className="cm-cab-miolo">
         <Link to="/" className="cm-marca" data-nome-site="">
           {NOME_SITE}
         </Link>
@@ -96,7 +98,7 @@ export function Cabecalho({ contexto, madrugada, aoAlternarMadrugada }: Props) {
             {menuAberto ? <X size={26} aria-hidden="true" /> : <Menu size={26} aria-hidden="true" />}
           </button>
         </div>
-      </div>
+      </QuadroLayout>
 
       <MenuCelular id={idMenu} aberto={menuAberto} contexto={contexto} aoFechar={fecharMenu} botao={botaoMenu} />
     </header>

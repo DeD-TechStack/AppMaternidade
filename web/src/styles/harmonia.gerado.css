@@ -21,7 +21,7 @@
   --quadro-largura: 1200px;
   --quadro-calha: clamp(20px, calc(20px + (100vw - 390px) * 12 / 1050), 32px);
   --medio: 880px;
-  --leitura: 680px;
+  --leitura: 640px;
   --texto-exibicao-tamanho: clamp(2.5rem, calc(2.5rem + (100vw - 390px) * 24 / 1050), 4rem);
   --texto-exibicao-entrelinha: clamp(2.75rem, calc(2.75rem + (100vw - 390px) * 24 / 1050), 4.25rem);
   --texto-titulo-1-tamanho: clamp(2.125rem, calc(2.125rem + (100vw - 390px) * 14 / 1050), 3rem);

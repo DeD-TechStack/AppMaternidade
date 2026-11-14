@@ -132,7 +132,7 @@ spacing:
   quadro-calha-390: 20px
   quadro-calha-1440: 32px
   medio: 880px
-  leitura: 680px
+  leitura: 640px
 components:
   botao-primario:
     backgroundColor: "{colors.cacau}"
@@ -244,7 +244,7 @@ O espaço vem de uma escala de oito papéis (`junto`, `pilha`, `grupo`, `bloco`,
 - **Calha:** 20 px em 390 e 32 px a partir de 1440, em linha reta no meio (`quadro-calha`). A largura do quadro (`quadro-largura`, 1200 px) é fixa e não entra no `clamp`.
 - **Seção:** uma faixa vertical da página, filha direta do `<main>`, ou o cabeçalho, ou o rodapé. Tem padding de topo e de base e nenhuma margem.
 - **Painel:** seção com fundo de cor (mel, cacau, oliva, areia), desenhada como caixa de raio 24 cujas bordas laterais coincidem com as do quadro. O conteúdo do painel começa na borda + `painel`.
-- **Contêiner de texto:** `medio` (880 px) e `leitura` (680 px) são larguras máximas de blocos de texto **alinhados à borda** do quadro, não centrados. Exceção única: a seção `centrada` (um título e uma ação, como o fechamento do Início), cujo texto é centrado no quadro.
+- **Contêiner de texto:** `medio` (880 px) e `leitura` (640 px) são larguras máximas de blocos de texto **alinhados à borda** do quadro, não centrados. Exceção única: a seção `centrada` (um título e uma ação, como o fechamento do Início), cujo texto é centrado no quadro.
 - **Pilha:** um grupo vertical de blocos com um vão fixo, dado por um token de papel.
 - **Bloco:** filho direto de uma pilha, de uma seção ou de uma grade.
 - **Corpo corrido:** elemento `p` com mais de 120 caracteres dentro de um contêiner `leitura`.
@@ -288,9 +288,13 @@ A classe é `<família>-<sufixo>`, e a família é qualquer utilitário de espa�
 - `quadro-largura`: 1200 px, fixo.
 - `quadro-calha`: 20 px em 390 e 32 px em 1440, em `clamp`.
 - `medio`: 880 px, para blocos de texto de duas ou três colunas e subtítulos longos, alinhado à borda.
-- `leitura`: 680 px, para texto corrido (66 a 72 caracteres a 18 px), alinhado à borda.
+- `leitura`: 640 px, para texto corrido (perto de 76 caracteres a 18 px, dentro de 60 a 80), alinhado à borda.
 - Todo conteúdo da seção começa na borda do contêiner: há **uma** borda esquerda por página. O painel recua o conteúdo só por `painel`.
 - Lado a lado, as proporções viram frações do quadro: herói texto/cena 7/5, acesso 7/5, Conta índice/conteúdo 3/9, linha rótulo + texto (`.sb-linha`) 2fr/3fr, cronômetro 7/3. O vão entre texto e mídia é `midia`; entre colunas de texto, `bloco`. Os pontos de quebra de hoje (767, 991, 1024 e 1200 px) ficam.
+
+### Primitivas
+
+As primitivas de layout ficam em `web/src/componentes/base/layout/` e têm um marcador `data-h` cada (aceita mais de um valor separado por espaço, e a medida usa o seletor `~=`): `Secao` (`data-h="secao"`, variante em `data-h-variante`: `painel` ou `centrada`; o painel leva a caixa de cor dentro, `data-h="caixa-cor"`), `QuadroLayout` (`data-h="quadro"`, `data-h-largura`: `quadro`, `medio` ou `leitura`), `Pilha` (`data-h="pilha"`, `data-h-vao`: o papel do vão), `Colunas` (`data-h="colunas"`, `data-h-vao`: `midia` ou `bloco`, `data-h-quebra`: a largura em que ficam lado a lado; cada filha leva `coluna`) e `Cartao` (`data-h` contém `cartao`). Todo espaço delas vem das variáveis `--espaco-*` e `--quadro-*` deste arquivo, sem px solto.
 
 ### Área de conta (MAT-37)
 
