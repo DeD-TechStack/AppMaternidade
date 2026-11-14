@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, screen, within } from '@testing-library/react'
 import { temBanco } from './prototipo/banco.ts'
-import { ID_BEBE, semSessaoEmAndamento } from './teste/rotina.fixture.ts'
+import { PESSOAS } from './teste/renderizarComDados.tsx'
+import type { FixtureRotina } from './dados/rotina.memoria.ts'
+import { ID_BEBE, comSessaoEmAndamento, semSessaoEmAndamento } from './teste/rotina.fixture.ts'
 import { aguardarCarga, renderizarRotaPronta } from './teste/renderizarRota.tsx'
 
 // O Hoje com os dados da rotina (MAT-38a) sobre o Campo de mel (DESIGN.md 4, telas do app): o título com a
@@ -223,6 +225,142 @@ describe('Hoje: o cartão da sessão', () => {
   })
 })
 
+// QA-10 no Hoje: "Encerrar" do cartão e o das outras sessões perguntam antes quando a sessão tem menos de 1 minuto.
+describe('Hoje: a pergunta da sessão curta (QA-10)', () => {
+  const PERGUNTA = 'A sessão durou menos de 1 minuto. Salvar mesmo assim?'
+  const pergunta = () => screen.getByRole('group', { name: PERGUNTA })
+  const semPergunta = () => expect(screen.queryByRole('group', { name: PERGUNTA })).toBeNull()
+
+  // Uma segunda sessão, mais antiga que a principal (a de início mais recente é a do cartão).
+  const comMamadaEmParalelo = (haMs: number) => (fixture: FixtureRotina): FixtureRotina => {
+    const modelo = fixture.registros.find((r) => r.tipo === 'sono' && r.fim === null)!
+    const inicio = new Date(Date.now() - haMs).toISOString()
+    return {
+      ...fixture,
+      registros: [
+        ...fixture.registros,
+        { ...modelo, id: 'a0000000-0000-7000-8000-000000005001', tipo: 'mamada' as const, inicio, recebidoEm: inicio },
+      ],
+    }
+  }
+
+  it('com 30 s, "Encerrar" do cartão pergunta no cartão, com "Salvar" e "Descartar", e não encerra nada', async () => {
+    const { container } = await renderizarRotaPronta('/app/hoje', { ajustarRotina: comSessaoEmAndamento('sono', 30_000) })
+
+    fireEvent.click(within(cartao(container)).getByRole('button', { name: 'Encerrar' }))
+
+    expect(cartao(container).contains(pergunta())).toBe(true)
+    expect(within(pergunta()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Salvar', 'Descartar'])
+    expect(document.activeElement).toBe(within(pergunta()).getByRole('button', { name: 'Salvar' }))
+    expect(screen.getByRole('timer')).toBeTruthy()
+    expect(screen.getByRole('status').textContent).toBe('')
+  })
+
+  it('"Salvar" encerra como sempre: o cartão passa a dizer "Nenhuma sessão" e a confirmação aparece', async () => {
+    const { container } = await renderizarRotaPronta('/app/hoje', { ajustarRotina: comSessaoEmAndamento('sono', 30_000) })
+    fireEvent.click(within(cartao(container)).getByRole('button', { name: 'Encerrar' }))
+
+    fireEvent.click(within(pergunta()).getByRole('button', { name: 'Salvar' }))
+    await aguardarCarga()
+
+    semPergunta()
+    expect(cartao(container).textContent).toContain('Nenhuma sessão em andamento.')
+    expect(screen.getByRole('status').textContent).toContain('Sessão encerrada')
+  })
+
+  it('"Descartar" usa o descarte de sempre: a sessão vai para a lixeira e nada é encerrado', async () => {
+    const { container, rotina } = await renderizarRotaPronta('/app/hoje', { ajustarRotina: comSessaoEmAndamento('sono', 30_000) })
+    fireEvent.click(within(cartao(container)).getByRole('button', { name: 'Encerrar' }))
+
+    fireEvent.click(within(pergunta()).getByRole('button', { name: 'Descartar' }))
+    await aguardarCarga()
+
+    semPergunta()
+    expect(cartao(container).textContent).toContain('Nenhuma sessão em andamento.')
+    expect(screen.getByRole('status').textContent).not.toContain('Sessão encerrada')
+    const lixeira = await rotina.lixeira(ID_BEBE)
+    expect(lixeira.ok && lixeira.valor.itens.map((r) => r.tipo)).toEqual(['sono'])
+  })
+
+  it('Esc fecha a pergunta e devolve o foco ao "Encerrar" que a abriu', async () => {
+    const { container } = await renderizarRotaPronta('/app/hoje', { ajustarRotina: comSessaoEmAndamento('sono', 30_000) })
+    const encerrar = within(cartao(container)).getByRole('button', { name: 'Encerrar' })
+    fireEvent.click(encerrar)
+
+    fireEvent.keyDown(document.activeElement!, { key: 'Escape' })
+
+    semPergunta()
+    expect(document.activeElement).toBe(encerrar)
+    expect(screen.getByRole('timer')).toBeTruthy()
+  })
+
+  it('com 59 s ainda pergunta; com 60 s ou mais, "Encerrar" encerra de uma vez, sem pergunta', async () => {
+    const curta = await renderizarRotaPronta('/app/hoje', { ajustarRotina: comSessaoEmAndamento('sono', 59_000) })
+    fireEvent.click(within(cartao(curta.container)).getByRole('button', { name: 'Encerrar' }))
+    expect(pergunta()).toBeTruthy()
+    curta.unmount()
+
+    const longa = await renderizarRotaPronta('/app/hoje', { ajustarRotina: comSessaoEmAndamento('sono', 60_000) })
+    fireEvent.click(within(cartao(longa.container)).getByRole('button', { name: 'Encerrar' }))
+    await aguardarCarga()
+
+    semPergunta()
+    expect(screen.getByRole('status').textContent).toContain('Sessão encerrada: 1 min')
+  })
+
+  it('o "Encerrar" de outra sessão em paralelo com menos de 1 minuto também pergunta; "Salvar" encerra só ela', async () => {
+    await renderizarRotaPronta('/app/hoje', {
+      ajustarRotina: (f) => comMamadaEmParalelo(40_000)(comSessaoEmAndamento('sono', 10_000)(f)),
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Encerrar mamada' }))
+    expect(within(screen.getByRole('region', { name: 'Outras sessões em andamento' })).getByRole('group', { name: PERGUNTA })).toBeTruthy()
+    expect(document.activeElement).toBe(within(pergunta()).getByRole('button', { name: 'Salvar' }))
+
+    fireEvent.click(within(pergunta()).getByRole('button', { name: 'Salvar' }))
+    await aguardarCarga()
+
+    semPergunta()
+    expect(screen.queryByRole('region', { name: 'Outras sessões em andamento' })).toBeNull()
+    expect(screen.getByRole('timer')).toBeTruthy()
+    expect(screen.getByRole('status').textContent).toContain('Sessão encerrada')
+  })
+
+  it('o "Descartar" da pergunta de outra sessão descarta só ela (vai para a lixeira)', async () => {
+    const { rotina } = await renderizarRotaPronta('/app/hoje', {
+      ajustarRotina: (f) => comMamadaEmParalelo(40_000)(comSessaoEmAndamento('sono', 10_000)(f)),
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Encerrar mamada' }))
+
+    fireEvent.click(within(pergunta()).getByRole('button', { name: 'Descartar' }))
+    await aguardarCarga()
+
+    semPergunta()
+    expect(screen.getByRole('timer')).toBeTruthy()
+    const lixeira = await rotina.lixeira(ID_BEBE)
+    expect(lixeira.ok && lixeira.valor.itens.map((r) => r.tipo)).toEqual(['mamada'])
+  })
+
+  it('com 60 s ou mais, o "Encerrar" de outra sessão encerra de uma vez', async () => {
+    await renderizarRotaPronta('/app/hoje', {
+      ajustarRotina: (f) => comMamadaEmParalelo(5 * 60_000)(comSessaoEmAndamento('sono', 2 * 60_000)(f)),
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Encerrar mamada' }))
+    await aguardarCarga()
+
+    semPergunta()
+    expect(screen.getByRole('status').textContent).toContain('Sessão encerrada')
+  })
+
+  it('observador não tem "Encerrar" e, portanto, nenhuma pergunta', async () => {
+    await renderizarRotaPronta('/app/hoje', { sessao: 'davi', papelDeDavi: 'observador', ajustarRotina: comSessaoEmAndamento('sono', 30_000) })
+
+    expect(screen.queryByRole('button', { name: 'Encerrar' })).toBeNull()
+    semPergunta()
+  })
+})
+
 describe('Hoje: Para você saber e Desde o seu último registro', () => {
   it('Para você saber traz a nota em destaque, com o autor e a hora', async () => {
     await renderizarRotaPronta('/app/hoje')
@@ -273,6 +411,45 @@ describe('Hoje: Para você saber e Desde o seu último registro', () => {
     expect(document.querySelector('[data-marca-envio]')).toBeNull()
   })
 
+  // QA-08: o mais novo primeiro, pela hora que a linha mostra; os de ontem levam "ontem" antes da hora, como em Últimos.
+  it('QA-08: itens de ontem e de hoje: do mais novo ao mais antigo e com "ontem" antes da hora dos de ontem', async () => {
+    const ontemAs = (hora: number, minuto: number) => new Date(2026, 10, 4, hora, minuto).toISOString()
+    await renderizarRotaPronta('/app/hoje', {
+      ajustarRotina: (f) => {
+        const modelo = f.registros.find((r) => r.tipo === 'fralda')!
+        const novo = (numero: number, autor: string, inicio: string, recebidoEm: string, conteudo: 'xixi' | 'coco' | 'ambos') => ({
+          ...modelo,
+          id: `a0000000-0000-7000-8000-${String(4000 + numero).padStart(12, '0')}`,
+          criadoPor: autor,
+          inicio,
+          recebidoEm,
+          atualizadoEm: recebidoEm,
+          detalhes: { conteudo },
+        })
+        return {
+          ...f,
+          registros: [
+            ...f.registros,
+            // O marco de Juliana: ontem às 20:00.
+            novo(1, PESSOAS.juliana.id, ontemAs(20, 0), ontemAs(20, 0), 'xixi'),
+            novo(2, PESSOAS.bruno.id, ontemAs(22, 30), ontemAs(22, 30), 'ambos'),
+            // Lançada hoje às 09:30, mas com a hora de ontem às 23:00: a linha mostra 23:00 de ontem.
+            novo(3, PESSOAS.bruno.id, ontemAs(23, 0), new Date(2026, 10, 5, 9, 30).toISOString(), 'coco'),
+          ],
+        }
+      },
+    })
+
+    const lista = within(regiao('Desde o seu último registro, às 20:00')).getAllByRole('listitem')
+    expect(lista.map((li) => [li.querySelector('p')!.textContent, li.querySelector('.tabular-nums')!.textContent])).toEqual([
+      ['Fralda, Xixi', '09:10'],
+      ['Sono, em andamento', '08:48'],
+      ['Mamada, 18 min · lado esquerdo', '07:32'],
+      ['Fralda, Cocô', 'ontem 23:00'],
+      ['Fralda, Ambos', 'ontem 22:30'],
+    ])
+  })
+
   it('sem registro de outra pessoa depois do marco: "Nada novo desde o seu último registro."; sem marco, o bloco não aparece', async () => {
     const nada = await renderizarRotaPronta('/app/hoje', {
       sessao: 'bruno',
@@ -294,20 +471,53 @@ describe('Hoje: Para você saber e Desde o seu último registro', () => {
 })
 
 describe('Hoje: os números do dia', () => {
-  it('três figuras: Mamadas (sessões e mamadeiras), Fraldas e Sono, só do dia da família', async () => {
+  // QA-09 (TESTES_TROCADOS): antes eram três figuras, com as mamadeiras somadas às mamadas ("3 Mamadas").
+  it('quatro figuras: Mamadas (só as sessões), Mamadeiras, Fraldas e Sono, só do dia da família', async () => {
     await renderizarRotaPronta('/app/hoje', { diaCompleto: true })
 
     const itens = within(regiao('Hoje até agora')).getAllByRole('listitem')
     expect(itens.map((li) => [...li.querySelectorAll('span')].map((s) => s.textContent))).toEqual([
-      ['3', 'Mamadas'],
+      ['2', 'Mamadas'],
+      ['1', 'Mamadeiras'],
       ['3', 'Fraldas'],
       ['4 h 20', 'Sono'],
     ])
   })
 
+  it('QA-09: as contagens de Mamadas e Mamadeiras do Hoje são as do resumo do dia do Histórico', async () => {
+    const hoje = await renderizarRotaPronta('/app/hoje', { diaCompleto: true })
+    const doHoje = (rotulo: string) =>
+      within(regiao('Hoje até agora')).getByText(rotulo).previousElementSibling!.textContent
+    const contagensDoHoje = [doHoje('Mamadas'), doHoje('Mamadeiras')]
+    hoje.unmount()
+
+    await renderizarRotaPronta('/app/historico', { diaCompleto: true })
+    const doHistorico = (rotulo: string) => {
+      const dt = [...document.querySelectorAll('[data-resumo-do-dia] dt')].find((item) => item.textContent === rotulo)!
+      return dt.nextElementSibling!.textContent!.split(',')[0]
+    }
+
+    expect(contagensDoHoje).toEqual([doHistorico('Mamadas'), doHistorico('Mamadeiras')])
+    expect(contagensDoHoje).toEqual(['2', '1'])
+  })
+
+  it('QA-09: a mamada em andamento não conta, e uma mamadeira sozinha não vira mamada', async () => {
+    await renderizarRotaPronta('/app/hoje', {
+      ajustarRotina: (f) => {
+        const modelo = f.registros.find((r) => r.tipo === 'mamadeira' || r.tipo === 'fralda')!
+        const mamadeira = { ...modelo, id: 'a0000000-0000-7000-8000-000000003001', tipo: 'mamadeira' as const, detalhes: { ml: 60 } }
+        return { ...f, registros: [...f.registros.filter((r) => r.tipo !== 'mamada'), mamadeira] }
+      },
+    })
+
+    const doHoje = (rotulo: string) => within(regiao('Hoje até agora')).getByText(rotulo).previousElementSibling!.textContent
+    expect(doHoje('Mamadas')).toBe('0')
+    expect(doHoje('Mamadeiras')).toBe('1')
+  })
+
   it('a fralda registrada soma uma fralda e o Desfazer devolve o número', async () => {
     await renderizarRotaPronta('/app/hoje', { diaCompleto: true })
-    const fraldas = () => within(regiao('Hoje até agora')).getAllByRole('listitem')[1].querySelector('span')!.textContent
+    const fraldas = () => within(regiao('Hoje até agora')).getByText('Fraldas').previousElementSibling!.textContent
 
     fireEvent.click(screen.getByRole('button', { name: 'Registrar fralda de Heloísa' }))
     fireEvent.click(screen.getByRole('button', { name: 'Xixi' }))
