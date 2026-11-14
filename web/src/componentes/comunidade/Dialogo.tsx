@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, type ReactNode, type RefObject } from 'react'
+import { CONTROLES_FOCAVEIS, prenderOTab } from '../conta/foco.ts'
 
 interface Props {
   titulo: string
@@ -10,10 +11,9 @@ interface Props {
   children: ReactNode
 }
 
-const FOCAVEIS = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-
 // A caixa de diálogo da Comunidade: o elemento `<dialog>` aberto como modal, com título, o foco inicial
-// no primeiro controle, o foco preso dentro dela, `Esc` fechando e o foco voltando ao botão de origem.
+// no primeiro controle (ou no botão marcado com `data-foco-inicial`), o foco preso dentro dela, `Esc`
+// fechando e o foco voltando ao botão de origem.
 // Se esse botão já não existe, quem chamou segue a regra de foco da MAT-40:RF-15. Só existe no DOM
 // enquanto está aberta.
 export function Dialogo({ titulo, aoFechar, origem, ocupado = false, children }: Props) {
@@ -37,7 +37,9 @@ export function Dialogo({ titulo, aoFechar, origem, ocupado = false, children }:
     } else {
       elemento.setAttribute('open', '')
     }
-    elemento.querySelector<HTMLElement>(FOCAVEIS)?.focus()
+    // A11Y-006: quem tem uma ação destrutiva marca o botão seguro ("Cancelar") com `data-foco-inicial`.
+    const inicial = elemento.querySelector<HTMLElement>('[data-foco-inicial]') ?? elemento.querySelector<HTMLElement>(CONTROLES_FOCAVEIS)
+    inicial?.focus()
 
     const pedirParaFechar = (evento: Event) => {
       evento.preventDefault()
@@ -45,19 +47,7 @@ export function Dialogo({ titulo, aoFechar, origem, ocupado = false, children }:
     }
     const aoTeclar = (evento: KeyboardEvent) => {
       if (evento.key === 'Escape') return pedirParaFechar(evento)
-      if (evento.key !== 'Tab') return
-      const dentro = [...elemento.querySelectorAll<HTMLElement>(FOCAVEIS)]
-      if (dentro.length === 0) return evento.preventDefault()
-      const primeiro = dentro[0]
-      const ultimo = dentro[dentro.length - 1]
-      const ativo = document.activeElement
-      if (evento.shiftKey && (ativo === primeiro || !elemento.contains(ativo))) {
-        evento.preventDefault()
-        ultimo.focus()
-      } else if (!evento.shiftKey && (ativo === ultimo || !elemento.contains(ativo))) {
-        evento.preventDefault()
-        primeiro.focus()
-      }
+      prenderOTab(evento, elemento)
     }
     elemento.addEventListener('cancel', pedirParaFechar)
     elemento.addEventListener('keydown', aoTeclar)

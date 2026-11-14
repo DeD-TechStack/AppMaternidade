@@ -54,6 +54,7 @@ export function DialogoBloquear({ autor, moderacao, origem, aoFechar, aoBloquead
         <button
           type="button"
           disabled={envio.enviando}
+          data-foco-inicial=""
           className={`${BOTAO_SECUNDARIO} min-[30rem]:w-full`}
           onClick={aoFechar}
         >

@@ -6,7 +6,7 @@ import { CONTEUDO, ELENCO, criarElenco, type PessoaDoElenco } from '../../dados/
 import { criarDadosComunidadeMemoria, simularFalha } from '../../dados/comunidade.memoria.ts'
 import { criarDadosContaMemoria } from '../../dados/conta.memoria.ts'
 import { criarFixtureDeTeste } from '../../teste/renderizarComDados.tsx'
-import { fixtureDeContasDoElenco, renderizarComunidade } from './apoio.tsx'
+import { comObrigatorio, fixtureDeContasDoElenco, renderizarComunidade } from './apoio.tsx'
 
 // MAT-40, teste 9: axe-core em cada tela, em cada estado, nos dois temas e com os diálogos abertos, com as
 // regras do `acessibilidade.test.tsx` da base (o contraste fica de fora: o jsdom não calcula cor).
@@ -54,7 +54,7 @@ function cena(pessoa: PessoaDoElenco, caminho: string, tema: 'claro' | 'madrugad
 
 const semOcupado = () => waitFor(() => expect(document.querySelector('[aria-busy="true"]')).toBeNull())
 const botao = (nome: string | RegExp) => screen.getByRole('button', { name: nome }) as HTMLButtonElement
-const campo = (rotulo: string | RegExp) => screen.getByLabelText(rotulo) as HTMLInputElement | HTMLTextAreaElement
+const campo = (rotulo: string | RegExp) => screen.getByLabelText(comObrigatorio(rotulo)) as HTMLInputElement | HTMLTextAreaElement
 const digitar = (rotulo: string | RegExp, texto: string) => fireEvent.change(campo(rotulo), { target: { value: texto } })
 
 type Ajuste = (estado: ReturnType<typeof criarElenco>) => void
@@ -133,7 +133,7 @@ for (const tema of ['claro', 'madrugada'] as const) {
 
     it('o formulário de tópico: com erro de limite e com a prévia, sem violações', async () => {
       const { container } = cena('outro', '/app/comunidade/sono/novo', tema)
-      await screen.findByLabelText('Título')
+      await screen.findByLabelText(comObrigatorio('Título'))
       digitar('Título', 'ab')
       digitar('Texto do tópico', 'x')
       expect(await violacoes(container)).toEqual([])

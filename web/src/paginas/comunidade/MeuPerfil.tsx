@@ -88,6 +88,7 @@ function FormularioDoPerfil({ perfil, aoSalvar }: FormularioProps) {
         erro={erroDoApelido}
         ajuda={TX.tx04}
         tentou={tentou}
+        obrigatorio
       />
       <CampoComContador
         id={ID_DA_BIO}

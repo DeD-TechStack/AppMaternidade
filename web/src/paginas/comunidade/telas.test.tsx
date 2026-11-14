@@ -5,7 +5,7 @@ import { CONTEUDO, ELENCO, criarElenco, type PessoaDoElenco } from '../../dados/
 import { criarDadosComunidadeMemoria, simularFalha, simularRespostaPerdida } from '../../dados/comunidade.memoria.ts'
 import { criarDadosContaMemoria } from '../../dados/conta.memoria.ts'
 import { criarFixtureDeTeste } from '../../teste/renderizarComDados.tsx'
-import { fixtureDeContasDoElenco, renderizarComunidade } from './apoio.tsx'
+import { comObrigatorio, fixtureDeContasDoElenco, renderizarComunidade } from './apoio.tsx'
 
 // Uma falha mostra só o começo do HTML (o padrão despeja milhares de linhas).
 process.env.DEBUG_PRINT_LIMIT = '300'
@@ -35,7 +35,7 @@ function cena(pessoa: PessoaDoElenco, caminho: string, ajustar?: (estado: Return
 const topico = (id: string) => `/app/comunidade/topico/${id}`
 const espaco = (slug: string) => `/app/comunidade/${slug}`
 const botao = (nome: string | RegExp) => screen.getByRole('button', { name: nome }) as HTMLButtonElement
-const campo = (rotulo: string | RegExp) => screen.getByLabelText(rotulo) as HTMLInputElement | HTMLTextAreaElement
+const campo = (rotulo: string | RegExp) => screen.getByLabelText(comObrigatorio(rotulo)) as HTMLInputElement | HTMLTextAreaElement
 const digitar = (rotulo: string | RegExp, texto: string) => fireEvent.change(campo(rotulo), { target: { value: texto } })
 const semCarregando = () => waitFor(() => expect(document.querySelector('[aria-busy="true"]')).toBeNull())
 /** O `h1` sempre existe; a tela só está pronta quando as leituras acabam (o `<main>` deixa de estar ocupado). */
@@ -489,14 +489,14 @@ describe('publicar um tópico com prévia e confirmação (MAT-40:RF-04)', () =>
     const { estado, roteador } = cena('outro', `${espaco('sono')}/novo`)
     await aguardarH1('Novo tópico')
     const total = estado.topicos.length
-    expect(botao('Ver prévia').disabled).toBe(true)
+    expect(botao('Ver prévia').getAttribute('aria-disabled')).toBe('true')
 
     digitar('Título', 'ab')
     digitar('Texto do tópico', 'Corpo do tópico')
     expect(screen.getByText('2 de 120')).toBeTruthy()
-    expect(botao('Ver prévia').disabled).toBe(true)
+    expect(botao('Ver prévia').getAttribute('aria-disabled')).toBe('true')
     digitar('Título', 'Um título bom')
-    expect(botao('Ver prévia').disabled).toBe(false)
+    expect(botao('Ver prévia').hasAttribute('aria-disabled')).toBe(false)
     fireEvent.click(screen.getByRole('radio', { name: '3 a 6 meses' }))
     fireEvent.click(botao('Ver prévia'))
 
@@ -528,11 +528,11 @@ describe('publicar um tópico com prévia e confirmação (MAT-40:RF-04)', () =>
     digitar('Título', 'Um título bom')
     digitar('Texto do tópico', 'x'.repeat(5001))
     expect(screen.getByText('5001 de 5000')).toBeTruthy()
-    expect(botao('Ver prévia').disabled).toBe(true)
+    expect(botao('Ver prévia').getAttribute('aria-disabled')).toBe('true')
     digitar('Texto do tópico', 'x'.repeat(5000))
-    expect(botao('Ver prévia').disabled).toBe(false)
+    expect(botao('Ver prévia').hasAttribute('aria-disabled')).toBe(false)
     digitar('Texto do tópico', '   ')
-    expect(botao('Ver prévia').disabled).toBe(true)
+    expect(botao('Ver prévia').getAttribute('aria-disabled')).toBe('true')
   })
 
   it('editar o tópico: valores atuais, a mesma prévia e "Salvar" com TX-26', async () => {
@@ -563,7 +563,7 @@ describe('publicar um tópico com prévia e confirmação (MAT-40:RF-04)', () =>
     expect(await screen.findByText(LISTA.paraPublicarFrase)).toBeTruthy()
     expect(screen.getByRole('link', { name: LISTA.entrar })).toBeTruthy()
     expect(document.getElementById('campo-titulo')).toBeNull()
-    expect(screen.queryByLabelText('Título')).toBeNull()
+    expect(screen.queryByLabelText(comObrigatorio('Título'))).toBeNull()
     expect(screen.queryByRole('button', { name: 'Ver prévia' })).toBeNull()
     semAceite.unmount()
 

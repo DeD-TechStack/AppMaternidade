@@ -21,6 +21,11 @@ interface CampoProps {
   /** A tela já tentou enviar: o mínimo vale mesmo com o campo ainda vazio. */
   tentou?: boolean
   autoComplete?: string
+  /**
+   * Campo obrigatório (A11Y-008): o rótulo ganha "(obrigatório)" e o controle `aria-required="true"`, sem o
+   * `required` nativo (a tela confere e diz o que falta).
+   */
+  obrigatorio?: boolean
 }
 
 /** Um campo de uma linha ou, com `linhas`, uma caixa de texto. */
@@ -36,6 +41,7 @@ export function CampoComContador({
   linhas,
   tentou = false,
   autoComplete,
+  obrigatorio = false,
 }: CampoProps) {
   const [tocou, setTocou] = useState(false)
   const situacao = conferirLimite(valor, limite)
@@ -48,6 +54,7 @@ export function CampoComContador({
     value: valor,
     onChange: (evento: { target: { value: string } }) => aoMudar(evento.target.value),
     onBlur: () => setTocou(true),
+    'aria-required': obrigatorio ? (true as const) : undefined,
     'aria-invalid': mensagem ? (true as const) : undefined,
     'aria-describedby': ligados,
   }
@@ -55,7 +62,7 @@ export function CampoComContador({
   return (
     <div className="cm-campo max-w-[40rem]">
       <label htmlFor={id} className="cm-campo-rotulo">
-        {rotulo}
+        {obrigatorio ? `${rotulo} ${COMUM_COMUNIDADE.obrigatorio}` : rotulo}
       </label>
       <div className="cm-campo-controle">
         {linhas ? (
