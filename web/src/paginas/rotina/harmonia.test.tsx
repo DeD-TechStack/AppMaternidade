@@ -4,7 +4,8 @@ import type { ErroDados } from '../../dados/comum.ts'
 import { SecaoDoHoje } from '../../componentes/rotina/SecaoDoHoje.tsx'
 import type { Secao } from '../../componentes/rotina/useSecao.ts'
 import { listarFontes, pastaSrcDe } from '../../teste/fontes.ts'
-import { semSessaoEmAndamento } from '../../teste/rotina.fixture.ts'
+import { simularFalhaRotina } from '../../dados/rotina.memoria.ts'
+import { criarMundoDeTeste, semSessaoEmAndamento } from '../../teste/rotina.fixture.ts'
 import { renderizarRotaPronta } from '../../teste/renderizarRota.tsx'
 
 // H-3e, a harmonia na Rotina (SPEC H3, H3:RF-01, 02, 04 e 05). O jsdom não calcula o CSS: aqui valem o marcador
@@ -145,6 +146,20 @@ describe('H3:RF-01/02, a Sessão e as telas de lista e de formulário da Rotina'
     const grade = pilha.querySelector<HTMLElement>(":scope > [data-h~='colunas']")!
     expect(grade.style.getPropertyValue('--h-colunas')).toBe('minmax(0, 7fr) minmax(0, 5fr)')
     expect(grade.getAttribute('data-h-vao')).toBe('bloco')
+  })
+
+  it('Sessão (falha da primeira leitura): só o erro, mas dentro do mesmo casco e sem margem nos blocos', async () => {
+    const mundo = criarMundoDeTeste()
+    simularFalhaRotina(mundo.rotina, 'emAndamento', 'rede')
+    const { container } = await renderizarRotaPronta('/app/sessao', { mundo })
+
+    const main = principal(container)
+    const pilha = conferirCasco(main)
+    expect(pilha.firstElementChild!.hasAttribute('data-titulo-tela')).toBe(true)
+    semMargemNosBlocos(main)
+    expect(main.querySelector("[role='alert']"), 'o erro honesto continua dentro do <main>').not.toBeNull()
+    expect(screen.getByRole('alert')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Tentar de novo' })).toBeTruthy()
   })
 
   it.each([

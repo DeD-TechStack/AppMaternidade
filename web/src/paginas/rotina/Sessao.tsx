@@ -321,11 +321,17 @@ export function Sessao() {
     return (
       <>
         <main ref={principal} className="text-corpo" data-tela="sessao">
-          <TituloRotina antes={VOLTAR_PARA_HOJE} titulo={TITULOS.sessao} linha={null} />
-          <div className="cm-area mt-5 max-w-md">
-            <AvisoDeErro erro={leitura.erro} papel={ativo.papel} aoTentarDeNovo={leitura.recarregar} />
-          </div>
-          {pendencia ? <div className="cm-area mt-5">{avisoDaPendencia}</div> : null}
+          <Secao>
+            <QuadroLayout>
+              <Pilha vao="bloco">
+                <TituloRotina antes={VOLTAR_PARA_HOJE} titulo={TITULOS.sessao} linha={null} />
+                <div className="max-w-md">
+                  <AvisoDeErro erro={leitura.erro} papel={ativo.papel} aoTentarDeNovo={leitura.recarregar} />
+                </div>
+                {pendencia ? <div>{avisoDaPendencia}</div> : null}
+              </Pilha>
+            </QuadroLayout>
+          </Secao>
         </main>
 
         <AvisoDaTela />
