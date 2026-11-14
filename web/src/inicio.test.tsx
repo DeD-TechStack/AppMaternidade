@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import stylelint from 'stylelint'
 import { describe, expect, it } from 'vitest'
 import { fireEvent, screen, within } from '@testing-library/react'
 import { DESCRICAO_ILUSTRACAO } from './componentes/campo/Ilustracao.tsx'
@@ -174,7 +175,9 @@ describe('Início: troca de turno', () => {
   it('o painel de mel tem o título, o texto, o desenho das mãos e o cartão "Desde que você saiu" em HTML', () => {
     abrirInicio()
     const painel = screen.getByRole('region', { name: 'Quem chega no turno já sabe o que houve.' })
-    expect(painel.getAttribute('data-painel')).toBe('mel')
+    // H-3b: o painel é a Secao de variante `painel`; a cor mora na caixa de cor de dentro (`data-h="caixa-cor"`).
+    expect(painel.getAttribute('data-h-variante')).toBe('painel')
+    expect(painel.querySelector("[data-h='caixa-cor']")!.getAttribute('data-painel')).toBe('mel')
     expect(
       within(painel).getByText(
         'Cada pessoa registra o que fez, com o nome. Na troca, o app mostra tudo o que aconteceu desde a última vez que você olhou.',
@@ -221,7 +224,9 @@ describe('Início: faixa da madrugada', () => {
   it('é a faixa de cacau com o título, o lide, o botão de mel e os tablets, sem traço preto', () => {
     abrirInicio()
     const faixa = screen.getByRole('region', { name: 'De madrugada, com uma mão só.' })
-    expect(faixa.getAttribute('data-painel')).toBe('cacau')
+    // H-3b: a faixa é a Secao de variante `painel`; a cor mora na caixa de cor de dentro (`data-h="caixa-cor"`).
+    expect(faixa.getAttribute('data-h-variante')).toBe('painel')
+    expect(faixa.querySelector("[data-h='caixa-cor']")!.getAttribute('data-painel')).toBe('cacau')
     expect(
       within(faixa).getByText('O botão de iniciar mamada fica na metade de baixo da tela, grande, em mel sobre o escuro.'),
     ).toBeTruthy()
@@ -419,7 +424,10 @@ describe('Início: perguntas', () => {
 describe('Início: fechamento', () => {
   it('é um painel de cacau (não se funde com o rodapé de mel) com uma frase e um só clicável, "Começar grátis", e o bebê no tapete', () => {
     abrirInicio()
-    const painel = screen.getByRole('region', { name: 'Sua família inteira no mesmo dia.' })
+    const secao = screen.getByRole('region', { name: 'Sua família inteira no mesmo dia.' })
+    // H-3b: o fechamento é a Secao de variante `painel`; a cor mora na caixa de cor de dentro (`data-h="caixa-cor"`).
+    expect(secao.getAttribute('data-h-variante')).toBe('painel')
+    const painel = secao.querySelector<HTMLElement>("[data-h='caixa-cor']")!
     expect(painel.getAttribute('data-painel')).toBe('cacau')
     const clicaveis = painel.querySelectorAll('a, button, input, select, textarea, [tabindex]')
     expect(clicaveis).toHaveLength(1)
@@ -503,5 +511,168 @@ describe('Início: ordem e texto da página', () => {
     expect(main.textContent).not.toMatch(/protótipo|dados de exemplo/i)
     expect(container.textContent).not.toMatch(/Protótipo|dados de exemplo/)
     expect(screen.queryByText(/Protótipo/)).toBeNull()
+  })
+})
+
+// H-3b: o espaço do Início sai das primitivas de layout e dos papéis do web/DESIGN.md (`## Layout`).
+describe('Início: harmonia de espaço (H-3b)', () => {
+  const VAOS = new Set(['junto', 'pilha', 'grupo', 'bloco', 'midia'])
+
+  it('toda filha do <main> é uma Secao (as caixas se tocam, sem margem entre elas) e a área antiga não existe mais', () => {
+    const { main } = abrirInicio()
+    const filhas = [...main.children]
+    // abertura, números e selos, turno, faixa, tabela, citação, relatos, perguntas e fechamento
+    expect(filhas).toHaveLength(9)
+    for (const filha of filhas) expect(filha.matches("[data-h~='secao']"), filha.outerHTML.slice(0, 80)).toBe(true)
+    expect(main.querySelector('.cm-area')).toBeNull()
+    // Só os três painéis levam a variante `painel`: o turno de mel, a faixa e o fechamento de cacau.
+    const paineis = filhas.filter((filha) => filha.getAttribute('data-h-variante') === 'painel')
+    expect(paineis.map((filha) => filha.querySelector("[data-h='caixa-cor']")!.getAttribute('data-painel'))).toEqual([
+      'mel',
+      'cacau',
+      'cacau',
+    ])
+  })
+
+  it('o conteúdo de cada seção sem fundo mora no quadro', () => {
+    const { main } = abrirInicio()
+    const semFundo = [...main.children].filter((filha) => filha.getAttribute('data-h-variante') !== 'painel')
+    expect(semFundo).toHaveLength(6)
+    for (const secao of semFundo) {
+      expect(secao.querySelector(":scope > [data-h~='quadro']"), secao.className).not.toBeNull()
+    }
+  })
+
+  it('a abertura é uma Colunas de texto (7fr) e cena (5fr) com vão de mídia, lado a lado a partir de 1100 (o ponto de hoje)', () => {
+    const { main } = abrirInicio()
+    const colunas = main.querySelector<HTMLElement>("[data-h~='secao']:first-child [data-h~='colunas']")!
+    expect(colunas.getAttribute('data-h-vao')).toBe('midia')
+    expect(colunas.getAttribute('data-h-quebra')).toBe('1100')
+    expect(colunas.style.getPropertyValue('--h-colunas')).toBe('minmax(0, 7fr) minmax(0, 5fr)')
+    const [texto, cena] = [...colunas.querySelectorAll(":scope > [data-h~='coluna']")]
+    expect(within(texto as HTMLElement).getByRole('heading', { level: 1 })).toBeTruthy()
+    expect(cena.querySelector('img')).not.toBeNull()
+  })
+
+  it('na abertura, título e lide ficam numa pilha `pilha` e a ação vem depois, numa pilha `grupo`', () => {
+    abrirInicio()
+    const h1 = screen.getByRole('heading', { level: 1 })
+    const titulo = h1.closest<HTMLElement>("[data-h~='pilha']")!
+    expect(titulo.getAttribute('data-h-vao')).toBe('pilha')
+    const externa = titulo.parentElement!.closest<HTMLElement>("[data-h~='pilha']")!
+    expect(externa.getAttribute('data-h-vao')).toBe('grupo')
+    expect(externa.querySelector('.in-heroi-acoes')).not.toBeNull()
+  })
+
+  it('as perguntas são uma Colunas 7fr/5fr com vão `bloco` a partir de 1100, como os relatos', () => {
+    abrirInicio()
+    const secao = screen.getByRole('region', { name: 'Perguntas de quem chega agora.' })
+    const colunas = secao.querySelector<HTMLElement>("[data-h~='colunas']")!
+    expect(colunas.getAttribute('data-h-vao')).toBe('bloco')
+    expect(colunas.getAttribute('data-h-quebra')).toBe('1100')
+    expect(colunas.style.getPropertyValue('--h-colunas')).toBe('minmax(0, 7fr) minmax(0, 5fr)')
+    expect(colunas.querySelectorAll(":scope > [data-h~='coluna']")).toHaveLength(2)
+  })
+
+  it('todo vão de pilha da página é de um papel do DESIGN.md, e há pilhas de `pilha`, `grupo` e `bloco`', () => {
+    const { main } = abrirInicio()
+    const vaos = [...main.querySelectorAll<HTMLElement>("[data-h~='pilha']")].map((pilha) => pilha.getAttribute('data-h-vao')!)
+    for (const vao of vaos) expect(VAOS.has(vao), vao).toBe(true)
+    for (const vao of ['pilha', 'grupo', 'bloco']) expect(vaos, vao).toContain(vao)
+  })
+
+  it('o inicio.css não tem margem entre seções nem a escala própria de antes: só papéis e as exceções fechadas', () => {
+    const regras = lerRegrasCss('componentes/inicio/inicio.css')
+    const seletores = regras.flatMap((regra) => regra.seletores)
+    expect(seletores.some((seletor) => /\.in-secao\b/.test(seletor))).toBe(false)
+    const fonte = readFileSync(join(process.cwd(), 'src', 'componentes/inicio/inicio.css'), 'utf8')
+    expect(fonte).not.toMatch(/--in-respiro|--in-largura-painel|--cm-respiro-painel|--cm-recuo-painel|--cm-margem/)
+
+    // Espaço entre blocos: nenhum px, rem ou em solto em margin, padding ou gap, fora destas três exceções (o
+    // padding que deixa o recorte do desenho concêntrico ao círculo, e o do círculo de 44 px do acordeão).
+    const soltos: string[] = []
+    for (const regra of regras) {
+      for (const declaracao of regra.corpo.split(';')) {
+        const corte = declaracao.indexOf(':')
+        if (corte < 0) continue
+        const propriedade = declaracao.slice(0, corte).trim()
+        const valor = declaracao.slice(corte + 1).trim()
+        if (propriedade.startsWith('--')) continue
+        if (!/^(margin|padding|gap|row-gap|column-gap)(-|$)/.test(propriedade)) continue
+        if (/\d(\.\d+)?(px|rem|em)\b/.test(valor)) soltos.push(`${regra.seletores.join(', ')} { ${propriedade}: ${valor} }`)
+      }
+    }
+    expect(soltos).toEqual([
+      '.in-relato-arte.cm-ilustracao { padding: 6px }',
+      '.in-perguntas-arte.cm-ilustracao { padding: 6px }',
+      '.in-faq .cm-acordeao-icone { padding: 10.5px }',
+    ])
+  })
+
+  it('os vãos das grades de seção são os papéis do contrato: `midia` entre texto e mídia, `bloco` entre cartões e colunas', () => {
+    const regras = lerRegrasCss('componentes/inicio/inicio.css')
+    const gapDe = (seletor: string) =>
+      regras
+        .filter((regra) => regra.seletores.includes(seletor) && regra.midia === null)
+        .map((regra) => /(?:^|[\s;])gap:\s*([^;]+)/.exec(regra.corpo)?.[1].trim())
+        .find((valor) => valor !== undefined)
+    expect(gapDe('.in-turno-grade')).toBe('var(--espaco-midia)')
+    expect(gapDe('.in-faixa-grade')).toBe('var(--espaco-midia)')
+    expect(gapDe('.in-tabela-grade')).toBe('var(--espaco-bloco)')
+    expect(gapDe('.in-relatos-grade')).toBe('var(--espaco-bloco)')
+  })
+
+  it('o stylelint da harmonia só acusa no inicio.css as exceções fechadas (larguras máximas, o número grande e o círculo dos desenhos)', async () => {
+    const resultado = await stylelint.lint({
+      files: join(process.cwd(), 'src', 'componentes/inicio/inicio.css'),
+      configFile: join(process.cwd(), 'stylelint.config.mjs'),
+    })
+    const acusados = new Set(
+      resultado.results.flatMap((arquivo) =>
+        arquivo.warnings.map((aviso) => {
+          const [, valor, propriedade] = /Valor solto "(.+)" em "(.+)":/.exec(aviso.text) ?? []
+          return `${propriedade} ${valor}`
+        }),
+      ),
+    )
+    // Larguras máximas de texto (`max-width` sai do RF-03 final; o `none` do cartão do turno também), o número grande (`numero`, fora da escala), o
+    // cabeçalho de 14 px da tabela a 390 (cabe "AppMaternidade" na coluna justa) e o padding que deixa o recorte
+    // do desenho concêntrico ao círculo (6 px) ou do ícone do acordeão (10,5 px): listados para harmonia-excecoes.json.
+    expect([...acusados].sort()).toEqual(
+      [
+        'font-size 0.875rem',
+        'font-size clamp(40px, 2.286vw + 31.086px, 64px)',
+        'max-width 30rem',
+        'max-width 32rem',
+        'max-width 34rem',
+        'max-width 40rem',
+        'max-width 56rem',
+        'max-width 768px',
+        'max-width none',
+        'padding 10.5px',
+        'padding 6px',
+      ].sort(),
+    )
+  }, 60_000)
+
+  it('os papéis usados valem os números de MEDIDAS §7 (390 e 1440) no tema gerado', () => {
+    const tema = readFileSync(join(process.cwd(), 'src', 'styles/harmonia.gerado.css'), 'utf8')
+    const pontas: Record<string, [number, number]> = {
+      junto: [8, 12],
+      pilha: [16, 16],
+      grupo: [24, 32],
+      bloco: [24, 48],
+      midia: [32, 64],
+      secao: [48, 80],
+      'secao-ampla': [72, 128],
+      painel: [24, 48],
+    }
+    for (const [papel, [em390, em1440]] of Object.entries(pontas)) {
+      const linha = new RegExp(`--espaco-${papel}:\\s*([^;]+);`).exec(tema)?.[1] ?? ''
+      const numeros = [...linha.matchAll(/(\d+)px/g)].map((m) => Number(m[1]))
+      // `clamp(<390>, calc(<390> + ...), <1440>)`: a primeira e a última medida em px são as pontas.
+      expect(numeros[0], `${papel} em 390`).toBe(em390)
+      expect(numeros[numeros.length - 1], `${papel} em 1440`).toBe(em1440)
+    }
   })
 })

@@ -1,7 +1,8 @@
 import { useId } from 'react'
+import { Pilha } from '../base/layout/Pilha.tsx'
+import { Secao } from '../base/layout/Secao.tsx'
 import { CartaoFlutuante } from '../campo/CartaoFlutuante.tsx'
 import { Ilustracao } from '../campo/Ilustracao.tsx'
-import { PainelCampo } from '../campo/PainelCampo.tsx'
 import { Titulo } from '../campo/Titulo.tsx'
 import { INICIO } from '../../conteudo/textos.ts'
 import { RevelaNaRolagem } from '../../movimento/RevelaNaRolagem.tsx'
@@ -21,13 +22,21 @@ export function SecaoTurno() {
   const { titulo, texto, cartao } = INICIO.turno
 
   return (
-    <PainelCampo variante="mel" luz como="section" aria-labelledby={id} className="in-turno cm-com-flutuante">
+    <Secao
+      variante="painel"
+      painel="mel"
+      luz
+      aria-labelledby={id}
+      className="in-turno"
+      classeCaixa="in-turno-caixa cm-com-flutuante"
+    >
+      {/* Duas metades a partir de 960 (o ponto de quebra de hoje, em inicio.css), `midia` entre elas. */}
       <div className="in-turno-grade">
-        <div className="in-turno-texto">
+        <Pilha vao="pilha" className="in-turno-texto">
           <Titulo nivel="h2" id={id} linhas={titulo} />
           <p className="cm-lide">{texto}</p>
-        </div>
-        <div className="in-turno-arte">
+        </Pilha>
+        <Pilha vao="pilha" className="in-turno-arte">
           <RevelaNaRolagem className="in-revela">
             <Ilustracao nome="maos-celular" decorativa />
           </RevelaNaRolagem>
@@ -50,8 +59,8 @@ export function SecaoTurno() {
               ))}
             </ul>
           </CartaoFlutuante>
-        </div>
+        </Pilha>
       </div>
-    </PainelCampo>
+    </Secao>
   )
 }

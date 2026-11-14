@@ -1,5 +1,8 @@
 import { useId } from 'react'
 import { Citacao } from '../componentes/campo/Citacao.tsx'
+import { Pilha } from '../componentes/base/layout/Pilha.tsx'
+import { QuadroLayout } from '../componentes/base/layout/QuadroLayout.tsx'
+import { Secao } from '../componentes/base/layout/Secao.tsx'
 import { FaixaSelos } from '../componentes/campo/FaixaSelos.tsx'
 import { DepoimentosInicio } from '../componentes/inicio/DepoimentosInicio.tsx'
 import { FaixaMadrugada } from '../componentes/inicio/FaixaMadrugada.tsx'
@@ -33,29 +36,39 @@ export function Inicio() {
     <main className="in-pagina">
       <HeroiInicio />
 
-      <section className="cm-area in-numeros" aria-labelledby={idNumeros}>
-        <h2 id={idNumeros} className="sr-only">
-          {INICIO.numeros.titulo}
-        </h2>
-        <NumerosInicio itens={FATOS} />
-      </section>
+      {/* Os números e os selos são uma faixa só (uma seção do <main>): os dois blocos, cada um uma região
+          nomeada, ficam numa pilha com o vão `bloco`. */}
+      <Secao as="div" className="in-faixa-numeros">
+        <QuadroLayout>
+          <Pilha vao="bloco">
+            <section className="in-numeros" aria-labelledby={idNumeros}>
+              <h2 id={idNumeros} className="sr-only">
+                {INICIO.numeros.titulo}
+              </h2>
+              <NumerosInicio itens={FATOS} />
+            </section>
 
-      {/* O letreiro da base (60 s, pausa no hover e no foco). Com movimento reduzido o inicio.css faz
-          a fileira ocupar a largura do conteúdo; abaixo de 768, uma grade de 2 colunas com quatro selos. */}
-      <section className="cm-area in-selos" aria-labelledby={idSelos}>
-        <h2 id={idSelos} className="sr-only">
-          {INICIO.selos.titulo}
-        </h2>
-        <FaixaSelos rotulo="Selos do app" />
-      </section>
+            {/* O letreiro da base (60 s, pausa no hover e no foco). Com movimento reduzido o inicio.css faz
+                a fileira ocupar a largura do conteúdo; abaixo de 768, uma grade de 2 colunas com quatro selos. */}
+            <section className="in-selos" aria-labelledby={idSelos}>
+              <h2 id={idSelos} className="sr-only">
+                {INICIO.selos.titulo}
+              </h2>
+              <FaixaSelos rotulo="Selos do app" />
+            </section>
+          </Pilha>
+        </QuadroLayout>
+      </Secao>
 
       <SecaoTurno />
       <FaixaMadrugada />
       <SecaoTabela />
 
-      <div className="cm-area in-secao in-citacao">
-        <Citacao texto={amarrarMonossilabos(INICIO.citacao.texto)} autor={INICIO.citacao.autor} />
-      </div>
+      <Secao as="div" className="in-citacao">
+        <QuadroLayout>
+          <Citacao texto={amarrarMonossilabos(INICIO.citacao.texto)} autor={INICIO.citacao.autor} />
+        </QuadroLayout>
+      </Secao>
       <DepoimentosInicio id={idDepoimentos} />
 
       <PerguntasInicio id={idPerguntas} />
