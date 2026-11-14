@@ -191,6 +191,22 @@ for (const tema of ['claro', 'madrugada'] as const) {
       expect(semAlvoDe44(container)).toEqual([])
     })
 
+    it('a fila: a região `status` fica fora dos filtros, não rouba o foco e diz o resultado (A11Y-016)', async () => {
+      const { container } = cena('moderador', '/moderacao', tema, comDenuncias)
+      await screen.findByRole('link', { name: new RegExp(ROTULO_MOTIVO.ataque_assedio) })
+      const regiao = screen.getByRole('status')
+      expect(regiao.closest('fieldset')).toBeNull()
+      await waitFor(() => expect(regiao.textContent).toBe('1 denúncia'))
+
+      const motivo = screen.getByLabelText('Motivo')
+      motivo.focus()
+      fireEvent.change(motivo, { target: { value: 'risco_autolesao' } })
+      await waitFor(() => expect(regiao.textContent).toBe('Nenhuma denúncia com esses filtros.'))
+      expect(document.activeElement).toBe(motivo)
+      expect(screen.getAllByRole('status')).toHaveLength(1)
+      expect(await violacoes(container)).toEqual([])
+    })
+
     it('a fila com os filtros mexidos, sem violações', async () => {
       const { container } = cena('moderador', '/moderacao', tema, comDenuncias)
       await screen.findByRole('link', { name: new RegExp(ROTULO_MOTIVO.ataque_assedio) })

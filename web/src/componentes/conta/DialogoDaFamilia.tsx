@@ -28,6 +28,13 @@ interface Plano {
   voluntaria?: boolean
 }
 
+/** As caixas cuja confirmação tira da tela o botão que as abriu, e o título do bloco onde esse botão vivia. */
+const BLOCO_DO_ITEM: Partial<Record<DialogoAberto['tipo'], string>> = {
+  remover: 'membros',
+  cancelarConvite: 'convites',
+  arquivar: 'bebes',
+}
+
 // As seis caixas de diálogo da Família (RN-03), uma de cada vez: remover acesso, mudar papel, sair,
 // excluir a família, cancelar convite e arquivar bebê. Cada uma confere o efeito pedido por releitura
 // quando a repetição de uma escrita falha (RF-17, "rede numa escrita").
@@ -111,6 +118,12 @@ export function DialogoDaFamilia({ dialogo, detalhe, acoes, aoFechar, retorno }:
       escrever: plano.escrever,
       conferir: plano.conferir,
       aoSucesso: async () => {
+        // A11Y-F4: o botão que abriu a caixa some com o item; o foco vai ao título do bloco dele.
+        const bloco = document.getElementById(BLOCO_DO_ITEM[dialogo.tipo] ?? '')
+        if (bloco) {
+          if (!bloco.hasAttribute('tabindex')) bloco.tabIndex = -1
+          retorno.current = bloco
+        }
         aoFechar()
         await acoes.aposAcao(plano.mensagem, plano.voluntaria)
       },
