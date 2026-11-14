@@ -31,7 +31,7 @@ export function BotaoIniciarMamada({ aoIniciar, ultima, compacto = false, classN
     <Coluna
       data-iniciar-mamada=""
       data-compacto={compacto ? '' : undefined}
-      className={`flex items-center ${compacto ? 'flex-row gap-5' : 'flex-col justify-center gap-4 py-2'} ${className ?? ''}`}
+      className={`flex items-center ${compacto ? 'flex-row flex-wrap gap-x-5 gap-y-2' : 'flex-col justify-center gap-4 py-2'} ${className ?? ''}`}
     >
       <button
         type="button"
@@ -44,7 +44,7 @@ export function BotaoIniciarMamada({ aoIniciar, ultima, compacto = false, classN
         </span>
       </button>
       {ultima ? (
-        <p className={`text-pequeno text-(--cor-texto-2) ${compacto ? 'max-w-64 text-left' : 'text-center'}`}>
+        <p className={`text-pequeno text-(--cor-texto-2) ${compacto ? 'min-w-0 max-w-64 text-left' : 'text-center'}`}>
           {ultima}
         </p>
       ) : null}
