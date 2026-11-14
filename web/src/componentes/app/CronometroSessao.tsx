@@ -1,17 +1,22 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { NotebookPen } from 'lucide-react'
-import { COMUM, SESSOES } from '../../conteudo/rotina.ts'
+import { COMUM, SESSAO, SESSOES } from '../../conteudo/rotina.ts'
 import { Botao } from '../base/Botao.tsx'
 import { Pilha } from '../base/layout/index.ts'
 import { ALVO_APP } from './alvo.ts'
+import { LIMITE_DA_SESSAO_CURTA_MS } from './PerguntaSessaoCurta.tsx'
 import { recuoOptico } from './recuoOptico.ts'
 import { tamanhoDoCronometro } from '../../prototipo/formatar.ts'
 
-type Painel = 'nota' | 'descartar'
+// `curta`: a pergunta de uma sessão com menos de 1 minuto (QA-10); `origem` diz qual botão a abriu.
+type Painel = 'nota' | 'descartar' | 'curta'
+type Origem = 'encerrar' | 'anotar'
 
 interface Props {
   /** "mm:ss" ou "h:mm:ss", já formatado. O leitor de tela lê o tempo inteiro. */
   cronometro: string
+  /** Quanto a sessão já durou, em ms. Abaixo de 1 minuto, "Encerrar" e "Encerrar e anotar" perguntam antes (QA-10). */
+  decorridoMs?: number
   atividade?: string
   /** Encerrar a sessão com o texto da nota já cortado nas pontas; `''` encerra sem nota. */
   aoEncerrar: (nota: string) => void
@@ -41,6 +46,7 @@ const TAMANHO = {
  */
 export function CronometroSessao({
   cronometro,
+  decorridoMs,
   atividade,
   aoEncerrar,
   aoDescartar,
@@ -53,9 +59,11 @@ export function CronometroSessao({
   const idDica = useId()
   const idErro = useId()
   const idPergunta = useId()
+  const idCurta = useId()
   const [painel, setPainel] = useState<Painel | null>(null)
   const [erroDaNota, setErroDaNota] = useState<string | null>(null)
   const painelAnterior = useRef<Painel | null>(null)
+  const origemDaCurta = useRef<Origem>('encerrar')
   const cartao = useRef<HTMLElement>(null)
   const campoNota = useRef<HTMLTextAreaElement>(null)
 
@@ -64,10 +72,40 @@ export function CronometroSessao({
     const acao = (nome: string) => cartao.current?.querySelector<HTMLElement>(`[data-acao="${nome}"]`)
     if (painel === 'nota') campoNota.current?.focus()
     else if (painel === 'descartar') acao('manter')?.focus()
+    else if (painel === 'curta') acao('salvar-curta')?.focus()
     else if (painelAnterior.current === 'nota') acao('anotar')?.focus()
     else if (painelAnterior.current === 'descartar') acao('descartar')?.focus()
+    else if (painelAnterior.current === 'curta') acao(origemDaCurta.current)?.focus()
     painelAnterior.current = painel
   }, [painel])
+
+  // Menos de 1 minuto: os dois botões de encerrar perguntam antes (QA-10). Com 1 minuto ou mais, nada muda.
+  const sessaoCurta = decorridoMs !== undefined && decorridoMs < LIMITE_DA_SESSAO_CURTA_MS
+
+  function tocarEncerrar() {
+    if (sessaoCurta) {
+      origemDaCurta.current = 'encerrar'
+      setPainel('curta')
+    } else {
+      aoEncerrar('')
+    }
+  }
+
+  function tocarAnotar() {
+    if (sessaoCurta) {
+      origemDaCurta.current = 'anotar'
+      setPainel('curta')
+    } else {
+      setPainel('nota')
+    }
+  }
+
+  // "Salvar" na pergunta segue o caminho normal do botão que a abriu: encerrar de uma vez, ou abrir a nota.
+  function salvarMesmoCurta() {
+    if (ocupado) return
+    if (origemDaCurta.current === 'anotar') setPainel('nota')
+    else aoEncerrar('')
+  }
 
   // A nota é validada antes da 1ª chamada: acima de 500, a mensagem fica no campo, nada é enviado e a
   // sessão continua em andamento, com o texto no campo para corrigir.
@@ -189,14 +227,15 @@ export function CronometroSessao({
         </Pilha>
       ) : null}
 
-      {painel !== 'nota' ? (
+      {painel !== 'nota' && painel !== 'curta' ? (
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3" data-acoes="">
           {acoes.encerrar ? (
             <Botao
               tamanho="app"
               className={`w-full sm:w-auto sm:min-w-[8.5rem] ${ALVO_APP}`}
               desativado={ocupado}
-              onClick={() => aoEncerrar('')}
+              data-acao="encerrar"
+              onClick={tocarEncerrar}
             >
               Encerrar
             </Botao>
@@ -208,7 +247,7 @@ export function CronometroSessao({
               className={`w-full sm:w-auto ${ALVO_APP}`}
               icone={<NotebookPen />}
               data-acao="anotar"
-              onClick={() => setPainel('nota')}
+              onClick={tocarAnotar}
             >
               <span>Encerrar e anotar</span>
             </Botao>
@@ -225,6 +264,30 @@ export function CronometroSessao({
             </Botao>
           ) : null}
         </div>
+      ) : null}
+
+      {painel === 'curta' ? (
+        <Pilha
+          vao="pilha"
+          role="group"
+          aria-labelledby={idCurta}
+          data-painel-sessao="curta"
+          className="rounded-campo bg-(--cor-fundo) p-4 text-(--cor-texto) lg:p-6"
+        >
+          <p id={idCurta} className="font-medium">
+            {SESSAO.curtaPergunta}
+          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <Botao tamanho="app" className={ALVO_APP} desativado={ocupado} data-acao="salvar-curta" onClick={salvarMesmoCurta}>
+              {SESSAO.curtaSalvar}
+            </Botao>
+            {acoes.descartar ? (
+              <Botao variante="contorno" tamanho="app" className={ALVO_APP} desativado={ocupado} onClick={aoDescartar}>
+                {SESSAO.curtaDescartar}
+              </Botao>
+            ) : null}
+          </div>
+        </Pilha>
       ) : null}
 
       {painel === 'descartar' ? (

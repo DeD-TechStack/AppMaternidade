@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link } from 'react-router'
 import { LIMITES_DE_DURACAO_MIN, ROTULO_TIPO, SESSOES } from '../../conteudo/rotina.ts'
 import type { ErroDados, Resultado } from '../../dados/comum.ts'
@@ -6,6 +6,7 @@ import { ehTipoDeSessao, type Registro, type TipoSessao } from '../../dados/roti
 import { formatarDuracao } from '../../prototipo/formatar.ts'
 import { ALVO_APP } from '../app/alvo.ts'
 import { Avatar } from '../app/Avatar.tsx'
+import { PerguntaSessaoCurta, sessaoCurta } from '../app/PerguntaSessaoCurta.tsx'
 import { Botao } from '../base/Botao.tsx'
 import { Pilha } from '../base/layout/index.ts'
 import { AvisoDeErro } from './AvisoDeErro.tsx'
@@ -24,6 +25,10 @@ interface Props {
   textoDoPapel: string
   ocupado: boolean
   aoEncerrar: (registro: Registro) => void
+  /** O "Descartar" da pergunta de uma sessão com menos de 1 minuto (QA-10). */
+  aoDescartar?: (registro: Registro) => void
+  /** Se a pessoa pode descartar esta sessão (matriz de papéis); sem ele, a pergunta só tem "Salvar". */
+  podeDescartar?: (registro: Registro) => boolean
   aoEncerrarEm: (registro: Registro, momento: number) => void
   aoUnir: (grupo: Registro[]) => Promise<Resultado<null>>
   /** A sessão cujo encerramento não foi enviado porque o relógio do aparelho está antes do início dela. */
@@ -47,6 +52,8 @@ export function SessoesEmParalelo({
   textoDoPapel,
   ocupado,
   aoEncerrar,
+  aoDescartar,
+  podeDescartar,
   aoEncerrarEm,
   aoUnir,
   relogioAtrasDe = null,
@@ -54,7 +61,23 @@ export function SessoesEmParalelo({
 }: Props) {
   const [uniao, setUniao] = useState<{ tipo: TipoSessao; erro: ErroDados | null; unindo: boolean } | null>(null)
   const [painelAberto, setPainelAberto] = useState<string | null>(null)
+  // A sessão cuja pergunta de "menos de 1 minuto" está aberta (QA-10).
+  const [curtaDe, setCurtaDe] = useState<string | null>(null)
+  const lista = useRef<HTMLUListElement>(null)
   const outras = sessoes.slice(1)
+
+  // Com 1 minuto ou mais, encerra de uma vez; com menos, pergunta antes.
+  function pedirEncerrar(sessao: Registro) {
+    if (ocupado) return
+    if (sessaoCurta(agora, Date.parse(sessao.inicio))) setCurtaDe(sessao.id)
+    else aoEncerrar(sessao)
+  }
+
+  // Esc fecha a pergunta e devolve o foco ao "Encerrar" da mesma sessão.
+  function fecharPergunta(id: string) {
+    setCurtaDe(null)
+    lista.current?.querySelector<HTMLElement>(`[data-encerrar-sessao="${id}"]`)?.focus()
+  }
 
   const porTipo = new Map<TipoSessao, Registro[]>()
   for (const sessao of sessoes) {
@@ -119,7 +142,7 @@ export function SessoesEmParalelo({
           className="rounded-cartao border border-(--cor-fio-suave) bg-(--cor-cartao) px-5 pt-4 pb-2 [box-shadow:var(--sombra-cartao)]"
         >
           <h3 className="cm-h4">{SESSOES.outras}</h3>
-          <ul>
+          <ul ref={lista}>
             {outras.map((sessao) => {
               const autor = autorDe(sessao)
               return (
@@ -142,7 +165,8 @@ export function SessoesEmParalelo({
                         className={ALVO_APP}
                         aria-label={`${SESSOES.encerrar} ${minusculo(ROTULO_TIPO[sessao.tipo])}`}
                         desativado={ocupado}
-                        onClick={() => aoEncerrar(sessao)}
+                        data-encerrar-sessao={sessao.id}
+                        onClick={() => pedirEncerrar(sessao)}
                       >
                         {SESSOES.encerrar}
                       </Botao>
@@ -158,6 +182,22 @@ export function SessoesEmParalelo({
                       {SESSOES.verSessao}
                     </Link>
                   </div>
+                  {podeEncerrar && curtaDe === sessao.id ? (
+                    <PerguntaSessaoCurta
+                      className="w-full"
+                      ocupado={ocupado}
+                      podeDescartar={aoDescartar !== undefined && (podeDescartar?.(sessao) ?? true)}
+                      aoSalvar={() => {
+                        setCurtaDe(null)
+                        aoEncerrar(sessao)
+                      }}
+                      aoDescartar={() => {
+                        setCurtaDe(null)
+                        aoDescartar?.(sessao)
+                      }}
+                      aoFechar={() => fecharPergunta(sessao.id)}
+                    />
+                  ) : null}
                 </li>
               )
             })}

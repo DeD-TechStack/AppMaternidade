@@ -1,15 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Outlet } from 'react-router'
-import { COMUM, ESTADOS, TITULOS } from '../../conteudo/rotina.ts'
+import { Outlet, useLocation } from 'react-router'
+import { COMUM, ESTADOS } from '../../conteudo/rotina.ts'
 import type { ContextoRotina, DadosRotina } from '../../dados/rotina.tipos.ts'
 import { OPERACOES_ROTINA, podeAlterarItem } from '../../dados/rotina.tipos.ts'
 import type { ErroDados, Resultado } from '../../dados/comum.ts'
 import { AvisoDaTela } from '../app/AvisoDaTela.tsx'
-import { QuadroLayout, Secao } from '../base/layout/index.ts'
+import { Botao } from '../base/Botao.tsx'
+import { Pilha, QuadroLayout, Secao } from '../base/layout/index.ts'
 import { useSessao } from '../conta/sessao.tsx'
 import { AvisoDeErro } from './AvisoDeErro.tsx'
 import { nomeDoAutor } from './formatos.ts'
 import { TituloRotina } from './TituloRotina.tsx'
+import { tituloDaRota } from './tituloDaRota.ts'
 import {
   ContextoDaRotina,
   type BebeAtivo,
@@ -74,6 +76,7 @@ interface Carga {
 export function ProvedorRotina() {
   const base = useDadosRotina()
   const { recarregarConta } = useSessao()
+  const { pathname } = useLocation()
   const dados = useMemo(() => envolver(base, () => void recarregarConta()), [base, recarregarConta])
 
   const [carga, setCarga] = useState<Carga>({ estado: 'carregando', contexto: null, erro: null })
@@ -199,18 +202,28 @@ export function ProvedorRotina() {
 
   if (!valor) return null
 
-  // Sem bebê não há tela de rotina: o estado "Família sem bebê" ou "Sem família" (R38-03). A tela de
-  // família (MAT-37b) ainda não existe na base: o texto fica sem link.
+  // Sem bebê não há tela de rotina: o estado "Família sem bebê" ou "Sem família" (R38-03). A rota mantém o
+  // próprio h1 (QA-01). Na família sem bebê, quem pode mudar a família (não é observador) ganha o botão que leva
+  // à tela Família, onde fica "Adicionar bebê"; a família é a primeira do contexto, também para o papel.
   if (situacao !== 'bebe') {
+    const familia = contexto?.familias[0]
+    const comBotao = situacao === 'familia_sem_bebe' && !perdeu && familia !== undefined && familia.meuPapel !== 'observador'
     return (
       <>
         <main className="text-corpo" data-tela="rotina-sem-bebe">
           <Secao>
             <QuadroLayout>
-              <TituloRotina
-                titulo={TITULOS.hoje}
-                linha={perdeu ? ESTADOS.acessoPerdido : situacao === 'sem_familia' ? ESTADOS.semFamilia : ESTADOS.familiaSemBebe}
-              />
+              <Pilha vao="bloco">
+                <TituloRotina
+                  titulo={tituloDaRota(pathname)}
+                  linha={perdeu ? ESTADOS.acessoPerdido : situacao === 'sem_familia' ? ESTADOS.semFamilia : ESTADOS.familiaSemBebe}
+                />
+                {comBotao ? (
+                  <Botao to={`/app/familia?familia=${familia.id}`} tamanho="app" className="self-start">
+                    {ESTADOS.cadastrarBebe}
+                  </Botao>
+                ) : null}
+              </Pilha>
             </QuadroLayout>
           </Secao>
         </main>

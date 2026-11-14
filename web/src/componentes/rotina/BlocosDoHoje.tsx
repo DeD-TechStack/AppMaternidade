@@ -79,10 +79,12 @@ interface DesdeProps {
   paraDetalhe?: (registro: Registro) => string
   /** No 38b, o link `Ver no Histórico`, abaixo dos itens. */
   rodape?: ReactNode
+  /** O instante atual (QA-08): o item de ontem leva `ontem` antes da hora. Sem ele, só `HH:MM`. */
+  agora?: number
 }
 
 /** "Desde o seu último registro" (RF-07): o que as outras pessoas registraram depois do marco, até 5. */
-export function DesdeUltimoRegistro({ marcoEm, registros, fuso, autorDe, marcaDe, className, dataH, paraDetalhe, rodape }: DesdeProps) {
+export function DesdeUltimoRegistro({ marcoEm, registros, fuso, autorDe, marcaDe, className, dataH, paraDetalhe, rodape, agora }: DesdeProps) {
   const idTitulo = useId()
   return (
     <Pilha as="section" vao="pilha" dataH={dataH} aria-labelledby={idTitulo} data-desde="" className={className}>
@@ -101,6 +103,7 @@ export function DesdeUltimoRegistro({ marcoEm, registros, fuso, autorDe, marcaDe
               autor={autorDe(registro)}
               marca={marcaDe?.(registro)}
               para={paraDetalhe?.(registro)}
+              agora={agora}
             />
           ))}
         </ul>

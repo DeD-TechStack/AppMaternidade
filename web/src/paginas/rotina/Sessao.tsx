@@ -277,6 +277,7 @@ export function Sessao() {
                     <CronometroSessao
                       className="lg:flex-1"
                       cronometro={formatarCronometro(agora - inicio)}
+                      decorridoMs={agora - inicio}
                       atividade={sessao.tipo === 'tummy' ? ATIVIDADE_TUMMY : undefined}
                       acoes={{ encerrar: gravacaoLiberada, descartar: podeAlterar(sessao) }}
                       ocupado={ocupado}
