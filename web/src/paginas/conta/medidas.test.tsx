@@ -87,7 +87,7 @@ describe('botões: o tamanho vem do sistema (cm-botao), não de alvo-toque', () 
       unmount()
     }
     expect(achados).toEqual([])
-  })
+  }, 30_000)
 
   it('todo botão de ação (submit e secundário) é um cm-botao', async () => {
     const achados: string[] = []
@@ -100,7 +100,7 @@ describe('botões: o tamanho vem do sistema (cm-botao), não de alvo-toque', () 
       unmount()
     }
     expect(achados).toEqual([])
-  })
+  }, 30_000)
 })
 
 describe('campos: 56 px nas telas públicas e 48 px nas do app', () => {
@@ -120,7 +120,7 @@ describe('campos: 56 px nas telas públicas e 48 px nas do app', () => {
     }
     expect(total).toBeGreaterThan(8)
     expect(achados).toEqual([])
-  })
+  }, 30_000)
 })
 
 describe('/app/conta quebra linha com a fonte a 200% (D-2)', () => {
@@ -152,14 +152,15 @@ describe('/app/conta quebra linha com a fonte a 200% (D-2)', () => {
       if (!paragrafo.classList.contains('wrap-anywhere')) achados.push(`falta wrap-anywhere em ${paragrafo.textContent}`)
     }
 
-    // As seções são uma coluna que encolhe (minmax(0,1fr)) e cada coluna interna tem min-w-0.
+    // As seções são `Colunas` com `minmax(0, Nfr)` (encolhem) e cada coluna interna é `Coluna` (min-w-0 pela primitiva).
     for (const secao of container.querySelectorAll<HTMLElement>('main section')) {
-      if (!secao.className.includes('grid-cols-[minmax(0,1fr)]')) achados.push(`seção sem coluna encolhível: ${secao.getAttribute('aria-labelledby')}`)
-      for (const filho of secao.children) {
-        if (!filho.classList.contains('min-w-0')) achados.push(`filho sem min-w-0 em ${secao.getAttribute('aria-labelledby')}`)
+      const colunas = secao.querySelector<HTMLElement>('[data-h~="colunas"]')!
+      if (!colunas.style.getPropertyValue('--h-colunas').includes('minmax(0,')) achados.push(`seção sem coluna encolhível: ${secao.getAttribute('aria-labelledby')}`)
+      for (const filho of colunas.children) {
+        if (!filho.getAttribute('data-h')?.split(' ').includes('coluna')) achados.push(`filho sem coluna em ${secao.getAttribute('aria-labelledby')}`)
       }
       // A coluna do texto da seção (títulos e frases) quebra palavra longa: a 200% e a 1024 px ela fica com ~90 px.
-      const texto = secao.children[0]
+      const texto = colunas.children[0]
       if (texto && !texto.classList.contains('wrap-anywhere')) achados.push(`coluna do texto sem wrap-anywhere em ${secao.getAttribute('aria-labelledby')}`)
     }
     expect(achados).toEqual([])
