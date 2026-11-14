@@ -10,6 +10,7 @@ import { fusoDoAparelho } from '../../componentes/conta/fusos.ts'
 import { MolduraPublica } from '../../componentes/conta/MolduraPublica.tsx'
 import { BOTAO_PRINCIPAL, Carregando, LINK_ALVO, RegiaoStatus, ResumoErro } from '../../componentes/conta/Partes.tsx'
 import { useDadosConta, useSessao } from '../../componentes/conta/sessao.tsx'
+import { erroDoEmail } from '../../componentes/conta/validarEmail.ts'
 import { AVISO_BANCO_DEMONSTRACAO, COMUM, CRIAR_CONTA, MANCHETES, TITULOS, textoDoErro } from '../../conteudo/conta.ts'
 import { modoDados } from '../../dados/comum.ts'
 
@@ -51,7 +52,8 @@ export function CriarConta() {
     evento.preventDefault()
     const novos: { nome?: string; email?: string; senha?: string } = {}
     if (!nome.trim()) novos.nome = COMUM.escrevaNome
-    if (!email.trim()) novos.email = COMUM.escrevaEmail
+    const erroDoFormato = erroDoEmail(email)
+    if (erroDoFormato) novos.email = erroDoFormato
     if (!senha) novos.senha = COMUM.escrevaSenha
     setErros(novos)
     if (novos.nome) return nomeRef.current?.focus()
@@ -143,6 +145,7 @@ export function CriarConta() {
             }}
             erro={erros.nome}
             refEntrada={nomeRef}
+            obrigatorio
           />
           <Campo
             rotulo={COMUM.rotuloEmail}
@@ -155,6 +158,7 @@ export function CriarConta() {
             }}
             erro={erros.email ?? (campoDoErro === 'email' && erroDoEnvio ? textoDoErro(erroDoEnvio) : null)}
             refEntrada={emailRef}
+            obrigatorio
           />
           <CampoSenha
             rotulo={COMUM.rotuloSenha}
@@ -167,6 +171,7 @@ export function CriarConta() {
             }}
             erro={erros.senha ?? (campoDoErro === 'senha' && erroDoEnvio ? textoDoErro(erroDoEnvio) : null)}
             refEntrada={senhaRef}
+            obrigatorio
           />
           <div>
             <p className="cm-pequeno text-[var(--cor-texto-2)]">{CRIAR_CONTA.termos.frase}</p>

@@ -52,6 +52,30 @@ export function useFocoNoTitulo() {
   return titulo
 }
 
+/** Os controles que o Tab alcança dentro de uma caixa de diálogo. */
+export const CONTROLES_FOCAVEIS =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
+/**
+ * O Tab fica dentro da caixa de diálogo (A11Y-007): do último controle volta ao primeiro, e Shift+Tab do
+ * primeiro vai ao último. Chame no `keydown` da caixa; só age na tecla Tab.
+ */
+export function prenderOTab(evento: KeyboardEvent, caixa: HTMLElement): void {
+  if (evento.key !== 'Tab') return
+  const dentro = [...caixa.querySelectorAll<HTMLElement>(CONTROLES_FOCAVEIS)]
+  if (dentro.length === 0) return evento.preventDefault()
+  const primeiro = dentro[0]
+  const ultimo = dentro[dentro.length - 1]
+  const ativo = document.activeElement
+  if (evento.shiftKey && (ativo === primeiro || !caixa.contains(ativo))) {
+    evento.preventDefault()
+    ultimo.focus()
+  } else if (!evento.shiftKey && (ativo === ultimo || !caixa.contains(ativo))) {
+    evento.preventDefault()
+    primeiro.focus()
+  }
+}
+
 /** Num envio com erro que não é de campo, o foco vai ao resumo do erro no topo. */
 export function useFocoNoResumo(erro: unknown) {
   const resumo = useRef<HTMLDivElement>(null)

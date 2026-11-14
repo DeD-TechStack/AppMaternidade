@@ -6,6 +6,7 @@ import { AVISO_BANCO_DEMONSTRACAO, NOMES_DO_H1, TEXTOS_ERRO } from '../conteudo/
 import { criarRotas } from '../rotas.tsx'
 import { CHAVE_RECUPERACAO } from '../componentes/conta/armazenamento.ts'
 import { criarClienteFalso, USUARIO_FALSO } from '../teste/renderizarComDados.tsx'
+import { comObrigatorio } from '../paginas/conta/obrigatorio.ts'
 
 // Qual banco as telas de acesso usam, pelas variáveis VITE_SUPABASE_*: sem as duas, a memória (com
 // o aviso da demonstração); com as duas, o banco (aqui, um cliente feito à mão, sem rede) e o aviso
@@ -51,7 +52,7 @@ function abrir(caminho: string) {
   return { roteador, ...render(<RouterProvider router={roteador} />) }
 }
 
-const campo = (rotulo: string) => screen.getByLabelText(rotulo, { selector: 'input' }) as HTMLInputElement
+const campo = (rotulo: string) => screen.getByLabelText(['Seu nome', 'E-mail', 'Senha'].includes(rotulo) ? comObrigatorio(rotulo) : rotulo, { selector: 'input' }) as HTMLInputElement
 const digitar = (rotulo: string, texto: string) => fireEvent.change(campo(rotulo), { target: { value: texto } })
 
 describe('sem as variáveis: a memória', () => {

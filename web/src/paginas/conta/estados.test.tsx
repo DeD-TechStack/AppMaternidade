@@ -14,6 +14,7 @@ import {
   type DadosContaMemoria,
 } from '../../dados/conta.memoria.ts'
 import { PESSOAS, criarFixtureDeTeste, renderizarComDados } from '../../teste/renderizarComDados.tsx'
+import { comObrigatorio } from './obrigatorio.ts'
 
 // RF-17: os estados de tela (matriz da seção 4.7, linhas da 37a). Em modo memória, com
 // `simularFalha` e `simularRespostaPerdida`. Cada bloco diz a célula da matriz que cobre.
@@ -31,7 +32,7 @@ afterEach(() => {
 })
 
 const novaMemoria = () => criarDadosContaMemoria(criarFixtureDeTeste(Date.now()))
-const campo = (rotulo: string) => screen.getByLabelText(rotulo, { selector: 'input, select' }) as HTMLInputElement
+const campo = (rotulo: string) => screen.getByLabelText(comObrigatorio(rotulo), { selector: 'input, select' }) as HTMLInputElement
 const digitar = (rotulo: string, texto: string) => fireEvent.change(campo(rotulo), { target: { value: texto } })
 const botao = (nome: string) => screen.getByRole('button', { name: nome }) as HTMLButtonElement
 const caminhoDe = (roteador: { state: { location: { pathname: string } } }) => roteador.state.location.pathname

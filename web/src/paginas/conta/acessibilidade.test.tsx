@@ -6,6 +6,7 @@ import { NOMES_DO_H1, TEXTOS_ERRO } from '../../conteudo/conta.ts'
 import { CODIGO_CONVITE_PENDENTE, SENHA_DEMONSTRACAO } from '../../dados/conta.demonstracao.ts'
 import { criarDadosContaMemoria, simularFalha } from '../../dados/conta.memoria.ts'
 import { PESSOAS, criarFixtureDeTeste, renderizarComDados as renderizarComDadosReal } from '../../teste/renderizarComDados.tsx'
+import { comObrigatorio } from './obrigatorio.ts'
 
 // RN-03: axe-core nas rotas desta tarefa, nos dois temas, com sessão de responsável e de cuidador
 // nas logadas e com a caixa de diálogo aberta; rótulos e erros ligados aos campos; foco no erro;
@@ -61,7 +62,7 @@ function semAlvoDe44(container: HTMLElement): string[] {
     .map((elemento) => elemento.outerHTML.slice(0, 160))
 }
 
-const campo = (rotulo: string) => screen.getByLabelText(rotulo, { selector: 'input, select' }) as HTMLInputElement
+const campo = (rotulo: string) => screen.getByLabelText(comObrigatorio(rotulo), { selector: 'input, select' }) as HTMLInputElement
 const digitar = (rotulo: string, texto: string) => fireEvent.change(campo(rotulo), { target: { value: texto } })
 const botao = (nome: string) => screen.getByRole('button', { name: nome }) as HTMLButtonElement
 const esperarCarregar = () => waitFor(() => expect(screen.queryByText(/Carregando…|Conferindo as suas famílias…/)).toBeNull())
