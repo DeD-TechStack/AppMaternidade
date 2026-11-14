@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { FAMILIA } from '../../conteudo/conta.ts'
 import type { DetalheFamilia } from '../../dados/conta.ts'
+import { Cartao, Pilha } from '../base/layout/index.ts'
 import type { AcoesDaFamilia } from './acoesFamilia.ts'
 import { FormularioFamilia } from './FormularioFamilia.tsx'
 import { BOTAO_SECUNDARIO } from './Partes.tsx'
@@ -21,13 +22,13 @@ export function BlocoAcoes({ detalhe, responsavel, acoes }: Props) {
   const { familia } = detalhe
 
   return (
-    <section aria-labelledby="acoes-da-familia" className="flex flex-col gap-4">
+    <Pilha as="section" aria-labelledby="acoes-da-familia" vao="pilha">
       <h2 id="acoes-da-familia" className="cm-h4">
         {FAMILIA.acoes.titulo}
       </h2>
 
       {responsavel && editando ? (
-        <div className="max-w-[32rem] rounded-cartao border border-[var(--cor-fio-suave)] p-5">
+        <Cartao className="max-w-[32rem] border border-[var(--cor-fio-suave)]">
           <FormularioFamilia
             nome={familia.nome}
             fuso={familia.fuso}
@@ -51,7 +52,7 @@ export function BlocoAcoes({ detalhe, responsavel, acoes }: Props) {
               await acoes.aposAcao(FAMILIA.acoes.salva)
             }}
           />
-        </div>
+        </Cartao>
       ) : null}
 
       <div className="flex flex-wrap gap-3">
@@ -86,6 +87,6 @@ export function BlocoAcoes({ detalhe, responsavel, acoes }: Props) {
           </button>
         ) : null}
       </div>
-    </section>
+    </Pilha>
   )
 }

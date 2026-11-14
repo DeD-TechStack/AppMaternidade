@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router'
 import { DuasColunas } from '../../componentes/acesso/DuasColunas.tsx'
 import { Manchete } from '../../componentes/acesso/Manchete.tsx'
+import { Cartao, Pilha } from '../../componentes/base/layout/index.ts'
 import { CHAVE_CONVITE, lerChave } from '../../componentes/conta/armazenamento.ts'
 import { FormularioBebe } from '../../componentes/conta/FormularioBebe.tsx'
 import { FormularioFamilia } from '../../componentes/conta/FormularioFamilia.tsx'
@@ -24,8 +25,7 @@ type Passo =
   | { tipo: 'familia' }
   | { tipo: 'bebe'; familia: { id: string; fuso: string } }
 
-const CARTAO =
-  'mt-4 flex max-w-[32rem] flex-col gap-5 rounded-cartao lg:mt-6 border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)] p-6 lg:p-8'
+const CARTAO = 'max-w-[32rem] border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)]'
 
 // /app/comecar com a conta completa (RF-14): "Criar uma família" (nome, fuso e depois o primeiro
 // bebê) ou "Tenho um convite". Com código de convite guardado, vai direto a /convite. A mensagem de
@@ -48,6 +48,7 @@ export function EscolhaDeFamilia({ conta }: { conta: Conta }) {
   return (
     <MolduraLogada ocupado={carregando}>
       <DuasColunas>
+        <Pilha vao="grupo">
         <Manchete linhas={MANCHETES.comecarFamilia} refTitulo={titulo} />
         <RegiaoStatus mensagem={textoDaPassagem(location.state)} />
 
@@ -63,28 +64,31 @@ export function EscolhaDeFamilia({ conta }: { conta: Conta }) {
             />
           </div>
         ) : passo.tipo === 'escolha' ? (
-          <section aria-labelledby="titulo-escolha" className={CARTAO}>
-            <div className="flex flex-col gap-2">
+          <Cartao as="section" aria-labelledby="titulo-escolha" className={CARTAO}>
+           <Pilha vao="grupo">
+            <Pilha vao="junto">
               <h2 id="titulo-escolha" className="cm-h4">
                 {COMECAR_FAMILIA.titulo}
               </h2>
               <p>{COMECAR_FAMILIA.frase}</p>
-            </div>
-            <div className="flex flex-col gap-2">
+            </Pilha>
+            <Pilha vao="junto">
               <button type="button" className={BOTAO_PRINCIPAL} onClick={() => setPasso({ tipo: 'familia' })}>
                 {COMECAR_FAMILIA.criar.botao}
               </button>
               <p className="cm-pequeno text-[var(--cor-texto-2)]">{COMECAR_FAMILIA.criar.texto}</p>
-            </div>
-            <div className="flex flex-col gap-2">
+            </Pilha>
+            <Pilha vao="junto">
               <Link to="/convite" className={`${BOTAO_SECUNDARIO} w-full`} data-botao="contorno" data-tamanho="app">
                 {COMECAR_FAMILIA.convite.botao}
               </Link>
               <p className="cm-pequeno text-[var(--cor-texto-2)]">{COMECAR_FAMILIA.convite.texto}</p>
-            </div>
-          </section>
+            </Pilha>
+           </Pilha>
+          </Cartao>
         ) : passo.tipo === 'familia' ? (
-          <section aria-labelledby="titulo-criar-familia" className={CARTAO}>
+          <Cartao as="section" aria-labelledby="titulo-criar-familia" className={CARTAO}>
+           <Pilha vao="pilha">
             <h2 id="titulo-criar-familia" className="cm-h4">
               {COMECAR_FAMILIA.formulario.titulo}
             </h2>
@@ -104,9 +108,11 @@ export function EscolhaDeFamilia({ conta }: { conta: Conta }) {
               }}
               comAviso
             />
-          </section>
+           </Pilha>
+          </Cartao>
         ) : (
-          <section aria-labelledby="titulo-primeiro-bebe" className={CARTAO}>
+          <Cartao as="section" aria-labelledby="titulo-primeiro-bebe" className={CARTAO}>
+           <Pilha vao="pilha">
             <h2 id="titulo-primeiro-bebe" className="cm-h4">
               {COMECAR_FAMILIA.bebe.titulo}
             </h2>
@@ -121,7 +127,8 @@ export function EscolhaDeFamilia({ conta }: { conta: Conta }) {
               aoPerderResposta={familias.recarregar}
               comAviso
             />
-          </section>
+           </Pilha>
+          </Cartao>
         )}
 
         {!carregando && familias.familias.length > 0 ? (
@@ -129,6 +136,7 @@ export function EscolhaDeFamilia({ conta }: { conta: Conta }) {
             {COMECAR_FAMILIA.irParaFamilia}
           </Link>
         ) : null}
+        </Pilha>
       </DuasColunas>
     </MolduraLogada>
   )

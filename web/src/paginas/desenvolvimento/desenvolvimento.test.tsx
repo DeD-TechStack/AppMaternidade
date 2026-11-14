@@ -523,21 +523,54 @@ describe('DES-06: os itens de conteúdo', () => {
     await waitFor(() => expect(document.title).toBe('Conteúdo não encontrado | AppMaternidade'))
   })
 
-  it('o texto da página não usa meta, estrelas nem sequência de dias, e não usa os nomes Ana ou Lia', async () => {
-    relogioEm()
-    const mundo = await mundoComBebeDe(100)
-    const { unmount } = renderizarRota('/app/desenvolvimento', { mundo })
-    await aguardarCarga()
-    const proibido = /meta de|estrelas|sequência de dias|\b(Ana|Lia)\b/i
-    expect(document.querySelector('main')!.textContent).not.toMatch(proibido)
-    unmount()
-    for (const [id] of ITENS) {
-      const { unmount: sair } = renderizarRota(`/app/desenvolvimento/conteudo/${id}`, { mundo })
-      await aguardarCarga()
-      expect(document.querySelector('main')!.textContent, id).not.toMatch(proibido)
-      sair()
-    }
+  // `\b` do JS é só ASCII: em "família" o `í` conta como borda e `\bLia\b` casaria. Por isso as bordas são letras Unicode.
+  const proibido = /meta de|estrelas|sequência de dias|(?<!\p{L})(Ana|Lia)(?!\p{L})/iu
+
+  it('o regex dos nomes proibidos casa palavras inteiras e não casa pedaços de outras palavras', () => {
+    expect('a Lia chegou').toMatch(proibido)
+    expect('Ana, vem').toMatch(proibido)
+    expect('a lia chegou').toMatch(proibido)
+    expect('O dia segue o fuso da família (UTC).').not.toMatch(proibido)
+    expect('Mariana').not.toMatch(proibido)
+    expect('Analia').not.toMatch(proibido)
+    expect('Aníbal e Liana').not.toMatch(proibido)
   })
+
+  it.each([
+    { condicao: 'aparelho no fuso da família: aviso de fuso oculto', zonaDoAparelho: FUSO, avisoDeFuso: false },
+    { condicao: 'aparelho em UTC: aviso de fuso exibido (texto com "família")', zonaDoAparelho: 'UTC', avisoDeFuso: true },
+  ])(
+    'o texto da página não usa meta, estrelas nem sequência de dias, e não usa os nomes Ana ou Lia ($condicao)',
+    async ({ zonaDoAparelho, avisoDeFuso }) => {
+      const original = Intl.DateTimeFormat.prototype.resolvedOptions
+      const espiao = vi.spyOn(Intl.DateTimeFormat.prototype, 'resolvedOptions').mockImplementation(function (this: Intl.DateTimeFormat) {
+        return { ...original.call(this), timeZone: zonaDoAparelho }
+      })
+      try {
+        relogioEm()
+        const mundo = await mundoComBebeDe(100)
+        const { unmount } = renderizarRota('/app/desenvolvimento', { mundo })
+        await aguardarCarga()
+        const aviso = document.querySelector('[data-fuso-diferente]')
+        if (avisoDeFuso) {
+          expect(aviso).not.toBeNull()
+          expect(aviso!.textContent).toContain('família')
+        } else {
+          expect(aviso).toBeNull()
+        }
+        expect(document.querySelector('main')!.textContent).not.toMatch(proibido)
+        unmount()
+        for (const [id] of ITENS) {
+          const { unmount: sair } = renderizarRota(`/app/desenvolvimento/conteudo/${id}`, { mundo })
+          await aguardarCarga()
+          expect(document.querySelector('main')!.textContent, id).not.toMatch(proibido)
+          sair()
+        }
+      } finally {
+        espiao.mockRestore()
+      }
+    },
+  )
 })
 
 describe('DES-06 item 5: a publicação', () => {
