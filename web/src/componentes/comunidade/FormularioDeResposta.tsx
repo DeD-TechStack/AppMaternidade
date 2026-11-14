@@ -161,7 +161,16 @@ export function FormularioDeResposta({ topicoId, modo, apelidoProprio, aoTirarCi
         linhas={5}
       />
       <div>
-        <button type="submit" disabled={!valido} aria-describedby={valido ? undefined : dicaId} className={BOTAO_PRINCIPAL}>
+        {/* `aria-disabled` em vez de `disabled`: o Tab chega ao botão e a dica ligada a ele é lida (A11Y-005). */}
+        <button
+          type="submit"
+          aria-disabled={valido ? undefined : 'true'}
+          aria-describedby={valido ? undefined : dicaId}
+          className={BOTAO_PRINCIPAL}
+          onClick={(evento) => {
+            if (!valido) evento.preventDefault()
+          }}
+        >
           {TOPICO.verPrevia}
         </button>
         {valido ? null : (

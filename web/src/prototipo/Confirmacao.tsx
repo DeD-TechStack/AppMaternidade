@@ -17,6 +17,8 @@ interface Props {
   aoDesfazer: () => void
   aoFechar: () => void
   escolhas?: Escolhas
+  /** O aviso depois de "Desfazer" (`Registro desfeito: fralda.`): só "Fechar", sem outro "Desfazer" (A11Y-004). */
+  semDesfazer?: boolean
 }
 
 // A região fica no DOM mesmo vazia, para o leitor de tela anunciar o que entrar nela. Não some
@@ -24,7 +26,7 @@ interface Props {
 // foco: quem usa "Desfazer" ou "Fechar" (que somem junto) tem o foco levado pelo chamador a um
 // controle que continua na tela. Mora no cartão flutuante acima da barra Registrar.
 // As escolhas, quando há, são opcionais: o registro já foi feito e elas só ajustam o texto.
-export function Confirmacao({ texto, aoDesfazer, aoFechar, escolhas }: Props) {
+export function Confirmacao({ texto, aoDesfazer, aoFechar, escolhas, semDesfazer = false }: Props) {
   return (
     <div role="status" className={texto ? 'flex flex-wrap items-center gap-3' : undefined}>
       {texto ? (
@@ -37,15 +39,17 @@ export function Confirmacao({ texto, aoDesfazer, aoFechar, escolhas }: Props) {
           </span>
           <p className="min-w-0 flex-1 text-[17px] leading-[25px] font-medium">{texto}</p>
           <div className="flex basis-full gap-2 sm:basis-auto">
-            <Botao
-              variante="contorno"
-              tamanho="app"
-              icone={<Undo2 />}
-              className={`flex-1 sm:flex-none ${ALVO_APP}`}
-              onClick={aoDesfazer}
-            >
-              <span>Desfazer</span>
-            </Botao>
+            {semDesfazer ? null : (
+              <Botao
+                variante="contorno"
+                tamanho="app"
+                icone={<Undo2 />}
+                className={`flex-1 sm:flex-none ${ALVO_APP}`}
+                onClick={aoDesfazer}
+              >
+                <span>Desfazer</span>
+              </Botao>
+            )}
             <Botao variante="texto" tamanho="app" className={`flex-1 sm:flex-none ${ALVO_APP}`} onClick={aoFechar}>
               Fechar
             </Botao>

@@ -4,6 +4,7 @@ import { Baby, Milk, Moon } from 'lucide-react'
 import { Botao } from '../base/Botao.tsx'
 import { ALVO_APP } from './alvo.ts'
 import { recuoOptico } from './recuoOptico.ts'
+import { TextoDoCronometro } from './TextoDoCronometro.tsx'
 import { Ilustracao, type NomeIlustracao } from '../campo/Ilustracao.tsx'
 import { ROTULO_SESSAO, type TipoSessao } from '../../prototipo/estado.ts'
 import { formatarCronometro, formatarHora } from '../../prototipo/formatar.ts'
@@ -99,7 +100,7 @@ export function CartaoSessao({ sessao, agora, aoEncerrar, podeEncerrar = true, o
               data-numero=""
               className={`mt-1 font-titulo text-[64px] leading-none font-semibold tracking-[-0.02em] whitespace-nowrap tabular-nums lg:text-[120px] ${recuoOptico(tempo)}`}
             >
-              {tempo}
+              <TextoDoCronometro tempo={tempo} />
             </p>
             <p className="mt-3 text-[15px] leading-[22px]">
               {`Iniciado às ${formatarHora(sessao.inicio)} `}

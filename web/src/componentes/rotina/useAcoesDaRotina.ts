@@ -17,7 +17,7 @@ import { diaDaFamilia, lerAparelho } from '../../dados/rotina.dia.ts'
 import { podeEscrever, type ConteudoFralda, type DetalhesRegistro, type Registro, type TipoSessao } from '../../dados/rotina.tipos.ts'
 import { uuidV7 } from '../../dados/rotina.uuid.ts'
 import { formatarDuracao, formatarHora } from '../../prototipo/formatar.ts'
-import type { BebeAtivo, NovaConfirmacao } from './contexto.ts'
+import type { BebeAtivo, NovaConfirmacao, OrigemDoRegistro } from './contexto.ts'
 import { useRotina } from './contexto.ts'
 import { urlDoHistoricoDoDia } from './parametrosHistorico.ts'
 
@@ -76,7 +76,7 @@ export function useAcoesDaRotina() {
   }
 
   /** A confirmação de um erro de escrita: a frase do catálogo e, se repetível, `Tentar de novo`. */
-  function confirmacaoDeErro(erro: ErroDados, repetir?: () => void, textoDaNota?: string): NovaConfirmacao {
+  function confirmacaoDeErro(erro: ErroDados, repetir?: () => void, textoDaNota?: string, origem?: OrigemDoRegistro): NovaConfirmacao {
     const acoes: NovaConfirmacao['acoes'] = []
     if (repetir && ehErroRepetivel(erro)) {
       acoes.push({ chave: 'tentar_de_novo', rotulo: COMUM.tentarDeNovo, executar: repetir })
@@ -86,11 +86,12 @@ export function useAcoesDaRotina() {
       acoes.push({ chave: 'abrir_a_lixeira', rotulo: LIGACOES.abrirALixeira, executar: () => undefined, para: '/app/lixeira' })
     }
     acoes.push({ chave: 'fechar', rotulo: COMUM.fechar, executar: () => undefined })
-    return { texto: textoDoErro(erro, { escrita: true, papel: ativo?.papel }), acoes, textoDaNota }
+    return { texto: textoDoErro(erro, { escrita: true, papel: ativo?.papel }), acoes, textoDaNota, ...(origem ? { origem } : {}) }
   }
 
-  function mostrarErro(erro: ErroDados, repetir?: () => void, textoDaNota?: string) {
-    mostrarConfirmacao(confirmacaoDeErro(erro, repetir, textoDaNota))
+  /** `origem`: só no erro de um `Desfazer`, para o `Tentar de novo` levar o foco ao mesmo lugar que ele levou. */
+  function mostrarErro(erro: ErroDados, repetir?: () => void, textoDaNota?: string, origem?: OrigemDoRegistro) {
+    mostrarConfirmacao(confirmacaoDeErro(erro, repetir, textoDaNota, origem))
     aposErro(erro)
   }
 
@@ -106,13 +107,15 @@ export function useAcoesDaRotina() {
 
   /**
    * Restaura o registro. Com `confirmar`, mostra `Registro restaurado.` com o link `Ver no Histórico`; sem ele
-   * (o `Desfazer` de uma exclusão), só relê. Falha: a frase do catálogo e, se incerta, `Tentar de novo` com o
-   * mesmo id. Prazo vencido entre a leitura e o toque: a frase e a releitura, que tira o item da lista.
+   * (o `Desfazer` de uma exclusão), anuncia `Registro desfeito: <tipo>.` só com `Fechar` (A11Y-004). Falha: a
+   * frase do catálogo e, se incerta, `Tentar de novo` com o mesmo id. Prazo vencido entre a leitura e o toque:
+   * a frase e a releitura, que tira o item da lista.
    */
-  async function restaurar(registro: Registro, opcoes: { confirmar: boolean }, repeticao = false): Promise<boolean> {
+  async function restaurar(registro: Registro, opcoes: { confirmar: boolean }): Promise<boolean> {
     const resultado = await dados.restaurarRegistro(registro.id)
     if (!resultado.ok) {
-      mostrarErro(resultado.erro, () => void restaurar(registro, opcoes, true))
+      // O erro de um Desfazer leva a origem: o controle que o criou (a exclusão no detalhe) já saiu da tela.
+      mostrarErro(resultado.erro, () => void restaurar(registro, opcoes), undefined, opcoes.confirmar ? undefined : 'tela')
       if (resultado.erro.chave === 'prazo_encerrado') atualizar()
       return false
     }
@@ -125,8 +128,8 @@ export function useAcoesDaRotina() {
           fechar,
         ],
       })
-    } else if (repeticao) {
-      fecharConfirmacao()
+    } else {
+      mostrarConfirmacao({ texto: REGISTRO_RAPIDO.desfeito(registro.tipo), acoes: [fechar] })
     }
     return true
   }
@@ -145,6 +148,7 @@ export function useAcoesDaRotina() {
     mostrarConfirmacao({
       texto: DETALHE.excluido,
       acoes: [{ chave: 'desfazer', rotulo: COMUM.desfazer, executar: () => void restaurar(registro, { confirmar: false }) }, fechar],
+      origem: 'tela',
     })
     aoConcluir()
   }
@@ -161,6 +165,21 @@ export function useAcoesDaRotina() {
       return
     }
     mostrarErro(resultado.erro, () => void excluir(id, true))
+  }
+
+  /**
+   * O `Desfazer` de um registro recém-criado (A11Y-004): exclui (vai para a lixeira) e anuncia
+   * `Registro desfeito: <tipo>.` só com `Fechar`. Falha: a frase e, se incerta, `Tentar de novo` com o mesmo id;
+   * o aviso só entra quando a exclusão deu certo, também na repetição. `origem` diz onde o foco volta.
+   */
+  async function desfazerRegistro(registro: Pick<Registro, 'id' | 'tipo'>, origem: OrigemDoRegistro): Promise<void> {
+    const resultado = await dados.excluirRegistro(registro.id)
+    if (!resultado.ok) {
+      mostrarErro(resultado.erro, () => void desfazerRegistro(registro, origem), undefined, origem)
+      return
+    }
+    atualizar()
+    mostrarConfirmacao({ texto: REGISTRO_RAPIDO.desfeito(registro.tipo), acoes: [fechar] })
   }
 
   // ---- iniciar sessão ---------------------------------------------------------------------------------
@@ -263,13 +282,15 @@ export function useAcoesDaRotina() {
       atualizar()
       const duplicado = await acharDuplicado(registro)
       const acoes: NovaConfirmacao['acoes'] = []
+      // Fralda nasce no botão Fralda; mamadeira e alimentação sólida, no painel do botão Mais (A11Y-004).
+      const origem: OrigemDoRegistro = tipo === 'fralda' ? 'fralda' : 'mais'
       if (duplicado) {
         acoes.push(
           { chave: 'manter_os_dois', rotulo: CONFIRMACAO.manterOsDois, executar: () => undefined },
           { chave: 'excluir_este', rotulo: CONFIRMACAO.excluirEste, executar: () => void excluir(registro.id) },
         )
       } else {
-        acoes.push({ chave: 'desfazer', rotulo: COMUM.desfazer, executar: () => void excluir(registro.id) })
+        acoes.push({ chave: 'desfazer', rotulo: COMUM.desfazer, executar: () => void desfazerRegistro(registro, origem) })
       }
       acoes.push(fechar)
       if (tipo !== 'fralda') {
@@ -280,7 +301,7 @@ export function useAcoesDaRotina() {
         })
       }
       const aviso = duplicado ? ` ${textoDoDuplicado(duplicado, tipo)}` : ''
-      mostrarConfirmacao({ texto: `${textoBase}${aviso}`, acoes })
+      mostrarConfirmacao({ texto: `${textoBase}${aviso}`, acoes, origem })
     }
     await tentar()
   }
@@ -409,6 +430,7 @@ export function useAcoesDaRotina() {
   return {
     iniciarSessao,
     excluir,
+    desfazerRegistro,
     registrarFralda,
     registrarMamadeiraOuSolido,
     encerrar,

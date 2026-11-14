@@ -115,7 +115,7 @@ function PassoDosTermos({ versao, aoMudar }: PassoProps) {
   )
 }
 
-function PassoDoPerfil({ aoMudar }: Pick<PassoProps, 'aoMudar'>) {
+function PassoDoPerfil({ aoMudar, focarNoApelido }: Pick<PassoProps, 'aoMudar'> & { focarNoApelido: boolean }) {
   const dados = useDadosComunidade()
   const [apelido, setApelido] = useState('')
   const [bio, setBio] = useState('')
@@ -129,6 +129,11 @@ function PassoDoPerfil({ aoMudar }: Pick<PassoProps, 'aoMudar'>) {
   useEffect(() => {
     if (apelidoEmUso) document.getElementById(ID_DO_APELIDO)?.focus()
   }, [apelidoEmUso, envio.estado])
+
+  // Depois do aceite o formulário dos termos some e leva o foco: o passo do perfil o recebe no apelido.
+  useEffect(() => {
+    if (focarNoApelido) document.getElementById(ID_DO_APELIDO)?.focus()
+  }, [focarNoApelido])
 
   const bioFinal = bio.trim() === '' ? null : bio
   const apelidoOk = apelidoValido(apelido)
@@ -220,6 +225,8 @@ export function EntrarNaComunidade() {
   // Quem já chega habilitado não tem o que fazer aqui: vai direto ao destino.
   const [chegouHabilitado, setChegouHabilitado] = useState<boolean | null>(null)
   if (lida && chegouHabilitado === null) setChegouHabilitado(ehEscritor(lida))
+  // O aceite foi feito nesta tela: o passo do perfil que vem depois recebe o foco no apelido.
+  const [aceitouAqui, setAceitouAqui] = useState(false)
 
   // Os dois passos feitos: vai ao destino, com a confirmação TX-25.
   useEffect(() => {
@@ -250,12 +257,18 @@ export function EntrarNaComunidade() {
     >
       {passoDoAceite && lida.versaoVigente ? (
         <Faixa>
-          <PassoDosTermos versao={lida.versaoVigente} aoMudar={() => situacao.reler()} />
+          <PassoDosTermos
+            versao={lida.versaoVigente}
+            aoMudar={() => {
+              setAceitouAqui(true)
+              return situacao.reler()
+            }}
+          />
         </Faixa>
       ) : null}
       {passoDoPerfil ? (
         <Faixa>
-          <PassoDoPerfil aoMudar={() => situacao.reler()} />
+          <PassoDoPerfil aoMudar={() => situacao.reler()} focarNoApelido={aceitouAqui} />
         </Faixa>
       ) : null}
     </Quadro>

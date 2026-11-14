@@ -1,13 +1,14 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { act, configure, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
-import axe from 'axe-core'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { describe, expect, it, vi } from 'vitest'
 import { GuardaSessao } from '../../componentes/conta/guarda.tsx'
 import { ProvedorDadosConta, ProvedorSessao } from '../../componentes/conta/sessao.tsx'
 import { ProvedorDoConteudo } from '../../componentes/desenvolvimento/conteudo.tsx'
 import { ABERTURA_DAS_IDEIAS, ITENS_DE_CONTEUDO, type ItemDeConteudo } from '../../componentes/desenvolvimento/itens.ts'
+import { rodarAxe } from '../../teste/axe.ts'
+import { relogioDoTeste } from '../../teste/relogio.ts'
 import { aguardarCarga, renderizarRota } from '../../teste/renderizarRota.tsx'
 import { criarMundoDeTeste, ID_BEBE, type Mundo, type OpcoesMundo } from '../../teste/rotina.fixture.ts'
 import { CorpoDaPagina } from './PaginaDesenvolvimento.tsx'
@@ -40,6 +41,7 @@ const ITENS: ReadonlyArray<readonly [string, string]> = [
 function relogioEm(data: Date = HOJE) {
   vi.useFakeTimers({ toFake: ['Date'] })
   vi.setSystemTime(data)
+  return relogioDoTeste()
 }
 
 /** O dia `AAAA-MM-DD` que fica `dias` antes de 12/11/2026. */
@@ -201,13 +203,13 @@ describe('a fase pela idade em dias (janelas com limites inclusivos)', () => {
   })
 
   it('a idade só se renova ao voltar à aba (visibilitychange), sem temporizador', async () => {
-    relogioEm()
+    const mudarRelogio = relogioEm()
     const mundo = await mundoComBebeDe(75)
     renderizarRota('/app/desenvolvimento', { mundo })
     await aguardarCarga()
     expect(faseDaTela()).toBe('Fases: Do nascimento a uns 2 meses e De uns 2 a 4 meses')
 
-    vi.setSystemTime(new Date('2026-11-13T15:00:00-03:00'))
+    mudarRelogio(new Date('2026-11-13T15:00:00-03:00'))
     expect(faseDaTela()).toBe('Fases: Do nascimento a uns 2 meses e De uns 2 a 4 meses')
     await act(async () => {
       document.dispatchEvent(new Event('visibilitychange'))
@@ -489,8 +491,9 @@ describe('DES-06: os itens de conteúdo', () => {
       const links = within(fontes).getAllByRole('link')
       expect(links.length).toBeGreaterThan(0)
       for (const link of links) {
-        expect(link.getAttribute('target')).toBe('_blank')
-        expect(link.getAttribute('rel')).toBe('noopener noreferrer')
+        // A11Y-009: a fonte abre na mesma aba, como as páginas públicas.
+        expect(link.hasAttribute('target')).toBe(false)
+        expect(link.hasAttribute('rel')).toBe(false)
         expect(link.getAttribute('href')).toMatch(/^https:\/\//)
       }
       expect(screen.getAllByText('consultada em 05/11/2026').length).toBe(links.length)
@@ -523,21 +526,54 @@ describe('DES-06: os itens de conteúdo', () => {
     await waitFor(() => expect(document.title).toBe('Conteúdo não encontrado | AppMaternidade'))
   })
 
-  it('o texto da página não usa meta, estrelas nem sequência de dias, e não usa os nomes Ana ou Lia', async () => {
-    relogioEm()
-    const mundo = await mundoComBebeDe(100)
-    const { unmount } = renderizarRota('/app/desenvolvimento', { mundo })
-    await aguardarCarga()
-    const proibido = /meta de|estrelas|sequência de dias|\b(Ana|Lia)\b/i
-    expect(document.querySelector('main')!.textContent).not.toMatch(proibido)
-    unmount()
-    for (const [id] of ITENS) {
-      const { unmount: sair } = renderizarRota(`/app/desenvolvimento/conteudo/${id}`, { mundo })
-      await aguardarCarga()
-      expect(document.querySelector('main')!.textContent, id).not.toMatch(proibido)
-      sair()
-    }
+  // `\b` do JS é só ASCII: em "família" o `í` conta como borda e `\bLia\b` casaria. Por isso as bordas são letras Unicode.
+  const proibido = /meta de|estrelas|sequência de dias|(?<!\p{L})(Ana|Lia)(?!\p{L})/iu
+
+  it('o regex dos nomes proibidos casa palavras inteiras e não casa pedaços de outras palavras', () => {
+    expect('a Lia chegou').toMatch(proibido)
+    expect('Ana, vem').toMatch(proibido)
+    expect('a lia chegou').toMatch(proibido)
+    expect('O dia segue o fuso da família (UTC).').not.toMatch(proibido)
+    expect('Mariana').not.toMatch(proibido)
+    expect('Analia').not.toMatch(proibido)
+    expect('Aníbal e Liana').not.toMatch(proibido)
   })
+
+  it.each([
+    { condicao: 'aparelho no fuso da família: aviso de fuso oculto', zonaDoAparelho: FUSO, avisoDeFuso: false },
+    { condicao: 'aparelho em UTC: aviso de fuso exibido (texto com "família")', zonaDoAparelho: 'UTC', avisoDeFuso: true },
+  ])(
+    'o texto da página não usa meta, estrelas nem sequência de dias, e não usa os nomes Ana ou Lia ($condicao)',
+    async ({ zonaDoAparelho, avisoDeFuso }) => {
+      const original = Intl.DateTimeFormat.prototype.resolvedOptions
+      const espiao = vi.spyOn(Intl.DateTimeFormat.prototype, 'resolvedOptions').mockImplementation(function (this: Intl.DateTimeFormat) {
+        return { ...original.call(this), timeZone: zonaDoAparelho }
+      })
+      try {
+        relogioEm()
+        const mundo = await mundoComBebeDe(100)
+        const { unmount } = renderizarRota('/app/desenvolvimento', { mundo })
+        await aguardarCarga()
+        const aviso = document.querySelector('[data-fuso-diferente]')
+        if (avisoDeFuso) {
+          expect(aviso).not.toBeNull()
+          expect(aviso!.textContent).toContain('família')
+        } else {
+          expect(aviso).toBeNull()
+        }
+        expect(document.querySelector('main')!.textContent).not.toMatch(proibido)
+        unmount()
+        for (const [id] of ITENS) {
+          const { unmount: sair } = renderizarRota(`/app/desenvolvimento/conteudo/${id}`, { mundo })
+          await aguardarCarga()
+          expect(document.querySelector('main')!.textContent, id).not.toMatch(proibido)
+          sair()
+        }
+      } finally {
+        espiao.mockRestore()
+      }
+    },
+  )
 })
 
 describe('DES-06 item 5: a publicação', () => {
@@ -724,7 +760,7 @@ describe('DES-13 11: a madrugada', () => {
 // DES-13 10: axe nos estados do DES-09, em cada tema, na rota do item e no item recolhido.
 async function violacoes(container: HTMLElement): Promise<string[]> {
   // O jsdom não calcula cor nem layout: o contraste é conferido em estilo.test.ts. `region` não vale fora da casca.
-  const resultado = await axe.run(container, { rules: { 'color-contrast': { enabled: false }, region: { enabled: false } } })
+  const resultado = await rodarAxe(container, { rules: { 'color-contrast': { enabled: false }, region: { enabled: false } } })
   return resultado.violations.map((v) => `${v.id}: ${v.help} (${v.nodes.map((n) => n.html).join(' | ')})`)
 }
 

@@ -1,6 +1,7 @@
 import type { MouseEvent } from 'react'
 import { FAMILIA, ORDEM_DOS_PAPEIS, PAPEIS } from '../../conteudo/conta.ts'
 import type { DetalheFamilia, Membro } from '../../dados/conta.ts'
+import { Pilha } from '../base/layout/index.ts'
 import type { AcoesDaFamilia } from './acoesFamilia.ts'
 import { formatarData } from './datas.ts'
 import { BOTAO_SECUNDARIO, LINK_ALVO } from './Partes.tsx'
@@ -32,7 +33,7 @@ function irParaOBotaoDeSair(evento: MouseEvent<HTMLAnchorElement>) {
 // controles: "Mudar papel" em toda linha, inclusive a própria, e "Remover acesso" nas outras.
 export function BlocoMembros({ detalhe, responsavel, acoes }: Props) {
   return (
-    <section aria-labelledby="membros" className="flex flex-col gap-4">
+    <Pilha as="section" aria-labelledby="membros" vao="pilha">
       <h2 id="membros" className="cm-h4">
         {FAMILIA.membros.titulo}
       </h2>
@@ -85,6 +86,6 @@ export function BlocoMembros({ detalhe, responsavel, acoes }: Props) {
           </li>
         ))}
       </ul>
-    </section>
+    </Pilha>
   )
 }

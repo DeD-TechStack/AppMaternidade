@@ -143,6 +143,7 @@ export function FormularioDeTopico({ espaco, perfilId, edicao, aoNaoEditavel }: 
         aoMudar={setTitulo}
         limite={LIMITES.titulo}
         mensagemDoLimite={FORMULARIO_TOPICO.erroTitulo}
+        obrigatorio
       />
       <CampoComContador
         id="campo-corpo"
@@ -152,10 +153,20 @@ export function FormularioDeTopico({ espaco, perfilId, edicao, aoNaoEditavel }: 
         limite={LIMITES.corpoTopico}
         mensagemDoLimite={FORMULARIO_TOPICO.erroCorpo}
         linhas={8}
+        obrigatorio
       />
       <EscolhaDeFaixa rotulo={COMUM_COMUNIDADE.faixaOpcional} valor={faixa} aoMudar={setFaixa} />
       <div>
-        <button type="submit" disabled={!valido} aria-describedby={dica ? dicaId : undefined} className={BOTAO_PRINCIPAL}>
+        {/* `aria-disabled` em vez de `disabled`: o Tab chega ao botão e a dica ligada a ele é lida (A11Y-005). */}
+        <button
+          type="submit"
+          aria-disabled={valido ? undefined : 'true'}
+          aria-describedby={dica ? dicaId : undefined}
+          className={BOTAO_PRINCIPAL}
+          onClick={(evento) => {
+            if (!valido) evento.preventDefault()
+          }}
+        >
           {FORMULARIO_TOPICO.verPrevia}
         </button>
         {dica ? (

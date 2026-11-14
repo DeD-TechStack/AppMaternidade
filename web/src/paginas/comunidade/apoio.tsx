@@ -11,6 +11,15 @@ import type { criarFixtureDeTeste } from '../../teste/renderizarComDados.tsx'
 // provedor de dados de conta (a sessão da MAT-37) e do provedor de dados da Comunidade, os dois com a
 // memória que o teste monta. O teste cria a memória de conta, para deixar a pessoa entrada.
 
+/**
+ * A11Y-008: os campos obrigatórios mostram "(obrigatório)" no rótulo. O rótulo pedido casa com ou sem esse
+ * sufixo, para os testes dizerem só o nome do campo.
+ */
+export function comObrigatorio(rotulo: string | RegExp): string | RegExp | ((texto: string) => boolean) {
+  if (typeof rotulo !== 'string') return rotulo
+  return (texto) => texto === rotulo || texto === `${rotulo} (obrigatório)`
+}
+
 type FixtureDeConta = ReturnType<typeof criarFixtureDeTeste>
 type DadosDeConta = NonNullable<Parameters<typeof ProvedorDadosConta>[0]['dados']>
 
