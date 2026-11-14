@@ -22,7 +22,8 @@ export function ResumoDoDia({ itens, className }: Props) {
       </h2>
       {/* A grade decide pelo espaço da própria seção, não pela janela: abaixo de 18 rem (390 a 200 %, fonte
           grande) cada número vira uma linha com fio, rótulo à esquerda; com espaço, duas por duas e, a partir de 32 rem, quatro lado a lado. Os
-          números seguem a largura (clamp em cqi): 44 px em 390, 52 px em 1440, 28 px no mínimo. */}
+          números seguem a largura (clamp em cqi) nas grades de uma e de duas colunas: 44 px em 390, 28 px no
+          mínimo; na linha de quatro, o degrau titulo-2 da escala (28 a 36 px), para caber na célula. */}
       <ul className="grid grid-cols-1 border-b border-(--cor-fio-suave) @min-[18rem]/resumo:grid-cols-2 @min-[18rem]/resumo:border-t @min-[32rem]/resumo:grid-cols-4">
         {itens.map((item) => (
           <li
@@ -31,7 +32,7 @@ export function ResumoDoDia({ itens, className }: Props) {
           >
             <span
               data-numero-do-dia=""
-              className="font-titulo text-[clamp(28px,12.5cqi,52px)] leading-none font-semibold tracking-[-0.02em] whitespace-nowrap tabular-nums"
+              className="font-titulo text-[clamp(28px,12.5cqi,52px)] leading-none @min-[32rem]/resumo:text-titulo-2 @min-[32rem]/resumo:leading-none font-semibold tracking-[-0.02em] whitespace-nowrap tabular-nums"
             >
               {item.valor}
             </span>
