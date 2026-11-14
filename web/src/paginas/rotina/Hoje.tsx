@@ -280,6 +280,7 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
         <section
           ref={cartao}
           tabIndex={-1}
+          data-h="cartao"
           data-andamento=""
           aria-busy={emAndamento.estado === 'carregando' ? 'true' : undefined}
           className="alvo-foco flex flex-col gap-esp-pilha rounded-cartao border border-(--cor-fio-suave) bg-(--cor-cartao) p-6 lg:p-8"

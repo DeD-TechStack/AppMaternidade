@@ -46,6 +46,7 @@ export function CartaoSessao({ sessao, agora, aoEncerrar, podeEncerrar = true, o
         ref={ref}
         aria-labelledby={idTitulo}
         tabIndex={-1}
+        data-h="cartao"
         data-andamento=""
         className={`alvo-foco flex flex-col gap-esp-junto rounded-cartao border border-(--cor-fio-suave) bg-(--cor-cartao) p-6 lg:p-8 ${className ?? ''}`}
       >
@@ -73,6 +74,7 @@ export function CartaoSessao({ sessao, agora, aoEncerrar, podeEncerrar = true, o
       ref={ref}
       aria-labelledby={idTitulo}
       tabIndex={-1}
+      data-h="cartao"
       data-andamento=""
       data-tipo={sessao.tipo}
       className={`alvo-foco relative flex overflow-hidden rounded-cartao bg-(--cor-campo-sessao) p-esp-painel text-(--cor-numero-sessao) [border:var(--borda-campo)] lg:items-stretch lg:gap-esp-grupo ${className ?? ''}`}
@@ -93,7 +95,7 @@ export function CartaoSessao({ sessao, agora, aoEncerrar, podeEncerrar = true, o
         <div className={`flex flex-col gap-esp-grupo ${NOITE_EM_LINHA}`}>
           <Pilha vao="junto">
             <p className="font-titulo text-titulo-4 font-semibold">{ROTULO_SESSAO[sessao.tipo]}</p>
-            <p
+            <div
               role="timer"
               aria-live="off"
               aria-label={`Tempo de ${ROTULO_SESSAO[sessao.tipo].toLowerCase()}`}
@@ -101,7 +103,7 @@ export function CartaoSessao({ sessao, agora, aoEncerrar, podeEncerrar = true, o
               className={`font-titulo text-[64px] leading-none font-semibold tracking-[-0.02em] whitespace-nowrap tabular-nums lg:text-[120px] ${recuoOptico(tempo)}`}
             >
               {tempo}
-            </p>
+            </div>
             <p className="text-pequeno">
               {`Iniciado às ${formatarHora(sessao.inicio)} `}
               <span>{`por ${sessao.pessoa}`}</span>

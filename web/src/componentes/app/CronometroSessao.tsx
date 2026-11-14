@@ -148,6 +148,7 @@ export function CronometroSessao({
     <section
       ref={cartao}
       aria-labelledby={idRotulo}
+      data-h="cartao"
       data-andamento=""
       className={`flex flex-col gap-esp-grupo rounded-cartao bg-(--cor-campo-sessao) px-esp-painel pt-esp-painel ${fundo} text-(--cor-numero-sessao) [border:var(--borda-campo)] lg:p-esp-painel ${className ?? ''}`}
     >
