@@ -30,6 +30,9 @@ ESTADO: ATIVO (14/11 ~08h35; session switch requested by the infra coordinator f
 **Arrived after SWITCH_OK (handle first in the new session):** A11Y-F2 t_a37f1086 R2 returned (causa: teste, F2-R2-01 must: finish the AX/keyboard proof already asked in F2-R1-01/03; the JSON covers only 8 Família entries). It is the SAME finding a second time: write the leader return comment as correction 2/2 (last), listing "already tried", and escalate if it comes back a third time.
 - AUD-SITE t_c948c5f8 BLOCKED (capability): executor-appmaternidade has no vision tool, so it cannot do R1-01 (look at each PNG); it says browser re-runs also lack tooling (but its S1/S5/S6 sweeps ran Chrome via terminal node scripts, so browser via terminal is possible). Options for the new session: (a) coordinator enables vision for executor-appmaternidade; (b) the card uses the existing headless visual judge route (`claude -p --model claude-fable-5-2[1m]` reading a PROMPT_AVALIADOR*.md and the captures, as in the item-H judges) for the visual pass, and terminal node+CDP scripts for the browser re-runs. Coordinator notified (avisar_coordenador, 14/11 ~08h45).
 
+- MAT-48h t_612731f2 R1 returned (causa: implementacao, teste; R1-01 must: web/src/teste/axe.ts:7-12 and setup.ts:11-20 serialize axe calls but do not isolate pending work at test timeout). Write the leader return comment (correction 1/2; rebase on be1e349).
+- A11Y-F1 t_35476306 in review (5c2f7f4 on 0e57c08).
+
 **Correction counts (2 max; 3rd time the same finding = leader escalates):** H-3b 1/2, H-3f 1/2, QA-F1 1/2, QA-F6 1/2, AUD-SITE 1/2, A11Y-F2 1/2 in review.
 
 **Next releases:** on H-3b..f all integrated, H-3g promotes itself, then H-4. AUD-SITE approved -> turn its should/must into fix cards (disjoint scopes, in parallel). P-56b -> fix cards for uncovered must/should. RF12-EGM -> spec fixes, APROVADA, then cards I-RF12-1 -> I-RF12-2 -> J-RF12-1 (only after P-74, default "do it").
