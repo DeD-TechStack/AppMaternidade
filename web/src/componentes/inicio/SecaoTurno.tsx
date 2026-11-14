@@ -1,4 +1,5 @@
 import { useId } from 'react'
+import { Colunas } from '../base/layout/Colunas.tsx'
 import { Pilha } from '../base/layout/Pilha.tsx'
 import { Secao } from '../base/layout/Secao.tsx'
 import { CartaoFlutuante } from '../campo/CartaoFlutuante.tsx'
@@ -30,13 +31,13 @@ export function SecaoTurno() {
       className="in-turno"
       classeCaixa="in-turno-caixa cm-com-flutuante"
     >
-      {/* Duas metades a partir de 960 (o ponto de quebra de hoje, em inicio.css), `midia` entre elas. */}
-      <div className="in-turno-grade">
-        <Pilha vao="pilha" className="in-turno-texto">
+      {/* Duas metades (6fr/6fr), `midia` entre elas. A primitiva quebra em 992; o inicio.css mantém o 960 de hoje. */}
+      <Colunas fracoes="6fr 6fr" vao="midia" aPartirDe={992} alinhar="centro" className="in-turno-grade">
+        <Pilha vao="pilha" dataH="coluna" className="in-turno-texto">
           <Titulo nivel="h2" id={id} linhas={titulo} />
           <p className="cm-lide">{texto}</p>
         </Pilha>
-        <Pilha vao="pilha" className="in-turno-arte">
+        <Pilha vao="pilha" dataH="coluna" className="in-turno-arte">
           <RevelaNaRolagem className="in-revela">
             <Ilustracao nome="maos-celular" decorativa />
           </RevelaNaRolagem>
@@ -60,7 +61,7 @@ export function SecaoTurno() {
             </ul>
           </CartaoFlutuante>
         </Pilha>
-      </div>
+      </Colunas>
     </Secao>
   )
 }

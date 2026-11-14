@@ -340,7 +340,8 @@ describe('Início: citação e depoimentos', () => {
     abrirInicio()
     const secao = screen.getByRole('region', { name: 'Quem cuida conta como é.' })
     const [grande, ...menores] = within(secao).getAllByRole('figure')
-    expect(grande.getAttribute('data-painel')).toBe('areia')
+    // R1: a cor é do Cartao (o `li`) que guarda o figure.
+    expect(grande.closest('[data-painel]')!.getAttribute('data-painel')).toBe('areia')
     expect(grande.querySelector('.in-relato-grande-texto')).not.toBeNull()
     for (const menor of menores) expect(menor.closest('[data-painel]')).toBeNull()
 
@@ -551,7 +552,8 @@ describe('Início: harmonia de espaço (H-3b)', () => {
     const semFundo = [...main.children].filter((filha) => filha.getAttribute('data-h-variante') !== 'painel')
     expect(semFundo).toHaveLength(6)
     for (const secao of semFundo) {
-      expect(secao.querySelector(":scope > [data-h~='quadro']"), secao.className).not.toBeNull()
+      // R1: a tabela e os relatos abrem com um quadro `medio` e a grade num quadro, os dois numa Pilha filha da seção.
+      expect(secao.querySelector(":scope > [data-h~='quadro'], :scope > [data-h~='pilha'] > [data-h~='quadro']"), secao.className).not.toBeNull()
     }
   })
 
@@ -622,16 +624,13 @@ describe('Início: harmonia de espaço (H-3b)', () => {
   })
 
   it('os vãos das grades de seção são os papéis do contrato: `midia` entre texto e mídia, `bloco` entre cartões e colunas', () => {
-    const regras = lerRegrasCss('componentes/inicio/inicio.css')
-    const gapDe = (seletor: string) =>
-      regras
-        .filter((regra) => regra.seletores.includes(seletor) && regra.midia === null)
-        .map((regra) => /(?:^|[\s;])gap:\s*([^;]+)/.exec(regra.corpo)?.[1].trim())
-        .find((valor) => valor !== undefined)
-    expect(gapDe('.in-turno-grade')).toBe('var(--espaco-midia)')
-    expect(gapDe('.in-faixa-grade')).toBe('var(--espaco-midia)')
-    expect(gapDe('.in-tabela-grade')).toBe('var(--espaco-bloco)')
-    expect(gapDe('.in-relatos-grade')).toBe('var(--espaco-bloco)')
+    // R1: o vão vem da Colunas (`data-h-vao`), não mais de um `gap` escrito no inicio.css.
+    const { main } = abrirInicio()
+    const vaoDe = (seletor: string) => main.querySelector(seletor)!.getAttribute('data-h-vao')
+    expect(vaoDe('.in-turno-grade')).toBe('midia')
+    expect(vaoDe('.in-faixa-grade')).toBe('midia')
+    expect(vaoDe('.in-tabela-grade')).toBe('bloco')
+    expect(vaoDe('.in-relatos-grade')).toBe('bloco')
   })
 
   it('o stylelint da harmonia só acusa no inicio.css as exceções fechadas (larguras máximas, o número grande e o círculo dos desenhos)', async () => {
@@ -686,5 +685,142 @@ describe('Início: harmonia de espaço (H-3b)', () => {
       expect(numeros[0], `${papel} em 390`).toBe(em390)
       expect(numeros[numeros.length - 1], `${papel} em 1440`).toBe(em1440)
     }
+  })
+})
+
+// H-3b, correção R1: toda composição lado a lado é `Colunas` com `Coluna` por filho, todo bloco com fundo ou borda é
+// `Cartao` (padding = espaco-painel) e a abertura das seções de grade fica em `QuadroLayout largura="medio"`.
+describe('Início: composições, cartões e aberturas nas primitivas (H-3b, R1)', () => {
+  const NOMES = {
+    turno: 'Quem chega no turno já sabe o que houve.',
+    faixa: 'De madrugada, com uma mão só.',
+    tabela: 'O caderno ajuda. O app divide.',
+    relatos: 'Quem cuida conta como é.',
+  } as const
+
+  const CARTAO = "[data-h~='cartao']"
+
+  function colunasDe(secao: HTMLElement): HTMLElement {
+    return secao.querySelector<HTMLElement>("[data-h~='colunas']")!
+  }
+
+  function filhasDe(colunas: HTMLElement): HTMLElement[] {
+    return [...colunas.children] as HTMLElement[]
+  }
+
+  it('toda composição do Início é uma Colunas e cada filho dela é uma coluna (abertura, turno, faixa, tabela, relatos e perguntas)', () => {
+    const { main } = abrirInicio()
+    const todas = [...main.querySelectorAll<HTMLElement>("[data-h~='colunas']")]
+    expect(todas).toHaveLength(6)
+    for (const colunas of todas) {
+      for (const filha of filhasDe(colunas)) {
+        expect(filha.matches("[data-h~='coluna']"), filha.outerHTML.slice(0, 80)).toBe(true)
+      }
+    }
+    // As quatro grades de seção que eram locais agora são a própria Colunas.
+    for (const classe of ['.in-turno-grade', '.in-faixa-grade', '.in-tabela-grade', '.in-relatos-grade']) {
+      expect(main.querySelector(classe)?.matches("[data-h~='colunas']"), classe).toBe(true)
+    }
+  })
+
+  it('turno e faixa são duas metades com vão `midia`; a tabela é 8fr/4fr e os relatos 7fr/5fr, com vão `bloco`', () => {
+    abrirInicio()
+    const esperado: Array<[keyof typeof NOMES, string, string, string, number]> = [
+      ['turno', 'minmax(0, 6fr) minmax(0, 6fr)', 'midia', '992', 2],
+      ['faixa', 'minmax(0, 5fr) minmax(0, 7fr)', 'midia', '992', 2],
+      ['tabela', 'minmax(0, 8fr) minmax(0, 4fr)', 'bloco', '1200', 2],
+      ['relatos', 'minmax(0, 7fr) minmax(0, 5fr)', 'bloco', '1100', 3],
+    ]
+    for (const [chave, modelo, vao, quebra, filhos] of esperado) {
+      const colunas = colunasDe(screen.getByRole('region', { name: NOMES[chave] }))
+      expect(colunas.style.getPropertyValue('--h-colunas'), chave).toBe(modelo)
+      expect(colunas.getAttribute('data-h-vao'), chave).toBe(vao)
+      expect(colunas.getAttribute('data-h-quebra'), chave).toBe(quebra)
+      expect(filhasDe(colunas), chave).toHaveLength(filhos)
+    }
+  })
+
+  it('o inicio.css não guarda grade própria: só a Colunas e os ajustes de ponto de quebra (960 do turno e da faixa, 1280 da tabela)', () => {
+    const regras = lerRegrasCss('componentes/inicio/inicio.css')
+    const locais = regras.filter(
+      (regra) =>
+        regra.seletores.some((seletor) => /^\.in-(turno|faixa|tabela|relatos)-grade\b/.test(seletor)) &&
+        !regra.seletores.some((seletor) => seletor.includes("[data-h~='colunas']")),
+    )
+    for (const regra of locais) {
+      expect(regra.corpo, regra.seletores.join(', ')).not.toMatch(/display:\s*grid|grid-template-columns|(?:^|[\s;])gap:/)
+    }
+    const ajuste = (seletor: string, midia: string) =>
+      regras.find((regra) => regra.seletores.includes(seletor) && regra.midia === midia)?.corpo ?? ''
+    const colunas = "[data-h~='colunas']"
+    expect(ajuste(`.in-turno-grade${colunas}`, '@media (min-width: 960px)')).toContain('grid-template-columns: var(--h-colunas)')
+    expect(ajuste(`.in-faixa-grade${colunas}`, '@media (min-width: 960px)')).toContain('grid-template-columns: var(--h-colunas)')
+    expect(ajuste(`.in-tabela-grade${colunas}`, '@media (max-width: 1279px)')).toContain('grid-template-columns: minmax(0, 1fr)')
+  })
+
+  it('a tabela, a foto, o relato grande e cada relato menor são um Cartao; a cor fica nas classes e no data-painel', () => {
+    const { main } = abrirInicio()
+    const tabela = screen.getByRole('region', { name: NOMES.tabela })
+    const cartaoTabela = within(tabela).getByRole('table').closest<HTMLElement>(CARTAO)!
+    expect(cartaoTabela).not.toBeNull()
+    expect(cartaoTabela.getAttribute('data-painel')).toBe('oliva')
+    expect(cartaoTabela.classList.contains('cm-painel-oliva')).toBe(true)
+    expect(cartaoTabela.matches("[data-h~='coluna']")).toBe(true)
+
+    const foto = within(tabela).getByRole('img', { name: 'Um celular sobre linho com uma tela real do AppMaternidade' })
+    const cartaoFoto = foto.closest<HTMLElement>(CARTAO)!
+    expect(cartaoFoto).not.toBeNull()
+    expect(cartaoFoto.getAttribute('data-painel')).toBe('areia')
+    expect(cartaoFoto.classList.contains('cm-painel-areia')).toBe(true)
+    expect(cartaoFoto).not.toBe(cartaoTabela)
+
+    const relatos = screen.getByRole('region', { name: NOMES.relatos })
+    const [grande, ...menores] = within(relatos).getAllByRole('figure')
+    const cartaoGrande = grande.closest<HTMLElement>(CARTAO)!
+    expect(cartaoGrande).not.toBeNull()
+    expect(cartaoGrande.getAttribute('data-painel')).toBe('areia')
+    expect(cartaoGrande.classList.contains('cm-painel-areia')).toBe(true)
+    const cartoesMenores = menores.map((menor) => menor.closest<HTMLElement>(CARTAO)!)
+    for (const cartao of cartoesMenores) {
+      expect(cartao).not.toBeNull()
+      expect(cartao.hasAttribute('data-painel')).toBe(false)
+      expect(cartao.matches("[data-h~='coluna']")).toBe(true)
+    }
+    expect(new Set([cartaoGrande, ...cartoesMenores]).size).toBe(3)
+    // Só esses cinco: o painel de cor das seções é a caixa de cor, e o cartão do turno é o flutuante da base.
+    expect(main.querySelectorAll(CARTAO)).toHaveLength(5)
+  })
+
+  it('o padding dos cartões é o da primitiva: o inicio.css não escreve padding no cartão de oliva, na foto nem no relato grande', () => {
+    const regras = lerRegrasCss('componentes/inicio/inicio.css')
+    const fonte = readFileSync(join(process.cwd(), 'src', 'componentes/inicio/inicio.css'), 'utf8')
+    expect(fonte).not.toMatch(/--in-tabela-lado/)
+    const doCartao = regras.filter((regra) =>
+      regra.seletores.some((seletor) => /cm-painel-oliva|\.in-tabela-foto(?![\w-])|\.in-relato-grande(?![\w-])|\.in-relatos-menor/.test(seletor)),
+    )
+    expect(doCartao.length).toBeGreaterThan(0)
+    for (const regra of doCartao) {
+      expect(regra.corpo, regra.seletores.join(', ')).not.toMatch(/(?:^|[\s;])padding(?:-[a-z]+)*\s*:/)
+    }
+  })
+
+  it('a abertura da tabela e a dos relatos ficam em QuadroLayout `medio`, e a grade abaixo delas não', () => {
+    abrirInicio()
+    const tabela = screen.getByRole('region', { name: NOMES.tabela })
+    const tituloTabela = within(tabela).getByRole('heading', { level: 2 })
+    const medioTabela = tituloTabela.closest<HTMLElement>("[data-h-largura='medio']")!
+    expect(medioTabela).not.toBeNull()
+    expect(medioTabela.matches("[data-h~='quadro']")).toBe(true)
+    expect(medioTabela.contains(colunasDe(tabela))).toBe(false)
+    expect(within(tabela).getByRole('table').closest("[data-h-largura='medio']")).toBeNull()
+
+    const relatos = screen.getByRole('region', { name: NOMES.relatos })
+    const tituloRelatos = within(relatos).getByRole('heading', { level: 2 })
+    const medioRelatos = tituloRelatos.closest<HTMLElement>("[data-h-largura='medio']")!
+    expect(medioRelatos).not.toBeNull()
+    expect(within(medioRelatos).getByText('Relatos ilustrativos')).toBeTruthy()
+    expect(medioRelatos.contains(colunasDe(relatos))).toBe(false)
+    // A grade fica no quadro de largura cheia, irmão da abertura.
+    expect(colunasDe(relatos).closest<HTMLElement>("[data-h~='quadro']")!.getAttribute('data-h-largura')).toBe('quadro')
   })
 })
