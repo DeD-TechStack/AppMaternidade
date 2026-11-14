@@ -563,3 +563,5 @@ Nenhuma tarefa de implementação (MAT-17 a MAT-19) começa sem pedido dele.
 - **14/11 01:10:** GO cards (equipe ca2404b). Soltos e rodando: H-3a t_e9313367 (ready/executor; triage→review recusado 409), QA-F2 t_1dcaa165, P-55 t_6544886b, P-56 t_506d9c94, A11Y-F2 t_a37f1086 (testes trocados autorizados, comentário 829), RF12-SPEC-v2 t_db57628a. Comentários 830-832 com o recibo --receipt-from.
 
 - **14/11 01:12:** RF12-SPEC-v2 t_db57628a deu gave_up 2/2 antes de trabalhar ("Kanban owner refused: Kanban execution unknown"); [D coordenador] avisado (t_b317581e), comentário 833. H-3a em revisão; QA-F2, P-55, P-56 e A11Y-F2 rodando.
+
+- **14/11 01:25:** P-55 e P-56 devolvidas na R2 (causa: teste; correção 2/2, comentários 835/837). Criados QA-F4 t_0b58ed8a (QA-15, filho da QA-F2), QA-F5 t_19fbae19 (QA-16) e QA-F6 t_d0de84c6 (QA-17, exportação). A11Y-F2 em revisão (4241bef).
