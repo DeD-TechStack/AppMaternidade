@@ -133,6 +133,10 @@ describe('LOC-04: o fuso horário em pt-BR (C12)', () => {
     expect(rotuloDoFuso('Nao/Existe')).toBe('Nao/Existe')
   })
 
+  it('a linha do fuso na Família mostra o rótulo em pt-BR, não o identificador', () => {
+    expect(FAMILIA.fuso('America/Sao_Paulo')).toBe('Fuso: Horário de Brasília (UTC−3)')
+  })
+
   it('o seletor mostra o rótulo em pt-BR e guarda o identificador IANA como valor', () => {
     render(createElement(SeletorFuso, { rotulo: 'Seu fuso horário', valor: 'America/Sao_Paulo', aoMudar: semEfeito }))
     const seletor = screen.getByLabelText('Seu fuso horário') as HTMLSelectElement
