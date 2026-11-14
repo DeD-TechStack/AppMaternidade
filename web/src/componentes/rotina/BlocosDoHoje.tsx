@@ -29,7 +29,7 @@ export function ParaVoceSaber({ notas, autorDe, agora, className, dataH, rodape 
   const idTitulo = useId()
   return (
     <Pilha as="section" vao="pilha" dataH={dataH} aria-labelledby={idTitulo} data-notas="" className={className}>
-      <h2 id={idTitulo} className="cm-h4">
+      <h2 id={idTitulo} className="text-titulo-4 font-titulo font-semibold">
         {HOJE.paraVoceSaber}
       </h2>
       {notas.length === 0 ? (
@@ -88,7 +88,7 @@ export function DesdeUltimoRegistro({ marcoEm, registros, fuso, autorDe, marcaDe
   const idTitulo = useId()
   return (
     <Pilha as="section" vao="pilha" dataH={dataH} aria-labelledby={idTitulo} data-desde="" className={className}>
-      <h2 id={idTitulo} className="cm-h4">
+      <h2 id={idTitulo} className="text-titulo-4 font-titulo font-semibold">
         {HOJE.desdeOUltimo(formatarHora(marcoEm))}
       </h2>
       {registros.length === 0 ? (

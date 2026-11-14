@@ -48,7 +48,7 @@ export function CartaoSessao({ sessao, agora, aoEncerrar, podeEncerrar = true, o
         tabIndex={-1}
         data-h="cartao"
         data-andamento=""
-        className={`alvo-foco flex flex-col gap-esp-junto rounded-cartao border border-(--cor-fio-suave) bg-(--cor-cartao) ${className ?? ''}`}
+        className={`alvo-foco flex flex-col gap-esp-junto border border-(--cor-fio-suave) bg-(--cor-cartao) ${className ?? ''}`}
       >
         <h2 id={idTitulo} className="text-pequeno font-medium text-(--cor-texto-2)">
           Em andamento
@@ -77,7 +77,7 @@ export function CartaoSessao({ sessao, agora, aoEncerrar, podeEncerrar = true, o
       data-h="cartao"
       data-andamento=""
       data-tipo={sessao.tipo}
-      className={`alvo-foco relative flex overflow-hidden rounded-cartao bg-(--cor-campo-sessao) p-esp-painel text-(--cor-numero-sessao) [border:var(--borda-campo)] lg:items-stretch lg:gap-esp-grupo ${className ?? ''}`}
+      className={`alvo-foco relative flex overflow-hidden bg-(--cor-campo-sessao) text-(--cor-numero-sessao) [border:var(--borda-campo)] lg:items-stretch lg:gap-esp-grupo ${className ?? ''}`}
     >
       <Pilha vao="pilha" className="relative z-10 min-w-0 flex-1 lg:flex-none lg:[[data-tema=madrugada]_&]:flex-1">
         <div className="flex items-center gap-2.5">

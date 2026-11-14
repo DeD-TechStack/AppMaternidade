@@ -91,13 +91,13 @@ export function Controle({
       </label>
       {children({ id, 'aria-invalid': erro ? true : undefined, 'aria-describedby': ligados })}
       {erro ? (
-        <p id={`${id}-erro`} className="cm-campo-mensagem cm-campo-erro cm-pequeno flex items-start gap-2">
+        <p id={`${id}-erro`} className="cm-campo-mensagem cm-campo-erro text-pequeno flex items-start gap-2">
           <CircleAlert size={18} aria-hidden="true" className="mt-0.5 shrink-0" />
           <span>{erro}</span>
         </p>
       ) : null}
       {ajuda ? (
-        <p id={`${id}-ajuda`} className="cm-campo-mensagem cm-pequeno text-(--cor-texto-2)">
+        <p id={`${id}-ajuda`} className="cm-campo-mensagem text-pequeno text-(--cor-texto-2)">
           {ajuda}
         </p>
       ) : null}

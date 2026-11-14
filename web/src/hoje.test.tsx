@@ -129,7 +129,7 @@ describe('Hoje: o título e o bebê ativo', () => {
     expect(h1.textContent).toBe('Hoje')
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
     expect(h1.getAttribute('tabindex')).toBe('-1')
-    expect(h1.classList.contains('cm-h1')).toBe(true)
+    expect(h1.classList.contains('text-titulo-1')).toBe(true)
     const linha = screen.getByText('Heloísa, 3 meses')
     expect(linha.tagName).toBe('P')
     expect(linha.classList.contains('italic')).toBe(true)

@@ -34,7 +34,7 @@ export function SecaoDoHoje<T>({ secao, titulo, papel, className, dataH, childre
         data-secao-estado={secao.estado}
         className={className}
       >
-        <h2 id={idTitulo} className="cm-h4">
+        <h2 id={idTitulo} className="text-titulo-4 font-titulo font-semibold">
           {titulo}
         </h2>
         {secao.estado === 'erro' && secao.erro ? (

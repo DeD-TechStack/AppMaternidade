@@ -22,8 +22,8 @@ export function TituloDaTela({ titulo, linha, antes, lateral }: Props) {
       {antes}
       <div className="flex flex-wrap items-end justify-between gap-x-esp-grupo gap-y-esp-junto">
         <Pilha vao="junto" className="min-w-0">
-          <h1 className="cm-h1">{titulo}</h1>
-          <p className="cm-h3 font-medium italic">{linha}</p>
+          <h1 className="text-titulo-1 font-titulo font-semibold">{titulo}</h1>
+          <p className="text-titulo-3 font-titulo font-medium italic">{linha}</p>
         </Pilha>
         {lateral}
       </div>

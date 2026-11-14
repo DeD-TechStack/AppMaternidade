@@ -37,7 +37,7 @@ export function UltimosDoHoje({ itens, marcaDe, className, dataH }: Props) {
   const idTitulo = useId()
   return (
     <Pilha as="section" vao="pilha" dataH={dataH} id="ultimos" data-ultimos="" aria-labelledby={idTitulo} className={className}>
-      <h2 id={idTitulo} className="cm-h4">
+      <h2 id={idTitulo} className="text-titulo-4 font-titulo font-semibold">
         {HOJE.ultimos}
       </h2>
       {/* A mesma linguagem do histórico: linhas com fio fino, sem cartão. Em 1440, três colunas entre os

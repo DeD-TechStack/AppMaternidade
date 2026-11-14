@@ -208,7 +208,7 @@ function DetalheDoRegistro() {
               const ordenadas = [...lista.itens].sort((a, b) => a.versao - b.versao || (a.recebidaEm < b.recebidaEm ? -1 : 1))
               return (
                 <Pilha as="section" vao="pilha" aria-labelledby="detalhe-alteracoes" data-historico-de-alteracoes="">
-                  <h2 id="detalhe-alteracoes" className="cm-h4">
+                  <h2 id="detalhe-alteracoes" className="text-titulo-4 font-titulo font-semibold">
                     {DETALHE.historicoDeAlteracoes}
                   </h2>
                   {lista.incompleta ? <AvisoDeLista limite={LIMITES.alteracoes} dado="alteracoes" /> : null}

@@ -8,7 +8,7 @@ import { ALVO_APP } from '../app/alvo.ts'
 import { Avatar } from '../app/Avatar.tsx'
 import { PerguntaSessaoCurta, sessaoCurta } from '../app/PerguntaSessaoCurta.tsx'
 import { Botao } from '../base/Botao.tsx'
-import { Pilha } from '../base/layout/index.ts'
+import { Cartao, Pilha } from '../base/layout/index.ts'
 import { AvisoDeErro } from './AvisoDeErro.tsx'
 import { PainelFimEmOutroHorario } from './PainelFimEmOutroHorario.tsx'
 
@@ -106,138 +106,138 @@ export function SessoesEmParalelo({
   return (
     <Pilha vao="pilha" className={className} data-sessoes-em-paralelo="">
       {repetidos.map(([tipo, grupo]) => (
-        <Pilha
+        <Cartao
           key={tipo}
-          vao="pilha"
-          dataH="cartao"
           data-uniao={tipo}
           className="border border-(--cor-fio-suave) bg-(--cor-cartao) [box-shadow:var(--sombra-cartao)]"
         >
-          <p className="font-medium">{SESSOES.duasDoMesmoTipo(grupo.length, minusculo(ROTULO_TIPO[tipo]))}</p>
-          {podeUnir(grupo) ? (
-            <Botao
-              variante="contorno"
-              tamanho="app"
-              className={`self-start ${ALVO_APP}`}
-              desativado={uniao?.unindo === true}
-              onClick={() => void unir(tipo, grupo)}
-            >
-              {uniao?.unindo && uniao.tipo === tipo ? SESSOES.unindo : SESSOES.unir}
-            </Botao>
-          ) : null}
-          {uniao && uniao.tipo === tipo && uniao.erro ? (
-            <AvisoDeErro erro={uniao.erro} escrita>
-              <p className="font-medium">{SESSOES.uniaoIncompleta}</p>
-            </AvisoDeErro>
-          ) : null}
-        </Pilha>
+          <Pilha vao="pilha">
+            <p className="font-medium">{SESSOES.duasDoMesmoTipo(grupo.length, minusculo(ROTULO_TIPO[tipo]))}</p>
+            {podeUnir(grupo) ? (
+              <Botao
+                variante="contorno"
+                tamanho="app"
+                className={`self-start ${ALVO_APP}`}
+                desativado={uniao?.unindo === true}
+                onClick={() => void unir(tipo, grupo)}
+              >
+                {uniao?.unindo && uniao.tipo === tipo ? SESSOES.unindo : SESSOES.unir}
+              </Botao>
+            ) : null}
+            {uniao && uniao.tipo === tipo && uniao.erro ? (
+              <AvisoDeErro erro={uniao.erro} escrita>
+                <p className="font-medium">{SESSOES.uniaoIncompleta}</p>
+              </AvisoDeErro>
+            ) : null}
+          </Pilha>
+        </Cartao>
       ))}
       {algumGrupoSemPermissao ? <p className="text-pequeno text-(--cor-texto-2)">{textoDoPapel}</p> : null}
 
       {outras.length > 0 ? (
-        <Pilha
+        <Cartao
           as="section"
-          vao="junto"
-          dataH="cartao"
           aria-label={SESSOES.outras}
           data-outras-sessoes=""
           className="border border-(--cor-fio-suave) bg-(--cor-cartao) [box-shadow:var(--sombra-cartao)]"
         >
-          <h3 className="cm-h4">{SESSOES.outras}</h3>
-          <ul ref={lista}>
-            {outras.map((sessao) => {
-              const autor = autorDe(sessao)
-              return (
-                <li
-                  key={sessao.id}
-                  className="flex flex-wrap items-center gap-3 border-t border-(--cor-fio-suave) py-3.5 first:border-t-0"
-                >
-                  <Avatar nome={autor} />
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium">
-                      {ROTULO_TIPO[sessao.tipo]} <span className="tabular-nums">{formatarDuracao(agora - Date.parse(sessao.inicio))}</span>
-                    </p>
-                    <p className="text-pequeno text-(--cor-texto-2)">{SESSOES.porAutor(autor)}</p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {podeEncerrar ? (
-                      <Botao
-                        variante="contorno"
-                        tamanho="app"
-                        className={ALVO_APP}
-                        aria-label={`${SESSOES.encerrar} ${minusculo(ROTULO_TIPO[sessao.tipo])}`}
-                        desativado={ocupado}
-                        data-encerrar-sessao={sessao.id}
-                        onClick={() => pedirEncerrar(sessao)}
+          <Pilha vao="junto">
+            <h3 className="text-titulo-4 font-titulo font-semibold">{SESSOES.outras}</h3>
+            <ul ref={lista}>
+              {outras.map((sessao) => {
+                const autor = autorDe(sessao)
+                return (
+                  <li
+                    key={sessao.id}
+                    className="flex flex-wrap items-center gap-3 border-t border-(--cor-fio-suave) py-3.5 first:border-t-0"
+                  >
+                    <Avatar nome={autor} />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium">
+                        {ROTULO_TIPO[sessao.tipo]} <span className="tabular-nums">{formatarDuracao(agora - Date.parse(sessao.inicio))}</span>
+                      </p>
+                      <p className="text-pequeno text-(--cor-texto-2)">{SESSOES.porAutor(autor)}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {podeEncerrar ? (
+                        <Botao
+                          variante="contorno"
+                          tamanho="app"
+                          className={ALVO_APP}
+                          aria-label={`${SESSOES.encerrar} ${minusculo(ROTULO_TIPO[sessao.tipo])}`}
+                          desativado={ocupado}
+                          data-encerrar-sessao={sessao.id}
+                          onClick={() => pedirEncerrar(sessao)}
+                        >
+                          {SESSOES.encerrar}
+                        </Botao>
+                      ) : null}
+                      <Link
+                        to={`/app/sessao?id=${sessao.id}`}
+                        state={{ foco: 'titulo' }}
+                        className={`cm-botao cm-botao-texto alvo-toque ${ALVO_APP}`}
+                        data-botao="texto"
+                        data-tamanho="app"
+                        aria-label={`${SESSOES.verSessao} ${minusculo(ROTULO_TIPO[sessao.tipo])}`}
                       >
-                        {SESSOES.encerrar}
-                      </Botao>
+                        {SESSOES.verSessao}
+                      </Link>
+                    </div>
+                    {podeEncerrar && curtaDe === sessao.id ? (
+                      <PerguntaSessaoCurta
+                        className="w-full"
+                        ocupado={ocupado}
+                        podeDescartar={aoDescartar !== undefined && (podeDescartar?.(sessao) ?? true)}
+                        aoSalvar={() => {
+                          setCurtaDe(null)
+                          aoEncerrar(sessao)
+                        }}
+                        aoDescartar={() => {
+                          setCurtaDe(null)
+                          aoDescartar?.(sessao)
+                        }}
+                        aoFechar={() => fecharPergunta(sessao.id)}
+                      />
                     ) : null}
-                    <Link
-                      to={`/app/sessao?id=${sessao.id}`}
-                      state={{ foco: 'titulo' }}
-                      className={`cm-botao cm-botao-texto alvo-toque ${ALVO_APP}`}
-                      data-botao="texto"
-                      data-tamanho="app"
-                      aria-label={`${SESSOES.verSessao} ${minusculo(ROTULO_TIPO[sessao.tipo])}`}
-                    >
-                      {SESSOES.verSessao}
-                    </Link>
-                  </div>
-                  {podeEncerrar && curtaDe === sessao.id ? (
-                    <PerguntaSessaoCurta
-                      className="w-full"
-                      ocupado={ocupado}
-                      podeDescartar={aoDescartar !== undefined && (podeDescartar?.(sessao) ?? true)}
-                      aoSalvar={() => {
-                        setCurtaDe(null)
-                        aoEncerrar(sessao)
-                      }}
-                      aoDescartar={() => {
-                        setCurtaDe(null)
-                        aoDescartar?.(sessao)
-                      }}
-                      aoFechar={() => fecharPergunta(sessao.id)}
-                    />
-                  ) : null}
-                </li>
-              )
-            })}
-          </ul>
-        </Pilha>
+                  </li>
+                )
+              })}
+            </ul>
+          </Pilha>
+        </Cartao>
       ) : null}
 
       {podeEncerrar
         ? esquecidas.map((sessao) => (
-            <Pilha
+            <Cartao
               key={sessao.id}
-              vao="pilha"
-              dataH="cartao"
               data-esquecida={sessao.id}
               className="border border-(--cor-fio-suave) bg-(--cor-cartao) [box-shadow:var(--sombra-cartao)]"
             >
-              <p className="font-medium">
-                {sessao.id === relogioAtrasDe ? SESSOES.relogioAtras : SESSOES.esquecida(formatarDuracao(agora - Date.parse(sessao.inicio)))}
-              </p>
-              {painelAberto === sessao.id ? (
-                <PainelFimEmOutroHorario
-                  inicio={Date.parse(sessao.inicio)}
-                  ocupado={ocupado}
-                  aoCancelar={() => setPainelAberto(null)}
-                  aoConfirmar={(momento) => aoEncerrarEm(sessao, momento)}
-                />
-              ) : (
-                <Botao
-                  variante="contorno"
-                  tamanho="app"
-                  className={`self-start ${ALVO_APP}`}
-                  aria-label={`${SESSOES.encerrarOutroHorario}, ${minusculo(ROTULO_TIPO[sessao.tipo])}`}
-                  onClick={() => setPainelAberto(sessao.id)}
-                >
-                  {SESSOES.encerrarOutroHorario}
-                </Botao>
-              )}
-            </Pilha>
+              <Pilha vao="pilha">
+                <p className="font-medium">
+                  {sessao.id === relogioAtrasDe ? SESSOES.relogioAtras : SESSOES.esquecida(formatarDuracao(agora - Date.parse(sessao.inicio)))}
+                </p>
+                {painelAberto === sessao.id ? (
+                  <PainelFimEmOutroHorario
+                    inicio={Date.parse(sessao.inicio)}
+                    ocupado={ocupado}
+                    aoCancelar={() => setPainelAberto(null)}
+                    aoConfirmar={(momento) => aoEncerrarEm(sessao, momento)}
+                  />
+                ) : (
+                  <Botao
+                    variante="contorno"
+                    tamanho="app"
+                    className={`self-start ${ALVO_APP}`}
+                    aria-label={`${SESSOES.encerrarOutroHorario}, ${minusculo(ROTULO_TIPO[sessao.tipo])}`}
+                    onClick={() => setPainelAberto(sessao.id)}
+                  >
+                    {SESSOES.encerrarOutroHorario}
+                  </Botao>
+                )}
+              </Pilha>
+            </Cartao>
           ))
         : null}
     </Pilha>

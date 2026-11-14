@@ -75,7 +75,7 @@ function LixeiraDoBebe({ ativo }: { ativo: BebeAtivo }) {
             const itens = [...lista.itens].sort(maisRecenteDaExclusao)
             return (
               <Pilha as="section" vao="pilha" aria-labelledby="lixeira-lista" data-lixeira="">
-                <h2 id="lixeira-lista" className="cm-h4">
+                <h2 id="lixeira-lista" className="text-titulo-4 font-titulo font-semibold">
                   {LIXEIRA.lista}
                 </h2>
                 {lista.incompleta ? <AvisoDeLista limite={LIMITES.lixeira} dado="lixeira" /> : null}

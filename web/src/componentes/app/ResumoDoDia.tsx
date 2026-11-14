@@ -16,7 +16,7 @@ export function ResumoDoDia({ itens, className }: Props) {
   const idTitulo = useId()
   return (
     <Pilha as="section" vao="pilha" aria-labelledby={idTitulo} data-resumo="" className={`@container/resumo ${className ?? ''}`}>
-      <h2 id={idTitulo} className="cm-h4">
+      <h2 id={idTitulo} className="text-titulo-4 font-titulo font-semibold">
         Hoje até agora
       </h2>
       {/* A grade decide pelo espaço da própria seção, não pela janela: abaixo de 18 rem (390 a 200 %, fonte

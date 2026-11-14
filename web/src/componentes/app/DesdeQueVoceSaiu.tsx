@@ -121,7 +121,7 @@ export function DesdeQueVoceSaiu({ itens, className }: Props) {
   const idTitulo = useId()
   return (
     <Pilha as="section" vao="pilha" aria-labelledby={idTitulo} data-desde="" className={className}>
-      <h2 id={idTitulo} className="cm-h4">
+      <h2 id={idTitulo} className="text-titulo-4 font-titulo font-semibold">
         Desde que você saiu
       </h2>
       {itens.length === 0 ? (

@@ -6,7 +6,7 @@ import { linhasDoResumo, type TotaisDoPeriodo } from './totaisHistorico.ts'
 export function TotaisDoDia({ totais }: { totais: TotaisDoPeriodo }) {
   return (
     <Pilha as="section" vao="pilha" aria-labelledby="historico-resumo" data-resumo-do-dia="">
-      <h2 id="historico-resumo" className="cm-h4">
+      <h2 id="historico-resumo" className="text-titulo-4 font-titulo font-semibold">
         {HISTORICO.resumoDoDia}
       </h2>
       <dl className="border-y border-(--cor-fio-suave)">

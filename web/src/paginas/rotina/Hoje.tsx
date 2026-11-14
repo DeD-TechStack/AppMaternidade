@@ -283,7 +283,7 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
           data-h="cartao"
           data-andamento=""
           aria-busy={emAndamento.estado === 'carregando' ? 'true' : undefined}
-          className="alvo-foco flex flex-col gap-esp-pilha rounded-cartao border border-(--cor-fio-suave) bg-(--cor-cartao)"
+          className="alvo-foco flex flex-col gap-esp-pilha border border-(--cor-fio-suave) bg-(--cor-cartao)"
         >
           <h2 className="text-pequeno font-medium text-(--cor-texto-2)">{HOJE.emAndamento}</h2>
           {emAndamento.erro ? (
@@ -408,7 +408,7 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
         if (doDia.registros.incompleta || doDia.sessoes.incompleta) {
           return (
             <Pilha as="section" vao="pilha" aria-labelledby="hoje-ate-agora" data-resumo="">
-              <h2 id="hoje-ate-agora" className="cm-h4">
+              <h2 id="hoje-ate-agora" className="text-titulo-4 font-titulo font-semibold">
                 {HOJE.hojeAteAgora}
               </h2>
               <p className="text-(--cor-texto-2)">{ESTADOS.demaisParaSomar}</p>
@@ -436,7 +436,7 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
         if (concluidos.length === 0) {
           return (
             <Pilha as="section" vao="pilha" id="ultimos" data-ultimos="" aria-labelledby="ultimos-titulo">
-              <h2 id="ultimos-titulo" className="cm-h4">
+              <h2 id="ultimos-titulo" className="text-titulo-4 font-titulo font-semibold">
                 {HOJE.ultimos}
               </h2>
               <p className="border-y border-(--cor-fio-suave) py-4 text-(--cor-texto-2)">

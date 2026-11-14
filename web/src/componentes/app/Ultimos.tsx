@@ -29,7 +29,7 @@ export function Ultimos({ itens, className, dataH }: Props) {
       aria-labelledby={idTitulo}
       className={className}
     >
-      <h2 id={idTitulo} className="cm-h4">
+      <h2 id={idTitulo} className="text-titulo-4 font-titulo font-semibold">
         Últimos
       </h2>
       {/* A mesma linguagem do histórico: linhas com fio fino, sem cartão. Em 1440, três colunas entre os

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { FORMULARIO, SESSOES } from '../../conteudo/rotina.ts'
 import { ALVO_APP } from '../app/alvo.ts'
 import { Botao } from '../base/Botao.tsx'
-import { Pilha } from '../base/layout/index.ts'
+import { Cartao, Pilha } from '../base/layout/index.ts'
 import { CampoHorario, type Horario } from './CampoHorario.tsx'
 import { dividirDataEHora, juntarDataEHora } from './formatos.ts'
 
@@ -37,32 +37,32 @@ export function PainelFimEmOutroHorario({ inicio, aoConfirmar, aoCancelar, ocupa
   }
 
   return (
-    <Pilha
-      vao="pilha"
-      dataH="cartao"
+    <Cartao
       role="group"
       aria-label={SESSOES.encerrarOutroHorario}
       data-painel-sessao="outro-horario"
       className="bg-(--cor-fundo) text-(--cor-texto)"
     >
-      <CampoHorario
-        rotulo={FORMULARIO.fim}
-        valor={horario}
-        aoMudar={(novo) => {
-          setHorario(novo)
-          setErro(null)
-        }}
-        erro={erro}
-        somenteLeitura={ocupado}
-      />
-      <div className="flex flex-wrap items-center gap-3">
-        <Botao tamanho="app" className={`min-w-[8.5rem] ${ALVO_APP}`} desativado={ocupado} onClick={confirmar}>
-          {SESSOES.encerrar}
-        </Botao>
-        <Botao variante="texto" tamanho="app" className={ALVO_APP} onClick={aoCancelar}>
-          {FORMULARIO.cancelar}
-        </Botao>
-      </div>
-    </Pilha>
+      <Pilha vao="pilha">
+        <CampoHorario
+          rotulo={FORMULARIO.fim}
+          valor={horario}
+          aoMudar={(novo) => {
+            setHorario(novo)
+            setErro(null)
+          }}
+          erro={erro}
+          somenteLeitura={ocupado}
+        />
+        <div className="flex flex-wrap items-center gap-3">
+          <Botao tamanho="app" className={`min-w-[8.5rem] ${ALVO_APP}`} desativado={ocupado} onClick={confirmar}>
+            {SESSOES.encerrar}
+          </Botao>
+          <Botao variante="texto" tamanho="app" className={ALVO_APP} onClick={aoCancelar}>
+            {FORMULARIO.cancelar}
+          </Botao>
+        </div>
+      </Pilha>
+    </Cartao>
   )
 }

@@ -118,7 +118,7 @@ function HistoricoDoBebe({ ativo }: { ativo: BebeAtivo }) {
         {lido.sessoes.incompleta ? <AvisoDeLista limite={LIMITES.sessoesDaJanela} dado="sessoes" /> : null}
         {incompleta ? (
           <Pilha as="section" vao="pilha" aria-labelledby="historico-resumo" data-resumo-do-dia="">
-            <h2 id="historico-resumo" className="cm-h4">
+            <h2 id="historico-resumo" className="text-titulo-4 font-titulo font-semibold">
               {HISTORICO.resumoDoDia}
             </h2>
             <p className="text-(--cor-texto-2)">{ESTADOS.demaisParaSomar}</p>
@@ -127,7 +127,7 @@ function HistoricoDoBebe({ ativo }: { ativo: BebeAtivo }) {
           <TotaisDoDia totais={totais} />
         ) : null}
         <Pilha as="section" vao="pilha" aria-labelledby="historico-registros" data-registros-do-dia="">
-          <h2 id="historico-registros" className="cm-h4">
+          <h2 id="historico-registros" className="text-titulo-4 font-titulo font-semibold">
             {HISTORICO.registrosDoDia}
           </h2>
           {visiveis.length === 0 ? (

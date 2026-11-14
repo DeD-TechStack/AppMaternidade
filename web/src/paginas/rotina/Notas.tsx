@@ -4,7 +4,7 @@ import { ChevronLeft, Pencil, Plus, Trash2 } from 'lucide-react'
 import { ALVO_APP } from '../../componentes/app/alvo.ts'
 import { Avatar } from '../../componentes/app/Avatar.tsx'
 import { Botao } from '../../componentes/base/Botao.tsx'
-import { Pilha } from '../../componentes/base/layout/index.ts'
+import { Cartao, Pilha } from '../../componentes/base/layout/index.ts'
 import { AvisoDeErro } from '../../componentes/rotina/AvisoDeErro.tsx'
 import { AvisoDeLista } from '../../componentes/rotina/AvisoDeLista.tsx'
 import { FormularioNota } from '../../componentes/rotina/FormularioNota.tsx'
@@ -112,7 +112,7 @@ function ListaDeNotas({ ativo }: { ativo: BebeAtivo }) {
             const itens = [...lista.itens].sort(maisNovaPrimeiro)
             return (
               <Pilha as="section" vao="pilha" aria-labelledby="notas-lista" data-notas-da-familia="">
-                <h2 id="notas-lista" className="cm-h4">
+                <h2 id="notas-lista" className="text-titulo-4 font-titulo font-semibold">
                   {NOTAS.lista}
                 </h2>
                 {lista.incompleta ? <AvisoDeLista limite={LIMITES.notas} dado="notas" /> : null}
@@ -141,17 +141,19 @@ function ListaDeNotas({ ativo }: { ativo: BebeAtivo }) {
                           </div>
                           {podeAlterar(nota) ? (
                             excluindo === nota.id ? (
-                              <Pilha vao="pilha" dataH="cartao" role="group" aria-label={NOTAS.grupoDaExclusao} className="bg-(--cor-papel-fundo)" data-confirmar-exclusao="">
-                                <p className="font-medium">{NOTAS.confirmarExclusao}</p>
-                                <div className="flex flex-wrap gap-3">
-                                  <Botao tamanho="app" className={ALVO_APP} desativado={ocupada === nota.id} onClick={() => void excluir(nota)}>
-                                    {NOTAS.excluir}
-                                  </Botao>
-                                  <Botao variante="contorno" tamanho="app" className={ALVO_APP} onClick={() => setExcluindo(null)}>
-                                    {NOTAS.manter}
-                                  </Botao>
-                                </div>
-                              </Pilha>
+                              <Cartao role="group" aria-label={NOTAS.grupoDaExclusao} className="bg-(--cor-papel-fundo)" data-confirmar-exclusao="">
+                                <Pilha vao="pilha">
+                                  <p className="font-medium">{NOTAS.confirmarExclusao}</p>
+                                  <div className="flex flex-wrap gap-3">
+                                    <Botao tamanho="app" className={ALVO_APP} desativado={ocupada === nota.id} onClick={() => void excluir(nota)}>
+                                      {NOTAS.excluir}
+                                    </Botao>
+                                    <Botao variante="contorno" tamanho="app" className={ALVO_APP} onClick={() => setExcluindo(null)}>
+                                      {NOTAS.manter}
+                                    </Botao>
+                                  </div>
+                                </Pilha>
+                              </Cartao>
                             ) : (
                               <div className="flex flex-wrap gap-3">
                                 <LinkDaRotina
