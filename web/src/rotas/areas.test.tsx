@@ -27,13 +27,7 @@ afterEach(() => {
 const caminhoDe = (rota: RouteObject) => rota.path
 
 describe('rotasDasAreas: o registro por área', () => {
-  it('é uma única rota sem caminho (o provedor de sessão) com todas as públicas e uma guarda', () => {
-    expect(rotasDasAreas).toHaveLength(1)
-    const [raiz] = rotasDasAreas
-    expect(raiz.path).toBeUndefined()
-    expect(raiz.element).toBeTruthy()
-
-    const filhos = raiz.children!
+  it('são todas as públicas e uma guarda (o provedor de sessão fica acima da casca, em rotas.tsx)', () => {
     const publicas = [
       ...rotasContaPublicas,
       ...rotasRotinaPublicas,
@@ -41,9 +35,9 @@ describe('rotasDasAreas: o registro por área', () => {
       ...rotasComunidadePublicas,
       ...rotasModeracaoPublicas,
     ]
-    expect(filhos.slice(0, publicas.length)).toEqual(publicas)
+    expect(rotasDasAreas.slice(0, publicas.length)).toEqual(publicas)
 
-    const guarda = filhos.slice(publicas.length)
+    const guarda = rotasDasAreas.slice(publicas.length)
     expect(guarda).toHaveLength(1)
     expect(guarda[0].path).toBeUndefined()
     expect(guarda[0].children).toEqual([
@@ -127,17 +121,26 @@ describe('rotasDasAreas: o registro por área', () => {
     expect(tituloDaAba(TITULOS.conta)).toBe('Conta | AppMaternidade')
   })
 
-  it('em rotas.tsx, entra como filho direto do Layout, depois das rotas do site e antes da rota *', () => {
-    const [layout] = criarRotas()
+  it('em rotas.tsx, o provedor de sessão fica acima do Layout, e as áreas entram como filhas do Layout, depois das rotas do site e antes da rota *', () => {
+    // Uma única rota raiz, sem caminho: o provedor de sessão de toda rota (as públicas também), pai do Layout.
+    const raizes = criarRotas()
+    expect(raizes).toHaveLength(1)
+    const [sessao] = raizes
+    expect(sessao.path).toBeUndefined()
+    expect(sessao.element).toBeTruthy()
+    expect(sessao.children).toHaveLength(1)
+    const [layout] = sessao.children!
+    expect(layout.path).toBeUndefined()
     const filhos = layout.children!
-    const indiceDasAreas = filhos.indexOf(rotasDasAreas[0])
+    const guarda = rotasDasAreas[rotasDasAreas.length - 1]
+    const indiceDaGuarda = filhos.indexOf(guarda)
 
     // A base nova tem as páginas públicas e o /sistema antes das áreas: a ordem fixa que importa é que as
     // áreas venham logo antes da rota `*`. O Hoje e a Sessão saíram daqui: moram em `rotasRotinaLogadas`.
     expect(filhos[0].index).toBe(true)
-    expect(filhos.filter((rota) => rota.element === rotasDasAreas[0].element)).toHaveLength(1)
-    expect(indiceDasAreas).toBe(filhos.length - 2)
-    expect(caminhoDe(filhos[indiceDasAreas])).toBeUndefined()
+    expect(filhos.slice(filhos.length - 1 - rotasDasAreas.length, filhos.length - 1)).toEqual(rotasDasAreas)
+    expect(indiceDaGuarda).toBe(filhos.length - 2)
+    expect(caminhoDe(filhos[indiceDaGuarda])).toBeUndefined()
     expect(filhos[filhos.length - 1].path).toBe('*')
     expect(filhos.map(caminhoDe)).not.toEqual(expect.arrayContaining(['app/hoje']))
     expect(filhos.map(caminhoDe)).not.toEqual(expect.arrayContaining(['app/sessao']))

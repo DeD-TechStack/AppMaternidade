@@ -569,9 +569,27 @@
       gap: var(--espaco-junto);
     }
 
+    .cm-cabecalho[data-contexto='logado'] .cm-cab-miolo {
+      gap: var(--espaco-junto);
+    }
+
     .cm-cabecalho[data-contexto='logado'] .cm-cab-acoes {
       flex: none;
+      gap: var(--espaco-junto);
       margin-left: var(--espaco-junto);
+    }
+
+    /* R2-01: com marca, seis links, Conta e Sair a 1100 o rótulo longo da lua não cabe na janela. No cabeçalho
+       logado, de 1100 para cima, a lua fica só com o ícone (o nome acessível continua "Modo madrugada"), como
+       abaixo de 480; o 1440 mantém a mesma linha. */
+    .cm-cabecalho[data-contexto='logado'] .cm-cab-madrugada {
+      width: 48px;
+      padding: 0;
+    }
+
+    .cm-cabecalho[data-contexto='logado'] .cm-cab-madrugada .cm-rotulo-longo,
+    .cm-cabecalho[data-contexto='logado'] .cm-cab-madrugada .cm-rotulo-curto {
+      display: none;
     }
   }
 

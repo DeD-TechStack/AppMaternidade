@@ -53,8 +53,15 @@ describe('o cabeçalho lê o registro', () => {
       )
       expect(screen.queryByText('Em breve')).toBeNull()
       expect(screen.queryByRole('navigation', { name: 'Principal' })).toBeNull()
-      // Só o modo madrugada e o menu são botões do cabeçalho: nenhum item desativado.
-      expect(within(cabecalho).getAllByRole('button').map((botao) => botao.getAttribute('aria-disabled'))).toEqual([null, null])
+      // Os botões do cabeçalho são o modo madrugada (só nas páginas da Rotina), o Sair e o menu: nenhum item desativado.
+      const botoes = within(cabecalho)
+        .getAllByRole('button')
+        .map((botao) => [botao.getAttribute('aria-label') ?? botao.textContent, botao.getAttribute('aria-disabled')])
+      expect(botoes).toEqual(
+        caminho === '/app/hoje' || caminho === '/app/sessao'
+          ? [['Modo madrugada', null], ['Sair', null], ['Menu', null]]
+          : [['Sair', null], ['Menu', null]],
+      )
     })
   }
 
