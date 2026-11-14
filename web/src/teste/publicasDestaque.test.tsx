@@ -654,10 +654,10 @@ describe('polimento, volta 2', () => {
   it('a faixa de oliva dos papéis tem um destaque só (os nomes): o cabeçalho é um rótulo sem faixa escura', () => {
     const cabeca = Object.assign({}, ...decl(/^\.pd-tabela thead th$/)) as Record<string, string>
     expect(cabeca).not.toHaveProperty('background-color')
-    expect(cabeca['font-size']).toBe('0.875rem')
+    expect(cabeca['font-size']).toBe('var(--texto-pequeno-tamanho)')
     const corpo = Object.assign({}, ...decl(/^\.pd-tabela tbody td$/)) as Record<string, string>
-    expect(corpo['font-size']).toBe('1.125rem')
-    expect(corpo['line-height']).toBe('1.6875rem')
+    expect(corpo['font-size']).toBe('var(--texto-corpo-tamanho)')
+    expect(corpo['line-height']).toBe('var(--texto-corpo-entrelinha)')
     const { container } = renderizarRota('/cuidado-compartilhado')
     expect(container.querySelector('.pd-painel-papeis table.pd-tabela')).not.toBeNull()
     // No celular o último campo de cada bloco é o item em destaque (fio de mel), só nessa tabela.

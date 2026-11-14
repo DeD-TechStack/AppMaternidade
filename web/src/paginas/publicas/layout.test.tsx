@@ -160,6 +160,83 @@ describe('rota inexistente: Secao, QuadroLayout e Pilha', () => {
   })
 })
 
+function semComentarios(arquivo: string): string {
+  return readFileSync(arquivo, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
+}
+
+function ehCartao(elemento: Element | null): boolean {
+  return (elemento?.getAttribute('data-h') ?? '').split(' ').includes('cartao')
+}
+
+describe('H-3c R1-01: caixas de conteúdo com fundo ou borda são o primitivo Cartao', () => {
+  it('Contato: o cartão de e-mail é um Cartao (padding do token, sem padding próprio)', () => {
+    const { container } = renderizarRota('/contato')
+    expect(ehCartao(container.querySelector('.pt-email'))).toBe(true)
+    const css = semComentarios('src/componentes/publicas-texto/publicasTexto.css')
+    const regra = css.match(/\.pt-email\s*\{([^}]*)\}/)![1]
+    expect(regra).not.toMatch(/padding\s*:/)
+    expect(regra).not.toMatch(/border-radius\s*:/)
+  })
+
+  it('Desenvolvimento: o painel de cada fase é um Cartao, mantendo a coluna', () => {
+    const { container } = renderizarRota('/desenvolvimento')
+    const fases = container.querySelectorAll('[role="tabpanel"].pd-fase')
+    expect(fases.length).toBeGreaterThan(0)
+    for (const fase of fases) {
+      expect(ehCartao(fase)).toBe(true)
+      expect((fase.getAttribute('data-h') ?? '').split(' ')).toContain('coluna')
+    }
+  })
+
+  it('Desenvolvimento: o aviso de saúde é um Cartao, com o ícone e o texto', () => {
+    const { container } = renderizarRota('/desenvolvimento')
+    const aviso = container.querySelector('[data-aviso-saude]')!
+    expect(ehCartao(aviso)).toBe(true)
+    expect(aviso.querySelector('svg')).not.toBeNull()
+  })
+
+  it('o CSS local não repete o padding nem o raio que o Cartao já dá (só a exceção do celular)', () => {
+    const css = semComentarios('src/componentes/publicas-destaque/publicas-destaque.css')
+    const base = css.match(/\n\.pd-fase\s*\{([^}]*)\}/)![1]
+    expect(base).not.toMatch(/padding\s*:/)
+    expect(base).not.toMatch(/border-radius\s*:/)
+    const aviso = css.match(/\n\.pd-aviso-saude\s*\{([^}]*)\}/)![1]
+    expect(aviso).not.toMatch(/padding\s*:/)
+    expect(aviso).not.toMatch(/border-radius\s*:/)
+  })
+})
+
+describe('H-3c R1-03: o vão entre os passos é o da Pilha (bloco), sem margem de fora no item', () => {
+  it('nenhuma regra põe margem no item da lista de passos', () => {
+    const css = semComentarios('src/componentes/publicas-destaque/publicas-destaque.css')
+    const regras = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    const comMargem = regras
+      .filter(([, seletor]) => /\.pd-passos\s*>\s*li/.test(seletor))
+      .filter(([, , corpo]) => /margin/.test(corpo))
+    expect(comMargem.map(([, seletor]) => seletor.trim())).toEqual([])
+  })
+
+  it('Como funciona: os passos são uma Pilha de vão bloco e cada item é filho direto', () => {
+    const { container } = renderizarRota('/como-funciona')
+    const passos = principal(container).querySelector('ol[data-passos]')!
+    expect(passos.getAttribute('data-h-vao')).toBe('bloco')
+    for (const item of passos.children) expect(item.tagName).toBe('LI')
+  })
+})
+
+describe('H-3c R1-05: a cabeça da página de leitura tem o limite de leitura (640)', () => {
+  for (const caminho of PAGINAS_DE_TEXTO) {
+    it(`${caminho}: título e abertura ficam numa coluna com max-w-leitura, e o corpo num quadro leitura`, () => {
+      const { container } = renderizarRota(caminho)
+      const cabeca = principal(container).querySelector('.pt-abertura > .pt-cabeca')!
+      expect(cabeca.classList.contains('max-w-leitura')).toBe(true)
+      expect(cabeca.querySelector('h1')).not.toBeNull()
+      const corpo = principal(container).querySelector('.pt-leitura')!
+      expect(corpo.closest('[data-h~="quadro"]')!.getAttribute('data-h-largura')).toBe('leitura')
+    })
+  }
+})
+
 describe('os arquivos de estilo das páginas públicas não têm espaço solto', () => {
   const ARQUIVOS = [
     'src/componentes/publicas-texto/publicasTexto.css',

@@ -611,7 +611,7 @@ describe('painel e figura por largura (CSS)', () => {
 
   it('o painel de mel não tem fundo próprio no CSS (a cor vem do PainelCampo) e abraça a figura: figura mais o respiro de 24, centrado na coluna, nas duas larguras', () => {
     const [celular] = corpos('.pt-figura > .cm-painel.pt-painel')
-    expect(celular).toMatch(/padding:\s*24px/)
+    expect(celular).toMatch(/padding:\s*var\(--espaco-grupo\)/)
     // No celular o painel ocupa a largura do quadro, na borda esquerda dele; em tela larga tem a largura da figura
     // (fit-content), no máximo a da coluna, e fica centrado nela.
     expect(celular).toMatch(/(^|[\s;])inline-size:\s*100%/)
@@ -640,7 +640,7 @@ describe('painel e figura por largura (CSS)', () => {
       }
       expect(corpo).toMatch(/(^|[\s;])inline-size:\s*(fit-content|100%)/)
       expect(corpo).toMatch(/(^|[\s;])max-inline-size:\s*100%/)
-      expect(corpo).toMatch(/padding:\s*24px/)
+      expect(corpo).toMatch(/padding:\s*var\(--espaco-grupo\)/)
       expect(corpo).toMatch(/box-sizing:\s*border-box/)
     }
 
@@ -669,15 +669,15 @@ describe('painel e figura por largura (CSS)', () => {
     }
   })
 
-  it('a frase de apoio fica sempre à vista, em Literata itálica, no degrau h4 (20/26 no celular, 24/30 em tela larga), embaixo do painel', () => {
+  it('a frase de apoio fica sempre à vista, em Literata itálica, no degrau de título 4 (o token, que cresce com a tela), embaixo do painel', () => {
     const [celular, largo] = corpos('.pt-apoio')
     expect(celular).not.toMatch(/display:\s*none/)
     expect(celular).toMatch(/font-style:\s*italic/)
     expect(celular).toMatch(/font-family:\s*var\(--fonte-titulo\)/)
-    expect(celular).toMatch(/font-size:\s*1\.25rem/)
+    expect(celular).toMatch(/font-size:\s*var\(--texto-titulo-4-tamanho\)/)
+    expect(celular).toMatch(/line-height:\s*var\(--texto-titulo-4-entrelinha\)/)
     expect(largo).toMatch(/text-align:\s*end/)
-    expect(largo).toMatch(/font-size:\s*1\.5rem/)
-    expect(largo).toMatch(/line-height:\s*1\.875rem/)
+    expect(largo).not.toMatch(/font-size|line-height/)
   })
 
   it('o desenho do painel fica inteiro (contain): 220 px de altura no celular, 300 px em tela larga', () => {
@@ -703,20 +703,20 @@ describe('painel e figura por largura (CSS)', () => {
     expect(css).not.toMatch(/\.pt-secao\s*\+\s*\.pt-secao/)
   })
 
-  it('o título usa a escala de h1 (cm-h1, 84/88 em 1440); a segunda linha usa só o corpo de h3 (24/30 a 36/42)', () => {
+  it('o título usa a escala de h1 (cm-h1, 84/88 em 1440); a segunda linha usa só o degrau de título 2 (o token)', () => {
     const [segunda] = corpos('.pt-segunda-linha')
-    expect(segunda).toMatch(/font-size:\s*clamp\(24px,[^;]*36px\)/)
-    expect(segunda).toMatch(/line-height:\s*clamp\(30px,[^;]*42px\)/)
+    expect(segunda).toMatch(/font-size:\s*var\(--texto-titulo-2-tamanho\)/)
+    expect(segunda).toMatch(/line-height:\s*var\(--texto-titulo-2-entrelinha\)/)
     expect(segunda).toMatch(/font-style:\s*italic/)
   })
 
   it('o índice em tela larga é uma lista vertical só, em corpo pequeno (15/22), sem grade nem colunas', () => {
     const [rotulo] = corpos('.pt-indice-rotulo')
-    expect(rotulo).toMatch(/font-size:\s*0\.9375rem/)
-    expect(rotulo).toMatch(/line-height:\s*1\.375rem/)
+    expect(rotulo).toMatch(/font-size:\s*var\(--texto-pequeno-tamanho\)/)
+    expect(rotulo).toMatch(/line-height:\s*var\(--texto-pequeno-entrelinha\)/)
     const [link] = corpos('.pt-indice-link')
-    expect(link).toMatch(/font-size:\s*0\.9375rem/)
-    expect(link).toMatch(/line-height:\s*1\.375rem/)
+    expect(link).toMatch(/font-size:\s*var\(--texto-pequeno-tamanho\)/)
+    expect(link).toMatch(/line-height:\s*var\(--texto-pequeno-entrelinha\)/)
     const [lista] = corpos('.pt-indice-lista')
     expect(lista).not.toMatch(/display:\s*grid|columns:/)
     expect(css).not.toMatch(/grid-template-columns:\s*repeat\(/)

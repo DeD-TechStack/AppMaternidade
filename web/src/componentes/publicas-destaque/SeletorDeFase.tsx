@@ -1,7 +1,7 @@
 import { useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { IDEIAS } from '../../conteudo/desenvolvimento/itens.ts'
 import type { Fase } from '../../conteudo/desenvolvimento/tipos.ts'
-import { Pilha } from '../base/layout/index.ts'
+import { Cartao, Pilha } from '../base/layout/index.ts'
 import { FontesDoItem } from './FontesDoItem.tsx'
 import './publicas-destaque.css'
 
@@ -63,7 +63,7 @@ export function SeletorDeFase({ fases, lateral }: { fases: readonly Fase[]; late
         ))}
       </div>
       {fases.map((fase, i) => (
-        <div
+        <Cartao
           key={fase.id}
           role="tabpanel"
           id={`${base}-fase-${i}`}
@@ -71,7 +71,7 @@ export function SeletorDeFase({ fases, lateral }: { fases: readonly Fase[]; late
           hidden={i !== ativa}
           tabIndex={0}
           className="pd-fase"
-          data-h="coluna"
+          dataH="coluna"
           data-fase={fase.id}
         >
           <Pilha vao="grupo">
@@ -83,7 +83,7 @@ export function SeletorDeFase({ fases, lateral }: { fases: readonly Fase[]; late
             </ul>
             <FontesDoItem fontes={fase.fontes} consultadoEm={fase.consultadoEm} />
           </Pilha>
-        </div>
+        </Cartao>
       ))}
       {lateral ? (
         <Pilha vao="pilha" dataH="coluna" className="pd-seletor-lateral">

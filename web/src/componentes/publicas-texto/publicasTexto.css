@@ -1,8 +1,10 @@
 /* Páginas públicas de leitura longa (Regras, Privacidade, Termos, Exclusão, Contato, Sobre).
-   Só valores dos tokens: cores, raios e as duas famílias vêm de tema.css e tokens.css. Classes `pt-*`.
+   Só valores dos tokens: cores, raios e as duas famílias vêm de tema.css e tokens.css; espaço e tipo, das variáveis
+   do tema gerado (`--espaco-*`, `--texto-*`). Classes `pt-*`.
    Ordem da página: abertura (título, segunda linha, botão e painel de mel), índice, leitura.
    O espaço vem das primitivas de layout (H-3a): a página é uma pilha de `Secao`; a abertura é um `Colunas` de vão
-   midia (o título e o painel de mel; empilhados até 1099 px); a leitura é um `QuadroLayout` de 640 px, alinhado à
+   midia (o título e o painel de mel; empilhados até 1099 px), com a cabeça (título e abertura) no limite de leitura
+   (`max-w-leitura`, alinhada à borda do quadro); a leitura é um `QuadroLayout` de 640 px, alinhado à
    esquerda do quadro, com o índice e as seções numa só `Pilha` de vão bloco; o mesmo fio abre cada bloco. */
 @layer components {
   /* Palavra curta colada à seguinte (ver `ligarPalavrasCurtas`): a linha não quebra entre as duas. */
@@ -10,12 +12,12 @@
     white-space: nowrap;
   }
 
-  /* Segunda linha do título: o corpo de h3 (24/30 em 390, 36/42 em 1440) em itálico. A escala de h1 é só do nome. */
+  /* Segunda linha do título: o degrau de título 2 em itálico. A escala de h1 é só do nome. */
   .pt-segunda-linha {
     margin: 0;
     font-family: var(--fonte-titulo);
-    font-size: clamp(24px, 1.143vw + 19.543px, 36px);
-    line-height: clamp(30px, 1.143vw + 25.543px, 42px);
+    font-size: var(--texto-titulo-2-tamanho);
+    line-height: var(--texto-titulo-2-entrelinha);
     font-style: italic;
     font-weight: 500;
     letter-spacing: -0.01em;
@@ -26,25 +28,25 @@
 
   /* Painel de mel: só o desenho. No celular o painel ocupa a largura do quadro, na borda esquerda dele, como o
      texto (um desenho estreito, como o de Privacidade, não fica solto no meio); o desenho fica centrado dentro dele.
-     Em tela larga o painel abraça a figura (fit-content): largura da figura mais o respiro de 24 de cada lado, no
-     máximo a da coluna, centrado nela (a da direita da abertura). Sem largura mínima, sem respiro a mais. A figura
-     tem a altura fixa (220 no celular, 300 em tela larga) e a largura que o traço pedir (se não couber, encolhe
-     dentro da caixa, sem recorte). No celular o painel tem uns 268 px de altura, abaixo de 40% da janela de 844 px.
-     A figura é filha de uma pilha (flex em coluna): o centro é `align-self`. */
+     Em tela larga o painel abraça a figura (fit-content): largura da figura mais o respiro (vão grupo) de cada
+     lado, no máximo a da coluna, centrado nela (a da direita da abertura). Sem largura mínima, sem respiro a mais.
+     A figura tem a altura fixa (220 no celular, 300 em tela larga) e a largura que o traço pedir (se não couber,
+     encolhe dentro da caixa, sem recorte). No celular o painel tem uns 268 px de altura, abaixo de 40% da janela de
+     844 px. A figura é filha de uma pilha (flex em coluna): o centro é `align-self`. */
   .pt-figura > .cm-painel.pt-painel {
     box-sizing: border-box;
     inline-size: 100%;
     max-inline-size: 100%;
     align-self: center;
-    padding: 24px;
+    padding: var(--espaco-grupo);
   }
 
-  /* A frase de apoio, no degrau h4 da escala (20/26 em 390, 24/30 em 1440), embaixo do painel. */
+  /* A frase de apoio, no degrau de título 4, embaixo do painel. */
   .pt-apoio {
     margin: 0;
     font-family: var(--fonte-titulo);
-    font-size: 1.25rem;
-    line-height: 1.625rem;
+    font-size: var(--texto-titulo-4-tamanho);
+    line-height: var(--texto-titulo-4-entrelinha);
     font-style: italic;
     font-weight: 500;
     text-wrap: balance;
@@ -64,8 +66,6 @@
   @media (min-width: 1100px) {
     /* A figura preenche a coluna da direita da abertura; a frase de apoio fica à direita, embaixo do painel. */
     .pt-apoio {
-      font-size: 1.5rem;
-      line-height: 1.875rem;
       text-align: end;
     }
 
@@ -74,7 +74,7 @@
       inline-size: fit-content;
       max-inline-size: 100%;
       align-self: center;
-      padding: 24px;
+      padding: var(--espaco-grupo);
     }
 
     .pt-ilustracao {
@@ -92,12 +92,12 @@
     padding-top: var(--espaco-grupo);
   }
 
-  /* Índice "Nesta página": corpo pequeno (15/22), uma lista vertical só nas seis páginas. */
+  /* Índice "Nesta página": corpo pequeno, uma lista vertical só nas seis páginas. */
   .pt-indice-rotulo {
     margin: 0;
     font-family: var(--fonte-texto);
-    font-size: 0.9375rem;
-    line-height: 1.375rem;
+    font-size: var(--texto-pequeno-tamanho);
+    line-height: var(--texto-pequeno-entrelinha);
     font-weight: 600;
   }
 
@@ -120,12 +120,12 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    gap: var(--espaco-junto);
     box-sizing: border-box;
     min-height: 48px;
     font-family: var(--fonte-texto);
-    font-size: 0.9375rem;
-    line-height: 1.375rem;
+    font-size: var(--texto-pequeno-tamanho);
+    line-height: var(--texto-pequeno-entrelinha);
     font-weight: 600;
     list-style: none;
     cursor: pointer;
@@ -146,8 +146,8 @@
     padding-block: 6px;
     color: inherit;
     font-family: var(--fonte-texto);
-    font-size: 0.9375rem;
-    line-height: 1.375rem;
+    font-size: var(--texto-pequeno-tamanho);
+    line-height: var(--texto-pequeno-entrelinha);
     text-decoration-line: underline;
     text-decoration-thickness: 1.5px;
     text-underline-offset: 4px;
@@ -157,26 +157,23 @@
     text-decoration-thickness: 3px;
   }
 
-  /* Leitura: Outfit 18/28 numa coluna de 640 px (uns 70 letras por linha). As seções se separam pelo vão bloco
-     da pilha e pelo fio de cima (acima). */
+  /* Leitura: Outfit no corpo (18/28 em 1440) numa coluna de 640 px (uns 70 letras por linha). As seções se separam
+     pelo vão bloco da pilha e pelo fio de cima (acima). */
   .pt-leitura {
     font-family: var(--fonte-texto);
-    font-size: 1.125rem;
-    line-height: 1.75rem;
+    font-size: var(--texto-corpo-tamanho);
+    line-height: var(--texto-corpo-entrelinha);
   }
 
-  /* Cartão de e-mail (Contato): o rótulo, o endereço e o botão, e mais nada. Texto e botão lado a lado quando
-     cabem; senão, um sobre o outro. */
+  /* Cartão de e-mail (Contato): o rótulo, o endereço e o botão, e mais nada. É um `Cartao` (padding do painel e raio
+     do cartão); daqui vêm o fundo, a borda e a cor. Texto e botão lado a lado quando cabem; senão, um sobre o outro. */
   .pt-email {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: var(--espaco-pilha) var(--espaco-grupo);
-    box-sizing: border-box;
-    padding: 20px 24px;
     border: 1px solid var(--cor-fio-suave);
-    border-radius: var(--radius-cartao);
     background-color: var(--cor-cartao);
     color: var(--color-cacau);
   }
@@ -187,8 +184,8 @@
 
   .pt-email-rotulo {
     font-family: var(--fonte-texto);
-    font-size: 0.875rem;
-    line-height: 1.25rem;
+    font-size: var(--texto-pequeno-tamanho);
+    line-height: var(--texto-pequeno-entrelinha);
     font-weight: 600;
   }
 
@@ -196,13 +193,13 @@
     margin: 2px 0 0;
     font-family: var(--fonte-texto);
     font-style: normal;
-    font-size: 1.125rem;
-    line-height: 1.75rem;
+    font-size: var(--texto-corpo-tamanho);
+    line-height: var(--texto-corpo-entrelinha);
     font-weight: 700;
     overflow-wrap: anywhere;
   }
 
-  /* h2 em Literata: 36/42 em 1440 e 24/30 em 390 (o degrau h3 da escala; o h2 de 56 é de página de venda). O vão
+  /* h2 em Literata no degrau de título 2 (36/42 em 1440; o h2 de 56 é de página de venda) e h3 no de título 4. O vão
      até o texto é o da pilha. */
   .pt-h2,
   .pt-h3 {
@@ -213,21 +210,21 @@
   }
 
   .pt-h2 {
-    font-size: clamp(24px, 1.143vw + 19.543px, 36px);
-    line-height: clamp(30px, 1.143vw + 25.543px, 42px);
+    font-size: var(--texto-titulo-2-tamanho);
+    line-height: var(--texto-titulo-2-entrelinha);
     letter-spacing: -0.01em;
   }
 
   .pt-h3 {
-    font-size: clamp(20px, 0.381vw + 18.514px, 24px);
-    line-height: clamp(26px, 0.381vw + 24.514px, 30px);
+    font-size: var(--texto-titulo-4-tamanho);
+    line-height: var(--texto-titulo-4-entrelinha);
   }
 
-  /* Texto: Outfit 18/28. */
+  /* Texto: Outfit no corpo. */
   .pt-texto {
     font-family: var(--fonte-texto);
-    font-size: 1.125rem;
-    line-height: 1.75rem;
+    font-size: var(--texto-corpo-tamanho);
+    line-height: var(--texto-corpo-entrelinha);
   }
 
   .pt-texto > * {
@@ -251,7 +248,7 @@
     padding-block: 8px;
     margin-block: -8px;
     color: var(--cor-link);
-    line-height: 1.75rem;
+    line-height: var(--texto-corpo-entrelinha);
     overflow-wrap: anywhere;
     text-decoration-line: underline;
     text-decoration-thickness: 1.5px;
@@ -265,7 +262,7 @@
   /* O reset do Tailwind tira os marcadores: aqui voltam (números nas listas ordenadas, bolinhas nas outras),
      na cor do texto (AA) e com recuo para o marcador ficar à vista. */
   .pt-texto > .pt-lista {
-    padding-inline-start: 2rem;
+    padding-inline-start: var(--espaco-grupo);
   }
 
   ol.pt-lista {
@@ -282,11 +279,11 @@
   }
 
   .pt-lista > li {
-    padding-inline-start: 0.25rem;
+    padding-inline-start: 4px;
   }
 
   .pt-lista > li + li {
-    margin-top: 8px;
+    margin-top: var(--espaco-junto);
   }
 
   /* Lista de 4 itens ou mais e só de itens curtos: corre em duas colunas dentro da coluna de leitura (a ordem
@@ -306,7 +303,7 @@
     }
 
     .pt-lista-colunas > li:not(:last-child) {
-      margin-bottom: 8px;
+      margin-bottom: var(--espaco-junto);
     }
   }
 
@@ -326,21 +323,21 @@
   .pt-tabela table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 1rem;
-    line-height: 1.5rem;
+    font-size: var(--texto-pequeno-tamanho);
+    line-height: var(--texto-pequeno-entrelinha);
   }
 
   .pt-tabela caption {
-    padding: 16px 16px 8px;
-    font-size: 1.125rem;
-    line-height: 1.75rem;
+    padding: var(--espaco-pilha) var(--espaco-pilha) var(--espaco-junto);
+    font-size: var(--texto-corpo-tamanho);
+    line-height: var(--texto-corpo-entrelinha);
     font-weight: 600;
     text-align: left;
   }
 
   .pt-tabela th,
   .pt-tabela td {
-    padding: 12px 16px;
+    padding: var(--espaco-junto) var(--espaco-pilha);
     border-top: 1px solid var(--cor-fio-suave);
     text-align: left;
     vertical-align: top;
@@ -363,12 +360,12 @@
 
   @media (max-width: 767px) {
     .pt-tabela caption {
-      padding-inline: 12px;
+      padding-inline: var(--espaco-junto);
     }
 
     .pt-tabela th,
     .pt-tabela td {
-      padding: 12px 10px;
+      padding: var(--espaco-junto);
     }
   }
 }

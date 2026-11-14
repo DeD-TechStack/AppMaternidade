@@ -1,5 +1,5 @@
 import { Botao } from '../../componentes/base/Botao.tsx'
-import { Coluna, Colunas, Pilha, QuadroLayout, Secao } from '../../componentes/base/layout/index.ts'
+import { Cartao, Coluna, Colunas, Pilha, QuadroLayout, Secao } from '../../componentes/base/layout/index.ts'
 import { CartaoFlutuante } from '../../componentes/campo/CartaoFlutuante.tsx'
 import { Ilustracao } from '../../componentes/campo/Ilustracao.tsx'
 import { PainelCampo } from '../../componentes/campo/PainelCampo.tsx'
@@ -70,7 +70,7 @@ export function CuidadoCompartilhado() {
                     <h2 className="cm-h3">{bloco.titulo}</h2>
                     <p className="cm-corpo">{bloco.texto}</p>
                   </Pilha>
-                  <p className="pd-regra-exemplo" data-h="coluna" data-exemplo="">
+                  <Cartao className="pd-regra-exemplo" dataH="coluna" data-exemplo="">
                     <span className="pd-avatar" aria-hidden="true">
                       {bloco.exemplo.inicial}
                     </span>
@@ -78,7 +78,7 @@ export function CuidadoCompartilhado() {
                       <span className="pd-linha-nome">{bloco.exemplo.quem}</span>
                       <span className="pd-linha-detalhe">{bloco.exemplo.oQue}</span>
                     </span>
-                  </p>
+                  </Cartao>
                 </Colunas>
               </li>
             ))}

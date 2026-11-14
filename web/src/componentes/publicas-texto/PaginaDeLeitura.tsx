@@ -86,7 +86,7 @@ export function PaginaDeLeitura({ pagina }: { pagina: PaginaDeTexto }) {
       <Secao>
         <QuadroLayout>
           <Colunas fracoes="1.2fr 1fr" aPartirDe={1100} vao="midia" alinhar="centro" className="pt-abertura">
-            <Pilha vao="grupo" dataH="coluna" className="pt-cabeca">
+            <Pilha vao="grupo" dataH="coluna" className="pt-cabeca max-w-leitura">
               <Pilha vao="pilha">
                 <h1 className="cm-h1">{ligarPalavrasCurtas(nome)}</h1>
                 <p className="pt-segunda-linha">{ligarPalavrasCurtas(subtitulo)}</p>
