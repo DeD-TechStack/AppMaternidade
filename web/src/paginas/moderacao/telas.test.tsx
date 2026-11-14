@@ -343,6 +343,27 @@ describe('M1: a fila (MAT-40:RF-03)', () => {
       await anuncioDiz('55 denúncias')
     })
 
+    it('a página 2 falha: as 50 linhas ficam, o alerta aparece e o anúncio segue dizendo que há mais; a nova tentativa traz as 55', async () => {
+      const { moderacao } = cena('moderador', painel, (estado) => {
+        for (let n = 0; n < 55; n++) novaDenuncia(estado)
+      })
+      await aguardarH1()
+      await anuncioDiz('50 denúncias carregadas; há mais.')
+
+      simularFalhaModeracao(moderacao, 'filaDeDenuncias', 'rede')
+      fireEvent.click(botao(FILA.carregarMais))
+      const alerta = await screen.findByRole('alert')
+      expect(alerta.textContent).toContain(TEXTOS_ERRO_COMUNIDADE.rede)
+      expect(hrefsDaFila()).toHaveLength(50)
+      await anuncioDiz('50 denúncias carregadas; há mais.')
+      expect(screen.getAllByRole('status')).toHaveLength(1)
+
+      fireEvent.click(within(alerta).getByRole('button', { name: COMUM_COMUNIDADE.tentarDeNovo }))
+      await waitFor(() => expect(hrefsDaFila()).toHaveLength(55))
+      await anuncioDiz('55 denúncias')
+      expect(screen.queryByRole('alert')).toBeNull()
+    })
+
     it('uma leitura que falha não anuncia contagem nem "nenhuma denúncia"', async () => {
       const { moderacao } = cena('moderador', painel, (estado) => {
         novaDenuncia(estado)

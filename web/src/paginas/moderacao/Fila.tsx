@@ -115,7 +115,7 @@ function ListaDaFila() {
           {lista && lista.itens.length === 0 ? (
             <p>{TX.tx13}</p>
           ) : lista ? (
-            FILA.contagem(lista.itens.length, lista.haMais && !lista.erroDaPagina)
+            FILA.contagem(lista.itens.length, lista.haMais)
           ) : null}
         </div>
         {lista && lista.itens.length > 0 ? (
