@@ -18,7 +18,7 @@ export function Status({ mensagem, refStatus }: Props) {
       data-status=""
       className={
         mensagem
-          ? 'alvo-foco max-w-[40rem] rounded-campo bg-[var(--cor-papel-fundo)] px-4 py-3 font-medium wrap-anywhere'
+          ? 'alvo-foco max-w-leitura rounded-campo bg-[var(--cor-papel-fundo)] px-4 py-3 font-medium wrap-anywhere'
           : 'sr-only'
       }
     >

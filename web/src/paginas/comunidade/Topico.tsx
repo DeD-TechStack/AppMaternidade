@@ -1,10 +1,13 @@
 import { useMemo, useRef, useState, type RefObject } from 'react'
 import { useLocation, useParams } from 'react-router'
 import { Botao } from '../../componentes/base/Botao.tsx'
+import { Cartao } from '../../componentes/base/layout/Cartao.tsx'
+import { Pilha } from '../../componentes/base/layout/Pilha.tsx'
 import { BOTAO_SECUNDARIO } from '../../componentes/conta/Partes.tsx'
 import { AcoesDoItem, type Acao } from '../../componentes/comunidade/AcoesDoItem.tsx'
 import { AvisoDeSaude, ErroDeLeitura, Esqueleto, NaoEncontrado } from '../../componentes/comunidade/Avisos.tsx'
 import { useDadosComunidade } from '../../componentes/comunidade/dados.ts'
+import { Faixa } from '../../componentes/comunidade/Faixa.tsx'
 import { useFocoPendente, type AlvoDeFoco } from '../../componentes/comunidade/foco.ts'
 import {
   FormularioDeResposta,
@@ -36,7 +39,7 @@ import type { Resultado } from '../../dados/comum.ts'
 import type { PerfilPublico, SituacaoConta, Topico as TopicoLido } from '../../dados/comunidade.ts'
 import { ehUuid } from '../../dados/comunidade.regras.ts'
 
-const CARTAO = 'flex flex-col gap-3 rounded-cartao border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)] p-5'
+const CARTAO = 'flex flex-col gap-3 border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)]'
 
 interface LidoDoTopico {
   topico: TopicoLido
@@ -146,7 +149,8 @@ function Conteudo({ topico, autor, situacao, bloqueados, relerTopicoEBloqueios, 
       !opcoes.filha && !opcoes.semMae && r.respostaA === null && visivel && podeResponder && !maeBloqueada
     const apelido = r.autor?.apelido ?? null
     return (
-      <article
+      <Cartao
+        as="article"
         id={`resposta-${r.id}`}
         tabIndex={-1}
         aria-labelledby={`resposta-${r.id}-autor`}
@@ -190,7 +194,7 @@ function Conteudo({ topico, autor, situacao, bloqueados, relerTopicoEBloqueios, 
           }
           {...acoesDeOutraPessoa('resposta', r.id, r.autorId, apelido, visivel)}
         />
-      </article>
+      </Cartao>
     )
   }
 
@@ -198,50 +202,57 @@ function Conteudo({ topico, autor, situacao, bloqueados, relerTopicoEBloqueios, 
 
   return (
     <>
-      <article aria-label={topico.titulo} className={`${CARTAO} mt-6`}>
-        <Meta
-          apelido={autor?.apelido ?? null}
-          criadoEm={topico.criadoEm}
-          editadoEm={topico.editadoEm}
-          faixa={topico.faixa}
-          idDoAutor="topico-autor"
-        />
-        <EtiquetaDeEstado estado={topico.estado} motivo={topico.motivoModeracao} />
-        <Texto>{topico.corpo}</Texto>
-        <AcoesDoItem
-          item={`topico-${topico.id}`}
-          editar={
-            ehMeu(topico.autorId) && topicoAberto && escritor ? { para: `/app/comunidade/topico/${topico.id}/editar` } : undefined
-          }
-          {...acoesDeOutraPessoa('topico', topico.id, topico.autorId, autor?.apelido ?? null, topicoAberto)}
-        />
-      </article>
+      <Faixa>
+        <Cartao as="article" aria-label={topico.titulo} className={CARTAO}>
+          <Meta
+            apelido={autor?.apelido ?? null}
+            criadoEm={topico.criadoEm}
+            editadoEm={topico.editadoEm}
+            faixa={topico.faixa}
+            idDoAutor="topico-autor"
+          />
+          <EtiquetaDeEstado estado={topico.estado} motivo={topico.motivoModeracao} />
+          <Texto>{topico.corpo}</Texto>
+          <AcoesDoItem
+            item={`topico-${topico.id}`}
+            editar={
+              ehMeu(topico.autorId) && topicoAberto && escritor ? { para: `/app/comunidade/topico/${topico.id}/editar` } : undefined
+            }
+            {...acoesDeOutraPessoa('topico', topico.id, topico.autorId, autor?.apelido ?? null, topicoAberto)}
+          />
+        </Cartao>
+        {caixas.caixa}
+      </Faixa>
 
-      <section aria-labelledby="respostas" aria-busy={respostas.estado.fase === 'carregando' || undefined} className="mt-10">
-        <h2 id="respostas" className="cm-h4">
-          {TOPICO.respostas}
-        </h2>
-        <div className="mt-4 flex flex-col gap-3">
+      <Faixa aria-labelledby="respostas" aria-busy={respostas.estado.fase === 'carregando' || undefined}>
+        <Pilha vao="grupo">
+          <h2 id="respostas" className="cm-h4 text-titulo-4">
+            {TOPICO.respostas}
+          </h2>
           {respostas.esqueleto ? <Esqueleto /> : null}
           {respostas.estado.fase === 'erro' ? (
             <ErroDeLeitura erro={respostas.estado.erro} aoTentarDeNovo={() => void respostas.recarregar()} />
           ) : null}
           {itens && itens.itens.length === 0 ? <p>{TX.tx17}</p> : null}
           {itens && itens.itens.length > 0 ? (
-            <ul className="m-0 flex list-none flex-col gap-3 p-0">
+            <Pilha as="ul" vao="grupo" className="m-0 list-none p-0">
               {arranjo.map((grupo) => (
-                <li key={grupo.resposta.id} className="flex flex-col gap-3">
+                <li key={grupo.resposta.id} className="flex flex-col gap-esp-grupo">
                   {renderResposta(grupo.resposta, { semMae: grupo.semMae })}
                   {grupo.filhas.length > 0 ? (
-                    <ul className="m-0 flex list-none flex-col gap-3 border-l-[3px] border-[var(--cor-fio-suave)] p-0 pl-4 min-[40rem]:ml-6">
+                    <Pilha
+                      as="ul"
+                      vao="grupo"
+                      className="m-0 list-none border-l-[3px] border-[var(--cor-fio-suave)] p-0 pl-4 min-[40rem]:ml-6"
+                    >
                       {grupo.filhas.map((filha) => (
                         <li key={filha.id}>{renderResposta(filha, { filha: true, mae: grupo.resposta })}</li>
                       ))}
-                    </ul>
+                    </Pilha>
                   ) : null}
                 </li>
               ))}
-            </ul>
+            </Pilha>
           ) : null}
           {itens?.erroDaPagina ? (
             <ErroDeLeitura erro={itens.erroDaPagina} aoTentarDeNovo={() => void respostas.carregarMais()} />
@@ -259,15 +270,15 @@ function Conteudo({ topico, autor, situacao, bloqueados, relerTopicoEBloqueios, 
               </button>
             </div>
           ) : null}
-        </div>
-      </section>
+        </Pilha>
+      </Faixa>
 
       {podeResponder ? (
-        <section aria-labelledby="sua-resposta" className="mt-10">
-          <h2 id="sua-resposta" className="cm-h4">
-            {modo.tipo === 'editar' ? TOPICO.editandoResposta : TOPICO.formulario}
-          </h2>
-          <div className="mt-4">
+        <Faixa aria-labelledby="sua-resposta">
+          <Pilha vao="grupo">
+            <h2 id="sua-resposta" className="cm-h4 text-titulo-4">
+              {modo.tipo === 'editar' ? TOPICO.editandoResposta : TOPICO.formulario}
+            </h2>
             {escritor ? (
               <FormularioDeResposta
                 key={modo.tipo === 'editar' ? `editar-${modo.resposta.id}` : 'nova'}
@@ -293,14 +304,15 @@ function Conteudo({ topico, autor, situacao, bloqueados, relerTopicoEBloqueios, 
                 }}
               />
             ) : (
-              <Botao to={caminhoDeEntrada(destinoDoTopico)} tamanho="app">
-                {TOPICO.paraEntrar}
-              </Botao>
+              <div>
+                <Botao to={caminhoDeEntrada(destinoDoTopico)} tamanho="app">
+                  {TOPICO.paraEntrar}
+                </Botao>
+              </div>
             )}
-          </div>
-        </section>
+          </Pilha>
+        </Faixa>
       ) : null}
-      {caixas.caixa}
     </>
   )
 }
@@ -333,31 +345,34 @@ function TopicoLido({ id }: { id: string }) {
   const falha = [topico, situacao, bloqueios].find((leitura) => leitura.estado.fase === 'erro')
 
   return (
-    <Quadro voltar={espaco ? `/app/comunidade/${espaco.slug}` : '/app/comunidade'} ocupado={carregando}>
-      <TituloDaTela>{lido ? lido.topico.titulo : LISTA.titulo}</TituloDaTela>
-      <div className="mt-8 flex flex-col gap-4">
-        <AvisoDeSaude />
-        <Status mensagem={status} refStatus={refStatus} />
-      </div>
-      <div className="mt-6">{topico.esqueleto ? <Esqueleto linhas={2} /> : null}</div>
-      {topico.estado.fase === 'erro' ? (
-        <div className="mt-6 max-w-[40rem]">
-          <ErroDeLeitura erro={topico.estado.erro} aoTentarDeNovo={() => void topico.recarregar()} />
-        </div>
-      ) : null}
-      {falha && falha !== topico && falha.estado.fase === 'erro' ? (
-        <div className="mt-6 max-w-[40rem]">
-          <ErroDeLeitura
-            erro={falha.estado.erro}
-            aoTentarDeNovo={() => void (falha === situacao ? situacao.recarregar() : bloqueios.recarregar())}
-          />
-        </div>
-      ) : null}
-      {topico.estado.fase === 'pronto' && lido === null ? (
-        <div className="mt-6">
-          <NaoEncontrado />
-        </div>
-      ) : null}
+    <Quadro
+      voltar={espaco ? `/app/comunidade/${espaco.slug}` : '/app/comunidade'}
+      ocupado={carregando}
+      titulo={<TituloDaTela>{lido ? lido.topico.titulo : LISTA.titulo}</TituloDaTela>}
+      cabeca={
+        <>
+          <Pilha vao="pilha">
+            <AvisoDeSaude />
+            <Status mensagem={status} refStatus={refStatus} />
+          </Pilha>
+          {topico.esqueleto ? <Esqueleto linhas={2} /> : null}
+          {topico.estado.fase === 'erro' ? (
+            <div className="max-w-leitura">
+              <ErroDeLeitura erro={topico.estado.erro} aoTentarDeNovo={() => void topico.recarregar()} />
+            </div>
+          ) : null}
+          {falha && falha !== topico && falha.estado.fase === 'erro' ? (
+            <div className="max-w-leitura">
+              <ErroDeLeitura
+                erro={falha.estado.erro}
+                aoTentarDeNovo={() => void (falha === situacao ? situacao.recarregar() : bloqueios.recarregar())}
+              />
+            </div>
+          ) : null}
+          {topico.estado.fase === 'pronto' && lido === null ? <NaoEncontrado /> : null}
+        </>
+      }
+    >
       {lido && lidaSituacao && lidosBloqueios ? (
         <Conteudo
           key={lido.topico.id}
@@ -382,12 +397,7 @@ export function Topico() {
   const { id } = useParams()
   if (!ehUuid(id)) {
     return (
-      <Quadro voltar="/app/comunidade">
-        <TituloDaTela>{LISTA.titulo}</TituloDaTela>
-        <div className="mt-6">
-          <NaoEncontrado />
-        </div>
-      </Quadro>
+      <Quadro voltar="/app/comunidade" titulo={<TituloDaTela>{LISTA.titulo}</TituloDaTela>} cabeca={<NaoEncontrado />} />
     )
   }
   return <TopicoLido key={id} id={id} />

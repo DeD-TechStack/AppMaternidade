@@ -53,13 +53,13 @@ export function CampoComContador({
   }
 
   return (
-    <div className="cm-campo max-w-[40rem]">
+    <div className="cm-campo max-w-leitura">
       <label htmlFor={id} className="cm-campo-rotulo">
         {rotulo}
       </label>
       <div className="cm-campo-controle">
         {linhas ? (
-          <textarea {...comum} rows={linhas} className="cm-campo-entrada alvo-toque resize-y py-3 leading-6" />
+          <textarea {...comum} rows={linhas} className="cm-campo-entrada alvo-toque resize-y py-3" />
         ) : (
           <input {...comum} type="text" autoComplete={autoComplete} className="cm-campo-entrada alvo-toque" />
         )}
@@ -97,7 +97,7 @@ export function EscolhaDeFaixa({ rotulo, valor, aoMudar }: FaixaProps) {
       <legend className="cm-campo-rotulo mb-1 p-0">{rotulo}</legend>
       <div className="flex flex-wrap gap-x-6">
         {OPCOES.map((opcao) => (
-          <label key={opcao ?? 'nenhuma'} className="alvo-toque flex cursor-pointer items-center gap-2">
+          <label key={opcao ?? 'nenhuma'} className="alvo-toque flex min-h-11 cursor-pointer items-center gap-3">
             <input
               type="radio"
               name={nome}

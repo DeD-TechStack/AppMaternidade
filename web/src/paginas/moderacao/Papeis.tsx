@@ -1,6 +1,9 @@
 import { useRef, useState, type FormEvent } from 'react'
+import { Cartao } from '../../componentes/base/layout/Cartao.tsx'
+import { Pilha } from '../../componentes/base/layout/Pilha.tsx'
 import { Esqueleto, ResumoDeErro } from '../../componentes/comunidade/Avisos.tsx'
 import { CampoComContador } from '../../componentes/comunidade/Campos.tsx'
+import { Faixa } from '../../componentes/comunidade/Faixa.tsx'
 import { useFocoPendente } from '../../componentes/comunidade/foco.ts'
 import { Status } from '../../componentes/comunidade/Status.tsx'
 import { useLeitura } from '../../componentes/comunidade/useLeitura.ts'
@@ -29,7 +32,7 @@ const ID_DO_MOTIVO = 'papel-motivo'
 const ID_DA_VALIDADE = 'papel-validade'
 const ID_DA_LISTA = 'papeis-titulo'
 
-const CARTAO = 'flex flex-col gap-3 rounded-cartao border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)] p-5'
+const CARTAO = 'flex flex-col gap-3 border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)]'
 
 const idDoBotao = (linha: PapelDaLista) => `revogar-${linha.contaId}-${linha.papel}`
 
@@ -47,7 +50,7 @@ interface CampoProps {
 function CampoSimples({ id, rotulo, valor, aoMudar, tipo = 'text', erro, ajuda }: CampoProps) {
   const ligados = [erro ? `${id}-erro` : null, ajuda ? `${id}-ajuda` : null].filter(Boolean).join(' ')
   return (
-    <div className="cm-campo grid-cols-[minmax(0,1fr)] min-w-0 max-w-[40rem]">
+    <div className="cm-campo grid-cols-[minmax(0,1fr)] min-w-0 max-w-leitura">
       <label htmlFor={id} className="cm-campo-rotulo">
         {rotulo}
       </label>
@@ -171,11 +174,11 @@ function ListaDePapeis() {
   }
 
   return (
-    <div className="flex flex-col gap-10">
-      <Status mensagem={status} refStatus={refStatus} />
-
-      <section aria-labelledby={ID_DA_LISTA} aria-busy={lista.estado.fase === 'carregando' || undefined} className="flex flex-col gap-3">
-        <h2 id={ID_DA_LISTA} tabIndex={-1} className="cm-h4 alvo-foco">
+    <>
+      <Faixa aria-labelledby={ID_DA_LISTA} aria-busy={lista.estado.fase === 'carregando' || undefined}>
+        <Pilha vao="grupo">
+        <Status mensagem={status} refStatus={refStatus} />
+        <h2 id={ID_DA_LISTA} tabIndex={-1} className="cm-h4 text-titulo-4 alvo-foco">
           {PAPEIS.lista}
         </h2>
         {lista.esqueleto ? <Esqueleto /> : null}
@@ -184,12 +187,12 @@ function ListaDePapeis() {
         ) : null}
         {papeis && papeis.length === 0 ? <p>{TX.tx31}</p> : null}
         {papeis && papeis.length > 0 ? (
-          <ul className="m-0 flex list-none flex-col gap-3 p-0">
+          <Pilha as="ul" vao="grupo" className="m-0 list-none p-0">
             {papeis.map((linha, indice) => {
               const meu = linha.contaId === painel.contaId
               const vigente = papelVigente(linha.validoAte, agora)
               return (
-                <li key={`${linha.contaId}-${linha.papel}`} className={CARTAO}>
+                <Cartao as="li" key={`${linha.contaId}-${linha.papel}`} className={CARTAO}>
                   {meu ? (
                     <p className="font-semibold">{COMUM_MODERACAO.voce}</p>
                   ) : (
@@ -233,21 +236,23 @@ function ListaDePapeis() {
                       {PAPEIS.revogar}
                     </button>
                   </div>
-                </li>
+                </Cartao>
               )
             })}
-          </ul>
+          </Pilha>
         ) : null}
-        <p role="note" className="max-w-[40rem] font-medium">
+        <p role="note" className="max-w-leitura font-medium">
           {TX.tx15}
         </p>
-      </section>
+        </Pilha>
+      </Faixa>
 
-      <section aria-labelledby="papel-conceder" className="flex flex-col gap-4">
-        <h2 id="papel-conceder" className="cm-h4">
+      <Faixa aria-labelledby="papel-conceder">
+        <Pilha vao="grupo">
+        <h2 id="papel-conceder" className="cm-h4 text-titulo-4">
           {PAPEIS.concederTitulo}
         </h2>
-        <form onSubmit={conceder} noValidate className="flex max-w-[40rem] flex-col gap-5">
+        <form onSubmit={conceder} noValidate className="flex max-w-leitura flex-col gap-esp-pilha">
           {erro ? (
             <ResumoDeErro
               texto={erro.texto}
@@ -313,13 +318,13 @@ function ListaDePapeis() {
             erro={erroDaValidade}
             ajuda={PAPEIS.dicaDaValidade}
           />
-          <div className="max-w-[24rem]">
+          <div className="max-w-[40ch]">
             <button type="submit" disabled={envio.enviando} className={BOTAO_PRINCIPAL_QUEBRA}>
               {envio.enviando ? COMUM_COMUNIDADE.enviando : PAPEIS.conceder}
             </button>
           </div>
         </form>
-      </section>
+        </Pilha>
 
       {revogando ? (
         <DialogoDeMotivo
@@ -360,7 +365,8 @@ function ListaDePapeis() {
           </p>
         </DialogoDeMotivo>
       ) : null}
-    </div>
+      </Faixa>
+    </>
   )
 }
 

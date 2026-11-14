@@ -78,7 +78,7 @@ export function Dialogo({ titulo, aoFechar, origem, ocupado = false, children }:
       className="m-auto max-h-[calc(100dvh-2rem)] w-[min(32rem,calc(100%_-_2rem))] overflow-y-auto rounded-cartao border-[1.5px] border-[var(--cor-texto)] bg-[var(--cor-fundo)] p-6 text-[var(--cor-texto)] backdrop:bg-[var(--cor-texto)]/40 lg:p-8"
     >
       <div className="flex flex-col gap-4">
-        <h2 id={tituloId} className="cm-h4">
+        <h2 id={tituloId} className="cm-h4 text-titulo-4">
           {titulo}
         </h2>
         {children}

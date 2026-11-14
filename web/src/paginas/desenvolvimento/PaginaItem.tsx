@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react'
 import { Link, useParams } from 'react-router'
 import { AvisoDaTela } from '../../componentes/app/AvisoDaTela.tsx'
+import { Pilha } from '../../componentes/base/layout/Pilha.tsx'
+import { Faixa } from '../../componentes/comunidade/Faixa.tsx'
 import { LINK_ALVO } from '../../componentes/conta/Partes.tsx'
 import { ArtigoDeConteudo } from '../../componentes/desenvolvimento/ArtigoDeConteudo.tsx'
 import { useConteudo } from '../../componentes/desenvolvimento/conteudo.tsx'
@@ -22,8 +24,10 @@ function Voltar() {
 function Moldura({ children }: { children: ReactNode }) {
   return (
     <>
-      <main className="cm-area flex flex-col gap-6 pt-6 pb-12 text-[17px] leading-[25px] lg:pt-12" data-tela="desenvolvimento-item">
-        {children}
+      <main className="text-corpo" data-tela="desenvolvimento-item">
+        <Faixa>
+          <Pilha vao="grupo">{children}</Pilha>
+        </Faixa>
       </main>
       <AvisoDaTela />
     </>
@@ -44,7 +48,7 @@ export function PaginaItem({ id }: { id: string }) {
   if (!visivel) {
     return (
       <Moldura>
-        <h1 ref={refDoTitulo} tabIndex={-1} className="cm-h2 alvo-foco wrap-anywhere">
+        <h1 ref={refDoTitulo} tabIndex={-1} className="cm-h2 text-titulo-1 alvo-foco wrap-anywhere">
           {existente.titulo}
         </h1>
         <p role="status" data-em-revisao="" className="m-0 max-w-[65ch] rounded-campo bg-[var(--cor-papel-fundo)] px-4 py-3 font-medium">
@@ -67,7 +71,7 @@ function NaoEncontrado() {
   const refDoTitulo = useFocoNoTitulo()
   return (
     <Moldura>
-      <h1 ref={refDoTitulo} tabIndex={-1} className="cm-h2 alvo-foco wrap-anywhere">
+      <h1 ref={refDoTitulo} tabIndex={-1} className="cm-h2 text-titulo-1 alvo-foco wrap-anywhere">
         {T.naoEncontrado}
       </h1>
       <Voltar />

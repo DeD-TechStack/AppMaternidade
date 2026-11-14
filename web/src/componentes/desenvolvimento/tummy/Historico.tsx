@@ -47,7 +47,7 @@ export function Historico({ encerradas, incompleta, vazio, fusoDaFamilia, agoraD
 
   return (
     <section aria-labelledby={idTitulo} data-historico="" className="flex flex-col gap-4">
-      <h3 id={idTitulo} className="cm-h4">
+      <h3 id={idTitulo} className="cm-h4 text-titulo-4">
         {TT.historico}
       </h3>
       <div data-fila-de-dias="" role="group" aria-labelledby={idTitulo} className="flex flex-wrap gap-2">
@@ -76,7 +76,7 @@ export function Historico({ encerradas, incompleta, vazio, fusoDaFamilia, agoraD
       )}
 
       {resumo.linhas.length > 0 ? (
-        <ul data-lista-do-dia="" className="m-0 flex max-w-[44rem] list-none flex-col gap-2 p-0">
+        <ul data-lista-do-dia="" className="m-0 flex max-w-leitura list-none flex-col gap-2 p-0">
           {resumo.linhas.map((linha) => (
             <li
               key={linha.id}

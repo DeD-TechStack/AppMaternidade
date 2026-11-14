@@ -2,7 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router'
 import { AvisoDaTela } from '../../componentes/app/AvisoDaTela.tsx'
 import { Botao } from '../../componentes/base/Botao.tsx'
-import { PainelCampo } from '../../componentes/campo/PainelCampo.tsx'
+import { Cartao } from '../../componentes/base/layout/Cartao.tsx'
+import { Coluna, Colunas } from '../../componentes/base/layout/Colunas.tsx'
+import { Pilha } from '../../componentes/base/layout/Pilha.tsx'
+import { Faixa } from '../../componentes/comunidade/Faixa.tsx'
 import {
   AvisoDeEstado,
   AvisoDeFuso,
@@ -14,12 +17,12 @@ import {
 } from '../../componentes/desenvolvimento/Avisos.tsx'
 import { IdeiasDaFase, ParaLer, TodasAsFases } from '../../componentes/desenvolvimento/Blocos.tsx'
 import { SeletorDeBebe } from '../../componentes/desenvolvimento/SeletorDeBebe.tsx'
+import { TituloDaPagina } from '../../componentes/desenvolvimento/TituloDaPagina.tsx'
 import { useConteudo } from '../../componentes/desenvolvimento/conteudo.tsx'
 import { fasesDaIdade, idadeEmDias, idadeEscrita } from '../../componentes/desenvolvimento/fase.ts'
 import { ID_MARCOS, ID_TODAS_AS_FASES, ID_TUMMY_TIME, type ItemDeConteudo } from '../../componentes/desenvolvimento/itens.ts'
 import { BlocoTummy } from '../../componentes/desenvolvimento/tummy/BlocoTummy.tsx'
 import { useContextoDoBebe, type ContextoDoBebe } from '../../componentes/desenvolvimento/useContextoDoBebe.ts'
-import { TituloRotina } from '../../componentes/rotina/TituloRotina.tsx'
 import {
   T,
   avisoDeFuso,
@@ -88,7 +91,7 @@ export function CorpoDaPagina({ focarTituloAoCarregar = false, aoPerderAcesso }:
 
   return (
     <>
-      <main ref={principal} className="pb-12 text-[17px] leading-[25px]" data-tela="desenvolvimento">
+      <main ref={principal} className="text-corpo" data-tela="desenvolvimento">
         {contexto.fase === 'pronto' ? (
           <ConteudoDoBebe contexto={contexto} aoPerderAcesso={aoPerderAcesso} />
         ) : (
@@ -119,16 +122,22 @@ function SemBebe({ contexto }: { contexto: Exclude<ContextoDoBebe, { fase: 'pron
   const { todasAsFases, artigos } = useBlocosEstaticos()
   return (
     <>
-      <TituloRotina titulo={T.titulo} linha={null} />
-      {contexto.fase === 'carregando' ? <EstadoCarregando /> : null}
-      {contexto.fase === 'erro' ? <EstadoDeErro aoTentarDeNovo={() => void contexto.recarregar()} /> : null}
-      {contexto.fase === 'fuso_invalido' ? <EstadoDeFusoInvalido /> : null}
-      {contexto.fase === 'sem_familia' ? <EstadoSemFamilia /> : null}
-      {contexto.fase === 'sem_bebe' ? <EstadoSemBebe /> : null}
-      <div data-blocos-estaticos="" className="cm-area mt-12 flex flex-col gap-12">
-        <TodasAsFases fases={todasAsFases} />
-        <ParaLer artigos={artigos} />
-      </div>
+      <Faixa>
+        <Pilha vao="grupo">
+          <TituloDaPagina titulo={T.titulo} linha={null} />
+          {contexto.fase === 'carregando' ? <EstadoCarregando /> : null}
+          {contexto.fase === 'erro' ? <EstadoDeErro aoTentarDeNovo={() => void contexto.recarregar()} /> : null}
+          {contexto.fase === 'fuso_invalido' ? <EstadoDeFusoInvalido /> : null}
+          {contexto.fase === 'sem_familia' ? <EstadoSemFamilia /> : null}
+          {contexto.fase === 'sem_bebe' ? <EstadoSemBebe /> : null}
+        </Pilha>
+      </Faixa>
+      <Faixa data-blocos-estaticos="">
+        <Pilha vao="bloco">
+          <TodasAsFases fases={todasAsFases} />
+          <ParaLer artigos={artigos} />
+        </Pilha>
+      </Faixa>
     </>
   )
 }
@@ -160,61 +169,65 @@ function ConteudoDoBebe({ contexto, aoPerderAcesso }: { contexto: Pronto; aoPerd
 
   return (
     <>
-      <TituloRotina
-        titulo={T.titulo}
-        linha={linhaDoBebe(bebe.nome, idade)}
-        lateral={
-          bebes.length > 1 ? (
-            <SeletorDeBebe bebes={bebes} escolhido={bebe.id} aoEscolher={contexto.escolher} pendente={pendente} />
-          ) : null
-        }
-      />
-
-      {nascimentoDepoisDeHoje ? <AvisoDeEstado dado="nascimento-futuro">{T.nascimentoDepoisDeHoje}</AvisoDeEstado> : null}
-      {arquivado ? (
-        <AvisoDeEstado dado="arquivado">{bebeArquivado(bebe.nome)}</AvisoDeEstado>
-      ) : papel === 'observador' ? (
-        <AvisoDeEstado dado="observador">{T.soVer}</AvisoDeEstado>
-      ) : null}
-      {aparelho !== familia.fuso ? <AvisoDeFuso>{avisoDeFuso(aparelho, familia.fuso)}</AvisoDeFuso> : null}
-
-      <div
-        data-grade-do-desenvolvimento=""
-        className="cm-area mt-6 grid grid-cols-1 gap-10 lg:mt-10 lg:grid-cols-12 lg:items-start lg:gap-x-8 lg:gap-y-12"
-      >
-        {linhaFase ? (
-          <PainelCampo como="section" aria-labelledby="desenv-fase" largura="celula" className="lg:col-span-7">
-            <div className="flex max-w-[34rem] flex-col items-start gap-5">
-              <h2 id="desenv-fase" className="cm-h3" data-fase="">
-                {linhaFase}
-              </h2>
-              {ideias.length > 0 ? (
-                <Botao href="#ideias" tamanho="app">
-                  {T.verIdeias}
-                </Botao>
-              ) : null}
-            </div>
-          </PainelCampo>
-        ) : null}
-
-        <div className={linhaFase ? 'lg:col-span-5' : 'lg:col-span-12'}>
-          <TodasAsFases fases={todasAsFases} atuais={atuais} />
-        </div>
-
-        <div key={identidade} data-lugar-do-tummy="" className="lg:col-span-12 empty:hidden">
-          <BlocoTummy
-            bebe={bebe}
-            familia={familia}
-            papel={papel}
-            aoPerderAcesso={aoPerderAcesso ? () => aoPerderAcesso(identidade) : undefined}
+      <Faixa>
+        <Pilha vao="grupo">
+          <TituloDaPagina
+            titulo={T.titulo}
+            linha={linhaDoBebe(bebe.nome, idade)}
+            lateral={
+              bebes.length > 1 ? (
+                <SeletorDeBebe bebes={bebes} escolhido={bebe.id} aoEscolher={contexto.escolher} pendente={pendente} />
+              ) : null
+            }
           />
-        </div>
+          {nascimentoDepoisDeHoje ? <AvisoDeEstado dado="nascimento-futuro">{T.nascimentoDepoisDeHoje}</AvisoDeEstado> : null}
+          {arquivado ? (
+            <AvisoDeEstado dado="arquivado">{bebeArquivado(bebe.nome)}</AvisoDeEstado>
+          ) : papel === 'observador' ? (
+            <AvisoDeEstado dado="observador">{T.soVer}</AvisoDeEstado>
+          ) : null}
+          {aparelho !== familia.fuso ? <AvisoDeFuso>{avisoDeFuso(aparelho, familia.fuso)}</AvisoDeFuso> : null}
+        </Pilha>
+      </Faixa>
 
-        <div className="flex flex-col gap-12 lg:col-span-12">
+      <Faixa data-grade-do-desenvolvimento="">
+        <Pilha vao="bloco">
+          {linhaFase ? (
+            // Fase de hoje (7 partes) e "Todas as fases" (5 partes), lado a lado a partir de 1024 px (o `lg` de antes).
+            <Colunas fracoes="7fr 5fr" aPartirDe={1024} alinhar="inicio">
+              <Cartao as="section" aria-labelledby="desenv-fase" dataH="coluna" className="cm-painel-mel rounded-painel" data-painel="mel">
+                <Pilha vao="grupo" className="max-w-leitura items-start">
+                  <h2 id="desenv-fase" className="cm-h3 text-titulo-3" data-fase="">
+                    {linhaFase}
+                  </h2>
+                  {ideias.length > 0 ? (
+                    <Botao href="#ideias" tamanho="app">
+                      {T.verIdeias}
+                    </Botao>
+                  ) : null}
+                </Pilha>
+              </Cartao>
+              <Coluna>
+                <TodasAsFases fases={todasAsFases} atuais={atuais} />
+              </Coluna>
+            </Colunas>
+          ) : (
+            <TodasAsFases fases={todasAsFases} atuais={atuais} />
+          )}
+
+          <div key={identidade} data-lugar-do-tummy="" className="empty:hidden">
+            <BlocoTummy
+              bebe={bebe}
+              familia={familia}
+              papel={papel}
+              aoPerderAcesso={aoPerderAcesso ? () => aoPerderAcesso(identidade) : undefined}
+            />
+          </div>
+
           <IdeiasDaFase itens={ideias} comAbertura={valemParaTodas !== undefined} nascimentoDepoisDeHoje={nascimentoDepoisDeHoje} />
           <ParaLer artigos={artigos} />
-        </div>
-      </div>
+        </Pilha>
+      </Faixa>
     </>
   )
 }

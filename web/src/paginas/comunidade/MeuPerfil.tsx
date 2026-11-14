@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState, type FormEvent, type RefObject } from 'react'
 import { Link, useLocation } from 'react-router'
+import { Pilha } from '../../componentes/base/layout/Pilha.tsx'
 import { BOTAO_PRINCIPAL, BOTAO_SECUNDARIO, LINK_ALVO } from '../../componentes/conta/Partes.tsx'
 import { useFocoNoResumo } from '../../componentes/conta/foco.ts'
 import { ErroDeLeitura, Esqueleto, ParaEntrar, ResumoDeErro } from '../../componentes/comunidade/Avisos.tsx'
 import { CampoComContador, EscolhaDeFaixa } from '../../componentes/comunidade/Campos.tsx'
 import { useDadosComunidade } from '../../componentes/comunidade/dados.ts'
 import { useEscrita } from '../../componentes/comunidade/escrita.ts'
+import { Faixa } from '../../componentes/comunidade/Faixa.tsx'
 import { useFocoPendente } from '../../componentes/comunidade/foco.ts'
 import { Quadro, TituloDaTela } from '../../componentes/comunidade/Quadro.tsx'
 import { ehEscritor, useSituacao } from '../../componentes/comunidade/situacao.ts'
@@ -66,7 +68,7 @@ function FormularioDoPerfil({ perfil, aoSalvar }: FormularioProps) {
   }
 
   return (
-    <form onSubmit={salvar} noValidate className="flex max-w-[34rem] flex-col gap-5">
+    <form onSubmit={salvar} noValidate className="flex max-w-leitura flex-col gap-esp-pilha">
       {erro && !apelidoEmUso ? (
         <ResumoDeErro
           texto={erro.texto}
@@ -121,49 +123,51 @@ function DadosDoPerfil({ perfilId, escritor, definirStatus }: DadosProps) {
   const { estado } = leitura
 
   return (
-    <section aria-labelledby="perfil" aria-busy={estado.fase === 'carregando' || undefined} className="mt-8 flex flex-col gap-4">
-      <h2 id="perfil" className="cm-h4">
-        {PERFIL.secao}
-      </h2>
-      {leitura.esqueleto ? <Esqueleto linhas={2} /> : null}
-      {estado.fase === 'erro' ? <ErroDeLeitura erro={estado.erro} aoTentarDeNovo={() => void leitura.recarregar()} /> : null}
-      {estado.fase === 'pronto' && estado.valor && escritor ? (
-        <FormularioDoPerfil
-          key={estado.valor.id}
-          perfil={estado.valor}
-          aoSalvar={async () => {
-            definirStatus(TX.tx26)
-            await leitura.reler()
-          }}
-        />
-      ) : null}
-      {estado.fase === 'pronto' && estado.valor && !escritor ? (
-        <div className="flex max-w-[34rem] flex-col gap-3">
-          <dl className="m-0 flex flex-col gap-3">
-            <div>
-              <dt className="cm-pequeno text-[var(--cor-texto-2)]">{PERFIL.apelidoRotulo}</dt>
-              <dd className="m-0 wrap-anywhere">{estado.valor.apelido}</dd>
-            </div>
-            {estado.valor.bio ? (
+    <Faixa aria-labelledby="perfil" aria-busy={estado.fase === 'carregando' || undefined}>
+      <Pilha vao="grupo">
+        <h2 id="perfil" className="cm-h4 text-titulo-4">
+          {PERFIL.secao}
+        </h2>
+        {leitura.esqueleto ? <Esqueleto linhas={2} /> : null}
+        {estado.fase === 'erro' ? <ErroDeLeitura erro={estado.erro} aoTentarDeNovo={() => void leitura.recarregar()} /> : null}
+        {estado.fase === 'pronto' && estado.valor && escritor ? (
+          <FormularioDoPerfil
+            key={estado.valor.id}
+            perfil={estado.valor}
+            aoSalvar={async () => {
+              definirStatus(TX.tx26)
+              await leitura.reler()
+            }}
+          />
+        ) : null}
+        {estado.fase === 'pronto' && estado.valor && !escritor ? (
+          <Pilha vao="pilha" className="max-w-leitura items-start">
+            <dl className="m-0 flex flex-col gap-3">
               <div>
-                <dt className="cm-pequeno text-[var(--cor-texto-2)]">{PERFIL.bioRotulo}</dt>
-                <dd className="m-0 wrap-anywhere">{estado.valor.bio}</dd>
+                <dt className="cm-pequeno text-[var(--cor-texto-2)]">{PERFIL.apelidoRotulo}</dt>
+                <dd className="m-0 wrap-anywhere">{estado.valor.apelido}</dd>
               </div>
-            ) : null}
-            {estado.valor.faixa ? (
-              <div>
-                <dt className="cm-pequeno text-[var(--cor-texto-2)]">{PERFIL.faixaRotulo}</dt>
-                <dd className="m-0">{ROTULO_FAIXA[estado.valor.faixa]}</dd>
-              </div>
-            ) : null}
-          </dl>
-          <p>{PERFIL.somenteLeitura}</p>
-          <Link to={caminhoDeEntrada('/app/comunidade/perfil')} className={LINK_ALVO}>
-            {PERFIL.editarPerfil}
-          </Link>
-        </div>
-      ) : null}
-    </section>
+              {estado.valor.bio ? (
+                <div>
+                  <dt className="cm-pequeno text-[var(--cor-texto-2)]">{PERFIL.bioRotulo}</dt>
+                  <dd className="m-0 wrap-anywhere">{estado.valor.bio}</dd>
+                </div>
+              ) : null}
+              {estado.valor.faixa ? (
+                <div>
+                  <dt className="cm-pequeno text-[var(--cor-texto-2)]">{PERFIL.faixaRotulo}</dt>
+                  <dd className="m-0">{ROTULO_FAIXA[estado.valor.faixa]}</dd>
+                </div>
+              ) : null}
+            </dl>
+            <p>{PERFIL.somenteLeitura}</p>
+            <Link to={caminhoDeEntrada('/app/comunidade/perfil')} className={LINK_ALVO}>
+              {PERFIL.editarPerfil}
+            </Link>
+          </Pilha>
+        ) : null}
+      </Pilha>
+    </Faixa>
   )
 }
 
@@ -197,15 +201,11 @@ function Bloqueios({ definirStatus, pedirFoco, refStatus }: BloqueiosProps) {
   }
 
   return (
-    <section
-      aria-labelledby="bloqueios"
-      aria-busy={estado.fase === 'carregando' || undefined}
-      className="mt-10 border-t border-[var(--cor-fio-suave)] pt-8"
-    >
-      <h2 id="bloqueios" className="cm-h4">
-        {PERFIL.bloqueios}
-      </h2>
-      <div className="mt-4 flex flex-col gap-3">
+    <Faixa aria-labelledby="bloqueios" aria-busy={estado.fase === 'carregando' || undefined}>
+      <Pilha vao="grupo" className="border-t border-[var(--cor-fio-suave)] pt-esp-grupo">
+        <h2 id="bloqueios" className="cm-h4 text-titulo-4">
+          {PERFIL.bloqueios}
+        </h2>
         {leitura.esqueleto ? <Esqueleto linhas={2} /> : null}
         {estado.fase === 'erro' ? <ErroDeLeitura erro={estado.erro} aoTentarDeNovo={() => void leitura.recarregar()} /> : null}
         {erro ? (
@@ -238,8 +238,8 @@ function Bloqueios({ definirStatus, pedirFoco, refStatus }: BloqueiosProps) {
             ))}
           </ul>
         ) : null}
-      </div>
-    </section>
+      </Pilha>
+    </Faixa>
   )
 }
 
@@ -254,24 +254,29 @@ export function MeuPerfil() {
   const lida = situacao.estado.fase === 'pronto' ? situacao.estado.valor : null
 
   return (
-    <Quadro voltar="/app/comunidade" ocupado={situacao.estado.fase === 'carregando'}>
-      <TituloDaTela>{PERFIL.titulo}</TituloDaTela>
-      <p className="cm-lide mt-3 max-w-[40rem] text-[var(--cor-texto-2)]">{PERFIL.frase}</p>
-      <div className="mt-6">
-        <Status mensagem={status} refStatus={refStatus} />
-      </div>
-      {situacao.esqueleto ? <Esqueleto linhas={2} /> : null}
-      {situacao.estado.fase === 'erro' ? (
-        <div className="mt-6 max-w-[40rem]">
-          <ErroDeLeitura erro={situacao.estado.erro} aoTentarDeNovo={() => void situacao.recarregar()} />
-        </div>
-      ) : null}
-      {lida && lida.perfilId === null ? (
-        <div className="mt-8 flex flex-col gap-3">
-          <p className="font-medium">{PERFIL.paraCriar}</p>
-          <ParaEntrar destino="/app/comunidade/perfil" />
-        </div>
-      ) : null}
+    <Quadro
+      voltar="/app/comunidade"
+      ocupado={situacao.estado.fase === 'carregando'}
+      titulo={<TituloDaTela>{PERFIL.titulo}</TituloDaTela>}
+      lide={PERFIL.frase}
+      cabeca={
+        <>
+          <Status mensagem={status} refStatus={refStatus} />
+          {situacao.esqueleto ? <Esqueleto linhas={2} /> : null}
+          {situacao.estado.fase === 'erro' ? (
+            <div className="max-w-leitura">
+              <ErroDeLeitura erro={situacao.estado.erro} aoTentarDeNovo={() => void situacao.recarregar()} />
+            </div>
+          ) : null}
+          {lida && lida.perfilId === null ? (
+            <Pilha vao="pilha">
+              <p className="font-medium">{PERFIL.paraCriar}</p>
+              <ParaEntrar destino="/app/comunidade/perfil" />
+            </Pilha>
+          ) : null}
+        </>
+      }
+    >
       {lida && lida.perfilId ? (
         <>
           <DadosDoPerfil perfilId={lida.perfilId} escritor={ehEscritor(lida)} definirStatus={setStatus} />

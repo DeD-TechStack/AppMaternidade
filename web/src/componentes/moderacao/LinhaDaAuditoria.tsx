@@ -3,6 +3,7 @@ import { COMUM_COMUNIDADE, ROTULO_ESTADO_DENUNCIA } from '../../conteudo/comunid
 import { AUDITORIA, COMUM_MODERACAO, ROTULO_ESTADO_CONTEUDO, ROTULO_PAPEL } from '../../conteudo/moderacao.ts'
 import { formatarDataHora } from '../../dados/comunidade.ts'
 import type { LinhaDeAuditoria } from '../../dados/moderacao.ts'
+import { Cartao } from '../base/layout/Cartao.tsx'
 import { Texto } from '../comunidade/Itens.tsx'
 import { LINK_ALVO_DO_PAINEL } from './estilos.ts'
 
@@ -47,7 +48,7 @@ function AlvoDaLinha({ linha }: { linha: LinhaDeAuditoria }) {
 export function LinhaDaAuditoria({ linha, contaId }: { linha: LinhaDeAuditoria; contaId: string | null }) {
   const mudou = linha.estadoAnterior !== null || linha.estadoNovo !== null
   return (
-    <li className="flex flex-col gap-2 rounded-cartao border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)] p-5">
+    <Cartao as="li" className="flex flex-col gap-2 border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)]">
       <p className="flex flex-wrap items-center gap-x-4 gap-y-1">
         <span className="font-semibold">{AUDITORIA.acao[linha.acao]}</span>
         <span className="cm-pequeno text-[var(--cor-texto-2)]">{quemAgiu(linha.atorId, contaId)}</span>
@@ -70,11 +71,11 @@ export function LinhaDaAuditoria({ linha, contaId }: { linha: LinhaDeAuditoria; 
       {linha.conteudo ? (
         <details>
           <summary className="alvo-toque inline-flex cursor-pointer items-center font-medium">{AUDITORIA.textoNoMomento}</summary>
-          <div className="mt-2">
+          <div className="pt-2">
             <Texto>{linha.conteudo}</Texto>
           </div>
         </details>
       ) : null}
-    </li>
+    </Cartao>
   )
 }

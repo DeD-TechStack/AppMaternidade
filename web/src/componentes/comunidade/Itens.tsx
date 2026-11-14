@@ -56,5 +56,5 @@ export function EtiquetaDeEstado({ estado, motivo }: EtiquetaProps) {
 
 /** O texto como a pessoa escreveu, com as quebras de linha, sem cortar palavra comprida. */
 export function Texto({ children }: { children: string }) {
-  return <p className="max-w-[44rem] whitespace-pre-wrap text-pretty wrap-anywhere">{children}</p>
+  return <p className="max-w-leitura whitespace-pre-wrap text-pretty wrap-anywhere">{children}</p>
 }

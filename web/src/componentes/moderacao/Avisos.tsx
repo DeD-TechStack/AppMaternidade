@@ -2,6 +2,7 @@ import { Link } from 'react-router'
 import { COMUM_COMUNIDADE } from '../../conteudo/comunidade.ts'
 import { NAO_ENCONTRADO, SEM_PERMISSAO, TX, textoDoErroModeracao } from '../../conteudo/moderacao.ts'
 import type { ErroDados } from '../../dados/comum.ts'
+import { Pilha } from '../base/layout/Pilha.tsx'
 import { ResumoDeErro } from '../comunidade/Avisos.tsx'
 import { LINK_ALVO_DO_PAINEL } from './estilos.ts'
 
@@ -10,19 +11,19 @@ import { LINK_ALVO_DO_PAINEL } from './estilos.ts'
 /** "Não existe" e "não pode ver" respondem igual (TX-11), com o caminho de volta à fila. */
 export function NaoEncontradoNoPainel() {
   return (
-    <div className="flex flex-col items-start gap-3" data-estado="nao-encontrado">
+    <Pilha vao="grupo" className="items-start" data-estado="nao-encontrado">
       <p className="font-medium">{NAO_ENCONTRADO.frase}</p>
       <Link to="/moderacao" className={LINK_ALVO_DO_PAINEL}>
         {NAO_ENCONTRADO.link}
       </Link>
-    </div>
+    </Pilha>
   )
 }
 
 /** O estado "sem permissão" (TX-12), com o link para a Comunidade. Nenhuma outra leitura acontece. */
 export function SemPermissao({ frasePerdida }: { frasePerdida?: string | null }) {
   return (
-    <div className="flex flex-col items-start gap-3" data-estado="sem-permissao">
+    <Pilha vao="grupo" className="items-start" data-estado="sem-permissao">
       {frasePerdida ? (
         <p role="alert" className="font-medium">
           {frasePerdida}
@@ -32,7 +33,7 @@ export function SemPermissao({ frasePerdida }: { frasePerdida?: string | null })
       <Link to="/app/comunidade" className={LINK_ALVO_DO_PAINEL}>
         {SEM_PERMISSAO.link}
       </Link>
-    </div>
+    </Pilha>
   )
 }
 

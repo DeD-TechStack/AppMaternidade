@@ -122,7 +122,7 @@ export function PainelDeRegistro({
       {horario ? (
         <>
           {aparelho !== fusoDaFamilia ? <p className="cm-pequeno cm-texto-2 m-0 max-w-[65ch]">{avisoDeFuso(aparelho, fusoDaFamilia)}</p> : null}
-          <div className="grid w-full max-w-[34rem] grid-cols-2 gap-x-4 gap-y-4">
+          <div className="grid w-full max-w-leitura grid-cols-2 gap-x-4 gap-y-4">
             <div className="col-span-2">
               <fieldset disabled={travado} className="m-0 min-w-0 border-0 p-0">
                 <Campo

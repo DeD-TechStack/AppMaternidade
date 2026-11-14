@@ -7,8 +7,10 @@ import type { SituacaoConta } from '../../dados/comunidade.ts'
 import { mfaModeracaoLigado } from '../../dados/moderacao.ts'
 import { erroDaChaveModeracao } from '../../dados/moderacao.erros.ts'
 import { Etiqueta } from '../base/Etiqueta.tsx'
+import { Pilha } from '../base/layout/Pilha.tsx'
 import { Esqueleto, ResumoDeErro } from '../comunidade/Avisos.tsx'
 import { useDadosComunidade } from '../comunidade/dados.ts'
+import { Faixa } from '../comunidade/Faixa.tsx'
 import { TituloDaTela } from '../comunidade/Quadro.tsx'
 import { useLeitura } from '../comunidade/useLeitura.ts'
 import { MolduraLogada } from '../conta/MolduraLogada.tsx'
@@ -50,7 +52,7 @@ function NavegacaoDoPainel({ admin }: { admin: boolean }) {
     { para: '/app/comunidade', rotulo: COMUM_MODERACAO.comunidade, atual: false },
   ]
   return (
-    <nav aria-label={COMUM_MODERACAO.painel} className="mt-6">
+    <nav aria-label={COMUM_MODERACAO.painel}>
       <ul className="m-0 flex list-none flex-wrap gap-x-2 gap-y-1 p-0">
         {itens.map((item) => (
           <li key={item.para}>
@@ -77,11 +79,24 @@ function ConferirNivel({ children }: { children: ReactNode }) {
   const [verificada, setVerificada] = useState(false)
 
   if (verificada) return children
-  if (nivel.estado.fase === 'carregando') return nivel.esqueleto ? <Esqueleto linhas={1} /> : null
+  if (nivel.estado.fase === 'carregando') {
+    return nivel.esqueleto ? (
+      <Faixa>
+        <Esqueleto linhas={1} />
+      </Faixa>
+    ) : null
+  }
   if (nivel.estado.fase === 'erro') {
     const { erro } = nivel.estado
-    if (erro.classe === 'rede') return <ErroDeLeituraNoPainel erro={erro} aoTentarDeNovo={() => void nivel.recarregar()} />
-    return <ResumoDeErro texto={textoDoErroModeracao(erro)} />
+    return (
+      <Faixa>
+        {erro.classe === 'rede' ? (
+          <ErroDeLeituraNoPainel erro={erro} aoTentarDeNovo={() => void nivel.recarregar()} />
+        ) : (
+          <ResumoDeErro texto={textoDoErroModeracao(erro)} />
+        )}
+      </Faixa>
+    )
   }
   if (nivel.estado.valor === 'aal2') return children
   return <VerificacaoEmDuasEtapas aoVerificar={() => setVerificada(true)} />
@@ -165,37 +180,37 @@ export function Painel({ titulo, comVoltar = true, exigeAdmin = false, children 
 
   return (
     <MolduraLogada ocupado={situacao.estado.fase === 'carregando'}>
-      <div className={`mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 ${ETIQUETAS_QUEBRAM}`}>
-        {comVoltar ? (
-          <Link to="/moderacao" className={LINK_ALVO_DO_PAINEL}>
-            {COMUM_COMUNIDADE.voltar}
-          </Link>
-        ) : null}
-        <Etiqueta>{TX.selo}</Etiqueta>
-      </div>
-      <TituloDaTela>{titulo}</TituloDaTela>
+      <Faixa>
+        <Pilha vao="grupo">
+          <Pilha vao="junto">
+            <div className={`flex flex-wrap items-center gap-x-4 gap-y-1 ${ETIQUETAS_QUEBRAM}`}>
+              {comVoltar ? (
+                <Link to="/moderacao" className={LINK_ALVO_DO_PAINEL}>
+                  {COMUM_COMUNIDADE.voltar}
+                </Link>
+              ) : null}
+              <Etiqueta>{TX.selo}</Etiqueta>
+            </div>
+            <TituloDaTela>{titulo}</TituloDaTela>
+          </Pilha>
 
-      {situacao.esqueleto ? (
-        <div className="mt-8">
-          <Esqueleto linhas={2} />
-        </div>
-      ) : null}
-      {situacao.estado.fase === 'erro' ? (
-        <div className="mt-8 max-w-[40rem]">
-          <ErroDeLeituraNoPainel erro={situacao.estado.erro} aoTentarDeNovo={() => void situacao.recarregar()} />
-        </div>
-      ) : null}
-      {negado ? (
-        <div className="mt-8 max-w-[40rem]">
-          <SemPermissao frasePerdida={perdeu === 'sem_papel' ? TEXTOS_ERRO_MODERACAO.sem_papel : null} />
-        </div>
-      ) : null}
+          {situacao.esqueleto ? <Esqueleto linhas={2} /> : null}
+          {situacao.estado.fase === 'erro' ? (
+            <div className="max-w-leitura">
+              <ErroDeLeituraNoPainel erro={situacao.estado.erro} aoTentarDeNovo={() => void situacao.recarregar()} />
+            </div>
+          ) : null}
+          {negado ? (
+            <div className="max-w-leitura">
+              <SemPermissao frasePerdida={perdeu === 'sem_papel' ? TEXTOS_ERRO_MODERACAO.sem_papel : null} />
+            </div>
+          ) : null}
+          {lida && !negado ? <NavegacaoDoPainel admin={admin} /> : null}
+        </Pilha>
+      </Faixa>
       {lida && !negado ? (
         <ContextoDoPainel value={contexto}>
-          <NavegacaoDoPainel admin={admin} />
-          <div className="mt-8">
-            <PortaDaVerificacao>{children}</PortaDaVerificacao>
-          </div>
+          <PortaDaVerificacao>{children}</PortaDaVerificacao>
         </ContextoDoPainel>
       ) : null}
     </MolduraLogada>

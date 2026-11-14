@@ -4,6 +4,7 @@ import { COMUM_COMUNIDADE, LISTA, TX, textoDoErroComunidade } from '../../conteu
 import type { ErroDados } from '../../dados/comum.ts'
 import { Botao } from '../base/Botao.tsx'
 import { Etiqueta } from '../base/Etiqueta.tsx'
+import { Pilha } from '../base/layout/Pilha.tsx'
 import { BOTAO_SECUNDARIO, LINK_ALVO } from '../conta/Partes.tsx'
 import { caminhoDeEntrada } from './volta.ts'
 
@@ -24,7 +25,7 @@ export function AvisoDeSaude() {
   return (
     <div
       role="note"
-      className="flex max-w-[40rem] flex-col items-start gap-1 rounded-campo border border-[var(--cor-fio-suave)] bg-[var(--cor-papel-fundo)] px-4 py-3"
+      className="flex max-w-leitura flex-col items-start gap-1 rounded-campo border border-[var(--cor-fio-suave)] bg-[var(--cor-papel-fundo)] px-4 py-3"
     >
       <p>{TX.tx02}</p>
       <LinkDeAjuda />
@@ -40,7 +41,7 @@ export function Selo() {
 /** O topo do conteúdo: o link "Voltar" (menos na C1) e o selo. */
 export function TopoDaTela({ voltar }: { voltar?: string }) {
   return (
-    <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1">
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
       {voltar ? (
         <Link to={voltar} className={LINK_ALVO}>
           {COMUM_COMUNIDADE.voltar}
@@ -81,24 +82,24 @@ export function ResumoDeErro({ texto, rotuloDaAcao, aoAgir, refResumo }: ResumoP
 /** Quem não é escritor habilitado: o bloco que leva à entrada na comunidade, com o destino da ação. */
 export function ParaEntrar({ destino }: { destino: string }) {
   return (
-    <div className="flex max-w-[34rem] flex-col items-start gap-3">
+    <Pilha vao="grupo" className="max-w-leitura items-start">
       <p>{LISTA.paraPublicarFrase}</p>
       <Botao to={caminhoDeEntrada(destino)} tamanho="app">
         {LISTA.entrar}
       </Botao>
-    </div>
+    </Pilha>
   )
 }
 
 /** "Não existe" e "não pode ver" respondem igual (TX-11), com o caminho de volta à Comunidade. */
 export function NaoEncontrado() {
   return (
-    <div className="flex flex-col items-start gap-3" data-estado="nao-encontrado">
+    <Pilha vao="grupo" className="items-start" data-estado="nao-encontrado">
       <p className="font-medium">{TX.tx11}</p>
       <Link to="/app/comunidade" className={LINK_ALVO}>
         {COMUM_COMUNIDADE.irParaComunidade}
       </Link>
-    </div>
+    </Pilha>
   )
 }
 
