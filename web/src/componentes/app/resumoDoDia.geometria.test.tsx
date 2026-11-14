@@ -22,12 +22,17 @@ const PASTA_CSS = join(PASTA_DIST, 'assets')
 const TOLERANCIA = 1
 const CELULAS = 4
 
+type Tema = 'claro' | 'madrugada'
+
 interface Janela {
   largura: number
   altura: number
+  /** `madrugada` põe `data-tema="madrugada"` no html (o tema escuro da Rotina); sem o campo ou `claro`, sem atributo. */
+  tema?: Tema
 }
 const CELULAR: Janela = { largura: 390, altura: 844 }
 const DESKTOP: Janela = { largura: 1440, altura: 900 }
+const comTema = (janela: Janela, tema: Tema): Janela => ({ ...janela, tema })
 
 interface Celula {
   x: number
@@ -36,6 +41,13 @@ interface Celula {
   bottom: number
   width: number
   height: number
+  /** Borda direita da área de conteúdo da célula: direita da caixa menos padding e borda da direita. */
+  conteudoRight: number
+  /** O texto do número do dia (span[data-numero-do-dia]). */
+  valorTexto: string
+  /** A caixa do TEXTO do número (Range), não a do span, que se estica até a largura da célula. */
+  valorX: number
+  valorRight: number
 }
 
 interface Medida {
@@ -58,6 +70,29 @@ const SCRIPT_DE_MEDIDA = `
     const r = el.getBoundingClientRect()
     return { x: r.x, right: r.right, y: r.y, bottom: r.bottom, width: r.width, height: r.height }
   }
+  const celula = (li) => {
+    const estilo = getComputedStyle(li)
+    const base = caixa(li)
+    const numero = li.querySelector('[data-numero-do-dia]')
+    let texto = ''
+    let valorX = Number.NaN
+    let valorRight = Number.NaN
+    if (numero) {
+      const faixa = document.createRange()
+      faixa.selectNodeContents(numero)
+      const r = faixa.getBoundingClientRect()
+      texto = numero.textContent ?? ''
+      valorX = r.x
+      valorRight = r.right
+    }
+    return {
+      ...base,
+      conteudoRight: base.right - parseFloat(estilo.paddingRight) - parseFloat(estilo.borderRightWidth),
+      valorTexto: texto,
+      valorX,
+      valorRight,
+    }
+  }
   try {
     document.body.offsetWidth
     await document.fonts.ready
@@ -70,7 +105,7 @@ const SCRIPT_DE_MEDIDA = `
       fontes: document.fonts.status,
       faces: [...document.fonts].map((f) => f.family + ':' + f.status),
       lista: lista ? caixa(lista) : null,
-      celulas: lista ? [...lista.querySelectorAll(':scope > li')].map(caixa) : [],
+      celulas: lista ? [...lista.querySelectorAll(':scope > li')].map(celula) : [],
     })
     saida.textContent = texto
     if (window.parent !== window) window.parent.postMessage(texto, '*')
@@ -112,7 +147,7 @@ function comPaginaNoChrome<T>(raizHtml: string, janela: Janela, argumentosExtras
     const pagina = join(pasta, 'pagina.html')
     writeFileSync(
       pagina,
-      `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">${folhas.join('')}</head>` +
+      `<!doctype html><html lang="pt-BR"${janela.tema === 'madrugada' ? ' data-tema="madrugada"' : ''}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">${folhas.join('')}</head>` +
         `<body><div id="root">${raizHtml}</div><pre id="geometria" hidden></pre><script>${SCRIPT_DE_MEDIDA}</script></body></html>`,
       'utf8',
     )
@@ -232,9 +267,57 @@ function conferirGrade2x2(medida: Medida) {
   expect(Math.abs(b.x - d.x), `2ª e 4ª na mesma coluna (esquerdas: ${dizer(esquerdas)})`).toBeLessThanOrEqual(TOLERANCIA)
 }
 
+/**
+ * O número do dia (a caixa do texto, não a do span) fica dentro da área de conteúdo da célula e da lista.
+ * O span se estica até a célula e esconde o estouro; o Range mede o que foi desenhado.
+ */
+function conferirValoresDentro(medida: Medida) {
+  const lista = medida.lista!
+  expect(medida.celulas, 'quantos números do dia mediu').toHaveLength(CELULAS)
+  const medidos = medida.celulas.filter((celula) => celula.valorTexto !== '' && Number.isFinite(celula.valorRight))
+  expect(medidos, `só ${medidos.length} de ${CELULAS} números do dia foram medidos`).toHaveLength(CELULAS)
+  for (const [i, celula] of medida.celulas.entries()) {
+    const quem = `célula ${i + 1}, valor "${celula.valorTexto}"`
+    expect(
+      celula.valorRight,
+      `${quem}: o texto termina em ${dizer([celula.valorRight])} e passa da área de conteúdo da célula (direita ${dizer([celula.conteudoRight])}; célula ${dizer([celula.x])}..${dizer([celula.right])})`,
+    ).toBeLessThanOrEqual(celula.conteudoRight + TOLERANCIA)
+    expect(
+      celula.valorRight,
+      `${quem}: o texto termina em ${dizer([celula.valorRight])} e passa da lista (direita ${dizer([lista.right])})`,
+    ).toBeLessThanOrEqual(lista.right + TOLERANCIA)
+    expect(
+      celula.valorX,
+      `${quem}: o texto começa em ${dizer([celula.valorX])}, à esquerda da célula (esquerda ${dizer([celula.x])})`,
+    ).toBeGreaterThanOrEqual(celula.x - TOLERANCIA)
+  }
+}
+
+/** Os quatro números mais longos que o produto escreve: contagens de três dígitos e o sono de 12 h 59 (HOJE.umaHoraEMinutos). */
+const VALORES_LONGOS = ['188', '188', '188', '12 h 59']
+
+/** Troca o texto dos quatro números do dia numa cópia da página (o jsdom do teste, nunca o produto) antes de ler o innerHTML. */
+function raizComValoresLongos(container: HTMLElement): string {
+  const copia = container.cloneNode(true) as HTMLElement
+  const numeros = [...copia.querySelectorAll<HTMLElement>('[data-numero-do-dia]')]
+  expect(numeros, 'a página não tem os quatro números do dia').toHaveLength(CELULAS)
+  for (const [i, numero] of numeros.entries()) numero.textContent = VALORES_LONGOS[i]
+  return raizDaPagina(copia)
+}
+
 const CASOS = [
   { nome: 'dia preenchido', opcoes: { sessao: 'juliana', diaCompleto: true } as const, captura: true },
   { nome: 'dia vazio (zeros)', opcoes: { sessao: 'juliana', semRegistros: true } as const, captura: false },
+]
+
+const CASOS_DOS_VALORES = [
+  ...CASOS.map(({ nome, opcoes }) => ({ nome, opcoes, raiz: raizDaPagina })),
+  { nome: 'valores longos', opcoes: CASOS[0].opcoes, raiz: raizComValoresLongos },
+]
+const TEMAS: Tema[] = ['claro', 'madrugada']
+const JANELAS = [
+  { rotulo: '1440x900', janela: DESKTOP },
+  { rotulo: '390x844', janela: CELULAR },
 ]
 
 describe('a geometria de "Hoje até agora" no Chrome', () => {
@@ -266,6 +349,25 @@ describe('a geometria de "Hoje até agora" no Chrome', () => {
       },
       60_000,
     )
+  }
+})
+
+describe('os números de "Hoje até agora" ficam dentro da célula e da lista no Chrome', () => {
+  for (const caso of CASOS_DOS_VALORES) {
+    for (const { rotulo, janela } of JANELAS) {
+      for (const tema of TEMAS) {
+        it(
+          `${caso.nome}, ${rotulo}, tema ${tema}: o texto de cada número não passa da célula nem da lista`,
+          async () => {
+            const { container } = await renderizarRotaPronta('/app/hoje', caso.opcoes)
+            const medida = medirNoChrome(caso.raiz(container), comTema(janela, tema))
+            conferirMedida(medida, janela)
+            conferirValoresDentro(medida)
+          },
+          60_000,
+        )
+      }
+    }
   }
 })
 
