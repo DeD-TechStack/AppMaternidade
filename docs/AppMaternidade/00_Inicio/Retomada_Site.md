@@ -14,7 +14,7 @@ Esta é a nota de partida da próxima sessão de trabalho no site. Ela registra 
 
 ## RETOMADA de 13/11/2026 (sessão nova do líder): ESTADO VIGENTE
 
-ESTADO: ATIVO. Frente principal: item H, sistema de harmonia (polimento por página congelado).
+ESTADO: ATIVO (14/11 00h40, retomada depois da pausa de 13/11; soltura dos cartões aguarda o "GO cards" do coordenador, ordem em PENDENCIAS.md). Frente principal: item H, sistema de harmonia (polimento por página congelado).
 - MAT-40c integrada: `origin/int/refazer` = a003fe4 (merge do 5ff67f6 revisado, diff idêntico, check 2734 testes na 3ª execução; as duas primeiras caíram no teste intermitente DES-09 "carregando", que vira o cartão MAT-48f t_dfbff632). Recibo no comentário 721.
 - MAT-39b t_c9529365 rodando na correção 2/2 (comentário 713); P-60 t_ca45d30f aprovada com limites (evidência da 37b); P-50 t_2af603f6 reduzida a C-1, C-3 e C-4 (comentário 711); POL-ABR t_d04a8a7d estacionada (comentário 712).
 - H passo 1 feito: `C:/OrchestrationLab/projetos/_staging/appmaternidade/HARMONIA/MEDIDAS.md` (Pato Jack, Good Inside no Rare Days e goodinside.com, 1440 e 390, getComputedStyle; nosso site medido com o mesmo script). Achados: nós somamos margem de seção 96 com painel 64 (160 entre conteúdos; 108 a 161 no celular, o dobro ou o triplo da referência), temos 3 margens esquerdas por página e a escala de títulos sem razão fixa (84/56/48/36).
