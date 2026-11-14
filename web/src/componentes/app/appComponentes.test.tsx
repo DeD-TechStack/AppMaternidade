@@ -2,7 +2,7 @@ import { createRef } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
-import axe from 'axe-core'
+import { rodarAxe } from '../../teste/axe.ts'
 import { ALVO_APP } from './alvo.ts'
 import { BotaoIniciarMamada } from './BotaoIniciarMamada.tsx'
 import { CartaoSessao } from './CartaoSessao.tsx'
@@ -16,7 +16,7 @@ const AGORA = Date.parse('2026-11-05T10:00:00')
 const MIN = 60_000
 
 async function violacoes(container: HTMLElement): Promise<string[]> {
-  const resultado = await axe.run(container, { rules: { 'color-contrast': { enabled: false }, region: { enabled: false } } })
+  const resultado = await rodarAxe(container, { rules: { 'color-contrast': { enabled: false }, region: { enabled: false } } })
   return resultado.violations.map((v) => `${v.id}: ${v.help}`)
 }
 
