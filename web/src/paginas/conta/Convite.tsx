@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router'
+import { Cartao, Pilha } from '../../componentes/base/layout/index.ts'
 import { apagarChave, CHAVE_CONVITE, gravarChave, lerChave } from '../../componentes/conta/armazenamento.ts'
 import { Campo } from '../../componentes/conta/Campos.tsx'
 import { codigoDoFragmento, normalizarCodigo } from '../../componentes/conta/codigoConvite.ts'
@@ -217,7 +218,7 @@ export function Convite() {
       ) : sessao.estado === 'erro' && sessao.erro ? (
         <ResumoErro erro={sessao.erro} repetivel aoTentarDeNovo={() => void sessao.recarregarConta()} />
       ) : semSessao && codigo ? (
-        <div className="flex flex-col gap-4">
+        <Pilha vao="pilha">
           <p className="rounded-campo bg-[var(--cor-papel-fundo)] px-4 py-3">{CONVITE.guardado}</p>
           <div className="flex flex-col gap-3">
             <Link
@@ -244,14 +245,16 @@ export function Convite() {
               {CONVITE.descartar}
             </button>
           </div>
-        </div>
+        </Pilha>
       ) : lendo ? (
         <Carregando />
       ) : pronta ? (
-        <section
+        <Cartao
+          as="section"
           aria-labelledby="titulo-previa"
-          className="flex flex-col gap-5 rounded-cartao border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)] p-6"
+          className="border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)]"
         >
+         <Pilha vao="pilha">
           <h2 id="titulo-previa" className="cm-h3 wrap-anywhere">
             {pronta.previa.familiaNome}
           </h2>
@@ -264,18 +267,18 @@ export function Convite() {
               CONVITE.semBebes
             )}
           </p>
-          <div className="flex flex-col gap-1">
+          <Pilha vao="junto">
             <p>
               {CONVITE.convidouComo} <strong>{PAPEIS[pronta.previa.papel].minusculo}</strong>.
             </p>
             <p className="cm-pequeno text-[var(--cor-texto-2)]">{PAPEIS[pronta.previa.papel].permite}</p>
-          </div>
-          <div className="tabular flex flex-col gap-1">
+          </Pilha>
+          <Pilha vao="junto" className="tabular">
             {pronta.previa.validoAte ? (
               <p>{CONVITE.acessoAte(formatarData(pronta.previa.validoAte, conta?.fuso ?? 'UTC'))}</p>
             ) : null}
             <p>{CONVITE.vence(formatarDataEHora(pronta.previa.expiraEm, conta?.fuso ?? 'UTC'))}</p>
-          </div>
+          </Pilha>
           {erroDeAceite && !erroFatal ? (
             <ResumoErro
               erro={erroDeAceite}
@@ -314,9 +317,10 @@ export function Convite() {
               {CONVITE.agoraNao}
             </button>
           </div>
-        </section>
+         </Pilha>
+        </Cartao>
       ) : (
-        <div className="flex flex-col gap-4">
+        <Pilha vao="pilha">
           {erroDaTela ? (
             <ResumoErro
               erro={erroDaTela}
@@ -329,7 +333,7 @@ export function Convite() {
             />
           ) : null}
           {campoDoCodigo}
-        </div>
+        </Pilha>
       )}
     </MolduraPublica>
   )

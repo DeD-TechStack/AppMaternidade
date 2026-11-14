@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { DuasColunas } from '../acesso/DuasColunas.tsx'
+import { Pilha } from '../base/layout/index.ts'
 import { Manchete } from '../acesso/Manchete.tsx'
 import type { NomeIlustracao } from '../campo/Ilustracao.tsx'
 import { useFocoNoTitulo } from './foco.ts'
@@ -29,22 +30,30 @@ export function MolduraPublica({ titulo, manchete, frase, ligacoes, ocupado = fa
   const tituloRef = useFocoNoTitulo()
 
   return (
-    <main aria-busy={ocupado || undefined} className="cm-area pt-4 lg:pt-6">
+    <main aria-busy={ocupado || undefined}>
       <DuasColunas ilustracao={ilustracao}>
-        {manchete ? (
-          <Manchete linhas={manchete} refTitulo={tituloRef} />
-        ) : (
-          <h1 ref={tituloRef} tabIndex={-1} className="cm-h1 alvo-foco wrap-anywhere">
-            {titulo}
-          </h1>
-        )}
-        {frase ? <p className="cm-lide cm-medida lg:mt-3">{frase}</p> : null}
-        {children ? <div className="flex max-w-[32rem] flex-col gap-4">{children}</div> : null}
-        {ligacoes ? (
-          <div className="flex max-w-[32rem] flex-wrap items-center gap-x-4 border-t border-[var(--cor-fio-suave)] pt-4">
-            {ligacoes}
-          </div>
-        ) : null}
+        <Pilha vao="grupo">
+          <Pilha vao="pilha" className="max-w-medio">
+            {manchete ? (
+              <Manchete linhas={manchete} refTitulo={tituloRef} />
+            ) : (
+              <h1 ref={tituloRef} tabIndex={-1} className="cm-h1 alvo-foco wrap-anywhere">
+                {titulo}
+              </h1>
+            )}
+            {frase ? <p className="cm-lide cm-medida">{frase}</p> : null}
+          </Pilha>
+          {children ? (
+            <Pilha vao="pilha" className="max-w-[32rem]">
+              {children}
+            </Pilha>
+          ) : null}
+          {ligacoes ? (
+            <div className="flex max-w-[32rem] flex-wrap items-center gap-x-4 border-t border-[var(--cor-fio-suave)] pt-4">
+              {ligacoes}
+            </div>
+          ) : null}
+        </Pilha>
       </DuasColunas>
     </main>
   )

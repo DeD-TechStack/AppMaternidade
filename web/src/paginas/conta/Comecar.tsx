@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Navigate, useLocation, useSearchParams } from 'react-router'
 import { DuasColunas } from '../../componentes/acesso/DuasColunas.tsx'
 import { Manchete } from '../../componentes/acesso/Manchete.tsx'
+import { Cartao, Pilha } from '../../componentes/base/layout/index.ts'
 import { Campo, SeletorFuso } from '../../componentes/conta/Campos.tsx'
 import { destinoDepoisDeEntrar, voltaValida } from '../../componentes/conta/destino.ts'
 import { useEnvio } from '../../componentes/conta/envio.ts'
@@ -81,12 +82,15 @@ function PassoSeuNome({ aoSalvar }: { aoSalvar: () => void }) {
   return (
     <MolduraLogada>
       <DuasColunas ilustracao="tummy-time">
+        <Pilha vao="grupo">
         <Manchete linhas={MANCHETES.comecar} refTitulo={titulo} />
         <RegiaoStatus mensagem={textoDaPassagem(location.state)} />
-        <section
+        <Cartao
+          as="section"
           aria-labelledby="titulo-seu-nome"
-          className="mt-2 flex max-w-[32rem] flex-col gap-4 rounded-cartao lg:mt-6 border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)] p-6 lg:p-8"
+          className="max-w-[32rem] border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)]"
         >
+         <Pilha vao="pilha">
           <h2 id="titulo-seu-nome" className="cm-h4">
             {COMECAR.titulo}
           </h2>
@@ -126,7 +130,9 @@ function PassoSeuNome({ aoSalvar }: { aoSalvar: () => void }) {
               {enviando ? COMUM.salvando : COMECAR.botao}
             </button>
           </form>
-        </section>
+         </Pilha>
+        </Cartao>
+        </Pilha>
       </DuasColunas>
     </MolduraLogada>
   )

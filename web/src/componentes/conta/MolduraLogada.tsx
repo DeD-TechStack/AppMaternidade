@@ -3,6 +3,7 @@ import { ArrowUpRight } from 'lucide-react'
 import { Link } from 'react-router'
 import { CABECALHO } from '../../conteudo/conta.ts'
 import { AvisoDemonstracao } from '../AvisoDemonstracao.tsx'
+import { Pilha, QuadroLayout } from '../base/layout/index.ts'
 
 // O link da barra, sem sublinhado; `alvo-toque` garante os 44 px de altura.
 const LINK_DA_BARRA = 'alvo-toque inline-flex items-center gap-1 rounded-pilula px-4 font-medium no-underline'
@@ -20,25 +21,27 @@ interface Props {
 // cabeçalho, e a saída que falha também mostra o alerta lá. Não monta navegação inferior.
 export function MolduraLogada({ ocupado = false, children }: Props) {
   return (
-    <div className="cm-area pt-2">
-      {/* Um só aviso honesto, acima da barra e fora do <main> e da mídia: só sem banco (`empty:hidden` some com a folga). */}
-      <div className="pt-1 pb-1 empty:hidden">
-        <AvisoDemonstracao lateral />
-      </div>
-      <nav
-        aria-label={CABECALHO.navegacao}
-        className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-[var(--cor-fio-suave)] py-4 sm:gap-y-3"
-      >
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <Link to="/app/hoje" className={LINK_DA_BARRA}>
-            {CABECALHO.irParaHoje}
-            <ArrowUpRight size={18} aria-hidden="true" />
-          </Link>
-        </div>
-      </nav>
-      <main aria-busy={ocupado || undefined} className="pb-4 pt-8 lg:pt-12">
-        {children}
-      </main>
-    </div>
+    <>
+      <QuadroLayout className="pt-2">
+        <Pilha vao="pilha">
+          {/* Um só aviso honesto, acima da barra e fora do <main> e da mídia: só sem banco (`empty:hidden` some com a folga). */}
+          <div className="empty:hidden">
+            <AvisoDemonstracao lateral />
+          </div>
+          <nav
+            aria-label={CABECALHO.navegacao}
+            className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-[var(--cor-fio-suave)] py-4 sm:gap-y-3"
+          >
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <Link to="/app/hoje" className={LINK_DA_BARRA}>
+                {CABECALHO.irParaHoje}
+                <ArrowUpRight size={18} aria-hidden="true" />
+              </Link>
+            </div>
+          </nav>
+        </Pilha>
+      </QuadroLayout>
+      <main aria-busy={ocupado || undefined}>{children}</main>
+    </>
   )
 }
