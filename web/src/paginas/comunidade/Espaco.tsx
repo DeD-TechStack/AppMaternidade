@@ -36,7 +36,11 @@ function ListaDoEspaco({ espaco, escritor }: ListaProps) {
     <Faixa aria-labelledby="topicos" aria-busy={estado.fase === 'carregando' || undefined}>
       <Pilha vao="bloco">
         {/* A leitura que falhou vem antes do filtro: o aviso e o "Tentar de novo" ficam na primeira tela. */}
-        {estado.fase === 'erro' ? <ErroDeLeitura erro={estado.erro} aoTentarDeNovo={() => void paginas.recarregar()} /> : null}
+        {estado.fase === 'erro' ? (
+          <div className="max-w-[40rem] empty:hidden">
+            <ErroDeLeitura erro={estado.erro} aoTentarDeNovo={() => void paginas.recarregar()} />
+          </div>
+        ) : null}
         <Pilha vao="pilha" className="items-start">
           <div role="group" aria-label={ESPACO.filtro} className="flex flex-wrap gap-2">
             {[null, ...FAIXAS].map((opcao) => (
