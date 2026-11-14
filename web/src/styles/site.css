@@ -49,6 +49,14 @@
     text-wrap: balance;
   }
 
+  /* O tamanho dos títulos é em rem (cresce com a raiz): uma palavra longa quebra em vez de alargar a página. */
+  .cm-h1,
+  .cm-h2,
+  .cm-h3,
+  .cm-h4 {
+    overflow-wrap: anywhere;
+  }
+
   /* Tamanho e entrelinha de toda classe de tipo vêm do MESMO nível da tabela do DESIGN.md (H3:RF-03):
      h1 = titulo-1, h2 = titulo-2, h3 = titulo-3, h4 = titulo-4. O herói do Início e a /sistema usam `exibicao`. */
   .cm-h1 {

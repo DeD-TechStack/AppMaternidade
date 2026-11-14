@@ -600,10 +600,16 @@ describe('polimento, volta 2', () => {
     expect(pecas).toContain('1 h 15 min')
     const detalhe = [...container.querySelectorAll('.pd-linha-detalhe')].find((el) => el.textContent?.includes('1 h 15 min'))!
     expect(detalhe.textContent).toBe('Encerrou a soneca, 1 h 15 min')
-    for (const alvo of [/^\.pd-nq$/, /^\.pd-linha-hora$/, /^\.pd-cartao-hora$/]) {
+    for (const alvo of [/^\.pd-nq$/, /^\.pd-linha-hora$/]) {
       const juntas = Object.assign({}, ...decl(alvo)) as Record<string, string>
       expect(juntas['white-space'], String(alvo)).toBe('nowrap')
     }
+    // H-3g r4: o parágrafo da hora do cartão é nowrap na base e só quebra no @container estreito (com a raiz a 200%
+    // o título em rem passa da largura do cartão); a regra de fora do @container fica como estava.
+    const base = decl(/^\.pd-cartao-hora$/).find((d) => 'white-space' in d)
+    expect(base?.['white-space'], '.pd-cartao-hora (base)').toBe('nowrap')
+    const estreito = blocosContainer.find((b) => /max-width:\s*[\d.]+rem/.test(b.condicao))!
+    expect(estreito.regras.find((r) => r.seletor === '.pd-cartao-hora')?.decl).toMatch(/white-space: normal/)
   })
 
   it('Como funciona e Desenvolvimento: "às 14:05" e "às 10:20" também são uma peça só', () => {

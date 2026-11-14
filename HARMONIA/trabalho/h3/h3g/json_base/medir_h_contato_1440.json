@@ -1,0 +1,66 @@
+{
+  "url": "http://127.0.0.1:5374/contato",
+  "vw": 1440,
+  "tem_data_h": false,
+  "tokens": {
+    "junto": 12,
+    "pilha": 16,
+    "grupo": 32,
+    "bloco": 48,
+    "midia": 64,
+    "secao": 80,
+    "secao-ampla": 128,
+    "painel": 48,
+    "quadro": 1200
+  },
+  "celulas": {
+    "a": {
+      "status": "N/A",
+      "total": 0,
+      "falhas": []
+    },
+    "b": {
+      "status": "N/A",
+      "total": 0,
+      "falhas": []
+    },
+    "c": {
+      "status": "N/A",
+      "total": 0,
+      "falhas": []
+    },
+    "d": {
+      "status": "N/A",
+      "total": 0,
+      "falhas": []
+    },
+    "e": {
+      "status": "N/A",
+      "total": 0,
+      "falhas": [],
+      "valor": null
+    }
+  },
+  "info": {
+    "bordas_esquerdas_distintas": 3,
+    "bordas": [
+      64,
+      380,
+      801
+    ],
+    "pares_de_tipo_distintos": 5,
+    "pares": [
+      "15/22",
+      "18/28",
+      "24/30",
+      "36/42",
+      "84/88"
+    ],
+    "mediana_cpl": 64.7,
+    "mediana_cpl_leitura": null,
+    "textos_medidos": 8
+  },
+  "janela": "1440x900",
+  "rolagem_lateral": false,
+  "caminho_final": "/contato"
+}

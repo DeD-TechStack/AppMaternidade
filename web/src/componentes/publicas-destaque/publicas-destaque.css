@@ -421,6 +421,11 @@
     row-gap: 4px;
   }
 
+  /* O parágrafo da hora quebra aqui (o tamanho do título cresce com a raiz); cada hora inteira fica numa `.pd-nq`. */
+  .pd-cartao-hora {
+    white-space: normal;
+  }
+
   .pd-linha-texto {
     order: 3;
     flex: 1 1 100%;
@@ -645,7 +650,8 @@
 
 .pd-cartao-legenda .pd-cartao {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  /* `fit-content(55%)`: com a raiz a 200% o valor não toma o cartão todo e deixa o detalhe sem largura. */
+  grid-template-columns: fit-content(55%) minmax(0, 1fr);
   grid-template-areas:
     'rotulo detalhe'
     'valor detalhe';
@@ -666,6 +672,11 @@
   margin: 0;
   padding-bottom: 4px;
   text-align: end;
+}
+
+/* Na coluna estreita do detalhe, a hora pode quebrar no espaço em vez de alargar a página. */
+.pd-cartao-legenda .pd-cartao-detalhe .pd-nq {
+  white-space: normal;
 }
 
 /* Cuidado compartilhado: o painel da família --------------------------------------------------- */

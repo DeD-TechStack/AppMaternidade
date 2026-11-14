@@ -363,6 +363,9 @@
 
   /* TabelaComparacao: tabela de verdade num painel de oliva, texto de papel. */
   .cm-tabela-rolagem {
+    /* É o contêiner de rolagem e o bloco de contenção dos `.sr-only` (absolutos) das células: sem `relative`,
+       eles escapam da rolagem e alargam a página (390 px com a raiz a 200%). */
+    position: relative;
     overflow-x: auto;
   }
 

@@ -1,0 +1,70 @@
+{
+  "url": "http://127.0.0.1:5373/privacidade",
+  "vw": 1440,
+  "tem_data_h": true,
+  "tokens": {
+    "junto": 12,
+    "pilha": 16,
+    "grupo": 32,
+    "bloco": 48,
+    "midia": 64,
+    "secao": 80,
+    "secao-ampla": 128,
+    "painel": 48,
+    "quadro": 1200
+  },
+  "celulas": {
+    "a": {
+      "status": "PASSA",
+      "total": 3,
+      "falhas": [],
+      "n_falhas": 0
+    },
+    "b": {
+      "status": "PASSA",
+      "total": 30,
+      "falhas": [],
+      "n_falhas": 0
+    },
+    "c": {
+      "status": "PASSA",
+      "total": 31,
+      "falhas": [],
+      "n_falhas": 0
+    },
+    "d": {
+      "status": "PASSA",
+      "total": 30,
+      "falhas": [],
+      "n_falhas": 0
+    },
+    "e": {
+      "status": "PASSA",
+      "total": 9,
+      "falhas": [],
+      "n_falhas": 0,
+      "valor": 63.3
+    }
+  },
+  "info": {
+    "bordas_esquerdas_distintas": 3,
+    "bordas": [
+      120,
+      168,
+      804
+    ],
+    "pares_de_tipo_distintos": 4,
+    "pares": [
+      "18/28",
+      "22/28",
+      "36/42",
+      "48/54"
+    ],
+    "mediana_cpl": 63.3,
+    "mediana_cpl_leitura": 63.3,
+    "textos_medidos": 30
+  },
+  "janela": "1440x900",
+  "rolagem_lateral": false,
+  "caminho_final": "/privacidade"
+}

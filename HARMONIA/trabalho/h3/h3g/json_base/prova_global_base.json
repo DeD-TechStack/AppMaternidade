@@ -1,0 +1,98 @@
+{
+  "comando": "BASE_URL=http://127.0.0.1:5374/ node .oc/prova_global.mjs HARMONIA/trabalho/h3/h3g/json_base/prova_global_base.json",
+  "fonte200_390": {
+    "inicio": {
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "lateral": false
+    },
+    "comofunciona": {
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "lateral": false
+    },
+    "cuidado": {
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "lateral": false
+    },
+    "desenvolvimento": {
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "lateral": false
+    },
+    "sobre": {
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "lateral": false
+    },
+    "privacidade": {
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "lateral": false
+    },
+    "contato": {
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "lateral": false
+    },
+    "entrar": {
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "lateral": false
+    },
+    "hoje_claro": {
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "lateral": false
+    },
+    "hoje_madrugada": {
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "lateral": false
+    },
+    "sessao_madrugada": {
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "lateral": false
+    }
+  },
+  "pares": {
+    "hoje_claro": [
+      "rgb(110, 101, 96) | rgba(0, 0, 0, 0)",
+      "rgb(242, 193, 78) | rgb(43, 35, 32)",
+      "rgb(242, 193, 78) | rgba(0, 0, 0, 0)",
+      "rgb(248, 246, 235) | rgb(105, 114, 85)",
+      "rgb(248, 246, 235) | rgb(43, 35, 32)",
+      "rgb(43, 35, 32) | rgb(234, 221, 197)",
+      "rgb(43, 35, 32) | rgb(242, 193, 78)",
+      "rgb(43, 35, 32) | rgb(248, 246, 235)",
+      "rgb(43, 35, 32) | rgba(0, 0, 0, 0)",
+      "rgb(79, 87, 64) | rgba(0, 0, 0, 0)"
+    ],
+    "hoje_madrugada": [
+      "rgb(185, 192, 159) | rgba(0, 0, 0, 0)",
+      "rgb(242, 193, 78) | rgb(43, 35, 32)",
+      "rgb(242, 193, 78) | rgba(0, 0, 0, 0)",
+      "rgb(248, 246, 235) | rgb(105, 114, 85)",
+      "rgb(248, 246, 235) | rgb(43, 35, 32)",
+      "rgb(248, 246, 235) | rgb(58, 48, 43)",
+      "rgb(248, 246, 235) | rgba(0, 0, 0, 0)",
+      "rgb(43, 35, 32) | rgb(242, 193, 78)",
+      "rgb(43, 35, 32) | rgb(248, 246, 235)",
+      "rgb(43, 35, 32) | rgba(0, 0, 0, 0)"
+    ],
+    "sessao_madrugada": [
+      "rgb(185, 192, 159) | rgba(0, 0, 0, 0)",
+      "rgb(248, 246, 235) | rgb(105, 114, 85)",
+      "rgb(248, 246, 235) | rgb(43, 35, 32)",
+      "rgb(248, 246, 235) | rgb(58, 48, 43)",
+      "rgb(248, 246, 235) | rgba(0, 0, 0, 0)",
+      "rgb(43, 35, 32) | rgb(242, 193, 78)",
+      "rgb(43, 35, 32) | rgb(248, 246, 235)",
+      "rgb(43, 35, 32) | rgba(0, 0, 0, 0)"
+    ]
+  },
+  "erros": [],
+  "exit": 0
+}

@@ -1,0 +1,452 @@
+{
+  "comando": "--cdp 9473 --base-url http://127.0.0.1:5374/ --out HARMONIA/trabalho/h3/h3g/json_base --modo base",
+  "modo": "base",
+  "medir_h_sha256": "3b22da114bff180bb9a6e89193f7efb6eff4b006bc5c18ba956841dec41f45e9",
+  "casos": {
+    "inicio_1440": {
+      "rota": "/",
+      "caminho_final": "/",
+      "rolagem_lateral": false,
+      "textos": 16,
+      "celulas": {
+        "a": "N/A",
+        "b": "N/A",
+        "c": "N/A",
+        "d": "N/A",
+        "e": "N/A"
+      },
+      "bordas": 4,
+      "pares": [
+        "14/20",
+        "18/27",
+        "24/30",
+        "24/34",
+        "56/62",
+        "84/88"
+      ],
+      "mediana_cpl": 40.7,
+      "mediana_cpl_leitura": null,
+      "e_pela_emenda": "N/A"
+    },
+    "inicio_390": {
+      "rota": "/",
+      "caminho_final": "/",
+      "rolagem_lateral": false,
+      "textos": 16,
+      "celulas": {
+        "a": "N/A",
+        "b": "N/A",
+        "c": "N/A",
+        "d": "N/A",
+        "e": "N/A"
+      },
+      "bordas": 3,
+      "pares": [
+        "14/20",
+        "18/27",
+        "24/30",
+        "32/38",
+        "42/46"
+      ],
+      "mediana_cpl": 30.5,
+      "mediana_cpl_leitura": null,
+      "e_pela_emenda": "N/A"
+    },
+    "comofunciona_1440": {
+      "rota": "/como-funciona",
+      "caminho_final": "/como-funciona",
+      "rolagem_lateral": false,
+      "textos": 8,
+      "celulas": {
+        "a": "N/A",
+        "b": "N/A",
+        "c": "N/A",
+        "d": "N/A",
+        "e": "N/A"
+      },
+      "bordas": 3,
+      "pares": [
+        "18/27",
+        "24/34",
+        "56/62",
+        "84/88"
+      ],
+      "mediana_cpl": 47.3,
+      "mediana_cpl_leitura": null,
+      "e_pela_emenda": "N/A"
+    },
+    "comofunciona_390": {
+      "rota": "/como-funciona",
+      "caminho_final": "/como-funciona",
+      "rolagem_lateral": false,
+      "textos": 8,
+      "celulas": {
+        "a": "N/A",
+        "b": "N/A",
+        "c": "N/A",
+        "d": "N/A",
+        "e": "N/A"
+      },
+      "bordas": 2,
+      "pares": [
+        "18/27",
+        "32/38",
+        "42/46"
+      ],
+      "mediana_cpl": 37.6,
+      "mediana_cpl_leitura": null,
+      "e_pela_emenda": "N/A"
+    },
+    "cuidado_1440": {
+      "rota": "/cuidado-compartilhado",
+      "caminho_final": "/cuidado-compartilhado",
+      "rolagem_lateral": false,
+      "textos": 20,
+      "celulas": {
+        "a": "N/A",
+        "b": "N/A",
+        "c": "N/A",
+        "d": "N/A",
+        "e": "N/A"
+      },
+      "bordas": 6,
+      "pares": [
+        "15/22",
+        "17/24",
+        "17/27",
+        "18/27",
+        "20/28",
+        "24/34",
+        "26/31.2",
+        "30/36",
+        "56/62",
+        "84/88"
+      ],
+      "mediana_cpl": 50,
+      "mediana_cpl_leitura": null,
+      "e_pela_emenda": "N/A"
+    },
+    "cuidado_390": {
+      "rota": "/cuidado-compartilhado",
+      "caminho_final": "/cuidado-compartilhado",
+      "rolagem_lateral": false,
+      "textos": 18,
+      "celulas": {
+        "a": "N/A",
+        "b": "N/A",
+        "c": "N/A",
+        "d": "N/A",
+        "e": "N/A"
+      },
+      "bordas": 5,
+      "pares": [
+        "15/22",
+        "17/24",
+        "18/27",
+        "20/28",
+        "22/26.4",
+        "24/30",
+        "32/38",
+        "42/46"
+      ],
+      "mediana_cpl": 35,
+      "mediana_cpl_leitura": null,
+      "e_pela_emenda": "N/A"
+    },
+    "desenvolvimento_1440": {
+      "rota": "/desenvolvimento",
+      "caminho_final": "/desenvolvimento",
+      "rolagem_lateral": false,
+      "textos": 43,
+      "celulas": {
+        "a": "N/A",
+        "b": "N/A",
+        "c": "N/A",
+        "d": "N/A",
+        "e": "N/A"
+      },
+      "bordas": 9,
+      "pares": [
+        "15/22",
+        "16/24",
+        "18/27",
+        "24/30",
+        "24/34",
+        "36/42",
+        "36/45",
+        "44/48.4",
+        "56/62",
+        "84/88"
+      ],
+      "mediana_cpl": 50.3,
+      "mediana_cpl_leitura": null,
+      "e_pela_emenda": "N/A"
+    },
+    "desenvolvimento_390": {
+      "rota": "/desenvolvimento",
+      "caminho_final": "/desenvolvimento",
+      "rolagem_lateral": false,
+      "textos": 43,
+      "celulas": {
+        "a": "N/A",
+        "b": "N/A",
+        "c": "N/A",
+        "d": "N/A",
+        "e": "N/A"
+      },
+      "bordas": 6,
+      "pares": [
+        "15/22",
+        "16/24",
+        "18/27",
+        "20/26",
+        "24/30",
+        "26/32.5",
+        "32/38",
+        "34/37.4",
+        "42/46"
+      ],
+      "mediana_cpl": 37,
+      "mediana_cpl_leitura": null,
+      "e_pela_emenda": "N/A"
+    },
+    "sobre_1440": {
+      "rota": "/sobre",
+      "caminho_final": "/sobre",
+      "rolagem_lateral": false,
+      "textos": 23,
+      "celulas": {
+        "a": "N/A",
+        "b": "N/A",
+        "c": "N/A",
+        "d": "N/A",
+        "e": "N/A"
+      },
+      "bordas": 3,
+      "pares": [
+        "15/22",
+        "18/28",
+        "24/30",
+        "24/34",
+        "36/42",
+        "84/88"
+      ],
+      "mediana_cpl": 58.7,
+      "mediana_cpl_leitura": null,
+      "e_pela_emenda": "N/A"
+    },
+    "sobre_390": {
+      "rota": "/sobre",
+      "caminho_final": "/sobre",
+      "rolagem_lateral": false,
+      "textos": 22,
+      "celulas": {
+        "a": "N/A",
+        "b": "N/A",
+        "c": "N/A",
+        "d": "N/A",
+        "e": "N/A"
+      },
+      "bordas": 1,
+      "pares": [
+        "18/27",
+        "18/28",
+        "20/26",
+        "24/30",
+        "42/46"
+      ],
+      "mediana_cpl": 35.2,
+      "mediana_cpl_leitura": null,
+      "e_pela_emenda": "N/A"
+    },
+    "privacidade_1440": {
+      "rota": "/privacidade",
+      "caminho_final": "/privacidade",
+      "rolagem_lateral": false,
+      "textos": 30,
+      "celulas": {
+        "a": "N/A",
+        "b": "N/A",
+        "c": "N/A",
+        "d": "N/A",
+        "e": "N/A"
+      },
+      "bordas": 3,
+      "pares": [
+        "15/22",
+        "18/28",
+        "24/30",
+        "36/42",
+        "84/88"
+      ],
+      "mediana_cpl": 64.5,
+      "mediana_cpl_leitura": null,
+      "e_pela_emenda": "N/A"
+    },
+    "privacidade_390": {
+      "rota": "/privacidade",
+      "caminho_final": "/privacidade",
+      "rolagem_lateral": false,
+      "textos": 29,
+      "celulas": {
+        "a": "N/A",
+        "b": "N/A",
+        "c": "N/A",
+        "d": "N/A",
+        "e": "N/A"
+      },
+      "bordas": 1,
+      "pares": [
+        "18/28",
+        "20/26",
+        "24/30",
+        "42/46"
+      ],
+      "mediana_cpl": 39.8,
+      "mediana_cpl_leitura": null,
+      "e_pela_emenda": "N/A"
+    },
+    "contato_1440": {
+      "rota": "/contato",
+      "caminho_final": "/contato",
+      "rolagem_lateral": false,
+      "textos": 8,
+      "celulas": {
+        "a": "N/A",
+        "b": "N/A",
+        "c": "N/A",
+        "d": "N/A",
+        "e": "N/A"
+      },
+      "bordas": 3,
+      "pares": [
+        "15/22",
+        "18/28",
+        "24/30",
+        "36/42",
+        "84/88"
+      ],
+      "mediana_cpl": 64.7,
+      "mediana_cpl_leitura": null,
+      "e_pela_emenda": "N/A"
+    },
+    "contato_390": {
+      "rota": "/contato",
+      "caminho_final": "/contato",
+      "rolagem_lateral": false,
+      "textos": 7,
+      "celulas": {
+        "a": "N/A",
+        "b": "N/A",
+        "c": "N/A",
+        "d": "N/A",
+        "e": "N/A"
+      },
+      "bordas": 1,
+      "pares": [
+        "18/28",
+        "20/26",
+        "24/30",
+        "42/46"
+      ],
+      "mediana_cpl": 38.8,
+      "mediana_cpl_leitura": null,
+      "e_pela_emenda": "N/A"
+    },
+    "entrar_1440": {
+      "rota": "/entrar",
+      "caminho_final": "/entrar",
+      "rolagem_lateral": false,
+      "textos": 2,
+      "celulas": {
+        "a": "N/A",
+        "b": "N/A",
+        "c": "N/A",
+        "d": "N/A",
+        "e": "N/A"
+      },
+      "bordas": 1,
+      "pares": [
+        "24/34",
+        "84/88"
+      ],
+      "mediana_cpl": null,
+      "mediana_cpl_leitura": null,
+      "e_pela_emenda": "N/A"
+    },
+    "entrar_390": {
+      "rota": "/entrar",
+      "caminho_final": "/entrar",
+      "rolagem_lateral": false,
+      "textos": 2,
+      "celulas": {
+        "a": "N/A",
+        "b": "N/A",
+        "c": "N/A",
+        "d": "N/A",
+        "e": "N/A"
+      },
+      "bordas": 1,
+      "pares": [
+        "18/27",
+        "42/46"
+      ],
+      "mediana_cpl": null,
+      "mediana_cpl_leitura": null,
+      "e_pela_emenda": "N/A"
+    },
+    "hoje_1440": {
+      "rota": "/app/hoje",
+      "caminho_final": "/app/hoje",
+      "rolagem_lateral": false,
+      "textos": 24,
+      "celulas": {
+        "a": "N/A",
+        "b": "N/A",
+        "c": "N/A",
+        "d": "N/A",
+        "e": "N/A"
+      },
+      "bordas": 9,
+      "pares": [
+        "120/120",
+        "15/22",
+        "17/25",
+        "24/30",
+        "36/42",
+        "84/88"
+      ],
+      "mediana_cpl": null,
+      "mediana_cpl_leitura": null,
+      "e_pela_emenda": "N/A"
+    },
+    "hoje_390": {
+      "rota": "/app/hoje",
+      "caminho_final": "/app/hoje",
+      "rolagem_lateral": false,
+      "textos": 23,
+      "celulas": {
+        "a": "N/A",
+        "b": "N/A",
+        "c": "N/A",
+        "d": "N/A",
+        "e": "N/A"
+      },
+      "bordas": 6,
+      "pares": [
+        "15/22",
+        "17/25",
+        "20/26",
+        "24/30",
+        "42/46",
+        "64/64"
+      ],
+      "mediana_cpl": null,
+      "mediana_cpl_leitura": null,
+      "e_pela_emenda": "N/A"
+    }
+  },
+  "erros": [],
+  "controle": null,
+  "exit": 0
+}
