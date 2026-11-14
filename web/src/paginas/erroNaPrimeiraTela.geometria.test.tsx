@@ -1,5 +1,5 @@
-import { spawnSync } from 'node:child_process'
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { spawnSync, type SpawnSyncReturns } from 'node:child_process'
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, utimesSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -168,7 +168,32 @@ function argumentosDoChrome(perfil: string, tela: Tela, alvo: string, saida: str
   ]
 }
 
-function medirNoChrome(telaHtml: string, tela: Tela, nomeDaRota: string): Medida {
+/**
+ * O subprocesso do Chrome tem de ter terminado limpo (status 0, sem sinal, sem erro de spawn). HOJE É FROUXO: não
+ * confere nada (a rodada seguinte põe aqui a checagem estrita). Os controles de `o harness falha fechado` a chamam.
+ */
+function exigirExecucaoLimpa(resultado: SpawnSyncReturns<string>, rotulo: string): void {
+  void resultado
+  void rotulo
+}
+
+/** Largura e altura de um PNG, lidas do IHDR (bytes 16..24, inteiros de 32 bits big-endian). */
+function dimensoesDoPng(png: string): { largura: number; altura: number } {
+  const bytes = readFileSync(png)
+  return { largura: bytes.readUInt32BE(16), altura: bytes.readUInt32BE(20) }
+}
+
+/**
+ * A captura tem de ser desta execução e do tamanho da tela. HOJE É FROUXO: só confere que o arquivo existe (a rodada
+ * seguinte põe aqui o mtime recente e o tamanho exato).
+ */
+function exigirCapturaFresca(png: string, inicioMs: number, tela: Tela): void {
+  void inicioMs
+  void tela
+  if (!existsSync(png)) throw new Error(`O Chrome não gravou a captura ${png}`)
+}
+
+function medirNoChrome(telaHtml: string, tela: Tela, nomeDaRota: string): { medida: Medida; png: string | null } {
   const pasta = mkdtempSync(join(tmpdir(), 'erro-primeira-tela-'))
   try {
     const perfil = join(pasta, 'perfil')
@@ -201,27 +226,29 @@ function medirNoChrome(telaHtml: string, tela: Tela, nomeDaRota: string): Medida
       timeout: 45_000,
       maxBuffer: 64 * 1024 * 1024,
     })
+    exigirExecucaoLimpa(resultado, `${nomeDaRota} ${tela.largura}x${tela.altura} --dump-dom`)
     const achado = /<pre id="geometria"[^>]*>([\s\S]*?)<\/pre>/.exec(resultado.stdout ?? '')
     if (!achado) {
       throw new Error(`O Chrome não devolveu a medida (status ${resultado.status}, erro ${resultado.error?.message ?? 'nenhum'}): ${resultado.stderr ?? ''}`)
     }
 
+    let png: string | null = null
     const pastaDasCapturas = process.env.AUD_CAPTURAS
     if (pastaDasCapturas) {
       mkdirSync(pastaDasCapturas, { recursive: true })
-      const png = resolve(pastaDasCapturas, `${nomeDaRota}_${tela.largura}x${tela.altura}.png`)
+      png = resolve(pastaDasCapturas, `${nomeDaRota}_${tela.largura}x${tela.altura}.png`)
       const perfilDaCaptura = join(pasta, 'perfil-captura')
       mkdirSync(perfilDaCaptura)
+      const inicioDaCaptura = Date.now()
       const captura = spawnSync(CHROME, argumentosDoChrome(perfilDaCaptura, tela, alvo, [`--screenshot=${png}`]), {
         encoding: 'utf8',
         timeout: 45_000,
         maxBuffer: 64 * 1024 * 1024,
       })
-      if (!existsSync(png)) {
-        throw new Error(`O Chrome não gravou a captura ${png} (status ${captura.status}, erro ${captura.error?.message ?? 'nenhum'}): ${captura.stderr ?? ''}`)
-      }
+      exigirExecucaoLimpa(captura, `${nomeDaRota} ${tela.largura}x${tela.altura} --screenshot`)
+      exigirCapturaFresca(png, inicioDaCaptura, tela)
     }
-    return JSON.parse(achado[1]) as Medida
+    return { medida: JSON.parse(achado[1]) as Medida, png }
   } finally {
     rmSync(pasta, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 })
   }
@@ -252,7 +279,7 @@ describe('o erro de leitura na primeira tela, no Chrome (390x844 e 1440x900)', (
             '"Tentar de novo" no jsdom',
           ).toHaveLength(1)
 
-          const medida = medirNoChrome(container.innerHTML, tela, rota.nome)
+          const { medida, png } = medirNoChrome(container.innerHTML, tela, rota.nome)
 
           expect(medida.erro).toBeUndefined()
           expect(medida.innerWidth).toBe(tela.largura)
@@ -273,6 +300,11 @@ describe('o erro de leitura na primeira tela, no Chrome (390x844 e 1440x900)', (
             medida.botao!.bottom,
             `${rota.caminho}: a borda de baixo do "Tentar de novo" (${medida.botao!.bottom}) passa da janela de altura ${medida.innerHeight} (alerta em ${medida.alerta!.top})`,
           ).toBeLessThanOrEqual(medida.innerHeight)
+
+          // Com AUD_CAPTURAS, a imagem é a da tela pedida (o viewport), não a da janela maior que o Chrome abre.
+          if (png) {
+            expect(dimensoesDoPng(png), `${rota.caminho}: o tamanho da captura ${png}`).toEqual({ largura: tela.largura, altura: tela.altura })
+          }
         },
         90_000,
       )
@@ -283,5 +315,88 @@ describe('o erro de leitura na primeira tela, no Chrome (390x844 e 1440x900)', (
     const esperadas = ROTAS.flatMap((rota) => TELAS.map((tela) => `${rota.nome}@${tela.largura}x${tela.altura}`))
     expect(FEITAS).toHaveLength(6)
     expect([...FEITAS].sort()).toEqual([...esperadas].sort())
+  })
+})
+
+// Controles de caminho de falha: provam que o harness recusa um Chrome que falhou e uma captura velha ou do tamanho
+// errado. Não usam o Chrome, não entram em FEITAS e não são medições.
+describe('o harness falha fechado (controles de caminho de falha)', () => {
+  const TELA_DO_CONTROLE: Tela = { largura: 390, altura: 844 }
+  const pastas: string[] = []
+
+  afterEach(() => {
+    for (const pasta of pastas.splice(0)) rmSync(pasta, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 })
+  })
+
+  /** Um resultado de spawnSync montado à mão: o que não vem em `parcial` é o de uma execução limpa. */
+  function resultadoDe(parcial: Partial<SpawnSyncReturns<string>>): SpawnSyncReturns<string> {
+    return { pid: 1, output: [null, '', ''], stdout: '', stderr: '', status: 0, signal: null, ...parcial }
+  }
+
+  /** Grava um arquivo com assinatura PNG e um IHDR que declara `largura` x `altura` (o resto não importa ao harness). */
+  function escreverPng(arquivo: string, largura: number, altura: number): void {
+    const bytes = Buffer.alloc(33)
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).copy(bytes, 0)
+    bytes.writeUInt32BE(13, 8)
+    bytes.write('IHDR', 12, 'ascii')
+    bytes.writeUInt32BE(largura, 16)
+    bytes.writeUInt32BE(altura, 20)
+    writeFileSync(arquivo, bytes)
+  }
+
+  function pastaTemporaria(): string {
+    const pasta = mkdtempSync(join(tmpdir(), 'harness-falha-fechado-'))
+    pastas.push(pasta)
+    return pasta
+  }
+
+  it('lê a largura e a altura do IHDR do PNG', () => {
+    const png = join(pastaTemporaria(), 'a.png')
+    escreverPng(png, 1440, 900)
+    expect(dimensoesDoPng(png)).toEqual({ largura: 1440, altura: 900 })
+  })
+
+  it('recusa um Chrome que saiu com código 1', () => {
+    const resultado = resultadoDe({ status: 1, stderr: 'boom' })
+    expect(() => exigirExecucaoLimpa(resultado, 'controle')).toThrow()
+  })
+
+  it('recusa um Chrome que nem subiu (erro de spawn)', () => {
+    const resultado = resultadoDe({ status: null, error: new Error('ENOENT') })
+    expect(() => exigirExecucaoLimpa(resultado, 'controle')).toThrow()
+  })
+
+  it('recusa um Chrome morto por sinal', () => {
+    const resultado = resultadoDe({ status: null, signal: 'SIGTERM' })
+    expect(() => exigirExecucaoLimpa(resultado, 'controle')).toThrow()
+  })
+
+  it('recusa o resultado de um subprocesso real que saiu com código 1', () => {
+    const resultado = spawnSync(process.execPath, ['-e', 'process.exit(1)'], { encoding: 'utf8' })
+    expect(resultado.status).toBe(1)
+    expect(() => exigirExecucaoLimpa(resultado, 'controle')).toThrow()
+  })
+
+  it('recusa uma captura velha que já estava na pasta (mtime de 1 hora atrás)', () => {
+    const png = join(pastaTemporaria(), 'velha.png')
+    escreverPng(png, TELA_DO_CONTROLE.largura, TELA_DO_CONTROLE.altura)
+    const umaHoraAtras = new Date(Date.now() - 60 * 60 * 1000)
+    utimesSync(png, umaHoraAtras, umaHoraAtras)
+    expect(() => exigirCapturaFresca(png, Date.now(), TELA_DO_CONTROLE)).toThrow()
+  })
+
+  it('recusa uma captura nova com o tamanho da janela (616x1144) e não o da tela (390x844)', () => {
+    const png = join(pastaTemporaria(), 'janela.png')
+    const inicio = Date.now() - 5_000
+    escreverPng(png, 616, 1144)
+    expect(() => exigirCapturaFresca(png, inicio, TELA_DO_CONTROLE)).toThrow()
+  })
+
+  it('controle positivo: execução limpa e captura nova de 390x844 passam', () => {
+    const png = join(pastaTemporaria(), 'boa.png')
+    const inicio = Date.now() - 5_000
+    escreverPng(png, TELA_DO_CONTROLE.largura, TELA_DO_CONTROLE.altura)
+    expect(() => exigirExecucaoLimpa(resultadoDe({ status: 0, signal: null }), 'controle')).not.toThrow()
+    expect(() => exigirCapturaFresca(png, inicio, TELA_DO_CONTROLE)).not.toThrow()
   })
 })
