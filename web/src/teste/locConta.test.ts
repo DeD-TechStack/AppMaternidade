@@ -2,7 +2,7 @@ import { createElement } from 'react'
 import { describe, expect, it } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { SeletorFuso } from '../componentes/conta/Campos.tsx'
-import { rotuloDoFuso } from '../componentes/conta/fusos.ts'
+import { listaDeFusos, rotuloDoFuso } from '../componentes/conta/fusos.ts'
 import * as TEXTOS from '../conteudo/conta.ts'
 import { CENA_ACESSO, COMECAR, COMECAR_FAMILIA, COMUM, CONTA, CONVITE, FAMILIA, PAPEIS, TEXTOS_ERRO, textoDoErro } from '../conteudo/conta.ts'
 import { erroDaChave } from '../dados/conta.erros.ts'
@@ -107,18 +107,23 @@ describe('LOC-04: o fuso horário em pt-BR (C12)', () => {
     expect(CONTA.perfil.fuso).toBe('Seu fuso horário')
   })
 
-  it('America/Sao_Paulo aparece com o nome em pt-BR, a diferença para o UTC e a cidade', () => {
-    const rotulo = rotuloDoFuso('America/Sao_Paulo')
-    expect(rotulo).toMatch(/^Horário .*Brasília \(UTC−3, São Paulo\)$/)
-    expect(rotulo).not.toContain('America/')
-    expect(rotulo).not.toContain('_')
+  it('America/Sao_Paulo aparece com o nome genérico em pt-BR e a diferença para o UTC, curto para caber a 390 px', () => {
+    expect(rotuloDoFuso('America/Sao_Paulo')).toBe('Horário de Brasília (UTC−3)')
+    expect(rotuloDoFuso('America/Manaus')).toBe('Horário do Amazonas (UTC−4)')
+    expect(rotuloDoFuso('America/Rio_Branco')).toBe('Horário do Acre (UTC−5)')
+    expect(rotuloDoFuso('America/Noronha')).toBe('Horário de Fernando de Noronha (UTC−2)')
   })
 
-  it('a cidade do Brasil leva acento; a de fora sai sem o sublinhado do identificador', () => {
-    expect(rotuloDoFuso('America/Cuiaba')).toMatch(/\(UTC−4, Cuiabá\)$/)
-    expect(rotuloDoFuso('America/Manaus')).toMatch(/\(UTC−4, Manaus\)$/)
-    expect(rotuloDoFuso('America/Noronha')).toMatch(/\(UTC−2, Fernando de Noronha\)$/)
+  it('os outros fusos do mesmo horário levam a cidade, com acento no Brasil e sem o sublinhado fora dele', () => {
+    expect(rotuloDoFuso('America/Fortaleza')).toBe('Horário de Brasília (UTC−3, Fortaleza)')
+    expect(rotuloDoFuso('America/Cuiaba')).toBe('Horário do Amazonas (UTC−4, Cuiabá)')
     expect(rotuloDoFuso('America/Argentina/Buenos_Aires')).toMatch(/\(UTC−3, Buenos Aires\)$/)
+  })
+
+  it('cada opção da lista tem um rótulo próprio, sem "Padrão" e sem o identificador cru', () => {
+    const rotulos = listaDeFusos().map(rotuloDoFuso)
+    expect(new Set(rotulos).size).toBe(rotulos.length)
+    expect(rotulos.filter((r) => r.includes('Padrão') || /[/_]/.test(r))).toEqual([])
   })
 
   it('UTC e os fusos sem nome próprio mostram só a diferença; um identificador inválido volta como veio', () => {
