@@ -122,7 +122,7 @@ function Fontes({ item, nivel }: { item: ItemDeConteudo; nivel: Props['nivel'] }
       <ol className={`${MEDIDA} m-0 flex list-none flex-col gap-1 p-0`}>
         {item.fontes.map((fonte, indice) => (
           <li key={fonte.url} id={`${item.id}-fonte-${indice + 1}`} className="flex flex-col">
-            <a href={fonte.url} target="_blank" rel="noopener noreferrer" className={`${LINK_ALVO} wrap-anywhere`}>
+            <a href={fonte.url} className={`${LINK_ALVO} wrap-anywhere`}>
               {fonte.nome}
             </a>
             <span className="cm-pequeno cm-texto-2">{T.consultadaEm}</span>

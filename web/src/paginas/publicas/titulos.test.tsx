@@ -3,7 +3,7 @@ import { tituloPublico } from '../../conteudo/conta.ts'
 import { PAGINAS_DE_TEXTO } from '../../conteudo/publicas-texto.ts'
 import { renderizarRota } from '../../teste/renderizarRota.tsx'
 
-// QA-13: cada página pública, a 404 e /sistema definem o título da aba como "<nome> · AppMaternidade" e o
+// QA-13 / A11Y-001: cada página pública, a 404 e /sistema definem o título da aba como "<nome> | AppMaternidade" e o
 // devolvem ao anterior quando saem de cena. O Início fica como está.
 
 const ANTES = 'Título de antes'
@@ -27,15 +27,15 @@ const ROTAS: ReadonlyArray<[caminho: string, nome: string]> = [
 ]
 
 describe('títulos das páginas públicas (QA-13)', () => {
-  it('tituloPublico monta "<nome> · AppMaternidade"', () => {
-    expect(tituloPublico('Contato')).toBe('Contato · AppMaternidade')
+  it('tituloPublico monta "<nome> | AppMaternidade"', () => {
+    expect(tituloPublico('Contato')).toBe('Contato | AppMaternidade')
   })
 
   it('percorre todas as rotas públicas, a 404 e /sistema: cada uma grava o título da aba', () => {
     for (const [caminho, nome] of ROTAS) {
       document.title = ANTES
       const { unmount } = renderizarRota(caminho)
-      expect(document.title, caminho).toBe(`${nome} · AppMaternidade`)
+      expect(document.title, caminho).toBe(`${nome} | AppMaternidade`)
       unmount()
     }
   })
@@ -57,7 +57,7 @@ describe('títulos das páginas públicas (QA-13)', () => {
 
   it('ao sair da página o título anterior volta', () => {
     const { unmount } = renderizarRota('/contato')
-    expect(document.title).toBe('Contato · AppMaternidade')
+    expect(document.title).toBe('Contato | AppMaternidade')
     unmount()
     expect(document.title).toBe(ANTES)
   })

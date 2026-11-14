@@ -25,7 +25,8 @@ const status = () => screen.getByRole('status')
 const notas = () => [...document.querySelectorAll('[data-notas-da-familia] li')] as HTMLElement[]
 const textosDasNotas = () => notas().map((li) => li.querySelector('p')!.textContent)
 const h1 = () => screen.getByRole('heading', { level: 1 })
-const campoTexto = () => screen.getByLabelText('Texto da nota') as HTMLTextAreaElement
+// A11Y-008: o campo do texto é obrigatório e o rótulo diz "(obrigatório)".
+const campoTexto = () => screen.getByLabelText('Texto da nota (obrigatório)') as HTMLTextAreaElement
 const selecao = (nome: string) => screen.getByLabelText(nome) as HTMLSelectElement
 
 function notaDe(numero: number, resto: Partial<Nota> = {}): Nota {
@@ -195,6 +196,16 @@ describe('R38-24: nova nota', () => {
     expect([...selecao('Sobre').options].map((opcao) => opcao.textContent)).toEqual(['A família toda', 'Heloísa'])
     expect(selecao('Destaque').value).toBe('')
     expect([...selecao('Destaque').options].map((opcao) => opcao.textContent)).toEqual(['Sem destaque', 'Por 12 horas', 'Por 24 horas', 'Por 3 dias'])
+  })
+
+  it('A11Y-008: o texto leva aria-required e "(obrigatório)" no rótulo, sem `required` nativo; `Sobre` e `Destaque` não', async () => {
+    await renderizarRotaPronta('/app/notas/nova')
+
+    expect(campoTexto().getAttribute('aria-required')).toBe('true')
+    expect(campoTexto().hasAttribute('required')).toBe(false)
+    expect(campoTexto().closest('form')!.noValidate).toBe(true)
+    expect(selecao('Sobre').hasAttribute('aria-required')).toBe(false)
+    expect(selecao('Destaque').hasAttribute('aria-required')).toBe(false)
   })
 
   it('criar volta à lista, mostra `Nota salva.`, põe o foco no h1 e a nota aparece com o destaque pedido', async () => {
