@@ -413,6 +413,8 @@ export const NOTAS = {
   voltarParaHoje: 'Voltar para Hoje',
   voltarParaNotas: 'Voltar para as notas',
   campoTexto: 'Texto da nota',
+  /** O rótulo do campo do texto, que é obrigatório (A11Y-008). */
+  campoTextoObrigatorio: 'Texto da nota (obrigatório)',
   limiteDoTexto: 'Até 500 caracteres.',
   campoSobre: 'Sobre',
   familiaToda: 'A família toda',

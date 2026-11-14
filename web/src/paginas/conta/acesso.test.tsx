@@ -13,6 +13,7 @@ import type { Usuario } from '../../dados/conta.ts'
 import { SENHA_DEMONSTRACAO } from '../../dados/conta.demonstracao.ts'
 import { criarDadosContaMemoria, simularFalha } from '../../dados/conta.memoria.ts'
 import { PESSOAS, criarFixtureDeTeste, renderizarComDados } from '../../teste/renderizarComDados.tsx'
+import { comObrigatorio } from './obrigatorio.ts'
 
 // RF-09 a RF-12: a guarda, o destino depois de entrar, entrar, criar conta, recuperar, redefinir,
 // sair e a saída que a pessoa não pediu. Tudo em modo memória, sem rede.
@@ -30,7 +31,7 @@ afterEach(() => {
 })
 
 // O passo "Seu nome" tem uma seção com o mesmo nome acessível do campo: só campos aqui.
-const campo = (rotulo: string) => screen.getByLabelText(rotulo, { selector: 'input, select' }) as HTMLInputElement
+const campo = (rotulo: string) => screen.getByLabelText(comObrigatorio(rotulo), { selector: 'input, select' }) as HTMLInputElement
 const digitar = (rotulo: string, texto: string) => fireEvent.change(campo(rotulo), { target: { value: texto } })
 const botao = (nome: string) => screen.getByRole('button', { name: nome })
 const status = () => screen.getByRole('status')

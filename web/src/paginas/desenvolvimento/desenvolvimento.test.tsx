@@ -489,8 +489,9 @@ describe('DES-06: os itens de conteúdo', () => {
       const links = within(fontes).getAllByRole('link')
       expect(links.length).toBeGreaterThan(0)
       for (const link of links) {
-        expect(link.getAttribute('target')).toBe('_blank')
-        expect(link.getAttribute('rel')).toBe('noopener noreferrer')
+        // A11Y-009: a fonte abre na mesma aba, como as páginas públicas.
+        expect(link.hasAttribute('target')).toBe(false)
+        expect(link.hasAttribute('rel')).toBe(false)
         expect(link.getAttribute('href')).toMatch(/^https:\/\//)
       }
       expect(screen.getAllByText('consultada em 05/11/2026').length).toBe(links.length)

@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, type FormEvent, type ReactNode, type RefObject } from 'react'
+import { prenderOTab } from './foco.ts'
 import { BOTAO_PRINCIPAL, BOTAO_SECUNDARIO } from './Partes.tsx'
 
 interface Props {
@@ -67,6 +68,7 @@ export function DialogoDeAcao({
     }
     const aoTeclar = (evento: KeyboardEvent) => {
       if (evento.key === 'Escape') pedirParaFechar(evento)
+      else prenderOTab(evento, elemento)
     }
     elemento.addEventListener('cancel', pedirParaFechar)
     elemento.addEventListener('keydown', aoTeclar)
