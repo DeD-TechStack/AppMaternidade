@@ -365,7 +365,7 @@ describe('R10: fuso da família inválido não quebra a tela', () => {
 
 describe('a leitura do contexto segurada: a tela mantém o h1 enquanto carrega', () => {
   /** Segura a leitura do contexto da rotina até `liberar()`; devolve a resposta de verdade. */
-  function segurarContexto(mundo: Mundo) {
+  function segurarContexto(mundo: ReturnType<typeof criarMundoDeTeste>) {
     const original = mundo.rotina.contexto.bind(mundo.rotina)
     let liberar: () => void = () => {}
     vi.spyOn(mundo.rotina, 'contexto').mockImplementation(() => new Promise((resolver) => (liberar = () => resolver(original()))))
