@@ -1,4 +1,4 @@
-import { useId, type Ref } from 'react'
+import { useId, type ReactNode, type Ref } from 'react'
 import { Link } from 'react-router'
 import { Baby, Milk, Moon } from 'lucide-react'
 import { Botao } from '../base/Botao.tsx'
@@ -20,6 +20,8 @@ interface Props {
   ocupado?: boolean
   /** O Hoje guarda o cartão para levar o foco até ele depois de encerrar (tabindex="-1"). */
   ref?: Ref<HTMLElement>
+  /** Um painel em linha (a pergunta da sessão curta, QA-10), logo abaixo das ações. */
+  painel?: ReactNode
   className?: string
 }
 
@@ -33,7 +35,7 @@ const DESENHO: Record<TipoSessao, NomeIlustracao> = { sono: 'pai-colo', mamada: 
  * madrugada; o tempo correndo em Literata com algarismos tabulares, a pílula de cacau "Encerrar" (de mel
  * na madrugada) e o link "Ver sessão". Sem sessão, diz "Nenhuma sessão em andamento." e como começar.
  */
-export function CartaoSessao({ sessao, agora, aoEncerrar, podeEncerrar = true, ocupado = false, ref, className }: Props) {
+export function CartaoSessao({ sessao, agora, aoEncerrar, podeEncerrar = true, ocupado = false, ref, painel, className }: Props) {
   const idTitulo = useId()
   const Icone = sessao ? ICONE[sessao.tipo] : Moon
 
@@ -107,7 +109,7 @@ export function CartaoSessao({ sessao, agora, aoEncerrar, podeEncerrar = true, o
 
           <div className="flex flex-wrap items-center gap-3">
             {podeEncerrar ? (
-              <Botao tamanho="app" className={`min-w-[8.5rem] ${ALVO_APP}`} desativado={ocupado} onClick={aoEncerrar}>
+              <Botao tamanho="app" className={`min-w-[8.5rem] ${ALVO_APP}`} desativado={ocupado} data-acao="encerrar" onClick={aoEncerrar}>
                 Encerrar
               </Botao>
             ) : null}
@@ -121,6 +123,7 @@ export function CartaoSessao({ sessao, agora, aoEncerrar, podeEncerrar = true, o
               Ver sessão
             </Link>
           </div>
+          {painel}
         </div>
       </div>
 
