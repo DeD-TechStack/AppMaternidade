@@ -52,9 +52,11 @@ export function Cabecalho({ contexto, comLua, madrugada, aoAlternarMadrugada }: 
   const idMenu = useId()
   const fecharMenu = useCallback(() => setAbertoEm(null), [])
 
-  const { estado, sair } = useSessao()
+  const { estado, usuario, sair } = useSessao()
+  // Um usuário conhecido é uma pessoa entrada, mesmo quando a leitura da conta falhou (`erro`): "visitante"
+  // é só a ausência de usuário (sem sessão, ou a leitura da própria sessão que falhou).
   const situacao: SituacaoDaConta =
-    estado === 'carregando' ? 'carregando' : estado === 'com_sessao' ? 'com_sessao' : 'visitante'
+    estado === 'carregando' ? 'carregando' : estado === 'com_sessao' || usuario !== null ? 'com_sessao' : 'visitante'
   // Os links de visitante seguem a sessão e valem onde valem hoje: nas páginas do site público.
   const comVisitante = situacao === 'visitante' && contexto === 'publico'
 

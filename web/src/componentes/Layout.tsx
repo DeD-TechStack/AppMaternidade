@@ -2,7 +2,8 @@ import { Outlet, useLocation, useMatches } from 'react-router'
 import { Cabecalho } from './casca/Cabecalho.tsx'
 import { Rodape } from './casca/Rodape.tsx'
 import type { Contexto } from './casca/textos.ts'
-import { AREA_DA_ROTINA, useLuaDaCasca } from './rotina/madrugada.ts'
+import { useLuaDoCabecalho } from './casca/luaDoCabecalho.ts'
+import { AREA_DA_ROTINA } from './rotina/madrugada.ts'
 
 /** A área logada (/app/*) usa o cabeçalho logado, com o modo madrugada; o resto, o público. */
 function contextoDoCaminho(caminho: string): Contexto {
@@ -13,7 +14,7 @@ function contextoDoCaminho(caminho: string): Contexto {
 // rodapé vem depois de todo o conteúdo da tela.
 function Casca() {
   const { pathname } = useLocation()
-  const { madrugada, alternar } = useLuaDaCasca()
+  const { madrugada, alternar } = useLuaDoCabecalho()
   const contexto = contextoDoCaminho(pathname)
   // O "Modo madrugada" só existe nas páginas da Rotina (a rota pai delas leva `handle.area`).
   const naRotina = useMatches().some((rota) => (rota.handle as { area?: unknown } | undefined)?.area === AREA_DA_ROTINA)

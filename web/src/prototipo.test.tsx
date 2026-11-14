@@ -439,7 +439,7 @@ describe('madrugada', () => {
     expect(document.documentElement.hasAttribute('data-tema')).toBe(false)
   })
 
-  it('o modo continua na Sessão e sai ao ir para o Início', async () => {
+  it('o modo continua na Sessão, sai ao ir para o Início e a escolha volta com a Rotina', async () => {
     const { roteador } = await renderizarRotaPronta('/app/hoje')
     fireEvent.click(botao('Modo madrugada'))
 
@@ -453,12 +453,12 @@ describe('madrugada', () => {
     await aguardarCarga()
     expect(document.documentElement.hasAttribute('data-tema')).toBe(false)
 
-    // O modo também desligou: ao voltar ao Hoje, o botão está solto.
+    // QA-04: o tema sai com a Rotina, mas a escolha fica: ao voltar ao Hoje, o botão segue pressionado.
     await act(async () => {
       await roteador.navigate('/app/hoje')
     })
     await aguardarCarga()
-    expect(botao('Modo madrugada').getAttribute('aria-pressed')).toBe('false')
+    expect(botao('Modo madrugada').getAttribute('aria-pressed')).toBe('true')
   })
 
   it('começar em madrugada põe o tema logo na primeira tela', async () => {

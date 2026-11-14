@@ -1,12 +1,17 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { createMemoryRouter, RouterProvider } from 'react-router'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { ProvedorDadosConta } from '../conta/sessao.tsx'
+import { ProvedorDadosRotina } from '../rotina/dadosRotina.tsx'
 import { NOMES_DO_H1, TEXTOS_ERRO } from '../../conteudo/conta.ts'
-import { ELENCO, criarElenco } from '../../dados/comunidade.elenco.ts'
-import { criarDadosComunidadeMemoria } from '../../dados/comunidade.memoria.ts'
-import { criarDadosContaMemoria, simularFalha } from '../../dados/conta.memoria.ts'
+import { criarElenco } from '../../dados/comunidade.elenco.ts'
+import { criarDadosComunidadeMemoria, type EstadoComunidade } from '../../dados/comunidade.memoria.ts'
+import { ProvedorDadosComunidade } from '../../dados/comunidade.ts'
+import { simularFalha } from '../../dados/conta.memoria.ts'
 import { criarDadosModeracaoMemoria } from '../../dados/moderacao.memoria.ts'
-import { fixtureDeContasDoElenco, renderizarModeracao } from '../../paginas/moderacao/apoio.tsx'
-import { criarFixtureDeTeste } from '../../teste/renderizarComDados.tsx'
+import { ProvedorDadosModeracao } from '../../dados/moderacao.ts'
+import { criarRotas } from '../../rotas.tsx'
+import { PESSOAS } from '../../teste/renderizarComDados.tsx'
 import { aguardarCarga, renderizarRota } from '../../teste/renderizarRota.tsx'
 import { criarMundoDeTeste } from '../../teste/rotina.fixture.ts'
 
@@ -32,18 +37,35 @@ afterEach(() => {
   fixarLargura(LARGURA_ORIGINAL)
 })
 
-function renderizarComoModerador(caminho: string) {
-  const estado = criarElenco()
-  const comunidade = criarDadosComunidadeMemoria(estado, ELENCO.moderador.conta)
-  const moderacao = criarDadosModeracaoMemoria(estado, ELENCO.moderador.conta)
-  const contas = criarDadosContaMemoria(fixtureDeContasDoElenco(criarFixtureDeTeste(Date.now())))
-  contas.sessaoParaTeste(ELENCO.moderador.email)
-  return renderizarModeracao(caminho, { contas, comunidade, moderacao })
-}
-
+// O site real com os quatro provedores (conta, rotina, Comunidade e moderação), todos em memória. A pessoa
+// entrada é sempre a Juliana (conta completa, com família): o membro não tem papel na plataforma, o
+// moderador tem o papel `moderador` (por isso as telas do app abrem para os dois no mesmo caminho).
 function renderizar(caminho: string, quem: Quem) {
-  if (quem === 'moderador') return renderizarComoModerador(caminho)
-  return renderizarRota(caminho, { sessao: quem === 'membro' ? 'juliana' : null })
+  const mundo = criarMundoDeTeste({ sessao: quem === 'nenhuma' ? null : 'juliana' })
+  const juliana = PESSOAS.juliana.id
+  const elenco = criarElenco()
+  const estado: EstadoComunidade = {
+    ...elenco,
+    contas: [...elenco.contas, juliana],
+    papeis:
+      quem === 'moderador'
+        ? [...elenco.papeis, { contaId: juliana, papel: 'moderador', concedidoPor: null, concedidoEm: new Date().toISOString(), validoAte: null }]
+        : elenco.papeis,
+  }
+  vi.stubGlobal('scrollTo', vi.fn())
+  const roteador = createMemoryRouter(criarRotas(), { initialEntries: [caminho] })
+  const resultado = render(
+    <ProvedorDadosConta dados={mundo.conta}>
+      <ProvedorDadosRotina dados={mundo.rotina}>
+        <ProvedorDadosComunidade dados={criarDadosComunidadeMemoria(estado, juliana)}>
+          <ProvedorDadosModeracao dados={criarDadosModeracaoMemoria(estado, juliana)}>
+            <RouterProvider router={roteador} />
+          </ProvedorDadosModeracao>
+        </ProvedorDadosComunidade>
+      </ProvedorDadosRotina>
+    </ProvedorDadosConta>,
+  )
+  return { ...resultado, roteador }
 }
 
 async function montar(caminho: string, quem: Quem, largura: number) {
@@ -78,23 +100,73 @@ const NENHUM: Itens = { entrar: false, criarConta: false, conta: false, sair: fa
 
 const lua = () => screen.queryByRole('button', { name: 'Modo madrugada' })
 
-const ROTINA = ['/app/hoje', '/app/sessao', '/app/historico', '/app/lixeira', '/app/notas', '/app/registro/novo']
-const PUBLICAS = ['/', '/desenvolvimento']
-const DO_APP = ['/app/comunidade', '/app/familia', '/app/conta', '/app/comecar', '/app/desenvolvimento']
+// A matriz A-F1-1: toda rota × toda pessoa (ninguém, membro, moderador) × as duas larguras. Cada rota tem um tipo:
+// pública (abre para todos), da Rotina (a lua vive nela), do app (logada, sem lua) e da Moderação (logada, só
+// abre para quem tem papel). Quem não tem sessão é levado pela guarda a `/entrar?volta=<caminho>`; o membro na
+// Moderação fica no mesmo caminho, com o estado "sem permissão" (o painel não redireciona).
+type Tipo = 'publica' | 'rotina' | 'app' | 'moderacao'
 
-const CASOS: Array<[Quem, string]> = [
-  ...[...PUBLICAS, ...ROTINA, ...DO_APP, '/moderacao'].map((caminho): [Quem, string] => ['nenhuma', caminho]),
-  ...[...PUBLICAS, ...ROTINA, ...DO_APP].map((caminho): [Quem, string] => ['membro', caminho]),
-  ...[...PUBLICAS, '/app/comunidade', '/moderacao', '/moderacao/auditoria'].map((caminho): [Quem, string] => ['moderador', caminho]),
+const ROTAS: Array<[string, Tipo]> = [
+  ['/', 'publica'],
+  ['/desenvolvimento', 'publica'],
+  ['/app/hoje', 'rotina'],
+  ['/app/sessao', 'rotina'],
+  ['/app/historico', 'rotina'],
+  ['/app/lixeira', 'rotina'],
+  ['/app/notas', 'rotina'],
+  ['/app/registro/novo', 'rotina'],
+  ['/app/comunidade', 'app'],
+  ['/app/desenvolvimento', 'app'],
+  ['/app/familia', 'app'],
+  ['/app/conta', 'app'],
+  ['/app/comecar', 'app'],
+  ['/moderacao', 'moderacao'],
+  ['/moderacao/auditoria', 'moderacao'],
 ]
+const PESSOAS_DA_MATRIZ: Quem[] = ['nenhuma', 'membro', 'moderador']
+
+const CASOS: Array<[Quem, string, Tipo]> = PESSOAS_DA_MATRIZ.flatMap((quem) =>
+  ROTAS.map(([caminho, tipo]): [Quem, string, Tipo] => [quem, caminho, tipo]),
+)
+
+const TEMPO_DA_MATRIZ = 15_000
+
+/** Onde a pessoa termina: a guarda leva quem não tem sessão de uma página logada a /entrar. */
+function destinoDe(quem: Quem, caminho: string, tipo: Tipo): string {
+  return tipo !== 'publica' && quem === 'nenhuma' ? '/entrar' : caminho
+}
+
+/** O que a matriz confere fora do cabeçalho: o destino e, na Moderação, o estado "sem permissão". */
+async function conferirDestino(roteador: { state: { location: { pathname: string; search: string } } }, quem: Quem, caminho: string, tipo: Tipo) {
+  // A guarda navega depois da leitura da sessão: espera o destino antes de olhar o cabeçalho (ou abrir o menu).
+  await waitFor(() => expect(roteador.state.location.pathname).toBe(destinoDe(quem, caminho, tipo)))
+  await aguardarCarga()
+  if (tipo !== 'publica' && quem === 'nenhuma') {
+    expect(roteador.state.location.search).toBe(`?volta=${encodeURIComponent(caminho)}`)
+  }
+  if (tipo === 'moderacao' && quem === 'membro') {
+    await waitFor(() => expect(document.querySelector('[data-estado="sem-permissao"]')).not.toBeNull())
+  }
+  if (tipo === 'moderacao' && quem === 'moderador') {
+    expect(document.querySelector('[data-estado="sem-permissao"]')).toBeNull()
+  }
+}
+
+/** Onde o cabeçalho mostra a lua: só nas páginas da Rotina, e só para quem chega a elas. */
+const comLuaEsperada = (quem: Quem, tipo: Tipo) => tipo === 'rotina' && quem !== 'nenhuma'
 
 describe('o espaço da conta no cabeçalho, em 1440', () => {
-  it.each(CASOS)('%s em %s: os itens seguem a sessão e a lua só vive na Rotina', async (quem, caminho) => {
-    await montar(caminho, quem, 1440)
+  it.each(CASOS)(
+    '%s em %s (%s): os itens seguem a sessão, o destino é o esperado e a lua só vive na Rotina',
+    async (quem, caminho, tipo) => {
+      const { roteador } = await montar(caminho, quem, 1440)
 
-    expect(leitura(cabecalho())).toEqual(quem === 'nenhuma' ? VISITANTE : COM_SESSAO)
-    expect(lua() !== null).toBe(quem !== 'nenhuma' && ROTINA.includes(caminho))
-  })
+      await conferirDestino(roteador, quem, caminho, tipo)
+      expect(leitura(cabecalho())).toEqual(quem === 'nenhuma' ? VISITANTE : COM_SESSAO)
+      expect(lua() !== null).toBe(comLuaEsperada(quem, tipo))
+    },
+    TEMPO_DA_MATRIZ,
+  )
 
   it('com sessão, "Conta" leva a /app/conta e "Sair" é um botão do cabeçalho', async () => {
     await montar('/sobre', 'membro', 1440)
@@ -133,13 +205,18 @@ describe('o espaço da conta no cabeçalho, em 1440', () => {
 })
 
 describe('o espaço da conta no menu, em 390', () => {
-  it.each(CASOS)('%s em %s: o menu aberto traz os itens da sessão', async (quem, caminho) => {
-    await montar(caminho, quem, 390)
-    fireEvent.click(screen.getByRole('button', { name: 'Menu' }))
+  it.each(CASOS)(
+    '%s em %s (%s): o menu aberto traz os itens da sessão, o destino é o esperado e a lua só vive na Rotina',
+    async (quem, caminho, tipo) => {
+      const { roteador } = await montar(caminho, quem, 390)
+      await conferirDestino(roteador, quem, caminho, tipo)
+      fireEvent.click(screen.getByRole('button', { name: 'Menu' }))
 
-    expect(leitura(painel())).toEqual(quem === 'nenhuma' ? VISITANTE : COM_SESSAO)
-    expect(lua() !== null).toBe(quem !== 'nenhuma' && ROTINA.includes(caminho))
-  })
+      expect(leitura(painel())).toEqual(quem === 'nenhuma' ? VISITANTE : COM_SESSAO)
+      expect(lua() !== null).toBe(comLuaEsperada(quem, tipo))
+    },
+    TEMPO_DA_MATRIZ,
+  )
 
   it('com sessão, o menu aberto tem um só "Sair" e ele fica depois dos links da navegação', async () => {
     await montar('/app/conta', 'membro', 390)
@@ -183,6 +260,56 @@ describe('enquanto a sessão carrega', () => {
     renderizarRota('/', { sessao: null })
     expect(leitura(cabecalho())).toEqual(NENHUM)
 
+    await aguardarCarga()
+
+    expect(leitura(cabecalho())).toEqual(VISITANTE)
+  })
+})
+
+// QA-03 (D3): "visitante" é só a ausência de usuário. Com a sessão válida e a leitura da conta falhando (o estado
+// `erro` da sessão, com o usuário conhecido), a pessoa continua entrada: "Conta" e "Sair", nunca "Entrar".
+describe('com a sessão válida e a leitura da conta falhando', () => {
+  function comFalhaNaConta() {
+    const mundo = criarMundoDeTeste()
+    simularFalha(mundo.conta, 'minhaConta', 'rede')
+    return mundo
+  }
+
+  it('em /sobre, a 1440: Conta e Sair no cabeçalho, sem Entrar nem "Criar conta"', async () => {
+    fixarLargura(1440)
+    renderizarRota('/sobre', { mundo: comFalhaNaConta() })
+    await aguardarCarga()
+
+    expect(leitura(cabecalho())).toEqual(COM_SESSAO)
+    expect(lua()).toBeNull()
+  })
+
+  it('em /sobre, a 390: o menu aberto traz Conta e Sair, sem Entrar nem "Criar conta"', async () => {
+    fixarLargura(390)
+    renderizarRota('/sobre', { mundo: comFalhaNaConta() })
+    await aguardarCarga()
+    fireEvent.click(screen.getByRole('button', { name: 'Menu' }))
+
+    expect(leitura(painel())).toEqual(COM_SESSAO)
+  })
+
+  it('Sair continua sendo uma saída pedida: em /app/conta leva a /entrar com "Você saiu da conta."', async () => {
+    fixarLargura(1440)
+    const { roteador } = renderizarRota('/app/conta', { mundo: comFalhaNaConta() })
+    await aguardarCarga()
+    expect(leitura(cabecalho())).toEqual(COM_SESSAO)
+
+    fireEvent.click(within(cabecalho()).getByRole('button', { name: 'Sair' }))
+
+    await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.entrar })
+    expect(roteador.state.location.pathname).toBe('/entrar')
+    expect((await screen.findByRole('status')).textContent).toBe('Você saiu da conta.')
+    expect(leitura(cabecalho())).toEqual(VISITANTE)
+  })
+
+  it('controle: sem sessão nenhuma, /sobre mostra Entrar e "Criar conta" (a leitura da sessão não falhou)', async () => {
+    fixarLargura(1440)
+    renderizarRota('/sobre', { sessao: null })
     await aguardarCarga()
 
     expect(leitura(cabecalho())).toEqual(VISITANTE)
