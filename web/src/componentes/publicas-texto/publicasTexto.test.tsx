@@ -612,13 +612,16 @@ describe('painel e figura por largura (CSS)', () => {
   it('o painel de mel não tem fundo próprio no CSS (a cor vem do PainelCampo) e abraça a figura: figura mais o respiro de 24, centrado na coluna, nas duas larguras', () => {
     const [celular] = corpos('.pt-figura > .cm-painel.pt-painel')
     expect(celular).toMatch(/padding:\s*24px/)
-    // O painel tem a largura da figura (fit-content), no máximo a da coluna, e fica centrado nela.
-    expect(celular).toMatch(/(^|[\s;])inline-size:\s*fit-content/)
+    // No celular o painel ocupa a largura do quadro, na borda esquerda dele; em tela larga tem a largura da figura
+    // (fit-content), no máximo a da coluna, e fica centrado nela.
+    expect(celular).toMatch(/(^|[\s;])inline-size:\s*100%/)
     expect(celular).toMatch(/(^|[\s;])max-inline-size:\s*100%/)
     expect(celular).toMatch(/box-sizing:\s*border-box/)
     expect(celular).toMatch(/align-self:\s*center/)
-    expect(celular).not.toMatch(/(^|[\s;])inline-size:\s*100%/)
     expect(css).toMatch(/@media \(min-width: 1100px\)/)
+    const [, largo] = corpos('.pt-figura > .cm-painel.pt-painel')
+    expect(largo).toMatch(/(^|[\s;])inline-size:\s*fit-content/)
+    expect(largo).toMatch(/align-self:\s*center/)
     expect(css).not.toMatch(/background-color:\s*var\(--color-areia\)/)
     // Nada mais dá respiro ao painel em tela larga: o painel continua figura + 24.
     expect(css).not.toMatch(/\.cm-painel\.pt-painel\s*\{[^}]*padding:\s*40px/)
@@ -635,7 +638,7 @@ describe('painel e figura por largura (CSS)', () => {
       for (const propriedade of ['width', 'min-width', 'min-inline-size', 'height', 'min-height', 'block-size', 'min-block-size', 'aspect-ratio']) {
         expect(declara(corpo, propriedade), propriedade).toBe(false)
       }
-      expect(corpo).toMatch(/(^|[\s;])inline-size:\s*fit-content/)
+      expect(corpo).toMatch(/(^|[\s;])inline-size:\s*(fit-content|100%)/)
       expect(corpo).toMatch(/(^|[\s;])max-inline-size:\s*100%/)
       expect(corpo).toMatch(/padding:\s*24px/)
       expect(corpo).toMatch(/box-sizing:\s*border-box/)

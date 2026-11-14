@@ -24,15 +24,16 @@
 
   /* Figura da abertura: o painel de mel e, logo abaixo dele, a frase de apoio (uma `Pilha`, vão pilha). */
 
-  /* Painel de mel: só o desenho, e do tamanho dele. O painel abraça a figura (fit-content): largura da figura mais o
-     respiro de 24 de cada lado, no máximo a da coluna, e fica centrado nela (a coluna toda no celular, a da direita
-     da abertura em tela larga), o mesmo nas seis páginas. Sem largura mínima, sem respiro a mais: a figura ocupa a
-     área interna inteira. A figura tem a altura fixa (220 no celular, 300 em tela larga) e a largura que o traço
-     pedir (se não couber, encolhe dentro da caixa, sem recorte). No celular o painel tem uns 268 px de altura,
-     abaixo de 40% da janela de 844 px. A figura é filha de uma pilha (flex em coluna): o centro é `align-self`. */
+  /* Painel de mel: só o desenho. No celular o painel ocupa a largura do quadro, na borda esquerda dele, como o
+     texto (um desenho estreito, como o de Privacidade, não fica solto no meio); o desenho fica centrado dentro dele.
+     Em tela larga o painel abraça a figura (fit-content): largura da figura mais o respiro de 24 de cada lado, no
+     máximo a da coluna, centrado nela (a da direita da abertura). Sem largura mínima, sem respiro a mais. A figura
+     tem a altura fixa (220 no celular, 300 em tela larga) e a largura que o traço pedir (se não couber, encolhe
+     dentro da caixa, sem recorte). No celular o painel tem uns 268 px de altura, abaixo de 40% da janela de 844 px.
+     A figura é filha de uma pilha (flex em coluna): o centro é `align-self`. */
   .pt-figura > .cm-painel.pt-painel {
     box-sizing: border-box;
-    inline-size: fit-content;
+    inline-size: 100%;
     max-inline-size: 100%;
     align-self: center;
     padding: 24px;
@@ -66,6 +67,14 @@
       font-size: 1.5rem;
       line-height: 1.875rem;
       text-align: end;
+    }
+
+    .pt-figura > .cm-painel.pt-painel {
+      box-sizing: border-box;
+      inline-size: fit-content;
+      max-inline-size: 100%;
+      align-self: center;
+      padding: 24px;
     }
 
     .pt-ilustracao {
@@ -102,6 +111,13 @@
      O fio de cima é o do próprio índice. */
   .pt-indice:has(> .pt-indice-detalhes) {
     padding-top: 0;
+  }
+
+  /* Fechado, o índice é só a linha do resumo entre o fio dele e o fio do bloco seguinte. O vão bloco da pilha
+     (48 em tela larga) deixaria o rótulo com 24 em cima e 72 embaixo: o vão se anula, e o rótulo fica no meio, com
+     24 de cada lado. Aberto, a lista volta a ter o vão bloco embaixo. */
+  .pt-indice:has(> .pt-indice-detalhes:not([open])) {
+    margin-block-end: calc(-1 * var(--espaco-bloco));
   }
 
   .pt-indice-resumo {
