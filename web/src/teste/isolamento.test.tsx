@@ -1,6 +1,6 @@
 import { render } from '@testing-library/react'
 import axe from 'axe-core'
-import { describe, expect, it, vi } from 'vitest'
+import { afterAll, describe, expect, it, vi } from 'vitest'
 import { rodarAxe } from './axe.ts'
 import { iniciarTeste, relogioDoTeste } from './relogio.ts'
 
@@ -83,5 +83,55 @@ describe('o axe em execuções sobrepostas', () => {
     const recusadas = resultados.filter((resultado): resultado is PromiseRejectedResult => resultado.status === 'rejected')
     expect(recusadas.length).toBeGreaterThanOrEqual(1)
     expect(recusadas.some((recusa) => /already running/.test(String((recusa.reason as Error)?.message ?? recusa.reason)))).toBe(true)
+  })
+})
+
+// A fila do `rodarAxe` tira o "already running", mas o axe não cancela uma execução: a do teste que estourou o tempo
+// seguia viva e o teste seguinte gastava o orçamento dele esperando na fila. O `afterEach` do `setup.ts` espera a
+// execução velha terminar antes de o teste seguinte começar. Os dois testes abaixo rodam na ordem do arquivo.
+describe('o axe de um teste que estourou o tempo', () => {
+  let terminou = false
+
+  afterAll(() => {
+    // Devolve as regras e as verificações do axe ao padrão: a regra lenta não vaza para outros testes.
+    axe.reset()
+  })
+
+  it.fails('A estoura o tempo com um axe real pendente', { timeout: 100 }, async () => {
+    render(
+      <main>
+        <h1>x</h1>
+      </main>,
+    )
+    axe.configure({
+      checks: [
+        {
+          id: 'lento',
+          evaluate() {
+            const terminar = this.async()
+            setTimeout(() => terminar(true), 600)
+          },
+        },
+      ],
+      rules: [{ id: 'regra-lenta', selector: 'h1', any: ['lento'], enabled: true }],
+    })
+
+    // A execução leva ~600 ms, e o teste só tem 100 ms: estoura o tempo com o axe ainda rodando.
+    await rodarAxe(document.body, { runOnly: { type: 'rule', values: ['regra-lenta'] } }).finally(() => {
+      terminou = true
+    })
+  })
+
+  it('B roda um axe comum dentro do mesmo orçamento de 100 ms, com o axe do A já encerrado', { timeout: 100 }, async () => {
+    expect(terminou).toBe(true)
+
+    const { container } = render(
+      <main>
+        <h1>x</h1>
+      </main>,
+    )
+    const resultado = await rodarAxe(container, { runOnly: { type: 'rule', values: ['region'] } })
+
+    expect(resultado.violations).toEqual([])
   })
 })
