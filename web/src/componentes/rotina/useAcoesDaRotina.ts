@@ -393,15 +393,26 @@ export function useAcoesDaRotina() {
 
   // ---- descartar e unir -------------------------------------------------------------------------------
 
-  /** Descartar exclui a sessão (ela vai para a lixeira). Na falha, `repetir` repete o mesmo descarte. */
-  async function descartar(registro: Registro): Promise<ResultadoDoDescarte> {
+  /**
+   * Descartar exclui a sessão (ela vai para a lixeira). Com `anunciar` (a Sessão, A11Y-024), o sucesso anuncia
+   * `Esta sessão foi descartada.` com `Desfazer` (restaura a MESMA sessão) e `Fechar`; o aviso vive no provedor
+   * e sobrevive à ida ao Hoje. Na falha, `repetir` repete o mesmo descarte, com a mesma opção.
+   */
+  async function descartar(registro: Registro, opcoes: { anunciar?: boolean } = {}): Promise<ResultadoDoDescarte> {
     const resultado = await dados.excluirRegistro(registro.id)
     if (resultado.ok) {
       atualizar()
+      if (opcoes.anunciar) {
+        mostrarConfirmacao({
+          texto: SESSOES.descartada,
+          acoes: [{ chave: 'desfazer', rotulo: COMUM.desfazer, executar: () => void restaurar(registro, { confirmar: false }) }, fechar],
+          origem: 'tela',
+        })
+      }
       return resultado
     }
     aposErro(resultado.erro)
-    return { ok: false, erro: resultado.erro, repetir: () => descartar(registro) }
+    return { ok: false, erro: resultado.erro, repetir: () => descartar(registro, opcoes) }
   }
 
   /**

@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { FAMILIA } from '../../conteudo/conta.ts'
 import type { DetalheFamilia } from '../../dados/conta.ts'
 import { Cartao, Pilha } from '../base/layout/index.ts'
+import { useFocoPendente } from '../comunidade/foco.ts'
 import type { AcoesDaFamilia } from './acoesFamilia.ts'
 import { FormularioFamilia } from './FormularioFamilia.tsx'
 import { BOTAO_SECUNDARIO } from './Partes.tsx'
@@ -19,11 +20,15 @@ export function BlocoAcoes({ detalhe, responsavel, acoes }: Props) {
   const dados = useDadosConta()
   const [editando, setEditando] = useState(false)
   const botaoEditar = useRef<HTMLButtonElement>(null)
+  // A11Y-F4: o formulário inline some ao cancelar ou salvar, e "Editar família" só volta na renderização
+  // seguinte: o foco é pedido para depois dela (o botão de origem; senão, o título do bloco).
+  const pedirFoco = useFocoPendente()
+  const voltarAoEditar = () => pedirFoco([() => botaoEditar.current, () => document.getElementById('acoes-da-familia')])
   const { familia } = detalhe
 
   return (
     <Pilha as="section" aria-labelledby="acoes-da-familia" vao="pilha">
-      <h2 id="acoes-da-familia" className="cm-h4">
+      <h2 id="acoes-da-familia" tabIndex={-1} className="cm-h4">
         {FAMILIA.acoes.titulo}
       </h2>
 
@@ -38,7 +43,7 @@ export function BlocoAcoes({ detalhe, responsavel, acoes }: Props) {
             rotuloSecundario={FAMILIA.acoes.cancelar}
             aoSecundario={() => {
               setEditando(false)
-              botaoEditar.current?.focus()
+              voltarAoEditar()
             }}
             escrever={(nome, fuso) => dados.atualizarFamilia(familia.id, nome, fuso)}
             conferir={async (nome, fuso) => {
@@ -49,6 +54,7 @@ export function BlocoAcoes({ detalhe, responsavel, acoes }: Props) {
             aoFalharNaFamilia={(erro) => void acoes.aposFalha(erro)}
             aoSucesso={async () => {
               setEditando(false)
+              voltarAoEditar()
               await acoes.aposAcao(FAMILIA.acoes.salva)
             }}
           />

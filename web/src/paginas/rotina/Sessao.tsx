@@ -194,7 +194,7 @@ export function Sessao() {
   }
 
   function descartar(registro: Registro) {
-    return conduzir(registro.id, '', () => acoes.descartar(registro))
+    return conduzir(registro.id, '', () => acoes.descartar(registro, { anunciar: true }))
   }
 
   const avisoDaPendencia = pendencia ? (

@@ -1,4 +1,4 @@
-import { useId, useLayoutEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
 import { COMUM_COMUNIDADE, FORMULARIO_TOPICO, RESUMO_NA_COMUNIDADE, TX } from '../../conteudo/comunidade.ts'
 import type { Resultado } from '../../dados/comum.ts'
@@ -103,10 +103,21 @@ export function FormularioDeTopico({ espaco, perfilId, edicao, aoNaoEditavel, ao
     campo?.setSelectionRange(campo.value.length, campo.value.length)
   })
 
+  // A11Y-F4: o passo que some leva o foco com ele; o foco vai ao título da prévia, ou ao primeiro campo na volta.
+  const tituloDaPrevia = useRef<HTMLHeadingElement>(null)
+  const trocouDePasso = useRef(false)
+  useEffect(() => {
+    if (!trocouDePasso.current) return
+    trocouDePasso.current = false
+    if (previa) tituloDaPrevia.current?.focus()
+    else document.getElementById('campo-titulo')?.focus()
+  }, [previa])
+
   function aoVerPrevia(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault()
     if (!valido) return
     setPainelAberto(false)
+    trocouDePasso.current = true
     setPrevia(true)
   }
 
@@ -146,7 +157,9 @@ export function FormularioDeTopico({ espaco, perfilId, edicao, aoNaoEditavel, ao
     return (
       <Pilha vao="grupo" className="max-w-[44rem]" data-previa="topico">
         <Pilha vao="pilha">
-          <h2 className="cm-h4 text-titulo-4">{FORMULARIO_TOPICO.previa}</h2>
+          <h2 ref={tituloDaPrevia} tabIndex={-1} className="cm-h4 text-titulo-4">
+            {FORMULARIO_TOPICO.previa}
+          </h2>
           <p>{TX.tx05}</p>
           {houveResumo ? <p>{RESUMO_NA_COMUNIDADE.avisoNaPrevia}</p> : null}
         </Pilha>
@@ -172,6 +185,7 @@ export function FormularioDeTopico({ espaco, perfilId, edicao, aoNaoEditavel, ao
             className={BOTAO_SECUNDARIO}
             onClick={() => {
               envio.limpar()
+              trocouDePasso.current = true
               setPrevia(false)
             }}
           >
