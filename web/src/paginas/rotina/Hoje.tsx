@@ -9,7 +9,7 @@ import { PerguntaSessaoCurta, sessaoCurta } from '../../componentes/app/Pergunta
 import { ALVO_APP } from '../../componentes/app/alvo.ts'
 import { Botao } from '../../componentes/base/Botao.tsx'
 import { Etiqueta } from '../../componentes/base/Etiqueta.tsx'
-import { Colunas, Pilha, QuadroLayout, Secao } from '../../componentes/base/layout/index.ts'
+import { Cartao, Colunas, Pilha, QuadroLayout, Secao } from '../../componentes/base/layout/index.ts'
 import { AvisoDeErro } from '../../componentes/rotina/AvisoDeErro.tsx'
 import { AvisoDeFuso } from '../../componentes/rotina/AvisoDeFuso.tsx'
 import { AvisoDeLista } from '../../componentes/rotina/AvisoDeLista.tsx'
@@ -290,10 +290,10 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
   const blocoCartao = (classe: string) => (
     <Pilha vao="pilha" dataH="coluna" className={classe}>
       {emAndamento.estado === 'carregando' || (emAndamento.estado === 'erro' && emAndamento.dados === null) ? (
-        <section
+        <Cartao
+          as="section"
           ref={cartao}
           tabIndex={-1}
-          data-h="cartao"
           data-andamento=""
           aria-busy={emAndamento.estado === 'carregando' ? 'true' : undefined}
           className="alvo-foco flex flex-col gap-esp-pilha border border-(--cor-fio-suave) bg-(--cor-cartao)"
@@ -304,7 +304,7 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
           ) : (
             <p className="text-(--cor-texto-2)">{COMUM.carregando}</p>
           )}
-        </section>
+        </Cartao>
       ) : (
         <>
           {emAndamento.erro ? (

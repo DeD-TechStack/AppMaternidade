@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef } from 'react'
 import { SESSAO } from '../../conteudo/rotina.ts'
 import { Botao } from '../base/Botao.tsx'
-import { Pilha } from '../base/layout/index.ts'
+import { Cartao, Pilha } from '../base/layout/index.ts'
 import { ALVO_APP } from './alvo.ts'
 
 /** Menos que isto, encerrar pergunta antes (QA-10). */
@@ -46,11 +46,10 @@ export function PerguntaSessaoCurta({ aoSalvar, aoDescartar, podeDescartar, ocup
   }, [aoFechar])
 
   return (
-    <div
+    <Cartao
       ref={painel}
       role="group"
       aria-labelledby={idPergunta}
-      data-h="cartao"
       data-painel-sessao="curta"
       className={`bg-(--cor-fundo) text-(--cor-texto) ${className ?? ''}`}
     >
@@ -69,6 +68,6 @@ export function PerguntaSessaoCurta({ aoSalvar, aoDescartar, podeDescartar, ocup
           ) : null}
         </div>
       </Pilha>
-    </div>
+    </Cartao>
   )
 }
