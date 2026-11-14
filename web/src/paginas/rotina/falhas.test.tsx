@@ -193,7 +193,9 @@ describe('cada chave do catálogo de erros, ao desfazer um registro', () => {
     expect(excluir.mock.calls[1][0]).toBe(excluir.mock.calls[0][0])
     const lixeira = await mundo.rotina.lixeira(ID_BEBE)
     expect(lixeira.ok && lixeira.valor.itens).toHaveLength(1)
-    expect(status().textContent).toBe('')
+    // A11Y-004: o que deu certo na repetição é anunciado (antes, a região ficava vazia).
+    expect(status().querySelector('p')!.textContent).toBe('Registro desfeito: fralda.')
+    expect(within(status()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Fechar'])
   })
 })
 
@@ -456,7 +458,9 @@ describe('R10: as corridas com outra pessoa', () => {
     await aguardarCarga()
 
     expect(screen.queryByRole('alert')).toBeNull()
-    expect(status().textContent).toBe('')
+    // A11Y-004: sem erro, o Desfazer termina no aviso de sempre (o registro está excluído, como a pessoa queria).
+    expect(status().querySelector('p')!.textContent).toBe('Registro desfeito: fralda.')
+    expect(within(status()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Fechar'])
     const lixeira = await mundo.rotina.lixeira(ID_BEBE)
     expect(lixeira.ok && lixeira.valor.itens.filter((r) => r.id === criado!.id)).toMatchObject([{ excluidoPor: PESSOAS.juliana.id }])
   })

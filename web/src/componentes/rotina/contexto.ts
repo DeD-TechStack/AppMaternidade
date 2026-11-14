@@ -34,6 +34,13 @@ export interface AcaoDaConfirmacao {
   para?: string
 }
 
+/**
+ * De onde veio o registro que o "Desfazer" desfaz, para o foco voltar ao controle certo (A11Y-004): o botão
+ * Fralda da barra, o botão Mais (mamadeira e alimentação sólida nascem no painel dele) ou a tela, quando o
+ * controle que criou o registro já não existe (formulário, detalhe, Histórico): o foco vai ao h1.
+ */
+export type OrigemDoRegistro = 'fralda' | 'mais' | 'tela'
+
 export interface ConfirmacaoDaRotina {
   /** Muda a cada confirmação nova. */
   id: number
@@ -41,6 +48,8 @@ export interface ConfirmacaoDaRotina {
   acoes: AcaoDaConfirmacao[]
   /** A frase de uma nota que não pôde ser gravada, para a pessoa não perder o que escreveu. */
   textoDaNota?: string
+  /** Só nas confirmações com `Desfazer` (e no erro dele): para onde o foco vai quando a pessoa toca. */
+  origem?: OrigemDoRegistro
 }
 
 export type NovaConfirmacao = Omit<ConfirmacaoDaRotina, 'id'>

@@ -28,6 +28,9 @@ export const ROTULO_TIPO: Readonly<Record<TipoRegistro, string>> = {
   observacao: 'Observação',
 }
 
+/** O rótulo com a 1ª letra em minúscula, como as frases dos avisos o citam ("fralda", "alimentação sólida"). */
+const primeiraEmMinuscula = (texto: string) => texto.charAt(0).toLocaleLowerCase('pt-BR') + texto.slice(1)
+
 export const COMUM = {
   carregando: 'Carregando…',
   tentarDeNovo: 'Tentar de novo',
@@ -131,6 +134,15 @@ export const HOJE = {
   ultimaMamada: (hora: string, autor: string) => `Última mamada às ${hora}, com ${autor}`,
 } as const
 
+/** A11Y-010: as unidades do cronômetro falado ("1 hora, 12 minutos e 7 segundos"), com o singular e o plural. */
+export const TEMPO_FALADO = {
+  horas: (quantidade: number) => (quantidade === 1 ? '1 hora' : `${quantidade} horas`),
+  minutos: (quantidade: number) => (quantidade === 1 ? '1 minuto' : `${quantidade} minutos`),
+  segundos: (quantidade: number) => (quantidade === 1 ? '1 segundo' : `${quantidade} segundos`),
+  separador: ', ',
+  ultimoSeparador: ' e ',
+} as const
+
 export const SELETOR = {
   rotulo: 'Escolher bebê',
   arquivados: 'Arquivados',
@@ -202,6 +214,8 @@ export const REGISTRO_RAPIDO = {
   detalhes: 'Detalhes',
   fraldaRegistrada: (rotulo: string) => `Fralda registrada: ${rotulo}`,
   registrada: (rotulo: string) => `${rotulo} registrada`,
+  /** A11Y-004: o aviso que o leitor de tela ouve depois de "Desfazer" (o tipo em minúsculas, com ponto final). */
+  desfeito: (tipo: TipoRegistro) => `Registro desfeito: ${primeiraEmMinuscula(ROTULO_TIPO[tipo])}.`,
   iniciarSono: (nome: string) => `Iniciar sono de ${nome}`,
   iniciarMamada: (nome: string) => `Iniciar mamada de ${nome}`,
   registrarFralda: (nome: string) => `Registrar fralda de ${nome}`,

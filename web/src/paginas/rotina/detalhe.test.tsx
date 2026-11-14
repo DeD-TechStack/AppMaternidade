@@ -228,7 +228,7 @@ describe('R38-22: Excluir e Desfazer', () => {
     expect(document.querySelector(`[data-registro="${MAMADA}"]`)).toBeNull()
   })
 
-  it('Desfazer restaura, fecha a confirmação e leva o foco ao h1; Fechar só fecha', async () => {
+  it('Desfazer restaura, troca a confirmação pelo aviso `Registro desfeito: mamada.` (só com Fechar) e leva o foco ao h1; Fechar só fecha', async () => {
     await renderizarRotaPronta(`/app/registro/${MAMADA}`)
     fireEvent.click(botao('Excluir'))
     await aguardarCarga()
@@ -237,7 +237,8 @@ describe('R38-22: Excluir e Desfazer', () => {
     await aguardarCarga()
 
     expect(document.querySelector(`[data-registro="${MAMADA}"]`)).not.toBeNull()
-    expect(status().textContent).toBe('')
+    expect(status().querySelector('p')!.textContent).toBe('Registro desfeito: mamada.')
+    expect(within(status()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Fechar'])
     expect(document.activeElement).toBe(h1())
   })
 
