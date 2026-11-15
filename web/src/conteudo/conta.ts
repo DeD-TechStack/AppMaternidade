@@ -96,7 +96,7 @@ export const COMUM = {
   conexaoCaiu: 'A conexão caiu antes da resposta. Confira abaixo se ficou salvo antes de tentar de novo.',
   repitaSenha: 'Repita a senha.',
   senhasDiferentes: 'As duas senhas precisam ser iguais.',
-  ajudaSenha: 'Pelo menos 6 caracteres.',
+  ajudaSenha: 'Pelo menos 8 caracteres.',
   idCopiado: 'ID copiado.',
   copieManualmente: 'Copie manualmente.',
   rotuloEmail: 'E-mail',
