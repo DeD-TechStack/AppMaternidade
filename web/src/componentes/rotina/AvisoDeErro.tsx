@@ -3,6 +3,7 @@ import { Link } from 'react-router'
 import { CircleAlert } from 'lucide-react'
 import { COMUM, LIGACOES, ehErroRepetivel, textoDoErro } from '../../conteudo/rotina.ts'
 import type { ErroDados, Papel } from '../../dados/comum.ts'
+import { Cartao } from '../base/layout/index.ts'
 import { BOTAO_SECUNDARIO, LINK_ALVO } from '../conta/Partes.tsx'
 
 interface Props {
@@ -12,7 +13,7 @@ interface Props {
   papel?: Papel | null
   /** O botão "Tentar de novo" aparece quando há a ação e a classe do erro pede repetição. */
   aoTentarDeNovo?: () => void
-  refAviso?: Ref<HTMLDivElement>
+  refAviso?: Ref<HTMLElement>
   className?: string
   children?: ReactNode
 }
@@ -23,11 +24,10 @@ interface Props {
  */
 export function AvisoDeErro({ erro, escrita = false, papel = null, aoTentarDeNovo, refAviso, className, children }: Props) {
   return (
-    <div
+    <Cartao
       ref={refAviso}
       role="alert"
       tabIndex={-1}
-      data-h="cartao"
       data-erro-rotina={erro.chave}
       className={`alvo-foco flex w-full flex-col items-start gap-3 border-[1.5px] border-(--cor-texto) bg-(--cor-cartao) ${className ?? ''}`}
     >
@@ -46,6 +46,6 @@ export function AvisoDeErro({ erro, escrita = false, papel = null, aoTentarDeNov
           {COMUM.tentarDeNovo}
         </button>
       ) : null}
-    </div>
+    </Cartao>
   )
 }
