@@ -63,6 +63,8 @@ interface Medida {
   /** Cada linha de texto do `h1` (uma caixa por linha de cada trecho de texto). */
   linhasDoH1: Caixa[]
   ilustracao: Caixa | null
+  /** A frase logo abaixo do título. */
+  lide: Caixa | null
   /** A ação principal que é um link (`a.cm-botao-primario`), quando a tela tem uma. */
   acaoPrincipal: (Caixa & { texto: string }) | null
   /** Os elementos do `main` que passam da borda direita da janela. */
@@ -97,6 +99,7 @@ const SCRIPT_DE_MEDIDA = `
         for (const r of intervalo.getClientRects()) if (r.width > 0 && r.height > 0) linhasDoH1.push(caixa(r))
       }
     }
+    const lideEl = document.querySelector('main p.cm-lide')
     const desenho = document.querySelector('main img[data-ilustracao]')
     const acao = document.querySelector('main a.cm-botao-primario')
     const principal = document.querySelector('main')
@@ -110,11 +113,12 @@ const SCRIPT_DE_MEDIDA = `
       scrollWidth: document.documentElement.scrollWidth,
       linhasDoH1,
       ilustracao: desenho && visivel(desenho) ? caixa(desenho.getBoundingClientRect()) : null,
+      lide: lideEl ? caixa(lideEl.getBoundingClientRect()) : null,
       acaoPrincipal: acao ? { ...caixa(acao.getBoundingClientRect()), texto: acao.textContent.trim() } : null,
       vazando,
     })
   } catch (e) {
-    emitir({ erro: String(e), innerWidth: 0, innerHeight: 0, fontes: '', scrollWidth: 0, linhasDoH1: [], ilustracao: null, acaoPrincipal: null, vazando: [] })
+    emitir({ erro: String(e), innerWidth: 0, innerHeight: 0, fontes: '', scrollWidth: 0, linhasDoH1: [], ilustracao: null, lide: null, acaoPrincipal: null, vazando: [] })
   }
 })()
 `
@@ -228,6 +232,11 @@ describe(`telas de acesso no Chrome, a 390 px${motivoDoPulo ? ` (pulado: ${motiv
         for (const linha of medida.linhasDoH1) {
           expect(cruza(linha, medida.ilustracao!), `uma linha do título (${JSON.stringify(linha)}) cruza o desenho (${JSON.stringify(medida.ilustracao)})`).toBe(false)
           expect(distancia(linha, medida.ilustracao!), `o vão entre a linha do título e o desenho: ${JSON.stringify(linha)} / ${JSON.stringify(medida.ilustracao)}`).toBeGreaterThanOrEqual(16)
+        }
+        // A frase logo abaixo também não encosta no desenho (a segunda linha do título termina acima da frase).
+        if (medida.lide) {
+          expect(cruza(medida.lide, medida.ilustracao!), 'a frase cruza o desenho').toBe(false)
+          expect(distancia(medida.lide, medida.ilustracao!), 'o vão entre o desenho e a frase').toBeGreaterThanOrEqual(8)
         }
       },
       60_000,
