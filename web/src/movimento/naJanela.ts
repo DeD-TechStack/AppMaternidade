@@ -2,7 +2,7 @@ import { useEffect, useState, type RefObject } from 'react'
 
 const temObservador = () => typeof window !== 'undefined' && typeof window.IntersectionObserver === 'function'
 
-export interface OpcoesNaJanela {
+interface OpcoesNaJanela {
   /** Para na primeira entrada: desliga o observador e o elemento fica "dentro" para sempre. */
   umaVez?: boolean
 }
