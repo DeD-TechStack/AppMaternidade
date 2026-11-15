@@ -5,9 +5,10 @@ import './layout.css'
 /**
  * Os pontos de quebra de hoje em que as colunas passam a ficar lado a lado (min-width, em px). 768 e 992 são o
  * "empilha até 767" e "empilha até 991" do código; 900 e 1100 são os de campo.css e site.css; 1024 é o `lg` do
- * Tailwind; 1200 é o de index.css. Nenhum ponto de quebra novo.
+ * Tailwind; 1200 é o de index.css. 960 e 1280 entraram no H-3g para as telas que quebram nelas hoje (o `xl` do
+ * Tailwind é 1280).
  */
-export const QUEBRAS_DE_COLUNAS = [768, 900, 992, 1024, 1100, 1200] as const
+export const QUEBRAS_DE_COLUNAS = [768, 900, 960, 992, 1024, 1100, 1200, 1280] as const
 
 type Props = HTMLAttributes<HTMLElement> & {
   /**

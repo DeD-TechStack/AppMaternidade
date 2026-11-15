@@ -177,7 +177,7 @@ describe('aviso de demonstração: as variantes do componente', () => {
 
     const padrao = render(<AvisoDemonstracao />)
     const classes = [...padrao.container.querySelector(SELETOR)!.classList]
-    for (const classe of ['aviso-demonstracao', 'texto-info', 'text-sm', 'py-1']) expect(classes).toContain(classe)
+    for (const classe of ['aviso-demonstracao', 'texto-info', 'text-pequeno', 'py-1']) expect(classes).toContain(classe)
     expect(classes).not.toContain('px-4')
     padrao.unmount()
 

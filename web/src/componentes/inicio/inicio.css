@@ -17,12 +17,6 @@
   min-height: 56px;
 }
 
-/* Dentro de uma grade, o painel de campo ocupa a célula. */
-.in-celula.cm-painel {
-  width: auto;
-  margin-inline: 0;
-}
-
 /* 1. Abertura -------------------------------------------------------------------------------- */
 /* A seção, o quadro, as colunas 7fr/5fr (vão `midia`) e as pilhas vêm das primitivas (HeroiInicio.tsx). */
 .in-heroi-lide {
@@ -116,7 +110,7 @@
   gap: var(--espaco-junto);
 }
 
-/* Número grande: fora da escala (`numero`, web/DESIGN.md; exceção a listar em harmonia-excecoes.json). */
+/* Número grande: fora da escala (`numero`, web/DESIGN.md; exceção em harmonia-excecoes.json). */
 .in-numeros-valor {
   font-family: var(--fonte-titulo);
   font-size: clamp(40px, 2.286vw + 31.086px, 64px);
@@ -353,7 +347,7 @@
   font-family: var(--fonte-titulo);
   font-size: var(--texto-corpo-tamanho);
   font-weight: 600;
-  line-height: 1;
+  line-height: var(--texto-corpo-entrelinha);
 }
 
 .in-avatar[data-tom='oliva'] {
@@ -467,11 +461,8 @@
 
 /* 6. Tabela ----------------------------------------------------------------------------------- */
 /* A tabela (oliva) e a foto (areia) são dois Cartao na mesma Colunas (SecaoTabela.tsx): o vão `bloco` e o padding
-   `painel` dos dois cartões vêm das primitivas. A tabela da base (PainelCampo) fica dentro do cartão de oliva sem o
-   respiro próprio dela (64 a 24), senão o padding dobraria. */
-.in-tabela-miolo.cm-painel {
-  padding: 0;
-}
+   `painel` dos dois cartões vêm das primitivas. A tabela fica dentro do cartão de oliva sem painel próprio
+   (`semPainel`), senão o respiro dela (64 a 24) dobraria o padding. */
 
 /* A foto sangra o cartão de areia (o padding do cartão fica, e a foto o cobre pela margem negativa), e o raio do
    cartão corta os cantos. */
@@ -527,9 +518,11 @@
     --in-tabela-respiro: 0px;
   }
 
-  /* O cabeçalho fica em 14 px para "AppMaternidade" caber na coluna justa (exceção a listar). */
+  /* O cabeçalho desce para `pequeno` (15 px, o menor nível) para "AppMaternidade" caber na coluna justa; as
+     larguras abaixo são em em e acompanham o tamanho. */
   .in-tabela-grade .cm-tabela thead th {
-    font-size: 0.875rem;
+    font-size: var(--texto-pequeno-tamanho);
+    line-height: var(--texto-pequeno-entrelinha);
   }
 
   .in-tabela-grade .cm-tabela thead th:nth-child(2) {
