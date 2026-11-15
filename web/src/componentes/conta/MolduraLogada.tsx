@@ -8,7 +8,7 @@ import { QuadroLayout } from '../base/layout/index.ts'
 // O link da barra, sem sublinhado e sem recuo: o texto começa na borda do quadro, a mesma do h1 da tela.
 // `alvo-toque` garante os 44 px de altura; `cm-barra-link` (campo.css) estende a área de toque por um
 // pseudo-elemento e afasta o anel de foco do texto.
-const LINK_DA_BARRA = 'cm-barra-link alvo-toque inline-flex items-center gap-1 rounded-pilula font-medium no-underline'
+const LINK_DA_BARRA = 'cm-barra-link alvo-toque inline-flex items-center gap-1 font-medium no-underline'
 
 interface Props {
   /** Enquanto a tela espera dados, o `<main>` leva `aria-busy`. */

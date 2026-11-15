@@ -830,9 +830,10 @@
 
   /* NEW-C: o "Ir para o Hoje" da barra da MolduraLogada não tem recuo, para o texto começar na borda do h1. A
      área de toque volta pelo pseudo-elemento (12 px de cada lado, sem vizinho para sobrepor) e o anel de foco
-     fica a 4 px do texto, sem encostar nele. */
+     fica a 4 px do texto, sem encostar nele: o raio do campo (e não a pílula) deixa a folga igual nos lados. */
   .cm-barra-link {
     position: relative;
+    border-radius: var(--radius-campo);
   }
 
   .cm-barra-link::before {
