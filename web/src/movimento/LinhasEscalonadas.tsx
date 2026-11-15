@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react'
 import { EntradaSuave } from '../componentes/terceiros/EntradaSuave.tsx'
-import { CATALOGO } from './catalogo.ts'
+import { CATALOGO, atrasoEscalonado } from './catalogo.ts'
 
-// M4: cada linha sobe 48 px e aparece, 250 ms depois da anterior. Dispara ao entrar na janela e
-// volta ao estado inicial quando a rolagem sobe acima do gatilho. Com movimento reduzido, a
-// EntradaSuave entrega cada linha comum, já no estado final.
+// M4: cada linha sobe 24 px e ganha opacidade, 80 ms depois da anterior (da terceira em diante, juntas).
+// Dispara uma vez, ao entrar na janela, e não volta à espera quando a rolagem sobe; a espera já é legível
+// (opacidade do M4, nunca 0). Com movimento reduzido, a EntradaSuave entrega cada linha comum, já no estado final.
 
 interface Props {
   linhas: ReactNode[]
@@ -13,7 +13,7 @@ interface Props {
 }
 
 export function LinhasEscalonadas({ linhas, className, classeLinha }: Props) {
-  const { deslocamentoPx, duracaoMs, curva, escalonamentoMs } = CATALOGO.M4
+  const { deslocamentoPx, duracaoMs, curva, umaVez } = CATALOGO.M4
 
   return (
     <div className={className}>
@@ -24,7 +24,8 @@ export function LinhasEscalonadas({ linhas, className, classeLinha }: Props) {
           deslocamentoPx={deslocamentoPx}
           duracaoMs={duracaoMs}
           curva={curva}
-          atrasoMs={i * escalonamentoMs}
+          atrasoMs={atrasoEscalonado(i)}
+          umaVez={umaVez}
         >
           {linha}
         </EntradaSuave>

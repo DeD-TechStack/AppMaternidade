@@ -1,6 +1,8 @@
-// Catálogo único do movimento (DESIGN.md 5). Toda peça de movimento lê os parâmetros daqui: nenhum
-// número de movimento fica solto num componente. Com `prefers-reduced-motion: reduce` tudo para
-// (as peças leem `usePrefereMovimentoReduzido`).
+// Catálogo único do movimento (DESIGN.md, seção Motion; SPEC_MOVIMENTO 2). Toda peça de movimento lê os
+// parâmetros daqui: nenhum número de movimento fica solto num componente. O CSS lê os mesmos números nas
+// variáveis `--mov-*` e `--curva-*` de `web/src/styles/tokens.css`; `movimento/tokens.test.ts` confere que
+// os dois lugares concordam. Com `prefers-reduced-motion: reduce` tudo para (as peças leem
+// `usePrefereMovimentoReduzido`).
 
 export interface RegistroMovimento {
   id: string
@@ -27,6 +29,12 @@ export interface RegistroMovimento {
   atrasoCamadaMs?: number
   /** Suavização por mola da animação presa à rolagem. */
   mola?: { stiffness: number; damping: number }
+  /** Entrada que dispara uma vez: o que já entrou não volta à espera ao sair da janela. */
+  umaVez?: boolean
+  /** Opacidade da espera, antes de entrar: já legível (acima de 0,1), nunca 0. */
+  opacidadeDe?: number
+  /** Escalonamento: do item `maxItensEscalonados` em diante, todos entram junto com ele. */
+  maxItensEscalonados?: number
 }
 
 export const CATALOGO = {
@@ -61,20 +69,25 @@ export const CATALOGO = {
     escala: { de: 0.9, para: 1 },
     mola: { stiffness: 120, damping: 30 },
   },
-  // Títulos de seção e números: as linhas sobem 48 px e aparecem, 1,25 s, uma a cada 250 ms.
+  // Títulos de seção e números (--mov-revela): as linhas sobem 24 px e ganham opacidade, 700 ms, 80 ms entre
+  // uma e a seguinte, no máximo 3 escalonadas, uma vez só (não voltam à espera ao sair da janela). A espera
+  // já é legível: opacidade 0,5, não 0 (um título grande de cacau sobre o papel fica acima de 3:1).
   M4: {
     id: 'M4',
     tipo: 'tempo',
-    duracaoMs: 1250,
+    duracaoMs: 700,
     janelaPx: 0,
     curva: [0.165, 0.84, 0.44, 1],
-    escalonamentoMs: 250,
+    escalonamentoMs: 80,
     atrasoMs: 0,
-    deslocamentoPx: 48,
+    deslocamentoPx: 24,
     deslocamentoPct: 0,
     escala: { de: 1, para: 1 },
+    umaVez: true,
+    opacidadeDe: 0.5,
+    maxItensEscalonados: 3,
   },
-  // Faixa de cacau: o conteúdo sai de baixo, de -50 % a 0, preso à rolagem.
+  // Faixa de cacau: o conteúdo sai de baixo, de -30 % a 0 (era -50 %), preso à rolagem.
   M6: {
     id: 'M6',
     tipo: 'rolagem',
@@ -84,7 +97,7 @@ export const CATALOGO = {
     escalonamentoMs: 0,
     atrasoMs: 0,
     deslocamentoPx: 0,
-    deslocamentoPct: 50,
+    deslocamentoPct: 30,
     escala: { de: 1, para: 1 },
   },
   // Rodapé: o mesmo, de -30 % a 0.
@@ -140,7 +153,101 @@ export const CATALOGO = {
     deslocamentoPct: 50,
     escala: { de: 1, para: 1 },
   },
+  // Resposta a ação (CSS, interrompível; SPEC_MOVIMENTO D4 e D5). Cor de hover em botões e links e cor da
+  // borda do campo (--mov-feedback): 150 ms, curva padrão.
+  M15: {
+    id: 'M15',
+    tipo: 'tempo',
+    duracaoMs: 150,
+    janelaPx: 0,
+    curva: [0.4, 0, 0.2, 1],
+    escalonamentoMs: 0,
+    atrasoMs: 0,
+    deslocamentoPx: 0,
+    deslocamentoPct: 0,
+    escala: { de: 1, para: 1 },
+  },
+  // Todo painel que aparece (--mov-pequeno): menu do celular, painéis e confirmações do app, popovers.
+  // Entra em 220 ms e sai em 160 ms, subindo 8 px (--mov-dist-popover).
+  M16: {
+    id: 'M16',
+    tipo: 'tempo',
+    duracaoMs: 220,
+    janelaPx: 0,
+    curva: [0.4, 0, 0.2, 1],
+    escalonamentoMs: 0,
+    atrasoMs: 0,
+    deslocamentoPx: 8,
+    deslocamentoPct: 0,
+    escala: { de: 1, para: 1 },
+    duracaoSaidaMs: 160,
+  },
+  // Só a altura do acordeão (--mov-medio): 280 ms, curva de saída.
+  M17: {
+    id: 'M17',
+    tipo: 'tempo',
+    duracaoMs: 280,
+    janelaPx: 0,
+    curva: [0, 0, 0.2, 1],
+    escalonamentoMs: 0,
+    atrasoMs: 0,
+    deslocamentoPx: 0,
+    deslocamentoPct: 0,
+    escala: { de: 1, para: 1 },
+  },
+  // O `<main>` ao trocar de rota (--mov-rota): só opacidade, 180 ms, sem saída.
+  M18: {
+    id: 'M18',
+    tipo: 'tempo',
+    duracaoMs: 180,
+    janelaPx: 0,
+    curva: [0, 0, 0.2, 1],
+    escalonamentoMs: 0,
+    atrasoMs: 0,
+    deslocamentoPx: 0,
+    deslocamentoPct: 0,
+    escala: { de: 1, para: 1 },
+  },
+  // Brilho do esqueleto de carregamento (--mov-esqueleto): 1,5 s por volta, em laço.
+  M19: {
+    id: 'M19',
+    tipo: 'laco',
+    duracaoMs: 1500,
+    janelaPx: 0,
+    curva: 'linear',
+    escalonamentoMs: 0,
+    atrasoMs: 0,
+    deslocamentoPx: 0,
+    deslocamentoPct: 0,
+    escala: { de: 1, para: 1 },
+  },
+  // Toque nos botões (--mov-toque, --mov-escala-toque): escala 0,96 no `:active`, 120 ms, ease-out
+  // (o CSS de `.cm-botao-*` em site.css). Nunca abaixo de 0,95.
+  M20: {
+    id: 'M20',
+    tipo: 'tempo',
+    duracaoMs: 120,
+    janelaPx: 0,
+    curva: 'easeOut',
+    escalonamentoMs: 0,
+    atrasoMs: 0,
+    deslocamentoPx: 0,
+    deslocamentoPct: 0,
+    escala: { de: 0.96, para: 1 },
+  },
 } satisfies Record<string, RegistroMovimento>
+
+/**
+ * Atraso do item `i` numa entrada escalonada: `escalonamentoMs` entre um item e o seguinte, e do item
+ * `maxItens` em diante todos entram juntos com ele (no M4, 0, 80, 160, 160...).
+ */
+export function atrasoEscalonado(
+  i: number,
+  escalonamentoMs: number = CATALOGO.M4.escalonamentoMs,
+  maxItens: number = CATALOGO.M4.maxItensEscalonados,
+): number {
+  return Math.min(Math.max(i, 0), maxItens - 1) * escalonamentoMs
+}
 
 /** Quando termina a cortina (todas as colunas do largo, com a camada de mel), em ms. */
 export function fimDaCortina(): number {

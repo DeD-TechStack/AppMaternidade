@@ -42,4 +42,33 @@
   --sombra-cartao: 0 1px 2px rgb(43 35 32 / .06), 0 8px 24px rgb(43 35 32 / .06);
   --luz-estudio: radial-gradient(120% 90% at 15% 10%, #F7D684 0%, #F2C14E 60%);
   --brilho-mel: radial-gradient(closest-side, rgb(242 193 78 / .22), transparent);
+
+  /* Movimento (SPEC_MOVIMENTO 2; DESIGN.md, seção Motion). Espelho de web/src/movimento/catalogo.ts: cada
+     variável tem o valor do registro do catálogo, conferido por web/src/movimento/tokens.test.ts. */
+  /* Durações */
+  --mov-toque: 120ms;
+  --mov-escala-toque: 0.96;
+  --mov-feedback: 150ms;
+  --mov-pequeno: 220ms;
+  --mov-pequeno-saida: 160ms;
+  --mov-medio: 280ms;
+  --mov-rota: 180ms;
+  --mov-revela: 700ms;
+  --mov-cena: 800ms;
+  --mov-cortina: 500ms;
+  --mov-cortina-escalona: 90ms;
+  --mov-cortina-atraso: 120ms;
+  --mov-laco: 60000ms;
+  --mov-esqueleto: 1500ms;
+  /* Distâncias, escalonamento e a espera legível das entradas */
+  --mov-dist-popover: 8px;
+  --mov-dist-revela: 24px;
+  --mov-escalona: 80ms;
+  --mov-escalona-max: 3;
+  --mov-opacidade-revela: 0.5;
+  /* Curvas */
+  --curva-padrao: cubic-bezier(0.4, 0, 0.2, 1);
+  --curva-saida: cubic-bezier(0, 0, 0.2, 1);
+  --curva-revela: cubic-bezier(0.165, 0.84, 0.44, 1);
+  --curva-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }

@@ -171,7 +171,9 @@ describe('peças com movimento reduzido', () => {
 class ObservadorFalso {
   static todos: ObservadorFalso[] = []
   desconectado = false
-  constructor(private readonly aviso: IntersectionObserverCallback) {
+  private readonly aviso: IntersectionObserverCallback
+  constructor(aviso: IntersectionObserverCallback) {
+    this.aviso = aviso
     ObservadorFalso.todos.push(this)
   }
   observe() {}
