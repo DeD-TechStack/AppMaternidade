@@ -85,7 +85,7 @@ export const INICIO = {
       {
         pergunta: 'Quanto custa?',
         resposta:
-          'Hoje o site é uma demonstração gratuita. O preço, se houver, ainda não foi definido, e nunca haverá anúncio feito com os dados da sua rotina.',
+          'O preço, se houver, ainda não foi definido, e nunca haverá anúncio feito com os dados da sua rotina.',
       },
       {
         pergunta: 'Quem vê os registros do bebê?',

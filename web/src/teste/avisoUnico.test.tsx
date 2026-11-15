@@ -6,9 +6,10 @@ import { criarRotas } from '../rotas.tsx'
 import { criarClienteFalso } from './renderizarComDados.tsx'
 import { aguardarCarga } from './renderizarRota.tsx'
 
-// NEW-B:RF-01. Nas páginas públicas, um aviso honesto só: o da demonstração (`[data-aviso]`). Nenhum
-// parágrafo ou item de lista diz, só para dizer, que o site é protótipo, demonstração, versão de avaliação
-// ou fictício. Fica de fora da conta: o próprio aviso, os textos fixos do contrato (TF) e o que é figura.
+// NEW-B:RF-01. Nas páginas públicas, um aviso honesto só: o da demonstração, no rodapé. Nenhum parágrafo ou item
+// de lista diz, só para dizer, que o site é protótipo, demonstração, versão de avaliação ou fictício. Fica de fora
+// da conta só: o aviso do rodapé (`footer[data-rodape] [data-aviso]`), os textos fixos do contrato (TF) e o que é
+// figura. Nada mais é isento: um `data-aviso` no corpo conta, e o texto próprio de um `li` com filhos conta.
 
 const falso = vi.hoisted(() => ({ cliente: null as unknown }))
 vi.mock('@supabase/supabase-js', () => ({ createClient: vi.fn(() => falso.cliente) }))
@@ -23,10 +24,8 @@ const PERMITIDOS = [
   'Nesta fase de avaliação, a demonstração roda num projeto Supabase nos Estados Unidos (região us-east-1), só com dados fictícios.',
 ]
 
-/** textos.ts:88, belongs to another card; remove when that card changes it. */
-const FORA_DO_ESCOPO = [
-  'Hoje o site é uma demonstração gratuita. O preço, se houver, ainda não foi definido, e nunca haverá anúncio feito com os dados da sua rotina.',
-]
+/** O aviso honesto único: o da demonstração, dentro do rodapé. */
+const AVISO_DO_RODAPE = 'footer[data-rodape] [data-aviso]'
 
 const ROTAS = [
   '/',
@@ -73,42 +72,72 @@ function comBanco(ligado: boolean) {
   }
 }
 
-/** Os blocos de texto (`p`, `li`) que casam com N, fora de figura, do aviso e dos textos fixos. */
+const normalizar = (t: string | null) => (t ?? '').replace(/\s+/g, ' ').trim()
+
+/** O texto próprio do bloco: o que sobra depois de tirar os `p` e `li` aninhados. */
+function textoProprio(bloco: Element): string {
+  const copia = bloco.cloneNode(true) as Element
+  for (const filho of copia.querySelectorAll('p, li')) filho.remove()
+  return normalizar(copia.textContent)
+}
+
+/** Os blocos de texto (`p`, `li`) que casam com N, fora de figura, do aviso do rodapé e dos textos fixos. */
 function avisosNoCorpo(container: HTMLElement): string[] {
   const achados: string[] = []
   for (const bloco of container.querySelectorAll('p, li')) {
-    if (bloco.querySelector('p, li')) continue
-    if (bloco.closest('figure') || bloco.closest('[data-aviso]') || bloco.hasAttribute('data-aviso')) continue
-    const texto = (bloco.textContent ?? '').replace(/\s+/g, ' ').trim()
-    if (PERMITIDOS.includes(texto) || FORA_DO_ESCOPO.includes(texto)) continue
+    if (bloco.closest('figure') || bloco.closest(AVISO_DO_RODAPE)) continue
+    const texto = textoProprio(bloco)
+    if (PERMITIDOS.includes(texto)) continue
     if (N.test(texto)) achados.push(texto)
   }
   return achados
 }
 
+/**
+ * O aviso do banco de /criar-conta e /entrar vive num `span` fora de `p`/`li`: este ajudante também olha os
+ * `span` com `data-aviso` fora do rodapé, para que o aviso extra não fuja da conta.
+ */
+function avisosExtras(container: HTMLElement): string[] {
+  return [...container.querySelectorAll('[data-aviso]')]
+    .filter((no) => !no.closest(AVISO_DO_RODAPE) && !no.closest('figure'))
+    .map((no) => normalizar(no.textContent))
+    .filter((texto) => N.test(texto) && !PERMITIDOS.includes(texto))
+}
+
+function renderizar(caminho: string, ligado: boolean) {
+  comBanco(ligado)
+  vi.stubGlobal('scrollTo', vi.fn())
+  const roteador = createMemoryRouter(criarRotas(), { initialEntries: [caminho] })
+  return render(<RouterProvider router={roteador} />)
+}
+
+const MODOS = [
+  ['sem banco', false],
+  ['com banco', true],
+] as const
+
 describe('um aviso só por página pública (NEW-B:RF-01)', () => {
-  for (const [modo, ligado] of [
-    ['sem banco', false],
-    ['com banco', true],
-  ] as const) {
+  for (const [modo, ligado] of MODOS) {
     for (const caminho of ROTAS) {
       it(`${caminho} ${modo}: nenhum parágrafo ou item diz que é protótipo, demonstração ou avaliação`, async () => {
-        comBanco(ligado)
-        vi.stubGlobal('scrollTo', vi.fn())
-        const roteador = createMemoryRouter(criarRotas(), { initialEntries: [caminho] })
-        const { container } = render(<RouterProvider router={roteador} />)
+        const { container } = renderizar(caminho, ligado)
         await aguardarCarga()
         expect(container.querySelector('main'), caminho).not.toBeNull()
         expect(avisosNoCorpo(container), caminho).toEqual([])
+        expect(avisosExtras(container), caminho).toEqual([])
       })
     }
   }
+})
 
-  it('o filtro enxerga o que procura (controle negativo): um parágrafo de protótipo é achado, o do aviso não', () => {
+describe('o filtro enxerga o que procura (controles negativos do RF-01)', () => {
+  it('um parágrafo de protótipo é achado; o aviso do rodapé, o texto fixo e a figura não', () => {
     const { container } = render(
       <div>
         <p>O protótipo já mostra o nome.</p>
-        <p data-aviso="demonstracao">Demonstração sem banco: nada do que você registra aqui é salvo.</p>
+        <footer data-rodape="">
+          <p data-aviso="demonstracao">Demonstração sem banco: nada do que você registra aqui é salvo.</p>
+        </footer>
         <p>{PERMITIDOS[0]}</p>
         <figure>
           <p>Tela de exemplo</p>
@@ -116,5 +145,58 @@ describe('um aviso só por página pública (NEW-B:RF-01)', () => {
       </div>,
     )
     expect(avisosNoCorpo(container)).toEqual(['O protótipo já mostra o nome.'])
+    expect(avisosExtras(container)).toEqual([])
+  })
+
+  it('um data-aviso fora do rodapé é achado (a isenção é só do aviso do rodapé)', () => {
+    const { container } = render(
+      <div>
+        <p data-aviso="demonstracao">Este site é uma demonstração.</p>
+        <span data-aviso="banco">Este site é uma demonstração com banco de teste.</span>
+      </div>,
+    )
+    expect(avisosNoCorpo(container)).toEqual(['Este site é uma demonstração.'])
+    expect(avisosExtras(container)).toEqual(['Este site é uma demonstração.', 'Este site é uma demonstração com banco de teste.'])
+  })
+
+  it('o texto próprio de um item de lista com filhos é achado, e o filho também', () => {
+    const { container } = render(
+      <ul>
+        <li>
+          Versão de avaliação em desenvolvimento.
+          <ul>
+            <li>Outro item de protótipo.</li>
+          </ul>
+        </li>
+      </ul>,
+    )
+    expect(avisosNoCorpo(container)).toEqual(['Versão de avaliação em desenvolvimento.', 'Outro item de protótipo.'])
+  })
+
+  it('um item de lista com filhos limpos e texto próprio limpo não é achado', () => {
+    const { container } = render(
+      <ul>
+        <li>
+          Passos do cuidado.
+          <ul>
+            <li>Registrar a mamada.</li>
+          </ul>
+        </li>
+      </ul>,
+    )
+    expect(avisosNoCorpo(container)).toEqual([])
+  })
+
+  it('só o texto fixo exato é permitido: o mesmo texto com um acréscimo é achado', () => {
+    const { container } = render(<p>{PERMITIDOS[0]} O protótipo avisa.</p>)
+    expect(avisosNoCorpo(container)).toHaveLength(1)
+  })
+
+  it('a FAQ de preço com a oração de status é achada; só com o fato, não', () => {
+    const suja = render(<p>Hoje o site é uma demonstração gratuita. O preço, se houver, ainda não foi definido.</p>)
+    expect(avisosNoCorpo(suja.container)).toHaveLength(1)
+    suja.unmount()
+    const limpa = render(<p>O preço, se houver, ainda não foi definido, e nunca haverá anúncio feito com os dados da sua rotina.</p>)
+    expect(avisosNoCorpo(limpa.container)).toEqual([])
   })
 })
