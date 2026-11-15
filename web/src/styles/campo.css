@@ -828,6 +828,24 @@
     min-height: 56px;
   }
 
+  /* NEW-C: o "Ir para o Hoje" da barra da MolduraLogada não tem recuo, para o texto começar na borda do h1. A
+     área de toque volta pelo pseudo-elemento (12 px de cada lado, sem vizinho para sobrepor) e o anel de foco
+     fica a 4 px do texto, sem encostar nele. */
+  .cm-barra-link {
+    position: relative;
+  }
+
+  .cm-barra-link::before {
+    content: '';
+    position: absolute;
+    inset: 0 -12px;
+  }
+
+  .cm-barra-link:focus-visible {
+    outline: 2px solid var(--cor-foco);
+    outline-offset: 4px;
+  }
+
   /* Os dois botões quadrados do cabeçalho (menu e lua) ficam 56 x 56. */
   :root[data-tema='madrugada'] .sb-cab-menu,
   :root[data-tema='madrugada'] .cm-cab-madrugada {
