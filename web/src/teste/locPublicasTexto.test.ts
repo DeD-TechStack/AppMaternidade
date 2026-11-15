@@ -120,3 +120,18 @@ describe('LOC-01: Sobre', () => {
     expect(frases[1]).toContain('tummy time (o tempo de bruços')
   })
 })
+
+describe('LOC-01: decisões do líder', () => {
+  it('Regras: não promete contestação, que o site ainda não tem', () => {
+    const regras = texto('regras')
+    expect(regras).not.toContain('contestar')
+    expect(regras).not.toContain('contestação')
+    expect(regras).toContain('Quem modera não lê dados de família.')
+  })
+
+  it('Privacidade, Seus direitos: o arquivo leva só a última versão e não leva as notas de passagem de turno', () => {
+    expect(texto('privacidade')).toContain(
+      'Quando o seu vínculo com uma família acaba, o arquivo leva só a última versão dos registros que você mesmo escreveu, sem as mudanças feitas depois por outras pessoas, e não leva as notas de passagem de turno dessa família.',
+    )
+  })
+})

@@ -197,7 +197,7 @@ const REGRAS: PaginaDeTexto = {
     {
       secao: secao('Como a moderação trabalha'),
       blocos: [
-        'A moderação pode ocultar ou remover um tópico ou uma resposta, e o motivo da decisão aparece junto do conteúdo. O plano é que o autor também possa contestar a decisão. Quem modera não lê dados de família.',
+        'A moderação pode ocultar ou remover um tópico ou uma resposta, e o motivo da decisão aparece junto do conteúdo. Quem modera não lê dados de família.',
         'O horário de atendimento e o prazo de resposta ainda serão publicados.',
       ],
     },
@@ -299,6 +299,7 @@ const PRIVACIDADE: PaginaDeTexto = {
       secao: secao('Seus direitos'),
       blocos: [
         'O site vai permitir pedir a confirmação de que seus dados são tratados, o acesso a eles, a correção e a eliminação, além de revogar o consentimento. Levar os dados para outro serviço ainda está em avaliação, porque depende de regulamentação.',
+        'Quando o seu vínculo com uma família acaba, o arquivo leva só a última versão dos registros que você mesmo escreveu, sem as mudanças feitas depois por outras pessoas, e não leva as notas de passagem de turno dessa família.',
         [
           'Os pedidos de acesso, com o botão “Baixar meus dados”, e de exclusão são feitos na tela Conta (/app/conta), por quem entrou na conta. Para apagar a conta, veja a página ',
           ligacao('Exclusão de conta', CAMINHO_EXCLUSAO),
