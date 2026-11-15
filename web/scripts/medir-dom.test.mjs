@@ -543,7 +543,16 @@ describe('CAIXA: nada em caixa alta', () => {
       criar({ tag: 'input', texto: '', textoControle: 'Maria' }),
     ])
     assert.equal(r.ok, true, r.motivo)
-    assert.deepEqual(SIGLAS_PERMITIDAS, ['RN', 'SBP', 'LGPD', 'OMS', 'SAMU'])
+    assert.deepEqual(SIGLAS_PERMITIDAS, ['RN', 'SBP', 'LGPD', 'OMS', 'SAMU', 'JSON'])
+  })
+
+  it('passa com a sigla JSON (exportar dados em /app/conta) e continua falhando com JSONS', () => {
+    const r = caixa([criar({ texto: 'Exportar em JSON' })])
+    assert.equal(r.ok, true, r.motivo)
+    assert.deepEqual(palavrasEmCaixaAlta('JSON'), [])
+    const falha = caixa([criar({ texto: 'JSONS e ATENÇÃO' })])
+    assert.equal(falha.ok, false)
+    assert.match(falha.motivo, /JSONS/)
   })
 
   it('passa com a sigla SAMU (telefone de emergência) e continua falhando com ATENÇÃO', () => {
@@ -612,7 +621,7 @@ describe('CAIXA: nada em caixa alta', () => {
       assert.equal(caixa([criar({ texto })]).ok, false, texto)
     }
     assert.deepEqual(palavrasEmCaixaAlta('Cena de HTML pura'), ['HTML'])
-    assert.deepEqual(SIGLAS_PERMITIDAS, ['RN', 'SBP', 'LGPD', 'OMS', 'SAMU'])
+    assert.deepEqual(SIGLAS_PERMITIDAS, ['RN', 'SBP', 'LGPD', 'OMS', 'SAMU', 'JSON'])
   })
 
   it('falha fechado: nenhum nó com texto, text-transform ausente e nó sem estilo', () => {
