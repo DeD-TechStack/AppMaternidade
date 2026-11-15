@@ -19,7 +19,7 @@ function montar(rotas: RouteObject[], caminho = '/', basename?: string) {
   return render(<RouterProvider router={roteador} />)
 }
 
-function linhasDoApp(espiao: ReturnType<typeof vi.spyOn>) {
+function linhasDoApp(espiao: { mock: { calls: unknown[][] } }) {
   return espiao.mock.calls.filter(([primeiro]) => typeof primeiro === 'string' && primeiro.startsWith('[AppMaternidade]'))
 }
 
