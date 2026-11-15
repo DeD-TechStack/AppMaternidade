@@ -683,8 +683,9 @@
     container-type: inline-size;
   }
 
-  /* O recipiente da revelação corta o que sobe: 8 px de folga para não cortar o anel de foco dos links. */
-  .cm-rodape-painel > .overflow-hidden {
+  /* O recipiente do conteúdo (na página longa, o da revelação, que corta o que sobe): 8 px de folga para não cortar o
+     anel de foco dos links. */
+  .cm-rodape-painel > .cm-rodape-conteudo {
     margin: -8px;
     padding: 8px;
   }
@@ -695,17 +696,17 @@
     line-height: var(--texto-titulo-2-entrelinha);
   }
 
-  /* Até duas colunas de links abaixo de 768, e só quando cabem: cada coluna tem no mínimo 8 rem (a palavra mais
-     longa, "compartilhado", cabe nela a 100 %) e não menos que metade do painel menos o vão. Com a fonte a 200 %
-     em 390 não cabem duas e vira uma coluna, em vez de uma palavra passar por cima da coluna do lado. */
+  /* Abaixo de 768 cada grupo (Produto, Ajuda, Legal) ocupa a linha inteira e os links correm em linha, com o vão
+     junto: nenhuma coluna fica sozinha ao lado de espaço vazio e nenhum rótulo quebra. Duas colunas lado a lado não
+     cabem em 390 sem quebrar ("Cuidado compartilhado" 179 px + "Regras da comunidade" 173 px > 302 px de miolo). */
   .cm-rodape-colunas {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(max(8rem, calc(50% - var(--espaco-bloco))), 1fr));
-    gap: var(--espaco-grupo) var(--espaco-bloco);
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--espaco-pilha) var(--espaco-grupo);
   }
 
   .cm-rodape-titulo {
-    margin: 0 0 8px;
+    margin: 0;
     font-family: var(--fonte-texto);
     font-size: var(--texto-pequeno-tamanho);
     line-height: var(--texto-pequeno-entrelinha);
@@ -713,15 +714,25 @@
   }
 
   .cm-rodape-lista {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: var(--espaco-junto);
     margin: 0;
     padding: 0;
     list-style: none;
+  }
+
+  .cm-rodape-lista > li {
+    min-width: 0;
   }
 
   .cm-rodape-link {
     display: inline-flex;
     align-items: center;
     min-height: 44px;
+    /* O Tab que traz o link para a janela deixa um vão até a borda (AUD-12): a revelação da página longa ainda
+       desloca o conteúdo alguns px depois da rolagem. */
+    scroll-margin-block: var(--espaco-grupo);
     /* Uma palavra mais larga que a coluna quebra, nunca passa por cima da coluna do lado (fonte a 200 %). */
     overflow-wrap: anywhere;
     color: inherit;
@@ -735,18 +746,32 @@
     text-decoration-color: currentColor;
   }
 
-  /* O nome ocupa a largura inteira do miolo do painel, da margem esquerda à régua da direita. O texto
-     (Literata 600, tracking -0.03em) mede 7,966 vezes o corpo da letra (medido, linear no tamanho); 100cqi
-     é a largura do miolo do .cm-rodape-painel (o recipiente). Sem teto, sem transform, sem mexer no tracking. */
+  /* O nome ocupa a largura do miolo do painel, da margem esquerda à régua da direita. O texto (Literata 600,
+     tracking -0.03em) mede 7,966 vezes o corpo da letra (medido, linear no tamanho); o fator 8,05 deixa 1 % de folga
+     para o arredondamento nunca quebrar a linha; 100cqi é a largura do miolo do .cm-rodape-painel (o recipiente).
+     Sem teto, sem transform, sem mexer no tracking. Com o espaçamento de texto forçado (WCAG 1.4.12) o nome quebra
+     no <wbr> entre "App" e "Maternidade" em vez de sair cortado do painel. */
   .cm-rodape-nome {
-    --cm-fator-marca: 7.966;
+    --cm-fator-marca: 8.05;
     margin: var(--espaco-secao) 0 0;
     font-family: var(--fonte-titulo);
     font-size: calc(100cqi / var(--cm-fator-marca));
     line-height: 1.05;
     font-weight: 600;
     letter-spacing: -0.03em;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+  }
+
+  /* Página curta (main < 1,5 janela, marcado pelo Rodape.tsx): o nome no nível `exibicao`, para não pesar mais que
+     o conteúdo da página. Sem JS o atributo não existe e vale o tamanho da página longa. Abaixo de 420 o miolo do
+     painel é mais estreito que o nome em `exibicao` (40 px x 8,05 = 322 px > 302 px em 390): lá o nome já é menor
+     que `exibicao` e fica no tamanho do miolo, numa linha só. */
+  @media (min-width: 420px) {
+    .cm-rodape[data-pagina-curta] .cm-rodape-nome {
+      margin-top: var(--espaco-bloco);
+      font-size: var(--texto-exibicao-tamanho);
+      line-height: var(--texto-exibicao-entrelinha);
+    }
   }
 
   .cm-rodape-base {
@@ -763,23 +788,42 @@
     margin: 0;
   }
 
-  /* Rodapé das rotas /app/*: uma linha de links que quebra, sobre uma régua fina; sem painel de mel. */
+  /* Rodapé das rotas /app/*: no quadro do conteúdo (a borda esquerda do h1), sobre uma régua fina, o nome do site em
+     texto pequeno e uma linha de links que quebra; sem painel de mel. */
   .cm-rodape-compacto {
     margin-top: 32px;
     padding-bottom: 24px;
   }
 
-  .cm-rodape-compacto-nav {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0 24px;
-    padding-top: 8px;
+  .cm-rodape-compacto-quadro {
+    padding-top: var(--espaco-pilha);
     border-top: 1px solid var(--cor-fio-suave);
   }
 
+  .cm-rodape-compacto-marca {
+    margin: 0;
+    font-family: var(--fonte-titulo);
+    font-weight: 600;
+  }
+
+  /* Vão `pilha`: os nove links cabem numa linha nos 1200 px do quadro em 1440 (com 24 px o último caía sozinho). */
+  .cm-rodape-compacto-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--espaco-pilha);
+  }
+
+  /* De 768 para cima: três colunas na mesma linha, cada uma da largura do rótulo mais longo dela (nenhum quebra) e a
+     sobra entre as colunas; os títulos e os primeiros links ficam na mesma linha de base. */
   @media (min-width: 768px) {
     .cm-rodape-colunas {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, max-content));
+      justify-content: space-between;
+    }
+
+    .cm-rodape-lista {
+      flex-direction: column;
+      align-items: flex-start;
     }
   }
 
