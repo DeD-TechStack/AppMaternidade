@@ -441,19 +441,63 @@ Histórico, detalhe do registro, lixeira e notas. Nenhuma direção nova: as tel
 
 ## Motion
 
-Curto e sem surpresa, com a biblioteca `motion` (`motion/react`, versão fixa no `package.json`). Todos os parâmetros moram num catálogo só, `web/src/movimento/catalogo.ts`, e nenhuma peça tem número de movimento solto. Só animam `transform` e `opacity`. Com `prefers-reduced-motion: reduce`, tudo para: o CSS desliga toda animação e toda transição (`web/src/index.css:649-656`) e as peças leem `usePrefereMovimentoReduzido` e nascem no estado final.
+Curto, uma vez e sem surpresa (SPEC_MOVIMENTO do MOV-REF, decisões D1 a D8). A biblioteca `motion` (`motion/react`, versão fixa no `package.json`) faz o que precisa de JS (rolagem, cortina, entradas); a resposta a ação (hover, menu, acordeão, painéis) é CSS puro. Nenhuma biblioteca de rolagem suave: a rolagem é a nativa e `scroll-behavior` não muda.
+
+**Onde moram os números.** Em dois lugares, sincronizados por teste: o catálogo `web/src/movimento/catalogo.ts` (JS) e as variáveis `--mov-*` e `--curva-*` no `:root` de `web/src/styles/tokens.css` (CSS). `web/src/movimento/tokens.test.ts` falha se um valor divergir, se faltar uma variável ou se existir uma sem registro no catálogo. Nenhum componente tem número de movimento solto.
+
+### Tokens
+
+| Token CSS | Catálogo | Valor | Uso |
+|---|---|---|---|
+| `--mov-toque`, `--mov-escala-toque` | M20 | 120 ms, 0,96 | escala do `:active` dos botões; nunca abaixo de 0,95 |
+| `--mov-feedback` | M15 | 150 ms | cor de hover de botões e links, cor da borda do campo |
+| `--mov-pequeno`, `--mov-pequeno-saida` | M16 | 220 ms entra, 160 ms sai | **todo** painel que aparece: menu do celular, painéis e confirmações do app, popovers |
+| `--mov-medio` | M17 | 280 ms | **só** a altura do acordeão |
+| `--mov-rota` | M18 | 180 ms | o `<main>` ao trocar de rota (só opacidade, sem saída) |
+| `--mov-revela` | M4 | 700 ms | linhas de título, números, cartão flutuante |
+| `--mov-cena` | M8 | 800 ms | cena do herói |
+| `--mov-cortina`, `--mov-cortina-escalona`, `--mov-cortina-atraso` | M2 | 500 ms por coluna, 90 ms entre colunas, 120 ms de atraso da camada de mel | cortina da primeira carga |
+| `--mov-laco` | M14 | 60 000 ms | letreiro de selos |
+| `--mov-esqueleto` | M19 | 1500 ms | brilho do esqueleto de carregamento |
+| `--mov-dist-popover` | M16 | 8 px | deslocamento do painel |
+| `--mov-dist-revela` | M4 | 24 px | deslocamento das entradas por rolagem |
+| `--mov-escalona`, `--mov-escalona-max` | M4 | 80 ms, 3 itens | do terceiro item em diante, entram juntos com ele (240 ms no total) |
+| `--mov-opacidade-revela` | M4 | 0,5 | opacidade da espera de uma entrada, antes de chegar à janela |
+
+| Curva | Valor | Uso |
+|---|---|---|
+| `--curva-padrao` | `cubic-bezier(0.4, 0, 0.2, 1)` | hover, menu, painéis (M15, M16) |
+| `--curva-saida` | `cubic-bezier(0, 0, 0.2, 1)` | saída, acordeão, troca de rota (M17, M18) |
+| `--curva-revela` | `cubic-bezier(0.165, 0.84, 0.44, 1)` | entradas por rolagem (M4) |
+| `--curva-expo` | `cubic-bezier(0.16, 1, 0.3, 1)` | cortina e cena (M2, M8) |
+| `linear` | (sem variável) | só o que segue a rolagem (M3, M6, M7) e o letreiro |
+
+### Regras
+
+- **Um momento orquestrado só:** a cortina (M2) e a cena do herói (M8), na primeira carga da sessão, só no Início e em `/sistema`. Nada mais dispara sozinho.
+- **Entradas por rolagem, uma vez:** cada linha sobe 24 px e ganha opacidade em 700 ms, 80 ms depois da anterior, no máximo 3 escalonadas. O que entrou não volta à espera ao sair da janela (`useNaJanela` com `umaVez`, padrão de `EntradaSuave`, `TextoAnimado` e `LinhasEscalonadas`).
+- **A espera já é legível:** antes de chegar à janela, a peça fica com opacidade 0,5 e 24 px abaixo, nunca em 0. Um leitor que não rola, uma captura de página inteira ou a impressão sempre leem o texto; um título grande de cacau sobre o papel nessa espera fica acima de 3:1. Sem `IntersectionObserver`, a peça nasce no estado final.
+- **Resposta a ação em CSS, de 150 a 320 ms, interrompível:** só `transform`, `opacity` e, nos botões e links, `background-color`, `border-color` e `color`. A cor do hover anima em 150 ms (`--mov-feedback`). Nunca `transition: all`; nunca `width`, `height`, `top`, `left` ou `margin` (a única exceção é o `grid-template-rows` do acordeão, isolado nele).
+- **Painéis:** todo painel usa `--mov-pequeno` (220 ms entra, 160 ms sai, 8 px); `--mov-medio` (280 ms) é exclusivo da altura do acordeão.
+- **Alta frequência não anima:** linhas de lista, botões do Registrar (além da escala do toque), teclado e digitação. O anel de foco aparece sem transição. Erro de campo muda cor e texto, sem tremor.
+- **Proibido:** entrada em todo bloco, hover de elevação em todo cartão, bounce, overshoot, blur animado, parallax novo, letreiro sem pausa, `will-change` sem engasgo medido e movimento como único sinal de estado.
+
+### Movimento reduzido
+
+Tudo para, sem versão curta: a regra global de `web/src/index.css` (`@media (prefers-reduced-motion: reduce)`, linha 617) desliga toda animação e toda transição e continua a última palavra; as peças leem `usePrefereMovimentoReduzido`, mantêm a mesma árvore (conteúdo, estado e foco sobrevivem à troca da preferência) e nascem no estado final. O letreiro vira fileira parada e o esqueleto, bloco estático. Nenhuma mudança de estado depende de `transitionend`.
 
 | Onde | Movimento (catálogo) | Movimento reduzido |
 |---|---|---|
-| Primeira carga | Cortina em colunas (M2, `catalogo.ts:35-48`, `Cortina.tsx:6-12`): 6 colunas em 1440 e 4 em 390, uma camada de cacau e depois a de mel (120 ms depois), cada uma de 0 a −100% em `y`, 0,5 s, curva `[0.16, 1, 0.3, 1]`, uma coluna a cada 90 ms. Sem tela de abertura: a página já está montada por baixo. Roda uma vez por sessão do navegador (marca em `sessionStorage`). | A página aparece direto |
-| Herói | A cena sobe de 0,94 a 1 e aparece, 0,8 s, depois da cortina (M8, `catalogo.ts:103-115`, `HeroiInicio.tsx:36-38`) | Parada |
-| Números e títulos de seção | As linhas sobem 48 px e aparecem, 1,25 s, curva `[0.165, 0.84, 0.44, 1]`, uma a cada 250 ms, ao entrar na janela (M4, `catalogo.ts:64-76`) | Já no lugar |
-| Painel com mídia | A mídia vai de 0,9 a 1 nos primeiros 360 px de rolagem, com mola (rigidez 120, amortecimento 30); o cartão flutuante chega 120 ms depois, subindo 24 px (M3, `catalogo.ts:49-63`) | Parada |
-| Faixa de cacau e rodapé | O conteúdo sai de baixo, preso à rolagem: de −50% a 0 na faixa (M6) e de −30% a 0 no rodapé (M7, `catalogo.ts:77-102`) | Parada |
-| Hover | O primário inverte na hora; a camada de cacau com o resumo do cartão de mídia aparece em 100 ms, também com foco (M13, `catalogo.ts:116-129`). A escala do toque nos botões é 0,96 no `:active`, 120 ms, `ease-out`, e só ela anima (`web/src/styles/site.css:146-154`). | Igual, sem deslocamento |
-| Selos | Letreiro de 60 s por volta, em CSS (M14, `campo.css:284-295`); para no hover, no foco e pelo botão | Fileira parada |
+| Primeira carga | Cortina em colunas (M2, `Cortina.tsx`): 6 colunas em 1440 e 4 em 390, a camada de cacau e depois a de mel (120 ms depois), cada uma de 0 a −100% em `y`, 500 ms, `--curva-expo`, uma coluna a cada 90 ms. Sem tela de abertura: a página já está montada por baixo. Uma vez por sessão do navegador (marca em `sessionStorage`). | A página aparece direto |
+| Herói | A cena sobe de 0,94 a 1 e aparece, 800 ms, depois da cortina (M8, `HeroiInicio.tsx`) | Parada |
+| Números e títulos de seção | As linhas sobem 24 px e vão de 0,5 a 1 de opacidade, 700 ms, `--curva-revela`, 80 ms entre linhas (no máximo 3), ao entrar na janela, uma vez (M4; `TextoAnimado`, `EntradaSuave`, `LinhasEscalonadas`) | Já no lugar |
+| Painel com mídia | A mídia vai de 0,9 a 1 nos primeiros 360 px de rolagem, com mola (rigidez 120, amortecimento 30); o cartão flutuante chega 120 ms depois, subindo 24 px (M3) | Parada |
+| Faixa de cacau e rodapé | O conteúdo sai de baixo, preso à rolagem: de −30% a 0 na faixa (M6) e no rodapé (M7) | Parado |
+| Hover e toque | Cor de fundo, borda e texto dos botões e links em 150 ms (M15). Escala do toque 0,96 no `:active`, 120 ms, `ease-out` (M20, `web/src/styles/site.css`). A camada de cacau com o resumo do cartão de mídia aparece em 100 ms, também com foco (M13, só `/sistema`). | Instantâneo |
+| Selos | Letreiro de 60 s por volta, em CSS (M14, `campo.css`); para no hover, no foco e pelo botão | Fileira parada |
+| Menu do celular, painéis, acordeão, troca de rota, esqueleto | Painel de `opacity 0 / translateY(-8px)` a `1 / 0` (M16); altura do acordeão por `grid-template-rows` com opacidade (M17); `<main>` de 0 a 1 de opacidade ao trocar de rota (M18); brilho do esqueleto só depois de 300 ms de carga (M19) | Sem transição; `aria-expanded` e foco idênticos |
 
-Os componentes de `web/src/movimento/` (`Cortina`, `EntradaCena`, `RevelaNaRolagem`, `LinhasEscalonadas`, `RevelacaoPorBaixo`, `CamadaHover`) implementam essas receitas e são os que se reutilizam.
+Os componentes de `web/src/movimento/` (`Cortina`, `EntradaCena`, `RevelaNaRolagem`, `LinhasEscalonadas`, `RevelacaoPorBaixo`, `CamadaHover`, `naJanela`) e de `web/src/componentes/terceiros/` (`EntradaSuave`, `TextoAnimado`) implementam essas receitas e são os que se reutilizam.
 
 ## Images
 
@@ -466,7 +510,7 @@ As cenas e os desenhos são WebP em 1× e 2× (sem AVIF), em `web/public/cenas` 
 
 ## Divergências com a FINAL (para a galeria do item H)
 
-Cada linha é uma regra que perdeu para o código na base (a003fe4, sem mudança de visual no H-2). As que vêm de "regra antiga" estavam neste arquivo antes do H-2; as demais são da FINAL. Nenhuma está em vigor acima.
+Cada linha é uma regra que perdeu para o código na base (a003fe4, sem mudança de visual no H-2). As que vêm de "regra antiga" estavam neste arquivo antes do H-2; as demais são da FINAL. Nenhuma está em vigor acima, menos as duas últimas, que são o contrário: a regra da seção Motion vale e o código ainda não a aplica (o cartão que a aplica está nomeado na linha).
 
 - **Botão primário.** Regra antiga: altura 80 (64 abaixo de 768), padding 0 32, raio 8, texto 24/24. O código faz: pílula, altura mínima 56 (48 no app), padding 28 (22), 18 px (17 no app), `site.css:125-160`. A FINAL concorda com o código (56 e 48); o CSS legado `.sb-botao` de 64 px abaixo de 768 não tem uso em `.tsx` (`index.css:398-418` e `476-479`).
 - **Moldura dupla.** Regra antiga: altura 48 (64 ao lado de um primário), raio 8 por fora e 4 por dentro. A FINAL diz "nenhum contorno duplo em lugar nenhum". O código faz: a variante `moldura` do app, pílula de 1 px com miolo, nas telas Hoje e Sessão até o redesenho, `Botao.tsx:9-12` e `index.css:421-467`.
@@ -478,7 +522,9 @@ Cada linha é uma regra que perdeu para o código na base (a003fe4, sem mudança
 - **CTA circular.** Regra antiga: círculo de 480 px (322 abaixo de 768) e outro, só de contorno, de 240, no site. O código faz: nenhum CTA circular no site; o único círculo é o botão "Iniciar mamada" da madrugada, de 13 rem (15 rem em telas grandes) ou 7 rem (9 rem) quando há outra sessão em andamento, `BotaoIniciarMamada.tsx:20-27`.
 - **Mídia e galeria.** Regra antiga: peças de 1376 × 888 a 1056, par de 672 × 672, retrato de 413 × 734, moldura de raio 8 (4 abaixo de 768). A FINAL diz painel de raio 24. O código faz: painel de até 1376 px de largura com raio `painel` e a cena com `border-radius: inherit`, `campo.css:4-11` e `60-63`.
 - **Movimento: "nenhuma animação de entrada na primeira carga".** Regra antiga. A FINAL §5 diz cortina de colunas, entrada do herói e linhas que sobem. O código faz: a cortina (`Cortina.tsx:35-82`, `catalogo.ts:35-48`), a entrada da cena (`catalogo.ts:103-115`) e as linhas (`catalogo.ts:64-76`).
-- **Movimento reduzido nos números e títulos.** A FINAL diz "só opacidade, 150 ms". O código faz: a peça nasce no estado final, sem transição, `EntradaSuave.tsx:34-44`.
+- **Movimento reduzido nos números e títulos.** A FINAL diz "só opacidade, 150 ms". A SPEC_MOVIMENTO (D7) e a seção Motion acima ficam com o código: sem versão curta, a peça nasce no estado final, sem transição (`EntradaSuave.tsx`, `TextoAnimado.tsx`).
+- **Cor do hover em 150 ms (D5).** A seção Motion acima manda a cor de fundo, borda e texto dos botões e links animar em 150 ms (`--mov-feedback`). O código faz: a troca na hora (Components, `site.css`) até o cartão VIS-1b aplicar o token; menu do celular, acordeão, painéis (VIS-1b, VIS-5) e troca de rota (VIS-1c) também só têm o token por enquanto.
+- **Escalonamento dos números.** A seção Motion acima diz no máximo 3 itens escalonados. O código faz: `Numeros.tsx` e `NumerosInicio.tsx` ainda somam 80 ms por item sem teto, até o VIS-3 passar a usar `atrasoEscalonado`.
 - **Escala de tipo e corpo.** A FINAL §2 diz h1 84/88, h2 56/62, h3 36/42, h4 24/30, corpo do site 18/27 e rótulo 14/20. A SPEC H e o front matter deste arquivo trocam isso pela escala de nove níveis (corpo 18/28, nada abaixo de 15 px). O código faz: a escala antiga, `site.css:48-110` (`.cm-corpo` 18/27, `.cm-rotulo` 14/20), até o H-3 aplicar.
 - **Grade e padding de painel.** A FINAL §3 diz grade de 12 colunas, margem 64, conteúdo máximo 1312 e padding de painel 64. A SPEC H e o Layout acima trocam isso pelo quadro de 1200 px com calha de 20 a 32 px e o papel `painel`. O código faz: `.cm-area` de 1312 px com margem de 20 a 64 px e respiro de painel de 24 a 64 px, `site.css:6-34`, até o H-3 aplicar.
 - **Ilustração nunca sobre o cacau.** A FINAL §4 proíbe. O código faz: o fechamento do Início põe o desenho `tummy-time` no painel de cacau, `Fechamento.tsx:21-23`.
