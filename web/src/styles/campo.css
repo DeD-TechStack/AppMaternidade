@@ -367,6 +367,8 @@
        eles escapam da rolagem e alargam a página (390 px com a raiz a 200%). */
     position: relative;
     overflow-x: auto;
+    /* A legenda mede a área visível (100cqi), não a tabela: a 390 a tabela é mais larga que o painel e rola. */
+    container-type: inline-size;
   }
 
   .cm-tabela {
@@ -376,8 +378,10 @@
   }
 
   .cm-tabela caption {
+    max-inline-size: 100cqi;
     margin-bottom: 24px;
     text-align: left;
+    text-wrap: balance;
   }
 
   .cm-tabela th,
