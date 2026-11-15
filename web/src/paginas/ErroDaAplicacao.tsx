@@ -30,14 +30,12 @@ export function ErroDaAplicacao() {
         <QuadroLayout largura="medio">
           <Pilha vao="grupo">
             <p className="cm-marca">{NOME_SITE}</p>
-            <Pilha vao="pilha">
-              <h1 ref={titulo} tabIndex={-1} className="cm-h1">
-                {ERRO_TITULO}
-              </h1>
-              <p role="alert" className="cm-lide cm-medida">
-                {ERRO_TEXTO}
-              </p>
-            </Pilha>
+            <h1 ref={titulo} tabIndex={-1} className="cm-h1 alvo-foco">
+              {ERRO_TITULO}
+            </h1>
+            <p role="alert" className="cm-lide cm-medida">
+              {ERRO_TEXTO}
+            </p>
             <div className="flex flex-wrap items-center gap-x-esp-grupo gap-y-esp-pilha">
               <Botao onClick={() => window.location.reload()}>{ERRO_RECARREGAR}</Botao>
               <Botao to="/" variante="texto">
