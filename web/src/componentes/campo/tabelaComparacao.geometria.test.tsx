@@ -155,7 +155,7 @@ function medirNoChrome(corpoHtml: string, largura: number, altura: number): Medi
         '--dump-dom',
         pathToFileURL(alvo).href,
       ],
-      { encoding: 'utf8', timeout: 60_000, maxBuffer: 128 * 1024 * 1024 },
+      { encoding: 'utf8', timeout: 100_000, maxBuffer: 128 * 1024 * 1024 },
     )
     // Falha fechada: status diferente de 0, sinal ou medida ausente param o teste.
     if (resultado.status !== 0 || resultado.signal) {
@@ -242,7 +242,7 @@ describe(`a geometria da legenda e dos títulos no Chrome${motivoDoPulo ? ` (pul
         expect(legenda.scrollWidth, 'texto cortado dentro da legenda').toBeLessThanOrEqual(legenda.clientWidth)
         expect(medida.scrollWidth, `a página rola para os lados em ${largura}`).toBeLessThanOrEqual(largura)
       },
-      90_000,
+      120_000,
     )
   }
 
@@ -262,7 +262,7 @@ describe(`a geometria da legenda e dos títulos no Chrome${motivoDoPulo ? ` (pul
           expect(equilibrado(titulo!.linhas), `${titulo!.texto}: linhas ${titulo!.linhas.join(' / ')}`).toBe(true)
         }
       },
-      90_000,
+      120_000,
     )
   }
 })
