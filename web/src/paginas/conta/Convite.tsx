@@ -209,7 +209,8 @@ export function Convite() {
   return (
     <MolduraPublica
       titulo={TITULOS.convite}
-      manchete={MANCHETES.convite}
+      // A segunda linha da manchete termina em ponto final, como as das outras telas de acesso.
+      manchete={[MANCHETES.convite[0], `${MANCHETES.convite[1]}.`]}
       frase={CONVITE.frase}
       ocupado={ocupado}
     >
