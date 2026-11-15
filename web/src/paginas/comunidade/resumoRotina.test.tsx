@@ -137,6 +137,28 @@ describe('compositor: o botão (RF-01)', () => {
   })
 })
 
+describe('compositor: hierarquia dos botões (F10)', () => {
+  it('compositor: hierarquia, cada formulário tem um só botão primário, "Ver prévia", e "Incluir resumo da rotina" é texto, sem caixa nem contorno', async () => {
+    for (const abrirPagina of [novoTopico, paginaDoTopico]) {
+      const { tela } = await abrirPagina()
+      const formulario = verPrevia().closest('form') as HTMLFormElement
+      expect(formulario.contains(botaoDoResumo())).toBe(true)
+
+      const primarios = [...formulario.querySelectorAll('button')].filter((botao) => botao.classList.contains('cm-botao-primario'))
+      expect(primarios).toEqual([verPrevia()])
+
+      const resumo = botaoDoResumo().classList
+      expect(resumo.contains('cm-botao-texto')).toBe(true)
+      expect(resumo.contains('cm-botao-primario')).toBe(false)
+      expect(resumo.contains('cm-botao-contorno')).toBe(false)
+
+      // Controle negativo: o botão principal do formulário não é a variante de texto.
+      expect(verPrevia().classList.contains('cm-botao-texto')).toBe(false)
+      tela.unmount()
+    }
+  })
+})
+
 describe('compositor: inserir no fim do corpo (RF-11)', () => {
   it('compositor: corpo vazio, cheio, só espaços e os 7 exemplos de fim de corpo do RF-11; foco, cursor no fim e status da página', async () => {
     await novoTopico()

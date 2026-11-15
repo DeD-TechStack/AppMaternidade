@@ -14,8 +14,8 @@ import { Meta, Texto } from './Itens.tsx'
 import type { RespostaComAutor } from './respostas.ts'
 
 export const ID_DO_CAMPO_DE_RESPOSTA = 'campo-resposta'
-// O `.cm-botao` é `nowrap`: a 390 px com 200 % de fonte o rótulo passava da tela. Estas classes o deixam quebrar.
-const QUEBRA_DO_BOTAO = 'h-auto max-w-full py-3 text-center whitespace-normal wrap-anywhere'
+// O `.cm-botao` é `nowrap`: a 390 px com 200 % de fonte o rótulo passava da tela. Estas classes o deixam quebrar; em texto (F10), para "Ver prévia" ser o único primário.
+const BOTAO_DO_RESUMO = 'cm-botao cm-botao-texto alvo-toque h-auto max-w-full text-start whitespace-normal wrap-anywhere'
 
 export type ModoDaResposta =
   | { tipo: 'nova'; citando: RespostaComAutor | null }
@@ -228,8 +228,7 @@ export function FormularioDeResposta({ topicoId, modo, apelidoProprio, aoTirarCi
               <button
                 ref={botaoDoResumo}
                 type="button"
-                className={`${BOTAO_SECUNDARIO} ${QUEBRA_DO_BOTAO}`}
-                data-tamanho="app"
+                className={BOTAO_DO_RESUMO}
                 aria-expanded={painelAberto}
                 aria-controls={painelAberto ? idDoPainel : undefined}
                 onClick={abrirOuFocarPainel}
