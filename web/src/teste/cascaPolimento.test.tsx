@@ -177,3 +177,20 @@ describe('C-4 alvos de 56 px na madrugada, só no contexto da Rotina', () => {
 afterEach(() => {
   Reflect.deleteProperty(HTMLElement.prototype, 'scrollIntoView')
 })
+
+describe('POL-S1 o item Comunidade do cabeçalho logado é a página atual em toda sub-rota da Comunidade', () => {
+  const linkComunidade = (container: HTMLElement) => {
+    const nav = container.querySelector<HTMLElement>('header[data-cabecalho] nav.cm-cab-links')!
+    return [...nav.querySelectorAll<HTMLAnchorElement>('a')].find((a) => a.textContent === 'Comunidade')!
+  }
+
+  it.each(['/app/comunidade', '/app/comunidade/sono', '/app/comunidade/perfil'])('em %s, Comunidade leva aria-current="page"', async (caminho) => {
+    const { container } = await renderizarRotaPronta(caminho)
+    expect(linkComunidade(container).getAttribute('aria-current')).toBe('page')
+  })
+
+  it('controle negativo: no Hoje, Comunidade não leva aria-current', async () => {
+    const { container } = await renderizarRotaPronta('/app/hoje')
+    expect(linkComunidade(container).hasAttribute('aria-current')).toBe(false)
+  })
+})
