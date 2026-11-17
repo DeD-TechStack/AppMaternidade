@@ -43,7 +43,9 @@ export function EntradaSuave({
   umaVez = CATALOGO.M4.umaVez,
 }: Props) {
   // Movimento reduzido e impressão têm o mesmo efeito: o bloco fica no estado final, sem animar (R2-F1).
-  const reduzido = usePrefereMovimentoReduzido() || useImprimindo()
+  const pediuMenos = usePrefereMovimentoReduzido()
+  const imprimindo = useImprimindo()
+  const reduzido = pediuMenos || imprimindo
   const ref = useRef<HTMLDivElement>(null)
   // Sempre observa, também no reduzido: ao voltar ao normal a peça sabe se já está na tela e não
   // reinicia a entrada de algo visível.

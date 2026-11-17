@@ -96,7 +96,9 @@ export function TextoAnimado({
   umaVez = CATALOGO.M4.umaVez,
 }: Props) {
   // Movimento reduzido e impressão têm o mesmo efeito: as linhas ficam no estado final, sem animar (R2-F1).
-  const reduzido = usePrefereMovimentoReduzido() || useImprimindo()
+  const pediuMenos = usePrefereMovimentoReduzido()
+  const imprimindo = useImprimindo()
+  const reduzido = pediuMenos || imprimindo
   const ref = useRef<HTMLDivElement>(null)
   // Sempre observa, também no reduzido, para a volta ao normal saber se o texto já está na tela.
   const dentro = useNaJanela(ref, { umaVez })
