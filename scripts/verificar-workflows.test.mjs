@@ -5,7 +5,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -31,7 +31,7 @@ test('acusa um uses fixado por tag', () => {
   const texto = workflow(['  a:', '    runs-on: ubuntu-latest', '    steps:', '      - uses: actions/setup-node@v5'])
   const problemas = verificarTexto(texto, 'x.yml')
   assert.equal(problemas.length, 1)
-  assert.match(problemas[0], /^x\.yml:9: uses sem pin por SHA de 40 hex: actions\/setup-node@v5$/)
+  assert.match(problemas[0], /^x\.yml: job a, passo 1: uses sem pin por SHA de 40 hex: actions\/setup-node@v5$/)
 })
 
 test('acusa um SHA curto e aceita o SHA de 40 hex com comentário da tag', () => {
@@ -103,6 +103,11 @@ test('aceita sem environment só GITHUB_TOKEN e as duas chaves públicas do site
     '  construir:',
     '    runs-on: ubuntu-latest',
     '    steps:',
+    '      - name: Exigir os segredos',
+    '        env:',
+    '          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}',
+    '          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}',
+    '        run: test -n "$VITE_SUPABASE_URL" && test -n "$VITE_SUPABASE_ANON_KEY" || exit 1',
     '      - run: echo ok',
     '        env:',
     '          A: ${{ secrets.GITHUB_TOKEN }}',
@@ -158,8 +163,8 @@ test('a linha de comando falha fechado: pasta vazia, pasta inexistente e workflo
   writeFileSync(join(pasta, 'ruim.yml'), workflow(['  a:', '    runs-on: ubuntu-latest', '    steps:', '      - uses: actions/checkout@v5']))
   const ruim = rodar(pasta)
   assert.equal(ruim.status, 1)
-  assert.match(ruim.stderr, /ruim\.yml:9: uses sem pin/)
-  assert.match(ruim.stderr, /ruim\.yml:9: checkout no job a sem persist-credentials/)
+  assert.match(ruim.stderr, /ruim\.yml: job a, passo 1: uses sem pin/)
+  assert.match(ruim.stderr, /ruim\.yml: job a, passo 1: checkout no job a sem persist-credentials/)
 
   writeFileSync(join(pasta, 'ruim.yml'), workflow(['  a:', '    runs-on: ubuntu-latest', '    steps:', ...CHECKOUT_OK]))
   const bom = rodar(pasta)
@@ -298,12 +303,18 @@ test('R1: persist-credentials entre aspas com valor true é acusado', () => {
   assert.ok(verificarTexto(ruim).some((p) => /sem persist-credentials: false/.test(p)))
 })
 
-test('R1: passo em forma de fluxo ({ uses: ... }) falha fechado', () => {
-  for (const passo of [`      - { uses: actions/checkout@v5 }`, `      - { "uses": "actions/checkout@${SHA}" }`]) {
+test('R1: passo em forma de fluxo ({ uses: ... }) é lido e julgado pelo conteúdo', () => {
+  const ruins = [
+    ['uses por tag', `      - { uses: actions/checkout@v5 }`, /uses sem pin por SHA/],
+    ['checkout sem persist-credentials', `      - { "uses": "actions/checkout@${SHA}" }`, /sem persist-credentials: false/],
+  ]
+  for (const [, passo, esperado] of ruins) {
     const texto = workflow(['  a:', '    runs-on: ubuntu-latest', '    steps:', passo])
     const problemas = verificarTexto(texto, 'f.yml')
-    assert.ok(problemas.some((p) => /forma de fluxo/.test(p)), problemas.join('\n'))
+    assert.ok(problemas.some((p) => esperado.test(p)), problemas.join('\n'))
   }
+  const seguro = workflow(['  a:', '    runs-on: ubuntu-latest', '    steps:', `      - { "uses": "actions/checkout@${SHA}", "with": { "persist-credentials": false } }`])
+  assert.deepEqual(verificarTexto(seguro, 'f.yml'), [])
 })
 
 test('R1: a CLI sai com 1 para um checkout com "uses" entre aspas e sem persist-credentials', () => {
@@ -315,4 +326,242 @@ test('R1: a CLI sai com 1 para um checkout com "uses" entre aspas e sem persist-
   } finally {
     rmSync(pasta, { recursive: true, force: true })
   }
+})
+
+// SEC-02r: o guard lê o YAML pelo pacote yaml e julga o objeto lido, não o texto.
+
+function cli(texto, nome = 'x.yml') {
+  const pasta = mkdtempSync(join(tmpdir(), 'wf-'))
+  try {
+    writeFileSync(join(pasta, nome), texto)
+    return spawnSync(process.execPath, [SCRIPT, pasta], { encoding: 'utf8' })
+  } finally {
+    rmSync(pasta, { recursive: true, force: true })
+  }
+}
+
+const PASSO = (linhas) => workflow(['  a:', '    runs-on: ubuntu-latest', '    steps:', ...linhas])
+
+test('SEC-02r: job em forma de fluxo com checkout fixado por tag é acusado', () => {
+  const texto = ['on: push', `jobs: { a: { runs-on: ubuntu-latest, steps: [ { uses: 'actions/checkout@v5' } ] } }`].join('\n')
+  const problemas = verificarTexto(texto, 'f.yml')
+  assert.ok(problemas.some((p) => /^f\.yml: job a, passo 1: uses sem pin por SHA de 40 hex: actions\/checkout@v5$/.test(p)), problemas.join('\n'))
+  assert.ok(problemas.some((p) => /checkout no job a sem persist-credentials: false/.test(p)), problemas.join('\n'))
+})
+
+test('SEC-02r: job em forma de fluxo seguro passa e com segredo sem environment é acusado', () => {
+  const seguro = ['on: push', `jobs: { a: { runs-on: ubuntu-latest, steps: [ { uses: 'actions/checkout@${SHA}', with: { persist-credentials: false } } ] } }`].join('\n')
+  assert.deepEqual(verificarTexto(seguro), [])
+  const segredo = ['on: push', 'jobs: { a: { runs-on: ubuntu-latest, steps: [ { run: "echo ${{ secrets.X }}" } ] } }'].join('\n')
+  assert.ok(verificarTexto(segredo).some((p) => /job a lê X sem environment: banco-producao \(atual: nenhum\)/.test(p)))
+})
+
+test('SEC-02r: chave com escape \\u é entendida (uses com tag acusado; persist-credentials escapado aceito)', () => {
+  const tag = PASSO(['      - "\\u0075ses": actions/checkout@v5'])
+  const p1 = verificarTexto(tag, 'e.yml')
+  assert.ok(p1.some((p) => /uses sem pin por SHA de 40 hex: actions\/checkout@v5/.test(p)), p1.join('\n'))
+
+  const sem = PASSO([`      - "\\u0075ses": actions/checkout@${SHA}`])
+  assert.ok(verificarTexto(sem).some((p) => /sem persist-credentials: false/.test(p)))
+
+  const ok = PASSO([`      - "\\u0075ses": actions/checkout@${SHA}`, '        with:', '          "persist\\u002dcredentials": false'])
+  assert.deepEqual(verificarTexto(ok), [])
+
+  const verdadeiro = PASSO([`      - "\\u0075ses": actions/checkout@${SHA}`, '        with:', '          "persist\\u002dcredentials": true'])
+  assert.ok(verificarTexto(verdadeiro).some((p) => /sem persist-credentials: false/.test(p)))
+})
+
+test('SEC-02r: arquivo que o yaml não lê falha com o nome do arquivo, e a CLI sai com 1', () => {
+  const textos = [
+    ['colchete aberto', 'on: push\njobs:\n  a:\n    runs-on: x\n    steps: [ { run: ok '],
+    ['recuo com tab', 'on: push\njobs:\n  a:\n\truns-on: x\n'],
+    ['documento vazio', ''],
+    ['dois documentos', 'on: push\n---\njobs: {}\n'],
+  ]
+  for (const [nome, texto] of textos) {
+    const problemas = verificarTexto(texto, 'quebrado.yml')
+    assert.ok(problemas.length > 0, `${nome} passou`)
+    assert.ok(problemas.every((p) => p.startsWith('quebrado.yml')), problemas.join('\n'))
+    const r = cli(texto, 'quebrado.yml')
+    assert.equal(r.status, 1, `${nome}: ${r.stdout}${r.stderr}`)
+    assert.match(r.stderr, /quebrado\.yml/)
+  }
+})
+
+test('SEC-02r: uses que não é texto falha (número, lista, mapa, vazio), no passo e no job', () => {
+  for (const valor of ['5', '[a]', '{ a: b }', '']) {
+    const passo = verificarTexto(PASSO([`      - uses: ${valor}`]), 'n.yml')
+    assert.ok(passo.some((p) => /uses sem pin por SHA de 40 hex: valor não é texto/.test(p)), `passo ${valor}: ${passo.join('\n')}`)
+    const job = verificarTexto(workflow(['  a:', `    uses: ${valor}`]), 'n.yml')
+    assert.ok(job.some((p) => /uses sem pin/.test(p)), `job ${valor}: ${job.join('\n')}`)
+  }
+})
+
+test('SEC-02r: uses de job (workflow reutilizável) precisa de SHA; ./local é aceito', () => {
+  assert.ok(verificarTexto(workflow(['  a:', '    uses: org/repo/.github/workflows/w.yml@v1'])).some((p) => /job a: uses sem pin/.test(p)))
+  assert.deepEqual(verificarTexto(workflow(['  a:', `    uses: org/repo/.github/workflows/w.yml@${SHA}`])), [])
+  assert.deepEqual(verificarTexto(workflow(['  a:', '    uses: ./.github/workflows/w.yml'])), [])
+  assert.deepEqual(verificarTexto(PASSO(['      - uses: ./.github/actions/local'])), [])
+})
+
+test('SEC-02r: checkout em forma de fluxo sem persist-credentials falha; com false passa', () => {
+  const sem = PASSO([`      - { uses: actions/checkout@${SHA} }`])
+  assert.ok(verificarTexto(sem).some((p) => /sem persist-credentials: false/.test(p)))
+  const com = PASSO([`      - { uses: actions/checkout@${SHA}, with: { persist-credentials: false } }`])
+  assert.deepEqual(verificarTexto(com), [])
+})
+
+test('SEC-02r: persist-credentials só vale boolean false ou o texto false; with que não é mapa falha', () => {
+  const checkout = (com) => PASSO([`      - uses: actions/checkout@${SHA}`, ...com])
+  assert.deepEqual(verificarTexto(checkout(['        with:', "          persist-credentials: 'false'"])), [])
+  for (const com of [
+    ['        with:', "          persist-credentials: 'true'"],
+    ['        with:', '          persist-credentials: 0'],
+    ['        with:', '          persist-credentials:'],
+    ['        with:', '          persist-credentials: [false]'],
+    ['        with: false'],
+    ['        with: [persist-credentials]'],
+    ['        with:', '          fetch-depth: 0'],
+    ['        with:', '          persist-credentials: false', '          Persist-Credentials: true'],
+  ]) {
+    const problemas = verificarTexto(checkout(com))
+    assert.ok(problemas.some((p) => /sem persist-credentials: false/.test(p)), `${com.join(' | ')}: ${problemas.join('\n')}`)
+  }
+})
+
+test('SEC-02r: chave duplicada no passo falha', () => {
+  const texto = PASSO([`      - uses: actions/checkout@${SHA}`, '        with:', '          persist-credentials: false', '        uses: actions/setup-node@v5'])
+  const problemas = verificarTexto(texto, 'd.yml')
+  assert.ok(problemas.length > 0)
+  assert.ok(problemas.every((p) => p.startsWith('d.yml')))
+  const duasWith = PASSO([`      - uses: actions/checkout@${SHA}`, '        with:', '          persist-credentials: true', '          persist-credentials: false'])
+  assert.ok(verificarTexto(duasWith).length > 0)
+  assert.equal(cli(texto, 'd.yml').status, 1)
+})
+
+test('SEC-02r: tipos errados em jobs, job, steps e passo falham', () => {
+  assert.ok(verificarTexto('on: push\njobs: [a]\n').length > 0)
+  assert.ok(verificarTexto('on: push\njobs: x\n').length > 0)
+  assert.ok(verificarTexto('on: push\njobs: {}\n').some((p) => /nenhum job encontrado/.test(p)))
+  assert.ok(verificarTexto('on: push\njobs:\n  a: 5\n').length > 0)
+  assert.ok(verificarTexto(workflow(['  a:', '    steps: 5'])).length > 0)
+  assert.ok(verificarTexto(workflow(['  a:', '    steps:'])).length > 0)
+  assert.ok(verificarTexto(PASSO(['      - actions/checkout@v5'])).length > 0)
+  assert.ok(verificarTexto('- a\n- b\n').length > 0)
+})
+
+test('SEC-02r: environment de tipo errado falha; mapa sem name não vale como banco-producao', () => {
+  const job = (env) => workflow(['  a:', '    runs-on: ubuntu-latest', ...env, '    steps:', '      - run: echo ${{ secrets.X }}'])
+  for (const env of [['    environment: [banco-producao]'], ['    environment: 5'], ['    environment:', '      url: x'], ['    environment:', '      name: [banco-producao]']]) {
+    assert.ok(verificarTexto(job(env)).some((p) => /environment/.test(p)), env.join('\n'))
+  }
+  assert.deepEqual(verificarTexto(job(['    environment:', '      name: "banco-producao"'])), [])
+  assert.equal(ambienteDoJob(job(['    environment: "banco-producao"']), 'a'), 'banco-producao')
+  assert.equal(ambienteDoJob(job([]), 'a'), null)
+  assert.equal(ambienteDoJob(job([]), 'inexistente'), null)
+})
+
+test('SEC-02r: segredos lidos em chaves, por maiúsculas, objeto inteiro e secrets em mapa do job', () => {
+  const lendo = (linha) => PASSO(['      - run: echo ok', '        env:', `          ${linha}`])
+  for (const linha of ['T: ${{ SECRETS.TOKEN }}', 'T: ${{ secrets . TOKEN }}', 'T: ${{ toJSON(secrets) }}', 'T: ${{ secrets.* }}', '"${{ secrets.TOKEN }}": x']) {
+    assert.ok(verificarTexto(lendo(linha)).some((p) => /sem environment: banco-producao/.test(p)), linha)
+  }
+  assert.deepEqual(verificarTexto(lendo('T: ${{ secrets.github_token }}')), [])
+  const mapa = workflow(['  a:', `    uses: org/repo/.github/workflows/w.yml@${SHA}`, '    secrets:', '      TOKEN: x'])
+  assert.ok(verificarTexto(mapa).some((p) => /job a lê TOKEN sem environment/.test(p)))
+  const aninhado = PASSO([`      - uses: org/repo@${SHA}`, '        with:', '          secrets: inherit'])
+  assert.ok(verificarTexto(aninhado).some((p) => /secrets: inherit/.test(p)))
+})
+
+test('SEC-02r: segredo fora de um job é acusado em qualquer chave do topo', () => {
+  const texto = ['on: push', 'concurrency:', '  group: ${{ secrets.G }}', 'jobs:', '  a:', '    runs-on: ubuntu-latest', '    steps:', '      - run: echo ok'].join('\n')
+  const problemas = verificarTexto(texto)
+  assert.equal(problemas.length, 1)
+  assert.match(problemas[0], /segredo lido fora de um job/)
+})
+
+test('SEC-02r: controles positivos: checkout seguro com chaves entre aspas e SHA passa', () => {
+  const texto = PASSO([`      - "uses": "actions/checkout@${SHA}" # v5`, '        "with":', '          "persist-credentials": "false"'])
+  assert.deepEqual(verificarTexto(texto), [])
+})
+
+test('SEC-02r: controles positivos: os três workflows reais passam, um a um', () => {
+  for (const nome of ['banco-nuvem.yml', 'ci.yml', 'pages.yml']) {
+    const texto = readFileSync(join(PASTA_WORKFLOWS, nome), 'utf8')
+    assert.deepEqual(verificarTexto(texto, nome), [], nome)
+  }
+})
+
+test('SEC-02r: sem o pacote yaml o guard não aprova nada (problema e saída 1)', (t) => {
+  const raiz = mkdtempSync(join(tmpdir(), 'wf-sem-yaml-'))
+  t.after(() => rmSync(raiz, { recursive: true, force: true }))
+  mkdirSync(join(raiz, 'scripts'))
+  mkdirSync(join(raiz, 'wf'))
+  copyFileSync(SCRIPT, join(raiz, 'scripts', 'verificar-workflows.mjs'))
+  writeFileSync(join(raiz, 'wf', 'ok.yml'), PASSO(['      - run: echo ok']))
+  const r = spawnSync(process.execPath, [join(raiz, 'scripts', 'verificar-workflows.mjs'), join(raiz, 'wf')], { encoding: 'utf8' })
+  assert.equal(r.status, 1, r.stdout + r.stderr)
+  assert.match(r.stderr, /ok\.yml: não consegui carregar o pacote yaml/)
+})
+
+// Guard contra segredo vazio (SEC-02r-I-06): o passo que lê VITE_SUPABASE_* precisa de um passo
+// anterior que falha com segredos vazios.
+
+const PAGES = readFileSync(join(PASTA_WORKFLOWS, 'pages.yml'), 'utf8').replace(/\r\n/g, '\n')
+const INI_GUARDA = '      - name: Exigir os segredos do Supabase\n'
+const INI_BUILD = '      - name: Gerar o build com o subcaminho do Pages\n'
+const INI_ENVIAR = '      - name: Enviar o site para o Pages\n'
+for (const marca of [INI_GUARDA, INI_BUILD, INI_ENVIAR]) assert.notEqual(PAGES.indexOf(marca), -1, `pages.yml sem ${marca.trim()}`)
+const BLOCO_GUARDA = PAGES.slice(PAGES.indexOf(INI_GUARDA), PAGES.indexOf(INI_BUILD))
+const BLOCO_BUILD = PAGES.slice(PAGES.indexOf(INI_BUILD), PAGES.indexOf(INI_ENVIAR))
+const PAGES_SEM_GUARDA = PAGES.replace(BLOCO_GUARDA, '')
+const PAGES_GUARDA_DEPOIS = PAGES_SEM_GUARDA.replace(BLOCO_BUILD, BLOCO_BUILD + BLOCO_GUARDA)
+
+test('segredos vazios: pages.yml sem o passo que exige os segredos é acusado e a CLI sai com 1', () => {
+  const problemas = verificarTexto(PAGES_SEM_GUARDA, 'pages.yml')
+  assert.equal(problemas.length, 1, problemas.join('\n'))
+  assert.match(problemas[0], /^pages\.yml: job construir, passo \d+: lê VITE_SUPABASE_\* sem passo anterior que falha com segredos vazios$/)
+  const r = cli(PAGES_SEM_GUARDA, 'pages.yml')
+  assert.equal(r.status, 1, r.stdout + r.stderr)
+  assert.match(r.stderr, /segredos vazios/)
+})
+
+test('segredos vazios: o pages.yml real passa', () => {
+  assert.deepEqual(verificarTexto(PAGES, 'pages.yml'), [])
+})
+
+test('segredos vazios: o passo que exige os segredos DEPOIS do build é acusado', () => {
+  const problemas = verificarTexto(PAGES_GUARDA_DEPOIS, 'pages.yml')
+  assert.equal(problemas.length, 1, problemas.join('\n'))
+  assert.match(problemas[0], /segredos vazios/)
+})
+
+test('segredos vazios: passo parecido com o guard mas sem exit, sem um dos segredos, com if ou com continue-on-error não vale', () => {
+  const variantes = [
+    ['sem exit', BLOCO_GUARDA.replace('exit $faltando', 'echo $faltando')],
+    ['sem um dos segredos no env', BLOCO_GUARDA.replace('          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}\n', '')],
+    ['com if', BLOCO_GUARDA.replace('        env:\n', "        if: always()\n        env:\n")],
+    ['com continue-on-error', BLOCO_GUARDA.replace('        env:\n', '        continue-on-error: true\n        env:\n')],
+  ]
+  for (const [nome, bloco] of variantes) {
+    assert.notEqual(bloco, BLOCO_GUARDA, `${nome}: a variante não mudou o bloco`)
+    const problemas = verificarTexto(PAGES.replace(BLOCO_GUARDA, bloco), 'pages.yml')
+    assert.ok(problemas.some((p) => /segredos vazios/.test(p)), `${nome}: ${problemas.join('\n')}`)
+  }
+})
+
+test('segredos vazios: job no banco-producao (scripts que já exigem as variáveis) fica fora da regra', () => {
+  const job = (env) => workflow(['  a:', '    runs-on: ubuntu-latest', ...env, '    steps:', '      - run: node scripts/banco-nuvem.mjs api', '        env:', '          U: ${{ secrets.VITE_SUPABASE_URL }}'])
+  assert.deepEqual(verificarTexto(job(['    environment: banco-producao'])), [])
+  assert.ok(verificarTexto(job([])).some((p) => /segredos vazios/.test(p)))
+  assert.ok(verificarTexto(job(['    environment: github-pages'])).some((p) => /segredos vazios/.test(p)))
+})
+
+test('segredos vazios: leitura em env do job, em forma de fluxo ou no with de um passo sem guard é acusada', () => {
+  const noJob = workflow(['  a:', '    runs-on: ubuntu-latest', '    env:', '      V: ${{ secrets.VITE_SUPABASE_URL }}', '    steps:', '      - run: echo ok'])
+  assert.ok(verificarTexto(noJob).some((p) => /segredos vazios/.test(p)))
+  const fluxo = PASSO(['      - { run: npm run build, env: { K: "${{ secrets.vite_supabase_anon_key }}" } }'])
+  assert.ok(verificarTexto(fluxo).some((p) => /segredos vazios/.test(p)))
+  const comWith = PASSO([`      - uses: org/repo@${SHA}`, '        with:', '          url: ${{ secrets.VITE_SUPABASE_URL }}'])
+  assert.ok(verificarTexto(comWith).some((p) => /segredos vazios/.test(p)))
 })
