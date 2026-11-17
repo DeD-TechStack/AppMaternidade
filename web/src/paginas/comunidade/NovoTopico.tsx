@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useLocation, useParams } from 'react-router'
 import { ErroDeLeitura, Esqueleto, NaoEncontrado, ParaEntrar } from '../../componentes/comunidade/Avisos.tsx'
 import { useDadosComunidade } from '../../componentes/comunidade/dados.ts'
@@ -15,6 +16,8 @@ export function NovoTopico() {
   const location = useLocation()
   const dados = useDadosComunidade()
   const situacao = useSituacao()
+  // O aviso do resumo inserido (RF12:RF-11) usa a área de status da página, a mesma da mensagem de passagem.
+  const [aviso, setAviso] = useState<string | null>(null)
   const espacos = useLeitura(() => dados.listarEspacos(), 'espacos')
   const lida = situacao.estado.fase === 'pronto' ? situacao.estado.valor : null
   const espaco = espacos.estado.fase === 'pronto' ? espacos.estado.valor.find((e) => e.slug === slug) : undefined
@@ -26,7 +29,7 @@ export function NovoTopico() {
       titulo={<TituloDaTela>{FORMULARIO_TOPICO.tituloNovo}</TituloDaTela>}
       cabeca={
         <>
-          <Status mensagem={textoDaPassagemComunidade(location.state)} />
+          <Status mensagem={aviso ?? textoDaPassagemComunidade(location.state)} />
           {espacos.esqueleto || situacao.esqueleto ? <Esqueleto linhas={2} /> : null}
           {espacos.estado.fase === 'erro' ? (
             <ErroDeLeitura erro={espacos.estado.erro} aoTentarDeNovo={() => void espacos.recarregar()} />
@@ -41,7 +44,7 @@ export function NovoTopico() {
     >
       {espaco && lida && ehEscritor(lida) && lida.perfilId ? (
         <Faixa>
-          <FormularioDeTopico key={espaco.id} espaco={espaco} perfilId={lida.perfilId} edicao={null} />
+          <FormularioDeTopico key={espaco.id} espaco={espaco} perfilId={lida.perfilId} edicao={null} aoAvisar={setAviso} />
         </Faixa>
       ) : null}
     </Quadro>

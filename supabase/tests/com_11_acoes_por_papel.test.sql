@@ -32,7 +32,7 @@ declare n int;
 begin
   perform set_config('teste.n_papel', '0', true);
   perform set_config('request.jwt.claims',
-    json_build_object('sub', pg_temp.i(p_n), 'role', 'authenticated')::text, true);
+    json_build_object('sub', pg_temp.i(p_n), 'role', 'authenticated', 'aal', 'aal2')::text, true);
   execute p_sql;
   get diagnostics n = row_count;
   return n::text;

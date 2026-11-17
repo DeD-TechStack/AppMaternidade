@@ -103,7 +103,7 @@ Só pai, mãe ou responsável legal cria o perfil do bebê e consente. Avós e b
 
 **Exportação:**
 
-- O responsável pede a exportação completa da família, em JSON e CSV (com anexos, quando existirem) [F01 arts. 18 e 19 §3º].
+- O responsável pede a exportação completa da família, em JSON (com anexos, quando existirem) [F01 arts. 18 e 19 §3º].
 - O cuidador exporta os próprios dados.
 - O pedido é registrado, e o arquivo sai por link de curta duração.
 

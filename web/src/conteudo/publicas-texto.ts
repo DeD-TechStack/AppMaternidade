@@ -47,7 +47,7 @@ const TF = {
   idadeMinima: 'Idade mínima para usar o AppMaternidade: a definir.',
   prazoExclusao: 'O prazo da exclusão ainda será definido e publicado nesta página.',
   pedidoExclusao:
-    'O pedido de exclusão ainda não pode ser feito por este site. Ele vai ficar na tela Família e conta, para quem entrou na conta.',
+    'O pedido de exclusão é feito na tela Conta (/app/conta), por quem entrou na conta. Lá, toque em “Baixar meus dados” se quiser guardar uma cópia e depois em “Excluir minha conta”.',
   dadosFicticios: 'Nesta versão de avaliação, use só dados fictícios.',
   semDiagnostico:
     'O AppMaternidade não faz diagnóstico e não substitui a orientação de um profissional de saúde.',
@@ -299,7 +299,7 @@ const PRIVACIDADE: PaginaDeTexto = {
       blocos: [
         'O site vai permitir pedir a confirmação de que seus dados são tratados, o acesso a eles, a correção e a eliminação, além de revogar o consentimento. Levar os dados para outro serviço ainda está em avaliação, porque depende de regulamentação.',
         [
-          'Esses pedidos vão ficar na tela Família e conta, para quem entrou na conta. Para apagar a conta, veja a página ',
+          'Os pedidos de acesso, com o botão “Baixar meus dados”, e de exclusão são feitos na tela Conta (/app/conta), por quem entrou na conta. Para apagar a conta, veja a página ',
           ligacao('Exclusão de conta', CAMINHO_EXCLUSAO),
           '.',
         ],
@@ -392,13 +392,13 @@ const EXCLUSAO: PaginaDeTexto = {
   secoes: [
     {
       secao: secao('Antes de excluir'),
-      blocos: ['O responsável vai poder exportar os dados da família antes de excluir a conta, na tela Família e conta.'],
+      blocos: ['Antes de excluir, quem entrou na conta pode baixar os dados na tela Conta (/app/conta), com o botão “Baixar meus dados”.'],
     },
     {
       secao: secao('Como pedir'),
       blocos: [
         TF.pedidoExclusao,
-        'Esta página abre sem login, para qualquer pessoa ler. O pedido vai exigir que a pessoa confirme que a conta é dela, e o jeito de confirmar ainda será definido.',
+        'Esta página abre sem login, para qualquer pessoa ler. Para pedir a exclusão, a pessoa precisa entrar na conta dela.',
       ],
     },
     {
