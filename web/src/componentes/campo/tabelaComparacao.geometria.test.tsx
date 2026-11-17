@@ -1,0 +1,268 @@
+import { spawnSync } from 'node:child_process'
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join, resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
+import { cleanup, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it } from 'vitest'
+import { aguardarCarga, renderizarRota } from '../../teste/renderizarRota.tsx'
+
+// BASE-DEF-1: a legenda da tabela de comparação e os títulos de duas linhas do Início, medidos num Chrome de
+// verdade (o jsdom não tem layout). Como em casca/geometria.test.tsx: a página que o site renderiza no jsdom vira
+// um html com o CSS já construído (web/dist/assets/*.css), e o Chrome sem janela mede com getBoundingClientRect
+// depois que as fontes carregam. Sem o Chrome ou sem o build, os testes de geometria pulam e dizem por quê.
+// AUD-01 (a área que rola recebe foco e tem nome) é DOM puro e roda sempre.
+
+const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe'
+const PASTA_DIST = resolve(import.meta.dirname, '..', '..', '..', 'dist')
+const PASTA_CSS = join(PASTA_DIST, 'assets')
+const TOLERANCIA = 0.5
+
+function arquivosCss(): string[] {
+  return existsSync(PASTA_CSS) ? readdirSync(PASTA_CSS).filter((nome) => nome.endsWith('.css')) : []
+}
+
+const motivoDoPulo: string | null = !existsSync(CHROME)
+  ? `Chrome não encontrado em ${CHROME}`
+  : arquivosCss().length === 0
+    ? 'sem web/dist/assets/*.css: rode `npm run build` antes'
+    : null
+
+interface Legenda {
+  texto: string
+  right: number
+  scrollWidth: number
+  clientWidth: number
+  rolagemLeft: number
+  rolagemRight: number
+}
+
+interface Titulo {
+  texto: string
+  /** A largura somada de cada linha visual, de cima para baixo. */
+  linhas: number[]
+}
+
+interface Medida {
+  erro?: string
+  innerWidth: number
+  fontes: string
+  faces: string[]
+  scrollWidth: number
+  legendas: Legenda[]
+  titulos: Titulo[]
+}
+
+// O script de dentro da página: espera as fontes e escreve a medida em JSON num <pre> escondido (--dump-dom).
+const SCRIPT_DE_MEDIDA = `
+(async () => {
+  const saida = document.getElementById('geometria')
+  const responder = (texto) => { saida.textContent = texto; if (window.parent !== window) window.parent.postMessage(texto, '*') }
+  try {
+    document.body.offsetWidth
+    await document.fonts.ready
+    await new Promise((r) => setTimeout(r, 100))
+    const legendas = [...document.querySelectorAll('table.cm-tabela caption')].map((c) => {
+      const b = c.getBoundingClientRect()
+      const rolagem = c.closest('.cm-tabela-rolagem').getBoundingClientRect()
+      return { texto: c.textContent.trim(), right: b.right, scrollWidth: c.scrollWidth, clientWidth: c.clientWidth, rolagemLeft: rolagem.left, rolagemRight: rolagem.right }
+    })
+    // As linhas animadas do título (aria-hidden): a largura de cada linha visual, agrupando os retângulos pelo topo.
+    const titulos = [...document.querySelectorAll('h1, h2')].filter((t) => t.textContent.trim().length > 0 && t.getClientRects().length > 0 && !t.classList.contains('sr-only')).map((t) => {
+      const partes = t.querySelectorAll('[aria-hidden="true"]').length > 0 ? [...t.querySelectorAll('[aria-hidden="true"]')] : [t]
+      const porTopo = new Map()
+      for (const parte of partes) {
+        const faixa = document.createRange()
+        faixa.selectNodeContents(parte)
+        for (const r of faixa.getClientRects()) {
+          if (r.width < 1) continue
+          const topo = [...porTopo.keys()].find((k) => Math.abs(k - r.top) < r.height / 2) ?? r.top
+          porTopo.set(topo, (porTopo.get(topo) ?? 0) + r.width)
+        }
+      }
+      const linhas = [...porTopo.entries()].sort((a, b) => a[0] - b[0]).map((e) => Math.round(e[1]))
+      return { texto: t.textContent.trim(), linhas }
+    })
+    responder(JSON.stringify({
+      innerWidth: window.innerWidth,
+      fontes: document.fonts.status,
+      faces: [...document.fonts].map((f) => f.family + ':' + f.status),
+      scrollWidth: document.documentElement.scrollWidth,
+      legendas,
+      titulos,
+    }))
+  } catch (e) {
+    responder(JSON.stringify({ erro: String(e), innerWidth: 0, fontes: '', faces: [], scrollWidth: 0, legendas: [], titulos: [] }))
+  }
+})()
+`
+
+// Sem animação nem transição: a medida é do estado final, e a faixa de selos (animação infinita) não prende o tempo virtual.
+const SEM_MOVIMENTO = '<style>*,*::before,*::after{animation:none!important;transition:none!important}</style>'
+
+/**
+ * O CSS do build aponta as fontes por `/assets/...` ou, com o subcaminho do Pages (vite.config.ts), por
+ * `/AppMaternidade/assets/...`: numa página file:// as duas formas passam a apontar para web/dist/assets.
+ */
+function cssComFontesDoDist(nome: string): string {
+  const base = `${pathToFileURL(PASTA_CSS).href}/`
+  return readFileSync(join(PASTA_CSS, nome), 'utf8').replace(/url\((["']?)\/(?!\/)(?:[^)"'/]+\/)*?assets\//g, (_t, aspas: string) => `url(${aspas}${base}`)
+}
+
+function medirNoChrome(corpoHtml: string, largura: number, altura: number): Medida {
+  const pasta = mkdtempSync(join(tmpdir(), 'cm-tabela-geometria-'))
+  try {
+    const perfil = join(pasta, 'perfil')
+    mkdirSync(perfil)
+    const folhas = arquivosCss().map((nome, i) => {
+      const arquivo = join(pasta, `folha-${i}.css`)
+      writeFileSync(arquivo, cssComFontesDoDist(nome), 'utf8')
+      return `<link rel="stylesheet" href="${pathToFileURL(arquivo).href}">`
+    })
+    const pagina = join(pasta, 'pagina.html')
+    writeFileSync(
+      pagina,
+      `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">${folhas.join('')}${SEM_MOVIMENTO}</head>` +
+        `<body><div id="root">${corpoHtml}</div><pre id="geometria" hidden></pre><script>${SCRIPT_DE_MEDIDA}</script></body></html>`,
+      'utf8',
+    )
+    // O Chrome sem janela não passa de ~500 px de largura: abaixo disso a página vai num iframe da largura pedida.
+    let alvo = pagina
+    if (largura < 500) {
+      alvo = join(pasta, 'envoltorio.html')
+      writeFileSync(
+        alvo,
+        `<!doctype html><html><body style="margin:0"><iframe src="${pathToFileURL(pagina).href}" style="border:0;width:${largura}px;height:${altura}px"></iframe><pre id="geometria" hidden></pre>` +
+          `<script>addEventListener('message', (e) => { document.getElementById('geometria').textContent = e.data })</script></body></html>`,
+        'utf8',
+      )
+    }
+    const resultado = spawnSync(
+      CHROME,
+      [
+        '--headless=new',
+        '--no-sandbox',
+        '--disable-gpu',
+        '--disable-crashpad-for-testing',
+        '--no-first-run',
+        '--allow-file-access-from-files',
+        '--hide-scrollbars',
+        `--user-data-dir=${perfil}`,
+        '--force-device-scale-factor=1',
+        // O Chrome sem janela soma 16 px de moldura: com +16 o innerWidth fica igual à largura pedida.
+        `--window-size=${Math.max(largura, 600) + 16},${altura}`,
+        '--virtual-time-budget=5000',
+        '--dump-dom',
+        pathToFileURL(alvo).href,
+      ],
+      { encoding: 'utf8', timeout: 100_000, maxBuffer: 128 * 1024 * 1024 },
+    )
+    // Falha fechada: status diferente de 0, sinal ou medida ausente param o teste.
+    if (resultado.status !== 0 || resultado.signal) {
+      throw new Error(`O Chrome saiu com status ${resultado.status} e sinal ${resultado.signal}: ${resultado.stderr ?? ''}`)
+    }
+    const achado = /<pre id="geometria"[^>]*>([\s\S]*?)<\/pre>/.exec(resultado.stdout ?? '')
+    if (!achado || achado[1].trim() === '') {
+      throw new Error(`O Chrome não devolveu a medida (erro ${resultado.error?.message ?? 'nenhum'}): ${resultado.stderr ?? ''}`)
+    }
+    return JSON.parse(achado[1].replaceAll('&quot;', '"').replaceAll('&amp;', '&').replaceAll('&lt;', '<').replaceAll('&gt;', '>')) as Medida
+  } finally {
+    rmSync(pasta, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 })
+  }
+}
+
+async function medirRota(caminho: string, largura: number, altura: number): Promise<Medida> {
+  Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: largura })
+  renderizarRota(caminho, { sessao: null })
+  await aguardarCarga()
+  const medida = medirNoChrome(document.querySelector('main')!.outerHTML, largura, altura)
+  expect(medida.erro).toBeUndefined()
+  expect(medida.innerWidth).toBe(largura)
+  expect(medida.fontes).toBe('loaded')
+  expect(medida.faces.some((face) => face.endsWith(':loaded')), medida.faces.join(', ')).toBe(true)
+  return medida
+}
+
+/** Duas linhas no máximo, ou cada linha com pelo menos 40 % da mais larga (o card BASE-DEF-1, I-1). */
+function equilibrado(linhas: number[]): boolean {
+  if (linhas.length <= 2) return linhas.every((l) => l > 0)
+  const maior = Math.max(...linhas)
+  return linhas.every((l) => l >= 0.4 * maior)
+}
+
+describe('a área que rola a tabela de comparação (AUD-01)', () => {
+  afterEach(cleanup)
+
+  for (const caminho of ['/sistema', '/']) {
+    it(`em ${caminho}: recebe o foco do Tab e tem o papel de região com o nome da legenda`, async () => {
+      renderizarRota(caminho, { sessao: null })
+      await aguardarCarga()
+      const tabela = screen.getByRole('table')
+      const legenda = tabela.querySelector('caption')!.textContent
+      const rolagem = tabela.closest('.cm-tabela-rolagem')!
+      expect(rolagem.getAttribute('tabindex')).toBe('0')
+      expect(rolagem.getAttribute('role')).toBe('region')
+      expect(rolagem.getAttribute('aria-label')).toBe(legenda)
+      expect(screen.getByRole('region', { name: legenda! })).toBe(rolagem)
+    })
+  }
+})
+
+describe('o controle negativo da regra de equilíbrio', () => {
+  it('reprova "De madrugada, / com uma / mão só." e aprova duas linhas', () => {
+    expect(equilibrado([263, 120, 98])).toBe(false)
+    expect(equilibrado([264, 285])).toBe(true)
+    expect(equilibrado([385, 663, 476])).toBe(true)
+    expect(equilibrado([])).toBe(true)
+  })
+})
+
+describe(`a geometria da legenda e dos títulos no Chrome${motivoDoPulo ? ` (pulado: ${motivoDoPulo})` : ''}`, () => {
+  const LARGURA_ORIGINAL = window.innerWidth
+  afterEach(() => {
+    cleanup()
+    Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: LARGURA_ORIGINAL })
+  })
+
+  for (const [largura, altura] of [
+    [390, 844],
+    [320, 256],
+  ] as const) {
+    it.skipIf(motivoDoPulo !== null)(
+      `/sistema em ${largura}: a legenda cabe inteira na área visível da tabela e a página não rola para os lados`,
+      async () => {
+        const medida = await medirRota('/sistema', largura, altura)
+        expect(medida.legendas).toHaveLength(1)
+        const [legenda] = medida.legendas
+        expect(legenda.texto).toMatch(/caderno/)
+        expect(legenda.right, `a borda direita da legenda (${legenda.right}) passa da janela de ${largura}`).toBeLessThanOrEqual(largura + TOLERANCIA)
+        expect(legenda.right, `a borda direita da legenda (${legenda.right}) passa da área visível (${legenda.rolagemRight})`).toBeLessThanOrEqual(
+          legenda.rolagemRight + TOLERANCIA,
+        )
+        expect(legenda.scrollWidth, 'texto cortado dentro da legenda').toBeLessThanOrEqual(legenda.clientWidth)
+        expect(medida.scrollWidth, `a página rola para os lados em ${largura}`).toBeLessThanOrEqual(largura)
+      },
+      120_000,
+    )
+  }
+
+  for (const [largura, altura] of [
+    [1440, 900],
+    [390, 844],
+  ] as const) {
+    it.skipIf(motivoDoPulo !== null)(
+      `Início em ${largura}: o título da faixa da madrugada e o h1 quebram em linhas equilibradas`,
+      async () => {
+        const medida = await medirRota('/', largura, altura)
+        const madrugada = medida.titulos.find((t) => t.texto.startsWith('De madrugada'))
+        const heroi = medida.titulos.find((t) => t.texto.startsWith('A rotina do bebê'))
+        for (const titulo of [madrugada, heroi]) {
+          expect(titulo, 'título não encontrado').toBeDefined()
+          expect(titulo!.linhas.length).toBeGreaterThan(0)
+          expect(equilibrado(titulo!.linhas), `${titulo!.texto}: linhas ${titulo!.linhas.join(' / ')}`).toBe(true)
+        }
+      },
+      120_000,
+    )
+  }
+})
