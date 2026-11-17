@@ -60,6 +60,21 @@ jobs:
         working-directory: web
         run: npm run check
 
+      - name: Exigir os segredos do Supabase
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          faltando=0
+          for nome in VITE_SUPABASE_URL VITE_SUPABASE_ANON_KEY; do
+            valor="${!nome-}"
+            if [ -z "${valor//[[:space:]]/}" ]; then
+              echo "::error title=Segredo ausente::O segredo $nome está vazio ou não existe. Cadastre em Settings > Secrets and variables > Actions e rode o workflow de novo."
+              faltando=1
+            fi
+          done
+          exit $faltando
+
       - name: Gerar o build com o subcaminho do Pages
         working-directory: web
         env:

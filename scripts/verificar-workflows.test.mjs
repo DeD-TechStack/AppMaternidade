@@ -187,3 +187,51 @@ test('o CI roda este teste ao lado do teste da política de commits e mantém o 
   assert.match(texto, /run: node --test scripts\/verificar-workflows\.test\.mjs/)
   assert.match(texto, /fetch-depth: 0/)
 })
+
+// Pages: falha fechado com segredo público do Supabase vazio (CODE-Q Q-3).
+
+function blocoExigirSegredos() {
+  const linhas = readFileSync(join(PASTA_WORKFLOWS, 'pages.yml'), 'utf8').split('\n').map((l) => l.replace(/\r$/, ''))
+  const i = linhas.findIndex((l) => /name: Exigir os segredos do Supabase/.test(l))
+  assert.notEqual(i, -1, 'pages.yml sem o passo "Exigir os segredos do Supabase"')
+  const j = linhas.findIndex((l, k) => k > i && /^\s+run: \|\s*$/.test(l))
+  assert.notEqual(j, -1)
+  const recuoRun = linhas[j].search(/\S/)
+  const corpo = []
+  for (let k = j + 1; k < linhas.length; k++) {
+    if (linhas[k].trim() !== '' && linhas[k].search(/\S/) <= recuoRun) break
+    corpo.push(linhas[k].slice(recuoRun + 2))
+  }
+  return { passo: linhas.slice(i, j).join('\n'), script: corpo.join('\n') }
+}
+
+function rodarBloco(script, env) {
+  return spawnSync('bash', ['-c', script], { encoding: 'utf8', env: { PATH: process.env.PATH, ...env } })
+}
+
+test('pages: o passo que exige os segredos lê os dois valores do ambiente e vem antes do build', () => {
+  const texto = readFileSync(join(PASTA_WORKFLOWS, 'pages.yml'), 'utf8')
+  const { passo } = blocoExigirSegredos()
+  assert.match(passo, /VITE_SUPABASE_URL: \$\{\{ secrets\.VITE_SUPABASE_URL \}\}/)
+  assert.match(passo, /VITE_SUPABASE_ANON_KEY: \$\{\{ secrets\.VITE_SUPABASE_ANON_KEY \}\}/)
+  assert.ok(texto.indexOf('Exigir os segredos do Supabase') < texto.indexOf('npm run build'))
+})
+
+test('pages: segredo obrigatório vazio ou só com espaços sai com 1 e nomeia o segredo', () => {
+  const { script } = blocoExigirSegredos()
+  for (const [env, nome] of [
+    [{ VITE_SUPABASE_URL: '', VITE_SUPABASE_ANON_KEY: 'chave-sintetica' }, 'VITE_SUPABASE_URL'],
+    [{ VITE_SUPABASE_URL: 'https://x.invalid', VITE_SUPABASE_ANON_KEY: '   ' }, 'VITE_SUPABASE_ANON_KEY'],
+    [{}, 'VITE_SUPABASE_URL'],
+  ]) {
+    const r = rodarBloco(script, env)
+    assert.equal(r.status, 1, r.stdout + r.stderr)
+    assert.ok((r.stdout + r.stderr).includes(nome), `mensagem sem ${nome}`)
+  }
+})
+
+test('pages: com os dois segredos preenchidos o passo passa', () => {
+  const { script } = blocoExigirSegredos()
+  const r = rodarBloco(script, { VITE_SUPABASE_URL: 'https://x.invalid', VITE_SUPABASE_ANON_KEY: 'chave-sintetica' })
+  assert.equal(r.status, 0, r.stdout + r.stderr)
+})
