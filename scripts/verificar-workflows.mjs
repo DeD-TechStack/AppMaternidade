@@ -21,6 +21,12 @@ export const SEGREDOS_PUBLICOS = new Set(['GITHUB_TOKEN', 'VITE_SUPABASE_URL', '
 
 const PIN = /@[0-9a-f]{40}$/
 
+// Chave YAML em qualquer grafia válida: nua, 'aspas simples' ou "aspas duplas", com espaços
+// opcionais antes dos dois-pontos. Devolve o texto de regex que casa a chave e os dois-pontos.
+function chave(nome) {
+  return `(?:"${nome}"|'${nome}'|${nome})\\s*:`
+}
+
 function recuo(linha) {
   return linha.length - linha.trimStart().length
 }
@@ -37,7 +43,7 @@ function semComentario(valor) {
 // Lista os jobs com o intervalo de linhas [inicio, fim) de cada um.
 export function jobsDoWorkflow(texto) {
   const linhas = texto.split(/\r?\n/)
-  const iJobs = linhas.findIndex((l) => /^jobs:\s*(#.*)?$/.test(l))
+  const iJobs = linhas.findIndex((l) => new RegExp(`^${chave('jobs')}\\s*(#.*)?$`).test(l))
   if (iJobs < 0) return { linhas, iJobs, jobs: [] }
   const jobs = []
   let recuoJob = -1
@@ -48,9 +54,9 @@ export function jobsDoWorkflow(texto) {
     if (r === 0) break
     if (recuoJob < 0) recuoJob = r
     if (r === recuoJob) {
-      const m = /^\s*([A-Za-z_][\w-]*):\s*(#.*)?$/.exec(l)
+      const m = /^\s*(?:"([^"]+)"|'([^']+)'|([A-Za-z_][\w-]*))\s*:\s*(#.*)?$/.exec(l)
       if (jobs.length) jobs[jobs.length - 1].fim = i
-      jobs.push({ nome: m ? m[1] : l.trim(), inicio: i, fim: linhas.length })
+      jobs.push({ nome: m ? (m[1] ?? m[2] ?? m[3]) : l.trim(), inicio: i, fim: linhas.length })
     }
   }
   if (jobs.length) {
@@ -80,14 +86,14 @@ function ambiente(linhas, job) {
     if (ignoravel(l)) continue
     if (recuoProp < 0) recuoProp = recuo(l)
     if (recuo(l) !== recuoProp) continue
-    const m = /^\s*environment:\s*(.*)$/.exec(l)
+    const m = new RegExp(`^\\s*${chave('environment')}\\s*(.*)$`).exec(l)
     if (!m) continue
     const inline = semComentario(m[1])
     if (inline) return inline
     for (let k = i + 1; k < job.fim; k++) {
       if (ignoravel(linhas[k])) continue
       if (recuo(linhas[k]) <= recuoProp) break
-      const n = /^\s*name:\s*(.*)$/.exec(linhas[k])
+      const n = new RegExp(`^\\s*${chave('name')}\\s*(.*)$`).exec(linhas[k])
       if (n) return semComentario(n[1])
     }
     return ''
@@ -98,7 +104,7 @@ function ambiente(linhas, job) {
 // Passos do job: cada um é o intervalo de linhas que começa num `- ` no recuo de `steps:`.
 function passos(linhas, job) {
   const lista = []
-  const iSteps = linhas.findIndex((l, i) => i > job.inicio && i < job.fim && /^\s*steps:\s*(#.*)?$/.test(l))
+  const iSteps = linhas.findIndex((l, i) => i > job.inicio && i < job.fim && new RegExp(`^\\s*${chave('steps')}\\s*(#.*)?$`).test(l))
   if (iSteps < 0) return lista
   const recuoSteps = recuo(linhas[iSteps])
   let recuoPasso = -1
@@ -116,7 +122,7 @@ function passos(linhas, job) {
 }
 
 function usesDaLinha(l) {
-  const m = /^\s*(?:-\s+)?uses:\s*(.+)$/.exec(l)
+  const m = new RegExp(`^\\s*(?:-\\s+)?${chave('uses')}\\s*(.+)$`).exec(l)
   return m ? semComentario(m[1]) : null
 }
 
@@ -127,6 +133,14 @@ export function verificarTexto(texto, arquivo = 'workflow.yml') {
   const p = (i, msg) => problemas.push(`${arquivo}:${i + 1}: ${msg}`)
 
   if (iJobs < 0 || jobs.length === 0) p(0, 'nenhum job encontrado (o arquivo não foi entendido)')
+
+  // Forma de fluxo (`- { uses: ... }`, `steps: [...]`) não é lida linha a linha: falha fechado.
+  linhas.forEach((l, i) => {
+    if (ignoravel(l)) return
+    if (/^\s*(?:-\s*)?\{/.test(l) || new RegExp(`^\\s*(?:${chave('steps')}|${chave('jobs')})\\s*[\\[{]`).test(l)) {
+      p(i, 'forma de fluxo do YAML não é suportada pelo guard; escreva em forma de bloco')
+    }
+  })
 
   linhas.forEach((l, i) => {
     if (ignoravel(l)) return
@@ -150,7 +164,7 @@ export function verificarTexto(texto, arquivo = 'workflow.yml') {
         if (!SEGREDOS_PUBLICOS.has(m[1])) lidos.push({ i, nome: m[1] })
       }
       if (/secrets\s*\[/.test(l)) lidos.push({ i, nome: 'secrets[...]' })
-      if (/^\s*secrets:\s*inherit\b/.test(l)) lidos.push({ i, nome: 'secrets: inherit' })
+      if (new RegExp(`^\\s*${chave('secrets')}\\s*inherit\\b`).test(l)) lidos.push({ i, nome: 'secrets: inherit' })
     }
     if (lidos.length) {
       const amb = ambiente(linhas, job)
@@ -167,7 +181,7 @@ export function verificarTexto(texto, arquivo = 'workflow.yml') {
         if (ignoravel(linhas[i])) continue
         const alvo = usesDaLinha(linhas[i])
         if (alvo && /^actions\/checkout@/.test(alvo)) checkout = i
-        if (/^\s*persist-credentials:\s*false\s*(#.*)?$/.test(linhas[i])) persiste = true
+        if (new RegExp(`^\\s*${chave('persist-credentials')}\\s*["']?false["']?\\s*(#.*)?$`).test(linhas[i])) persiste = true
       }
       if (checkout >= 0 && !persiste) p(checkout, `checkout no job ${job.nome} sem persist-credentials: false`)
     }

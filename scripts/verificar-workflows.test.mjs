@@ -235,3 +235,84 @@ test('pages: com os dois segredos preenchidos o passo passa', () => {
   const r = rodarBloco(script, { VITE_SUPABASE_URL: 'https://x.invalid', VITE_SUPABASE_ANON_KEY: 'chave-sintetica' })
   assert.equal(r.status, 0, r.stdout + r.stderr)
 })
+
+// R1: toda grafia YAML válida das chaves lidas pelo guard (nua, 'aspas simples', "aspas duplas",
+// espaço antes dos dois-pontos) precisa ser entendida; o que não dá para classificar falha fechado.
+
+const aspas = [
+  ['nua', (k) => k],
+  ['aspas simples', (k) => `'${k}'`],
+  ['aspas duplas', (k) => `"${k}"`],
+  ['espaço antes dos dois-pontos', (k) => `${k} `],
+]
+
+function jobCom({ usa = 'actions/checkout@v5', chave = (k) => k, persiste = true }) {
+  const linhas = ['  a:', '    runs-on: ubuntu-latest', '    steps:', `      - ${chave('uses')}: ${usa}`]
+  if (persiste) linhas.push(`        ${chave('with')}:`, `          ${chave('persist-credentials')}: false`)
+  return workflow(linhas)
+}
+
+for (const [nome, chave] of aspas) {
+  test(`R1 (${nome}): uses fixado por tag é acusado`, () => {
+    const problemas = verificarTexto(jobCom({ chave }), 'q.yml')
+    assert.ok(problemas.some((p) => /uses sem pin por SHA/.test(p)), problemas.join('\n'))
+  })
+
+  test(`R1 (${nome}): checkout sem persist-credentials é acusado`, () => {
+    const problemas = verificarTexto(jobCom({ usa: `actions/checkout@${SHA}`, chave, persiste: false }), 'q.yml')
+    assert.ok(problemas.some((p) => /sem persist-credentials: false/.test(p)), problemas.join('\n'))
+  })
+
+  test(`R1 (${nome}): checkout com SHA e persist-credentials false passa (controle positivo)`, () => {
+    assert.deepEqual(verificarTexto(jobCom({ usa: `actions/checkout@${SHA}`, chave })), [])
+  })
+
+  test(`R1 (${nome}): environment banco-producao é aceito para job com segredo`, () => {
+    const texto = workflow([
+      '  aplicar:',
+      '    runs-on: ubuntu-latest',
+      `    ${chave('environment')}: banco-producao`,
+      '    steps:',
+      '      - run: echo ok',
+      '        env:',
+      '          T: ${{ secrets.SUPABASE_ACCESS_TOKEN }}',
+    ])
+    assert.deepEqual(verificarTexto(texto), [])
+  })
+
+  test(`R1 (${nome}): segredo sem environment continua acusado`, () => {
+    const texto = workflow([
+      '  aplicar:',
+      '    runs-on: ubuntu-latest',
+      '    steps:',
+      '      - run: echo ok',
+      '        env:',
+      '          T: ${{ secrets.SUPABASE_ACCESS_TOKEN }}',
+    ])
+    assert.equal(verificarTexto(texto).length, 1)
+  })
+}
+
+test('R1: persist-credentials entre aspas com valor true é acusado', () => {
+  const ruim = jobCom({ usa: `actions/checkout@${SHA}` }).replace('persist-credentials: false', '"persist-credentials": true')
+  assert.ok(verificarTexto(ruim).some((p) => /sem persist-credentials: false/.test(p)))
+})
+
+test('R1: passo em forma de fluxo ({ uses: ... }) falha fechado', () => {
+  for (const passo of [`      - { uses: actions/checkout@v5 }`, `      - { "uses": "actions/checkout@${SHA}" }`]) {
+    const texto = workflow(['  a:', '    runs-on: ubuntu-latest', '    steps:', passo])
+    const problemas = verificarTexto(texto, 'f.yml')
+    assert.ok(problemas.some((p) => /forma de fluxo/.test(p)), problemas.join('\n'))
+  }
+})
+
+test('R1: a CLI sai com 1 para um checkout com "uses" entre aspas e sem persist-credentials', () => {
+  const pasta = mkdtempSync(join(tmpdir(), 'wf-'))
+  try {
+    writeFileSync(join(pasta, 'x.yml'), jobCom({ usa: `actions/checkout@${SHA}`, chave: (k) => `"${k}"`, persiste: false }))
+    const r = spawnSync(process.execPath, [SCRIPT, pasta], { encoding: 'utf8' })
+    assert.equal(r.status, 1, r.stdout + r.stderr)
+  } finally {
+    rmSync(pasta, { recursive: true, force: true })
+  }
+})
