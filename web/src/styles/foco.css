@@ -1,0 +1,11 @@
+@layer components {
+  /* F-03 (WCAG 2.4.7): o botão do seletor de data e hora vive no shadow DOM do navegador e o contorno dele é
+     cortado. Quando o foco está nele, o campo casa `:focus-within`: é o campo que desenha o anel, o mesmo do
+     `input[type='date']:focus-visible` de site.css. */
+  input[type='date']:focus-within,
+  input[type='time']:focus-within,
+  input[type='datetime-local']:focus-within {
+    outline: 3px solid var(--cor-foco);
+    outline-offset: 2px;
+  }
+}
