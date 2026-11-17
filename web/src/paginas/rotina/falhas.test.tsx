@@ -5,7 +5,7 @@ import { simularFalhaRotina, simularRespostaPerdidaRotina } from '../../dados/ro
 import type { Registro } from '../../dados/rotina.tipos.ts'
 import { uuidV7 } from '../../dados/rotina.uuid.ts'
 import { simularAparelho } from '../../dados/rotina.aparelho.simulado.ts'
-import { aguardarCarga, renderizarRotaPronta } from '../../teste/renderizarRota.tsx'
+import { aguardarCarga, renderizarRota, renderizarRotaPronta } from '../../teste/renderizarRota.tsx'
 import { FUSO_DO_APARELHO, ID_BEBE, ID_FAMILIA, criarMundoDeTeste, semSessaoEmAndamento } from '../../teste/rotina.fixture.ts'
 import { relogioDoTeste } from '../../teste/relogio.ts'
 import { PESSOAS } from '../../teste/renderizarComDados.tsx'
@@ -360,6 +360,54 @@ describe('R10: fuso da família inválido não quebra a tela', () => {
     fireEvent.click(botao('Salvar'))
     await aguardarCarga()
     expect(mundo.roteador.state.location.pathname).toBe('/app/hoje')
+  })
+})
+
+describe('a leitura do contexto segurada: a tela mantém o h1 enquanto carrega', () => {
+  /** Segura a leitura do contexto da rotina até `liberar()`; devolve a resposta de verdade. */
+  function segurarContexto(mundo: ReturnType<typeof criarMundoDeTeste>) {
+    const original = mundo.rotina.contexto.bind(mundo.rotina)
+    let liberar: () => void = () => {}
+    vi.spyOn(mundo.rotina, 'contexto').mockImplementation(() => new Promise((resolver) => (liberar = () => resolver(original()))))
+    return () => liberar()
+  }
+  const esvaziar = () =>
+    act(async () => {
+      for (let passo = 0; passo < 8; passo++) await Promise.resolve()
+    })
+
+  it('/app/hoje: um só h1 "Hoje" dentro do main aria-busy, e o "Carregando…" só dentro de região ocupada', async () => {
+    const mundo = criarMundoDeTeste()
+    const liberar = segurarContexto(mundo)
+    renderizarRota('/app/hoje', { mundo })
+    await esvaziar()
+
+    const ocupado = document.querySelector('main[aria-busy="true"]') as HTMLElement
+    expect(ocupado).toBeTruthy()
+    expect(within(ocupado).getAllByRole('heading', { level: 1 }).map((h) => h.textContent)).toEqual(['Hoje'])
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
+    expect(within(ocupado).getByText('Carregando…')).toBeTruthy()
+    for (const texto of screen.getAllByText('Carregando…')) expect(texto.closest('[aria-busy="true"]')).not.toBeNull()
+
+    liberar()
+    await aguardarCarga()
+    expect(screen.getAllByRole('heading', { level: 1 }).map((h) => h.textContent)).toEqual(['Hoje'])
+    expect(document.querySelector('[aria-busy="true"]')).toBeNull()
+  })
+
+  it('outra rota (/app/historico): o h1 do provedor carregando é o título da rota', async () => {
+    const mundo = criarMundoDeTeste()
+    const liberar = segurarContexto(mundo)
+    renderizarRota('/app/historico', { mundo })
+    await esvaziar()
+
+    const ocupado = document.querySelector('main[aria-busy="true"][data-tela="rotina-carregando"]') as HTMLElement
+    expect(within(ocupado).getAllByRole('heading', { level: 1 }).map((h) => h.textContent)).toEqual(['Histórico'])
+    expect(within(ocupado).getByText('Carregando…')).toBeTruthy()
+
+    liberar()
+    await aguardarCarga()
+    expect(document.querySelector('[aria-busy="true"]')).toBeNull()
   })
 })
 

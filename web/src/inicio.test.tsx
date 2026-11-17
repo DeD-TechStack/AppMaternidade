@@ -2,9 +2,11 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import stylelint from 'stylelint'
 import { describe, expect, it } from 'vitest'
-import { fireEvent, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { DESCRICAO_ILUSTRACAO } from './componentes/campo/Ilustracao.tsx'
+import { TabelaComparacao } from './componentes/campo/TabelaComparacao.tsx'
 import { PROMESSA } from './conteudo/textos.ts'
+import { SECOES } from './conteudo/sistema.ts'
 import { renderizarRota } from './teste/renderizarRota.tsx'
 
 // O Início (MAT-49c), conferido pelo papel e pelo texto que a pessoa vê.
@@ -15,6 +17,41 @@ function textoLido(elemento: Element): string {
   for (const escondido of copia.querySelectorAll('[aria-hidden="true"]')) escondido.remove()
   return (copia.textContent ?? '').replace(/\s+/g, ' ').trim()
 }
+
+// H-3g: `semPainel` da TabelaComparacao (o teste mora aqui porque o arquivo da peça, em componentes/campo, é de outro
+// cartão); o Início usa a opção para a tabela ficar dentro do Cartao de oliva sem um segundo painel.
+describe('TabelaComparacao: semPainel', () => {
+  const linhas = [{ necessidade: 'Ver o dia', app: true, caderno: false }]
+
+  it('por padrão desenha o painel de oliva em volta da tabela', () => {
+    const { container } = render(<TabelaComparacao legenda="Comparação" linhas={linhas} className="k" />)
+    const painel = container.firstElementChild!
+    expect(painel.classList.contains('cm-painel')).toBe(true)
+    expect(painel.getAttribute('data-painel')).toBe('oliva')
+    expect(painel.classList.contains('k')).toBe(true)
+    expect(painel.querySelector('table')).not.toBeNull()
+  })
+
+  it('com semPainel não há painel próprio: a rolagem da tabela é o primeiro elemento e leva o className', () => {
+    const { container } = render(<TabelaComparacao semPainel legenda="Comparação" linhas={linhas} className="k" />)
+    expect(container.querySelector('.cm-painel')).toBeNull()
+    expect(container.querySelector('[data-painel]')).toBeNull()
+    const rolagem = container.firstElementChild!
+    expect(rolagem.classList.contains('cm-tabela-rolagem')).toBe(true)
+    expect(rolagem.classList.contains('k')).toBe(true)
+    expect(rolagem.querySelector('table caption')!.textContent).toBe('Comparação')
+    expect(rolagem.querySelectorAll('th[scope="row"]')).toHaveLength(1)
+    expect([...rolagem.querySelectorAll('td .sr-only')].map((s) => s.textContent)).toEqual(['Sim', 'Não'])
+  })
+
+  it('no Início a tabela fica no Cartao de oliva, sem um segundo painel dentro dele', () => {
+    const { container } = renderizarRota('/')
+    const tabela = container.querySelector('table')!
+    const cartao = tabela.closest('[data-painel="oliva"]')!
+    expect(cartao.getAttribute('data-h')).toContain('cartao')
+    expect(cartao.querySelector('.cm-painel')).toBeNull()
+  })
+})
 
 type RegraCss = { seletores: string[]; midia: string | null; corpo: string }
 
@@ -95,7 +132,7 @@ describe('Início: abertura', () => {
     abrirInicio()
     const heroi = screen.getByRole('heading', { level: 1 }).closest('section')!
     const cena = within(heroi).getByRole('img', {
-      name: 'Três celulares sobre pedestais de oliva num fundo de mel, mostrando telas reais do AppMaternidade.',
+      name: 'Três celulares sobre pedestais verdes, num fundo amarelo, mostrando telas do AppMaternidade.',
     })
     expect(cena.getAttribute('src')).toBe('/cenas/inicio/heroi@1x.webp')
     expect(cena.getAttribute('srcset')).toBe('/cenas/inicio/heroi@1x.webp 1x, /cenas/inicio/heroi@2x.webp 2x')
@@ -221,21 +258,21 @@ describe('Início: troca de turno', () => {
 })
 
 describe('Início: faixa da madrugada', () => {
-  it('é a faixa de cacau com o título, o lide, o botão de mel e os tablets, sem traço preto', () => {
+  it('é a faixa de cacau com o título, o lide, o botão de mel e o celular, sem traço preto', () => {
     abrirInicio()
     const faixa = screen.getByRole('region', { name: 'De madrugada, com uma mão só.' })
     // H-3b: a faixa é a Secao de variante `painel`; a cor mora na caixa de cor de dentro (`data-h="caixa-cor"`).
     expect(faixa.getAttribute('data-h-variante')).toBe('painel')
     expect(faixa.querySelector("[data-h='caixa-cor']")!.getAttribute('data-painel')).toBe('cacau')
     expect(
-      within(faixa).getByText('O botão de iniciar mamada fica na metade de baixo da tela, grande, em mel sobre o escuro.'),
+      within(faixa).getByText('O botão de iniciar mamada fica na metade de baixo da tela, grande e amarelo sobre o fundo escuro.'),
     ).toBeTruthy()
     const botao = within(faixa).getByRole('link', { name: 'Ver o modo madrugada' })
     expect(botao.getAttribute('href')).toBe('/como-funciona')
     expect(botao.getAttribute('data-botao')).toBe('mel')
 
     const cena = within(faixa).getByRole('img', {
-      name: 'Dois tablets flutuando sobre o cacau, com telas reais do AppMaternidade',
+      name: 'Um celular sobre linho com a tela escura do modo madrugada e o botão amarelo de iniciar mamada.',
     })
     expect(cena.getAttribute('src')).toBe('/cenas/inicio/faixa-cacau@1x.webp')
     // Carrega na hora: a faixa nunca aparece com o painel da cena vazio.
@@ -277,7 +314,7 @@ describe('Início: tabela', () => {
       ['Sem metas nem comparações', 'Sim', 'Sim'],
     ])
 
-    const foto = within(secao).getByRole('img', { name: 'Um celular sobre linho com uma tela real do AppMaternidade' })
+    const foto = within(secao).getByRole('img', { name: 'Um celular sobre linho com uma tela real do AppMaternidade.' })
     expect(foto.getAttribute('src')).toBe('/cenas/inicio/tabela@1x.webp')
     // Carrega na hora: o painel de areia ao lado da tabela nunca fica vazio.
     expect(foto.getAttribute('loading')).toBe('eager')
@@ -297,7 +334,7 @@ describe('Início: mídia dos painéis (M3)', () => {
     expect(revelaDesenho!.closest('.in-turno-arte')).not.toBeNull()
 
     const tabela = screen.getByRole('region', { name: 'O caderno ajuda. O app divide.' })
-    const foto = within(tabela).getByRole('img', { name: 'Um celular sobre linho com uma tela real do AppMaternidade' })
+    const foto = within(tabela).getByRole('img', { name: 'Um celular sobre linho com uma tela real do AppMaternidade.' })
     const revelaFoto = foto.closest('[data-revela]')
     expect(revelaFoto).not.toBeNull()
     expect(revelaFoto!.closest('.in-tabela-foto')).not.toBeNull()
@@ -646,24 +683,15 @@ describe('Início: harmonia de espaço (H-3b)', () => {
         }),
       ),
     )
-    // Larguras máximas de texto (`max-width` sai do RF-03 final; o `none` do cartão do turno também), o número grande (`numero`, fora da escala), o
-    // cabeçalho de 14 px da tabela a 390 (cabe "AppMaternidade" na coluna justa) e o padding que deixa o recorte
-    // do desenho concêntrico ao círculo (6 px) ou do ícone do acordeão (10,5 px): listados para harmonia-excecoes.json.
-    expect([...acusados].sort()).toEqual(
-      [
-        'font-size 0.875rem',
-        'font-size clamp(40px, 2.286vw + 31.086px, 64px)',
-        'max-width 30rem',
-        'max-width 32rem',
-        'max-width 34rem',
-        'max-width 40rem',
-        'max-width 56rem',
-        'max-width 768px',
-        'max-width none',
-        'padding 10.5px',
-        'padding 6px',
-      ].sort(),
-    )
+    // H-3g r3: o inicio.css passa limpo. `max-width` saiu da regra, padding de 1 a 32 px (6 px e 10,5 px) passa, o
+    // cabeçalho da tabela a 390 usa `pequeno` e a entrelinha dos avatares vem do nível. O único valor fora dos
+    // tokens é o número grande (`numero`, fora da escala): vive em harmonia-excecoes.json, e a exceção é conferida aqui.
+    expect([...acusados]).toEqual([])
+    const excecoes = JSON.parse(readFileSync(join(process.cwd(), 'harmonia-excecoes.json'), 'utf8')) as {
+      excecoes: { arquivo: string; alvo: string }[]
+    }
+    const doInicio = excecoes.excecoes.filter((e) => e.arquivo === 'src/componentes/inicio/inicio.css').map((e) => e.alvo)
+    expect(doInicio).toEqual(['.in-numeros-valor'])
   }, 60_000)
 
   it('os papéis usados valem os números de MEDIDAS §7 (390 e 1440) no tema gerado', () => {
@@ -767,7 +795,7 @@ describe('Início: composições, cartões e aberturas nas primitivas (H-3b, R1)
     expect(cartaoTabela.classList.contains('cm-painel-oliva')).toBe(true)
     expect(cartaoTabela.matches("[data-h~='coluna']")).toBe(true)
 
-    const foto = within(tabela).getByRole('img', { name: 'Um celular sobre linho com uma tela real do AppMaternidade' })
+    const foto = within(tabela).getByRole('img', { name: 'Um celular sobre linho com uma tela real do AppMaternidade.' })
     const cartaoFoto = foto.closest<HTMLElement>(CARTAO)!
     expect(cartaoFoto).not.toBeNull()
     expect(cartaoFoto.getAttribute('data-painel')).toBe('areia')
@@ -822,5 +850,33 @@ describe('Início: composições, cartões e aberturas nas primitivas (H-3b, R1)
     expect(medioRelatos.contains(colunasDe(relatos))).toBe(false)
     // A grade fica no quadro de largura cheia, irmão da abertura.
     expect(colunasDe(relatos).closest<HTMLElement>("[data-h~='quadro']")!.getAttribute('data-h-largura')).toBe('quadro')
+  })
+})
+
+describe('Início e /sistema: texto em palavras comuns (LOC-08)', () => {
+  // Quem usa leitor de tela não conhece os nomes de cor do sistema (oliva, mel, cacau): o texto
+  // alternativo diz o que se vê, e cada um termina em ponto, como uma frase.
+  it('nenhum texto alternativo do Início usa nome de cor do sistema, e todos terminam em ponto', () => {
+    abrirInicio()
+    const alts = [...document.querySelectorAll('main img')]
+      .map((img) => img.getAttribute('alt') ?? '')
+      .filter((alt) => alt !== '')
+    // As três cenas de aparelho, pelo menos, têm descrição.
+    expect(alts.length).toBeGreaterThanOrEqual(3)
+    for (const alt of alts) {
+      expect(alt, alt).not.toMatch(/\b(oliva|mel|cacau)\b/i)
+      expect(alt.endsWith('.'), alt).toBe(true)
+    }
+  })
+
+  it('o lide da madrugada descreve o botão sem nome de cor do sistema', () => {
+    abrirInicio()
+    const faixa = screen.getByRole('region', { name: 'De madrugada, com uma mão só.' })
+    const lide = within(faixa).getByText(/^O botão de iniciar mamada/)
+    expect(lide.textContent).not.toMatch(/\b(oliva|mel|cacau)\b/i)
+  })
+
+  it('o título dos selos no /sistema diz só o que o app promete', () => {
+    expect(SECOES.selos).toEqual(['O que o app', 'promete.'])
   })
 })

@@ -21,7 +21,7 @@ export function AvisoDemonstracao({ comRecuo = false, lateral = false, rodape = 
     ? 'aviso-demonstracao'
     : lateral
       ? 'aviso-demonstracao t-ui t-secundario'
-      : `aviso-demonstracao texto-info py-1 text-sm font-normal leading-snug${comRecuo ? ' px-4' : ''}`
+      : `aviso-demonstracao texto-info py-1 text-pequeno font-normal${comRecuo ? ' px-4' : ''}`
 
   return (
     <p data-aviso="demonstracao" className={classe}>

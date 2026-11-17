@@ -17,6 +17,7 @@ import { uuidV7 } from '../../dados/rotina.uuid.ts'
 import { formatarDuracao, formatarHora } from '../../prototipo/formatar.ts'
 import { ALVO_APP } from '../app/alvo.ts'
 import { Botao } from '../base/Botao.tsx'
+import { Cartao } from '../base/layout/index.ts'
 import { AvisoDeErro } from './AvisoDeErro.tsx'
 import { CampoHorario } from './CampoHorario.tsx'
 import { useRotina, type BebeAtivo } from './contexto.ts'
@@ -496,8 +497,7 @@ export function FormularioRegistro({ modo, ativo, tipoInicial, registro }: Props
       ) : null}
 
       {passo === 'confirmando' ? (
-        <div
-          data-h="cartao"
+        <Cartao
           ref={grupoDeAvisos}
           role="group"
           aria-label={FORMULARIO.confirmarGrupo}
@@ -534,7 +534,7 @@ export function FormularioRegistro({ modo, ativo, tipoInicial, registro }: Props
               {FORMULARIO.corrigir}
             </Botao>
           </div>
-        </div>
+        </Cartao>
       ) : (
         <div className="flex flex-wrap gap-3">
           <Botao type="submit" tamanho="app" className={`min-w-[8.5rem] ${ALVO_APP}`} desativado={enviando}>
