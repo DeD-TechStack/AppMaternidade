@@ -144,6 +144,7 @@ function SemBebe({ contexto }: { contexto: Exclude<ContextoDoBebe, { fase: 'pron
 
 function ConteudoDoBebe({ contexto, aoPerderAcesso }: { contexto: Pronto; aoPerderAcesso?: (identidade: string) => void }) {
   const { pendente } = usePendencia()
+  const [tummyFalhou, setTummyFalhou] = useState(false)
   const { conteudo, todasAsFases, artigos } = useBlocosEstaticos()
   const { familia, bebe, bebes, papel, agora } = contexto
   const identidade = `${familia.id}:${bebe.id}`
@@ -166,6 +167,41 @@ function ConteudoDoBebe({ contexto, aoPerderAcesso }: { contexto: Pronto; aoPerd
 
   const aparelho = lerAparelho(agora).fuso
   const arquivado = bebe.estado === 'arquivado'
+
+  const fases = linhaFase ? (
+    // Fase de hoje (7 partes) e "Todas as fases" (5 partes), lado a lado a partir de 1024 px (o `lg` de antes).
+    <Colunas key="fases" fracoes="7fr 5fr" aPartirDe={1024} alinhar="inicio">
+      <Cartao as="section" aria-labelledby="desenv-fase" dataH="coluna" className="cm-painel-mel rounded-painel" data-painel="mel">
+        <Pilha vao="grupo" className="max-w-[34rem] items-start">
+          <h2 id="desenv-fase" className="cm-h3 text-titulo-3" data-fase="">
+            {linhaFase}
+          </h2>
+          {ideias.length > 0 ? (
+            <Botao href="#ideias" tamanho="app">
+              {T.verIdeias}
+            </Botao>
+          ) : null}
+        </Pilha>
+      </Cartao>
+      <Coluna>
+        <TodasAsFases fases={todasAsFases} atuais={atuais} />
+      </Coluna>
+    </Colunas>
+  ) : (
+    <TodasAsFases key="fases" fases={todasAsFases} atuais={atuais} />
+  )
+
+  const blocoDoTummy = (
+    <div key={identidade} data-lugar-do-tummy="" className="empty:hidden">
+      <BlocoTummy
+        bebe={bebe}
+        familia={familia}
+        papel={papel}
+        aoPerderAcesso={aoPerderAcesso ? () => aoPerderAcesso(identidade) : undefined}
+        aoMudarFalhaDeLeitura={setTummyFalhou}
+      />
+    </div>
+  )
 
   return (
     <>
@@ -192,37 +228,8 @@ function ConteudoDoBebe({ contexto, aoPerderAcesso }: { contexto: Pronto; aoPerd
 
       <Faixa data-grade-do-desenvolvimento="">
         <Pilha vao="bloco">
-          {linhaFase ? (
-            // Fase de hoje (7 partes) e "Todas as fases" (5 partes), lado a lado a partir de 1024 px (o `lg` de antes).
-            <Colunas fracoes="7fr 5fr" aPartirDe={1024} alinhar="inicio">
-              <Cartao as="section" aria-labelledby="desenv-fase" dataH="coluna" className="cm-painel-mel rounded-painel" data-painel="mel">
-                <Pilha vao="grupo" className="max-w-[34rem] items-start">
-                  <h2 id="desenv-fase" className="cm-h3 text-titulo-3" data-fase="">
-                    {linhaFase}
-                  </h2>
-                  {ideias.length > 0 ? (
-                    <Botao href="#ideias" tamanho="app">
-                      {T.verIdeias}
-                    </Botao>
-                  ) : null}
-                </Pilha>
-              </Cartao>
-              <Coluna>
-                <TodasAsFases fases={todasAsFases} atuais={atuais} />
-              </Coluna>
-            </Colunas>
-          ) : (
-            <TodasAsFases fases={todasAsFases} atuais={atuais} />
-          )}
-
-          <div key={identidade} data-lugar-do-tummy="" className="empty:hidden">
-            <BlocoTummy
-              bebe={bebe}
-              familia={familia}
-              papel={papel}
-              aoPerderAcesso={aoPerderAcesso ? () => aoPerderAcesso(identidade) : undefined}
-            />
-          </div>
+          {/* Com a leitura do tummy time falhando, o bloco sobe antes das fases (a chave mantém o estado: só move o nó). */}
+          {tummyFalhou ? [blocoDoTummy, fases] : [fases, blocoDoTummy]}
 
           <IdeiasDaFase itens={ideias} comAbertura={valemParaTodas !== undefined} nascimentoDepoisDeHoje={nascimentoDepoisDeHoje} />
           <ParaLer artigos={artigos} />

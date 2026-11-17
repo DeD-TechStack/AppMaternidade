@@ -122,7 +122,7 @@
   }
 
   /* Os pontos de quebra são os que o código já tem hoje (nenhum criado, nenhum removido): lado a lado a partir
-     de 768 (empilha até 767), 900, 992 (empilha até 991), 1024, 1100 e 1200. */
+     de 768 (empilha até 767), 900, 960, 992 (empilha até 991), 1024, 1100, 1200 e 1280. */
   @media (min-width: 768px) {
     [data-h~='colunas'][data-h-quebra='768'] {
       grid-template-columns: var(--h-colunas);
@@ -131,6 +131,12 @@
 
   @media (min-width: 900px) {
     [data-h~='colunas'][data-h-quebra='900'] {
+      grid-template-columns: var(--h-colunas);
+    }
+  }
+
+  @media (min-width: 960px) {
+    [data-h~='colunas'][data-h-quebra='960'] {
       grid-template-columns: var(--h-colunas);
     }
   }
@@ -155,6 +161,12 @@
 
   @media (min-width: 1200px) {
     [data-h~='colunas'][data-h-quebra='1200'] {
+      grid-template-columns: var(--h-colunas);
+    }
+  }
+
+  @media (min-width: 1280px) {
+    [data-h~='colunas'][data-h-quebra='1280'] {
       grid-template-columns: var(--h-colunas);
     }
   }

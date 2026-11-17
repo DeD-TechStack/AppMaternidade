@@ -17,6 +17,7 @@ import {
 import { CONTEUDO, ELENCO, criarElenco, type PessoaDoElenco } from '../../dados/comunidade.elenco.ts'
 import { criarDadosComunidadeMemoria, type EstadoComunidade } from '../../dados/comunidade.memoria.ts'
 import { criarDadosContaMemoria } from '../../dados/conta.memoria.ts'
+import { erroDaChaveModeracao } from '../../dados/moderacao.erros.ts'
 import { criarDadosModeracaoMemoria, simularFalhaModeracao, simularRespostaPerdidaModeracao } from '../../dados/moderacao.memoria.ts'
 import { criarFixtureDeTeste } from '../../teste/renderizarComDados.tsx'
 import { fixtureDeContasDoElenco, renderizarModeracao } from './apoio.tsx'
@@ -215,6 +216,101 @@ describe('a guarda de acesso falha fechada (MAT-40:RF-10, teste 15)', () => {
     simularFalhaModeracao(moderacao, 'filaDeDenuncias', 'sem_permissao')
     expect(await screen.findByText(TX.tx12)).toBeTruthy()
     expect(screen.queryByRole('navigation', { name: COMUM_MODERACAO.painel })).toBeNull()
+  })
+})
+
+describe('o estado negado tem o próprio h1, e não o título operacional da tela', () => {
+  const operacionais = [NOMES_DAS_TELAS.fila, NOMES_DAS_TELAS.auditoria, NOMES_DAS_TELAS.papeis]
+
+  /** Exatamente um h1, com o texto do estado negado e sem nenhuma das palavras dos títulos operacionais. */
+  function conferirH1Negado(rotulo: string) {
+    const h1s = document.querySelectorAll('h1')
+    expect(h1s, rotulo).toHaveLength(1)
+    expect(h1s[0].textContent, rotulo).toBe(TX.negado)
+    for (const palavra of ['Fila', 'Auditoria', 'Papéis']) expect(h1s[0].textContent, rotulo).not.toContain(palavra)
+  }
+
+  /** O que não muda no estado negado: TX-12, o link à Comunidade e o título da aba. */
+  async function conferirNegadoIntacto(rotulo: string) {
+    expect(await screen.findByText(TX.tx12), rotulo).toBeTruthy()
+    expect(screen.getByRole('link', { name: COMUM_MODERACAO.irParaComunidade }).getAttribute('href')).toBe('/app/comunidade')
+    expect(document.title, rotulo).toBe(TITULO_DA_ABA_MODERACAO)
+  }
+
+  const negados: Array<[string, PessoaDoElenco, string]> = [
+    ['pessoa sem papel na fila', 'outro', painel],
+    ['pessoa sem papel na auditoria', 'outro', '/moderacao/auditoria'],
+    ['moderador sem admin nos papéis', 'moderador', '/moderacao/papeis'],
+  ]
+
+  for (const [descricao, pessoa, caminho] of negados) {
+    it(`I-1 e I-3: ${descricao}: um só h1 "${TX.negado}", TX-12, o link à Comunidade e o título da aba`, async () => {
+      cena(pessoa, caminho)
+      await conferirNegadoIntacto(descricao)
+      await semCarregando()
+      conferirH1Negado(descricao)
+      expect(screen.queryByRole('heading', { level: 1, name: new RegExp(operacionais.join('|')) })).toBeNull()
+    })
+  }
+
+  it('I-1 e I-3: o papel perdido no meio da ação (sem_papel): o mesmo h1 negado, TX-12 e a frase do acesso encerrado', async () => {
+    const { moderacao } = cena('moderador', painel, (e) => {
+      novaDenuncia(e)
+    })
+    await aguardarH1(NOMES_DAS_TELAS.fila)
+    fireEvent.click(await screen.findByRole('link', { name: new RegExp(ROTULO_MOTIVO.outro) }))
+    await screen.findByRole('button', { name: ACAO_NO_CONTEUDO.oculto.botao })
+    simularFalhaModeracao(moderacao, 'moderarConteudo', 'sem_papel')
+    const caixa = await abrirCaixa(ACAO_NO_CONTEUDO.oculto.botao, ACAO_NO_CONTEUDO.oculto.titulo)
+    confirmarNaCaixa(caixa, 'Motivo', ACAO_NO_CONTEUDO.oculto.confirmar)
+    await conferirNegadoIntacto('sem_papel')
+    expect(screen.getByRole('alert').textContent).toBe(TEXTOS_ERRO_MODERACAO.sem_papel)
+    conferirH1Negado('sem_papel')
+  })
+
+  it('I-2: com o papel, os três títulos operacionais seguem os de antes', async () => {
+    for (const [caminho, pessoa, h1] of [
+      [painel, 'moderador', NOMES_DAS_TELAS.fila],
+      ['/moderacao/auditoria', 'moderador', NOMES_DAS_TELAS.auditoria],
+      ['/moderacao/papeis', 'admin', NOMES_DAS_TELAS.papeis],
+    ] as Array<[string, PessoaDoElenco, string]>) {
+      const { unmount } = cena(pessoa, caminho)
+      await aguardarH1(h1)
+      expect(document.querySelectorAll('h1'), caminho).toHaveLength(1)
+      expect(document.querySelector('h1')!.textContent, caminho).toBe(h1)
+      expect(screen.queryByText(TX.negado), caminho).toBeNull()
+      expect(screen.queryByText(TX.tx12), caminho).toBeNull()
+      unmount()
+    }
+  })
+
+  it('I-2: enquanto a situação da conta carrega, o h1 é o título da tela e não há TX-12', async () => {
+    const estado = criarElenco()
+    const comunidade = criarDadosComunidadeMemoria(estado, ELENCO.outro.conta)
+    const moderacao = criarDadosModeracaoMemoria(estado, ELENCO.outro.conta)
+    vi.spyOn(comunidade, 'situacaoDaConta').mockReturnValue(new Promise(() => undefined))
+    const contas = criarDadosContaMemoria(fixtureDeContasDoElenco(criarFixtureDeTeste(Date.now())))
+    contas.sessaoParaTeste(ELENCO.outro.email)
+    renderizarModeracao('/moderacao/auditoria', { contas, comunidade, moderacao })
+    const titulo = await screen.findByRole('heading', { level: 1 })
+    expect(titulo.textContent).toBe(NOMES_DAS_TELAS.auditoria)
+    expect(screen.queryByText(TX.tx12)).toBeNull()
+    expect(screen.queryByText(TX.negado)).toBeNull()
+  })
+
+  it('I-2: a leitura da situação falha (rede): o h1 é o título da tela, com o erro e sem TX-12', async () => {
+    const estado = criarElenco()
+    const comunidade = criarDadosComunidadeMemoria(estado, ELENCO.moderador.conta)
+    const moderacao = criarDadosModeracaoMemoria(estado, ELENCO.moderador.conta)
+    vi.spyOn(comunidade, 'situacaoDaConta').mockResolvedValue({ ok: false, erro: erroDaChaveModeracao('rede') })
+    const contas = criarDadosContaMemoria(fixtureDeContasDoElenco(criarFixtureDeTeste(Date.now())))
+    contas.sessaoParaTeste(ELENCO.moderador.email)
+    renderizarModeracao(painel, { contas, comunidade, moderacao })
+    expect(await screen.findByRole('alert')).toBeTruthy()
+    const titulo = await screen.findByRole('heading', { level: 1 })
+    expect(titulo.textContent).toBe(NOMES_DAS_TELAS.fila)
+    expect(screen.queryByText(TX.tx12)).toBeNull()
+    expect(screen.queryByText(TX.negado)).toBeNull()
   })
 })
 

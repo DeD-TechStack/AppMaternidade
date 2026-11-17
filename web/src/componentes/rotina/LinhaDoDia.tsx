@@ -25,7 +25,7 @@ export function LinhaDoDia({ registro, fuso, autor, para, marca }: Props) {
   const resumo = resumoDoRegistro(registro, fuso)
   const texto = resumo ? HOJE.rotuloEResumo(ROTULO_TIPO[registro.tipo], resumo) : ROTULO_TIPO[registro.tipo]
   return (
-    <li data-registro={registro.id} className="relative flex items-center gap-3 border-t border-(--cor-fio-suave) py-3.5 first:border-t-0 lg:gap-4">
+    <li data-registro={registro.id} className="relative flex items-center gap-3 border-t border-(--cor-fio-suave) py-3 first:border-t-0 lg:gap-4">
       <div className="flex w-[4.5rem] shrink-0 items-center gap-1 text-pequeno text-(--cor-texto-2)">
         <span className="whitespace-nowrap tabular-nums">{formatarHora(Date.parse(registro.inicio))}</span>
         <MarcaDeEnvio marca={marca} />
