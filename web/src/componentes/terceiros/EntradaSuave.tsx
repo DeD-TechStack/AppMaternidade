@@ -13,6 +13,7 @@
 import { useEffect, useRef, type ReactNode } from 'react'
 import { animate, motion, useMotionValue } from 'motion/react'
 import { useDeslocamentoSeguro } from '../../movimento/folga.ts'
+import { useImprimindo } from '../../movimento/impressao.ts'
 import { useNaJanela } from '../../movimento/naJanela.ts'
 import { usePrefereMovimentoReduzido } from '../../movimento/reduzido.ts'
 import { CATALOGO, type RegistroMovimento } from '../../movimento/catalogo.ts'
@@ -41,7 +42,8 @@ export function EntradaSuave({
   opacidadeDe = CATALOGO.M4.opacidadeDe,
   umaVez = CATALOGO.M4.umaVez,
 }: Props) {
-  const reduzido = usePrefereMovimentoReduzido()
+  // Movimento reduzido e impressão têm o mesmo efeito: o bloco fica no estado final, sem animar (R2-F1).
+  const reduzido = usePrefereMovimentoReduzido() || useImprimindo()
   const ref = useRef<HTMLDivElement>(null)
   // Sempre observa, também no reduzido: ao voltar ao normal a peça sabe se já está na tela e não
   // reinicia a entrada de algo visível.

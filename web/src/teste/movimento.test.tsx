@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { render, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
-import { act, useRef } from 'react'
+import { act, useRef, type ReactNode } from 'react'
 import { CATALOGO, atrasoEscalonado, fimDaCortina } from '../movimento/catalogo.ts'
 import { useNaJanela } from '../movimento/naJanela.ts'
 import { LinhasEscalonadas } from '../movimento/LinhasEscalonadas.tsx'
@@ -384,6 +384,87 @@ describe('espera legível e sem colisão (VIS-1 R1)', () => {
     observador.disparar(false)
     await pausa()
     expect(deslocamentoDe(container.querySelector('h2')!.parentElement)).toBe(0)
+    vi.restoreAllMocks()
+  })
+})
+
+// VIS-1 R2-F1: na impressão o bloco já carregado e nunca visto está no estado final (sem deslocamento).
+describe('impressão: estado final também num bloco carregado que nunca entrou na janela (R2-F1)', () => {
+  const caixas = (filho: ReactNode) => (
+    <div>
+      <div data-caixa="0,100">{filho}</div>
+      <div data-caixa="160,200">
+        <p>parágrafo</p>
+      </div>
+    </div>
+  )
+  const imprimir = (evento: 'beforeprint' | 'afterprint') => act(async () => { window.dispatchEvent(new Event(evento)) })
+
+  it('EntradaSuave: a espera de 24 px vai a 0 em beforeprint e volta à espera em afterprint', async () => {
+    comObservador()
+    consultas({})
+    comCaixas()
+    const { container } = render(
+      caixas(
+        <EntradaSuave deslocamentoPx={24} duracaoMs={700} curva="linear">
+          <h2>título</h2>
+        </EntradaSuave>,
+      ),
+    )
+    const bloco = () => container.querySelector('h2')!.parentElement
+    await waitFor(() => expect(deslocamentoDe(bloco())).toBe(24))
+    await imprimir('beforeprint')
+    await waitFor(() => expect(deslocamentoDe(bloco())).toBe(0))
+    expect(opacidadeDe(bloco())).toBe(1)
+    await imprimir('afterprint')
+    await waitFor(() => expect(deslocamentoDe(bloco())).toBe(24))
+    vi.restoreAllMocks()
+  })
+
+  it('TextoAnimado: cada linha vai a 0 em beforeprint', async () => {
+    comObservador()
+    consultas({})
+    comCaixas()
+    const { container } = render(
+      caixas(
+        <TextoAnimado as="h2" deslocamentoPx={24} duracaoMs={700} curva="linear" escalonamentoMs={80}>
+          {'linha um\nlinha dois'}
+        </TextoAnimado>,
+      ),
+    )
+    const linhas = () => [...container.querySelectorAll('[aria-hidden="true"]')]
+    await waitFor(() => linhas().forEach((linha) => expect(deslocamentoDe(linha)).toBe(24)))
+    await imprimir('beforeprint')
+    await waitFor(() => linhas().forEach((linha) => expect(deslocamentoDe(linha)).toBe(0)))
+    linhas().forEach((linha) => expect(opacidadeDe(linha)).toBe(1))
+    await imprimir('afterprint')
+    vi.restoreAllMocks()
+  })
+
+  it('a mídia print ativa na montagem também deixa as duas peças no estado final', async () => {
+    comObservador()
+    vi.stubGlobal('matchMedia', (consulta: string) => ({
+      matches: consulta === 'print',
+      media: consulta,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    }))
+    comCaixas()
+    const { container } = render(
+      caixas(
+        <>
+          <EntradaSuave deslocamentoPx={24} duracaoMs={700} curva="linear">
+            <h2>título</h2>
+          </EntradaSuave>
+          <TextoAnimado deslocamentoPx={24} duracaoMs={700} curva="linear" escalonamentoMs={80}>
+            {'linha'}
+          </TextoAnimado>
+        </>,
+      ),
+    )
+    await act(async () => { await new Promise((r) => setTimeout(r, 80)) })
+    expect(deslocamentoDe(container.querySelector('h2')!.parentElement)).toBe(0)
+    expect(deslocamentoDe(container.querySelector('[aria-hidden="true"]'))).toBe(0)
     vi.restoreAllMocks()
   })
 })
