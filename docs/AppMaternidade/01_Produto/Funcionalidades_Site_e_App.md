@@ -198,14 +198,14 @@ Esta tabela é para o dono do site acrescentar o que ele quer que o produto tenh
 
 Só as que já estão registradas como pendentes de Daniel, em [Pendências](../00_Inicio/PENDENCIAS.md) e em [Decisões para Daniel](../07_Roadmap/Decisoes_para_Daniel.md).
 
-**Antes de publicar o site:**
+**Antes de publicar o site (respondido por Daniel em 17/11/2026):**
 
-1. **Entrar com Google.** A definir. Até lá, o site entra só com e-mail e senha.
-2. **Texto final da Política de privacidade e dos Termos.** Há itens marcados "a definir", como o responsável pelo produto e a idade mínima, além da frase de que esta versão usa só dados fictícios.
-3. **Confirmação de e-mail ao criar conta.** Ligar ou não a exigência de a pessoa confirmar o e-mail antes de entrar. A recomendação é ligar.
-4. **Aparecer nas buscas do Google.** Decidir se o site pode ser encontrado em buscadores. Até lá, ele fica escondido das buscas.
-5. **Segurança das contas técnicas.** Guardar as chaves do banco de dados de produção (o serviço onde os dados ficam guardados) num lugar protegido do repositório e ligar, no painel desse banco, a verificação em duas etapas, a senha mínima de 8 caracteres e o bloqueio de senhas que já vazaram na internet. A verificação em duas etapas da moderação ficou em aberto em 06/11 porque Daniel pediu explicação antes de decidir.
-6. **Publicar.** O site só vai ao ar quando Daniel disser que pode.
+1. **Entrar com Google.** Decidido: por enquanto o site entra só com e-mail e senha.
+2. **Texto final da Política de privacidade e dos Termos.** Decidido: o líder do projeto escreve textos simples, próprios de uma demonstração completa, e preenche os itens "a definir" com a melhor escolha.
+3. **Confirmação de e-mail ao criar conta.** Decidido: ligar.
+4. **Aparecer nas buscas do Google.** Decidido: o site fica escondido das buscas. A entrega é o link direto, provavelmente no GitHub Pages.
+5. **Segurança das contas técnicas.** Decidido: como é uma demonstração, não é preciso configurar mais nada no painel do banco. Segredos continuam fora do repositório.
+6. **Publicar.** Decidido: quando todas as páginas estiverem aceitas, o líder do projeto publica no GitHub. Depois disso, cada correção é atualizar e publicar de novo.
 
 **Sobre o produto:**
 
