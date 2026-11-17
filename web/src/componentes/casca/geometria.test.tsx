@@ -175,7 +175,9 @@ async function medirNoChrome(cabecalhoHtml: string, largura: number, tema: Tema)
           '--headless=new',
           '--no-sandbox',
           '--disable-gpu',
-          '--disable-crashpad-for-testing',
+          // CI-UBUNTU: no Chrome 157 do Linux esta opção mata o processo com "FD ownership violation", então o Chrome
+          // nunca devolve a medida, cada queda aciona o apport e o runner morre sem memória. No Windows ela fica.
+          ...(process.platform === 'win32' ? ['--disable-crashpad-for-testing'] : []),
           '--no-first-run',
           '--allow-file-access-from-files',
           '--disable-dev-shm-usage',
@@ -188,8 +190,9 @@ async function medirNoChrome(cabecalhoHtml: string, largura: number, tema: Tema)
           '--no-default-browser-check',
           `--user-data-dir=${perfil}`,
           '--force-device-scale-factor=1',
-          // O Chrome sem janela soma 16 px de moldura: com +16 o innerWidth fica igual à largura pedida.
-          `--window-size=${Math.max(largura, 600) + 16},900`,
+          // A moldura de 16 px é a do headless do Windows: com +16 o innerWidth fica igual à largura pedida.
+          // No Linux não há moldura, então o innerWidth já é igual à largura da janela.
+          `--window-size=${Math.max(largura, 600) + (process.platform === 'win32' ? 16 : 0)},900`,
           '--virtual-time-budget=3000',
           '--dump-dom',
           pathToFileURL(alvo).href,
