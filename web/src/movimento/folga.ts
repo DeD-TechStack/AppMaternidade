@@ -52,7 +52,7 @@ const yEscrito = (no: Element): number => {
  * do ancestral mais próximo que tenha). Devolve no máximo `px`, nunca menos que 0; sem medida (jsdom,
  * sem layout) devolve 0, o bloco fica no lugar. `yAtual` desconta a transformação em curso da medida.
  */
-export function deslocamentoSeguro(no: HTMLElement | null, px: number, yAtual = 0): number {
+function deslocamentoSeguro(no: HTMLElement | null, px: number, yAtual = 0): number {
   if (!no || typeof window === 'undefined') return px
   const base = no.getBoundingClientRect().bottom - yAtual
   let atual: HTMLElement | null = no
