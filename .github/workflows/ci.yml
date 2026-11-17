@@ -11,6 +11,8 @@ jobs:
   verificar:
     name: Verificar (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    # Um passo travado falha em minutos em vez de ocupar o runner por 6 h.
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
