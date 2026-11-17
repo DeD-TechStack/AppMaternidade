@@ -1,85 +1,85 @@
 ---
 tipo: adr
 id: ADR-003
-status: Proposta
+status: Proposed
 data: 2026-10-22
-autor: Hermes (coordenador da APP-001)
-aprovador: nenhum até agora
+autor: Hermes (coordinator of APP-001)
+aprovador: none so far
 tarefas: MAT-7, MAT-8, MAT-9, MAT-15, MAT-17
 ---
 
-# ADR-003 — Backend, persistência remota e autenticação
+# ADR-003 — Backend, remote persistence and authentication
 
-> Nota de 03/11/2026: o rumo mudou para site completo primeiro e port Android e iOS depois ([ADR-009](ADR-009_Site_Completo_Primeiro.md)). Onde este texto fala em app nativo, leia como o port; o site cobre as mesmas funções.
+> Note dated 03/11/2026: the direction changed to the complete site first and Android and iOS ports afterward ([ADR-009](ADR-009_Site_Completo_Primeiro.md)). Where this text mentions a native app, read it as the port; the site covers the same functions.
 
-**Status:** Proposta. Recomendação técnica do Hermes; não aprovada por Daniel.
+**Status:** Proposed. Hermes's technical recommendation; not approved by Daniel.
 
-## Contexto e requisitos
+## Context and requirements
 
-- Protocolo de escrita com idempotência, conferência do vínculo atual a cada operação, versão-base e conflitos explícitos ([ADR-004](ADR-004_Offline_Sync_e_Temporizadores.md)).
-- Isolamento entre famílias em consultas, sincronização, arquivos e push; comunidade sem caminho para a rotina ([ADR-005](ADR-005_Isolamento_e_Fronteira_Comunidade.md)).
-- Dados de rotina de bebês tratados como potencialmente sensíveis; preferência por hospedagem no Brasil a avaliar ([Privacidade e segurança](../05_Privacidade_Operacao/Privacidade_e_Seguranca.md)).
-- Equipe pequena: poucos fornecedores, operação gerenciada, saída possível.
+- Write protocol with idempotency, current membership checked on every operation, base version and explicit conflicts ([ADR-004](ADR-004_Offline_Sync_e_Temporizadores.md)).
+- Isolation between families in queries, synchronization, files and push; community without a path to the routine ([ADR-005](ADR-005_Isolamento_e_Fronteira_Comunidade.md)).
+- Baby routine data treated as potentially sensitive; preference for hosting in Brazil to be evaluated ([Privacy and security](../05_Privacidade_Operacao/Privacidade_e_Seguranca.md)).
+- Small team: few vendors, managed operations, a viable exit.
 
-## Opções consideradas
+## Options considered
 
-- **Conjunto A — Firebase** (Firestore com SDK nativo, Auth, Storage, FCM, Cloud Functions).
-- **Conjunto B — PostgreSQL gerenciado + PowerSync + serviço de domínio próprio** (Supabase para banco e autenticação).
-- **Conjunto C — API própria + PostgreSQL gerenciado + sincronização própria.**
-- Variantes descartadas: Firebase JS SDK em React Native (sem persistência do Firestore), ElectricSQL sozinho (só leitura), Zero (sem escrita offline), Replicache (manutenção), Atlas Device Sync (encerrado).
+- **Set A — Firebase** (Firestore with native SDK, Auth, Storage, FCM, Cloud Functions).
+- **Set B — Managed PostgreSQL + PowerSync + a custom domain service** (Supabase for the database and authentication).
+- **Set C — Custom API + managed PostgreSQL + custom synchronization.**
+- Rejected variants: Firebase JS SDK in React Native (no Firestore persistence), ElectricSQL alone (read-only), Zero (no offline writes), Replicache (maintenance), Atlas Device Sync (discontinued).
 
 ## Evidências
 
-Consultas de 22/10/2026; detalhes em [Dados, sincronização e backend](../08_Referencias/Tecnologias/Dados_Sincronizacao_e_Backend.md) e [Comparação de arquiteturas](../03_Arquitetura/Comparacao_de_Arquiteturas.md).
+Sources accessed on 22/10/2026; details in [Data, synchronization and backend](../08_Referencias/Tecnologias/Dados_Sincronizacao_e_Backend.md) and [Architecture comparison](../03_Arquitetura/Comparacao_de_Arquiteturas.md).
 
-- Firestore: offline nos SDKs nativos, última escrita vence, transações falham offline (https://firebase.google.com/docs/firestore/manage-data/enable-offline, https://firebase.google.com/docs/firestore/manage-data/transactions); sem persistência no SDK JavaScript em React Native (https://firebase.google.com/docs/web/environments-js-sdk).
-- PowerSync: fila enviada a um endpoint nosso, que deve ser idempotente e responder 2xx com detalhe em erros de domínio (https://docs.powersync.com/handling-writes/writing-client-changes, https://docs.powersync.com/handling-writes/handling-update-conflicts); revogação apagando a linha de vínculo e remoção no cliente quando a linha sai dos buckets (https://docs.powersync.com/sync/rules/parameter-queries, https://docs.powersync.com/architecture/powersync-protocol); SDK React Native e Dart em GA (https://docs.powersync.com/resources/feature-status); licença do serviço FSL-1.1-ALv2 com edição aberta auto-hospedável (https://github.com/powersync-ja/powersync-service/blob/main/LICENSE); região BR disponível (https://docs.powersync.com/integrations/supabase/guide).
-- Supabase: região sa-east-1, São Paulo (https://supabase.com/docs/guides/platform/regions); JWT pode estar desatualizado até a renovação, por isso a autorização deve consultar a tabela de vínculos (https://supabase.com/docs/guides/database/postgres/row-level-security); SMTP padrão não serve para produção; projetos gratuitos pausam após uma semana sem uso (https://supabase.com/pricing).
-- Custo ilustrativo de infraestrutura em 100, 1.000 e 10.000 famílias, em USD por mês e sem o custo de engenharia ([Preços datados](../08_Referencias/Tecnologias/Precos_Datados.md)):
-  - Firebase: ~27, 35 e 139;
-  - Supabase + PowerSync: ~101, 121 e 214;
-  - API própria: ~64, 109 e 202.
-- Com o serviço de domínio desta recomendação, o Conjunto B fica em ~108 a 126, 128 a 146 e 238 a 298 ([Custos e operação](../05_Privacidade_Operacao/Custos_e_Operacao.md), seção 2). Esses valores não incluem o PITR (+US$ 100/mês) nem a homologação.
-- Diretriz 4.8 da App Store: login social exige opção equivalente; só e-mail próprio dispensa (https://developer.apple.com/app-store/review/guidelines/).
+- Firestore: offline in native SDKs, last write wins, transactions fail offline (https://firebase.google.com/docs/firestore/manage-data/enable-offline, https://firebase.google.com/docs/firestore/manage-data/transactions); no persistence in the JavaScript SDK in React Native (https://firebase.google.com/docs/web/environments-js-sdk).
+- PowerSync: queue sent to our endpoint, which must be idempotent and return 2xx with details for domain errors (https://docs.powersync.com/handling-writes/writing-client-changes, https://docs.powersync.com/handling-writes/handling-update-conflicts); revocation by deleting the membership row and removal on the client when the row leaves the buckets (https://docs.powersync.com/sync/rules/parameter-queries, https://docs.powersync.com/architecture/powersync-protocol); React Native and Dart SDKs in GA (https://docs.powersync.com/resources/feature-status); service license FSL-1.1-ALv2 with an open self-hostable edition (https://github.com/powersync-ja/powersync-service/blob/main/LICENSE); BR region available (https://docs.powersync.com/integrations/supabase/guide).
+- Supabase: sa-east-1 region, São Paulo (https://supabase.com/docs/guides/platform/regions); JWT can remain stale until renewal, so authorization must query the membership table (https://supabase.com/docs/guides/database/postgres/row-level-security); default SMTP is unsuitable for production; free projects pause after a week without use (https://supabase.com/pricing).
+- Illustrative infrastructure costs at 100, 1.000 and 10.000 families, in USD per month and excluding engineering costs ([Dated prices](../08_Referencias/Tecnologias/Precos_Datados.md)):
+  - Firebase: ~27, 35 and 139;
+  - Supabase + PowerSync: ~101, 121 and 214;
+  - Custom API: ~64, 109 and 202.
+- With the domain service in this recommendation, Set B costs ~108 to 126, 128 to 146 and 238 to 298 ([Costs and operations](../05_Privacidade_Operacao/Custos_e_Operacao.md), section 2). These figures do not include PITR (+US$ 100/month) or staging.
+- App Store guideline 4.8: social login requires an equivalent option; using only your own email login is exempt (https://developer.apple.com/app-store/review/guidelines/).
 
 ## Recomendação
 
-**Conjunto B: Supabase (PostgreSQL e Auth, região São Paulo) + PowerSync Cloud (região BR) + serviço de domínio próprio**, desenhada em [Arquitetura proposta](../03_Arquitetura/Arquitetura_Proposta.md):
+**Set B: Supabase (PostgreSQL and Auth, São Paulo region) + PowerSync Cloud (BR region) + a custom domain service**, diagrammed in [Proposed architecture](../03_Arquitetura/Arquitetura_Proposta.md):
 
-- todas as escritas de cuidado passam pelo serviço; os apps não escrevem direto no banco;
-- o serviço implementa o contrato do [ADR-004](ADR-004_Offline_Sync_e_Temporizadores.md) e responde por operação;
-- leitura offline pelos Sync Streams, com família resolvida pela tabela de vínculos;
-- esquemas e papéis de banco separados por contexto; o módulo de comunidade não tem permissão nas tabelas de cuidado;
-- autenticação por código de uso único por e-mail, com provedor de e-mail próprio, JWT curto, MFA no painel, sem login social no MVP.
+- all care writes go through the service; apps do not write directly to the database;
+- the service implements the [ADR-004](ADR-004_Offline_Sync_e_Temporizadores.md) contract and responds per operation;
+- offline reads through Sync Streams, with the family resolved through the membership table;
+- separate database schemas and roles per context; the community module has no permissions on care tables;
+- authentication by one-time email code, with a dedicated email provider, short-lived JWTs, MFA on the panel and no social login in the MVP.
 
-Justificativa: o protocolo de escrita, que é o coração do cuidado compartilhado, fica sob nosso controle; a fila durável e o download parcial, que são o maior risco de cronograma do Conjunto C, vêm prontos; o esquema e o serviço são os mesmos do Conjunto C, o que torna a saída do PowerSync uma troca de peça, não uma reescrita; os dados de cuidado ficam no Brasil. O Conjunto A é o mais barato e rápido no início, mas resolve concorrência por última escrita, espalha autorização entre regras e Functions e tem a saída mais difícil.
+Rationale: the write protocol, which is the core of shared care, stays under our control; the durable queue and partial download, the largest schedule risks in Set C, come ready-made; the schema and service are the same as in Set C, making an exit from PowerSync a component replacement rather than a rewrite; care data stays in Brazil. Set A is the cheapest and fastest initially, but resolves concurrency through last write wins, spreads authorization across rules and Functions, and is the hardest to leave.
 
-**Alternativa principal: Conjunto C**, mantendo banco, esquema e serviço e trocando a sincronização.
+**Main alternative: Set C**, retaining the database, schema and service and replacing synchronization.
 
-### Linguagem do serviço
+### Service language
 
-Decisão separada e reversível, porque o contrato fica em OpenAPI e JSON Schema. Opções comparadas na nota de dados (seção 6): TypeScript (NestJS ou Fastify), Python (Django + DRF) e Java ou Kotlin (Spring Boot). Proposta fraca: **TypeScript**, porque uma linguagem só no app, no serviço e no painel reduz a carga de manutenção de uma equipe de uma pessoa e a fila de tarefas pode ficar no próprio PostgreSQL (`pg-boss`). Não é escolhida por usar React Native: o motivo é a manutenção. Django ganha se o painel administrativo pronto pesar mais; Spring Boot ganha se a equipe for Java em primeiro lugar.
+A separate, reversible decision, because the contract is in OpenAPI and JSON Schema. Options compared in the data note (section 6): TypeScript (NestJS or Fastify), Python (Django + DRF) and Java or Kotlin (Spring Boot). Tentative proposal: **TypeScript**, because one language across app, service and panel reduces the maintenance load for a one-person team, and the task queue can live in PostgreSQL itself (`pg-boss`). It is not selected because React Native is used: the reason is maintenance. Django wins if a ready-made administration panel matters more; Spring Boot wins if the team is Java-first.
 
-## Consequências
+## Consequences
 
-- Positivas: regras de escrita num lugar só; offline durável sem construir o motor de sincronização; PostgreSQL portátil; dados no Brasil.
-- Negativas: dois fornecedores críticos; custo fixo maior no começo; os Sync Streams precisam espelhar as regras do serviço; um serviço próprio para construir e operar.
+- Positive: write rules in one place; durable offline support without building the synchronization engine; portable PostgreSQL; data in Brazil.
+- Negative: two critical vendors; higher fixed costs initially; Sync Streams must mirror service rules; a custom service to build and operate.
 
-## Riscos e verificação que falta
+## Risks and outstanding verification
 
-- Provar na MAT-17 que a fila sobrevive ao encerramento, que o reenvio não duplica e que a revogação remove os dados do aparelho (P1, P2, P4).
-- Testes que provem que serviço e Sync Streams recusam as mesmas coisas (P5).
-- Confirmar a validade máxima do JWT aceita pelo PowerSync (a documentação diverge entre 60 minutos e 24 horas).
-- Confirmar preços nas regiões do Brasil e a política de backup e restauração do Supabase para o RPO e o RTO definidos em [Custos e operação](../05_Privacidade_Operacao/Custos_e_Operacao.md).
-- `op-sqlite` aparece como Beta no PowerSync ("production-ready for tested use cases"): cobrir o caso de uso na prova.
+- Prove in MAT-17 that the queue survives termination, retries do not duplicate data, and revocation removes data from the device (P1, P2, P4).
+- Tests proving that the service and Sync Streams reject the same things (P5).
+- Confirm the maximum JWT lifetime accepted by PowerSync (the documentation differs between 60 minutes and 24 hours).
+- Confirm pricing in Brazilian regions and Supabase's backup and restoration policy for the RPO and RTO defined in [Costs and operations](../05_Privacidade_Operacao/Custos_e_Operacao.md).
+- `op-sqlite` appears as Beta in PowerSync ("production-ready for tested use cases"): cover the use case in the proof.
 
-## Quando revisar
+## When to review
 
-- Falha do PowerSync nas provas, mudança de licença ou de preço.
-- Exigência de auto-hospedagem ou de controle total no Brasil.
-- Volume acima dos limites do plano Pro do PowerSync.
-- Necessidade de login social (exige Sign in with Apple ou equivalente).
+- PowerSync fails the proofs, or its license or pricing changes.
+- A requirement for self-hosting or full control in Brazil.
+- Volume exceeds the limits of PowerSync's Pro plan.
+- A need for social login (requires Sign in with Apple or equivalent).
 
 ## Referências
 
-[Comparação de arquiteturas](../03_Arquitetura/Comparacao_de_Arquiteturas.md) · [Arquitetura proposta](../03_Arquitetura/Arquitetura_Proposta.md) · [Modelo de dados e permissões](../03_Arquitetura/Modelo_de_Dados_e_Permissoes.md) · [ADR-002](ADR-002_Framework_Mobile.md) · [ADR-004](ADR-004_Offline_Sync_e_Temporizadores.md) · [ADR-005](ADR-005_Isolamento_e_Fronteira_Comunidade.md) · [ADR-008](ADR-008_Documentacao_Operacao_Custos_e_Evolucao.md) · tarefas MAT-7, MAT-8, MAT-9, MAT-15 e MAT-17.
+[Architecture comparison](../03_Arquitetura/Comparacao_de_Arquiteturas.md) · [Proposed architecture](../03_Arquitetura/Arquitetura_Proposta.md) · [Data model and permissions](../03_Arquitetura/Modelo_de_Dados_e_Permissoes.md) · [ADR-002](ADR-002_Framework_Mobile.md) · [ADR-004](ADR-004_Offline_Sync_e_Temporizadores.md) · [ADR-005](ADR-005_Isolamento_e_Fronteira_Comunidade.md) · [ADR-008](ADR-008_Documentacao_Operacao_Custos_e_Evolucao.md) · tasks MAT-7, MAT-8, MAT-9, MAT-15 and MAT-17.

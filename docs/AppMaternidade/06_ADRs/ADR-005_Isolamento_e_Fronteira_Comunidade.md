@@ -1,65 +1,65 @@
 ---
 tipo: adr
 id: ADR-005
-status: Proposta
+status: Proposed
 data: 2026-10-22
-autor: Hermes (coordenador da APP-001)
-aprovador: nenhum até agora
+autor: Hermes (coordinator of APP-001)
+aprovador: none so far
 tarefas: MAT-8, MAT-12, MAT-18, MAT-19
 ---
 
-# ADR-005 — Isolamento entre famílias e fronteira com a comunidade
+# ADR-005 — Isolation between families and the community boundary
 
-**Status:** Proposta. Recomendação técnica do Hermes; não aprovada por Daniel.
+**Status:** Proposed. Hermes's technical recommendation; not approved by Daniel.
 
-## Contexto e requisitos
+## Context and requirements
 
-- Separação entre famílias em consultas, escritas, arquivos, sincronização e notificações (requisito fixo; Q-06).
-- Acesso à comunidade não concede acesso à rotina privada; compartilhar dado privado exige ação consciente com prévia (requisitos fixos; Q-07).
-- Moderador da comunidade não é alguém autorizado a ler dados infantis privados (05_DESIGN_DOCS_E_ADRS.md).
-- Permissões guardadas no token podem ficar velhas (fonte B05 do pacote).
+- Separation between families in queries, writes, files, synchronization and notifications (fixed requirement; Q-06).
+- Access to the community does not grant access to the private routine; sharing private data requires a deliberate action with a preview (fixed requirements; Q-07).
+- A community moderator is not someone authorized to read private child data (05_DESIGN_DOCS_E_ADRS.md).
+- Permissions stored in the token can become stale (source B05 in the package).
 
-## Opções consideradas
+## Options considered
 
-1. **Permissões por modelo** (o padrão do Django usado pelo Baby Buddy), sem escopo por família.
-2. **Escopo por família com lista de famílias no token.**
-3. **Escopo por família conferido no vínculo atual a cada operação**, comunidade num contexto separado com perfil público próprio.
-4. **Instância separada por família** (como uma instalação de Baby Buddy por casa).
+1. **Model-level permissions** (the Django default used by Baby Buddy), without family-level scoping.
+2. **Family-level scoping with a list of families in the token.**
+3. **Family-level scoping checked against current membership on every operation**, with the community in a separate context with its own public profile.
+4. **A separate instance per family** (such as one Baby Buddy installation per household).
 
 ## Evidências
 
-- Baby Buddy: permissões por modelo e querysets que partem de todos os objetos; pensado para uma instalação por família (ficha [Baby Buddy](../08_Referencias/Repositorios/Baby_Buddy.md)).
-- Sprout Track: helper de escopo por família com campos de família opcionais em partes do schema (ficha [Sprout Track](../08_Referencias/Repositorios/Sprout_Track.md)).
-- Finnberry: procedimento autenticado que resolve a família do usuário (ficha [Finnberry](../08_Referencias/Repositorios/Finnberry.md)).
-- Supabase: claims no JWT podem ficar desatualizadas até a renovação (fonte B05 do pacote).
+- Baby Buddy: model-level permissions and querysets that start from all objects; designed for one installation per family (profile: [Baby Buddy](../08_Referencias/Repositorios/Baby_Buddy.md)).
+- Sprout Track: family-scoping helper with optional family fields in parts of the schema (profile: [Sprout Track](../08_Referencias/Repositorios/Sprout_Track.md)).
+- Finnberry: authenticated procedure that resolves the user's family (profile: [Finnberry](../08_Referencias/Repositorios/Finnberry.md)).
+- Supabase: JWT claims can remain outdated until renewal (source B05 in the package).
 
 ## Recomendação
 
-Opção 3, detalhada em [Modelo de dados e permissões](../03_Arquitetura/Modelo_de_Dados_e_Permissoes.md):
+Option 3, detailed in [Data model and permissions](../03_Arquitetura/Modelo_de_Dados_e_Permissoes.md):
 
-- todo dado de cuidado tem família; o servidor confere o vínculo vigente (estado, papel, validade e época) em cada operação, inclusive nas da sincronização e nas URLs de arquivos;
-- ids de outra família respondem como inexistentes;
-- comunidade num contexto próprio: perfil público pseudônimo ligado à conta só no servidor, sem nenhuma referência a família, bebê ou registro;
-- compartilhamento de rotina como cópia de texto revisada e confirmada, sem vínculo de volta;
-- papéis de plataforma (moderação, suporte) sem leitura de dados de cuidado;
-- push só para dispositivos com vínculo ativo, sem dado sensível no texto.
+- all care data belongs to a family; the server checks current membership (state, role, validity and epoch) on every operation, including synchronization operations and file URLs;
+- IDs from another family return as nonexistent;
+- community in its own context: a pseudonymous public profile linked to the account only on the server, without any reference to a family, baby or record;
+- routine sharing as a reviewed and confirmed text copy, without a link back;
+- platform roles (moderation, support) without read access to care data;
+- push only to devices with active membership, without sensitive data in the text.
 
-## Consequências
+## Consequences
 
-- Positivas: isolamento verificável por testes automatizados; revogação efetiva; comunidade sem caminho técnico para a rotina.
-- Negativas: duas identidades por pessoa exigem explicação clara; consultas de autorização a cada operação têm custo; o suporte não consegue investigar um problema de dados sem autorização explícita da família.
+- Positive: isolation verifiable through automated tests; effective revocation; community without a technical path to the routine.
+- Negative: two identities per person require a clear explanation; authorization queries on every operation have a cost; support cannot investigate a data problem without the family's explicit authorization.
 
-## Riscos e verificação que falta
+## Risks and outstanding verification
 
-- Testes de autorização com ids de outra família em todas as rotas e canais (Q-06), incluindo o canal de sincronização e a emissão de URLs.
-- Revisão de consultas da comunidade para garantir que nenhuma junta tabelas de cuidado.
-- Validação jurídica do acesso de suporte com autorização da família.
+- Authorization tests with another family's IDs on all routes and channels (Q-06), including the synchronization channel and URL issuance.
+- Review of community queries to ensure that none joins care tables.
+- Legal validation of support access with the family's authorization.
 
-## Quando revisar
+## When to review
 
-- Se surgir papel profissional (pediatra, consultora) com acesso a dados de uma família: exige novo ADR, consentimento específico e trilha de auditoria.
-- Se a comunidade passar a ter grupos privados ligados à família.
+- If a professional role (pediatrician, consultant) with access to a family's data is introduced: this requires a new ADR, specific consent and an audit trail.
+- If the community starts having private groups linked to the family.
 
 ## Referências
 
-[Comunidade e moderação](../04_Comunidade_Conteudo/Comunidade_e_Moderacao.md) · [Privacidade e segurança](../05_Privacidade_Operacao/Privacidade_e_Seguranca.md) · ADR-006 · tarefas MAT-8, MAT-12, MAT-18 e MAT-19.
+[Community and moderation](../04_Comunidade_Conteudo/Comunidade_e_Moderacao.md) · [Privacy and security](../05_Privacidade_Operacao/Privacidade_e_Seguranca.md) · ADR-006 · tasks MAT-8, MAT-12, MAT-18 and MAT-19.

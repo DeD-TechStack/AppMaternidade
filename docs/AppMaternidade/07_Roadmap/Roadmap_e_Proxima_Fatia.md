@@ -1,51 +1,51 @@
 ---
 tipo: roadmap
-status: proposta
+status: proposal
 responsavel: lider-appmaternidade
 revisado_em: 2026-11-03
-tarefas: MAT-27, MAT-32 a MAT-43; rumo anterior MAT-15, MAT-17, MAT-18, MAT-19
+tarefas: MAT-27, MAT-32 to MAT-43; previous direction MAT-15, MAT-17, MAT-18, MAT-19
 fontes_principais:
   - 06_ADRs/ADR-009_Site_Completo_Primeiro.md
-  - 02_Experiencia/Direcao_Visual.md (portões G1 a G12)
-  - tasks/hermes/APP-001-design-docs/05_DESIGN_DOCS_E_ADRS.md (seção "Próxima fatia executável")
+  - 02_Experiencia/Direcao_Visual.md (gates G1 to G12)
+  - tasks/hermes/APP-001-design-docs/05_DESIGN_DOCS_E_ADRS.md (section "Próxima fatia executável")
   - tasks/hermes/APP-001-design-docs/06_CRITERIOS_DE_ACEITE.md
   - 05_Privacidade_Operacao/Qualidade_e_Validacao.md
 ---
 
-# Roadmap e próxima fatia
+# Roadmap and next slice
 
-## Rumo atual (03/11/2026)
+## Current direction (03/11/2026)
 
-Daniel decidiu em 03/11/2026 começar pelo site completo, com RF-01 a RF-14, e fazer o port para Android e iOS depois ([ADR-009](../06_ADRs/ADR-009_Site_Completo_Primeiro.md)). As fases, em ordem:
+Daniel decided on 03/11/2026 to start with the complete website, with RF-01 to RF-14, and port it to Android and iOS later ([ADR-009](../06_ADRs/ADR-009_Site_Completo_Primeiro.md)). The phases, in order:
 
 1. design docs (MAT-32);
-2. referência visual (MAT-33), direção visual e tokens (MAT-34);
-3. fundação (MAT-35) e backend local (MAT-43);
-4. fatias do site (MAT-36 a MAT-41);
-5. portão final: junção de qualidade e aceite do site inteiro (MAT-42);
-6. piloto com famílias reais convidadas: depende de D5 (MAT-24), D7 (MAT-26) e D9 (MAT-29);
-7. port Android e iOS. MAT-17, MAT-18 e MAT-19 ficam congeladas até lá. O que elas tinham de produto é absorvido pelas fatias do site; sobra a parte nativa.
+2. visual reference (MAT-33), visual direction and tokens (MAT-34);
+3. foundation (MAT-35) and local backend (MAT-43);
+4. website slices (MAT-36 to MAT-41);
+5. final gate: combined quality review and acceptance of the entire website (MAT-42);
+6. pilot with invited real families: depends on D5 (MAT-24), D7 (MAT-26) and D9 (MAT-29);
+7. Android and iOS port. MAT-17, MAT-18 and MAT-19 remain frozen until then. Their product scope is absorbed into the website slices; the native portion remains.
 
-Antiga F0: descoberta, revisor de conteúdo e consulta jurídica correm em paralelo às fases 1 a 5 e são pré-requisito da fase 6.
+Former F0: discovery, content reviewer and legal consultation run in parallel with phases 1 to 5 and are prerequisites for phase 6.
 
-Toda tarefa que mexe no site passa pelos portões G1 a G12 de [Direção visual](../02_Experiencia/Direcao_Visual.md). As páginas de cada fatia estão no [mapa do site](../02_Experiencia/Site_Mapa_e_Paginas.md), e as decisões abertas, em [Decisões para Daniel](Decisoes_para_Daniel.md).
+Every task that changes the website passes through gates G1 to G12 in [Visual direction](../02_Experiencia/Direcao_Visual.md). The pages for each slice are in the [site map](../02_Experiencia/Site_Mapa_e_Paginas.md), and the open decisions are in [Decisions for Daniel](Decisoes_para_Daniel.md).
 
-## Rumo anterior (APP-001)
+## Previous direction (APP-001)
 
-> Substituído pelo ADR-009 em 03/11/2026. O texto abaixo fica como registro, sem mudanças além do nível dos títulos.
+> Replaced by ADR-009 on 03/11/2026. The text below remains as a record, with no changes other than heading levels.
 >
-> No rumo atual, os critérios de aceite estão nas tarefas MAT-35 a MAT-43 e nos portões G1 a G12.
+> In the current direction, the acceptance criteria are in tasks MAT-35 to MAT-43 and gates G1 to G12.
 
-Proposta do Hermes. Nada do que está aqui foi implementado: este documento planeja as etapas seguintes. A stack de cada etapa depende da decisão de Daniel sobre os ADRs 002 e 003; as tarefas futuras estão no itsaplan como Backlog, sem agente atribuído, e só começam com pedido explícito.
+Proposal by Hermes. Nothing here has been implemented: this document plans the next steps. The stack for each step depends on Daniel's decision on ADRs 002 and 003; future tasks are in itsaplan as Backlog, with no agent assigned, and only start upon explicit request.
 
-### 1. Onde estamos
+### 1. Where we are
 
-| Etapa | Situação |
+| Step | Status |
 | --- | --- |
-| APP-001 — pesquisa, design docs, ADRs, organização | Em entrega (esta etapa) |
-| Implementação | Não iniciada. Nenhum código do produto existe. |
+| APP-001 — research, design docs, ADRs, organization | Being delivered (this step) |
+| Implementation | Not started. No product code exists. |
 
-### 2. Fases
+### 2. Phases
 
 ```mermaid
 flowchart LR
@@ -60,87 +60,87 @@ flowchart LR
   PI --> E[F6 Evoluções por evidência]
 ```
 
-| Fase | Objetivo | Entra | Sai quando |
+| Phase | Objective | Includes | Exits when |
 | --- | --- | --- | --- |
-| F0 Descoberta (paralela) | Testar hipóteses de produto antes de investir em telas | Entrevistas com 8 a 12 cuidadores (incluindo avós e babás), teste de linguagem ("família"), revisor de conteúdo contratado ou parceiro, consulta jurídica inicial (LGPD e ECA Digital) | Personas e botões rápidos revistos; revisor definido; parecer inicial registrado |
-| F1 Prova técnica (MAT-17) | Escolher a stack com evidência | Provas P1 a P9 de [Qualidade e validação](../05_Privacidade_Operacao/Qualidade_e_Validacao.md), em código descartável | ADR-002, 003 e 004 aceitos ou revistos por Daniel com base no resultado |
-| F2 Fundação e 1ª fatia (MAT-18) | Base real do produto e o núcleo de cuidado compartilhado | Seção 3 deste documento | Critérios A1 a A11 aprovados |
-| F3 Fatia da comunidade (MAT-19) | Comunidade mínima com moderação | Espaços, tópicos, respostas, denúncia, bloqueio, painel mínimo | Q-07 e Q-11 aprovados; regras da comunidade publicadas |
-| F4 MVP completo | Os quatro pilares utilizáveis | Requisitos RF-01 a RF-14 de [Visão e escopo](../01_Produto/Visao_e_Escopo.md); site público; conteúdo 0 a 12 meses revisado; exportação e exclusão; acessibilidade | Checklist das lojas e cenários Q-01 a Q-12 aprovados |
-| F5 Piloto fechado | Uso real com poucas famílias | TestFlight e teste fechado da Play; moderação ativa; métricas de [Visão e escopo](../01_Produto/Visao_e_Escopo.md) | Decisão de lançamento com dados |
-| F6 Evoluções | Expandir pelo que o piloto mostrar | Candidatas: 0 a 24 meses, widgets e Live Activities, anexos, grupos por fase, app web para cuidadores | Cada uma com ADR ou decisão própria |
+| F0 Discovery (parallel) | Test product hypotheses before investing in screens | Interviews with 8 to 12 caregivers (including grandparents and nannies), language testing ("família"), hired or partner content reviewer, initial legal consultation (LGPD and Digital ECA) | Personas and quick buttons revised; reviewer selected; initial legal opinion recorded |
+| F1 Technical proof (MAT-17) | Choose the stack based on evidence | Proofs P1 to P9 from [Quality and validation](../05_Privacidade_Operacao/Qualidade_e_Validacao.md), in disposable code | ADR-002, 003 and 004 accepted or revised by Daniel based on the results |
+| F2 Foundation and slice 1 (MAT-18) | Real product foundation and the core of shared care | Section 3 of this document | Criteria A1 to A11 approved |
+| F3 Community slice (MAT-19) | Minimal community with moderation | Spaces, topics, replies, reporting, blocking, minimal dashboard | Q-07 and Q-11 approved; community rules published |
+| F4 Complete MVP | All four pillars usable | Requirements RF-01 to RF-14 from [Vision and scope](../01_Produto/Visao_e_Escopo.md); public website; reviewed content for ages 0 to 12 months; export and deletion; accessibility | Store checklist and scenarios Q-01 to Q-12 approved |
+| F5 Closed pilot | Real use with a few families | TestFlight and Play closed testing; active moderation; metrics from [Vision and scope](../01_Produto/Visao_e_Escopo.md) | Launch decision based on data |
+| F6 Enhancements | Expand based on what the pilot shows | Candidates: ages 0 to 24 months, widgets and Live Activities, attachments, groups by stage, web app for caregivers | Each with its own ADR or decision |
 
-### 3. Próxima fatia executável (proposta, não implementada)
+### 3. Next executable slice (proposed, not implemented)
 
 #### Objetivo
 
-Provar o núcleo do produto em Android e iOS: cuidado compartilhado com registro offline, sincronização, autoria e revogação, e mostrar que a comunidade não toca os dados da família.
+Prove the product's core on Android and iOS: shared care with offline recording, synchronization, authorship and revocation, and show that the community does not access family data.
 
 #### Escopo
 
-1. Conta por e-mail com código de uso único (sem login social, o que evita a exigência da diretriz 4.8 da App Store nesta fase).
-2. Criar família e cadastrar um bebê (nome ou apelido e data de nascimento).
-3. Convite com código de uso único, papel Cuidador e validade de 7 dias; aceite em outro aparelho.
-4. Sessão de tummy time: iniciar, encerrar, registrar retroativo; funcionando offline.
-5. Banco local, fila de operações, envio idempotente, recebimento por cursor, estados visíveis ("aguardando envio", "sincronizado", "não enviado").
-6. Histórico do dia com autoria, no fuso da família.
-7. Revogação de vínculo com limpeza local ao reconectar.
-8. Se couber no prazo: um espaço da comunidade com tópico e resposta por perfil público, sem moderação completa, só para provar a separação de dados (Q-07).
+1. Email account with a single-use code (no social login, which avoids the requirement of App Store guideline 4.8 at this phase).
+2. Create a family and register a baby (name or nickname and date of birth).
+3. Invitation with a single-use code, Cuidador role and validity of 7 days; acceptance on another device.
+4. Tummy time session: start, end, record retroactively; working offline.
+5. Local database, operation queue, idempotent sending, cursor-based receiving, visible states ("aguardando envio", "sincronizado", "não enviado").
+6. Daily history with authorship, in the family's time zone.
+7. Membership revocation with local cleanup upon reconnection.
+8. If time allows: one community space with a topic and reply posted through a public profile, without full moderation, just to prove data separation (Q-07).
 
-#### Fora da fatia
+#### Outside the slice
 
-Outros tipos de registro, notas de passagem, push, cronômetro fora do app, conteúdo editorial, painel de moderação, exportação e exclusão, identidade visual final.
+Other record types, handoff notes, push, timer outside the app, editorial content, moderation dashboard, export and deletion, final visual identity.
 
 #### Pré-requisitos
 
 | Item | Android | iOS |
 | --- | --- | --- |
-| Ferramentas | Android Studio, SDK e emulador no Windows | Caminho de build definido no ADR-002: serviço de build em nuvem ou Mac |
-| Conta | Google Play Console (taxa única; conta pessoal exige teste fechado de 12 testadores por 14 dias antes da produção) | Apple Developer Program (anuidade), necessário para TestFlight e push |
-| Aparelho | Um Android físico | Um iPhone físico |
-| Backend | Ambiente de desenvolvimento do conjunto escolhido no ADR-003, com dados fictícios | O mesmo |
+| Tools | Android Studio, SDK and emulator on Windows | Build path defined in ADR-002: cloud build service or Mac |
+| Account | Google Play Console (one-time fee; personal accounts require closed testing with 12 testers for 14 days before production) | Apple Developer Program (annual fee), required for TestFlight and push |
+| Device | One physical Android device | One physical iPhone |
+| Backend | Development environment for the stack chosen in ADR-003, with fictional data | The same |
 
-Valores das contas e serviços em [Preços datados](../08_Referencias/Tecnologias/Precos_Datados.md). Abrir contas e contratar serviços são decisões de Daniel.
+Account and service costs in [Dated prices](../08_Referencias/Tecnologias/Precos_Datados.md). Opening accounts and purchasing services are Daniel's decisions.
 
-#### Critérios de aceite
+#### Acceptance criteria
 
-| ID | Critério | Cenário |
+| ID | Criterion | Scenario |
 | --- | --- | --- |
-| A1 | O responsável cria conta, família e bebê num Android físico e num iPhone físico, com build de teste instalado | — |
-| A2 | O responsável gera um convite; o cuidador aceita em outro aparelho, de outra plataforma, e aparece como Cuidador | — |
-| A3 | Em modo avião, o cuidador inicia tummy time, encerra o app pelo sistema e reabre: a sessão continua e a duração bate com um cronômetro de referência (diferença de até 1 segundo) | Q-01, Q-08 |
-| A4 | Ainda offline, o cuidador encerra a sessão; com a rede de volta, o registro sincroniza e aparece no histórico do outro aparelho com "por <cuidador>" | Q-01 |
-| A5 | Teste de integração automatizado: 200 ciclos de envio com resposta perdida ou timeout não criam registro duplicado | Q-02 |
-| A6 | Com o aparelho do cuidador offline, o responsável revoga o vínculo; ao reconectar, as operações pendentes são recusadas, os dados locais da família somem e o aviso aparece | Q-05 |
-| A7 | Teste automatizado: ids de outra família, em todas as rotas e no canal de sincronização da fatia, recebem a mesma resposta de id inexistente | Q-06 |
-| A8 | Testes unitários de meia-noite, troca de fuso e horário de verão passam; o histórico agrupa pelo fuso da família | Q-09 |
-| A9 | Se o item 8 entrar: tópico e resposta publicados por perfil público; teste de esquema confirma que nada da comunidade referencia família, bebê ou registro | Q-07 |
-| A10 | Logs sem dados sensíveis (varredura automática); capturas e rastros só das falhas; revisão independente sem achado bloqueante | — |
-| A11 | O responsável inicia uma sessão de tummy time, que sincroniza; o cuidador a encerra no outro aparelho, que pode estar offline. Depois da sincronização, os dois aparelhos mostram uma sessão só, com "iniciada por <responsável>" e "encerrada por <cuidador>". Um segundo encerramento simultâneo segue a política do [Offline, seção 7.2](../03_Arquitetura/Offline_Sincronizacao_e_Temporizadores.md), sem apagar o primeiro | Q-03 |
+| A1 | The guardian creates an account, family and baby on a physical Android device and a physical iPhone, with a test build installed | — |
+| A2 | The guardian generates an invitation; the caregiver accepts on another device, on a different platform, and appears as Cuidador | — |
+| A3 | In airplane mode, the caregiver starts tummy time, closes the app through the system and reopens it: the session continues and the duration matches a reference stopwatch (difference of up to 1 second) | Q-01, Q-08 |
+| A4 | Still offline, the caregiver ends the session; when the network returns, the record synchronizes and appears in the other device's history with "por <cuidador>" | Q-01 |
+| A5 | Automated integration test: 200 send cycles with a lost response or timeout do not create a duplicate record | Q-02 |
+| A6 | With the caregiver's device offline, the guardian revokes the membership; upon reconnection, pending operations are rejected, the family's local data disappears and the notice appears | Q-05 |
+| A7 | Automated test: IDs from another family, across all routes and the slice's synchronization channel, receive the same response as a nonexistent ID | Q-06 |
+| A8 | Unit tests for midnight, time zone changes and daylight saving time pass; history groups records by the family's time zone | Q-09 |
+| A9 | If item 8 is included: topic and reply published through a public profile; a schema test confirms that nothing in the community references a family, baby or record | Q-07 |
+| A10 | Logs without sensitive data (automated scan); screenshots and traces only for failures; independent review with no blocking findings | — |
+| A11 | The guardian starts a tummy time session, which synchronizes; the caregiver ends it on the other device, which may be offline. After synchronization, both devices show a single session, with "iniciada por <responsável>" and "encerrada por <cuidador>". A second simultaneous ending follows the policy in [Offline, section 7.2](../03_Arquitetura/Offline_Sincronizacao_e_Temporizadores.md), without deleting the first | Q-03 |
 
-#### Evidência exigida na entrega da fatia
+#### Evidence required for slice delivery
 
-Comandos e resultados dos testes, versões das ferramentas, modelos e versões dos aparelhos, capturas dos critérios manuais e o relatório da revisão. Plano não é evidência: sem esses itens, a fatia não está pronta.
+Test commands and results, tool versions, device models and versions, screenshots of the manual criteria and the review report. A plan is not evidence: without these items, the slice is not ready.
 
-### 4. Tarefas no itsaplan
+### 4. Tasks in itsaplan
 
-| Chave | Tarefa | Situação |
+| Key | Task | Status |
 | --- | --- | --- |
-| MAT-17 | Validar stack com prova pequena (F1) | Backlog, sem agente, aguarda pedido de Daniel |
-| MAT-18 | Fundação e primeira fatia de cuidados (F2, seção 3) | Backlog, bloqueada por MAT-17 |
-| MAT-19 | Fatia inicial da comunidade (F3) | Backlog, bloqueada por MAT-18 |
+| MAT-17 | Validate the stack with a small proof (F1) | Backlog, no agent, awaiting Daniel's request |
+| MAT-18 | Foundation and first care slice (F2, section 3) | Backlog, blocked by MAT-17 |
+| MAT-19 | Initial community slice (F3) | Backlog, blocked by MAT-18 |
 
-### Questões abertas
+### Open questions
 
-1. Prova técnica e fatia separadas ou juntas: a proposta é separar, para não carregar código descartável para o produto.
-2. Item 8 da fatia (comunidade mínima) dentro ou fora.
-3. Quem participa da descoberta e com que recrutamento.
+1. Technical proof and slice separate or together: the proposal is to separate them, to avoid carrying disposable code into the product.
+2. Item 8 of the slice (minimal community) included or excluded.
+3. Who participates in discovery and how they are recruited.
 
-### Limites desta análise
+### Limits of this analysis
 
-Planejamento sem execução e sem estimativa de prazo: não há histórico de produtividade para basear números. As exigências das lojas foram lidas em 22/10/2026.
+Planning without execution or a time estimate: there is no productivity history on which to base numbers. Store requirements were read on 22/10/2026.
 
-## Questões abertas
+## Open questions
 
-1. D5 (MAT-24) e D7 (MAT-26): pessoas para conteúdo e moderação, e registros de testes de acesso; condicionam a fase 6.
-2. Recursos nativos do port (ADR-009, seção 4): definem quando a fase 7 pode começar.
+1. D5 (MAT-24) and D7 (MAT-26): people for content and moderation, and access test records; these are conditions for phase 6.
+2. Native features of the port (ADR-009, section 4): determine when phase 7 can begin.

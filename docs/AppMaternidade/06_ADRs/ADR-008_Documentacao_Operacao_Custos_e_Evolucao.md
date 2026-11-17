@@ -1,119 +1,119 @@
 ---
 tipo: adr
 id: ADR-008
-status: Proposta
+status: Proposed
 data: 2026-10-22
-autor: Hermes (coordenador da APP-001)
-aprovador: nenhum até agora
+autor: Hermes (coordinator of APP-001)
+aprovador: none so far
 tarefas: MAT-12, MAT-13, MAT-14, MAT-15, MAT-17, MAT-18
 ---
 
-# ADR-008 — Documentação, operação, custos e caminho de evolução
+# ADR-008 — Documentation, operations, costs, and evolution path
 
-> Nota de 03/11/2026: o rumo mudou para site completo primeiro e port Android e iOS depois ([ADR-009](ADR-009_Site_Completo_Primeiro.md)). Onde este texto fala em app nativo, leia como o port; o site cobre as mesmas funções.
+> Note from 03/11/2026: the direction changed to a complete website first and Android and iOS ports later ([ADR-009](ADR-009_Site_Completo_Primeiro.md)). Where this text refers to a native app, read it as the port; the website covers the same functions.
 
-**Status:** Proposta. Recomendação técnica do Hermes; não aprovada por Daniel.
+**Status:** Proposed. Technical recommendation from Hermes; not approved by Daniel.
 
-## Contexto e requisitos
+## Context and requirements
 
-- O produto vai ser construído e operado por uma equipe pequena, talvez uma pessoa só no início, com agentes de IA ajudando no desenvolvimento. As decisões precisam continuar legíveis por quem chegar depois, humano ou agente.
-- O repositório remoto é público, e o cofre de documentação fica dentro dele (`docs/AppMaternidade`). Nada sensível pode ir para o Git.
-- Os dados tratados são, por hipótese, de saúde de criança. Operação descuidada vira incidente ([Privacidade e segurança](../05_Privacidade_Operacao/Privacidade_e_Seguranca.md)).
-- Nas escalas ilustrativas, o custo de infraestrutura fica abaixo de US$ 350/mês, sem PITR e sem EAS Update. O custo de pessoas e de engenharia domina e não foi levantado ([Custos e operação](../05_Privacidade_Operacao/Custos_e_Operacao.md)).
-- A pesquisa encontrou fornecedores com risco de mudança: o Realm Device Sync foi encerrado, o Replicache entrou em manutenção, e planos gratuitos pausam por inatividade ([Dados, sincronização e backend](../08_Referencias/Tecnologias/Dados_Sincronizacao_e_Backend.md)). Toda dependência precisa de saída conhecida.
+- The product will be built and operated by a small team, perhaps just one person at first, with AI agents helping with development. Decisions must remain understandable to anyone who joins later, human or agent.
+- The remote repository is public, and the documentation vault is inside it (`docs/AppMaternidade`). Nothing sensitive may go into Git.
+- The data handled is assumed to concern children's health. Careless operations become incidents ([Privacy and security](../05_Privacidade_Operacao/Privacidade_e_Seguranca.md)).
+- At the illustrative scales, infrastructure costs remain below US$ 350/month, without PITR or EAS Update. People and engineering costs dominate and have not been assessed ([Costs and operations](../05_Privacidade_Operacao/Custos_e_Operacao.md)).
+- The research found providers at risk of change: Realm Device Sync was discontinued, Replicache entered maintenance mode, and free plans pause due to inactivity ([Data, synchronization, and backend](../08_Referencias/Tecnologias/Dados_Sincronizacao_e_Backend.md)). Every dependency needs a known exit path.
 
-## Opções consideradas
+## Options considered
 
-**Documentação:**
+**Documentation:**
 
-1. **Markdown no repositório**, em cofre Obsidian, com ADRs e evidências; tarefas e estado no itsaplan.
-2. Documentos dentro do itsaplan.
-3. Wiki externo.
+1. **Markdown in the repository**, in an Obsidian vault, with ADRs and evidence; tasks and status in itsaplan.
+2. Documents within itsaplan.
+3. External wiki.
 
-**Operação:**
+**Operations:**
 
-1. **Serviços gerenciados com planos pagos desde a homologação**, mais um serviço próprio pequeno em container.
-2. Auto-hospedar tudo (PostgreSQL, PowerSync Open Edition, serviço) desde o início.
-3. Planos gratuitos até o lançamento.
+1. **Managed services with paid plans starting in staging**, plus a small custom service in a container.
+2. Self-host everything (PostgreSQL, PowerSync Open Edition, service) from the start.
+3. Free plans until launch.
 
-**Evolução:**
+**Evolution:**
 
-1. **Fases com critério de saída e um ADR ou decisão por expansão** ([Roadmap](../07_Roadmap/Roadmap_e_Proxima_Fatia.md)).
-2. Plano fixo de funcionalidades.
+1. **Phases with exit criteria and an ADR or decision for each expansion** ([Roadmap](../07_Roadmap/Roadmap_e_Proxima_Fatia.md)).
+2. Fixed feature plan.
 
 ## Evidências
 
-- Os planos Free do Supabase e do PowerSync pausam ou desativam após 1 semana sem uso. O Supabase Pro custa a partir de US$ 25/mês e o PowerSync Pro a partir de US$ 49/mês (https://supabase.com/pricing e https://www.powersync.com/pricing, consultados em 22/10/2026; [Preços datados](../08_Referencias/Tecnologias/Precos_Datados.md)).
-- O Supabase Pro tem backups diários com 7 dias de acesso; o PITR de 7 dias custa US$ 100/mês; os backups não incluem objetos do Storage (mesma fonte).
-- O PowerSync Open Edition é auto-hospedável sob FSL-1.1-ALv2, e cada versão vira Apache-2.0 depois de dois anos (https://docs.powersync.com/intro/self-hosting; [Dados, sincronização e backend](../08_Referencias/Tecnologias/Dados_Sincronizacao_e_Backend.md)).
-- O itsaplan do projeto (http://localhost:3001/oficina/MAT) guarda tarefas, vínculos e um documento de estado. Os textos canônicos ficam no cofre ([Registro da organização](../00_Inicio/Registro_Organizacao.md)).
-- Nesta etapa, a ficha do Finnberry e quatro documentos (este ADR incluído) tiveram de ser escritos pelo coordenador depois de falhas de subagentes ([Progresso](../00_Inicio/Progresso.md)). Isso só foi possível porque a evidência estava em disco, e não apenas no histórico da conversa.
+- The Supabase and PowerSync Free plans pause or deactivate after 1 week without use. Supabase Pro starts at US$ 25/month and PowerSync Pro starts at US$ 49/month (https://supabase.com/pricing and https://www.powersync.com/pricing, accessed on 22/10/2026; [Dated pricing](../08_Referencias/Tecnologias/Precos_Datados.md)).
+- Supabase Pro has daily backups with 7 days of access; 7-day PITR costs US$ 100/month; backups do not include Storage objects (same source).
+- PowerSync Open Edition can be self-hosted under FSL-1.1-ALv2, and each version becomes Apache-2.0 after two years (https://docs.powersync.com/intro/self-hosting; [Data, synchronization, and backend](../08_Referencias/Tecnologias/Dados_Sincronizacao_e_Backend.md)).
+- The project's itsaplan (http://localhost:3001/oficina/MAT) stores tasks, links, and a status document. Canonical texts remain in the vault ([Organization record](../00_Inicio/Registro_Organizacao.md)).
+- At this stage, the Finnberry profile and four documents (including this ADR) had to be written by the coordinator after subagent failures ([Progress](../00_Inicio/Progresso.md)). This was only possible because the evidence was on disk, rather than only in the conversation history.
 
 ## Recomendação
 
-**Documentação:**
+**Documentation:**
 
-- O cofre `docs/AppMaternidade` é a fonte canônica de design docs, ADRs e evidências, com links Markdown relativos (legíveis no GitHub e no Obsidian).
-- O itsaplan guarda tarefas, dependências, decisões pendentes e um documento de estado. Ele não duplica texto editável.
-- Estados de ADR: Proposta, Aceita, Rejeitada e Substituída. "Aceita" só com aprovação registrada de Daniel, com data. Um ADR substituído aponta para o sucessor.
-- Cada afirmação relevante leva sua classe de evidência ([EXEC], [CÓDIGO], [DOC], [HIP]) e a data da fonte ([Convenções](../00_Inicio/Convencoes.md)).
-- O `.gitignore` exclui clones de referência, configuração local do Obsidian, capturas, pacotes de contexto e qualquer `.env`. Nenhum dado real de família entra no repositório, nem em teste.
+- The `docs/AppMaternidade` vault is the canonical source for design docs, ADRs, and evidence, with relative Markdown links (readable on GitHub and in Obsidian).
+- itsaplan stores tasks, dependencies, pending decisions, and a status document. It does not duplicate editable text.
+- ADR statuses: Proposed, Accepted, Rejected, and Superseded. "Aceita" only with Daniel's recorded approval, dated. A superseded ADR points to its successor.
+- Each relevant claim includes its evidence class ([EXEC], [CÓDIGO], [DOC], [HIP]) and the source date ([Conventions](../00_Inicio/Convencoes.md)).
+- `.gitignore` excludes reference clones, local Obsidian configuration, captures, context packages, and any `.env`. No real family data enters the repository, even in tests.
 
-**Operação:**
+**Operations:**
 
-- Serviços gerenciados (Supabase e PowerSync) com planos pagos a partir da homologação contínua e no piloto; os gratuitos ficam para provas descartáveis.
-- Serviço de domínio em container, com imagem reproduzível.
-- PITR de 7 dias e ensaio de restauração antes do piloto. Depois de restaurar, as exclusões são reaplicadas.
-- Monitoramento mínimo de disponibilidade, rejeições, atraso de sincronização, erros sem conteúdo, fila de moderação e gasto ([Custos e operação, seção 6](../05_Privacidade_Operacao/Custos_e_Operacao.md)).
-- Acesso administrativo com MFA, contas nominais e trilha de auditoria.
-- Plano de saída escrito para cada fornecedor ([Custos e operação, seção 7](../05_Privacidade_Operacao/Custos_e_Operacao.md)).
+- Managed services (Supabase and PowerSync) with paid plans starting in continuous staging and during the pilot; free plans are reserved for disposable proofs of concept.
+- Domain service in a container, with a reproducible image.
+- 7-day PITR and a restoration drill before the pilot. After restoration, deletions are reapplied.
+- Minimum monitoring of availability, rejections, synchronization lag, errors without content, the moderation queue, and spending ([Costs and operations, section 6](../05_Privacidade_Operacao/Custos_e_Operacao.md)).
+- Administrative access with MFA, named accounts, and an audit trail.
+- A written exit plan for each provider ([Costs and operations, section 7](../05_Privacidade_Operacao/Custos_e_Operacao.md)).
 
-**Custos:**
+**Costs:**
 
-- Preços sempre com data e fonte, revalidados antes de cada decisão de plano.
-- Cenários sempre marcados como ilustrativos.
-- Assinatura pessoal de IA nunca conta como crédito de API do produto.
+- Prices always include a date and source and are revalidated before each plan decision.
+- Scenarios are always marked as illustrative.
+- A personal AI subscription never counts as product API credit.
 
-**Evolução:**
+**Evolution:**
 
-- Fases F0 a F6 do roadmap, cada uma com critério de saída.
-- Toda expansão (anexos, 0 a 24 meses, grupos por fase, app web, áudio ao vivo, IA) entra com ADR ou decisão própria.
+- Roadmap phases F0 through F6, each with exit criteria.
+- Every expansion (attachments, 0 to 24 months, groups by stage, web app, live audio, AI) requires its own ADR or decision.
 
-Justificativa:
+Rationale:
 
-- **Documentação no repositório:** versiona junto com o código, sobrevive a falhas de ferramenta e de agente, e é lida tanto pelo Obsidian quanto por agentes.
-- **Serviços gerenciados:** reduzem a operação que uma pessoa precisaria fazer sozinha, e os planos pagos evitam pausas que derrubariam o piloto.
-- **Plano de saída:** mantém a escolha de fornecedor reversível sem reescrever o app.
+- **Documentation in the repository:** versioned alongside the code, survives tool and agent failures, and can be read by both Obsidian and agents.
+- **Managed services:** reduce the operational work one person would need to do alone, and paid plans prevent pauses that would bring down the pilot.
+- **Exit plan:** keeps the provider choice reversible without rewriting the app.
 
-## Consequências
+## Consequences
 
-- **Positivas:**
-  - decisões rastreáveis entre tarefa, documento, ADR e evidência;
-  - custo previsível na ordem de US$ 110 a 300 por mês até o piloto;
-  - restauração e saída de fornecedor ensaiáveis.
-- **Negativas:**
-  - custo fixo desde a homologação, mesmo sem usuários;
-  - dois fornecedores críticos;
-  - disciplina de documentação que consome tempo;
-  - cofre público, que exige revisão antes de cada commit para não expor nada sensível.
+- **Positive:**
+  - traceable decisions across tasks, documents, ADRs, and evidence;
+  - predictable costs on the order of US$ 110 to 300 per month through the pilot;
+  - restoration and provider exit can be rehearsed.
+- **Negative:**
+  - fixed costs starting in staging, even without users;
+  - two critical providers;
+  - documentation discipline that takes time;
+  - a public vault, which requires review before each commit to avoid exposing anything sensitive.
 
-## Riscos e verificação que falta
+## Risks and pending verification
 
-- Preços das regiões do Brasil não confirmados [NC].
-- RPO e RTO não decididos: eles definem o PITR e a janela de backup.
-- Ensaio de restauração e de reconstrução do PowerSync a partir do PostgreSQL ainda não feito; entra na MAT-17 ou na MAT-18.
-- Operação por uma pessoa só, sem plantão contínuo.
-- Links do cofre conferidos por script nesta etapa; a navegação no Obsidian depende de registrar o cofre (MAT-3, aguardando Daniel).
+- Pricing for Brazilian regions has not been confirmed [NC].
+- RPO and RTO have not been decided: they determine PITR and the backup window.
+- A drill to restore and rebuild PowerSync from PostgreSQL has not yet been performed; it is scheduled for MAT-17 or MAT-18.
+- Operations handled by one person, without continuous on-call coverage.
+- Vault links were checked by script at this stage; navigation in Obsidian depends on registering the vault (MAT-3, awaiting Daniel).
 
-## Quando revisar
+## When to review
 
-- Mudança de preço ou de plano do Supabase, do PowerSync ou da Expo que altere a ordem de grandeza.
-- O piloto mostrar que a operação não cabe no tempo disponível.
-- Exigência de RPO menor que o PITR oferece, ou de retenção maior de backup.
-- Entrada de mais pessoas na equipe, o que pode mudar a ferramenta de documentação ou de tarefas.
-- Troca da stack no ADR-002 ou no ADR-003.
+- A price or plan change from Supabase, PowerSync, or Expo that changes the order of magnitude.
+- The pilot shows that operations cannot fit within the available time.
+- A requirement for a lower RPO than PITR offers, or for longer backup retention.
+- More people joining the team, which may change the documentation or task tool.
+- A stack change in ADR-002 or ADR-003.
 
 ## Referências
 
-- Tarefas: MAT-12, MAT-13, MAT-14, MAT-15, MAT-17 e MAT-18 em http://localhost:3001/oficina/MAT
-- [Custos e operação](../05_Privacidade_Operacao/Custos_e_Operacao.md) · [Privacidade e segurança](../05_Privacidade_Operacao/Privacidade_e_Seguranca.md) · [Qualidade e validação](../05_Privacidade_Operacao/Qualidade_e_Validacao.md) · [Roadmap e próxima fatia](../07_Roadmap/Roadmap_e_Proxima_Fatia.md) · [Decisões para Daniel](../07_Roadmap/Decisoes_para_Daniel.md) · [ADR-002](ADR-002_Framework_Mobile.md) · [ADR-003](ADR-003_Backend_Persistencia_Autenticacao.md)
+- Tasks: MAT-12, MAT-13, MAT-14, MAT-15, MAT-17, and MAT-18 in http://localhost:3001/oficina/MAT
+- [Costs and operations](../05_Privacidade_Operacao/Custos_e_Operacao.md) · [Privacy and security](../05_Privacidade_Operacao/Privacidade_e_Seguranca.md) · [Quality and validation](../05_Privacidade_Operacao/Qualidade_e_Validacao.md) · [Roadmap and next slice](../07_Roadmap/Roadmap_e_Proxima_Fatia.md) · [Decisions for Daniel](../07_Roadmap/Decisoes_para_Daniel.md) · [ADR-002](ADR-002_Framework_Mobile.md) · [ADR-003](ADR-003_Backend_Persistencia_Autenticacao.md)

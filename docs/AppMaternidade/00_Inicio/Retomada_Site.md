@@ -1,370 +1,370 @@
 ---
-tipo: progresso
-status: em andamento
+tipo: progress
+status: in progress
 responsavel: lider-appmaternidade
 revisado_em: 2026-11-17
-fontes_principais: board Kanban appmaternidade; itsaplan MAT-27 a MAT-43; git main
+fontes_principais: appmaternidade Kanban board; itsaplan MAT-27 to MAT-43; git main
 ---
 
-# Retomada do site: estado em 03/11/2026
+# Resuming the site: state at 03/11/2026
 
-Esta é a nota de partida da próxima sessão de trabalho no site. Ela registra o estado da sessão de 03/11/2026. Antes de agir, confira o board `appmaternidade`, o itsaplan (MAT-27 e as tarefas filhas) e o `git log` da main: o estado verdadeiro está lá, não nesta nota.
+This is the starting note for the next working session on the site. It records the state of the 03/11/2026 session. Before acting, check the `appmaternidade` board, itsaplan (MAT-27 and its child tasks) and the `git log` of main: the true state is there, not in this note.
 
-**Site publicado (06/11/2026):** https://ded-techstack.github.io/AppMaternidade/ (MAT-48a, main 2beddee). Ele mostra Início, Hoje e Sessão com o aviso "Demonstração sem banco". As variáveis do banco entram no build com a MAT-37.
+**Published site (06/11/2026):** https://ded-techstack.github.io/AppMaternidade/ (MAT-48a, main 2beddee). It shows Início, Hoje and Sessão with the "Demonstração sem banco" notice. The database variables go into the build with MAT-37.
 
-## RETOMADA de 17/11/2026 (GO de Daniel): ESTADO VIGENTE
+## RESUMPTION of 17/11/2026 (Daniel's GO): CURRENT STATE
 
-ESTADO: ATIVO desde 17/11 ~11h (GO de Daniel ~10h40: retomar e terminar o site, subir no GitHub e registrar aqui). A pausa PAUSA-20261114 terminou. O passo a passo está no bloco RETOMAR de [PENDENCIAS](PENDENCIAS.md).
-- `origin/int/refazer` = fe52a8ee (trem de 14/11: H-3g, CI-GEO g2, AUD-F2, SEC-01, MED-AUTH, RF12-HIER). `main` sem mudança (publicação só com o portão PROD_AUDIT em GO e as duas notas >= 7,5 em todas as páginas).
-- 17/11 ~11h: 21 cartões liberados. Com código pronto, voltando para revisão: NEW-A (rodapé), VIS-1 (movimento), NEW-C (casca logada), BASE-DEF-1, SEC-02 (environment banco-producao), VIS-4, SEC-03, SEC-05, LOC-08. Retrabalho: NEW-B (decisão: JS desligado sai do escopo e vai para o PA-03), LOC-01 (depois do NEW-B), LOC-04, QA-HOSTIL (2/2), CODE-Q e PERF (pedir revisão), LOC-03, LOC-05, J-RF12-1, H-4. Correções: FIX-RELOGIO, AUD-F4 g3, CI-UBUNTU, FABLE-D. A11Y-ZOOM arquivado (dados viram insumo do A11Y-Z1).
-- Filhos do líder em curso: SEC-06 (teste do banco em 473ea66 para o revisor), integração da LOC-02 (74f499b5) com o juiz Fable, atualização dos rascunhos CARDS_62 + PA-01/PA-03 na base nova, fechamento da spec RF-14 v3.
-- Contas (coordenador, 17/11 ~06h): os 3 segredos estão no environment banco-producao e o login com Google está ligado no Supabase (redirecionamento localhost).
+STATE: ACTIVE since 17/11 ~11h (Daniel's GO ~10h40: resume and finish the site, push it to GitHub and record it here). The PAUSA-20261114 pause has ended. The step-by-step is in the RETOMAR block of [PENDENCIAS](PENDENCIAS.md).
+- `origin/int/refazer` = fe52a8ee (merge train of 14/11: H-3g, CI-GEO g2, AUD-F2, SEC-01, MED-AUTH, RF12-HIER). `main` unchanged (publication only with the PROD_AUDIT gate at GO and both scores >= 7,5 on every page).
+- 17/11 ~11h: 21 cards released. With code ready, going back to review: NEW-A (footer), VIS-1 (motion), NEW-C (logged-in shell), BASE-DEF-1, SEC-02 (banco-producao environment), VIS-4, SEC-03, SEC-05, LOC-08. Rework: NEW-B (decision: JS disabled leaves the scope and goes to PA-03), LOC-01 (after NEW-B), LOC-04, QA-HOSTIL (2/2), CODE-Q and PERF (request review), LOC-03, LOC-05, J-RF12-1, H-4. Fixes: FIX-RELOGIO, AUD-F4 g3, CI-UBUNTU, FABLE-D. A11Y-ZOOM archived (its data becomes input for A11Y-Z1).
+- Leader's children in progress: SEC-06 (database test in 473ea66 for the reviewer), integration of LOC-02 (74f499b5) with the Fable judge, update of the CARDS_62 + PA-01/PA-03 drafts on the new base, closing of the RF-14 v3 spec.
+- Accounts (coordinator, 17/11 ~06h): the 3 secrets are in the banco-producao environment and Google login is enabled in Supabase (localhost redirect).
 
-## RETOMADA de 13/11/2026 (sessão nova do líder): histórico
+## RESUMPTION of 13/11/2026 (new leader session): history
 
-ESTADO: PAUSE (14/11 ~03h15, Daniel; state in PENDENCIAS.md, block RETOMAR 14/11). Before: ATIVO (14/11 00h40, retomada depois da pausa de 13/11; soltura dos cartões aguarda o "GO cards" do coordenador, ordem em PENDENCIAS.md). Frente principal: item H, sistema de harmonia (polimento por página congelado).
-- MAT-40c integrada: `origin/int/refazer` = a003fe4 (merge do 5ff67f6 revisado, diff idêntico, check 2734 testes na 3ª execução; as duas primeiras caíram no teste intermitente DES-09 "carregando", que vira o cartão MAT-48f t_dfbff632). Recibo no comentário 721.
-- MAT-39b t_c9529365 rodando na correção 2/2 (comentário 713); P-60 t_ca45d30f aprovada com limites (evidência da 37b); P-50 t_2af603f6 reduzida a C-1, C-3 e C-4 (comentário 711); POL-ABR t_d04a8a7d estacionada (comentário 712).
-- H passo 1 feito: `C:/OrchestrationLab/projetos/_staging/appmaternidade/HARMONIA/MEDIDAS.md` (Pato Jack, Good Inside no Rare Days e goodinside.com, 1440 e 390, getComputedStyle; nosso site medido com o mesmo script). Achados: nós somamos margem de seção 96 com painel 64 (160 entre conteúdos; 108 a 161 no celular, o dobro ou o triplo da referência), temos 3 margens esquerdas por página e a escala de títulos sem razão fixa (84/56/48/36).
-- H passo 2 em spec: `HARMONIA/SPEC_H.md` v1 (portão enxuto, explique de volta R1). Depois: H-2 (DESIGN.md e tema gerado), H-3 (primitivas globais, um cartão), H-4 (números e replica-diff antes dos juízes).
+STATE: PAUSE (14/11 ~03h15, Daniel; state in PENDENCIAS.md, block RETOMAR 14/11). Before: ACTIVE (14/11 00h40, resumption after the 13/11 pause; releasing the cards awaits the coordinator's "GO cards", order in PENDENCIAS.md). Main front: item H, harmony system (per-page polishing frozen).
+- MAT-40c integrated: `origin/int/refazer` = a003fe4 (merge of the reviewed 5ff67f6, identical diff, check 2734 tests on run 3; the first two hit the intermittent test DES-09 "carregando", which becomes card MAT-48f t_dfbff632). Receipt in comment 721.
+- MAT-39b t_c9529365 running on fix 2/2 (comment 713); P-60 t_ca45d30f approved with limits (evidence from 37b); P-50 t_2af603f6 reduced to C-1, C-3 and C-4 (comment 711); POL-ABR t_d04a8a7d parked (comment 712).
+- H step 1 done: `C:/OrchestrationLab/projetos/_staging/appmaternidade/HARMONIA/MEDIDAS.md` (Pato Jack, Good Inside on Rare Days and goodinside.com, 1440 and 390, getComputedStyle; our site measured with the same script). Findings: we add section margin 96 to panel 64 (160 between content blocks; 108 to 161 on mobile, double or triple the reference), we have 3 left margins per page, and the heading scale has no fixed ratio (84/56/48/36).
+- H step 2 in spec: `HARMONIA/SPEC_H.md` v1 (lean gate, explain-back R1). Then: H-2 (DESIGN.md and generated theme), H-3 (global primitives, one card), H-4 (numbers and replica-diff before the judges).
 
-## PAUSA de 12/11/2026 ~07h50 (Daniel, via coordenador, t_8f26b965): histórico
+## PAUSE of 12/11/2026 ~07h50 (Daniel, via coordinator, t_8f26b965): history
 
-Pausa num ponto seguro; Daniel volta em alguns dias (cota do GPT no fim). Cron retorno-oc (cacefbc1849d) pausado; 39b em triage, P-60 bloqueada, P-50 e POL-ABR em scheduled, MAT-40c aprovada sem integrar. O passo a passo da retomada está no bloco RETOMAR de [PENDENCIAS](PENDENCIAS.md).
+Pause at a safe point; Daniel comes back in a few days (GPT quota running out). Cron retorno-oc (cacefbc1849d) paused; 39b in triage, P-60 blocked, P-50 and POL-ABR in scheduled, MAT-40c approved but not integrated. The step-by-step for resuming is in the RETOMAR block of [PENDENCIAS](PENDENCIAS.md).
 
-## TROCA DE SESSÃO (12/11/2026, 7h42): histórico
+## SESSION SWITCH (12/11/2026, 7h42): history
 
-Daniel, via coordenador (t_64dcb622), depois de ver a galeria do estado atual: a base está boa, mas falta a harmonia de espaço do Pato Jack e da Becky/Good Inside, e o polimento por página não converge. O polimento por página está congelado (POL-ABR t_d04a8a7d estacionado) e entra o item H, sistema de harmonia: medir o espaço e o tipo das duas referências, derivar as escalas e aplicar de forma global. O passo a passo da sessão nova está no bloco RETOMAR de [PENDENCIAS](PENDENCIAS.md).
+Daniel, via the coordinator (t_64dcb622), after seeing the gallery of the current state: the base is good, but it lacks the spatial harmony of Pato Jack and Becky/Good Inside, and per-page polishing does not converge. Per-page polishing is frozen (POL-ABR t_d04a8a7d parked) and item H comes in, the harmony system: measure the spacing and type of the two references, derive the scales and apply them globally. The step-by-step for the new session is in the RETOMAR block of [PENDENCIAS](PENDENCIAS.md).
 
-- `origin/int/refazer` = 9091c13 (10 integrações em 12/11: 38a g2, POL-DES v1 e v2, POL-TXT v2, POL-INI v2, 40b, 39a g2, MAT-48e, 37b g3, 38b). `main` intocada; publicação só com o "pode" (P-19).
-- Abertos: MAT-40c t_ec79b067 aprovada (5ff67f6), falta integrar; MAT-39b t_c9529365 em correção 1/2; P-60 t_ca45d30f (evidência da 37b) e P-50 t_2af603f6 (casco) rodando.
-- Decisões de Daniel em 12/11: Gmail no Contato fica por enquanto e troca antes de divulgar (P-63); limpeza de worktrees ainda espera "pode limpar".
-- Achado do dia: a ferramenta de captura usava DSF 1 com recorte ampliado e as cenas saíam borradas para os juízes; corrigida (DSF 2 real). Com ela, Como funciona, Cuidado e Desenvolvimento passaram de 2/15 para 10/15 e o Início de 4/10 para 6/10; as páginas de texto ficaram em 0/13.
+- `origin/int/refazer` = 9091c13 (10 integrations in 12/11: 38a g2, POL-DES v1 and v2, POL-TXT v2, POL-INI v2, 40b, 39a g2, MAT-48e, 37b g3, 38b). `main` untouched; publication only with "pode" (P-19).
+- Open: MAT-40c t_ec79b067 approved (5ff67f6), still to be integrated; MAT-39b t_c9529365 in fix 1/2; P-60 t_ca45d30f (evidence from 37b) and P-50 t_2af603f6 (shell) running.
+- Daniel's decisions on 12/11: the Gmail address on Contato stays for now and is swapped before the site is promoted (P-63); worktree cleanup still waits for "pode limpar".
+- Finding of the day: the capture tool used DSF 1 with an enlarged crop, and the scenes came out blurry for the judges; fixed (real DSF 2). With it, Como funciona, Cuidado and Desenvolvimento went from 2/15 to 10/15 and Início from 4/10 to 6/10; the text pages stayed at 0/13.
 
-## CONSTRUÇÃO EM CURSO (11/11/2026, 9h25): histórico
+## BUILD IN PROGRESS (11/11/2026, 9h25): history
 
-- **Spec:** `C:/OrchestrationLab/projetos/_staging/appmaternidade/DIRECOES_20261111/FINAL/DESIGN.md` (sha256 e504df37). As regras comuns dos cartões ficam em `FINAL/CARTOES_COMUM.md` (sha256 626371ab).
-- **Ativos gerados pelo Codex no plano do ChatGPT:**
-  - 4 cenas de estúdio com a tela em verde, que serão compostas com capturas reais pelo `ferramentas/compor.py`, já testado;
-  - 6 ilustrações de traço;
-  - o registro de cada um em `FINAL/ativos/PROVENANCE.md`.
-- **Cartões:**
-  - t_fdba5bed MAT-49a g1, base: tokens, fontes, cabeçalho, rodapé, componentes, movimento e `/sistema`. O código ficou pronto (62eab0f), com prévia em http://127.0.0.1:5281/sistema. Caiu em triage porque o medidor de tela media o sistema antigo; arquivada em 11/11 com o aval do coordenador, porque a g2 leva o código dela.
-  - t_836284e3 MAT-49a g2: reescreve o medidor para o DESIGN.md e completa as licenças, depois pede revisão de g1 + g2. É o pai dos 5 cartões de página. Galeria da base: `DIRECOES_20261111/GALERIA_BASE.html`.
-  - t_26066f02 MAT-49b: Hoje, Sessão e Madrugada. Em Opus, espera a base.
-  - t_3c6e3a0c MAT-49c: Início com as cenas. Em Opus, espera só a base desde 11/11 10h15. As cenas são compostas com capturas das próprias páginas.
-  - t_ee526db4 MAT-36r-A: Como funciona, Cuidado compartilhado e Desenvolvimento. Em Opus, espera só a base desde 11/11 10h15.
-  - t_0aecd8d2 MAT-49d: recompõe as cenas com as telas novas de Hoje, Sessão e Madrugada, só nas imagens. Espera a 49b, a 49c, a 36r-A e o 37r.
-  - 11h30: 49b, 49c, 36r-A e 37r rodam juntos sobre o head d65dfeb da g2 (aval do coordenador), enquanto a g2 passa pela revisão R2 do medidor. A 36r-B espera a g2 aprovada. O líder leva a correção do medidor aos ramos das páginas antes da revisão delas.
-  - t_e1d0eaa8 MAT-36r-B: 6 páginas de texto. Em Sonnet, espera a base.
-  - t_d63c932a MAT-37r: traz o fad75c0 (37a) e refaz as telas de acesso. Em Sonnet, espera a base.
-- **Arquivados como substituídos:** t_915e3632 (37a, que tem o MAT-37r como sucessor) e t_55a580e8 (39a, coberto pela 36r-A).
-- **Religados e ainda em `scheduled`:**
-  - 37b t_11ad28e6 e 37g t_1757260d, agora presos ao 37r;
-  - 38a t_f7bdf7e8, que também espera a 49b;
-  - 39b t_c9529365, agora preso à 36r-A;
-  - 40a t_4c921e60, agora preso ao 37r.
-  - O corpo deles será reescrito para a base nova antes do `unblock`.
-- **Aceite visual:** depois que o revisor aprovar cada cartão, passa por 2 juízes cegos de famílias diferentes, calibrados antes, e então vai para a galeria do Daniel.
+- **Spec:** `C:/OrchestrationLab/projetos/_staging/appmaternidade/DIRECOES_20261111/FINAL/DESIGN.md` (sha256 e504df37). The common rules for the cards are in `FINAL/CARTOES_COMUM.md` (sha256 626371ab).
+- **Assets generated by Codex on the ChatGPT plan:**
+  - 4 studio scenes with the screen in green, to be composited with real captures by `ferramentas/compor.py`, already tested;
+  - 6 line illustrations;
+  - the record of each one in `FINAL/ativos/PROVENANCE.md`.
+- **Cards:**
+  - t_fdba5bed MAT-49a g1, base: tokens, fonts, header, footer, components, motion and `/sistema`. The code was ready (62eab0f), with a preview at http://127.0.0.1:5281/sistema. It fell into triage because the screen meter was measuring the old system; archived on 11/11 with the coordinator's approval, because g2 carries its code.
+  - t_836284e3 MAT-49a g2: rewrites the meter for DESIGN.md and completes the licenses, then requests review of g1 + g2. It is the parent of the 5 page cards. Base gallery: `DIRECOES_20261111/GALERIA_BASE.html`.
+  - t_26066f02 MAT-49b: Hoje, Sessão and Madrugada. On Opus, waiting for the base.
+  - t_3c6e3a0c MAT-49c: Início with the scenes. On Opus, waiting only for the base since 11/11 10h15. The scenes are composited with captures of the pages themselves.
+  - t_ee526db4 MAT-36r-A: Como funciona, Cuidado compartilhado and Desenvolvimento. On Opus, waiting only for the base since 11/11 10h15.
+  - t_0aecd8d2 MAT-49d: recomposes the scenes with the new Hoje, Sessão and Madrugada screens, in the images only. Waits for 49b, 49c, 36r-A and 37r.
+  - 11h30: 49b, 49c, 36r-A and 37r run together on head d65dfeb of g2 (coordinator's approval), while g2 goes through review R2 of the meter. 36r-B waits for g2 to be approved. The leader carries the meter fix over to the page branches before they are reviewed.
+  - t_e1d0eaa8 MAT-36r-B: 6 text pages. On Sonnet, waiting for the base.
+  - t_d63c932a MAT-37r: brings in fad75c0 (37a) and redoes the access screens. On Sonnet, waiting for the base.
+- **Archived as superseded:** t_915e3632 (37a, which has MAT-37r as its successor) and t_55a580e8 (39a, covered by 36r-A).
+- **Relinked and still in `scheduled`:**
+  - 37b t_11ad28e6 and 37g t_1757260d, now tied to 37r;
+  - 38a t_f7bdf7e8, which also waits for 49b;
+  - 39b t_c9529365, now tied to 36r-A;
+  - 40a t_4c921e60, now tied to 37r.
+  - Their bodies will be rewritten for the new base before `unblock`.
+- **Visual acceptance:** after the reviewer approves each card, it goes through 2 blind judges from different families, calibrated beforehand, and then on to Daniel's gallery.
 
-## DIREÇÃO ESCOLHIDA (11/11/2026, 9h03): histórico
+## CHOSEN DIRECTION (11/11/2026, 9h03): history
 
-- **Decisões de Daniel (11/11, de manhã), repassadas pelo coordenador** (`C:/OrchestrationLab/exports/Revisao_Geral_20261111/retomada_lideres/APPMATERNIDADE_V2.md` e `V2b.md`):
-  - nenhuma das direções A/B/C;
-  - quer uma fusão da Pato Jack (paleta e alma) com a Becky/Good Inside (recursos visuais);
-  - quem desenha olha as duas fontes; não entram ativos, textos nem código delas;
-  - imagem, sombra e gradiente liberados, controlados pelos tokens;
-  - imagens geradas no site publicado, com curadoria e `PROVENANCE.md`;
-  - Opus nas telas que definem a cara do site.
-- **Rodada 2.** A galeria `C:/OrchestrationLab/projetos/_staging/appmaternidade/DIRECOES_20261111/GALERIA2.html` traz as 3 fusões, cada uma com DESIGN.md e 3 composições. A análise dos 24 recursos está em `rodada2/ANALISE_FEATURES.md`, com as capturas das duas fontes em 1440 e 390.
-- **Escolha de Daniel, às 9h03:** a **F1 Campo de mel**, que leva a estrutura e o movimento da Becky com as cores da Pato Jack, mais duas peças das outras fusões: da F2, a tabela de comparação, a faixa de selos e os depoimentos; da F3, o modo Madrugada nas telas do app. O registro está em `DIRECOES_20261111/GOSTO_DANIEL.md`.
-- **Próximo passo:**
-  1. Fechar o DESIGN.md final e a lista de ativos.
-  2. Gerar e escolher os ativos: as cenas de estúdio e o traço preto.
-  3. Criar o cartão da base (tokens, casca, componentes), em Opus, e mostrar a base a Daniel cedo.
-  4. Abrir as páginas em paralelo em cima da base.
-  5. Abrir o sucessor que integra o `fad75c0` (37a) e religar os cartões em `scheduled` a ele.
+- **Daniel's decisions (11/11, in the morning), relayed by the coordinator** (`C:/OrchestrationLab/exports/Revisao_Geral_20261111/retomada_lideres/APPMATERNIDADE_V2.md` and `V2b.md`):
+  - none of directions A/B/C;
+  - wants a fusion of Pato Jack (palette and soul) with Becky/Good Inside (visual devices);
+  - whoever designs looks at both sources; none of their assets, text or code goes in;
+  - images, shadows and gradients allowed, controlled by the tokens;
+  - generated images on the published site, with curation and `PROVENANCE.md`;
+  - Opus on the screens that define the site's look.
+- **Round 2.** The `C:/OrchestrationLab/projetos/_staging/appmaternidade/DIRECOES_20261111/GALERIA2.html` gallery has the 3 fusions, each with a DESIGN.md and 3 compositions. The analysis of the 24 visual devices is in `rodada2/ANALISE_FEATURES.md`, with the captures of the two sources in 1440 and 390.
+- **Daniel's choice, at 9h03:** **F1 Campo de mel**, which takes Becky's structure and motion with Pato Jack's colors, plus two pieces from the other fusions: from F2, the comparison table, the badge strip and the testimonials; from F3, the Madrugada mode on the app screens. The record is in `DIRECOES_20261111/GOSTO_DANIEL.md`.
+- **Next step:**
+  1. Finalize the DESIGN.md and the asset list.
+  2. Generate and choose the assets: the studio scenes and the black line art.
+  3. Create the base card (tokens, shell, components), on Opus, and show the base to Daniel early.
+  4. Open the pages in parallel on top of the base.
+  5. Open the successor that integrates `fad75c0` (37a) and relink the cards in `scheduled` to it.
 
-## VISUAL REFEITO DO ZERO, passo 0 (11/11/2026, 3h20): histórico
+## VISUAL REDONE FROM SCRATCH, step 0 (11/11/2026, 3h20): history
 
-Este bloco substitui o de 10/11 logo abaixo, que vale só como histórico. Nele, os cartões 44d-3, MAT-36 g2, 6b, 6c e 44d-6 ficaram superados.
+This block replaces the 10/11 block just below, which now serves only as history. In it, cards 44d-3, MAT-36 g2, 6b, 6c and 44d-6 were superseded.
 
-- **Por quê.** Às 2h20, Daniel rejeitou o visual do site ("um completo lixo visualmente", "não segue em nada o site referência"). A causa está na auditoria da infra (`C:/OrchestrationLab/exports/Revisao_Geral_20261111/T1_visual/RESULTADO.md`). A spec MAT-44d mandava fazer os aparelhos em 3D de CSS e proibia imagem, sombra e gradiente. A sala limpa tirou da spec a aparência da referência. E o juiz Fable deu nota ao próprio plano.
-- **Regra nova (equipe c93a301).** O código de uma página só começa depois que Daniel aprova uma galeria de direções. O aceite visual é feito por 2 juízes cegos de famílias diferentes, calibrados antes, com no máximo 2 rodadas por página. Quem escreveu a spec não julga. Pausa se faz com `schedule`, não com `block`.
-- **Feito no passo 0.** A galeria está em `C:/OrchestrationLab/projetos/_staging/appmaternidade/DIRECOES_20261111/GALERIA.html`. Cada uma das 3 direções tem um DESIGN.md (paleta com contraste medido, 2 famílias de letra, espaçamento, componentes, o que fazer e o que não fazer, e como se fazem as imagens) e 3 comps do image_gen do Codex, feitas no plano do ChatGPT: a abertura, o Hoje e uma página pública. A referência e as capturas rejeitadas ficam ao lado. O registro de cada imagem está em `PROVENANCE.md`.
-  - A, Estúdio anil: celulares reais fotografados em estúdio sobre anil `#2E4BD8`, com as letras Bricolage Grotesque e Atkinson Hyperlegible Next.
-  - B, Madrugada: abertura noturna com luz de abajur e fotos sem rosto, com as letras Young Serif e Figtree.
-  - C, Bilhete da família: ilustração em guache e bilhetes amarelos, com as letras Shantell Sans e Hanken Grotesk.
+- **Why.** At 2h20, Daniel rejected the site's look ("um completo lixo visualmente", "não segue em nada o site referência"). The cause is in the infra audit (`C:/OrchestrationLab/exports/Revisao_Geral_20261111/T1_visual/RESULTADO.md`). Spec MAT-44d required the devices to be built in 3D CSS and prohibited images, shadows and gradients. The clean room stripped the reference's appearance out of the spec. And the Fable judge scored its own plan.
+- **New rule (team c93a301).** A page's code only starts after Daniel approves a gallery of directions. Visual acceptance is done by 2 blind judges from different families, calibrated beforehand, with at most 2 rounds per page. Whoever wrote the spec does not judge. Pausing is done with `schedule`, not with `block`.
+- **Done in step 0.** The gallery is in `C:/OrchestrationLab/projetos/_staging/appmaternidade/DIRECOES_20261111/GALERIA.html`. Each of the 3 directions has a DESIGN.md (palette with measured contrast, 2 typeface families, spacing, components, dos and don'ts, and how the images are made) and 3 comps from Codex's image_gen, made on the ChatGPT plan: the opening, Hoje and a public page. The reference and the rejected captures sit alongside them. The record of each image is in `PROVENANCE.md`.
+  - A, Estúdio anil: real phones photographed in a studio on indigo `#2E4BD8`, with the typefaces Bricolage Grotesque and Atkinson Hyperlegible Next.
+  - B, Madrugada: night-time opening with lamplight and faceless photos, with the typefaces Young Serif and Figtree.
+  - C, Bilhete da família: gouache illustration and yellow notes, with the typefaces Shantell Sans and Hanken Grotesk.
 - **Board.**
-  - Arquivados como substituídos: t_5184c99c (44d-3), t_93f3308e (MAT-36 g2), t_b2a55931 (MAT-36), t_f67d8962 (44c-1), t_ab1bd202 (PWA, que Daniel recusou), t_77f83db6 (6b), t_673ee2f7 (6c) e t_1584e47e (44d-6).
-  - Em `scheduled`, a lógica de dados e de acesso: t_915e3632 (37a, com o código aprovado `fad75c0` no ramo `wt/t_915e3632`), t_1757260d (37g), t_11ad28e6 (37b), t_f7bdf7e8 (38a), t_7c491177 (38b), t_55a580e8 (39a), t_c9529365 (39b), t_4c921e60 (40a) e t_359ab800 (40b).
-  - Nenhum cartão está em triage. A 48b já estava concluída (t_fa51c4df e t_0754f01f).
-- **Git.** Nada foi integrado e não houve push para a main. `int/refazer` continua em e73e75a, e o site publicado continua o antigo.
-- **Esperando Daniel (decisor: Daniel), as perguntas da galeria:**
-  1. Qual direção ele escolhe. Recomendo a A, com o modo Madrugada da B nas telas do app à noite.
-  2. Se quem desenha pode ver a referência. Recomendo sim, sem que nada dela entre no repositório ou no site.
-  3. Se libera imagem, sombra e gradiente, só pelos tokens. Recomendo sim.
-  4. Se aceita imagens geradas no site publicado. Recomendo sim, com curadoria e `PROVENANCE.md`.
-  5. Se o Opus escreve as telas que definem a cara do site. Recomendo sim, com o Sonnet nas páginas que só seguem o padrão.
-- **Próximo passo, depois da resposta.** Uma rodada de refinamento da direção escolhida, também em imagem. Depois:
-  - um DESIGN.md final;
-  - os ativos gerados e escolhidos;
-  - um cartão de casca, com os tokens, o cabeçalho, o rodapé e uma página modelo;
-  - um cartão sucessor que integra o `fad75c0` (37a) e refaz as telas de acesso;
-  - antes de qualquer `unblock`, religar a esse sucessor os cartões em `scheduled` que eram filhos da 44d-3 ou da MAT-36 g2.
+  - Archived as superseded: t_5184c99c (44d-3), t_93f3308e (MAT-36 g2), t_b2a55931 (MAT-36), t_f67d8962 (44c-1), t_ab1bd202 (PWA, which Daniel declined), t_77f83db6 (6b), t_673ee2f7 (6c) and t_1584e47e (44d-6).
+  - In `scheduled`, the data and access logic: t_915e3632 (37a, with code approved `fad75c0` on branch `wt/t_915e3632`), t_1757260d (37g), t_11ad28e6 (37b), t_f7bdf7e8 (38a), t_7c491177 (38b), t_55a580e8 (39a), t_c9529365 (39b), t_4c921e60 (40a) and t_359ab800 (40b).
+  - No card is in triage. 48b was already done (t_fa51c4df and t_0754f01f).
+- **Git.** Nothing was integrated and there was no push to main. `int/refazer` remains at e73e75a, and the published site is still the old one.
+- **Waiting on Daniel (decision-maker: Daniel), the gallery questions:**
+  1. Which direction to choose. I recommend A, with B's Madrugada mode on the app screens at night.
+  2. Whether whoever designs may see the reference. I recommend yes, without anything from it entering the repository or the site.
+  3. Whether to allow images, shadows and gradients, only through the tokens. I recommend yes.
+  4. Whether to accept generated images on the published site. I recommend yes, with curation and `PROVENANCE.md`.
+  5. Whether Opus writes the screens that define the site's look. I recommend yes, with Sonnet on the pages that only follow the pattern.
+- **Next step, after the answer.** A refinement round of the chosen direction, also as images. Then:
+  - a final DESIGN.md;
+  - the generated and selected assets;
+  - a shell card, with the tokens, the header, the footer and a template page;
+  - a successor card that integrates `fad75c0` (37a) and redoes the access screens;
+  - before any `unblock`, relink to that successor the cards in `scheduled` that were children of 44d-3 or MAT-36 g2.
 
-## RETOMADA de 10/11/2026 (Hermes v0.23.1): histórico, substituído pelo bloco acima
+## RESUMPTION of 10/11/2026 (Hermes v0.23.1): history, superseded by the block above
 
-- **Cartões e condutor.** O quadro 9119 (PATCH) devolveu a ready os 4 cartões da pausa: t_f67d8962 (44c-1), t_ecf636f5 (44c-2a), t_915e3632 (37a) e t_fa51c4df (48b). Eles e os filhos t_b2a55931 (MAT-36) e t_1757260d (37g) agora são conduzidos pelo **executor-appmaternidade**, em Sonnet. Os comentários 119 a 122 levam a ordem de trabalho: rebase sobre 41d20d3, só as 2 skills, e os testes de borda que falham fechado (item 8).
-- **Prévia.** Fechei o vite que estava aberto na porta 5175 desde 09/11. Ele era do worktree da 37a.
-- **Aceite visual.** O avaliador agora é o do piloto: Fable 5.2 high, com o Opus também nas 2 primeiras telas. As duas notas vão no cartão. Se uma nota ficar a menos de 0,2 do mínimo, a decisão volta para mim. O mínimo continua 8,0.
-- **OSV (decisão do líder, 10/11).** O alerta de `zod 3.25.76` vem de `@google/design.md`, e os de `minimatch 10.2.6` e 3.1.5 vêm do eslint e do typescript-eslint. Todos são **só de desenvolvimento**: não vão para o build do site nem rodam no navegador do usuário. Não abro cartão agora. Eles sobem com a próxima atualização de dependências de desenvolvimento.
-- **Plugins (decisão do líder, 10/11).** O Playwright CLI no OpenCode e o Modern Web Guidance ficam para depois. O foco agora é fechar o site. As capturas continuam pelo `navegacao-agentes`.
-- **Subagentes.** Há 2 em curso. Um escreve os corpos 44c-2b e 37b. O outro faz a spec v3 da MAT-38 com os corpos 38a e 38b. Depois deles vêm as MAT-39, 40 e 41. Com 4 cartões rodando, mantenho no máximo 2 subagentes.
-- **Marco (10/11).** A MAT-44c-2a, que traz as peças de movimento e o motion 12.43.0 sem ligar nada nas páginas, foi integrada na main **7472abc**. Para isso, os 5 commits do d7f6c6d aprovado foram rebaseados e o range-diff deu igual nos 5. O check passou com 582 testes. O OSV não achou nada novo, só os alertas zod e minimatch, que são de desenvolvimento.
-- **Decisão (10/11).** A spec v3 da MAT-38 foi aprovada (sha 87dd78d9) e as das MAT-39, 40 e 41 também (shas 145824bc, 0d387f95 e 93c02716). Os cartões foram criados e ligados aos pais: 44c-2b t_6e8036b9, 37b t_11ad28e6, 38a t_f7bdf7e8, 38b t_7c491177, 39a t_55a580e8, 39b t_c9529365, 40a t_4c921e60, 40b t_359ab800 e 41a t_ab1bd202. A 41b só nasce depois do commit de junção C41b. Na 39a e na MAT-36 entrou uma emenda: sai "Revisão profissional: pendente" e o selo de rascunho (comentários 129 e 130). Para a 48b, a ACC-11 foi emendada no comentário 125.
-- **Marco (10/11): MAT-48b concluída.** Integrei na main **146e290**. Os 3 commits do c2a7cc2 foram rebaseados, e o range-diff deu igual. Como o sandbox do revisor-appmaternidade falha com ShellExecuteExW 1223 neste cartão, a revisão veio da R-B (codex gpt-6-astra, só leitura), com o resultado APPROVED_WITH_LIMITS (`MAT-48/RB_REVISAO_48b.md`). A verificação determinística ficou com o líder, em `.oc/lider_verif/`. **As migrações já estão aplicadas no Supabase da nuvem** (run 42785674785). O job de dados iniciais falhou porque a CLI pede `--yes`. Nada mudou na nuvem, e a correção está no cartão t_0754f01f (MAT-48b-fix). Depois dela, o líder roda o job de dados de novo.
-- **Marco (10/11): banco da nuvem pronto.** A correção t_0754f01f foi integrada em **67d390a**. O run 42787421628 passou nos 3 jobs: testes locais, migrações na nuvem e dados iniciais. Os termos vigentes estão garantidos. O admin ainda não existe e só será criado quando Daniel tiver conta no site, o que depende da 37a.
-- **RETOMADA de 11/11, às 1h35.** Daniel retomou só com a infra e o AppMaternidade. A infra soltou a 44d-3 (t_5184c99c), a 6a (t_f21ee109) e a MAT-36. `int/refazer` está em e73e75a, e a main em c86090a, com push.
-  - **MAT-36 em ESCALA-2R:** o cartão teve 3 `changes_requested`. O t_b2a55931 foi encerrado, com o worktree e o 667bf2b guardados.
-  - **Sucessor da MAT-36:** o g2 é o **t_93f3308e**. Ele parte do 667bf2b e traz a lista consolidada de 12 itens. Esta é a volta visual 3/3; se falhar, o caso vai a Daniel com a galeria. A 6c, a 39a e a 40a foram religadas a ele.
-  - **Limite de 2 skills por cartão:** a 6b e a 6c, que fixavam 4 skills e não tinham começado, foram arquivadas. Os cartões novos são a **6b t_77f83db6** e a **6c t_673ee2f7**, com 2 skills e o protocolo do `rodada.py`. A 6a, que já estava rodando com 4 skills, ficou como estava.
-  - **Próximo passo:** integrar a 44d-3, o que libera a 37b, a 39a, a 40a e a 6b. Depois, integrar a MAT-36 g2, o que libera a 6c. Em seguida a 44d-6 e a galeria.
-- **PAUSA de 10/11, às 20h15 (pedido de Daniel).** Daniel retoma mais tarde, com a infra e o AppMaternidade. Nada foi integrado depois do pedido e não houve push para a main.
-  - **Estado:** `int/refazer` está em **e73e75a** e já tem a 44d-1 (base), a 44d-4 (Início), a 44d-2 (área logada) e a 44d-5 (imagens do Início). A main está em 439a42d, mais esta nota em commit local. O site publicado continua o antigo.
-  - **Cartões pausados, com `needs_input` e o motivo "[decisor: Daniel] pausa de 10/11 (~20h15)":**
-    - t_5184c99c (44d-3, acesso e Conta): na volta visual 1/3, com as notas 7,4–8,2 e o comentário 258. Ao voltar, fazer D1–D5 numa passada só, com o `rodada.py`, e depois Fable e revisão.
-    - t_b2a55931 (MAT-36, páginas públicas): na volta 2/3. 18 de 20 casos passam, e só o Contato fica em 7,6/7,8 (comentários 265 e 269). Ao voltar, fazer N1–N7, o rodapé em 1440 e o zoom dentro do próprio escopo.
-    - t_f21ee109 (44d-6a, área logada, acabamento das imagens e zoom do cabeçalho): começou a 1ª passada. Ao voltar, entregar A, B e C.
-  - **Cartões em fila, presos aos pais pausados (o painel não deixa bloquear um cartão em todo):**
-    - 44d-6b t_6afcc9b3 e 44d-6c t_9a4ca6ee;
-    - 44d-6 t_1584e47e, a conferência final;
-    - 37b t_11ad28e6, 38a t_f7bdf7e8, 38b t_7c491177, 39a t_55a580e8, 39b t_c9529365, 40a t_4c921e60 e 40b t_359ab800.
-  - **Parados de antes:**
-    - 41a t_ab1bd202: a PWA foi adiada por Daniel;
-    - 37a t_915e3632 e 44c-1 t_f67d8962: substituídos;
-    - 37g t_1757260d: espera o Google.
-  - **Ao retomar, em ordem:**
-    1. Desbloquear a 44d-3, a MAT-36 e a 6a.
-    2. Integrar a 44d-3, o que libera a 37b, a 39a, a 40a e a 6b.
-    3. Integrar a MAT-36, o que libera a 6c.
-    4. Fazer a 44d-6.
-    5. Montar a galeria para Daniel.
-  - **Previsão a partir da retomada:** cerca de 4 horas para o visual inteiro em `int/refazer` e mais 3 a 4 horas para a ligação com o banco.
-  - **Ferramenta nova:** `_staging/appmaternidade/ferramentas/rodada/rodada.py`, que faz a cerimônia de cada volta numa chamada só.
+- **Cards and driver.** Board 9119 (PATCH) returned the 4 cards from the pause to ready: t_f67d8962 (44c-1), t_ecf636f5 (44c-2a), t_915e3632 (37a) and t_fa51c4df (48b). They and the children t_b2a55931 (MAT-36) and t_1757260d (37g) are now driven by **executor-appmaternidade**, on Sonnet. Comments 119 to 122 carry the work order: rebase onto 41d20d3, only the 2 skills, and the edge tests that fail closed (item 8).
+- **Preview.** I closed the vite that had been open on port 5175 since 09/11. It belonged to the 37a worktree.
+- **Visual acceptance.** The evaluator is now the pilot's: Fable 5.2 high, with Opus also on the first 2 screens. Both scores go on the card. If a score is within 0,2 of the minimum, the decision comes back to me. The minimum remains 8,0.
+- **OSV (leader's decision, 10/11).** The `zod 3.25.76` alert comes from `@google/design.md`, and the `minimatch 10.2.6` and 3.1.5 ones come from eslint and typescript-eslint. All of them are **development-only**: they don't go into the site build or run in the user's browser. I'm not opening a card now. They get bumped with the next development dependency update.
+- **Plugins (leader's decision, 10/11).** The Playwright CLI in OpenCode and Modern Web Guidance are left for later. The focus now is finishing the site. Captures continue through `navegacao-agentes`.
+- **Subagents.** There are 2 in progress. One writes the bodies 44c-2b and 37b. The other does the v3 spec of MAT-38 with the bodies 38a and 38b. After them come MAT-39, 40 and 41. With 4 cards running, I keep at most 2 subagents.
+- **Milestone (10/11).** MAT-44c-2a, which brings the motion pieces and motion 12.43.0 without wiring anything into the pages, was integrated into main **7472abc**. To do so, the 5 commits of the approved d7f6c6d were rebased, and the range-diff came out identical on all 5. The check passed with 582 tests. OSV found nothing new, only the zod and minimatch alerts, which are development-only.
+- **Decision (10/11).** The v3 spec of MAT-38 was approved (sha 87dd78d9), and so were those of MAT-39, 40 and 41 (shas 145824bc, 0d387f95 and 93c02716). The cards were created and linked to their parents: 44c-2b t_6e8036b9, 37b t_11ad28e6, 38a t_f7bdf7e8, 38b t_7c491177, 39a t_55a580e8, 39b t_c9529365, 40a t_4c921e60, 40b t_359ab800 and 41a t_ab1bd202. 41b is only created after the join commit C41b. An amendment went into 39a and MAT-36: "Revisão profissional: pendente" and the draft badge are removed (comments 129 and 130). For 48b, ACC-11 was amended in comment 125.
+- **Milestone (10/11): MAT-48b done.** I integrated it into main **146e290**. The 3 commits of c2a7cc2 were rebased, and the range-diff came out identical. Since the revisor-appmaternidade sandbox fails with ShellExecuteExW 1223 on this card, the review came from R-B (codex gpt-6-astra, read-only), with the result APPROVED_WITH_LIMITS (`MAT-48/RB_REVISAO_48b.md`). The deterministic verification was done by the leader, in `.oc/lider_verif/`. **The migrations are already applied to the cloud Supabase** (run 42785674785). The seed data job failed because the CLI asks for `--yes`. Nothing changed in the cloud, and the fix is in card t_0754f01f (MAT-48b-fix). After it, the leader runs the data job again.
+- **Milestone (10/11): cloud database ready.** Fix t_0754f01f was integrated in **67d390a**. Run 42787421628 passed all 3 jobs: local tests, cloud migrations and seed data. The current terms are guaranteed to be in place. The admin doesn't exist yet and will only be created when Daniel has an account on the site, which depends on 37a.
+- **RESUMPTION of 11/11, at 1h35.** Daniel resumed with only infra and AppMaternidade. Infra released 44d-3 (t_5184c99c), 6a (t_f21ee109) and MAT-36. `int/refazer` is at e73e75a, and main at c86090a, with push.
+  - **MAT-36 in ESCALA-2R:** the card had 3 `changes_requested`. t_b2a55931 was closed, with the worktree and 667bf2b kept.
+  - **Successor of MAT-36:** g2 is **t_93f3308e**. It starts from 667bf2b and brings the consolidated list of 12 items. This is visual round 3/3; if it fails, the case goes to Daniel with the gallery. 6c, 39a and 40a were relinked to it.
+  - **Limit of 2 skills per card:** 6b and 6c, which pinned 4 skills and had not started, were archived. The new cards are **6b t_77f83db6** and **6c t_673ee2f7**, with 2 skills and the `rodada.py` protocol. 6a, which was already running with 4 skills, was left as it was.
+  - **Next step:** integrate 44d-3, which releases 37b, 39a, 40a and 6b. Then integrate MAT-36 g2, which releases 6c. After that, 44d-6 and the gallery.
+- **PAUSE of 10/11, at 20h15 (Daniel's request).** Daniel resumes later, with infra and AppMaternidade. Nothing was integrated after the request and there was no push to main.
+  - **State:** `int/refazer` is at **e73e75a** and already contains 44d-1 (base), 44d-4 (Início), 44d-2 (logged-in area) and 44d-5 (Início images). Main is at 439a42d, plus this note in a local commit. The published site is still the old one.
+  - **Paused cards, with `needs_input` and the reason "[decisor: Daniel] pausa de 10/11 (~20h15)":**
+    - t_5184c99c (44d-3, access and Conta): in visual round 1/3, with scores 7,4–8,2 and comment 258. On return, do D1–D5 in a single pass, with `rodada.py`, then Fable and review.
+    - t_b2a55931 (MAT-36, public pages): in round 2/3. 18 of 20 cases pass, and only Contato remains at 7,6/7,8 (comments 265 and 269). On return, do N1–N7, the footer at 1440 and the zoom within its own scope.
+    - t_f21ee109 (44d-6a, logged-in area, image finishing and header zoom): started pass 1. On return, deliver A, B and C.
+  - **Queued cards, tied to the paused parents (the panel doesn't allow blocking a card in todo):**
+    - 44d-6b t_6afcc9b3 and 44d-6c t_9a4ca6ee;
+    - 44d-6 t_1584e47e, the final check;
+    - 37b t_11ad28e6, 38a t_f7bdf7e8, 38b t_7c491177, 39a t_55a580e8, 39b t_c9529365, 40a t_4c921e60 and 40b t_359ab800.
+  - **Stalled from before:**
+    - 41a t_ab1bd202: the PWA was postponed by Daniel;
+    - 37a t_915e3632 and 44c-1 t_f67d8962: superseded;
+    - 37g t_1757260d: waiting for Google.
+  - **On resuming, in order:**
+    1. Unblock 44d-3, MAT-36 and 6a.
+    2. Integrate 44d-3, which releases 37b, 39a, 40a and 6b.
+    3. Integrate MAT-36, which releases 6c.
+    4. Do 44d-6.
+    5. Put together the gallery for Daniel.
+  - **Forecast from the resumption:** about 4 hours for the whole visual in `int/refazer` and another 3 to 4 hours for connecting it to the database.
+  - **New tool:** `_staging/appmaternidade/ferramentas/rodada/rodada.py`, which performs the ceremony of each round in a single call.
   - PAUSA_OK appmaternidade 2026-11-10T20:20-03:00
-- **Decisão e marco (10/11).** Daniel respondeu: "tudo sim e segue com opção A" (D1 a D5, com a barra Registrar de 1 toque). Saiu a spec MAT-44d, com sha256 953a9114 e as 3 primeiras seções em `_staging/appmaternidade/MAT-44d/TAREFA.md`, e foi criado o ramo `int/refazer`, em f069499, com push. O Pages só publica a partir da main. Ficaram 6 cartões:
-  - t_0288c2c3: 44d-1, sistema-base, pronto para começar;
-  - t_6c3e5423 (44d-2, área logada), t_5184c99c (44d-3, acesso e Conta, com o código fad75c0 da 37a) e t_27b74658 (44d-4, Início): esperam o 1;
-  - t_cc66cbf8: 44d-5, mídia;
-  - t_1584e47e: 44d-6, conferência cruzada.
-  Os cartões t_f67d8962 e t_915e3632 foram substituídos (comentários 160 e 161), e o 37g agora depende do 44d-3. O aceite de cada cartão é feito pelo Fable, com nota mínima 8. A main só recebe `int/refazer` depois que o 44d-6 passar.
-- **Bloqueio, decisão de Daniel (10/11).** O diagnóstico do Fable está pronto em `_staging/appmaternidade/REAVALIACAO_20261110/DIAGNOSTICO_FABLE.md` (500 linhas, US$ 4,76). Ele mostra 10 causas de base: três cascas diferentes, mídia de meia largura com texto dentro, 5 tamanhos de tipo contra 11, grade de 12 contra 10 colunas sem calha, ritmo curto, cor demais, fios sem regra, linha de texto curta, falta de rodapé e uma regressão. Traz também um sistema-base com valores exatos, um plano por tela com critérios medidos e 6 cartões em ordem. Antes do cartão 1 ficam 5 decisões para Daniel, em `REAVALIACAO_20261110/DECISOES_DANIEL.md`: fontes novas, fim da lateral e da navegação inferior, a barra Registrar, títulos curtos e os 3 números. Perguntei pelo clarify, sem resposta em 60 minutos.
-- **Decisão e parada (10/11, Daniel pela infra): reavaliação do site inteiro.** Daniel achou o site muito ruim porque "não segue em nada o site referência". As notas pararam em 6 a 7, mesmo com o laço visual funcionando, o que indica problema de base. Por isso parei a rodada visual 3 da 44c-1 (t_f67d8962, OpenCode interrompido, worktree em 11de622 com 3 arquivos sujos) e a rodada 3 da 37a (t_915e3632, worktree ae7a405). As duas estão em needs_input, e nada foi integrado. O Fable 5.2 high, só leitura, está fazendo o diagnóstico e o plano do site inteiro contra a referência, em `_staging/appmaternidade/REAVALIACAO_20261110/DIAGNOSTICO_FABLE.md`. Os cartões serão refeitos a partir desse plano, em sessão nova do OpenCode, com o laço visual e o Fable no aceite (nota mínima 8).
-- **Aceite visual (10/11): 37a reprovada.** O código está aprovado no fad75c0. O Fable deu de 5,00 a 6,15, e o Opus deu 5,80 em entrar e 6,00 em criar_conta. As notas estão em `MAT-37/evidencias/aceite_37a/`. A rodada visual voltou ao executor pelos comentários 142 e 143, com até 3 voltas. A 37g (t_1757260d) fica bloqueada até a 37a entrar na main.
-- **Pendente com Daniel.** Falta configurar o Google OAuth e decidir a verificação extra de quem modera.
+- **Decision and milestone (10/11).** Daniel answered: "tudo sim e segue com opção A" (D1 to D5, with a 1-tap Registrar bar). Spec MAT-44d came out, with sha256 953a9114 and the first 3 sections in `_staging/appmaternidade/MAT-44d/TAREFA.md`, and branch `int/refazer` was created, at f069499, with push. Pages only publishes from main. 6 cards remained:
+  - t_0288c2c3: 44d-1, base system, ready to start;
+  - t_6c3e5423 (44d-2, logged-in area), t_5184c99c (44d-3, access and Conta, with code fad75c0 from 37a) and t_27b74658 (44d-4, Início): waiting for 1;
+  - t_cc66cbf8: 44d-5, media;
+  - t_1584e47e: 44d-6, cross-check.
+  Cards t_f67d8962 and t_915e3632 were superseded (comments 160 and 161), and 37g now depends on 44d-3. Each card's acceptance is done by Fable, with a minimum score of 8. Main only receives `int/refazer` after 44d-6 passes.
+- **Blocker, Daniel's decision (10/11).** Fable's diagnosis is ready in `_staging/appmaternidade/REAVALIACAO_20261110/DIAGNOSTICO_FABLE.md` (500 lines, US$ 4,76). It shows 10 root causes: three different shells, half-width media with text inside, 5 type sizes versus 11, a grid of 12 versus 10 columns with no gutter, cramped rhythm, too much color, hairlines with no rule, short text line length, a missing footer and a regression. It also includes a base system with exact values, a per-screen plan with measured criteria and 6 cards in order. Before card 1 there are 5 decisions for Daniel, in `REAVALIACAO_20261110/DECISOES_DANIEL.md`: new fonts, the end of the sidebar and the bottom navigation, the Registrar bar, short headings and the 3 numbers. I asked via clarify, with no answer in 60 minutes.
+- **Decision and stop (10/11, Daniel via infra): reassessment of the entire site.** Daniel found the site very bad because "não segue em nada o site referência". Scores stalled at 6 to 7, even with the visual loop working, which points to a foundational problem. So I stopped visual round 3 of 44c-1 (t_f67d8962, OpenCode interrupted, worktree at 11de622 with 3 dirty files) and round 3 of 37a (t_915e3632, worktree ae7a405). Both are in needs_input, and nothing was integrated. Fable 5.2 high, read-only, is producing the diagnosis and the plan for the entire site against the reference, in `_staging/appmaternidade/REAVALIACAO_20261110/DIAGNOSTICO_FABLE.md`. The cards will be redone from that plan, in a new OpenCode session, with the visual loop and Fable at acceptance (minimum score 8).
+- **Visual acceptance (10/11): 37a failed.** The code is approved in fad75c0. Fable gave 5,00 to 6,15, and Opus gave 5,80 on entrar and 6,00 on criar_conta. The scores are in `MAT-37/evidencias/aceite_37a/`. The visual round went back to the executor via comments 142 and 143, with up to 3 rounds. 37g (t_1757260d) stays blocked until 37a is on main.
+- **Pending with Daniel.** Google OAuth still needs to be configured, and the extra verification for moderators still needs to be decided.
 
-## PAUSA de 09/11/2026 ~22h (conferência antes da retomada, decisão de Daniel)
+## PAUSE of 09/11/2026 ~22h (check before resuming, Daniel's decision)
 
-A retomada de 09/11, às ~21h50, saiu cedo demais e foi suspensa. Daniel vai conferir as atualizações, as sessões, as assinaturas e os modelos antes de o trabalho voltar.
+The resumption of 09/11, at ~21h50, started too early and was suspended. Daniel will check the updates, sessions, subscriptions and models before work resumes.
 
-- **Cartões parados:** t_f67d8962 (44c-1), t_ecf636f5 (44c-2a), t_915e3632 (37a) e t_fa51c4df (48b) estão bloqueados como needs_input `[decisor: Daniel] pausa de 09/11 (conferência antes da retomada)`. O board os pôs em triage. Os worktrees ficaram preservados, e nada foi integrado nem enviado.
-- **Subagentes:** os 2 que refaziam os corpos 44c-2b e 37b e a spec v3 da MAT-38 foram interrompidos sem escrever nada. A MAT-38 continua na v2, idêntica a `TAREFA_v2.md`.
-- **No ar:** o site continua em 599b975 e a main está em 58ae00f, mais este registro, que está só no local.
-- **Na retomada:** desbloqueie os 4 cartões. Os comentários 114 a 117 pedem o rebase sobre a main. Na 44c-1, valem também os comentários 109 e 110. Relance os 2 subagentes, usando `CONTEXTO_CARTOES.md`. O resto continua igual à seção de 06/11 abaixo.
+- **Stalled cards:** t_f67d8962 (44c-1), t_ecf636f5 (44c-2a), t_915e3632 (37a) and t_fa51c4df (48b) are blocked as needs_input `[decisor: Daniel] pausa de 09/11 (conferência antes da retomada)`. The board put them in triage. The worktrees were preserved, and nothing was integrated or pushed.
+- **Subagents:** the 2 that were redoing the bodies 44c-2b and 37b and the v3 spec of MAT-38 were interrupted without writing anything. MAT-38 remains at v2, identical to `TAREFA_v2.md`.
+- **Live:** the site remains at 599b975 and main is at 58ae00f, plus this record, which is only local.
+- **On resuming:** unblock the 4 cards. Comments 114 to 117 ask for the rebase onto main. For 44c-1, comments 109 and 110 also apply. Relaunch the 2 subagents, using `CONTEXTO_CARTOES.md`. Everything else stays the same as in the 06/11 section below.
 
-## PAUSA de 06/11/2026 ~19h30 (limite do Claude, decisão de Daniel)
+## PAUSE of 06/11/2026 ~19h30 (Claude limit, Daniel's decision)
 
-**No ar:** main **599b975**, em https://ded-techstack.github.io/AppMaternidade/. É o site da MAT-44 e da MAT-48a, agora com a família de exemplo Heloísa (bebê) e Juliana (mãe), mais Bruno e Carla. A frase do protótipo passou a ser "Um dia de exemplo com Heloísa…". A troca de nomes veio do cartão t_5c545bc3, aprovado pelo revisor (469 testes). Ela só mexe em texto, não muda o layout.
+**Live:** main **599b975**, at https://ded-techstack.github.io/AppMaternidade/. It is the site from MAT-44 and MAT-48a, now with the example family Heloísa (baby) and Juliana (mother), plus Bruno and Carla. The prototype's phrase became "Um dia de exemplo com Heloísa…". The name change came from card t_5c545bc3, approved by the reviewer (469 tests). It only touches text and does not change the layout.
 
-**Galeria:** `C:/OrchestrationLab/projetos/_staging/appmaternidade/PAUSA_20261106/GALERIA.html`.
+**Gallery:** `C:/OrchestrationLab/projetos/_staging/appmaternidade/PAUSA_20261106/GALERIA.html`.
 
-**Pela metade.** Todos os cartões abaixo estão bloqueados como needs_input `[decisor: Daniel] pausa de 06/11 (limite do Claude)`, com o worktree em `.worktrees/<id>` preservado:
-- **t_f67d8962, 44c-1 (base de layout).** O candidato é o 79b4dfc. O avaliador independente deu notas de 5,58 a 6,22, abaixo de 8, então não integra. As 2 exceções de teste estão no comentário 109, e os 8 defeitos para a nova rodada visual estão no comentário 110.
-- **t_ecf636f5, 44c-2a (componentes de movimento).** O candidato c8aa498 levou BLOCK, com R1 (o estado e o foco se perdem ao alternar movimento reduzido) e R2 (scaleX abaixo do piso de 0,8). A correção estava em curso.
-- **t_915e3632, 37a (login, sessão e Conta).** Parou no ponto em que estava.
-- **t_fa51c4df, 48b (banco na nuvem).** Spec v2 com sha 956e8853. Parou no ponto em que estava.
+**Halfway done.** All the cards below are blocked as needs_input `[decisor: Daniel] pausa de 06/11 (limite do Claude)`, with the worktree at `.worktrees/<id>` preserved:
+- **t_f67d8962, 44c-1 (layout base).** The candidate is 79b4dfc. The independent evaluator gave scores from 5,58 to 6,22, below 8, so it does not get integrated. The 2 test exceptions are in comment 109, and the 8 defects for the new visual round are in comment 110.
+- **t_ecf636f5, 44c-2a (motion components).** Candidate c8aa498 got BLOCK, with R1 (state and focus are lost when toggling reduced motion) and R2 (scaleX below the 0,8 floor). The fix was in progress.
+- **t_915e3632, 37a (login, session and Conta).** Stopped where it was.
+- **t_fa51c4df, 48b (cloud database).** Spec v2 with sha 956e8853. Stopped where it was.
 
-**Na fila, ligados aos pais e sem rodar:**
-- t_b2a55931, MAT-36 (páginas públicas): a correção cd25061 está aprovada e o cartão espera a 44c-1.
-- t_1757260d, 37g (Google): espera a 37a, e o adendo `MAT-37/ADENDO_GOOGLE.md` tem sha a0fba14e.
+**Queued, linked to their parents and not running:**
+- t_b2a55931, MAT-36 (public pages): fix cd25061 is approved and the card is waiting for 44c-1.
+- t_1757260d, 37g (Google): waiting for 37a, and addendum `MAT-37/ADENDO_GOOGLE.md` has sha a0fba14e.
 
-**Pendências de Daniel:**
-- configurar o Google OAuth, com o passo a passo no fim do ADENDO_GOOGLE;
-- decidir o MFA do moderador;
-- depois da 48b, criar a própria conta no site e informar o "Id da sua conta".
+**Daniel's pending items:**
+- configure Google OAuth, with the step-by-step at the end of ADENDO_GOOGLE;
+- decide on MFA for the moderator;
+- after 48b, create their own account on the site and report the "Id da sua conta".
 
-**Próxima ação exata na retomada:**
-1. Desbloqueie a t_f67d8962. Ela faz a rodada visual dos comentários 109 e 110.
-2. Quando ela voltar, rode o avaliador independente lado a lado com a referência. Ela só integra com nota de 8 ou mais.
-3. Ao mesmo tempo, desbloqueie a t_ecf636f5, a t_915e3632 e a t_fa51c4df. Com 4 ou mais cartões rodando, use no máximo 2 subagentes ao mesmo tempo, porque em 06/11 às 18h51 tudo caiu junto.
-4. Refaça os corpos da 44c-2b e da 37b e as specs v3 das MAT-38, 39, 40 e 41, que ficaram interrompidas. O contexto comum está em `_staging/appmaternidade/CONTEXTO_CARTOES.md`.
+**Exact next action on resuming:**
+1. Unblock t_f67d8962. It does the visual round from comments 109 and 110.
+2. When it comes back, run the independent evaluator side by side with the reference. It only gets integrated with a score of 8 or higher.
+3. At the same time, unblock t_ecf636f5, t_915e3632 and t_fa51c4df. With 4 or more cards running, use at most 2 subagents at a time, because on 06/11 at 18h51 everything went down together.
+4. Redo the bodies of 44c-2b and 37b and the v3 specs of MAT-38, 39, 40 and 41, which were interrupted. The shared context is in `_staging/appmaternidade/CONTEXTO_CARTOES.md`.
 
-## PAUSA para a janela v0.23.0 (decisão de Daniel, 05/11/2026 ~23h30; fechada em 06/11/2026 ~00h20)
+## PAUSE for the v0.23.0 window (Daniel's decision, 05/11/2026 ~23h30; closed on 06/11/2026 ~00h20)
 
-Hoje no board `appmaternidade` nenhum cartão está rodando, pronto ou em revisão, e não há OpenCode ativo. A main está em `881275d`, sincronizada com origin/main.
+Today on board `appmaternidade` no card is running, ready or in review, and there is no active OpenCode. Main is at `881275d`, in sync with origin/main.
 
-**Pronto (na main):**
-- Fundação do site (MAT-35) e direção visual com o protótipo de 3 telas (MAT-34).
-- Banco local completo, com as correções da releitura por outra família:
+**Done (on main):**
+- Site foundation (MAT-35) and visual direction with the 3-screen prototype (MAT-34).
+- Complete local database, with the fixes from the re-read by another family:
   - MAT-43 (base);
-  - MAT-45 (conta e família): `t_e3572be9` e a correção `t_ad018d1e`, f738247;
-  - MAT-46 (rotina): `t_c9df145a` e a correção `t_d4e788ea`, a80924e;
-  - MAT-47 (comunidade): `t_569c296e` e a correção `t_e0627701`, c16b68c.
+  - MAT-45 (account and family): `t_e3572be9` and fix `t_ad018d1e`, f738247;
+  - MAT-46 (routine): `t_c9df145a` and fix `t_d4e788ea`, a80924e;
+  - MAT-47 (community): `t_569c296e` and fix `t_e0627701`, c16b68c.
 
-  São 56 arquivos de teste e 3.485 asserções passando, mais o check do site com 294 testes.
-- Infra de Daniel feita:
-  - GitHub Pages ativado (Source: GitHub Actions);
-  - projeto Supabase `appmaternidade-demo` (Free, us-east-1, ref caatnppalmwyrldtdooh), com login por e-mail, Confirm email desligado, Site URL e Redirect URL do Pages;
-  - os 5 secrets no GitHub, conferidos só pelo nome.
+  That's 56 test files and 3.485 assertions passing, plus the site check with 294 tests.
+- Daniel's infra done:
+  - GitHub Pages enabled (Source: GitHub Actions);
+  - Supabase project `appmaternidade-demo` (Free, us-east-1, ref caatnppalmwyrldtdooh), with email login, Confirm email disabled, and the Pages Site URL and Redirect URL;
+  - the 5 secrets in GitHub, checked by name only.
 
-**Aprovado, mas ainda fora da main:**
-- **MAT-44** (salto visual de Início, Hoje e Sessão): `t_10f8dad7`, APROVADA na revisão 3 do candidato `3a8789d898a40e35107fa2ba983747276c7b284f`, com base 2a35dc7. O G6 do revisor deu 8,03 a 8,17.
-- A integração não foi feita na pausa porque ainda falta o portão do líder: a nota do leitor cego (G6) e o rebase sobre 881275d.
-- A prévia local em http://127.0.0.1:5180/ mostra esse candidato (worktree `.worktrees/previa`).
+**Approved, but still outside main:**
+- **MAT-44** (visual leap for Início, Hoje and Sessão): `t_10f8dad7`, APPROVED in review 3 of candidate `3a8789d898a40e35107fa2ba983747276c7b284f`, with base 2a35dc7. The reviewer's G6 gave 8,03 to 8,17.
+- The integration was not done during the pause because the leader's gate is still missing: the blind reader's score (G6) and the rebase onto 881275d.
+- The local preview at http://127.0.0.1:5180/ shows that candidate (worktree `.worktrees/previa`).
 
-**Specs no staging (fora do Git, `C:/OrchestrationLab/projetos/_staging/appmaternidade/`), ainda sem cartão:**
+**Specs in staging (outside Git, `C:/OrchestrationLab/projetos/_staging/appmaternidade/`), still without a card:**
 
-| Spec | Estado | Linhas | sha256 |
+| Spec | State | Lines | sha256 |
 |---|---|---|---|
-| MAT-36 (páginas públicas) | v3, depois da R-B 1 (B=2 M=9 N=7) | 788 | 5db326af |
-| MAT-48a (Pages pelo CI) | v2.2, **aprovada** | — | 815e1f94 |
-| MAT-37 (conta e login) | RASCUNHO v1 | 594 | 5f375c49 |
-| MAT-38 (Hoje, registros, Sessão, Histórico) | RASCUNHO v1 | 648 | 1c534bbd |
-| MAT-39 (Desenvolvimento) | RASCUNHO v1 | 701 | b17e6f20 |
-| MAT-40 (Comunidade e moderação) | RASCUNHO v1 | 733 | 1d52798e |
-| MAT-41 (PWA e offline) | RASCUNHO v1 | 502 | 326b1c10 |
-| MAT-48b (banco na nuvem), em `MAT-48/TAREFA_48b.md` | RASCUNHO v1 | 480 | feff3fbe |
+| MAT-36 (public pages) | v3, after R-B 1 (B=2 M=9 N=7) | 788 | 5db326af |
+| MAT-48a (Pages via CI) | v2.2, **approved** | — | 815e1f94 |
+| MAT-37 (account and login) | DRAFT v1 | 594 | 5f375c49 |
+| MAT-38 (Hoje, records, Sessão, Histórico) | DRAFT v1 | 648 | 1c534bbd |
+| MAT-39 (Desenvolvimento) | DRAFT v1 | 701 | b17e6f20 |
+| MAT-40 (Comunidade and moderation) | DRAFT v1 | 733 | 1d52798e |
+| MAT-41 (PWA and offline) | DRAFT v1 | 502 | 326b1c10 |
+| MAT-48b (cloud database), in `MAT-48/TAREFA_48b.md` | DRAFT v1 | 480 | feff3fbe |
 
-Cada rascunho tem uma tabela de decisões pendentes do líder no fim. A **MAT-50** (movimento, itsaplan 214) é uma pendência planejada e só nasce depois da MAT-44 na main.
+Each draft has a table of the leader's pending decisions at the end. **MAT-50** (motion, itsaplan 214) is a planned pending item and is only created after MAT-44 is on main.
 
-**Próximo passo exato da retomada, em ordem:**
-1. Ler o AGENTS.md e o board, e conferir que o Hermes está na v0.23.0, que o gateway foi reiniciado e se o itsaplan voltou.
-2. **Integrar a MAT-44:**
-   - rebase de 3a8789d sobre a main;
+**Exact next step on resuming, in order:**
+1. Read AGENTS.md and the board, and check that Hermes is on v0.23.0, that the gateway has been restarted, and whether itsaplan is back.
+2. **Integrate MAT-44:**
+   - rebase 3a8789d onto main;
    - range-diff;
    - `npm --prefix web run check`;
-   - nota do leitor cego (G6, maior ou igual a 8,0, com diferença de até 1,0 para a nota do revisor);
-   - ff, push e cofre.
-3. **Rodar a D2 da MAT-48b antes do cartão da MAT-48a.** Os secrets `VITE_*` já existem, então o aviso de demonstração some e a ACC-09 da 48a reprova. Decidir se a v2.3 da 48a deixa de passar os `VITE_*` ao build até a MAT-37. Depois disso, criar o cartão da **MAT-48a**: é ele que põe o site no ar.
-4. **Preparar as specs:**
-   - acrescentar os slots 37 a 41 no `ferramentas/isolar_supabase.py`;
-   - decidir as pendências das specs MAT-37 a 41 e 48b;
-   - rodar o explique de volta R-B (`ferramentas/rb_explique.py --tela MAT-NN`) na MAT-36 v3 e nas 6 novas.
-5. **Cartões em paralelo** (até 5): MAT-36, MAT-37 e MAT-50. Depois da MAT-37 na main, MAT-38, 39 e 40. Por último, a MAT-41.
+   - blind reader's score (G6, greater than or equal to 8,0, with a difference of at most 1,0 from the reviewer's score);
+   - ff, push and vault.
+3. **Run D2 of MAT-48b before the MAT-48a card.** The `VITE_*` secrets already exist, so the demo notice disappears and ACC-09 of 48a fails. Decide whether v2.3 of 48a stops passing the `VITE_*` to the build until MAT-37. After that, create the **MAT-48a** card: it is the one that puts the site live.
+4. **Prepare the specs:**
+   - add slots 37 to 41 in `ferramentas/isolar_supabase.py`;
+   - decide the pending items of specs MAT-37 to 41 and 48b;
+   - run the R-B explain-back (`ferramentas/rb_explique.py --tela MAT-NN`) on MAT-36 v3 and on the 6 new ones.
+5. **Cards in parallel** (up to 5): MAT-36, MAT-37 and MAT-50. After MAT-37 is on main, MAT-38, 39 and 40. Finally, MAT-41.
 
-**Pendências com Daniel:** D5 (quem revisa o conteúdo de Desenvolvimento, que vai ao site com o selo "Rascunho em revisão"), e-mail de contato e encarregado de dados.
+**Pending with Daniel:** D5 (who reviews the Desenvolvimento content, which goes onto the site with the "Rascunho em revisão" badge), contact email, and data protection officer.
 
 ## Rumo
 
-Em 03/11/2026, Daniel definiu o rumo: o AppMaternidade começa como site completo, com RF-01 a RF-14. Android e iOS vêm depois, por port (empacotar o site como app de loja pelo Capacitor). A tarefa-mãe é a MAT-27, com os portões de aceite G1 a G12.
+On 03/11/2026, Daniel set the course: AppMaternidade starts as a complete site, with RF-01 to RF-14. Android and iOS come later, via a port (packaging the site as a store app with Capacitor). The parent task is MAT-27, with acceptance gates G1 to G12.
 
-## Decisões de 03/11/2026
+## Decisions of 03/11/2026
 
-| Decisão | Estado | O que ficou |
+| Decision | State | Outcome |
 |---|---|---|
-| D8, stack (MAT-28) | decidida por delegação de Daniel | React 19 + TypeScript + Vite, Tailwind 4, shadcn/ui e Magic UI só da lista aprovada, Supabase em São Paulo, PWA; port pelo Capacitor |
-| D9, hospedagem (MAT-29) | decidida por Daniel | GitHub Pages pelo GitHub Actions; Supabase Free só sem dados reais; domínio próprio depois |
-| D10, Impeccable (MAT-30) | decidida por delegação | verificação local que não bloqueia, no portão final, depois de avaliada |
-| D11, referência visual (MAT-31) | decidida por delegação | estudo em sala limpa reduzida: o analista usa a REA e o site recebe só uma especificação abstrata |
+| D8, stack (MAT-28) | decided under Daniel's delegation | React 19 + TypeScript + Vite, Tailwind 4, shadcn/ui and Magic UI only from the approved list, Supabase in São Paulo, PWA; port via Capacitor |
+| D9, hosting (MAT-29) | decided by Daniel | GitHub Pages via GitHub Actions; Supabase Free only without real data; own domain later |
+| D10, Impeccable (MAT-30) | decided under delegation | local non-blocking check, at the final gate, after it has been evaluated |
+| D11, visual reference (MAT-31) | decided under delegation | reduced clean-room study: the analyst uses the REA and the site receives only an abstract specification |
 
-## O que está pronto
+## What is done
 
-- **Fundação do site (MAT-35):** integrada na main no commit d731d3d.
-  - A pasta `web/` tem React, Vite, TypeScript, Tailwind 4 e React Router.
-  - Há lint com acessibilidade, testes com axe e contraste, o verificador de commits e o CI.
-  - O site tem só duas páginas provisórias: a inicial e a de endereço inexistente. Ainda não há tela de produto.
-- **Estudo da referência visual (MAT-33):** a especificação abstrata está fora do repositório, na pasta de staging do projeto, e passou na busca de termos proibidos.
-- **Cadastro do projeto:** os comandos de validação e a lista de comandos do OpenCode foram preenchidos.
-- **Backend local (MAT-43):** integrado na main em b76a707 (cartão `t_58526cc9`). Traz a CLI do Supabase 3.0.0, 3 migrações (contas, famílias, vínculos e bebês, com RLS e grants por coluna), 10 testes pgTAP com 123 asserções, seed fictício e job `banco` no CI. Para rodar: `npm run db:start`, `db:reset`, `db:test` e `db:stop`.
-- **Direção visual, tokens e protótipo (MAT-34):** integrados na main em e57c844 (cartão `t_dd87ca3d`), depois de 4 revisões. O `web/DESIGN.md` traz os tokens validados, e há as telas Início, Hoje (com modo madrugada) e Sessão, com dados fictícios. Ficam 294 testes, incluindo a geometria de todo texto em 100% e 200% de fonte, em 4 larguras. O G6 ficou entre 7,17 e 7,25, e é esse patamar que a MAT-44 vai elevar.
+- **Site foundation (MAT-35):** integrated into main in commit d731d3d.
+  - The `web/` folder has React, Vite, TypeScript, Tailwind 4 and React Router.
+  - There is linting with accessibility rules, tests with axe and contrast, the commit checker and CI.
+  - The site has only two placeholder pages: the home page and the not-found page. There is no product screen yet.
+- **Visual reference study (MAT-33):** the abstract specification is outside the repository, in the project's staging folder, and passed the forbidden-terms search.
+- **Project registration:** the validation commands and the list of OpenCode commands have been filled in.
+- **Local backend (MAT-43):** integrated into main in b76a707 (card `t_58526cc9`). It brings the Supabase CLI 3.0.0, 3 migrations (accounts, families, links and babies, with RLS and per-column grants), 10 pgTAP tests with 123 assertions, a fictitious seed and a `banco` job in CI. To run: `npm run db:start`, `db:reset`, `db:test` and `db:stop`.
+- **Visual direction, tokens and prototype (MAT-34):** integrated into main in e57c844 (card `t_dd87ca3d`), after 4 reviews. `web/DESIGN.md` brings the validated tokens, and there are the Início, Hoje (with madrugada mode) and Sessão screens, with fictitious data. There are 294 tests, including the geometry of all text at 100% and 200% font size, at 4 widths. G6 landed between 7,17 and 7,25, and that is the level MAT-44 will raise.
 
-- **Design docs v0.4 (MAT-32):** integrados na main em 5500c66 (cartão `t_46deffa1`).
-  - Entraram o ADR-009, o mapa de páginas, a direção visual, a política de commits, o roadmap e as decisões, os custos, as notas de status e a frase nova do `AGENTS.md`.
-  - Ficou aberto um detalhe não bloqueante: a origem "Analise" da linha "Família e conta" do mapa tem 8 palavras, e a regra pede de 4 a 6.
+- **Design docs v0.4 (MAT-32):** integrated into main in 5500c66 (card `t_46deffa1`).
+  - Added: ADR-009, the page map, the visual direction, the commit policy, the roadmap and the decisions, the costs, the status notes and the new phrase for `AGENTS.md`.
+  - One non-blocking detail remained open: the "Analise" source of line "Família e conta" of the map has 8 words, and the rule calls for 4 to 6.
 
-## O que está em andamento
+## What is in progress
 
-Estado às 17h55:
-- **MAT-44 (salto visual):** o cartão `t_10f8dad7` roda num worktree criado em 2a35dc7 (a main com a MAT-34, mais um commit de cofre), com a spec v4 (sha256 `750efcf5`) e o contrato `0d75b04d3288`. O que ele tem de fazer:
-  - antes do código, montar 3 direções; vence a de maior nota do award-bar, sem espera (D-1 = não, decisão de Daniel), e na integração o leitor cego do líder confere a escolha;
-  - fazer o OpenCode carregar as skills de interface, com prova no recibo;
-  - passar por um laço visual de até 3 iterações;
-  - fechar o G6 com duas notas independentes, ambas acima de 8,0;
-  - usar ícones do lucide-react.
-- **MAT-50 (movimento, pendência planejada, itsaplan 214):** pedido de Daniel em 05/11/2026 para trazer as animações da referência, que ficaram de fora da MAT-44. O cartão nasce depois da MAT-44 na main e cobre cinco pontos:
-  - a referência gravada em vídeo ou quadros, descrita em sala limpa;
-  - `motion` e até 6 componentes animados da lista aprovada;
-  - a VIS-08 relaxada só na abertura e nos destaques, com `prefers-reduced-motion` deixando tudo estático;
-  - a replica-diff e uma galeria em `GALERIA.html`;
-  - duas notas independentes, as duas maiores ou iguais a 8,0.
-- **MAT-48a (Pages pelo CI):** a spec v2.2 foi aprovada (sha256 `815e1f94`). O cartão nasce quando a MAT-44 estiver na main. O Pages já foi ativado por Daniel em 05/11/2026 (build_type workflow, endereço https://ded-techstack.github.io/AppMaternidade/). Em 05/11/2026 Daniel criou o projeto Supabase `appmaternidade-demo` (Free, us-east-1, ref caatnppalmwyrldtdooh), com login por e-mail, Site URL e Redirect URL do Pages e um token de 90 dias limitado ao projeto. Os 5 secrets estão no GitHub, conferidos só pelos nomes: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, SUPABASE_PROJECT_REF, SUPABASE_DB_PASSWORD e SUPABASE_ACCESS_TOKEN. A MAT-48b não espera mais Daniel.
-- **Estudo de apps de maternidade (MAT-49, pronto):** o estudo está em `_staging/appmaternidade/PESQ-APPS/ESTUDO_PADROES.md`. Toda tela logada nova (MAT-37 a MAT-41) usa os padrões P1 a P7 e passa pelo `imgdiff` contra os 3 recortes, com teto de 75.
-- **MAT-45, MAT-46 e MAT-47 (banco):** as specs v2 já incorporam a 1ª releitura e as decisões comuns de banco (`_staging/appmaternidade/DECISOES_BANCO_20261105.md`, C1 a C9). A base, a MAT-43, já está na main. A 2ª releitura por outra família está parada por falha do runtime Codex do revisor, "codex app-server stdout closed". Os cartões t_6bf153de, t_fcd8ad89 e t_620068a5 foram recriados em worktree e caíram igual. O caso foi escalado à infra no comentário 53.
-- **MAT-36 (páginas públicas):** a spec v2 está pronta. A releitura vem depois da MAT-44 na main.
+State at 17h55:
+- **MAT-44 (visual leap):** card `t_10f8dad7` runs in a worktree created at 2a35dc7 (main with MAT-34, plus a vault commit), with spec v4 (sha256 `750efcf5`) and contract `0d75b04d3288`. What it has to do:
+  - before the code, put together 3 directions; the one with the highest award-bar score wins, with no waiting (D-1 = no, Daniel's decision), and at integration the leader's blind reader checks the choice;
+  - make OpenCode load the interface skills, with proof in the receipt;
+  - go through a visual loop of up to 3 iterations;
+  - close G6 with two independent scores, both above 8,0;
+  - use icons from lucide-react.
+- **MAT-50 (motion, planned pending item, itsaplan 214):** Daniel's request on 05/11/2026 to bring in the reference's animations, which were left out of MAT-44. The card is created after MAT-44 is on main and covers five points:
+  - the reference recorded as video or frames, described in a clean room;
+  - `motion` and up to 6 animated components from the approved list;
+  - VIS-08 relaxed only in the opening and the highlights, with `prefers-reduced-motion` making everything static;
+  - the replica-diff and a gallery at `GALERIA.html`;
+  - two independent scores, both greater than or equal to 8,0.
+- **MAT-48a (Pages via CI):** spec v2.2 was approved (sha256 `815e1f94`). The card is created when MAT-44 is on main. Pages was already enabled by Daniel on 05/11/2026 (build_type workflow, address https://ded-techstack.github.io/AppMaternidade/). On 05/11/2026 Daniel created Supabase project `appmaternidade-demo` (Free, us-east-1, ref caatnppalmwyrldtdooh), with email login, the Pages Site URL and Redirect URL, and a 90-day token scoped to the project. The 5 secrets are in GitHub, checked by name only: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, SUPABASE_PROJECT_REF, SUPABASE_DB_PASSWORD and SUPABASE_ACCESS_TOKEN. MAT-48b is no longer waiting on Daniel.
+- **Study of maternity apps (MAT-49, done):** the study is in `_staging/appmaternidade/PESQ-APPS/ESTUDO_PADROES.md`. Every new logged-in screen (MAT-37 to MAT-41) uses patterns P1 to P7 and goes through `imgdiff` against the 3 crops, with a ceiling of 75.
+- **MAT-45, MAT-46 and MAT-47 (database):** the v2 specs already incorporate re-read round 1 and the common database decisions (`_staging/appmaternidade/DECISOES_BANCO_20261105.md`, C1 to C9). The base, MAT-43, is already on main. Re-read round 2 by another family is stalled due to a failure of the reviewer's Codex runtime, "codex app-server stdout closed". Cards t_6bf153de, t_fcd8ad89 and t_620068a5 were recreated in a worktree and failed the same way. The case was escalated to infra in comment 53.
+- **MAT-36 (public pages):** spec v2 is ready. The re-read comes after MAT-44 is on main.
 
-## Roteiro do site completo (pedido de Daniel em 05/11/2026)
+## Complete site roadmap (Daniel's request on 05/11/2026)
 
-Daniel, em 05/11/2026: "não quero só homepage, quero site inteiro funcional". O site deve:
-- funcionar de ponta a ponta;
-- ter a interface próxima da referência, adaptada para nós;
-- ficar publicado, para o professor entrar e usar tudo com dados fictícios.
+Daniel, on 05/11/2026: "não quero só homepage, quero site inteiro funcional". The site must:
+- work end to end;
+- have an interface close to the reference, adapted for us;
+- be published, so the professor can log in and use everything with fictitious data.
 
-O acesso é por e-mail e senha, com recuperação por e-mail (decisão de Daniel). O e-mail de contato do site fica pendente.
+Access is via email and password, with recovery by email (Daniel's decision). The site's contact email is still pending.
 
-O trabalho anda em duas trilhas paralelas, uma de banco e uma de tela. Cada cartão tem o próprio worktree.
+The work moves along two parallel tracks, one for the database and one for screens. Each card has its own worktree.
 
-| Ordem | Tarefa | O que entrega | Depende de |
+| Order | Task | What it delivers | Depends on |
 |---|---|---|---|
-| 1 | MAT-34 | protótipo de 3 telas (rodada 2 de correção) | — |
-| 1 | MAT-43 | banco local: contas, famílias, vínculos e bebês | revisão com Docker (coordenador) |
-| 2 | MAT-44 | salto visual com a referência, base do visual de todas as páginas | MAT-34 |
-| 2 | MAT-45, MAT-46, MAT-47 | banco de conta e família, de rotina e de comunidade | MAT-43 |
-| 3 | MAT-36 | páginas públicas: Como funciona, Cuidado compartilhado, Desenvolvimento, Regras, Privacidade, Termos, Exclusão, Contato e Sobre | MAT-44 |
-| 3 | MAT-37 | telas de entrar, criar conta, recuperar acesso, convite, família e conta, ligadas ao banco | MAT-44, MAT-45 |
-| 4 | MAT-38 | Hoje, os 7 registros, Sessão e Histórico ligados ao banco | MAT-37, MAT-46 |
-| 4 | MAT-39 | Desenvolvimento: tummy time e atividades, com fontes | MAT-37, MAT-46 |
-| 4 | MAT-40 | Comunidade e painel de moderação | MAT-37, MAT-47 |
-| 5 | MAT-41 | PWA: offline, sincronização e lembretes | MAT-38 |
-| 6 | MAT-48 | publicação: Supabase Free em São Paulo e GitHub Pages pelo CI, com conta de demonstração | push e secrets autorizados por Daniel |
-| 7 | MAT-42 | portão final de qualidade e aceite | todas |
+| 1 | MAT-34 | 3-screen prototype (fix round 2) | — |
+| 1 | MAT-43 | local database: accounts, families, links and babies | review with Docker (coordinator) |
+| 2 | MAT-44 | visual leap with the reference, the basis for the look of every page | MAT-34 |
+| 2 | MAT-45, MAT-46, MAT-47 | account and family, routine, and community databases | MAT-43 |
+| 3 | MAT-36 | public pages: Como funciona, Cuidado compartilhado, Desenvolvimento, Regras, Privacidade, Termos, Exclusão, Contato and Sobre | MAT-44 |
+| 3 | MAT-37 | sign-in, create account, account recovery, invite, family and account screens, connected to the database | MAT-44, MAT-45 |
+| 4 | MAT-38 | Hoje, the 7 records, Sessão and Histórico connected to the database | MAT-37, MAT-46 |
+| 4 | MAT-39 | Desenvolvimento: tummy time and activities, with sources | MAT-37, MAT-46 |
+| 4 | MAT-40 | Comunidade and moderation panel | MAT-37, MAT-47 |
+| 5 | MAT-41 | PWA: offline, sync and reminders | MAT-38 |
+| 6 | MAT-48 | publication: Supabase Free in São Paulo and GitHub Pages via CI, with a demo account | push and secrets authorized by Daniel |
+| 7 | MAT-42 | final quality and acceptance gate | all |
 
-**Como o professor vai usar:** o site publicado fala com um projeto Supabase Free em São Paulo, só com dados fictícios.
-- Haverá uma conta de demonstração já com família, bebê e uma semana de registros.
-- O professor também pode criar a própria conta.
-- Daniel cria o projeto e cadastra as chaves como secrets do GitHub. Nenhum agente vê as chaves.
+**How the professor will use it:** the published site talks to a Supabase Free project in São Paulo, with fictitious data only.
+- There will be a demo account that already has a family, a baby and a week of records.
+- The professor can also create their own account.
+- Daniel creates the project and registers the keys as GitHub secrets. No agent sees the keys.
 
-## Regras em vigor desde 03/11/2026
+## Rules in effect since 03/11/2026
 
-- O OpenCode escreve o código de produto dos cartões `[impl]`. O líder cuida do cartão, das verificações e da integração. A revisão é sempre de outra família.
-- Toda devolução do revisor traz a causa: especificacao, implementacao, teste, ambiente ou criterio_novo.
-- Toda correção trata a classe do achado, não só o caso, com o teste da variação escrito antes.
-- Commits saem com o autor Daniel Macedo, um passo real por commit. O teto é de 800 por dia e não é meta.
+- OpenCode writes the product code for the `[impl]` cards. The leader handles the card, the checks and the integration. Review is always done by another family.
+- Every return from the reviewer states the cause: especificacao, implementacao, teste, ambiente or criterio_novo.
+- Every fix addresses the class of the finding, not just the case, with the test for the variation written first.
+- Commits are made with Daniel Macedo as author, one real step per commit. The ceiling is 800 per day and is not a target.
 
 ## Antes de publicar
 
-Desde 05/11/2026 o push é rotina, por decisão de Daniel. A D7 ficou com a opção A, e o nome de usuário local foi trocado por `<usuario>`.
+Since 05/11/2026, pushing is routine, by Daniel's decision. D7 went with option A, and the local username was changed to `<usuario>`.
 
-Depois de cada integração aprovada, o líder faz quatro coisas:
-- procura segredos no diff (sk-, ghp_, AKIA, Bearer, password=, api_key=, .env);
-- confere o `git status`;
-- confere que autor e committer são Daniel Macedo;
-- faz o push normal da `main`.
+After each approved integration, the leader does four things:
+- searches the diff for secrets (sk-, ghp_, AKIA, Bearer, password=, api_key=, .env);
+- checks `git status`;
+- checks that author and committer are Daniel Macedo;
+- does the normal push of `main`.
 
-Para o site ficar no ar ainda falta a MAT-48: o projeto Supabase na nuvem e os secrets no GitHub, que ficam com Daniel, e o Pages pelo CI.
+For the site to go live, MAT-48 is still missing: the cloud Supabase project and the GitHub secrets, which are Daniel's responsibility, and Pages via CI.
 
-## Ver a prévia
+## View the preview
 
-Na raiz do repositório:
+From the repository root:
 
 1. `npm --prefix web ci`
 2. `npm --prefix web run dev`
 
-Depois abra http://localhost:5173/ no navegador.
+Then open http://localhost:5173/ in the browser.
 
-## Questões abertas
+## Open questions
 
-- D7 (MAT-26), com Daniel.
-- A nota mínima do award-bar (G6) sai na MAT-34.
+- D7 (MAT-26), with Daniel.
+- The minimum award-bar score (G6) is set in MAT-34.
 
-- 11/11 12h30: base MAT-49a (g1 + g2) aprovada na revisão R3 e integrada por fast-forward em `int/refazer` (e73e75a..98c50de). 36r-B t_e1d0eaa8 liberada.
+- 11/11 12h30: base MAT-49a (g1 + g2) approved in review R3 and integrated by fast-forward in `int/refazer` (e73e75a..98c50de). 36r-B t_e1d0eaa8 released.

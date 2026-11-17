@@ -1,7 +1,7 @@
 ---
-tipo: ficha-concorrente
-status: rascunho
-responsavel: Hermes (subagente concorrentes B)
+tipo: competitor-profile
+status: draft
+responsavel: Hermes (competitor subagent B)
 revisado_em: 2026-10-22
 produto: Peanut (app "Peanut: Find Mom Friends")
 fontes_principais:
@@ -15,216 +15,216 @@ fontes_principais:
 
 # Peanut
 
-Ficha de concorrente da APP-001. Todas as fontes foram consultadas em 22/10/2026 (America/Sao_Paulo). As marcas seguem as [Convenções do cofre](../../00_Inicio/Convencoes.md): **[DOC]** indica algo declarado em site, loja, ajuda, termos ou matéria; **[HIP]** indica hipótese, inferência, ausência de menção ou relato isolado. Nada foi observado em execução. Trechos em inglês entre aspas são literais. Os códigos PN01, PN02… remetem à tabela de Fontes no fim da ficha. Fichas irmãs: [Kinedu](Kinedu.md), [Pathways](Pathways.md), [BabyCenter](BabyCenter.md); grupo A: [Huckleberry](Huckleberry.md), [Napper](Napper.md), [Baby Daybook](Baby_Daybook.md), [Nara Baby](Nara_Baby.md).
+Competitor profile for APP-001. All sources were accessed on 22/10/2026 (America/Sao_Paulo). Labels follow the [Vault conventions](../../00_Inicio/Convencoes.md): **[DOC]** indicates something stated on a website, app store, help page, in terms, or in an article; **[HIP]** indicates a hypothesis, inference, lack of mention, or isolated report. Nothing was observed in use. Quoted English excerpts are verbatim. Codes PN01, PN02… refer to the Sources table at the end of the profile. Related profiles: [Kinedu](Kinedu.md), [Pathways](Pathways.md), [BabyCenter](BabyCenter.md); group A: [Huckleberry](Huckleberry.md), [Napper](Napper.md), [Baby Daybook](Baby_Daybook.md), [Nara Baby](Nara_Baby.md).
 
 ## Resumo
 
-- **Rede social só para mulheres**, com mecânica de app de namoro: deslizar, "wave" e match por fase de vida e proximidade. Tem feed, grupos, posts anônimos ("Incognito"), salas de áudio ao vivo ("Pods") e, desde abril de 2026, o assistente "Ask Peanut", que responde com base nas respostas da comunidade [DOC PN01, PN11, PN22].
-- **Segurança é o argumento central** [DOC PN06, PN07, PN08, PN09, PN14]:
-  - selfie obrigatória, checada por sistema e revisada por pessoas quando há dúvida;
-  - denúncia por categorias, com opção não punitiva "I'm worried about this person";
-  - bloqueio, palavras silenciadas e filtros de conteúdo sensível.
-- **Riscos de moderação aparecem em relatos públicos** [HIP PN02, PN23, PN21]: contas falsas, conflitos em Pods, encontros presenciais e localização. São relatos não verificados.
-- **Sem rotina, sem desenvolvimento estruturado e sem cuidado compartilhado.** As diretrizes dizem "Duplicate and shared accounts aren't permitted", e o público é só feminino [DOC PN06].
-- **Chegou ao Brasil em janeiro de 2025**, com loja em português e acompanhamento da gravidez semana a semana [DOC PN19, PN04].
+- **Women-only social network**, with dating app mechanics: swiping, "wave", and matching by life stage and proximity. It has a feed, groups, anonymous posts ("Incognito"), live audio rooms ("Pods"), and, since abril de 2026, the "Ask Peanut" assistant, which answers based on community responses [DOC PN01, PN11, PN22].
+- **Safety is the central selling point** [DOC PN06, PN07, PN08, PN09, PN14]:
+  - mandatory selfie, checked by a system and reviewed by people when there is doubt;
+  - reporting by category, with the non-punitive option "I'm worried about this person";
+  - blocking, muted words, and sensitive content filters.
+- **Moderation risks appear in public reports** [HIP PN02, PN23, PN21]: fake accounts, conflicts in Pods, in-person meetups, and location. These reports are unverified.
+- **No routine tracking, structured development tracking, or shared care.** The guidelines say "Duplicate and shared accounts aren't permitted", and the audience is women only [DOC PN06].
+- **Launched in Brazil in janeiro de 2025**, with an app store listing in Portuguese and week-by-week pregnancy tracking [DOC PN19, PN04].
 
 ## Identificação
 
-| Campo | Valor | Fonte |
+| Field | Value | Source |
 | --- | --- | --- |
-| Empresa | Peanut App Limited. Fundada em 2017 por Michelle Kennedy | [DOC PN01, PN18] |
-| Site | https://www.peanut-app.io (diretrizes em inglês e espanhol) | [DOC PN06] |
-| App Store | `id1178656034`, "Peanut: Find Mom Friends". Gratuito, com compras. Nota 4,4 com 12 mil avaliações. Classificação **18+** "with content restrictions", com controle "Age Assurance". Categoria Lifestyle. iOS 16+. Versão 8.25.0 ("2d ago", cerca de 20/10/2026 [HIP]) | [DOC PN01] |
-| Google Play | `com.teampeanut.peanut`. Nota 3,9 com 11,9 mil avaliações. 1 mi+ downloads. Classificação "Teen" (pt-BR: "Não recomendados para menores de 13 anos"). "Contains ads", compras no app. Atualizado em 14/10/2026. Categoria Social | [DOC PN03, PN04] |
-| Idiomas (iOS) | Inglês e mais 13, incluindo português | [DOC PN01] |
-| Tamanho declarado | "over 5 million women" nas lojas; "Trusted by 6M+ women" no site | [DOC PN01, PN06] |
-| Preço | Gratuito. **Peanut Plus** de US$ 8,99 a US$ 29,99 e compras avulsas "Who Waved At You" (24 h US$ 3,99; 2 sem. US$ 4,99; 1 sem. US$ 10,99, como listado). Plus é vendido "to speed up the friend-finding process" | [DOC PN01] |
-| Brasil | "Olá, Brasil! Peanut chega ao Brasil!" (15/01/2025). A loja brasileira oferece "Amigas de gestação", "Gravidez semana a semana" e "Marcos gestacionais" | [DOC PN19, PN04] |
+| Company | Peanut App Limited. Founded in 2017 by Michelle Kennedy | [DOC PN01, PN18] |
+| Website | https://www.peanut-app.io (guidelines in English and Spanish) | [DOC PN06] |
+| App Store | `id1178656034`, "Peanut: Find Mom Friends". Free, with purchases. Rating 4,4 with 12 thousand ratings. Age rating **18+** "with content restrictions", with "Age Assurance" control. Lifestyle category. iOS 16+. Version 8.25.0 ("2d ago", around 20/10/2026 [HIP]) | [DOC PN01] |
+| Google Play | `com.teampeanut.peanut`. Rating 3,9 with 11,9 thousand ratings. 1 million+ downloads. Age rating "Teen" (pt-BR: "Não recomendados para menores de 13 anos"). "Contains ads", in-app purchases. Updated on 14/10/2026. Social category | [DOC PN03, PN04] |
+| Languages (iOS) | English and 13 more, including Portuguese | [DOC PN01] |
+| Stated size | "over 5 million women" in app stores; "Trusted by 6M+ women" on the website | [DOC PN01, PN06] |
+| Price | Free. **Peanut Plus** from US$ 8,99 to US$ 29,99 and one-off "Who Waved At You" purchases (24 h US$ 3,99; 2 wk. US$ 4,99; 1 wk. US$ 10,99, as listed). Plus is sold "to speed up the friend-finding process" | [DOC PN01] |
+| Brazil | "Olá, Brasil! Peanut chega ao Brasil!" (15/01/2025). The Brazilian app store listing offers "Amigas de gestação", "Gravidez semana a semana", and "Marcos gestacionais" | [DOC PN19, PN04] |
 
-## Funcionalidades por pilar
+## Features by pillar
 
-### Rotina (não encontrada)
+### Routine (not found)
 
-- Não foram encontrados registros de sono, mamada ou fralda [HIP: ausência em PN01, PN03, PN04, PN11].
-- Na versão brasileira há acompanhamento da **gravidez** semana a semana (tamanho do bebê, sintomas e dicas) [DOC PN04].
+- No sleep, feeding, or diaper logs were found [HIP: absent from PN01, PN03, PN04, PN11].
+- The Brazilian version has week-by-week **pregnancy** tracking (baby size, symptoms, and tips) [DOC PN04].
 
-### Desenvolvimento (parcial, social)
+### Development (partial, social)
 
-- "Baby Milestones: Share your baby's milestones with other moms with babies at a similar stage". O recurso é de compartilhamento social, não de acompanhamento estruturado [DOC PN01].
-- Blog com "over 2,000 articles and guides" e revisão por especialista [DOC PN17].
-- Não foram encontrados plano de atividades nem ferramenta de tummy time [HIP].
+- "Baby Milestones: Share your baby's milestones with other moms with babies at a similar stage". The feature is for social sharing, not structured tracking [DOC PN01].
+- Blog with "over 2,000 articles and guides" and expert review [DOC PN17].
+- No activity plan or tummy time tool was found [HIP].
 
-### Comunidade (sim, núcleo do produto)
+### Community (yes, the core of the product)
 
-- **Discovery**: "swipe up to 'wave'". Quando há aceno mútuo, abre-se o chat 1:1, com GIFs, fotos, **localização** e chamada de vídeo [DOC PN11]. Há também a aba "Go Global", para conexões em outros países [DOC PN11].
-- **Feed**: posts, enquetes e status, filtrados por "Topics". Posts podem ser **anônimos** (Incognito) [DOC PN11]. A equipe afirma que "incognito posts are all made by members with verified accounts" [DOC PN08].
-- **Groups**: "mini-communities… around a specific topic, life stage, and/or location". Podem ser criados pela Peanut ou por membros [DOC PN11].
-- **Pods**: "live audio-only chat rooms" por tema. As anfitriãs moderam e os ouvintes "raise their hand" para falar [DOC PN11, PN20]. Existem Pods e grupos reservados a mulheres negras, asiáticas e de minorias étnicas [DOC PN10].
-- **Especialistas**: "live conversations hosted by experts" (App Store) [DOC PN01]. Perfis "Peanut Pros" ("doctors, nurses, therapists and sleep consultants"), mas "we do not independently verify the identity or credentials of Peanut Pros" [DOC PN16].
-- **Ask Peanut** (lançado no fim de abril de 2026, segundo a Forbes): IA que reúne respostas da comunidade. A empresa justifica: "women were doing it anyway" (levavam respostas do ChatGPT ou do Claude para validar com outras mães) [DOC PN22].
-- **Gamificação**: badges por completar o perfil, conversar, criar grupo e "being kind" [DOC PN11].
+- **Discovery**: "swipe up to 'wave'". When both users wave, the 1:1 chat opens, with GIFs, photos, **location**, and video calling [DOC PN11]. There is also a "Go Global" tab for connections in other countries [DOC PN11].
+- **Feed**: posts, polls, and statuses, filtered by "Topics". Posts can be **anonymous** (Incognito) [DOC PN11]. The team states that "incognito posts are all made by members with verified accounts" [DOC PN08].
+- **Groups**: "mini-communities… around a specific topic, life stage, and/or location". They can be created by Peanut or by members [DOC PN11].
+- **Pods**: "live audio-only chat rooms" by topic. Hosts moderate, and listeners "raise their hand" to speak [DOC PN11, PN20]. There are Pods and groups reserved for Black, Asian, and ethnic minority women [DOC PN10].
+- **Experts**: "live conversations hosted by experts" (App Store) [DOC PN01]. "Peanut Pros" profiles ("doctors, nurses, therapists and sleep consultants"), but "we do not independently verify the identity or credentials of Peanut Pros" [DOC PN16].
+- **Ask Peanut** (launched in late abril de 2026, according to Forbes): AI that brings together community responses. The company explains: "women were doing it anyway" (bringing answers from ChatGPT or Claude to validate with other mothers) [DOC PN22].
+- **Gamification**: badges for completing a profile, chatting, creating a group, and "being kind" [DOC PN11].
 
-### Cuidado compartilhado (não)
+### Shared care (no)
 
-- "Duplicate and shared accounts aren't permitted." Cada perfil é individual e verificado por selfie [DOC PN06].
-- O público aceito é só feminino ("non-binary identified, cis, and transwomen"), o que exclui pais e outros cuidadores homens [DOC PN06].
+- "Duplicate and shared accounts aren't permitted." Each profile is individual and verified by selfie [DOC PN06].
+- The accepted audience is women only ("non-binary identified, cis, and transwomen"), which excludes fathers and other male caregivers [DOC PN06].
 
-## Conteúdo educativo
+## Educational content
 
-- **Processo declarado** [DOC PN17]:
-  - conteúdo marcado como "Medical" vai para "a vetted medical reviewer in that field";
-  - o topo do artigo mostra autor e revisor, e os posts do blog levam o selo "Fact checked" [DOC PN11];
-  - a equipe interna consulta "National Library of Medicine, the American College of Obstetricians and Gynecologists, the American Academy of Pediatrics".
-- **Revisores listados**: OB-GYNs, pediatras, médica do NHS, nutricionista, consultora de sono, psicoterapeuta. A lista também inclui quiroprata e "Wellness Practitioner" [DOC PN17].
-- **Frequência de revisão**: não declarada. As datas "Updated" variam por artigo [DOC PN11] [HIP].
-- **Fronteira com orientação médica** [DOC PN16, PN23, PN24, PN06, PN12]:
-  - termos: "The App is not a substitution for professional medical care" e "Member Content is no substitute for professional advice";
-  - Peanut Pros devem usar "custom disclaimers" e dar só "generic advice";
-  - todo post público traz "The views expressed in community are solely the opinions of participants, and do not reflect those of Peanut";
-  - desinformação é proibida (exemplo: "misinformation about vaccines"), e há categoria de denúncia "Misinformation" para "concerning medical advice".
-- **Ask Peanut** transforma relatos em resposta agregada para dúvidas como dentição, alimentação e sono [DOC PN22]. Não foram encontradas salvaguardas publicadas (citação de fontes, aviso médico, escalonamento) [HIP].
-- **Licenças** [DOC PN16]:
-  - o conteúdo da Peanut ("Our Content") tem licença "non-exclusive, limited, personal, non-transferable, revocable", sem reuso;
-  - o conteúdo das usuárias recebe licença "non-exclusive, royalty free, perpetual, worldwide licence to use Your Content in any way (including… advertising…)", sublicenciável a afiliadas.
+- **Stated process** [DOC PN17]:
+  - content marked "Medical" goes to "a vetted medical reviewer in that field";
+  - the top of the article shows the author and reviewer, and blog posts carry the "Fact checked" label [DOC PN11];
+  - the internal team consults "National Library of Medicine, the American College of Obstetricians and Gynecologists, the American Academy of Pediatrics".
+- **Listed reviewers**: OB-GYNs, pediatricians, an NHS doctor, a nutritionist, a sleep consultant, a psychotherapist. The list also includes a chiropractor and a "Wellness Practitioner" [DOC PN17].
+- **Review frequency**: not stated. "Updated" dates vary by article [DOC PN11] [HIP].
+- **Boundary with medical advice** [DOC PN16, PN23, PN24, PN06, PN12]:
+  - terms: "The App is not a substitution for professional medical care" and "Member Content is no substitute for professional advice";
+  - Peanut Pros must use "custom disclaimers" and give only "generic advice";
+  - every public post displays "The views expressed in community are solely the opinions of participants, and do not reflect those of Peanut";
+  - misinformation is prohibited (example: "misinformation about vaccines"), and there is a "Misinformation" reporting category for "concerning medical advice".
+- **Ask Peanut** turns personal accounts into an aggregated answer to questions about topics such as teething, feeding, and sleep [DOC PN22]. No published safeguards were found (source citations, medical disclaimer, escalation) [HIP].
+- **Licenses** [DOC PN16]:
+  - Peanut's content ("Our Content") has a "non-exclusive, limited, personal, non-transferable, revocable" license, with no reuse;
+  - user content is granted a "non-exclusive, royalty free, perpetual, worldwide licence to use Your Content in any way (including… advertising…)", which can be sublicensed to affiliates.
 
 ## Tummy time
 
-- **Nenhum recurso** (timer, lembrete, atividade ou meta) foi encontrado [HIP: ausência em PN01, PN03, PN04].
-- O tema aparece em **posts da comunidade** [DOC PN24]. No post "3month milestones?", a mãe escreve "they say at 3mths, baby should be… [doing] 1hr of tummy time a day… Baby defo isn't doing 1hr… maybe 5 mins a day! So a little worried". Outra responde: "I find there's so much pressure to make sure we're doing everything."
-- É um retrato anedótico da pressão que metas de tummy time criam e de como a comunidade funciona como espaço de alívio [HIP]. Ver a meta de "1 hour by 3 months" em [Pathways](Pathways.md).
+- **No feature** (timer, reminder, activity, or goal) was found [HIP: absent from PN01, PN03, PN04].
+- The topic appears in **community posts** [DOC PN24]. In the post "3month milestones?", the mother writes "they say at 3mths, baby should be… [doing] 1hr of tummy time a day… Baby defo isn't doing 1hr… maybe 5 mins a day! So a little worried". Another replies: "I find there's so much pressure to make sure we're doing everything."
+- It is an anecdotal snapshot of the pressure tummy time goals create and how the community serves as a space for relief [HIP]. See the goal of "1 hour by 3 months" in [Pathways](Pathways.md).
 
-## Comunidade e moderação
+## Community and moderation
 
-- **Diretrizes** [DOC PN06]:
-  - **queremos ver**: inclusão, gentileza e autenticidade, conexões significativas, conversa respeitosa ("avoid ghosting");
-  - **proibido**: falsidade de identidade (selfie obrigatória; contas duplicadas ou compartilhadas); desinformação ("misinformation about vaccines"); plágio; ódio (tolerância zero); assédio e bullying, inclusive "screenshotting content without permission"; **denúncia falsa** ("submitting reports in retaliation"); exploração sexual infantil e nudez; atividade ilegal; publicidade e pedidos de dinheiro (vendas, listas de presentes, GoFundMe).
-- **Verificação por selfie** [DOC PN07, PN08, PN15]:
-  - obrigatória no cadastro, sem como contornar;
-  - um sistema próprio ("machine learning/AI") checa primeiro e, "if anything looks off, it goes straight to a real person on our moderation team. Yep, real moms and Peanut users just like you";
-  - a política cita provedor de "liveness" ("such as Hive") e diz que a selfie "never compared against any other image";
-  - fica guardada enquanto a conta existir, para moderadoras consultarem em caso de denúncia.
-- **Limites da verificação**: nos comentários do próprio post da equipe, usuárias pedem "ask for ID" e relatam suspeita de conversar com homens. Em outro post, relatam contas falsas que "keeps popping up", com fotos de banco de imagens [HIP PN08, PN23]. A selfie confirma que há uma pessoa real, não a identidade nem a condição de mãe [HIP].
-- **Denúncia** [DOC PN09, PN12]:
-  - três pontos > "Report" > categoria mais específica e nota opcional. O post de maio de 2025 afirma que "every single report is reviewed by a real person";
-  - depois da denúncia, o app oferece sair do grupo ou bloquear a usuária;
-  - **"I'm worried about this person"** leva a equipe a avaliar e, se preciso, oferecer recursos de apoio. A empresa diz que essa opção "won't get anyone in trouble".
-- **Controles da usuária** [DOC PN01, PN10, PN14]:
-  - bloqueio;
-  - **"Mute Keywords"** (desde maio de 2020; exemplo: silenciar "pregnancy" ou "baby names");
-  - "Sensitive Content Filters" para conteúdo que pode ser gatilho.
-- **Pods (áudio ao vivo)** [DOC PN10, PN15, PN20]:
-  - denúncia pelo menu da sala; "system checks" mais a equipe de Community Support; banimento vitalício por racismo ou ódio;
-  - **o áudio é gravado** e mantido por 30 dias após o fim do Pod, só para investigar denúncias, com mais 75 dias se houver violação, para permitir recurso;
-  - em 2021, a empresa "pays over two dozen moderators" e treinou a equipe para áudio.
-- **IA na moderação**: a política cita revisão de conteúdo "including through automated and AI-assisted tools". A Data safety declara coleta de "Other in-app messages" para "Fraud prevention, security, and compliance" [DOC PN15, PN05].
-- **Idade**: os termos e a política exigem 18+ e excluem contas de menores ao descobri-las [DOC PN15, PN16]. A classificação da Google Play é "Teen" [DOC PN03].
-- **Encontros presenciais**: dicas de segurança como "Arrange meet-ups in a public place" e não compartilhar detalhes sensíveis [DOC PN13].
-- **Relatos públicos de risco** [HIP]:
-  - uma avaliação de 1 estrela na App Store relata ameaças, mom-shaming, uma agressão depois de um encontro e Pods "cut throat". O desenvolvedor respondeu citando "a dedicated moderation team" [PN02];
-  - matéria local da Fox17 (data não capturada) ouviu mães preocupadas com fotos e idades dos filhos e localização "down to the mom's city". A empresa respondeu que cada mulher "is vetted by community moderators" [PN21];
-  - na Google Play há queixas de geolocalização imprecisa e de "flaking and ghosting" [PN03].
+- **Guidelines** [DOC PN06]:
+  - **what we want to see**: inclusion, kindness and authenticity, meaningful connections, respectful conversation ("avoid ghosting");
+  - **prohibited**: misrepresentation of identity (mandatory selfie; duplicate or shared accounts); misinformation ("misinformation about vaccines"); plagiarism; hate (zero tolerance); harassment and bullying, including "screenshotting content without permission"; **false reporting** ("submitting reports in retaliation"); child sexual exploitation and nudity; illegal activity; advertising and requests for money (sales, gift registries, GoFundMe).
+- **Selfie verification** [DOC PN07, PN08, PN15]:
+  - mandatory at signup, with no way to bypass it;
+  - an in-house system ("machine learning/AI") checks first, and "if anything looks off, it goes straight to a real person on our moderation team. Yep, real moms and Peanut users just like you";
+  - the policy mentions a "liveness" provider ("such as Hive") and says the selfie is "never compared against any other image";
+  - it is stored for as long as the account exists, so moderators can consult it if a report is made.
+- **Verification limits**: in comments on the team's own post, users ask to "ask for ID" and report suspicions that they are talking to men. In another post, they report fake accounts that "keeps popping up", with stock photos [HIP PN08, PN23]. The selfie confirms that there is a real person, not their identity or whether they are a mother [HIP].
+- **Reporting** [DOC PN09, PN12]:
+  - three dots > "Report" > most specific category and optional note. The maio de 2025 post states that "every single report is reviewed by a real person";
+  - after a report, the app offers the option to leave the group or block the user;
+  - **"I'm worried about this person"** leads the team to assess the situation and, if needed, offer support resources. The company says this option "won't get anyone in trouble".
+- **User controls** [DOC PN01, PN10, PN14]:
+  - blocking;
+  - **"Mute Keywords"** (since maio de 2020; example: muting "pregnancy" or "baby names");
+  - "Sensitive Content Filters" for potentially triggering content.
+- **Pods (live audio)** [DOC PN10, PN15, PN20]:
+  - reporting through the room menu; "system checks" plus the Community Support team; lifetime bans for racism or hate;
+  - **audio is recorded** and kept for 30 days after the Pod ends, solely to investigate reports, with an additional 75 days if there is a violation, to allow an appeal;
+  - in 2021, the company "pays over two dozen moderators" and trained the team for audio.
+- **AI in moderation**: the policy mentions content review "including through automated and AI-assisted tools". Data safety declares the collection of "Other in-app messages" for "Fraud prevention, security, and compliance" [DOC PN15, PN05].
+- **Age**: the terms and policy require 18+ and remove underage accounts when discovered [DOC PN15, PN16]. The Google Play age rating is "Teen" [DOC PN03].
+- **In-person meetups**: safety tips such as "Arrange meet-ups in a public place" and not sharing sensitive details [DOC PN13].
+- **Public reports of risk** [HIP]:
+  - a 1-star App Store review reports threats, mom-shaming, an assault after a meetup, and "cut throat" Pods. The developer responded by citing "a dedicated moderation team" [PN02];
+  - a local Fox17 article (date not captured) interviewed mothers concerned about their children's photos and ages, and location "down to the mom's city". The company responded that each woman "is vetted by community moderators" [PN21];
+  - Google Play has complaints about inaccurate geolocation and "flaking and ghosting" [PN03].
 
-## Privacidade
+## Privacy
 
-- **Política** ("last updated on: 8 September 2026") [DOC PN15]:
-  - **fase de vida e etiquetas** (gravidez, menopausa, LGBTQ+) tratadas como dado sensível e visíveis a outras usuárias, com consentimento explícito; o app pode ser usado sem nenhuma etiqueta;
-  - **publicidade personalizada** pela fase de vida "where you have opted in". Para provedores de anúncios (Google Ad Manager) vão só "anonymised, aggregated data";
-  - provedores de IA recebem conteúdo e selfies "in de-identified form";
-  - outras usuárias veem cidade ou estado e distância aproximada, "never your precise location".
-- **Retenção publicada** [DOC PN15]:
-  - selfies: enquanto a conta existir, mais até 30 dias;
-  - áudio de Pods: 30 dias, mais 75 se houver violação;
-  - logs de servidor: 14 dias;
-  - IPs de contas banidas: "indefinitely";
-  - eventos: anonimizados quando a conta é apagada.
-  
-  Conteúdo já compartilhado pode continuar visível depois da exclusão.
-- **App Store**: "Data Used to Track You": compras e **"Sensitive Info"**. "Data Linked to You" inclui localização precisa e aproximada, conteúdo, histórico de busca e dados sensíveis [DOC PN01].
+- **Policy** ("last updated on: 8 September 2026") [DOC PN15]:
+  - **life stage and labels** (pregnancy, menopause, LGBTQ+) are treated as sensitive data and visible to other users, with explicit consent; the app can be used without any labels;
+  - **personalized advertising** based on life stage "where you have opted in". Only "anonymised, aggregated data" goes to advertising providers (Google Ad Manager);
+  - AI providers receive content and selfies "in de-identified form";
+  - other users see city or state and approximate distance, "never your precise location".
+- **Published retention periods** [DOC PN15]:
+  - selfies: for as long as the account exists, plus up to 30 days;
+  - Pod audio: 30 days, plus 75 if there is a violation;
+  - server logs: 14 days;
+  - IP addresses of banned accounts: "indefinitely";
+  - events: anonymized when the account is deleted.
+
+  Previously shared content may remain visible after deletion.
+- **App Store**: "Data Used to Track You": purchases and **"Sensitive Info"**. "Data Linked to You" includes precise and approximate location, content, search history, and sensitive data [DOC PN01].
 - **Google Play (Data safety)** [DOC PN05]:
-  - compartilha IDs de usuário e de dispositivo para "Analytics, Advertising or marketing";
-  - coleta localização precisa e aproximada (opcional), contatos (opcional), telefone, fotos e vídeos, e mensagens (segurança);
-  - criptografia em trânsito e pedido de exclusão.
-- A App Store fala em rastreamento com dados sensíveis, e a política diz que só dados agregados vão para anúncios. A diferença pode ser de definição ou uma inconsistência [HIP].
+  - shares user and device IDs for "Analytics, Advertising or marketing";
+  - collects precise and approximate location (optional), contacts (optional), phone number, photos and videos, and messages (security);
+  - encryption in transit and deletion requests.
+- The App Store mentions tracking with sensitive data, while the policy says only aggregated data goes to advertising. The difference may be a matter of definition or an inconsistency [HIP].
 
-## Pontos fortes
+## Strengths
 
-- O pacote de segurança é o mais completo do grupo: selfie com revisão humana, denúncia por categorias, opção "I'm worried about this person", bloqueio, palavras silenciadas, filtros de sensibilidade, regra contra denúncia falsa e contra print sem permissão [DOC PN06, PN07, PN09, PN14].
-- Política de retenção específica e legível (selfie, áudio, logs) [DOC PN15].
-- Posts anônimos, mas de contas verificadas [DOC PN08, PN11].
-- Usuárias relatam alívio da solidão no pós-parto [HIP PN02].
+- The safety package is the most complete in the group: selfie with human review, reporting by category, the "I'm worried about this person" option, blocking, muted words, sensitive content filters, and rules against false reporting and screenshots without permission [DOC PN06, PN07, PN09, PN14].
+- Specific and readable retention policy (selfie, audio, logs) [DOC PN15].
+- Anonymous posts, but from verified accounts [DOC PN08, PN11].
+- Users report relief from postpartum loneliness [HIP PN02].
 
-## Limitações e queixas recorrentes
+## Limitations and recurring complaints
 
-- Paywall sobre "quem acenou": "impossible to see your waves on the free version". O desenvolvedor respondeu que é "just a way to speed the process up" [HIP PN03].
-- Contas falsas, dúvidas sobre a verificação, conflitos em Pods e encontros presenciais [HIP PN02, PN08, PN23].
-- Só mulheres e sem contas compartilhadas, o que não atende pais nem outros cuidadores [DOC PN06].
-- Peanut Pros sem verificação de credenciais [DOC PN16].
-- IA que agrega relatos para dúvidas de saúde (Ask Peanut), sem salvaguardas publicadas [DOC PN22] [HIP].
-- Classificações divergentes: 18+ na App Store, "Teen" na Google Play [DOC PN01, PN03].
+- Paywall for "who waved": "impossible to see your waves on the free version". The developer responded that it is "just a way to speed the process up" [HIP PN03].
+- Fake accounts, questions about verification, conflicts in Pods, and in-person meetups [HIP PN02, PN08, PN23].
+- Women only and no shared accounts, which does not serve fathers or other caregivers [DOC PN06].
+- Peanut Pros without credential verification [DOC PN16].
+- AI that aggregates personal accounts to answer health questions (Ask Peanut), with no published safeguards [DOC PN22] [HIP].
+- Different age ratings: 18+ on the App Store, "Teen" on Google Play [DOC PN01, PN03].
 
-## O que o AppMaternidade pode aprender
+## What AppMaternidade can learn
 
-- Oferecer **"Estou preocupada com esta pessoa"** como denúncia de cuidado, não de punição, ligada a recursos de apoio [DOC PN09, PN12].
-- Mostrar, logo após denunciar, as opções **bloquear, sair do grupo e silenciar** [DOC PN09].
-- Oferecer **silenciar palavras** e **filtro de conteúdo sensível**, importantes para perda gestacional e temas difíceis [DOC PN01, PN14].
-- Ter regras explícitas contra **denúncia retaliatória** e **print sem permissão** [DOC PN06].
-- Permitir posts **anônimos para o público, mas rastreáveis pela moderação** [DOC PN08].
-- Publicar a **tabela de retenção** de cada dado sensível [DOC PN15].
-- Se houver áudio ao vivo: gravar só para apuração, com prazo curto e aviso claro, e treinar moderação para áudio antes de lançar [DOC PN15, PN20].
+- Offer **"Estou preocupada com esta pessoa"** as a report focused on care rather than punishment, linked to support resources [DOC PN09, PN12].
+- Show the options to **block, leave the group, and mute** immediately after reporting [DOC PN09].
+- Offer **keyword muting** and a **sensitive content filter**, which are important for pregnancy loss and difficult topics [DOC PN01, PN14].
+- Have explicit rules against **retaliatory reporting** and **screenshots without permission** [DOC PN06].
+- Allow posts that are **anonymous to the public but traceable by moderators** [DOC PN08].
+- Publish the **retention table** for each type of sensitive data [DOC PN15].
+- If live audio is offered: record only for investigations, with a short retention period and clear notice, and train moderators for audio before launch [DOC PN15, PN20].
 
-## O que não copiar
+## What not to copy
 
-- Mecânica de namoro (deslizar, "wave") com **paywall para ver quem quer conversar**, o que monetiza a solidão [DOC PN01] [HIP PN03].
-- Público só feminino e proibição de contas compartilhadas. No AppMaternidade, todos os cuidadores autorizados contam [DOC PN06].
-- Selo de especialista sem verificação de credenciais [DOC PN16].
-- IA que resume relatos da comunidade como se fossem resposta de saúde [DOC PN22].
-- Licença perpétua sobre o conteúdo das usuárias, inclusive para publicidade [DOC PN16].
-- Publicidade personalizada por gravidez ou fertilidade, mesmo com opt-in [DOC PN15].
-- Compartilhar localização no chat sem salvaguardas de encontro presencial [DOC PN11, PN13].
+- Dating mechanics (swiping, "wave") with a **paywall to see who wants to talk**, which monetizes loneliness [DOC PN01] [HIP PN03].
+- Women-only audience and a ban on shared accounts. In AppMaternidade, all authorized caregivers count [DOC PN06].
+- Expert badge without credential verification [DOC PN16].
+- AI that summarizes community accounts as if they were a health answer [DOC PN22].
+- Perpetual license over user content, including for advertising [DOC PN16].
+- Personalized advertising based on pregnancy or fertility, even with opt-in [DOC PN15].
+- Sharing location in chat without safeguards for in-person meetups [DOC PN11, PN13].
 
 ## Fontes
 
-Consulta de todas: 22/10/2026.
+All accessed on: 22/10/2026.
 
-| ID | Fonte | Tipo de evidência | Plataforma/versão visível |
+| ID | Source | Evidence type | Visible platform/version |
 | --- | --- | --- | --- |
-| PN01 | https://apps.apple.com/us/app/peanut-app-find-mom-friends/id1178656034 | Loja: descrição, notas de versão (8.3.0–8.25.0), rótulo de privacidade, compras e informações | iOS 8.25.0; iOS 16+ |
-| PN02 | https://apps.apple.com/us/app/peanut-find-mom-friends/id1178656034?see-all=reviews&platform=iphone | Avaliações de usuários com respostas | iOS |
-| PN03 | https://play.google.com/store/apps/details?id=com.teampeanut.peanut&hl=en_US | Loja: descrição, nota, downloads e avaliações com respostas (09/09/2026) | Android; atualizado em 14/10/2026 |
-| PN04 | https://play.google.com/store/apps/details?id=com.teampeanut.peanut&hl=pt-BR | Loja em português | Android |
-| PN05 | https://play.google.com/store/apps/datasafety?id=com.teampeanut.peanut&hl=en_US | Loja: Data safety | Android |
-| PN06 | https://www.peanut-app.io/community-guidelines | Diretrizes da comunidade | — |
-| PN07 | https://www.peanut-app.io/blog/why-we-use-selfie-verification | Blog oficial (atualizado em 11/05/2023) | — |
-| PN08 | https://www.peanut-app.io/posts/4jztt-4w3/peanut-safety-series-who-reviews-your-selfies | Post oficial da equipe na comunidade, com comentários de usuárias | — |
-| PN09 | https://www.peanut-app.io/blog/our-reporting-system | Blog oficial (atualizado em 20/05/2025) | — |
-| PN10 | https://www.peanut-app.io/blog/pods-safety | Blog oficial (atualizado em 11/05/2023) | — |
-| PN11 | https://www.peanut-app.io/blog/how-does-peanut-app-work | Blog oficial (10/10/2022, atualizado em 08/01/2025) | — |
-| PN12 | https://www.peanut-app.io/e/help/help-community-safety-and-wellbeing | Central de ajuda | — |
-| PN13 | https://www.peanut-app.io/blog/is-peanut-app-safe | Blog oficial (atualizado em 11/05/2023) | — |
-| PN14 | https://www.peanut-app.io/blog/peanut-mute-keywords-feature | Blog oficial | — |
-| PN15 | https://www.peanut-app.io/privacy | Política de privacidade (atualizada em 08/09/2026) | — |
-| PN16 | https://www.peanut-app.io/terms | Termos de uso (atualizados em 08/09/2026) | — |
-| PN17 | https://www.peanut-app.io/medical-review | Site oficial: processo de revisão médica | — |
-| PN18 | https://www.peanut-app.io/about-us | Site oficial: história | — |
-| PN19 | https://www.peanut-app.io/blog/ola-brasil | Blog oficial em português (15/01/2025, atualizado em 12/02/2025) | — |
-| PN20 | https://techcrunch.com/2021/04/27/social-networking-app-for-women-peanut-adds-live-audio-rooms/ | Artigo de terceiro (27/04/2021) | — |
-| PN21 | https://fox17.com/news/local/app-for-moms-to-meet-other-moms-to-launch-in-nashville-sparking-safety-concerns-for-some | Artigo de terceiro (TV local; data não capturada; cita "around one million moms") | — |
-| PN22 | https://www.forbes.com/sites/christinedare-bryan/2026/05/01/when-your-customers-make-you-adopt-ai-do-it-for-the-right-reasons/ | Artigo de terceiro (coluna, 01/05/2026) | — |
-| PN23 | https://www.peanut-app.io/posts/2psyd-ocn/fake-accounts | Post público de usuária com comentários | — |
-| PN24 | https://www.peanut-app.io/posts/3pzau-5qs/3month-milestones | Post público de usuária com comentários | — |
+| PN01 | https://apps.apple.com/us/app/peanut-app-find-mom-friends/id1178656034 | App store: description, release notes (8.3.0–8.25.0), privacy label, purchases, and information | iOS 8.25.0; iOS 16+ |
+| PN02 | https://apps.apple.com/us/app/peanut-find-mom-friends/id1178656034?see-all=reviews&platform=iphone | User reviews with responses | iOS |
+| PN03 | https://play.google.com/store/apps/details?id=com.teampeanut.peanut&hl=en_US | App store: description, rating, downloads, and reviews with responses (09/09/2026) | Android; updated on 14/10/2026 |
+| PN04 | https://play.google.com/store/apps/details?id=com.teampeanut.peanut&hl=pt-BR | App store listing in Portuguese | Android |
+| PN05 | https://play.google.com/store/apps/datasafety?id=com.teampeanut.peanut&hl=en_US | App store: Data safety | Android |
+| PN06 | https://www.peanut-app.io/community-guidelines | Community guidelines | — |
+| PN07 | https://www.peanut-app.io/blog/why-we-use-selfie-verification | Official blog (updated on 11/05/2023) | — |
+| PN08 | https://www.peanut-app.io/posts/4jztt-4w3/peanut-safety-series-who-reviews-your-selfies | Official team post in the community, with user comments | — |
+| PN09 | https://www.peanut-app.io/blog/our-reporting-system | Official blog (updated on 20/05/2025) | — |
+| PN10 | https://www.peanut-app.io/blog/pods-safety | Official blog (updated on 11/05/2023) | — |
+| PN11 | https://www.peanut-app.io/blog/how-does-peanut-app-work | Official blog (10/10/2022, updated on 08/01/2025) | — |
+| PN12 | https://www.peanut-app.io/e/help/help-community-safety-and-wellbeing | Help center | — |
+| PN13 | https://www.peanut-app.io/blog/is-peanut-app-safe | Official blog (updated on 11/05/2023) | — |
+| PN14 | https://www.peanut-app.io/blog/peanut-mute-keywords-feature | Official blog | — |
+| PN15 | https://www.peanut-app.io/privacy | Privacy policy (updated on 08/09/2026) | — |
+| PN16 | https://www.peanut-app.io/terms | Terms of use (updated on 08/09/2026) | — |
+| PN17 | https://www.peanut-app.io/medical-review | Official website: medical review process | — |
+| PN18 | https://www.peanut-app.io/about-us | Official website: history | — |
+| PN19 | https://www.peanut-app.io/blog/ola-brasil | Official blog in Portuguese (15/01/2025, updated on 12/02/2025) | — |
+| PN20 | https://techcrunch.com/2021/04/27/social-networking-app-for-women-peanut-adds-live-audio-rooms/ | Third-party article (27/04/2021) | — |
+| PN21 | https://fox17.com/news/local/app-for-moms-to-meet-other-moms-to-launch-in-nashville-sparking-safety-concerns-for-some | Third-party article (local TV; date not captured; mentions "around one million moms") | — |
+| PN22 | https://www.forbes.com/sites/christinedare-bryan/2026/05/01/when-your-customers-make-you-adopt-ai-do-it-for-the-right-reasons/ | Third-party article (column, 01/05/2026) | — |
+| PN23 | https://www.peanut-app.io/posts/2psyd-ocn/fake-accounts | Public user post with comments | — |
+| PN24 | https://www.peanut-app.io/posts/3pzau-5qs/3month-milestones | Public user post with comments | — |
 
-## Questões abertas
+## Open questions
 
-- A moderação no Brasil é feita em português? Existem diretrizes em pt-BR? Só foram encontradas versões em inglês e espanhol.
-- Quais salvaguardas o Ask Peanut tem: fontes, aviso médico, bloqueio de temas de risco, escalonamento?
-- Quantas pessoas moderam em 2026 e em quanto tempo uma denúncia é respondida?
-- Como o "I'm worried about this person" funciona fora do Reino Unido e dos EUA? Quais recursos o app oferece no Brasil?
-- Qual é a data da matéria da Fox17? A menção a cerca de um milhão de mães sugere 2018–2019 [HIP].
+- Is moderation in Brazil conducted in Portuguese? Are there pt-BR guidelines? Only English and Spanish versions were found.
+- What safeguards does Ask Peanut have: sources, medical disclaimer, blocking of high-risk topics, escalation?
+- How many people moderate in 2026, and how long does it take to respond to a report?
+- How does "I'm worried about this person" work outside the UK and the US? What resources does the app offer in Brazil?
+- What is the date of the Fox17 article? The mention of around one million mothers suggests 2018–2019 [HIP].
 
-## Limites desta análise
+## Limits of this analysis
 
-- Nenhum app instalado e nenhuma conta criada. Nada foi observado em execução. Os posts da comunidade foram lidos pela prévia pública na web.
-- Os relatos de risco (avaliações, posts, matéria local) são anedóticos e não foram verificados [HIP].
-- A TechCrunch (2021) é antiga. O número de moderadores pode ter mudado.
-- A matéria da Forbes é coluna de opinião sobre adoção de IA, não auditoria do produto.
-- Na App Store, datas sem ano foram lidas como 2026 e "2d ago" como cerca de 20/10/2026 [HIP].
+- No app was installed and no account was created. Nothing was observed in use. Community posts were read through the public web preview.
+- Risk reports (reviews, posts, local article) are anecdotal and were not verified [HIP].
+- The TechCrunch article (2021) is old. The number of moderators may have changed.
+- The Forbes article is an opinion column on AI adoption, not a product audit.
+- In the App Store, dates without a year were read as 2026 and "2d ago" as around 20/10/2026 [HIP].

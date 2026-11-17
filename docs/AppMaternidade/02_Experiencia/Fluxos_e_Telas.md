@@ -1,41 +1,41 @@
 ---
 tipo: design-doc
-status: proposta
-responsavel: Hermes (coordenador da APP-001)
+status: proposal
+responsavel: Hermes (coordinator of APP-001)
 revisado_em: 2026-10-22
 tarefa: MAT-6
 adr: ADR-001
 fontes_principais:
-  - https://developer.apple.com/design/human-interface-guidelines/accessibility (consulta 22/10/2026)
-  - https://support.google.com/accessibility/android/answer/7101858 (consulta 22/10/2026)
-  - https://www.w3.org/TR/WCAG22/ (Recomendação W3C de 12/12/2024, consulta 22/10/2026)
+  - https://developer.apple.com/design/human-interface-guidelines/accessibility (consulted 22/10/2026)
+  - https://support.google.com/accessibility/android/answer/7101858 (consulted 22/10/2026)
+  - https://www.w3.org/TR/WCAG22/ (W3C Recommendation of 12/12/2024, consulted 22/10/2026)
   - 01_Produto/Concorrentes_e_Diferenciais.md
   - 08_Referencias/Repositorios/Sprout_Track.md
 ---
 
-# Fluxos e telas
+# Flows and screens
 
-> Nota de 03/11/2026: o rumo mudou para site completo primeiro e port Android e iOS depois ([ADR-009](../06_ADRs/ADR-009_Site_Completo_Primeiro.md)). Onde este texto fala em app nativo, leia como o port; o site cobre as mesmas funções.
+> Note from 03/11/2026: the direction changed to a full website first and an Android and iOS port later ([ADR-009](../06_ADRs/ADR-009_Site_Completo_Primeiro.md)). Where this text mentions a native app, read it as the port; the website covers the same functions.
 
-Proposta do Hermes para a experiência mobile em Android e iOS. A navegação é hipótese a testar com cuidadores reais; nada aqui é layout final nem identidade visual. Os wireframes são esquemas de conteúdo, sem estilo.
+Hermes's proposal for the mobile experience on Android and iOS. The navigation is a hypothesis to be tested with real caregivers; nothing here is a final layout or visual identity. The wireframes are content schematics, without styling.
 
-## 1. Princípios
+## 1. Principles
 
-| Princípio | Como aparece no produto | Como validar |
+| Principle | How it appears in the product | How to validate |
 | --- | --- | --- |
-| Registrar em até 2 toques a partir de Hoje | Botões rápidos para os tipos mais usados; detalhes opcionais depois | Teste de usabilidade com 5 a 8 cuidadores: toques e segundos até o registro salvo |
-| Uma mão, no colo | Ações principais na metade de baixo da tela; alvos de pelo menos 48 x 48 dp no Android e 44 x 44 pt no iOS | Medição nos protótipos; Accessibility Scanner e Accessibility Inspector |
-| Madrugada | Tema escuro de baixo brilho, sem fundos brancos; animações mínimas; vibração discreta como confirmação | Teste em quarto escuro; respeito a Reduzir Movimento |
-| Erro reversível | "Desfazer" por alguns segundos depois de registrar; editar e excluir sempre acessíveis; exclusão restaurável por 30 dias | Teste de tarefa: corrigir um registro feito por engano |
-| Sem cobrança | Linguagem neutra; nada de "atrasado", metas, pontos ou rankings | Revisão de texto; perguntas pós-teste sobre culpa e pressão |
-| Privado e público bem separados | A área da comunidade tem marca visual própria e indica sempre "público"; o resto do app é privado da família | Teste: perguntar o que outra pessoa veria de uma postagem |
-| Acessível | Fonte ampliada até pelo menos 200% (Dynamic Type no iOS, escala de fonte no Android); leitor de tela com rótulos completos ("Iniciar sono de Lia"); contraste mínimo de 4,5:1 para texto comum | VoiceOver e TalkBack em aparelho físico; verificação de contraste |
+| Log within 2 taps from Hoje | Quick buttons for the most used types; optional details afterwards | Usability test with 5 to 8 caregivers: taps and seconds until the record is saved |
+| One hand, baby on the lap | Primary actions in the bottom half of the screen; targets of at least 48 x 48 dp on Android and 44 x 44 pt on iOS | Measurement in the prototypes; Accessibility Scanner and Accessibility Inspector |
+| Middle of the night | Low-brightness dark theme, no white backgrounds; minimal animations; subtle vibration as confirmation | Test in a dark room; respect for Reduce Motion |
+| Reversible errors | "Desfazer" for a few seconds after logging; edit and delete always accessible; deletion restorable for 30 days | Task test: correct a record made by mistake |
+| No pressure | Neutral language; no "atrasado", goals, points or rankings | Copy review; post-test questions about guilt and pressure |
+| Private and public clearly separated | The community area has its own visual mark and always shows "público"; the rest of the app is private to the family | Test: ask what another person would see of a post |
+| Accessible | Font enlarged to at least 200% (Dynamic Type on iOS, font scale on Android); screen reader with complete labels ("Iniciar sono de Lia"); minimum contrast of 4,5:1 for regular text | VoiceOver and TalkBack on a physical device; contrast check |
 
-As metas de toques e tempo são hipóteses de projeto, não resultados medidos.
+The tap and time targets are design hypotheses, not measured results.
 
-## 2. Navegação proposta
+## 2. Proposed navigation
 
-Cinco abas, o máximo recomendado para barra inferior nas duas plataformas:
+Five tabs, the maximum recommended for a bottom bar on both platforms:
 
 ```mermaid
 flowchart TB
@@ -61,9 +61,9 @@ flowchart TB
   FAM --> CONF[Notificações, fuso, privacidade, exportar e excluir]
 ```
 
-Alternativas a testar: quatro abas (Histórico dentro de Hoje) e Desenvolvimento como seção de Hoje. Critério: qual versão as pessoas usam sem explicação no teste de primeira semana.
+Alternatives to test: four tabs (Histórico inside Hoje) and Desenvolvimento as a section of Hoje. Criterion: which version people use without explanation in the first-week test.
 
-## 3. Telas principais
+## 3. Main screens
 
 ### 3.1 Hoje
 
@@ -90,12 +90,12 @@ Alternativas a testar: quatro abas (Histórico dentro de Hoje) e Desenvolvimento
 └───────────────────────────────────────┘
 ```
 
-- Os botões rápidos ficam embaixo, ao alcance do polegar.
-- Tocar em Sono ou Tummy time inicia uma sessão; tocar em Fralda abre uma escolha de um toque (xixi, cocô, ambos) e salva.
-- Toque longo num botão abre o registro retroativo, com início e fim.
-- "Para você saber" mostra notas de passagem com destaque válido.
+- The quick buttons sit at the bottom, within reach of the thumb.
+- Tapping Sono or Tummy time starts a session; tapping Fralda opens a one-tap choice (xixi, cocô, ambos) and saves.
+- Long-pressing a button opens retroactive logging, with start and end.
+- "Para você saber" shows handoff notes whose highlight is still valid.
 
-### 3.2 Sessão em andamento
+### 3.2 Session in progress
 
 ```text
 ┌───────────────────────────────────────┐
@@ -108,50 +108,50 @@ Alternativas a testar: quatro abas (Histórico dentro de Hoje) e Desenvolvimento
 └───────────────────────────────────────┘
 ```
 
-O tempo é calculado a partir do início gravado (ver [Offline e temporizadores](../03_Arquitetura/Offline_Sincronizacao_e_Temporizadores.md)). No Android, uma notificação contínua mostra o cronômetro; no iOS, uma Live Activity, se a stack escolhida suportar (ver [Mobile e plataformas](../08_Referencias/Tecnologias/Mobile_e_Plataformas.md)).
+The time is calculated from the recorded start (see [Offline and timers](../03_Arquitetura/Offline_Sincronizacao_e_Temporizadores.md)). On Android, an ongoing notification shows the timer; on iOS, a Live Activity, if the chosen stack supports it (see [Mobile and platforms](../08_Referencias/Tecnologias/Mobile_e_Plataformas.md)).
 
 ### 3.3 Histórico
 
-- Linha do tempo por dia, no fuso da família, com ícone, horário, duração e autor ("por Carla").
-- Filtros por tipo; resumo do dia (totais e intervalos) e da semana em gráfico simples.
-- Sessões que atravessam a meia-noite aparecem no dia em que começaram, com a marca "termina no dia seguinte".
-- Tocar num registro abre o detalhe, com edição, exclusão e histórico de alterações.
-- Sem interpretação clínica: o app mostra o que foi registrado, sem dizer se está "bom" ou "ruim". Estimativas, se um dia existirem, trazem premissas e limites.
+- Timeline by day, in the family's time zone, with icon, time, duration and author ("por Carla").
+- Filters by type; summary of the day (totals and intervals) and of the week in a simple chart.
+- Sessions that cross midnight appear on the day they started, with the "termina no dia seguinte" mark.
+- Tapping a record opens the detail view, with editing, deletion and change history.
+- No clinical interpretation: the app shows what was logged, without saying whether it is "bom" or "ruim". Estimates, if they ever exist, come with assumptions and limits.
 
 ### 3.4 Desenvolvimento
 
-- Tummy time: botão de sessão, histórico de sessões (duração, horários) e atividades da fase com fonte e revisão.
-- Atividades por fase: sugestões sem pontuação; "fizemos" opcional.
-- Artigos: texto com autoria, fontes, revisor e data de revisão visíveis.
-- Detalhes em [Desenvolvimento e conteúdo](../04_Comunidade_Conteudo/Desenvolvimento_e_Conteudo.md).
+- Tummy time: session button, session history (duration, times) and activities for the stage with source and review.
+- Activities by stage: suggestions without scoring; optional "fizemos".
+- Articles: text with authorship, sources, reviewer and review date visible.
+- Details in [Development and content](../04_Comunidade_Conteudo/Desenvolvimento_e_Conteudo.md).
 
 ### 3.5 Comunidade
 
-- Espaços por tema; dentro de cada um, tópicos com respostas.
-- Selo permanente "Comunidade · público"; o autor aparece pelo perfil público.
-- Busca por palavra e filtro por faixa de idade escolhida pelo autor.
-- Menu de cada tópico ou resposta: denunciar, bloquear o autor, silenciar o tópico.
-- Detalhes em [Comunidade e moderação](../04_Comunidade_Conteudo/Comunidade_e_Moderacao.md).
+- Spaces by theme; inside each one, threads with replies.
+- Permanent "Comunidade · público" badge; the author appears through their public profile.
+- Search by keyword and filter by age range chosen by the author.
+- Menu on each thread or reply: report, block the author, mute the thread.
+- Details in [Community and moderation](../04_Comunidade_Conteudo/Comunidade_e_Moderacao.md).
 
 ### 3.6 Família
 
-- Membros com papel e validade; convites pendentes; revogar e mudar papel (só responsáveis).
-- Bebês; fuso de referência da família; preferências de notificação; privacidade; exportar e excluir dados.
+- Members with role and expiration; pending invitations; revoke and change role (guardians only).
+- Babies; family reference time zone; notification preferences; privacy; export and delete data.
 
-## 4. Fluxos críticos
+## 4. Critical flows
 
-### 4.1 Primeiro acesso
+### 4.1 First access
 
-1. Tela de boas-vindas com uma frase do que o app faz e o aviso de que ele não substitui orientação profissional.
-2. Criar conta: e-mail com código de uso único (proposta) ou login social. Se houver login social, o iOS precisa oferecer também uma opção equivalente à exigida pela diretriz 4.8 da App Store (ver [Privacidade, legal e lojas](../08_Referencias/Pesquisa_Privacidade_Legal_e_Lojas.md)).
-3. Escolher "criar família" ou "tenho um convite".
-4. Termos e política em linguagem simples, com o consentimento específico para os dados do bebê separado do resto (texto a validar juridicamente).
+1. Welcome screen with one sentence about what the app does and the notice that it does not replace professional guidance.
+2. Create an account: email with a one-time code (proposal) or social login. If there is social login, iOS must also offer an option equivalent to the one required by App Store guideline 4.8 (see [Privacy, legal and stores](../08_Referencias/Pesquisa_Privacidade_Legal_e_Lojas.md)).
+3. Choose "criar família" or "tenho um convite".
+4. Terms and policy in plain language, with the specific consent for the baby's data separate from the rest (text to be legally validated).
 
-### 4.2 Cadastro do bebê
+### 4.2 Baby registration
 
-Nome ou apelido e data de nascimento. Nada mais é obrigatório. Explicação curta: "A data serve para mostrar atividades da fase; ela não aparece na comunidade".
+Name or nickname and date of birth. Nothing else is required. Short explanation: "A data serve para mostrar atividades da fase; ela não aparece na comunidade".
 
-### 4.3 Convite de outro cuidador
+### 4.3 Inviting another caregiver
 
 ```mermaid
 sequenceDiagram
@@ -167,87 +167,87 @@ sequenceDiagram
   S-->>R: aviso "Carla entrou como cuidadora"
 ```
 
-O responsável pode cancelar o convite enquanto ele está pendente. O convite exige conexão nas duas pontas.
+The guardian can cancel the invitation while it is pending. The invitation requires a connection on both ends.
 
-### 4.4 Registro rápido
+### 4.4 Quick logging
 
-1. Em Hoje, tocar em "Fralda" e escolher o tipo. Salvo no aparelho na hora, com "desfazer" por alguns segundos.
-2. Detalhes opcionais (horário diferente, observação) no próprio cartão do registro.
-3. A marca "aguardando envio" some quando o servidor confirma.
+1. In Hoje, tap "Fralda" and choose the type. Saved on the device immediately, with "desfazer" for a few seconds.
+2. Optional details (different time, note) on the record card itself.
+3. The "aguardando envio" mark disappears when the server confirms.
 
-### 4.5 Temporizador e troca de turno
+### 4.5 Timer and shift change
 
-1. Ana inicia o sono às 14:00. O cartão "Em andamento" aparece para todos os cuidadores depois da sincronização.
-2. Bruno assume e encerra às 15:10. O detalhe mostra "iniciado por Ana · encerrado por Bruno".
-3. Se os dois encerrarem quase juntos, vale o primeiro; diferença maior vira revisão (regras na seção 7 do documento de sincronização).
+1. Ana starts sleep at 14:00. The "Em andamento" card appears for all caregivers after syncing.
+2. Bruno takes over and ends it at 15:10. The detail view shows "iniciado por Ana · encerrado por Bruno".
+3. If both end it at almost the same time, the first one wins; a larger difference goes to review (rules in section 7 of the sync document).
 
-### 4.6 Correção e exclusão
+### 4.6 Correction and deletion
 
-- Editar horários com seletores grandes e acessíveis, sem teclado.
-- Excluir com "desfazer"; depois, restauração por 30 dias na lixeira da família.
-- Conflito: selo "precisa de revisão" e tela de comparação lado a lado, com autor e horário de cada versão.
+- Edit times with large, accessible pickers, without the keyboard.
+- Delete with "desfazer"; afterwards, restoration for 30 days from the family's trash.
+- Conflict: "precisa de revisão" badge and a side-by-side comparison screen, with the author and time of each version.
 
-### 4.7 Passagem de cuidados
+### 4.7 Care handoff
 
-"Desde que você saiu às 13:00": registros desde então, sessões em andamento e notas em destaque, numa tela só. É uma consulta sobre os dados existentes, sem tela de preenchimento extra.
+"Desde que você saiu às 13:00": records since then, sessions in progress and highlighted notes, on a single screen. It is a query over existing data, with no extra form screen.
 
-### 4.8 Postar e responder
+### 4.8 Posting and replying
 
-1. Escolher o espaço, escrever título e texto, ver a prévia com o selo "público" e publicar (exige conexão).
-2. Responder a um tópico; uma resposta pode citar outra (um nível).
-3. Incluir um resumo da rotina: a pessoa escolhe o período e os números; o app mostra exatamente o texto que será publicado; nada sai sem confirmação; o que vai é uma cópia, sem vínculo com os registros.
+1. Choose the space, write a title and text, see the preview with the "público" badge and publish (requires a connection).
+2. Reply to a thread; a reply can quote another (one level).
+3. Include a routine summary: the person chooses the period and the numbers; the app shows exactly the text that will be published; nothing goes out without confirmation; what goes out is a copy, with no link to the records.
 
-### 4.9 Denúncia e bloqueio
+### 4.9 Reporting and blocking
 
-1. Menu da postagem: "Denunciar" com os motivos de [Comunidade e moderação, seção 7](../04_Comunidade_Conteudo/Comunidade_e_Moderacao.md): ataque ou assédio, informação de saúde perigosa, conteúdo sexual, exposição de criança, dados pessoais, spam ou venda, risco de autolesão (segue a rota de crise) e outro.
-2. Confirmação: "Recebemos. A moderação analisa em até [prazo a definir]". Quem denunciou deixa de ver aquele conteúdo, se quiser.
-3. "Bloquear [apelido]": efeito imediato e mútuo; a pessoa bloqueada não é avisada.
+1. Post menu: "Denunciar" with the reasons from [Community and moderation, section 7](../04_Comunidade_Conteudo/Comunidade_e_Moderacao.md): attack or harassment, dangerous health information, sexual content, exposure of a child, personal data, spam or sales, risk of self-harm (follows the crisis route) and other.
+2. Confirmation: "Recebemos. A moderação analisa em até [prazo a definir]". The person who reported stops seeing that content, if they wish.
+3. "Bloquear [apelido]": immediate and mutual effect; the blocked person is not notified.
 
-### 4.10 Revogação
+### 4.10 Revocation
 
-1. O responsável abre o membro e toca em "Remover acesso".
-2. Aviso honesto: "Carla perde o acesso assim que o aparelho dela se conectar. O que ela já viu ou guardou no aparelho enquanto estava offline não pode ser apagado na hora."
-3. Do lado de Carla, ao reconectar: "Seu acesso à família de Lia foi encerrado. 2 registros feitos offline não foram enviados."
+1. The guardian opens the member and taps "Remover acesso".
+2. Honest warning: "Carla perde o acesso assim que o aparelho dela se conectar. O que ela já viu ou guardou no aparelho enquanto estava offline não pode ser apagado na hora."
+3. On Carla's side, upon reconnecting: "Seu acesso à família de Lia foi encerrado. 2 registros feitos offline não foram enviados."
 
-## 5. Estados de tela
+## 5. Screen states
 
-| Estado | Onde aparece | Texto proposto |
+| State | Where it appears | Proposed text |
 | --- | --- | --- |
-| Vazio | Hoje sem registros; Histórico novo; Comunidade sem tópicos no espaço | "Nenhum registro hoje. Toque em um botão abaixo para começar." |
-| Carregando | Primeira sincronização; comunidade | Esqueleto da tela; nunca bloqueia o registro local |
-| Sem conexão | Faixa no topo | "Sem conexão. Seus registros ficam salvos no aparelho." |
-| Sincronização pendente | Faixa e marca no registro | "3 registros aguardando envio." |
-| Conflito | Selo no registro e no Hoje | "Este registro foi alterado por duas pessoas. Escolha a versão certa." |
-| Permissão negada (papel) | Ação de observador; ação de cuidador sobre registro alheio | "Seu papel nesta família permite só ver os registros." |
-| Permissão negada (sistema) | Notificações negadas | "Sem notificações, você ainda registra e vê tudo dentro do app." |
-| Acesso encerrado | Após revogação | Texto da seção 4.10 |
-| Erro | Falha inesperada | O que aconteceu, o que foi preservado e o que fazer ("Seu registro está salvo no aparelho. Tentaremos enviar de novo.") |
+| Empty | Hoje with no records; new Histórico; Comunidade with no threads in the space | "Nenhum registro hoje. Toque em um botão abaixo para começar." |
+| Loading | First sync; community | Screen skeleton; never blocks local logging |
+| No connection | Banner at the top | "Sem conexão. Seus registros ficam salvos no aparelho." |
+| Sync pending | Banner and mark on the record | "3 registros aguardando envio." |
+| Conflict | Badge on the record and on Hoje | "Este registro foi alterado por duas pessoas. Escolha a versão certa." |
+| Permission denied (role) | Observer action; caregiver action on someone else's record | "Seu papel nesta família permite só ver os registros." |
+| Permission denied (system) | Notifications denied | "Sem notificações, você ainda registra e vê tudo dentro do app." |
+| Access ended | After revocation | Text from section 4.10 |
+| Error | Unexpected failure | What happened, what was preserved and what to do ("Seu registro está salvo no aparelho. Tentaremos enviar de novo.") |
 
-## 6. Android e iOS
+## 6. Android and iOS
 
-| Tema | Android | iOS |
+| Topic | Android | iOS |
 | --- | --- | --- |
-| Voltar | Gesto ou botão de voltar do sistema | Gesto de deslizar da borda |
-| Cronômetro fora do app | Notificação contínua com cronômetro do sistema | Live Activity e Dynamic Island (iOS 16.1 ou posterior) |
-| Atalho na tela inicial | Widget | Widget |
-| Permissão de notificação | Pedida em tempo de execução a partir do Android 13 | Pedida pelo sistema; pode ser provisória |
-| Fonte ampliada | Escala de fonte do sistema | Dynamic Type |
-| Leitor de tela | TalkBack | VoiceOver |
+| Back | System back gesture or button | Edge swipe gesture |
+| Timer outside the app | Ongoing notification with the system chronometer | Live Activity and Dynamic Island (iOS 16.1 or later) |
+| Home screen shortcut | Widget | Widget |
+| Notification permission | Requested at runtime starting with Android 13 | Requested by the system; can be provisional |
+| Enlarged font | System font scale | Dynamic Type |
+| Screen reader | TalkBack | VoiceOver |
 
-As interfaces não precisam ser idênticas: componentes e gestos seguem o costume de cada plataforma, e o conteúdo e as regras são os mesmos.
+The interfaces do not need to be identical: components and gestures follow each platform's conventions, while the content and rules are the same.
 
-## 7. O que não entra no MVP
+## 7. What is not in the MVP
 
-Registro por voz, assistente de IA, previsão de sono, câmera ou monitor, relógio inteligente, chat em tempo real e salas de áudio. Ficam como hipóteses de expansão no [Roadmap](../07_Roadmap/Roadmap_e_Proxima_Fatia.md).
+Voice logging, AI assistant, sleep prediction, camera or monitor, smartwatch, real-time chat and audio rooms. They remain as expansion hypotheses in the [Roadmap](../07_Roadmap/Roadmap_e_Proxima_Fatia.md).
 
-## Questões abertas
+## Open questions
 
-1. Cinco ou quatro abas.
-2. Nome do grupo na interface ("Família" ou outro).
-3. Quais tipos ganham botão rápido em Hoje (proposta: sono, mamada, fralda, tummy time).
-4. Prazo de resposta da moderação exibido a quem denuncia.
-5. Validade padrão do convite (proposta: 7 dias).
+1. Five or four tabs.
+2. Name of the group in the interface ("Família" or another).
+3. Which types get a quick button in Hoje (proposal: sleep, feeding, diaper, tummy time).
+4. Moderation response time shown to the person who reports.
+5. Default invitation validity (proposal: 7 days).
 
-## Limites desta análise
+## Limits of this analysis
 
-Proposta sem protótipo navegável nem teste com usuários. As metas de toques, tempo e legibilidade são hipóteses a medir; as referências de concorrentes estão em [Concorrentes e diferenciais](../01_Produto/Concorrentes_e_Diferenciais.md).
+Proposal without a navigable prototype or user testing. The tap, time and readability targets are hypotheses to be measured; the competitor references are in [Competitors and differentiators](../01_Produto/Concorrentes_e_Diferenciais.md).

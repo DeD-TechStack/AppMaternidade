@@ -1,109 +1,109 @@
 ---
 tipo: adr
 id: ADR-009
-status: Aceita
+status: Accepted
 data: 2026-11-03
 autor: lider-appmaternidade
-aprovador: Daniel (rumo decidido; stack por delegação registrada na MAT-28)
+aprovador: Daniel (direction decided; stack delegated as recorded in MAT-28)
 tarefas: MAT-27, MAT-28, MAT-32
 ---
 
-# ADR-009 — Site completo primeiro, port Android e iOS depois
+# ADR-009 — Complete website first, Android and iOS port later
 
-> **Emenda de 10/11/2026: PWA adiada por Daniel.** As palavras dele foram: "eu não pedi pra ter instalavel de nada, só o site". Por isso, a PWA (instalação na tela inicial e casca offline, MAT-41) saiu do escopo atual. O site segue como site comum, aberto pelo navegador. A PWA tinha entrado na stack como escolha técnica da D8-A, e não por pedido de Daniel. O cartão MAT-41a (t_ab1bd202) ficou parado: o worktree e os commits foram guardados, e nada foi integrado. A PWA só volta se Daniel pedir.
+> **Amendment of 10/11/2026: PWA postponed by Daniel.** His words were: "eu não pedi pra ter instalavel de nada, só o site". As a result, the PWA (home screen installation and offline shell, MAT-41) was removed from the current scope. The website remains a regular website, opened in a browser. The PWA had been included in the stack as a technical choice by D8-A, rather than at Daniel's request. Card MAT-41a (t_ab1bd202) was put on hold: the worktree and commits were saved, and nothing was integrated. The PWA will only return if Daniel requests it.
 
-**Status:** Aceita. Daniel (rumo decidido; stack por delegação registrada na MAT-28).
+**Status:** Accepted. Daniel (direction decided; stack delegated as recorded in MAT-28).
 
 ## 1. Contexto
 
-A APP-001 recomendou apps de loja para Android e iOS no MVP e deixou o app web para famílias para depois ([ADR-001](ADR-001_Plataformas_e_Web.md)), com React Native e Expo como framework ([ADR-002](ADR-002_Framework_Mobile.md)). A versão 0.3 do [design doc base](../../DESIGN_DOC_BASE.md) já propunha outra ordem: um piloto web pequeno antes das lojas.
+APP-001 recommended store apps for Android and iOS in the MVP and deferred the web app for families ([ADR-001](ADR-001_Plataformas_e_Web.md)), with React Native and Expo as the framework ([ADR-002](ADR-002_Framework_Mobile.md)). Version 0.3 of the [base design doc](../../DESIGN_DOC_BASE.md) already proposed a different order: a small web pilot before the stores.
 
-Em 03/11/2026, Daniel tomou duas decisões:
+On 03/11/2026, Daniel made two decisions:
 
-- **Rumo.** O AppMaternidade começa como site completo, com todos os requisitos RF-01 a RF-14 de [Visão e escopo](../01_Produto/Visao_e_Escopo.md) (seção 6). Android e iOS vêm depois, como port: o mesmo produto empacotado como app de loja.
-- **Stack.** Daniel delegou ao líder do projeto, de forma explícita, a escolha da base técnica do site. A escolha (D8, MAT-28) está na seção 3 e foi registrada na tarefa no mesmo dia.
+- **Direction.** AppMaternidade starts as a complete website, with all requirements RF-01 through RF-14 from [Vision and scope](../01_Produto/Visao_e_Escopo.md) (section 6). Android and iOS come later, as a port: the same product packaged as a store app.
+- **Stack.** Daniel explicitly delegated the choice of the website's technical foundation to the project lead. The choice (D8, MAT-28) is in section 3 and was recorded in the task on the same day.
 
-As exigências que o ADR-001 levantou continuam: as lojas pedem política de privacidade publicada e um link web de exclusão de conta, a comunidade precisa de denúncia, bloqueio e moderação, e o moderador não vê dados de cuidado.
+The requirements raised by ADR-001 still apply: the stores require a published privacy policy and a web link for account deletion, the community needs reporting, blocking and moderation, and the moderator cannot see care data.
 
-## 2. Opções
+## 2. Options
 
-### D8-A: React + TypeScript + Vite, Tailwind CSS 4, shadcn/ui e Magic UI, Supabase e PWA; port pelo Capacitor
+### D8-A: React + TypeScript + Vite, Tailwind CSS 4, shadcn/ui and Magic UI, Supabase and PWA; port through Capacitor
 
-- Pró: usa os componentes da lista aprovada para o site.
-- Pró: hospedagem estática barata.
-- Pró: o port reaproveita o mesmo código.
-- Contra: recursos nativos avançados pedem plugin.
+- Pro: uses components from the approved list for the website.
+- Pro: inexpensive static hosting.
+- Pro: the port reuses the same code.
+- Con: advanced native features require a plugin.
 
-### D8-B: Next.js (App Router), com a mesma interface e o mesmo backend
+### D8-B: Next.js (App Router), with the same interface and backend
 
-- Pró: renderização no servidor e SEO.
-- Contra: mais peças para operar.
-- Contra: a hospedagem ideal é a Vercel, cujo plano Hobby não permitiria uso comercial (a confirmar: o cofre não tem fonte datada sobre isso).
+- Pro: server rendering and SEO.
+- Con: more parts to operate.
+- Con: the ideal hosting is Vercel, whose Hobby plan would not allow commercial use (to be confirmed: the vault has no dated source on this).
 
-### D8-C: Expo Router com React Native Web
+### D8-C: Expo Router with React Native Web
 
-- Pró: reaproveita melhor o código num app nativo.
-- Contra: não usa shadcn/ui nem Magic UI, que dependem do DOM.
-- Contra: contraria a regra de componentes do site.
+- Pro: better code reuse in a native app.
+- Con: does not use shadcn/ui or Magic UI, which depend on the DOM.
+- Con: conflicts with the website's component rule.
 
-## 3. Decisão
+## 3. Decision
 
-D8-A, decidida em 03/11/2026 por delegação de Daniel:
+D8-A, decided on 03/11/2026 under Daniel's delegation:
 
-- React + TypeScript + Vite, Tailwind CSS 4 e componentes shadcn/ui e Magic UI;
-- Supabase (PostgreSQL, Auth e RLS), na região São Paulo;
+- React + TypeScript + Vite, Tailwind CSS 4 and shadcn/ui and Magic UI components;
+- Supabase (PostgreSQL, Auth and RLS), in the São Paulo region;
 - PWA;
-- port para Android e iOS pelo Capacitor.
+- port to Android and iOS through Capacitor.
 
-D8-B e D8-C ficam registradas como alternativas avaliadas.
+D8-B and D8-C remain recorded as evaluated alternatives.
 
-## 4. Caminho do port
+## 4. Port path
 
-O cofre não avaliou o Capacitor: [Mobile e plataformas](../08_Referencias/Tecnologias/Mobile_e_Plataformas.md) o deixa fora do escopo. Por isso, o que segue é plano, a confirmar quando o port começar [HIP].
+The vault did not evaluate Capacitor: [Mobile and platforms](../08_Referencias/Tecnologias/Mobile_e_Plataformas.md) leaves it out of scope. Therefore, what follows is a plan, to be confirmed when the port begins [HIP].
 
-**O que se reaproveita sem mudar:**
+**What is reused without changes:**
 
-- a interface (componentes e telas do site);
-- as regras de domínio;
-- o cliente do Supabase.
+- the interface (website components and screens);
+- the domain rules;
+- the Supabase client.
 
-**O que o Capacitor exige:**
+**What Capacitor requires:**
 
-- projetos Android e iOS gerados a partir do site;
-- assinatura dos builds de cada plataforma;
-- contas de loja, que dependem da D3 (MAT-22).
+- Android and iOS projects generated from the website;
+- signing the builds for each platform;
+- store accounts, which depend on D3 (MAT-22).
 
-**Recursos que pedem plugin nativo ou a volta do Expo à mesa:**
+**Features that require a native plugin or reconsidering Expo:**
 
-- cronômetro na tela bloqueada e Live Activity no iPhone;
-- notificação contínua com cronômetro no Android;
-- banco local cifrado.
+- lock screen timer and Live Activity on iPhone;
+- persistent notification with a timer on Android;
+- encrypted local database.
 
-**Gatilho para reavaliar:** um desses recursos ficar sem solução no Capacitor. Nesse caso, o framework nativo volta a ser decidido, e o [ADR-002](ADR-002_Framework_Mobile.md) é o ponto de partida.
+**Trigger for reevaluation:** one of these features has no solution in Capacitor. In that case, the native framework decision is reopened, and [ADR-002](ADR-002_Framework_Mobile.md) is the starting point.
 
-## 5. O que continua valendo do ADR-001
+## 5. What still applies from ADR-001
 
-As regras do painel interno ficam em vigor:
+The internal dashboard rules remain in effect:
 
-- papéis de plataforma separados dos papéis de família;
-- autenticação forte para a equipe;
-- auditoria;
-- nenhuma leitura de dados de cuidado pela moderação.
+- platform roles separate from family roles;
+- strong authentication for the team;
+- auditing;
+- no reading of care data by moderation.
 
-## 6. Consequências
+## 6. Consequences
 
-- O site deixa de ser só a página pública e o painel: ele é o produto inteiro para as famílias, com os quatro pilares.
-- A primeira entrega roda no navegador, sem conta de loja, sem Mac e sem build de iOS.
-- O offline do site depende do navegador: PWA com fila local em IndexedDB (MAT-41). A sincronização nativa volta a ser decidida no port.
-- Lembretes locais viram Web Push enviado pelo servidor e passam a depender de rede.
-- Cronômetro na tela bloqueada, Live Activity e notificação contínua ficam para o port.
-- As tarefas MAT-17, MAT-18 e MAT-19 ficam congeladas até o port. O que elas tinham de produto passa para as fatias do site (MAT-36 a MAT-41).
-- As decisões D1 (framework nativo) e a parte de lojas da D3 ficam para o port ([Decisões para Daniel](../07_Roadmap/Decisoes_para_Daniel.md)).
+- The website is no longer just the public page and dashboard: it is the entire product for families, with all four pillars.
+- The first release runs in the browser, without a store account, a Mac or an iOS build.
+- The website's offline functionality depends on the browser: PWA with a local queue in IndexedDB (MAT-41). Native synchronization will be decided again during the port.
+- Local reminders become Web Push sent by the server and become dependent on a network connection.
+- The lock screen timer, Live Activity and persistent notification are deferred to the port.
+- Tasks MAT-17, MAT-18 and MAT-19 are frozen until the port. Their product functionality moves to the website slices (MAT-36 through MAT-41).
+- Decision D1 (native framework) and the store portion of D3 are deferred to the port ([Decisions for Daniel](../07_Roadmap/Decisoes_para_Daniel.md)).
 
-## 7. Questões abertas
+## 7. Open questions
 
-1. Recursos nativos do port: como o Capacitor resolve cronômetro na tela bloqueada, Live Activity, notificação contínua no Android e banco local cifrado.
+1. Native features of the port: how Capacitor handles the lock screen timer, Live Activity, persistent notification on Android and encrypted local database.
 
 ## Referências
 
-[ADR-001](ADR-001_Plataformas_e_Web.md) · [ADR-002](ADR-002_Framework_Mobile.md) · [Visão e escopo](../01_Produto/Visao_e_Escopo.md) · [Roadmap](../07_Roadmap/Roadmap_e_Proxima_Fatia.md) · [Decisões para Daniel](../07_Roadmap/Decisoes_para_Daniel.md) · [Design doc base](../../DESIGN_DOC_BASE.md) · tarefas MAT-27, MAT-28 e MAT-32.
+[ADR-001](ADR-001_Plataformas_e_Web.md) · [ADR-002](ADR-002_Framework_Mobile.md) · [Vision and scope](../01_Produto/Visao_e_Escopo.md) · [Roadmap](../07_Roadmap/Roadmap_e_Proxima_Fatia.md) · [Decisions for Daniel](../07_Roadmap/Decisoes_para_Daniel.md) · [Base design doc](../../DESIGN_DOC_BASE.md) · tasks MAT-27, MAT-28 and MAT-32.

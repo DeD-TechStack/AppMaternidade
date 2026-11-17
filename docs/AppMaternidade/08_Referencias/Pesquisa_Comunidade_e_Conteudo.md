@@ -1,107 +1,107 @@
 ---
-tipo: pesquisa
-status: rascunho
-responsavel: Hermes (subagente comunidade e conteúdo)
+tipo: research
+status: draft
+responsavel: Hermes (community and content subagent)
 revisado_em: 2026-10-22
 fontes_principais:
-  - Apple App Review Guidelines, seção 1.2 (Last Updated 16/10/2026)
-  - Google Play — User Generated Content e Child Safety Standards
-  - AAP — Sleep-Related Infant Deaths, recomendações de 2022 (Pediatrics) e HealthyChildren.org
-  - OMS — diretrizes de atividade física, comportamento sedentário e sono para menores de 5 anos (2019)
-  - CDC — Learn the Signs. Act Early. (marcos revistos em 2022; páginas revisadas em 2026)
-  - NHS — atividade do bebê e termos de reuso (OGL v3.0)
-  - Pathways.org — Tummy Time e termos de uso
-  - SBP — Departamento Científico de Medicina do Sono; SPSP
-  - Ministério da Saúde — Guia de Intervenção Precoce (minuta em consulta pública, 2025); Guia de Atividade Física (2021); Caderneta da Criança
-  - STF — art. 19 do Marco Civil (julgamento finalizado em 26/06/2025)
+  - Apple App Review Guidelines, section 1.2 (Last Updated 16/10/2026)
+  - Google Play — User Generated Content and Child Safety Standards
+  - AAP — Sleep-Related Infant Deaths, 2022 recommendations (Pediatrics) and HealthyChildren.org
+  - WHO — guidelines on physical activity, sedentary behaviour and sleep for children under 5 years of age (2019)
+  - CDC — Learn the Signs. Act Early. (milestones revised in 2022; pages reviewed in 2026)
+  - NHS — baby activity and reuse terms (OGL v3.0)
+  - Pathways.org — Tummy Time and terms of use
+  - SBP — Scientific Department of Sleep Medicine; SPSP
+  - Ministry of Health — Early Intervention Guide (draft under public consultation, 2025); Physical Activity Guide (2021); Child Health Handbook
+  - STF — art. 19 of the Brazilian Internet Civil Rights Framework (ruling completed on 26/06/2025)
   - CVV 188, SAMU 192, Disque 100, Ligue 180
 ---
 
-# Pesquisa — comunidade, moderação, tummy time e ciclo editorial
+# Research — community, moderation, tummy time and editorial cycle
 
-Nota de referência para a APP-001. Alimenta os futuros [Comunidade e moderação](../04_Comunidade_Conteudo/Comunidade_e_Moderacao.md) e [Desenvolvimento e conteúdo](../04_Comunidade_Conteudo/Desenvolvimento_e_Conteudo.md) (ambos a criar) e os ADR-006 (formato de comunidade e moderação) e ADR-007 (conteúdo educativo). Segue as [Convenções](../00_Inicio/Convencoes.md).
+Reference note for APP-001. Informs the future [Community and moderation](../04_Comunidade_Conteudo/Comunidade_e_Moderacao.md) and [Development and content](../04_Comunidade_Conteudo/Desenvolvimento_e_Conteudo.md) (both to be created) and ADR-006 (community format and moderation) and ADR-007 (educational content). Follows the [Conventions](../00_Inicio/Convencoes.md).
 
-Como ler:
+How to read:
 
-- Todas as fontes externas foram consultadas em 22/10/2026 (America/Sao_Paulo). Os números entre colchetes, como [1], remetem à seção "Fontes", logo antes das questões abertas. Cada fonte numerada tem trecho literal conferido no texto baixado.
-- [DOC] indica conteúdo declarado em documentação, site ou norma. [HIP] indica proposta ou inferência do Hermes, ainda não validada com usuários, jurídico ou profissional de saúde.
-- Esta nota não traz orientação clínica própria: só relata o que cada fonte diz, com citação curta.
-- Fora do escopo desta nota, tratados por outros agentes: privacidade, LGPD e requisitos gerais das lojas, em [Pesquisa de privacidade, legal e lojas](Pesquisa_Privacidade_Legal_e_Lojas.md); concorrentes, em [BabyCenter](Concorrentes/BabyCenter.md), [Peanut](Concorrentes/Peanut.md), [Kinedu](Concorrentes/Kinedu.md) e [Pathways](Concorrentes/Pathways.md); preços consolidados, em [Preços datados](Tecnologias/Precos_Datados.md); conteúdo offline do Bebbo, em [Bebbo](Repositorios/Bebbo.md). Algumas dessas notas ainda estão sendo escritas em paralelo.
+- All external sources were accessed on 22/10/2026 (America/Sao_Paulo). Numbers in square brackets, such as [1], refer to the "Sources" section, just before the open questions. Each numbered source has a verbatim excerpt checked against the downloaded text.
+- [DOC] indicates content stated in documentation, a website or a standard. [HIP] indicates a proposal or inference by Hermes, not yet validated with users, legal counsel or a healthcare professional.
+- This note does not provide its own clinical guidance: it only reports what each source says, with a short quotation.
+- Outside the scope of this note, handled by other agents: privacy, LGPD and general store requirements, in [Privacy, legal and store research](Pesquisa_Privacidade_Legal_e_Lojas.md); competitors, in [BabyCenter](Concorrentes/BabyCenter.md), [Peanut](Concorrentes/Peanut.md), [Kinedu](Concorrentes/Kinedu.md) and [Pathways](Concorrentes/Pathways.md); consolidated prices, in [Dated prices](Tecnologias/Precos_Datados.md); Bebbo's offline content, in [Bebbo](Repositorios/Bebbo.md). Some of these notes are still being written in parallel.
 
 ## Resumo
 
-- **Formato do MVP [HIP]:** fórum assíncrono de tópicos e respostas, com espaços por assunto curados pela equipe e etiqueta opcional de faixa etária no tópico. No início: só texto, sem mensagem direta, sem chat e sem salas ao vivo. As rodas de conversa ficam registradas como etapa posterior, com critérios para ativação; não foram descartadas.
-- **Segurança mínima:** denúncia com motivos, bloquear e silenciar, fila de moderação com prioridade para crise e criança, ações graduais com aviso ao usuário, apelação, auditoria, regras aceitas antes de publicar, limites para contas novas, identidade pública pseudônima e protocolo de crise com CVV 188 e SAMU 192. A Apple exige filtro, denúncia com resposta em tempo hábil, bloqueio e contato publicado [1]. O Google Play exige aceite dos termos, denúncia e bloqueio dentro do app [2]. O STF passou a exigir remoção rápida de alguns conteúdos graves e autorregulação com devido processo [55].
-- **Tummy time:** as fontes convergem em bebê acordado e supervisionado e em sono sempre de barriga para cima [11][23]. As que tratam do início recomendam começar cedo e aumentar aos poucos [23][12][13]. Divergem na quantidade. AAP: 15 a 30 min/dia até 7 semanas [23]. OMS e Ministério da Saúde: ao menos 30 min/dia para quem ainda não se locomove [21][18]. Pathways: ao menos 60 min/dia aos 6 meses [13]. NHS: sem número [12]. A SBP registra que não há consenso sobre tempo e frequência [14]. Nenhum desses números deve virar meta no app.
-- **Licenças:** citar e linkar é possível em todas as fontes. Reproduzir texto só vale para CDC (domínio público, com condições) [24], NHS (OGL, mas tradução conta como adaptação) [26] e OMS (somente uso não comercial) [21]. AAP, Pathways e SBP exigem permissão [29][27][31]. O texto em pt-BR precisa ser produção própria, com revisão profissional.
+- **MVP format [HIP]:** asynchronous forum of topics and replies, with subject areas curated by the team and an optional age range tag on each topic. Initially: text only, no direct messages, no chat and no live rooms. Discussion circles remain listed as a later stage, with activation criteria; they have not been ruled out.
+- **Minimum safety:** reporting with reasons, blocking and muting, moderation queue prioritizing crises and children, graduated actions with user notification, appeals, auditing, rules accepted before posting, limits for new accounts, pseudonymous public identity and a crisis protocol with CVV 188 and SAMU 192. Apple requires filtering, reporting with timely responses, blocking and published contact information [1]. Google Play requires acceptance of the terms, reporting and blocking within the app [2]. The STF now requires rapid removal of some types of serious content and self-regulation with due process [55].
+- **Tummy time:** the sources agree that the baby must be awake and supervised and must always sleep on their back [11][23]. Those that address when to start recommend starting early and increasing gradually [23][12][13]. They differ on the amount. AAP: 15 to 30 min/day by 7 weeks [23]. WHO and Ministry of Health: at least 30 min/day for babies who are not yet mobile [21][18]. Pathways: at least 60 min/day at 6 months [13]. NHS: no number [12]. The SBP states that there is no consensus on duration and frequency [14]. None of these numbers should become a target in the app.
+- **Licenses:** citing and linking are possible for all sources. Text may only be reproduced from CDC (public domain, with conditions) [24], NHS (OGL, but translation counts as adaptation) [26] and WHO (noncommercial use only) [21]. AAP, Pathways and SBP require permission [29][27][31]. The pt-BR text must be original content, with professional review.
 
 ---
 
-## Parte 1 — Comunidade e moderação
+## Part 1 — Community and moderation
 
-### 1.1 O que se sabe sobre comunidades de pais
+### 1.1 What is known about parent communities
 
-- Uma revisão integrativa de 38 publicações concluiu que o apoio entre pares pela internet oferece suporte emocional e informativo. A evidência de efetividade foi "inconclusiva", mas nenhum efeito nocivo foi relatado nos estudos revisados [52]. Os autores descrevem esse apoio como complemento, e não substituto, do apoio profissional [52].
-- Uma revisão de escopo do King's College London (preprint revisado em outubro de 2025) mapeou riscos dos conselhos online para pais de crianças pequenas: excesso de informação, recomendações conflitantes, informação pouco confiável e sentimento de inadequação diante de comparações [53]. Segundo um estudo citado nela, 71% dos pais buscavam informação online, mas só 26% sempre verificavam as fontes [53].
-- Leitura [HIP]: a comunidade tem valor como apoio entre pares. Esse valor depende de três coisas: separar relato de orientação, dar destaque a conteúdo revisado e evitar mecânicas de comparação.
+- An integrative review of 38 publications concluded that internet-based peer support provides emotional and informational support. Evidence of effectiveness was "inconclusive", but no harmful effects were reported in the reviewed studies [52]. The authors describe this support as a complement to, rather than a replacement for, professional support [52].
+- A scoping review from King's College London (preprint revised in outubro de 2025) mapped the risks of online advice for parents of young children: information overload, conflicting recommendations, unreliable information and feelings of inadequacy arising from comparisons [53]. According to a study cited in it, 71% of parents sought information online, but only 26% always checked the sources [53].
+- Interpretation [HIP]: the community has value as peer support. That value depends on three things: separating personal accounts from guidance, highlighting reviewed content and avoiding comparison mechanics.
 
-### 1.2 Comparação de formatos
+### 1.2 Format comparison
 
-| Formato | Pouco tempo e uso de madrugada | Descoberta e busca | Riscos de moderação | Custo e operação | Requisitos técnicos | Evidência em produtos reais |
+| Format | Limited time and use during the night | Discovery and search | Moderation risks | Cost and operations | Technical requirements | Evidence from real products |
 | --- | --- | --- | --- | --- | --- | --- |
-| Fórum por tópicos e respostas (assíncrono) | Alto: lê e responde quando puder, com uma mão; a pergunta fica disponível para respostas posteriores [HIP] | Alta: tópicos ficam pesquisáveis, e respostas antigas resolvem dúvidas repetidas [HIP] | Desinformação persiste se não for corrigida, mas pode ser corrigida, fixada ou ocultada; o assédio é menos imediato que em tempo real [HIP] | Fila assíncrona com prazo de atendimento; dá para começar com equipe pequena [HIP] | CRUD, busca, push opcional; sem tempo real | What to Expect organiza a comunidade em fóruns (grupos por mês de nascimento e por interesse) [46][45]; Mumsnet Talk é um fórum aberto com intervenção mínima e moderação a partir de denúncias [47] |
-| Grupos por fase ou mês de nascimento | Alto quando há volume; com pouca gente vira sala vazia [HIP] | Média: fragmenta o conteúdo por grupo [HIP] | Expõe o mês de nascimento; favorece panelinhas e grupos privados difíceis de fiscalizar [HIP] | Cada grupo precisa de alguém responsável [HIP] | Igual ao fórum, mais associação ao grupo | What to Expect: grupos por mês de nascimento [46], uns geridos pela equipe e outros por membros donos do grupo [45] |
-| Chat em grupo (texto em tempo real) | Companhia imediata de madrugada, mas exige estar presente; conversa rápida e sem estrutura [HIP] | Baixa: histórico corrido e difícil de pesquisar [HIP] | Alto: assédio, spam e aliciamento em tempo real; mensagem direta exige bloqueio [2] | Moderação perto do tempo real e cobertura de horário [HIP] | WebSocket, presença, push; serviço pago ou infraestrutura própria (Stream, Sendbird) [41][42] | Hipótese: no Brasil, cuidadores já usam grupos de mensageria; copiar esse formato dificilmente diferencia o produto [HIP] |
-| Salas de áudio ou vídeo, rodas agendadas com mediação | Acolhimento por voz, mas depende de agenda; madrugada só com sala aberta [HIP] | Nula sem gravação ou transcrição, que por sua vez criam problema de privacidade [HIP] | Dano em tempo real não pode ser filtrado antes; gravação exige consentimento; mediador precisa estar presente [HIP] | Mediador por sessão e treinamento específico. A Peanut moderava os "Pods" de áudio com equipe interna; a equipe paga que moderava o resto do app (mais de duas dezenas de pessoas) só recebeu treinamento para áudio às vésperas do lançamento [50] | WebRTC/SFU; serviços como LiveKit e Agora [43][44] | Peanut lançou salas de áudio em 2021 [50] (situação atual não verificada). O Clubhouse cortou mais da metade da equipe em 2023; os fundadores escreveram que ficou mais difícil para muitas pessoas "to fit long conversations into their daily lives" [54] |
-| AMA ou evento com profissional | Bom se assíncrono: perguntas coletadas antes e respostas publicadas depois [HIP] | Alta: vira tópico pesquisável [HIP] | Risco de tratar caso individual como consulta; exige verificação do profissional e aviso de limites [HIP] | Tempo do profissional, agenda e mediação [HIP] | Igual ao fórum, mais selo e agenda | Os webchats do Mumsnet seguem regras como "One question per member plus one follow-up", com mediação da equipe [49] |
+| Topic and reply forum (asynchronous) | High: users read and reply when they can, with one hand; the question remains available for later replies [HIP] | High: topics remain searchable, and old replies answer recurring questions [HIP] | Misinformation persists if not corrected, but it can be corrected, pinned or hidden; harassment is less immediate than in real time [HIP] | Asynchronous queue with a response deadline; can start with a small team [HIP] | CRUD, search, optional push notifications; no real time | What to Expect organizes its community into forums (birth month and interest groups) [46][45]; Mumsnet Talk is an open forum with minimal intervention and report-based moderation [47] |
+| Groups by stage or birth month | High when there is enough activity; with few people, it becomes an empty room [HIP] | Medium: fragments content across groups [HIP] | Reveals the birth month; encourages cliques and private groups that are hard to monitor [HIP] | Each group needs someone responsible for it [HIP] | Same as the forum, plus group membership | What to Expect: birth month groups [46], some managed by the team and others by members who own the group [45] |
+| Group chat (real-time text) | Immediate company during the night, but requires being present; fast, unstructured conversation [HIP] | Low: continuous history that is hard to search [HIP] | High: real-time harassment, spam and grooming; direct messaging requires blocking [2] | Near-real-time moderation and scheduled coverage [HIP] | WebSocket, presence, push notifications; paid service or own infrastructure (Stream, Sendbird) [41][42] | Hypothesis: in Brazil, caregivers already use messaging groups; copying this format is unlikely to differentiate the product [HIP] |
+| Audio or video rooms, scheduled facilitated circles | Support through voice, but depends on scheduling; available during the night only if a room is open [HIP] | None without recording or transcription, which in turn create a privacy issue [HIP] | Real-time harm cannot be filtered in advance; recording requires consent; a facilitator must be present [HIP] | Facilitator for each session and specific training. Peanut moderated its audio "Pods" with an internal team; the paid team that moderated the rest of the app (more than two dozen people) only received audio training just before launch [50] | WebRTC/SFU; services such as LiveKit and Agora [43][44] | Peanut launched audio rooms in 2021 [50] (current status not verified). Clubhouse cut more than half its staff in 2023; the founders wrote that it had become harder for many people "to fit long conversations into their daily lives" [54] |
+| AMA or event with a professional | Good if asynchronous: questions collected beforehand and answers published afterward [HIP] | High: becomes a searchable topic [HIP] | Risk of treating an individual case as a consultation; requires professional verification and a notice about limits [HIP] | Professional's time, scheduling and facilitation [HIP] | Same as the forum, plus a badge and schedule | Mumsnet webchats follow rules such as "One question per member plus one follow-up", with team facilitation [49] |
 
-Leitura [HIP]:
+Interpretation [HIP]:
 
-1. Para quem tem pouco tempo e usa o app de madrugada, o formato assíncrono atende melhor: a pergunta das 3h recebe resposta de manhã e continua útil para a próxima pessoa.
-2. Formatos em tempo real cobram presença simultânea de usuários e de moderadores. O caso do Clubhouse mostra o problema de encaixar conversas longas na rotina [54]; o caso da Peanut mostra que áudio exige treinamento próprio de moderação [50].
-3. Rodas de conversa continuam com valor potencial (acolhimento, voz, vínculo). Por isso entram como etapa posterior, com critérios para ativação.
+1. For people with limited time who use the app during the night, the asynchronous format works better: a question asked at 3h gets an answer in the morning and remains useful to the next person.
+2. Real-time formats require users and moderators to be present simultaneously. The Clubhouse case shows the problem of fitting long conversations into daily life [54]; the Peanut case shows that audio requires its own moderation training [50].
+3. Discussion circles still have potential value (support, voice, connection). They are therefore included as a later stage, with activation criteria.
 
-### 1.3 Recomendação de formato e evolução por etapas [HIP]
+### 1.3 Recommended format and staged development [HIP]
 
-| Etapa | O que entra | Critério para avançar (limiares calibrados no piloto, não metas inventadas) |
+| Stage | What is included | Criteria for advancing (thresholds calibrated in the pilot, not invented targets) |
 | --- | --- | --- |
-| 0. Fundação | **Superado; ver a nota abaixo da tabela.** Modelo de dados com identidade pública separada do grupo familiar, tópico, resposta, denúncia, ação de moderação e auditoria. Painel web mínimo de moderação | O fluxo de tópico e resposta comprova que a comunidade não lê dados da família (requisito fixo do pacote da task: "Acesso à comunidade não concede acesso à rotina privada de uma criança") |
-| 1. MVP de comunidade | Fórum assíncrono em espaços curados: sono, alimentação, banho, tummy time, organização da rotina, divisão dos cuidados, dificuldades do dia a dia. Etiqueta opcional de faixa etária no tópico. Busca. Tópico fixado em cada espaço com conteúdo revisado. Só texto. Sem mensagem direta. Primeiras publicações de contas novas passam por revisão prévia | Tempo até a primeira resposta humana; proporção de tópicos sem resposta; prazo de moderação cumprido por várias semanas seguidas; denúncias por mil publicações; reversões em apelação; pedidos explícitos por imagens, fases ou conversa ao vivo. Medir no piloto antes de fixar limiares |
-| 2. Expansão assíncrona | Imagens com salvaguardas (seção 1.4). Grupos por faixa etária ampla, só se houver volume. "Roda assíncrona": tópico-evento com horário, tema e anfitriã ou anfitrião treinado. AMA assíncrono com profissional verificado | Moderação de imagem funcionando sem atraso; verificação de profissional operando; volume suficiente para que grupos não fiquem vazios |
-| 3. Rodas ao vivo (áudio) | Salas agendadas, pequenas, com mediador treinado presente, regras próprias, sem gravação por padrão e com saída fácil | Demanda medida (inscrição em lista de interesse, presença nas rodas assíncronas); equipe treinada para áudio; protocolo de crise em tempo real; custo por minuto orçado [43][44] |
-| 4. Chat ou mensagem direta | Só com demanda forte e bloqueio entre usuários desde o início [2] | Risco de aliciamento e assédio aceito e mitigado; capacidade de moderação comprovada |
+| 0. Foundation | **Superseded; see the note below the table.** Data model with public identity separate from the family group, topic, reply, report, moderation action and audit. Minimal web moderation panel | The topic and reply flow proves that the community does not read family data (fixed task package requirement: "Access to the community does not grant access to a child's private routine") |
+| 1. Community MVP | Asynchronous forum in curated spaces: sleep, feeding, bathing, tummy time, routine organization, sharing care responsibilities, everyday difficulties. Optional age range tag on the topic. Search. Pinned topic in each space with reviewed content. Text only. No direct messages. First posts from new accounts undergo prior review | Time to first human reply; proportion of topics without replies; moderation deadline met for several consecutive weeks; reports per thousand posts; reversals on appeal; explicit requests for images, stages or live conversation. Measure in the pilot before setting thresholds |
+| 2. Asynchronous expansion | Images with safeguards (section 1.4). Broad age range groups, only if there is enough activity. "Asynchronous circle": event topic with a time, theme and trained host. Asynchronous AMA with a verified professional | Image moderation working without delays; professional verification operating; enough activity to keep groups from being empty |
+| 3. Live circles (audio) | Small, scheduled rooms, with a trained facilitator present, their own rules, no recording by default and an easy way to leave | Measured demand (interest list signups, attendance at asynchronous circles); team trained for audio; real-time crisis protocol; budgeted cost per minute [43][44] |
+| 4. Chat or direct messaging | Only with strong demand and user blocking from the start [2] | Grooming and harassment risks accepted and mitigated; proven moderation capacity |
 
-**Nota do coordenador, depois da revisão independente:** a divisão em etapas foi ajustada ao roadmap.
+**Coordinator's note, after the independent review:** the stage breakdown was adjusted to the roadmap.
 
-- **Fundação (MAT-18):** só a prova de separação de dados, e só se couber no prazo.
-- **MVP de comunidade (MAT-19):** denúncia, moderação, auditoria e painel.
+- **Foundation (MAT-18):** only proof of data separation, and only if it fits the schedule.
+- **Community MVP (MAT-19):** reporting, moderation, auditing and panel.
 
-Regra vigente em [Comunidade e moderação](../04_Comunidade_Conteudo/Comunidade_e_Moderacao.md), seção 4.
+Current rule in [Community and moderation](../04_Comunidade_Conteudo/Comunidade_e_Moderacao.md), section 4.
 
-Registro para o ADR-006: as rodas de conversa ao vivo não foram eliminadas. Ficam como etapa 3 condicionada aos critérios acima.
+Record for ADR-006: live discussion circles have not been removed. They remain as stage 3, subject to the criteria above.
 
-### 1.4 Mecanismos mínimos de segurança no MVP
+### 1.4 Minimum safety mechanisms in the MVP
 
-| Mecanismo | Proposta para o MVP [HIP, salvo indicação] | Base |
+| Mechanism | MVP proposal [HIP, unless otherwise indicated] | Basis |
 | --- | --- | --- |
-| Regras da comunidade | Aceite obrigatório antes de publicar pela primeira vez; regras curtas em pt-BR, com exemplos (relato pessoal x orientação; nada de diagnóstico; sem venda; sem expor terceiros) | A política do Google Play exige aceite dos termos antes de publicar UGC e definição do que é proibido [2] |
-| Denúncia com motivos | Motivos sugeridos: ataque ou assédio; informação de saúde perigosa; conteúdo sexual; exposição de criança; dados pessoais; spam ou venda; risco de autolesão (aciona a rota de crise); outro | A Apple exige mecanismo de denúncia e resposta em tempo hábil [1]; o Google exige denúncia dentro do app [2] |
-| Bloquear e silenciar | Bloquear: o conteúdo da pessoa bloqueada fica oculto para quem bloqueou, e ela não pode responder nem mencionar quem a bloqueou. Silenciar: oculta o conteúdo sem impedir interação. Ações sem aviso à outra parte. **Superado:** a regra vigente é o bloqueio mútuo. Nenhum dos dois vê o conteúdo do outro nem responde a ele ([Comunidade e moderação](../04_Comunidade_Conteudo/Comunidade_e_Moderacao.md), seção 7) | Bloqueio de usuários abusivos é exigido pela Apple [1] e pelo Google [2]; o Discourse dá a usuários de nível 1 a opção de silenciar outros [40] |
-| Fila de moderação | Prioridade 1: risco de vida e conteúdo envolvendo criança. Prioridade 2: assédio e dados pessoais. Prioridade 3: desinformação e spam. Mostrar o contexto e o histórico do autor na comunidade, nunca dados da família | Requisito do pacote: moderador não lê dados infantis privados |
-| Ações | Ocultar até a análise; remover; advertir; modo somente leitura temporário; suspender; banir. Cada ação informa a regra violada e o trecho afetado | Os Santa Clara Principles pedem aviso ao usuário com o motivo e a regra aplicada [51] |
-| Apelação | Um pedido de revisão por ação, analisado por outra pessoa sempre que possível, com prazo publicado | Santa Clara: oportunidade significativa e tempestiva de apelação ("meaningful opportunity for timely appeal"), no idioma do usuário [51]; o STF exige devido processo na autorregulação [55] |
-| Auditoria | Registro imutável de quem, quando, qual regra, qual ação e qual versão do conteúdo. Acesso restrito. Retenção a definir com o agente de privacidade | Base para relatório de transparência; o STF pede relatórios anuais sobre notificações extrajudiciais [55] |
-| Filtros automáticos | Lista de termos em pt-BR (inclusive de crise); limite de publicações por hora; links bloqueados para contas novas; primeiras publicações revisadas antes de aparecer | O Discourse restringe contas novas: no máximo 1 imagem, 2 links e 3 tópicos, e nenhum anexo (padrões descritos em 2018 e configuráveis) [40] |
-| Moderação automática por API (opcional) | Só depois de revisão de privacidade e contrato de tratamento de dados; nunca como decisão final sozinha | Ver seção 1.8 |
-| Identidade pública pseudônima | Apelido e avatar genérico; nenhum vínculo visível com nome, cidade ou família; a conta da comunidade não carrega dados do bebê | What to Expect avisa que nome de usuário, avatar e posts são públicos e recomenda evitar dados pessoais [45] |
-| Fotos de crianças | MVP sem imagens. Na etapa 2: aviso antes do envio; desestimular rosto da criança; proibir nudez infantil em qualquer contexto, inclusive banho; remover metadados no aparelho; revisar a imagem antes de publicar | A Apple informa que, com os Serviços de Localização ativos para a Câmera, as coordenadas ficam gravadas em cada foto e vídeo [57]; a AAP aponta o risco de expor localização e rotina ao compartilhar fotos de crianças [59] |
-| Crise (autolesão, depressão pós-parto, violência) | Ver seção 1.5 | [4][6][7] |
-| Contato publicado | Canal de contato e de denúncia fora da comunidade, sempre visível | Exigido pela Apple [1]; o STF pede canais de atendimento acessíveis e permanentes [55] |
-| Selo de profissional verificado | Adiar para a etapa 2. Exige conferir o registro no conselho profissional e a identidade, renovar periodicamente e definir o escopo do selo | [HIP]; custo operacional manual |
-| Separação entre relato e orientação | Tudo nasce como "relato pessoal". Selos distintos para "conteúdo revisado" (equipe editorial) e "profissional verificado: orientação geral, não substitui consulta". Aviso fixo de que a comunidade não é atendimento | What to Expect exige fonte para informação de saúde que não venha da experiência pessoal [45]; a Apple pede lembrar o usuário de consultar o médico [1] |
-| Idade mínima | Decisão aberta. What to Expect exige 18 anos ou mais [45]. O ECA Digital alcança também serviços que possam ser acessados por crianças e adolescentes [56], e há mães adolescentes no público provável [HIP] | Encaminhar ao agente de privacidade e ao jurídico |
+| Community rules | Mandatory acceptance before the first post; short rules in pt-BR, with examples (personal account vs. guidance; no diagnosis; no selling; no exposing third parties) | Google Play policy requires acceptance of the terms before posting UGC and a definition of what is prohibited [2] |
+| Reporting with reasons | Suggested reasons: attack or harassment; dangerous health information; sexual content; exposure of a child; personal data; spam or selling; risk of self-harm (triggers the crisis route); other | Apple requires a reporting mechanism and timely response [1]; Google requires in-app reporting [2] |
+| Blocking and muting | Blocking: the blocked person's content is hidden from the person who blocked them, and they cannot reply to or mention the person who blocked them. Muting: hides content without preventing interaction. Actions do not notify the other party. **Superseded:** the current rule is mutual blocking. Neither person sees or replies to the other's content ([Community and moderation](../04_Comunidade_Conteudo/Comunidade_e_Moderacao.md), section 7) | Blocking abusive users is required by Apple [1] and Google [2]; Discourse gives level 1 users the option to mute others [40] |
+| Moderation queue | Priority 1: life-threatening risk and content involving children. Priority 2: harassment and personal data. Priority 3: misinformation and spam. Show the context and the author's community history, never family data | Package requirement: moderators do not read private child data |
+| Actions | Hide pending review; remove; warn; temporary read-only mode; suspend; ban. Each action states the rule violated and the affected excerpt | The Santa Clara Principles call for notifying users of the reason and the rule applied [51] |
+| Appeal | One review request per action, assessed by another person whenever possible, with a published deadline | Santa Clara: "meaningful opportunity for timely appeal", in the user's language [51]; the STF requires due process in self-regulation [55] |
+| Auditing | Immutable record of who, when, which rule, which action and which content version. Restricted access. Retention to be defined with the privacy agent | Basis for a transparency report; the STF calls for annual reports on extrajudicial notices [55] |
+| Automatic filters | List of terms in pt-BR (including crisis terms); hourly posting limit; links blocked for new accounts; first posts reviewed before appearing | Discourse restricts new accounts: at most 1 image, 2 links and 3 topics, and no attachments (defaults described in 2018 and configurable) [40] |
+| Automatic moderation through an API (optional) | Only after privacy review and a data processing agreement; never as the sole final decision-maker | See section 1.8 |
+| Pseudonymous public identity | Nickname and generic avatar; no visible link to name, city or family; the community account carries no baby data | What to Expect warns that usernames, avatars and posts are public and recommends avoiding personal data [45] |
+| Photos of children | MVP without images. In stage 2: notice before upload; discourage showing the child's face; prohibit child nudity in any context, including bathing; remove metadata on the device; review the image before publication | Apple states that, when Location Services are enabled for Camera, coordinates are recorded in every photo and video [57]; the AAP points out the risk of exposing location and routine when sharing photos of children [59] |
+| Crisis (self-harm, postpartum depression, violence) | See section 1.5 | [4][6][7] |
+| Published contact information | Contact and reporting channel outside the community, always visible | Required by Apple [1]; the STF calls for accessible, permanent support channels [55] |
+| Verified professional badge | Defer to stage 2. Requires checking professional council registration and identity, periodically renewing verification and defining the badge's scope | [HIP]; manual operating cost |
+| Separation between personal accounts and guidance | Everything starts as "relato pessoal". Separate badges for "conteúdo revisado" (editorial team) and "profissional verificado: orientação geral, não substitui consulta". Fixed notice that the community does not provide healthcare | What to Expect requires a source for health information that does not come from personal experience [45]; Apple calls for reminding users to consult a doctor [1] |
+| Minimum age | Open decision. What to Expect requires users to be 18 or older [45]. The ECA Digital also covers services that may be accessed by children and adolescents [56], and teenage mothers are part of the likely audience [HIP] | Refer to the privacy agent and legal counsel |
 
-Fluxo mínimo de uma denúncia [HIP]:
+Minimum reporting flow [HIP]:
 
 ```
 denúncia (motivo) ─► triagem automática (crise? criança? volume?) ─► fila priorizada
@@ -112,242 +112,242 @@ ação (ocultar/remover/advertir/suspender) ─► aviso ao autor (regra + trech
       └──────────────────────── tudo registrado na auditoria ────────────────────────┘
 ```
 
-### 1.5 Protocolo de crise e canais oficiais [DOC + HIP]
+### 1.5 Crisis protocol and official channels [DOC + HIP]
 
-Canais confirmados nas fontes oficiais em 22/10/2026:
+Channels confirmed in official sources on 22/10/2026:
 
-| Situação | Canal | O que a fonte diz |
+| Situation | Channel | What the source says |
 | --- | --- | --- |
-| Sofrimento emocional, ideação suicida | CVV, 188 | Ligação gratuita, 24 horas, de todo o território nacional; também atende por chat e e-mail [4]. Linha nacional gratuita implantada por cooperação com o Ministério da Saúde [5] |
-| Urgência ou emergência de saúde | SAMU, 192 | Serviço gratuito, 24 horas por dia, 7 dias por semana [6] |
-| Violência contra a mulher | Ligue 180 | Ligação gratuita, 24 horas, todos os dias [9] |
-| Violação de direitos de crianças e adolescentes | Disque 100 | Funciona 24 horas, inclusive fins de semana e feriados; basta discar 100; crianças e adolescentes estão entre os grupos atendidos [8] |
+| Emotional distress, suicidal ideation | CVV, 188 | Free calls, 24 hours, from anywhere in the country; also provides support through chat and email [4]. Free national line implemented in cooperation with the Ministry of Health [5] |
+| Urgent health issue or medical emergency | SAMU, 192 | Free service, 24 hours a day, 7 days a week [6] |
+| Violence against women | Ligue 180 | Free calls, 24 hours, every day [9] |
+| Violation of the rights of children and adolescents | Disque 100 | Operates 24 hours, including weekends and holidays; simply dial 100; children and adolescents are among the groups served [8] |
 
-Sobre depressão pós-parto, a página do Ministério da Saúde diz que ela "não é uma falha de caráter ou uma fraqueza" e que homens também podem desenvolvê-la [7]. Entre os sinais listados estão "pensamento na morte ou suicídio" e "vontade súbita de prejudicar ou fazer mal ao bebê" [7]. Casos com risco de suicídio ou infanticídio devem ser encaminhados para internação, e o tratamento é oferecido de forma integral e gratuita pelo SUS [7].
+On postpartum depression, the Ministry of Health page says that it "is not a character flaw or a weakness" and that men can also develop it [7]. The listed signs include "thoughts of death or suicide" and "a sudden urge to harm or hurt the baby" [7]. Cases involving a risk of suicide or infanticide should be referred for hospitalization, and treatment is provided comprehensively and free of charge through SUS [7].
 
-Proposta de comportamento do app [HIP]:
+Proposed app behavior [HIP]:
 
-1. Gatilhos: denúncia com o motivo "risco de autolesão", termos de crise da lista em pt-BR ou categoria de autolesão de uma API de moderação, se adotada. A API da OpenAI, por exemplo, separa `self-harm`, `self-harm/intent` e `self-harm/instructions` [32].
-2. Para quem escreveu: mensagem de acolhimento, sem julgamento, com o 188 (ligação, chat e e-mail) e o 192 para urgência. Nada de diagnóstico. A mensagem nunca diz que o conteúdo "violou regras".
-3. Visibilidade: relato pessoal de sofrimento continua visível se não houver risco imediato, com recursos fixados abaixo. Conteúdo que induz ou instrui autolesão é removido na hora. O STF incluiu o induzimento, a instigação e o auxílio ao suicídio ou à automutilação entre os conteúdos que o provedor precisa tornar indisponíveis imediatamente [55].
-4. Fora do horário coberto: o conteúdo com gatilho fica oculto do público, o autor continua vendo o próprio post e recebe os recursos, e a revisão humana acontece na abertura do turno.
-5. Moderadores não são clínicos: o roteiro de resposta precisa ser escrito com profissional de saúde mental e revisado periodicamente.
+1. Triggers: a report with the reason "risco de autolesão", crisis terms from the pt-BR list or a self-harm category from a moderation API, if adopted. The OpenAI API, for example, separates `self-harm`, `self-harm/intent` and `self-harm/instructions` [32].
+2. For the author: a supportive, nonjudgmental message with 188 (phone, chat and email) and 192 for emergencies. No diagnosis. The message never says that the content "violou regras".
+3. Visibility: personal accounts of distress remain visible if there is no immediate risk, with resources pinned below. Content that encourages or instructs self-harm is removed immediately. The STF included inducing, inciting and assisting suicide or self-mutilation among the content that providers must make unavailable immediately [55].
+4. Outside covered hours: triggered content is hidden from the public, the author continues to see their own post and receives the resources, and human review takes place at the start of the shift.
+5. Moderators are not clinicians: the response script must be written with a mental health professional and reviewed periodically.
 
-Conteúdo sexual envolvendo criança [HIP + DOC]: remoção imediata, preservação de evidência conforme orientação jurídica e comunicação às autoridades. O STF incluiu "crimes sexuais contra pessoas vulneráveis, pornografia infantil e crimes graves contra crianças e adolescentes" no rol de remoção imediata [55]. A documentação da OpenAI pede que não se envie material suspeito de abuso sexual infantil à API de moderação [32]. Se o app for classificado na categoria "Social" do Google Play, a política de padrões de segurança infantil exige padrões publicados contra abuso e exploração sexual infantil, canal de retorno dentro do app, tratamento de material de abuso, cumprimento da lei e ponto de contato [3]. A política vale com ou sem crianças entre os usuários [3].
+Sexual content involving children [HIP + DOC]: immediate removal, preservation of evidence according to legal guidance and notification of the authorities. The STF included "sexual crimes against vulnerable persons, child pornography and serious crimes against children and adolescents" in the list requiring immediate removal [55]. OpenAI documentation asks that suspected child sexual abuse material not be sent to the moderation API [32]. If the app is classified in Google Play's "Social" category, the child safety standards policy requires published standards against child sexual abuse and exploitation, an in-app feedback channel, handling of abuse material, compliance with the law and a point of contact [3]. The policy applies whether or not children are among the users [3].
 
-### 1.6 Operação mínima no MVP [HIP]
+### 1.6 Minimum MVP operations [HIP]
 
-- **Quem modera:** equipe do produto mais uma ou duas pessoas treinadas em meio período, sem voluntários no começo. O papel de moderador não dá acesso a nenhum dado de família ou criança.
-- **Prazos propostos (a validar no piloto):** crise e criança, triagem em até 1 hora dentro do horário coberto; demais denúncias, em até 24 horas. Referência: o Mumsnet declarou ao Parlamento britânico ter equipe profissional de moderação 7 dias por semana, 365 dias por ano, com tempo médio de resposta de 1h26 e mais da metade das denúncias respondidas em menos de 15 minutos [48]. Um MVP não alcança esse nível; a compensação vem de horário publicado, ocultação automática fora do turno, revisão prévia das contas novas e ausência de tempo real.
-- **Horário:** publicar a cobertura (por exemplo, todos os dias, das 8h às 22h). Fora dela valem as regras automáticas da seção 1.5 e a ocultação provisória após várias denúncias de contas com histórico.
-- **Ferramentas mínimas:** painel web com fila, contexto, ações, histórico do autor, modelos de mensagem, auditoria e exportação de evidência; roteiro de crise; métricas (tempo até a primeira ação, volume por motivo, reversões em apelação).
-- **Transparência:** relatório periódico simples. O STF prevê autorregulação com sistema de notificações, devido processo e relatórios anuais de transparência [55].
+- **Who moderates:** product team plus one or two trained part-time people, with no volunteers at the start. The moderator role grants no access to any family or child data.
+- **Proposed deadlines (to validate in the pilot):** crises and children, triage within 1 hour during covered hours; other reports, within 24 hours. Reference: Mumsnet told the UK Parliament that it had a professional moderation team 7 days a week, 365 days a year, with an average response time of 1h26 and more than half of reports answered in under 15 minutes [48]. An MVP cannot reach this level; published hours, automatic hiding outside shifts, prior review of new accounts and the absence of real-time interaction compensate for this.
+- **Hours:** publish coverage (for example, every day, from 8h to 22h). Outside those hours, the automatic rules in section 1.5 and temporary hiding after multiple reports from accounts with a history apply.
+- **Minimum tools:** web panel with queue, context, actions, author history, message templates, auditing and evidence export; crisis script; metrics (time to first action, volume by reason, reversals on appeal).
+- **Transparency:** simple periodic report. The STF provides for self-regulation with a notification system, due process and annual transparency reports [55].
 
-### 1.7 Lojas: requisitos para conteúdo gerado por usuários [DOC]
+### 1.7 Stores: requirements for user-generated content [DOC]
 
-| Loja | Versão consultada | Exigências |
+| Store | Version accessed | Requirements |
 | --- | --- | --- |
-| Apple, App Review Guidelines 1.2 | "Last Updated: October 16, 2026" [1] | Método para filtrar material ofensivo; mecanismo de denúncia com resposta em tempo hábil; bloqueio de usuários abusivos; contato publicado [1]. Remover conteúdo que viole as regras é responsabilidade do desenvolvedor, e falha recorrente pode levar à remoção do app [1]. A seção 1.4.1 pede lembrar o usuário de consultar o médico antes de decisões médicas [1] |
-| Google Play, política de UGC | Página da Central de Políticas, sem data de versão visível (consultada em 22/10/2026) [2] | Aceite dos termos antes de publicar; definição do conteúdo proibido; moderação contínua com denúncia e bloqueio de conteúdo e de usuários dentro do app; bloqueio obrigatório em recursos 1:1 [2]. Falhar continuamente em tratar reclamações é violação [2] |
-| Google Play, padrões de segurança infantil | FAQ consultado em 22/10/2026 [3] | Vale para apps nas categorias "Social" e "Dating" e para chats anônimos ou aleatórios [3]. A categoria declarada (por exemplo, "Parenting" ou "Social") define se a política se aplica; adotar esses padrões mesmo fora do escopo é prudente [HIP] |
+| Apple, App Review Guidelines 1.2 | "Last Updated: October 16, 2026" [1] | Method for filtering offensive material; reporting mechanism with timely responses; blocking abusive users; published contact information [1]. Removing content that violates the rules is the developer's responsibility, and repeated failure may lead to removal of the app [1]. Section 1.4.1 calls for reminding users to consult a doctor before making medical decisions [1] |
+| Google Play, UGC policy | Policy Center page, with no visible version date (accessed on 22/10/2026) [2] | Acceptance of the terms before posting; definition of prohibited content; ongoing moderation with in-app reporting and blocking of content and users; mandatory blocking in 1:1 features [2]. Continually failing to address complaints is a violation [2] |
+| Google Play, child safety standards | FAQ accessed on 22/10/2026 [3] | Applies to apps in the "Social" and "Dating" categories and to anonymous or random chats [3]. The declared category (for example, "Parenting" or "Social") determines whether the policy applies; adopting these standards even outside its scope is prudent [HIP] |
 
-Contexto jurídico brasileiro, só sinalizado aqui e sem análise: (a) no julgamento finalizado em 26/06/2025, o STF declarou o art. 19 do Marco Civil parcialmente inconstitucional e fixou deveres de remoção e autorregulação [55]; (b) o ECA Digital (Lei 15.211/2025) vale para serviços digitais direcionados a crianças e adolescentes ou que possam ser acessados por eles [56]. O impacto nos dois casos fica com o agente de privacidade, legal e lojas e com o jurídico.
+Brazilian legal context, only flagged here without analysis: (a) in the ruling completed on 26/06/2025, the STF declared art. 19 of the Brazilian Internet Civil Rights Framework partially unconstitutional and established removal and self-regulation duties [55]; (b) the ECA Digital (Law 15.211/2025) applies to digital services directed at children and adolescents or that may be accessed by them [56]. The impact of both cases is left to the privacy, legal and stores agent and legal counsel.
 
-### 1.8 Ferramentas de referência (sem escolher stack)
+### 1.8 Reference tools (without choosing a stack)
 
-Preços em USD, fotografia de 22/10/2026, sem impostos. Consolidar em [Preços datados](Tecnologias/Precos_Datados.md).
+Prices in USD, snapshot as of 22/10/2026, excluding taxes. Consolidate in [Dated prices](Tecnologias/Precos_Datados.md).
 
-| Ferramenta | O que faz | Preço ou condição | Privacidade e encaixe [HIP, salvo citação] |
+| Tool | What it does | Price or condition | Privacy and fit [HIP, unless cited] |
 | --- | --- | --- | --- |
-| OpenAI Moderation (`omni-moderation-latest`) | Classifica texto e imagem; não classifica áudio | Gratuita [32] | Pela tabela de controles de dados, `/v1/moderations` não usa dados para treino e não retém registros de monitoramento de abuso [37]. Ainda assim é um terceiro no exterior: exige base legal e contrato |
-| Azure AI Content Safety | Texto e imagem | Gratuito até 5 mil registros de texto e 5 mil imagens por mês; plano Standard a US$ 0,38 por mil registros de texto (até 1.000 caracteres cada) e US$ 0,75 por mil imagens [34] | Avaliar a região de processamento e os termos |
-| Google Cloud Natural Language, Text Moderation | Categorias de dano em texto [35] | Unidade de 100 caracteres [35]; a tabela mostra faixa gratuita até 50 mil unidades e US$ 5,00 na faixa seguinte. Confirmar a unidade de cobrança na calculadora | Idem |
-| Amazon Rekognition (`DetectModerationLabels`, Grupo 2) | Moderação de imagem | O exemplo oficial do Grupo 2 cobra US$ 0,0010 por imagem no primeiro milhão [39] | Só se houver imagens (etapa 2) |
-| Perspective API (Jigsaw) | Toxicidade em texto | Encerramento anunciado: o serviço termina depois de 2026, sem suporte à migração [33] | Não adotar |
-| Discourse | Software de fórum | Licença GPL v2.0 ou posterior [38]. Hospedagem gerenciada: Pro a US$ 100/mês (5 vagas para equipe, plugin DiscourseConnect) e Business a US$ 500/mês (SSO OpenID/OAuth2); há plano Free com 2 vagas para equipe [36] | Útil como referência de funções (níveis de confiança, sinalização). Integrá-lo num app nativo significa WebView ou cliente próprio via API, além de outra base de dados para separar da família. No MVP, um módulo próprio mínimo de tópico, resposta e denúncia parece mais coerente; decisão com o agente de arquitetura |
-| Stream Chat | Chat em tempo real | Plano Build gratuito (1.000 MAU); Start a US$ 399/mês no plano anual ou US$ 499 no mensal, para 10 mil MAU, com moderação e filtros avançados [41] | Só a partir da etapa 4 |
-| Sendbird Chat | Chat em tempo real | Starter (5 mil MAU) a US$ 349/mês no plano anual ou US$ 399 no mensal; a página lista recursos como filtro de palavrões (disponibilidade por plano a conferir) [42] | Só a partir da etapa 4 |
-| LiveKit Cloud | Salas de áudio e vídeo (WebRTC) | Build a US$ 0 com 5 mil minutos WebRTC; Ship a partir de US$ 50/mês com 150 mil minutos e depois US$ 0,0005 por minuto [43] | Etapa 3 |
-| Agora RTC | Voz, vídeo e transmissão ao vivo [44] | A partir de US$ 0,59 por mil minutos; 10 mil minutos gratuitos por mês [44] | Etapa 3 |
+| OpenAI Moderation (`omni-moderation-latest`) | Classifies text and images; does not classify audio | Free [32] | According to the data controls table, `/v1/moderations` does not use data for training and does not retain abuse monitoring logs [37]. It is still a third party abroad: requires a legal basis and contract |
+| Azure AI Content Safety | Text and images | Free up to 5 thousand text records and 5 thousand images per month; Standard plan at US$ 0,38 per thousand text records (up to 1.000 characters each) and US$ 0,75 per thousand images [34] | Assess the processing region and terms |
+| Google Cloud Natural Language, Text Moderation | Harm categories in text [35] | Unit of 100 characters [35]; the table shows a free tier up to 50 thousand units and US$ 5,00 in the next tier. Confirm the billing unit in the calculator | Same |
+| Amazon Rekognition (`DetectModerationLabels`, Group 2) | Image moderation | The official Group 2 example charges US$ 0,0010 per image for the first million [39] | Only if images are included (stage 2) |
+| Perspective API (Jigsaw) | Text toxicity | Shutdown announced: the service ends after 2026, with no migration support [33] | Do not adopt |
+| Discourse | Forum software | GPL v2.0 or later license [38]. Managed hosting: Pro at US$ 100/month (5 staff seats, DiscourseConnect plugin) and Business at US$ 500/month (OpenID/OAuth2 SSO); a Free plan with 2 staff seats is available [36] | Useful as a reference for features (trust levels, flagging). Integrating it into a native app means a WebView or a custom API client, plus another database to keep separate from the family. In the MVP, a minimal custom module for topics, replies and reports seems more consistent; decision with the architecture agent |
+| Stream Chat | Real-time chat | Free Build plan (1.000 MAU); Start at US$ 399/month billed annually or US$ 499 billed monthly, for 10 thousand MAU, with moderation and advanced filters [41] | Only from stage 4 onward |
+| Sendbird Chat | Real-time chat | Starter (5 thousand MAU) at US$ 349/month billed annually or US$ 399 billed monthly; the page lists features such as a profanity filter (availability by plan to be checked) [42] | Only from stage 4 onward |
+| LiveKit Cloud | Audio and video rooms (WebRTC) | Build at US$ 0 with 5 thousand WebRTC minutes; Ship from US$ 50/month with 150 thousand minutes and then US$ 0,0005 per minute [43] | Stage 3 |
+| Agora RTC | Voice, video and live streaming [44] | From US$ 0,59 per thousand minutes; 10 thousand free minutes per month [44] | Stage 3 |
 
-### 1.9 Filtro por fase sem revelar a data de nascimento [HIP]
+### 1.9 Stage filtering without revealing the birth date [HIP]
 
-1. A data de nascimento fica só no espaço da família. O cliente calcula localmente uma **faixa larga** ("0–3 meses", "4–6 meses", "7–12 meses", "1–2 anos") e envia à comunidade apenas a faixa. O serviço da comunidade nunca recebe a data.
-2. A faixa é **etiqueta opcional por tópico**, congelada no momento da publicação e editável ou removível pelo autor. Uma faixa que se atualizasse sozinha permitiria inferir a data pelas mudanças.
-3. O filtro "minha fase" é calculado no aparelho e funciona como preferência de leitura, sem virar atributo público do perfil.
-4. Grupos por mês e ano de nascimento, como os do What to Expect [46], revelam mais. Se surgirem grupos por período, usar janelas largas (trimestre ou semestre) e só com volume.
-5. Idade corrigida de prematuro é informação sensível: usar apenas no cálculo local, nunca exibir na comunidade.
-6. Mídia, a partir da etapa 2: remover EXIF e localização no aparelho antes do envio (as coordenadas ficam gravadas em cada foto [57]), recodificar a imagem, guardar num repositório próprio da comunidade, separado dos anexos da família, servir por URL assinada e nunca reaproveitar automaticamente anexos de registros familiares.
+1. The birth date stays only in the family space. The client locally calculates a **broad range** ("0–3 meses", "4–6 meses", "7–12 meses", "1–2 anos") and sends only the range to the community. The community service never receives the date.
+2. The range is an **optional tag per topic**, frozen at the time of publication and editable or removable by the author. A range that updated itself would allow the date to be inferred from the changes.
+3. The "minha fase" filter is calculated on the device and works as a reading preference, without becoming a public profile attribute.
+4. Groups by birth month and year, such as those on What to Expect [46], reveal more. If groups by period are introduced, use broad windows (quarter or half-year) and only with enough activity.
+5. A premature baby's corrected age is sensitive information: use it only in the local calculation, never display it in the community.
+6. Media, from stage 2 onward: remove EXIF and location on the device before upload (coordinates are recorded in every photo [57]), re-encode the image, store it in a dedicated community repository separate from family attachments, serve it through a signed URL and never automatically reuse attachments from family records.
 
 ---
 
-## Parte 2 — Tummy time, atividades e ciclo editorial
+## Part 2 — Tummy time, activities and editorial cycle
 
-### 2.1 O que as fontes dizem sobre tummy time [DOC]
+### 2.1 What the sources say about tummy time [DOC]
 
-| Fonte (versão) | Início | Frequência e duração | Supervisão e sono | Quando procurar profissional |
+| Source (version) | Start | Frequency and duration | Supervision and sleep | When to seek a professional |
 | --- | --- | --- | --- | --- |
-| AAP, recomendações de sono seguro de 2022 (Pediatrics) [23] | Logo após a alta, em períodos curtos [23] | Aumentar aos poucos: "at least 15 to 30 minutes total daily by 7 weeks of age" [23] | Acordado e supervisionado; "Back to sleep for every sleep" [23] | Não trata disso. No texto extraído da Tabela 2, o item aparece no bloco de nível A; conferir na versão formatada. A AAP observa que não há ensaios randomizados sobre morte súbita, e que estudos caso-controle são a melhor evidência disponível [23] |
-| HealthyChildren.org (AAP, atualizado em 08/09/2026; no site, "9/8/2026") [10] | No dia em que o bebê chega em casa [10] | 2 a 3 vezes ao dia, 3 a 5 minutos; aumentar conforme o bebê mostra que gosta, até 15 a 30 minutos por dia com 7 semanas [10] | "Closely supervised"; dormir de costas, inclusive em sonecas [10] | Alguns bebês não gostam no início [10]; não substitui o pediatra [10] |
-| CDC, Learn the Signs. Act Early. (2, 4 e 6 meses; atualizado em 16/5/2026) [11][61][62] | Não fixa | Sem minutos | Bebê de bruços acordado, com brinquedos na altura dos olhos; nunca sozinho; se ficar sonolento, colocar de barriga para cima em local de sono seguro [11] | Marcos são o que 75% ou mais das crianças fazem até certa idade [11]: 2 meses, segura a cabeça de bruços [11]; 4 meses, apoia-se nos antebraços [61]; 6 meses, rola de barriga para baixo para cima e apoia-se com braços estendidos [62]. Não substituem triagem validada; se o bebê não atinge marcos, perde habilidades ou há preocupação, "act early" e conversar com o médico [11] |
-| NHS (última revisão em 9/3/2023; próxima prevista para 9/3/2026) [12] | Desde o nascimento, sobre o peito do adulto, se o adulto estiver bem acordado [12] | "Little and often" no início, aumentando dia a dia; sem número [12] | Só com o bebê acordado e alerta, e um adulto olhando [12] | Não trata disso. Em 22/10/2026, a data de revisão prevista já tinha passado |
-| OMS, diretriz de 2019 [21][20] | Não fixa | Para quem ainda não se locomove: pelo menos 30 minutos de bruços por dia, distribuídos, acordado [21]; não ficar contido por mais de 1 hora seguida [20] | Acordado [21] | Recomendação forte ("strong recommendation"), com qualidade geral da evidência "very low" (GRADE) em atividade física [21]. Benefícios: desenvolvimento motor e menor chance de plagiocefalia [21]. Cerca de 30% dos bebês em estudos do Canadá e da Austrália já cumpriam a recomendação [21] |
-| Pathways.org [13] | Quando o bebê chega do hospital [13] | Sessões de 2 a 5 minutos algumas vezes por dia; ao menos 15 a 30 min/dia aos 2 meses e ao menos 60 min/dia aos 6 meses; "More is always better" [13] | Parar se o bebê se irritar; se adormecer, virar de barriga para cima [13] | Se o bebê não atinge as habilidades esperadas ou não tolera o tummy time de forma persistente, conversar com o profissional de saúde [13] |
-| SBP, Departamento Científico de Medicina do Sono [14][15] | Não fixa | "Não há consenso [...] qual o tempo e a frequência" [14]; a nota que resume a AAP 2022 menciona "30 minutos com sete semanas de vida" [15] | Posição prona acordada e supervisionada [14]; dormir de barriga para cima sempre, até completar um ano [15] | Não trata disso |
-| SPSP (filiada à SBP) [16][17] | Períodos curtos após a alta [16] | Até 15 a 30 minutos por dia a partir de sete semanas [16] | Sempre acordado e supervisionado [16]; "Quando o bebê chorar, deve-se mudar a atividade" [17] | Não trata disso |
-| Ministério da Saúde, Guia de Atividade Física (2021, descrito na RBAFS) [19] | Não fixa | Até 1 ano: pelo menos 30 min/dia de barriga para baixo, distribuídos [19] | Não detalhado no trecho | Qualidade das evidências "de baixa a moderada", segundo o quadro de justificativas [19] |
-| Ministério da Saúde, Guia de Intervenção Precoce de 0 a 3 anos (minuta em consulta pública, 2025) [18] | "desde o primeiro mês de vida" [18] | 0–3 e 4–11 meses: no mínimo 30 min/dia distribuídos, enquanto acordado [18] | Acordado e supervisionado [18] | É documento preliminar; a versão final não foi verificada |
-| Caderneta da Criança, 7ª edição revisada (2025) [60] | — | — | — | Edição listada pelo Ministério [60]. O PDF no BVS foi bloqueado nesta sessão (HTTP 503), e o conteúdo não foi conferido |
+| AAP, 2022 safe sleep recommendations (Pediatrics) [23] | Shortly after discharge, for short periods [23] | Increase gradually: "at least 15 to 30 minutes total daily by 7 weeks of age" [23] | Awake and supervised; "Back to sleep for every sleep" [23] | Does not address this. In the text extracted from Table 2, the item appears in the level A block; check the formatted version. The AAP notes that there are no randomized trials on sudden death, and that case-control studies are the best available evidence [23] |
+| HealthyChildren.org (AAP, updated on 08/09/2026; on the website, "9/8/2026") [10] | On the day the baby comes home [10] | 2 to 3 times a day, 3 to 5 minutes; increase as the baby shows enjoyment, up to 15 to 30 minutes per day at 7 weeks [10] | "Closely supervised"; sleep on the back, including naps [10] | Some babies do not like it at first [10]; does not replace the pediatrician [10] |
+| CDC, Learn the Signs. Act Early. (2, 4 and 6 months; updated on 16/5/2026) [11][61][62] | Does not specify | No minutes | Baby on their tummy while awake, with toys at eye level; never alone; if drowsy, place on their back in a safe sleep space [11] | Milestones are what 75% or more of children do by a certain age [11]: 2 months, holds head up when on tummy [11]; 4 months, pushes up onto forearms [61]; 6 months, rolls from tummy to back and pushes up with straight arms [62]. They do not replace validated screening; if the baby does not reach milestones, loses skills or there is a concern, "act early" and talk to the doctor [11] |
+| NHS (last reviewed on 9/3/2023; next review due on 9/3/2026) [12] | From birth, on the adult's chest, if the adult is fully awake [12] | "Little and often" at first, increasing day by day; no number [12] | Only with the baby awake and alert, and an adult watching [12] | Does not address this. As of 22/10/2026, the scheduled review date had already passed |
+| WHO, 2019 guideline [21][20] | Does not specify | For babies who are not yet mobile: at least 30 minutes on their tummy per day, spread out, while awake [21]; not restrained for more than 1 hour at a time [20] | Awake [21] | "Strong recommendation", with "very low" overall evidence quality (GRADE) for physical activity [21]. Benefits: motor development and lower likelihood of plagiocephaly [21]. About 30% of babies in studies from Canada and Australia already met the recommendation [21] |
+| Pathways.org [13] | When the baby comes home from the hospital [13] | Sessions of 2 to 5 minutes a few times a day; at least 15 to 30 min/day at 2 months and at least 60 min/day at 6 months; "More is always better" [13] | Stop if the baby becomes upset; if they fall asleep, turn them onto their back [13] | If the baby does not reach expected skills or persistently does not tolerate tummy time, talk to the healthcare professional [13] |
+| SBP, Scientific Department of Sleep Medicine [14][15] | Does not specify | "There is no consensus [...] on duration and frequency" [14]; the note summarizing AAP 2022 mentions "30 minutes at seven weeks of age" [15] | Prone position while awake and supervised [14]; always sleep on the back until one year of age [15] | Does not address this |
+| SPSP (affiliated with SBP) [16][17] | Short periods after discharge [16] | Up to 15 to 30 minutes per day from seven weeks onward [16] | Always awake and supervised [16]; "When the baby cries, the activity should be changed" [17] | Does not address this |
+| Ministry of Health, Physical Activity Guide (2021, described in RBAFS) [19] | Does not specify | Up to 1 year: at least 30 min/day on the tummy, spread out [19] | Not detailed in the excerpt | Evidence quality "low to moderate", according to the rationale table [19] |
+| Ministry of Health, Early Intervention Guide from 0 to 3 years (draft under public consultation, 2025) [18] | "from the first month of life" [18] | 0–3 and 4–11 months: at least 30 min/day spread out, while awake [18] | Awake and supervised [18] | It is a preliminary document; the final version was not verified |
+| Child Health Handbook, revised edition 7 (2025) [60] | — | — | — | Edition listed by the Ministry [60]. The PDF on BVS was blocked in this session (HTTP 503), and the content was not checked |
 
-### 2.2 Divergências entre fontes
+### 2.2 Differences between sources
 
-1. **Quantidade:** AAP, 15 a 30 min/dia até 7 semanas [23]. OMS e Ministério da Saúde, 30 min/dia ou mais para quem ainda não se locomove [21][18]. Pathways, 60 min/dia ou mais aos 6 meses, com o lema "more is always better" [13]. NHS, nenhum número [12]. SBP, sem consenso [14].
-2. **O que conta como tummy time:** a AAP sugere deitar o bebê sobre o peito do adulto como brincadeira de bruços [10], e o NHS começa pelo peito [12]. A definição da OMS fala em estar de bruços acordado "with unrestricted movement of limbs" [21]. Somar o tempo no colo como tummy time é uma escolha de produto que precisa de revisão profissional [HIP].
-3. **Força da evidência:** a OMS faz recomendação forte com evidência muito baixa [21]; o Guia brasileiro registra evidência de baixa a moderada [19]; a SBP não fixa tempo [14].
-4. **Consequência para o produto [HIP]:** não escolher um número como meta. Se o app mostrar referência, mostrar a faixa, a fonte e o contexto, e não usar a referência para calcular atraso.
+1. **Amount:** AAP, 15 to 30 min/day by 7 weeks [23]. WHO and Ministry of Health, 30 min/day or more for babies who are not yet mobile [21][18]. Pathways, 60 min/day or more at 6 months, with the motto "more is always better" [13]. NHS, no number [12]. SBP, no consensus [14].
+2. **What counts as tummy time:** the AAP suggests laying the baby on the adult's chest as tummy play [10], and the NHS starts with the chest [12]. The WHO definition refers to being on the tummy while awake "with unrestricted movement of limbs" [21]. Counting time being held as tummy time is a product choice that requires professional review [HIP].
+3. **Strength of evidence:** WHO makes a strong recommendation with very low evidence [21]; the Brazilian Guide records low to moderate evidence [19]; the SBP does not specify a duration [14].
+4. **Consequence for the product [HIP]:** do not choose a number as a target. If the app shows a reference, show the range, source and context, and do not use the reference to calculate delay.
 
-### 2.3 O que não pode virar meta ou cobrança [HIP]
+### 2.3 What must not become a target or source of pressure [HIP]
 
-- Minutos por dia como objetivo, anel de progresso, sequência de dias (streak), selo de duração ou "você não cumpriu hoje".
-- Comparação entre bebês ou famílias, ranking ou percentil, na comunidade ou nas atividades.
-- Marcos como prova de aprovação ou reprovação, ou a palavra "atrasado". Para o CDC, marcos são o que 75% ou mais das crianças fazem, e as listas não substituem triagem [11].
-- Lembrete com tom de culpa. Lembretes, se existirem, são opcionais e neutros ("quer registrar o tummy time de agora?").
-- Horas de sono "recomendadas" como meta diária.
-- Em vez disso: registro opcional, resumo neutro ("hoje: 3 sessões, 12 min no total") e lembrete de parar se o bebê se incomodar [13][17]. A seção "quando conversar com o pediatra ou a UBS" fica separada, em tom neutro e baseada nas fontes [11][13].
+- Minutes per day as a goal, progress ring, streak, duration badge or "você não cumpriu hoje".
+- Comparisons between babies or families, rankings or percentiles, in the community or activities.
+- Milestones as a pass-or-fail test, or the word "atrasado". For the CDC, milestones are what 75% or more of children do, and the checklists do not replace screening [11].
+- Guilt-inducing reminders. Reminders, if any, are optional and neutral ("quer registrar o tummy time de agora?").
+- "Recommended" hours of sleep as a daily target.
+- Instead: optional recording, a neutral summary ("hoje: 3 sessões, 12 min no total") and a reminder to stop if the baby becomes uncomfortable [13][17]. The "quando conversar com o pediatra ou a UBS" section stays separate, with a neutral tone and based on the sources [11][13].
 
-### 2.4 Sono seguro na experiência de tummy time [HIP, derivado de DOC]
+### 2.4 Safe sleep in the tummy time experience [HIP, derived from DOC]
 
-- O temporizador mostra o texto fixo: "Só com o bebê acordado e um adulto olhando. Se ele ficar com sono, coloque de barriga para cima no berço." Base: [11][13][10].
-- Nenhum recurso, texto ou imagem sugere dormir de bruços. Fotos e ilustrações próprias não mostram travesseiros ou objetos soltos no berço, seguindo as recomendações de ambiente de sono [10][15].
-- Encerramento por qualquer cuidador e registro retrospectivo seguem o modelo de sessão do D5; não pertencem a esta nota.
+- The timer shows the fixed text: "Só com o bebê acordado e um adulto olhando. Se ele ficar com sono, coloque de barriga para cima no berço." Basis: [11][13][10].
+- No feature, text or image suggests sleeping on the tummy. Original photos and illustrations do not show pillows or loose objects in the crib, following sleep environment recommendations [10][15].
+- Ending a session by any caregiver and retrospective recording follow the D5 session model; they do not belong in this note.
 
-### 2.5 Licenciamento de conteúdo por fonte
+### 2.5 Content licensing by source
 
-| Fonte | Citar e linkar | Reproduzir texto | Imagens e vídeos | Observações |
+| Source | Citing and linking | Reproducing text | Images and videos | Notes |
 | --- | --- | --- | --- | --- |
-| AAP / HealthyChildren.org | Sim [HIP: citação curta com fonte] | Não sem permissão prévia por escrito [29] | Não sem permissão [29] | Os termos também proíbem usar o conteúdo com ferramentas de IA sem permissão expressa [29] |
-| CDC | Sim; o CDC prefere link a republicação [24] | A maior parte é domínio público, com condições: atribuir, avisar que não há endosso, não mudar o conteúdo substantivo e informar que o material está disponível gratuitamente [24] | Algumas imagens e recursos de terceiros têm restrição; o logo do CDC exige permissão [24] | Na personalização do LTSAE, não editar os marcos e não usar logos CDC ou HHS [25] |
-| NHS | Sim | Licença OGL v3.0, inclusive para uso comercial, com regras de atribuição e atualização [26] | Imagens e dados pessoais (pessoas identificáveis) ficam fora da OGL [26] | Tradução conta como adaptação: o conteúdo adaptado não pode ser atribuído ao NHS [26], e a adaptação pode invalidar a aprovação clínica [26] |
-| OMS (diretriz de 2019) | Sim | Licença CC BY-NC-SA 3.0 IGO: só uso não comercial, com citação e compartilhamento pela mesma licença [21][22] | Uso do logo da OMS não permitido [21] | Se o app for comercial, não reproduzir; reescrever com citação [HIP] |
-| Pathways.org | Sim | Uso pessoal não comercial; nenhum uso com fins lucrativos sem aprovação escrita [27]; formulário de permissão [28] | Idem [27] | A Pathways declara que seus marcos se baseiam em CDC e AAP e passam por revisão de especialistas [28] |
-| SBP | Sim | "Todos os direitos reservados" [31]; pedir permissão | Idem | — |
-| Ministério da Saúde / gov.br | Sim | A página do portal traz "©2025 - Ministério da Saúde \| Todos os direitos reservados" [7]. Publicações costumam ter licença própria na ficha catalográfica; conferir obra a obra [HIP] | Idem | O artigo da RBAFS que descreve o Guia de Atividade Física é CC BY 4.0 [19] |
+| AAP / HealthyChildren.org | Yes [HIP: short quotation with source] | Not without prior written permission [29] | Not without permission [29] | The terms also prohibit using the content with AI tools without express permission [29] |
+| CDC | Yes; the CDC prefers linking to republication [24] | Most is public domain, with conditions: attribute, state that there is no endorsement, do not change the substantive content and state that the material is available free of charge [24] | Some third-party images and resources have restrictions; the CDC logo requires permission [24] | When customizing LTSAE, do not edit milestones or use CDC or HHS logos [25] |
+| NHS | Yes | OGL v3.0 license, including commercial use, with attribution and updating rules [26] | Images and personal data (identifiable people) are outside the OGL [26] | Translation counts as adaptation: adapted content cannot be attributed to the NHS [26], and adaptation may invalidate clinical approval [26] |
+| WHO (2019 guideline) | Yes | CC BY-NC-SA 3.0 IGO license: noncommercial use only, with citation and sharing under the same license [21][22] | Use of the WHO logo is not permitted [21] | If the app is commercial, do not reproduce; rewrite with citation [HIP] |
+| Pathways.org | Yes | Personal noncommercial use; no for-profit use without written approval [27]; permission form [28] | Same [27] | Pathways states that its milestones are based on CDC and AAP and undergo expert review [28] |
+| SBP | Yes | "All rights reserved" [31]; request permission | Same | — |
+| Ministry of Health / gov.br | Yes | The portal page states "©2025 - Ministry of Health \| All rights reserved" [7]. Publications usually have their own license in the cataloging data; check each work individually [HIP] | Same | The RBAFS article describing the Physical Activity Guide is CC BY 4.0 [19] |
 
-Regras propostas [HIP, confirmar com jurídico]:
+Proposed rules [HIP, confirm with legal counsel]:
 
-1. **Sempre:** linkar a fonte, citar trecho curto entre aspas com autoria e data e registrar a versão e a data da fonte no conteúdo.
-2. **Fatos e recomendações** (por exemplo, "30 minutos por dia, distribuídos") podem ser reescritos em texto próprio com citação. A expressão (texto, ilustração, diagramação, vídeo) só com licença.
-3. **Produção própria obrigatória** para: texto em pt-BR das telas e artigos, ilustrações de posições, vídeos, roteiros de atividades e mensagens de crise. Tudo passa por revisão de profissional com registro no conselho.
-4. **Não usar** logos, ilustrações ou vídeos de terceiros sem licença escrita, nem "traduzir e publicar" material da AAP, da Pathways ou da OMS num app comercial.
+1. **Always:** link to the source, quote a short excerpt in quotation marks with author and date, and record the source version and date in the content.
+2. **Facts and recommendations** (for example, "30 minutes per day, spread out") may be rewritten in original wording with citation. Their expression (text, illustration, layout, video) requires a license.
+3. **Original production required** for: pt-BR screen and article text, position illustrations, videos, activity scripts and crisis messages. Everything undergoes review by a professional registered with their professional council.
+4. **Do not use** third-party logos, illustrations or videos without a written license, or "translate and publish" AAP, Pathways or WHO material in a commercial app.
 
-### 2.6 Ciclo editorial proposto [HIP]
+### 2.6 Proposed editorial cycle [HIP]
 
-Exemplos de mercado: o NHS exibe "Page last reviewed" e "Next review due" [12], e o CDC exibe datas de publicação, atualização e revisão por especialistas [11]. O HealthyChildren revisa todo o conteúdo periodicamente, impede que revisores com conflito de interesse revisem o artigo e submete traduções a pediatras nativos no idioma [30].
+Market examples: the NHS displays "Page last reviewed" and "Next review due" [12], and the CDC displays publication, update and expert review dates [11]. HealthyChildren reviews all content periodically, prevents reviewers with conflicts of interest from reviewing the article and submits translations to pediatricians who are native speakers of the language [30].
 
-Etapas: pauta → rascunho (autor) → checagem de fontes → revisão técnica por profissional credenciado e sem conflito declarado → revisão de linguagem (pt-BR simples, sem culpa, sem jargão) → aprovação editorial → publicação com número de versão → acompanhamento (botão "reportar erro no conteúdo") → revisão na data prevista → correção ou retirada → histórico.
+Stages: topic planning → draft (author) → source checking → technical review by a credentialed professional with no declared conflict → language review (plain pt-BR, without guilt or jargon) → editorial approval → publication with version number → monitoring ("reportar erro no conteúdo" button) → review on the scheduled date → correction or withdrawal → history.
 
-Níveis de correção:
+Correction levels:
 
-| Nível | Exemplo | Ação |
+| Level | Example | Action |
 | --- | --- | --- |
-| Crítica (segurança) | Texto que contradiz o sono de barriga para cima | Retirar na hora; o aparelho processa a lista de retirada antes de qualquer outra atualização; aviso ao usuário |
-| Importante | Faixa etária errada ou fonte desatualizada | Nova versão com nota de mudança |
-| Menor | Erro de digitação | Nova versão menor, sem aviso |
+| Critical (safety) | Text that contradicts back sleeping | Withdraw immediately; the device processes the withdrawal list before any other update; user notice |
+| Major | Wrong age range or outdated source | New version with a change note |
+| Minor | Typo | New minor version, without a notice |
 
-Campos mínimos de um item de conteúdo:
+Minimum fields for a content item:
 
-| Campo | Observação |
+| Field | Note |
 | --- | --- |
-| `id` | Estável entre versões |
-| `versao` | Inteiro crescente ou semver; mais `versao_anterior` |
-| `status` | rascunho, em revisão, aprovado, publicado, retirado |
-| `tipo` | artigo, atividade, dica de segurança, roteiro de crise |
-| `titulo`, `resumo`, `corpo` | Markdown restrito, sem HTML arbitrário |
+| `id` | Stable across versions |
+| `versao` | Increasing integer or semver; plus `versao_anterior` |
+| `status` | draft, under review, approved, published, withdrawn |
+| `tipo` | article, activity, safety tip, crisis script |
+| `titulo`, `resumo`, `corpo` | Restricted Markdown, without arbitrary HTML |
 | `idioma`, `localidade` | pt-BR, BR |
-| `faixa_etaria_inicio_dias`, `faixa_etaria_fim_dias` | Janelas sobrepostas; nunca "deve fazer até" |
-| `considera_idade_corrigida` | Booleano, com texto revisado |
-| `temas` | Ligam o item aos espaços da comunidade |
-| `autores` | Nome e função |
-| `revisores` | Nome, profissão, conselho, UF e número do registro, data da revisão, declaração de conflito |
-| `fontes` | Organização, título, URL, versão ou data da fonte, data de consulta e tipo (diretriz, consenso, documento oficial) |
-| `licenca_texto`, `licencas_midia` | Produção própria, CC ou permissão, com créditos por mídia |
-| `aviso_de_limites` | Ex.: "não substitui consulta" |
-| `avisos_de_seguranca` | Ex.: "somente acordado e supervisionado" |
-| `publicado_em`, `revisado_em`, `proxima_revisao` | Mostrar "revisão vencida" internamente quando passar a data |
-| `nota_de_mudanca`, `nivel_de_correcao` | Histórico legível |
-| `retirado_em`, `motivo_retirada` | Lápide visível offline depois da sincronização |
-| `midias` | id, texto alternativo, transcrição, checksum, créditos |
-| `hash_conteudo` | Integridade do pacote |
+| `faixa_etaria_inicio_dias`, `faixa_etaria_fim_dias` | Overlapping windows; never "deve fazer até" |
+| `considera_idade_corrigida` | Boolean, with reviewed text |
+| `temas` | Link the item to community spaces |
+| `autores` | Name and role |
+| `revisores` | Name, profession, council, state and registration number, review date, conflict declaration |
+| `fontes` | Organization, title, URL, source version or date, access date and type (guideline, consensus, official document) |
+| `licenca_texto`, `licencas_midia` | Original production, CC or permission, with credits for each media asset |
+| `aviso_de_limites` | E.g.: "não substitui consulta" |
+| `avisos_de_seguranca` | E.g.: "somente acordado e supervisionado" |
+| `publicado_em`, `revisado_em`, `proxima_revisao` | Show "review overdue" internally once the date has passed |
+| `nota_de_mudanca`, `nivel_de_correcao` | Readable history |
+| `retirado_em`, `motivo_retirada` | Tombstone visible offline after synchronization |
+| `midias` | id, alt text, transcript, checksum, credits |
+| `hash_conteudo` | Package integrity |
 
-Versionamento offline [HIP]:
+Offline versioning [HIP]:
 
-1. Pacote de conteúdo com manifesto (versão do pacote, versão mínima do app, lista de itens com `id`, `versao` e `hash`, mais a lista de retirada), assinado pelo backend. A primeira versão vem embutida no app para uso sem rede.
-2. Na sincronização, o app baixa o manifesto (com cache condicional), processa primeiro a lista de retirada, depois as atualizações por diferença, e mantém a última versão íntegra se a atualização falhar.
-3. Cada item mostra "versão N, revisado em DD/MM/AAAA" e as fontes.
-4. O conteúdo editorial fica somente leitura no aparelho e separado dos dados da família. Atividades marcadas como feitas guardam `id` e `versao` do conteúdo usado.
-5. Comparar com o Bebbo, que oferece acesso offline a conteúdo; ver [Bebbo](Repositorios/Bebbo.md).
+1. Content package with a manifest (package version, minimum app version, list of items with `id`, `versao` and `hash`, plus the withdrawal list), signed by the backend. The first version is bundled with the app for use without a network.
+2. During synchronization, the app downloads the manifest (with conditional caching), processes the withdrawal list first, then differential updates, and keeps the last intact version if the update fails.
+3. Each item shows "versão N, revisado em DD/MM/AAAA" and the sources.
+4. Editorial content is read-only on the device and separate from family data. Activities marked as done store `id` and `versao` of the content used.
+5. Compare with Bebbo, which offers offline access to content; see [Bebbo](Repositorios/Bebbo.md).
 
-### 2.7 Atividades por fase sem competição [HIP]
+### 2.7 Activities by stage without competition [HIP]
 
-- Apresentar como "ideias para brincar nesta fase", em janelas que se sobrepõem, sem lista de tarefas. Nada de pontos, porcentagem concluída ou "atrasado".
-- Linguagem de cuidado, baseada nas fontes: mudar a atividade se o bebê chorar [17]; parar se ele se irritar [13]; ler o humor do bebê e fazer uma pausa para consolar quando ele estiver chateado [62].
-- Registro opcional ("fizemos"), sem sequências. O histórico é visível só para a família e pode ser ocultado.
-- A seção "quando conversar com o profissional" fica separada das atividades e usa a formulação do CDC e da Pathways [11][13], com encaminhamento ao pediatra ou à UBS e ao SAMU 192 para urgência [6].
-- Ligação com tummy time e comunidade sem expor dados:
-  - da atividade para "ver conversas sobre este tema": abre a comunidade filtrada por tema e, se a pessoa quiser, pela faixa calculada no aparelho (seção 1.9);
-  - da comunidade para "salvar ideia": copia a sugestão para a lista da família, sem vínculo com o autor;
-  - da rotina para a comunidade: só por um editor explícito, com prévia de exatamente o que será publicado. Números da rotina nunca são anexados automaticamente, e por padrão nada é incluído;
-  - o perfil público não tem nenhum link para o bebê nem para a família.
-- O espaço "Tummy time" da comunidade tem um tópico fixado com o conteúdo revisado e o aviso de sono seguro.
+- Present as "ideias para brincar nesta fase", in overlapping windows, without a task list. No points, completion percentage or "atrasado".
+- Caring language, based on the sources: change the activity if the baby cries [17]; stop if they become upset [13]; read the baby's mood and take a break to comfort them when they are upset [62].
+- Optional recording ("fizemos"), without streaks. The history is visible only to the family and can be hidden.
+- The "quando conversar com o profissional" section stays separate from activities and uses the wording from CDC and Pathways [11][13], with referral to the pediatrician or primary healthcare unit (UBS) and to SAMU 192 for emergencies [6].
+- Connection with tummy time and the community without exposing data:
+  - from the activity to "ver conversas sobre este tema": opens the community filtered by topic and, if the person wishes, by the range calculated on the device (section 1.9);
+  - from the community to "salvar ideia": copies the suggestion to the family's list, without a link to the author;
+  - from the routine to the community: only through an explicit editor, with a preview of exactly what will be published. Routine numbers are never attached automatically, and nothing is included by default;
+  - the public profile has no link to the baby or family.
+- The community's "Tummy time" space has a pinned topic with reviewed content and the safe sleep notice.
 
-### 2.8 Estimativas de sono (fora do escopo principal)
+### 2.8 Sleep estimates (outside the main scope)
 
-- A OMS cita 14 a 17 horas (0–3 meses) e 12 a 16 horas (4–11 meses) de sono de boa qualidade, incluindo sonecas [20]. A minuta do Ministério da Saúde repete essas faixas [18].
-- A AASM recomenda 12 a 16 horas para 4–12 meses e não faz recomendação para menores de 4 meses, por causa da grande variação normal e da evidência insuficiente [58]. Essa é uma divergência para a faixa de 0–3 meses.
-- Premissas para qualquer estimativa no app [HIP]: mostrar faixa populacional com fonte, nunca meta; previsão de soneca só como estimativa baseada no histórico registrado, com aviso de que registros faltando e variações individuais afetam o resultado; nenhum alarme baseado em total de horas; sem promessa clínica.
+- WHO cites 14 to 17 hours (0–3 months) and 12 to 16 hours (4–11 months) of good-quality sleep, including naps [20]. The Ministry of Health draft repeats these ranges [18].
+- The AASM recommends 12 to 16 hours for 4–12 months and makes no recommendation for babies under 4 months, because of wide normal variation and insufficient evidence [58]. This is a difference for the 0–3-month age range.
+- Assumptions for any estimate in the app [HIP]: show a population range with a source, never a target; nap prediction only as an estimate based on recorded history, with a notice that missing records and individual variation affect the result; no alarm based on total hours; no clinical promise.
 
 ## Fontes
 
-Todas consultadas em 22/10/2026.
+All accessed on 22/10/2026.
 
 - [1] Apple — App Review Guidelines (Last Updated: October 16, 2026). <https://developer.apple.com/app-store/review/guidelines/>
-- [2] Google Play Console Help — User Generated Content (política). <https://support.google.com/googleplay/android-developer/answer/9876937?hl=en>
+- [2] Google Play Console Help — User Generated Content (policy). <https://support.google.com/googleplay/android-developer/answer/9876937?hl=en>
 - [3] Google Play Console Help — Learning more about our Child Safety Standards policy. <https://support.google.com/googleplay/android-developer/answer/14747720?hl=en>
-- [4] CVV — Ligue 188. <https://cvv.org.br/ligue-188-3/>
-- [5] CVV — O CVV (quem somos). <https://cvv.org.br/o-cvv/>
-- [6] Ministério da Saúde — Serviço de Atendimento Móvel de Urgência (SAMU 192). <https://www.gov.br/saude/pt-br/composicao/saes/samu-192>
-- [7] Ministério da Saúde — Depressão pós-parto (Saúde de A a Z). <https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/d/depressao-pos-parto>
-- [8] gov.br — Denunciar violação de direitos humanos (Disque 100). <https://www.gov.br/pt-br/servicos/denunciar-violacao-de-direitos-humanos>
-- [9] Ministério das Mulheres — Ligue 180, Central de Atendimento à Mulher. <https://www.gov.br/mulheres/pt-br/ligue180>
+- [4] CVV — Call 188. <https://cvv.org.br/ligue-188-3/>
+- [5] CVV — About CVV (who we are). <https://cvv.org.br/o-cvv/>
+- [6] Ministry of Health — Mobile Emergency Medical Service (SAMU 192). <https://www.gov.br/saude/pt-br/composicao/saes/samu-192>
+- [7] Ministry of Health — Postpartum depression (Health A to Z). <https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/d/depressao-pos-parto>
+- [8] gov.br — Report human rights violations (Disque 100). <https://www.gov.br/pt-br/servicos/denunciar-violacao-de-direitos-humanos>
+- [9] Ministry of Women — Ligue 180, Women's Support Center. <https://www.gov.br/mulheres/pt-br/ligue180>
 - [10] HealthyChildren.org (AAP) — Back to Sleep, Tummy to Play (Last Updated 9/8/2026). <https://www.healthychildren.org/English/ages-stages/baby/sleep/Pages/back-to-sleep-tummy-to-play.aspx>
 - [11] CDC — Important Milestones: Your Baby By Two Months (Learn the Signs. Act Early.). <https://www.cdc.gov/act-early/milestones/2-months.html>
 - [12] NHS — How to keep your baby or toddler active. <https://www.nhs.uk/baby/babys-development/play-and-learning/keep-baby-or-toddler-active/>
 - [13] Pathways.org — Tummy Time: Essential Guide for Parents. <https://pathways.org/topics-of-development/tummy-time>
-- [14] SBP — Documento Científico 'Síndrome da Morte Súbita do Lactente' (Departamento Científico de Medicina do Sono). <https://www.sbp.com.br/fileadmin/user_upload/20226d-DocCient_-_Sindrome_Morte_Subita_do_Lactente.pdf>
-- [15] SBP — Nota de Alerta 'Recomendações da AAP sobre sono seguro em menores de um ano' (DC Medicina do Sono, gestão 2022-2024). <https://www.sbp.com.br/fileadmin/user_upload/23990b-NotaAlerta-Recomend_AAP_SonoSeguro_1ano.pdf>
-- [16] SPSP (filiada à SBP) — Atualize-se, Segurança Infantil (DC Segurança). <https://www.spsp.org.br/publicacao/AtualizeA11N1.pdf>
-- [17] SPSP — Documento Científico sobre atividade física e estímulos por idade. <https://spsp.org.br/PDF/AtividadeFi%CC%81sicacompletookgrupo1junho.pdf>
-- [18] Ministério da Saúde — Guia de Intervenção Precoce: de 0 a 3 anos (documento preliminar/minuta em consulta pública, 2025). <https://www.gov.br/saude/pt-br/acesso-a-informacao/participacao-social/consultas-publicas/2025/guia-de-intervencao-precoce-de-0-a-3-anos-de-idade/documento-preliminar-minuta>
-- [19] RBAFS 2021 — Atividade física para crianças até 5 anos: Guia de Atividade Física para a População Brasileira (DOI 10.12820/rbafs.26e0213). <https://rbafs.org.br/RBAFS/article/download/14563/11171/57773>
-- [20] OMS — To grow up healthy, children need to sit less and play more (24/04/2019). <https://www.who.int/news/item/24-04-2019-to-grow-up-healthy-children-need-to-sit-less-and-play-more>
-- [21] OMS (2019) — Guidelines on physical activity, sedentary behaviour and sleep for children under 5 years of age (PDF, IRIS). <https://iris.who.int/server/api/core/bitstreams/60a1cbaa-2bef-4251-9557-e52ce22112b3/content>
-- [22] OMS IRIS — registro da diretriz 2019 (licença CC BY-NC-SA 3.0 IGO). <https://iris.who.int/items/677e3562-1deb-48ec-bb1e-4bc8aad3ea09>
+- [14] SBP — Scientific Document 'Sudden Infant Death Syndrome' (Scientific Department of Sleep Medicine). <https://www.sbp.com.br/fileadmin/user_upload/20226d-DocCient_-_Sindrome_Morte_Subita_do_Lactente.pdf>
+- [15] SBP — Alert Note 'AAP recommendations on safe sleep for children under one year' (Scientific Department of Sleep Medicine, 2022-2024 term). <https://www.sbp.com.br/fileadmin/user_upload/23990b-NotaAlerta-Recomend_AAP_SonoSeguro_1ano.pdf>
+- [16] SPSP (affiliated with SBP) — Stay Up to Date, Child Safety (Scientific Department of Safety). <https://www.spsp.org.br/publicacao/AtualizeA11N1.pdf>
+- [17] SPSP — Scientific Document on physical activity and stimulation by age. <https://spsp.org.br/PDF/AtividadeFi%CC%81sicacompletookgrupo1junho.pdf>
+- [18] Ministry of Health — Early Intervention Guide: from 0 to 3 years (preliminary document/draft under public consultation, 2025). <https://www.gov.br/saude/pt-br/acesso-a-informacao/participacao-social/consultas-publicas/2025/guia-de-intervencao-precoce-de-0-a-3-anos-de-idade/documento-preliminar-minuta>
+- [19] RBAFS 2021 — Physical activity for children up to 5 years: Physical Activity Guide for the Brazilian Population (DOI 10.12820/rbafs.26e0213). <https://rbafs.org.br/RBAFS/article/download/14563/11171/57773>
+- [20] WHO — To grow up healthy, children need to sit less and play more (24/04/2019). <https://www.who.int/news/item/24-04-2019-to-grow-up-healthy-children-need-to-sit-less-and-play-more>
+- [21] WHO (2019) — Guidelines on physical activity, sedentary behaviour and sleep for children under 5 years of age (PDF, IRIS). <https://iris.who.int/server/api/core/bitstreams/60a1cbaa-2bef-4251-9557-e52ce22112b3/content>
+- [22] WHO IRIS — 2019 guideline record (CC BY-NC-SA 3.0 IGO license). <https://iris.who.int/items/677e3562-1deb-48ec-bb1e-4bc8aad3ea09>
 - [23] AAP (Moon, Carlin, Hand) — Sleep-Related Infant Deaths: Updated 2022 Recommendations (Pediatrics 2022;150(1):e2022057990). <https://publications.aap.org/pediatrics/article/150/1/e2022057990/188304/Sleep-Related-Infant-Deaths-Updated-2022>
 - [24] CDC — Use of Agency Materials. <https://www.cdc.gov/other/agencymaterials.html>
 - [25] CDC — Learn the Signs. Act Early.: Customization, Translations, and Ordering Online. <https://www.cdc.gov/act-early/resources/customization.html>
-- [26] NHS website — Terms and conditions (licença OGL v3.0 e regras de reuso). <https://www.nhs.uk/our-policies/terms-and-conditions/>
+- [26] NHS website — Terms and conditions (OGL v3.0 license and reuse rules). <https://www.nhs.uk/our-policies/terms-and-conditions/>
 - [27] Pathways.org — Terms of Use. <https://pathways.org/terms-of-use>
-- [28] Pathways.org — Baby Experts Page (uso de conteúdo e revisão). <https://pathways.org/baby-experts-page>
-- [29] AAP — Terms of Use (aplicável ao HealthyChildren.org). <https://www.aap.org/en/pages/terms-of-use/>
+- [28] Pathways.org — Baby Experts Page (content use and review). <https://pathways.org/baby-experts-page>
+- [29] AAP — Terms of Use (applicable to HealthyChildren.org). <https://www.aap.org/en/pages/terms-of-use/>
 - [30] HealthyChildren.org — Editorial Policy. <https://www.healthychildren.org/English/Pages/Editorial-Policy.aspx>
-- [31] SBP — portal (rodapé de direitos autorais). <https://www.sbp.com.br/>
+- [31] SBP — portal (copyright footer). <https://www.sbp.com.br/>
 - [32] OpenAI API — Moderation guide (omni-moderation-latest). <https://developers.openai.com/api/docs/guides/moderation>
-- [33] Perspective API (Jigsaw/Google) — FAQ / aviso de encerramento. <https://www.perspectiveapi.com/faq/>
+- [33] Perspective API (Jigsaw/Google) — FAQ / shutdown notice. <https://www.perspectiveapi.com/faq/>
 - [34] Microsoft Azure — Content Safety pricing. <https://azure.microsoft.com/en-us/pricing/details/content-safety/>
 - [35] Google Cloud — Natural Language API pricing (Text Moderation). <https://cloud.google.com/natural-language/pricing>
-- [36] Discourse — hosting plans (preços). <https://www.discourse.org/pricing>
+- [36] Discourse — hosting plans (prices). <https://www.discourse.org/pricing>
 - [37] OpenAI API — Data controls in the OpenAI platform. <https://developers.openai.com/api/docs/guides/your-data>
-- [38] Discourse — repositório GitHub (licença). <https://github.com/discourse/discourse>
+- [38] Discourse — GitHub repository (license). <https://github.com/discourse/discourse>
 - [39] AWS — Amazon Rekognition pricing. <https://aws.amazon.com/rekognition/pricing/>
 - [40] Discourse Blog — Understanding Discourse Trust Levels (2018). <https://blog.discourse.org/2018/06/understanding-discourse-trust-levels/>
 - [41] Stream — Chat pricing. <https://getstream.io/chat/pricing/>
@@ -355,47 +355,47 @@ Todas consultadas em 22/10/2026.
 - [43] LiveKit Cloud — pricing. <https://livekit.io/pricing>
 - [44] Agora — pricing overview. <https://www.agora.io/en/pricing/>
 - [45] What to Expect — Community Guidelines. <https://www.whattoexpect.com/community-guidelines>
-- [46] What to Expect — Help/FAQ (comunidade e grupos por mês de nascimento). <https://www.whattoexpect.com/home/help-landing.aspx>
+- [46] What to Expect — Help/FAQ (community and birth month groups). <https://www.whattoexpect.com/home/help-landing.aspx>
 - [47] Mumsnet — Talk Guidelines. <https://www.mumsnet.com/i/netiquette>
 - [48] UK Parliament — Written Evidence Submitted by Mumsnet (OSB0031), Draft Online Safety Bill. <https://committees.parliament.uk/writtenevidence/39118/pdf/>
-- [49] Mumsnet — Webchats & Live Events (fórum de Q&A). <https://www.mumsnet.com/talk/mumsnet_live_events>
+- [49] Mumsnet — Webchats & Live Events (Q&A forum). <https://www.mumsnet.com/talk/mumsnet_live_events>
 - [50] TechCrunch (27/04/2021) — Social networking app for women, Peanut, adds live audio rooms. <https://techcrunch.com/2021/04/27/social-networking-app-for-women-peanut-adds-live-audio-rooms/>
 - [51] The Santa Clara Principles on Transparency and Accountability in Content Moderation (2.0). <https://santaclaraprinciples.org/>
 - [52] Niela-Vilén et al. (2014) — Internet-based peer support for parents: A systematic integrative review (Int J Nurs Stud). <https://www.sciencedirect.com/science/article/abs/pii/S0020748914001667>
 - [53] Salazar de Pablo & Scott (KCL, rev. out/2025) — Hazards of Online Advice for Parents of Young Children: A Scoping Review (preprint). <https://www.kcl.ac.uk/ioppn/assets/hazards-of-online-parenting-kcl-revision-9-october-2025-1-002.pdf>
 - [54] Fortune (28/04/2023) — Clubhouse cuts more than half its staff. <https://fortune.com/2023/04/28/clubhouse-layoffs-cuts-more-than-half-its-staff/>
-- [55] STF — Julgamentos de especial relevância 2025: responsabilidade de plataformas (art. 19 do Marco Civil), julgamento finalizado em 26/06/2025. <https://portal.stf.jus.br/textos/verTexto.asp?servico=jurisprudenciaPesquisaGeral&pagina=casos_notorios_2025>
-- [56] Ministério da Justiça — ECA Digital (Lei 15.211/2025). <https://www.gov.br/mj/pt-br/assuntos/sua-protecao/sedigi/eca-digital/eca-digital-1>
+- [55] STF — Rulings of special relevance 2025: platform liability (art. 19 of the Brazilian Internet Civil Rights Framework), ruling completed on 26/06/2025. <https://portal.stf.jus.br/textos/verTexto.asp?servico=jurisprudenciaPesquisaGeral&pagina=casos_notorios_2025>
+- [56] Ministry of Justice — ECA Digital (Law 15.211/2025). <https://www.gov.br/mj/pt-br/assuntos/sua-protecao/sedigi/eca-digital/eca-digital-1>
 - [57] Apple Support — Manage location metadata in Photos (Personal Safety User Guide). <https://support.apple.com/guide/personal-safety/manage-location-metadata-in-photos-ips0d7a5df82/web>
 - [58] AASM (Paruthi et al., J Clin Sleep Med 2016) — Recommended Amount of Sleep for Pediatric Populations. <https://aasm.org/resources/pdf/pediatricsleepdurationconsensus.pdf>
 - [59] AAP Center of Excellence on Social Media — Sharing Photos and Videos of Children on Social Media ('Sharenting'). <https://www.aap.org/en/patient-care/media-and-children/center-of-excellence-on-social-media-and-youth-mental-health/qa-portal/qa-portal-library/qa-portal-library-questions/sharing-photos-and-videos-of-children-on-social-media/>
-- [60] Ministério da Saúde/SAPS — Cadernetas e Cartões (lista de edições da Caderneta da Criança). <https://www.gov.br/saude/pt-br/composicao/saps/publicacoes/cadernetas-e-cartoes>
+- [60] Ministry of Health/SAPS — Handbooks and Cards (list of Child Health Handbook editions). <https://www.gov.br/saude/pt-br/composicao/saps/publicacoes/cadernetas-e-cartoes>
 - [61] CDC — Important Milestones: Your Baby By Four Months. <https://www.cdc.gov/act-early/milestones/4-months.html>
 - [62] CDC — Important Milestones: Your Baby By Six Months. <https://www.cdc.gov/act-early/milestones/6-months.html>
 
 ---
 
-## Questões abertas
+## Open questions
 
-1. **Idade mínima na comunidade:** exigir 18 anos ou mais, como o What to Expect [45], exclui mães e pais adolescentes. Como conciliar com o ECA Digital [56]? Fica com o agente de privacidade e o jurídico.
-2. **Categoria nas lojas:** "Parenting" ou "Social" no Google Play? A escolha define se a política de padrões de segurança infantil se aplica [3].
-3. **Operação:** quem modera no piloto, em que horário e com qual orçamento? Os prazos de 1h e 24h são viáveis?
-4. **Imagens:** entram só na etapa 2 (recomendação) ou o MVP precisa delas para o tummy time ser útil na comunidade?
-5. **Moderação por API de terceiros:** vale o ganho, considerando transferência internacional e contrato de tratamento? Qual provedor?
-6. **Conteúdo de sofrimento:** manter visível com recursos ou ocultar até a revisão? O roteiro precisa de profissional de saúde mental.
-7. **Profissionais:** verificação manual nos conselhos, remuneração de AMAs e limites éticos. O Código de Ética Médica (Res. CFM 2.217/2018) tem regras sobre consulta e prescrição por meios de comunicação; o portal do CFM não respondeu nesta sessão, e o texto precisa ser conferido.
-8. **Caderneta da Criança, 7ª edição revisada (2025):** conferir o texto sobre bebê de bruços e sono, que não foi acessado [60].
-9. **Guia de Intervenção Precoce:** saber se a versão final foi publicada e se mudou os 30 min/dia da minuta [18].
-10. **Licenças:** pedir permissão à AAP ou à Pathways, ou produzir tudo internamente? Quem revisa (pediatra, fisioterapeuta ou terapeuta ocupacional pediátrico) e com qual credencial?
-11. **Tempo no colo:** conta como tummy time no registro? Depende de revisão profissional, por causa da diferença de definição entre as fontes [10][21].
+1. **Minimum age in the community:** requiring users to be 18 or older, as What to Expect does [45], excludes teenage mothers and fathers. How can this be reconciled with the ECA Digital [56]? Left to the privacy agent and legal counsel.
+2. **Store category:** "Parenting" or "Social" on Google Play? The choice determines whether the child safety standards policy applies [3].
+3. **Operations:** who moderates in the pilot, during which hours and with what budget? Are the 1h and 24h deadlines feasible?
+4. **Images:** should they be included only in stage 2 (recommendation), or does the MVP need them for tummy time to be useful in the community?
+5. **Moderation through a third-party API:** is the benefit worthwhile, considering international transfer and a data processing agreement? Which provider?
+6. **Content about distress:** keep visible with resources or hide pending review? The script needs a mental health professional.
+7. **Professionals:** manual verification with professional councils, compensation for AMAs and ethical limits. The Code of Medical Ethics (CFM Resolution 2.217/2018) has rules on consultations and prescriptions through communication media; the CFM portal did not respond in this session, and the text needs to be checked.
+8. **Child Health Handbook, revised edition 7 (2025):** check the text on babies lying on their tummy and sleep, which was not accessed [60].
+9. **Early Intervention Guide:** find out whether the final version has been published and whether it changed the draft's 30 min/day [18].
+10. **Licenses:** request permission from AAP or Pathways, or produce everything internally? Who reviews it (pediatrician, physical therapist or pediatric occupational therapist) and with what credential?
+11. **Time being held:** does it count as tummy time in the record? Depends on professional review, because of the difference in definitions between sources [10][21].
 
-## Limites desta análise
+## Limits of this analysis
 
-- Fontes consultadas em 22/10/2026; páginas, políticas e preços mudam. Preços em USD, sem impostos nem câmbio.
-- Inacessíveis nesta sessão: PDFs do BVS/Ministério da Saúde (Caderneta da Criança 7ª edição e Guia de Atividade Física, bloqueio HTTP 503), portal do CFM (tempo esgotado) e páginas da BabyCenter (extração recusada; tema do agente de concorrentes). O Guia de Atividade Física foi lido pelo artigo da RBAFS que o descreve [19].
-- Na AAP 2022, o nível da recomendação de tummy time veio do texto extraído da Tabela 2 [23]; conferir no PDF formatado antes de citar a força da recomendação.
-- Esta nota não contém parecer jurídico. As teses do STF [55] e o ECA Digital [56] foram apenas sinalizados.
-- Esta nota não contém juízo clínico. Os números foram reportados como cada fonte os apresenta.
-- As evidências de produto vêm de documentação e imprensa (TechCrunch, Fortune), não de medição própria. O status atual dos Pods da Peanut não foi verificado.
-- A revisão do King's College [53] é preprint.
-- A recomendação de formato e as etapas são hipóteses: nenhuma pesquisa com cuidadores foi feita nesta etapa.
+- Sources accessed on 22/10/2026; pages, policies and prices change. Prices in USD, excluding taxes and currency conversion.
+- Inaccessible in this session: BVS/Ministry of Health PDFs (Child Health Handbook edition 7 and Physical Activity Guide, HTTP 503 block), CFM portal (timed out) and BabyCenter pages (extraction denied; topic assigned to the competitors agent). The Physical Activity Guide was read through the RBAFS article that describes it [19].
+- In AAP 2022, the tummy time recommendation level came from text extracted from Table 2 [23]; check the formatted PDF before citing the strength of the recommendation.
+- This note contains no legal opinion. The STF rulings [55] and the ECA Digital [56] were only flagged.
+- This note contains no clinical judgment. The numbers were reported as each source presents them.
+- Product evidence comes from documentation and the press (TechCrunch, Fortune), not from our own measurements. The current status of Peanut's Pods was not verified.
+- The King's College review [53] is a preprint.
+- The format recommendation and stages are hypotheses: no research with caregivers was conducted at this stage.

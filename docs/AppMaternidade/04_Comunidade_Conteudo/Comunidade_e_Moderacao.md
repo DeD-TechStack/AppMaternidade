@@ -1,7 +1,7 @@
 ---
 tipo: design-doc
-status: proposta
-responsavel: Hermes (coordenador da APP-001)
+status: proposal
+responsavel: Hermes (coordinator of APP-001)
 revisado_em: 2026-10-22
 tarefa: MAT-10
 adr: ADR-006, ADR-005
@@ -14,141 +14,141 @@ fontes_principais:
   - https://developer.apple.com/app-store/review/guidelines/
 ---
 
-# Comunidade e moderação
+# Community and moderation
 
-> Nota de 03/11/2026: o rumo mudou para site completo primeiro e port Android e iOS depois ([ADR-009](../06_ADRs/ADR-009_Site_Completo_Primeiro.md)). Onde este texto fala em app nativo, leia como o port; o site cobre as mesmas funções.
+> Note from 03/11/2026: the direction changed to a full website first and an Android and iOS port later ([ADR-009](../06_ADRs/ADR-009_Site_Completo_Primeiro.md)). Where this text refers to a native app, read it as the port; the website covers the same functions.
 
-Proposta de formato, regras e operação da comunidade do AppMaternidade, a partir da [pesquisa de comunidade e conteúdo](../08_Referencias/Pesquisa_Comunidade_e_Conteudo.md) e das fichas de concorrentes. Os números entre colchetes, como [1], remetem às fontes dessa pesquisa, consultadas em 22/10/2026. Os códigos F01 a F50 remetem à [pesquisa de privacidade, legal e lojas](../08_Referencias/Pesquisa_Privacidade_Legal_e_Lojas.md). Os códigos BC, KN e PN remetem às tabelas de fontes das fichas [BabyCenter](../08_Referencias/Concorrentes/BabyCenter.md), [Kinedu](../08_Referencias/Concorrentes/Kinedu.md) e [Peanut](../08_Referencias/Concorrentes/Peanut.md).
+Proposed format, rules and operation of the AppMaternidade community, based on the [community and content research](../08_Referencias/Pesquisa_Comunidade_e_Conteudo.md) and the competitor profiles. Numbers in square brackets, such as [1], refer to the sources of that research, consulted on 22/10/2026. The codes F01 to F50 refer to the [privacy, legal and app store research](../08_Referencias/Pesquisa_Privacidade_Legal_e_Lojas.md). The codes BC, KN and PN refer to the source tables in the [BabyCenter](../08_Referencias/Concorrentes/BabyCenter.md), [Kinedu](../08_Referencias/Concorrentes/Kinedu.md) and [Peanut](../08_Referencias/Concorrentes/Peanut.md) profiles.
 
-Tudo aqui é [HIP], salvo indicação: nada foi testado com usuários nem validado juridicamente.
+Everything here is [HIP] unless otherwise stated: nothing has been tested with users or legally validated.
 
-## 1. Problema
+## 1. Problem
 
-- **Por que ter comunidade.** Quem cuida de um bebê quer saber se "isso é normal" e trocar experiência, muitas vezes de madrugada e com uma mão. Nas fontes consultadas, não foi identificada comunidade no app em nenhum dos quatro rastreadores de rotina analisados ([Concorrentes e diferenciais](../01_Produto/Concorrentes_e_Diferenciais.md)).
-- **O valor tem condições.** O apoio entre pares pela internet oferece suporte emocional e informativo, mas a evidência de efetividade é inconclusiva [52]. Os riscos conhecidos são informação conflitante ou pouco confiável e o sentimento de inadequação diante de comparações [53].
-- **Dois limites fixos da task:**
-  - a comunidade não pode dar acesso à rotina privada de nenhuma criança;
-  - quem modera não lê dados de família.
-- **Exigências externas:** as lojas exigem filtro, denúncia, bloqueio e contato [1][2]. Depois do STF e dos decretos de 2026, há prazos curtos para alguns conteúdos [55; F18; F19; F20].
+- **Why have a community.** People caring for a baby want to know whether "isso é normal" and to exchange experiences, often in the middle of the night and with one hand. In the sources consulted, no in-app community was identified in any of the four routine trackers analyzed ([Competitors and differentiators](../01_Produto/Concorrentes_e_Diferenciais.md)).
+- **The value comes with conditions.** Online peer support offers emotional and informational support, but the evidence of effectiveness is inconclusive [52]. The known risks are conflicting or unreliable information and feelings of inadequacy in the face of comparisons [53].
+- **Two fixed limits of the task:**
+  - the community cannot provide access to any child's private routine;
+  - moderators do not read family data.
+- **External requirements:** the app stores require filtering, reporting, blocking and contact information [1][2]. Following the STF decision and the decrees of 2026, there are short deadlines for some content [55; F18; F19; F20].
 
-## 2. Formato proposto para o MVP
+## 2. Proposed format for the MVP
 
-**Fórum assíncrono de tópicos e respostas, em espaços curados pela equipe:**
+**Asynchronous forum of topics and replies, in spaces curated by the team:**
 
-- **Espaços:** sono, alimentação, banho, tummy time, organização da rotina, divisão dos cuidados e dificuldades do dia a dia ([Modelo de dados, 3.4](../03_Arquitetura/Modelo_de_Dados_e_Permissoes.md)).
-- **Tópicos:** cada um tem título, corpo e uma etiqueta opcional de faixa etária larga (0–3, 3–6, 6–12 meses).
-- **Respostas:** um nível de resposta a resposta, sem árvore profunda.
-- **Conteúdo fixado:** em cada espaço, um texto revisado pela equipe editorial ([Desenvolvimento e conteúdo](Desenvolvimento_e_Conteudo.md)).
-- **Busca** dentro da comunidade.
+- **Spaces:** sleep, feeding, bathing, tummy time, routine organization, division of care and day-to-day difficulties ([Data model, 3.4](../03_Arquitetura/Modelo_de_Dados_e_Permissoes.md)).
+- **Topics:** each has a title, a body and an optional broad age-range tag (0–3, 3–6, 6–12 months).
+- **Replies:** one level of reply-to-reply, with no deep tree.
+- **Pinned content:** in each space, a text reviewed by the editorial team ([Development and content](Desenvolvimento_e_Conteudo.md)).
+- **Search** within the community.
 
-**Fora do MVP:**
+**Outside the MVP:**
 
-- imagens, vídeo e áudio;
-- mensagem direta e chat;
-- salas ao vivo;
-- grupos por mês de nascimento;
-- selo de profissional verificado;
-- marcação "ajudou", ranking ou contagem pública de pessoas.
+- images, video and audio;
+- direct messages and chat;
+- live rooms;
+- birth-month groups;
+- verified professional badge;
+- "ajudou" marking, rankings or public people counts.
 
-**Por que este formato:**
+**Why this format:**
 
-- **Encaixa no uso real:** a pergunta das 3h recebe resposta de manhã e continua útil para a próxima pessoa [HIP; pesquisa 1.2].
-- **Moderação viável para equipe pequena:** a fila é assíncrona, com prazo, sem exigir alguém presente em tempo real [HIP].
-- **Só texto reduz os riscos mais graves:** fotos de crianças, localização em metadados [57][59] e conteúdo íntimo, que tem prazo de remoção de 2 horas [F19 art. 7º].
-- **Sem mensagem direta, menos assédio:** fecha o principal caminho de assédio e aliciamento, que nos recursos 1:1 exige bloqueio obrigatório [2] e que a Peanut mostra em relatos [Peanut](../08_Referencias/Concorrentes/Peanut.md).
+- **Fits real usage:** the 3h question gets an answer in the morning and remains useful for the next person [HIP; research 1.2].
+- **Moderation feasible for a small team:** the queue is asynchronous, with deadlines, and does not require someone present in real time [HIP].
+- **Text only reduces the most serious risks:** photos of children, location in metadata [57][59] and intimate content, which has a removal deadline of 2 hours [F19 art. 7º].
+- **No direct messages, less harassment:** closes the main path for harassment and grooming, which in 1:1 features requires mandatory blocking [2] and which Peanut illustrates in user reports [Peanut](../08_Referencias/Concorrentes/Peanut.md).
 
-## 3. Alternativas consideradas
+## 3. Alternatives considered
 
-| Formato | Ponto forte | Por que não no MVP |
+| Format | Strength | Why not in the MVP |
 | --- | --- | --- |
-| Grupos por mês de nascimento (BabyCenter) | Coorte natural em grande escala [BC10] | Com pouca gente, vira sala vazia; expõe o mês de nascimento; cada grupo precisa de responsável |
-| Chat em grupo em tempo real | Companhia imediata | Moderação quase em tempo real; histórico difícil de pesquisar; copia o que já existe em grupos de mensageria [HIP] |
-| Salas de áudio ao vivo (Peanut "Pods") | Acolhimento por voz | Mediador presente, treinamento próprio [50] e dano que não se filtra antes. **Não descartado:** fica como etapa 3 (seção 4) |
-| Comentários sob conteúdo (Kinedu) | Conversa contextual, de baixo custo | Bom complemento, mas sozinho não forma comunidade; o Kinedu não publica diretrizes [KN06]. Candidato à etapa 2 |
-| Sem comunidade no app, com link para grupos externos | Custo zero de moderação | Abandona o pilar e perde a separação de dados que o app pode garantir |
-| Software de fórum pronto (por exemplo, Discourse) | Funções maduras (níveis de confiança, sinalização) [40] | GPL v2 [38], integração por WebView ou API e outra base para separar da família; um módulo próprio mínimo parece mais coerente [HIP] |
+| Birth-month groups (BabyCenter) | Natural cohort at large scale [BC10] | With few people, it becomes an empty room; it exposes the birth month; each group needs someone in charge |
+| Real-time group chat | Immediate companionship | Near-real-time moderation; history hard to search; copies what already exists in messaging groups [HIP] |
+| Live audio rooms (Peanut "Pods") | Voice-based emotional support | A mediator present, dedicated training [50] and harm that cannot be filtered in advance. **Not ruled out:** remains as stage 3 (section 4) |
+| Comments under content (Kinedu) | Contextual, low-cost conversation | A good complement, but on its own it does not form a community; Kinedu does not publish guidelines [KN06]. Candidate for stage 2 |
+| No in-app community, with a link to external groups | Zero moderation cost | Abandons the pillar and loses the data separation the app can guarantee |
+| Off-the-shelf forum software (for example, Discourse) | Mature features (trust levels, flagging) [40] | GPL v2 [38], integration via WebView or API, and another database to separate from family data; a minimal in-house module seems more coherent [HIP] |
 
-A decisão está no [ADR-006](../06_ADRs/ADR-006_Comunidade_e_Moderacao.md).
+The decision is in [ADR-006](../06_ADRs/ADR-006_Comunidade_e_Moderacao.md).
 
-## 4. Evolução por etapas
+## 4. Phased evolution
 
-| Etapa | O que entra | Critério para avançar (limiares calibrados no piloto, não inventados agora) |
+| Stage | What is included | Criteria for advancing (thresholds calibrated in the pilot, not invented now) |
 | --- | --- | --- |
-| 0. Fundação (MAT-18, só se couber no prazo) | Perfil público separado, tópico e resposta, para provar a separação de dados. Sem moderação completa e sem painel ([Roadmap, seção 3](../07_Roadmap/Roadmap_e_Proxima_Fatia.md), item 8) | Teste que mostra que o módulo de comunidade não lê dados de família (Q-07; aceite A9) |
-| 1. MVP de comunidade (MAT-19) | Formato da seção 2, com regras publicadas, denúncia, bloqueio e silenciar, fila, ações graduais, apelação, auditoria e painel web mínimo de moderação | Tempo até a primeira resposta humana; tópicos sem resposta; prazo de moderação cumprido por semanas seguidas; denúncias por mil publicações; reversões em apelação; pedidos por imagens, fases ou conversa ao vivo |
-| 2. Expansão assíncrona | Imagens com salvaguardas; grupos por faixa larga, se houver volume; rodas assíncronas com anfitriã treinada; AMA assíncrono com profissional verificado | Moderação de imagem sem atraso; verificação de profissional funcionando; volume para grupos não ficarem vazios |
-| 3. Rodas ao vivo (áudio) | Salas agendadas e pequenas, com mediador presente, sem gravação por padrão | Demanda medida; equipe treinada para áudio; protocolo de crise em tempo real; custo por minuto orçado [43][44] |
-| 4. Mensagem direta | Só com demanda forte, com bloqueio desde o início | Risco de aliciamento e assédio mitigado; capacidade de moderação comprovada |
+| 0. Foundation (MAT-18, only if it fits the deadline) | Separate public profile, topic and reply, to prove data separation. No full moderation and no dashboard ([Roadmap, section 3](../07_Roadmap/Roadmap_e_Proxima_Fatia.md), item 8) | A test showing that the community module does not read family data (Q-07; acceptance A9) |
+| 1. Community MVP (MAT-19) | The format from section 2, with published rules, reporting, blocking and muting, a queue, graduated actions, appeals, auditing and a minimal web moderation dashboard | Time to first human reply; unanswered topics; moderation deadline met for consecutive weeks; reports per thousand posts; reversals on appeal; requests for images, phases or live conversation |
+| 2. Asynchronous expansion | Images with safeguards; broad-range groups, if there is enough volume; asynchronous circles with a trained host; asynchronous AMA with a verified professional | Image moderation without delays; professional verification working; enough volume that groups are not empty |
+| 3. Live circles (audio) | Small, scheduled rooms with a mediator present, no recording by default | Measured demand; team trained for audio; real-time crisis protocol; per-minute cost budgeted [43][44] |
+| 4. Direct messages | Only with strong demand, with blocking from the start | Grooming and harassment risk mitigated; moderation capacity proven |
 
-## 5. Identidade pública e fronteira com a família
+## 5. Public identity and the boundary with the family
 
-- **Perfil público:** a conta tem um perfil pseudônimo, com apelido único, avatar genérico e bio curta. Ele se liga à conta só no servidor e não carrega família, bebê nem registro ([ADR-005](../06_ADRs/ADR-005_Isolamento_e_Fronteira_Comunidade.md)).
-- **Faixa do bebê:** o aparelho sugere a faixa a partir da data de nascimento, e a pessoa escolhe se mostra. O servidor da comunidade recebe só a faixa escolhida, nunca a data ([Modelo de dados, 3.4](../03_Arquitetura/Modelo_de_Dados_e_Permissoes.md)).
-- **Nada entra automaticamente:** a rotina não vai para a comunidade por conta própria. Se a pessoa quiser contar algo ("ele dormiu 40 minutos"), ela escreve, ou escolhe um resumo e vê a prévia exata antes de publicar (Q-07; [Offline, S5](../03_Arquitetura/Offline_Sincronizacao_e_Temporizadores.md)).
-- **Permissões no banco:** o módulo de comunidade não tem permissão para ler os esquemas de família e cuidado ([Arquitetura proposta, 5.3](../03_Arquitetura/Arquitetura_Proposta.md)).
-- **Moderador:** é um papel de plataforma e não dá leitura de dados de cuidado ([Modelo de dados, 5.2](../03_Arquitetura/Modelo_de_Dados_e_Permissoes.md)).
-- **Fora da web aberta:** a comunidade fica dentro do app e não é indexada por buscadores. É o contrário do BabyCenter, onde os posts são indexáveis e ficam no ar depois que a conta é encerrada [BC06, BC11].
+- **Public profile:** the account has a pseudonymous profile, with a unique nickname, a generic avatar and a short bio. It is linked to the account only on the server and carries no family, baby or log data ([ADR-005](../06_ADRs/ADR-005_Isolamento_e_Fronteira_Comunidade.md)).
+- **Baby's age range:** the device suggests the range from the date of birth, and the person chooses whether to show it. The community server receives only the chosen range, never the date ([Data model, 3.4](../03_Arquitetura/Modelo_de_Dados_e_Permissoes.md)).
+- **Nothing gets in automatically:** the routine does not go to the community on its own. If the person wants to share something ("ele dormiu 40 minutos"), they write it, or they choose a summary and see the exact preview before publishing (Q-07; [Offline, S5](../03_Arquitetura/Offline_Sincronizacao_e_Temporizadores.md)).
+- **Database permissions:** the community module has no permission to read the family and care schemas ([Proposed architecture, 5.3](../03_Arquitetura/Arquitetura_Proposta.md)).
+- **Moderator:** a platform role that does not grant read access to care data ([Data model, 5.2](../03_Arquitetura/Modelo_de_Dados_e_Permissoes.md)).
+- **Off the open web:** the community stays inside the app and is not indexed by search engines. This is the opposite of BabyCenter, where posts are indexable and remain online after the account is closed [BC06, BC11].
 
-## 6. Regras da comunidade (resumo para a versão publicada)
+## 6. Community rules (summary for the published version)
 
-Aceite obrigatório antes da primeira publicação [2]. Texto curto em pt-BR, com exemplos.
+Mandatory acceptance before the first post [2]. Short text in pt-BR, with examples.
 
-1. Aqui se conta experiência, não se dá diagnóstico. Todo post nasce como "relato pessoal".
-2. Nada de indicar remédio, dose ou tratamento. Na dúvida, procure um profissional de saúde.
-3. Não exponha crianças nem outras pessoas: nada de nome completo, escola, endereço ou rotina de terceiros.
-4. Sem venda, troca ou propaganda, inclusive de remédios e de fórmula infantil (regra semelhante à do BabyCenter Brasil [BC11]).
-5. Respeito: sem ataque, assédio, discriminação ou pressão ("você deveria…").
-6. Sem print ou repostagem de conteúdo de outra pessoa sem permissão [PN06].
-7. Denúncia é para proteger. Denúncia usada como retaliação também vale como violação [PN06; F13 art. 32].
+1. This is a place to share experience, not to give diagnoses. Every post starts out as "relato pessoal".
+2. No recommending medicines, doses or treatments. When in doubt, see a health professional.
+3. Do not expose children or other people: no full names, schools, addresses or other people's routines.
+4. No selling, swapping or advertising, including medicines and infant formula (a rule similar to BabyCenter Brasil's [BC11]).
+5. Respect: no attacks, harassment, discrimination or pressure ("você deveria…").
+6. No screenshots or reposting of another person's content without permission [PN06].
+7. Reporting is for protection. Using reports as retaliation also counts as a violation [PN06; F13 art. 32].
 
-Cada espaço tem um aviso fixo de que a comunidade não é atendimento de saúde, com o caminho para os canais de crise [1].
+Each space has a pinned notice that the community is not a health service, with the path to crisis channels [1].
 
-## 7. Denúncia, bloqueio e silenciar
+## 7. Reporting, blocking and muting
 
-| Ação | Quem pode | Efeito para quem age | Efeito para o outro | Quem recebe |
+| Action | Who can | Effect for the person acting | Effect for the other person | Who receives it |
 | --- | --- | --- | --- | --- |
-| Denunciar tópico, resposta ou perfil | Qualquer conta | O item continua visível (ou fica oculto para quem denunciou, se ela quiser), com confirmação de recebimento | Nenhum aviso de quem denunciou | Fila de moderação; o motivo "risco de autolesão" segue a rota de crise (seção 9) |
-| Bloquear | Qualquer conta | Efeito imediato e mútuo: deixa de ver o conteúdo da outra pessoa e não pode responder a ela | Também deixa de ver o conteúdo de quem bloqueou e não pode responder nem mencionar; não é avisada | Ninguém; fica registrado |
-| Silenciar pessoa | Qualquer conta | Oculta o conteúdo, sem impedir interação | Nenhum | Ninguém |
-| Silenciar palavras | Qualquer conta | Oculta posts com os termos escolhidos (por exemplo, sobre perda gestacional) [PN14] | Nenhum | Ninguém |
-| "Estou preocupada com esta pessoa" | Qualquer conta | Envia um alerta de cuidado, não de punição [PN09] | A pessoa recebe recursos de apoio, sem saber quem enviou | Fila de moderação, como cuidado |
+| Report a topic, reply or profile | Any account | The item stays visible (or is hidden for the reporter, if they wish), with confirmation of receipt | No notice of who reported | Moderation queue; the "risco de autolesão" reason follows the crisis route (section 9) |
+| Block | Any account | Immediate and mutual effect: stops seeing the other person's content and cannot reply to them | Also stops seeing the blocker's content and cannot reply to or mention them; is not notified | No one; it is logged |
+| Mute a person | Any account | Hides their content, without preventing interaction | None | No one |
+| Mute words | Any account | Hides posts containing the chosen terms (for example, about pregnancy loss) [PN14] | None | No one |
+| "Estou preocupada com esta pessoa" | Any account | Sends a care alert, not a punishment [PN09] | The person receives support resources, without knowing who sent it | Moderation queue, as a care matter |
 
-Motivos de denúncia: ataque ou assédio; informação de saúde perigosa; conteúdo sexual; exposição de criança; dados pessoais; spam ou venda; risco de autolesão; outro [pesquisa 1.4]. Logo depois de denunciar, o app oferece bloquear, silenciar ou sair do tópico [PN09].
+Report reasons: attack or harassment; dangerous health information; sexual content; exposure of a child; personal data; spam or selling; risk of self-harm; other [research 1.4]. Right after reporting, the app offers to block, mute or leave the topic [PN09].
 
-## 8. Fila, ações, apelação e auditoria
+## 8. Queue, actions, appeals and auditing
 
-**Prioridades da fila:**
+**Queue priorities:**
 
-1. Risco de vida e conteúdo envolvendo criança.
-2. Assédio e dados pessoais.
-3. Desinformação e spam.
+1. Risk to life and content involving children.
+2. Harassment and personal data.
+3. Misinformation and spam.
 
-O moderador vê o conteúdo, o perfil público e o histórico de moderação daquele perfil, nunca dados de família.
+The moderator sees the content, the public profile and that profile's moderation history, never family data.
 
-**Ações, em ordem gradual:**
+**Actions, in graduated order:**
 
-1. Ocultar até a análise.
-2. Remover.
-3. Advertir.
-4. Somente leitura temporária.
-5. Suspender.
-6. Banir.
+1. Hide pending review.
+2. Remove.
+3. Warn.
+4. Temporary read-only.
+5. Suspend.
+6. Ban.
 
-Cada ação informa ao autor a regra aplicada e o trecho afetado [51].
+Each action informs the author of the rule applied and the affected excerpt [51].
 
-**Apelação:** um pedido por ação, analisado por outra pessoa sempre que possível, com prazo publicado [51; 55].
+**Appeals:** one request per action, reviewed by a different person whenever possible, with a published deadline [51; 55].
 
-**Auditoria:** registro imutável de quem agiu, quando, com qual regra, qual ação e sobre qual versão do conteúdo. O acesso é restrito e a retenção está em [Privacidade e segurança, 8](../05_Privacidade_Operacao/Privacidade_e_Seguranca.md). A auditoria alimenta o relatório anual de transparência [55; F20].
+**Auditing:** an immutable record of who acted, when, under which rule, with which action and on which version of the content. Access is restricted and retention is covered in [Privacy and security, 8](../05_Privacidade_Operacao/Privacidade_e_Seguranca.md). The audit log feeds the annual transparency report [55; F20].
 
-**Filtros automáticos:**
+**Automatic filters:**
 
-- lista de termos em pt-BR, inclusive de crise;
-- limite de publicações por hora;
-- links bloqueados e primeiras publicações revisadas antes de aparecer, para contas novas [40].
+- a list of terms in pt-BR, including crisis terms;
+- a limit on posts per hour;
+- blocked links and first posts reviewed before they appear, for new accounts [40].
 
-Moderação por API externa só depois de revisão de privacidade e contrato, e nunca como decisão final sozinha [pesquisa 1.8].
+Moderation via an external API only after a privacy and contract review, and never as the sole final decision [research 1.8].
 
-Fluxo:
+Flow:
 
 ```mermaid
 flowchart LR
@@ -165,90 +165,90 @@ flowchart LR
   F -.-> L
 ```
 
-## 9. Crise e conteúdos graves
+## 9. Crisis and serious content
 
-**Canais oficiais, confirmados em 22/10/2026:**
+**Official channels, confirmed on 22/10/2026:**
 
-| Canal | Quando usar | Fonte |
+| Channel | When to use | Source |
 | --- | --- | --- |
-| CVV 188 | Sofrimento emocional e ideação suicida; atende por ligação, chat e e-mail | [4][5] |
-| SAMU 192 | Urgência de saúde | [6] |
-| Ligue 180 | Violência contra a mulher | [9] |
-| Disque 100 | Violação de direitos de crianças e adolescentes | [8] |
+| CVV 188 | Emotional distress and suicidal ideation; available by phone call, chat and email | [4][5] |
+| SAMU 192 | Health emergency | [6] |
+| Ligue 180 | Violence against women | [9] |
+| Disque 100 | Violations of the rights of children and adolescents | [8] |
 
-**Comportamento proposto:**
+**Proposed behavior:**
 
-1. **Gatilhos:** denúncia com motivo "risco de autolesão", termos de crise ou alerta "estou preocupada".
-2. **Para quem escreveu:** mensagem de acolhimento, sem julgamento e sem diagnóstico, com os canais acima. Ela nunca diz que o conteúdo "violou regras". A depressão pós-parto "não é uma falha de caráter ou uma fraqueza" e também acontece com homens [7].
-3. **Visibilidade:**
-   - relato de sofrimento sem risco imediato continua visível, com os recursos fixados abaixo;
-   - conteúdo que induz ou instrui autolesão é removido na hora [55].
-4. **Fora do horário coberto:** o conteúdo com gatilho fica oculto do público, o autor continua vendo o próprio post e recebe os recursos, e a revisão acontece na abertura do turno.
-5. **Roteiro escrito com profissional de saúde mental:** os moderadores não são clínicos.
+1. **Triggers:** a report with the reason "risco de autolesão", crisis terms or a "estou preocupada" alert.
+2. **For the person who wrote it:** a supportive message, without judgment and without diagnosis, with the channels above. It never says that the content "violou regras". Postpartum depression "não é uma falha de caráter ou uma fraqueza" and also happens to men [7].
+3. **Visibility:**
+   - an account of distress without immediate risk stays visible, with the resources pinned below it;
+   - content that induces or instructs self-harm is removed immediately [55].
+4. **Outside covered hours:** content with a trigger is hidden from the public, the author can still see their own post and receives the resources, and the review happens when the shift opens.
+5. **Script written with a mental health professional:** the moderators are not clinicians.
 
-**Conteúdo sexual envolvendo criança:**
+**Sexual content involving children:**
 
-- remoção imediata;
-- preservação da evidência conforme orientação jurídica;
-- comunicação às autoridades [55; F13 art. 27; F15 arts. 36 a 39].
+- immediate removal;
+- preservation of evidence according to legal guidance;
+- reporting to the authorities [55; F13 art. 27; F15 arts. 36 to 39].
 
-Esse material nunca vai para API de moderação de terceiros [32]. O fluxo é próprio, separado da moderação comum, e é ensaiado antes do piloto.
+This material never goes to a third-party moderation API [32]. The flow is in-house, separate from regular moderation, and is rehearsed before the pilot.
 
-**Prazos legais curtos** (conferir com o jurídico):
+**Short legal deadlines** (to be checked with legal):
 
-- conteúdo íntimo não autorizado: 2 horas [F19 art. 7º];
-- crimes graves contra crianças e induzimento à autolesão: remoção imediata [55];
-- demais prazos, de 6 h e 24 h, conforme o tipo [F17; F19].
+- non-consensual intimate content: 2 hours [F19 art. 7º];
+- serious crimes against children and inducement to self-harm: immediate removal [55];
+- other deadlines, of 6 h and 24 h, depending on the type [F17; F19].
 
-Só texto no MVP reduz, mas não elimina, a exposição a esses prazos.
+Text only in the MVP reduces, but does not eliminate, exposure to these deadlines.
 
-## 10. Operação no MVP
+## 10. Operations in the MVP
 
-| Item | Proposta | Situação |
+| Item | Proposal | Status |
 | --- | --- | --- |
-| Quem modera | Equipe do produto mais uma ou duas pessoas treinadas em meio período; sem voluntários no começo; sem acesso a dados de família | Custo de pessoas: decisão D5 |
-| Prazos | Crise e criança: triagem em até 1 hora dentro do horário coberto. Demais denúncias: até 24 horas | Hipóteses a calibrar no piloto |
-| Horário coberto | Publicado (por exemplo, todos os dias, das 8h às 22h); fora dele valem as regras automáticas da seção 9 | A definir |
-| Ferramentas | Painel web com fila, contexto, ações, histórico do autor, modelos de mensagem, auditoria e exportação de evidência | Parte da MAT-19 ([ADR-001](../06_ADRs/ADR-001_Plataformas_e_Web.md): web como painel interno) |
-| Métricas | Tempo até a primeira ação; volume por motivo; reversões em apelação; tópicos sem resposta; tempo até a primeira resposta humana | Painel interno |
-| Transparência | Relatório periódico simples; relatório anual exigido pela tese do STF [55; F20] | Formato a definir |
+| Who moderates | The product team plus one or two trained part-time people; no volunteers at the start; no access to family data | Staffing cost: decision D5 |
+| Deadlines | Crisis and children: triage within 1 hour during covered hours. Other reports: within 24 hours | Hypotheses to calibrate in the pilot |
+| Covered hours | Published (for example, every day, from 8h to 22h); outside them, the automatic rules in section 9 apply | To be defined |
+| Tools | Web dashboard with queue, context, actions, author history, message templates, audit log and evidence export | Part of MAT-19 ([ADR-001](../06_ADRs/ADR-001_Plataformas_e_Web.md): web as an internal dashboard) |
+| Metrics | Time to first action; volume by reason; reversals on appeal; unanswered topics; time to first human reply | Internal dashboard |
+| Transparency | Simple periodic report; annual report required by the STF's legal thesis [55; F20] | Format to be defined |
 
-Para comparação, o Mumsnet declarou moderação profissional 7 dias por semana, com tempo médio de resposta de 1h26 [48]. O MVP não chega a esse nível. A compensação vem de quatro medidas: horário publicado, ocultação automática fora do turno, revisão prévia das contas novas e ausência de tempo real.
+For comparison, Mumsnet reported professional moderation 7 days a week, with an average response time of 1h26 [48]. The MVP does not reach that level. This is offset by four measures: published hours, automatic hiding outside the shift, prior review of new accounts and the absence of real-time features.
 
-## 11. Exclusão e retenção
+## 11. Deletion and retention
 
-- Quando a conta é excluída, posts e respostas do autor são apagados. Os tópicos de outras pessoas ficam com "[removido]" no lugar da resposta [F24].
-- Retém-se só o necessário por obrigação legal (registros de acesso, relatórios de abuso, ordem judicial), isolado e com prazo ([Privacidade e segurança, 7 e 8](../05_Privacidade_Operacao/Privacidade_e_Seguranca.md)).
-- Um conteúdo removido por moderação sai da busca e das listas na hora. A versão fica só na auditoria.
+- When the account is deleted, the author's posts and replies are erased. Other people's topics show "[removido]" in place of the reply [F24].
+- Only what is required by legal obligation is retained (access logs, abuse reports, court orders), isolated and time-limited ([Privacy and security, 7 and 8](../05_Privacidade_Operacao/Privacidade_e_Seguranca.md)).
+- Content removed by moderation leaves search and listings immediately. The version remains only in the audit log.
 
-## 12. Lojas
+## 12. App stores
 
-- **Apple 1.2:** filtro de material ofensivo, denúncia com resposta em tempo hábil, bloqueio e contato publicado. O desenvolvedor responde por remover conteúdo que viole as regras [1].
-- **Google Play, UGC:** aceite dos termos antes de publicar, definição do proibido, moderação contínua, denúncia e bloqueio dentro do app [2].
-- **Google Play, padrões de segurança infantil:** valem para as categorias "Social" e "Dating" [3]. A categoria proposta é "Parenting" [HIP], mas adotar os padrões mesmo assim é prudente.
+- **Apple 1.2:** a filter for objectionable material, reporting with a timely response, blocking and published contact information. The developer is responsible for removing content that violates the rules [1].
+- **Google Play, UGC:** acceptance of the terms before posting, a definition of what is prohibited, ongoing moderation, and in-app reporting and blocking [2].
+- **Google Play, child safety standards:** these apply to the "Social" and "Dating" categories [3]. The proposed category is "Parenting" [HIP], but adopting the standards anyway is prudent.
 
-## 13. Cenários de validação
+## 13. Validation scenarios
 
-| Cenário | O que precisa acontecer | Onde é testado |
+| Scenario | What must happen | Where it is tested |
 | --- | --- | --- |
-| Q-07 Publicar e ler | Nenhum acesso à família; resumo de rotina só com prévia e confirmação | [Qualidade e validação](../05_Privacidade_Operacao/Qualidade_e_Validacao.md); MAT-18 e MAT-19 |
-| Q-11 Denunciar, bloquear, excluir | Visibilidade conforme as seções 7, 8 e 11; ação registrada | Idem |
-| Crise | Mensagem de apoio, ocultação fora do turno e revisão no turno | Ensaio com dados fictícios antes do piloto |
+| Q-07 Post and read | No access to the family; routine summary only with preview and confirmation | [Quality and validation](../05_Privacidade_Operacao/Qualidade_e_Validacao.md); MAT-18 and MAT-19 |
+| Q-11 Report, block, delete | Visibility as described in sections 7, 8 and 11; action logged | Same |
+| Crisis | Support message, hiding outside the shift and review during the shift | Rehearsal with fictitious data before the pilot |
 
-## 14. Questões abertas
+## 14. Open questions
 
-1. Idade mínima: 18+ no MVP (decisão D4)? Mães e pais adolescentes ficariam fora.
-2. Horário de moderação e quem cobre: decisão D5.
-3. Haverá espaço próprio para perda gestacional e luto, com regras e moderação específicas?
-4. Que categoria declarar na Google Play?
-5. Quem escreve o roteiro de crise com profissional de saúde mental?
+1. Minimum age: 18+ in the MVP (decision D4)? Teenage mothers and fathers would be left out.
+2. Moderation hours and who covers them: decision D5.
+3. Will there be a dedicated space for pregnancy loss and grief, with specific rules and moderation?
+4. Which category should be declared on Google Play?
+5. Who writes the crisis script with a mental health professional?
 
-## Limites desta análise
+## Limits of this analysis
 
-- Proposta sem teste com usuários, sem validação jurídica e sem roteiro clínico.
-- Prazos e métricas são hipóteses para calibrar no piloto.
-- Documento escrito pelo coordenador, porque o redator delegado parou por falta de resposta do provedor.
+- A proposal without user testing, without legal validation and without a clinical script.
+- Deadlines and metrics are hypotheses to calibrate in the pilot.
+- Document written by the coordinator, because the delegated writer stopped due to a lack of response from the provider.
 
-## Relação com outros documentos
+## Relationship to other documents
 
-[ADR-006](../06_ADRs/ADR-006_Comunidade_e_Moderacao.md) · [ADR-005](../06_ADRs/ADR-005_Isolamento_e_Fronteira_Comunidade.md) · [Fluxos e telas, 3.5 e 4.9](../02_Experiencia/Fluxos_e_Telas.md) · [Modelo de dados e permissões](../03_Arquitetura/Modelo_de_Dados_e_Permissoes.md) · [Privacidade e segurança](../05_Privacidade_Operacao/Privacidade_e_Seguranca.md) · [Custos e operação](../05_Privacidade_Operacao/Custos_e_Operacao.md) · [Desenvolvimento e conteúdo](Desenvolvimento_e_Conteudo.md) · [Pesquisa de comunidade e conteúdo](../08_Referencias/Pesquisa_Comunidade_e_Conteudo.md)
+[ADR-006](../06_ADRs/ADR-006_Comunidade_e_Moderacao.md) · [ADR-005](../06_ADRs/ADR-005_Isolamento_e_Fronteira_Comunidade.md) · [Flows and screens, 3.5 and 4.9](../02_Experiencia/Fluxos_e_Telas.md) · [Data model and permissions](../03_Arquitetura/Modelo_de_Dados_e_Permissoes.md) · [Privacy and security](../05_Privacidade_Operacao/Privacidade_e_Seguranca.md) · [Costs and operations](../05_Privacidade_Operacao/Custos_e_Operacao.md) · [Development and content](Desenvolvimento_e_Conteudo.md) · [Community and content research](../08_Referencias/Pesquisa_Comunidade_e_Conteudo.md)

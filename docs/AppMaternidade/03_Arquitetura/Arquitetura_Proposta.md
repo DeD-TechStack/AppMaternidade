@@ -1,26 +1,26 @@
 ---
 tipo: design-doc
-status: proposta
-responsavel: Hermes (coordenador da APP-001)
+status: proposed
+responsavel: Hermes (coordinator of APP-001)
 revisado_em: 2026-10-22
 tarefa: MAT-7, MAT-15
 adr: ADR-002, ADR-003, ADR-004, ADR-005
 fontes_principais:
   - 03_Arquitetura/Comparacao_de_Arquiteturas.md
-  - https://docs.powersync.com/handling-writes/writing-client-changes (consulta 22/10/2026)
-  - https://docs.powersync.com/handling-writes/handling-update-conflicts (consulta 22/10/2026)
-  - https://docs.powersync.com/sync/rules/parameter-queries (consulta 22/10/2026)
-  - https://docs.powersync.com/architecture/powersync-protocol (consulta 22/10/2026)
-  - https://supabase.com/docs/guides/database/postgres/row-level-security (consulta 22/10/2026)
+  - https://docs.powersync.com/handling-writes/writing-client-changes (accessed 22/10/2026)
+  - https://docs.powersync.com/handling-writes/handling-update-conflicts (accessed 22/10/2026)
+  - https://docs.powersync.com/sync/rules/parameter-queries (accessed 22/10/2026)
+  - https://docs.powersync.com/architecture/powersync-protocol (accessed 22/10/2026)
+  - https://supabase.com/docs/guides/database/postgres/row-level-security (accessed 22/10/2026)
 ---
 
-# Arquitetura proposta
+# Proposed architecture
 
-> Nota de 03/11/2026: o rumo mudou para site completo primeiro e port Android e iOS depois ([ADR-009](../06_ADRs/ADR-009_Site_Completo_Primeiro.md)). Onde este texto fala em app nativo, leia como o port; o site cobre as mesmas funções.
+> Note from 03/11/2026: the direction changed to a full website first and an Android and iOS port later ([ADR-009](../06_ADRs/ADR-009_Site_Completo_Primeiro.md)). Where this text refers to a native app, read it as the port; the website covers the same functions.
 
-Proposta do Hermes, derivada da recomendação em [Comparação de arquiteturas](Comparacao_de_Arquiteturas.md). Não foi aprovada nem construída. Descreve fronteiras, responsabilidades, interfaces e o caminho dos dados; regras de negócio estão em [Modelo de dados e permissões](Modelo_de_Dados_e_Permissoes.md) e [Offline, sincronização e temporizadores](Offline_Sincronizacao_e_Temporizadores.md), que valem para qualquer conjunto.
+Hermes's proposal, derived from the recommendation in [Architecture comparison](Comparacao_de_Arquiteturas.md). It has not been approved or built. It describes boundaries, responsibilities, interfaces and the data path; business rules are in [Data model and permissions](Modelo_de_Dados_e_Permissoes.md) and [Offline, synchronization and timers](Offline_Sincronizacao_e_Temporizadores.md), which apply to any set.
 
-## 1. Visão geral
+## 1. Overview
 
 ```mermaid
 flowchart LR
@@ -55,77 +55,77 @@ flowchart LR
   SVC --> PUSH
 ```
 
-Princípio central: **o aparelho propõe, o serviço de domínio decide.** O PowerSync transporta dados (fila de envio e download por família), mas nenhuma regra de negócio mora nele. Toda escrita em dados de cuidado passa pelo serviço; os clientes não escrevem direto no banco.
+Core principle: **the device proposes, the domain service decides.** PowerSync transports data (upload queue and per-family download), but no business rule lives in it. Every write to care data goes through the service; clients do not write directly to the database.
 
-## 2. Responsabilidades
+## 2. Responsibilities
 
-| Componente | Responsável por | Não faz |
+| Component | Responsible for | Does not |
 | --- | --- | --- |
-| App (React Native + Expo) | Telas; gravação local na mesma transação da fila; estados visíveis (aguardando envio, sincronizado, conflito, não enviado); cronômetro derivado do início gravado; Live Activity e notificação com cronômetro; licença local de 14 dias por família | Decidir permissão; resolver conflito sozinho; guardar dados de outra família |
-| SQLite local (PowerSync + op-sqlite) | Cópia dos dados das famílias com vínculo ativo; fila durável de envio; tabelas só locais (resultado de cada operação, rascunhos) | Ser fonte de verdade final |
-| PowerSync Cloud | Entregar a cada aparelho só os dados das famílias em que a pessoa tem vínculo ativo (Sync Streams); remover do aparelho o que sai do escopo; encaminhar a fila ao serviço | Validar escritas: os Sync Streams "do not apply to uploaded data" (https://docs.powersync.com/integrations/supabase/rls-and-sync-streams) |
-| Serviço de domínio | Autoridade de escrita: idempotência, vínculo atual, validação, versão-base, conflitos, histórico; convites e papéis; comunidade online; moderação; publicação de conteúdo; exportação e exclusão; push; auditoria | Expor dados de cuidado à comunidade ou ao painel |
-| PostgreSQL (Supabase) | Fonte de verdade; restrições únicas; transações; RLS como defesa em profundidade | Aceitar escrita direta dos apps em tabelas de cuidado |
-| Supabase Auth | Contas, código de uso único por e-mail, emissão de JWT curto | Autorizar acesso a família (isso é o vínculo no banco) |
-| Painel interno | Fila de denúncias, ações de moderação, conteúdo editorial, suporte limitado, com MFA e auditoria | Ler dados de cuidado |
-| Site estático | Apresentação, política, termos, regras da comunidade, pedido de exclusão de conta, contato | Login de usuários |
+| App (React Native + Expo) | Screens; local write in the same transaction as the queue; visible states (awaiting upload, synced, conflict, not sent); timer derived from the recorded start; Live Activity and notification with timer; local lease of 14 days per family | Decide permissions; resolve conflicts on its own; store another family's data |
+| Local SQLite (PowerSync + op-sqlite) | Copy of the data of families with an active membership; durable upload queue; local-only tables (result of each operation, drafts) | Act as the final source of truth |
+| PowerSync Cloud | Deliver to each device only the data of the families in which the person has an active membership (Sync Streams); remove from the device whatever leaves scope; forward the queue to the service | Validate writes: Sync Streams "do not apply to uploaded data" (https://docs.powersync.com/integrations/supabase/rls-and-sync-streams) |
+| Domain service | Write authority: idempotency, current membership, validation, base version, conflicts, history; invitations and roles; online community; moderation; content publishing; export and deletion; push; auditing | Expose care data to the community or the dashboard |
+| PostgreSQL (Supabase) | Source of truth; unique constraints; transactions; RLS as defense in depth | Accept direct writes from the apps to care tables |
+| Supabase Auth | Accounts, one-time code by email, issuance of short-lived JWTs | Authorize access to a family (that is the membership in the database) |
+| Internal dashboard | Report queue, moderation actions, editorial content, limited support, with MFA and auditing | Read care data |
+| Static website | Presentation, policy, terms, community rules, account deletion request, contact | User login |
 
-## 3. Módulos do serviço de domínio
+## 3. Domain service modules
 
-Um processo só (monólito modular), com módulos de fronteira clara. Cada módulo usa um papel de banco próprio, para que a separação valha também no banco, e não só no código.
+A single process (modular monolith), with clearly bounded modules. Each module uses its own database role, so that the separation holds in the database too, and not only in the code.
 
-| Módulo | Dados que escreve | Papel de banco proposto | Lê |
+| Module | Data it writes | Proposed database role | Reads |
 | --- | --- | --- | --- |
-| Identidade | Contas, dispositivos, tokens de push | `svc_identidade` | — |
-| Família | Famílias, vínculos (com época), convites, bebês | `svc_familia` | Identidade |
-| Cuidado | Registros, segmentos, notas, histórico de alterações, operações processadas, propostas pendentes | `svc_cuidado` | Família (vínculo atual) |
-| Comunidade | Perfis públicos, espaços, tópicos, respostas, denúncias, bloqueios | `svc_comunidade`, **sem permissão nenhuma nas tabelas de cuidado e de família** | Identidade (só a ligação conta ↔ perfil, no servidor) |
-| Moderação e operação | Ações de moderação, papéis de plataforma, auditoria | `svc_operacao`, sem permissão nas tabelas de cuidado | Comunidade |
-| Conteúdo | Conteúdos e versões | `svc_conteudo` | — |
-| Privacidade | Pedidos de exportação e exclusão, expurgo, lista de exclusões | `svc_privacidade` (permissão de apagar, com auditoria) | Todos, no escopo do pedido |
-| Notificações | Fila de envio de push | `svc_notificacoes` | Vínculos ativos e tokens |
+| Identity | Accounts, devices, push tokens | `svc_identidade` | — |
+| Family | Families, memberships (with epoch), invitations, babies | `svc_familia` | Identity |
+| Care | Records, segments, notes, change history, processed operations, pending proposals | `svc_cuidado` | Family (current membership) |
+| Community | Public profiles, spaces, topics, replies, reports, blocks | `svc_comunidade`, **with no permission at all on the care and family tables** | Identity (only the account ↔ profile link, on the server) |
+| Moderation and operations | Moderation actions, platform roles, auditing | `svc_operacao`, with no permission on the care tables | Community |
+| Content | Content items and versions | `svc_conteudo` | — |
+| Privacy | Export and deletion requests, purge, deletion list | `svc_privacidade` (delete permission, with auditing) | All, within the scope of the request |
+| Notifications | Push delivery queue | `svc_notificacoes` | Active memberships and tokens |
 
-Esquemas de banco correspondentes: `identidade`, `familia`, `cuidado`, `comunidade`, `operacao`, `conteudo`. O papel de replicação do PowerSync lê só `familia`, `cuidado` e o necessário de `conteudo`. Os papéis expostos aos apps pela API automática do Supabase não recebem permissão de escrita em nenhum desses esquemas; a RLS fica ligada e negando por padrão, como defesa em profundidade (o papel `service_role` ignora RLS e fica só no servidor: https://supabase.com/docs/guides/database/postgres/row-level-security).
+Corresponding database schemas: `identidade`, `familia`, `cuidado`, `comunidade`, `operacao`, `conteudo`. The PowerSync replication role reads only `familia`, `cuidado` and what is needed from `conteudo`. The roles exposed to the apps through Supabase's automatic API receive no write permission on any of these schemas; RLS stays enabled and denying by default, as defense in depth (the `service_role` role bypasses RLS and stays on the server only: https://supabase.com/docs/guides/database/postgres/row-level-security).
 
 ## 4. Interfaces
 
-### 4.1 Envio da fila (escrita de cuidado)
+### 4.1 Queue upload (care writes)
 
-- O app grava no SQLite local; o PowerSync põe a mudança na fila de envio. Cada linha alterada leva `op_id` (UUIDv7 gerado no aparelho) e, em edições, `versao_base` (a versão que o aparelho conhecia).
-- O conector `uploadData()` do app envia a fila em lote para `POST /v1/sync/operacoes` com o JWT da sessão.
-- O serviço processa cada operação numa transação: deduplica por `op_id`; confere o vínculo atual (estado, papel, validade, época); valida; compara a versão-base; aplica, mescla ou grava proposta pendente; registra o histórico; sobe a versão.
-- Resposta HTTP 200 com um resultado por operação: `aplicada`, `mesclada`, `ja_processada`, `conflito` ou `rejeitada` (com motivo: `sem_permissao`, `vinculo_encerrado`, `validacao`, `registro_excluido`). A documentação do PowerSync pede que erros de validação ou conflito voltem como 2xx com detalhe, porque 4xx bloqueia a fila, e reserva 5xx para falhas temporárias (https://docs.powersync.com/handling-writes/writing-client-changes).
-- O conector grava os resultados numa tabela só local, que alimenta os estados "não enviado" e "precisa de revisão" na tela.
-- As propostas pendentes de conflito descem pelo sync para todos os cuidadores da família, para que qualquer um com permissão resolva.
+- The app writes to the local SQLite; PowerSync puts the change in the upload queue. Each changed row carries `op_id` (UUIDv7 generated on the device) and, for edits, `versao_base` (the version the device knew).
+- The app's `uploadData()` connector sends the queue in batches to `POST /v1/sync/operacoes` with the session JWT.
+- The service processes each operation in a transaction: deduplicates by `op_id`; checks the current membership (status, role, validity, epoch); validates; compares the base version; applies, merges or stores a pending proposal; records the history; bumps the version.
+- HTTP 200 response with one result per operation: `aplicada`, `mesclada`, `ja_processada`, `conflito` or `rejeitada` (with a reason: `sem_permissao`, `vinculo_encerrado`, `validacao`, `registro_excluido`). The PowerSync documentation asks that validation or conflict errors come back as 2xx with details, because 4xx blocks the queue, and reserves 5xx for temporary failures (https://docs.powersync.com/handling-writes/writing-client-changes).
+- The connector writes the results to a local-only table, which feeds the "não enviado" and "precisa de revisão" states on screen.
+- Pending conflict proposals come down through sync to all of the family's caregivers, so that anyone with permission can resolve them.
 
-### 4.2 Download (leitura de cuidado)
+### 4.2 Download (care reads)
 
-- Sync Streams por usuário: vínculos ativos da pessoa e, para cada família com vínculo ativo, bebês, registros (janela proposta de 90 dias), segmentos, notas, membros e propostas pendentes.
-- O parâmetro de família vem de consulta à tabela de vínculos, não de claim no token; apagar ou revogar o vínculo tira a família dos buckets e o cliente remove as linhas na sincronização seguinte (https://docs.powersync.com/sync/rules/parameter-queries, https://docs.powersync.com/architecture/powersync-protocol).
-- Registros mais antigos que a janela: consulta online ao serviço, sob demanda.
+- Per-user Sync Streams: the person's active memberships and, for each family with an active membership, babies, records (proposed window of 90 days), segments, notes, members and pending proposals.
+- The family parameter comes from a query on the memberships table, not from a token claim; deleting or revoking the membership removes the family from the buckets, and the client removes the rows on the next sync (https://docs.powersync.com/sync/rules/parameter-queries, https://docs.powersync.com/architecture/powersync-protocol).
+- Records older than the window: online query to the service, on demand.
 
-### 4.3 API online do serviço
+### 4.3 Online service API
 
-| Grupo | Exemplos de rota | Observação |
+| Group | Example routes | Notes |
 | --- | --- | --- |
-| Conta e dispositivo | registrar dispositivo e token de push; preferências; pedir exportação; pedir exclusão | Exclusão também pelo site (exigência do Google Play) |
-| Família | criar família; cadastrar bebê; criar convite; aceitar convite; mudar papel; revogar; sair; transferir responsabilidade | Ações de segurança só online |
-| Comunidade | espaços; tópicos; respostas; denunciar; bloquear; silenciar; meu perfil público | Online; rascunho local só no aparelho |
-| Conteúdo | pacote de conteúdo por versão e lista de retirada | Formato definido em [Desenvolvimento e conteúdo](../04_Comunidade_Conteudo/Desenvolvimento_e_Conteudo.md); usar um stream global do PowerSync é alternativa a medir na prova |
-| Operação (painel) | fila de denúncias; ações; auditoria; publicação editorial | Papel de plataforma, MFA, trilha de auditoria |
+| Account and device | register device and push token; preferences; request export; request deletion | Deletion also via the website (Google Play requirement) |
+| Family | create family; register baby; create invitation; accept invitation; change role; revoke; leave; transfer responsibility | Security actions online only |
+| Community | spaces; topics; replies; report; block; mute; my public profile | Online; local draft on the device only |
+| Content | content package by version and withdrawal list | Format defined in [Development and content](../04_Comunidade_Conteudo/Desenvolvimento_e_Conteudo.md); using a global PowerSync stream is an alternative to be measured in the proof of concept |
+| Operations (dashboard) | report queue; actions; audit; editorial publishing | Platform role, MFA, audit trail |
 
-O contrato é descrito em OpenAPI e JSON Schema, independentes de linguagem; os tipos do app e do painel são gerados a partir dele.
+The contract is described in OpenAPI and JSON Schema, which are language-independent; the app and dashboard types are generated from it.
 
-### 4.4 Autenticação
+### 4.4 Authentication
 
-- Supabase Auth com código de uso único por e-mail, por um provedor de e-mail próprio (o SMTP padrão do Supabase "is not meant for production use", segundo a nota de dados).
-- JWT de vida curta; refresh revogável no servidor. O JWT prova quem é a pessoa; a família e o papel vêm sempre da tabela de vínculos (o próprio Supabase alerta que o JWT "is not always up-to-date": https://supabase.com/docs/guides/database/postgres/row-level-security).
-- Sem login social no MVP, o que afasta a exigência da diretriz 4.8 da App Store.
-- Painel com MFA obrigatório.
+- Supabase Auth with a one-time code by email, through our own email provider (Supabase's default SMTP "is not meant for production use", according to the data note).
+- Short-lived JWT; refresh revocable on the server. The JWT proves who the person is; the family and role always come from the memberships table (Supabase itself warns that the JWT "is not always up-to-date": https://supabase.com/docs/guides/database/postgres/row-level-security).
+- No social login in the MVP, which avoids the requirement of App Store guideline 4.8.
+- Dashboard with mandatory MFA.
 
-## 5. Caminho dos dados
+## 5. Data path
 
-### 5.1 Registro offline até a confirmação
+### 5.1 Offline record through confirmation
 
 ```mermaid
 sequenceDiagram
@@ -148,60 +148,60 @@ sequenceDiagram
   Note over A: tela mostra "sincronizado"
 ```
 
-### 5.2 Revogação
+### 5.2 Revocation
 
-1. O responsável revoga pelo app (online). O serviço marca o vínculo como revogado, sobe a época, remove os tokens de push daquela conta para a família e registra auditoria.
-2. O PowerSync deixa de entregar a família àquela conta; o aparelho remove as linhas na próxima sincronização.
-3. Operações pendentes do aparelho revogado voltam como `rejeitada: vinculo_encerrado`; o app descarta a fila daquela família e mostra quantas operações não foram enviadas.
-4. Aparelho que não sincroniza há mais de 14 dias esconde os dados da família até revalidar (licença local).
-5. Limites honestos: o que já estava no aparelho offline continua lá até a reconexão ou o vencimento da licença; ver [Offline e temporizadores](Offline_Sincronizacao_e_Temporizadores.md), seção 11.
+1. The responsible caregiver revokes through the app (online). The service marks the membership as revoked, bumps the epoch, removes that account's push tokens for the family and records an audit entry.
+2. PowerSync stops delivering the family to that account; the device removes the rows on the next sync.
+3. Pending operations from the revoked device come back as `rejeitada: vinculo_encerrado`; the app discards that family's queue and shows how many operations were not sent.
+4. A device that has not synced for more than 14 days hides the family's data until it revalidates (local lease).
+5. Honest limits: whatever was already on the offline device stays there until reconnection or until the lease expires; see [Offline and timers](Offline_Sincronizacao_e_Temporizadores.md), section 11.
 
-### 5.3 Comunidade e moderação
+### 5.3 Community and moderation
 
-1. O app publica pelo serviço (online). O módulo de comunidade grava com o perfil público; ele não tem permissão de banco para ler cuidado ou família.
-2. Uma denúncia entra na fila do painel; o moderador vê o conteúdo, o perfil público e o histórico de moderação daquele perfil, nunca a família.
-3. Ações de moderação ficam na trilha de auditoria; o autor recebe aviso. Detalhes em [Comunidade e moderação](../04_Comunidade_Conteudo/Comunidade_e_Moderacao.md).
+1. The app publishes through the service (online). The community module writes using the public profile; it has no database permission to read care or family data.
+2. A report enters the dashboard queue; the moderator sees the content, the public profile and that profile's moderation history, never the family.
+3. Moderation actions are kept in the audit trail; the author receives a notice. Details in [Community and moderation](../04_Comunidade_Conteudo/Comunidade_e_Moderacao.md).
 
-## 6. Cronômetro e notificações
+## 6. Timer and notifications
 
-- O cronômetro é sempre derivado do início gravado no SQLite.
-- iOS: Live Activity pelo `expo-widgets`, com texto de timer desenhado pelo sistema; encerrada pelo sistema depois de 8 horas, quando o app mostra o estado real ao abrir.
-- Android: notificação contínua com cronômetro do sistema, por um módulo Expo pequeno em Kotlin; promoção a Live Update só para sessões iniciadas no próprio aparelho, como pede a regra do Android.
-- Push entre cuidadores: o serviço envia só a dispositivos de contas com vínculo ativo, com texto neutro.
-- Fonte: [Mobile e plataformas](../08_Referencias/Tecnologias/Mobile_e_Plataformas.md), seção 4.
+- The timer is always derived from the start recorded in SQLite.
+- iOS: Live Activity via `expo-widgets`, with timer text rendered by the system; ended by the system after 8 hours, after which the app shows the actual state when opened.
+- Android: ongoing notification with a system chronometer, through a small Expo module in Kotlin; promotion to Live Update only for sessions started on the device itself, as the Android rule requires.
+- Push between caregivers: the service sends only to devices of accounts with an active membership, with neutral text.
+- Source: [Mobile and platforms](../08_Referencias/Tecnologias/Mobile_e_Plataformas.md), section 4.
 
-## 7. Ambientes
+## 7. Environments
 
-| Ambiente | Composição | Uso |
+| Environment | Composition | Use |
 | --- | --- | --- |
-| Local (Windows) | Docker com PostgreSQL, PowerSync Open Edition (imagem `journeyapps/powersync-service`) e o serviço; emulador e aparelho Android; development build no iPhone via EAS | Testes de integração do protocolo sem nuvem |
-| Homologação | Projetos separados no Supabase e no PowerSync, dados fictícios | Testes de ponta a ponta e builds de teste |
-| Produção | Supabase sa-east-1 e PowerSync região BR, planos pagos (os gratuitos pausam por inatividade) | Piloto e lançamento |
+| Local (Windows) | Docker with PostgreSQL, PowerSync Open Edition (image `journeyapps/powersync-service`) and the service; Android emulator and device; development build on the iPhone via EAS | Protocol integration tests without the cloud |
+| Staging | Separate projects in Supabase and PowerSync, fictitious data | End-to-end tests and test builds |
+| Production | Supabase sa-east-1 and PowerSync BR region, paid plans (the free ones pause due to inactivity) | Pilot and launch |
 
-## 8. Tradeoffs aceitos
+## 8. Accepted tradeoffs
 
-| Ganho | Custo aceito |
+| Gain | Accepted cost |
 | --- | --- |
-| Fila durável e download parcial prontos | Dois fornecedores (Supabase e PowerSync) e custo fixo maior no início |
-| Regras de escrita num lugar só (serviço) | Serviço próprio para construir, testar e operar |
-| Comunidade isolada também no banco | Mais papéis de banco para manter |
-| Dados de cuidado hospedados no Brasil | Preços das regiões do Brasil ainda não confirmados |
-| Saída para o Conjunto C sem refazer o servidor | Leitura nos Sync Streams precisa espelhar as regras do serviço, com testes nos dois caminhos |
+| Durable queue and partial download out of the box | Two vendors (Supabase and PowerSync) and a higher fixed cost at the start |
+| Write rules in a single place (the service) | An in-house service to build, test and operate |
+| Community isolated in the database too | More database roles to maintain |
+| Care data hosted in Brazil | Prices for the Brazil regions not yet confirmed |
+| A path to Set C without rebuilding the server | Reads in Sync Streams must mirror the service's rules, with tests on both paths |
 
-## 9. Caminho de evolução
+## 9. Evolution path
 
-1. Se o PowerSync for trocado: manter esquema, serviço e contrato de envio; acrescentar endpoint de pull por cursor e cliente de sync próprio (Conjunto C da comparação).
-2. App web para cuidadores, se aprovado: SDK Web do PowerSync, que é GA.
-3. Anexos: Supabase Storage com prefixo por família, quarentena e remoção de metadados no servidor antes de publicar.
-4. Escala: auto-hospedar o PowerSync Open Edition ou mudar de plano, conforme custo medido.
+1. If PowerSync is replaced: keep the schema, the service and the upload contract; add a cursor-based pull endpoint and an in-house sync client (Set C in the comparison).
+2. Web app for caregivers, if approved: the PowerSync Web SDK, which is GA.
+3. Attachments: Supabase Storage with a per-family prefix, quarantine and server-side metadata removal before publishing.
+4. Scale: self-host PowerSync Open Edition or change plans, depending on measured cost.
 
-## Questões abertas
+## Open questions
 
-1. Linguagem do serviço de domínio ([ADR-003](../06_ADRs/ADR-003_Backend_Persistencia_Autenticacao.md)).
-2. Conteúdo editorial por pacote assinado ou por stream global do PowerSync.
-3. Janela local de 90 dias e licença de 14 dias (valores a medir).
-4. Expo Push Service ou FCM e APNs direto.
+1. Language of the domain service ([ADR-003](../06_ADRs/ADR-003_Backend_Persistencia_Autenticacao.md)).
+2. Editorial content via a signed package or via a global PowerSync stream.
+3. Local window of 90 days and lease of 14 days (values to be measured).
+4. Expo Push Service, or FCM and APNs directly.
 
-## Limites desta análise
+## Limits of this analysis
 
-Desenho sem implementação. O comportamento do PowerSync e do Supabase vem da documentação oficial lida em 22/10/2026; o encaixe com o protocolo de [Offline e temporizadores](Offline_Sincronizacao_e_Temporizadores.md) precisa ser provado na prova técnica (MAT-17).
+Design without implementation. The behavior of PowerSync and Supabase comes from the official documentation read on 22/10/2026; the fit with the protocol in [Offline and timers](Offline_Sincronizacao_e_Temporizadores.md) needs to be proven in the technical proof of concept (MAT-17).

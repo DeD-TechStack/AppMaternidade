@@ -1,165 +1,165 @@
 ---
-tipo: decisoes
-status: proposta
-responsavel: Hermes (coordenador da APP-001)
+tipo: decisions
+status: proposal
+responsavel: Hermes (coordinator of APP-001)
 revisado_em: 2026-11-03
 tarefa: MAT-15
 fontes_principais:
   - 03_Arquitetura/Comparacao_de_Arquiteturas.md
-  - 08_Referencias/Pesquisa_Privacidade_Legal_e_Lojas.md (seção 10)
+  - 08_Referencias/Pesquisa_Privacidade_Legal_e_Lojas.md (section 10)
   - 08_Referencias/Tecnologias/Precos_Datados.md
 ---
 
-# Decisões para Daniel
+# Decisions for Daniel
 
-Só as decisões que mudam de forma significativa o produto, o custo ou a manutenção. Cada uma traz opções, a recomendação do Hermes, o impacto, o que continua reversível e quando precisa ser tomada. D8 a D11 foram tomadas em 03/11/2026; D1 foi adiada até o port; as demais seguem abertas.
+Only decisions that significantly change the product, cost, or maintenance. Each includes options, Hermes's recommendation, the impact, what remains reversible, and when it needs to be made. D8 through D11 were made on 03/11/2026; D1 was deferred until the port; the others remain open.
 
-Para responder, basta indicar o número e a opção (por exemplo, "D1: A; D2: A; D3: A"), aqui na conversa ou num comentário da tarefa correspondente no itsaplan (coluna "Esperando Daniel", http://localhost:3001/oficina/MAT). Cada resposta volta ao ADR correspondente com data, e a tarefa muda de estado. As decisões D1, D2 e D3 bloqueiam a prova técnica, MAT-17 (no port); D4 bloqueia a fundação (MAT-18); D5 bloqueia a fatia da comunidade (MAT-19); D6 não bloqueia nada agora; a D7 foi decidida em 05/11/2026 (A), e o push do repositório, que é público, está liberado.
+To respond, just give the number and option (for example, "D1: A; D2: A; D3: A"), here in the conversation or in a comment on the corresponding task in itsaplan (column "Esperando Daniel", http://localhost:3001/oficina/MAT). Each answer is added to the corresponding ADR with a date, and the task changes status. Decisions D1, D2, and D3 block the technical proof of concept, MAT-17 (during the port); D4 blocks the foundation (MAT-18); D5 blocks the community slice (MAT-19); D6 does not block anything now; D7 was decided on 05/11/2026 (A), and pushing the repository, which is public, is authorized.
 
 ## Resumo
 
-| ID | Tarefa no itsaplan | Decisão | Recomendação | Antes de |
+| ID | Task in itsaplan | Decision | Recommendation | Before |
 | --- | --- | --- | --- | --- |
-| D1 | MAT-20 | Framework mobile | React Native + Expo | Prova técnica (MAT-17) |
-| D2 | MAT-21 | Conjunto de dados, backend e região | Conjunto B: Supabase + PowerSync + serviço de domínio próprio, com dados de cuidado no Brasil | Prova técnica (MAT-17) |
-| D3 | MAT-22 | Quem publica e contas nas lojas | Pessoa jurídica; abrir Apple Developer e Google Play quando a prova começar | Primeiro build de teste em iPhone |
-| D4 | MAT-23 | Recorte do MVP | 0 a 12 meses, Brasil em pt-BR, adultos 18+, comunidade só texto, sem IA generativa para usuários, sem anúncios | Fundação (MAT-18) |
-| D5 | MAT-24 | Pessoas para conteúdo, moderação e jurídico | Revisor de conteúdo registrado, 1 ou 2 moderadores de meio período no piloto, consultoria em LGPD e ECA Digital | Abertura da comunidade e do conteúdo |
-| D6 | MAT-25 | Monetização | Em aberto; sem anúncios direcionados com dados de rotina | Antes do piloto público (não bloqueia a próxima etapa) |
-| D7 | MAT-26 | Registros de testes de acesso em projetos de terceiros | A: manter só no disco, fora do Git, sem contato com os mantenedores | — (decidida em 05/11/2026) |
-| D8 | MAT-28 | Stack do site | D8-A: React + TypeScript + Vite, Tailwind 4, shadcn/ui e Magic UI, Supabase e PWA; port pelo Capacitor | — (decidida) |
-| D9 | MAT-29 | Domínio e hospedagem | GitHub Pages do próprio repositório, com Supabase Free na região São Paulo; domínio próprio depois | — (decidida) |
-| D10 | MAT-30 | Detector Impeccable | Verificação local, não bloqueante e com versão fixa | — (decidida) |
-| D11 | MAT-31 | REA e sala limpa | Sala limpa reduzida e declarada | — (decidida) |
+| D1 | MAT-20 | Mobile framework | React Native + Expo | Technical proof of concept (MAT-17) |
+| D2 | MAT-21 | Data stack, backend, and region | Stack B: Supabase + PowerSync + a custom domain service, with care data in Brazil | Technical proof of concept (MAT-17) |
+| D3 | MAT-22 | Publisher and store accounts | Legal entity; open Apple Developer and Google Play accounts when the proof of concept starts | First test build on iPhone |
+| D4 | MAT-23 | MVP scope | 0 to 12 months, Brazil in pt-BR, adults 18+, text-only community, no generative AI for users, no ads | Foundation (MAT-18) |
+| D5 | MAT-24 | People for content, moderation, and legal work | Licensed content reviewer, 1 or 2 part-time moderators during the pilot, consulting on the LGPD and ECA Digital | Launch of the community and content |
+| D6 | MAT-25 | Monetization | Open; no targeted ads using routine data | Before the public pilot (does not block the next stage) |
+| D7 | MAT-26 | Records of access tests on third-party projects | A: keep only on disk, outside Git, without contacting the maintainers | — (decided on 05/11/2026) |
+| D8 | MAT-28 | Website stack | D8-A: React + TypeScript + Vite, Tailwind 4, shadcn/ui and Magic UI, Supabase and PWA; port through Capacitor | — (decided) |
+| D9 | MAT-29 | Domain and hosting | GitHub Pages from the repository itself, with Supabase Free in the São Paulo region; custom domain later | — (decided) |
+| D10 | MAT-30 | Impeccable detector | Local, non-blocking check with a pinned version | — (decided) |
+| D11 | MAT-31 | REA and clean room | Reduced and declared clean room | — (decided) |
 
-## D1 — Framework mobile
+## D1 — Mobile framework
 
-- **Estado:** Adiada até o port (ADR-009).
-- **Opções:** (A) React Native + Expo; (B) Flutter; (C) Kotlin Multiplatform com UI nativa.
-- **Recomendação:** A. Detalhes no [ADR-002](../06_ADRs/ADR-002_Framework_Mobile.md).
-  - Com o EAS, o ciclo de iOS inteiro roda a partir do Windows num fluxo integrado: build, assinatura, instalação no iPhone e TestFlight.
-  - A Live Activity sai sem Swift.
-  - Flutter e KMP também chegam ao TestFlight sem Mac próprio, por CI macOS, mas com o pipeline montado à parte e a Live Activity em Swift.
-  - Sem Mac, a depuração nativa no iPhone fica limitada em todas as opções.
-- **Impacto:** com A, não é preciso comprar Mac agora (Apple US$ 99/ano; EAS de US$ 0 a 19/mês, preços de 22/10/2026). Com B ou C, soma-se um Mac (a partir de US$ 899) ou Mac remoto ou CI.
-- **Reversível:** sim, até a fundação (MAT-18). A prova técnica é descartável.
-- **O que muda a recomendação:** a equipe passar a ter Mac, ou aceitar CI macOS e Swift para a Live Activity, e a prova favorecer Flutter; falha do `expo-widgets` ou da acessibilidade na prova.
+- **Status:** Deferred until the port (ADR-009).
+- **Options:** (A) React Native + Expo; (B) Flutter; (C) Kotlin Multiplatform with native UI.
+- **Recommendation:** A. Details in [ADR-002](../06_ADRs/ADR-002_Framework_Mobile.md).
+  - With EAS, the entire iOS cycle runs from Windows in an integrated workflow: build, signing, installation on iPhone, and TestFlight.
+  - The Live Activity can be built without Swift.
+  - Flutter and KMP can also reach TestFlight without owning a Mac, through macOS CI, but with a separately configured pipeline and the Live Activity in Swift.
+  - Without a Mac, native debugging on iPhone is limited in all options.
+- **Impact:** with A, there is no need to buy a Mac now (Apple US$ 99/year; EAS from US$ 0 to 19/month, prices as of 22/10/2026). B or C adds a Mac (starting at US$ 899), a remote Mac, or CI.
+- **Reversible:** yes, until the foundation (MAT-18). The technical proof of concept is disposable.
+- **What would change the recommendation:** the team gains access to a Mac, or accepts macOS CI and Swift for the Live Activity, and the proof of concept favors Flutter; failure of `expo-widgets` or accessibility in the proof of concept.
 
-## D2 — Conjunto de dados, backend e região
+## D2 — Data stack, backend, and region
 
-- **Estado:** Respondida em parte pela D8: backend Supabase na região São Paulo. A sincronização offline nativa volta a ser decidida no port.
-- **Opções:** (A) Supabase + PowerSync + serviço de domínio próprio (Conjunto B); (B) API própria com sincronização própria (Conjunto C); (C) Firebase (Conjunto A).
-- **Recomendação:** A. O protocolo de escrita (conflitos, permissões, revogação) fica sob nosso controle; a fila offline e o download parcial vêm prontos; a saída para a opção B não exige refazer o servidor. Detalhes no [ADR-003](../06_ADRs/ADR-003_Backend_Persistencia_Autenticacao.md) e na [Comparação de arquiteturas](../03_Arquitetura/Comparacao_de_Arquiteturas.md).
-- **Impacto:**
-  - **Custo ilustrativo com 100 famílias:** de US$ 108 a 126 por mês, já com o serviço de domínio ([Custos e operação](../05_Privacidade_Operacao/Custos_e_Operacao.md), seção 2).
-  - **Fora desse valor:** o PITR, recomendado em produção (+US$ 100/mês), e a homologação (+US$ 10 a 50/mês).
-  - **Comparação só de infraestrutura** ([Preços datados](../08_Referencias/Tecnologias/Precos_Datados.md), seção 10; preços de 22/10/2026): Conjunto B ~US$ 101, sem o serviço; Firebase ~US$ 27; API própria ~US$ 64, que já inclui a API em Cloud Run.
-  - **Manutenção:** dois fornecedores críticos e um serviço próprio para manter.
-- **Reversível:** sim, até a fundação. Depois, trocar o PowerSync pela opção B continua possível sem mudar o banco.
-- **Região:** dados de cuidado no Brasil (Supabase em São Paulo e PowerSync na região BR; os dois oferecem essas regiões na consulta de 22/10/2026). Reduz transferência internacional de dados potencialmente sensíveis de crianças. Preços das regiões do Brasil não foram confirmados, e alguns subprocessadores (push, e-mail, relatório de falhas) podem continuar fora do Brasil ([Privacidade e segurança](../05_Privacidade_Operacao/Privacidade_e_Seguranca.md)). Mudar de região depois exige mover o banco.
-- **Sub-decisão de baixo impacto:** linguagem do serviço. Proposta: TypeScript, por manutenção com uma linguagem só; Django ou Spring Boot são alternativas legítimas.
+- **Status:** Partly answered by D8: Supabase backend in the São Paulo region. Native offline synchronization will be decided again during the port.
+- **Options:** (A) Supabase + PowerSync + a custom domain service (Stack B); (B) custom API with custom synchronization (Stack C); (C) Firebase (Stack A).
+- **Recommendation:** A. The write protocol (conflicts, permissions, revocation) stays under our control; the offline queue and partial downloads are provided out of the box; moving to option B does not require rebuilding the server. Details in [ADR-003](../06_ADRs/ADR-003_Backend_Persistencia_Autenticacao.md) and the [Architecture comparison](../03_Arquitetura/Comparacao_de_Arquiteturas.md).
+- **Impact:**
+  - **Illustrative cost with 100 families:** US$ 108 to 126 per month, including the domain service ([Costs and operations](../05_Privacidade_Operacao/Custos_e_Operacao.md), section 2).
+  - **Excluded from this amount:** PITR, recommended in production (+US$ 100/month), and staging (+US$ 10 to 50/month).
+  - **Infrastructure-only comparison** ([Dated prices](../08_Referencias/Tecnologias/Precos_Datados.md), section 10; prices as of 22/10/2026): Stack B ~US$ 101, excluding the service; Firebase ~US$ 27; custom API ~US$ 64, which already includes the API on Cloud Run.
+  - **Maintenance:** two critical providers and a custom service to maintain.
+- **Reversible:** yes, until the foundation. After that, replacing PowerSync with option B remains possible without changing the database.
+- **Region:** care data in Brazil (Supabase in São Paulo and PowerSync in the BR region; both offer these regions as checked on 22/10/2026). This reduces international transfers of potentially sensitive children's data. Prices for the Brazil regions have not been confirmed, and some subprocessors (push, email, crash reporting) may remain outside Brazil ([Privacy and security](../05_Privacidade_Operacao/Privacidade_e_Seguranca.md)). Changing regions later requires moving the database.
+- **Low-impact subdecision:** service language. Proposal: TypeScript, to maintain a single language; Django or Spring Boot are valid alternatives.
 
-## D3 — Quem publica e contas nas lojas
+## D3 — Publisher and store accounts
 
-- **Estado:** Contas de loja: só no port.
-- **Opções:** (A) pessoa jurídica; (B) pessoa física.
-- **Recomendação:** A. A diretriz 5.1.1(ix) da Apple diz que apps de setores regulados, como saúde, ou que exigem informação sensível devem ser enviados por pessoa jurídica; o Google indica conta de organização para apps de saúde; o Marco Civil e a tese do STF também falam em pessoa jurídica. Se isso se aplica a este app precisa de validação jurídica. Ver [Pesquisa de privacidade, legal e lojas](../08_Referencias/Pesquisa_Privacidade_Legal_e_Lojas.md).
-- **Impacto:** conta de organização na Play não tem a exigência de teste fechado com 12 testadores por 14 dias, que vale para contas pessoais criadas depois de 13/11/2023. Contas de organização nas duas lojas exigem número D-U-N-S, e a da Apple pede também site e e-mail com domínio próprio. Como pessoa física, o nome legal de Daniel aparece como vendedor na App Store. Abrir a empresa tem custos próprios (abertura, contabilidade), não levantados. Custos das lojas em 22/10/2026: Apple US$ 99/ano; Google Play US$ 25 uma vez.
-- **Reversível:** parcialmente; transferir apps entre contas é possível, mas trabalhoso.
-- **Quando:** antes do primeiro build de teste em iPhone (a prova técnica precisa da conta Apple).
+- **Status:** Store accounts: only during the port.
+- **Options:** (A) legal entity; (B) individual.
+- **Recommendation:** A. Apple's guideline 5.1.1(ix) says that apps in regulated sectors, such as healthcare, or that require sensitive information must be submitted by a legal entity; Google recommends an organization account for health apps; the Brazilian Internet Civil Rights Framework and the STF's legal position also refer to a legal entity. Whether this applies to this app requires legal validation. See [Privacy, legal, and store research](../08_Referencias/Pesquisa_Privacidade_Legal_e_Lojas.md).
+- **Impact:** an organization account on Play does not have the closed-test requirement of 12 testers for 14 days, which applies to personal accounts created after 13/11/2023. Organization accounts in both stores require a D-U-N-S number, and Apple's also requires a website and email with a custom domain. As an individual, Daniel's legal name appears as the seller in the App Store. Setting up the company has its own costs (registration, accounting), which have not been researched. Store costs as of 22/10/2026: Apple US$ 99/year; Google Play US$ 25 once.
+- **Reversible:** partly; transferring apps between accounts is possible but laborious.
+- **When:** before the first test build on iPhone (the technical proof of concept needs the Apple account).
 
-## D4 — Recorte do MVP
+## D4 — MVP scope
 
-- **Estado:** Respondida em parte: o site sai com todas as funcionalidades; público e idade mínima continuam abertos.
-- **Proposta:** bebês de 0 a 12 meses; Brasil, em pt-BR; usuários adultos de 18 anos ou mais; comunidade só com texto, sem mensagens diretas; sem IA generativa respondendo a usuários; sem anúncios; web com site público e painel interno, sem app web para famílias.
-- **Por quê:** reduz riscos de saúde, de moderação e do ECA Digital enquanto o núcleo é validado. Detalhes em [Visão e escopo](../01_Produto/Visao_e_Escopo.md), [ADR-001](../06_ADRs/ADR-001_Plataformas_e_Web.md), [ADR-006](../06_ADRs/ADR-006_Comunidade_e_Moderacao.md) e [ADR-007](../06_ADRs/ADR-007_Conteudo_Educativo_e_IA.md).
-- **Impacto:** pais adolescentes ficam de fora no MVP; gestação fica para depois.
-- **Reversível:** sim; cada item pode ser ampliado com decisão própria.
+- **Status:** Partly answered: the website will launch with all features; the audience and minimum age remain open.
+- **Proposal:** babies from 0 to 12 months; Brazil, in pt-BR; adult users aged 18 or older; text-only community, without direct messages; no generative AI responding to users; no ads; web with a public website and internal dashboard, without a web app for families.
+- **Why:** reduces health, moderation, and ECA Digital risks while the core is validated. Details in [Vision and scope](../01_Produto/Visao_e_Escopo.md), [ADR-001](../06_ADRs/ADR-001_Plataformas_e_Web.md), [ADR-006](../06_ADRs/ADR-006_Comunidade_e_Moderacao.md), and [ADR-007](../06_ADRs/ADR-007_Conteudo_Educativo_e_IA.md).
+- **Impact:** teenage parents are excluded from the MVP; pregnancy comes later.
+- **Reversible:** yes; each item can be expanded through a separate decision.
 
-## D5 — Pessoas para conteúdo, moderação e jurídico
+## D5 — People for content, moderation, and legal work
 
-- **Proposta:** um revisor de conteúdo com registro profissional (por exemplo, pediatra ou fisioterapeuta pediátrico) para o tummy time e as atividades; um ou dois moderadores de meio período quando a comunidade abrir; consultoria em LGPD e ECA Digital antes do piloto; definição do encarregado de dados.
-- **Por quê:** sem revisor, o conteúdo não pode ser publicado; sem moderação, a comunidade não atende às lojas nem às regras de remoção de conteúdo; os textos legais não podem ser publicados sem validação.
-- **Impacto:** custo de pessoas, sem preço levantado nesta etapa ([Custos e operação](../05_Privacidade_Operacao/Custos_e_Operacao.md)).
-- **Reversível:** sim; o formato (contratação, parceria, voluntariado supervisionado) é aberto.
+- **Proposal:** one content reviewer with professional registration (for example, a pediatrician or pediatric physical therapist) for tummy time and activities; one or two part-time moderators when the community opens; consulting on the LGPD and ECA Digital before the pilot; appointment of the data protection officer.
+- **Why:** without a reviewer, the content cannot be published; without moderation, the community does not meet store requirements or content removal rules; legal texts cannot be published without validation.
+- **Impact:** staffing costs, with no prices researched at this stage ([Costs and operations](../05_Privacidade_Operacao/Custos_e_Operacao.md)).
+- **Reversible:** yes; the arrangement (hiring, partnership, supervised volunteering) is open.
 
-## D6 — Monetização
+## D6 — Monetization
 
-- **Opções:** assinatura com plano gratuito; pagamento único; gratuito sustentado por parceria institucional.
-- **Recomendação:** decidir antes do piloto público. Em qualquer caso, nada de anúncios direcionados com dados de rotina (a LGPD proíbe compartilhar dado de saúde para obter vantagem econômica, segundo a pesquisa de privacidade).
-- **Impacto:** compras dentro do app exigem as regras das lojas e do Código de Defesa do Consumidor; não muda a fundação técnica.
+- **Options:** subscription with a free plan; one-time payment; free, supported by an institutional partnership.
+- **Recommendation:** decide before the public pilot. In any case, no targeted ads using routine data (the LGPD prohibits sharing health data for economic gain, according to the privacy research).
+- **Impact:** in-app purchases require compliance with store rules and the Consumer Protection Code; this does not change the technical foundation.
 
-## D7 — Registros de testes de acesso em projetos de terceiros
+## D7 — Records of access tests on third-party projects
 
-- **Decidida por Daniel em 05/11/2026: opção A.** Os registros ficam só no disco, fora do Git, sem contato com os mantenedores. O push do repositório foi liberado.
-- **Situação.** Na primeira rodada das fichas, antes da regra de só ler código, dois subagentes fizeram sondagens de acesso em instâncias locais do Sprout Track e do Baby Buddy, com dados fictícios e só em 127.0.0.1.
-  - Os registros estão no disco, em `09_Evidencias/Execucao_Referencias/Sprout_Track/` e `Baby_Buddy/`. Desde 05:05 estão no `.gitignore` e não entram em nenhum commit.
-  - As fichas não detalham esses registros. Os pontos de acesso aparecem só como perguntas de auditoria.
-  - No Finnberry e no Bebbo não houve sondagem de acesso.
-- **Opções:**
-  - (A) Manter os arquivos só no disco, fora do Git, sem contato com os mantenedores.
-  - (B) Como em A, e Daniel avisa os mantenedores em particular, pelo canal de segurança de cada projeto, antes de publicar o cofre. O Baby Buddy indica o relato de vulnerabilidades pelo GitHub no `SECURITY.md` (https://github.com/babybuddy/babybuddy/security). O Sprout Track não tem `SECURITY.md` no commit analisado; o canal ainda precisa ser identificado.
-  - (C) Apagar os registros agora.
-- **Recomendação:** B. É o caminho de divulgação responsável, e os registros servem de base para um aviso preciso. O Hermes não contata ninguém: o aviso, se houver, sai de Daniel.
-- **Impacto:** nenhum no AppMaternidade. As lições já estão nas fichas e nos cenários Q-06 de [Qualidade e validação](../05_Privacidade_Operacao/Qualidade_e_Validacao.md).
-- **Reversível:** A e B sim. C não.
-- **Quando:** antes do primeiro push do repositório, porque o remoto é público.
+- **Decided by Daniel on 05/11/2026: option A.** The records stay only on disk, outside Git, without contacting the maintainers. Pushing the repository was authorized.
+- **Situation.** In the first round of project assessments, before the rule to only read code, two subagents performed access probes on local instances of Sprout Track and Baby Buddy, with fictitious data and only on 127.0.0.1.
+  - The records are on disk, in `09_Evidencias/Execucao_Referencias/Sprout_Track/` and `Baby_Buddy/`. Since 05:05 they have been in `.gitignore` and are not included in any commit.
+  - The assessments do not detail these records. Access points appear only as audit questions.
+  - No access probes were performed on Finnberry or Bebbo.
+- **Options:**
+  - (A) Keep the files only on disk, outside Git, without contacting the maintainers.
+  - (B) Same as A, and Daniel privately notifies the maintainers through each project's security channel before publishing the vault. Baby Buddy directs vulnerability reports through GitHub in `SECURITY.md` (https://github.com/babybuddy/babybuddy/security). Sprout Track has no `SECURITY.md` in the analyzed commit; the channel still needs to be identified.
+  - (C) Delete the records now.
+- **Recommendation:** B. This is the responsible disclosure path, and the records provide the basis for an accurate notice. Hermes contacts no one: any notice comes from Daniel.
+- **Impact:** none on AppMaternidade. The lessons are already in the assessments and the Q-06 scenarios in [Quality and validation](../05_Privacidade_Operacao/Qualidade_e_Validacao.md).
+- **Reversible:** A and B, yes. C, no.
+- **When:** before the repository's first push, because the remote is public.
 
-## D8, stack do site (MAT-28): decidida
+## D8, website stack (MAT-28): decided
 
-Decidida em 03/11/2026, por delegação de Daniel: opção A.
+Decided on 03/11/2026, under authority delegated by Daniel: option A.
 
-| Opção | O que é | Prós | Contras |
+| Option | What it is | Pros | Cons |
 |---|---|---|---|
-| A (escolhida) | React + TypeScript + Vite, Tailwind 4, shadcn/ui e Magic UI, Supabase e PWA; port pelo Capacitor | Usa os componentes da lista; hospedagem estática barata; o port reaproveita o código | Recursos nativos avançados pedem plugin |
-| B | Next.js (App Router), com a mesma UI e o mesmo backend | Renderização no servidor e SEO | Mais peças para operar; a hospedagem ideal é a Vercel, cujo plano Hobby não permitiria uso comercial ("a confirmar": sem fonte datada no cofre) |
-| C | Expo Router com React Native Web | Melhor reaproveitamento num app nativo | Não usa shadcn/ui nem Magic UI, que dependem do DOM; contraria a regra de componentes |
+| A (chosen) | React + TypeScript + Vite, Tailwind 4, shadcn/ui and Magic UI, Supabase and PWA; port through Capacitor | Uses the listed components; inexpensive static hosting; the port reuses the code | Advanced native features require a plugin |
+| B | Next.js (App Router), with the same UI and backend | Server-side rendering and SEO | More parts to operate; the ideal hosting is Vercel, whose Hobby plan would not allow commercial use ("to be confirmed": no dated source in the vault) |
+| C | Expo Router with React Native Web | Better reuse in a native app | Does not use shadcn/ui or Magic UI, which depend on the DOM; conflicts with the component rule |
 
-## D9, domínio e hospedagem (MAT-29): decidida
+## D9, domain and hosting (MAT-29): decided
 
-Decidida por Daniel em 03/11/2026.
-- **Hospedagem:** GitHub Pages do próprio repositório, publicado por GitHub Actions. Custo zero.
-- **Backend:** Supabase Free na região São Paulo, só para desenvolvimento e demonstração sem dados reais.
-- **Domínio próprio:** depois.
-- **Para publicar:** em 05/11/2026 a D7 foi decidida (A), o nome de usuário local virou `<usuario>` nos arquivos rastreados (nos commits antigos ele continua, por escolha de Daniel) e o push foi liberado como rotina. Falta só a MAT-48: o projeto Supabase na nuvem, os secrets no GitHub e o Pages pelo CI.
-- **Alternativas avaliadas:** Cloudflare Pages, Netlify ou Vercel nos planos grátis; Supabase Pro quando houver usuários reais.
+Decided by Daniel on 03/11/2026.
+- **Hosting:** GitHub Pages from the repository itself, published through GitHub Actions. Zero cost.
+- **Backend:** Supabase Free in the São Paulo region, only for development and demonstration without real data.
+- **Custom domain:** later.
+- **To publish:** on 05/11/2026 D7 was decided (A), the local username became `<usuario>` in tracked files (it remains in old commits, by Daniel's choice), and pushing was authorized as routine. Only MAT-48 remains: the Supabase project in the cloud, the secrets in GitHub, and Pages through CI.
+- **Alternatives evaluated:** Cloudflare Pages, Netlify, or Vercel on free plans; Supabase Pro when there are real users.
 
-## D10, detector Impeccable (MAT-30): decidida
+## D10, Impeccable detector (MAT-30): decided
 
-Decidida por delegação de Daniel em 03/11/2026.
-- O Impeccable entra como verificação local, não bloqueante e com versão fixa, no portão final (MAT-42).
-- Antes, passa por avaliação na `skill-scouting`.
-- **Alternativa avaliada:** não usar, porque G4 a G6 já cobrem o critério.
+Decided under authority delegated by Daniel on 03/11/2026.
+- Impeccable is included as a local, non-blocking check with a pinned version at the final gate (MAT-42).
+- First, it undergoes evaluation in `skill-scouting`.
+- **Alternative evaluated:** do not use it, because G4 through G6 already cover the criterion.
 
-## D11, REA e sala limpa (MAT-31): decidida
+## D11, REA and clean room (MAT-31): decided
 
-Decidida em 03/11/2026: opção A, sala limpa reduzida e declarada.
-- A REA roda pela CLI (`rea-agents@6.8.0`).
-- O analista é o líder, com rede só para a referência.
-- O reconstrutor recebe só a especificação filtrada.
-- O verificador (revisor-appmaternidade) só relata.
-- **Limite:** mesma conta do Windows; o isolamento é por instrução e permissão.
-- **Alternativas avaliadas:** B, conta ou contêiner isolado; C, sem REA.
+Decided on 03/11/2026: option A, reduced and declared clean room.
+- REA runs through the CLI (`rea-agents@6.8.0`).
+- The analyst is the lead, with network access only for the reference.
+- The reconstructor receives only the filtered specification.
+- The verifier (revisor-appmaternidade) only reports.
+- **Limitation:** same Windows account; isolation relies on instructions and permissions.
+- **Alternatives evaluated:** B, isolated account or container; C, no REA.
 
-## Decisões da demonstração (Daniel, 06/11/2026)
+## Demonstration decisions (Daniel, 06/11/2026)
 
-Estas decisões valem para a prévia acadêmica publicada no Pages, com o Supabase `appmaternidade-demo`.
+These decisions apply to the academic preview published on Pages, with Supabase `appmaternidade-demo`.
 
-1. **Contas.** Cada pessoa cria a própria conta pelo site, com o Supabase de verdade. Não há contas de demonstração nem o secret `DEMO_PASSWORD`, que não existe no repositório (conferido em 06/11/2026). Nas palavras de Daniel: "o Supabase subiu para isso, o site tem que funcionar de verdade, o uso é leve".
-2. **Conteúdo de Desenvolvimento.** Entra normal, **sem** o selo "Rascunho em revisão", porque a prévia deve parecer pronta e funcionando. Continuam valendo a fonte citada em cada item e o aviso padrão de que o conteúdo não substitui orientação médica.
-3. **Verificação extra de quem modera** (MFA no painel, ADR-003 e Arquitetura): em aberto, porque Daniel pediu explicação antes de decidir.
-4. **Contato e LGPD.** O e-mail de contato é o e-mail de autor dos commits do repositório (`git config user.email`), e o encarregado de dados é Daniel Macedo. Os dois são provisórios da demonstração. O valor do e-mail não é copiado para notas nem logs; ele entra só nas páginas do site que o pedem.
+1. **Accounts.** Each person creates their own account through the website, using real Supabase. There are no demonstration accounts or `DEMO_PASSWORD` secret, which does not exist in the repository (checked on 06/11/2026). In Daniel's words: "o Supabase subiu para isso, o site tem que funcionar de verdade, o uso é leve".
+2. **Development content.** Included as normal, **without** the "Rascunho em revisão" badge, because the preview should look complete and functional. The source cited in each item and the standard notice that the content does not replace medical advice still apply.
+3. **Extra verification for moderators** (MFA in the dashboard, ADR-003 and Architecture): open, because Daniel requested an explanation before deciding.
+4. **Contact and LGPD.** The contact email is the author email from the repository's commits (`git config user.email`), and the data protection officer is Daniel Macedo. Both are provisional for the demonstration. The email value is not copied into notes or logs; it appears only on the website pages that require it.
 
-## O que não precisa de decisão agora
+## What does not need a decision now
 
-Nome definitivo do produto, identidade visual, tipos de registro além do MVP, widgets e expansões. Ficam no [Roadmap](Roadmap_e_Proxima_Fatia.md).
+Final product name, visual identity, record types beyond the MVP, widgets, and expansions. They remain in the [Roadmap](Roadmap_e_Proxima_Fatia.md).
 
-## Questões abertas
+## Open questions
 
-1. Há iPhone disponível para testes? Qual modelo e versão do iOS?
-2. Há Mac disponível ou disposição de comprar ou alugar um? (muda D1)
-3. Quem opera o sistema em produção e com que disponibilidade?
+1. Is an iPhone available for testing? Which model and iOS version?
+2. Is a Mac available, or is there a willingness to buy or rent one? (changes D1)
+3. Who operates the system in production, and with what availability?
 
-## Limites desta análise
+## Limits of this analysis
 
-Recomendações técnicas, não jurídicas nem financeiras. Preços são de 22/10/2026 e podem mudar.
+Technical recommendations, not legal or financial advice. Prices are as of 22/10/2026 and may change.

@@ -1,161 +1,161 @@
 ---
 tipo: design-doc
-status: proposta
-responsavel: Hermes (coordenador da APP-001)
+status: proposal
+responsavel: Hermes (coordinator of APP-001)
 revisado_em: 2026-10-22
 tarefa: MAT-14
 adr: ADR-008
 fontes_principais:
-  - tasks/hermes/APP-001-design-docs/06_CRITERIOS_DE_ACEITE.md (cenários Q-01 a Q-12)
-  - https://support.google.com/googleplay/android-developer/answer/14151465 (consulta 22/10/2026)
-  - https://developer.apple.com/testflight/ (consulta 22/10/2026)
-  - https://developer.apple.com/design/human-interface-guidelines/accessibility (consulta 22/10/2026)
-  - https://support.google.com/accessibility/android/answer/7101858 (consulta 22/10/2026)
+  - tasks/hermes/APP-001-design-docs/06_CRITERIOS_DE_ACEITE.md (scenarios Q-01 to Q-12)
+  - https://support.google.com/googleplay/android-developer/answer/14151465 (accessed 22/10/2026)
+  - https://developer.apple.com/testflight/ (accessed 22/10/2026)
+  - https://developer.apple.com/design/human-interface-guidelines/accessibility (accessed 22/10/2026)
+  - https://support.google.com/accessibility/android/answer/7101858 (accessed 22/10/2026)
 ---
 
-# Qualidade e validação
+# Quality and validation
 
-> Nota de 03/11/2026: o rumo mudou para site completo primeiro e port Android e iOS depois ([ADR-009](../06_ADRs/ADR-009_Site_Completo_Primeiro.md)). Onde este texto fala em app nativo, leia como o port; o site cobre as mesmas funções.
+> Note from 03/11/2026: the direction changed to a full website first, with the Android and iOS port afterward ([ADR-009](../06_ADRs/ADR-009_Site_Completo_Primeiro.md)). Where this text mentions a native app, read it as the port; the website covers the same functions.
 
-Proposta do Hermes. Define como provar, nas próximas etapas, que o aplicativo faz o que os documentos prometem. Nada aqui foi executado: os cenários são requisitos de teste, e as metas numéricas são hipóteses a confirmar ou ajustar na prova técnica (MAT-17).
+Hermes's proposal. It defines how to prove, in the next stages, that the application does what the documents promise. Nothing here has been executed: the scenarios are test requirements, and the numeric targets are hypotheses to be confirmed or adjusted in the technical proof (MAT-17).
 
-## 1. Problema
+## 1. Problem
 
-O que mais destrói a confiança neste produto não é uma tela feia, e sim:
+What most destroys trust in this product is not an ugly screen, but rather:
 
-- um registro que some, duplica ou muda sem aviso;
-- dados de uma família aparecendo para outra;
-- a comunidade revelando a rotina de um bebê;
-- um temporizador que mostra a duração errada depois que o app foi fechado;
-- conteúdo de desenvolvimento sem fonte ou com orientação inadequada;
-- um app difícil de usar com uma mão, no escuro ou com fonte ampliada.
+- a record that disappears, duplicates or changes without warning;
+- one family's data appearing to another;
+- the community revealing a baby's routine;
+- a timer that shows the wrong duration after the app was closed;
+- developmental content without a source or with inappropriate guidance;
+- an app that is hard to use with one hand, in the dark or with enlarged text.
 
-A estratégia concentra o esforço de teste nesses riscos, nas duas plataformas.
+The strategy concentrates the testing effort on these risks, on both platforms.
 
-## 2. Estratégia por risco
+## 2. Risk-based strategy
 
-| Risco | Impacto | Onde se previne | Como se prova | Evidência exigida |
+| Risk | Impact | Where it is prevented | How it is proven | Required evidence |
 | --- | --- | --- | --- | --- |
-| Perda ou duplicação de registro | Alto | Fila local transacional; id de operação; idempotência no servidor | Testes de integração com falhas injetadas (resposta perdida, timeout, app encerrado) e teste em aparelho físico | Contagens no servidor e no aparelho; registro do teste |
-| Vazamento entre famílias | Crítico | Autorização pelo vínculo atual em toda rota, canal de sync, arquivo e push | Testes automáticos com ids de outra família para cada rota e canal, gerados a partir da lista de rotas | Relatório de cobertura por rota; falha bloqueia a publicação |
-| Comunidade expondo a rotina | Crítico | Contextos separados; perfil público sem chave de família | Teste de esquema (nenhuma tabela da comunidade referencia Cuidado) e revisão das consultas | Teste automático e revisão registrada |
-| Revogação ineficaz | Alto | Época do vínculo; recusa no servidor; limpeza local | Cenário com aparelho offline revogado (Q-05) | Registro do teste nos dois aparelhos |
-| Conflito silencioso | Médio | Versão-base; mescla por campo; selo de revisão | Dois aparelhos offline editando o mesmo campo (Q-04) | Histórico com as versões |
-| Temporizador errado | Médio | Duração derivada do início gravado | Encerrar o app, reiniciar o aparelho, trocar fuso (Q-08, Q-09) | Comparação com relógio de referência |
-| Conteúdo inadequado | Alto | Ciclo editorial com revisor qualificado | Checklist editorial por versão | Registro de revisão na versão do conteúdo |
-| Acessibilidade insuficiente | Médio | Componentes com rótulos; fonte escalável; alvos de toque | TalkBack, VoiceOver e fonte ampliada em aparelho | Checklist por tela |
-| Dado sensível em log, push ou analytics | Alto | Política de logs; textos de push neutros | Busca automática por campos sensíveis em logs de teste; revisão de SDKs | Relatório da varredura |
+| Record loss or duplication | High | Transactional local queue; operation id; server-side idempotency | Integration tests with injected failures (lost response, timeout, app terminated) and testing on a physical device | Counts on the server and on the device; test log |
+| Leakage between families | Critical | Authorization by the current membership on every route, sync channel, file and push | Automated tests with another family's ids for each route and channel, generated from the route list | Per-route coverage report; a failure blocks the release |
+| Community exposing the routine | Critical | Separate contexts; public profile without a family key | Schema test (no community table references Care) and query review | Automated test and recorded review |
+| Ineffective revocation | High | Membership epoch; server-side refusal; local cleanup | Scenario with a revoked offline device (Q-05) | Test log on both devices |
+| Silent conflict | Medium | Base version; per-field merge; review flag | Two offline devices editing the same field (Q-04) | History with the versions |
+| Wrong timer | Medium | Duration derived from the recorded start | Terminate the app, restart the device, change time zone (Q-08, Q-09) | Comparison against a reference clock |
+| Inappropriate content | High | Editorial cycle with a qualified reviewer | Editorial checklist per version | Review record on the content version |
+| Insufficient accessibility | Medium | Components with labels; scalable text; touch targets | TalkBack, VoiceOver and enlarged text on a device | Per-screen checklist |
+| Sensitive data in logs, push or analytics | High | Logging policy; neutral push texts | Automated search for sensitive fields in test logs; SDK review | Scan report |
 
-## 3. Escada de testes
+## 3. Testing ladder
 
-Cada tarefa de implementação diz quais degraus valem para ela; um degrau que falte no projeto vira lacuna registrada, não degrau pulado.
+Each implementation task states which rungs apply to it; a rung missing from the project becomes a recorded gap, not a skipped rung.
 
-1. **Análise estática:** lint, tipos, varredura de segredos e de licenças de dependências.
-2. **Unitários:** regras de domínio (durações, meia-noite, fusos, validação de registros, matriz de permissões).
-3. **Integração:** servidor com banco real descartável; protocolo de sincronização; autorização por rota e canal; idempotência; conflitos.
-4. **Interface em aparelho ou emulador:** fluxos críticos automatizados nas duas plataformas, com captura de tela e rastro só das falhas.
-5. **Manual em aparelho físico:** cenários que a automação não cobre bem (app encerrado pelo sistema, notificações, leitor de tela, quarto escuro).
-6. **Revisão independente:** outra família de modelo revisa design e evidências, só leitura; revisão humana de conteúdo; revisão jurídica antes do lançamento.
+1. **Static analysis:** lint, types, secret scanning and dependency license scanning.
+2. **Unit:** domain rules (durations, midnight, time zones, record validation, permissions matrix).
+3. **Integration:** server with a real disposable database; sync protocol; authorization per route and channel; idempotency; conflicts.
+4. **UI on device or emulator:** critical flows automated on both platforms, with screenshots and traces captured only for failures.
+5. **Manual on a physical device:** scenarios that automation does not cover well (app terminated by the system, notifications, screen reader, dark room).
+6. **Independent review:** another model family reviews design and evidence, read-only; human content review; legal review before launch.
 
-Dados de teste são sempre fictícios. Nenhum dado real de criança entra em teste, captura ou log.
+Test data is always fictitious. No real child data goes into a test, screenshot or log.
 
-## 4. Cenários Q-01 a Q-12
+## 4. Scenarios Q-01 to Q-12
 
-As regras de cada cenário estão em [Offline, sincronização e temporizadores](../03_Arquitetura/Offline_Sincronizacao_e_Temporizadores.md) (seções 5 a 13), [Modelo de dados e permissões](../03_Arquitetura/Modelo_de_Dados_e_Permissoes.md) e [Comunidade e moderação](../04_Comunidade_Conteudo/Comunidade_e_Moderacao.md).
+The rules for each scenario are in [Offline, sync and timers](../03_Arquitetura/Offline_Sincronizacao_e_Temporizadores.md) (sections 5 to 13), [Data model and permissions](../03_Arquitetura/Modelo_de_Dados_e_Permissoes.md) and [Community and moderation](../04_Comunidade_Conteudo/Comunidade_e_Moderacao.md).
 
-| ID | Cenário | Resultado esperado | Degraus | Plataformas | Evidência |
+| ID | Scenario | Expected result | Rungs | Platforms | Evidence |
 | --- | --- | --- | --- | --- | --- |
-| Q-01 | Registro offline, app encerrado e reaberto | Registro presente, com estado "aguardando envio" e depois "sincronizado" | 3, 4, 5 | Android e iOS físicos | Capturas antes e depois; contagem no servidor |
-| Q-02 | Reenvio depois de timeout ou resposta perdida | Uma operação vira um registro | 3 | Servidor | Teste com proxy que descarta a resposta; tabela de operações processadas |
-| Q-03 | A inicia, B encerra a mesma sessão | Uma sessão, "iniciado por A, encerrado por B"; duplo encerramento tratado | 3, 4 | Dois aparelhos, um de cada plataforma | Detalhe do registro e histórico |
-| Q-04 | A e B editam offline o mesmo registro | Campos diferentes: mescla; mesmo campo: selo de revisão com as duas versões | 3, 4 | Dois aparelhos | Histórico com as versões; captura da tela de revisão |
-| Q-05 | Revogação com aparelho offline | Operações recusadas ao reconectar; dados locais da família apagados; aviso honesto | 3, 5 | Dois aparelhos | Respostas do servidor; captura do aviso; banco local conferido |
-| Q-06 | Ids e anexos de outra família | Resposta igual à de id inexistente, em rotas, sync, URLs de arquivo e push | 2, 3 | Servidor | Relatório de cobertura por rota e canal |
-| Q-07 | Publicar e ler na comunidade | Nenhum acesso à família; resumo de rotina só com prévia e confirmação | 3, 4 | Android e iOS | Teste de esquema; captura da prévia |
-| Q-08 | Tela bloqueada, app suspenso ou encerrado durante sessão | Duração correta ao reabrir | 2, 5 | Android e iOS físicos | Comparação com cronômetro de referência |
-| Q-09 | Troca de fuso, troca manual de relógio, meia-noite | Instantes, duração e agrupamento segundo as regras | 2, 5 | Android e iOS | Testes unitários com fusos e horário de verão; teste manual de troca de fuso |
-| Q-10 | Notificação negada ou push não recebido | Registro e sincronização normais; mensagem compreensível | 4, 5 | Android 13 ou superior e iOS | Capturas com permissão negada |
-| Q-11 | Denunciar, bloquear, excluir postagem | Visibilidade conforme as regras de moderação ([Comunidade e moderação](../04_Comunidade_Conteudo/Comunidade_e_Moderacao.md), seções 7, 8 e 11). O bloqueio é mútuo: nenhum dos dois vê o conteúdo do outro nem responde a ele. A postagem excluída sai de listas e busca na hora | 3, 4 | Android, iOS e painel de moderação | Registro da ação de moderação; capturas |
-| Q-12 | Exportar, excluir e restaurar backup | Exportação só da família e por responsável; exclusão propagada aos aparelhos; restauração de backup não ressuscita dados excluídos | 3, 5 | Servidor e aparelhos | Arquivo exportado com dados fictícios; registro do expurgo; ensaio de restauração em ambiente de teste |
+| Q-01 | Offline record, app terminated and reopened | Record present, with state "aguardando envio" and then "sincronizado" | 3, 4, 5 | Physical Android and iOS | Screenshots before and after; count on the server |
+| Q-02 | Resend after timeout or lost response | One operation becomes one record | 3 | Server | Test with a proxy that drops the response; table of processed operations |
+| Q-03 | A starts, B ends the same session | One session, "iniciado por A, encerrado por B"; double ending handled | 3, 4 | Two devices, one of each platform | Record detail and history |
+| Q-04 | A and B edit the same record offline | Different fields: merge; same field: review flag with both versions | 3, 4 | Two devices | History with the versions; screenshot of the review screen |
+| Q-05 | Revocation with an offline device | Operations refused on reconnect; the family's local data deleted; honest notice | 3, 5 | Two devices | Server responses; screenshot of the notice; local database checked |
+| Q-06 | Another family's ids and attachments | Response identical to that for a nonexistent id, across routes, sync, file URLs and push | 2, 3 | Server | Coverage report per route and channel |
+| Q-07 | Post and read in the community | No access to the family; routine summary only with preview and confirmation | 3, 4 | Android and iOS | Schema test; screenshot of the preview |
+| Q-08 | Screen locked, app suspended or terminated during a session | Correct duration on reopening | 2, 5 | Physical Android and iOS | Comparison against a reference stopwatch |
+| Q-09 | Time zone change, manual clock change, midnight | Instants, duration and grouping according to the rules | 2, 5 | Android and iOS | Unit tests with time zones and daylight saving time; manual time zone change test |
+| Q-10 | Notification denied or push not received | Normal recording and sync; understandable message | 4, 5 | Android 13 or later and iOS | Screenshots with permission denied |
+| Q-11 | Report, block, delete post | Visibility according to the moderation rules ([Community and moderation](../04_Comunidade_Conteudo/Comunidade_e_Moderacao.md), sections 7, 8 and 11). Blocking is mutual: neither of the two sees the other's content or replies to it. The deleted post leaves lists and search immediately | 3, 4 | Android, iOS and moderation panel | Moderation action log; screenshots |
+| Q-12 | Export, delete and restore backup | Export of the family only and by a guardian; deletion propagated to devices; backup restoration does not resurrect deleted data | 3, 5 | Server and devices | Exported file with fictitious data; purge log; restoration rehearsal in a test environment |
 
-Q-12 tem um ponto que costuma ser esquecido: ao restaurar um backup, as exclusões feitas depois da cópia precisam ser reaplicadas. A proposta é manter uma lista de exclusões (só ids e datas, sem conteúdo) fora do backup e reaplicá-la em toda restauração. Detalhes em [Privacidade e segurança](Privacidade_e_Seguranca.md).
+Q-12 has a point that is often forgotten: when restoring a backup, deletions made after the copy must be reapplied. The proposal is to keep a list of deletions (only ids and dates, no content) outside the backup and reapply it on every restoration. Details in [Privacy and security](Privacidade_e_Seguranca.md).
 
-## 5. Requisitos mensuráveis
+## 5. Measurable requirements
 
-Metas propostas para discussão. Todas são hipóteses até a prova técnica; nenhuma foi medida.
+Proposed targets for discussion. All are hypotheses until the technical proof; none has been measured.
 
-| Requisito | Meta proposta | Premissa | Método de validação |
+| Requirement | Proposed target | Assumption | Validation method |
 | --- | --- | --- | --- |
-| Registro rápido | Botão rápido salva em até 2 toques e 5 segundos | Botões rápidos em Hoje | Teste de usabilidade com 5 a 8 cuidadores, cronometrado |
-| Gravação local | Registro visível na tela em até 300 ms depois do toque, em aparelho de entrada | Banco local na mesma transação da fila | Instrumentação na prova técnica, percentil 95 |
-| Perda e duplicação | Zero em 200 ciclos de envio com falhas injetadas | Fila transacional e idempotência | Teste de integração automatizado |
-| Isolamento | 100% das rotas e canais cobertos por teste de outra família | Lista de rotas gerada do código | Relatório de cobertura; publicação bloqueada se faltar rota |
-| Temporizador | Diferença de até 1 segundo em relação ao cronômetro de referência após encerrar e reabrir | Duração derivada do início gravado | Teste manual nas duas plataformas |
-| Sincronização entre cuidadores | Mudança de outro cuidador visível em até 10 segundos com os dois apps abertos e rede boa | Canal de aviso mais pedido de mudanças | Medição com dois aparelhos na prova técnica |
-| Abertura | Hoje aberto em até 2 segundos a frio com 90 dias de dados, em aparelho de entrada | Leitura local | Medição na prova técnica |
-| Acessibilidade | Registro rápido completo com TalkBack e VoiceOver; fonte a 200% sem cortar ações principais | Rótulos e layout flexível | Checklist por tela |
-| Contraste | Texto comum com pelo menos 4,5:1, no tema claro e no escuro | Paleta definida no design | Ferramenta de contraste sobre as capturas |
-| Alvos de toque | Pelo menos 48 x 48 dp (Android) e 44 x 44 pt (iOS) | Componentes padronizados | Accessibility Scanner e Accessibility Inspector |
+| Quick recording | Quick button saves in at most 2 taps and 5 seconds | Quick buttons on Hoje | Timed usability test with 5 to 8 caregivers |
+| Local write | Record visible on screen within 300 ms after the tap, on an entry-level device | Local database in the same transaction as the queue | Instrumentation in the technical proof, percentile 95 |
+| Loss and duplication | Zero in 200 send cycles with injected failures | Transactional queue and idempotency | Automated integration test |
+| Isolation | 100% of routes and channels covered by another-family test | Route list generated from the code | Coverage report; release blocked if a route is missing |
+| Timer | Difference of at most 1 second relative to the reference stopwatch after terminating and reopening | Duration derived from the recorded start | Manual test on both platforms |
+| Sync between caregivers | Another caregiver's change visible within 10 seconds with both apps open and a good network | Notification channel plus change request | Measurement with two devices in the technical proof |
+| Startup | Hoje open within 2 seconds from a cold start with 90 days of data, on an entry-level device | Local read | Measurement in the technical proof |
+| Accessibility | Full quick recording with TalkBack and VoiceOver; text at 200% without cutting off main actions | Labels and flexible layout | Per-screen checklist |
+| Contrast | Regular text with at least 4,5:1, in the light and dark themes | Palette defined in the design | Contrast tool applied to the screenshots |
+| Touch targets | At least 48 x 48 dp (Android) and 44 x 44 pt (iOS) | Standardized components | Accessibility Scanner and Accessibility Inspector |
 
-As metas de contraste e alvos de toque vêm das diretrizes das plataformas (fontes no cabeçalho). As demais são propostas do Hermes.
+The contrast and touch target goals come from the platform guidelines (sources in the header). The others are Hermes's proposals.
 
-## 6. Android e iOS
+## 6. Android and iOS
 
-### Aparelhos
+### Devices
 
-- Proposta mínima de laboratório: um Android de entrada, um Android intermediário e um iPhone na versão mínima suportada, mais um na versão atual. As versões mínimas saem do [ADR-002](../06_ADRs/ADR-002_Framework_Mobile.md).
-- Emulador Android roda no Windows. O simulador de iOS só roda em macOS. Por isso, a validação de iOS a partir do ambiente atual depende de iPhone físico com distribuição de teste, de um Mac (local ou alugado) ou de um serviço de build e teste em nuvem. O caminho por alternativa de stack está em [Mobile e plataformas](../08_Referencias/Tecnologias/Mobile_e_Plataformas.md).
-- Testes com o sistema encerrando o app, notificações e leitor de tela exigem aparelho físico.
+- Minimum proposed lab: one entry-level Android, one mid-range Android and one iPhone on the minimum supported version, plus one on the current version. The minimum versions come from [ADR-002](../06_ADRs/ADR-002_Framework_Mobile.md).
+- The Android emulator runs on Windows. The iOS simulator runs only on macOS. Therefore, iOS validation from the current environment depends on a physical iPhone with test distribution, a Mac (local or rented) or a cloud build and test service. The path via an alternative stack is in [Mobile and platforms](../08_Referencias/Tecnologias/Mobile_e_Plataformas.md).
+- Tests with the system terminating the app, notifications and the screen reader require a physical device.
 
-### Distribuição de teste
+### Test distribution
 
-| Loja | Mecanismo | Limites e exigências (consulta 22/10/2026) |
+| Store | Mechanism | Limits and requirements (accessed 22/10/2026) |
 | --- | --- | --- |
-| Google Play | Testes interno, fechado e aberto | Conta pessoal criada depois de 13/11/2023 precisa de teste fechado com pelo menos 12 testadores inscritos continuamente por 14 dias antes de pedir acesso à produção; conta de organização não tem essa exigência. |
-| App Store | TestFlight | Até 100 testadores internos (membros da equipe) e até 10.000 externos; o primeiro build para testadores externos passa por revisão da Apple. |
+| Google Play | Internal, closed and open testing | A personal account created after 13/11/2023 needs a closed test with at least 12 testers continuously opted in for 14 days before applying for production access; an organization account does not have this requirement. |
+| App Store | TestFlight | Up to 100 internal testers (team members) and up to 10.000 external testers; the first build for external testers goes through Apple review. |
 
-O tipo de conta de desenvolvedor (pessoal ou organização) muda prazos e custos; está em [Decisões para Daniel](../07_Roadmap/Decisoes_para_Daniel.md).
+The type of developer account (personal or organization) changes timelines and costs; it is covered in [Decisions for Daniel](../07_Roadmap/Decisoes_para_Daniel.md).
 
-## 7. Provas técnicas previstas (MAT-17)
+## 7. Planned technical proofs (MAT-17)
 
-A prova técnica é pequena e descartável. Ela existe para escolher a stack com evidência, não para virar o produto.
+The technical proof is small and disposable. It exists to choose the stack with evidence, not to become the product.
 
-| Prova | Pergunta | Passa se |
+| Proof | Question | Passes if |
 | --- | --- | --- |
-| P1 Offline e reabertura | A fila local sobrevive ao encerramento? | Q-01 passa nas duas plataformas |
-| P2 Reenvio idempotente | Reenvio duplica? | Q-02 passa com 200 ciclos |
-| P3 Dois cuidadores | Conflito e autoria funcionam? | Q-03 e Q-04 passam |
-| P4 Revogação offline | O servidor recusa e o aparelho limpa? | Q-05 passa |
-| P5 Isolamento no canal de sync | O canal de sincronização respeita o vínculo atual? | Q-06 passa no canal de sync |
-| P6 Cronômetro fora do app | Notificação contínua no Android e Live Activity no iOS são viáveis na stack? | Funcionam com o app encerrado, ou o custo de não ter fica registrado |
-| P7 Build de iOS a partir do Windows | Quanto tempo e custo leva do código ao iPhone? | Build instalado via TestFlight com tempo e custo registrados |
-| P8 Acessibilidade básica | Os componentes da stack expõem rótulos e escala de fonte? | Registro rápido com TalkBack e VoiceOver |
-| P9 Tamanho e abertura | O app cabe nas metas da seção 5? | Medidas registradas em aparelho de entrada |
+| P1 Offline and reopening | Does the local queue survive termination? | Q-01 passes on both platforms |
+| P2 Idempotent resend | Does resending duplicate? | Q-02 passes with 200 cycles |
+| P3 Two caregivers | Do conflict and authorship work? | Q-03 and Q-04 pass |
+| P4 Offline revocation | Does the server refuse and the device clean up? | Q-05 passes |
+| P5 Isolation in the sync channel | Does the sync channel respect the current membership? | Q-06 passes on the sync channel |
+| P6 Stopwatch outside the app | Are an ongoing notification on Android and a Live Activity on iOS feasible in the stack? | They work with the app terminated, or the cost of not having them is recorded |
+| P7 iOS build from Windows | How much time and cost does it take from code to iPhone? | Build installed via TestFlight with time and cost recorded |
+| P8 Basic accessibility | Do the stack's components expose labels and text scaling? | Quick recording with TalkBack and VoiceOver |
+| P9 Size and startup | Does the app fit the targets in section 5? | Measurements recorded on an entry-level device |
 
-Critério de decisão: se a stack recomendada falhar em P1 a P5 sem correção razoável, a alternativa principal do [ADR-002](../06_ADRs/ADR-002_Framework_Mobile.md) e do [ADR-003](../06_ADRs/ADR-003_Backend_Persistencia_Autenticacao.md) é testada antes de seguir.
+Decision criterion: if the recommended stack fails P1 to P5 without a reasonable fix, the main alternative from [ADR-002](../06_ADRs/ADR-002_Framework_Mobile.md) and [ADR-003](../06_ADRs/ADR-003_Backend_Persistencia_Autenticacao.md) is tested before proceeding.
 
-## 8. Observabilidade
+## 8. Observability
 
-- Logs de servidor e de aparelho sem conteúdo de registros, notas, nomes ou datas de nascimento; ids e tipos de operação bastam.
-- Relatório de falhas sem dados pessoais; SDKs de terceiros avaliados um a um e declarados nas lojas.
-- Métricas do protocolo: operações pendentes por aparelho, idade da operação mais antiga, rejeições por motivo e conflitos por semana.
-- Alerta para filas paradas, taxa de rejeição anormal e falhas de autorização em série.
+- Server and device logs without the content of records, notes, names or birth dates; ids and operation types are enough.
+- Crash reports without personal data; third-party SDKs evaluated one by one and declared in the stores.
+- Protocol metrics: pending operations per device, age of the oldest operation, rejections by reason and conflicts per week.
+- Alerts for stalled queues, abnormal rejection rates and serial authorization failures.
 
-## 9. Lacunas conhecidas
+## 9. Known gaps
 
-| Lacuna | Efeito | Menor intervenção |
+| Gap | Effect | Smallest intervention |
 | --- | --- | --- |
-| Sem Android SDK, Flutter, Kotlin ou Gradle instalados nesta máquina | Nenhuma prova mobile foi feita nesta etapa | Instalar o necessário na MAT-17, depois da escolha de stack |
-| Sem Mac nem iPhone de teste conhecido | Validação de iOS depende de serviço em nuvem ou aparelho | Decisão de Daniel sobre conta Apple e aparelho |
-| Sem contas de desenvolvedor | Sem TestFlight nem teste fechado na Play | Decisão de Daniel |
-| Sem revisor de conteúdo nem consultoria jurídica | Conteúdo e textos legais não podem ser publicados | Decisão de Daniel |
+| No Android SDK, Flutter, Kotlin or Gradle installed on this machine | No mobile proof was done in this stage | Install what is needed in MAT-17, after the stack choice |
+| No known Mac or test iPhone | iOS validation depends on a cloud service or device | Daniel's decision on the Apple account and device |
+| No developer accounts | No TestFlight or closed testing on Play | Daniel's decision |
+| No content reviewer or legal counsel | Content and legal texts cannot be published | Daniel's decision |
 
-## Questões abertas
+## Open questions
 
-1. Versões mínimas de Android e iOS (dependem do ADR-002 e do público).
-2. Quem serão os 12 testadores do teste fechado, se a conta da Play for pessoal.
-3. Orçamento para aparelhos de teste ou laboratório em nuvem.
+1. Minimum Android and iOS versions (depend on ADR-002 and the audience).
+2. Who the 12 testers for the closed test will be, if the Play account is personal.
+3. Budget for test devices or a cloud lab.
 
-## Limites desta análise
+## Limits of this analysis
 
-Plano sem execução. As metas são propostas, não medidas; as exigências das lojas foram lidas em 22/10/2026 e podem mudar.
+Plan without execution. The targets are proposals, not measurements; the store requirements were read on 22/10/2026 and may change.

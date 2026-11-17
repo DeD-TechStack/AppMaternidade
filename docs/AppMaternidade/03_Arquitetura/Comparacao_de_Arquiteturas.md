@@ -1,209 +1,209 @@
 ---
 tipo: design-doc
-status: proposta
-responsavel: Hermes (coordenador da APP-001)
+status: proposal
+responsavel: Hermes (coordinator of APP-001)
 revisado_em: 2026-10-22
 tarefa: MAT-7
 adr: ADR-002, ADR-003
 fontes_principais:
-  - 08_Referencias/Tecnologias/Mobile_e_Plataformas.md (103 fontes, consulta 22/10/2026)
-  - 08_Referencias/Tecnologias/Dados_Sincronizacao_e_Backend.md (consulta 22/10/2026)
-  - 08_Referencias/Tecnologias/Precos_Datados.md (fotografia de 22/10/2026)
-  - tasks/hermes/APP-001-design-docs/02_PESQUISA_TECNOLOGIAS.md (critérios de desempate)
-  - https://supabase.com/docs/guides/platform/regions (consulta 22/10/2026)
-  - https://docs.powersync.com/integrations/supabase/guide (consulta 22/10/2026)
-  - https://docs.powersync.com/resources/feature-status (consulta 22/10/2026)
-  - https://docs.powersync.com/client-sdks/advanced/data-encryption (consulta 22/10/2026)
+  - 08_Referencias/Tecnologias/Mobile_e_Plataformas.md (103 sources, consulted 22/10/2026)
+  - 08_Referencias/Tecnologias/Dados_Sincronizacao_e_Backend.md (consulted 22/10/2026)
+  - 08_Referencias/Tecnologias/Precos_Datados.md (snapshot from 22/10/2026)
+  - tasks/hermes/APP-001-design-docs/02_PESQUISA_TECNOLOGIAS.md (tie-breaking criteria)
+  - https://supabase.com/docs/guides/platform/regions (consulted 22/10/2026)
+  - https://docs.powersync.com/integrations/supabase/guide (consulted 22/10/2026)
+  - https://docs.powersync.com/resources/feature-status (consulted 22/10/2026)
+  - https://docs.powersync.com/client-sdks/advanced/data-encryption (consulted 22/10/2026)
 ---
 
-# Comparação de arquiteturas
+# Architecture comparison
 
-> Nota de 03/11/2026: o rumo mudou para site completo primeiro e port Android e iOS depois ([ADR-009](../06_ADRs/ADR-009_Site_Completo_Primeiro.md)). Onde este texto fala em app nativo, leia como o port; o site cobre as mesmas funções.
+> Note from 03/11/2026: the direction changed to a full website first and an Android and iOS port later ([ADR-009](../06_ADRs/ADR-009_Site_Completo_Primeiro.md)). Where this text talks about a native app, read it as the port; the website covers the same functions.
 
-Proposta do Hermes. Nenhuma tecnologia está aprovada e nada foi construído ou medido: as comparações vêm de documentação oficial, de consultas aos registros de pacotes e de inferências marcadas como [HIP]. A decisão fica nos [ADR-002](../06_ADRs/ADR-002_Framework_Mobile.md) e [ADR-003](../06_ADRs/ADR-003_Backend_Persistencia_Autenticacao.md), que dependem de Daniel e da prova técnica (MAT-17).
+Hermes's proposal. No technology is approved and nothing has been built or measured: the comparisons come from official documentation, from queries to the package registries and from inferences marked as [HIP]. The decision rests with [ADR-002](../06_ADRs/ADR-002_Framework_Mobile.md) and [ADR-003](../06_ADRs/ADR-003_Backend_Persistencia_Autenticacao.md), which depend on Daniel and on the technical proof (MAT-17).
 
-Regras do pacote seguidas aqui:
+Package rules followed here:
 
-- Escolher pelo produto e pela manutenção, não por familiaridade, por uso num repositório de referência ou por sugestões anteriores (React Native + Spring Boot e Flutter + Firebase foram citadas antes e não estão aprovadas).
-- Não acoplar Flutter a Firebase nem React Native a backend TypeScript por conveniência: mobile e dados têm justificativas próprias.
-- Nomear o SDK real de cada combinação. Persistência offline documentada para SDK nativo não vale automaticamente para biblioteca JavaScript em React Native.
+- Choose based on the product and on maintenance, not on familiarity, on use in a reference repository or on earlier suggestions (React Native + Spring Boot and Flutter + Firebase were mentioned before and are not approved).
+- Do not couple Flutter to Firebase or React Native to a TypeScript backend for convenience: mobile and data have their own justifications.
+- Name the actual SDK of each combination. Offline persistence documented for a native SDK does not automatically apply to a JavaScript library in React Native.
 
-## 1. O que a arquitetura precisa resolver
+## 1. What the architecture needs to solve
 
-| Necessidade | Onde está especificada |
+| Need | Where it is specified |
 | --- | --- |
-| Registrar sem conexão, sobreviver ao encerramento do app, reenviar sem duplicar | [Offline, sincronização e temporizadores](Offline_Sincronizacao_e_Temporizadores.md), seções 2 a 6 |
-| Conflitos explícitos entre cuidadores; nada some sem aviso | Mesmo documento, seção 7 |
-| Revogação reavaliada no servidor, com limpeza local | Mesmo documento, seção 11; [ADR-005](../06_ADRs/ADR-005_Isolamento_e_Fronteira_Comunidade.md) |
-| Isolamento entre famílias em consultas, sync, arquivos e push | [Modelo de dados e permissões](Modelo_de_Dados_e_Permissoes.md), seção 6 |
-| Comunidade sem caminho para a rotina | Mesmo documento, seções 2 e 6 |
-| Cronômetro sem processo rodando, visível fora do app | [Offline e temporizadores](Offline_Sincronizacao_e_Temporizadores.md), seção 9 |
-| Android e iOS desde um ambiente Windows, sem Mac hoje | [Qualidade e validação](../05_Privacidade_Operacao/Qualidade_e_Validacao.md), seção 9 |
-| Equipe pequena: poucas linguagens, poucos fornecedores, saída possível | Este documento, seção 5 |
-| Web em três papéis separados | [ADR-001](../06_ADRs/ADR-001_Plataformas_e_Web.md) |
+| Record without a connection, survive the app being closed, resend without duplicating | [Offline, synchronization and timers](Offline_Sincronizacao_e_Temporizadores.md), sections 2 to 6 |
+| Explicit conflicts between caregivers; nothing disappears without warning | Same document, section 7 |
+| Revocation re-evaluated on the server, with local cleanup | Same document, section 11; [ADR-005](../06_ADRs/ADR-005_Isolamento_e_Fronteira_Comunidade.md) |
+| Isolation between families in queries, sync, files and push | [Data model and permissions](Modelo_de_Dados_e_Permissoes.md), section 6 |
+| Community with no path to the routine | Same document, sections 2 and 6 |
+| Timer with no process running, visible outside the app | [Offline and timers](Offline_Sincronizacao_e_Temporizadores.md), section 9 |
+| Android and iOS from a Windows environment, with no Mac today | [Quality and validation](../05_Privacidade_Operacao/Qualidade_e_Validacao.md), section 9 |
+| Small team: few languages, few vendors, possible exit | This document, section 5 |
+| Web in three separate roles | [ADR-001](../06_ADRs/ADR-001_Plataformas_e_Web.md) |
 
-## 2. Critérios
+## 2. Criteria
 
-Prioridades sugeridas no pacote (`02_PESQUISA_TECNOLOGIAS.md`, seção 4), usadas sem pontuação somada:
+Priorities suggested in the package (`02_PESQUISA_TECNOLOGIAS.md`, section 4), used without a summed score:
 
-1. Integridade e recuperação dos registros offline.
-2. Autorização e separação entre famílias e comunidade.
-3. Experiência de registro e histórico em Android e iOS.
-4. Viabilidade de construir, depurar e testar iOS a partir do ambiente disponível.
-5. Esforço da equipe e manutenção das dependências.
-6. Operação e custo total, incluindo moderação.
-7. Exportar dados e substituir fornecedores.
-8. Papel efetivamente necessário da web.
+1. Integrity and recovery of offline records.
+2. Authorization and separation between families and community.
+3. Recording and history experience on Android and iOS.
+4. Feasibility of building, debugging and testing iOS from the available environment.
+5. Team effort and dependency maintenance.
+6. Operations and total cost, including moderation.
+7. Exporting data and replacing vendors.
+8. Actually necessary role of the web.
 
-## 3. Peças avaliadas e peças descartadas
+## 3. Pieces evaluated and pieces discarded
 
 ### Mobile
 
-Cinco alternativas comparadas em [Mobile e plataformas](../08_Referencias/Tecnologias/Mobile_e_Plataformas.md). Versões consultadas nos registros oficiais em 22/10/2026 [EXEC E1 a E8 daquela nota]: Expo SDK 58 (`expo` 58.0.17) com React Native 0.88.0; Flutter 3.47.7 com Dart 3.13.5; Kotlin 2.4.21 e Compose Multiplatform 1.12.2; Xcode 27.1 com Swift 6.4.
+Five alternatives compared in [Mobile and platforms](../08_Referencias/Tecnologias/Mobile_e_Plataformas.md). Versions checked in the official registries on 22/10/2026 [EXEC E1 to E8 of that note]: Expo SDK 58 (`expo` 58.0.17) with React Native 0.88.0; Flutter 3.47.7 with Dart 3.13.5; Kotlin 2.4.21 and Compose Multiplatform 1.12.2; Xcode 27.1 with Swift 6.4.
 
-| Alternativa | Situação | Motivo principal |
+| Alternative | Status | Main reason |
 | --- | --- | --- |
-| React Native + Expo | Recomendada (ADR-002) | Compila, assina, instala no iPhone e envia ao TestFlight a partir do Windows num fluxo integrado, via EAS Build e EAS Submit (https://docs.expo.dev/faq/). As outras chegam ao TestFlight por CI macOS, com o pipeline montado à parte ([Mobile e plataformas, 2.1](../08_Referencias/Tecnologias/Mobile_e_Plataformas.md)). Live Activity no iOS com o pacote oficial `expo-widgets`, sem Swift (https://docs.expo.dev/versions/latest/sdk/widgets/). |
-| Flutter | Alternativa principal | Persistência madura (drift) e cronômetro Android pronto no plugin de notificações; compila o iOS só no macOS (https://docs.flutter.dev/platform-integration/ios/setup): sem Mac próprio, por CI macOS e TestFlight. Pede Swift na extensão da Live Activity (https://pub.dev/packages/live_activities). |
-| KMP com UI nativa | Condicional | Bom se houver competência em iOS. Tem duas UIs; compila no macOS e, na prática, pede Mac para escrever e testar a UI em Swift [HIP] (https://kotlinlang.org/docs/multiplatform/quickstart.html). |
-| KMP + Compose Multiplatform | Fora por ora | Compila no macOS (Mac ou CI); lacunas de acessibilidade documentadas no iOS (https://kotlinlang.org/docs/multiplatform/compose-ios-accessibility.html). |
-| Swift + Kotlin nativos | Fora por ora | Dois apps completos e duas implementações do protocolo offline para uma equipe pequena. |
+| React Native + Expo | Recommended (ADR-002) | Compiles, signs, installs on the iPhone and submits to TestFlight from Windows in an integrated flow, via EAS Build and EAS Submit (https://docs.expo.dev/faq/). The others reach TestFlight through macOS CI, with the pipeline assembled separately ([Mobile and platforms, 2.1](../08_Referencias/Tecnologias/Mobile_e_Plataformas.md)). Live Activity on iOS with the official package `expo-widgets`, without Swift (https://docs.expo.dev/versions/latest/sdk/widgets/). |
+| Flutter | Main alternative | Mature persistence (drift) and Android timer ready-made in the notifications plugin; compiles iOS only on macOS (https://docs.flutter.dev/platform-integration/ios/setup): without its own Mac, via macOS CI and TestFlight. Requires Swift in the Live Activity extension (https://pub.dev/packages/live_activities). |
+| KMP with native UI | Conditional | Good if there is iOS expertise. Has two UIs; compiles on macOS and, in practice, requires a Mac to write and test the Swift UI [HIP] (https://kotlinlang.org/docs/multiplatform/quickstart.html). |
+| KMP + Compose Multiplatform | Out for now | Compiles on macOS (Mac or CI); documented accessibility gaps on iOS (https://kotlinlang.org/docs/multiplatform/compose-ios-accessibility.html). |
+| Native Swift + Kotlin | Out for now | Two complete apps and two implementations of the offline protocol for a small team. |
 
-### Dados e sincronização
+### Data and synchronization
 
-| Peça | Situação | Motivo |
+| Piece | Status | Reason |
 | --- | --- | --- |
-| Firestore com SDK nativo (React Native Firebase ou FlutterFire) | Conjunto A | Offline por padrão nos SDKs nativos; última escrita vence (https://firebase.google.com/docs/firestore/manage-data/enable-offline). |
-| Firebase JS SDK em React Native | Descartado para dados | A tabela oficial de ambientes marca o Firestore em React Native como "except persistence" (https://firebase.google.com/docs/web/environments-js-sdk). |
-| PowerSync (PostgreSQL ↔ SQLite) | Conjunto B | Fila local de envio para um endpoint nosso; download por Sync Streams; remoção no aparelho quando o acesso sai (https://docs.powersync.com/handling-writes/writing-client-changes, https://docs.powersync.com/architecture/powersync-protocol). |
-| Sincronização própria (outbox e pull por cursor) | Conjunto C | Controle total, mais esforço. |
-| ElectricSQL | Descartado sozinho | Só leitura: "does not do write-path sync" (https://electric.ax/docs/sync/guides/writes). |
-| Zero | Descartado | "Zero does not support offline writes" (https://zero.rocicorp.dev/docs/connection). |
-| Replicache | Descartado | Em modo de manutenção (https://replicache.dev/). |
-| Atlas Device Sync (Realm) | Descartado | Encerrado em 30/09/2025 (https://www.mongodb.com/docs/atlas/app-services/sync/device-sync-deprecation/). |
-| WatermelonDB, RxDB | Descartados agora | Mais de um ano sem publicação no npm; SQLite de produção só na versão paga, respectivamente (nota de dados, seção 5.4). |
+| Firestore with native SDK (React Native Firebase or FlutterFire) | Stack A | Offline by default in the native SDKs; last write wins (https://firebase.google.com/docs/firestore/manage-data/enable-offline). |
+| Firebase JS SDK in React Native | Discarded for data | The official environments table marks Firestore in React Native as "except persistence" (https://firebase.google.com/docs/web/environments-js-sdk). |
+| PowerSync (PostgreSQL ↔ SQLite) | Stack B | Local upload queue to an endpoint of ours; download via Sync Streams; removal on the device when access is lost (https://docs.powersync.com/handling-writes/writing-client-changes, https://docs.powersync.com/architecture/powersync-protocol). |
+| Own synchronization (outbox and cursor-based pull) | Stack C | Full control, more effort. |
+| ElectricSQL | Discarded on its own | Read-only: "does not do write-path sync" (https://electric.ax/docs/sync/guides/writes). |
+| Zero | Discarded | "Zero does not support offline writes" (https://zero.rocicorp.dev/docs/connection). |
+| Replicache | Discarded | In maintenance mode (https://replicache.dev/). |
+| Atlas Device Sync (Realm) | Discarded | Shut down in 30/09/2025 (https://www.mongodb.com/docs/atlas/app-services/sync/device-sync-deprecation/). |
+| WatermelonDB, RxDB | Discarded for now | More than a year without an npm release; production SQLite only in the paid version, respectively (data note, section 5.4). |
 
-## 4. Três conjuntos completos
+## 4. Three complete stacks
 
-Cada conjunto inclui app, banco local, sincronização, servidor, autenticação, arquivos, push, e-mail, site e painel. O mobile aparece com React Native + Expo para comparar só a parte de dados; Flutter funciona nos três com os SDKs equivalentes indicados.
+Each stack includes app, local database, synchronization, server, authentication, files, push, email, website and dashboard. Mobile appears as React Native + Expo in order to compare only the data part; Flutter works in all three with the equivalent SDKs indicated.
 
-### Conjunto B — PostgreSQL gerenciado + PowerSync + serviço de domínio próprio (recomendado)
+### Stack B — Managed PostgreSQL + PowerSync + own domain service (recommended)
 
-| Peça | Escolha e SDK real |
+| Piece | Choice and actual SDK |
 | --- | --- |
-| App | React Native 0.88 com Expo SDK 58, TypeScript, development build pelo EAS (Expo Go não serve) |
-| Banco local | SQLite gerenciado pelo `@powersync/react-native` 2.3.3 (GA), que usa `@op-engineering/op-sqlite` (suporte marcado como Beta, "production-ready for tested use cases") e permite SQLCipher (https://docs.powersync.com/client-sdks/reference/react-native-and-expo, https://docs.powersync.com/resources/feature-status, https://docs.powersync.com/client-sdks/advanced/data-encryption) |
-| Sincronização | PowerSync Cloud, região BR (https://docs.powersync.com/integrations/supabase/guide): download por Sync Streams filtrados pelo vínculo ativo; fila de envio para o serviço de domínio |
-| Servidor | Serviço de domínio próprio (monólito modular em container): recebe todas as escritas de cuidado, convites, comunidade, moderação, exportação, exclusão e push |
-| Banco remoto | Supabase PostgreSQL na região sa-east-1, São Paulo (https://supabase.com/docs/guides/platform/regions), com esquemas separados por contexto e RLS negando escrita direta dos clientes |
-| Autenticação | Supabase Auth com código de uso único por e-mail, enviado por SMTP próprio (o SMTP padrão não serve para produção) |
-| Arquivos (depois do MVP) | Supabase Storage com prefixo por família e URLs curtas emitidas pelo serviço |
-| Push | FCM e APNs, direto ou pelo Expo Push Service (decisão aberta) |
-| Web | Site estático; painel interno web falando com o serviço de domínio |
+| App | React Native 0.88 with Expo SDK 58, TypeScript, development build via EAS (Expo Go does not work) |
+| Local database | SQLite managed by `@powersync/react-native` 2.3.3 (GA), which uses `@op-engineering/op-sqlite` (support marked as Beta, "production-ready for tested use cases") and allows SQLCipher (https://docs.powersync.com/client-sdks/reference/react-native-and-expo, https://docs.powersync.com/resources/feature-status, https://docs.powersync.com/client-sdks/advanced/data-encryption) |
+| Synchronization | PowerSync Cloud, BR region (https://docs.powersync.com/integrations/supabase/guide): download via Sync Streams filtered by the active link; upload queue to the domain service |
+| Server | Own domain service (modular monolith in a container): receives all care writes, invitations, community, moderation, export, deletion and push |
+| Remote database | Supabase PostgreSQL in the sa-east-1 region, São Paulo (https://supabase.com/docs/guides/platform/regions), with schemas separated by context and RLS denying direct writes from clients |
+| Authentication | Supabase Auth with a one-time code by email, sent via our own SMTP (the default SMTP is not suitable for production) |
+| Files (after the MVP) | Supabase Storage with a per-family prefix and short-lived URLs issued by the service |
+| Push | FCM and APNs, directly or via Expo Push Service (open decision) |
+| Web | Static website; internal web dashboard talking to the domain service |
 
-### Conjunto A — Firebase
+### Stack A — Firebase
 
-| Peça | Escolha e SDK real |
+| Piece | Choice and actual SDK |
 | --- | --- |
-| App | React Native + Expo com `@react-native-firebase/*` 27.0.0 (SDK nativo, development build), ou Flutter com FlutterFire (`cloud_firestore` 7.0.0) |
-| Banco local e sincronização | Cache persistente do SDK nativo do Firestore; última escrita vence; transações falham offline |
-| Servidor | Cloud Functions para convites, conflitos, moderação, EXIF e push |
-| Autorização | Regras de segurança com leitura do documento de vínculo; Functions com Admin SDK ignoram as regras e precisam de checagem própria |
-| Autenticação, arquivos, push | Firebase Auth, Cloud Storage for Firebase, FCM |
-| Web | Site estático; painel próprio |
+| App | React Native + Expo with `@react-native-firebase/*` 27.0.0 (native SDK, development build), or Flutter with FlutterFire (`cloud_firestore` 7.0.0) |
+| Local database and synchronization | Persistent cache of the Firestore native SDK; last write wins; transactions fail offline |
+| Server | Cloud Functions for invitations, conflicts, moderation, EXIF and push |
+| Authorization | Security rules reading the link document; Functions with the Admin SDK bypass the rules and need their own checks |
+| Authentication, files, push | Firebase Auth, Cloud Storage for Firebase, FCM |
+| Web | Static website; own dashboard |
 
-### Conjunto C — API própria + PostgreSQL gerenciado + sincronização própria
+### Stack C — Own API + managed PostgreSQL + own synchronization
 
-| Peça | Escolha e SDK real |
+| Piece | Choice and actual SDK |
 | --- | --- |
-| App | React Native + Expo com `expo-sqlite` 58 (SQLCipher por config plugin) ou `op-sqlite`; Flutter com drift |
-| Sincronização | Construída pelo projeto: outbox, envio em lote, pull por cursor, tombstones, purga local na revogação |
-| Servidor | Monólito modular em container; PostgreSQL gerenciado (Supabase, Neon, Cloud SQL, RDS ou outro) |
-| Autenticação | Biblioteca do framework ou provedor externo |
-| Arquivos, push, e-mail, web | Object storage com URLs assinadas; FCM e APNs; provedor de e-mail; site estático e painel |
+| App | React Native + Expo with `expo-sqlite` 58 (SQLCipher via config plugin) or `op-sqlite`; Flutter with drift |
+| Synchronization | Built by the project: outbox, batch upload, cursor-based pull, tombstones, local purge on revocation |
+| Server | Modular monolith in a container; managed PostgreSQL (Supabase, Neon, Cloud SQL, RDS or another) |
+| Authentication | Framework library or external provider |
+| Files, push, email, web | Object storage with signed URLs; FCM and APNs; email provider; static website and dashboard |
 
-### Como cada conjunto trata os cenários mais difíceis
+### How each stack handles the hardest scenarios
 
-| Cenário | Conjunto B (recomendado) | Conjunto A (Firebase) | Conjunto C (API própria) |
+| Scenario | Stack B (recommended) | Stack A (Firebase) | Stack C (own API) |
 | --- | --- | --- | --- |
-| Q-02 reenvio sem duplicar | O serviço deduplica pelo id da operação; o PowerSync manda operações com id e exige endpoint idempotente (https://docs.powersync.com/handling-writes/handling-update-conflicts) | Id gerado no aparelho evita duplicar a criação | Construído pelo projeto |
-| Q-04 conflito explícito | Implementado no serviço (versão-base, mescla por campo, proposta pendente) | Construir sobre "última escrita vence". Escrita recusada pelas regras é desfeita no cache local [DOC B01 + HIP, nota de dados]; mostrar a versão perdida depois de um reinício do app precisa de prova | Implementado no serviço |
-| Q-05 revogação offline | O serviço recusa o envio; o vínculo apagado tira os dados da família dos buckets e o cliente os remove na sincronização seguinte (https://docs.powersync.com/sync/rules/parameter-queries) | Regras negam na reconexão; limpar o cache é código do app | Protocolo próprio responde "acesso encerrado" e o app purga |
-| Q-06 isolamento no canal de sync | Duas autoridades a manter coerentes: o serviço (escrita) e os Sync Streams (leitura); testes nos dois | Regras por coleção; Functions precisam da própria checagem | Uma autoridade: o serviço |
-| Q-07 comunidade separada | Esquema próprio, fora do sync, sem permissão de banco sobre as tabelas de cuidado | Coleções separadas com regras próprias | Módulo e esquema separados |
+| Q-02 resend without duplicating | The service deduplicates by operation id; PowerSync sends operations with an id and requires an idempotent endpoint (https://docs.powersync.com/handling-writes/handling-update-conflicts) | Id generated on the device avoids duplicating the creation | Built by the project |
+| Q-04 explicit conflict | Implemented in the service (base version, per-field merge, pending proposal) | Build on top of "última escrita vence". A write rejected by the rules is rolled back in the local cache [DOC B01 + HIP, data note]; showing the lost version after an app restart needs proof | Implemented in the service |
+| Q-05 offline revocation | The service rejects the upload; the deleted link removes the family's data from the buckets and the client removes it on the next synchronization (https://docs.powersync.com/sync/rules/parameter-queries) | Rules deny on reconnection; clearing the cache is app code | Own protocol responds "acesso encerrado" and the app purges |
+| Q-06 isolation in the sync channel | Two authorities to keep consistent: the service (writes) and the Sync Streams (reads); tests on both | Per-collection rules; Functions need their own checks | One authority: the service |
+| Q-07 separate community | Own schema, outside sync, with no database permission over the care tables | Separate collections with their own rules | Separate module and schema |
 
-## 5. Quadro pelos critérios
+## 5. Assessment by criteria
 
-Sem pontuação somada. "Forte", "adequado" e "fraco" com o motivo.
+No summed score. "Forte", "adequado" and "fraco" with the reason.
 
-| Critério | Conjunto B (recomendado) | Conjunto A (Firebase) | Conjunto C (API própria) |
+| Criterion | Stack B (recommended) | Stack A (Firebase) | Stack C (own API) |
 | --- | --- | --- | --- |
-| 1. Integridade offline | **Forte:** SQLite local e fila prontos; endpoint idempotente | **Adequado:** cache do SDK nativo; persistência das escritas pendentes após reinício a confirmar | **Forte se bem construído; risco alto de erro** |
-| 2. Autorização e separação | **Adequado:** escrita centralizada no serviço; leitura nos Sync Streams precisa espelhar as regras | **Adequado:** regras por documento; lógica espalhada entre regras e Functions | **Forte:** uma autoridade só |
-| 3. Experiência de registro e histórico | **Forte:** leitura local, histórico sem custo de rede | **Adequado:** leitura do cache; histórico longo gera leituras cobradas | **Forte:** leitura local |
-| 4. iOS a partir do Windows | Igual nos três: decidido pelo mobile (ADR-002) | Igual | Igual |
-| 5. Esforço e manutenção | **Adequado:** construir o serviço de domínio e manter os Sync Streams; dois fornecedores | **Forte no começo, fraco depois:** pouco código inicial; regras e índices crescem | **Fraco:** protocolo e cliente de sync próprios |
-| 6. Operação e custo | **Adequado:** custo fixo maior no início (seção 6) | **Forte:** o mais barato nas três escalas | **Adequado:** mais operação própria |
-| 7. Exportação e saída | **Adequado:** PostgreSQL portátil; PowerSync tem edição aberta auto-hospedável (licença FSL-1.1-ALv2, que vira Apache-2.0 após dois anos: https://github.com/powersync-ja/powersync-service/blob/main/LICENSE); sair do PowerSync leva ao Conjunto C | **Fraco:** modelo documental e reescrita da camada de dados | **Forte:** tudo padrão |
-| 8. Papel da web | **Forte:** PowerSync tem SDK Web GA, se um dia houver app web | **Adequado:** outro SDK na web | **Adequado:** cliente de sync a mais |
-| Dados no Brasil | **Forte:** Supabase sa-east-1 e PowerSync região BR | Região em São Paulo a confirmar nesta etapa | Depende do provedor escolhido |
+| 1. Offline integrity | **Strong:** local SQLite and queue ready-made; idempotent endpoint | **Adequate:** native SDK cache; persistence of pending writes after restart to be confirmed | **Strong if well built; high risk of error** |
+| 2. Authorization and separation | **Adequate:** writes centralized in the service; reads in the Sync Streams need to mirror the rules | **Adequate:** per-document rules; logic spread between rules and Functions | **Strong:** a single authority |
+| 3. Recording and history experience | **Strong:** local reads, history with no network cost | **Adequate:** reads from cache; long history generates billed reads | **Strong:** local reads |
+| 4. iOS from Windows | Same in all three: decided by mobile (ADR-002) | Same | Same |
+| 5. Effort and maintenance | **Adequate:** build the domain service and maintain the Sync Streams; two vendors | **Strong at first, weak later:** little initial code; rules and indexes grow | **Weak:** own protocol and sync client |
+| 6. Operations and cost | **Adequate:** higher fixed cost at the start (section 6) | **Strong:** the cheapest at all three scales | **Adequate:** more self-run operations |
+| 7. Export and exit | **Adequate:** portable PostgreSQL; PowerSync has a self-hostable open edition (FSL-1.1-ALv2 license, which becomes Apache-2.0 after two years: https://github.com/powersync-ja/powersync-service/blob/main/LICENSE); leaving PowerSync leads to Stack C | **Weak:** document model and rewrite of the data layer | **Strong:** everything standard |
+| 8. Role of the web | **Strong:** PowerSync has a GA Web SDK, if there is ever a web app | **Adequate:** another SDK on the web | **Adequate:** one more sync client |
+| Data in Brazil | **Strong:** Supabase sa-east-1 and PowerSync BR region | São Paulo region to be confirmed at this stage | Depends on the chosen provider |
 
-## 6. Custos ilustrativos
+## 6. Illustrative costs
 
-Fotografia de 22/10/2026, em USD por mês, sem impostos, incluindo EAS Starter e a anuidade da Apple rateada. Cenários ilustrativos, não previsão de demanda. Premissas em [Preços datados](../08_Referencias/Tecnologias/Precos_Datados.md), seção 10.
+Snapshot from 22/10/2026, in USD per month, excluding taxes, including EAS Starter and the prorated Apple annual fee. Illustrative scenarios, not a demand forecast. Assumptions in [Dated prices](../08_Referencias/Tecnologias/Precos_Datados.md), section 10.
 
-| Famílias | Conjunto B recomendado, com o serviço de domínio | Conjunto B, só infraestrutura | Conjunto A (Firebase) | Conjunto C (API própria em Cloud Run) |
+| Families | Stack B recommended, with the domain service | Stack B, infrastructure only | Stack A (Firebase) | Stack C (own API on Cloud Run) |
 | ---: | ---: | ---: | ---: | ---: |
-| 100 | ~108 a 126 | ~101 | ~27 | ~64 |
-| 1.000 | ~128 a 146 | ~121 | ~35 | ~109 |
-| 10.000 | ~238 a 298 | ~214 | ~139 | ~202 |
+| 100 | ~108 to 126 | ~101 | ~27 | ~64 |
+| 1.000 | ~128 to 146 | ~121 | ~35 | ~109 |
+| 10.000 | ~238 to 298 | ~214 | ~139 | ~202 |
 
-A primeira coluna é a composição canônica do conjunto recomendado ([Custos e operação](../05_Privacidade_Operacao/Custos_e_Operacao.md), seção 2): soma o container do serviço de domínio aos valores da pesquisa. Nenhuma coluna inclui o PITR (+US$ 100/mês, recomendado em produção) nem a homologação (+US$ 10 a 50/mês). Nessas escalas, a diferença de infraestrutura entre os conjuntos é pequena perto do custo de engenharia, que não foi estimado [HIP].
+The first column is the canonical composition of the recommended stack ([Costs and operations](../05_Privacidade_Operacao/Custos_e_Operacao.md), section 2): it adds the domain service container to the research values. No column includes PITR (+US$ 100/month, recommended in production) or staging (+US$ 10 to 50/month). At these scales, the infrastructure difference between the stacks is small compared with the engineering cost, which has not been estimated [HIP].
 
-## 7. Recomendação provisória
+## 7. Provisional recommendation
 
-**Conjunto B com React Native + Expo.** Justificativa pelas necessidades do app:
+**Stack B with React Native + Expo.** Justification based on the app's needs:
 
-1. **O protocolo de escrita é nosso desde o primeiro dia.** Idempotência, conferência do vínculo atual, versão-base, conflitos explícitos e histórico ficam no serviço de domínio, que é o mesmo contrato que o PowerSync exige do endpoint de envio (https://docs.powersync.com/handling-writes/writing-client-changes). Isso atende ADR-004 e ADR-005 sem lutar contra uma política de "última escrita vence".
-2. **A parte mais trabalhosa e menos diferenciadora vem pronta:** banco local, fila durável, download parcial por família e remoção no aparelho quando o acesso sai.
-3. **Saída planejada:** o esquema PostgreSQL e o serviço são os mesmos do Conjunto C. Se o PowerSync falhar na prova, mudar de preço ou de licença, troca-se só o download e a fila do cliente.
-4. **Dados no Brasil:** Supabase em São Paulo e PowerSync na região BR reduzem transferência internacional dos dados de cuidado (análise em [Privacidade e segurança](../05_Privacidade_Operacao/Privacidade_e_Seguranca.md)).
-5. **Mobile:** React Native + Expo fecha o ciclo de iOS a partir do Windows num fluxo integrado e faz a Live Activity sem Swift; justificativa completa no [ADR-002](../06_ADRs/ADR-002_Framework_Mobile.md), independente da escolha de dados (PowerSync tem SDK GA também para Flutter).
+1. **The write protocol is ours from day one.** Idempotency, checking the current link, base version, explicit conflicts and history live in the domain service, which is the same contract PowerSync requires of the upload endpoint (https://docs.powersync.com/handling-writes/writing-client-changes). This meets ADR-004 and ADR-005 without fighting a "última escrita vence" policy.
+2. **The most laborious and least differentiating part comes ready-made:** local database, durable queue, partial per-family download and removal on the device when access is lost.
+3. **Planned exit:** the PostgreSQL schema and the service are the same as in Stack C. If PowerSync fails the proof, or changes its price or license, only the download and the client queue are replaced.
+4. **Data in Brazil:** Supabase in São Paulo and PowerSync in the BR region reduce international transfer of care data (analysis in [Privacy and security](../05_Privacidade_Operacao/Privacidade_e_Seguranca.md)).
+5. **Mobile:** React Native + Expo closes the iOS loop from Windows in an integrated flow and builds the Live Activity without Swift; full justification in [ADR-002](../06_ADRs/ADR-002_Framework_Mobile.md), independent of the data choice (PowerSync also has a GA SDK for Flutter).
 
-A linguagem do serviço de domínio é uma decisão separada (ADR-003, seção "Linguagem do serviço"); ela não decorre do uso de React Native.
+The domain service's language is a separate decision (ADR-003, section "Linguagem do serviço"); it does not follow from using React Native.
 
-## 8. Alternativa principal e condições de mudança
+## 8. Main alternative and conditions for switching
 
-| Eixo | Alternativa principal | Muda para ela se |
+| Axis | Main alternative | Switch to it if |
 | --- | --- | --- |
-| Dados | Conjunto C (mesmo PostgreSQL e mesmo serviço, sincronização própria) | O PowerSync falhar nas provas P1, P2, P4 ou P5; a revogação não remover os dados do aparelho como documentado; mudar a licença ou o preço; Sync Streams e serviço não puderem ser mantidos coerentes por testes |
-| Mobile | Flutter | A equipe passar a ter Mac, ou aceitar CI macOS e Swift na Live Activity, e o desempate da prova favorecer Flutter; `expo-widgets` não atender; acessibilidade com fonte a 200% falhar em React Native; mudança de preço ou condição do EAS |
-| Conjunto inteiro | Conjunto A (Firebase) | Prazo de piloto muito curto, aceitando conflitos simplificados e saída difícil; só com decisão explícita de Daniel |
+| Data | Stack C (same PostgreSQL and same service, own synchronization) | PowerSync fails proofs P1, P2, P4 or P5; revocation does not remove the data from the device as documented; the license or price changes; Sync Streams and the service cannot be kept consistent through tests |
+| Mobile | Flutter | The team gets a Mac, or accepts macOS CI and Swift in the Live Activity, and the proof's tie-breaker favors Flutter; `expo-widgets` does not meet needs; accessibility with font at 200% fails in React Native; EAS pricing or terms change |
+| Entire stack | Stack A (Firebase) | Very short pilot deadline, accepting simplified conflicts and a difficult exit; only with an explicit decision by Daniel |
 
-Outros fatores que mudariam a recomendação:
+Other factors that would change the recommendation:
 
-- Exigência de hospedar tudo no Brasil com controle próprio: Conjunto C, ou Conjunto B com PowerSync e Supabase auto-hospedados.
-- Entrada de alguém com Swift: KMP com UI nativa vira candidata.
-- App web para cuidadores no MVP: reforça React Native e o Conjunto B (SDK Web do PowerSync).
-- Escala acima dos limites do plano Pro do PowerSync (3.000 clientes simultâneos e 100 GB, segundo a nota de dados): reavaliar custo do plano Team ou auto-hospedagem.
+- A requirement to host everything in Brazil under our own control: Stack C, or Stack B with self-hosted PowerSync and Supabase.
+- Someone with Swift joining: KMP with native UI becomes a candidate.
+- A web app for caregivers in the MVP: strengthens React Native and Stack B (PowerSync Web SDK).
+- Scale beyond the limits of the PowerSync Pro plan (3.000 concurrent clients and 100 GB, according to the data note): re-evaluate the cost of the Team plan or self-hosting.
 
-## 9. O que a prova técnica precisa mostrar
+## 9. What the technical proof needs to show
 
-As provas P1 a P9 estão em [Qualidade e validação](../05_Privacidade_Operacao/Qualidade_e_Validacao.md), seção 7. Para esta comparação, as decisivas são:
+Proofs P1 to P9 are in [Quality and validation](../05_Privacidade_Operacao/Qualidade_e_Validacao.md), section 7. For this comparison, the decisive ones are:
 
-- P1 e P2 com o PowerSync e o serviço: fila sobrevive ao encerramento; reenvio não duplica.
-- P4: revogação offline remove os dados da família no aparelho ao reconectar.
-- P5: Sync Streams e serviço recusam a mesma coisa (testes com ids de outra família nos dois caminhos).
-- P6 e P7: `expo-widgets` e o módulo Kotlin do cronômetro funcionam; build de iOS sai do Windows até o TestFlight.
-- SQLCipher ativo no build de release (conferir com `PRAGMA cipher_version`, já que a chave pode ser ignorada sem erro quando a biblioteca não está no binário).
+- P1 and P2 with PowerSync and the service: the queue survives the app being closed; resending does not duplicate.
+- P4: offline revocation removes the family's data from the device on reconnection.
+- P5: Sync Streams and the service reject the same things (tests with ids from another family on both paths).
+- P6 and P7: `expo-widgets` and the Kotlin timer module work; the iOS build goes from Windows all the way to TestFlight.
+- SQLCipher active in the release build (check with `PRAGMA cipher_version`, since the key can be silently ignored when the library is not in the binary).
 
-## Questões abertas
+## Open questions
 
-1. Linguagem do serviço de domínio (ADR-003).
-2. Expo Push Service ou FCM e APNs direto.
-3. Região do Firestore em São Paulo e preços das regiões do Brasil: não capturados nesta etapa.
-4. Divergência na documentação do PowerSync sobre a validade máxima do JWT (60 minutos ou 24 horas): confirmar na prova.
+1. Language of the domain service (ADR-003).
+2. Expo Push Service or FCM and APNs directly.
+3. Firestore region in São Paulo and prices for the Brazil regions: not captured at this stage.
+4. Discrepancy in the PowerSync documentation about the maximum JWT validity (60 minutes or 24 hours): confirm in the proof.
 
-## Limites desta análise
+## Limits of this analysis
 
-Nada foi instalado, construído ou medido. Comportamentos vêm da documentação oficial ou são inferências [HIP]; versões e preços são de 22/10/2026 e mudam rápido. O custo de engenharia não foi estimado.
+Nothing has been installed, built or measured. Behaviors come from official documentation or are inferences [HIP]; versions and prices are from 22/10/2026 and change quickly. The engineering cost has not been estimated.

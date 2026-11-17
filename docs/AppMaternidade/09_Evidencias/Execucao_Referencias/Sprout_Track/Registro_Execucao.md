@@ -1,66 +1,66 @@
 ---
-tipo: evidencia-execucao
-status: rascunho
-responsavel: Hermes (subagente Sprout Track)
+tipo: execution-evidence
+status: draft
+responsavel: Hermes (Sprout Track subagent)
 revisado_em: 2026-10-22
 fontes_principais:
   - https://github.com/Oak-and-Sprout/sprout-track/tree/eb26949461bd0455cb8d6137dc5bc417a02adcf9
 ---
 
-# Registro da execução local do Sprout Track
+# Sprout Track local execution record
 
-Ficha correspondente: [Sprout_Track.md](../../../08_Referencias/Repositorios/Sprout_Track.md).
+Corresponding assessment: [Sprout_Track.md](../../../08_Referencias/Repositorios/Sprout_Track.md).
 
 ## Ambiente
 
-| Item | Valor |
+| Item | Value |
 | --- | --- |
-| Data | 22/10/2026, 02:55–03:33 (America/Sao_Paulo) |
-| Máquina | Windows 11 Pro 10.0.26300, shell Git Bash |
-| Node / npm | v24.20.0 / 11.19.0 (README pede Node 22+; não houve erro de versão) |
-| Clone | `C:/Projetos/AppMaternidade/_referencias/sprout-track/` (pasta ignorada pelo Git do produto) |
-| Branch / SHA | `main` / `eb26949461bd0455cb8d6137dc5bc417a02adcf9` (igual à fotografia do pacote), commit de 2026-10-12 13:53:59 -0500 |
-| Banco | SQLite em diretório temporário do Hermes (fora do clone), descartado ao final |
-| Servidor | `next dev -H 127.0.0.1 -p 38317` (Next.js 16.3.3, Turbopack) |
-| Segredos | `JWT_SECRET` e `ENC_HASH` aleatórios e descartáveis, passados por variável de ambiente; nenhum `.env` criado ou lido |
-| Docker | Não usado |
+| Date | 22/10/2026, 02:55–03:33 (America/Sao_Paulo) |
+| Machine | Windows 11 Pro 10.0.26300, Git Bash shell |
+| Node / npm | v24.20.0 / 11.19.0 (README requires Node 22+; no version error occurred) |
+| Clone | `C:/Projetos/AppMaternidade/_referencias/sprout-track/` (folder ignored by the product's Git) |
+| Branch / SHA | `main` / `eb26949461bd0455cb8d6137dc5bc417a02adcf9` (same as the package snapshot), commit from 2026-10-12 13:53:59 -0500 |
+| Database | SQLite in Hermes's temporary directory (outside the clone), discarded at the end |
+| Server | `next dev -H 127.0.0.1 -p 38317` (Next.js 16.3.3, Turbopack) |
+| Secrets | Random, disposable `JWT_SECRET` and `ENC_HASH`, passed through environment variables; no `.env` created or read |
+| Docker | Not used |
 
-## Passos e resultados
+## Steps and results
 
-| # | Comando (resumo) | Resultado | Log |
+| # | Command (summary) | Result | Log |
 | --- | --- | --- | --- |
-| 1 | `npm ci --ignore-scripts --no-audit --no-fund` | 874 pacotes em ~5 min; exit 0; avisos de depreciação | [01_npm_ci.log](01_npm_ci.log) |
-| 2 | `npx prisma generate` e `--config prisma/log.config.ts` | Clientes Prisma 7.10.0 gerados; exit 0 | [02_prisma_generate.log](02_prisma_generate.log) |
-| 3 | `npx prisma migrate deploy` | Todas as migrações aplicadas; o CLI baixou `schema-engine-windows.exe` para `node_modules/@prisma/engines` (local ao clone) | [03_prisma_migrate.log](03_prisma_migrate.log) |
-| 3b | `npx prisma db push --config prisma/log.config.ts --accept-data-loss` (banco de logs da API) | **Recusado** pelo Prisma 7.10 (03:12:13): o CLI detectou execução por agente de IA e exigiu consentimento explícito do usuário para ação destrutiva. Não contornado. Banco de logs desnecessário com `ENABLE_LOG=false` | [03_prisma_migrate.log](03_prisma_migrate.log) |
-| 4 | `prebuild-install` do `better-sqlite3@12.11.1` aninhado em `@prisma/adapter-better-sqlite3` (passo `install` pulado pelo `--ignore-scripts`) | Binário pré-compilado baixado do GitHub Releases do WiseLibs e extraído; exit 0. O tarball ficou em `npm-cache/_prebuilds` e foi removido ao final | [04_better_sqlite3_prebuild.log](04_better_sqlite3_prebuild.log) |
-| 5 | `npx tsx prisma/seed.ts` | Família padrão `my-family`, cuidador de sistema com PIN padrão documentado, 28 unidades, curvas CDC/OMS; exit 0 | [05_seed.log](05_seed.log) |
-| 6 | `npx next dev -H 127.0.0.1 -p 38317` | Pronto em 2,2 s; 424 requisições registradas. Efeito colateral: o `next dev` 16.3 acrescentou um bloco "agent rules" ao `CLAUDE.md` do clone; revertido com `git checkout -- CLAUDE.md` | `06_next_dev.log` (fora do Git, D7) |
-| 7 | Roteiro da API (`python -I roteiros/api_probe.py`) | 74 passos, 03:17:15–03:17:44 | `07_api_probe.json` (fora do Git, D7) |
-| 8 | Verificação complementar (`roteiros/api_probe2.py`) | 6 passos, 03:19:54 | `08_api_probe2.json` (fora do Git, D7) |
-| 9 | Interface pelo navegador + teste offline | Registro próprio | `12_UI_Navegador.md` e `09_check_offline.json` (fora do Git, D7) |
-| 10 | `npx vitest run` | 132 arquivos: 131 passaram, 1 falhou; 1.753 testes passaram, 2 falharam (`tests/prisma-adapter.test.ts` espera caminhos POSIX e recebeu `C:\...` no Windows) | [10_vitest.log](10_vitest.log) |
-| 11 | Leitura do `package-lock.json` (v3) por script, sem rede e sem instalar nada. Feita pelo coordenador às 06:21, depois da revisão independente | 1.023 entradas: 520 de produção, contando binários opcionais por plataforma, e 503 de desenvolvimento. Licença pelo campo declarado no lock; LICENSE não conferido | [13_licencas_dependencias.tsv](13_licencas_dependencias.tsv) |
+| 1 | `npm ci --ignore-scripts --no-audit --no-fund` | 874 packages in ~5 min; exit 0; deprecation warnings | [01_npm_ci.log](01_npm_ci.log) |
+| 2 | `npx prisma generate` and `--config prisma/log.config.ts` | Prisma 7.10.0 clients generated; exit 0 | [02_prisma_generate.log](02_prisma_generate.log) |
+| 3 | `npx prisma migrate deploy` | All migrations applied; the CLI downloaded `schema-engine-windows.exe` to `node_modules/@prisma/engines` (local to the clone) | [03_prisma_migrate.log](03_prisma_migrate.log) |
+| 3b | `npx prisma db push --config prisma/log.config.ts --accept-data-loss` (API log database) | **Rejected** by Prisma 7.10 (03:12:13): the CLI detected execution by an AI agent and required explicit user consent for a destructive action. Not bypassed. Log database unnecessary with `ENABLE_LOG=false` | [03_prisma_migrate.log](03_prisma_migrate.log) |
+| 4 | `prebuild-install` of `better-sqlite3@12.11.1` nested in `@prisma/adapter-better-sqlite3` (step `install` skipped by `--ignore-scripts`) | Precompiled binary downloaded from WiseLibs' GitHub Releases and extracted; exit 0. The tarball remained in `npm-cache/_prebuilds` and was removed at the end | [04_better_sqlite3_prebuild.log](04_better_sqlite3_prebuild.log) |
+| 5 | `npx tsx prisma/seed.ts` | Default family `my-family`, system caregiver with documented default PIN, 28 units, CDC/WHO curves; exit 0 | [05_seed.log](05_seed.log) |
+| 6 | `npx next dev -H 127.0.0.1 -p 38317` | Ready in 2,2 s; 424 requests logged. Side effect: `next dev` 16.3 added an "agent rules" block to the clone's `CLAUDE.md`; reverted with `git checkout -- CLAUDE.md` | `06_next_dev.log` (outside Git, D7) |
+| 7 | API script (`python -I roteiros/api_probe.py`) | 74 steps, 03:17:15–03:17:44 | `07_api_probe.json` (outside Git, D7) |
+| 8 | Additional verification (`roteiros/api_probe2.py`) | 6 steps, 03:19:54 | `08_api_probe2.json` (outside Git, D7) |
+| 9 | Browser interface + offline test | Separate record | `12_UI_Navegador.md` and `09_check_offline.json` (outside Git, D7) |
+| 10 | `npx vitest run` | 132 files: 131 passed, 1 failed; 1.753 tests passed, 2 failed (`tests/prisma-adapter.test.ts` expects POSIX paths and received `C:\...` on Windows) | [10_vitest.log](10_vitest.log) |
+| 11 | Reading `package-lock.json` (v3) using a script, without network access or installing anything. Done by the coordinator at 06:21, after the independent review | 1.023 entries: 520 production, including optional platform binaries, and 503 development. License taken from the field declared in the lockfile; LICENSE not checked | [13_licencas_dependencias.tsv](13_licencas_dependencias.tsv) |
 
-Resumo legível dos 80 passos da API: `11_Resumo_Passos_API.md` (fora do Git, D7).
+Readable summary of the 80 API steps: `11_Resumo_Passos_API.md` (outside Git, D7).
 
-## Encerramento e limpeza (03:29–03:33)
+## Shutdown and cleanup (03:29–03:33)
 
-- Servidor: o encerramento do processo `npx` não derrubou o filho; a árvore `next dev` (PIDs 16568 → 27764 → 30056, 16672) foi finalizada com `taskkill /T /F`. Porta 38317 confirmada livre; nenhum `node.exe` com `sprout-track` na linha de comando.
-- Navegador: 3 abas da sessão isolada `appmat-sprout` fechadas.
-- Clone: `git status` limpo após reverter `CLAUDE.md`; `node_modules/`, `.next/` e `next-env.d.ts` permanecem (ignorados pelo `.gitignore` do projeto).
-- Cache: removido o tarball `npm-cache/_prebuilds/4d2ad7-better-sqlite3-v12.11.1-node-v137-win32-x64.tar.gz` e a pasta `_prebuilds` (criados por este passo). O cache normal do npm (`_cacache`) recebeu os pacotes do `npm ci`, comportamento padrão do npm; não foi alterado.
-- Nenhum container, imagem ou volume Docker criado. Nenhuma instalação global.
+- Server: terminating process `npx` did not stop the child; the `next dev` tree (PIDs 16568 → 27764 → 30056, 16672) was terminated with `taskkill /T /F`. Port 38317 confirmed free; no `node.exe` with `sprout-track` on the command line.
+- Browser: 3 tabs from the isolated `appmat-sprout` session closed.
+- Clone: `git status` clean after reverting `CLAUDE.md`; `node_modules/`, `.next/` and `next-env.d.ts` remain (ignored by the project's `.gitignore`).
+- Cache: removed tarball `npm-cache/_prebuilds/4d2ad7-better-sqlite3-v12.11.1-node-v137-win32-x64.tar.gz` and folder `_prebuilds` (created by this step). The normal npm cache (`_cacache`) received the packages from `npm ci`, standard npm behavior; it was not modified.
+- No Docker containers, images or volumes created. No global installations.
 
-## Sobre os roteiros e a divulgação
+## About the scripts and disclosure
 
-Os roteiros em `roteiros/` são do Hermes, não código do Sprout Track. Usam somente dados e PINs fictícios de uma instância local já destruída. Os roteiros de sondagem (`api_probe.py`, `api_probe2.py`, `check_offline.py`) e os registros dos passos 6 a 9 e 11 registram comportamentos que pedem avaliação dos mantenedores. Por isso ficam fora do Git até a decisão D7 ([Decisões para Daniel](../../../07_Roadmap/Decisoes_para_Daniel.md)), e a ficha não os detalha (revisão do coordenador por volta das 05:36).
+The scripts in `roteiros/` belong to Hermes and are not Sprout Track code. They use only fictitious data and PINs from a local instance that has already been destroyed. The probing scripts (`api_probe.py`, `api_probe2.py`, `check_offline.py`) and the records of steps 6 through 9 and 11 record behaviors that require evaluation by the maintainers. They therefore remain outside Git until decision D7 ([Decisions for Daniel](../../../07_Roadmap/Decisoes_para_Daniel.md)), and the assessment does not detail them (coordinator review around 05:36).
 
-## Questões abertas
+## Open questions
 
-- Se Daniel decidir avisar os mantenedores (D7), a verificação de correções fica com eles. O Hermes não repete os roteiros de sondagem.
-- Teste em aparelho móvel real (PWA instalado) não foi feito.
+- If Daniel decides to notify the maintainers (D7), verifying fixes is their responsibility. Hermes does not repeat the probing scripts.
+- Testing on a real mobile device (installed PWA) was not performed.
 
-## Limites desta análise
+## Limits of this analysis
 
-Execução em modo de desenvolvimento (`next dev`), não `next build`/`start` nem Docker; SQLite apenas (PostgreSQL não testado); notificações desativadas (`ENABLE_NOTIFICATIONS=false`), sem VAPID/FCM/APNs; modo SaaS e contas por e-mail não exercitados; uma única execução de cada passo, sem medição de desempenho.
+Execution in development mode (`next dev`), not `next build`/`start` or Docker; SQLite only (PostgreSQL not tested); notifications disabled (`ENABLE_NOTIFICATIONS=false`), without VAPID/FCM/APNs; SaaS mode and email accounts not exercised; a single execution of each step, without performance measurement.

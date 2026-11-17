@@ -1,7 +1,7 @@
 ---
-tipo: ficha-repositorio
-status: rascunho
-responsavel: Hermes (coordenador da APP-001)
+tipo: repository-profile
+status: draft
+responsavel: Hermes (coordinator of APP-001)
 revisado_em: 2026-10-22
 tarefa: MAT-5
 repositorio: https://github.com/bckenstler/finnberry
@@ -18,246 +18,246 @@ fontes_principais:
 
 # Finnberry
 
-Ficha escrita por leitura do código no commit `5e17b1a` e pelos registros de execução já existentes ([índice de evidências](../../09_Evidencias/Execucao_Referencias/Finnberry/00_Indice.md)). Marcas de evidência conforme as [Convenções](../../00_Inicio/Convencoes.md). Os links de código apontam para o commit analisado; os números de linha valem para ele.
+Profile written by reading the code at commit `5e17b1a` and the existing execution records ([evidence index](../../09_Evidencias/Execucao_Referencias/Finnberry/00_Indice.md)). Evidence markers follow the [Conventions](../../00_Inicio/Convencoes.md). Code links point to the analyzed commit; line numbers apply to that commit.
 
-Neste documento, `B` abrevia `https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c`.
+In this document, `B` abbreviates `https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c`.
 
 ## Resumo
 
-- **O que é.** App web (Next.js) de registro de cuidados do bebê, com sono, alimentação, fraldas, bombeamento, crescimento, temperatura, atividades e remédios; família com papéis; tempo real pelo Supabase; chat de IA e servidor MCP. O próprio repositório se descreve como "clone of Huckleberry" ([CLAUDE.md](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/CLAUDE.md)) [DOC].
-- **Serve como referência para:** modelo de família com quatro papéis, convite por e-mail com validade, exclusão de conta com transferência de titularidade, temporizador derivado do instante de início e tummy time como atividade com timer, sem meta [CÓDIGO].
-- **Não serve como referência para:** offline (não há fila nem cache persistente), app mobile (só web), autoria dos registros (não existe), fuso (o "hoje" é calculado no servidor) e isolamento por família (ficam perguntas de auditoria, abaixo) [CÓDIGO].
-- **Execução.** Instalação, geração do cliente Prisma, 613 testes unitários e de integração (com Prisma simulado) e criação do schema num PostgreSQL local descartável [EXEC, logs 01 a 05]. O app não foi iniciado.
-- **Licença.** MIT na raiz; dependências majoritariamente permissivas, com três pontos a conferir ([Licenças por material](#licenças-por-material)).
-- **Maturidade.** 104 commits entre 25 e 30/01/2026, nenhum depois disso no `main` até 22/10/2026 (log 06) [EXEC]. tRPC em release candidate e NextAuth em beta.
+- **What it is.** A web app (Next.js) for logging baby care, with sleep, feeding, diapers, pumping, growth, temperature, activities and medicine; families with roles; real-time updates through Supabase; AI chat and an MCP server. The repository describes itself as a "clone of Huckleberry" ([CLAUDE.md](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/CLAUDE.md)) [DOC].
+- **Useful as a reference for:** a family model with four roles, email invitations with an expiration date, account deletion with ownership transfer, a timer derived from the start time and tummy time as a timed activity, without a target [CÓDIGO].
+- **Not useful as a reference for:** offline use (no queue or persistent cache), a mobile app (web only), record authorship (none), time zones ("today" is calculated on the server) and family isolation (audit questions remain, below) [CÓDIGO].
+- **Execution.** Installation, Prisma client generation, 613 unit and integration tests (with mocked Prisma) and schema creation in a disposable local PostgreSQL instance [EXEC, logs 01 to 05]. The app was not started.
+- **License.** MIT at the root; mostly permissive dependencies, with three points to check ([Licenses by material](#licenças-por-material)).
+- **Maturity.** 104 commits between 25 and 30/01/2026, none after that on `main` through 22/10/2026 (log 06) [EXEC]. tRPC is a release candidate and NextAuth is in beta.
 
 ## Identificação
 
-| Item | Valor | Evidência |
+| Item | Value | Evidence |
 | --- | --- | --- |
-| Repositório | https://github.com/bckenstler/finnberry | — |
-| Branch e commit | `main`, `5e17b1a71e10735f0b6aaa22996ce37349d9402c` | [EXEC] log 06 |
-| Data do commit | 29/01/2026 23:36:19 −0800 (30/01/2026 07:36:19 UTC), "Add Vercel deployment section to README (#46)" | [EXEC] log 06 |
-| `main` remoto em 22/10/2026 04:00 | Mesmo SHA | [EXEC] log 06 (`git ls-remote`) |
-| Histórico | 104 commits; primeiro em 25/01/2026; autores: Brad Kenstler (89), "Claude" (8), "Ubuntu" (7) | [EXEC] log 06 |
-| Tamanho | 218 arquivos versionados; nenhuma imagem, fonte, SQL, migração ou política RLS versionada | [EXEC] log 06 |
-| Licença raiz | MIT, "Copyright (c) 2026 bckenstler"; SHA-256 `2aa2c07d…8aa5de` | [CÓDIGO] [LICENSE](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/LICENSE); log 06 |
-| Clone local | `C:/Projetos/AppMaternidade/_referencias/finnberry`, somente leitura, sem alteração em arquivos versionados | [EXEC] log 06 |
+| Repository | https://github.com/bckenstler/finnberry | — |
+| Branch and commit | `main`, `5e17b1a71e10735f0b6aaa22996ce37349d9402c` | [EXEC] log 06 |
+| Commit date | 29/01/2026 23:36:19 −0800 (30/01/2026 07:36:19 UTC), "Add Vercel deployment section to README (#46)" | [EXEC] log 06 |
+| Remote `main` at 22/10/2026 04:00 | Same SHA | [EXEC] log 06 (`git ls-remote`) |
+| History | 104 commits; first on 25/01/2026; authors: Brad Kenstler (89), "Claude" (8), "Ubuntu" (7) | [EXEC] log 06 |
+| Size | 218 tracked files; no tracked images, fonts, SQL, migrations or RLS policies | [EXEC] log 06 |
+| Root license | MIT, "Copyright (c) 2026 bckenstler"; SHA-256 `2aa2c07d…8aa5de` | [CÓDIGO] [LICENSE](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/LICENSE); log 06 |
+| Local clone | `C:/Projetos/AppMaternidade/_referencias/finnberry`, read-only, no changes to tracked files | [EXEC] log 06 |
 
-## Stack confirmada
+## Confirmed stack
 
-Faixas de versão declaradas nos `package.json` do commit [CÓDIGO]; versões instaladas só onde há log.
+Version ranges declared in the commit's `package.json` [CÓDIGO]; installed versions only where a log exists.
 
-| Componente | Declarado | Observação |
+| Component | Declared | Note |
 | --- | --- | --- |
-| Next.js / React | `^15.1.4` / `^19.0.0` | App Router; só web, sem app mobile nem PWA |
-| tRPC | `^11.0.0-rc.682` | Release candidate na fundação |
-| Prisma | `^6.2.0` | Cliente gerado na versão 6.19.2 [EXEC, log 02] |
-| NextAuth (Auth.js) | `^5.0.0-beta.25` | Beta; adaptador Prisma; magic link (Nodemailer) e Google, ambos opcionais por configuração ([auth.ts](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/lib/auth.ts)) |
-| Banco | PostgreSQL (Supabase, segundo o README) | Schema aplicado num PostgreSQL 16.6 local [EXEC, log 05] |
-| Tempo real | `@supabase/supabase-js ^2.48.1` | Canal aberto no navegador |
-| Estado local | `zustand ^5.0.3` com `persist` em `localStorage` | Só para temporizadores |
-| IA | `@anthropic-ai/sdk ^0.71.2`, `@anthropic-ai/claude-agent-sdk ^0.2.20`, `@modelcontextprotocol/sdk ^1.4.0` | Chat no app e servidor MCP |
-| Validação | `zod ^3.24.1` | Schemas compartilhados em `packages/schemas` |
-| Monorepo e testes | Turborepo `^2.3.0`, pnpm 9.15.0, Vitest `^2.1.0`, Playwright `^1.48.0` | — |
+| Next.js / React | `^15.1.4` / `^19.0.0` | App Router; web only, no mobile app or PWA |
+| tRPC | `^11.0.0-rc.682` | Release candidate in the foundation |
+| Prisma | `^6.2.0` | Client generated at version 6.19.2 [EXEC, log 02] |
+| NextAuth (Auth.js) | `^5.0.0-beta.25` | Beta; Prisma adapter; magic link (Nodemailer) and Google, both optional through configuration ([auth.ts](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/lib/auth.ts)) |
+| Database | PostgreSQL (Supabase, according to the README) | Schema applied to a local PostgreSQL 16.6 instance [EXEC, log 05] |
+| Real-time updates | `@supabase/supabase-js ^2.48.1` | Channel opened in the browser |
+| Local state | `zustand ^5.0.3` with `persist` in `localStorage` | Only for timers |
+| AI | `@anthropic-ai/sdk ^0.71.2`, `@anthropic-ai/claude-agent-sdk ^0.2.20`, `@modelcontextprotocol/sdk ^1.4.0` | In-app chat and MCP server |
+| Validation | `zod ^3.24.1` | Shared schemas in `packages/schemas` |
+| Monorepo and tests | Turborepo `^2.3.0`, pnpm 9.15.0, Vitest `^2.1.0`, Playwright `^1.48.0` | — |
 
-## Fluxos analisados
+## Flows analyzed
 
-| Fluxo | Arquivos lidos |
+| Flow | Files read |
 | --- | --- |
-| Iniciar, consultar e encerrar sono | [sleep.ts](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/routers/sleep.ts), [timer-store.ts](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/stores/timer-store.ts), [use-timer.ts](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/hooks/use-timer.ts), `packages/schemas/src/sleep.ts` |
-| Atividades, incluindo tummy time | `packages/api/src/routers/activity.ts`, `packages/schemas/src/activity.ts`, [schema.prisma L338–L364](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/db/prisma/schema.prisma#L338-L364) |
-| Convidar, aceitar, mudar papel, remover membro | [household.ts](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/routers/household.ts), `packages/schemas/src/household.ts` |
-| Excluir conta | [user.ts L42–L103](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/routers/user.ts#L42-L103) |
-| Tempo real entre cuidadores | [use-realtime.ts](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/hooks/use-realtime.ts), [supabase.ts](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/lib/supabase.ts) |
-| Resumo do dia | [sleep.ts L172–L217](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/routers/sleep.ts#L172-L217), [date.ts L63–L74](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/utils/src/date.ts#L63-L74) |
-| Chat de IA e servidor MCP | [chat/route.ts](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/app/api/chat/route.ts), [mcp-server/src/index.ts](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/mcp-server/src/index.ts) |
-| Middleware de acesso | [trpc.ts](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/trpc.ts), [trpc.test.ts](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/trpc.test.ts) |
+| Start, query and end sleep | [sleep.ts](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/routers/sleep.ts), [timer-store.ts](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/stores/timer-store.ts), [use-timer.ts](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/hooks/use-timer.ts), `packages/schemas/src/sleep.ts` |
+| Activities, including tummy time | `packages/api/src/routers/activity.ts`, `packages/schemas/src/activity.ts`, [schema.prisma L338–L364](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/db/prisma/schema.prisma#L338-L364) |
+| Invite, accept, change role, remove member | [household.ts](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/routers/household.ts), `packages/schemas/src/household.ts` |
+| Delete account | [user.ts L42–L103](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/routers/user.ts#L42-L103) |
+| Real-time updates between caregivers | [use-realtime.ts](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/hooks/use-realtime.ts), [supabase.ts](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/lib/supabase.ts) |
+| Daily summary | [sleep.ts L172–L217](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/routers/sleep.ts#L172-L217), [date.ts L63–L74](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/utils/src/date.ts#L63-L74) |
+| AI chat and MCP server | [chat/route.ts](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/app/api/chat/route.ts), [mcp-server/src/index.ts](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/mcp-server/src/index.ts) |
+| Access middleware | [trpc.ts](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/trpc.ts), [trpc.test.ts](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/trpc.test.ts) |
 
-## Achados por tema
+## Findings by topic
 
-### Modelo de domínio
+### Domain model
 
-- **Família e papéis** [CÓDIGO]. `Household` tem membros (`HouseholdMember`, único por família e usuário) com papel `OWNER`, `ADMIN`, `CAREGIVER` ou `VIEWER`, padrão `CAREGIVER` ([schema.prisma L87–L107](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/db/prisma/schema.prisma#L87-L107)). `HouseholdInvite` guarda e-mail, papel, token único e validade ([L109–L121](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/db/prisma/schema.prisma#L109-L121)).
-- **Registros pendurados na criança** [CÓDIGO]. Cada registro aponta para `Child`, que aponta para `Household`; os registros não têm coluna de família. Toda relação usa exclusão em cascata.
-- **Sessões com início e fim** [CÓDIGO]. Sono, mamada, bombeamento e atividade têm `startTime` e `endTime` opcional; sessão em andamento é a que tem `endTime` nulo. Fralda, temperatura e dose de remédio têm um instante só.
-- **Sem autoria** [CÓDIGO]. Nenhum registro guarda quem criou, encerrou ou editou; só `createdAt` e `updatedAt`. Não há versão, exclusão lógica nem id de operação.
-- **Tummy time** [CÓDIGO]. É um valor de `ActivityType` (junto com banho, brincadeira, tela, pele a pele, leitura e escovação) e usa timer; não há meta, marco nem conteúdo associado ([L338–L364](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/db/prisma/schema.prisma#L338-L364)).
-- **Crescimento** [CÓDIGO]. Peso, altura e perímetro cefálico; o CLAUDE.md diz que curvas de percentil não foram implementadas [DOC].
+- **Family and roles** [CÓDIGO]. `Household` has members (`HouseholdMember`, unique per family and user) with the role `OWNER`, `ADMIN`, `CAREGIVER` or `VIEWER`, defaulting to `CAREGIVER` ([schema.prisma L87–L107](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/db/prisma/schema.prisma#L87-L107)). `HouseholdInvite` stores email, role, unique token and expiration date ([L109–L121](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/db/prisma/schema.prisma#L109-L121)).
+- **Records attached to the child** [CÓDIGO]. Each record points to `Child`, which points to `Household`; records have no family column. Every relationship uses cascading deletion.
+- **Sessions with a start and an end** [CÓDIGO]. Sleep, breastfeeding, pumping and activities have `startTime` and optional `endTime`; an ongoing session has a null `endTime`. Diapers, temperature and medicine doses have a single timestamp.
+- **No authorship** [CÓDIGO]. No record stores who created, ended or edited it; only `createdAt` and `updatedAt`. There is no version, soft deletion or operation ID.
+- **Tummy time** [CÓDIGO]. It is a value of `ActivityType` (alongside bathing, play, screen time, skin-to-skin, reading and toothbrushing) and uses a timer; there is no associated target, milestone or content ([L338–L364](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/db/prisma/schema.prisma#L338-L364)).
+- **Growth** [CÓDIGO]. Weight, height and head circumference; CLAUDE.md says percentile curves have not been implemented [DOC].
 
-### Validações
+### Validations
 
-- Os ids são validados como CUID e as datas são convertidas por `z.coerce.date()` ([common.ts L3](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/schemas/src/common.ts#L3)) [CÓDIGO].
-- Nenhum schema em `packages/schemas/src` usa `refine` ou `superRefine` (busca no código). Não há regra de fim depois do início, de sobreposição nem de data futura [CÓDIGO].
-- "Uma sessão de sono ativa por criança" é conferida lendo antes de criar ([sleep.ts L60–L72](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/routers/sleep.ts#L60-L72)), sem restrição no banco. Dois inícios simultâneos podem criar duas sessões ativas [HIP, não testado].
-- Encerrar grava `endTime` pelo id sem conferir se a sessão já estava encerrada ([L85–L105](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/routers/sleep.ts#L85-L105)); um segundo encerramento sobrescreve o primeiro [CÓDIGO].
+- IDs are validated as CUIDs and dates are converted by `z.coerce.date()` ([common.ts L3](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/schemas/src/common.ts#L3)) [CÓDIGO].
+- No schema in `packages/schemas/src` uses `refine` or `superRefine` (code search). There is no rule for an end after the start, overlaps or future dates [CÓDIGO].
+- "One active sleep session per child" is checked by reading before creating ([sleep.ts L60–L72](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/routers/sleep.ts#L60-L72)), without a database constraint. Two simultaneous starts could create two active sessions [HYP, not tested].
+- Ending writes `endTime` by ID without checking whether the session has already ended ([L85–L105](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/routers/sleep.ts#L85-L105)); a second ending overwrites the first [CÓDIGO].
 
-### Autorização e isolamento
+### Authorization and isolation
 
-Descrição por leitura do código, em termos de design. Nada foi executado contra o app, e nenhum acesso foi testado.
+Description based on reading the code, in design terms. Nothing was run against the app, and no access was tested.
 
-- **Três níveis de procedimento** [CÓDIGO]: público, autenticado (exige sessão) e de família (sessão mais vínculo com a família) ([trpc.ts L59–L74](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/trpc.ts#L59-L74)). Os papéis são conferidos dentro de cada rota: `VIEWER` não grava; `OWNER` e `ADMIN` convidam e editam a família; só `OWNER` muda papéis e apaga a família ([household.ts](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/routers/household.ts)).
-- **Família resolvida a partir da entrada** [CÓDIGO]. O middleware procura a família por `householdId`, por `childId` ou por `id`, interpretado como criança ou como família ([L77–L119](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/trpc.ts#L77-L119)). Quando não encontra, segue sem família e sem papel no contexto ([L155–L171](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/trpc.ts#L155-L171)).
-- **Operações por id de registro.** Encerrar, editar e apagar recebem só o id do registro, conferem se o papel é `VIEWER` e gravam filtrando pelo id ([sleep.ts L85–L170](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/routers/sleep.ts#L85-L170); o mesmo padrão em `activity.ts`) [CÓDIGO]. Pela leitura, não fica evidente onde essas operações conferem que o registro pertence a uma família do usuário. Os testes do middleware cobrem família, criança, `id` de criança e criança de outra família ([trpc.test.ts L59–L140](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/trpc.test.ts#L59-L140)), mas não um id que não seja de criança nem de família. **Pergunta de auditoria, não vulnerabilidade demonstrada.**
-- **Canal de tempo real.** O navegador abre o canal com a chave pública do Supabase ([supabase.ts L1–L6](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/lib/supabase.ts#L1-L6)), e o filtro por criança é escolhido pelo cliente ([use-realtime.ts L21–L30](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/hooks/use-realtime.ts#L21-L30)) [CÓDIGO]. O login é do NextAuth, não do Supabase Auth, então o canal não leva a identidade do usuário [HIP, inferido da configuração]. O que cada assinante recebe depende das políticas do banco, e o repositório não versiona nenhuma (log 06); o log 05 sugere RLS desligado [HIP]. **Pergunta de auditoria, não vulnerabilidade demonstrada.**
-- **Ferramentas do chat de IA.** A rota confere a sessão e se a criança da conversa pertence a uma família do usuário ([chat/route.ts L97–L141](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/app/api/chat/route.ts#L97-L141)) [CÓDIGO]. As ferramentas rodam com acesso direto ao banco, e o `childId` da conversa só é injetado quando o modelo não informa outro ([L266–L272](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/app/api/chat/route.ts#L266-L272)) [CÓDIGO]. **Pergunta de auditoria:** as ferramentas ficam limitadas à família da conversa quando o modelo informa outro id?
-- **Servidor MCP** [CÓDIGO]. Roda por stdio com a `DATABASE_URL` completa e sem conceito de usuário ([index.ts L14, L73](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/mcp-server/src/index.ts)). É pensado para uma instalação de uma família só, não para um serviço com várias famílias.
-- **Rota de dados de teste** [CÓDIGO]. `/api/test/seed` cria usuários e sessões para os testes E2E e só responde com `NODE_ENV` igual a `development` ou `test` ([seed/route.ts L10](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/app/api/test/seed/route.ts#L10)).
+- **Three procedure levels** [CÓDIGO]: public, authenticated (requires a session) and family (session plus family membership) ([trpc.ts L59–L74](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/trpc.ts#L59-L74)). Roles are checked inside each route: `VIEWER` cannot write; `OWNER` and `ADMIN` invite and edit the family; only `OWNER` changes roles and deletes the family ([household.ts](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/routers/household.ts)).
+- **Family resolved from input** [CÓDIGO]. The middleware looks up the family by `householdId`, by `childId` or by `id`, interpreted as a child or a family ([L77–L119](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/trpc.ts#L77-L119)). When it finds none, it continues without a family or role in the context ([L155–L171](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/trpc.ts#L155-L171)).
+- **Operations by record ID.** Ending, editing and deleting receive only the record ID, check whether the role is `VIEWER` and write using an ID filter ([sleep.ts L85–L170](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/routers/sleep.ts#L85-L170); the same pattern in `activity.ts`) [CÓDIGO]. From reading the code, it is unclear where these operations check that the record belongs to one of the user's families. Middleware tests cover family, child, child `id` and a child from another family ([trpc.test.ts L59–L140](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/trpc.test.ts#L59-L140)), but not an ID that belongs to neither a child nor a family. **Audit question, not a demonstrated vulnerability.**
+- **Real-time channel.** The browser opens the channel with the Supabase public key ([supabase.ts L1–L6](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/lib/supabase.ts#L1-L6)), and the child filter is chosen by the client ([use-realtime.ts L21–L30](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/hooks/use-realtime.ts#L21-L30)) [CÓDIGO]. Login uses NextAuth, not Supabase Auth, so the channel does not carry the user's identity [HYP, inferred from the configuration]. What each subscriber receives depends on database policies, and none are tracked in the repository (log 06); log 05 suggests RLS is disabled [HIP]. **Audit question, not a demonstrated vulnerability.**
+- **AI chat tools.** The route checks the session and whether the child in the conversation belongs to one of the user's families ([chat/route.ts L97–L141](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/app/api/chat/route.ts#L97-L141)) [CÓDIGO]. The tools run with direct database access, and the conversation's `childId` is injected only when the model does not supply another one ([L266–L272](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/app/api/chat/route.ts#L266-L272)) [CÓDIGO]. **Audit question:** are the tools restricted to the conversation's family when the model supplies another ID?
+- **MCP server** [CÓDIGO]. Runs over stdio with the full `DATABASE_URL` and no concept of a user ([index.ts L14, L73](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/mcp-server/src/index.ts)). It is intended for a single-family installation, not a service with multiple families.
+- **Test data route** [CÓDIGO]. `/api/test/seed` creates users and sessions for E2E tests and responds only when `NODE_ENV` equals `development` or `test` ([seed/route.ts L10](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/app/api/test/seed/route.ts#L10)).
 
 ### Timers
 
-- **Duração derivada do início** [CÓDIGO]. O temporizador ativo guarda `startTime` em milissegundos; o tempo decorrido é `Date.now() − startTime`, sem contador em segundo plano ([timer-store.ts L147–L151](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/stores/timer-store.ts#L147-L151)). O estado persiste em `localStorage` com a chave `finnberry-timers` ([L157–L160](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/stores/timer-store.ts#L157-L160)).
-- **Amamentação por lado** [CÓDIGO]. Acumula milissegundos à esquerda e à direita e reinicia o segmento na troca de lado ([L99–L135](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/stores/timer-store.ts#L99-L135)). O banco guarda as durações por lado em segundos.
-- **Dois lugares de verdade** [CÓDIGO]. O timer local é por navegador; o registro no banco, com `endTime` nulo, é o que outro cuidador enxerga por `getActive` ([sleep.ts L36–L48](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/routers/sleep.ts#L36-L48)). Segundo o CLAUDE.md, a interface sincroniza ao abrir o modal quando a sessão foi iniciada pelo chat ou pelo MCP [DOC].
-- **Relógios misturados** [CÓDIGO]. O início e o fim gravados no banco vêm do campo enviado pelo cliente ou, sem ele, do relógio do servidor (`input.startTime ?? new Date()`, `input.endTime ?? new Date()`). O timer local usa o relógio do aparelho. A diferença entre os dois relógios entra na duração [HIP].
-- **Persistência após recarregar.** Os testes E2E `timer-persistence.spec.ts` cobrem recarregar a página [CÓDIGO]; não foram executados.
+- **Duration derived from the start** [CÓDIGO]. The active timer stores `startTime` in milliseconds; elapsed time is `Date.now() − startTime`, without a background counter ([timer-store.ts L147–L151](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/stores/timer-store.ts#L147-L151)). State persists in `localStorage` under the key `finnberry-timers` ([L157–L160](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/stores/timer-store.ts#L157-L160)).
+- **Breastfeeding by side** [CÓDIGO]. Accumulates milliseconds on the left and right and restarts the segment when switching sides ([L99–L135](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/stores/timer-store.ts#L99-L135)). The database stores durations per side in seconds.
+- **Two sources of truth** [CÓDIGO]. The local timer is per browser; the database record, with a null `endTime`, is what another caregiver sees through `getActive` ([sleep.ts L36–L48](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/routers/sleep.ts#L36-L48)). According to CLAUDE.md, the interface synchronizes when opening the modal if the session was started through chat or MCP [DOC].
+- **Mixed clocks** [CÓDIGO]. The start and end stored in the database come from the field sent by the client or, without it, from the server clock (`input.startTime ?? new Date()`, `input.endTime ?? new Date()`). The local timer uses the device clock. The difference between the two clocks affects the duration [HIP].
+- **Persistence after reloading.** E2E tests `timer-persistence.spec.ts` cover page reloading [CÓDIGO]; they were not run.
 
-### Persistência e offline
+### Persistence and offline use
 
-- Não há service worker, manifesto, cache de consultas persistido nem detecção de conexão (busca por `serviceWorker`, `navigator.onLine`, `onlineManager`, `persistQueryClient` e manifesto em `apps/web`, sem resultado) [CÓDIGO]. O CLAUDE.md lista "PWA support not added" [DOC].
-- Sem conexão, as mutações vão direto ao tRPC e não ficam numa fila [CÓDIGO]; o comportamento na tela não foi observado [HIP].
-- Só o temporizador sobrevive a recarregar; os registros, não.
+- There is no service worker, manifest, persisted query cache or connection detection (search for `serviceWorker`, `navigator.onLine`, `onlineManager`, `persistQueryClient` and a manifest in `apps/web`, with no results) [CÓDIGO]. CLAUDE.md lists "PWA support not added" [DOC].
+- Without a connection, mutations go directly to tRPC and are not queued [CÓDIGO]; on-screen behavior was not observed [HIP].
+- Only the timer survives reloading; records do not.
 
-### UI de registro e histórico
+### Logging and history UI
 
-- O README declara grade de registro rápido, visões de dia, semana e lista, linha do tempo visual e edição com controles de duração [DOC]. Os componentes existem em `apps/web/src/components/tracking` e `reports` [CÓDIGO, só árvore]. Nada foi visto em execução.
-- Interface só em inglês; nenhuma biblioteca de internacionalização encontrada [CÓDIGO].
-- O convite é criado na tela de configurações da família ([settings/page.tsx L108](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/app/(dashboard)/dashboard/household/settings/page.tsx#L108)), mas nenhum arquivo `.tsx` chama `acceptInvite` e não há rota com "invite" no caminho em `apps/web/src/app` [CÓDIGO]. Como o convidado recebe e usa o token ficou sem resposta.
+- The README declares a quick logging grid, day, week and list views, a visual timeline and editing with duration controls [DOC]. The components exist in `apps/web/src/components/tracking` and `reports` [CODE, file tree only]. Nothing was seen running.
+- English-only interface; no internationalization library found [CÓDIGO].
+- The invitation is created on the family settings screen ([settings/page.tsx L108](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/app/(dashboard)/dashboard/household/settings/page.tsx#L108)), but no `.tsx` file calls `acceptInvite` and there is no route with "invite" in its path in `apps/web/src/app` [CÓDIGO]. How the invitee receives and uses the token remains unanswered.
 
-### Relatórios
+### Reports
 
-- Os resumos por período ("today", "week", "month") são calculados no servidor com `startOfDay(new Date())` ([date.ts L63–L74](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/utils/src/date.ts#L63-L74)) [CÓDIGO]. O "hoje" segue o fuso do servidor; num servidor em UTC, o dia de uma família em Brasília viraria às 21h [HIP, não executado]. "Mês" é os últimos 30 dias.
-- Uma rota `timeline` agrega os oito tipos de registro para as três visões [CÓDIGO, `timeline.ts`].
+- Period summaries ("today", "week", "month") are calculated on the server with `startOfDay(new Date())` ([date.ts L63–L74](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/utils/src/date.ts#L63-L74)) [CÓDIGO]. "Today" follows the server's time zone; on a UTC server, the day for a family in Brasília would change at 21h [HYP, not executed]. "Month" means the last 30 days.
+- A `timeline` route aggregates the eight record types for the three views [CODE, `timeline.ts`].
 
 ### API
 
-- Doze routers tRPC com SuperJSON: activity, child, diaper, feeding, growth, household, medicine, pumping, sleep, temperature, timeline e user [CÓDIGO]. Não há API REST documentada; o acesso externo é pelo servidor MCP.
+- Twelve tRPC routers with SuperJSON: activity, child, diaper, feeding, growth, household, medicine, pumping, sleep, temperature, timeline and user [CÓDIGO]. There is no documented REST API; external access is through the MCP server.
 
 ### Testes
 
-- **Executados:** 36 arquivos e 613 testes passaram em 38,92 s [EXEC, log 03]. Os testes da API usam Prisma simulado ([CLAUDE.md](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/CLAUDE.md), seção Testing) [DOC], portanto não provam comportamento com banco real.
-- **Não executados:** cinco specs Playwright (login, família, registro, persistência do timer, tempo real) [CÓDIGO].
-- **Sem cobertura aparente:** concorrência entre cuidadores, offline, fuso e o caso de id não resolvido no middleware [CÓDIGO].
+- **Executed:** 36 files and 613 tests passed in 38,92 s [EXEC, log 03]. API tests use mocked Prisma ([CLAUDE.md](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/CLAUDE.md), Testing section) [DOC], so they do not prove behavior with a real database.
+- **Not executed:** five Playwright specs (login, family, logging, timer persistence, real-time updates) [CÓDIGO].
+- **No apparent coverage:** concurrency between caregivers, offline use, time zones and the unresolved ID case in the middleware [CÓDIGO].
 
-### Configuração e i18n
+### Configuration and i18n
 
-- Variáveis: `DATABASE_URL`, `DIRECT_URL` e `AUTH_SECRET` obrigatórias; Google, SMTP, chaves do Supabase (pública e de serviço) e `ANTHROPIC_API_KEY` opcionais (CLAUDE.md) [DOC].
-- Deploy pensado para Vercel, com `maxDuration` de 60 s no chat ([chat/route.ts L8](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/app/api/chat/route.ts#L8)) [CÓDIGO].
-- Sem notificações push (busca por `web-push`, `PushManager` e `Notification.requestPermission`, sem resultado) [CÓDIGO].
+- Variables: `DATABASE_URL`, `DIRECT_URL` and `AUTH_SECRET` are required; Google, SMTP, Supabase keys (public and service) and `ANTHROPIC_API_KEY` are optional (CLAUDE.md) [DOC].
+- Deployment intended for Vercel, with a `maxDuration` of 60 s in chat ([chat/route.ts L8](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/app/api/chat/route.ts#L8)) [CÓDIGO].
+- No push notifications (search for `web-push`, `PushManager` and `Notification.requestPermission`, with no results) [CÓDIGO].
 
 ## Execução
 
-Resumo; detalhes, comandos e SHA-256 no [índice de evidências](../../09_Evidencias/Execucao_Referencias/Finnberry/00_Indice.md).
+Summary; details, commands and SHA-256 in the [evidence index](../../09_Evidencias/Execucao_Referencias/Finnberry/00_Indice.md).
 
-| Etapa | Resultado | Evidência |
+| Step | Result | Evidence |
 | --- | --- | --- |
-| `pnpm install` (pnpm 9.15.0, Node 24.20.0, Windows) | 812 pacotes, exit 0; bin `finnberry-mcp` não criado porque o MCP não foi compilado | [EXEC] [01-install.log](../../09_Evidencias/Execucao_Referencias/Finnberry/01-install.log) |
-| `prisma generate` | Cliente 6.19.2 gerado; schema válido | [EXEC] [02-prisma-generate.log](../../09_Evidencias/Execucao_Referencias/Finnberry/02-prisma-generate.log) |
-| `vitest run` | 613 testes em 36 arquivos, exit 0 | [EXEC] [03-vitest-all.clean.log](../../09_Evidencias/Execucao_Referencias/Finnberry/03-vitest-all.clean.log) |
-| PostgreSQL 16.6 em container `appmat-ref-finnberry-pg`, 127.0.0.1:38110, dados em tmpfs | Aceitou conexões | [EXEC] [04-postgres-docker.log](../../09_Evidencias/Execucao_Referencias/Finnberry/04-postgres-docker.log) |
-| `prisma db push` | 17 tabelas criadas em 726 ms | [EXEC] [05-prisma-db-push.log](../../09_Evidencias/Execucao_Referencias/Finnberry/05-prisma-db-push.log) |
-| Identificação Git e levantamento de licenças | Ver as seções acima | [EXEC] logs 06 e 07 |
+| `pnpm install` (pnpm 9.15.0, Node 24.20.0, Windows) | 812 packages, exit 0; bin `finnberry-mcp` not created because MCP was not compiled | [EXEC] [01-install.log](../../09_Evidencias/Execucao_Referencias/Finnberry/01-install.log) |
+| `prisma generate` | Client 6.19.2 generated; valid schema | [EXEC] [02-prisma-generate.log](../../09_Evidencias/Execucao_Referencias/Finnberry/02-prisma-generate.log) |
+| `vitest run` | 613 tests in 36 files, exit 0 | [EXEC] [03-vitest-all.clean.log](../../09_Evidencias/Execucao_Referencias/Finnberry/03-vitest-all.clean.log) |
+| PostgreSQL 16.6 in container `appmat-ref-finnberry-pg`, 127.0.0.1:38110, data in tmpfs | Accepted connections | [EXEC] [04-postgres-docker.log](../../09_Evidencias/Execucao_Referencias/Finnberry/04-postgres-docker.log) |
+| `prisma db push` | 17 tables created in 726 ms | [EXEC] [05-prisma-db-push.log](../../09_Evidencias/Execucao_Referencias/Finnberry/05-prisma-db-push.log) |
+| Git identification and license inventory | See the sections above | [EXEC] logs 06 and 07 |
 
-- Os logs 01 a 05 são da primeira tentativa, interrompida às 03:14 pelo filtro do provedor, sem erro do projeto. O container foi removido pelo coordenador depois (não há porta 38xxx nem container `appmat-ref-*` ativo às 04:35).
-- **Não executado:** `next dev`, build, lint, type-check, E2E, rota de seed, servidor MCP, chat, tempo real, offline, dois aparelhos e fusos. Nenhuma requisição ao app e nenhum login.
+- Logs 01 to 05 are from the first attempt, interrupted at 03:14 by the provider's filter, with no project error. The container was later removed by the coordinator (no 38xxx port or `appmat-ref-*` container active at 04:35).
+- **Not executed:** `next dev`, build, lint, type-check, E2E, seed route, MCP server, chat, real-time updates, offline use, two devices and time zones. No requests to the app and no login.
 
-## Licenças por material
+## Licenses by material
 
-| Material | Licença | Evidência | O que observar |
+| Material | License | Evidence | What to watch for |
 | --- | --- | --- | --- |
-| Código do repositório | MIT | [CÓDIGO] LICENSE lido; log 06 | Manter o aviso de copyright e de permissão em cópias substanciais |
-| Dependências de produção (434 versões no fechamento) | MIT 340, ISC 19, Apache-2.0 17, BSD-3-Clause 4, BSD-2-Clause 2, MIT-0 1, 0BSD 1 | [EXEC] log 07, campo `license` autodeclarado | Conferir LICENSE e NOTICE antes de usar qualquer uma |
-| `@anthropic-ai/claude-agent-sdk` 0.2.20 | "SEE LICENSE IN README.md" (termos próprios, não open source) | [EXEC] log 07 | Fora de qualquer reaproveitamento sem ler os termos |
-| Binários `@img/sharp-*` (libvips) | Apache-2.0 AND LGPL-3.0-or-later | [EXEC] log 07 | Obrigações da LGPL ao redistribuir o binário |
-| Ferramentas de desenvolvimento | MPL-2.0 (por exemplo, `axe-core`) e CC-BY-4.0 (`caniuse-lite`) | [EXEC] log 07 | Só desenvolvimento; não entram no app |
-| Imagens e fontes | Nenhuma versionada | [EXEC] log 06 | — |
-| Textos educativos | Não há | [CÓDIGO] | — |
-| Nome e marca | "Finnberry"; o repositório se diz clone do Huckleberry | [DOC] | Não usar nome, marca nem a associação |
+| Repository code | MIT | [CÓDIGO] LICENSE read; log 06 | Retain the copyright and permission notice in substantial copies |
+| Production dependencies (434 versions at completion) | MIT 340, ISC 19, Apache-2.0 17, BSD-3-Clause 4, BSD-2-Clause 2, MIT-0 1, 0BSD 1 | [EXEC] log 07, self-declared `license` field | Check LICENSE and NOTICE before using any of them |
+| `@anthropic-ai/claude-agent-sdk` 0.2.20 | "SEE LICENSE IN README.md" (custom terms, not open source) | [EXEC] log 07 | Exclude from any reuse without reading the terms |
+| `@img/sharp-*` binaries (libvips) | Apache-2.0 AND LGPL-3.0-or-later | [EXEC] log 07 | LGPL obligations when redistributing the binary |
+| Development tools | MPL-2.0 (for example, `axe-core`) and CC-BY-4.0 (`caniuse-lite`) | [EXEC] log 07 | Development only; not included in the app |
+| Images and fonts | None tracked | [EXEC] log 06 | — |
+| Educational texts | None | [CÓDIGO] | — |
+| Name and brand | "Finnberry"; the repository calls itself a Huckleberry clone | [DOC] | Do not use the name, brand or association |
 
-## O que aproveitar como conceito
+## Concepts to adopt
 
-1. Família com quatro papéis e a regra "quem só vê não grava".
-2. Convite por e-mail com validade de 7 dias, aceito só pelo e-mail convidado e consumido na mesma transação que cria o vínculo ([household.ts L127–L213](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/routers/household.ts#L127-L213)).
-3. Exclusão de conta com confirmação por e-mail: a titularidade passa ao primeiro administrador ou membro, e a família só é apagada quando não sobra ninguém ([user.ts L42–L103](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/routers/user.ts#L42-L103)). Isso conversa com a exigência de exclusão de conta dentro do app.
-4. Temporizador derivado do instante de início, persistido no aparelho, com acumulação por lado na amamentação.
-5. Tummy time como atividade com timer e sem meta, coerente com a linha editorial sem cobrança.
-6. Uma consulta de linha do tempo que junta todos os tipos de registro.
+1. A family with four roles and the rule "view-only users cannot write".
+2. Email invitation valid for 7 days, accepted only by the invited email address and consumed in the same transaction that creates the membership ([household.ts L127–L213](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/routers/household.ts#L127-L213)).
+3. Account deletion with email confirmation: ownership passes to the first administrator or member, and the family is deleted only when no one remains ([user.ts L42–L103](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/routers/user.ts#L42-L103)). This aligns with the requirement for in-app account deletion.
+4. A timer derived from the start time, persisted on the device, with accumulation per side during breastfeeding.
+5. Tummy time as a timed activity without a target, consistent with the editorial approach of avoiding pressure.
+6. A timeline query that combines all record types.
 
-## O que pode ser reutilizado conforme a licença
+## What can be reused under the license
 
-O MIT permite reutilizar o código desde que o aviso de copyright e de permissão acompanhe as partes copiadas. Como a stack proposta é outra (React Native + Expo, PowerSync e serviço de domínio; [ADR-002](../../06_ADRs/ADR-002_Framework_Mobile.md) e [ADR-003](../../06_ADRs/ADR-003_Backend_Persistencia_Autenticacao.md)), o reaproveitamento direto se limita a peças pequenas em TypeScript:
+MIT allows code reuse as long as the copyright and permission notice accompanies the copied portions. Since the proposed stack is different (React Native + Expo, PowerSync and a domain service; [ADR-002](../../06_ADRs/ADR-002_Framework_Mobile.md) and [ADR-003](../../06_ADRs/ADR-003_Backend_Persistencia_Autenticacao.md)), direct reuse is limited to small TypeScript pieces:
 
-- conversões de unidade (`packages/utils/src/format.ts`: ml e oz, peso, altura, temperatura);
-- a lógica de acumulação por lado do `timer-store.ts`, fora do Zustand;
-- enumerações dos schemas Zod (tipos de fralda, de alimentação e de atividade), traduzidas e revistas.
+- unit conversions (`packages/utils/src/format.ts`: ml and oz, weight, height, temperature);
+- the per-side accumulation logic from `timer-store.ts`, outside Zustand;
+- Zod schema enumerations (diaper, feeding and activity types), translated and reviewed.
 
-Cada trecho copiado leva o aviso MIT e a referência ao commit. Nada de imagem, texto ou marca.
+Each copied snippet carries the MIT notice and a reference to the commit. No images, text or branding.
 
-## Adaptações necessárias
+## Required adaptations
 
-- **Autoria:** "iniciado por", "encerrado por" e "editado por" em todo registro, com histórico ([Modelo de dados e permissões](../../03_Arquitetura/Modelo_de_Dados_e_Permissoes.md)).
-- **Escopo por família:** resolvido a partir do registro gravado no servidor, nunca do que o cliente envia, e repetido na camada de dados e nas regras de sincronização ([ADR-005](../../06_ADRs/ADR-005_Isolamento_e_Fronteira_Comunidade.md)).
-- **Sessões em andamento:** sessões paralelas são detectadas e resolvidas, sem recusar a intenção feita offline. O servidor aceita as duas e a interface oferece "unir" ou "encerrar uma". O segundo encerramento é tratado explicitamente ([Offline, seção 7.2](../../03_Arquitetura/Offline_Sincronizacao_e_Temporizadores.md); [ADR-004](../../06_ADRs/ADR-004_Offline_Sync_e_Temporizadores.md)).
-- **Validações:** fim antes do início é recusado. Sobreposição e datas no futuro geram aviso, com tolerância e sem bloqueio ([Offline, seção 8](../../03_Arquitetura/Offline_Sincronizacao_e_Temporizadores.md)).
-- **Tempo:** instante com fuso da família; "hoje" calculado no fuso da família, não no do servidor.
-- **Offline:** fila local persistente com id de operação, no lugar de mutações diretas ([Offline, sincronização e temporizadores](../../03_Arquitetura/Offline_Sincronizacao_e_Temporizadores.md)).
-- **Saída do titular:** `removeMember` deixa o titular sair sem transferir a titularidade ([household.ts L245–L287](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/routers/household.ts#L245-L287)) [CÓDIGO]; a família pode ficar sem titular [HIP]. No AppMaternidade, a saída exige transferência antes.
-- **Tempo real completo:** o canal por criança só escuta sono, mamada e fralda ([use-realtime.ts L21–L64](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/hooks/use-realtime.ts#L21-L64)) [CÓDIGO]; atividades (inclusive tummy time) e bombeamento não chegam em tempo real ao outro cuidador [HIP].
+- **Authorship:** "iniciado por", "encerrado por" and "editado por" on every record, with history ([Data model and permissions](../../03_Arquitetura/Modelo_de_Dados_e_Permissoes.md)).
+- **Family scope:** resolved from the record stored on the server, never from what the client sends, and repeated in the data layer and synchronization rules ([ADR-005](../../06_ADRs/ADR-005_Isolamento_e_Fronteira_Comunidade.md)).
+- **Ongoing sessions:** parallel sessions are detected and resolved without rejecting an action made offline. The server accepts both and the interface offers "unir" or "encerrar uma". A second ending is handled explicitly ([Offline, section 7.2](../../03_Arquitetura/Offline_Sincronizacao_e_Temporizadores.md); [ADR-004](../../06_ADRs/ADR-004_Offline_Sync_e_Temporizadores.md)).
+- **Validations:** an end before the start is rejected. Overlaps and future dates generate a warning, with tolerance and without blocking ([Offline, section 8](../../03_Arquitetura/Offline_Sincronizacao_e_Temporizadores.md)).
+- **Time:** timestamp with the family's time zone; "today" calculated in the family's time zone, not the server's.
+- **Offline:** persistent local queue with an operation ID, replacing direct mutations ([Offline, synchronization and timers](../../03_Arquitetura/Offline_Sincronizacao_e_Temporizadores.md)).
+- **Owner departure:** `removeMember` lets the owner leave without transferring ownership ([household.ts L245–L287](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/packages/api/src/routers/household.ts#L245-L287)) [CÓDIGO]; the family could be left without an owner [HIP]. In AppMaternidade, leaving requires a transfer first.
+- **Complete real-time updates:** the channel per child listens only for sleep, breastfeeding and diapers ([use-realtime.ts L21–L64](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/hooks/use-realtime.ts#L21-L64)) [CÓDIGO]; activities (including tummy time) and pumping do not reach the other caregiver in real time [HIP].
 
-## O que não reproduzir
+## What not to reproduce
 
-- Família descoberta a partir da entrada, com passagem sem contexto quando não é encontrada.
-- Canal de tempo real com chave pública e filtro escolhido pelo cliente sem políticas versionadas.
-- Nome e data de nascimento da criança no prompt de sistema enviado a um provedor externo de IA ([chat/route.ts L158](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/app/api/chat/route.ts#L158)) [CÓDIGO]. Envolve transferência de dado de criança a terceiro; a proposta do MVP é não ter IA generativa respondendo a usuários ([Decisões para Daniel](../../07_Roadmap/Decisoes_para_Daniel.md), D4).
-- Ferramentas de IA ou servidor MCP com acesso direto ao banco num produto com várias famílias.
-- "Hoje" calculado no fuso do servidor.
-- Dependências em release candidate ou beta na fundação (tRPC RC, NextAuth beta).
+- Family discovered from input, with execution continuing without context when none is found.
+- Real-time channel with a public key and a client-selected filter without tracked policies.
+- The child's name and date of birth in the system prompt sent to an external AI provider ([chat/route.ts L158](https://github.com/bckenstler/finnberry/blob/5e17b1a71e10735f0b6aaa22996ce37349d9402c/apps/web/src/app/api/chat/route.ts#L158)) [CÓDIGO]. This involves transferring a child's data to a third party; the MVP proposal excludes generative AI responding to users ([Decisions for Daniel](../../07_Roadmap/Decisoes_para_Daniel.md), D4).
+- AI tools or an MCP server with direct database access in a product with multiple families.
+- "Hoje" calculated in the server's time zone.
+- Release candidate or beta dependencies in the foundation (tRPC RC, NextAuth beta).
 
-## Riscos e problemas encontrados
+## Risks and problems found
 
-| Risco | Evidência | Impacto para o AppMaternidade |
+| Risk | Evidence | Impact on AppMaternidade |
 | --- | --- | --- |
-| Projeto curto e parado: 104 commits em 6 dias, nada depois de 30/01/2026 | [EXEC] log 06 | Referência, não base de código |
-| Escopo por família nas operações por id de registro não evidente | [CÓDIGO] trpc.ts, sleep.ts | Reforça o ADR-005; pergunta de auditoria |
-| Políticas de acesso do banco fora do repositório | [EXEC] log 06; [HIP] log 05 | O tempo real depende de configuração não versionada |
-| Sem autoria nos registros | [CÓDIGO] schema.prisma | O diferencial de passagem de turno não tem base aqui |
-| Corrida ao iniciar sessão e sobrescrita ao encerrar | [CÓDIGO]; [HIP] para a corrida | Cenário Q-03 precisa de regra no banco |
-| Dados da criança enviados a provedor de IA | [CÓDIGO] chat/route.ts | LGPD e consentimento; fora do MVP |
-| Fuso do servidor nos resumos | [CÓDIGO] date.ts | Cenário Q-09 |
-| Convite sem tela de aceite encontrada | [CÓDIGO] | Fluxo incompleto; o AppMaternidade define o seu em [Fluxos e telas](../../02_Experiencia/Fluxos_e_Telas.md) |
+| Short-lived, inactive project: 104 commits in 6 days, nothing after 30/01/2026 | [EXEC] log 06 | A reference, not a codebase |
+| Family scope in operations by record ID is unclear | [CÓDIGO] trpc.ts, sleep.ts | Reinforces ADR-005; audit question |
+| Database access policies outside the repository | [EXEC] log 06; [HIP] log 05 | Real-time updates depend on untracked configuration |
+| No record authorship | [CÓDIGO] schema.prisma | The caregiver handover differentiator has no foundation here |
+| Race when starting a session and overwrite when ending | [CÓDIGO]; [HIP] for the race | Scenario Q-03 needs a database rule |
+| Child data sent to an AI provider | [CÓDIGO] chat/route.ts | LGPD and consent; outside the MVP |
+| Server time zone in summaries | [CÓDIGO] date.ts | Scenario Q-09 |
+| No invitation acceptance screen found | [CÓDIGO] | Incomplete flow; AppMaternidade defines its own in [Flows and screens](../../02_Experiencia/Fluxos_e_Telas.md) |
 
-## Relação com os cenários Q-01 a Q-12
+## Relationship to scenarios Q-01 to Q-12
 
-| Cenário | O que o Finnberry mostra | Classe | Lição para o AppMaternidade |
+| Scenario | What Finnberry shows | Class | Lesson for AppMaternidade |
 | --- | --- | --- | --- |
-| Q-01 registro offline, fechar e reabrir | Não há fila nem cache persistente; só o timer local sobrevive | [CÓDIGO] | Fila local persistente com estado visível |
-| Q-02 reenvio | Sem id de operação; um reenvio cria outro registro | [CÓDIGO] | Id de operação gerado no aparelho e resposta idempotente |
-| Q-03 A inicia, B encerra | B encerra pelo registro no banco, mas a autoria não é gravada; o segundo encerramento sobrescreve | [CÓDIGO] | "Iniciado por" e "encerrado por", e duplo encerramento tratado |
-| Q-04 edição concorrente | Última gravação vence, sem versão nem aviso | [CÓDIGO] | Versão por registro e conflito visível |
-| Q-05 revogação | Remover membro apaga o vínculo; não há cache offline a limpar | [CÓDIGO] | Revalidar operações na reconexão e apagar dados locais |
-| Q-06 ids de outra família | Ver "Autorização e isolamento": perguntas de auditoria | [CÓDIGO] | Escopo pelo registro gravado e testes de acesso negado em todas as rotas e canais |
-| Q-07 comunidade | Não existe | [CÓDIGO] | Sem referência |
-| Q-08 tela bloqueada ou app encerrado | Duração derivada do início; persiste ao recarregar | [CÓDIGO]; E2E não executado | Mesmo princípio, com estado local e no servidor |
-| Q-09 fuso e meia-noite | "Hoje" no fuso do servidor; relógios do aparelho e do servidor misturados | [CÓDIGO]; [HIP] para o efeito | Fuso gravado com o evento e regra única de dia |
-| Q-10 notificação negada | Não há notificações | [CÓDIGO] | Registrar e sincronizar sem depender de push |
-| Q-11 denúncia e moderação | Não existe | [CÓDIGO] | Sem referência |
-| Q-12 exportar, excluir, backup | Exclusão de conta com transferência de titularidade; exportação ainda sem interface (CLAUDE.md) | [CÓDIGO]; [DOC] | Exportação por família e exclusão propagada |
+| Q-01 offline logging, close and reopen | No queue or persistent cache; only the local timer survives | [CÓDIGO] | Persistent local queue with visible state |
+| Q-02 resending | No operation ID; resending creates another record | [CÓDIGO] | Device-generated operation ID and idempotent response |
+| Q-03 A starts, B ends | B ends through the database record, but authorship is not stored; a second ending overwrites | [CÓDIGO] | "Iniciado por" and "encerrado por", and duplicate ending handled |
+| Q-04 concurrent editing | Last write wins, without a version or warning | [CÓDIGO] | Version per record and visible conflict |
+| Q-05 revocation | Removing a member deletes the membership; no offline cache to clear | [CÓDIGO] | Revalidate operations on reconnection and delete local data |
+| Q-06 IDs from another family | See "Authorization and isolation": audit questions | [CÓDIGO] | Scope based on the stored record and access-denied tests on all routes and channels |
+| Q-07 community | Does not exist | [CÓDIGO] | No reference |
+| Q-08 locked screen or closed app | Duration derived from the start; persists across reloads | [CÓDIGO]; E2E not executed | Same principle, with local and server state |
+| Q-09 time zone and midnight | "Today" in the server's time zone; device and server clocks mixed | [CÓDIGO]; [HIP] for the effect | Time zone stored with the event and a single day rule |
+| Q-10 notification denied | No notifications | [CÓDIGO] | Log and synchronize without depending on push |
+| Q-11 reporting and moderation | Does not exist | [CÓDIGO] | No reference |
+| Q-12 export, delete, backup | Account deletion with ownership transfer; export still has no interface (CLAUDE.md) | [CÓDIGO]; [DOC] | Export per family and propagated deletion |
 
-## Questões abertas
+## Open questions
 
-1. Em que ponto as operações por id de registro conferem a família? (Pergunta de auditoria; resposta só com leitura completa dos routers e dos testes.)
-2. O projeto Supabase usado em produção tinha políticas de acesso configuradas fora do repositório?
-3. Como o convidado recebe e usa o token do convite?
-4. Com RLS ligado e sem políticas, o tempo real deixaria de entregar eventos sem aviso? [HIP]
-5. A segunda listagem do log 05 (`tabela|f`) é de fato `relrowsecurity`?
+1. At what point do operations by record ID check the family? (Audit question; answering requires a full reading of the routers and tests.)
+2. Did the Supabase project used in production have access policies configured outside the repository?
+3. How does the invitee receive and use the invitation token?
+4. With RLS enabled and no policies, would real-time updates stop delivering events without warning? [HIP]
+5. Is the second listing in log 05 (`tabela|f`) actually `relrowsecurity`?
 
-## Limites desta análise
+## Limits of this analysis
 
-- Ficha escrita pelo coordenador, por leitura de código no commit analisado e pelos logs já existentes, depois de duas tentativas de subagente que não terminaram: a primeira interrompida às 03:14 pelo filtro do provedor; a segunda, às 04:30, por falta de resposta do provedor, depois de salvar o índice de evidências.
-- Pela regra desta frente, não houve requisição ao app, login, nem teste de autorização ou de acesso a dados de outra família. As observações de acesso são perguntas de auditoria.
-- Os achados de comportamento sem execução são [CÓDIGO] ou [HIP]; nenhum foi observado no app rodando.
-- Leitura parcial: `timeline.ts`, os componentes de interface e as ferramentas do MCP foram vistos só por busca.
+- Profile written by the coordinator by reading code at the analyzed commit and existing logs, after two subagent attempts that did not finish: the first interrupted at 03:14 by the provider's filter; the second, at 04:30, because the provider did not respond, after saving the evidence index.
+- Under this workstream's rule, there were no requests to the app, login, authorization tests or tests of access to another family's data. Access observations are audit questions.
+- Behavioral findings without execution are [CÓDIGO] or [HIP]; none were observed in the running app.
+- Partial reading: `timeline.ts`, interface components and MCP tools were examined only through searches.
 
 ## Voltar
 
-[Home](../../00_Inicio/Home.md) · [Progresso](../../00_Inicio/Progresso.md) · [Baby Buddy](Baby_Buddy.md)
+[Home](../../00_Inicio/Home.md) · [Progress](../../00_Inicio/Progresso.md) · [Baby Buddy](Baby_Buddy.md)

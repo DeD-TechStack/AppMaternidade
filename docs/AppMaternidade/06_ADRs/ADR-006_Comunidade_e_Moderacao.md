@@ -1,108 +1,108 @@
 ---
 tipo: adr
 id: ADR-006
-status: Proposta
+status: Proposed
 data: 2026-10-22
-autor: Hermes (coordenador da APP-001)
-aprovador: nenhum até agora
+autor: Hermes (coordinator of APP-001)
+aprovador: none so far
 tarefas: MAT-10, MAT-15, MAT-18, MAT-19
 ---
 
-# ADR-006 — Formato de comunidade e capacidade de moderação
+# ADR-006 — Community format and moderation capacity
 
-> Nota de 03/11/2026: o rumo mudou para site completo primeiro e port Android e iOS depois ([ADR-009](ADR-009_Site_Completo_Primeiro.md)). Onde este texto fala em app nativo, leia como o port; o site cobre as mesmas funções.
+> Note dated 03/11/2026: the direction changed to the complete site first and Android and iOS ports afterward ([ADR-009](ADR-009_Site_Completo_Primeiro.md)). Where this text mentions a native app, read it as the port; the site covers the same functions.
 
-**Status:** Proposta. Recomendação técnica do Hermes; não aprovada por Daniel.
+**Status:** Proposed. Hermes's technical recommendation; not approved by Daniel.
 
-## Contexto e requisitos
+## Context and requirements
 
-- Comunidade é um dos quatro pilares e precisa estar no planejamento desde o início (requisito da task).
-- Acesso à comunidade não pode dar acesso à rotina privada de nenhuma criança, e moderador não lê dados de família ([ADR-005](ADR-005_Isolamento_e_Fronteira_Comunidade.md)).
-- O uso típico é com pouco tempo, muitas vezes de madrugada.
-- Requisitos externos:
-  - **Apple 1.2:** filtro, denúncia, bloqueio e contato.
-  - **Google Play:** aceite dos termos, denúncia e bloqueio dentro do app.
-  - **Tese do STF e decretos de 2026:** remoção imediata de alguns conteúdos, devido processo e relatório anual.
-  - **Conteúdo íntimo não autorizado:** remoção em 2 horas.
-- A capacidade de moderação no início é pequena: uma ou duas pessoas em meio período (decisão D5).
+- Community is one of the four pillars and must be included in planning from the start (task requirement).
+- Community access cannot grant access to any child's private routine, and moderators do not read family data ([ADR-005](ADR-005_Isolamento_e_Fronteira_Comunidade.md)).
+- Typical use involves little time, often late at night.
+- External requirements:
+  - **Apple 1.2:** filtering, reporting, blocking and contact information.
+  - **Google Play:** acceptance of terms, reporting and blocking within the app.
+  - **STF ruling and 2026 decrees:** immediate removal of certain content, due process and an annual report.
+  - **Unauthorized intimate content:** removal within 2 hours.
+- Initial moderation capacity is small: one or two people working part time (decision D5).
 
-## Opções consideradas
+## Options considered
 
-1. **Fórum assíncrono de tópicos e respostas em espaços curados, só texto, sem mensagem direta.**
-2. Grupos por mês de nascimento.
-3. Chat em grupo em tempo real.
-4. Salas de áudio ao vivo.
-5. Comentários sob o conteúdo editorial, como única forma de comunidade.
-6. Nenhuma comunidade no app (link para grupos externos).
-7. Software de fórum pronto integrado ao app.
+1. **An asynchronous forum with topics and replies in curated spaces, text only, without direct messages.**
+2. Groups by birth month.
+3. Real-time group chat.
+4. Live audio rooms.
+5. Comments under editorial content as the only form of community.
+6. No community in the app (link to external groups).
+7. Ready-made forum software integrated into the app.
 
 ## Evidências
 
-Consultadas em 22/10/2026; detalhes em [Comunidade e moderação](../04_Comunidade_Conteudo/Comunidade_e_Moderacao.md) e na [pesquisa de comunidade e conteúdo](../08_Referencias/Pesquisa_Comunidade_e_Conteudo.md).
+Sources accessed on 22/10/2026; details in [Community and moderation](../04_Comunidade_Conteudo/Comunidade_e_Moderacao.md) and the [community and content research](../08_Referencias/Pesquisa_Comunidade_e_Conteudo.md).
 
-- Apple App Review Guidelines 1.2, "Last Updated: October 16, 2026" (https://developer.apple.com/app-store/review/guidelines/): filtro, denúncia com resposta em tempo hábil, bloqueio e contato publicado.
-- Política de UGC do Google Play: aceite dos termos, denúncia e bloqueio dentro do app; bloqueio obrigatório em recursos 1:1 (fonte [2] da pesquisa).
-- Revisão integrativa: apoio entre pares é complemento do apoio profissional, e a efetividade é inconclusiva [52]. Os riscos são informação conflitante e comparação [53].
+- Apple App Review Guidelines 1.2, "Last Updated: October 16, 2026" (https://developer.apple.com/app-store/review/guidelines/): filtering, reporting with a timely response, blocking and published contact information.
+- Google Play UGC policy: acceptance of terms, reporting and blocking within the app; blocking mandatory for 1:1 features (research source [2]).
+- Integrative review: peer support complements professional support, and effectiveness is inconclusive [52]. Risks include conflicting information and comparison [53].
 - **BabyCenter:**
-  - grupos por mês de nascimento com 121 a 146 mil membros cada, e moderação em camadas;
-  - a empresa declara que não monitora o que os membros postam, e os posts são indexáveis ([ficha](../08_Referencias/Concorrentes/BabyCenter.md)).
+  - birth-month groups with 121 to 146 thousand members each, and layered moderation;
+  - the company states that it does not monitor members' posts, and posts are indexable ([profile](../08_Referencias/Concorrentes/BabyCenter.md)).
 - **Peanut:**
-  - salas de áudio exigiram treinamento próprio de moderação [50];
-  - há relatos de contas falsas e de encontros presenciais ([ficha](../08_Referencias/Concorrentes/Peanut.md)).
-- **Clubhouse:** os fundadores relataram que ficou difícil para muitas pessoas "to fit long conversations into their daily lives" [54].
-- **Rastreadores de rotina:** nas fontes consultadas, não foi identificada comunidade no app em nenhum dos quatro analisados. Nenhum app foi instalado ([Concorrentes e diferenciais](../01_Produto/Concorrentes_e_Diferenciais.md)).
+  - audio rooms required dedicated moderation training [50];
+  - there are reports of fake accounts and in-person meetings ([profile](../08_Referencias/Concorrentes/Peanut.md)).
+- **Clubhouse:** the founders reported that it became difficult for many people "to fit long conversations into their daily lives" [54].
+- **Routine trackers:** the sources consulted did not identify an in-app community in any of the four analyzed. No app was installed ([Competitors and differentiators](../01_Produto/Concorrentes_e_Diferenciais.md)).
 
 ## Recomendação
 
-Opção 1 no MVP, com evolução por etapas:
+Option 1 in the MVP, with phased evolution:
 
-- **MVP:** fórum assíncrono em espaços curados, só texto, sem mensagem direta.
-- **Etapa 2:** imagens com salvaguardas, grupos por faixa larga, rodas assíncronas e AMA com profissional verificado.
-- **Etapa 3:** rodas ao vivo de áudio, agendadas e mediadas.
-- **Etapa 4:** mensagem direta.
+- **MVP:** asynchronous forum in curated spaces, text only, without direct messages.
+- **Stage 2:** images with safeguards, broad-range groups, asynchronous discussion circles and AMAs with a verified professional.
+- **Stage 3:** scheduled, moderated live audio discussion circles.
+- **Stage 4:** direct messaging.
 
-Cada etapa só abre quando cumprir os critérios medidos no piloto. **As rodas de conversa ao vivo não foram descartadas:** ficam registradas como etapa 3, condicionada à demanda medida e a moderação treinada para áudio.
+Each stage opens only after meeting the criteria measured in the pilot. **Live discussion circles have not been discarded:** they remain recorded as stage 3, conditional on measured demand and moderation staff trained for audio.
 
-Capacidade mínima de moderação exigida antes de abrir a comunidade (MAT-19):
+Minimum moderation capacity required before opening the community (MAT-19):
 
-- regras publicadas e aceitas antes da primeira publicação;
-- denúncia com motivos, bloquear e silenciar;
-- fila priorizada com ações graduais, aviso ao autor, apelação e auditoria;
-- protocolo de crise com CVV 188 e SAMU 192, mais um fluxo próprio para conteúdo sexual envolvendo criança;
-- horário de cobertura publicado e ocultação automática fora dele;
-- primeiras publicações de contas novas revisadas antes de aparecer;
-- painel web interno de moderação, sem acesso a dados de família.
+- rules published and accepted before the first post;
+- reporting with reasons, blocking and muting;
+- prioritized queue with graduated actions, notice to the author, appeals and auditing;
+- crisis protocol with CVV 188 and SAMU 192, plus a dedicated flow for sexual content involving children;
+- published coverage hours and automatic hiding outside them;
+- new accounts' first posts reviewed before appearing;
+- internal web moderation panel, without access to family data.
 
-Justificativa: é o formato que encaixa no uso de madrugada e pode ser moderado por uma equipe pequena com prazo. Ele também evita os riscos mais caros (imagens de crianças, contato direto, tempo real) até haver capacidade comprovada.
+Rationale: this format fits late-night use and can be moderated within deadlines by a small team. It also avoids the most costly risks (images of children, direct contact, real time) until capacity has been demonstrated.
 
-## Consequências
+## Consequences
 
-- **Positivas:**
-  - comunidade útil desde o MVP, com conteúdo pesquisável;
-  - moderação possível sem plantão 24 horas;
-  - menor exposição a prazos de horas.
-- **Negativas:**
-  - menos "companhia imediata" que um chat;
-  - sem fotos, a experiência fica mais pobre;
-  - risco de comunidade vazia no começo;
-  - custo de pessoas (moderadores e roteiro de crise) desde o piloto.
+- **Positive:**
+  - useful community from the MVP, with searchable content;
+  - moderation possible without 24-hour on-call coverage;
+  - less exposure to deadlines measured in hours.
+- **Negative:**
+  - less "companhia imediata" than a chat;
+  - without photos, the experience is more limited;
+  - risk of an empty community initially;
+  - staffing costs (moderators and crisis script) from the pilot onward.
 
-## Riscos e verificação que falta
+## Risks and outstanding verification
 
-- Comunidade vazia: mitigar com espaços curados, conteúdo fixado e convite a famílias do piloto. Medir o tempo até a primeira resposta.
-- Prazos legais (2 horas para conteúdo íntimo; remoção imediata para crimes graves) com equipe pequena: validar com o jurídico o que basta no MVP só de texto.
-- Roteiro de crise sem profissional de saúde mental: precisa ser escrito com um antes do piloto.
-- Idade mínima e ECA Digital: decisão D4 e parecer jurídico.
-- Teste Q-07 (nenhum acesso à família) e Q-11 (denúncia, bloqueio e exclusão) ainda não executados.
+- Empty community: mitigate with curated spaces, pinned content and invitations to pilot families. Measure time to first reply.
+- Legal deadlines (2 hours for intimate content; immediate removal for serious crimes) with a small team: validate with legal counsel what is sufficient in the text-only MVP.
+- Crisis script without a mental health professional: it must be written with one before the pilot.
+- Minimum age and ECA Digital: decision D4 and a legal opinion.
+- Tests Q-07 (no family access) and Q-11 (reporting, blocking and deletion) have not yet been executed.
 
-## Quando revisar
+## When to review
 
-- O piloto mostrar demanda por imagens, grupos ou conversa ao vivo, com os critérios da etapa cumpridos.
-- A moderação não cumprir os prazos por várias semanas: rever o formato ou reduzir o escopo.
-- Mudança nas regras das lojas ou na legislação sobre plataformas.
-- Mudança na decisão de idade mínima.
+- The pilot shows demand for images, groups or live conversation, with the stage criteria met.
+- Moderation misses deadlines for several weeks: review the format or reduce scope.
+- Changes in app store rules or platform legislation.
+- A change in the minimum-age decision.
 
 ## Referências
 
-- Tarefas: MAT-10, MAT-15, MAT-18 e MAT-19 em http://localhost:3001/oficina/MAT
-- [Comunidade e moderação](../04_Comunidade_Conteudo/Comunidade_e_Moderacao.md) · [Pesquisa de comunidade e conteúdo](../08_Referencias/Pesquisa_Comunidade_e_Conteudo.md) · [Pesquisa de privacidade, legal e lojas](../08_Referencias/Pesquisa_Privacidade_Legal_e_Lojas.md) · [ADR-005](ADR-005_Isolamento_e_Fronteira_Comunidade.md) · [Custos e operação](../05_Privacidade_Operacao/Custos_e_Operacao.md) · [Decisões para Daniel](../07_Roadmap/Decisoes_para_Daniel.md)
+- Tasks: MAT-10, MAT-15, MAT-18 and MAT-19 at http://localhost:3001/oficina/MAT
+- [Community and moderation](../04_Comunidade_Conteudo/Comunidade_e_Moderacao.md) · [Community and content research](../08_Referencias/Pesquisa_Comunidade_e_Conteudo.md) · [Privacy, legal and app store research](../08_Referencias/Pesquisa_Privacidade_Legal_e_Lojas.md) · [ADR-005](ADR-005_Isolamento_e_Fronteira_Comunidade.md) · [Costs and operations](../05_Privacidade_Operacao/Custos_e_Operacao.md) · [Decisions for Daniel](../07_Roadmap/Decisoes_para_Daniel.md)

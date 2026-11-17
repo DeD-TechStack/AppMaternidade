@@ -1,7 +1,7 @@
 ---
-tipo: ficha-concorrente
-status: rascunho
-responsavel: Hermes (subagente concorrentes A)
+tipo: competitor-profile
+status: draft
+responsavel: Hermes (competitor subagent A)
 revisado_em: 2026-10-22
 produto: Napper
 fontes_principais:
@@ -14,206 +14,206 @@ fontes_principais:
 
 # Napper
 
-Ficha de concorrente da APP-001. Todas as fontes foram consultadas em 22/10/2026 (America/Sao_Paulo). As marcas seguem as [Convenções do cofre](../../00_Inicio/Convencoes.md): **[DOC]** indica algo declarado em site, loja ou ajuda; **[HIP]** indica hipótese, inferência ou relato isolado. Nenhum item foi observado em execução: o app não foi instalado. Trechos citados em inglês são literais; citações em português de fontes em inglês são traduções livres. Os códigos N01, N02… remetem à tabela de Fontes (no fim da ficha). Fichas irmãs: [Huckleberry](Huckleberry.md), [Baby Daybook](Baby_Daybook.md) e [Nara Baby](Nara_Baby.md).
+Competitor profile for APP-001. All sources were accessed on 22/10/2026 (America/Sao_Paulo). The labels follow the [Vault conventions](../../00_Inicio/Convencoes.md): **[DOC]** indicates something stated on a website, store listing or help page; **[HIP]** indicates a hypothesis, inference or isolated report. No item was observed in use: the app was not installed. Quoted passages in English are verbatim; Portuguese quotations from English sources are loose translations. The codes N01, N02… refer to the Sources table (at the end of the profile). Related profiles: [Huckleberry](Huckleberry.md), [Baby Daybook](Baby_Daybook.md) and [Nara Baby](Nara_Baby.md).
 
 ## Resumo
 
-- É um app de **sono** do bebê. O centro do produto é a agenda de sonecas e da hora de dormir, recalculada a partir dos registros, mais sons para dormir e um curso sobre sono. Os demais registros (mamadas, fraldas, bombinha, sólidos, temperatura, medicação) são secundários [DOC N01, N02, N05].
-- O cuidado compartilhado se resume a compartilhar o bebê e a assinatura com quantos cuidadores a família quiser [DOC N05, N13]. Não há papéis ou permissões declarados.
-- **Tummy time não foi encontrado** como registro ou recurso em nenhuma fonte oficial consultada. O veredito e o método estão abaixo.
-- Não foi encontrada comunidade no app [DOC/HIP N07].
+- It is a baby **sleep** app. The core of the product is the nap and bedtime schedule, recalculated from logs, plus sleep sounds and a sleep course. Other logs (feeds, diapers, pumping, solids, temperature, medication) are secondary [DOC N01, N02, N05].
+- Shared care consists of sharing the baby and the subscription with as many caregivers as the family wants [DOC N05, N13]. No roles or permissions are stated.
+- **Tummy time was not found** as a log type or feature in any official source consulted. The verdict and method are below.
+- No community was found in the app [DOC/HIP N07].
 
-## Veredito: tummy time no Napper
+## Verdict: tummy time in Napper
 
-**Veredito: não encontrado nas fontes consultadas (o que não prova ausência).**
+**Verdict: not found in the sources consulted (which does not prove absence).**
 
-O que foi verificado:
+What was checked:
 
-| # | Fonte verificada | O que mostra sobre tummy time |
+| # | Source checked | What it shows about tummy time |
 | --- | --- | --- |
-| 1 | Site oficial, home em inglês e em português (N01) | Recursos de sono, sons, artigos e estatísticas. A imagem oficial da tela "Track" tem 10 categorias e um botão "Edit": Wake-up, Nap, Bedtime, Night waking, Bottle feeding, Nursing, Pumping, Solids, Temperature e Diaper. Nenhuma é tummy time [DOC N01, N17]. |
-| 2 | Sitemap completo do site, com 610 URLs em 13 idiomas (N12) | Só há páginas institucionais (home, preços, presente, suporte, sobre), blog e termos. Nenhuma página de recurso trata de tummy time ou atividades [DOC N12]. |
-| 3 | Página de preços (N09) | Lista sono, curso, sons, tendências e "Unlimited tracking and tracking categories". Não cita tummy time [DOC N09]. |
-| 4 | Suporte (N16) | Só um formulário de contato. Não foi encontrada central de ajuda ou FAQ pública [DOC N16]. |
-| 5 | Google Play: descrição em inglês e em português e 7 capturas oficiais (N02, N03) | A descrição cita sono, amamentação, mamadeira, sólidos e medicação. As capturas mostram previsão, a grade de registros (mesmas categorias do item 1), sons, convite de cuidador, curso, tendências e notificações. Nada de tummy time [DOC N02, N03]. |
-| 6 | App Store EUA e Brasil: descrição, notas de versão de 6.52.3 a 6.86.0 (jun–out/2026) e compras no app (N05, N06) | Nenhuma menção a tummy time ou atividades. As notas de versão recentes tratam de iOS 27, Spotlight e correções [DOC N05, N06]. |
-| 7 | Avaliações públicas na App Store dos EUA e do Reino Unido (N07, N08) | Uma avaliação pede "um botão para registrar exercício […] com opções como 'tummy time', 'fisioterapia'". O Napper responde em 30/mai que levará a sugestão à equipe. Outra avaliação pede uma opção de "banho ou brincadeira" (resposta em 2/mai) [HIP N07]. A App Store mostra essas datas sem o ano; pelo padrão da loja, devem ser de 2026 [HIP]. |
-| 8 | Blog oficial (N14, N15) | Tummy time aparece **só como orientação** nos artigos de rotina por idade (por exemplo, o de 2 meses), não como recurso do app [DOC N14]. O artigo de atividades para pais cansados não cita tummy time [DOC N15]. |
-| 9 | Instagram oficial (N18) | A página não pôde ser extraída. Um trecho de busca de um post sugere "tummy time strolls" como atividade, ou seja, conteúdo e não recurso [HIP N18]. |
-| 10 | Política de privacidade (N10) | Cita como exemplos de registro amamentação, fraldas e bombinha. Não cita tummy time [DOC N10]. |
+| 1 | Official website, English and Portuguese home pages (N01) | Sleep features, sounds, articles and statistics. The official image of the "Track" screen has 10 categories and an "Edit" button: Wake-up, Nap, Bedtime, Night waking, Bottle feeding, Nursing, Pumping, Solids, Temperature and Diaper. None is tummy time [DOC N01, N17]. |
+| 2 | Full website sitemap, with 610 URLs in 13 languages (N12) | It contains only company pages (home, pricing, gift, support, about), blog and terms. No feature page covers tummy time or activities [DOC N12]. |
+| 3 | Pricing page (N09) | Lists sleep, course, sounds, trends and "Unlimited tracking and tracking categories". Does not mention tummy time [DOC N09]. |
+| 4 | Support (N16) | Only a contact form. No public help center or FAQ was found [DOC N16]. |
+| 5 | Google Play: English and Portuguese descriptions and 7 official screenshots (N02, N03) | The description mentions sleep, breastfeeding, bottle feeding, solids and medication. The screenshots show predictions, the logging grid (same categories as item 1), sounds, caregiver invitation, course, trends and notifications. No tummy time [DOC N02, N03]. |
+| 6 | US and Brazil App Store: description, release notes from 6.52.3 to 6.86.0 (Jun–out/2026) and in-app purchases (N05, N06) | No mention of tummy time or activities. Recent release notes cover iOS 27, Spotlight and fixes [DOC N05, N06]. |
+| 7 | Public reviews on the US and UK App Store (N07, N08) | One review asks for "a button to log exercise […] with options such as 'tummy time', 'physical therapy'". Napper replies on 30/mai that it will pass the suggestion to the team. Another review asks for a "bath or play" option (reply on 2/mai) [HIP N07]. The App Store shows these dates without the year; based on the store's convention, they should be from 2026 [HIP]. |
+| 8 | Official blog (N14, N15) | Tummy time appears **only as guidance** in age-based routine articles (for example, the one for 2 months), not as an app feature [DOC N14]. The article on activities for tired parents does not mention tummy time [DOC N15]. |
+| 9 | Official Instagram (N18) | The page could not be extracted. A search snippet from a post suggests "tummy time strolls" as an activity, meaning content rather than a feature [HIP N18]. |
+| 10 | Privacy policy (N10) | Mentions breastfeeding, diapers and pumping as examples of logs. Does not mention tummy time [DOC N10]. |
 
-Leitura: o conjunto **sugere** que, na versão atual, não há uma categoria dedicada a tummy time. A evidência mais forte é indireta: o pedido público de 2026 e a resposta do desenvolvedor sem indicar que o recurso já existia [HIP N07]. Há, porém, lacunas que impedem afirmar ausência:
+Interpretation: the evidence **suggests** that the current version has no dedicated tummy time category. The strongest evidence is indirect: the public request from 2026 and the developer's reply without indicating that the feature already existed [HIP N07]. However, gaps prevent a claim of absence:
 
-- A tela "Track" tem botão "Edit", e a lista exibida não inclui "Medicine", que a loja declara existir [DOC N02, N17]. Logo, as imagens não mostram todas as categorias.
-- O plano "Napper Complete" é vendido como "Sleep + more tracking & stats", segundo um agregador que reproduz a descrição da App Store [HIP N19]. As categorias extras desse plano não são públicas.
-- As capturas da App Store não foram analisadas, só as da Google Play e as do site.
+- The "Track" screen has an "Edit" button, and the displayed list does not include "Medicine", which the store listing says exists [DOC N02, N17]. Therefore, the images do not show all categories.
+- The "Napper Complete" plan is sold as "Sleep + more tracking & stats", according to an aggregator that reproduces the App Store description [HIP N19]. The extra categories in this plan are not public.
+- The App Store screenshots were not analyzed, only those from Google Play and the website.
 
-O que faltaria para confirmar: abrir o app instalado (conta de teste, sem dados reais) no Android e no iOS e percorrer "Track → Edit" nos planos Free, Sleep e Complete. Alternativa: resposta escrita do suporte (support@napper.app). Contatar o suporte é decisão de Daniel, porque esta task não envia mensagens.
+What would still be needed to confirm: open the installed app (test account, no real data) on Android and iOS and go through "Track → Edit" on the Free, Sleep and Complete plans. Alternative: a written reply from support (support@napper.app). Contacting support is Daniel's decision, because this task does not send messages.
 
-Também foi verificado:
+Also checked:
 
-- **Colaboração entre cuidadores: presente** [DOC N05, N02].
-- **Atividades e brincadeiras: não encontradas** como recurso [DOC N01, N02, N05]. Há só conteúdo de blog [DOC N14].
-- **Conteúdo por fase: presente de forma parcial.** O curso é sobre sono, o blog tem artigos de rotina por idade e há um assistente de IA citado na política de privacidade [DOC N02, N10, N14].
+- **Caregiver collaboration: present** [DOC N05, N02].
+- **Activities and play: not found** as a feature [DOC N01, N02, N05]. There is only blog content [DOC N14].
+- **Stage-based content: partially present.** The course covers sleep, the blog has age-based routine articles and an AI assistant is mentioned in the privacy policy [DOC N02, N10, N14].
 
 ## Identificação
 
-| Campo | Valor | Fonte |
+| Field | Value | Source |
 | --- | --- | --- |
-| Empresa | Napper AB, Strandvägen 7A, Estocolmo, Suécia | [DOC N02] |
-| Site | https://napper.app (a Google Play aponta para getnapper.com) | [DOC N01, N02] |
-| Google Play | `com.napper`: "Napper: Baby Sleep & Parenting" (em pt-BR, "Napper: Horário do sono"). 1 mi+ downloads. Nota 4,7 com 16,8 mil avaliações (EUA) e 4,9 (BR). Atualizado em 07/10/2026. A versão não aparece na página | [DOC N02, N03] |
-| App Store | `id1491340863`: "Napper: Baby Sleep Tracker" (em pt-BR, "Napper: Horário do sono"). Versão 6.86.0, exibida como "há 2 dias" em 22/10/2026. Saúde e fitness. Nota 4,9 com 4,6 mil avaliações (EUA). Editors' Choice | [DOC N05, N06] |
-| Plataformas | Android; iPhone (iOS 16.4+); Apple Watch (watchOS 26.0+); Apple Vision. Em 26/07/2024 o desenvolvedor ainda dizia não ter integração com Apple Watch, então o app de relógio é recente [DOC N05, N06] [HIP sobre a data] | |
-| Idiomas | Inglês e mais 19, entre eles português. O site também tem versão `/pt/` | [DOC N05, N06, N12] |
-| Preço | Plano Free e plano Unlimited a US$ 69,99/ano, com teste de 7 dias. Na página de preços, o Free tem só "Daily sleep tracking" e "Sleep schedule based on age"; os outros itens aparecem bloqueados (ícone de cadeado, conferido no DOM da página) | [DOC N09] |
-| Assinaturas na App Store (EUA) | Napper Sleep: US$ 14,99/mês ou US$ 89,99/ano. Napper Complete: US$ 19,99/mês ou US$ 129,99/ano. Há ainda variantes "Unlimited: Baby-Sleep Expert +" e "Night Slumber +" | [DOC N05] |
-| Assinaturas na App Store (BR) | "Napper Unlimited" a R$ 89,90 e variantes de R$ 22,90 a R$ 359,90 | [DOC N06] |
-| Termos | Exige 18 anos ou mais (menores só com consentimento dos pais ou responsável). O app "não constitui aconselhamento médico" | [DOC N11] |
+| Company | Napper AB, Strandvägen 7A, Stockholm, Sweden | [DOC N02] |
+| Website | https://napper.app (Google Play points to getnapper.com) | [DOC N01, N02] |
+| Google Play | `com.napper`: "Napper: Baby Sleep & Parenting" (in pt-BR, "Napper: Horário do sono"). 1 million+ downloads. Rating of 4,7 with 16,8 thousand reviews (US) and 4,9 (BR). Updated on 07/10/2026. The version is not shown on the page | [DOC N02, N03] |
+| App Store | `id1491340863`: "Napper: Baby Sleep Tracker" (in pt-BR, "Napper: Horário do sono"). Version 6.86.0, displayed as "há 2 dias" on 22/10/2026. Health & Fitness. Rating of 4,9 with 4,6 thousand reviews (US). Editors' Choice | [DOC N05, N06] |
+| Platforms | Android; iPhone (iOS 16.4+); Apple Watch (watchOS 26.0+); Apple Vision. In 26/07/2024 the developer still said there was no Apple Watch integration, so the watch app is recent [DOC N05, N06] [HIP about the date] | |
+| Languages | English and 19 more, including Portuguese. The website also has a `/pt/` version | [DOC N05, N06, N12] |
+| Price | Free plan and Unlimited plan at US$ 69,99/year, with a 7-day trial. On the pricing page, Free has only "Daily sleep tracking" and "Sleep schedule based on age"; the other items appear locked (padlock icon, checked in the page DOM) | [DOC N09] |
+| App Store subscriptions (US) | Napper Sleep: US$ 14,99/month or US$ 89,99/year. Napper Complete: US$ 19,99/month or US$ 129,99/year. There are also "Unlimited: Baby-Sleep Expert +" and "Night Slumber +" variants | [DOC N05] |
+| App Store subscriptions (BR) | "Napper Unlimited" at R$ 89,90 and variants from R$ 22,90 to R$ 359,90 | [DOC N06] |
+| Terms | Requires age 18 or older (minors only with parental or guardian consent). The app "does not constitute medical advice" | [DOC N11] |
 
-## Funcionalidades por pilar
+## Features by pillar
 
 ### Rotina
 
-- Agenda de sono personalizada a partir do ritmo do bebê, que "se ajusta" com os registros [DOC N02, N05]. Tela inicial com arco do dia, sonecas previstas, contagem regressiva ("First nap in 3 min") e um indicador de calibração ("Napper is Learning") [DOC N01, N02].
-- Registros: despertar, soneca, hora de dormir, despertar noturno, mamadeira, amamentação, bombinha, sólidos, temperatura e fralda [DOC N01, N02]. Medicação também é citada [DOC N02]. Uma avaliação de 2025 menciona gráficos de crescimento existentes [HIP N06].
-- O registro pode ser feito "em tempo real ou retrospectivamente" [DOC N02]. A amamentação tem cronômetro com lado, e as sonecas aceitam pausas [HIP N05].
-- Sons para dormir (mais de 30) e notificação antes da soneca ("30 minutes to bedtime") [DOC N01, N02].
-- Exportação de dados ainda não existe. Em 23/08/2026 o desenvolvedor respondeu que ela virá "em uma atualização futura" [DOC N03].
+- Personalized sleep schedule based on the baby's rhythm, which "adjusts" with logs [DOC N02, N05]. Home screen with a day arc, predicted naps, a countdown ("First nap in 3 min") and a calibration indicator ("Napper is Learning") [DOC N01, N02].
+- Logs: wake-up, nap, bedtime, night waking, bottle feeding, breastfeeding, pumping, solids, temperature and diaper [DOC N01, N02]. Medication is also mentioned [DOC N02]. A review from 2025 mentions existing growth charts [HIP N06].
+- Logging can be done "in real time or retrospectively" [DOC N02]. Breastfeeding has a timer with side tracking, and naps allow pauses [HIP N05].
+- Sleep sounds (more than 30) and a notification before the nap ("30 minutes to bedtime") [DOC N01, N02].
+- Data export does not yet exist. In 23/08/2026 the developer replied that it would come "in a future update" [DOC N03].
 
-### Desenvolvimento, tummy time, atividades e conteúdo
+### Development, tummy time, activities and content
 
-- Tummy time: não encontrado (ver veredito).
-- Atividades e brincadeiras: não encontradas como recurso. Há artigos de blog, como "12 Low-Energy Baby Activities" (out/2025) [DOC N15].
-- Conteúdo: "Napper's Baby Sleep Bootcamp", um curso dividido em dias e capítulos, com "70+ articles". A Google Play diz que foi escrito "em colaboração com especialistas em sono" [DOC N02].
-- A política de privacidade descreve um **assistente baseado em IA** que usa idade, padrões de sono e alimentação, fraldas, temperatura e os primeiros nomes do bebê e do responsável. Os dados podem ir a fornecedores de modelos de linguagem ("por exemplo, OpenAI ou Anthropic") [DOC N10]. As descrições das lojas não citam o assistente [DOC N02, N05].
+- Tummy time: not found (see verdict).
+- Activities and play: not found as a feature. There are blog articles, such as "12 Low-Energy Baby Activities" (out/2025) [DOC N15].
+- Content: "Napper's Baby Sleep Bootcamp", a course divided into days and chapters, with "70+ articles". Google Play says it was written "in collaboration with sleep experts" [DOC N02].
+- The privacy policy describes an **AI-based assistant** that uses age, sleep and feeding patterns, diapers, temperature and the first names of the baby and parent or guardian. Data may be sent to language model providers ("for example, OpenAI or Anthropic") [DOC N10]. The store descriptions do not mention the assistant [DOC N02, N05].
 
 ### Comunidade
 
-- Não encontrada no app. Uma avaliação pede "a community board". A resposta (17/ago) indica o Bootcamp e o blog, sem citar fórum [DOC/HIP N07].
-- Há presença em redes sociais (Instagram @napper.app), que não é comunidade no produto [HIP N18].
+- Not found in the app. One review asks for "a community board". The reply (17/ago) points to the Bootcamp and blog, without mentioning a forum [DOC/HIP N07].
+- There is a social media presence (Instagram @napper.app), which is not a community within the product [HIP N18].
 
 ### Cuidado compartilhado
 
-- Dá para compartilhar o bebê e a assinatura "com quantos cuidadores forem necessários" [DOC N05, N06]. A assinatura é compartilhada automaticamente com quem recebe o bebê [DOC N13].
-- O convite usa QR code e um botão "Send invitation", com o título "Shared custody?" [DOC N02, captura].
-- Não foram encontrados papéis, permissões, revogação ou exibição de autoria [HIP: ausência de menção].
-- Relatos de atrito: lembretes presos à conta de cada cuidador, e não ao perfil do bebê (06/02/2025). Dessincronização e duplicidade entre o casal e nos widgets (24/03/2024), com o suporte sugerindo que todos estejam na mesma versão [HIP N05, N06].
+- The baby and subscription can be shared "with as many caregivers as needed" [DOC N05, N06]. The subscription is automatically shared with anyone the baby is shared with [DOC N13].
+- The invitation uses a QR code and a "Send invitation" button, with the title "Shared custody?" [DOC N02, screenshot].
+- No roles, permissions, revocation or display of authorship were found [HIP: no mention].
+- Reports of friction: reminders tied to each caregiver's account rather than the baby's profile (06/02/2025). Sync issues and duplicates between the couple and in widgets (24/03/2024), with support suggesting that everyone use the same version [HIP N05, N06].
 
-## Registro rápido
+## Quick logging
 
-- Há registro rápido na tela inicial (despertar, mamadeira, fralda, sólidos) e um botão central "+" [DOC N01]. O número exato de toques não foi verificado.
-- Widgets no iOS existem segundo avaliações: um widget mostra só a próxima soneca, e outros têm problemas de sincronização [HIP N05, N08]. No Android, uma avaliação de 23/08/2026 pede widgets e digitação de horários em vez de rolagem [HIP N03].
-- No iOS 27, a próxima soneca e a hora de dormir aparecem no Spotlight [DOC N05, notas 6.83–6.86].
-- Apple Watch suportado (watchOS 26+) [DOC N05]. Não há Wear OS declarado.
-- Siri, atalhos e voz: não encontrados.
-- Registro retroativo: declarado [DOC N02]. Uma avaliação de 2022 relata dificuldade para registrar, depois da meia-noite, um sono iniciado no dia anterior. O suporte orienta navegar por datas no Histórico [HIP N05]. Outra, de 2023, relata dificuldade para editar pausas da amamentação [HIP N05].
+- There is quick logging on the home screen (wake-up, bottle feeding, diaper, solids) and a central "+" button [DOC N01]. The exact number of taps was not checked.
+- iOS widgets exist according to reviews: one widget shows only the next nap, and others have sync problems [HIP N05, N08]. On Android, a review from 23/08/2026 asks for widgets and typing times instead of scrolling [HIP N03].
+- On iOS 27, the next nap and bedtime appear in Spotlight [DOC N05, notes 6.83–6.86].
+- Apple Watch supported (watchOS 26+) [DOC N05]. No Wear OS support is stated.
+- Siri, shortcuts and voice: not found.
+- Retrospective logging: stated [DOC N02]. A review from 2022 reports difficulty logging, after midnight, a sleep session that began the previous day. Support advises navigating through dates in Histórico [HIP N05]. Another, from 2023, reports difficulty editing breastfeeding pauses [HIP N05].
 
-## Atividade em andamento e timers
+## Ongoing activity and timers
 
-- Há cronômetro de amamentação e de soneca com pausas, e a captura mostra uma barra "Nap in 3 min" com play [DOC N02] [HIP N05].
-- Live Activities e notificação persistente na tela bloqueada: não encontradas. Uma avaliação em pt-BR (resposta de 23/08/2026) pede "notificação de tarefa em andamento […] na tela do celular bloqueado" [HIP N03].
-- Funcionamento sem rede: avaliação no Reino Unido (resposta de 8/mai) relata que o app "bloqueia completamente" sem internet, inclusive os sons [HIP N08]. Nenhuma fonte oficial descreve modo offline.
+- There are breastfeeding and nap timers with pauses, and the screenshot shows a "Nap in 3 min" bar with play [DOC N02] [HIP N05].
+- Live Activities and persistent lock screen notification: not found. A review in pt-BR (reply from 23/08/2026) asks for an "ongoing task notification […] on the phone's lock screen" [HIP N03].
+- Operation without a network connection: a UK review (reply from 8/mai) reports that the app "locks up completely" without internet, including the sounds [HIP N08]. No official source describes an offline mode.
 
-## Histórico e previsões
+## History and predictions
 
-- Há tendências e estatísticas (horas de sono, horários de acordar e dormir, despertares, duração das mamadas) em gráficos semanais [DOC N01, N02, N05].
-- Previsão de sono: o marketing fala em "algorithmic magic" e "almost uncanny accuracy" [DOC N05], o que **não é evidência clínica nem de acurácia medida**. As ressalvas vêm do próprio Napper em respostas públicas:
-  - "o algoritmo nem sempre consegue levar em conta novas circunstâncias", mas melhora com o uso contínuo [DOC N05, resposta de 01/07/2024];
-  - a agenda usa os registros e estatísticas de bebês da mesma idade, e é possível fixar número de sonecas e hora de dormir [DOC N05, resposta de 15/11/2025];
-  - a tela mostra o estado "Napper is Learning" durante a calibração [DOC N01].
-- Relatos negativos: janelas de vigília longas demais aos 5–6 meses, e previsões que pioram depois do teste gratuito [HIP N02, N05].
-- O histórico divide o sono noturno entre dois dias. Um usuário achou ruim ver a noite anterior [HIP N05].
+- There are trends and statistics (hours of sleep, wake-up and bedtimes, wakings, feeding duration) in weekly charts [DOC N01, N02, N05].
+- Sleep prediction: the marketing refers to "algorithmic magic" and "almost uncanny accuracy" [DOC N05], which **is neither clinical evidence nor evidence of measured accuracy**. The caveats come from Napper itself in public replies:
+  - "the algorithm cannot always account for new circumstances", but improves with continued use [DOC N05, reply from 01/07/2024];
+  - the schedule uses logs and statistics from babies of the same age, and the number of naps and bedtime can be fixed [DOC N05, reply from 15/11/2025];
+  - the screen shows the "Napper is Learning" state during calibration [DOC N01].
+- Negative reports: wake windows that are too long at 5–6 months, and predictions that worsen after the free trial [HIP N02, N05].
+- The history splits nighttime sleep between two days. One user found viewing the previous night inconvenient [HIP N05].
 
-## Conteúdo por fase: autoria e revisão
+## Stage-based content: authorship and review
 
-- No blog, o artigo de rotina dos 2 meses foi "Written by Hanna Pauser, Certified Doula & Napper Content manager" e "Medically reviewed by Iris Ciba, MD, consultant pediatrician". Tem referências (CDC) e o aviso de que vale para bebês saudáveis nascidos a termo [DOC N14].
-- Nem todo artigo declara revisão médica. O de atividades (out/2025) foi escrito por uma "Creative Copywriter" e não mostra revisor [DOC N15].
-- Do curso no app, só se sabe que foi escrito "em colaboração com especialistas em sono" [DOC N02]. Autores e data de revisão não foram encontrados.
+- On the blog, the routine article for 2 months was "Written by Hanna Pauser, Certified Doula & Napper Content manager" and "Medically reviewed by Iris Ciba, MD, consultant pediatrician". It has references (CDC) and a notice that it applies to healthy babies born at term [DOC N14].
+- Not every article states that it has medical review. The activities article (out/2025) was written by a "Creative Copywriter" and shows no reviewer [DOC N15].
+- All that is known about the in-app course is that it was written "in collaboration with sleep experts" [DOC N02]. Authors and review date were not found.
 
-## Comunidade e moderação
+## Community and moderation
 
-Não se aplica: nenhuma comunidade foi encontrada no app [DOC/HIP N07]. As avaliações nas lojas recebem resposta de atendentes identificados pelo nome [DOC N05].
+Not applicable: no community was found in the app [DOC/HIP N07]. Store reviews receive replies from support staff identified by name [DOC N05].
 
-## Privacidade
+## Privacy
 
-- Política: https://napper.app/privacy, atualizada em 21/04/2026. Cita direitos do GDPR, IP usado para geolocalização aproximada (DB-IP), dados agregados e anonimizados compartilhados com parceiros de pesquisa e o envio de dados ao provedor de IA [DOC N10].
-- Rótulo da App Store:
-  - **usados para rastrear você**: identificadores;
-  - **vinculados a você**: compras, localização aproximada, contato, identificadores, uso e diagnóstico;
-  - **não vinculados**: conteúdo do usuário e ID.
-  
+- Policy: https://napper.app/privacy, updated on 21/04/2026. Mentions GDPR rights, IP used for approximate geolocation (DB-IP), aggregated and anonymized data shared with research partners and data sent to the AI provider [DOC N10].
+- App Store label:
+  - **used to track you**: identifiers;
+  - **linked to you**: purchases, approximate location, contact information, identifiers, usage and diagnostics;
+  - **not linked**: user content and ID.
+
   [DOC N05]
-- Data safety da Google Play: compartilha e-mail, IDs de usuário e de dispositivo, interações e diagnósticos para fins de análise. Coleta também informações financeiras e fotos. Os dados são criptografados em trânsito e é possível pedir exclusão [DOC N04].
+- Google Play Data safety: shares email, user and device IDs, interactions and diagnostics for analytics. Also collects financial information and photos. Data is encrypted in transit and deletion can be requested [DOC N04].
 
-## Pontos fortes
+## Strengths
 
-- Proposta de valor clara (a próxima soneca) e calibração visível [DOC N01].
-- Compartilhamento simples, com convite por QR code e assinatura incluída para todos os cuidadores [DOC N02, N13].
-- Artigos do blog com autor e revisor médico identificados [DOC N14].
-- Interface em 20 idiomas, incluindo português [DOC N05].
+- Clear value proposition (the next nap) and visible calibration [DOC N01].
+- Simple sharing, with QR code invitations and a subscription included for all caregivers [DOC N02, N13].
+- Blog articles with an identified author and medical reviewer [DOC N14].
+- Interface in 20 languages, including Portuguese [DOC N05].
 
-## Limitações e queixas recorrentes
+## Limitations and recurring complaints
 
-- O valor depende de pagar: no plano gratuito só há registro de sono e agenda por idade [DOC N09]. Há queixas de preço e de previsões piores depois do teste [HIP N02, N03].
-- Faltam categorias de rotina e desenvolvimento que usuários pedem: banho, brincadeira, tummy time e exercício [HIP N03, N07].
-- Coordenação entre cuidadores frágil: lembretes por conta, dessincronização e widgets [HIP N05, N06].
-- Depende de internet [HIP N08].
-- Edição retroativa confusa em versões antigas [HIP N05].
-- Sem exportação de dados até ago/2026 [DOC N03].
+- Value depends on paying: the free plan has only sleep logging and an age-based schedule [DOC N09]. There are complaints about pricing and worse predictions after the trial [HIP N02, N03].
+- Missing routine and development categories requested by users: bath, play, tummy time and exercise [HIP N03, N07].
+- Fragile caregiver coordination: reminders per account, sync issues and widgets [HIP N05, N06].
+- Depends on internet access [HIP N08].
+- Confusing retrospective editing in older versions [HIP N05].
+- No data export as of ago/2026 [DOC N03].
 
-## O que o AppMaternidade pode aprender
+## What AppMaternidade can learn
 
-- Mostrar o estado de aprendizado de qualquer estimativa ("ainda calibrando") e permitir controle manual (sonecas e hora de dormir fixas) [DOC N01, N05].
-- Convite por QR code no mesmo cômodo reduz atrito [DOC N02]. Precisa vir com papéis, revogação e autoria, que o Napper não declara.
-- Lembretes devem seguir o **bebê**, não a conta do cuidador [HIP N06].
-- Registro offline é requisito: queixas de dependência de rede aparecem até num app de sono [HIP N08].
-- Identificar autor e revisor no conteúdo é viável e valorizado. Fazer isso em todo o conteúdo, não só em parte [DOC N14, N15].
-- A lacuna de tummy time e atividades aparece em pedidos de usuários do Napper [HIP N07]. Ela sustenta, sem provar, a hipótese de integrar desenvolvimento à rotina.
+- Show the learning state of any estimate ("ainda calibrando") and allow manual control (fixed naps and bedtime) [DOC N01, N05].
+- QR code invitations in the same room reduce friction [DOC N02]. They need to come with roles, revocation and authorship, which Napper does not state.
+- Reminders should follow the **baby**, not the caregiver's account [HIP N06].
+- Offline logging is a requirement: complaints about network dependence appear even in a sleep app [HIP N08].
+- Identifying the author and reviewer in content is feasible and valued. Do this for all content, not just some [DOC N14, N15].
+- The gap in tummy time and activities appears in requests from Napper users [HIP N07]. It supports, without proving, the hypothesis of integrating development into the routine.
 
-## O que não copiar
+## What not to copy
 
-- Marca, nome, ícones 3D, paleta escura roxa, arco do dia como identidade visual, ilustrações, nomes de sons, textos de marketing e o conteúdo do curso e do blog.
-- O tom de promessa ("magic", "uncanny accuracy") para previsões sem validação [DOC N05].
-- O uso de identificadores para rastreamento entre apps (rótulo da App Store) [DOC N05].
+- Brand, name, 3D icons, dark purple palette, day arc as visual identity, illustrations, sound names, marketing text and the course and blog content.
+- The tone of promises ("magic", "uncanny accuracy") for predictions without validation [DOC N05].
+- The use of identifiers for tracking across apps (App Store label) [DOC N05].
 
 ## Fontes
 
-Consulta de todas: 22/10/2026.
+All accessed on: 22/10/2026.
 
-| ID | Fonte | Tipo de evidência | Plataforma/versão visível |
+| ID | Source | Evidence type | Visible platform/version |
 | --- | --- | --- | --- |
-| N01 | https://napper.app/en/ (e https://napper.app/pt/) | Site oficial, incluindo as imagens oficiais da tela inicial e da "Track" | — |
-| N02 | https://play.google.com/store/apps/details?id=com.napper&hl=en_US&gl=US | Loja: descrição, 7 capturas oficiais, avaliações e respostas | Android. Atualizado em 07/10/2026 |
-| N03 | https://play.google.com/store/apps/details?id=com.napper&hl=pt_BR&gl=BR | Loja: descrição em pt-BR, avaliações com respostas de 28/06/2026 e 23/08/2026 | Android. Atualizado em 07/10/2026 |
-| N04 | https://play.google.com/store/apps/datasafety?id=com.napper&hl=en | Loja: Data safety | Android |
-| N05 | https://apps.apple.com/us/app/napper-baby-sleep-tracker/id1491340863 | Loja: descrição, notas de versão, assinaturas, rótulo de privacidade e avaliações | iOS 6.86.0; watchOS 26+ |
-| N06 | https://apps.apple.com/br/app/napper-baby-sleep-tracker/id1491340863 | Loja: descrição em pt-BR, preços em R$, idiomas e avaliações (26/07/2024 e 06/02/2025) | iOS 6.86.0 |
-| N07 | https://apps.apple.com/us/app/napper-baby-sleep-tracker/id1491340863?see-all=reviews&platform=iphone | Avaliações de usuários e respostas do desenvolvedor | iOS |
-| N08 | https://apps.apple.com/gb/app/napper-baby-sleep-tracker/id1491340863?see-all=reviews&platform=iphone | Avaliações de usuários (internet e widget) | iOS |
-| N09 | https://napper.app/en/pricing/ | Site oficial: preços, colunas Free/Unlimited conferidas no DOM | — |
-| N10 | https://napper.app/privacy/ | Política de privacidade (atualizada em 21/04/2026) | — |
-| N11 | https://napper.app/terms-of-service/ | Termos de uso (atualizados em 23/02/2026) | — |
-| N12 | https://napper.app/sitemap.xml | Site oficial: sitemap com 610 URLs | — |
-| N13 | https://napper.app/partnerships/sami/ | Site oficial: página de parceria com FAQ | — |
-| N14 | https://napper.app/en/blog/baby-sleep/2-month-old-sleep-schedule-and-daily-routine/ | Blog oficial com autoria e revisão médica (publicado em 14/11/2024, atualizado em 02/10/2025) | — |
-| N15 | https://napper.app/en/blog/baby-sleep/low-energy-baby-activities-new-parents/ | Blog oficial (01/10/2025) | — |
-| N16 | https://napper.app/en/support/ | Site oficial: formulário de suporte | — |
-| N17 | https://napper.app/_next/static/immutable/media/napper_mockup_tracker_en.1ebpkbxyg_gt9.webp | Imagem oficial do site (tela "Track"), lida por análise de imagem | — |
-| N18 | https://www.instagram.com/p/DOEF-fejIXk/ | Rede social oficial. Só trecho de busca; a página não pôde ser extraída | — |
-| N19 | https://appshunter.io/ios/app/napper-baby-sleep-tracker/id1491340863/how-to-cancel-subscription | Agregador de terceiros que reproduz as descrições das assinaturas da App Store | iOS |
+| N01 | https://napper.app/en/ (and https://napper.app/pt/) | Official website, including official images of the home screen and "Track" | — |
+| N02 | https://play.google.com/store/apps/details?id=com.napper&hl=en_US&gl=US | Store: description, 7 official screenshots, reviews and replies | Android. Updated on 07/10/2026 |
+| N03 | https://play.google.com/store/apps/details?id=com.napper&hl=pt_BR&gl=BR | Store: pt-BR description, reviews with replies from 28/06/2026 and 23/08/2026 | Android. Updated on 07/10/2026 |
+| N04 | https://play.google.com/store/apps/datasafety?id=com.napper&hl=en | Store: Data safety | Android |
+| N05 | https://apps.apple.com/us/app/napper-baby-sleep-tracker/id1491340863 | Store: description, release notes, subscriptions, privacy label and reviews | iOS 6.86.0; watchOS 26+ |
+| N06 | https://apps.apple.com/br/app/napper-baby-sleep-tracker/id1491340863 | Store: pt-BR description, prices in R$, languages and reviews (26/07/2024 and 06/02/2025) | iOS 6.86.0 |
+| N07 | https://apps.apple.com/us/app/napper-baby-sleep-tracker/id1491340863?see-all=reviews&platform=iphone | User reviews and developer replies | iOS |
+| N08 | https://apps.apple.com/gb/app/napper-baby-sleep-tracker/id1491340863?see-all=reviews&platform=iphone | User reviews (internet and widget) | iOS |
+| N09 | https://napper.app/en/pricing/ | Official website: pricing, Free/Unlimited columns checked in the DOM | — |
+| N10 | https://napper.app/privacy/ | Privacy policy (updated on 21/04/2026) | — |
+| N11 | https://napper.app/terms-of-service/ | Terms of use (updated on 23/02/2026) | — |
+| N12 | https://napper.app/sitemap.xml | Official website: sitemap with 610 URLs | — |
+| N13 | https://napper.app/partnerships/sami/ | Official website: partnership page with FAQ | — |
+| N14 | https://napper.app/en/blog/baby-sleep/2-month-old-sleep-schedule-and-daily-routine/ | Official blog with authorship and medical review (published on 14/11/2024, updated on 02/10/2025) | — |
+| N15 | https://napper.app/en/blog/baby-sleep/low-energy-baby-activities-new-parents/ | Official blog (01/10/2025) | — |
+| N16 | https://napper.app/en/support/ | Official website: support form | — |
+| N17 | https://napper.app/_next/static/immutable/media/napper_mockup_tracker_en.1ebpkbxyg_gt9.webp | Official website image ("Track" screen), read through image analysis | — |
+| N18 | https://www.instagram.com/p/DOEF-fejIXk/ | Official social media account. Search snippet only; the page could not be extracted | — |
+| N19 | https://appshunter.io/ios/app/napper-baby-sleep-tracker/id1491340863/how-to-cancel-subscription | Third-party aggregator that reproduces App Store subscription descriptions | iOS |
 
-## Questões abertas
+## Open questions
 
-- A versão instalada do Napper (Complete ou Unlimited) tem alguma categoria de atividade, personalizada ou de tummy time em "Track → Edit"? Isso fecharia o veredito.
-- O assistente de IA descrito na política está disponível em todos os mercados e em pt-BR? Que conteúdo ele usa e quem o revisa?
-- Como funcionam a revogação de um cuidador e a autoria dos registros?
-- Existem Live Activities no iOS e notificação persistente no Android?
+- Does the installed version of Napper (Complete or Unlimited) have any activity, custom or tummy time category in "Track → Edit"? This would settle the verdict.
+- Is the AI assistant described in the policy available in all markets and in pt-BR? What content does it use and who reviews it?
+- How do caregiver revocation and log authorship work?
+- Are there Live Activities on iOS and persistent notifications on Android?
 
-## Limites desta análise
+## Limits of this analysis
 
-- Nada foi observado em execução: o app não foi instalado, nenhuma conta foi criada e o suporte não foi contatado.
-- As capturas analisadas são materiais de marketing e podem não refletir a versão 6.86.0 nem todas as categorias. As capturas da App Store não foram analisadas.
-- As avaliações são relatos isolados [HIP]. Na App Store, várias datas aparecem sem o ano.
-- O Instagram e outras redes não puderam ser lidos diretamente.
-- Preços são fotografias de 22/10/2026, em USD ou BRL, sem impostos.
+- Nothing was observed in use: the app was not installed, no account was created and support was not contacted.
+- The screenshots analyzed are marketing materials and may not reflect version 6.86.0 or all categories. The App Store screenshots were not analyzed.
+- Reviews are isolated reports [HIP]. On the App Store, several dates appear without the year.
+- Instagram and other social networks could not be read directly.
+- Prices are snapshots from 22/10/2026, in USD or BRL, excluding taxes.

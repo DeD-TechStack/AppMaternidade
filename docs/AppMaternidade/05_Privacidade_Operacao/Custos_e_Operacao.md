@@ -1,7 +1,7 @@
 ---
 tipo: design-doc
-status: proposta
-responsavel: Hermes (coordenador da APP-001)
+status: proposal
+responsavel: Hermes (coordinator of APP-001)
 revisado_em: 2026-11-03
 tarefa: MAT-13
 adr: ADR-008
@@ -16,197 +16,197 @@ fontes_principais:
   - https://support.google.com/googleplay/android-developer/answer/14151465
 ---
 
-# Custos e operação
+# Costs and operations
 
-## Site (rumo atual)
+## Website (current direction)
 
-Custos do site completo ([ADR-009](../06_ADRs/ADR-009_Site_Completo_Primeiro.md)), por fase. Os preços do Supabase vêm de [Preços datados](../08_Referencias/Tecnologias/Precos_Datados.md), seção 3, fotografia de 22/10/2026.
+Costs of the full website ([ADR-009](../06_ADRs/ADR-009_Site_Completo_Primeiro.md)), by phase. Supabase prices come from [Dated prices](../08_Referencias/Tecnologias/Precos_Datados.md), section 3, snapshot from 22/10/2026.
 
-| Fase | Serviço | Custo | Fonte |
+| Phase | Service | Cost | Source |
 | --- | --- | --- | --- |
-| Desenvolvimento local e demonstração eventual, sem dados reais | GitHub Pages em repositório público | Grátis, a confirmar | O cofre não tem fonte datada |
-| Desenvolvimento local e demonstração eventual, sem dados reais | Supabase Free | US$ 0; o projeto pausa após 1 semana sem uso; preço na região São Paulo a confirmar | Preços datados, seção 3 (22/10/2026) |
-| Piloto com famílias reais | Supabase Pro | US$ 25/mês; preço na região São Paulo a confirmar | Preços datados, seção 3 (22/10/2026) |
+| Local development and occasional demo, no real data | GitHub Pages on a public repository | Free, to be confirmed | The vault has no dated source |
+| Local development and occasional demo, no real data | Supabase Free | US$ 0; the project pauses after 1 week without use; price in the São Paulo region to be confirmed | Dated prices, section 3 (22/10/2026) |
+| Pilot with real families | Supabase Pro | US$ 25/month; price in the São Paulo region to be confirmed | Dated prices, section 3 (22/10/2026) |
 
-A seção 6.1 deste documento diz: "Planos gratuitos não entram em produção nem em homologação contínua, porque pausam por inatividade." Por isso, o Free só serve para a primeira fase.
+Section 6.1 of this document says: "Planos gratuitos não entram em produção nem em homologação contínua, porque pausam por inatividade." That is why Free is only suitable for the first phase.
 
-As seções seguintes descrevem a arquitetura da APP-001 (rumo anterior) e servem de base para o port.
+The following sections describe the APP-001 architecture (previous direction) and serve as the basis for the port.
 
-Cenários de custo e o mínimo de operação para a arquitetura proposta: React Native + Expo e o Conjunto B (Supabase, PowerSync e serviço de domínio) ([Arquitetura proposta](../03_Arquitetura/Arquitetura_Proposta.md)).
+Cost scenarios and minimum operations for the proposed architecture: React Native + Expo and Set B (Supabase, PowerSync and domain service) ([Proposed architecture](../03_Arquitetura/Arquitetura_Proposta.md)).
 
-Todos os preços vêm de [Preços datados](../08_Referencias/Tecnologias/Precos_Datados.md), uma fotografia das páginas oficiais em 22/10/2026. Os valores estão em USD, sem impostos, IOF nem câmbio. Preço de página não é contrato. **Plano gratuito não é garantia de produção, e assinatura pessoal de IA não é crédito de API.**
+All prices come from [Dated prices](../08_Referencias/Tecnologias/Precos_Datados.md), a snapshot of the official pages on 22/10/2026. Amounts are in USD, excluding taxes, IOF and currency exchange. A listed price is not a contract. **A free plan is not a production guarantee, and a personal AI subscription is not API credit.**
 
-Os cenários de 100, 1.000 e 10.000 famílias são ilustrativos, não previsão de demanda.
+The scenarios of 100, 1.000 and 10.000 families are illustrative, not a demand forecast.
 
-## 1. Custo por fase (rumo anterior)
+## 1. Cost per phase (previous direction)
 
-| Fase ([Roadmap](../07_Roadmap/Roadmap_e_Proxima_Fatia.md)) | Composição proposta | Custo mensal ilustrativo | Observações |
+| Phase ([Roadmap](../07_Roadmap/Roadmap_e_Proxima_Fatia.md)) | Proposed composition | Illustrative monthly cost | Notes |
 | --- | --- | --- | --- |
-| F1 Prova técnica (MAT-17) | Stack local em Docker (PostgreSQL, PowerSync Open Edition e serviço); Supabase Free e PowerSync Free só se a prova precisar de nuvem; EAS Free; Apple Developer | **~US$ 8**: Apple, US$ 99/ano | Os planos Free do Supabase e do PowerSync pausam ou desativam após 1 semana sem uso. O EAS Free dá 15 builds iOS/mês, em fila de baixa prioridade ("90+ minutes" no pico). Um iPhone físico custa a partir de US$ 699 se a equipe não tiver; um aparelho antigo compatível serve [HIP] |
-| F2 a F4 Fundação e MVP | Homologação em nuvem com planos pagos; EAS Starter | **~US$ 110 a 150** | Precisa de Supabase Pro e PowerSync Pro para não pausar, mais o serviço e o e-mail. Ver seção 2 |
-| F5 Piloto fechado (~100 famílias) | Produção e homologação | **~US$ 120 a 180 sem PITR; ~US$ 220 a 280 com PITR** | Recomendo PITR para dado sensível em produção. A decisão depende do RPO/RTO desejado (seção 5) |
-| Crescimento (~10.000 famílias) | Compute maior, mais clientes simultâneos no PowerSync | **~US$ 250 a 350 sem PITR e sem EAS Update, com homologação** | Somam-se US$ 100 de PITR e até US$ 85 de EAS Update acima de 3 mil MAU no Starter |
+| F1 Technical proof (MAT-17) | Local Docker stack (PostgreSQL, PowerSync Open Edition and service); Supabase Free and PowerSync Free only if the proof needs the cloud; EAS Free; Apple Developer | **~US$ 8**: Apple, US$ 99/year | The Supabase and PowerSync Free plans pause or deactivate after 1 week without use. EAS Free gives 15 iOS builds/month, in a low-priority queue ("90+ minutes" at peak). A physical iPhone costs from US$ 699 if the team does not have one; an old compatible device will do [HIP] |
+| F2 to F4 Foundation and MVP | Cloud staging with paid plans; EAS Starter | **~US$ 110 to 150** | Requires Supabase Pro and PowerSync Pro to avoid pausing, plus the service and email. See section 2 |
+| F5 Closed pilot (~100 families) | Production and staging | **~US$ 120 to 180 without PITR; ~US$ 220 to 280 with PITR** | I recommend PITR for sensitive data in production. The decision depends on the desired RPO/RTO (section 5) |
+| Growth (~10.000 families) | Larger compute, more concurrent clients on PowerSync | **~US$ 250 to 350 without PITR and without EAS Update, with staging** | Add US$ 100 for PITR and up to US$ 85 for EAS Update above 3 thousand MAU on Starter |
 
-A Google Play cobra US$ 25 uma única vez, fora do mensal. Conta pessoal nova exige teste fechado com 12 testadores por 14 dias ([answer 14151465](https://support.google.com/googleplay/android-developer/answer/14151465)). Conta de organização exige D-U-N-S (decisão D3).
+Google Play charges US$ 25 one time, outside the monthly cost. A new personal account requires a closed test with 12 testers for 14 days ([answer 14151465](https://support.google.com/googleplay/android-developer/answer/14151465)). An organization account requires D-U-N-S (decision D3).
 
-## 2. Composição do Conjunto B
+## 2. Composition of Set B
 
-O Conjunto B da nota de preços usa Supabase e PowerSync, sem serviço próprio separado. A arquitetura proposta acrescenta o serviço de domínio em container, então esta tabela soma a hospedagem dele.
+Set B in the pricing note uses Supabase and PowerSync, with no separate in-house service. The proposed architecture adds the domain service in a container, so this table adds its hosting.
 
-| Item | 100 famílias | 1.000 | 10.000 | Fonte e premissa |
+| Item | 100 families | 1.000 | 10.000 | Source and assumption |
 | --- | ---: | ---: | ---: | --- |
-| Apple Developer (US$ 99/ano) | 8,25 | 8,25 | 8,25 | Preços datados, seção 1 |
-| EAS Starter | 19 | 19 | 19 | Inclui US$ 45 de crédito de build; acima de 3 mil MAU, EAS Update cobra à parte |
-| Supabase Pro | 25 | 25 | 75 | US$ 25 de base; em 10 mil, compute Medium (+US$ 50) |
-| PowerSync Pro | 49 | 49 | 79 | US$ 49 de base; em 10 mil, +US$ 30 por mil clientes simultâneos acima de 1.000 |
-| E-mail (Resend) | 0 | 20 | 20 | Free até 3 mil por mês e **100 por dia**; o limite diário pode travar picos de convite |
-| Serviço de domínio (container) | 7 a 25 | 7 a 25 | 25 a 85 | Fly.io 1 GB a US$ 6,70; Render 1 CPU/2 GB a US$ 25 e 2 CPU/4 GB a US$ 85 (preços dos EUA; disponibilidade e preço no Brasil [NC]) |
-| Push (FCM, APNs ou Expo Push) | 0 | 0 | 0 | Sem custo por mensagem; a Expo limita 600/s por projeto |
-| Excedentes de banco, arquivos e volume do PowerSync | 0 | 0 | ~12 | Memória logo abaixo da tabela [HIP] |
-| **Subtotal** | **~108 a 126** | **~128 a 146** | **~238 a 298** | — |
-| PITR do Supabase (recomendado) | +100 | +100 | +100 | 7 dias de retenção |
-| Homologação | +10 a 50 | +10 a 50 | +10 a 50 | Projeto extra no Supabase e instância extra no PowerSync [HIP] |
-| EAS Update acima de 3 mil MAU | 0 | 0 | +85 | 20 mil MAU × US$ 0,005; o plano Production (US$ 199) pode compensar |
+| Apple Developer (US$ 99/year) | 8,25 | 8,25 | 8,25 | Dated prices, section 1 |
+| EAS Starter | 19 | 19 | 19 | Includes US$ 45 of build credit; above 3 thousand MAU, EAS Update is charged separately |
+| Supabase Pro | 25 | 25 | 75 | US$ 25 base; at 10 thousand, Medium compute (+US$ 50) |
+| PowerSync Pro | 49 | 49 | 79 | US$ 49 base; at 10 thousand, +US$ 30 per thousand concurrent clients above 1.000 |
+| Email (Resend) | 0 | 20 | 20 | Free up to 3 thousand per month and **100 per day**; the daily limit can block invitation spikes |
+| Domain service (container) | 7 to 25 | 7 to 25 | 25 to 85 | Fly.io 1 GB at US$ 6,70; Render 1 CPU/2 GB at US$ 25 and 2 CPU/4 GB at US$ 85 (US prices; availability and price in Brazil [NC]) |
+| Push (FCM, APNs or Expo Push) | 0 | 0 | 0 | No per-message cost; Expo limits to 600/s per project |
+| Database, file and PowerSync volume overages | 0 | 0 | ~12 | Breakdown just below the table [HIP] |
+| **Subtotal** | **~108 to 126** | **~128 to 146** | **~238 to 298** | — |
+| Supabase PITR (recommended) | +100 | +100 | +100 | 7 days of retention |
+| Staging | +10 to 50 | +10 to 50 | +10 to 50 | Extra project on Supabase and extra instance on PowerSync [HIP] |
+| EAS Update above 3 thousand MAU | 0 | 0 | +85 | 20 thousand MAU × US$ 0,005; the Production plan (US$ 199) may pay off |
 
-**Memória dos excedentes em 10.000 famílias.** Calculada pelas fórmulas da seção 10.2 de [Preços datados](../08_Referencias/Tecnologias/Precos_Datados.md), em GB decimais:
+**Overage breakdown at 10.000 families.** Calculated with the formulas in section 10.2 of [Dated prices](../08_Referencias/Tecnologias/Precos_Datados.md), in decimal GB:
 
-- **Banco:** 50 GB, US$ 5,25 acima dos 8 GB incluídos.
-- **Arquivos:** 144 GB, US$ 0,94 acima dos 100 GB incluídos. Como o MVP proposto não tem fotos, este item fica superestimado.
-- **PowerSync:** 11,25 GB hospedados, US$ 1,25 acima dos 10 GB incluídos. A sincronização mensal fica abaixo da franquia de 30 GB.
-- **Soma reproduzível:** ~US$ 7,44.
-- **Restante (~US$ 4,56):** é a diferença para o total da nota (~US$ 186). Ela não se reproduz pelas fórmulas publicadas, e o script original não foi guardado. Fica como margem conservadora até a nova coleta de preços (seção 3).
+- **Database:** 50 GB, US$ 5,25 above the 8 GB included.
+- **Files:** 144 GB, US$ 0,94 above the 100 GB included. Since the proposed MVP has no photos, this item is overestimated.
+- **PowerSync:** 11,25 GB hosted, US$ 1,25 above the 10 GB included. Monthly sync stays below the 30 GB allowance.
+- **Reproducible sum:** ~US$ 7,44.
+- **Remainder (~US$ 4,56):** this is the difference from the note's total (~US$ 186). It cannot be reproduced with the published formulas, and the original script was not kept. It remains as a conservative margin until the new price collection (section 3).
 
-Premissas da nota de preços [HIP]:
+Assumptions of the pricing note [HIP]:
 
-- 2 cuidadores e 2 aparelhos por família;
-- 25 escritas por família por dia e 8 aberturas por aparelho por dia;
-- 0,5 KB por operação sincronizada, janela de 90 dias hospedada, pico de 10% dos aparelhos conectados;
-- 3 e-mails por família por mês e 5 pushes por família por dia;
-- 4 fotos por mês por família. O MVP proposto não tem fotos, então esse item fica superestimado.
+- 2 caregivers and 2 devices per family;
+- 25 writes per family per day and 8 app opens per device per day;
+- 0,5 KB per synced operation, a hosted window of 90 days, a peak of 10% of devices connected;
+- 3 emails per family per month and 5 pushes per family per day;
+- 4 photos per month per family. The proposed MVP has no photos, so this item is overestimated.
 
-Para comparação, os três conjuntos da nota de preços (infraestrutura mais EAS e Apple), sem o serviço de domínio do B:
+For comparison, the three sets in the pricing note (infrastructure plus EAS and Apple), without B's domain service:
 
-| Conjunto | 100 famílias | 1.000 | 10.000 |
+| Set | 100 families | 1.000 | 10.000 |
 | --- | ---: | ---: | ---: |
 | A: Firebase | ~27 | ~35 | ~139 |
 | B: Supabase + PowerSync | ~101 | ~121 | ~214 |
 | C: Cloud Run + Cloud SQL + R2 | ~64 | ~109 | ~202 |
 
-Nessas escalas, a diferença de infraestrutura entre os conjuntos é menor do que algumas horas de engenharia por mês. Custo de infraestrutura não deve decidir a arquitetura [HIP; Preços datados, 10.5].
+At these scales, the infrastructure difference between the sets is smaller than a few hours of engineering per month. Infrastructure cost should not decide the architecture [HIP; Dated prices, 10.5].
 
-## 3. O que não tem preço confirmado
+## 3. What has no confirmed price
 
-| Item | Por que importa | Situação |
+| Item | Why it matters | Status |
 | --- | --- | --- |
-| Regiões do Brasil (Supabase sa-east-1, PowerSync região BR, hospedagem do serviço) | Os dados de cuidado ficariam no Brasil (decisão D2) | [NC]: repetir a coleta de preços para São Paulo |
-| Monitoramento e relatórios de falha | Operação e incidentes | [NC]: ferramenta não escolhida |
-| Domínio, DNS e site público | Política de privacidade, exclusão de conta por link web, suporte | [NC] |
-| Cópia de backup fora do provedor | Janela de retenção maior que 7 dias (seção 5) | [NC] |
-| Comissões das lojas sobre assinaturas | Monetização (decisão D6) | Não pesquisado |
-| Abertura da empresa, contabilidade e D-U-N-S | Decisão D3 | Não levantado |
-| Revisor de conteúdo, moderadores e assessoria jurídica | Decisão D5 | Não levantado |
-| Engenharia e operação (horas) | Provavelmente o maior custo em todas as escalas [HIP] | Fora da conta |
-| Mac (só se a stack mudar para Flutter, KMP ou nativo) | ADR-002 | Mac mini a partir de US$ 899; Mac remoto a partir de US$ 25/mês; Codemagic com 500 min/mês grátis |
+| Brazil regions (Supabase sa-east-1, PowerSync BR region, service hosting) | Care data would stay in Brazil (decision D2) | [NC]: repeat the price collection for São Paulo |
+| Monitoring and crash reporting | Operations and incidents | [NC]: tool not chosen |
+| Domain, DNS and public website | Privacy policy, account deletion via web link, support | [NC] |
+| Backup copy outside the provider | Retention window longer than 7 days (section 5) | [NC] |
+| Store commissions on subscriptions | Monetization (decision D6) | Not researched |
+| Company incorporation, accounting and D-U-N-S | Decision D3 | Not surveyed |
+| Content reviewer, moderators and legal counsel | Decision D5 | Not surveyed |
+| Engineering and operations (hours) | Probably the largest cost at every scale [HIP] | Outside the calculation |
+| Mac (only if the stack changes to Flutter, KMP or native) | ADR-002 | Mac mini from US$ 899; remote Mac from US$ 25/month; Codemagic with 500 free min/month |
 
-## 4. IA: assinatura não é crédito de API
+## 4. AI: a subscription is not API credit
 
-- As assinaturas pessoais de assistentes de IA usadas no desenvolvimento (por exemplo, Claude ou ChatGPT) servem a quem desenvolve. Elas não dão crédito de API para recursos do produto nem cobrem uso por usuários.
-- O MVP proposto não tem IA generativa respondendo a usuários ([ADR-007](../06_ADRs/ADR-007_Conteudo_Educativo_e_IA.md)).
-- Se algum recurso de IA entrar depois, ele terá custo de API próprio, contrato com o fornecedor, avaliação de transferência internacional e consentimento específico ([Privacidade e segurança](Privacidade_e_Seguranca.md), seção 4).
+- The personal AI assistant subscriptions used in development (for example, Claude or ChatGPT) serve the person developing. They do not provide API credit for product features, nor do they cover usage by users.
+- The proposed MVP has no generative AI responding to users ([ADR-007](../06_ADRs/ADR-007_Conteudo_Educativo_e_IA.md)).
+- If any AI feature is added later, it will have its own API cost, a contract with the vendor, an international transfer assessment and specific consent ([Privacy and security](Privacidade_e_Seguranca.md), section 4).
 
-## 5. Backups e restauração
+## 5. Backups and restore
 
-- **O que o Supabase Pro oferece:** backups diários com 7 dias de acesso. O PITR de 7 dias custa US$ 100/mês. O plano Team (US$ 599/mês) dá 14 dias. Os backups não incluem objetos do Storage ([Preços datados](../08_Referencias/Tecnologias/Precos_Datados.md), seção 3).
-- **Proposta para o piloto:** PITR de 7 dias e janela de backup de 7 dias. Janela curta também ajuda a exclusão: o dado apagado some dos backups em até 7 dias.
-- **Janela maior:** só com cópia externa cifrada, numa região do Brasil, com custo [NC]. A decisão depende do RPO e do RTO que Daniel aceitar.
-- **Restauração:** ensaio registrado antes do piloto e depois de cada mudança de esquema relevante. Depois de restaurar, as exclusões são reaplicadas para não ressuscitar dados apagados (Q-12).
-- **PowerSync:** guarda réplica e buckets, não é fonte de verdade. Depois de uma restauração do banco, ele se reconstrói a partir do PostgreSQL [HIP, a confirmar na prova].
+- **What Supabase Pro offers:** daily backups with 7 days of access. PITR of 7 days costs US$ 100/month. The Team plan (US$ 599/month) gives 14 days. Backups do not include Storage objects ([Dated prices](../08_Referencias/Tecnologias/Precos_Datados.md), section 3).
+- **Proposal for the pilot:** PITR of 7 days and a backup window of 7 days. A short window also helps with deletion: deleted data disappears from backups within 7 days.
+- **Longer window:** only with an encrypted external copy, in a Brazil region, at a cost [NC]. The decision depends on the RPO and RTO that Daniel accepts.
+- **Restore:** a recorded drill before the pilot and after each relevant schema change. After restoring, deletions are reapplied so that deleted data is not resurrected (Q-12).
+- **PowerSync:** stores a replica and buckets; it is not the source of truth. After a database restore, it rebuilds itself from PostgreSQL [HIP, to be confirmed in the proof].
 
-## 6. Operação mínima
+## 6. Minimum operations
 
-### 6.1 Ambientes
+### 6.1 Environments
 
-Local (Docker no Windows), homologação com dados fictícios e produção, conforme a [Arquitetura proposta, seção 7](../03_Arquitetura/Arquitetura_Proposta.md). Planos gratuitos não entram em produção nem em homologação contínua, porque pausam por inatividade.
+Local (Docker on Windows), staging with fictitious data, and production, as per the [Proposed architecture, section 7](../03_Arquitetura/Arquitetura_Proposta.md). Free plans are not used in production or in continuous staging, because they pause due to inactivity.
 
-### 6.2 Monitoramento e alertas
+### 6.2 Monitoring and alerts
 
-| Sinal | Por quê | Alerta proposto |
+| Signal | Why | Proposed alert |
 | --- | --- | --- |
-| Disponibilidade do serviço e do endpoint de envio | Sem envio, a fila cresce nos aparelhos | Falha por mais de 5 minutos |
-| Rejeições e conflitos por hora | Defeito de versão ou de permissão | Desvio do padrão da semana |
-| Atraso de replicação do PowerSync | Cuidador B não vê o registro de A | Acima de 1 minuto [HIP] |
-| Erros no app, sem conteúdo | Qualidade | Nova falha em mais de 1% das sessões [HIP] |
-| Fila de moderação | Prazos da comunidade | Item de crise sem triagem no turno |
-| Gasto | Evitar surpresa | Spend cap do Supabase ligado (é o padrão no Pro); alertas de orçamento nos demais |
+| Availability of the service and the upload endpoint | Without uploads, the queue grows on the devices | Failure for more than 5 minutes |
+| Rejections and conflicts per hour | Version or permission defect | Deviation from the week's pattern |
+| PowerSync replication lag | Caregiver B does not see A's entry | Above 1 minute [HIP] |
+| App errors, without content | Quality | New crash in more than 1% of sessions [HIP] |
+| Moderation queue | Community deadlines | Crisis item not triaged during the shift |
+| Spending | Avoid surprises | Supabase spend cap enabled (it is the default on Pro); budget alerts on the others |
 
-Os limiares são hipóteses para calibrar no piloto.
+The thresholds are hypotheses to be calibrated in the pilot.
 
-### 6.3 Suporte
+### 6.3 Support
 
-- Canal por e-mail, com endereço publicado no site e no app, mais uma página de perguntas frequentes.
-- Meta proposta no piloto: primeira resposta em 1 dia útil [HIP].
-- O suporte não acessa o espaço da família. Se for preciso diagnosticar, o próprio usuário envia dados técnicos sem conteúdo. Um acesso de emergência, se existir, segue a regra de auditoria de [Privacidade e segurança](Privacidade_e_Seguranca.md).
+- Email channel, with an address published on the website and in the app, plus a frequently asked questions page.
+- Proposed target in the pilot: first response within 1 business day [HIP].
+- Support does not access the family's space. If diagnosis is needed, the user themselves sends technical data without content. Emergency access, if it exists, follows the audit rule in [Privacy and security](Privacidade_e_Seguranca.md).
 
-### 6.4 Moderação
+### 6.4 Moderation
 
-A operação proposta está em [Comunidade e moderação](../04_Comunidade_Conteudo/Comunidade_e_Moderacao.md) e na [pesquisa de comunidade](../08_Referencias/Pesquisa_Comunidade_e_Conteudo.md):
+The proposed operation is described in [Community and moderation](../04_Comunidade_Conteudo/Comunidade_e_Moderacao.md) and in the [community research](../08_Referencias/Pesquisa_Comunidade_e_Conteudo.md):
 
-- um ou dois moderadores em meio período, sem acesso a dados de família;
-- triagem de crise em até 1 hora dentro do horário coberto e demais denúncias em até 24 horas;
-- fora do turno, o conteúdo com gatilho fica oculto do público até a revisão.
+- one or two part-time moderators, without access to family data;
+- crisis triage within 1 hour during covered hours, and other reports within 24 hours;
+- outside the shift, content with triggers stays hidden from the public until review.
 
-O custo de pessoas é a decisão D5.
+The cost of people is decision D5.
 
-### 6.5 Distribuição
+### 6.5 Distribution
 
-| Item | Como | Custo e prazo |
+| Item | How | Cost and timeline |
 | --- | --- | --- |
-| iOS | EAS Build e EAS Submit a partir do Windows; TestFlight para o piloto | Apple US$ 99/ano; uma conta de organização exige D-U-N-S |
-| Android | EAS Build; faixas de teste da Play | US$ 25 uma vez; conta pessoal nova: 12 testadores por 14 dias antes da produção |
-| Atualizações de JavaScript | EAS Update | Starter: 3 mil MAU incluídos, depois US$ 0,005/MAU |
-| Exigências técnicas das lojas | Xcode 26+ desde 28/04/2026; API 36 desde 31/08/2026 ([Mobile e plataformas](../08_Referencias/Tecnologias/Mobile_e_Plataformas.md)) | Revisar a cada ciclo anual das lojas |
+| iOS | EAS Build and EAS Submit from Windows; TestFlight for the pilot | Apple US$ 99/year; an organization account requires D-U-N-S |
+| Android | EAS Build; Play testing tracks | US$ 25 once; new personal account: 12 testers for 14 days before production |
+| JavaScript updates | EAS Update | Starter: 3 thousand MAU included, then US$ 0,005/MAU |
+| Store technical requirements | Xcode 26+ since 28/04/2026; API 36 since 31/08/2026 ([Mobile and platforms](../08_Referencias/Tecnologias/Mobile_e_Plataformas.md)) | Review at each annual store cycle |
 
-### 6.6 Incidentes e plantão
+### 6.6 Incidents and on-call
 
-- Roteiro e prazos em [Privacidade e segurança, seção 11](Privacidade_e_Seguranca.md).
-- Com uma pessoa só operando, não há plantão contínuo. Isso é um risco aceito no piloto, que precisa ser declarado aos participantes [HIP].
+- Playbook and deadlines in [Privacy and security, section 11](Privacidade_e_Seguranca.md).
+- With only one person operating, there is no continuous on-call coverage. This is an accepted risk in the pilot, which must be disclosed to participants [HIP].
 
-## 7. Plano de saída por fornecedor
+## 7. Exit plan per vendor
 
-| Fornecedor | Para onde sair | O que facilita | Custo de sair |
+| Vendor | Where to move | What makes it easier | Cost of leaving |
 | --- | --- | --- | --- |
-| Supabase (banco e Auth) | Qualquer PostgreSQL gerenciado (RDS, Cloud SQL, Neon) e outro provedor de identidade | PostgreSQL padrão; esquemas e políticas versionados no repositório; serviço próprio com as regras | Migrar contas e trocar a emissão de JWT; o login por código de e-mail é simples de reproduzir |
-| PowerSync | PowerSync Open Edition auto-hospedado, ou sincronização própria (Conjunto C) | O contrato de envio (`POST /v1/sync/operacoes`) e as regras são nossos ([Arquitetura proposta, seção 9](../03_Arquitetura/Arquitetura_Proposta.md)) | Escrever o pull por cursor e o cliente de sync próprio |
-| Expo / EAS | Builds locais ou outro CI | O código é React Native padrão | iOS sem EAS exige Mac ou CI macOS |
-| Provedor de e-mail | Qualquer SMTP ou API de e-mail | Envio isolado no serviço | Baixo |
-| Push da Expo | FCM e APNs direto | Já são o transporte por baixo | Baixo |
-| Hospedagem do serviço | Qualquer plataforma de container | Imagem de container | Baixo |
+| Supabase (database and Auth) | Any managed PostgreSQL (RDS, Cloud SQL, Neon) and another identity provider | Standard PostgreSQL; schemas and policies versioned in the repository; in-house service holding the rules | Migrate accounts and change JWT issuance; email code login is simple to reproduce |
+| PowerSync | Self-hosted PowerSync Open Edition, or in-house sync (Set C) | The upload contract (`POST /v1/sync/operacoes`) and the rules are ours ([Proposed architecture, section 9](../03_Arquitetura/Arquitetura_Proposta.md)) | Write the cursor-based pull and the in-house sync client |
+| Expo / EAS | Local builds or another CI | The code is standard React Native | iOS without EAS requires a Mac or macOS CI |
+| Email provider | Any SMTP or email API | Sending is isolated in the service | Low |
+| Expo Push | FCM and APNs directly | They are already the underlying transport | Low |
+| Service hosting | Any container platform | Container image | Low |
 
-Os usuários também podem sair: a exportação completa por família faz parte do MVP ([Privacidade e segurança, seção 7](Privacidade_e_Seguranca.md)).
+Users can also leave: full per-family export is part of the MVP ([Privacy and security, section 7](Privacidade_e_Seguranca.md)).
 
-## 8. Riscos de custo
+## 8. Cost risks
 
-- **Plano gratuito tratado como produção:** os planos Free do Supabase e do PowerSync pausam ou desativam após 1 semana sem uso.
-- **Teto do PowerSync Pro:** por padrão, no máximo 3.000 clientes simultâneos e 100 GB hospedados. Acima disso, vem o plano Team (US$ 599+) ou a auto-hospedagem.
-- **EAS Update e OneSignal:** em 10 mil famílias, podem somar mais que todo o backend.
-- **Câmbio:** todos os preços estão em USD.
-- **Firebase (só se o Conjunto A for escolhido):** não há teto automático de gasto.
+- **Free plan treated as production:** the Supabase and PowerSync Free plans pause or deactivate after 1 week without use.
+- **PowerSync Pro ceiling:** by default, at most 3.000 concurrent clients and 100 GB hosted. Above that comes the Team plan (US$ 599+) or self-hosting.
+- **EAS Update and OneSignal:** at 10 thousand families, they may add up to more than the entire backend.
+- **Exchange rate:** all prices are in USD.
+- **Firebase (only if Set A is chosen):** there is no automatic spending cap.
 
-## 9. Questões abertas
+## 9. Open questions
 
-1. Qual RPO e RTO aceitar? Decide o PITR e a janela de backup.
-2. Quais são os preços das regiões do Brasil? Coletar antes da fundação.
-3. Qual ferramenta de monitoramento e relatório de falhas usar, com limpeza de conteúdo?
-4. Onde hospedar o serviço de domínio no Brasil, e a que preço?
-5. Quem atende suporte e moderação no piloto, e em que horário?
+1. What RPO and RTO should be accepted? This decides the PITR and the backup window.
+2. What are the prices for the Brazil regions? Collect them before the foundation.
+3. Which monitoring and crash reporting tool should be used, with content scrubbing?
+4. Where should the domain service be hosted in Brazil, and at what price?
+5. Who handles support and moderation in the pilot, and during what hours?
 
-## Limites desta análise
+## Limits of this analysis
 
-- Fotografia de preços de 22/10/2026 e premissas inventadas para ordem de grandeza; nada foi medido.
-- O custo da hospedagem do serviço de domínio foi acrescentado pelo coordenador, com preços dos EUA.
-- Custos de pessoas, jurídico e empresa não foram levantados.
-- Documento escrito pelo coordenador, porque o redator delegado parou por falta de resposta do provedor.
+- Price snapshot from 22/10/2026 and invented assumptions for order of magnitude; nothing was measured.
+- The domain service hosting cost was added by the coordinator, using US prices.
+- People, legal and company costs were not surveyed.
+- Document written by the coordinator, because the delegated writer stopped due to lack of response from the provider.
 
-## Relação com outros documentos
+## Relationship to other documents
 
-[Comparação de arquiteturas](../03_Arquitetura/Comparacao_de_Arquiteturas.md) · [Arquitetura proposta](../03_Arquitetura/Arquitetura_Proposta.md) · [Privacidade e segurança](Privacidade_e_Seguranca.md) · [Qualidade e validação](Qualidade_e_Validacao.md) · [ADR-008](../06_ADRs/ADR-008_Documentacao_Operacao_Custos_e_Evolucao.md) · [Decisões para Daniel](../07_Roadmap/Decisoes_para_Daniel.md)
+[Architecture comparison](../03_Arquitetura/Comparacao_de_Arquiteturas.md) · [Proposed architecture](../03_Arquitetura/Arquitetura_Proposta.md) · [Privacy and security](Privacidade_e_Seguranca.md) · [Quality and validation](Qualidade_e_Validacao.md) · [ADR-008](../06_ADRs/ADR-008_Documentacao_Operacao_Custos_e_Evolucao.md) · [Decisions for Daniel](../07_Roadmap/Decisoes_para_Daniel.md)

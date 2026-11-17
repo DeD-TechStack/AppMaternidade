@@ -1,220 +1,220 @@
 ---
-tipo: registro
-status: em andamento
-responsavel: Hermes (coordenador da APP-001)
+tipo: log
+status: in progress
+responsavel: Hermes (coordinator of APP-001)
 revisado_em: 2026-10-22
 ---
 
-# Registro da organização
+# Organization log
 
-Recibos das criações feitas na APP-001. Depois de uma interrupção, confira esta página e o itsaplan antes de recriar qualquer coisa. Os IDs abaixo foram devolvidos pelo próprio itsaplan; nenhum foi deduzido da semente do pacote.
+Receipts for the items created in APP-001. After an interruption, check this page and itsaplan before recreating anything. The IDs below were returned by itsaplan itself; none was inferred from the package seed.
 
 ## itsaplan
 
-| Item | Valor | Como foi conferido |
+| Item | Value | How it was verified |
 | --- | --- | --- |
-| Instância | Web em http://localhost:3001; API e MCP em http://127.0.0.1:3000/mcp; versão 1.6.0 segundo o guia de acesso da oficina | Conector `itsaplan` do perfil default do Hermes |
-| Equipe | "Oficina" (teamId 1, teamRef `oficina`) | `list_projects` |
-| Projeto | AppMaternidade, chave **MAT**, id 5, ref `oficina.MAT` | `get_project MAT` |
-| Criação | Por Daniel, na interface, em 22/10/2026 às 03:09:16 (06:09:16 UTC). O conector do Hermes não tem ferramenta para criar projeto; Daniel escolheu criar e adicionar o agente. | `createdAt` do projeto e resposta de Daniel |
-| Quadro | http://localhost:3001/oficina/MAT | Rota `/<teamRef>/<key>` do itsaplan 1.6.0 (`apps/web/src/utils/paths.ts`), o mesmo formato dos links exportados do LAB e do BRK |
-| Tarefa (exemplo) | http://localhost:3001/oficina/issue/MAT-1 | Rota `/<teamRef>/issue/<KEY>-<n>` do mesmo arquivo |
-| Documento de estado | "Estado atual e próximos passos (AppMaternidade)", id 9: http://localhost:3001/oficina/MAT/docs/9 | `create_document`; ligado às 19 tarefas |
-| Agente | Hermes (default), usuário `hermes-default`, agente externo (não responde a menções e não executa sozinho). Pode criar e editar tarefas e documentos; não pode apagar. | `get_project MAT` (viewer e assignees) |
-| Membros | Daniel (danielmacedosilva11), Admin (instalação) e Hermes (default) | `get_project MAT` |
+| Instance | Web at http://localhost:3001; API and MCP at http://127.0.0.1:3000/mcp; version 1.6.0 according to the workshop access guide | `itsaplan` connector of the Hermes default profile |
+| Team | "Oficina" (teamId 1, teamRef `oficina`) | `list_projects` |
+| Project | AppMaternidade, key **MAT**, id 5, ref `oficina.MAT` | `get_project MAT` |
+| Creation | By Daniel, in the interface, on 22/10/2026 at 03:09:16 (06:09:16 UTC). The Hermes connector has no tool to create a project; Daniel chose to create it and add the agent. | `createdAt` of the project and Daniel's reply |
+| Board | http://localhost:3001/oficina/MAT | `/<teamRef>/<key>` route of itsaplan 1.6.0 (`apps/web/src/utils/paths.ts`), the same format as the links exported from LAB and BRK |
+| Task (example) | http://localhost:3001/oficina/issue/MAT-1 | `/<teamRef>/issue/<KEY>-<n>` route from the same file |
+| Status document | "Estado atual e próximos passos (AppMaternidade)", id 9: http://localhost:3001/oficina/MAT/docs/9 | `create_document`; linked to the 19 tasks |
+| Agent | Hermes (default), user `hermes-default`, external agent (does not respond to mentions and does not run on its own). Can create and edit tasks and documents; cannot delete. | `get_project MAT` (viewer and assignees) |
+| Members | Daniel (danielmacedosilva11), Admin (installation) and Hermes (default) | `get_project MAT` |
 
-### Colunas e etiquetas efetivas
+### Actual columns and labels
 
-As colunas e etiquetas foram criadas por Daniel junto com o projeto. Mapeamento dos estados conceituais do pacote:
+The columns and labels were created by Daniel together with the project. Mapping of the package's conceptual states:
 
-| Estado conceitual (pacote) | Coluna no MAT |
+| Conceptual state (package) | Column in MAT |
 | --- | --- |
 | Backlog | Backlog |
-| Pronto | A fazer |
-| Em andamento | Em andamento |
-| Em revisão | Em revisão |
-| Concluído | Feito |
-| Bloqueado | etiqueta `bloqueado`, ou a coluna "Esperando Daniel" quando a tarefa depende dele |
-| (sem equivalente) | Congelado e Cancelado |
+| Ready | A fazer |
+| In progress | Em andamento |
+| In review | Em revisão |
+| Done | Feito |
+| Blocked | label `bloqueado`, or the "Esperando Daniel" column when the task depends on Daniel |
+| (no equivalent) | Congelado and Cancelado |
 
-As frentes de trabalho viraram etiquetas, porque o conector não tem ferramentas de iniciativas: Descoberta e escopo (22), Experiência mobile (23), Referências e licenças (24), Arquitetura e dados (25), Comunidade e conteúdo (26), Operação e entrega (27). Etiquetas de controle: decisão de Daniel (19), precisa de autorização (20), bloqueado (21).
+The work streams became labels, because the connector has no initiative tools: Discovery and scope (22), Mobile experience (23), References and licenses (24), Architecture and data (25), Community and content (26), Operations and delivery (27). Control labels: Daniel's decision (19), needs authorization (20), blocked (21).
 
-### Tarefas criadas
+### Tasks created
 
-| Semente | Chave | id | Título | Coluna em 22/10 03:28 | Bloqueada por |
+| Seed | Key | id | Title | Column at 22/10 03:28 | Blocked by |
 | --- | --- | --- | --- | --- | --- |
-| DOC-001 | MAT-1 | 137 | Conferir contexto, escopo e checkpoint | Feito | — |
-| DOC-002 | MAT-2 | 138 | Criar e verificar projeto AppMaternidade no itsaplan | Em andamento | MAT-1 |
-| DOC-003 | MAT-3 | 139 | Criar cofre no Obsidian normal e Home | Em andamento, `bloqueado` | MAT-1 |
-| DOC-004 | MAT-4 | 140 | Pesquisar concorrentes e definir hipótese de produto | Em andamento | MAT-1 |
-| DOC-005 | MAT-5 | 141 | Analisar quatro repositórios e licenças | Em andamento | MAT-1 |
-| DOC-006 | MAT-6 | 142 | Desenhar jornadas e navegação mobile | A fazer | MAT-4 |
-| DOC-007 | MAT-7 | 143 | Comparar mobile e arquiteturas completas | Em andamento | MAT-4, MAT-5 |
-| DOC-008 | MAT-8 | 144 | Especificar modelo e permissões | A fazer | MAT-7 |
-| DOC-009 | MAT-9 | 145 | Especificar offline, conflitos e temporizadores | A fazer | MAT-8 |
-| DOC-010 | MAT-10 | 146 | Definir comunidade e moderação | Em andamento | MAT-4 |
-| DOC-011 | MAT-11 | 147 | Definir tummy time e ciclo editorial | Em andamento | MAT-4, MAT-5 |
-| DOC-012 | MAT-12 | 148 | Documentar privacidade e segurança | A fazer | MAT-8, MAT-9, MAT-10, MAT-11 |
-| DOC-013 | MAT-13 | 149 | Estimar custos e operação | A fazer | MAT-7, MAT-10 |
-| DOC-014 | MAT-14 | 150 | Definir qualidade e provas técnicas | A fazer | MAT-6, MAT-9, MAT-12 |
-| DOC-015 | MAT-15 | 151 | Consolidar ADRs, decisões e roadmap | A fazer | MAT-5 a MAT-14 |
-| DOC-016 | MAT-16 | 152 | Revisar documentação e entregar recibos | A fazer | MAT-2, MAT-3, MAT-15 |
-| FUT-001 | MAT-17 | 153 | Validar a stack escolhida com uma prova pequena | Backlog, sem agente | MAT-15 |
-| FUT-002 | MAT-18 | 154 | Construir fundação e primeira fatia de cuidados | Backlog, sem agente | MAT-17 |
-| FUT-003 | MAT-19 | 155 | Entregar fatia inicial da comunidade | Backlog, sem agente | MAT-18 |
+| DOC-001 | MAT-1 | 137 | Check context, scope and checkpoint | Feito | — |
+| DOC-002 | MAT-2 | 138 | Create and verify the AppMaternidade project in itsaplan | Em andamento | MAT-1 |
+| DOC-003 | MAT-3 | 139 | Create vault in the regular Obsidian and Home | Em andamento, `bloqueado` | MAT-1 |
+| DOC-004 | MAT-4 | 140 | Research competitors and define product hypothesis | Em andamento | MAT-1 |
+| DOC-005 | MAT-5 | 141 | Analyze four repositories and licenses | Em andamento | MAT-1 |
+| DOC-006 | MAT-6 | 142 | Design mobile journeys and navigation | A fazer | MAT-4 |
+| DOC-007 | MAT-7 | 143 | Compare mobile and full architectures | Em andamento | MAT-4, MAT-5 |
+| DOC-008 | MAT-8 | 144 | Specify model and permissions | A fazer | MAT-7 |
+| DOC-009 | MAT-9 | 145 | Specify offline, conflicts and timers | A fazer | MAT-8 |
+| DOC-010 | MAT-10 | 146 | Define community and moderation | Em andamento | MAT-4 |
+| DOC-011 | MAT-11 | 147 | Define tummy time and editorial cycle | Em andamento | MAT-4, MAT-5 |
+| DOC-012 | MAT-12 | 148 | Document privacy and security | A fazer | MAT-8, MAT-9, MAT-10, MAT-11 |
+| DOC-013 | MAT-13 | 149 | Estimate costs and operations | A fazer | MAT-7, MAT-10 |
+| DOC-014 | MAT-14 | 150 | Define quality and technical proofs | A fazer | MAT-6, MAT-9, MAT-12 |
+| DOC-015 | MAT-15 | 151 | Consolidate ADRs, decisions and roadmap | A fazer | MAT-5 to MAT-14 |
+| DOC-016 | MAT-16 | 152 | Review documentation and deliver receipts | A fazer | MAT-2, MAT-3, MAT-15 |
+| FUT-001 | MAT-17 | 153 | Validate the chosen stack with a small proof | Backlog, no agent | MAT-15 |
+| FUT-002 | MAT-18 | 154 | Build foundation and first care slice | Backlog, no agent | MAT-17 |
+| FUT-003 | MAT-19 | 155 | Deliver initial community slice | Backlog, no agent | MAT-18 |
 
-Diferenças em relação à semente `07_BACKLOG_INICIAL.json`:
+Differences from seed `07_BACKLOG_INICIAL.json`:
 
-- A semente marcava tudo como Backlog. As colunas refletem o andamento real; as tarefas futuras ficam no Backlog, sem agente delegado e com a etiqueta "precisa de autorização", para não disparar execução.
-- Prioridade "normal" virou `medium`; arquitetura, sincronização, comunidade, conteúdo e privacidade ficaram `high`; as futuras, `low`.
-- As 37 dependências da semente viraram vínculos "bloqueado por" (ids de vínculo 86 a 122).
-- As descrições ganharam verificação, executor, autorização e fonte. O entregável "Relatorio_Final.md" passou a ser `00_Inicio/Relatorio_Final_APP-001.md`.
-- As decisões que esperam Daniel entram como tarefas novas na coluna "Esperando Daniel" ao fim da MAT-15; não estavam na semente.
+- The seed marked everything as Backlog. The columns reflect actual progress; the future tasks stay in Backlog, with no delegated agent and with the "precisa de autorização" label, so as not to trigger execution.
+- Priority "normal" became `medium`; architecture, sync, community, content and privacy became `high`; the future ones, `low`.
+- The 37 dependencies from the seed became "bloqueado por" links (link ids 86 to 122).
+- The descriptions gained verification, executor, authorization and source. The deliverable "Relatorio_Final.md" became `00_Inicio/Relatorio_Final_APP-001.md`.
+- The decisions awaiting Daniel go in as new tasks in the "Esperando Daniel" column at the end of MAT-15; they were not in the seed.
 
-Verificação: `list_issues` às 03:28 devolveu 19 tarefas (MAT-1 a MAT-19); o documento 9 foi ligado às 19.
+Verification: `list_issues` at 03:28 returned 19 tasks (MAT-1 to MAT-19); the document 9 was linked to 19.
 
-### Decisões de Daniel (criadas às 04:30)
+### Daniel's decisions (created at 04:30)
 
-Coluna "Esperando Daniel" (35), etiqueta "decisão de Daniel" (19), responsável Daniel, sem agente. Texto completo em [Decisões para Daniel](../07_Roadmap/Decisoes_para_Daniel.md).
+Column "Esperando Daniel" (35), label "decisão de Daniel" (19), assignee Daniel, no agent. Full text in [Decisions for Daniel](../07_Roadmap/Decisoes_para_Daniel.md).
 
-| Decisão | Chave | id | Bloqueia |
+| Decision | Key | id | Blocks |
 | --- | --- | --- | --- |
-| D1 Framework mobile | MAT-20 | 156 | MAT-17 |
-| D2 Dados, backend e região | MAT-21 | 157 | MAT-17 |
-| D3 Quem publica e contas nas lojas | MAT-22 | 158 | MAT-17 |
-| D4 Recorte do MVP | MAT-23 | 159 | MAT-18 |
-| D5 Pessoas para conteúdo, moderação e jurídico | MAT-24 | 160 | MAT-19 |
-| D6 Monetização | MAT-25 | 161 | — |
+| D1 Mobile framework | MAT-20 | 156 | MAT-17 |
+| D2 Data, backend and region | MAT-21 | 157 | MAT-17 |
+| D3 Who publishes and store accounts | MAT-22 | 158 | MAT-17 |
+| D4 MVP scope | MAT-23 | 159 | MAT-18 |
+| D5 People for content, moderation and legal | MAT-24 | 160 | MAT-19 |
+| D6 Monetization | MAT-25 | 161 | — |
 
-Vínculos "bloqueado por" novos: ids 123 a 127. O documento 9 foi ligado às seis decisões.
+New "bloqueado por" links: ids 123 to 127. The document 9 was linked to the six decisions.
 
-### Movimentos de coluna às 04:28
+### Column moves at 04:28
 
-| Tarefa | De | Para | Motivo |
+| Task | From | To | Reason |
 | --- | --- | --- | --- |
-| MAT-2 | Em andamento | Feito | Projeto conferido por releitura (`get_project`) e comentário com os recibos |
-| MAT-3 | Em andamento | Esperando Daniel (responsável: Daniel) | Registro do cofre depende de ação de Daniel no Obsidian |
-| MAT-6, MAT-7, MAT-8, MAT-9, MAT-14 | A fazer ou Em andamento | Em revisão | Documento entregue; aguarda a revisão independente (MAT-16) |
-| MAT-12, MAT-13, MAT-15 | A fazer | Em andamento | Redação em curso |
+| MAT-2 | Em andamento | Feito | Project verified by re-reading (`get_project`) and a comment with the receipts |
+| MAT-3 | Em andamento | Esperando Daniel (assignee: Daniel) | Vault registration depends on an action by Daniel in Obsidian |
+| MAT-6, MAT-7, MAT-8, MAT-9, MAT-14 | A fazer or Em andamento | Em revisão | Document delivered; awaiting the independent review (MAT-16) |
+| MAT-12, MAT-13, MAT-15 | A fazer | Em andamento | Writing in progress |
 
-### Decisão D7 e movimentos de 04:52 a 05:42
+### Decision D7 and moves from 04:52 to 05:42
 
 - **MAT-26 (id 162), "D7 — Registros de testes de acesso em projetos de terceiros":**
-  - criada às 05:29:39 (08:29:39 UTC), na coluna 35, tipo 15, prioridade medium;
-  - etiqueta 19, responsável Daniel, sem agente;
-  - ligada ao documento 9 às 05:30:02.
-  - Não bloqueia tarefa do backlog: precisa de resposta antes do primeiro push.
-- **Para "Em revisão" (coluna 36), cada uma com comentário:**
-  - MAT-4 às 04:52;
-  - MAT-10, MAT-12 e MAT-13 por volta de 05:00;
-  - MAT-11 às 05:30;
-  - MAT-5 às 05:42.
-- **Para "Em andamento" (coluna 31):** MAT-5 às 05:30, antes de ir para revisão; MAT-16 às 05:42, quando começou a revisão independente.
-- **Comentário de andamento na MAT-15** às 05:30: ADR-006 a ADR-008 escritos e D7 criada.
-- **Releitura com `list_issues` às 05:42:** 26 tarefas, de MAT-1 a MAT-26.
-  - Feito: MAT-1 e MAT-2.
-  - Esperando Daniel: MAT-3 e MAT-20 a MAT-26.
-  - Em revisão: MAT-4 a MAT-14.
-  - Em andamento: MAT-15 e MAT-16.
-  - Backlog: MAT-17 a MAT-19, sem agente.
+  - created at 05:29:39 (08:29:39 UTC), in the 35 column, type 15, priority medium;
+  - label 19, assignee Daniel, no agent;
+  - linked to document 9 at 05:30:02.
+  - Does not block any backlog task: it needs an answer before the first push.
+- **To "Em revisão" (column 36), each with a comment:**
+  - MAT-4 at 04:52;
+  - MAT-10, MAT-12 and MAT-13 at around 05:00;
+  - MAT-11 at 05:30;
+  - MAT-5 at 05:42.
+- **To "Em andamento" (column 31):** MAT-5 at 05:30, before going to review; MAT-16 at 05:42, when the independent review started.
+- **Progress comment on MAT-15** at 05:30: ADR-006 to ADR-008 written and D7 created.
+- **Re-read with `list_issues` at 05:42:** 26 tasks, from MAT-1 to MAT-26.
+  - Feito: MAT-1 and MAT-2.
+  - Esperando Daniel: MAT-3 and MAT-20 to MAT-26.
+  - Em revisão: MAT-4 to MAT-14.
+  - Em andamento: MAT-15 and MAT-16.
+  - Backlog: MAT-17 to MAT-19, no agent.
 
-### Revisão independente e movimentos de 05:45 a 06:25
+### Independent review and moves from 05:45 to 06:25
 
-- **Documento 9 ("Estado atual e próximos passos")** atualizado para a versão 2 às 05:45.
-- **Comentário 925 na MAT-16 (id 152)**, às 06:24:32: resultado da primeira rodada da revisão independente, os 8 achados com as correções e o início da segunda rodada.
-- **MAT-15 (id 151) para "Em revisão" (coluna 36)**, às 06:24:42. O comentário 927 lista os entregáveis e as correções nos ADRs e no roadmap.
-- **Sem agente:** MAT-17 a MAT-19 continuam no backlog. Nenhuma decisão D1 a D7 foi respondida.
+- **Document 9 ("Estado atual e próximos passos")** updated to version 2 at 05:45.
+- **Comment 925 on MAT-16 (id 152)**, at 06:24:32: result of the first round of the independent review, the 8 findings with the fixes, and the start of the second round.
+- **MAT-15 (id 151) to "Em revisão" (column 36)**, at 06:24:42. Comment 927 lists the deliverables and the fixes to the ADRs and the roadmap.
+- **No agent:** MAT-17 to MAT-19 remain in the backlog. None of decisions D1 to D7 has been answered.
 
-### Encerramento da revisão, de 06:56 a 06:58
+### End of the review, from 06:56 to 06:58
 
-- **MAT-16 (id 152):** comentário 932 às 06:57:05, com a segunda e a terceira rodadas e as correções. Em seguida, foi para "Em revisão" (coluna 36).
-- **Releitura às 06:57:** as colunas 30 ("A fazer") e 31 ("Em andamento") estavam vazias.
-- **Documento 9:** foi para a versão 3 às 06:57:53.
-- **Estado final da etapa:**
-  - Feito: MAT-1 e MAT-2.
-  - Esperando Daniel: MAT-3 e MAT-20 a MAT-26.
-  - Em revisão: MAT-4 a MAT-16.
-  - Backlog sem agente: MAT-17 a MAT-19.
+- **MAT-16 (id 152):** comment 932 at 06:57:05, with the second and third rounds and the fixes. It then went to "Em revisão" (column 36).
+- **Re-read at 06:57:** the columns 30 ("A fazer") and 31 ("Em andamento") were empty.
+- **Document 9:** went to version 3 at 06:57:53.
+- **Final state of the stage:**
+  - Feito: MAT-1 and MAT-2.
+  - Esperando Daniel: MAT-3 and MAT-20 to MAT-26.
+  - Em revisão: MAT-4 to MAT-16.
+  - Backlog, no agent: MAT-17 to MAT-19.
 
-### Obsidian registrado e MAT-3 concluída, de 07:00 a 07:14
+### Obsidian registered and MAT-3 completed, from 07:00 to 07:14
 
-- **MAT-3 (id 139):** comentário 935 às 07:04:54, com as evidências do registro feito por Daniel às 07:00:46.
-- **Navegação conferida** pelo `workspace.json` do cofre: Home às 07:11:55; ADR-002 às 07:12:03, depois ADR-003, ADR-001, ADR-007 e ADR-004; Roadmap e Decisões às 07:12:39; e o design doc Comunidade e moderação, aberto às 07:12:42.
-- **MAT-3 foi para "Feito"** (coluna 32) às 07:14:36, com o comentário 937.
-- **Documento 9:** foi para a versão 4 às 07:14:58. Diz que a etapa está concluída e que Daniel tem a revisão e as decisões D1 a D7.
+- **MAT-3 (id 139):** comment 935 at 07:04:54, with the evidence of the registration done by Daniel at 07:00:46.
+- **Navigation verified** through the vault's `workspace.json`: Home at 07:11:55; ADR-002 at 07:12:03, then ADR-003, ADR-001, ADR-007 and ADR-004; Roadmap e Decisões at 07:12:39; and the design doc Comunidade e moderação, opened at 07:12:42.
+- **MAT-3 went to "Feito"** (column 32) at 07:14:36, with comment 937.
+- **Document 9:** went to version 4 at 07:14:58. It states that the stage is complete and that Daniel has the review and decisions D1 to D7.
 
-### Descrições de MAT-20 e MAT-21 alinhadas ao cofre, às 14:55
+### Descriptions of MAT-20 and MAT-21 aligned with the vault, at 14:55
 
-- Na preparação do pacote de retorno, a releitura das 26 tarefas mostrou que as descrições de MAT-20 (D1) e MAT-21 (D2) ainda tinham o texto anterior à revisão independente.
-  - MAT-20 dizia que o Expo era "a única opção" para o iOS a partir do Windows (achado F02).
-  - MAT-21 citava US$ 101/mês, sem o serviço de domínio (achado F01).
-- **Correção:** as duas descrições foram atualizadas pelo `update_issue` às 14:55:15, com o texto do cofre e uma nota da atualização. As recomendações não mudaram.
-- **Releitura das demais 24 tarefas:** nenhuma outra contradição com o cofre. A descrição da MAT-3 mantém a "Situação em 22/10 04:28" como histórico; a conclusão está nos comentários 935 e 937.
-- **Documento 9:** a releitura às 15:07 mostrou a versão 5, salva por Daniel às 14:16:13. O texto é idêntico ao da versão 4, escrita pelo Hermes às 07:14:58 (conferido por script).
-- **MAT-3:** a etiqueta "bloqueado" (21) foi retirada às 14:58, porque a tarefa está feita. Ficou só "Operação e entrega" (27).
-- **Recibo do pacote:** comentário 990 na MAT-16, às 15:13:29, com o caminho e o SHA-256 do ZIP de retorno.
-- **Correção de nome:** a coluna 30 do MAT se chama "A fazer". Este registro e o relatório final a chamavam por engano de "docs dependentes"; corrigido às 14:57.
+- While preparing the return package, re-reading the 26 tasks showed that the descriptions of MAT-20 (D1) and MAT-21 (D2) still had the text from before the independent review.
+  - MAT-20 said that Expo was "a única opção" for iOS from Windows (finding F02).
+  - MAT-21 cited US$ 101/month, without the domain service (finding F01).
+- **Fix:** both descriptions were updated through `update_issue` at 14:55:15, with the vault text and an update note. The recommendations did not change.
+- **Re-read of the other 24 tasks:** no other contradiction with the vault. The description of MAT-3 keeps "Situação em 22/10 04:28" as history; the completion is in comments 935 and 937.
+- **Document 9:** the re-read at 15:07 showed version 5, saved by Daniel at 14:16:13. The text is identical to that of version 4, written by Hermes at 07:14:58 (verified by script).
+- **MAT-3:** the label "bloqueado" (21) was removed at 14:58, because the task is done. Only "Operação e entrega" (27) remained.
+- **Package receipt:** comment 990 on MAT-16, at 15:13:29, with the path and the SHA-256 of the return ZIP.
+- **Name fix:** the 30 column in MAT is named "A fazer". This log and the final report mistakenly called it "docs dependentes"; fixed at 14:57.
 
-### Design doc base de escopo, às 18:23
+### Base scope design doc, at 18:23
 
-- **Origem:** versão-base escrita pelo consultor às 18:04, sem acesso aos arquivos locais, depois da consulta sobre web primeiro. Original em `entregas/Consulta_Plataformas_2026-10-22/DESIGN_DOC_BASE_v0.1_consultor.md`.
-- **Conferência com o cofre (v0.2):** sete tipos de registro, papéis e vários bebês do modelo, lembretes na web, cifra local do nativo, sequência original da APP-001 e ligação com D1 a D7 e MAT-17 a MAT-19.
-- **Documento 10** "Design doc base de escopo (AppMaternidade)", criado às 18:23:44, versão 1, não privado. O texto publicado é idêntico ao arquivo `entregas/Consulta_Plataformas_2026-10-22/DESIGN_DOC_BASE.md` (conferido por script). Ligado às tarefas MAT-17 e MAT-20 a MAT-25.
-- **Documento 9:** versão 6 às 18:25:14, com a proposta revista, o link do documento 10 e os novos próximos passos. A versão 7, às 18:25:21, é o editor de Daniel salvando a página aberta; as mudanças da versão 6 continuam nela, e o horário antigo não voltou (conferido por script).
-- **Ainda não alinhados:** as descrições de MAT-20, MAT-22 e MAT-23 e os documentos do cofre descrevem a proposta da APP-001 (nativo primeiro). A reconciliação vem depois da revisão de Daniel e Diego (seção 15 do design doc base).
+- **Origin:** base version written by the consultant at 18:04, without access to the local files, after the consultation about web first. Original at `entregas/Consulta_Plataformas_2026-10-22/DESIGN_DOC_BASE_v0.1_consultor.md`.
+- **Check against the vault (v0.2):** seven record types, roles and multiple babies in the model, reminders on the web, local encryption on native, the original sequence of APP-001, and the connection to D1 through D7 and MAT-17 through MAT-19.
+- **Document 10** "Design doc base de escopo (AppMaternidade)", created at 18:23:44, version 1, not private. The published text is identical to the file `entregas/Consulta_Plataformas_2026-10-22/DESIGN_DOC_BASE.md` (verified by script). Linked to tasks MAT-17 and MAT-20 to MAT-25.
+- **Document 9:** version 6 at 18:25:14, with the revised proposal, the link to document 10 and the new next steps. Version 7, at 18:25:21, is Daniel's editor saving the open page; the changes from version 6 remain in it, and the old timestamp did not come back (verified by script).
+- **Not yet aligned:** the descriptions of MAT-20, MAT-22 and MAT-23 and the vault documents describe the proposal from APP-001 (native first). Reconciliation comes after the review by Daniel and Diego (section 15 of the base design doc).
 
-### Conferência dos documentos 9 e 10, em 23/10 às 07:30
+### Check of documents 9 and 10, on 23/10 at 07:30
 
-- **Documento 10:** a versão 2, de 23/10 às 01:22, saiu em nome de Daniel quando ele abriu a página. O texto é idêntico ao de `entregas/Consulta_Plataformas_2026-10-22/DESIGN_DOC_BASE.md` (conferido por script).
-- **Documento 9:** a versão 7 tem exatamente o texto enviado na versão 6, lido no registro da sessão (conferido por script). A versão 8, às 07:30:22, alinhou três linhas com o design doc base:
-  - o custo de US$ 108 a 126/mês foi calculado para o plano nativo primeiro e será refeito para a web;
-  - a MAT-17 vem depois da revisão da dupla e precisa de um iPhone real;
-  - o horário da atualização.
-- **Nada mudou desde 22/10 às 18:26:** as decisões D1 a D7 (MAT-20 a MAT-26) continuam sem comentários; as colunas das tarefas são as mesmas; não houve rodada nova do consultor nem commit.
-- **Fatos do design doc conferidos de novo no cofre:**
-  - 0 a 12 meses e gestação fora;
-  - os sete tipos de registro;
-  - RF-05, RF-07, RF-12 e RF-14;
-  - os papéis e o observador;
-  - o SQLCipher fora da web;
-  - o SDK Web do PowerSync em GA;
-  - F5 e F6 do roadmap;
-  - a etapa 3 do ADR-006;
-  - a D4 com 18 anos ou mais.
+- **Document 10:** version 2, from 23/10 at 01:22, was saved under Daniel's name when they opened the page. The text is identical to that of `entregas/Consulta_Plataformas_2026-10-22/DESIGN_DOC_BASE.md` (verified by script).
+- **Document 9:** version 7 has exactly the text sent in version 6, read from the session log (verified by script). Version 8, at 07:30:22, aligned three lines with the base design doc:
+  - the cost of US$ 108 to 126/month was calculated for the native-first plan and will be redone for the web;
+  - MAT-17 comes after the pair's review and needs a real iPhone;
+  - the update timestamp.
+- **Nothing has changed since 22/10 at 18:26:** decisions D1 to D7 (MAT-20 to MAT-26) still have no comments; the task columns are the same; there was no new consultant round and no commit.
+- **Design doc facts verified again in the vault:**
+  - 0 to 12 months, with pregnancy excluded;
+  - the seven record types;
+  - RF-05, RF-07, RF-12 and RF-14;
+  - the roles and the observer;
+  - SQLCipher not on the web;
+  - the PowerSync Web SDK in GA;
+  - F5 and F6 of the roadmap;
+  - stage 3 of ADR-006;
+  - D4 with 18 years or older.
 
-### Design doc 0.3 e publicação no GitHub, em 23/10 às 07:58
+### Design doc 0.3 and publication on GitHub, on 23/10 at 07:58
 
-- **Pedido de Daniel:** tirar do documento as menções a ele e ao Diego, deixá-lo focado no projeto e subir só ele para o GitHub, com Daniel como autor.
-- **Versão 0.3:** 25 trocas por script, com contagem exata de cada âncora. Saíram as menções a Daniel, Diego, "dupla", Hermes, consultor e "cofre". O parecer jurídico sobre o ECA Digital continua, porque é conteúdo do projeto. A tabela do histórico perdeu a coluna "Quem".
-- **Documento 10:** versão 3, às 07:58:12. O texto é idêntico a `docs/DESIGN_DOC_BASE.md` (sha256 `ec1be7c2f46954f9…`, conferido por script).
-- **GitHub:** commit `a51fc1f` em `main` de https://github.com/DeD-TechStack/AppMaternidade (público).
-  - Contém só `docs/DESIGN_DOC_BASE.md`.
-  - Autor e committer: Daniel Macedo, com o e-mail ligado à conta Daniel-Macedo-dev.
-  - A API do GitHub mostra Daniel-Macedo-dev como autor e como único contributor.
-  - O blob remoto é igual ao local.
-  - O push usou a credencial do `gh` só naquele comando, sem mudar a configuração do Git.
-- **Fora do Git:** o cofre, `tasks/`, `.gitignore` e `PROGRESSO_TASK_HERMES.md`. A D7 continua necessária antes de publicar o restante.
-- **Documento 9:** versão 10, às 08:00:21. Inclui o link do GitHub, o commit e a regra "sem pedido explícito de Daniel".
-- **Cópia anterior:** `entregas/Consulta_Plataformas_2026-10-22/DESIGN_DOC_BASE.md` continua como a versão 0.2.
+- **Daniel's request:** remove the mentions of Daniel and Diego from the document, keep it focused on the project, and push only that document to GitHub, with Daniel as author.
+- **Version 0.3:** 25 replacements by script, with an exact count for each anchor. The mentions of Daniel, Diego, "dupla", Hermes, consultant and "cofre" were removed. The legal opinion on ECA Digital remains, because it is project content. The history table lost the "Quem" column.
+- **Document 10:** version 3, at 07:58:12. The text is identical to `docs/DESIGN_DOC_BASE.md` (sha256 `ec1be7c2f46954f9…`, verified by script).
+- **GitHub:** commit `a51fc1f` on `main` of https://github.com/DeD-TechStack/AppMaternidade (public).
+  - Contains only `docs/DESIGN_DOC_BASE.md`.
+  - Author and committer: Daniel Macedo, with the email linked to the Daniel-Macedo-dev account.
+  - The GitHub API shows Daniel-Macedo-dev as author and as the sole contributor.
+  - The remote blob is the same as the local one.
+  - The push used the `gh` credential only for that command, without changing the Git configuration.
+- **Outside Git:** the vault, `tasks/`, `.gitignore` and `PROGRESSO_TASK_HERMES.md`. D7 is still required before publishing the rest.
+- **Document 9:** version 10, at 08:00:21. Includes the GitHub link, the commit and the "sem pedido explícito de Daniel" rule.
+- **Previous copy:** `entregas/Consulta_Plataformas_2026-10-22/DESIGN_DOC_BASE.md` remains as version 0.2.
 
 ## Obsidian
 
-| Item | Valor |
+| Item | Value |
 | --- | --- |
-| Cofre | AppMaternidade |
-| Caminho | `C:/Projetos/AppMaternidade/docs/AppMaternidade` |
-| Aplicativo | Obsidian 1.14.4, executável `C:/OrchestrationLab/apps/orca/home/AppData/Local/Programs/Obsidian/Obsidian.exe`, o mesmo associado ao protocolo `obsidian://` |
-| Perfil normal (usado) | Cadastro em `C:/Users/<usuario>/AppData/Roaming/obsidian/obsidian.json`; antes do registro listava BreakInv e FORJAI |
-| Perfil Oficina (não usado) | Lançador `C:/OrchestrationLab/Abrir-Obsidian-Oficina.cmd`, com `--user-data-dir` em `C:/OrchestrationLab/apps/orca/home/AppData/Roaming/obsidian` (cofre OficinaConhecimento) |
-| Situação | **Registrado por Daniel às 07:00:46**, no seletor do perfil normal. Evidências: entrada `75cd70ea629fa64f` no `%APPDATA%/obsidian/obsidian.json`, com `open: true`; janela "AppMaternidade - Obsidian 1.14.4" no processo 24904, sem `--user-data-dir`, com os processos filhos em `%APPDATA%/obsidian`; pasta `.obsidian/` criada às 07:00:47, fora do Git. O cadastro da Oficina continua com o mesmo SHA-256 de antes (`5dec260f…`). Antes, às 03:12:45, a automação de interface tinha voltado "BLOCKED, not run; the user did NOT consent" e não foi repetida. **Navegação no aplicativo:** conferida pelo `workspace.json` do cofre, sem automação de interface: Home às 07:11:55; ADR-002 às 07:12:03, depois ADR-003, ADR-001, ADR-007 e ADR-004; Roadmap e Decisões às 07:12:39; e o design doc Comunidade e moderação, aberto às 07:12:42. |
+| Vault | AppMaternidade |
+| Path | `C:/Projetos/AppMaternidade/docs/AppMaternidade` |
+| Application | Obsidian 1.14.4, executable `C:/OrchestrationLab/apps/orca/home/AppData/Local/Programs/Obsidian/Obsidian.exe`, the same one associated with the `obsidian://` protocol |
+| Regular profile (used) | Registry in `C:/Users/<usuario>/AppData/Roaming/obsidian/obsidian.json`; before the registration it listed BreakInv and FORJAI |
+| Oficina profile (not used) | Launcher `C:/OrchestrationLab/Abrir-Obsidian-Oficina.cmd`, with `--user-data-dir` in `C:/OrchestrationLab/apps/orca/home/AppData/Roaming/obsidian` (vault OficinaConhecimento) |
+| Status | **Registered by Daniel at 07:00:46**, in the regular profile's picker. Evidence: entry `75cd70ea629fa64f` in `%APPDATA%/obsidian/obsidian.json`, with `open: true`; window "AppMaternidade - Obsidian 1.14.4" in process 24904, without `--user-data-dir`, with the child processes in `%APPDATA%/obsidian`; folder `.obsidian/` created at 07:00:47, outside Git. The Oficina registry still has the same SHA-256 as before (`5dec260f…`). Earlier, at 03:12:45, the UI automation had returned "BLOCKED, not run; the user did NOT consent" and was not repeated. **Navigation in the application:** verified through the vault's `workspace.json`, without UI automation: Home at 07:11:55; ADR-002 at 07:12:03, then ADR-003, ADR-001, ADR-007 and ADR-004; Roadmap e Decisões at 07:12:39; and the design doc Comunidade e moderação, opened at 07:12:42. |
 
-Fotografia antes do registro, para medir o efeito depois: SHA-256 do cadastro normal `1a949920f191d3e5a539639a5ac6466b6c1c33a04ed716467eca81eb034fa6a3`; do cadastro da Oficina `5dec260fe65fff856c75dc198f18ccd38ebbc20b87ad10c15303face687675aa`.
+Snapshot before the registration, to measure the effect afterwards: SHA-256 of the regular registry `1a949920f191d3e5a539639a5ac6466b6c1c33a04ed716467eca81eb034fa6a3`; of the Oficina registry `5dec260fe65fff856c75dc198f18ccd38ebbc20b87ad10c15303face687675aa`.
 
-Depois do registro, conferido às 07:03: o cadastro normal mudou para `19f3c6f981d13bf5129ddd6f6349994508245913b48bd7d9fa2a81c4a18cd621`, com a entrada nova do AppMaternidade. O cadastro da Oficina continua com o mesmo hash de antes.
+After the registration, verified at 07:03: the regular registry changed to `19f3c6f981d13bf5129ddd6f6349994508245913b48bd7d9fa2a81c4a18cd621`, with the new AppMaternidade entry. The Oficina registry still has the same hash as before.
 
-## Tarefa, documento e ADR
+## Task, document and ADR
 
-| Tarefa | Documentos | ADR |
+| Task | Documents | ADR |
 | --- | --- | --- |
 | MAT-4 | `01_Produto/Visao_e_Escopo.md`, `01_Produto/Concorrentes_e_Diferenciais.md` | ADR-001 |
 | MAT-5 | `08_Referencias/Analise_dos_Repositorios.md`, `08_Referencias/Licencas_e_Fontes.md` | ADR-007 |
@@ -227,9 +227,9 @@ Depois do registro, conferido às 07:03: o cadastro normal mudou para `19f3c6f98
 | MAT-12 | `05_Privacidade_Operacao/Privacidade_e_Seguranca.md` | ADR-005, ADR-008 |
 | MAT-13 | `05_Privacidade_Operacao/Custos_e_Operacao.md` | ADR-008 |
 | MAT-14 | `05_Privacidade_Operacao/Qualidade_e_Validacao.md` | ADR-004 |
-| MAT-15 | `06_ADRs/`, `07_Roadmap/Roadmap_e_Proxima_Fatia.md`, `07_Roadmap/Decisoes_para_Daniel.md` | todos |
+| MAT-15 | `06_ADRs/`, `07_Roadmap/Roadmap_e_Proxima_Fatia.md`, `07_Roadmap/Decisoes_para_Daniel.md` | all |
 | MAT-16 | `00_Inicio/Progresso.md`, `00_Inicio/Relatorio_Final_APP-001.md` | — |
 
 ## Voltar
 
-[Home](Home.md) · [Progresso](Progresso.md)
+[Home](Home.md) · [Progress](Progresso.md)

@@ -1,7 +1,7 @@
 ---
-tipo: pesquisa-tecnologia
-status: rascunho
-responsavel: Hermes (subagente dados e backend)
+tipo: technology-research
+status: draft
+responsavel: Hermes (data and backend subagent)
 revisado_em: 2026-10-22
 fontes_principais:
   - https://firebase.google.com/docs/firestore/manage-data/enable-offline
@@ -15,675 +15,675 @@ fontes_principais:
   - https://developer.apple.com/app-store/review/guidelines/
 ---
 
-# Dados, sincronização e backend: opções para o AppMaternidade
+# Data, synchronization and backend: options for AppMaternidade
 
-Nota de pesquisa da APP-001 (D4 e D5) sobre banco remoto, sincronização offline, autenticação, push, arquivos, e-mail e operação. Os preços completos e os cenários de custo estão em [Preços datados](Precos_Datados.md). As convenções seguem [Convenções](../../00_Inicio/Convencoes.md). Frameworks mobile, caminho iOS/Windows, Live Activities e farms de teste ficam na nota do outro subagente. Aqui só cito o que muda a escolha de dados.
+Research note from APP-001 (D4 and D5) on remote databases, offline synchronization, authentication, push, files, email and operations. Full prices and cost scenarios are in [Dated prices](Precos_Datados.md). Conventions follow [Conventions](../../00_Inicio/Convencoes.md). Mobile frameworks, the iOS/Windows path, Live Activities and test farms are covered in the other subagent's note. Here I only mention what changes the data choice.
 
-Este documento é pesquisa, não decisão. Nada aqui foi aprovado por Daniel.
+This document is research, not a decision. Nothing here has been approved by Daniel.
 
 ## Resumo
 
-- **Firestore offline depende do SDK real.** Os SDKs nativos Android e Apple persistem em disco por padrão. FlutterFire e React Native Firebase usam esses SDKs nativos. O Firebase JS SDK em React Native/Expo Go **não tem persistência do Firestore**. A tabela de ambientes oficial marca "except persistence" para React Native. [DOC] ([D01](#fontes), [D03](#fontes))
-- **Firestore resolve concorrência por "última escrita vence"** e transações falham offline. Conflitos explícitos (duas edições offline; exclusão versus edição) precisam ser modelados pelo app. [DOC] ([B01](#fontes), [B02](#fontes))
-- **PowerSync** é a camada PostgreSQL↔SQLite mais aderente ao requisito de escrita offline. A fila local é enviada para **uma API que você escreve**, e o backend decide conflitos e autorização. A licença do serviço é FSL-1.1-ALv2: uso livre exceto para competir com o produto, e cada versão vira Apache-2.0 após dois anos. Os SDKs cliente são Apache-2.0. [DOC][EXEC]
-- **ElectricSQL** sincroniza só leitura ("does not do write-path sync"). **Zero** chegou à versão 1.x, mas **não aceita escrita offline**. **Replicache** está em modo de manutenção. Nenhum dos três atende sozinho ao requisito de registro offline durável. [DOC]
-- **Autorização tem de ser reavaliada no servidor a cada operação.** A própria Supabase alerta que o JWT "is not always up-to-date" até ser renovado. [DOC] ([B05](#fontes))
-- **Três conjuntos coerentes** (detalhes na [seção 11](#11-três-conjuntos-completos)):
-  - A: Firebase com SDK nativo.
-  - B: Supabase com PowerSync.
-  - C: API própria (monólito modular) com PostgreSQL e outbox/sync próprio.
-- **Custo ilustrativo de infraestrutura** com as premissas de [Preços datados](Precos_Datados.md). Não inclui o serviço de domínio da recomendação, o PITR nem a homologação; a composição do conjunto recomendado está em [Custos e operação](../../05_Privacidade_Operacao/Custos_e_Operacao.md), seção 2:
+- **Firestore offline support depends on the actual SDK.** The native Android and Apple SDKs persist to disk by default. FlutterFire and React Native Firebase use these native SDKs. The Firebase JS SDK in React Native/Expo Go **has no Firestore persistence**. The official environments table says "except persistence" for React Native. [DOC] ([D01](#fontes), [D03](#fontes))
+- **Firestore resolves concurrency with "last write wins"** and transactions fail offline. Explicit conflicts (two offline edits; deletion versus editing) must be modeled by the app. [DOC] ([B01](#fontes), [B02](#fontes))
+- **PowerSync** is the PostgreSQL↔SQLite layer that best fits the offline write requirement. The local queue is sent to **an API you write**, and the backend decides conflicts and authorization. The service license is FSL-1.1-ALv2: unrestricted use except to compete with the product, and each version becomes Apache-2.0 after two years. The client SDKs are Apache-2.0. [DOC][EXEC]
+- **ElectricSQL** only synchronizes reads ("does not do write-path sync"). **Zero** reached version 1.x, but **does not support offline writes**. **Replicache** is in maintenance mode. None of the three meets the durable offline record requirement on its own. [DOC]
+- **Authorization must be reevaluated on the server for every operation.** Supabase itself warns that the JWT "is not always up-to-date" until refreshed. [DOC] ([B05](#fontes))
+- **Three coherent stacks** (details in [section 11](#11-três-conjuntos-completos)):
+  - A: Firebase with a native SDK.
+  - B: Supabase with PowerSync.
+  - C: Custom API (modular monolith) with PostgreSQL and a custom outbox/sync.
+- **Illustrative infrastructure cost** using the assumptions in [Dated prices](Precos_Datados.md). Does not include the domain service in the recommendation, PITR or staging; the composition of the recommended stack is in [Costs and operations](../../05_Privacidade_Operacao/Custos_e_Operacao.md), section 2:
 
-  | Famílias | Faixa de custo | A | B | C |
+  | Families | Cost range | A | B | C |
   | ---: | --- | ---: | ---: | ---: |
-  | 100 | ~US$ 27–101/mês | US$ 27 | US$ 101 | US$ 64 |
-  | 1.000 | ~US$ 35–121/mês | US$ 35 | US$ 121 | US$ 109 |
-  | 10.000 | ~US$ 139–214/mês | US$ 139 | US$ 214 | US$ 202 |
+  | 100 | ~US$ 27–101/month | US$ 27 | US$ 101 | US$ 64 |
+  | 1.000 | ~US$ 35–121/month | US$ 35 | US$ 121 | US$ 109 |
+  | 10.000 | ~US$ 139–214/month | US$ 139 | US$ 214 | US$ 202 |
 
-  Os valores incluem EAS Starter e Apple Developer Program. A diferença entre conjuntos é pequena perto do custo de engenharia. [HIP]
+  The amounts include EAS Starter and Apple Developer Program. The difference between stacks is small compared with the engineering cost. [HIP]
 
-## 1. Escopo, método e evidências
+## 1. Scope, method and evidence
 
-- Data de consulta: 22/10/2026 (America/Sao_Paulo). Preços em USD, sem impostos nem câmbio.
-- Versões [EXEC] foram coletadas em 22/10/2026 entre ~06:00 e 06:35 UTC (03:00–03:35 BRT), no Windows 11 com npm 11.19.0. Fontes das versões:
+- Access date: 22/10/2026 (America/Sao_Paulo). Prices in USD, excluding taxes and currency conversion.
+- [EXEC] versions were collected on 22/10/2026 between ~06:00 and 06:35 UTC (03:00–03:35 BRT), on Windows 11 with npm 11.19.0. Version sources:
   - `npm view <pacote> version time.modified license`;
-  - APIs públicas de pub.dev (`/api/packages/<p>`) e PyPI (`/pypi/<p>/json`);
-  - `maven-metadata.xml` do Maven Central e do Google Maven;
+  - Public APIs from pub.dev (`/api/packages/<p>`) and PyPI (`/pypi/<p>/json`);
+  - `maven-metadata.xml` from Maven Central and Google Maven;
   - GitHub REST (`/releases/latest`, `/license`, `/commits/main`).
-- Nada foi instalado, nenhuma conta foi criada e nenhum serviço foi contratado.
-- Classes [DOC], [EXEC], [CÓDIGO] e [HIP] conforme as convenções. Ausência de menção numa página não prova ausência do recurso.
+- Nothing was installed, no accounts were created and no services were purchased.
+- Classes [DOC], [EXEC], [CÓDIGO] and [HIP] follow the conventions. A feature not being mentioned on a page does not prove it is absent.
 
-## 2. Requisitos que guiam a comparação
+## 2. Requirements guiding the comparison
 
-Os requisitos vêm de `01_TASK_HERMES.md` (D4/D5) e do contexto da task:
+The requirements come from `01_TASK_HERMES.md` (D4/D5) and the task context:
 
-1. Registros essenciais criados e editados offline, persistidos no aparelho e enviados depois sem perda nem duplicação (idempotência).
-2. Conflitos explícitos: duas edições offline do mesmo registro; exclusão versus edição.
-3. Revogação de vínculo com aparelho offline. O servidor reavalia a autorização **atual** em cada operação; uma lista de famílias dentro do JWT não basta.
-4. Isolamento entre famílias em consultas, escritas, arquivos, canais de sync e notificações.
-5. Comunidade separada da rotina privada.
-6. Exportação, exclusão, backups e logs sem conteúdo sensível.
-7. Dados de rotina de bebês tratados como potencialmente sensíveis (saúde). A análise jurídica fica em [Pesquisa de privacidade, legal e lojas](../Pesquisa_Privacidade_Legal_e_Lojas.md).
+1. Essential records created and edited offline, persisted on the device and sent later without loss or duplication (idempotency).
+2. Explicit conflicts: two offline edits to the same record; deletion versus editing.
+3. Membership revocation with an offline device. The server reevaluates **current** authorization for every operation; a list of families inside the JWT is not enough.
+4. Isolation between families in queries, writes, files, sync channels and notifications.
+5. Community separate from the private routine.
+6. Export, deletion, backups and logs without sensitive content.
+7. Baby routine data treated as potentially sensitive (health). The legal analysis is in [Privacy, legal and app stores research](../Pesquisa_Privacidade_Legal_e_Lojas.md).
 
 ## 3. Firebase / Cloud Firestore
 
-### 3.1 O que cada SDK realmente entrega offline
+### 3.1 What each SDK actually provides offline
 
-| Runtime real | Persistência do Firestore em disco | Sobrevive a encerrar o processo? | Requisitos de build | Versão verificada [EXEC] |
+| Actual runtime | Firestore persistence on disk | Survives process termination? | Build requirements | Verified version [EXEC] |
 | --- | --- | --- | --- | --- |
-| SDK nativo Android | Habilitada por padrão; limite de cache padrão de 100 MB, configurável. [DOC] [B01](#fontes) | Provável. O cache fica em disco [DOC]. A página não diz explicitamente que escritas pendentes sobrevivem ao reinício; a inferência é forte, mas validar no protótipo. [HIP] | Gradle/BoM | `com.google.firebase:firebase-bom` 35.1.0 (Google Maven, atualizado em 21/10/2026) |
-| SDK nativo Apple | Habilitada por padrão. [DOC] [B01](#fontes) | Provável (como no Android). [HIP] | SPM/CocoaPods | `firebase-ios-sdk` 13.1.0 (release de 21/10/2026) |
-| FlutterFire (`cloud_firestore`) | Mesma persistência do SDK nativo, porque o plugin depende dos SDKs nativos (veja abaixo). [CÓDIGO] [D05](#fontes) | Herda o comportamento do nativo. [CÓDIGO]+[HIP] | Projeto Flutter com Android/iOS; iOS 15+ e Android 7.0+ segundo o guia. [DOC] [D06](#fontes) | `cloud_firestore` 7.0.0, `firebase_core` 5.0.0 (pub.dev, 15/10/2026) |
-| React Native Firebase (`@react-native-firebase/firestore`) | Habilitada por padrão. "IndexedDB persistence and `memoryLocalCache` / `persistentLocalCache` are web only. Native persistence is controlled by the iOS/Android Firestore SDK." [DOC] [D03](#fontes) | Herda o comportamento do nativo. [DOC] [D02](#fontes) + [HIP] | Código nativo. **Não funciona no Expo Go**; exige `expo-dev-client`/development build, config plugins e `npx expo prebuild --clean`. [DOC] [M11](#fontes) | `@react-native-firebase/*` 27.0.0 (19/10/2026) |
-| Firebase JS SDK em React Native/Expo | **Sem persistência.** A tabela oficial de ambientes marca Cloud Firestore em React Native como "(except persistence)". [DOC] [D01](#fontes) | **Não garantido.** Sem persistência em disco, escritas pendentes ficam em memória e se perdem se o processo morrer antes de sincronizar. [HIP derivado de D01] | Funciona no Expo Go, sem plugins. [DOC] [M11](#fontes) | `firebase` 13.1.0 (npm, 21/10/2026) |
-| Firebase JS SDK na web | Desabilitada por padrão; habilitável com `persistentLocalCache` (IndexedDB). [DOC] [B01](#fontes) | Depende do navegador. | n/a | `firebase` 13.1.0 |
+| Native Android SDK | Enabled by default; default cache limit of 100 MB, configurable. [DOC] [B01](#fontes) | Likely. The cache is on disk [DOC]. The page does not explicitly say that pending writes survive a restart; the inference is strong, but validate it in the prototype. [HIP] | Gradle/BoM | `com.google.firebase:firebase-bom` 35.1.0 (Google Maven, updated on 21/10/2026) |
+| Native Apple SDK | Enabled by default. [DOC] [B01](#fontes) | Likely (as on Android). [HIP] | SPM/CocoaPods | `firebase-ios-sdk` 13.1.0 (release from 21/10/2026) |
+| FlutterFire (`cloud_firestore`) | Same persistence as the native SDK, because the plugin depends on the native SDKs (see below). [CÓDIGO] [D05](#fontes) | Inherits native behavior. [CÓDIGO]+[HIP] | Flutter project with Android/iOS; iOS 15+ and Android 7.0+ according to the guide. [DOC] [D06](#fontes) | `cloud_firestore` 7.0.0, `firebase_core` 5.0.0 (pub.dev, 15/10/2026) |
+| React Native Firebase (`@react-native-firebase/firestore`) | Enabled by default. "IndexedDB persistence and `memoryLocalCache` / `persistentLocalCache` are web only. Native persistence is controlled by the iOS/Android Firestore SDK." [DOC] [D03](#fontes) | Inherits native behavior. [DOC] [D02](#fontes) + [HIP] | Native code. **Does not work in Expo Go**; requires `expo-dev-client`/development build, config plugins and `npx expo prebuild --clean`. [DOC] [M11](#fontes) | `@react-native-firebase/*` 27.0.0 (19/10/2026) |
+| Firebase JS SDK in React Native/Expo | **No persistence.** The official environments table marks Cloud Firestore in React Native as "(except persistence)". [DOC] [D01](#fontes) | **Not guaranteed.** Without disk persistence, pending writes stay in memory and are lost if the process dies before synchronizing. [HIP derived from D01] | Works in Expo Go, without plugins. [DOC] [M11](#fontes) | `firebase` 13.1.0 (npm, 21/10/2026) |
+| Firebase JS SDK on the web | Disabled by default; can be enabled with `persistentLocalCache` (IndexedDB). [DOC] [B01](#fontes) | Depends on the browser. | n/a | `firebase` 13.1.0 |
 
-Evidência de código do FlutterFire [CÓDIGO]. No HEAD de `main`, commit `cb3cc4b6bed7aa0ca916d98abb11275fbfe0728f` de 21/10/2026, "bump Firebase Android SDK to 35.0.2":
-- `packages/cloud_firestore/cloud_firestore/android/build.gradle`, linhas 63–66, declara `firebase-bom` e `com.google.firebase:firebase-firestore`;
-- `packages/cloud_firestore/cloud_firestore/ios/cloud_firestore.podspec`, linha 35, declara `s.dependency 'Firebase/Firestore'`.
+FlutterFire code evidence [CÓDIGO]. At the HEAD of `main`, commit `cb3cc4b6bed7aa0ca916d98abb11275fbfe0728f` from 21/10/2026, "bump Firebase Android SDK to 35.0.2":
+- `packages/cloud_firestore/cloud_firestore/android/build.gradle`, lines 63–66, declares `firebase-bom` and `com.google.firebase:firebase-firestore`;
+- `packages/cloud_firestore/cloud_firestore/ios/cloud_firestore.podspec`, line 35, declares `s.dependency 'Firebase/Firestore'`.
 
-Os permalinks estão em [D05](#fontes).
+The permalinks are in [D05](#fontes).
 
-Consequência prática:
-- Em React Native, só o React Native Firebase atende ao requisito de registro offline durável com Firestore. Isso obriga a usar development build (EAS ou build local).
-- O custo marginal desse requisito é menor do que parece: push remoto também não funciona no Expo Go desde o SDK 53. [DOC] [D53](#fontes)
-- O SDK JS só serve para web ou protótipo.
+Practical consequence:
+- In React Native, only React Native Firebase meets the durable offline record requirement with Firestore. This requires a development build (EAS or local build).
+- The marginal cost of this requirement is smaller than it seems: remote push also does not work in Expo Go since SDK 53. [DOC] [D53](#fontes)
+- The JS SDK is only suitable for the web or a prototype.
 
-### 3.2 Semântica de sincronização e limites
+### 3.2 Synchronization semantics and limits
 
-- **Última escrita vence:** ao sincronizar alterações locais, "it's last write wins". [DOC] [B01](#fontes) Não há detecção de conflito embutida. Duas edições offline do mesmo documento terminam com a última a chegar.
-- **Transações falham offline:** "Transactions will fail when the client is offline." [DOC] [B02](#fontes), [D03](#fontes) Operações que precisam ler o estado atual do servidor (unicidade, contadores, "encerrar sessão só se ainda aberta") não podem depender de transação no cliente.
-- **Como tornar conflitos explícitos** [HIP, a validar em protótipo]:
-  - IDs gerados no cliente (UUID/ULID) e `set` idempotente na criação.
-  - Campo `version` e/ou `updatedBy`/`updatedAtClient`.
-  - Exclusão lógica com campo `deletedAt` (tombstone) em vez de `delete` físico.
-  - Uma Cloud Function que compara versões e grava um documento de conflito para o app mostrar.
-  - Regras de segurança podem exigir `request.resource.data.version == resource.data.version + 1`. Uma escrita offline rejeitada pelas regras só falha na reconexão, e o app precisa tratar o erro.
-- **Regras de segurança:**
-  - `get()`/`exists()` permitem verificar o vínculo atual (ex.: documento de membro da família) a cada requisição. [DOC] [B03](#fontes)
-  - Limite de 10 chamadas de acesso a documentos por avaliação em requisições de documento único e consultas, e 20 em leituras múltiplas, transações e lotes. [DOC] [B03](#fontes)
-  - Essas leituras são cobradas. [DOC] [B04](#fontes)
-- **Admin SDK e bibliotecas de servidor ignoram as regras:** "The server client libraries bypass all Cloud Firestore Security Rules and instead authenticate through Google Application Default Credentials." [DOC] [D10](#fontes) Toda Cloud Function precisa refazer a checagem de autorização por conta própria.
-- **Revogação com aparelho offline:**
-  - A próxima requisição do aparelho revogado é negada pelas regras se elas consultarem o documento de vínculo. [DOC B03 + HIP]
-  - O cache local continua legível no aparelho até o app limpá-lo. O app deve chamar a limpeza de persistência do SDK ao receber `permission-denied` ou um sinal de revogação. [HIP: API de limpeza não reverificada nesta rodada]
-  - Escritas pendentes do aparelho revogado são rejeitadas na reconexão. [HIP]
+- **Last write wins:** when synchronizing local changes, "it's last write wins". [DOC] [B01](#fontes) There is no built-in conflict detection. Two offline edits to the same document end with the last one to arrive.
+- **Transactions fail offline:** "Transactions will fail when the client is offline." [DOC] [B02](#fontes), [D03](#fontes) Operations that need to read the current server state (uniqueness, counters, "end the session only if it is still open") cannot depend on a client transaction.
+- **How to make conflicts explicit** [HIP, to validate in a prototype]:
+  - Client-generated IDs (UUID/ULID) and idempotent `set` on creation.
+  - `version` field and/or `updatedBy`/`updatedAtClient`.
+  - Logical deletion with a `deletedAt` field (tombstone) instead of a physical `delete`.
+  - A Cloud Function that compares versions and writes a conflict document for the app to display.
+  - Security rules can require `request.resource.data.version == resource.data.version + 1`. An offline write rejected by the rules only fails on reconnection, and the app must handle the error.
+- **Security rules:**
+  - `get()`/`exists()` allow checking current membership (e.g., a family member document) on every request. [DOC] [B03](#fontes)
+  - Limit of 10 document access calls per evaluation for single-document requests and queries, and 20 for multiple reads, transactions and batches. [DOC] [B03](#fontes)
+  - These reads are billed. [DOC] [B04](#fontes)
+- **Admin SDK and server libraries bypass the rules:** "The server client libraries bypass all Cloud Firestore Security Rules and instead authenticate through Google Application Default Credentials." [DOC] [D10](#fontes) Every Cloud Function must perform its own authorization check again.
+- **Revocation with an offline device:**
+  - The revoked device's next request is denied by the rules if they query the membership document. [DOC B03 + HIP]
+  - The local cache remains readable on the device until the app clears it. The app must call the SDK's persistence cleanup when it receives `permission-denied` or a revocation signal. [HIP: cleanup API not reverified in this round]
+  - Pending writes from the revoked device are rejected on reconnection. [HIP]
 
-### 3.3 Custo por leitura, escrita e listener
+### 3.3 Cost per read, write and listener
 
-Valores completos em [Preços datados](Precos_Datados.md). Pontos que mudam o desenho:
+Full amounts in [Dated prices](Precos_Datados.md). Points that change the design:
 
 - **Listeners:**
-  - Cobram uma leitura por documento adicionado, alterado ou removido do resultado.
-  - Com persistência ativa, se o listener ficar desconectado **mais de 30 minutos**, a reconexão é cobrada como consulta nova.
-  - Sem persistência, toda reconexão é cobrada assim.
+  - Bill one read per document added, changed or removed from the result.
+  - With persistence enabled, if the listener is disconnected for **more than 30 minutes**, reconnection is billed as a new query.
+  - Without persistence, every reconnection is billed this way.
   - [DOC] [B04](#fontes)
-- **Mínimo de uma leitura por consulta.** Leituras de `get()`/`exists()` nas regras também são cobradas. [DOC] [B04](#fontes)
-- **Implicação:** abrir o app várias vezes ao dia relê "os registros de hoje". Histórico longo deve vir de documentos de resumo, não de releitura de cada registro. [HIP]
+- **Minimum of one read per query.** Reads of `get()`/`exists()` in the rules are also billed. [DOC] [B04](#fontes)
+- **Implication:** opening the app several times a day rereads "today's records". Long histories should come from summary documents, rather than rereading every record. [HIP]
 
 ### 3.4 Firebase Authentication
 
-- Sem custo até 50 mil MAU (Tier 1: e-mail, social, anônimo). Acima disso vale a tabela do Identity Platform (US$ 0,0055/MAU de 50 mil a 100 mil). [DOC] [D14](#fontes)
-- **Limites relevantes:**
-  - O e-mail de login por link é limitado a **5/dia no plano Spark** e 25.000/dia no Blaze.
-  - SMS só existe no Blaze.
+- No cost up to 50 thousand MAU (Tier 1: email, social, anonymous). Above that, Identity Platform pricing applies (US$ 0,0055/MAU from 50 thousand to 100 thousand). [DOC] [D14](#fontes)
+- **Relevant limits:**
+  - Sign-in link email is limited to **5/day on the Spark plan** and 25.000/day on Blaze.
+  - SMS is only available on Blaze.
   - [DOC] [D13](#fontes)
-  - Um app real precisa estar no Blaze.
-- **Passkeys:** não encontrei suporte nativo documentado nas páginas oficiais de Firebase Auth consultadas (busca em 22/10/2026). [HIP/limite: confirmar antes de decidir]
+  - A real app needs to be on Blaze.
+- **Passkeys:** I found no documented native support on the official Firebase Auth pages consulted (search on 22/10/2026). [HIP/limitation: confirm before deciding]
 
-### 3.5 Cloud Storage for Firebase, FCM e saída
+### 3.5 Cloud Storage for Firebase, FCM and exit
 
-- **Storage exige plano Blaze** desde as mudanças anunciadas em setembro de 2024. No Spark, as chamadas retornam 402/403 e o console perde o acesso. [DOC] [D15](#fontes)
-  - Regras por caminho permitem prefixo por família, com a mesma checagem de vínculo das regras do Firestore. [HIP]
+- **Storage requires the Blaze plan** since the changes announced in setembro de 2024. On Spark, calls return 402/403 and the console loses access. [DOC] [D15](#fontes)
+  - Path-based rules allow a prefix per family, with the same membership check as the Firestore rules. [HIP]
 - **FCM:**
-  - Sem custo. [DOC] [D09](#fontes)
-  - O envio usa a HTTP v1 API com token OAuth 2.0 de curta duração derivado de conta de serviço. [DOC] [D16](#fontes)
-  - Mensagens de dados têm até 4 KB. [DOC] [D17](#fontes)
-  - As APIs de servidor InstanceId e o recurso de device groups foram descontinuados em setembro de 2026, com desligamento em **29/09/2027**. Não desenhar notificação de família com device groups. [DOC] [D17](#fontes)
-- **Exportação e saída:**
-  - Export gerenciado para bucket do Cloud Storage em "LevelDB log format", com caminho para BigQuery. [DOC] [D11](#fontes)
-  - Backups agendados diários/semanais com retenção de até 14 semanas, mais PITR, ambos cobrados. [DOC] [D12](#fontes), [D08](#fontes)
-  - Sair do Firestore significa converter um modelo documental e reescrever a camada de dados e as regras do app. É o maior acoplamento dos três conjuntos. [HIP]
+  - No cost. [DOC] [D09](#fontes)
+  - Sending uses the HTTP v1 API with a short-lived OAuth 2.0 token derived from a service account. [DOC] [D16](#fontes)
+  - Data messages are up to 4 KB. [DOC] [D17](#fontes)
+  - The InstanceId server APIs and device groups feature were deprecated in setembro de 2026, with shutdown on **29/09/2027**. Do not design family notifications using device groups. [DOC] [D17](#fontes)
+- **Export and exit:**
+  - Managed export to a Cloud Storage bucket in "LevelDB log format", with a path to BigQuery. [DOC] [D11](#fontes)
+  - Daily/weekly scheduled backups with retention of up to 14 weeks, plus PITR, both billed. [DOC] [D12](#fontes), [D08](#fontes)
+  - Leaving Firestore means converting a document model and rewriting the app's data layer and rules. It creates the strongest coupling of the three stacks. [HIP]
 
 ## 4. Supabase
 
-- **PostgreSQL com RLS:**
-  - O papel `service_role` "bypasses RLS" e deve ficar só no servidor.
-  - Views ignoram RLS por padrão (`security definer`), salvo configuração explícita.
-  - A documentação recomenda indexar as colunas usadas nas políticas.
+- **PostgreSQL with RLS:**
+  - The `service_role` role "bypasses RLS" and must stay on the server only.
+  - Views bypass RLS by default (`security definer`), unless explicitly configured.
+  - The documentation recommends indexing the columns used in policies.
   - [DOC] [B05](#fontes)
-- **JWT desatualizado (B05)**: "Keep in mind that a JWT is not always up-to-date... even if you remove a user from a team and update the `app_metadata` field, that will not be reflected using `auth.jwt()` until the user's JWT is refreshed." [DOC] [B05](#fontes)
-  - Para revogação, as políticas devem consultar a tabela de vínculos (`auth.uid()` + junção ou função), não claims de família no token.
+- **Outdated JWT (B05)**: "Keep in mind that a JWT is not always up-to-date... even if you remove a user from a team and update the `app_metadata` field, that will not be reflected using `auth.jwt()` until the user's JWT is refreshed." [DOC] [B05](#fontes)
+  - For revocation, policies must query the membership table (`auth.uid()` + join or function), rather than family claims in the token.
 - **Auth:**
-  - Free tem 50 mil MAU. Pro inclui 100 mil MAU e cobra US$ 0,00325/MAU acima disso. [DOC] [B08](#fontes)
-  - O SMTP padrão "is not meant for production use": só entrega a endereços da equipe e tem limite atual de **2 mensagens/hora**. Produção exige SMTP próprio (ex.: Resend, Postmark, SES). [DOC] [D21](#fontes)
-  - Passkeys existem, mas são "experimental" no guia (opt-in no cliente JS) e "BETA" na referência Flutter (`supabase_flutter` ≥ 2.15.0). [DOC] [D23](#fontes), [D24](#fontes)
+  - Free has 50 thousand MAU. Pro includes 100 thousand MAU and charges US$ 0,00325/MAU above that. [DOC] [B08](#fontes)
+  - The default SMTP "is not meant for production use": it only delivers to team addresses and has a current limit of **2 messages/hour**. Production requires your own SMTP (e.g., Resend, Postmark, SES). [DOC] [D21](#fontes)
+  - Passkeys exist, but are "experimental" in the guide (opt-in in the JS client) and "BETA" in the Flutter reference (`supabase_flutter` ≥ 2.15.0). [DOC] [D23](#fontes), [D24](#fontes)
 - **Storage:**
-  - Por padrão não aceita upload sem políticas RLS em `storage.objects`. [DOC] [D19](#fontes)
-  - URLs assinadas via `createSignedUrl`. [DOC] [D59](#fontes)
-  - **Os backups do banco não incluem os objetos do Storage.** [DOC] [D18](#fontes)
+  - By default, uploads are not accepted without RLS policies on `storage.objects`. [DOC] [D19](#fontes)
+  - Signed URLs via `createSignedUrl`. [DOC] [D59](#fontes)
+  - **Database backups do not include Storage objects.** [DOC] [D18](#fontes)
 - **Realtime:**
-  - Oferece Broadcast, Presence e Postgres Changes. [DOC] [D22](#fontes)
-  - A documentação não descreve persistência local nem fila de escrita offline. Realtime não substitui um protocolo de sync offline. [DOC+HIP]
+  - Provides Broadcast, Presence and Postgres Changes. [DOC] [D22](#fontes)
+  - The documentation does not describe local persistence or an offline write queue. Realtime does not replace an offline sync protocol. [DOC+HIP]
 - **Backups:**
-  - Pro tem backups diários com acesso a 7 dias; Team, 14; Enterprise, até 30. Projetos Free não aparecem entre os com backup automático.
-  - PITR é add-on (preço em [Preços datados](Precos_Datados.md)).
-  - A restauração deixa o projeto inacessível durante o processo.
+  - Pro has daily backups with access to 7 days; Team, 14; Enterprise, up to 30. Free projects are not listed among those with automatic backups.
+  - PITR is an add-on (price in [Dated prices](Precos_Datados.md)).
+  - Restoration makes the project inaccessible during the process.
   - [DOC] [D18](#fontes)
-- **Plano gratuito:** projetos "are paused after 1 week of inactivity", com limite de 2 projetos ativos. [DOC] [B08](#fontes)
+- **Free plan:** projects "are paused after 1 week of inactivity", with a limit of 2 active projects. [DOC] [B08](#fontes)
 - **Self-host:**
-  - Feito via Docker. Roda um único projeto.
-  - Não inclui branching, métricas avançadas, backups gerenciados, PITR nem a Management API.
+  - Done via Docker. Runs a single project.
+  - Does not include branching, advanced metrics, managed backups, PITR or the Management API.
   - [DOC] [D20](#fontes)
-  - O repositório `supabase/supabase` é Apache-2.0. [EXEC: GitHub `/license`]
-- **Saída:** é PostgreSQL padrão (`supabase db dump`/`pg_dump`). [DOC] [D18](#fontes)
+  - The `supabase/supabase` repository is Apache-2.0. [EXEC: GitHub `/license`]
+- **Exit:** it is standard PostgreSQL (`supabase db dump`/`pg_dump`). [DOC] [D18](#fontes)
 
-## 5. Camadas de sincronização PostgreSQL ↔ SQLite
+## 5. PostgreSQL ↔ SQLite synchronization layers
 
 ### 5.1 PowerSync
 
-**Caminho de escrita**:
-- O cliente grava no SQLite local. A operação entra numa fila de upload ordenada.
-- A função `uploadData()` do app envia a fila para **um endpoint do seu backend**, em qualquer estilo de API. [DOC] [D25](#fontes)
-- O endpoint deve ser síncrono com a escrita no banco.
-- Erros de validação ou conflito devem voltar como **2xx com detalhe**, porque 4xx bloqueia a fila. 5xx é só para falha temporária e provoca nova tentativa. [DOC] [D25](#fontes)
+**Write path**:
+- The client writes to local SQLite. The operation enters an ordered upload queue.
+- The app's `uploadData()` function sends the queue to **an endpoint on your backend**, using any API style. [DOC] [D25](#fontes)
+- The endpoint must be synchronous with the database write.
+- Validation or conflict errors must return as **2xx with details**, because 4xx blocks the queue. 5xx is only for temporary failures and triggers a retry. [DOC] [D25](#fontes)
 
-**Idempotência e conflitos**:
-- "The operations must be idempotent". O backend pode receber a mesma operação mais de uma vez.
-- Cada operação traz um ID incremental por cliente para deduplicar.
-- O padrão é "per-field Last-Write-Wins", customizável no backend.
+**Idempotency and conflicts**:
+- "The operations must be idempotent". The backend may receive the same operation more than once.
+- Each operation carries an incremental ID per client for deduplication.
+- The default is "per-field Last-Write-Wins", customizable on the backend.
 - [DOC] [D26](#fontes)
 
-**Download e autorização**:
-- Sync Streams (GA) definem o que desce ao cliente e "do not apply to uploaded data". A RLS (ou a API) é a autoridade sobre escritas. [DOC] [B07](#fontes), [D33](#fontes)
+**Download and authorization**:
+- Sync Streams (GA) define what is downloaded to the client and "do not apply to uploaded data". RLS (or the API) is the authority for writes. [DOC] [B07](#fontes), [D33](#fontes)
 
-**Revogação**:
-- Parâmetros lidos de tabela permitem que o acesso "can instantly be revoked by deleting the user row/document from the source database". [DOC] [D27](#fontes)
-- Uma linha só é apagada do cliente quando sai de todos os buckets (operação `REMOVE`). [DOC] [D28](#fontes)
-- Não há como revogar um JWT já emitido. A recomendação é expiração curta (ex.: 5 min). [DOC] [D29](#fontes)
-  - A mesma página afirma que "JWTs older than 60 minutes are not accepted" e, em outro trecho, aceita validade de até 24 h com 60 min recomendados. Há divergência interna a confirmar.
-- `disconnectAndClear()` apaga os dados locais no logout. Só deve ser usado com a fila vazia, senão as mutações locais se perdem. [DOC] [D30](#fontes), [D61](#fontes)
-- Aparelho offline mantém os dados até reconectar. [HIP inerente]
+**Revocation**:
+- Parameters read from a table allow access that "can instantly be revoked by deleting the user row/document from the source database". [DOC] [D27](#fontes)
+- A row is only deleted from the client when it leaves all buckets (`REMOVE` operation). [DOC] [D28](#fontes)
+- There is no way to revoke a JWT that has already been issued. The recommendation is a short expiration (e.g., 5 min). [DOC] [D29](#fontes)
+  - The same page states that "JWTs older than 60 minutes are not accepted" and, elsewhere, accepts validity of up to 24 h with 60 min recommended. There is an internal discrepancy to confirm.
+- `disconnectAndClear()` deletes local data on logout. It should only be used with an empty queue, otherwise local mutations are lost. [DOC] [D30](#fontes), [D61](#fontes)
+- An offline device retains the data until it reconnects. [inherent HIP]
 
-**Dados sensíveis**:
-- Na página HIPAA, o cliente fica responsável por criptografar o SQLite local (SQLCipher), controlar o acesso ao aparelho e descartar dados no desprovisionamento. [DOC] [D31](#fontes)
+**Sensitive data**:
+- On the HIPAA page, the customer is responsible for encrypting local SQLite (SQLCipher), controlling access to the device and discarding data during deprovisioning. [DOC] [D31](#fontes)
 
-**SDKs e status**:
-- GA: React Native, Dart/Flutter, Kotlin, Swift, JavaScript/Web e Node.js.
-- Beta: OP-SQLite Support, Drift, Drizzle, Room, SQLDelight, .NET, Flutter SQLCipher e Kotlin SQLite3MultipleCiphers.
-- Bancos de origem: Postgres e MongoDB GA; MySQL e SQL Server Beta.
+**SDKs and status**:
+- GA: React Native, Dart/Flutter, Kotlin, Swift, JavaScript/Web and Node.js.
+- Beta: OP-SQLite Support, Drift, Drizzle, Room, SQLDelight, .NET, Flutter SQLCipher and Kotlin SQLite3MultipleCiphers.
+- Source databases: Postgres and MongoDB GA; MySQL and SQL Server Beta.
 - [DOC] [D33](#fontes)
 
 **Expo**:
-- O adaptador nativo (`@op-engineering/op-sqlite`) "is not compatible with Expo Go". Exige development build.
-- Para Expo Go existe o adaptador JS `@powersync/adapter-sql-js`.
+- The native adapter (`@op-engineering/op-sqlite`) "is not compatible with Expo Go". Requires a development build.
+- For Expo Go, the JS adapter `@powersync/adapter-sql-js` is available.
 - [DOC] [D32](#fontes)
-- A documentação diz suportar op-sqlite "1.17.0 or later". O `peerDependencies` publicado exige `>=17.1.0 <19.0.0` [EXEC], o que indica erro de digitação na página.
-- O pacote `@powersync/op-sqlite` 0.9.16 exige op-sqlite ^13–15 e `@powersync/common` ^1.57 [EXEC]. Parece legado. Não usar sem confirmar.
+- The documentation says it supports op-sqlite "1.17.0 or later". The published `peerDependencies` requires `>=17.1.0 <19.0.0` [EXEC], which suggests a typo on the page.
+- The `@powersync/op-sqlite` 0.9.16 package requires op-sqlite ^13–15 and `@powersync/common` ^1.57 [EXEC]. It appears to be legacy. Do not use without confirming.
 
-**Licença e self-host**:
-- O serviço usa a **Functional Source License 1.1 com licença futura Apache-2.0** ("FSL-1.1-ALv2"). O uso é permitido para qualquer fim exceto "Competing Use", e cada versão passa a Apache-2.0 "on the second anniversary". [DOC] [D35](#fontes)
-- A API do GitHub reporta `NOASSERTION` por não reconhecer a FSL. [EXEC]
-- Os SDKs JS (`powersync-js`) são Apache-2.0. [EXEC]
-- Self-host da **Open Edition** (GA) usa a imagem Docker `journeyapps/powersync-service`. Existe ainda a Enterprise Self-Hosted Edition com preço sob consulta. [DOC] [D34](#fontes), [D33](#fontes)
+**License and self-host**:
+- The service uses the **Functional Source License 1.1 with a future Apache-2.0 license** ("FSL-1.1-ALv2"). Use is allowed for any purpose except "Competing Use", and each version becomes Apache-2.0 "on the second anniversary". [DOC] [D35](#fontes)
+- The GitHub API reports `NOASSERTION` because it does not recognize the FSL. [EXEC]
+- The JS SDKs (`powersync-js`) are Apache-2.0. [EXEC]
+- Self-hosting the **Open Edition** (GA) uses the `journeyapps/powersync-service` Docker image. There is also an Enterprise Self-Hosted Edition with pricing on request. [DOC] [D34](#fontes), [D33](#fontes)
 
-**Preço**: Free/Pro/Team em [Preços datados](Precos_Datados.md).
-- O Free é desativado após uma semana de inatividade e permite 50 clientes simultâneos no pico.
-- O Pro hospeda até 100 GB por padrão. [DOC] [B09](#fontes)
+**Price**: Free/Pro/Team in [Dated prices](Precos_Datados.md).
+- Free is deactivated after one week of inactivity and allows 50 concurrent clients at peak.
+- Pro hosts up to 100 GB by default. [DOC] [B09](#fontes)
 
-### 5.2 ElectricSQL (estado em 2026)
+### 5.2 ElectricSQL (status as of 2026)
 
-- "Electric does read-path sync... Electric does not do write-path sync." Para escrita, o guia propõe quatro padrões: online, estado otimista, estado otimista persistente compartilhado e "through-the-database". [DOC] [D36](#fontes)
-- Para registro offline durável com Electric, o app ainda precisa de store local e outbox. Na prática, o caminho de escrita fica igual ao do conjunto C. [HIP]
-- O cliente TypeScript funciona em Expo. [DOC] [D38](#fontes)
-- Versões [EXEC]:
-  - `@electric-sql/client` 1.5.28 e `@electric-sql/react` 1.0.57 (09/09/2026);
+- "Electric does read-path sync... Electric does not do write-path sync." For writes, the guide proposes four patterns: online, optimistic state, shared persistent optimistic state and "through-the-database". [DOC] [D36](#fontes)
+- For durable offline records with Electric, the app still needs a local store and outbox. In practice, the write path is the same as in stack C. [HIP]
+- The TypeScript client works in Expo. [DOC] [D38](#fontes)
+- Versions [EXEC]:
+  - `@electric-sql/client` 1.5.28 and `@electric-sql/react` 1.0.57 (09/09/2026);
   - `@core/sync-service` 1.8.1 (07/09/2026).
-- Licença Apache-2.0. [EXEC]
-- Electric Cloud cobra por escrita e retenção; leitura e egress são livres. [DOC] [D37](#fontes)
+- Apache-2.0 license. [EXEC]
+- Electric Cloud charges for writes and retention; reads and egress are free. [DOC] [D37](#fontes)
 
-### 5.3 Zero e Replicache (Rocicorp)
+### 5.3 Zero and Replicache (Rocicorp)
 
 - **Zero:**
-  - Atingiu 1.0 ("Zero to 1.0"). O roadmap de 2026 prevê levar o Cloud Zero a "full public availability". [DOC] [D40](#fontes)
-  - Suporta React Native/Expo com `kvStore` em expo-sqlite ou op-sqlite. [DOC] [D41](#fontes)
-  - **"Zero does not support offline writes"**: desconectado, lê dados sincronizados, mas "writes are rejected". O projeto avisa que "is not designed for long periods offline". [DOC] [D39](#fontes)
-  - Isso viola o requisito 1. **Descartado para a rotina.**
+  - Reached 1.0 ("Zero to 1.0"). The 2026 roadmap plans to bring Cloud Zero to "full public availability". [DOC] [D40](#fontes)
+  - Supports React Native/Expo with `kvStore` on expo-sqlite or op-sqlite. [DOC] [D41](#fontes)
+  - **"Zero does not support offline writes"**: when disconnected, it reads synchronized data, but "writes are rejected". The project warns that it "is not designed for long periods offline". [DOC] [D39](#fontes)
+  - This violates requirement 1. **Ruled out for the routine.**
   - `@rocicorp/zero` 1.11.2 (21/10/2026), Apache-2.0. [EXEC]
 - **Replicache:**
-  - "is now in maintenance mode": código aberto, sem cobrança e sem novos recursos. Usuários devem migrar para Zero. [DOC] [D42](#fontes)
-  - npm 15.3.0 (22/05/2026), com campo de licença apontando para `roci.dev/terms.html`. [EXEC]
-  - Não recomendado para projeto novo.
+  - "is now in maintenance mode": open source, no charge and no new features. Users should migrate to Zero. [DOC] [D42](#fontes)
+  - npm 15.3.0 (22/05/2026), with the license field pointing to `roci.dev/terms.html`. [EXEC]
+  - Not recommended for a new project.
 
-### 5.4 Outras opções verificadas
+### 5.4 Other options checked
 
 - **WatermelonDB:**
-  - Banco local com primitivas de sync. "bring your own backend" com dois endpoints (pull/push). [DOC] [D43](#fontes)
-  - npm 0.28.0, última modificação em 24/07/2025. [EXEC]
-  - Mais de um ano sem publicação é risco de manutenção. [HIP]
-- **RxDB** 17.6.0 [EXEC]: o storage SQLite completo para produção é do RxDB Premium (pago). O core traz uma versão "trial". [DOC] [D44](#fontes)
-- **MongoDB Atlas Device Sync / Realm:** "Device Sync has reached its end-of-life status and be removed on September 30, 2025". [DOC] [D45](#fontes) **Descartado.**
-- **TanStack DB** 0.15.2 [EXEC]: pré-1.0; citado pela Electric e pelo status do PowerSync (Alpha). Não avaliado a fundo.
+  - Local database with sync primitives. "bring your own backend" with two endpoints (pull/push). [DOC] [D43](#fontes)
+  - npm 0.28.0, last modified on 24/07/2025. [EXEC]
+  - More than a year without a release is a maintenance risk. [HIP]
+- **RxDB** 17.6.0 [EXEC]: the full SQLite storage for production is part of RxDB Premium (paid). The core includes a "trial" version. [DOC] [D44](#fontes)
+- **MongoDB Atlas Device Sync / Realm:** "Device Sync has reached its end-of-life status and be removed on September 30, 2025". [DOC] [D45](#fontes) **Ruled out.**
+- **TanStack DB** 0.15.2 [EXEC]: pre-1.0; mentioned by Electric and in the PowerSync status (Alpha). Not evaluated in depth.
 
-### 5.5 Outbox próprio + endpoint de sync (o que precisa construir)
+### 5.5 Custom outbox + sync endpoint (what needs to be built)
 
-Se não houver camada pronta, como no conjunto C ou no Electric, é preciso construir [HIP: desenho de referência a validar em protótipo]:
+Without a ready-made layer, as in stack C or Electric, the following must be built [HIP: reference design to validate in a prototype]:
 
-1. **Banco local** (SQLite):
-   - RN: `expo-sqlite` 58.0.13 ou `@op-engineering/op-sqlite` 18.2.5, com ORM opcional `drizzle-orm` 0.45.4.
-   - Flutter: `drift` 2.35.2 ou `sqflite` 2.4.5.
-   - Versões [EXEC].
-2. **Outbox** com a operação, numa transação local junto da mudança visível:
-   - `op_id` único gerado no cliente (UUIDv7/ULID);
-   - `device_id`, `seq` local monotônico, `entity`, `entity_id`, `base_version`, `payload`;
-   - `observed_at` (relógio do aparelho) e `tz`.
-3. **Endpoint de push** que, em transação no servidor:
-   - reavalia o vínculo **atual** de quem envia com a família;
-   - deduplica por `op_id` (tabela com chave única);
-   - compara `base_version` com a versão atual;
-   - aplica a mudança ou grava um conflito explícito;
-   - registra `received_at`;
-   - responde por operação: aceita, duplicada, conflito ou rejeitada (revogada/validação).
-4. **Endpoint de pull** por família com **cursor** (sequência monotônica do servidor, não relógio), paginação e **tombstones** (`deleted_at`) para propagar exclusões.
-5. **Reconciliação no cliente:**
-   - marcar operações aceitas;
-   - mostrar conflitos;
-   - reaplicar pendentes sobre o estado novo;
-   - purgar dados locais da família quando o servidor responder "revogado".
-6. **Migrações de esquema** local e remoto versionadas; compatibilidade com versões antigas do app ainda em uso.
-7. **Testes de propriedade e caos**: matar o processo, reenvio duplicado, ordem trocada, relógio adiantado/atrasado e revogação no meio do lote.
+1. **Local database** (SQLite):
+   - RN: `expo-sqlite` 58.0.13 or `@op-engineering/op-sqlite` 18.2.5, with optional ORM `drizzle-orm` 0.45.4.
+   - Flutter: `drift` 2.35.2 or `sqflite` 2.4.5.
+   - Versions [EXEC].
+2. **Outbox** with the operation, in a local transaction together with the visible change:
+   - Unique client-generated `op_id` (UUIDv7/ULID);
+   - `device_id`, monotonic local `seq`, `entity`, `entity_id`, `base_version`, `payload`;
+   - `observed_at` (device clock) and `tz`.
+3. **Push endpoint** that, in a server transaction:
+   - reevaluates the sender's **current** family membership;
+   - deduplicates by `op_id` (table with a unique key);
+   - compares `base_version` with the current version;
+   - applies the change or records an explicit conflict;
+   - records `received_at`;
+   - responds per operation: accepted, duplicate, conflict or rejected (revoked/validation).
+4. **Pull endpoint** per family with a **cursor** (monotonic server sequence, not a clock), pagination and **tombstones** (`deleted_at`) to propagate deletions.
+5. **Client reconciliation:**
+   - mark accepted operations;
+   - display conflicts;
+   - reapply pending operations over the new state;
+   - purge local family data when the server responds "revoked".
+6. Versioned local and remote **schema migrations**; compatibility with older app versions still in use.
+7. **Property and chaos tests**: kill the process, duplicate resends, reordered operations, clock ahead/behind and revocation in the middle of a batch.
 
-O PostgreSQL ajuda nos itens 3 e 4 com isolamento transacional e restrições únicas. [DOC] [B10](#fontes) É o mesmo contrato que o PowerSync exige do endpoint de upload. A diferença é que, no PowerSync, o download, os buckets e a remoção no cliente já vêm prontos.
+PostgreSQL helps with items 3 and 4 through transaction isolation and unique constraints. [DOC] [B10](#fontes) This is the same contract PowerSync requires from the upload endpoint. The difference is that, with PowerSync, downloads, buckets and client-side removal are ready-made.
 
-## 6. API própria: monólito modular com PostgreSQL
+## 6. Custom API: modular monolith with PostgreSQL
 
-Comparação objetiva. Nenhuma das três foi escolhida por familiaridade. A familiaridade de Daniel com Java/React é um critério de custo a declarar, não justificativa automática.
+Objective comparison. None of the three was chosen based on familiarity. Daniel's familiarity with Java/React is a cost criterion to declare, not an automatic justification.
 
-| Critério | NestJS (TypeScript) | Django + DRF (Python) | Spring Boot (Java) |
+| Criterion | NestJS (TypeScript) | Django + DRF (Python) | Spring Boot (Java) |
 | --- | --- | --- | --- |
-| Versões verificadas [EXEC] | `@nestjs/core` 12.2.0 (19/10/2026); `@nestjs/testing` 12.2.0 | Django 6.1.2 (06/10/2026, Python ≥ 3.12); DRF 3.18.3 (06/10/2026) | Spring Boot 4.1.1 GA (milestone 4.2.0-M2); Spring Security 7.1.1; Spring Modulith 2.1.1 |
-| Autorização por objeto | `@nestjs/authorization` 0.1.0 (08/10/2026): policies com `@Can()` e guard global que "denies by default". [DOC] [D46](#fontes) Pacote **muito novo (0.x)**. Alternativa madura: `@casl/ability` 7.0.2. [EXEC] | Permissões de objeto rodam em `get_object()`. "the generic views will not automatically apply object level permissions to each instance in a queryset when returning a list". O filtro por família precisa ficar no queryset. [DOC] [D47](#fontes) Apoio: `django-guardian` 3.5.2; `rules` 3.5 (última versão de 09/2024). [EXEC] | `@PreAuthorize`, `@PostAuthorize`, `@PreFilter`/`@PostFilter` e `AuthorizationManager`. [DOC] [D50](#fontes) Filtro por família em repositório/consulta. |
-| Admin/moderação | Sem admin nativo; exige ferramenta ou tela própria. [HIP] | Django admin: o uso "is limited to an organization's internal management tool. It's not intended for building your entire front end". Serve de back-office de moderação com permissões restritas. [DOC] [D49](#fontes) | Sem admin de dados nativo; tela própria. [HIP] |
-| Jobs (push, e-mail, EXIF, exclusão) | `@nestjs/bullmq` 12.0.0 + BullMQ 6.4.0 (exige Redis) ou `pg-boss` 12.38.0 (fila no próprio Postgres). [EXEC] | O framework de Tasks do Django 6.x define a API, mas "built-in backends... are for development and testing only". Precisa de backend/worker (`django-tasks` 0.12.0 ou Celery 5.6.3). [DOC] [D48](#fontes) [EXEC] | JobRunr 9.0.2 ou Quartz 2.5.2. [EXEC] |
-| ORM/migrações | Prisma: o dist-tag `latest` aponta para **8.0.0-rc.24** (prev 7.10.1), o que exige fixar versão. Drizzle 0.45.4. TypeORM 1.1.2. [EXEC] | ORM e migrações nativos. | JPA/Hibernate e Flyway/Liquibase (não verificados nesta rodada). |
-| Linguagem compartilhada com o app | Só se o mobile for RN. Não é motivo suficiente (regra da task). | Nenhuma. | Nenhuma (Kotlin no Android nativo é próximo, mas não se aplica a RN/Flutter). |
-| Operação | Container Node; memória baixa. | Container Python + worker. | JVM; memória maior em instância pequena. [HIP] |
+| Verified versions [EXEC] | `@nestjs/core` 12.2.0 (19/10/2026); `@nestjs/testing` 12.2.0 | Django 6.1.2 (06/10/2026, Python ≥ 3.12); DRF 3.18.3 (06/10/2026) | Spring Boot 4.1.1 GA (milestone 4.2.0-M2); Spring Security 7.1.1; Spring Modulith 2.1.1 |
+| Object-level authorization | `@nestjs/authorization` 0.1.0 (08/10/2026): policies with `@Can()` and a global guard that "denies by default". [DOC] [D46](#fontes) **Very new package (0.x)**. Mature alternative: `@casl/ability` 7.0.2. [EXEC] | Object permissions run in `get_object()`. "the generic views will not automatically apply object level permissions to each instance in a queryset when returning a list". Family filtering must be in the queryset. [DOC] [D47](#fontes) Support: `django-guardian` 3.5.2; `rules` 3.5 (last version from 09/2024). [EXEC] | `@PreAuthorize`, `@PostAuthorize`, `@PreFilter`/`@PostFilter` and `AuthorizationManager`. [DOC] [D50](#fontes) Family filter in the repository/query. |
+| Admin/moderation | No native admin; requires a tool or custom screen. [HIP] | Django admin: use "is limited to an organization's internal management tool. It's not intended for building your entire front end". Serves as a moderation back office with restricted permissions. [DOC] [D49](#fontes) | No native data admin; custom screen. [HIP] |
+| Jobs (push, email, EXIF, deletion) | `@nestjs/bullmq` 12.0.0 + BullMQ 6.4.0 (requires Redis) or `pg-boss` 12.38.0 (queue in Postgres itself). [EXEC] | The Django 6.x Tasks framework defines the API, but "built-in backends... are for development and testing only". Requires a backend/worker (`django-tasks` 0.12.0 or Celery 5.6.3). [DOC] [D48](#fontes) [EXEC] | JobRunr 9.0.2 or Quartz 2.5.2. [EXEC] |
+| ORM/migrations | Prisma: the `latest` dist-tag points to **8.0.0-rc.24** (prev 7.10.1), which requires pinning the version. Drizzle 0.45.4. TypeORM 1.1.2. [EXEC] | Native ORM and migrations. | JPA/Hibernate and Flyway/Liquibase (not checked in this round). |
+| Language shared with the app | Only if mobile uses RN. Not sufficient reason (task rule). | None. | None (Kotlin on native Android is close, but does not apply to RN/Flutter). |
+| Operations | Node container; low memory. | Python container + worker. | JVM; more memory on a small instance. [HIP] |
 
-Outras stacks (Rails, Laravel, .NET, Go) não foram avaliadas por falta de motivo forte nesta etapa.
+Other stacks (Rails, Laravel, .NET, Go) were not evaluated for lack of a strong reason at this stage.
 
-Em qualquer das três, a fronteira de segurança deve ficar centralizada:
-- um módulo `familia` que resolve o vínculo atual;
-- consultas sempre filtradas por `family_id` vindo desse módulo, nunca do cliente;
-- opcionalmente, RLS no PostgreSQL como defesa em profundidade, com `set_config` por transação.
+In any of the three, the security boundary must be centralized:
+- a `familia` module that resolves current membership;
+- queries always filtered by `family_id` from that module, never from the client;
+- optionally, RLS in PostgreSQL as defense in depth, with `set_config` per transaction.
 
 [HIP]
 
-## 7. Hospedagem e PostgreSQL gerenciado
+## 7. Hosting and managed PostgreSQL
 
-Preços detalhados em [Preços datados](Precos_Datados.md).
+Detailed prices in [Dated prices](Precos_Datados.md).
 
-- **Computação da API:**
-  - Cloud Run tem cobrança por requisição com free tier mensal e instância mínima opcional.
-  - Render, Railway e Fly.io oferecem instâncias mensais pequenas.
-  - Todos rodam containers. A escolha afeta mais o custo fixo e a operação do que a arquitetura. [DOC]
-- **PostgreSQL gerenciado:**
+- **API compute:**
+  - Cloud Run has request-based billing with a monthly free tier and an optional minimum instance.
+  - Render, Railway and Fly.io offer small monthly instances.
+  - All run containers. The choice affects fixed cost and operations more than architecture. [DOC]
+- **Managed PostgreSQL:**
   - Supabase (Pro + compute);
-  - Neon (por CU-hora e GB-mês; janela de restauração de 7 dias no Launch e 30 no Scale);
-  - Cloud SQL (vCPU/memória; instâncias compartilhadas sem SLA);
-  - RDS (backup grátis até 100% do armazenamento provisionado);
-  - Render Postgres (PITR listado; backup lógico em instâncias pagas);
-  - Fly Managed Postgres (a partir de US$ 38/mês).
+  - Neon (per CU-hora and GB-month; restoration window of 7 days on Launch and 30 on Scale);
+  - Cloud SQL (vCPU/memory; shared instances without SLA);
+  - RDS (free backup up to 100% of provisioned storage);
+  - Render Postgres (PITR listed; logical backup on paid instances);
+  - Fly Managed Postgres (starting at US$ 38/month).
   - [DOC]
-- **Backups e restauração** são o critério que separa protótipo de produção para dado sensível. Antes de lançar:
-  - definir RPO/RTO;
-  - testar restauração completa (banco + objetos), porque backups de banco não cobrem storage de objetos em nenhum dos serviços olhados;
-  - documentar quem consegue apagar backups.
+- **Backups and restoration** are the criterion separating a prototype from production for sensitive data. Before launch:
+  - define RPO/RTO;
+  - test a full restoration (database + objects), because database backups do not cover object storage in any of the services examined;
+  - document who can delete backups.
   - [HIP]
-- **Região:** preços capturados são de regiões dos EUA (us-central1/us-east). Os preços de São Paulo não foram capturados nesta rodada. [Questão aberta]
+- **Region:** captured prices are for US regions (us-central1/us-east). São Paulo prices were not captured in this round. [Open question]
 
-## 8. Autenticação
+## 8. Authentication
 
-| Método | Observações |
+| Method | Notes |
 | --- | --- |
-| E-mail com link mágico/OTP | Sem senha para lembrar. Exige provedor de e-mail com boa entregabilidade. Firebase limita links a 5/dia no Spark. [DOC] [D13](#fontes) Supabase exige SMTP próprio. [DOC] [D21](#fontes) |
-| Senha | Universal. Exige fluxo de recuperação e proteção contra força bruta. |
-| Passkeys | Supabase: experimental/beta. [DOC] [D23](#fontes), [D24](#fontes) Auth0: "Passkeys" incluído em todos os planos. [DOC] [D60](#fontes) Firebase: não localizado. [HIP] Clerk e Cognito: não verificados nesta rodada. |
-| Login social (Google etc.) | Aciona a diretriz 4.8 da App Store (abaixo). |
+| Email with magic link/OTP | No password to remember. Requires an email provider with good deliverability. Firebase limits links to 5/day on Spark. [DOC] [D13](#fontes) Supabase requires your own SMTP. [DOC] [D21](#fontes) |
+| Password | Universal. Requires a recovery flow and protection against brute force. |
+| Passkeys | Supabase: experimental/beta. [DOC] [D23](#fontes), [D24](#fontes) Auth0: "Passkeys" included in all plans. [DOC] [D60](#fontes) Firebase: not found. [HIP] Clerk and Cognito: not checked in this round. |
+| Social login (Google etc.) | Triggers App Store guideline 4.8 (below). |
 
-**App Store Review Guideline 4.8 (Login Services), texto vigente em 22/10/2026** [DOC] [D51](#fontes):
+**App Store Review Guideline 4.8 (Login Services), text in effect on 22/10/2026** [DOC] [D51](#fontes):
 
 > Apps that use a third-party or social login service (such as Facebook Login, Google Sign-In, Log in with X, Sign In with LinkedIn, Login with Amazon, or WeChat Login) to set up or authenticate the user's primary account with the app must also offer as an equivalent option another login service with the following features: the login service limits data collection to the user's name and email address; the login service allows users to keep their email address private as part of setting up their account; and the login service does not collect interactions with your app for advertising purposes without consent.
 
-Há exceções, entre elas o app que "exclusively uses your company's own account setup and sign-in systems".
+There are exceptions, including an app that "exclusively uses your company's own account setup and sign-in systems".
 
-Consequência:
-- Se o app oferecer Google como conta principal, precisa oferecer uma alternativa com as três propriedades.
-- Sign in with Apple é o caminho usual. A diretriz atual não o nomeia; confirmar na revisão. [HIP]
-- Com apenas e-mail próprio (link/OTP/senha), a exigência não se aplica.
+Consequence:
+- If the app offers Google as the primary account, it must offer an alternative with the three properties.
+- Sign in with Apple is the usual path. The current guideline does not name it; confirm during review. [HIP]
+- With only your own email authentication (link/OTP/password), the requirement does not apply.
 
-**Custo de provedores** (detalhe em [Preços datados](Precos_Datados.md)):
-- Supabase Auth: 50 mil MAU no Free; 100 mil no Pro, depois US$ 0,00325/MAU.
-- Firebase Auth: 50 mil MAU Tier 1 sem custo.
-- Clerk: 50 mil MRU no Hobby.
-- Auth0: Free até 25 mil MAU; Essentials US$ 35/mês para 500 MAU (B2C).
-- Cognito: free tier de 10 mil MAU; Essentials US$ 0,015/MAU.
-- Self-host: custo de infraestrutura e de engenharia.
+**Provider costs** (details in [Dated prices](Precos_Datados.md)):
+- Supabase Auth: 50 thousand MAU on Free; 100 thousand on Pro, then US$ 0,00325/MAU.
+- Firebase Auth: 50 thousand MAU Tier 1 at no cost.
+- Clerk: 50 thousand MRU on Hobby.
+- Auth0: Free up to 25 thousand MAU; Essentials US$ 35/month for 500 MAU (B2C).
+- Cognito: free tier of 10 thousand MAU; Essentials US$ 0,015/MAU.
+- Self-host: infrastructure and engineering costs.
 - [DOC]
 
-**Revogação** em qualquer provedor [HIP fundamentado em B05 e D29]:
-- access token curto (5–15 min);
-- refresh token revogável no servidor;
-- checagem do vínculo na tabela a cada operação;
-- claims nunca como fonte única de autorização de família.
+**Revocation** with any provider [HIP based on B05 and D29]:
+- short-lived access token (5–15 min);
+- server-revocable refresh token;
+- membership check in the table for every operation;
+- claims never used as the sole source of family authorization.
 
 ## 9. Push
 
-- **FCM HTTP v1**: sem custo; OAuth 2.0 de curta duração via conta de serviço; dados até 4 KB. [DOC] [D16](#fontes), [D17](#fontes), [D09](#fontes)
-- **APNs por token**: chave `.p8` (team-scoped ou topic-specific). O token assinado precisa ser renovado "at least once an hour". [DOC] [D52](#fontes)
+- **FCM HTTP v1**: no cost; short-lived OAuth 2.0 via service account; data up to 4 KB. [DOC] [D16](#fontes), [D17](#fontes), [D09](#fontes)
+- **Token-based APNs**: `.p8` key (team-scoped or topic-specific). The signed token must be renewed "at least once an hour". [DOC] [D52](#fontes)
 - **Expo Push Service** [DOC] [D53](#fontes), [D54](#fontes):
   - "no cost associated with sending notifications";
-  - limite de **600 notificações/s por projeto**;
-  - entrega "at-least-once" ao FCM/APNs, o que exige deduplicar por ID no app;
-  - não guarda o conteúdo além da entrega;
-  - recibos devem ser consultados ~15 min depois;
-  - push não funciona no Expo Go desde o SDK 53.
+  - limit of **600 notifications/s per project**;
+  - "at-least-once" delivery to FCM/APNs, which requires deduplication by ID in the app;
+  - does not retain content beyond delivery;
+  - receipts should be checked ~15 min later;
+  - push does not work in Expo Go since SDK 53.
 - **OneSignal** [DOC] [D55](#fontes):
-  - Free com push ilimitado só "for organizations with up to 1,000 monthly active users";
-  - Growth a partir de US$ 19/mês, com push a US$ 0,012/MAU.
-  - Com 20 mil MAU, só o push custaria ~US$ 240/mês. [HIP: cálculo]
-- **Conteúdo**: a diretriz 4.5.4 diz que push "should not be used to send sensitive personal or confidential information". [DOC] [D51](#fontes) Desenho recomendado [HIP]:
-  - texto genérico ("Há uma atualização na rotina da família") e somente IDs opacos no payload;
-  - o app busca os detalhes depois de autenticado;
-  - nada de nome do bebê, horário de mamada ou sintomas no corpo;
-  - visibilidade privada na tela de bloqueio;
-  - envio só a tokens registrados por membros com vínculo **atual**, removendo tokens na revogação;
-  - nunca tópicos FCM por família.
+  - Free with unlimited push only "for organizations with up to 1,000 monthly active users";
+  - Growth starting at US$ 19/month, with push at US$ 0,012/MAU.
+  - With 20 thousand MAU, push alone would cost ~US$ 240/month. [HIP: calculation]
+- **Content**: guideline 4.5.4 says push "should not be used to send sensitive personal or confidential information". [DOC] [D51](#fontes) Recommended design [HIP]:
+  - generic text ("Há uma atualização na rotina da família") and only opaque IDs in the payload;
+  - the app fetches details after authentication;
+  - no baby names, feeding times or symptoms in the body;
+  - private visibility on the lock screen;
+  - send only to tokens registered by members with **current** membership, removing tokens on revocation;
+  - never FCM topics per family.
 
-## 10. Arquivos e mídia
+## 10. Files and media
 
-- **Armazenamento:** R2, GCS, Supabase Storage, Cloud Storage for Firebase ou S3 (preços em [Preços datados](Precos_Datados.md); S3 não capturado).
-- **URLs assinadas por escopo de família:**
-  - chave de objeto `families/{family_id}/...`;
-  - o servidor checa o vínculo atual antes de emitir a URL;
-  - expiração curta;
-  - bucket nunca público.
+- **Storage:** R2, GCS, Supabase Storage, Cloud Storage for Firebase or S3 (prices in [Dated prices](Precos_Datados.md); S3 not captured).
+- **Signed URLs scoped to the family:**
+  - object key `families/{family_id}/...`;
+  - the server checks current membership before issuing the URL;
+  - short expiration;
+  - never a public bucket.
   - [HIP]
-  - As presigned URLs do R2 valem de 1 s a 7 dias e cobrem uma operação num objeto. Não funcionam em domínio customizado. [DOC] [D56](#fontes)
-  - No Supabase e no Firebase, a mesma regra vira política/regra de Storage. [DOC] [D19](#fontes)
+  - R2 presigned URLs are valid from 1 s to 7 days and cover one operation on one object. They do not work on a custom domain. [DOC] [D56](#fontes)
+  - In Supabase and Firebase, the same rule becomes a Storage policy/rule. [DOC] [D19](#fontes)
 - **EXIF:**
-  - `sharp` remove todos os metadados por padrão, inclusive a orientação EXIF (`sharp` 0.35.5). [DOC] [D57](#fontes) [EXEC]
-  - No Android, a localização em fotos fica oculta para o app sem `ACCESS_MEDIA_LOCATION`. [DOC] [D58](#fontes)
-  - Não verifiquei se `expo-image-manipulator` (58.0.15 [EXEC]) remove EXIF ao recodificar; testar. [HIP]
-  - Desenho recomendado: upload para prefixo de quarentena → função no servidor recodifica sem metadados → move para o prefixo da família → só então referencia no registro. [HIP]
-- **Custo:**
-  - armazenamento de fotos com premissa de 4 fotos/família/mês: < US$ 3/mês com 10 mil famílias em qualquer opção;
-  - tráfego: R2 não cobra egress; GCS cobra US$ 0,12/GiB fora das cotas grátis.
+  - `sharp` removes all metadata by default, including EXIF orientation (`sharp` 0.35.5). [DOC] [D57](#fontes) [EXEC]
+  - On Android, location in photos is hidden from the app without `ACCESS_MEDIA_LOCATION`. [DOC] [D58](#fontes)
+  - I did not verify whether `expo-image-manipulator` (58.0.15 [EXEC]) removes EXIF when reencoding; test it. [HIP]
+  - Recommended design: upload to a quarantine prefix → server function reencodes without metadata → moves to the family prefix → only then references it in the record. [HIP]
+- **Cost:**
+  - photo storage assuming 4 photos/family/month: < US$ 3/month with 10 thousand families in any option;
+  - traffic: R2 does not charge for egress; GCS charges US$ 0,12/GiB beyond free quotas.
   - [DOC]+[HIP]
 
-## 11. Três conjuntos completos
+## 11. Three complete stacks
 
-O mobile fica em aberto ("RN/Expo ou Flutter") porque a escolha cabe à outra nota. Abaixo, o SDK real em cada caso.
+Mobile remains open ("RN/Expo or Flutter") because the choice belongs in the other note. Below is the actual SDK in each case.
 
-### Conjunto A: BaaS documental (Firebase)
+### Stack A: Document BaaS (Firebase)
 
-**Componentes:**
-- Firestore (Standard), Firebase Auth (e-mail link + Sign in with Apple + Google), Cloud Storage for Firebase, FCM;
-- Cloud Functions para convite, moderação, EXIF, push e conflitos;
-- plano Blaze obrigatório.
+**Components:**
+- Firestore (Standard), Firebase Auth (email link + Sign in with Apple + Google), Cloud Storage for Firebase, FCM;
+- Cloud Functions for invitations, moderation, EXIF, push and conflicts;
+- Blaze plan required.
 - Mobile:
-  - RN: `@react-native-firebase/{app,firestore,auth,storage,messaging}` 27.0.0, com development build/config plugin (não usar o JS SDK para dados);
+  - RN: `@react-native-firebase/{app,firestore,auth,storage,messaging}` 27.0.0, with development build/config plugin (do not use the JS SDK for data);
   - Flutter: `firebase_core` 5.0.0, `cloud_firestore` 7.0.0, `firebase_auth` 7.0.0, `firebase_storage` 14.0.0, `firebase_messaging` 17.0.0 [EXEC].
 
-**Do registro local à confirmação:**
-1. O app grava o documento com ID do cliente no cache persistente do SDK nativo.
-2. A UI mostra o estado pendente (`hasPendingWrites`).
-3. Na reconexão, o SDK envia. As regras validam vínculo e versão.
-4. A confirmação chega pelo listener (metadados sem pendência).
-5. Rejeições aparecem como erro na escrita e o cache reverte. [DOC B01 + HIP]
+**From local record to confirmation:**
+1. The app writes the document with a client-generated ID to the native SDK's persistent cache.
+2. The UI shows the pending state (`hasPendingWrites`).
+3. On reconnection, the SDK sends it. The rules validate membership and version.
+4. Confirmation arrives through the listener (metadata with no pending writes).
+5. Rejections appear as write errors and the cache reverts. [DOC B01 + HIP]
 
-**Conflitos e duplicidade:**
-- Última escrita vence por padrão. Conflito explícito exige campo de versão, tombstone e checagem nas regras ou numa Function.
-- ID do cliente evita duplicar. [DOC+HIP]
+**Conflicts and duplication:**
+- Last write wins by default. Explicit conflicts require a version field, tombstone and a check in the rules or a Function.
+- Client-generated ID prevents duplication. [DOC+HIP]
 
-**Revogação:** as regras com `get()` do vínculo negam a próxima requisição; o cache local some só quando o app limpar. [HIP]
+**Revocation:** rules with `get()` of the membership deny the next request; the local cache only disappears when the app clears it. [HIP]
 
-**Isolamento e comunidade:**
-- rotina em `families/{id}/...` com regras por vínculo;
-- comunidade em coleção separada, com regras e moderação próprias, sem referência a registros privados;
-- Storage com prefixo por família.
+**Isolation and community:**
+- routine in `families/{id}/...` with membership-based rules;
+- community in a separate collection, with its own rules and moderation, without references to private records;
+- Storage with a prefix per family.
 
-**Conhecimento exigido:** modelagem documental, linguagem de regras, TypeScript/Node para Functions, IAM do GCP, SDK nativo via RN ou Flutter.
+**Required knowledge:** document modeling, rules language, TypeScript/Node for Functions, GCP IAM, native SDK via RN or Flutter.
 
-**Esforço:**
-- Desenvolvimento inicial: o mais baixo para sync.
-- Manutenção: regras e índices crescem com o produto; testes de regras com emulador.
-- Operação: mínima.
+**Effort:**
+- Initial development: the lowest for sync.
+- Maintenance: rules and indexes grow with the product; rule tests with the emulator.
+- Operations: minimal.
 
-**Saída:** a mais difícil (modelo documental, export em LevelDB/BigQuery, reescrita da camada de dados).
+**Exit:** the hardest (document model, export in LevelDB/BigQuery, data layer rewrite).
 
-**Principal risco:** conflitos e autorização ficam espalhados em regras e Functions. Revogação e "exclusão versus edição" dependem de disciplina de modelagem, não da plataforma.
+**Main risk:** conflicts and authorization are spread across rules and Functions. Revocation and "deletion versus editing" depend on modeling discipline, not the platform.
 
-### Conjunto B: PostgreSQL gerenciado + camada de sync (Supabase + PowerSync)
+### Stack B: Managed PostgreSQL + sync layer (Supabase + PowerSync)
 
-**Componentes:**
+**Components:**
 - Supabase (Postgres, Auth, Storage, Edge Functions);
-- PowerSync Cloud Pro (ou Open Edition self-host);
-- endpoint de upload (Edge Function ou serviço próprio) com dedupe por ID de operação;
-- SMTP próprio (Resend/Postmark/SES);
-- push por FCM/APNs ou Expo Push.
+- PowerSync Cloud Pro (or self-hosted Open Edition);
+- upload endpoint (Edge Function or custom service) with deduplication by operation ID;
+- your own SMTP (Resend/Postmark/SES);
+- push via FCM/APNs or Expo Push.
 - Mobile:
-  - RN: `@powersync/react-native` 2.3.3 + `@op-engineering/op-sqlite` 18.2.5 (peer `>=17.1.0 <19`) + `@supabase/supabase-js` 2.118.0, com development build;
+  - RN: `@powersync/react-native` 2.3.3 + `@op-engineering/op-sqlite` 18.2.5 (peer `>=17.1.0 <19`) + `@supabase/supabase-js` 2.118.0, with development build;
   - Flutter: `powersync` 2.5.0 + `supabase_flutter` 2.18.3 [EXEC].
 
-**Do registro local à confirmação:**
-1. O app grava no SQLite. A operação entra na fila de upload.
-2. `uploadData()` chama o endpoint, que valida vínculo e versão em transação Postgres sob RLS ou checagem própria, e responde 2xx (com erro de domínio quando houver).
-3. O cliente avança para o write checkpoint.
-4. A confirmação chega quando o dado volta pelo stream de download. [DOC D25/D26]
+**From local record to confirmation:**
+1. The app writes to SQLite. The operation enters the upload queue.
+2. `uploadData()` calls the endpoint, which validates membership and version in a Postgres transaction under RLS or its own check, and responds 2xx (with a domain error when applicable).
+3. The client advances to the write checkpoint.
+4. Confirmation arrives when the data returns through the download stream. [DOC D25/D26]
 
-**Conflitos e duplicidade:** LWW por campo por padrão; conflitos explícitos implementados no endpoint; dedupe pelo ID da operação. [DOC D26]
+**Conflicts and duplication:** per-field LWW by default; explicit conflicts implemented in the endpoint; deduplication by operation ID. [DOC D26]
 
-**Revogação:**
-- apagar a linha de vínculo remove os buckets;
-- o cliente apaga as linhas na próxima sync;
-- uploads do revogado são rejeitados pelo endpoint/RLS;
-- JWT curto. [DOC D27/D28/D29]
+**Revocation:**
+- deleting the membership row removes the buckets;
+- the client deletes the rows on the next sync;
+- uploads from the revoked member are rejected by the endpoint/RLS;
+- short-lived JWT. [DOC D27/D28/D29]
 
-**Isolamento e comunidade:**
-- RLS por família e Sync Streams equivalentes (devem espelhar a RLS);
-- comunidade em esquema/tabelas separadas, possivelmente fora do sync offline (online-only);
-- Storage com políticas por prefixo.
+**Isolation and community:**
+- RLS per family and equivalent Sync Streams (must mirror RLS);
+- community in separate schema/tables, possibly outside offline sync (online-only);
+- Storage with policies per prefix.
 
-**Conhecimento exigido:** SQL/RLS, configuração de Sync Streams, backend do endpoint (TypeScript/Deno ou qualquer linguagem), SQLite no cliente, operação de dois fornecedores.
+**Required knowledge:** SQL/RLS, Sync Streams configuration, endpoint backend (TypeScript/Deno or any language), SQLite on the client, operating two providers.
 
-**Esforço:**
-- Desenvolvimento: médio (endpoint + políticas espelhadas).
-- Manutenção: manter RLS e Sync Streams coerentes.
-- Operação: dois serviços gerenciados.
+**Effort:**
+- Development: medium (endpoint + mirrored policies).
+- Maintenance: keep RLS and Sync Streams consistent.
+- Operations: two managed services.
 
-**Saída:**
-- Postgres portátil.
-- PowerSync tem self-host (FSL → Apache-2.0 após 2 anos).
-- Trocar a camada de sync exige reescrever o acesso a dados no cliente, mas o esquema SQLite permanece.
+**Exit:**
+- Portable Postgres.
+- PowerSync supports self-hosting (FSL → Apache-2.0 after 2 years).
+- Replacing the sync layer requires rewriting client data access, but the SQLite schema remains.
 
-**Principal risco:** dois fornecedores com planos gratuitos que pausam ou desativam por inatividade, e duas fontes de verdade de autorização (RLS e Sync Streams) que podem divergir.
+**Main risk:** two providers with free plans that pause or deactivate due to inactivity, and two authorization sources of truth (RLS and Sync Streams) that can diverge.
 
-### Conjunto C: API própria (monólito modular) + PostgreSQL + outbox/sync próprio
+### Stack C: Custom API (modular monolith) + PostgreSQL + custom outbox/sync
 
-**Componentes:**
-- API em NestJS, Django/DRF ou Spring Boot (seção 6);
-- PostgreSQL gerenciado (Cloud SQL, Neon, RDS, Render ou Fly);
-- object storage S3-compatível (R2 ou GCS) com URLs assinadas;
-- fila/worker (pg-boss, Django tasks/Celery, JobRunr);
-- auth própria (biblioteca do framework) ou provedor (Supabase Auth, Auth0, Cognito, Clerk);
-- FCM/APNs direto ou Expo Push;
-- e-mail transacional.
+**Components:**
+- API in NestJS, Django/DRF or Spring Boot (section 6);
+- managed PostgreSQL (Cloud SQL, Neon, RDS, Render or Fly);
+- S3-compatible object storage (R2 or GCS) with signed URLs;
+- queue/worker (pg-boss, Django tasks/Celery, JobRunr);
+- your own auth (framework library) or provider (Supabase Auth, Auth0, Cognito, Clerk);
+- direct FCM/APNs or Expo Push;
+- transactional email.
 - Mobile:
-  - RN: `expo-sqlite` 58.0.13 ou `op-sqlite` 18.2.5 + `drizzle-orm` 0.45.4;
+  - RN: `expo-sqlite` 58.0.13 or `op-sqlite` 18.2.5 + `drizzle-orm` 0.45.4;
   - Flutter: `drift` 2.35.2 [EXEC].
 
-**Do registro local à confirmação:** outbox na mesma transação local → push em lote → resposta por operação → pull por cursor → reconciliação (seção 5.5).
+**From local record to confirmation:** outbox in the same local transaction → batch push → response per operation → cursor-based pull → reconciliation (section 5.5).
 
-**Conflitos e duplicidade:** sob controle total, com `op_id` único, `base_version`, tombstones e conflito como entidade visível. Exige construir e testar tudo.
+**Conflicts and duplication:** under full control, with unique `op_id`, `base_version`, tombstones and conflicts as visible entities. Requires building and testing everything.
 
-**Revogação:** checagem do vínculo atual por operação. O servidor responde "revogado" e o cliente purga os dados da família. Tokens de push removidos na revogação.
+**Revocation:** current membership check per operation. The server responds "revoked" and the client purges family data. Push tokens removed on revocation.
 
-**Isolamento e comunidade:**
-- módulo de família como única fonte de escopo;
-- comunidade como módulo separado, com contrato de API próprio e sem acesso ao módulo de rotina;
-- RLS opcional como defesa em profundidade.
+**Isolation and community:**
+- family module as the sole source of scope;
+- community as a separate module, with its own API contract and no access to the routine module;
+- optional RLS as defense in depth.
 
-**Conhecimento exigido:** a linguagem do backend escolhido, SQL, desenho de protocolo de sync, SQLite no cliente, DevOps (deploy, backups, observabilidade, segurança).
+**Required knowledge:** the chosen backend language, SQL, sync protocol design, SQLite on the client, DevOps (deployment, backups, observability, security).
 
-**Esforço:**
-- Desenvolvimento: o mais alto (protocolo + cliente de sync + painel de moderação).
-- Manutenção: alta, mas sem limites de fornecedor.
-- Operação: a maior responsabilidade.
+**Effort:**
+- Development: the highest (protocol + sync client + moderation panel).
+- Maintenance: high, but without provider limits.
+- Operations: the greatest responsibility.
 
-**Saída:** a mais simples; tudo é padrão (Postgres, S3, OAuth/OIDC).
+**Exit:** the simplest; everything is standard (Postgres, S3, OAuth/OIDC).
 
-**Principal risco:** subestimar o sync próprio. Ordem, idempotência, migrações e revogação são as partes difíceis e aparecem tarde. O cronograma escorrega antes do custo de infraestrutura.
+**Main risk:** underestimating custom sync. Ordering, idempotency, migrations and revocation are the hard parts and appear late. The schedule slips before infrastructure cost becomes an issue.
 
-### Quadro-resumo (sem pontuação numérica)
+### Summary table (without numerical scores)
 
-| Aspecto | A (Firebase) | B (Supabase + PowerSync) | C (API própria) |
+| Aspect | A (Firebase) | B (Supabase + PowerSync) | C (Custom API) |
 | --- | --- | --- | --- |
-| Escrita offline durável | Sim, com SDK nativo (RNFirebase/FlutterFire) | Sim (SQLite + fila) | Sim, se bem construído |
-| Conflito explícito | Construir sobre LWW | Construir no endpoint (LWW por padrão) | Construir (controle total) |
-| Revogação com aparelho offline | Regras na reconexão + limpeza local pelo app | Buckets removidos + endpoint rejeita | Protocolo próprio |
-| Fonte de autorização | Regras + Functions (Admin ignora regras) | RLS + Sync Streams (espelhadas) | Código da API (+ RLS opcional) |
-| Dev build obrigatório em RN | Sim | Sim (op-sqlite) | Depende do SQLite escolhido; push já exige |
-| Fornecedores críticos | 1 (Google) | 2 (Supabase, PowerSync) | 1–3 (nuvem, banco, storage) |
-| Saída | Difícil | Média | Fácil |
-| Custo ilustrativo de infra (100/1k/10k famílias), com fixos e sem o serviço de domínio | ~US$ 27 / 35 / 139 | ~US$ 101 / 121 / 214 | ~US$ 64 / 109 / 202 |
+| Durable offline writes | Yes, with native SDK (RNFirebase/FlutterFire) | Yes (SQLite + queue) | Yes, if well built |
+| Explicit conflict | Build on top of LWW | Build in the endpoint (LWW by default) | Build (full control) |
+| Revocation with an offline device | Rules on reconnection + local cleanup by the app | Buckets removed + endpoint rejects | Custom protocol |
+| Authorization source | Rules + Functions (Admin bypasses rules) | RLS + Sync Streams (mirrored) | API code (+ optional RLS) |
+| Dev build required in RN | Yes | Yes (op-sqlite) | Depends on the chosen SQLite; push already requires it |
+| Critical providers | 1 (Google) | 2 (Supabase, PowerSync) | 1–3 (cloud, database, storage) |
+| Exit | Hard | Medium | Easy |
+| Illustrative infrastructure cost (100/1k/10k families), with fixed costs and without the domain service | ~US$ 27 / 35 / 139 | ~US$ 101 / 121 / 214 | ~US$ 64 / 109 / 202 |
 
-Critérios de desempate sugeridos [HIP]:
-1. Prova prática dos cinco cenários de D5 num protótipo de cada finalista.
-2. Quem vai operar o sistema em produção.
-3. Custo de saída aceitável.
-4. Prazo do primeiro lançamento.
+Suggested tie-breaking criteria [HIP]:
+1. Practical proof of the five D5 scenarios in a prototype of each finalist.
+2. Who will operate the system in production.
+3. Acceptable exit cost.
+4. First release deadline.
 
-## 12. Fatores que mudariam a escolha
+## 12. Factors that would change the choice
 
-- **Equipe sem experiência de operação/DevOps** → favorece A ou B.
-- **Exigência de conflitos ricos** (merge por campo, histórico visível, auditoria) → favorece B ou C; o LWW do Firestore vira custo de modelagem.
-- **Exigência regulatória ou contratual de hospedagem no Brasil ou de self-host** → favorece C ou B com PowerSync Open Edition e Supabase self-host. Conferir as limitações do self-host do Supabase.
-- **Mudança de licença ou preço do PowerSync** (FSL hoje) ou fim do plano Pro de US$ 49 → reduz B. Mudanças de cota do Firestore → afetam A.
-- **Web obrigatória com offline** → no Firestore a web usa outro SDK (IndexedDB). PowerSync tem Web SDK GA. No C, o cliente de sync precisa existir em mais uma plataforma.
-- **Uso intenso de histórico/relatórios no app** → encarece A (leituras); B e C leem do SQLite local.
-- **Escala >10 mil famílias com picos simultâneos** → limites padrão do PowerSync Pro (3.000 clientes simultâneos, 100 GB hospedados) podem forçar o Team (US$ 599+).
-- **Decisão por Flutter ou por RN** → não muda a família de dados. Muda o SDK: RNFirebase e FlutterFire são equivalentes no offline; os SDKs PowerSync RN e Dart são ambos GA.
+- **Team without operations/DevOps experience** → favors A or B.
+- **Requirement for rich conflicts** (per-field merge, visible history, auditing) → favors B or C; Firestore's LWW becomes a modeling cost.
+- **Regulatory or contractual requirement for hosting in Brazil or self-hosting** → favors C or B with PowerSync Open Edition and self-hosted Supabase. Check the limitations of self-hosted Supabase.
+- **PowerSync license or price change** (FSL today) or discontinuation of the US$ 49 Pro plan → weakens B. Firestore quota changes → affect A.
+- **Web required with offline support** → in Firestore, the web uses another SDK (IndexedDB). PowerSync has a GA Web SDK. In C, the sync client must exist on one more platform.
+- **Heavy use of history/reports in the app** → makes A more expensive (reads); B and C read from local SQLite.
+- **Scale >10 thousand families with simultaneous peaks** → PowerSync Pro's default limits (3.000 concurrent clients, 100 GB hosted) may force Team (US$ 599+).
+- **Decision for Flutter or RN** → does not change the data stack category. It changes the SDK: RNFirebase and FlutterFire are equivalent offline; the PowerSync RN and Dart SDKs are both GA.
 
-## 13. Questões abertas
+## 13. Open questions
 
-1. Há requisito de residência de dados no Brasil? Os preços de `southamerica-east1`/`sa-east-1` não foram capturados.
-2. A comunidade precisa funcionar offline ou pode ser online-only (fora do motor de sync)?
-3. Qual RPO/RTO aceitável? Define PITR (US$ 100/mês no Supabase para 7 dias) versus só backups diários.
-4. Login social é necessário no MVP? Sem ele, a diretriz 4.8 não se aplica.
-5. Quem opera o backend em produção (Daniel sozinho?) e com qual disponibilidade?
-6. Divergência na documentação PowerSync sobre idade máxima do JWT (60 min versus 24 h): confirmar em teste.
-7. O Firebase Auth tem passkeys nativas? Não localizado; confirmar com o suporte ou em teste.
-8. O `expo-image-manipulator` remove EXIF? Confirmar em teste. Recomenda-se remover no servidor de qualquer forma.
+1. Is there a data residency requirement in Brazil? Prices for `southamerica-east1`/`sa-east-1` were not captured.
+2. Does the community need to work offline or can it be online-only (outside the sync engine)?
+3. What RPO/RTO is acceptable? Determines PITR (US$ 100/month on Supabase for 7 days) versus daily backups only.
+4. Is social login necessary in the MVP? Without it, guideline 4.8 does not apply.
+5. Who operates the backend in production (Daniel alone?) and with what availability?
+6. Discrepancy in PowerSync documentation on maximum JWT age (60 min versus 24 h): confirm through testing.
+7. Does Firebase Auth have native passkeys? Not found; confirm with support or through testing.
+8. Does `expo-image-manipulator` remove EXIF? Confirm through testing. Removing it on the server is recommended in any case.
 
-## 14. Limites desta análise
+## 14. Limits of this analysis
 
-- Nada foi executado contra serviços reais: sem protótipo, benchmark ou teste de sync. As afirmações de comportamento são [DOC] ou [HIP].
-- As versões [EXEC] refletem o registro de pacotes em 22/10/2026. Não testei compatibilidade cruzada além de `peerDependencies`. A versão do React Native suportada pelo Expo SDK 58 fica com a outra nota (npm `react-native` latest = 0.88.0; `expo` = 58.0.17).
-- Alguns preços dependem de tabelas dinâmicas não capturadas: S3, regiões do Brasil e egress exato do Firestore. Foram marcados em [Preços datados](Precos_Datados.md).
-- O custo de engenharia (horas) não está estimado. Ele domina a diferença entre os conjuntos nessas escalas.
-- Não houve avaliação jurídica. Ver [Pesquisa de privacidade, legal e lojas](../Pesquisa_Privacidade_Legal_e_Lojas.md).
+- Nothing was run against real services: no prototype, benchmark or sync test. Behavioral claims are [DOC] or [HIP].
+- [EXEC] versions reflect the package registry on 22/10/2026. I did not test cross-compatibility beyond `peerDependencies`. The React Native version supported by Expo SDK 58 belongs in the other note (npm `react-native` latest = 0.88.0; `expo` = 58.0.17).
+- Some prices depend on dynamic tables that were not captured: S3, Brazil regions and exact Firestore egress. They were marked in [Dated prices](Precos_Datados.md).
+- Engineering cost (hours) is not estimated. It dominates the difference between stacks at these scales.
+- No legal assessment was performed. See [Privacy, legal and app stores research](../Pesquisa_Privacidade_Legal_e_Lojas.md).
 
 ## Fontes
 
-Todas consultadas em 22/10/2026. Os IDs B01–B10 e M11 seguem `tasks/hermes/APP-001-design-docs/08_FONTES_E_EVIDENCIAS.md`.
+All accessed on 22/10/2026. IDs B01–B10 and M11 follow `tasks/hermes/APP-001-design-docs/08_FONTES_E_EVIDENCIAS.md`.
 
-| ID | Fonte | Uso |
+| ID | Source | Use |
 | --- | --- | --- |
-| B01 | https://firebase.google.com/docs/firestore/manage-data/enable-offline | Persistência por plataforma, cache de 100 MB, última escrita vence |
-| B02 | https://firebase.google.com/docs/firestore/manage-data/transactions | Transações falham offline |
-| B03 | https://firebase.google.com/docs/firestore/security/rules-conditions | `get()`/`exists()`, limites de acesso |
-| B04 | https://firebase.google.com/docs/firestore/pricing | Cobrança de listeners, regras, mínimo por consulta |
-| B05 | https://supabase.com/docs/guides/database/postgres/row-level-security | RLS, `service_role`, views, JWT desatualizado |
-| B07 | https://docs.powersync.com/integrations/supabase/rls-and-sync-streams | Sync Streams não se aplicam a uploads |
-| B08 | https://supabase.com/pricing | Planos, pausa do Free |
-| B09 | https://www.powersync.com/pricing | Planos, desativação do Free, limites |
-| B10 | https://www.postgresql.org/docs/current/transaction-iso.html | Isolamento transacional (referência do pacote) |
-| M11 | https://docs.expo.dev/guides/using-firebase/ | JS SDK × React Native Firebase no Expo |
-| D01 | https://firebase.google.com/docs/web/environments-js-sdk | Firestore em React Native "(except persistence)" |
-| D02 | https://rnfirebase.io/ | RNFirebase envolve SDKs nativos |
-| D03 | https://rnfirebase.io/firestore/usage | Offline por padrão; opções de cache web-only; transações offline |
-| D05 | https://github.com/firebase/flutterfire/blob/cb3cc4b6bed7aa0ca916d98abb11275fbfe0728f/packages/cloud_firestore/cloud_firestore/android/build.gradle#L63-L66 e https://github.com/firebase/flutterfire/blob/cb3cc4b6bed7aa0ca916d98abb11275fbfe0728f/packages/cloud_firestore/cloud_firestore/ios/cloud_firestore.podspec#L35 | FlutterFire depende dos SDKs nativos [CÓDIGO] |
-| D06 | https://firebase.google.com/docs/flutter/setup | Requisitos de plataforma do FlutterFire |
-| D08 | https://cloud.google.com/firestore/pricing | Preços Standard edition, PITR, backup |
-| D09 | https://firebase.google.com/pricing | Spark/Blaze, FCM sem custo, Storage |
-| D10 | https://firebase.google.com/docs/firestore/security/insecure-rules | Bibliotecas de servidor ignoram regras |
-| D11 | https://firebase.google.com/docs/firestore/manage-data/export-import | Export gerenciado (LevelDB), BigQuery |
-| D12 | https://firebase.google.com/docs/firestore/backups | Backups agendados, retenção até 14 semanas |
-| D13 | https://firebase.google.com/docs/auth/limits | Limites de e-mail e SMS por plano |
-| D14 | https://cloud.google.com/identity-platform/pricing | Preço por MAU acima de 50 mil |
-| D15 | https://firebase.google.com/docs/storage/faqs-storage-changes-announced-sept-2024 | Storage exige Blaze |
+| B01 | https://firebase.google.com/docs/firestore/manage-data/enable-offline | Persistence by platform, 100 MB cache, last write wins |
+| B02 | https://firebase.google.com/docs/firestore/manage-data/transactions | Transactions fail offline |
+| B03 | https://firebase.google.com/docs/firestore/security/rules-conditions | `get()`/`exists()`, access limits |
+| B04 | https://firebase.google.com/docs/firestore/pricing | Listener billing, rules, minimum per query |
+| B05 | https://supabase.com/docs/guides/database/postgres/row-level-security | RLS, `service_role`, views, outdated JWT |
+| B07 | https://docs.powersync.com/integrations/supabase/rls-and-sync-streams | Sync Streams do not apply to uploads |
+| B08 | https://supabase.com/pricing | Plans, Free pausing |
+| B09 | https://www.powersync.com/pricing | Plans, Free deactivation, limits |
+| B10 | https://www.postgresql.org/docs/current/transaction-iso.html | Transaction isolation (package reference) |
+| M11 | https://docs.expo.dev/guides/using-firebase/ | JS SDK × React Native Firebase in Expo |
+| D01 | https://firebase.google.com/docs/web/environments-js-sdk | Firestore in React Native "(except persistence)" |
+| D02 | https://rnfirebase.io/ | RNFirebase wraps native SDKs |
+| D03 | https://rnfirebase.io/firestore/usage | Offline by default; web-only cache options; offline transactions |
+| D05 | https://github.com/firebase/flutterfire/blob/cb3cc4b6bed7aa0ca916d98abb11275fbfe0728f/packages/cloud_firestore/cloud_firestore/android/build.gradle#L63-L66 and https://github.com/firebase/flutterfire/blob/cb3cc4b6bed7aa0ca916d98abb11275fbfe0728f/packages/cloud_firestore/cloud_firestore/ios/cloud_firestore.podspec#L35 | FlutterFire depends on native SDKs [CÓDIGO] |
+| D06 | https://firebase.google.com/docs/flutter/setup | FlutterFire platform requirements |
+| D08 | https://cloud.google.com/firestore/pricing | Standard edition prices, PITR, backup |
+| D09 | https://firebase.google.com/pricing | Spark/Blaze, no-cost FCM, Storage |
+| D10 | https://firebase.google.com/docs/firestore/security/insecure-rules | Server libraries bypass rules |
+| D11 | https://firebase.google.com/docs/firestore/manage-data/export-import | Managed export (LevelDB), BigQuery |
+| D12 | https://firebase.google.com/docs/firestore/backups | Scheduled backups, retention up to 14 weeks |
+| D13 | https://firebase.google.com/docs/auth/limits | Email and SMS limits per plan |
+| D14 | https://cloud.google.com/identity-platform/pricing | Price per MAU above 50 thousand |
+| D15 | https://firebase.google.com/docs/storage/faqs-storage-changes-announced-sept-2024 | Storage requires Blaze |
 | D16 | https://firebase.google.com/docs/cloud-messaging/send/v1-api | FCM HTTP v1, OAuth 2.0 |
-| D17 | https://firebase.google.com/docs/cloud-messaging/troubleshooting | 4 KB, descontinuação InstanceId/device groups (29/09/2027) |
-| D18 | https://supabase.com/docs/guides/platform/backups | Retenção por plano, Storage fora do backup, PITR |
-| D19 | https://supabase.com/docs/guides/storage/security/access-control | Políticas em `storage.objects` |
-| D20 | https://supabase.com/docs/guides/self-hosting | Limitações do self-host |
-| D21 | https://supabase.com/docs/guides/auth/auth-smtp | SMTP padrão não serve para produção |
-| D22 | https://supabase.com/docs/guides/realtime | Recursos do Realtime |
-| D23 | https://supabase.com/docs/guides/auth/passkeys | Passkeys experimental |
-| D24 | https://supabase.com/docs/reference/dart/auth-signinwithpasskey | Passkeys BETA no Flutter |
-| D25 | https://docs.powersync.com/handling-writes/writing-client-changes | Endpoint de upload, códigos de resposta |
-| D26 | https://docs.powersync.com/handling-writes/handling-update-conflicts | Idempotência, ID por operação, LWW por campo |
-| D27 | https://docs.powersync.com/sync/rules/parameter-queries | Revogação por linha de vínculo |
-| D28 | https://docs.powersync.com/architecture/powersync-protocol | PUT/REMOVE e remoção no cliente |
-| D29 | https://docs.powersync.com/configuration/auth/custom | JWT curto, sem revogação |
+| D17 | https://firebase.google.com/docs/cloud-messaging/troubleshooting | 4 KB, InstanceId/device groups deprecation (29/09/2027) |
+| D18 | https://supabase.com/docs/guides/platform/backups | Retention per plan, Storage excluded from backup, PITR |
+| D19 | https://supabase.com/docs/guides/storage/security/access-control | Policies on `storage.objects` |
+| D20 | https://supabase.com/docs/guides/self-hosting | Self-hosting limitations |
+| D21 | https://supabase.com/docs/guides/auth/auth-smtp | Default SMTP is unsuitable for production |
+| D22 | https://supabase.com/docs/guides/realtime | Realtime features |
+| D23 | https://supabase.com/docs/guides/auth/passkeys | Experimental passkeys |
+| D24 | https://supabase.com/docs/reference/dart/auth-signinwithpasskey | BETA passkeys in Flutter |
+| D25 | https://docs.powersync.com/handling-writes/writing-client-changes | Upload endpoint, response codes |
+| D26 | https://docs.powersync.com/handling-writes/handling-update-conflicts | Idempotency, ID per operation, per-field LWW |
+| D27 | https://docs.powersync.com/sync/rules/parameter-queries | Revocation through membership row |
+| D28 | https://docs.powersync.com/architecture/powersync-protocol | PUT/REMOVE and client-side removal |
+| D29 | https://docs.powersync.com/configuration/auth/custom | Short-lived JWT, no revocation |
 | D30 | https://docs.powersync.com/resources/usage-and-billing/reducing-usage | `disconnectAndClear()` |
-| D31 | https://docs.powersync.com/resources/hipaa | Responsabilidades no aparelho |
+| D31 | https://docs.powersync.com/resources/hipaa | Device responsibilities |
 | D32 | https://docs.powersync.com/client-sdks/reference/react-native-and-expo | op-sqlite, Expo Go |
-| D33 | https://docs.powersync.com/resources/feature-status | Status GA/Beta |
-| D34 | https://docs.powersync.com/intro/self-hosting | Open Edition e Enterprise Self-Hosted |
+| D33 | https://docs.powersync.com/resources/feature-status | GA/Beta status |
+| D34 | https://docs.powersync.com/intro/self-hosting | Open Edition and Enterprise Self-Hosted |
 | D35 | https://github.com/powersync-ja/powersync-service/blob/main/LICENSE | FSL-1.1-ALv2 |
-| D36 | https://electric.ax/docs/sync/guides/writes | Electric só leitura; padrões de escrita |
-| D37 | https://electric.ax/pricing | Preço Electric Cloud |
-| D38 | https://electric.ax/docs/sync/integrations/expo | Electric em Expo |
-| D39 | https://zero.rocicorp.dev/docs/connection | Zero sem escrita offline |
-| D40 | https://zero.rocicorp.dev/docs/status | Zero 1.0 e roadmap |
-| D41 | https://zero.rocicorp.dev/docs/react-native | Zero em RN/Expo |
-| D42 | https://replicache.dev/ | Replicache em manutenção |
-| D43 | https://watermelondb.dev/docs/Sync/Intro | WatermelonDB: backend próprio |
+| D36 | https://electric.ax/docs/sync/guides/writes | Electric read-only; write patterns |
+| D37 | https://electric.ax/pricing | Electric Cloud price |
+| D38 | https://electric.ax/docs/sync/integrations/expo | Electric in Expo |
+| D39 | https://zero.rocicorp.dev/docs/connection | Zero without offline writes |
+| D40 | https://zero.rocicorp.dev/docs/status | Zero 1.0 and roadmap |
+| D41 | https://zero.rocicorp.dev/docs/react-native | Zero in RN/Expo |
+| D42 | https://replicache.dev/ | Replicache in maintenance |
+| D43 | https://watermelondb.dev/docs/Sync/Intro | WatermelonDB: custom backend |
 | D44 | https://rxdb.info/rx-storage-sqlite.html | RxDB SQLite Premium |
-| D45 | https://www.mongodb.com/docs/atlas/app-services/sync/device-sync-deprecation/ | Fim do Atlas Device Sync |
+| D45 | https://www.mongodb.com/docs/atlas/app-services/sync/device-sync-deprecation/ | End of Atlas Device Sync |
 | D46 | https://docs.nestjs.com/security/authorization | `@nestjs/authorization` |
-| D47 | https://www.django-rest-framework.org/api-guide/permissions/ | Limites de permissão por objeto |
-| D48 | https://docs.djangoproject.com/en/6.1/topics/tasks/ | Tasks: backends só para dev/teste |
-| D49 | https://docs.djangoproject.com/en/6.1/ref/contrib/admin/ | Admin como ferramenta interna |
+| D47 | https://www.django-rest-framework.org/api-guide/permissions/ | Object-level permission limits |
+| D48 | https://docs.djangoproject.com/en/6.1/topics/tasks/ | Tasks: backends for dev/testing only |
+| D49 | https://docs.djangoproject.com/en/6.1/ref/contrib/admin/ | Admin as an internal tool |
 | D50 | https://docs.spring.io/spring-security/reference/servlet/authorization/method-security.html | Method security |
 | D51 | https://developer.apple.com/app-store/review/guidelines/ | 4.8 Login Services; 4.5.4 Push |
-| D52 | https://developer.apple.com/documentation/usernotifications/establishing-a-token-based-connection-to-apns | APNs por token |
-| D53 | https://docs.expo.dev/push-notifications/faq/ | Custo, 600/s, at-least-once, Expo Go |
-| D54 | https://docs.expo.dev/push-notifications/sending-notifications/ | Tickets e recibos |
-| D55 | https://onesignal.com/pricing | Push Free até 1.000 MAU; US$ 0,012/MAU |
-| D56 | https://developers.cloudflare.com/r2/api/s3/presigned-urls/ | Presigned URLs R2 |
-| D57 | https://sharp.pixelplumbing.com/api-output/ | Remoção de metadados por padrão |
-| D58 | https://developer.android.com/training/data-storage/shared/media | Localização oculta sem `ACCESS_MEDIA_LOCATION` |
-| D59 | https://supabase.com/docs/reference/javascript/storage-from-createsignedurl | URLs assinadas Supabase |
-| D60 | https://auth0.com/pricing | Planos e passkeys Auth0 |
-| D61 | https://docs.powersync.com/migration-guides/electric | Uso seguro de `disconnectAndClear()` |
+| D52 | https://developer.apple.com/documentation/usernotifications/establishing-a-token-based-connection-to-apns | Token-based APNs |
+| D53 | https://docs.expo.dev/push-notifications/faq/ | Cost, 600/s, at-least-once, Expo Go |
+| D54 | https://docs.expo.dev/push-notifications/sending-notifications/ | Tickets and receipts |
+| D55 | https://onesignal.com/pricing | Free push up to 1.000 MAU; US$ 0,012/MAU |
+| D56 | https://developers.cloudflare.com/r2/api/s3/presigned-urls/ | R2 presigned URLs |
+| D57 | https://sharp.pixelplumbing.com/api-output/ | Metadata removal by default |
+| D58 | https://developer.android.com/training/data-storage/shared/media | Location hidden without `ACCESS_MEDIA_LOCATION` |
+| D59 | https://supabase.com/docs/reference/javascript/storage-from-createsignedurl | Supabase signed URLs |
+| D60 | https://auth0.com/pricing | Auth0 plans and passkeys |
+| D61 | https://docs.powersync.com/migration-guides/electric | Safe use of `disconnectAndClear()` |
 
-Registros [EXEC] de versões, coletados em 22/10/2026 entre 06:00 e 06:35 UTC no Windows 11 com npm 11.19.0. A coluna de data significa coisas diferentes por registro:
-- npm: `time.modified` do pacote, não necessariamente a data da versão;
-- pub.dev e PyPI: publicação da versão;
-- Maven: `lastUpdated` do metadata;
-- GitHub: `published_at` da release.
+[EXEC] version records, collected on 22/10/2026 between 06:00 and 06:35 UTC on Windows 11 with npm 11.19.0. The date column means different things for each registry:
+- npm: the package's `time.modified`, not necessarily the version date;
+- pub.dev and PyPI: version publication;
+- Maven: `lastUpdated` from the metadata;
+- GitHub: the release's `published_at`.
 
-Comandos: `npm view <p> version time.modified license --json`, `npm view <p> peerDependencies dist-tags`, `curl https://pub.dev/api/packages/<p>`, `curl https://pypi.org/pypi/<p>/json`, `curl https://repo1.maven.org/maven2/<g>/<a>/maven-metadata.xml`, `curl https://dl.google.com/android/maven2/com/google/firebase/firebase-bom/maven-metadata.xml` e `curl https://api.github.com/repos/<r>/releases/latest|license`.
+Commands: `npm view <p> version time.modified license --json`, `npm view <p> peerDependencies dist-tags`, `curl https://pub.dev/api/packages/<p>`, `curl https://pypi.org/pypi/<p>/json`, `curl https://repo1.maven.org/maven2/<g>/<a>/maven-metadata.xml`, `curl https://dl.google.com/android/maven2/com/google/firebase/firebase-bom/maven-metadata.xml` and `curl https://api.github.com/repos/<r>/releases/latest|license`.
 
-Os `peerDependencies` relevantes foram consultados com `npm view`:
-- `@powersync/react-native` 2.3.3 exige `@op-engineering/op-sqlite >=17.1.0 <19.0.0` e `@powersync/common ^2.4.0`;
-- `@powersync/op-sqlite` 0.9.16 exige op-sqlite `^13 || ^14 || ^15`;
-- `@react-native-firebase/app` 27.0.0 exige `expo >=47.0.0` (opcional) e `react-native >=0.60.0-0`;
-- `prisma` tem dist-tags `latest` 8.0.0-rc.24 e `prev` 7.10.1.
+The relevant `peerDependencies` were queried with `npm view`:
+- `@powersync/react-native` 2.3.3 requires `@op-engineering/op-sqlite >=17.1.0 <19.0.0` and `@powersync/common ^2.4.0`;
+- `@powersync/op-sqlite` 0.9.16 requires op-sqlite `^13 || ^14 || ^15`;
+- `@react-native-firebase/app` 27.0.0 requires `expo >=47.0.0` (optional) and `react-native >=0.60.0-0`;
+- `prisma` has dist-tags `latest` 8.0.0-rc.24 and `prev` 7.10.1.
 
-| Pacote/artefato | Versão | Data (publicação ou modificação) | Licença declarada | Registro |
+| Package/artifact | Version | Date (publication or modification) | Declared license | Registry |
 | --- | --- | --- | --- | --- |
 | `@nestjs/core` | 12.2.0 | 2026-10-19 | MIT | npm |
 | `bullmq` | 6.4.0 | 2026-10-21 | MIT | npm |

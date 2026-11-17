@@ -1,7 +1,7 @@
 ---
 tipo: design-doc
-status: proposta
-responsavel: Hermes (coordenador da APP-001)
+status: proposed
+responsavel: Hermes (coordinator of APP-001)
 revisado_em: 2026-10-22
 tarefa: MAT-4
 adr: ADR-001
@@ -11,135 +11,135 @@ fontes_principais:
   - 01_Produto/Concorrentes_e_Diferenciais.md
 ---
 
-# Visão e escopo
+# Vision and scope
 
-> Nota de 03/11/2026: o rumo mudou para site completo primeiro e port Android e iOS depois ([ADR-009](../06_ADRs/ADR-009_Site_Completo_Primeiro.md)). Onde este texto fala em app nativo, leia como o port; o site cobre as mesmas funções.
+> Note dated 03/11/2026: the direction changed to the complete site first and Android and iOS ports afterward ([ADR-009](../06_ADRs/ADR-009_Site_Completo_Primeiro.md)). Where this text mentions a native app, read it as the port; the site covers the same functions.
 
-Proposta do Hermes. O nome AppMaternidade é provisório; escopo etário, mercado inicial, monetização e papel da web aguardam decisão de Daniel (ver [Decisões para Daniel](../07_Roadmap/Decisoes_para_Daniel.md)).
+Hermes's proposal. The name AppMaternidade is provisional; age scope, initial market, monetization and the role of the web await Daniel's decision (see [Decisions for Daniel](../07_Roadmap/Decisoes_para_Daniel.md)).
 
-## 1. Problema
+## 1. Problem
 
-Nos primeiros meses, a rotina do bebê fica espalhada entre memória, papel e mensagens. Quem assume o turno pergunta "quando ele mamou?", "a soneca começou que horas?", "passou a pomada?". Quem cuida sozinha de madrugada tem dúvidas práticas e pouca gente para perguntar. Conteúdo sobre desenvolvimento existe em muitos lugares, com qualidade desigual e, às vezes, num tom que cobra metas.
+In the first months, the baby's routine is scattered across memory, paper and messages. Whoever takes over the shift asks "quando ele mamou?", "a soneca começou que horas?", "passou a pomada?". Someone caring alone late at night has practical questions and few people to ask. Development content exists in many places, with uneven quality and sometimes a tone that pressures people to meet targets.
 
-Os produtos de mercado resolvem partes disso, em geral separadas: rastreadores de rotina, programas de atividades por fase e comunidades de pais. A comparação, com fontes, está em [Concorrentes e diferenciais](Concorrentes_e_Diferenciais.md).
+Market products address parts of this, generally separately: routine trackers, age-based activity programs and parent communities. The comparison, with sources, is in [Competitors and differentiators](Concorrentes_e_Diferenciais.md).
 
 ## 2. Proposta
 
-Um aplicativo Android e iOS em que a família registra a rotina rapidamente, divide os cuidados com outros adultos autorizados, acompanha o desenvolvimento com atividades confiáveis (tummy time desde o início) e conversa numa comunidade organizada por assunto, sem que a comunidade tenha acesso à rotina privada.
+An Android and iOS app where the family quickly records the routine, shares care with other authorized adults, follows development through reliable activities (tummy time from the start) and talks in a topic-based community, without the community having access to the private routine.
 
-Hipótese de valor: ligar rotina, desenvolvimento e conversa contextualizada reduz a carga mental de quem cuida, desde que cada pilar continue simples e nada vire cobrança.
+Value hypothesis: connecting routine, development and contextualized conversation reduces caregivers' mental load, provided each pillar stays simple and nothing becomes a source of pressure.
 
-## 3. Público e escopo etário
+## 3. Audience and age scope
 
-- Usuários: adultos. Mães, pais e outros cuidadores autorizados (avós, babás, outros responsáveis). Não há contas de criança.
-- Escopo etário proposto para o MVP: do nascimento aos 12 meses. O modelo de dados não fixa limite; conteúdo e atividades cobrem 0 a 12 meses no lançamento, com extensão para 24 meses como primeira expansão. Gestação fica fora do MVP: muda conteúdo, comunidade e riscos de saúde, e merece decisão própria.
-- Mercado inicial proposto: Brasil, em português. Afeta conteúdo, moderação, LGPD e preço; é decisão de Daniel.
+- Users: adults. Mothers, fathers and other authorized caregivers (grandparents, nannies, other guardians). There are no child accounts.
+- Proposed age scope for the MVP: birth to 12 months. The data model sets no limit; content and activities cover 0 to 12 months at launch, with an extension to 24 months as the first expansion. Pregnancy is outside the MVP: it changes content, community and health risks, and deserves its own decision.
+- Proposed initial market: Brazil, in Portuguese. This affects content, moderation, LGPD and pricing; it is Daniel's decision.
 
 ## 4. Personas
 
-| Persona | Situação | O que precisa | O que atrapalha |
+| Persona | Situation | Needs | Obstacles |
 | --- | --- | --- | --- |
-| Ana, mãe de primeira viagem em licença | Mama de 2 em 2 horas, registra de madrugada no escuro | Saber a última mamada e o lado, registrar com uma mão, tirar dúvidas | Telas claras, formulários longos, tom de cobrança |
-| Bruno, pai que voltou ao trabalho | Faz o turno da noite e os fins de semana | Saber o que aconteceu e o que está em andamento sem perguntar | Mensagens espalhadas; não saber se a soneca já começou |
-| Dona Carmem, avó que cuida duas tardes por semana | Usa celular com fonte grande | Registrar sem aprender um app complexo; ler os avisos da família | Ícones sem texto; muitos passos |
-| Dora, babá | Acesso temporário | Registrar e ver as notas do dia | Ver dados além do necessário; ficar com acesso depois de sair |
+| Ana, a first-time mother on leave | Breastfeeds every 2 hours (2-hour intervals) and records late at night in the dark | Know the last feed and side, record one-handed, get answers | Bright screens, long forms, a pressuring tone |
+| Bruno, a father back at work | Covers nights and weekends | Know what happened and what is in progress without asking | Scattered messages; not knowing whether the nap has started |
+| Dona Carmem, a grandmother caring two afternoons a week | Uses a phone with large text | Record without learning a complex app; read family notices | Icons without text; too many steps |
+| Dora, a nanny | Temporary access | Record and view the day's notes | Seeing more data than necessary; retaining access after leaving |
 
-Personas são hipóteses de projeto, a validar em entrevistas.
+Personas are design hypotheses, to be validated in interviews.
 
-## 5. Jornadas principais
+## 5. Main journeys
 
-1. **Primeira semana:** criar conta, cadastrar o bebê, convidar o outro responsável, registrar as primeiras mamadas e fraldas.
-2. **Madrugada:** abrir o app no escuro, ver a última mamada, iniciar e encerrar a mamada com uma mão, voltar a dormir.
-3. **Troca de turno:** Bruno abre "Desde que você saiu" e vê registros, a soneca em andamento e a nota "pomada só à noite".
-4. **Tummy time diário:** iniciar uma sessão curta, ver uma atividade da fase, registrar sem meta.
-5. **Dúvida do dia a dia:** perguntar no espaço "Sono" como outras famílias dividem a madrugada; receber respostas; denunciar uma resposta com desinformação.
-6. **Fim do contrato da babá:** o responsável remove o acesso; a babá perde o acesso ao reconectar.
+1. **First week:** create an account, register the baby, invite the other guardian, record the first feeds and diapers.
+2. **Late night:** open the app in the dark, see the last feed, start and end the feed one-handed, go back to sleep.
+3. **Shift handoff:** Bruno opens "Desde que você saiu" and sees records, the nap in progress and the note "pomada só à noite".
+4. **Daily tummy time:** start a short session, view an activity for the stage, record without a target.
+5. **Everyday question:** ask in the "Sono" space how other families divide late-night care; receive replies; report a reply with misinformation.
+6. **End of the nanny's contract:** the guardian removes access; the nanny loses access on reconnecting.
 
-## 6. Requisitos funcionais
+## 6. Functional requirements
 
-| ID | Requisito | Pilar | Documento que detalha |
+| ID | Requirement | Pillar | Detailed in |
 | --- | --- | --- | --- |
-| RF-01 | Registrar sono, amamentação, mamadeira, alimentação sólida, fralda, tummy time e observação curta | Rotina | [Fluxos e telas](../02_Experiencia/Fluxos_e_Telas.md) |
-| RF-02 | Iniciar e encerrar sessões cronometradas que sobrevivem ao encerramento do app | Rotina, Desenvolvimento | [Offline e temporizadores](../03_Arquitetura/Offline_Sincronizacao_e_Temporizadores.md) |
-| RF-03 | Registrar retroativamente, corrigir, excluir e restaurar registros | Rotina | Fluxos e telas |
-| RF-04 | Ver histórico por dia e semana, com autoria | Rotina, Cuidado compartilhado | Fluxos e telas |
-| RF-05 | Criar família, cadastrar bebês e convidar cuidadores com papel e validade | Cuidado compartilhado | [Modelo de dados e permissões](../03_Arquitetura/Modelo_de_Dados_e_Permissoes.md) |
-| RF-06 | Revogar acesso e mudar papel | Cuidado compartilhado | Modelo de dados e permissões |
-| RF-07 | Ver passagem de cuidados ("desde que você saiu") e escrever notas com destaque | Cuidado compartilhado | Fluxos e telas |
-| RF-08 | Sessões de tummy time com histórico e atividades sugeridas por fase | Desenvolvimento | [Desenvolvimento e conteúdo](../04_Comunidade_Conteudo/Desenvolvimento_e_Conteudo.md) |
-| RF-09 | Conteúdo educativo com autoria, fontes, revisor, data de revisão e versão | Desenvolvimento | Desenvolvimento e conteúdo |
-| RF-10 | Espaços temáticos com tópicos e respostas | Comunidade | [Comunidade e moderação](../04_Comunidade_Conteudo/Comunidade_e_Moderacao.md) |
-| RF-11 | Denunciar, bloquear e moderar | Comunidade | Comunidade e moderação |
-| RF-12 | Compartilhar resumo da rotina na comunidade só por ação consciente, com prévia | Comunidade, Rotina | Offline e temporizadores, seção 13 (S5) |
-| RF-13 | Exportar dados da família e excluir conta e família | Todos | [Privacidade e segurança](../05_Privacidade_Operacao/Privacidade_e_Seguranca.md) |
-| RF-14 | Notificações opcionais entre cuidadores e lembretes locais desligados por padrão | Cuidado compartilhado | Offline e temporizadores, seção 10 |
+| RF-01 | Record sleep, breastfeeding, bottle feeding, solid food, diapers, tummy time and a short observation | Routine | [Flows and screens](../02_Experiencia/Fluxos_e_Telas.md) |
+| RF-02 | Start and end timed sessions that survive app termination | Routine, Development | [Offline and timers](../03_Arquitetura/Offline_Sincronizacao_e_Temporizadores.md) |
+| RF-03 | Record retrospectively, correct, delete and restore records | Routine | Flows and screens |
+| RF-04 | View daily and weekly history, with authorship | Routine, Shared care | Flows and screens |
+| RF-05 | Create a family, register babies and invite caregivers with a role and validity period | Shared care | [Data model and permissions](../03_Arquitetura/Modelo_de_Dados_e_Permissoes.md) |
+| RF-06 | Revoke access and change roles | Shared care | Data model and permissions |
+| RF-07 | View care handoff ("desde que você saiu") and write highlighted notes | Shared care | Flows and screens |
+| RF-08 | Tummy time sessions with history and suggested activities by stage | Development | [Development and content](../04_Comunidade_Conteudo/Desenvolvimento_e_Conteudo.md) |
+| RF-09 | Educational content with authorship, sources, reviewer, review date and version | Development | Development and content |
+| RF-10 | Topic-based spaces with topics and replies | Community | [Community and moderation](../04_Comunidade_Conteudo/Comunidade_e_Moderacao.md) |
+| RF-11 | Report, block and moderate | Community | Community and moderation |
+| RF-12 | Share a routine summary in the community only through a deliberate action, with a preview | Community, Routine | Offline and timers, section 13 (S5) |
+| RF-13 | Export family data and delete accounts and families | All | [Privacy and security](../05_Privacidade_Operacao/Privacidade_e_Seguranca.md) |
+| RF-14 | Optional notifications between caregivers and local reminders disabled by default | Shared care | Offline and timers, section 10 |
 
-## 7. Requisitos não funcionais
+## 7. Nonfunctional requirements
 
-| ID | Requisito | Como verificar |
+| ID | Requirement | How to verify |
 | --- | --- | --- |
-| RNF-01 | site completo primeiro; Android e iOS com o mesmo conjunto de funções do MVP no port | teste no navegador (site) e, no port, nos aparelhos |
-| RNF-02 | Registros essenciais funcionam sem conexão (alcance definido no documento de sincronização) | Cenários Q-01, Q-02 e Q-08 de [Qualidade e validação](../05_Privacidade_Operacao/Qualidade_e_Validacao.md) |
-| RNF-03 | Isolamento entre famílias em consultas, escritas, arquivos, sincronização e notificações | Cenário Q-06 e testes de autorização por rota |
-| RNF-04 | Comunidade sem acesso à rotina privada | Cenário Q-07 |
-| RNF-05 | Acessibilidade: fonte ampliada, leitor de tela, contraste e alvos de toque | Checklist de acessibilidade em aparelho |
-| RNF-06 | Privacidade por padrão: minimização, logs sem conteúdo sensível, pushes sem dado sensível | Revisão de código e de logs; cenário Q-12 |
-| RNF-07 | Conteúdo educativo rastreável (fonte, revisão, versão) | Revisão editorial antes da publicação |
+| RNF-01 | complete site first; Android and iOS with the same MVP feature set in the port | browser testing (site) and, in the port, device testing |
+| RNF-02 | Essential records work without a connection (scope defined in the synchronization document) | Scenarios Q-01, Q-02 and Q-08 in [Quality and validation](../05_Privacidade_Operacao/Qualidade_e_Validacao.md) |
+| RNF-03 | Isolation between families in queries, writes, files, synchronization and notifications | Scenario Q-06 and per-route authorization tests |
+| RNF-04 | Community without access to the private routine | Scenario Q-07 |
+| RNF-05 | Accessibility: enlarged text, screen reader, contrast and touch targets | Device accessibility checklist |
+| RNF-06 | Privacy by default: minimization, logs without sensitive content, push notifications without sensitive data | Code and log review; scenario Q-12 |
+| RNF-07 | Traceable educational content (source, review, version) | Editorial review before publication |
 
-## 8. Critérios de sucesso propostos
+## 8. Proposed success criteria
 
-Métricas a medir num piloto; os alvos são hipóteses para discussão, não resultados.
+Metrics to measure in a pilot; targets are hypotheses for discussion, not results.
 
-| Critério | Medida | Alvo inicial proposto |
+| Criterion | Measure | Proposed initial target |
 | --- | --- | --- |
-| Registro rápido | Toques e segundos do botão ao registro salvo | Até 2 toques e 5 segundos nos tipos com botão rápido |
-| Cuidado compartilhado real | Famílias com 2 ou mais adultos registrando na semana | Acompanhar; sem alvo antes do piloto |
-| Confiança nos dados | Registros perdidos ou duplicados por falha de sync | Zero nos testes de Q-01 a Q-05 |
-| Comunidade útil | Tópicos com pelo menos uma resposta em 24 horas | Acompanhar no piloto |
-| Moderação | Denúncias decididas dentro do prazo publicado | Prazo a definir com a operação |
-| Sem cobrança | Relatos de culpa ou pressão nas entrevistas | Nenhum padrão recorrente |
+| Quick recording | Taps and seconds from button to saved record | Up to 2 taps and 5 seconds for types with a quick button |
+| Real shared care | Families with 2 or more adults recording during the week | Track; no target before the pilot |
+| Trust in the data | Records lost or duplicated through sync failures | Zero in tests Q-01 to Q-05 |
+| Useful community | Topics with at least one reply within 24 hours | Track in the pilot |
+| Moderation | Reports decided within the published deadline | Deadline to be defined with operations |
+| No pressure | Reports of guilt or pressure in interviews | No recurring pattern |
 
-## 9. Recorte em etapas
+## 9. Phased scope
 
-No rumo atual, ver ADR-009.
+For the current direction, see ADR-009.
 
-| Etapa | O que entra | O que prova |
+| Stage | Included | What it proves |
 | --- | --- | --- |
-| Fundação técnica | Projeto mobile nas duas plataformas, autenticação, família, vínculo, bebê, banco local com fila, sincronização mínima, autorização no servidor, testes de isolamento | Que a arquitetura escolhida aguenta offline, troca de turno e revogação |
-| MVP utilizável | Os sete tipos de registro, sessões, histórico, passagem de cuidados, tummy time com atividades revisadas, comunidade com tópicos e respostas, denúncia, bloqueio, painel de moderação, exportação e exclusão | Que famílias reais usam os quatro pilares juntos |
-| Expansões candidatas | Faixa até 24 meses, widgets e Live Activities (se não couberem no MVP), anexos e fotos, gráficos mais ricos, grupos por fase, rodas de conversa agendadas, conteúdo em vídeo, app web para cuidadores | Decididas por uso e demanda |
+| Technical foundation | Mobile project on both platforms, authentication, family, membership, baby, local database with a queue, minimal synchronization, server-side authorization, isolation tests | That the selected architecture supports offline use, shift handoff and revocation |
+| Usable MVP | The seven record types, sessions, history, care handoff, tummy time with reviewed activities, community with topics and replies, reporting, blocking, moderation panel, export and deletion | That real families use the four pillars together |
+| Candidate expansions | Age range up to 24 months, widgets and Live Activities (if they do not fit in the MVP), attachments and photos, richer charts, stage-based groups, scheduled discussion circles, video content, web app for caregivers | Decided by usage and demand |
 
-A próxima fatia funcional a implementar está em [Roadmap e próxima fatia](../07_Roadmap/Roadmap_e_Proxima_Fatia.md).
+The next functional slice to implement is in [Roadmap and next slice](../07_Roadmap/Roadmap_e_Proxima_Fatia.md).
 
-## 10. Fora do MVP
+## 10. Outside the MVP
 
-No rumo atual, ver ADR-009.
+For the current direction, see ADR-009.
 
-Previsão de sono, IA generativa, reconhecimento por câmera, wearables e monitores, chat em tempo real, salas de áudio ou vídeo, telemedicina, marketplace, anúncios e gestação. Qualquer um volta só com utilidade demonstrada, avaliação de privacidade e custo justificado.
+Sleep prediction, generative AI, camera recognition, wearables and monitors, real-time chat, audio or video rooms, telemedicine, marketplace, advertising and pregnancy. Any of these returns only with demonstrated utility, a privacy assessment and justified costs.
 
-## 11. Web: três perguntas separadas
+## 11. Web: three separate questions
 
-No rumo atual, ver ADR-009.
+For the current direction, see ADR-009.
 
-| Papel da web | Proposta | Quando |
+| Web role | Proposal | When |
 | --- | --- | --- |
-| Site público | Necessário: página do produto, política de privacidade, termos e a página de exclusão de conta que o Google Play exige como link web | Antes da primeira publicação nas lojas |
-| Painel de moderação e operação | Necessário quando a comunidade abrir: fila de denúncias, ações, auditoria e gestão de conteúdo editorial; uso interno | Junto com a comunidade do MVP |
-| App web para cuidadores | Não no MVP. Reavaliar com dados de uso (por exemplo, pedidos de avós sem smartphone ou uso em computador) | Depois do MVP |
+| Public site | Necessary: product page, privacy policy, terms and the account-deletion page Google Play requires as a web link | Before the first app store release |
+| Moderation and operations panel | Necessary when the community opens: report queue, actions, auditing and editorial content management; internal use | Alongside the MVP community |
+| Web app for caregivers | Not in the MVP. Reevaluate with usage data (for example, requests from grandparents without smartphones or for computer use) | After the MVP |
 
-A decisão e as consequências estão no [ADR-001](../06_ADRs/ADR-001_Plataformas_e_Web.md).
+The decision and consequences are in [ADR-001](../06_ADRs/ADR-001_Plataformas_e_Web.md).
 
-## 12. Monetização
+## 12. Monetization
 
-Em aberto. Opções a avaliar (assinatura com plano gratuito, pagamento único, gratuito sustentado por parceria institucional) têm consequências de privacidade e de produto; anúncio direcionado com dados de rotina de bebê não é proposto. Decisão de Daniel, sem impacto na fundação técnica além de prever compras dentro do app.
+Open. Options to evaluate (subscription with a free plan, one-time payment, free with institutional partnership funding) have privacy and product consequences; targeted advertising using baby routine data is not proposed. Daniel's decision, with no impact on the technical foundation beyond allowing for in-app purchases.
 
-## Questões abertas
+## Open questions
 
-1. Escopo etário (proposta 0 a 12 meses no MVP) e gestação fora.
-2. Mercado inicial (proposta Brasil, pt-BR).
-3. Monetização.
-4. Nome definitivo do produto.
+1. Age scope (proposed 0 to 12 months in the MVP) and pregnancy excluded.
+2. Initial market (proposed Brazil, pt-BR).
+3. Monetization.
+4. Final product name.
 
-## Limites desta análise
+## Limits of this analysis
 
-Personas, jornadas e alvos são hipóteses sem pesquisa com usuários. A comparação com o mercado depende das fontes listadas em [Concorrentes e diferenciais](Concorrentes_e_Diferenciais.md).
+Personas, journeys and targets are hypotheses without user research. The market comparison depends on the sources listed in [Competitors and differentiators](Concorrentes_e_Diferenciais.md).

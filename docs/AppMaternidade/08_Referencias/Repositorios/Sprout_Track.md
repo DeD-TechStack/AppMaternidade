@@ -1,13 +1,13 @@
 ---
-tipo: ficha-repositorio
-status: rascunho
-responsavel: Hermes (coordenador da APP-001)
+tipo: repository-profile
+status: draft
+responsavel: Hermes (coordinator of APP-001)
 revisado_em: 2026-10-22
 tarefa: MAT-5
 repositorio: https://github.com/Oak-and-Sprout/sprout-track
 branch: main
 commit: eb26949461bd0455cb8d6137dc5bc417a02adcf9
-licenca_raiz: Licença própria (Non-Commercial + Share-Alike)
+licenca_raiz: Custom license (Non-Commercial + Share-Alike)
 fontes_principais:
   - https://github.com/Oak-and-Sprout/sprout-track/tree/eb26949461bd0455cb8d6137dc5bc417a02adcf9
   - https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/LICENSE.md
@@ -18,263 +18,263 @@ fontes_principais:
 
 # Sprout Track
 
-Ficha escrita por leitura do código no commit `eb26949` e pelo [registro de execução](../../09_Evidencias/Execucao_Referencias/Sprout_Track/Registro_Execucao.md) da primeira tentativa. Marcas de evidência conforme as [Convenções](../../00_Inicio/Convencoes.md). Os links de código apontam para o commit analisado.
+Profile written by reading the code at commit `eb26949` and the [execution record](../../09_Evidencias/Execucao_Referencias/Sprout_Track/Registro_Execucao.md) from the first attempt. Evidence tags follow the [Conventions](../../00_Inicio/Convencoes.md). Code links point to the analyzed commit.
 
 ## Resumo
 
-- **O que é.** App web (Next.js) de registro de cuidados do bebê, maduro e ativo, com versão 1.6.8, 1.982 commits e último commit em 12/10/2026 [CÓDIGO; EXEC git]. Tem modo "Nursery" de tela cheia para madrugada e creche, várias famílias, cuidadores com PIN, relatórios, exportação, notificações push e integrações por API [DOC README].
-- **Apps Android e iOS:** existem como uma casca Capacitor, em outro repositório, que carrega este app web num WebView [DOC CLAUDE.md].
-- **Serve como referência de experiência:**
-  - modo Nursery, botões grandes e blocos de "acordado há", "desde a última mamada" e "desde a última fralda";
-  - sessões ativas guardadas no servidor, com **uma sessão ativa por bebê garantida no banco**;
-  - autoria por cuidador;
-  - tummy time como atividade com timer e média diária no relatório, sem meta [CÓDIGO].
-- **Não serve para:**
-  - offline: o service worker não faz cache, e não há fila local [CÓDIGO];
-  - base de código: a licença proíbe uso comercial [CÓDIGO LICENSE.md].
-- **Licença:** própria, "Non-Commercial + Share-Alike". **Nada do código entra no AppMaternidade**; só conceitos, implementados do zero.
-- **Execução:**
-  - Instalação, geração do Prisma, migrações, seed e servidor de desenvolvimento funcionaram [EXEC].
-  - Testes: 1.753 de 1.755 passaram; as 2 falhas vêm de caminhos do Windows [EXEC].
-  - Os registros de sondagem de acesso da primeira tentativa ficam fora desta ficha e fora do Git (seção "Execução").
+- **What it is.** A mature, active baby care logging web app (Next.js), at version 1.6.8, with 1.982 commits and its latest commit on 12/10/2026 [CODE; EXEC git]. It has a full-screen "Nursery" mode for nighttime and daycare, multiple families, caregivers with PINs, reports, export, push notifications, and API integrations [DOC README].
+- **Android and iOS apps:** these exist as a Capacitor shell in another repository that loads this web app in a WebView [DOC CLAUDE.md].
+- **Useful as a reference for the experience:**
+  - Nursery mode, large buttons, and "acordado há", "desde a última mamada", and "desde a última fralda" blocks;
+  - active sessions stored on the server, with **one active session per baby enforced by the database**;
+  - caregiver attribution;
+  - tummy time as a timed activity with a daily average in the report, without a target [CÓDIGO].
+- **Not useful for:**
+  - offline use: the service worker does not cache, and there is no local queue [CÓDIGO];
+  - a codebase: the license prohibits commercial use [CODE LICENSE.md].
+- **License:** custom, "Non-Commercial + Share-Alike". **None of the code goes into AppMaternidade**; only concepts, implemented from scratch.
+- **Execution:**
+  - Installation, Prisma generation, migrations, seed, and the development server worked [EXEC].
+  - Tests: 1.753 of 1.755 passed; the 2 failures come from Windows paths [EXEC].
+  - The access probe records from the first attempt remain outside this profile and outside Git ("Execution" section).
 
 ## Identificação
 
-| Item | Valor | Evidência |
+| Item | Value | Evidence |
 | --- | --- | --- |
-| Repositório | https://github.com/Oak-and-Sprout/sprout-track | — |
-| Branch e commit | `main`, `eb26949461bd0455cb8d6137dc5bc417a02adcf9` | [EXEC] `git log` no clone |
-| Data do commit | 12/10/2026 13:53:59 −0500, "fix(deploy): store backup.sh and service.sh as executable" | [EXEC] |
-| Histórico | 1.982 commits desde 15/02/2025. Autores principais: John Overton (1.734 + 146 com outro nome), Simon Bach (26), Giovanni Cerretani (20), Rafal Lesniak (11) | [EXEC] `git shortlog` |
-| Tamanho | 1.600 arquivos versionados; 133 itens em `tests/` | [EXEC] |
-| Versão | 1.6.8 (`package.json`) | [CÓDIGO] |
-| Licença | "Sprout Track License", Copyright © 2026 John Overton and Oak and Sprout; SHA-256 `d512a5ac…09af6de2` | [CÓDIGO] [LICENSE.md](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/LICENSE.md) |
-| Clone local | `C:/Projetos/AppMaternidade/_referencias/sprout-track`, somente leitura, `git status` limpo | [EXEC] |
+| Repository | https://github.com/Oak-and-Sprout/sprout-track | — |
+| Branch and commit | `main`, `eb26949461bd0455cb8d6137dc5bc417a02adcf9` | [EXEC] `git log` in the clone |
+| Commit date | 12/10/2026 13:53:59 −0500, "fix(deploy): store backup.sh and service.sh as executable" | [EXEC] |
+| History | 1.982 commits since 15/02/2025. Main authors: John Overton (1.734 + 146 under another name), Simon Bach (26), Giovanni Cerretani (20), Rafal Lesniak (11) | [EXEC] `git shortlog` |
+| Size | 1.600 tracked files; 133 items in `tests/` | [EXEC] |
+| Version | 1.6.8 (`package.json`) | [CÓDIGO] |
+| License | "Sprout Track License", Copyright © 2026 John Overton and Oak and Sprout; SHA-256 `d512a5ac…09af6de2` | [CÓDIGO] [LICENSE.md](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/LICENSE.md) |
+| Local clone | `C:/Projetos/AppMaternidade/_referencias/sprout-track`, read-only, clean `git status` | [EXEC] |
 
-## Stack confirmada
+## Confirmed stack
 
-| Componente | Declarado no commit | Observação |
+| Component | Declared at the commit | Note |
 | --- | --- | --- |
-| Next.js / React | `^16.3.3` / `^19.2.8` | App Router; o servidor de desenvolvimento subiu com Next.js 16.3.3 [EXEC] |
+| Next.js / React | `^16.3.3` / `^19.2.8` | App Router; the development server started with Next.js 16.3.3 [EXEC] |
 | TypeScript | `^7.0.2` | — |
-| Prisma | `^7.10.0`, com adaptadores `@prisma/adapter-pg` e `@prisma/adapter-better-sqlite3` | SQLite por padrão; PostgreSQL por `db push` [DOC CLAUDE.md] |
-| Autenticação | `jsonwebtoken ^9.0.3`; conta por e-mail e senha (bcrypt) e cuidador por ID de 2 dígitos + PIN | JWT guardado no `localStorage` [DOC CLAUDE.md] |
-| Push | `web-push ^3.6.7` (VAPID); FCM no Android e APNs direto no iOS, pela casca nativa | [CÓDIGO; DOC CLAUDE.md] |
-| Testes | Vitest `^4.1.11` | [EXEC, log 10] |
-| Mobile | Casca Capacitor em repositório separado (`mobile-app-v1`), não analisada | [DOC CLAUDE.md] |
+| Prisma | `^7.10.0`, with `@prisma/adapter-pg` and `@prisma/adapter-better-sqlite3` adapters | SQLite by default; PostgreSQL through `db push` [DOC CLAUDE.md] |
+| Authentication | `jsonwebtoken ^9.0.3`; account using email and password (bcrypt), and caregiver using a 2-digit ID + PIN | JWT stored in `localStorage` [DOC CLAUDE.md] |
+| Push | `web-push ^3.6.7` (VAPID); FCM on Android and direct APNs on iOS, through the native shell | [CODE; DOC CLAUDE.md] |
+| Tests | Vitest `^4.1.11` | [EXEC, log 10] |
+| Mobile | Capacitor shell in a separate repository (`mobile-app-v1`), not analyzed | [DOC CLAUDE.md] |
 
-## Fluxos analisados
+## Flows analyzed
 
-| Fluxo | Arquivos lidos |
+| Flow | Files read |
 | --- | --- |
-| Escopo por família | [app/api/utils/family-scope.ts](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/app/api/utils/family-scope.ts) e a regra descrita no [CLAUDE.md](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/CLAUDE.md) |
-| Sessão ativa de atividade e de amamentação | [schema.prisma L1751–L1797](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/prisma/schema.prisma#L1751-L1797), [app/api/active-activity/route.ts](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/app/api/active-activity/route.ts) |
-| Modo Nursery | [src/utils/nursery/timerBlocks.ts](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/src/utils/nursery/timerBlocks.ts) |
-| Offline e PWA | [public/sw.js](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/public/sw.js) e busca por fila local em `src` e `app` |
-| Registros e autoria | [schema.prisma](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/prisma/schema.prisma) (`SleepLog`, `PlayLog`, `Caretaker`, `Family`, `FamilyMember`, `Account`) |
-| Idiomas | [src/localization/supported-languages.json](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/src/localization/supported-languages.json) |
-| Licença | [LICENSE.md](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/LICENSE.md), lida inteira (55 linhas) |
+| Family scope | [app/api/utils/family-scope.ts](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/app/api/utils/family-scope.ts) and the rule described in [CLAUDE.md](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/CLAUDE.md) |
+| Active activity and breastfeeding sessions | [schema.prisma L1751–L1797](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/prisma/schema.prisma#L1751-L1797), [app/api/active-activity/route.ts](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/app/api/active-activity/route.ts) |
+| Nursery mode | [src/utils/nursery/timerBlocks.ts](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/src/utils/nursery/timerBlocks.ts) |
+| Offline and PWA | [public/sw.js](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/public/sw.js) and a search for a local queue in `src` and `app` |
+| Records and attribution | [schema.prisma](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/prisma/schema.prisma) (`SleepLog`, `PlayLog`, `Caretaker`, `Family`, `FamilyMember`, `Account`) |
+| Languages | [src/localization/supported-languages.json](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/src/localization/supported-languages.json) |
+| License | [LICENSE.md](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/LICENSE.md), read in full (55 lines) |
 
-## Achados por tema
+## Findings by topic
 
-### Modelo de domínio
+### Domain model
 
-- **Família e pessoas** [CÓDIGO]:
-  - `Family` tem slug e nome e se liga a no máximo uma `Account`, a conta titular com e-mail.
-  - `Caretaker` é o cuidador: ID de login de 2 dígitos, PIN, tipo livre (por exemplo, "parent", "daycare", "nanny", "grandparent") e papel ([L293](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/prisma/schema.prisma#L293)).
-  - `FamilyMember` liga cuidador e família, com papel em texto ("admin", "member").
-- **Registros com autoria** [CÓDIGO]. `SleepLog`, `FeedLog`, `DiaperLog`, `PlayLog`, `BathLog` e outros têm `caretakerId` (quem registrou), `deletedAt` (exclusão lógica) e `familyId`. Em `SleepLog`, a duração é calculada a partir de início e fim ([L349](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/prisma/schema.prisma#L349)). A autoria guarda um cuidador só: não separa "iniciado por" de "encerrado por".
-- **`familyId` opcional em quase todo o esquema** [CÓDIGO]. O campo é `String?` na maioria dos modelos, com o comentário "Nullable initially for migration". Ele é obrigatório só em poucos, como `FamilyMember`.
-- **Tummy time** [CÓDIGO]: valor `TUMMY_TIME` do enum `PlayType`, ao lado de brincadeira dentro e fora de casa, passeio e personalizada ([L82](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/prisma/schema.prisma#L82)). O relatório mensal mostra "Tummy time/day" como métrica (`src/components/Reports/MonthlyReportCard/ActivitySection.tsx`, linha 28), e a busca por meta ou alvo de tummy time não encontrou nada.
-- **Amplitude.** O esquema também cobre mamada, extração e balanço de leite, alimentos e alergênicos, medicamentos, vacinas, medidas com curvas CDC e OMS, calendário, contatos, fotos e notas. Tem ainda tabelas de operação SaaS: assinatura (campos Stripe), códigos de presente, links curtos, campanhas beta e chaves de API [CÓDIGO].
+- **Family and people** [CÓDIGO]:
+  - `Family` has a slug and name and is linked to at most one `Account`, the primary account with an email address.
+  - `Caretaker` is the caregiver: a 2-digit login ID, PIN, free-form type (for example, "parent", "daycare", "nanny", "grandparent"), and role ([L293](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/prisma/schema.prisma#L293)).
+  - `FamilyMember` links caregiver and family, with a role stored as text ("admin", "member").
+- **Records with attribution** [CÓDIGO]. `SleepLog`, `FeedLog`, `DiaperLog`, `PlayLog`, `BathLog`, and others have `caretakerId` (who recorded it), `deletedAt` (soft deletion), and `familyId`. In `SleepLog`, duration is calculated from the start and end ([L349](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/prisma/schema.prisma#L349)). Attribution stores only one caregiver: it does not separate "started by" from "ended by".
+- **`familyId` is optional throughout almost the entire schema** [CÓDIGO]. The field is `String?` in most models, with the comment "Nullable initially for migration". It is required in only a few, such as `FamilyMember`.
+- **Tummy time** [CÓDIGO]: the `TUMMY_TIME` value of the `PlayType` enum, alongside indoor and outdoor play, outings, and custom activity ([L82](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/prisma/schema.prisma#L82)). The monthly report shows "Tummy time/day" as a metric (`src/components/Reports/MonthlyReportCard/ActivitySection.tsx`, line 28), and the search for a tummy time goal or target found nothing.
+- **Breadth.** The schema also covers feeding, pumping and milk balance, foods and allergens, medications, vaccines, measurements with CDC and WHO curves, calendar, contacts, photos, and notes. It also has SaaS operation tables: subscription (Stripe fields), gift codes, short links, beta campaigns, and API keys [CÓDIGO].
 
-### Validações
+### Validations
 
-- **Uma sessão ativa por bebê, garantida no banco** [CÓDIGO]. `ActiveBreastFeed.babyId` e `ActiveActivity.babyId` são `@unique`, com o comentário "Only one active session per baby" ([L1751–L1797](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/prisma/schema.prisma#L1751-L1797)). A rota de início também confere antes e responde 409, "An active activity session already exists for this baby." ([active-activity/route.ts L78–L81](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/app/api/active-activity/route.ts#L78-L81)).
-- **Pausa e acumulação** [CÓDIGO]. As sessões ativas guardam segundos acumulados, instante do segmento atual e início da sessão; na amamentação, por lado e com pausa.
-- Validações de sobreposição, de fim depois do início e de datas futuras não foram analisadas nesta ficha.
+- **One active session per baby, enforced by the database** [CÓDIGO]. `ActiveBreastFeed.babyId` and `ActiveActivity.babyId` are `@unique`, with the comment "Only one active session per baby" ([L1751–L1797](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/prisma/schema.prisma#L1751-L1797)). The start route also checks first and responds with 409, "An active activity session already exists for this baby." ([active-activity/route.ts L78–L81](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/app/api/active-activity/route.ts#L78-L81)).
+- **Pausing and accumulation** [CÓDIGO]. Active sessions store accumulated seconds, the current segment timestamp, and the session start; breastfeeding tracks these per side and supports pausing.
+- Validations for overlaps, end after start, and future dates were not analyzed in this profile.
 
-### Autorização e isolamento
+### Authorization and isolation
 
-Descrição por leitura do código, em termos de design.
+Description based on reading the code, in design terms.
 
-- **Regra declarada** [DOC CLAUDE.md]:
-  - "Never trust client-sent family context." A família vem só do `authContext` do middleware.
-  - Leitura, edição e exclusão por id buscam o recurso e conferem a família, devolvendo 404 se não bater.
-  - Criação confere o recurso-pai; listagens filtram por família.
-- **Helper central** [CÓDIGO]. `resolveFamilyScope` usa a família autenticada como autoridade. A família enviada pelo cliente só pode confirmar, nunca trocar. Só o administrador do sistema age em outra família, e precisa indicá-la ([family-scope.ts L18–L36](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/app/api/utils/family-scope.ts#L18-L36)).
-- **Lição documentada pelo próprio projeto** [DOC CLAUDE.md]: um `OR` vazio aninhado no Prisma pode virar um filtro só por família e alcançar linhas de outros donos. A recomendação deles é conferir o escopo pelo SQL gerado, não pelo objeto da consulta. A lição vale para qualquer ORM no AppMaternidade.
-- **Perguntas de auditoria, não vulnerabilidades demonstradas:**
-  - Como cada rota trata registros legados com `familyId` nulo?
-  - Toda rota usa o helper ou a regra de busca seguida de conferência?
+- **Declared rule** [DOC CLAUDE.md]:
+  - "Never trust client-sent family context." The family comes only from the middleware's `authContext`.
+  - Reading, editing, and deleting by ID retrieve the resource and check the family, returning 404 if it does not match.
+  - Creation checks the parent resource; listings filter by family.
+- **Central helper** [CÓDIGO]. `resolveFamilyScope` uses the authenticated family as the authority. The family sent by the client can only confirm it, never change it. Only the system administrator can act in another family and must specify it ([family-scope.ts L18–L36](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/app/api/utils/family-scope.ts#L18-L36)).
+- **Lesson documented by the project itself** [DOC CLAUDE.md]: an empty `OR` nested in Prisma can become a family-only filter and reach rows belonging to other owners. Their recommendation is to check the scope through the generated SQL, rather than the query object. The lesson applies to any ORM in AppMaternidade.
+- **Audit questions, not demonstrated vulnerabilities:**
+  - How does each route handle legacy records with a null `familyId`?
+  - Does every route use the helper or the retrieval-then-check rule?
 
-  A primeira tentativa desta análise fez sondagens de acesso numa instância local com dados fictícios. Segundo o [registro de execução](../../09_Evidencias/Execucao_Referencias/Sprout_Track/Registro_Execucao.md), elas registram comportamentos que exigem atenção. Os arquivos ficam fora do Git e não são detalhados aqui, até Daniel decidir sobre divulgação responsável aos mantenedores ([Decisões para Daniel](../../07_Roadmap/Decisoes_para_Daniel.md), D7).
-- **Autenticação pensada para casa e creche** [DOC CLAUDE.md]:
-  - ID de 2 dígitos e PIN por cuidador, num teclado numérico;
-  - JWT no `localStorage`, lista de tokens revogados no logout e tempo de inatividade configurável;
-  - bloqueio por IP por 5 minutos depois de 3 falhas.
+  The first attempt at this analysis ran access probes on a local instance with fictitious data. According to the [execution record](../../09_Evidencias/Execucao_Referencias/Sprout_Track/Registro_Execucao.md), they record behaviors that require attention. The files remain outside Git and are not detailed here until Daniel decides on responsible disclosure to the maintainers ([Decisions for Daniel](../../07_Roadmap/Decisoes_para_Daniel.md), D7).
+- **Authentication designed for home and daycare** [DOC CLAUDE.md]:
+  - a 2-digit ID and PIN per caregiver, on a numeric keypad;
+  - JWT in `localStorage`, a list of tokens revoked on logout, and a configurable inactivity timeout;
+  - an IP block for 5 minutes after 3 failures.
 
-  É prático no aparelho compartilhado da creche. Como única proteção de um serviço na internet com dados de saúde de crianças, não basta [HIP].
+  This is practical on a shared daycare device. As the sole protection for an internet service holding children's health data, it is insufficient [HIP].
 
 ### Timers
 
-- **Sessão no servidor, com tela derivada** [CÓDIGO]:
-  - a sessão ativa é uma linha no banco, então qualquer cuidador vê e encerra a sessão iniciada por outro;
-  - a tela deriva "acordado há", "dormindo há", "desde a última mamada" e "desde a última fralda" a partir dos registros e do relógio, com corte de 24 h e limiar de aviso configurável por bebê ([timerBlocks.ts](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/src/utils/nursery/timerBlocks.ts));
-  - não há contador em segundo plano.
-- **Avisos por bebê** [CÓDIGO]: tempos de aviso de mamada (padrão 3 h), fralda (2 h) e extração (3 h), e a opção de contar o timer de mamada a partir do início ou do fim (modelo `Baby`).
-- **Sem rede** [CÓDIGO]: iniciar e encerrar sessão depende do servidor, porque não há fila local (seção seguinte).
+- **Session on the server, with the display derived from it** [CÓDIGO]:
+  - the active session is a database row, so any caregiver can see and end a session started by another;
+  - the display derives "acordado há", "dormindo há", "desde a última mamada", and "desde a última fralda" from the records and the clock, with a 24 h cutoff and a warning threshold configurable per baby ([timerBlocks.ts](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/src/utils/nursery/timerBlocks.ts));
+  - there is no background counter.
+- **Warnings per baby** [CÓDIGO]: warning times for feeding (default 3 h), diapers (2 h), and pumping (3 h), and the option to count the feeding timer from the start or the end (`Baby` model).
+- **Without a network connection** [CÓDIGO]: starting and ending a session depends on the server because there is no local queue (next section).
 
-### Persistência e offline
+### Persistence and offline use
 
-- **Service worker sem cache** [CÓDIGO]. O `public/sw.js` registra `fetch` com uma função vazia ([L5](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/public/sw.js#L5)), não usa `caches` e trata só instalação, ativação e push.
-- **Sem fila local** [CÓDIGO]. A busca por `indexedDB`, fila offline e `navigator.onLine` em `src` e `app` não encontrou nada.
-- **Contradição com a documentação.** O CLAUDE.md fala em "PWA architecture with offline support" [DOC], mas o código do commit não sustenta isso. É o exemplo que o pacote da task pedia para conferir: instalar como PWA não é escrita offline.
-- A observação pelo navegador feita na primeira tentativa está nos registros fora do Git (D7).
+- **Service worker without caching** [CÓDIGO]. `public/sw.js` registers `fetch` with an empty function ([L5](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/public/sw.js#L5)), does not use `caches`, and handles only installation, activation, and push.
+- **No local queue** [CÓDIGO]. The search for `indexedDB`, an offline queue, and `navigator.onLine` in `src` and `app` found nothing.
+- **Contradiction with the documentation.** CLAUDE.md mentions "PWA architecture with offline support" [DOC], but the code at this commit does not support that claim. This is the example the task package asked to check: installing as a PWA does not mean offline writing.
+- The browser observation from the first attempt is in the records outside Git (D7).
 
-### UI de registro e histórico
+### Logging and history UI
 
-Declarado no README [DOC]:
+Declared in the README [DOC]:
 
-- painel diário;
-- calendário;
-- relatórios e curvas de crescimento;
-- registro completo com busca e exportação;
-- modo Nursery de tela cheia, com botões grandes e cores e brilho configuráveis;
-- modo escuro.
+- daily dashboard;
+- calendar;
+- reports and growth curves;
+- complete log with search and export;
+- full-screen Nursery mode, with large buttons and configurable colors and brightness;
+- dark mode.
 
-O que o código confirma [CÓDIGO]:
+What the code confirms [CÓDIGO]:
 
-- os blocos do modo Nursery;
-- a cor do cuidador na linha do tempo (`badgeColor`).
+- the Nursery mode blocks;
+- the caregiver's color in the timeline (`badgeColor`).
 
-### Relatórios
+### Reports
 
-O relatório mensal tem seção de atividades com média diária de tummy time [CÓDIGO]. As curvas usam tabelas CDC e OMS carregadas no seed [EXEC, registro passo 5].
+The monthly report has an activities section with a daily tummy time average [CÓDIGO]. The curves use CDC and WHO tables loaded by the seed [EXEC, record step 5].
 
-### API e integrações
+### API and integrations
 
-- **Rotas** [CÓDIGO]: rotas REST em `app/api`, inclusive `api-keys`, `hooks`, `import`, `database`, `notifications` e `timeline`.
-- **Integrações declaradas** [DOC README, seção "API & Integrations"]: chaves de API e integrações externas, com as rotas `api-keys` e `hooks` [CÓDIGO, só árvore].
-- **Importação do Baby Buddy** [CÓDIGO]: `src/lib/importers/baby-buddy/`.
+- **Routes** [CÓDIGO]: REST routes in `app/api`, including `api-keys`, `hooks`, `import`, `database`, `notifications`, and `timeline`.
+- **Declared integrations** [DOC README, "API & Integrations" section]: API keys and external integrations, with the `api-keys` and `hooks` routes [CODE, tree only].
+- **Baby Buddy import** [CÓDIGO]: `src/lib/importers/baby-buddy/`.
 
 ### Testes
 
-- **Executados** [EXEC, log 10]:
-  - 132 arquivos: 131 passaram e 1 falhou;
-  - 1.755 testes: 1.753 passaram e 2 falharam;
-  - as falhas estão em `tests/prisma-adapter.test.ts`, que espera caminhos POSIX e recebeu `C:\...` no Windows.
-- **Regra do projeto** [DOC CLAUDE.md]: toda mudança vem com teste, e a lógica vai para funções puras testáveis.
+- **Executed** [EXEC, log 10]:
+  - 132 files: 131 passed and 1 failed;
+  - 1.755 tests: 1.753 passed and 2 failed;
+  - the failures are in `tests/prisma-adapter.test.ts`, which expects POSIX paths and received `C:\...` on Windows.
+- **Project rule** [DOC CLAUDE.md]: every change comes with a test, and logic goes into testable pure functions.
 
-### Configuração e i18n
+### Configuration and i18n
 
-- **Idiomas:** 12, incluindo **pt-BR** e pt-PT ([supported-languages.json](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/src/localization/supported-languages.json)) [CÓDIGO]. O CLAUDE.md ainda lista só cinco arquivos [DOC desatualizado].
-- **Fuso:** há utilitários no servidor (`app/api/utils/timezone.ts`), uma rota `system-timezone` e uma opção de depuração de fuso nas configurações [CÓDIGO, só árvore]. O comportamento não foi analisado nesta ficha.
-- **Implantação:** Docker com SQLite ou PostgreSQL, ou execução local com SQLite [DOC README].
+- **Languages:** 12, including **pt-BR** and pt-PT ([supported-languages.json](https://github.com/Oak-and-Sprout/sprout-track/blob/eb26949461bd0455cb8d6137dc5bc417a02adcf9/src/localization/supported-languages.json)) [CÓDIGO]. CLAUDE.md still lists only five files [outdated DOC].
+- **Time zone:** there are server utilities (`app/api/utils/timezone.ts`), a `system-timezone` route, and a time zone debugging option in settings [CODE, tree only]. The behavior was not analyzed in this profile.
+- **Deployment:** Docker with SQLite or PostgreSQL, or local execution with SQLite [DOC README].
 
 ## Execução
 
-Resumo do [registro de execução](../../09_Evidencias/Execucao_Referencias/Sprout_Track/Registro_Execucao.md) da primeira tentativa, das 02:55 às 03:33 de 22/10/2026, com Node 24.20.0 no Windows 11 e SQLite descartável fora do clone.
+Summary of the [execution record](../../09_Evidencias/Execucao_Referencias/Sprout_Track/Registro_Execucao.md) from the first attempt, from 02:55 to 03:33 on 22/10/2026, with Node 24.20.0 on Windows 11 and a disposable SQLite database outside the clone.
 
-| Passo | Resultado | Evidência |
+| Step | Result | Evidence |
 | --- | --- | --- |
-| `npm ci --ignore-scripts` | 874 pacotes em cerca de 5 min, exit 0 | [EXEC] [01_npm_ci.log](../../09_Evidencias/Execucao_Referencias/Sprout_Track/01_npm_ci.log) |
-| `prisma generate` | Clientes Prisma 7.10.0, exit 0 | [EXEC] [02_prisma_generate.log](../../09_Evidencias/Execucao_Referencias/Sprout_Track/02_prisma_generate.log) |
-| `prisma migrate deploy` | Migrações aplicadas | [EXEC] [03_prisma_migrate.log](../../09_Evidencias/Execucao_Referencias/Sprout_Track/03_prisma_migrate.log) |
-| `db push` do banco de logs | **Recusado pelo Prisma 7.10**, que detectou execução por agente de IA e exigiu consentimento explícito do usuário para ação destrutiva. Não foi contornado; o banco de logs é dispensável com `ENABLE_LOG=false` | [EXEC] mesmo log |
-| Binário do `better-sqlite3` | Pré-compilado baixado e extraído, exit 0; tarball removido depois | [EXEC] [04_better_sqlite3_prebuild.log](../../09_Evidencias/Execucao_Referencias/Sprout_Track/04_better_sqlite3_prebuild.log) |
-| Seed | Família padrão, cuidador de sistema com PIN padrão documentado, 28 unidades e curvas CDC e OMS, exit 0 | [EXEC] [05_seed.log](../../09_Evidencias/Execucao_Referencias/Sprout_Track/05_seed.log) |
-| `next dev` em 127.0.0.1:38317 | Pronto em 2,2 s. O `next dev` 16.3 acrescentou um bloco ao `CLAUDE.md` do clone, revertido com `git checkout` | [EXEC] registro, passo 6 |
-| `vitest run` | 1.753 de 1.755 testes passaram | [EXEC] [10_vitest.log](../../09_Evidencias/Execucao_Referencias/Sprout_Track/10_vitest.log) |
-| Limpeza | Árvore do `next dev` encerrada, porta livre, abas fechadas, nenhum Docker | [EXEC] registro |
+| `npm ci --ignore-scripts` | 874 packages in about 5 min, exit 0 | [EXEC] [01_npm_ci.log](../../09_Evidencias/Execucao_Referencias/Sprout_Track/01_npm_ci.log) |
+| `prisma generate` | Prisma clients 7.10.0, exit 0 | [EXEC] [02_prisma_generate.log](../../09_Evidencias/Execucao_Referencias/Sprout_Track/02_prisma_generate.log) |
+| `prisma migrate deploy` | Migrations applied | [EXEC] [03_prisma_migrate.log](../../09_Evidencias/Execucao_Referencias/Sprout_Track/03_prisma_migrate.log) |
+| `db push` of the log database | **Refused by Prisma 7.10**, which detected execution by an AI agent and required explicit user consent for a destructive action. It was not bypassed; the log database is unnecessary with `ENABLE_LOG=false` | [EXEC] same log |
+| `better-sqlite3` binary | Prebuilt binary downloaded and extracted, exit 0; tarball removed afterward | [EXEC] [04_better_sqlite3_prebuild.log](../../09_Evidencias/Execucao_Referencias/Sprout_Track/04_better_sqlite3_prebuild.log) |
+| Seed | Default family, system caregiver with documented default PIN, 28 units, and CDC and WHO curves, exit 0 | [EXEC] [05_seed.log](../../09_Evidencias/Execucao_Referencias/Sprout_Track/05_seed.log) |
+| `next dev` on 127.0.0.1:38317 | Ready in 2,2 s. `next dev` 16.3 added a block to the clone's `CLAUDE.md`, reverted with `git checkout` | [EXEC] record, step 6 |
+| `vitest run` | 1.753 of 1.755 tests passed | [EXEC] [10_vitest.log](../../09_Evidencias/Execucao_Referencias/Sprout_Track/10_vitest.log) |
+| Cleanup | `next dev` process tree terminated, port free, tabs closed, no Docker | [EXEC] record |
 
-**Fora desta ficha e fora do Git:** as sondagens de API e a observação pela interface com teste offline (`06`, `07`, `08`, `09`, `11`, `12` e `roteiros/api_probe*.py`, `check_offline.py`). Eles ficam no disco, ignorados pelo `.gitignore`, até a decisão D7.
+**Outside this profile and outside Git:** the API probes and interface observation with an offline test (`06`, `07`, `08`, `09`, `11`, `12` and `roteiros/api_probe*.py`, `check_offline.py`). They remain on disk, ignored by `.gitignore`, until decision D7.
 
-**Não executado:** build de produção, Docker, PostgreSQL, push, modo SaaS, contas por e-mail, casca nativa e aparelho móvel real.
+**Not executed:** production build, Docker, PostgreSQL, push, SaaS mode, email accounts, native shell, and a real mobile device.
 
-## Licenças por material
+## Licenses by material
 
-| Material | Licença | O que significa para o AppMaternidade |
+| Material | License | What it means for AppMaternidade |
 | --- | --- | --- |
-| Código, documentação e arquivos do repositório | **Sprout Track License**. Concede uso, cópia, modificação, distribuição e obras derivadas (seção 2), sob três condições (seção 3): atribuição; **uso não comercial**, que exclui prestar serviços por remuneração, incorporar num produto vendido e "generate revenue, directly or indirectly"; e **compartilhamento pela mesma licença** | Um app que possa ter assinatura, parceria ou qualquer receita, direta ou indireta, não pode incorporar o código. Os titulares se reservam o uso comercial e podem licenciar em outros termos (seção 4), o que só seria possível por acordo |
-| Imagens do README (`public/readme/*.png`) | Mesma licença, como "associated files" (seção 1) | Não reutilizar |
-| Dependências | Levantadas pelo `package-lock.json` depois da revisão independente: 520 entradas de produção, a maioria MIT, ISC e Apache-2.0. A conferir: `heic-to` (LGPL-3.0), `web-push` (MPL-2.0), `@img/sharp-*` (LGPL-3.0-or-later, opcionais), `elkjs` (EPL-2.0), `caniuse-lite` (CC-BY-4.0) e 2 sem licença declarada ([lista](../../09_Evidencias/Execucao_Referencias/Sprout_Track/13_licencas_dependencias.tsv)) | Se o AppMaternidade escolher alguma dessas bibliotecas, ela é avaliada pela própria licença, independente do Sprout Track |
-| Curvas CDC e OMS no seed | Dados públicos de origem própria; licença das fontes a conferir separadamente | Buscar nas fontes primárias, não neste repositório |
-| Nome e marca | "Sprout Track", "Oak and Sprout" | Não usar |
+| Code, documentation, and repository files | **Sprout Track License**. Grants use, copying, modification, distribution, and derivative works (section 2), subject to three conditions (section 3): attribution; **non-commercial use**, which excludes providing services for compensation, incorporation into a product sold, and "generate revenue, directly or indirectly"; and **sharing under the same license** | An app that may have subscriptions, partnerships, or any revenue, direct or indirect, cannot incorporate the code. The rights holders reserve commercial use and may license under other terms (section 4), which would require an agreement |
+| README images (`public/readme/*.png`) | Same license, as "associated files" (section 1) | Do not reuse |
+| Dependencies | Listed by `package-lock.json` after the independent review: 520 production entries, mostly MIT, ISC, and Apache-2.0. To check: `heic-to` (LGPL-3.0), `web-push` (MPL-2.0), `@img/sharp-*` (LGPL-3.0-or-later, optional), `elkjs` (EPL-2.0), `caniuse-lite` (CC-BY-4.0), and 2 with no declared license ([list](../../09_Evidencias/Execucao_Referencias/Sprout_Track/13_licencas_dependencias.tsv)) | If AppMaternidade chooses any of these libraries, it is assessed under its own license, independently of Sprout Track |
+| CDC and WHO curves in the seed | Public data from their respective sources; source licenses must be checked separately | Obtain from primary sources, not this repository |
+| Name and brand | "Sprout Track", "Oak and Sprout" | Do not use |
 
-Isto é leitura técnica da licença, não parecer jurídico.
+This is a technical reading of the license, not a legal opinion.
 
-## O que aproveitar como conceito
+## What to use as a concept
 
-Só como ideia, implementada do zero:
+Only as an idea, implemented from scratch:
 
-1. Modo de tela cheia para madrugada e creche, com botões grandes e blocos de "há quanto tempo".
-2. Sessão ativa no servidor, com pausa e acumulação por lado. A regra de unicidade do Sprout Track (restrição no banco e 409) não é copiada: offline não dá para recusar a segunda sessão. No AppMaternidade, as duas são aceitas e marcadas para unir ([Offline, seção 7.2](../../03_Arquitetura/Offline_Sincronizacao_e_Temporizadores.md)).
-3. Autoria por cuidador em todo registro e cor do cuidador na linha do tempo.
-4. Limiares de aviso por bebê ("mamada há mais de 3 h"), configuráveis pela família.
-5. Tummy time como atividade com timer e métrica de média no relatório, sem meta.
-6. Regra explícita "não confiar na família enviada pelo cliente", com um helper único e a conferência pelo SQL gerado.
+1. Full-screen mode for nighttime and daycare, with large buttons and "how long ago" blocks.
+2. Active session on the server, with pausing and accumulation per side. Sprout Track's uniqueness rule (database constraint and 409) is not copied: offline, the second session cannot be rejected. In AppMaternidade, both are accepted and flagged for merging ([Offline, section 7.2](../../03_Arquitetura/Offline_Sincronizacao_e_Temporizadores.md)).
+3. Caregiver attribution in every record and the caregiver's color in the timeline.
+4. Warning thresholds per baby ("mamada há mais de 3 h"), configurable by the family.
+5. Tummy time as a timed activity with an average metric in the report, without a target.
+6. An explicit "do not trust the family sent by the client" rule, with a single helper and verification through the generated SQL.
 
-## O que pode ser reutilizado conforme a licença
+## What can be reused under the license
 
-Nada do código, das imagens ou dos textos, enquanto o AppMaternidade puder ter qualquer receita. A alternativa seria um acordo com os titulares (seção 4). Não há recomendação de buscar esse acordo.
+None of the code, images, or text, as long as AppMaternidade may have any revenue. The alternative would be an agreement with the rights holders (section 4). There is no recommendation to seek that agreement.
 
-## Adaptações necessárias
+## Required adaptations
 
-- **Offline de verdade:** fila local persistente e banco local ([ADR-004](../../06_ADRs/ADR-004_Offline_Sync_e_Temporizadores.md)). Aqui a sessão ativa depende do servidor.
-- **"Iniciado por" e "encerrado por"** separados, além do autor do registro.
-- **`familyId` obrigatório** em todo dado de cuidado, sem estado legado nulo ([Modelo de dados, invariantes](../../03_Arquitetura/Modelo_de_Dados_e_Permissoes.md)).
-- **Autenticação de serviço na internet:** conta por pessoa e código por e-mail ([ADR-003](../../06_ADRs/ADR-003_Backend_Persistencia_Autenticacao.md)). O PIN pode servir como trava local de aparelho compartilhado, nunca como única credencial [HIP].
-- **App nativo,** não WebView, para timer na tela bloqueada e armazenamento cifrado ([ADR-002](../../06_ADRs/ADR-002_Framework_Mobile.md)).
+- **Actual offline support:** persistent local queue and local database ([ADR-004](../../06_ADRs/ADR-004_Offline_Sync_e_Temporizadores.md)). Here, the active session depends on the server.
+- **Separate "started by" and "ended by" fields**, in addition to the record's author.
+- **Required `familyId`** in all care data, with no legacy null state ([Data model, invariants](../../03_Arquitetura/Modelo_de_Dados_e_Permissoes.md)).
+- **Internet service authentication:** an account per person and a code by email ([ADR-003](../../06_ADRs/ADR-003_Backend_Persistencia_Autenticacao.md)). The PIN can serve as a local lock on a shared device, never as the sole credential [HIP].
+- **Native app,** not a WebView, for a timer on the lock screen and encrypted storage ([ADR-002](../../06_ADRs/ADR-002_Framework_Mobile.md)).
 
-## O que não reproduzir
+## What not to reproduce
 
-- Afirmar suporte offline sem cache nem fila.
-- `familyId` opcional "temporariamente" em dados de família.
-- JWT no `localStorage` de um app web com dados sensíveis [HIP].
-- PIN curto como credencial principal de um serviço exposto.
+- Claiming offline support without caching or a queue.
+- "Temporarily" optional `familyId` in family data.
+- JWT in `localStorage` in a web app with sensitive data [HIP].
+- A short PIN as the main credential for an exposed service.
 
-## Riscos e problemas encontrados
+## Risks and problems found
 
-| Risco | Evidência | Impacto para o AppMaternidade |
+| Risk | Evidence | Impact on AppMaternidade |
 | --- | --- | --- |
-| Licença não comercial com compartilhamento pela mesma licença | [CÓDIGO] LICENSE.md | Nenhum reaproveitamento de código |
-| Documentação diz offline; o código não tem | [CÓDIGO] sw.js; [DOC] CLAUDE.md | Confirma que PWA não resolve o requisito offline |
-| `familyId` opcional na maior parte do esquema | [CÓDIGO] schema.prisma | Pergunta de auditoria; reforça o invariante de escopo obrigatório |
-| Observações de acesso da primeira tentativa, não divulgadas | [EXEC] registros fora do Git | Decisão D7 antes de publicar o cofre |
-| Testes dependentes de caminho POSIX | [EXEC] log 10 | Lição para o nosso CI: rodar testes também no Windows, ou isolar caminhos |
+| Non-commercial license requiring sharing under the same license | [CÓDIGO] LICENSE.md | No code reuse |
+| Documentation claims offline support; the code does not have it | [CÓDIGO] sw.js; [DOC] CLAUDE.md | Confirms that a PWA does not meet the offline requirement |
+| Optional `familyId` throughout most of the schema | [CÓDIGO] schema.prisma | Audit question; reinforces the mandatory scope invariant |
+| Undisclosed access observations from the first attempt | [EXEC] records outside Git | Decision D7 before publishing the vault |
+| Tests dependent on POSIX paths | [EXEC] log 10 | Lesson for our CI: run tests on Windows too, or isolate paths |
 
-## Relação com os cenários Q-01 a Q-12
+## Relationship to scenarios Q-01 through Q-12
 
-| Cenário | O que o Sprout Track mostra | Classe | Lição para o AppMaternidade |
+| Scenario | What Sprout Track shows | Class | Lesson for AppMaternidade |
 | --- | --- | --- | --- |
-| Q-01 offline, fechar e reabrir | Sem cache nem fila; o registro depende do servidor | [CÓDIGO] | Fila local persistente com estado visível |
-| Q-02 reenvio | Sem id de operação visto na leitura | [HIP] | Id de operação e idempotência |
-| Q-03 A inicia, B encerra | Sessão ativa no servidor, única por bebê; qualquer cuidador encerra; a autoria guarda um cuidador | [CÓDIGO] | Sessão compartilhada com "iniciado por" e "encerrado por". Sessões paralelas são aceitas e marcadas para unir, porque offline não dá para recusar (Offline, 7.2) |
-| Q-04 edição concorrente | Não analisado | — | Versão por registro |
-| Q-05 revogação | Lista de tokens revogados no logout; sem cache offline a limpar | [DOC] | Revalidação na reconexão e limpeza local |
-| Q-06 ids de outra família | Regra e helper centrais; perguntas de auditoria sobre registros sem família | [CÓDIGO] [DOC] | Escopo pelo vínculo vigente e teste em todas as rotas |
-| Q-07 comunidade | Não existe | [CÓDIGO] | Sem referência |
-| Q-08 tela bloqueada | Blocos derivados do relógio e dos registros; sessão no servidor | [CÓDIGO] | Mesmo princípio, com estado local |
-| Q-09 fuso e meia-noite | Utilitários de fuso no servidor; comportamento não analisado | [CÓDIGO, árvore] | Fuso gravado com o evento |
-| Q-10 notificação | Push web (VAPID) e nativo (FCM, APNs) | [CÓDIGO] [DOC] | Registro sem depender de push |
-| Q-11 moderação | Não existe | [CÓDIGO] | Sem referência |
-| Q-12 exportar, excluir, backup | Exportação declarada; rotas de banco e backup; encerramento de conta (`closed`, `closedAt`) | [DOC] [CÓDIGO] | Exportação por família e exclusão propagada |
+| Q-01 offline, close and reopen | No caching or queue; logging depends on the server | [CÓDIGO] | Persistent local queue with visible state |
+| Q-02 resubmission | No operation ID seen during the reading | [HIP] | Operation ID and idempotency |
+| Q-03 A starts, B ends | Active session on the server, unique per baby; any caregiver can end it; attribution stores one caregiver | [CÓDIGO] | Shared session with "started by" and "ended by". Parallel sessions are accepted and flagged for merging because they cannot be rejected offline (Offline, 7.2) |
+| Q-04 concurrent editing | Not analyzed | — | Version per record |
+| Q-05 revocation | List of tokens revoked on logout; no offline cache to clear | [DOC] | Revalidation on reconnection and local cleanup |
+| Q-06 IDs from another family | Central rule and helper; audit questions about records without a family | [CÓDIGO] [DOC] | Scope based on the current relationship and testing in every route |
+| Q-07 community | Does not exist | [CÓDIGO] | No reference |
+| Q-08 lock screen | Blocks derived from the clock and records; session on the server | [CÓDIGO] | Same principle, with local state |
+| Q-09 time zone and midnight | Server time zone utilities; behavior not analyzed | [CODE, tree] | Time zone stored with the event |
+| Q-10 notification | Web push (VAPID) and native push (FCM, APNs) | [CÓDIGO] [DOC] | Logging without depending on push |
+| Q-11 moderation | Does not exist | [CÓDIGO] | No reference |
+| Q-12 export, delete, backup | Export declared; database and backup routes; account closure (`closed`, `closedAt`) | [DOC] [CÓDIGO] | Export per family and propagated deletion |
 
-## Questões abertas
+## Open questions
 
-1. Como as rotas tratam os registros com `familyId` nulo? (Pergunta de auditoria.)
-2. Quando a conta é encerrada (`closed`), os dados da família são excluídos ou só desativados?
-3. Como a casca Capacitor guarda o token e se comporta sem rede?
-4. Como os utilitários de fuso definem o dia: pelo fuso do servidor ou pelo do cuidador?
-5. Daniel vai avisar os mantenedores sobre as observações da primeira tentativa (D7)?
+1. How do the routes handle records with a null `familyId`? (Audit question.)
+2. When the account is closed (`closed`), is the family's data deleted or only deactivated?
+3. How does the Capacitor shell store the token and behave without a network connection?
+4. How do the time zone utilities define the day: by the server's time zone or the caregiver's?
+5. Will Daniel notify the maintainers about the observations from the first attempt (D7)?
 
-## Limites desta análise
+## Limits of this analysis
 
-- Ficha escrita pelo coordenador, por leitura de código e pelo registro de execução, depois de duas tentativas de subagente que não terminaram: a primeira interrompida pelo filtro do provedor por volta de 03:37, a segunda por falta de resposta do provedor às 04:54.
-- Pela regra adotada depois dos bloqueios, não houve nova execução nem requisição ao app. As observações de acesso são perguntas de auditoria.
-- Leitura parcial: rotas individuais, componentes, utilitários de fuso e a casca nativa não foram lidos linha a linha.
+- Profile written by the coordinator, based on reading code and the execution record, after two unfinished subagent attempts: the first interrupted by the provider's filter around 03:37, the second by a lack of response from the provider at 04:54.
+- Under the rule adopted after the blocks, there was no further execution or request to the app. The access observations are audit questions.
+- Partial reading: individual routes, components, time zone utilities, and the native shell were not read line by line.
 
 ## Voltar
 
-[Home](../../00_Inicio/Home.md) · [Progresso](../../00_Inicio/Progresso.md) · [Finnberry](Finnberry.md) · [Baby Buddy](Baby_Buddy.md)
+[Home](../../00_Inicio/Home.md) · [Progress](../../00_Inicio/Progresso.md) · [Finnberry](Finnberry.md) · [Baby Buddy](Baby_Buddy.md)

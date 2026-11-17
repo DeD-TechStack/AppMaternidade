@@ -1,7 +1,7 @@
 ---
-tipo: ficha-concorrente
-status: rascunho
-responsavel: Hermes (subagente concorrentes A)
+tipo: competitor-profile
+status: draft
+responsavel: Hermes (competitors subagent A)
 revisado_em: 2026-10-22
 produto: Baby Daybook
 fontes_principais:
@@ -14,173 +14,173 @@ fontes_principais:
 
 # Baby Daybook
 
-Ficha de concorrente da APP-001. Todas as fontes foram consultadas em 22/10/2026 (America/Sao_Paulo). As marcas seguem as [Convenções do cofre](../../00_Inicio/Convencoes.md): **[DOC]** indica algo declarado em site, loja ou ajuda; **[HIP]** indica hipótese, inferência ou relato isolado. Nada foi observado em execução. Trechos citados em inglês são literais; citações em português de fontes em inglês são traduções livres. Os códigos B01, B02… remetem à tabela de Fontes (no fim da ficha). Fichas irmãs: [Napper](Napper.md), [Huckleberry](Huckleberry.md) e [Nara Baby](Nara_Baby.md).
+Competitor profile for APP-001. All sources were accessed on 22/10/2026 (America/Sao_Paulo). The labels follow the [Vault conventions](../../00_Inicio/Convencoes.md): **[DOC]** indicates something stated on a website, store, or help page; **[HIP]** indicates a hypothesis, inference, or isolated report. Nothing was observed during use. Passages quoted in English are verbatim; Portuguese quotations from English sources are loose translations. Codes B01, B02… refer to the Sources table (at the end of the profile). Related profiles: [Napper](Napper.md), [Huckleberry](Huckleberry.md), and [Nara Baby](Nara_Baby.md).
 
 ## Resumo
 
-- É um rastreador generalista e muito configurável. Permite criar tipos de atividade próprios, e é assim que entram **tummy time**, passeio e banho [DOC B01, B07, B08].
-- É o mais forte dos quatro em registro fora do app. Tem widgets na tela inicial e na tela bloqueada, Live Activities, notificação fixa no Android, Apple Watch, Wear OS e atalhos da Siri [DOC B03, B04, B07].
-- O plano gratuito tem anúncios na Google Play. O Premium (mensal, anual ou vitalício) libera sincronização familiar, previsões de sono, histórico ilimitado, curvas de crescimento, lembretes e PDF, e vale para todos os cuidadores do bebê [DOC B02, B08].
-- Não foram encontrados comunidade nem conteúdo educativo no app [HIP: ausência nas fontes oficiais].
+- It is a general-purpose, highly configurable tracker. It allows users to create their own activity types, which is how **tummy time**, walks, and baths are included [DOC B01, B07, B08].
+- It is the strongest of the four for logging outside the app. It has home screen and lock screen widgets, Live Activities, a persistent Android notification, Apple Watch, Wear OS, and Siri shortcuts [DOC B03, B04, B07].
+- The free plan has ads on Google Play. Premium (monthly, annual, or lifetime) unlocks family sync, sleep predictions, unlimited history, growth charts, reminders, and PDF, and covers all of the baby's caregivers [DOC B02, B08].
+- No community or educational content was found in the app [HIP: absent from official sources].
 
-## Tummy time e desenvolvimento
+## Tummy time and development
 
-**Tummy time: presente, como atividade personalizável.**
+**Tummy time: available as a customizable activity.**
 
-- A loja diz: "Custom Activity Tracking – Track tummy time, outdoor walks, bath time & more" (App Store) e "Log tummy time, walks, playtime, bath time, and more" (Google Play) [DOC B07, B08].
-- O site fala em "create custom types for anything else" [DOC B01].
-- Uma avaliação de 2024 confirma o uso para tummy time e "any other activity" [HIP B14].
-- Desenvolvimento, na prática, é crescimento:
-  - **Curvas de crescimento** OMS/CDC, com tabelas para prematuros (idade corrigida desde a versão 7.2.0) e para algumas síndromes cromossômicas [DOC B06, B07];
-  - **dentes**: erupção e queda [DOC B06];
-  - **"Moments"**: fotos em qualquer evento [DOC B06].
-- Não foram encontrados atividades sugeridas por fase, marcos com conteúdo ou guia de tummy time no app [HIP: ausência].
+- The store says: "Custom Activity Tracking – Track tummy time, outdoor walks, bath time & more" (App Store) and "Log tummy time, walks, playtime, bath time, and more" (Google Play) [DOC B07, B08].
+- The website mentions "create custom types for anything else" [DOC B01].
+- A review from 2024 confirms use for tummy time and "any other activity" [HIP B14].
+- Development, in practice, means growth:
+  - WHO/CDC **growth charts**, with charts for premature babies (corrected age since version 7.2.0) and for some chromosomal syndromes [DOC B06, B07];
+  - **teeth**: eruption and loss [DOC B06];
+  - **"Moments"**: photos in any event [DOC B06].
+- No suggested activities by stage, milestones with content, or tummy time guide were found in the app [HIP: absent].
 
 ## Identificação
 
-| Campo | Valor | Fonte |
+| Field | Value | Source |
 | --- | --- | --- |
-| Empresa | BALTAPIS UAB, Draugystės g. 17-1, Kaunas, Lituânia | [DOC B08, B11] |
-| Site | https://babydaybook.app | [DOC B01] |
-| Google Play | `com.drillyapps.babydaybook`: "Baby Daybook - Newborn Tracker" (em pt-BR, "Baby Daybook - Amamentação"). 1 mi+ downloads. Nota 4,7 com 69,2 mil avaliações. **Contém anúncios** e compras no app. Atualizado em 14/10/2026 | [DOC B08, B09] |
-| App Store | `id1446283219`: "Baby Daybook - Newborn Tracker". Versão 7.3.1, exibida como "há 6 dias" em 22/10/2026. Categoria Medicina. Classificação 13+ | [DOC B07] |
-| Plataformas | Android e Wear OS (tiles e complicações). iPhone, iPad e iPod touch (iOS 15+). Mac com Apple Silicon (macOS 12+). Apple Vision. Apple Watch (watchOS 9+) | [DOC B07, B08, B04] |
-| Idiomas | Inglês e mais 39, incluindo **português** | [DOC B07] |
-| Preço (App Store EUA) | Premium mensal de US$ 1,99 a US$ 9,99 (várias faixas). Anual a US$ 9,99 ou US$ 59,99. Vitalício a US$ 59,99 (–40%) ou US$ 99,99 | [DOC B07] |
-| Premium | Inclui sincronização familiar, previsões de sono, estatísticas e linha do tempo com histórico ilimitado, crescimento, lembretes e exportação em PDF. Vale para os cuidadores do mesmo bebê e funciona em Android e iOS | [DOC B02] |
+| Company | BALTAPIS UAB, Draugystės g. 17-1, Kaunas, Lithuania | [DOC B08, B11] |
+| Website | https://babydaybook.app | [DOC B01] |
+| Google Play | `com.drillyapps.babydaybook`: "Baby Daybook - Newborn Tracker" (in pt-BR, "Baby Daybook - Amamentação"). 1 million+ downloads. Rating 4,7 with 69,2 thousand reviews. **Contains ads** and in-app purchases. Updated on 14/10/2026 | [DOC B08, B09] |
+| App Store | `id1446283219`: "Baby Daybook - Newborn Tracker". Version 7.3.1, displayed as "há 6 dias" on 22/10/2026. Medical category. Age rating 13+ | [DOC B07] |
+| Platforms | Android and Wear OS (tiles and complications). iPhone, iPad, and iPod touch (iOS 15+). Mac with Apple Silicon (macOS 12+). Apple Vision. Apple Watch (watchOS 9+) | [DOC B07, B08, B04] |
+| Languages | English and 39 more, including **Portuguese** | [DOC B07] |
+| Price (US App Store) | Monthly Premium from US$ 1,99 to US$ 9,99 (several price points). Annual at US$ 9,99 or US$ 59,99. Lifetime at US$ 59,99 (–40%) or US$ 99,99 | [DOC B07] |
+| Premium | Includes family sync, sleep predictions, statistics and a timeline with unlimited history, growth, reminders, and PDF export. Covers caregivers of the same baby and works on Android and iOS | [DOC B02] |
 
-## Funcionalidades por pilar
+## Features by pillar
 
 ### Rotina
 
-- Amamentação com timer por lado (iniciar, parar e trocar de lado com um toque), bombinha, mamadeira e sólidos com reações [DOC B01, B07, B08].
-- Fraldas e desfralde, com lembretes [DOC B07, B08].
-- Saúde: sintomas, temperatura, medicação, consultas e vacinas, com estatística e PDF de vacinação [DOC B07, B08].
-- Também: linha do tempo diária, estatísticas, registro pesquisável (por tipo, palavra, data), fotos em qualquer atividade, vários bebês e modo escuro [DOC B01, B07].
-- Exportação em PDF de atividades, crescimento, dentes e vacinas [DOC B02, B07].
+- Breastfeeding with a timer for each side (start, stop, and switch sides with one tap), pumping, bottle feeding, and solids with reactions [DOC B01, B07, B08].
+- Diapers and potty training, with reminders [DOC B07, B08].
+- Health: symptoms, temperature, medication, appointments, and vaccines, with vaccination statistics and PDF [DOC B07, B08].
+- Also: daily timeline, statistics, searchable log (by type, word, date), photos in any activity, multiple babies, and dark mode [DOC B01, B07].
+- PDF export of activities, growth, teeth, and vaccines [DOC B02, B07].
 
-### Desenvolvimento, tummy time, atividades e conteúdo
+### Development, tummy time, activities, and content
 
-Ver a seção "Tummy time e desenvolvimento" acima. Fora do app, o blog publica artigos assinados por "Margarita Grigaliūnė", com lista de fontes (por exemplo, AAP). Não foi vista revisão profissional declarada [DOC B12].
+See the "Tummy time and development" section above. Outside the app, the blog publishes articles by "Margarita Grigaliūnė", with a list of sources (for example, AAP). No stated professional review was seen [DOC B12].
 
 ### Comunidade
 
-Não encontrada [HIP: ausência nas fontes oficiais].
+Not found [HIP: absent from official sources].
 
 ### Cuidado compartilhado
 
 - "Add your partner or nanny to the caregivers list, so that everyone could input data" [DOC B01].
-- "Family sync" em tempo real aparece como benefício Premium. O Premium comprado por um cuidador vale para os demais [DOC B02].
-- Avaliações relatam sincronização por e-mail do parceiro com permissão de edição, e uso por famílias com Android e iPhone [HIP B08, B14].
-- Não foram encontrados papéis, permissões diferentes, revogação ou exibição de autoria [HIP: ausência].
-- As notas de versão mostram um esforço recente em sincronização:
-  - "Redesigned sync architecture for greater reliability, smoother realtime updates, and more efficient background syncing" (7.0.12 e 7.0.13, jul–ago/2026);
+- Real-time "Family sync" appears as a Premium benefit. Premium purchased by one caregiver covers the others [DOC B02].
+- Reviews report syncing through the partner's email with editing permission, and use by families with Android and iPhone [HIP B08, B14].
+- No roles, different permissions, revocation, or display of authorship were found [HIP: absent].
+- The release notes show recent work on syncing:
+  - "Redesigned sync architecture for greater reliability, smoother realtime updates, and more efficient background syncing" (7.0.12 and 7.0.13, Jul–ago/2026);
   - "Fixed an issue that could add duplicate activities from the watch" (7.1.0, 19/ago).
-  
+
   [DOC B07]
 
-## Registro rápido
+## Quick logging
 
-- Widgets na tela inicial em três tamanhos, alguns com botões para iniciar ou parar atividade sem abrir o app (Android). Widgets na tela bloqueada no iOS [DOC B03, B04].
-- **Notificação fixa no Android**: não pode ser descartada e permite iniciar ou parar atividades pela tela bloqueada [DOC B04].
-- Apple Watch e Wear OS: registrar, iniciar e parar atividades, informar quantidades e ver lembretes, com sincronização automática. Há complicações no mostrador. O app de relógio foi "Google Play's Best of 2024" para relógios, segundo o próprio site [DOC B03, B04].
-- Siri Shortcuts: "Log activities using voice commands" [DOC B07]. Uma avaliação diz que é preciso configurar os comandos exatos [HIP B14].
-- Registro retroativo e edição: declarado de forma genérica ("record everything") [DOC B03]. O fluxo não foi detalhado nas fontes.
+- Home screen widgets in three sizes, some with buttons to start or stop an activity without opening the app (Android). Lock screen widgets on iOS [DOC B03, B04].
+- **Persistent Android notification**: cannot be dismissed and allows activities to be started or stopped from the lock screen [DOC B04].
+- Apple Watch and Wear OS: log, start, and stop activities, enter amounts, and view reminders, with automatic syncing. There are watch face complications. The watch app was "Google Play's Best of 2024" for watches, according to the website itself [DOC B03, B04].
+- Siri Shortcuts: "Log activities using voice commands" [DOC B07]. One review says the exact commands need to be configured [HIP B14].
+- Backdated logging and editing: stated in general terms ("record everything") [DOC B03]. The flow was not detailed in the sources.
 
-## Atividade em andamento e timers
+## Activity in progress and timers
 
-- **Live Activities** no iOS, na tela bloqueada e na Dynamic Island: iniciar, pausar, retomar, parar e trocar lado da mamada [DOC B03].
-- No Android, os timers ficam acessíveis pela notificação fixa [DOC B04].
-- Funcionamento sem rede: não está descrito nas fontes oficiais consultadas. Artigos de terceiros afirmam que funciona offline [HIP B13]. A política de privacidade cita Firebase para autenticação e armazenamento em nuvem [DOC B11]. Que haja cache local é inferência [HIP].
+- **Live Activities** on iOS, on the lock screen and in the Dynamic Island: start, pause, resume, stop, and switch breastfeeding sides [DOC B03].
+- On Android, timers are accessible through the persistent notification [DOC B04].
+- Operation without a network connection: not described in the official sources consulted. Third-party articles claim it works offline [HIP B13]. The privacy policy mentions Firebase for authentication and cloud storage [DOC B11]. The existence of a local cache is an inference [HIP].
 
-## Histórico e previsões
+## History and predictions
 
-- Linha do tempo com dias lado a lado e estatísticas por período (Premium para histórico ilimitado) [DOC B01, B02].
-- **Previsões de sono** (Premium): agenda do dia em linha do tempo, com caixas tracejadas para sonecas e hora de dormir previstas. A agenda se ajusta a cada registro e permite escolher o número de sonecas (agenda com 1 soneca a partir de 10 meses, desde a versão 7.2.0) [DOC B05, B07].
-- Ressalva do próprio produto: "Our Sleep Predictions are designed to support you – not to replace your instincts […] it's just that: guidance" [DOC B05].
-- A loja fala em "expert-backed recommendations" sem dizer quais especialistas ou fontes [DOC B07]. Não há evidência de validação de acurácia [HIP].
+- Timeline with days side by side and statistics by period (Premium for unlimited history) [DOC B01, B02].
+- **Sleep predictions** (Premium): daily schedule on a timeline, with dashed boxes for predicted naps and bedtime. The schedule adjusts with each entry and allows users to choose the number of naps (schedule with 1 nap from 10 months, since version 7.2.0) [DOC B05, B07].
+- The product's own caveat: "Our Sleep Predictions are designed to support you – not to replace your instincts […] it's just that: guidance" [DOC B05].
+- The store mentions "expert-backed recommendations" without identifying the experts or sources [DOC B07]. There is no evidence of accuracy validation [HIP].
 
-## Conteúdo por fase: autoria e revisão
+## Content by stage: authorship and review
 
-- No app, não foi encontrado conteúdo educativo por fase [HIP: ausência].
-- No blog, os artigos têm autora identificada e fontes, mas não há revisor declarado no artigo consultado [DOC B12].
+- No educational content by stage was found in the app [HIP: absent].
+- On the blog, articles have a named author and sources, but there is no stated reviewer in the article consulted [DOC B12].
 
-## Comunidade e moderação
+## Community and moderation
 
-Não se aplica (comunidade não encontrada).
+Not applicable (no community found).
 
-## Privacidade
+## Privacy
 
-- Política: https://babydaybook.app/privacy-policy/
-  - usa **Firebase (Google)** para autenticação, análise, relatórios de falha e armazenamento;
-  - os dados podem ser transferidos para fora da UE (incluindo EUA) com cláusulas contratuais padrão;
-  - lista direitos de acesso, correção, exclusão e portabilidade (GDPR/CCPA);
-  - declara não vender dados.
-  
+- Policy: https://babydaybook.app/privacy-policy/
+  - uses **Firebase (Google)** for authentication, analytics, crash reporting, and storage;
+  - data may be transferred outside the EU (including to the US) under standard contractual clauses;
+  - lists rights of access, correction, deletion, and portability (GDPR/CCPA);
+  - states that it does not sell data.
+
   [DOC B11]
-- Rótulo da App Store: não há seção "usados para rastrear você". **Vinculados a você**: saúde, contato, conteúdo, identificadores, uso, **informações sensíveis** e diagnóstico. **Não vinculado**: ID do dispositivo [DOC B07].
-- Data safety da Google Play: **compartilha ID do dispositivo para publicidade e marketing**. Coleta desempenho, atividade no app, dados pessoais (opcional), histórico de compras e fotos (opcional). Os dados são criptografados em trânsito e é possível pedir exclusão [DOC B10].
+- App Store label: there is no "used to track you" section. **Linked to you**: health, contact information, content, identifiers, usage, **sensitive information**, and diagnostics. **Not linked**: device ID [DOC B07].
+- Google Play Data safety: **shares device ID for advertising and marketing**. Collects performance, app activity, personal data (optional), purchase history, and photos (optional). Data is encrypted in transit, and deletion can be requested [DOC B10].
 
-## Pontos fortes
+## Strengths
 
-- Cobertura completa de registro fora do app em Android e iOS, incluindo relógio nas duas plataformas [DOC B03, B04].
-- Atividades personalizáveis: tummy time e banho não dependem do roteiro do fabricante [DOC B01, B07].
-- Premium compartilhado com cuidadores e entre plataformas, com opção vitalícia [DOC B02, B07].
-- 40 idiomas, incluindo português [DOC B07].
-- Melhorias recentes de VoiceOver no celular e no relógio (7.2.0) [DOC B07].
+- Comprehensive logging outside the app on Android and iOS, including watches on both platforms [DOC B03, B04].
+- Customizable activities: tummy time and baths do not depend on the developer's predefined options [DOC B01, B07].
+- Premium shared with caregivers and across platforms, with a lifetime option [DOC B02, B07].
+- 40 languages, including Portuguese [DOC B07].
+- Recent VoiceOver improvements on phones and watches (7.2.0) [DOC B07].
 
-## Limitações e queixas recorrentes
+## Limitations and recurring complaints
 
-- Anúncios no plano gratuito (declarado na Google Play). Um relato antigo (2019) cita anúncio com som durante a amamentação noturna [DOC B08] [HIP B08].
-- Funções migradas para assinatura: um usuário de longa data diz ter perdido acesso. O desenvolvedor responde (2/jun) que compras Premium anteriores devem continuar valendo [HIP B14].
-- Duplicação vinda do relógio e reescrita da sincronização em 2026 mostram que a sincronização é um ponto sensível [DOC B07].
-- Conteúdo e comunidade não encontrados [HIP].
+- Ads on the free plan (stated on Google Play). An old report (2019) mentions an ad with sound during nighttime breastfeeding [DOC B08] [HIP B08].
+- Features moved to a subscription: a longtime user says they lost access. The developer responds (2/jun) that previous Premium purchases should remain valid [HIP B14].
+- Duplication from the watch and the syncing rewrite in 2026 show that syncing is a sensitive area [DOC B07].
+- Content and community not found [HIP].
 
-## O que o AppMaternidade pode aprender
+## What AppMaternidade can learn
 
-- Atividade personalizável resolve a cauda longa (banho, passeio, fisioterapia). O tummy time pode ter tratamento próprio sem impedir tipos livres [DOC B01, B07].
-- Uma notificação fixa no Android, com iniciar e parar, é o equivalente prático das Live Activities e deve entrar no desenho dos timers [DOC B04].
-- Identificador de operação e deduplicação devem cobrir **todos** os pontos de entrada (relógio, widget, notificação), porque a duplicação pelo relógio foi um defeito real [DOC B07].
-- Uma assinatura que cobre a família toda reduz atrito entre cuidadores [DOC B02].
-- Escrever um aviso curto de limite nas previsões de sono ("guidance, not instinct replacement") [DOC B05].
+- Customizable activities cover the long tail (baths, walks, physical therapy). Tummy time can have dedicated handling while still allowing custom types [DOC B01, B07].
+- A persistent Android notification, with start and stop, is the practical equivalent of Live Activities and should be included in the timer design [DOC B04].
+- Operation identifiers and deduplication should cover **all** entry points (watch, widget, notification), because duplication from the watch was a real defect [DOC B07].
+- A subscription that covers the whole family reduces friction between caregivers [DOC B02].
+- Write a short notice about the limits of sleep predictions ("guidance, not instinct replacement") [DOC B05].
 
-## O que não copiar
+## What not to copy
 
-- Marca, nome, ícones, telas, textos de loja e do blog.
-- Anúncios num app de cuidado infantil e compartilhamento de ID do dispositivo para publicidade [DOC B08, B10].
-- Retirar funções de quem já comprou ao migrar para assinatura (relato) [HIP B14].
+- Brand, name, icons, screens, store copy, and blog text.
+- Ads in a childcare app and sharing device ID for advertising [DOC B08, B10].
+- Removing features from existing purchasers when moving to a subscription (report) [HIP B14].
 
 ## Fontes
 
-Consulta de todas: 22/10/2026.
+All accessed on: 22/10/2026.
 
-| ID | Fonte | Tipo de evidência | Plataforma/versão visível |
+| ID | Source | Evidence type | Visible platform/version |
 | --- | --- | --- | --- |
-| B01 | https://babydaybook.app/ | Site oficial | — |
-| B02 | https://babydaybook.app/premium/ | Site oficial: Premium e FAQ | — |
-| B03 | https://babydaybook.app/apple-widgets-watch-app/ | Site oficial: widgets, Live Activities, Apple Watch | iOS e watchOS |
-| B04 | https://babydaybook.app/android-widgets-watch-app/ | Site oficial: widgets, notificação fixa, Wear OS | Android e Wear OS |
-| B05 | https://babydaybook.app/sleep-predictions/ | Site oficial: previsões com aviso | — |
-| B06 | https://babydaybook.app/development-tracker/ | Site oficial: crescimento, dentes, momentos | — |
-| B07 | https://apps.apple.com/us/app/baby-daybook-newborn-tracker/id1446283219 | Loja: descrição, notas de versão 7.0.12–7.3.1, compras, rótulo de privacidade, idiomas | iOS 7.3.1; watchOS 9+ |
-| B08 | https://play.google.com/store/apps/details?id=com.drillyapps.babydaybook&hl=en_US&gl=US | Loja: descrição, anúncios, avaliações e respostas | Android. Atualizado em 14/10/2026 |
-| B09 | https://play.google.com/store/apps/details?id=com.drillyapps.babydaybook&hl=pt_BR&gl=BR | Loja: listagem no Brasil | Android |
-| B10 | https://play.google.com/store/apps/datasafety?id=com.drillyapps.babydaybook&hl=en | Loja: Data safety | Android |
-| B11 | https://babydaybook.app/privacy-policy/ | Política de privacidade | — |
-| B12 | https://babydaybook.app/blog/formula-feeding-101-what-new-parents-actually-need-to-know/ | Blog oficial (25/09/2026) | — |
-| B13 | https://pebbi.co/blog/baby-daybook-alternatives | Artigo de terceiro (concorrente), só trecho de busca | — |
-| B14 | https://apps.apple.com/us/app/baby-daybook-newborn-tracker/id1446283219?see-all=reviews&platform=iphone | Avaliações de usuários e respostas (2024–2026) | iOS |
+| B01 | https://babydaybook.app/ | Official website | — |
+| B02 | https://babydaybook.app/premium/ | Official website: Premium and FAQ | — |
+| B03 | https://babydaybook.app/apple-widgets-watch-app/ | Official website: widgets, Live Activities, Apple Watch | iOS and watchOS |
+| B04 | https://babydaybook.app/android-widgets-watch-app/ | Official website: widgets, persistent notification, Wear OS | Android and Wear OS |
+| B05 | https://babydaybook.app/sleep-predictions/ | Official website: predictions with notice | — |
+| B06 | https://babydaybook.app/development-tracker/ | Official website: growth, teeth, moments | — |
+| B07 | https://apps.apple.com/us/app/baby-daybook-newborn-tracker/id1446283219 | Store: description, release notes 7.0.12–7.3.1, purchases, privacy label, languages | iOS 7.3.1; watchOS 9+ |
+| B08 | https://play.google.com/store/apps/details?id=com.drillyapps.babydaybook&hl=en_US&gl=US | Store: description, ads, reviews, and responses | Android. Updated on 14/10/2026 |
+| B09 | https://play.google.com/store/apps/details?id=com.drillyapps.babydaybook&hl=pt_BR&gl=BR | Store: listing in Brazil | Android |
+| B10 | https://play.google.com/store/apps/datasafety?id=com.drillyapps.babydaybook&hl=en | Store: Data safety | Android |
+| B11 | https://babydaybook.app/privacy-policy/ | Privacy policy | — |
+| B12 | https://babydaybook.app/blog/formula-feeding-101-what-new-parents-actually-need-to-know/ | Official blog (25/09/2026) | — |
+| B13 | https://pebbi.co/blog/baby-daybook-alternatives | Third-party article (competitor), search snippet only | — |
+| B14 | https://apps.apple.com/us/app/baby-daybook-newborn-tracker/id1446283219?see-all=reviews&platform=iphone | User reviews and responses (2024–2026) | iOS |
 
-## Questões abertas
+## Open questions
 
-- A sincronização familiar é só Premium, ou há uma sincronização básica gratuita? A home e a página Premium não deixam claro.
-- Como o app resolve dois cuidadores editando o mesmo registro? Mostra quem registrou?
-- O app funciona offline com envio posterior? Falta documentação oficial.
-- Os anúncios aparecem também no iOS gratuito?
+- Is family sync Premium-only, or is there basic free syncing? The home page and Premium page do not make this clear.
+- How does the app handle two caregivers editing the same entry? Does it show who logged it?
+- Does the app work offline and upload later? Official documentation is missing.
+- Do ads also appear in the free iOS version?
 
-## Limites desta análise
+## Limits of this analysis
 
-- Nada foi observado em execução: nenhum app instalado e nenhuma conta criada.
-- O offline vem só de terceiros [HIP]. A política de privacidade foi lida apenas nos trechos relevantes.
-- As avaliações são anedóticas. As datas de resposta sem ano seguem o padrão da App Store e devem ser do ano corrente [HIP].
-- Preços em USD, fotografia de 22/10/2026.
+- Nothing was observed during use: no app was installed and no account was created.
+- Offline support is reported only by third parties [HIP]. Only the relevant sections of the privacy policy were read.
+- Reviews are anecdotal. Response dates without a year follow the App Store format and are presumed to be from the current year [HIP].
+- Prices in USD, snapshot from 22/10/2026.

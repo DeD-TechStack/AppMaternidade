@@ -1,42 +1,42 @@
 ---
 tipo: design-doc
-status: proposta
-responsavel: Hermes (coordenador da APP-001)
+status: proposal
+responsavel: Hermes (coordinator of APP-001)
 revisado_em: 2026-10-22
 tarefa: MAT-9
 adr: ADR-004
 fontes_principais:
-  - tasks/hermes/APP-001-design-docs/01_TASK_HERMES.md (seção D5)
-  - tasks/hermes/APP-001-design-docs/06_CRITERIOS_DE_ACEITE.md (Q-01 a Q-12)
-  - https://developer.android.com/topic/architecture/data-layer/offline-first (consulta 22/10/2026)
-  - 08_Referencias/Tecnologias/ e 08_Referencias/Repositorios/
+  - tasks/hermes/APP-001-design-docs/01_TASK_HERMES.md (section D5)
+  - tasks/hermes/APP-001-design-docs/06_CRITERIOS_DE_ACEITE.md (Q-01 to Q-12)
+  - https://developer.android.com/topic/architecture/data-layer/offline-first (query 22/10/2026)
+  - 08_Referencias/Tecnologias/ and 08_Referencias/Repositorios/
 ---
 
-# Offline, sincronização e temporizadores
+# Offline, sync, and timers
 
-> Nota de 03/11/2026: o rumo mudou para site completo primeiro e port Android e iOS depois ([ADR-009](../06_ADRs/ADR-009_Site_Completo_Primeiro.md)). Onde este texto fala em app nativo, leia como o port; o site cobre as mesmas funções.
+> Note from 03/11/2026: the direction changed to the full website first and the Android and iOS port afterward ([ADR-009](../06_ADRs/ADR-009_Site_Completo_Primeiro.md)). Where this text mentions a native app, read it as the port; the website covers the same functions.
 
-Proposta do Hermes, ainda não aprovada por Daniel. Este documento define o comportamento esperado, independente da tecnologia. Como cada conjunto de arquitetura o implementa está na seção 14 e em [Comparação de arquiteturas](Comparacao_de_Arquiteturas.md). Entidades e papéis vêm de [Modelo de dados e permissões](Modelo_de_Dados_e_Permissoes.md).
+Hermes's proposal, not yet approved by Daniel. This document defines the expected behavior, independent of technology. How each architecture stack implements it is in section 14 and in [Architecture comparison](Comparacao_de_Arquiteturas.md). Entities and roles come from [Data model and permissions](Modelo_de_Dados_e_Permissoes.md).
 
-## 1. Problema
+## 1. Problem
 
-Cuidadores registram de madrugada, no colo, com sinal ruim ou sem sinal. Um registro perdido, duplicado ou alterado sem aviso destrói a confiança no aplicativo. Ao mesmo tempo, vários adultos escrevem sobre o mesmo bebê, às vezes sem conexão, e um deles pode perder o acesso enquanto está offline. "Ter offline" não basta: é preciso dizer o que funciona sem rede, onde fica guardado, como chega ao servidor, quando a permissão é conferida de novo e o que a pessoa vê quando algo dá errado.
+Caregivers log records in the middle of the night, with the baby in their lap, with poor signal or no signal. A lost, duplicated, or silently altered record destroys trust in the app. At the same time, several adults write about the same baby, sometimes without a connection, and one of them may lose access while offline. "Ter offline" is not enough: it is necessary to state what works without a network, where it is stored, how it reaches the server, when permission is checked again, and what the person sees when something goes wrong.
 
-## 2. Alcance do modo offline
+## 2. Scope of offline mode
 
-| Ação | Sem conexão | Observação |
+| Action | Without connection | Note |
 | --- | --- | --- |
-| Ver Hoje, histórico recente e sessões em andamento | Sim | Com os dados já guardados no aparelho. Proposta: últimos 90 dias de registros; períodos mais antigos são buscados quando houver rede. |
-| Registrar (todos os tipos do MVP), iniciar e encerrar sessão | Sim | Grava no aparelho e entra na fila de envio. |
-| Corrigir ou excluir registro permitido pelo papel | Sim | Idem; pode gerar conflito (seção 7). |
-| Escrever nota de passagem de cuidados | Sim | Idem. |
-| Ler conteúdo de desenvolvimento da fase atual | Sim | Pacote versionado baixado com antecedência. |
-| Criar família, cadastrar bebê | Não no MVP | Ação rara; exige servidor para criar o vínculo de responsável. |
-| Convidar, aceitar convite, mudar papel, revogar | Não | Ações de segurança: só valem confirmadas pelo servidor. |
-| Comunidade | Leitura do que já foi aberto; escrita vira rascunho | Publicar exige conexão: a moderação e as regras de bloqueio são do servidor. |
-| Exportar dados, excluir conta | Não | |
+| View Hoje, recent history, and sessions in progress | Yes | Using the data already stored on the device. Proposal: last 90 days of records; older periods are fetched when there is a network connection. |
+| Log (all MVP types), start and end a session | Yes | Writes to the device and enters the send queue. |
+| Correct or delete a record as permitted by the role | Yes | Same; may generate a conflict (section 7). |
+| Write a care handoff note | Yes | Same. |
+| Read development content for the current phase | Yes | Versioned package downloaded in advance. |
+| Create a family, register a baby | Not in the MVP | Rare action; requires the server to create the guardian membership. |
+| Invite, accept an invitation, change role, revoke | No | Security actions: they only take effect once confirmed by the server. |
+| Community | Reading what has already been opened; writing becomes a draft | Publishing requires a connection: moderation and blocking rules belong to the server. |
+| Export data, delete account | No | |
 
-## 3. Arquitetura no aparelho
+## 3. On-device architecture
 
 ```mermaid
 flowchart LR
@@ -48,211 +48,211 @@ flowchart LR
   SYNC --> DB
 ```
 
-- A interface lê sempre do banco local. Nenhuma tela espera a rede para mostrar um registro recém-feito.
-- Cada ação do usuário grava, numa única transação, a mudança local e uma operação na fila. Se o app for encerrado logo depois, as duas coisas estão no disco ou nenhuma está.
-- O motor de sincronização envia a fila quando há rede e baixa mudanças das famílias em que a pessoa tem vínculo ativo.
+- The interface always reads from the local database. No screen waits for the network to show a just-created record.
+- Each user action writes, in a single transaction, the local change and an operation in the queue. If the app is closed right afterward, either both are on disk or neither is.
+- The sync engine sends the queue when there is a network connection and downloads changes from the families in which the person has an active membership.
 
-## 4. A operação
+## 4. The operation
 
-Cada intenção do usuário vira uma operação com:
+Each user intent becomes an operation with:
 
-| Campo | Para quê |
+| Field | Purpose |
 | --- | --- |
-| id da operação | Gerado no aparelho (UUIDv7 ou equivalente). Garante que reenviar não duplica. |
-| tipo | iniciar sessão, encerrar sessão, criar registro, atualizar registro, excluir registro, restaurar registro, criar nota. |
-| entidade, família, bebê | Escopo conferido pelo servidor. |
-| versão-base | A versão do registro que o aparelho conhecia ao editar. Detecta edição sobre dado velho. |
-| campos | Só os campos alterados. |
-| autor e dispositivo | Autoria; o servidor confirma que batem com a sessão autenticada. |
-| instante local, fuso IANA e deslocamento | Quando a pessoa agiu, segundo o aparelho. |
-| relógio monotônico (sessões ao vivo) | Detecta troca manual do relógio durante uma sessão (seção 9). |
-| sequência local | Ordem das operações daquele aparelho. |
+| operation id | Generated on the device (UUIDv7 or equivalent). Ensures that resending does not duplicate. |
+| type | start session, end session, create record, update record, delete record, restore record, create note. |
+| entity, family, baby | Scope checked by the server. |
+| base version | The version of the record the device knew when editing. Detects editing over stale data. |
+| fields | Only the changed fields. |
+| author and device | Authorship; the server confirms they match the authenticated session. |
+| local instant, IANA time zone, and offset | When the person acted, according to the device. |
+| monotonic clock (live sessions) | Detects a manual clock change during a session (section 9). |
+| local sequence | Order of that device's operations. |
 
-## 5. Envio e confirmação
+## 5. Sending and confirmation
 
-1. O aparelho envia operações em lote, na ordem da sequência local.
-2. O servidor procura o id da operação. Se já foi processada, devolve o mesmo resultado de antes e não aplica de novo.
-3. Confere a identidade da sessão e o vínculo atual na família (estado, papel, validade, época). Sem vínculo válido, rejeita.
-4. Valida o conteúdo (tipos, limites, fim depois do início, bebê da mesma família).
-5. Compara a versão-base com a versão atual e aplica a política de conflito (seção 7).
-6. Aplica, sobe a versão do registro, grava "recebido em" e a entrada no histórico de alterações, e acrescenta a mudança ao fluxo da família.
-7. Devolve um resultado por operação: aplicada, aplicada com mescla, já processada, conflito ou rejeitada (com motivo: sem permissão, vínculo revogado, validação, registro excluído).
+1. The device sends operations in batches, in local sequence order.
+2. The server looks up the operation id. If it has already been processed, it returns the same result as before and does not apply it again.
+3. It checks the session identity and the current membership in the family (state, role, validity, epoch). Without a valid membership, it rejects.
+4. It validates the content (types, limits, end after start, baby from the same family).
+5. It compares the base version with the current version and applies the conflict policy (section 7).
+6. It applies, bumps the record version, writes "recebido em" and the entry in the change history, and appends the change to the family's stream.
+7. It returns one result per operation: applied, applied with merge, already processed, conflict, or rejected (with a reason: no permission, membership revoked, validation, record deleted).
 
-Reenvio: depois de timeout ou queda, o aparelho reenvia a mesma operação com o mesmo id. Operações que dependem de uma rejeitada (por exemplo, editar um registro cuja criação foi recusada) também são recusadas, com o mesmo motivo.
+Resending: after a timeout or dropped connection, the device resends the same operation with the same id. Operations that depend on a rejected one (for example, editing a record whose creation was refused) are also refused, with the same reason.
 
-## 6. Recebimento
+## 6. Receiving
 
-- O servidor mantém, por família, uma sequência crescente de mudanças, incluindo marcas de exclusão. O aparelho pede "mudanças desde o cursor N" para cada família em que tem vínculo ativo.
-- Antes de responder, o servidor confere o vínculo atual. Se ele foi revogado, a resposta é "acesso encerrado" e o aparelho apaga os dados locais daquela família (seção 11).
-- Um canal em tempo real, se existir, só avisa que há mudança; quem traz o dado é o pedido de mudanças. Perder um aviso não perde dado.
+- The server maintains, per family, an increasing sequence of changes, including deletion markers. The device requests "mudanças desde o cursor N" for each family in which it has an active membership.
+- Before responding, the server checks the current membership. If it has been revoked, the response is "acesso encerrado" and the device deletes that family's local data (section 11).
+- A real-time channel, if one exists, only signals that there is a change; the data is brought by the change request. Losing a signal does not lose data.
 
-## 7. Estados visíveis e conflitos
+## 7. Visible states and conflicts
 
-### 7.1 Estado de cada registro
+### 7.1 State of each record
 
-| Estado | O que significa | O que a pessoa vê |
+| State | What it means | What the person sees |
 | --- | --- | --- |
-| Salvo no aparelho | Gravado localmente, ainda não enviado | Marca discreta "aguardando envio" |
-| Enviando | Em envio | A mesma marca, animada |
-| Sincronizado | Confirmado pelo servidor | Sem marca |
-| Precisa de revisão | Conflito de edição | Selo e as duas versões, com autor e horário |
-| Não enviado | Rejeitado pelo servidor | Motivo e ações: descartar ou copiar o texto |
+| Saved on device | Stored locally, not yet sent | Discreet mark "aguardando envio" |
+| Sending | Being sent | The same mark, animated |
+| Synced | Confirmed by the server | No mark |
+| Needs review | Edit conflict | Badge and both versions, with author and time |
+| Not sent | Rejected by the server | Reason and actions: discard or copy the text |
 
-No topo do app: "Sem conexão. 3 registros aguardando envio" e "Atualizado às 03:12".
+At the top of the app: "Sem conexão. 3 registros aguardando envio" and "Atualizado às 03:12".
 
-### 7.2 Política por caso
+### 7.2 Policy by case
 
-| Caso | Política | O que a pessoa vê |
+| Case | Policy | What the person sees |
 | --- | --- | --- |
-| Reenvio da mesma operação | Idempotência pelo id da operação | Nada; um registro só |
-| Duas pessoas registram o mesmo evento (por exemplo, a mesma troca de fralda) | Não é conflito técnico: os ids são diferentes | Aviso "possível duplicado" quando há mesmo tipo, mesmo bebê, autores diferentes e até 10 minutos de distância; ações "manter os dois" ou "excluir este" |
-| Edições em campos diferentes do mesmo registro | Mescla por campo | Nada; o histórico mostra os dois autores |
-| Edições no mesmo campo com versão-base antiga | Vale a primeira que chegou ao servidor; a segunda fica guardada como proposta pendente | Registro com selo "precisa de revisão", mostrando as duas versões; qualquer pessoa com permissão de edição escolhe. Nada some sem decisão. |
-| Exclusão chega depois de uma edição | A exclusão vale; a edição fica no histórico | Quem editou recebe "excluído por B; sua alteração ficou no histórico" e, se puder, restaura |
-| Edição chega depois de uma exclusão | Rejeitada como "registro excluído" | Opção de restaurar (se o papel permitir) e reaplicar a edição |
-| Dois encerramentos da mesma sessão | Vale o primeiro; se o segundo tiver fim até 2 minutos diferente, é duplicado sem efeito; se a diferença for maior, vira conflito no campo "fim" | Normalmente nada; no conflito, o selo de revisão |
-| Duas sessões do mesmo tipo iniciadas em paralelo para o mesmo bebê | O servidor aceita as duas (não há como impedir offline) | "Duas sessões de sono em andamento", com ações "unir" (mantém o início mais cedo) ou "encerrar uma" |
-| Operação de quem perdeu o acesso | Rejeitada | "Não enviado: seu acesso a esta família foi encerrado" |
+| Resend of the same operation | Idempotency via the operation id | Nothing; just one record |
+| Two people log the same event (for example, the same diaper change) | Not a technical conflict: the ids are different | Warning "possível duplicado" when there is the same type, same baby, different authors, and up to 10 minutes apart; actions "manter os dois" or "excluir este" |
+| Edits to different fields of the same record | Per-field merge | Nothing; the history shows both authors |
+| Edits to the same field with an old base version | The first one to reach the server wins; the second is kept as a pending proposal | Record with badge "precisa de revisão", showing both versions; anyone with edit permission chooses. Nothing disappears without a decision. |
+| Deletion arrives after an edit | The deletion stands; the edit remains in the history | Whoever edited receives "excluído por B; sua alteração ficou no histórico" and, if permitted, restores |
+| Edit arrives after a deletion | Rejected as "registro excluído" | Option to restore (if the role permits) and reapply the edit |
+| Two endings of the same session | The first one wins; if the second has an end time up to 2 minutes different, it is a duplicate with no effect; if the difference is larger, it becomes a conflict on the field "fim" | Normally nothing; in a conflict, the review badge |
+| Two sessions of the same type started in parallel for the same baby | The server accepts both (there is no way to prevent it offline) | "Duas sessões de sono em andamento", with actions "unir" (keeps the earlier start) or "encerrar uma" |
+| Operation from someone who lost access | Rejected | "Não enviado: seu acesso a esta família foi encerrado" |
 
-O último-que-escreve-vence puro foi descartado para campos de horário e quantidade porque apagaria, sem aviso, a correção de um dos cuidadores.
+Pure last-writer-wins was ruled out for time and quantity fields because it would silently erase one of the caregivers' corrections.
 
-### 7.3 Ordem e relógios divergentes
+### 7.3 Order and divergent clocks
 
-- A ordem de aplicação é a ordem de chegada ao servidor, dentro de cada família. A ordem de exibição é o início observado do registro.
-- O servidor nunca reescreve horários informados pela pessoa. Ele compara o relógio do aparelho com o próprio em cada sincronização; acima de 2 minutos de diferença, o app avisa que o relógio do aparelho parece adiantado ou atrasado.
-- Registro com início mais de 5 minutos no futuro, segundo o servidor, recebe marca "horário a conferir", sem bloqueio.
+- The order of application is the order of arrival at the server, within each family. The display order is the record's observed start.
+- The server never rewrites times entered by the person. It compares the device's clock with its own on each sync; above 2 minutes of difference, the app warns that the device's clock seems to be fast or slow.
+- A record with a start more than 5 minutes in the future, according to the server, receives the mark "horário a conferir", without blocking.
 
-## 8. Tempo, fuso e meia-noite
+## 8. Time, time zone, and midnight
 
-- Instantes ficam em UTC, junto com o fuso IANA e o deslocamento do aparelho no momento do registro.
-- Durações saem sempre da diferença entre instantes UTC; horário de verão e troca de fuso não alteram a duração.
-- A família tem um fuso de referência (por padrão, o de quem a criou). "Hoje" e os totais do dia usam esse fuso, para que todos vejam o mesmo dia. Os horários aparecem no fuso atual do aparelho; quando ele difere do fuso da família, a tela avisa.
-- Uma sessão que atravessa a meia-noite aparece no dia em que começou, com a marca "termina no dia seguinte". Os totais diários repartem a duração entre os dois dias.
-- Registro retroativo: início e fim escolhidos pela pessoa, com origem "retroativo". Fim antes do início é recusado; durações acima de um limite por tipo (por exemplo, sono acima de 16 horas ou tummy time acima de 1 hora) pedem confirmação, sem bloquear.
-- Sobreposição de sessões do mesmo tipo gera aviso, não bloqueio: a pessoa pode estar corrigindo um registro antigo.
+- Instants are stored in UTC, along with the device's IANA time zone and offset at the moment of the record.
+- Durations are always derived from the difference between UTC instants; daylight saving time and time zone changes do not alter the duration.
+- The family has a reference time zone (by default, that of whoever created it). "Hoje" and the daily totals use that time zone, so that everyone sees the same day. Times are shown in the device's current time zone; when it differs from the family's time zone, the screen warns.
+- A session that crosses midnight appears on the day it started, with the mark "termina no dia seguinte". Daily totals split the duration between the two days.
+- Retroactive record: start and end chosen by the person, with origin "retroativo". An end before the start is refused; durations above a per-type limit (for example, sleep above 16 hours or tummy time above 1 hour) ask for confirmation, without blocking.
+- Overlapping sessions of the same type generate a warning, not a block: the person may be correcting an old record.
 
-## 9. Temporizadores
+## 9. Timers
 
-Princípio: o tempo decorrido é calculado a partir do início gravado; a tela só redesenha. Nada precisa ficar rodando em segundo plano.
+Principle: elapsed time is calculated from the recorded start; the screen only redraws. Nothing needs to keep running in the background.
 
-1. **Iniciar.** O app grava o Registro em andamento e a operação antes de mostrar o cronômetro.
-2. **Tela bloqueada, app suspenso ou encerrado.** Nenhum contador roda. Ao reabrir, o app lê os registros em andamento e calcula o tempo a partir do início.
-3. **Troca manual do relógio.** O app guarda também uma leitura do relógio monotônico do sistema no início da sessão. Se, no mesmo ciclo de energia, as duas medidas divergirem mais de 1 minuto, a tela pede para conferir o horário. Reiniciar o aparelho zera o relógio monotônico; aí vale só o instante gravado.
-4. **Fora do app.** Android pode mostrar uma notificação contínua com cronômetro desenhado pelo sistema; iOS pode mostrar uma Live Activity. As duas partem do instante de início e não dependem de o app estar rodando. São melhorias que exigem código nativo; o custo por alternativa está em [Mobile e plataformas](../08_Referencias/Tecnologias/Mobile_e_Plataformas.md).
-5. **Sessão esquecida.** Acima do limite do tipo, ao abrir o app a pessoa vê "Ainda em andamento?" e pode encerrar escolhendo o horário real.
-6. **Lembrete.** Opcional, por notificação local, desligado por padrão, sem tom de cobrança.
-7. **Outro cuidador encerra.** Qualquer Responsável ou Cuidador encerra uma sessão em andamento; "iniciado por" e "encerrado por" ficam registrados. Concorrência na seção 7.
+1. **Start.** The app writes the in-progress Record and the operation before showing the stopwatch.
+2. **Screen locked, app suspended or closed.** No counter runs. On reopening, the app reads the in-progress records and calculates the time from the start.
+3. **Manual clock change.** The app also stores a reading of the system's monotonic clock at the start of the session. If, within the same power cycle, the two measurements diverge by more than 1 minute, the screen asks to check the time. Restarting the device resets the monotonic clock; in that case only the recorded instant counts.
+4. **Outside the app.** Android can show an ongoing notification with a system-drawn chronometer; iOS can show a Live Activity. Both start from the start instant and do not depend on the app running. These are enhancements that require native code; the cost per alternative is in [Mobile and platforms](../08_Referencias/Tecnologias/Mobile_e_Plataformas.md).
+5. **Forgotten session.** Above the type's limit, when opening the app the person sees "Ainda em andamento?" and can end it by choosing the actual time.
+6. **Reminder.** Optional, via local notification, off by default, without a nagging tone.
+7. **Another caregiver ends it.** Any Guardian or Caregiver can end a session in progress; "iniciado por" and "encerrado por" are recorded. Concurrency in section 7.
 
-## 10. Notificação local, push e sincronização
+## 10. Local notification, push, and sync
 
-| Mecanismo | Serve para | Depende de | Se falhar ou for negado |
+| Mechanism | Used for | Depends on | If it fails or is denied |
 | --- | --- | --- | --- |
-| Notificação local | Lembretes agendados no próprio aparelho | Permissão de notificação | O app funciona igual; o lembrete não aparece |
-| Push remoto | Avisar outro cuidador (opcional) e sugerir uma sincronização | Permissão, FCM/APNs e rede | A sincronização acontece ao abrir o app ou quando o sistema permitir |
-| Sincronização | Transferir os dados | Rede | A fila espera; nada se perde |
+| Local notification | Reminders scheduled on the device itself | Notification permission | The app works the same; the reminder does not appear |
+| Remote push | Notifying another caregiver (optional) and prompting a sync | Permission, FCM/APNs, and network | Sync happens when the app is opened or when the system allows |
+| Sync | Transferring the data | Network | The queue waits; nothing is lost |
 
-Push nunca é condição para os dados ficarem corretos. O texto padrão não traz dado sensível nem nome do bebê na tela bloqueada ("Há uma atualização na rotina"); detalhes só dentro do app. Tarefas periódicas em segundo plano não têm horário garantido pelos sistemas (fonte M08 do pacote) e servem só como oportunidade extra de sincronizar.
+Push is never a condition for the data to be correct. The default text does not include sensitive data or the baby's name on the lock screen ("Há uma atualização na rotina"); details only inside the app. Periodic background tasks have no time guaranteed by the systems (source M08 from the package) and serve only as an extra opportunity to sync.
 
-## 11. Revogação e limites honestos
+## 11. Revocation and honest limits
 
-No servidor, a revogação é imediata: o vínculo vira "revogado", a época sobe, operações daquela conta para a família passam a ser recusadas, o fluxo de mudanças para de entregar dados da família e os pushes param.
+On the server, revocation is immediate: the membership becomes "revogado", the epoch increments, operations from that account for the family start being refused, the change stream stops delivering the family's data, and pushes stop.
 
-No aparelho que estava offline:
+On the device that was offline:
 
-1. Enquanto não reconecta, o app continua mostrando os dados guardados e aceita novos registros na fila: ele não sabe da revogação.
-2. Ao reconectar, a primeira resposta do servidor é "acesso encerrado". O app apaga os dados locais daquela família (registros, notas, cache de arquivos e operações pendentes) e mostra quantas operações não foram enviadas.
-3. As operações não enviadas são descartadas; os dados pertencem à família, e quem saiu não pode exportá-los.
+1. Until it reconnects, the app keeps showing the stored data and accepts new records into the queue: it does not know about the revocation.
+2. On reconnecting, the server's first response is "acesso encerrado". The app deletes that family's local data (records, notes, file cache, and pending operations) and shows how many operations were not sent.
+3. The unsent operations are discarded; the data belongs to the family, and whoever left cannot export it.
 
-Limites que o produto não deve esconder:
+Limits the product must not hide:
 
-- Revogação remota não apaga na hora o que já foi visto ou guardado num aparelho desconectado, nem o que alguém copiou ou fotografou.
-- Mitigações propostas: janela local de 90 dias; uma "licença de acesso" de 14 dias por aparelho e família, renovada a cada sincronização (vencida, o app esconde os dados da família até conseguir revalidar); armazenamento cifrado pelo sistema operacional e, se a prova técnica mostrar custo aceitável, banco local cifrado. Um aparelho com root ou jailbreak ainda pode extrair o que já estava no disco.
-- A mensagem ao responsável que revoga diz isso em linguagem simples.
+- Remote revocation does not immediately erase what has already been seen or stored on a disconnected device, nor what someone copied or photographed.
+- Proposed mitigations: a local window of 90 days; a "licença de acesso" of 14 days per device and family, renewed at each sync (once expired, the app hides the family's data until it can revalidate); storage encrypted by the operating system and, if the technical proof shows an acceptable cost, an encrypted local database. A rooted or jailbroken device can still extract what was already on disk.
+- The message to the guardian who revokes says this in plain language.
 
-## 12. Exclusão propagada
+## 12. Propagated deletion
 
-| O que é excluído | Efeito |
+| What is deleted | Effect |
 | --- | --- |
-| Registro | Marca de exclusão sincronizada; os aparelhos removem a cópia local. Restauração possível por 30 dias; depois, expurgo. |
-| Bebê | Arquivar esconde e preserva. Excluir propaga marcas para todos os registros dele; aparelhos removem; expurgo depois do prazo. |
-| Família | Todos os membros recebem "família excluída" e apagam os dados locais. Proposta: 7 dias para desfazer, depois expurgo. |
-| Conta | Encerra os vínculos; se a pessoa for a última responsável, precisa transferir o papel ou excluir a família antes. O tratamento das postagens na comunidade está em [Privacidade e segurança](../05_Privacidade_Operacao/Privacidade_e_Seguranca.md). |
+| Record | Deletion marker synced; devices remove the local copy. Restoration possible for 30 days; after that, purge. |
+| Baby | Archiving hides and preserves. Deleting propagates markers to all of the baby's records; devices remove them; purge after the deadline. |
+| Family | All members receive "família excluída" and delete the local data. Proposal: 7 days to undo, then purge. |
+| Account | Ends the memberships; if the person is the last guardian, they must transfer the role or delete the family first. The handling of community posts is in [Privacy and security](../05_Privacidade_Operacao/Privacidade_e_Seguranca.md). |
 
-Backups seguem o ciclo próprio de retenção; a exclusão só se completa neles quando a cópia expira. Prazos e redação para o usuário estão no documento de privacidade.
+Backups follow their own retention cycle; deletion is only complete in them when the copy expires. Deadlines and user-facing wording are in the privacy document.
 
-## 13. Cinco situações de ponta a ponta
+## 13. Five end-to-end scenarios
 
-### S1. Registro offline, app encerrado, reabertura e envio sem perda nem duplicação (Q-01, Q-02, Q-08)
+### S1. Offline record, app closed, reopening, and sending without loss or duplication (Q-01, Q-02, Q-08)
 
-1. Sem rede, Ana inicia uma sessão de tummy time. O app grava o Registro em andamento e a operação "iniciar sessão" na mesma transação.
-2. Ana bloqueia a tela; o sistema encerra o app.
-3. Ana reabre. O app lê o Registro em andamento e mostra o tempo calculado a partir do início. Ela encerra: nova operação "encerrar sessão" na fila.
-4. A rede volta. O motor envia as duas operações. A resposta do servidor se perde.
-5. O app reenvia as mesmas duas operações. O servidor reconhece os ids e devolve "já processada".
-6. Resultado esperado: um registro, com início e fim corretos, estado "sincronizado". Evidência na prova: contagem de registros no servidor igual a 1, tabela de idempotência com as duas operações, captura da tela antes e depois.
+1. Without a network, Ana starts a tummy time session. The app writes the in-progress Record and the operation "iniciar sessão" in the same transaction.
+2. Ana locks the screen; the system terminates the app.
+3. Ana reopens it. The app reads the in-progress Record and shows the time calculated from the start. She ends it: new operation "encerrar sessão" in the queue.
+4. The network comes back. The engine sends both operations. The server's response is lost.
+5. The app resends the same two operations. The server recognizes the ids and returns "já processada".
+6. Expected result: one record, with correct start and end, state "sincronizado". Evidence in the proof: record count on the server equal to 1, idempotency table with both operations, screenshot before and after.
 
-### S2. Um cuidador inicia, outro encerra; os dois editam (Q-03, Q-04)
+### S2. One caregiver starts, another ends; both edit (Q-03, Q-04)
 
-1. Bruno inicia a soneca às 14:00 e sincroniza.
-2. Carla vê a sessão em andamento no aparelho dela e encerra às 15:10. "Encerrado por Carla."
-3. Offline, Bruno corrige o início para 13:55; Carla, também offline, corrige para 14:05. As duas edições partem da mesma versão-base.
-4. A edição de Bruno chega primeiro e é aplicada. A de Carla chega com versão-base antiga no mesmo campo e vira proposta pendente.
-5. Os dois veem o selo "precisa de revisão" com as duas versões, autores e horários; um deles escolhe. O histórico guarda as três versões.
+1. Bruno starts the nap at 14:00 and syncs.
+2. Carla sees the session in progress on her device and ends it at 15:10. "Encerrado por Carla."
+3. Offline, Bruno corrects the start to 13:55; Carla, also offline, corrects it to 14:05. Both edits start from the same base version.
+4. Bruno's edit arrives first and is applied. Carla's arrives with an old base version on the same field and becomes a pending proposal.
+5. Both see the badge "precisa de revisão" with both versions, authors, and times; one of them chooses. The history keeps all three versions.
 
-### S3. Vínculo revogado com um aparelho offline (Q-05)
+### S3. Membership revoked with an offline device (Q-05)
 
-1. A babá Dora (Cuidadora) está offline no metrô e registra duas fraldas.
-2. O responsável revoga o vínculo de Dora. No servidor, a época sobe e o vínculo fica revogado.
-3. Dora reconecta. O pedido de mudanças responde "acesso encerrado"; o envio das duas operações é recusado com o mesmo motivo.
-4. O app de Dora apaga os dados da família e mostra "2 registros não foram enviados porque seu acesso foi encerrado".
-5. A família não recebe esses registros. Se a licença de 14 dias tivesse vencido antes da reconexão, o app já teria escondido os dados.
+1. The nanny Dora (Caregiver) is offline on the subway and logs two diaper changes.
+2. The guardian revokes Dora's membership. On the server, the epoch increments and the membership becomes revoked.
+3. Dora reconnects. The change request responds "acesso encerrado"; sending the two operations is refused with the same reason.
+4. Dora's app deletes the family's data and shows "2 registros não foram enviados porque seu acesso foi encerrado".
+5. The family does not receive these records. If the 14-day license had expired before reconnection, the app would already have hidden the data.
 
-### S4. Duas famílias ao mesmo tempo, com anexos e notificações (Q-06, Q-10)
+### S4. Two families at the same time, with attachments and notifications (Q-06, Q-10)
 
-1. As famílias X e Y sincronizam em paralelo.
-2. Um cliente modificado da família X envia operações com o id de um registro de Y e pede mudanças de Y. O servidor responde como se os ids não existissem.
-3. Quando houver anexos, um pedido de URL de arquivo de Y por alguém de X é recusado antes de qualquer URL ser emitida; URLs expiram em minutos.
-4. Um push sobre Y só vai para dispositivos com vínculo ativo em Y. Se alguém de X negou notificações, nada muda para X além de não receber avisos.
-5. Evidência na prova: testes automatizados de autorização por id de outra família em cada rota e canal, e conferência dos destinatários de push num ambiente de teste.
+1. Families X and Y sync in parallel.
+2. A modified client from family X sends operations with the id of a record from Y and requests Y's changes. The server responds as if the ids did not exist.
+3. When there are attachments, a request for a Y file URL by someone from X is refused before any URL is issued; URLs expire in minutes.
+4. A push about Y only goes to devices with an active membership in Y. If someone from X denied notifications, nothing changes for X other than not receiving alerts.
+5. Evidence in the proof: automated authorization tests using another family's ids on every route and channel, and verification of push recipients in a test environment.
 
-### S5. Publicar na comunidade sem expor a rotina (Q-07)
+### S5. Posting to the community without exposing the routine (Q-07)
 
-1. Elisa abre o espaço "Sono" e escreve um tópico. O autor é o perfil público dela; nada da família vai junto.
-2. Ela toca em "incluir um resumo da minha semana". O app monta, no aparelho, um texto com as médias que ela escolher e mostra a prévia exata do que será publicado; nada sai sem a confirmação dela.
-3. Publicado, o tópico guarda só o texto confirmado, sem referência a bebê, família ou registros.
-4. Outra pessoa abre o perfil público de Elisa e vê apelido, bio e a faixa de idade que ela escolheu mostrar. Não há caminho para a rotina.
-5. Um moderador que avalia uma denúncia sobre o tópico vê o tópico e o perfil público; não vê a família.
+1. Elisa opens the space "Sono" and writes a topic. The author is her public profile; nothing from the family goes along.
+2. She taps "incluir um resumo da minha semana". The app assembles, on the device, a text with the averages she chooses and shows the exact preview of what will be published; nothing goes out without her confirmation.
+3. Once published, the topic stores only the confirmed text, with no reference to baby, family, or records.
+4. Another person opens Elisa's public profile and sees the nickname, bio, and the age range she chose to show. There is no path to the routine.
+5. A moderator who reviews a report about the topic sees the topic and the public profile; the moderator does not see the family.
 
-## 14. Como cada conjunto de arquitetura implementa o protocolo
+## 14. How each architecture stack implements the protocol
 
-Resumo; a comparação completa, com versões e fontes, está em [Comparação de arquiteturas](Comparacao_de_Arquiteturas.md).
+Summary; the full comparison, with versions and sources, is in [Architecture comparison](Comparacao_de_Arquiteturas.md).
 
-| Parte do protocolo | A. Firebase (Firestore) | B. PostgreSQL gerenciado + camada de sync | C. API própria + PostgreSQL |
+| Part of the protocol | A. Firebase (Firestore) | B. Managed PostgreSQL + sync layer | C. Custom API + PostgreSQL |
 | --- | --- | --- | --- |
-| Banco local | Cache do SDK nativo (Android, Apple ou Flutter); no React Native, depende de usar o SDK nativo (React Native Firebase) e não o SDK JavaScript | SQLite gerenciado pela biblioteca de sync | SQLite com fila própria |
-| Fila e idempotência | Gravações pendentes do SDK; id do documento gerado no aparelho dá idempotência na criação; operações de domínio exigem uma coleção de operações processada por funções no servidor | Fila de envio da biblioteca; o backend aplica as operações e guarda o id | Construídas pelo projeto |
-| Conflito explícito | Não nativo (última escrita vence por campo); exige funções no servidor | Implementado nas funções do backend que recebem o envio | Implementado no serviço |
-| Autorização pelo vínculo atual | Regras de segurança consultando o documento de vínculo; caminhos de servidor precisam da própria checagem | Políticas no banco e checagem nas funções; regras de download filtram por vínculo | Checagem no serviço em toda rota |
-| Revogação e limpeza local | Escrita recusada pelas regras é desfeita no cache; a limpeza da família no aparelho é código do app | Dados fora das regras de download saem do aparelho; a confirmar na prova | Código do app ao receber "acesso encerrado" |
+| Local database | Native SDK cache (Android, Apple, or Flutter); in React Native, depends on using the native SDK (React Native Firebase) rather than the JavaScript SDK | SQLite managed by the sync library | SQLite with a custom queue |
+| Queue and idempotency | SDK pending writes; a document id generated on the device provides idempotency on creation; domain operations require an operations collection processed by server-side functions | The library's upload queue; the backend applies the operations and stores the id | Built by the project |
+| Explicit conflict | Not native (last write wins per field); requires server-side functions | Implemented in the backend functions that receive the upload | Implemented in the service |
+| Authorization by current membership | Security rules querying the membership document; server paths need their own check | Database policies and checks in the functions; download rules filter by membership | Check in the service on every route |
+| Revocation and local cleanup | A write refused by the rules is rolled back in the cache; cleaning up the family on the device is app code | Data outside the download rules leaves the device; to be confirmed in the proof | App code upon receiving "acesso encerrado" |
 
-## 15. Alternativas consideradas
+## 15. Alternatives considered
 
-| Alternativa | Por que não |
+| Alternative | Why not |
 | --- | --- |
-| Só online | Viola o requisito de registrar sem conexão. |
-| Último que escreve vence em tudo | Apaga correções sem aviso em horários e quantidades. |
-| CRDT completo | Complexidade desproporcional: poucos campos editados em paralelo, e a revisão humana é aceitável nesses casos raros. |
-| Só quem iniciou pode encerrar a sessão | Quebra a troca de turno entre cuidadores, que é o centro do pilar de cuidado compartilhado. |
-| Contador rodando em segundo plano | Os sistemas não garantem execução contínua; a duração seria perdida ao encerrar o app. |
+| Online only | Violates the requirement to log without a connection. |
+| Last writer wins for everything | Silently erases corrections to times and quantities. |
+| Full CRDT | Disproportionate complexity: few fields are edited in parallel, and human review is acceptable in these rare cases. |
+| Only whoever started the session can end it | Breaks the shift handoff between caregivers, which is the core of the shared care pillar. |
+| Counter running in the background | The systems do not guarantee continuous execution; the duration would be lost when the app is closed. |
 
-## Questões abertas
+## Open questions
 
-1. Janela local de 90 dias e licença de 14 dias: valores a validar com uso real e na prova técnica.
-2. Tolerância de 2 minutos para encerramento duplicado.
-3. Texto e granularidade dos pushes entre cuidadores (o que avisar e quando).
-4. Banco local cifrado: custo de desempenho e de build a medir na prova.
-5. Escrita offline na comunidade além de rascunho: proposta é não.
+1. Local window of 90 days and license of 14 days: values to validate with real usage and in the technical proof.
+2. Tolerance of 2 minutes for a duplicate ending.
+3. Text and granularity of pushes between caregivers (what to notify about and when).
+4. Encrypted local database: performance and build cost to be measured in the proof.
+5. Offline writing in the community beyond drafts: the proposal is no.
 
-## Limites desta análise
+## Limits of this analysis
 
-Especificação sem implementação. Os cenários S1 a S5 são requisitos de teste para a prova técnica (MAT-17) e para a primeira fatia (MAT-18), não resultados de teste.
+Specification without implementation. Scenarios S1 to S5 are test requirements for the technical proof (MAT-17) and for the first slice (MAT-18), not test results.

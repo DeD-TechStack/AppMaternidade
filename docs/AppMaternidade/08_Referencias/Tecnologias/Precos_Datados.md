@@ -1,7 +1,7 @@
 ---
-tipo: pesquisa-tecnologia
-status: rascunho
-responsavel: Hermes (subagente dados e backend)
+tipo: technology-research
+status: draft
+responsavel: Hermes (data and backend subagent)
 revisado_em: 2026-10-22
 fontes_principais:
   - https://cloud.google.com/firestore/pricing
@@ -14,242 +14,242 @@ fontes_principais:
   - https://developers.cloudflare.com/r2/pricing/
 ---
 
-# Preços datados (fotografia de 22/10/2026)
+# Dated prices (snapshot from 22/10/2026)
 
-Esta nota lista preços e limites exibidos nas páginas oficiais em 22/10/2026 (America/Sao_Paulo). Valores em USD, sem impostos, IOF ou câmbio. Preço de página não é contrato. **Plano gratuito não é garantia de produção.** **Assinatura pessoal de IA não é crédito de API.**
+This note lists prices and limits displayed on official pages on 22/10/2026 (America/Sao_Paulo). Amounts are in USD, excluding taxes, IOF, or currency conversion. A price on a page is not a contract. **A free plan is not a production guarantee.** **A personal AI subscription is not API credit.**
 
-A análise técnica que usa estes números está em [Dados, sincronização e backend](Dados_Sincronizacao_e_Backend.md). Convenções em [Convenções](../../00_Inicio/Convencoes.md).
+The technical analysis that uses these figures is in [Data, synchronization, and backend](Dados_Sincronizacao_e_Backend.md). Conventions are in [Conventions](../../00_Inicio/Convencoes.md).
 
-Legenda das observações:
-- **[NC]**: preço não confirmado nesta rodada (tabela dinâmica não capturada ou não consultada).
-- **[HIP]**: estimativa ou inferência.
+Notes legend:
+- **[NC]**: price not confirmed in this round (dynamic table not captured or not checked).
+- **[HIP]**: estimate or inference.
 
-## 1. Lojas e build
+## 1. Stores and build
 
-| Item | Plano | Preço/limite exibido | URL | Data | Observações |
+| Item | Plan | Displayed price/limit | URL | Date | Notes |
 | --- | --- | --- | --- | --- | --- |
-| Apple Developer Program | Anual | "99 USD per membership year"; "Prices may vary by region" | https://developer.apple.com/programs/enroll/ | 22/10/2026 | Isenção possível para ONGs, instituições de ensino e governo. Necessário para distribuir via TestFlight/App Store [HIP: não reverificado nesta rodada]. |
-| Google Play Console | Registro | "US$25 one-time registration fee" | https://support.google.com/googleplay/android-developer/answer/6112435 | 22/10/2026 | Pode exigir documento e cartão no nome legal. Taxa não reembolsada se os dados forem inválidos. Contas pessoais novas têm requisito de testes (ver nota do outro subagente). |
-| Expo EAS | Free | US$ 0; 15 builds Android + 15 iOS/mês; fila de baixa prioridade; updates para 1 mil MAU | https://expo.dev/pricing | 22/10/2026 | Fila de baixa prioridade pode esperar "90+ minutes" em pico. |
-| Expo EAS | Starter | US$ 19/mês + uso; US$ 45 de crédito de build; fila prioritária; updates para 3 mil MAU | https://expo.dev/pricing | 22/10/2026 | Builds avulsos: Android US$ 1 (medium) / US$ 2 (large); iOS US$ 2 / US$ 4. Updates acima de 3 mil MAU: US$ 0,005/MAU (faixa 3.001–200.000). Banda 100 GiB, depois US$ 0,10/GiB. |
-| Expo EAS | Production | US$ 199/mês + uso; US$ 225 de crédito; updates para 50 mil MAU; suporte prioritário | https://expo.dev/pricing | 22/10/2026 | Storage 1 TiB incluído. |
-| Expo EAS | Enterprise | Sob consulta; a partir de US$ 1.000 de crédito | https://expo.dev/pricing | 22/10/2026 | — |
+| Apple Developer Program | Annual | "99 USD per membership year"; "Prices may vary by region" | https://developer.apple.com/programs/enroll/ | 22/10/2026 | A waiver may be available for nonprofits, educational institutions, and government. Required for distribution through TestFlight/App Store [HIP: not rechecked in this round]. |
+| Google Play Console | Registration | "US$25 one-time registration fee" | https://support.google.com/googleplay/android-developer/answer/6112435 | 22/10/2026 | May require an ID document and a card in the legal name. The fee is not refunded if the details are invalid. New personal accounts have a testing requirement (see the other subagent's note). |
+| Expo EAS | Free | US$ 0; 15 Android + 15 iOS builds/month; low-priority queue; updates for 1 thousand MAU | https://expo.dev/pricing | 22/10/2026 | The low-priority queue may have a wait of "90+ minutes" at peak times. |
+| Expo EAS | Starter | US$ 19/month + usage; US$ 45 in build credit; priority queue; updates for 3 thousand MAU | https://expo.dev/pricing | 22/10/2026 | Individual builds: Android US$ 1 (medium) / US$ 2 (large); iOS US$ 2 / US$ 4. Updates above 3 thousand MAU: US$ 0,005/MAU (tier 3.001–200.000). Bandwidth 100 GiB, then US$ 0,10/GiB. |
+| Expo EAS | Production | US$ 199/month + usage; US$ 225 in credit; updates for 50 thousand MAU; priority support | https://expo.dev/pricing | 22/10/2026 | Storage 1 TiB included. |
+| Expo EAS | Enterprise | Contact for pricing; starting at US$ 1.000 in credit | https://expo.dev/pricing | 22/10/2026 | — |
 
-## 2. Firebase e Google Cloud
+## 2. Firebase and Google Cloud
 
-| Item | Plano | Preço/limite exibido | URL | Data | Observações |
+| Item | Plan | Displayed price/limit | URL | Date | Notes |
 | --- | --- | --- | --- | --- | --- |
-| Firebase | Spark | Sem custo, sem meio de pagamento | https://firebase.google.com/pricing | 22/10/2026 | Sem Cloud Storage (402/403). Login por link de e-mail limitado a 5 e-mails/dia. Inviável para produção do app. |
-| Firebase | Blaze | Pay-as-you-go; as cotas sem custo continuam valendo | https://firebase.google.com/pricing | 22/10/2026 | Exige conta de faturamento. Não há teto automático de gasto (alertas de orçamento não bloqueiam) [HIP: não reverificado]. |
-| Firestore Standard (us-central1 exibido) | Cota grátis | 1 GiB armazenado; 50.000 leituras/dia; 20.000 escritas/dia; 20.000 exclusões/dia; 10 GiB/mês de saída | https://cloud.google.com/firestore/pricing | 22/10/2026 | "No free quota for named databases": só o banco `(default)` tem cota. |
-| Firestore Standard | Uso | Leitura US$ 0,03/100 mil; escrita US$ 0,09/100 mil; exclusão US$ 0,01/100 mil; TTL US$ 0,01/100 mil | https://cloud.google.com/firestore/pricing | 22/10/2026 | Listener desconectado > 30 min relê como consulta nova. Mínimo de 1 leitura por consulta. `get()`/`exists()` nas regras cobram leituras (https://firebase.google.com/docs/firestore/pricing). Preço de São Paulo [NC]. |
-| Firestore Standard | Armazenamento/backup | Dados US$ 0,000205479/GiB-hora (≈ US$ 0,15/GiB-mês); PITR, mesmo valor; backup US$ 0,000041096/GiB-hora (≈ US$ 0,03/GiB-mês); restauração e clone US$ 0,20/GiB | https://cloud.google.com/firestore/pricing | 22/10/2026 | Saída de rede acima de 10 GiB segue a tabela de rede do Google Cloud [NC: taxa exata não capturada]. |
-| Firebase Authentication | Spark e Blaze | 50 mil MAU sem custo; SAML/OIDC 50 MAU | https://firebase.google.com/pricing | 22/10/2026 | Limites de e-mail: link de login 5/dia no Spark, 25.000/dia no Blaze (https://firebase.google.com/docs/auth/limits). |
-| Identity Platform (acima de 50 mil MAU) | Tier 1 (e-mail, social, anônimo) | 0–50 mil: grátis; 50 mil–100 mil: US$ 0,0055/MAU; 100 mil–1 milhão: US$ 0,0046/MAU | https://cloud.google.com/identity-platform/pricing | 22/10/2026 | Tier 2 (SAML/OIDC): US$ 0,015/MAU acima de 50. SMS por mensagem: Brasil US$ 0,02 (as 10 primeiras/dia não são cobradas). |
-| Cloud Storage for Firebase | Blaze (obrigatório) | Buckets `*.firebasestorage.app`: sem custo até 5 GB-mês, 100 GB/mês de download, 5 mil uploads e 50 mil downloads/mês; depois, tabela do Cloud Storage | https://firebase.google.com/pricing | 22/10/2026 | Cotas grátis só em us-central1, us-west1 e us-east1. Buckets legados `*.appspot.com`: 5 GB, depois US$ 0,026/GB; 1 GB/dia de download, depois US$ 0,12/GB. |
-| Cloud Functions (via Firebase) | Blaze | 2 milhões de invocações/mês grátis, depois US$ 0,40/milhão; 400 mil GB-s; 200 mil CPU-s; 5 GB de saída, depois US$ 0,12/GB | https://firebase.google.com/pricing | 22/10/2026 | Cloud Build: 120 min/dia grátis. |
-| Firebase Cloud Messaging | Todos | "No-cost" | https://firebase.google.com/pricing | 22/10/2026 | APIs InstanceId e device groups desligam em 29/09/2027. |
-| Cloud Run | Request-based (Tier 1) | CPU ativa US$ 0,000024/vCPU-s; memória US$ 0,0000025/GiB-s; US$ 0,40/milhão de requisições; ocioso de instância mínima US$ 0,0000025 | https://cloud.google.com/run/pricing | 22/10/2026 | Grátis/mês: 180 mil vCPU-s, 360 mil GiB-s, 2 milhões de requisições. Saída: 1 GiB/mês grátis na América do Norte, depois tabela de rede. |
-| Cloud Run | Instance-based | US$ 0,000018/vCPU-s; US$ 0,000002/GiB-s | https://cloud.google.com/run/pricing | 22/10/2026 | Grátis: 240 mil vCPU-s, 450 mil GiB-s. |
-| Cloud SQL para PostgreSQL | Enterprise (us-central1) | vCPU US$ 0,0413/h; memória US$ 0,007/GiB-h; HA em dobro. Compartilhadas: db-f1-micro US$ 0,0105/h; db-g1-small US$ 0,035/h | https://cloud.google.com/sql/pricing | 22/10/2026 | Instâncias compartilhadas "are not covered by the Cloud SQL SLA". SSD US$ 0,000232877/GiB-h (≈ US$ 0,17/GiB-mês), HA US$ 0,000465753; backup US$ 0,000109589/GiB-h (≈ US$ 0,08/GiB-mês). Clientes novos: US$ 300 em créditos. |
-| Cloud Storage (GCS) | Standard (us-central1) | US$ 0,000027397/GiB-h (≈ US$ 0,020/GiB-mês); Classe A US$ 0,005/mil; Classe B US$ 0,0004/mil | https://cloud.google.com/storage/pricing | 22/10/2026 | Saída para "Worldwide": US$ 0,12/GiB (0–10 TiB). Always Free: 5 GB-mês, 5 mil Classe A e 50 mil Classe B, só em regiões dos EUA. São Paulo [NC]. |
+| Firebase | Spark | No cost, no payment method | https://firebase.google.com/pricing | 22/10/2026 | No Cloud Storage (402/403). Email link login limited to 5 emails/day. Not viable for the app in production. |
+| Firebase | Blaze | Pay-as-you-go; no-cost quotas still apply | https://firebase.google.com/pricing | 22/10/2026 | Requires a billing account. There is no automatic spending cap (budget alerts do not block spending) [HIP: not rechecked]. |
+| Firestore Standard (us-central1 displayed) | Free quota | 1 GiB stored; 50.000 reads/day; 20.000 writes/day; 20.000 deletes/day; 10 GiB/month of egress | https://cloud.google.com/firestore/pricing | 22/10/2026 | "No free quota for named databases": only the `(default)` database has a quota. |
+| Firestore Standard | Usage | Read US$ 0,03/100 per thousand; write US$ 0,09/100 per thousand; delete US$ 0,01/100 per thousand; TTL US$ 0,01/100 per thousand | https://cloud.google.com/firestore/pricing | 22/10/2026 | A listener disconnected for > 30 min rereads as a new query. Minimum of 1 read per query. `get()`/`exists()` in rules incur read charges (https://firebase.google.com/docs/firestore/pricing). São Paulo price [NC]. |
+| Firestore Standard | Storage/backup | Data US$ 0,000205479/GiB-hour (≈ US$ 0,15/GiB-month); PITR, same price; backup US$ 0,000041096/GiB-hour (≈ US$ 0,03/GiB-month); restore and clone US$ 0,20/GiB | https://cloud.google.com/firestore/pricing | 22/10/2026 | Network egress above 10 GiB follows the Google Cloud network pricing table [NC: exact rate not captured]. |
+| Firebase Authentication | Spark and Blaze | 50 thousand MAU at no cost; SAML/OIDC 50 MAU | https://firebase.google.com/pricing | 22/10/2026 | Email limits: login link 5/day on Spark, 25.000/day on Blaze (https://firebase.google.com/docs/auth/limits). |
+| Identity Platform (above 50 thousand MAU) | Tier 1 (email, social, anonymous) | 0–50 thousand: free; 50 thousand–100 thousand: US$ 0,0055/MAU; 100 thousand–1 million: US$ 0,0046/MAU | https://cloud.google.com/identity-platform/pricing | 22/10/2026 | Tier 2 (SAML/OIDC): US$ 0,015/MAU above 50. SMS per message: Brazil US$ 0,02 (the first 10/day are not charged). |
+| Cloud Storage for Firebase | Blaze (required) | Buckets `*.firebasestorage.app`: no cost up to 5 GB-month, 100 GB/month of downloads, 5 thousand uploads and 50 thousand downloads/month; then, Cloud Storage pricing table | https://firebase.google.com/pricing | 22/10/2026 | Free quotas only in us-central1, us-west1, and us-east1. Legacy buckets `*.appspot.com`: 5 GB, then US$ 0,026/GB; 1 GB/day of downloads, then US$ 0,12/GB. |
+| Cloud Functions (via Firebase) | Blaze | 2 million invocations/month free, then US$ 0,40/million; 400 thousand GB-s; 200 thousand CPU-s; 5 GB of egress, then US$ 0,12/GB | https://firebase.google.com/pricing | 22/10/2026 | Cloud Build: 120 min/day free. |
+| Firebase Cloud Messaging | All | "No-cost" | https://firebase.google.com/pricing | 22/10/2026 | InstanceId and device groups APIs shut down on 29/09/2027. |
+| Cloud Run | Request-based (Tier 1) | Active CPU US$ 0,000024/vCPU-s; memory US$ 0,0000025/GiB-s; US$ 0,40/million requests; minimum instance idle cost US$ 0,0000025 | https://cloud.google.com/run/pricing | 22/10/2026 | Free/month: 180 thousand vCPU-s, 360 thousand GiB-s, 2 million requests. Egress: 1 GiB/month free in North America, then network pricing table. |
+| Cloud Run | Instance-based | US$ 0,000018/vCPU-s; US$ 0,000002/GiB-s | https://cloud.google.com/run/pricing | 22/10/2026 | Free: 240 thousand vCPU-s, 450 thousand GiB-s. |
+| Cloud SQL for PostgreSQL | Enterprise (us-central1) | vCPU US$ 0,0413/h; memory US$ 0,007/GiB-h; HA costs twice as much. Shared: db-f1-micro US$ 0,0105/h; db-g1-small US$ 0,035/h | https://cloud.google.com/sql/pricing | 22/10/2026 | Shared instances "are not covered by the Cloud SQL SLA". SSD US$ 0,000232877/GiB-h (≈ US$ 0,17/GiB-month), HA US$ 0,000465753; backup US$ 0,000109589/GiB-h (≈ US$ 0,08/GiB-month). New customers: US$ 300 in credits. |
+| Cloud Storage (GCS) | Standard (us-central1) | US$ 0,000027397/GiB-h (≈ US$ 0,020/GiB-month); Class A US$ 0,005/thousand; Class B US$ 0,0004/thousand | https://cloud.google.com/storage/pricing | 22/10/2026 | Egress to "Worldwide": US$ 0,12/GiB (0–10 TiB). Always Free: 5 GB-month, 5 thousand Class A and 50 thousand Class B, only in US regions. São Paulo [NC]. |
 
 ## 3. Supabase
 
-| Item | Plano | Preço/limite exibido | URL | Data | Observações |
+| Item | Plan | Displayed price/limit | URL | Date | Notes |
 | --- | --- | --- | --- | --- | --- |
-| Supabase | Free | US$ 0; 50 mil MAU; banco de 500 MB; CPU compartilhada com 500 MB de RAM; 5 GB de egress + 5 GB em cache; 1 GB de arquivos | https://supabase.com/pricing | 22/10/2026 | **"Free projects are paused after 1 week of inactivity. Limit of 2 active projects."** Sem backups automáticos (só Pro/Team/Enterprise). SMTP padrão: 2 mensagens/hora e só para a equipe. |
-| Supabase | Pro | A partir de US$ 25/mês; 100 mil MAU, depois US$ 0,00325/MAU; disco de 8 GB/projeto, depois US$ 0,125/GB; 250 GB de egress, depois US$ 0,09/GB; 250 GB em cache, depois US$ 0,03/GB; 100 GB de arquivos, depois US$ 0,0213/GB | https://supabase.com/pricing | 22/10/2026 | Backups diários com 7 dias de acesso; logs de 7 dias. US$ 10/mês de crédito de compute (cobre um Micro). Projetos extras a partir de US$ 10/mês. Spend cap ligado por padrão. |
-| Supabase | Team | A partir de US$ 599/mês | https://supabase.com/pricing | 22/10/2026 | SOC 2 e ISO 27001; "HIPAA available as paid add-on"; backups de 14 dias; logs de 28 dias. |
-| Supabase compute | Add-on | Micro US$ 10 (1 GB); Small US$ 15 (2 GB); Medium US$ 60 (4 GB); Large US$ 110 (2 vCPU dedicadas, 8 GB); XL US$ 210 | https://supabase.com/pricing | 22/10/2026 | Valores por projeto/mês. |
-| Supabase PITR | Add-on | US$ 100/mês por 7 dias de retenção | https://supabase.com/pricing | 22/10/2026 | Não disponível no Free. Backups não incluem objetos do Storage (https://supabase.com/docs/guides/platform/backups). |
-| Supabase Realtime | Pro | 500 conexões de pico, depois US$ 10/mil; 5 milhões de mensagens, depois US$ 2,50/milhão | https://supabase.com/pricing | 22/10/2026 | Free: 200 conexões e 2 milhões de mensagens. |
-| Supabase Edge Functions | Pro | 2 milhões de invocações, depois US$ 2/milhão | https://supabase.com/pricing | 22/10/2026 | Free: 500 mil. |
-| Supabase extras | Pro | Domínio próprio US$ 10/mês; log drain US$ 60/drain + US$ 0,20/milhão de eventos; MFA por telefone US$ 75/mês; transformação de imagem: 100 grátis, depois US$ 5/mil | https://supabase.com/pricing | 22/10/2026 | — |
+| Supabase | Free | US$ 0; 50 thousand MAU; 500 MB database; shared CPU with 500 MB of RAM; 5 GB of egress + 5 GB cached; 1 GB of files | https://supabase.com/pricing | 22/10/2026 | **"Free projects are paused after 1 week of inactivity. Limit of 2 active projects."** No automatic backups (Pro/Team/Enterprise only). Default SMTP: 2 messages/hour and only to the team. |
+| Supabase | Pro | Starting at US$ 25/month; 100 thousand MAU, then US$ 0,00325/MAU; 8 GB disk/project, then US$ 0,125/GB; 250 GB of egress, then US$ 0,09/GB; 250 GB cached, then US$ 0,03/GB; 100 GB of files, then US$ 0,0213/GB | https://supabase.com/pricing | 22/10/2026 | Daily backups with 7 days of access; 7 days of logs. US$ 10/month in compute credit (covers one Micro). Extra projects starting at US$ 10/month. Spend cap enabled by default. |
+| Supabase | Team | Starting at US$ 599/month | https://supabase.com/pricing | 22/10/2026 | SOC 2 and ISO 27001; "HIPAA available as paid add-on"; 14 days of backups; 28 days of logs. |
+| Supabase compute | Add-on | Micro US$ 10 (1 GB); Small US$ 15 (2 GB); Medium US$ 60 (4 GB); Large US$ 110 (2 dedicated vCPUs, 8 GB); XL US$ 210 | https://supabase.com/pricing | 22/10/2026 | Amounts per project/month. |
+| Supabase PITR | Add-on | US$ 100/month for 7 days of retention | https://supabase.com/pricing | 22/10/2026 | Not available on Free. Backups do not include Storage objects (https://supabase.com/docs/guides/platform/backups). |
+| Supabase Realtime | Pro | 500 peak connections, then US$ 10/thousand; 5 million messages, then US$ 2,50/million | https://supabase.com/pricing | 22/10/2026 | Free: 200 connections and 2 million messages. |
+| Supabase Edge Functions | Pro | 2 million invocations, then US$ 2/million | https://supabase.com/pricing | 22/10/2026 | Free: 500 thousand. |
+| Supabase extras | Pro | Custom domain US$ 10/month; log drain US$ 60/drain + US$ 0,20/million events; phone MFA US$ 75/month; image transformation: 100 free, then US$ 5/thousand | https://supabase.com/pricing | 22/10/2026 | — |
 
-## 4. Camadas de sincronização
+## 4. Synchronization layers
 
-| Item | Plano | Preço/limite exibido | URL | Data | Observações |
+| Item | Plan | Displayed price/limit | URL | Date | Notes |
 | --- | --- | --- | --- | --- | --- |
-| PowerSync Cloud | Free | US$ 0; 2 GB sincronizados/mês; 500 MB hospedados; 50 clientes simultâneos no pico; 2 instâncias | https://www.powersync.com/pricing | 22/10/2026 | **"Free projects are deactivated after 1 week of inactivity."** Logs de 24 h. |
-| PowerSync Cloud | Pro | A partir de US$ 49/mês; 30 GB sincronizados, depois US$ 1/GB; 10 GB hospedados, depois US$ 1/GB (máx. 100 GB por padrão); 1.000 clientes simultâneos, depois US$ 30 por mil (máx. 3.000 por padrão); 2 instâncias, depois US$ 25/mês cada | https://www.powersync.com/pricing | 22/10/2026 | Sem desativação. Logs de 7 dias. |
-| PowerSync Cloud | Team | A partir de US$ 599/mês; hospedagem até 500 GB; 10 mil clientes (configurável para 50 mil+) | https://www.powersync.com/pricing | 22/10/2026 | Logs de 30 dias. A página lista relatório SOC 2 e "HIPAA compliance available" na grade de recursos (plano exato [NC]). |
-| PowerSync self-host | Open Edition | Sem preço de licença (FSL-1.1-ALv2) | https://docs.powersync.com/intro/self-hosting | 22/10/2026 | Custo é a infraestrutura própria: serviço + banco de bucket storage (Postgres ou MongoDB). Enterprise Self-Hosted sob consulta. |
-| Electric Cloud | PAYG | US$ 1 por milhão de escritas; US$ 0,10/GB-mês de retenção; leitura, egress e fan-out grátis | https://electric.ax/pricing | 22/10/2026 | Contas abaixo de US$ 5/mês são isentas. Pro US$ 249/mês (−10%); Scale US$ 1.999/mês (−20%). Electric não faz escrita. |
-| Cloud Zero | — | Sem preço público confirmado | https://zero.rocicorp.dev/docs/cloud-zero | 22/10/2026 | Acesso por formulário; roadmap 2026 prevê "full public availability" [NC]. |
+| PowerSync Cloud | Free | US$ 0; 2 GB synced/month; 500 MB hosted; 50 concurrent clients at peak; 2 instances | https://www.powersync.com/pricing | 22/10/2026 | **"Free projects are deactivated after 1 week of inactivity."** 24 h of logs. |
+| PowerSync Cloud | Pro | Starting at US$ 49/month; 30 GB synced, then US$ 1/GB; 10 GB hosted, then US$ 1/GB (max. 100 GB by default); 1.000 concurrent clients, then US$ 30 per thousand (max. 3.000 by default); 2 instances, then US$ 25/month each | https://www.powersync.com/pricing | 22/10/2026 | No deactivation. 7 days of logs. |
+| PowerSync Cloud | Team | Starting at US$ 599/month; hosting up to 500 GB; 10 thousand clients (configurable to 50 thousand+) | https://www.powersync.com/pricing | 22/10/2026 | 30 days of logs. The page lists a SOC 2 report and "HIPAA compliance available" in the feature grid (exact plan [NC]). |
+| PowerSync self-host | Open Edition | No license fee (FSL-1.1-ALv2) | https://docs.powersync.com/intro/self-hosting | 22/10/2026 | The cost is your own infrastructure: service + bucket storage database (Postgres or MongoDB). Contact for Enterprise Self-Hosted pricing. |
+| Electric Cloud | PAYG | US$ 1 per million writes; US$ 0,10/GB-month of retention; reads, egress, and fan-out free | https://electric.ax/pricing | 22/10/2026 | Accounts below US$ 5/month are exempt. Pro US$ 249/month (−10%); Scale US$ 1.999/month (−20%). Electric does not perform writes. |
+| Cloud Zero | — | No confirmed public price | https://zero.rocicorp.dev/docs/cloud-zero | 22/10/2026 | Access through a form; the 2026 roadmap anticipates "full public availability" [NC]. |
 
-## 5. Hospedagem e PostgreSQL gerenciado
+## 5. Hosting and managed PostgreSQL
 
-| Item | Plano | Preço/limite exibido | URL | Data | Observações |
+| Item | Plan | Displayed price/limit | URL | Date | Notes |
 | --- | --- | --- | --- | --- | --- |
-| Render | Workspace | Hobby US$ 0; Pro US$ 25/mês; Scale US$ 499/mês; Enterprise sob consulta | https://render.com/pricing | 22/10/2026 | Banda incluída: 5 GB (Hobby), 25 GB (Pro), 1 TB (Scale). |
-| Render | Web service | Free (com limitações); 0,5 CPU/512 MB US$ 7/mês; 1 CPU/2 GB US$ 25/mês; 2 CPU/4 GB US$ 85/mês | https://render.com/pricing | 22/10/2026 | SSD US$ 0,25/GB-mês. |
-| Render Postgres | Instância | Free (com limitações); 256 MB US$ 6/mês; 1 GB US$ 19/mês; 1 CPU/2 GB US$ 40/mês; 1 CPU/4 GB US$ 55/mês; 2 CPU/4 GB US$ 75/mês | https://render.com/pricing | 22/10/2026 | Armazenamento US$ 0,30/GB. PITR listado. "Logical backup for paid instances". |
-| Railway | Planos | Free US$ 0 (US$ 1 de crédito/mês); Hobby US$ 5/mês (inclui US$ 5 de uso); Pro US$ 20/mês (inclui US$ 20 de uso) | https://docs.railway.com/reference/pricing/plans | 22/10/2026 | Uso: RAM US$ 10/GB-mês; CPU US$ 20/vCPU-mês; egress US$ 0,05/GB; volume US$ 0,15/GB-mês. Trial de 30 dias com US$ 5. |
-| Fly.io | Machines | shared-cpu-1x: 256 MB US$ 2,19/mês; 512 MB US$ 3,69; 1 GB US$ 6,70. shared-cpu-2x 2 GB US$ 13,39 | https://docs.fly.io/about/pricing | 22/10/2026 | Volume US$ 0,15/GB-mês. Saída US$ 0,02/GB (América do Norte/Europa) e US$ 0,04/GB (América do Sul). Suporte padrão US$ 29/mês. |
-| Fly.io | Managed Postgres | US$ 38/mês (Basic) a US$ 1.922/mês | https://docs.fly.io/about/pricing | 22/10/2026 | Armazenamento US$ 0,28/GB-mês. |
-| Neon | Free | US$ 0; 100 CU-horas/projeto; scale-to-zero após 5 min; 1 GB/projeto; restauração de até 6 h ou 1 GB de mudanças; 5 GB de egress | https://neon.com/pricing | 22/10/2026 | Free sem cartão e sem prazo. Não é garantia de produção. |
-| Neon | Launch | US$ 0,106/CU-hora; US$ 0,35/GB-mês; histórico US$ 0,20/GB-mês; restauração de até 7 dias | https://neon.com/pricing | 22/10/2026 | "Typical spend: $15/mo". Até 16 CU. |
-| Neon | Scale | US$ 0,222/CU-hora; US$ 0,35/GB-mês; restauração de até 30 dias | https://neon.com/pricing | 22/10/2026 | "Typical spend: $701/mo". |
-| Amazon RDS for PostgreSQL | On-demand | db.t4g.micro US$ 0,016/h; db.t4g.small US$ 0,032/h (Single-AZ); Multi-AZ db.t4g.micro US$ 0,032/h | https://aws.amazon.com/rds/postgresql/pricing/ | 22/10/2026 | Região da tabela não identificada no texto extraído [NC]. gp2/gp3 US$ 0,115/GB-mês. Backup sem custo até 100% do armazenamento do banco, depois US$ 0,095/GiB-mês. Free Tier: 750 h/mês por 12 meses para clientes novos. |
-| Cloud SQL / Cloud Run | — | Ver seção 2 | — | — | — |
-| Supabase (como Postgres) | — | Ver seção 3 | — | — | — |
+| Render | Workspace | Hobby US$ 0; Pro US$ 25/month; Scale US$ 499/month; contact for Enterprise pricing | https://render.com/pricing | 22/10/2026 | Included bandwidth: 5 GB (Hobby), 25 GB (Pro), 1 TB (Scale). |
+| Render | Web service | Free (with limitations); 0,5 CPU/512 MB US$ 7/month; 1 CPU/2 GB US$ 25/month; 2 CPU/4 GB US$ 85/month | https://render.com/pricing | 22/10/2026 | SSD US$ 0,25/GB-month. |
+| Render Postgres | Instance | Free (with limitations); 256 MB US$ 6/month; 1 GB US$ 19/month; 1 CPU/2 GB US$ 40/month; 1 CPU/4 GB US$ 55/month; 2 CPU/4 GB US$ 75/month | https://render.com/pricing | 22/10/2026 | Storage US$ 0,30/GB. PITR listed. "Logical backup for paid instances". |
+| Railway | Plans | Free US$ 0 (US$ 1 in credit/month); Hobby US$ 5/month (includes US$ 5 of usage); Pro US$ 20/month (includes US$ 20 of usage) | https://docs.railway.com/reference/pricing/plans | 22/10/2026 | Usage: RAM US$ 10/GB-month; CPU US$ 20/vCPU-month; egress US$ 0,05/GB; volume US$ 0,15/GB-month. 30-day trial with US$ 5. |
+| Fly.io | Machines | shared-cpu-1x: 256 MB US$ 2,19/month; 512 MB US$ 3,69; 1 GB US$ 6,70. shared-cpu-2x 2 GB US$ 13,39 | https://docs.fly.io/about/pricing | 22/10/2026 | Volume US$ 0,15/GB-month. Egress US$ 0,02/GB (North America/Europe) and US$ 0,04/GB (South America). Standard support US$ 29/month. |
+| Fly.io | Managed Postgres | US$ 38/month (Basic) to US$ 1.922/month | https://docs.fly.io/about/pricing | 22/10/2026 | Storage US$ 0,28/GB-month. |
+| Neon | Free | US$ 0; 100 CU-horas/project; scale-to-zero after 5 min; 1 GB/project; restore up to 6 h or 1 GB of changes; 5 GB of egress | https://neon.com/pricing | 22/10/2026 | Free with no card and no time limit. Not a production guarantee. |
+| Neon | Launch | US$ 0,106/CU-hora; US$ 0,35/GB-month; history US$ 0,20/GB-month; restore up to 7 days | https://neon.com/pricing | 22/10/2026 | "Typical spend: $15/mo". Up to 16 CU. |
+| Neon | Scale | US$ 0,222/CU-hora; US$ 0,35/GB-month; restore up to 30 days | https://neon.com/pricing | 22/10/2026 | "Typical spend: $701/mo". |
+| Amazon RDS for PostgreSQL | On-demand | db.t4g.micro US$ 0,016/h; db.t4g.small US$ 0,032/h (Single-AZ); Multi-AZ db.t4g.micro US$ 0,032/h | https://aws.amazon.com/rds/postgresql/pricing/ | 22/10/2026 | Table region not identified in the extracted text [NC]. gp2/gp3 US$ 0,115/GB-month. Backup at no cost up to 100% of database storage, then US$ 0,095/GiB-month. Free Tier: 750 h/month for 12 months for new customers. |
+| Cloud SQL / Cloud Run | — | See section 2 | — | — | — |
+| Supabase (as Postgres) | — | See section 3 | — | — | — |
 
 ## 6. Autenticação
 
-| Item | Plano | Preço/limite exibido | URL | Data | Observações |
+| Item | Plan | Displayed price/limit | URL | Date | Notes |
 | --- | --- | --- | --- | --- | --- |
-| Supabase Auth | Free/Pro | 50 mil MAU (Free); 100 mil MAU (Pro), depois US$ 0,00325/MAU | https://supabase.com/pricing | 22/10/2026 | Passkeys experimentais/beta. Exige SMTP próprio em produção. |
-| Firebase Auth | Spark/Blaze | 50 mil MAU sem custo; acima, Identity Platform | https://firebase.google.com/pricing | 22/10/2026 | Ver seção 2. |
-| Clerk | Hobby | Grátis; "50,000 MRU limit per app" | https://clerk.com/pricing | 22/10/2026 | MRU = usuário retido mensal, conforme a página. |
-| Clerk | Pro | US$ 20/mês com cobrança anual; 50 mil MRU incluídos, depois US$ 0,02/MRU | https://clerk.com/pricing | 22/10/2026 | Valor mensal sem cobrança anual [NC]. |
-| Auth0 | Free | US$ 0; até 25 mil MAU | https://auth0.com/pricing | 22/10/2026 | Passkeys e passwordless incluídos em todos os planos. |
-| Auth0 | Essentials (B2C) | US$ 35/mês para até 500 MAU | https://auth0.com/pricing | 22/10/2026 | Professional US$ 240/mês. Faixas maiores sob consulta ("Custom Tiers"). |
-| Amazon Cognito | Lite/Essentials | Free tier de 10 mil MAU (diretos + social) sem expiração; Essentials US$ 0,015/MAU acima disso | https://aws.amazon.com/cognito/pricing/ | 22/10/2026 | Plus US$ 0,020/MAU. SAML/OIDC: 50 MAU grátis. Lite tem tabela por faixas mais barata [NC: faixas completas]. |
+| Supabase Auth | Free/Pro | 50 thousand MAU (Free); 100 thousand MAU (Pro), then US$ 0,00325/MAU | https://supabase.com/pricing | 22/10/2026 | Experimental/beta passkeys. Requires your own SMTP in production. |
+| Firebase Auth | Spark/Blaze | 50 thousand MAU at no cost; above that, Identity Platform | https://firebase.google.com/pricing | 22/10/2026 | See section 2. |
+| Clerk | Hobby | Free; "50,000 MRU limit per app" | https://clerk.com/pricing | 22/10/2026 | MRU = monthly retained user, according to the page. |
+| Clerk | Pro | US$ 20/month with annual billing; 50 thousand MRU included, then US$ 0,02/MRU | https://clerk.com/pricing | 22/10/2026 | Monthly price without annual billing [NC]. |
+| Auth0 | Free | US$ 0; up to 25 thousand MAU | https://auth0.com/pricing | 22/10/2026 | Passkeys and passwordless included in all plans. |
+| Auth0 | Essentials (B2C) | US$ 35/month for up to 500 MAU | https://auth0.com/pricing | 22/10/2026 | Professional US$ 240/month. Contact for higher tiers ("Custom Tiers"). |
+| Amazon Cognito | Lite/Essentials | Free tier of 10 thousand MAU (direct + social) with no expiration; Essentials US$ 0,015/MAU above that | https://aws.amazon.com/cognito/pricing/ | 22/10/2026 | Plus US$ 0,020/MAU. SAML/OIDC: 50 MAU free. Lite has a cheaper tiered pricing table [NC: full tiers]. |
 
 ## 7. Push
 
-| Item | Plano | Preço/limite exibido | URL | Data | Observações |
+| Item | Plan | Displayed price/limit | URL | Date | Notes |
 | --- | --- | --- | --- | --- | --- |
-| FCM (HTTP v1) | — | Sem custo | https://firebase.google.com/pricing | 22/10/2026 | Payload de dados até 4 KB. |
-| APNs | — | Sem tabela de preço por mensagem; incluído na adesão ao Apple Developer Program [HIP] | https://developer.apple.com/documentation/usernotifications/establishing-a-token-based-connection-to-apns | 22/10/2026 | Chave .p8; token renovado ao menos de hora em hora. |
-| Expo Push Service | — | "There is no cost"; limite de 600 notificações/s por projeto | https://docs.expo.dev/push-notifications/faq/ | 22/10/2026 | Entrega at-least-once. Não funciona no Expo Go (SDK 53+). |
-| OneSignal | Free | US$ 0; push ilimitado "for organizations with up to 1,000 monthly active users"; e-mail 10 mil envios/mês | https://onesignal.com/pricing | 22/10/2026 | Acima de 1 mil MAU, sai do Free. |
-| OneSignal | Growth | A partir de US$ 19/mês; push US$ 0,012/MAU; e-mail 20 mil grátis, depois US$ 1,50/mil | https://onesignal.com/pricing | 22/10/2026 | Com 20 mil MAU ≈ US$ 240/mês só de push [HIP: cálculo]. |
+| FCM (HTTP v1) | — | No cost | https://firebase.google.com/pricing | 22/10/2026 | Data payload up to 4 KB. |
+| APNs | — | No per-message pricing table; included in Apple Developer Program membership [HIP] | https://developer.apple.com/documentation/usernotifications/establishing-a-token-based-connection-to-apns | 22/10/2026 | .p8 key; token renewed at least hourly. |
+| Expo Push Service | — | "There is no cost"; limit of 600 notifications/s per project | https://docs.expo.dev/push-notifications/faq/ | 22/10/2026 | at-least-once delivery. Does not work in Expo Go (SDK 53+). |
+| OneSignal | Free | US$ 0; unlimited push "for organizations with up to 1,000 monthly active users"; email 10 thousand sends/month | https://onesignal.com/pricing | 22/10/2026 | Above 1 thousand MAU, no longer eligible for Free. |
+| OneSignal | Growth | Starting at US$ 19/month; push US$ 0,012/MAU; email 20 thousand free, then US$ 1,50/thousand | https://onesignal.com/pricing | 22/10/2026 | With 20 thousand MAU ≈ US$ 240/month for push alone [HIP: calculation]. |
 
-## 8. E-mail transacional
+## 8. Transactional email
 
-| Item | Plano | Preço/limite exibido | URL | Data | Observações |
+| Item | Plan | Displayed price/limit | URL | Date | Notes |
 | --- | --- | --- | --- | --- | --- |
-| Resend | Free | US$ 0; 3.000 e-mails/mês; **100/dia**; 3 domínios; retenção de 30 dias | https://resend.com/pricing | 22/10/2026 | O limite diário pode travar picos de convite. |
-| Resend | Pro | US$ 20/mês; 50.000 e-mails/mês; extra US$ 0,90/mil | https://resend.com/pricing | 22/10/2026 | 10 domínios. |
-| Resend | Scale | US$ 90/mês; 100.000 e-mails/mês; extra US$ 0,90/mil | https://resend.com/pricing | 22/10/2026 | IP dedicado como add-on. |
-| Postmark | Free | US$ 0; 100 e-mails/mês, sem excedente | https://postmarkapp.com/pricing | 22/10/2026 | Para teste. |
-| Postmark | Basic / Pro | Basic US$ 15/mês (10 mil, extra US$ 1,80/mil); Pro US$ 16,50/mês (10 mil, extra US$ 1,30/mil) | https://postmarkapp.com/pricing | 22/10/2026 | Platform US$ 18/mês. |
-| Amazon SES | À la carte | US$ 0,10 por mil e-mails; US$ 0,12/GB de anexo | https://aws.amazon.com/ses/pricing/ | 22/10/2026 | Planos novos: Essentials US$ 0,16/mil; Pro US$ 0,22/mil + US$ 105/mês; Enterprise US$ 0,23/mil + US$ 500/mês. Clientes novos: até US$ 200 em créditos do Free Tier. |
+| Resend | Free | US$ 0; 3.000 emails/month; **100/day**; 3 domains; 30 days of retention | https://resend.com/pricing | 22/10/2026 | The daily limit may block invitation spikes. |
+| Resend | Pro | US$ 20/month; 50.000 emails/month; extra US$ 0,90/thousand | https://resend.com/pricing | 22/10/2026 | 10 domains. |
+| Resend | Scale | US$ 90/month; 100.000 emails/month; extra US$ 0,90/thousand | https://resend.com/pricing | 22/10/2026 | Dedicated IP as an add-on. |
+| Postmark | Free | US$ 0; 100 emails/month, no overages | https://postmarkapp.com/pricing | 22/10/2026 | For testing. |
+| Postmark | Basic / Pro | Basic US$ 15/month (10 thousand, extra US$ 1,80/thousand); Pro US$ 16,50/month (10 thousand, extra US$ 1,30/thousand) | https://postmarkapp.com/pricing | 22/10/2026 | Platform US$ 18/month. |
+| Amazon SES | À la carte | US$ 0,10 per thousand emails; US$ 0,12/GB of attachments | https://aws.amazon.com/ses/pricing/ | 22/10/2026 | New plans: Essentials US$ 0,16/thousand; Pro US$ 0,22/thousand + US$ 105/month; Enterprise US$ 0,23/thousand + US$ 500/month. New customers: up to US$ 200 in Free Tier credits. |
 
-## 9. Armazenamento de objetos
+## 9. Object storage
 
-| Item | Plano | Preço/limite exibido | URL | Data | Observações |
+| Item | Plan | Displayed price/limit | URL | Date | Notes |
 | --- | --- | --- | --- | --- | --- |
-| Cloudflare R2 | Standard | US$ 0,015/GB-mês; Classe A US$ 4,50/milhão; Classe B US$ 0,36/milhão; **egress grátis** | https://developers.cloudflare.com/r2/pricing/ | 22/10/2026 | Grátis/mês: 10 GB-mês, 1 milhão Classe A, 10 milhões Classe B. Infrequent Access US$ 0,01/GB-mês + US$ 0,01/GB de recuperação. |
-| Google Cloud Storage | Standard us-central1 | ≈ US$ 0,020/GiB-mês; saída US$ 0,12/GiB | https://cloud.google.com/storage/pricing | 22/10/2026 | Ver seção 2. |
-| Supabase Storage | Pro | 100 GB incluídos, depois US$ 0,0213/GB | https://supabase.com/pricing | 22/10/2026 | Egress dentro da cota do plano. |
-| Cloud Storage for Firebase | Blaze | Ver seção 2 | https://firebase.google.com/pricing | 22/10/2026 | — |
-| Amazon S3 | Standard | [NC]: a tabela dinâmica não foi capturada | https://aws.amazon.com/s3/pricing/ | 22/10/2026 | Saída para internet aparece nos exemplos da página (ex.: US$ 0,09/GB a partir da Irlanda). Usar a calculadora. |
+| Cloudflare R2 | Standard | US$ 0,015/GB-month; Class A US$ 4,50/million; Class B US$ 0,36/million; **free egress** | https://developers.cloudflare.com/r2/pricing/ | 22/10/2026 | Free/month: 10 GB-month, 1 million Class A, 10 million Class B. Infrequent Access US$ 0,01/GB-month + US$ 0,01/GB of retrieval. |
+| Google Cloud Storage | Standard us-central1 | ≈ US$ 0,020/GiB-month; egress US$ 0,12/GiB | https://cloud.google.com/storage/pricing | 22/10/2026 | See section 2. |
+| Supabase Storage | Pro | 100 GB included, then US$ 0,0213/GB | https://supabase.com/pricing | 22/10/2026 | Egress within the plan quota. |
+| Cloud Storage for Firebase | Blaze | See section 2 | https://firebase.google.com/pricing | 22/10/2026 | — |
+| Amazon S3 | Standard | [NC]: the dynamic table was not captured | https://aws.amazon.com/s3/pricing/ | 22/10/2026 | Internet egress appears in the page examples (e.g., US$ 0,09/GB from Ireland). Use the calculator. |
 
-## 10. Custo mensal ilustrativo dos três conjuntos
+## 10. Illustrative monthly cost of the three stacks
 
-**Cenário ilustrativo, não previsão.** Calculado com os preços acima e as premissas abaixo. O script ficou só na área temporária do agente; as fórmulas estão nesta seção para que o cálculo possa ser refeito. O custo de engenharia (horas de desenvolvimento e operação) **não** está incluído e provavelmente supera a infraestrutura em todas as escalas. [HIP]
+**Illustrative scenario, not a forecast.** Calculated using the prices above and the assumptions below. The script remained only in the agent's temporary area; the formulas are in this section so the calculation can be repeated. Engineering costs (development and operations hours) are **not** included and probably exceed infrastructure costs at all scales. [HIP]
 
-### 10.1 Premissas [HIP]
+### 10.1 Assumptions [HIP]
 
-| Premissa | Valor |
+| Assumption | Value |
 | --- | --- |
-| Famílias ativas no mês | 100 / 1.000 / 10.000 |
-| Cuidadores (e aparelhos) por família | 2 → MAU = 2 × famílias |
-| Escritas de rotina | 25 por família/dia (20 registros + 5 edições/exclusões). No Firestore, 30 (com atualização de resumo/sessão) |
-| Aberturas/sincronizações | 8 por aparelho/dia |
-| Leituras Firestore | ~515 por família/dia: 18 docs por abertura (listener relido após > 30 min), 12,5 atualizações em tempo real, 25 leituras de regras em escritas, 32 em consultas, 140 de histórico de 7 dias e 18 de comunidade |
-| Volume estruturado após 12 meses | Postgres 5 MB por família/ano; Firestore 10 MB por família/ano (documentos + índices) |
-| Anexos | 4 fotos/mês de 300 KB (sem EXIF) por família; cada foto baixada 3×; retenção de 12 meses |
-| Sync PowerSync | ~0,5 KB por operação; janela de 90 dias hospedada; pico de 10% dos aparelhos conectados |
-| API própria (Cloud Run) | 40 requisições por família/dia; 0,06 vCPU-s por requisição; 1 instância mínima |
-| E-mails | 3 por família/mês (login por link/OTP + convites). No conjunto A, o login por link sai pelo Firebase Auth e o Resend envia só convites |
-| Push | 5 por família/dia via FCM/APNs ou Expo Push (sem custo). OneSignal só como opcional |
-| Comunidade | 30% dos usuários leem 30 itens/dia; postagem desprezível |
-| Builds | EAS Starter (US$ 19) + Apple (US$ 99/12 = US$ 8,25/mês). Google Play é taxa única (fora do mensal) |
-| Região | Preços exibidos dos EUA (us-central1 etc.). Brasil [NC] |
+| Active families per month | 100 / 1.000 / 10.000 |
+| Caregivers (and devices) per family | 2 → MAU = 2 × families |
+| Routine writes | 25 per family/day (20 records + 5 edits/deletes). In Firestore, 30 (with summary/session update) |
+| Opens/syncs | 8 per device/day |
+| Firestore reads | ~515 per family/day: 18 docs per open (listener reread after > 30 min), 12,5 real-time updates, 25 rule reads on writes, 32 on queries, 140 for 7 days of history and 18 for community |
+| Structured volume after 12 months | Postgres 5 MB per family/year; Firestore 10 MB per family/year (documents + indexes) |
+| Attachments | 4 photos/month of 300 KB (without EXIF) per family; each photo downloaded 3×; 12 months of retention |
+| PowerSync sync | ~0,5 KB per operation; hosted window of 90 days; peak of 10% of devices connected |
+| Own API (Cloud Run) | 40 requests per family/day; 0,06 vCPU-s per request; 1 minimum instance |
+| Emails | 3 per family/month (link/OTP login + invitations). In stack A, link login goes through Firebase Auth and Resend sends only invitations |
+| Push | 5 per family/day via FCM/APNs or Expo Push (no cost). OneSignal only as an option |
+| Community | 30% of users read 30 items/day; posting negligible |
+| Builds | EAS Starter (US$ 19) + Apple (US$ 99/12 = US$ 8,25/month). Google Play is a one-time fee (outside the monthly cost) |
+| Region | Displayed US prices (us-central1 etc.). Brazil [NC] |
 
-### 10.2 Resultado (USD/mês)
+### 10.2 Result (USD/month)
 
-| Conjunto | 100 famílias | 1.000 famílias | 10.000 famílias | Itens que dominam |
+| Stack | 100 families | 1.000 families | 10.000 families | Dominant items |
 | --- | ---: | ---: | ---: | --- |
-| A: Firebase (infra) | ~0 | ~7,50 | ~112 | Leituras Firestore (US$ 46 em 10 mil), armazenamento (US$ 14,50), saída de rede (US$ 16,50, taxa [NC]), Resend Pro para convites (US$ 20) |
-| A + fixos (EAS Starter + Apple) | ~27 | ~35 | ~139 | — |
-| B: Supabase + PowerSync (infra) | ~74 | ~94 | ~186 | Supabase Pro US$ 25 + PowerSync Pro US$ 49 desde o início; em 10 mil: compute Medium (+US$ 50), concorrência PowerSync (+US$ 30), Resend (US$ 20) |
-| B + fixos | ~101 | ~121 | ~214 | — |
-| C: Cloud Run + Cloud SQL + R2 (infra) | ~37 | ~82 | ~175 | Cloud SQL: compartilhada em 100; 1 vCPU em 1 mil; HA em 10 mil (US$ 99) + disco HA (US$ 20) |
-| C + fixos | ~64 | ~109 | ~202 | — |
+| A: Firebase (infra) | ~0 | ~7,50 | ~112 | Firestore reads (US$ 46 at 10 thousand), storage (US$ 14,50), network egress (US$ 16,50, rate [NC]), Resend Pro for invitations (US$ 20) |
+| A + fixed costs (EAS Starter + Apple) | ~27 | ~35 | ~139 | — |
+| B: Supabase + PowerSync (infra) | ~74 | ~94 | ~186 | Supabase Pro US$ 25 + PowerSync Pro US$ 49 from the start; at 10 thousand: Medium compute (+US$ 50), PowerSync concurrency (+US$ 30), Resend (US$ 20) |
+| B + fixed costs | ~101 | ~121 | ~214 | — |
+| C: Cloud Run + Cloud SQL + R2 (infra) | ~37 | ~82 | ~175 | Cloud SQL: shared at 100; 1 vCPU at 1 thousand; HA at 10 thousand (US$ 99) + HA disk (US$ 20) |
+| C + fixed costs | ~64 | ~109 | ~202 | — |
 
-**O conjunto B desta tabela é um subtotal sem o serviço de domínio** que a arquitetura proposta acrescenta, com hospedagem de US$ 7 a 85/mês. A composição do conjunto recomendado está em [Custos e operação](../../05_Privacidade_Operacao/Custos_e_Operacao.md), seção 2.
+**Stack B in this table is a subtotal excluding the domain service** that the proposed architecture adds, with hosting at US$ 7 to 85/month. The breakdown of the recommended stack is in [Costs and operations](../../05_Privacidade_Operacao/Custos_e_Operacao.md), section 2.
 
-Em 10.000 famílias, as fórmulas abaixo dão ~US$ 7,44 de excedentes para B: banco, arquivos e dados hospedados no PowerSync. Somados aos itens que dominam (US$ 174), chegam a ~US$ 181, e não aos ~186 da tabela. Os ~US$ 4,56 de diferença não se reproduzem pelas fórmulas, e o script original não foi guardado. A composição canônica os mantém como margem conservadora.
+At 10.000 families, the formulas below yield ~US$ 7,44 in overages for B: database, files, and data hosted in PowerSync. Added to the dominant items (US$ 174), they reach ~US$ 181, rather than the ~186 in the table. The ~US$ 4,56 difference cannot be reproduced using the formulas, and the original script was not saved. The canonical breakdown retains it as a conservative margin.
 
-Notas do coordenador, acrescentadas depois da revisão independente.
+Coordinator's notes, added after the independent review.
 
-Fórmulas usadas (por mês, 30 dias):
+Formulas used (per month, 30 days):
 - **Firestore:**
-  - leituras: `max(0, leituras_dia − 50.000) × 30 × 0,03/100.000`;
-  - escritas: `max(0, escritas_dia − 20.000) × 30 × 0,09/100.000`;
-  - armazenamento: `max(0, GiB − 1) × 0,15`;
-  - saída: `max(0, GiB − 10) × 0,12` (taxa proxy [NC]).
+  - reads: `max(0, leituras_dia − 50.000) × 30 × 0,03/100.000`;
+  - writes: `max(0, escritas_dia − 20.000) × 30 × 0,09/100.000`;
+  - storage: `max(0, GiB − 1) × 0,15`;
+  - egress: `max(0, GiB − 10) × 0,12` (proxy rate [NC]).
 - **PowerSync:**
   - US$ 49 + `max(0, GB_sync − 30)` + `max(0, GB_hosp − 10)`;
-  - mais US$ 30 por mil clientes de pico acima de 1.000.
+  - plus US$ 30 per thousand peak clients above 1.000.
 - **Supabase:**
-  - US$ 25 + compute acima do crédito;
+  - US$ 25 + compute above the credit;
   - `max(0, GB_banco − 8) × 0,125` + `max(0, GB_arquivos − 100) × 0,0213`;
   - `max(0, invocações − 2 M) × 2/M`.
 - **Cloud Run:**
   - `max(0, vCPU-s − 180 mil) × 0,000024` + `max(0, req − 2 M) × 0,40/M`;
-  - mais o ocioso de 1 instância mínima (~US$ 9,86).
+  - plus the idle cost of 1 minimum instance (~US$ 9,86).
 - **Cloud SQL:**
-  - instância (db-g1-small, 1 vCPU/3,75 GiB, ou o dobro em HA) + disco SSD (HA em 10 mil) + backup ≈ 2 × banco.
+  - instance (db-g1-small, 1 vCPU/3,75 GiB, or twice that in HA) + SSD disk (HA at 10 thousand) + backup ≈ 2 × database.
 - **R2:** `max(0, GB − 10) × 0,015`.
-- **Resend:** Free abaixo de 3.000 e-mails/mês; senão, Pro US$ 20.
+- **Resend:** Free below 3.000 emails/month; otherwise, Pro US$ 20.
 
-### 10.3 Opcionais que mudam muito a conta
+### 10.3 Options that change the bill substantially
 
-| Opcional | 100 | 1.000 | 10.000 | Observação |
+| Option | 100 | 1.000 | 10.000 | Note |
 | --- | ---: | ---: | ---: | --- |
-| EAS Update no Starter (MAU acima de 3 mil × US$ 0,005) | 0 | 0 | +85 | Em 10 mil famílias (20 mil MAU), o plano Production (US$ 199, 50 mil MAU) pode compensar. Só RN/Expo. |
-| OneSignal Growth em vez de FCM/Expo Push | 0 | +24 | +240 | US$ 0,012/MAU acima do Free de 1.000 MAU. |
-| Supabase PITR (7 dias) | +100 | +100 | +100 | Recomendável para dado sensível em produção (decisão de RPO). |
-| Ambiente de homologação | [HIP] +10 a +50 | idem | idem | Projeto Supabase extra (compute), segunda instância Cloud SQL ou outro projeto Firebase. |
-| PowerSync Free/Supabase Free no protótipo | −74 | n/a | n/a | Só protótipo: desativa ou pausa após 1 semana sem uso. |
+| EAS Update on Starter (MAU above 3 thousand × US$ 0,005) | 0 | 0 | +85 | At 10 thousand families (20 thousand MAU), the Production plan (US$ 199, 50 thousand MAU) may be worthwhile. RN/Expo only. |
+| OneSignal Growth instead of FCM/Expo Push | 0 | +24 | +240 | US$ 0,012/MAU above the Free allowance of 1.000 MAU. |
+| Supabase PITR (7 days) | +100 | +100 | +100 | Recommended for sensitive data in production (RPO decision). |
+| Staging environment | [HIP] +10 to +50 | same | same | Extra Supabase project (compute), second Cloud SQL instance, or another Firebase project. |
+| PowerSync Free/Supabase Free in the prototype | −74 | n/a | n/a | Prototype only: deactivates or pauses after 1 week without use. |
 
-### 10.4 O que não está incluído
+### 10.4 What is not included
 
-- Engenharia e operação (horas).
-- Monitoramento e erros (ex.: Sentry): [NC], não consultado.
-- Nome de domínio do site e DNS.
-- Hospedagem do serviço de domínio do conjunto B recomendado ([Custos e operação](../../05_Privacidade_Operacao/Custos_e_Operacao.md), seção 2).
-- Suporte pago.
-- Moderação de conteúdo assistida (APIs de classificação).
-- Backup externo (cópia fora do provedor).
-- Impostos e câmbio.
-- Assessoria jurídica.
-- Testes em farm (outra nota).
-- Hardware Mac para iOS (outra nota).
-- Taxa única do Google Play (US$ 25).
+- Engineering and operations (hours).
+- Monitoring and errors (e.g., Sentry): [NC], not checked.
+- Website domain name and DNS.
+- Hosting for the domain service in the recommended stack B ([Costs and operations](../../05_Privacidade_Operacao/Custos_e_Operacao.md), section 2).
+- Paid support.
+- Assisted content moderation (classification APIs).
+- External backup (copy outside the provider).
+- Taxes and currency conversion.
+- Legal advice.
+- Device farm testing (another note).
+- Mac hardware for iOS (another note).
+- Google Play one-time fee (US$ 25).
 
-### 10.5 Leitura dos números
+### 10.5 Interpreting the figures
 
-- Até ~1.000 famílias, os custos fixos dominam: EAS e Apple (~US$ 27) e, no conjunto B, os dois planos pagos (US$ 74). Nessa faixa o conjunto A é o mais barato, mas exige o plano Blaze (cartão).
-- Em 10 mil famílias, os três ficam entre ~US$ 140 e ~US$ 215/mês. A diferença é menor que o custo de algumas horas de engenharia por mês. **Custo de infraestrutura não deve decidir a arquitetura nessas escalas.** [HIP]
-- O conjunto A é sensível ao padrão de leitura. Dobrar aberturas ou consultas de histórico dobra o item principal. B e C leem do SQLite local e são pouco sensíveis a isso.
+- Up to ~1.000 families, fixed costs dominate: EAS and Apple (~US$ 27) and, in stack B, the two paid plans (US$ 74). In this range, stack A is the cheapest, but requires the Blaze plan (card).
+- At 10 thousand families, all three are between ~US$ 140 and ~US$ 215/month. The difference is less than the cost of a few engineering hours per month. **Infrastructure cost should not determine the architecture at these scales.** [HIP]
+- Stack A is sensitive to read patterns. Doubling opens or history queries doubles the main item. B and C read from local SQLite and are not very sensitive to this.
 
-## Fatores que mudariam a escolha
+## Factors that would change the choice
 
-- **Residência de dados no Brasil:** os preços regionais (São Paulo) não foram capturados e podem ser maiores, sobretudo Cloud SQL, GCS e Firestore.
-- **Uso intenso de histórico e relatórios no cliente** encarece o Firestore (leituras) e favorece B/C.
-- **Mudança de plano ou preço do PowerSync** (Pro a US$ 49 hoje) ou do Supabase Pro altera B diretamente.
-- **Uso de EAS Update e OneSignal** pode somar mais que todo o backend em 10 mil famílias.
-- **Exigência de PITR/HIPAA-like** empurra B para o Team (US$ 599+) e C para HA com retenção maior.
+- **Data residency in Brazil:** regional prices (São Paulo) were not captured and may be higher, especially for Cloud SQL, GCS, and Firestore.
+- **Heavy use of history and reports on the client** makes Firestore more expensive (reads) and favors B/C.
+- **Changes to the PowerSync plan or price** (Pro at US$ 49 today) or to Supabase Pro directly affect B.
+- **Use of EAS Update and OneSignal** may add up to more than the entire backend at 10 thousand families.
+- **A PITR/HIPAA-like requirement** pushes B toward Team (US$ 599+) and C toward HA with longer retention.
 
-## Questões abertas
+## Open questions
 
-1. Qual região será usada? Rodar de novo a coleta de preços para São Paulo.
-2. Qual o RPO/RTO desejado? Define PITR e HA.
-3. EAS Update será usado? Com quantos MAU?
-4. A taxa de saída de rede do Firestore deve ser confirmada na tabela de rede do Google Cloud.
-5. Preço do S3 e das faixas completas do Cognito Lite: coletar se forem candidatos.
-6. Monitoramento e observabilidade: escolher ferramenta e precificar.
+1. Which region will be used? Collect prices again for São Paulo.
+2. What is the desired RPO/RTO? This determines PITR and HA.
+3. Will EAS Update be used? With how many MAU?
+4. The Firestore network egress rate must be confirmed in the Google Cloud network pricing table.
+5. S3 pricing and the full Cognito Lite tiers: collect if they are candidates.
+6. Monitoring and observability: choose a tool and price it.
 
-## Limites desta análise
+## Limits of this analysis
 
-- Fotografia de 22/10/2026. Páginas de preço mudam sem aviso; revalidar antes de decidir.
-- Os cenários usam premissas inventadas para ilustrar a ordem de grandeza. Não houve medição de uso real nem de tamanho de documento ou linha.
-- Onde a tabela da página é dinâmica (S3, região do RDS, egress do Firestore), o valor ficou marcado [NC] ou foi substituído por proxy declarado.
-- Os valores com "a partir de" (Supabase, PowerSync, EAS) podem crescer com o uso. Foram considerados só os excedentes modelados.
+- Snapshot from 22/10/2026. Pricing pages change without notice; revalidate before deciding.
+- The scenarios use invented assumptions to illustrate the order of magnitude. Actual usage and document or row size were not measured.
+- Where the page table is dynamic (S3, RDS region, Firestore egress), the value was marked [NC] or replaced with a declared proxy.
+- Amounts marked "starting at" (Supabase, PowerSync, EAS) may grow with usage. Only the modeled overages were considered.

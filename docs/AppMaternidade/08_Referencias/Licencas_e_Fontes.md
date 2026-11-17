@@ -1,7 +1,7 @@
 ---
-tipo: referencia
-status: rascunho
-responsavel: Hermes (coordenador da APP-001)
+tipo: reference
+status: draft
+responsavel: Hermes (coordinator of APP-001)
 revisado_em: 2026-10-22
 tarefa: MAT-5
 fontes_principais:
@@ -11,94 +11,94 @@ fontes_principais:
   - 08_Referencias/Tecnologias/Dados_Sincronizacao_e_Backend.md
 ---
 
-# Licenças e fontes
+# Licenses and sources
 
-Consolida, por tipo de material, o que pode e o que não pode entrar no AppMaternidade. Isto é **leitura técnica, não parecer jurídico**: antes de reutilizar qualquer material de terceiros, o texto da licença precisa ser conferido por profissional.
+Consolidates, by material type, what can and cannot be included in AppMaternidade. This is **a technical review, not a legal opinion**: before reusing any third-party material, the license text must be checked by a professional.
 
-## 1. Regra adotada nesta etapa
+## 1. Rule adopted at this stage
 
-- **Nenhum material copiado:** nenhum código, texto, imagem, ícone ou marca dos repositórios de referência ou dos concorrentes foi copiado para o AppMaternidade. Os aprendizados entram como conceitos, implementados do zero.
-- **Conteúdo educativo:** texto próprio em pt-BR, escrito a partir de fontes primárias, com link e citação, e revisado por profissional registrado ([ADR-007](../06_ADRs/ADR-007_Conteudo_Educativo_e_IA.md)).
-- **Dependências:** cada uma é escolhida pela licença dela, conferida no registro do pacote e no arquivo LICENSE antes da fundação. Os avisos vão para uma tela de licenças de terceiros no app.
+- **No copied material:** no code, text, images, icons, or trademarks from the reference repositories or competitors have been copied into AppMaternidade. Lessons learned are incorporated as concepts, implemented from scratch.
+- **Educational content:** original text in pt-BR, written from primary sources, with links and citations, and reviewed by a registered professional ([ADR-007](../06_ADRs/ADR-007_Conteudo_Educativo_e_IA.md)).
+- **Dependencies:** each is chosen based on its license, checked in the package registry and LICENSE file before the foundation is built. Notices go on a third-party licenses screen in the app.
 
-## 2. Repositórios de referência
+## 2. Reference repositories
 
 | Material | Finnberry | Baby Buddy | Sprout Track | Bebbo |
 | --- | --- | --- | --- | --- |
-| **Código** | MIT, "Copyright (c) 2026 bckenstler" | BSD-2-Clause, "Copyright (c) 2017 - 2022, Baby Buddy's Contributors" | Licença própria: só uso **não comercial**, com atribuição e **compartilhamento pela mesma licença**. Os titulares reservam o uso comercial | **GPL-3.0** |
-| Pode reutilizar? | Sim, com o aviso MIT nas partes copiadas. Não planejado | Sim, com o aviso BSD-2 no código e na documentação do app. Não planejado | **Não**, enquanto o app puder ter qualquer receita | **Não**: obrigaria o AppMaternidade a ser GPL-3.0; na App Store, há conflito conhecido entre os termos da loja e a GPL |
-| **Dependências** | Produção: MIT 340, ISC 19, Apache-2.0 17, BSD-3 4, BSD-2 2, MIT-0 1, 0BSD 1. Pontos a conferir: `@anthropic-ai/claude-agent-sdk` (termos próprios) e `@img/sharp-*` (LGPL-3.0) | Python: BSD, MIT, Apache-2.0; `psycopg2-binary` LGPL com exceções; bundles de front-end versionados sem avisos de licença | Produção, pelo `package-lock.json` (520 entradas, com binários opcionais por plataforma): MIT 381, ISC 51, Apache-2.0 44, BSD-3 7 e outras permissivas 14. Pontos a conferir (23): `heic-to` (LGPL-3.0, direta), `web-push` (MPL-2.0, direta), `@img/sharp-*` (LGPL-3.0-or-later, opcionais), `elkjs` (EPL-2.0), `caniuse-lite` (CC-BY-4.0, dados), `jszip` (MIT ou GPL-3.0), `dompurify` (MPL-2.0 ou Apache-2.0), `rgbcolor` e 2 sem licença declarada (`buffers`, `seq-queue`). [Lista](../09_Evidencias/Execucao_Referencias/Sprout_Track/13_licencas_dependencias.tsv) | Diretas: MIT 86, Apache-2.0 7, ISC 2, MIT e Apache-2.0 1, BSD-2 1; nenhuma GPL |
-| **Conteúdo e textos** | Não há | Documentação no repositório BSD-2, sem licença separada | Mesma licença do código | **Proprietário da UNICEF e licenciadores**; os termos proíbem uso comercial, cópia digital e modificação |
-| **Imagens e ícones** | Nenhum versionado | Fonte de ícones montada com Font Awesome, MFG Labs e Entypo (SIL OFL), com uma entrada sem URL | Imagens do README sob a licença do projeto | Ilustrações, fotos, vídeo e áudio proibidos pelos termos |
-| **Dados** | — | Percentis em CSV sem fonte declarada | Curvas CDC e OMS no seed | Tabelas de desvio-padrão; origem não conferida |
-| **Nome e marca** | "Finnberry"; o repositório se diz clone do Huckleberry | "Baby Buddy" e logo, sem licença | "Sprout Track", "Oak and Sprout" | UNICEF e Bebbo; nome e emblema da UNICEF protegidos |
-| Ficha | [Finnberry](Repositorios/Finnberry.md) | [Baby Buddy](Repositorios/Baby_Buddy.md) | [Sprout Track](Repositorios/Sprout_Track.md) | [Bebbo](Repositorios/Bebbo.md) |
+| **Code** | MIT, "Copyright (c) 2026 bckenstler" | BSD-2-Clause, "Copyright (c) 2017 - 2022, Baby Buddy's Contributors" | Custom license: **noncommercial** use only, with attribution and **sharing under the same license**. The rights holders reserve commercial use | **GPL-3.0** |
+| Can it be reused? | Yes, with the MIT notice in the copied portions. Not planned | Yes, with the BSD-2 notice in the app's code and documentation. Not planned | **No**, as long as the app may generate any revenue | **No**: it would require AppMaternidade to be GPL-3.0; on the App Store, there is a known conflict between the store's terms and the GPL |
+| **Dependencies** | Production: MIT 340, ISC 19, Apache-2.0 17, BSD-3 4, BSD-2 2, MIT-0 1, 0BSD 1. Items to check: `@anthropic-ai/claude-agent-sdk` (custom terms) and `@img/sharp-*` (LGPL-3.0) | Python: BSD, MIT, Apache-2.0; `psycopg2-binary` LGPL with exceptions; front-end bundles checked into version control without license notices | Production, according to `package-lock.json` (520 entries, with optional platform-specific binaries): MIT 381, ISC 51, Apache-2.0 44, BSD-3 7 and other permissive licenses 14. Items to check (23): `heic-to` (LGPL-3.0, direct), `web-push` (MPL-2.0, direct), `@img/sharp-*` (LGPL-3.0-or-later, optional), `elkjs` (EPL-2.0), `caniuse-lite` (CC-BY-4.0, data), `jszip` (MIT or GPL-3.0), `dompurify` (MPL-2.0 or Apache-2.0), `rgbcolor` and 2 with no declared license (`buffers`, `seq-queue`). [List](../09_Evidencias/Execucao_Referencias/Sprout_Track/13_licencas_dependencias.tsv) | Direct: MIT 86, Apache-2.0 7, ISC 2, MIT and Apache-2.0 1, BSD-2 1; none GPL |
+| **Content and text** | None | Documentation in the BSD-2 repository, with no separate license | Same license as the code | **Proprietary to UNICEF and licensors**; the terms prohibit commercial use, digital copying, and modification |
+| **Images and icons** | None checked into version control | Icon font assembled from Font Awesome, MFG Labs, and Entypo (SIL OFL), with one entry lacking a URL | README images under the project's license | Illustrations, photos, video, and audio prohibited by the terms |
+| **Data** | — | Percentiles in CSV with no declared source | CDC and WHO curves in the seed data | Standard deviation tables; origin not checked |
+| **Name and trademark** | "Finnberry"; the repository describes itself as a Huckleberry clone | "Baby Buddy" and logo, with no license | "Sprout Track", "Oak and Sprout" | UNICEF and Bebbo; UNICEF's name and emblem are protected |
+| Profile | [Finnberry](Repositorios/Finnberry.md) | [Baby Buddy](Repositorios/Baby_Buddy.md) | [Sprout Track](Repositorios/Sprout_Track.md) | [Bebbo](Repositorios/Bebbo.md) |
 
-**Bebbo e App Store:** em 2010, a FSF entendeu que os termos da App Store conflitam com a seção 6 da GPLv2, e o GNU Go foi removido da loja (https://www.fsf.org/news/2010-05-app-store-compliance, consultado em 22/10/2026). A GPLv3 tem cláusula semelhante [HIP].
+**Bebbo and the App Store:** in 2010, the FSF found that the App Store's terms conflict with section 6 of GPLv2, and GNU Go was removed from the store (https://www.fsf.org/news/2010-05-app-store-compliance, accessed on 22/10/2026). GPLv3 has a similar clause [HIP].
 
-**Curvas de crescimento:** buscar sempre na fonte primária (OMS), com os termos dela, e não nos repositórios.
+**Growth curves:** always obtain them from the primary source (WHO), under its terms, rather than from the repositories.
 
-## 3. Fontes de conteúdo educativo
+## 3. Educational content sources
 
-Resumo da [pesquisa de comunidade e conteúdo, seção 2.5](Pesquisa_Comunidade_e_Conteudo.md). Os números entre colchetes remetem às fontes dessa nota.
+Summary of the [community and content research, section 2.5](Pesquisa_Comunidade_e_Conteudo.md). The numbers in brackets refer to the sources in that note.
 
-| Fonte | Citar e linkar | Reproduzir texto | Imagens, vídeos e logo | Atribuição exigida |
+| Source | Cite and link | Reproduce text | Images, videos, and logo | Required attribution |
 | --- | --- | --- | --- | --- |
-| AAP / HealthyChildren.org [29] | Sim | Não sem permissão escrita; também proíbe usar o conteúdo com IA | Não sem permissão | — |
-| CDC [24][25] | Sim; prefere link | Domínio público na maior parte, sem mudar o conteúdo; marcos não editáveis na personalização | Algumas imagens restritas; logo exige permissão | Atribuir; não sugerir endosso; informar que o material está disponível de graça |
-| NHS [26] | Sim | OGL v3.0, inclusive comercial; tradução é adaptação | Imagens fora da OGL | Declaração da OGL; adaptação não pode ser atribuída ao NHS |
-| OMS, diretriz de 2019 [21][22] | Sim | CC BY-NC-SA 3.0 IGO: não comercial | Logo não permitido | Citação; compartilhamento pela mesma licença |
-| Pathways.org [27][28] | Sim | Só uso pessoal e não comercial, sem aprovação escrita | Idem | — |
-| SBP [31] | Sim | "Todos os direitos reservados" | Idem | — |
-| Ministério da Saúde [7][19] | Sim | Conferir obra a obra; o artigo da RBAFS sobre o Guia é CC BY 4.0 | Idem | Conforme a obra |
-| Bebbo (UNICEF) | Sim | Proibido | Proibido | — |
+| AAP / HealthyChildren.org [29] | Yes | Not without written permission; also prohibits using the content with AI | Not without permission | — |
+| CDC [24][25] | Yes; prefers links | Mostly public domain, without changing the content; milestones cannot be edited during customization | Some images are restricted; logo requires permission | Attribute; do not imply endorsement; state that the material is available free of charge |
+| NHS [26] | Yes | OGL v3.0, including commercial use; translation is an adaptation | Images outside the OGL | OGL statement; adaptations cannot be attributed to the NHS |
+| WHO, 2019 guideline [21][22] | Yes | CC BY-NC-SA 3.0 IGO: noncommercial | Logo not permitted | Citation; sharing under the same license |
+| Pathways.org [27][28] | Yes | Personal and noncommercial use only, without written approval | Same | — |
+| SBP [31] | Yes | "All rights reserved" | Same | — |
+| Ministry of Health [7][19] | Yes | Check each work individually; the RBAFS article about the Guide is CC BY 4.0 | Same | As specified by the work |
+| Bebbo (UNICEF) | Yes | Prohibited | Prohibited | — |
 
-**Como o conteúdo próprio usa essas fontes:**
+**How original content uses these sources:**
 
-- fatos e recomendações (por exemplo, "pelo menos 30 minutos por dia, distribuídos") podem ser reescritos com citação;
-- a expressão (texto, ilustração, vídeo) só entra com licença;
-- cada item guarda as fontes, com versão e data de consulta ([Desenvolvimento e conteúdo, seção 8](../04_Comunidade_Conteudo/Desenvolvimento_e_Conteudo.md)).
+- facts and recommendations (for example, "at least 30 minutes per day, spread throughout the day") can be rewritten with a citation;
+- the expression (text, illustration, video) is included only with a license;
+- each item stores its sources, with version and access date ([Development and content, section 8](../04_Comunidade_Conteudo/Desenvolvimento_e_Conteudo.md)).
 
-## 4. Concorrentes
+## 4. Competitors
 
-As oito fichas não encontraram licença de reuso para Napper, Huckleberry, Baby Daybook, Nara Baby, Kinedu, BabyCenter e Peanut. O conteúdo desses produtos é tratado como proprietário. A Pathways permite só uso pessoal e não comercial ([Concorrentes e diferenciais](../01_Produto/Concorrentes_e_Diferenciais.md), seção "Reutilização de conteúdo").
+The eight profiles found no reuse license for Napper, Huckleberry, Baby Daybook, Nara Baby, Kinedu, BabyCenter, and Peanut. The content of these products is treated as proprietary. Pathways permits personal and noncommercial use only ([Competitors and differentiators](../01_Produto/Concorrentes_e_Diferenciais.md), "Content reuse" section).
 
-Capturas de tela e textos de loja servem só como evidência interna da análise. Não entram no produto nem em material público do AppMaternidade.
+Screenshots and store text serve only as internal evidence for the analysis. They are not included in the product or in AppMaternidade's public materials.
 
-## 5. Tecnologias da arquitetura proposta
+## 5. Technologies in the proposed architecture
 
-Licenças conferidas nas notas de tecnologia em 22/10/2026 [EXEC: registro npm e API do GitHub]:
+Licenses checked in the technology notes on 22/10/2026 [EXEC: npm registry and GitHub API]:
 
-| Componente | Licença | Observação |
+| Component | License | Note |
 | --- | --- | --- |
-| `expo` 58.0.17 e módulos `expo-*` consultados | MIT | [Dados, sincronização e backend](Tecnologias/Dados_Sincronizacao_e_Backend.md), tabela de versões |
-| `@powersync/react-native` 2.3.3 e SDKs JS | Apache-2.0 | Idem |
-| Serviço PowerSync (auto-hospedado, Open Edition) | FSL-1.1-ALv2: qualquer uso, exceto "Competing Use"; cada versão vira Apache-2.0 depois de dois anos | A API do GitHub mostra `NOASSERTION`, porque não reconhece a FSL |
-| Supabase (repositório `supabase/supabase`) | Apache-2.0 | No serviço gerenciado valem os termos do contrato |
-| `drizzle-orm` 0.45.4 | Apache-2.0 | Se for usado no serviço de domínio |
-| SQLCipher e `op-sqlite` | A conferir | Antes da prova técnica (MAT-17) |
+| `expo` 58.0.17 and `expo-*` modules checked | MIT | [Data, synchronization, and backend](Tecnologias/Dados_Sincronizacao_e_Backend.md), version table |
+| `@powersync/react-native` 2.3.3 and JS SDKs | Apache-2.0 | Same |
+| PowerSync service (self-hosted, Open Edition) | FSL-1.1-ALv2: any use except "Competing Use"; each version becomes Apache-2.0 after two years | The GitHub API shows `NOASSERTION` because it does not recognize the FSL |
+| Supabase (`supabase/supabase` repository) | Apache-2.0 | The contract terms apply to the managed service |
+| `drizzle-orm` 0.45.4 | Apache-2.0 | If used in the domain service |
+| SQLCipher and `op-sqlite` | To be checked | Before the technical proof of concept (MAT-17) |
 
-Plataformas: Apple Developer Program License Agreement e Políticas do Google Play, citados em [Mobile e plataformas](Tecnologias/Mobile_e_Plataformas.md).
+Platforms: Apple Developer Program License Agreement and Google Play Policies, cited in [Mobile and platforms](Tecnologias/Mobile_e_Plataformas.md).
 
-## 6. Obrigações de atribuição no app
+## 6. Attribution obligations in the app
 
-- Uma tela "Licenças de terceiros" no app, gerada a partir das dependências do build, com o texto de cada licença.
-- Se algum trecho MIT ou BSD-2 dos repositórios de referência vier a ser copiado (não planejado), registrar arquivo, commit e permalink de origem, e incluir o aviso de copyright no repositório e na tela de licenças.
-- No conteúdo, citar fonte, versão e data em cada item, seguindo as exigências de atribuição da seção 3.
+- A "Licenças de terceiros" screen in the app, generated from the build dependencies, with the text of each license.
+- If any MIT or BSD-2 portion of the reference repositories is ever copied (not planned), record the source file, commit, and permalink, and include the copyright notice in the repository and on the licenses screen.
+- In the content, cite the source, version, and date for each item, following the attribution requirements in section 3.
 
-## 7. Questões abertas
+## 7. Open questions
 
-1. Licenças do SQLCipher e do `op-sqlite` na versão escolhida para a prova.
-2. Vale pedir permissão à AAP ou à Pathways, ou produzir tudo internamente (ADR-007)?
-3. De onde vêm as tabelas de crescimento, se o produto incluir curvas (fora do MVP)?
+1. Licenses for SQLCipher and `op-sqlite` in the version chosen for the proof of concept.
+2. Is it worth requesting permission from the AAP or Pathways, or producing everything internally (ADR-007)?
+3. Where will the growth tables come from if the product includes curves (outside the MVP)?
 
-## Limites desta análise
+## Limits of this analysis
 
-- Não é parecer jurídico.
-- As licenças de dependências vêm do campo autodeclarado nos pacotes; LICENSE e NOTICE não foram conferidos um a um.
-- As licenças do front-end do Baby Buddy foram inferidas.
-- As dependências do Sprout Track foram levantadas depois da revisão independente, pelo `package-lock.json`. Como a licença do próprio Sprout Track já impede reutilizar o código dele, a lista só serve se o AppMaternidade escolher as mesmas bibliotecas; nesse caso, cada uma é avaliada pela própria licença.
+- This is not a legal opinion.
+- Dependency licenses come from the self-declared field in the packages; LICENSE and NOTICE have not been checked individually.
+- Baby Buddy's front-end licenses were inferred.
+- Sprout Track's dependencies were identified after the independent review, using `package-lock.json`. Since Sprout Track's own license already prevents reusing its code, the list is only useful if AppMaternidade chooses the same libraries; in that case, each is assessed under its own license.
 
-## Relação com outros documentos
+## Relationship to other documents
 
-[Análise dos repositórios](Analise_dos_Repositorios.md) · [ADR-007](../06_ADRs/ADR-007_Conteudo_Educativo_e_IA.md) · [Desenvolvimento e conteúdo](../04_Comunidade_Conteudo/Desenvolvimento_e_Conteudo.md) · [Pesquisa de comunidade e conteúdo](Pesquisa_Comunidade_e_Conteudo.md) · [Home](../00_Inicio/Home.md)
+[Repository analysis](Analise_dos_Repositorios.md) · [ADR-007](../06_ADRs/ADR-007_Conteudo_Educativo_e_IA.md) · [Development and content](../04_Comunidade_Conteudo/Desenvolvimento_e_Conteudo.md) · [Community and content research](Pesquisa_Comunidade_e_Conteudo.md) · [Home](../00_Inicio/Home.md)

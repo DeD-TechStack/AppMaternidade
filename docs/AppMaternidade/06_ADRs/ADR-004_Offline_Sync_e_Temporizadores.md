@@ -1,71 +1,71 @@
 ---
 tipo: adr
 id: ADR-004
-status: Proposta
+status: Proposed
 data: 2026-10-22
-autor: Hermes (coordenador da APP-001)
-aprovador: nenhum até agora
+autor: Hermes (coordinator of APP-001)
+aprovador: none so far
 tarefas: MAT-9, MAT-14, MAT-17
 ---
 
-# ADR-004 — Persistência local, sincronização, conflitos e temporizadores
+# ADR-004 — Local persistence, synchronization, conflicts and timers
 
-> Nota de 03/11/2026: o rumo mudou para site completo primeiro e port Android e iOS depois ([ADR-009](ADR-009_Site_Completo_Primeiro.md)). Onde este texto fala em app nativo, leia como o port; o site cobre as mesmas funções.
+> Note dated 03/11/2026: the direction changed to the complete site first and Android and iOS ports afterward ([ADR-009](ADR-009_Site_Completo_Primeiro.md)). Where this text mentions a native app, read it as the port; the site covers the same functions.
 
-**Status:** Proposta. Recomendação técnica do Hermes; não aprovada por Daniel.
+**Status:** Proposed. Hermes's technical recommendation; not approved by Daniel.
 
-## Contexto e requisitos
+## Context and requirements
 
-- Registros essenciais precisam funcionar sem conexão e sobreviver ao encerramento do app (requisitos fixos da task; cenários Q-01, Q-02 e Q-08).
-- Vários cuidadores escrevem sobre o mesmo bebê, às vezes offline; uma sessão iniciada por um pode ser encerrada por outro (Q-03, Q-04).
-- O acesso de um cuidador pode ser revogado enquanto o aparelho dele está offline (Q-05).
-- Temporizadores não podem depender de execução contínua em segundo plano (Q-08), e fuso, relógio e meia-noite precisam de regra (Q-09).
+- Essential records must work without a connection and survive app termination (fixed task requirements; scenarios Q-01, Q-02 and Q-08).
+- Multiple caregivers write about the same baby, sometimes offline; a session started by one can be ended by another (Q-03, Q-04).
+- A caregiver's access can be revoked while their device is offline (Q-05).
+- Timers cannot depend on continuous background execution (Q-08), and time zones, clocks and midnight need a rule (Q-09).
 
-## Opções consideradas
+## Options considered
 
-1. **Só online**, com cache de leitura.
-2. **Cache do SDK de um BaaS** com a política padrão de última escrita.
-3. **Local-first com fila de operações idempotentes**, autorização e conflitos decididos no servidor, temporizador como registro em andamento.
-4. **CRDT completo** no aparelho e no servidor.
+1. **Online only**, with a read cache.
+2. **A BaaS SDK cache** with the default last-write policy.
+3. **Local-first with an idempotent operation queue**, authorization and conflicts decided on the server, and a timer as an in-progress record.
+4. **Full CRDT** on the device and server.
 
 ## Evidências
 
-- Guia oficial de arquitetura offline do Android: armazenamento local como fonte para a interface, filas e conflitos tratados explicitamente (https://developer.android.com/topic/architecture/data-layer/offline-first, consulta 22/10/2026).
-- Firestore: cache persistente, última escrita no mesmo documento e transações que falham offline (fontes B01 e B02 do pacote, revistas em [Dados, sincronização e backend](../08_Referencias/Tecnologias/Dados_Sincronizacao_e_Backend.md)).
-- Tarefas em segundo plano não têm horário garantido no Android nem no iOS (fonte M08 do pacote).
-- Referências: Finnberry deriva a duração do instante de início, mas guarda o timer só no navegador; Baby Buddy separa timer e registro; Sprout Track instala como PWA sem fila de escrita offline comprovada (fichas em `08_Referencias/Repositorios/`).
+- Official Android offline architecture guide: local storage as the source for the interface, with queues and conflicts handled explicitly (https://developer.android.com/topic/architecture/data-layer/offline-first, accessed 22/10/2026).
+- Firestore: persistent cache, last write on the same document and transactions that fail offline (sources B01 and B02 in the package, reviewed in [Data, synchronization and backend](../08_Referencias/Tecnologias/Dados_Sincronizacao_e_Backend.md)).
+- Background tasks have no guaranteed execution time on Android or iOS (source M08 in the package).
+- References: Finnberry derives duration from the start time but stores the timer only in the browser; Baby Buddy separates timer and record; Sprout Track installs as a PWA without a proven offline write queue (profiles in `08_Referencias/Repositorios/`).
 
 ## Recomendação
 
-Opção 3, especificada em [Offline, sincronização e temporizadores](../03_Arquitetura/Offline_Sincronizacao_e_Temporizadores.md):
+Option 3, specified in [Offline, synchronization and timers](../03_Arquitetura/Offline_Sincronizacao_e_Temporizadores.md):
 
-- banco SQLite local como fonte da interface;
-- cada ação grava a mudança e a operação na mesma transação;
-- operações com id gerado no aparelho, reenvio idempotente e resultado por operação;
-- autorização pelo vínculo atual em cada operação recebida;
-- mescla por campo e conflito explícito quando dois cuidadores alteram o mesmo campo de horário ou quantidade;
-- temporizador como Registro em andamento, com tempo calculado do início gravado;
-- revogação com limpeza local ao reconectar e limites declarados ao usuário.
+- local SQLite database as the source for the interface;
+- each action saves the change and operation in the same transaction;
+- operations with a device-generated ID, idempotent retries and a per-operation result;
+- authorization against current membership on every received operation;
+- field-level merging and explicit conflict when two caregivers change the same time or quantity field;
+- timer as an in-progress Record, with elapsed time calculated from the saved start time;
+- revocation with local cleanup on reconnection and limits disclosed to the user.
 
-A forma de implementar (camada de sync pronta ou protocolo próprio) depende do ADR-003.
+The implementation approach (an existing sync layer or a custom protocol) depends on ADR-003.
 
-## Consequências
+## Consequences
 
-- Positivas: nenhuma perda ou duplicação por reenvio; troca de turno real; revogação efetiva no servidor; autoria e histórico preservados.
-- Negativas: mais código e testes do que um cache de SDK; é preciso desenhar a tela de conflito; a fila e o histórico ocupam espaço no aparelho e no servidor.
+- Positive: no loss or duplication from retries; real shift handoff; effective server-side revocation; authorship and history preserved.
+- Negative: more code and tests than an SDK cache; a conflict screen must be designed; the queue and history take up space on the device and server.
 
-## Riscos e verificação que falta
+## Risks and outstanding verification
 
-- Medir em Android e iOS físicos: encerramento do app logo após registrar, reenvio depois de timeout, dois aparelhos offline editando o mesmo registro, revogação offline (prova técnica MAT-17).
-- Confirmar como a camada de sync escolhida remove do aparelho dados de uma família após revogação.
-- Medir o custo de desempenho do banco local cifrado.
+- Measure on physical Android and iOS devices: app termination immediately after recording, retry after timeout, two offline devices editing the same record, and offline revocation (technical proof MAT-17).
+- Confirm how the selected sync layer removes a family's data from the device after revocation.
+- Measure the performance cost of the encrypted local database.
 
-## Quando revisar
+## When to review
 
-- Se a prova mostrar que a camada escolhida não permite conflito explícito sem reescrever o envio.
-- Se o volume de conflitos reais for desprezível no piloto (simplificar a tela de revisão).
-- Se surgir edição colaborativa de texto longo (avaliar CRDT só para esse campo).
+- If the proof shows that the selected layer does not allow explicit conflicts without rewriting the upload path.
+- If the volume of real conflicts is negligible in the pilot (simplify the review screen).
+- If collaborative editing of long text is introduced (evaluate CRDT only for that field).
 
 ## Referências
 
-[Modelo de dados e permissões](../03_Arquitetura/Modelo_de_Dados_e_Permissoes.md) · [Qualidade e validação](../05_Privacidade_Operacao/Qualidade_e_Validacao.md) · ADR-003 · tarefas MAT-9, MAT-14 e MAT-17.
+[Data model and permissions](../03_Arquitetura/Modelo_de_Dados_e_Permissoes.md) · [Quality and validation](../05_Privacidade_Operacao/Qualidade_e_Validacao.md) · ADR-003 · tasks MAT-9, MAT-14 and MAT-17.

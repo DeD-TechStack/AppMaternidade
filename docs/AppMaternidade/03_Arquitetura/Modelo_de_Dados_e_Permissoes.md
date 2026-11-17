@@ -1,33 +1,33 @@
 ---
 tipo: design-doc
-status: proposta
-responsavel: Hermes (coordenador da APP-001)
+status: proposal
+responsavel: Hermes (coordinator of APP-001)
 revisado_em: 2026-10-22
 tarefa: MAT-8
 adr: ADR-005
 fontes_principais:
-  - tasks/hermes/APP-001-design-docs/01_TASK_HERMES.md (seções 2 e D5)
+  - tasks/hermes/APP-001-design-docs/01_TASK_HERMES.md (sections 2 and D5)
   - tasks/hermes/APP-001-design-docs/05_DESIGN_DOCS_E_ADRS.md
-  - 08_Referencias/Repositorios/ (fichas dos quatro repositórios)
+  - 08_Referencias/Repositorios/ (fact sheets for the four repositories)
 ---
 
-# Modelo de dados e permissões
+# Data model and permissions
 
-> Nota de 03/11/2026: o rumo mudou para site completo primeiro e port Android e iOS depois ([ADR-009](../06_ADRs/ADR-009_Site_Completo_Primeiro.md)). Onde este texto fala em app nativo, leia como o port; o site cobre as mesmas funções.
+> Note from 03/11/2026: the direction changed to a complete website first and an Android and iOS port afterward ([ADR-009](../06_ADRs/ADR-009_Site_Completo_Primeiro.md)). Wherever this text mentions a native app, read it as the port; the website covers the same functions.
 
-Proposta do Hermes, ainda não aprovada por Daniel. O modelo é lógico: vale para qualquer um dos conjuntos de arquitetura comparados em [Comparação de arquiteturas](Comparacao_de_Arquiteturas.md). Nomes de tabelas, tipos de coluna e índices ficam para a implementação.
+Hermes's proposal, not yet approved by Daniel. The model is logical: it applies to any of the architecture stacks compared in [Architecture comparison](Comparacao_de_Arquiteturas.md). Table names, column types and indexes are left to the implementation.
 
-## 1. Problema
+## 1. Problem
 
-O aplicativo guarda dados de bebês registrados por vários adultos, de várias famílias independentes, e ao mesmo tempo tem uma comunidade aberta a pessoas que não pertencem a essas famílias. Três riscos orientam o modelo:
+The app stores data about babies recorded by several adults, from several independent families, and at the same time has a community open to people who do not belong to those families. Three risks guide the model:
 
-1. Uma família ler ou alterar dados de outra, por consulta, sincronização, arquivo ou notificação.
-2. A comunidade virar caminho de acesso à rotina privada de uma criança.
-3. Um cuidador removido continuar escrevendo com uma permissão antiga guardada no aparelho ou no token.
+1. One family reading or changing another family's data, through a query, sync, file or notification.
+2. The community becoming a path to a child's private routine.
+3. A removed caregiver continuing to write with an old permission stored on the device or in the token.
 
-## 2. Fronteiras de domínio
+## 2. Domain boundaries
 
-O modelo se divide em cinco contextos. Cada um tem dono, regras e armazenamento lógico próprios; as setas mostram as únicas referências permitidas entre eles.
+The model is divided into five contexts. Each has its own owner, rules and logical storage; the arrows show the only references allowed between them.
 
 ```mermaid
 flowchart LR
@@ -44,76 +44,76 @@ flowchart LR
   OP --> ID
 ```
 
-Regras da fronteira:
+Boundary rules:
 
-- **Cuidado** e **Comunidade** não se referenciam. Nenhuma entidade da comunidade guarda chave de Família, Bebê ou Registro. Quando alguém compartilha algo da rotina, o que vai para a comunidade é uma cópia do texto que a pessoa revisou e confirmou, sem vínculo de volta (seção 6).
-- O elo entre a Conta e o Perfil público existe só no servidor. Outros usuários e a tela comum de moderação veem apenas o perfil público.
-- **Operação** atua sobre Comunidade e Identidade. Moderação não tem caminho para dados de Cuidado.
-- **Conteúdo** é somente leitura para usuários; registros podem citar uma atividade pelo id e pela versão lida.
+- **Care** and **Community** do not reference each other. No community entity stores a Family, Baby or Record key. When someone shares something from the routine, what goes to the community is a copy of the text the person reviewed and confirmed, with no link back (section 6).
+- The link between the Account and the Public profile exists only on the server. Other users and the common moderation screen see only the public profile.
+- **Operations** acts on Community and Identity. Moderation has no path to Care data.
+- **Content** is read-only for users; records may cite an activity by its id and the version that was read.
 
-## 3. Entidades
+## 3. Entities
 
-Legenda da coluna Fase: **MVP** entra na primeira versão utilizável; **Fundação** precisa existir já na primeira fatia técnica; **Depois** fica para expansões.
+Legend for the Phase column: **MVP** goes into the first usable version; **Foundation** must already exist in the first technical slice; **Later** is left for expansions.
 
-### 3.1 Identidade
+### 3.1 Identity
 
-| Entidade | Campos principais | Fase | Observações |
+| Entity | Main fields | Phase | Notes |
 | --- | --- | --- | --- |
-| Conta | id, e-mail de login, nome privado (visto só pela família), idioma, fuso preferido, estado (ativa, exclusão agendada, excluída), versões aceitas de termos e política | Fundação | Um adulto. Não existe conta de criança. |
-| Dispositivo | id, conta, plataforma, versão do app, token de push (cifrado), último contato, sessão | Fundação | Revogar um dispositivo encerra a sessão dele sem afetar os outros. |
+| Account | id, login e-mail, private name (seen only by the family), language, preferred time zone, status (active, deletion scheduled, deleted), accepted versions of terms and policy | Foundation | One adult. There is no child account. |
+| Device | id, account, platform, app version, push token (encrypted), last contact, session | Foundation | Revoking a device ends its session without affecting the others. |
 
-### 3.2 Cuidado (privado)
+### 3.2 Care (private)
 
-| Entidade | Campos principais | Fase | Observações |
+| Entity | Main fields | Phase | Notes |
 | --- | --- | --- | --- |
-| Família | id, nome, fuso de referência (IANA), criada por, criada em, estado | Fundação | "Grupo de cuidado" no modelo; o nome na interface fica para a pesquisa de linguagem (ver [Fluxos e telas](../02_Experiencia/Fluxos_e_Telas.md)). |
-| Vínculo | família, conta, papel, estado (ativo, revogado, saiu), válido até (opcional), concedido por, criado em, encerrado em, época | Fundação | A "época" sobe a cada mudança de papel ou revogação; o servidor compara com a época que o aparelho conhece. |
-| Convite | família, papel proposto, criado por, hash do código, expira em, usos restantes (1), estado (pendente, aceito, expirado, revogado), aceito por, aceito em | Fundação | O código em claro só aparece para quem convida; o servidor guarda o hash. |
-| Bebê | id, família, nome ou apelido, data de nascimento, estado (ativo, arquivado), criado por | Fundação | Sexo, peso e foto ficam fora do MVP (minimização). A data de nascimento serve para idade e conteúdo por fase; nunca sai do contexto de Cuidado. |
-| Registro | id (gerado no aparelho), família, bebê, tipo, estado (em andamento, concluído), início, fim, campos do tipo, nota, origem (ao vivo, retroativo), fuso e deslocamento no momento do registro, iniciado por, encerrado por, criado por, versão (do servidor), recebido em, excluído em, excluído por | Fundação | Uma sessão temporizada é um Registro em andamento; não há entidade "timer" separada (justificativa na seção 3.6). |
-| Segmento | registro, lado ou parte, início, fim | MVP | Só para amamentação (lado esquerdo e direito). Pausas de tummy time viram sessões separadas. |
-| Alteração de registro | registro, operação, autor, dispositivo, antes, depois, recebida em | Fundação | Histórico só de acréscimo. Sustenta autoria, conflitos e restauração. |
-| Nota de cuidado | id, família, bebê (opcional), autor, texto, destaque até, criada em | MVP | Base da passagem de cuidados ("o que você precisa saber"). |
-| Anexo | id, família, registro ou nota, tipo, tamanho, caminho no armazenamento, criado por | Depois | Fotos e arquivos ficam fora do MVP; o modelo já prevê escopo por família. |
-| Operação de sincronização | id da operação, conta, dispositivo, família, tipo, entidade, versão-base, resultado, processada em | Fundação | Registro de idempotência no servidor (ver [Offline e sincronização](Offline_Sincronizacao_e_Temporizadores.md)). |
+| Family | id, name, reference time zone (IANA), created by, created at, status | Foundation | "Grupo de cuidado" in the model; the name in the interface is left to language research (see [Flows and screens](../02_Experiencia/Fluxos_e_Telas.md)). |
+| Membership | family, account, role, status (active, revoked, left), valid until (optional), granted by, created at, ended at, epoch | Foundation | The "época" goes up with each role change or revocation; the server compares it with the epoch the device knows. |
+| Invitation | family, proposed role, created by, code hash, expires at, remaining uses (1), status (pending, accepted, expired, revoked), accepted by, accepted at | Foundation | The plaintext code is shown only to the inviter; the server stores the hash. |
+| Baby | id, family, name or nickname, date of birth, status (active, archived), created by | Foundation | Sex, weight and photo are left out of the MVP (minimization). The date of birth is used for age and phase-based content; it never leaves the Care context. |
+| Record | id (generated on the device), family, baby, type, status (in progress, completed), start, end, type-specific fields, note, origin (live, retroactive), time zone and offset at the time of recording, started by, ended by, created by, version (from the server), received at, deleted at, deleted by | Foundation | A timed session is an in-progress Record; there is no separate "timer" entity (rationale in section 3.6). |
+| Segment | record, side or part, start, end | MVP | Only for breastfeeding (left and right side). Tummy time pauses become separate sessions. |
+| Record change | record, operation, author, device, before, after, received at | Foundation | Append-only history. Supports authorship, conflicts and restoration. |
+| Care note | id, family, baby (optional), author, text, highlighted until, created at | MVP | Basis of the care handoff ("o que você precisa saber"). |
+| Attachment | id, family, record or note, type, size, storage path, created by | Later | Photos and files are left out of the MVP; the model already provides for family scoping. |
+| Sync operation | operation id, account, device, family, type, entity, base version, result, processed at | Foundation | Idempotency record on the server (see [Offline and sync](Offline_Sincronizacao_e_Temporizadores.md)). |
 
-Tipos de Registro no MVP: sono (inclui sonecas), amamentação, mamadeira, alimentação sólida, fralda, tummy time e observação curta. Medicamentos, medidas de crescimento, temperatura, extração de leite e banho ficam como candidatos de expansão; alguns exigem cuidado adicional com dado de saúde.
+Record types in the MVP: sleep (including naps), breastfeeding, bottle, solid food, diaper, tummy time and short observation. Medications, growth measurements, temperature, milk expression and bath remain as expansion candidates; some require additional care with health data.
 
-### 3.3 Conteúdo (editorial)
+### 3.3 Content (editorial)
 
-| Entidade | Campos principais | Fase | Observações |
+| Entity | Main fields | Phase | Notes |
 | --- | --- | --- | --- |
-| Conteúdo | id, tipo (artigo, atividade), tema, faixa etária mínima e máxima em semanas, idioma | MVP | Atividades de tummy time e brincadeiras por fase. |
-| Versão de conteúdo | conteúdo, número, texto, autores, revisor com credencial, fontes, licença ou atribuição, revisado em, próxima revisão, estado (rascunho, em revisão, publicado, retirado) | MVP | Ciclo editorial em [Desenvolvimento e conteúdo](../04_Comunidade_Conteudo/Desenvolvimento_e_Conteudo.md). |
+| Content | id, type (article, activity), topic, minimum and maximum age range in weeks, language | MVP | Tummy time activities and age-appropriate play. |
+| Content version | content, number, text, authors, credentialed reviewer, sources, license or attribution, reviewed at, next review, status (draft, in review, published, withdrawn) | MVP | Editorial cycle in [Development and content](../04_Comunidade_Conteudo/Desenvolvimento_e_Conteudo.md). |
 
-### 3.4 Comunidade
+### 3.4 Community
 
-| Entidade | Campos principais | Fase | Observações |
+| Entity | Main fields | Phase | Notes |
 | --- | --- | --- | --- |
-| Perfil público | id, apelido único, avatar (sem foto de criança por padrão), bio curta, faixa do bebê exibida (opcional, escolhida pela pessoa), estado (ativo, suspenso, banido) | MVP | Ligado à Conta apenas no servidor. A faixa exibida é uma escolha, não um cálculo a partir da data de nascimento. |
-| Espaço | id, nome, descrição, regras específicas | MVP | Sono, alimentação, banho, tummy time, organização da rotina, divisão dos cuidados, dificuldades do dia a dia. |
-| Tópico | id, espaço, autor (perfil público), título, corpo, faixa etária (etiqueta opcional), estado (visível, oculto para revisão, removido, travado), criado em, editado em | MVP | |
-| Resposta | id, tópico, autor (perfil público), corpo, resposta a (um nível), estado, criada em, editada em | MVP | |
-| Marcação "ajudou" | resposta, perfil público | Depois | Sem ranking público de pessoas. |
-| Denúncia | id, alvo (tópico, resposta ou perfil), denunciante, motivo, texto, estado (aberta, em análise, procedente, improcedente), decidida por, decisão, decidida em | MVP | |
-| Bloqueio | quem bloqueia, quem é bloqueado, criado em | MVP | Efeito mútuo: um deixa de ver o outro e não pode responder a ele. |
+| Public profile | id, unique nickname, avatar (no child photo by default), short bio, displayed baby age range (optional, chosen by the person), status (active, suspended, banned) | MVP | Linked to the Account only on the server. The displayed range is a choice, not a calculation from the date of birth. |
+| Space | id, name, description, specific rules | MVP | Sleep, feeding, bath, tummy time, routine organization, division of care, everyday difficulties. |
+| Topic | id, space, author (public profile), title, body, age range (optional tag), status (visible, hidden for review, removed, locked), created at, edited at | MVP | |
+| Reply | id, topic, author (public profile), body, reply to (one level), status, created at, edited at | MVP | |
+| "ajudou" marking | reply, public profile | Later | No public ranking of people. |
+| Report | id, target (topic, reply or profile), reporter, reason, text, status (open, under review, upheld, dismissed), decided by, decision, decided at | MVP | |
+| Block | blocker, blocked, created at | MVP | Mutual effect: each stops seeing the other and cannot reply to them. |
 
-### 3.5 Operação
+### 3.5 Operations
 
-| Entidade | Campos principais | Fase | Observações |
+| Entity | Main fields | Phase | Notes |
 | --- | --- | --- | --- |
-| Papel de plataforma | conta, papel (moderador, suporte, administrador técnico), concedido por, válido até | MVP | Papel da equipe do produto, separado dos papéis na família. |
-| Ação de moderação | id, moderador, alvo, ação (ocultar, remover, restaurar, advertir, suspender, banir, travar tópico), regra aplicada, denúncia, prazo, avisado ao autor em | MVP | |
-| Evento de auditoria | quem, o quê, alvo, quando, origem | Fundação | Login, convite aceito, mudança de papel, revogação, exportação, exclusão, ações administrativas. Sem conteúdo dos registros. |
+| Platform role | account, role (moderator, support, technical administrator), granted by, valid until | MVP | A role for the product team, separate from family roles. |
+| Moderation action | id, moderator, target, action (hide, remove, restore, warn, suspend, ban, lock topic), rule applied, report, deadline, author notified at | MVP | |
+| Audit event | who, what, target, when, origin | Foundation | Login, invitation accepted, role change, revocation, export, deletion, administrative actions. No record content. |
 
-### 3.6 Fronteiras justificadas
+### 3.6 Justified boundaries
 
-- **Sessão temporizada como Registro em andamento.** O Baby Buddy separa o temporizador do registro e exige um passo de conversão; o Finnberry guarda o timer só no navegador. Aqui, a sessão já nasce como Registro com início e sem fim: outro cuidador vê e encerra a mesma entidade, a sincronização trata um objeto só e não há estado de timer para reconciliar. Detalhes e evidências nas fichas de [Baby Buddy](../08_Referencias/Repositorios/Baby_Buddy.md) e [Finnberry](../08_Referencias/Repositorios/Finnberry.md).
-- **Observação curta como tipo de Registro e Nota de cuidado como entidade.** A observação ligada a um momento ("arrotou pouco") entra na linha do tempo; a nota de passagem ("pomada só à noite") tem destaque e validade e aparece no topo para quem assume o cuidado.
-- **Sem entidade de "atividade feita" no MVP.** Fazer uma atividade sugerida pode virar uma sessão de tummy time com referência ao conteúdo; uma tabela própria só se houver uso demonstrado.
-- **Anexos fora do MVP.** Reduzem o volume de dado sensível e o custo de armazenamento enquanto o núcleo é validado.
+- **Timed session as an in-progress Record.** Baby Buddy separates the timer from the record and requires a conversion step; Finnberry keeps the timer only in the browser. Here, the session is born as a Record with a start and no end: another caregiver sees and ends the same entity, sync handles a single object, and there is no timer state to reconcile. Details and evidence in the [Baby Buddy](../08_Referencias/Repositorios/Baby_Buddy.md) and [Finnberry](../08_Referencias/Repositorios/Finnberry.md) fact sheets.
+- **Short observation as a Record type and Care note as an entity.** An observation tied to a moment ("arrotou pouco") goes into the timeline; a handoff note ("pomada só à noite") has a highlight and validity period and appears at the top for whoever takes over care.
+- **No "atividade feita" entity in the MVP.** Doing a suggested activity can become a tummy time session with a reference to the content; a dedicated table only if there is demonstrated use.
+- **Attachments outside the MVP.** They reduce the volume of sensitive data and the storage cost while the core is validated.
 
-## 4. Diagrama lógico
+## 4. Logical diagram
 
 ```mermaid
 erDiagram
@@ -136,93 +136,93 @@ erDiagram
   CONTEUDO ||--o{ VERSAO_DE_CONTEUDO : versiona
 ```
 
-## 5. Papéis e matriz de permissões
+## 5. Roles and permission matrix
 
-### 5.1 Papéis na família
+### 5.1 Family roles
 
-| Papel | Para quem | Resumo |
+| Role | For whom | Summary |
 | --- | --- | --- |
-| Responsável | Mãe, pai ou outro responsável legal | Administra a família, os bebês, os convites e os dados. Pode haver mais de um. |
-| Cuidador | Avó, babá, outro adulto de confiança | Registra e acompanha. Edita e exclui só o que ele mesmo criou, e pode encerrar qualquer sessão em andamento. |
-| Observador | Quem só acompanha | Lê registros e notas; não escreve. |
+| Guardian | Mother, father or other legal guardian | Manages the family, babies, invitations and data. There may be more than one. |
+| Caregiver | Grandparent, nanny, other trusted adult | Records and follows along. Edits and deletes only what they themselves created, and can end any in-progress session. |
+| Observer | Someone who only follows along | Reads records and notes; does not write. |
 
-Qualquer vínculo pode ter validade ("cuidador até domingo"). Vencida a validade, ele se comporta como revogado.
+Any membership can have a validity period ("cuidador até domingo"). Once it expires, the membership behaves as revoked.
 
-### 5.2 Papéis de plataforma
+### 5.2 Platform roles
 
-Moderador, suporte e administrador técnico são papéis da equipe do produto. Nenhum deles dá leitura de dados de cuidado. O suporte só vê dados de cuidado se a própria família pedir e autorizar no caso específico, com registro em auditoria; essa rotina é proposta para validação jurídica em [Privacidade e segurança](../05_Privacidade_Operacao/Privacidade_e_Seguranca.md).
+Moderator, support and technical administrator are product-team roles. None of them grants read access to care data. Support sees care data only if the family itself requests and authorizes it in the specific case, with an audit record; this procedure is proposed for legal validation in [Privacy and security](../05_Privacidade_Operacao/Privacidade_e_Seguranca.md).
 
-### 5.3 Matriz
+### 5.3 Matrix
 
-Legenda: ✔ permitido; ✖ negado; "próprio" só no que a pessoa criou.
+Legend: ✔ allowed; ✖ denied; "próprio" only on what the person created.
 
-| Ação | Responsável | Cuidador | Observador | Ex-membro ou vínculo vencido | Usuário só da comunidade | Moderador | Suporte |
+| Action | Guardian | Caregiver | Observer | Former member or expired membership | Community-only user | Moderator | Support |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Ver registros e notas do bebê | ✔ | ✔ | ✔ | ✖ | ✖ | ✖ | ✖ (só com autorização da família no caso) |
-| Criar registro ou nota | ✔ | ✔ | ✖ | ✖ | ✖ | ✖ | ✖ |
-| Iniciar ou encerrar sessão em andamento | ✔ | ✔ (qualquer sessão) | ✖ | ✖ | ✖ | ✖ | ✖ |
-| Editar registro | ✔ | próprio | ✖ | ✖ | ✖ | ✖ | ✖ |
-| Excluir registro | ✔ | próprio | ✖ | ✖ | ✖ | ✖ | ✖ |
-| Restaurar registro excluído (até 30 dias) | ✔ | próprio | ✖ | ✖ | ✖ | ✖ | ✖ |
-| Ver histórico de alterações | ✔ | ✔ | ✖ | ✖ | ✖ | ✖ | ✖ |
-| Cadastrar, editar ou arquivar bebê | ✔ | ✖ | ✖ | ✖ | ✖ | ✖ | ✖ |
-| Convidar, revogar e mudar papel | ✔ | ✖ | ✖ | ✖ | ✖ | ✖ | ✖ |
-| Sair da família | ✔ (se não for o último responsável) | ✔ | ✔ | — | — | — | — |
-| Exportar dados da família | ✔ | ✖ | ✖ | ✖ | ✖ | ✖ | ✖ |
-| Excluir a família | ✔ | ✖ | ✖ | ✖ | ✖ | ✖ | ✖ |
-| Publicar, responder, denunciar e bloquear na comunidade | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ |
-| Ver fila de denúncias e moderar | ✖ | ✖ | ✖ | ✖ | ✖ | ✔ | ✖ |
-| Ver e-mail ou dados da conta de um autor | ✖ | ✖ | ✖ | ✖ | ✖ | ✖ (só o perfil público) | ✔ (com motivo registrado) |
+| View the baby's records and notes | ✔ | ✔ | ✔ | ✖ | ✖ | ✖ | ✖ (only with the family's authorization in the case) |
+| Create record or note | ✔ | ✔ | ✖ | ✖ | ✖ | ✖ | ✖ |
+| Start or end an in-progress session | ✔ | ✔ (any session) | ✖ | ✖ | ✖ | ✖ | ✖ |
+| Edit record | ✔ | own | ✖ | ✖ | ✖ | ✖ | ✖ |
+| Delete record | ✔ | own | ✖ | ✖ | ✖ | ✖ | ✖ |
+| Restore deleted record (up to 30 days) | ✔ | own | ✖ | ✖ | ✖ | ✖ | ✖ |
+| View change history | ✔ | ✔ | ✖ | ✖ | ✖ | ✖ | ✖ |
+| Add, edit or archive baby | ✔ | ✖ | ✖ | ✖ | ✖ | ✖ | ✖ |
+| Invite, revoke and change role | ✔ | ✖ | ✖ | ✖ | ✖ | ✖ | ✖ |
+| Leave the family | ✔ (if not the last guardian) | ✔ | ✔ | — | — | — | — |
+| Export family data | ✔ | ✖ | ✖ | ✖ | ✖ | ✖ | ✖ |
+| Delete the family | ✔ | ✖ | ✖ | ✖ | ✖ | ✖ | ✖ |
+| Post, reply, report and block in the community | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ |
+| View report queue and moderate | ✖ | ✖ | ✖ | ✖ | ✖ | ✔ | ✖ |
+| View an author's e-mail or account data | ✖ | ✖ | ✖ | ✖ | ✖ | ✖ (only the public profile) | ✔ (with a recorded reason) |
 
-A comunidade é aberta a qualquer conta, com ou sem família. Ter família não muda nada na comunidade, e participar da comunidade não muda nada na família.
+The community is open to any account, with or without a family. Having a family changes nothing in the community, and participating in the community changes nothing in the family.
 
-## 6. Invariantes
+## 6. Invariants
 
-O servidor garante as regras abaixo em toda operação, inclusive nas que chegam pela sincronização. Testes de cada uma estão previstos em [Qualidade e validação](../05_Privacidade_Operacao/Qualidade_e_Validacao.md).
+The server enforces the rules below on every operation, including those arriving through sync. Tests for each one are planned in [Quality and validation](../05_Privacidade_Operacao/Qualidade_e_Validacao.md).
 
-1. **Autorização pelo vínculo atual.** Cada operação sobre dados de Cuidado é autorizada a partir do vínculo vigente no banco no momento em que chega (estado, papel, validade e época). O token prova só quem é a pessoa e qual o dispositivo; uma lista de famílias guardada no token nunca autoriza escrita.
-2. **Consistência de escopo.** Todo Registro, Nota e Anexo pertence à mesma família do bebê que referencia. Um id de outra família é tratado como inexistente: a resposta é a mesma de um id que não existe, sem confirmar que ele pertence a alguém.
-3. **Pelo menos um responsável.** Toda família ativa tem um responsável ativo. O último responsável só sai depois de transferir o papel ou excluir a família.
-4. **Comunidade sem caminho para a rotina.** Nenhuma consulta da comunidade junta tabelas de Cuidado. Perfis públicos não carregam data de nascimento, nome do bebê nem família.
-5. **Moderação sem leitura de dados infantis.** Papéis de plataforma não concedem leitura de Cuidado.
-6. **Campos do servidor.** Versão, "recebido em", autoria confirmada e resultado da operação são definidos pelo servidor. O aparelho propõe; o servidor confirma.
-7. **Exclusão rastreável.** Registro excluído vira marca de exclusão sincronizável; os dados são apagados de vez depois do prazo de restauração, salvo exclusão de conta ou família, que antecipa o expurgo (prazos em [Privacidade e segurança](../05_Privacidade_Operacao/Privacidade_e_Seguranca.md)).
-8. **Identificadores não sequenciais.** Ids gerados no aparelho, únicos e ordenáveis no tempo (UUIDv7 ou equivalente); nunca contadores que permitam adivinhar ids de outras famílias.
-9. **Notificação só para vínculo ativo.** Push sobre uma família só vai para dispositivos de contas com vínculo ativo nela, e o texto do push não traz dado sensível.
-10. **Arquivos por escopo.** Quando houver anexos, eles ficam sob um prefixo da família e só são entregues por URL de curta duração emitida depois da checagem de vínculo. Mídia da comunidade fica em área separada, sem metadados de localização.
+1. **Authorization by current membership.** Every operation on Care data is authorized based on the membership in effect in the database at the moment it arrives (status, role, validity and epoch). The token proves only who the person is and which device it is; a list of families stored in the token never authorizes a write.
+2. **Scope consistency.** Every Record, Note and Attachment belongs to the same family as the baby it references. An id from another family is treated as nonexistent: the response is the same as for an id that does not exist, without confirming that it belongs to someone.
+3. **At least one guardian.** Every active family has an active guardian. The last guardian can only leave after transferring the role or deleting the family.
+4. **Community with no path to the routine.** No community query joins Care tables. Public profiles do not carry date of birth, baby name or family.
+5. **Moderation without reading children's data.** Platform roles do not grant read access to Care.
+6. **Server fields.** Version, "recebido em", confirmed authorship and operation result are set by the server. The device proposes; the server confirms.
+7. **Traceable deletion.** A deleted record becomes a syncable deletion marker; the data is permanently erased after the restoration period, except for account or family deletion, which brings the purge forward (time limits in [Privacy and security](../05_Privacidade_Operacao/Privacidade_e_Seguranca.md)).
+8. **Non-sequential identifiers.** Ids generated on the device, unique and time-ordered (UUIDv7 or equivalent); never counters that would allow guessing other families' ids.
+9. **Notifications only for active memberships.** A push about a family goes only to devices of accounts with an active membership in it, and the push text contains no sensitive data.
+10. **Files by scope.** When there are attachments, they are kept under a family prefix and delivered only via a short-lived URL issued after the membership check. Community media is kept in a separate area, without location metadata.
 
-## 7. Classificação dos dados
+## 7. Data classification
 
-| Classe | Exemplos | Tratamento |
+| Class | Examples | Handling |
 | --- | --- | --- |
-| Sensível (hipótese: dado de saúde de criança) | Registros de cuidado, notas, data de nascimento, futuros anexos | Só no contexto de Cuidado; criptografia em trânsito e em repouso; fora de logs, analytics e pushes. A classificação jurídica está em aberto em [Privacidade e segurança](../05_Privacidade_Operacao/Privacidade_e_Seguranca.md). |
-| Pessoal | E-mail, nome privado, tokens de push, IPs de acesso | Mínimo necessário; retenção definida; fora do conteúdo público. |
-| Pública no app | Tópicos, respostas e perfis públicos | Visível a qualquer conta; moderada; sujeita a denúncia. |
-| Editorial | Conteúdos e versões | Pública; com autoria, fonte e licença. |
+| Sensitive (hypothesis: child health data) | Care records, notes, date of birth, future attachments | Only in the Care context; encryption in transit and at rest; kept out of logs, analytics and pushes. The legal classification is open in [Privacy and security](../05_Privacidade_Operacao/Privacidade_e_Seguranca.md). |
+| Personal | E-mail, private name, push tokens, access IPs | Minimum necessary; defined retention; kept out of public content. |
+| Public in the app | Topics, replies and public profiles | Visible to any account; moderated; subject to reports. |
+| Editorial | Content items and versions | Public; with authorship, source and license. |
 
-## 8. Alternativas consideradas
+## 8. Alternatives considered
 
-| Alternativa | Por que não foi proposta |
+| Alternative | Why it was not proposed |
 | --- | --- |
-| Permissão por modelo, como no Django padrão do Baby Buddy | Responde "esta pessoa pode editar registros de sono?", não "pode editar os desta família?". Num produto com várias famílias, o escopo por família precisa vir antes do tipo de dado. |
-| Lista de famílias no token como autorização | Fica velha até o token ser renovado; um cuidador revogado continuaria escrevendo. A documentação do Supabase alerta para isso (fonte B05 do pacote). |
-| Uma conta só com perfil público e privado juntos | Simplifica, mas expõe a família quando alguém clica no autor de uma postagem. |
-| Timer como entidade separada do registro | Duplica estado e exige conversão; ver seção 3.6. |
-| Edição livre de qualquer registro por qualquer cuidador | Mais simples para casais, arriscado para cuidadores temporários. A proposta dá esse poder ao papel Responsável, que pode ser dado aos dois pais. |
+| Per-model permission, as in Baby Buddy's default Django | Answers "esta pessoa pode editar registros de sono?", not "pode editar os desta família?". In a product with several families, family scoping must come before the data type. |
+| List of families in the token as authorization | Goes stale until the token is renewed; a revoked caregiver would keep writing. The Supabase documentation warns about this (source B05 in the package). |
+| A single account with public and private profile combined | Simpler, but exposes the family when someone clicks on a post's author. |
+| Timer as an entity separate from the record | Duplicates state and requires conversion; see section 3.6. |
+| Free editing of any record by any caregiver | Simpler for couples, risky for temporary caregivers. The proposal gives this power to the Guardian role, which can be given to both parents. |
 
-## 9. Consequências
+## 9. Consequences
 
-- Positivas: escopo por família explícito em toda operação; comunidade isolada por construção; revogação efetiva no servidor; autoria e histórico disponíveis para resolver conflitos.
-- Negativas: duas identidades por pessoa (conta e perfil público) exigem explicação na interface; o histórico de alterações cresce e precisa de retenção; a checagem do vínculo em cada operação tem custo de consulta, a medir na prova técnica (MAT-17).
+- Positive: explicit family scoping in every operation; community isolated by construction; effective revocation on the server; authorship and history available to resolve conflicts.
+- Negative: two identities per person (account and public profile) require explanation in the interface; the change history grows and needs retention; checking the membership on every operation has a query cost, to be measured in the technical proof (MAT-17).
 
-## Questões abertas
+## Open questions
 
-1. Nome do grupo na interface: "Família", "Rede de cuidado" ou outro (pesquisa com usuários).
-2. Um bebê pode pertencer a duas famílias (pais separados com grupos distintos)? A proposta é não no MVP: um grupo só, com os dois responsáveis.
-3. O Observador deve ter limite de histórico (por exemplo, últimos 7 dias)?
-4. Prazo de restauração de registro excluído: 30 dias é proposta.
-5. Classificação jurídica dos registros como dado de saúde: depende de validação profissional.
+1. Name of the group in the interface: "Família", "Rede de cuidado" or something else (user research).
+2. Can a baby belong to two families (separated parents with distinct groups)? The proposal is no in the MVP: a single group, with both guardians.
+3. Should the Observer have a history limit (for example, the last 7 days)?
+4. Restoration period for a deleted record: 30 days is a proposal.
+5. Legal classification of records as health data: depends on professional validation.
 
-## Limites desta análise
+## Limits of this analysis
 
-Modelo lógico sem implementação nem teste. As afirmações sobre as referências estão sustentadas nas fichas de `08_Referencias/Repositorios/`; as regras de autorização e os invariantes serão provados na prova técnica (MAT-17) e na primeira fatia (MAT-18).
+Logical model with no implementation or testing. The claims about the references are supported by the fact sheets in `08_Referencias/Repositorios/`; the authorization rules and invariants will be proven in the technical proof (MAT-17) and in the first slice (MAT-18).

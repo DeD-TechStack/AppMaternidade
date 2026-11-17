@@ -1,7 +1,7 @@
 ---
-tipo: ficha-concorrente
-status: rascunho
-responsavel: Hermes (subagente concorrentes A)
+tipo: competitor-profile
+status: draft
+responsavel: Hermes (competitors subagent A)
 revisado_em: 2026-10-22
 produto: Huckleberry
 fontes_principais:
@@ -14,198 +14,198 @@ fontes_principais:
 
 # Huckleberry
 
-Ficha de concorrente da APP-001. Todas as fontes foram consultadas em 22/10/2026 (America/Sao_Paulo). As marcas seguem as [Convenções do cofre](../../00_Inicio/Convencoes.md): **[DOC]** indica algo declarado em site, loja ou central de ajuda; **[HIP]** indica hipótese, inferência ou relato isolado. Nada foi observado em execução. Trechos citados em inglês são literais; citações em português de fontes em inglês são traduções livres. Os códigos H01, H02… remetem à tabela de Fontes (no fim da ficha). Fichas irmãs: [Napper](Napper.md), [Baby Daybook](Baby_Daybook.md) e [Nara Baby](Nara_Baby.md).
+Competitor profile for APP-001. All sources were accessed on 22/10/2026 (America/Sao_Paulo). The labels follow the [Vault conventions](../../00_Inicio/Convencoes.md): **[DOC]** indicates something stated on a website, store listing, or help center; **[HIP]** indicates a hypothesis, inference, or isolated report. Nothing was observed in use. Passages quoted in English are verbatim; Portuguese quotations from English sources are free translations. The codes H01, H02… refer to the Sources table (at the end of the profile). Related profiles: [Napper](Napper.md), [Baby Daybook](Baby_Daybook.md), and [Nara Baby](Nara_Baby.md).
 
 ## Resumo
 
-- É o rastreador mais completo dos quatro analisados. Cobre sono, alimentação, sólidos, fraldas, desfralde, bombinha, medicação, crescimento, temperatura, marcos e **atividades com tummy time**, além de timer de contrações para gestantes [DOC H06, H19].
-- O modelo é freemium em três níveis:
-  - **Free**: registro, relatórios e sincronização;
-  - **Plus**: SweetSpot, Insights, registro por IA e atalhos fora do app;
-  - **Premium**: chat de IA "Berry" e planos de sono feitos por especialistas.
-  
+- It is the most comprehensive tracker of the four analyzed. It covers sleep, feeding, solids, diapers, potty training, pumping, medication, growth, temperature, milestones, and **activities including tummy time**, plus a contraction timer for pregnant users [DOC H06, H19].
+- The model is freemium with three tiers:
+  - **Free**: logging, reports, and syncing;
+  - **Plus**: SweetSpot, Insights, AI logging, and shortcuts outside the app;
+  - **Premium**: "Berry" AI chat and sleep plans created by specialists.
+
   [DOC H02]
-- O cuidado compartilhado é o ponto fraco declarado: o caminho oficial é **entrar com a mesma conta** no celular do outro cuidador [DOC H12].
-- Não foi encontrada comunidade no app [HIP: ausência nas fontes oficiais].
+- Shared care is the documented weak point: the official method is to **sign in with the same account** on the other caregiver's phone [DOC H12].
+- No community was found in the app [HIP: absent from official sources].
 
-## Tummy time e desenvolvimento
+## Tummy time and development
 
-**Tummy time: presente (com evidência).**
+**Tummy time: available (with evidence).**
 
-- A função "Activities" (anunciada no blog; página atualizada em 13/08/2025) inclui oito atividades: pele a pele, leitura, brincadeira ao ar livre, brincadeira dentro de casa, escovar os dentes, **tummy time**, tela e banho [DOC H05, H06].
-- Cada atividade pode ser registrada com timer ou só como "feito", aceita notas e edição posterior e aparece em todos os relatórios (dia, semana, resumo e lista). As atividades podem ser desligadas [DOC H05].
-- A versão 0.9.312 informa: "The Tummy Time timer stays accurate while your screen is off" [DOC H19].
-- Não é possível criar atividade própria. A ajuda sugere reaproveitar uma atividade sem uso [DOC H07].
-- O "Milestones Tracker" usa marcos do CDC de 2 semanas a 5 anos, organizados pela idade **corrigida** (prematuros), mais "momentos de vida". O texto diz que os marcos "não são um checklist" e orienta procurar o pediatra em caso de preocupação [DOC H08].
-- "Insights" (Plus e Premium, 0–17 meses) combina registros e questionários mensais com "pesquisa pediátrica especializada" para gerar dicas e miniplanos [DOC H17].
+- The "Activities" feature (announced on the blog; page updated on 13/08/2025) includes eight activities: skin-to-skin contact, reading, outdoor play, indoor play, brushing teeth, **tummy time**, screen time, and bathing [DOC H05, H06].
+- Each activity can be logged with a timer or simply as "feito", supports notes and later editing, and appears in all reports (day, week, summary, and list). Activities can be turned off [DOC H05].
+- Version 0.9.312 states: "The Tummy Time timer stays accurate while your screen is off" [DOC H19].
+- Users cannot create custom activities. The help center suggests repurposing an unused activity [DOC H07].
+- The "Milestones Tracker" uses CDC milestones from 2 weeks to 5 years, organized by **corrected** age (for premature babies), plus "life moments". The text says milestones "are not a checklist" and advises consulting a pediatrician if there are concerns [DOC H08].
+- "Insights" (Plus and Premium, 0–17 months) combines logs and monthly questionnaires with "expert pediatric research" to generate tips and mini plans [DOC H17].
 
 ## Identificação
 
-| Campo | Valor | Fonte |
+| Field | Value | Source |
 | --- | --- | --- |
-| Empresa | Huckleberry Labs, Inc., Irvine, Califórnia, EUA | [DOC H20] |
-| Site e ajuda | https://huckleberrycare.com e https://huckleberry.zendesk.com/hc/en-us | [DOC H01, H06] |
-| Google Play | `com.huckleberry_labs.app`: "Huckleberry: Baby Tracker". 1 mi+ downloads. Nota 4,9 com 36,9 mil avaliações. Atualizado em 20/10/2026. A versão não aparece na página | [DOC H20] |
-| App Store | `id1169136078`: "Huckleberry: Baby Tracker". Versão 0.9.314, exibida como "há 10 h" em 22/10/2026. Categoria Medicina. Nota 4,9 com 75 mil avaliações (EUA) | [DOC H19] |
-| Plataformas | Android; iPhone e iPad (iOS/iPadOS 16+); Apple Watch (watchOS 10.2+). Widgets e Apple Watch são "iOS only" | [DOC H19, H02] |
-| Idiomas | A App Store declara só **inglês**. pt-BR não foi encontrado | [DOC H19] |
-| Preço | Free. Plus a US$ 11,99/mês ou US$ 5,74/mês no plano anual (preço promocional riscado no site). Premium a US$ 14,99/mês ou US$ 9,99/mês no plano anual | [DOC H01, H02] |
-| Compras na App Store (EUA) | Plus: US$ 11,99, US$ 58,99 e US$ 68,99. Premium: US$ 14,99 e US$ 119,99. "Sleep Improvement Plan" a US$ 49,99. "Expedited Service" a US$ 19,99 | [DOC H19] |
+| Company | Huckleberry Labs, Inc., Irvine, California, USA | [DOC H20] |
+| Website and help | https://huckleberrycare.com and https://huckleberry.zendesk.com/hc/en-us | [DOC H01, H06] |
+| Google Play | `com.huckleberry_labs.app`: "Huckleberry: Baby Tracker". 1 million+ downloads. Rating of 4,9 with 36,9 thousand reviews. Updated on 20/10/2026. The version does not appear on the page | [DOC H20] |
+| App Store | `id1169136078`: "Huckleberry: Baby Tracker". Version 0.9.314, shown as "10 h ago" on 22/10/2026. Medical category. Rating of 4,9 with 75 thousand reviews (USA) | [DOC H19] |
+| Platforms | Android; iPhone and iPad (iOS/iPadOS 16+); Apple Watch (watchOS 10.2+). Widgets and Apple Watch are "iOS only" | [DOC H19, H02] |
+| Languages | The App Store lists only **English**. pt-BR was not found | [DOC H19] |
+| Price | Free. Plus at US$ 11,99/month or US$ 5,74/month on the annual plan (promotional price crossed out on the website). Premium at US$ 14,99/month or US$ 9,99/month on the annual plan | [DOC H01, H02] |
+| App Store purchases (USA) | Plus: US$ 11,99, US$ 58,99, and US$ 68,99. Premium: US$ 14,99 and US$ 119,99. "Sleep Improvement Plan" at US$ 49,99. "Expedited Service" at US$ 19,99 | [DOC H19] |
 
-## Funcionalidades por pilar
+## Features by pillar
 
 ### Rotina
 
-- O plano gratuito registra sono, fraldas, mamadas (com timer por lado), bombinha, crescimento, marcos, peso, desfralde, atividades e medicação. Inclui lembretes, resumos e médias de sono, vários filhos e sincronização entre cuidadores [DOC H19, H20].
-- Sólidos: alergênicos, reações, foto, sugestões e guias de preparo por idade. O relatório de sólidos ficou gratuito numa versão anterior a 30/09/2026 [DOC H19].
-- Personalização: a tela inicial mostra só as categorias escolhidas ("More options > Modify categories") [DOC H01, H06].
-- Exportação: CSV por filho, enviado por link de e-mail válido por 24 h [DOC H18].
+- The free plan logs sleep, diapers, feeds (with a timer for each side), pumping, growth, milestones, weight, potty training, activities, and medication. It includes reminders, sleep summaries and averages, multiple children, and syncing between caregivers [DOC H19, H20].
+- Solids: allergens, reactions, photos, suggestions, and age-based preparation guides. The solids report became free in a version before 30/09/2026 [DOC H19].
+- Customization: the home screen shows only the selected categories ("More options > Modify categories") [DOC H01, H06].
+- Export: CSV per child, sent through an email link valid for 24 h [DOC H18].
 
-### Desenvolvimento, tummy time, atividades e conteúdo
+### Development, tummy time, activities, and content
 
-Ver a seção "Tummy time e desenvolvimento" acima. Também:
+See the "Tummy time and development" section above. Also:
 
-- Blog com autoria identificada. O artigo sobre brincadeiras de recém-nascido é de "Beth Christensen, DPT, Pediatric Sleep Consultant & Physical Therapist" e cita a recomendação da AAP de 30 minutos diários de tummy time e brincadeiras [DOC H22].
-- O site diz contar com uma equipe de "40+ pediatric sleep specialists" por trás de SweetSpot, Insights e planos de sono [DOC H03, H02].
+- Blog with identified authors. The article on newborn play is by "Beth Christensen, DPT, Pediatric Sleep Consultant & Physical Therapist" and cites the AAP recommendation of 30 minutes of tummy time and play daily [DOC H22].
+- The website says a team of "40+ pediatric sleep specialists" supports SweetSpot, Insights, and sleep plans [DOC H03, H02].
 
 ### Comunidade
 
-- Não foi encontrada comunidade no app (fórum, grupos ou chat entre pais) em site, ajuda ou lojas [HIP: ausência nas fontes oficiais].
-- Existe o subreddit r/HuckleberryParents, com um AMA publicado pela conta "huckleberrycare". Ou seja, a conversa entre pais acontece fora do produto. O caráter oficial do subreddit não foi verificado [HIP H24].
+- No in-app community (forum, groups, or chat between parents) was found on the website, in the help center, or in store listings [HIP: absent from official sources].
+- The r/HuckleberryParents subreddit exists, with an AMA posted by the "huckleberrycare" account. This means conversations between parents take place outside the product. The subreddit's official status was not verified [HIP H24].
 
 ### Cuidado compartilhado
 
-- O caminho declarado é **entrar com a mesma conta** no celular do parceiro: "the way to share the app […] is to log in with your account on your husband/wife/partner's phone" [DOC H12]. Não há convites, papéis, permissões ou revogação descritos [HIP: ausência].
-- "One parent can start a sleep session, and the other can stop it." A sincronização exige que os dois estejam conectados [DOC H13].
-- Modo de economia de bateria e "Background App Refresh" desligado podem impedir a sincronização [DOC H12].
-- Relatos de logs fora de sincronia entre aparelhos com login compartilhado [HIP H23].
-- O Berry é apresentado como solução quando "shared caregivers may track your child's day differently", aceitando foto, texto ou voz para registrar vários eventos [DOC H04].
+- The documented method is to **sign in with the same account** on the partner's phone: "the way to share the app […] is to log in with your account on your husband/wife/partner's phone" [DOC H12]. No invitations, roles, permissions, or revocation are described [HIP: absent].
+- "One parent can start a sleep session, and the other can stop it." Syncing requires both to be connected [DOC H13].
+- Battery saver mode and disabled "Background App Refresh" can prevent syncing [DOC H12].
+- Reports of logs being out of sync between devices sharing a login [HIP H23].
+- Berry is presented as a solution when "shared caregivers may track your child's day differently", accepting photos, text, or voice to log multiple events [DOC H04].
 
-## Registro rápido
+## Quick logging
 
-- Free: "One-touch tracker" e timers prontos ("Built-in timers and smart reminders") [DOC H19, H01].
-- Widgets no iOS (Plus e Premium): SweetSpot, sono, mamada (peito e mamadeira), fraldas, bombinha e sólidos. Há os modelos "One Tap Tracking" e "Quick Log", que mostra o tempo desde o último evento. Cada widget pode ser configurado por filho [DOC H09]. No Android, uma avaliação diz não haver widget [HIP H20]. A tabela de planos marca widgets como "iOS only" [DOC H02].
-- Siri: registrar desfralde, fralda, mamadeira, amamentação (iniciar, trocar lado, pausar, retomar, parar) e bombinha, além de perguntar "último X" [DOC H11].
-- Apple Watch: há app de relógio. Uma correção de out/2026 trata de conversão ml/oz e sincronização no relógio [DOC H19].
-- "AI Logging" (Plus): registrar por texto, voz ou foto [DOC H19]. Uma avaliação diz que "rarely work[s]" [HIP H20].
-- Registro retroativo e edição: as atividades "podem ser editadas depois" [DOC H05].
+- Free: "One-touch tracker" and built-in timers ("Built-in timers and smart reminders") [DOC H19, H01].
+- Widgets on iOS (Plus and Premium): SweetSpot, sleep, feeding (breast and bottle), diapers, pumping, and solids. There are "One Tap Tracking" and "Quick Log" options, the latter showing the time since the last event. Each widget can be configured per child [DOC H09]. On Android, one review says there is no widget [HIP H20]. The plan comparison table marks widgets as "iOS only" [DOC H02].
+- Siri: log potty training, diapers, bottles, breastfeeding (start, switch sides, pause, resume, stop), and pumping, as well as ask for the "last X" [DOC H11].
+- Apple Watch: a watch app is available. A fix from out/2026 addresses ml/oz conversion and syncing on the watch [DOC H19].
+- "AI Logging" (Plus): log through text, voice, or photos [DOC H19]. One review says it "rarely work[s]" [HIP H20].
+- Backdated logging and editing: activities "can be edited later" [DOC H05].
 
-## Atividade em andamento e timers
+## Ongoing activity and timers
 
-- "Lock Screen Updates" (Plus e Premium) aparecem como Live Activities no iOS 16.1+ e Live Updates no Android 16+. Mostram timer de sono, timer de amamentação, SweetSpot (só iOS) e a última mamada, e cada tipo pode ser ligado ou desligado [DOC H10].
-- Uma versão anterior a 30/09/2026 (o número dela foi cortado na extração) corrigiu "duplicate or stuck timers" nas Live Activities e passou a sincronizar entre aparelhos as alterações feitas pela tela bloqueada ou pela Siri [DOC H19].
-- Timer de tummy time correto com a tela apagada (out/2026) [DOC H19].
-- Offline: dá para registrar e ver relatórios sem conexão, mas "logs may become out of sync" entre parceiros ao reconectar. O SweetSpot volta a previsões padrão [DOC H14]. Em out/2026 passou a ser possível salvar sólidos com foto offline [DOC H19].
+- "Lock Screen Updates" (Plus and Premium) appear as Live Activities on iOS 16.1+ and Live Updates on Android 16+. They show a sleep timer, breastfeeding timer, SweetSpot (iOS only), and the last feed, and each type can be turned on or off [DOC H10].
+- A version before 30/09/2026 (its number was cut off during extraction) fixed "duplicate or stuck timers" in Live Activities and began syncing changes made from the lock screen or through Siri across devices [DOC H19].
+- Accurate tummy time timer with the screen off (out/2026) [DOC H19].
+- Offline: users can log events and view reports without a connection, but "logs may become out of sync" between partners when reconnecting. SweetSpot reverts to default predictions [DOC H14]. In out/2026, saving solids with photos offline became possible [DOC H19].
 
-## Histórico e previsões
+## History and predictions
 
-- Há relatórios em dia, semana, resumo e lista, "Enhanced Reports" no Plus e relatório "Wake Windows vs. SweetSpot" [DOC H05, H02, H17].
-- **SweetSpot** (Plus e Premium, a partir de 2 meses): parte de janelas de vigília por idade e se ajusta aos registros. Um sono registrado basta para a primeira previsão [DOC H03]. Ressalvas do próprio Huckleberry:
-  - "this is like a weather forecast […] please use discretion", especialmente com doença, picos de crescimento, mudança de fuso e planos de sono [DOC H15];
-  - não dá novas previsões durante o sono noturno [DOC H15];
-  - as previsões ficam dentro da faixa de janelas apropriada para a idade [DOC H26];
-  - há "Manual Mode" para fixar janelas [DOC H16].
-- Marketing: "Up to 93% of families using our baby sleep solutions report improved sleep patterns" [DOC H19]. É **autodeclaração de satisfação, não resultado clínico**, e a metodologia não foi encontrada.
-- Berry (IA): "expert-vetted" e "contextually aware", com acesso aos registros do filho [DOC H04, H19]. A página do Berry diz que ele faz parte do Plus e do Premium, enquanto a tabela de planos e a loja dizem só Premium. É uma contradição nas fontes oficiais [DOC H04, H02, H19].
+- There are day, week, summary, and list reports, "Enhanced Reports" on Plus, and a "Wake Windows vs. SweetSpot" report [DOC H05, H02, H17].
+- **SweetSpot** (Plus and Premium, from 2 months): starts with age-based wake windows and adjusts to logs. One logged sleep session is enough for the first prediction [DOC H03]. Huckleberry's own caveats:
+  - "this is like a weather forecast […] please use discretion", especially with illness, growth spurts, time zone changes, and sleep plans [DOC H15];
+  - it does not provide new predictions during nighttime sleep [DOC H15];
+  - predictions stay within the range of age-appropriate wake windows [DOC H26];
+  - there is a "Manual Mode" to set fixed windows [DOC H16].
+- Marketing: "Up to 93% of families using our baby sleep solutions report improved sleep patterns" [DOC H19]. This is **self-reported satisfaction, not a clinical outcome**, and the methodology was not found.
+- Berry (AI): "expert-vetted" and "contextually aware", with access to the child's logs [DOC H04, H19]. The Berry page says it is included in Plus and Premium, while the plan comparison table and store listing say Premium only. This is a contradiction in official sources [DOC H04, H02, H19].
 
-## Conteúdo por fase: autoria e revisão
+## Content by stage: authorship and review
 
-- Insights: dicas de 0 a 17 meses e miniplanos a partir de 6 meses, baseados em registros e questionários mensais [DOC H17].
-- Planos de sono personalizados (Premium) feitos pela equipe de especialistas em sono pediátrico, sem "cry-it-out" [DOC H02, H19].
-- Blog com autor e credencial no artigo consultado. Revisor médico separado não foi visto [DOC H22].
-- Marcos baseados no CDC, com aviso explícito contra o uso como checklist [DOC H08].
+- Insights: tips from 0 to 17 months and mini plans from 6 months, based on logs and monthly questionnaires [DOC H17].
+- Personalized sleep plans (Premium) created by the pediatric sleep specialist team, without "cry-it-out" [DOC H02, H19].
+- Blog with an author and credentials on the article consulted. No separate medical reviewer was seen [DOC H22].
+- CDC-based milestones, with an explicit warning against using them as a checklist [DOC H08].
 
-## Comunidade e moderação
+## Community and moderation
 
-Não se aplica ao app (comunidade não encontrada). Para moderação, não há o que avaliar [HIP].
+Not applicable to the app (no community found). There is nothing to assess for moderation [HIP].
 
-## Privacidade
+## Privacy
 
-- Política: https://huckleberrycare.com/privacy-policy (link das lojas). O texto integral não foi analisado [DOC H19].
-- Rótulo da App Store:
-  - **usados para rastrear você**: dados de uso;
-  - **vinculados a você**: saúde e condicionamento, contato, conteúdo do usuário, identificadores, uso (incluindo dados de publicidade) e diagnóstico.
-  
+- Policy: https://huckleberrycare.com/privacy-policy (link from store listings). The full text was not analyzed [DOC H19].
+- App Store label:
+  - **used to track you**: usage data;
+  - **linked to you**: health and fitness, contact information, user content, identifiers, usage (including advertising data), and diagnostics.
+
   [DOC H19]
-- Data safety da Google Play: compartilha nome, e-mail e ID do dispositivo. Coleta interações, dados pessoais, falhas, diagnósticos e fotos (opcional). Os dados são criptografados em trânsito e é possível pedir exclusão. Dados de saúde não aparecem na declaração da Google Play, diferente da App Store [DOC H21]. O motivo da diferença não foi apurado [HIP].
-- Exclusão de conta pela ajuda ("How can I delete or close my account?") [DOC H27].
+- Google Play Data safety: shares name, email, and device ID. Collects interactions, personal data, crashes, diagnostics, and photos (optional). Data is encrypted in transit, and deletion can be requested. Health data does not appear in the Google Play declaration, unlike the App Store [DOC H21]. The reason for the difference was not investigated [HIP].
+- Account deletion through the help center ("How can I delete or close my account?") [DOC H27].
 
-## Pontos fortes
+## Strengths
 
-- Cobertura ampla de rotina e desenvolvimento, com tummy time de fato integrado a timer, notas e relatórios [DOC H05].
-- Ressalvas explícitas nas previsões ("weather forecast") e modo manual [DOC H15, H16].
-- Registro fora do app: widgets, Live Activities e Live Updates, Siri, relógio e IA [DOC H09, H10, H11].
-- Comportamento offline documentado com honestidade, incluindo o risco de dessincronização [DOC H14].
-- Marcos pela idade corrigida, com aviso contra o uso competitivo [DOC H08].
+- Broad coverage of routines and development, with tummy time integrated into timers, notes, and reports [DOC H05].
+- Explicit caveats for predictions ("weather forecast") and a manual mode [DOC H15, H16].
+- Logging outside the app: widgets, Live Activities and Live Updates, Siri, watch, and AI [DOC H09, H10, H11].
+- Offline behavior documented honestly, including the risk of logs falling out of sync [DOC H14].
+- Milestones based on corrected age, with a warning against competitive use [DOC H08].
 
-## Limitações e queixas recorrentes
+## Limitations and recurring complaints
 
-- Compartilhamento por login comum: sem autoria por pessoa, sem revogação individual e com relatos de dessincronização [DOC H12] [HIP H23].
-- Pop-ups frequentes de upgrade. Um usuário relata cobrança acidental de US$ 128 [HIP H20].
-- Android atrás do iOS em widgets e SweetSpot na tela bloqueada [DOC H02, H10] [HIP H20].
-- Só inglês na App Store [DOC H19].
-- Mistura ml/oz nos relatórios [HIP H25].
+- Sharing through a common login: no attribution per person, no individual revocation, and reports of logs falling out of sync [DOC H12] [HIP H23].
+- Frequent upgrade pop-ups. One user reports an accidental charge of US$ 128 [HIP H20].
+- Android lags behind iOS in widgets and SweetSpot on the lock screen [DOC H02, H10] [HIP H20].
+- English only in the App Store [DOC H19].
+- Mixed ml/oz units in reports [HIP H25].
 
-## O que o AppMaternidade pode aprender
+## What AppMaternidade can learn
 
-- Tummy time como **atividade de rotina** (timer ou "feito", notas, relatórios, desligável) é o mínimo de mercado, não um diferencial [DOC H05, H06].
-- Escrever as ressalvas da previsão na própria interface ("como previsão do tempo") e oferecer modo manual [DOC H15, H16].
-- Documentar o comportamento offline e o risco de conflito, em vez de prometer sincronia perfeita [DOC H14].
-- Mostrar timers na tela bloqueada e permitir que o segundo cuidador encerre um timer iniciado pelo primeiro [DOC H10, H13]. Isso precisa de identidade por pessoa: a Huckleberry usa login compartilhado [DOC H12].
-- Usar idade corrigida em marcos e conteúdo [DOC H08].
-- Não usar paywall agressivo em momentos de cuidado [HIP H20].
+- Tummy time as a **routine activity** (timer or "feito", notes, reports, can be disabled) is a market baseline, not a differentiator [DOC H05, H06].
+- Put prediction caveats in the interface itself ("como previsão do tempo") and offer a manual mode [DOC H15, H16].
+- Document offline behavior and the risk of conflicts instead of promising perfect syncing [DOC H14].
+- Show timers on the lock screen and allow the second caregiver to stop a timer started by the first [DOC H10, H13]. This requires an identity for each person: Huckleberry uses a shared login [DOC H12].
+- Use corrected age for milestones and content [DOC H08].
+- Do not use an aggressive paywall during care [HIP H20].
 
-## O que não copiar
+## What not to copy
 
-- Marca, nome "SweetSpot®" (marca registrada), "Berry", ilustrações, paleta, textos, o conteúdo do blog e dos planos, e a lista proprietária de "Insights".
-- O compartilhamento por senha comum [DOC H12].
-- Números de marketing sem metodologia ("Up to 93%") [DOC H19].
+- The brand, the name "SweetSpot®" (registered trademark), "Berry", illustrations, color palette, text, blog and plan content, and the proprietary list of "Insights".
+- Sharing through a common password [DOC H12].
+- Marketing figures without a methodology ("Up to 93%") [DOC H19].
 
 ## Fontes
 
-Consulta de todas: 22/10/2026.
+All accessed on: 22/10/2026.
 
-| ID | Fonte | Tipo de evidência | Plataforma/versão visível |
+| ID | Source | Evidence type | Visible platform/version |
 | --- | --- | --- | --- |
-| H01 | https://huckleberrycare.com/product/tracking | Site oficial: rastreamento e planos | — |
-| H02 | https://huckleberrycare.com/product/premium | Site oficial: tabela de planos Free/Plus/Premium (o mesmo quadro aparece em /product/plus e /product/free) | — |
-| H03 | https://huckleberrycare.com/product/sweetspot | Site oficial: SweetSpot | — |
-| H04 | https://huckleberrycare.com/product/berry | Site oficial: Berry | — |
-| H05 | https://huckleberrycare.com/blog/activities-tracking | Blog oficial (anúncio, atualizado em 13/08/2025) | — |
-| H06 | https://huckleberry.zendesk.com/hc/en-us/articles/4533227079315-What-other-events-can-I-track-in-the-app-besides-sleep | Central de ajuda | — |
-| H07 | https://huckleberry.zendesk.com/hc/en-us/articles/4968861861267-I-don-t-see-an-activity-I-want-to-track-can-I-add-my-own | Central de ajuda | — |
-| H08 | https://huckleberry.zendesk.com/hc/en-us/articles/54962203960083-What-is-the-Milestones-Tracker | Central de ajuda | — |
-| H09 | https://huckleberry.zendesk.com/hc/en-us/articles/15265962112787-iOS-Widgets-Frequently-Asked-Questions-FAQ | Central de ajuda | iOS 14+ |
-| H10 | https://huckleberry.zendesk.com/hc/en-us/articles/18411865969427-iOS-Live-Activities-Frequently-Asked-Questions-FAQ | Central de ajuda (Lock Screen Updates) | iOS 16.1+; Android 16+ |
-| H11 | https://huckleberry.zendesk.com/hc/en-us/articles/27299831807251-Siri-Voice-Commands | Central de ajuda | iOS |
-| H12 | https://huckleberry.zendesk.com/hc/en-us/articles/360062801213-How-do-I-share-my-account-with-my-husband-wife-partner-or-another-caregiver | Central de ajuda | — |
-| H13 | https://huckleberry.zendesk.com/hc/en-us/articles/360025562694-Can-another-caregiver-track-sleep-for-the-same-child | Central de ajuda | — |
-| H14 | https://huckleberry.zendesk.com/hc/en-us/articles/4499354970643-Can-I-use-the-app-offline | Central de ajuda | — |
-| H15 | https://huckleberry.zendesk.com/hc/en-us/articles/360025709813-How-do-I-use-SweetSpot | Central de ajuda | — |
-| H16 | https://huckleberry.zendesk.com/hc/en-us/articles/360053175093-SweetSpot-Manual-Mode-What-is-it-and-how-do-I-use-it | Central de ajuda | — |
-| H17 | https://huckleberry.zendesk.com/hc/en-us/articles/28263913356563-What-is-Huckleberry-Insights | Central de ajuda | — |
-| H18 | https://huckleberry.zendesk.com/hc/en-us/articles/5055945148819-Can-I-export-my-data-from-the-app | Central de ajuda | — |
-| H19 | https://apps.apple.com/us/app/huckleberry-baby-tracker/id1169136078 | Loja: descrição, notas de versão 0.9.309–0.9.314, compras, rótulo de privacidade e idiomas | iOS 0.9.314; watchOS 10.2+ |
-| H20 | https://play.google.com/store/apps/details?id=com.huckleberry_labs.app&hl=en_US&gl=US | Loja: descrição e avaliações (resposta de 08/09/2026) | Android. Atualizado em 20/10/2026 |
-| H21 | https://play.google.com/store/apps/datasafety?id=com.huckleberry_labs.app&hl=en | Loja: Data safety | Android |
-| H22 | https://huckleberrycare.com/blog/best-newborn-play-and-wake-activities | Blog oficial com autoria | — |
-| H23 | https://www.reddit.com/r/HuckleberryParents/comments/1rj63o9/app_log_in_shared_with_husband_but_its_always_out/ | Relato de usuário no Reddit (só trecho de busca) | — |
-| H24 | https://www.reddit.com/r/HuckleberryParents/comments/1qvsrlm/help_us_build_whats_next_ama_with_huckleberrys/ | Reddit: AMA atribuído à conta huckleberrycare (só trecho de busca) | — |
-| H25 | https://apps.apple.com/us/app/huckleberry-baby-tracker/id1169136078?see-all=reviews&platform=iphone | Avaliações de usuários | iOS |
-| H26 | https://huckleberry.zendesk.com/hc/en-us/articles/36524002219923-Why-do-my-SweetSpot%E2%93%87-predictions-not-match-Schedule-Creator-wake-windows | Central de ajuda | — |
-| H27 | https://huckleberry.zendesk.com/hc/en-us/sections/1500000353521-Account-Management | Central de ajuda: gestão de conta (compartilhar, excluir conta) | — |
+| H01 | https://huckleberrycare.com/product/tracking | Official website: tracking and plans | — |
+| H02 | https://huckleberrycare.com/product/premium | Official website: Free/Plus/Premium plan comparison table (the same table appears at /product/plus and /product/free) | — |
+| H03 | https://huckleberrycare.com/product/sweetspot | Official website: SweetSpot | — |
+| H04 | https://huckleberrycare.com/product/berry | Official website: Berry | — |
+| H05 | https://huckleberrycare.com/blog/activities-tracking | Official blog (announcement, updated on 13/08/2025) | — |
+| H06 | https://huckleberry.zendesk.com/hc/en-us/articles/4533227079315-What-other-events-can-I-track-in-the-app-besides-sleep | Help center | — |
+| H07 | https://huckleberry.zendesk.com/hc/en-us/articles/4968861861267-I-don-t-see-an-activity-I-want-to-track-can-I-add-my-own | Help center | — |
+| H08 | https://huckleberry.zendesk.com/hc/en-us/articles/54962203960083-What-is-the-Milestones-Tracker | Help center | — |
+| H09 | https://huckleberry.zendesk.com/hc/en-us/articles/15265962112787-iOS-Widgets-Frequently-Asked-Questions-FAQ | Help center | iOS 14+ |
+| H10 | https://huckleberry.zendesk.com/hc/en-us/articles/18411865969427-iOS-Live-Activities-Frequently-Asked-Questions-FAQ | Help center (Lock Screen Updates) | iOS 16.1+; Android 16+ |
+| H11 | https://huckleberry.zendesk.com/hc/en-us/articles/27299831807251-Siri-Voice-Commands | Help center | iOS |
+| H12 | https://huckleberry.zendesk.com/hc/en-us/articles/360062801213-How-do-I-share-my-account-with-my-husband-wife-partner-or-another-caregiver | Help center | — |
+| H13 | https://huckleberry.zendesk.com/hc/en-us/articles/360025562694-Can-another-caregiver-track-sleep-for-the-same-child | Help center | — |
+| H14 | https://huckleberry.zendesk.com/hc/en-us/articles/4499354970643-Can-I-use-the-app-offline | Help center | — |
+| H15 | https://huckleberry.zendesk.com/hc/en-us/articles/360025709813-How-do-I-use-SweetSpot | Help center | — |
+| H16 | https://huckleberry.zendesk.com/hc/en-us/articles/360053175093-SweetSpot-Manual-Mode-What-is-it-and-how-do-I-use-it | Help center | — |
+| H17 | https://huckleberry.zendesk.com/hc/en-us/articles/28263913356563-What-is-Huckleberry-Insights | Help center | — |
+| H18 | https://huckleberry.zendesk.com/hc/en-us/articles/5055945148819-Can-I-export-my-data-from-the-app | Help center | — |
+| H19 | https://apps.apple.com/us/app/huckleberry-baby-tracker/id1169136078 | Store listing: description, release notes 0.9.309–0.9.314, purchases, privacy label, and languages | iOS 0.9.314; watchOS 10.2+ |
+| H20 | https://play.google.com/store/apps/details?id=com.huckleberry_labs.app&hl=en_US&gl=US | Store listing: description and reviews (response from 08/09/2026) | Android. Updated on 20/10/2026 |
+| H21 | https://play.google.com/store/apps/datasafety?id=com.huckleberry_labs.app&hl=en | Store listing: Data safety | Android |
+| H22 | https://huckleberrycare.com/blog/best-newborn-play-and-wake-activities | Official blog with identified author | — |
+| H23 | https://www.reddit.com/r/HuckleberryParents/comments/1rj63o9/app_log_in_shared_with_husband_but_its_always_out/ | User report on Reddit (search snippet only) | — |
+| H24 | https://www.reddit.com/r/HuckleberryParents/comments/1qvsrlm/help_us_build_whats_next_ama_with_huckleberrys/ | Reddit: AMA attributed to the huckleberrycare account (search snippet only) | — |
+| H25 | https://apps.apple.com/us/app/huckleberry-baby-tracker/id1169136078?see-all=reviews&platform=iphone | User reviews | iOS |
+| H26 | https://huckleberry.zendesk.com/hc/en-us/articles/36524002219923-Why-do-my-SweetSpot%E2%93%87-predictions-not-match-Schedule-Creator-wake-windows | Help center | — |
+| H27 | https://huckleberry.zendesk.com/hc/en-us/sections/1500000353521-Account-Management | Help center: account management (sharing, deleting an account) | — |
 
-## Questões abertas
+## Open questions
 
-- Existe convite por pessoa, com conta própria para cada cuidador, numa versão recente? A ajuda consultada só descreve login compartilhado.
-- O Berry está no Plus ou só no Premium? As fontes oficiais divergem.
-- Por que a Data safety da Google Play não declara dados de saúde, enquanto a App Store declara?
-- Há previsão de pt-BR e de comunidade?
+- Is there an invitation for each person, with a separate account for each caregiver, in a recent version? The help pages consulted only describe a shared login.
+- Is Berry included in Plus or only in Premium? Official sources disagree.
+- Why does Google Play Data safety not declare health data, while the App Store does?
+- Are pt-BR and a community planned?
 
-## Limites desta análise
+## Limits of this analysis
 
-- Nada foi observado em execução: nenhum app instalado e nenhuma conta criada.
-- A política de privacidade completa não foi lida. Os rótulos das lojas são autodeclarações não verificadas pelas lojas.
-- Os relatos do Reddit vieram só de trechos de busca [HIP]. As avaliações são anedóticas.
-- Preços em USD, fotografia de 22/10/2026, incluindo descontos promocionais do site.
-- Na App Store, as datas sem ano ("Oct 7", "Sep 30") foram lidas como 2026, pelo padrão da loja [HIP].
+- Nothing was observed in use: no app was installed and no account was created.
+- The full privacy policy was not read. Store labels are self-reported declarations that the stores have not verified.
+- Reddit reports came only from search snippets [HIP]. Reviews are anecdotal.
+- Prices in USD, a snapshot from 22/10/2026, including promotional discounts on the website.
+- In the App Store, dates without a year ("Oct 7", "Sep 30") were interpreted as 2026, based on the store's pattern [HIP].

@@ -1,45 +1,45 @@
 ---
 tipo: convencoes
-status: em uso
-responsavel: Hermes (coordenador da APP-001)
+status: in use
+responsavel: Hermes (coordinator of the APP-001)
 revisado_em: 2026-10-22
 ---
 
-# Convenções do cofre
+# Vault conventions
 
-Regras de escrita usadas por todos os documentos do cofre AppMaternidade.
+Writing rules used by all documents in the AppMaternidade vault.
 
-## Status de documento
+## Document status
 
-| Status | Significado |
+| Status | Meaning |
 | --- | --- |
-| rascunho | Texto em produção; pode mudar sem aviso. |
-| em revisão | Completo, aguardando revisão independente ou de Daniel. |
-| proposta | Recomendação do Hermes pronta para decisão; não aprovada. |
-| aprovado | Somente quando Daniel aprovou de fato (com data e registro). |
+| draft | Text in progress; may change without notice. |
+| under review | Complete, awaiting independent review or review by Daniel. |
+| proposed | Hermes recommendation ready for decision; not approved. |
+| approved | Only when Daniel has actually approved it (with date and record). |
 
-## Status de ADR
+## ADR status
 
-Proposta, Aceita, Rejeitada ou Substituída. Só uma aprovação real de Daniel torna um ADR "Aceita". A recomendação técnica do Hermes aparece como recomendação, nunca como decisão tomada.
+Proposed, Accepted, Rejected or Superseded. Only an actual approval by Daniel makes an ADR "Aceita". Hermes's technical recommendation appears as a recommendation, never as a decision made.
 
-## Classes de evidência
+## Evidence classes
 
-| Marca | Significado |
+| Mark | Meaning |
 | --- | --- |
-| [EXEC] | Observado em execução, com comando, ambiente e data. |
-| [CÓDIGO] | Confirmado no código, no commit indicado, com permalink e linhas. |
-| [DOC] | Declarado em documentação, README, site, loja ou central de ajuda. |
-| [HIP] | Hipótese ou inferência ainda não verificada. |
+| [EXEC] | Observed at runtime, with command, environment and date. |
+| [CÓDIGO] | Confirmed in the code, at the indicated commit, with permalink and lines. |
+| [DOC] | Stated in documentation, README, website, app store or help center. |
+| [HIP] | Hypothesis or inference not yet verified. |
 
-Marketing não é resultado clínico. Ausência de menção numa página não prova ausência no produto.
+Marketing is not a clinical outcome. Absence of a mention on a page does not prove absence in the product.
 
-## Datas, fontes e links
+## Dates, sources and links
 
-- Data de consulta das fontes externas desta etapa: 22/10/2026 (America/Sao_Paulo), salvo indicação.
-- Preços são fotografias datadas, em USD quando a fonte usa USD, sem impostos nem câmbio.
-- Links entre notas são links Markdown relativos (por exemplo, `[Home](Home.md)`), legíveis fora do Obsidian.
-- Nomes de arquivo sem espaços e sem acentos, com `_` entre palavras.
+- Access date of the external sources for this stage: 22/10/2026 (America/Sao_Paulo), unless otherwise indicated.
+- Prices are dated snapshots, in USD when the source uses USD, excluding taxes and currency conversion.
+- Links between notes are relative Markdown links (for example, `[Home](Home.md)`), readable outside Obsidian.
+- File names without spaces and without accents, with `_` between words.
 
-## Cabeçalho de cada documento
+## Header of each document
 
-Frontmatter com `tipo`, `status`, `responsavel`, `revisado_em` e `fontes_principais` quando houver. Cada documento termina com "Questões abertas" e, quando aplicável, "Limites desta análise".
+Frontmatter with `tipo`, `status`, `responsavel`, `revisado_em` and `fontes_principais` when applicable. Each document ends with "Questões abertas" and, when applicable, "Limites desta análise".
