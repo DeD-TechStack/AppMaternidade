@@ -295,14 +295,18 @@ function conferirValoresDentro(medida: Medida) {
 
 /** Os quatro números mais longos que o produto escreve: contagens de três dígitos e o sono de 12 h 59 (HOJE.umaHoraEMinutos). */
 const VALORES_LONGOS = ['188', '188', '188', '12 h 59']
+/** O sono mais longo possível no dia: 23 h 59. */
+const VALORES_LONGOS_23H = ['188', '188', '188', '23 h 59']
 
 /** Troca o texto dos quatro números do dia numa cópia da página (o jsdom do teste, nunca o produto) antes de ler o innerHTML. */
-function raizComValoresLongos(container: HTMLElement): string {
-  const copia = container.cloneNode(true) as HTMLElement
-  const numeros = [...copia.querySelectorAll<HTMLElement>('[data-numero-do-dia]')]
-  expect(numeros, 'a página não tem os quatro números do dia').toHaveLength(CELULAS)
-  for (const [i, numero] of numeros.entries()) numero.textContent = VALORES_LONGOS[i]
-  return raizDaPagina(copia)
+function raizComValores(valores: string[]) {
+  return (container: HTMLElement): string => {
+    const copia = container.cloneNode(true) as HTMLElement
+    const numeros = [...copia.querySelectorAll<HTMLElement>('[data-numero-do-dia]')]
+    expect(numeros, 'a página não tem os quatro números do dia').toHaveLength(CELULAS)
+    for (const [i, numero] of numeros.entries()) numero.textContent = valores[i]
+    return raizDaPagina(copia)
+  }
 }
 
 const CASOS = [
@@ -312,7 +316,8 @@ const CASOS = [
 
 const CASOS_DOS_VALORES = [
   ...CASOS.map(({ nome, opcoes }) => ({ nome, opcoes, raiz: raizDaPagina })),
-  { nome: 'valores longos', opcoes: CASOS[0].opcoes, raiz: raizComValoresLongos },
+  { nome: 'valores longos', opcoes: CASOS[0].opcoes, raiz: raizComValores(VALORES_LONGOS) },
+  { nome: 'valores longos (sono 23 h 59)', opcoes: CASOS[0].opcoes, raiz: raizComValores(VALORES_LONGOS_23H) },
 ]
 const TEMAS: Tema[] = ['claro', 'madrugada']
 const JANELAS = [
