@@ -27,7 +27,7 @@ pkill -9 -x chrome || true
 sleep 2
 kill $MONPID || true
 grep -c GUARD /tmp/mon.log
-snap depois-do-vitest; sleep 5; snap 5s-depois; ps -eo stat,rss,vsz,etimes,comm --sort=-vsz | head -n 6
+snap depois-do-vitest; echo "== comm por contagem"; ps -eo comm | sort | uniq -c | sort -rn | head -n 8; echo "== amostra dos que nao sao do runner"; ps -eo pid,ppid,pgid,stat,rss,etimes,args --sort=-etimes | grep -v 'Runner\|containerd\|docker\|provjob\|\[' | tail -n 25 | cut -c1-260; sleep 5; snap 5s-depois
 echo "== paginas guardadas"; ls /tmp/keep | head
 d=$(ls -d /tmp/keep/*/ | head -n 1)
 echo "== usando $d"; ls "$d"
