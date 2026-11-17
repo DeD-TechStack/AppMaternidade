@@ -138,9 +138,9 @@ describe('A11Y-005: "Ver prévia" alcançável por Tab e ativável pelo teclado,
         expect(tabular(), 'o Tab chega ao botão "Ver prévia"').toBe(botao)
         expect(tabular(true)).toBe(anterior)
 
-        // Do último campo de texto, no máximo duas paradas (o grupo da faixa conta uma) até o botão.
+        // Do último campo de texto, no máximo três paradas (o botão "Incluir resumo da rotina" e o grupo da faixa contam uma cada) até o botão.
         campoPorId(compositor.ultimoCampo).focus()
-        const percurso = [tabular(), tabular()]
+        const percurso = [tabular(), tabular(), tabular()]
         expect(percurso).toContain(botao)
       })
 
