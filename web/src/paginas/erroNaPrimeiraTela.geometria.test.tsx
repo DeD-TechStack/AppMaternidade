@@ -31,7 +31,11 @@ import { criarMundoDeTeste } from '../teste/rotina.fixture.ts'
 // medições feitas, o teste FALHA. Com `AUD_CAPTURAS=<pasta>`, cada medição também grava a captura
 // `<rota>_<largura>x<altura>.png` nessa pasta.
 
-const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe'
+const CANDIDATOS_NO_LINUX = ['/usr/bin/google-chrome', '/usr/bin/google-chrome-stable', '/usr/bin/chromium', '/usr/bin/chromium-browser']
+const CHROME =
+  process.platform === 'win32'
+    ? 'C:/Program Files/Google/Chrome/Application/chrome.exe'
+    : (process.env.CHROME_PATH ?? CANDIDATOS_NO_LINUX.find((caminho) => existsSync(caminho)) ?? CANDIDATOS_NO_LINUX[0])
 const PASTA_DIST = resolve(import.meta.dirname, '..', '..', 'dist')
 const PASTA_CSS = join(PASTA_DIST, 'assets')
 const TENTAR_DE_NOVO = 'Tentar de novo'
@@ -172,7 +176,8 @@ function argumentosDoChrome(perfil: string, janela: Tela, alvo: string, saida: s
     '--headless=new',
     '--no-sandbox',
     '--disable-gpu',
-    '--disable-crashpad-for-testing',
+    // CI-UBUNTU: no Chrome 157 do Linux essa opção derruba o processo ("FD ownership violation"); no Windows fica.
+    ...(process.platform === 'win32' ? ['--disable-crashpad-for-testing'] : []),
     '--no-first-run',
     '--allow-file-access-from-files',
     `--user-data-dir=${perfil}`,

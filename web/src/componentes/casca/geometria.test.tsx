@@ -175,7 +175,9 @@ async function medirNoChrome(cabecalhoHtml: string, largura: number, tema: Tema)
           '--headless=new',
           '--no-sandbox',
           '--disable-gpu',
-          '--disable-crashpad-for-testing',
+          // CI-UBUNTU: no Chrome 157 do Linux essa opção derruba o processo ("FD ownership violation"): o Chrome
+          // nunca devolve a medida, cada queda aciona o apport e o runner morre por falta de memória. No Windows fica.
+          ...(process.platform === 'win32' ? ['--disable-crashpad-for-testing'] : []),
           '--no-first-run',
           '--allow-file-access-from-files',
           '--disable-dev-shm-usage',
