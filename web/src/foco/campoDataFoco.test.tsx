@@ -25,9 +25,10 @@ function defeitosDaRegra(css: string): string[] {
     if (!seletor.includes(alvo)) defeitos.push(`o seletor não cobre ${tipo}`)
   }
 
-  const anel = /outline:\s*([\d.]+)px\s+solid\s+var\(--cor-foco\)/.exec(corpo)
-  if (!anel) defeitos.push('o outline não é "<largura>px solid var(--cor-foco)"')
+  const anel = /outline:\s*([\d.]+)rem\s+solid\s+var\(--cor-foco\)/.exec(corpo)
+  if (!anel) defeitos.push('o outline não é "<largura>rem solid var(--cor-foco)"')
   else if (!(Number(anel[1]) > 0)) defeitos.push('a largura do outline é zero')
+  if (/[0-9]+px\b/.test(corpo)) defeitos.push('a regra tem px literal')
   if (/outline:\s*(none|0)\s*(;|$)/.test(corpo)) defeitos.push('o outline está desligado')
   if (/transition/.test(corpo)) defeitos.push('a regra tem transition')
   return defeitos
@@ -64,6 +65,11 @@ describe('foco do botão do seletor de data e hora (A11Y-Z1, F-03)', () => {
     expect(foco).not.toMatch(/transition/)
   })
 
+  it('foco.css não tem px literal', () => {
+    expect(foco, 'falta web/src/styles/foco.css').not.toBe('')
+    expect(foco).not.toMatch(/[0-9]+px\b/)
+  })
+
   it('foco.css não tem cor em hexadecimal', () => {
     expect(foco, 'falta web/src/styles/foco.css').not.toBe('')
     expect(foco).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
@@ -73,8 +79,8 @@ describe('foco do botão do seletor de data e hora (A11Y-Z1, F-03)', () => {
     const certa = `input[type='date']:focus-within,
 input[type='time']:focus-within,
 input[type='datetime-local']:focus-within {
-  outline: 3px solid var(--cor-foco);
-  outline-offset: 2px;
+  outline: 0.1875rem solid var(--cor-foco);
+  outline-offset: 0.125rem;
 }`
 
     it('aceita a regra certa', () => {
@@ -82,13 +88,19 @@ input[type='datetime-local']:focus-within {
     })
 
     it('reprova a regra com outline: none', () => {
-      const defeitos = defeitosDaRegra(certa.replace('outline: 3px solid var(--cor-foco);', 'outline: none;'))
+      const defeitos = defeitosDaRegra(certa.replace('outline: 0.1875rem solid var(--cor-foco);', 'outline: none;'))
       expect(defeitos.length).toBeGreaterThan(0)
+    })
+
+    it('reprova a regra em rem com px literal', () => {
+      expect(defeitosDaRegra(certa.replace('0.1875rem', '3px')).length).toBeGreaterThan(0)
+      expect(defeitosDaRegra(certa.replace('outline-offset: 0.125rem', 'outline-offset: 2px')))
+        .toContain('a regra tem px literal')
     })
 
     it('reprova a regra que cobre só o tipo date', () => {
       const soDate = `input[type='date']:focus-within {
-  outline: 3px solid var(--cor-foco);
+  outline: 0.1875rem solid var(--cor-foco);
 }`
       const defeitos = defeitosDaRegra(soDate)
       expect(defeitos).toContain('o seletor não cobre time')
@@ -96,7 +108,7 @@ input[type='datetime-local']:focus-within {
     })
 
     it('reprova a regra com largura zero e a com transition', () => {
-      expect(defeitosDaRegra(certa.replace('3px solid', '0px solid')).length).toBeGreaterThan(0)
+      expect(defeitosDaRegra(certa.replace('0.1875rem solid', '0rem solid')).length).toBeGreaterThan(0)
       expect(defeitosDaRegra(certa.replace('outline-offset', 'transition: outline 1s;\n  outline-offset')).length).toBeGreaterThan(0)
     })
 
