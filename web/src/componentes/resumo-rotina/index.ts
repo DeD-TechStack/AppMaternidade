@@ -6,6 +6,7 @@
 
 export { anexarBloco, separadorAntesDoBloco } from './bloco.ts'
 export { NUMERO_DO_ESTADO, criarControladorDoResumo } from './controlador.ts'
+export { PainelDoResumo } from './PainelDoResumo.tsx'
 export type { CaixaDoNumero, ControladorDoResumo, EstadoDoResumo, OpcoesDoControlador, SituacaoDoResumo } from './controlador.ts'
 export type { MotivoDoImpedimento, OpcaoDeBebe } from './bebes.ts'
 export type { ChaveDoNumero, PeriodoDoResumo } from './calculo.ts'

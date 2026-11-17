@@ -1,3 +1,4 @@
+import { createRef } from 'react'
 import { render } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { Cartao } from './Cartao.tsx'
@@ -26,6 +27,34 @@ describe('Cartao: markup', () => {
     expect(cartao.getAttribute('data-h')).toBe('coluna cartao')
     expect(cartao.matches("[data-h~='cartao']")).toBe(true)
     expect(cartao.matches("[data-h='cartao']")).toBe(false)
+  })
+
+  it('aceita as="figure" e mantém o data-h', () => {
+    const { container } = render(<Cartao as="figure">x</Cartao>)
+    const figura = container.firstElementChild!
+    expect(figura.tagName).toBe('FIGURE')
+    expect(figura.getAttribute('data-h')).toBe('cartao')
+  })
+
+  it('repassa o ref (React 19: ref é prop) para o elemento do cartão', () => {
+    const ref = createRef<HTMLDivElement>()
+    const { container } = render(<Cartao ref={ref}>x</Cartao>)
+    expect(ref.current).toBe(container.firstElementChild)
+  })
+
+  it('repassa o ref também com as="section" e com ref de função', () => {
+    let visto: HTMLElement | null = null
+    const { container } = render(
+      <Cartao
+        as="section"
+        ref={(no) => {
+          visto = no
+        }}
+      >
+        x
+      </Cartao>,
+    )
+    expect(visto).toBe(container.querySelector('section'))
   })
 
   it.each(['article', 'li', 'section'] as const)('aceita as="%s"', (como) => {

@@ -23,6 +23,15 @@ describe('Colunas: markup', () => {
     expect(filhas.map((f) => f.getAttribute('data-h'))).toEqual(['coluna', 'coluna'])
   })
 
+  it.each([960, 1280] as const)('aceita a quebra de %d e a grava em data-h-quebra', (quebra) => {
+    const { container } = render(
+      <Colunas aPartirDe={quebra}>
+        <Coluna>a</Coluna>
+      </Colunas>,
+    )
+    expect(container.firstElementChild!.getAttribute('data-h-quebra')).toBe(String(quebra))
+  })
+
   it('vao="midia" (texto e mídia) e a quebra escolhida vão em atributos', () => {
     const { container } = render(
       <Colunas vao="midia" aPartirDe={1100} alinhar="centro">
@@ -88,7 +97,7 @@ describe('Colunas: vão e quebra (layout.css)', () => {
   })
 
   it('as quebras são só pontos de quebra que o código já tem hoje, e cada uma liga as frações a partir da largura dela', () => {
-    expect([...QUEBRAS_DE_COLUNAS]).toEqual([768, 900, 992, 1024, 1100, 1200])
+    expect([...QUEBRAS_DE_COLUNAS]).toEqual([768, 900, 960, 992, 1024, 1100, 1200, 1280])
     for (const quebra of QUEBRAS_DE_COLUNAS) {
       const bloco = blocoDe(cssDoLayout, `@media (min-width: ${quebra}px)`)
       expect(bloco, String(quebra)).not.toBeNull()

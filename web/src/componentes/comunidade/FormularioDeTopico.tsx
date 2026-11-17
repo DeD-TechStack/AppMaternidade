@@ -1,6 +1,6 @@
-import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
-import { COMUM_COMUNIDADE, FORMULARIO_TOPICO, TX } from '../../conteudo/comunidade.ts'
+import { COMUM_COMUNIDADE, FORMULARIO_TOPICO, RESUMO_NA_COMUNIDADE, TX } from '../../conteudo/comunidade.ts'
 import type { Resultado } from '../../dados/comum.ts'
 import type { Espaco, PerfilPublico } from '../../dados/comunidade.ts'
 import { LIMITES, conferirLimite, type FaixaBebe } from '../../dados/comunidade.regras.ts'
@@ -8,6 +8,7 @@ import { Cartao } from '../base/layout/Cartao.tsx'
 import { Pilha } from '../base/layout/Pilha.tsx'
 import { useFocoNoResumo } from '../conta/foco.ts'
 import { BOTAO_PRINCIPAL, BOTAO_SECUNDARIO } from '../conta/Partes.tsx'
+import { PainelDoResumo, anexarBloco } from '../resumo-rotina/index.ts'
 import { ResumoDeErro, Selo } from './Avisos.tsx'
 import { CampoComContador, EscolhaDeFaixa } from './Campos.tsx'
 import { useDadosComunidade } from './dados.ts'
@@ -23,12 +24,20 @@ interface Props {
   edicao: { id: string; titulo: string; corpo: string; faixa: FaixaBebe | null } | null
   /** O banco não achou a linha para editar: a tela relê o tópico. */
   aoNaoEditavel?: () => void
+  /** O aviso de status da página (RF12:RF-11): o novo tópico o mostra em `role="status"`. */
+  aoAvisar?: (mensagem: string) => void
 }
+
+const ID_DO_CAMPO_DO_CORPO = 'campo-corpo'
+// O `.cm-botao` é `nowrap`: a 390 px com 200 % de fonte o rótulo passava da tela. Estas classes o deixam quebrar; em texto (F10), para "Ver prévia" ser o único primário.
+const BOTAO_DO_RESUMO = 'cm-botao cm-botao-texto alvo-toque h-auto max-w-full text-start whitespace-normal wrap-anywhere'
 
 // O formulário de C4 (MAT-40:RF-04), de novo tópico e de edição: título de 3 a 120 caracteres, corpo de
 // 1 a 5000 e faixa opcional, cada campo com contador. "Ver prévia" só vale com tudo dentro do limite. A
-// prévia mostra o tópico como vai aparecer, e só o botão dela grava ("Publicar" ou "Salvar").
-export function FormularioDeTopico({ espaco, perfilId, edicao, aoNaoEditavel }: Props) {
+// prévia mostra o tópico como vai aparecer, e só o botão dela grava ("Publicar" ou "Salvar"). No tópico novo
+// (não na edição), o botão "Incluir resumo da rotina" abre o painel do resumo (RF12): este formulário é dono do
+// botão, do estado aberto, da marca "houve inserção" e do foco; do painel só recebe o texto do bloco.
+export function FormularioDeTopico({ espaco, perfilId, edicao, aoNaoEditavel, aoAvisar }: Props) {
   const dados = useDadosComunidade()
   const navegar = useNavigate()
   const [titulo, setTitulo] = useState(edicao?.titulo ?? '')
@@ -58,6 +67,42 @@ export function FormularioDeTopico({ espaco, perfilId, edicao, aoNaoEditavel }: 
   const botaoDoErro =
     erro?.acao === 'conferir' ? COMUM_COMUNIDADE.conferir : erro?.acao ? COMUM_COMUNIDADE.tentarDeNovo : undefined
 
+  // O resumo da rotina (RF12): o painel, a marca de que houve inserção (vale até publicar) e o foco.
+  const comResumo = edicao === null
+  const [painelAberto, setPainelAberto] = useState(false)
+  const [houveResumo, setHouveResumo] = useState(false)
+  const botaoDoResumo = useRef<HTMLButtonElement>(null)
+  const focoNoCorpo = useRef(false)
+  const idDoPainel = useId()
+  const idDoTituloDoPainel = useId()
+
+  function abrirOuFocarPainel() {
+    if (painelAberto) document.getElementById(idDoTituloDoPainel)?.focus()
+    else setPainelAberto(true)
+  }
+
+  function fecharPainel() {
+    setPainelAberto(false)
+    botaoDoResumo.current?.focus()
+  }
+
+  function inserirResumo(bloco: string) {
+    setCorpo((atual) => anexarBloco(atual, bloco))
+    setHouveResumo(true)
+    setPainelAberto(false)
+    focoNoCorpo.current = true
+    aoAvisar?.(RESUMO_NA_COMUNIDADE.inserido)
+  }
+
+  // Depois da inserção o foco vai ao campo do corpo, com o cursor no fim do texto.
+  useLayoutEffect(() => {
+    if (!focoNoCorpo.current) return
+    focoNoCorpo.current = false
+    const campo = document.getElementById(ID_DO_CAMPO_DO_CORPO) as HTMLTextAreaElement | null
+    campo?.focus()
+    campo?.setSelectionRange(campo.value.length, campo.value.length)
+  })
+
   // A11Y-F4: o passo que some leva o foco com ele; o foco vai ao título da prévia, ou ao primeiro campo na volta.
   const tituloDaPrevia = useRef<HTMLHeadingElement>(null)
   const trocouDePasso = useRef(false)
@@ -71,6 +116,7 @@ export function FormularioDeTopico({ espaco, perfilId, edicao, aoNaoEditavel }: 
   function aoVerPrevia(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault()
     if (!valido) return
+    setPainelAberto(false)
     trocouDePasso.current = true
     setPrevia(true)
   }
@@ -115,6 +161,7 @@ export function FormularioDeTopico({ espaco, perfilId, edicao, aoNaoEditavel }: 
             {FORMULARIO_TOPICO.previa}
           </h2>
           <p>{TX.tx05}</p>
+          {houveResumo ? <p>{RESUMO_NA_COMUNIDADE.avisoNaPrevia}</p> : null}
         </Pilha>
         <Cartao as="article" className="flex flex-col gap-3 border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)]">
           <Selo />
@@ -160,16 +207,37 @@ export function FormularioDeTopico({ espaco, perfilId, edicao, aoNaoEditavel }: 
         mensagemDoLimite={FORMULARIO_TOPICO.erroTitulo}
         obrigatorio
       />
-      <CampoComContador
-        id="campo-corpo"
-        rotulo={FORMULARIO_TOPICO.campoCorpo}
-        valor={corpo}
-        aoMudar={setCorpo}
-        limite={LIMITES.corpoTopico}
-        mensagemDoLimite={FORMULARIO_TOPICO.erroCorpo}
-        linhas={8}
-        obrigatorio
-      />
+      <Pilha vao="grupo">
+        <CampoComContador
+          id={ID_DO_CAMPO_DO_CORPO}
+          rotulo={FORMULARIO_TOPICO.campoCorpo}
+          valor={corpo}
+          aoMudar={setCorpo}
+          limite={LIMITES.corpoTopico}
+          mensagemDoLimite={FORMULARIO_TOPICO.erroCorpo}
+          linhas={8}
+          obrigatorio
+        />
+        {comResumo ? (
+          <>
+            <div>
+              <button
+                ref={botaoDoResumo}
+                type="button"
+                className={BOTAO_DO_RESUMO}
+                aria-expanded={painelAberto}
+                aria-controls={painelAberto ? idDoPainel : undefined}
+                onClick={abrirOuFocarPainel}
+              >
+                {RESUMO_NA_COMUNIDADE.botao}
+              </button>
+            </div>
+            {painelAberto ? (
+              <PainelDoResumo id={idDoPainel} idDoTitulo={idDoTituloDoPainel} nivelDoTitulo={2} aoInserir={inserirResumo} aoFechar={fecharPainel} />
+            ) : null}
+          </>
+        ) : null}
+      </Pilha>
       <EscolhaDeFaixa rotulo={COMUM_COMUNIDADE.faixaOpcional} valor={faixa} aoMudar={setFaixa} />
       <div>
         {/* `aria-disabled` em vez de `disabled`: o Tab chega ao botão e a dica ligada a ele é lida (A11Y-005). */}
