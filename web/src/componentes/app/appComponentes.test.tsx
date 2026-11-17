@@ -162,14 +162,15 @@ const NUMEROS = [
 ]
 
 describe('ResumoDoDia: a grade se ajusta ao espaço, sem rolagem lateral (R1-3)', () => {
-  it('a seção é o contêiner; a grade tem uma coluna por padrão e três lado a lado só com 18 rem ou mais', () => {
+  it('a seção é o contêiner; a grade tem uma coluna por padrão, duas com 18 rem e quatro lado a lado com 32 rem ou mais', () => {
     render(<ResumoDoDia itens={NUMEROS} />)
 
     const secao = screen.getByRole('region', { name: 'Hoje até agora' })
     expect(secao.classList.contains('@container/resumo')).toBe(true)
     const lista = within(secao).getByRole('list')
     expect(lista.classList.contains('grid-cols-1')).toBe(true)
-    expect(lista.classList.contains('@min-[18rem]/resumo:grid-cols-[1fr_1fr_1.45fr]')).toBe(true)
+    expect(lista.classList.contains('@min-[18rem]/resumo:grid-cols-2')).toBe(true)
+    expect(lista.classList.contains('@min-[32rem]/resumo:grid-cols-4')).toBe(true)
     expect([...lista.classList].some((c) => /^grid-cols-\[/.test(c))).toBe(false)
   })
 
