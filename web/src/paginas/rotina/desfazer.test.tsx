@@ -12,7 +12,7 @@ import { ID_BEBE } from '../../teste/rotina.fixture.ts'
 const INSTANTE = new Date('2026-11-05T10:00:00')
 const id = (numero: number) => `a0000000-0000-7000-8000-${String(numero).padStart(12, '0')}`
 const MAMADA = id(3)
-const FRASE_DE_REDE = 'Não deu para confirmar com o servidor. Tente de novo: se já tiver sido salvo, não duplica.'
+const FRASE_DE_REDE = 'Não deu para confirmar com o servidor. Tente de novo. Se já tiver sido salvo, nada fica repetido.'
 
 beforeEach(() => {
   vi.useFakeTimers()

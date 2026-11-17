@@ -148,7 +148,7 @@ describe('cada chave do catálogo de erros, ao desfazer um registro', () => {
   const REPETIVEIS: readonly ChaveErroRotina[] = ['rede', 'tente_de_novo', 'desconhecido', 'autor_desconhecido', 'fuso_da_familia_invalido']
 
   const FRASES: Partial<Record<ChaveErroRotina, string>> = {
-    rede: 'Não deu para confirmar com o servidor. Tente de novo: se já tiver sido salvo, não duplica.',
+    rede: 'Não deu para confirmar com o servidor. Tente de novo. Se já tiver sido salvo, nada fica repetido.',
     nao_encontrado: 'Não encontramos este registro. Ele pode ter sido removido, ou você não tem mais acesso.',
     bebe_arquivado: 'Este bebê está arquivado. Os registros ficam só para leitura.',
     registro_excluido: 'Este registro foi excluído e não pode ser mudado.',
@@ -202,7 +202,7 @@ describe('cada chave do catálogo de erros, ao desfazer um registro', () => {
   })
 })
 
-const FRASES_REDE = 'Não deu para confirmar com o servidor. Tente de novo: se já tiver sido salvo, não duplica.'
+const FRASES_REDE = 'Não deu para confirmar com o servidor. Tente de novo. Se já tiver sido salvo, nada fica repetido.'
 
 describe('a nota que falha depois de encerrar', () => {
   async function encerrarComNota(texto: string) {
@@ -265,7 +265,7 @@ describe('a nota que falha depois de encerrar', () => {
 
 describe('o encerramento em si falha', () => {
   it.each([
-    ['rede', 'Não deu para confirmar com o servidor. Tente de novo: se já tiver sido salvo, não duplica.', true],
+    ['rede', 'Não deu para confirmar com o servidor. Tente de novo. Se já tiver sido salvo, nada fica repetido.', true],
     ['bebe_arquivado', 'Este bebê está arquivado. Os registros ficam só para leitura.', false],
   ] as const)('"%s": a frase fica no cartão, sem código, e a sessão continua em andamento', async (chave, frase, repete) => {
     const mundo = await renderizarRotaPronta('/app/sessao')
@@ -580,7 +580,7 @@ describe('R10: as corridas com outra pessoa', () => {
     await aguardarCarga()
 
     expect(tela.roteador.state.location.pathname).toBe('/app/sessao')
-    expect(status().querySelector('p')!.textContent).toBe('Bruno registrou mamada às 09:58.')
+    expect(status().querySelector('p')!.textContent).toBe('Bruno já fez um registro de mamada às 09:58.')
     expect(within(status()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Manter os dois', 'Excluir este', 'Fechar'])
     const abertas = await mundo.rotina.emAndamento(ID_BEBE)
     expect(abertas.ok && abertas.valor.itens).toHaveLength(2)
