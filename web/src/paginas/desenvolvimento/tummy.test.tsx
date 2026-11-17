@@ -1357,6 +1357,132 @@ describe('DES-13 19: o fail-closed do 39b', () => {
 })
 
 // ---------------------------------------------------------------------------------------------------------------
+// O erro de leitura do bloco na primeira tela: o alerta e o "Tentar de novo" vêm antes das fases (I-1), o foco não
+// se move e a releitura funciona (I-3), e os outros estados seguem como estão (I-4). A medida em pixels, num Chrome
+// de verdade, está em `erroNaPrimeiraTela.geometria.test.tsx`.
+describe('o erro de leitura do bloco na primeira tela', () => {
+  /** `depois` vem depois de `antes` na ordem do documento, e um não contém o outro. */
+  const precede = (antes: Node, depois: Node) =>
+    (antes.compareDocumentPosition(depois) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0 && !antes.contains(depois)
+
+  /** A leitura do bloco falha (a do contexto da rotina); a leitura do contexto da página, que é da conta, segue. */
+  async function abrirComFalhaDeLeitura() {
+    relogioEm()
+    const m = mundo()
+    simularFalhaRotina(m.rotina, 'contexto', 'rede')
+    await abrir(m)
+  }
+
+  const alerta = () => within(bloco()).getByRole('alert')
+  const tentarDeNovo = () => botao('Tentar de novo')
+
+  it('I-1: o alerta e o "Tentar de novo" vêm, na ordem do documento, antes dos blocos de fase', async () => {
+    await abrirComFalhaDeLeitura()
+    expect(bloco().querySelector('[data-leitura-falhou]')).not.toBeNull()
+    expect(alerta().textContent).toBe(T.falhaDeLeitura)
+
+    const fases = [document.querySelector('[data-fase]'), document.querySelector('[data-todas-as-fases]')]
+    expect(fases.every((fase) => fase !== null)).toBe(true)
+    for (const fase of fases as HTMLElement[]) {
+      expect(precede(alerta(), fase), `o alerta deve vir antes de ${fase.tagName.toLowerCase()}[${fase.getAttributeNames().join(' ')}]`).toBe(true)
+      expect(precede(tentarDeNovo(), fase), `o "Tentar de novo" deve vir antes de ${fase.tagName.toLowerCase()}[${fase.getAttributeNames().join(' ')}]`).toBe(true)
+    }
+  })
+
+  it('I-3: o erro não move o foco, o alerta continua role=alert e o "Tentar de novo" relê uma vez', async () => {
+    relogioEm()
+    const m = mundo()
+    const gravado = gravando(m.rotina)
+    simularFalhaRotina(m.rotina, 'contexto', 'rede')
+    renderizarRota('/app/desenvolvimento', { mundo: { ...m, rotina: gravado.dados } })
+    const focoAntes = document.activeElement
+    await aguardarCarga()
+
+    expect(bloco().querySelector('[data-leitura-falhou]')).not.toBeNull()
+    expect(alerta().tagName).toBe('P')
+    expect(alerta().textContent).toBe(T.falhaDeLeitura)
+    expect(document.activeElement).toBe(focoAntes)
+    expect(document.activeElement).not.toBe(alerta())
+    expect(document.activeElement).not.toBe(tentarDeNovo())
+
+    const leiturasDoBloco = () => gravado.chamadas.filter((chamada) => chamada.operacao === 'emAndamento').length
+    const antes = leiturasDoBloco()
+    expect(antes).toBeGreaterThan(0)
+    await clicar(tentarDeNovo())
+    expect(leiturasDoBloco()).toBe(antes + 1)
+    expect(bloco().querySelector('[data-leitura-falhou]')).toBeNull()
+    expect(within(bloco()).queryByRole('alert')).toBeNull()
+    expect(botao(TT.fizemosAgora).getAttribute('aria-disabled')).toBeNull()
+  })
+
+  it('I-4 carregando: o bloco fica ocupado, com o texto de carregando, sem alerta e sem lista', async () => {
+    relogioEm()
+    const m = mundo()
+    const preso = segurando(m.rotina, 'sessoesDaJanela')
+    renderizarRota('/app/desenvolvimento', { mundo: { ...m, rotina: preso.dados } })
+    await waitFor(() => expect(document.querySelector('[data-tummy][aria-busy="true"]')).not.toBeNull())
+
+    expect(within(bloco()).getAllByRole('status').map((faixa) => faixa.textContent)).toContain(T.carregando)
+    expect(bloco().querySelector('[data-carregando]')!.textContent).toBe(T.carregando)
+    expect(bloco().querySelector('[data-carregando]')).not.toBeNull()
+    expect(within(bloco()).queryByRole('alert')).toBeNull()
+    expect(bloco().querySelector('[data-leitura-falhou]')).toBeNull()
+    expect(textoDoBloco()).not.toContain('Nenhum tummy time nos últimos 7 dias.')
+    expect(botao(TT.fizemosAgora).getAttribute('aria-disabled')).toBe('true')
+
+    await act(async () => {
+      preso.liberar()
+    })
+    await aguardarCarga()
+    expect(bloco().getAttribute('aria-busy')).toBeNull()
+    expect(textoDoBloco()).toContain('Nenhum tummy time nos últimos 7 dias.')
+  })
+
+  it('I-4 vazio: a frase de nenhum tummy time, sem alerta, sem fila de dias e com os controles de escrita', async () => {
+    relogioEm()
+    await abrir(mundo())
+
+    expect(within(bloco()).getByText('Nenhum tummy time nos últimos 7 dias.')).toBeTruthy()
+    expect(within(bloco()).queryByRole('alert')).toBeNull()
+    expect(bloco().querySelector('[data-leitura-falhou]')).toBeNull()
+    expect(bloco().querySelector('[data-fila-de-dias]')).toBeNull()
+    expect(botao('Iniciar tummy time de Heloísa').getAttribute('aria-disabled')).toBeNull()
+    expect(botao(TT.fizemosAgora).getAttribute('aria-disabled')).toBeNull()
+  })
+
+  it('I-4 preenchido: a fila de 7 dias e o resumo de hoje, sem alerta', async () => {
+    relogioEm()
+    await abrir(mundo({}, sessao({ inicio: em(0, 9, 0), fim: em(0, 9, 12) })))
+
+    expect(within(bloco()).getByText('Hoje: 1 sessão, 12 min no total')).toBeTruthy()
+    expect(within(bloco()).getByText('09:00 – 09:12 · 12 min · por Juliana')).toBeTruthy()
+    const fila = bloco().querySelector<HTMLElement>('[data-fila-de-dias]')!
+    expect(within(fila).getAllByRole('button')).toHaveLength(7)
+    expect(within(bloco()).queryByRole('alert')).toBeNull()
+    expect(textoDoBloco()).not.toContain('Nenhum tummy time nos últimos 7 dias.')
+  })
+
+  it('I-4 erro de escrita: continua dentro do bloco, perto do controle, e a leitura não falha', async () => {
+    relogioEm()
+    const m = mundo()
+    await abrir(m)
+    simularFalhaRotina(m.rotina, 'gravarRegistro', 'rede')
+    await clicar(botao('Iniciar tummy time de Heloísa'))
+
+    const aviso = alerta()
+    const zona = aviso.closest('[data-erro-de-escrita]') as HTMLElement
+    expect(zona).not.toBeNull()
+    expect(bloco().contains(zona)).toBe(true)
+    expect(aviso.textContent).toContain(TT.semResposta)
+    expect(within(zona).getByRole('button', { name: 'Tentar de novo' })).toBeTruthy()
+    expect(bloco().querySelector('[data-leitura-falhou]')).toBeNull()
+    // O aviso de escrita vem depois dos controles que o dispararam, e o bloco segue com o título e o texto de segurança.
+    expect(precede(botao(TT.fizemosAgora), zona)).toBe(true)
+    expect(within(bloco()).getByRole('heading', { level: 2, name: 'Tummy time' })).toBeTruthy()
+  })
+})
+
+// ---------------------------------------------------------------------------------------------------------------
 // R2: uma sessão em andamento termina, para a conta da sobreposição, no instante da validação (nunca no infinito).
 describe('R2: a sobreposição com a sessão em andamento', () => {
   const AGORA = HOJE.getTime()

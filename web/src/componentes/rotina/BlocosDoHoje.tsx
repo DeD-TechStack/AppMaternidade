@@ -41,7 +41,7 @@ export function ParaVoceSaber({ notas, autorDe, agora, className, dataH, rodape 
             return (
               <li
                 key={nota.id}
-                className="flex items-center gap-3 border-t border-(--cor-fio-suave) py-3.5 first:border-t-0 lg:gap-4"
+                className="flex items-center gap-3 border-t border-(--cor-fio-suave) py-3 first:border-t-0 lg:gap-4"
               >
                 <Avatar nome={autor} />
                 <div className="min-w-0 flex-1">

@@ -39,5 +39,9 @@ export default defineConfig(({ command }) => ({
     setupFiles: ['./src/teste/setup.ts'],
     // Os testes de web/scripts usam o node:test (node --test); o Vitest não os roda.
     exclude: ['**/node_modules/**', '**/dist/**', 'scripts/**'],
+    // Metade das CPUs lógicas: deixa folga para o host e para o Chrome do geometria.test.tsx.
+    maxWorkers: '50%',
+    // O limite padrão de 5 s é apertado num host compartilhado; 20 s ainda falha rápido num teste travado.
+    testTimeout: 20000,
   },
 }))
