@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, screen, within } from '@testing-library/react'
+import { act, fireEvent, screen, within } from '@testing-library/react'
 import { janelaDoDia } from '../../dados/rotina.dia.ts'
 import { simularFalhaRotina, type FixtureRotina } from '../../dados/rotina.memoria.ts'
 import type { Registro } from '../../dados/rotina.tipos.ts'
 import { calcularResumo, type ChaveDoNumero } from '../../componentes/resumo-rotina/calculo.ts'
 import { seteDiasAte } from '../../componentes/rotina/diasDoHistorico.ts'
 import { formatarMinutos, totaisPorDiaDaSemana } from '../../componentes/rotina/totaisHistorico.ts'
-import { aguardarCarga, renderizarRotaPronta } from '../../teste/renderizarRota.tsx'
+import { aguardarCarga, renderizarRota, renderizarRotaPronta } from '../../teste/renderizarRota.tsx'
 import { FUSO_DO_APARELHO, ID_BEBE, criarMundoDeTeste } from '../../teste/rotina.fixture.ts'
 
 // O Histórico (MAT-38b, R38-20 e R38-21), com o relógio falso às 10:00 de 5/11/2026 (hora do aparelho): o dia, a
@@ -425,5 +425,104 @@ describe('R38-11: lista incompleta e falha de leitura', () => {
     const alerta = screen.getByRole('alert')
     expect(alerta.textContent).toContain('Algo deu errado e não sabemos se a mudança foi salva.')
     expect(alerta.textContent).not.toMatch(/XX000|erro qualquer/)
+  })
+})
+
+// O erro da leitura do dia na primeira tela: o alerta e o "Tentar de novo" vêm antes das vistas e dos filtros (I-1), o
+// foco não se move e a releitura funciona (I-3), e os outros estados seguem como estão (I-4). A medida em pixels,
+// num Chrome de verdade, está em `erroNaPrimeiraTela.geometria.test.tsx`.
+describe('R38-11: o erro de leitura do dia na primeira tela', () => {
+  /** `depois` vem depois de `antes` na ordem do documento, e um não contém o outro. */
+  const precede = (antes: Node, depois: Node) =>
+    (antes.compareDocumentPosition(depois) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0 && !antes.contains(depois)
+
+  const vistas = () => document.querySelector<HTMLElement>('[data-vistas]')!
+
+  function mundoComFalhaNoDia() {
+    const mundo = criarMundoDeTeste({ diaCompleto: true })
+    simularFalhaRotina(mundo.rotina, 'doDia', 'rede')
+    return mundo
+  }
+
+  it('I-1: o alerta e o "Tentar de novo" vêm, na ordem do documento, antes das vistas', async () => {
+    await renderizarRotaPronta('/app/historico', { mundo: mundoComFalhaNoDia() })
+    const alerta = screen.getByRole('alert')
+    const tentar = within(alerta).getByRole('button', { name: 'Tentar de novo' })
+
+    expect(alerta.textContent).toContain('Não foi possível falar com o servidor. Verifique a conexão.')
+    expect(within(vistas()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Dia', 'Semana'])
+    expect(precede(alerta, vistas()), 'o alerta deve vir antes de [data-vistas]').toBe(true)
+    expect(precede(tentar, vistas()), 'o "Tentar de novo" deve vir antes de [data-vistas]').toBe(true)
+  })
+
+  it('I-3: o erro não move o foco, o alerta continua role=alert e o "Tentar de novo" relê uma vez', async () => {
+    const mundo = mundoComFalhaNoDia()
+    const leituras = vi.spyOn(mundo.rotina, 'doDia')
+    renderizarRota('/app/historico', { mundo })
+    const focoAntes = document.activeElement
+    await aguardarCarga()
+
+    const alerta = screen.getByRole('alert')
+    expect(alerta.getAttribute('role')).toBe('alert')
+    expect(document.activeElement).toBe(focoAntes)
+    expect(document.activeElement).not.toBe(alerta)
+    expect(linhas()).toHaveLength(0)
+    expect(leituras).toHaveBeenCalledTimes(1)
+
+    fireEvent.click(within(alerta).getByRole('button', { name: 'Tentar de novo' }))
+    await aguardarCarga()
+    expect(leituras).toHaveBeenCalledTimes(2)
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(linhas()).toHaveLength(9)
+  })
+
+  it('I-4 carregando: a seção fica ocupada, com as vistas e os filtros à vista, sem alerta e sem linhas', async () => {
+    const mundo = criarMundoDeTeste({ diaCompleto: true })
+    const original = mundo.rotina.doDia.bind(mundo.rotina)
+    let liberar: () => void = () => undefined
+    const travada = new Promise<void>((resolver) => {
+      liberar = resolver
+    })
+    vi.spyOn(mundo.rotina, 'doDia').mockImplementation(async (...argumentos) => {
+      await travada
+      return original(...argumentos)
+    })
+    renderizarRota('/app/historico', { mundo })
+    for (let passo = 0; passo < 20; passo++) {
+      await act(async () => {
+        await Promise.resolve()
+      })
+    }
+
+    const secao = document.querySelector<HTMLElement>('[data-secao-estado="carregando"]')!
+    expect(secao.getAttribute('aria-busy')).toBe('true')
+    expect(within(secao).getByText('Carregando…').textContent).toBeTruthy()
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(linhas()).toHaveLength(0)
+    expect(within(vistas()).getAllByRole('button')).toHaveLength(2)
+    expect(botao('Todos').getAttribute('aria-pressed')).toBe('true')
+
+    liberar()
+    await aguardarCarga()
+    expect(document.querySelector('[data-secao-estado="carregando"]')).toBeNull()
+    expect(linhas()).toHaveLength(9)
+  })
+
+  it('I-4 vazio: a frase do dia sem registro, depois das vistas, sem alerta e sem resumo', async () => {
+    await renderizarRotaPronta('/app/historico', { semRegistros: true })
+
+    const frase = screen.getByText('Nenhum registro neste dia.')
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(document.querySelector('[data-resumo-do-dia]')).toBeNull()
+    expect(precede(vistas(), frase)).toBe(true)
+  })
+
+  it('I-4 preenchido: as vistas vêm antes do resumo e das 9 linhas do dia, sem alerta', async () => {
+    await renderizarRotaPronta('/app/historico', { diaCompleto: true })
+
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(linhas()).toHaveLength(9)
+    expect(precede(vistas(), document.querySelector('[data-resumo-do-dia]')!)).toBe(true)
+    expect(precede(vistas(), document.querySelector('[data-registros-do-dia]')!)).toBe(true)
   })
 })

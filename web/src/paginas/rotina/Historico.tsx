@@ -164,6 +164,19 @@ function HistoricoDoBebe({ ativo }: { ativo: BebeAtivo }) {
     )
   }
 
+  const secao =
+    vista === 'dia' ? (
+      <SecaoDoHoje secao={doDia} titulo={HISTORICO.registrosDoDia} papel={ativo.papel}>
+        {conteudoDoDia}
+      </SecaoDoHoje>
+    ) : (
+      <SecaoDoHoje secao={daSemana} titulo={HISTORICO.resumoDaSemana} papel={ativo.papel}>
+        {conteudoDaSemana}
+      </SecaoDoHoje>
+    )
+  // Sem nenhum dado para mostrar, o aviso do erro e o "Tentar de novo" vêm antes das vistas e dos filtros, na primeira tela.
+  const falhouSemDados = secaoAtual.estado === 'erro' && secaoAtual.dados === null
+
   return (
     <TelaRotina
       tela="historico"
@@ -181,6 +194,7 @@ function HistoricoDoBebe({ ativo }: { ativo: BebeAtivo }) {
       }
     >
       <Pilha vao="bloco">
+        {falhouSemDados ? secao : null}
         {somenteLeitura || aparelho !== fuso ? (
           <Pilha vao="pilha">
             {somenteLeitura ? <AvisoDoPapel texto={textoDoPapel(ativo)} /> : null}
@@ -205,15 +219,7 @@ function HistoricoDoBebe({ ativo }: { ativo: BebeAtivo }) {
           <SeletorDeDia dia={dia} hoje={hoje} aoEscolher={(novo) => ir({ dia: novo })} />
           {vista === 'dia' ? <FiltrosDoHistorico tipos={tipos} aoMudar={(novos) => ir({ tipos: novos }, true)} /> : null}
         </Pilha>
-        {vista === 'dia' ? (
-          <SecaoDoHoje secao={doDia} titulo={HISTORICO.registrosDoDia} papel={ativo.papel}>
-            {conteudoDoDia}
-          </SecaoDoHoje>
-        ) : (
-          <SecaoDoHoje secao={daSemana} titulo={HISTORICO.resumoDaSemana} papel={ativo.papel}>
-            {conteudoDaSemana}
-          </SecaoDoHoje>
-        )}
+        {falhouSemDados ? null : secao}
       </Pilha>
     </TelaRotina>
   )
