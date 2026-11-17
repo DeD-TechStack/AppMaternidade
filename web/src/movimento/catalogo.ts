@@ -71,7 +71,8 @@ export const CATALOGO = {
   },
   // Títulos de seção e números (--mov-revela): as linhas sobem 24 px e ganham opacidade, 700 ms, 80 ms entre
   // uma e a seguinte, no máximo 3 escalonadas, uma vez só (não voltam à espera ao sair da janela). A espera
-  // já é legível: opacidade 0,5, não 0 (um título grande de cacau sobre o papel fica acima de 3:1).
+  // é legível (VIS-1 R1): o texto nunca desbota (opacidade 1, contraste cheio sobre papel, mel e areia) e o
+  // deslocamento da espera é limitado à folga até o bloco seguinte (movimento/folga.ts), sem sobreposição.
   M4: {
     id: 'M4',
     tipo: 'tempo',
@@ -84,7 +85,7 @@ export const CATALOGO = {
     deslocamentoPct: 0,
     escala: { de: 1, para: 1 },
     umaVez: true,
-    opacidadeDe: 0.5,
+    opacidadeDe: 1,
     maxItensEscalonados: 3,
   },
   // Faixa de cacau: o conteúdo sai de baixo, de -30 % a 0 (era -50 %), preso à rolagem.

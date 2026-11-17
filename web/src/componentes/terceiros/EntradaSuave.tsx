@@ -12,6 +12,7 @@
 // meio de uma entrada ele vai direto ao estado final, sem terminar a animação.
 import { useEffect, useRef, type ReactNode } from 'react'
 import { animate, motion, useMotionValue } from 'motion/react'
+import { useDeslocamentoSeguro } from '../../movimento/folga.ts'
 import { useNaJanela } from '../../movimento/naJanela.ts'
 import { usePrefereMovimentoReduzido } from '../../movimento/reduzido.ts'
 import { CATALOGO, type RegistroMovimento } from '../../movimento/catalogo.ts'
@@ -47,21 +48,25 @@ export function EntradaSuave({
   const dentro = useNaJanela(ref, { umaVez })
   const visivel = reduzido || dentro
   const opacity = useMotionValue(reduzido ? 1 : opacidadeDe)
-  const y = useMotionValue(reduzido ? 0 : deslocamentoPx)
+  // Nasce no lugar (o estado final: sem JS, na impressão e antes da medida o bloco já está inteiro).
+  const y = useMotionValue(0)
+  // A espera desloca o bloco no máximo até a folga que ele tem para o bloco seguinte (VIS-1 R1): medida
+  // antes da primeira pintura, nunca há sobreposição, e o conteúdo nasce legível (opacidade 1).
+  const espera = useDeslocamentoSeguro(ref, deslocamentoPx, !reduzido && !visivel, () => y.get())
 
   useEffect(() => {
     const alvoOpacity = visivel ? 1 : opacidadeDe
-    const alvoY = visivel ? 0 : deslocamentoPx
-    if (reduzido) {
-      // Salto: encerra qualquer animação em curso e põe o bloco no estado final de uma vez.
-      opacity.jump(alvoOpacity)
-      y.jump(alvoY)
+    const alvoY = visivel ? 0 : espera
+    if (reduzido || !visivel) {
+      // Salto: encerra qualquer animação em curso e põe o bloco no estado de espera ou final de uma vez.
+      opacity.jump(reduzido ? 1 : alvoOpacity)
+      y.jump(reduzido ? 0 : alvoY)
       return
     }
     const transicao = { duration: duracaoMs / 1000, ease: curva, delay: dentro ? atrasoMs / 1000 : 0 }
     const animacoes = [animate(opacity, alvoOpacity, transicao), animate(y, alvoY, transicao)]
     return () => animacoes.forEach((animacao) => animacao.stop())
-  }, [reduzido, visivel, dentro, deslocamentoPx, duracaoMs, curva, atrasoMs, opacidadeDe, opacity, y])
+  }, [reduzido, visivel, dentro, espera, duracaoMs, curva, atrasoMs, opacidadeDe, opacity, y])
 
   return (
     <motion.div ref={ref} className={className} style={{ opacity, y }}>

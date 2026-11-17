@@ -1,4 +1,6 @@
-import { render } from '@testing-library/react'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { render, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { act, useRef } from 'react'
 import { CATALOGO, atrasoEscalonado, fimDaCortina } from '../movimento/catalogo.ts'
@@ -54,9 +56,8 @@ describe('catálogo (DESIGN.md 5)', () => {
     expect(M4.umaVez).toBe(true)
   })
 
-  it('a espera das linhas já é legível (POL-S1 A-1a): começa com opacidade acima de 0,1 e abaixo de 1', () => {
-    expect(CATALOGO.M4.opacidadeDe).toBeGreaterThan(0.1)
-    expect(CATALOGO.M4.opacidadeDe).toBeLessThan(1)
+  it('a espera das linhas é legível (POL-S1 A-1a, VIS-1 R1): o texto nunca desbota, a opacidade da espera é 1', () => {
+    expect(CATALOGO.M4.opacidadeDe).toBe(1)
   })
 
   it('escalonamento: 80 ms entre itens, e do terceiro em diante entram juntos (240 ms no total)', () => {
@@ -254,6 +255,136 @@ describe('primitivas de entrada: o primeiro quadro já é legível (POL-S1 A-1a,
       expect(opacidadeDe(peca)).toBe(1)
       expect(['', 'none']).toContain((peca as HTMLElement).style.transform)
     }
+  })
+})
+
+// VIS-1 R1: o texto é legível em todo estado em que a entrada pode deixá-lo (espera, durante, final,
+// sem hidratação, impressão, nunca rolado) e o título nunca encosta no bloco seguinte.
+const lerTokens = () => readFileSync(resolve(__dirname, '../styles/tokens.css'), 'utf8')
+const corDoToken = (nome: string) => {
+  const achado = new RegExp(`--color-${nome}:\\s*#([0-9a-fA-F]{6})`).exec(lerTokens())
+  if (!achado) throw new Error(`token --color-${nome} não encontrado`)
+  const n = parseInt(achado[1], 16)
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255]
+}
+const luminancia = ([r, g, b]: number[]) => {
+  const c = [r, g, b].map((v) => {
+    const s = v / 255
+    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4
+  })
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
+}
+/** Contraste do texto `cacau` com a opacidade dada sobre o fundo (composição alfa). */
+const contraste = (opacidade: number, fundo: string) => {
+  const t = corDoToken('cacau')
+  const f = corDoToken(fundo)
+  const mistura = t.map((v, i) => v * opacidade + f[i] * (1 - opacidade))
+  const [a, b] = [luminancia(mistura), luminancia(f)].sort((x, y) => y - x)
+  return (a + 0.05) / (b + 0.05)
+}
+const deslocamentoDe = (no: Element | null) => {
+  const achado = /translateY\((-?[\d.]+)px\)/.exec((no as HTMLElement | null)?.style.transform ?? '')
+  return achado ? Number(achado[1]) : 0
+}
+/** O jsdom não faz layout: o teste diz onde cada caixa está, pela marca data-caixa="topo,base". */
+function comCaixas() {
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+    const marca = this.closest('[data-caixa]')?.getAttribute('data-caixa') ?? '0,0'
+    const [top, bottom] = marca.split(',').map(Number)
+    return { top, bottom, left: 0, right: 100, width: 100, height: bottom - top, x: 0, y: top, toJSON: () => ({}) } as DOMRect
+  })
+}
+
+describe('espera legível e sem colisão (VIS-1 R1)', () => {
+  it.each(['papel', 'mel', 'areia'])('o texto de cacau da espera passa de 4,5:1 sobre %s', (fundo) => {
+    comObservador()
+    consultas({})
+    const { getByText } = render(
+      <EntradaSuave deslocamentoPx={24} duracaoMs={700} curva="linear">
+        <p>número</p>
+      </EntradaSuave>,
+    )
+    expect(contraste(opacidadeDe(getByText('número').parentElement), fundo)).toBeGreaterThanOrEqual(4.5)
+  })
+
+  it('controle negativo: a espera antiga (opacidade 0,5) reprova o mesmo cálculo (3,06 / 2,71 / 2,89)', () => {
+    expect(contraste(0.5, 'papel')).toBeLessThan(4.5)
+    expect(contraste(0.5, 'mel')).toBeLessThan(3)
+    expect(contraste(0.5, 'areia')).toBeLessThan(3)
+  })
+
+  const pausa = () => act(async () => { await new Promise((r) => setTimeout(r, 80)) })
+
+  it('a espera nunca desloca o bloco além da folga até o bloco seguinte: sobreposição 0', async () => {
+    comObservador()
+    consultas({})
+    comCaixas()
+    const { container } = render(
+      <div>
+        <div data-caixa="0,100">
+          <EntradaSuave deslocamentoPx={24} duracaoMs={700} curva="linear">
+            <h2>título</h2>
+          </EntradaSuave>
+        </div>
+        <div data-caixa="108,200">
+          <p>parágrafo</p>
+        </div>
+      </div>,
+    )
+    const bloco = container.querySelector('h2')!.parentElement
+    // O valor escrito pelo motion chega no próximo quadro: espera o 8 (folga) e depois confere que não passou.
+    await waitFor(() => expect(deslocamentoDe(bloco)).toBe(8))
+    await pausa()
+    expect(deslocamentoDe(bloco)).toBeLessThanOrEqual(8)
+    vi.restoreAllMocks()
+  })
+
+  it('sem folga (bloco seguinte encostado) a espera fica no lugar', async () => {
+    comObservador()
+    consultas({})
+    comCaixas()
+    const { container } = render(
+      <div>
+        <div data-caixa="0,100">
+          <EntradaSuave deslocamentoPx={24} duracaoMs={700} curva="linear">
+            <h2>título</h2>
+          </EntradaSuave>
+        </div>
+        <div data-caixa="100,200">
+          <p>parágrafo</p>
+        </div>
+      </div>,
+    )
+    await pausa()
+    expect(deslocamentoDe(container.querySelector('h2')!.parentElement)).toBe(0)
+    vi.restoreAllMocks()
+  })
+
+  it('com folga maior que o deslocamento o bloco espera nos 24 px do catálogo e entra uma vez', async () => {
+    comObservador()
+    consultas({})
+    comCaixas()
+    const { container } = render(
+      <div>
+        <div data-caixa="0,100">
+          <EntradaSuave deslocamentoPx={24} duracaoMs={700} curva="linear">
+            <h2>título</h2>
+          </EntradaSuave>
+        </div>
+        <div data-caixa="160,200">
+          <p>parágrafo</p>
+        </div>
+      </div>,
+    )
+    await waitFor(() => expect(deslocamentoDe(container.querySelector('h2')!.parentElement)).toBe(24))
+    // Entra uma vez: ao chegar na janela o bloco vai ao lugar e, ao sair, não volta à espera.
+    const observador = ObservadorFalso.todos[0]
+    observador.disparar(true)
+    await waitFor(() => expect(deslocamentoDe(container.querySelector('h2')!.parentElement)).toBe(0), { timeout: 2000 })
+    observador.disparar(false)
+    await pausa()
+    expect(deslocamentoDe(container.querySelector('h2')!.parentElement)).toBe(0)
+    vi.restoreAllMocks()
   })
 })
 

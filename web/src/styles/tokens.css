@@ -65,7 +65,7 @@
   --mov-dist-revela: 24px;
   --mov-escalona: 80ms;
   --mov-escalona-max: 3;
-  --mov-opacidade-revela: 0.5;
+  --mov-opacidade-revela: 1;
   /* Curvas */
   --curva-padrao: cubic-bezier(0.4, 0, 0.2, 1);
   --curva-saida: cubic-bezier(0, 0, 0.2, 1);

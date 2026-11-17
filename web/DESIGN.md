@@ -462,7 +462,7 @@ Curto, uma vez e sem surpresa (SPEC_MOVIMENTO do MOV-REF, decisões D1 a D8). A 
 | `--mov-dist-popover` | M16 | 8 px | deslocamento do painel |
 | `--mov-dist-revela` | M4 | 24 px | deslocamento das entradas por rolagem |
 | `--mov-escalona`, `--mov-escalona-max` | M4 | 80 ms, 3 itens | do terceiro item em diante, entram juntos com ele (240 ms no total) |
-| `--mov-opacidade-revela` | M4 | 0,5 | opacidade da espera de uma entrada, antes de chegar à janela |
+| `--mov-opacidade-revela` | M4 | 1 | opacidade da espera de uma entrada, antes de chegar à janela: o texto nunca desbota (contraste cheio); a espera desloca o bloco só até a folga que ele tem para o bloco seguinte, sem sobreposição |
 
 | Curva | Valor | Uso |
 |---|---|---|

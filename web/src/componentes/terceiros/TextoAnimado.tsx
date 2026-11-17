@@ -13,6 +13,7 @@
 // entrada elas vão direto ao estado final, sem terminar a animação.
 import { useEffect, useRef } from 'react'
 import { animate, motion, useMotionValue } from 'motion/react'
+import { useDeslocamentoSeguro } from '../../movimento/folga.ts'
 import { useNaJanela } from '../../movimento/naJanela.ts'
 import { usePrefereMovimentoReduzido } from '../../movimento/reduzido.ts'
 import { CATALOGO, atrasoEscalonado, type RegistroMovimento } from '../../movimento/catalogo.ts'
@@ -54,15 +55,16 @@ interface PropsDaLinha {
 
 function Linha({ texto, className, visivel, reduzido, deslocamentoPx, duracaoMs, curva, atrasoMs, opacidadeDe }: PropsDaLinha) {
   const opacity = useMotionValue(reduzido ? 1 : opacidadeDe)
-  const y = useMotionValue(reduzido ? 0 : deslocamentoPx)
+  // Nasce no lugar; a espera (já medida pelo texto, no máximo a folga até o bloco seguinte) entra no efeito.
+  const y = useMotionValue(0)
 
   useEffect(() => {
     const alvoOpacity = visivel ? 1 : opacidadeDe
     const alvoY = visivel ? 0 : deslocamentoPx
-    if (reduzido) {
-      // Salto: encerra qualquer animação em curso e põe a linha no estado final de uma vez.
-      opacity.jump(alvoOpacity)
-      y.jump(alvoY)
+    if (reduzido || !visivel) {
+      // Salto: encerra qualquer animação em curso e põe a linha no estado de espera ou final de uma vez.
+      opacity.jump(reduzido ? 1 : alvoOpacity)
+      y.jump(reduzido ? 0 : alvoY)
       return
     }
     const transicao = { duration: duracaoMs / 1000, ease: curva, delay: visivel ? atrasoMs / 1000 : 0 }
@@ -99,6 +101,9 @@ export function TextoAnimado({
   const visivel = reduzido || dentro
   const Tag = as
 
+  // A espera desloca as linhas no máximo até a folga do texto para o bloco seguinte (VIS-1 R1).
+  const espera = useDeslocamentoSeguro(ref, deslocamentoPx, !reduzido && !visivel)
+
   const linhas = children.split('\n')
 
   return (
@@ -112,7 +117,7 @@ export function TextoAnimado({
           className={cn('block', classeLinha, i > 0 && classeSegundaLinha)}
           visivel={visivel}
           reduzido={reduzido}
-          deslocamentoPx={deslocamentoPx}
+          deslocamentoPx={espera}
           duracaoMs={duracaoMs}
           curva={curva}
           atrasoMs={atrasoMs + atrasoEscalonado(i, escalonamentoMs)}
