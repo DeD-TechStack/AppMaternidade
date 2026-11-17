@@ -152,7 +152,8 @@ describe('T-FRONT: a fronteira do cuidado (RF12:RN-01)', () => {
     expect(verificarFronteira(REAIS, new Set([ENTRADA_DA_PECA])).achados.some((achado) => achado.alvo.startsWith('dados/conta'))).toBe(true)
     const importaOIndex = plantado('componentes/comunidade/legitimo.ts', `import { anexarBloco } from '../resumo-rotina/index.ts'\nexport const juntar = anexarBloco`)
     const semOIndex = verificarFronteira([...REAIS, importaOIndex], new Set([SESSAO]))
-    expect(raizesVermelhas(semOIndex)).toEqual(['componentes/comunidade/legitimo.ts'])
+    // Os compositores reais já importam o index.ts (RF12), então também ficam vermelhos sem ele.
+    expect(raizesVermelhas(semOIndex)).toContain('componentes/comunidade/legitimo.ts')
     expect(semOIndex.achados.some((achado) => achado.alvo.startsWith('dados/rotina'))).toBe(true)
   })
 

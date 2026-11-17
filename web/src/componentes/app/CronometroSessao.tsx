@@ -142,10 +142,10 @@ export function CronometroSessao({
   }
 
   return (
-    <section
+    <Cartao
+      as="section"
       ref={cartao}
       aria-labelledby={idRotulo}
-      data-h="cartao"
       data-andamento=""
       className={`flex flex-col gap-esp-grupo bg-(--cor-campo-sessao) text-(--cor-numero-sessao) [border:var(--borda-campo)] ${className ?? ''}`}
     >
@@ -315,6 +315,6 @@ export function CronometroSessao({
           </Pilha>
         </Cartao>
       ) : null}
-    </section>
+    </Cartao>
   )
 }

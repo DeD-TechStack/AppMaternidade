@@ -149,7 +149,7 @@ export function SessoesEmParalelo({
                 return (
                   <li
                     key={sessao.id}
-                    className="flex flex-wrap items-center gap-3 border-t border-(--cor-fio-suave) py-3.5 first:border-t-0"
+                    className="flex flex-wrap items-center gap-3 border-t border-(--cor-fio-suave) py-3 first:border-t-0"
                   >
                     <Avatar nome={autor} />
                     <div className="min-w-0 flex-1">
