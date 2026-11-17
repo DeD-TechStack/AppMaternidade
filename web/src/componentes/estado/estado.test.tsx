@@ -9,9 +9,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { simularFalha as simularFalhaConta, criarDadosContaMemoria } from '../../dados/conta.memoria.ts'
 import { simularFalha as simularFalhaComunidade } from '../../dados/comunidade.memoria.ts'
 import { simularFalhaRotina } from '../../dados/rotina.memoria.ts'
+import { HISTORICO, HOJE, NOTAS } from '../../conteudo/rotina.ts'
 import { criarComunidadeDeTeste } from '../../teste/comunidade.fixture.ts'
 import { PESSOAS, criarFixtureDeTeste, renderizarComDados } from '../../teste/renderizarComDados.tsx'
-import { renderizarRota } from '../../teste/renderizarRota.tsx'
+import { renderizarRota, renderizarRotaPronta } from '../../teste/renderizarRota.tsx'
 import { criarMundoDeTeste } from '../../teste/rotina.fixture.ts'
 import { Carregando } from './Carregando.tsx'
 import { ErroDeLeitura } from './ErroDeLeitura.tsx'
@@ -369,6 +370,52 @@ describe('Comunidade: a lista de tópicos de um espaço usa as peças', () => {
     await waitFor(() => expect(document.querySelector('[data-esqueleto][role="status"][aria-busy="true"]')).not.toBeNull(), { timeout: 3000 })
     expect(document.querySelectorAll('h1')).toHaveLength(1)
     expect(document.body.innerHTML).not.toMatch(/animate-pulse/)
+  })
+})
+
+describe('Rotina: os vazios das listas usam o PainelVazio', () => {
+  /** O vazio é desta peça (e não um parágrafo local): leva a marca, a frase do catálogo e nenhum título próprio. */
+  function vazioDaPeca(dentro: Element, frase: string): HTMLElement {
+    const painel = dentro.querySelector<HTMLElement>('[data-estado="vazio"]')
+    expect(painel, 'o painel da peça PainelVazio').not.toBeNull()
+    expect(painel!.textContent).toBe(frase)
+    expect(painel!.querySelector('h1, h2, h3, h4')).toBeNull()
+    return painel!
+  }
+
+  it('Histórico, vista do dia: o vazio da lista, e o h1 e o h2 "Registros do dia" continuam', async () => {
+    await renderizarRotaPronta('/app/historico', { semRegistros: true })
+    const secao = document.querySelector<HTMLElement>('[data-registros-do-dia]')!
+    vazioDaPeca(secao, HISTORICO.semRegistros)
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
+    expect(within(secao).getByRole('heading', { level: 2, name: HISTORICO.registrosDoDia })).toBeTruthy()
+    expect(secao.getAttribute('aria-labelledby')).toBe('historico-registros')
+  })
+
+  it('Histórico, vista da semana: o vazio da semana, e o h1 e a lista "Resumo da semana" continuam', async () => {
+    await renderizarRotaPronta('/app/historico?vista=semana', { semRegistros: true })
+    const principal = document.querySelector('main') as HTMLElement
+    vazioDaPeca(principal, HISTORICO.semRegistrosNaSemana)
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
+    expect(within(principal).getByRole('list', { name: HISTORICO.resumoDaSemana })).toBeTruthy()
+  })
+
+  it('Hoje, "Últimos": o vazio dentro da seção, com o h2 dos Últimos no lugar', async () => {
+    await renderizarRotaPronta('/app/hoje', { semRegistros: true })
+    const secao = document.querySelector<HTMLElement>('main #ultimos')!
+    expect(secao.hasAttribute('data-ultimos')).toBe(true)
+    vazioDaPeca(secao, HOJE.semRegistros)
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
+    expect(within(secao).getByRole('heading', { level: 2, name: HOJE.ultimos })).toBeTruthy()
+  })
+
+  it('Notas: o vazio da lista, com o h1 e o h2 da lista no lugar', async () => {
+    await renderizarRotaPronta('/app/notas', { semRegistros: true })
+    const secao = document.querySelector<HTMLElement>('[data-notas-da-familia]')!
+    vazioDaPeca(secao, NOTAS.vazia)
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
+    expect(within(secao).getByRole('heading', { level: 2, name: NOTAS.lista })).toBeTruthy()
+    expect(secao.querySelector('ul')).toBeNull()
   })
 })
 

@@ -12,6 +12,7 @@ import { Etiqueta } from '../../componentes/base/Etiqueta.tsx'
 import { Cartao, Colunas, Pilha, QuadroLayout, Secao } from '../../componentes/base/layout/index.ts'
 import { Carregando } from '../../componentes/estado/Carregando.tsx'
 import { ErroDaRotina } from '../../componentes/estado/ErroDaRotina.tsx'
+import { PainelVazio } from '../../componentes/estado/PainelVazio.tsx'
 import { AvisoDeFuso } from '../../componentes/rotina/AvisoDeFuso.tsx'
 import { AvisoDeLista } from '../../componentes/rotina/AvisoDeLista.tsx'
 import { BarraRegistroRapido, type BotaoRapido, type ItemDoMais } from '../../componentes/rotina/BarraRegistroRapido.tsx'
@@ -454,9 +455,7 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
               <h2 id="ultimos-titulo" className="text-titulo-4 font-titulo font-semibold">
                 {HOJE.ultimos}
               </h2>
-              <p className="border-y border-(--cor-fio-suave) py-4 text-(--cor-texto-2)">
-                {sessoes.length === 0 ? HOJE.semRegistros : HOJE.semConcluidos}
-              </p>
+              <PainelVazio texto={sessoes.length === 0 ? HOJE.semRegistros : HOJE.semConcluidos} />
             </Pilha>
           )
         }

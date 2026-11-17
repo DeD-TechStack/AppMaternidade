@@ -7,6 +7,7 @@ import { Botao } from '../../componentes/base/Botao.tsx'
 import { Cartao, Pilha } from '../../componentes/base/layout/index.ts'
 import { Carregando } from '../../componentes/estado/Carregando.tsx'
 import { ErroDaRotina } from '../../componentes/estado/ErroDaRotina.tsx'
+import { PainelVazio } from '../../componentes/estado/PainelVazio.tsx'
 import { AvisoDeLista } from '../../componentes/rotina/AvisoDeLista.tsx'
 import { FormularioNota } from '../../componentes/rotina/FormularioNota.tsx'
 import { LinkDaRotina } from '../../componentes/rotina/LinkDaRotina.tsx'
@@ -118,7 +119,7 @@ function ListaDeNotas({ ativo }: { ativo: BebeAtivo }) {
                 </h2>
                 {lista.incompleta ? <AvisoDeLista limite={LIMITES.notas} dado="notas" /> : null}
                 {itens.length === 0 ? (
-                  <p className="border-y border-(--cor-fio-suave) py-4 text-(--cor-texto-2)">{NOTAS.vazia}</p>
+                  <PainelVazio texto={NOTAS.vazia} />
                 ) : (
                   <ul className="border-y border-(--cor-fio-suave)">
                     {itens.map((nota) => {
