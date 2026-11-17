@@ -39,7 +39,14 @@ jobs:
         shell: bash
         run: |
           if [ "$RUNNER_OS" = Linux ]; then
-            ( while true; do echo "MON $(date +%T) chrome=$(pgrep -c chrome) $(free -m | sed -n 2p) | $(ps -eo pid,ppid,pgid,etimes,rss,args | grep -i '[c]hrome' | cut -c1-110 | head -n 8 | tr '\n' ';')"; sleep 5; done ) &
+            google-chrome --version
+            printf '<!doctype html><pre id=g>ok</pre><script>document.fonts.ready.then(()=>{document.getElementById("g").textContent="pronto"})</script>' > /tmp/min.html
+            for flags in "--virtual-time-budget=3000" ""; do
+              echo "TRIV flags=[$flags]"; s=$(date +%s)
+              timeout 25 google-chrome --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --user-data-dir=/tmp/p$RANDOM $flags --dump-dom file:///tmp/min.html | head -c 300; echo " exit=$? secs=$(( $(date +%s) - s ))"
+              pkill -9 chrome || true
+            done
+            ( while true; do echo "MON $(date +%T) $(free -m | sed -n 2p) | $(ps -eo rss,pid,etimes,args --sort=-rss | grep -i '[c]hrome' | sed -n 1,4p | cut -c1-170 | tr '\n' ';')"; sleep 5; done ) &
             npm run build
             npx vitest run src/componentes/casca/geometria.test.tsx
           else
