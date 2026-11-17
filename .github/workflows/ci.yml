@@ -39,14 +39,12 @@ jobs:
         shell: bash
         run: |
           if [ "$RUNNER_OS" = Linux ]; then
-            printf '<!doctype html><pre id=g>ok</pre><script>(async()=>{await document.fonts.ready;await new Promise(r=>setTimeout(r,100));document.getElementById("g").textContent="pronto"})()</script>' > /tmp/min.html
-            base="--headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --disable-software-rasterizer --disable-extensions --disable-background-networking --no-first-run --allow-file-access-from-files"
-            i=0
-            for flags in "--virtual-time-budget=3000" "--virtual-time-budget=500" "--virtual-time-budget=3000 --in-process-gpu" "--virtual-time-budget=3000 --use-gl=disabled" "--virtual-time-budget=3000 --disable-features=Vulkan,UseSkiaRenderer" "--virtual-time-budget=3000 --single-process" "--timeout=2000"; do
-              i=$((i+1)); echo "TRIV flags=[$flags]"; s=$(date +%s)
-              out=$(timeout 40 google-chrome $base --user-data-dir=/tmp/p$i $flags --dump-dom file:///tmp/min.html 2>/dev/null | grep -o '>pronto<\|>ok<'); echo "TRIV result=[$out] secs=$(( $(date +%s) - s ))"
-              pkill -9 chrome || true
-            done
+            ( while true; do echo "MON $(date +%T) $(free -m | sed -n 2p | tr -s ' ') | $(ps -eo rss,pid,etimes,args --sort=-rss | sed -n 2,5p | cut -c1-150 | tr '\n' ';')" >> /tmp/mon.log; if [ "$(free -m | awk 'NR==2{print $7}')" -lt 2500 ]; then echo "MON GUARD: matando chrome e vitest" >> /tmp/mon.log; pkill -9 chrome; pkill -9 -f vitest; fi; sleep 3; done ) > /dev/null 2>&1 &
+            npm run build > /tmp/build.log 2>&1; echo "build=$?"
+            timeout 150 npx vitest run src/componentes/casca/geometria.test.tsx > /tmp/vt.log 2>&1; echo "vitest=$?"
+            pkill -f 'while true' || true
+            echo "== vitest (fim)"; tail -n 60 /tmp/vt.log | cut -c1-300
+            echo "== monitor"; awk 'NR%3==1' /tmp/mon.log | cut -c1-700 | head -n 40; grep GUARD /tmp/mon.log | head -n 2
             exit 0
           else
             npm run check
