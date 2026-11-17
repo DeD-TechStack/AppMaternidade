@@ -109,14 +109,38 @@ function linhaFamilia(linha: unknown): LinhaFamilia {
   return linha as unknown as LinhaFamilia
 }
 
-/** O vínculo com a família embutida (objeto, lista ou ausente: a RLS pode esconder a família). */
+/** Coluna que aceita nulo: a chave tem de vir (`undefined` é coluna ausente) e ser texto ou `null`. */
+const ehTextoOuNulo = (valor: unknown): valor is string | null => valor === null || typeof valor === 'string'
+
+function linhaVinculo(linha: unknown): LinhaVinculo {
+  if (!ehObjeto(linha) || !ehTexto(linha.id) || !ehTexto(linha.conta_id) || !ehTexto(linha.papel) || !ehTexto(linha.estado) || !ehTextoOuNulo(linha.valido_ate)) {
+    inesperada('linha de vinculos')
+  }
+  return linha as unknown as LinhaVinculo
+}
+
+function linhaConvite(linha: unknown): LinhaConvite {
+  if (
+    !ehObjeto(linha) ||
+    !ehTexto(linha.id) ||
+    !ehTexto(linha.papel) ||
+    !ehTextoOuNulo(linha.vinculo_valido_ate) ||
+    !ehTextoOuNulo(linha.criado_por) ||
+    !ehTexto(linha.expira_em)
+  ) {
+    inesperada('linha de convites')
+  }
+  return linha as unknown as LinhaConvite
+}
+
+/** O vínculo com a família embutida: a chave `familias` vem sempre (objeto, lista ou `null` se a RLS escondeu a família). */
 function linhaVinculoComFamilia(linha: unknown): LinhaVinculoComFamilia {
-  if (!ehObjeto(linha) || !ehTexto(linha.id) || !ehTexto(linha.papel) || (linha.valido_ate !== null && typeof linha.valido_ate !== 'string')) {
+  if (!ehObjeto(linha) || !ehTexto(linha.id) || !ehTexto(linha.papel) || !ehTextoOuNulo(linha.valido_ate) || linha.familias === undefined) {
     inesperada('linha de vinculos')
   }
   const familias = linha.familias
   if (Array.isArray(familias)) familias.forEach(linhaFamilia)
-  else if (familias !== null && familias !== undefined) linhaFamilia(familias)
+  else if (familias !== null) linhaFamilia(familias)
   return linha as unknown as LinhaVinculoComFamilia
 }
 
@@ -272,6 +296,7 @@ export function criarDadosContaSupabase(cliente: SupabaseClient): DadosConta {
       // Sem a lista embutida (resposta fora da forma), a família segue sem `membros`: quem pediu relê.
       if (comMembros && linha.papel === 'responsavel' && Array.isArray(familia.vinculos)) {
         const brutos = familia.vinculos
+          .map(linhaVinculo)
           .filter((v) => v.estado === 'ativo' && vale(v.valido_ate))
           .sort((a, b) => ordemDoVinculo(a, b))
         dosMembros.push({ resumo, brutos })
@@ -287,7 +312,12 @@ export function criarDadosContaSupabase(cliente: SupabaseClient): DadosConta {
   async function nomesDasContas(ids: string[]): Promise<Map<string, string>> {
     const { data, error } = await cliente.from('contas').select('id, nome_privado').in('id', ids)
     if (error) throw error
-    return new Map(((data ?? []) as Array<{ id: string; nome_privado: string }>).map((c) => [c.id, c.nome_privado]))
+    return new Map(
+      ((data ?? []) as unknown[]).map((c): [string, string] => {
+        if (!ehObjeto(c) || !ehTexto(c.id) || typeof c.nome_privado !== 'string') inesperada('linha de contas')
+        return [c.id, c.nome_privado]
+      }),
+    )
   }
 
   const paraMembro = (v: LinhaVinculo, nomes: Map<string, string>, pessoa: string): Membro => ({
@@ -315,9 +345,8 @@ export function criarDadosContaSupabase(cliente: SupabaseClient): DadosConta {
     if (error) throw error
     const brutos = ((data ?? []) as unknown[])
       .map((linha) => {
-        const vinculo = linhaVinculoComFamilia(linha) as unknown as LinhaVinculo & { familias?: LinhaFamilia | LinhaFamilia[] | null }
-        if (!ehTexto(vinculo.conta_id) || !ehTexto(vinculo.estado)) inesperada('linha de vinculos')
-        return vinculo
+        const vinculo = linhaVinculo(linha)
+        return { ...vinculo, familias: linhaVinculoComFamilia(linha).familias }
       })
       .filter((v) => vale(v.valido_ate))
     const meu = brutos.find((v) => v.conta_id === pessoa)
@@ -535,8 +564,8 @@ export function criarDadosContaSupabase(cliente: SupabaseClient): DadosConta {
         if (bebesR.error) throw bebesR.error
         if (convitesR.error) throw convitesR.error
 
-        const membrosBrutos = ((vinculosR.data ?? []) as LinhaVinculo[]).filter((v) => vale(v.valido_ate))
-        const convitesBrutos = (convitesR.data ?? null) as LinhaConvite[] | null
+        const membrosBrutos = ((vinculosR.data ?? []) as unknown[]).map(linhaVinculo).filter((v) => vale(v.valido_ate))
+        const convitesBrutos = convitesR.data ? (convitesR.data as unknown[]).map(linhaConvite) : null
         const nomes = await nomesDasContas([
           ...new Set([...membrosBrutos.map((v) => v.conta_id), ...(convitesBrutos ?? []).flatMap((c) => (c.criado_por ? [c.criado_por] : []))]),
         ])

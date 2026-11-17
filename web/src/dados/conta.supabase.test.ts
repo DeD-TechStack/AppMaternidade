@@ -1102,5 +1102,68 @@ describe('I-S8: linha malformada', () => {
       })
       expect(valor(await dados.minhasFamilias()).map((f) => f.meuVinculoId).sort()).toEqual(['lista', 'objeto'])
     })
+
+    it('F1: o vínculo sem a chave familias (a consulta sempre a pede) é desconhecido, não uma lista vazia', async () => {
+      const semAChave = Object.fromEntries(Object.entries(vinculo).filter(([nome]) => nome !== 'familias'))
+
+      const lista = montar({ tabelas: { vinculos: [resposta([semAChave])] } })
+      expect(falha(await lista.dados.minhasFamilias()).classe).toBe('desconhecido')
+
+      const membro = { ...semAChave, conta_id: USUARIO_FALSO.id, estado: 'ativo' }
+      const detalhe = montar({ tabelas: { vinculos: [resposta([membro])], contas: [resposta([])] } })
+      expect(falha(await detalhe.dados.detalheFamilia(FAMILIA, 'membros')).classe).toBe('desconhecido')
+    })
+  })
+
+  describe('as outras linhas lidas: coluna ausente ou de outro tipo é desconhecido', () => {
+    const MEMBRO = { id: 'm1', conta_id: USUARIO_FALSO.id, papel: 'responsavel', estado: 'ativo', valido_ate: null }
+    const CONVITE = { id: 'c1', papel: 'cuidador', vinculo_valido_ate: null, criado_por: null, expira_em: '2026-11-13T12:00:00Z' }
+    const NOME = { id: USUARIO_FALSO.id, nome_privado: 'Juliana' }
+
+    const completo = (tabelas: { vinculos?: unknown[]; convites?: unknown[]; contas?: unknown[] }) =>
+      montar({
+        tabelas: {
+          vinculos: [resposta([vinculoComFamilia('meu', null)]), resposta(tabelas.vinculos ?? [])],
+          bebes: [resposta([])],
+          convites: [resposta(tabelas.convites ?? [])],
+          contas: [resposta(tabelas.contas ?? [])],
+        },
+      })
+    const embutido = (membro: unknown, contas: unknown[] = [NOME]) =>
+      montar({
+        tabelas: { vinculos: [resposta([vinculoComFamilia('v1', null, { ...LINHA_FAMILIA, vinculos: [membro] })])], contas: [resposta(contas)] },
+      })
+
+    for (const [rotulo, ruim] of defeitos(MEMBRO, ['id', 'conta_id', 'papel', 'estado', 'valido_ate'])) {
+      it(`vínculo embutido na família (comMembros) ${rotulo}`, async () => {
+        expect(falha(await embutido(ruim).dados.minhasFamilias({ comMembros: true })).classe).toBe('desconhecido')
+      })
+
+      it(`vínculo da lista de membros do detalhe ${rotulo}`, async () => {
+        expect(falha(await completo({ vinculos: [ruim] }).dados.detalheFamilia(FAMILIA)).classe).toBe('desconhecido')
+      })
+    }
+
+    for (const [rotulo, ruim] of defeitos(CONVITE, ['id', 'papel', 'vinculo_valido_ate', 'criado_por', 'expira_em'])) {
+      it(`convite do detalhe ${rotulo}`, async () => {
+        expect(falha(await completo({ convites: [ruim] }).dados.detalheFamilia(FAMILIA)).classe).toBe('desconhecido')
+      })
+    }
+
+    for (const [rotulo, ruim] of defeitos(NOME, ['id', 'nome_privado'])) {
+      it(`nome da conta (nomesDasContas) ${rotulo}`, async () => {
+        expect(falha(await completo({ vinculos: [MEMBRO], contas: [ruim] }).dados.detalheFamilia(FAMILIA)).classe).toBe('desconhecido')
+        expect(falha(await embutido(MEMBRO, [ruim]).dados.minhasFamilias({ comMembros: true })).classe).toBe('desconhecido')
+      })
+    }
+
+    it('as linhas válidas continuam mapeando', async () => {
+      const detalhe = valor(await completo({ vinculos: [MEMBRO], convites: [CONVITE], contas: [NOME] }).dados.detalheFamilia(FAMILIA))
+      expect(detalhe.membros).toMatchObject([{ vinculoId: 'm1', contaId: USUARIO_FALSO.id, nome: 'Juliana', papel: 'responsavel' }])
+      expect(detalhe.convites).toMatchObject([{ id: 'c1', papel: 'cuidador', criadoPorNome: null }])
+
+      const familias = valor(await embutido(MEMBRO).dados.minhasFamilias({ comMembros: true }))
+      expect(familias[0].membros).toMatchObject([{ vinculoId: 'm1', nome: 'Juliana' }])
+    })
   })
 })
