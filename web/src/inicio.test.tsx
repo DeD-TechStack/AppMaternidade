@@ -547,12 +547,14 @@ describe('Início: ordem e texto da página', () => {
       .filter((h2) => !h2.classList.contains('sr-only'))
     expect(titulos).toHaveLength(Object.keys(segundas).length)
     for (const h2 of titulos) {
-      const linhas = [...h2.querySelectorAll(':scope > [aria-hidden="true"]')]
-      expect(linhas).toHaveLength(2)
-      const [primeira, segunda] = linhas
-      expect(primeira.classList.contains('cm-segunda-linha')).toBe(false)
-      expect(segunda.classList.contains('cm-segunda-linha')).toBe(true)
-      expect(segunda.textContent).toBe(segundas[primeira.textContent!])
+      // MOTION-1: texto comum, sem linhas aria-hidden: a primeira linha (o primeiro nó de texto), um espaço e a
+      // segunda linha em `span.cm-segunda-linha`.
+      expect(h2.querySelector('[aria-hidden="true"]')).toBeNull()
+      const segundaLinha = [...h2.querySelectorAll(':scope > .cm-segunda-linha')]
+      expect(segundaLinha).toHaveLength(1)
+      const segunda = segundaLinha[0]
+      const primeira = h2.firstChild!.textContent!.trim()
+      expect(segunda.textContent).toBe(segundas[primeira])
     }
   })
 

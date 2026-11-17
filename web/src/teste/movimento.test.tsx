@@ -39,16 +39,7 @@ describe('catálogo (DESIGN.md 5)', () => {
     expect(M3.atrasoMs).toBe(120)
   })
 
-  it('linhas: sobem 48 px em 1,25 s, curva [0.165,0.84,0.44,1], uma a cada 250 ms', () => {
-    const { M4 } = CATALOGO
-    expect(M4.deslocamentoPx).toBe(48)
-    expect(M4.duracaoMs).toBe(1250)
-    expect(M4.curva).toEqual([0.165, 0.84, 0.44, 1])
-    expect(M4.escalonamentoMs).toBe(250)
-  })
-
-  it('faixa de cacau de -50 % a 0, rodapé de -30 % a 0, cena 0,94 → 1 em 0,8 s, selos 60 s, camada 100 ms', () => {
-    expect(CATALOGO.M6.deslocamentoPct).toBe(50)
+  it('rodapé de -30 % a 0, cena 0,94 → 1 em 0,8 s, selos 60 s, camada 100 ms', () => {
     expect(CATALOGO.M7.deslocamentoPct).toBe(30)
     expect(CATALOGO.M8.escala).toEqual({ de: 0.94, para: 1 })
     expect(CATALOGO.M8.duracaoMs).toBe(800)
