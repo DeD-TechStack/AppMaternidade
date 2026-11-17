@@ -37,7 +37,7 @@ export const SECOES = {
   ilustracoes: ['Gente que cuida,', 'em traço preto.'],
   citacao: ['Citação'],
   faixa: ['De madrugada,', 'com uma mão só.'],
-  selos: ['O que o app', 'promete e cumpre.'],
+  selos: ['O que o app', 'promete.'],
   tabela: ['O caderno ajuda.', 'O app divide.'],
   depoimentos: ['Quem cuida', 'conta como é.'],
   perguntas: ['Perguntas', 'de quem chega agora.'],
