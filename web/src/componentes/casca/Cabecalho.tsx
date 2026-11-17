@@ -89,11 +89,9 @@ export function Cabecalho({ contexto, comLua, madrugada, aoAlternarMadrugada }: 
           {NOME_SITE}
         </Link>
 
-        {/* Os itens vêm das áreas (`rotas/<area>.tsx`): um item novo da área logada entra lá, sem mexer aqui. Na área
-            logada o item vale também nas sub-rotas (a Comunidade em /app/comunidade/sono); no site público, só na rota. */}
         <nav aria-label={ROTULO_NAVEGACAO} className="cm-cab-links">
           {ITENS_DO_CABECALHO[contexto].map((item) => (
-            <NavLink key={item.para} to={item.para} end={contexto === 'publico'} className="cm-cab-link">
+            <NavLink key={item.para} to={item.para} end className="cm-cab-link">
               {item.rotulo}
             </NavLink>
           ))}
