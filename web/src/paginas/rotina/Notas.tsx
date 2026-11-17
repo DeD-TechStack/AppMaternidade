@@ -5,7 +5,8 @@ import { ALVO_APP } from '../../componentes/app/alvo.ts'
 import { Avatar } from '../../componentes/app/Avatar.tsx'
 import { Botao } from '../../componentes/base/Botao.tsx'
 import { Cartao, Pilha } from '../../componentes/base/layout/index.ts'
-import { AvisoDeErro } from '../../componentes/rotina/AvisoDeErro.tsx'
+import { Carregando } from '../../componentes/estado/Carregando.tsx'
+import { ErroDaRotina } from '../../componentes/estado/ErroDaRotina.tsx'
 import { AvisoDeLista } from '../../componentes/rotina/AvisoDeLista.tsx'
 import { FormularioNota } from '../../componentes/rotina/FormularioNota.tsx'
 import { LinkDaRotina } from '../../componentes/rotina/LinkDaRotina.tsx'
@@ -265,18 +266,18 @@ function EdicaoDaNota({ ativo }: { ativo: BebeAtivo }) {
   if (leitura.estado === 'erro' && leitura.dados === null && leitura.erro) {
     return tela(
       <div className="max-w-md">
-        <AvisoDeErro erro={leitura.erro} papel={ativo.papel} aoTentarDeNovo={leitura.recarregar} />
+        <ErroDaRotina erro={leitura.erro} papel={ativo.papel} aoTentarDeNovo={leitura.recarregar} />
       </div>,
     )
   }
-  if (nota === null) return tela(<p aria-busy="true">{COMUM.carregando}</p>, true)
+  if (nota === null) return tela(<Carregando texto={COMUM.carregando} />, true)
   return tela(
     <>
       {/* Uma releitura que falhou com a nota já na tela: o aviso e `Tentar de novo` ficam junto do formulário, que
           não é desmontado e não perde o rascunho (R38-11/12). */}
       {leitura.erro ? (
         <div className="max-w-md" data-releitura-falhou="">
-          <AvisoDeErro erro={leitura.erro} papel={ativo.papel} aoTentarDeNovo={leitura.recarregar} />
+          <ErroDaRotina erro={leitura.erro} papel={ativo.papel} aoTentarDeNovo={leitura.recarregar} />
         </div>
       ) : null}
       {podeAlterar(nota) ? (

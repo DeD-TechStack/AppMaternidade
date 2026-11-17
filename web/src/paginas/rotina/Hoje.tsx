@@ -10,7 +10,8 @@ import { ALVO_APP } from '../../componentes/app/alvo.ts'
 import { Botao } from '../../componentes/base/Botao.tsx'
 import { Etiqueta } from '../../componentes/base/Etiqueta.tsx'
 import { Cartao, Colunas, Pilha, QuadroLayout, Secao } from '../../componentes/base/layout/index.ts'
-import { AvisoDeErro } from '../../componentes/rotina/AvisoDeErro.tsx'
+import { Carregando } from '../../componentes/estado/Carregando.tsx'
+import { ErroDaRotina } from '../../componentes/estado/ErroDaRotina.tsx'
 import { AvisoDeFuso } from '../../componentes/rotina/AvisoDeFuso.tsx'
 import { AvisoDeLista } from '../../componentes/rotina/AvisoDeLista.tsx'
 import { BarraRegistroRapido, type BotaoRapido, type ItemDoMais } from '../../componentes/rotina/BarraRegistroRapido.tsx'
@@ -301,15 +302,15 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
         >
           <h2 className="text-pequeno font-medium text-(--cor-texto-2)">{HOJE.emAndamento}</h2>
           {emAndamento.erro ? (
-            <AvisoDeErro erro={emAndamento.erro} papel={ativo.papel} aoTentarDeNovo={emAndamento.recarregar} />
+            <ErroDaRotina erro={emAndamento.erro} papel={ativo.papel} aoTentarDeNovo={emAndamento.recarregar} />
           ) : (
-            <p className="text-(--cor-texto-2)">{COMUM.carregando}</p>
+            <Carregando texto={COMUM.carregando} />
           )}
         </Cartao>
       ) : (
         <>
           {emAndamento.erro ? (
-            <AvisoDeErro erro={emAndamento.erro} papel={ativo.papel} aoTentarDeNovo={emAndamento.recarregar} />
+            <ErroDaRotina erro={emAndamento.erro} papel={ativo.papel} aoTentarDeNovo={emAndamento.recarregar} />
           ) : null}
           <CartaoSessao
             ref={cartao}
