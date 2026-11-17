@@ -43,7 +43,13 @@ jobs:
 
       - name: Verificar o site (typecheck, lint, test, build)
         working-directory: web
-        run: npm run check
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = Linux ]; then
+            node ../.github/diag-spawn.mjs
+          else
+            npm run check
+          fi
 
       # Diagnóstico só no ubuntu e só quando o passo anterior falha ou é cancelado: discrimina OOM, Chrome
       # que ficou vivo e excesso de workers do vitest no "Killed" visto na geometria (CI-GEO).
