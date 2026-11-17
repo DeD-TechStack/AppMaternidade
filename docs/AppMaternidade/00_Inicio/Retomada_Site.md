@@ -2,7 +2,7 @@
 tipo: progresso
 status: em andamento
 responsavel: lider-appmaternidade
-revisado_em: 2026-11-12
+revisado_em: 2026-11-17
 fontes_principais: board Kanban appmaternidade; itsaplan MAT-27 a MAT-43; git main
 ---
 
@@ -12,7 +12,15 @@ Esta é a nota de partida da próxima sessão de trabalho no site. Ela registra 
 
 **Site publicado (06/11/2026):** https://ded-techstack.github.io/AppMaternidade/ (MAT-48a, main 2beddee). Ele mostra Início, Hoje e Sessão com o aviso "Demonstração sem banco". As variáveis do banco entram no build com a MAT-37.
 
-## RETOMADA de 13/11/2026 (sessão nova do líder): ESTADO VIGENTE
+## RETOMADA de 17/11/2026 (GO de Daniel): ESTADO VIGENTE
+
+ESTADO: ATIVO desde 17/11 ~11h (GO de Daniel ~10h40: retomar e terminar o site, subir no GitHub e registrar aqui). A pausa PAUSA-20261114 terminou. O passo a passo está no bloco RETOMAR de [PENDENCIAS](PENDENCIAS.md).
+- `origin/int/refazer` = fe52a8ee (trem de 14/11: H-3g, CI-GEO g2, AUD-F2, SEC-01, MED-AUTH, RF12-HIER). `main` sem mudança (publicação só com o portão PROD_AUDIT em GO e as duas notas >= 7,5 em todas as páginas).
+- 17/11 ~11h: 21 cartões liberados. Com código pronto, voltando para revisão: NEW-A (rodapé), VIS-1 (movimento), NEW-C (casca logada), BASE-DEF-1, SEC-02 (environment banco-producao), VIS-4, SEC-03, SEC-05, LOC-08. Retrabalho: NEW-B (decisão: JS desligado sai do escopo e vai para o PA-03), LOC-01 (depois do NEW-B), LOC-04, QA-HOSTIL (2/2), CODE-Q e PERF (pedir revisão), LOC-03, LOC-05, J-RF12-1, H-4. Correções: FIX-RELOGIO, AUD-F4 g3, CI-UBUNTU, FABLE-D. A11Y-ZOOM arquivado (dados viram insumo do A11Y-Z1).
+- Filhos do líder em curso: SEC-06 (teste do banco em 473ea66 para o revisor), integração da LOC-02 (74f499b5) com o juiz Fable, atualização dos rascunhos CARDS_62 + PA-01/PA-03 na base nova, fechamento da spec RF-14 v3.
+- Contas (coordenador, 17/11 ~06h): os 3 segredos estão no environment banco-producao e o login com Google está ligado no Supabase (redirecionamento localhost).
+
+## RETOMADA de 13/11/2026 (sessão nova do líder): histórico
 
 ESTADO: PAUSE (14/11 ~03h15, Daniel; state in PENDENCIAS.md, block RETOMAR 14/11). Before: ATIVO (14/11 00h40, retomada depois da pausa de 13/11; soltura dos cartões aguarda o "GO cards" do coordenador, ordem em PENDENCIAS.md). Frente principal: item H, sistema de harmonia (polimento por página congelado).
 - MAT-40c integrada: `origin/int/refazer` = a003fe4 (merge do 5ff67f6 revisado, diff idêntico, check 2734 testes na 3ª execução; as duas primeiras caíram no teste intermitente DES-09 "carregando", que vira o cartão MAT-48f t_dfbff632). Recibo no comentário 721.

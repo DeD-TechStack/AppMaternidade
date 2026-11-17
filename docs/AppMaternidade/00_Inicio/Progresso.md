@@ -21,6 +21,7 @@ Horários em America/Sao_Paulo, tirados do relógio da máquina ou de carimbos d
 
 Uma linha por marco, a mais recente no topo. O estado corrente fica em [Retomada do site](Retomada_Site.md), e o detalhe de cada marco está no cartão Kanban citado.
 
+- 17/11/2026, ~11h: **retomada depois da PAUSA-20261114** (GO de Daniel). Commit do RETOMAR df23af9; 21 cartões liberados no board; base `origin/int/refazer` fe52a8ee. Filhos: deleg_62d3d968 (SEC-06 banco), deleg_5723031d (LOC-02 + cartões), deleg_9de15a10 (RF-14).
 - 11/11/2026, às 9h25: **construção aberta.**
   - Spec final: `FINAL/DESIGN.md` (sha256 e504df37). Os ativos foram gerados e escolhidos.
   - A base t_fdba5bed (MAT-49a, Opus) está rodando.
