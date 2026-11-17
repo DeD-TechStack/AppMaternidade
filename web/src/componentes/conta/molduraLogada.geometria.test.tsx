@@ -59,9 +59,15 @@ describe('NEW-C:RF-01 o aviso da moldura vem depois do <main>, numa região rotu
     definirBanco(false)
     const { container } = await renderizarRotaPronta('/moderacao')
     const avisos = container.querySelectorAll<HTMLElement>(SELETOR)
+    // Emenda do líder (17/11): ali o único aviso é o do rodapé público (dono: casca/Rodape.tsx), depois do <main>,
+    // dentro de um marco; a moldura não monta região própria (nenhum segundo aviso).
     expect(avisos).toHaveLength(1)
-    expect(avisos[0].closest('footer[data-rodape]')).not.toBeNull()
-    expect(container.querySelector(`section[aria-label="${ROTULO_REGIAO}"]`)).toBeNull()
+    const rodape = avisos[0].closest('footer[data-rodape]')
+    expect(rodape).not.toBeNull()
+    expect(avisos[0].closest('main, header, nav')).toBeNull()
+    const main = container.querySelector('main')!
+    expect(main.compareDocumentPosition(rodape!) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
+    expect(container.querySelectorAll(`section[aria-label="${ROTULO_REGIAO}"]`)).toHaveLength(0)
   })
 
   for (const caminho of ROTAS_COM_BANCO) {
