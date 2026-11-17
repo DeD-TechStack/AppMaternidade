@@ -2,6 +2,8 @@
 # diagnostico temporario do CI-UBUNTU (sera removido)
 set -u
 mkdir -p /tmp/keep
+snap() { echo "SNAP $1: $(grep -E 'MemAvailable|AnonPages|Shmem:|Slab|SUnreclaim|PageTables|Percpu|Unevictable|KernelStack|Mapped:' /proc/meminfo | tr -s ' ' | tr '\n' ' ') | $(df -h /tmp | tail -n 1 | tr -s ' ') | tmp=$(du -sh /tmp 2>/dev/null | cut -f1) | procs=$(ps -e | wc -l) zombies=$(ps -eo stat | grep -c '^Z')"; }
+snap inicio
 mon() {
   while true; do
     for d in /tmp/cm-geometria-*; do
@@ -20,11 +22,12 @@ mon() {
 mon > /dev/null 2>&1 &
 MONPID=$!
 npm run build > /tmp/build.log 2>&1; echo "build=$?"
-timeout 60 npx vitest run src/componentes/casca/geometria.test.tsx > /tmp/vt.log 2>&1 || true
+timeout 40 npx vitest run src/componentes/casca/geometria.test.tsx > /tmp/vt.log 2>&1 || true
 pkill -9 -x chrome || true
 sleep 2
 kill $MONPID || true
 grep -c GUARD /tmp/mon.log
+snap depois-do-vitest; sleep 5; snap 5s-depois; ps -eo stat,rss,vsz,etimes,comm --sort=-vsz | head -n 6
 echo "== paginas guardadas"; ls /tmp/keep | head
 d=$(ls -d /tmp/keep/*/ | head -n 1)
 echo "== usando $d"; ls "$d"
@@ -47,6 +50,6 @@ for extra in "" "--disable-gpu-compositing" "--disable-3d-apis --disable-webgl" 
   done
   pkill -9 -x chrome || true
   echo "VAR $i fim secs=$(( $(date +%s) - s )) maxUsedMB=$max resultado=$(grep -c innerWidth /tmp/out.txt)"
-  sleep 2
+  sleep 2; snap var$i
 done
 exit 0
