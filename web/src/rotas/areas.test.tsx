@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, fireEvent, screen } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import type { RouteObject } from 'react-router'
 import { NOMES_DO_H1, TITULOS, tituloDaAba } from '../conteudo/conta.ts'
 import { criarDadosContaMemoria } from '../dados/conta.memoria.ts'
@@ -165,7 +165,12 @@ describe('o Hoje e a Sessão ficam sob a guarda e sob o provedor da área (R38-3
       ['/app/registro/novo', 'Novo registro | AppMaternidade', /^Novo registro$/],
     ] as const) {
       const { roteador, unmount } = renderizarComDados(caminho, { sessao: 'juliana' })
-      expect((await screen.findByRole('heading', { level: 1 })).textContent).toMatch(h1)
+      // A tela de carga já mostra um h1: espera a tela final (sem main ocupado) antes de conferir o texto.
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { level: 1 }).textContent).toMatch(h1)
+        expect(document.querySelector('[aria-busy="true"]')).toBeNull()
+      })
+      expect(screen.getByRole('heading', { level: 1 }).textContent).toMatch(h1)
       expect(roteador.state.location.pathname).toBe(caminho)
       expect(document.title).toBe(titulo)
       unmount()

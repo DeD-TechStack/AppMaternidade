@@ -289,7 +289,8 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
 
   const blocoCartao = (classe: string) => (
     <Pilha vao="pilha" dataH="coluna" className={classe}>
-      {emAndamento.estado === 'carregando' || (emAndamento.estado === 'erro' && emAndamento.dados === null) ? (
+      {/* Leitura que falhou sem sessão guardada (primeira ou releitura): o erro ocupa o cartão, nunca "Nenhuma sessão". */}
+      {emAndamento.estado === 'carregando' || (emAndamento.erro && !principalSessao) ? (
         <Cartao
           as="section"
           ref={cartao}
