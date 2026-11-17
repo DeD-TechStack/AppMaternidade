@@ -275,8 +275,8 @@ describe('Início: faixa da madrugada', () => {
       name: 'Um celular sobre linho com a tela escura do modo madrugada e o botão amarelo de iniciar mamada.',
     })
     expect(cena.getAttribute('src')).toBe('/cenas/inicio/faixa-cacau@1x.webp')
-    // Carrega na hora: a faixa nunca aparece com o painel da cena vazio.
-    expect(cena.getAttribute('loading')).toBe('eager')
+    // Carrega ao chegar perto (padrão do FotoCena); a caixa fica reservada por width/height.
+    expect(cena.getAttribute('loading')).toBe('lazy')
     expect(cena.getAttribute('width')).toBe('768')
     expect(cena.getAttribute('height')).toBe('512')
     // A cena é o painel da faixa (vai até as bordas), não uma caixa solta.
@@ -316,8 +316,8 @@ describe('Início: tabela', () => {
 
     const foto = within(secao).getByRole('img', { name: 'Um celular sobre linho com uma tela real do AppMaternidade.' })
     expect(foto.getAttribute('src')).toBe('/cenas/inicio/tabela@1x.webp')
-    // Carrega na hora: o painel de areia ao lado da tabela nunca fica vazio.
-    expect(foto.getAttribute('loading')).toBe('eager')
+    // Carrega ao chegar perto (padrão do FotoCena); a caixa fica reservada por width/height.
+    expect(foto.getAttribute('loading')).toBe('lazy')
     expect(foto.getAttribute('width')).toBe('768')
     expect(foto.getAttribute('height')).toBe('512')
     expect(foto.closest('[data-painel]')!.getAttribute('data-painel')).toBe('areia')

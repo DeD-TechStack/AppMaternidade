@@ -9,6 +9,8 @@ interface Props {
   altura: number
   /** O que a cena mostra: as nossas telas, nos aparelhos. */
   alt: string
+  /** `lazy` (padrão) carrega ao chegar perto da janela; `eager`, na hora (a cena da primeira dobra). */
+  carregamento?: 'lazy' | 'eager'
   /** Classe a mais da `<picture>` (onde ela fica no painel). */
   className?: string
   /** O `data-h` da `<picture>` quando ela é filha direta de uma `Colunas` (`"coluna"`). */
@@ -17,10 +19,10 @@ interface Props {
 
 /**
  * Uma cena de estúdio sem o painel de mel da `CenaEstudio`: a `<picture>` WebP 1× e 2×, com largura
- * e altura explícitas. Carrega na hora: são WebPs pequenos, e o painel ao lado nunca pode ficar vazio.
- * Vai sobre o cacau ou num painel de areia.
+ * e altura explícitas, que reservam a caixa antes de a imagem chegar. Carrega ao chegar perto da
+ * janela; `carregamento="eager"` a traz na hora. Vai sobre o cacau ou num painel de areia.
  */
-export function FotoCena({ base, largura, altura, alt, className, dataH }: Props) {
+export function FotoCena({ base, largura, altura, alt, carregamento = 'lazy', className, dataH }: Props) {
   return (
     <picture className={['in-foto-quadro', className].filter(Boolean).join(' ')} data-h={dataH}>
       <source type="image/webp" srcSet={srcSetWebp(base)} />
@@ -30,7 +32,7 @@ export function FotoCena({ base, largura, altura, alt, className, dataH }: Props
         width={largura}
         height={altura}
         alt={alt}
-        loading="eager"
+        loading={carregamento}
         decoding="async"
         className="in-foto"
       />
