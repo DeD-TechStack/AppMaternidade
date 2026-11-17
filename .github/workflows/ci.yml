@@ -39,14 +39,7 @@ jobs:
         shell: bash
         run: |
           if [ "$RUNNER_OS" = Linux ]; then
-            ( while true; do echo "MON $(date +%T) $(free -m | sed -n 2p | tr -s ' ') | $(ps -eo rss,pid,etimes,args --sort=-rss | sed -n 2,5p | cut -c1-150 | tr '\n' ';')" >> /tmp/mon.log; if [ "$(free -m | awk 'NR==2{print $7}')" -lt 2500 ]; then echo "MON GUARD: matando chrome e vitest" >> /tmp/mon.log; pkill -9 -x chrome; pkill -9 -x MainThread; pkill -9 -f '[v]itest'; fi; sleep 3; done ) > /dev/null 2>&1 &
-            MONPID=$!
-            npm run build > /tmp/build.log 2>&1; echo "build=$?"
-            timeout 150 npx vitest run src/componentes/casca/geometria.test.tsx > /tmp/vt.log 2>&1 || true; echo "vitest-fim"
-            kill $MONPID || true
-            echo "== vitest (fim)"; tail -n 60 /tmp/vt.log | cut -c1-300
-            echo "== monitor"; awk 'NR%3==1' /tmp/mon.log | cut -c1-700 | head -n 40; grep GUARD /tmp/mon.log | head -n 2
-            exit 0
+            bash ../.github/diag-chrome.sh
           else
             npm run check
           fi
