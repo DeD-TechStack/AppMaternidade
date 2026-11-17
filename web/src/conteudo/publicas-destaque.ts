@@ -44,7 +44,7 @@ export const COMO_FUNCIONA_DESTAQUE = {
       id: 'madrugada',
       titulo: 'De madrugada',
       texto:
-        'O Hoje tem o modo madrugada: tela escura, pouco brilho e botões maiores. O plano é abrir o site no escuro, ver a última mamada e iniciar ou encerrar o registro com uma mão.',
+        'O Hoje tem o modo madrugada: tela escura, pouco brilho e botões maiores. Dá para abrir o site no escuro, ver a última mamada e iniciar ou encerrar o registro com uma mão.',
     },
     {
       id: 'troca-de-turno',
