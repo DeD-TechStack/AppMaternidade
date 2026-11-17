@@ -531,6 +531,76 @@ describe('R1 (repetição): recuperação concluída por senha_igual depois de u
   })
 })
 
+describe('I-S2: trocar a senha encerra as sessões dos outros aparelhos', () => {
+  const sessaoDe = (usuario: Record<string, unknown>) => ({ user: usuario })
+  const tique = () => new Promise<void>((resolver) => setTimeout(resolver, 0))
+
+  async function inscrever(dados: DadosConta) {
+    const eventos: string[] = []
+    const cancelar = dados.aoMudarSessao((evento) => eventos.push(evento))
+    await tique()
+    return { eventos, cancelar }
+  }
+
+  it('depois da troca com sucesso, signOut({ scope: "others" }) é chamado uma vez e o resultado segue { ok: true, valor: null }', async () => {
+    const { dados, auth } = montar()
+
+    expect(await dados.trocarSenha('senha-nova')).toEqual({ ok: true, valor: null })
+
+    expect(auth.signOut).toHaveBeenCalledTimes(1)
+    expect(auth.signOut).toHaveBeenCalledWith({ scope: 'others' })
+  })
+
+  it('a troca recusada (erro do Auth ou exceção) não chama signOut', async () => {
+    const recusas = [
+      { data: { user: null }, error: { name: 'AuthApiError', code: 'weak_password', status: 422, message: 'x' } },
+      { data: { user: null }, error: { name: 'AuthApiError', code: 'same_password', status: 422, message: 'x' } },
+      { data: { user: null }, error: ERRO_DE_SESSAO('session_expired') },
+    ]
+    for (const recusa of recusas) {
+      const { dados, auth } = montar()
+      auth.updateUser.mockResolvedValueOnce(recusa)
+      falha(await dados.trocarSenha('senha-nova'))
+      expect(auth.signOut).not.toHaveBeenCalled()
+    }
+
+    const { dados, auth } = montar()
+    auth.updateUser.mockRejectedValueOnce(new TypeError('Failed to fetch'))
+    falha(await dados.trocarSenha('senha-nova'))
+    expect(auth.signOut).not.toHaveBeenCalled()
+  })
+
+  it('signOut que rejeita ou devolve { error }: a troca segue ok e avisa outrosAparelhosMantidos, sem lançar', async () => {
+    const falhas: Array<(auth: ReturnType<typeof montar>['auth']) => void> = [
+      (auth) => auth.signOut.mockRejectedValueOnce(new TypeError('Failed to fetch')),
+      (auth) => auth.signOut.mockResolvedValueOnce({ error: { name: 'AuthApiError', code: 'unexpected_failure', message: 'x' } }),
+    ]
+    for (const preparar of falhas) {
+      const { dados, auth } = montar()
+      preparar(auth)
+
+      expect(await dados.trocarSenha('senha-nova')).toEqual({ ok: true, valor: null, outrosAparelhosMantidos: true })
+      expect(auth.signOut).toHaveBeenCalledTimes(1)
+      expect(auth.signOut).toHaveBeenCalledWith({ scope: 'others' })
+    }
+  })
+
+  it('signOut que falha não desfaz a conclusão da recuperação: o replay some e a incerteza zera', async () => {
+    const { dados, auth, emitirAuth } = montar()
+    emitirAuth('PASSWORD_RECOVERY', sessaoDe(USUARIO_FALSO))
+    auth.signOut.mockRejectedValueOnce(new TypeError('Failed to fetch'))
+
+    expect(valor(await dados.trocarSenha('senha-nova'))).toBeNull()
+    expect((await inscrever(dados)).eventos).toEqual([])
+
+    // Sem a incerteza, um same_password depois de um link novo não consome o replay.
+    emitirAuth('PASSWORD_RECOVERY', sessaoDe(USUARIO_FALSO))
+    auth.updateUser.mockResolvedValueOnce({ data: { user: null }, error: { name: 'AuthApiError', code: 'same_password', status: 422, message: 'x' } })
+    falha(await dados.trocarSenha('senha-nova'))
+    expect((await inscrever(dados)).eventos).toEqual(['recuperacao'])
+  })
+})
+
 describe('2. a hora', () => {
   const instante = (milissegundos: number) => new Date(AGORA + milissegundos).toISOString()
 
@@ -918,6 +988,119 @@ describe('3. resposta do Supabase com erro ou vazia', () => {
     it('uma exceção que não é de rede (um Error comum) é desconhecido', async () => {
       const { dados } = montar({ tabelas: { contas: [() => { throw new Error('quebrou por dentro') }] } })
       expect(falha(await dados.minhaConta()).classe).toBe('desconhecido')
+    })
+  })
+})
+
+describe('I-S8: linha malformada', () => {
+  /** A linha sem a coluna, e a mesma linha com um número onde se espera texto. */
+  const defeitos = (linha: Record<string, unknown>, colunas: string[]) =>
+    colunas.flatMap((coluna) => {
+      const semAColuna = Object.fromEntries(Object.entries(linha).filter(([nome]) => nome !== coluna))
+      return [
+        [`sem ${coluna}`, semAColuna],
+        [`${coluna} numérico`, { ...linha, [coluna]: 42 }],
+      ] as Array<[string, Record<string, unknown>]>
+    })
+
+  describe('LinhaConta (minhaConta, criarMinhaConta, atualizarMinhaConta)', () => {
+    for (const [rotulo, ruim] of defeitos(LINHA_CONTA, ['id', 'nome_privado', 'fuso', 'criada_em'])) {
+      it(`${rotulo}: desconhecido`, async () => {
+        const lida = montar({ tabelas: { contas: [resposta(ruim)] } })
+        expect(falha(await lida.dados.minhaConta()).classe).toBe('desconhecido')
+
+        const criada = montar({ tabelas: { contas: [resposta(ruim)] } })
+        expect(falha(await criada.dados.criarMinhaConta('Juliana', FUSO)).classe).toBe('desconhecido')
+
+        const atualizada = montar({ tabelas: { contas: [resposta([ruim])] } })
+        expect(falha(await atualizada.dados.atualizarMinhaConta('Juliana', FUSO)).classe).toBe('desconhecido')
+      })
+    }
+
+    it('a linha válida continua mapeando nas três operações', async () => {
+      const lida = montar({ tabelas: { contas: [resposta(LINHA_CONTA)] } })
+      expect(valor(await lida.dados.minhaConta())).toMatchObject({ id: USUARIO_FALSO.id, nome: 'Juliana', fuso: FUSO })
+      const criada = montar({ tabelas: { contas: [resposta(LINHA_CONTA)] } })
+      expect(valor(await criada.dados.criarMinhaConta('Juliana', FUSO))).toMatchObject({ nome: 'Juliana' })
+      const atualizada = montar({ tabelas: { contas: [resposta([LINHA_CONTA])] } })
+      expect(valor(await atualizada.dados.atualizarMinhaConta('Juliana', FUSO))).toMatchObject({ nome: 'Juliana' })
+    })
+  })
+
+  describe('LinhaBebe (cadastrarBebe, atualizarBebe, detalheFamilia)', () => {
+    const detalhe = (bebe: unknown) =>
+      montar({
+        tabelas: {
+          vinculos: [resposta([vinculoComFamilia('meu', null)]), resposta([])],
+          bebes: [resposta([bebe])],
+          convites: [resposta([])],
+          contas: [resposta([])],
+        },
+      })
+
+    for (const [rotulo, ruim] of defeitos(LINHA_BEBE, ['id', 'familia_id', 'nome', 'nascimento', 'estado'])) {
+      it(`${rotulo}: desconhecido`, async () => {
+        const criado = montar({ tabelas: { bebes: [resposta(ruim)] } })
+        expect(falha(await criado.dados.cadastrarBebe(FAMILIA, 'Heloísa', '2026-08-05')).classe).toBe('desconhecido')
+
+        const atualizado = montar({ tabelas: { bebes: [resposta([ruim])] } })
+        expect(falha(await atualizado.dados.atualizarBebe(BEBE, 'Heloísa', '2026-08-05')).classe).toBe('desconhecido')
+
+        expect(falha(await detalhe(ruim).dados.detalheFamilia(FAMILIA)).classe).toBe('desconhecido')
+      })
+    }
+
+    it('a linha válida continua mapeando nas três operações', async () => {
+      const esperado = { id: BEBE, familiaId: FAMILIA, nome: 'Heloísa', nascimento: '2026-08-05', estado: 'ativo' }
+      const criado = montar({ tabelas: { bebes: [resposta(LINHA_BEBE)] } })
+      expect(valor(await criado.dados.cadastrarBebe(FAMILIA, 'Heloísa', '2026-08-05'))).toEqual(esperado)
+      const atualizado = montar({ tabelas: { bebes: [resposta([LINHA_BEBE])] } })
+      expect(valor(await atualizado.dados.atualizarBebe(BEBE, 'Heloísa', '2026-08-05'))).toEqual(esperado)
+      expect(valor(await detalhe(LINHA_BEBE).dados.detalheFamilia(FAMILIA)).bebes).toEqual([esperado])
+    })
+  })
+
+  describe('LinhaVinculoComFamilia (minhasFamilias, detalheFamilia)', () => {
+    const vinculo = { id: 'v1', papel: 'responsavel', valido_ate: null, familias: LINHA_FAMILIA }
+
+    for (const [rotulo, ruim] of defeitos(vinculo, ['id', 'papel', 'valido_ate'])) {
+      it(`${rotulo}: desconhecido`, async () => {
+        const { dados } = montar({ tabelas: { vinculos: [resposta([ruim])] } })
+        expect(falha(await dados.minhasFamilias()).classe).toBe('desconhecido')
+      })
+    }
+
+    for (const [rotulo, ruim] of defeitos(LINHA_FAMILIA, ['id', 'nome', 'fuso', 'criada_em'])) {
+      it(`a família embutida ${rotulo}: desconhecido`, async () => {
+        const { dados } = montar({ tabelas: { vinculos: [resposta([{ ...vinculo, familias: ruim }])] } })
+        expect(falha(await dados.minhasFamilias()).classe).toBe('desconhecido')
+      })
+    }
+
+    it('o detalhe só com membros: a linha do vínculo ou a família embutida malformada dá desconhecido', async () => {
+      const membro = { id: 'v1', conta_id: USUARIO_FALSO.id, papel: 'responsavel', estado: 'ativo', valido_ate: null, familias: LINHA_FAMILIA }
+      const casos = [{ ...membro, papel: 42 }, { ...membro, familias: { ...LINHA_FAMILIA, nome: undefined } }, { ...membro, conta_id: undefined }]
+      for (const ruim of casos) {
+        const { dados } = montar({ tabelas: { vinculos: [resposta([ruim])], contas: [resposta([])] } })
+        expect(falha(await dados.detalheFamilia(FAMILIA, 'membros')).classe).toBe('desconhecido')
+      }
+      const bom = montar({ tabelas: { vinculos: [resposta([membro])], contas: [resposta([])] } })
+      expect(valor(await bom.dados.detalheFamilia(FAMILIA, 'membros')).familia).toMatchObject({ id: FAMILIA, meuVinculoId: 'v1' })
+    })
+
+    it('a linha válida (com família em objeto ou em lista, ou sem família) continua mapeando', async () => {
+      const { dados } = montar({
+        tabelas: {
+          vinculos: [
+            resposta([
+              { ...vinculo, id: 'objeto' },
+              { ...vinculo, id: 'lista', familias: [{ ...LINHA_FAMILIA, id: 'fb' }] },
+              { ...vinculo, id: 'sem_familia', familias: null },
+            ]),
+          ],
+        },
+      })
+      expect(valor(await dados.minhasFamilias()).map((f) => f.meuVinculoId).sort()).toEqual(['lista', 'objeto'])
     })
   })
 })

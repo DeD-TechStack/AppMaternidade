@@ -78,6 +78,48 @@ const ehTexto = (valor: unknown): valor is string => typeof valor === 'string' &
 const ehObjeto = (valor: unknown): valor is Record<string, unknown> =>
   typeof valor === 'object' && valor !== null && !Array.isArray(valor)
 
+// A forma de cada linha lida do banco: coluna ausente ou de outro tipo é resposta fora da forma
+// (`desconhecido`), nunca um `undefined` que segue até a tela. `nascimento` e as datas passam depois
+// por `dataSimples` e `iso`.
+function linhaConta(linha: unknown): LinhaConta {
+  if (!ehObjeto(linha) || !ehTexto(linha.id) || typeof linha.nome_privado !== 'string' || !ehTexto(linha.fuso) || !ehTexto(linha.criada_em)) {
+    inesperada('linha de contas')
+  }
+  return linha as unknown as LinhaConta
+}
+
+function linhaBebe(linha: unknown): LinhaBebe {
+  if (
+    !ehObjeto(linha) ||
+    !ehTexto(linha.id) ||
+    !ehTexto(linha.familia_id) ||
+    typeof linha.nome !== 'string' ||
+    !ehTexto(linha.nascimento) ||
+    (linha.estado !== 'ativo' && linha.estado !== 'arquivado')
+  ) {
+    inesperada('linha de bebes')
+  }
+  return linha as unknown as LinhaBebe
+}
+
+function linhaFamilia(linha: unknown): LinhaFamilia {
+  if (!ehObjeto(linha) || !ehTexto(linha.id) || typeof linha.nome !== 'string' || !ehTexto(linha.fuso) || !ehTexto(linha.criada_em)) {
+    inesperada('linha de familias')
+  }
+  return linha as unknown as LinhaFamilia
+}
+
+/** O vínculo com a família embutida (objeto, lista ou ausente: a RLS pode esconder a família). */
+function linhaVinculoComFamilia(linha: unknown): LinhaVinculoComFamilia {
+  if (!ehObjeto(linha) || !ehTexto(linha.id) || !ehTexto(linha.papel) || (linha.valido_ate !== null && typeof linha.valido_ate !== 'string')) {
+    inesperada('linha de vinculos')
+  }
+  const familias = linha.familias
+  if (Array.isArray(familias)) familias.forEach(linhaFamilia)
+  else if (familias !== null && familias !== undefined) linhaFamilia(familias)
+  return linha as unknown as LinhaVinculoComFamilia
+}
+
 const iso = (texto: string) => new Date(texto).toISOString()
 /** O `nascimento` (`AAAA-MM-DD`) tem de ser uma data que existe. */
 function dataSimples(texto: string): string {
@@ -164,6 +206,16 @@ export function criarDadosContaSupabase(cliente: SupabaseClient): DadosConta {
     }
   }
 
+  /** `signOut` com escopo `others`: nunca lança; devolve se os outros aparelhos saíram. */
+  async function encerrarOutrosAparelhos(): Promise<boolean> {
+    try {
+      const { error } = await auth.signOut({ scope: 'others' })
+      return !error
+    } catch {
+      return false
+    }
+  }
+
   async function meuUsuario(): Promise<Usuario> {
     const { data, error } = await auth.getSession()
     if (error) throw error
@@ -186,7 +238,7 @@ export function criarDadosContaSupabase(cliente: SupabaseClient): DadosConta {
   async function buscarConta(id: string, email: string): Promise<Conta | null> {
     const { data, error } = await cliente.from('contas').select(COLUNAS_CONTA).eq('id', id).maybeSingle()
     if (error) throw error
-    return data ? paraConta(data as LinhaConta, email) : null
+    return data ? paraConta(linhaConta(data), email) : null
   }
 
   /**
@@ -204,7 +256,7 @@ export function criarDadosContaSupabase(cliente: SupabaseClient): DadosConta {
     if (error) throw error
     const lista: FamiliaResumo[] = []
     const dosMembros: Array<{ resumo: FamiliaResumo; brutos: LinhaVinculo[] }> = []
-    for (const linha of (data ?? []) as unknown as LinhaVinculoComFamilia[]) {
+    for (const linha of ((data ?? []) as unknown[]).map(linhaVinculoComFamilia)) {
       const familia = Array.isArray(linha.familias) ? linha.familias[0] : linha.familias
       if (!familia || !vale(linha.valido_ate)) continue
       const resumo: FamiliaResumo = {
@@ -261,9 +313,13 @@ export function criarDadosContaSupabase(cliente: SupabaseClient): DadosConta {
       .order('criado_em')
       .order('conta_id')
     if (error) throw error
-    const brutos = ((data ?? []) as unknown as Array<LinhaVinculo & { familias?: LinhaFamilia | LinhaFamilia[] | null }>).filter((v) =>
-      vale(v.valido_ate),
-    )
+    const brutos = ((data ?? []) as unknown[])
+      .map((linha) => {
+        const vinculo = linhaVinculoComFamilia(linha) as unknown as LinhaVinculo & { familias?: LinhaFamilia | LinhaFamilia[] | null }
+        if (!ehTexto(vinculo.conta_id) || !ehTexto(vinculo.estado)) inesperada('linha de vinculos')
+        return vinculo
+      })
+      .filter((v) => vale(v.valido_ate))
     const meu = brutos.find((v) => v.conta_id === pessoa)
     const embutida = meu?.familias
     const familia = Array.isArray(embutida) ? embutida[0] : embutida
@@ -306,10 +362,10 @@ export function criarDadosContaSupabase(cliente: SupabaseClient): DadosConta {
   async function atualizarBebeNoBanco(bebeId: string, campos: Record<string, unknown>): Promise<Bebe> {
     const { data, error } = await cliente.from('bebes').update(campos).eq('id', bebeId).select(COLUNAS_BEBE)
     if (error) throw error
-    const linhas = (data ?? []) as LinhaBebe[]
+    const linhas = (data ?? []) as unknown[]
     if (linhas.length === 0) return recusaDoBebe(bebeId)
 
-    return paraBebe(linhas[0])
+    return paraBebe(linhaBebe(linhas[0]))
   }
 
   return {
@@ -377,6 +433,12 @@ export function criarDadosContaSupabase(cliente: SupabaseClient): DadosConta {
       if (resultado.ok) {
         ultimaRecuperacao = null
         trocaIncerta = false
+        // A senha nova encerra as sessões dos outros aparelhos. Se isso falhar, a troca continua
+        // valendo (já gravou): o resultado só avisa que os outros aparelhos seguem conectados.
+        if (!(await encerrarOutrosAparelhos())) {
+          const comAviso = { ...resultado, outrosAparelhosMantidos: true }
+          return comAviso
+        }
       } else if (ehRepetivel(resultado.erro.classe)) {
         trocaIncerta = true
       } else if (resultado.erro.chave === 'senha_igual' && trocaIncerta) {
@@ -414,7 +476,7 @@ export function criarDadosContaSupabase(cliente: SupabaseClient): DadosConta {
           .single()
         if (error) throw error
         if (!ehObjeto(data)) inesperada('conta criada sem linha')
-        return paraConta(data as unknown as LinhaConta, usuario.email)
+        return paraConta(linhaConta(data), usuario.email)
       }),
 
     atualizarMinhaConta: (nome, fuso) =>
@@ -426,10 +488,10 @@ export function criarDadosContaSupabase(cliente: SupabaseClient): DadosConta {
           .eq('id', usuario.id)
           .select(COLUNAS_CONTA)
         if (error) throw error
-        const linhas = (data ?? []) as LinhaConta[]
+        const linhas = (data ?? []) as unknown[]
         // Zero linhas no update da própria conta: a sessão já não vale.
         if (linhas.length === 0) throw SESSAO_AUSENTE
-        return paraConta(linhas[0], usuario.email)
+        return paraConta(linhaConta(linhas[0]), usuario.email)
       }),
 
     minhasFamilias: (opcoes) =>
@@ -490,7 +552,7 @@ export function criarDadosContaSupabase(cliente: SupabaseClient): DadosConta {
               vencido: Date.parse(c.expira_em) <= Date.now() || (c.vinculo_valido_ate !== null && Date.parse(c.vinculo_valido_ate) <= Date.now()),
             }))
           : null
-        return { familia: resumo, bebes: ((bebesR.data ?? []) as LinhaBebe[]).map(paraBebe), membros, convites }
+        return { familia: resumo, bebes: ((bebesR.data ?? []) as unknown[]).map((b) => paraBebe(linhaBebe(b))), membros, convites }
       }),
 
     criarFamilia: (nome, fuso) => executar(async () => idDaResposta(await chamar('criar_familia', { nome, fuso }))),
@@ -517,7 +579,7 @@ export function criarDadosContaSupabase(cliente: SupabaseClient): DadosConta {
           throw error
         }
         if (!ehObjeto(data)) inesperada('bebê criado sem linha')
-        return paraBebe(data as unknown as LinhaBebe)
+        return paraBebe(linhaBebe(data))
       }),
 
     atualizarBebe: (bebeId, nome, nascimento) =>
