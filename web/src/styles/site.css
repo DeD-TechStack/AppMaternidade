@@ -763,15 +763,13 @@
   }
 
   /* Página curta (main < 1,5 janela, marcado pelo Rodape.tsx): o nome no nível `exibicao`, para não pesar mais que
-     o conteúdo da página. Sem JS o atributo não existe e vale o tamanho da página longa. Abaixo de 420 o miolo do
-     painel é mais estreito que o nome em `exibicao` (40 px x 8,05 = 322 px > 302 px em 390): lá o nome já é menor
-     que `exibicao` e fica no tamanho do miolo, numa linha só. */
-  @media (min-width: 420px) {
-    .cm-rodape[data-pagina-curta] .cm-rodape-nome {
-      margin-top: var(--espaco-bloco);
-      font-size: var(--texto-exibicao-tamanho);
-      line-height: var(--texto-exibicao-entrelinha);
-    }
+     o conteúdo da página. Sem JS o atributo não existe e vale o tamanho da página longa. Em todas as larguras o
+     tamanho é o do token (40/44 em 390); onde o miolo do painel é mais estreito que o nome (em 390), o <wbr> entre
+     "App" e "Maternidade" quebra o nome em duas linhas. */
+  .cm-rodape[data-pagina-curta] .cm-rodape-nome {
+    margin-top: var(--espaco-bloco);
+    font-size: var(--texto-exibicao-tamanho);
+    line-height: var(--texto-exibicao-entrelinha);
   }
 
   .cm-rodape-base {

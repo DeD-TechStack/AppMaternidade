@@ -87,6 +87,9 @@ describe('NEW-A RF-05: o nome segue o comprimento da página (data-pagina-curta)
   })
 
   it('a regra da página curta usa o token exibicao; a regra base continua presa ao miolo do painel', () => {
+    // Sem @media: o token vale em todas as larguras, inclusive 390 (a regra fora de media e a única com esse seletor).
+    expect(corpoNoMedia(/min-width/, '.cm-rodape[data-pagina-curta] .cm-rodape-nome')).toBe('')
+    expect(corpos('.cm-rodape[data-pagina-curta] .cm-rodape-nome')).toHaveLength(1)
     const curta = corpos('.cm-rodape[data-pagina-curta] .cm-rodape-nome')[0] ?? ''
     expect(curta).toMatch(/font-size:\s*var\(--texto-exibicao-tamanho\)/)
     expect(curta).toMatch(/line-height:\s*var\(--texto-exibicao-entrelinha\)/)
