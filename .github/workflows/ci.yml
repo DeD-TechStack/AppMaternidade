@@ -36,7 +36,12 @@ jobs:
 
       - name: Verificar o site (typecheck, lint, test, build)
         working-directory: web
-        run: npm run check
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = Linux ]; then
+            ( while true; do echo "MON $(date +%T) $(free -m | sed -n 2p) | $(uptime) | $(ps -eo rss,pid,comm --sort=-rss | sed -n 2,4p | tr '\n' ';')"; sleep 5; done ) &
+          fi
+          npm run check
 
       # Diagnóstico só no ubuntu e só quando o passo anterior falha ou é cancelado: discrimina OOM, Chrome
       # que ficou vivo e excesso de workers do vitest no "Killed" visto na geometria (CI-GEO).
