@@ -10,7 +10,7 @@ language plpgsql as $$
 declare r text;
 begin
   perform set_config('request.jwt.claims',
-    json_build_object('sub', p_conta, 'role', 'authenticated')::text, true);
+    json_build_object('sub', p_conta, 'role', 'authenticated', 'aal', 'aal2')::text, true);
   execute p_sql into r;
   return r;
 exception when others then

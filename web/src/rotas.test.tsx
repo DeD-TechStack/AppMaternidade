@@ -1,8 +1,8 @@
-import { describe, expect, it } from 'vitest'
-import { fireEvent, screen, within } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
+import { act, fireEvent, screen, within } from '@testing-library/react'
 import { PROMESSA } from './conteudo/textos.ts'
-import { renderizarRota } from './teste/renderizarRota.tsx'
-import { semSessaoEmAndamento } from './teste/rotina.fixture.ts'
+import { aguardarCarga, renderizarRota } from './teste/renderizarRota.tsx'
+import { criarMundoDeTeste, semSessaoEmAndamento } from './teste/rotina.fixture.ts'
 
 const semSessao = () => ({ ajustarRotina: semSessaoEmAndamento })
 
@@ -57,7 +57,9 @@ describe('rotas', () => {
   it('o Hoje tem o h1 "Hoje" e um único bloco de cor (Em andamento), sem cartão', async () => {
     const { container } = renderizarRota('/app/hoje')
 
-    const titulo = await screen.findByRole('heading', { level: 1 })
+    // A tela de carga já traz o h1 "Hoje": espera a tela final (nenhum aria-busy) antes de conferir.
+    await aguardarCarga()
+    const titulo = await screen.findByRole('heading', { level: 1, name: 'Hoje' })
     expect(titulo.textContent).toBe('Hoje')
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
     expect(container.querySelectorAll('[data-andamento]')).toHaveLength(1)
@@ -67,7 +69,8 @@ describe('rotas', () => {
   it('a Sessão com ?tipo=tummy e sem sessão começa um Tummy time', async () => {
     renderizarRota('/app/sessao?tipo=tummy', semSessao())
 
-    const titulo = await screen.findByRole('heading', { level: 1 })
+    const titulo = await screen.findByRole('heading', { level: 1, name: 'Tummy time de Heloísa' })
+    await aguardarCarga()
     expect(titulo.textContent).toBe('Tummy time de Heloísa')
     expect(screen.getByText('Atividade sugerida: Espelho no chão')).toBeTruthy()
     expect(screen.getByText(/^Iniciado às \d{2}:\d{2} por Juliana$/)).toBeTruthy()
@@ -76,7 +79,8 @@ describe('rotas', () => {
   it('a Sessão sem sessão e sem tipo mostra o estado vazio', async () => {
     renderizarRota('/app/sessao', semSessao())
 
-    const titulo = await screen.findByRole('heading', { level: 1 })
+    const titulo = await screen.findByRole('heading', { level: 1, name: 'Nenhuma sessão em andamento' })
+    await aguardarCarga()
     expect(titulo.textContent).toBe('Nenhuma sessão em andamento')
     const link = screen.getByRole('link', { name: 'Voltar para Hoje' })
     expect(link.getAttribute('href')).toBe('/app/hoje')
@@ -85,16 +89,39 @@ describe('rotas', () => {
   it('a Sessão ignora um ?tipo= inválido', async () => {
     renderizarRota('/app/sessao?tipo=banho', semSessao())
 
-    const titulo = await screen.findByRole('heading', { level: 1 })
+    const titulo = await screen.findByRole('heading', { level: 1, name: 'Nenhuma sessão em andamento' })
+    await aguardarCarga()
     expect(titulo.textContent).toBe('Nenhuma sessão em andamento')
   })
 
   it('a Sessão mostra a sessão em andamento e ignora o ?tipo=', async () => {
     renderizarRota('/app/sessao?tipo=tummy')
 
-    const titulo = await screen.findByRole('heading', { level: 1 })
+    const titulo = await screen.findByRole('heading', { level: 1, name: 'Sono de Heloísa' })
+    await aguardarCarga()
     expect(titulo.textContent).toBe('Sono de Heloísa')
     expect(screen.queryByText(/Atividade sugerida/)).toBeNull()
+  })
+
+  it('a Sessão com a leitura da rotina segurada tem um único h1 "Sessão", dentro do main aria-busy', async () => {
+    const mundo = criarMundoDeTeste()
+    // Segura a leitura do contexto até o fim do teste; devolve a resposta de verdade ao soltar.
+    const original = mundo.rotina.contexto.bind(mundo.rotina)
+    let liberar: () => void = () => {}
+    vi.spyOn(mundo.rotina, 'contexto').mockImplementation(() => new Promise((resolver) => (liberar = () => resolver(original()))))
+    renderizarRota('/app/sessao', { mundo })
+    await act(async () => {
+      for (let passo = 0; passo < 8; passo++) await Promise.resolve()
+    })
+
+    const ocupado = document.querySelector('main[aria-busy="true"]') as HTMLElement
+    expect(ocupado).toBeTruthy()
+    expect(within(ocupado).getAllByRole('heading', { level: 1 }).map((h) => h.textContent)).toEqual(['Sessão'])
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
+
+    liberar()
+    await aguardarCarga()
+    expect(document.querySelector('[aria-busy="true"]')).toBeNull()
   })
 
   it('a rota inexistente mostra o aviso e o link para o início', async () => {
@@ -135,6 +162,8 @@ describe('navegação inferior', () => {
 
   it('na Sessão o caminho de volta é o link "Voltar para Hoje", na lateral, e leva à página /app/hoje', async () => {
     const { roteador } = renderizarRota('/app/sessao')
+    // Na tela de carga o link ainda não é o da rota: espera a tela final antes de clicar.
+    await aguardarCarga()
     const voltar = await screen.findByRole('link', { name: 'Voltar para Hoje' })
     expect(voltar.getAttribute('href')).toBe('/app/hoje')
     expect(voltar.hasAttribute('aria-current')).toBe(false)
