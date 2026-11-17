@@ -11,7 +11,7 @@ export function NaoEncontrada() {
       <Secao>
         <QuadroLayout largura="medio">
           <Pilha vao="grupo">
-            <h1 className="cm-h1">Página não encontrada</h1>
+            <h1 className="cm-h1 cm-exibicao">Página não encontrada</h1>
             <p className="cm-lide cm-medida">O endereço pode ter mudado. Pelo início você chega a todas as páginas do site.</p>
             <Botao to="/" className="self-start">
               Voltar ao início

@@ -30,7 +30,7 @@ export function HeroiInicio() {
           <Coluna>
             <Pilha vao="grupo">
               <Pilha vao="pilha">
-                <h1 id={id} className="cm-h1">
+                <h1 id={id} className="cm-h1 cm-exibicao">
                   {titulo[0]}
                   <span className="cm-segunda-linha">{` ${titulo[1]}`}</span>
                 </h1>
