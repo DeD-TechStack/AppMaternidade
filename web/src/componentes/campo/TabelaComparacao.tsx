@@ -42,7 +42,15 @@ function Marca({ sim }: { sim: boolean }) {
  */
 export function TabelaComparacao({ legenda, linhas, className, semPainel = false }: Props) {
   const tabela = (
-    <div className={semPainel && className ? `cm-tabela-rolagem ${className}` : 'cm-tabela-rolagem'}>
+    // A área rola para os lados quando a tabela não cabe (390): recebe o foco do Tab para rolar pelo teclado e
+    // tem o nome da legenda (AUD-01, WCAG 2.1.1).
+    <div
+      className={semPainel && className ? `cm-tabela-rolagem ${className}` : 'cm-tabela-rolagem'}
+      role="region"
+      aria-label={legenda}
+      // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- área que rola (como TabelaDeLeitura)
+      tabIndex={0}
+    >
       <table className="cm-tabela">
         <caption className="cm-h4">{legenda}</caption>
         <thead>
