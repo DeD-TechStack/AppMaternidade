@@ -348,7 +348,10 @@ export function Sessao() {
         <Secao>
           <QuadroLayout>
             {carregando || iniciandoPelaUrl ? (
-              <p>{iniciandoPelaUrl ? null : COMUM.carregando}</p>
+              <Pilha vao="bloco">
+                <TituloRotina antes={VOLTAR_PARA_HOJE} titulo={TITULOS.sessao} linha={null} />
+                <p>{iniciandoPelaUrl ? null : COMUM.carregando}</p>
+              </Pilha>
             ) : (
               <Pilha vao="bloco">
                 <TituloRotina antes={VOLTAR_PARA_HOJE} titulo={TITULO_SEM_SESSAO} linha={SUBTITULO_SEM_SESSAO} />

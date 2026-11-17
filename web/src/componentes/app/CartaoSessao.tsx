@@ -2,7 +2,7 @@ import { useId, type ReactNode, type Ref } from 'react'
 import { Link } from 'react-router'
 import { Baby, Milk, Moon } from 'lucide-react'
 import { Botao } from '../base/Botao.tsx'
-import { Pilha } from '../base/layout/index.ts'
+import { Cartao, Pilha } from '../base/layout/index.ts'
 import { ALVO_APP } from './alvo.ts'
 import { recuoOptico } from './recuoOptico.ts'
 import { TextoDoCronometro } from './TextoDoCronometro.tsx'
@@ -43,11 +43,11 @@ export function CartaoSessao({ sessao, agora, aoEncerrar, podeEncerrar = true, o
 
   if (!sessao) {
     return (
-      <section
+      <Cartao
+        as="section"
         ref={ref}
         aria-labelledby={idTitulo}
         tabIndex={-1}
-        data-h="cartao"
         data-andamento=""
         className={`alvo-foco flex flex-col gap-esp-junto border border-(--cor-fio-suave) bg-(--cor-cartao) ${className ?? ''}`}
       >
@@ -58,7 +58,7 @@ export function CartaoSessao({ sessao, agora, aoEncerrar, podeEncerrar = true, o
         <p className="text-pequeno text-(--cor-texto-2)">
           Para começar, toque em Sono ou Mamada na barra Registrar, embaixo.
         </p>
-      </section>
+      </Cartao>
     )
   }
 
@@ -71,11 +71,11 @@ export function CartaoSessao({ sessao, agora, aoEncerrar, podeEncerrar = true, o
     'lg:[[data-tema=madrugada]_&]:flex-row lg:[[data-tema=madrugada]_&]:flex-wrap lg:[[data-tema=madrugada]_&]:items-end lg:[[data-tema=madrugada]_&]:justify-between'
 
   return (
-    <section
+    <Cartao
+      as="section"
       ref={ref}
       aria-labelledby={idTitulo}
       tabIndex={-1}
-      data-h="cartao"
       data-andamento=""
       data-tipo={sessao.tipo}
       className={`alvo-foco relative flex overflow-hidden bg-(--cor-campo-sessao) text-(--cor-numero-sessao) [border:var(--borda-campo)] lg:items-stretch lg:gap-esp-grupo ${className ?? ''}`}
@@ -154,6 +154,6 @@ export function CartaoSessao({ sessao, agora, aoEncerrar, podeEncerrar = true, o
           />
         </span>
       </div>
-    </section>
+    </Cartao>
   )
 }
