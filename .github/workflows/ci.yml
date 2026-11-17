@@ -39,9 +39,12 @@ jobs:
         shell: bash
         run: |
           if [ "$RUNNER_OS" = Linux ]; then
-            ( while true; do echo "MON $(date +%T) $(free -m | sed -n 2p) | $(uptime) | $(ps -eo rss,pid,comm --sort=-rss | sed -n 2,4p | tr '\n' ';')"; sleep 5; done ) &
+            ( while true; do echo "MON $(date +%T) chrome=$(pgrep -c chrome) $(free -m | sed -n 2p) | $(ps -eo pid,ppid,pgid,etimes,rss,args | grep -i '[c]hrome' | cut -c1-110 | head -n 8 | tr '\n' ';')"; sleep 5; done ) &
+            npm run build
+            npx vitest run src/componentes/casca/geometria.test.tsx
+          else
+            npm run check
           fi
-          npm run check
 
       # Diagnóstico só no ubuntu e só quando o passo anterior falha ou é cancelado: discrimina OOM, Chrome
       # que ficou vivo e excesso de workers do vitest no "Killed" visto na geometria (CI-GEO).
