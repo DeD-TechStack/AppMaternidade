@@ -1,4 +1,4 @@
-import { useId, useRef } from 'react'
+import { useEffect, useId, useRef } from 'react'
 import { Link } from 'react-router'
 import { T, bebeArquivado } from '../../../conteudo/desenvolvimento/textosLogada.ts'
 import { TT, iniciarDe } from '../../../conteudo/desenvolvimento/textosTummy.ts'
@@ -24,6 +24,8 @@ interface Props {
   papel: Papel
   /** O vínculo com a família acabou com a página aberta: a página relê o contexto do bebê e tira o bloco. */
   aoPerderAcesso?: () => void
+  /** A leitura do bloco falhou (`true`) ou deixou de falhar (`false`): a página põe o bloco antes das fases enquanto falha. */
+  aoMudarFalhaDeLeitura?: (falhou: boolean) => void
 }
 
 const FAIXA_DE_ESTADO = 'm-0 max-w-[65ch] rounded-campo bg-[var(--cor-papel-fundo)] px-4 py-3 font-medium wrap-anywhere'
@@ -33,12 +35,18 @@ const FAIXA_DE_ESTADO = 'm-0 max-w-[65ch] rounded-campo bg-[var(--cor-papel-fund
  * com cronômetro, "Fizemos agora", outro horário e o histórico de 7 dias. Os dados vêm da `DadosRotina` pela
  * camada da área; nada é guardado no aparelho. O texto de segurança e o aviso de saúde ficam sempre à vista.
  */
-export function BlocoTummy({ bebe, familia, papel, aoPerderAcesso }: Props) {
+export function BlocoTummy({ bebe, familia, papel, aoPerderAcesso, aoMudarFalhaDeLeitura }: Props) {
   const raiz = useRef<HTMLElement>(null)
   const bloco = useBlocoTummy({ bebe, familia, papel, raiz, aoPerderAcesso })
   const conteudo = useConteudo()
   const idTitulo = useId()
   const { acoes } = bloco
+  const falhouALeitura = bloco.leitura === 'falha'
+
+  useEffect(() => {
+    aoMudarFalhaDeLeitura?.(falhouALeitura)
+    return () => aoMudarFalhaDeLeitura?.(false)
+  }, [falhouALeitura, aoMudarFalhaDeLeitura])
 
   const erroEm = (onde: typeof bloco.ondeDoErro) =>
     bloco.erro && bloco.ondeDoErro === onde ? (
@@ -58,6 +66,18 @@ export function BlocoTummy({ bebe, familia, papel, aoPerderAcesso }: Props) {
       <h2 id={idTitulo} tabIndex={-1} data-foco={CHAVE.titulo} className="cm-h3 text-titulo-3 alvo-foco">
         {TT.titulo}
       </h2>
+
+      {/* A leitura que falhou vem logo depois do título: o aviso e o "Tentar de novo" ficam na primeira tela. */}
+      {falhouALeitura ? (
+        <div data-leitura-falhou="" className="flex flex-col items-start gap-3">
+          <p role="alert" className="m-0 max-w-[65ch] rounded-campo border-2 border-[var(--cor-erro,var(--cor-texto))] bg-[var(--cor-cartao)] px-4 py-3 font-medium wrap-anywhere">
+            {T.falhaDeLeitura}
+          </p>
+          <Botao variante="contorno" tamanho="app" className={ALVO_APP} onClick={acoes.tentarLeituraDeNovo}>
+            {T.tentarDeNovo}
+          </Botao>
+        </div>
+      ) : null}
 
       <div className="flex max-w-[65ch] flex-col items-start gap-2">
         <p className="m-0 font-medium">{TT.seguranca}</p>
@@ -93,17 +113,6 @@ export function BlocoTummy({ bebe, familia, papel, aoPerderAcesso }: Props) {
           {T.carregando}
         </p>
       ) : null}
-      {bloco.leitura === 'falha' ? (
-        <div data-leitura-falhou="" className="flex flex-col items-start gap-3">
-          <p role="alert" className="m-0 max-w-[65ch] rounded-campo border-2 border-[var(--cor-erro,var(--cor-texto))] bg-[var(--cor-cartao)] px-4 py-3 font-medium wrap-anywhere">
-            {T.falhaDeLeitura}
-          </p>
-          <Botao variante="contorno" tamanho="app" className={ALVO_APP} onClick={acoes.tentarLeituraDeNovo}>
-            {T.tentarDeNovo}
-          </Botao>
-        </div>
-      ) : null}
-
       {bloco.emAndamento.length > 0 ? (
         <div className="flex w-full flex-col gap-4">
           {bloco.emAndamento.map((sessao) => (

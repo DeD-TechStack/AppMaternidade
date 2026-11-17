@@ -29,8 +29,8 @@ interface Props {
 }
 
 const ID_DO_CAMPO_DO_CORPO = 'campo-corpo'
-// O `.cm-botao` é `nowrap`: a 390 px com 200 % de fonte o rótulo passava da tela. Estas classes o deixam quebrar.
-const QUEBRA_DO_BOTAO = 'h-auto max-w-full py-3 text-center whitespace-normal wrap-anywhere'
+// O `.cm-botao` é `nowrap`: a 390 px com 200 % de fonte o rótulo passava da tela. Estas classes o deixam quebrar; em texto (F10), para "Ver prévia" ser o único primário.
+const BOTAO_DO_RESUMO = 'cm-botao cm-botao-texto alvo-toque h-auto max-w-full text-start whitespace-normal wrap-anywhere'
 
 // O formulário de C4 (MAT-40:RF-04), de novo tópico e de edição: título de 3 a 120 caracteres, corpo de
 // 1 a 5000 e faixa opcional, cada campo com contador. "Ver prévia" só vale com tudo dentro do limite. A
@@ -224,8 +224,7 @@ export function FormularioDeTopico({ espaco, perfilId, edicao, aoNaoEditavel, ao
               <button
                 ref={botaoDoResumo}
                 type="button"
-                className={`${BOTAO_SECUNDARIO} ${QUEBRA_DO_BOTAO}`}
-                data-tamanho="app"
+                className={BOTAO_DO_RESUMO}
                 aria-expanded={painelAberto}
                 aria-controls={painelAberto ? idDoPainel : undefined}
                 onClick={abrirOuFocarPainel}

@@ -17,6 +17,10 @@ export const PESSOAS_DEMONSTRACAO = {
   bruno: { id: '22222222-2222-4222-8222-222222222222', email: 'bruno@exemplo.invalid', nome: 'Bruno' },
   carla: { id: '33333333-3333-4333-8333-333333333333', email: 'carla@exemplo.invalid', nome: 'Carla' },
   davi: { id: '45444444-4444-4444-8444-444444444444', email: 'davi@exemplo.invalid', nome: 'Davi' },
+  // O moderador fictício (MED-AUTH): o `CONTAS.diego` de `comunidade.demonstracao.ts` e o do seed
+  // `supabase/seeds/47_comunidade.sql`. Só existe no modo memória; o papel de moderador vem da fixture
+  // da comunidade. Não tem família nem vínculo.
+  moderador: { id: '47000000-0000-4000-8000-000000000001', email: 'diego.moderador@exemplo.invalid', nome: 'Diego' },
 } as const
 
 export const FAMILIAS_DEMONSTRACAO = {
@@ -31,11 +35,11 @@ const DIA = 86_400_000
 /** `agora` é o instante da carga da página: o convite pendente vence 7 dias depois dele. */
 export function criarFixtureDemonstracao(agora: number): FixtureConta {
   const quando = (dias: number) => new Date(agora + dias * DIA).toISOString()
-  const { responsavel, bruno, carla, davi } = PESSOAS_DEMONSTRACAO
+  const { responsavel, bruno, carla, davi, moderador } = PESSOAS_DEMONSTRACAO
   const fuso = 'America/Sao_Paulo'
 
   return {
-    usuarios: [responsavel, bruno, carla, davi].map((pessoa) => ({
+    usuarios: [responsavel, bruno, carla, davi, moderador].map((pessoa) => ({
       id: pessoa.id,
       email: pessoa.email,
       senha: SENHA_DEMONSTRACAO,
@@ -46,6 +50,7 @@ export function criarFixtureDemonstracao(agora: number): FixtureConta {
       { id: bruno.id, nome: bruno.nome, fuso, criadaEm: quando(-30) },
       { id: carla.id, nome: carla.nome, fuso, criadaEm: quando(-30) },
       { id: davi.id, nome: davi.nome, fuso, criadaEm: quando(-30) },
+      { id: moderador.id, nome: moderador.nome, fuso, criadaEm: quando(-30) },
     ],
     familias: [
       { id: FAMILIAS_DEMONSTRACAO.exemplo, nome: 'Família Exemplo', fuso, criadaEm: quando(-30), criadaPor: responsavel.id },
