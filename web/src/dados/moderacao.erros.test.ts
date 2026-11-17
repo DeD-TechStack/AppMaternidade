@@ -24,7 +24,7 @@ const LINHAS: Array<[string, string, string, string, string]> = [
   ['P0001', 'decisao invalida', 'decisao_invalida', 'negocio', 'Escolha uma decisão.'],
   ['P0001', 'denuncia ja decidida', 'denuncia_ja_decidida', 'negocio', 'Essa denúncia já foi decidida.'],
   ['P0001', 'validade no passado', 'validade_no_passado', 'negocio', 'A validade precisa ser uma data futura.'],
-  ['P0001', 'ultimo admin', 'ultimo_admin', 'negocio', 'Não dá para tirar o último admin. Conceda o papel a outra pessoa antes.'],
+  ['P0001', 'ultimo admin', 'ultimo_admin', 'negocio', 'Não dá para tirar o último administrador. Conceda o papel a outra pessoa antes.'],
   ['42501', 'sem papel de plataforma', 'sem_papel', 'sem_permissao', 'Seu acesso à moderação terminou.'],
 ]
 
@@ -92,7 +92,7 @@ describe('os textos fixos da 40b (seção 4.11)', () => {
     expect(TX.tx13).toBe('Nenhuma denúncia com esses filtros.')
     expect(TX.tx14).toBe('Feito. A ação ficou registrada na auditoria.')
     expect(TX.tx15).toBe(
-      'Se a última pessoa admin excluir a própria conta, ninguém mais concede papéis pelo site. A equipe técnica recupera por migração.',
+      'Se a última pessoa administradora excluir a própria conta, ninguém mais concede papéis pelo site. Só a equipe técnica consegue recuperar o acesso.',
     )
     expect(TX.tx20).toBe('Nenhuma ação registrada ainda.')
     expect(TX.tx28).toBe('Perfil excluído. A denúncia ainda pode ser decidida.')

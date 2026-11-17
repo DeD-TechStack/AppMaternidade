@@ -159,7 +159,7 @@ describe('responder, citar e editar (MAT-40:RF-05)', () => {
     const total = estado.respostas.length
     expect(botao(TOPICO.verPrevia).getAttribute('aria-disabled')).toBe('true')
     digitar(TOPICO.campoResposta, 'Minha resposta')
-    expect(screen.getByText('14 de 2000')).toBeTruthy()
+    expect(screen.getByText('14 de 2.000')).toBeTruthy()
     fireEvent.click(botao(TOPICO.verPrevia))
 
     const previa = document.querySelector('[data-previa="resposta"]') as HTMLElement
@@ -219,7 +219,7 @@ describe('responder, citar e editar (MAT-40:RF-05)', () => {
     expect(within(resposta(CONTEUDO.respostaDoOutro)).getByText('editado')).toBeTruthy()
   })
 
-  it('o limite da resposta: 1 a 2000 caracteres, e a prévia só abre dentro dele', async () => {
+  it('o limite da resposta: 1 a 2.000 caracteres, e a prévia só abre dentro dele', async () => {
     await abrir('outro', CONTEUDO.topicoDoAutor)
     digitar(TOPICO.campoResposta, 'a'.repeat(2001))
     expect(botao(TOPICO.verPrevia).getAttribute('aria-disabled')).toBe('true')
@@ -628,7 +628,7 @@ describe('C6: meu perfil público', () => {
 
   it('a lista de bloqueios mostra só a data e "Desbloquear", que desfaz sem confirmação e leva o foco à confirmação', async () => {
     const { estado } = await abrirPerfil('autor')
-    const linha = await screen.findByText(/^Perfil bloqueado em \d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/)
+    const linha = await screen.findByText(/^Perfil bloqueado em \d{2}\/\d{2}\/\d{4} às \d{2}:\d{2}$/)
     expect(linha.textContent).not.toContain(ELENCO.bloqueado.apelido!)
     fireEvent.click(botao(PERFIL.desbloquear))
     expect(await screen.findByText(TX.tx18)).toBeTruthy()
@@ -689,7 +689,7 @@ describe('C7: minhas denúncias (MAT-40:RF-09)', () => {
     expect(within(quarta).getByText('Anúncio.')).toBeTruthy()
     expect(within(quarta).getByText('Spam ou venda')).toBeTruthy()
     expect(within(quarta).getByText('Aberta')).toBeTruthy()
-    expect(within(quarta).getByText(/^Enviada em \d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/)).toBeTruthy()
+    expect(within(quarta).getByText(/^Enviada em \d{2}\/\d{2}\/\d{4} às \d{2}:\d{2}$/)).toBeTruthy()
     expect(within(quarta).queryByText(/^Decidida em /)).toBeNull()
   })
 
