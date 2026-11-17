@@ -190,8 +190,9 @@ async function medirNoChrome(cabecalhoHtml: string, largura: number, tema: Tema)
           '--no-default-browser-check',
           `--user-data-dir=${perfil}`,
           '--force-device-scale-factor=1',
-          // O Chrome sem janela soma 16 px de moldura: com +16 o innerWidth fica igual à largura pedida.
-          `--window-size=${Math.max(largura, 600) + 16},900`,
+          // O Chrome sem janela do Windows soma 16 px de moldura: com +16 o innerWidth fica igual à largura pedida.
+          // No Linux (CI-UBUNTU) a moldura não existe: o innerWidth já é o da janela.
+          `--window-size=${Math.max(largura, 600) + (process.platform === 'win32' ? 16 : 0)},900`,
           '--virtual-time-budget=3000',
           '--dump-dom',
           pathToFileURL(alvo).href,
