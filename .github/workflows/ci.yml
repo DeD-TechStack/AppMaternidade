@@ -34,15 +34,16 @@ jobs:
         working-directory: web
         run: npm ci
 
+      # CI-UBUNTU: o Chrome do geometria.test.tsx cai no ubuntu e cada queda aciona o apport (um python por
+      # core dump); eles se acumulam (111 em 40 s, ~50 MB cada), esgotam os 16 GB e o runner morre ("shutdown
+      # signal"), sem teste falho. Sem core dump o apport não roda e o Chrome é só morto, como o teste já faz.
+      - name: Desligar os core dumps do runner (ubuntu)
+        if: ${{ runner.os == 'Linux' }}
+        run: sudo sysctl -w kernel.core_pattern='|/bin/false'
+
       - name: Verificar o site (typecheck, lint, test, build)
         working-directory: web
-        shell: bash
-        run: |
-          if [ "$RUNNER_OS" = Linux ]; then
-            bash ../.github/diag-chrome.sh
-          else
-            npm run check
-          fi
+        run: npm run check
 
       # Diagnóstico só no ubuntu e só quando o passo anterior falha ou é cancelado: discrimina OOM, Chrome
       # que ficou vivo e excesso de workers do vitest no "Killed" visto na geometria (CI-GEO).
