@@ -174,7 +174,10 @@ export function ProvedorRotina() {
         <main aria-busy="true" data-tela="rotina-carregando">
           <Secao>
             <QuadroLayout>
-              <p>{COMUM.carregando}</p>
+              <Pilha vao="bloco">
+                <TituloRotina titulo={tituloDaRota(pathname)} linha={null} />
+                <p>{COMUM.carregando}</p>
+              </Pilha>
             </QuadroLayout>
           </Secao>
         </main>
