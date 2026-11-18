@@ -665,10 +665,11 @@
     width: 100%;
   }
 
-  /* Rodapé: painel de mel com o nome em tamanho de exibição ------------------------------------- */
-  /* O rodapé do site é um painel (Secao): a caixa externa dá metade de espaco-bloco em cima e embaixo, e a caixa de
-     cor tem a largura do quadro. Enquanto uma página não termina numa Secao (as áreas do H-3b a H-3f), o respiro do
-     fim dela continua sendo esta margem; quando termina, o `secao-ampla` da última seção já cobre. */
+  /* Rodapé: links agrupados no fundo da página, sem painel de cor --------------------------------- */
+  /* O rodapé do site não tem fundo próprio: fica no fundo da página (papel; noite na madrugada), sob um fio de 1 px
+     (`.cm-rodape-quadro`, na área do site, como o rodapé compacto). Enquanto uma página não termina numa Secao (as
+     áreas do H-3b a H-3f), o respiro do fim dela continua sendo esta margem; quando termina, o `secao-ampla` da
+     última seção já cobre. */
   .cm-rodape {
     margin-top: var(--cm-entre-secoes);
   }
@@ -677,39 +678,51 @@
     margin-top: 0;
   }
 
-  .cm-rodape-painel {
-    background-color: var(--cor-painel-rodape);
-    color: var(--cor-sobre-painel-rodape);
-    container-type: inline-size;
+  /* A largura é a do quadro da página (a mesma do cabeçalho e das seções, 1200 px no máximo), para o nome e os links
+     ficarem na borda esquerda do resto da página; abaixo de 1224 px dá a mesma margem lateral da `.cm-area`. */
+  .cm-rodape-quadro {
+    width: min(var(--quadro-largura), 100vw - 2 * var(--quadro-calha));
+    padding-block: var(--espaco-pilha);
+    border-top: 1px solid var(--cor-fio-suave);
   }
 
-  /* O recipiente da revelação corta o que sobe: 8 px de folga para não cortar o anel de foco dos links. */
-  .cm-rodape-painel > .overflow-hidden {
-    margin: -8px;
-    padding: 8px;
+  /* O nome é texto comum no nível `titulo-3` (nunca maior que o h1 da página). A marca e as colunas de links vão
+     uma sobre a outra abaixo de 768 e na mesma fileira daí em diante. */
+  .cm-rodape-nome {
+    margin: 0;
+    font-family: var(--fonte-titulo);
+    font-size: var(--texto-titulo-3-tamanho);
+    line-height: var(--texto-titulo-3-entrelinha);
+    font-weight: 600;
+    letter-spacing: -0.01em;
   }
 
-  .cm-rodape-frase {
-    max-width: 22ch;
-    font-size: var(--texto-titulo-2-tamanho);
-    line-height: var(--texto-titulo-2-entrelinha);
-  }
-
-  /* Até duas colunas de links abaixo de 768, e só quando cabem: cada coluna tem no mínimo 8 rem (a palavra mais
-     longa, "compartilhado", cabe nela a 100 %) e não menos que metade do painel menos o vão. Com a fonte a 200 %
-     em 390 não cabem duas e vira uma coluna, em vez de uma palavra passar por cima da coluna do lado. */
+  /* Abaixo de 768: os nove links são uma lista só, em duas colunas, lida coluna a coluna na ordem dos grupos
+     (Produto, Ajuda, Legal). Os títulos dos grupos ficam só para o leitor de tela (sr-only). Cada coluna tem a
+     largura de meia área menos o vão; com a fonte a 200 % o texto quebra dentro do link, nunca passa da coluna. */
   .cm-rodape-colunas {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(max(8rem, calc(50% - var(--espaco-bloco))), 1fr));
-    gap: var(--espaco-grupo) var(--espaco-bloco);
+    position: relative;
+    column-count: 2;
+    column-gap: var(--espaco-pilha);
   }
 
   .cm-rodape-titulo {
-    margin: 0 0 8px;
     font-family: var(--fonte-texto);
     font-size: var(--texto-pequeno-tamanho);
     line-height: var(--texto-pequeno-entrelinha);
     font-weight: 600;
+    color: var(--cor-texto-2);
+    /* Abaixo de 768 o título fica no DOM, só para o leitor de tela (a mesma técnica do sr-only). */
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
   .cm-rodape-lista {
@@ -718,10 +731,15 @@
     list-style: none;
   }
 
+  .cm-rodape-lista > li {
+    break-inside: avoid;
+  }
+
   .cm-rodape-link {
     display: inline-flex;
     align-items: center;
     min-height: 44px;
+    min-width: var(--alvo-toque);
     /* Uma palavra mais larga que a coluna quebra, nunca passa por cima da coluna do lado (fonte a 200 %). */
     overflow-wrap: anywhere;
     color: inherit;
@@ -735,28 +753,20 @@
     text-decoration-color: currentColor;
   }
 
-  /* O nome ocupa a largura inteira do miolo do painel, da margem esquerda à régua da direita. O texto
-     (Literata 600, tracking -0.03em) mede 7,966 vezes o corpo da letra (medido, linear no tamanho); 100cqi
-     é a largura do miolo do .cm-rodape-painel (o recipiente). Sem teto, sem transform, sem mexer no tracking. */
-  .cm-rodape-nome {
-    --cm-fator-marca: 7.966;
-    margin: var(--espaco-secao) 0 0;
-    font-family: var(--fonte-titulo);
-    font-size: calc(100cqi / var(--cm-fator-marca));
-    line-height: 1.05;
-    font-weight: 600;
-    letter-spacing: -0.03em;
-    white-space: nowrap;
+  /* Na lista do rodapé do site o link é um bloco do tamanho do texto: uma linha por link, sem folga de linha em
+     volta (a caixa tem 44 px, 56 na madrugada), e duas caixas nunca se tocam. O recuo do foco fica livre: nada corta. */
+  .cm-rodape-lista .cm-rodape-link {
+    display: flex;
+    width: fit-content;
+    max-width: 100%;
+    font-size: var(--texto-pequeno-tamanho);
+    line-height: var(--texto-pequeno-entrelinha);
   }
 
+  /* O aviso de demonstração: uma linha (ou duas, em tela estreita) embaixo dos links, em texto secundário. */
   .cm-rodape-base {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 8px 32px;
-    margin-top: 32px;
-    padding-top: 20px;
-    border-top: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+    margin-top: var(--espaco-junto);
+    color: var(--cor-texto-2);
   }
 
   .cm-rodape-base > p {
@@ -777,9 +787,47 @@
     border-top: 1px solid var(--cor-fio-suave);
   }
 
+  /* De 768 em diante: o nome à esquerda e os três grupos (com os títulos à vista) à direita, numa fileira só.
+     Em 768 a fileira cabe com folga curta (o texto dos três grupos e o nome somam ~650 px de uma área de ~700):
+     por isso o vão é o menor dos papéis até 1023 e cresce daí em diante. */
   @media (min-width: 768px) {
+    .cm-rodape-quadro {
+      padding-block: var(--espaco-grupo);
+    }
+
+    .cm-rodape-topo {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      column-gap: var(--espaco-junto);
+    }
+
     .cm-rodape-colunas {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      display: flex;
+      column-count: auto;
+      column-gap: var(--espaco-junto);
+    }
+
+    /* Os títulos dos grupos voltam ao fluxo normal, à vista. */
+    .cm-rodape-titulo {
+      position: static;
+      width: auto;
+      height: auto;
+      margin: 0;
+      overflow: visible;
+      clip: auto;
+      clip-path: none;
+      white-space: normal;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .cm-rodape-topo {
+      column-gap: var(--espaco-bloco);
+    }
+
+    .cm-rodape-colunas {
+      column-gap: var(--espaco-grupo);
     }
   }
 
