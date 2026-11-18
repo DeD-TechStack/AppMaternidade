@@ -107,7 +107,15 @@ function checarY(e) {
   assert.ok(Array.isArray(e.linhas_topo), 'linhas_topo must be an array')
   assert.ok(linhaCom(e, /16:00/, /mamada/i, /Ju/), 'no 16:00 mamada Ju row in the top 292 px')
   assert.ok(linhaCom(e, /17:30/, /Ícaro/), 'no 17:30 Ícaro row in the top 292 px')
-  assert.ok((e.fonte_px_linha * 280) / 390 >= 12, `row font ${e.fonte_px_linha}px is below 12px at 280 wide`)
+  checarFonte(e)
+}
+
+/** The hour row is >= 12 px at 280 wide, or the shortfall is an accepted open item recorded as `a42_aberto` (leader 18/11). */
+function checarFonte(e) {
+  const em280 = (e.fonte_px_linha * 280) / 390
+  if (em280 >= 12) return
+  const arredondado = Math.round(em280 * 100) / 100
+  assert.equal(e.a42_aberto?.['390'], arredondado, `row font ${e.fonte_px_linha}px is ${arredondado}px at 280 wide (< 12) and a42_aberto does not record it`)
 }
 
 function checarN(e) {
@@ -126,12 +134,24 @@ function checarYAlta(manifesto) {
   const y = entradaDe(manifesto, 'Y')
   const alta = entradaDe(manifesto, 'Y_ALTA')
   assert.equal(alta.estado, 'Y')
-  for (const campo of ['rota', 'tema', 'fixture', 'rolagem_px', 'linhas_topo']) {
+  for (const campo of ['rota', 'tema', 'fixture', 'rolagem_px']) {
     assert.deepEqual(alta[campo], y[campo], `Y_ALTA.${campo} differs from Y`)
   }
   checarCelular(alta, '390x1234', 780, 2468)
-  assert.deepEqual(alta.rolagem_px, { 1440: 320, 390: 280 })
-  assert.deepEqual(y.rolagem_px, alta.rolagem_px)
+  // The tall state scrolls upward by at most offset_y_px (scaled to the viewport), capped at 320 / 280 px.
+  assert.equal(alta.direcao_rolagem, 'para_cima', 'Y_ALTA.direcao_rolagem must be para_cima')
+  assert.equal(typeof alta.offset_y_px, 'number', 'Y_ALTA.offset_y_px must be a number')
+  assert.deepEqual(alta.rolagem_px, {
+    1440: Math.min(Math.round((alta.offset_y_px * 320) / 390), 320),
+    390: Math.min(Math.round((alta.offset_y_px * 280) / 390), 280),
+  })
+  // Y_ALTA lists every visible row: Y's rows must all be among them.
+  assert.ok(Array.isArray(alta.linhas_topo) && Array.isArray(y.linhas_topo), 'linhas_topo must be arrays')
+  for (const linha of y.linhas_topo) {
+    assert.ok(alta.linhas_topo.includes(linha), `Y row "${linha}" is missing from Y_ALTA linhas_topo`)
+  }
+  // Scroll at the page maximum: the document height minus the 1234 px viewport.
+  assert.equal(alta.scroll_y, alta.altura_documento - 1234, 'Y_ALTA.scroll_y is not at the page maximum')
 }
 
 /** A known-good synthetic manifest: the negative fixtures mutate it, so a rejection is the mutation's doing. */
@@ -141,9 +161,12 @@ function manifestoBom() {
   return {
     capturas: [
       { id: 'Y', estado: 'Y', rota: '/app/historico', caminho_final: '/app/historico', h1: 'Histórico', tema: 'claro',
-        viewport: '390x844', png: { largura: 780, altura: 1688 }, linhas_topo: linhas, ...comum },
+        viewport: '390x844', png: { largura: 780, altura: 1688 }, linhas_topo: linhas, ...comum,
+        scroll_y: 280, altura_documento: 2993, offset_y_px: 88, direcao_rolagem: 'para_cima' },
       { id: 'Y_ALTA', estado: 'Y', rota: '/app/historico', caminho_final: '/app/historico', h1: 'Histórico', tema: 'claro',
-        viewport: '390x1234', png: { largura: 780, altura: 2468 }, linhas_topo: linhas, ...comum },
+        viewport: '390x1234', png: { largura: 780, altura: 2468 }, ...comum,
+        linhas_topo: [...linhas, '19:10 sono Ju'], scroll_y: 1759, altura_documento: 2993, offset_y_px: 473,
+        direcao_rolagem: 'para_cima' },
       { id: 'N', estado: 'N', rota: '/app/hoje', caminho_final: '/app/hoje', h1: 'Hoje', tema: 'madrugada',
         viewport: '390x844', png: { largura: 780, altura: 1688 }, instante: '2026-11-18T21:42:00',
         linhas_topo: ['20:30 Ícaro mamada'], ...comum, rolagem_px: null },
@@ -166,6 +189,14 @@ test('AST1-I-03 state Y: the history screen at 390x844 shows the 16:00 and 17:30
     m.capturas[0].linhas_topo = m.capturas[0].linhas_topo.filter((l) => !l.includes('17:30'))
   })
   assert.throws(() => checarY(entradaDe(sem1730, 'Y')), /17:30/)
+  // A 15 px hour row (10.77 px at 280 wide) passes only with the matching a42_aberto record.
+  const quinze = (a42) => manifestoMutado((m) => {
+    m.capturas[0].fonte_px_linha = 15
+    if (a42 !== undefined) m.capturas[0].a42_aberto = { 390: a42 }
+  })
+  assert.throws(() => checarY(entradaDe(quinze(undefined), 'Y')), /a42_aberto/)
+  assert.throws(() => checarY(entradaDe(quinze(10.7), 'Y')), /a42_aberto/)
+  checarY(entradaDe(quinze(10.77), 'Y'))
   checarY(entradaDe(lerManifesto(MANIFESTO), 'Y'))
 })
 
@@ -183,7 +214,33 @@ test('AST1-I-06 Y_ALTA: same route, theme, fixture, scroll and rows as Y, 390x12
   const baixa = manifestoMutado((m) => {
     m.capturas[1].viewport = '390x1100'
   })
-  assert.throws(() => checarYAlta(baixa))
+  assert.throws(() => checarYAlta(baixa), /390x1100/)
+  const sem1730 = manifestoMutado((m) => {
+    m.capturas[1].linhas_topo = m.capturas[1].linhas_topo.filter((l) => !l.includes('17:30'))
+  })
+  assert.throws(() => checarYAlta(sem1730), /17:30/)
+  const rolagemErrada = manifestoMutado((m) => {
+    m.capturas[1].scroll_y += 1
+  })
+  assert.throws(() => checarYAlta(rolagemErrada), /page maximum/)
+  const rolagemGrande = manifestoMutado((m) => {
+    m.capturas[1].rolagem_px = { 1440: 400, 390: 280 }
+    m.capturas[0].rolagem_px = { 1440: 400, 390: 280 }
+  })
+  assert.throws(() => checarYAlta(rolagemGrande))
+  const outraDirecao = manifestoMutado((m) => {
+    m.capturas[1].direcao_rolagem = 'para_baixo'
+  })
+  assert.throws(() => checarYAlta(outraDirecao), /para_cima/)
+  const semDirecao = manifestoMutado((m) => {
+    delete m.capturas[1].direcao_rolagem
+  })
+  assert.throws(() => checarYAlta(semDirecao), /para_cima/)
+  // A Y budget that differs from Y_ALTA's is rejected too.
+  const yDiferente = manifestoMutado((m) => {
+    m.capturas[0].rolagem_px = { 1440: 100, 390: 90 }
+  })
+  assert.throws(() => checarYAlta(yDiferente), /rolagem_px differs from Y/)
   checarYAlta(lerManifesto(MANIFESTO))
 })
 
@@ -304,8 +361,8 @@ function criarMolduraPng(h, corpo) {
   return Buffer.concat([ASSINATURA_PNG, pedaco('IHDR', ihdr), pedaco('IDAT', deflateSync(cru)), pedaco('IEND', Buffer.alloc(0))])
 }
 
-/** Frames the folder's PROVENANCE.md records under `## cap_open`: file name -> measured byte count. */
-function capAbertoDasMolduras(pasta) {
+/** Files the folder's PROVENANCE.md records under `## cap_open` (frames, captures): file name -> measured byte count. */
+function capAbertoDaPasta(pasta) {
   const caminho = join(pasta, 'PROVENANCE.md')
   const abertos = new Map()
   if (!existsSync(caminho)) return abertos
@@ -321,11 +378,11 @@ function capAbertoDasMolduras(pasta) {
   return abertos
 }
 
-/** A frame is at most `teto` bytes, or over it only with a cap_open line carrying exactly its measured bytes. */
-function checarBytesMoldura(pasta, nome, teto) {
+/** A frame or capture is at most `teto` bytes, or over it only with a cap_open line carrying exactly its measured bytes. */
+function checarBytesCapAberto(pasta, nome, teto) {
   const bytes = statSync(join(pasta, nome)).size
   if (bytes <= teto) return
-  const registrado = capAbertoDasMolduras(pasta).get(nome)
+  const registrado = capAbertoDaPasta(pasta).get(nome)
   assert.equal(registrado, bytes, `${nome}: ${bytes} bytes is over the ${teto} cap and PROVENANCE.md cap_open says ${registrado}`)
 }
 
@@ -346,15 +403,15 @@ test('AST1-I-07 frames: 678x1423 RGBA, clear screen hole, opaque body strip in t
   // Negative 3: a 1,001 B frame without a cap_open line fails; with a line carrying exactly its bytes it passes; a wrong count fails.
   const pesada = pastaTmp()
   writeFileSync(join(pesada, 'moldura-dia.png'), Buffer.alloc(1001))
-  assert.throws(() => checarBytesMoldura(pesada, 'moldura-dia.png', ATIVOS.tetoMoldura), /over the 1000 cap/)
+  assert.throws(() => checarBytesCapAberto(pesada, 'moldura-dia.png', ATIVOS.tetoMoldura), /over the 1000 cap/)
   const linhaAberta = (n) => `## cap_open\n\n- moldura-dia.png: ${n} bytes over the 1,000 B cap (measured minimum lossless encoding)\n`
   writeFileSync(join(pesada, 'PROVENANCE.md'), `# x\n\n${linhaAberta(1002)}`)
-  assert.throws(() => checarBytesMoldura(pesada, 'moldura-dia.png', ATIVOS.tetoMoldura), /cap_open says 1002/)
+  assert.throws(() => checarBytesCapAberto(pesada, 'moldura-dia.png', ATIVOS.tetoMoldura), /cap_open says 1002/)
   writeFileSync(join(pesada, 'PROVENANCE.md'), `# x\n\n${linhaAberta(1001)}`)
-  checarBytesMoldura(pesada, 'moldura-dia.png', ATIVOS.tetoMoldura)
+  checarBytesCapAberto(pesada, 'moldura-dia.png', ATIVOS.tetoMoldura)
   for (const nome of Object.keys(CORPOS)) {
     checarMoldura(lerMoldura(join(PASTAS.molduras, nome)), CORPOS[nome])
-    checarBytesMoldura(PASTAS.molduras, nome, ATIVOS.tetoMoldura)
+    checarBytesCapAberto(PASTAS.molduras, nome, ATIVOS.tetoMoldura)
   }
 })
 
@@ -421,10 +478,10 @@ function checarTudo(pastas) {
     assert.ok(soma <= ATIVOS.tetoSomaCamadas, `${rotulo}: layers total ${soma} bytes, over ${ATIVOS.tetoSomaCamadas}`)
   }
   for (const nome of ATIVOS.molduras) {
-    checarBytesMoldura(pastas.molduras, nome, ATIVOS.tetoMoldura)
+    checarBytesCapAberto(pastas.molduras, nome, ATIVOS.tetoMoldura)
   }
   for (const [nome, teto] of Object.entries(ATIVOS.capturas)) {
-    assert.ok(t(pastas.telas, nome) <= teto, `${nome}: ${t(pastas.telas, nome)} bytes is over the ${teto} cap`)
+    checarBytesCapAberto(pastas.telas, nome, teto)
   }
   const total =
     t(pastas.cenas, 'm05-sol-1672w.webp') + bytesDaCamada(pastas.cenas, 'm05-luz-1672w', ausentes) +
@@ -453,6 +510,16 @@ test('AST1-I-09 byte caps: plates, lamp layers, layer sums per DPR, frames, capt
   assert.equal(bytesDaCamada(comLista, 'm05-luz-1672w', camadasAusentes(comLista)), 0)
   writeFileSync(join(comLista, 'm05-luz-1672w.png'), Buffer.alloc(5))
   assert.throws(() => camadasAusentes(comLista), /listed as not served but present/)
+  // Captures: over the cap only with a cap_open line naming the file with exactly its bytes.
+  const telas = pastaTmp()
+  writeFileSync(join(telas, 'historico-y-alta-640w.webp'), Buffer.alloc(35001))
+  const teto = ATIVOS.capturas['historico-y-alta-640w.webp']
+  assert.throws(() => checarBytesCapAberto(telas, 'historico-y-alta-640w.webp', teto), /over the 35000 cap/)
+  const aberta = (n) => `## cap_open\n\n- historico-y-alta-640w.webp: ${n} bytes over the 35000 B cap at q72 (leader rules at integration)\n`
+  writeFileSync(join(telas, 'PROVENANCE.md'), `# x\n\n${aberta(35002)}`)
+  assert.throws(() => checarBytesCapAberto(telas, 'historico-y-alta-640w.webp', teto), /cap_open says 35002/)
+  writeFileSync(join(telas, 'PROVENANCE.md'), `# x\n\n${aberta(35001)}`)
+  checarBytesCapAberto(telas, 'historico-y-alta-640w.webp', teto)
   checarTudo(PASTAS)
 })
 

@@ -3,7 +3,7 @@
   "fonte_sha": "4fcc1de5be380a007cc09cdef2b3992ff5356529",
   "ferramenta": {
     "capturar_sha256": "ecb24d1c8c386e2c8e8a88412f0beca10da9c5a40b2affbdd5448f542e3175a7",
-    "cdp_sha256": "4632405017ceb2c670c64fe22c3180123af0d15174def92c5c77ccd2edc9a476"
+    "cdp_sha256": "fb18a5c6683d0f625a5f80ef5997cb7279d7caea34c1ffe718b8f92df3db56ea"
   },
   "capturas": [
     {
@@ -69,7 +69,14 @@
           "sha256": "25e7c44db58acfe875c07aa60a4630e981e32b45d4772f0d98ce67b1edff1679",
           "qualidade": 82
         }
-      ]
+      ],
+      "a42_aberto": {
+        "390": 10.77
+      },
+      "scroll_y": 2144,
+      "altura_documento": 2993,
+      "offset_y_px": 88,
+      "direcao_rolagem": "para_cima"
     },
     {
       "id": "Y_ALTA",
@@ -81,7 +88,7 @@
       "viewport": "390x1234",
       "dpr": 2,
       "toque": true,
-      "instante": "2026-11-18T21:42:03-03:00",
+      "instante": "2026-11-18T21:42:04-03:00",
       "fixture": "SEED-A demo family: criarFixtureRotinaDemonstracao at the fixed clock 21:42 America/Sao_Paulo",
       "rotulo_demo_oculto": "[data-aviso-tela]",
       "png": {
@@ -93,7 +100,15 @@
       "linhas_topo": [
         "07:00 Fralda, Cocô por Juliana",
         "09:00 Sono, 1 h 30 min por Juliana",
-        "11:00 Mamadeira, 100 ml · leite materno por Juliana"
+        "11:00 Mamadeira, 100 ml · leite materno por Juliana",
+        "11:15 Fralda, Ambos por Juliana",
+        "13:00 Sono, 1 h 40 min por Juliana",
+        "15:00 Tummy time, 8 min por Juliana",
+        "16:00 Mamada, 20 min · os dois lados por Juliana",
+        "17:30 Fralda, Xixi por Ícaro",
+        "18:00 Sono, 40 min por Ícaro",
+        "19:30 Mamadeira, 120 ml · fórmula por Ícaro",
+        "20:30 Sono, 3 h 20 min por Ícaro"
       ],
       "fonte_px_linha": 15,
       "rolagem_px": {
@@ -134,7 +149,14 @@
           "sha256": "785dd25552fe5d994701a7c8c9db28855410c84384ed6200fe1d05ed14b5b021",
           "qualidade": 72
         }
-      ]
+      ],
+      "a42_aberto": {
+        "390": 10.77
+      },
+      "scroll_y": 1759,
+      "altura_documento": 2993,
+      "offset_y_px": 473,
+      "direcao_rolagem": "para_cima"
     },
     {
       "id": "N",
