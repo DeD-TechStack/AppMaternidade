@@ -1,12 +1,14 @@
 import { useEffect, useRef } from 'react'
 import { useMatches } from 'react-router'
+import { useDadosConta } from '../conta/sessao.tsx'
 import { AREA_DA_ROTINA, useMadrugada, type useLuaDaCasca } from '../rotina/madrugada.ts'
 
 /**
  * A lua do cabeçalho: o mesmo que `useLuaDaCasca` (o estado da lua e o toque que a alterna), mas a escolha da
  * pessoa sobrevive a uma visita fora da Rotina. Dentro da Rotina a madrugada acompanha a escolha; ao sair
  * (Conta, Início, outra área) o `data-tema` vai embora e a lua não existe; ao voltar, a escolha é restaurada.
- * Quem estava com a madrugada desligada continua desligada. Fechar a página joga a escolha fora.
+ * Quem estava com a madrugada desligada continua desligada. Fechar a página joga a escolha fora, e sair da
+ * conta ("Sair") também: a próxima pessoa começa com a madrugada desligada.
  */
 export function useLuaDoCabecalho(): ReturnType<typeof useLuaDaCasca> {
   const dentro = useMatches().some((rota) => (rota.handle as { area?: unknown } | undefined)?.area === AREA_DA_ROTINA)
@@ -16,6 +18,19 @@ export function useLuaDoCabecalho(): ReturnType<typeof useLuaDaCasca> {
   // A escolha da pessoa e se a Rotina já a aplicou nesta visita.
   const escolha = useRef(false)
   const aplicada = useRef(false)
+
+  // A casca fica montada depois do "Sair" e acima da sessão (sem `useSessao`): a saída chega pelo evento `saiu`
+  // da conta. A escolha era de quem saiu: a próxima pessoa começa com a madrugada desligada.
+  const dados = useDadosConta()
+  useEffect(
+    () =>
+      dados.aoMudarSessao((evento) => {
+        if (evento !== 'saiu') return
+        escolha.current = false
+        definir(false)
+      }),
+    [dados, definir],
+  )
 
   useEffect(() => {
     if (!dentro) {
