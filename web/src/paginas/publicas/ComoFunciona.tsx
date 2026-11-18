@@ -17,7 +17,6 @@ import {
 import { ListaDePassos } from '../../componentes/publicas-destaque/Passos.tsx'
 import { COMO_FUNCIONA_DESTAQUE as T } from '../../conteudo/publicas-destaque.ts'
 import { NOMES_DE_PAGINA } from '../../conteudo/publicas-texto.ts'
-import { RevelacaoPorBaixo } from '../../movimento/RevelacaoPorBaixo.tsx'
 import { useTituloDaPagina } from './useTitulo.ts'
 
 /**
@@ -104,7 +103,7 @@ export function ComoFunciona() {
       </Secao>
 
       <Secao variante="painel" painel="cacau" classeCaixa="cm-faixa-cacau" aria-labelledby="como-fechamento">
-        <RevelacaoPorBaixo variante="M6" className="cm-faixa-conteudo">
+        <div className="cm-faixa-conteudo">
           <Colunas fracoes="6fr 5fr" aPartirDe={900} vao="midia" alinhar="centro" className="pd-faixa pd-faixa-com-numeros">
             <Pilha vao="grupo" dataH="coluna" className="pd-faixa-lado">
               <Titulo nivel="h2" id="como-fechamento" linhas={T.fechamento.titulo} />
@@ -116,7 +115,7 @@ export function ComoFunciona() {
               <Numeros itens={T.numeros} className="pd-faixa-numeros" />
             </Coluna>
           </Colunas>
-        </RevelacaoPorBaixo>
+        </div>
       </Secao>
     </main>
   )

@@ -2,7 +2,7 @@
 // número de movimento fica solto num componente. Com `prefers-reduced-motion: reduce` tudo para
 // (as peças leem `usePrefereMovimentoReduzido`).
 
-export interface RegistroMovimento {
+interface RegistroMovimento {
   id: string
   /** `tempo` corre no relógio; `rolagem` segue a posição da rolagem; `laco` repete. */
   tipo: 'tempo' | 'rolagem' | 'laco'
@@ -61,33 +61,7 @@ export const CATALOGO = {
     escala: { de: 0.9, para: 1 },
     mola: { stiffness: 120, damping: 30 },
   },
-  // Títulos de seção e números: as linhas sobem 48 px e aparecem, 1,25 s, uma a cada 250 ms.
-  M4: {
-    id: 'M4',
-    tipo: 'tempo',
-    duracaoMs: 1250,
-    janelaPx: 0,
-    curva: [0.165, 0.84, 0.44, 1],
-    escalonamentoMs: 250,
-    atrasoMs: 0,
-    deslocamentoPx: 48,
-    deslocamentoPct: 0,
-    escala: { de: 1, para: 1 },
-  },
-  // Faixa de cacau: o conteúdo sai de baixo, de -50 % a 0, preso à rolagem.
-  M6: {
-    id: 'M6',
-    tipo: 'rolagem',
-    duracaoMs: null,
-    janelaPx: 0,
-    curva: 'linear',
-    escalonamentoMs: 0,
-    atrasoMs: 0,
-    deslocamentoPx: 0,
-    deslocamentoPct: 50,
-    escala: { de: 1, para: 1 },
-  },
-  // Rodapé: o mesmo, de -30 % a 0.
+  // Rodapé: o conteúdo sai de baixo, de -30 % a 0, preso à rolagem.
   M7: {
     id: 'M7',
     tipo: 'rolagem',

@@ -15,7 +15,6 @@ import { TabelaTexto } from '../../componentes/publicas-destaque/TabelaTexto.tsx
 import { FASES, IDEIAS, MARCOS, QUANTO_TEMPO, TUMMY_TIME } from '../../conteudo/desenvolvimento/itens.ts'
 import { DESENVOLVIMENTO_DESTAQUE as T, ROTULOS_FONTES } from '../../conteudo/desenvolvimento/pagina.ts'
 import { NOMES_DE_PAGINA } from '../../conteudo/publicas-texto.ts'
-import { RevelacaoPorBaixo } from '../../movimento/RevelacaoPorBaixo.tsx'
 import { useTituloDaPagina } from './useTitulo.ts'
 
 // As partes do tummy time antes da tabela "quanto tempo" (o que é, segurança, quando começar); a
@@ -144,14 +143,14 @@ export function Desenvolvimento() {
       </Secao>
 
       <Secao variante="painel" painel="cacau" classeCaixa="cm-faixa-cacau" aria-labelledby="desenv-urgencia">
-        <RevelacaoPorBaixo variante="M6" className="cm-faixa-conteudo">
+        <div className="cm-faixa-conteudo">
           <div className="pd-faixa pd-faixa-texto">
             <Pilha vao="grupo" className="pd-faixa-lado">
               <Titulo nivel="h2" id="desenv-urgencia" linhas={T.urgencia.titulo} />
               <p className="cm-lide">{T.urgencia.texto}</p>
             </Pilha>
           </div>
-        </RevelacaoPorBaixo>
+        </div>
       </Secao>
     </main>
   )

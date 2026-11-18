@@ -8,6 +8,7 @@ import { LIMITE_DA_SESSAO_CURTA_MS } from './PerguntaSessaoCurta.tsx'
 import { recuoOptico } from './recuoOptico.ts'
 import { TextoDoCronometro } from './TextoDoCronometro.tsx'
 import { tamanhoDoCronometro } from '../../prototipo/formatar.ts'
+import { CRONOMETRO_SESSAO } from '../../prototipo/textosSessao.ts'
 
 // `curta`: a pergunta de uma sessão com menos de 1 minuto (QA-10); `origem` diz qual botão a abriu.
 type Painel = 'nota' | 'descartar' | 'curta'
@@ -151,7 +152,7 @@ export function CronometroSessao({
     >
       <Pilha vao="junto">
         <p id={idRotulo} className="text-pequeno font-medium">
-          Duração da sessão
+          {CRONOMETRO_SESSAO.duracao}
         </p>
         {/* `data-cronometro` mora nos dígitos: é por ele que o medidor acha o cronômetro. */}
         <div
@@ -164,7 +165,7 @@ export function CronometroSessao({
         >
           <TextoDoCronometro tempo={cronometro} />
         </div>
-        {atividade ? <p className="text-corpo">{`Atividade sugerida: ${atividade}`}</p> : null}
+        {atividade ? <p className="text-corpo">{CRONOMETRO_SESSAO.atividadeSugerida(atividade)}</p> : null}
       </Pilha>
 
       {/* Com a nota aberta, o "Salvar" dela é o primário: o Encerrar e o Encerrar e anotar saem e o painel
@@ -172,17 +173,17 @@ export function CronometroSessao({
       {painel === 'nota' ? (
         <Cartao
           role="group"
-          aria-label="Encerrar e anotar"
+          aria-label={CRONOMETRO_SESSAO.encerrarEAnotar}
           data-painel-sessao="nota"
           className="-mx-2 bg-(--cor-fundo) text-(--cor-texto) sm:mx-0"
         >
           <Pilha vao="pilha">
             <Pilha vao="junto">
               <label htmlFor={idCampo} className="block font-medium">
-                Nota
+                {CRONOMETRO_SESSAO.nota}
               </label>
               <p id={idDica} className="text-pequeno text-(--cor-texto-2)">
-                O que a família precisa saber sobre esta sessão.
+                {CRONOMETRO_SESSAO.dicaDaNota}
               </p>
             </Pilha>
             <textarea
@@ -208,7 +209,7 @@ export function CronometroSessao({
                 {ocupado ? COMUM.salvando : COMUM.salvar}
               </Botao>
               <Botao variante="texto" tamanho="app" className={`mx-0 px-2 sm:px-3 ${ALVO_APP}`} onClick={() => setPainel(null)}>
-                Cancelar
+                {CRONOMETRO_SESSAO.cancelar}
               </Botao>
               {acoes.descartar ? (
                 <Botao
@@ -218,7 +219,7 @@ export function CronometroSessao({
                   data-acao="descartar"
                   onClick={() => setPainel('descartar')}
                 >
-                  Descartar
+                  {CRONOMETRO_SESSAO.descartar}
                 </Botao>
               ) : null}
             </div>
@@ -236,7 +237,7 @@ export function CronometroSessao({
               data-acao="encerrar"
               onClick={tocarEncerrar}
             >
-              Encerrar
+              {CRONOMETRO_SESSAO.encerrar}
             </Botao>
           ) : null}
           {acoes.encerrar ? (
@@ -248,7 +249,7 @@ export function CronometroSessao({
               data-acao="anotar"
               onClick={tocarAnotar}
             >
-              <span>Encerrar e anotar</span>
+              <span>{CRONOMETRO_SESSAO.encerrarEAnotar}</span>
             </Botao>
           ) : null}
           {painel !== 'descartar' && acoes.descartar ? (
@@ -259,7 +260,7 @@ export function CronometroSessao({
               data-acao="descartar"
               onClick={() => setPainel('descartar')}
             >
-              Descartar
+              {CRONOMETRO_SESSAO.descartar}
             </Botao>
           ) : null}
         </div>
@@ -300,16 +301,16 @@ export function CronometroSessao({
           <Pilha vao="pilha">
             <Pilha vao="junto">
               <p id={idPergunta} className="font-medium">
-                Descartar esta sessão?
+                {CRONOMETRO_SESSAO.descartarPergunta}
               </p>
-              <p className="text-pequeno text-(--cor-texto-2)">O tempo não vai para o dia nem para o histórico.</p>
+              <p className="text-pequeno text-(--cor-texto-2)">{CRONOMETRO_SESSAO.descartarExplicacao}</p>
             </Pilha>
             <div className="flex flex-wrap items-center gap-3">
               <Botao variante="contorno" tamanho="app" className={ALVO_APP} desativado={ocupado} onClick={aoDescartar}>
-                Descartar
+                {CRONOMETRO_SESSAO.descartar}
               </Botao>
               <Botao variante="texto" tamanho="app" className={ALVO_APP} data-acao="manter" onClick={() => setPainel(null)}>
-                Manter
+                {CRONOMETRO_SESSAO.manter}
               </Botao>
             </div>
           </Pilha>
