@@ -6,7 +6,7 @@ import { SemQuebra } from './SemQuebra.tsx'
 import './publicas-destaque.css'
 
 // As telas de exemplo das páginas públicas, em HTML de verdade (DESIGN.md 4), com a família fictícia:
-// Juliana (mãe), Bruno, Carla e a bebê Heloísa. Cada página tem no máximo um CartaoFlutuante (girado,
+// Juliana (mãe), Ícaro, Carla e a bebê Heloísa. Cada página tem no máximo um CartaoFlutuante (girado,
 // com a sombra flutuante); as outras telas vão num CartaoPlano, no fluxo, sem giro e com a sombra de
 // cartão. Os botões desenhados aqui são parte da tela de exemplo, não controles desta página.
 
@@ -95,7 +95,7 @@ export function CartaoMadrugada() {
   )
 }
 
-/** Passo 3: o que aconteceu desde que você saiu, com a soneca de Bruno ainda em andamento. */
+/** Passo 3: o que aconteceu desde que você saiu, com a soneca de Ícaro ainda em andamento. */
 export function CartaoDesdeQueSaiu() {
   const c = CF.desdeQueSaiu
   return (
@@ -159,7 +159,7 @@ export function CartaoConviteComPrazo() {
 
 /**
  * Cuidado compartilhado: a tarde da Heloísa, com quem fez cada registro e a que horas (a soneca que
- * Bruno começou e Carla encerrou), e a nota que Carla deixou para quem chega.
+ * Ícaro começou e Carla encerrou), e a nota que Carla deixou para quem chega.
  */
 export function CartaoTarde() {
   const c = CC.tarde

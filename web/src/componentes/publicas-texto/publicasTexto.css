@@ -91,6 +91,11 @@
     .pt-figura .pt-ilustracao {
       height: 136px;
     }
+
+    /* Desenho de retrato no celular: 200 px de altura, para o traço não ficar miúdo. */
+    .pt-figura.pt-figura-retrato .pt-ilustracao {
+      height: 200px;
+    }
   }
 
 
@@ -126,6 +131,20 @@
 
     .pt-abertura .pt-figura > .pt-apoio {
       text-align: start;
+    }
+
+    /* Desenho de retrato: o painel abraça o desenho, rente à borda final da coluna da figura, e a frase de apoio
+       acaba na mesma borda. */
+    .pt-abertura .pt-figura.pt-figura-retrato > .cm-painel.pt-painel {
+      box-sizing: border-box;
+      inline-size: fit-content;
+      max-inline-size: 100%;
+      align-self: flex-end;
+      padding: var(--espaco-grupo);
+    }
+
+    .pt-abertura .pt-figura.pt-figura-retrato > .pt-apoio {
+      text-align: end;
     }
   }
 
@@ -244,6 +263,17 @@
     line-height: var(--texto-corpo-entrelinha);
     font-weight: 700;
     overflow-wrap: anywhere;
+  }
+
+  /* De 1280 em diante o cartão é uma linha só; a coluna do texto cresce pelo conteúdo, pelo piso de `min-content`. */
+  @media (min-width: 1280px) {
+    .pt-email {
+      flex-wrap: nowrap;
+    }
+
+    .pt-email-endereco {
+      white-space: nowrap;
+    }
   }
 
   /* h2 em Literata no degrau de título 2 (36/42 em 1440; o h2 de 56 é de página de venda) e h3 no de título 4. O vão

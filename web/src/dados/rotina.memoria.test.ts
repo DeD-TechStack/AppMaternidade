@@ -65,7 +65,7 @@ describe('contexto', () => {
     const [familia] = resultado.valor.familias
     expect(familia.meuPapel).toBe('responsavel')
     expect(familia.bebes.map((bebe) => bebe.nome)).toEqual(['Heloísa'])
-    expect(familia.membros.map((membro) => membro.nome).sort()).toEqual(['Bruno', 'Carla', 'Juliana'])
+    expect(familia.membros.map((membro) => membro.nome).sort()).toEqual(['Carla', 'Juliana', 'Ícaro'])
   })
 
   it('sem sessão de login, devolve a classe sessao_encerrada', async () => {
@@ -171,7 +171,7 @@ describe('editarRegistro', () => {
 
   it('o cuidador edita só o que criou; o responsável edita tudo', async () => {
     const dela = await gravado(fralda())
-    entrar('bruno')
+    entrar('icaro')
     const edicao = { inicio: dela.inicio, fim: null, detalhes: { conteudo: 'coco' as const }, nota: null }
     expect(chaveDe(await rotina.editarRegistro(dela.id, edicao))).toBe('sem_permissao')
     const dele = await gravado(fralda())
@@ -199,7 +199,7 @@ describe('editarRegistro', () => {
     montar({ bebeArquivado: true })
     // A fralda de Juliana (coco) do dia fictício.
     const alvo = mundo.fixture.registros[3]
-    entrar('bruno')
+    entrar('icaro')
     const edicao = { inicio: alvo.inicio, fim: null, detalhes: { conteudo: 'xixi' as const }, nota: null }
     expect(chaveDe(await rotina.editarRegistro(alvo.id, edicao))).toBe('sem_permissao')
     entrar('juliana')
@@ -219,7 +219,7 @@ describe('encerrarSessao', () => {
 
   it('o cuidador encerra a sessão de outra pessoa; o observador não', async () => {
     const criado = await gravado(sono())
-    entrar('bruno')
+    entrar('icaro')
     expect(chaveDe(await rotina.encerrarSessao(criado.id, iso(-MIN)))).toBe('ok')
     montar({ papelDeDavi: 'observador' })
     const outra = await gravado(sono())
@@ -281,11 +281,11 @@ describe('excluir, restaurar e lixeira', () => {
 
   it('o cuidador não exclui nem restaura o que é de outra pessoa', async () => {
     const dela = await gravado(fralda())
-    entrar('bruno')
+    entrar('icaro')
     expect(chaveDe(await rotina.excluirRegistro(dela.id))).toBe('sem_permissao')
     entrar('juliana')
     await rotina.excluirRegistro(dela.id)
-    entrar('bruno')
+    entrar('icaro')
     expect(chaveDe(await rotina.restaurarRegistro(dela.id))).toBe('sem_permissao')
   })
 
@@ -326,7 +326,7 @@ describe('notas', () => {
   it('editar e excluir: o cuidador só as suas; nota excluída não se edita; excluir de novo não muda nada', async () => {
     const dela = nota()
     await rotina.gravarNota(dela)
-    entrar('bruno')
+    entrar('icaro')
     expect(chaveDe(await rotina.editarNota(dela.id, 'Outro texto', null))).toBe('sem_permissao')
     expect(chaveDe(await rotina.excluirNota(dela.id))).toBe('sem_permissao')
     entrar('juliana')

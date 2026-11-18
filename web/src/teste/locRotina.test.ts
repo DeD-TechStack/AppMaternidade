@@ -42,7 +42,7 @@ describe('LOC-03: sem artigo de gênero diante do rótulo do tipo', () => {
     })
 
     it(`R03: duplicado de "${rotulo}" diz quem já fez o registro e a hora`, () => {
-      expect(CONFIRMACAO.duplicado('Bruno', rotulo, '09:55')).toBe(`Bruno já fez um registro de ${rotulo} às 09:55.`)
+      expect(CONFIRMACAO.duplicado('Ícaro', rotulo, '09:55')).toBe(`Ícaro já fez um registro de ${rotulo} às 09:55.`)
     })
 
     it(`R05: "ontem às" volta pelo formatarUltimo com o rótulo "${rotuloMaiusculo}"`, () => {
@@ -78,7 +78,7 @@ describe('LOC-03: tempo, hora e autoria', () => {
   })
 
   it('R04: "Início às HH:MM, por Autor" nas sessões e no cartão do Hoje', () => {
-    expect(SESSOES.iniciadoAs('08:48', 'Bruno')).toBe('Início às 08:48, por Bruno')
+    expect(SESSOES.iniciadoAs('08:48', 'Ícaro')).toBe('Início às 08:48, por Ícaro')
     expect(SESSOES.iniciadoAs('23:05', 'Juliana')).toBe('Início às 23:05, por Juliana')
     expect(CARTAO_SESSAO.inicioAs('08:48')).toBe('Início às 08:48, ')
   })
@@ -90,7 +90,7 @@ describe('LOC-03: tempo, hora e autoria', () => {
   })
 
   it('R08: a última mamada diz quem registrou, e não "com" quem', () => {
-    expect(HOJE.ultimaMamada('07:32', 'Bruno')).toBe('Última mamada às 07:32, registrada por Bruno')
+    expect(HOJE.ultimaMamada('07:32', 'Ícaro')).toBe('Última mamada às 07:32, registrada por Ícaro')
     expect(HOJE.ultimaMamada('23:50', 'Juliana')).toBe('Última mamada às 23:50, registrada por Juliana')
   })
 
@@ -166,13 +166,13 @@ describe('LOC-03: sessão e registro rápido', () => {
         MemoryRouter,
         null,
         createElement(CartaoSessao, {
-          sessao: { tipo: 'sono', inicio, pessoa: 'Bruno' },
+          sessao: { tipo: 'sono', inicio, pessoa: 'Ícaro' },
           agora: inicio + MIN,
           aoEncerrar: () => undefined,
         }),
       ),
     )
-    expect(container.textContent).toContain('Início às 08:48, por Bruno')
+    expect(container.textContent).toContain('Início às 08:48, por Ícaro')
     expect(container.textContent).not.toContain('Iniciado')
   })
 })
@@ -194,7 +194,7 @@ describe('LOC-03: nenhum texto da área leva as frases velhas', () => {
     ...textos(TT),
     SUBTITULO_SEM_SESSAO,
     CARTAO_SESSAO.inicioAs('08:48'),
-    SESSOES.iniciadoAs('08:48', 'Bruno'),
+    SESSOES.iniciadoAs('08:48', 'Ícaro'),
     bebeArquivado('Heloísa'),
     ...ROTULOS.flatMap((rotulo) => [
       FORMULARIO.confirmaDuracao(minusculo(rotulo), '2 h'),

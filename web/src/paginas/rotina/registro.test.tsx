@@ -403,7 +403,7 @@ describe('a edição', () => {
 
   it('abre com o estado completo do registro e manda o estado completo; confirma "Registro salvo." só com Fechar', async () => {
     const primeira = await renderizarRotaPronta('/app/hoje')
-    const alvo = registroDe(primeira.fixture, 'fralda', PESSOAS.bruno.id)
+    const alvo = registroDe(primeira.fixture, 'fralda', PESSOAS.icaro.id)
     primeira.unmount()
 
     const { rotina } = await renderizarRotaPronta(`/app/registro/${alvo.id}/editar`, { mundo: primeira })
@@ -425,7 +425,7 @@ describe('a edição', () => {
 
   it('sessão em andamento: só o início e os detalhes, sem o campo de fim', async () => {
     const primeira = await renderizarRotaPronta('/app/hoje')
-    const alvo = registroDe(primeira.fixture, 'sono', PESSOAS.bruno.id, true)
+    const alvo = registroDe(primeira.fixture, 'sono', PESSOAS.icaro.id, true)
     primeira.unmount()
 
     await renderizarRotaPronta(`/app/registro/${alvo.id}/editar`, { mundo: primeira })
@@ -454,7 +454,7 @@ describe('a edição', () => {
     const primeira = await renderizarRotaPronta('/app/hoje', { diaCompleto: true })
     const alvo = registroDe(primeira.fixture, 'fralda', PESSOAS.juliana.id)
     primeira.unmount()
-    primeira.conta.sessaoParaTeste(PESSOAS.bruno.email)
+    primeira.conta.sessaoParaTeste(PESSOAS.icaro.email)
 
     await renderizarRotaPronta(`/app/registro/${alvo.id}/editar`, { mundo: primeira })
 
@@ -477,7 +477,7 @@ describe('a edição', () => {
   it('id que não é UUID, que não existe ou sem acesso: "Não encontrado"; excluído: a frase do banco', async () => {
     const primeira = await renderizarRotaPronta('/app/registro/banana/editar')
     expect(screen.getByText(/Não encontramos este registro/)).toBeTruthy()
-    const alvo = registroDe(primeira.fixture, 'fralda', PESSOAS.bruno.id)
+    const alvo = registroDe(primeira.fixture, 'fralda', PESSOAS.icaro.id)
     primeira.unmount()
 
     const desconhecido = await renderizarRotaPronta('/app/registro/c3333333-3333-4333-8333-333333333333/editar', { mundo: primeira })
@@ -503,8 +503,8 @@ describe('a edição', () => {
   })
 
   it('a edição aberta pela sessão em andamento de Juliana: o responsável edita a sessão de outro cuidador', async () => {
-    const primeira = await renderizarRotaPronta('/app/hoje', { ajustarRotina: comSessaoEmAndamento('mamada', 10 * MIN, PESSOAS.bruno.id) })
-    const alvo = registroDe(primeira.fixture, 'mamada', PESSOAS.bruno.id, true)
+    const primeira = await renderizarRotaPronta('/app/hoje', { ajustarRotina: comSessaoEmAndamento('mamada', 10 * MIN, PESSOAS.icaro.id) })
+    const alvo = registroDe(primeira.fixture, 'mamada', PESSOAS.icaro.id, true)
     primeira.unmount()
 
     await renderizarRotaPronta(`/app/registro/${alvo.id}/editar`, { mundo: primeira })

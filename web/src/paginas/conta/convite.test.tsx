@@ -398,7 +398,7 @@ describe('os erros do convite (fail-closed)', () => {
   })
 
   it('ja_e_membro: a frase com o nome da família e o link "Ir para a família", sem trocar a família atual', async () => {
-    renderizarComDados(`/convite#${CODIGO}`, { sessao: 'bruno' })
+    renderizarComDados(`/convite#${CODIGO}`, { sessao: 'icaro' })
     await esperarAPrevia()
     fireEvent.click(botao('Aceitar convite'))
 

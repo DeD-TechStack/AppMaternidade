@@ -71,14 +71,14 @@ describe('Sessão: a estrutura', () => {
 })
 
 describe('Sessão: o título', () => {
-  it('o h1 é "Sono de Heloísa", focável por programa, e "Início às 08:48, por Bruno" é a segunda linha em itálico', async () => {
+  it('o h1 é "Sono de Heloísa", focável por programa, e "Início às 08:48, por Ícaro" é a segunda linha em itálico', async () => {
     await renderizarRotaPronta('/app/sessao')
 
     const h1 = screen.getByRole('heading', { level: 1 })
     expect(h1.textContent).toBe('Sono de Heloísa')
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
     expect(h1.getAttribute('tabindex')).toBe('-1')
-    const linha = screen.getByText('Início às 08:48, por Bruno')
+    const linha = screen.getByText('Início às 08:48, por Ícaro')
     expect(linha.classList.contains('italic')).toBe(true)
     expect(h1.nextElementSibling).toBe(linha)
   })
@@ -227,8 +227,8 @@ describe('Sessão: o cartão do cronômetro', () => {
   })
 
   it('com a nota aberta, o Descartar só aparece para quem pode descartar (cuidador: só as sessões que iniciou)', async () => {
-    // Bruno é cuidador e a sessão aberta é dele: pode descartar. Juliana é responsável. Carla (cuidadora)
-    // abre a sessão de Bruno: encerra e anota, mas não descarta.
+    // Ícaro é cuidador e a sessão aberta é dele: pode descartar. Juliana é responsável. Carla (cuidadora)
+    // abre a sessão de Ícaro: encerra e anota, mas não descarta.
     await renderizarRotaPronta('/app/sessao', { sessao: 'carla' })
     fireEvent.click(screen.getByRole('button', { name: 'Encerrar e anotar' }))
 
@@ -300,7 +300,7 @@ describe('Sessão: as sessões anteriores', () => {
 
     const linhas = within(screen.getByRole('region', { name: 'Sessões anteriores de sono' })).getAllByRole('listitem')
     expect(linhas.map((li) => [...li.querySelectorAll('p')].map((p) => p.textContent).join(' | '))).toEqual([
-      '05:55 às 06:40 | Bruno, no carrinho',
+      '05:55 às 06:40 | Ícaro, no carrinho',
       '03:30 às 04:20 | Juliana, no berço',
       '23:00 às 02:45 | Juliana, sono da noite',
     ])

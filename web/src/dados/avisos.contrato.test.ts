@@ -28,7 +28,7 @@ function nota(numero: number, extra: Partial<Nota> = {}): Nota {
     bebeId: null,
     texto: `Texto da nota ${numero}`,
     destaqueAte: null,
-    criadoPor: PESSOAS.bruno.id,
+    criadoPor: PESSOAS.icaro.id,
     criadaEm,
     versao: 1,
     atualizadoEm: criadaEm,
@@ -80,26 +80,26 @@ describe('RF14:RF-03 a preferência é da conta e vale na mesma página', () => 
     expect((await estado(avisos)).ligados).toBe(false)
   })
 
-  it('a preferência é de cada conta: ligar como Juliana não liga para Bruno', async () => {
+  it('a preferência é de cada conta: ligar como Juliana não liga para Ícaro', async () => {
     const { avisos, conta } = montar()
     await avisos.definirLigados(true)
-    conta.sessaoParaTeste(PESSOAS.bruno.email)
+    conta.sessaoParaTeste(PESSOAS.icaro.email)
     expect((await estado(avisos)).ligados).toBe(false)
     conta.sessaoParaTeste(PESSOAS.juliana.email)
     expect((await estado(avisos)).ligados).toBe(true)
   })
 
-  it('a demonstração: Juliana liga e vê exatamente a nota de Bruno (RF14:RF-17)', async () => {
+  it('a demonstração: Juliana liga e vê exatamente a nota de Ícaro (RF14:RF-17)', async () => {
     const { avisos } = montar({
       notas: [
-        nota(1, { texto: 'Fraldas P no armário de cima.', criadoPor: PESSOAS.bruno.id }),
+        nota(1, { texto: 'Fraldas P no armário de cima.', criadoPor: PESSOAS.icaro.id }),
         nota(2, { texto: 'Pomada só à noite.', criadoPor: PESSOAS.juliana.id }),
       ],
     })
     await avisos.definirLigados(true)
     const lido = await estado(avisos)
     expect(lido.avisos.map((a) => a.texto)).toEqual(['Fraldas P no armário de cima.'])
-    expect(lido.avisos[0]).toMatchObject({ familiaNome: 'Família Exemplo', autor: { tipo: 'nome', nome: 'Bruno' } })
+    expect(lido.avisos[0]).toMatchObject({ familiaNome: 'Família Exemplo', autor: { tipo: 'nome', nome: 'Ícaro' } })
   })
 
   // Controle negativo: o auxiliar que confere a regra lança quando o valor esperado é o contrário.
@@ -154,7 +154,7 @@ describe('RF14:RF-05 o que é um aviso', () => {
 
   it('(b) a nota da própria conta não conta; a de autor apagado (nulo) conta', async () => {
     const { avisos } = montar({
-      notas: [nota(1, { criadoPor: PESSOAS.juliana.id }), nota(2, { criadoPor: null }), nota(3, { criadoPor: PESSOAS.bruno.id })],
+      notas: [nota(1, { criadoPor: PESSOAS.juliana.id }), nota(2, { criadoPor: null }), nota(3, { criadoPor: PESSOAS.icaro.id })],
     })
     expect(await idsLigados(avisos)).toEqual([idDaNota(2), idDaNota(3)])
     const removido = (await estado(avisos)).avisos[0]
@@ -256,17 +256,17 @@ describe('RF14:RF-05 o que é um aviso', () => {
   })
 
   it('o autor: nome só com vínculo ativo; quem saiu vira "saiu", sem nome', async () => {
-    const { avisos, conta } = montar({ notas: [nota(1, { criadoPor: PESSOAS.bruno.id }), nota(2, { criadoPor: PESSOAS.carla.id })] })
+    const { avisos, conta } = montar({ notas: [nota(1, { criadoPor: PESSOAS.icaro.id }), nota(2, { criadoPor: PESSOAS.carla.id })] })
     await avisos.definirLigados(true)
     const antes = (await estado(avisos)).avisos
-    expect(antes.map((a) => a.autor)).toEqual([{ tipo: 'nome', nome: 'Bruno' }, { tipo: 'nome', nome: 'Carla' }])
+    expect(antes.map((a) => a.autor)).toEqual([{ tipo: 'nome', nome: 'Ícaro' }, { tipo: 'nome', nome: 'Carla' }])
     const detalhe = await conta.detalheFamilia(ID_FAMILIA)
     if (!detalhe.ok) throw new Error('detalhe falhou')
-    const vinculoDeBruno = detalhe.valor.membros.find((m) => m.contaId === PESSOAS.bruno.id)!.vinculoId
-    expect((await conta.revogarVinculo(vinculoDeBruno)).ok).toBe(true)
+    const vinculoDeIcaro = detalhe.valor.membros.find((m) => m.contaId === PESSOAS.icaro.id)!.vinculoId
+    expect((await conta.revogarVinculo(vinculoDeIcaro)).ok).toBe(true)
     const depois = (await estado(avisos)).avisos
     expect(depois.map((a) => a.autor)).toEqual([{ tipo: 'saiu' }, { tipo: 'nome', nome: 'Carla' }])
-    expect(JSON.stringify(depois[0])).not.toContain('Bruno')
+    expect(JSON.stringify(depois[0])).not.toContain('Ícaro')
   })
 
   it('quando o vínculo do leitor acaba, as notas daquela família deixam de ser avisos', async () => {
@@ -393,9 +393,9 @@ describe('RF14:RF-14 só a conta que chama lê e muda os seus dados', () => {
     }
   })
 
-  it('a conta de outra pessoa não é alcançada: Bruno marca o visto dele e Juliana continua sem', async () => {
+  it('a conta de outra pessoa não é alcançada: Ícaro marca o visto dele e Juliana continua sem', async () => {
     const { avisos, conta } = montar()
-    conta.sessaoParaTeste(PESSOAS.bruno.email)
+    conta.sessaoParaTeste(PESSOAS.icaro.email)
     await avisos.marcarVistos(iso(AGORA - SEGUNDO))
     conta.sessaoParaTeste(PESSOAS.juliana.email)
     expect(((await exportado(conta)).avisos as { vistos_ate: string | null }).vistos_ate).toBeNull()
@@ -432,12 +432,12 @@ describe('RF14:RF-15 a exportação ganha a chave avisos, nos dois modos', () =>
 
 describe('RF14:RF-16 excluir a conta não deixa preferência nem visto até', () => {
   it('depois da exclusão, uma conta nova com o mesmo e-mail lê desligado e sem visto até', async () => {
-    const { avisos, conta } = montar({ sessao: 'bruno' })
+    const { avisos, conta } = montar({ sessao: 'icaro' })
     await avisos.definirLigados(true)
     await avisos.marcarVistos(iso(AGORA - SEGUNDO))
     expect((await conta.excluirConta()).ok).toBe(true)
-    expect((await conta.criarUsuario(PESSOAS.bruno.email, 'uma-senha-forte-1', 'Bruno', '/app/comecar')).ok).toBe(true)
-    expect((await conta.criarMinhaConta('Bruno', 'America/Sao_Paulo')).ok).toBe(true)
+    expect((await conta.criarUsuario(PESSOAS.icaro.email, 'uma-senha-forte-1', 'Ícaro', '/app/comecar')).ok).toBe(true)
+    expect((await conta.criarMinhaConta('Ícaro', 'America/Sao_Paulo')).ok).toBe(true)
     expect(await estado(avisos)).toEqual({ ligados: false, avisos: [], maisDe50: false })
     expect((await exportado(conta)).avisos).toEqual({ ligados: false, vistos_ate: null })
   })
@@ -456,7 +456,7 @@ describe('RF14:RN-06 os erros não carregam texto de nota nem nome', () => {
       expect(lido.ok, operacao).toBe(false)
       const texto = JSON.stringify(lido)
       expect(texto).not.toContain(MARCADOR)
-      expect(texto).not.toContain('Bruno')
+      expect(texto).not.toContain('Ícaro')
       expect(texto).not.toContain('Juliana')
     }
   })

@@ -333,7 +333,7 @@ describe('Como funciona', () => {
       '2',
       null,
     ])
-    expect(itens[2].textContent).toContain('Bruno')
+    expect(itens[2].textContent).toContain('Ícaro')
     expect(itens[2].textContent).toContain(COMO_FUNCIONA_DESTAQUE.desdeQueSaiu.andamento.rotulo)
   })
 

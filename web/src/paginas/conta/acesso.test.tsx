@@ -35,7 +35,7 @@ afterEach(() => {
 const campo = (rotulo: string) => screen.getByLabelText(comObrigatorio(rotulo), { selector: 'input, select' }) as HTMLInputElement
 const digitar = (rotulo: string, texto: string) => fireEvent.change(campo(rotulo), { target: { value: texto } })
 const botao = (nome: string) => screen.getByRole('button', { name: nome })
-const status = () => screen.getByRole('status')
+const status = () => screen.getAllByRole('status').find((regiao) => regiao.getAttribute('data-estado') !== 'carregando')!
 // O cabeçalho da casca também tem os links Entrar e Criar conta (levam ao Contato por enquanto): os da
 // tela se buscam dentro do <main>.
 const principal = () => within(document.querySelector('main')!)
@@ -134,7 +134,7 @@ describe('o destino depois de entrar (RF-10)', () => {
     comVolta.unmount()
 
     sessionStorage.setItem(CHAVE_CONVITE, 'a'.repeat(64))
-    const comCodigo = renderizarComDados('/entrar', { sessao: 'bruno' })
+    const comCodigo = renderizarComDados('/entrar', { sessao: 'icaro' })
     await waitFor(() => expect(caminhoDe(comCodigo.roteador)).toBe('/convite'))
     comCodigo.unmount()
     sessionStorage.clear()
@@ -660,7 +660,7 @@ describe('/redefinir-senha', () => {
   })
 
   it('a marca de outro usuário é apagada, e a tela mostra o link vencido', async () => {
-    comMarca(PESSOAS.bruno.id)
+    comMarca(PESSOAS.icaro.id)
     renderizarComDados('/redefinir-senha', { sessao: 'juliana' })
 
     expect(await screen.findByText(TEXTOS_ERRO.link_vencido)).toBeTruthy()
@@ -673,7 +673,7 @@ describe('/redefinir-senha', () => {
     await screen.findByText(TEXTOS_ERRO.link_vencido)
 
     await act(async () => {
-      await dados.entrar('bruno@exemplo.invalid', SENHA_DEMONSTRACAO)
+      await dados.entrar('icaro@exemplo.invalid', SENHA_DEMONSTRACAO)
     })
     await waitFor(() => expect(sessionStorage.getItem(CHAVE_RECUPERACAO)).toBeNull())
   })

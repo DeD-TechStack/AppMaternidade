@@ -96,11 +96,11 @@ describe('DialogoDaFamilia: o foco depois de confirmar uma ação que tira o bot
 
   it('Remover acesso: o botão some com o membro, e o foco vai ao título do bloco "Membros"', async () => {
     await abrir()
-    const origem = botao('Remover acesso de Bruno')
+    const origem = botao('Remover acesso de Ícaro')
     fireEvent.click(origem)
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Remover acesso' }))
 
-    await waitFor(() => expect(status().textContent).toBe('O acesso de Bruno foi removido.'))
+    await waitFor(() => expect(status().textContent).toBe('O acesso de Ícaro foi removido.'))
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     expect(origem.isConnected).toBe(false)
     await waitFor(() => expect(document.activeElement).toBe(titulo('membros')))

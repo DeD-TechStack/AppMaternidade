@@ -37,8 +37,8 @@ function confirmarFocoPreso(dialogo: HTMLElement) {
 }
 
 const DIALOGOS_DA_FAMILIA: Array<{ nome: string; abre: () => HTMLElement }> = [
-  { nome: 'remover acesso', abre: () => botao('Remover acesso de Bruno') },
-  { nome: 'mudar papel', abre: () => botao('Mudar papel de Bruno') },
+  { nome: 'remover acesso', abre: () => botao('Remover acesso de Ícaro') },
+  { nome: 'mudar papel', abre: () => botao('Mudar papel de Ícaro') },
   { nome: 'mudar papel (própria linha)', abre: () => botao('Mudar papel de Juliana') },
   { nome: 'sair da família', abre: () => botao('Sair da família') },
   { nome: 'excluir família', abre: () => botao('Excluir família') },
@@ -90,7 +90,7 @@ describe('A11Y-007: o grupo de papéis é uma parada só do Tab', () => {
   const nomeDoPapel = (papel: Papel) => PAPEIS[papel].nome
   const em = (caixa: HTMLElement, lista: HTMLElement[]) => lista.filter((parada) => caixa.contains(parada))
 
-  for (const abridor of ['Mudar papel de Bruno', 'Mudar papel de Juliana']) {
+  for (const abridor of ['Mudar papel de Ícaro', 'Mudar papel de Juliana']) {
     for (const marcado of ORDEM_DOS_PAPEIS) {
       it(`${abridor}, com ${nomeDoPapel(marcado)} marcado: parada do grupo -> Cancelar -> Confirmar -> volta; 10 Tab e 10 Shift+Tab sem escapar`, async () => {
         await abrirFamilia()
@@ -284,7 +284,7 @@ describe('A11Y-013: o nome do botão de opção do papel é só o papel', () => 
 
   it('em "Mudar papel": o mesmo nome curto e a mesma descrição', async () => {
     await abrirFamilia()
-    fireEvent.click(botao('Mudar papel de Bruno'))
+    fireEvent.click(botao('Mudar papel de Ícaro'))
     const dialogo = within(screen.getByRole('dialog'))
 
     for (const papel of ORDEM_DOS_PAPEIS) {
