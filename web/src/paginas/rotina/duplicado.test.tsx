@@ -44,21 +44,21 @@ async function iniciarMamada(ajuste: (f: FixtureRotina) => FixtureRotina) {
 
 describe('iniciar uma sessão quando já há um registro parecido de outra pessoa', () => {
   it('a Sessão abre e a confirmação cita quem registrou e a hora, com "Manter os dois", "Excluir este" e "Fechar"', async () => {
-    const mundo = await iniciarMamada(comSessaoConcluida('mamada', PESSOAS.bruno.id, 5 * MIN))
+    const mundo = await iniciarMamada(comSessaoConcluida('mamada', PESSOAS.icaro.id, 5 * MIN))
 
     expect(mundo.roteador.state.location.pathname).toBe('/app/sessao')
-    expect(status().querySelector('p')!.textContent).toBe('Bruno já fez um registro de mamada às 09:55.')
+    expect(status().querySelector('p')!.textContent).toBe('Ícaro já fez um registro de mamada às 09:55.')
     expect(within(status()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Manter os dois', 'Excluir este', 'Fechar'])
     expect(within(status()).queryByRole('button', { name: 'Desfazer' })).toBeNull()
   })
 
   it('exatamente 10 minutos conta como parecido; 10 minutos e 1 segundo, não', async () => {
-    await iniciarMamada(comSessaoConcluida('mamada', PESSOAS.bruno.id, 10 * MIN))
-    expect(status().querySelector('p')!.textContent).toBe('Bruno já fez um registro de mamada às 09:50.')
+    await iniciarMamada(comSessaoConcluida('mamada', PESSOAS.icaro.id, 10 * MIN))
+    expect(status().querySelector('p')!.textContent).toBe('Ícaro já fez um registro de mamada às 09:50.')
   })
 
   it('"Manter os dois" fecha a confirmação e as duas sessões ficam', async () => {
-    const mundo = await iniciarMamada(comSessaoConcluida('mamada', PESSOAS.bruno.id, 5 * MIN))
+    const mundo = await iniciarMamada(comSessaoConcluida('mamada', PESSOAS.icaro.id, 5 * MIN))
 
     fireEvent.click(botao('Manter os dois'))
     await aguardarCarga()
@@ -71,8 +71,8 @@ describe('iniciar uma sessão quando já há um registro parecido de outra pesso
     expect(andamento.ok && andamento.valor.itens.map((r) => r.tipo)).toEqual(['mamada'])
   })
 
-  it('"Excluir este" exclui a sessão nova (vai para a lixeira) e volta ao Hoje; a de Bruno fica', async () => {
-    const mundo = await iniciarMamada(comSessaoConcluida('mamada', PESSOAS.bruno.id, 5 * MIN))
+  it('"Excluir este" exclui a sessão nova (vai para a lixeira) e volta ao Hoje; a de Ícaro fica', async () => {
+    const mundo = await iniciarMamada(comSessaoConcluida('mamada', PESSOAS.icaro.id, 5 * MIN))
 
     fireEvent.click(botao('Excluir este'))
     await aguardarCarga()
@@ -90,8 +90,8 @@ describe('iniciar uma sessão quando já há um registro parecido de outra pesso
 describe('iniciar uma sessão sem registro parecido', () => {
   it.each([
     ['do mesmo autor', 'mamada', PESSOAS.juliana.id, 5 * MIN],
-    ['de outro tipo', 'sono', PESSOAS.bruno.id, 5 * MIN],
-    ['a mais de 10 minutos', 'mamada', PESSOAS.bruno.id, 10 * MIN + 1000],
+    ['de outro tipo', 'sono', PESSOAS.icaro.id, 5 * MIN],
+    ['a mais de 10 minutos', 'mamada', PESSOAS.icaro.id, 10 * MIN + 1000],
   ] as const)('%s: nenhuma confirmação', async (_titulo, tipo, autor, ha) => {
     const mundo = await iniciarMamada(comSessaoConcluida(tipo, autor, ha))
 

@@ -7,8 +7,8 @@ import { aguardarCarga, renderizarRotaPronta } from '../../teste/renderizarRota.
 import { criarMundoDeTeste } from '../../teste/rotina.fixture.ts'
 
 // O detalhe do registro (MAT-38b, R38-22), com o relógio falso às 10:00 de 5/11/2026 (hora do aparelho). Os ids são os
-// da fixture de teste: 3 é a mamada de Bruno (07:32 a 07:50, lado esquerdo), 1 é o sono de Bruno em andamento, 2 é a
-// fralda de Bruno e 11 é a fralda de Juliana (variação "dia completo").
+// da fixture de teste: 3 é a mamada de Ícaro (07:32 a 07:50, lado esquerdo), 1 é o sono de Ícaro em andamento, 2 é a
+// fralda de Ícaro e 11 é a fralda de Juliana (variação "dia completo").
 
 const INSTANTE = new Date('2026-11-05T10:00:00')
 const DIA_EM_MS = 86_400_000
@@ -43,8 +43,8 @@ describe('R38-22: o que o detalhe mostra', () => {
       Lado: 'lado esquerdo',
       Origem: 'registrado na hora',
     })
-    expect(screen.getByText('iniciado por Bruno')).toBeTruthy()
-    expect(screen.getByText('encerrado por Bruno')).toBeTruthy()
+    expect(screen.getByText('iniciado por Ícaro')).toBeTruthy()
+    expect(screen.getByText('encerrado por Ícaro')).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Voltar para o Histórico' }).getAttribute('href')).toBe('/app/historico?dia=2026-11-05')
   })
 
@@ -146,17 +146,17 @@ describe('R38-22: quem pode alterar', () => {
   })
 
   it('o cuidador só os dos próprios registros', async () => {
-    const { unmount } = await renderizarRotaPronta(`/app/registro/${MAMADA}`, { sessao: 'bruno', diaCompleto: true })
+    const { unmount } = await renderizarRotaPronta(`/app/registro/${MAMADA}`, { sessao: 'icaro', diaCompleto: true })
     expect(botao('Excluir')).toBeTruthy()
     unmount()
 
-    await renderizarRotaPronta(`/app/registro/${FRALDA_DE_JULIANA}`, { sessao: 'bruno', diaCompleto: true })
+    await renderizarRotaPronta(`/app/registro/${FRALDA_DE_JULIANA}`, { sessao: 'icaro', diaCompleto: true })
     expect(screen.queryByRole('button', { name: 'Excluir' })).toBeNull()
     expect(screen.queryByRole('link', { name: /Editar/ })).toBeNull()
   })
 
   it('o observador não tem ações e não vê o Histórico de alterações', async () => {
-    await renderizarRotaPronta(`/app/registro/${MAMADA}`, { sessao: 'bruno', papelDeBruno: 'observador' })
+    await renderizarRotaPronta(`/app/registro/${MAMADA}`, { sessao: 'icaro', papelDeIcaro: 'observador' })
 
     expect(screen.queryByRole('button', { name: 'Excluir' })).toBeNull()
     expect(screen.queryByRole('link', { name: /Editar/ })).toBeNull()

@@ -23,7 +23,7 @@ const DIA = 86_400_000
 const EXEMPLO = FAMILIAS_DEMONSTRACAO.exemplo
 const TESTE = FAMILIAS_DEMONSTRACAO.teste
 const VINCULO_DA_JULIANA = 'b1111111-1111-4111-8111-111111111111'
-const VINCULO_DO_BRUNO = 'b2222222-2222-4222-8222-222222222222'
+const VINCULO_DO_ICARO = 'b2222222-2222-4222-8222-222222222222'
 const CONVITE_PENDENTE = '45e11111-1111-4111-8111-111111111111'
 const CONVITE_VENCIDO = '45e22222-2222-4222-8222-222222222222'
 const INEXISTENTE = '99999999-9999-4999-8999-999999999999'
@@ -246,7 +246,7 @@ describe('famílias: leitura', () => {
         meuAcessoAte: null,
       },
     ])
-    expect((await valor(como('bruno').minhasFamilias())).map((f) => [f.id, f.meuPapel])).toEqual([[EXEMPLO, 'cuidador']])
+    expect((await valor(como('icaro').minhasFamilias())).map((f) => [f.id, f.meuPapel])).toEqual([[EXEMPLO, 'cuidador']])
     expect(await valor(como('davi').minhasFamilias())).toEqual([])
   })
 
@@ -263,7 +263,7 @@ describe('famílias: leitura', () => {
     expect(detalhe.familia).toMatchObject({ id: EXEMPLO, meuPapel: 'responsavel' })
     expect(detalhe.membros).toEqual([
       { vinculoId: VINCULO_DA_JULIANA, contaId: PESSOAS.juliana.id, nome: 'Juliana', papel: 'responsavel', validoAte: null, souEu: true },
-      { vinculoId: VINCULO_DO_BRUNO, contaId: PESSOAS.bruno.id, nome: 'Bruno', papel: 'cuidador', validoAte: null, souEu: false },
+      { vinculoId: VINCULO_DO_ICARO, contaId: PESSOAS.icaro.id, nome: 'Ícaro', papel: 'cuidador', validoAte: null, souEu: false },
     ])
     expect(detalhe.bebes).toEqual([{ id: BEBE_DEMONSTRACAO, familiaId: EXEMPLO, nome: 'Heloísa', nascimento: '2026-08-05', estado: 'ativo' }])
     expect(detalhe.convites).toHaveLength(2)
@@ -274,9 +274,9 @@ describe('famílias: leitura', () => {
   })
 
   it('detalheFamilia de quem não é responsável vem sem a lista de convites (null)', async () => {
-    const detalhe = await valor(como('bruno').detalheFamilia(EXEMPLO))
+    const detalhe = await valor(como('icaro').detalheFamilia(EXEMPLO))
     expect(detalhe.convites).toBeNull()
-    expect(detalhe.membros.find((m) => m.souEu)?.nome).toBe('Bruno')
+    expect(detalhe.membros.find((m) => m.souEu)?.nome).toBe('Ícaro')
   })
 
   it('detalheFamilia sem visibilidade responde como id inexistente: P0002', async () => {
@@ -300,7 +300,7 @@ describe('famílias: leitura', () => {
     expect(await valor(dados.minhasFamilias())).toEqual([])
     expect((await erro(dados.detalheFamilia(EXEMPLO))).chave).toBe('nao_encontrado')
     como('juliana', dados)
-    expect((await valor(dados.detalheFamilia(EXEMPLO))).membros.map((m) => m.nome)).toEqual(['Juliana', 'Bruno'])
+    expect((await valor(dados.detalheFamilia(EXEMPLO))).membros.map((m) => m.nome)).toEqual(['Juliana', 'Ícaro'])
   })
 })
 
@@ -327,14 +327,14 @@ describe('famílias: criar e editar', () => {
     const resumo = await valor(dados.atualizarFamilia(EXEMPLO, 'Família Nova', 'America/Manaus'))
     expect(resumo).toMatchObject({ id: EXEMPLO, nome: 'Família Nova', fuso: 'America/Manaus' })
 
-    expect(await erro(como('bruno', dados).atualizarFamilia(EXEMPLO, 'X', 'UTC'))).toMatchObject({ chave: 'sem_permissao', codigo: '42501', mensagemOriginal: 'sem permissao' })
+    expect(await erro(como('icaro', dados).atualizarFamilia(EXEMPLO, 'X', 'UTC'))).toMatchObject({ chave: 'sem_permissao', codigo: '42501', mensagemOriginal: 'sem permissao' })
     expect(await erro(como('davi', dados).atualizarFamilia(EXEMPLO, 'X', 'UTC'))).toMatchObject({ chave: 'nao_encontrado', codigo: 'P0002', mensagemOriginal: 'familia inexistente' })
   })
 
   it('atualizarFamilia: o valor só é conferido depois da visibilidade e do papel', async () => {
     const dados = criar()
     expect((await erro(como('davi', dados).atualizarFamilia(EXEMPLO, 'X', 'Fuso/Inexistente'))).chave).toBe('nao_encontrado')
-    expect((await erro(como('bruno', dados).atualizarFamilia(EXEMPLO, 'X', 'Fuso/Inexistente'))).chave).toBe('sem_permissao')
+    expect((await erro(como('icaro', dados).atualizarFamilia(EXEMPLO, 'X', 'Fuso/Inexistente'))).chave).toBe('sem_permissao')
     expect((await erro(como('juliana', dados).atualizarFamilia(EXEMPLO, 'X', 'Fuso/Inexistente'))).chave).toBe('fuso_invalido')
   })
 
@@ -370,7 +370,7 @@ describe('bebês', () => {
   it('cadastrarBebe: P0002 sem visibilidade, 42501 sem ser responsável e só depois o valor', async () => {
     const dados = criar()
     expect(await erro(como('davi', dados).cadastrarBebe(EXEMPLO, 'Teo', '2030-01-01'))).toMatchObject({ chave: 'nao_encontrado', mensagemOriginal: 'familia inexistente' })
-    expect(await erro(como('bruno', dados).cadastrarBebe(EXEMPLO, 'Teo', '2030-01-01'))).toMatchObject({ chave: 'sem_permissao', codigo: '42501' })
+    expect(await erro(como('icaro', dados).cadastrarBebe(EXEMPLO, 'Teo', '2030-01-01'))).toMatchObject({ chave: 'sem_permissao', codigo: '42501' })
     expect((await erro(como('juliana', dados).cadastrarBebe(EXEMPLO, 'Teo', '2030-01-01'))).chave).toBe('nascimento_no_futuro')
   })
 
@@ -389,8 +389,8 @@ describe('bebês', () => {
     }
     // Sem visibilidade na família do bebê, é igual a um bebê que não existe.
     expect((await erro(como('davi', dados).arquivarBebe(BEBE_DEMONSTRACAO, true))).mensagemOriginal).toBe('bebe inexistente')
-    expect(await erro(como('bruno', dados).arquivarBebe(BEBE_DEMONSTRACAO, true))).toMatchObject({ chave: 'sem_permissao', codigo: '42501' })
-    expect((await erro(como('bruno', dados).atualizarBebe(BEBE_DEMONSTRACAO, 'X', '2030-01-01'))).chave).toBe('sem_permissao')
+    expect(await erro(como('icaro', dados).arquivarBebe(BEBE_DEMONSTRACAO, true))).toMatchObject({ chave: 'sem_permissao', codigo: '42501' })
+    expect((await erro(como('icaro', dados).atualizarBebe(BEBE_DEMONSTRACAO, 'X', '2030-01-01'))).chave).toBe('sem_permissao')
   })
 })
 
@@ -421,8 +421,8 @@ describe('convites', () => {
   it('criarConvite: P0002 sem visibilidade e 42501 sem ser responsável', async () => {
     const dados = criar()
     expect(await erro(como('davi', dados).criarConvite(EXEMPLO, 'observador', null))).toMatchObject({ chave: 'nao_encontrado', mensagemOriginal: 'familia inexistente' })
-    expect(await erro(como('bruno', dados).criarConvite(EXEMPLO, 'observador', null))).toMatchObject({ chave: 'sem_permissao', codigo: '42501' })
-    expect((await erro(como('bruno', dados).criarConvite(EXEMPLO, 'responsavel', new Date(AGORA).toISOString()))).chave).toBe('sem_permissao')
+    expect(await erro(como('icaro', dados).criarConvite(EXEMPLO, 'observador', null))).toMatchObject({ chave: 'sem_permissao', codigo: '42501' })
+    expect((await erro(como('icaro', dados).criarConvite(EXEMPLO, 'responsavel', new Date(AGORA).toISOString()))).chave).toBe('sem_permissao')
   })
 
   it('verConvite mostra a prévia, sem conferir se a pessoa já é membro, e normaliza o código', async () => {
@@ -434,8 +434,8 @@ describe('convites', () => {
       expiraEm: new Date(AGORA + 7 * DIA).toISOString(),
       bebes: ['Heloísa'],
     })
-    // Bruno já é membro: a prévia não confere vínculo.
-    expect((await valor(como('bruno').verConvite(CODIGO_CONVITE_PENDENTE))).familiaNome).toBe('Família Exemplo')
+    // Ícaro já é membro: a prévia não confere vínculo.
+    expect((await valor(como('icaro').verConvite(CODIGO_CONVITE_PENDENTE))).familiaNome).toBe('Família Exemplo')
   })
 
   it('a prévia só traz os bebês ativos', async () => {
@@ -482,13 +482,13 @@ describe('convites', () => {
     const detalhe = await valor(dados.detalheFamilia(EXEMPLO))
     expect(detalhe.familia.meuPapel).toBe('observador')
     expect(detalhe.convites).toBeNull()
-    expect(detalhe.membros.map((m) => m.nome)).toEqual(['Juliana', 'Bruno', 'Davi'])
+    expect(detalhe.membros.map((m) => m.nome)).toEqual(['Juliana', 'Ícaro', 'Davi'])
     // O convite aceito sai da lista de pendentes de quem o criou.
     expect((await valor(como('juliana', dados).detalheFamilia(EXEMPLO))).convites!.map((c) => c.id)).toEqual([CONVITE_VENCIDO])
   })
 
   it('aceitarConvite: quem já é membro recebe ja_e_membro e o convite continua pendente; vencido vem antes', async () => {
-    const dados = como('bruno')
+    const dados = como('icaro')
     expect(await erro(dados.aceitarConvite(CODIGO_CONVITE_PENDENTE))).toMatchObject({ chave: 'ja_e_membro', mensagemOriginal: 'ja e membro' })
     expect((await erro(dados.aceitarConvite(CODIGO_CONVITE_VENCIDO))).chave).toBe('convite_vencido')
     como('davi', dados)
@@ -496,13 +496,13 @@ describe('convites', () => {
   })
 
   it('reingresso: a mesma linha volta a valer com o papel do novo convite', async () => {
-    const dados = como('bruno')
+    const dados = como('icaro')
     await valor(dados.sairDaFamilia(EXEMPLO))
     expect(await valor(dados.minhasFamilias())).toEqual([])
 
     expect(await valor(dados.aceitarConvite(CODIGO_CONVITE_PENDENTE))).toBe(EXEMPLO)
     const [volta] = await valor(dados.minhasFamilias())
-    expect(volta).toMatchObject({ id: EXEMPLO, meuPapel: 'observador', meuVinculoId: VINCULO_DO_BRUNO })
+    expect(volta).toMatchObject({ id: EXEMPLO, meuPapel: 'observador', meuVinculoId: VINCULO_DO_ICARO })
   })
 
   it('revogarConvite: pendente (vencido ou não) vira revogado; depois, convite_nao_pendente', async () => {
@@ -520,20 +520,20 @@ describe('convites', () => {
 
     expect(await erro(dados.revogarConvite(INEXISTENTE))).toMatchObject({ chave: 'nao_encontrado', mensagemOriginal: 'convite inexistente' })
     expect(await erro(como('carla', dados).revogarConvite(CONVITE_VENCIDO))).toMatchObject({ chave: 'nao_encontrado', mensagemOriginal: 'convite inexistente' })
-    expect(await erro(como('bruno', dados).revogarConvite(CONVITE_VENCIDO))).toMatchObject({ chave: 'sem_permissao', codigo: '42501' })
+    expect(await erro(como('icaro', dados).revogarConvite(CONVITE_VENCIDO))).toMatchObject({ chave: 'sem_permissao', codigo: '42501' })
   })
 })
 
 describe('papéis e saída', () => {
   it('mudarPapel muda o papel do vínculo; papel igual; vínculo inexistente; sem ser responsável', async () => {
     const dados = como('juliana')
-    expect(await valor(dados.mudarPapel(VINCULO_DO_BRUNO, 'observador'))).toBeNull()
-    expect((await valor(dados.detalheFamilia(EXEMPLO))).membros.find((m) => m.nome === 'Bruno')?.papel).toBe('observador')
+    expect(await valor(dados.mudarPapel(VINCULO_DO_ICARO, 'observador'))).toBeNull()
+    expect((await valor(dados.detalheFamilia(EXEMPLO))).membros.find((m) => m.nome === 'Ícaro')?.papel).toBe('observador')
 
-    expect(await erro(dados.mudarPapel(VINCULO_DO_BRUNO, 'observador'))).toMatchObject({ chave: 'papel_igual', mensagemOriginal: 'papel igual' })
+    expect(await erro(dados.mudarPapel(VINCULO_DO_ICARO, 'observador'))).toMatchObject({ chave: 'papel_igual', mensagemOriginal: 'papel igual' })
     expect(await erro(dados.mudarPapel(INEXISTENTE, 'observador'))).toMatchObject({ chave: 'nao_encontrado', mensagemOriginal: 'vinculo inexistente' })
-    expect(await erro(como('carla', dados).mudarPapel(VINCULO_DO_BRUNO, 'cuidador'))).toMatchObject({ chave: 'nao_encontrado', mensagemOriginal: 'vinculo inexistente' })
-    expect(await erro(como('bruno', dados).mudarPapel(VINCULO_DO_BRUNO, 'cuidador'))).toMatchObject({ chave: 'sem_permissao', codigo: '42501' })
+    expect(await erro(como('carla', dados).mudarPapel(VINCULO_DO_ICARO, 'cuidador'))).toMatchObject({ chave: 'nao_encontrado', mensagemOriginal: 'vinculo inexistente' })
+    expect(await erro(como('icaro', dados).mudarPapel(VINCULO_DO_ICARO, 'cuidador'))).toMatchObject({ chave: 'sem_permissao', codigo: '42501' })
   })
 
   it('o único responsável não pode se rebaixar nem ser rebaixado: ultimo_responsavel (e papel_igual vem antes)', async () => {
@@ -544,14 +544,14 @@ describe('papéis e saída', () => {
 
   it('com outro responsável, o autorrebaixamento vale: a pessoa perde os controles e os convites que criou', async () => {
     const dados = como('juliana')
-    await valor(dados.mudarPapel(VINCULO_DO_BRUNO, 'responsavel'))
+    await valor(dados.mudarPapel(VINCULO_DO_ICARO, 'responsavel'))
     expect(await valor(dados.mudarPapel(VINCULO_DA_JULIANA, 'cuidador'))).toBeNull()
 
     const rebaixada = await valor(dados.detalheFamilia(EXEMPLO))
     expect(rebaixada.familia.meuPapel).toBe('cuidador')
     expect(rebaixada.convites).toBeNull()
     // Os convites pendentes de quem deixou de ser responsável foram revogados (D5).
-    expect((await valor(como('bruno', dados).detalheFamilia(EXEMPLO))).convites).toEqual([])
+    expect((await valor(como('icaro', dados).detalheFamilia(EXEMPLO))).convites).toEqual([])
     // Repetir o autorrebaixamento já gravado: a pessoa já não é responsável.
     expect((await erro(como('juliana', dados).mudarPapel(VINCULO_DA_JULIANA, 'cuidador'))).chave).toBe('sem_permissao')
   })
@@ -571,27 +571,27 @@ describe('papéis e saída', () => {
 
   it('revogarVinculo: o responsável tira o acesso de outro; revogar de novo é vinculo_inativo; o próprio é use_sair', async () => {
     const dados = como('juliana')
-    expect(await valor(dados.revogarVinculo(VINCULO_DO_BRUNO))).toBeNull()
+    expect(await valor(dados.revogarVinculo(VINCULO_DO_ICARO))).toBeNull()
     expect((await valor(dados.detalheFamilia(EXEMPLO))).membros.map((m) => m.nome)).toEqual(['Juliana'])
-    expect(await valor(como('bruno', dados).minhasFamilias())).toEqual([])
+    expect(await valor(como('icaro', dados).minhasFamilias())).toEqual([])
 
     como('juliana', dados)
-    expect(await erro(dados.revogarVinculo(VINCULO_DO_BRUNO))).toMatchObject({ chave: 'vinculo_inativo', mensagemOriginal: 'vinculo inativo' })
-    expect((await erro(dados.mudarPapel(VINCULO_DO_BRUNO, 'observador'))).chave).toBe('vinculo_inativo')
+    expect(await erro(dados.revogarVinculo(VINCULO_DO_ICARO))).toMatchObject({ chave: 'vinculo_inativo', mensagemOriginal: 'vinculo inativo' })
+    expect((await erro(dados.mudarPapel(VINCULO_DO_ICARO, 'observador'))).chave).toBe('vinculo_inativo')
     expect(await erro(dados.revogarVinculo(VINCULO_DA_JULIANA))).toMatchObject({ chave: 'use_sair', mensagemOriginal: 'use sair da familia' })
   })
 
   it('revogarVinculo: vínculo inexistente, sem visibilidade (P0002) e sem ser responsável (42501)', async () => {
     const dados = criar()
     expect(await erro(como('juliana', dados).revogarVinculo(INEXISTENTE))).toMatchObject({ chave: 'nao_encontrado', mensagemOriginal: 'vinculo inexistente' })
-    expect((await erro(como('davi', dados).revogarVinculo(VINCULO_DO_BRUNO))).chave).toBe('nao_encontrado')
-    expect(await erro(como('bruno', dados).revogarVinculo(VINCULO_DA_JULIANA))).toMatchObject({ chave: 'sem_permissao', codigo: '42501' })
+    expect((await erro(como('davi', dados).revogarVinculo(VINCULO_DO_ICARO))).chave).toBe('nao_encontrado')
+    expect(await erro(como('icaro', dados).revogarVinculo(VINCULO_DA_JULIANA))).toMatchObject({ chave: 'sem_permissao', codigo: '42501' })
   })
 
   it('revogar outro responsável vale e revoga os convites pendentes dele', async () => {
     const dados = como('juliana')
-    await valor(dados.mudarPapel(VINCULO_DO_BRUNO, 'responsavel'))
-    como('bruno', dados)
+    await valor(dados.mudarPapel(VINCULO_DO_ICARO, 'responsavel'))
+    como('icaro', dados)
     const dele = await valor(dados.criarConvite(EXEMPLO, 'observador', null))
     await valor(dados.revogarVinculo(VINCULO_DA_JULIANA))
     expect(await valor(dados.minhasFamilias())).toHaveLength(1)
@@ -601,7 +601,7 @@ describe('papéis e saída', () => {
   })
 
   it('sairDaFamilia: qualquer papel sai; o único responsável não (ultimo_responsavel); sem vínculo é P0002', async () => {
-    const dados = como('bruno')
+    const dados = como('icaro')
     expect(await valor(dados.sairDaFamilia(EXEMPLO))).toBeNull()
     expect((await erro(dados.detalheFamilia(EXEMPLO))).chave).toBe('nao_encontrado')
     expect(await erro(dados.sairDaFamilia(EXEMPLO))).toMatchObject({ chave: 'nao_encontrado', mensagemOriginal: 'familia inexistente' })
@@ -613,23 +613,23 @@ describe('papéis e saída', () => {
 
   it('quem sai perde os convites pendentes que criou', async () => {
     const dados = como('juliana')
-    await valor(dados.mudarPapel(VINCULO_DO_BRUNO, 'responsavel'))
+    await valor(dados.mudarPapel(VINCULO_DO_ICARO, 'responsavel'))
     await valor(dados.sairDaFamilia(EXEMPLO))
-    expect((await valor(como('bruno', dados).detalheFamilia(EXEMPLO))).convites).toEqual([])
+    expect((await valor(como('icaro', dados).detalheFamilia(EXEMPLO))).convites).toEqual([])
   })
 
   it('excluirFamilia: o responsável apaga a família e tudo o que é dela', async () => {
     const dados = como('juliana')
     expect(await valor(dados.excluirFamilia(EXEMPLO))).toBeNull()
     expect(await valor(dados.minhasFamilias())).toEqual([])
-    expect(await valor(como('bruno', dados).minhasFamilias())).toEqual([])
+    expect(await valor(como('icaro', dados).minhasFamilias())).toEqual([])
     expect((await erro(como('davi', dados).verConvite(CODIGO_CONVITE_PENDENTE))).chave).toBe('convite_invalido')
     expect((await erro(como('juliana', dados).arquivarBebe(BEBE_DEMONSTRACAO, true))).mensagemOriginal).toBe('bebe inexistente')
   })
 
   it('excluirFamilia: sem ser responsável 42501; sem visibilidade P0002', async () => {
     const dados = criar()
-    expect(await erro(como('bruno', dados).excluirFamilia(EXEMPLO))).toMatchObject({ chave: 'sem_permissao', codigo: '42501' })
+    expect(await erro(como('icaro', dados).excluirFamilia(EXEMPLO))).toMatchObject({ chave: 'sem_permissao', codigo: '42501' })
     expect(await erro(como('davi', dados).excluirFamilia(EXEMPLO))).toMatchObject({ chave: 'nao_encontrado', mensagemOriginal: 'familia inexistente' })
     expect((await erro(como('juliana', dados).excluirFamilia(TESTE))).chave).toBe('nao_encontrado')
   })
@@ -662,7 +662,7 @@ describe('exportação e exclusão da conta', () => {
     expect(json.registros).toEqual([])
     expect(json.notas).toEqual([])
     const membros = familias[0].membros as Array<Record<string, unknown>>
-    expect(membros.map((m) => m.nome_privado)).toEqual(['Juliana', 'Bruno'])
+    expect(membros.map((m) => m.nome_privado)).toEqual(['Juliana', 'Ícaro'])
     expect(Object.keys(membros[0])).toEqual(['conta_id', 'nome_privado', 'papel', 'valido_ate'])
     const bebes = familias[0].bebes as Array<Record<string, unknown>>
     expect(Object.keys(bebes[0])).toEqual(['id', 'nome', 'nascimento', 'estado', 'criado_em'])
@@ -675,7 +675,7 @@ describe('exportação e exclusão da conta', () => {
   })
 
   it('exportarDados de quem não é responsável traz só a conta e os próprios vínculos', async () => {
-    const json = (await valor(como('bruno').exportarDados())) as { vinculos: unknown[]; familias: unknown[] }
+    const json = (await valor(como('icaro').exportarDados())) as { vinculos: unknown[]; familias: unknown[] }
     expect(json.vinculos).toHaveLength(1)
     expect(json.familias).toEqual([])
     const vazio = (await valor(como('davi').exportarDados())) as { vinculos: unknown[]; familias: unknown[] }
@@ -700,30 +700,30 @@ describe('exportação e exclusão da conta', () => {
   })
 
   it('excluirConta do cuidador tira o vínculo e as famílias dele seguem', async () => {
-    const dados = como('bruno')
+    const dados = como('icaro')
     await valor(dados.excluirConta())
     expect((await valor(como('juliana', dados).detalheFamilia(EXEMPLO))).membros.map((m) => m.nome)).toEqual(['Juliana'])
   })
 
   it('excluirConta de um responsável com outro responsável: a titularidade passa e os convites dele caem', async () => {
     const dados = como('juliana')
-    await valor(dados.mudarPapel(VINCULO_DO_BRUNO, 'responsavel'))
+    await valor(dados.mudarPapel(VINCULO_DO_ICARO, 'responsavel'))
     expect(await valor(dados.excluirConta())).toBeNull()
 
-    const bruno = await valor(como('bruno', dados).detalheFamilia(EXEMPLO))
-    expect(bruno.membros.map((m) => m.nome)).toEqual(['Bruno'])
-    expect(bruno.convites).toEqual([])
-    expect(bruno.bebes).toHaveLength(1)
+    const icaro = await valor(como('icaro', dados).detalheFamilia(EXEMPLO))
+    expect(icaro.membros.map((m) => m.nome)).toEqual(['Ícaro'])
+    expect(icaro.convites).toEqual([])
+    expect(icaro.bebes).toHaveLength(1)
   })
 
   it('excluirConta: os convites que a conta criou e ninguém aceitou caem; os aceitos seguem como estão', async () => {
     const dados = como('juliana')
-    await valor(dados.mudarPapel(VINCULO_DO_BRUNO, 'responsavel'))
+    await valor(dados.mudarPapel(VINCULO_DO_ICARO, 'responsavel'))
     como('davi', dados)
     await valor(dados.aceitarConvite(CODIGO_CONVITE_PENDENTE))
     await valor(como('juliana', dados).excluirConta())
 
-    const json = (await valor(como('bruno', dados).exportarDados())) as { familias: Array<{ convites: Array<{ estado: string }> }> }
+    const json = (await valor(como('icaro', dados).exportarDados())) as { familias: Array<{ convites: Array<{ estado: string }> }> }
     expect(json.familias[0].convites.map((c) => c.estado).sort()).toEqual(['aceito', 'revogado'])
   })
 })
@@ -791,38 +791,38 @@ describe('exportação com a rotina (RF-13)', () => {
     }
   }
 
-  const { juliana, bruno, carla } = PESSOAS
+  const { juliana, icaro, carla } = PESSOAS
   const NA_TESTE = { familiaId: TESTE, bebeId: BEBE_DA_TESTE }
 
-  // Na Família Exemplo, Juliana é responsável e Bruno e Carla são cuidadores; na Família Teste, só Carla tem
+  // Na Família Exemplo, Juliana é responsável e Ícaro e Carla são cuidadores; na Família Teste, só Carla tem
   // vínculo (responsável). Cada lista está fora de ordem, de propósito.
   function itens() {
     return {
       registros: [
-        // Lixeira: do Bruno, excluído pela Juliana.
-        registro(4, bruno.id, T3, { excluidoEm: T4, excluidoPor: juliana.id, versao: 2, atualizadoEm: T4 }),
-        registro(3, bruno.id, T2),
+        // Lixeira: do Ícaro, excluído pela Juliana.
+        registro(4, icaro.id, T3, { excluidoEm: T4, excluidoPor: juliana.id, versao: 2, atualizadoEm: T4 }),
+        registro(3, icaro.id, T2),
         // Empata com o 1 em recebido_em: o id desempata.
         registro(2, carla.id, T1, { tipo: 'observacao', detalhes: {}, nota: 'Dormiu bem' }),
         registro(1, juliana.id, T1),
-        // Outra família: o da Carla nunca aparece; o da Juliana e o do Bruno vão para o topo (autoria).
+        // Outra família: o da Carla nunca aparece; o da Juliana e o do Ícaro vão para o topo (autoria).
         registro(10, carla.id, T1, NA_TESTE),
         registro(11, juliana.id, T2, NA_TESTE),
-        registro(12, bruno.id, T1, NA_TESTE),
+        registro(12, icaro.id, T1, NA_TESTE),
       ],
       notas: [
         nota(910, carla.id, T2),
-        nota(909, bruno.id, T2),
+        nota(909, icaro.id, T2),
         // A mais antiga, na lixeira, e com bebê.
-        nota(911, bruno.id, T1, { bebeId: ID_BEBE, excluidaEm: T4, excluidaPor: juliana.id, versao: 2, atualizadoEm: T4 }),
+        nota(911, icaro.id, T1, { bebeId: ID_BEBE, excluidaEm: T4, excluidaPor: juliana.id, versao: 2, atualizadoEm: T4 }),
         nota(920, carla.id, T1, { familiaId: TESTE }),
         nota(921, juliana.id, T3, { familiaId: TESTE }),
-        nota(922, bruno.id, T3, { familiaId: TESTE }),
+        nota(922, icaro.id, T3, { familiaId: TESTE }),
       ],
     }
   }
 
-  function mundo(sessao: 'juliana' | 'bruno' | 'carla') {
+  function mundo(sessao: 'juliana' | 'icaro' | 'carla') {
     return criarMundoDeTeste({
       sessao,
       semRegistros: true,
@@ -859,7 +859,7 @@ describe('exportação com a rotina (RF-13)', () => {
       origem: 'ao_vivo',
       fuso: 'America/Sao_Paulo',
       deslocamento_min: -180,
-      criado_por: bruno.id,
+      criado_por: icaro.id,
       encerrado_por: null,
       versao: 2,
       recebido_em: micro(T3),
@@ -884,7 +884,7 @@ describe('exportação com a rotina (RF-13)', () => {
       bebe_id: ID_BEBE,
       texto: 'Nota 911',
       destaque_ate: null,
-      criado_por: bruno.id,
+      criado_por: icaro.id,
       criada_em: micro(T1),
       versao: 2,
       atualizado_em: micro(T4),
@@ -910,19 +910,19 @@ describe('exportação com a rotina (RF-13)', () => {
   })
 
   it('o cuidador recebe no topo só os itens que criou, lixeira inclusive, e nada da família', async () => {
-    const json = await exportar(mundo('bruno'))
+    const json = await exportar(mundo('icaro'))
 
     expect(json.familias).toEqual([])
     // recebido_em: 12 (T1, Teste), 3 (T2) e 4 (T3, lixeira).
     expect(ids(json.registros)).toEqual([idRotina(12), idRotina(3), idRotina(4)])
     for (const item of json.registros) expect(Object.keys(item).sort()).toEqual([...CHAVES_REGISTRO].sort())
-    expect(json.registros.every((item) => item.criado_por === bruno.id)).toBe(true)
+    expect(json.registros.every((item) => item.criado_por === icaro.id)).toBe(true)
     expect(json.registros[2]).toMatchObject({ excluido_em: micro(T4), excluido_por: juliana.id })
 
     // criada_em: 911 (T1, lixeira), 909 (T2) e 922 (T3, Teste).
     expect(ids(json.notas)).toEqual([idRotina(911), idRotina(909), idRotina(922)])
     for (const item of json.notas) expect(Object.keys(item).sort()).toEqual([...CHAVES_NOTA].sort())
-    expect(json.notas.every((item) => item.criado_por === bruno.id)).toBe(true)
+    expect(json.notas.every((item) => item.criado_por === icaro.id)).toBe(true)
 
     const texto = JSON.stringify(json)
     for (const numero of [1, 2, 10, 11, 910, 920, 921]) expect(texto).not.toContain(idRotina(numero))
@@ -955,8 +955,8 @@ describe('exportação com a rotina (RF-13)', () => {
       sessao: 'juliana',
       semRegistros: true,
       ajustarRotina: () => ({
-        registros: [registro(7, juliana.id, T1), registro(5, bruno.id, T1), registro(6, carla.id, T1)],
-        notas: [nota(808, juliana.id, T1), nota(806, bruno.id, T1), nota(807, carla.id, T1)],
+        registros: [registro(7, juliana.id, T1), registro(5, icaro.id, T1), registro(6, carla.id, T1)],
+        notas: [nota(808, juliana.id, T1), nota(806, icaro.id, T1), nota(807, carla.id, T1)],
       }),
     }).conta
     const json = await exportar(dados)
@@ -977,10 +977,10 @@ describe('exportação com a rotina (RF-13)', () => {
     expect(ids(daJuliana.registros)).toEqual([idRotina(11)])
     expect(ids(daJuliana.notas)).toEqual([idRotina(921)])
 
-    dados.sessaoParaTeste(bruno.email)
-    const doBruno = await exportar(dados)
-    expect(ids(doBruno.registros)).toEqual([idRotina(12)])
-    expect(ids(doBruno.notas)).toEqual([idRotina(922)])
+    dados.sessaoParaTeste(icaro.email)
+    const doIcaro = await exportar(dados)
+    expect(ids(doIcaro.registros)).toEqual([idRotina(12)])
+    expect(ids(doIcaro.notas)).toEqual([idRotina(922)])
 
     dados.sessaoParaTeste(carla.email)
     const texto = JSON.stringify(await exportar(dados))
@@ -989,17 +989,17 @@ describe('exportação com a rotina (RF-13)', () => {
 
   it('depois do excluirConta do cuidador, o responsável recebe os itens da família com a autoria nula', async () => {
     const dados = criarMundoDeTeste({
-      sessao: 'bruno',
+      sessao: 'icaro',
       semRegistros: true,
       ajustarRotina: () => ({
         registros: [
-          registro(21, bruno.id, T1, { encerradoPor: bruno.id }),
-          registro(22, juliana.id, T2, { excluidoEm: T3, excluidoPor: bruno.id, versao: 2, atualizadoEm: T3 }),
-          registro(23, bruno.id, T3),
+          registro(21, icaro.id, T1, { encerradoPor: icaro.id }),
+          registro(22, juliana.id, T2, { excluidoEm: T3, excluidoPor: icaro.id, versao: 2, atualizadoEm: T3 }),
+          registro(23, icaro.id, T3),
         ],
         notas: [
-          nota(931, bruno.id, T1),
-          nota(932, juliana.id, T2, { excluidaEm: T3, excluidaPor: bruno.id, versao: 2, atualizadoEm: T3 }),
+          nota(931, icaro.id, T1),
+          nota(932, juliana.id, T2, { excluidaEm: T3, excluidaPor: icaro.id, versao: 2, atualizadoEm: T3 }),
         ],
       }),
     }).conta
@@ -1015,25 +1015,25 @@ describe('exportação com a rotina (RF-13)', () => {
     expect(ids(familia.notas)).toEqual([idRotina(931), idRotina(932)])
     expect(familia.notas[0]).toMatchObject({ criado_por: null })
     expect(familia.notas[1]).toMatchObject({ criado_por: juliana.id, excluida_por: null })
-    expect(JSON.stringify(json)).not.toContain(bruno.id)
+    expect(JSON.stringify(json)).not.toContain(icaro.id)
   })
 
   it('excluirConta do último membro remove a família e seus itens da exportação', async () => {
-    const FAMILIA_DO_BRUNO = 'fa111111-1111-4111-8111-111111111111'
+    const FAMILIA_DO_ICARO = 'fa111111-1111-4111-8111-111111111111'
     const base = criarFixtureDeTeste(AGORA)
     const conta = criarDadosContaMemoria(
       {
         ...base,
         familias: [
           ...base.familias,
-          { id: FAMILIA_DO_BRUNO, nome: 'Família do Bruno', fuso: 'America/Sao_Paulo', criadaEm: '2026-10-01T00:00:00.000Z', criadaPor: bruno.id },
+          { id: FAMILIA_DO_ICARO, nome: 'Família do Ícaro', fuso: 'America/Sao_Paulo', criadaEm: '2026-10-01T00:00:00.000Z', criadaPor: icaro.id },
         ],
         vinculos: [
           ...base.vinculos,
           {
             id: 'b7777777-7777-4777-8777-777777777777',
-            familiaId: FAMILIA_DO_BRUNO,
-            contaId: bruno.id,
+            familiaId: FAMILIA_DO_ICARO,
+            contaId: icaro.id,
             papel: 'cuidador',
             estado: 'ativo',
             validoAte: null,
@@ -1046,13 +1046,13 @@ describe('exportação com a rotina (RF-13)', () => {
     )
     criarDadosRotinaMemoria(conta, {
       registros: [
-        registro(31, bruno.id, T1, { familiaId: FAMILIA_DO_BRUNO }),
-        registro(32, juliana.id, T2, { familiaId: FAMILIA_DO_BRUNO }),
+        registro(31, icaro.id, T1, { familiaId: FAMILIA_DO_ICARO }),
+        registro(32, juliana.id, T2, { familiaId: FAMILIA_DO_ICARO }),
       ],
-      notas: [nota(941, bruno.id, T1, { familiaId: FAMILIA_DO_BRUNO }), nota(942, juliana.id, T2, { familiaId: FAMILIA_DO_BRUNO })],
+      notas: [nota(941, icaro.id, T1, { familiaId: FAMILIA_DO_ICARO }), nota(942, juliana.id, T2, { familiaId: FAMILIA_DO_ICARO })],
     })
 
-    conta.sessaoParaTeste(bruno.email)
+    conta.sessaoParaTeste(icaro.email)
     await valor(conta.excluirConta())
 
     conta.sessaoParaTeste(juliana.email)
@@ -1061,7 +1061,7 @@ describe('exportação com a rotina (RF-13)', () => {
   })
 
   it('quem sai da família continua recebendo no topo os itens que criou nela', async () => {
-    const dados = mundo('bruno')
+    const dados = mundo('icaro')
     await valor(dados.sairDaFamilia(ID_FAMILIA))
 
     const json = await exportar(dados)
@@ -1072,17 +1072,17 @@ describe('exportação com a rotina (RF-13)', () => {
 
   it('o vínculo revogado não apaga nada: os itens ficam em familias[] do responsável e no topo de quem os criou', async () => {
     const dados = mundo('juliana')
-    await valor(dados.revogarVinculo(VINCULO_DO_BRUNO))
+    await valor(dados.revogarVinculo(VINCULO_DO_ICARO))
 
     const daJuliana = await exportar(dados)
     expect(ids(daJuliana.familias[0].registros)).toEqual([idRotina(1), idRotina(2), idRotina(3), idRotina(4)])
     expect(ids(daJuliana.familias[0].notas)).toEqual([idRotina(911), idRotina(909), idRotina(910)])
 
-    dados.sessaoParaTeste(bruno.email)
-    const doBruno = await exportar(dados)
-    expect(doBruno.familias).toEqual([])
-    expect(ids(doBruno.registros)).toEqual([idRotina(12), idRotina(3), idRotina(4)])
-    expect(ids(doBruno.notas)).toEqual([idRotina(911), idRotina(909), idRotina(922)])
+    dados.sessaoParaTeste(icaro.email)
+    const doIcaro = await exportar(dados)
+    expect(doIcaro.familias).toEqual([])
+    expect(ids(doIcaro.registros)).toEqual([idRotina(12), idRotina(3), idRotina(4)])
+    expect(ids(doIcaro.notas)).toEqual([idRotina(911), idRotina(909), idRotina(922)])
   })
 })
 
@@ -1102,8 +1102,8 @@ describe('sem sessão e conta incompleta', () => {
       dados.verConvite(CODIGO_CONVITE_PENDENTE),
       dados.aceitarConvite(CODIGO_CONVITE_PENDENTE),
       dados.revogarConvite(CONVITE_PENDENTE),
-      dados.mudarPapel(VINCULO_DO_BRUNO, 'observador'),
-      dados.revogarVinculo(VINCULO_DO_BRUNO),
+      dados.mudarPapel(VINCULO_DO_ICARO, 'observador'),
+      dados.revogarVinculo(VINCULO_DO_ICARO),
       dados.sairDaFamilia(EXEMPLO),
       dados.excluirFamilia(EXEMPLO),
       dados.exportarDados(),
@@ -1124,8 +1124,8 @@ describe('sem sessão e conta incompleta', () => {
       dados.verConvite(CODIGO_CONVITE_PENDENTE),
       dados.aceitarConvite(CODIGO_CONVITE_PENDENTE),
       dados.revogarConvite(CONVITE_PENDENTE),
-      dados.mudarPapel(VINCULO_DO_BRUNO, 'observador'),
-      dados.revogarVinculo(VINCULO_DO_BRUNO),
+      dados.mudarPapel(VINCULO_DO_ICARO, 'observador'),
+      dados.revogarVinculo(VINCULO_DO_ICARO),
       dados.sairDaFamilia(EXEMPLO),
       dados.excluirFamilia(EXEMPLO),
       dados.exportarDados(),
@@ -1207,7 +1207,7 @@ describe('simularRespostaPerdida e a repetição (RF-17)', () => {
 
   it('autorrebaixamento já gravado: a repetição recebe 42501, porque a pessoa já não é responsável', async () => {
     const dados = como('juliana')
-    await valor(dados.mudarPapel(VINCULO_DO_BRUNO, 'responsavel'))
+    await valor(dados.mudarPapel(VINCULO_DO_ICARO, 'responsavel'))
     simularRespostaPerdida(dados, 'mudarPapel')
     expect((await erro(dados.mudarPapel(VINCULO_DA_JULIANA, 'cuidador'))).chave).toBe('rede')
     expect(await erro(dados.mudarPapel(VINCULO_DA_JULIANA, 'cuidador'))).toMatchObject({ chave: 'sem_permissao', codigo: '42501' })
@@ -1239,8 +1239,8 @@ describe('simularRespostaPerdida e a repetição (RF-17)', () => {
     const dados = como('juliana')
     simularRespostaPerdida(dados, 'revogarVinculo')
     simularRespostaPerdida(dados, 'revogarConvite')
-    expect((await erro(dados.revogarVinculo(VINCULO_DO_BRUNO))).chave).toBe('rede')
-    expect((await erro(dados.revogarVinculo(VINCULO_DO_BRUNO))).chave).toBe('vinculo_inativo')
+    expect((await erro(dados.revogarVinculo(VINCULO_DO_ICARO))).chave).toBe('rede')
+    expect((await erro(dados.revogarVinculo(VINCULO_DO_ICARO))).chave).toBe('vinculo_inativo')
     expect((await erro(dados.revogarConvite(CONVITE_PENDENTE))).chave).toBe('rede')
     expect((await erro(dados.revogarConvite(CONVITE_PENDENTE))).chave).toBe('convite_nao_pendente')
     const detalhe = await valor(dados.detalheFamilia(EXEMPLO))

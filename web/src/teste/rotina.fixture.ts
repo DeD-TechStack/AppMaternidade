@@ -15,11 +15,11 @@ import {
 import { PESSOAS, criarFixtureDeTeste } from './renderizarComDados.tsx'
 
 // A fixture de TESTE da rotina (R38-33). Ela é só dos testes e não reutiliza a de demonstração
-// (`dados/rotina.demonstracao.ts`, que segue o seed): a conta é Juliana (responsável), com Bruno (cuidador),
+// (`dados/rotina.demonstracao.ts`, que segue o seed): a conta é Juliana (responsável), com Ícaro (cuidador),
 // Carla (cuidadora, só nesta fixture, na Família Exemplo) e a bebê Heloísa, nascida 3 meses e 10 dias antes do
 // dia do relógio. Os horários nascem do relógio do teste e no fuso do aparelho. A rotina tem só o que os
-// testes conferem (R38-31, item 1): a sessão de sono de Bruno há 72 minutos, a nota `Pomada só à noite.` de
-// Carla às 22:40 mais recentes, uma mamada de Bruno com fim há 130 minutos, uma fralda de Bruno há 50 minutos
+// testes conferem (R38-31, item 1): a sessão de sono de Ícaro há 72 minutos, a nota `Pomada só à noite.` de
+// Carla às 22:40 mais recentes, uma mamada de Ícaro com fim há 130 minutos, uma fralda de Ícaro há 50 minutos
 // e um tummy time de Carla com fim às 17:30 de ontem. Nenhum registro de Juliana: sem marco, o bloco "Desde o
 // seu último registro" não aparece. Quem precisa de mais monta a variação (`comDiaCompleto`, `ajustarRotina`).
 // Só dados fictícios.
@@ -103,14 +103,14 @@ function construtor(fuso: string): Construtor {
 /** A rotina de teste do R38-33, sem nada além do que os testes da base conferem. */
 function criarRotinaDeTeste(agora: number, fuso: string): FixtureRotina {
   const { registro } = construtor(fuso)
-  const { bruno, carla } = PESSOAS
+  const { icaro, carla } = PESSOAS
   const fimDoTummy = ontemAs(agora, 17, 30)
   const criadaEm = new Date(ultimaVezQueMarcou(agora, 22, 40)).toISOString()
 
   const registros: Registro[] = [
-    registro(1, 'sono', bruno.id, agora - 72 * MINUTO, null),
-    registro(2, 'fralda', bruno.id, agora - 50 * MINUTO, null, { detalhes: { conteudo: 'xixi' } }),
-    registro(3, 'mamada', bruno.id, agora - 148 * MINUTO, agora - 130 * MINUTO, { detalhes: { lado: 'esquerdo' } }),
+    registro(1, 'sono', icaro.id, agora - 72 * MINUTO, null),
+    registro(2, 'fralda', icaro.id, agora - 50 * MINUTO, null, { detalhes: { conteudo: 'xixi' } }),
+    registro(3, 'mamada', icaro.id, agora - 148 * MINUTO, agora - 130 * MINUTO, { detalhes: { lado: 'esquerdo' } }),
     registro(4, 'tummy', carla.id, fimDoTummy - 10 * MINUTO, fimDoTummy),
   ]
   const notas: Nota[] = [
@@ -135,27 +135,27 @@ function criarRotinaDeTeste(agora: number, fuso: string): FixtureRotina {
  * A variação "dia completo": a rotina de teste mais o dia de Heloísa que os testes de totais, de Desde o seu
  * último registro, de Últimos com cinco tipos e de sessões anteriores precisam. Sem Juliana não há marco; aqui
  * ela registrou uma fralda às 07:50 (130 minutos antes), o que dá o marco `recebido_em` = 07:50. Soma 3
- * mamadas (uma é mamadeira), 3 fraldas e 4 h 20 de sono; as três sonecas anteriores são de Bruno e de Juliana.
+ * mamadas (uma é mamadeira), 3 fraldas e 4 h 20 de sono; as três sonecas anteriores são de Ícaro e de Juliana.
  * Os registros são só desta variação: a fixture de demonstração não entra aqui.
  */
 export const comDiaCompleto = (fixture: FixtureRotina, agora: number = Date.now()): FixtureRotina => {
   const fuso = fixture.registros[0]?.fuso ?? FUSO_DO_APARELHO
   const { registro } = construtor(fuso)
-  const { juliana, bruno } = PESSOAS
+  const { juliana, icaro } = PESSOAS
   const extras: Registro[] = [
     registro(11, 'fralda', juliana.id, agora - 130 * MINUTO, null, { detalhes: { conteudo: 'coco' } }),
-    registro(12, 'sono', bruno.id, agora - (4 * HORA + 5 * MINUTO), agora - (3 * HORA + 20 * MINUTO), { nota: 'no carrinho' }),
+    registro(12, 'sono', icaro.id, agora - (4 * HORA + 5 * MINUTO), agora - (3 * HORA + 20 * MINUTO), { nota: 'no carrinho' }),
     registro(13, 'mamada', juliana.id, agora - (5 * HORA + 10 * MINUTO), agora - (4 * HORA + 52 * MINUTO), { detalhes: { lado: 'direito' } }),
     registro(14, 'sono', juliana.id, agora - (6 * HORA + 30 * MINUTO), agora - (5 * HORA + 40 * MINUTO), { nota: 'no berço' }),
-    registro(15, 'fralda', bruno.id, agora - 6 * HORA, null, { detalhes: { conteudo: 'ambos' } }),
-    registro(16, 'mamadeira', bruno.id, agora - 8 * HORA, null, { detalhes: { ml: 90, conteudo: 'leite_materno' } }),
+    registro(15, 'fralda', icaro.id, agora - 6 * HORA, null, { detalhes: { conteudo: 'ambos' } }),
+    registro(16, 'mamadeira', icaro.id, agora - 8 * HORA, null, { detalhes: { ml: 90, conteudo: 'leite_materno' } }),
     registro(17, 'sono', juliana.id, agora - 11 * HORA, agora - (7 * HORA + 15 * MINUTO), { nota: 'sono da noite' }),
     registro(18, 'tummy', juliana.id, agora - (21 * HORA), agora - (20 * HORA + 52 * MINUTO)),
   ]
   return { ...fixture, registros: [...fixture.registros, ...extras] }
 }
 
-/** A rotina de teste sem a sessão de sono de Bruno em andamento. */
+/** A rotina de teste sem a sessão de sono de Ícaro em andamento. */
 export const semSessaoEmAndamento = (fixture: FixtureRotina): FixtureRotina => ({
   ...fixture,
   registros: fixture.registros.filter((registro) => !(ehTipoDeSessao(registro.tipo) && registro.fim === null)),
@@ -163,10 +163,10 @@ export const semSessaoEmAndamento = (fixture: FixtureRotina): FixtureRotina => (
 
 /**
  * A rotina de teste com uma sessão em andamento de um tipo, começada há um tempo, no lugar da de sono de
- * Bruno (o padrão é a de sono de Bruno, há 72 minutos).
+ * Ícaro (o padrão é a de sono de Ícaro, há 72 minutos).
  */
 export const comSessaoEmAndamento =
-  (tipo: TipoRegistro, ha = 72 * 60_000, autor: string = PESSOAS.bruno.id) =>
+  (tipo: TipoRegistro, ha = 72 * 60_000, autor: string = PESSOAS.icaro.id) =>
   (fixture: FixtureRotina): FixtureRotina => {
     const base = semSessaoEmAndamento(fixture)
     const modelo = fixture.registros.find((registro) => registro.tipo === 'sono' && registro.fim === null)!
@@ -181,8 +181,8 @@ export interface OpcoesMundo {
   fusoDaFamilia?: string
   /** O papel de Davi na família de exemplo (sem a opção, ele não tem vínculo). */
   papelDeDavi?: Papel
-  /** O papel de Bruno; padrão: cuidador. */
-  papelDeBruno?: Papel
+  /** O papel de Ícaro; padrão: cuidador. */
+  papelDeIcaro?: Papel
   /** A bebê Heloísa arquivada. */
   bebeArquivado?: boolean
   /** Bebês a mais; sem `familiaId`, na família de exemplo. */
@@ -226,7 +226,7 @@ export function criarMundoDeTeste(opcoes: OpcoesMundo = {}): Mundo {
     ...base,
     familias: base.familias.map((familia) => ({ ...familia, fuso })),
     vinculos: [
-      ...base.vinculos.map((v) => (v.contaId === PESSOAS.bruno.id && opcoes.papelDeBruno ? { ...v, papel: opcoes.papelDeBruno } : v)),
+      ...base.vinculos.map((v) => (v.contaId === PESSOAS.icaro.id && opcoes.papelDeIcaro ? { ...v, papel: opcoes.papelDeIcaro } : v)),
       vinculo('b4444444-4444-4444-8444-444444444444', PESSOAS.carla.id, 'cuidador', 28),
       ...(opcoes.papelDeDavi ? [vinculo('b5555555-5555-4555-8555-555555555555', PESSOAS.davi.id, opcoes.papelDeDavi, 27)] : []),
       ...(opcoes.papelNaFamiliaTeste

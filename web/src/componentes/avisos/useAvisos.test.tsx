@@ -25,7 +25,7 @@ function aviso(numero: number): Aviso {
     texto: `Nota ${numero}`,
     criadaEm: new Date(Date.parse('2026-11-15T10:00:00.000Z') + numero * 1000).toISOString(),
     destaqueAte: null,
-    autor: { tipo: 'nome', nome: 'Bruno' },
+    autor: { tipo: 'nome', nome: 'Ícaro' },
     familiaNome: 'Família Exemplo',
     familiaFuso: 'America/Sao_Paulo',
   }
@@ -82,7 +82,7 @@ async function avancar(ms: number) {
   })
 }
 
-async function montar(opcoes: { sessao?: 'juliana' | 'bruno' | null; caminho?: string; dados?: DadosAvisos } = {}) {
+async function montar(opcoes: { sessao?: 'juliana' | 'icaro' | null; caminho?: string; dados?: DadosAvisos } = {}) {
   const conta = criarDadosContaMemoria(criarFixtureDeTeste(Date.now()))
   const sessao = opcoes.sessao === undefined ? 'juliana' : opcoes.sessao
   conta.sessaoParaTeste(sessao ? PESSOAS[sessao].email : null)
@@ -479,7 +479,7 @@ describe('RF14:RF-18 a troca de conta', () => {
     const antes = quadros.length
     await pessoaDaSessao(m)
     await act(async () => {
-      await m.conta.entrar(PESSOAS.bruno.email, SENHA_DEMONSTRACAO)
+      await m.conta.entrar(PESSOAS.icaro.email, SENHA_DEMONSTRACAO)
     })
     await assentar()
     // Toda renderização depois da troca vem sem o estado de quem saiu.
@@ -499,7 +499,7 @@ describe('RF14:RF-18 a troca de conta', () => {
     await act(async () => void uso.definirLigados(false))
     await pessoaDaSessao(m)
     await act(async () => {
-      await m.conta.entrar(PESSOAS.bruno.email, SENHA_DEMONSTRACAO)
+      await m.conta.entrar(PESSOAS.icaro.email, SENHA_DEMONSTRACAO)
     })
     await assentar()
     await m.responder(m.leituras[1], ok(estado(true, 1)))

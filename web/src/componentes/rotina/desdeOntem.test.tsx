@@ -25,7 +25,7 @@ function marco(diasAtras: number, hora: number, minuto: number): Date {
 /** Desenha o bloco com o relógio e a prop `agora` em `agoraEm` (padrão: hoje às 12:47). */
 function desenhar(marcoEm: Date, agoraEm: Date = agora()) {
   vi.setSystemTime(agoraEm)
-  render(<DesdeUltimoRegistro marcoEm={marcoEm.getTime()} registros={[]} fuso={FUSO} autorDe={() => 'Bruno'} agora={agoraEm.getTime()} />)
+  render(<DesdeUltimoRegistro marcoEm={marcoEm.getTime()} registros={[]} fuso={FUSO} autorDe={() => 'Ícaro'} agora={agoraEm.getTime()} />)
   return screen.getByRole('heading', { level: 2 })
 }
 

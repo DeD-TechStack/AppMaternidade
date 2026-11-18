@@ -224,7 +224,7 @@ const idDeTeste = (numero: number) => `a0000000-0000-7000-8000-${String(numero).
 /**
  * O mundo de teste com Carla (que não é Juliana, quem olha a tela) autora de: um registro de hoje depois do marco de
  * Juliana (o "Desde o seu último registro"), a nota em destaque da fixture e uma sessão de mamada em andamento. A de
- * sono de Bruno (a mais nova) fica como a principal do Hoje; a de Carla, mais antiga, cai em "Outras sessões" (as
+ * sono de Ícaro (a mais nova) fica como a principal do Hoje; a de Carla, mais antiga, cai em "Outras sessões" (as
  * sessões em paralelo, que só aparecem com mais de uma sessão). Depois, ela é renomeada pela camada de dados da conta
  * (a única que muda um nome: a conta entrada muda o próprio) e a sessão volta a ser a de Juliana.
  */
