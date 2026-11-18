@@ -447,13 +447,13 @@ Curto e sem surpresa, com a biblioteca `motion` (`motion/react`, versão fixa no
 |---|---|---|
 | Primeira carga | Cortina em colunas (M2, `catalogo.ts:35-48`, `Cortina.tsx:6-12`): 6 colunas em 1440 e 4 em 390, uma camada de cacau e depois a de mel (120 ms depois), cada uma de 0 a −100% em `y`, 0,5 s, curva `[0.16, 1, 0.3, 1]`, uma coluna a cada 90 ms. Sem tela de abertura: a página já está montada por baixo. Roda uma vez por sessão do navegador (marca em `sessionStorage`). | A página aparece direto |
 | Herói | A cena sobe de 0,94 a 1 e aparece, 0,8 s, depois da cortina (M8, `catalogo.ts:103-115`, `HeroiInicio.tsx:36-38`) | Parada |
-| Números e títulos de seção | As linhas sobem 48 px e aparecem, 1,25 s, curva `[0.165, 0.84, 0.44, 1]`, uma a cada 250 ms, ao entrar na janela (M4, `catalogo.ts:64-76`) | Já no lugar |
-| Painel com mídia | A mídia vai de 0,9 a 1 nos primeiros 360 px de rolagem, com mola (rigidez 120, amortecimento 30); o cartão flutuante chega 120 ms depois, subindo 24 px (M3, `catalogo.ts:49-63`) | Parada |
-| Faixa de cacau e rodapé | O conteúdo sai de baixo, preso à rolagem: de −50% a 0 na faixa (M6) e de −30% a 0 no rodapé (M7, `catalogo.ts:77-102`) | Parada |
+| Números e títulos de seção | Sem movimento: o texto já está no lugar desde a primeira pintura. M4 (as linhas que subiam e apareciam) e M5 (o título dividido por linha) saíram na MOTION-1 | Igual |
+| Painel com mídia | A mídia vai de 0,9 a 1 nos primeiros 360 px de rolagem, com mola (rigidez 120, amortecimento 30); a opacidade fica sempre em 1, e o cartão flutuante já está no lugar (M3, `catalogo.ts`) | Parada |
+| Faixa de cacau e rodapé | Só o rodapé se move: o conteúdo sai de baixo, preso à rolagem, de −30% a 0 (M7, `catalogo.ts`). A faixa de cacau já está no lugar desde a primeira pintura; M6 (o conteúdo que saía de baixo) saiu na MOTION-1 | Parada |
 | Hover | O primário inverte na hora; a camada de cacau com o resumo do cartão de mídia aparece em 100 ms, também com foco (M13, `catalogo.ts:116-129`). A escala do toque nos botões é 0,96 no `:active`, 120 ms, `ease-out`, e só ela anima (`web/src/styles/site.css:146-154`). | Igual, sem deslocamento |
 | Selos | Letreiro de 60 s por volta, em CSS (M14, `campo.css:284-295`); para no hover, no foco e pelo botão | Fileira parada |
 
-Os componentes de `web/src/movimento/` (`Cortina`, `EntradaCena`, `RevelaNaRolagem`, `LinhasEscalonadas`, `RevelacaoPorBaixo`, `CamadaHover`) implementam essas receitas e são os que se reutilizam.
+Os componentes de `web/src/movimento/` (`Cortina`, `EntradaCena`, `RevelaNaRolagem`, `RevelacaoPorBaixo`, `CamadaHover`) implementam essas receitas e são os que se reutilizam. Nenhum conteúdo do `<main>` começa escondido à espera da rolagem.
 
 ## Images
 
@@ -478,7 +478,7 @@ Cada linha é uma regra que perdeu para o código na base (a003fe4, sem mudança
 - **CTA circular.** Regra antiga: círculo de 480 px (322 abaixo de 768) e outro, só de contorno, de 240, no site. O código faz: nenhum CTA circular no site; o único círculo é o botão "Iniciar mamada" da madrugada, de 13 rem (15 rem em telas grandes) ou 7 rem (9 rem) quando há outra sessão em andamento, `BotaoIniciarMamada.tsx:20-27`.
 - **Mídia e galeria.** Regra antiga: peças de 1376 × 888 a 1056, par de 672 × 672, retrato de 413 × 734, moldura de raio 8 (4 abaixo de 768). A FINAL diz painel de raio 24. O código faz: painel de até 1376 px de largura com raio `painel` e a cena com `border-radius: inherit`, `campo.css:4-11` e `60-63`.
 - **Movimento: "nenhuma animação de entrada na primeira carga".** Regra antiga. A FINAL §5 diz cortina de colunas, entrada do herói e linhas que sobem. O código faz: a cortina (`Cortina.tsx:35-82`, `catalogo.ts:35-48`), a entrada da cena (`catalogo.ts:103-115`) e as linhas (`catalogo.ts:64-76`).
-- **Movimento reduzido nos números e títulos.** A FINAL diz "só opacidade, 150 ms". O código faz: a peça nasce no estado final, sem transição, `EntradaSuave.tsx:34-44`.
+- **Movimento reduzido nos números e títulos.** A FINAL diz "só opacidade, 150 ms". Resolvida na MOTION-1: os números e os títulos não têm mais entrada animada (a `EntradaSuave`, o `TextoAnimado` e a `LinhasEscalonadas` foram removidos), e o texto está no lugar desde a primeira pintura, com ou sem movimento reduzido.
 - **Escala de tipo e corpo.** A FINAL §2 diz h1 84/88, h2 56/62, h3 36/42, h4 24/30, corpo do site 18/27 e rótulo 14/20. A SPEC H e o front matter deste arquivo trocam isso pela escala de nove níveis (corpo 18/28, nada abaixo de 15 px). O código faz: a escala antiga, `site.css:48-110` (`.cm-corpo` 18/27, `.cm-rotulo` 14/20), até o H-3 aplicar.
 - **Grade e padding de painel.** A FINAL §3 diz grade de 12 colunas, margem 64, conteúdo máximo 1312 e padding de painel 64. A SPEC H e o Layout acima trocam isso pelo quadro de 1200 px com calha de 20 a 32 px e o papel `painel`. O código faz: `.cm-area` de 1312 px com margem de 20 a 64 px e respiro de painel de 24 a 64 px, `site.css:6-34`, até o H-3 aplicar.
 - **Ilustração nunca sobre o cacau.** A FINAL §4 proíbe. O código faz: o fechamento do Início põe o desenho `tummy-time` no painel de cacau, `Fechamento.tsx:21-23`.
