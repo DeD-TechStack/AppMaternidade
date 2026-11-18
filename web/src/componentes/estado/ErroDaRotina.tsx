@@ -3,6 +3,7 @@ import { Link } from 'react-router'
 import { COMUM, LIGACOES, ehErroRepetivel, textoDoErro } from '../../conteudo/rotina.ts'
 import type { ErroDados, Papel } from '../../dados/comum.ts'
 import { LINK_ALVO } from '../conta/Partes.tsx'
+import { AvisoDeErro } from '../rotina/AvisoDeErro.tsx'
 import { ErroDeLeitura } from './ErroDeLeitura.tsx'
 
 interface Props {
@@ -13,20 +14,24 @@ interface Props {
   /** O botão "Tentar de novo" aparece quando há a ação e a classe do erro pede repetição. */
   aoTentarDeNovo?: () => void
   refAviso?: Ref<HTMLDivElement>
+  /** Dentro de um cartão: a mesma peça dos outros erros da página, o `AvisoDeErro`. */
+  aninhado?: boolean
   className?: string
   children?: ReactNode
 }
 
 /**
- * Classes do erro aninhado num cartão (o "Em andamento" do Hoje): o mesmo peso, cor e raio do `AvisoDeErro`.
- */
-export const ERRO_ANINHADO = 'border-[1.5px]! border-(--cor-texto)! rounded-(--radius-cartao)!'
-
-/**
  * O erro da Rotina na peça comum: a frase do catálogo (Anexo B), o `data-erro-rotina` com a chave, o link da lixeira
  * para `registro_excluido` e "Tentar de novo" só nos erros que repetem a chamada.
  */
-export function ErroDaRotina({ erro, escrita = false, papel = null, aoTentarDeNovo, refAviso, className, children }: Props) {
+export function ErroDaRotina({ erro, escrita = false, papel = null, aoTentarDeNovo, refAviso, aninhado = false, className, children }: Props) {
+  if (aninhado) {
+    return (
+      <AvisoDeErro erro={erro} escrita={escrita} papel={papel} aoTentarDeNovo={aoTentarDeNovo} refAviso={refAviso} className={className}>
+        {children}
+      </AvisoDeErro>
+    )
+  }
   return (
     <ErroDeLeitura
       refErro={refAviso}

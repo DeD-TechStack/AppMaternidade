@@ -11,7 +11,7 @@ import { Botao } from '../../componentes/base/Botao.tsx'
 import { Etiqueta } from '../../componentes/base/Etiqueta.tsx'
 import { Cartao, Colunas, Pilha, QuadroLayout, Secao } from '../../componentes/base/layout/index.ts'
 import { Carregando } from '../../componentes/estado/Carregando.tsx'
-import { ERRO_ANINHADO, ErroDaRotina } from '../../componentes/estado/ErroDaRotina.tsx'
+import { ErroDaRotina } from '../../componentes/estado/ErroDaRotina.tsx'
 import { PainelVazio } from '../../componentes/estado/PainelVazio.tsx'
 import { AvisoDeFuso } from '../../componentes/rotina/AvisoDeFuso.tsx'
 import { AvisoDeLista } from '../../componentes/rotina/AvisoDeLista.tsx'
@@ -303,7 +303,7 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
         >
           <h2 className="text-pequeno font-medium text-(--cor-texto-2)">{HOJE.emAndamento}</h2>
           {emAndamento.erro ? (
-            <ErroDaRotina erro={emAndamento.erro} papel={ativo.papel} aoTentarDeNovo={emAndamento.recarregar} className={ERRO_ANINHADO} />
+            <ErroDaRotina erro={emAndamento.erro} papel={ativo.papel} aoTentarDeNovo={emAndamento.recarregar} aninhado />
           ) : (
             <Carregando texto={COMUM.carregando} />
           )}
