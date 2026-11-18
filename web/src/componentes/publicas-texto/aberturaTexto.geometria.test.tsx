@@ -367,8 +367,14 @@ describe(descreve, () => {
     )
 
     // B-2: no celular o primeiro parágrafo de leitura começa dentro da primeira tela.
-    roda(
-      `${caminho} a 390: o painel tem a largura da coluna do texto, o primeiro parágrafo de leitura começa na primeira tela e nenhum vão vazio passa de 25%`,
+    // Exclusão decidida (decisão do líder em 17/11, DIRECAO.md): /privacidade a 390 não passa pelo layout, porque a
+    // ordem da cópia é protegida. `it.fails` deixa o VERMELHO visível e faz a execução ficar vermelha assim que
+    // /privacidade a 390 passar a passar. Nada mais foi afrouxado: as outras cinco páginas afirmam como antes.
+    const caso390 = caminho === '/privacidade' ? roda.fails : roda
+    caso390(
+      caminho === '/privacidade'
+        ? 'POL-TXT:A-2 @ /privacidade 390: excluded, protected copy order; recomposed by the visual reset (DIRECAO.md)'
+        : `${caminho} a 390: o painel tem a largura da coluna do texto, o primeiro parágrafo de leitura começa na primeira tela e nenhum vão vazio passa de 25%`,
       () => {
         const m = medirPagina(caminho, 390, 844, true)
         expect(m.primeiroParagrafo, 'a segunda seção tem um parágrafo de leitura').not.toBeNull()
