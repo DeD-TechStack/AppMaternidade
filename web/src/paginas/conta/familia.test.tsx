@@ -76,7 +76,7 @@ describe('os blocos e a ordem (responsável)', () => {
       .getAllByRole('heading', { level: 2 })
       .map((titulo) => titulo.textContent)
     expect(titulos).toEqual(['Família Exemplo', 'Bebês', 'Membros', 'Convites', 'Ações da família'])
-    expect(screen.getByText(`Fuso: ${FUSO}`)).toBeTruthy()
+    expect(screen.getByText('Fuso: Horário de Brasília (UTC−3)')).toBeTruthy()
     expect(screen.getByText('Você é responsável.')).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Política de privacidade' }).getAttribute('href')).toBe('/privacidade')
     expect(document.title).toBe('Família | AppMaternidade')
@@ -563,7 +563,7 @@ describe('bebês', () => {
     const nascimento = somarDias(hojeNoFuso(FUSO), -20)
     digitar('Data de nascimento', nascimento)
     fireEvent.click(botao('Salvar'))
-    await waitFor(() => expect(status().textContent).toBe('Mel foi adicionado.'))
+    await waitFor(() => expect(status().textContent).toBe('Bebê adicionado: Mel.'))
     const bebes = secao('Bebês')
     expect(bebes.getByText('Mel')).toBeTruthy()
     expect(bebes.getByText(`nasceu em ${formatarNascimento(nascimento)}`)).toBeTruthy()
@@ -603,7 +603,7 @@ describe('bebês', () => {
     const dialogo = screen.getByRole('dialog', { name: 'Arquivar Heloísa?' })
     fireEvent.click(within(dialogo).getByRole('button', { name: 'Arquivar' }))
 
-    await waitFor(() => expect(status().textContent).toBe('Heloísa foi arquivado.'))
+    await waitFor(() => expect(status().textContent).toBe('Bebê arquivado: Heloísa.'))
     expect(secao('Bebês').getByText('Nenhum bebê cadastrado.')).toBeTruthy()
     const arquivados = document.querySelector('details')!
     expect(arquivados.hasAttribute('open')).toBe(false)
@@ -623,14 +623,14 @@ describe('as ações da família', () => {
     fireEvent.click(botao('Editar família'))
 
     expect(campo('Nome da família').value).toBe('Família Exemplo')
-    expect(campo('Fuso da família').value).toBe(FUSO)
+    expect(campo('Fuso horário da família').value).toBe(FUSO)
     digitar('Nome da família', 'Família Aurora')
-    digitar('Fuso da família', 'America/Manaus')
+    digitar('Fuso horário da família', 'America/Manaus')
     fireEvent.click(botao('Salvar'))
 
     await waitFor(() => expect(status().textContent).toBe('Dados da família salvos.'))
     expect(await screen.findByRole('heading', { level: 2, name: 'Família Aurora' })).toBeTruthy()
-    expect(screen.getByText('Fuso: America/Manaus')).toBeTruthy()
+    expect(screen.getByText('Fuso: Horário do Amazonas (UTC−4)')).toBeTruthy()
   })
 
   it('editar família: nome vazio dá erro no campo, sem chamar o banco', async () => {

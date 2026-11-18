@@ -11,7 +11,7 @@ interface Props {
   altura: number
   /** O que a cena mostra: as nossas telas, nos aparelhos. */
   alt: string
-  /** A primeira dobra carrega a imagem na hora; as outras, ao chegar perto. */
+  /** A primeira dobra carrega a imagem na hora e com prioridade alta; as outras, ao chegar perto. */
   prioritaria?: boolean
   /** O que flutua sobre o painel (um `CartaoFlutuante`). */
   children?: ReactNode
@@ -36,6 +36,7 @@ export function CenaEstudio({ base, largura, altura, alt, prioritaria = false, c
             height={altura}
             alt={alt}
             loading={prioritaria ? 'eager' : 'lazy'}
+            fetchPriority={prioritaria ? 'high' : undefined}
             decoding="async"
             data-cena=""
           />

@@ -45,7 +45,7 @@ export const TT = {
   /** T-30. */
   semDuracao: 'sem duração',
   /** T-31. */
-  contaRemovida: 'por conta removida',
+  contaRemovida: 'por pessoa removida',
   /** T-32. */
   registradoDepois: 'registrado depois',
   /** T-41. */

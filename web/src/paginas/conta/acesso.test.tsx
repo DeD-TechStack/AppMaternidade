@@ -458,7 +458,7 @@ describe('/criar-conta', () => {
     renderizarComDados('/criar-conta')
     await screen.findByRole('button', { name: 'Criar conta' })
 
-    expect(screen.getByText('Pelo menos 6 caracteres.')).toBeTruthy()
+    expect(screen.getByText('Pelo menos 8 caracteres.')).toBeTruthy()
     expect(screen.getByText('É o nome que a família vai ver.')).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Termos de uso' }).getAttribute('href')).toBe('/termos')
     expect(screen.getByRole('link', { name: 'Política de privacidade' }).getAttribute('href')).toBe('/privacidade')
@@ -624,7 +624,7 @@ describe('/redefinir-senha', () => {
     await screen.findByLabelText('Nova senha')
     expect(campo('Repetir a senha')).toBeTruthy()
     expect(botao('Salvar senha')).toBeTruthy()
-    expect(screen.getByText('Pelo menos 6 caracteres.')).toBeTruthy()
+    expect(screen.getByText('Pelo menos 8 caracteres.')).toBeTruthy()
   })
 
   it('o evento de recuperação grava a marca com o id do usuário e abre o formulário', async () => {

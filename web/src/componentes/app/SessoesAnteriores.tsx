@@ -3,11 +3,12 @@ import { Cartao, Pilha } from '../base/layout/index.ts'
 import { Avatar } from './Avatar.tsx'
 import type { SessaoAnterior, TipoSessao } from '../../prototipo/estado.ts'
 import { formatarDuracao, formatarHora } from '../../prototipo/formatar.ts'
+import { SESSOES_ANTERIORES } from '../../prototipo/textosSessao.ts'
 
 const TITULO: Record<TipoSessao, string> = {
-  sono: 'Sonecas anteriores',
-  mamada: 'Mamadas anteriores',
-  tummy: 'Tummy time anteriores',
+  sono: SESSOES_ANTERIORES.sono,
+  mamada: SESSOES_ANTERIORES.mamada,
+  tummy: SESSOES_ANTERIORES.tummy,
 }
 
 interface Props {
@@ -32,7 +33,7 @@ export function SessoesAnteriores({ tipo, itens, className }: Props) {
           {TITULO[tipo]}
         </h2>
         {itens.length === 0 ? (
-          <p className="py-4 text-(--cor-texto-2)">Nenhuma ainda.</p>
+          <p className="py-4 text-(--cor-texto-2)">{SESSOES_ANTERIORES.nenhuma}</p>
         ) : (
           <ul>
             {itens.slice(0, 4).map((item) => (

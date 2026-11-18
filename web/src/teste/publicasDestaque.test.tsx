@@ -19,8 +19,8 @@ const PAGINAS = [
   ['/desenvolvimento', DESENVOLVIMENTO_DESTAQUE.titulo],
 ] as const
 
-/** O texto que o leitor de tela lê de um título animado (o span sr-only com as duas linhas). */
-const nomeDoTitulo = (titulo: HTMLElement) => titulo.querySelector('.sr-only')?.textContent ?? titulo.textContent
+/** O texto do título: as duas linhas em texto comum, sem cópia só para leitor de tela. */
+const nomeDoTitulo = (titulo: HTMLElement) => titulo.textContent
 
 async function violacoes(container: HTMLElement): Promise<string[]> {
   const resultado = await rodarAxe(container, { rules: { 'color-contrast': { enabled: false } } })

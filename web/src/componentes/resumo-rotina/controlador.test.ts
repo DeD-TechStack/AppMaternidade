@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { FAMILIAS_DEMONSTRACAO } from '../../dados/conta.demonstracao.ts'
 import type { ErroDados } from '../../dados/comum.ts'
 import { diaDaFamilia, janelaDoDia } from '../../dados/rotina.dia.ts'
@@ -22,6 +22,17 @@ import {
 // presas (`adiarRotina`) e falhas simuladas (`simularFalhaRotina`).
 
 const DIA = 86_400_000
+
+// A rotina de teste põe os registros de "hoje" de 50 min a 6 h antes de agora. Perto da meia-noite eles caem no dia
+// anterior da família e o painel vê "sem números". Por isso o relógio do aparelho fica preso, só o Date, às 12:00
+// locais (o `vi.waitFor` e os `setTimeout` seguem reais).
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(new Date(2026, 10, 5, 12, 0, 0))
+})
+afterEach(() => {
+  vi.useRealTimers()
+})
 
 const sessaoVencida: ErroDados = { classe: 'sessao_encerrada', chave: 'sessao_encerrada', codigo: '', mensagemOriginal: '' }
 
