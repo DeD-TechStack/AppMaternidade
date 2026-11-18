@@ -37,7 +37,7 @@ export function LinhaDoDia({ registro, fuso, autor, para, marca }: Props) {
             {texto}
           </Link>
         </p>
-        <p className="text-pequeno text-(--cor-texto-2)">{SESSOES.porAutor(autor)}</p>
+        <p className="text-pequeno text-(--cor-texto-2) wrap-anywhere">{SESSOES.porAutor(autor)}</p>
       </div>
     </li>
   )
