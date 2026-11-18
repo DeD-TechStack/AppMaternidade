@@ -14,7 +14,7 @@ export const EMAIL_CONTATO = 'contato@appmaternidade.example'
 /** Fatos jurídicos que Daniel respondeu (18/11/2026, STRINGS.md A3/A7/A8): não são um segundo aviso de avaliação. */
 export const TEXTO_QUEM_PODE_USAR =
   'O AppMaternidade é para quem cuida de um bebê. O bebê não vai ter conta, e nesta versão de avaliação os dados dele também devem ser fictícios.'
-export const TEXTO_APOIO_CONTATO = 'Este e-mail é fictício e não recebe mensagens.'
+export const TEXTO_APOIO_CONTATO = 'E-mail fictício.'
 export const TEXTO_SEUS_DIREITOS =
   'Na tela Conta, quem entrou na conta já pode baixar uma cópia dos seus dados num arquivo JSON, que não é um formato regulamentado de portabilidade, e excluir a conta. A confirmação de que seus dados são tratados, a correção e a revogação do consentimento ainda não têm tela própria. O endereço de e-mail da página Contato é fictício e não recebe mensagens. Por enquanto, o que dá para pedir é o que a tela Conta já faz: baixar os dados ou excluir a conta.'
 

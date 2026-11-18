@@ -21,7 +21,7 @@ const ROTAS_DE_LEITURA = [
 const ENDERECO = 'contato@appmaternidade.example'
 const A2 = 'Não há idade mínima para usar o AppMaternidade. Quem tem menos de 18 anos usa o site com o pai, a mãe ou o responsável legal.'
 const A3 = 'O AppMaternidade é para quem cuida de um bebê. O bebê não vai ter conta, e nesta versão de avaliação os dados dele também devem ser fictícios.'
-const A7 = 'Este e-mail é fictício e não recebe mensagens.'
+const A7 = 'E-mail fictício.'
 const A8 =
   'Na tela Conta, quem entrou na conta já pode baixar uma cópia dos seus dados num arquivo JSON, que não é um formato regulamentado de portabilidade, e excluir a conta. A confirmação de que seus dados são tratados, a correção e a revogação do consentimento ainda não têm tela própria. O endereço de e-mail da página Contato é fictício e não recebe mensagens. Por enquanto, o que dá para pedir é o que a tela Conta já faz: baixar os dados ou excluir a conta.'
 
