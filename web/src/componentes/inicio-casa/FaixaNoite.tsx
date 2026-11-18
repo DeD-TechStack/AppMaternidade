@@ -70,11 +70,9 @@ export function FaixaNoite({ larga, fixo }: Props) {
               decoding="async"
             />
             <LuzDaLampada
-              cone={LUZ_M06.cone}
-              poca={LUZ_M06.poca}
+              luz={LUZ_M06}
               memoria="casa-luz-m06"
               gatilho="vista"
-              tamanho={{ largura: M06.largura, altura: M06.altura }}
             />
           </figure>
           <div className="ic-piso-noite" data-costura-lado="noite">

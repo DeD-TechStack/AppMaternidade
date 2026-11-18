@@ -4,8 +4,8 @@ import { ID_FAIXA_TELA } from './ids.ts'
 import { CAPTURA_N, MOLDURA_NOITE } from './midia.ts'
 
 /**
- * Band 3, on cacau: "Dormiu às 20:30." and the second framed real screen (manifest state `N`, Hoje at 21:42, the
- * night body of the frame on the cacau wall). No floor strip and no button. The heading is plain `exibicao`.
+ * Band 3, on cacau: "Dormiu às 20:30." and the second framed real screen (manifest state `N`, Hoje at 21:42, in the
+ * night frame raster on the cacau wall). No floor strip and no button. The heading is plain `exibicao`.
  */
 export function FaixaTela() {
   return (

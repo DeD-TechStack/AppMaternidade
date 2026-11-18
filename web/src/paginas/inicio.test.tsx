@@ -14,14 +14,13 @@ import { aguardarCarga, renderizarRota } from '../teste/renderizarRota.tsx'
 // Nothing here imports a file the implementation has yet to create: `conteudo/inicio.ts` and the new
 // source folders are read from disk with node:fs, so at the base each test fails on an assertion.
 //
-// Contract the implementation must meet (the card leaves the hook to the page; casca/** is not edited):
-//   - `<main>` carries `data-cta-cabecalho="quieta" | "cheia"`, the page-owned state the shell CSS reads
-//     for the header pill (`a[data-cabecalho-pilula]`).
-//   - At >= 1024 px the state is `quieta` at mount (the CSS default, no JS needed) and follows an
-//     IntersectionObserver on the hero pill (`[data-cena-heroi] a[data-botao-mel]`): visible -> quieta,
-//     scrolled past -> cheia.
-//   - Below 1024 px it is `cheia` at mount, and the hero renders no mel pill, only the text link.
-//   QUESTION FOR LEADER: the shell has no such hook yet; this attribute is this test's proposal.
+// Contract the implementation must meet (leader ruling, round 4; casca/** is not edited):
+//   - The page sets `document.documentElement.dataset.inicioHeroi = "visivel"` while the hero's mel pill
+//     (`[data-cena-heroi] a[data-botao-mel]`) is in view under the header (IntersectionObserver, top root
+//     margin -72 px), deletes it when the pill leaves view and on unmount. `<main>` carries no such state.
+//   - The quiet / filled CSS of `a[data-cabecalho-pilula]` lives in `inicio-casa.css`, scoped by
+//     `html[data-inicio-heroi="visivel"]` at >= 1024 px.
+//   - Below 1024 px the attribute is never set, and the hero renders no mel pill, only the text link.
 //   - The width switch is a `matchMedia` query (`(min-width: 1024px)` or the rem form), so jsdom can drive it.
 
 const PASTA_WEB = process.cwd()
@@ -85,8 +84,9 @@ class ObservadorFalso {
   rootMargin = ''
   thresholds: number[] = []
   chamada: IntersectionObserverCallback
-  constructor(chamada: IntersectionObserverCallback) {
+  constructor(chamada: IntersectionObserverCallback, opcoes?: IntersectionObserverInit) {
     this.chamada = chamada
+    this.rootMargin = opcoes?.rootMargin ?? ''
     ObservadorFalso.todos.push(this)
   }
   observe(alvo: Element) {
@@ -230,6 +230,32 @@ describe('REPH-I-01 composition of /: one [data-casa], the seven bands in order,
     expect(telas.map((t) => t.getAttribute('alt'))).toEqual([COPY.altTela1, COPY.altTela2])
   })
 
+  it('REPH-I-01 /: each framed screen is a real capture under ASSET-1\'s frame raster (day on band 2, night on band 3), and no device is drawn in CSS', async () => {
+    await abrir(1440)
+    const artes = [...principal().querySelectorAll<HTMLImageElement>('[data-produto-moldura-arte]')]
+    expect(artes.map((a) => a.tagName)).toEqual(['IMG', 'IMG'])
+    expect(artes.map((a) => a.getAttribute('src'))).toEqual(['/molduras/moldura-dia.png', '/molduras/moldura-noite.png'])
+    for (const arte of artes) {
+      expect(arte.getAttribute('alt')).toBe('')
+      expect(arte.getAttribute('aria-hidden')).toBe('true')
+      expect([arte.getAttribute('width'), arte.getAttribute('height')]).toEqual(['678', '1423'])
+    }
+    expect(principal().querySelector('.ic-aparelho, .ic-aparelho-corpo, [data-corpo]')).toBeNull()
+  })
+
+  it('REPH-I-01 at 390 the first frame is the night raster on the cacau wall, and no device is drawn in CSS', async () => {
+    await abrir(390)
+    const artes = [...principal().querySelectorAll<HTMLImageElement>('[data-produto-moldura-arte]')]
+    expect(artes.map((a) => a.getAttribute('src'))).toEqual(['/molduras/moldura-noite.png', '/molduras/moldura-noite.png'])
+    expect(principal().querySelector('.ic-aparelho, .ic-aparelho-corpo, [data-corpo]')).toBeNull()
+  })
+
+  it('REPH-I-01 the page sources and stylesheet no longer name the CSS-drawn device (ic-aparelho, AparelhoEmCss)', () => {
+    const fontes = [join(PASTA_SRC, 'paginas', 'Inicio.tsx'), ...PASTAS_DA_CASA.flatMap(arquivosDe)].filter((f) => !/AparelhoEmCss\.tsx$/.test(f))
+    for (const arquivo of fontes) expect(readFileSync(arquivo, 'utf8'), arquivo).not.toMatch(/AparelhoEmCss|ic-aparelho/)
+    expect(readFileSync(CSS_DA_CASA, 'utf8')).not.toContain('ic-aparelho')
+  })
+
   it('REPH-I-01 /: no retired piece of the old home renders (numbers, seals, shift card, table, quotes, marquee, three-phone scene)', async () => {
     await abrir(1440)
     const velhos = [
@@ -341,7 +367,8 @@ describe('REPH-I-02 copy: every rendered text and alt is a COPY constant, ini.le
 // ---------------------------------------------------------------------------------------------
 
 const pilulaDoCabecalho = () => document.querySelector<HTMLAnchorElement>('header[data-cabecalho] a[data-cabecalho-pilula]')
-const estadoDaPilula = () => principal().getAttribute('data-cta-cabecalho')
+const ganchoDoHeroi = () => document.documentElement.dataset.inicioHeroi
+const CSS_DA_CASA = join(PASTA_SRC, 'componentes', 'inicio-casa', 'inicio-casa.css')
 
 describe('REPH-I-31 one h1 with two spans, and the header pill quiet or filled by the page', () => {
   it('REPH-I-31 /: one h1 with exactly two child spans, whole text equal to ini.h1', async () => {
@@ -365,21 +392,48 @@ describe('REPH-I-31 one h1 with two spans, and the header pill quiet or filled b
     const link = [...document.querySelectorAll<HTMLAnchorElement>('[data-cena-heroi] a')].find((a) => norm(a.textContent) === COPY.cta2)
     expect(link?.getAttribute('href')).toBe('/como-funciona')
     expect(pilulaDoCabecalho()).not.toBeNull()
-    expect(estadoDaPilula()).toBe('quieta')
+    expect(ganchoDoHeroi()).toBe('visivel')
+    expect(principal().hasAttribute('data-cta-cabecalho')).toBe(false)
   })
 
-  it('REPH-I-31 at 1440 the header pill turns filled once the hero pill is scrolled past, and quiet again when it returns', async () => {
+  it('REPH-I-31 at 1440 the html mark goes away once the hero pill is scrolled past, and returns with the pill', async () => {
     await abrir(1440)
     expect(avisarPilulaDoHeroi(false)).toBeGreaterThan(0)
-    expect(estadoDaPilula()).toBe('cheia')
+    expect(ganchoDoHeroi()).toBeUndefined()
     expect(avisarPilulaDoHeroi(true)).toBeGreaterThan(0)
-    expect(estadoDaPilula()).toBe('quieta')
+    expect(ganchoDoHeroi()).toBe('visivel')
   })
 
-  it('REPH-I-31 at 390 the header pill is always filled and the hero renders no mel pill', async () => {
+  it('REPH-I-31 at 1440 the observer on the hero pill keeps a -72 px top root margin, and the mark is removed on unmount', async () => {
+    const { unmount } = await abrir(1440)
+    const dele = ObservadorFalso.todos.find((o) => [...o.alvos].some((alvo) => alvo.matches(PILULA_DO_HEROI)))
+    expect(dele?.rootMargin.split(/\s+/)[0]).toBe('-72px')
+    expect(ganchoDoHeroi()).toBe('visivel')
+    unmount()
+    expect(ganchoDoHeroi()).toBeUndefined()
+  })
+
+  it('REPH-I-31 the page stylesheet quiets the shell pill only under html[data-inicio-heroi] at 1024 and more, with no !important', () => {
+    const css = readFileSync(CSS_DA_CASA, 'utf8').replace(/\r\n/g, '\n')
+    const semComentario = css.replace(/\/\*[\s\S]*?\*\//g, '')
+    const inicio = semComentario.indexOf('html[data-inicio-heroi')
+    expect(inicio).toBeGreaterThan(-1)
+    const bloco = semComentario.slice(semComentario.lastIndexOf('@media', inicio), semComentario.indexOf('@media (prefers-reduced-motion', inicio))
+    expect(bloco).toMatch(/@media \(min-width: 1024px\)/)
+    expect(bloco).toContain("html[data-inicio-heroi='visivel'] header[data-cabecalho]:not([data-tom='noite']) a[data-cabecalho-pilula]")
+    expect(bloco).not.toMatch(/!important/)
+    // Only the colours change, 160 ms; the filled return animates too through the transition rule of the page.
+    const transicao = semComentario.slice(semComentario.indexOf("a[data-cabecalho-pilula] {\n    transition-property"))
+    expect(transicao).toMatch(/transition-property: scale, background-color, color;/)
+    expect(transicao).toMatch(/transition-duration: 120ms, 160ms, 160ms;/)
+    expect(semComentario).not.toMatch(/transition:\s*all/)
+    expect(semComentario).not.toContain('data-cta-cabecalho')
+  })
+
+  it('REPH-I-31 at 390 the html mark is never set, the header pill stays the shell filled one and the hero renders no mel pill', async () => {
     await abrir(390)
     expect(pilulaDoCabecalho()).not.toBeNull()
-    expect(estadoDaPilula()).toBe('cheia')
+    expect(ganchoDoHeroi()).toBeUndefined()
     expect(document.querySelector(PILULA_DO_HEROI)).toBeNull()
     const link = [...document.querySelectorAll<HTMLAnchorElement>('[data-cena-heroi] a')].find((a) => norm(a.textContent) === COPY.cta2)
     expect(link).toBeDefined()
@@ -527,7 +581,15 @@ describe('REPH-I-11 pinned stage (1440 x 900): one stage in band 2, one night sh
     expect(folha.getAttribute('aria-hidden')).toBe('true')
     const gemeaTela = folha.querySelector<HTMLImageElement>('[data-troca-gemea-tela]')!
     expect(gemeaTela.getAttribute('alt')).toBe('')
-    expect(folha.querySelector('[data-troca-gemea-arte]')!.getAttribute('alt')).toBe('')
+    // The twin's body is ASSET-1's night frame raster, hidden from the tree, with an empty alt.
+    const arte = folha.querySelector<HTMLImageElement>('[data-troca-gemea-arte]')!
+    expect(arte.tagName).toBe('IMG')
+    expect(arte.getAttribute('alt')).toBe('')
+    expect(arte.getAttribute('aria-hidden')).toBe('true')
+    expect(arte.getAttribute('src')).toBe('/molduras/moldura-noite.png')
+    expect(gemeaTela.getAttribute('src')).toBe(principal().querySelector('[data-produto-tela]')!.getAttribute('src'))
+    // None of the marks the meter counts a framed screen by.
+    expect(folha.querySelector('[data-produto-tela], [data-produto-moldura], [data-produto-moldura-arte]')).toBeNull()
     // The twin is invisible to the tree: only the day frame counts as a framed real screen.
     expect(principal().querySelectorAll('[data-produto-tela]')).toHaveLength(2)
   })

@@ -48,7 +48,9 @@
     --heroi-chao-extra: 65px;
   }
 
-  /* The framed screens: 320 px of screen layer at 1440 and 280 at 390 (RECUT §6). */
+  /* The framed screens (`ProdutoEmMoldura`: the real capture under ASSET-1's frame raster): 320 px of screen layer at 1440
+     and 280 at 390 (RECUT §6). The shared box (`.cm-produto-moldura` in secoes.css) does the rest: the capture is inset by
+     3 % of the screen layer's width, the frame is 1.06 x that wide and `--moldura-razao` x as tall. */
   [data-casa] .cm-produto-moldura {
     --produto-tela: clamp(280px, calc(280px + (100vw - 390px) * 40 / 1050), 320px);
   }
@@ -239,8 +241,23 @@
       width: var(--heroi-medida);
     }
 
+    /* RECUT §3: the lede is two lines of `abertura` (y 456.8 to 520.8) and the pill starts `heroi-acoes-vao` (24 px) under
+       it (y 544.8), so the first row is exactly two line-heights tall and the actions are the second row. The pill is at
+       the top of its row, whatever the link beside it measures. */
+    [data-casa] .ic-noite-heroi {
+      display: grid;
+      grid-template-rows: calc(2 * var(--texto-abertura-entrelinha)) auto;
+      row-gap: var(--heroi-acoes-vao);
+      align-items: start;
+    }
+
     [data-casa] .ic-acoes {
-      margin-top: var(--heroi-acoes-vao);
+      margin-top: 0;
+      align-items: flex-start;
+    }
+
+    [data-casa] .ic-acoes .cm-botao-texto {
+      align-self: center;
     }
 
     /* The plate: its seam on the page seam. The walls and floors run on to both edges of the window. */
@@ -381,7 +398,9 @@
       background-color: var(--color-texto-2);
     }
 
-    /* The twin takes the day frame's box (same custom properties, same left and bottom): within 1 px of it. */
+    /* The twin takes the day frame's box: it is a `.cm-produto-moldura` in the stage's coordinates, so the rule above
+       gives it the same custom properties, the same left and the same bottom as the day frame (within 1 px). Its two
+       layers follow the shared box (`secoes.css`) under their own marks, which carry no `data-produto-*`. */
     [data-casa] .ic-gemea [data-troca-gemea-tela] {
       position: absolute;
       top: var(--produto-borda);
@@ -485,28 +504,34 @@
   }
 
   /* ---- The header pill (RECUT §5): quiet while the hero's pill is in view, filled at every other position -------- */
-  /* The shell has no hook for this: the page sets `data-cta-cabecalho` on its <main> and this rule reads it from the
-     root. Only background-color and color change, in 160 ms on the standard curve; the box does not change. At 1024
-     and more the first state is `quieta` (first paint, no script and reduced motion all show it). */
-  :root:has(main[data-cta-cabecalho]) header[data-cabecalho]:not([data-tom='noite']) a[data-cabecalho-pilula] {
+  /* The shell has no hook for this and `casca/**` is not edited: the page's `useGanchoDoCabecalho` sets
+     `data-inicio-heroi="visivel"` on <html> while the hero's mel pill is in view, and removes it when the pill leaves
+     view and on unmount. With no attribute the pill is the shell's own filled one (every other page, every other scroll
+     position, and below 1024, where the hero has no pill). The attribute is set before the first paint, so a page opened
+     at the top at 1024 and more shows the quiet pill with no flash. Only background-color and color change, in 160 ms on
+     the standard curve (and `scale`, the shell's touch press, is kept in the list); the box does not change. The
+     selectors carry the shell's `.cm-botao-primario` weight and more (0,4,3 against 0,2,0), so no `!important`. */
+  :root:has(main [data-cena-heroi]) header[data-cabecalho]:not([data-tom='noite']) a[data-cabecalho-pilula] {
     transition-property: scale, background-color, color;
     transition-duration: 120ms, 160ms, 160ms;
     transition-timing-function: ease-out, var(--curva-padrao), var(--curva-padrao);
   }
 
-  :root:has(main[data-cta-cabecalho='quieta']) header[data-cabecalho]:not([data-tom='noite']) a[data-cabecalho-pilula] {
-    border-color: var(--color-cacau);
-    background-color: transparent;
-    color: var(--color-cacau);
-  }
+  @media (min-width: 1024px) {
+    html[data-inicio-heroi='visivel'] header[data-cabecalho]:not([data-tom='noite']) a[data-cabecalho-pilula] {
+      border-color: var(--color-cacau);
+      background-color: transparent;
+      color: var(--color-cacau);
+    }
 
-  :root:has(main[data-cta-cabecalho='quieta']) header[data-cabecalho]:not([data-tom='noite']) a[data-cabecalho-pilula]:hover {
-    background-color: var(--color-cacau);
-    color: var(--color-papel);
+    html[data-inicio-heroi='visivel'] header[data-cabecalho]:not([data-tom='noite']) a[data-cabecalho-pilula]:hover {
+      background-color: var(--color-cacau);
+      color: var(--color-papel);
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    :root:has(main[data-cta-cabecalho]) header[data-cabecalho] a[data-cabecalho-pilula] {
+    :root:has(main [data-cena-heroi]) header[data-cabecalho] a[data-cabecalho-pilula] {
       transition-duration: 0s;
     }
   }

@@ -127,7 +127,9 @@ export const CATALOGO = {
   },
   // Início, moment 1 (REP-HOME): the lamp lights at the seam. The cone fades in over 240 ms and the pool of light
   // on the floor 80 ms later, over 320 ms; both start 300 ms after the plate's `load`, on the first visit only.
-  // `duracaoMs` is the cone, `duracaoPocaMs` the pool. Opacity only.
+  // `duracaoMs` is the cone, `duracaoPocaMs` the pool. Opacity only. ASSET-1 serves cone and pool merged in ONE light
+  // layer per plate, so the page runs that one layer from the cone's start to the pool's end (`escalonamentoMs` +
+  // `duracaoPocaMs`, 400 ms); the two numbers stay here as the sheet's.
   M15: {
     id: 'M15',
     tipo: 'tempo',

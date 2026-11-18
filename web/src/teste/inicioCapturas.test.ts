@@ -4,10 +4,11 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 // REP-HOME, round 1 (REPH-I-06, spec RF-06): both product frames on `/` hold ASSET-1 real captures.
-// Only node:fs and node:crypto are imported, so at the base (no manifest yet) each test fails on an
-// assertion, not on a missing module. The manifest is `web/public/telas/casa/MANIFESTO.json`; this
-// test reads what the card names and nothing else about its shape:
-//   capturas[]: { estado: 'Y' | 'Y_ALTA' | 'N', linhas_topo: [...], servidos: [{ sha256, <path field> }] }
+// The manifest is `web/public/telas/casa/MANIFESTO.json`; this test reads what the card names and
+// nothing else about its shape (round 4: the real manifest names an entry by `id`, `estado` is `Y` for
+// both Histórico entries, so the key is `id ?? estado`):
+//   capturas[]: { id: 'Y' | 'Y_ALTA' | 'N', linhas_topo: [...], servidos: [{ arquivo, largura, altura, sha256 }] }
+// The page's own `midia.ts` is compared with it (path, srcSet, width, height), never with a guess.
 //   - `linhas_topo` lists the rows visible in the top 240 screen-layer px (a string or an object per row);
 //   - a served entry names its file by one of `caminho`, `arquivo`, `src` or `path` (relative to
 //     web/public, with or without a leading slash).
@@ -23,11 +24,16 @@ interface Servido {
   [chave: string]: unknown
 }
 interface Captura {
+  id?: unknown
   estado?: unknown
   linhas_topo?: unknown
   servidos?: unknown
   [chave: string]: unknown
 }
+
+/** The key of a capture entry: the real manifest names it `id` (`Y`, `Y_ALTA`, `N`; `estado` is `Y` for both Histórico entries). */
+const chave = (captura: Captura): unknown => captura.id ?? captura.estado
+const entrada = (capturas: Captura[], id: string) => capturas.find((c) => chave(c) === id)
 
 const sha256 = (bytes: Buffer) => createHash('sha256').update(bytes).digest('hex')
 const texto = (valor: unknown) => JSON.stringify(valor ?? '').normalize('NFC')
@@ -45,15 +51,15 @@ function problemas(manifesto: { capturas?: unknown }, ler: (relativo: string) =>
   const capturas = Array.isArray(manifesto.capturas) ? (manifesto.capturas as Captura[]) : []
   if (capturas.length === 0) return ['no captures in the manifest']
   for (const estado of ['Y', 'Y_ALTA', 'N']) {
-    if (!capturas.some((c) => c.estado === estado)) achados.push(`no entry for state ${estado}`)
+    if (!entrada(capturas, estado)) achados.push(`no entry for state ${estado}`)
   }
   for (const captura of capturas) {
     const servidos = Array.isArray(captura.servidos) ? (captura.servidos as Servido[]) : []
-    if (servidos.length === 0) achados.push(`state ${String(captura.estado)}: no served file`)
+    if (servidos.length === 0) achados.push(`state ${String(chave(captura))}: no served file`)
     for (const servido of servidos) {
       const relativo = caminhoDe(servido)
       if (relativo === null) {
-        achados.push(`state ${String(captura.estado)}: a served entry names no file`)
+        achados.push(`state ${String(chave(captura))}: a served entry names no file`)
         continue
       }
       if (typeof servido.sha256 !== 'string' || !/^[0-9a-f]{64}$/.test(servido.sha256)) {
@@ -65,12 +71,12 @@ function problemas(manifesto: { capturas?: unknown }, ler: (relativo: string) =>
       else if (sha256(bytes) !== servido.sha256) achados.push(`${relativo}: sha256 mismatch`)
     }
   }
-  const linhasY = texto(capturas.find((c) => c.estado === 'Y')?.linhas_topo)
-  const linhas = Array.isArray(capturas.find((c) => c.estado === 'Y')?.linhas_topo) ? (capturas.find((c) => c.estado === 'Y')!.linhas_topo as unknown[]) : []
+  const linhasY = texto(entrada(capturas, 'Y')?.linhas_topo)
+  const linhas = Array.isArray(entrada(capturas, 'Y')?.linhas_topo) ? (entrada(capturas, 'Y')!.linhas_topo as unknown[]) : []
   const linhaDe = (...partes: string[]) => linhas.some((linha) => partes.every((parte) => texto(linha).toLowerCase().includes(parte.toLowerCase())))
   if (linhasY === '""' || !linhaDe('16:00', 'mamada', 'Ju')) achados.push('state Y: no 16:00 mamada Ju row in the top 240 px')
   if (!linhaDe('17:30', 'Ícaro')) achados.push('state Y: no 17:30 Ícaro row in the top 240 px')
-  const estadoN = capturas.find((c) => c.estado === 'N')
+  const estadoN = entrada(capturas, 'N')
   if (!texto(estadoN).includes('21:42')) achados.push('state N: the instant 21:42 is not stated')
   return achados
 }
@@ -106,7 +112,7 @@ describe('REPH-I-06 real captures: the manifest, the hashes of the served files,
     expect(existsSync(MANIFESTO)).toBe(true)
     const manifesto = JSON.parse(readFileSync(MANIFESTO, 'utf8')) as { capturas?: Captura[] }
     expect(Array.isArray(manifesto.capturas)).toBe(true)
-    expect((manifesto.capturas ?? []).map((c) => c.estado).sort()).toEqual(['N', 'Y', 'Y_ALTA'])
+    expect((manifesto.capturas ?? []).map(chave).sort()).toEqual(['N', 'Y', 'Y_ALTA'])
   })
 
   it('REPH-I-06 every served file exists under web/public and its sha256 equals the manifest entry; no problem is left', () => {
@@ -118,12 +124,12 @@ describe('REPH-I-06 real captures: the manifest, the hashes of the served files,
   it('REPH-I-06 state Y has the 16:00 + mamada + Ju row and the 17:30 + Ícaro row in the top 240 px; state N states 21:42', () => {
     expect(existsSync(MANIFESTO)).toBe(true)
     const manifesto = JSON.parse(readFileSync(MANIFESTO, 'utf8')) as { capturas: Captura[] }
-    const y = manifesto.capturas.find((c) => c.estado === 'Y')
+    const y = entrada(manifesto.capturas, 'Y')
     expect(y).toBeDefined()
     const linhas = (Array.isArray(y!.linhas_topo) ? y!.linhas_topo : []).map((linha) => texto(linha))
     expect(linhas.some((l) => l.includes('16:00') && /mamada/i.test(l) && l.includes('Ju'))).toBe(true)
     expect(linhas.some((l) => l.includes('17:30') && l.includes('Ícaro'))).toBe(true)
-    const n = manifesto.capturas.find((c) => c.estado === 'N')
+    const n = entrada(manifesto.capturas, 'N')
     expect(texto(n)).toContain('21:42')
   })
 
@@ -136,10 +142,64 @@ describe('REPH-I-06 real captures: the manifest, the hashes of the served files,
       .join('\n')
     expect(fontes).not.toBe('')
     const caminhos = (estado: string) =>
-      (manifesto.capturas.find((c) => c.estado === estado)?.servidos as Servido[] | undefined)?.map(caminhoDe).filter((c): c is string => c !== null) ?? []
+      (entrada(manifesto.capturas, estado)?.servidos as Servido[] | undefined)?.map(caminhoDe).filter((c): c is string => c !== null) ?? []
     const usa = (estado: string) => caminhos(estado).some((caminho) => fontes.includes(caminho) || fontes.includes(caminho.replace(/@[12]x(?=\.)/, '')))
     expect(usa('Y')).toBe(true)
     expect(usa('N')).toBe(true)
+  })
+
+  it('REPH-I-06 midia.ts names each capture by the manifest: same src, srcSet files, widths and heights (no guessed size)', async () => {
+    const { CAPTURA_Y, CAPTURA_N } = await import('../componentes/inicio-casa/midia.ts')
+    const manifesto = JSON.parse(readFileSync(MANIFESTO, 'utf8')) as { capturas: Captura[] }
+    const casos = [
+      { id: 'Y', imagem: CAPTURA_Y },
+      { id: 'N', imagem: CAPTURA_N },
+    ]
+    for (const { id, imagem } of casos) {
+      const servidos = (entrada(manifesto.capturas, id)?.servidos ?? []) as Array<Servido & { largura: number; altura: number }>
+      expect(servidos.length, id).toBeGreaterThan(0)
+      const porCaminho = new Map(servidos.map((s) => [caminhoDe(s), s]))
+      // Every file of the srcSet is a served file, with the width the descriptor states; the served set is covered.
+      const lista = (imagem.srcSet ?? '').split(',').map((parte) => parte.trim().split(/\s+/))
+      expect(lista.length, id).toBe(servidos.length)
+      for (const [caminho, descritor] of lista) {
+        const servido = porCaminho.get(caminho.replace(/^\/+/, ''))
+        expect(servido, `${id}: ${caminho} is not a served file`).toBeDefined()
+        expect(`${servido!.largura}w`, caminho).toBe(descritor)
+        expect(existsSync(join(PUBLICO, caminho)), caminho).toBe(true)
+      }
+      // `src` is one of them; `largura` / `altura` are those of the largest file, as the Imagem contract says.
+      expect(porCaminho.has(imagem.src.replace(/^\/+/, '')), `${id}: src`).toBe(true)
+      const maior = servidos.reduce((a, b) => (b.largura > a.largura ? b : a))
+      expect([imagem.largura, imagem.altura], id).toEqual([maior.largura, maior.altura])
+    }
+  })
+
+  it('REPH-I-06 every file midia.ts serves from /cenas/inicio exists under web/public', async () => {
+    const midia = await import('../componentes/inicio-casa/midia.ts')
+    const caminhos = new Set<string>()
+    for (const valor of Object.values(midia)) {
+      if (typeof valor !== 'object' || valor === null || !('src' in valor)) continue
+      const imagem = valor as { src: string; srcSet?: string }
+      caminhos.add(imagem.src)
+      for (const parte of (imagem.srcSet ?? '').split(',')) if (parte.trim() !== '') caminhos.add(parte.trim().split(/\s+/)[0])
+    }
+    expect(caminhos.size).toBeGreaterThan(10)
+    for (const caminho of caminhos) expect(existsSync(join(PUBLICO, caminho.replace(/^\/+/, ''))), caminho).toBe(true)
+  })
+
+  it('REPH-I-06 the frames are ASSET-1 PNG rasters under web/public/molduras with the size midia.ts states (678 x 1423)', async () => {
+    const { MOLDURA_DIA, MOLDURA_NOITE } = await import('../componentes/inicio-casa/midia.ts')
+    expect([MOLDURA_DIA.src, MOLDURA_NOITE.src]).toEqual(['/molduras/moldura-dia.png', '/molduras/moldura-noite.png'])
+    for (const moldura of [MOLDURA_DIA, MOLDURA_NOITE]) {
+      const arquivo = join(PUBLICO, moldura.src.replace(/^\/+/, ''))
+      expect(existsSync(arquivo), moldura.src).toBe(true)
+      const bytes = readFileSync(arquivo)
+      // PNG: the 8-byte signature, then IHDR with the width and the height as big-endian 32-bit integers.
+      expect(bytes.subarray(0, 8).toString('hex'), moldura.src).toBe('89504e470d0a1a0a')
+      expect([bytes.readUInt32BE(16), bytes.readUInt32BE(20)], moldura.src).toEqual([moldura.largura, moldura.altura])
+      expect(bytes[25], `${moldura.src}: colour type 6 (RGBA, the hole is alpha)`).toBe(6)
+    }
   })
 
   it('REPH-I-06 no placeholder, skeleton or stand-in file sits under web/public/telas/casa', () => {

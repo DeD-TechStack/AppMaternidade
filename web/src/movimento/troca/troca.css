@@ -1,7 +1,7 @@
 /* Motion of the Início, moments 1 to 3 (REP-HOME). Only opacity and transform are animated; no `transition: all`,
-   no loop, no layout property. The durations come from the catalogue (M15 to M17) as inline custom properties:
-   the numbers below are only fallbacks for a missing property. With reduced motion nothing runs and the lamp is
-   lit at rest. */
+   no loop, no layout property. The duration of the lamp comes from the catalogue (M15) as an inline custom property:
+   the number below is only a fallback for a missing property. With reduced motion nothing runs and the lamp is lit at
+   rest. */
 @layer components {
   /* The two curves of the motion sheet: expo for the lamp, standard for the caption. */
   :root {
@@ -9,12 +9,17 @@
     --curva-padrao: cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* The light: two layers over the plate, lit at rest (opacity 1). The dark state exists only on a first visit. */
+  /* The light: ONE layer over the plate (cone and pool merged by ASSET-1), lit at rest (opacity 1). The dark state exists
+     only on a first visit. */
   [data-luz-grupo] {
     position: absolute;
     inset: 0;
     z-index: 2;
     pointer-events: none;
+  }
+
+  [data-luz-grupo] picture {
+    display: contents;
   }
 
   [data-luz] {
@@ -24,14 +29,7 @@
     width: 100%;
     height: 100%;
     opacity: 1;
-  }
-
-  [data-luz='cone'] {
-    transition: opacity var(--luz-cone-ms, 240ms) var(--curva-expo);
-  }
-
-  [data-luz='poca'] {
-    transition: opacity var(--luz-poca-ms, 320ms) var(--curva-expo) var(--luz-poca-atraso, 80ms);
+    transition: opacity var(--luz-ms, 400ms) var(--curva-expo);
   }
 
   [data-luz-estado='apagada'] [data-luz] {

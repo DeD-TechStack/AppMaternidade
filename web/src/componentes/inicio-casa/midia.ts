@@ -1,27 +1,24 @@
 import type { Imagem } from '../secoes/contrato.ts'
 
-// The files of the page (plates, light layers, frames, real captures). ASSET-1 serves them under
-// `web/public/cenas/casa/` and `web/public/telas/casa/`; this card does not create anything under `web/public/**`.
-// The names below follow the slot sheet (`M05_base_sol`, `M05_luz_lampada`, `M06_*`, state captures `Y` and `N`);
-// the widths and heights are the ones of RECUT §2-§4 at density 2. They change here, in one place, when ASSET-1
-// publishes `web/public/telas/casa/MANIFESTO.json`.
-
-const CENAS = '/cenas/casa'
-const TELAS = '/telas/casa'
+// The files of the page: ASSET-1's plates and light layers under `web/public/cenas/inicio/` (PROVENANCE.md, section
+// "ASSET-1 served plates and light layers") and the three real captures under `web/public/telas/casa/` (MANIFESTO.json).
+// Every path and size below is a served file's own; `src/teste/inicioCapturas.test.ts` reads the manifest and fails when
+// a capture's path, width or height here differs from it. This card does not create anything under `web/public/**`.
+// The device frames are ASSET-1's rasters under `web/public/molduras/`; nothing is drawn in CSS or SVG.
 
 /** M05, the whole plate (900 × 506.5 CSS px at 1440): the day and the night of one room on one seam. */
 export const M05: Imagem = {
-  src: `${CENAS}/M05_base_sol-1800.webp`,
-  srcSet: `${CENAS}/M05_base_sol-900.webp 900w, ${CENAS}/M05_base_sol-1800.webp 1800w`,
+  src: '/cenas/inicio/m05-sol-900w.webp',
+  srcSet: '/cenas/inicio/m05-sol-900w.webp 900w, /cenas/inicio/m05-sol-1672w.webp 1672w',
   sizes: '(min-width: 1440px) 900px, 62.5vw',
-  largura: 1800,
-  altura: 1013,
+  largura: 1672,
+  altura: 941,
 }
 
-/** M05 for 390: the window of RECUT §4 (L 472, s 0.325), 390 × 305.8 CSS px, from the plate's source columns. */
+/** M05 for 390: the window of RECUT §4, 390 × 306 CSS px, in the plate's own pixels at 1× and 2×. */
 export const M05_390: Imagem = {
-  src: `${CENAS}/M05_base_sol-390.webp`,
-  srcSet: `${CENAS}/M05_base_sol-390.webp 390w, ${CENAS}/M05_base_sol-780.webp 780w`,
+  src: '/cenas/inicio/m05-sol-390c-390w.webp',
+  srcSet: '/cenas/inicio/m05-sol-390c-390w.webp 390w, /cenas/inicio/m05-sol-390c-780w.webp 780w',
   sizes: '100vw',
   largura: 780,
   altura: 612,
@@ -37,32 +34,71 @@ export const M05_CHAO = 0.7992
 /** The width of M05 at 1440, within the 836 to 1115 px range of CenaHeroi. */
 export const M05_LARGURA = 900
 
-/** The light layers of M05 and M06 (cone and pool, same box as the plate; opacity only; lit at rest). */
-export const LUZ_M05 = { cone: `${CENAS}/M05_luz_lampada_cone.webp`, poca: `${CENAS}/M05_luz_lampada_poca.webp` } as const
-export const LUZ_M06 = { cone: `${CENAS}/M06_luz_lampada_cone.webp`, poca: `${CENAS}/M06_luz_lampada_poca.webp` } as const
+/**
+ * The light layer of a plate: ONE file (cone and pool merged) in the plate's own box, opacity only, lit at rest. The
+ * layers over 12,000 bytes (`m05-luz-1672w`, `m05-luz-390c-780w`, `m06-luz-600w`, `m06-luz-792w`) are not served.
+ */
+export const LUZ_M05: Imagem = { src: '/cenas/inicio/m05-luz-900w.png', largura: 900, altura: 507 }
+export const LUZ_M05_390: Imagem = { src: '/cenas/inicio/m05-luz-390c-390w.png', largura: 390, altura: 306 }
+export const LUZ_M06: Imagem = {
+  src: '/cenas/inicio/m06-luz-396w.png',
+  srcSet: '/cenas/inicio/m06-luz-300w.png 300w, /cenas/inicio/m06-luz-396w.png 396w',
+  sizes: '(min-width: 1024px) 395.5px, 300px',
+  largura: 396,
+  altura: 647,
+}
 
-/** M06, the whole plate (395.5 × 645.9 CSS px at 1440, 300 × 490 inset at 390). */
+/** M06, the whole plate with the lamp off (395.5 × 645.9 CSS px from 1024, 300 × 490 below). */
 export const M06: Imagem = {
-  src: `${CENAS}/M06_base_noite-791.webp`,
-  srcSet: `${CENAS}/M06_base_noite-600.webp 600w, ${CENAS}/M06_base_noite-791.webp 791w`,
-  sizes: '(min-width: 1024px) 396px, 300px',
-  largura: 791,
-  altura: 1292,
+  src: '/cenas/inicio/m06-apagada-396w.webp',
+  srcSet:
+    '/cenas/inicio/m06-apagada-300w.webp 300w, /cenas/inicio/m06-apagada-396w.webp 396w, /cenas/inicio/m06-apagada-600w.webp 600w, /cenas/inicio/m06-apagada-792w.webp 792w',
+  sizes: '(min-width: 1024px) 395.5px, 300px',
+  largura: 792,
+  altura: 1293,
 }
 
 /** M04, the scene of the band "só eu" (a crop of the plate of 15:00; its caption is not rendered here). */
 export const M04: Imagem = {
-  src: `${CENAS}/M04_so_eu-1280.webp`,
-  srcSet: `${CENAS}/M04_so_eu-640.webp 640w, ${CENAS}/M04_so_eu-1280.webp 1280w`,
-  sizes: '(min-width: 1024px) 640px, 100vw',
-  largura: 1280,
-  altura: 720,
+  src: '/cenas/inicio/m04-recorte-600w.webp',
+  srcSet:
+    '/cenas/inicio/m04-recorte-350w.webp 350w, /cenas/inicio/m04-recorte-600w.webp 600w, /cenas/inicio/m04-recorte-700w.webp 700w, /cenas/inicio/m04-recorte-1200w.webp 1200w',
+  sizes: '(min-width: 1024px) 600px, 100vw',
+  largura: 1200,
+  altura: 870,
 }
 
-/** The frame rasters: the day body (cacau on papel, 1440) and the night body (#6E6560, on a cacau wall). */
-export const MOLDURA_DIA: Imagem = { src: `${TELAS}/moldura-dia.webp`, largura: 678, altura: 1423 }
-export const MOLDURA_NOITE: Imagem = { src: `${TELAS}/moldura-noite.webp`, largura: 678, altura: 1423 }
+/**
+ * The device frames (ASSET-1, `web/public/molduras/`, PROVENANCE.md there): a PNG with a hole where the screen goes, the
+ * real capture under it. The day frame stands on the papel wall, the night frame on cacau (and as the night twin).
+ * 678 x 1423 = the screen layer's width x 1.06 by its height x 2.2241 (`--moldura-razao`).
+ */
+export const MOLDURA_DIA: Imagem = { src: '/molduras/moldura-dia.png', largura: 678, altura: 1423 }
+export const MOLDURA_NOITE: Imagem = { src: '/molduras/moldura-noite.png', largura: 678, altura: 1423 }
 
-/** The two real captures (manifest states `Y`, Histórico, and `N`, Hoje at 21:42), screen layer 320 × 692.5 at 2×. */
-export const CAPTURA_Y = { src: `${TELAS}/Y.png`, largura: 640, altura: 1385 } as const
-export const CAPTURA_N = { src: `${TELAS}/N.png`, largura: 640, altura: 1385 } as const
+/**
+ * The screen layer of a framed capture: 320 CSS px wide at 1440 and 280 at 390 (RECUT §6), so the 280w, 320w, 560w and
+ * 640w files cover 1× and 2×. The same list serves both captures.
+ */
+const TAMANHOS_DA_TELA =
+  '(min-width: 1440px) 320px, (max-width: 390px) 280px, calc(280px + (100vw - 390px) * 40 / 1050)'
+
+/** State `Y` of the manifest: Histórico on 21:42, the 16:00 mamada row and the 17:30 fralda row in the top 240 px. */
+export const CAPTURA_Y: Imagem = {
+  src: '/telas/casa/historico-y-320w.webp',
+  srcSet:
+    '/telas/casa/historico-y-280w.webp 280w, /telas/casa/historico-y-320w.webp 320w, /telas/casa/historico-y-560w.webp 560w, /telas/casa/historico-y-640w.webp 640w',
+  sizes: TAMANHOS_DA_TELA,
+  largura: 640,
+  altura: 1385,
+}
+
+/** State `N` of the manifest: Hoje in the madrugada theme at 21:42, the sleep in progress since 20:30. */
+export const CAPTURA_N: Imagem = {
+  src: '/telas/casa/hoje-n-320w.webp',
+  srcSet:
+    '/telas/casa/hoje-n-280w.webp 280w, /telas/casa/hoje-n-320w.webp 320w, /telas/casa/hoje-n-560w.webp 560w, /telas/casa/hoje-n-640w.webp 640w',
+  sizes: TAMANHOS_DA_TELA,
+  largura: 640,
+  altura: 1385,
+}

@@ -5,6 +5,7 @@ import { FaixaTela } from '../componentes/inicio-casa/FaixaTela.tsx'
 import { ID_FAIXA_NOITE, ID_FAIXA_SO, ID_FAIXA_TELA, ID_TITULO } from '../componentes/inicio-casa/ids.ts'
 import {
   LUZ_M05,
+  LUZ_M05_390,
   M05,
   M05_390,
   M05_CHAO,
@@ -13,7 +14,7 @@ import {
 } from '../componentes/inicio-casa/midia.ts'
 import { PalcoTroca } from '../componentes/inicio-casa/PalcoTroca.tsx'
 import { TituloCasa } from '../componentes/inicio-casa/TituloCasa.tsx'
-import { useEstadoDaPilula, useLarga1024 } from '../componentes/inicio-casa/usoDaCasa.ts'
+import { useGanchoDoCabecalho, useLarga1024 } from '../componentes/inicio-casa/usoDaCasa.ts'
 import { CenaHeroi } from '../componentes/secoes/CenaHeroi.tsx'
 import { FaixaInteira } from '../componentes/secoes/FaixaInteira.tsx'
 import { FaixaProva } from '../componentes/secoes/FaixaProva.tsx'
@@ -34,16 +35,16 @@ import '../componentes/inicio-casa/inicio-casa.css'
  * framed screen; 4 the lone carer; 5 the proof; 6 the questions; 7 the night closing.
  * Every string comes from conteudo/inicio.ts; this file and the page folders write no text of their own.
  *
- * The header pill belongs to the shell; the page only says which state it is in (`data-cta-cabecalho` on <main>),
- * and the page stylesheet inicio-casa.css reads it.
+ * The header pill belongs to the shell; the page only says whether its hero pill is in view (`data-inicio-heroi` on
+ * <html>, set by `useGanchoDoCabecalho`), and the page stylesheet inicio-casa.css quiets the shell's pill from it.
  */
 export function Inicio() {
   const larga = useLarga1024()
   const fixo = usePalcoFixo()
-  const estadoDaPilula = useEstadoDaPilula(larga)
+  useGanchoDoCabecalho(larga)
 
   return (
-    <main data-cta-cabecalho={estadoDaPilula}>
+    <main>
       <PaginaCasa>
         <CenaHeroi
           imagem={M05}
@@ -57,13 +58,7 @@ export function Inicio() {
           lado="esquerda"
           idTitulo={ID_TITULO}
           sobrePlaca={
-            <LuzDaLampada
-              cone={LUZ_M05.cone}
-              poca={LUZ_M05.poca}
-              memoria="casa-luz-m05"
-              gatilho="carga"
-              tamanho={{ largura: M05.largura, altura: M05.altura }}
-            />
+            <LuzDaLampada luz={LUZ_M05} luz390={LUZ_M05_390} memoria="casa-luz-m05" gatilho="carga" />
           }
           // data-costura-lado: the side of the seam the text lives on, read by the meter's COSTURA rule. The caption of
           // 16:00 is day text from 1024 (on the day floor) and night text below (papel on cacau, under the plate). It and

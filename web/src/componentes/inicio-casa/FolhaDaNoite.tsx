@@ -12,9 +12,9 @@ interface Props {
  * floor and the night twin of the frame) stays still while the edge moves. At rest, and with reduced motion, the sheet
  * sits at the seam with no transform, and the twin is clipped out of sight. It never uses `clip-path` or `width`.
  *
- * The twin is the frame's night body (`MOLDURA_NOITE`) over the same capture file as the day frame (one request): an
- * `aria-hidden` copy, with an empty `alt`, registered to the day frame because both take the same box from the page
- * stylesheet. A frame pixel is never a cacau body on a cacau wall: the night body is `#6E6560`.
+ * The twin is the night frame raster (`MOLDURA_NOITE`) around the same capture file as the day frame (one request): an
+ * `aria-hidden` copy with empty `alt`s and none of the `data-produto-*` marks the meter counts, registered to the day
+ * frame because both take the same box from the page stylesheet (`.ic-estagio .cm-produto-moldura`).
  */
 export function FolhaDaNoite({ refFolha, refInterior }: Props) {
   return (
@@ -22,10 +22,12 @@ export function FolhaDaNoite({ refFolha, refInterior }: Props) {
       <div ref={refInterior} data-troca-noite-interior="" className="ic-folha-interior">
         <div data-troca-noite-parede="" className="ic-folha-parede" />
         <div className="ic-folha-piso" />
-        <figure className="cm-produto-moldura ic-gemea">
+        <figure className="cm-produto-moldura ic-gemea" aria-hidden="true">
           <img
             data-troca-gemea-tela=""
             src={CAPTURA_Y.src}
+            srcSet={CAPTURA_Y.srcSet}
+            sizes={CAPTURA_Y.sizes}
             width={CAPTURA_Y.largura}
             height={CAPTURA_Y.altura}
             alt=""
@@ -38,6 +40,7 @@ export function FolhaDaNoite({ refFolha, refInterior }: Props) {
             width={MOLDURA_NOITE.largura}
             height={MOLDURA_NOITE.altura}
             alt=""
+            aria-hidden="true"
             loading="lazy"
             decoding="async"
           />
