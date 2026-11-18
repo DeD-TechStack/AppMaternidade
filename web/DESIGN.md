@@ -448,11 +448,11 @@ Curto e sem surpresa, com a biblioteca `motion` (`motion/react`, versão fixa no
 | Herói | A cena sobe de 0,94 a 1 e aparece, 0,8 s, depois da cortina (M8, `catalogo.ts:103-115`, `HeroiInicio.tsx:36-38`) | Parada |
 | Números e títulos de seção | Sem movimento: o texto já está no lugar desde a primeira pintura. M4 (as linhas que subiam e apareciam) e M5 (o título dividido por linha) saíram na MOTION-1 | Igual |
 | Painel com mídia | A mídia vai de 0,9 a 1 nos primeiros 360 px de rolagem, com mola (rigidez 120, amortecimento 30); a opacidade fica sempre em 1, e o cartão flutuante já está no lugar (M3, `catalogo.ts`) | Parada |
-| Faixa de cacau e rodapé | Só o rodapé se move: o conteúdo sai de baixo, preso à rolagem, de −30% a 0 (M7, `catalogo.ts`). A faixa de cacau já está no lugar desde a primeira pintura; M6 (o conteúdo que saía de baixo) saiu na MOTION-1 | Parada |
+| Faixa de cacau e rodapé | Sem movimento: a faixa de cacau e o rodapé já estão no lugar desde a primeira pintura. O M7 (o conteúdo que saía de baixo, preso à rolagem, `catalogo.ts`) saiu do rodapé: está estacionado e nenhuma página o usa; M6 saiu na MOTION-1 | Igual |
 | Hover | O primário inverte na hora; a camada de cacau com o resumo do cartão de mídia aparece em 100 ms, também com foco (M13, `catalogo.ts:116-129`). A escala do toque nos botões é 0,96 no `:active`, 120 ms, `ease-out`, e só ela anima (`web/src/styles/site.css:146-154`). | Igual, sem deslocamento |
 | Selos | Letreiro de 60 s por volta, em CSS (M14, `campo.css:284-295`); para no hover, no foco e pelo botão | Fileira parada |
 
-Os componentes de `web/src/movimento/` (`Cortina`, `EntradaCena`, `RevelaNaRolagem`, `RevelacaoPorBaixo`, `CamadaHover`) implementam essas receitas e são os que se reutilizam. Nenhum conteúdo do `<main>` começa escondido à espera da rolagem.
+Os componentes de `web/src/movimento/` (`Cortina`, `EntradaCena`, `RevelaNaRolagem` e `CamadaHover`) implementam essas receitas e são os que se reutilizam. A `RevelacaoPorBaixo` (M7) fica estacionada em `web/src/movimento/`, sem uso em nenhuma página, e o teste de contrato proíbe importá-la em código de produção. Nenhum conteúdo do `<main>` começa escondido à espera da rolagem.
 
 ## Images
 
