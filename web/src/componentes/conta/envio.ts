@@ -17,6 +17,9 @@ interface PlanoEnvio<T> {
   aoSucesso: (valor: T | undefined) => void | Promise<void>
 }
 
+/** Um envio novo logo depois de outro terminar (o 2º clique do mesmo gesto) é ignorado. */
+const JANELA_DO_MESMO_GESTO_MS = 500
+
 type EstadoEnvio =
   | { fase: 'ocioso' }
   | { fase: 'enviando' }
@@ -31,10 +34,14 @@ export function useEnvio() {
   // O que o "Tentar de novo" repete: a escrita ou, se a conferência falhou, só a conferência.
   const alvo = useRef<'escrita' | 'conferencia'>('escrita')
   const erroDaRepeticao = useRef<ErroDados | null>(null)
+  // Quando o último envio terminou (sucesso, falha ou exceção): o 2º clique do mesmo gesto cai aqui.
+  const fimDoUltimoEnvio = useRef(Number.NEGATIVE_INFINITY)
 
   const falhar = useCallback((erro: ErroDados) => {
     repetindo.current = repetindo.current || ehRepetivel(erro.classe)
     emVoo.current = false
+    // Só um sucesso arma o guard do mesmo gesto: depois de uma falha a pessoa reenvia na hora.
+    fimDoUltimoEnvio.current = Number.NEGATIVE_INFINITY
     setEstado({ fase: 'erro', erro, tentarDeNovo: ehRepetivel(erro.classe) })
   }, [])
 
@@ -43,6 +50,7 @@ export function useEnvio() {
     alvo.current = 'escrita'
     erroDaRepeticao.current = null
     await atual.aoSucesso(valor)
+    fimDoUltimoEnvio.current = Date.now()
     emVoo.current = false
     setEstado({ fase: 'ocioso' })
   }, [])
@@ -53,29 +61,36 @@ export function useEnvio() {
       emVoo.current = true
       setEstado({ fase: 'enviando' })
 
-      if (alvo.current === 'conferencia' && atual.conferir) {
-        const conferida = await atual.conferir()
-        if (!conferida.ok) return falhar(conferida.erro)
-        if (conferida.valor) return concluir(atual, undefined)
-        alvo.current = 'escrita'
-        return falhar(erroDaRepeticao.current ?? erroDaChave('desconhecido'))
-      }
-
-      const escrita = await atual.escrever()
-      if (escrita.ok) return concluir(atual, escrita.valor)
-
-      const repeticao = repetindo.current
-      if (repeticao && atual.provaSucesso?.(escrita.erro)) return concluir(atual, undefined)
-      if (repeticao && atual.conferir) {
-        const conferida = await atual.conferir()
-        if (conferida.ok && conferida.valor) return concluir(atual, undefined)
-        if (!conferida.ok) {
-          erroDaRepeticao.current = escrita.erro
-          alvo.current = 'conferencia'
-          return falhar(conferida.erro)
+      try {
+        if (alvo.current === 'conferencia' && atual.conferir) {
+          const conferida = await atual.conferir()
+          if (!conferida.ok) return falhar(conferida.erro)
+          if (conferida.valor) return await concluir(atual, undefined)
+          alvo.current = 'escrita'
+          return falhar(erroDaRepeticao.current ?? erroDaChave('desconhecido'))
         }
+
+        const escrita = await atual.escrever()
+        if (escrita.ok) return await concluir(atual, escrita.valor)
+
+        const repeticao = repetindo.current
+        if (repeticao && atual.provaSucesso?.(escrita.erro)) return await concluir(atual, undefined)
+        if (repeticao && atual.conferir) {
+          const conferida = await atual.conferir()
+          if (conferida.ok && conferida.valor) return await concluir(atual, undefined)
+          if (!conferida.ok) {
+            erroDaRepeticao.current = escrita.erro
+            alvo.current = 'conferencia'
+            return falhar(conferida.erro)
+          }
+        }
+        return falhar(escrita.erro)
+      } catch {
+        // Um callback do plano lançou: o formulário sai de "enviando" e mostra o erro desconhecido.
+        falhar(erroDaChave('desconhecido'))
+      } finally {
+        emVoo.current = false
       }
-      return falhar(escrita.erro)
     },
     [concluir, falhar],
   )
@@ -84,6 +99,7 @@ export function useEnvio() {
   const enviar = useCallback(
     <T>(novo: PlanoEnvio<T>) => {
       if (emVoo.current) return Promise.resolve()
+      if (Date.now() - fimDoUltimoEnvio.current < JANELA_DO_MESMO_GESTO_MS) return Promise.resolve()
       plano.current = novo as PlanoEnvio<unknown>
       repetindo.current = false
       alvo.current = 'escrita'

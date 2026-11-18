@@ -509,8 +509,15 @@ describe('/recuperar-acesso', () => {
     const primeira = status().textContent
 
     digitar('E-mail', 'ninguem@exemplo.invalid')
-    fireEvent.click(botao('Enviar link'))
-    await waitFor(() => expect(dados.ultimoPedidoDeRecuperacao('ninguem@exemplo.invalid')).toBeDefined())
+    // Um clique deliberado, depois da janela do mesmo gesto (500 ms) que segue o sucesso.
+    const agoraReal = Date.now.bind(Date)
+    const relogio = vi.spyOn(Date, 'now').mockImplementation(() => agoraReal() + 600)
+    try {
+      fireEvent.click(botao('Enviar link'))
+      await waitFor(() => expect(dados.ultimoPedidoDeRecuperacao('ninguem@exemplo.invalid')).toBeDefined())
+    } finally {
+      relogio.mockRestore()
+    }
     expect(status().textContent).toBe(primeira)
     expect(dados.ultimoPedidoDeRecuperacao('juliana@exemplo.invalid')).toBe(`${window.location.origin}/redefinir-senha`)
   })

@@ -406,8 +406,15 @@ describe('novo convite', () => {
     expect((await dados.verConvite(codigo)).ok).toBe(true)
 
     // Criar outro faz o código anterior sumir; sair da página também.
-    fireEvent.click(botao('Criar convite'))
-    await waitFor(() => expect(secao('Convites').getAllByRole('listitem')).toHaveLength(4))
+    // Um clique deliberado, depois da janela do mesmo gesto (500 ms) que segue o sucesso.
+    const agoraReal = Date.now.bind(Date)
+    const relogio = vi.spyOn(Date, 'now').mockImplementation(() => agoraReal() + 600)
+    try {
+      fireEvent.click(botao('Criar convite'))
+      await waitFor(() => expect(secao('Convites').getAllByRole('listitem')).toHaveLength(4))
+    } finally {
+      relogio.mockRestore()
+    }
     const novo = screen.getByRole('region', { name: 'Código do convite' })
     expect(novo.querySelector('[data-codigo-convite]')!.textContent).not.toBe(codigo)
     expect(document.body.textContent).not.toContain(codigo)
