@@ -717,10 +717,10 @@ describe('painel e figura por largura (CSS)', () => {
     }
   })
 
-  it('a frase de apoio fica sempre à vista, em Literata itálica, no degrau de título 4 (o token, que cresce com a tela), embaixo do painel', () => {
+  it('a frase de apoio fica sempre à vista, em Literata em prumo, no degrau de título 4 (o token, que cresce com a tela), embaixo do painel', () => {
     const [celular, largo] = corpos('.pt-apoio')
     expect(celular).not.toMatch(/display:\s*none/)
-    expect(celular).toMatch(/font-style:\s*italic/)
+    expect(celular).toMatch(/font-style:\s*normal/)
     expect(celular).toMatch(/font-family:\s*var\(--fonte-titulo\)/)
     expect(celular).toMatch(/font-size:\s*var\(--texto-titulo-4-tamanho\)/)
     expect(celular).toMatch(/line-height:\s*var\(--texto-titulo-4-entrelinha\)/)

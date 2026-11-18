@@ -69,7 +69,7 @@ export const ESTADOS = {
   naoEncontradaNota: 'Não encontramos esta nota. Ela pode ter sido removida, ou você não tem mais acesso.',
   registroExcluido: 'Este registro foi excluído e não pode ser mudado.',
   redeNaLeitura: 'Não foi possível falar com o servidor. Verifique a conexão.',
-  redeNaEscrita: 'Não deu para confirmar com o servidor. Tente de novo: se já tiver sido salvo, não duplica.',
+  redeNaEscrita: 'Não deu para confirmar com o servidor. Tente de novo. Se já tiver sido salvo, nada fica repetido.',
 } as const
 
 /** A frase de cada chave do catálogo de erros (Anexo B). Código e mensagem do banco nunca aparecem. */
@@ -131,7 +131,7 @@ export const HOJE = {
   semRegistros: 'Nenhum registro hoje. Toque em um botão abaixo para começar.',
   semConcluidos: 'Nenhum registro concluído ainda.',
   umaHoraEMinutos: (horas: number, minutos: number) => `${horas} h ${String(minutos).padStart(2, '0')}`,
-  ultimaMamada: (hora: string, autor: string) => `Última mamada às ${hora}, com ${autor}`,
+  ultimaMamada: (hora: string, autor: string) => `Última mamada às ${hora}, registrada por ${autor}`,
 } as const
 
 /** A11Y-010: as unidades do cronômetro falado ("1 hora, 12 minutos e 7 segundos"), com o singular e o plural. */
@@ -157,7 +157,7 @@ export const FORMATOS = {
   haMinutos: (minutos: number) => `há ${minutos} min`,
   haHoras: (horas: number) => `há ${horas} h`,
   haHorasEMinutos: (horas: number, minutos: number) => `há ${horas} h ${minutos} min`,
-  ontem: (hora: string) => `ontem ${hora}`,
+  ontem: (hora: string) => `ontem às ${hora}`,
   terminaNoDiaSeguinte: 'termina no dia seguinte',
   separador: ' · ',
   ml: (quantidade: number) => `${quantidade} ml`,
@@ -175,7 +175,7 @@ export const SESSOES = {
   verSessao: 'Ver sessão',
   encerrar: 'Encerrar',
   porAutor: (autor: string) => `por ${autor}`,
-  iniciadoAs: (hora: string, autor: string) => `Iniciado às ${hora} por ${autor}`,
+  iniciadoAs: (hora: string, autor: string) => `Início às ${hora}, por ${autor}`,
   duasDoMesmoTipo: (quantidade: number, rotuloMinusculo: string) => {
     const palavra = quantidade === 2 ? 'Duas' : quantidade === 3 ? 'Três' : quantidade === 4 ? 'Quatro' : String(quantidade)
     return `${palavra} sessões de ${rotuloMinusculo} em andamento.`
@@ -232,7 +232,8 @@ export const CONFIRMACAO = {
   editarHorario: 'Editar horário',
   manterOsDois: 'Manter os dois',
   excluirEste: 'Excluir este',
-  duplicado: (autor: string, rotuloMinusculo: string, hora: string) => `${autor} registrou ${rotuloMinusculo} às ${hora}.`,
+  duplicado: (autor: string, rotuloMinusculo: string, hora: string) =>
+    `${autor} já fez um registro de ${rotuloMinusculo} às ${hora}.`,
   registroSalvo: 'Registro salvo.',
   notaDoEncerramento: (erro: string, texto: string) => `${erro} Sua nota: “${texto}”`,
 } as const
@@ -297,10 +298,11 @@ export const FORMULARIO = {
   erroAlimentoLongo: 'O alimento passa de 100 caracteres.',
   erroInicioObrigatorio: 'Escolha a data e a hora.',
   erroSessaoEncerradaSemFim: 'Uma sessão encerrada não pode voltar a ficar em andamento.',
-  confirmaDuracao: (rotulo: string, duracao: string) => `Este ${rotulo} dura ${duracao}, mais do que o esperado.`,
-  confirmaSobreposicao: (rotulo: string, de: string, ate: string) => `Este ${rotulo} se sobrepõe a outro, das ${de} às ${ate}.`,
+  confirmaDuracao: (rotulo: string, duracao: string) => `Duração de ${duracao}: mais do que o esperado para ${rotulo}.`,
+  confirmaSobreposicao: (rotulo: string, de: string, ate: string) =>
+    `Há outro registro de ${rotulo} no mesmo horário, das ${de} às ${ate}.`,
   confirmaSobreposicaoEmAndamento: (rotulo: string, de: string) =>
-    `Este ${rotulo} se sobrepõe a outro, das ${de} até agora (em andamento).`,
+    `Há outro registro de ${rotulo} no mesmo horário, das ${de} até agora (em andamento).`,
   eMaisN: (quantidade: number) => `E mais ${quantidade}.`,
 } as const
 
@@ -361,7 +363,7 @@ export const TOTAIS = {
   observacoes: 'Observações',
   mamadeirasComMl: (quantidade: number, ml: number) => `${quantidade}, somando ${ml} ml`,
   fraldasPorTipo: (total: number, xixi: number, coco: number, ambos: number) =>
-    `${total}: ${xixi} xixi, ${coco} cocô, ${ambos} ambos`,
+    `${total}: ${xixi} de xixi, ${coco} de cocô, ${ambos} com xixi e cocô`,
 } as const
 
 export const DETALHE = {

@@ -216,7 +216,7 @@ describe('C2: os tópicos de um espaço', () => {
     const doAutor = await screen.findByRole('article', { name: 'Tópico do autor' })
     expect(within(doAutor).getByText('autor_do_forum')).toBeTruthy()
     expect(within(doAutor).getByText(COMUM_COMUNIDADE.respostas(4))).toBeTruthy()
-    expect(within(doAutor).getByText(/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/)).toBeTruthy()
+    expect(within(doAutor).getByText(/^\d{2}\/\d{2}\/\d{4} às \d{2}:\d{2}$/)).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Novo tópico' }).getAttribute('href')).toBe('/app/comunidade/sono/novo')
   })
 
@@ -628,12 +628,12 @@ describe('publicar um tópico com prévia e confirmação (MAT-40:RF-04)', () =>
     expect((await screen.findAllByRole('status')).some((s) => s.textContent === TX.tx06)).toBe(true)
   })
 
-  it('os limites do corpo: 1 a 5000 caracteres, com o contador à vista', async () => {
+  it('os limites do corpo: 1 a 5.000 caracteres, com o contador à vista', async () => {
     cena('outro', `${espaco('sono')}/novo`)
     await aguardarH1('Novo tópico')
     digitar('Título', 'Um título bom')
     digitar('Texto do tópico', 'x'.repeat(5001))
-    expect(screen.getByText('5001 de 5000')).toBeTruthy()
+    expect(screen.getByText('5.001 de 5.000')).toBeTruthy()
     expect(botao('Ver prévia').getAttribute('aria-disabled')).toBe('true')
     digitar('Texto do tópico', 'x'.repeat(5000))
     expect(botao('Ver prévia').hasAttribute('aria-disabled')).toBe(false)

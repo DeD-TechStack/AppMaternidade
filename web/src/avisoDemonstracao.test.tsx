@@ -91,16 +91,23 @@ describe('aviso de demonstração: uma linha no rodapé do site público', () =>
 })
 
 describe('aviso de demonstração: as telas do app têm um aviso fora do conteúdo, e não a etiqueta', () => {
-  const telas: Array<[string, string, OpcoesRota]> = [
+  // O quarto campo: só sem banco (com banco a tela lê a Comunidade do banco, que o teste não tem).
+  const telas: Array<[string, string, OpcoesRota, 'soSemBanco'?]> = [
     ['o Hoje', '/app/hoje', claro],
     ['o Hoje (madrugada)', '/app/hoje', madrugada],
     ['a Sessão', '/app/sessao', claro],
     ['a Sessão (madrugada)', '/app/sessao', madrugada],
     ['a Sessão sem sessão', '/app/sessao', { ajustarRotina: semSessaoEmAndamento }],
+    // NEW-C: as telas da MolduraLogada em /app/* seguem a mesma regra (o aviso depois do <main>). A /moderacao
+    // fica fora da área do app: lá o aviso é o do rodapé (o laço de um aviso por página, abaixo, a cobre).
+    ['o Começar', '/app/comecar', claro],
+    ['a Conta', '/app/conta', claro],
+    ['a Família', '/app/familia', claro],
+    ['a Comunidade', '/app/comunidade', claro, 'soSemBanco'],
   ]
 
-  for (const [tela, caminho, opcoes] of telas) {
-    for (const [banco, url, chave, aparece] of BANCOS) {
+  for (const [tela, caminho, opcoes, soSemBanco] of telas) {
+    for (const [banco, url, chave, aparece] of BANCOS.filter((linha) => !soSemBanco || linha[3])) {
       it(`${tela}, ${banco}: ${aparece ? 'um aviso' : 'nenhum aviso'}, depois do conteúdo e fora do main, e nenhuma etiqueta`, async () => {
         definirBanco(url, chave)
         const { container } = await renderizarRotaPronta(caminho, opcoes)
@@ -129,7 +136,7 @@ describe('aviso de demonstração: as telas do app têm um aviso fora do conteú
 
   it('no máximo um aviso por página, em todas as rotas (públicas e do app), sem banco', async () => {
     definirBanco('', '')
-    for (const caminho of [...PUBLICAS, '/app/hoje', '/app/sessao']) {
+    for (const caminho of [...PUBLICAS, '/app/hoje', '/app/sessao', '/app/comecar', '/app/conta', '/app/familia', '/app/comunidade', '/moderacao']) {
       const { container, unmount } = renderizarRota(caminho)
       await aguardarCarga()
       expect(container.querySelectorAll(SELETOR).length, caminho).toBeLessThanOrEqual(1)

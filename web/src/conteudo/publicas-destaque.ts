@@ -31,7 +31,7 @@ export const COMO_FUNCIONA_DESTAQUE = {
   },
   momentos: {
     titulo: ['Três momentos', 'da rotina.'],
-    texto: 'Cada momento vem com uma tela de exemplo, da família de Juliana, Bruno e Carla, que cuidam da Heloísa.',
+    texto: 'Cada momento vem numa tela da família de Juliana, Bruno e Carla, que cuidam da Heloísa.',
   },
   passos: [
     {
@@ -44,7 +44,7 @@ export const COMO_FUNCIONA_DESTAQUE = {
       id: 'madrugada',
       titulo: 'De madrugada',
       texto:
-        'O protótipo do Hoje já tem o modo madrugada: tela escura, pouco brilho e botões maiores. O plano é abrir o site no escuro, ver a última mamada e iniciar ou encerrar o registro com uma mão.',
+        'O Hoje tem o modo madrugada: tela escura, pouco brilho e botões maiores. Dá para abrir o site no escuro, ver a última mamada e iniciar ou encerrar o registro com uma mão.',
     },
     {
       id: 'troca-de-turno',
@@ -165,7 +165,7 @@ export const CUIDADO_DESTAQUE = {
   registro: {
     titulo: 'Quem fez cada registro',
     texto:
-      'Cada registro vai mostrar quem o fez. Numa sessão, como uma soneca, o site vai guardar quem iniciou e quem encerrou, mesmo que sejam pessoas diferentes. O protótipo já mostra o nome de quem fez cada registro.',
+      'Cada registro vai mostrar quem o fez. Numa sessão, como uma soneca, o site vai guardar quem iniciou e quem encerrou, mesmo que sejam pessoas diferentes.',
   },
   passagem: {
     titulo: 'Na passagem de turno',

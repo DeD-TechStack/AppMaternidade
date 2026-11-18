@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router'
 import { ChevronDown, CircleAlert } from 'lucide-react'
 import { COMUM, CONFIRMACAO, FORMULARIO, LIMITES_DE_DURACAO_MIN, ROTULO_TIPO } from '../../conteudo/rotina.ts'
 import type { ErroDados } from '../../dados/comum.ts'
+import { classificarErroRotina } from '../../dados/rotina.erros.ts'
 import {
   TIPOS_REGISTRO,
   ehTipoDeSessao,
@@ -64,6 +65,18 @@ const mesmosValores = (a: Chamada, b: Chamada) =>
   a.entrada.fim === b.entrada.fim &&
   a.entrada.nota === b.entrada.nota &&
   JSON.stringify(a.entrada.detalhes) === JSON.stringify(b.entrada.detalhes)
+
+/**
+ * O envio num só estado (nunca duas flags ao mesmo tempo): parado, em andamento (a conferência prévia ou a
+ * gravação), ou terminado em erro, o da leitura da conferência ou o da escrita.
+ */
+type EstadoDoEnvio =
+  | { fase: 'ocioso' }
+  | { fase: 'enviando' }
+  | { fase: 'erro-leitura'; erro: ErroDados }
+  | { fase: 'erro-envio'; erro: ErroDados }
+
+const OCIOSO: EstadoDoEnvio = { fase: 'ocioso' }
 
 interface PropsDoControle {
   id: string
@@ -179,9 +192,10 @@ export function FormularioRegistro({ modo, ativo, tipoInicial, registro }: Props
   const [tentativas, setTentativas] = useState(0)
   const [passo, setPasso] = useState<'editando' | 'confirmando'>('editando')
   const [avisos, setAvisos] = useState<string[]>([])
-  const [erroDeLeitura, setErroDeLeitura] = useState<ErroDados | null>(null)
-  const [erroDeEnvio, setErroDeEnvio] = useState<ErroDados | null>(null)
-  const [enviando, setEnviando] = useState(false)
+  const [envio, setEnvio] = useState<EstadoDoEnvio>(OCIOSO)
+  const enviando = envio.fase === 'enviando'
+  const erroDeLeitura = envio.fase === 'erro-leitura' ? envio.erro : null
+  const erroDeEnvio = envio.fase === 'erro-envio' ? envio.erro : null
   const chamadaPendente = useRef<Chamada | null>(null)
   const grupoDeAvisos = useRef<HTMLDivElement>(null)
   const voltouDaConfirmacao = useRef(false)
@@ -265,28 +279,37 @@ export function FormularioRegistro({ modo, ativo, tipoInicial, registro }: Props
   async function gravar(chamada: Chamada) {
     const { entrada } = chamada
     chamadaPendente.current = chamada
-    setEnviando(true)
-    setErroDeEnvio(null)
-    const resultado =
-      modo === 'novo'
-        ? await dados.gravarRegistro({
-            id: chamada.id,
-            bebeId: chamada.bebeId,
-            tipo: chamada.tipo,
-            inicio: entrada.inicio,
-            fim: entrada.fim,
-            detalhes: entrada.detalhes,
-            nota: entrada.nota,
-            origem: 'retroativo',
-          })
-        : await dados.editarRegistro(chamada.id, { inicio: entrada.inicio, fim: entrada.fim, detalhes: entrada.detalhes, nota: entrada.nota })
-    setEnviando(false)
-    if (!resultado.ok) {
+    setEnvio({ fase: 'enviando' })
+    const falhar = (erro: ErroDados) => {
       setPasso('editando')
-      setErroDeEnvio(resultado.erro)
-      acoes.aposErro(resultado.erro)
+      setEnvio({ fase: 'erro-envio', erro })
+      acoes.aposErro(erro)
+    }
+    let resultado
+    try {
+      resultado =
+        modo === 'novo'
+          ? await dados.gravarRegistro({
+              id: chamada.id,
+              bebeId: chamada.bebeId,
+              tipo: chamada.tipo,
+              inicio: entrada.inicio,
+              fim: entrada.fim,
+              detalhes: entrada.detalhes,
+              nota: entrada.nota,
+              origem: 'retroativo',
+            })
+          : await dados.editarRegistro(chamada.id, { inicio: entrada.inicio, fim: entrada.fim, detalhes: entrada.detalhes, nota: entrada.nota })
+    } catch (rejeicao) {
+      // Uma promessa rejeitada termina no mesmo erro de escrita de um `{ ok: false }`, e o formulário volta a servir.
+      falhar(classificarErroRotina(rejeicao))
       return
     }
+    if (!resultado.ok) {
+      falhar(resultado.erro)
+      return
+    }
+    setEnvio(OCIOSO)
     atualizar()
     const fechar = { chave: 'fechar', rotulo: COMUM.fechar, executar: () => undefined } as const
     mostrarConfirmacao({
@@ -311,19 +334,23 @@ export function FormularioRegistro({ modo, ativo, tipoInicial, registro }: Props
     }
     if (tipo === '') return
     setErros({})
-    setErroDeLeitura(null)
-    setErroDeEnvio(null)
+    setEnvio(OCIOSO)
     const chamada = prepararChamada(entrada, tipo)
     if (!forcar && ehTipoDeSessao(tipo)) {
-      setEnviando(true)
-      const conferencia = await conferir(entrada, tipo)
-      setEnviando(false)
+      setEnvio({ fase: 'enviando' })
+      let conferencia: Awaited<ReturnType<typeof conferir>>
+      try {
+        conferencia = await conferir(entrada, tipo)
+      } catch (rejeicao) {
+        conferencia = { avisos: [], erro: classificarErroRotina(rejeicao) }
+      }
       if (conferencia.erro) {
-        // Se a leitura falhar, nada é enviado: o erro aparece acima dos botões e `Tentar de novo` relê.
+        // Se a leitura falhar (resultado ou rejeição), nada é enviado: o erro aparece acima dos botões e `Tentar de novo` relê.
         chamadaPendente.current = chamada
-        setErroDeLeitura(conferencia.erro)
+        setEnvio({ fase: 'erro-leitura', erro: conferencia.erro })
         return
       }
+      setEnvio(OCIOSO)
       if (conferencia.avisos.length > 0) {
         chamadaPendente.current = chamada
         setAvisos(conferencia.avisos)
@@ -479,7 +506,7 @@ export function FormularioRegistro({ modo, ativo, tipoInicial, registro }: Props
           erro={erroDeLeitura}
           papel={ativo.papel}
           aoTentarDeNovo={() => {
-            setErroDeLeitura(null)
+            setEnvio(OCIOSO)
             void avancar(false)
           }}
         />

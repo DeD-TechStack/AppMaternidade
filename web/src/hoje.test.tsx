@@ -67,7 +67,7 @@ describe('Hoje: a ordem dos blocos', () => {
     expect(cartao(container).compareDocumentPosition(botao) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
     expect(botao.compareDocumentPosition(regiao('Para você saber')) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
     // A mamada da fixture de teste é de Bruno (R38-33); antes, o texto dizia "com Juliana".
-    expect(screen.getByText('Última mamada às 07:32, com Bruno')).toBeTruthy()
+    expect(screen.getByText('Última mamada às 07:32, registrada por Bruno')).toBeTruthy()
   })
 
   it('(madrugada) o histórico vem antes dos números do dia, para a primeira linha subir no celular', async () => {
@@ -606,8 +606,8 @@ describe('Hoje: Para você saber e Desde o seu último registro', () => {
       ['Fralda, Xixi', '09:10'],
       ['Sono, em andamento', '08:48'],
       ['Mamada, 18 min · lado esquerdo', '07:32'],
-      ['Fralda, Cocô', 'ontem 23:00'],
-      ['Fralda, Ambos', 'ontem 22:30'],
+      ['Fralda, Cocô', 'ontem às 23:00'],
+      ['Fralda, Ambos', 'ontem às 22:30'],
     ])
   })
 

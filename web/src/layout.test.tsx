@@ -455,13 +455,13 @@ describe('D3: a casca do Campo de mel e os números', () => {
     }
   })
 
-  it('na /sistema a faixa de cacau é uma seção nomeada pelo seu h2, com o conteúdo no recipiente da revelação', () => {
+  it('na /sistema a faixa de cacau é uma seção nomeada pelo seu h2, com o conteúdo no recipiente do conteúdo da faixa', () => {
     const { container } = renderizarRota('/sistema')
     const faixa = container.querySelector<HTMLElement>('main section.cm-faixa-cacau[data-painel="cacau"]')!
     const titulo = document.getElementById(faixa.getAttribute('aria-labelledby')!)!
     expect(titulo.tagName).toBe('H2')
     expect(faixa.contains(titulo)).toBe(true)
-    expect(faixa.querySelector('.cm-faixa-conteudo.overflow-hidden')!.contains(titulo)).toBe(true)
+    expect(faixa.querySelector('.cm-faixa-conteudo')!.contains(titulo)).toBe(true)
   })
 })
 
