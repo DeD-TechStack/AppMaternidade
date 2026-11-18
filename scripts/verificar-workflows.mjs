@@ -74,14 +74,49 @@ function caminhar(valor, visitante, vistos = new Set()) {
   }
 }
 
-// Segredos lidos num texto: secrets.NOME, secrets[...] e o objeto inteiro (`secrets.*`, toJSON(secrets)).
-function segredosEm(texto) {
-  const nomes = []
-  for (const m of texto.matchAll(/secrets\s*\.\s*([A-Za-z_][A-Za-z0-9_]*)/gi)) nomes.push(m[1])
-  if (/secrets\s*\[/i.test(texto)) nomes.push('secrets[...]')
-  for (const m of texto.matchAll(/\$\{\{([\s\S]*?)\}\}/g)) {
-    if (/\bsecrets\b(?!\s*\.\s*[A-Za-z_]|\s*\[)/i.test(m[1])) nomes.push('secrets')
+// Corpos das expressões `${{ ... }}` de um texto. O fim é o primeiro `}}` fora de um literal 'texto'
+// (aspas simples, '' é aspa escapada); sem fim, a expressão vai até o fim do texto (falha fechado).
+function corposDeExpressao(texto) {
+  const corpos = []
+  let i = texto.indexOf('${{')
+  while (i !== -1) {
+    const ini = i + 3
+    let j = ini
+    let literal = false
+    let fim = texto.length
+    for (; j < texto.length; j++) {
+      if (texto[j] === "'") literal = !literal
+      else if (!literal && texto[j] === '}' && texto[j + 1] === '}') {
+        fim = j
+        break
+      }
+    }
+    corpos.push(texto.slice(ini, fim))
+    i = fim >= texto.length ? -1 : texto.indexOf('${{', fim + 2)
   }
+  return corpos
+}
+
+// Segredos lidos numa expressão (corpo sem `${{ }}`): cada secrets.NOME vira o NOME; qualquer outra
+// citação do contexto (`secrets[...]`, `toJSON(secrets)`, `secrets.*`, o que não der para classificar)
+// vira `exibir`, o texto da expressão, e conta como leitura.
+function segredosNaExpressao(corpo, exibir) {
+  const nomes = []
+  for (const m of corpo.matchAll(/\bsecrets\s*\.\s*([A-Za-z_][A-Za-z0-9_]*)/gi)) nomes.push(m[1])
+  const resto = corpo.replace(/\bsecrets\s*\.\s*[A-Za-z_][A-Za-z0-9_]*/gi, ' ')
+  if (/\bsecrets\b/i.test(resto)) nomes.push(exibir)
+  return nomes
+}
+
+const compacto = (s) => s.replace(/\s+/g, ' ').trim()
+
+// Segredos lidos num texto. Só expressão lê segredo: o que está em `${{ }}` e o valor de uma chave
+// `if` (que o Actions trata como expressão mesmo sem `${{ }}`). A palavra `secrets` em texto puro,
+// como num script de `run:`, não é leitura.
+function segredosEm(texto, { condicao = false } = {}) {
+  const nomes = []
+  if (condicao && !texto.includes('${{')) nomes.push(...segredosNaExpressao(texto, compacto(texto)))
+  for (const corpo of corposDeExpressao(texto)) nomes.push(...segredosNaExpressao(corpo, `\${{ ${compacto(corpo)} }}`))
   return nomes
 }
 
@@ -96,6 +131,9 @@ function segredosLidos(valor, { job = false } = {}) {
     },
     chave: (k, v) => {
       if (k === 'secrets' && v === 'inherit') lidos.add('secrets: inherit')
+      if (typeof k === 'string' && k.toLowerCase() === 'if' && typeof v === 'string') {
+        for (const n of segredosEm(v, { condicao: true })) if (!publico(n)) lidos.add(n)
+      }
     },
   })
   if (job && eMapa(valor)) {
@@ -110,6 +148,11 @@ function leSegredoVite(valor) {
   caminhar(valor, {
     texto: (s) => {
       if (segredosEm(s).some((n) => VITE.includes(n.toUpperCase()))) le = true
+    },
+    chave: (k, v) => {
+      if (typeof k === 'string' && k.toLowerCase() === 'if' && typeof v === 'string') {
+        if (segredosEm(v, { condicao: true }).some((n) => VITE.includes(n.toUpperCase()))) le = true
+      }
     },
   })
   return le

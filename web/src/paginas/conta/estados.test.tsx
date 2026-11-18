@@ -631,8 +631,15 @@ describe('sucesso: a região de status é única, não move o foco e só some na
     expect(screen.getByRole('status').contains(document.activeElement)).toBe(false)
 
     simularFalha(dados, 'pedirRecuperacao', 'muitas_tentativas')
-    fireEvent.click(botao('Enviar link'))
-    await screen.findByRole('alert')
+    // Um clique deliberado, depois da janela do mesmo gesto (500 ms) que segue o sucesso.
+    const agoraReal = Date.now.bind(Date)
+    const relogio = vi.spyOn(Date, 'now').mockImplementation(() => agoraReal() + 600)
+    try {
+      fireEvent.click(botao('Enviar link'))
+      await screen.findByRole('alert')
+    } finally {
+      relogio.mockRestore()
+    }
     expect(screen.getByRole('status').textContent).toBe('')
   })
 })

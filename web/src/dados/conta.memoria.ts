@@ -167,13 +167,29 @@ function paraJson(texto: string | null): string | null {
 interface FonteDeExportacao {
   registros: () => readonly Registro[]
   notas: () => readonly Nota[]
+  /** Zera a autoria (`criadoPor`, `encerradoPor`, `excluidoPor`, `excluidaPor`) de quem teve a conta excluída. */
+  anonimizarAutor?: (contaId: string) => void
 }
 
 const SEM_ROTINA: FonteDeExportacao = { registros: () => [], notas: () => [] }
 const fontesDeExportacao = new WeakMap<object, FonteDeExportacao>()
+const origensDaConta = new WeakMap<object, object>()
+
+/**
+ * Diz que `copia` (o que um provedor faz da conta, como o `envolver` da sessão) é a mesma memória que `original`:
+ * a fonte registrada pela rotina sobre a cópia vale para a exportação e para a exclusão da conta original.
+ */
+export function registrarOrigemDaConta(copia: object, original: object): void {
+  origensDaConta.set(copia, origensDaConta.get(original) ?? original)
+}
+
+/** Diz se a rotina em memória já registrou a fonte de exportação desta conta (ou da original, se for cópia). */
+export function temFonteDeExportacao(conta: object): boolean {
+  return fontesDeExportacao.has(origensDaConta.get(conta) ?? conta)
+}
 
 export function registrarFonteDeExportacao(conta: object, fonte: FonteDeExportacao): void {
-  fontesDeExportacao.set(conta, fonte)
+  fontesDeExportacao.set(origensDaConta.get(conta) ?? conta, fonte)
 }
 
 const compararTexto = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
@@ -902,6 +918,8 @@ export function criarDadosContaMemoria(fixture: FixtureConta, opcoes: OpcoesMemo
       if (c.criadoPor === eu) c.criadoPor = null
       if (c.aceitoPor === eu) c.aceitoPor = null
     }
+    // Os registros e as notas da rotina moram na fonte registrada; ela zera a autoria dos que eram da conta.
+    fontesDeExportacao.get(dados)?.anonimizarAutor?.(eu)
     contasApagadas.add(eu)
     contas.splice(contas.indexOf(conta), 1)
     usuarios.splice(usuarios.indexOf(usuario), 1)

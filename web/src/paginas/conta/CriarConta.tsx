@@ -63,8 +63,8 @@ export function CriarConta() {
     const nomeLimpo = nome.trim()
     const emailLimpo = email.trim()
     const retorno = urlDoSite(caminhoComVolta('entrar', volta))
-    setConfirmacao(null)
     void enviar({
+      aoComecar: () => setConfirmacao(null),
       escrever: () => dados.criarUsuario(emailLimpo, senha, nomeLimpo, retorno),
       aoSucesso: async (criado) => {
         if (!criado) return
