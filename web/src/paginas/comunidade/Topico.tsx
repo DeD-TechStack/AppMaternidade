@@ -5,7 +5,10 @@ import { Cartao } from '../../componentes/base/layout/Cartao.tsx'
 import { Pilha } from '../../componentes/base/layout/Pilha.tsx'
 import { BOTAO_SECUNDARIO } from '../../componentes/conta/Partes.tsx'
 import { AcoesDoItem, type Acao } from '../../componentes/comunidade/AcoesDoItem.tsx'
-import { AvisoDeSaude, ErroDeLeitura, Esqueleto, NaoEncontrado } from '../../componentes/comunidade/Avisos.tsx'
+import { AvisoDeSaude, NaoEncontrado } from '../../componentes/comunidade/Avisos.tsx'
+import { Carregando } from '../../componentes/estado/Carregando.tsx'
+import { ErroDaComunidade } from '../../componentes/estado/ErroDaComunidade.tsx'
+import { PainelVazio } from '../../componentes/estado/PainelVazio.tsx'
 import { useDadosComunidade } from '../../componentes/comunidade/dados.ts'
 import { Faixa } from '../../componentes/comunidade/Faixa.tsx'
 import { useFocoPendente, type AlvoDeFoco } from '../../componentes/comunidade/foco.ts'
@@ -229,11 +232,11 @@ function Conteudo({ topico, autor, situacao, bloqueados, relerTopicoEBloqueios, 
           <h2 id="respostas" className="cm-h4 text-titulo-4">
             {TOPICO.respostas}
           </h2>
-          {respostas.esqueleto ? <Esqueleto /> : null}
+          {respostas.estado.fase === 'carregando' ? <Carregando linhas={3} /> : null}
           {respostas.estado.fase === 'erro' ? (
-            <ErroDeLeitura erro={respostas.estado.erro} aoTentarDeNovo={() => void respostas.recarregar()} />
+            <ErroDaComunidade erro={respostas.estado.erro} aoTentarDeNovo={() => void respostas.recarregar()} />
           ) : null}
-          {itens && itens.itens.length === 0 ? <p>{TX.tx17}</p> : null}
+          {itens && itens.itens.length === 0 ? <PainelVazio texto={TX.tx17} /> : null}
           {itens && itens.itens.length > 0 ? (
             <Pilha as="ul" vao="grupo" className="m-0 list-none p-0">
               {arranjo.map((grupo) => (
@@ -255,7 +258,7 @@ function Conteudo({ topico, autor, situacao, bloqueados, relerTopicoEBloqueios, 
             </Pilha>
           ) : null}
           {itens?.erroDaPagina ? (
-            <ErroDeLeitura erro={itens.erroDaPagina} aoTentarDeNovo={() => void respostas.carregarMais()} />
+            <ErroDaComunidade erro={itens.erroDaPagina} aoTentarDeNovo={() => void respostas.carregarMais()} />
           ) : null}
           {itens && itens.haMais && !itens.erroDaPagina ? (
             <div>
@@ -356,15 +359,15 @@ function TopicoLido({ id }: { id: string }) {
             <AvisoDeSaude />
             <Status mensagem={status} refStatus={refStatus} />
           </Pilha>
-          {topico.esqueleto ? <Esqueleto linhas={2} /> : null}
+          {topico.estado.fase === 'carregando' ? <Carregando linhas={2} /> : null}
           {topico.estado.fase === 'erro' ? (
             <div className="max-w-[40rem]">
-              <ErroDeLeitura erro={topico.estado.erro} aoTentarDeNovo={() => void topico.recarregar()} />
+              <ErroDaComunidade erro={topico.estado.erro} aoTentarDeNovo={() => void topico.recarregar()} />
             </div>
           ) : null}
           {falha && falha !== topico && falha.estado.fase === 'erro' ? (
             <div className="max-w-[40rem]">
-              <ErroDeLeitura
+              <ErroDaComunidade
                 erro={falha.estado.erro}
                 aoTentarDeNovo={() => void (falha === situacao ? situacao.recarregar() : bloqueios.recarregar())}
               />

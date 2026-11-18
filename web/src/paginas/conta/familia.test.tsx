@@ -27,7 +27,7 @@ const botao = (nome: string | RegExp) => screen.getByRole('button', { name: nome
 const talvezBotao = (nome: string | RegExp) => screen.queryByRole('button', { name: nome })
 const campo = (rotulo: string) => screen.getByLabelText(rotulo, { selector: 'input, select' }) as HTMLInputElement
 const digitar = (rotulo: string, texto: string) => fireEvent.change(campo(rotulo), { target: { value: texto } })
-const status = () => screen.getByRole('status')
+const status = () => screen.getAllByRole('status').find((regiao) => regiao.getAttribute('data-estado') !== 'carregando')!
 const caminhoDe = (roteador: { state: { location: { pathname: string } } }) => roteador.state.location.pathname
 const secao = (nome: string) => within(screen.getByRole('region', { name: nome }))
 

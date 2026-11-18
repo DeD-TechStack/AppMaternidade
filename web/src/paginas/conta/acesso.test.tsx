@@ -34,7 +34,7 @@ afterEach(() => {
 const campo = (rotulo: string) => screen.getByLabelText(comObrigatorio(rotulo), { selector: 'input, select' }) as HTMLInputElement
 const digitar = (rotulo: string, texto: string) => fireEvent.change(campo(rotulo), { target: { value: texto } })
 const botao = (nome: string) => screen.getByRole('button', { name: nome })
-const status = () => screen.getByRole('status')
+const status = () => screen.getAllByRole('status').find((regiao) => regiao.getAttribute('data-estado') !== 'carregando')!
 // O cabeçalho da casca também tem os links Entrar e Criar conta (levam ao Contato por enquanto): os da
 // tela se buscam dentro do <main>.
 const principal = () => within(document.querySelector('main')!)
