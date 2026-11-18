@@ -367,6 +367,8 @@
        eles escapam da rolagem e alargam a página (390 px com a raiz a 200%). */
     position: relative;
     overflow-x: auto;
+    /* A legenda mede a área visível (100cqi), não a tabela: a 390 a tabela é mais larga que o painel e rola. */
+    container-type: inline-size;
   }
 
   .cm-tabela {
@@ -376,6 +378,7 @@
   }
 
   .cm-tabela caption {
+    max-inline-size: 100cqi;
     margin-bottom: 24px;
     text-align: left;
   }
@@ -826,6 +829,25 @@
   :root[data-tema='madrugada'] header[data-cabecalho] :is(a, button),
   :root[data-tema='madrugada'] .cm-area > nav :is(a, button) {
     min-height: 56px;
+  }
+
+  /* NEW-C: o "Ir para o Hoje" da barra da MolduraLogada não tem recuo, para o texto começar na borda do h1. A
+     área de toque volta pelo pseudo-elemento (12 px de cada lado, sem vizinho para sobrepor) e o anel de foco
+     fica a 4 px do texto, sem encostar nele: o raio do campo (e não a pílula) deixa a folga igual nos lados. */
+  .cm-barra-link {
+    position: relative;
+    border-radius: var(--radius-campo);
+  }
+
+  .cm-barra-link::before {
+    content: '';
+    position: absolute;
+    inset: 0 -12px;
+  }
+
+  .cm-barra-link:focus-visible {
+    outline: 2px solid var(--cor-foco);
+    outline-offset: 4px;
   }
 
   /* Os dois botões quadrados do cabeçalho (menu e lua) ficam 56 x 56. */
