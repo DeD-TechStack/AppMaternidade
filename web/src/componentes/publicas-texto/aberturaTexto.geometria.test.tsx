@@ -367,28 +367,55 @@ describe(descreve, () => {
     )
 
     // B-2: no celular o primeiro parágrafo de leitura começa dentro da primeira tela.
-    // Exclusão decidida (decisão do líder em 17/11, DIRECAO.md): /privacidade a 390 não passa pelo layout, porque a
-    // ordem da cópia é protegida. `it.fails` deixa o VERMELHO visível e faz a execução ficar vermelha assim que
-    // /privacidade a 390 passar a passar. Nada mais foi afrouxado: as outras cinco páginas afirmam como antes.
-    const caso390 = caminho === '/privacidade' ? roda.fails : roda
-    caso390(
-      caminho === '/privacidade'
-        ? 'POL-TXT:A-2 @ /privacidade 390: excluded, protected copy order; recomposed by the visual reset (DIRECAO.md)'
-        : `${caminho} a 390: o painel tem a largura da coluna do texto, o primeiro parágrafo de leitura começa na primeira tela e nenhum vão vazio passa de 25%`,
-      () => {
-        const m = medirPagina(caminho, 390, 844, true)
-        expect(m.primeiroParagrafo, 'a segunda seção tem um parágrafo de leitura').not.toBeNull()
-        const marcos = `abertura ${Math.round(m.abertura.y)}-${Math.round(m.abertura.bottom)}, painel ${Math.round(m.painel.y)}-${Math.round(m.painel.bottom)}, apoio ${Math.round(m.apoio.y)}-${Math.round(m.apoio.bottom)}`
-        expect(m.primeiroParagrafo!.y, `o primeiro parágrafo de leitura começa em ${Math.round(m.primeiroParagrafo!.y)} (${marcos})`).toBeLessThanOrEqual(844)
-        expect(m.painel.width / m.cabeca.width, 'o painel enche a coluna do texto').toBeGreaterThanOrEqual(0.98)
-        expect(m.painel.x).toBe(m.cabeca.x)
-        expect(m.apoio.x).toBe(m.painel.x)
-        expect(m.apoio.width).toBe(m.painel.width)
-        const vazio = fracaoVazia(m)
-        expect(vazio, `o maior vão vazio da abertura: ${vazio.toFixed(3)} da área`).toBeLessThanOrEqual(0.25)
-        expect(m.scrollWidth).toBeLessThanOrEqual(m.innerWidth)
-      },
-      TEMPO_DO_CHROME,
-    )
+    // Exclusão decidida (decisão do líder em 17/11, DIRECAO.md): SÓ a asserção de y (o primeiro parágrafo de leitura
+    // começar na primeira tela) de /privacidade a 390 fica excluída, porque a ordem da cópia é protegida. Ela vira um
+    // caso nomeado com `it.fails`, que deixa o VERMELHO visível e fica vermelho assim que a asserção passar a passar.
+    // Todos os outros critérios de /privacidade a 390 (parágrafo existe, painel, eixos, vão vazio, rolagem) seguem como
+    // portão comum. As outras cinco páginas afirmam tudo como antes.
+    if (caminho === '/privacidade') {
+      roda(
+        `${caminho} a 390: o painel tem a largura da coluna do texto, o primeiro parágrafo de leitura existe e nenhum vão vazio passa de 25%`,
+        () => {
+          const m = medirPagina(caminho, 390, 844, true)
+          expect(m.primeiroParagrafo, 'a segunda seção tem um parágrafo de leitura').not.toBeNull()
+          expect(m.painel.width / m.cabeca.width, 'o painel enche a coluna do texto').toBeGreaterThanOrEqual(0.98)
+          expect(m.painel.x).toBe(m.cabeca.x)
+          expect(m.apoio.x).toBe(m.painel.x)
+          expect(m.apoio.width).toBe(m.painel.width)
+          const vazio = fracaoVazia(m)
+          expect(vazio, `o maior vão vazio da abertura: ${vazio.toFixed(3)} da área`).toBeLessThanOrEqual(0.25)
+          expect(m.scrollWidth).toBeLessThanOrEqual(m.innerWidth)
+        },
+        TEMPO_DO_CHROME,
+      )
+      roda.fails(
+        'POL-TXT:A-2 @ /privacidade 390: excluded, protected copy order; recomposed by the visual reset (DIRECAO.md)',
+        () => {
+          const m = medirPagina(caminho, 390, 844, true)
+          expect(m.primeiroParagrafo, 'a segunda seção tem um parágrafo de leitura').not.toBeNull()
+          const marcos = `abertura ${Math.round(m.abertura.y)}-${Math.round(m.abertura.bottom)}, painel ${Math.round(m.painel.y)}-${Math.round(m.painel.bottom)}, apoio ${Math.round(m.apoio.y)}-${Math.round(m.apoio.bottom)}`
+          expect(m.primeiroParagrafo!.y, `o primeiro parágrafo de leitura começa em ${Math.round(m.primeiroParagrafo!.y)} (${marcos})`).toBeLessThanOrEqual(844)
+        },
+        TEMPO_DO_CHROME,
+      )
+    } else {
+      roda(
+        `${caminho} a 390: o painel tem a largura da coluna do texto, o primeiro parágrafo de leitura começa na primeira tela e nenhum vão vazio passa de 25%`,
+        () => {
+          const m = medirPagina(caminho, 390, 844, true)
+          expect(m.primeiroParagrafo, 'a segunda seção tem um parágrafo de leitura').not.toBeNull()
+          const marcos = `abertura ${Math.round(m.abertura.y)}-${Math.round(m.abertura.bottom)}, painel ${Math.round(m.painel.y)}-${Math.round(m.painel.bottom)}, apoio ${Math.round(m.apoio.y)}-${Math.round(m.apoio.bottom)}`
+          expect(m.primeiroParagrafo!.y, `o primeiro parágrafo de leitura começa em ${Math.round(m.primeiroParagrafo!.y)} (${marcos})`).toBeLessThanOrEqual(844)
+          expect(m.painel.width / m.cabeca.width, 'o painel enche a coluna do texto').toBeGreaterThanOrEqual(0.98)
+          expect(m.painel.x).toBe(m.cabeca.x)
+          expect(m.apoio.x).toBe(m.painel.x)
+          expect(m.apoio.width).toBe(m.painel.width)
+          const vazio = fracaoVazia(m)
+          expect(vazio, `o maior vão vazio da abertura: ${vazio.toFixed(3)} da área`).toBeLessThanOrEqual(0.25)
+          expect(m.scrollWidth).toBeLessThanOrEqual(m.innerWidth)
+        },
+        TEMPO_DO_CHROME,
+      )
+    }
   }
 })
