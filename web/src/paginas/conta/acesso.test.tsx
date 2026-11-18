@@ -133,7 +133,7 @@ describe('o destino depois de entrar (RF-10)', () => {
     comVolta.unmount()
 
     sessionStorage.setItem(CHAVE_CONVITE, 'a'.repeat(64))
-    const comCodigo = renderizarComDados('/entrar', { sessao: 'bruno' })
+    const comCodigo = renderizarComDados('/entrar', { sessao: 'icaro' })
     await waitFor(() => expect(caminhoDe(comCodigo.roteador)).toBe('/convite'))
     comCodigo.unmount()
     sessionStorage.clear()
@@ -655,7 +655,7 @@ describe('/redefinir-senha', () => {
   })
 
   it('a marca de outro usuário é apagada, e a tela mostra o link vencido', async () => {
-    comMarca(PESSOAS.bruno.id)
+    comMarca(PESSOAS.icaro.id)
     renderizarComDados('/redefinir-senha', { sessao: 'juliana' })
 
     expect(await screen.findByText(TEXTOS_ERRO.link_vencido)).toBeTruthy()
@@ -668,7 +668,7 @@ describe('/redefinir-senha', () => {
     await screen.findByText(TEXTOS_ERRO.link_vencido)
 
     await act(async () => {
-      await dados.entrar('bruno@exemplo.invalid', SENHA_DEMONSTRACAO)
+      await dados.entrar('icaro@exemplo.invalid', SENHA_DEMONSTRACAO)
     })
     await waitFor(() => expect(sessionStorage.getItem(CHAVE_RECUPERACAO)).toBeNull())
   })

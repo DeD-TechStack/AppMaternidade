@@ -219,7 +219,7 @@ describe('RF15: os impedimentos (estado 3, RF-02)', () => {
   const casos: Array<[string, OpcoesMundo, string]> = [
     ['sem família', { sessao: 'davi' }, ESTADOS_DO_RESUMO.semFamilia],
     ['família sem bebê', { semBebes: true }, ESTADOS_DO_RESUMO.familiaSemBebe],
-    ['bebê só de quem não é responsável', { sessao: 'bruno' }, ESTADOS_DO_RESUMO.soResponsavel],
+    ['bebê só de quem não é responsável', { sessao: 'icaro' }, ESTADOS_DO_RESUMO.soResponsavel],
     ['só bebês arquivados', { bebeArquivado: true }, ESTADOS_DO_RESUMO.semBebeAtivo],
   ]
   it.each(casos)('RF15:3: %s dá o texto do estado 3 e nenhuma leitura de números', async (_nome, opcoes, texto) => {
@@ -238,7 +238,7 @@ describe('RF15: os impedimentos (estado 3, RF-02)', () => {
     await aguardar(semBebeEFamilia.controlador, 'impedido')
     expect(semBebeEFamilia.controlador.situacao().motivo).toBe('sem_familia')
 
-    const cuidadorEArquivado = montar({ sessao: 'bruno', bebeArquivado: true })
+    const cuidadorEArquivado = montar({ sessao: 'icaro', bebeArquivado: true })
     cuidadorEArquivado.controlador.abrir()
     await aguardar(cuidadorEArquivado.controlador, 'impedido')
     expect(cuidadorEArquivado.controlador.situacao().motivo).toBe('so_responsavel')
@@ -382,7 +382,7 @@ describe('RF19: as leituras do painel', () => {
   })
 
   it('RF19:4: a leitura atrasada do contexto, de uma abertura anterior, é ignorada', async () => {
-    const { controlador, adiada } = montar({ sessao: 'bruno' })
+    const { controlador, adiada } = montar({ sessao: 'icaro' })
     adiada.adiar('contexto')
     controlador.abrir()
     controlador.fechar()

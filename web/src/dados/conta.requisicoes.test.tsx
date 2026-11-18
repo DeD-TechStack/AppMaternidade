@@ -32,7 +32,7 @@ function montar(vinculos: unknown[]) {
   const falso = criarClienteFalso({
     tabelas: {
       vinculos: [resposta(vinculos)],
-      contas: [resposta([{ id: USUARIO_FALSO.id, nome_privado: 'Juliana' }, { id: 'outra', nome_privado: 'Bruno' }])],
+      contas: [resposta([{ id: USUARIO_FALSO.id, nome_privado: 'Juliana' }, { id: 'outra', nome_privado: 'Ícaro' }])],
     },
   })
   const tabelas = () => falso.from.mock.calls.map(([tabela]) => tabela)
@@ -49,7 +49,7 @@ describe("detalheFamilia(id, 'membros') no banco", () => {
     expect(detalhe.familia).toMatchObject({ id: FAMILIA, nome: 'Casa da Heloísa', meuPapel: 'responsavel', meuVinculoId: 'v1' })
     expect(detalhe.membros.map((m) => [m.nome, m.papel, m.souEu])).toEqual([
       ['Juliana', 'responsavel', true],
-      ['Bruno', 'cuidador', false],
+      ['Ícaro', 'cuidador', false],
     ])
     expect(detalhe.bebes).toEqual([])
     expect(detalhe.convites).toBeNull()
@@ -108,7 +108,7 @@ describe('minhasFamilias({ comMembros: true }) no banco', () => {
   })
   const meu = (id: string, papel: string, familias: unknown) => ({ id, papel, valido_ate: null, familias })
 
-  function montarComMembros(linhas: unknown[], contas: RespostaFalsa = resposta([{ id: USUARIO_FALSO.id, nome_privado: 'Juliana' }, { id: 'outra', nome_privado: 'Bruno' }])) {
+  function montarComMembros(linhas: unknown[], contas: RespostaFalsa = resposta([{ id: USUARIO_FALSO.id, nome_privado: 'Juliana' }, { id: 'outra', nome_privado: 'Ícaro' }])) {
     const falso = criarClienteFalso({ tabelas: { vinculos: [resposta(linhas)], contas: [contas] } })
     const tabelas = () => falso.from.mock.calls.map(([tabela]) => tabela)
     return { dados: criarDadosContaSupabase(falso.cliente), tabelas, falso }
@@ -130,11 +130,11 @@ describe('minhasFamilias({ comMembros: true }) no banco', () => {
     expect(familias.map((f) => f.membros?.map((m) => [m.nome, m.papel, m.souEu]))).toEqual([
       [
         ['Juliana', 'responsavel', true],
-        ['Bruno', 'cuidador', false],
+        ['Ícaro', 'cuidador', false],
       ],
       [
         ['Juliana', 'responsavel', true],
-        ['Bruno', 'responsavel', false],
+        ['Ícaro', 'responsavel', false],
       ],
       undefined,
     ])
@@ -197,7 +197,7 @@ describe("minhasFamilias({ comMembros: true }) na memória", () => {
 
   it('quem é cuidador não recebe membros, e sem a opção nenhuma família traz a chave', async () => {
     const dados = criarDadosContaMemoria(criarFixtureDeTeste(Date.now()))
-    dados.sessaoParaTeste(PESSOAS.bruno.email)
+    dados.sessaoParaTeste(PESSOAS.icaro.email)
 
     const [comoCuidador] = valor(await dados.minhasFamilias({ comMembros: true }))
     const [semOpcao] = valor(await dados.minhasFamilias())

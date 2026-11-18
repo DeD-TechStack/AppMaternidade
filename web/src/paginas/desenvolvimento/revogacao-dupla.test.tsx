@@ -7,7 +7,7 @@ import { aguardarCarga, renderizarRota } from '../../teste/renderizarRota.tsx'
 import { ID_FAMILIA, criarMundoDeTeste, type Mundo } from '../../teste/rotina.fixture.ts'
 
 // MAT-39b, devolução 2: a proteção contra laço da página vale por IDENTIDADE do contexto (`familia.id:bebe.id`), não
-// uma vez por abertura. Bruno está em duas famílias (Exemplo, com Heloísa, e Teste, com Teo); cada revogação de
+// uma vez por abertura. Ícaro está em duas famílias (Exemplo, com Heloísa, e Teste, com Teo); cada revogação de
 // vínculo com a página aberta invalida o contexto atual, e a mesma identidade já invalidada não vira laço.
 
 configure({ getElementError: (mensagem) => new Error(mensagem ?? 'Elemento não encontrado.') })
@@ -39,28 +39,28 @@ async function clicar(elemento: HTMLElement) {
   await aguardarCarga()
 }
 
-/** Bruno em Família Exemplo (Heloísa) e em Família Teste (Teo, criada por Carla). Devolve os vínculos dele. */
-async function mundoDeBrunoEmDuasFamilias() {
-  const m = criarMundoDeTeste({ sessao: 'bruno' })
+/** Ícaro em Família Exemplo (Heloísa) e em Família Teste (Teo, criada por Carla). Devolve os vínculos dele. */
+async function mundoDeIcaroEmDuasFamilias() {
+  const m = criarMundoDeTeste({ sessao: 'icaro' })
   mudarDeSessao(m, 'carla')
   expect((await m.conta.cadastrarBebe(ID_FAMILIA_TESTE, 'Teo', '2026-08-05')).ok).toBe(true)
   const convite = await m.conta.criarConvite(ID_FAMILIA_TESTE, 'cuidador', null)
   if (!convite.ok) throw new Error('convite: ' + convite.erro.chave)
-  mudarDeSessao(m, 'bruno')
+  mudarDeSessao(m, 'icaro')
   expect((await m.conta.aceitarConvite(convite.valor.codigo)).ok).toBe(true)
   const vinculoEm = async (familiaId: string) => {
     const detalhe = await m.conta.detalheFamilia(familiaId)
     if (!detalhe.ok) throw new Error('detalhe: ' + detalhe.erro.chave)
-    return detalhe.valor.membros.find((membro) => membro.contaId === PESSOAS.bruno.id)!.vinculoId
+    return detalhe.valor.membros.find((membro) => membro.contaId === PESSOAS.icaro.id)!.vinculoId
   }
   return { m, vinculoExemplo: await vinculoEm(ID_FAMILIA), vinculoTeste: await vinculoEm(ID_FAMILIA_TESTE) }
 }
 
-/** Quem tem poder (responsável da família) revoga o vínculo de Bruno; depois a sessão volta a ser a dele. */
+/** Quem tem poder (responsável da família) revoga o vínculo de Ícaro; depois a sessão volta a ser a dele. */
 async function revogar(m: Mundo, quem: 'juliana' | 'carla', vinculo: string) {
   mudarDeSessao(m, quem)
   expect((await m.conta.revogarVinculo(vinculo)).ok).toBe(true)
-  mudarDeSessao(m, 'bruno')
+  mudarDeSessao(m, 'icaro')
 }
 
 async function abrir(m: Mundo, rotina: DadosRotina = m.rotina) {
@@ -71,7 +71,7 @@ async function abrir(m: Mundo, rotina: DadosRotina = m.rotina) {
 describe('revogações de vínculo seguidas com a página aberta (MAT-39b, R1)', () => {
   it('duas revogações em sequência: terminam em "Sem família", sem bloco nem grade da fase, com o foco no h1', async () => {
     relogioEm()
-    const { m, vinculoExemplo, vinculoTeste } = await mundoDeBrunoEmDuasFamilias()
+    const { m, vinculoExemplo, vinculoTeste } = await mundoDeIcaroEmDuasFamilias()
     await abrir(m)
     expect(h1().textContent).toBe('Desenvolvimento')
 
@@ -94,7 +94,7 @@ describe('revogações de vínculo seguidas com a página aberta (MAT-39b, R1)',
 
   it('após cada invalidação: o bloco do contexto antigo sai da tela e o foco vai ao h1', async () => {
     relogioEm()
-    const { m, vinculoExemplo, vinculoTeste } = await mundoDeBrunoEmDuasFamilias()
+    const { m, vinculoExemplo, vinculoTeste } = await mundoDeIcaroEmDuasFamilias()
     await abrir(m)
     expect(within(bloco()!).getByRole('button', { name: 'Iniciar tummy time de Heloísa' })).toBeTruthy()
 
@@ -115,7 +115,7 @@ describe('revogações de vínculo seguidas com a página aberta (MAT-39b, R1)',
 
   it('a primeira revogação sozinha continua passando: a página segue na outra família, com o foco no h1', async () => {
     relogioEm()
-    const { m, vinculoExemplo } = await mundoDeBrunoEmDuasFamilias()
+    const { m, vinculoExemplo } = await mundoDeIcaroEmDuasFamilias()
     await abrir(m)
 
     await revogar(m, 'juliana', vinculoExemplo)
@@ -129,7 +129,7 @@ describe('revogações de vínculo seguidas com a página aberta (MAT-39b, R1)',
 
   it('a mesma identidade não vira laço: o contexto que segue na tela sem acesso é relido uma vez só', async () => {
     relogioEm()
-    const m = criarMundoDeTeste({ sessao: 'bruno' })
+    const m = criarMundoDeTeste({ sessao: 'icaro' })
     // A resposta é a da própria memória, sem a família de Heloísa: o bloco acha que perdeu o acesso, mas a conta
     // ainda lista a família e a página continua com o mesmo bebê (mesma identidade `familia.id:bebe.id`).
     let chamadas = 0

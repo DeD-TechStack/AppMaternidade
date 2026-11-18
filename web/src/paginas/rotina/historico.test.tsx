@@ -40,15 +40,15 @@ describe('R38-20: a vista do dia', () => {
     expect(screen.getAllByRole('heading', { level: 1 }).map((h) => h.textContent)).toEqual(['Histórico'])
     expect(linhaDoBebe()).toBe('Heloísa, Hoje, quinta-feira, 5 de novembro')
     expect(linhas()).toEqual([
-      { hora: '02:00', texto: 'Mamadeira, 90 ml · leite materno', autor: 'por Bruno' },
+      { hora: '02:00', texto: 'Mamadeira, 90 ml · leite materno', autor: 'por Ícaro' },
       { hora: '03:30', texto: 'Sono, 50 min', autor: 'por Juliana' },
-      { hora: '04:00', texto: 'Fralda, Ambos', autor: 'por Bruno' },
+      { hora: '04:00', texto: 'Fralda, Ambos', autor: 'por Ícaro' },
       { hora: '04:50', texto: 'Mamada, 18 min · lado direito', autor: 'por Juliana' },
-      { hora: '05:55', texto: 'Sono, 45 min', autor: 'por Bruno' },
-      { hora: '07:32', texto: 'Mamada, 18 min · lado esquerdo', autor: 'por Bruno' },
+      { hora: '05:55', texto: 'Sono, 45 min', autor: 'por Ícaro' },
+      { hora: '07:32', texto: 'Mamada, 18 min · lado esquerdo', autor: 'por Ícaro' },
       { hora: '07:50', texto: 'Fralda, Cocô', autor: 'por Juliana' },
-      { hora: '08:48', texto: 'Sono, em andamento', autor: 'por Bruno' },
-      { hora: '09:10', texto: 'Fralda, Xixi', autor: 'por Bruno' },
+      { hora: '08:48', texto: 'Sono, em andamento', autor: 'por Ícaro' },
+      { hora: '09:10', texto: 'Fralda, Xixi', autor: 'por Ícaro' },
     ])
   })
 
@@ -84,7 +84,7 @@ describe('R38-20: a vista do dia', () => {
   })
 
   it('o observador vê o histórico e o detalhe de cada linha, sem nenhum botão de escrita', async () => {
-    await renderizarRotaPronta('/app/historico', { diaCompleto: true, papelDeBruno: 'observador', sessao: 'bruno' })
+    await renderizarRotaPronta('/app/historico', { diaCompleto: true, papelDeIcaro: 'observador', sessao: 'icaro' })
 
     expect(linhas()).toHaveLength(9)
     expect(screen.queryByRole('button', { name: /Excluir|Restaurar|Editar/ })).toBeNull()

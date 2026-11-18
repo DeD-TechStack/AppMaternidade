@@ -93,7 +93,7 @@ const montagens: Array<[string, Montagem]> = [
     async (estadoInicial) => renderizarComDados('/app/comecar', { estadoInicial, dados: await memoriaSemConta() }),
   ],
   ['/app/conta (responsável)', async (estadoInicial) => renderizarComDados('/app/conta', { estadoInicial, sessao: 'juliana' })],
-  ['/app/conta (cuidador)', async (estadoInicial) => renderizarComDados('/app/conta', { estadoInicial, sessao: 'bruno' })],
+  ['/app/conta (cuidador)', async (estadoInicial) => renderizarComDados('/app/conta', { estadoInicial, sessao: 'icaro' })],
   ['/app/conta (sem família)', async (estadoInicial) => renderizarComDados('/app/conta', { estadoInicial, sessao: 'davi' })],
   // 37b
   [
@@ -122,7 +122,7 @@ const montagens: Array<[string, Montagem]> = [
     },
   ],
   ['/app/familia (responsável)', async (estadoInicial) => renderizarComDados('/app/familia', { estadoInicial, sessao: 'juliana' })],
-  ['/app/familia (cuidador)', async (estadoInicial) => renderizarComDados('/app/familia', { estadoInicial, sessao: 'bruno' })],
+  ['/app/familia (cuidador)', async (estadoInicial) => renderizarComDados('/app/familia', { estadoInicial, sessao: 'icaro' })],
 ]
 
 describe('axe-core, rota por rota, nos dois temas', () => {
@@ -404,10 +404,10 @@ describe('RN-01: nenhuma rota desta tarefa chama a rede', () => {
 const DIALOGOS_DA_FAMILIA: Array<{ nome: string; abre: () => HTMLElement; titulo: string }> = [
   {
     nome: 'remover acesso',
-    abre: () => botao('Remover acesso de Bruno'),
-    titulo: 'Remover o acesso de Bruno?',
+    abre: () => botao('Remover acesso de Ícaro'),
+    titulo: 'Remover o acesso de Ícaro?',
   },
-  { nome: 'mudar papel', abre: () => botao('Mudar papel de Bruno'), titulo: 'Mudar o papel de Bruno' },
+  { nome: 'mudar papel', abre: () => botao('Mudar papel de Ícaro'), titulo: 'Mudar o papel de Ícaro' },
   { nome: 'mudar papel (própria linha)', abre: () => botao('Mudar papel de Juliana'), titulo: 'Mudar o seu papel' },
   { nome: 'sair da família', abre: () => botao('Sair da família'), titulo: 'Sair da família Família Exemplo?' },
   { nome: 'excluir família', abre: () => botao('Excluir família'), titulo: 'Excluir a família Família Exemplo?' },
