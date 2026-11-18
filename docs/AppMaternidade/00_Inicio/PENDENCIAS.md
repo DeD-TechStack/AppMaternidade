@@ -11,7 +11,8 @@ MANDATO (Daniel, 05/11/2026; visual refeito em 11/11): o site inteiro funcionand
 ESTADO: ATIVO. Source of state: block "RETOMAR 18/11 SWITCH-D5-7" right below (authoritative); the session log and older RETOMAR blocks are history with per-card details.
 ## RETOMAR 18/11 SWITCH-D5-7 (session local-d19642c3, started ~15h00 host clock; brief BRIEF_LIDER_TROCA_D5_6_20261118.md; religar exit 0 (30 cards); ORDERS: ordens-vigentes rev 4; D8 English; NEVER clarify)
 - MAIN PUSH RULE (brief s4): push main ONLY for the gated RC and for PAGES-PREV (with root byte-identical proof). Vault commits stay LOCAL until the RC.
-- BRANCH: origin/int/refazer = 8bbec929fecad3b44fb660cf076d4f62df36ff7f (HOJE-ROT-1 ff, 15:09). Leader full check on 8bbec92 in .worktrees/t_7bbaf4b7/.oc/lider_verif/check_8bbec92.{log,exit} -> then RECIBO on t_7bbaf4b7 + remove its worktree.
+- BRANCH: origin/int/refazer = 8bbec929fecad3b44fb660cf076d4f62df36ff7f (HOJE-ROT-1 ff, 15:09; leader full check exit 0, 4268 passed; RECIBO 2074; worktree + wt branch removed).
+- CI RED on ubuntu since b26e41d (run 44354636628): estado.test.tsx + erroAninhado.test.tsx hardcode the Windows Chrome path and throw on ubuntu -> CI-CHR t_4db2e588 (test-only, base 8bbec92, READY 15:25). On approval integrate and watch the ubuntu job. [ ] familia.test.tsx 'validade_menor aria-describedby' failed once on ubuntu (windows green): check CI 44366491708 on 8bbec92; if it repeats, fix card.
 - BOARD (card -> next leader action):
   - SEED-A t_4150b4f3 RUNNING (claimed 15:08, run 1329; SHAs de base 2070 = 8bbec92) -> on approval integrate, then release ASSET-1 t_89137a0f (SHAs de base per D5-6 block: SEED-A SHA + SIGNOFF_D54c + R-2 ecc28aa7).
   - DS-1a t_3560b1f7 IN REVIEW (leader-filed request 15:10, HEAD 0b5d5d1, 2 base_red_known VIS-4-r3 tests) -> on approval: integrate only after the VIS-4 chain is on int (merge int into 0b5d5d1, full check fully green), then release REP-HOME + LEGAL-D54b + I-RF14-3.
