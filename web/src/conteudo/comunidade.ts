@@ -18,7 +18,7 @@ export const TX = {
   tx05b: 'É assim que a resposta vai aparecer para todas as pessoas que entraram no site. Confira antes de publicar.',
   tx06: 'Tópico publicado.',
   tx07: 'Oculto pela moderação',
-  tx08: 'Se você ou alguém corre risco agora, ligue 192 (SAMU). Para conversar com alguém, o CVV atende no 188.',
+  tx08: 'Se você ou alguém corre risco agora, ligue para o Samu, no 192. Para conversar com alguém, o CVV atende no 188.',
   tx09: 'Recebemos sua denúncia. A moderação vai analisar. Quem você denunciou não fica sabendo.',
   tx10: 'Vocês deixam de ver o conteúdo um do outro e não podem responder um ao outro. A pessoa não é avisada. A equipe de moderação continua vendo o que todos publicam.',
   tx10b: 'Como você faz parte da moderação, ainda vai ver o que essa pessoa publica.',
@@ -127,7 +127,7 @@ export const COMUM_COMUNIDADE = {
   semFaixa: 'Sem faixa',
   faixaDoBebe: 'Faixa do bebê',
   faixaOpcional: 'Faixa do bebê (opcional)',
-  contador: (usado: number, maximo: number) => `${usado} de ${maximo}`,
+  contador: (usado: number, maximo: number) => `${usado.toLocaleString('pt-BR')} de ${maximo.toLocaleString('pt-BR')}`,
   motivoDaModeracao: (motivo: string) => `Motivo: ${motivo}`,
   respostas: (n: number) => (n === 1 ? '1 resposta' : `${n} respostas`),
   linkTermos: 'Termos de uso',
@@ -178,7 +178,7 @@ export const TOPICO = {
   paraEntrar: 'Entrar na comunidade para responder',
   editandoResposta: 'Editar resposta',
   citacaoDe: (trecho: string) => `“${trecho}”`,
-  erroLimiteResposta: 'A resposta precisa ter de 1 a 2000 caracteres.',
+  erroLimiteResposta: 'A resposta precisa ter de 1 a 2.000 caracteres.',
   // Aparece enquanto "Ver prévia" está desabilitado, ligada ao botão por `aria-describedby`.
   dicaPrevia: 'Escreva um texto para ver a prévia.',
   acoes: 'Ações',
@@ -197,13 +197,21 @@ export const FORMULARIO_TOPICO = {
   previa: 'Prévia',
   espaco: 'Espaço',
   erroTitulo: 'O título precisa ter de 3 a 120 caracteres.',
-  erroCorpo: 'O texto precisa ter de 1 a 5000 caracteres.',
+  erroCorpo: 'O texto precisa ter de 1 a 5.000 caracteres.',
   // Aparece enquanto "Ver prévia" está desabilitado, conforme o que falta.
   dicaPrevia: {
     ambos: 'Escreva um título e um texto para ver a prévia.',
     titulo: 'Escreva um título para ver a prévia.',
     texto: 'Escreva um texto para ver a prévia.',
   },
+} as const
+
+/** O resumo da rotina nos compositores (RF12): o botão, o aviso de status e a frase extra da prévia (RF-01, RF-11, RF-13). */
+export const RESUMO_NA_COMUNIDADE = {
+  botao: 'Incluir resumo da rotina',
+  inserido: 'Resumo inserido no fim do texto. Você pode mudar ou apagar antes de publicar.',
+  avisoNaPrevia:
+    'Este texto tem números da rotina do seu bebê. Todas as pessoas que entraram no site vão ver. É uma cópia: mudar a rotina depois não muda o texto publicado.',
 } as const
 
 export const ENTRAR_NA_COMUNIDADE = {

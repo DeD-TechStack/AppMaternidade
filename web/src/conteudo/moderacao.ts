@@ -14,7 +14,7 @@ export const TX = {
   tx12: 'Esta área é só da equipe de moderação.',
   tx13: 'Nenhuma denúncia com esses filtros.',
   tx14: 'Feito. A ação ficou registrada na auditoria.',
-  tx15: 'Se a última pessoa admin excluir a própria conta, ninguém mais concede papéis pelo site. A equipe técnica recupera por migração.',
+  tx15: 'Se a última pessoa administradora excluir a própria conta, ninguém mais concede papéis pelo site. Só a equipe técnica consegue recuperar o acesso.',
   tx20: 'Nenhuma ação registrada ainda.',
   tx28: 'Perfil excluído. A denúncia ainda pode ser decidida.',
   tx29: 'Nenhum outro conteúdo deste perfil.',
@@ -25,6 +25,8 @@ export const TX = {
   tx35: 'Cadastrar app autenticador',
   tx36: 'QR code para cadastrar o app autenticador',
   tx37: 'Código de 6 dígitos',
+  /** O `h1` do estado negado: não carrega o nome de nenhuma tela operacional. */
+  negado: 'Área da equipe de moderação',
   /** O selo de uso interno do painel. */
   selo: 'Moderação · uso interno',
 } as const
@@ -42,7 +44,7 @@ export const TEXTOS_ERRO_MODERACAO: Readonly<Record<string, string>> = {
   decisao_invalida: 'Escolha uma decisão.',
   denuncia_ja_decidida: 'Essa denúncia já foi decidida.',
   validade_no_passado: 'A validade precisa ser uma data futura.',
-  ultimo_admin: 'Não dá para tirar o último admin. Conceda o papel a outra pessoa antes.',
+  ultimo_admin: 'Não dá para tirar o último administrador. Conceda o papel a outra pessoa antes.',
   sem_papel: 'Seu acesso à moderação terminou.',
   codigo_invalido: 'Código incorreto ou vencido. Confira o app autenticador e tente de novo.',
   mfa_indisponivel: 'A verificação em duas etapas não está disponível agora. Avise a equipe técnica.',
@@ -86,7 +88,7 @@ export const ROTULO_ESTADO_CONTEUDO: Readonly<Record<EstadoModeracao, string>> =
 
 export const ROTULO_PAPEL: Readonly<Record<PapelPlataforma, string>> = {
   moderador: 'Moderador',
-  admin: 'Admin',
+  admin: 'Administrador',
 }
 
 export const FILA = {
@@ -129,7 +131,7 @@ export const DENUNCIA = {
   tituloTopico: 'Título',
   corpo: 'Texto',
   respostaNoTopico: (titulo: string) => `Resposta no tópico “${titulo}”`,
-  respostaSemTopico: 'Resposta em um tópico que você não lê.',
+  respostaSemTopico: 'Resposta num tópico que você não pode abrir.',
   acoesDoConteudo: 'Ações sobre o conteúdo',
   acoesDaDenuncia: 'Decisão sobre a denúncia',
   conteudoNaoLido: 'O conteúdo não está disponível para leitura.',
@@ -189,8 +191,8 @@ export const AUDITORIA = {
 export const PAPEIS = {
   titulo: 'Papéis',
   lista: 'Papéis da plataforma',
-  copiarId: 'Copiar id',
-  copiado: 'Id copiado.',
+  copiarId: 'Copiar ID',
+  copiado: 'ID copiado.',
   copieManualmente: 'Copie manualmente.',
   concedidoPor: 'Concedido por',
   concedidoEm: 'Concedido em',
@@ -203,13 +205,13 @@ export const PAPEIS = {
   revogarTitulo: 'Revogar este papel?',
   revogarConfirmar: 'Revogar papel',
   concederTitulo: 'Conceder papel',
-  campoConta: 'Id da conta',
-  dicaDaConta: 'Peça à pessoa o “Id da sua conta”, que aparece na tela Conta.',
+  campoConta: 'ID da conta',
+  dicaDaConta: 'Peça à pessoa o ID da conta dela, que aparece na tela Conta.',
   campoPapel: 'Papel',
   campoValidade: 'Validade (opcional)',
   dicaDaValidade: 'Deixe vazio para um papel sem validade.',
   conceder: 'Conceder papel',
-  erroConta: 'O id da conta precisa ser um UUID, como o que aparece na tela Conta.',
+  erroConta: 'Confira o ID: ele tem 36 caracteres, como o que aparece na tela Conta.',
   erroValidadePassada: 'A validade precisa ser uma data futura.',
   erroValidadeIlegivel: 'Escreva a validade como data e hora.',
   erroPapel: 'Escolha o papel.',

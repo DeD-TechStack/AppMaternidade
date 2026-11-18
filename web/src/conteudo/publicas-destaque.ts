@@ -19,7 +19,7 @@ const ABRIR_PROTOTIPO = 'Começar grátis'
 
 export const COMO_FUNCIONA_DESTAQUE = {
   titulo: ['Do primeiro dia', 'à troca de turno.'],
-  lide: 'Três momentos da rotina mostram o que o site vai fazer pela família: a primeira semana, a madrugada e a troca de turno.',
+  lide: 'Três momentos da rotina mostram o que o site faz pela família: a primeira semana, a madrugada e a troca de turno.',
   primario: { rotulo: ABRIR_PROTOTIPO, destino: HOJE },
   secundario: { rotulo: 'Ver os três momentos', destino: '#tres-momentos' },
   cena: {
@@ -27,30 +27,30 @@ export const COMO_FUNCIONA_DESTAQUE = {
     // 1× do recorte em retrato em volta do celular (@2x: 680 × 1050).
     largura: 340,
     altura: 525,
-    alt: 'Um celular sobre um pedestal de oliva, num fundo de mel, com uma tela do site AppMaternidade.',
+    alt: 'Um celular sobre um pedestal verde, num fundo amarelo, com uma tela do AppMaternidade.',
   },
   momentos: {
     titulo: ['Três momentos', 'da rotina.'],
-    texto: 'Cada momento vem com uma tela de exemplo, da família de Juliana, Bruno e Carla, que cuidam da Heloísa.',
+    texto: 'Cada momento vem numa tela da família de Juliana, Bruno e Carla, que cuidam da Heloísa.',
   },
   passos: [
     {
       id: 'primeira-semana',
       titulo: 'Na primeira semana',
       texto:
-        'Na primeira semana, o site vai permitir criar a conta, cadastrar o bebê e convidar o outro responsável. A partir daí, os dois já vão poder fazer os primeiros registros de mamada e de fralda.',
+        'Na primeira semana, dá para criar a conta, cadastrar o bebê e convidar o outro responsável. A partir daí, os dois já fazem os primeiros registros de mamada e de fralda.',
     },
     {
       id: 'madrugada',
       titulo: 'De madrugada',
       texto:
-        'O protótipo do Hoje já tem o modo madrugada: tela escura, pouco brilho e botões maiores. O plano é abrir o site no escuro, ver a última mamada e iniciar ou encerrar o registro com uma mão.',
+        'O Hoje tem o modo madrugada: tela escura, pouco brilho e botões maiores. Dá para abrir o site no escuro, ver a última mamada e iniciar ou encerrar o registro com uma mão.',
     },
     {
       id: 'troca-de-turno',
       titulo: 'Na troca de turno',
       texto:
-        'O plano é que quem chega para o turno veja, sem precisar perguntar, os registros desde que saiu, a sessão em andamento, como a soneca que Bruno começou e ainda não acabou, e as notas em destaque.',
+        'Quem chega para o turno vê, sem precisar perguntar, os registros desde que saiu, a sessão em andamento, como a soneca que Bruno começou e ainda não acabou, e as notas em destaque.',
     },
   ],
   convite: {
@@ -74,7 +74,7 @@ export const COMO_FUNCIONA_DESTAQUE = {
   },
   desdeQueSaiu: {
     titulo: 'Desde que você saiu',
-    andamento: { rotulo: 'Soneca em andamento', tempo: '00:42', detalhe: 'Começou às 14:05, com Bruno' },
+    andamento: { rotulo: 'Soneca em andamento', tempo: '00:42', detalhe: 'Começou às 14:05, por Bruno' },
     itens: [
       { inicial: 'C', tipo: 'Fralda', detalhe: 'Cocô, Carla', hora: '13:55' },
       { inicial: 'J', tipo: 'Mamada', detalhe: 'Lado direito, Juliana', hora: '13:20' },
@@ -85,7 +85,7 @@ export const COMO_FUNCIONA_DESTAQUE = {
     titulo: ['Para começar,', 'só o navegador.'],
     textos: [
       'O site abre no navegador, sem instalar nada.',
-      'Para a conta, o plano é este: o acesso vai ser por e-mail e senha, e depois a pessoa escolhe entre criar a família ou entrar por um convite. Do bebê, o site vai pedir só o nome ou apelido e a data de nascimento. Os termos de uso e o consentimento para os dados do bebê vão aparecer em telas separadas.',
+      'O acesso é por e-mail e senha, e depois a pessoa escolhe entre criar a família ou entrar por um convite. Do bebê, o site pede só o nome ou apelido e a data de nascimento. Os termos de uso e o consentimento para os dados do bebê vão aparecer em telas separadas.',
     ],
   },
   // A frase que explicava o botão ("O protótipo de Hoje e Sessão já pode ser aberto…") saiu: repetia a
@@ -106,7 +106,7 @@ export const COMO_FUNCIONA_DESTAQUE = {
 
 export const CUIDADO_DESTAQUE = {
   titulo: ['Um bebê,', 'vários adultos.'],
-  lide: 'Mães, pais, avós, babás e outros adultos autorizados vão poder cuidar do mesmo bebê pelo site, cada um com a própria conta e o próprio papel.',
+  lide: 'Mães, pais, avós, babás e outros adultos autorizados cuidam do mesmo bebê pelo site, cada um com a própria conta e o próprio papel.',
   /** O primário da primeira dobra e o do fim da página: o mesmo destino do fechamento de Como funciona. */
   primario: { rotulo: ABRIR_PROTOTIPO, destino: HOJE },
   familia: {
@@ -115,8 +115,8 @@ export const CUIDADO_DESTAQUE = {
     bebe: { nome: 'Heloísa', papel: 'Bebê, 3 meses' },
     pessoas: [
       { nome: 'Juliana', papel: 'Responsável' },
-      { nome: 'Bruno', papel: 'Cuidador' },
-      { nome: 'Carla', papel: 'Cuidador até domingo' },
+      { nome: 'Bruno', papel: 'Responsável' },
+      { nome: 'Carla', papel: 'Cuidador · acesso até domingo' },
     ],
     botao: 'Convidar',
   },
@@ -125,19 +125,19 @@ export const CUIDADO_DESTAQUE = {
     {
       titulo: 'Convite com papel',
       texto:
-        'Cada pessoa vai entrar na família com um papel. E cada adulto entra com a própria conta: ninguém vai precisar dividir uma senha da família.',
+        'Cada pessoa entra na família com um papel, e cada adulto com a própria conta: ninguém divide uma senha da família.',
       /** Como a tela Família vai mostrar isso, com a família de exemplo. */
-      exemplo: { inicial: 'B', quem: 'Bruno', oQue: 'Entrou como cuidador, convidado por Juliana' },
+      exemplo: { inicial: 'B', quem: 'Bruno', oQue: 'Entrou como responsável, convidado por Juliana' },
     },
     {
       titulo: 'Acesso com prazo',
-      texto: 'Qualquer vínculo vai poder ter validade, como “cuidador até domingo”. Vencida a data, o acesso termina.',
+      texto: 'Cuidadores e observadores podem ter acesso com prazo, como “cuidador até domingo”. No fim desse dia, o acesso termina.',
       exemplo: { inicial: 'C', quem: 'Carla', oQue: 'Cuidadora, com acesso até domingo' },
     },
     {
       titulo: 'Revogue quando quiser',
       texto:
-        'O responsável vai poder remover o acesso de qualquer pessoa da família. Ela perde o acesso assim que o aparelho dela se conectar à internet.',
+        'O responsável pode remover o acesso de qualquer pessoa da família. Ela perde o acesso na hora.',
       exemplo: { inicial: 'J', quem: 'Juliana', oQue: 'Removeu o acesso de uma babá antiga' },
     },
   ],
@@ -165,12 +165,12 @@ export const CUIDADO_DESTAQUE = {
   registro: {
     titulo: 'Quem fez cada registro',
     texto:
-      'Cada registro vai mostrar quem o fez. Numa sessão, como uma soneca, o site vai guardar quem iniciou e quem encerrou, mesmo que sejam pessoas diferentes. O protótipo já mostra o nome de quem fez cada registro.',
+      'Cada registro vai mostrar quem o fez. Numa sessão, como uma soneca, o site vai guardar quem iniciou e quem encerrou, mesmo que sejam pessoas diferentes.',
   },
   passagem: {
     titulo: 'Na passagem de turno',
     texto:
-      'Cada adulto vai ver a mesma sessão no próprio celular ou notebook, como a soneca que Bruno começou. O plano é que quem chega encontre, numa tela só, as notas em destaque deixadas por quem estava antes e tudo o que aconteceu desde que saiu.',
+      'Cada adulto vê a mesma sessão no próprio celular ou notebook, como a soneca que Bruno começou. Quem chega encontra, numa tela só, as notas em destaque deixadas por quem estava antes e tudo o que aconteceu desde que saiu.',
   },
   /** A tarde da Heloísa, como a lista de registros vai mostrar: quem fez o quê, e quando. */
   tarde: {
@@ -190,8 +190,8 @@ export const CUIDADO_DESTAQUE = {
   parar: {
     titulo: ['Quando alguém', 'para de cuidar.'],
     textos: [
-      'O responsável vai poder remover o acesso de qualquer pessoa da família. A pessoa vai perder o acesso assim que o aparelho dela se conectar à internet.',
-      'O que ela já viu ou guardou no aparelho enquanto estava sem internet não vai poder ser apagado na hora. Um vínculo com validade, como o de uma babá contratada por um período, vai vencer sozinho.',
+      'Quem é responsável tira o acesso de alguém da família quando quiser, e a pessoa perde o acesso na hora.',
+      'O que ela já viu não pode ser apagado. Um vínculo com prazo, como o de uma babá contratada por um período, vence sozinho.',
     ],
   },
 } as const

@@ -49,9 +49,9 @@ describe('RF-01: quem cria o cliente e quem lê as variáveis', () => {
     expect(chamam).toEqual(['dados/cliente.ts'])
   })
 
-  it('só dados/cliente.ts e o critério do aviso de demonstração (prototipo/banco.ts, que o componentes/AvisoDemonstracao.tsx usa) leem as variáveis do banco', () => {
+  it('só dados/cliente.ts lê as variáveis do banco; o aviso de demonstração (prototipo/banco.ts, que o componentes/AvisoDemonstracao.tsx usa) delega a ele', () => {
     const leem = fontes.filter((f) => /VITE_SUPABASE_(URL|ANON_KEY)/.test(f.texto)).map((f) => f.nome)
-    expect(leem.sort()).toEqual(['dados/cliente.ts', 'prototipo/banco.ts'])
+    expect(leem.sort()).toEqual(['dados/cliente.ts'])
     // O componente do aviso não lê as variáveis: só chama `temBanco()`.
     const aviso = fontes.find((f) => f.nome === 'componentes/AvisoDemonstracao.tsx')!
     expect(aviso.texto).toMatch(/from '\.\.\/prototipo\/banco\.ts'/)
@@ -182,6 +182,18 @@ describe('RF-01: um cliente só por página', () => {
     expect(autenticacao.persistSession).toBe(true)
     expect(autenticacao.autoRefreshToken).toBe(true)
     expect(autenticacao.detectSessionInUrl).toBe(true)
+  })
+
+  it('I-S3: o cliente usa o fluxo PKCE e mantém as três opções de sessão', () => {
+    const fetchProibido = proibirARede()
+    vi.mocked(createClient).mockClear()
+    definirBanco('https://pkce.invalid', 'chave-pkce')
+
+    expect(obterCliente()).not.toBeNull()
+    expect(createClient).toHaveBeenCalledTimes(1)
+    const opcoes = vi.mocked(createClient).mock.calls[0][2]
+    expect(opcoes?.auth).toMatchObject({ flowType: 'pkce', persistSession: true, autoRefreshToken: true, detectSessionInUrl: true })
+    expect(fetchProibido).not.toHaveBeenCalled()
   })
 
   it('criarDadosConta devolve a mesma instância durante a vida da página, em cada modo', () => {

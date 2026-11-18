@@ -298,7 +298,7 @@ const PRIVACIDADE: PaginaDeTexto = {
     {
       secao: secao('Seus direitos'),
       blocos: [
-        'O site vai permitir pedir a confirmação de que seus dados são tratados, o acesso a eles, a correção e a eliminação, além de revogar o consentimento. Levar os dados para outro serviço ainda está em avaliação, porque depende de regulamentação.',
+        'O site vai permitir pedir a confirmação de que seus dados são tratados, o acesso a eles, a correção e a eliminação, além de revogar o consentimento.',
         'Quando o seu vínculo com uma família acaba, o arquivo leva só a última versão dos registros que você mesmo escreveu, sem as mudanças feitas depois por outras pessoas, e não leva as notas de passagem de turno dessa família.',
         [
           'Os pedidos de acesso, com o botão “Baixar meus dados”, e de exclusão são feitos na tela Conta (/app/conta), por quem entrou na conta. Para apagar a conta, veja a página ',
@@ -329,7 +329,7 @@ const TERMOS: PaginaDeTexto = {
     {
       secao: secao('O que é o AppMaternidade'),
       blocos: [
-        'O AppMaternidade vai ser um site para a família registrar a rotina do bebê, dividir os cuidados entre os adultos, acompanhar o desenvolvimento e conversar numa comunidade separada da rotina privada. Hoje existe o protótipo das telas Hoje e Sessão, com uma família fictícia.',
+        'O AppMaternidade vai ser um site para a família registrar a rotina do bebê, dividir os cuidados entre os adultos, acompanhar o desenvolvimento e conversar numa comunidade separada da rotina privada.',
         TF.semDiagnostico,
       ],
     },
@@ -413,7 +413,7 @@ const EXCLUSAO: PaginaDeTexto = {
           itens: [
             'a conta e os dados ligados a ela;',
             'o conteúdo dos tópicos e das respostas da pessoa na comunidade: no lugar fica “[removido]”, e o autor aparece como “pessoa removida”;',
-            'se ela for cuidadora, os dados pessoais dela, e a autoria dos registros que fez vai virar um rótulo neutro. Esta proposta ainda está em avaliação.',
+            'se ela for cuidadora, os dados pessoais dela, e a autoria dos registros que fez vai virar um rótulo neutro.',
           ],
         },
         'Se a pessoa for a única responsável de uma família, o site não deixa excluir a conta. Antes, ela torna outra pessoa responsável ou exclui a família.',
@@ -475,14 +475,13 @@ const SOBRE: PaginaDeTexto = {
     {
       secao: secao('Para quem é'),
       blocos: [
-        'O plano é começar no Brasil, em português, para mães, pais e outros cuidadores adultos de bebês nos primeiros meses. O público ainda está em avaliação, e a idade mínima também.',
+        'O plano é começar no Brasil, em português, para mães, pais e outros cuidadores adultos de bebês nos primeiros meses.',
       ],
     },
     {
       secao: secao('O que ele faz'),
       blocos: [
         { titulados: PILARES.map((titulo, indice) => ({ titulo, texto: FRASES_DOS_PILARES[indice] })) },
-        'Hoje já existe o protótipo das telas Hoje e Sessão, com uma família fictícia.',
       ],
     },
     {
@@ -494,7 +493,7 @@ const SOBRE: PaginaDeTexto = {
     },
     {
       secao: secao('Quem faz'),
-      blocos: ['O AppMaternidade é um projeto acadêmico em desenvolvimento, e esta versão serve para avaliação.', TF.responsavel],
+      blocos: ['O AppMaternidade é um projeto acadêmico.', TF.responsavel],
     },
   ],
 }
