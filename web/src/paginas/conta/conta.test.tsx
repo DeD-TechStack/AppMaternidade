@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
-import { listaDeFusos } from '../../componentes/conta/fusos.ts'
+import { listaDeFusos, rotuloDoFuso } from '../../componentes/conta/fusos.ts'
 import { CHAVE_CONVITE, CHAVE_FAMILIA_ATUAL, CHAVE_RECUPERACAO } from '../../componentes/conta/armazenamento.ts'
 import { CONTA, NOMES_DO_H1, TEXTOS_ERRO } from '../../conteudo/conta.ts'
 import { dataNoFuso, fusoValido, type Resultado } from '../../dados/comum.ts'
@@ -56,7 +56,7 @@ describe('estrutura da tela', () => {
     const secoes = within(document.querySelector('main')!)
       .getAllByRole('heading', { level: 2 })
       .map((titulo) => titulo.textContent)
-    expect(secoes).toEqual(['Perfil', 'Id da sua conta', 'Seus dados', 'Excluir conta', 'Privacidade'])
+    expect(secoes).toEqual(['Perfil', 'ID da sua conta', 'Seus dados', 'Excluir conta', 'Privacidade'])
 
     // O "Conta" e o "Sair" são do cabeçalho do site (a sessão); a barra da página só tem "Ir para o Hoje".
     const cabecalho = within(document.querySelector<HTMLElement>('header[data-cabecalho]')!)
@@ -77,7 +77,7 @@ describe('estrutura da tela', () => {
 
     const indice = within(screen.getByRole('navigation', { name: 'Nesta página' }))
     const links = indice.getAllByRole('link')
-    expect(links.map((link) => link.textContent)).toEqual(['Perfil', 'Id da conta', 'Seus dados', 'Excluir conta', 'Privacidade'])
+    expect(links.map((link) => link.textContent)).toEqual(['Perfil', 'ID da conta', 'Seus dados', 'Excluir conta', 'Privacidade'])
     expect(links.map((link) => link.getAttribute('href'))).toEqual(['#perfil', '#id-conta', '#exportar', '#excluir-conta', '#privacidade'])
     for (const link of links) {
       expect(link.classList.contains('alvo-toque')).toBe(true)
@@ -126,14 +126,14 @@ describe('perfil', () => {
     expect(campo('Seu nome').value).toBe('Juliana')
     expect(campo('E-mail').value).toBe('juliana@exemplo.invalid')
     expect(campo('E-mail').readOnly).toBe(true)
-    expect(campo('Seu fuso').value).toBe('America/Sao_Paulo')
+    expect(campo('Seu fuso horário').value).toBe('America/Sao_Paulo')
   })
 
   it('só o e-mail leva a marca de só leitura; o seletor de fuso, editável, não', async () => {
     await abrirConta()
 
     expect(campo('E-mail').className).toMatch(/read-only:/)
-    expect(campo('Seu fuso').className).not.toMatch(/read-only:/)
+    expect(campo('Seu fuso horário').className).not.toMatch(/read-only:/)
   })
 
   it('salvar muda o nome e o fuso, mostra "Dados salvos." e atualiza a linha do alto', async () => {
@@ -141,7 +141,7 @@ describe('perfil', () => {
     await abrirConta('juliana', dados)
 
     digitar('Seu nome', '  Juliana Souza  ')
-    digitar('Seu fuso', 'America/Manaus')
+    digitar('Seu fuso horário', 'America/Manaus')
     fireEvent.click(screen.getByRole('button', { name: 'Salvar' }))
 
     await waitFor(() => expect(status().textContent).toBe('Dados salvos.'))
@@ -178,9 +178,9 @@ describe('perfil', () => {
 
     simularFalha(dados, 'atualizarMinhaConta', 'fuso_invalido')
     fireEvent.click(screen.getByRole('button', { name: 'Salvar' }))
-    await waitFor(() => expect(campo('Seu fuso').getAttribute('aria-invalid')).toBe('true'))
+    await waitFor(() => expect(campo('Seu fuso horário').getAttribute('aria-invalid')).toBe('true'))
     expect(screen.getByText(TEXTOS_ERRO.fuso_invalido)).toBeTruthy()
-    await waitFor(() => expect(document.activeElement).toBe(campo('Seu fuso')))
+    await waitFor(() => expect(document.activeElement).toBe(campo('Seu fuso horário')))
   })
 
   it('um fuso guardado fora da lista aparece primeiro, como atual, e salvar sem trocar o mantém', async () => {
@@ -195,10 +195,10 @@ describe('perfil', () => {
     renderizarComDados('/app/conta', { dados })
     await screen.findByRole('heading', { level: 1, name: 'Conta' })
 
-    const opcoes = [...campo('Seu fuso').querySelectorAll('option')]
+    const opcoes = [...campo('Seu fuso horário').querySelectorAll('option')]
     expect(opcoes[0].value).toBe(fora)
-    expect(opcoes[0].textContent).toBe(`${fora} (atual)`)
-    expect(campo('Seu fuso').value).toBe(fora)
+    expect(opcoes[0].textContent).toBe(`${rotuloDoFuso(fora!)} (atual)`)
+    expect(campo('Seu fuso horário').value).toBe(fora)
     expect(opcoes.slice(1).map((opcao) => opcao.value)).toEqual(listaDeFusos())
 
     fireEvent.click(screen.getByRole('button', { name: 'Salvar' }))
@@ -228,22 +228,22 @@ describe('id da conta', () => {
       expect(quebra.previousSibling?.textContent?.endsWith('-')).toBe(true)
     }
     expect(id.innerHTML.replaceAll('<wbr>', '')).toBe(PESSOAS.juliana.id)
-    expect(screen.getByText('Quem cuida da moderação pode pedir este número para dar a você um papel na equipe.')).toBeTruthy()
+    expect(screen.getByText('Quem cuida da moderação pode pedir este código para dar a você um papel na equipe.')).toBeTruthy()
   })
 
-  it('"Copiar id" copia pela área de transferência e avisa na região de status', async () => {
+  it('"Copiar ID" copia pela área de transferência e avisa na região de status', async () => {
     const escrever = vi.fn().mockResolvedValue(undefined)
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: escrever } })
     await abrirConta()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Copiar id' }))
-    await waitFor(() => expect(status().textContent).toBe('Id copiado.'))
+    fireEvent.click(screen.getByRole('button', { name: 'Copiar ID' }))
+    await waitFor(() => expect(status().textContent).toBe('ID copiado.'))
     expect(escrever).toHaveBeenCalledWith(PESSOAS.juliana.id)
   })
 
   it('sem área de transferência, ou com ela negada, o id fica selecionado e o status diz "Copie manualmente."', async () => {
     await abrirConta()
-    fireEvent.click(screen.getByRole('button', { name: 'Copiar id' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Copiar ID' }))
     await waitFor(() => expect(status().textContent).toBe('Copie manualmente.'))
     expect(window.getSelection()?.toString()).toContain(PESSOAS.juliana.id)
 
@@ -252,7 +252,7 @@ describe('id da conta', () => {
       configurable: true,
       value: { writeText: vi.fn().mockRejectedValue(new DOMException('negado', 'NotAllowedError')) },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Copiar id' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Copiar ID' }))
     await waitFor(() => expect(window.getSelection()?.toString()).toContain(PESSOAS.juliana.id))
     expect(status().textContent).toBe('Copie manualmente.')
   })
@@ -330,7 +330,7 @@ describe('exportação', () => {
 
   it('explica o que cada papel recebe e leva a âncora #exportar no título da seção', async () => {
     await abrirConta()
-    expect(screen.getByText(/^Baixe um arquivo com os seus dados, para guardar\. Quem é responsável recebe a família inteira/)).toBeTruthy()
+    expect(screen.getByText(/^Baixe uma cópia dos seus dados num arquivo JSON\. Quem é responsável recebe os dados da família inteira/)).toBeTruthy()
     expect(screen.getByRole('heading', { level: 2, name: 'Seus dados' }).id).toBe('exportar')
   })
 
@@ -353,14 +353,14 @@ describe('excluir conta: impedimentos', () => {
 
     expect(botaoExcluir().disabled).toBe(true)
     const explicacao = document.getElementById(botaoExcluir().getAttribute('aria-describedby')!)!
-    expect(explicacao.textContent).toContain('Você é a única pessoa responsável destas famílias.')
+    expect(explicacao.textContent).toContain('Você é a única pessoa responsável nestas famílias.')
     expect(explicacao.textContent).toContain('Família Exemplo')
     // RF-16, item 4 (37b): cada nome é um link para a Família, com a família pedida.
     const links = [...explicacao.querySelectorAll('a')]
     expect(links.map((link) => link.textContent)).toEqual(['Família Exemplo'])
     expect(links[0].getAttribute('href')).toBe(`/app/familia?familia=${FAMILIAS_DEMONSTRACAO.exemplo}`)
     expect(links[0].classList.contains('alvo-toque')).toBe(true)
-    expect(screen.getByText(/^Ao excluir a conta, ela e os seus vínculos com famílias somem/).textContent).toContain('“pessoa removida”')
+    expect(screen.getByText(/^Ao excluir a conta, ela e os seus vínculos com famílias são apagados/).textContent).toContain('“pessoa removida”')
   })
 
   it('cada família em que ela é a única responsável entra na lista', async () => {
@@ -431,7 +431,7 @@ describe('excluir conta: falha na leitura dos impedimentos', () => {
     expect(botaoExcluir().disabled).toBe(true)
     // Perfil, id, exportar e sair continuam funcionando.
     expect((screen.getByRole('button', { name: 'Salvar' }) as HTMLButtonElement).disabled).toBe(false)
-    expect((screen.getByRole('button', { name: 'Copiar id' }) as HTMLButtonElement).disabled).toBe(false)
+    expect((screen.getByRole('button', { name: 'Copiar ID' }) as HTMLButtonElement).disabled).toBe(false)
     expect((screen.getByRole('button', { name: 'Baixar meus dados' }) as HTMLButtonElement).disabled).toBe(false)
     expect(screen.getAllByRole('button', { name: 'Sair' })).toHaveLength(1)
 
@@ -704,7 +704,7 @@ describe('privacidade e sair', () => {
 
     const encarregado = document.querySelector('[data-encarregado]')!
     expect(encarregado.textContent).toBe('Daniel Macedo')
-    expect(encarregado.parentElement!.textContent).toBe('Encarregado de dados: Daniel Macedo.')
+    expect(encarregado.parentElement!.textContent).toBe('Encarregado pelo tratamento de dados: Daniel Macedo.')
     expect(encarregado.classList.contains('wrap-anywhere')).toBe(true)
     expect(encarregado.innerHTML).toBe('Daniel Macedo')
 

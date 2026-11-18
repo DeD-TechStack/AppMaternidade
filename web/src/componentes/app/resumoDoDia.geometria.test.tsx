@@ -16,7 +16,16 @@ import { criarMundoDeTeste } from '../../teste/rotina.fixture.ts'
 // iguais numa linha em 1440 e uma grade 2x2 em 390. Só caixas medidas contam, nunca nomes de classe.
 // Sem Chrome ou sem o build, o teste FALHA (não pula): `npm run build` antes.
 
-const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe'
+const CANDIDATOS_NO_LINUX = [
+  '/usr/bin/google-chrome',
+  '/usr/bin/google-chrome-stable',
+  '/usr/bin/chromium',
+  '/usr/bin/chromium-browser',
+]
+const CHROME =
+  process.platform === 'win32'
+    ? 'C:/Program Files/Google/Chrome/Application/chrome.exe'
+    : (process.env.CHROME_PATH ?? CANDIDATOS_NO_LINUX.find((caminho) => existsSync(caminho)) ?? CANDIDATOS_NO_LINUX[0])
 const PASTA_DIST = resolve(import.meta.dirname, '..', '..', '..', 'dist')
 const PASTA_CSS = join(PASTA_DIST, 'assets')
 const TOLERANCIA = 1
@@ -169,13 +178,14 @@ function comPaginaNoChrome<T>(raizHtml: string, janela: Janela, argumentosExtras
         '--headless=new',
         '--no-sandbox',
         '--disable-gpu',
-        '--disable-crashpad-for-testing',
+        // CI-UBUNTU: no Chrome 157 do Linux esta opção mata o processo ("FD ownership violation"); no Windows ela fica.
+        ...(process.platform === 'win32' ? ['--disable-crashpad-for-testing'] : []),
         '--no-first-run',
         '--allow-file-access-from-files',
         `--user-data-dir=${perfil}`,
         '--force-device-scale-factor=1',
-        // O Chrome sem janela soma 16 px de moldura: com +16 o innerWidth fica igual à largura pedida.
-        `--window-size=${Math.max(janela.largura, 600) + 16},${janela.altura}`,
+        // No Windows o Chrome sem janela soma 16 px de moldura: com +16 o innerWidth fica igual à largura pedida (no Linux não há moldura).
+        `--window-size=${Math.max(janela.largura, 600) + (process.platform === 'win32' ? 16 : 0)},${janela.altura}`,
         '--virtual-time-budget=3000',
         ...argumentosExtras(pasta),
         pathToFileURL(alvo).href,
