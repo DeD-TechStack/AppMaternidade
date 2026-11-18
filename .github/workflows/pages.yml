@@ -1,5 +1,8 @@
 name: Pages
 
+# O Pages serve um único artefato: a main na raiz e o int/refazer em previa/.
+# A prévia é publicada quando o CI do int/refazer termina com sucesso (workflow_run).
+# O workflow_run sempre roda o arquivo da branch padrão, então este arquivo precisa estar na main.
 on:
   push:
     branches:
@@ -8,6 +11,13 @@ on:
       - "web/**"
       - "web/package*.json"
       - ".github/workflows/pages.yml"
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
+    branches:
+      - int/refazer
   workflow_dispatch:
 
 permissions:
@@ -21,13 +31,21 @@ jobs:
   construir:
     name: Construir o site
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: >-
+      github.event_name == 'push' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_run' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'int/refazer')
     permissions:
       contents: read
       pages: read
     steps:
+      # A raiz é sempre a main: no push, o commit do próprio evento; nos outros eventos, a ponta da main.
       - name: Baixar o código
         uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event_name == 'push' && github.sha || 'main' }}
 
       - name: Instalar o Node
         uses: actions/setup-node@v5
@@ -64,10 +82,45 @@ jobs:
           BASE_SITE: ${{ steps.pages.outputs.base_path }}
         run: npm run build
 
+      # Prévia: o int/refazer num segundo checkout. No workflow_run, o commit que o CI testou.
+      - name: Baixar o código da prévia
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || 'int/refazer' }}
+          path: previa-src
+
+      - name: Registrar o commit da prévia
+        id: sha_previa
+        run: echo "sha=$(git -C previa-src rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Instalar as dependências da prévia
+        working-directory: previa-src/web
+        run: npm ci
+
+      # O CI do int/refazer já verificou o commit; só o disparo manual não passou por ele.
+      - name: Avisar que a verificação da prévia foi pulada
+        if: github.event_name != 'workflow_run'
+        run: echo "A prévia não roda npm run check aqui; a verificação do int/refazer é a do CI."
+
+      - name: Gerar o build da prévia no subcaminho previa
+        working-directory: previa-src/web
+        env:
+          BASE_SITE: ${{ steps.pages.outputs.base_path }}/previa
+        run: npm run build
+
+      - name: Montar o artefato do Pages
+        run: >-
+          node scripts/montar-pages.mjs
+          --raiz web/dist
+          --previa previa-src/web/dist
+          --saida _site
+          --sha "${{ steps.sha_previa.outputs.sha }}"
+          --rotas previa-src/web/src
+
       - name: Enviar o site para o Pages
         uses: actions/upload-pages-artifact@v3
         with:
-          path: web/dist
+          path: _site
 
   publicar:
     name: Publicar no Pages
