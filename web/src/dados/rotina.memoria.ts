@@ -136,7 +136,22 @@ export function criarDadosRotinaMemoria(conta: DadosConta, fixture: FixtureRotin
   const notas: Nota[] = fixture.notas.map(copiarNota)
   const alteracoes: Alteracao[] = []
   // A exportação da conta (RF-13) lê os registros e as notas daqui, pelo objeto da conta.
-  registrarFonteDeExportacao(conta, { registros: () => registros, notas: () => notas })
+  // Quando a conta é excluída, ela pede aqui para zerar a autoria do que era dela (`on delete set null`).
+  registrarFonteDeExportacao(conta, {
+    registros: () => registros,
+    notas: () => notas,
+    anonimizarAutor: (contaId) => {
+      for (const r of registros) {
+        if (r.criadoPor === contaId) r.criadoPor = null
+        if (r.encerradoPor === contaId) r.encerradoPor = null
+        if (r.excluidoPor === contaId) r.excluidoPor = null
+      }
+      for (const n of notas) {
+        if (n.criadoPor === contaId) n.criadoPor = null
+        if (n.excluidaPor === contaId) n.excluidaPor = null
+      }
+    },
+  })
   let sequencia = 0
   const controle: Controle = { falhas: new Map(), perdidas: new Map() }
 
