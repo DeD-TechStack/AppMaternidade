@@ -233,7 +233,7 @@ describe('rótulos e erros ligados aos campos', () => {
     for (const [rotulo, erro, ajuda] of [
       ['Seu nome', 'Escreva o seu nome.', 'É o nome que a família vai ver.'],
       ['E-mail', 'Escreva o seu e-mail.', null],
-      ['Senha', 'Escreva a sua senha.', 'Pelo menos 6 caracteres.'],
+      ['Senha', 'Escreva a sua senha.', 'Pelo menos 8 caracteres.'],
     ] as const) {
       expect(campo(rotulo).getAttribute('aria-invalid'), rotulo).toBe('true')
       expect(textosLigados(rotulo), rotulo).toContain(erro)
@@ -246,7 +246,7 @@ describe('rótulos e erros ligados aos campos', () => {
     await screen.findByRole('button', { name: 'Criar conta' })
 
     expect(campo('Senha').hasAttribute('aria-invalid')).toBe(false)
-    expect(document.getElementById(campo('Senha').getAttribute('aria-describedby')!)!.textContent).toBe('Pelo menos 6 caracteres.')
+    expect(document.getElementById(campo('Senha').getAttribute('aria-describedby')!)!.textContent).toBe('Pelo menos 8 caracteres.')
     expect(campo('E-mail').hasAttribute('aria-describedby')).toBe(false)
   })
 
