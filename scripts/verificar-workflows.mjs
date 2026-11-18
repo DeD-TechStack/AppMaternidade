@@ -115,7 +115,7 @@ const compacto = (s) => s.replace(/\s+/g, ' ').trim()
 // como num script de `run:`, não é leitura.
 function segredosEm(texto, { condicao = false } = {}) {
   const nomes = []
-  if (condicao) nomes.push(...segredosNaExpressao(texto, compacto(texto)))
+  if (condicao && !texto.includes('${{')) nomes.push(...segredosNaExpressao(texto, compacto(texto)))
   for (const corpo of corposDeExpressao(texto)) nomes.push(...segredosNaExpressao(corpo, `\${{ ${compacto(corpo)} }}`))
   return nomes
 }

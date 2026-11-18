@@ -606,6 +606,20 @@ test('SEC-02b: secrets.NOME num if sem ${{ }} continua nomeando o segredo', () =
   assert.match(problemas[0], /^x\.yml: job a lê SUPABASE_DB_PASSWORD sem environment: banco-producao/)
 })
 
+test('SEC-02b: if escrito com ${{ }} gera um único problema, sem mensagem duplicada', () => {
+  for (const [rotulo, linha] of [
+    ['com espaços', "        if: ${{ toJSON(secrets) != '' }}"],
+    ['sem espaços', "        if: ${{toJSON(secrets)!=''}}"],
+  ]) {
+    const problemas = verificarTexto(JOB_COM([], ['      - run: echo ok', linha]), 'x.yml')
+    assert.equal(problemas.length, 1, `${rotulo}: ${problemas.join('\n')}`)
+    const lidos = problemas[0].match(/^x\.yml: job a lê (.*) sem environment: banco-producao/)
+    assert.ok(lidos, `${rotulo}: ${problemas[0]}`)
+    assert.ok(!lidos[1].includes('}}, '), `${rotulo}: a mesma expressão aparece duas vezes: ${problemas[0]}`)
+    assert.equal(lidos[1].match(/toJSON\(secrets\)/g).length, 1, `${rotulo}: ${problemas[0]}`)
+  }
+})
+
 test('SEC-02b: chamada reutilizável com secrets: inherit sem environment é acusada', () => {
   const texto = workflow(['  a:', `    uses: org/repo/.github/workflows/w.yml@${SHA}`, '    secrets: inherit'])
   const problemas = verificarTexto(texto, 'x.yml')
