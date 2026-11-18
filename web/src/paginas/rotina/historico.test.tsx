@@ -62,7 +62,7 @@ describe('R38-20: a vista do dia', () => {
   it('o resumo do dia tem só totais, com a parte do sono que começou ontem', async () => {
     await renderizarRotaPronta('/app/historico', { diaCompleto: true })
 
-    expect(resumo()).toEqual(['Sono: 4 h 20', 'Mamadas: 2', 'Mamadeiras: 1, somando 90 ml', 'Fraldas: 3: 1 xixi, 1 cocô, 1 ambos'])
+    expect(resumo()).toEqual(['Sono: 4 h 20', 'Mamadas: 2', 'Mamadeiras: 1, somando 90 ml', 'Fraldas: 3: 1 de xixi, 1 de cocô, 1 com xixi e cocô'])
   })
 
   it('dia sem registro: a frase e nenhum resumo', async () => {

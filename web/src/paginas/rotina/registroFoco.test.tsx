@@ -58,7 +58,7 @@ describe('o foco quando "Salvar" cai num aviso', () => {
       expect(document.activeElement).not.toBe(document.body)
       expect(document.activeElement).toBe(grupo)
       expect(grupo!.getAttribute('tabindex')).toBe('-1')
-      expect(descricao(grupo!)).toContain('se sobrepõe')
+      expect(descricao(grupo!)).toContain('no mesmo horário')
       // O próximo Tab chega a "Salvar assim".
       expect(proximoNoTab(grupo!)).toBe(botao('Salvar assim'))
     })
@@ -90,7 +90,7 @@ describe('o foco quando "Salvar" cai num aviso', () => {
     expect(grupo.getAttribute('aria-describedby')!.split(/\s+/)).toHaveLength(2)
     expect(document.activeElement).toBe(grupo)
     expect(descricao(grupo)).toContain('mais do que o esperado')
-    expect(descricao(grupo)).toContain('se sobrepõe')
+    expect(descricao(grupo)).toContain('no mesmo horário')
   })
 
   it('"Corrigir" devolve o foco ao campo Início (data), nunca ao body', async () => {
