@@ -16,7 +16,7 @@ beforeEach(() => {
 })
 
 const campoDeTexto = () => screen.getByLabelText('Seu nome', { selector: 'input' }) as HTMLInputElement
-const campoDeFuso = () => screen.getByLabelText('Fuso', { selector: 'select' }) as HTMLSelectElement
+const campoDeFuso = () => screen.getByLabelText('Fuso horário', { selector: 'select' }) as HTMLSelectElement
 const salvar = () => fireEvent.click(screen.getByRole('button', { name: 'Salvar' }))
 const caminhoDe = (roteador: { state: { location: { pathname: string } } }) => roteador.state.location.pathname
 
@@ -268,8 +268,8 @@ describe('a escolha (RF-14, 37b)', () => {
 
     expect(screen.getByRole('heading', { level: 2, name: 'Criar uma família' })).toBeTruthy()
     expect(document.activeElement).toBe(campo('Nome da família'))
-    expect(campo('Fuso da família').value).toBe('America/Sao_Paulo')
-    expect([...(campo('Fuso da família') as unknown as HTMLSelectElement).options].map((opcao) => opcao.value)).toEqual(listaDeFusos())
+    expect(campo('Fuso horário da família').value).toBe('America/Sao_Paulo')
+    expect([...(campo('Fuso horário da família') as unknown as HTMLSelectElement).options].map((opcao) => opcao.value)).toEqual(listaDeFusos())
 
     fireEvent.click(botao('Voltar'))
     expect(screen.getByRole('heading', { level: 2, name: 'Como você quer começar?' })).toBeTruthy()
@@ -294,7 +294,7 @@ describe('a escolha (RF-14, 37b)', () => {
 
     simularFalha(dados, 'criarFamilia', 'fuso_invalido')
     fireEvent.click(botao('Criar família'))
-    await waitFor(() => expect(campo('Fuso da família').getAttribute('aria-invalid')).toBe('true'))
+    await waitFor(() => expect(campo('Fuso horário da família').getAttribute('aria-invalid')).toBe('true'))
     expect(screen.getByText(TEXTOS_ERRO.fuso_invalido)).toBeTruthy()
   })
 
@@ -302,7 +302,7 @@ describe('a escolha (RF-14, 37b)', () => {
     const { dados, roteador } = await abrirEscolha('davi')
     fireEvent.click(botao('Criar uma família'))
     digitar('Nome da família', '  Casa da Heloísa ')
-    digitar('Fuso da família', 'America/Manaus')
+    digitar('Fuso horário da família', 'America/Manaus')
     fireEvent.click(botao('Criar família'))
 
     expect(await screen.findByRole('heading', { level: 2, name: 'Agora, o primeiro bebê' })).toBeTruthy()
