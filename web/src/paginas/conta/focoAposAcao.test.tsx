@@ -86,7 +86,7 @@ describe('DialogoDaFamilia: o foco depois de confirmar uma ação que tira o bot
     fireEvent.click(origem)
     fireEvent.click(within(screen.getByRole('dialog', { name: 'Arquivar Heloísa?' })).getByRole('button', { name: 'Arquivar' }))
 
-    await waitFor(() => expect(status().textContent).toBe('Heloísa foi arquivado.'))
+    await waitFor(() => expect(status().textContent).toBe('Bebê arquivado: Heloísa.'))
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     expect(origem.isConnected).toBe(false)
     await waitFor(() => expect(document.activeElement).toBe(titulo('bebes')))
