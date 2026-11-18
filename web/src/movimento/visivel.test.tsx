@@ -1,4 +1,3 @@
-import { waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { renderizarRota } from '../teste/renderizarRota.tsx'
 
@@ -102,16 +101,12 @@ afterEach(() => {
 
 describe('segunda visita', () => {
   for (const rota of ROTAS) {
-    it(`${rota}: nada no <main> espera (sem opacidade abaixo de 1, sem deslocamento), com um observador que nunca avisa`, async () => {
+    it(`${rota}: nada no <main> espera (sem opacidade abaixo de 1, sem deslocamento), com um observador que nunca avisa`, () => {
       window.sessionStorage.setItem(MARCA_DA_CORTINA, '1')
       consultas(false)
       const { container } = renderizarRota(rota)
       expect(container.querySelector('[data-cortina]')).toBeNull()
-      // Tudo menos a cena da abertura (M8) está no estado final já na primeira pintura.
-      expect(emEspera(container, true)).toEqual([])
-      // A cena da abertura nasce em opacidade 0 e entra sozinha em 0,8 s no relógio (EntradaCena.tsx, fora do
-      // escopo da MOTION-1): sem cortina, ela termina sem rolagem nem observador, e então nada espera.
-      await waitFor(() => expect(emEspera(container, false)).toEqual([]), { timeout: 3000 })
+      expect(emEspera(container, false)).toEqual([])
     })
   }
 })
@@ -127,6 +122,8 @@ describe('primeira visita', () => {
         consultas(false)
         const { container } = renderizarRota(rota)
         if (abre) expect(container.querySelector('[data-cortina]')).not.toBeNull()
+        // Controle negativo: a cena da abertura (M8) nasce com opacity 0 sob a cortina.
+        if (abre) expect(emEspera(container, false).length).toBeGreaterThan(0)
         expect(emEspera(container, abre)).toEqual([])
       },
     )

@@ -102,6 +102,7 @@ describe('peças com movimento reduzido', () => {
   })
 
   it('sem movimento reduzido, a cena espera a cortina', () => {
+    window.sessionStorage.clear()
     consultas({})
     const { container } = render(
       <EntradaCena pronta={false}>
@@ -109,6 +110,20 @@ describe('peças com movimento reduzido', () => {
       </EntradaCena>,
     )
     expect(container.firstElementChild!.getAttribute('data-entrada-cena')).toBe('espera')
+  })
+
+  it('na segunda visita (cortina já vista), a cena nasce no estado final mesmo com pronta falso', () => {
+    window.sessionStorage.setItem('cortina-vista', '1')
+    consultas({})
+    const { container } = render(
+      <EntradaCena pronta={false}>
+        <p>cena</p>
+      </EntradaCena>,
+    )
+    const cena = container.firstElementChild!
+    expect(cena.getAttribute('data-entrada-cena')).toBe('final')
+    expect(cena.getAttribute('style') ?? '').not.toContain('opacity: 0')
+    window.sessionStorage.clear()
   })
 
   it('a mídia presa à rolagem fica em escala 1 e o conteúdo da revelação por baixo fica no lugar', () => {
