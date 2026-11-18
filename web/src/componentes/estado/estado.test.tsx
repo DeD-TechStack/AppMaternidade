@@ -170,7 +170,18 @@ describe('PainelVazio', () => {
 // arquivo que liga o CSS do build (web/dist/assets/*.css) e o Chrome sem janela mede. NÃO PULA: sem Chrome ou sem
 // `npm run build`, falha.
 
-const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe'
+const CANDIDATOS_DO_CHROME: Record<string, string[]> = {
+  win32: [
+    'C:/Program Files/Google/Chrome/Application/chrome.exe',
+    'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
+  ],
+  linux: ['/usr/bin/google-chrome', '/usr/bin/google-chrome-stable', '/usr/bin/chromium', '/usr/bin/chromium-browser'],
+  darwin: ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'],
+}
+const CHROME_DO_AMBIENTE = process.env.CHROME_PATH
+// Com CHROME_PATH definido só ele vale: um caminho que não existe falha, em vez de cair noutro Chrome.
+const BUSCADOS = CHROME_DO_AMBIENTE ? [CHROME_DO_AMBIENTE] : (CANDIDATOS_DO_CHROME[process.platform] ?? [])
+const CHROME: string = BUSCADOS.find((caminho) => existsSync(caminho)) ?? BUSCADOS[0] ?? 'chrome'
 const PASTA_DIST = resolve(import.meta.dirname, '..', '..', '..', 'dist')
 const PASTA_CSS = join(PASTA_DIST, 'assets')
 const TELA = { largura: 390, altura: 844 }
@@ -311,7 +322,7 @@ function medirNoChrome(html: string): Medida {
 
 describe('ErroDeLeitura no Chrome (390x844)', () => {
   it('o alerta e o "Tentar de novo" ficam dentro da primeira tela, mesmo com uma frase longa e uma palavra sem espaço', () => {
-    if (!existsSync(CHROME)) throw new Error(`Chrome não encontrado em ${CHROME}`)
+    if (!existsSync(CHROME)) throw new Error(`Chrome não encontrado. Defina CHROME_PATH ou instale o Chrome. Procurado: ${BUSCADOS.join(', ')}`)
     if (arquivosCss().length === 0) throw new Error('Sem web/dist/assets/*.css: rode `npm run build` antes.')
     const longa = `Não deu para carregar os dados. Confira a conexão e tente de novo em instantes. ${'x'.repeat(60)}`
     const { container } = render(
