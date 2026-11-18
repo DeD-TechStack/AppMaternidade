@@ -89,9 +89,10 @@
     }
 
     .pt-figura .pt-ilustracao {
-      height: 160px;
+      height: 136px;
     }
   }
+
 
   @media (min-width: 1100px) {
     /* A figura preenche a coluna da direita da abertura; a frase de apoio fica à esquerda, embaixo do painel. */
@@ -330,6 +331,15 @@
 
   .pt-lista > li + li {
     margin-top: var(--espaco-junto);
+  }
+
+  /* Celular: a lista de leitura é mais densa (vão de 4 px entre itens, no lugar do vão junto). O texto, o tamanho e a
+     entrelinha do corpo e a ordem não mudam; só o espaço, para a lista longa de Privacidade (9 grupos de dados)
+     empurrar menos o primeiro parágrafo para baixo. */
+  @media (max-width: 639.98px) {
+    .pt-lista > li + li {
+      margin-top: 4px;
+    }
   }
 
   /* Lista de 4 itens ou mais e só de itens curtos: corre em duas colunas dentro da coluna de leitura (a ordem

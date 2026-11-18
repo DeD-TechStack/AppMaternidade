@@ -77,11 +77,7 @@ interface Medida {
   desenho: Caixa
   /** A coluna do texto da abertura (`.pt-cabeca`). */
   cabeca: Caixa
-  /**
-   * O primeiro parágrafo de leitura: o de abertura (`cm-lide`) ou o primeiro parágrafo da primeira seção, o que vier
-   * antes na segunda seção da página. Em Privacidade o primeiro parágrafo de mais de 60 letras vem depois de uma
-   * lista longa de grupos de dados, então a conta pelo comprimento não mede a abertura.
-   */
+  /** O primeiro `p` de mais de 60 letras da segunda seção da página (a de leitura); o `cm-lide` conta quando é longo. */
   primeiroParagrafo: Caixa | null
   /** O `text-wrap` computado do primeiro parágrafo de leitura e do primeiro `h2`. */
   quebraDoParagrafo: string
@@ -115,7 +111,7 @@ const SCRIPT_DE_MEDIDA = `
       return el
     }
     const segundaSecao = document.querySelector('main').children[1]
-    const paragrafo = segundaSecao.querySelector('.cm-lide, .pt-texto p')
+    const paragrafo = [...segundaSecao.querySelectorAll('p')].find((p) => p.textContent.trim().length > 60) ?? null
     const letrasPorLinha = []
     for (const p of segundaSecao.querySelectorAll('.pt-texto p')) {
       const total = p.textContent.trim().length
