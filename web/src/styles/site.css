@@ -789,7 +789,7 @@
 
   /* De 768 em diante: o nome à esquerda e os três grupos (com os títulos à vista) à direita, numa fileira só.
      Em 768 a fileira cabe com folga curta (o texto dos três grupos e o nome somam ~650 px de uma área de ~700):
-     por isso o vão é o menor dos papéis até 1023 e cresce daí em diante. */
+     por isso o vão é `junto` até 1023 e `grupo` de 1024 em diante. */
   @media (min-width: 768px) {
     .cm-rodape-quadro {
       padding-block: var(--espaco-grupo);
@@ -823,7 +823,7 @@
 
   @media (min-width: 1024px) {
     .cm-rodape-topo {
-      column-gap: var(--espaco-bloco);
+      column-gap: var(--espaco-grupo);
     }
 
     .cm-rodape-colunas {
