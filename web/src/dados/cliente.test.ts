@@ -49,9 +49,9 @@ describe('RF-01: quem cria o cliente e quem lê as variáveis', () => {
     expect(chamam).toEqual(['dados/cliente.ts'])
   })
 
-  it('só dados/cliente.ts e o critério do aviso de demonstração (prototipo/banco.ts, que o componentes/AvisoDemonstracao.tsx usa) leem as variáveis do banco', () => {
+  it('só dados/cliente.ts lê as variáveis do banco; o aviso de demonstração (prototipo/banco.ts, que o componentes/AvisoDemonstracao.tsx usa) delega a ele', () => {
     const leem = fontes.filter((f) => /VITE_SUPABASE_(URL|ANON_KEY)/.test(f.texto)).map((f) => f.nome)
-    expect(leem.sort()).toEqual(['dados/cliente.ts', 'prototipo/banco.ts'])
+    expect(leem.sort()).toEqual(['dados/cliente.ts'])
     // O componente do aviso não lê as variáveis: só chama `temBanco()`.
     const aviso = fontes.find((f) => f.nome === 'componentes/AvisoDemonstracao.tsx')!
     expect(aviso.texto).toMatch(/from '\.\.\/prototipo\/banco\.ts'/)
