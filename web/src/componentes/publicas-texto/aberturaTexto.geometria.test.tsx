@@ -5,6 +5,8 @@ import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { describe, expect, it, vi } from 'vitest'
 import { renderizarRota } from '../../teste/renderizarRota.tsx'
+import { DIMENSAO_ILUSTRACAO } from '../campo/Ilustracao.tsx'
+import { EMAIL_CONTATO, PAGINAS_DE_TEXTO } from '../../conteudo/publicas-texto.ts'
 
 // VIS-4, as seis páginas de texto: a abertura (título, painel de mel, frase de apoio) medida num Chrome de
 // verdade. O jsdom não tem layout: o corpo serializado vai para uma página com o CSS e as imagens do build
@@ -107,6 +109,19 @@ interface Medida {
   linhasDosParagrafos: number[][]
   /** O h1 da abertura: a coluna dele e as linhas medidas letra a letra. */
   h1: H1Medido
+  /** VIS-4-r4: o maior right das letras da última linha da frase de apoio (null sem letras) e o `text-align` dela. */
+  apoioUltimaLinhaDireita: number | null
+  apoioAlinhamento: string
+  /** O padding computado do painel de mel. */
+  painelPaddingEsquerda: number
+  painelPaddingDireita: number
+  /** `.pt-figura` leva a classe `pt-figura-retrato`. */
+  figuraTemRetrato: boolean
+  /** O cartão de e-mail, o botão, o endereço e as linhas do endereço: só em /contato, null nas outras páginas. */
+  email: Caixa | null
+  emailBotao: Caixa | null
+  emailEndereco: Caixa | null
+  enderecoLinhas: number | null
 }
 
 // O script de dentro da página: espera as fontes e as imagens e escreve a medida em JSON num <pre>.
@@ -212,7 +227,58 @@ const SCRIPT_DE_MEDIDA = `
     }
     for (const el of document.querySelectorAll('main .pt-abertura h1, main .pt-abertura .pt-segunda-linha, main .pt-abertura .pt-apoio')) linhasDe(el)
     for (const el of document.querySelectorAll('main .pt-abertura .pt-painel, main .pt-abertura .pt-email, main .pt-abertura .pt-acao a')) blocos.push(caixa(el))
+    // VIS-4-r4: a frase de apoio letra a letra (o maior right das letras da linha de maior topo) e o estilo do painel.
+    const apoioEl = um('main .pt-apoio')
+    let apoioUltimaLinhaDireita = null
+    {
+      let topoMaior = -Infinity
+      const caminhanteDoApoio = document.createTreeWalker(apoioEl, NodeFilter.SHOW_TEXT)
+      while (caminhanteDoApoio.nextNode()) {
+        const no = caminhanteDoApoio.currentNode
+        const faixa = document.createRange()
+        for (let i = 0; i < no.length; i++) {
+          faixa.setStart(no, i)
+          faixa.setEnd(no, i + 1)
+          for (const r of faixa.getClientRects()) {
+            if (r.width <= 0) continue
+            if (r.top > topoMaior + 1) { topoMaior = r.top; apoioUltimaLinhaDireita = r.right }
+            else if (Math.abs(r.top - topoMaior) <= 1) apoioUltimaLinhaDireita = Math.max(apoioUltimaLinhaDireita, r.right)
+          }
+        }
+      }
+    }
+    const estiloDoPainel = getComputedStyle(um('main .pt-painel'))
+    const talvezCaixa = (seletor) => {
+      const el = document.querySelector(seletor)
+      return el ? caixa(el) : null
+    }
+    // VIS-4-r4-I-04: o cartão de e-mail (só em /contato; null nas outras): o botão, o endereço e as linhas do endereço.
+    let enderecoLinhas = null
+    const enderecoEl = document.querySelector('main .pt-email address')
+    if (enderecoEl) {
+      const topos = new Set()
+      const caminhanteDoEndereco = document.createTreeWalker(enderecoEl, NodeFilter.SHOW_TEXT)
+      while (caminhanteDoEndereco.nextNode()) {
+        const no = caminhanteDoEndereco.currentNode
+        const faixa = document.createRange()
+        for (let i = 0; i < no.length; i++) {
+          faixa.setStart(no, i)
+          faixa.setEnd(no, i + 1)
+          for (const r of faixa.getClientRects()) if (r.width > 0) topos.add(Math.round(r.top))
+        }
+      }
+      enderecoLinhas = topos.size
+    }
     emitir({
+      apoioUltimaLinhaDireita,
+      apoioAlinhamento: getComputedStyle(apoioEl).textAlign,
+      painelPaddingEsquerda: parseFloat(estiloDoPainel.paddingLeft),
+      painelPaddingDireita: parseFloat(estiloDoPainel.paddingRight),
+      figuraTemRetrato: um('main .pt-figura').classList.contains('pt-figura-retrato'),
+      email: talvezCaixa('main .pt-email'),
+      emailBotao: talvezCaixa('main .pt-email a'),
+      emailEndereco: talvezCaixa('main .pt-email address'),
+      enderecoLinhas,
       blocos,
       innerWidth: window.innerWidth,
       innerHeight: window.innerHeight,
@@ -341,12 +407,17 @@ function consultaPelaLargura(largura: number) {
   }
 }
 
-function medirPagina(caminho: string, largura: number, altura: number, foto = false): Medida {
+function medirPagina(caminho: string, largura: number, altura: number, foto = false, trocar?: [string, string]): Medida {
   vi.stubGlobal('matchMedia', consultaPelaLargura(largura))
   let corpo: string
   try {
     renderizarRota(caminho)
     corpo = document.body.innerHTML
+    // VIS-4-r4-I-04: o texto trocado no corpo serializado (o endereço de e-mail mais longo que o real).
+    if (trocar) {
+      expect(corpo, `o texto "${trocar[0]}" existe no corpo de ${caminho}`).toContain(trocar[0])
+      corpo = corpo.replaceAll(trocar[0], trocar[1])
+    }
   } finally {
     vi.unstubAllGlobals()
   }
@@ -430,6 +501,21 @@ function linhasForaDaColuna(h1: H1Medido, tolerancia = 1): LinhaDoH1[] {
   )
 }
 
+const CHAVE_DA_PAGINA = {
+  '/regras-da-comunidade': 'regras',
+  '/privacidade': 'privacidade',
+  '/termos': 'termos',
+  '/exclusao-de-conta': 'exclusao',
+  '/contato': 'contato',
+  '/sobre': 'sobre',
+} as const
+
+/** VIS-4-r4: o desenho da página é de retrato (mais alto que largo)? Vem do desenho, não de uma lista de páginas. */
+function ehRetrato(caminho: (typeof PAGINAS)[number]): boolean {
+  const { largura, altura } = DIMENSAO_ILUSTRACAO[PAGINAS_DE_TEXTO[CHAVE_DA_PAGINA[caminho]].ilustracao]
+  return largura < altura
+}
+
 const descreve = `a abertura das seis páginas de texto no Chrome${motivoDoPulo ? ` (pulado: ${motivoDoPulo})` : ''}`
 
 describe(descreve, () => {
@@ -499,38 +585,162 @@ describe(descreve, () => {
     expect(dentro).toEqual([])
   })
 
+  // VIS-4-r4-I-01 (conjunto): a regra "retrato" vem do desenho e há ao menos uma página de retrato e uma de paisagem.
+  it('VIS-4-r4-I-01 o conjunto de páginas de desenho em retrato não é vazio, e há páginas de paisagem', () => {
+    const retratos = PAGINAS.filter((caminho) => ehRetrato(caminho))
+    expect(retratos.length, 'páginas com desenho em retrato').toBeGreaterThan(0)
+    expect(retratos.length, 'páginas com desenho em paisagem').toBeLessThan(PAGINAS.length)
+  })
+
+  // VIS-4-r4-I-04: o cartão de e-mail de /contato fica numa linha só de 1280 em diante, mesmo com um endereço mais longo.
+  const ENDERECO_LONGO = 'contato@appmaternidade.example'
+  const afirmarCartaoEmUmaLinha = (rotulo: string, m: Medida): string[] => {
+    const problemas: string[] = []
+    if (!m.email || !m.emailBotao || !m.emailEndereco || m.enderecoLinhas === null) {
+      return [`${rotulo}: o cartão de e-mail, o botão ou o endereço não foi medido`]
+    }
+    const { email, emailBotao, emailEndereco } = m
+    const sobreposto = emailBotao.y < emailEndereco.bottom && emailEndereco.y < emailBotao.bottom
+    if (!sobreposto) {
+      problemas.push(
+        `${rotulo}: o botão (${emailBotao.y.toFixed(1)}-${emailBotao.bottom.toFixed(1)}) e o endereço (${emailEndereco.y.toFixed(1)}-${emailEndereco.bottom.toFixed(1)}) não se sobrepõem na vertical: o cartão quebrou em duas linhas`,
+      )
+    }
+    if (emailBotao.x < emailEndereco.right) {
+      problemas.push(`${rotulo}: o botão começa em ${emailBotao.x.toFixed(1)}, antes do fim do endereço (${emailEndereco.right.toFixed(1)})`)
+    }
+    if (m.enderecoLinhas !== 1) problemas.push(`${rotulo}: o endereço tem ${m.enderecoLinhas} linhas (esperado 1)`)
+    if (email.right > m.cabeca.right + 0.5) {
+      problemas.push(`${rotulo}: o cartão termina em ${email.right.toFixed(1)}, além da coluna do texto (${m.cabeca.right.toFixed(1)})`)
+    }
+    if (m.cabeca.width > 640) problemas.push(`${rotulo}: a coluna do texto tem ${m.cabeca.width.toFixed(1)} px (máximo 640)`)
+    const fora = linhasForaDaColuna(m.h1)
+    if (fora.length > 0) problemas.push(`${rotulo}: linha(s) do h1 fora da coluna: ${fora.map((l) => `"${l.texto}"`).join('; ')}`)
+    if (m.scrollWidth > m.innerWidth) problemas.push(`${rotulo}: rolagem horizontal (${m.scrollWidth} > ${m.innerWidth})`)
+    return problemas
+  }
+
+  roda(
+    'VIS-4-r4-I-04 /contato a 1280 e a 1440: o cartão de e-mail é uma linha só, com o endereço de hoje e com um mais longo',
+    () => {
+      const problemas: string[] = []
+      for (const largura of [1280, 1440]) {
+        problemas.push(...afirmarCartaoEmUmaLinha(`/contato a ${largura}`, medirPagina('/contato', largura, 900)))
+        problemas.push(
+          ...afirmarCartaoEmUmaLinha(
+            `/contato a ${largura} com ${ENDERECO_LONGO}`,
+            medirPagina('/contato', largura, 900, false, [EMAIL_CONTATO, ENDERECO_LONGO]),
+          ),
+        )
+      }
+      expect(problemas).toEqual([])
+    },
+    TEMPO_DO_CHROME,
+  )
+
+  roda(
+    'VIS-4-r4-I-04 /contato a 1100: sem rolagem horizontal e o cartão de e-mail dentro da janela (pode quebrar)',
+    () => {
+      const problemas: string[] = []
+      for (const trocar of [undefined, [EMAIL_CONTATO, ENDERECO_LONGO] as [string, string]]) {
+        const rotulo = trocar ? `/contato a 1100 com ${ENDERECO_LONGO}` : '/contato a 1100'
+        const m = medirPagina('/contato', 1100, 900, false, trocar)
+        if (m.scrollWidth > m.innerWidth) problemas.push(`${rotulo}: rolagem horizontal (${m.scrollWidth} > ${m.innerWidth})`)
+        if (!m.email) problemas.push(`${rotulo}: o cartão de e-mail não foi medido`)
+        else if (m.email.x < 0 || m.email.right > m.innerWidth) {
+          problemas.push(`${rotulo}: o cartão (${m.email.x.toFixed(1)} a ${m.email.right.toFixed(1)}) sai da janela de ${m.innerWidth} px`)
+        }
+      }
+      expect(problemas).toEqual([])
+    },
+    TEMPO_DO_CHROME,
+  )
+
   for (const caminho of PAGINAS) {
-    // B-1: a figura (painel de mel + frase de apoio) é uma coluna só: mesma borda esquerda e mesma largura, a frase
-    // a no máximo 16 px do painel, e o painel ocupa pelo menos 60% da coluna (nenhuma ilha estreita no meio).
+    // VIS-4-r4-I-01: nas páginas de desenho em retrato, de 1100 em diante, o painel de mel abraça o desenho, fica rente
+    // à borda final da coluna da figura e a frase de apoio acaba na borda final do painel. As três larguras são medidas
+    // antes de afirmar, para a mensagem nomear todas as que falham. Nas de paisagem só a classe `pt-figura-retrato` ausente.
     roda(
-      `${caminho} a 1440: o painel, a frase de apoio e a coluna da figura têm a mesma borda e a mesma largura; o painel enche a coluna`,
+      `VIS-4-r4-I-01 ${caminho} a 1100, 1280 e 1440: ${ehRetrato(caminho) ? 'o painel abraça o desenho e a frase acaba na borda do painel' : 'a figura de paisagem não leva a classe pt-figura-retrato'}`,
       () => {
-        const m = medirPagina(caminho, 1440, 900, true)
-        expect(m.painel.x, 'a borda esquerda do painel e a da coluna da figura').toBe(m.figura.x)
-        expect(m.apoio.x, 'a borda esquerda da frase de apoio e a do painel').toBe(m.painel.x)
-        expect(m.painel.width, 'a largura do painel e a da coluna da figura').toBe(m.figura.width)
-        expect(m.apoio.width, 'a largura da frase de apoio e a do painel').toBe(m.painel.width)
-        expect(m.painel.width / m.figura.width).toBeGreaterThanOrEqual(0.6)
-        const vao = m.apoio.y - m.painel.bottom
-        expect(vao, `a frase de apoio fica ${vao} px abaixo do painel`).toBeGreaterThanOrEqual(0)
-        expect(vao).toBeLessThanOrEqual(16)
-        // O desenho fica dentro do painel.
-        expect(m.desenho.x).toBeGreaterThanOrEqual(m.painel.x)
-        expect(m.desenho.right).toBeLessThanOrEqual(m.painel.right)
-        expect(m.scrollWidth).toBeLessThanOrEqual(m.innerWidth)
+        const retrato = ehRetrato(caminho)
+        const problemas: string[] = []
+        for (const largura of [1100, 1280, 1440]) {
+          const rotulo = `${caminho} a ${largura}`
+          const m = medirPagina(caminho, largura, 900)
+          if (m.figuraTemRetrato !== retrato) {
+            problemas.push(`${rotulo}: a classe pt-figura-retrato ${m.figuraTemRetrato ? 'está' : 'não está'} na figura (esperado: ${retrato ? 'presente' : 'ausente'})`)
+          }
+          if (!retrato) continue
+          const esperada = m.desenho.width + m.painelPaddingEsquerda + m.painelPaddingDireita
+          if (Math.abs(m.painel.width - esperada) > 1) {
+            problemas.push(`${rotulo}: o painel tem ${m.painel.width.toFixed(1)} px; o desenho (${m.desenho.width.toFixed(1)}) mais o padding (${m.painelPaddingEsquerda} + ${m.painelPaddingDireita}) dá ${esperada.toFixed(1)}`)
+          }
+          if (Math.abs(m.painel.right - m.figura.right) > 0.5) {
+            problemas.push(`${rotulo}: o painel acaba em ${m.painel.right.toFixed(1)} e a coluna da figura em ${m.figura.right.toFixed(1)}`)
+          }
+          if (m.apoioUltimaLinhaDireita === null || Math.abs(m.apoioUltimaLinhaDireita - m.painel.right) > 1) {
+            problemas.push(`${rotulo}: a última linha da frase de apoio acaba em ${m.apoioUltimaLinhaDireita?.toFixed(1) ?? 'nada'} e o painel em ${m.painel.right.toFixed(1)}`)
+          }
+          if (m.apoioAlinhamento !== 'end') problemas.push(`${rotulo}: o text-align da frase de apoio é "${m.apoioAlinhamento}" (esperado: end)`)
+          const vao = m.apoio.y - m.painel.bottom
+          if (vao < 0 || vao > 16) problemas.push(`${rotulo}: a frase de apoio fica ${vao.toFixed(1)} px abaixo do painel (de 0 a 16)`)
+          if (m.desenho.x < m.painel.x || m.desenho.right > m.painel.right) {
+            problemas.push(`${rotulo}: o desenho (${m.desenho.x.toFixed(1)} a ${m.desenho.right.toFixed(1)}) sai do painel (${m.painel.x.toFixed(1)} a ${m.painel.right.toFixed(1)})`)
+          }
+          if (m.scrollWidth > m.innerWidth) problemas.push(`${rotulo}: rolagem horizontal (${m.scrollWidth} > ${m.innerWidth})`)
+        }
+        expect(problemas).toEqual([])
       },
       TEMPO_DO_CHROME,
     )
 
+    // VIS-4-r4-I-03: no celular o desenho de retrato tem 200 px de altura e o de paisagem 136 px; o painel não passa de 40% da tela.
     roda(
-      `${caminho} a 1440: o maior vão vazio da abertura não passa de 25% da área dela`,
+      `VIS-4-r4-I-03 ${caminho} a 390: o desenho tem ${ehRetrato(caminho) ? 200 : 136} px de altura e o painel não passa de 40% da altura da tela`,
       () => {
-        const m = medirPagina(caminho, 1440, 900)
-        const vazio = fracaoVazia(m)
-        expect(vazio, `o maior vão vazio da abertura: ${vazio.toFixed(3)} da área`).toBeLessThanOrEqual(0.25)
+        const m = medirPagina(caminho, 390, 844)
+        const esperada = ehRetrato(caminho) ? 200 : 136
+        expect(Math.abs(m.desenho.height - esperada), `${caminho} a 390: o desenho tem ${m.desenho.height.toFixed(1)} px de altura (esperado ${esperada})`).toBeLessThanOrEqual(0.5)
+        expect(m.painel.height, `${caminho} a 390: o painel tem ${m.painel.height.toFixed(1)} px (máximo ${0.4 * 844})`).toBeLessThanOrEqual(0.4 * 844)
       },
       TEMPO_DO_CHROME,
     )
+
+    // B-1: a figura (painel de mel + frase de apoio) é uma coluna só: mesma borda esquerda e mesma largura, a frase
+    // a no máximo 16 px do painel, e o painel ocupa pelo menos 60% da coluna (nenhuma ilha estreita no meio).
+    // VIS-4-r4: só nas páginas de desenho paisagem; nas de retrato o painel abraça o desenho (VIS-4-r4-I-01).
+    if (!ehRetrato(caminho)) {
+      roda(
+        `${caminho} a 1440: o painel, a frase de apoio e a coluna da figura têm a mesma borda e a mesma largura; o painel enche a coluna`,
+        () => {
+          const m = medirPagina(caminho, 1440, 900, true)
+          expect(m.painel.x, 'a borda esquerda do painel e a da coluna da figura').toBe(m.figura.x)
+          expect(m.apoio.x, 'a borda esquerda da frase de apoio e a do painel').toBe(m.painel.x)
+          expect(m.painel.width, 'a largura do painel e a da coluna da figura').toBe(m.figura.width)
+          expect(m.apoio.width, 'a largura da frase de apoio e a do painel').toBe(m.painel.width)
+          expect(m.painel.width / m.figura.width).toBeGreaterThanOrEqual(0.6)
+          const vao = m.apoio.y - m.painel.bottom
+          expect(vao, `a frase de apoio fica ${vao} px abaixo do painel`).toBeGreaterThanOrEqual(0)
+          expect(vao).toBeLessThanOrEqual(16)
+          // O desenho fica dentro do painel.
+          expect(m.desenho.x).toBeGreaterThanOrEqual(m.painel.x)
+          expect(m.desenho.right).toBeLessThanOrEqual(m.painel.right)
+          expect(m.scrollWidth).toBeLessThanOrEqual(m.innerWidth)
+        },
+        TEMPO_DO_CHROME,
+      )
+
+      roda(
+        `${caminho} a 1440: o maior vão vazio da abertura não passa de 25% da área dela`,
+        () => {
+          const m = medirPagina(caminho, 1440, 900)
+          const vazio = fracaoVazia(m)
+          expect(vazio, `o maior vão vazio da abertura: ${vazio.toFixed(3)} da área`).toBeLessThanOrEqual(0.25)
+        },
+        TEMPO_DO_CHROME,
+      )
+    }
 
     // O texto de leitura: menos de 80 letras por linha; parágrafo com `pretty` e título com `balance`.
     roda(
