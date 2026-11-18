@@ -176,6 +176,33 @@ describe('RF14:RF-05 o que é um aviso', () => {
     expect((await estado(avisos)).avisos.map((a) => a.id)).toEqual([idDaNota(3)])
   })
 
+  it('(c2) RF-05 restored note: a nota restaurada da lixeira volta a ser aviso', async () => {
+    const { conta, rotina } = montar({ notas: [nota(1), nota(2)] })
+    let naLixeira = true
+    const rotinaIsolada: typeof rotina = {
+      ...rotina,
+      notas: async (...args: Parameters<typeof rotina.notas>) => {
+        const lido = await rotina.notas(...args)
+        if (!lido.ok) return lido
+        return {
+          ...lido,
+          valor: {
+            ...lido.valor,
+            itens: lido.valor.itens.map((n: Nota) =>
+              n.id === idDaNota(1) && naLixeira ? { ...n, excluidaEm: iso(AGORA - SEGUNDO), excluidaPor: PESSOAS.juliana.id } : n,
+            ),
+          },
+        }
+      },
+    }
+    const avisos: DadosAvisos = criarDadosAvisosMemoria(conta, rotinaIsolada, { agora: () => AGORA })
+    expect(await idsLigados(avisos)).toEqual([idDaNota(2)])
+    naLixeira = false
+    expect((await estado(avisos)).avisos.map((a) => a.id)).toEqual([idDaNota(1), idDaNota(2)])
+    naLixeira = true
+    expect((await estado(avisos)).avisos.map((a) => a.id)).toEqual([idDaNota(2)])
+  })
+
   it('(d) a janela de 168 h: dentro por 1 s entra, no limite exato sai, agora entra, futuro não', async () => {
     const { avisos } = montar({
       notas: [
@@ -329,14 +356,6 @@ describe('RF14:RF-10 o visto até vale o maior entre o guardado e o enviado, nun
     expect(await guardado(conta)).toBe(emJson(AGORA - 10 * SEGUNDO))
   })
 
-  it('controle negativo: esperar o valor mais velho guardado depois do mais novo falha', async () => {
-    const { avisos, conta } = montar()
-    await avisos.marcarVistos(iso(AGORA - 10 * SEGUNDO))
-    await avisos.marcarVistos(iso(AGORA - 120 * SEGUNDO))
-    const valor = await guardado(conta)
-    expect(() => expect(valor).toBe(emJson(AGORA - 120 * SEGUNDO))).toThrow()
-  })
-
   it('um valor do futuro é guardado como agora, sem erro', async () => {
     const { avisos, conta } = montar()
     expect(await avisos.marcarVistos(iso(AGORA + 5 * HORA))).toEqual({ ok: true, valor: null })
@@ -374,12 +393,6 @@ describe('RF14:RF-14 só a conta que chama lê e muda os seus dados', () => {
     }
   })
 
-  it('controle negativo: esperar sucesso sem sessão falha', async () => {
-    const { avisos } = montar({ sessao: null })
-    const lido = await avisos.lerEstado()
-    expect(() => expect(lido.ok).toBe(true)).toThrow()
-  })
-
   it('a conta de outra pessoa não é alcançada: Bruno marca o visto dele e Juliana continua sem', async () => {
     const { avisos, conta } = montar()
     conta.sessaoParaTeste(PESSOAS.bruno.email)
@@ -415,12 +428,6 @@ describe('RF14:RF-15 a exportação ganha a chave avisos, nos dois modos', () =>
     await avisos.marcarVistos(iso(AGORA - 3 * SEGUNDO))
     expect((await exportado(conta)).avisos).toEqual({ ligados: true, vistos_ate: emJson(AGORA - 3 * SEGUNDO) })
   })
-
-  it('controle negativo: o conjunto de chaves esperado sem avisos falha', async () => {
-    const { conta } = montar()
-    const chaves = Object.keys(await exportado(conta))
-    expect(() => expect(chaves).toEqual(CHAVES_ANTES)).toThrow()
-  })
 })
 
 describe('RF14:RF-16 excluir a conta não deixa preferência nem visto até', () => {
@@ -433,16 +440,6 @@ describe('RF14:RF-16 excluir a conta não deixa preferência nem visto até', ()
     expect((await conta.criarMinhaConta('Bruno', 'America/Sao_Paulo')).ok).toBe(true)
     expect(await estado(avisos)).toEqual({ ligados: false, avisos: [], maisDe50: false })
     expect((await exportado(conta)).avisos).toEqual({ ligados: false, vistos_ate: null })
-  })
-
-  it('controle negativo: esperar a preferência de antes depois da exclusão falha', async () => {
-    const { avisos, conta } = montar({ sessao: 'bruno' })
-    await avisos.definirLigados(true)
-    await conta.excluirConta()
-    await conta.criarUsuario(PESSOAS.bruno.email, 'uma-senha-forte-1', 'Bruno', '/app/comecar')
-    await conta.criarMinhaConta('Bruno', 'America/Sao_Paulo')
-    const lido = await estado(avisos)
-    expect(() => expect(lido.ligados).toBe(true)).toThrow()
   })
 })
 

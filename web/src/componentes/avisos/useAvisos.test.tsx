@@ -351,17 +351,6 @@ describe('RF14:RF-07 regra 3: o que se grava vence a leitura mais velha', () => 
     })
   }
 
-  // Controle negativo: um gancho que aplicasse a leitura sobreposta mostraria a leitura, e o que cada caso
-  // espera é outra coisa; então a conferência de "a leitura sobreposta foi mostrada" tem de lançar.
-  it('controle negativo: a conferência de que a leitura sobreposta foi aplicada falha nos casos acima', async () => {
-    const m = await montar()
-    await m.responder(m.leituras[0], ok(estado(true, 2)))
-    await m.ir('/app/avisos')
-    await act(async () => void uso.marcarVistos('2026-11-15T10:00:03.000000Z'))
-    await m.responder(m.leituras[1], ok(estado(true, 5, true)))
-    expect(() => expect(uso.mostrado).toEqual(estado(true, 5, true))).toThrow()
-  })
-
   it('uma gravação que sobrepõe uma leitura com falha: a leitura falha em silêncio, sem erro', async () => {
     const m = await montar()
     await m.responder(m.leituras[0], ok(estado(true, 2)))
@@ -502,18 +491,6 @@ describe('RF14:RF-18 a troca de conta', () => {
     expect(uso.fase).toBe('lendo')
     await m.responder(m.leituras[2], ok(estado(false, 0)))
     expect(uso.mostrado).toEqual(estado(false, 0))
-  })
-
-  it('controle negativo: a conferência de que o resultado da conta anterior foi mostrado falha', async () => {
-    const m = await montar()
-    await pessoaDaSessao(m)
-    await act(async () => {
-      await m.conta.entrar(PESSOAS.bruno.email, SENHA_DEMONSTRACAO)
-    })
-    await assentar()
-    // A leitura 0 é a da primeira conta, ainda em andamento quando a segunda entrou.
-    await m.responder(m.leituras[0], ok(estado(true, 7)))
-    expect(() => expect(uso.mostrado).toEqual(estado(true, 7))).toThrow()
   })
 
   it('uma gravação da conta anterior que volta depois da troca não mexe no estado da nova', async () => {
