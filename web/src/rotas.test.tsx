@@ -73,7 +73,7 @@ describe('rotas', () => {
     await aguardarCarga()
     expect(titulo.textContent).toBe('Tummy time de Heloísa')
     expect(screen.getByText('Atividade sugerida: Espelho no chão')).toBeTruthy()
-    expect(screen.getByText(/^Iniciado às \d{2}:\d{2} por Juliana$/)).toBeTruthy()
+    expect(screen.getByText(/^Início às \d{2}:\d{2}, por Juliana$/)).toBeTruthy()
   })
 
   it('a Sessão sem sessão e sem tipo mostra o estado vazio', async () => {
