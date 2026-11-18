@@ -144,7 +144,7 @@ describe('R38-20 e R38-21: os totais', () => {
     expect(linhasDoResumo(totais).map((linha) => `${linha.rotulo}: ${linha.valor}`)).toEqual([
       'Mamadas: 1',
       'Mamadeiras: 2, somando 90 ml',
-      'Fraldas: 3: 1 xixi, 1 cocô, 1 ambos',
+      'Fraldas: 3: 1 de xixi, 1 de cocô, 1 com xixi e cocô',
       'Alimentação sólida: 1',
       'Observações: 1',
     ])

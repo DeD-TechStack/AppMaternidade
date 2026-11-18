@@ -617,17 +617,17 @@ describe('DES-13 14: o histórico de 7 dias', () => {
     relogioEm()
     await abrir(mundo({}, sessao({ inicio: em(-3, 23, 0), fim: em(-1, 1, 0) })))
     await clicar(within(bloco()).getByRole('button', { name: '09/11' }))
-    expect(within(bloco()).getByText('23:00 – 01:00 · 26 h 0 min · por Juliana · termina em 11/11')).toBeTruthy()
-    expect(within(bloco()).getByText('09/11: 1 sessão, 1 h 0 min no total')).toBeTruthy()
+    expect(within(bloco()).getByText('23:00 – 01:00 · 26 h · por Juliana · termina em 11/11')).toBeTruthy()
+    expect(within(bloco()).getByText('09/11: 1 sessão, 1 h no total')).toBeTruthy()
     await clicar(within(bloco()).getByRole('button', { name: 'Ontem' }))
-    expect(within(bloco()).getByText('Ontem: 1 h 0 min no total, de sessão que começou antes deste dia.')).toBeTruthy()
+    expect(within(bloco()).getByText('Ontem: 1 h no total, de sessão que começou antes deste dia.')).toBeTruthy()
   })
 
   it('iniciada em D-8 e encerrada em D-6: entra só no total de D-6, sem linha', async () => {
     relogioEm()
     await abrir(mundo({}, sessao({ inicio: em(-8, 10, 0), fim: em(-6, 8, 0) })))
     await clicar(within(bloco()).getByRole('button', { name: '06/11' }))
-    expect(within(bloco()).getByText('06/11: 8 h 0 min no total, de sessão que começou antes deste dia.')).toBeTruthy()
+    expect(within(bloco()).getByText('06/11: 8 h no total, de sessão que começou antes deste dia.')).toBeTruthy()
     expect(bloco().querySelector('[data-lista-do-dia]')).toBeNull()
   })
 
@@ -639,7 +639,7 @@ describe('DES-13 14: o histórico de 7 dias', () => {
     expect(talvezBotao(/^Iniciar tummy time/)).toBeNull()
   })
 
-  it('autor nulo dá "por conta removida"; autor fora dos membros dá "por outra conta"', async () => {
+  it('autor nulo dá "por pessoa removida"; autor fora dos membros dá "por outra conta"', async () => {
     relogioEm()
     await abrir(
       mundo(
@@ -648,7 +648,7 @@ describe('DES-13 14: o histórico de 7 dias', () => {
         sessao({ inicio: em(0, 10, 0), fim: em(0, 10, 5), autor: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc' }),
       ),
     )
-    expect(within(bloco()).getByText('09:00 – 09:05 · 5 min · por conta removida')).toBeTruthy()
+    expect(within(bloco()).getByText('09:00 – 09:05 · 5 min · por pessoa removida')).toBeTruthy()
     expect(within(bloco()).getByText('10:00 – 10:05 · 5 min · por outra conta')).toBeTruthy()
   })
 
@@ -772,7 +772,7 @@ describe('DES-13 15: papéis e erros', () => {
   it('bebê arquivado: T-40 uma vez e sem controles de escrita', async () => {
     relogioEm()
     await abrir(mundo({ bebeArquivado: true }, sessao({ inicio: em(-1, 15, 0), fim: em(-1, 15, 8) })))
-    expect(screen.getAllByText('Heloísa está arquivado. Os registros continuam visíveis, mas não dá para registrar.')).toHaveLength(1)
+    expect(screen.getAllByText('O cadastro de Heloísa está arquivado. Os registros continuam visíveis, mas não dá para registrar.')).toHaveLength(1)
     for (const nome of ESCRITA) expect(talvezBotao(nome), String(nome)).toBeNull()
     expect(within(bloco()).getByRole('button', { name: 'Ontem' })).toBeTruthy()
   })
@@ -784,7 +784,7 @@ describe('DES-13 15: papéis e erros', () => {
     await m.conta.arquivarBebe(ID_BEBE, true)
     await clicar(botao('Iniciar tummy time de Heloísa'))
     expect(within(bloco()).getByRole('alert').textContent).toContain(
-      'Heloísa está arquivado. Os registros continuam visíveis, mas não dá para registrar.',
+      'O cadastro de Heloísa está arquivado. Os registros continuam visíveis, mas não dá para registrar.',
     )
     for (const nome of ESCRITA) expect(talvezBotao(nome), String(nome)).toBeNull()
     expect(await tummyGravado(m)).toHaveLength(0)

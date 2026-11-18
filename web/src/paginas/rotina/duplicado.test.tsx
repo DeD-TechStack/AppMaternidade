@@ -47,14 +47,14 @@ describe('iniciar uma sessão quando já há um registro parecido de outra pesso
     const mundo = await iniciarMamada(comSessaoConcluida('mamada', PESSOAS.bruno.id, 5 * MIN))
 
     expect(mundo.roteador.state.location.pathname).toBe('/app/sessao')
-    expect(status().querySelector('p')!.textContent).toBe('Bruno registrou mamada às 09:55.')
+    expect(status().querySelector('p')!.textContent).toBe('Bruno já fez um registro de mamada às 09:55.')
     expect(within(status()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Manter os dois', 'Excluir este', 'Fechar'])
     expect(within(status()).queryByRole('button', { name: 'Desfazer' })).toBeNull()
   })
 
   it('exatamente 10 minutos conta como parecido; 10 minutos e 1 segundo, não', async () => {
     await iniciarMamada(comSessaoConcluida('mamada', PESSOAS.bruno.id, 10 * MIN))
-    expect(status().querySelector('p')!.textContent).toBe('Bruno registrou mamada às 09:50.')
+    expect(status().querySelector('p')!.textContent).toBe('Bruno já fez um registro de mamada às 09:50.')
   })
 
   it('"Manter os dois" fecha a confirmação e as duas sessões ficam', async () => {

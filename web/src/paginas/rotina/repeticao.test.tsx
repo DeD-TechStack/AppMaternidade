@@ -10,7 +10,7 @@ import { ID_BEBE } from '../../teste/rotina.fixture.ts'
 // mas a mudança foi aplicada). O relógio falso anda entre as tentativas: um momento novo seria visto.
 
 const INSTANTE = new Date('2026-11-05T10:00:00')
-const FRASE_DE_REDE = 'Não deu para confirmar com o servidor. Tente de novo: se já tiver sido salvo, não duplica.'
+const FRASE_DE_REDE = 'Não deu para confirmar com o servidor. Tente de novo. Se já tiver sido salvo, nada fica repetido.'
 
 beforeEach(() => {
   vi.useFakeTimers()

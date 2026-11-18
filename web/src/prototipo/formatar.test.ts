@@ -34,8 +34,8 @@ describe('formatarDuracao', () => {
     expect(formatarDuracao(30_000)).toBe('0 min')
   })
 
-  it('com zero minutos acima de 1 hora escreve "2 h 0 min"', () => {
-    expect(formatarDuracao(120 * MIN)).toBe('2 h 0 min')
+  it('com zero minutos acima de 1 hora escreve "2 h"', () => {
+    expect(formatarDuracao(120 * MIN)).toBe('2 h')
   })
 
   it('não passa de zero para tempos negativos', () => {
@@ -67,7 +67,7 @@ describe('formatarUltimo', () => {
   const tabela: Array<[string, string, string, string]> = [
     ['há 2 h 10 min', 'Mamada', '2 h 10', `Mamada${LEGENDA_HA}`],
     ['há 50 min', 'Fralda', '50 min', `Fralda${LEGENDA_HA}`],
-    ['ontem 17:30', 'Tummy time', '17:30', 'Tummy time, ontem'],
+    ['ontem às 17:30', 'Tummy time', '17:30', 'Tummy time, ontem'],
     ['agora', 'Mamadeira', 'agora', 'Mamadeira'],
     ['há 1 h 05 min', 'Mamada', '1 h 05', `Mamada${LEGENDA_HA}`],
     ['há 3 h', 'Sono', '3 h', `Sono${LEGENDA_HA}`],
@@ -85,12 +85,12 @@ describe('formatarUltimo', () => {
 
   it('corta os espaços das pontas e os de dentro do que sobra depois do prefixo', () => {
     expect(formatarUltimo('  Fralda  ', '  há 50 min  ')).toEqual({ valor: '50 min', legenda: `Fralda${LEGENDA_HA}` })
-    expect(formatarUltimo('Tummy time', 'ontem   17:30')).toEqual({ valor: '17:30', legenda: 'Tummy time, ontem' })
+    expect(formatarUltimo('Tummy time', 'ontem às   17:30')).toEqual({ valor: '17:30', legenda: 'Tummy time, ontem' })
     expect(formatarUltimo('Mamada', '  agora ')).toEqual({ valor: 'agora', legenda: 'Mamada' })
   })
 
   it('falha fechado: "quando" vazio, só espaços ou só o prefixo dá o travessão', () => {
-    for (const quando of ['', '   ', 'há ', 'ontem ', '  há   ', ' ontem  ']) {
+    for (const quando of ['', '   ', 'há ', 'ontem às ', '  há   ', ' ontem às  ']) {
       expect(formatarUltimo('Fralda', quando).valor, JSON.stringify(quando)).toBe('—')
     }
     expect(formatarUltimo('Fralda', '')).toEqual({ valor: '—', legenda: 'Fralda' })
@@ -98,7 +98,7 @@ describe('formatarUltimo', () => {
 
   it('falha fechado: rótulo vazio ou só espaços dá o travessão na legenda, sem o complemento', () => {
     expect(formatarUltimo('', 'há 50 min')).toEqual({ valor: '50 min', legenda: '—' })
-    expect(formatarUltimo('   ', 'ontem 17:30')).toEqual({ valor: '17:30', legenda: '—' })
+    expect(formatarUltimo('   ', 'ontem às 17:30')).toEqual({ valor: '17:30', legenda: '—' })
     expect(formatarUltimo('', '')).toEqual({ valor: '—', legenda: '—' })
   })
 
