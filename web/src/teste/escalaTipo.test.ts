@@ -110,7 +110,7 @@ describe('TYPE-1: a escala de tipo (arquivos-fonte)', () => {
 
     const h1Com = /<h1\b[^>]*className="[^"]*(?<![\w-])cm-exibicao(?![\w-])/
     for (const arquivo of [
-      'src/componentes/inicio/HeroiInicio.tsx',
+      'src/componentes/inicio-casa/TituloCasa.tsx',
       'src/componentes/publicas-texto/PaginaDeLeitura.tsx',
       'src/paginas/NaoEncontrada.tsx',
     ]) {

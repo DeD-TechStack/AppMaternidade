@@ -8,6 +8,7 @@ Cada recurso de terceiros que vai no site tem uma linha aqui: pacote, versão ex
 |---|---|---|---|---|---|
 | Literata | `@fontsource-variable/literata` | 5.3.0 | SIL Open Font License 1.1 (`OFL-1.1`) | `web/licencas/fontsource-variable-literata.txt` | `9895ebc015226accf416b758ac1ca02a2fb4f83a89d316791ef697c3dc0852aa` |
 | Outfit | `@fontsource-variable/outfit` | 5.3.0 | SIL Open Font License 1.1 (`OFL-1.1`) | `web/licencas/fontsource-variable-outfit.txt` | `0e5fcef5d93bfcae273c11c00f0bb453d3b5491860e1ac8b658767b7577c938f` |
+| M PLUS Rounded 1c (variante B de exibição, temporária até a FG-2b; só os arquivos latin 700 e 800) | `@fontsource/m-plus-rounded-1c` | 5.3.0 | SIL Open Font License 1.1 (`OFL-1.1`) | `web/licencas/fontsource-m-plus-rounded-1c.txt` | `64a7bd79d7e69545e66d003153e7e4999910cbb15249a19ae2a49c472637c7e0` |
 
 A cópia da licença é o arquivo `LICENSE` do próprio pacote, sem alteração (mesmo sha256).
 

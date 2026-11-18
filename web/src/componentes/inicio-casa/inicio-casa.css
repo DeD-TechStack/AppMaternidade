@@ -1,0 +1,513 @@
+/* The Início (REP-HOME): the page-owned layout of the seven bands. Everything here reads the tokens (`var(--color-*)`,
+   the MEDIDAS roles `--espaco-junto|pilha|grupo|bloco|midia|secao`) or the measured geometry of RECUT.md, written once
+   as custom properties on `[data-casa]` below. No gradient, no shadow, no blur, no italic, no loop, no 3D; nothing in
+   this file animates (the lamp and the header pill transition only opacity, background-color and color).
+
+   Two compositions, one switch at 1024 px (the same width the page reads in JS):
+   - 1024 and more: the room of RECUT §2-§3, positioned from the seam (x 556.5 at 1440). The plate (M05, 900 wide) is
+     set so its own seam falls on the seam of the h1 (the first span's width plus 12 px). The stage (the first
+     framed screen) is band 2 itself: its walls, floors, frame and night sheet are the band's layers (moment 2).
+   - Below 1024: one column, the page is night from the h1's second line down (RECUT §4).
+
+   Hero text sizes are the DESIGN.md levels (`text-exibicao`, `text-abertura`, `text-titulo-1`, `text-corpo`). */
+@layer components {
+  [data-casa] {
+    /* The left text edge: the quadro's, or the gutter on narrow windows. */
+    --heroi-esq: max(var(--quadro-calha), (100% - var(--quadro-largura)) / 2);
+
+    /* The seam of the plate: the h1's first span (5.30625 em wide in display variant B, 424.5 px at 80 px) plus the
+       12 px (`junto`) that separate it from the seam. The ratio is the measured one of variant B; A and C follow the
+       face chosen at FG-2b (the meter's COSTURA rule reads the real gap). */
+    --heroi-span1-em: 5.30625;
+    --heroi-costura-x: calc(var(--heroi-esq) + var(--heroi-span1-em) * var(--texto-exibicao-tamanho) + var(--espaco-junto));
+
+    /* The measured positions of RECUT §2-§3 at 1440, measured from the hero's top (doc y 72) or the stage's top. */
+    --heroi-alto: 723px;
+    --heroi-titulo-topo: 32px;
+    --heroi-placa-topo: 152px;
+    --heroi-lede-topo: 384.8px;
+    --heroi-acoes-vao: 24px;
+    --heroi-leg-topo: 666.5px;
+    --heroi-medida: 388px;
+    --heroi-borda-noite: 36px;
+    --heroi-noite-esq: calc(100% - var(--heroi-borda-noite) - var(--heroi-medida));
+    --palco-topo: 24px;
+    --palco-alto: calc(100svh - var(--palco-topo));
+    --palco-chao: 108px;
+    --palco-m06-largura: 395.5px;
+    /* M06's top to its own floor line, so the plate stands on the stage's floor line at any stage height. */
+    --palco-m06-chao: 555.2px;
+    /* The text block of the night column ends 28 px above the floor line; the caption is 32 px above the stage's end. */
+    --palco-texto-fundo: 136px;
+    --palco-leg-fundo: 32px;
+    /* Room the frame needs on a window 812 to 895 tall (motion sheet §3.1): the header's 48 px that lie over the stage,
+       8.5 px of air, and the floor strip; its height is 2.2241 times its screen layer's width. */
+    --palco-quadro-livre: 188.5px;
+    --moldura-razao: 2.2241;
+    /* The hero's floor runs 65 px under the plate, to the foot of the hero. */
+    --heroi-chao-extra: 65px;
+  }
+
+  /* The framed screens: 320 px of screen layer at 1440 and 280 at 390 (RECUT §6). */
+  [data-casa] .cm-produto-moldura {
+    --produto-tela: clamp(280px, calc(280px + (100vw - 390px) * 40 / 1050), 320px);
+  }
+
+  /* The h1: one string, two inks. The first span is cacau on the day wall, the second papel on the night wall. */
+  [data-casa] .ic-titulo {
+    margin: 0;
+    font-weight: var(--peso-exibicao);
+    font-style: normal;
+  }
+
+  [data-casa] .ic-titulo [data-h1-dia] {
+    color: var(--color-cacau);
+  }
+
+  [data-casa] .ic-titulo [data-h1-noite] {
+    color: var(--color-papel);
+  }
+
+  [data-casa] .ic-lede {
+    max-width: var(--heroi-medida);
+    margin: 0;
+    color: var(--color-papel);
+    text-wrap: pretty;
+  }
+
+  [data-casa] .ic-acoes {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--espaco-pilha) var(--espaco-grupo);
+    margin-top: var(--espaco-grupo);
+  }
+
+  /* The link of the hero is papel on the night wall; the mel pill keeps its own colours. */
+  [data-casa] .ic-acoes .cm-botao-texto {
+    color: var(--color-papel);
+  }
+
+  /* Below 768 the plate is the 390 window (`<source>` of the picture): its seam is at 142.3 of 390, not at 0.5443 of the
+     whole plate. The custom property is set inline by CenaHeroi, so the window needs the important flag. */
+  @media (max-width: 767px) {
+    [data-casa] [data-cena-heroi][data-lado] {
+      --cena-costura: 0.365 !important;
+    }
+  }
+
+  /* ---- Below 1024: one column ---------------------------------------------------------------------------------- */
+  @media (max-width: 1023px) {
+    /* The hero is cacau from the day band down. Its text container dissolves so every piece is an item of one column. */
+    [data-casa] [data-cena-heroi][data-lado] {
+      display: flex;
+      flex-direction: column;
+      background-color: var(--color-cacau);
+      color: var(--color-papel);
+    }
+
+    [data-casa] [data-cena-heroi][data-lado] .cm-cena-texto {
+      display: contents;
+    }
+
+    /* Day band: 32 + 48 + 8 px (RECUT §4, y 56 to 144), full bleed; then the night starts with the second line. */
+    [data-casa] .ic-titulo {
+      display: flex;
+      flex-direction: column;
+      order: 1;
+    }
+
+    [data-casa] .ic-titulo [data-h1-dia] {
+      display: block;
+      padding: var(--espaco-midia) var(--quadro-calha) var(--espaco-junto);
+      background-color: var(--color-papel);
+    }
+
+    [data-casa] .ic-titulo [data-h1-noite] {
+      display: block;
+      padding: var(--espaco-junto) var(--quadro-calha) 0;
+    }
+
+    [data-casa] .ic-noite-heroi {
+      order: 2;
+      padding: var(--espaco-pilha) var(--quadro-calha) 0;
+    }
+
+    /* The plate window: full width. */
+    [data-casa] [data-cena-heroi][data-lado] .cm-cena-placa {
+      order: 3;
+      align-self: stretch;
+      width: 100%;
+      margin-top: var(--espaco-grupo);
+    }
+
+    [data-casa] .ic-leg1 {
+      order: 4;
+      padding: var(--espaco-junto) var(--quadro-calha) var(--espaco-pilha);
+    }
+
+    [data-casa] .ic-palco {
+      order: 5;
+      padding: var(--espaco-junto) var(--quadro-calha) var(--espaco-midia);
+    }
+
+    /* Band 2 is cacau all the way. */
+    [data-casa] [data-faixa][aria-labelledby='ic-noite'] [data-faixa-lado] {
+      left: 0;
+    }
+
+    [data-casa] [data-faixa][aria-labelledby='ic-noite'] {
+      padding-top: var(--espaco-midia);
+    }
+
+    [data-casa] .ic-noite-conteudo {
+      display: grid;
+      gap: 0;
+    }
+
+    [data-casa] .ic-noite-texto {
+      display: grid;
+      gap: var(--espaco-pilha);
+    }
+
+    [data-casa] .ic-m06 {
+      width: min(300px, 100%);
+      margin: calc(2 * var(--espaco-midia)) auto 0;
+    }
+
+    [data-casa] .ic-m06 img:not([data-luz]) {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    /* The caption of 17:30 lies on the night floor, a strip across the whole window. */
+    [data-casa] .ic-piso-noite {
+      margin-inline: calc(-1 * var(--quadro-calha));
+      padding: var(--espaco-junto) var(--quadro-calha);
+      background-color: var(--color-texto-2);
+    }
+
+    [data-casa] .ic-tela {
+      display: grid;
+      justify-items: center;
+      gap: var(--espaco-midia);
+    }
+
+    [data-casa] .ic-tela-texto,
+    [data-casa] .ic-so-texto {
+      display: grid;
+      justify-self: stretch;
+      gap: var(--espaco-pilha);
+    }
+
+    [data-casa] .ic-so {
+      display: grid;
+      gap: var(--espaco-midia);
+    }
+  }
+
+  /* ---- 1024 and more: the room of RECUT §2-§3 ------------------------------------------------------------------ */
+  @media (min-width: 1024px) {
+    /* The hero's own box is the room (doc y 72 to 795); the stage follows it in the flow and band 2 lies over the stage. */
+    [data-casa] [data-cena-heroi][data-lado] {
+      display: block;
+      padding-top: var(--heroi-alto);
+    }
+
+    [data-casa] [data-cena-heroi][data-lado] .cm-cena-texto {
+      display: contents;
+    }
+
+    /* "Ela mamou" ends 12 px (`junto`) left of the seam and "que horas?" starts 12 px right of it. */
+    [data-casa] .ic-titulo {
+      position: absolute;
+      top: var(--heroi-titulo-topo);
+      left: var(--heroi-esq);
+      z-index: 2;
+      display: flex;
+      gap: calc(2 * var(--espaco-junto));
+      white-space: nowrap;
+    }
+
+    /* The lede and the one filled action hang on the night wall, right of the lamp. */
+    [data-casa] .ic-noite-heroi {
+      position: absolute;
+      top: var(--heroi-lede-topo);
+      left: var(--heroi-noite-esq);
+      z-index: 2;
+      width: var(--heroi-medida);
+    }
+
+    [data-casa] .ic-acoes {
+      margin-top: var(--heroi-acoes-vao);
+    }
+
+    /* The plate: its seam on the page seam. The walls and floors run on to both edges of the window. */
+    [data-casa] [data-cena-heroi][data-lado] .cm-cena-placa {
+      position: absolute;
+      top: var(--heroi-placa-topo);
+      left: calc(var(--heroi-costura-x) - var(--cena-costura) * (var(--cena-largura-max) * min(100vw, 1440px) / 1440));
+      z-index: 1;
+    }
+
+    [data-casa] [data-camada='parede-esquerda'],
+    [data-casa] [data-camada='parede-direita'] {
+      top: calc(-1 * var(--heroi-placa-topo));
+    }
+
+    [data-casa] [data-camada='chao-esquerda'],
+    [data-casa] [data-camada='chao-direita'] {
+      bottom: calc(-1 * var(--heroi-chao-extra));
+    }
+
+    /* The caption of 16:00 on the day floor under the plate, left of the seam. */
+    [data-casa] .ic-leg1 {
+      position: absolute;
+      top: var(--heroi-leg-topo);
+      left: var(--heroi-esq);
+      z-index: 2;
+    }
+
+    /* Band 2 is the stage of moment 2 (REP-HOME motion sheet §3). Its quadro and tone wrappers dissolve, so the stage's
+       containing block is the band itself: the band is the track. At rest (reduced motion, a window under 812 tall, no
+       script) the stage is 100svh - 24 px tall and nothing moves. Where the pin is built (`data-troca-fixo`, set by the
+       page before the first paint) the track is the stage plus the pin distance D, which the scroll driver writes as
+       `--troca-d` from the catalogue (M16), and the stage sticks 24 px under the top of the window. */
+    [data-casa] [data-faixa][aria-labelledby='ic-noite'] {
+      padding-block: 0;
+    }
+
+    [data-casa] [data-faixa][aria-labelledby='ic-noite'] > .cm-faixa-quadro,
+    [data-casa] [data-faixa][aria-labelledby='ic-noite'] .cm-tom-da-faixa {
+      display: contents;
+    }
+
+    [data-casa] [data-faixa][aria-labelledby='ic-noite']:has([data-troca-fixo]) {
+      min-height: calc(var(--palco-alto) + var(--troca-d, 0px));
+    }
+
+    [data-casa] .ic-estagio {
+      position: relative;
+      width: 100%;
+      height: var(--palco-alto);
+      overflow-x: clip;
+    }
+
+    [data-casa] .ic-estagio[data-troca-fixo] {
+      position: sticky;
+      top: var(--palco-topo);
+    }
+
+    /* Layer order, bottom to top: the day wall (the band's own) and the day floor; the day frame; the night sheet; the
+       night column's content. Window 812 to 895 tall: the frames take the height they have (motion sheet §3.1). */
+    [data-casa] .ic-estagio .cm-produto-moldura {
+      --produto-tela: min(
+        clamp(280px, calc(280px + (100vw - 390px) * 40 / 1050), 320px),
+        calc((100svh - var(--palco-quadro-livre)) / var(--moldura-razao))
+      );
+
+      position: absolute;
+      z-index: 1;
+      bottom: var(--palco-chao);
+      left: calc(var(--heroi-costura-x) - var(--espaco-grupo) - var(--produto-tela) * 1.06);
+    }
+
+    /* A zero-size marker on the seam: the scroll driver reads its `offsetLeft`. */
+    [data-casa] .ic-medida {
+      position: absolute;
+      top: 0;
+      left: var(--heroi-costura-x);
+      width: 0;
+      height: 0;
+    }
+
+    [data-casa] .ic-piso-dia {
+      position: absolute;
+      inset-inline: 0;
+      bottom: 0;
+      z-index: 0;
+      height: var(--palco-chao);
+      background-color: var(--color-areia);
+    }
+
+    /* The night sheet. At rest the outer box sits at the seam with no transform and the inner box is pulled back by the
+       same distance, so the content is in the stage's coordinates and the twin of the frame is clipped out of sight.
+       With the pin both boxes span the stage and take opposite `translateX`; their first value (the seam) is the
+       rest state, so the first paint matches; the driver writes the rest inline. */
+    [data-casa] .ic-folha {
+      position: absolute;
+      inset-block: 0;
+      left: var(--heroi-costura-x);
+      right: 0;
+      z-index: 2;
+      overflow: clip;
+    }
+
+    [data-casa] .ic-folha-interior {
+      position: absolute;
+      inset-block: 0;
+      left: calc(-1 * var(--heroi-costura-x));
+      right: 0;
+    }
+
+    [data-casa] .ic-estagio[data-troca-fixo] .ic-folha {
+      left: 0;
+      transform: translateX(var(--heroi-costura-x));
+    }
+
+    [data-casa] .ic-estagio[data-troca-fixo] .ic-folha-interior {
+      left: 0;
+      transform: translateX(calc(-1 * var(--heroi-costura-x)));
+    }
+
+    /* `will-change` only on the sheet's two boxes, only while the stage is in the window. */
+    [data-casa] .ic-estagio[data-troca-visivel] .ic-folha,
+    [data-casa] .ic-estagio[data-troca-visivel] .ic-folha-interior {
+      will-change: transform;
+    }
+
+    [data-casa] .ic-folha-parede {
+      position: absolute;
+      inset: 0;
+      background-color: var(--color-cacau);
+    }
+
+    [data-casa] .ic-folha-piso {
+      position: absolute;
+      inset-inline: 0;
+      bottom: 0;
+      height: var(--palco-chao);
+      background-color: var(--color-texto-2);
+    }
+
+    /* The twin takes the day frame's box (same custom properties, same left and bottom): within 1 px of it. */
+    [data-casa] .ic-gemea [data-troca-gemea-tela] {
+      position: absolute;
+      top: var(--produto-borda);
+      left: var(--produto-borda);
+      width: var(--produto-tela);
+      height: calc(100% - 2 * var(--produto-borda));
+      border-radius: calc(var(--produto-tela) * 0.1166 - var(--produto-borda));
+      object-fit: cover;
+      object-position: top;
+    }
+
+    [data-casa] .ic-gemea [data-troca-gemea-arte] {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: auto;
+      pointer-events: none;
+    }
+
+    [data-casa] .ic-noite-conteudo {
+      display: contents;
+    }
+
+    [data-casa] .ic-noite-texto {
+      position: absolute;
+      bottom: var(--palco-texto-fundo);
+      left: var(--heroi-noite-esq);
+      z-index: 3;
+      display: grid;
+      gap: var(--espaco-pilha);
+      width: var(--heroi-medida);
+    }
+
+    [data-casa] .ic-m06 {
+      position: absolute;
+      top: calc(var(--palco-alto) - var(--palco-chao) - var(--palco-m06-chao));
+      left: calc(var(--heroi-costura-x) + var(--espaco-grupo));
+      z-index: 3;
+      width: var(--palco-m06-largura);
+      margin: 0;
+    }
+
+    [data-casa] .ic-m06 img:not([data-luz]) {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    /* The caption of the night floor. The swap node of moment 3 keeps one line of height, so nothing moves when the
+       text changes. */
+    [data-casa] .ic-piso-noite {
+      position: absolute;
+      bottom: var(--palco-leg-fundo);
+      left: var(--heroi-noite-esq);
+      z-index: 3;
+    }
+
+    [data-casa] .ic-piso-noite [data-troca-legenda] {
+      min-height: 1lh;
+    }
+
+    /* Band 3: the text on the left, the second frame at about x 860 (RECUT §8.3), 16 px (`pilha`) under the band's padding. */
+    [data-casa] .ic-tela {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: start;
+      column-gap: var(--espaco-midia);
+    }
+
+    [data-casa] .ic-tela .cm-produto-moldura {
+      margin: var(--espaco-pilha) calc(var(--espaco-secao) + var(--espaco-midia) * 0.6) 0 0;
+    }
+
+    [data-casa] .ic-tela-texto,
+    [data-casa] .ic-so-texto {
+      display: grid;
+      gap: var(--espaco-pilha);
+    }
+
+    /* Band 4: the answer on the left, the scene on the right. */
+    [data-casa] .ic-so {
+      display: grid;
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      align-items: center;
+      column-gap: var(--espaco-midia);
+    }
+  }
+
+  [data-casa] .ic-h2-exibicao {
+    font-weight: var(--peso-exibicao);
+  }
+
+  [data-casa] .ic-so-cena {
+    margin: 0;
+  }
+
+  [data-casa] .ic-so-cena img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* ---- The header pill (RECUT §5): quiet while the hero's pill is in view, filled at every other position -------- */
+  /* The shell has no hook for this: the page sets `data-cta-cabecalho` on its <main> and this rule reads it from the
+     root. Only background-color and color change, in 160 ms on the standard curve; the box does not change. At 1024
+     and more the first state is `quieta` (first paint, no script and reduced motion all show it). */
+  :root:has(main[data-cta-cabecalho]) header[data-cabecalho]:not([data-tom='noite']) a[data-cabecalho-pilula] {
+    transition-property: scale, background-color, color;
+    transition-duration: 120ms, 160ms, 160ms;
+    transition-timing-function: ease-out, var(--curva-padrao), var(--curva-padrao);
+  }
+
+  :root:has(main[data-cta-cabecalho='quieta']) header[data-cabecalho]:not([data-tom='noite']) a[data-cabecalho-pilula] {
+    border-color: var(--color-cacau);
+    background-color: transparent;
+    color: var(--color-cacau);
+  }
+
+  :root:has(main[data-cta-cabecalho='quieta']) header[data-cabecalho]:not([data-tom='noite']) a[data-cabecalho-pilula]:hover {
+    background-color: var(--color-cacau);
+    color: var(--color-papel);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :root:has(main[data-cta-cabecalho]) header[data-cabecalho] a[data-cabecalho-pilula] {
+      transition-duration: 0s;
+    }
+  }
+}

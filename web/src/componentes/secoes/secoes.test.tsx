@@ -440,6 +440,31 @@ describe('DS1-I-12 CenaHeroi: a placa de estúdio rente a uma borda, com paredes
   it('DS1-I-12 CenaHeroi na noite (parede cacau dos dois lados) rende sem erro', () => {
     expect(() => pintar(cena({ parede: { esquerda: 'cacau', direita: 'cacau' }, chao: { esquerda: 'chao-noite', direita: 'chao-noite' } }))).not.toThrow()
   })
+
+  it('REPH-I-10 CenaHeroi sobrePlaca: the content goes inside the plate box, after the picture, in an aria-hidden div', () => {
+    const { container } = pintar(cena({ sobrePlaca: <span data-teste-sobre="">luz</span> }))
+    const placa = container.querySelector<HTMLElement>('.cm-cena-placa')!
+    const sobre = placa.querySelector<HTMLElement>('[data-sobre-placa]')!
+    expect(sobre).not.toBeNull()
+    expect(sobre.getAttribute('aria-hidden')).toBe('true')
+    expect(sobre.querySelector('[data-teste-sobre]')).not.toBeNull()
+    expect(placa.querySelector('picture')!.compareDocumentPosition(sobre) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
+  })
+
+  it('REPH-I-04 CenaHeroi depoisDaPlaca: the content is the last child of the section, after the plate box in DOM order', () => {
+    const { container } = pintar(cena({ depoisDaPlaca: <p data-teste-depois="">legenda</p> }))
+    const secao = container.querySelector<HTMLElement>('[data-cena-heroi]')!
+    const placa = secao.querySelector<HTMLElement>('.cm-cena-placa')!
+    const depois = secao.querySelector<HTMLElement>('[data-teste-depois]')!
+    expect(depois).not.toBeNull()
+    expect(placa.compareDocumentPosition(depois) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
+    expect(secao.lastElementChild).toBe(depois)
+  })
+
+  it('REPH-I-10 CenaHeroi without sobrePlaca renders no [data-sobre-placa]', () => {
+    const { container } = pintar(cena())
+    expect(container.querySelector('[data-sobre-placa]')).toBeNull()
+  })
 })
 
 // ---------------------------------------------------------------------------------------------

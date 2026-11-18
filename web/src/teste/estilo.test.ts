@@ -95,7 +95,7 @@ describe('tokens (DESIGN.md 1 a 3)', () => {
 describe('tipo: duas famílias só (DESIGN.md 2 e 8)', () => {
   const GENERICAS = new Set(['serif', 'sans-serif', 'system-ui'])
 
-  it('toda pilha de fontes do CSS do produto é Literata ou Outfit, com genéricas só de reserva', () => {
+  it('toda pilha de fontes do CSS do produto é Literata, Outfit ou (só na variante B do h1) M PLUS Rounded 1c, com genéricas só de reserva', () => {
     const familias = new Set<string>()
     for (const arquivo of css) {
       for (const { propriedade, valor } of declaracoes(arquivo.limpo)) {
@@ -108,7 +108,8 @@ describe('tipo: duas famílias só (DESIGN.md 2 e 8)', () => {
       }
     }
     const nomeadas = [...familias].filter((f) => !GENERICAS.has(f))
-    expect(nomeadas.sort()).toEqual(['Literata Variable', 'Outfit Variable'])
+    // REP-HOME (REPH-I-17): o bloco da variante B de tokens.css nomeia M PLUS Rounded 1c; FG-2b apaga o que perder.
+    expect(nomeadas.sort()).toEqual(['Literata Variable', 'M PLUS Rounded 1c', 'Outfit Variable'])
   })
 
   it('nenhum monospace e nenhuma família fora do tema, nem no CSS nem nos componentes', () => {
