@@ -58,16 +58,22 @@
   }
 
   /* Tamanho e entrelinha de toda classe de tipo vêm do MESMO nível da tabela do DESIGN.md (H3:RF-03):
-     h1 = titulo-1, h2 = titulo-2, h3 = titulo-3, h4 = titulo-4. O herói do Início e a /sistema usam `exibicao`. */
+     h1 = titulo-1, h2 = titulo-1, h3 = titulo-3, h4 = titulo-4. O h1 de toda página de conteúdo (`cm-exibicao`)
+     e a /sistema usam `exibicao`; as telas de acesso e as logadas ficam no h1 de `titulo-1`. */
   .cm-h1 {
     font-size: var(--texto-titulo-1-tamanho);
     line-height: var(--texto-titulo-1-entrelinha);
     letter-spacing: -0.02em;
   }
 
+  .cm-h1.cm-exibicao {
+    font-size: var(--texto-exibicao-tamanho);
+    line-height: var(--texto-exibicao-entrelinha);
+  }
+
   .cm-h2 {
-    font-size: var(--texto-titulo-2-tamanho);
-    line-height: var(--texto-titulo-2-entrelinha);
+    font-size: var(--texto-titulo-1-tamanho);
+    line-height: var(--texto-titulo-1-entrelinha);
     letter-spacing: -0.015em;
   }
 
@@ -82,9 +88,13 @@
     line-height: var(--texto-titulo-4-entrelinha);
   }
 
-  /* A ênfase do título é a segunda linha inteira em itálico, nunca uma palavra solta. */
+  /* Uma ênfase em itálico por página, no máximo: a segunda linha inteira do h1 (nunca uma palavra solta). Nos
+     demais títulos a segunda linha é um bloco em prumo. */
   .cm-segunda-linha {
     display: block;
+  }
+
+  h1 .cm-segunda-linha {
     font-style: italic;
   }
 

@@ -166,8 +166,8 @@ export function PaginaConta() {
       return nomeRef.current?.focus()
     }
     setErroNome(null)
-    setStatus(null)
     void perfil.enviar({
+      aoComecar: () => setStatus(null),
       escrever: () => dados.atualizarMinhaConta(nomeLimpo, fuso),
       conferir: async () => {
         const lida = await dados.minhaConta()
@@ -200,8 +200,8 @@ export function PaginaConta() {
   }
 
   function baixarDados() {
-    setStatus(null)
     void exportacao.enviar({
+      aoComecar: () => setStatus(null),
       escrever: () => dados.exportarDados(),
       aoSucesso: (conteudo) => {
         baixarJson(conteudo, nomeDoArquivoDeDados(conta!.fuso))

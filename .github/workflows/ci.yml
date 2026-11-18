@@ -19,16 +19,17 @@ jobs:
         os: [ubuntu-latest, windows-latest]
     steps:
       - name: Baixar o código
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           # Histórico completo: o verificar-commits percorre o intervalo desde a base.
           fetch-depth: 0
+          persist-credentials: false
           # Na pull_request, usa a cabeça da PR e não o commit de merge; no push fica vazio
           # e o checkout usa o commit do push.
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Instalar o Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: 24
 
@@ -55,6 +56,9 @@ jobs:
       - name: Testar o script da política de commits
         run: node --test scripts/verificar-commits.test.mjs
 
+      - name: Testar os workflows (pin por SHA, environment, checkout)
+        run: node --test scripts/verificar-workflows.test.mjs
+
       # A base é fixa: os commits até ela não seguem esta política (dois títulos passam
       # de 72 caracteres), e o mesmo intervalo vale em todo push e na PR.
       - name: Verificar a política de commits desde a base
@@ -65,10 +69,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Baixar o código
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
 
       - name: Instalar o Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: 24
 

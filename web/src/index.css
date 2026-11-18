@@ -7,6 +7,7 @@
 @import '@fontsource-variable/outfit/wght.css';
 @import './styles/site.css';
 @import './styles/campo.css';
+@import './styles/foco.css';
 
 @layer base {
   html {

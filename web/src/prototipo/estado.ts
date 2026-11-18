@@ -39,7 +39,7 @@ export const ESCOLHAS_FRALDA = ['Xixi', 'Cocô', 'Ambos'] as const
 export type EscolhaFralda = (typeof ESCOLHAS_FRALDA)[number]
 
 /** O texto da confirmação da fralda, com ou sem o tipo escolhido. */
-export const TEXTO_FRALDA = 'Fralda registrada'
+const TEXTO_FRALDA = 'Fralda registrada'
 
 export function textoDaFralda(escolha: EscolhaFralda): string {
   return `${TEXTO_FRALDA}: ${escolha}`

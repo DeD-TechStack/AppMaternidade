@@ -1,6 +1,7 @@
 // Textos das seis páginas públicas de leitura: Regras da comunidade, Privacidade, Termos, Exclusão de
-// conta, Contato e Sobre. Os parágrafos vêm do site anterior (MAT-36) sem mudar palavra. Os textos fixos
-// (TF-xx) e os rótulos também. Única mudança: o endereço de e-mail só aparece em Contato; nas outras
+// conta, Contato e Sobre. Os parágrafos vieram do site anterior (MAT-36); a LOC-01 (t_60782730) passou para o
+// presente o que o site já faz e tirou o que ele não faz. Os textos fixos (TF-xx) e os rótulos seguem como
+// estão. O endereço de e-mail só aparece em Contato; nas outras
 // páginas, onde o texto antigo trazia o endereço, entra o link “Contato”. As páginas não declaram frase
 // em literal: tiram tudo daqui. A frase de dados fictícios é um parágrafo comum da seção a que se refere.
 
@@ -59,10 +60,10 @@ const PILARES = ['Rotina', 'Desenvolvimento', 'Cuidado compartilhado', 'Comunida
 
 /** A frase de cada pilar, na ordem de PILARES. */
 const FRASES_DOS_PILARES = [
-  'Vai permitir registrar sono, mamadas, fraldas e os outros cuidados do dia em poucos toques.',
-  'Vai trazer o tummy time, o tempo que o bebê passa de bruços, acordado e com um adulto olhando, e conteúdo sobre desenvolvimento sem metas.',
-  'Vai dividir o cuidado entre os adultos da família, cada um com a própria conta e um papel.',
-  'Vai abrir uma comunidade organizada por assunto, separada da rotina privada da família.',
+  'Registra sono, mamadas, fraldas e os outros cuidados do dia em poucos toques.',
+  'Registra o tummy time (o tempo de bruços, acordado e com um adulto olhando) e traz conteúdo sobre desenvolvimento, sem metas.',
+  'Divide o cuidado entre os adultos da família, cada um com a própria conta e um papel.',
+  'Tem uma comunidade organizada por assunto, separada da rotina privada da família.',
 ] as const
 
 // ---------------------------------------------------------------------------
@@ -142,24 +143,24 @@ const LINK_CONTATO = ligacao('Contato', CAMINHO_CONTATO)
 
 const REGRAS: PaginaDeTexto = {
   nome: 'Regras da comunidade',
-  subtitulo: 'Para quando ela abrir.',
+  subtitulo: 'Para quem conversa nela.',
   ilustracao: 'maos-celular',
   apoio: 'Regras claras para quem participa.',
   acao: ACAO_CRIAR_CONTA,
   apresentacao:
-    'A comunidade do AppMaternidade ainda não abriu. Esta página mostra as regras que vão valer quando ela abrir e como a moderação vai funcionar.',
+    'A comunidade do AppMaternidade está aberta para quem tem conta. Aqui estão as regras que valem nela e o jeito como a moderação trabalha.',
   secoes: [
     {
       secao: secao('Antes de publicar'),
       blocos: [
-        'Antes da primeira publicação, cada pessoa vai aceitar estas regras. A comunidade vai ser vista só por quem entrou na conta e não vai aparecer em buscadores.',
+        'Antes da primeira publicação, cada pessoa aceita estas regras. A comunidade aparece só para quem entrou na conta e fica fora dos buscadores.',
         'Nada da rotina do bebê vai para lá por conta própria. Se a pessoa quiser contar algo, ela mesma escreve, ou escolhe um resumo e vê a prévia exata antes de publicar.',
       ],
     },
     {
       secao: secao('As sete regras'),
       blocos: [
-        'Estas regras vão valer quando a comunidade abrir:',
+        'Quem participa segue estas regras:',
         {
           ordenada: true,
           itens: [
@@ -175,9 +176,9 @@ const REGRAS: PaginaDeTexto = {
       ],
     },
     {
-      secao: secao('Denunciar, bloquear e silenciar'),
+      secao: secao('Denunciar e bloquear'),
       blocos: [
-        'Qualquer pessoa vai poder denunciar um tópico, uma resposta ou um perfil, por um destes oito motivos:',
+        'Qualquer pessoa pode denunciar um tópico, uma resposta ou um perfil, por um destes oito motivos:',
         {
           itens: [
             'ataque ou assédio',
@@ -190,13 +191,13 @@ const REGRAS: PaginaDeTexto = {
             'outro',
           ],
         },
-        'O bloqueio vai valer para os dois lados: as duas pessoas vão deixar de ver o conteúdo uma da outra, e quem foi bloqueado não vai receber aviso. Também vai dar para silenciar uma pessoa ou as palavras que você prefere não ver.',
+        'O bloqueio vale para os dois lados: as duas pessoas deixam de ver o conteúdo uma da outra, e quem foi bloqueado não recebe aviso.',
       ],
     },
     {
       secao: secao('Como a moderação trabalha'),
       blocos: [
-        'A moderação vai usar ações graduais, avisar o autor de cada decisão e dar a ele o direito de contestar. Quem modera não vai ler dados de família.',
+        'A moderação pode ocultar ou remover um tópico ou uma resposta, e o motivo da decisão aparece junto do conteúdo. Quem modera não lê dados de família.',
         'O horário de atendimento e o prazo de resposta ainda serão publicados.',
       ],
     },
@@ -255,7 +256,7 @@ const PRIVACIDADE: PaginaDeTexto = {
     },
     {
       secao: secao('O que fica de fora'),
-      blocos: ['A proposta é não pedir CPF, documento nem localização. Foto, sexo e peso do bebê ficam fora desta versão.'],
+      blocos: ['O site não pede CPF, documento nem localização. Foto, sexo e peso do bebê ficam fora desta versão.'],
     },
     {
       secao: secao('Para que os dados vão servir'),
@@ -297,7 +298,8 @@ const PRIVACIDADE: PaginaDeTexto = {
     {
       secao: secao('Seus direitos'),
       blocos: [
-        'O site vai permitir pedir a confirmação de que seus dados são tratados, o acesso a eles, a correção e a eliminação, além de revogar o consentimento. Levar os dados para outro serviço ainda está em avaliação, porque depende de regulamentação.',
+        'Na tela Conta, quem entrou na conta já pode baixar uma cópia dos seus dados num arquivo JSON, que não é um formato regulamentado de portabilidade, e excluir a conta. A confirmação de que seus dados são tratados, a correção e a revogação do consentimento ainda não têm tela própria: peça pelo contato desta página.',
+        'Quando o seu vínculo com uma família acaba, o arquivo leva só a última versão dos registros que você mesmo escreveu, sem as mudanças feitas depois por outras pessoas, e não leva as notas de passagem de turno dessa família.',
         [
           'Os pedidos de acesso, com o botão “Baixar meus dados”, e de exclusão são feitos na tela Conta (/app/conta), por quem entrou na conta. Para apagar a conta, veja a página ',
           ligacao('Exclusão de conta', CAMINHO_EXCLUSAO),
@@ -327,7 +329,7 @@ const TERMOS: PaginaDeTexto = {
     {
       secao: secao('O que é o AppMaternidade'),
       blocos: [
-        'O AppMaternidade vai ser um site para a família registrar a rotina do bebê, dividir os cuidados entre os adultos, acompanhar o desenvolvimento e conversar numa comunidade separada da rotina privada. Hoje existe o protótipo das telas Hoje e Sessão, com uma família fictícia.',
+        'O AppMaternidade é um site para a família registrar a rotina do bebê, dividir os cuidados entre os adultos, acompanhar o desenvolvimento e conversar numa comunidade separada da rotina privada.',
         TF.semDiagnostico,
       ],
     },
@@ -392,13 +394,15 @@ const EXCLUSAO: PaginaDeTexto = {
   secoes: [
     {
       secao: secao('Antes de excluir'),
-      blocos: ['Antes de excluir, quem entrou na conta pode baixar os dados na tela Conta (/app/conta), com o botão “Baixar meus dados”.'],
+      blocos: [
+        'Antes de excluir, quem entrou na conta pode baixar os dados na tela Conta (/app/conta), com o botão “Baixar meus dados”. Quem é responsável recebe os dados da família inteira; os outros papéis recebem os próprios dados.',
+      ],
     },
     {
       secao: secao('Como pedir'),
       blocos: [
         TF.pedidoExclusao,
-        'Esta página abre sem login, para qualquer pessoa ler. Para pedir a exclusão, a pessoa precisa entrar na conta dela.',
+        'Esta página abre sem login, para qualquer pessoa ler. Para pedir a exclusão, a pessoa entra na conta dela e confirma com a senha atual.',
       ],
     },
     {
@@ -408,11 +412,11 @@ const EXCLUSAO: PaginaDeTexto = {
         {
           itens: [
             'a conta e os dados ligados a ela;',
-            'os posts e as respostas da pessoa na comunidade; nos tópicos de outras pessoas, a resposta dela vai aparecer como “[removido]”;',
-            'se ela for o último responsável da família, o espaço da família inteiro, depois de oferecer a exportação dos dados;',
-            'se ela for cuidadora, os dados pessoais dela, e a autoria dos registros que fez vai virar um rótulo neutro. Esta proposta ainda está em avaliação.',
+            'o conteúdo dos tópicos e das respostas da pessoa na comunidade: no lugar fica “[removido]”, e o autor aparece como “pessoa removida”;',
+            'se ela for cuidadora, os vínculos dela com as famílias e os dados pessoais dela; nos registros que fez, o autor passa a aparecer como “pessoa removida”.',
           ],
         },
+        'Se a pessoa for a única responsável de uma família, o site não deixa excluir a conta. Antes, ela torna outra pessoa responsável ou exclui a família.',
       ],
     },
     {
@@ -466,19 +470,18 @@ const SOBRE: PaginaDeTexto = {
   apoio: 'Feito para o dia a dia do cuidado.',
   acao: ACAO_CRIAR_CONTA,
   apresentacao:
-    'O AppMaternidade quer juntar num lugar só a rotina do bebê, o desenvolvimento, o cuidado dividido entre os adultos e uma comunidade separada da rotina privada.',
+    'O AppMaternidade junta num lugar só a rotina do bebê, o desenvolvimento, o cuidado dividido entre os adultos e uma comunidade separada da rotina privada. As quatro partes já estão no site.',
   secoes: [
     {
       secao: secao('Para quem é'),
       blocos: [
-        'O plano é começar no Brasil, em português, para mães, pais e outros cuidadores adultos de bebês nos primeiros meses. O público ainda está em avaliação, e a idade mínima também.',
+        'O plano é começar no Brasil, em português, para mães, pais e outros cuidadores adultos de bebês nos primeiros meses.',
       ],
     },
     {
       secao: secao('O que ele faz'),
       blocos: [
         { titulados: PILARES.map((titulo, indice) => ({ titulo, texto: FRASES_DOS_PILARES[indice] })) },
-        'Hoje já existe o protótipo das telas Hoje e Sessão, com uma família fictícia.',
       ],
     },
     {
@@ -490,7 +493,7 @@ const SOBRE: PaginaDeTexto = {
     },
     {
       secao: secao('Quem faz'),
-      blocos: ['O AppMaternidade é um projeto acadêmico em desenvolvimento, e esta versão serve para avaliação.', TF.responsavel],
+      blocos: ['O AppMaternidade é um projeto acadêmico.', TF.responsavel],
     },
   ],
 }

@@ -45,7 +45,7 @@ describe('CartaoSessao', () => {
     expect(timer.getAttribute('aria-live')).toBe('off')
     for (const classe of ['font-titulo', 'tabular-nums']) expect(timer.classList.contains(classe), classe).toBe(true)
     expect(within(regiao).getByText('por Juliana')).toBeTruthy()
-    expect(regiao.textContent).toContain('Iniciado às 09:21')
+    expect(regiao.textContent).toContain('Início às 09:21')
   })
 
   it('o "Encerrar" é a pílula primária de nome exato e chama aoEncerrar; o "Ver sessão" leva à Sessão', () => {

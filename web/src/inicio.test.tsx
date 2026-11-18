@@ -275,8 +275,8 @@ describe('Início: faixa da madrugada', () => {
       name: 'Um celular sobre linho com a tela escura do modo madrugada e o botão amarelo de iniciar mamada.',
     })
     expect(cena.getAttribute('src')).toBe('/cenas/inicio/faixa-cacau@1x.webp')
-    // Carrega na hora: a faixa nunca aparece com o painel da cena vazio.
-    expect(cena.getAttribute('loading')).toBe('eager')
+    // Carrega ao chegar perto (padrão do FotoCena); a caixa fica reservada por width/height.
+    expect(cena.getAttribute('loading')).toBe('lazy')
     expect(cena.getAttribute('width')).toBe('768')
     expect(cena.getAttribute('height')).toBe('512')
     // A cena é o painel da faixa (vai até as bordas), não uma caixa solta.
@@ -316,8 +316,8 @@ describe('Início: tabela', () => {
 
     const foto = within(secao).getByRole('img', { name: 'Um celular sobre linho com uma tela real do AppMaternidade.' })
     expect(foto.getAttribute('src')).toBe('/cenas/inicio/tabela@1x.webp')
-    // Carrega na hora: o painel de areia ao lado da tabela nunca fica vazio.
-    expect(foto.getAttribute('loading')).toBe('eager')
+    // Carrega ao chegar perto (padrão do FotoCena); a caixa fica reservada por width/height.
+    expect(foto.getAttribute('loading')).toBe('lazy')
     expect(foto.getAttribute('width')).toBe('768')
     expect(foto.getAttribute('height')).toBe('512')
     expect(foto.closest('[data-painel]')!.getAttribute('data-painel')).toBe('areia')
@@ -400,7 +400,7 @@ describe('Início: perguntas', () => {
     const perguntas: Array<[string, string]> = [
       [
         'Quanto custa?',
-        'Hoje o site é uma demonstração gratuita. O preço, se houver, ainda não foi definido, e nunca haverá anúncio feito com os dados da sua rotina.',
+        'O preço, se houver, ainda não foi definido, e nunca haverá anúncio feito com os dados da sua rotina.',
       ],
       [
         'Quem vê os registros do bebê?',
@@ -547,12 +547,14 @@ describe('Início: ordem e texto da página', () => {
       .filter((h2) => !h2.classList.contains('sr-only'))
     expect(titulos).toHaveLength(Object.keys(segundas).length)
     for (const h2 of titulos) {
-      const linhas = [...h2.querySelectorAll(':scope > [aria-hidden="true"]')]
-      expect(linhas).toHaveLength(2)
-      const [primeira, segunda] = linhas
-      expect(primeira.classList.contains('cm-segunda-linha')).toBe(false)
-      expect(segunda.classList.contains('cm-segunda-linha')).toBe(true)
-      expect(segunda.textContent).toBe(segundas[primeira.textContent!])
+      // MOTION-1: texto comum, sem linhas aria-hidden: a primeira linha (o primeiro nó de texto), um espaço e a
+      // segunda linha em `span.cm-segunda-linha`.
+      expect(h2.querySelector('[aria-hidden="true"]')).toBeNull()
+      const segundaLinha = [...h2.querySelectorAll(':scope > .cm-segunda-linha')]
+      expect(segundaLinha).toHaveLength(1)
+      const segunda = segundaLinha[0]
+      const primeira = h2.firstChild!.textContent!.trim()
+      expect(segunda.textContent).toBe(segundas[primeira])
     }
   })
 

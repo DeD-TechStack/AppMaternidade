@@ -9,7 +9,7 @@ import { criarMundoDeTeste, semSessaoEmAndamento } from '../../teste/rotina.fixt
 const INSTANTE = new Date('2026-11-05T10:00:00')
 const FRASE_DE_LEITURA = 'Não foi possível falar com o servidor. Verifique a conexão.'
 const TITULO_VAZIO = 'Nenhuma sessão em andamento'
-const SUBTITULO_VAZIO = 'Comece uma sessão pela barra Registrar no Hoje.'
+const SUBTITULO_VAZIO = 'Comece uma sessão pelo registro rápido, na tela Hoje.'
 
 beforeEach(() => {
   vi.useFakeTimers()

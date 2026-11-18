@@ -1,6 +1,3 @@
-import { TextoAnimado } from '../terceiros/TextoAnimado.tsx'
-import { CATALOGO } from '../../movimento/catalogo.ts'
-
 interface Props {
   /** O nível do título no documento. */
   nivel: 'h1' | 'h2' | 'h3'
@@ -15,24 +12,21 @@ interface Props {
 const CLASSE = { h1: 'cm-h1', h2: 'cm-h2', h3: 'cm-h3' } as const
 
 /**
- * Título em Literata 600 com a segunda linha em itálico (DESIGN.md 2). As linhas sobem 48 px e
- * aparecem ao entrar na janela, uma a cada 250 ms (M4); com movimento reduzido, ficam paradas. O leitor
- * de tela lê o título inteiro uma vez.
+ * Título em Literata 600 com a segunda linha em itálico (DESIGN.md 2). É texto comum, visível desde a
+ * primeira pintura, com a marcação do h1 do Início: a primeira linha, um espaço e a segunda linha em
+ * `span.cm-segunda-linha` (o espaço fica fora do span, para o span trazer só a segunda linha). O leitor de tela lê o título inteiro, uma vez.
  */
 export function Titulo({ nivel, tamanho = nivel, linhas, id, className }: Props) {
-  const { deslocamentoPx, duracaoMs, curva, escalonamentoMs } = CATALOGO.M4
+  const Tag = nivel
   return (
-    <TextoAnimado
-      as={nivel}
-      className={[CLASSE[tamanho], className].filter(Boolean).join(' ')}
-      classeSegundaLinha="cm-segunda-linha"
-      deslocamentoPx={deslocamentoPx}
-      duracaoMs={duracaoMs}
-      curva={curva}
-      escalonamentoMs={escalonamentoMs}
-      id={id}
-    >
-      {linhas.join('\n')}
-    </TextoAnimado>
+    <Tag id={id} className={[CLASSE[tamanho], className].filter(Boolean).join(' ')}>
+      {linhas[0]}
+      {linhas.length > 1 ? (
+        <>
+          {' '}
+          <span className="cm-segunda-linha">{linhas[1]}</span>
+        </>
+      ) : null}
+    </Tag>
   )
 }

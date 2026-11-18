@@ -42,9 +42,9 @@ export function RecuperarAcesso() {
       return emailRef.current?.focus()
     }
     setErroLocal(null)
-    setMensagem(null)
     const endereco = email.trim()
     void enviar({
+      aoComecar: () => setMensagem(null),
       escrever: async (): Promise<Resultado<null>> => {
         // A troca de senha tem destino fixo: o `volta` não vai no link.
         const enviado = await dados.pedirRecuperacao(endereco, urlDoSite('redefinir-senha'))
