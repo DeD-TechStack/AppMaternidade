@@ -1,5 +1,5 @@
-import { spawnSync, type SpawnSyncReturns } from 'node:child_process'
-import { closeSync, existsSync, mkdirSync, mkdtempSync, openSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { spawn, spawnSync, type ChildProcess, type SpawnSyncReturns } from 'node:child_process'
+import { closeSync, existsSync, mkdirSync, mkdtempSync, openSync, readdirSync, readFileSync, rmSync, writeFileSync, writeSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -61,7 +61,7 @@ const SCRIPT_DE_MEDIDA = `
 // parte (só módulos `node:`), imprime uma linha de JSON e sempre fecha o Chrome. `String.raw` mantém as barras do
 // script como estão; ele não usa crase nem interpolação.
 const SCRIPT_DE_FOCO = String.raw`
-import { spawn } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { setTimeout as esperar } from 'node:timers/promises'
@@ -143,11 +143,31 @@ async function teclaTab() {
   await enviar('Input.dispatchKeyEvent', Object.assign({ type: 'keyUp' }, tecla))
 }
 
+// Encerramento do Chrome: o filho direto é só a raiz da árvore. No Windows, os processos filhos seguram arquivos do
+// perfil aberto e só o taskkill /T derruba a árvore inteira.
+function chromeSaiu() {
+  return !chrome || !chrome.pid || chrome.exitCode !== null || chrome.signalCode !== null
+}
+
+function esperarSaida(ms) {
+  if (chromeSaiu()) return Promise.resolve()
+  return Promise.race([new Promise((ok) => chrome.once('exit', ok)), esperar(ms)])
+}
+
+function matarArvore() {
+  if (!chrome || !chrome.pid) return
+  if (process.platform === 'win32') {
+    spawnSync('taskkill', ['/PID', String(chrome.pid), '/T', '/F'], { stdio: 'ignore', windowsHide: true })
+  } else {
+    chrome.kill()
+  }
+}
+
 let codigo = 0
 let linha = ''
 const vigia = setTimeout(() => {
   console.error('Tempo esgotado no script de foco.')
-  if (chrome) chrome.kill()
+  matarArvore()
   process.exit(1)
 }, 75000)
 
@@ -263,7 +283,13 @@ try {
   } catch (e) {
     // Já fechado.
   }
-  if (chrome) chrome.kill()
+  if (chrome) {
+    await esperarSaida(5000)
+    if (!chromeSaiu()) {
+      matarArvore()
+      await esperarSaida(2000)
+    }
+  }
   const sair = () => process.exit(codigo)
   if (linha) process.stdout.write(linha + '\n', sair)
   else sair()
@@ -343,11 +369,85 @@ function montarPagina(html: string, tema: Tema, pasta: string, script?: string):
   return pagina
 }
 
+/*
+ * Limpeza da pasta temporária do Chrome. Ela NUNCA decide o resultado do teste: no Windows, processos filhos do Chrome
+ * podem segurar arquivos do perfil e o `rmSync` lança EPERM; um throw no `finally` mascararia o erro real da medida
+ * (ou reprovaria um teste que passou). Por isso a falha vira só um `console.warn` com o caminho e o código do erro.
+ *
+ * Controles negativos, lidos de `ERRO_ANINHADO_CONTROLE` (o condutor roda cada um):
+ * - `sem-anel`: lido no script de foco; uma regra posterior apaga o anel e o teste de foco TEM de ficar vermelho.
+ * - `trava`: segura `perfil/trava.lock` aberto durante TODA a limpeza (num PowerShell filho, porque o `openSync` do
+ *   Node compartilha DELETE no Windows e não bloqueia a remoção). O teste TEM de continuar verde e a limpeza TEM de
+ *   avisar com o caminho (que contém `erro-aninhado`), sem lançar. Depois a trava é solta e a pasta removida.
+ *
+ * Cada remoção tenta por ~5 s no máximo (6 tentativas, espera linear de 250 ms vezes a tentativa), para um perfil
+ * travado não custar minutos. O aviso sai por `console.warn` e também direto no descritor 2: o Vitest captura o
+ * console do teste e, num teste que passa, o aviso não aparecia na saída da execução.
+ */
+function avisar(texto: string): void {
+  console.warn(texto)
+  try {
+    writeSync(2, `${texto}\n`)
+  } catch (erro) {
+    console.error(`Aviso: não deu para escrever no stderr (${String(erro)}); o aviso era: ${texto}`)
+  }
+}
+
+function limparPasta(pasta: string, comTentativas = true): void {
+  try {
+    rmSync(pasta, comTentativas ? { recursive: true, force: true, maxRetries: 6, retryDelay: 250 } : { recursive: true, force: true })
+  } catch (erro) {
+    const e = erro as NodeJS.ErrnoException
+    avisar(`Aviso: não deu para remover a pasta temporária ${pasta} (${e.code ?? 'sem código'}): ${e.message}`)
+  }
+}
+
+function pausar(ms: number): void {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms)
+}
+
+function travarPerfil(perfil: string): ChildProcess | null {
+  if (process.env.ERRO_ANINHADO_CONTROLE !== 'trava') return null
+  const arquivo = join(perfil, 'trava.lock')
+  const caminho = arquivo.replace(/'/g, "''")
+  const filho = spawn(
+    'powershell.exe',
+    ['-NoProfile', '-NonInteractive', '-Command', `$f=[IO.File]::Open('${caminho}','OpenOrCreate','ReadWrite','None');Start-Sleep -Seconds 120`],
+    { stdio: 'ignore', windowsHide: true },
+  )
+  for (let i = 0; i < 100 && !existsSync(arquivo); i++) pausar(100)
+  if (!existsSync(arquivo)) {
+    soltarTrava(filho)
+    throw new Error(`O controle "trava" não conseguiu criar ${arquivo} em 10 s.`)
+  }
+  return filho
+}
+
+function soltarTrava(filho: ChildProcess | null): void {
+  if (!filho || filho.pid === undefined) return
+  if (process.platform === 'win32') {
+    spawnSync('taskkill', ['/PID', String(filho.pid), '/T', '/F'], { stdio: 'ignore', windowsHide: true })
+  } else {
+    filho.kill()
+  }
+  for (let i = 0; i < 100; i++) {
+    try {
+      process.kill(filho.pid, 0)
+    } catch {
+      return // ESRCH: o processo já morreu
+    }
+    pausar(100)
+  }
+  avisar(`Aviso: o processo que segurava a trava (pid ${filho.pid}) não morreu em 10 s.`)
+}
+
 function medirNoChrome(html: string, tema: Tema): Medida {
   const pasta = mkdtempSync(join(tmpdir(), 'erro-aninhado-'))
+  let trava: ChildProcess | null = null
   try {
     const perfil = join(pasta, 'perfil')
     mkdirSync(perfil)
+    trava = travarPerfil(perfil)
     const pagina = montarPagina(html, tema, pasta, SCRIPT_DE_MEDIDA)
     const alvo = join(pasta, 'envoltorio.html')
     writeFileSync(
@@ -380,15 +480,19 @@ function medirNoChrome(html: string, tema: Tema): Medida {
     if (!achado) throw new Error(`O Chrome não devolveu a medida: ${resultado.stderr ?? ''}`)
     return JSON.parse(achado[1]) as Medida
   } finally {
-    rmSync(pasta, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 })
+    limparPasta(pasta)
+    soltarTrava(trava)
+    if (trava) limparPasta(pasta, false)
   }
 }
 
 function focoNoChrome(html: string, tema: Tema): MedidaDeFoco {
   const pasta = mkdtempSync(join(tmpdir(), 'erro-aninhado-foco-'))
+  let trava: ChildProcess | null = null
   try {
     const perfil = join(pasta, 'perfil')
     mkdirSync(perfil)
+    trava = travarPerfil(perfil)
     const pagina = montarPagina(html, tema, pasta)
     const script = join(pasta, 'foco.mjs')
     writeFileSync(script, SCRIPT_DE_FOCO, 'utf8')
@@ -404,7 +508,9 @@ function focoNoChrome(html: string, tema: Tema): MedidaDeFoco {
     const ultimaLinha = resultado.stdout.trim().split(/\r?\n/).pop() ?? ''
     return JSON.parse(ultimaLinha) as MedidaDeFoco
   } finally {
-    rmSync(pasta, { recursive: true, force: true, maxRetries: 20, retryDelay: 250 })
+    limparPasta(pasta)
+    soltarTrava(trava)
+    if (trava) limparPasta(pasta, false)
   }
 }
 
