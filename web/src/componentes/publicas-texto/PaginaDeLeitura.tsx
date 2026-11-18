@@ -60,7 +60,8 @@ function tituloDoFragmento(hash: string, secoes: PaginaDeTexto['secoes']): HTMLE
  * 1. a abertura: o nome da página (`h1`, na escala de título), logo abaixo a segunda linha em itálico (corpo de
  *    `h3`) e o botão de ação principal (ou o cartão de e-mail, em Contato). Em 1100 px ou mais, o painel de mel
  *    (só o desenho, com 24 px de respiro em volta, e a frase de apoio logo abaixo dele) fica ao lado; abaixo
- *    disso, embaixo do botão, com o painel de no máximo 40% da altura da janela;
+ *    disso, embaixo do botão, com o painel de no máximo 40% da altura da janela. A figura é uma coluna só: o
+ *    painel e a frase de apoio têm a borda e a largura dela, nas duas disposições;
  * 2. o índice "Nesta página": uma lista vertical só (fechada num `details` abaixo de 1100 px);
  * 3. o parágrafo de abertura, quando há, e as seções de leitura, numa coluna só, centrada, com o mesmo fio entre
  *    uma seção e a outra.
@@ -83,9 +84,9 @@ export function PaginaDeLeitura({ pagina }: { pagina: PaginaDeTexto }) {
 
   return (
     <main>
-      <Secao>
+      <Secao className="pt-secao-abertura">
         <QuadroLayout>
-          <Colunas fracoes="1.2fr 1fr" aPartirDe={1100} vao="midia" alinhar="centro" className="pt-abertura">
+          <Colunas fracoes="1fr 1fr" aPartirDe={1100} vao="midia" alinhar="centro" className="pt-abertura">
             <Pilha vao="grupo" dataH="coluna" className="pt-cabeca max-w-leitura">
               <Pilha vao="pilha">
                 <h1 className="cm-h1 cm-exibicao">{ligarPalavrasCurtas(nome)}</h1>
@@ -107,7 +108,7 @@ export function PaginaDeLeitura({ pagina }: { pagina: PaginaDeTexto }) {
           </Colunas>
         </QuadroLayout>
       </Secao>
-      <Secao as="div">
+      <Secao as="div" className="pt-secao-leitura">
         <QuadroLayout largura="leitura">
           <Pilha vao="bloco" className="pt-leitura">
             <IndiceDaPagina secoes={secoes.map(({ secao }) => secao)} />

@@ -486,7 +486,7 @@ describe('foco e rolagem na 37b', () => {
     await screen.findByRole('button', { name: 'Entrar' })
 
     fireEvent.click(within(document.querySelector('main')!).getByRole('link', { name: 'Tenho um convite' }))
-    const convite = await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.convite })
+    const convite = await screen.findByRole('heading', { level: 1, name: `${NOMES_DO_H1.convite}.` })
     await waitFor(() => expect(document.activeElement).toBe(convite))
   })
 })
