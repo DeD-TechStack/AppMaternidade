@@ -70,6 +70,8 @@ function tituloDoFragmento(hash: string, secoes: PaginaDeTexto['secoes']): HTMLE
  *
  * O `h1` leva só o nome da página (o texto exato que as rotas conferem), por isso não usa o `Titulo`
  * animado, cujo texto para leitor de tela repete as linhas; a segunda linha é um parágrafo logo depois dele.
+ * A coluna do texto tem piso de `min-content` porque as palavras coladas do título (`.pt-junto`, sem quebra)
+ * têm de caber na coluna em toda largura de duas colunas.
  */
 export function PaginaDeLeitura({ pagina }: { pagina: PaginaDeTexto }) {
   const { hash, key } = useLocation()
@@ -86,7 +88,7 @@ export function PaginaDeLeitura({ pagina }: { pagina: PaginaDeTexto }) {
     <main>
       <Secao className="pt-secao-abertura">
         <QuadroLayout>
-          <Colunas fracoes="1fr 1fr" aPartirDe={1100} vao="midia" alinhar="centro" className="pt-abertura">
+          <Colunas fracoes="minmax(min-content, 1fr) minmax(0, 1fr)" aPartirDe={1100} vao="midia" alinhar="centro" className="pt-abertura">
             <Pilha vao="grupo" dataH="coluna" className="pt-cabeca max-w-leitura">
               <Pilha vao="pilha">
                 <h1 className="cm-h1 cm-exibicao">{ligarPalavrasCurtas(nome)}</h1>
