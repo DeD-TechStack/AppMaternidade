@@ -1,5 +1,5 @@
-import { spawnSync } from 'node:child_process'
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { spawn, spawnSync, type ChildProcess } from 'node:child_process'
+import { closeSync, existsSync, mkdirSync, mkdtempSync, openSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -13,6 +13,10 @@ import { aguardarCarga, renderizarRota } from '../../teste/renderizarRota.tsx'
 // com getBoundingClientRect depois que as fontes carregam. Layout real, nada simulado. O teste só roda com o
 // Chrome instalado e o build feito (`npm run build`); sem um dos dois, pula e diz por quê. O `check` faz o
 // build antes de testar; em CI (qualquer sistema), Chrome ou build ausente falha em vez de pular.
+// O Chrome roda com spawn assíncrono, saída em arquivos e grupo de processos próprio, morto inteiro no fim, com todo
+// await limitado no tempo. HIPÓTESE (não provada): no ubuntu do CI o "Killed" veio de um Chrome (ou filhos dele) que
+// ficou vivo e segurou os pipes do spawnSync ou a memória do runner; a mudança elimina esses dois caminhos, mas a causa
+// só se confirma com a telemetria do passo de diagnóstico do job ubuntu (.github/workflows/ci.yml).
 
 const CANDIDATOS_DO_CHROME: Record<string, string[]> = {
   win32: [
@@ -124,7 +128,7 @@ function cssComFontesDoDist(nome: string): string {
   return readFileSync(join(PASTA_CSS, nome), 'utf8').replace(/url\((["']?)\/(?!\/)/g, (_t, aspas: string) => `url(${aspas}${base}`)
 }
 
-function medirNoChrome(cabecalhoHtml: string, largura: number, tema: Tema): Medida {
+async function medirNoChrome(cabecalhoHtml: string, largura: number, tema: Tema): Promise<Medida> {
   const pasta = mkdtempSync(join(tmpdir(), 'cm-geometria-'))
   try {
     const perfil = join(pasta, 'perfil')
@@ -154,32 +158,110 @@ function medirNoChrome(cabecalhoHtml: string, largura: number, tema: Tema): Medi
         'utf8',
       )
     }
-    const resultado = spawnSync(
-      CHROME,
-      [
-        '--headless=new',
-        '--no-sandbox',
-        '--disable-gpu',
-        '--disable-crashpad-for-testing',
-        '--no-first-run',
-        '--allow-file-access-from-files',
-        `--user-data-dir=${perfil}`,
-        '--force-device-scale-factor=1',
-        // O Chrome sem janela soma 16 px de moldura: com +16 o innerWidth fica igual à largura pedida.
-        `--window-size=${Math.max(largura, 600) + 16},900`,
-        '--virtual-time-budget=3000',
-        '--dump-dom',
-        pathToFileURL(alvo).href,
-      ],
-      { encoding: 'utf8', timeout: 45_000, maxBuffer: 64 * 1024 * 1024 },
-    )
-    const achado = /<pre id="geometria"[^>]*>([\s\S]*?)<\/pre>/.exec(resultado.stdout ?? '')
+    // Saída em arquivos, nunca em pipes: os filhos do Chrome que sobrevivem não seguram nada que nos bloqueie.
+    const arquivoDeSaida = join(pasta, 'saida.txt')
+    const arquivoDeErro = join(pasta, 'erro.txt')
+    const fdSaida = openSync(arquivoDeSaida, 'w')
+    const fdErro = openSync(arquivoDeErro, 'w')
+    let filho: ChildProcess | null = null
+    let terminou: Promise<{ status: number | null; erro: string | null }> | null = null
+    let expirou = false
+    // O resultado do filho fica aqui assim que ele termina: depois do limite e da limpeza nunca se espera de novo uma promise pendente.
+    let final: { status: number | null; erro: string | null } | null = null
+    try {
+      const alvoDoFilho = spawn(
+        CHROME,
+        [
+          '--headless=new',
+          '--no-sandbox',
+          '--disable-gpu',
+          // CI-UBUNTU: no Chrome 157 do Linux esta opção mata o processo com "FD ownership violation", então o Chrome
+          // nunca devolve a medida, cada queda aciona o apport e o runner morre sem memória. No Windows ela fica.
+          ...(process.platform === 'win32' ? ['--disable-crashpad-for-testing'] : []),
+          '--no-first-run',
+          '--allow-file-access-from-files',
+          '--disable-dev-shm-usage',
+          '--disable-extensions',
+          '--disable-background-networking',
+          '--disable-component-update',
+          '--disable-sync',
+          '--disable-software-rasterizer',
+          '--mute-audio',
+          '--no-default-browser-check',
+          `--user-data-dir=${perfil}`,
+          '--force-device-scale-factor=1',
+          // A moldura de 16 px é a do headless do Windows: com +16 o innerWidth fica igual à largura pedida.
+          // No Linux não há moldura, então o innerWidth já é igual à largura da janela.
+          `--window-size=${Math.max(largura, 600) + (process.platform === 'win32' ? 16 : 0)},900`,
+          '--virtual-time-budget=3000',
+          '--dump-dom',
+          pathToFileURL(alvo).href,
+        ],
+        { stdio: ['ignore', fdSaida, fdErro], detached: process.platform !== 'win32', windowsHide: true },
+      )
+      filho = alvoDoFilho
+      terminou = new Promise((resolver) => {
+        alvoDoFilho.once('error', (erro) => {
+          final = { status: null, erro: erro.message }
+          resolver(final)
+        })
+        alvoDoFilho.once('exit', (status) => {
+          final = { status, erro: null }
+          resolver(final)
+        })
+      })
+      let relogio: NodeJS.Timeout | undefined
+      const limite = new Promise<'tempo'>((resolver) => {
+        relogio = setTimeout(() => resolver('tempo'), 45_000)
+      })
+      expirou = (await Promise.race([terminou, limite]).finally(() => clearTimeout(relogio))) === 'tempo'
+    } finally {
+      if (filho?.pid !== undefined) matarGrupo(filho.pid, filho)
+      // Depois do kill, espera o exit por um instante antes de apagar a pasta.
+      if (terminou) {
+        let espera: NodeJS.Timeout | undefined
+        await Promise.race([
+          terminou,
+          new Promise((resolver) => {
+            espera = setTimeout(resolver, 3_000)
+          }),
+        ]).finally(() => clearTimeout(espera))
+      }
+      closeSync(fdSaida)
+      closeSync(fdErro)
+    }
+    // Sem await: se o Chrome não emitiu exit nem error mesmo depois do kill e dos 3 s de espera, rejeita aqui (a pasta é limpa no finally externo).
+    const resultado = final ?? { status: null, erro: 'o Chrome não encerrou nem depois do kill (sem exit/error em 3 s)' }
+    const achado = /<pre id="geometria"[^>]*>([\s\S]*?)<\/pre>/.exec(readFileSync(arquivoDeSaida, 'utf8'))
     if (!achado) {
-      throw new Error(`O Chrome não devolveu a medida (status ${resultado.status}, erro ${resultado.error?.message ?? 'nenhum'}): ${resultado.stderr ?? ''}`)
+      const mensagem = resultado.erro ?? (expirou ? 'tempo esgotado (45000 ms)' : 'nenhum')
+      throw new Error(`O Chrome não devolveu a medida (status ${resultado.status}, erro ${mensagem}): ${readFileSync(arquivoDeErro, 'utf8')}`)
     }
     return JSON.parse(achado[1]) as Medida
   } finally {
     rmSync(pasta, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 })
+  }
+}
+
+/** Mata o Chrome e todos os filhos: o grupo inteiro no POSIX (spawn detached), a árvore no Windows. */
+function matarGrupo(pid: number, filho: ChildProcess): void {
+  if (process.platform === 'win32') {
+    try {
+      filho.kill()
+    } catch {
+      // já terminou
+    }
+    try {
+      spawnSync('taskkill', ['/pid', String(pid), '/T', '/F'], { windowsHide: true, timeout: 5_000 })
+    } catch {
+      // já terminou
+    }
+    return
+  }
+  try {
+    process.kill(-pid, 'SIGKILL')
+  } catch {
+    // grupo já terminou
   }
 }
 
@@ -225,7 +307,7 @@ describe(`a geometria do cabeçalho logado no Chrome${motivoDoPulo ? ` (pulado: 
           }
           const cabecalho = document.querySelector<HTMLElement>('header[data-cabecalho]')!
 
-          const medida = medirNoChrome(cabecalho.outerHTML, largura, tema)
+          const medida = await medirNoChrome(cabecalho.outerHTML, largura, tema)
 
           expect(medida.erro).toBeUndefined()
           expect(medida.innerWidth).toBe(largura)

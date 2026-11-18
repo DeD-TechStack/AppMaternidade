@@ -13,7 +13,7 @@ language plpgsql as $$
 declare n int;
 begin
   perform set_config('request.jwt.claims',
-    json_build_object('sub', pg_temp.i(p_n), 'role', 'authenticated')::text, true);
+    json_build_object('sub', pg_temp.i(p_n), 'role', 'authenticated', 'aal', 'aal2')::text, true);
   execute p_sql;
   get diagnostics n = row_count;
   return n::text;
@@ -29,7 +29,7 @@ language plpgsql as $$
 declare r text;
 begin
   perform set_config('request.jwt.claims',
-    json_build_object('sub', pg_temp.i(p_n), 'role', 'authenticated')::text, true);
+    json_build_object('sub', pg_temp.i(p_n), 'role', 'authenticated', 'aal', 'aal2')::text, true);
   execute p_sql into r;
   return r;
 exception when others then

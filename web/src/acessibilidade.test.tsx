@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { fireEvent, screen } from '@testing-library/react'
 import { rodarAxe } from './teste/axe.ts'
@@ -86,5 +88,17 @@ describe('acessibilidade (axe-core)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Descartar' }))
     expect(screen.getByText('Descartar esta sessão?')).toBeTruthy()
     expect(await violacoes(container)).toEqual([])
+  })
+})
+
+describe('foco do campo de data (A11Y-002)', () => {
+  // O jsdom não calcula o `outline` de um campo de data de verdade: a prova é a regra no CSS compartilhado.
+  const css = readFileSync(join(process.cwd(), 'src', 'styles', 'site.css'), 'utf8')
+
+  it('há uma regra input[type=date]:focus-visible com anel de 3 px na cor de foco', () => {
+    const regra = /input\[type=['"]date['"]\]:focus-visible\s*\{([^}]*)\}/.exec(css)
+    expect(regra, "falta a regra `input[type='date']:focus-visible` em styles/site.css").not.toBeNull()
+    expect(regra?.[1]).toMatch(/outline:\s*3px solid var\(--cor-foco\)/)
+    expect(regra?.[1]).not.toMatch(/outline:\s*none/)
   })
 })

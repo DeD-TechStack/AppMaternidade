@@ -287,6 +287,7 @@ function Conteudo({ topico, autor, situacao, bloqueados, relerTopicoEBloqueios, 
                 apelidoProprio={apelidoProprio}
                 aoTirarCitacao={() => setModo({ tipo: 'nova', citando: null })}
                 aoNaoEditavel={() => void respostas.reler()}
+                aoAvisar={definirStatus}
                 aoConcluir={async (id, tipo) => {
                   const paginasLidas = respostas.estado.fase === 'pronto' ? respostas.estado.paginas : 1
                   setModo({ tipo: 'nova', citando: null })
