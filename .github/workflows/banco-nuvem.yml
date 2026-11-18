@@ -36,10 +36,12 @@ jobs:
       contents: read
     steps:
       - name: Baixar o código
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
 
       - name: Instalar o Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: 24
 
@@ -72,15 +74,20 @@ jobs:
     needs: testar
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    # Os segredos do banco ficam no Environment protegido: o run espera a aprovação do
+    # Daniel e só sai da main (regra de branch do próprio Environment).
+    environment: banco-producao
     timeout-minutes: 15
     permissions:
       contents: read
     steps:
       - name: Baixar o código
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
 
       - name: Instalar o Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: 24
 
@@ -117,15 +124,20 @@ jobs:
     needs: aplicar
     if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.dados_iniciais
     runs-on: ubuntu-latest
+    # Os segredos do banco ficam no Environment protegido: o run espera a aprovação do
+    # Daniel e só sai da main (regra de branch do próprio Environment).
+    environment: banco-producao
     timeout-minutes: 10
     permissions:
       contents: read
     steps:
       - name: Baixar o código
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
 
       - name: Instalar o Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: 24
 

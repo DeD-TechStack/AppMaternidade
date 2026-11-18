@@ -60,7 +60,7 @@ export function Abertura({ titulo, texto, midia, aviso, proporcao = 'texto' }: P
           data-proporcao={proporcao}
         >
           <Pilha vao="grupo" dataH="coluna" className="pd-abertura-texto">
-            <Titulo nivel="h1" linhas={titulo} />
+            <Titulo nivel="h1" linhas={titulo} className="cm-exibicao" />
             {texto}
             {compacta ? painelDeMidia : null}
             {aviso}

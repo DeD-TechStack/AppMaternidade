@@ -31,9 +31,9 @@ export function SecaoTabela() {
           {/* Tabela (8fr) e foto (4fr) lado a lado a partir de 1280 (o ponto de quebra de hoje: a primitiva
               quebra em 1200 e o inicio.css empilha até 1279), `bloco` entre os dois cartões. */}
           <Colunas fracoes="8fr 4fr" vao="bloco" aPartirDe={1200} alinhar="inicio" className="in-tabela-grade">
-            {/* O cartão é o de oliva (padding espaco-painel); a tabela da base vem sem o padding próprio dela. */}
+            {/* O cartão é o de oliva (padding espaco-painel); a tabela vem sem o painel próprio dela (`semPainel`). */}
             <Cartao dataH="coluna" className="cm-painel-oliva" data-painel="oliva">
-              <TabelaComparacao legenda={legenda} linhas={linhas} className="in-celula in-tabela-miolo" />
+              <TabelaComparacao semPainel legenda={legenda} linhas={linhas} />
             </Cartao>
             <Cartao dataH="coluna" className="in-tabela-foto cm-painel-areia" data-painel="areia">
               <RevelaNaRolagem className="in-revela">

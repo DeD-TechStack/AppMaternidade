@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "typecheck": "tsc -b --noEmit",
-    "lint": "eslint . --max-warnings 0",
+    "lint": "eslint . --max-warnings 0 && stylelint \"src/**/*.css\"",
     "tema": "node scripts/gerar-tema.mjs",
     "lint:harmonia": "node -e \"process.env.HARMONIA_LINT='1';const{spawnSync:s}=require('node:child_process');const t=(a,ok)=>{const r=s(process.execPath,a,{stdio:'inherit'});if(!ok.includes(r.status))process.exit(r.status||1)};t(['node_modules/eslint/bin/eslint.js','.'],[0,1]);t(['node_modules/stylelint/bin/stylelint.mjs','src/**/*.css'],[0,2])\"",
     "test": "vitest run",
@@ -46,7 +46,8 @@
     "typescript": "6.0.3",
     "typescript-eslint": "8.72.1",
     "vite": "8.3.5",
-    "vitest": "5.1.0"
+    "vitest": "5.1.0",
+    "yaml": "2.9.1"
   },
   "overrides": {
     "@google/design.md": {

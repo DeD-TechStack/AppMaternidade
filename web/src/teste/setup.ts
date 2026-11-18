@@ -1,7 +1,10 @@
 import { afterEach, beforeEach, vi } from 'vitest'
-import { cleanup } from '@testing-library/react'
+import { cleanup, configure } from '@testing-library/react'
 import { aguardarAxe } from './axe.ts'
 import { iniciarTeste } from './relogio.ts'
+
+// O padrão de 1000 ms do findBy*/waitFor é apertado num host carregado; um elemento ausente continua falhando, só mais tarde.
+configure({ asyncUtilTimeout: 4000 })
 
 // Cada teste abre uma geração do relógio; um zumbi de um teste que estourou o tempo não muda a hora do seguinte.
 beforeEach(() => {

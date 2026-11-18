@@ -1,6 +1,6 @@
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
-import { COMUM_COMUNIDADE, ENTRAR_NA_COMUNIDADE, LISTA, TX, TEXTOS_ERRO_COMUNIDADE } from '../../conteudo/comunidade.ts'
+import { COMUM_COMUNIDADE, ENTRAR_NA_COMUNIDADE, ESPACO, LISTA, TX, TEXTOS_ERRO_COMUNIDADE } from '../../conteudo/comunidade.ts'
 import { CONTEUDO, ELENCO, criarElenco, type PessoaDoElenco } from '../../dados/comunidade.elenco.ts'
 import { criarDadosComunidadeMemoria, simularFalha, simularRespostaPerdida } from '../../dados/comunidade.memoria.ts'
 import { criarDadosContaMemoria } from '../../dados/conta.memoria.ts'
@@ -216,7 +216,7 @@ describe('C2: os tópicos de um espaço', () => {
     const doAutor = await screen.findByRole('article', { name: 'Tópico do autor' })
     expect(within(doAutor).getByText('autor_do_forum')).toBeTruthy()
     expect(within(doAutor).getByText(COMUM_COMUNIDADE.respostas(4))).toBeTruthy()
-    expect(within(doAutor).getByText(/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/)).toBeTruthy()
+    expect(within(doAutor).getByText(/^\d{2}\/\d{2}\/\d{4} às \d{2}:\d{2}$/)).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Novo tópico' }).getAttribute('href')).toBe('/app/comunidade/sono/novo')
   })
 
@@ -396,6 +396,112 @@ describe('estados das leituras (MAT-40:RF-15, teste 5)', () => {
   })
 })
 
+// O erro da leitura dos tópicos na primeira tela: o alerta e o "Tentar de novo" vêm antes do filtro de faixa (I-1), o
+// foco não se move e a releitura funciona (I-3), e os outros estados seguem como estão (I-4). A medida em pixels,
+// num Chrome de verdade, está em `erroNaPrimeiraTela.geometria.test.tsx`.
+describe('C2: o erro de leitura dos tópicos na primeira tela', () => {
+  /** `depois` vem depois de `antes` na ordem do documento, e um não contém o outro. */
+  const precede = (antes: Node, depois: Node) =>
+    (antes.compareDocumentPosition(depois) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0 && !antes.contains(depois)
+
+  const filtro = () => screen.getByRole('group', { name: ESPACO.filtro })
+
+  /** A pessoa de fora abre o espaço; `antes` mexe na memória (falha, atraso) antes de a tela montar. */
+  function abrirEspaco(slug: string, antes: (comunidade: ReturnType<typeof criarDadosComunidadeMemoria>) => void = () => undefined) {
+    const estado = criarElenco()
+    const comunidade = criarDadosComunidadeMemoria(estado, ELENCO.outro.conta)
+    antes(comunidade)
+    const contas = criarDadosContaMemoria(fixtureDeContasDoElenco(criarFixtureDeTeste(Date.now())))
+    contas.sessaoParaTeste(ELENCO.outro.email)
+    return { comunidade, ...renderizarComunidade(espaco(slug), { contas, comunidade }) }
+  }
+
+  it('I-1: o alerta e o "Tentar de novo" vêm, na ordem do documento, antes do filtro de faixa', async () => {
+    abrirEspaco('sono', (comunidade) => simularFalha(comunidade, 'listarTopicos', 'rede'))
+    const alerta = await screen.findByRole('alert')
+    await semCarregando()
+    expect(alerta.textContent).toContain(TEXTOS_ERRO_COMUNIDADE.rede)
+    const tentar = within(alerta).getByRole('button', { name: COMUM_COMUNIDADE.tentarDeNovo })
+
+    expect(within(filtro()).getAllByRole('button').length).toBeGreaterThan(1)
+    expect(precede(alerta, filtro()), 'o alerta deve vir antes do filtro de faixa').toBe(true)
+    expect(precede(tentar, filtro()), 'o "Tentar de novo" deve vir antes do filtro de faixa').toBe(true)
+  })
+
+  it('I-3: o erro não move o foco, o alerta continua role=alert e o "Tentar de novo" relê uma vez', async () => {
+    let leituras = 0
+    abrirEspaco('sono', (comunidade) => {
+      simularFalha(comunidade, 'listarTopicos', 'rede')
+      const original = comunidade.listarTopicos.bind(comunidade)
+      comunidade.listarTopicos = async (...argumentos) => {
+        leituras += 1
+        return original(...argumentos)
+      }
+    })
+    const focoAntes = document.activeElement
+    const alerta = await screen.findByRole('alert')
+    await semCarregando()
+
+    expect(alerta.getAttribute('role')).toBe('alert')
+    expect(document.activeElement).toBe(focoAntes)
+    expect(document.activeElement).not.toBe(alerta)
+    expect(leituras).toBe(1)
+
+    fireEvent.click(within(alerta).getByRole('button', { name: COMUM_COMUNIDADE.tentarDeNovo }))
+    expect(await screen.findByRole('article', { name: 'Tópico do autor' })).toBeTruthy()
+    expect(leituras).toBe(2)
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
+
+  it('I-4 carregando: a lista fica ocupada, com o filtro à vista, sem alerta, sem tópicos e sem a frase de vazio', async () => {
+    let liberar: () => void = () => undefined
+    const travada = new Promise<void>((resolver) => {
+      liberar = resolver
+    })
+    abrirEspaco('sono', (comunidade) => {
+      const original = comunidade.listarTopicos.bind(comunidade)
+      comunidade.listarTopicos = async (...argumentos) => {
+        await travada
+        return original(...argumentos)
+      }
+    })
+    await waitFor(() => expect(document.querySelector('[aria-labelledby="topicos"][aria-busy="true"]')).not.toBeNull())
+
+    expect(within(filtro()).getAllByRole('button').map((b) => b.textContent)).toEqual([ESPACO.todas, '0 a 3 meses', '3 a 6 meses', '6 a 12 meses'])
+    expect(screen.getByRole('link', { name: 'Novo tópico' })).toBeTruthy()
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(screen.queryByRole('article')).toBeNull()
+    expect(screen.queryByText(TX.tx16)).toBeNull()
+
+    liberar()
+    expect(await screen.findByRole('article', { name: 'Tópico do autor' })).toBeTruthy()
+    await semCarregando()
+    expect(document.querySelector('[aria-labelledby="topicos"][aria-busy="true"]')).toBeNull()
+  })
+
+  it('I-4 vazio: o espaço sem tópicos mostra TX-16 depois do filtro, sem alerta', async () => {
+    abrirEspaco('tummy-time')
+    const vazio = await screen.findByText(TX.tx16)
+    await semCarregando()
+
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(screen.queryByRole('article')).toBeNull()
+    expect(precede(filtro(), vazio)).toBe(true)
+  })
+
+  it('I-4 preenchido: o filtro vem antes dos tópicos, que seguem com título, autor e respostas, sem alerta', async () => {
+    abrirEspaco('sono')
+    const doAutor = await screen.findByRole('article', { name: 'Tópico do autor' })
+    await semCarregando()
+
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(screen.queryByText(TX.tx16)).toBeNull()
+    expect(precede(filtro(), doAutor)).toBe(true)
+    expect(within(doAutor).getByText('autor_do_forum')).toBeTruthy()
+    expect(within(doAutor).getByText(COMUM_COMUNIDADE.respostas(4))).toBeTruthy()
+  })
+})
+
 describe('C5: entrar na comunidade (MAT-40:RF-03, teste 7)', () => {
   it('a Nova chega pelo "Novo tópico", aceita, cria o perfil e volta à C4 vazia, com TX-25', async () => {
     const { roteador, estado } = cena('nova', espaco('sono'))
@@ -522,12 +628,12 @@ describe('publicar um tópico com prévia e confirmação (MAT-40:RF-04)', () =>
     expect((await screen.findAllByRole('status')).some((s) => s.textContent === TX.tx06)).toBe(true)
   })
 
-  it('os limites do corpo: 1 a 5000 caracteres, com o contador à vista', async () => {
+  it('os limites do corpo: 1 a 5.000 caracteres, com o contador à vista', async () => {
     cena('outro', `${espaco('sono')}/novo`)
     await aguardarH1('Novo tópico')
     digitar('Título', 'Um título bom')
     digitar('Texto do tópico', 'x'.repeat(5001))
-    expect(screen.getByText('5001 de 5000')).toBeTruthy()
+    expect(screen.getByText('5.001 de 5.000')).toBeTruthy()
     expect(botao('Ver prévia').getAttribute('aria-disabled')).toBe('true')
     digitar('Texto do tópico', 'x'.repeat(5000))
     expect(botao('Ver prévia').hasAttribute('aria-disabled')).toBe(false)

@@ -13,7 +13,7 @@ export const INICIO = {
     secundario: { rotulo: 'Ver como funciona', destino: '/como-funciona' },
     cena: {
       base: '/cenas/inicio/heroi',
-      alt: 'Três celulares sobre pedestais de oliva num fundo de mel, mostrando telas reais do AppMaternidade.',
+      alt: 'Três celulares sobre pedestais verdes, num fundo amarelo, mostrando telas do AppMaternidade.',
     },
   },
   numeros: { titulo: 'Números do app' },
@@ -33,11 +33,11 @@ export const INICIO = {
   },
   madrugada: {
     titulo: ['De madrugada,', 'com uma mão só.'],
-    lide: 'O botão de iniciar mamada fica na metade de baixo da tela, grande, em mel sobre o escuro.',
+    lide: 'O botão de iniciar mamada fica na metade de baixo da tela, grande e amarelo sobre o fundo escuro.',
     botao: { rotulo: 'Ver o modo madrugada', destino: '/como-funciona' },
     cena: {
       base: '/cenas/inicio/faixa-cacau',
-      alt: 'Dois tablets flutuando sobre o cacau, com telas reais do AppMaternidade',
+      alt: 'Um celular sobre linho com a tela escura do modo madrugada e o botão amarelo de iniciar mamada.',
     },
   },
   tabela: {
@@ -52,7 +52,7 @@ export const INICIO = {
     ],
     cena: {
       base: '/cenas/inicio/tabela',
-      alt: 'Um celular sobre linho com uma tela real do AppMaternidade',
+      alt: 'Um celular sobre linho com uma tela real do AppMaternidade.',
     },
   },
   citacao: {
@@ -85,7 +85,7 @@ export const INICIO = {
       {
         pergunta: 'Quanto custa?',
         resposta:
-          'Hoje o site é uma demonstração gratuita. O preço, se houver, ainda não foi definido, e nunca haverá anúncio feito com os dados da sua rotina.',
+          'O preço, se houver, ainda não foi definido, e nunca haverá anúncio feito com os dados da sua rotina.',
       },
       {
         pergunta: 'Quem vê os registros do bebê?',

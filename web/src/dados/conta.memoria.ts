@@ -384,7 +384,7 @@ export function criarDadosContaMemoria(fixture: FixtureConta, opcoes: OpcoesMemo
   ): Resultado<{ usuario: Usuario; comSessao: boolean }> {
     const email = emailBruto.trim().toLowerCase()
     if (!FORMATO_DO_EMAIL.test(email)) return falhaAuth('email_invalido')
-    if (senha.length < 6) return falhaAuth('senha_fraca')
+    if (senha.length < 8) return falhaAuth('senha_fraca')
     if (usuarios.some((u) => u.email === email)) return falhaAuth('email_em_uso')
     const usuario: UsuarioMem = { id: novoId(), email, senha, nomeMetadados: nome }
     usuarios.push(usuario)
@@ -405,7 +405,7 @@ export function criarDadosContaMemoria(fixture: FixtureConta, opcoes: OpcoesMemo
     const usuario = usuarioAtual()
     if (!usuario) return falhaAuth('sessao_encerrada')
     if (nova === usuario.senha) return falhaAuth('senha_igual')
-    if (nova.length < 6) return falhaAuth('senha_fraca')
+    if (nova.length < 8) return falhaAuth('senha_fraca')
     usuario.senha = nova
     emitir('usuario_atualizado', paraUsuario(usuario))
     return ok(null)

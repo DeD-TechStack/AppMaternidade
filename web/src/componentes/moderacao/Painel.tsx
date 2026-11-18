@@ -191,7 +191,7 @@ export function Painel({ titulo, comVoltar = true, exigeAdmin = false, children 
               ) : null}
               <Etiqueta>{TX.selo}</Etiqueta>
             </div>
-            <TituloDaTela>{titulo}</TituloDaTela>
+            <TituloDaTela>{negado ? TX.negado : titulo}</TituloDaTela>
           </Pilha>
 
           {situacao.esqueleto ? <Esqueleto linhas={2} /> : null}

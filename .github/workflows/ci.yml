@@ -11,22 +11,25 @@ jobs:
   verificar:
     name: Verificar (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    # Um passo travado falha em minutos em vez de ocupar o runner por 6 h.
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
     steps:
       - name: Baixar o código
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           # Histórico completo: o verificar-commits percorre o intervalo desde a base.
           fetch-depth: 0
+          persist-credentials: false
           # Na pull_request, usa a cabeça da PR e não o commit de merge; no push fica vazio
           # e o checkout usa o commit do push.
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Instalar o Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: 24
 
@@ -38,8 +41,23 @@ jobs:
         working-directory: web
         run: npm run check
 
+      # Diagnóstico só no ubuntu e só quando o passo anterior falha ou é cancelado: discrimina OOM, Chrome
+      # que ficou vivo e excesso de workers do vitest no "Killed" visto na geometria (CI-GEO).
+      - name: Diagnóstico do runner (ubuntu, só em falha)
+        if: ${{ (failure() || cancelled()) && runner.os == 'Linux' }}
+        continue-on-error: true
+        run: |
+          echo "== memória (free -m)"; free -m || true
+          echo "== OOM no kernel (dmesg/journal)"; (dmesg 2>/dev/null || sudo -n dmesg 2>/dev/null || journalctl -k --no-pager 2>/dev/null || true) | grep -iE 'out of memory|oom|killed process' | tail -n 20 || true
+          echo "== árvore de processos chrome/node"; ps -eo pid,ppid,pgid,rss,etimes,stat,args --sort=-rss | grep -Ei 'chrome|chromium|node|vitest' | grep -v grep | head -n 40 || true
+          echo "== workers do vitest"; echo "node: $(pgrep -fc 'vitest' || true) | chrome: $(pgrep -fc 'chrome|chromium' || true) | nproc: $(nproc)"
+          echo "== cgroup"; cat /sys/fs/cgroup/memory.events /sys/fs/cgroup/memory.max 2>/dev/null || true
+
       - name: Testar o script da política de commits
         run: node --test scripts/verificar-commits.test.mjs
+
+      - name: Testar os workflows (pin por SHA, environment, checkout)
+        run: node --test scripts/verificar-workflows.test.mjs
 
       # A base é fixa: os commits até ela não seguem esta política (dois títulos passam
       # de 72 caracteres), e o mesmo intervalo vale em todo push e na PR.
@@ -51,10 +69,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Baixar o código
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
 
       - name: Instalar o Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: 24
 

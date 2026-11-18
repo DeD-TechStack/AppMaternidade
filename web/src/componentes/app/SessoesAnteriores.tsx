@@ -38,7 +38,7 @@ export function SessoesAnteriores({ tipo, itens, className }: Props) {
             {itens.slice(0, 4).map((item) => (
               <li
                 key={item.inicio}
-                className="flex items-center gap-3 border-t border-(--cor-fio-suave) py-3.5 first:border-t-0 lg:gap-4"
+                className="flex items-center gap-3 border-t border-(--cor-fio-suave) py-3 first:border-t-0 lg:gap-4"
               >
                 <Avatar nome={item.pessoa} />
                 <div className="min-w-0 flex-1">
