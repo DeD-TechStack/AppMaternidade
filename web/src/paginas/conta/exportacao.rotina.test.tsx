@@ -67,20 +67,20 @@ async function baixar(pessoa: keyof typeof PESSOAS, inicio: '/app/hoje' | '/app/
 }
 
 describe('exportação pelo provedor real da rotina (B01)', () => {
-  it('o arquivo exportado pelo provedor real traz os registros e as notas da rotina', async () => {
+  // Um caso por (conta, rota inicial): cada ramo falha sozinho. A fixture de demonstração dá notas às duas contas
+  // (`Pomada só à noite.` da responsável e `Fraldas P no armário de cima.` de Bruno).
+  const casos = [
+    ['o arquivo exportado pelo provedor real traz os registros e as notas da rotina', 'bruno', '/app/hoje'],
+    ['o arquivo exportado pelo provedor real traz os registros e as notas da rotina', 'juliana', '/app/hoje'],
+    ['o arquivo exportado sem abrir a rotina antes traz os registros e as notas da rotina', 'bruno', '/app/conta'],
+    ['o arquivo exportado sem abrir a rotina antes traz os registros e as notas da rotina', 'juliana', '/app/conta'],
+  ] as const
+
+  it.each(casos)('%s (%s, começando em %s)', async (_titulo, pessoa, inicio) => {
+    const json = await baixar(pessoa, inicio)
     // O cuidador recebe no topo o que ele mesmo criou; o responsável, dentro da família.
-    const dele = await baixar('bruno')
-    expect(dele.registros.length).toBeGreaterThan(0)
-
-    const dela = await baixar('juliana')
-    expect(dela.familias[0].registros.length).toBeGreaterThan(0)
-  })
-
-  it('o arquivo exportado sem abrir a rotina antes traz os registros e as notas da rotina', async () => {
-    const dele = await baixar('bruno', '/app/conta')
-    expect(dele.registros.length).toBeGreaterThan(0)
-
-    const dela = await baixar('juliana', '/app/conta')
-    expect(dela.familias[0].registros.length).toBeGreaterThan(0)
+    const { registros, notas } = pessoa === 'bruno' ? json : json.familias[0]
+    expect(registros.length).toBeGreaterThan(0)
+    expect(notas.length).toBeGreaterThan(0)
   })
 })
