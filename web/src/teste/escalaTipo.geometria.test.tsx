@@ -50,6 +50,11 @@ interface Acento {
   dentroDoH1: boolean
   irmaoDoH1: boolean
 }
+/** O menor `left` e o maior `right` das letras de uma linha do h1, em px da janela. */
+interface LimiteDeLinha {
+  esquerda: number
+  direita: number
+}
 interface Medida {
   erro?: string
   innerWidth: number
@@ -57,7 +62,15 @@ interface Medida {
   scrollWidth: number
   clientWidth: number
   largos: string[]
-  h1: { fontSize: number; classe: string; texto: string; linhas: string[] } | null
+  h1: {
+    fontSize: number
+    classe: string
+    texto: string
+    linhas: string[]
+    colunaEsquerda: number
+    colunaDireita: number
+    limites: LimiteDeLinha[]
+  } | null
   h2: Array<{ texto: string; fontSize: number }>
   acentos: Acento[]
 }
@@ -94,6 +107,8 @@ const SCRIPT_DE_MEDIDA = `
     if (h1) {
       // Cada letra visível vai para a linha do seu topo: o texto de cada linha mostra se alguma tem uma palavra só.
       const porTopo = new Map()
+      // Por linha também: o menor left e o maior right das letras, para ver se a linha cabe na coluna do h1.
+      const limitesPorTopo = new Map()
       let textoDoH1 = ''
       const caminhante = document.createTreeWalker(h1, NodeFilter.SHOW_TEXT)
       while (caminhante.nextNode()) {
@@ -108,13 +123,29 @@ const SCRIPT_DE_MEDIDA = `
           if (retangulos.length === 0) continue
           const topo = Math.round(retangulos[0].top)
           porTopo.set(topo, (porTopo.get(topo) || '') + no.data[i])
+          const limite = limitesPorTopo.get(topo) || { esquerda: Infinity, direita: -Infinity }
+          for (const retangulo of retangulos) {
+            limite.esquerda = Math.min(limite.esquerda, retangulo.left)
+            limite.direita = Math.max(limite.direita, retangulo.right)
+          }
+          limitesPorTopo.set(topo, limite)
         }
       }
+      const arredondar = (n) => Math.round(n * 10) / 10
+      const estiloDoH1 = getComputedStyle(h1)
+      const caixaDoH1 = h1.getBoundingClientRect()
+      const ordenados = [...porTopo.entries()].sort((a, b) => a[0] - b[0])
       infoH1 = {
-        fontSize: parseFloat(getComputedStyle(h1).fontSize),
+        fontSize: parseFloat(estiloDoH1.fontSize),
         classe: h1.className,
         texto: textoDoH1,
-        linhas: [...porTopo.entries()].sort((a, b) => a[0] - b[0]).map((par) => par[1]),
+        linhas: ordenados.map((par) => par[1]),
+        colunaEsquerda: arredondar(caixaDoH1.left + parseFloat(estiloDoH1.paddingLeft) + parseFloat(estiloDoH1.borderLeftWidth)),
+        colunaDireita: arredondar(caixaDoH1.right - parseFloat(estiloDoH1.paddingRight) - parseFloat(estiloDoH1.borderRightWidth)),
+        limites: ordenados.map((par) => ({
+          esquerda: arredondar(limitesPorTopo.get(par[0]).esquerda),
+          direita: arredondar(limitesPorTopo.get(par[0]).direita),
+        })),
       }
     }
     const principal = document.querySelector('main')
@@ -374,6 +405,15 @@ function palavrasPartidas(linhas: readonly string[], textoDoH1: string): string[
   return linhas.flatMap((linha) => palavrasDaLinha(linha)).filter((palavra) => !inteiras.has(palavra))
 }
 
+/** Os índices das linhas cujas letras passam da coluna do h1 (esquerda ou direita) por mais que a tolerância, em px. */
+function linhasForaDaColuna(limites: readonly LimiteDeLinha[], colunaEsquerda: number, colunaDireita: number, tolerancia = 1): number[] {
+  const fora: number[] = []
+  limites.forEach((limite, indice) => {
+    if (limite.esquerda < colunaEsquerda - tolerancia || limite.direita > colunaDireita + tolerancia) fora.push(indice)
+  })
+  return fora
+}
+
 /** O resíduo de linhas com uma palavra só (aceitas) vai para `.oc/medidas/residuo_uma_palavra.json` e para o console. */
 function escreverResiduo(residuo: unknown[]): void {
   const pasta = resolve(import.meta.dirname, '..', '..', '..', '.oc', 'medidas')
@@ -444,8 +484,14 @@ describe('TYPE-1: a escala de tipo medida no Chrome', () => {
             achados.push(`${caminho} em ${largura}: rolagem horizontal (${m.scrollWidth} > ${m.clientWidth}): ${JSON.stringify(m.largos)}`)
           }
           expect(m.h1, `${caminho}: sem h1 em ${largura}`).not.toBeNull()
-          const { linhas, texto } = m.h1!
+          const { linhas, texto, limites, colunaEsquerda, colunaDireita } = m.h1!
           expect(linhas.length, `${caminho}: o h1 sem linhas em ${largura}`).toBeGreaterThan(0)
+          // Nenhuma linha passa da coluna do próprio h1, mesmo quando o documento não rola (vale também onde a rolagem é pulada).
+          const foraDaColuna = linhasForaDaColuna(limites, colunaEsquerda, colunaDireita)
+          if (foraDaColuna.length > 0) {
+            const detalhe = foraDaColuna.map((i) => `"${linhas[i].trim()}" [${limites[i].esquerda}, ${limites[i].direita}] (${Math.round((limites[i].direita - limites[i].esquerda) * 10) / 10} px)`)
+            achados.push(`${caminho} em ${largura}: linha(s) do h1 fora da coluna [${colunaEsquerda}, ${colunaDireita}] (${Math.round((colunaDireita - colunaEsquerda) * 10) / 10} px): ${detalhe.join('; ')}`)
+          }
           // Nenhuma palavra partida dentro dela (overflow-wrap: anywhere): cada pedaço de linha é palavra inteira do h1.
           for (const fragmento of palavrasPartidas(linhas, texto)) {
             achados.push(`${caminho} em ${largura}: palavra partida "${fragmento}" (linhas: ${JSON.stringify(linhas)})`)
@@ -472,5 +518,19 @@ describe('TYPE-1: a escala de tipo medida no Chrome', () => {
     // Linhas inteiras, com pontuação no fim e uma palavra só numa linha: nada a acusar.
     expect(palavrasPartidas(['Exclusão ', 'da conta.'], 'Exclusão da conta.')).toEqual([])
     expect(palavrasPartidas(['A rotina ', 'do bebê,', ' dividida com ', 'carinho.'], 'A rotina do bebê,  dividida com carinho. ')).toEqual([])
+  })
+
+  it('quebra: o controle negativo acusa uma linha que estoura a coluna', () => {
+    // Uma linha de 181,7 px numa coluna de 40 px (0 a 40): é a da revisão, com o documento sem rolar. A linha de dentro e a
+    // que passa só 0,5 px (dentro da tolerância de 1 px) não são acusadas.
+    const limites = [
+      { esquerda: 0, direita: 181.7 },
+      { esquerda: 2, direita: 38 },
+      { esquerda: 0, direita: 40.5 },
+    ]
+    expect(linhasForaDaColuna(limites, 0, 40)).toEqual([0])
+    // Estourar pela esquerda também conta; a tolerância é ajustável.
+    expect(linhasForaDaColuna([{ esquerda: -3, direita: 30 }], 0, 40)).toEqual([0])
+    expect(linhasForaDaColuna([{ esquerda: 0, direita: 40.5 }], 0, 40, 0)).toEqual([0])
   })
 })
