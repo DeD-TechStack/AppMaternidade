@@ -128,7 +128,7 @@ describe('/app/conta quebra linha com a fonte a 200% (D-2)', () => {
     const { container, unmount } = await abrir(TELAS.find((t) => t.nome === '/app/conta')!)
     const achados: string[] = []
 
-    for (const nome of ['Copiar id', 'Baixar meus dados', 'Excluir minha conta']) {
+    for (const nome of ['Copiar ID', 'Baixar meus dados', 'Excluir minha conta']) {
       const botao = screen.getByRole('button', { name: nome })
       for (const necessaria of ['whitespace-normal', 'max-w-full', 'wrap-anywhere']) {
         if (!botao.classList.contains(necessaria)) achados.push(`${nome}: falta ${necessaria}`)
@@ -190,8 +190,8 @@ describe('h1 na escala do DESIGN.md (cm-h1)', () => {
 })
 
 describe('texto de interface sem sigla em caixa alta', () => {
-  it('nenhuma frase de conteudo/conta.ts tem palavra toda em maiúsculas de 2+ letras fora RN, SBP, LGPD e OMS', () => {
-    const permitidas = new Set(['RN', 'SBP', 'LGPD', 'OMS'])
+  it('nenhuma frase de conteudo/conta.ts tem palavra toda em maiúsculas de 2+ letras fora RN, SBP, LGPD, OMS, ID e JSON', () => {
+    const permitidas = new Set(['RN', 'SBP', 'LGPD', 'OMS', 'ID', 'JSON'])
     const frases: string[] = []
     const coletar = (valor: unknown) => {
       if (typeof valor === 'string') frases.push(valor)
