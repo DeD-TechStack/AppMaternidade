@@ -7,9 +7,8 @@ import { rotuloDoFuso } from '../componentes/conta/fusos.ts'
 
 const MARCA = 'AppMaternidade'
 
-// O contato provisório da demonstração (decisão de Daniel, 06/11/2026): o e-mail do autor dos
-// commits do repositório. É o único lugar do código em que ele aparece.
-const CONTATO_PROVISORIO = 'danielmacedosilva11@gmail.com'
+// Endereço fictício num domínio reservado (decisão de Daniel, 18/11/2026), o mesmo da página Contato.
+const CONTATO_PROVISORIO = 'contato@appmaternidade.example'
 
 export const TITULOS = {
   entrar: 'Entrar',
