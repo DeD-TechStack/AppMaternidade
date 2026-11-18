@@ -15,6 +15,11 @@ interface PlanoEnvio<T> {
   provaSucesso?: (erro: ErroDados) => boolean
   /** Roda no sucesso, também quando ele vem pela repetição. `valor` falta se veio da conferência. */
   aoSucesso: (valor: T | undefined) => void | Promise<void>
+  /**
+   * Roda uma vez, na hora, só quando o envio de fato começa (um envio novo que passou das duas
+   * guardas). Um clique ignorado não chama: é aqui que se limpa o que o envio novo vai refazer.
+   */
+  aoComecar?: () => void
 }
 
 /** Um envio novo logo depois de outro terminar (o 2º clique do mesmo gesto) é ignorado. */
@@ -39,7 +44,6 @@ export function useEnvio() {
 
   const falhar = useCallback((erro: ErroDados) => {
     repetindo.current = repetindo.current || ehRepetivel(erro.classe)
-    emVoo.current = false
     // Só um sucesso arma o guard do mesmo gesto: depois de uma falha a pessoa reenvia na hora.
     fimDoUltimoEnvio.current = Number.NEGATIVE_INFINITY
     setEstado({ fase: 'erro', erro, tentarDeNovo: ehRepetivel(erro.classe) })
@@ -51,7 +55,6 @@ export function useEnvio() {
     erroDaRepeticao.current = null
     await atual.aoSucesso(valor)
     fimDoUltimoEnvio.current = Date.now()
-    emVoo.current = false
     setEstado({ fase: 'ocioso' })
   }, [])
 
@@ -104,6 +107,7 @@ export function useEnvio() {
       repetindo.current = false
       alvo.current = 'escrita'
       erroDaRepeticao.current = null
+      novo.aoComecar?.()
       return rodar(novo as PlanoEnvio<unknown>)
     },
     [rodar],

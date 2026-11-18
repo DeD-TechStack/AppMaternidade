@@ -1,5 +1,5 @@
 // RED proof for CODE-Q finding ERR-1 (useEnvio stuck in 'enviando' when aoSucesso throws).
-// Copied into <base>/web/src/__codeq__/ (scratch copy, never the repo) and run with vitest.
+// Copied into BASE_DIR/web/src/__codeq__/ (scratch copy, never the repo) and run with vitest.
 // EXPECTED at BASE: both tests FAIL (that is the finding). After the fix they must pass.
 import { renderHook, act } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
