@@ -2,6 +2,7 @@ import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore }
 import { Link, NavLink, useLocation } from 'react-router'
 import { Menu, Moon, X } from 'lucide-react'
 import type { ErroDados } from '../../dados/comum.ts'
+import { EntradaAvisos } from '../avisos/EntradaAvisos.tsx'
 import { Botao } from '../base/Botao.tsx'
 import { QuadroLayout } from '../base/layout/QuadroLayout.tsx'
 import { ResumoErro } from '../conta/Partes.tsx'
@@ -173,6 +174,7 @@ export function Cabecalho({ contexto, comLua, madrugada, aoAlternarMadrugada, to
           {situacao === 'com_sessao' ? (
             // Os dois ficam no cabeçalho de 1100 para cima; abaixo disso vão para o menu (mesma classe do "Entrar").
             <>
+              <EntradaAvisos variante="linha" />
               <NavLink to={DESTINO_CONTA} end className="cm-cab-link cm-cab-entrar">
                 {ROTULO_CONTA}
               </NavLink>
