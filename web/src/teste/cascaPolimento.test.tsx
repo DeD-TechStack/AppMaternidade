@@ -112,21 +112,28 @@ describe('C-1 link "Pular para o conteúdo" (WCAG 2.4.1)', () => {
 })
 
 describe('C-3 fonte a 200 % em 390 px', () => {
-  it('a marca encolhe com a janela (min() com vw) e continua 24 px a 100 %', () => {
+  // DS1 §3.9: abaixo de 640 a marca é `min(1.25rem, 5.3vw)` (20 px, fora da escala) para a pílula "Criar conta" caber na
+  // linha de 390; de 640 em diante volta a `min(1.5rem, 4.4vw)` (24 px).
+  it('a marca encolhe com a janela (min() com vw) e é 20 px a 100 % em 390', () => {
     const base = regras.find((r) => r.seletor === '.cm-marca' && /min-height:\s*44px/.test(r.corpo))!
-    const vw = Number(/font-size:\s*min\(1\.5rem,\s*([\d.]+)vw\)/.exec(base.corpo)?.[1])
+    const vw = Number(/font-size:\s*min\(1\.25rem,\s*([\d.]+)vw\)/.exec(base.corpo)?.[1])
     expect(vw).toBeGreaterThan(0)
-    // A 100 % em 390: o menor entre 24 e vw% de 390 continua 24.
-    expect(Math.min(24, (vw / 100) * 390)).toBe(24)
+    // A 100 % em 390: o menor entre 20 e vw% de 390 (5,3 % = 20,67 px) continua 20.
+    expect(Math.min(20, (vw / 100) * 390)).toBe(20)
   })
 
-  it('a conta de 390 com a fonte a 200 %: marca + lua + menu cabem nos 350 px da área', () => {
+  it('a conta de 390 com a fonte a 200 %: marca + pílula + menu (público) e marca + lua + menu (logado) cabem nos 350 px da área', () => {
     const base = regras.find((r) => r.seletor === '.cm-marca' && /min-height:\s*44px/.test(r.corpo))!
-    const vw = Number(/min\(1\.5rem,\s*([\d.]+)vw\)/.exec(base.corpo)?.[1])
-    const marca = 8.25 * Math.min(2 * 24, (vw / 100) * 390) // "AppMaternidade" mede 8,25 em (7,966 + tracking de -0,01 em)
-    const acoes = 48 + 8 + (48 - 14.25) // lua 48, folga 8, menu 48 com o recuo de -14,25
+    const vw = Number(/min\(1\.25rem,\s*([\d.]+)vw\)/.exec(base.corpo)?.[1])
+    const marca = 8.25 * Math.min(2 * 20, (vw / 100) * 390) // "AppMaternidade" mede 8,25 em (7,966 + tracking de -0,01 em)
+    const menu = 48 - 14.25 // menu de 48 com o recuo de -14,25
     const area = 390 - 2 * 20
-    expect(marca + 16 + acoes).toBeLessThanOrEqual(area)
+    // Público: a pílula "Criar conta" (44 px de altura, ~120 px de largura, largura estimada: não medida) e o menu. A lua
+    // só existe nas páginas da Rotina (logado), onde não há pílula: os dois nunca dividem a linha.
+    const publico = marca + 16 + (120 + 8 + menu)
+    const logado = marca + 16 + (48 + 8 + menu) // lua 48, folga 8, menu
+    expect(publico).toBeLessThanOrEqual(area)
+    expect(logado).toBeLessThanOrEqual(area)
   })
 
   it('o cabeçalho nunca passa da janela: max-width 100 % e overflow-x clip, e os filhos aceitam encolher', () => {

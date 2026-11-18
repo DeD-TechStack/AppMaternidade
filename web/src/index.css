@@ -253,7 +253,7 @@
     font-size: var(--texto-titulo-1-tamanho);
     line-height: var(--texto-titulo-1-entrelinha);
     font-weight: 400;
-    font-style: italic;
+    font-style: normal;
     letter-spacing: 0;
   }
 

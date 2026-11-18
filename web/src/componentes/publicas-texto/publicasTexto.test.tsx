@@ -764,7 +764,8 @@ describe('painel e figura por largura (CSS)', () => {
     const [segunda] = corpos('.pt-segunda-linha')
     expect(segunda).toMatch(/font-size:\s*var\(--texto-titulo-2-tamanho\)/)
     expect(segunda).toMatch(/line-height:\s*var\(--texto-titulo-2-entrelinha\)/)
-    expect(segunda).toMatch(/font-style:\s*italic/)
+    // DS1:RF-06 (§5.3): sem itálico público; a linha vira `font-style: normal` ou some.
+    expect(segunda).not.toMatch(/font-style:\s*italic/)
   })
 
   it('o índice em tela larga é uma lista vertical só, em corpo pequeno (15/22), sem grade nem colunas', () => {

@@ -11,6 +11,9 @@ const { COLUNAS_DO_RODAPE, NOME_SITE } = textos
 
 const PAGINAS_PUBLICAS = ['/', '/como-funciona', '/privacidade', '/contato', '/rota-que-nao-existe']
 const LINKS = COLUNAS_DO_RODAPE.flatMap((coluna) => coluna.links)
+// DS1:RF-14: o rodapé do app (`/app/*`) continua com os 9 links de Produto, Ajuda e Legal, sem o grupo Conta.
+const GRUPOS_DO_RODAPE_COMPACTO = ['Produto', 'Ajuda', 'Legal']
+const LINKS_COMPACTOS = COLUNAS_DO_RODAPE.filter((coluna) => GRUPOS_DO_RODAPE_COMPACTO.includes(coluna.titulo)).flatMap((coluna) => coluna.links)
 
 function rodapeDe(caminho: string) {
   const resultado = renderizarRota(caminho, { sessao: null })
@@ -53,19 +56,19 @@ describe('rodapé público compacto (FOOTER-1)', () => {
     expect(rodape.querySelector('.cm-area')).not.toBeNull()
   })
 
-  it('traz os 9 links de COLUNAS_DO_RODAPE, na ordem e com o destino de cada um', () => {
+  it('traz os 13 links de COLUNAS_DO_RODAPE, na ordem e com o destino de cada um', () => {
     const { rodape } = rodapeDe('/privacidade')
-    expect(LINKS).toHaveLength(9)
+    expect(LINKS).toHaveLength(13)
     const links = within(rodape).getAllByRole('link')
     expect(links.map((a) => a.textContent)).toEqual(LINKS.map((l) => l.rotulo))
     expect(links.map((a) => a.getAttribute('href'))).toEqual(LINKS.map((l) => l.para))
     for (const a of links) expect(a.classList.contains('cm-rodape-link')).toBe(true)
   })
 
-  it('os três títulos de grupo estão no DOM, em ordem, cada um sobre a lista do seu grupo', () => {
+  it('os quatro títulos de grupo estão no DOM, em ordem, cada um sobre a lista do seu grupo', () => {
     const { rodape } = rodapeDe('/contato')
     const titulos = within(rodape).getAllByRole('heading', { level: 2 })
-    expect(titulos.map((h) => h.textContent)).toEqual(['Produto', 'Ajuda', 'Legal'])
+    expect(titulos.map((h) => h.textContent)).toEqual(['Produto', 'Conta', 'Ajuda', 'Legal'])
     for (const [i, titulo] of titulos.entries()) {
       const grupo = titulo.parentElement!
       expect([...grupo.querySelectorAll('a')].map((a) => a.textContent)).toEqual(COLUNAS_DO_RODAPE[i].links.map((l) => l.rotulo))
@@ -97,7 +100,7 @@ describe('rodapé público compacto (FOOTER-1)', () => {
     const navs = within(rodape).getAllByRole('navigation')
     expect(navs).toHaveLength(1)
     expect(navs[0].getAttribute('aria-label')).toBe('Rodapé')
-    expect(within(navs[0]).getAllByRole('link')).toHaveLength(9)
+    expect(within(navs[0]).getAllByRole('link')).toHaveLength(13)
   })
 
   it('a linha do aviso de demonstração continua no rodapé, depois dos links (sem as variáveis do banco)', () => {
@@ -120,6 +123,7 @@ describe('rodapé público compacto (FOOTER-1)', () => {
     expect(rodape.querySelector('[data-aviso="demonstracao"]')).toBeNull()
     const nav = within(rodape).getByRole('navigation')
     expect(nav.className).toBe('cm-rodape-compacto-nav')
-    expect(within(nav).getAllByRole('link').map((a) => a.getAttribute('href'))).toEqual(LINKS.map((l) => l.para))
+    expect(LINKS_COMPACTOS).toHaveLength(9)
+    expect(within(nav).getAllByRole('link').map((a) => a.getAttribute('href'))).toEqual(LINKS_COMPACTOS.map((l) => l.para))
   })
 })

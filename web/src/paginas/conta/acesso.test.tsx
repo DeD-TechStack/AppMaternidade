@@ -7,6 +7,7 @@ import {
   CHAVE_RECUPERACAO,
 } from '../../componentes/conta/armazenamento.ts'
 import { destinoDepoisDeEntrar, voltaValida } from '../../componentes/conta/destino.ts'
+import { AVISO_RODAPE } from '../../componentes/casca/textos.ts'
 import { AVISO_BANCO_DEMONSTRACAO, CRIAR_CONTA, NOMES_DO_H1, RECUPERAR, TEXTOS_ERRO } from '../../conteudo/conta.ts'
 import type { Resultado } from '../../dados/comum.ts'
 import type { Usuario } from '../../dados/conta.ts'
@@ -490,7 +491,11 @@ describe('/criar-conta', () => {
     expect(aviso.tagName).toBe('P')
     expect(aviso.textContent).toBe(AVISO_BANCO_DEMONSTRACAO)
     expect(aviso.hasAttribute('role')).toBe(false)
-    expect(banco.container.querySelectorAll(seletorDaMemoria)).toHaveLength(0)
+    // DS1:RF-14: o aviso do rodapé (o único `[data-aviso="demonstracao"]`) vale também com banco, com o texto AVISO_RODAPE.
+    const avisosDoRodape = banco.container.querySelectorAll(seletorDaMemoria)
+    expect(avisosDoRodape).toHaveLength(1)
+    expect(avisosDoRodape[0].closest('footer[data-rodape]')).not.toBeNull()
+    expect(avisosDoRodape[0].textContent).toBe(AVISO_RODAPE)
     expect(fetchProibido).not.toHaveBeenCalled()
   })
 })

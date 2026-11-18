@@ -1,7 +1,7 @@
 import type { Ref } from 'react'
 
 interface Props {
-  /** A primeira linha e a segunda: a ênfase é a segunda linha inteira em itálico (DESIGN.md 2). */
+  /** A primeira linha e a segunda: a segunda linha é um bloco em prumo, sem itálico (DESIGN.md 3). */
   linhas: readonly [string, string]
   /** O `h1` recebe o foco por programa quando a tela muda (`useFocoNoTitulo`). */
   refTitulo: Ref<HTMLHeadingElement>

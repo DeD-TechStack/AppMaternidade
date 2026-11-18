@@ -45,7 +45,7 @@
   .cm-marca {
     margin: 0;
     font-family: var(--fonte-titulo);
-    font-weight: 600;
+    font-weight: var(--peso-titulo);
     text-wrap: balance;
   }
 
@@ -69,6 +69,24 @@
   .cm-h1.cm-exibicao {
     font-size: var(--texto-exibicao-tamanho);
     line-height: var(--texto-exibicao-entrelinha);
+    font-weight: var(--peso-exibicao);
+  }
+
+  /* Fora da escala, só para o h1 da 404 (REP-T4): 112/112 em 1440 e 56/58 em 390, em linha reta entre os dois. */
+  :root {
+    --texto-exibicao-404-tamanho: clamp(3.5rem, calc(3.5rem + (100vw - 390px) * 56 / 1050), 7rem);
+    --texto-exibicao-404-entrelinha: clamp(3.625rem, calc(3.625rem + (100vw - 390px) * 54 / 1050), 7rem);
+  }
+
+  .cm-exibicao-404 {
+    margin: 0;
+    font-family: var(--fonte-exibicao);
+    font-weight: var(--peso-exibicao);
+    font-size: var(--texto-exibicao-404-tamanho);
+    line-height: var(--texto-exibicao-404-entrelinha);
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+    overflow-wrap: anywhere;
   }
 
   .cm-h2 {
@@ -88,14 +106,9 @@
     line-height: var(--texto-titulo-4-entrelinha);
   }
 
-  /* Uma ênfase em itálico por página, no máximo: a segunda linha inteira do h1 (nunca uma palavra solta). Nos
-     demais títulos a segunda linha é um bloco em prumo. */
+  /* A segunda linha de um título é um bloco em prumo: nenhum itálico nas páginas públicas (DESIGN.md 3). */
   .cm-segunda-linha {
     display: block;
-  }
-
-  h1 .cm-segunda-linha {
-    font-style: italic;
   }
 
   .cm-corpo {
@@ -442,15 +455,17 @@
     min-width: 0;
   }
 
-  /* A marca acompanha a janela: 24 px a 100 % (em 390, 6,4 vw = 25 px), e com a raiz a 200 % (1,5 rem = 48 px)
-     fica em ~25 px em vez de 380 px de largura, que empurravam a lua e o menu para fora (DEF-62b-7). */
+  /* A marca acompanha a janela: 20 px abaixo de 640 (fora da escala, DESIGN.md "Marca do cabeçalho": com a pílula
+     "Criar conta" na linha de 390 a marca, a pílula e o menu só cabem a 20 px) e 24 px de 640 em diante; com a
+     raiz a 200 % (1,25 rem = 40 px) fica em ~21 px em vez de 380 px de largura, que empurravam a lua e o menu
+     para fora (DEF-62b-7). */
   .cm-marca {
     flex: none;
     display: inline-flex;
     align-items: center;
     min-height: 44px;
     color: inherit;
-    font-size: min(1.5rem, 6.4vw);
+    font-size: min(1.25rem, 5.3vw);
     line-height: 1.5rem;
     letter-spacing: -0.01em;
     text-decoration: none;
@@ -492,15 +507,45 @@
     text-decoration-color: currentColor;
   }
 
-  /* Entrar e Criar conta ficam no menu abaixo de 1100; Criar conta volta ao topo a partir de 640. */
-  .cm-cab-entrar,
-  .cm-cab-criar {
+  /* "Entrar" fica no menu abaixo de 1100. A pílula "Criar conta" fica na linha em toda largura (DS1:RF-09):
+     44 px de altura abaixo de 640 (as medidas da pílula do app, padding 22), 48 px daí em diante. */
+  .cm-cab-entrar {
     display: none;
   }
 
   .cm-cab-criar {
-    min-height: 48px;
+    min-height: 44px;
     padding: 0 22px;
+  }
+
+  /* O estado de noite do cabeçalho (`useCabecalhoNoite()`): cacau, marca e links de papel, a pílula em contorno
+     de papel e fundo transparente (nenhum botão de mel no cabeçalho; o de mel é o da página). O menu do celular
+     continua de papel, com o texto de cacau. */
+  .cm-cabecalho[data-tom='noite'] {
+    background-color: var(--color-cacau);
+    color: var(--color-papel);
+  }
+
+  .cm-cabecalho[data-tom='noite'] .cm-cab-criar {
+    border-color: var(--color-papel);
+    background-color: transparent;
+    color: var(--color-papel);
+  }
+
+  .cm-cabecalho[data-tom='noite'] .cm-cab-criar:hover {
+    background-color: var(--color-papel);
+    color: var(--color-cacau);
+  }
+
+  /* O anel de foco do cacau é de cacau: sobre o cacau ele passa a ser de papel. */
+  .cm-cabecalho[data-tom='noite'] .cm-cab-miolo :focus-visible,
+  .cm-cabecalho[data-tom='noite'] .cm-pular:focus {
+    outline-color: var(--color-papel);
+  }
+
+  .cm-cabecalho[data-tom='noite'] .cm-pular:focus {
+    background-color: var(--color-papel);
+    color: var(--color-cacau);
   }
 
   .sb-cab-menu {
@@ -542,7 +587,7 @@
 
   @media (min-width: 640px) {
     .cm-cab-criar {
-      display: inline-flex;
+      min-height: 48px;
     }
 
     .cm-cab-madrugada .cm-rotulo-longo {
@@ -675,13 +720,22 @@
     width: 100%;
   }
 
-  /* Rodapé: links agrupados no fundo da página, sem painel de cor --------------------------------- */
-  /* O rodapé do site não tem fundo próprio: fica no fundo da página (papel; noite na madrugada), sob um fio de 1 px
-     (`.cm-rodape-quadro`, na área do site, como o rodapé compacto). Enquanto uma página não termina numa Secao (as
-     áreas do H-3b a H-3f), o respiro do fim dela continua sendo esta margem; quando termina, o `secao-ampla` da
-     última seção já cobre. */
+  /* Rodapé (RodapeMapa, DS1:RF-04): uma faixa de cacau de borda a borda, de links agrupados ------------------- */
+  /* O rodapé do site é cacau (papel nos links, noite-2 nos títulos, no aviso e no ©), sem sombra, sem gradiente e
+     sem movimento. O rodapé compacto de /app/* não herda o cacau (`:not`). Enquanto uma página não termina numa
+     Secao, o respiro do fim dela continua sendo esta margem; quando termina, a última seção já cobre. */
   .cm-rodape {
     margin-top: var(--cm-entre-secoes);
+  }
+
+  .cm-rodape:not(.cm-rodape-compacto) {
+    background-color: var(--color-cacau);
+    color: var(--color-papel);
+  }
+
+  /* O anel de foco do site é de cacau: sobre o cacau do rodapé ele passa a ser de papel. */
+  .cm-rodape:not(.cm-rodape-compacto) :focus-visible {
+    outline-color: var(--color-papel);
   }
 
   main:has(> [data-h~='secao']:last-child) ~ .cm-rodape:not(.cm-rodape-compacto) {
@@ -690,10 +744,17 @@
 
   /* A largura é a do quadro da página (a mesma do cabeçalho e das seções, 1200 px no máximo), para o nome e os links
      ficarem na borda esquerda do resto da página; abaixo de 1224 px dá a mesma margem lateral da `.cm-area`. */
+  /* Abaixo de 768 o rodapé tem de caber em 420 px também na madrugada (links de 56 px, cinco linhas de 280 px): o
+     respiro do quadro é o `junto`, o nome encosta nos links (a caixa de cada link já traz folga em volta do texto) e
+     o © segue o aviso na mesma linha corrida (a segunda linha do aviso é curta). De 768 em diante volta tudo ao
+     respiro de grupo, com o nome e o ©/aviso em blocos. */
   .cm-rodape-quadro {
     width: min(var(--quadro-largura), 100vw - 2 * var(--quadro-calha));
-    padding-block: var(--espaco-pilha);
-    border-top: 1px solid var(--cor-fio-suave);
+    padding-block: var(--espaco-junto);
+  }
+
+  .cm-rodape-topo {
+    margin-bottom: 0;
   }
 
   /* O nome é texto comum no nível `titulo-3` (nunca maior que o h1 da página). A marca e as colunas de links vão
@@ -703,25 +764,27 @@
     font-family: var(--fonte-titulo);
     font-size: var(--texto-titulo-3-tamanho);
     line-height: var(--texto-titulo-3-entrelinha);
-    font-weight: 600;
+    font-weight: var(--peso-titulo);
     letter-spacing: -0.01em;
   }
 
-  /* Abaixo de 768: os nove links são uma lista só, em duas colunas, lida coluna a coluna na ordem dos grupos
-     (Produto, Ajuda, Legal). Os títulos dos grupos ficam só para o leitor de tela (sr-only). Cada coluna tem a
-     largura de meia área menos o vão; com a fonte a 200 % o texto quebra dentro do link, nunca passa da coluna. */
+  /* Abaixo de 768 o desenho é livre dentro do teto de 420 px (spec §3.8): os 13 links são uma lista só, em três
+     colunas (5 linhas de 44 px), lidos coluna a coluna na ordem dos grupos (Produto, Conta, Ajuda, Legal). Os
+     títulos dos grupos ficam só para o leitor de tela (sr-only). Um rótulo mais largo que a coluna quebra em duas
+     linhas dentro da caixa de 44 px, e nunca passa da coluna (também com a fonte a 200 %). */
   .cm-rodape-colunas {
     position: relative;
-    column-count: 2;
-    column-gap: var(--espaco-pilha);
+    column-count: 3;
+    column-gap: var(--espaco-junto);
   }
 
   .cm-rodape-titulo {
+    margin: 0;
     font-family: var(--fonte-texto);
     font-size: var(--texto-pequeno-tamanho);
     line-height: var(--texto-pequeno-entrelinha);
-    font-weight: 600;
-    color: var(--cor-texto-2);
+    font-weight: 500;
+    color: var(--color-noite-2);
     /* Abaixo de 768 o título fica no DOM, só para o leitor de tela (a mesma técnica do sr-only). */
     position: absolute;
     width: 1px;
@@ -750,8 +813,10 @@
     align-items: center;
     min-height: 44px;
     min-width: var(--alvo-toque);
-    /* Uma palavra mais larga que a coluna quebra, nunca passa por cima da coluna do lado (fonte a 200 %). */
+    /* Uma palavra mais larga que a coluna quebra (com hífen, quando o navegador tem o dicionário), nunca passa
+       por cima da coluna do lado (fonte a 200 %). */
     overflow-wrap: anywhere;
+    hyphens: auto;
     color: inherit;
     text-decoration-line: underline;
     text-decoration-color: transparent;
@@ -773,14 +838,18 @@
     line-height: var(--texto-pequeno-entrelinha);
   }
 
-  /* O aviso de demonstração: uma linha (ou duas, em tela estreita) embaixo dos links, em texto secundário. */
+  /* O aviso e, depois dele, a linha do ©: cada um em um parágrafo de `pequeno`, em noite-2, embaixo dos links. */
   .cm-rodape-base {
-    margin-top: var(--espaco-junto);
-    color: var(--cor-texto-2);
+    color: var(--color-noite-2);
   }
 
   .cm-rodape-base > p {
+    display: inline;
     margin: 0;
+  }
+
+  .cm-rodape-base > p + p {
+    margin-inline-start: var(--espaco-junto);
   }
 
   /* Rodapé das rotas /app/*: uma linha de links que quebra, sobre uma régua fina; sem painel de mel. */
@@ -797,23 +866,26 @@
     border-top: 1px solid var(--cor-fio-suave);
   }
 
-  /* De 768 em diante: o nome à esquerda e os três grupos (com os títulos à vista) à direita, numa fileira só.
-     Em 768 a fileira cabe com folga curta (o texto dos três grupos e o nome somam ~650 px de uma área de ~700):
-     por isso o vão é `junto` até 1023 e `grupo` de 1024 em diante. */
+  /* De 768 em diante os quatro grupos (com os títulos à vista) ficam numa fileira só. Em 768 o texto dos quatro
+     grupos (~565 px) e o nome (~185 px) não cabem lado a lado numa área de ~720 px: até 1023 o nome fica
+     sobre a fileira dos grupos; de 1024 em diante o nome vai à esquerda e os grupos à direita. Com o nome numa
+     fileira própria (768 a 1023) e os links de 56 px na madrugada, o rodapé só cabe nos 400 px com o respiro
+     `pilha` no quadro, o nome encostado nos grupos e o © na linha corrida do aviso (como abaixo de 768); de 1024
+     em diante, com o nome ao lado, o respiro de grupo e os dois blocos voltam. */
   @media (min-width: 768px) {
     .cm-rodape-quadro {
-      padding-block: var(--espaco-grupo);
+      padding-block: var(--espaco-pilha);
     }
 
     .cm-rodape-topo {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      column-gap: var(--espaco-junto);
+      display: grid;
+      row-gap: var(--espaco-junto);
+      margin-bottom: 0;
     }
 
     .cm-rodape-colunas {
       display: flex;
+      justify-content: space-between;
       column-count: auto;
       column-gap: var(--espaco-junto);
     }
@@ -832,11 +904,31 @@
   }
 
   @media (min-width: 1024px) {
+    .cm-rodape-quadro {
+      padding-block: var(--espaco-grupo);
+    }
+
     .cm-rodape-topo {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
       column-gap: var(--espaco-grupo);
+      margin-bottom: var(--espaco-pilha);
+    }
+
+    .cm-rodape-base {
+      display: grid;
+      gap: 4px;
+    }
+
+    .cm-rodape-base > p,
+    .cm-rodape-base > p + p {
+      display: block;
+      margin: 0;
     }
 
     .cm-rodape-colunas {
+      justify-content: flex-start;
       column-gap: var(--espaco-grupo);
     }
   }

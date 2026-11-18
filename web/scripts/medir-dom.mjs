@@ -1,5 +1,5 @@
-// Medidor do site "Campo de mel": mede no Chrome, por CDP, os gates determinísticos da seção 8 do
-// DESIGN.md (.oc/contrato/DESIGN.md). Só biblioteca padrão do Node 24 (fetch e WebSocket), só loopback.
+// Medidor do site: mede no Chrome, por CDP, os gates determinísticos do web/DESIGN.md. Só biblioteca
+// padrão do Node 24 (fetch e WebSocket), só loopback.
 //
 // Uso: node web/scripts/medir-dom.mjs <pasta> <caso>:<tema>:<LxA> ...
 //   casos: sistema, inicio, hoje, sessao, e qualquer outro nome [a-z0-9_]+ que esteja em CASOS de
@@ -8,9 +8,19 @@
 //   Saída 0 se mediu (as falhas ficam no JSON e no RESUMO); 2 em erro de uso ou de conexão.
 //   Ambiente: CDP_PORTA (padrão 9344) e BASE_URL (padrão http://127.0.0.1:5244/).
 //
-// Regras (todas bloqueiam em todos os casos): G1 (sem rolagem horizontal), G11 (alvos e contraste),
-// G12 (movimento reduzido), FONTES (só Literata e Outfit), CAIXA (nada em caixa alta), SOMBRA (sombra,
-// gradiente e filtro só pelos tokens) e 3D (sem perspective, preserve-3d nem rotação em X ou Y).
+// As sete regras originais valem em todo caso: G1 (sem rolagem horizontal, Layout), G11 (alvos e contraste,
+// Components e Colors), G12 (movimento reduzido), FONTES (só Literata e Outfit, e nenhuma monospace na frente,
+// Typography), CAIXA (nada em caixa alta, Typography), SOMBRA (sombra, gradiente e filtro só pelos tokens,
+// Elevation & Depth) e 3D (sem perspective, preserve-3d nem rotação em X ou Y, Do's and Don'ts).
+//
+// As regras da casa acesa (DS-1a) valem nas páginas públicas e na /sistema: FAIXA (faixas de ponta a ponta nos
+// quatro chãos, Colors e Layout), PRODUTO (a moldura do aparelho, Components), RODAPE (RodapeMapa, Components),
+// EXIBICAO (a face de exibição nos títulos, Typography), ITALICO (nenhum itálico, Typography), TITULO e
+// TITULO_REGISTRO (um título, uma cor), SOBRETITULO (nenhum rótulo sobre o título, Do's and Don'ts), DOCK (nenhuma
+// barra colada na base, Do's and Don'ts), CABECALHO (a pílula Criar conta, Components), BOTAO_LARGO (Components),
+// CENA (a placa de estúdio, Components), CASA_LIMPA e CASA_LIMPA_REGISTRO (sem sombra, gradiente, painel nem mel de
+// chão, Elevation & Depth e Do's and Don'ts) e CASA_PRESENTE (a /sistema tem um [data-casa]). Só TITULO_REGISTRO e
+// CASA_LIMPA_REGISTRO apenas registram: medem o main das páginas públicas que ainda não são casa.
 //
 // A parte pura recebe um JSON de nós e devolve { regra, ok, motivo, nos_com_falha }. Ela falha
 // fechado: nó sem texto onde a regra pede texto, sem estilo, medida ausente, NaN ou valor ilegível
@@ -44,8 +54,53 @@ const TOKENS_NA_PAGINA = {
   brilhoMel: '--brilho-mel',
 }
 
-/** As regras, na ordem em que saem. */
-export const REGRAS = ['G1', 'G11', 'G12', 'FONTES', 'CAIXA', 'SOMBRA', '3D']
+/** As sete regras de sempre, na ordem em que saem. */
+export const REGRAS_ORIGINAIS = ['G1', 'G11', 'G12', 'FONTES', 'CAIXA', 'SOMBRA', '3D']
+
+/** Todas as regras, na ordem do spec: as sete originais e as quinze da casa acesa. */
+export const REGRAS = [
+  ...REGRAS_ORIGINAIS,
+  'FAIXA',
+  'PRODUTO',
+  'RODAPE',
+  'EXIBICAO',
+  'ITALICO',
+  'TITULO',
+  'TITULO_REGISTRO',
+  'SOBRETITULO',
+  'DOCK',
+  'CABECALHO',
+  'BOTAO_LARGO',
+  'CENA',
+  'CASA_LIMPA',
+  'CASA_LIMPA_REGISTRO',
+  'CASA_PRESENTE',
+]
+
+/** As quinze rotas públicas (os casos de .oc/cdp.mjs). */
+export const CASOS_PUBLICOS = [
+  'inicio',
+  'comofunciona',
+  'cuidado',
+  'desenvolvimento',
+  'privacidade',
+  'termos',
+  'regras',
+  'exclusao',
+  'sobre',
+  'contato',
+  'entrar',
+  'criar_conta',
+  'recuperar_acesso',
+  'convite',
+  'naoencontrada',
+]
+
+/** Os casos que têm de trazer um [data-casa] no main (a /sistema, a vitrine das peças). */
+export const CASOS_CASA = ['sistema']
+
+/** As duas regras que só registram: nunca bloqueiam. */
+const REGRAS_DE_REGISTRO = ['TITULO_REGISTRO', 'CASA_LIMPA_REGISTRO']
 
 /**
  * As contas fictícias da demonstração, que só existem na memória da página (modo memória, sem
@@ -175,7 +230,20 @@ const px = (valor) => {
 }
 const semAspas = (texto) => String(texto).trim().replace(/^["']|["']$/g, '').trim()
 
-function resultado(regra, falhas, motivoOk, motivoFalha) {
+function resultado(regra, falhasBrutas, motivoOk, motivoFalha) {
+  // As falhas com `ref` (as regras da casa acesa) se juntam por nó: um nó que falha em dois pontos é um só nó com falha.
+  const porNo = new Map()
+  const falhas = []
+  for (const f of falhasBrutas) {
+    const antes = f.ref === undefined ? undefined : porNo.get(f.ref)
+    if (antes) {
+      antes.motivo = `${antes.motivo}; ${f.detalhe}`
+      continue
+    }
+    const falha = f.ref === undefined ? f : { no: f.no, motivo: f.motivo }
+    if (f.ref !== undefined) porNo.set(f.ref, falha)
+    falhas.push(falha)
+  }
   const ok = falhas.length === 0
   return {
     regra,
@@ -408,6 +476,12 @@ export function fontes(nos) {
   // As famílias nomeadas de uma pilha: devolve as que ficam fora de Literata e Outfit.
   const foraDaPilha = (familias) => {
     const fora = []
+    // DS1:RF-07: uma pilha que COMEÇA em monospace ou ui-monospace desenha em monoespaçada; como reserva
+    // depois do Outfit ou da Literata ela segue valendo.
+    if (/^(?:monospace|ui-monospace)$/i.test(familias[0] ?? '')) {
+      foraDoSet.set(familias[0].toLowerCase(), familias[0])
+      fora.push(familias[0])
+    }
     for (const familia of familias) {
       if (ehGenerica(familia)) continue
       const base = familiaBase(familia)
@@ -756,17 +830,423 @@ export function tresD(nos) {
 
 // ---------------------------------------------------------------------------------------------
 
-/** As regras que bloqueiam em cada caso: todas, em todos. */
-export function bloqueantesDoCaso() {
-  return [...REGRAS]
+// ---------------------------------------------------------------------------------------------
+// As regras da casa acesa (DS-1a). Cada uma é pura sobre `(nos, doc)`, devolve { regra, ok, motivo,
+// nos_com_falha } e falha fechado: leitura ausente, NaN ou ilegível reprova. Sem elemento no escopo a
+// regra passa com o motivo "nenhum elemento" (a menos que o escopo seja obrigatório).
+
+const nenhumElemento = (regra) => ({ regra, ok: true, motivo: 'nenhum elemento', nos_com_falha: [] })
+
+/** Os chãos e a luz do DESIGN.md (Colors): papel, cacau, areia, chao-noite; mel e mel-claro não são chão. */
+const COR = {
+  papel: [248, 246, 235],
+  cacau: [43, 35, 32],
+  areia: [234, 221, 197],
+  chaoNoite: [110, 101, 96],
+  mel: [242, 193, 78],
+  melClaro: [247, 214, 132],
+}
+const CHAOS = [COR.papel, COR.cacau, COR.areia, COR.chaoNoite]
+
+/** A cor calculada `texto` é opaca e igual a `[r, g, b]`, com a folga de arredondamento do navegador. */
+function ehCor(texto, [r, g, b], folga = 1) {
+  const cor = parseCor(texto)
+  return cor !== null && cor.a >= 0.999 && Math.abs(cor.r - r) <= folga && Math.abs(cor.g - g) <= folga && Math.abs(cor.b - b) <= folga
+}
+const ehChao = (texto) => CHAOS.some((chao) => ehCor(texto, chao))
+
+const retanguloDe = (no) => {
+  const r = no.rect
+  return r && ['x', 'y', 'w', 'h'].every((k) => Number.isFinite(r[k])) ? r : null
+}
+const leitura = (valor) => (valor === undefined || valor === null ? '' : String(valor).trim())
+const ehTitulo = (no) => /^h[1-6]$/.test(no.tag ?? '')
+const falharNo = (falhas, no, motivo) => falhas.push({ no: descrever(no), motivo: `${descrever(no)}: ${motivo}`, ref: no, detalhe: motivo })
+const falharDoc = (falhas, motivo) => falhas.push({ no: 'documento', motivo })
+
+/** Todos os raios (um a quatro valores) são 0 px; ausente ou ilegível reprova. */
+function raioZero(valor) {
+  if (!lido(valor)) return false
+  return valor.trim().split(/[\s/]+/).every((parte) => px(parte) <= 0)
 }
 
-/** Avalia as regras sobre as leituras de uma página: `{ doc, nos, tema }`. Todas bloqueiam, em todo caso. */
-export function avaliarTudo({ doc, nos, tema }) {
+/** FAIXA: toda `[data-faixa]` toca as duas bordas, tem raio 0, padding vertical do token de seção e um dos quatro chãos. */
+export function faixa(nos, doc) {
+  const faixas = nos.filter((no) => marca(no, 'faixa'))
+  const lados = nos.filter((no) => marca(no, 'faixaLado'))
+  if (faixas.length === 0 && lados.length === 0) return nenhumElemento('FAIXA')
+  const falhas = []
+  const largura = doc?.clientWidth
+  const espaco = px(doc?.tokens?.espacoSecao)
+  for (const no of faixas) {
+    const r = retanguloDe(no)
+    if (!r) falharNo(falhas, no, 'sem retângulo')
+    else if (!Number.isFinite(largura)) falharNo(falhas, no, 'clientWidth da janela ausente')
+    else {
+      if (r.x > 1) falharNo(falhas, no, `começa em x=${r.x.toFixed(1)}: não toca a borda esquerda`)
+      if (r.x + r.w < largura - 1) falharNo(falhas, no, `termina em x=${(r.x + r.w).toFixed(1)}: não toca a borda direita (${largura})`)
+    }
+    if (!raioZero(no.estilo?.borderRadius)) falharNo(falhas, no, `raio ${leitura(no.estilo?.borderRadius) || 'ausente'} (a faixa é reta)`)
+    for (const [lado, nome] of [['paddingTop', 'padding-top'], ['paddingBottom', 'padding-bottom']]) {
+      const p = px(no.estilo?.[lado])
+      if (!Number.isFinite(espaco)) falharNo(falhas, no, 'token --espaco-secao não lido na raiz')
+      else if (!Number.isFinite(p)) falharNo(falhas, no, `${nome} ausente ou ilegível`)
+      else if (Math.abs(p - espaco) > 1) falharNo(falhas, no, `${nome} ${p}px (o token de seção é ${espaco}px)`)
+    }
+    if (!ehChao(no.estilo?.backgroundColor)) falharNo(falhas, no, `fundo ${leitura(no.estilo?.backgroundColor) || 'ausente'} fora dos quatro chãos`)
+  }
+  for (const no of lados) {
+    if (!ehChao(no.estilo?.backgroundColor)) falharNo(falhas, no, `lado da faixa com fundo ${leitura(no.estilo?.backgroundColor) || 'ausente'} fora dos quatro chãos`)
+  }
+  return resultado('FAIXA', falhas, `${faixas.length} faixas de ponta a ponta, ${lados.length} lados, só nos quatro chãos`)
+}
+
+/** PRODUTO: no máximo 2 molduras, cada uma com tela única e moldura, sem sombra, filtro nem gradiente. */
+export function produto(nos, doc) {
+  const figuras = nos.filter((no) => marca(no, 'produto'))
+  const telas = nos.filter((no) => marca(no, 'produtoTela'))
+  const molduras = nos.filter((no) => marca(no, 'produtoMoldura'))
+  if (figuras.length === 0 && telas.length === 0 && molduras.length === 0) return nenhumElemento('PRODUTO')
+  const falhas = []
+  if (figuras.length > 2) falharDoc(falhas, `${figuras.length} molduras de produto (o máximo é 2)`)
+  if (telas.length !== figuras.length) falharDoc(falhas, `${figuras.length} molduras e ${telas.length} telas (uma tela por moldura)`)
+  if (molduras.length < figuras.length) falharDoc(falhas, `${figuras.length} molduras e ${molduras.length} artes de moldura`)
+  const minimo = doc?.largura >= 1440 ? 320 : 280
+  for (const no of [...figuras, ...telas, ...molduras]) {
+    const e = no.estilo
+    if (!retanguloDe(no)) falharNo(falhas, no, 'sem retângulo')
+    if (!e || !lido(e.boxShadow)) falharNo(falhas, no, 'box-shadow ausente')
+    else if (sombraCanonica(e.boxShadow) !== 'none') falharNo(falhas, no, `box-shadow ${e.boxShadow} (a moldura não tem sombra)`)
+    if (!e || !lido(e.filter)) falharNo(falhas, no, 'filter ausente')
+    else if (e.filter.trim() !== 'none') falharNo(falhas, no, `filter ${e.filter}`)
+    if (!e || !lido(e.backgroundImage)) falharNo(falhas, no, 'background-image ausente')
+    else if (/gradient\(/i.test(e.backgroundImage)) falharNo(falhas, no, 'gradiente na moldura')
+  }
+  const vistas = new Set()
+  for (const no of telas) {
+    const r = retanguloDe(no)
+    if (r && r.w < minimo) falharNo(falhas, no, `tela de ${r.w.toFixed(1)} px (o mínimo é ${minimo})`)
+    if (!lido(no.currentSrc)) falharNo(falhas, no, 'currentSrc ausente (a imagem não carregou)')
+    else if (vistas.has(no.currentSrc)) falharNo(falhas, no, `a mesma tela (currentSrc ${no.currentSrc}) em duas molduras`)
+    else vistas.add(no.currentSrc)
+  }
+  return resultado('PRODUTO', falhas, `${figuras.length} molduras, ${telas.length} telas únicas, sem sombra, filtro nem gradiente`)
+}
+
+/** RODAPE: o RodapeMapa de cacau, largura cheia, 13 links, 4 grupos, ©, altura máxima e um só aviso, dentro dele. */
+export function rodape(nos, doc) {
+  const raiz = nos.find((no) => marca(no, 'rodape'))
+  if (!raiz) return falhaFechada('RODAPE', 'nenhum rodapé (footer[data-rodape])')
+  const falhas = []
+  const r = retanguloDe(raiz)
+  if (!r) falharNo(falhas, raiz, 'sem retângulo')
+  else if (!Number.isFinite(doc?.largura)) falharDoc(falhas, 'largura da janela ausente')
+  else {
+    if (r.w < 0.95 * doc.largura) falharNo(falhas, raiz, `rodapé de ${r.w.toFixed(1)} px numa janela de ${doc.largura} (largura cheia)`)
+    const teto = doc.largura >= 1440 ? 400 : 420
+    if (r.h > teto) falharNo(falhas, raiz, `rodapé de ${r.h.toFixed(1)} px de altura (o teto é ${teto})`)
+  }
+  if (!ehCor(raiz.estilo?.backgroundColor, COR.cacau, 2)) falharNo(falhas, raiz, `fundo ${leitura(raiz.estilo?.backgroundColor) || 'ausente'} (o rodapé é de cacau)`)
+  if (typeof raiz.textoTodo !== 'string') falharNo(falhas, raiz, 'texto do rodapé não lido')
+  else if (!raiz.textoTodo.includes('©')) falharNo(falhas, raiz, 'sem a linha do ©')
+  const links = nos.filter((no) => marca(no, 'link') && marca(no, 'noRodape')).length
+  if (links < 12) falharDoc(falhas, `${links} links no rodapé (o piso é 12)`)
+  const grupos = nos.filter((no) => marca(no, 'rodapeGrupo')).length
+  if (grupos < 4) falharDoc(falhas, `${grupos} grupos no rodapé (o piso é 4)`)
+  const avisos = nos.filter((no) => marca(no, 'aviso'))
+  if (avisos.length !== 1) falharDoc(falhas, `${avisos.length} avisos [data-aviso] no documento (tem de ser um só)`)
+  else if (!marca(avisos[0], 'noRodape')) falharNo(falhas, avisos[0], 'o aviso está fora do rodapé')
+  return resultado('RODAPE', falhas, `rodapé de cacau, ${links} links, ${grupos} grupos, © e um aviso dentro dele`)
+}
+
+/** EXIBICAO: h1 a h4 do cabeçalho e do main, e o nome do rodapé, computam a 1ª família de --fonte-exibicao. */
+export function exibicao(nos, doc) {
+  const esperada = primeiraFamilia(doc?.tokens?.fonteExibicao)
+  if (!esperada) return falhaFechada('EXIBICAO', '--fonte-exibicao não lida na raiz')
+  const escopo = nos.filter(
+    (no) =>
+      visivel(no) &&
+      !marca(no, 'rodapeTitulo') &&
+      ((/^h[1-4]$/.test(no.tag ?? '') && (marca(no, 'noCabecalho') || marca(no, 'noMain'))) || marca(no, 'rodapeNome')),
+  )
+  if (escopo.length === 0) return falhaFechada('EXIBICAO', 'nenhum título nem nome do rodapé medido')
+  const falhas = []
+  for (const no of escopo) {
+    const familia = primeiraFamilia(no.estilo?.fontFamily)
+    if (!familia) falharNo(falhas, no, 'font-family ausente')
+    else if (familia.toLowerCase() !== esperada.toLowerCase()) falharNo(falhas, no, `família ${familia} (a de exibição é ${esperada})`)
+  }
+  return resultado('EXIBICAO', falhas, `${escopo.length} títulos e nomes na família de exibição (${esperada})`)
+}
+
+/** ITALICO: nenhum nó do cabeçalho, do main, do rodapé e da casa em itálico ou oblíquo. */
+export function italico(nos) {
+  const escopo = nos.filter((no) => marca(no, 'noCabecalho') || marca(no, 'noMain') || marca(no, 'noRodape') || marca(no, 'casa'))
+  if (escopo.length === 0) return nenhumElemento('ITALICO')
+  const falhas = []
+  for (const no of escopo) {
+    const estilo = leitura(no.estilo?.fontStyle)
+    if (estilo === '') falharNo(falhas, no, 'font-style ausente')
+    else if (estilo !== 'normal') falharNo(falhas, no, `font-style ${estilo} (nenhum itálico nas páginas públicas)`)
+  }
+  return resultado('ITALICO', falhas, `${escopo.length} nós em prumo`)
+}
+
+/** Um título, uma cor: os nós de texto de um mesmo h1/h2 dividem cor, estilo e peso. */
+function titulosUniformes(regra, nos, noEscopo) {
+  const escopo = nos.filter((no) => noEscopo(no) && temTexto(no))
+  if (escopo.length === 0) return nenhumElemento(regra)
+  const falhas = []
+  const grupos = new Map()
+  for (const no of escopo) {
+    const e = no.estilo ?? {}
+    const lidos = { cor: leitura(e.color), estilo: leitura(e.fontStyle), peso: leitura(e.fontWeight) }
+    const faltando = Object.entries(lidos).filter(([, valor]) => valor === '').map(([nome]) => nome)
+    if (faltando.length > 0) {
+      falharNo(falhas, no, `${faltando.join(', ')} ausente`)
+      continue
+    }
+    if (no.tituloId === undefined || no.tituloId === null) {
+      falharNo(falhas, no, 'título sem identificador')
+      continue
+    }
+    const grupo = grupos.get(no.tituloId)
+    if (!grupo) {
+      grupos.set(no.tituloId, { primeiro: lidos, nos: [no] })
+      continue
+    }
+    grupo.nos.push(no)
+    const diferentes = Object.keys(lidos).filter((chave) => lidos[chave] !== grupo.primeiro[chave])
+    if (diferentes.length > 0) falharNo(falhas, no, `${diferentes.join(', ')} diferente do resto do título`)
+  }
+  return resultado(regra, falhas, `${grupos.size} títulos, cada um com uma cor, um estilo e um peso`)
+}
+
+/** TITULO: o título da casa tem uma cor, um estilo e um peso só. */
+export function titulo(nos) {
+  return titulosUniformes('TITULO', nos, (no) => marca(no, 'titulo') && marca(no, 'casa'))
+}
+
+/** TITULO_REGISTRO: o mesmo teste no main das páginas públicas fora da casa (só registra). */
+export function tituloRegistro(nos) {
+  return titulosUniformes('TITULO_REGISTRO', nos, (no) => marca(no, 'titulo') && marca(no, 'noMain') && !marca(no, 'casa'))
+}
+
+/** SOBRETITULO: nenhum rótulo sobre o título no main e na casa (por classe, ou pela forma de um rótulo). */
+export function sobretitulo(nos) {
+  const escopo = nos.filter((no) => (marca(no, 'noMain') || marca(no, 'casa')) && !marca(no, 'noRodape'))
+  if (escopo.length === 0) return nenhumElemento('SOBRETITULO')
+  const falhas = []
+  for (const no of escopo) {
+    if ((no.classes ?? []).some((classe) => String(classe).includes('sobretitulo'))) {
+      falharNo(falhas, no, 'classe sobretitulo (nenhum rótulo acima do título)')
+      continue
+    }
+    if (ehTitulo(no) || !marca(no, 'antesDeTitulo') || !temTexto(no) || no.texto.trim().length > 40) continue
+    const tamanho = px(no.estilo?.fontSize)
+    const peso = numeroDe(no.estilo?.fontWeight)
+    if (Number.isNaN(tamanho)) falharNo(falhas, no, 'font-size ausente ou ilegível')
+    else if (!Number.isFinite(peso)) falharNo(falhas, no, `font-weight ilegível (${leitura(no.estilo?.fontWeight)})`)
+    else if (peso >= 600 && tamanho <= 16) falharNo(falhas, no, `rótulo de ${tamanho}px e peso ${peso} colado num título`)
+  }
+  return resultado('SOBRETITULO', falhas, `${escopo.length} nós sem rótulo sobre o título`)
+}
+
+/** DOCK: nenhuma barra fixa (ou sticky com bottom) colada na base da janela. */
+export function dock(nos, doc) {
+  if (!ehNumero(doc?.altura)) return falhaFechada('DOCK', 'altura da janela ausente')
+  const falhas = []
+  for (const no of nos) {
+    const posicao = leitura(no.estilo?.position)
+    if (posicao === '') {
+      falharNo(falhas, no, 'position ausente')
+      continue
+    }
+    if (!visivel(no)) continue
+    let candidato = posicao === 'fixed'
+    if (posicao === 'sticky') {
+      const base = leitura(no.estilo?.bottom)
+      if (base === '') {
+        falharNo(falhas, no, 'bottom ausente num nó sticky')
+        continue
+      }
+      candidato = base !== 'auto'
+    }
+    if (!candidato) continue
+    const r = retanguloDe(no)
+    if (!r) {
+      falharNo(falhas, no, 'sem retângulo')
+      continue
+    }
+    if (Math.abs(r.y + r.h - doc.altura) <= 1 && r.y > doc.altura / 2) {
+      falharNo(falhas, no, `barra ${posicao} colada na base da janela (termina em ${(r.y + r.h).toFixed(1)} de ${doc.altura})`)
+    }
+  }
+  return resultado('DOCK', falhas, `${nos.length} nós, nenhuma barra colada na base da janela`)
+}
+
+/** BOTAO_LARGO: em 390, a pílula tem de 323 a 357 px de largura e 44 de altura. */
+export function botaoLargo(nos, doc) {
+  const botoes = nos.filter((no) => marca(no, 'botaoLargo'))
+  if (botoes.length === 0) return nenhumElemento('BOTAO_LARGO')
+  if (Math.round(doc?.largura) !== 390) return { regra: 'BOTAO_LARGO', ok: true, motivo: 'a largura do botão só é medida em 390', nos_com_falha: [] }
+  const falhas = []
+  for (const no of botoes) {
+    const r = retanguloDe(no)
+    if (!r) falharNo(falhas, no, 'sem retângulo')
+    else if (!(r.w >= 323 && r.w <= 357)) falharNo(falhas, no, `${r.w.toFixed(1)} px de largura (de 323 a 357 em 390)`)
+    else if (!(r.h >= 44)) falharNo(falhas, no, `${r.h.toFixed(1)} px de altura (o mínimo é 44)`)
+  }
+  return resultado('BOTAO_LARGO', falhas, `${botoes.length} botões de 323 a 357 px e 44 px de altura em 390`)
+}
+
+/** CABECALHO: a pílula "Criar conta" na linha do cabeçalho (fora do menu), visível, 44 px (48 de 1100), em cacau. */
+export function cabecalho(nos, doc) {
+  const pilulas = nos.filter((no) => marca(no, 'cabecalhoPilula') && !marca(no, 'noMenu'))
+  if (pilulas.length === 0) return falhaFechada('CABECALHO', 'nenhuma pílula [data-cabecalho-pilula] na linha do cabeçalho')
+  const minimo = doc?.largura >= 1100 ? 48 : 44
+  const falhas = []
+  for (const no of pilulas) {
+    if (!visivel(no)) falharNo(falhas, no, 'pílula oculta')
+    if (!marca(no, 'noCabecalho')) falharNo(falhas, no, 'pílula fora do cabeçalho')
+    const r = retanguloDe(no)
+    if (!r) falharNo(falhas, no, 'sem retângulo')
+    else if (r.h < minimo) falharNo(falhas, no, `pílula de ${r.h.toFixed(1)} px de altura (o mínimo é ${minimo})`)
+    const fundo = no.estilo?.backgroundColor
+    // De noite (o cabeçalho de cacau) a pílula é de contorno: fundo transparente e texto de papel.
+    const deNoite = no.tom === 'noite' && parseCor(fundo)?.a === 0 && ehCor(no.estilo?.color, COR.papel)
+    if (parseCor(fundo) === null) falharNo(falhas, no, `fundo ${leitura(fundo) || 'ausente'} ilegível`)
+    else if (!deNoite && !ehCor(fundo, COR.cacau, 2)) falharNo(falhas, no, `fundo ${leitura(fundo)} (a pílula é de cacau)`)
+  }
+  return resultado('CABECALHO', falhas, `${pilulas.length} pílula de cacau, visível, de ${minimo} px ou mais`)
+}
+
+/** CENA: a placa de estúdio tem densidade ≥ 1,50; em 1440 mede de 836 a 1115 px e até `data-largura-max`. */
+export function cena(nos, doc) {
+  const placas = nos.filter((no) => marca(no, 'cenaPlaca'))
+  if (placas.length === 0) return nenhumElemento('CENA')
+  const falhas = []
+  for (const no of placas) {
+    const r = retanguloDe(no)
+    if (!r) {
+      falharNo(falhas, no, 'sem retângulo')
+      continue
+    }
+    if (!(no.naturalWidth > 0)) {
+      falharNo(falhas, no, 'a imagem não carregou (naturalWidth ausente)')
+      continue
+    }
+    const densidade = r.w > 0 ? Math.round((no.naturalWidth / r.w) * 100) / 100 : Number.NaN
+    if (!(densidade >= 1.5)) falharNo(falhas, no, `densidade ${Number.isFinite(densidade) ? densidade.toFixed(2) : '?'} (o mínimo é 1,50)`)
+    if (doc?.largura >= 1440) {
+      if (!Number.isFinite(no.larguraMax)) falharNo(falhas, no, 'data-largura-max ausente')
+      else if (r.w > no.larguraMax + 0.5) falharNo(falhas, no, `placa de ${r.w.toFixed(1)} px acima do máximo declarado (${no.larguraMax})`)
+      if (r.w < 836 - 0.5 || r.w > 1115 + 0.5) falharNo(falhas, no, `placa de ${r.w.toFixed(1)} px fora de 836 a 1115 em 1440`)
+    }
+  }
+  return resultado('CENA', falhas, `${placas.length} placas com densidade ≥ 1,50 e largura dentro da faixa`)
+}
+
+const HORA_SOLTA = /^\d{1,2}:\d{2}$/
+
+/** O que a casa não pode ter: sombra, gradiente, opacidade, painel, peça viva, hora solta e mel de chão. */
+function casaLimpaDe(regra, nos, noEscopo) {
+  const escopo = nos.filter(noEscopo)
+  if (escopo.length === 0) return nenhumElemento(regra)
+  const falhas = []
+  for (const no of escopo) {
+    // O menu do celular fechado (hidden) está fora da tela: não é parede da casa.
+    if (marca(no, 'noMenu') && no.visivel === false) continue
+    const e = no.estilo ?? {}
+    if (!lido(e.boxShadow)) falharNo(falhas, no, 'box-shadow ausente')
+    else if (sombraCanonica(e.boxShadow) !== 'none') falharNo(falhas, no, `box-shadow ${e.boxShadow}`)
+    if (!lido(e.textShadow)) falharNo(falhas, no, 'text-shadow ausente')
+    else if (e.textShadow.trim() !== 'none') falharNo(falhas, no, `text-shadow ${e.textShadow}`)
+    if (!lido(e.backgroundImage)) falharNo(falhas, no, 'background-image ausente')
+    else if (/gradient\(/i.test(e.backgroundImage)) falharNo(falhas, no, 'gradiente de fundo')
+    const opacidade = numeroDe(e.opacity)
+    if (!Number.isFinite(opacidade)) falharNo(falhas, no, `opacity ilegível (${leitura(e.opacity)})`)
+    else if (opacidade !== 1) falharNo(falhas, no, `opacity ${opacidade}`)
+    if (!lido(e.visibility)) falharNo(falhas, no, 'visibility ausente')
+    else if (e.visibility.trim() !== 'visible') falharNo(falhas, no, `visibility ${e.visibility.trim()}`)
+    if (marca(no, 'painel')) falharNo(falhas, no, 'painel (a casa não tem painel)')
+    if (marca(no, 'vivo') && !marca(no, 'noProduto')) falharNo(falhas, no, 'peça viva fora da moldura do produto')
+    if (marca(no, 'folha') && !marca(no, 'noProduto') && HORA_SOLTA.test(leitura(no.texto))) falharNo(falhas, no, 'hora solta fora da moldura do produto')
+    const fundo = parseCor(e.backgroundColor)
+    if (fundo === null) falharNo(falhas, no, `fundo ${leitura(e.backgroundColor) || 'ausente'} ilegível`)
+    else if (ehCor(e.backgroundColor, COR.mel) || ehCor(e.backgroundColor, COR.melClaro)) {
+      // O mel é luz: só a pílula primária, e só sobre o cacau.
+      if (!marca(no, 'botaoMel')) falharNo(falhas, no, 'mel de chão (o mel só existe como pílula)')
+      else if (!ehCor(no.fundoSob, COR.cacau, 2)) falharNo(falhas, no, `pílula de mel sobre ${leitura(no.fundoSob) || 'fundo não lido'} (só vale sobre o cacau)`)
+    }
+  }
+  return resultado(regra, falhas, `${escopo.length} nós sem sombra, gradiente, opacidade, painel nem mel de chão`)
+}
+
+/** CASA_LIMPA: a casa, o cabeçalho e o rodapé. */
+export function casaLimpa(nos) {
+  return casaLimpaDe('CASA_LIMPA', nos, (no) => marca(no, 'casa') || marca(no, 'noCabecalho') || marca(no, 'noRodape'))
+}
+
+/** CASA_LIMPA_REGISTRO: o main das páginas públicas fora da casa (só registra). */
+export function casaLimpaRegistro(nos) {
+  return casaLimpaDe('CASA_LIMPA_REGISTRO', nos, (no) => marca(no, 'noMain') && !marca(no, 'casa'))
+}
+
+/** CASA_PRESENTE: a rota de casa tem um [data-casa] dentro do main. */
+export function casaPresente(nos) {
+  const achou = nos.some((no) => marca(no, 'casaRaiz') && marca(no, 'noMain'))
+  return achou
+    ? { regra: 'CASA_PRESENTE', ok: true, motivo: '[data-casa] dentro do main', nos_com_falha: [] }
+    : falhaFechada('CASA_PRESENTE', 'nenhum [data-casa] dentro do main')
+}
+
+// ---------------------------------------------------------------------------------------------
+
+/** As regras de um caso: a /sistema roda as 21; as páginas públicas, 20 (sem CASA_PRESENTE); o resto, as sete originais. */
+export function regrasDoCaso(caso) {
+  if (CASOS_CASA.includes(caso)) return [...REGRAS]
+  if (CASOS_PUBLICOS.includes(caso)) return REGRAS.filter((regra) => regra !== 'CASA_PRESENTE')
+  return [...REGRAS_ORIGINAIS]
+}
+
+/** As regras que bloqueiam em cada caso: todas as do caso, menos as duas que só registram. */
+export function bloqueantesDoCaso(caso) {
+  return regrasDoCaso(caso).filter((regra) => !REGRAS_DE_REGISTRO.includes(regra))
+}
+
+/**
+ * Avalia as regras sobre as leituras de uma página: `{ doc, nos, tema, caso, rota }`. Sem `caso` valem as sete
+ * originais; com ele, as do caso (`regrasDoCaso`), e só as duas de registro não bloqueiam.
+ */
+export function avaliarTudo({ doc, nos, tema, caso }) {
   const lista = Array.isArray(nos) ? nos : []
-  const bloqueantes = bloqueantesDoCaso()
-  const todas = [g1(doc), g11(lista, tema), g12(lista), fontes(lista), caixa(lista), sombra(lista, doc), tresD(lista)]
-  return todas.map((r) => ({ ...r, bloqueia: bloqueantes.includes(r.regra) }))
+  const bloqueantes = bloqueantesDoCaso(caso)
+  const avaliadores = {
+    G1: () => g1(doc),
+    G11: () => g11(lista, tema),
+    G12: () => g12(lista),
+    FONTES: () => fontes(lista),
+    CAIXA: () => caixa(lista),
+    SOMBRA: () => sombra(lista, doc),
+    '3D': () => tresD(lista),
+    FAIXA: () => faixa(lista, doc),
+    PRODUTO: () => produto(lista, doc),
+    RODAPE: () => rodape(lista, doc),
+    EXIBICAO: () => exibicao(lista, doc),
+    ITALICO: () => italico(lista, doc),
+    TITULO: () => titulo(lista, doc),
+    TITULO_REGISTRO: () => tituloRegistro(lista, doc),
+    SOBRETITULO: () => sobretitulo(lista, doc),
+    DOCK: () => dock(lista, doc),
+    CABECALHO: () => cabecalho(lista, doc),
+    BOTAO_LARGO: () => botaoLargo(lista, doc),
+    CENA: () => cena(lista, doc),
+    CASA_LIMPA: () => casaLimpa(lista, doc),
+    CASA_LIMPA_REGISTRO: () => casaLimpaRegistro(lista, doc),
+    CASA_PRESENTE: () => casaPresente(lista, doc),
+  }
+  return regrasDoCaso(caso).map((regra) => ({ ...avaliadores[regra](), bloqueia: bloqueantes.includes(regra) }))
 }
 
 /** A linha de resumo: `RESUMO <arquivo> G1 ok G11 FALHA ...`; falha que não bloqueia sai como "registrada". */
@@ -820,6 +1300,18 @@ export function coletarNaPagina() {
     sombraCartao: estiloRaiz.getPropertyValue('--sombra-cartao').trim(),
     luzEstudio: estiloRaiz.getPropertyValue('--luz-estudio').trim(),
     brilhoMel: estiloRaiz.getPropertyValue('--brilho-mel').trim(),
+    // DS1: a face de exibição como a raiz a declara, e o espaço de seção JÁ RESOLVIDO em px (a propriedade
+    // crua é um clamp(), então um div oculto com `padding-top: var(--espaco-secao)` a calcula).
+    fonteExibicao: estiloRaiz.getPropertyValue('--fonte-exibicao').trim(),
+    espacoSecao: '',
+  }
+  {
+    const sonda = document.createElement('div')
+    sonda.setAttribute('aria-hidden', 'true')
+    sonda.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none;height:0;overflow:hidden;padding-top:var(--espaco-secao);'
+    document.body.appendChild(sonda)
+    doc.tokens.espacoSecao = getComputedStyle(sonda).paddingTop
+    sonda.remove()
   }
   const colapsar = (t) => t.replace(/\s+/g, ' ').trim()
   const cadeiaDe = (el) => {
@@ -896,6 +1388,51 @@ export function coletarNaPagina() {
     return legivel ? { opacidade, escalaX, escalaY } : null
   }
 
+  // DS1: as marcas das regras da casa acesa, lidas dos atributos que as peças carregam (`data-*`).
+  const idsDeTitulo = new WeakMap()
+  let proximoTitulo = 0
+  const marcasDaCasa = (el) => {
+    const proximo = el.nextElementSibling
+    return {
+      faixa: el.matches('[data-faixa]'),
+      faixaLado: el.matches('[data-faixa-lado]'),
+      produto: el.matches('[data-produto-moldura]'),
+      produtoTela: el.matches('[data-produto-tela]'),
+      produtoMoldura: el.matches('[data-produto-moldura-arte]'),
+      rodape: el.matches('footer[data-rodape]'),
+      rodapeGrupo: el.matches('[data-rodape-grupo]'),
+      rodapeTitulo: el.matches('h2, h3') && el.closest('[data-rodape-grupo]') !== null,
+      rodapeNome: el.matches('[data-nome-rodape]'),
+      link: el.matches('a[href]'),
+      aviso: el.matches('[data-aviso]'),
+      noRodape: el.closest('footer[data-rodape]') !== null,
+      noCabecalho: el.closest('[data-cabecalho]') !== null,
+      noMain: el.closest('main') !== null,
+      casa: el.closest('[data-casa]') !== null,
+      casaRaiz: el.matches('[data-casa]'),
+      cabecalhoPilula: el.matches('[data-cabecalho-pilula]'),
+      noMenu: el.closest('[data-menu-celular]') !== null,
+      botaoLargo: el.matches('[data-botao-largo]'),
+      botaoMel: el.matches('[data-botao="mel"]'),
+      cenaPlaca: el.matches('[data-cena-heroi] img'),
+      painel: el.matches('[data-painel], [data-h~="caixa-cor"]'),
+      vivo: el.matches('.cm-flutuante, [data-cartao-plano], .pd-cartao, .pd-linha, .pd-avatar, .pd-seletor'),
+      folha: textoProprio(el) !== '',
+      antesDeTitulo: proximo !== null && /^H[1-3]$/.test(proximo.tagName),
+      noProduto: el.closest('[data-produto-moldura]') !== null,
+      titulo: el.closest('h1, h2') !== null,
+    }
+  }
+  const idDoTitulo = (el) => {
+    const titulo = el.closest('h1, h2')
+    if (titulo === null) return undefined
+    if (!idsDeTitulo.has(titulo)) {
+      proximoTitulo += 1
+      idsDeTitulo.set(titulo, `titulo-${proximoTitulo}`)
+    }
+    return idsDeTitulo.get(titulo)
+  }
+
   // O html e o body entram na coleta (3D, sombra, gradiente, fonte e o resto valem para eles também);
   // as marcas de bloco e de controle não os alcançam, então as regras de bloco e de controle não mudam.
   const elementos = [raiz, document.body, ...document.body.querySelectorAll('*')].filter((el) => el && !ignorar.has(el.tagName))
@@ -925,8 +1462,18 @@ export function coletarNaPagina() {
         transformStyle: cs.getPropertyValue('transform-style'),
         filter: cs.getPropertyValue('filter'),
         backdropFilter: cs.getPropertyValue('backdrop-filter'),
+        // DS1: o que as regras da casa acesa leem a mais.
+        fontStyle: cs.fontStyle,
+        position: cs.position,
+        bottom: cs.bottom,
+        borderRadius: cs.borderRadius,
+        paddingTop: cs.paddingTop,
+        paddingBottom: cs.paddingBottom,
+        textShadow: cs.textShadow,
+        visibility: cs.visibility,
       },
       m: {
+        ...marcasDaCasa(el),
         filhoDeMain: el.parentElement !== null && el.parentElement.tagName === 'MAIN',
         filhoDeBloco: el.parentElement !== null && el.parentElement.matches('[data-bloco]'),
         // G12: os blocos e as mídias aninhados em qualquer profundidade dentro de <main>.
@@ -971,8 +1518,46 @@ export function coletarNaPagina() {
       }
     }
     if (no.m.filhoDeMain || no.m.filhoDeBloco || no.m.blocoG12) no.ancestrais = ancestraisDe(el)
+    // DS1: os campos soltos que as regras da casa acesa leem.
+    no.classes = [...el.classList]
+    const idTitulo = idDoTitulo(el)
+    if (idTitulo !== undefined) no.tituloId = idTitulo
+    if (no.m.rodape) no.textoTodo = colapsar(el.textContent ?? '')
+    if (el.tagName === 'IMG') {
+      no.currentSrc = el.currentSrc || el.getAttribute('src') || ''
+      no.naturalWidth = el.naturalWidth
+    }
+    if (no.m.cenaPlaca) {
+      const bruto = el.closest('[data-cena-heroi]')?.getAttribute('data-largura-max')
+      const largura = bruto === null || bruto === undefined || bruto.trim() === '' ? Number.NaN : Number(bruto)
+      if (Number.isFinite(largura)) no.larguraMax = largura
+    }
+    if (no.m.cabecalhoPilula) no.tom = el.closest('[data-cabecalho]')?.getAttribute('data-tom') ?? undefined
     return no
   })
+
+  // DS1: o fundo sob cada pílula de mel (o primeiro elemento opaco abaixo dela, no centro). Numa passada à parte, porque
+  // `elementsFromPoint` só enxerga o que está na janela: rola até a pílula e devolve a rolagem de antes.
+  let rolou = false
+  elementos.forEach((el, indice) => {
+    if (!nos[indice].m.botaoMel) return
+    if (typeof document.elementsFromPoint !== 'function') return
+    if (typeof el.scrollIntoView === 'function') {
+      el.scrollIntoView({ block: 'center', inline: 'nearest' })
+      rolou = true
+    }
+    const r = el.getBoundingClientRect()
+    const pilhas = document.elementsFromPoint(r.x + r.width / 2, r.y + r.height / 2)
+    for (const abaixo of pilhas) {
+      if (abaixo === el || el.contains(abaixo)) continue
+      const cor = getComputedStyle(abaixo).backgroundColor
+      if (cor && cor !== 'transparent' && !/rgba\(\s*\d+,\s*\d+,\s*\d+,\s*0\s*\)/.test(cor)) {
+        nos[indice].fundoSob = cor
+        break
+      }
+    }
+  })
+  if (rolou) window.scrollTo(sx, sy)
 
   return { doc, nos }
 }
@@ -1062,6 +1647,9 @@ function contaPadrao(rota) {
 /** O h1 da tela de login (`MANCHETES.entrar` de web/src/conteudo/conta.ts, as linhas unidas por um espaço). */
 export const MANCHETE_LOGIN = 'Volte à rotina da família.'
 
+/** As rotas de acesso, em que o h1 do login é o esperado. */
+const CAMINHOS_DE_ACESSO = ['/entrar', '/criar-conta', '/recuperar-acesso', '/convite']
+
 /** O caminho em que o caso tem de terminar: o `caminho` do caso, senão a rota (a sessão termina em /app/sessao). Sem busca. */
 export function caminhoEsperado({ caso, rota, caminho }, base) {
   if (typeof caminho === 'string') return new URL(caminho.replace(/^\/+/, ''), base).pathname
@@ -1081,7 +1669,9 @@ export async function verificarPagina(cdp, esperado) {
   if (h1 === '') throw new Error(`a página ${visto.caminho} está sem h1`)
   // Sem espaço nenhum na comparação: as duas linhas do h1 do login podem vir sem espaço entre elas.
   const semEspaco = (texto) => texto.replace(/\s+/g, '')
-  if (semEspaco(h1).includes(semEspaco(MANCHETE_LOGIN))) throw new Error(`o h1 é o h1 do login ("${MANCHETE_LOGIN}") em ${visto.caminho}`)
+  // As telas de acesso (DS1:RF-15) têm o h1 do login por definição: a manchete só denuncia a guarda nas outras rotas.
+  const ehTelaDeAcesso = CAMINHOS_DE_ACESSO.includes(esperado)
+  if (!ehTelaDeAcesso && semEspaco(h1).includes(semEspaco(MANCHETE_LOGIN))) throw new Error(`o h1 é o h1 do login ("${MANCHETE_LOGIN}") em ${visto.caminho}`)
   return { caminho: visto.caminho, h1_texto: h1 }
 }
 
@@ -1220,7 +1810,7 @@ export async function medirPedido(cdp, base, pedido, pasta, opcoes = {}) {
     if (aberto?.naoSeAplica) return { naoSeAplica: aberto.naoSeAplica }
     const pagina = await verificarPagina(cdp, caminhoEsperado(pedido, base))
     const leitura = await avaliar(cdp, `(${coletarNaPagina.toString()})()`)
-    const resultados = avaliarTudo({ ...leitura, tema: pedido.tema })
+    const resultados = avaliarTudo({ ...leitura, tema: pedido.tema, caso: pedido.caso, rota: pedido.rota })
     const arquivo = arquivoDoPedido(pedido)
     const medidas = {
       largura: leitura.doc.largura,

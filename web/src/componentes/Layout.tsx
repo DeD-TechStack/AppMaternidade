@@ -1,9 +1,12 @@
 import { Outlet, useLocation, useMatches } from 'react-router'
-import { Cabecalho } from './casca/Cabecalho.tsx'
+import { Cabecalho, useCabecalhoNoite } from './casca/Cabecalho.tsx'
 import { Rodape } from './casca/Rodape.tsx'
 import type { Contexto } from './casca/textos.ts'
 import { useLuaDoCabecalho } from './casca/luaDoCabecalho.ts'
 import { AREA_DA_ROTINA } from './rotina/madrugada.ts'
+
+// A noite do cabeçalho mora em casca/Cabecalho.tsx; as páginas a pedem por aqui.
+export { useCabecalhoNoite }
 
 /** A área logada (/app/*) usa o cabeçalho logado, com o modo madrugada; o resto, o público. */
 function contextoDoCaminho(caminho: string): Contexto {

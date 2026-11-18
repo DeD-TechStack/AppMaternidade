@@ -98,7 +98,8 @@ describe('TYPE-1: a escala de tipo (arquivos-fonte)', () => {
     expect(h2).toMatch(/line-height:\s*var\(--texto-titulo-1-entrelinha\)/)
 
     expect(umCorpo(site, '.cm-segunda-linha')).not.toMatch(/font-style:\s*italic/)
-    expect(umCorpo(site, 'h1 .cm-segunda-linha')).toMatch(/font-style:\s*italic/)
+    // DS1:RF-06 (§5.3): nenhum itálico público. A linha vira `font-style: normal` ou some, e a regra pode sumir junto.
+    expect(corposDa(site, 'h1 .cm-segunda-linha').join('\n')).not.toMatch(/italic/)
 
     const inicio = lerTexto('src/componentes/inicio/inicio.css')
     expect(umCorpo(inicio, '.in-pagina .cm-segunda-linha')).not.toMatch(/italic/)
