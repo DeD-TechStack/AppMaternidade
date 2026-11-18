@@ -124,7 +124,7 @@ describe('gerarTema', () => {
 
   it('falha com a mensagem do token que falta', () => {
     assert.throws(() => gerarTema(design.replace('  pilha-390: 16px\n', '')), /falta spacing\.pilha-390/)
-    assert.throws(() => gerarTema(design.replace('lineHeight: 44px', 'lineHeight: grande')), /typography\.exibicao-390\.lineHeight precisa ser uma dimensão/)
+    assert.throws(() => gerarTema(design.replace('lineHeight: 48px', 'lineHeight: grande')), /typography\.exibicao-390\.lineHeight precisa ser uma dimensão/)
   })
 
   it('não toca no que já existe: nenhum nome de cor, raio, fonte, sombra ou variável de página', () => {

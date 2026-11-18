@@ -47,7 +47,7 @@
     font-family: var(--fonte-titulo);
     font-size: var(--texto-titulo-4-tamanho);
     line-height: var(--texto-titulo-4-entrelinha);
-    font-style: italic;
+    font-style: normal;
     font-weight: 500;
     text-wrap: balance;
   }

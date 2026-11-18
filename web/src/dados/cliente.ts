@@ -33,7 +33,7 @@ export function obterCliente(): SupabaseClient | null {
     return guardado.cliente
   }
   const cliente = createClient(credenciais.url, credenciais.chave, {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce' },
   })
   guardado = { ...credenciais, cliente }
   return cliente
