@@ -617,7 +617,7 @@ describe('sucesso: a região de status é única, não move o foco e só some na
     expect(screen.getByRole('status').textContent).toBe('Dados salvos.')
 
     // ...e some quando a pessoa faz outra coisa.
-    fireEvent.click(botao('Copiar id'))
+    fireEvent.click(botao('Copiar ID'))
     await waitFor(() => expect(screen.getByRole('status').textContent).toBe('Copie manualmente.'))
     expect(screen.getAllByRole('status')).toHaveLength(1)
   })
