@@ -54,7 +54,8 @@ describe('sem sessão', () => {
     const familias = vi.spyOn(dados, 'minhasFamilias')
     renderizarComDados('/convite', { dados, sessao: null })
 
-    expect((await screen.findByRole('heading', { level: 1 })).textContent).toBe(NOMES_DO_H1.convite)
+    // VIS-4 (A-4): a segunda linha da manchete termina em ponto final, como nas outras telas de acesso.
+    expect((await screen.findByRole('heading', { level: 1 })).textContent).toBe(`${NOMES_DO_H1.convite}.`)
     expect(NOMES_DO_H1.convite).toBe('Convite para uma família')
     expect(document.title).toBe('Convite | AppMaternidade')
     await waitFor(() => expect(campo()).toBeTruthy())

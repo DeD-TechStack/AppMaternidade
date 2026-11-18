@@ -3,7 +3,7 @@ import { useLocation } from 'react-router'
 import type { PaginaDeTexto } from '../../conteudo/publicas-texto.ts'
 import { Botao } from '../base/Botao.tsx'
 import { Colunas, Pilha, QuadroLayout, Secao } from '../base/layout/index.ts'
-import { Ilustracao } from '../campo/Ilustracao.tsx'
+import { DIMENSAO_ILUSTRACAO, Ilustracao } from '../campo/Ilustracao.tsx'
 import { PainelCampo } from '../campo/PainelCampo.tsx'
 import { BlocoDeEmail } from './BlocoDeEmail.tsx'
 import { IndiceDaPagina } from './IndiceDaPagina.tsx'
@@ -60,7 +60,10 @@ function tituloDoFragmento(hash: string, secoes: PaginaDeTexto['secoes']): HTMLE
  * 1. a abertura: o nome da página (`h1`, na escala de título), logo abaixo a segunda linha em itálico (corpo de
  *    `h3`) e o botão de ação principal (ou o cartão de e-mail, em Contato). Em 1100 px ou mais, o painel de mel
  *    (só o desenho, com 24 px de respiro em volta, e a frase de apoio logo abaixo dele) fica ao lado; abaixo
- *    disso, embaixo do botão, com o painel de no máximo 40% da altura da janela;
+ *    disso, embaixo do botão, com o painel de no máximo 40% da altura da janela. A figura é uma coluna só: o
+ *    painel e a frase de apoio têm a borda e a largura dela, nas duas disposições. Com o desenho de retrato, o
+ *    painel de mel abraça o desenho de 1100 px em diante, rente à borda final da coluna da figura, com a frase de
+ *    apoio na mesma borda;
  * 2. o índice "Nesta página": uma lista vertical só (fechada num `details` abaixo de 1100 px);
  * 3. o parágrafo de abertura, quando há, e as seções de leitura, numa coluna só, centrada, com o mesmo fio entre
  *    uma seção e a outra.
@@ -69,10 +72,13 @@ function tituloDoFragmento(hash: string, secoes: PaginaDeTexto['secoes']): HTMLE
  *
  * O `h1` leva só o nome da página (o texto exato que as rotas conferem), por isso não usa o `Titulo`
  * animado, cujo texto para leitor de tela repete as linhas; a segunda linha é um parágrafo logo depois dele.
+ * A coluna do texto tem piso de `min-content` porque as palavras coladas do título (`.pt-junto`, sem quebra)
+ * têm de caber na coluna em toda largura de duas colunas.
  */
 export function PaginaDeLeitura({ pagina }: { pagina: PaginaDeTexto }) {
   const { hash, key } = useLocation()
   const { nome, subtitulo, ilustracao, apoio, acao, blocoDeEmail, apresentacao, secoes } = pagina
+  const retrato = DIMENSAO_ILUSTRACAO[ilustracao].largura < DIMENSAO_ILUSTRACAO[ilustracao].altura
 
   useEffect(() => {
     const alvo = tituloDoFragmento(hash, secoes)
@@ -83,9 +89,9 @@ export function PaginaDeLeitura({ pagina }: { pagina: PaginaDeTexto }) {
 
   return (
     <main>
-      <Secao>
+      <Secao className="pt-secao-abertura">
         <QuadroLayout>
-          <Colunas fracoes="1.2fr 1fr" aPartirDe={1100} vao="midia" alinhar="centro" className="pt-abertura">
+          <Colunas fracoes="minmax(min-content, 1fr) minmax(0, 1fr)" aPartirDe={1100} vao="midia" alinhar="centro" className="pt-abertura">
             <Pilha vao="grupo" dataH="coluna" className="pt-cabeca max-w-leitura">
               <Pilha vao="pilha">
                 <h1 className="cm-h1 cm-exibicao">{ligarPalavrasCurtas(nome)}</h1>
@@ -98,7 +104,7 @@ export function PaginaDeLeitura({ pagina }: { pagina: PaginaDeTexto }) {
                 </div>
               ) : null}
             </Pilha>
-            <Pilha vao="pilha" dataH="coluna" className="pt-figura">
+            <Pilha vao="pilha" dataH="coluna" className={retrato ? 'pt-figura pt-figura-retrato' : 'pt-figura'}>
               <PainelCampo como="aside" variante="mel" largura="celula" className="pt-painel">
                 <Ilustracao nome={ilustracao} carregamento="eager" className="pt-ilustracao" />
               </PainelCampo>
@@ -107,7 +113,7 @@ export function PaginaDeLeitura({ pagina }: { pagina: PaginaDeTexto }) {
           </Colunas>
         </QuadroLayout>
       </Secao>
-      <Secao as="div">
+      <Secao as="div" className="pt-secao-leitura">
         <QuadroLayout largura="leitura">
           <Pilha vao="bloco" className="pt-leitura">
             <IndiceDaPagina secoes={secoes.map(({ secao }) => secao)} />

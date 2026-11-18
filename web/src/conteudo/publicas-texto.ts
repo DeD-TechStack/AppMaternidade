@@ -43,7 +43,7 @@ const CAMINHO_REGRAS = '/regras-da-comunidade'
 // Textos fixos (TF-xx do contrato, entram como estão)
 
 const TF = {
-  responsavel: 'Responsável pelo AppMaternidade: a definir.',
+  responsavel: 'Responsável pelo AppMaternidade: DeD TechStack.',
   encarregado: 'Encarregado pelo tratamento de dados: Daniel Macedo.',
   idadeMinima: 'Idade mínima para usar o AppMaternidade: a definir.',
   prazoExclusao: 'O prazo da exclusão ainda será definido e publicado nesta página.',
