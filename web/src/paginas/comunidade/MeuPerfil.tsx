@@ -3,10 +3,14 @@ import { Link, useLocation } from 'react-router'
 import { Pilha } from '../../componentes/base/layout/Pilha.tsx'
 import { BOTAO_PRINCIPAL, BOTAO_SECUNDARIO, LINK_ALVO } from '../../componentes/conta/Partes.tsx'
 import { useFocoNoResumo } from '../../componentes/conta/foco.ts'
-import { ErroDeLeitura, Esqueleto, ParaEntrar, ResumoDeErro } from '../../componentes/comunidade/Avisos.tsx'
+import { ParaEntrar } from '../../componentes/comunidade/Avisos.tsx'
 import { CampoComContador, EscolhaDeFaixa } from '../../componentes/comunidade/Campos.tsx'
 import { useDadosComunidade } from '../../componentes/comunidade/dados.ts'
 import { useEscrita } from '../../componentes/comunidade/escrita.ts'
+import { Carregando } from '../../componentes/estado/Carregando.tsx'
+import { ErroDaComunidade } from '../../componentes/estado/ErroDaComunidade.tsx'
+import { ErroDeLeitura } from '../../componentes/estado/ErroDeLeitura.tsx'
+import { PainelVazio } from '../../componentes/estado/PainelVazio.tsx'
 import { Faixa } from '../../componentes/comunidade/Faixa.tsx'
 import { useFocoPendente } from '../../componentes/comunidade/foco.ts'
 import { Quadro, TituloDaTela } from '../../componentes/comunidade/Quadro.tsx'
@@ -70,11 +74,11 @@ function FormularioDoPerfil({ perfil, aoSalvar }: FormularioProps) {
   return (
     <form onSubmit={salvar} noValidate className="flex max-w-[34rem] flex-col gap-esp-pilha">
       {erro && !apelidoEmUso ? (
-        <ResumoDeErro
+        <ErroDeLeitura
           texto={erro.texto}
-          rotuloDaAcao={erro.acao ? COMUM_COMUNIDADE.tentarDeNovo : undefined}
-          aoAgir={() => void envio.tentarDeNovo()}
-          refResumo={resumo}
+          rotuloDeNovo={COMUM_COMUNIDADE.tentarDeNovo}
+          aoTentarDeNovo={erro.acao ? () => void envio.tentarDeNovo() : undefined}
+          refErro={resumo}
         />
       ) : null}
       <CampoComContador
@@ -129,8 +133,8 @@ function DadosDoPerfil({ perfilId, escritor, definirStatus }: DadosProps) {
         <h2 id="perfil" className="cm-h4 text-titulo-4">
           {PERFIL.secao}
         </h2>
-        {leitura.esqueleto ? <Esqueleto linhas={2} /> : null}
-        {estado.fase === 'erro' ? <ErroDeLeitura erro={estado.erro} aoTentarDeNovo={() => void leitura.recarregar()} /> : null}
+        {estado.fase === 'carregando' ? <Carregando linhas={2} /> : null}
+        {estado.fase === 'erro' ? <ErroDaComunidade erro={estado.erro} aoTentarDeNovo={() => void leitura.recarregar()} /> : null}
         {estado.fase === 'pronto' && estado.valor && escritor ? (
           <FormularioDoPerfil
             key={estado.valor.id}
@@ -207,17 +211,17 @@ function Bloqueios({ definirStatus, pedirFoco, refStatus }: BloqueiosProps) {
         <h2 id="bloqueios" className="cm-h4 text-titulo-4">
           {PERFIL.bloqueios}
         </h2>
-        {leitura.esqueleto ? <Esqueleto linhas={2} /> : null}
-        {estado.fase === 'erro' ? <ErroDeLeitura erro={estado.erro} aoTentarDeNovo={() => void leitura.recarregar()} /> : null}
+        {estado.fase === 'carregando' ? <Carregando linhas={2} /> : null}
+        {estado.fase === 'erro' ? <ErroDaComunidade erro={estado.erro} aoTentarDeNovo={() => void leitura.recarregar()} /> : null}
         {erro ? (
-          <ResumoDeErro
+          <ErroDeLeitura
             texto={erro.texto}
-            rotuloDaAcao={erro.acao ? COMUM_COMUNIDADE.tentarDeNovo : undefined}
-            aoAgir={() => void envio.tentarDeNovo()}
-            refResumo={resumo}
+            rotuloDeNovo={COMUM_COMUNIDADE.tentarDeNovo}
+            aoTentarDeNovo={erro.acao ? () => void envio.tentarDeNovo() : undefined}
+            refErro={resumo}
           />
         ) : null}
-        {estado.fase === 'pronto' && estado.valor.length === 0 ? <p>{TX.tx18}</p> : null}
+        {estado.fase === 'pronto' && estado.valor.length === 0 ? <PainelVazio texto={TX.tx18} /> : null}
         {estado.fase === 'pronto' && estado.valor.length > 0 ? (
           <ul className="m-0 flex list-none flex-col gap-2 p-0">
             {estado.valor.map((bloqueio) => (
@@ -263,10 +267,10 @@ export function MeuPerfil() {
       cabeca={
         <>
           <Status mensagem={status} refStatus={refStatus} />
-          {situacao.esqueleto ? <Esqueleto linhas={2} /> : null}
+          {situacao.estado.fase === 'carregando' ? <Carregando linhas={2} /> : null}
           {situacao.estado.fase === 'erro' ? (
             <div className="max-w-[40rem]">
-              <ErroDeLeitura erro={situacao.estado.erro} aoTentarDeNovo={() => void situacao.recarregar()} />
+              <ErroDaComunidade erro={situacao.estado.erro} aoTentarDeNovo={() => void situacao.recarregar()} />
             </div>
           ) : null}
           {lida && lida.perfilId === null ? (

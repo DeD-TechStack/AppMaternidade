@@ -9,7 +9,8 @@ import { useEnvio } from '../../componentes/conta/envio.ts'
 import { useFocoNoResumo, useFocoNoTitulo } from '../../componentes/conta/foco.ts'
 import { fusoDoAparelho } from '../../componentes/conta/fusos.ts'
 import { MolduraLogada } from '../../componentes/conta/MolduraLogada.tsx'
-import { BOTAO_PRINCIPAL, RegiaoStatus, ResumoErro } from '../../componentes/conta/Partes.tsx'
+import { BOTAO_PRINCIPAL, RegiaoStatus } from '../../componentes/conta/Partes.tsx'
+import { ErroDaConta } from '../../componentes/estado/ErroDaConta.tsx'
 import { useDadosConta, useSessao } from '../../componentes/conta/sessao.tsx'
 import { COMECAR, COMUM, MANCHETES, textoDaPassagem, textoDoErro } from '../../conteudo/conta.ts'
 import { EscolhaDeFamilia } from './EscolhaDeFamilia.tsx'
@@ -97,7 +98,7 @@ function PassoSeuNome({ aoSalvar }: { aoSalvar: () => void }) {
           <p>{COMECAR.frase}</p>
           <form onSubmit={aoEnviar} noValidate className="flex flex-col gap-5">
             {erroDoEnvio && !campoDoErro ? (
-              <ResumoErro
+              <ErroDaConta
                 erro={erroDoEnvio}
                 repetivel={estado.fase === 'erro' && estado.tentarDeNovo}
                 aoTentarDeNovo={() => void tentarDeNovo()}

@@ -10,9 +10,11 @@ import { SeletorDeOpcoes } from '../../componentes/conta/Campos.tsx'
 import { DialogoDaFamilia } from '../../componentes/conta/DialogoDaFamilia.tsx'
 import { useFocoNoResumo, useFocoNoTitulo } from '../../componentes/conta/foco.ts'
 import { MolduraLogada } from '../../componentes/conta/MolduraLogada.tsx'
-import { Carregando, LINK_ALVO, RegiaoStatus, ResumoErro } from '../../componentes/conta/Partes.tsx'
+import { LINK_ALVO, RegiaoStatus } from '../../componentes/conta/Partes.tsx'
 import { useDadosConta, useFamiliaAtual } from '../../componentes/conta/sessao.tsx'
-import { FAMILIA, PAPEIS, TITULOS, textoDaPassagem } from '../../conteudo/conta.ts'
+import { Carregando } from '../../componentes/estado/Carregando.tsx'
+import { ErroDaConta } from '../../componentes/estado/ErroDaConta.tsx'
+import { COMUM, FAMILIA, PAPEIS, TITULOS, textoDaPassagem } from '../../conteudo/conta.ts'
 import type { ErroDados } from '../../dados/comum.ts'
 import type { DetalheFamilia } from '../../dados/conta.ts'
 
@@ -173,7 +175,7 @@ export function Familia() {
               <RegiaoStatus mensagem={status} />
               {erroDaPagina ? (
                 <div className="max-w-[40rem]">
-                  <ResumoErro erro={erroDaPagina} refResumo={resumoDaPagina} />
+                  <ErroDaConta erro={erroDaPagina} refResumo={resumoDaPagina} />
                 </div>
               ) : null}
             </Pilha>
@@ -192,13 +194,13 @@ export function Familia() {
 
             {familias.estado === 'erro' && familias.erro ? (
               <div className="max-w-[40rem]">
-                <ResumoErro erro={familias.erro} repetivel aoTentarDeNovo={() => void recarregarFamilias()} />
+                <ErroDaConta erro={familias.erro} repetivel aoTentarDeNovo={() => void recarregarFamilias()} />
               </div>
             ) : carregando ? (
-              <Carregando />
+              <Carregando texto={COMUM.carregando} />
             ) : erroDaLeitura && !familiaMudou(erroDaLeitura) ? (
               <div className="max-w-[40rem]">
-                <ResumoErro
+                <ErroDaConta
                   erro={erroDaLeitura}
                   repetivel
                   aoTentarDeNovo={() => atualId && void carregarDetalhe(atualId)}

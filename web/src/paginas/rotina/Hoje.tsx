@@ -10,7 +10,9 @@ import { ALVO_APP } from '../../componentes/app/alvo.ts'
 import { Botao } from '../../componentes/base/Botao.tsx'
 import { Etiqueta } from '../../componentes/base/Etiqueta.tsx'
 import { Cartao, Colunas, Pilha, QuadroLayout, Secao } from '../../componentes/base/layout/index.ts'
-import { AvisoDeErro } from '../../componentes/rotina/AvisoDeErro.tsx'
+import { Carregando } from '../../componentes/estado/Carregando.tsx'
+import { ErroDaRotina } from '../../componentes/estado/ErroDaRotina.tsx'
+import { PainelVazio } from '../../componentes/estado/PainelVazio.tsx'
 import { AvisoDeFuso } from '../../componentes/rotina/AvisoDeFuso.tsx'
 import { AvisoDeLista } from '../../componentes/rotina/AvisoDeLista.tsx'
 import { BarraRegistroRapido, type BotaoRapido, type ItemDoMais } from '../../componentes/rotina/BarraRegistroRapido.tsx'
@@ -301,15 +303,15 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
         >
           <h2 className="text-pequeno font-medium text-(--cor-texto-2)">{HOJE.emAndamento}</h2>
           {emAndamento.erro ? (
-            <AvisoDeErro erro={emAndamento.erro} papel={ativo.papel} aoTentarDeNovo={emAndamento.recarregar} />
+            <ErroDaRotina erro={emAndamento.erro} papel={ativo.papel} aoTentarDeNovo={emAndamento.recarregar} aninhado />
           ) : (
-            <p className="text-(--cor-texto-2)">{COMUM.carregando}</p>
+            <Carregando texto={COMUM.carregando} />
           )}
         </Cartao>
       ) : (
         <>
           {emAndamento.erro ? (
-            <AvisoDeErro erro={emAndamento.erro} papel={ativo.papel} aoTentarDeNovo={emAndamento.recarregar} />
+            <ErroDaRotina erro={emAndamento.erro} papel={ativo.papel} aoTentarDeNovo={emAndamento.recarregar} />
           ) : null}
           <CartaoSessao
             ref={cartao}
@@ -453,9 +455,7 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
               <h2 id="ultimos-titulo" className="text-titulo-4 font-titulo font-semibold">
                 {HOJE.ultimos}
               </h2>
-              <p className="border-y border-(--cor-fio-suave) py-4 text-(--cor-texto-2)">
-                {sessoes.length === 0 ? HOJE.semRegistros : HOJE.semConcluidos}
-              </p>
+              <PainelVazio texto={sessoes.length === 0 ? HOJE.semRegistros : HOJE.semConcluidos} />
             </Pilha>
           )
         }
