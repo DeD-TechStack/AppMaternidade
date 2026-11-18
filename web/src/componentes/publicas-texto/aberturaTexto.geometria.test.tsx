@@ -11,6 +11,8 @@ import { renderizarRota } from '../../teste/renderizarRota.tsx'
 // (`web/dist`), numa janela de 1440 x 900 (a leitura no computador) e de 390 x 844 (o celular). Sem Chrome ou
 // sem build o teste pula e diz por quê; em CI falha. O executor do Chrome repete o de `casca/geometria.test.tsx`:
 // um auxiliar compartilhado seria um arquivo novo fora do que esta unidade pode editar.
+// VIS-4-r3: a medida de leitura conta as linhas cheias de todo parágrafo que quebra em 2 linhas ou mais (I-03), as
+// linhas do h1 têm de caber na coluna do h1 a 1100 e a 1440 (I-02), e controles negativos puros provam as duas réguas (I-04).
 
 const CANDIDATOS_DO_CHROME: Record<string, string[]> = {
   win32: [
@@ -61,6 +63,20 @@ interface Caixa {
   height: number
 }
 
+/** Uma linha do h1: o texto e o menor left e o maior right das letras dela. */
+interface LinhaDoH1 {
+  texto: string
+  esquerda: number
+  direita: number
+}
+
+/** O h1 da abertura: a caixa de conteúdo (sem padding nem borda) e cada linha com seus limites. */
+interface H1Medido {
+  colunaEsquerda: number
+  colunaDireita: number
+  linhas: LinhaDoH1[]
+}
+
 interface Medida {
   erro?: string
   innerWidth: number
@@ -84,6 +100,13 @@ interface Medida {
   quebraDoTitulo: string
   /** Letras por linha (média) dos parágrafos de leitura de mais de 150 letras. */
   letrasPorLinha: number[]
+  /**
+   * Os parágrafos de `.pt-texto p` da segunda seção que quebram em 2 linhas ou mais: para cada um, as letras de cada
+   * linha (`trim().length`, a mesma unidade do total), em ordem. Só letras visíveis (retângulo com largura).
+   */
+  linhasDosParagrafos: number[][]
+  /** O h1 da abertura: a coluna dele e as linhas medidas letra a letra. */
+  h1: H1Medido
 }
 
 // O script de dentro da página: espera as fontes e as imagens e escreve a medida em JSON num <pre>.
@@ -121,6 +144,64 @@ const SCRIPT_DE_MEDIDA = `
       const topos = new Set([...intervalo.getClientRects()].filter((r) => r.width > 0).map((r) => Math.round(r.top)))
       letrasPorLinha.push(total / Math.max(1, topos.size))
     }
+    // VIS-4-r3-I-03: todo parágrafo de leitura da segunda seção, de qualquer tamanho. Cada letra visível vai para a
+    // linha do seu topo; o texto de cada linha sai em ordem do DOM e conta por trim().length.
+    const linhasDosParagrafos = []
+    for (const p of segundaSecao.querySelectorAll('.pt-texto p')) {
+      const porTopoDoParagrafo = new Map()
+      const caminhante = document.createTreeWalker(p, NodeFilter.SHOW_TEXT)
+      while (caminhante.nextNode()) {
+        const no = caminhante.currentNode
+        const faixa = document.createRange()
+        for (let i = 0; i < no.length; i++) {
+          faixa.setStart(no, i)
+          faixa.setEnd(no, i + 1)
+          const retangulos = [...faixa.getClientRects()].filter((r) => r.width > 0)
+          if (retangulos.length === 0) continue
+          const topo = Math.round(retangulos[0].top)
+          porTopoDoParagrafo.set(topo, (porTopoDoParagrafo.get(topo) || '') + no.data[i])
+        }
+      }
+      const linhasDoParagrafo = [...porTopoDoParagrafo.entries()].sort((a, b) => a[0] - b[0]).map((par) => par[1].trim().length)
+      if (linhasDoParagrafo.length >= 2) linhasDosParagrafos.push(linhasDoParagrafo)
+    }
+    // VIS-4-r3-I-02: o h1 letra a letra (o método de escalaTipo.geometria.test.tsx): cada linha por Math.round(top),
+    // com o menor left e o maior right; a coluna é a caixa do h1 sem padding nem borda.
+    const h1 = um('main .pt-abertura h1')
+    const linhasDoH1 = new Map()
+    const limitesDoH1 = new Map()
+    const caminhanteDoH1 = document.createTreeWalker(h1, NodeFilter.SHOW_TEXT)
+    while (caminhanteDoH1.nextNode()) {
+      const no = caminhanteDoH1.currentNode
+      if (no.parentElement.closest('.sr-only')) continue
+      const faixa = document.createRange()
+      for (let i = 0; i < no.length; i++) {
+        faixa.setStart(no, i)
+        faixa.setEnd(no, i + 1)
+        const retangulos = faixa.getClientRects()
+        if (retangulos.length === 0) continue
+        const topo = Math.round(retangulos[0].top)
+        linhasDoH1.set(topo, (linhasDoH1.get(topo) || '') + no.data[i])
+        const limite = limitesDoH1.get(topo) || { esquerda: Infinity, direita: -Infinity }
+        for (const retangulo of retangulos) {
+          limite.esquerda = Math.min(limite.esquerda, retangulo.left)
+          limite.direita = Math.max(limite.direita, retangulo.right)
+        }
+        limitesDoH1.set(topo, limite)
+      }
+    }
+    const arredondar = (n) => Math.round(n * 10) / 10
+    const estiloDoH1 = getComputedStyle(h1)
+    const caixaDoH1 = h1.getBoundingClientRect()
+    const h1Medido = {
+      colunaEsquerda: arredondar(caixaDoH1.left + parseFloat(estiloDoH1.paddingLeft) + parseFloat(estiloDoH1.borderLeftWidth)),
+      colunaDireita: arredondar(caixaDoH1.right - parseFloat(estiloDoH1.paddingRight) - parseFloat(estiloDoH1.borderRightWidth)),
+      linhas: [...linhasDoH1.entries()].sort((a, b) => a[0] - b[0]).map((par) => ({
+        texto: par[1].trim(),
+        esquerda: arredondar(limitesDoH1.get(par[0]).esquerda),
+        direita: arredondar(limitesDoH1.get(par[0]).direita),
+      })),
+    }
     // O que a abertura ocupa de fato: as linhas de texto (uma caixa por linha, não a caixa de bloco, que vai até a
     // borda da coluna), o painel, o botão e o cartão de e-mail.
     const blocos = []
@@ -147,6 +228,8 @@ const SCRIPT_DE_MEDIDA = `
       quebraDoParagrafo: paragrafo ? getComputedStyle(paragrafo).textWrap : '',
       quebraDoTitulo: getComputedStyle(um('main h2')).textWrap,
       letrasPorLinha,
+      linhasDosParagrafos,
+      h1: h1Medido,
     })
   } catch (e) {
     emitir({ erro: String(e) })
@@ -310,6 +393,43 @@ function fracaoVazia(medida: Medida): number {
   return (melhor * CELULA * CELULA) / (colunas * CELULA * linhas * CELULA)
 }
 
+/**
+ * VIS-4-r3-I-03, a régua da medida de leitura (pura, sem Chrome). Recebe, por parágrafo que quebra em 2 linhas ou
+ * mais, as letras de cada linha. Linha cheia = toda linha menos a última de cada parágrafo. Três partes:
+ * (b1) nenhuma linha cheia passa de `maximo` letras; (b2) a mediana das linhas cheias da página é menor que
+ * `limiteDaMediana` (com número par de linhas, a média dos dois valores do meio); (b3) há ao menos 1 linha cheia,
+ * senão a medida não mediu nada (e só essa mensagem sai). Devolve as mensagens (lista vazia = ok).
+ */
+function violacoesDasLinhasCheias(caminho: string, paragrafos: number[][], maximo = 90, limiteDaMediana = 80): string[] {
+  const mensagens: string[] = []
+  const cheias: number[] = []
+  paragrafos.forEach((linhas, p) => {
+    linhas.slice(0, -1).forEach((letras, l) => {
+      cheias.push(letras)
+      if (letras > maximo) {
+        mensagens.push(`${caminho}: o parágrafo ${p} a linha cheia ${l} tem ${letras} letras (limite: no máximo ${maximo})`)
+      }
+    })
+  })
+  if (cheias.length === 0) {
+    return [`${caminho}: nenhum parágrafo de leitura quebra em 2 linhas ou mais; a medida não mediu nada`]
+  }
+  const ordenadas = [...cheias].sort((a, b) => a - b)
+  const meio = Math.floor(ordenadas.length / 2)
+  const mediana = ordenadas.length % 2 === 1 ? ordenadas[meio] : (ordenadas[meio - 1] + ordenadas[meio]) / 2
+  if (mediana >= limiteDaMediana) {
+    mensagens.push(`${caminho}: a mediana das linhas cheias é ${mediana} letras (limite: abaixo de ${limiteDaMediana})`)
+  }
+  return mensagens
+}
+
+/** VIS-4-r3-I-02, a régua da coluna do h1 (pura): as linhas cujas letras passam da coluna, com `tolerancia` px de folga. */
+function linhasForaDaColuna(h1: H1Medido, tolerancia = 1): LinhaDoH1[] {
+  return h1.linhas.filter(
+    (linha) => linha.esquerda < h1.colunaEsquerda - tolerancia || linha.direita > h1.colunaDireita + tolerancia,
+  )
+}
+
 const descreve = `a abertura das seis páginas de texto no Chrome${motivoDoPulo ? ` (pulado: ${motivoDoPulo})` : ''}`
 
 describe(descreve, () => {
@@ -319,6 +439,65 @@ describe(descreve, () => {
     })
   }
   const roda = it.skipIf(motivoDoPulo !== null && !exigirNoCI)
+
+  // VIS-4-r3-I-04: controles negativos das duas réguas, nas funções puras (sem Chrome, fora do skipIf).
+  it('VIS-4-r3-I-04 um parágrafo cuja primeira linha cheia tem 91 letras é apontado', () => {
+    // As outras duas linhas cheias (70) mantêm a mediana abaixo de 80: só o teto (b1) fala.
+    const mensagens = violacoesDasLinhasCheias('/sobre', [[91, 40], [70, 40], [70, 40]])
+    expect(mensagens).toHaveLength(1)
+    expect(mensagens[0]).toContain('/sobre')
+    expect(mensagens[0]).toContain('91')
+  })
+
+  it('VIS-4-r3-I-04 uma linha cheia de 85 letras não é apontada pelo teto de 90 quando a mediana da página fica abaixo de 80', () => {
+    expect(violacoesDasLinhasCheias('/privacidade', [[85, 40], [70, 40], [70, 40]])).toEqual([])
+  })
+
+  it('VIS-4-r3-I-04 uma página cuja mediana das linhas cheias é 80 falha e nomeia a página e a mediana', () => {
+    const mensagens = violacoesDasLinhasCheias('/termos', [[78, 10], [80, 10], [82, 10]])
+    expect(mensagens).toHaveLength(1)
+    expect(mensagens[0]).toContain('/termos')
+    expect(mensagens[0]).toContain('mediana')
+    expect(mensagens[0]).toContain('80')
+  })
+
+  it('VIS-4-r3-I-04 parágrafos de uma linha só não são medidos: o conjunto sem linha cheia falha só com a mensagem da página', () => {
+    const mensagens = violacoesDasLinhasCheias('/contato', [[60], [120]])
+    expect(mensagens).toHaveLength(1)
+    expect(mensagens[0]).toContain('/contato')
+    expect(mensagens[0]).toContain('não mediu nada')
+  })
+
+  it('VIS-4-r3-I-04 a última linha de um parágrafo não conta: 3 linhas com 70, 70 e 95 não são apontadas', () => {
+    expect(violacoesDasLinhasCheias('/exclusao-de-conta', [[70, 70, 95]])).toEqual([])
+  })
+
+  it('VIS-4-r3-I-04 um conjunto medido vazio falha e nomeia a página', () => {
+    const mensagens = violacoesDasLinhasCheias('/regras-da-comunidade', [])
+    expect(mensagens).toHaveLength(1)
+    expect(mensagens[0]).toContain('/regras-da-comunidade')
+    expect(mensagens[0]).toContain('não mediu nada')
+  })
+
+  it('VIS-4-r3-I-04 uma linha do h1 15 px além da coluna é apontada; uma dentro (com 1 px de folga) não', () => {
+    const coluna = { colunaEsquerda: 100, colunaDireita: 668 }
+    const fora = linhasForaDaColuna({
+      ...coluna,
+      linhas: [
+        { texto: 'Regras', esquerda: 100, direita: 300 },
+        { texto: 'da comunidade', esquerda: 100, direita: 683 },
+      ],
+    })
+    expect(fora.map((l) => l.texto)).toEqual(['da comunidade'])
+    const dentro = linhasForaDaColuna({
+      ...coluna,
+      linhas: [
+        { texto: 'Regras', esquerda: 99.5, direita: 668.8 },
+        { texto: 'da comunidade', esquerda: 100, direita: 600 },
+      ],
+    })
+    expect(dentro).toEqual([])
+  })
 
   for (const caminho of PAGINAS) {
     // B-1: a figura (painel de mel + frase de apoio) é uma coluna só: mesma borda esquerda e mesma largura, a frase
@@ -358,10 +537,35 @@ describe(descreve, () => {
       `${caminho} a 1440: menos de 80 letras por linha, parágrafos com text-wrap pretty e títulos com balance`,
       () => {
         const m = medirPagina(caminho, 1440, 900)
-        expect(m.letrasPorLinha.length).toBeGreaterThan(0)
+        expect(violacoesDasLinhasCheias(caminho, m.linhasDosParagrafos)).toEqual([])
         for (const letras of m.letrasPorLinha) expect(letras).toBeLessThan(80)
         expect(m.quebraDoParagrafo).toBe('pretty')
         expect(m.quebraDoTitulo).toBe('balance')
+      },
+      TEMPO_DO_CHROME,
+    )
+
+    // VIS-4-r3-I-02: a coluna de duas frações não pode deixar uma linha do h1 passar da própria coluna, e a coluna
+    // do h1 não passa da medida de leitura (`max-w-leitura`, 640 px).
+    roda(
+      `VIS-4-r3-I-02 ${caminho} a 1100 e 1440: as linhas do h1 ficam dentro da coluna do h1 e a coluna não passa de 640 px`,
+      () => {
+        // As duas larguras são medidas antes de afirmar, para a mensagem nomear todas as que falham.
+        const problemas: string[] = []
+        for (const largura of [1100, 1440]) {
+          const m = medirPagina(caminho, largura, 900)
+          const fora = linhasForaDaColuna(m.h1)
+          const coluna = m.h1.colunaDireita - m.h1.colunaEsquerda
+          if (fora.length > 0) {
+            problemas.push(
+              `${caminho} em ${largura}: linha(s) do h1 fora da coluna (${m.h1.colunaEsquerda} a ${m.h1.colunaDireita}, ${coluna.toFixed(1)} px): ` +
+                fora.map((l) => `"${l.texto}" ${l.esquerda} a ${l.direita} (${(l.direita - l.esquerda).toFixed(1)} px)`).join('; '),
+            )
+          }
+          if (coluna > 641) problemas.push(`${caminho} em ${largura}: a coluna do h1 tem ${coluna.toFixed(1)} px (máximo 640)`)
+          if (m.scrollWidth > m.innerWidth) problemas.push(`${caminho} em ${largura}: rolagem horizontal (${m.scrollWidth} > ${m.innerWidth})`)
+        }
+        expect(problemas).toEqual([])
       },
       TEMPO_DO_CHROME,
     )
