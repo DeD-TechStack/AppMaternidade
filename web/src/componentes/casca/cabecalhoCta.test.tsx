@@ -299,6 +299,31 @@ describe('DS1-I-09 CabecalhoCTA: o CSS não esconde a pílula e define o estado 
     }
   })
 
+  // DS1:RN-02 / DS1-I-20 (DS1A-R1-01): a marca de 20 px é só do cabeçalho público; a do logado (/app/*, /moderacao*) fica
+  // em 24 px. A medida em Chrome está em geometria.test.tsx; aqui vai o código-fonte.
+  it("DS1-I-20 a marca de 20 px (5,3 vw) só existe sob [data-contexto='publico'], e nenhuma regra .cm-marca solta diz 5,3 vw", () => {
+    const daMarca = blocos.filter((b) => /\.cm-marca\b/.test(b.seletor))
+    expect(daMarca.length).toBeGreaterThan(0)
+    const dos20 = daMarca.filter((b) => /5\.3vw|1\.25rem/.test(b.corpo))
+    expect(dos20.length, 'a declaração de 20 px da marca pública existe').toBeGreaterThan(0)
+    for (const { seletor } of dos20) {
+      for (const parte of seletor.split(',').map((p) => p.trim())) {
+        expect(parte, `a regra de 20 px da marca está solta: ${parte}`).toMatch(/\[data-contexto=['"]publico['"]\]/)
+        expect(parte).toMatch(/\.cm-marca$/)
+      }
+    }
+    // A regra solta (a global) é a da base: 24 px, sem 5,3 vw.
+    const soltas = daMarca.filter((b) => b.seletor.split(',').some((p) => !/\[data-contexto/.test(p)))
+    expect(soltas.length).toBeGreaterThan(0)
+    expect(soltas.map((b) => b.corpo).join('\n')).not.toMatch(/5\.3vw/)
+    expect(soltas.map((b) => b.corpo).join('\n')).toMatch(/min\(1\.5rem,\s*6\.4vw\)/)
+  })
+
+  it('DS1-I-20 de 640 em diante o cabeçalho público volta a 24 px: o seletor escopado também tem min(1.5rem, 4.4vw)', () => {
+    const de640 = blocos.filter((b) => /\[data-contexto=['"]publico['"]\]\s+\.cm-marca/.test(b.seletor) && /min\(1\.5rem,\s*4\.4vw\)/.test(b.corpo))
+    expect(de640.length).toBeGreaterThan(0)
+  })
+
   it('DS1-I-09 o estado de noite tem regras: fundo de cacau no cabeçalho e a pílula de contorno com fundo transparente', () => {
     const daNoite = blocos.filter((b) => /data-tom=["']?noite/.test(b.seletor))
     expect(daNoite.length).toBeGreaterThan(0)

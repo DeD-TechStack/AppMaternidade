@@ -463,21 +463,27 @@
     min-width: 0;
   }
 
-  /* A marca acompanha a janela: 20 px abaixo de 640 (fora da escala, DESIGN.md "Marca do cabeçalho": com a pílula
-     "Criar conta" na linha de 390 a marca, a pílula e o menu só cabem a 20 px) e 24 px de 640 em diante; com a
-     raiz a 200 % (1,25 rem = 40 px) fica em ~21 px em vez de 380 px de largura, que empurravam a lua e o menu
-     para fora (DEF-62b-7). */
+  /* A marca acompanha a janela: 24 px (a base, DS1:RN-02: a área logada guarda o desenho dela); com a raiz a 200 %
+     (1,5 rem = 48 px) fica em ~25 px em vez de 380 px de largura, que empurravam a lua e o menu para fora
+     (DEF-62b-7). */
   .cm-marca {
     flex: none;
     display: inline-flex;
     align-items: center;
     min-height: 44px;
     color: inherit;
-    font-size: min(1.25rem, 5.3vw);
+    font-size: min(1.5rem, 6.4vw);
     line-height: 1.5rem;
     letter-spacing: -0.01em;
     text-decoration: none;
     white-space: nowrap;
+  }
+
+  /* Só o cabeçalho público: 20 px abaixo de 640 (fora da escala, DESIGN.md "Marca do cabeçalho": com a pílula
+     "Criar conta" na linha de 390 a marca, a pílula e o menu só cabem a 20 px) e 24 px de 640 em diante (bloco de
+     640 abaixo). Com a raiz a 200 % (1,25 rem = 40 px) fica em ~21 px. */
+  .cm-cabecalho[data-contexto='publico'] .cm-marca {
+    font-size: min(1.25rem, 5.3vw);
   }
 
   .cm-cab-links {
@@ -609,6 +615,10 @@
     /* De 640 para cima a marca e o rótulo longo da lua também acompanham a janela com a raiz a 200 %: a 100 %
        valem 24 e 17 px (4,4 vw >= 28 px, 2,7 vw >= 17,3 px em 640). */
     .cm-marca {
+      font-size: min(1.5rem, 4.4vw);
+    }
+
+    .cm-cabecalho[data-contexto='publico'] .cm-marca {
       font-size: min(1.5rem, 4.4vw);
     }
 

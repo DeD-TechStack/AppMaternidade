@@ -63,6 +63,7 @@ interface Caixa {
   bottom: number
   width: number
   height: number
+  fontSize: number
 }
 
 interface Medida {
@@ -99,6 +100,7 @@ const SCRIPT_DE_MEDIDA = `
           rotulo: el.getAttribute('aria-label') || el.textContent.trim(),
           seletor,
           x: r.x, right: r.right, y: r.y, bottom: r.bottom, width: r.width, height: r.height,
+          fontSize: parseFloat(getComputedStyle(el).fontSize),
         })
       }
     }
@@ -316,6 +318,15 @@ describe(`a geometria do cabeçalho logado no Chrome${motivoDoPulo ? ` (pulado: 
           expect(medida.faces.some((face) => face.endsWith(':loaded'))).toBe(true)
 
           expect(medida.caixas.length).toBeGreaterThan(0)
+          // DS1:RN-02 / DS1-I-20: a área logada guarda o desenho dela. A marca do cabeçalho logado é de 24 px em toda
+          // largura (raiz de 16 px: min(1,5 rem, 6,4 vw) = 24 em 390 e min(1,5 rem, 4,4 vw) = 24 de 640 em diante) e nos
+          // dois temas; os 20 px são só do cabeçalho público (a pílula "Criar conta" divide a linha lá).
+          const marcas = medida.caixas.filter((caixa) => caixa.seletor === '.cm-marca')
+          expect(marcas, 'o cabeçalho logado tem a marca').toHaveLength(1)
+          expect(
+            marcas[0].fontSize,
+            `a marca do cabeçalho logado perdeu o tamanho de 24 px (${marcas[0].fontSize} px em ${largura}, tema ${tema})`,
+          ).toBe(24)
           for (const caixa of medida.caixas) {
             expect(caixa.x, `${caixa.rotulo}: a borda esquerda`).toBeGreaterThanOrEqual(0)
             expect(caixa.right, `${caixa.rotulo}: a borda direita (${caixa.right}) passa da janela de ${largura}`).toBeLessThanOrEqual(medida.innerWidth)

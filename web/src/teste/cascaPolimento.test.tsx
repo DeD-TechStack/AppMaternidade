@@ -112,26 +112,37 @@ describe('C-1 link "Pular para o conteúdo" (WCAG 2.4.1)', () => {
 })
 
 describe('C-3 fonte a 200 % em 390 px', () => {
-  // DS1 §3.9: abaixo de 640 a marca é `min(1.25rem, 5.3vw)` (20 px, fora da escala) para a pílula "Criar conta" caber na
-  // linha de 390; de 640 em diante volta a `min(1.5rem, 4.4vw)` (24 px).
-  it('a marca encolhe com a janela (min() com vw) e é 20 px a 100 % em 390', () => {
-    const base = regras.find((r) => r.seletor === '.cm-marca' && /min-height:\s*44px/.test(r.corpo))!
-    const vw = Number(/font-size:\s*min\(1\.25rem,\s*([\d.]+)vw\)/.exec(base.corpo)?.[1])
+  // DS1 §3.9: no cabeçalho PÚBLICO, abaixo de 640, a marca é `min(1.25rem, 5.3vw)` (20 px, fora da escala) para a pílula
+  // "Criar conta" caber na linha de 390; de 640 em diante volta a `min(1.5rem, 4.4vw)` (24 px). O cabeçalho logado
+  // (/app/*, /moderacao*) guarda a base, `min(1.5rem, 6.4vw)` (24 px em 390; DS1:RN-02, DS1A-R1-01).
+  const SELETOR_PUBLICO = ".cm-cabecalho[data-contexto='publico'] .cm-marca"
+
+  it('a marca pública encolhe com a janela (min() com vw) e é 20 px a 100 % em 390; a base logada é 24 px', () => {
+    const publica = regras.find((r) => r.seletor === SELETOR_PUBLICO && /font-size:\s*min\(1\.25rem/.test(r.corpo))!
+    expect(publica, SELETOR_PUBLICO).toBeDefined()
+    const vw = Number(/font-size:\s*min\(1\.25rem,\s*([\d.]+)vw\)/.exec(publica.corpo)?.[1])
     expect(vw).toBeGreaterThan(0)
     // A 100 % em 390: o menor entre 20 e vw% de 390 (5,3 % = 20,67 px) continua 20.
     expect(Math.min(20, (vw / 100) * 390)).toBe(20)
+    const base = regras.find((r) => r.seletor === '.cm-marca' && /min-height:\s*44px/.test(r.corpo))!
+    const vwBase = Number(/font-size:\s*min\(1\.5rem,\s*([\d.]+)vw\)/.exec(base.corpo)?.[1])
+    expect(vwBase).toBeGreaterThan(0)
+    expect(Math.min(24, (vwBase / 100) * 390)).toBe(24)
   })
 
   it('a conta de 390 com a fonte a 200 %: marca + pílula + menu (público) e marca + lua + menu (logado) cabem nos 350 px da área', () => {
+    const publica = regras.find((r) => r.seletor === SELETOR_PUBLICO && /font-size:\s*min\(1\.25rem/.test(r.corpo))!
+    const vwPublica = Number(/min\(1\.25rem,\s*([\d.]+)vw\)/.exec(publica.corpo)?.[1])
     const base = regras.find((r) => r.seletor === '.cm-marca' && /min-height:\s*44px/.test(r.corpo))!
-    const vw = Number(/min\(1\.25rem,\s*([\d.]+)vw\)/.exec(base.corpo)?.[1])
-    const marca = 8.25 * Math.min(2 * 20, (vw / 100) * 390) // "AppMaternidade" mede 8,25 em (7,966 + tracking de -0,01 em)
+    const vwBase = Number(/min\(1\.5rem,\s*([\d.]+)vw\)/.exec(base.corpo)?.[1])
+    const marcaPublica = 8.25 * Math.min(2 * 20, (vwPublica / 100) * 390) // "AppMaternidade" mede 8,25 em (7,966 + tracking de -0,01 em)
+    const marcaLogada = 8.25 * Math.min(2 * 24, (vwBase / 100) * 390)
     const menu = 48 - 14.25 // menu de 48 com o recuo de -14,25
     const area = 390 - 2 * 20
     // Público: a pílula "Criar conta" (44 px de altura, ~120 px de largura, largura estimada: não medida) e o menu. A lua
     // só existe nas páginas da Rotina (logado), onde não há pílula: os dois nunca dividem a linha.
-    const publico = marca + 16 + (120 + 8 + menu)
-    const logado = marca + 16 + (48 + 8 + menu) // lua 48, folga 8, menu
+    const publico = marcaPublica + 16 + (120 + 8 + menu)
+    const logado = marcaLogada + 16 + (48 + 8 + menu) // lua 48, folga 8, menu
     expect(publico).toBeLessThanOrEqual(area)
     expect(logado).toBeLessThanOrEqual(area)
   })
