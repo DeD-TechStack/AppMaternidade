@@ -63,8 +63,44 @@
     object-position: center;
   }
 
+  /* Abaixo de 1100 px a abertura é uma coluna só e a primeira tela tem de chegar ao texto de leitura (o primeiro
+     parágrafo começa antes dos 844 px de um celular). Só espaço: o conteúdo e a ordem são os mesmos. A seção da
+     abertura abre com um vão de grupo (no lugar do `secao-ampla`) e não tem padding embaixo; a leitura abre com o
+     mesmo vão de grupo, então entre a frase de apoio e o fio do índice sobra um vão só. As duas colunas e o painel
+     com a frase de apoio ficam a um vão de grupo e de junto um do outro. O desenho do celular é mais baixo (o
+     painel de mel fica com a largura do texto e 160 px de figura mais o respiro). Seletores mais específicos que os
+     de `layout.css`, que vêm antes e valem de 1100 px para cima. */
+  @media (max-width: 1099.98px) {
+    main > .pt-secao-abertura:first-child[data-h~='secao']:not([data-h-variante='painel']) {
+      padding-top: var(--espaco-grupo);
+      padding-bottom: 0;
+    }
+
+    main > .pt-secao-leitura[data-h~='secao']:not([data-h-variante='painel']) {
+      padding-top: var(--espaco-grupo);
+    }
+
+    .pt-abertura[data-h~='colunas'][data-h-vao='midia'] {
+      gap: var(--espaco-grupo);
+    }
+
+    .pt-figura[data-h~='pilha'][data-h-vao='pilha'] {
+      gap: var(--espaco-junto);
+    }
+
+    .pt-figura .pt-ilustracao {
+      height: 136px;
+    }
+
+    /* Desenho de retrato no celular: 200 px de altura, para o traço não ficar miúdo. */
+    .pt-figura.pt-figura-retrato .pt-ilustracao {
+      height: 200px;
+    }
+  }
+
+
   @media (min-width: 1100px) {
-    /* A figura preenche a coluna da direita da abertura; a frase de apoio fica à direita, embaixo do painel. */
+    /* A figura preenche a coluna da direita da abertura; a frase de apoio fica à esquerda, embaixo do painel. */
     .pt-apoio {
       text-align: end;
     }
@@ -79,6 +115,36 @@
 
     .pt-ilustracao {
       height: 300px;
+    }
+
+    /* A figura é uma coluna só: o painel de mel, a frase de apoio e a coluna têm a mesma borda esquerda e a mesma
+       largura (o painel não abraça mais o desenho: um desenho estreito, como o de Termos, ficava numa ilha de 31%
+       da coluna, fora do eixo da frase). O desenho segue centrado no painel. A frase se alinha ao começo, na
+       borda do painel. Os seletores com o `.pt-abertura` na frente valem mais que as regras acima. */
+    .pt-abertura .pt-figura > .cm-painel.pt-painel {
+      box-sizing: border-box;
+      inline-size: 100%;
+      max-inline-size: 100%;
+      align-self: stretch;
+      padding: var(--espaco-grupo);
+    }
+
+    .pt-abertura .pt-figura > .pt-apoio {
+      text-align: start;
+    }
+
+    /* Desenho de retrato: o painel abraça o desenho, rente à borda final da coluna da figura, e a frase de apoio
+       acaba na mesma borda. */
+    .pt-abertura .pt-figura.pt-figura-retrato > .cm-painel.pt-painel {
+      box-sizing: border-box;
+      inline-size: fit-content;
+      max-inline-size: 100%;
+      align-self: flex-end;
+      padding: var(--espaco-grupo);
+    }
+
+    .pt-abertura .pt-figura.pt-figura-retrato > .pt-apoio {
+      text-align: end;
     }
   }
 
@@ -199,6 +265,17 @@
     overflow-wrap: anywhere;
   }
 
+  /* De 1280 em diante o cartão é uma linha só; a coluna do texto cresce pelo conteúdo, pelo piso de `min-content`. */
+  @media (min-width: 1280px) {
+    .pt-email {
+      flex-wrap: nowrap;
+    }
+
+    .pt-email-endereco {
+      white-space: nowrap;
+    }
+  }
+
   /* h2 em Literata no degrau de título 2 (36/42 em 1440; o h2 de 56 é de página de venda) e h3 no de título 4. O vão
      até o texto é o da pilha. */
   .pt-h2,
@@ -231,10 +308,10 @@
     margin: 0;
   }
 
-  /* Sem `text-wrap: pretty`: ele encurta as linhas para não deixar palavra sozinha no fim, e na coluna de 640 isso
-     leva a mediana para abaixo de 60 letras por linha. As linhas enchem a coluna. */
+  /* `text-wrap: pretty` só evita a palavra sozinha na última linha do parágrafo; as demais linhas enchem a coluna. */
   .pt-texto p {
     overflow-wrap: break-word;
+    text-wrap: pretty;
   }
 
   /* Link no meio do texto: alvo de 44 x 44 no mínimo. A caixa cresce 8 px para cima e para baixo (28 de linha
@@ -284,6 +361,15 @@
 
   .pt-lista > li + li {
     margin-top: var(--espaco-junto);
+  }
+
+  /* Celular: a lista de leitura é mais densa (vão de 4 px entre itens, no lugar do vão junto). O texto, o tamanho e a
+     entrelinha do corpo e a ordem não mudam; só o espaço, para a lista longa de Privacidade (9 grupos de dados)
+     empurrar menos o primeiro parágrafo para baixo. */
+  @media (max-width: 639.98px) {
+    .pt-lista > li + li {
+      margin-top: 4px;
+    }
   }
 
   /* Lista de 4 itens ou mais e só de itens curtos: corre em duas colunas dentro da coluna de leitura (a ordem

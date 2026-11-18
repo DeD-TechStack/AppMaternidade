@@ -17,7 +17,7 @@ async function familiaDaRotinaDe(mundo: ReturnType<typeof criarMundoDeTeste>) {
 
 describe('autoria depois de excluirConta (B06)', () => {
   it('depois de excluirConta o registro da pessoa tem autor nulo', async () => {
-    const mundo = criarMundoDeTeste({ semRegistros: true, sessao: 'bruno' })
+    const mundo = criarMundoDeTeste({ semRegistros: true, sessao: 'icaro' })
     const id = uuidV7()
     const gravado = await mundo.rotina.gravarRegistro({
       id,
@@ -26,7 +26,7 @@ describe('autoria depois de excluirConta (B06)', () => {
       inicio: new Date(Date.now() - 60_000).toISOString(),
       nota: 'Acordou às 3h',
     })
-    expect(gravado.ok && gravado.valor.criadoPor).toBe(PESSOAS.bruno.id)
+    expect(gravado.ok && gravado.valor.criadoPor).toBe(PESSOAS.icaro.id)
 
     const excluida = await mundo.conta.excluirConta()
     expect(excluida.ok).toBe(true)
@@ -41,10 +41,10 @@ describe('autoria depois de excluirConta (B06)', () => {
   })
 
   it('depois de excluirConta a nota da pessoa tem autor nulo', async () => {
-    const mundo = criarMundoDeTeste({ semRegistros: true, sessao: 'bruno' })
+    const mundo = criarMundoDeTeste({ semRegistros: true, sessao: 'icaro' })
     const id = uuidV7()
     const gravada = await mundo.rotina.gravarNota({ id, familiaId: ID_FAMILIA, texto: 'Trocar a fralda antes da mamada' })
-    expect(gravada.ok && gravada.valor.criadoPor).toBe(PESSOAS.bruno.id)
+    expect(gravada.ok && gravada.valor.criadoPor).toBe(PESSOAS.icaro.id)
 
     const excluida = await mundo.conta.excluirConta()
     expect(excluida.ok).toBe(true)

@@ -4,7 +4,7 @@
 --   convite pendente (observador): código = '45a1' repetido 16 vezes (64 caracteres);
 --   convite vencido (cuidador):    código = '45b2' repetido 16 vezes (64 caracteres).
 -- O banco guarda só o hash (SHA-256 em hexadecimal minúsculo); o código em claro fica aqui.
--- Usa só as linhas do supabase/seed.sql (Ana, Bruno e Família Exemplo) e as próprias.
+-- Usa só as linhas do supabase/seed.sql (Ana, Ícaro e Família Exemplo) e as próprias.
 
 insert into auth.users (
   id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -36,7 +36,7 @@ values
 insert into public.contas (id, nome_privado, fuso)
 values ('45444444-4444-4444-8444-444444444444', 'Davi', 'America/Sao_Paulo');
 
--- Ana (responsável) concedeu o papel de Bruno.
+-- Ana (responsável) concedeu o papel de Ícaro.
 update public.vinculos
    set concedido_por = '11111111-1111-4111-8111-111111111111'
  where id = 'b2222222-2222-4222-8222-222222222222';

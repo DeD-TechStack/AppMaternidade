@@ -13,7 +13,7 @@ import { PESSOAS, criarFixtureDeTeste, renderizarComDados } from '../../teste/re
 // senha errada e sucesso), pendências visíveis e sair.
 
 const AGORA = Date.parse('2026-11-06T12:00:00.000Z')
-const VINCULO_DO_BRUNO = 'b2222222-2222-4222-8222-222222222222'
+const VINCULO_DO_ICARO = 'b2222222-2222-4222-8222-222222222222'
 
 beforeEach(() => {
   sessionStorage.clear()
@@ -319,7 +319,7 @@ describe('exportação', () => {
 
   it('quem não é responsável recebe só os próprios dados', async () => {
     const download = simularDownload()
-    await abrirConta('bruno')
+    await abrirConta('icaro')
 
     fireEvent.click(screen.getByRole('button', { name: 'Baixar meus dados' }))
     await waitFor(() => expect(download.blobs).toHaveLength(1))
@@ -367,7 +367,7 @@ describe('excluir conta: impedimentos', () => {
     const dados = novaMemoria()
     dados.sessaoParaTeste('juliana@exemplo.invalid')
     await dados.criarFamilia('Solo', 'UTC')
-    await dados.mudarPapel(VINCULO_DO_BRUNO, 'responsavel')
+    await dados.mudarPapel(VINCULO_DO_ICARO, 'responsavel')
     // Na Família Exemplo agora há dois responsáveis; só a Solo bloqueia.
     renderizarComDados('/app/conta', { dados })
     await screen.findByRole('heading', { level: 1, name: 'Conta' })
@@ -380,7 +380,7 @@ describe('excluir conta: impedimentos', () => {
   it('com outro responsável ativo em cada família, o botão fica ativo', async () => {
     const dados = novaMemoria()
     dados.sessaoParaTeste('juliana@exemplo.invalid')
-    await dados.mudarPapel(VINCULO_DO_BRUNO, 'responsavel')
+    await dados.mudarPapel(VINCULO_DO_ICARO, 'responsavel')
     renderizarComDados('/app/conta', { dados })
     await screen.findByRole('heading', { level: 1, name: 'Conta' })
     await esperarALeitura()
@@ -390,8 +390,8 @@ describe('excluir conta: impedimentos', () => {
     expect(document.getElementById('impedimento-exclusao')).toBeNull()
   })
 
-  it('quem não é responsável (Bruno) e quem não tem família (Davi) podem excluir', async () => {
-    for (const pessoa of ['bruno', 'davi'] as const) {
+  it('quem não é responsável (Ícaro) e quem não tem família (Davi) podem excluir', async () => {
+    for (const pessoa of ['icaro', 'davi'] as const) {
       const { unmount } = await abrirConta(pessoa)
       await esperarALeitura()
       expect(botaoExcluir().disabled, pessoa).toBe(false)

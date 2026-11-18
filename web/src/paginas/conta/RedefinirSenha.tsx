@@ -6,7 +6,7 @@ import { Campo, CampoSenha } from '../../componentes/conta/Campos.tsx'
 import { useEnvio } from '../../componentes/conta/envio.ts'
 import { useFocoNoResumo } from '../../componentes/conta/foco.ts'
 import { MolduraPublica } from '../../componentes/conta/MolduraPublica.tsx'
-import { BOTAO_PRINCIPAL, Carregando, LINK_ALVO, ResumoErro } from '../../componentes/conta/Partes.tsx'
+import { BOTAO_PRINCIPAL, Carregando, ResumoErro } from '../../componentes/conta/Partes.tsx'
 import { useDadosConta, useSessao } from '../../componentes/conta/sessao.tsx'
 import { COMUM, MANCHETES, REDEFINIR, TEXTOS_ERRO, TITULOS, textoDoErro } from '../../conteudo/conta.ts'
 
@@ -75,18 +75,19 @@ export function RedefinirSenha() {
     <MolduraPublica
       titulo={TITULOS.redefinirSenha}
       manchete={MANCHETES.redefinirSenha}
-      frase={REDEFINIR.frase}
+      // "Escolha a senha nova" só vale com o formulário: com o link vencido a frase do aviso é a única.
+      frase={carregando || vencido ? undefined : REDEFINIR.frase}
       ocupado={carregando}
     >
       {carregando ? (
         <Carregando />
       ) : vencido ? (
-        <div className="flex flex-col items-start gap-3">
-          <p className="flex items-start gap-3 font-medium">
+        <div className="flex flex-col items-start gap-esp-pilha">
+          <p className="flex items-start gap-3 font-medium wrap-anywhere">
             <CircleAlert size={22} aria-hidden="true" className="mt-0.5 shrink-0" />
             <span>{TEXTOS_ERRO.link_vencido}</span>
           </p>
-          <Link to="/recuperar-acesso" className={LINK_ALVO}>
+          <Link to="/recuperar-acesso" className={BOTAO_PRINCIPAL}>
             {REDEFINIR.pedirOutroLink}
           </Link>
         </div>

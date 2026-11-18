@@ -86,7 +86,7 @@ describe('exportação com registros e notas (I-F6-1)', () => {
   it('o responsável baixa os registros e as notas da família, de qualquer autor, dentro de familias[0]', async () => {
     const mundo = criarMundoDeTeste({ semRegistros: true })
     const dela = await criarItens(mundo, 'juliana', 'Dormiu a noite toda', 'Pomada só à noite')
-    const dele = await criarItens(mundo, 'bruno', 'Acordou às 3h', 'Trocar a fralda antes da mamada')
+    const dele = await criarItens(mundo, 'icaro', 'Acordou às 3h', 'Trocar a fralda antes da mamada')
 
     const json = await baixar(mundo, 'juliana')
 
@@ -95,10 +95,10 @@ describe('exportação com registros e notas (I-F6-1)', () => {
     const { registros, notas } = json.familias[0]
     expect(registros.map((r) => r.id).sort()).toEqual([dela.registroId, dele.registroId].sort())
     expect(registros.find((r) => r.id === dela.registroId)).toMatchObject({ nota: 'Dormiu a noite toda', criado_por: PESSOAS.juliana.id, excluido_em: null })
-    expect(registros.find((r) => r.id === dele.registroId)).toMatchObject({ nota: 'Acordou às 3h', criado_por: PESSOAS.bruno.id })
+    expect(registros.find((r) => r.id === dele.registroId)).toMatchObject({ nota: 'Acordou às 3h', criado_por: PESSOAS.icaro.id })
     expect(notas.map((n) => n.id).sort()).toEqual([dela.notaId, dele.notaId].sort())
     expect(notas.find((n) => n.id === dela.notaId)).toMatchObject({ texto: 'Pomada só à noite', criado_por: PESSOAS.juliana.id })
-    expect(notas.find((n) => n.id === dele.notaId)).toMatchObject({ texto: 'Trocar a fralda antes da mamada', criado_por: PESSOAS.bruno.id })
+    expect(notas.find((n) => n.id === dele.notaId)).toMatchObject({ texto: 'Trocar a fralda antes da mamada', criado_por: PESSOAS.icaro.id })
     // O que já está dentro de familias[] não se repete no topo.
     expect(json.registros).toEqual([])
     expect(json.notas).toEqual([])
@@ -119,15 +119,15 @@ describe('exportação com registros e notas (I-F6-1)', () => {
   it('o cuidador baixa só os itens que ele mesmo criou, no topo, e nada da família', async () => {
     const mundo = criarMundoDeTeste({ semRegistros: true })
     const dela = await criarItens(mundo, 'juliana', 'Dormiu a noite toda', 'Pomada só à noite')
-    const dele = await criarItens(mundo, 'bruno', 'Acordou às 3h', 'Trocar a fralda antes da mamada')
+    const dele = await criarItens(mundo, 'icaro', 'Acordou às 3h', 'Trocar a fralda antes da mamada')
 
-    const json = await baixar(mundo, 'bruno')
+    const json = await baixar(mundo, 'icaro')
 
     expect(json.familias).toEqual([])
     expect(json.registros.map((r) => r.id)).toEqual([dele.registroId])
-    expect(json.registros[0]).toMatchObject({ nota: 'Acordou às 3h', criado_por: PESSOAS.bruno.id })
+    expect(json.registros[0]).toMatchObject({ nota: 'Acordou às 3h', criado_por: PESSOAS.icaro.id })
     expect(json.notas.map((n) => n.id)).toEqual([dele.notaId])
-    expect(json.notas[0]).toMatchObject({ texto: 'Trocar a fralda antes da mamada', criado_por: PESSOAS.bruno.id })
+    expect(json.notas[0]).toMatchObject({ texto: 'Trocar a fralda antes da mamada', criado_por: PESSOAS.icaro.id })
 
     const texto = JSON.stringify(json)
     for (const id of [dela.registroId, dela.notaId]) expect(texto).not.toContain(id)

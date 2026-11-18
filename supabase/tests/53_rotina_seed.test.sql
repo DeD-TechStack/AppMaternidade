@@ -109,7 +109,7 @@ select is(
 select is(
   (select criado_por::text || ' ' || encerrado_por::text from public.registros where id = pg_temp.id_registro(108)),
   '11111111-1111-4111-8111-111111111111 22222222-2222-4222-8222-222222222222',
-  'o sono de D-1 nasceu por Ana e foi encerrado por Bruno'
+  'o sono de D-1 nasceu por Ana e foi encerrado por Ícaro'
 );
 
 select is(
@@ -157,7 +157,7 @@ select is(
   (select tipo::text || ' ' || criado_por::text || ' ' || excluido_por::text || ' ' || versao::text
      from public.registros where id = pg_temp.id_registro(91)),
   'fralda 22222222-2222-4222-8222-222222222222 11111111-1111-4111-8111-111111111111 2',
-  'a fralda de D-2 é de Bruno e foi excluída por Ana'
+  'a fralda de D-2 é de Ícaro e foi excluída por Ana'
 );
 
 select is(
@@ -171,7 +171,7 @@ select is(
   (select criado_por::text || ' ' || coalesce(fim::text, 'aberta') || ' ' || origem::text
      from public.registros where id = pg_temp.id_registro(115)),
   '22222222-2222-4222-8222-222222222222 aberta ao_vivo',
-  'a sessão de hoje é de Bruno, está em andamento e é ao vivo'
+  'a sessão de hoje é de Ícaro, está em andamento e é ao vivo'
 );
 
 select ok(
@@ -200,7 +200,7 @@ select is(
      from public.notas_cuidado),
   '460000c9-0000-7000-8000-000000000000|Pomada só à noite.|11111111-1111-4111-8111-111111111111|c1111111-1111-4111-8111-111111111111|true;'
   || '460000ca-0000-7000-8000-000000000000|Fraldas P no armário de cima.|22222222-2222-4222-8222-222222222222|-|false',
-  'as duas notas do seed: a da Lia com destaque (Ana) e a da família sem bebê nem destaque (Bruno)'
+  'as duas notas do seed: a da Lia com destaque (Ana) e a da família sem bebê nem destaque (Ícaro)'
 );
 
 reset role;

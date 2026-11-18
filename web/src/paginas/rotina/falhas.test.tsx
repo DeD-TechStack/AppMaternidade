@@ -39,21 +39,21 @@ describe('a sessão que outra pessoa já encerrou', () => {
   it('"Encerrar" mostra quem encerrou e a hora que valeu, sem trocar o fim gravado', async () => {
     const mundo = await renderizarRotaPronta('/app/sessao')
     const id = idDoSonoEmAndamento(mundo)
-    const fimDeBruno = new Date('2026-11-05T09:55:00').toISOString()
-    // Bruno encerra por outro aparelho enquanto a tela de Juliana ainda mostra a sessão em andamento.
-    mundo.conta.sessaoParaTeste(PESSOAS.bruno.email)
-    const dele = await mundo.rotina.encerrarSessao(id, fimDeBruno)
-    expect(dele).toEqual({ ok: true, valor: fimDeBruno })
+    const fimDeIcaro = new Date('2026-11-05T09:55:00').toISOString()
+    // Ícaro encerra por outro aparelho enquanto a tela de Juliana ainda mostra a sessão em andamento.
+    mundo.conta.sessaoParaTeste(PESSOAS.icaro.email)
+    const dele = await mundo.rotina.encerrarSessao(id, fimDeIcaro)
+    expect(dele).toEqual({ ok: true, valor: fimDeIcaro })
     mundo.conta.sessaoParaTeste(PESSOAS.juliana.email)
 
     fireEvent.click(botao('Encerrar'))
     await aguardarCarga()
 
     expect(mundo.roteador.state.location.pathname).toBe('/app/hoje')
-    expect(status().querySelector('p')!.textContent).toBe('Esta sessão já tinha sido encerrada por Bruno às 09:55.')
+    expect(status().querySelector('p')!.textContent).toBe('Esta sessão já tinha sido encerrada por Ícaro às 09:55.')
     expect(within(status()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Fechar'])
     const lido = await mundo.rotina.registro(id)
-    expect(lido.ok && lido.valor).toMatchObject({ fim: fimDeBruno, encerradoPor: PESSOAS.bruno.id })
+    expect(lido.ok && lido.valor).toMatchObject({ fim: fimDeIcaro, encerradoPor: PESSOAS.icaro.id })
   })
 })
 
@@ -129,7 +129,7 @@ describe('o fuso e o deslocamento do aparelho', () => {
 
   it('a edição regrava o deslocamento do aparelho de agora', async () => {
     const mundo = await renderizarRotaPronta('/app/hoje')
-    const alvo = mundo.fixture.registros.find((r) => r.tipo === 'fralda' && r.criadoPor === PESSOAS.bruno.id)!
+    const alvo = mundo.fixture.registros.find((r) => r.tipo === 'fralda' && r.criadoPor === PESSOAS.icaro.id)!
     mundo.unmount()
     await renderizarRotaPronta(`/app/registro/${alvo.id}/editar`, { mundo })
     vi.spyOn(Date.prototype, 'getTimezoneOffset').mockReturnValue(240)
@@ -484,9 +484,9 @@ function criarModeloDeFralda() {
 }
 
 describe('R10: as corridas com outra pessoa', () => {
-  const comoBruno = (mundo: { conta: Mundo['conta'] }, fazer: () => Promise<unknown>) =>
+  const comoIcaro = (mundo: { conta: Mundo['conta'] }, fazer: () => Promise<unknown>) =>
     (async () => {
-      mundo.conta.sessaoParaTeste(PESSOAS.bruno.email)
+      mundo.conta.sessaoParaTeste(PESSOAS.icaro.email)
       try {
         await fazer()
       } finally {
@@ -495,17 +495,17 @@ describe('R10: as corridas com outra pessoa', () => {
     })()
 
   it('R10: o Desfazer de um registro que outra pessoa já excluiu não dá erro e deixa a exclusão da outra pessoa', async () => {
-    const mundo = await renderizarRotaPronta('/app/hoje', { sessao: 'bruno' })
+    const mundo = await renderizarRotaPronta('/app/hoje', { sessao: 'icaro' })
     fireEvent.click(botao('Registrar fralda de Heloísa'))
     fireEvent.click(botao('Xixi'))
     await aguardarCarga()
     const lista = await mundo.rotina.doIntervalo(ID_BEBE, new Date(Date.now() - 5 * 60_000).toISOString(), new Date(Date.now() + 5 * 60_000).toISOString())
-    const criado = lista.ok ? lista.valor.itens.find((r) => r.origem === 'ao_vivo' && r.criadoPor === PESSOAS.bruno.id) : undefined
+    const criado = lista.ok ? lista.valor.itens.find((r) => r.origem === 'ao_vivo' && r.criadoPor === PESSOAS.icaro.id) : undefined
     expect(criado).toBeTruthy()
-    // Juliana (responsável) exclui o registro de Bruno por outro aparelho, antes do Desfazer dele.
+    // Juliana (responsável) exclui o registro de Ícaro por outro aparelho, antes do Desfazer dele.
     mundo.conta.sessaoParaTeste(PESSOAS.juliana.email)
     expect((await mundo.rotina.excluirRegistro(criado!.id)).ok).toBe(true)
-    mundo.conta.sessaoParaTeste(PESSOAS.bruno.email)
+    mundo.conta.sessaoParaTeste(PESSOAS.icaro.email)
 
     fireEvent.click(botao('Desfazer'))
     await aguardarCarga()
@@ -521,7 +521,7 @@ describe('R10: as corridas com outra pessoa', () => {
   it('R10: "Encerrar" numa sessão que outra pessoa excluiu mostra a frase de registro excluído, sem "Tentar de novo", e a tela se atualiza', async () => {
     const mundo = await renderizarRotaPronta('/app/hoje')
     const id = idDoSonoEmAndamento(mundo)
-    await comoBruno(mundo, async () => expect((await mundo.rotina.excluirRegistro(id)).ok).toBe(true))
+    await comoIcaro(mundo, async () => expect((await mundo.rotina.excluirRegistro(id)).ok).toBe(true))
 
     fireEvent.click(botao('Encerrar'))
     await aguardarCarga()
@@ -536,7 +536,7 @@ describe('R10: as corridas com outra pessoa', () => {
   it('R10: "Descartar" de uma sessão que outra pessoa já excluiu não dá erro (a exclusão é idempotente) e leva ao Hoje', async () => {
     const mundo = await renderizarRotaPronta('/app/sessao')
     const id = idDoSonoEmAndamento(mundo)
-    await comoBruno(mundo, async () => expect((await mundo.rotina.excluirRegistro(id)).ok).toBe(true))
+    await comoIcaro(mundo, async () => expect((await mundo.rotina.excluirRegistro(id)).ok).toBe(true))
 
     fireEvent.click(botao('Descartar'))
     fireEvent.click(within(screen.getByRole('group', { name: 'Descartar esta sessão?' })).getByRole('button', { name: 'Descartar' }))
@@ -550,9 +550,9 @@ describe('R10: as corridas com outra pessoa', () => {
     const mundo = criarMundoDeTeste({ ajustarRotina: semSessaoEmAndamento })
     const tela = await renderizarRotaPronta('/app/hoje', { mundo })
     const gravar = vi.spyOn(mundo.rotina, 'gravarRegistro')
-    const idDeBruno = uuidV7()
-    await comoBruno(mundo, async () => {
-      const gravada = await mundo.rotina.gravarRegistro({ id: idDeBruno, bebeId: ID_BEBE, tipo: 'mamada', inicio: new Date(Date.now() - 2 * 60_000).toISOString() })
+    const idDeIcaro = uuidV7()
+    await comoIcaro(mundo, async () => {
+      const gravada = await mundo.rotina.gravarRegistro({ id: idDeIcaro, bebeId: ID_BEBE, tipo: 'mamada', inicio: new Date(Date.now() - 2 * 60_000).toISOString() })
       expect(gravada.ok).toBe(true)
     })
     gravar.mockClear()
@@ -562,25 +562,25 @@ describe('R10: as corridas com outra pessoa', () => {
 
     expect(gravar).not.toHaveBeenCalled()
     expect(tela.roteador.state.location.pathname).toBe('/app/sessao')
-    expect(tela.roteador.state.location.search).toBe(`?id=${idDeBruno}`)
+    expect(tela.roteador.state.location.search).toBe(`?id=${idDeIcaro}`)
     expect(screen.getByText('Já há uma sessão de Mamada em andamento.')).toBeTruthy()
   })
 
   it('R10: a mamada de outra pessoa que chega entre a leitura e a gravação vira a pergunta do duplicado, com as duas ficando', async () => {
     const mundo = criarMundoDeTeste({ ajustarRotina: semSessaoEmAndamento })
     const tela = await renderizarRotaPronta('/app/hoje', { mundo })
-    await comoBruno(mundo, async () => {
+    await comoIcaro(mundo, async () => {
       const gravada = await mundo.rotina.gravarRegistro({ id: uuidV7(), bebeId: ID_BEBE, tipo: 'mamada', inicio: new Date(Date.now() - 2 * 60_000).toISOString() })
       expect(gravada.ok).toBe(true)
     })
-    // A conferência de "já há uma sessão" ainda viu a lista vazia: a gravação de Juliana é que encontra a de Bruno.
+    // A conferência de "já há uma sessão" ainda viu a lista vazia: a gravação de Juliana é que encontra a de Ícaro.
     vi.spyOn(mundo.rotina, 'emAndamento').mockResolvedValueOnce({ ok: true, valor: { itens: [], incompleta: false } })
 
     fireEvent.click(botao('Iniciar mamada de Heloísa'))
     await aguardarCarga()
 
     expect(tela.roteador.state.location.pathname).toBe('/app/sessao')
-    expect(status().querySelector('p')!.textContent).toBe('Bruno já fez um registro de mamada às 09:58.')
+    expect(status().querySelector('p')!.textContent).toBe('Ícaro já fez um registro de mamada às 09:58.')
     expect(within(status()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Manter os dois', 'Excluir este', 'Fechar'])
     const abertas = await mundo.rotina.emAndamento(ID_BEBE)
     expect(abertas.ok && abertas.valor.itens).toHaveLength(2)

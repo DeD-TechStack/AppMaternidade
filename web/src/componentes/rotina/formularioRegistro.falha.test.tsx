@@ -61,7 +61,7 @@ describe('o formulário de registro quando a chamada rejeita', () => {
 
   it('editarRegistro rejeita: termina no erro de escrita desconhecido e o formulário segue usável', async () => {
     const mundo = await renderizarRotaPronta('/app/hoje')
-    const alvo = mundo.fixture.registros.find((r) => r.tipo === 'fralda' && r.criadoPor === PESSOAS.bruno.id)!
+    const alvo = mundo.fixture.registros.find((r) => r.tipo === 'fralda' && r.criadoPor === PESSOAS.icaro.id)!
     mundo.unmount()
     await renderizarRotaPronta(`/app/registro/${alvo.id}/editar`, { mundo })
     digitar('Nota', 'Muito')
