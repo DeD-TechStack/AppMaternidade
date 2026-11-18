@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { waitFor } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { simularFalhaRotina } from '../../dados/rotina.memoria.ts'
 import { adiarRotina } from '../../teste/adiado.ts'
 import { renderizarRota, renderizarRotaPronta } from '../../teste/renderizarRota.tsx'
@@ -410,15 +410,22 @@ describe('"Hoje até agora" sem as quatro células enquanto a leitura não termi
   it('carregando: a seção existe como esqueleto e não tem lista de células', async () => {
     const mundo = criarMundoDeTeste({ sessao: 'juliana', diaCompleto: true })
     const adiada = adiarRotina(mundo.rotina)
-    adiada.adiar('doDia')
-    const { container } = renderizarRota('/app/hoje', { mundo: { ...mundo, rotina: adiada.dados } })
+    const controle = process.env.RESUMO_CONTROLE
+    if (controle !== 'solto') adiada.adiar('doDia')
+    try {
+      if (controle === 'atraso') vi.stubGlobal('queueMicrotask', (f: () => void) => setTimeout(f, 300))
+      const { container } = renderizarRota('/app/hoje', { mundo: { ...mundo, rotina: adiada.dados } })
 
-    // O esqueleto de "Hoje até agora" só aparece com o bebê ativo lido; a leitura do dia segue presa.
-    await waitFor(() => expect(container.querySelector('[data-secao-estado="carregando"]'), 'o esqueleto de carregando não apareceu').not.toBeNull())
-    expect(adiada.presas('doDia'), 'a leitura do dia deveria estar presa').toBeGreaterThan(0)
-    expect(container.querySelectorAll('[data-resumo] li')).toHaveLength(0)
-    expect(container.querySelector('[data-resumo] ul')).toBeNull()
-    adiada.liberarTodas('doDia')
+      // A leitura do dia só começa depois do primeiro commit (useEffect + queueMicrotask em useSecao): espera ela ficar presa.
+      await waitFor(() => expect(adiada.presas('doDia'), 'a leitura do dia deveria estar presa').toBeGreaterThan(0))
+      // Com a leitura presa, o esqueleto de "Hoje até agora" está na tela.
+      expect(container.querySelector('[data-secao-estado="carregando"]'), 'o esqueleto de carregando não apareceu').not.toBeNull()
+      expect(container.querySelectorAll('[data-resumo] li')).toHaveLength(0)
+      expect(container.querySelector('[data-resumo] ul')).toBeNull()
+      adiada.liberarTodas('doDia')
+    } finally {
+      vi.unstubAllGlobals()
+    }
   })
 
   it('erro: a falha da leitura do dia mostra o aviso e nenhuma célula', async () => {
