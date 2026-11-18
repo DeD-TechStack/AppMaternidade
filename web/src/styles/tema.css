@@ -14,9 +14,6 @@
   --cor-foco: var(--color-cacau);
   --cor-fio-suave: color-mix(in srgb, var(--color-cacau) 20%, transparent);
   --cor-cartao: var(--color-branco);
-  /* O rodapé é um painel de mel; na madrugada, o cartão da noite. */
-  --cor-painel-rodape: var(--color-mel);
-  --cor-sobre-painel-rodape: var(--color-cacau);
 
   /* Apelidos das telas do app: primário antigo → cacau, neutro → papel, destaque → mel (com cacau por cima). */
   --cor-destaque: var(--color-mel);
@@ -60,8 +57,6 @@
   --cor-foco: var(--color-mel);
   --cor-fio-suave: color-mix(in srgb, var(--color-papel) 20%, transparent);
   --cor-cartao: var(--color-noite-cartao);
-  --cor-painel-rodape: var(--color-noite-cartao);
-  --cor-sobre-painel-rodape: var(--color-papel);
 
   --cor-destaque: var(--color-mel);
   --cor-sobre-destaque: var(--color-cacau);

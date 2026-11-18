@@ -80,6 +80,3 @@ export const COLUNAS_DO_RODAPE: readonly ColunaDoRodape[] = [
     ],
   },
 ]
-
-/** A frase do rodapé, com a segunda linha em itálico. */
-export const FRASE_DO_RODAPE = ['A rotina do bebê,', 'dividida por quem cuida.'] as const

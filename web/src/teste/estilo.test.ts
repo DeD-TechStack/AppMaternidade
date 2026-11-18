@@ -204,23 +204,33 @@ function corpoDaRegra(texto: string, seletor: string): string {
   return regra?.[2] ?? ''
 }
 
-describe('rodapé: marca ajustada ao painel e alvos da casca (MAT-49e)', () => {
+describe('rodapé: marca no nível titulo-3 e alvos da casca (MAT-49e, FOOTER-1)', () => {
   const site = css.find((f) => f.nome === 'styles/site.css')!.limpo
 
-  it('o nome do rodapé tem o tamanho preso à largura do painel (cqi), sem teto de 160 px, sem transform nem mexida no tracking', () => {
+  it('o nome do rodapé é texto comum no nível titulo-3 (tokens de tamanho e entrelinha), sem cqi, sem transform e sem fator de largura', () => {
     const corpo = corpoDaRegra(site, '.cm-rodape-nome')
     expect(corpo).not.toBe('')
-    const tamanho = /font-size:\s*([^;]+);/.exec(corpo)?.[1] ?? ''
-    expect(tamanho).toMatch(/cqi/)
-    expect(tamanho).not.toMatch(/min\(\s*160px/)
-    expect(tamanho).not.toMatch(/160px/)
-    expect(corpo).not.toMatch(/transform|scale/)
-    expect(corpo.match(/letter-spacing:\s*([^;]+);/g)).toEqual(['letter-spacing: -0.03em;'])
+    expect(/font-size:\s*([^;]+);/.exec(corpo)?.[1]).toBe('var(--texto-titulo-3-tamanho)')
+    expect(/line-height:\s*([^;]+);/.exec(corpo)?.[1]).toBe('var(--texto-titulo-3-entrelinha)')
+    expect(corpo).toMatch(/font-family:\s*var\(--fonte-titulo\)/)
+    expect(corpo).toMatch(/font-weight:\s*600/)
+    expect(corpo).not.toMatch(/cqi|transform|scale|white-space/)
   })
 
-  it('o fator da largura do texto é declarado uma vez, como propriedade própria', () => {
-    expect(site.match(/--cm-fator-marca:\s*[\d.]+;/g)).toHaveLength(1)
-    expect(corpoDaRegra(site, '.cm-rodape-nome')).toMatch(/var\(--cm-fator-marca\)/)
+  it('nenhuma regra do site.css usa 100cqi, container-type ou o fator da marca (a marca do rodapé não é mais fora da escala)', () => {
+    expect(site).not.toMatch(/cqi|container-type|--cm-fator-marca/)
+  })
+
+  it('o rodapé do site não tem fundo próprio: nenhuma regra .cm-rodape* pinta fundo, e o fio de cima é o fio suave de 1 px', () => {
+    const regras = [...site.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter((m) => /\.cm-rodape/.test(m[1]))
+    expect(regras.length).toBeGreaterThan(0)
+    for (const [, seletor, corpo] of regras) expect(corpo, seletor.trim()).not.toMatch(/background/)
+    expect(corpoDaRegra(site, '.cm-rodape-quadro')).toMatch(/border-top:\s*1px solid var\(--cor-fio-suave\)/)
+  })
+
+  it('os tokens do painel de mel do rodapé saíram do tema, do dia e da madrugada', () => {
+    expect(temaCss).not.toMatch(/--cor-painel-rodape|--cor-sobre-painel-rodape/)
+    expect(site).not.toMatch(/--cor-painel-rodape|--cor-sobre-painel-rodape/)
   })
 
   it('.alvo-toque é só um piso de especificidade zero (:where), sem !important, para não vencer o .cm-botao de 56 px', () => {
