@@ -76,7 +76,7 @@ describe('os blocos e a ordem (responsável)', () => {
       .getAllByRole('heading', { level: 2 })
       .map((titulo) => titulo.textContent)
     expect(titulos).toEqual(['Família Exemplo', 'Bebês', 'Membros', 'Convites', 'Ações da família'])
-    expect(screen.getByText('Fuso: Horário de Brasília (UTC−3)')).toBeTruthy()
+    expect(screen.getByText('Fuso: Brasília (UTC−3)')).toBeTruthy()
     expect(screen.getByText('Você é responsável.')).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Política de privacidade' }).getAttribute('href')).toBe('/privacidade')
     expect(document.title).toBe('Família | AppMaternidade')
@@ -595,7 +595,7 @@ describe('as ações da família', () => {
 
     await waitFor(() => expect(status().textContent).toBe('Dados da família salvos.'))
     expect(await screen.findByRole('heading', { level: 2, name: 'Família Aurora' })).toBeTruthy()
-    expect(screen.getByText('Fuso: Horário do Amazonas (UTC−4)')).toBeTruthy()
+    expect(screen.getByText('Fuso: Amazonas (UTC−4)')).toBeTruthy()
   })
 
   it('editar família: nome vazio dá erro no campo, sem chamar o banco', async () => {

@@ -107,17 +107,17 @@ describe('LOC-04: o fuso horário em pt-BR (C12)', () => {
     expect(CONTA.perfil.fuso).toBe('Seu fuso horário')
   })
 
-  it('America/Sao_Paulo aparece com o nome genérico em pt-BR e a diferença para o UTC, curto para caber a 390 px', () => {
-    expect(rotuloDoFuso('America/Sao_Paulo')).toBe('Horário de Brasília (UTC−3)')
-    expect(rotuloDoFuso('America/Manaus')).toBe('Horário do Amazonas (UTC−4)')
-    expect(rotuloDoFuso('America/Rio_Branco')).toBe('Horário do Acre (UTC−5)')
-    expect(rotuloDoFuso('America/Noronha')).toBe('Horário de Fernando de Noronha (UTC−2)')
+  it('America/Sao_Paulo aparece pelo nome de uso e a diferença para o UTC, curto para caber a 390 px', () => {
+    expect(rotuloDoFuso('America/Sao_Paulo')).toBe('Brasília (UTC−3)')
+    expect(rotuloDoFuso('America/Manaus')).toBe('Amazonas (UTC−4)')
+    expect(rotuloDoFuso('America/Rio_Branco')).toBe('Acre (UTC−5)')
+    expect(rotuloDoFuso('America/Noronha')).toBe('Fernando de Noronha (UTC−2)')
   })
 
-  it('os outros fusos do mesmo horário levam a cidade, com acento no Brasil e sem o sublinhado fora dele', () => {
-    expect(rotuloDoFuso('America/Fortaleza')).toBe('Horário de Brasília (UTC−3, Fortaleza)')
-    expect(rotuloDoFuso('America/Cuiaba')).toBe('Horário do Amazonas (UTC−4, Cuiabá)')
-    expect(rotuloDoFuso('America/Argentina/Buenos_Aires')).toMatch(/\(UTC−3, Buenos Aires\)$/)
+  it('os outros fusos levam a cidade, com acento no Brasil e sem o sublinhado fora dele', () => {
+    expect(rotuloDoFuso('America/Fortaleza')).toBe('Fortaleza (UTC−3)')
+    expect(rotuloDoFuso('America/Cuiaba')).toBe('Cuiabá (UTC−4)')
+    expect(rotuloDoFuso('America/Argentina/Buenos_Aires')).toBe('Buenos Aires (UTC−3)')
   })
 
   it('cada opção da lista tem um rótulo próprio, sem "Padrão" e sem o identificador cru', () => {
@@ -129,12 +129,12 @@ describe('LOC-04: o fuso horário em pt-BR (C12)', () => {
   it('UTC e os fusos sem nome próprio mostram só a diferença; um identificador inválido volta como veio', () => {
     expect(rotuloDoFuso('UTC')).toBe('UTC')
     expect(rotuloDoFuso('Etc/GMT+3')).toBe('UTC−3')
-    expect(rotuloDoFuso('Asia/Kolkata')).toMatch(/\(UTC\+5:30, Kolkata\)$/)
+    expect(rotuloDoFuso('Asia/Kolkata')).toBe('Kolkata (UTC+5:30)')
     expect(rotuloDoFuso('Nao/Existe')).toBe('Nao/Existe')
   })
 
   it('a linha do fuso na Família mostra o rótulo em pt-BR, não o identificador', () => {
-    expect(FAMILIA.fuso('America/Sao_Paulo')).toBe('Fuso: Horário de Brasília (UTC−3)')
+    expect(FAMILIA.fuso('America/Sao_Paulo')).toBe('Fuso: Brasília (UTC−3)')
   })
 
   it('o seletor mostra o rótulo em pt-BR e guarda o identificador IANA como valor', () => {
