@@ -4,8 +4,10 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { waitFor } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
-import { simularFalhaRotina } from '../../dados/rotina.memoria.ts'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { simularFalhaRotina, type FixtureRotina } from '../../dados/rotina.memoria.ts'
+import type { Registro } from '../../dados/rotina.tipos.ts'
+import { PESSOAS } from '../../teste/renderizarComDados.tsx'
 import { adiarRotina } from '../../teste/adiado.ts'
 import { renderizarRota, renderizarRotaPronta } from '../../teste/renderizarRota.tsx'
 import { criarMundoDeTeste } from '../../teste/rotina.fixture.ts'
@@ -437,4 +439,174 @@ describe('"Hoje até agora" sem as quatro células enquanto a leitura não termi
     expect(container.querySelectorAll('[data-resumo] li')).toHaveLength(0)
     expect(container.querySelector('[data-resumo] ul')).toBeNull()
   })
+})
+
+// ---- I-05 (HOJE-ROT-1): os rótulos novos cabem numa linha só ------------------------------------------------
+// "Sono concluído" na faixa "Hoje até agora" e as legendas de sessão de "Últimos" ("Mamada, fim, tempo desde o
+// registro", "Sono, fim ontem", "Tummy time, fim ontem") são mais longas que as de antes. Cada rótulo da faixa e cada
+// legenda tem de ficar numa linha (altura da caixa <= line-height + 1 px) e dentro da célula dela. Se uma quebrar, o
+// teste falha com a medida: a correção é do produto, e o texto não se reescreve para caber.
+
+interface MedidaDeLinha {
+  quem: string
+  texto: string
+  altura: number
+  alturaDaLinha: number | null
+  linhas: number
+  esquerda: number
+  direita: number
+  celulaEsquerda: number
+  celulaDireita: number
+}
+
+interface MedidaDeLinhas {
+  erro?: string
+  innerWidth: number
+  fontes: string
+  rotulos: MedidaDeLinha[]
+  legendas: MedidaDeLinha[]
+}
+
+// Um script a mais na página, que roda depois do de medida (+250 ms contra +100 ms) e troca o conteúdo do <pre>
+// #geometria (e a mensagem ao pai, abaixo de 500 px) pela sua medida. Lê só caixas: a altura do rótulo, a do texto
+// (Range, por linha) e as bordas da célula.
+const SCRIPT_DAS_LINHAS = `
+(async () => {
+  try {
+    await document.fonts.ready
+    await new Promise((r) => setTimeout(r, 250))
+    const medir = (el, celula, quem) => {
+      const estilo = getComputedStyle(el)
+      const caixa = el.getBoundingClientRect()
+      // Só o texto que a vista alcança: o trecho .sr-only (", tempo desde o registro" da legenda) fica fora.
+      const visiveis = [...el.childNodes].filter((no) => !(no.nodeType === 1 && no.classList.contains('sr-only')))
+      const pedacos = visiveis.flatMap((no) => {
+        const faixa = document.createRange()
+        faixa.selectNodeContents(no)
+        return [...faixa.getClientRects()]
+      })
+      const alturaDaLinha = parseFloat(estilo.lineHeight)
+      const topos = pedacos.map((p) => p.top).sort((a, b) => a - b)
+      let linhas = topos.length > 0 ? 1 : 0
+      for (let i = 1; i < topos.length; i++) if (topos[i] - topos[i - 1] > (alturaDaLinha || 10) / 2) linhas++
+      const c = celula.getBoundingClientRect()
+      return {
+        quem,
+        texto: visiveis.map((no) => no.textContent ?? '').join(''),
+        altura: caixa.height,
+        alturaDaLinha: Number.isFinite(alturaDaLinha) ? alturaDaLinha : null,
+        linhas,
+        esquerda: pedacos.length ? Math.min(...pedacos.map((p) => p.left)) : caixa.left,
+        direita: pedacos.length ? Math.max(...pedacos.map((p) => p.right)) : caixa.right,
+        celulaEsquerda: c.left,
+        celulaDireita: c.right,
+      }
+    }
+    const rotulos = [...document.querySelectorAll('section[data-resumo] ul > li')].map((li, i) =>
+      medir(li.querySelectorAll('span')[1], li, 'rótulo ' + (i + 1) + ' da faixa'),
+    )
+    const legendas = [...document.querySelectorAll('#ultimos .sb-numeros-item')].map((item, i) =>
+      medir(item.querySelectorAll('p')[1], item, 'legenda ' + (i + 1) + ' de Últimos'),
+    )
+    const texto = JSON.stringify({ innerWidth: window.innerWidth, fontes: document.fonts.status, rotulos, legendas })
+    document.getElementById('geometria').textContent = texto
+    if (window.parent !== window) window.parent.postMessage(texto, '*')
+  } catch (e) {
+    const texto = JSON.stringify({ erro: String(e), innerWidth: 0, fontes: '', rotulos: [], legendas: [] })
+    document.getElementById('geometria').textContent = texto
+    if (window.parent !== window) window.parent.postMessage(texto, '*')
+  }
+})()
+`
+
+function medirLinhasNoChrome(container: HTMLElement, janela: Janela): MedidaDeLinhas {
+  const raiz = `${raizDaPagina(container)}<script>${SCRIPT_DAS_LINHAS}</script>`
+  return medirNoChrome(raiz, janela) as unknown as MedidaDeLinhas
+}
+
+function conferirUmaLinhaCadaRotulo(medida: MedidaDeLinhas, janela: Janela, esperados: { rotulos: number; legendas: number }) {
+  expect(medida.erro, 'o script das linhas falhou no Chrome').toBeUndefined()
+  expect(medida.innerWidth, 'a largura da janela do Chrome').toBe(janela.largura)
+  expect(medida.fontes, 'as fontes carregaram').toBe('loaded')
+  expect(medida.rotulos, 'quantos rótulos da faixa mediu').toHaveLength(esperados.rotulos)
+  expect(medida.legendas, 'quantas legendas de "Últimos" mediu').toHaveLength(esperados.legendas)
+  for (const m of [...medida.rotulos, ...medida.legendas]) {
+    const quem = `${m.quem} ("${m.texto}")`
+    expect(m.texto, `${quem}: sem texto`).not.toBe('')
+    expect(m.alturaDaLinha, `${quem}: line-height não numérico`).not.toBeNull()
+    expect(m.altura, `${quem}: altura ${dizer([m.altura])} passa de uma linha (line-height ${dizer([m.alturaDaLinha ?? 0])} + 1)`).toBeLessThanOrEqual((m.alturaDaLinha ?? 0) + 1)
+    expect(m.linhas, `${quem}: ocupa ${m.linhas} linhas`).toBe(1)
+    expect(m.direita, `${quem}: o texto termina em ${dizer([m.direita])}, depois da célula (direita ${dizer([m.celulaDireita])})`).toBeLessThanOrEqual(m.celulaDireita + TOLERANCIA)
+    expect(m.esquerda, `${quem}: o texto começa em ${dizer([m.esquerda])}, antes da célula (esquerda ${dizer([m.celulaEsquerda])})`).toBeGreaterThanOrEqual(m.celulaEsquerda - TOLERANCIA)
+  }
+}
+
+/** O mínimo que a tela lê de um registro; `modelo` dá o bebê, a família e o fuso da fixture (como em teste/hojeRotulos.test.tsx). */
+function registroDaFaixa(modelo: Registro, numero: number, inicio: string, fim: string | null): Registro {
+  const marco = new Date(fim ?? inicio).toISOString()
+  return {
+    ...modelo,
+    id: `a0000000-0000-7000-8000-${String(900 + numero).padStart(12, '0')}`,
+    tipo: 'sono',
+    inicio: new Date(inicio).toISOString(),
+    fim: fim === null ? null : new Date(fim).toISOString(),
+    detalhes: {},
+    nota: null,
+    criadoPor: PESSOAS.juliana.id,
+    encerradoPor: fim === null ? null : PESSOAS.juliana.id,
+    recebidoEm: marco,
+    atualizadoEm: marco,
+  }
+}
+
+/** O sono de ontem (20:30 a 23:50) mais o sono de hoje em andamento (desde as 18:42), sem nenhum outro registro nem nota. */
+const sonoDeOntemEAberto = (fixture: FixtureRotina): FixtureRotina => ({
+  notas: [],
+  registros: [
+    registroDaFaixa(fixture.registros[0], 1, '2026-11-16T20:30:00', '2026-11-16T23:50:00'),
+    registroDaFaixa(fixture.registros[0], 2, '2026-11-17T18:42:00', null),
+  ],
+})
+
+const CASOS_DOS_ROTULOS = [
+  // O dia completo da base do hoje.test.tsx (relógio de 5/11 às 10:00): Fralda e Mamada com "há", Tummy time "fim ontem".
+  {
+    nome: 'dia completo (Tummy time, fim ontem)',
+    instante: new Date('2026-11-05T10:00:00'),
+    opcoes: { sessao: 'juliana', diaCompleto: true } as const,
+    esperados: { rotulos: CELULAS, legendas: 5 },
+  },
+  // O sono de ontem terminado e o de hoje em andamento (relógio de 17/11 às 19:54): "Sono concluído" e "Sono, fim ontem".
+  {
+    nome: 'sono de ontem e sono em andamento',
+    instante: new Date('2026-11-17T19:54:02'),
+    opcoes: { sessao: 'juliana', ajustarRotina: sonoDeOntemEAberto } as const,
+    esperados: { rotulos: CELULAS, legendas: 3 },
+  },
+]
+
+describe('I-05: rótulos de "Hoje até agora" e legendas de "Últimos" numa linha só no Chrome', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  for (const caso of CASOS_DOS_ROTULOS) {
+    for (const { rotulo, janela } of JANELAS) {
+      for (const tema of TEMAS) {
+        it(
+          `${caso.nome}, ${rotulo}, tema ${tema}: cada rótulo e cada legenda ocupa uma linha e cabe na célula`,
+          async () => {
+            vi.setSystemTime(caso.instante)
+            const { container } = await renderizarRotaPronta('/app/hoje', caso.opcoes)
+            const medida = medirLinhasNoChrome(container, comTema(janela, tema))
+            conferirUmaLinhaCadaRotulo(medida, janela, caso.esperados)
+          },
+          60_000,
+        )
+      }
+    }
+  }
 })
