@@ -4,7 +4,8 @@ import { ChevronLeft, Pencil, Trash2, Undo2 } from 'lucide-react'
 import { ALVO_APP } from '../../componentes/app/alvo.ts'
 import { Botao } from '../../componentes/base/Botao.tsx'
 import { Pilha } from '../../componentes/base/layout/index.ts'
-import { AvisoDeErro } from '../../componentes/rotina/AvisoDeErro.tsx'
+import { Carregando } from '../../componentes/estado/Carregando.tsx'
+import { ErroDaRotina } from '../../componentes/estado/ErroDaRotina.tsx'
 import { AvisoDeLista } from '../../componentes/rotina/AvisoDeLista.tsx'
 import { AvisoDoPapel } from '../../componentes/rotina/AvisoDoPapel.tsx'
 import { ItemRegistro } from '../../componentes/rotina/ItemRegistro.tsx'
@@ -99,7 +100,7 @@ function DetalheDoRegistro() {
     return (
       <TelaRotina tela="registro-detalhe" principal={principal} acionar={acionar} titulo={titulo} linha={ativo.bebe.nome} antes={voltar(null)}>
         <div className="max-w-md">
-          <AvisoDeErro erro={leitura.erro} papel={ativo.papel} aoTentarDeNovo={leitura.recarregar} />
+          <ErroDaRotina erro={leitura.erro} papel={ativo.papel} aoTentarDeNovo={leitura.recarregar} />
         </div>
       </TelaRotina>
     )
@@ -107,7 +108,7 @@ function DetalheDoRegistro() {
   if (registro === null) {
     return (
       <TelaRotina tela="registro-detalhe" principal={principal} acionar={acionar} titulo={titulo} linha={ativo.bebe.nome} antes={voltar(null)} ocupada>
-        <p aria-busy="true">{COMUM.carregando}</p>
+        <Carregando texto={COMUM.carregando} />
       </TelaRotina>
     )
   }
@@ -148,7 +149,7 @@ function DetalheDoRegistro() {
       <Pilha vao="bloco" className="max-w-leitura">
         {leitura.erro ? (
           <div data-releitura-falhou="">
-            <AvisoDeErro erro={leitura.erro} papel={dono.papel} aoTentarDeNovo={leitura.recarregar} />
+            <ErroDaRotina erro={leitura.erro} papel={dono.papel} aoTentarDeNovo={leitura.recarregar} />
           </div>
         ) : null}
 

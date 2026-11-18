@@ -34,7 +34,7 @@ const recarregarPelaAba = async () => {
 // ---- R4: quem não grava não vê nem envia ação de criação -----------------------------------------------
 
 const SEM_GRAVACAO: Array<[string, OpcoesMundo]> = [
-  ['observador', { papelDeBruno: 'observador', sessao: 'bruno' }],
+  ['observador', { papelDeIcaro: 'observador', sessao: 'icaro' }],
   ['bebê arquivado', { bebeArquivado: true }],
 ]
 const TEMAS: Array<[string, boolean]> = [
@@ -96,7 +96,7 @@ describe('R4: gravacaoLiberada vale para todo atalho de criação', () => {
   })
 
   it('R4: o cuidador também grava: /app/sessao?tipo= continua começando a sessão', async () => {
-    const mundo = criarMundoDeTeste({ sessao: 'bruno', ajustarRotina: semSessaoEmAndamento })
+    const mundo = criarMundoDeTeste({ sessao: 'icaro', ajustarRotina: semSessaoEmAndamento })
     const resultado = await renderizarRotaPronta('/app/sessao?tipo=sono', { mundo })
     expect(resultado.roteador.state.location.search).toMatch(/^\?id=/)
   })

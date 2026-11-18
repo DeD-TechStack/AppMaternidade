@@ -8,16 +8,11 @@ import { FormularioBebe } from '../../componentes/conta/FormularioBebe.tsx'
 import { FormularioFamilia } from '../../componentes/conta/FormularioFamilia.tsx'
 import { useFocoNoResumo, useFocoNoTitulo } from '../../componentes/conta/foco.ts'
 import { MolduraLogada } from '../../componentes/conta/MolduraLogada.tsx'
-import {
-  BOTAO_PRINCIPAL,
-  BOTAO_SECUNDARIO,
-  Carregando,
-  LINK_ALVO,
-  RegiaoStatus,
-  ResumoErro,
-} from '../../componentes/conta/Partes.tsx'
+import { BOTAO_PRINCIPAL, BOTAO_SECUNDARIO, LINK_ALVO, RegiaoStatus } from '../../componentes/conta/Partes.tsx'
 import { useDadosConta, useFamiliaAtual } from '../../componentes/conta/sessao.tsx'
-import { COMECAR_FAMILIA, MANCHETES, textoDaPassagem } from '../../conteudo/conta.ts'
+import { Carregando } from '../../componentes/estado/Carregando.tsx'
+import { ErroDaConta } from '../../componentes/estado/ErroDaConta.tsx'
+import { COMECAR_FAMILIA, COMUM, MANCHETES, textoDaPassagem } from '../../conteudo/conta.ts'
 import type { Conta } from '../../dados/conta.ts'
 
 type Passo =
@@ -53,10 +48,10 @@ export function EscolhaDeFamilia({ conta }: { conta: Conta }) {
         <RegiaoStatus mensagem={textoDaPassagem(location.state)} />
 
         {carregando ? (
-          <Carregando />
+          <Carregando texto={COMUM.carregando} />
         ) : familias.estado === 'erro' && familias.erro ? (
           <div className="max-w-[32rem]">
-            <ResumoErro
+            <ErroDaConta
               erro={familias.erro}
               repetivel
               aoTentarDeNovo={() => void familias.recarregar()}

@@ -10,7 +10,9 @@ import { ALVO_APP } from '../../componentes/app/alvo.ts'
 import { Botao } from '../../componentes/base/Botao.tsx'
 import { Etiqueta } from '../../componentes/base/Etiqueta.tsx'
 import { Cartao, Colunas, Pilha, QuadroLayout, Secao } from '../../componentes/base/layout/index.ts'
-import { AvisoDeErro } from '../../componentes/rotina/AvisoDeErro.tsx'
+import { Carregando } from '../../componentes/estado/Carregando.tsx'
+import { ErroDaRotina } from '../../componentes/estado/ErroDaRotina.tsx'
+import { PainelVazio } from '../../componentes/estado/PainelVazio.tsx'
 import { AvisoDeFuso } from '../../componentes/rotina/AvisoDeFuso.tsx'
 import { AvisoDeLista } from '../../componentes/rotina/AvisoDeLista.tsx'
 import { BarraRegistroRapido, type BotaoRapido, type ItemDoMais } from '../../componentes/rotina/BarraRegistroRapido.tsx'
@@ -31,7 +33,7 @@ import { ORIGEM_HOJE } from '../../componentes/rotina/origemDasNotas.ts'
 import { COMUM, ESTADOS, HOJE, LIGACOES, ROTULO_TIPO, SEM_RESULTADO, TITULOS, TOTAIS } from '../../conteudo/rotina.ts'
 import type { Resultado } from '../../dados/comum.ts'
 import { diaDaFamilia, formatarIdade, janelaDoDia, lerAparelho } from '../../dados/rotina.dia.ts'
-import { LIMITES, podeEscrever, type Lista, type Registro } from '../../dados/rotina.tipos.ts'
+import { ehTipoDeSessao, LIMITES, podeEscrever, type Lista, type Registro } from '../../dados/rotina.tipos.ts'
 import { focoDoEstado } from '../../prototipo/foco.ts'
 import { formatarHora, formatarUltimo } from '../../prototipo/formatar.ts'
 import { useAgora } from '../../prototipo/useAgora.ts'
@@ -301,15 +303,15 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
         >
           <h2 className="text-pequeno font-medium text-(--cor-texto-2)">{HOJE.emAndamento}</h2>
           {emAndamento.erro ? (
-            <AvisoDeErro erro={emAndamento.erro} papel={ativo.papel} aoTentarDeNovo={emAndamento.recarregar} />
+            <ErroDaRotina erro={emAndamento.erro} papel={ativo.papel} aoTentarDeNovo={emAndamento.recarregar} aninhado />
           ) : (
-            <p className="text-(--cor-texto-2)">{COMUM.carregando}</p>
+            <Carregando texto={COMUM.carregando} />
           )}
         </Cartao>
       ) : (
         <>
           {emAndamento.erro ? (
-            <AvisoDeErro erro={emAndamento.erro} papel={ativo.papel} aoTentarDeNovo={emAndamento.recarregar} />
+            <ErroDaRotina erro={emAndamento.erro} papel={ativo.papel} aoTentarDeNovo={emAndamento.recarregar} />
           ) : null}
           <CartaoSessao
             ref={cartao}
@@ -453,16 +455,14 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
               <h2 id="ultimos-titulo" className="text-titulo-4 font-titulo font-semibold">
                 {HOJE.ultimos}
               </h2>
-              <p className="border-y border-(--cor-fio-suave) py-4 text-(--cor-texto-2)">
-                {sessoes.length === 0 ? HOJE.semRegistros : HOJE.semConcluidos}
-              </p>
+              <PainelVazio texto={sessoes.length === 0 ? HOJE.semRegistros : HOJE.semConcluidos} />
             </Pilha>
           )
         }
         // Três colunas sempre: os mais recentes, e o travessão nas que faltam. Cada coluna leva o registro
         // dela, para o encaixe da marca de envio (R38-13); a MAT-38 não passa marca nenhuma.
         const colunas: ItemDosUltimos[] = concluidos.map((registro) => ({
-          ...formatarUltimo(ROTULO_TIPO[registro.tipo], formatarQuando(momentoDoRegistro(registro), agora)),
+          ...formatarUltimo(ROTULO_TIPO[registro.tipo], formatarQuando(momentoDoRegistro(registro), agora), ehTipoDeSessao(registro.tipo)),
           registro,
         }))
         const itens = [...colunas, ...Array.from({ length: Math.max(0, 3 - colunas.length) }, () => ({ valor: SEM_RESULTADO, legenda: SEM_RESULTADO }))]

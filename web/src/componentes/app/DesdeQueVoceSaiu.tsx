@@ -8,7 +8,7 @@ export interface ItemDesde {
   pessoa: string
   /** O que foi registrado: "Fralda, xixi". */
   texto: string
-  /** Quem e em que papel: "Bruno, pai". Na tela larga vem ao lado do registro; no celular, só para o leitor de tela. */
+  /** Quem e em que papel: "Ícaro, pai". Na tela larga vem ao lado do registro; no celular, só para o leitor de tela. */
   detalhe: string
   /** A hora ("07:58") ou, na sessão em andamento, o tempo dela ("1 h 12 min"). */
   quando: string

@@ -15,7 +15,7 @@ export const DESENVOLVIMENTO_DESTAQUE = {
     altura: 512,
     alt: 'Dois tablets flutuando, com telas do AppMaternidade.',
   },
-  registro: { rotulo: 'Tummy time', valor: 'Fizemos', detalhe: 'Hoje às 10:20, registrado por Bruno' },
+  registro: { rotulo: 'Tummy time', valor: 'Fizemos', detalhe: 'Hoje às 10:20, registrado por Ícaro' },
   tummyTitulo: ['O que as fontes dizem', 'sobre tummy time.'],
   marcosTitulo: ['Marcos,', 'sem cobrança.'],
   urgencia: {

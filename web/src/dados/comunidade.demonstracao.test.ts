@@ -7,7 +7,7 @@ import { criarDadosComunidadeMemoria, criarEstadoComunidade } from './comunidade
 // conferidas só pela ordem.
 
 const JULIANA = '11111111-1111-4111-8111-111111111111'
-const BRUNO = '22222222-2222-4222-8222-222222222222'
+const ICARO = '22222222-2222-4222-8222-222222222222'
 const CARLA = '33333333-3333-4333-8333-333333333333'
 const DIEGO = '47000000-0000-4000-8000-000000000001'
 const ELISA = '47000000-0000-4000-8000-000000000002'
@@ -30,14 +30,14 @@ describe('a fixture de demonstração (MAT-40:RF-16)', () => {
 
   it('as contas do seed, só pelo id', () => {
     expect([...fixture.contas].sort()).toEqual(
-      [JULIANA, BRUNO, CARLA, '45444444-4444-4444-8444-444444444444', DIEGO, ELISA].sort(),
+      [JULIANA, ICARO, CARLA, '45444444-4444-4444-8444-444444444444', DIEGO, ELISA].sort(),
     )
   })
 
-  it('os perfis de Juliana, Bruno e Carla, com os apelidos e os ids do seed', () => {
+  it('os perfis de Juliana, Ícaro e Carla, com os apelidos e os ids do seed', () => {
     expect(fixture.perfis.map(({ id, contaId, apelido }) => ({ id, contaId, apelido }))).toEqual([
       { id: '47000000-0000-4000-8000-000000000011', contaId: JULIANA, apelido: 'noites_em_claro' },
-      { id: '47000000-0000-4000-8000-000000000012', contaId: BRUNO, apelido: 'turno_da_tarde' },
+      { id: '47000000-0000-4000-8000-000000000012', contaId: ICARO, apelido: 'turno_da_tarde' },
       { id: '47000000-0000-4000-8000-000000000013', contaId: CARLA, apelido: 'cafe_e_colo' },
     ])
   })
@@ -99,10 +99,10 @@ describe('a fixture de demonstração (MAT-40:RF-16)', () => {
     ])
   })
 
-  it('os aceites de Juliana, Bruno e Carla; os papéis de Diego e Elisa; e a denúncia 041 de Carla', () => {
+  it('os aceites de Juliana, Ícaro e Carla; os papéis de Diego e Elisa; e a denúncia 041 de Carla', () => {
     expect(fixture.aceites.map(({ contaId, versao }) => [contaId, versao])).toEqual([
       [JULIANA, '2026-11-05'],
-      [BRUNO, '2026-11-05'],
+      [ICARO, '2026-11-05'],
       [CARLA, '2026-11-05'],
     ])
     expect(fixture.papeis.map(({ contaId, papel, concedidoPor, validoAte }) => ({ contaId, papel, concedidoPor, validoAte }))).toEqual([

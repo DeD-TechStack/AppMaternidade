@@ -69,7 +69,7 @@ describe('cronômetro', () => {
   it('mostra a hora de início e quem começou', async () => {
     await renderizarRotaPronta('/app/sessao')
 
-    expect(screen.getByText('Início às 08:48, por Bruno')).toBeTruthy()
+    expect(screen.getByText('Início às 08:48, por Ícaro')).toBeTruthy()
   })
 
   it('o cartão do Hoje conta os minutos a partir do início', async () => {
@@ -163,8 +163,8 @@ describe('fralda', () => {
     // O que a base conferia (R38-31, item 5): Fralda há 50 min, Mamada há 2 h 10 min, Tummy time ontem 17:30.
     expect(itensDeUltimos()).toEqual([
       '50 min Fralda, tempo desde o registro',
-      '2 h 10 Mamada, tempo desde o registro',
-      '17:30 Tummy time, ontem',
+      '2 h 10 Mamada, fim, tempo desde o registro',
+      '17:30 Tummy time, fim ontem',
     ])
     expect(status().querySelector('p')!.textContent).toBe('Registro desfeito: fralda.')
     expect(within(status()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Fechar'])
@@ -277,7 +277,7 @@ describe('sessões', () => {
   })
 
   it('o cuidador que encerra a sessão de outra pessoa vê só "Fechar"', async () => {
-    await renderizarRotaPronta('/app/hoje', { sessao: 'bruno', ajustarRotina: comSessaoEmAndamento('sono', 72 * MIN, PESSOAS.juliana.id) })
+    await renderizarRotaPronta('/app/hoje', { sessao: 'icaro', ajustarRotina: comSessaoEmAndamento('sono', 72 * MIN, PESSOAS.juliana.id) })
 
     await clicar(botao('Encerrar'))
 

@@ -5,7 +5,10 @@ import { Coluna, Colunas } from '../../componentes/base/layout/Colunas.tsx'
 import { Pilha } from '../../componentes/base/layout/Pilha.tsx'
 import { Secao } from '../../componentes/base/layout/Secao.tsx'
 import { LINK_ALVO } from '../../componentes/conta/Partes.tsx'
-import { AvisoDeSaude, ErroDeLeitura, Esqueleto } from '../../componentes/comunidade/Avisos.tsx'
+import { AvisoDeSaude } from '../../componentes/comunidade/Avisos.tsx'
+import { Carregando } from '../../componentes/estado/Carregando.tsx'
+import { ErroDaComunidade } from '../../componentes/estado/ErroDaComunidade.tsx'
+import { PainelVazio } from '../../componentes/estado/PainelVazio.tsx'
 import { useDadosComunidade } from '../../componentes/comunidade/dados.ts'
 import { Faixa } from '../../componentes/comunidade/Faixa.tsx'
 import { Quadro, TituloDaTela } from '../../componentes/comunidade/Quadro.tsx'
@@ -47,7 +50,7 @@ export function Comunidade() {
           </Pilha>
           {situacao.estado.fase === 'erro' ? (
             <div className="max-w-[40rem]">
-              <ErroDeLeitura erro={situacao.estado.erro} aoTentarDeNovo={() => void situacao.recarregar()} />
+              <ErroDaComunidade erro={situacao.estado.erro} aoTentarDeNovo={() => void situacao.recarregar()} />
             </div>
           ) : null}
         </>
@@ -74,11 +77,11 @@ export function Comunidade() {
           <h2 id="espacos" className="cm-h4 text-titulo-4">
             {LISTA.espacos}
           </h2>
-          {espacos.esqueleto ? <Esqueleto linhas={4} /> : null}
+          {espacos.estado.fase === 'carregando' ? <Carregando linhas={4} /> : null}
           {espacos.estado.fase === 'erro' ? (
-            <ErroDeLeitura erro={espacos.estado.erro} aoTentarDeNovo={() => void espacos.recarregar()} />
+            <ErroDaComunidade erro={espacos.estado.erro} aoTentarDeNovo={() => void espacos.recarregar()} />
           ) : null}
-          {espacos.estado.fase === 'pronto' && espacos.estado.valor.length === 0 ? <p>{TX.tx30}</p> : null}
+          {espacos.estado.fase === 'pronto' && espacos.estado.valor.length === 0 ? <PainelVazio texto={TX.tx30} /> : null}
           {espacos.estado.fase === 'pronto' && espacos.estado.valor.length > 0 ? (
             <Colunas role="list" fracoes="1fr 1fr 1fr" aPartirDe={1024} className="comunidade-espacos">
               {espacos.estado.valor.map((espaco) => (

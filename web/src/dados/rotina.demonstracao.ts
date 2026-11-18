@@ -6,8 +6,8 @@ import type { DetalhesRegistro, Nota, Registro, TipoRegistro } from './rotina.ti
 // A fixture de DEMONSTRAÇÃO da rotina (modo memória, R38-33): a rotina do seed `supabase/seeds/46_rotina.sql`
 // sobre a bebê Heloísa, com os horários calculados a partir do instante em que a página abre. Os registros de
 // D-7 a D-1 têm as 6 exceções do seed (por isso o teste 53 dá `16,16,16,17,16,16,16` registros por dia, sem
-// contar o excluído), a sessão de sono de Bruno em andamento há 72 minutos, a nota `Pomada só à noite.` da mãe,
-// em destaque por 1 dia, e a nota `Fraldas P no armário de cima.` de Bruno. As pessoas, a família e o bebê vêm
+// contar o excluído), a sessão de sono de Ícaro em andamento há 72 minutos, a nota `Pomada só à noite.` da mãe,
+// em destaque por 1 dia, e a nota `Fraldas P no armário de cima.` de Ícaro. As pessoas, a família e o bebê vêm
 // da fixture de demonstração da conta; a rotina não cria pessoa. Os dados somem ao recarregar. É só desta
 // fixture: a fixture de TESTE (`teste/rotina.fixture.ts`) é outra e não a reutiliza. Só dados fictícios.
 
@@ -57,7 +57,7 @@ const DIA_TIPO: readonly Linha[] = [
   linha(16, '20:30', '23:50', 'sono', {}, null, 'pai'),
   // Exceção 1 (D-4): observação da mãe.
   linha(17, '14:50', null, 'observacao', {}, 'Arrotou pouco depois da mamada.', 'mae'),
-  // Exceção 3 (D-2): fralda de Bruno, excluída pela mãe.
+  // Exceção 3 (D-2): fralda de Ícaro, excluída pela mãe.
   linha(18, '12:00', null, 'fralda', { conteudo: 'xixi' }, null, 'pai'),
 ]
 
@@ -75,8 +75,8 @@ const minutosDoDia = (hora: string) => {
 }
 
 export function criarFixtureRotinaDemonstracao(agora: number): FixtureRotina {
-  const { responsavel, bruno } = PESSOAS_DEMONSTRACAO
-  const autorDe = (autor: Autor) => (autor === 'mae' ? responsavel.id : bruno.id)
+  const { responsavel, icaro } = PESSOAS_DEMONSTRACAO
+  const autorDe = (autor: Autor) => (autor === 'mae' ? responsavel.id : icaro.id)
   const iso = (instante: number) => new Date(instante).toISOString()
   const hoje = diaDaFamilia(agora, FUSO)
   let numero = 0
@@ -128,8 +128,8 @@ export function criarFixtureRotinaDemonstracao(agora: number): FixtureRotina {
       const autor = autorDe(l.autor)
 
       if (k === 1 && l.ordem === 10) {
-        // Exceção 4 (D-1): o sono nasce em andamento, ao vivo, e Bruno o encerra às 14:40.
-        registros.push(registro(l.tipo, inicio, fim, autor, { origem: 'ao_vivo', encerradoPor: bruno.id }))
+        // Exceção 4 (D-1): o sono nasce em andamento, ao vivo, e Ícaro o encerra às 14:40.
+        registros.push(registro(l.tipo, inicio, fim, autor, { origem: 'ao_vivo', encerradoPor: icaro.id }))
       } else if (k === 1 && l.ordem === 8) {
         // Exceção 5 (D-1): a mãe corrige a mamadeira de 90 para 100 ml.
         registros.push(
@@ -140,7 +140,7 @@ export function criarFixtureRotinaDemonstracao(agora: number): FixtureRotina {
           }),
         )
       } else if (k === 2 && l.ordem === 18) {
-        // Exceção 3 (D-2): a fralda de Bruno que a mãe excluiu.
+        // Exceção 3 (D-2): a fralda de Ícaro que a mãe excluiu.
         registros.push(
           registro(l.tipo, inicio, fim, autor, {
             detalhes: l.detalhes,
@@ -154,9 +154,9 @@ export function criarFixtureRotinaDemonstracao(agora: number): FixtureRotina {
     }
   }
 
-  // Exceção 6 (hoje): a sessão de sono de Bruno em andamento, ao vivo, há 72 minutos (o id 115 do seed: os 114 registros de D-7 a D-1 vêm antes).
+  // Exceção 6 (hoje): a sessão de sono de Ícaro em andamento, ao vivo, há 72 minutos (o id 115 do seed: os 114 registros de D-7 a D-1 vêm antes).
   numero += 1
-  registros.push(registro('sono', agora - 72 * MINUTO, null, bruno.id, { origem: 'ao_vivo' }))
+  registros.push(registro('sono', agora - 72 * MINUTO, null, icaro.id, { origem: 'ao_vivo' }))
 
   const nota = (id: number, texto: string, autor: string, bebeId: string | null, destaqueAte: string | null): Nota => ({
     id: idDoSeed(id),
@@ -173,7 +173,7 @@ export function criarFixtureRotinaDemonstracao(agora: number): FixtureRotina {
   })
   const notas: Nota[] = [
     nota(201, 'Pomada só à noite.', responsavel.id, BEBE_DEMONSTRACAO, iso(agora + 24 * 60 * MINUTO)),
-    nota(202, 'Fraldas P no armário de cima.', bruno.id, null, null),
+    nota(202, 'Fraldas P no armário de cima.', icaro.id, null, null),
   ]
 
   return { registros, notas }

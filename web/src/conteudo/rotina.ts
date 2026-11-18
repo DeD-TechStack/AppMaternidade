@@ -133,7 +133,7 @@ export const HOJE = {
   hojeAteAgora: 'Hoje até agora',
   mamadas: 'Mamadas',
   fraldas: 'Fraldas',
-  sono: 'Sono',
+  sono: 'Sono concluído',
   semRegistros: 'Nenhum registro hoje. Toque em um botão abaixo para começar.',
   semConcluidos: 'Nenhum registro concluído ainda.',
   umaHoraEMinutos: (horas: number, minutos: number) => `${horas} h ${String(minutos).padStart(2, '0')}`,
