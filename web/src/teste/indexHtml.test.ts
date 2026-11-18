@@ -40,4 +40,22 @@ describe('metadados do index.html (PA-03)', () => {
     expect(meta('meta[property="og:description"]')).toBe(meta('meta[name="description"]'))
     expect(meta('meta[property="og:type"]')).toBe('website')
   })
+
+  it('avisa em um <noscript> antes de #root que o site precisa de JavaScript', () => {
+    const avisos = doc.body.querySelectorAll('noscript')
+    expect(avisos.length, 'um único <noscript> no body').toBe(1)
+    const aviso = avisos[0]!
+    const raiz = doc.body.querySelector('#root')
+    expect(raiz).not.toBeNull()
+    const filhos = Array.from(doc.body.children)
+    expect(filhos.indexOf(aviso)).toBeGreaterThanOrEqual(0)
+    expect(filhos.indexOf(aviso)).toBeLessThan(filhos.indexOf(raiz!))
+    const texto = (aviso.textContent ?? '').trim()
+    expect(texto).toMatch(/(?<![\p{L}])JavaScript(?![\p{L}])/u)
+    expect(texto.split('.').length - 1, 'um ponto só').toBe(1)
+    expect(texto.endsWith('.'), 'o ponto é o final').toBe(true)
+    expect(texto.length).toBeLessThanOrEqual(80)
+    expect(texto).not.toMatch(/prot[oó]tipo/iu)
+    expect(meta('meta[name="robots"]')).toBe('noindex, nofollow')
+  })
 })
