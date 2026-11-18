@@ -33,7 +33,7 @@ import { ORIGEM_HOJE } from '../../componentes/rotina/origemDasNotas.ts'
 import { COMUM, ESTADOS, HOJE, LIGACOES, ROTULO_TIPO, SEM_RESULTADO, TITULOS, TOTAIS } from '../../conteudo/rotina.ts'
 import type { Resultado } from '../../dados/comum.ts'
 import { diaDaFamilia, formatarIdade, janelaDoDia, lerAparelho } from '../../dados/rotina.dia.ts'
-import { LIMITES, podeEscrever, type Lista, type Registro } from '../../dados/rotina.tipos.ts'
+import { ehTipoDeSessao, LIMITES, podeEscrever, type Lista, type Registro } from '../../dados/rotina.tipos.ts'
 import { focoDoEstado } from '../../prototipo/foco.ts'
 import { formatarHora, formatarUltimo } from '../../prototipo/formatar.ts'
 import { useAgora } from '../../prototipo/useAgora.ts'
@@ -462,7 +462,7 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
         // Três colunas sempre: os mais recentes, e o travessão nas que faltam. Cada coluna leva o registro
         // dela, para o encaixe da marca de envio (R38-13); a MAT-38 não passa marca nenhuma.
         const colunas: ItemDosUltimos[] = concluidos.map((registro) => ({
-          ...formatarUltimo(ROTULO_TIPO[registro.tipo], formatarQuando(momentoDoRegistro(registro), agora)),
+          ...formatarUltimo(ROTULO_TIPO[registro.tipo], formatarQuando(momentoDoRegistro(registro), agora), ehTipoDeSessao(registro.tipo)),
           registro,
         }))
         const itens = [...colunas, ...Array.from({ length: Math.max(0, 3 - colunas.length) }, () => ({ valor: SEM_RESULTADO, legenda: SEM_RESULTADO }))]

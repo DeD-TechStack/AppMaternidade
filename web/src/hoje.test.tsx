@@ -641,7 +641,7 @@ describe('Hoje: os números do dia', () => {
       ['2', 'Mamadas'],
       ['1', 'Mamadeiras'],
       ['3', 'Fraldas'],
-      ['4 h 20', 'Sono'],
+      ['4 h 20', 'Sono concluído'],
     ])
   })
 
@@ -717,8 +717,8 @@ describe('Hoje: Últimos', () => {
     // Os valores da base (R38-31, item 5): Fralda há 50 min, Mamada há 2 h 10 min, Tummy time ontem 17:30.
     expect(colunasDeUltimos(container)).toEqual([
       '50 min Fralda, tempo desde o registro',
-      '2 h 10 Mamada, tempo desde o registro',
-      '17:30 Tummy time, ontem',
+      '2 h 10 Mamada, fim, tempo desde o registro',
+      '17:30 Tummy time, fim ontem',
     ])
   })
 
@@ -727,10 +727,10 @@ describe('Hoje: Últimos', () => {
 
     expect(colunasDeUltimos(container)).toEqual([
       '50 min Fralda, tempo desde o registro',
-      '2 h 10 Mamada, tempo desde o registro',
-      '3 h 20 Sono, tempo desde o registro',
+      '2 h 10 Mamada, fim, tempo desde o registro',
+      '3 h 20 Sono, fim, tempo desde o registro',
       '8 h Mamadeira, tempo desde o registro',
-      '17:30 Tummy time, ontem',
+      '17:30 Tummy time, fim ontem',
     ])
   })
 
