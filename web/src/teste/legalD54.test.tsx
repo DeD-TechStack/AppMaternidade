@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { CONTA } from '../conteudo/conta.ts'
-import { EMAIL_CONTATO } from '../conteudo/publicas-texto.ts'
+import { EMAIL_CONTATO, TEXTO_APOIO_CONTATO } from '../conteudo/publicas-texto.ts'
 import { criarDadosContaMemoria } from '../dados/conta.memoria.ts'
 import { renderizarComDados, criarFixtureDeTeste } from './renderizarComDados.tsx'
 import { renderizarRota } from './renderizarRota.tsx'
@@ -21,7 +21,7 @@ const ROTAS_DE_LEITURA = [
 const ENDERECO = 'contato@appmaternidade.example'
 const A2 = 'Não há idade mínima para usar o AppMaternidade. Quem tem menos de 18 anos usa o site com o pai, a mãe ou o responsável legal.'
 const A3 = 'O AppMaternidade é para quem cuida de um bebê. O bebê não vai ter conta, e nesta versão de avaliação os dados dele também devem ser fictícios.'
-const A7 = 'O endereço de e-mail desta página é fictício e não recebe mensagens.'
+const A7 = 'Este e-mail é fictício e não recebe mensagens.'
 const A8 =
   'Na tela Conta, quem entrou na conta já pode baixar uma cópia dos seus dados num arquivo JSON, que não é um formato regulamentado de portabilidade, e excluir a conta. A confirmação de que seus dados são tratados, a correção e a revogação do consentimento ainda não têm tela própria. O endereço de e-mail da página Contato é fictício e não recebe mensagens. Por enquanto, o que dá para pedir é o que a tela Conta já faz: baixar os dados ou excluir a conta.'
 
@@ -104,6 +104,7 @@ describe('LEGAL-D54a', () => {
     expect(botao.getAttribute('href')).toBe(`mailto:${ENDERECO}`)
     conferirEndereco((botao.getAttribute('href') ?? '').replace('mailto:', ''))
 
+    expect(TEXTO_APOIO_CONTATO).toBe(A7)
     expect(ocorrencias(texto, A7)).toBe(1)
   })
 
