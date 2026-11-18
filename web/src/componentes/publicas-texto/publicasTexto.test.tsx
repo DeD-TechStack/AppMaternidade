@@ -449,7 +449,8 @@ describe('"a definir" fora do alto das páginas', () => {
       const comADefinir = secoes.flatMap((secao, posicao) =>
         [...secao.querySelectorAll('p')].filter((p) => /a definir/.test(p.textContent ?? '')).map(() => posicao),
       )
-      expect(comADefinir.length).toBeGreaterThan(0)
+      // /privacidade não tem mais "a definir" (o responsável agora é "DeD TechStack"); /termos mantém a idade mínima.
+      if (caminho === '/termos') expect(comADefinir.length).toBeGreaterThan(0)
       for (const posicao of comADefinir) expect(posicao).toBeGreaterThanOrEqual(2)
       for (const secao of secoes.slice(0, 2)) expect(secao.textContent).not.toMatch(/a definir/)
     })
@@ -468,12 +469,12 @@ describe('"a definir" fora do alto das páginas', () => {
 })
 
 describe('Exclusão de conta: página de tarefa', () => {
-  it('"Responsável pelo AppMaternidade: a definir." é o último bloco de "Prazo" e não está em "Como pedir"', () => {
+  it('"Responsável pelo AppMaternidade: DeD TechStack." é o último bloco de "Prazo" e não está em "Como pedir"', () => {
     renderizarRota('/exclusao-de-conta')
     const pedir = screen.getByRole('heading', { level: 2, name: 'Como pedir' }).closest('section')!
     expect(pedir.textContent).not.toContain('a definir')
     const prazo = screen.getByRole('heading', { level: 2, name: 'Prazo' }).closest('section')!
-    expect(prazo.querySelector('.pt-texto')!.lastElementChild!.textContent).toBe('Responsável pelo AppMaternidade: a definir.')
+    expect(prazo.querySelector('.pt-texto')!.lastElementChild!.textContent).toBe('Responsável pelo AppMaternidade: DeD TechStack.')
     const primeiros = PAGINAS_DE_TEXTO.exclusao.secoes[1].blocos
     expect(primeiros).toHaveLength(2)
   })
@@ -562,12 +563,20 @@ describe('páginas públicas: exclusão e dados na tela Conta', () => {
 
   it('I-4 os marcadores legais continuam nas páginas que os têm', () => {
     const exclusao = textoDe('/exclusao-de-conta')
-    expect(exclusao).toContain('Responsável pelo AppMaternidade: a definir.')
+    expect(exclusao).toContain('Responsável pelo AppMaternidade: DeD TechStack.')
     expect(exclusao).toContain('O prazo da exclusão ainda será definido')
-    expect(textoDe('/privacidade')).toContain('Responsável pelo AppMaternidade: a definir.')
+    expect(textoDe('/privacidade')).toContain('Responsável pelo AppMaternidade: DeD TechStack.')
     const termos = textoDe('/termos')
-    expect(termos).toContain('Responsável pelo AppMaternidade: a definir.')
+    expect(termos).toContain('Responsável pelo AppMaternidade: DeD TechStack.')
     expect(termos).toContain('Idade mínima para usar o AppMaternidade: a definir.')
+  })
+
+  it('I-4b /privacidade, /termos, /exclusao-de-conta e /sobre trazem o responsável "DeD TechStack" e não "a definir"', () => {
+    for (const caminho of ['/privacidade', '/termos', '/exclusao-de-conta', '/sobre']) {
+      const texto = textoDe(caminho)
+      expect(texto, caminho).toContain('Responsável pelo AppMaternidade: DeD TechStack.')
+      expect(texto, caminho).not.toContain('Responsável pelo AppMaternidade: a definir')
+    }
   })
 
   it('I-5 nenhuma das duas páginas fala em CSV', () => {
