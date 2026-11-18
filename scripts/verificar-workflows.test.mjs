@@ -557,6 +557,111 @@ test('segredos vazios: job no banco-producao (scripts que já exigem as variáve
   assert.ok(verificarTexto(job(['    environment: github-pages'])).some((p) => /segredos vazios/.test(p)))
 })
 
+// SEC-02b: qualquer expressão que cite o contexto `secrets` é leitura de segredo; a mensagem
+// nomeia o arquivo, o job e o texto da expressão. `if:` sem ${{ }} também é expressão.
+
+const JOB_COM = (extra, passos) => workflow(['  a:', '    runs-on: ubuntu-latest', ...extra, '    steps:', ...passos])
+const ENV_PASSO = (linha) => ['      - run: echo ok', '        env:', `          ${linha}`]
+const SEM_AMBIENTE = / sem environment: banco-producao \(atual: nenhum\)$/
+const escapar = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+function acusaLeitura(texto, expressao, rotulo) {
+  const problemas = verificarTexto(texto, 'x.yml')
+  assert.equal(problemas.length, 1, `${rotulo}: ${problemas.join('\n')}`)
+  assert.match(problemas[0], new RegExp(`^x\\.yml: job a lê .*${escapar(expressao)}.*${SEM_AMBIENTE.source}`), rotulo)
+}
+
+test('SEC-02b: ${{ toJSON(secrets) }} no env de um passo é acusado com arquivo, job e expressão; com banco-producao passa', () => {
+  acusaLeitura(JOB_COM([], ENV_PASSO('T: ${{ toJSON(secrets) }}')), '${{ toJSON(secrets) }}', 'sem environment')
+  assert.deepEqual(verificarTexto(JOB_COM(['    environment: banco-producao'], ENV_PASSO('T: ${{ toJSON(secrets) }}'))), [])
+})
+
+test('SEC-02b: secrets[matrix.nome] e secrets[\'X\'] num passo são acusados com a expressão', () => {
+  acusaLeitura(JOB_COM([], ENV_PASSO('T: ${{ secrets[matrix.nome] }}')), '${{ secrets[matrix.nome] }}', 'indice dinamico')
+  acusaLeitura(JOB_COM([], ENV_PASSO("T: ${{ secrets['X'] }}")), "${{ secrets['X'] }}", 'indice literal')
+  assert.deepEqual(verificarTexto(JOB_COM(['    environment: banco-producao'], ENV_PASSO('T: ${{ secrets[matrix.nome] }}'))), [])
+})
+
+test('SEC-02b: secrets.X dentro de format() é acusado e nomeia X; secrets[...] misturado mostra a expressão', () => {
+  const nome = verificarTexto(JOB_COM([], ENV_PASSO("T: ${{ format('{0}', secrets.X) }}")), 'x.yml')
+  assert.equal(nome.length, 1, nome.join('\n'))
+  assert.match(nome[0], /^x\.yml: job a lê X sem environment: banco-producao/)
+  acusaLeitura(JOB_COM([], ENV_PASSO("T: ${{ format('{0}', secrets.GITHUB_TOKEN, secrets[matrix.k]) }}")), '${{ format(', 'publico misturado com indice')
+})
+
+test('SEC-02b: toJSON(secrets) no env do job é acusado com a expressão', () => {
+  acusaLeitura(JOB_COM(['    env:', '      T: ${{ toJSON(secrets) }}'], ['      - run: echo ok']), '${{ toJSON(secrets) }}', 'env do job')
+})
+
+test('SEC-02b: if do passo e if do job sem ${{ }} são lidos como expressão e mostram o texto', () => {
+  acusaLeitura(JOB_COM([], ['      - run: echo ok', "        if: toJSON(secrets) != ''"]), "toJSON(secrets) != ''", 'if do passo')
+  acusaLeitura(JOB_COM(["    if: secrets[matrix.n] != ''"], ['      - run: echo ok']), "secrets[matrix.n] != ''", 'if do job')
+  const ok = JOB_COM(['    environment: banco-producao', "    if: secrets[matrix.n] != ''"], ['      - run: echo ok', "        if: toJSON(secrets) != ''"])
+  assert.deepEqual(verificarTexto(ok), [])
+})
+
+test('SEC-02b: secrets.NOME num if sem ${{ }} continua nomeando o segredo', () => {
+  const problemas = verificarTexto(JOB_COM([], ['      - run: echo ok', "        if: secrets.SUPABASE_DB_PASSWORD != ''"]), 'x.yml')
+  assert.equal(problemas.length, 1, problemas.join('\n'))
+  assert.match(problemas[0], /^x\.yml: job a lê SUPABASE_DB_PASSWORD sem environment: banco-producao/)
+})
+
+test('SEC-02b: if escrito com ${{ }} gera um único problema, sem mensagem duplicada', () => {
+  for (const [rotulo, linha] of [
+    ['com espaços', "        if: ${{ toJSON(secrets) != '' }}"],
+    ['sem espaços', "        if: ${{toJSON(secrets)!=''}}"],
+  ]) {
+    const problemas = verificarTexto(JOB_COM([], ['      - run: echo ok', linha]), 'x.yml')
+    assert.equal(problemas.length, 1, `${rotulo}: ${problemas.join('\n')}`)
+    const lidos = problemas[0].match(/^x\.yml: job a lê (.*) sem environment: banco-producao/)
+    assert.ok(lidos, `${rotulo}: ${problemas[0]}`)
+    assert.ok(!lidos[1].includes('}}, '), `${rotulo}: a mesma expressão aparece duas vezes: ${problemas[0]}`)
+    assert.equal(lidos[1].match(/toJSON\(secrets\)/g).length, 1, `${rotulo}: ${problemas[0]}`)
+  }
+})
+
+test('SEC-02b: chamada reutilizável com secrets: inherit sem environment é acusada', () => {
+  const texto = workflow(['  a:', `    uses: org/repo/.github/workflows/w.yml@${SHA}`, '    secrets: inherit'])
+  const problemas = verificarTexto(texto, 'x.yml')
+  assert.equal(problemas.length, 1, problemas.join('\n'))
+  assert.match(problemas[0], /^x\.yml: job a lê secrets: inherit sem environment: banco-producao/)
+})
+
+test('SEC-02b: só GITHUB_TOKEN (em ${{ }} e em if) passa sem environment', () => {
+  assert.deepEqual(verificarTexto(JOB_COM([], ENV_PASSO('T: ${{ secrets.GITHUB_TOKEN }}'))), [])
+  assert.deepEqual(verificarTexto(JOB_COM([], ['      - run: echo ok', "        if: secrets.GITHUB_TOKEN != ''"])), [])
+  assert.deepEqual(verificarTexto(JOB_COM(["    if: secrets.GITHUB_TOKEN != ''"], ['      - run: echo ok'])), [])
+  assert.deepEqual(verificarTexto(JOB_COM([], ENV_PASSO('T: ${{ secrets . github_token }}'))), [])
+})
+
+test('SEC-02b: unclassified secrets expression fails', () => {
+  acusaLeitura(JOB_COM([], ENV_PASSO('T: ${{ fromJSON(toJSON(secrets))[inputs.k] }}')), '${{ fromJSON(toJSON(secrets))[inputs.k] }}', 'fromJSON')
+  acusaLeitura(JOB_COM([], ENV_PASSO('T: ${{ secrets.* }}')), '${{ secrets.* }}', 'secrets.*')
+  acusaLeitura(JOB_COM([], ENV_PASSO('T: ${{ inputs.escolha && secrets }}')), '${{ inputs.escolha && secrets }}', 'secrets nu')
+  // `}}` dentro de um literal não encerra a expressão: o que vem depois ainda é lido.
+  const literal = verificarTexto(JOB_COM([], ENV_PASSO("T: ${{ format('}}', secrets.X) }}")), 'x.yml')
+  assert.equal(literal.length, 1, literal.join('\n'))
+  assert.match(literal[0], /^x\.yml: job a lê X sem environment/)
+})
+
+test('SEC-02b: a palavra secrets como texto puro num run: fora de ${{ }} não é leitura', () => {
+  assert.deepEqual(verificarTexto(JOB_COM([], ['      - run: echo secrets'])), [])
+  assert.deepEqual(verificarTexto(JOB_COM([], ['      - run: echo "secrets.X e secrets[0] são só texto"'])), [])
+  assert.deepEqual(verificarTexto(JOB_COM([], ['      - name: rotina de secrets', '        run: echo ok'])), [])
+})
+
+test('SEC-02b: ler VITE_SUPABASE_* num if sem passo que exige os segredos continua acusado', () => {
+  const passo = ['      - run: echo ok', "        if: secrets.VITE_SUPABASE_URL != ''"]
+  assert.ok(verificarTexto(JOB_COM([], passo)).some((p) => /segredos vazios/.test(p)))
+  assert.ok(verificarTexto(JOB_COM(["    if: secrets.VITE_SUPABASE_URL != ''"], ['      - run: echo ok'])).some((p) => /segredos vazios/.test(p)))
+})
+
+test('SEC-02b: a CLI sai com 1 e imprime a expressão para toJSON(secrets) sem environment', () => {
+  const r = cli(JOB_COM([], ENV_PASSO('T: ${{ toJSON(secrets) }}')), 'x.yml')
+  assert.equal(r.status, 1, r.stdout + r.stderr)
+  assert.match(r.stderr, /x\.yml: job a lê .*\$\{\{ toJSON\(secrets\) \}\}/)
+})
+
 test('segredos vazios: leitura em env do job, em forma de fluxo ou no with de um passo sem guard é acusada', () => {
   const noJob = workflow(['  a:', '    runs-on: ubuntu-latest', '    env:', '      V: ${{ secrets.VITE_SUPABASE_URL }}', '    steps:', '      - run: echo ok'])
   assert.ok(verificarTexto(noJob).some((p) => /segredos vazios/.test(p)))

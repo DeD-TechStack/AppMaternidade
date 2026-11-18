@@ -154,8 +154,10 @@ export function Convite() {
 
   function aceitar(leituraPronta: Extract<Leitura, { fase: 'pronta' }>) {
     const antes = new Set(leituraPronta.familiasAntes.map((familia) => familia.id))
-    novaFamilia.current = null
     void aceitacao.enviar({
+      aoComecar: () => {
+        novaFamilia.current = null
+      },
       escrever: () => dados.aceitarConvite(leituraPronta.codigo),
       // Depois de uma resposta perdida: exatamente uma família que não estava na lista de antes.
       conferir: async () => {
