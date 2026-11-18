@@ -103,9 +103,9 @@ describe('catálogo de erros: cada origem dá a chave e a classe da linha', () =
       codigo: 'P0001',
       mensagemOriginal: 'convite vencido',
     })
-    expect(classificarErroConta(auth('weak_password', 422, 'Password should be at least 6 characters.'))).toMatchObject({
+    expect(classificarErroConta(auth('weak_password', 422, 'Password should be at least 8 characters.'))).toMatchObject({
       codigo: 'weak_password',
-      mensagemOriginal: 'Password should be at least 6 characters.',
+      mensagemOriginal: 'Password should be at least 8 characters.',
     })
     expect(classificarErroConta(new TypeError('Failed to fetch')).codigo).toBe('rede')
   })
