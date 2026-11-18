@@ -136,7 +136,7 @@ export const CRIAR_CONTA = {
 } as const
 
 export const AVISO_BANCO_DEMONSTRACAO =
-  'Este site é uma demonstração com banco de teste. Para a família e o bebê, use só nomes e datas fictícios.'
+  'O banco é de teste. Para a família e o bebê, use só nomes e datas inventados.'
 
 export const RECUPERAR = {
   frase: 'Escreva o e-mail da conta. Enviamos um link para você criar uma senha nova.',

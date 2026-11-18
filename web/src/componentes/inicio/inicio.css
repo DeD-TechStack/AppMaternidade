@@ -613,11 +613,10 @@
 }
 
 /* Títulos ------------------------------------------------------------------------------------- */
-/* A ênfase é a segunda linha inteira em itálico, num bloco só dela: numa coluna estreita as duas
-   linhas nunca se juntam nem trocam palavras (o text-wrap: balance age dentro de cada linha). */
+/* A segunda linha de um título é um bloco só dela: numa coluna estreita as duas linhas nunca se juntam nem
+   trocam palavras (o text-wrap: balance age dentro de cada linha). O itálico é só o do h1 (site.css). */
 .in-pagina .cm-segunda-linha {
   display: block;
-  font-style: italic;
 }
 
 /* 7. Citação e depoimentos -------------------------------------------------------------------- */

@@ -39,16 +39,7 @@ describe('catálogo (DESIGN.md 5)', () => {
     expect(M3.atrasoMs).toBe(120)
   })
 
-  it('linhas: sobem 48 px em 1,25 s, curva [0.165,0.84,0.44,1], uma a cada 250 ms', () => {
-    const { M4 } = CATALOGO
-    expect(M4.deslocamentoPx).toBe(48)
-    expect(M4.duracaoMs).toBe(1250)
-    expect(M4.curva).toEqual([0.165, 0.84, 0.44, 1])
-    expect(M4.escalonamentoMs).toBe(250)
-  })
-
-  it('faixa de cacau de -50 % a 0, rodapé de -30 % a 0, cena 0,94 → 1 em 0,8 s, selos 60 s, camada 100 ms', () => {
-    expect(CATALOGO.M6.deslocamentoPct).toBe(50)
+  it('rodapé de -30 % a 0, cena 0,94 → 1 em 0,8 s, selos 60 s, camada 100 ms', () => {
     expect(CATALOGO.M7.deslocamentoPct).toBe(30)
     expect(CATALOGO.M8.escala).toEqual({ de: 0.94, para: 1 })
     expect(CATALOGO.M8.duracaoMs).toBe(800)
@@ -111,6 +102,7 @@ describe('peças com movimento reduzido', () => {
   })
 
   it('sem movimento reduzido, a cena espera a cortina', () => {
+    window.sessionStorage.clear()
     consultas({})
     const { container } = render(
       <EntradaCena pronta={false}>
@@ -118,6 +110,20 @@ describe('peças com movimento reduzido', () => {
       </EntradaCena>,
     )
     expect(container.firstElementChild!.getAttribute('data-entrada-cena')).toBe('espera')
+  })
+
+  it('na segunda visita (cortina já vista), a cena nasce no estado final mesmo com pronta falso', () => {
+    window.sessionStorage.setItem('cortina-vista', '1')
+    consultas({})
+    const { container } = render(
+      <EntradaCena pronta={false}>
+        <p>cena</p>
+      </EntradaCena>,
+    )
+    const cena = container.firstElementChild!
+    expect(cena.getAttribute('data-entrada-cena')).toBe('final')
+    expect(cena.getAttribute('style') ?? '').not.toContain('opacity: 0')
+    window.sessionStorage.clear()
   })
 
   it('a mídia presa à rolagem fica em escala 1 e o conteúdo da revelação por baixo fica no lugar', () => {

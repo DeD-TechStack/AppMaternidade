@@ -202,8 +202,8 @@ select is(
     where c.contype = 'c'
       and c.conrelid in ('public.convites'::regclass, 'public.vinculos'::regclass, 'public.contas'::regclass,
                          'public.familias'::regclass, 'public.bebes'::regclass)),
-  array['convites_check'],
-  'R6: o único check da MAT-45 é convites_check (estado aceito se e só se aceito_em); nenhum das tabelas da MAT-43'
+  array['bebes_nome_tamanho', 'contas_nome_tamanho', 'convites_check', 'familias_nome_tamanho'],
+  'R6: o único check da MAT-45 é convites_check (estado aceito se e só se aceito_em); nas tabelas da MAT-43, só os limites de nome da SEC-05'
 );
 
 -- R6: nenhuma função de leitura da MAT-45 recebe fuso (então não há 22023 a converter).

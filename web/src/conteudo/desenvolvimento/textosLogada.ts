@@ -65,7 +65,7 @@ export const avisoDeFuso = (aparelho: string, familia: string) =>
 
 /** T-40. */
 export const bebeArquivado = (nome: string) =>
-  `${nome} está arquivado. Os registros continuam visíveis, mas não dá para registrar.`
+  `O cadastro de ${nome} está arquivado. Os registros continuam visíveis, mas não dá para registrar.`
 
 /** A linha do bebê abaixo do `h1`: "<nome> · <idade>", ou só o nome quando não há idade. */
 export const linhaDoBebe = (nome: string, idade: string | null) => (idade === null ? nome : `${nome} · ${idade}`)

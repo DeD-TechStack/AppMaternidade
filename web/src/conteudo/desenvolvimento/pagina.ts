@@ -6,14 +6,14 @@ export const AVISO_SAUDE =
 
 export const DESENVOLVIMENTO_DESTAQUE = {
   titulo: ['Cada fase,', 'no tempo do bebê.'],
-  lide: 'Tummy time é o tempo que o bebê passa de bruços, acordado e com um adulto olhando. No site, ele vai ser mais um registro da rotina, ao lado de ideias para brincar em cada fase. Sem metas, sem cobrança.',
+  lide: 'Tummy time é o tempo que o bebê passa de bruços, acordado e com um adulto olhando. No site, ele é um registro da rotina, ao lado de ideias para brincar em cada fase, sem metas e sem cobrança.',
   primario: { rotulo: 'Ver ideias para cada fase', destino: '#ideias' },
   secundario: { rotulo: 'Ler sobre tummy time', destino: '#tummy-time' },
   cena: {
     base: '/cenas/publicas/desenvolvimento',
     largura: 768,
     altura: 512,
-    alt: 'Dois tablets flutuando sobre um fundo de cacau com um círculo de mel, mostrando telas do site AppMaternidade.',
+    alt: 'Dois tablets flutuando, com telas do AppMaternidade.',
   },
   registro: { rotulo: 'Tummy time', valor: 'Fizemos', detalhe: 'Hoje às 10:20, registrado por Bruno' },
   tummyTitulo: ['O que as fontes dizem', 'sobre tummy time.'],

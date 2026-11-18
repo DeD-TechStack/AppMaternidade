@@ -69,7 +69,7 @@ describe('cronômetro', () => {
   it('mostra a hora de início e quem começou', async () => {
     await renderizarRotaPronta('/app/sessao')
 
-    expect(screen.getByText('Iniciado às 08:48 por Bruno')).toBeTruthy()
+    expect(screen.getByText('Início às 08:48, por Bruno')).toBeTruthy()
   })
 
   it('o cartão do Hoje conta os minutos a partir do início', async () => {
