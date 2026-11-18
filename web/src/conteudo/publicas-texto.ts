@@ -298,7 +298,7 @@ const PRIVACIDADE: PaginaDeTexto = {
     {
       secao: secao('Seus direitos'),
       blocos: [
-        'O site vai permitir pedir a confirmação de que seus dados são tratados, o acesso a eles, a correção e a eliminação, além de revogar o consentimento.',
+        'Na tela Conta, quem entrou na conta já pode baixar uma cópia dos seus dados num arquivo JSON, que não é um formato regulamentado de portabilidade, e excluir a conta. A confirmação de que seus dados são tratados, a correção e a revogação do consentimento ainda não têm tela própria: peça pelo contato desta página.',
         'Quando o seu vínculo com uma família acaba, o arquivo leva só a última versão dos registros que você mesmo escreveu, sem as mudanças feitas depois por outras pessoas, e não leva as notas de passagem de turno dessa família.',
         [
           'Os pedidos de acesso, com o botão “Baixar meus dados”, e de exclusão são feitos na tela Conta (/app/conta), por quem entrou na conta. Para apagar a conta, veja a página ',
@@ -329,7 +329,7 @@ const TERMOS: PaginaDeTexto = {
     {
       secao: secao('O que é o AppMaternidade'),
       blocos: [
-        'O AppMaternidade vai ser um site para a família registrar a rotina do bebê, dividir os cuidados entre os adultos, acompanhar o desenvolvimento e conversar numa comunidade separada da rotina privada.',
+        'O AppMaternidade é um site para a família registrar a rotina do bebê, dividir os cuidados entre os adultos, acompanhar o desenvolvimento e conversar numa comunidade separada da rotina privada.',
         TF.semDiagnostico,
       ],
     },
@@ -413,7 +413,7 @@ const EXCLUSAO: PaginaDeTexto = {
           itens: [
             'a conta e os dados ligados a ela;',
             'o conteúdo dos tópicos e das respostas da pessoa na comunidade: no lugar fica “[removido]”, e o autor aparece como “pessoa removida”;',
-            'se ela for cuidadora, os dados pessoais dela, e a autoria dos registros que fez vai virar um rótulo neutro.',
+            'se ela for cuidadora, os vínculos dela com as famílias e os dados pessoais dela; nos registros que fez, o autor passa a aparecer como “pessoa removida”.',
           ],
         },
         'Se a pessoa for a única responsável de uma família, o site não deixa excluir a conta. Antes, ela torna outra pessoa responsável ou exclui a família.',

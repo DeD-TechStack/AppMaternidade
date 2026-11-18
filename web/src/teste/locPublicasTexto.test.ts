@@ -121,6 +121,28 @@ describe('LOC-01: Sobre', () => {
   })
 })
 
+describe('LOC-01: F08, F12, F16', () => {
+  it('F08 Termos: o site já existe, está no presente', () => {
+    const termos = texto('termos')
+    expect(termos).not.toContain('vai ser um site')
+    expect(termos).toContain('O AppMaternidade é um site para a família registrar a rotina do bebê')
+  })
+
+  it('F12 Exclusão: a cuidadora perde os vínculos com as famílias e o autor vira "pessoa removida"', () => {
+    const exclusao = texto('exclusao')
+    expect(exclusao).not.toContain('vai virar um rótulo neutro')
+    expect(exclusao).toContain('os vínculos dela com as famílias')
+    expect(exclusao).toContain('pessoa removida')
+  })
+
+  it('F16 Privacidade: o arquivo JSON não é formato regulamentado de portabilidade', () => {
+    const privacidade = texto('privacidade')
+    expect(privacidade).not.toContain('O site vai permitir pedir')
+    expect(privacidade).toContain('arquivo JSON')
+    expect(privacidade).toContain('formato regulamentado de portabilidade')
+  })
+})
+
 describe('LOC-01: decisões do líder', () => {
   it('Regras: não promete contestação, que o site ainda não tem', () => {
     const regras = texto('regras')
