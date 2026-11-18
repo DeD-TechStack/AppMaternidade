@@ -1,7 +1,7 @@
 import { useId, useMemo, useState, type ReactNode, type Ref } from 'react'
 import { ChevronDown, CircleAlert, Eye, EyeOff } from 'lucide-react'
 import { COMECAR, COMUM } from '../../conteudo/conta.ts'
-import { listaDeFusos } from './fusos.ts'
+import { listaDeFusos, rotuloDoFuso } from './fusos.ts'
 
 // Campos de formulário no "Campo de mel": rótulo visível acima, caixa de 56 px com raio 14 e contorno
 // de 1,5 px (as classes `cm-campo-*` da base). Erro e ajuda ficam ligados ao controle por
@@ -208,7 +208,7 @@ export function SeletorFuso({ rotulo, valor, aoMudar, guardado, ajuda, erro, ref
         >
           {opcoes.map((fuso) => (
             <option key={fuso} value={fuso}>
-              {fuso === foraDaLista ? COMECAR.fusoAtual(fuso) : fuso}
+              {fuso === foraDaLista ? COMECAR.fusoAtual(rotuloDoFuso(fuso)) : rotuloDoFuso(fuso)}
             </option>
           ))}
         </select>
