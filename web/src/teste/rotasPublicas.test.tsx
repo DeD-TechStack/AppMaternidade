@@ -58,12 +58,12 @@ describe('Início (MAT-49c)', () => {
 })
 
 describe('rota inexistente', () => {
-  it('tem o título em Literata e o primário de volta ao início', () => {
+  it('tem o h1 da noite e o botão de mel de volta ao início', () => {
     renderizarRota('/nao-existe')
-    const h1 = screen.getByRole('heading', { level: 1, name: 'Página não encontrada' })
+    const h1 = screen.getByRole('heading', { level: 1, name: 'Aqui não mora ninguém.' })
     expect(h1.classList.contains('cm-h1')).toBe(true)
     const voltar = screen.getByRole('link', { name: 'Voltar ao início' })
     expect(voltar.getAttribute('href')).toBe('/')
-    expect(voltar.getAttribute('data-botao')).toBe('primario')
+    expect(voltar.getAttribute('data-botao')).toBe('mel')
   })
 })
