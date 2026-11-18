@@ -135,7 +135,7 @@ const ORIGEM_DE_EXEMPLO: Record<ChaveErro, unknown> = {
   credenciais: { name: 'AuthApiError', code: 'invalid_credentials', status: 400, message: 'Invalid login credentials' },
   email_nao_confirmado: { name: 'AuthApiError', code: 'email_not_confirmed', status: 400, message: 'Email not confirmed' },
   email_em_uso: { name: 'AuthApiError', code: 'user_already_exists', status: 422, message: 'User already registered' },
-  senha_fraca: { name: 'AuthApiError', code: 'weak_password', status: 422, message: 'Password should be at least 6 characters.' },
+  senha_fraca: { name: 'AuthApiError', code: 'weak_password', status: 422, message: 'Password should be at least 8 characters.' },
   senha_igual: { name: 'AuthApiError', code: 'same_password', status: 422, message: 'New password should be different from the old password.' },
   email_invalido: { name: 'AuthApiError', code: 'email_address_invalid', status: 400, message: 'Email address is invalid' },
   muitas_tentativas: { name: 'AuthApiError', code: 'over_request_rate_limit', status: 429, message: 'Request rate limit reached' },

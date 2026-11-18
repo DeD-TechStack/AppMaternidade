@@ -29,7 +29,7 @@ export const FASES: readonly Fase[] = [
       'Converse com o rosto perto do dele e olhe nos olhos. Nessa idade o bebê já ouve e enxerga a uns 20 cm, mais ou menos a distância do rosto de quem amamenta.',
       'Mostre um objeto colorido a uns 30 cm dos olhos dele e mova devagar para os lados, para cima e para baixo.',
       'Cante e leia em voz alta para ele.',
-      'Deixe o bebê de barriga para baixo e chame com a voz, com o nome dele ou com um brinquedo, para ele tentar levantar a cabeça. Também dá para começar com ele deitado no seu peito, se você estiver bem acordado.',
+      'Deixe o bebê de barriga para baixo e chame com a voz, com o nome dele ou com um brinquedo, para ele tentar levantar a cabeça. Também dá para começar com ele deitado no seu peito, se você não estiver com sono.',
       'No colo, mude a posição de vez em quando: virado para você, de bruços, virado para a frente.',
     ],
     fontes: [FONTES.caderneta, FONTES.nhs, FONTES.spsp],
@@ -203,7 +203,7 @@ export const MARCOS: Artigo = {
       titulo: 'Quando conversar com o profissional',
       textos: [
         'Converse com o pediatra ou com a equipe da UBS se o bebê deixou de fazer algo que já fazia, se ele ainda não faz o que se espera para a fase, ou quando alguma coisa preocupa você, mesmo sem saber explicar.',
-        'Na maioria das vezes não é nada sério. Mesmo assim, as fontes recomendam não esperar para conversar.',
+        'As fontes recomendam não esperar para conversar.',
       ],
     },
   ],

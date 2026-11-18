@@ -32,7 +32,6 @@ import {
 import { CamadaHover } from '../movimento/CamadaHover.tsx'
 import { Cortina } from '../movimento/Cortina.tsx'
 import { EntradaCena } from '../movimento/EntradaCena.tsx'
-import { LinhasEscalonadas } from '../movimento/LinhasEscalonadas.tsx'
 import { useTituloDaPagina } from './publicas/useTitulo.ts'
 
 interface PropsParte {
@@ -216,55 +215,51 @@ export function Sistema() {
         </Secao>
 
         <Parte id="tipo" rotulo="Tipo" titulo={SECOES.tipo}>
-          {/* Cada linha da escala sobe 48 px e aparece ao entrar na janela, uma a cada 250 ms (M4). */}
+          {/* A escala de tipo é texto comum: cada linha já está no lugar desde a primeira pintura (a revelação M4 saiu na MOTION-1). */}
           <QuadroLayout>
-            <LinhasEscalonadas
-              className="cm-tipos"
-              classeLinha="cm-tipo-linha"
-              linhas={[
-                <>
-                  <p className="cm-rotulo cm-texto-2">Título 1, Literata 600, 84 por 88</p>
-                  <p className="cm-h1">
-                    A rotina do bebê,
-                    <span className="cm-segunda-linha">dividida com carinho.</span>
+            <div className="cm-tipos">
+              <div className="cm-tipo-linha">
+                <p className="cm-rotulo cm-texto-2">Título 1, Literata 600, 84 por 88</p>
+                <p className="cm-h1">
+                  A rotina do bebê,
+                  <span className="cm-segunda-linha">dividida com carinho.</span>
+                </p>
+              </div>
+              <div className="cm-tipo-linha">
+                <p className="cm-rotulo cm-texto-2">Título 2, 56 por 62</p>
+                <p className="cm-h2">
+                  Quem chega no turno
+                  <span className="cm-segunda-linha">já sabe o que houve.</span>
+                </p>
+              </div>
+              <div className="cm-tipo-linha">
+                <p className="cm-rotulo cm-texto-2">Título 3, 36 por 42</p>
+                <p className="cm-h3">Mamada às 02:40, lado esquerdo</p>
+              </div>
+              <div className="cm-tipo-linha">
+                <p className="cm-rotulo cm-texto-2">Título 4, 24 por 30</p>
+                <p className="cm-h4">Desde que você saiu</p>
+              </div>
+              <div className="cm-tipo-linha">
+                <p className="cm-rotulo cm-texto-2">Outfit: corpo 18, pequeno 15, rótulo 14</p>
+                <div className="cm-tipo-textos">
+                  <p className="cm-corpo cm-medida">
+                    Cada adulto autorizado registra sono, mamada e fralda com um ou dois toques, e todos veem o
+                    mesmo dia, com o nome de quem registrou.
                   </p>
-                </>,
-                <>
-                  <p className="cm-rotulo cm-texto-2">Título 2, 56 por 62</p>
-                  <p className="cm-h2">
-                    Quem chega no turno
-                    <span className="cm-segunda-linha">já sabe o que houve.</span>
-                  </p>
-                </>,
-                <>
-                  <p className="cm-rotulo cm-texto-2">Título 3, 36 por 42</p>
-                  <p className="cm-h3">Mamada às 02:40, lado esquerdo</p>
-                </>,
-                <>
-                  <p className="cm-rotulo cm-texto-2">Título 4, 24 por 30</p>
-                  <p className="cm-h4">Desde que você saiu</p>
-                </>,
-                <>
-                  <p className="cm-rotulo cm-texto-2">Outfit: corpo 18, pequeno 15, rótulo 14</p>
-                  <div className="cm-tipo-textos">
-                    <p className="cm-corpo cm-medida">
-                      Cada adulto autorizado registra sono, mamada e fralda com um ou dois toques, e todos veem o
-                      mesmo dia, com o nome de quem registrou.
-                    </p>
-                    <p className="cm-pequeno cm-texto-2">Registrado por Bruno às 04:05.</p>
-                    <p className="cm-rotulo">Última mamada</p>
-                  </div>
-                </>,
-                <>
-                  <p className="cm-rotulo cm-texto-2">Algarismos tabulares nos tempos</p>
-                  <p className="cm-h3 cm-tabular cm-tabular-amostra">
-                    <span>00:12:40</span>
-                    <span>01:05:09</span>
-                    <span>10:47:33</span>
-                  </p>
-                </>,
-              ]}
-            />
+                  <p className="cm-pequeno cm-texto-2">Registrado por Bruno às 04:05.</p>
+                  <p className="cm-rotulo">Última mamada</p>
+                </div>
+              </div>
+              <div className="cm-tipo-linha">
+                <p className="cm-rotulo cm-texto-2">Algarismos tabulares nos tempos</p>
+                <p className="cm-h3 cm-tabular cm-tabular-amostra">
+                  <span>00:12:40</span>
+                  <span>01:05:09</span>
+                  <span>10:47:33</span>
+                </p>
+              </div>
+            </div>
           </QuadroLayout>
         </Parte>
 

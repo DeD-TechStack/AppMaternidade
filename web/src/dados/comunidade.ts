@@ -227,11 +227,11 @@ const FORMATO_DATA = new Intl.DateTimeFormat('pt-BR', {
   hourCycle: 'h23',
 })
 
-/** `DD/MM/AAAA HH:MM` no locale `pt-BR` e no fuso do navegador (por exemplo `05/11/2026 14:30`). */
+/** `DD/MM/AAAA às HH:MM` no locale `pt-BR` e no fuso do navegador (por exemplo `05/11/2026 às 14:30`). */
 export function formatarDataHora(instante: string | number | Date): string {
   const data = new Date(instante)
   if (Number.isNaN(data.getTime())) return ''
   const partes = FORMATO_DATA.formatToParts(data)
   const pega = (tipo: string) => partes.find((parte) => parte.type === tipo)?.value ?? ''
-  return `${pega('day')}/${pega('month')}/${pega('year')} ${pega('hour')}:${pega('minute')}`
+  return `${pega('day')}/${pega('month')}/${pega('year')} às ${pega('hour')}:${pega('minute')}`
 }

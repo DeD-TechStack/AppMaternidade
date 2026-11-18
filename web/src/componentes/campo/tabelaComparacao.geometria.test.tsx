@@ -41,6 +41,10 @@ interface Titulo {
   texto: string
   /** A largura somada de cada linha visual, de cima para baixo. */
   linhas: number[]
+  /** A largura útil da coluna do título: a caixa do h1/h2 sem o padding, arredondada. */
+  coluna: number
+  /** Quantas palavras ficam partidas em mais de uma linha visual. */
+  palavrasQuebradas: number
 }
 
 interface Medida {
@@ -71,17 +75,43 @@ const SCRIPT_DE_MEDIDA = `
     const titulos = [...document.querySelectorAll('h1, h2')].filter((t) => t.textContent.trim().length > 0 && t.getClientRects().length > 0 && !t.classList.contains('sr-only')).map((t) => {
       const partes = t.querySelectorAll('[aria-hidden="true"]').length > 0 ? [...t.querySelectorAll('[aria-hidden="true"]')] : [t]
       const porTopo = new Map()
+      // Só os retângulos do texto: selectNodeContents(span) devolve também a caixa do próprio span de bloco
+      // (a coluna inteira), que somada ao texto inflava a linha acima da coluna.
       for (const parte of partes) {
-        const faixa = document.createRange()
-        faixa.selectNodeContents(parte)
-        for (const r of faixa.getClientRects()) {
-          if (r.width < 1) continue
-          const topo = [...porTopo.keys()].find((k) => Math.abs(k - r.top) < r.height / 2) ?? r.top
-          porTopo.set(topo, (porTopo.get(topo) ?? 0) + r.width)
+        const andadorDeLinhas = document.createTreeWalker(parte, NodeFilter.SHOW_TEXT)
+        for (let no = andadorDeLinhas.nextNode(); no; no = andadorDeLinhas.nextNode()) {
+          const faixa = document.createRange()
+          faixa.selectNodeContents(no)
+          for (const r of faixa.getClientRects()) {
+            if (r.width < 1) continue
+            const topo = [...porTopo.keys()].find((k) => Math.abs(k - r.top) < r.height / 2) ?? r.top
+            porTopo.set(topo, (porTopo.get(topo) ?? 0) + r.width)
+          }
         }
       }
       const linhas = [...porTopo.entries()].sort((a, b) => a[0] - b[0]).map((e) => Math.round(e[1]))
-      return { texto: t.textContent.trim(), linhas }
+      // A coluna: a caixa do título sem o padding. As palavras partidas: cada palavra vira um Range, e ela está
+      // partida quando os retângulos dela caem em dois ou mais topos distintos (a mesma regra de agrupar das linhas).
+      const estilo = getComputedStyle(t)
+      const coluna = Math.round(t.getBoundingClientRect().width - parseFloat(estilo.paddingLeft) - parseFloat(estilo.paddingRight))
+      let palavrasQuebradas = 0
+      for (const parte of partes) {
+        const andador = document.createTreeWalker(parte, NodeFilter.SHOW_TEXT)
+        for (let no = andador.nextNode(); no; no = andador.nextNode()) {
+          for (const palavra of no.textContent.matchAll(/\\S+/g)) {
+            const faixaDaPalavra = document.createRange()
+            faixaDaPalavra.setStart(no, palavra.index)
+            faixaDaPalavra.setEnd(no, palavra.index + palavra[0].length)
+            const topos = []
+            for (const r of faixaDaPalavra.getClientRects()) {
+              if (r.width < 1) continue
+              if (!topos.some((k) => Math.abs(k - r.top) < r.height / 2)) topos.push(r.top)
+            }
+            if (topos.length >= 2) palavrasQuebradas += 1
+          }
+        }
+      }
+      return { texto: t.textContent.trim(), linhas, coluna, palavrasQuebradas }
     })
     responder(JSON.stringify({
       innerWidth: window.innerWidth,
@@ -190,6 +220,11 @@ function equilibrado(linhas: number[]): boolean {
   return linhas.every((l) => l >= 0.4 * maior)
 }
 
+/** Nenhuma linha passa da coluna (com 1 px de folga de arredondamento) e nenhuma palavra fica partida no meio. */
+function semEstouro(titulo: { linhas: number[]; coluna: number; palavrasQuebradas: number }): boolean {
+  return titulo.linhas.every((l) => l <= titulo.coluna + 1) && titulo.palavrasQuebradas === 0
+}
+
 describe('a área que rola a tabela de comparação (AUD-01)', () => {
   afterEach(cleanup)
 
@@ -214,6 +249,14 @@ describe('o controle negativo da regra de equilíbrio', () => {
     expect(equilibrado([264, 285])).toBe(true)
     expect(equilibrado([385, 663, 476])).toBe(true)
     expect(equilibrado([])).toBe(true)
+  })
+})
+
+describe('o controle negativo da regra de estouro', () => {
+  it('reprova a linha mais larga que a coluna e a palavra partida, e aprova o título que cabe', () => {
+    expect(semEstouro({ linhas: [641, 1131, 311], coluna: 1200, palavrasQuebradas: 0 })).toBe(true)
+    expect(semEstouro({ linhas: [641, 1331, 311], coluna: 1200, palavrasQuebradas: 0 })).toBe(false)
+    expect(semEstouro({ linhas: [100], coluna: 1200, palavrasQuebradas: 1 })).toBe(false)
   })
 })
 
@@ -251,7 +294,7 @@ describe(`a geometria da legenda e dos títulos no Chrome${motivoDoPulo ? ` (pul
     [390, 844],
   ] as const) {
     it.skipIf(motivoDoPulo !== null)(
-      `Início em ${largura}: o título da faixa da madrugada e o h1 quebram em linhas equilibradas`,
+      `Início em ${largura}: o título da madrugada quebra em linhas equilibradas e o h1 não estoura a coluna nem parte uma palavra`,
       async () => {
         const medida = await medirRota('/', largura, altura)
         const madrugada = medida.titulos.find((t) => t.texto.startsWith('De madrugada'))
@@ -259,8 +302,9 @@ describe(`a geometria da legenda e dos títulos no Chrome${motivoDoPulo ? ` (pul
         for (const titulo of [madrugada, heroi]) {
           expect(titulo, 'título não encontrado').toBeDefined()
           expect(titulo!.linhas.length).toBeGreaterThan(0)
-          expect(equilibrado(titulo!.linhas), `${titulo!.texto}: linhas ${titulo!.linhas.join(' / ')}`).toBe(true)
         }
+        expect(equilibrado(madrugada!.linhas), `${madrugada!.texto}: linhas ${madrugada!.linhas.join(' / ')}`).toBe(true)
+        expect(semEstouro(heroi!), 'h1 estoura a coluna ou quebra uma palavra: ' + JSON.stringify(heroi)).toBe(true)
       },
       120_000,
     )

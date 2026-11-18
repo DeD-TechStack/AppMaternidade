@@ -276,7 +276,7 @@ describe('os avisos que não bloqueiam: "Salvar assim" e "Corrigir"', () => {
     await enviar()
 
     const grupo = screen.getByRole('group', { name: 'Confirmar o registro' })
-    expect(within(grupo).getByText('Este tummy time dura 2 h 0 min, mais do que o esperado.')).toBeTruthy()
+    expect(within(grupo).getByText('Duração de 2 h: mais do que o esperado para tummy time.')).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'Salvar' })).toBeNull()
     fireEvent.click(botao('Corrigir'))
     expect(botao('Salvar')).toBeTruthy()
@@ -304,7 +304,7 @@ describe('os avisos que não bloqueiam: "Salvar assim" e "Corrigir"', () => {
     digitarFim('09:30')
 
     await enviar()
-    expect(screen.getByText('Este sono se sobrepõe a outro, das 08:48 até agora (em andamento).')).toBeTruthy()
+    expect(screen.getByText('Há outro registro de sono no mesmo horário, das 08:48 até agora (em andamento).')).toBeTruthy()
   })
 
   it('uma sessão que termina quando a outra começa (06:40) encosta e não pede confirmação', async () => {
@@ -325,7 +325,7 @@ describe('os avisos que não bloqueiam: "Salvar assim" e "Corrigir"', () => {
 
     await enviar()
 
-    expect(screen.getByText('Este sono se sobrepõe a outro, das 03:30 às 04:20. E mais 2.')).toBeTruthy()
+    expect(screen.getByText('Há outro registro de sono no mesmo horário, das 03:30 às 04:20. E mais 2.')).toBeTruthy()
   })
 
   it('se a leitura da conferência falhar, nada é enviado: o erro aparece acima dos botões e "Tentar de novo" relê', async () => {
@@ -369,7 +369,7 @@ describe('o erro do banco no envio', () => {
 
     await enviar()
     const alerta = screen.getByRole('alert')
-    expect(alerta.textContent).toContain('Não deu para confirmar com o servidor. Tente de novo: se já tiver sido salvo, não duplica.')
+    expect(alerta.textContent).toContain('Não deu para confirmar com o servidor. Tente de novo. Se já tiver sido salvo, nada fica repetido.')
     fireEvent.click(within(alerta).getByRole('button', { name: 'Tentar de novo' }))
     await aguardarCarga()
 
