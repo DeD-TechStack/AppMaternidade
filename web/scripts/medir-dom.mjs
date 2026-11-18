@@ -1032,9 +1032,16 @@ export function tituloRegistro(nos) {
   return titulosUniformes('TITULO_REGISTRO', nos, (no) => marca(no, 'titulo') && marca(no, 'noMain') && !marca(no, 'casa'))
 }
 
-/** SOBRETITULO: nenhum rótulo sobre o título no main e na casa (por classe, ou pela forma de um rótulo). */
-export function sobretitulo(nos) {
-  const escopo = nos.filter((no) => (marca(no, 'noMain') || marca(no, 'casa')) && !marca(no, 'noRodape'))
+/**
+ * SOBRETITULO: nenhum rótulo sobre o título (por classe, ou pela forma de um rótulo). O escopo é o main e a casa nas
+ * páginas públicas (P, C); na /sistema (`caso` de CASOS_CASA) é só a casa: a amostra de tipo da /sistema mostra o
+ * `sobretitulo` fora dela de propósito (spec §5.2, premissa P-4).
+ */
+export function sobretitulo(nos, _doc, caso) {
+  const soCasa = CASOS_CASA.includes(caso)
+  const escopo = nos.filter(
+    (no) => (soCasa ? marca(no, 'casa') : marca(no, 'noMain') || marca(no, 'casa')) && !marca(no, 'noRodape'),
+  )
   if (escopo.length === 0) return nenhumElemento('SOBRETITULO')
   const falhas = []
   for (const no of escopo) {
@@ -1237,7 +1244,7 @@ export function avaliarTudo({ doc, nos, tema, caso }) {
     ITALICO: () => italico(lista, doc),
     TITULO: () => titulo(lista, doc),
     TITULO_REGISTRO: () => tituloRegistro(lista, doc),
-    SOBRETITULO: () => sobretitulo(lista, doc),
+    SOBRETITULO: () => sobretitulo(lista, doc, caso),
     DOCK: () => dock(lista, doc),
     CABECALHO: () => cabecalho(lista, doc),
     BOTAO_LARGO: () => botaoLargo(lista, doc),

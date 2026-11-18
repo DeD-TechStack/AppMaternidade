@@ -22,9 +22,14 @@ function Casca() {
   // O "Modo madrugada" só existe nas páginas da Rotina (a rota pai delas leva `handle.area`).
   const naRotina = useMatches().some((rota) => (rota.handle as { area?: unknown } | undefined)?.area === AREA_DA_ROTINA)
 
+  // Os títulos (h1 a h4) herdam a face de exibição só no site público e na /sistema (DS1:RF-05): a área logada
+  // (/app/*) e a fila de moderação (/moderacao*) mantêm o desenho delas (site.css, `data-titulos`).
+  const daModeracao = pathname === '/moderacao' || pathname.startsWith('/moderacao/')
+  const titulosDoSite = contexto === 'publico' && !daModeracao
+
   // `sb-casca` continua como marcador da casca para os testes das telas do app.
   return (
-    <div className="sb-casca cm-casca">
+    <div className="sb-casca cm-casca" data-titulos={titulosDoSite ? 'site' : undefined}>
       <Cabecalho contexto={contexto} comLua={naRotina} madrugada={madrugada} aoAlternarMadrugada={alternar} />
       <Outlet />
       {/* As telas do app já trazem o aviso de demonstração: o do rodapé fica só no site público. */}

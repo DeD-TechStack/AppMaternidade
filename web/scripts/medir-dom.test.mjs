@@ -2860,6 +2860,33 @@ describe('DS1-I-07 SOBRETITULO: nenhum rótulo acima de título no main das pág
     assert.equal(medir.sobretitulo([no({ classes: ['cm-sobretitulo'] })], docDs1(1440)).ok, true)
   })
 
+  it('DS1-I-07 SOBRETITULO na /sistema olha só a casa: o sobretitulo da amostra de tipo (no main, fora da casa) passa', () => {
+    const amostra = no({ tag: 'p', classes: ['cm-sobretitulo'], m: { noMain: true } })
+    // /sistema: o mesmo nó que reprova numa página pública passa, porque está fora da casa.
+    const r = medir.sobretitulo([amostra], docDs1(1440), 'sistema')
+    assert.equal(r.ok, true, r.motivo)
+    assert.equal(r.regra, 'SOBRETITULO')
+    assert.deepEqual(Object.keys(r).sort(), CHAVES_PURAS)
+    // Pela avaliação inteira do caso: a regra SOBRETITULO da /sistema passa com a amostra fora da casa.
+    const rotulada = medir.avaliarTudo({ doc: docDs1(1440), nos: [amostra], tema: 'claro', caso: 'sistema', rota: 'sistema' })
+    assert.equal(rotulada.find((x) => x.regra === 'SOBRETITULO').ok, true)
+  })
+
+  it('DS1-I-07 SOBRETITULO controle: na /sistema um sobretitulo dentro da casa falha, e numa página pública um no main falha', () => {
+    const naCasa = no({ tag: 'p', classes: ['cm-sobretitulo'], m: { casa: true, noMain: true } })
+    assert.equal(medir.sobretitulo([naCasa], docDs1(1440), 'sistema').ok, false)
+    assert.equal(medir.sobretitulo([naCasa, no({ classes: ['cm-sobretitulo'], m: { noMain: true } })], docDs1(1440), 'sistema').nos_com_falha.length, 1)
+    // Rótulo pela forma (15 px, 600, antes de título) também vale dentro da casa da /sistema, e não fora dela.
+    assert.equal(medir.sobretitulo([rotulo({ m: { casa: true, noMain: true, antesDeTitulo: true } })], docDs1(1440), 'sistema').ok, false)
+    assert.equal(medir.sobretitulo([rotulo()], docDs1(1440), 'sistema').ok, true)
+    // Página pública (inicio e sem caso): o main inteiro conta.
+    const noMain = no({ tag: 'p', classes: ['cm-sobretitulo'], m: { noMain: true } })
+    assert.equal(medir.sobretitulo([noMain], docDs1(1440), 'inicio').ok, false)
+    assert.equal(medir.sobretitulo([noMain], docDs1(1440)).ok, false)
+    const publica = medir.avaliarTudo({ doc: docDs1(1440), nos: [noMain], tema: 'claro', caso: 'inicio', rota: '' })
+    assert.equal(publica.find((x) => x.regra === 'SOBRETITULO').ok, false)
+  })
+
   it('DS1-I-07 SOBRETITULO falha fechado: rótulo candidato sem tamanho ou sem peso legível', () => {
     assert.equal(medir.sobretitulo([rotulo({ estilo: { fontSize: undefined } })], docDs1(1440)).ok, false)
     assert.equal(medir.sobretitulo([rotulo({ estilo: { fontWeight: 'bold-ish' } })], docDs1(1440)).ok, false)

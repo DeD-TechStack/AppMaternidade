@@ -49,6 +49,14 @@
     text-wrap: balance;
   }
 
+  /* No site público e na /sistema (`data-titulos="site"`, posto pelo Layout) todo h1 a h4 sem família própria desenha
+     na face de exibição (DS1:RF-05), sem mexer em tamanho, peso nem cor. Os dois `:where()` zeram a especificidade: a
+     classe de qualquer título (os títulos do rodapé, por exemplo) continua valendo. A área logada e a moderação não
+     têm o marcador e ficam como estão. */
+  :where(.cm-casca[data-titulos='site']) :where(h1, h2, h3, h4) {
+    font-family: var(--fonte-exibicao);
+  }
+
   /* O tamanho dos títulos é em rem (cresce com a raiz): uma palavra longa quebra em vez de alargar a página. */
   .cm-h1,
   .cm-h2,
