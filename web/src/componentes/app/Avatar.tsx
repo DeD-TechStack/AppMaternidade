@@ -2,7 +2,7 @@
 // (9,2:1 e 11,5:1), oliva com papel por cima (4,7:1).
 const CORES: Record<string, string> = {
   Juliana: 'bg-mel text-cacau',
-  Bruno: 'bg-oliva text-papel',
+  'Ícaro': 'bg-oliva text-papel',
   Carla: 'bg-areia text-cacau',
 }
 

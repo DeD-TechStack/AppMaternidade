@@ -242,13 +242,13 @@ describe('Início: troca de turno', () => {
         linha.querySelector('time')!.textContent,
       ]),
     ).toEqual([
-      ['Mamada, lado esquerdo', 'Juliana', '02:40'],
-      ['Fralda trocada', 'Bruno', '03:10'],
+      ['Mamada, lado esquerdo', 'Ju', '02:40'],
+      ['Fralda trocada', 'Ícaro', '03:10'],
       ['Soneca começou', 'Carla', '03:25'],
     ])
-    expect(within(cartao).getByText('Juliana')).toBeTruthy()
+    expect(within(cartao).getByText('Ju')).toBeTruthy()
     expect(within(cartao).getByText('03:25').classList.contains('in-cartao-hora')).toBe(true)
-    expect(linhas.map((linha) => linha.querySelector('[aria-hidden="true"]')!.textContent)).toEqual(['J', 'B', 'C'])
+    expect(linhas.map((linha) => linha.querySelector('[aria-hidden="true"]')!.textContent)).toEqual(['J', 'Í', 'C'])
     expect(linhas.map((linha) => linha.querySelector('time')!.getAttribute('datetime'))).toEqual([
       '02:40',
       '03:10',
@@ -345,7 +345,7 @@ describe('Início: citação e depoimentos', () => {
   it('a citação da Carla vem antes dos 3 relatos, e a linha "Relatos ilustrativos" aparece uma vez', () => {
     const { main } = abrirInicio()
     const citacao = screen.getByText('“Pomada só à noite, a de dia acabou. Se ela acordar, o bico está na bolsa.”')
-    expect(screen.getByText('Carla, avó da Heloísa, na nota das 22:40')).toBeTruthy()
+    expect(screen.getByText('Carla, avó da Helo, na nota das 22:40')).toBeTruthy()
 
     const secao = screen.getByRole('region', { name: 'Quem cuida conta como é.' })
     expect(citacao.compareDocumentPosition(secao) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()

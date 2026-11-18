@@ -25,8 +25,8 @@ export const INICIO = {
     cartao: {
       titulo: 'Desde que você saiu',
       itens: [
-        { texto: 'Mamada, lado esquerdo', pessoa: 'Juliana', hora: '02:40' },
-        { texto: 'Fralda trocada', pessoa: 'Bruno', hora: '03:10' },
+        { texto: 'Mamada, lado esquerdo', pessoa: 'Ju', hora: '02:40' },
+        { texto: 'Fralda trocada', pessoa: 'Ícaro', hora: '03:10' },
         { texto: 'Soneca começou', pessoa: 'Carla', hora: '03:25' },
       ],
     },
@@ -57,7 +57,7 @@ export const INICIO = {
   },
   citacao: {
     texto: 'Pomada só à noite, a de dia acabou. Se ela acordar, o bico está na bolsa.',
-    autor: 'Carla, avó da Heloísa, na nota das 22:40',
+    autor: 'Carla, avó da Helo, na nota das 22:40',
   },
   depoimentos: {
     titulo: ['Quem cuida', 'conta como é.'],

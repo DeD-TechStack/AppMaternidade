@@ -31,7 +31,7 @@ export const COMO_FUNCIONA_DESTAQUE = {
   },
   momentos: {
     titulo: ['Três momentos', 'da rotina.'],
-    texto: 'Cada momento vem numa tela da família de Juliana, Bruno e Carla, que cuidam da Heloísa.',
+    texto: 'Cada momento vem numa tela da família de Juliana, Ícaro e Carla, que cuidam da Heloísa.',
   },
   passos: [
     {
@@ -50,34 +50,34 @@ export const COMO_FUNCIONA_DESTAQUE = {
       id: 'troca-de-turno',
       titulo: 'Na troca de turno',
       texto:
-        'Quem chega para o turno vê, sem precisar perguntar, os registros desde que saiu, a sessão em andamento, como a soneca que Bruno começou e ainda não acabou, e as notas em destaque.',
+        'Quem chega para o turno vê, sem precisar perguntar, os registros desde que saiu, a sessão em andamento, como a soneca que Ícaro começou e ainda não acabou, e as notas em destaque.',
     },
   ],
   convite: {
     rotulo: 'Convite enviado',
-    pessoa: 'Bruno',
+    pessoa: 'Ícaro',
     papel: 'Responsável, convidado por Juliana',
   },
   primeirosRegistros: {
     titulo: 'Primeiros registros',
     itens: [
-      { tipo: 'Mamada', detalhe: 'Lado direito, Juliana', hora: '07:40' },
-      { tipo: 'Fralda', detalhe: 'Xixi, Bruno', hora: '08:15' },
+      { tipo: 'Mamada', detalhe: 'Lado direito, Ju', hora: '07:40' },
+      { tipo: 'Fralda', detalhe: 'Xixi, Ícaro', hora: '08:15' },
     ],
   },
   madrugada: {
     rotulo: 'Modo madrugada',
     ultima: 'Última mamada',
     hora: '02:40',
-    detalhe: 'Lado esquerdo, Juliana',
+    detalhe: 'Lado esquerdo, Ju',
     botao: 'Iniciar mamada',
   },
   desdeQueSaiu: {
     titulo: 'Desde que você saiu',
-    andamento: { rotulo: 'Soneca em andamento', tempo: '00:42', detalhe: 'Começou às 14:05, por Bruno' },
+    andamento: { rotulo: 'Soneca em andamento', tempo: '00:42', detalhe: 'Começou às 14:05, por Ícaro' },
     itens: [
       { inicial: 'C', tipo: 'Fralda', detalhe: 'Cocô, Carla', hora: '13:55' },
-      { inicial: 'J', tipo: 'Mamada', detalhe: 'Lado direito, Juliana', hora: '13:20' },
+      { inicial: 'J', tipo: 'Mamada', detalhe: 'Lado direito, Ju', hora: '13:20' },
     ],
     nota: { rotulo: 'Nota em destaque', texto: 'O bico extra está na bolsa azul.', autor: 'Carla, às 13:58' },
   },
@@ -115,7 +115,7 @@ export const CUIDADO_DESTAQUE = {
     bebe: { nome: 'Heloísa', papel: 'Bebê, 3 meses' },
     pessoas: [
       { nome: 'Juliana', papel: 'Responsável' },
-      { nome: 'Bruno', papel: 'Responsável' },
+      { nome: 'Ícaro', papel: 'Responsável' },
       { nome: 'Carla', papel: 'Cuidador · acesso até domingo' },
     ],
     botao: 'Convidar',
@@ -127,7 +127,7 @@ export const CUIDADO_DESTAQUE = {
       texto:
         'Cada pessoa entra na família com um papel, e cada adulto com a própria conta: ninguém divide uma senha da família.',
       /** Como a tela Família vai mostrar isso, com a família de exemplo. */
-      exemplo: { inicial: 'B', quem: 'Bruno', oQue: 'Entrou como responsável, convidado por Juliana' },
+      exemplo: { inicial: 'Í', quem: 'Ícaro', oQue: 'Entrou como responsável, convidado por Juliana' },
     },
     {
       titulo: 'Acesso com prazo',
@@ -170,14 +170,14 @@ export const CUIDADO_DESTAQUE = {
   passagem: {
     titulo: 'Na passagem de turno',
     texto:
-      'Cada adulto vê a mesma sessão no próprio celular ou notebook, como a soneca que Bruno começou. Quem chega encontra, numa tela só, as notas em destaque deixadas por quem estava antes e tudo o que aconteceu desde que saiu.',
+      'Cada adulto vê a mesma sessão no próprio celular ou notebook, como a soneca que Ícaro começou. Quem chega encontra, numa tela só, as notas em destaque deixadas por quem estava antes e tudo o que aconteceu desde que saiu.',
   },
   /** A tarde da Heloísa, como a lista de registros vai mostrar: quem fez o quê, e quando. */
   tarde: {
-    titulo: 'Tarde da Heloísa',
-    rotulo: 'Hoje, com Bruno e Carla',
+    titulo: 'Tarde da Helo',
+    rotulo: 'Hoje, com Ícaro e Carla',
     itens: [
-      { inicial: 'B', quem: 'Bruno', oQue: 'Começou a soneca', hora: '14:05' },
+      { inicial: 'Í', quem: 'Ícaro', oQue: 'Começou a soneca', hora: '14:05' },
       { inicial: 'C', quem: 'Carla', oQue: 'Encerrou a soneca, 1 h 15 min', hora: '15:20' },
       { inicial: 'C', quem: 'Carla', oQue: 'Mamada, lado direito', hora: '15:30' },
     ],
@@ -185,7 +185,7 @@ export const CUIDADO_DESTAQUE = {
   nota: {
     rotulo: 'Nota em destaque',
     texto: 'Dormiu no carrinho e acordou com fome.',
-    autor: 'Carla, para Juliana, às 15:22',
+    autor: 'Carla, para Ju, às 15:22',
   },
   parar: {
     titulo: ['Quando alguém', 'para de cuidar.'],
