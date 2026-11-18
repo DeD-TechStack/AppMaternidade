@@ -3,11 +3,11 @@ import { closeSync, existsSync, mkdirSync, mkdtempSync, openSync, readdirSync, r
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Registro } from '../../dados/rotina.tipos.ts'
 import { aguardarCarga, renderizarRota } from '../../teste/renderizarRota.tsx'
 import { PESSOAS } from '../../teste/renderizarComDados.tsx'
-import { comSessaoEmAndamento, criarMundoDeTeste, FUSO_DO_APARELHO, type Mundo } from '../../teste/rotina.fixture.ts'
+import { criarMundoDeTeste, type Mundo } from '../../teste/rotina.fixture.ts'
 
 // QH-07: o nome de quem NÃO é a pessoa que olha a tela tem 5000 letras e não pode estourar a largura da página. Carla
 // (outra pessoa da família) é renomeada pela camada de dados em memória e passa a ser autora de um registro de hoje, de
@@ -31,6 +31,11 @@ const PASTA_DIST = resolve(import.meta.dirname, '..', '..', '..', 'dist')
 const PASTA_CSS = join(PASTA_DIST, 'assets')
 const NOME_LONGO = 'Q'.repeat(5000)
 const MINUTO = 60_000
+// O fuso do aparelho e o relógio ficam fixos: o dia do cenário (e quem está depois do marco de Juliana) não muda com a
+// máquina nem com a hora em que o teste roda. Só `Date` é falso: o Chrome (processo filho) e os temporizadores seguem reais.
+const FUSO = 'America/Sao_Paulo'
+const INSTANTE = new Date('2026-11-18T15:00:00.000Z')
+const TZ_ORIGINAL = process.env.TZ
 
 interface Tela {
   largura: number
@@ -218,23 +223,43 @@ const idDeTeste = (numero: number) => `a0000000-0000-7000-8000-${String(numero).
 
 /**
  * O mundo de teste com Carla (que não é Juliana, quem olha a tela) autora de: um registro de hoje depois do marco de
- * Juliana (o "Desde o seu último registro"), a nota em destaque da fixture e uma sessão em andamento. Depois, ela é
- * renomeada pela camada de dados da conta (a única que muda um nome: a conta entrada muda o próprio) e a sessão volta a ser a de Juliana.
+ * Juliana (o "Desde o seu último registro"), a nota em destaque da fixture e uma sessão de mamada em andamento. A de
+ * sono de Bruno (a mais nova) fica como a principal do Hoje; a de Carla, mais antiga, cai em "Outras sessões" (as
+ * sessões em paralelo, que só aparecem com mais de uma sessão). Depois, ela é renomeada pela camada de dados da conta
+ * (a única que muda um nome: a conta entrada muda o próprio) e a sessão volta a ser a de Juliana.
  */
 async function mundoComNomeLongo(): Promise<Mundo> {
   const agora = Date.now()
   const mundo = criarMundoDeTeste({
+    fusoDaFamilia: FUSO,
     diaCompleto: true,
     ajustarRotina: (fixture) => {
-      const base = comSessaoEmAndamento('sono', 72 * MINUTO, PESSOAS.carla.id)(fixture)
-      const modelo = fixture.registros.find((registro) => registro.tipo === 'fralda')!
-      const inicio = new Date(agora - 30 * MINUTO).toISOString()
-      const deCarla: Registro = { ...modelo, id: idDeTeste(777), criadoPor: PESSOAS.carla.id, inicio, recebidoEm: inicio, atualizadoEm: inicio }
-      return { ...base, registros: [...base.registros, deCarla] }
+      const fralda = fixture.registros.find((registro) => registro.tipo === 'fralda')!
+      const sono = fixture.registros.find((registro) => registro.tipo === 'sono' && registro.fim === null)!
+      const inicioDoRegistro = new Date(agora - 30 * MINUTO).toISOString()
+      const inicioDaSessao = new Date(agora - 100 * MINUTO).toISOString()
+      const registroDeCarla: Registro = {
+        ...fralda,
+        id: idDeTeste(777),
+        criadoPor: PESSOAS.carla.id,
+        inicio: inicioDoRegistro,
+        recebidoEm: inicioDoRegistro,
+        atualizadoEm: inicioDoRegistro,
+      }
+      const sessaoDeCarla: Registro = {
+        ...sono,
+        id: idDeTeste(778),
+        tipo: 'mamada',
+        criadoPor: PESSOAS.carla.id,
+        inicio: inicioDaSessao,
+        recebidoEm: inicioDaSessao,
+        atualizadoEm: inicioDaSessao,
+      }
+      return { ...fixture, registros: [...fixture.registros, registroDeCarla, sessaoDeCarla] }
     },
   })
   mundo.conta.sessaoParaTeste(PESSOAS.carla.email)
-  const renomeada = await mundo.conta.atualizarMinhaConta(NOME_LONGO, FUSO_DO_APARELHO)
+  const renomeada = await mundo.conta.atualizarMinhaConta(NOME_LONGO, FUSO)
   expect(renomeada.ok, 'a camada de dados renomeia Carla').toBe(true)
   mundo.conta.sessaoParaTeste(PESSOAS.juliana.email)
   return mundo
@@ -245,6 +270,19 @@ const FEITAS: string[] = []
 
 describe('o nome de 5000 letras de outra pessoa da família, no Chrome (390x844 e 1440x900)', () => {
   const LARGURA_ORIGINAL = window.innerWidth
+  beforeAll(() => {
+    process.env.TZ = FUSO
+  })
+  // O `setup.ts` volta ao relógio real depois de cada teste: o relógio falso é ligado a cada teste, o fuso uma vez.
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(INSTANTE)
+  })
+  afterAll(() => {
+    vi.useRealTimers()
+    if (TZ_ORIGINAL === undefined) delete process.env.TZ
+    else process.env.TZ = TZ_ORIGINAL
+  })
   afterEach(() => {
     Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: LARGURA_ORIGINAL })
   })
@@ -261,6 +299,27 @@ describe('o nome de 5000 letras de outra pessoa da família, no Chrome (390x844 
           await aguardarCarga()
           // O nome longo chegou à tela: a medida de fora é a do cenário, não a de uma tela sem ele.
           expect(container.textContent ?? '', `${rota.caminho}: o nome longo de Carla na tela do jsdom`).toMatch(/Q{20,}/)
+          if (rota.nome === 'hoje') {
+            // Cada linha de autor do cenário existe na tela e leva o nome longo: senão a medida não cobre aquela linha.
+            const linhasDeAutor: Array<[string, string]> = [
+              ['[data-notas]', 'a nota em destaque ("Carla, HH:MM")'],
+              ['[data-desde]', 'o registro depois do marco ("por Carla")'],
+              ['[data-sessoes-em-paralelo]', 'a sessão em andamento ("por Carla")'],
+            ]
+            for (const [seletor, descricao] of linhasDeAutor) {
+              const bloco = container.querySelector(seletor)
+              expect(bloco, `${rota.caminho}: o bloco ${seletor} existe (${descricao})`).not.toBeNull()
+              expect(bloco!.textContent ?? '', `${rota.caminho}: ${seletor} traz o nome longo de Carla em ${descricao}`).toMatch(/Q{20,}/)
+            }
+          } else {
+            // O Histórico: a linha "por <autor>" da LinhaDoDia leva o nome longo e quebra em qualquer ponto (`wrap-anywhere`).
+            const linhasDoAutor = [...container.querySelectorAll('p')].filter((p) => /Q{20,}/.test(p.textContent ?? ''))
+            expect(linhasDoAutor.length, `${rota.caminho}: ao menos um <p> com o nome longo de Carla ("por Carla")`).toBeGreaterThan(0)
+            expect(
+              linhasDoAutor.some((p) => p.classList.contains('wrap-anywhere')),
+              `${rota.caminho}: a linha "por <autor>" com o nome longo tem a classe wrap-anywhere`,
+            ).toBe(true)
+          }
 
           const medida = medirNoChrome(container.innerHTML, tela, rota.nome)
 
