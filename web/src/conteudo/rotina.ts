@@ -122,7 +122,13 @@ export const HOJE = {
   desdeCarregando: 'Desde o seu último registro',
   paraVoceSaber: 'Para você saber',
   semNotaEmDestaque: 'Nenhuma nota em destaque.',
-  desdeOUltimo: (hora: string) => `Desde o seu último registro, às ${hora}`,
+  // `quando` é a saída de `horaDoItem`: `HH:MM`, `ontem às HH:MM` ou `DD/MM HH:MM`.
+  desdeOUltimo: (quando: string) => {
+    const base = 'Desde o seu último registro,'
+    if (quando.startsWith('ontem')) return `${base} ${quando}`
+    const [dia, hora] = quando.split(' ')
+    return hora === undefined ? `${base} às ${dia}` : `${base} em ${dia} às ${hora}`
+  },
   nadaNovo: 'Nada novo desde o seu último registro.',
   hojeAteAgora: 'Hoje até agora',
   mamadas: 'Mamadas',

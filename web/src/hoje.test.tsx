@@ -601,7 +601,7 @@ describe('Hoje: Para você saber e Desde o seu último registro', () => {
       },
     })
 
-    const lista = within(regiao('Desde o seu último registro, às 20:00')).getAllByRole('listitem')
+    const lista = within(regiao('Desde o seu último registro, ontem às 20:00')).getAllByRole('listitem')
     expect(lista.map((li) => [li.querySelector('p')!.textContent, li.querySelector('.tabular-nums')!.textContent])).toEqual([
       ['Fralda, Xixi', '09:10'],
       ['Sono, em andamento', '08:48'],

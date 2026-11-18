@@ -406,14 +406,49 @@ describe('novo convite', () => {
     expect((await dados.verConvite(codigo)).ok).toBe(true)
 
     // Criar outro faz o código anterior sumir; sair da página também.
-    fireEvent.click(botao('Criar convite'))
-    await waitFor(() => expect(secao('Convites').getAllByRole('listitem')).toHaveLength(4))
+    // Um clique deliberado, depois da janela do mesmo gesto (500 ms) que segue o sucesso.
+    const agoraReal = Date.now.bind(Date)
+    const relogio = vi.spyOn(Date, 'now').mockImplementation(() => agoraReal() + 600)
+    try {
+      fireEvent.click(botao('Criar convite'))
+      await waitFor(() => expect(secao('Convites').getAllByRole('listitem')).toHaveLength(4))
+    } finally {
+      relogio.mockRestore()
+    }
     const novo = screen.getByRole('region', { name: 'Código do convite' })
     expect(novo.querySelector('[data-codigo-convite]')!.textContent).not.toBe(codigo)
     expect(document.body.textContent).not.toContain(codigo)
     unmount()
     await abrir('juliana', dados)
     expect(screen.queryByRole('region', { name: 'Código do convite' })).toBeNull()
+  })
+
+  it('o mesmo gesto preserva o único código do convite', async () => {
+    const dados = novaMemoria()
+    const criar = vi.spyOn(dados, 'criarConvite')
+    await abrir('juliana', dados)
+    // O relógio parado: o 2º clique cai dentro da janela de 500 ms que segue o sucesso.
+    const agoraReal = Date.now()
+    const relogio = vi.spyOn(Date, 'now').mockImplementation(() => agoraReal)
+    try {
+      fireEvent.click(botao('Criar convite'))
+      const bloco = await screen.findByRole('region', { name: 'Código do convite' })
+      const codigo = bloco.querySelector('[data-codigo-convite]')!.textContent!
+      await waitFor(() => expect(status().textContent).toBe('Convite de cuidador criado.'))
+      await waitFor(() => expect(botao('Criar convite').disabled).toBe(false))
+
+      fireEvent.click(botao('Criar convite'))
+      await act(async () => {
+        await Promise.resolve()
+      })
+
+      expect(criar).toHaveBeenCalledTimes(1)
+      const depois = screen.getByRole('region', { name: 'Código do convite' })
+      expect(depois.querySelector('[data-codigo-convite]')!.textContent).toBe(codigo)
+      expect(status().textContent).toBe('Convite de cuidador criado.')
+    } finally {
+      relogio.mockRestore()
+    }
   })
 
   it('a validade gravada é o fim do dia escolhido no fuso da família', async () => {

@@ -640,7 +640,7 @@ describe('exportação e exclusão da conta', () => {
 
   it('exportarDados do responsável: a forma exata do formato v1, com listas e sem codigo_hash', async () => {
     const json = (await valor(como('juliana').exportarDados())) as Record<string, unknown>
-    expect(Object.keys(json)).toEqual(['formato', 'gerado_em', 'conta', 'vinculos', 'familias', 'registros', 'notas'])
+    expect(Object.keys(json)).toEqual(['formato', 'gerado_em', 'conta', 'vinculos', 'familias', 'registros', 'notas', 'avisos'])
     expect(json.formato).toBe('appmaternidade-exportacao-v1')
     expect(json.gerado_em).toMatch(DATA_E_HORA)
 

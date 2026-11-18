@@ -167,13 +167,43 @@ function paraJson(texto: string | null): string | null {
 interface FonteDeExportacao {
   registros: () => readonly Registro[]
   notas: () => readonly Nota[]
+  /** Zera a autoria (`criadoPor`, `encerradoPor`, `excluidoPor`, `excluidaPor`) de quem teve a conta excluída. */
+  anonimizarAutor?: (contaId: string) => void
 }
 
 const SEM_ROTINA: FonteDeExportacao = { registros: () => [], notas: () => [] }
 const fontesDeExportacao = new WeakMap<object, FonteDeExportacao>()
+const origensDaConta = new WeakMap<object, object>()
+
+/**
+ * Diz que `copia` (o que um provedor faz da conta, como o `envolver` da sessão) é a mesma memória que `original`:
+ * a fonte registrada pela rotina sobre a cópia vale para a exportação e para a exclusão da conta original.
+ */
+export function registrarOrigemDaConta(copia: object, original: object): void {
+  origensDaConta.set(copia, origensDaConta.get(original) ?? original)
+}
+
+/** Diz se a rotina em memória já registrou a fonte de exportação desta conta (ou da original, se for cópia). */
+export function temFonteDeExportacao(conta: object): boolean {
+  return fontesDeExportacao.has(origensDaConta.get(conta) ?? conta)
+}
 
 export function registrarFonteDeExportacao(conta: object, fonte: FonteDeExportacao): void {
-  fontesDeExportacao.set(conta, fonte)
+  fontesDeExportacao.set(origensDaConta.get(conta) ?? conta, fonte)
+}
+
+/**
+ * Quem leva a preferência de avisos e o "visto até" da conta para a exportação (RF14:RF-15). A memória dos
+ * avisos se registra aqui com `registrarFonteDeAvisos(conta, ...)`; sem ela, a conta exporta desligado e
+ * sem "visto até". O "visto até" vem como instante ISO, ou `null`.
+ */
+type FonteDeAvisos = (contaId: string) => { ligados: boolean; vistosAte: string | null }
+
+const SEM_AVISOS: FonteDeAvisos = () => ({ ligados: false, vistosAte: null })
+const fontesDeAvisos = new WeakMap<object, FonteDeAvisos>()
+
+export function registrarFonteDeAvisos(conta: object, fonte: FonteDeAvisos): void {
+  fontesDeAvisos.set(conta, fonte)
 }
 
 const compararTexto = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
@@ -857,6 +887,10 @@ export function criarDadosContaMemoria(fixture: FixtureConta, opcoes: OpcoesMemo
       // O que a conta criou onde não é responsável ativa; onde é, já está dentro de familias[].
       registros: registrosEmJson(registrosVivos().filter((r) => r.criadoPor === conta.id && !idsDasFamilias.has(r.familiaId)), autor),
       notas: notasEmJson(notasVivas().filter((n) => n.criadoPor === conta.id && !idsDasFamilias.has(n.familiaId)), autor),
+      avisos: (() => {
+        const { ligados, vistosAte } = (fontesDeAvisos.get(dados) ?? SEM_AVISOS)(conta.id)
+        return { ligados, vistos_ate: paraJson(vistosAte) }
+      })(),
     })
   }
 
@@ -902,6 +936,8 @@ export function criarDadosContaMemoria(fixture: FixtureConta, opcoes: OpcoesMemo
       if (c.criadoPor === eu) c.criadoPor = null
       if (c.aceitoPor === eu) c.aceitoPor = null
     }
+    // Os registros e as notas da rotina moram na fonte registrada; ela zera a autoria dos que eram da conta.
+    fontesDeExportacao.get(dados)?.anonimizarAutor?.(eu)
     contasApagadas.add(eu)
     contas.splice(contas.indexOf(conta), 1)
     usuarios.splice(usuarios.indexOf(usuario), 1)

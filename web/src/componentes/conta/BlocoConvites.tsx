@@ -56,10 +56,12 @@ export function BlocoConvites({ detalhe, acoes }: Props) {
   function criar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault()
     const validoAte = papel === 'responsavel' || !validade ? null : fimDoDia(validade, fuso)
-    // O código de um convite anterior some quando outro é criado.
-    setCriado(null)
-    acoes.dizer(null)
     void enviar({
+      // O código de um convite anterior some quando outro é criado (só se o envio começa de fato).
+      aoComecar: () => {
+        setCriado(null)
+        acoes.dizer(null)
+      },
       escrever: async () => {
         const resultado = await dados.criarConvite(detalhe.familia.id, papel, validoAte)
         // A resposta pode ter se perdido depois de gravar: a lista relida mostra se o convite nasceu.

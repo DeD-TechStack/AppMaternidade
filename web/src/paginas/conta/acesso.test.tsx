@@ -509,10 +509,40 @@ describe('/recuperar-acesso', () => {
     const primeira = status().textContent
 
     digitar('E-mail', 'ninguem@exemplo.invalid')
-    fireEvent.click(botao('Enviar link'))
-    await waitFor(() => expect(dados.ultimoPedidoDeRecuperacao('ninguem@exemplo.invalid')).toBeDefined())
+    // Um clique deliberado, depois da janela do mesmo gesto (500 ms) que segue o sucesso.
+    const agoraReal = Date.now.bind(Date)
+    const relogio = vi.spyOn(Date, 'now').mockImplementation(() => agoraReal() + 600)
+    try {
+      fireEvent.click(botao('Enviar link'))
+      await waitFor(() => expect(dados.ultimoPedidoDeRecuperacao('ninguem@exemplo.invalid')).toBeDefined())
+    } finally {
+      relogio.mockRestore()
+    }
     expect(status().textContent).toBe(primeira)
     expect(dados.ultimoPedidoDeRecuperacao('juliana@exemplo.invalid')).toBe(`${window.location.origin}/redefinir-senha`)
+  })
+
+  it('o mesmo gesto preserva a mensagem: o 2º envio logo depois é ignorado', async () => {
+    const { dados } = renderizarComDados('/recuperar-acesso')
+    const pedir2 = vi.spyOn(dados, 'pedirRecuperacao')
+    // O relógio parado: o 2º clique cai dentro da janela de 500 ms que segue o sucesso.
+    const agoraReal = Date.now()
+    const relogio = vi.spyOn(Date, 'now').mockImplementation(() => agoraReal)
+    try {
+      await pedir('juliana@exemplo.invalid')
+      await waitFor(() => expect(status().textContent).toBe(RECUPERAR.resultado))
+      await waitFor(() => expect((botao('Enviar link') as HTMLButtonElement).disabled).toBe(false))
+
+      fireEvent.click(botao('Enviar link'))
+      await act(async () => {
+        await Promise.resolve()
+      })
+
+      expect(pedir2).toHaveBeenCalledTimes(1)
+      expect(status().textContent).toBe(RECUPERAR.resultado)
+    } finally {
+      relogio.mockRestore()
+    }
   })
 
   it('um erro de negócio qualquer dá a mesma mensagem, que não revela a conta', async () => {

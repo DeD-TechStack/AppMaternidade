@@ -48,10 +48,11 @@ describe('o código fora dos testes', () => {
     expect(achados).toEqual([])
   })
 
-  it('RevelacaoPorBaixo só é importada pelo Rodape', () => {
+  it('nenhum arquivo de produção importa RevelacaoPorBaixo (primitiva estacionada)', () => {
+    // O M7 está estacionado: um cartão futuro que o use deve mudar este contrato de propósito.
     const importa = /from\s+['"][^'"]*\/RevelacaoPorBaixo(?:\.[a-z]+)?['"]/
     const quem = codigo.filter((c) => importa.test(ler(c))).map(nomeRelativo)
-    expect(quem).toEqual(['componentes/casca/Rodape.tsx'])
+    expect(quem).toEqual([])
   })
 
   it('nenhum CSS declara "transition: all" nem "transition-property: all"', () => {
