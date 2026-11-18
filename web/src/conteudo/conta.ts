@@ -1,7 +1,9 @@
 import type { ErroDados } from '../dados/comum.ts'
+import { rotuloDoFuso } from '../componentes/conta/fusos.ts'
 
 // Todos os textos de interface da área de conta (MAT-37a). Já passaram pela revisão de texto
-// (`.oc/textos_MAT-37a.md`): não reescrever. Nenhum arquivo de `paginas/` declara frase em literal.
+// (`.oc/textos_MAT-37a.md`): não reescrever. A LOC-04 trocou as frases dos achados C01 a C15 da
+// revisão de locale (LOC-REV) e de SEC-06. Nenhum arquivo de `paginas/` declara frase em literal.
 
 const MARCA = 'AppMaternidade'
 
@@ -70,7 +72,7 @@ export const CENA_ACESSO = {
   base: '/cenas/acesso/entrar',
   largura: 512,
   altura: 768,
-  alt: 'Celular sobre um pedestal de oliva, com uma tela do app AppMaternidade aberta.',
+  alt: 'Celular sobre um pedestal verde-oliva, com uma tela do AppMaternidade aberta.',
 } as const
 
 export const COMUM = {
@@ -94,8 +96,8 @@ export const COMUM = {
   conexaoCaiu: 'A conexão caiu antes da resposta. Confira abaixo se ficou salvo antes de tentar de novo.',
   repitaSenha: 'Repita a senha.',
   senhasDiferentes: 'As duas senhas precisam ser iguais.',
-  ajudaSenha: 'Pelo menos 6 caracteres.',
-  idCopiado: 'Id copiado.',
+  ajudaSenha: 'Pelo menos 8 caracteres.',
+  idCopiado: 'ID copiado.',
   copieManualmente: 'Copie manualmente.',
   rotuloEmail: 'E-mail',
   rotuloSenha: 'Senha',
@@ -162,7 +164,7 @@ export const CONTA_EXCLUIDA = {
 export const COMECAR = {
   titulo: 'Seu nome',
   frase: 'Falta pouco. Diga o seu nome e o fuso em que você está.',
-  fuso: 'Fuso',
+  fuso: 'Fuso horário',
   ajudaFuso: 'Os horários aparecem neste fuso.',
   botao: 'Salvar',
   /** A opção do fuso guardado que não está na lista. */
@@ -179,7 +181,7 @@ export const PAPEIS = {
   cuidador: {
     nome: 'Cuidador',
     minusculo: 'cuidador',
-    permite: 'Registra e acompanha. Edita e exclui só o que você mesmo criou, e pode encerrar qualquer sessão em andamento.',
+    permite: 'Registra e acompanha. Edita e exclui só os próprios registros e pode encerrar qualquer sessão em andamento.',
   },
   observador: {
     nome: 'Observador',
@@ -196,7 +198,7 @@ export const COMECAR_FAMILIA = {
   frase: 'Crie a família do seu bebê ou entre numa que já existe, com um convite.',
   criar: {
     titulo: 'Criar uma família',
-    texto: 'Você será a pessoa responsável e convida quem vai cuidar junto.',
+    texto: 'Você fica como responsável e pode convidar quem vai cuidar junto.',
     botao: 'Criar uma família',
   },
   convite: {
@@ -209,7 +211,7 @@ export const COMECAR_FAMILIA = {
     titulo: 'Criar uma família',
     nome: 'Nome da família',
     ajudaNome: 'Só quem faz parte da família vê este nome.',
-    fuso: 'Fuso da família',
+    fuso: 'Fuso horário da família',
     ajudaFuso: 'Os horários da família aparecem neste fuso.',
     botao: 'Criar família',
     voltar: 'Voltar',
@@ -238,7 +240,7 @@ export const CONVITE = {
   aceitando: 'Entrando…',
   semBebes: 'Nenhum bebê cadastrado ainda.',
   bebes: 'Bebês',
-  convidouComo: 'Você foi convidado como',
+  convidouComo: 'Seu papel nesta família:',
   acessoAte: (data: string) => `Acesso até ${data}`,
   vence: (dataEHora: string) => `O convite vence em ${dataEHora}`,
   irParaFamilia: 'Ir para a família',
@@ -247,7 +249,8 @@ export const CONVITE = {
 export const FAMILIA = {
   seletor: 'Família',
   voceE: (papel: string) => `Você é ${papel}.`,
-  fuso: (fuso: string) => `Fuso: ${fuso}`,
+  /** O fuso da família em pt-BR ("Fuso: Horário de Brasília (UTC−3)"), nunca o identificador IANA. */
+  fuso: (fuso: string) => `Fuso: ${rotuloDoFuso(fuso)}`,
   carregando: 'Carregando a família…',
   bebes: {
     titulo: 'Bebês',
@@ -260,9 +263,9 @@ export const FAMILIA = {
     desarquivar: 'Desarquivar',
     salvar: 'Salvar',
     cancelar: 'Cancelar',
-    adicionado: (nome: string) => `${nome} foi adicionado.`,
+    adicionado: (nome: string) => `Bebê adicionado: ${nome}.`,
     editado: (nome: string) => `Dados de ${nome} salvos.`,
-    arquivado: (nome: string) => `${nome} foi arquivado.`,
+    arquivado: (nome: string) => `Bebê arquivado: ${nome}.`,
     desarquivado: (nome: string) => `${nome} voltou para a lista.`,
   },
   membros: {
@@ -307,7 +310,7 @@ export const FAMILIA = {
     sair: 'Sair da família',
     excluir: 'Excluir família',
     nome: 'Nome da família',
-    fuso: 'Fuso da família',
+    fuso: 'Fuso horário da família',
     salvar: 'Salvar',
     cancelar: 'Cancelar',
     salva: 'Dados da família salvos.',
@@ -362,7 +365,7 @@ export const CONTA = {
   indice: 'Nesta página',
   secoes: {
     perfil: 'Perfil',
-    id: 'Id da conta',
+    id: 'ID da conta',
     dados: 'Seus dados',
     excluir: 'Excluir conta',
     privacidade: 'Privacidade',
@@ -374,28 +377,28 @@ export const CONTA = {
     frase: 'Seu nome é o que a família vê. O e-mail é o da entrada e não muda por aqui.',
     nome: 'Seu nome',
     email: 'E-mail',
-    fuso: 'Seu fuso',
+    fuso: 'Seu fuso horário',
     botao: 'Salvar',
     sucesso: 'Dados salvos.',
   },
   id: {
-    titulo: 'Id da sua conta',
-    botao: 'Copiar id',
-    frase: 'Quem cuida da moderação pode pedir este número para dar a você um papel na equipe.',
+    titulo: 'ID da sua conta',
+    botao: 'Copiar ID',
+    frase: 'Quem cuida da moderação pode pedir este código para dar a você um papel na equipe.',
   },
   exportar: {
     titulo: 'Seus dados',
     frase:
-      'Baixe um arquivo com os seus dados, para guardar. Quem é responsável recebe a família inteira; os outros papéis recebem os próprios dados.',
+      'Baixe uma cópia dos seus dados num arquivo JSON. Quem é responsável recebe os dados da família inteira; as outras pessoas recebem os próprios dados.',
     botao: 'Baixar meus dados',
     sucesso: 'Arquivo baixado.',
   },
   excluir: {
     titulo: 'Excluir conta',
     explicacao:
-      'Ao excluir a conta, ela e os seus vínculos com famílias somem. Nos registros que você fez, o autor passa a aparecer como “pessoa removida”. Não dá para desfazer.',
+      'Ao excluir a conta, ela e os seus vínculos com famílias são apagados. Nos registros que você fez, o autor passa a aparecer como “pessoa removida”. Não dá para desfazer.',
     impedimento:
-      'Você é a única pessoa responsável destas famílias. Antes de excluir a conta, torne outra pessoa responsável ou exclua a família:',
+      'Você é a única pessoa responsável nestas famílias. Antes de excluir a conta, torne outra pessoa responsável ou exclua a família:',
     lendo: 'Conferindo as suas famílias…',
     botao: 'Excluir minha conta',
     dialogo: {
@@ -411,7 +414,7 @@ export const CONTA = {
   privacidade: {
     titulo: 'Privacidade',
     contato: { antes: 'Dúvidas sobre seus dados: ', valor: CONTATO_PROVISORIO, depois: '.' },
-    encarregado: { antes: 'Encarregado de dados: ', valor: 'Daniel Macedo', depois: '.' },
+    encarregado: { antes: 'Encarregado pelo tratamento de dados: ', valor: 'Daniel Macedo', depois: '.' },
     politica: 'Política de privacidade',
   },
   sair: 'Sair',
@@ -427,7 +430,7 @@ export const TEXTOS_ERRO: Readonly<Record<string, string>> = {
   nome_vazio: 'Escreva um nome.',
   fuso_invalido: 'Escolha um fuso da lista.',
   nascimento_no_futuro: 'A data de nascimento não pode ser depois de hoje.',
-  convite_invalido: 'Este código de convite não vale. Confira se copiou o código inteiro.',
+  convite_invalido: 'Este código de convite não é válido. Confira se copiou o código inteiro.',
   convite_revogado: 'Este convite foi cancelado. Peça um novo a quem convidou.',
   convite_usado: 'Este convite já foi usado. Peça um novo a quem convidou.',
   convite_vencido: 'Este convite venceu. Peça um novo a quem convidou.',
@@ -443,7 +446,7 @@ export const TEXTOS_ERRO: Readonly<Record<string, string>> = {
   credenciais: 'E-mail ou senha não conferem.',
   email_nao_confirmado: 'Antes de entrar, confirme o e-mail pelo link que enviamos.',
   email_em_uso: 'Já existe uma conta com este e-mail.',
-  senha_fraca: 'A senha precisa ter pelo menos 6 caracteres.',
+  senha_fraca: 'A senha precisa ter pelo menos 8 caracteres.',
   senha_igual: 'A nova senha precisa ser diferente da atual.',
   email_invalido: 'Confira o e-mail digitado.',
   muitas_tentativas: 'Muitas tentativas seguidas. Espere alguns minutos e tente de novo.',
@@ -452,10 +455,15 @@ export const TEXTOS_ERRO: Readonly<Record<string, string>> = {
   desconhecido: 'Algo deu errado. Tente de novo em instantes.',
 }
 
+/** `ja_e_membro` sem o nome da família: a frase não fica com "da família .". */
+const JA_E_MEMBRO_SEM_NOME = 'Você já faz parte desta família.'
+
 /** A frase do erro, pelo catálogo; nunca o código nem a mensagem original do banco. */
 export function textoDoErro(erro: ErroDados, familiaNome?: string): string {
   const texto = TEXTOS_ERRO[erro.chave] ?? TEXTOS_ERRO[erro.classe] ?? TEXTOS_ERRO.desconhecido
-  return texto.replace('<familia_nome>', familiaNome ?? '')
+  if (!texto.includes('<familia_nome>')) return texto
+  const nome = familiaNome?.trim() ?? ''
+  return nome ? texto.replace('<familia_nome>', nome) : JA_E_MEMBRO_SEM_NOME
 }
 
 /** As mensagens de passagem (lista fechada da 37a): nascem numa tela e aparecem na seguinte. */

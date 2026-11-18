@@ -113,7 +113,7 @@ describe('sessão e Auth', () => {
       chave: 'email_em_uso',
       codigo: 'user_already_exists',
     })
-    expect(await erro(dados.criarUsuario('nova@exemplo.invalid', '12345', 'Nova', 'x'))).toMatchObject({ chave: 'senha_fraca', codigo: 'weak_password' })
+    expect(await erro(dados.criarUsuario('nova@exemplo.invalid', '1234567', 'Nova', 'x'))).toMatchObject({ chave: 'senha_fraca', codigo: 'weak_password' })
     expect(await erro(dados.criarUsuario('sem-arroba', 'senha-nova', 'Nova', 'x'))).toMatchObject({ chave: 'email_invalido' })
     expect(await valor(dados.sessaoAtual())).toBeNull()
   })
@@ -143,7 +143,7 @@ describe('sessão e Auth', () => {
     const eventos: EventoSessao[] = []
     dados.aoMudarSessao((evento) => eventos.push(evento))
     expect(await erro(dados.trocarSenha(SENHA_DEMONSTRACAO))).toMatchObject({ chave: 'senha_igual', codigo: 'same_password' })
-    expect(await erro(dados.trocarSenha('12345'))).toMatchObject({ chave: 'senha_fraca' })
+    expect(await erro(dados.trocarSenha('1234567'))).toMatchObject({ chave: 'senha_fraca' })
 
     expect(await valor(dados.trocarSenha('senha-nova'))).toBeNull()
     await esperarEventos()
