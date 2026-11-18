@@ -87,8 +87,8 @@ describe('as regras puras (MAT-40:RN-02)', () => {
     for (const invalido of ['', '123', 'nao-e-uuid', '47000000-0000-4000-8000-00000000002z', undefined]) expect(ehUuid(invalido)).toBe(false)
   })
 
-  it('a data sai como DD/MM/AAAA HH:MM, e a ilegível sai vazia', () => {
-    expect(formatarDataHora('2026-11-05T14:30:00Z')).toMatch(/^05\/11\/2026 \d{2}:30$/)
+  it('a data sai como DD/MM/AAAA às HH:MM, e a ilegível sai vazia', () => {
+    expect(formatarDataHora('2026-11-05T14:30:00Z')).toMatch(/^05\/11\/2026 às \d{2}:30$/)
     expect(formatarDataHora('ontem')).toBe('')
   })
 })
