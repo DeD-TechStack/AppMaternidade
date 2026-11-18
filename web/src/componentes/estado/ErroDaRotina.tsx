@@ -18,6 +18,11 @@ interface Props {
 }
 
 /**
+ * Classes do erro aninhado num cartão (o "Em andamento" do Hoje): o mesmo peso, cor e raio do `AvisoDeErro`.
+ */
+export const ERRO_ANINHADO = 'border-[1.5px]! border-(--cor-texto)! rounded-(--radius-cartao)!'
+
+/**
  * O erro da Rotina na peça comum: a frase do catálogo (Anexo B), o `data-erro-rotina` com a chave, o link da lixeira
  * para `registro_excluido` e "Tentar de novo" só nos erros que repetem a chamada.
  */
