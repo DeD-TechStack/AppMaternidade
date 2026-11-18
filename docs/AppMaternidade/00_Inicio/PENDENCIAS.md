@@ -19,6 +19,7 @@ ESTADO: ATIVO. Source of state: the block "RETOMAR 18/11 SWITCH-D5-2" right belo
 - ART: all 7 plates approved (M12 v2 sha 8aad136e, arms-only run at asset time; M06 v3 sha 1c04712e; 4_cenas/APROVACAO_DANIEL.md). Daniel has not seen M06 v3 / M12 v2: FOR DANIEL (non-blocking) gallery DIRECAO_FABLE/4_cenas/CENAS.html.
 - SKILL: appmaternidade-delivery SKILL.md patched 18/11 (Fable picks; Daniel non-blocking gallery). Tool notes for the coordinator already sent: encerrar_processos.py skips 'hermes' command lines; npm audit 13 high picomatch (dev only, plan s6.3 deferred with evidence).
 - SINGLE WRITER: subscriptions moved to local-233a2a40 (coordinator t_8b58002a); the new session's religar is run by the coordinator.
+- ~06h45 QH-01 t_01625ddb returned 1/2 (run 1234: per-account BASE RED witness, durable S01/S09 evidence + 14 controls, notas asserted) -> leader comment 1889. IMG-A t_0614af41 parked (1887).
 RETOMAR-OK 18/11 SWITCH-D5-2
 ## RETOMAR 18/11 SWITCH-D5 (~03h15; session local-1af40d52 at ~356k, coordinator t_cd80c311; ORDERS: ordens-vigentes rev 3; D8 English)
 - BRANCH: origin/int/refazer = 0a5fbb1a52f80c5c372b60019c31f9bed36c2edb (fetched at write time; the integration child is pushing, re-fetch). main untouched. Vault commits stay local on main.
