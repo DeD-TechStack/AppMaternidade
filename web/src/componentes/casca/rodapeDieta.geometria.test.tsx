@@ -441,13 +441,15 @@ describe('a geometria do rodapé público no Chrome (FOOTER-1)', () => {
     })
   })
 
-  it('links: 9 links de uma linha e 44 px de alvo, em duas colunas na ordem dos grupos abaixo de 768 (títulos só para o leitor de tela), numa fileira com o nome de 768 em diante, sem caixas sobrepostas', () => {
+  it('links: 13 links de uma linha e 44 px de alvo, com o desenho abaixo de 768 livre (§3.8), numa fileira de quatro grupos com o nome de 768 em diante, sem caixas sobrepostas', () => {
     paraCadaCaso(TEMAS, LARGURAS, (q, rotulo, tema, largura) => {
-      expect(q.links, `${rotulo}: os 9 links`).toHaveLength(9)
+      expect(q.links, `${rotulo}: os 13 links`).toHaveLength(13)
       expect(q.links.map((l) => l.rotulo), rotulo).toEqual(LINKS.map((l) => l.rotulo))
       for (const link of q.links) {
         // Uma linha de texto (o intervalo do texto do link ocupa uma só linha); o piso de 44 px (56 na madrugada, campo.css) vale para a caixa.
-        expect(link.linhas, `${rotulo}: "${link.rotulo}" quebra em ${link.linhas} linhas (caixa ${Math.round(link.width)} px, nome ${Math.round(q.nome!.width)} px, navegação ${Math.round(q.nav?.width ?? 0)} px)`).toBe(1)
+        // De 768 em diante cada rótulo cabe em uma linha; abaixo de 768 (três colunas de ~110 px, spec §3.8 e §3.12 "labels
+        // wrap inside 44 px boxes") um rótulo largo quebra em duas linhas dentro da caixa de 44 px.
+        expect(link.linhas, `${rotulo}: "${link.rotulo}" quebra em ${link.linhas} linhas (caixa ${Math.round(link.width)} px, nome ${Math.round(q.nome!.width)} px, navegação ${Math.round(q.nav?.width ?? 0)} px)`).toBeLessThanOrEqual(largura < 768 ? 2 : 1)
         expect(link.height, `${rotulo}: "${link.rotulo}" altura`).toBeGreaterThanOrEqual(ALVO_MINIMO[tema])
         // Rótulo curto ("Sobre") também tem alvo de 44 px de largura.
         expect(link.width, `${rotulo}: "${link.rotulo}" largura (${link.width} px)`).toBeGreaterThanOrEqual(44)
@@ -463,18 +465,12 @@ describe('a geometria do rodapé público no Chrome (FOOTER-1)', () => {
       expect(q.titulos.map((t) => t.texto), `${rotulo}: os títulos dos grupos ficam no DOM`).toEqual(COLUNAS_DO_RODAPE.map((c) => c.titulo))
 
       if (largura < 768) {
-        // Uma lista só, em duas colunas: as esquerdas dos links são duas, e a leitura (coluna a coluna) segue Produto, Ajuda, Legal.
-        const esquerdas = [...new Set(q.links.map((l) => Math.round(l.x)))].sort((a, b) => a - b)
-        expect(esquerdas, `${rotulo}: colunas de links`).toHaveLength(2)
-        const leitura = [...q.links].sort((a, b) => (Math.round(a.x) === Math.round(b.x) ? a.y - b.y : a.x - b.x)).map((l) => l.rotulo)
-        expect(leitura, `${rotulo}: ordem de leitura`).toEqual(LINKS.map((l) => l.rotulo))
-        for (const titulo of q.titulos) {
-          expect(titulo.width, `${rotulo}: "${titulo.texto}" largura`).toBe(1)
-          expect(titulo.height, `${rotulo}: "${titulo.texto}" altura`).toBe(1)
-          expect(titulo.clip !== 'auto' || titulo.clipPath !== 'none', `${rotulo}: "${titulo.texto}" sem recorte`).toBe(true)
-        }
+        // DS1:RF-04 / §3.8: o desenho abaixo de 768 é livre (a grade de 3 colunas é só a opção medida), dentro do teto de
+        // 420 px. O que vale em toda largura: a ordem do DOM é a dos grupos (Produto, Conta, Ajuda, Legal), os 13 links
+        // ficam dentro da janela e nenhum título de grupo some do DOM.
+        expect(q.links.map((l) => l.rotulo), `${rotulo}: ordem do DOM`).toEqual(LINKS.map((l) => l.rotulo))
       } else {
-        // O nome e os três grupos numa fileira só, com os títulos à vista.
+        // O nome e os quatro grupos numa fileira só, com os títulos à vista.
         for (const titulo of q.titulos) {
           expect(titulo.width, `${rotulo}: "${titulo.texto}" largura`).toBeGreaterThan(8)
           expect(titulo.height, `${rotulo}: "${titulo.texto}" altura`).toBeGreaterThan(8)
@@ -482,14 +478,20 @@ describe('a geometria do rodapé público no Chrome (FOOTER-1)', () => {
           expect(titulo.position, rotulo).not.toBe('absolute')
         }
         const topos = q.titulos.map((t) => t.y)
-        expect(Math.max(...topos) - Math.min(...topos), `${rotulo}: os três grupos na mesma fileira`).toBeLessThanOrEqual(1)
+        expect(Math.max(...topos) - Math.min(...topos), `${rotulo}: os quatro grupos na mesma fileira`).toBeLessThanOrEqual(1)
         const lefts = q.titulos.map((t) => t.x)
         expect(lefts, `${rotulo}: grupos lado a lado`).toEqual([...lefts].sort((a, b) => a - b))
-        expect(new Set(lefts.map(Math.round)).size, `${rotulo}: três colunas`).toBe(3)
+        expect(new Set(lefts.map(Math.round)).size, `${rotulo}: quatro colunas`).toBe(COLUNAS_DO_RODAPE.length)
         const nome = q.nome!
-        expect(nome.right, `${rotulo}: o nome antes do primeiro grupo`).toBeLessThanOrEqual(Math.min(...q.links.map((l) => l.x)) + TOLERANCIA)
-        expect(nome.y, `${rotulo}: o nome na fileira dos grupos`).toBeLessThan(q.nav!.bottom)
-        expect(nome.bottom, `${rotulo}: o nome na fileira dos grupos`).toBeGreaterThan(q.nav!.y)
+        if (largura >= 1024) {
+          // O nome à esquerda, na fileira dos grupos.
+          expect(nome.right, `${rotulo}: o nome antes do primeiro grupo`).toBeLessThanOrEqual(Math.min(...q.links.map((l) => l.x)) + TOLERANCIA)
+          expect(nome.y, `${rotulo}: o nome na fileira dos grupos`).toBeLessThan(q.nav!.bottom)
+          expect(nome.bottom, `${rotulo}: o nome na fileira dos grupos`).toBeGreaterThan(q.nav!.y)
+        } else {
+          // Em 768 o nome (~185 px) e os quatro grupos (~565 px) não cabem lado a lado numa área de ~720 px: o nome fica sobre a fileira.
+          expect(nome.bottom, `${rotulo}: o nome sobre a fileira dos grupos`).toBeLessThanOrEqual(q.nav!.y + TOLERANCIA)
+        }
       }
     })
   })

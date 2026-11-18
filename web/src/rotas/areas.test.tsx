@@ -223,7 +223,8 @@ describe('as rotas logadas só abrem com sessão; as públicas, sempre', () => {
       ['/recuperar-acesso', TITULOS.recuperarAcesso, NOMES_DO_H1.recuperarAcesso, null],
       ['/redefinir-senha', TITULOS.redefinirSenha, NOMES_DO_H1.redefinirSenha, null],
       ['/conta-excluida', TITULOS.contaExcluida, NOMES_DO_H1.contaExcluida, null],
-      ['/convite', TITULOS.convite, NOMES_DO_H1.convite, null],
+      // VIS-4 (POL-ACE A-4): a segunda linha da manchete do convite termina em ponto final, como as das outras telas.
+      ['/convite', TITULOS.convite, `${NOMES_DO_H1.convite}.`, null],
       ['/app/conta', TITULOS.conta, 'Conta', 'juliana'],
       ['/app/familia', TITULOS.familia, 'Família', 'juliana'],
     ]

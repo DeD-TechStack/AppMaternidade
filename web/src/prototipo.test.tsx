@@ -69,7 +69,7 @@ describe('cronômetro', () => {
   it('mostra a hora de início e quem começou', async () => {
     await renderizarRotaPronta('/app/sessao')
 
-    expect(screen.getByText('Início às 08:48, por Bruno')).toBeTruthy()
+    expect(screen.getByText('Início às 08:48, por Ícaro')).toBeTruthy()
   })
 
   it('o cartão do Hoje conta os minutos a partir do início', async () => {
@@ -277,7 +277,7 @@ describe('sessões', () => {
   })
 
   it('o cuidador que encerra a sessão de outra pessoa vê só "Fechar"', async () => {
-    await renderizarRotaPronta('/app/hoje', { sessao: 'bruno', ajustarRotina: comSessaoEmAndamento('sono', 72 * MIN, PESSOAS.juliana.id) })
+    await renderizarRotaPronta('/app/hoje', { sessao: 'icaro', ajustarRotina: comSessaoEmAndamento('sono', 72 * MIN, PESSOAS.juliana.id) })
 
     await clicar(botao('Encerrar'))
 

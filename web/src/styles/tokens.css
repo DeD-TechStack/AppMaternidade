@@ -4,13 +4,18 @@
 @theme static {
   /* Duas famílias só: Literata e Outfit (DESIGN.md 2 e 8). As famílias padrão do Tailwind (sans, serif,
      mono) apontam para elas, para nenhuma outra família (nem monospace) chegar ao CSS gerado. */
-  --font-titulo: 'Literata Variable', serif;
+  --fonte-exibicao: 'Literata Variable', serif;
+  --font-titulo: var(--fonte-exibicao);
   --font-texto: 'Outfit Variable', system-ui, sans-serif;
   --font-sans: var(--font-texto);
   --font-serif: var(--font-titulo);
   --font-mono: var(--font-texto);
   --default-font-family: var(--font-texto);
   --default-mono-font-family: var(--font-texto);
+  /* Peso dos títulos: o nível `exibicao` lê --peso-exibicao; titulo-1 a titulo-4 e a marca do cabeçalho leem
+     --peso-titulo. Uma troca de face (FG-2b) muda este bloco e --fonte-exibicao, e mais nada. */
+  --peso-exibicao: 600;
+  --peso-titulo: 600;
 
   /* 1. Paleta (papéis; nomes do tema do Tailwind) */
   --color-*: initial;

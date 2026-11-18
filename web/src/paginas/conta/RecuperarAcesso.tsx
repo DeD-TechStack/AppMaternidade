@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { ArrowRight } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router'
 import { Campo } from '../../componentes/conta/Campos.tsx'
 import { caminhoComVolta, urlDoSite, voltaValida } from '../../componentes/conta/destino.ts'
 import { useEnvio } from '../../componentes/conta/envio.ts'
 import { useFocoNoResumo } from '../../componentes/conta/foco.ts'
 import { MolduraPublica } from '../../componentes/conta/MolduraPublica.tsx'
-import { BOTAO_PRINCIPAL, BOTAO_SECUNDARIO, LINK_ALVO, RegiaoStatus, ResumoErro } from '../../componentes/conta/Partes.tsx'
+import { BOTAO_PRINCIPAL, LINK_ALVO, RegiaoStatus, ResumoErro } from '../../componentes/conta/Partes.tsx'
 import { useDadosConta } from '../../componentes/conta/sessao.tsx'
 import { erroDoEmail } from '../../componentes/conta/validarEmail.ts'
 import { COMUM, MANCHETES, RECUPERAR, TITULOS, textoDoErro } from '../../conteudo/conta.ts'
@@ -66,17 +65,15 @@ export function RecuperarAcesso() {
       frase={RECUPERAR.frase}
       ilustracao="avo-carrinho"
       ligacoes={
-        // Dois níveis: "Entrar" é o botão secundário do sistema (contorno, largura cheia no celular);
-        // "Criar conta" é o link de texto, com seta, logo abaixo.
-        <div className="flex w-full flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-6">
-          <Link to={caminhoComVolta('/entrar', volta)} className={`${BOTAO_SECUNDARIO} w-full sm:w-auto`}>
+        // Como em /entrar: links sublinhados na régua. "Enviar link" é a única ação principal da tela.
+        <>
+          <Link to={caminhoComVolta('/entrar', volta)} className={LINK_ALVO}>
             {RECUPERAR.entrar}
           </Link>
-          <Link to={caminhoComVolta('/criar-conta', volta)} className={`${LINK_ALVO} gap-2`}>
+          <Link to={caminhoComVolta('/criar-conta', volta)} className={LINK_ALVO}>
             {RECUPERAR.criarConta}
-            <ArrowRight size={20} aria-hidden="true" />
           </Link>
-        </div>
+        </>
       }
     >
       <RegiaoStatus mensagem={mensagem} />

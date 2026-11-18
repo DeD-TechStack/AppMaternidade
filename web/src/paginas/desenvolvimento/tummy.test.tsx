@@ -667,7 +667,7 @@ describe('DES-13 14: o histórico de 7 dias', () => {
     const m = mundo()
     await abrir(m)
     expect(textoDoBloco()).toContain('Nenhum tummy time nos últimos 7 dias.')
-    const gravada = sessao({ inicio: em(0, 9, 0), fim: em(0, 9, 12), autor: PESSOAS.bruno.id })
+    const gravada = sessao({ inicio: em(0, 9, 0), fim: em(0, 9, 12), autor: PESSOAS.icaro.id })
     await m.rotina.gravarRegistro({ id: gravada.id, bebeId: ID_BEBE, tipo: 'tummy', inicio: gravada.inicio, fim: gravada.fim, origem: 'ao_vivo' })
     await act(async () => {
       document.dispatchEvent(new Event('visibilitychange'))
@@ -692,8 +692,8 @@ describe('DES-13 15: papéis e erros', () => {
   it('cuidador: encerra a sessão de outra pessoa, não vê Descartar nela e vê Descartar na própria', async () => {
     relogioEm()
     const dela = sessao({ inicio: HOJE.getTime() - 20 * MINUTO, fim: null, autor: PESSOAS.juliana.id })
-    const dele = sessao({ inicio: HOJE.getTime() - 10 * MINUTO, fim: null, autor: PESSOAS.bruno.id })
-    await abrir(mundo({ sessao: 'bruno' }, dela, dele))
+    const dele = sessao({ inicio: HOJE.getTime() - 10 * MINUTO, fim: null, autor: PESSOAS.icaro.id })
+    await abrir(mundo({ sessao: 'icaro' }, dela, dele))
     const cartaoDela = bloco().querySelector<HTMLElement>(`[data-sessao-tummy="${dela.id}"]`)!
     const cartaoDele = bloco().querySelector<HTMLElement>(`[data-sessao-tummy="${dele.id}"]`)!
     expect(within(cartaoDela).getByRole('button', { name: 'Encerrar tummy time de Heloísa' })).toBeTruthy()
@@ -705,13 +705,13 @@ describe('DES-13 15: papéis e erros', () => {
 
   it('cuidador rebaixado a observador com a página aberta: Encerrar dá T-44, os controles somem, T-23 aparece e o foco vai à mensagem', async () => {
     relogioEm()
-    const m = mundo({ sessao: 'bruno' }, sessao({ inicio: HOJE.getTime() - 20 * MINUTO, fim: null }))
+    const m = mundo({ sessao: 'icaro' }, sessao({ inicio: HOJE.getTime() - 20 * MINUTO, fim: null }))
     await abrir(m)
     const familia = await m.conta.detalheFamilia(ID_FAMILIA)
-    const vinculo = familia.ok ? familia.valor.membros.find((membro) => membro.contaId === PESSOAS.bruno.id)!.vinculoId : ''
+    const vinculo = familia.ok ? familia.valor.membros.find((membro) => membro.contaId === PESSOAS.icaro.id)!.vinculoId : ''
     mudarDeSessao(m, 'juliana')
     await m.conta.mudarPapel(vinculo, 'observador')
-    mudarDeSessao(m, 'bruno')
+    mudarDeSessao(m, 'icaro')
 
     await clicar(botao('Encerrar tummy time de Heloísa'))
     const alerta = within(bloco()).getByRole('alert')
@@ -736,7 +736,7 @@ describe('DES-13 15: papéis e erros', () => {
     },
     {
       nome: 'Descartar',
-      sessoes: () => [sessao({ inicio: HOJE.getTime() - 20 * MINUTO, fim: null, autor: PESSOAS.bruno.id })],
+      sessoes: () => [sessao({ inicio: HOJE.getTime() - 20 * MINUTO, fim: null, autor: PESSOAS.icaro.id })],
       agir: () => clicar(botao('Descartar')),
     },
     {
@@ -752,13 +752,13 @@ describe('DES-13 15: papéis e erros', () => {
   for (const caso of ACOES_COM_VINCULO_REVOGADO) {
     it(`vínculo revogado com a página aberta (${caso.nome}): a página relê o contexto (T-56), o bloco some e o foco vai ao h1`, async () => {
       relogioEm()
-      const m = mundo({ sessao: 'bruno' }, ...caso.sessoes())
+      const m = mundo({ sessao: 'icaro' }, ...caso.sessoes())
       await abrir(m)
       const familia = await m.conta.detalheFamilia(ID_FAMILIA)
-      const vinculo = familia.ok ? familia.valor.membros.find((membro) => membro.contaId === PESSOAS.bruno.id)!.vinculoId : ''
+      const vinculo = familia.ok ? familia.valor.membros.find((membro) => membro.contaId === PESSOAS.icaro.id)!.vinculoId : ''
       mudarDeSessao(m, 'juliana')
       await m.conta.revogarVinculo(vinculo)
-      mudarDeSessao(m, 'bruno')
+      mudarDeSessao(m, 'icaro')
 
       await caso.agir()
       await waitFor(() => expect(screen.getByText('Você ainda não faz parte de uma família.')).toBeTruthy())
@@ -1198,15 +1198,15 @@ describe('DES-13 17: sem cobrança e acessibilidade do bloco', () => {
 
 // ---------------------------------------------------------------------------------------------------------------
 describe('DES-13 19: o fail-closed do 39b', () => {
-  it('sessão aberta por Bruno, vista por um cuidador: Encerrar existe e Descartar não; Descartar direto na memória dá 42501, e a tela mostra T-44', async () => {
+  it('sessão aberta por Ícaro, vista por um cuidador: Encerrar existe e Descartar não; Descartar direto na memória dá 42501, e a tela mostra T-44', async () => {
     relogioEm()
-    const dela = sessao({ inicio: HOJE.getTime() - 10 * MINUTO, fim: null, autor: PESSOAS.bruno.id })
-    const m = mundo({ papelDeBruno: 'cuidador', sessao: 'bruno' }, dela)
+    const dela = sessao({ inicio: HOJE.getTime() - 10 * MINUTO, fim: null, autor: PESSOAS.icaro.id })
+    const m = mundo({ papelDeIcaro: 'cuidador', sessao: 'icaro' }, dela)
     await abrir(m)
     expect(talvezBotao('Encerrar tummy time de Heloísa')).not.toBeNull()
-    // Bruno é o autor: Descartar existe para ele; a de outra pessoa não.
+    // Ícaro é o autor: Descartar existe para ele; a de outra pessoa não.
     const alheia = sessao({ inicio: HOJE.getTime() - 20 * MINUTO, fim: null, autor: PESSOAS.juliana.id })
-    const direto = await mundo({ sessao: 'bruno' }, alheia).rotina.excluirRegistro(alheia.id)
+    const direto = await mundo({ sessao: 'icaro' }, alheia).rotina.excluirRegistro(alheia.id)
     expect(!direto.ok && direto.erro.codigo).toBe('42501')
 
     simularFalhaRotina(m.rotina, 'excluirRegistro', 'sem_permissao')
@@ -1540,7 +1540,7 @@ describe('R2: a sobreposição com a sessão em andamento', () => {
 // R3: leitura incompleta nunca vira "vazio".
 describe('R3: a leitura incompleta sem nenhum tummy time', () => {
   const sono = (inicio: number): Registro => ({ ...sessao({ inicio, fim: null }), tipo: 'sono' })
-  // Só estas sessões abertas (a de sono de Bruno, da fixture, sai): o limite de `emAndamento` é 20.
+  // Só estas sessões abertas (a de sono de Ícaro, da fixture, sai): o limite de `emAndamento` é 20.
   const comAbertasDeSono = (quantas: number) =>
     criarMundoDeTeste({
       ajustarRotina: (fixture) => {

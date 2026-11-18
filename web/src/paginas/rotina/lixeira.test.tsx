@@ -8,7 +8,7 @@ import { aguardarCarga, renderizarRotaPronta } from '../../teste/renderizarRota.
 import { criarMundoDeTeste } from '../../teste/rotina.fixture.ts'
 
 // A lixeira (MAT-38b, R38-23), com o relógio falso às 10:00 de 5/11/2026 (hora do aparelho). Os ids são os da
-// fixture de teste: 2 é a fralda de Bruno, 3 é a mamada de Bruno e 4 é o tummy de Carla, de ontem.
+// fixture de teste: 2 é a fralda de Ícaro, 3 é a mamada de Ícaro e 4 é o tummy de Carla, de ontem.
 
 const INSTANTE = new Date('2026-11-05T10:00:00')
 const DIA = 86_400_000
@@ -36,7 +36,7 @@ const excluindo =
   })
 
 const TRES = excluindo({
-  2: { por: PESSOAS.bruno.id, haMs: 3 * DIA },
+  2: { por: PESSOAS.icaro.id, haMs: 3 * DIA },
   3: { por: PESSOAS.juliana.id, haMs: 60 * 60_000 },
   4: { por: PESSOAS.carla.id, haMs: 2 * 60 * 60_000 },
 })
@@ -56,7 +56,7 @@ describe('R38-23: a lista da lixeira', () => {
     expect(mamada.textContent).toContain('excluído por Juliana em 05/11 às 09:00')
     expect(mamada.textContent).toContain('pode ser restaurado até 05/12 às 09:00')
     expect(tummy.textContent).toContain('excluído por Carla em 05/11 às 08:00')
-    expect(fralda.textContent).toContain('excluído por Bruno em 02/11 às 10:00')
+    expect(fralda.textContent).toContain('excluído por Ícaro em 02/11 às 10:00')
     expect(fralda.textContent).toContain('pode ser restaurado até 02/12 às 10:00')
   })
 
@@ -78,7 +78,7 @@ describe('R38-23: a lista da lixeira', () => {
   })
 
   it('o que passou de 30 dias já não aparece', async () => {
-    await renderizarRotaPronta('/app/lixeira', { ajustarRotina: excluindo({ 2: { por: PESSOAS.bruno.id, haMs: 31 * DIA }, 3: { por: PESSOAS.bruno.id, haMs: 29 * DIA } }) })
+    await renderizarRotaPronta('/app/lixeira', { ajustarRotina: excluindo({ 2: { por: PESSOAS.icaro.id, haMs: 31 * DIA }, 3: { por: PESSOAS.icaro.id, haMs: 29 * DIA } }) })
 
     expect(idsDaLista()).toEqual([id(3)])
   })
@@ -129,7 +129,7 @@ describe('R38-23: quem pode restaurar', () => {
   })
 
   it('o cuidador restaura só o que ele mesmo fez', async () => {
-    await renderizarRotaPronta('/app/lixeira', { ajustarRotina: TRES, sessao: 'bruno' })
+    await renderizarRotaPronta('/app/lixeira', { ajustarRotina: TRES, sessao: 'icaro' })
 
     expect(idsDaLista()).toEqual([id(3), id(4), id(2)])
     expect(within(itens()[0]).getByRole('button', { name: /^Restaurar / })).toBeTruthy()
@@ -138,7 +138,7 @@ describe('R38-23: quem pode restaurar', () => {
   })
 
   it('o observador vê a lista e nenhum botão', async () => {
-    await renderizarRotaPronta('/app/lixeira', { ajustarRotina: TRES, papelDeBruno: 'observador', sessao: 'bruno' })
+    await renderizarRotaPronta('/app/lixeira', { ajustarRotina: TRES, papelDeIcaro: 'observador', sessao: 'icaro' })
 
     expect(itens()).toHaveLength(3)
     expect(screen.queryByRole('button', { name: /Restaurar/ })).toBeNull()

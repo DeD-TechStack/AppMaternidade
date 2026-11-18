@@ -183,6 +183,14 @@ function lerPortaDoChrome(arquivo) {
   if (controle === 'porta-sempre-ocupada' || (controle === 'porta-ocupada' && leiturasDaPorta <= 3)) {
     throw Object.assign(new Error('EBUSY: resource busy or locked, open ' + arquivo), { code: 'EBUSY' })
   }
+  const incompleta = /^porta-ocupada-incompleta-(EBUSY|EPERM|EACCES)$/.exec(controle || '')
+  if (incompleta) {
+    // Primeira leitura presa com o código pedido; as seguintes veem o arquivo incompleto (1 linha).
+    if (leiturasDaPorta === 1) {
+      throw Object.assign(new Error(incompleta[1] + ': operation not permitted, open ' + arquivo), { code: incompleta[1] })
+    }
+    return '12345\n'
+  }
   return readFileSync(arquivo, 'utf8')
 }
 
@@ -231,7 +239,6 @@ try {
         const linhas = conteudo.split(/\r?\n/).filter(Boolean)
         const primeira = (linhas[0] || '').trim()
         if (linhas.length >= 2 && /^[0-9]+$/.test(primeira)) porta = primeira
-        else ultimoCodigo = null
       }
     }
     if (porta === null) await esperar(100)
@@ -424,6 +431,10 @@ function montarPagina(html: string, tema: Tema, pasta: string, script?: string):
  *   e o teste TEM de continuar verde.
  * - `porta-sempre-ocupada`: lido no script de foco; toda leitura do `DevToolsActivePort` é um EBUSY simulado e o
  *   teste TEM de ficar vermelho, com a mensagem citando `DevToolsActivePort` e `EBUSY`.
+ * - `porta-ocupada-incompleta-EBUSY`, `porta-ocupada-incompleta-EPERM` e `porta-ocupada-incompleta-EACCES`: lidos no
+ *   script de foco; a primeira leitura do `DevToolsActivePort` lança o código do nome e as seguintes devolvem
+ *   `12345\n` (arquivo incompleto, 1 linha). O teste TEM de ficar vermelho, com a mensagem citando
+ *   `DevToolsActivePort` e esse código (o código do erro não se perde nas leituras incompletas).
  *
  * Cada remoção tenta por ~5 s no máximo (6 tentativas, espera linear de 250 ms vezes a tentativa), para um perfil
  * travado não custar minutos. O aviso sai por `console.warn` e também direto no descritor 2: o Vitest captura o

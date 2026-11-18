@@ -225,7 +225,7 @@
 }
 
 /* No celular o cartão do convite ocupa a coluna inteira da pilha e o ícone fica em cima do texto:
-   nenhuma palavra ("Bruno", "Responsável", "convidado") parte ao meio. */
+   nenhuma palavra ("Ícaro", "Responsável", "convidado") parte ao meio. */
 @media (max-width: 599px) {
   .pd-pilha > .pd-em-fluxo.cm-flutuante {
     width: 100%;
@@ -281,7 +281,7 @@
    o @container abaixo), não pela janela. A largura do cartão vem de fora (célula, coluna, `width`),
    nunca do conteúdo. Palavra que não cabe quebra em vez de vazar, mas só como último recurso:
    `break-word` (e não `anywhere`) mantém a palavra mais longa como largura mínima, então uma coluna
-   de texto ao lado de um ícone nunca encolhe a ponto de partir "Bruno" ao meio. */
+   de texto ao lado de um ícone nunca encolhe a ponto de partir "Ícaro" ao meio. */
 .pd-cartao {
   container-type: inline-size;
   overflow-wrap: break-word;

@@ -62,17 +62,19 @@ describe('telas de acesso: cena e desenho', () => {
 })
 
 describe('/recuperar-acesso: hierarquia dos links', () => {
-  it('"Entrar" é o botão secundário do sistema e "Criar conta" o link de texto com seta, nessa ordem', async () => {
+  // VIS-4 (A-2): os dois são links sublinhados na régua, como em /entrar; "Enviar link" é a única ação principal.
+  it('"Entrar" e "Criar conta" são links de texto (alvo-toque, sem pílula nem seta), nessa ordem', async () => {
     renderizarComDados('/recuperar-acesso')
     await screen.findByRole('button', { name: 'Enviar link' })
 
     const entrar = within(document.querySelector('main')!).getByRole('link', { name: 'Entrar' })
     const criar = within(document.querySelector('main')!).getByRole('link', { name: 'Criar conta' })
-    expect(entrar.classList.contains('cm-botao')).toBe(true)
-    expect(entrar.classList.contains('cm-botao-contorno')).toBe(true)
-    expect(criar.classList.contains('cm-botao')).toBe(false)
-    expect(criar.classList.contains('alvo-toque')).toBe(true)
-    expect(criar.querySelector('svg[aria-hidden="true"]')).not.toBeNull()
+    for (const link of [entrar, criar]) {
+      expect(link.classList.contains('cm-botao')).toBe(false)
+      expect(link.classList.contains('cm-botao-contorno')).toBe(false)
+      expect(link.classList.contains('alvo-toque')).toBe(true)
+      expect(link.querySelector('svg')).toBeNull()
+    }
     expect(Boolean(entrar.compareDocumentPosition(criar) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true)
   })
 })

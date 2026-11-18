@@ -15,7 +15,7 @@ function aviso(extra: Record<string, unknown> = {}) {
     criada_em: INSTANTE,
     destaque_ate: null,
     autor: 'nome',
-    autor_nome: 'Bruno',
+    autor_nome: 'Ícaro',
     familia_nome: 'Família Exemplo',
     familia_fuso: 'America/Sao_Paulo',
     ...extra,
@@ -137,7 +137,7 @@ describe('RF14:RF-09 o autor de cada aviso', () => {
         aviso({ id: 'a2000000-0000-7000-8000-000000000003', autor: 'saiu', autor_nome: null, destaque_ate: INSTANTE }),
       ]),
     }).dados.lerEstado()
-    expect(lido.ok && lido.valor.avisos.map((a) => a.autor)).toEqual([{ tipo: 'nome', nome: 'Bruno' }, { tipo: 'removido' }, { tipo: 'saiu' }])
+    expect(lido.ok && lido.valor.avisos.map((a) => a.autor)).toEqual([{ tipo: 'nome', nome: 'Ícaro' }, { tipo: 'removido' }, { tipo: 'saiu' }])
     expect(lido.ok && lido.valor.avisos[0]).toMatchObject({ familiaNome: 'Família Exemplo', familiaFuso: 'America/Sao_Paulo', destaqueAte: null })
     expect(lido.ok && lido.valor.avisos[2].destaqueAte).toBe(INSTANTE)
   })

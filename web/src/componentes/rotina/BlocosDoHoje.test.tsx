@@ -12,14 +12,14 @@ const fuso = 'America/Sao_Paulo'
 
 describe('R9: DesdeUltimoRegistro encaixa a marca de envio no ItemRegistro', () => {
   it('R9: sem `marcaDe`, nenhum item tem o span data-marca-envio', () => {
-    const { container } = render(<DesdeUltimoRegistro marcoEm={Date.now()} registros={registros} fuso={fuso} autorDe={() => 'Bruno'} />)
+    const { container } = render(<DesdeUltimoRegistro marcoEm={Date.now()} registros={registros} fuso={fuso} autorDe={() => 'Ícaro'} />)
     expect(container.querySelectorAll('[data-registro]')).toHaveLength(3)
     expect(container.querySelector('[data-marca-envio]')).toBeNull()
   })
 
   it('R9: com `marcaDe`, cada item mostra a marca dele no span, logo depois da hora', () => {
     const { container } = render(
-      <DesdeUltimoRegistro marcoEm={Date.now()} registros={registros} fuso={fuso} autorDe={() => 'Bruno'} marcaDe={(r) => <b>{`marca ${r.id.slice(-3)}`}</b>} />,
+      <DesdeUltimoRegistro marcoEm={Date.now()} registros={registros} fuso={fuso} autorDe={() => 'Ícaro'} marcaDe={(r) => <b>{`marca ${r.id.slice(-3)}`}</b>} />,
     )
     const itens = [...container.querySelectorAll('[data-registro]')]
     expect(itens).toHaveLength(3)
@@ -33,7 +33,7 @@ describe('R9: DesdeUltimoRegistro encaixa a marca de envio no ItemRegistro', () 
 
   it('R9: `marcaDe` que devolve nulo ou nada não cria o span', () => {
     const { container } = render(
-      <DesdeUltimoRegistro marcoEm={Date.now()} registros={registros} fuso={fuso} autorDe={() => 'Bruno'} marcaDe={() => null} />,
+      <DesdeUltimoRegistro marcoEm={Date.now()} registros={registros} fuso={fuso} autorDe={() => 'Ícaro'} marcaDe={() => null} />,
     )
     expect(container.querySelector('[data-marca-envio]')).toBeNull()
   })
@@ -45,7 +45,7 @@ describe('R9: DesdeUltimoRegistro encaixa a marca de envio no ItemRegistro', () 
         marcoEm={Date.now()}
         registros={registros}
         fuso={fuso}
-        autorDe={() => 'Bruno'}
+        autorDe={() => 'Ícaro'}
         marcaDe={(r) => (r.id === primeiro.id ? <i>pendente</i> : undefined)}
       />,
     )

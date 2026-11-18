@@ -11,7 +11,7 @@ import { criarRotas } from '../rotas.tsx'
 // (`conta.demonstracao.ts`, que tem os ids do seed local e os nomes de exemplo de Daniel).
 export const PESSOAS = {
   juliana: { id: PESSOAS_DEMONSTRACAO.responsavel.id, email: 'juliana@exemplo.invalid', nome: 'Juliana' },
-  bruno: PESSOAS_DEMONSTRACAO.bruno,
+  icaro: PESSOAS_DEMONSTRACAO.icaro,
   carla: PESSOAS_DEMONSTRACAO.carla,
   davi: PESSOAS_DEMONSTRACAO.davi,
 } as const

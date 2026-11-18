@@ -33,11 +33,11 @@ describe('LOC-02: prazo de acesso e família fictícia', () => {
     expect(texto).not.toMatch(/respons[aá]vel/i)
   })
 
-  it('D04: Bruno é Responsável nas duas famílias de exemplo', () => {
+  it('D04: Ícaro é Responsável nas duas famílias de exemplo', () => {
     expect(COMO_FUNCIONA_DESTAQUE.convite.papel).toMatch(/^Responsável\b/)
-    expect(pessoa('Bruno').papel).toBe('Responsável')
+    expect(pessoa('Ícaro').papel).toBe('Responsável')
     const exemplo = bloco('Convite com papel').exemplo
-    expect(exemplo.quem).toBe('Bruno')
+    expect(exemplo.quem).toBe('Ícaro')
     expect(exemplo.oQue).toMatch(/como responsável/)
     expect(exemplo.oQue).not.toMatch(/cuidador/i)
   })
@@ -66,8 +66,8 @@ describe('LOC-02: prazo de acesso e família fictícia', () => {
     expect(CUIDADO_DESTAQUE.parar.textos[0]).toMatch(/na hora/)
   })
 
-  it('D07: o autor da soneca vem como "por Bruno"', () => {
-    expect(COMO_FUNCIONA_DESTAQUE.desdeQueSaiu.andamento.detalhe).toBe('Começou às 14:05, por Bruno')
+  it('D07: o autor da soneca vem como "por Ícaro"', () => {
+    expect(COMO_FUNCIONA_DESTAQUE.desdeQueSaiu.andamento.detalhe).toBe('Começou às 14:05, por Ícaro')
   })
 
   it('D01: o que o site já faz fica no presente (fora dos textos da NEW-B)', () => {
