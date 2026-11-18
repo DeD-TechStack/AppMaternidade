@@ -159,6 +159,8 @@ insert into public.registros (id, familia_id, bebe_id, tipo, inicio, fuso, deslo
   (pg_temp.v7(63), pg_temp.i(60), pg_temp.i(61), 'sono', now(), 'America/Sao_Paulo', -180, pg_temp.i(2));
 insert into public.notas_cuidado (id, familia_id, bebe_id, texto, criado_por) values
   (pg_temp.v7(64), pg_temp.i(60), pg_temp.i(61), 'Nota de cuidado da fixture', pg_temp.i(2));
+insert into public.avisos_entre_cuidadores (conta_id, ligados, vistos_ate) values
+  (pg_temp.i(2), true, '2026-01-02T00:00:00Z');
 
 -- A fixture cobre cada tabela de cuidado que existe: se alguma ficou sem linha nova, o nome dela sai aqui.
 select is(

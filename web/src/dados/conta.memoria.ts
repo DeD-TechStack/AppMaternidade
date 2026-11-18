@@ -192,6 +192,20 @@ export function registrarFonteDeExportacao(conta: object, fonte: FonteDeExportac
   fontesDeExportacao.set(origensDaConta.get(conta) ?? conta, fonte)
 }
 
+/**
+ * Quem leva a preferência de avisos e o "visto até" da conta para a exportação (RF14:RF-15). A memória dos
+ * avisos se registra aqui com `registrarFonteDeAvisos(conta, ...)`; sem ela, a conta exporta desligado e
+ * sem "visto até". O "visto até" vem como instante ISO, ou `null`.
+ */
+type FonteDeAvisos = (contaId: string) => { ligados: boolean; vistosAte: string | null }
+
+const SEM_AVISOS: FonteDeAvisos = () => ({ ligados: false, vistosAte: null })
+const fontesDeAvisos = new WeakMap<object, FonteDeAvisos>()
+
+export function registrarFonteDeAvisos(conta: object, fonte: FonteDeAvisos): void {
+  fontesDeAvisos.set(conta, fonte)
+}
+
 const compararTexto = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
 
 /** Registros no formato do JSON do banco: chaves em snake_case, por `recebido_em` e depois id. */
@@ -873,6 +887,10 @@ export function criarDadosContaMemoria(fixture: FixtureConta, opcoes: OpcoesMemo
       // O que a conta criou onde não é responsável ativa; onde é, já está dentro de familias[].
       registros: registrosEmJson(registrosVivos().filter((r) => r.criadoPor === conta.id && !idsDasFamilias.has(r.familiaId)), autor),
       notas: notasEmJson(notasVivas().filter((n) => n.criadoPor === conta.id && !idsDasFamilias.has(n.familiaId)), autor),
+      avisos: (() => {
+        const { ligados, vistosAte } = (fontesDeAvisos.get(dados) ?? SEM_AVISOS)(conta.id)
+        return { ligados, vistos_ate: paraJson(vistosAte) }
+      })(),
     })
   }
 
