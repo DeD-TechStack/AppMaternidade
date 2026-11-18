@@ -22,8 +22,8 @@
   --quadro-calha: clamp(20px, calc(20px + (100vw - 390px) * 12 / 1050), 32px);
   --medio: 880px;
   --leitura: 640px;
-  --texto-exibicao-tamanho: clamp(2.5rem, calc(2.5rem + (100vw - 390px) * 24 / 1050), 4rem);
-  --texto-exibicao-entrelinha: clamp(2.75rem, calc(2.75rem + (100vw - 390px) * 24 / 1050), 4.25rem);
+  --texto-exibicao-tamanho: clamp(2.75rem, calc(2.75rem + (100vw - 390px) * 36 / 1050), 5rem);
+  --texto-exibicao-entrelinha: clamp(3rem, calc(3rem + (100vw - 390px) * 36 / 1050), 5.25rem);
   --texto-titulo-1-tamanho: clamp(2.125rem, calc(2.125rem + (100vw - 390px) * 14 / 1050), 3rem);
   --texto-titulo-1-entrelinha: clamp(2.5rem, calc(2.5rem + (100vw - 390px) * 14 / 1050), 3.375rem);
   --texto-titulo-2-tamanho: clamp(1.75rem, calc(1.75rem + (100vw - 390px) * 8 / 1050), 2.25rem);

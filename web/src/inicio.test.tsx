@@ -400,7 +400,7 @@ describe('Início: perguntas', () => {
     const perguntas: Array<[string, string]> = [
       [
         'Quanto custa?',
-        'Hoje o site é uma demonstração gratuita. O preço, se houver, ainda não foi definido, e nunca haverá anúncio feito com os dados da sua rotina.',
+        'O preço, se houver, ainda não foi definido, e nunca haverá anúncio feito com os dados da sua rotina.',
       ],
       [
         'Quem vê os registros do bebê?',

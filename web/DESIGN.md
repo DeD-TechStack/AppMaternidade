@@ -18,14 +18,14 @@ colors:
 typography:
   exibicao-390:
     fontFamily: Literata
-    fontSize: 40px
+    fontSize: 44px
     fontWeight: 600
-    lineHeight: 44px
+    lineHeight: 48px
   exibicao-1440:
     fontFamily: Literata
-    fontSize: 64px
+    fontSize: 80px
     fontWeight: 600
-    lineHeight: 68px
+    lineHeight: 84px
   titulo-1-390:
     fontFamily: Literata
     fontSize: 34px
@@ -210,9 +210,9 @@ Nove níveis. Cada nível tem dois pares de tamanho e entrelinha, um para 390 px
 
 | Nível | 390 (tamanho/entrelinha) | 1440 | Família e peso | Uso (P4 da SPEC H) |
 |---|---|---|---|---|
-| `exibicao` | 40/44 | 64/68 | Literata 600 | `h1` do herói do Início |
-| `titulo-1` | 34/40 | 48/54 | Literata 600 | `h1` das outras páginas e telas |
-| `titulo-2` | 28/34 | 36/42 | Literata 600 | títulos de seção (`h2`) e citação grande (itálica) |
+| `exibicao` | 44/48 | 80/84 | Literata 600 | `h1` de toda página de conteúdo (Início, Como funciona, Cuidado compartilhado, Desenvolvimento, textos de leitura e 404) e da `/sistema` |
+| `titulo-1` | 34/40 | 48/54 | Literata 600 | `h1` das telas de acesso e das telas logadas; títulos de seção (`h2`) das páginas de conteúdo |
+| `titulo-2` | 28/34 | 36/42 | Literata 600 | títulos de bloco menores e citação grande (itálica) |
 | `titulo-3` | 22/28 | 28/34 | Literata 600 | `h3` |
 | `titulo-4` | 19/25 | 22/28 | Literata 600 | títulos de cartão e de passo |
 | `abertura` | 19/28 | 22/32 | Outfit 400 | texto de abertura e depoimento (itálico) |
@@ -220,7 +220,7 @@ Nove níveis. Cada nível tem dois pares de tamanho e entrelinha, um para 390 px
 | `pequeno` | 15/22 | 15/22 | Outfit 400 | legendas, etiquetas, rótulos |
 | `sobretitulo` | 15/20 | 15/20 | Outfit 600 | sobretítulo, sem caixa alta |
 
-Razão entre os títulos de ≈ 1,25 no desktop e ≈ 1,2 no celular (as referências sobem por 1,2 a 1,25). A razão exibição/corpo é 3,6 no desktop e 2,4 no celular, entre o Pato Jack e a Good Inside do herói (3,0) e o estudo de caso da Good Inside (4,8). O corpo fica em 18/28 e 17/26, acima das referências (15 a 16 px), por ser lido de madrugada com o bebê no colo (P1). `sobretitulo` e `pequeno` ficam em 15 px porque a regra "nada menor que 15 px" vale para o site inteiro. Linha de leitura de 60 a 80 caracteres no desktop.
+Razão entre os títulos de ≈ 1,25 no desktop e ≈ 1,2 no celular (as referências sobem por 1,2 a 1,25). A razão exibição/corpo é 4,4 no desktop (80/18) e 2,6 no celular (44/17), entre o herói do Pato Jack e da Good Inside (3,0) e o estudo de caso da Good Inside (4,8): o `h1` das páginas de conteúdo é o maior tipo da tela e fica sozinho (no mínimo 72 px em 1440 e 40 px em 390). O corpo fica em 18/28 e 17/26, acima das referências (15 a 16 px), por ser lido de madrugada com o bebê no colo (P1). `sobretitulo` e `pequeno` ficam em 15 px porque a regra "nada menor que 15 px" vale para o site inteiro. Linha de leitura de 60 a 80 caracteres no desktop.
 
 O espaçamento entre letras (tracking) dos títulos continua o do código até a aplicação (H-3): `h1` −0,02 em, `h2` −0,015 em e `h3` −0,01 em (`web/src/styles/site.css:52,59,66`); o resto, 0.
 
@@ -413,7 +413,7 @@ Cada item abaixo descreve o que o código faz hoje, com o arquivo e a linha. A d
 - Faça: rótulos completos para leitor de tela e texto ampliável até 200% sem corte.
 - Faça: todo vão e todo tamanho de letra pelo token do papel ou do nível (Layout e Typography).
 - Faça: um painel de mel por dobra, com algo real dentro (cena ou interface), e papel respirando entre os painéis.
-- Faça: a chamada principal sempre como botão; a ênfase de um título é a segunda linha inteira em itálico.
+- Faça: a chamada principal sempre como botão; no máximo uma ênfase em itálico por página, só na linha de assinatura (a segunda linha inteira do `h1`, ou o subtítulo logo abaixo dele); os demais títulos ficam em prumo.
 - Faça: nenhuma cor fora das doze do `tokens.css`; sombra, gradiente e filtro só pelas variáveis de Elevation & Depth.
 - Faça: rolagem horizontal nenhuma em 390, 768, 1024 e 1440 px nem com zoom de 200%; contraste AA; foco visível; alvos de 44 px ou mais (56 px na barra Registrar); `prefers-reduced-motion` respeitado.
 - Não faça: linguagem de cobrança. Nada de "atrasado", metas, pontos ou rankings.
