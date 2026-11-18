@@ -779,11 +779,25 @@
   /* Abaixo de 768 o desenho é livre dentro do teto de 420 px (spec §3.8): os 13 links são uma lista só, em três
      colunas (5 linhas de 44 px), lidos coluna a coluna na ordem dos grupos (Produto, Conta, Ajuda, Legal). Os
      títulos dos grupos ficam só para o leitor de tela (sr-only). Um rótulo mais largo que a coluna quebra em duas
-     linhas dentro da caixa de 44 px, e nunca passa da coluna (também com a fonte a 200 %). */
+     linhas dentro da caixa de 44 px, e nunca passa da coluna (também com a fonte a 200 %). As colunas não são
+     terços iguais: dividem a largura na proporção da palavra mais longa de cada uma (12 : 8 : 8, de ~122, ~82 e
+     ~79 px), então a menor tem folga sobre a palavra a 100 % ("Desenvolvimento" cabe inteira, sem quebra no meio)
+     e, por serem `fr` com mínimo 0, encolhem junto com a janela a 200 %, sem alargar o rodapé. Os grupos e as listas
+     viram `contents` para os 13 links serem as células de uma grade só, em 5 fileiras, lida coluna a coluna. */
   .cm-rodape-colunas {
     position: relative;
-    column-count: 3;
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(5, auto);
+    grid-template-columns: minmax(0, 12fr) minmax(0, 8fr) minmax(0, 8fr);
     column-gap: var(--espaco-junto);
+  }
+
+  @media (max-width: 767.98px) {
+    .cm-rodape-grupo,
+    .cm-rodape-lista {
+      display: contents;
+    }
   }
 
   .cm-rodape-titulo {
@@ -812,7 +826,9 @@
     list-style: none;
   }
 
+  /* `min-width: 0`: a célula da grade (abaixo de 768) pode ficar mais estreita que o texto e deixa o link quebrar. */
   .cm-rodape-lista > li {
+    min-width: 0;
     break-inside: avoid;
   }
 
@@ -821,10 +837,13 @@
     align-items: center;
     min-height: 44px;
     min-width: var(--alvo-toque);
-    /* Uma palavra mais larga que a coluna quebra (com hífen, quando o navegador tem o dicionário), nunca passa
-       por cima da coluna do lado (fonte a 200 %). */
+    /* Sem hífen e sem quebra no meio da palavra a 100 %: o rótulo de várias palavras quebra só entre elas. Só uma
+       palavra mais larga que a própria coluna (texto a 200 %) quebra, em vez de passar da janela. `anywhere` (e não
+       `break-word`) também baixa o `min-content` do link, que é um flex: com `break-word` a palavra mais longa seguia
+       sendo o mínimo do texto e passava da coluna. A largura da coluna (`fr` com mínimo 0) é que decide a quebra. */
     overflow-wrap: anywhere;
-    hyphens: auto;
+    word-break: normal;
+    hyphens: manual;
     color: inherit;
     text-decoration-line: underline;
     text-decoration-color: transparent;
