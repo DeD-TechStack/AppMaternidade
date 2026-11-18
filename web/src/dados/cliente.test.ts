@@ -184,6 +184,18 @@ describe('RF-01: um cliente só por página', () => {
     expect(autenticacao.detectSessionInUrl).toBe(true)
   })
 
+  it('I-S3: o cliente usa o fluxo PKCE e mantém as três opções de sessão', () => {
+    const fetchProibido = proibirARede()
+    vi.mocked(createClient).mockClear()
+    definirBanco('https://pkce.invalid', 'chave-pkce')
+
+    expect(obterCliente()).not.toBeNull()
+    expect(createClient).toHaveBeenCalledTimes(1)
+    const opcoes = vi.mocked(createClient).mock.calls[0][2]
+    expect(opcoes?.auth).toMatchObject({ flowType: 'pkce', persistSession: true, autoRefreshToken: true, detectSessionInUrl: true })
+    expect(fetchProibido).not.toHaveBeenCalled()
+  })
+
   it('criarDadosConta devolve a mesma instância durante a vida da página, em cada modo', () => {
     proibirARede()
 

@@ -203,7 +203,7 @@ describe('compositor: o bloco é texto comum, com os limites de hoje (RF-12)', (
     const completo = `${'x'.repeat(1990)}\n\n${BLOCO_DO_SONO}`
     expect(campoDaResposta().value).toBe(completo)
     expect(completo.length).toBeGreaterThan(2000)
-    expect(screen.getByText('A resposta precisa ter de 1 a 2000 caracteres.')).toBeTruthy()
+    expect(screen.getByText('A resposta precisa ter de 1 a 2.000 caracteres.')).toBeTruthy()
     expect(previaPronta()).toBe(false)
     // O bloco é texto da pessoa: apagar a linha do sono volta a caber.
     digitar(campoDaResposta(), `${'x'.repeat(1970)}\n\nResumo da rotina`)
