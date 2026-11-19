@@ -3,7 +3,8 @@ import { Link, useLocation, useParams, useSearchParams } from 'react-router'
 import { ChevronLeft } from 'lucide-react'
 import { AvisoDaTela } from '../../componentes/app/AvisoDaTela.tsx'
 import { Pilha, QuadroLayout, Secao } from '../../componentes/base/layout/index.ts'
-import { AvisoDeErro } from '../../componentes/rotina/AvisoDeErro.tsx'
+import { Carregando } from '../../componentes/estado/Carregando.tsx'
+import { ErroDaRotina } from '../../componentes/estado/ErroDaRotina.tsx'
 import { FormularioRegistro } from '../../componentes/rotina/FormularioRegistro.tsx'
 import { TituloRotina } from '../../componentes/rotina/TituloRotina.tsx'
 import { useRotina } from '../../componentes/rotina/contexto.ts'
@@ -128,7 +129,7 @@ export function RegistroEditar() {
     return (
       <Tela titulo={titulo} linha={ativo.bebe.nome}>
         <div className="max-w-md">
-          <AvisoDeErro erro={leitura.erro} papel={ativo.papel} aoTentarDeNovo={leitura.recarregar} />
+          <ErroDaRotina erro={leitura.erro} papel={ativo.papel} aoTentarDeNovo={leitura.recarregar} />
         </div>
       </Tela>
     )
@@ -136,7 +137,7 @@ export function RegistroEditar() {
   if (registro === null) {
     return (
       <Tela titulo={titulo} linha={ativo.bebe.nome}>
-        <p aria-busy="true">{COMUM.carregando}</p>
+        <Carregando texto={COMUM.carregando} />
       </Tela>
     )
   }
@@ -148,7 +149,7 @@ export function RegistroEditar() {
           desmontar o formulário nem apagar o que a pessoa digitou (R8). */}
       {leitura.erro ? (
         <div className="max-w-md" data-releitura-falhou="">
-          <AvisoDeErro erro={leitura.erro} papel={dono.papel} aoTentarDeNovo={leitura.recarregar} />
+          <ErroDaRotina erro={leitura.erro} papel={dono.papel} aoTentarDeNovo={leitura.recarregar} />
         </div>
       ) : null}
       {registro.excluidoEm !== null ? (

@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { Info } from 'lucide-react'
 import { Link, Navigate, useSearchParams } from 'react-router'
 import { AreaDoLoginSocial } from '../../componentes/conta/AreaDoLoginSocial.tsx'
 import { Campo, CampoSenha } from '../../componentes/conta/Campos.tsx'
@@ -7,6 +6,7 @@ import { caminhoComVolta, destinoDepoisDeEntrar, urlDoSite, voltaValida } from '
 import { useEnvio } from '../../componentes/conta/envio.ts'
 import { useFocoNoResumo } from '../../componentes/conta/foco.ts'
 import { fusoDoAparelho } from '../../componentes/conta/fusos.ts'
+import { NOME_DA_CONTA_MAX } from '../../componentes/conta/limitesDeNome.ts'
 import { MolduraPublica } from '../../componentes/conta/MolduraPublica.tsx'
 import { BOTAO_PRINCIPAL, Carregando, LINK_ALVO, RegiaoStatus, ResumoErro } from '../../componentes/conta/Partes.tsx'
 import { useDadosConta, useSessao } from '../../componentes/conta/sessao.tsx'
@@ -63,8 +63,8 @@ export function CriarConta() {
     const nomeLimpo = nome.trim()
     const emailLimpo = email.trim()
     const retorno = urlDoSite(caminhoComVolta('entrar', volta))
-    setConfirmacao(null)
     void enviar({
+      aoComecar: () => setConfirmacao(null),
       escrever: () => dados.criarUsuario(emailLimpo, senha, nomeLimpo, retorno),
       aoSucesso: async (criado) => {
         if (!criado) return
@@ -88,7 +88,6 @@ export function CriarConta() {
       manchete={MANCHETES.criarConta}
       frase={CRIAR_CONTA.frase}
       ocupado={carregando}
-      ilustracao="maos-celular"
       ligacoes={
         <>
           <span>{CRIAR_CONTA.jaTemConta}</span>
@@ -98,15 +97,6 @@ export function CriarConta() {
         </>
       }
     >
-      {comBanco ? (
-        <p
-          data-aviso="banco-de-demonstracao"
-          className="cm-pequeno flex items-start gap-3 rounded-campo bg-[var(--cor-papel-fundo)] px-4 py-3"
-        >
-          <Info size={20} aria-hidden="true" className="mt-0.5 shrink-0" />
-          <span>{AVISO_BANCO_DEMONSTRACAO}</span>
-        </p>
-      ) : null}
       <RegiaoStatus mensagem={confirmacao} />
       <AreaDoLoginSocial />
       {carregando ? (
@@ -137,6 +127,7 @@ export function CriarConta() {
           <Campo
             rotulo={COMUM.rotuloNome}
             ajuda={COMUM.ajudaNome}
+            maxLength={NOME_DA_CONTA_MAX}
             autoComplete="name"
             valor={nome}
             aoMudar={(valor) => {
@@ -173,6 +164,12 @@ export function CriarConta() {
             refEntrada={senhaRef}
             obrigatorio
           />
+          {/* O aviso do banco de teste vem depois dos campos, junto dos termos, e não acima do primeiro campo (cartão COPY_criar-conta). */}
+          {comBanco ? (
+            <p data-aviso="banco-de-demonstracao" className="cm-pequeno">
+              {AVISO_BANCO_DEMONSTRACAO}
+            </p>
+          ) : null}
           <div>
             <p className="cm-pequeno text-[var(--cor-texto-2)]">{CRIAR_CONTA.termos.frase}</p>
             <ul className="m-0 flex list-none flex-wrap gap-x-5 p-0">

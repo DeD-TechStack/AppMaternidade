@@ -56,7 +56,7 @@ export function ItemRegistro({ registro, fuso, autor, marca, para, agora }: Prop
             texto
           )}
         </p>
-        <p className="text-pequeno text-(--cor-texto-2)">{SESSOES.porAutor(autor)}</p>
+        <p className="text-pequeno text-(--cor-texto-2) wrap-anywhere">{SESSOES.porAutor(autor)}</p>
       </div>
       <div className="flex shrink-0 items-center gap-2 text-pequeno text-(--cor-texto-2)">
         <span className="whitespace-nowrap tabular-nums">{hora}</span>

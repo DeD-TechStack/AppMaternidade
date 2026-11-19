@@ -1,8 +1,10 @@
 import { useLocation } from 'react-router'
 import { Cartao } from '../../componentes/base/layout/Cartao.tsx'
 import { Pilha } from '../../componentes/base/layout/Pilha.tsx'
-import { ErroDeLeitura, Esqueleto } from '../../componentes/comunidade/Avisos.tsx'
 import { useDadosComunidade } from '../../componentes/comunidade/dados.ts'
+import { Carregando } from '../../componentes/estado/Carregando.tsx'
+import { ErroDaComunidade } from '../../componentes/estado/ErroDaComunidade.tsx'
+import { PainelVazio } from '../../componentes/estado/PainelVazio.tsx'
 import { Faixa } from '../../componentes/comunidade/Faixa.tsx'
 import { Quadro, TituloDaTela } from '../../componentes/comunidade/Quadro.tsx'
 import { Status } from '../../componentes/comunidade/Status.tsx'
@@ -53,9 +55,9 @@ export function MinhasDenuncias() {
       cabeca={
         <>
           <Status mensagem={textoDaPassagemComunidade(location.state)} />
-          {leitura.esqueleto ? <Esqueleto /> : null}
-          {estado.fase === 'erro' ? <ErroDeLeitura erro={estado.erro} aoTentarDeNovo={() => void leitura.recarregar()} /> : null}
-          {estado.fase === 'pronto' && estado.valor.denuncias.length === 0 ? <p>{TX.tx19}</p> : null}
+          {estado.fase === 'carregando' ? <Carregando linhas={3} /> : null}
+          {estado.fase === 'erro' ? <ErroDaComunidade erro={estado.erro} aoTentarDeNovo={() => void leitura.recarregar()} /> : null}
+          {estado.fase === 'pronto' && estado.valor.denuncias.length === 0 ? <PainelVazio texto={TX.tx19} /> : null}
         </>
       }
     >

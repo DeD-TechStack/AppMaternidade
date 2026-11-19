@@ -217,7 +217,7 @@ describe('R38-12: a atualização', () => {
     await aguardarCarga()
 
     expect(screen.getByText('Nenhuma sessão em andamento.')).toBeTruthy()
-    expect(screen.queryByText('por Bruno')).toBeNull()
+    expect(screen.queryByText('por Ícaro')).toBeNull()
   })
 })
 
@@ -264,7 +264,7 @@ describe('R38-11: os estados de tela', () => {
   })
 
   it('acesso perdido: depois de sair da família, ao atualizar, "Você não tem mais acesso a este bebê."', async () => {
-    const mundo = await renderizarRotaPronta('/app/hoje', { sessao: 'bruno' })
+    const mundo = await renderizarRotaPronta('/app/hoje', { sessao: 'icaro' })
 
     await mundo.conta.sairDaFamilia(ID_FAMILIA)
     fireEvent.click(botao('Atualizar'))

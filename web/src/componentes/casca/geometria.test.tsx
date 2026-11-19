@@ -1,5 +1,5 @@
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process'
-import { closeSync, existsSync, mkdirSync, mkdtempSync, openSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { closeSync, existsSync, mkdirSync, mkdtempSync, openSync, readdirSync, readFileSync, rmSync, writeFileSync, writeSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -63,6 +63,7 @@ interface Caixa {
   bottom: number
   width: number
   height: number
+  fontSize: number
 }
 
 interface Medida {
@@ -99,6 +100,7 @@ const SCRIPT_DE_MEDIDA = `
           rotulo: el.getAttribute('aria-label') || el.textContent.trim(),
           seletor,
           x: r.x, right: r.right, y: r.y, bottom: r.bottom, width: r.width, height: r.height,
+          fontSize: parseFloat(getComputedStyle(el).fontSize),
         })
       }
     }
@@ -123,6 +125,26 @@ const SCRIPT_DE_MEDIDA = `
 `
 
 /** O CSS do build aponta as fontes por `/assets/...`: numa página file:// isso vira a raiz do disco, então as URLs absolutas passam a apontar para o dist. */
+// A limpeza da pasta temporária do Chrome nunca decide o resultado do teste: no Windows o Chrome pode segurar o perfil
+// e o `rmSync` lançaria EPERM do `finally`. A falha vira só um aviso (caminho, código e mensagem), sem throw.
+function avisar(texto: string): void {
+  console.warn(texto)
+  try {
+    writeSync(2, `${texto}\n`)
+  } catch (erro) {
+    console.error(`Aviso: não deu para escrever no stderr (${String(erro)}); o aviso era: ${texto}`)
+  }
+}
+
+function limparPasta(pasta: string, comTentativas = true): void {
+  try {
+    rmSync(pasta, comTentativas ? { recursive: true, force: true, maxRetries: 6, retryDelay: 250 } : { recursive: true, force: true })
+  } catch (erro) {
+    const e = erro as NodeJS.ErrnoException
+    avisar(`Aviso: não deu para remover a pasta temporária ${pasta} (${e.code ?? 'sem código'}): ${e.message}`)
+  }
+}
+
 function cssComFontesDoDist(nome: string): string {
   const base = `${pathToFileURL(PASTA_DIST).href}/`
   return readFileSync(join(PASTA_CSS, nome), 'utf8').replace(/url\((["']?)\/(?!\/)/g, (_t, aspas: string) => `url(${aspas}${base}`)
@@ -239,7 +261,7 @@ async function medirNoChrome(cabecalhoHtml: string, largura: number, tema: Tema)
     }
     return JSON.parse(achado[1]) as Medida
   } finally {
-    rmSync(pasta, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 })
+    limparPasta(pasta)
   }
 }
 
@@ -316,6 +338,15 @@ describe(`a geometria do cabeçalho logado no Chrome${motivoDoPulo ? ` (pulado: 
           expect(medida.faces.some((face) => face.endsWith(':loaded'))).toBe(true)
 
           expect(medida.caixas.length).toBeGreaterThan(0)
+          // DS1:RN-02 / DS1-I-20: a área logada guarda o desenho dela. A marca do cabeçalho logado é de 24 px em toda
+          // largura (raiz de 16 px: min(1,5 rem, 6,4 vw) = 24 em 390 e min(1,5 rem, 4,4 vw) = 24 de 640 em diante) e nos
+          // dois temas; os 20 px são só do cabeçalho público (a pílula "Criar conta" divide a linha lá).
+          const marcas = medida.caixas.filter((caixa) => caixa.seletor === '.cm-marca')
+          expect(marcas, 'o cabeçalho logado tem a marca').toHaveLength(1)
+          expect(
+            marcas[0].fontSize,
+            `a marca do cabeçalho logado perdeu o tamanho de 24 px (${marcas[0].fontSize} px em ${largura}, tema ${tema})`,
+          ).toBe(24)
           for (const caixa of medida.caixas) {
             expect(caixa.x, `${caixa.rotulo}: a borda esquerda`).toBeGreaterThanOrEqual(0)
             expect(caixa.right, `${caixa.rotulo}: a borda direita (${caixa.right}) passa da janela de ${largura}`).toBeLessThanOrEqual(medida.innerWidth)

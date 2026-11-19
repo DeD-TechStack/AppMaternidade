@@ -4,7 +4,7 @@ import { vi } from 'vitest'
 import { ProvedorDadosConta } from '../../componentes/conta/sessao.tsx'
 import { ProvedorDadosComunidade, type DadosComunidade } from '../../dados/comunidade.ts'
 import { ProvedorDadosModeracao, type DadosModeracao } from '../../dados/moderacao.ts'
-import { criarRotas } from '../../rotas.tsx'
+import { criarRotasProntas } from '../../teste/rotasProntas.ts'
 
 // O apoio dos testes das telas do painel de moderação: as rotas reais num roteador em memória, dentro do
 // provedor de dados de conta (a sessão da MAT-37), do provedor da Comunidade (a leitura do conteúdo) e do
@@ -30,7 +30,7 @@ export function renderizarModeracao(caminho: string, { contas, comunidade, moder
   const rolarAoTopo = vi.fn()
   vi.stubGlobal('scrollTo', rolarAoTopo)
   if (madrugada) document.documentElement.setAttribute('data-tema', 'madrugada')
-  const roteador = createMemoryRouter(criarRotas(), {
+  const roteador = createMemoryRouter(criarRotasProntas(), {
     initialEntries: [basename ? `${basename}${caminho}` : caminho],
     basename,
   })

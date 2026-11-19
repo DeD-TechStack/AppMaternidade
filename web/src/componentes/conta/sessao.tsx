@@ -10,6 +10,8 @@ import {
 } from 'react'
 import { Outlet, useLocation, useMatches } from 'react-router'
 import type { ErroDados, Resultado } from '../../dados/comum.ts'
+import { modoDados } from '../../dados/comum.ts'
+import { registrarCarregadorDaFonte, registrarOrigemDaConta, temFonteDeExportacao } from '../../dados/fontes.ts'
 import { criarDadosConta, OPERACOES_CONTA, type Conta, type DadosConta, type FamiliaResumo, type Usuario } from '../../dados/conta.ts'
 import { apagarChave, CHAVE_FAMILIA_ATUAL, CHAVE_RECUPERACAO, gravarChave, lerChave } from './armazenamento.ts'
 
@@ -91,6 +93,16 @@ function envolver(dados: DadosConta, aoEncerrar: () => void): DadosConta {
       if (!resultado.ok && resultado.erro.classe === 'sessao_encerrada') aoEncerrar()
       return resultado
     }
+  }
+  // A rotina em memória se registra na cópia; a exportação e a exclusão da conta procuram pela memória original.
+  registrarOrigemDaConta(copia, dados)
+  // Na memória, a rotina precisa estar ligada já aqui: quem abre a conta sem passar pela rotina também exporta os
+  // registros. Só se registra quem a carrega (o motor e a fixture não vêm com a página: `import()` na hora de exportar
+  // ou excluir, ou quando a rotina é usada). Uma rotina que quem chamou já registrou na conta (como a de um teste) é mantida.
+  if (modoDados() === 'memoria' && !temFonteDeExportacao(dados)) {
+    registrarCarregadorDaFonte(copia, async () =>
+      (await import('../../dados/rotina.ts')).carregarRotinaEmMemoria(copia as unknown as DadosConta),
+    )
   }
   return copia as unknown as DadosConta
 }

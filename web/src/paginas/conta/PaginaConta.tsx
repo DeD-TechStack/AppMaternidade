@@ -13,6 +13,7 @@ import { DialogoExcluirConta } from '../../componentes/conta/DialogoExcluirConta
 import { useEnvio } from '../../componentes/conta/envio.ts'
 import { useFocoNoResumo, useFocoNoTitulo } from '../../componentes/conta/foco.ts'
 import { IndiceDaConta } from '../../componentes/conta/IndiceDaConta.tsx'
+import { NOME_DA_CONTA_MAX } from '../../componentes/conta/limitesDeNome.ts'
 import { MolduraLogada } from '../../componentes/conta/MolduraLogada.tsx'
 import {
   BOTAO_PERIGO,
@@ -20,8 +21,9 @@ import {
   BOTAO_SECUNDARIO,
   LINK_ALVO,
   RegiaoStatus,
-  ResumoErro,
 } from '../../componentes/conta/Partes.tsx'
+import { Carregando } from '../../componentes/estado/Carregando.tsx'
+import { ErroDaConta } from '../../componentes/estado/ErroDaConta.tsx'
 import { Cartao, Coluna, Colunas, Pilha, QuadroLayout, Secao } from '../../componentes/base/layout/index.ts'
 import { useDadosConta, useSessao } from '../../componentes/conta/sessao.tsx'
 import { COMUM, CONTA, TITULOS, textoDaPassagem, textoDoErro } from '../../conteudo/conta.ts'
@@ -166,8 +168,8 @@ export function PaginaConta() {
       return nomeRef.current?.focus()
     }
     setErroNome(null)
-    setStatus(null)
     void perfil.enviar({
+      aoComecar: () => setStatus(null),
       escrever: () => dados.atualizarMinhaConta(nomeLimpo, fuso),
       conferir: async () => {
         const lida = await dados.minhaConta()
@@ -200,8 +202,8 @@ export function PaginaConta() {
   }
 
   function baixarDados() {
-    setStatus(null)
     void exportacao.enviar({
+      aoComecar: () => setStatus(null),
       escrever: () => dados.exportarDados(),
       aoSucesso: (conteudo) => {
         baixarJson(conteudo, nomeDoArquivoDeDados(conta!.fuso))
@@ -290,7 +292,7 @@ export function PaginaConta() {
             <Pilha dataH="coluna" vao="pilha">
             <form onSubmit={salvarPerfil} noValidate className={`flex ${COLUNA_DOS_CONTROLES} flex-col gap-5`}>
               {erroDoPerfil && !campoDoPerfil ? (
-                <ResumoErro
+                <ErroDaConta
                   erro={erroDoPerfil}
                   repetivel={perfil.estado.fase === 'erro' && perfil.estado.tentarDeNovo}
                   aoTentarDeNovo={() => void perfil.tentarDeNovo()}
@@ -299,6 +301,7 @@ export function PaginaConta() {
               ) : null}
               <Campo
                 rotulo={CONTA.perfil.nome}
+                maxLength={NOME_DA_CONTA_MAX}
                 autoComplete="name"
                 tamanho="app"
                 valor={nome}
@@ -372,7 +375,7 @@ export function PaginaConta() {
             </Pilha>
             <Pilha dataH="coluna" vao="pilha" className="items-start">
               {exportacao.estado.fase === 'erro' ? (
-                <ResumoErro
+                <ErroDaConta
                   erro={exportacao.estado.erro}
                   repetivel={exportacao.estado.tentarDeNovo}
                   aoTentarDeNovo={() => void exportacao.tentarDeNovo()}
@@ -399,9 +402,9 @@ export function PaginaConta() {
               <p className="cm-medida">{CONTA.excluir.explicacao}</p>
             </Pilha>
             <Pilha dataH="coluna" vao="pilha" className="items-start">
-              {leitura.fase === 'lendo' ? <p>{CONTA.excluir.lendo}</p> : null}
+              {leitura.fase === 'lendo' ? <Carregando texto={CONTA.excluir.lendo} /> : null}
               {leitura.fase === 'erro' ? (
-                <ResumoErro
+                <ErroDaConta
                   erro={leitura.erro}
                   repetivel
                   aoTentarDeNovo={() => {
@@ -485,7 +488,7 @@ export function PaginaConta() {
           erroSenha={erroSenha ?? (senhaErrada && erroDaExclusao ? textoDoErro(erroDaExclusao) : null)}
           resumo={
             erroDaExclusao && !senhaErrada && exclusao.estado.fase === 'erro' ? (
-              <ResumoErro
+              <ErroDaConta
                 erro={erroDaExclusao}
                 repetivel={exclusao.estado.tentarDeNovo}
                 aoTentarDeNovo={() => void exclusao.tentarDeNovo()}

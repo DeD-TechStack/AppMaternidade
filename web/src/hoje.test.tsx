@@ -66,8 +66,8 @@ describe('Hoje: a ordem dos blocos', () => {
     expect(principal(container).contains(botao)).toBe(true)
     expect(cartao(container).compareDocumentPosition(botao) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
     expect(botao.compareDocumentPosition(regiao('Para você saber')) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
-    // A mamada da fixture de teste é de Bruno (R38-33); antes, o texto dizia "com Juliana".
-    expect(screen.getByText('Última mamada às 07:32, com Bruno')).toBeTruthy()
+    // A mamada da fixture de teste é de Ícaro (R38-33); antes, o texto dizia "com Juliana".
+    expect(screen.getByText('Última mamada às 07:32, registrada por Ícaro')).toBeTruthy()
   })
 
   it('(madrugada) o histórico vem antes dos números do dia, para a primeira linha subir no celular', async () => {
@@ -162,7 +162,7 @@ describe('Hoje: o título e o bebê ativo', () => {
 })
 
 describe('Hoje: o cartão da sessão', () => {
-  it('com sessão: "Em andamento", o tipo, o tempo correndo, "por Bruno", Encerrar e Ver sessão com o id', async () => {
+  it('com sessão: "Em andamento", o tipo, o tempo correndo, "por Ícaro", Encerrar e Ver sessão com o id', async () => {
     const { container, fixture } = await renderizarRotaPronta('/app/hoje')
 
     const bloco = cartao(container)
@@ -172,7 +172,7 @@ describe('Hoje: o cartão da sessão', () => {
     expect(bloco.getAttribute('aria-labelledby')).toBe(titulo.id)
     expect(within(bloco).getByText('Sono', { selector: 'p' })).toBeTruthy()
     expect(digitos(within(bloco).getByRole('timer'))).toBe('1:12:00')
-    expect(within(bloco).getByText('por Bruno')).toBeTruthy()
+    expect(within(bloco).getByText('por Ícaro')).toBeTruthy()
     expect(within(bloco).getByRole('button', { name: 'Encerrar' })).toBeTruthy()
     const emAndamento = fixture.registros.find((r) => r.tipo === 'sono' && r.fim === null)!
     expect(within(bloco).getByRole('link', { name: 'Ver sessão' }).getAttribute('href')).toBe(`/app/sessao?id=${emAndamento.id}`)
@@ -564,7 +564,7 @@ describe('Hoje: Para você saber e Desde o seu último registro', () => {
 
     const lista = within(regiao('Desde o seu último registro, às 07:50')).getAllByRole('listitem')
     expect(lista.map((li) => li.querySelector('p')!.textContent)).toEqual(['Fralda, Xixi', 'Sono, em andamento'])
-    expect(lista.map((li) => li.querySelectorAll('p')[1].textContent)).toEqual(['por Bruno', 'por Bruno'])
+    expect(lista.map((li) => li.querySelectorAll('p')[1].textContent)).toEqual(['por Ícaro', 'por Ícaro'])
     expect(within(lista[0]).getByText('09:10')).toBeTruthy()
     expect(within(lista[1]).getByText('08:48')).toBeTruthy()
     for (const li of lista) expect(li.querySelector('[data-avatar]')!.getAttribute('aria-hidden')).toBe('true')
@@ -593,27 +593,27 @@ describe('Hoje: Para você saber e Desde o seu último registro', () => {
             ...f.registros,
             // O marco de Juliana: ontem às 20:00.
             novo(1, PESSOAS.juliana.id, ontemAs(20, 0), ontemAs(20, 0), 'xixi'),
-            novo(2, PESSOAS.bruno.id, ontemAs(22, 30), ontemAs(22, 30), 'ambos'),
+            novo(2, PESSOAS.icaro.id, ontemAs(22, 30), ontemAs(22, 30), 'ambos'),
             // Lançada hoje às 09:30, mas com a hora de ontem às 23:00: a linha mostra 23:00 de ontem.
-            novo(3, PESSOAS.bruno.id, ontemAs(23, 0), new Date(2026, 10, 5, 9, 30).toISOString(), 'coco'),
+            novo(3, PESSOAS.icaro.id, ontemAs(23, 0), new Date(2026, 10, 5, 9, 30).toISOString(), 'coco'),
           ],
         }
       },
     })
 
-    const lista = within(regiao('Desde o seu último registro, às 20:00')).getAllByRole('listitem')
+    const lista = within(regiao('Desde o seu último registro, ontem às 20:00')).getAllByRole('listitem')
     expect(lista.map((li) => [li.querySelector('p')!.textContent, li.querySelector('.tabular-nums')!.textContent])).toEqual([
       ['Fralda, Xixi', '09:10'],
       ['Sono, em andamento', '08:48'],
       ['Mamada, 18 min · lado esquerdo', '07:32'],
-      ['Fralda, Cocô', 'ontem 23:00'],
-      ['Fralda, Ambos', 'ontem 22:30'],
+      ['Fralda, Cocô', 'ontem às 23:00'],
+      ['Fralda, Ambos', 'ontem às 22:30'],
     ])
   })
 
   it('sem registro de outra pessoa depois do marco: "Nada novo desde o seu último registro."; sem marco, o bloco não aparece', async () => {
     const nada = await renderizarRotaPronta('/app/hoje', {
-      sessao: 'bruno',
+      sessao: 'icaro',
       ajustarRotina: (f) => ({ ...f, registros: f.registros.filter((r) => r.criadoPor === '22222222-2222-4222-8222-222222222222') }),
     })
     expect(screen.getByText('Nada novo desde o seu último registro.')).toBeTruthy()
@@ -641,7 +641,7 @@ describe('Hoje: os números do dia', () => {
       ['2', 'Mamadas'],
       ['1', 'Mamadeiras'],
       ['3', 'Fraldas'],
-      ['4 h 20', 'Sono'],
+      ['4 h 20', 'Sono concluído'],
     ])
   })
 
@@ -717,8 +717,8 @@ describe('Hoje: Últimos', () => {
     // Os valores da base (R38-31, item 5): Fralda há 50 min, Mamada há 2 h 10 min, Tummy time ontem 17:30.
     expect(colunasDeUltimos(container)).toEqual([
       '50 min Fralda, tempo desde o registro',
-      '2 h 10 Mamada, tempo desde o registro',
-      '17:30 Tummy time, ontem',
+      '2 h 10 Mamada, fim, tempo desde o registro',
+      '17:30 Tummy time, fim ontem',
     ])
   })
 
@@ -727,10 +727,10 @@ describe('Hoje: Últimos', () => {
 
     expect(colunasDeUltimos(container)).toEqual([
       '50 min Fralda, tempo desde o registro',
-      '2 h 10 Mamada, tempo desde o registro',
-      '3 h 20 Sono, tempo desde o registro',
+      '2 h 10 Mamada, fim, tempo desde o registro',
+      '3 h 20 Sono, fim, tempo desde o registro',
       '8 h Mamadeira, tempo desde o registro',
-      '17:30 Tummy time, ontem',
+      '17:30 Tummy time, fim ontem',
     ])
   })
 
@@ -787,7 +787,7 @@ describe('Hoje: a barra Registrar fica fora do main e é a única coisa fixa emb
     expect(barra(container).contains(screen.getByRole('status'))).toBe(true)
   })
 
-  it('o botão da sessão em andamento fica marcado (data-ativo): Sono, com o sono de Bruno', async () => {
+  it('o botão da sessão em andamento fica marcado (data-ativo): Sono, com o sono de Ícaro', async () => {
     await renderizarRotaPronta('/app/hoje')
 
     expect(screen.getByRole('button', { name: 'Iniciar sono de Heloísa' }).hasAttribute('data-ativo')).toBe(true)

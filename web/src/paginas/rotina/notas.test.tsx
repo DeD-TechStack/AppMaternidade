@@ -145,17 +145,17 @@ describe('R38-24: quem pode o quê', () => {
   })
 
   it('o cuidador cria e muda só as notas que fez', async () => {
-    await renderizarRotaPronta('/app/notas', { sessao: 'bruno', ajustarRotina: comNotas(notaDe(1, { texto: 'Do Bruno', criadoPor: PESSOAS.bruno.id })) })
+    await renderizarRotaPronta('/app/notas', { sessao: 'icaro', ajustarRotina: comNotas(notaDe(1, { texto: 'Do Ícaro', criadoPor: PESSOAS.icaro.id })) })
 
     expect(screen.getByRole('link', { name: 'Nova nota' })).toBeTruthy()
-    const [doBruno, daCarla] = notas()
-    expect(within(doBruno).getByRole('button', { name: 'Excluir nota: Do Bruno' })).toBeTruthy()
+    const [doIcaro, daCarla] = notas()
+    expect(within(doIcaro).getByRole('button', { name: 'Excluir nota: Do Ícaro' })).toBeTruthy()
     expect(within(daCarla).queryByRole('button')).toBeNull()
     expect(within(daCarla).queryByRole('link')).toBeNull()
   })
 
   it('o observador vê as notas e a frase do papel, sem criar, editar nem excluir', async () => {
-    await renderizarRotaPronta('/app/notas', { sessao: 'bruno', papelDeBruno: 'observador' })
+    await renderizarRotaPronta('/app/notas', { sessao: 'icaro', papelDeIcaro: 'observador' })
 
     expect(notas()).toHaveLength(1)
     expect(screen.queryByRole('link', { name: 'Nova nota' })).toBeNull()
@@ -164,18 +164,18 @@ describe('R38-24: quem pode o quê', () => {
   })
 
   it('o observador que abre a tela de nova nota ou de edição vê só a frase do papel', async () => {
-    const { unmount } = await renderizarRotaPronta('/app/notas/nova', { sessao: 'bruno', papelDeBruno: 'observador' })
+    const { unmount } = await renderizarRotaPronta('/app/notas/nova', { sessao: 'icaro', papelDeIcaro: 'observador' })
     expect(document.querySelector('[data-sem-permissao]')!.textContent).toBe('Seu papel nesta família permite só ver os registros.')
     expect(document.querySelector('form')).toBeNull()
     unmount()
 
-    await renderizarRotaPronta(`/app/notas/${DA_CARLA}/editar`, { sessao: 'bruno', papelDeBruno: 'observador' })
+    await renderizarRotaPronta(`/app/notas/${DA_CARLA}/editar`, { sessao: 'icaro', papelDeIcaro: 'observador' })
     expect(document.querySelector('[data-sem-permissao]')).toBeTruthy()
     expect(document.querySelector('form')).toBeNull()
   })
 
   it('o cuidador que abre a edição da nota de outra pessoa vê a frase do papel, sem formulário', async () => {
-    await renderizarRotaPronta(`/app/notas/${DA_CARLA}/editar`, { sessao: 'bruno' })
+    await renderizarRotaPronta(`/app/notas/${DA_CARLA}/editar`, { sessao: 'icaro' })
 
     expect(document.querySelector('[data-sem-permissao]')!.textContent).toBe('Seu papel nesta família permite mudar só os registros que você fez.')
     expect(document.querySelector('form')).toBeNull()

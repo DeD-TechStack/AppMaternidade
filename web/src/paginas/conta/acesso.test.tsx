@@ -7,6 +7,7 @@ import {
   CHAVE_RECUPERACAO,
 } from '../../componentes/conta/armazenamento.ts'
 import { destinoDepoisDeEntrar, voltaValida } from '../../componentes/conta/destino.ts'
+import { AVISO_RODAPE } from '../../componentes/casca/textos.ts'
 import { AVISO_BANCO_DEMONSTRACAO, CRIAR_CONTA, NOMES_DO_H1, RECUPERAR, TEXTOS_ERRO } from '../../conteudo/conta.ts'
 import type { Resultado } from '../../dados/comum.ts'
 import type { Usuario } from '../../dados/conta.ts'
@@ -34,7 +35,7 @@ afterEach(() => {
 const campo = (rotulo: string) => screen.getByLabelText(comObrigatorio(rotulo), { selector: 'input, select' }) as HTMLInputElement
 const digitar = (rotulo: string, texto: string) => fireEvent.change(campo(rotulo), { target: { value: texto } })
 const botao = (nome: string) => screen.getByRole('button', { name: nome })
-const status = () => screen.getByRole('status')
+const status = () => screen.getAllByRole('status').find((regiao) => regiao.getAttribute('data-estado') !== 'carregando')!
 // O cabeçalho da casca também tem os links Entrar e Criar conta (levam ao Contato por enquanto): os da
 // tela se buscam dentro do <main>.
 const principal = () => within(document.querySelector('main')!)
@@ -133,7 +134,7 @@ describe('o destino depois de entrar (RF-10)', () => {
     comVolta.unmount()
 
     sessionStorage.setItem(CHAVE_CONVITE, 'a'.repeat(64))
-    const comCodigo = renderizarComDados('/entrar', { sessao: 'bruno' })
+    const comCodigo = renderizarComDados('/entrar', { sessao: 'icaro' })
     await waitFor(() => expect(caminhoDe(comCodigo.roteador)).toBe('/convite'))
     comCodigo.unmount()
     sessionStorage.clear()
@@ -490,7 +491,11 @@ describe('/criar-conta', () => {
     expect(aviso.tagName).toBe('P')
     expect(aviso.textContent).toBe(AVISO_BANCO_DEMONSTRACAO)
     expect(aviso.hasAttribute('role')).toBe(false)
-    expect(banco.container.querySelectorAll(seletorDaMemoria)).toHaveLength(0)
+    // DS1:RF-14: o aviso do rodapé (o único `[data-aviso="demonstracao"]`) vale também com banco, com o texto AVISO_RODAPE.
+    const avisosDoRodape = banco.container.querySelectorAll(seletorDaMemoria)
+    expect(avisosDoRodape).toHaveLength(1)
+    expect(avisosDoRodape[0].closest('footer[data-rodape]')).not.toBeNull()
+    expect(avisosDoRodape[0].textContent).toBe(AVISO_RODAPE)
     expect(fetchProibido).not.toHaveBeenCalled()
   })
 })
@@ -509,10 +514,40 @@ describe('/recuperar-acesso', () => {
     const primeira = status().textContent
 
     digitar('E-mail', 'ninguem@exemplo.invalid')
-    fireEvent.click(botao('Enviar link'))
-    await waitFor(() => expect(dados.ultimoPedidoDeRecuperacao('ninguem@exemplo.invalid')).toBeDefined())
+    // Um clique deliberado, depois da janela do mesmo gesto (500 ms) que segue o sucesso.
+    const agoraReal = Date.now.bind(Date)
+    const relogio = vi.spyOn(Date, 'now').mockImplementation(() => agoraReal() + 600)
+    try {
+      fireEvent.click(botao('Enviar link'))
+      await waitFor(() => expect(dados.ultimoPedidoDeRecuperacao('ninguem@exemplo.invalid')).toBeDefined())
+    } finally {
+      relogio.mockRestore()
+    }
     expect(status().textContent).toBe(primeira)
     expect(dados.ultimoPedidoDeRecuperacao('juliana@exemplo.invalid')).toBe(`${window.location.origin}/redefinir-senha`)
+  })
+
+  it('o mesmo gesto preserva a mensagem: o 2º envio logo depois é ignorado', async () => {
+    const { dados } = renderizarComDados('/recuperar-acesso')
+    const pedir2 = vi.spyOn(dados, 'pedirRecuperacao')
+    // O relógio parado: o 2º clique cai dentro da janela de 500 ms que segue o sucesso.
+    const agoraReal = Date.now()
+    const relogio = vi.spyOn(Date, 'now').mockImplementation(() => agoraReal)
+    try {
+      await pedir('juliana@exemplo.invalid')
+      await waitFor(() => expect(status().textContent).toBe(RECUPERAR.resultado))
+      await waitFor(() => expect((botao('Enviar link') as HTMLButtonElement).disabled).toBe(false))
+
+      fireEvent.click(botao('Enviar link'))
+      await act(async () => {
+        await Promise.resolve()
+      })
+
+      expect(pedir2).toHaveBeenCalledTimes(1)
+      expect(status().textContent).toBe(RECUPERAR.resultado)
+    } finally {
+      relogio.mockRestore()
+    }
   })
 
   it('um erro de negócio qualquer dá a mesma mensagem, que não revela a conta', async () => {
@@ -625,7 +660,7 @@ describe('/redefinir-senha', () => {
   })
 
   it('a marca de outro usuário é apagada, e a tela mostra o link vencido', async () => {
-    comMarca(PESSOAS.bruno.id)
+    comMarca(PESSOAS.icaro.id)
     renderizarComDados('/redefinir-senha', { sessao: 'juliana' })
 
     expect(await screen.findByText(TEXTOS_ERRO.link_vencido)).toBeTruthy()
@@ -638,7 +673,7 @@ describe('/redefinir-senha', () => {
     await screen.findByText(TEXTOS_ERRO.link_vencido)
 
     await act(async () => {
-      await dados.entrar('bruno@exemplo.invalid', SENHA_DEMONSTRACAO)
+      await dados.entrar('icaro@exemplo.invalid', SENHA_DEMONSTRACAO)
     })
     await waitFor(() => expect(sessionStorage.getItem(CHAVE_RECUPERACAO)).toBeNull())
   })

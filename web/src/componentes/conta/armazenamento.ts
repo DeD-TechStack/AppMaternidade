@@ -43,3 +43,32 @@ export function apagarChave(tipo: Tipo, chave: string): void {
     // Nada a apagar.
   }
 }
+
+const PARAMETROS_DE_AUTENTICACAO = /(?:^|[?&#])(?:code|error_code|error_description)=/
+const FRAGMENTO_DE_AUTENTICACAO = /(?:^|[#&])(?:access_token|error_code|error_description|type)=/
+
+/**
+ * Há motivo para falar com o Auth agora? É verdade quando o navegador guarda uma sessão do Supabase (`sb-...-auth-token`,
+ * que cobre também o verificador do PKCE) ou quando a URL traz o retorno de um link de autenticação (`code=`, `access_token=`,
+ * `type=`, `error_code=`, `error_description=`). Uma visita anônima nova dá falso, e o pacote do Supabase nem é pedido.
+ * Armazenamento bloqueado dá falso: sem armazenamento não há sessão a retomar.
+ */
+export function haSinalDeSessao(): boolean {
+  try {
+    const armazenamento = window.localStorage
+    for (let i = 0; i < armazenamento.length; i++) {
+      const chave = armazenamento.key(i)
+      if (chave !== null && chave.startsWith('sb-') && chave.includes('-auth-token')) return true
+    }
+  } catch {
+    // Armazenamento bloqueado: segue para a URL.
+  }
+  try {
+    const { search, hash } = window.location
+    if (PARAMETROS_DE_AUTENTICACAO.test(search)) return true
+    if (FRAGMENTO_DE_AUTENTICACAO.test(hash)) return true
+  } catch {
+    // Sem `location`: sem sinal.
+  }
+  return false
+}

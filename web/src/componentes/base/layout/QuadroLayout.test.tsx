@@ -46,10 +46,27 @@ describe('QuadroLayout: largura e calha (layout.css)', () => {
     expect(declara(corpo, 'margin-inline', 'auto')).toBe(true)
   })
 
-  it('a conta: em 1440 o quadro tem 1200 e em 390 tem 350 (calha de 32 e de 20)', () => {
-    const quadro = (janela: number, calha: number) => Math.min(1200, janela - 2 * calha)
-    expect(quadro(1440, 32)).toBe(1200)
-    expect(quadro(390, 20)).toBe(350)
+  // As contas abaixo usam os tokens do tema gerado (FLUID-DS): a calha é a reta de 20 (390) a 32 (1440), parada em
+  // 320 e em 1920; a largura do quadro é 1200 até 1440 e a reta até 1600 em 2560.
+  const calha = (janela: number) => {
+    const reta = (j: number) => 20 + ((j - 390) * 12) / 1050
+    return Math.min(reta(1920), Math.max(reta(320), reta(janela)))
+  }
+  const quadroLargura = (janela: number) => Math.min(1600, Math.max(1200, 1200 + ((janela - 1440) * 400) / 1120))
+  const quadro = (janela: number) => Math.min(quadroLargura(janela), janela - 2 * calha(janela))
+
+  it('a conta: em 390 o quadro tem 350 e em 1440 tem 1200 (calha de 20 e de 32), os números de antes', () => {
+    expect(quadro(390)).toBe(350)
+    expect(quadro(1440)).toBe(1200)
+  })
+
+  it('a conta: em 320 o quadro tem 281,6 (calha de 19,2), sem estourar a janela', () => {
+    expect(quadro(320)).toBeCloseTo(281.6, 6)
+  })
+
+  it('a conta: em 1920 o quadro cresce para ~1371 e em 2560 para no teto de 1600', () => {
+    expect(quadro(1920)).toBeCloseTo(1200 + (400 * 480) / 1120, 6)
+    expect(quadro(2560)).toBe(1600)
   })
 
   it('medio e leitura limitam a largura com os tokens do DESIGN.md e ficam na borda esquerda do quadro, sem centrar', () => {
@@ -67,12 +84,14 @@ describe('QuadroLayout: largura e calha (layout.css)', () => {
     }
   })
 
-  it('a borda esquerda de medio e leitura é a do quadro em 390, 1000, 1250 e 1440', () => {
-    const calha = (janela: number) => Math.min(32, Math.max(20, 20 + ((janela - 390) * 12) / 1050))
-    const bordaDoQuadro = (janela: number) => (janela - Math.min(1200, janela - 2 * calha(janela))) / 2
-    const bordaDaMargem = (janela: number) => Math.max(calha(janela), (janela - 1200) / 2)
+  it('a borda esquerda de medio e leitura é a do quadro de 320 a 2560', () => {
+    const bordaDoQuadro = (janela: number) => (janela - quadro(janela)) / 2
+    const bordaDaMargem = (janela: number) => Math.max(calha(janela), (janela - quadroLargura(janela)) / 2)
+    expect(bordaDaMargem(320)).toBeCloseTo(bordaDoQuadro(320), 6)
     for (const janela of [390, 1000, 1250, 1440]) {
       expect(bordaDaMargem(janela), String(janela)).toBeCloseTo(bordaDoQuadro(janela), 6)
     }
+    expect(bordaDaMargem(1920)).toBeCloseTo(bordaDoQuadro(1920), 6)
+    expect(bordaDaMargem(2560)).toBeCloseTo(bordaDoQuadro(2560), 6)
   })
 })

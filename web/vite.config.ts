@@ -30,10 +30,29 @@ function paginaNaoEncontrada(): Plugin {
   }
 }
 
+// Com as páginas em pacotes à parte, o CSS dos pacotes compartilhados vai para o arquivo antes do `index.css`. A ordem
+// das camadas vale pela primeira aparição; sem esta linha a `components` ficaria abaixo da `base` do Tailwind.
+function ordemDasCamadas(): Plugin {
+  return {
+    name: 'ordem-das-camadas',
+    enforce: 'post',
+    apply: 'build',
+    generateBundle(_opcoes, pacote) {
+      for (const item of Object.values(pacote)) {
+        if (item.type === 'asset' && item.fileName.endsWith('.css')) {
+          item.source = `@layer theme,base,components,utilities;${String(item.source)}`
+        }
+      }
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig(({ command }) => ({
   base: command === 'build' ? subcaminhoDoBuild(process.env.BASE_SITE) : '/',
-  plugins: [react(), tailwindcss(), chavePublica(), politicaDeConteudo(), paginaNaoEncontrada()],
+  // Um só arquivo de CSS, na ordem de sempre: dividir o CSS por página mudaria a ordem da cascata.
+  build: { cssCodeSplit: false },
+  plugins: [react(), tailwindcss(), chavePublica(), politicaDeConteudo(), paginaNaoEncontrada(), ordemDasCamadas()],
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/teste/setup.ts'],

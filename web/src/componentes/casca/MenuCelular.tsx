@@ -1,6 +1,8 @@
-import { useEffect, useRef, type RefObject } from 'react'
+import { useEffect, useRef, useState, type RefObject } from 'react'
 import { Link, NavLink } from 'react-router'
+import { EntradaAvisos } from '../avisos/EntradaAvisos.tsx'
 import { Botao } from '../base/Botao.tsx'
+import { duracaoDeSaida, semMovimento } from '../comunidade/Dialogo.tsx'
 import {
   DESTINO_CONTA,
   DESTINO_CRIAR_CONTA,
@@ -46,6 +48,20 @@ interface Props {
 export function MenuCelular({ id, aberto, contexto, situacao, saindo, aoSair, aoFechar, botao }: Props) {
   const painel = useRef<HTMLDivElement>(null)
 
+  // A saída: ao fechar, o conteúdo fica na tela (inerte e escondido para o leitor de tela) enquanto o painel faz o
+  // fade de styles/abrir-fechar.css, e só depois some. Sem movimento (reduzido ou sem `matchMedia`), some na hora.
+  const [abertoAntes, setAbertoAntes] = useState(aberto)
+  const [fechando, setFechando] = useState(false)
+  if (aberto !== abertoAntes) {
+    setAbertoAntes(aberto)
+    setFechando(!aberto && !semMovimento())
+  }
+  useEffect(() => {
+    if (!fechando) return
+    const relogio = window.setTimeout(() => setFechando(false), duracaoDeSaida())
+    return () => window.clearTimeout(relogio)
+  }, [fechando])
+
   // Ao abrir, o foco vai ao primeiro item.
   useEffect(() => {
     if (!aberto) return
@@ -85,8 +101,8 @@ export function MenuCelular({ id, aberto, contexto, situacao, saindo, aoSair, ao
 
   return (
     <div id={id} ref={painel} className="cm-menu-celular" data-menu-celular="" hidden={!aberto}>
-      {aberto ? (
-        <div className="cm-area">
+      {aberto || fechando ? (
+        <div className="cm-area" inert={!aberto} aria-hidden={aberto ? undefined : true}>
           <ul className="cm-menu-lista">
             {ITENS_DO_CABECALHO[contexto].map((item) => (
               <li key={item.para}>
@@ -106,6 +122,7 @@ export function MenuCelular({ id, aberto, contexto, situacao, saindo, aoSair, ao
           ) : null}
           {situacao === 'com_sessao' ? (
             <div className="cm-menu-acoes">
+              <EntradaAvisos variante="menu" aoFechar={aoFechar} />
               {/* Link do mesmo desenho do botão, para fechar o menu também quando a pessoa já está na Conta. */}
               <Link
                 to={DESTINO_CONTA}

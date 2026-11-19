@@ -1,17 +1,22 @@
 import { Link, useLocation } from 'react-router'
 import { AvisoDemonstracao } from '../AvisoDemonstracao.tsx'
-import { Coluna, Colunas } from '../base/layout/Colunas.tsx'
-import { Secao } from '../base/layout/Secao.tsx'
-import { RevelacaoPorBaixo } from '../../movimento/RevelacaoPorBaixo.tsx'
-import { COLUNAS_DO_RODAPE, FRASE_DO_RODAPE, NOME_SITE, ROTULO_NAVEGACAO_RODAPE } from './textos.ts'
+import { PAGINAS_DA_CASA } from './Cabecalho.tsx'
+import {
+  AVISO_RODAPE,
+  COLUNAS_DO_RODAPE,
+  COPYRIGHT_RODAPE,
+  LINKS_DO_RODAPE_COMPACTO,
+  NOME_SITE,
+  ROTULO_NAVEGACAO_RODAPE,
+} from './textos.ts'
 
-/** O rodapé das rotas /app/*: todos os links do rodapé numa linha que quebra, sem o painel de mel. */
+/** O rodapé das rotas /app/*: os nove links de Produto, Ajuda e Legal numa linha que quebra, sem o painel de cacau. */
 function RodapeCompacto() {
   return (
     <footer className="cm-rodape cm-rodape-compacto" data-rodape="" id="rodape">
       <div className="cm-area">
         <nav aria-label={ROTULO_NAVEGACAO_RODAPE} className="cm-rodape-compacto-nav">
-          {COLUNAS_DO_RODAPE.flatMap((coluna) => coluna.links).map((link) => (
+          {LINKS_DO_RODAPE_COMPACTO.map((link) => (
             <Link key={link.para} to={link.para} className="cm-rodape-link">
               {link.rotulo}
             </Link>
@@ -23,67 +28,50 @@ function RodapeCompacto() {
 }
 
 /**
- * O rodapé do site (DESIGN.md 4): um painel de mel com a frase, as colunas Produto, Ajuda e Legal (todo
- * link vai a uma rota pública), o nome em Literata no tamanho de exibição (até 160 px em 1440) e o aviso
- * de demonstração numa linha (`comAviso`: só no site público; as telas do app têm a etiqueta delas). O
- * conteúdo sai de baixo, de -30 % a 0, preso à rolagem (M7).
+ * O rodapé do site, o RodapeMapa (DESIGN.md 4): uma faixa de cacau de borda a borda no fim de toda página
+ * pública. O nome em Literata no nível `titulo-3` (nunca maior que o h1 da página), os quatro grupos Produto,
+ * Conta, Ajuda e Legal (11 links, todos para rotas públicas), o aviso de avaliação (um só nó `[data-aviso]`, sempre
+ * renderizado, dentro do rodapé) e a linha do ©, nesta ordem. Abaixo de 768 os links são uma lista em duas colunas
+ * e os títulos dos grupos ficam só para o leitor de tela; de 768 em diante os quatro grupos ficam à vista numa
+ * fileira. Estático: sem movimento, sem sombra, sem ícone e sem rede social.
  */
 export function Rodape({ comAviso = true }: { comAviso?: boolean }) {
-  // Nas rotas /app/* o rodapé é uma linha só de links: sem o nome grande, sem a frase nem o painel de mel.
-  // O aviso não entra aqui (as telas do app trazem o delas).
+  // Nas rotas /app/* o rodapé é uma linha só de links: sem o nome, sem os grupos, sem o aviso (as telas do app
+  // trazem o delas).
   const { pathname } = useLocation()
   if (pathname === '/app' || pathname.startsWith('/app/')) return <RodapeCompacto />
 
-  // O rodapé do site é um painel: a caixa externa (`footer`, sem fundo, metade de `espaco-bloco` em cima e embaixo)
-  // e, dentro, a caixa de mel com a largura do quadro. A frase e as colunas de links são duas colunas de texto.
   return (
-    <Secao
-      as="footer"
-      variante="painel"
-      painel="mel"
-      className="cm-rodape"
-      classeCaixa="cm-rodape-painel"
-      data-rodape=""
-      id="rodape"
-    >
-      <RevelacaoPorBaixo variante="M7">
-        <Colunas fracoes="5fr 7fr" aPartirDe={1100}>
-          <Coluna>
-            <p className="cm-h3 cm-rodape-frase">
-              {FRASE_DO_RODAPE[0]}
-              <span className="cm-segunda-linha">{FRASE_DO_RODAPE[1]}</span>
-            </p>
-          </Coluna>
-          <Coluna>
-            <nav aria-label={ROTULO_NAVEGACAO_RODAPE} className="cm-rodape-colunas">
-              {COLUNAS_DO_RODAPE.map((coluna) => (
-                <div key={coluna.titulo}>
-                  <h2 className="cm-rodape-titulo">{coluna.titulo}</h2>
-                  <ul className="cm-rodape-lista">
-                    {coluna.links.map((link) => (
-                      <li key={link.para}>
-                        <Link to={link.para} className="cm-rodape-link">
-                          {link.rotulo}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </nav>
-          </Coluna>
-        </Colunas>
+    <footer className="cm-rodape" data-rodape="" id="rodape">
+      <div className="cm-area cm-rodape-quadro">
+        <div className="cm-rodape-topo">
+          <p className="cm-rodape-nome" data-nome-rodape="" aria-hidden="true">
+            {NOME_SITE}
+          </p>
 
-        <p className="cm-rodape-nome" data-nome-rodape="" aria-hidden="true">
-          {NOME_SITE}
-        </p>
+          <nav aria-label={ROTULO_NAVEGACAO_RODAPE} className="cm-rodape-colunas">
+            {COLUNAS_DO_RODAPE.map((coluna) => (
+              <div key={coluna.titulo} className="cm-rodape-grupo" data-rodape-grupo="">
+                <h2 className="cm-rodape-titulo">{coluna.titulo}</h2>
+                <ul className="cm-rodape-lista">
+                  {coluna.links.map((link) => (
+                    <li key={link.para}>
+                      <Link to={link.para} className="cm-rodape-link" viewTransition={PAGINAS_DA_CASA.has(link.para)}>
+                        {link.rotulo}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </nav>
+        </div>
 
-        {comAviso ? (
-          <div className="cm-rodape-base cm-pequeno">
-            <AvisoDemonstracao rodape />
-          </div>
-        ) : null}
-      </RevelacaoPorBaixo>
-    </Secao>
+        <div className="cm-rodape-base cm-pequeno">
+          {comAviso ? <AvisoDemonstracao rodape textoComBanco={AVISO_RODAPE} /> : null}
+          <p>{COPYRIGHT_RODAPE}</p>
+        </div>
+      </div>
+    </footer>
   )
 }

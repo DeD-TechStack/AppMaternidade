@@ -1,5 +1,5 @@
 -- MAT-47: comunidade e moderação (dados fictícios)
--- Carrega depois de ../seed.sql e usa só as contas de Ana, Bruno e Carla (MAT-43) e as linhas
+-- Carrega depois de ../seed.sql e usa só as contas de Ana, Ícaro e Carla (MAT-43) e as linhas
 -- iniciais das migrações desta tarefa (versão 2026-11-05 e os espaços). Todo id fixo começa com 47.
 -- Senha de Diego e Elisa: senha-local-ficticia (só local; nunca reutilize em outro ambiente).
 
@@ -53,7 +53,7 @@ values
   ('47000000-0000-4000-8000-000000000001', 'moderador', null, null),
   ('47000000-0000-4000-8000-000000000002', 'admin', null, null);
 
--- Ana, Bruno e Carla aceitam a versão vigente. Diego e Elisa não aceitam.
+-- Ana, Ícaro e Carla aceitam a versão vigente. Diego e Elisa não aceitam.
 insert into public.aceites_termos (conta_id, versao)
 values
   ('11111111-1111-4111-8111-111111111111', '2026-11-05'),
@@ -110,7 +110,7 @@ values
     'Compre o kit de mamadeiras pelo meu link com desconto.'
   );
 
--- Carla denuncia a resposta de Bruno como propaganda.
+-- Carla denuncia a resposta de Ícaro como propaganda.
 insert into public.denuncias (id, denunciante_id, resposta_id, motivo, texto, estado)
 values
   (

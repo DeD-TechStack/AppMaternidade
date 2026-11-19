@@ -631,8 +631,15 @@ describe('sucesso: a região de status é única, não move o foco e só some na
     expect(screen.getByRole('status').contains(document.activeElement)).toBe(false)
 
     simularFalha(dados, 'pedirRecuperacao', 'muitas_tentativas')
-    fireEvent.click(botao('Enviar link'))
-    await screen.findByRole('alert')
+    // Um clique deliberado, depois da janela do mesmo gesto (500 ms) que segue o sucesso.
+    const agoraReal = Date.now.bind(Date)
+    const relogio = vi.spyOn(Date, 'now').mockImplementation(() => agoraReal() + 600)
+    try {
+      fireEvent.click(botao('Enviar link'))
+      await screen.findByRole('alert')
+    } finally {
+      relogio.mockRestore()
+    }
     expect(screen.getByRole('status').textContent).toBe('')
   })
 })
@@ -680,7 +687,7 @@ describe('erro do banco: a frase da linha do catálogo, no campo ou no topo', ()
     await waitFor(() => expect(screen.getByText(TEXTOS_ERRO.senha_igual)).toBeTruthy())
     primeira.unmount()
 
-    sessionStorage.setItem(CHAVE_RECUPERACAO, PESSOAS.bruno.id)
+    sessionStorage.setItem(CHAVE_RECUPERACAO, PESSOAS.icaro.id)
     renderizarComDados('/redefinir-senha', { sessao: 'juliana' })
     expect(await screen.findByText(TEXTOS_ERRO.link_vencido)).toBeTruthy()
     expect(screen.queryByLabelText('Nova senha')).toBeNull()
@@ -813,14 +820,14 @@ describe('criar a própria conta: conferência falsa', () => {
 
 // ---- 37b: as linhas da matriz de /convite (em convite.test.tsx), /app/comecar (escolha e criar) e /app/familia ----
 
-const VINCULO_DO_BRUNO = 'b2222222-2222-4222-8222-222222222222'
+const VINCULO_DO_ICARO = 'b2222222-2222-4222-8222-222222222222'
 const hoje = () => hojeNoFuso('America/Sao_Paulo')
 
-/** Juliana (responsável) e Bruno (também responsável), para a Juliana poder rebaixar-se. */
+/** Juliana (responsável) e Ícaro (também responsável), para a Juliana poder rebaixar-se. */
 async function memoriaComDoisResponsaveis() {
   const dados = novaMemoria()
   dados.sessaoParaTeste(PESSOAS.juliana.email)
-  await dados.mudarPapel(VINCULO_DO_BRUNO, 'responsavel')
+  await dados.mudarPapel(VINCULO_DO_ICARO, 'responsavel')
   return dados
 }
 
@@ -921,7 +928,7 @@ describe('/app/comecar, escolha e criar [37b]', () => {
 describe('/app/familia [37b]: enviando', () => {
   it('mudar papel: o botão desativa com "Salvando…" e um segundo envio não chama o banco', async () => {
     const { dados } = await abrirFamilia()
-    fireEvent.click(botao('Mudar papel de Bruno'))
+    fireEvent.click(botao('Mudar papel de Ícaro'))
     const dialogo = within(screen.getByRole('dialog'))
     fireEvent.click(dialogo.getByRole('radio', { name: /Observador/ }))
     const mudar = segurar<null>(dados, 'mudarPapel')
@@ -972,7 +979,7 @@ describe('/app/familia [37b]: rede numa escrita (RF-17)', () => {
     simularRespostaPerdida(dados, 'mudarPapel')
     const mudar = vi.spyOn(dados, 'mudarPapel')
     await abrirFamilia('juliana', dados)
-    fireEvent.click(botao('Mudar papel de Bruno'))
+    fireEvent.click(botao('Mudar papel de Ícaro'))
     const dialogo = within(screen.getByRole('dialog'))
     fireEvent.click(dialogo.getByRole('radio', { name: /Observador/ }))
     fireEvent.click(dialogo.getByRole('button', { name: 'Mudar papel' }))
@@ -980,7 +987,7 @@ describe('/app/familia [37b]: rede numa escrita (RF-17)', () => {
     expect((await dialogo.findByRole('alert')).textContent).toContain(TEXTOS_ERRO.rede)
     fireEvent.click(dialogo.getByRole('button', { name: 'Tentar de novo' }))
 
-    await waitFor(() => expect(screen.getByRole('status').textContent).toBe('Bruno agora é observador.'))
+    await waitFor(() => expect(screen.getByRole('status').textContent).toBe('Ícaro agora é observador.'))
     expect(screen.queryByRole('dialog')).toBeNull()
     expect(mudar).toHaveBeenCalledTimes(2)
     const detalhe = await dados.detalheFamilia(FAMILIAS_DEMONSTRACAO.exemplo)
@@ -1008,15 +1015,15 @@ describe('/app/familia [37b]: rede numa escrita (RF-17)', () => {
     const dados = novaMemoria()
     simularRespostaPerdida(dados, 'revogarVinculo')
     await abrirFamilia('juliana', dados)
-    fireEvent.click(botao('Remover acesso de Bruno'))
+    fireEvent.click(botao('Remover acesso de Ícaro'))
     const dialogo = within(screen.getByRole('dialog'))
     fireEvent.click(dialogo.getByRole('button', { name: 'Remover acesso' }))
 
     expect((await dialogo.findByRole('alert')).textContent).toContain(TEXTOS_ERRO.rede)
     fireEvent.click(dialogo.getByRole('button', { name: 'Tentar de novo' }))
 
-    await waitFor(() => expect(screen.getByRole('status').textContent).toBe('O acesso de Bruno foi removido.'))
-    expect(screen.queryByText('Bruno')).toBeNull()
+    await waitFor(() => expect(screen.getByRole('status').textContent).toBe('O acesso de Ícaro foi removido.'))
+    expect(screen.queryByText('Ícaro')).toBeNull()
   })
 
   it('cancelar convite: depois da resposta perdida, a conferência vê que ele saiu da lista: sucesso', async () => {
@@ -1039,7 +1046,7 @@ describe('/app/familia [37b]: rede numa escrita (RF-17)', () => {
     simularFalha(dados, 'mudarPapel', 'rede')
     simularFalha(dados, 'mudarPapel', 'desconhecido')
     await abrirFamilia('juliana', dados)
-    fireEvent.click(botao('Mudar papel de Bruno'))
+    fireEvent.click(botao('Mudar papel de Ícaro'))
     const dialogo = within(screen.getByRole('dialog'))
     fireEvent.click(dialogo.getByRole('radio', { name: /Observador/ }))
     fireEvent.click(dialogo.getByRole('button', { name: 'Mudar papel' }))
@@ -1050,7 +1057,7 @@ describe('/app/familia [37b]: rede numa escrita (RF-17)', () => {
     await waitFor(() => expect(dialogo.getByRole('alert').textContent).toContain(TEXTOS_ERRO.desconhecido))
     expect(screen.getByRole('status').textContent).toBe('')
     const detalhe = await dados.detalheFamilia(FAMILIAS_DEMONSTRACAO.exemplo)
-    expect(detalhe.ok && detalhe.valor.membros.find((m) => m.nome === 'Bruno')?.papel).toBe('cuidador')
+    expect(detalhe.ok && detalhe.valor.membros.find((m) => m.nome === 'Ícaro')?.papel).toBe('cuidador')
   })
 
   it('se a própria conferência falhar, a frase dela vem com "Tentar de novo", que repete a conferência, não a escrita', async () => {
@@ -1059,7 +1066,7 @@ describe('/app/familia [37b]: rede numa escrita (RF-17)', () => {
     simularFalha(dados, 'revogarVinculo', 'desconhecido')
     await abrirFamilia('juliana', dados)
     const remover = vi.spyOn(dados, 'revogarVinculo')
-    fireEvent.click(botao('Remover acesso de Bruno'))
+    fireEvent.click(botao('Remover acesso de Ícaro'))
     const dialogo = within(screen.getByRole('dialog'))
     fireEvent.click(dialogo.getByRole('button', { name: 'Remover acesso' }))
     expect((await dialogo.findByRole('alert')).textContent).toContain(TEXTOS_ERRO.rede)
@@ -1069,7 +1076,7 @@ describe('/app/familia [37b]: rede numa escrita (RF-17)', () => {
     await waitFor(() => expect(dialogo.getByRole('alert').textContent).toContain(TEXTOS_ERRO.tente_de_novo))
     expect(remover).toHaveBeenCalledTimes(2)
 
-    // Repete só a conferência: Bruno segue na lista, então o erro da repetição volta.
+    // Repete só a conferência: Ícaro segue na lista, então o erro da repetição volta.
     fireEvent.click(dialogo.getByRole('button', { name: 'Tentar de novo' }))
     await waitFor(() => expect(dialogo.getByRole('alert').textContent).toContain(TEXTOS_ERRO.desconhecido))
     expect(remover).toHaveBeenCalledTimes(2)

@@ -10,7 +10,7 @@ import { ProvedorDadosComunidade } from '../../dados/comunidade.ts'
 import { simularFalha } from '../../dados/conta.memoria.ts'
 import { criarDadosModeracaoMemoria } from '../../dados/moderacao.memoria.ts'
 import { ProvedorDadosModeracao } from '../../dados/moderacao.ts'
-import { criarRotas } from '../../rotas.tsx'
+import { criarRotasProntas } from '../../teste/rotasProntas.ts'
 import { PESSOAS } from '../../teste/renderizarComDados.tsx'
 import { aguardarCarga, renderizarRota } from '../../teste/renderizarRota.tsx'
 import { criarMundoDeTeste } from '../../teste/rotina.fixture.ts'
@@ -53,7 +53,7 @@ function renderizar(caminho: string, quem: Quem) {
         : elenco.papeis,
   }
   vi.stubGlobal('scrollTo', vi.fn())
-  const roteador = createMemoryRouter(criarRotas(), { initialEntries: [caminho] })
+  const roteador = createMemoryRouter(criarRotasProntas(), { initialEntries: [caminho] })
   const resultado = render(
     <ProvedorDadosConta dados={mundo.conta}>
       <ProvedorDadosRotina dados={mundo.rotina}>
@@ -190,8 +190,9 @@ describe('o espaço da conta no cabeçalho, em 1440', () => {
     await montar('/moderacao', 'moderador', 1440)
 
     expect(screen.getAllByRole('button', { name: 'Sair' })).toHaveLength(1)
-    expect(screen.queryByRole('link', { name: 'Entrar' })).toBeNull()
-    expect(screen.queryByRole('link', { name: 'Criar conta' })).toBeNull()
+    // DS1:RF-14: o rodapé público ganhou o grupo Conta (Entrar, Criar conta); o espaço da conta que a sessão troca é o do cabeçalho.
+    expect(within(cabecalho()).queryByRole('link', { name: 'Entrar' })).toBeNull()
+    expect(within(cabecalho()).queryByRole('link', { name: 'Criar conta' })).toBeNull()
   })
 
   it('a barra da página logada não tem mais "Conta" nem "Sair"; "Ir para o Hoje" continua', async () => {

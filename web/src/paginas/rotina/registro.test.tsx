@@ -276,7 +276,7 @@ describe('os avisos que não bloqueiam: "Salvar assim" e "Corrigir"', () => {
     await enviar()
 
     const grupo = screen.getByRole('group', { name: 'Confirmar o registro' })
-    expect(within(grupo).getByText('Este tummy time dura 2 h 0 min, mais do que o esperado.')).toBeTruthy()
+    expect(within(grupo).getByText('Duração de 2 h: mais do que o esperado para tummy time.')).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'Salvar' })).toBeNull()
     fireEvent.click(botao('Corrigir'))
     expect(botao('Salvar')).toBeTruthy()
@@ -304,7 +304,7 @@ describe('os avisos que não bloqueiam: "Salvar assim" e "Corrigir"', () => {
     digitarFim('09:30')
 
     await enviar()
-    expect(screen.getByText('Este sono se sobrepõe a outro, das 08:48 até agora (em andamento).')).toBeTruthy()
+    expect(screen.getByText('Há outro registro de sono no mesmo horário, das 08:48 até agora (em andamento).')).toBeTruthy()
   })
 
   it('uma sessão que termina quando a outra começa (06:40) encosta e não pede confirmação', async () => {
@@ -325,7 +325,7 @@ describe('os avisos que não bloqueiam: "Salvar assim" e "Corrigir"', () => {
 
     await enviar()
 
-    expect(screen.getByText('Este sono se sobrepõe a outro, das 03:30 às 04:20. E mais 2.')).toBeTruthy()
+    expect(screen.getByText('Há outro registro de sono no mesmo horário, das 03:30 às 04:20. E mais 2.')).toBeTruthy()
   })
 
   it('se a leitura da conferência falhar, nada é enviado: o erro aparece acima dos botões e "Tentar de novo" relê', async () => {
@@ -369,7 +369,7 @@ describe('o erro do banco no envio', () => {
 
     await enviar()
     const alerta = screen.getByRole('alert')
-    expect(alerta.textContent).toContain('Não deu para confirmar com o servidor. Tente de novo: se já tiver sido salvo, não duplica.')
+    expect(alerta.textContent).toContain('Não deu para confirmar com o servidor. Tente de novo. Se já tiver sido salvo, nada fica repetido.')
     fireEvent.click(within(alerta).getByRole('button', { name: 'Tentar de novo' }))
     await aguardarCarga()
 
@@ -403,7 +403,7 @@ describe('a edição', () => {
 
   it('abre com o estado completo do registro e manda o estado completo; confirma "Registro salvo." só com Fechar', async () => {
     const primeira = await renderizarRotaPronta('/app/hoje')
-    const alvo = registroDe(primeira.fixture, 'fralda', PESSOAS.bruno.id)
+    const alvo = registroDe(primeira.fixture, 'fralda', PESSOAS.icaro.id)
     primeira.unmount()
 
     const { rotina } = await renderizarRotaPronta(`/app/registro/${alvo.id}/editar`, { mundo: primeira })
@@ -425,7 +425,7 @@ describe('a edição', () => {
 
   it('sessão em andamento: só o início e os detalhes, sem o campo de fim', async () => {
     const primeira = await renderizarRotaPronta('/app/hoje')
-    const alvo = registroDe(primeira.fixture, 'sono', PESSOAS.bruno.id, true)
+    const alvo = registroDe(primeira.fixture, 'sono', PESSOAS.icaro.id, true)
     primeira.unmount()
 
     await renderizarRotaPronta(`/app/registro/${alvo.id}/editar`, { mundo: primeira })
@@ -454,7 +454,7 @@ describe('a edição', () => {
     const primeira = await renderizarRotaPronta('/app/hoje', { diaCompleto: true })
     const alvo = registroDe(primeira.fixture, 'fralda', PESSOAS.juliana.id)
     primeira.unmount()
-    primeira.conta.sessaoParaTeste(PESSOAS.bruno.email)
+    primeira.conta.sessaoParaTeste(PESSOAS.icaro.email)
 
     await renderizarRotaPronta(`/app/registro/${alvo.id}/editar`, { mundo: primeira })
 
@@ -477,7 +477,7 @@ describe('a edição', () => {
   it('id que não é UUID, que não existe ou sem acesso: "Não encontrado"; excluído: a frase do banco', async () => {
     const primeira = await renderizarRotaPronta('/app/registro/banana/editar')
     expect(screen.getByText(/Não encontramos este registro/)).toBeTruthy()
-    const alvo = registroDe(primeira.fixture, 'fralda', PESSOAS.bruno.id)
+    const alvo = registroDe(primeira.fixture, 'fralda', PESSOAS.icaro.id)
     primeira.unmount()
 
     const desconhecido = await renderizarRotaPronta('/app/registro/c3333333-3333-4333-8333-333333333333/editar', { mundo: primeira })
@@ -503,8 +503,8 @@ describe('a edição', () => {
   })
 
   it('a edição aberta pela sessão em andamento de Juliana: o responsável edita a sessão de outro cuidador', async () => {
-    const primeira = await renderizarRotaPronta('/app/hoje', { ajustarRotina: comSessaoEmAndamento('mamada', 10 * MIN, PESSOAS.bruno.id) })
-    const alvo = registroDe(primeira.fixture, 'mamada', PESSOAS.bruno.id, true)
+    const primeira = await renderizarRotaPronta('/app/hoje', { ajustarRotina: comSessaoEmAndamento('mamada', 10 * MIN, PESSOAS.icaro.id) })
+    const alvo = registroDe(primeira.fixture, 'mamada', PESSOAS.icaro.id, true)
     primeira.unmount()
 
     await renderizarRotaPronta(`/app/registro/${alvo.id}/editar`, { mundo: primeira })
