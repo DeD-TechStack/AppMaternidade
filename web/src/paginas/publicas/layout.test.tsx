@@ -15,7 +15,10 @@ const PAGINAS_DE_TEXTO = [
   '/sobre',
 ] as const
 
-const PAGINAS_DE_DESTAQUE = ['/como-funciona', '/cuidado-compartilhado', '/desenvolvimento'] as const
+// /cuidado-compartilhado saiu desta lista: foi refeita nas seções da casa e a estrutura dela
+// está em `cuidado.casa.test.tsx` (aqui ficam as duas que ainda têm a abertura `.pd-abertura`).
+// Como funciona saiu daqui: é a casa acesa (faixas de secoes/, não Secao) e tem o seu teste, comoFunciona.casa.test.tsx.
+const PAGINAS_DE_DESTAQUE = ['/desenvolvimento'] as const
 
 function principal(container: HTMLElement): HTMLElement {
   return container.querySelector('main') as HTMLElement
@@ -110,31 +113,6 @@ describe('páginas em destaque: Secao, Colunas e painéis', () => {
     })
   }
 
-  it('Como funciona: uma faixa de cacau, como Secao de painel; os passos são uma Pilha bloco (ol)', () => {
-    const { container } = renderizarRota('/como-funciona')
-    const faixas = principal(container).querySelectorAll('[data-h~="secao"][data-h-variante="painel"]')
-    expect(faixas).toHaveLength(1)
-    expect(faixas[0].querySelector(':scope > [data-painel="cacau"]')).not.toBeNull()
-    expect(faixas[0].matches('section[aria-labelledby]')).toBe(true)
-    const passos = principal(container).querySelector('ol[data-passos]')!
-    expect(passos.getAttribute('data-h')).toContain('pilha')
-    expect(passos.getAttribute('data-h-vao')).toBe('bloco')
-    const colunas = principal(container).querySelector('.pd-duas')!
-    expect(colunas.getAttribute('data-h-vao')).toBe('bloco')
-    expect(colunas.getAttribute('data-h-quebra')).toBe('900')
-  })
-
-  it('Cuidado compartilhado: o painel de areia é uma Secao de painel (.pd-registro) e a lista dos blocos é uma Pilha', () => {
-    const { container } = renderizarRota('/cuidado-compartilhado')
-    const paineis = principal(container).querySelectorAll('[data-h~="secao"][data-h-variante="painel"]')
-    expect(paineis).toHaveLength(1)
-    const caixa = paineis[0].querySelector(':scope > [data-painel="areia"]')!
-    expect(caixa.classList.contains('pd-registro')).toBe(true)
-    const lista = principal(container).querySelector('ul[data-blocos]')!
-    expect(lista.getAttribute('data-h')).toContain('pilha')
-    expect(lista.closest('[data-h~="quadro"]')!.getAttribute('data-h-largura')).toBe('quadro')
-  })
-
   it('Desenvolvimento: a faixa de cacau é uma Secao de painel e o tummy time é uma Pilha bloco', () => {
     const { container } = renderizarRota('/desenvolvimento')
     const paineis = principal(container).querySelectorAll('[data-h~="secao"][data-h-variante="painel"]')
@@ -214,13 +192,6 @@ describe('H-3c R1-03: o vão entre os passos é o da Pilha (bloco), sem margem d
       .filter(([, seletor]) => /\.pd-passos\s*>\s*li/.test(seletor))
       .filter(([, , corpo]) => /margin/.test(corpo))
     expect(comMargem.map(([, seletor]) => seletor.trim())).toEqual([])
-  })
-
-  it('Como funciona: os passos são uma Pilha de vão bloco e cada item é filho direto', () => {
-    const { container } = renderizarRota('/como-funciona')
-    const passos = principal(container).querySelector('ol[data-passos]')!
-    expect(passos.getAttribute('data-h-vao')).toBe('bloco')
-    for (const item of passos.children) expect(item.tagName).toBe('LI')
   })
 })
 
