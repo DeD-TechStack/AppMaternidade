@@ -173,6 +173,8 @@
     }
 
     [data-casa] .ic-m06 {
+      /* Positioned, so the light group (absolute, inset 0) registers against this plate, not the frame. */
+      position: relative;
       width: min(300px, 100%);
       margin: calc(2 * var(--espaco-midia)) auto 0;
     }

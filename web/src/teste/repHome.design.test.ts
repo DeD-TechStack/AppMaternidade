@@ -189,6 +189,17 @@ describe('REPH-I-17 display variants A/B/C and the M PLUS Rounded 1c package', (
   })
 })
 
+describe('REP-HOME-R1-01 the M06 plate is the containing block of its light group', () => {
+  it('REP-HOME-R1-01 the narrow-width .ic-m06 rule is positioned (relative) and the desktop one stays absolute', () => {
+    const css = semComentarios(lerSrc('componentes', 'inicio-casa', 'inicio-casa.css'))
+    const regras = [...css.matchAll(/\[data-casa\] \.ic-m06\s*\{([^}]*)\}/g)].map((m) => m[1])
+    expect(regras).toHaveLength(2)
+    const [estreita, larga] = regras
+    expect(estreita).toMatch(/position:\s*relative\b/)
+    expect(larga).toMatch(/position:\s*absolute\b/)
+  })
+})
+
 // ---------------------------------------------------------------------------------------------
 // REPH-I-21
 // ---------------------------------------------------------------------------------------------
