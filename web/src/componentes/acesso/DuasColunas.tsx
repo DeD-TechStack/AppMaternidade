@@ -17,11 +17,14 @@ interface Props {
 // `<main>` termina numa seção) e zera o respiro de seção (`py-0`): quem dá o respiro é cada metade.
 const BANDA = 'py-0 gap-0 lg:min-h-[calc(100svh-var(--cm-cabecalho))]'
 
-// O formulário: respiro de topo e de base da seção ampla (72 em 390, 128 em 1440), a margem lateral da calha do
-// quadro e, a partir de 1024, o recuo da borda da metade: o da margem do quadro (120 em 1440), no máximo a seção
-// ampla, para o formulário não fugir para a direita em janelas largas.
+// O formulário: respiro de topo e de base da seção ampla em 390 (72), a margem lateral da calha do quadro e, a
+// partir de 1024, o recuo da borda da metade: o da margem do quadro (120 em 1440), no máximo a seção ampla, para o
+// formulário não fugir para a direita em janelas largas. A partir de 1024 o respiro vertical cai para o vão de grupo
+// (32 em 1440) e o formulário se centra na altura da metade (coluna flex, `justify-center`): o mais alto (Criar
+// conta, ~636 px) cabe nos 720 px da placa sem crescer a banda, e os curtos (Entrar, Recuperar) ficam no meio.
 const FORMULARIO =
   'pt-esp-secao-ampla pb-esp-secao-ampla px-esp-quadro-calha ' +
+  'lg:flex lg:flex-col lg:justify-center lg:pt-esp-grupo lg:pb-esp-grupo ' +
   'lg:col-start-2 lg:row-start-1 lg:ps-[clamp(var(--quadro-calha),calc((100vw-var(--quadro-largura))/2),var(--espaco-secao-ampla))]'
 
 // A metade da placa: parede de cacau (não troca na madrugada) e a placa no fundo. O piso de noite (noite-cartão) da

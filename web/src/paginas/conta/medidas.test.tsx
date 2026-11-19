@@ -25,6 +25,8 @@ afterEach(() => {
 interface Tela {
   nome: string
   app: boolean
+  /** Tela do app com os campos de 56 px (o acesso sem moldura logada). */
+  campo56?: boolean
   montar: () => Promise<{ container: HTMLElement; unmount: () => void }>
 }
 
@@ -46,6 +48,8 @@ const TELAS: Tela[] = [
   {
     nome: '/app/comecar',
     app: true,
+    // O passo "Seu nome" é tela de acesso sem moldura logada: os campos são de 56 px, como os das telas públicas.
+    campo56: true,
     montar: async () => {
       const dados = criarDadosContaMemoria(criarFixtureDeTeste(Date.now()))
       await dados.criarUsuario('nova@exemplo.invalid', 'senha-nova', 'Nova', 'x')
@@ -113,8 +117,9 @@ describe('campos: 56 px nas telas públicas e 48 px nas do app', () => {
         total += 1
         if (campo.classList.contains('alvo-toque')) achados.push(`${tela.nome}: alvo-toque em ${campo.id}`)
         const baixo = campo.classList.contains('min-h-12')
-        if (tela.app && !baixo) achados.push(`${tela.nome}: falta min-h-12 (48 px) em ${campo.id}`)
-        if (!tela.app && baixo) achados.push(`${tela.nome}: min-h-12 numa tela pública em ${campo.id}`)
+        const quarentaEOito = tela.app && !tela.campo56
+        if (quarentaEOito && !baixo) achados.push(`${tela.nome}: falta min-h-12 (48 px) em ${campo.id}`)
+        if (!quarentaEOito && baixo) achados.push(`${tela.nome}: min-h-12 numa tela de 56 px em ${campo.id}`)
       }
       unmount()
     }

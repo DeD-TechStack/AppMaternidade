@@ -170,9 +170,11 @@ describe('telas de acesso: a banda de duas metades iguais (formulário e placa d
     expect(filhosDoMain(passo.container)).toHaveLength(1)
     const colunas = passo.container.querySelector(`main ${DATA_H('colunas')}`)!
     expect(modeloDe(colunas)).toBe('minmax(0, 1fr) minmax(0, 1fr)')
-    // O cartão do passo é um Cartao (padding de painel e raio do cartão), com o formulário e o título dentro.
+    // O passo é uma pilha sem cartão (sem borda, fundo nem raio), com o título e o formulário dentro.
     const cartao = screen.getByRole('heading', { level: 2, name: 'Seu nome' }).closest('section')!
-    expect(cartao.getAttribute('data-h')?.split(' ')).toContain('cartao')
+    expect(cartao.getAttribute('data-h')?.split(' ')).toContain('pilha')
+    expect(cartao.getAttribute('data-h')?.split(' ')).not.toContain('cartao')
+    expect(cartao.className).not.toMatch(/border|bg-|rounded|shadow/)
     passo.unmount()
 
     const escolha = renderizarComDados('/app/comecar', { sessao: 'davi' })
@@ -182,7 +184,9 @@ describe('telas de acesso: a banda de duas metades iguais (formulário e placa d
     const colunasDaEscolha = escolha.container.querySelector(`main ${DATA_H('colunas')}`)!
     expect(modeloDe(colunasDaEscolha)).toBe('minmax(0, 1fr) minmax(0, 1fr)')
     const cartaoDaEscolha = screen.getByRole('heading', { level: 2, name: 'Como você quer começar?' }).closest('section')!
-    expect(cartaoDaEscolha.getAttribute('data-h')?.split(' ')).toContain('cartao')
+    expect(cartaoDaEscolha.getAttribute('data-h')?.split(' ')).toContain('pilha')
+    expect(cartaoDaEscolha.getAttribute('data-h')?.split(' ')).not.toContain('cartao')
+    expect(cartaoDaEscolha.className).not.toMatch(/border|bg-|rounded|shadow/)
   })
 
   it('o estado carregando e o estado de erro da tela de acesso também são a banda de duas metades, com pilha', async () => {

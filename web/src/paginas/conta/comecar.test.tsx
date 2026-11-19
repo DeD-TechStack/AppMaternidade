@@ -184,15 +184,13 @@ describe('o passo "Seu nome"', () => {
     await waitFor(() => expect(document.activeElement).toBe(campoDeTexto()))
   })
 
-  it('traz a barra com "Ir para o Hoje", sem o link do protótipo; o Conta e o Sair são do cabeçalho do site, que traz a navegação', async () => {
+  it('sem a barra "Ir para o Hoje" (a tela de acesso não tem moldura logada); o Conta e o Sair são do cabeçalho do site, que traz a navegação', async () => {
     const dados = await memoriaSemConta()
     renderizarComDados('/app/comecar', { dados })
     await screen.findByRole('heading', { level: 2, name: 'Seu nome' })
 
-    const barra = within(screen.getByRole('navigation', { name: 'Conta' }))
-    expect(screen.getByRole('link', { name: 'Ir para o Hoje' }).getAttribute('href')).toBe('/app/hoje')
-    expect(barra.queryByRole('link', { name: 'Conta' })).toBeNull()
-    expect(barra.queryByRole('button', { name: 'Sair' })).toBeNull()
+    expect(screen.queryByRole('navigation', { name: 'Conta' })).toBeNull()
+    expect(screen.queryByRole('link', { name: 'Ir para o Hoje' })).toBeNull()
     // Um só "Sair" na página, o do cabeçalho, e o "Conta" do cabeçalho não está na página atual.
     const cabecalho = within(document.querySelector<HTMLElement>('header[data-cabecalho]')!)
     expect(screen.getAllByRole('button', { name: 'Sair' })).toHaveLength(1)

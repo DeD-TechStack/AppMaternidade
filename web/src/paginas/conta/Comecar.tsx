@@ -2,14 +2,14 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Navigate, useLocation, useSearchParams } from 'react-router'
 import { DuasColunas } from '../../componentes/acesso/DuasColunas.tsx'
 import { Manchete } from '../../componentes/acesso/Manchete.tsx'
-import { Cartao, Pilha } from '../../componentes/base/layout/index.ts'
+import { AvisoDaTela } from '../../componentes/app/AvisoDaTela.tsx'
+import { Pilha } from '../../componentes/base/layout/index.ts'
 import { Campo, SeletorFuso } from '../../componentes/conta/Campos.tsx'
 import { destinoDepoisDeEntrar, voltaValida } from '../../componentes/conta/destino.ts'
 import { useEnvio } from '../../componentes/conta/envio.ts'
 import { useFocoNoResumo, useFocoNoTitulo } from '../../componentes/conta/foco.ts'
 import { fusoDoAparelho } from '../../componentes/conta/fusos.ts'
 import { NOME_DA_CONTA_MAX } from '../../componentes/conta/limitesDeNome.ts'
-import { MolduraLogada } from '../../componentes/conta/MolduraLogada.tsx'
 import { BOTAO_PRINCIPAL, RegiaoStatus } from '../../componentes/conta/Partes.tsx'
 import { ErroDaConta } from '../../componentes/estado/ErroDaConta.tsx'
 import { useDadosConta, useSessao } from '../../componentes/conta/sessao.tsx'
@@ -82,61 +82,56 @@ function PassoSeuNome({ aoSalvar }: { aoSalvar: () => void }) {
   }
 
   return (
-    <MolduraLogada>
-      <DuasColunas>
-        <Pilha vao="grupo">
-        <Manchete texto={MANCHETES.comecar} refTitulo={titulo} />
-        <RegiaoStatus mensagem={textoDaPassagem(location.state)} />
-        <Cartao
-          as="section"
-          aria-labelledby="titulo-seu-nome"
-          className="max-w-[32rem] border border-[var(--cor-fio-suave)] bg-[var(--cor-cartao)]"
-        >
-         <Pilha vao="pilha">
-          <h2 id="titulo-seu-nome" className="cm-h4">
-            {COMECAR.titulo}
-          </h2>
-          <p>{COMECAR.frase}</p>
-          <form onSubmit={aoEnviar} noValidate className="flex flex-col gap-5">
-            {erroDoEnvio && !campoDoErro ? (
-              <ErroDaConta
-                erro={erroDoEnvio}
-                repetivel={estado.fase === 'erro' && estado.tentarDeNovo}
-                aoTentarDeNovo={() => void tentarDeNovo()}
-                refResumo={resumo}
-              />
-            ) : null}
-            <Campo
-              rotulo={COMUM.rotuloNome}
-              ajuda={COMUM.ajudaNome}
-              maxLength={NOME_DA_CONTA_MAX}
-              autoComplete="name"
-              tamanho="app"
-              valor={nome}
-              aoMudar={(valor) => {
-                setNome(valor)
-                setErroNome(null)
-              }}
-              erro={erroNome ?? (campoDoErro === 'nome' && erroDoEnvio ? textoDoErro(erroDoEnvio) : null)}
-              refEntrada={nomeRef}
-            />
-            <SeletorFuso
-              rotulo={COMECAR.fuso}
-              ajuda={COMECAR.ajudaFuso}
-              tamanho="app"
-              valor={fuso}
-              aoMudar={setFuso}
-              erro={campoDoErro === 'fuso' && erroDoEnvio ? textoDoErro(erroDoEnvio) : null}
-              refEntrada={fusoRef}
-            />
-            <button type="submit" disabled={enviando} className={BOTAO_PRINCIPAL}>
-              {enviando ? COMUM.salvando : COMECAR.botao}
-            </button>
-          </form>
-         </Pilha>
-        </Cartao>
-        </Pilha>
-      </DuasColunas>
-    </MolduraLogada>
+    <>
+      <main>
+        <DuasColunas>
+          <Pilha vao="grupo">
+            <Manchete texto={MANCHETES.comecar} refTitulo={titulo} />
+            <RegiaoStatus mensagem={textoDaPassagem(location.state)} />
+            <Pilha as="section" vao="pilha" aria-labelledby="titulo-seu-nome">
+              <h2 id="titulo-seu-nome" className="cm-h4">
+                {COMECAR.titulo}
+              </h2>
+              <p>{COMECAR.frase}</p>
+              <form onSubmit={aoEnviar} noValidate className="flex flex-col gap-4">
+                {erroDoEnvio && !campoDoErro ? (
+                  <ErroDaConta
+                    erro={erroDoEnvio}
+                    repetivel={estado.fase === 'erro' && estado.tentarDeNovo}
+                    aoTentarDeNovo={() => void tentarDeNovo()}
+                    refResumo={resumo}
+                  />
+                ) : null}
+                <Campo
+                  rotulo={COMUM.rotuloNome}
+                  ajuda={COMUM.ajudaNome}
+                  maxLength={NOME_DA_CONTA_MAX}
+                  autoComplete="name"
+                  valor={nome}
+                  aoMudar={(valor) => {
+                    setNome(valor)
+                    setErroNome(null)
+                  }}
+                  erro={erroNome ?? (campoDoErro === 'nome' && erroDoEnvio ? textoDoErro(erroDoEnvio) : null)}
+                  refEntrada={nomeRef}
+                />
+                <SeletorFuso
+                  rotulo={COMECAR.fuso}
+                  ajuda={COMECAR.ajudaFuso}
+                  valor={fuso}
+                  aoMudar={setFuso}
+                  erro={campoDoErro === 'fuso' && erroDoEnvio ? textoDoErro(erroDoEnvio) : null}
+                  refEntrada={fusoRef}
+                />
+                <button type="submit" disabled={enviando} className={BOTAO_PRINCIPAL}>
+                  {enviando ? COMUM.salvando : COMECAR.botao}
+                </button>
+              </form>
+            </Pilha>
+          </Pilha>
+        </DuasColunas>
+      </main>
+      <AvisoDaTela />
+    </>
   )
 }

@@ -2559,10 +2559,20 @@ async function carregarCasosCdp() {
   }
 }
 
+// O ambiente da sessão (BASE_URL e CDP_PORTA) pode vir do `.oc/ambiente.json` do checkout; a variável de ambiente vale mais.
+function lerAmbienteDoCartao() {
+  try {
+    return JSON.parse(fs.readFileSync(path.resolve('.oc/ambiente.json'), 'utf8'))
+  } catch {
+    return {}
+  }
+}
+
 async function principal(argumentos) {
   let pasta
   let pedidos
-  const baseUrl = process.env.BASE_URL ?? 'http://127.0.0.1:5244/'
+  const ambiente = lerAmbienteDoCartao()
+  const baseUrl = process.env.BASE_URL ?? ambiente.BASE_URL ?? 'http://127.0.0.1:5244/'
   try {
     ;({ pasta, pedidos } = lerArgumentos(argumentos))
     verificarLoopback(baseUrl)
@@ -2573,7 +2583,7 @@ async function principal(argumentos) {
     console.error(erro.message)
     return 2
   }
-  const porta = Number(process.env.CDP_PORTA ?? 9344)
+  const porta = Number(process.env.CDP_PORTA ?? ambiente.CDP_PORTA ?? 9344)
   fs.mkdirSync(pasta, { recursive: true })
   // Falha fechado: o JSON velho de cada pedido sai antes de qualquer medida, então um pedido que
   // falha (ou que não chega a ser medido) nunca deixa uma medida antiga no lugar da nova.
