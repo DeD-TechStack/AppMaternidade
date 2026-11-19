@@ -1069,4 +1069,22 @@
   .cm-pagina-simples .cm-botao {
     margin-top: var(--espaco-grupo);
   }
+
+  /* The build label of the preview (`<div data-previa role="note">`, injected by scripts/montar-pages.mjs with an inline
+     style: fixed, padded, on a dark ground). It stays in the DOM for assistive technology but leaves the picture, so it
+     never covers the page. Only the labelled note: the form wrappers carry `data-previa="topico|resposta"` without the
+     role. The flags are needed because the element's own style is inline; an important declaration beats a normal
+     inline one. */
+  [data-previa][role='note'] {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: -1px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    border: 0 !important;
+    clip: rect(0 0 0 0) !important;
+    clip-path: inset(50%) !important;
+    white-space: nowrap !important;
+  }
 }
