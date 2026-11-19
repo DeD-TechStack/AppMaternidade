@@ -1,247 +1,113 @@
-/* Páginas públicas de leitura longa (Regras, Privacidade, Termos, Exclusão, Contato, Sobre).
-   Só valores dos tokens: cores, raios e as duas famílias vêm de tema.css e tokens.css; espaço e tipo, das variáveis
-   do tema gerado (`--espaco-*`, `--texto-*`). Classes `pt-*`.
-   Ordem da página: abertura (título, segunda linha, botão e painel de mel), índice, leitura.
-   O espaço vem das primitivas de layout (H-3a): a página é uma pilha de `Secao`; a abertura é um `Colunas` de vão
-   midia (o título e o painel de mel; empilhados até 1099 px), com a cabeça (título e abertura) no limite de leitura
-   (`max-w-leitura`, alinhada à borda do quadro); a leitura é um `QuadroLayout` de 640 px, alinhado à
-   esquerda do quadro, com o índice e as seções numa só `Pilha` de vão bloco; o mesmo fio abre cada bloco. */
+/* Páginas públicas de leitura longa (Regras, Privacidade, Termos, Exclusão, Contato, Sobre), no modelo T2 assinado
+   (`.oc/ref/t2.md`). Só valores dos tokens: cores, raios e as duas famílias vêm de tema.css e tokens.css; espaço e
+   tipo, das variáveis do tema gerado (`--espaco-*`, `--texto-*`). Classes `pt-*`.
+   Ordem da página: a abertura (uma faixa de cacau com o título, a frase de abertura, a pílula de mel e, na parte
+   direita, a placa da rua), depois o documento sobre papel (uma coluna de 640 px, com o índice à direita quando há
+   lugar). Nada se move: nenhuma transição além da resposta de hover e foco, que é imediata.
+   O espaço vem das primitivas de layout (H-3a): a página é uma pilha de `Secao`; a abertura e a leitura leem o limite
+   de leitura do quadro (borda esquerda única: o `h1`, a frase, o botão, os títulos e os parágrafos). As disposições
+   mudam por consulta de contêiner (a faixa da abertura e o quadro da leitura), não pela janela. */
 @layer components {
-  /* Palavra curta colada à seguinte (ver `ligarPalavrasCurtas`): a linha não quebra entre as duas. */
+  /* Palavra curta colada à seguinte (ver `ligarPalavrasCurtas`): o par fica junto quando cabe na linha (é uma caixa
+     só) e, quando não cabe (320 px, texto a 200%), quebra por dentro em vez de passar da coluna. */
   .pt-junto {
-    white-space: nowrap;
-  }
-
-  /* Segunda linha do título: o degrau de título 2 em itálico. A escala de h1 é só do nome. */
-  .pt-segunda-linha {
-    margin: 0;
-    font-family: var(--fonte-titulo);
-    font-size: var(--texto-titulo-2-tamanho);
-    line-height: var(--texto-titulo-2-entrelinha);
-    font-style: normal;
-    font-weight: 500;
-    letter-spacing: -0.01em;
-    text-wrap: balance;
-  }
-
-  /* Figura da abertura: o painel de mel e, logo abaixo dele, a frase de apoio (uma `Pilha`, vão pilha). */
-
-  /* Painel de mel: só o desenho. No celular o painel ocupa a largura do quadro, na borda esquerda dele, como o
-     texto (um desenho estreito, como o de Privacidade, não fica solto no meio); o desenho fica centrado dentro dele.
-     Em tela larga o painel abraça a figura (fit-content): largura da figura mais o respiro (vão grupo) de cada
-     lado, no máximo a da coluna, centrado nela (a da direita da abertura). Sem largura mínima, sem respiro a mais.
-     A figura tem a altura fixa (220 no celular, 300 em tela larga) e a largura que o traço pedir (se não couber,
-     encolhe dentro da caixa, sem recorte). No celular o painel tem uns 268 px de altura, abaixo de 40% da janela de
-     844 px. A figura é filha de uma pilha (flex em coluna): o centro é `align-self`. */
-  .pt-figura > .cm-painel.pt-painel {
-    box-sizing: border-box;
-    inline-size: 100%;
+    display: inline-block;
     max-inline-size: 100%;
-    align-self: center;
-    padding: var(--espaco-grupo);
   }
 
-  /* A frase de apoio, no degrau de título 4, embaixo do painel. */
-  .pt-apoio {
-    margin: 0;
-    font-family: var(--fonte-titulo);
-    font-size: var(--texto-titulo-4-tamanho);
-    line-height: var(--texto-titulo-4-entrelinha);
-    font-style: normal;
-    font-weight: 500;
-    text-wrap: balance;
+  /* Uma palavra longa quebra no título em vez de alargar a coluna (texto ampliado, tela estreita). */
+  .pt-abertura h1 {
+    overflow-wrap: anywhere;
   }
 
-  /* O desenho é um traço preto sobre o mel: inteiro dentro da caixa, centrado, sem recorte. */
-  .pt-ilustracao {
+  /* ----- Abertura: uma faixa de cacau, de ponta a ponta, logo abaixo do cabeçalho ----- */
+
+  /* A faixa é o contêiner da própria disposição. O papel das letras e o anel de foco vêm de `data-faixa-fundo`
+     (secoes.css). `--pt-placa-largura`: a placa é mostrada na largura nativa de 340 px (densidade 1,59, nunca
+     ampliada). `--pt-borda`: onde o texto começa (a borda esquerda do quadro). */
+  .pt-abertura {
+    --pt-placa-largura: 340px;
+    --pt-borda: max(var(--quadro-calha), (100% - var(--quadro-largura)) / 2);
+
+    container: pt-abertura / inline-size;
+    overflow-x: clip;
+    background-color: var(--color-cacau);
+    color: var(--color-papel);
+  }
+
+  /* A faixa não tem padding próprio (a grade dá o espaço): vence a regra da primeira `Secao` do `<main>`. */
+  main > .pt-abertura[data-h~='secao']:first-child:not([data-h-variante='painel']) {
+    padding-block: 0;
+  }
+
+  /* Estreito: o texto em cima e a placa embaixo, rente à borda direita e ao pé da faixa. */
+  .pt-abertura-grade {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--espaco-secao);
+    box-sizing: border-box;
+    padding-block: var(--espaco-bloco) 0;
+  }
+
+  /* O pé da faixa continua o chão da placa (a faixa escura do pé do recorte) até a borda esquerda: sem linha de
+     areia nem de piso, só a mesma noite. A altura é a do chão da placa (32 de 542 px de largura). A cor é a do chão
+     do recorte (cacau com metade de preto). */
+  .pt-abertura-grade::before {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    block-size: calc(min(var(--pt-placa-largura), 100cqi) * 0.059);
+    background-color: color-mix(in srgb, var(--color-cacau) 50%, black);
+    content: '';
+  }
+
+  .pt-placa {
+    position: relative;
+    justify-self: end;
+    inline-size: min(var(--pt-placa-largura), 100%);
+  }
+
+  /* A `<picture>` (AVIF + WebP) não tem caixa: a `<img>` segue como filha da placa. */
+  .pt-placa > picture {
+    display: contents;
+  }
+
+  .pt-placa img {
     display: block;
-    width: auto;
-    max-width: 100%;
-    height: 220px;
-    margin: 0 auto;
-    object-fit: contain;
-    object-position: center;
+    inline-size: 100%;
+    block-size: auto;
+    max-inline-size: none;
   }
 
-  /* Abaixo de 1100 px a abertura é uma coluna só e a primeira tela tem de chegar ao texto de leitura (o primeiro
-     parágrafo começa antes dos 844 px de um celular). Só espaço: o conteúdo e a ordem são os mesmos. A seção da
-     abertura abre com um vão de grupo (no lugar do `secao-ampla`) e não tem padding embaixo; a leitura abre com o
-     mesmo vão de grupo, então entre a frase de apoio e o fio do índice sobra um vão só. As duas colunas e o painel
-     com a frase de apoio ficam a um vão de grupo e de junto um do outro. O desenho do celular é mais baixo (o
-     painel de mel fica com a largura do texto e 160 px de figura mais o respiro). Seletores mais específicos que os
-     de `layout.css`, que vêm antes e valem de 1100 px para cima. */
-  @media (max-width: 1099.98px) {
-    main > .pt-secao-abertura:first-child[data-h~='secao']:not([data-h-variante='painel']) {
-      padding-top: var(--espaco-grupo);
-      padding-bottom: 0;
+  /* Largo: a faixa tem 400 px de altura no mínimo (cresce com o texto), o texto fica centrado na vertical e a placa
+     sai do fluxo, rente à borda direita e ao pé. A coluna do texto nunca passa por baixo da placa. */
+  @container pt-abertura (min-width: 60rem) {
+    .pt-abertura-grade {
+      align-content: center;
+      min-block-size: 400px;
+      padding-block: var(--espaco-grupo);
+      row-gap: 0;
     }
 
-    main > .pt-secao-leitura[data-h~='secao']:not([data-h-variante='painel']) {
-      padding-top: var(--espaco-grupo);
+    .pt-abertura .pt-abertura-grade > .pt-abertura-quadro[data-h~='quadro'] {
+      max-inline-size: min(var(--leitura), 100% - var(--pt-borda) - var(--pt-placa-largura) - var(--espaco-grupo));
     }
 
-    .pt-abertura[data-h~='colunas'][data-h-vao='midia'] {
-      gap: var(--espaco-grupo);
-    }
-
-    .pt-figura[data-h~='pilha'][data-h-vao='pilha'] {
-      gap: var(--espaco-junto);
-    }
-
-    .pt-figura .pt-ilustracao {
-      height: 136px;
-    }
-
-    /* Desenho de retrato no celular: 200 px de altura, para o traço não ficar miúdo. */
-    .pt-figura.pt-figura-retrato .pt-ilustracao {
-      height: 200px;
+    .pt-placa {
+      position: absolute;
+      inset-inline-end: 0;
+      inset-block-end: 0;
     }
   }
 
-
-  @media (min-width: 1100px) {
-    /* A figura preenche a coluna da direita da abertura; a frase de apoio fica à esquerda, embaixo do painel. */
-    .pt-apoio {
-      text-align: end;
-    }
-
-    .pt-figura > .cm-painel.pt-painel {
-      box-sizing: border-box;
-      inline-size: fit-content;
-      max-inline-size: 100%;
-      align-self: center;
-      padding: var(--espaco-grupo);
-    }
-
-    .pt-ilustracao {
-      height: 300px;
-    }
-
-    /* A figura é uma coluna só: o painel de mel, a frase de apoio e a coluna têm a mesma borda esquerda e a mesma
-       largura (o painel não abraça mais o desenho: um desenho estreito, como o de Termos, ficava numa ilha de 31%
-       da coluna, fora do eixo da frase). O desenho segue centrado no painel. A frase se alinha ao começo, na
-       borda do painel. Os seletores com o `.pt-abertura` na frente valem mais que as regras acima. */
-    .pt-abertura .pt-figura > .cm-painel.pt-painel {
-      box-sizing: border-box;
-      inline-size: 100%;
-      max-inline-size: 100%;
-      align-self: stretch;
-      padding: var(--espaco-grupo);
-    }
-
-    .pt-abertura .pt-figura > .pt-apoio {
-      text-align: start;
-    }
-
-    /* Desenho de retrato: o painel abraça o desenho, rente à borda final da coluna da figura, e a frase de apoio
-       acaba na mesma borda. */
-    .pt-abertura .pt-figura.pt-figura-retrato > .cm-painel.pt-painel {
-      box-sizing: border-box;
-      inline-size: fit-content;
-      max-inline-size: 100%;
-      align-self: flex-end;
-      padding: var(--espaco-grupo);
-    }
-
-    .pt-abertura .pt-figura.pt-figura-retrato > .pt-apoio {
-      text-align: end;
-    }
-  }
-
-  /* A coluna de leitura (`QuadroLayout` de 640, alinhado à esquerda do quadro) guarda o índice e a leitura numa só
-     pilha. O mesmo fio abre o índice, o parágrafo de abertura e cada seção: nenhum fio por bloco a mais, nenhum a
-     menos. */
-  .pt-leitura > .pt-indice,
-  .pt-leitura > .cm-lide,
-  .pt-leitura > .pt-secao {
-    border-top: 1px solid var(--cor-fio-suave);
-    padding-top: var(--espaco-grupo);
-  }
-
-  /* Índice "Nesta página": corpo pequeno, uma lista vertical só nas seis páginas. */
-  .pt-indice-rotulo {
-    margin: 0;
-    font-family: var(--fonte-texto);
-    font-size: var(--texto-pequeno-tamanho);
-    line-height: var(--texto-pequeno-entrelinha);
-    font-weight: 600;
-  }
-
-  .pt-indice-lista {
-    margin: 4px 0 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  /* Em tela estreita o índice é um <details> fechado: o resumo é uma linha de 48 px com a seta, sem fundo.
-     O fio de cima é o do próprio índice. Fechado, o índice é só essa linha entre o fio dele e o fio do bloco
-     seguinte, que vem depois do vão bloco da pilha: para o rótulo ficar no meio, com o mesmo espaço em cima e
-     embaixo, o índice recebe em cima o mesmo vão bloco que a pilha põe embaixo (sem margem negativa: o vão entre
-     os dois blocos continua o da pilha). */
-  .pt-indice:has(> .pt-indice-detalhes) {
-    padding-top: var(--espaco-bloco);
-  }
-
-  .pt-indice-resumo {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--espaco-junto);
-    box-sizing: border-box;
-    min-height: 48px;
-    font-family: var(--fonte-texto);
-    font-size: var(--texto-pequeno-tamanho);
-    line-height: var(--texto-pequeno-entrelinha);
-    font-weight: 600;
-    list-style: none;
-    cursor: pointer;
-  }
-
-  .pt-indice-resumo::-webkit-details-marker {
-    display: none;
-  }
-
-  .pt-indice-detalhes[open] .pt-indice-seta {
-    transform: rotate(180deg);
-  }
-
-  .pt-indice-link {
-    display: flex;
-    align-items: center;
-    box-sizing: border-box;
-    padding-block: 6px;
-    color: inherit;
-    font-family: var(--fonte-texto);
-    font-size: var(--texto-pequeno-tamanho);
-    line-height: var(--texto-pequeno-entrelinha);
-    text-decoration-line: underline;
-    text-decoration-thickness: 1.5px;
-    text-underline-offset: 4px;
-  }
-
-  .pt-indice-link:hover {
-    text-decoration-thickness: 3px;
-  }
-
-  /* Leitura: Outfit no corpo (18/28 em 1440) numa coluna de 640 px (uns 70 letras por linha). As seções se separam
-     pelo vão bloco da pilha e pelo fio de cima (acima). */
-  .pt-leitura {
-    font-family: var(--fonte-texto);
-    font-size: var(--texto-corpo-tamanho);
-    line-height: var(--texto-corpo-entrelinha);
-  }
-
-  /* Cartão de e-mail (Contato): o rótulo, o endereço e o botão, e mais nada. É um `Cartao` (padding do painel e raio
-     do cartão); daqui vêm o fundo, a borda e a cor. Texto e botão lado a lado quando cabem; senão, um sobre o outro. */
+  /* Cartão de e-mail (Contato): o rótulo, o endereço e o botão, e mais nada, no lugar do botão, em papel sobre o
+     cacau (14,2:1). Sem caixa, fundo nem borda. Texto e botão lado a lado quando cabem; senão, um sobre o outro. */
   .pt-email {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    justify-content: space-between;
     gap: var(--espaco-pilha) var(--espaco-grupo);
-    border: 1px solid var(--cor-fio-suave);
-    background-color: var(--cor-cartao);
-    color: var(--color-cacau);
   }
 
   .pt-email-dados {
@@ -265,25 +131,119 @@
     overflow-wrap: anywhere;
   }
 
-  /* De 1280 em diante o cartão é uma linha só; a coluna do texto cresce pelo conteúdo, pelo piso de `min-content`. */
-  @media (min-width: 1280px) {
-    .pt-email {
-      flex-wrap: nowrap;
+  /* ----- Documento: sobre papel, logo abaixo da faixa ----- */
+
+  .pt-secao-leitura[data-h~='secao'] {
+    padding-block-start: var(--espaco-midia);
+  }
+
+  /* O quadro da página é o contêiner do índice: ele vai para a direita da coluna quando cabem 640 + vão + 320. */
+  .pt-pagina {
+    container: pt-pagina / inline-size;
+  }
+
+  /* Estreito: o índice vem antes do documento, em fluxo, numa coluna só. */
+  .pt-pagina-grade {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--espaco-bloco);
+  }
+
+  @container pt-pagina (min-width: 66rem) {
+    .pt-pagina-grade {
+      grid-template-columns: minmax(0, var(--leitura)) minmax(0, 20rem);
+      column-gap: var(--espaco-secao);
+      align-items: start;
     }
 
-    .pt-email-endereco {
-      white-space: nowrap;
+    .pt-pagina-grade > .pt-leitura {
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    .pt-pagina-grade > .pt-indice {
+      grid-column: 2;
+      grid-row: 1;
     }
   }
 
+  /* Índice "Nesta página": o rótulo no corpo, em 500, e uma lista vertical só, igual nas seis páginas. */
+  .pt-indice-rotulo {
+    margin: 0;
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-corpo-tamanho);
+    line-height: var(--texto-corpo-entrelinha);
+    font-weight: 500;
+  }
+
+  .pt-indice-lista {
+    margin: 4px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Em tela estreita o índice é um <details> fechado: o resumo é uma linha de 48 px com a seta, sem fundo. */
+  .pt-indice-resumo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--espaco-junto);
+    box-sizing: border-box;
+    min-height: 48px;
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-corpo-tamanho);
+    line-height: var(--texto-corpo-entrelinha);
+    font-weight: 500;
+    list-style: none;
+    cursor: pointer;
+  }
+
+  .pt-indice-resumo::-webkit-details-marker {
+    display: none;
+  }
+
+  .pt-indice-detalhes[open] .pt-indice-seta {
+    transform: rotate(180deg);
+  }
+
+  /* Links de cacau, alvo de 44 px no mínimo, sublinhados só no hover e no foco (a resposta é imediata). */
+  .pt-indice-link {
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    min-block-size: var(--alvo-toque);
+    padding-block: 6px;
+    color: var(--color-cacau);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-corpo-tamanho);
+    line-height: var(--texto-corpo-entrelinha);
+    text-decoration-line: none;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 4px;
+  }
+
+  .pt-indice-link:hover,
+  .pt-indice-link:focus-visible {
+    text-decoration-line: underline;
+  }
+
+  /* Leitura: Outfit no corpo (18/28 em 1440) numa coluna de 640 px (uns 70 letras por linha). As seções se separam
+     só pelo vão `midia` da pilha (64 px em 1440) e pelos títulos: nenhum fio, nenhum cartão. */
+  .pt-leitura {
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-corpo-tamanho);
+    line-height: var(--texto-corpo-entrelinha);
+  }
+
   /* h2 em Literata no degrau de título 2 (36/42 em 1440; o h2 de 56 é de página de venda) e h3 no de título 4. O vão
-     até o texto é o da pilha. */
+     até o texto é o da pilha (16 px). */
   .pt-h2,
   .pt-h3 {
     margin: 0;
     font-family: var(--fonte-titulo);
     font-weight: 600;
     text-wrap: balance;
+    overflow-wrap: anywhere;
   }
 
   .pt-h2 {
@@ -399,6 +359,7 @@
 
   /* Tabela: legenda, cabeçalhos e linhas; rola dentro da própria região em tela estreita. */
   .pt-tabela {
+    container: pt-tabela / inline-size;
     max-width: 100%;
     overflow-x: auto;
     border: 1px solid var(--cor-fio-suave);
@@ -437,11 +398,26 @@
 
   .pt-tabela tbody th {
     font-weight: 600;
-    white-space: nowrap;
   }
 
-  .pt-tabela tbody td:nth-child(2) {
-    white-space: nowrap;
+  /* Em coluna estreita para o tamanho do texto (menos de 15 em: texto a 200% no celular) as células quebram até
+     dentro da palavra e a tabela cabe na coluna. Com folga (15 em ou mais: 390 e 1440 com o texto normal) o canal e o
+     número ficam numa linha só, como sempre foram; o em é o do corpo, por isso a consulta acompanha o texto. */
+  .pt-tabela th,
+  .pt-tabela td {
+    overflow-wrap: anywhere;
+  }
+
+  @container pt-tabela (min-width: 15em) {
+    .pt-tabela th,
+    .pt-tabela td {
+      overflow-wrap: normal;
+    }
+
+    .pt-tabela tbody th,
+    .pt-tabela tbody td:nth-child(2) {
+      white-space: nowrap;
+    }
   }
 
   @media (max-width: 767px) {

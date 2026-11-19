@@ -4,7 +4,11 @@
    proporções das artes (a moldura 721 × 1426 e a captura do Histórico, cujas linhas acabam a 1,52 × a largura da tela).
 
    O chão: o padding de topo e de base das faixas da página é `secao`; abaixo de 768 ele desce a `midia` (64 px entre
-   duas faixas em 390). O aparelho da abertura e a família das ideias ficam em pé nesse chão. */
+   duas faixas em 390). O aparelho da abertura e a família das ideias ficam em pé nesse chão.
+
+   MOTION-PAGES (E2, E3): o movimento preso à rolagem mora no arquivo importado abaixo, todo sob @supports e
+   prefers-reduced-motion: no-preference; sem suporte ou com movimento reduzido, esta página segue estática. */
+@import '../../movimento/paginas/desenvolvimento.css';
 .dc-abertura {
   --dc-chao: var(--espaco-secao);
 

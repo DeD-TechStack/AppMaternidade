@@ -7,7 +7,12 @@
    carregadas no mesmo pacote, desmontavam este heroi (texto em `display: contents`, placa absoluta, parede de cacau
    sob o texto de cacau). Aqui cada propriedade que elas tocam volta ao desenho desta pagina.
 
-   As faixas 2 a 5 sao conteineres (`.cf-banda`): as duas colunas vem de uma consulta de conteiner, nao da janela. */
+   As faixas 2 a 5 sao conteineres (`.cf-banda`): as duas colunas vem de uma consulta de conteiner, nao da janela.
+
+   MOTION-PAGES (C2, C3): o movimento preso a rolagem mora no arquivo importado abaixo, todo sob @supports e
+   prefers-reduced-motion: no-preference; sem suporte ou com movimento reduzido, esta pagina segue estatica. */
+@import '../../movimento/paginas/como.css';
+
 @layer components {
   /* ---- Heroi: a placa rente a esquerda, o texto pendurado na parede da noite (de 768 em diante) ---- */
   [data-casa] [data-cena-heroi][data-lado]:has(.cf-hero-texto) {
