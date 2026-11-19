@@ -82,6 +82,16 @@ async function responder<T>(pendente: Pendente<T>, valor: Resultado<T>) {
   await assentar()
 }
 
+/** Uma leitura que começa agora (a aba volta a ficar visível) e o servidor responde `servidor` na hora. */
+async function lerAgora(falso: Falso, servidor: EstadoDosAvisos) {
+  falso.servidor = servidor
+  Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' })
+  await act(async () => {
+    document.dispatchEvent(new Event('visibilitychange'))
+  })
+  await assentar()
+}
+
 async function montar(caminho: string, falso: Falso, sessao: 'juliana' | 'davi' = 'juliana') {
   const mundo = criarMundoDeTeste({ sessao })
   vi.stubGlobal('scrollTo', vi.fn())
@@ -317,8 +327,8 @@ describe('RF14:RF-02 gravar na hora', () => {
   })
 
   describe('a gravação que falha', () => {
-    async function comFalha() {
-      const falso = criarFalso(estado(false))
+    async function comFalha(inicial: EstadoDosAvisos = estado(false)) {
+      const falso = criarFalso(inicial)
       await montar('/app/conta', falso)
       const marcada = await esperarCaixa()
       marcada.focus()
@@ -403,6 +413,140 @@ describe('RF14:RF-02 gravar na hora', () => {
 
       expect(falso.dados.lerEstado).toHaveBeenCalledTimes(2)
       expect(alerta()).not.toBeNull()
+    })
+
+    // A gravação que falhou se aposenta de vez quando uma leitura a reconcilia: o erro velho não volta.
+    it('gravar ligado falha, uma leitura mostra ligado (resumo some), outro aparelho desliga e a leitura seguinte mostra desligado: o resumo velho não volta, sem foco roubado nem gravação nova', async () => {
+      const falso = await comFalha()
+      expect(alerta()).not.toBeNull()
+
+      await lerAgora(falso, estado(true, 0))
+      await waitFor(() => expect(alerta()).toBeNull())
+      expect(caixa().checked).toBe(true)
+
+      caixa().focus()
+      await lerAgora(falso, estado(false))
+
+      expect(caixa().checked).toBe(false)
+      expect(alerta()).toBeNull()
+      expect(within(secao()).queryByRole('button', { name: 'Tentar de novo' })).toBeNull()
+      expect(document.activeElement).toBe(caixa())
+      expect(falso.dados.definirLigados).toHaveBeenCalledTimes(1)
+      expect(caixa().disabled).toBe(false)
+      expect(statusDaTela()).toBe('')
+    })
+
+    it('no sentido inverso: ligado, gravar desligado falha, a leitura mostra desligado, outro aparelho liga e a leitura seguinte mostra ligado: o resumo velho não volta', async () => {
+      const falso = await comFalha(estado(true, 1))
+      expect(caixa().checked).toBe(true)
+      expect(falso.ligacoes[0].valor).toBe(false)
+      expect(alerta()).not.toBeNull()
+
+      await lerAgora(falso, estado(false))
+      await waitFor(() => expect(alerta()).toBeNull())
+      expect(caixa().checked).toBe(false)
+
+      caixa().focus()
+      await lerAgora(falso, estado(true, 1))
+
+      expect(caixa().checked).toBe(true)
+      expect(alerta()).toBeNull()
+      expect(within(secao()).queryByRole('button', { name: 'Tentar de novo' })).toBeNull()
+      expect(document.activeElement).toBe(caixa())
+      expect(falso.dados.definirLigados).toHaveBeenCalledTimes(1)
+      expect(caixa().disabled).toBe(false)
+    })
+
+    it('gravação falha, a leitura a reconcilia e uma gravação nova tem sucesso: nenhum erro volta e há uma só região de mensagem', async () => {
+      const falso = await comFalha()
+      await lerAgora(falso, estado(true, 0))
+      await waitFor(() => expect(alerta()).toBeNull())
+
+      fireEvent.click(caixa())
+      expect(falso.ligacoes[1].valor).toBe(false)
+      falso.servidor = estado(false)
+      await responder(falso.ligacoes[1], ok(null))
+
+      expect(alerta()).toBeNull()
+      expect(document.querySelector('[role="alert"]')).toBeNull()
+      expect(statusDaTela()).toBe(AVISOS_TEXTOS.statusDesligados)
+      expect(regioesDeStatus()).toHaveLength(1)
+      expect(caixa().checked).toBe(false)
+      expect(caixa().disabled).toBe(false)
+
+      // E uma leitura que ainda mostra o mesmo valor não traz o erro velho de volta.
+      await lerAgora(falso, estado(false))
+      expect(alerta()).toBeNull()
+      expect(falso.dados.definirLigados).toHaveBeenCalledTimes(2)
+    })
+
+    it('duas gravações: a segunda mudança em voo é ignorada; depois que a primeira falha, uma gravação nova tem sucesso e nenhum erro velho sobra', async () => {
+      const falso = criarFalso(estado(false))
+      await montar('/app/conta', falso)
+      const marcada = await esperarCaixa()
+      marcada.focus()
+
+      fireEvent.click(marcada)
+      fireEvent.click(caixa())
+      expect(falso.dados.definirLigados).toHaveBeenCalledTimes(1)
+      expect(caixa().checked).toBe(true)
+      expect(caixa().disabled).toBe(false)
+
+      await responder(falso.ligacoes[0], rede)
+      expect(alerta()).not.toBeNull()
+      expect(caixa().checked).toBe(false)
+
+      fireEvent.click(caixa())
+      expect(alerta()).toBeNull()
+      expect(falso.dados.definirLigados).toHaveBeenCalledTimes(2)
+      falso.servidor = estado(true, 0)
+      await responder(falso.ligacoes[1], ok(null))
+
+      expect(alerta()).toBeNull()
+      expect(document.querySelector('[role="alert"]')).toBeNull()
+      expect(caixa().checked).toBe(true)
+      expect(statusDaTela()).toBe(AVISOS_TEXTOS.statusLigados)
+      expect(regioesDeStatus()).toHaveLength(1)
+
+      await lerAgora(falso, estado(true, 0))
+      expect(alerta()).toBeNull()
+      expect(falso.dados.definirLigados).toHaveBeenCalledTimes(2)
+    })
+
+    it('a leitura que falhou e foi refeita com sucesso: gravar com sucesso depois e uma leitura que falha de novo não trazem o resumo de leitura de volta', async () => {
+      const falso = criarFalso(null)
+      await montar('/app/conta', falso)
+      await responder(falso.leituras[0], rede)
+      expect(alerta()).not.toBeNull()
+
+      fireEvent.click(within(alerta()!).getByRole('button', { name: 'Tentar de novo' }))
+      await assentar()
+      await responder(falso.leituras[1], ok(estado(false)))
+      expect(alerta()).toBeNull()
+      expect(caixa().checked).toBe(false)
+
+      fireEvent.click(caixa())
+      await responder(falso.ligacoes[0], ok(null))
+      // A leitura que a gravação dispara.
+      await responder(falso.leituras[2], ok(estado(true, 0)))
+      expect(statusDaTela()).toBe(AVISOS_TEXTOS.statusLigados)
+      expect(alerta()).toBeNull()
+
+      // Uma leitura posterior que falha não mostra erro nenhum: a caixa fica como está.
+      Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' })
+      await act(async () => {
+        document.dispatchEvent(new Event('visibilitychange'))
+      })
+      await assentar()
+      expect(falso.leituras).toHaveLength(4)
+      const ultima = falso.leituras[falso.leituras.length - 1]
+      await responder(ultima, rede)
+
+      expect(alerta()).toBeNull()
+      expect(document.querySelector('[role="alert"]')).toBeNull()
+      expect(caixa().checked).toBe(true)
+      expect(caixa().disabled).toBe(false)
+      expect(regioesDeStatus()).toHaveLength(1)
     })
   })
 })

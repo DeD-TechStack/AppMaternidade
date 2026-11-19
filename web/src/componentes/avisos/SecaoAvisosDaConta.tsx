@@ -32,8 +32,11 @@ export function SecaoAvisosDaConta({ aoStatus }: Props) {
 
   // O estado do servidor que a tela mostra; `null` antes da primeira leitura com sucesso da sessão.
   const guardado = avisos.mostrado?.ligados ?? null
-  // Um erro de gravação sai de cena quando uma leitura posterior já mostra o valor que se queria gravar.
-  const erroDaGravacao = gravacao.fase === 'erro' && guardado !== gravacao.alvo ? gravacao : null
+  // Uma gravação que falhou se aposenta de vez quando uma leitura já mostra o valor que se queria gravar: ela está
+  // reconciliada, e o erro não pode voltar se outro aparelho mudar a preferência depois (a repetição velha
+  // desfaria a preferência mais nova). Só mexe no erro: uma gravação em andamento ou uma ação nova fica como está.
+  if (gravacao.fase === 'erro' && guardado === gravacao.alvo) setGravacao({ fase: 'ocioso' })
+  const erroDaGravacao = gravacao.fase === 'erro' ? gravacao : null
   const resumoDaGravacao = useFocoNoResumo(erroDaGravacao)
   const resumoDaLeitura = useFocoNoResumo(avisos.fase === 'erro' ? avisos.erro : null)
 
