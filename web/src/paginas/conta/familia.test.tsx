@@ -475,7 +475,7 @@ describe('novo convite', () => {
     await waitFor(() => expect(campo('Validade do acesso').getAttribute('aria-invalid')).toBe('true'))
     const ligados = campo('Validade do acesso').getAttribute('aria-describedby')!.split(' ').map((id) => document.getElementById(id)!.textContent)
     expect(ligados).toContain(TEXTOS_ERRO.validade_menor)
-    expect(document.activeElement).toBe(campo('Validade do acesso'))
+    await waitFor(() => expect(document.activeElement).toBe(campo('Validade do acesso')))
   })
 
   it('"Copiar link" e "Copiar código" usam a área de transferência e confirmam no status', async () => {
