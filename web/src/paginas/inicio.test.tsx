@@ -54,6 +54,12 @@ const norm = (texto: string | null | undefined) => (texto ?? '').replace(/\s+/g,
 const horaDe = (legenda: string) => legenda.slice(0, legenda.indexOf(','))
 const autorDe = (legenda: string) => legenda.split(' ').slice(-2).join(' ')
 
+// jsdom has no `document.scrollingElement`, and Motion's scroll tracker (the one `useScroll` uses, read by the night
+// sheet's driver in `movimento/troca/usarPalco.ts`) is a no-op without it. Every browser has it.
+if (!document.scrollingElement) {
+  Object.defineProperty(document, 'scrollingElement', { configurable: true, get: () => document.documentElement })
+}
+
 // ---- width and observer stubs ----
 
 const LARGURA_ORIGINAL = window.innerWidth

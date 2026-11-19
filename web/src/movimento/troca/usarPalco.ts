@@ -1,3 +1,4 @@
+import { scrollInfo, useMotionValue, useTransform } from 'motion/react'
 import { useLayoutEffect, useRef, useSyncExternalStore, type RefObject } from 'react'
 import { usePrefereMovimentoReduzido } from '../reduzido.ts'
 import {
@@ -10,8 +11,9 @@ import {
 } from './medidas.ts'
 
 // Moment 2 of the Início (REP-HOME, motion sheet §3): the pinned stage and the night sheet that crosses it. The pin
-// itself is CSS (`position: sticky` on the stage, inside a track of stage + D); this file only reads the scroll, with a
-// passive listener throttled to one frame, and writes the two `translateX` of the sheet. No library, no smoothing.
+// itself is CSS (`position: sticky` on the stage, inside a track of stage + D); this file only reads the scroll, through
+// Motion's scroll tracker (the one `useScroll` uses; one tick per frame), and writes the two `translateX` of the sheet
+// from `useTransform`. No smoothing.
 
 function temMatchMedia(): boolean {
   return typeof window !== 'undefined' && typeof window.matchMedia === 'function'
@@ -72,10 +74,22 @@ interface AlvosDoPalco {
 /** The day frame in the stage: its centre line is where the edge holds in the middle. */
 const QUADRO_DO_DIA = '[data-produto-moldura]'
 
+/** The stage's measures in px, read by `medir` on mount and on resize: the stage's width, the seam, the frame's centre line. */
+interface MedidasDoPalco {
+  largura: number
+  costura: number
+  centro: number
+}
+
+/** The sheet's `translateX`, in percent, for the progress p: the edge of `bordaDaNoite` as a share of the stage's width. */
+function traduzir(progresso: number, { largura, costura, centro }: MedidasDoPalco): number {
+  return traducaoEmPercentual(bordaDaNoite(progresso, costura, centro), largura)
+}
+
 /**
- * Drives the night sheet from the scroll while `ativo`. Each frame it reads the track's top, takes p, puts the edge at
- * `bordaDaNoite(p)` and writes the two transforms (outer `+t`, inner `-t`, in percent of the stage's width, so they
- * cancel). `aoMudarLado` is called when p crosses the caption's threshold, either way, and once at mount. The
+ * Drives the night sheet from the scroll while `ativo`. On each scroll tick it reads the track's top and sets p (a motion
+ * value); `useTransform` puts the edge at `bordaDaNoite(p)` and the hook writes the two transforms (outer `+t`, inner
+ * `-t`, in percent of the stage's width, so they cancel). `aoMudarLado` is called when p crosses the caption's threshold, either way, and once at mount. The
  * stage is marked `data-troca-visivel` while its track is in the window: that is when the sheet's boxes carry
  * `will-change: transform`.
  */
@@ -84,6 +98,13 @@ export function useNoitePresa(alvos: AlvosDoPalco, ativo: boolean, aoMudarLado: 
   useLayoutEffect(() => {
     aviso.current = aoMudarLado
   })
+
+  // p and the stage's measures are motion values; the sheet's translateX is `useTransform` of them. `versao` is bumped
+  // by every re-measure, so the percent is computed again even when p did not move.
+  const p = useMotionValue(0)
+  const versao = useMotionValue(0)
+  const medidas = useRef<MedidasDoPalco>({ largura: 0, costura: 0, centro: 0 })
+  const traducao = useTransform([p, versao], ([v]: number[]) => traduzir(v, medidas.current))
 
   useLayoutEffect(() => {
     const palco = alvos.palco.current
@@ -97,66 +118,72 @@ export function useNoitePresa(alvos: AlvosDoPalco, ativo: boolean, aoMudarLado: 
 
     let distancia = distanciaDoFixo(window.innerWidth)
     let topoColado = 0
-    let largura = 0
-    let costura = 0
-    let centro = 0
-    let quadroId = 0
     let ultimoLado: 1 | 2 | null = null
     let ultimaTraducao = Number.NaN
     let visivel: boolean | null = null
 
-    const medir = () => {
-      distancia = distanciaDoFixo(window.innerWidth)
-      trilha.style.setProperty('--troca-d', `${distancia}px`)
-      const topo = Number.parseFloat(window.getComputedStyle(palco).top)
-      topoColado = Number.isFinite(topo) ? topo : 0
-      largura = palco.clientWidth
-      costura = costuraEl.offsetLeft
-      centro = quadro.offsetLeft + quadro.offsetWidth / 2
+    const escrever = (t: number) => {
+      if (t === ultimaTraducao) return
+      ultimaTraducao = t
+      folha.style.setProperty('transform', `translateX(${t}%)`)
+      interior.style.setProperty('transform', `translateX(${-t}%)`)
     }
 
-    const aplicar = () => {
-      quadroId = 0
-      const r = trilha.getBoundingClientRect()
-      const naVista = r.bottom > 0 && r.top < window.innerHeight
-      if (naVista !== visivel) {
-        visivel = naVista
-        palco.toggleAttribute('data-troca-visivel', naVista)
-      }
-      const p = progressoDoFixo(r.top, topoColado, distancia)
-      const t = traducaoEmPercentual(bordaDaNoite(p, costura, centro), largura)
-      if (t !== ultimaTraducao) {
-        ultimaTraducao = t
-        folha.style.setProperty('transform', `translateX(${t}%)`)
-        interior.style.setProperty('transform', `translateX(${-t}%)`)
-      }
-      const lado = ladoDaLegenda(p)
+    const anunciar = (progresso: number) => {
+      const lado = ladoDaLegenda(progresso)
       if (lado !== ultimoLado) {
         ultimoLado = lado
         aviso.current(lado)
       }
     }
 
-    const agendar = () => {
-      if (quadroId === 0) quadroId = window.requestAnimationFrame(aplicar)
-    }
-    const aoRedimensionar = () => {
-      medir()
-      agendar()
+    const medir = () => {
+      distancia = distanciaDoFixo(window.innerWidth)
+      trilha.style.setProperty('--troca-d', `${distancia}px`)
+      const topo = Number.parseFloat(window.getComputedStyle(palco).top)
+      topoColado = Number.isFinite(topo) ? topo : 0
+      medidas.current = {
+        largura: palco.clientWidth,
+        costura: costuraEl.offsetLeft,
+        centro: quadro.offsetLeft + quadro.offsetWidth / 2,
+      }
+      versao.set(versao.get() + 1)
     }
 
+    // The tick: one read of the track's top, the in-view flag, and p. The motion values do the rest.
+    const aplicar = () => {
+      const r = trilha.getBoundingClientRect()
+      const naVista = r.bottom > 0 && r.top < window.innerHeight
+      if (naVista !== visivel) {
+        visivel = naVista
+        palco.toggleAttribute('data-troca-visivel', naVista)
+      }
+      p.set(progressoDoFixo(r.top, topoColado, distancia))
+    }
+
+    const aoRedimensionar = () => {
+      medir()
+      aplicar()
+    }
+
+    const pararTraducao = traducao.on('change', escrever)
+    const pararLado = p.on('change', anunciar)
     medir()
     aplicar()
-    window.addEventListener('scroll', agendar, { passive: true })
+    // First state, written at once (the motion values update on the next frame step): the sheet and the caption's side.
+    escrever(traduzir(p.get(), medidas.current))
+    anunciar(p.get())
+    const pararRolagem = scrollInfo(aplicar)
     window.addEventListener('resize', aoRedimensionar, { passive: true })
     return () => {
-      window.removeEventListener('scroll', agendar)
+      pararRolagem()
       window.removeEventListener('resize', aoRedimensionar)
-      if (quadroId !== 0) window.cancelAnimationFrame(quadroId)
+      pararTraducao()
+      pararLado()
       folha.style.removeProperty('transform')
       interior.style.removeProperty('transform')
       palco.removeAttribute('data-troca-visivel')
       trilha.style.removeProperty('--troca-d')
     }
-  }, [alvos, ativo])
+  }, [alvos, ativo, p, versao, traducao, medidas])
 }
