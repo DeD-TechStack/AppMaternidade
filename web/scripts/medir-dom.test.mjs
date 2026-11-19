@@ -961,8 +961,9 @@ const juntar =
   }
 
 /** Monta `html` num jsdom, roda o coletor serializado (como o CDP faz) e devolve `{ doc, nos }`. */
-function coletarDe(html, preparar = () => undefined, css = '') {
+function coletarDe(html, preparar = () => undefined, css = '', url = undefined) {
   const dom = new JSDOM(`<!doctype html><html><head><style>${BASE_JSDOM}${css}</style></head><body>${html}</body></html>`, {
+    url,
     runScripts: 'outside-only',
     virtualConsole: new VirtualConsole(), // sem o aviso "not implemented" do ::placeholder
   })
@@ -2644,10 +2645,11 @@ describe('DS1-I-04 RODAPE: cacau, largura cheia, 11 links, 4 grupos, ©, altura 
     assert.equal(medir.rodape(rodapeConforme({ textoTodo: 'AppMaternidade Produto Conta Ajuda Legal 2026' }), docDs1(1440)).ok, false)
   })
 
-  it('DS1-I-04 RODAPE controle: 481 px de altura em 390 falha (480 passa), 441 px em 1440 falha (440 passa)', () => {
+  it('DS1-I-04 RODAPE controle: 641 px de altura em 390 falha (640 passa), 441 px em 1440 falha (440 passa)', () => {
+    // METER-INICIO 11: o teto em 390 era 480; o rodapé aprovado do Início tem o teto de 640 abaixo de 768.
     const celular = (h) => rodapeConforme({ rect: { x: 0, y: 2000, w: 390, h } })
-    assert.equal(medir.rodape(celular(480), docDs1(390)).ok, true)
-    assert.equal(medir.rodape(celular(481), docDs1(390)).ok, false)
+    assert.equal(medir.rodape(celular(640), docDs1(390)).ok, true)
+    assert.equal(medir.rodape(celular(641), docDs1(390)).ok, false)
     assert.equal(medir.rodape(rodapeConforme({ rect: { x: 0, y: 2000, w: 1440, h: 440 } }), docDs1(1440)).ok, true)
     assert.equal(medir.rodape(rodapeConforme({ rect: { x: 0, y: 2000, w: 1440, h: 441 } }), docDs1(1440)).ok, false)
   })
@@ -3155,7 +3157,11 @@ describe('DS1-I-11 CENA R1-01: imagem que não carregou reprova mesmo com candid
       Object.defineProperty(img, 'naturalWidth', { value: naturalWidth, configurable: true })
       Object.defineProperty(img, 'currentSrc', { value: currentSrc, configurable: true })
     }
-    const lido = coletarDe(`<div data-cena-heroi data-largura-max="960"><img src="${CDN}a-390.webp" srcset="${srcset}" alt=""></div>`, preparar)
+    // METER-INICIO 5: a placa é a imagem do <picture> dentro de .cm-cena-placa.
+    const lido = coletarDe(
+      `<div data-cena-heroi data-largura-max="960"><div class="cm-cena-placa"><picture><img src="${CDN}a-390.webp" srcset="${srcset}" alt=""></picture></div></div>`,
+      preparar,
+    )
     assert.equal(lido.nos.filter((n) => n.m?.cenaPlaca).length, 1)
     return medir.cena(lido.nos, { ...lido.doc, largura: 390 })
   }
@@ -3171,10 +3177,13 @@ describe('DS1-I-11 CENA R1-01: imagem que não carregou reprova mesmo com candid
     assert.equal(r.ok, true, r.motivo)
   })
 
-  it('controle: 1x ampliada (codificada 390 num slot de 390) falha com densidade 1.00', () => {
-    const r = cenaDe({ naturalWidth: 390, currentSrc: `${CDN}a-390.webp` })
+  it('controle: 1x ampliada (a fonte só oferece 390 w num slot de 390) falha com densidade 1.00', () => {
+    // METER-INICIO 5: com 780 w na fonte a escolha de DPR 1 (390 w) passa; o controle é a fonte que só tem 390 w.
+    const r = cenaDe({ naturalWidth: 390, currentSrc: `${CDN}a-390.webp`, srcset: `${CDN}a-390.webp 390w` })
     assert.equal(r.ok, false)
     assert.match(r.motivo, /densidade 1\.00/)
+    // E a mesma escolha de DPR 1 numa fonte que oferece 780 w passa: vale o maior candidato.
+    assert.equal(cenaDe({ naturalWidth: 390, currentSrc: `${CDN}a-390.webp` }).ok, true)
   })
 
   it('controle: largura codificada desconhecida (currentSrc fora do srcset, NaN) falha fechado', () => {
@@ -3188,8 +3197,8 @@ describe('DS1-I-11 CENA: larguraCodificadaDe (a largura codificada do recurso qu
   const base = 'http://127.0.0.1:5254/pagina/'
   const srcset = 'img/a-780.webp 780w, img/a-1560.webp 1560w'
 
-  it('descritor w: usa o número do candidato que casa com o currentSrc', () => {
-    assert.equal(medir.larguraCodificadaDe(srcset, `${base}img/a-780.webp`, 390, base), 780)
+  it('descritor w: vale o maior w da fonte que tem o arquivo escolhido (METER-INICIO 5; antes era o candidato que casa)', () => {
+    assert.equal(medir.larguraCodificadaDe(srcset, `${base}img/a-780.webp`, 390, base), 1560)
     assert.equal(medir.larguraCodificadaDe(srcset, `${base}img/a-1560.webp`, 780, base), 1560)
   })
 
@@ -3579,7 +3588,10 @@ const heroi1440 = ({ placa = PLACA_1440, botao = true, spans = true } = {}) => [
     : []),
 ]
 
-const heroi390 = ({ placa = PLACA_390, parede = true, link = { x: 20, y: 268, w: 200, h: 44 }, botao = false } = {}) => [
+// METER-INICIO 7: a caixa da imagem em 390 é o recorte pronto (390 × 305,8 em x 0, y 392); PLACA_390 (a janela larga de
+// antes) segue só nas fixtures da LEGENDA_PRESA, que não mudou.
+const PLACA_390_RECORTE = { x: 0, y: 392, w: 390, h: 305.8 }
+const heroi390 = ({ placa = PLACA_390_RECORTE, parede = true, link = { x: 20, y: 268, w: 200, h: 44 }, botao = false } = {}) => [
   placaNo(placa),
   ...(parede ? [rhNo({ paredeNoite: true }, { x: 0, y: 144, w: 390, h: 220 }, { tag: 'div', texto: '', ordemDom: 0, estilo: { backgroundColor: CACAU } })] : []),
   rhNo({ heroiLink: true }, link, { tag: 'a', texto: 'd', ordemDom: 4 }),
@@ -3606,28 +3618,29 @@ describe('REPH-I-03 HEROI: 900 px plate at 1440, the M05 window at 390', () => {
     falha(regra('heroi')(heroi1440({ botao: false }), docRh(1440)), /bot|pílula|pilula|mel/i)
   })
 
-  it('REPH-I-03 HEROI passes at 390: plate edge to edge at the nominal box, rows 144-364 cacau, only the text link in the fold', () => {
+  it('REPH-I-03 HEROI passes at 390: image box 390 wide at the nominal crop, rows 144-364 cacau, only the text link in the fold', () => {
     ok(regra('heroi')(heroi390(), docRh(390)))
   })
 
   it('REPH-I-03 HEROI fails at 390 for a plate 370 wide (2 px short is not edge to edge)', () => {
-    falha(regra('heroi')(heroi390({ placa: { x: -173.4, y: 364, w: 543.4, h: 305.8 } }), docRh(390)), /borda|390|direita/i)
+    falha(regra('heroi')(heroi390({ placa: { x: 0, y: 392, w: 370, h: 305.8 } }), docRh(390)), /borda|390|direita|largura/i)
   })
 
   it('REPH-I-03 HEROI fails at 390 for the 390 x 219 uncropped plate', () => {
-    falha(regra('heroi')(heroi390({ placa: { x: 0, y: 364, w: 390, h: 219 } }), docRh(390)), /altura|janela|recort/i)
+    falha(regra('heroi')(heroi390({ placa: { x: 0, y: 392, w: 390, h: 219 } }), docRh(390)), /altura|janela|recort/i)
   })
 
   it('REPH-I-03 HEROI fails at 390 when rows 144-364 are not covered by a cacau full-width node', () => {
     falha(regra('heroi')(heroi390({ parede: false }), docRh(390)), /cacau|parede|144/i)
   })
 
-  it('REPH-I-03 HEROI fails at 390 when the first action sits at y 312', () => {
-    falha(regra('heroi')(heroi390({ link: { x: 20, y: 312, w: 200, h: 44 } }), docRh(390)), /300|ação|acao|link/i)
+  it('REPH-I-03 HEROI passes at 390 with the first action at y 312 (METER-INICIO 7: the ceiling was 300) and fails at y 320', () => {
+    ok(regra('heroi')(heroi390({ link: { x: 20, y: 312, w: 200, h: 44 } }), docRh(390)))
+    falha(regra('heroi')(heroi390({ link: { x: 20, y: 320, w: 200, h: 44 } }), docRh(390)), /312|ação|acao|link/i)
   })
 
-  it('REPH-I-03 HEROI fails at 390 when the hero shows a mel pill (the header pill is the filled action)', () => {
-    falha(regra('heroi')(heroi390({ botao: true }), docRh(390)), /mel|bot|pílula|pilula/i)
+  it('REPH-I-03 HEROI passes at 390 when the hero shows its mel pill (METER-INICIO 7: it was refused; the header pill goes quiet instead)', () => {
+    ok(regra('heroi')(heroi390({ botao: true }), docRh(390)))
   })
 
   it('REPH-I-03 HEROI is out of scope at 768 and 1024', () => {
@@ -3734,12 +3747,13 @@ describe('REPH-I-05 MOLDURA_DOBRA: the real frame is whole at the scrollY of p 0
   })
 
   it('REPH-I-05 MOLDURA_DOBRA fails when the p 0 scrollY is greater than innerHeight', () => {
+    // METER-INICIO 8: em 390 não há fixo nem rolagem de p 0; o teste daquela largura é o de a moldura mais o cabeçalho caberem.
     falha(regra('molduraDobra')(moldura1440({ palcoY: 1000, frame: { x: 140, y: 1040, w: 300, h: 640 } }), docRh(1440)), /rolagem|scroll|innerHeight|altura/i)
-    falha(regra('molduraDobra')(moldura390({ palcoY: 1000, frame: { x: 20, y: 1008, w: 296.8, h: 622.7 } }), docRh(390)), /rolagem|scroll|innerHeight|altura/i)
   })
 
-  it('REPH-I-05 MOLDURA_DOBRA fails when the frame bottom is below the viewport', () => {
-    falha(regra('molduraDobra')(moldura390({ frame: { x: 20, y: 730, w: 296.8, h: 900 } }), docRh(390)), /base|bottom|dentro|inferior/i)
+  it('REPH-I-05 MOLDURA_DOBRA fails when the frame bottom is below the viewport (1440), or the frame does not fit the window (390)', () => {
+    falha(regra('molduraDobra')(moldura1440({ frame: { x: 140, y: 835, w: 300, h: 900 } }), docRh(1440)), /base|bottom|dentro|inferior/i)
+    falha(regra('molduraDobra')(moldura390({ frame: { x: 20, y: 730, w: 296.8, h: 900 } }), docRh(390)), /janela|innerHeight|cabe/i)
   })
 
   it('REPH-I-05 MOLDURA_DOBRA fails closed with the frame absent', () => {
@@ -3925,14 +3939,14 @@ describe('REPH-I-09 TEMPO: hours never go back, ink follows the ground, one clos
     falha(regra('tempo')(tempoComHoras(390, { botoes: [] }), docRh(390)), /fechamento|mel|bot/i)
   })
 
-  it('REPH-I-09 TEMPO fails at 390 when the hero pill is shown (only the closing mel button exists there)', () => {
+  it('REPH-I-09 TEMPO passes at 390 when the hero pill is shown (METER-INICIO 9: it was refused below 1024)', () => {
     const lista = tempoComHoras(390, {
       botoes: [
         rhNo({ botaoMel: true, heroiBotao: true }, { x: 20, y: 268, w: 220, h: 48 }, { tag: 'a', texto: 'c', ordemDom: 10, fundoSob: CACAU }),
         rhNo({ botaoMel: true, fechamento: true }, { x: 20, y: 2400, w: 220, h: 48 }, { tag: 'a', texto: 'f', ordemDom: 11, fundoSob: CACAU }),
       ],
     })
-    falha(regra('tempo')(lista, docRh(390)), /heroi|herói|390|bot|mel/i)
+    ok(regra('tempo')(lista, docRh(390)))
   })
 })
 
@@ -3989,16 +4003,18 @@ describe('REPH-I-18 meter surface: cases, rules, fonts, MEDIDAS_REP_HOME, avalia
     assert.deepEqual([m.escuro_medio?.[1440], m.escuro_medio?.[390], m.creme_max?.[1440], m.creme_max?.[390]], [0.45, 0.5, 0.55, 0.5])
   })
 
-  it('REPH-I-18 MEDIDAS_REP_HOME.placa390 holds the worker-measured window and is internally consistent', () => {
+  it('REPH-I-18 MEDIDAS_REP_HOME.placa390 holds the cropped window (METER-INICIO 7) and is internally consistent', () => {
     const p = medir.MEDIDAS_REP_HOME?.placa390
     assert.equal(typeof p, 'object', 'placa390 must be exported')
     for (const chave of ['L', 's', 'w', 'h', 'x', 'y', 'seam']) assert.ok(Number.isFinite(p[chave]), chave)
     assert.ok(p.L > 440 && p.L < 500, `L ${p.L}`)
     assert.ok(Math.abs(p.s - 390 / (1672 - p.L)) < 0.001, 's = 390 / (1672 - L)')
-    assert.ok(Math.abs(p.w - 1672 * p.s) < 0.5, 'w = 1672 s')
-    assert.ok(Math.abs(p.x + p.L * p.s) < 0.5, 'x = -L s')
+    // The image box is the finished crop: 390 wide at x 0 (it was the whole 1672 plate at scale s, 543.4 wide at -L s).
+    assert.equal(p.w, 390)
+    assert.equal(p.x, 0)
+    assert.ok(Math.abs(p.h - 941 * p.s) < 0.5, 'h = 941 s')
     assert.ok(Math.abs(p.seam - (910 - p.L) * p.s) < 0.5, 'seam = (910 - L) s')
-    assert.equal(p.y, 364)
+    assert.equal(p.y, 392)
   })
 
   const NOMES_MOVIMENTO = ['LUZ', 'PALCO', 'COBERTURA', 'CONTRASTE', 'MOLDURA', 'LEGENDA', 'DURACOES', 'CLS', 'LONGTASK', 'PROPRIEDADES', 'TRANSICOES', 'LCP', 'BYTES']
@@ -4199,5 +4215,424 @@ describe('REPH-I-23 CAPTURA_REAL: every product screen is an ASSET-1 capture lis
     const outra = Buffer.from('another image', 'utf8')
     const raiz = publico({ 'historico@2x.png': REAL }, { 'historico@2x.png': REAL, 'outra.png': outra })
     falha(regra('capturaReal')([quadro('historico@2x.png'), quadro('outra.png')], docRh(1440), { publico: raiz }))
+  })
+
+  it('METER-INICIO CAPTURA_REAL: the manifest lists the files with the leading slash (/telas/casa/...), the form the real one has', () => {
+    const raiz = fs.mkdtempSync(path.join(os.tmpdir(), 'repho-capt-'))
+    pastas.push(raiz)
+    const pasta = path.join(raiz, 'telas', 'casa')
+    fs.mkdirSync(pasta, { recursive: true })
+    fs.writeFileSync(path.join(pasta, 'real@2x.png'), REAL)
+    const manifesto = (arquivo, hash) => JSON.stringify({ capturas: [{ id: 'real', servidos: [{ arquivo, sha256: hash }] }] })
+    fs.writeFileSync(path.join(pasta, 'MANIFESTO.json'), manifesto('/telas/casa/real@2x.png', sha(REAL)))
+    ok(regra('capturaReal')([quadro('real@2x.png')], docRh(1440), { publico: raiz }))
+    // The control of the same form: a file the manifest does not list, and a sha that does not match, still fail.
+    fs.writeFileSync(path.join(pasta, 'fora.png'), Buffer.from('not listed', 'utf8'))
+    falha(regra('capturaReal')([quadro('fora.png')], docRh(1440), { publico: raiz }), /manifest/i)
+    fs.writeFileSync(path.join(pasta, 'MANIFESTO.json'), manifesto('/telas/casa/real@2x.png', sha(Buffer.from('other bytes', 'utf8'))))
+    falha(regra('capturaReal')([quadro('real@2x.png')], docRh(1440), { publico: raiz }), /sha256|hash/i)
+  })
+})
+
+// =============================================================================================
+// METER-INICIO: the meter brought up to date with the approved Início. One pair per rule: a PASS fixture of the current
+// approved markup and a CONTROL fixture that still fails a real violation of the same rule.
+// =============================================================================================
+
+describe('METER-INICIO 1 G11: the contrast reads fundoSob when it is readable, else the ancestor chain', () => {
+  const alvo = () => no({ tag: 'a', texto: 'Entrar', rect: { x: 0, y: 0, w: 100, h: 48 }, m: { interativo: true } })
+  const texto = (extra) => no({ texto: 'noite', rect: { x: 0, y: 0, w: 200, h: 24 }, ...extra })
+
+  it('PASS: papel ink on a cacau ground read under it (fundoSob) while the ancestor chain is papel', () => {
+    const r = medir.g11([alvo(), texto({ estilo: { color: PAPEL }, cadeia: [TRANSPARENTE, PAPEL], fundoSob: CACAU })], 'claro')
+    ok(r)
+  })
+
+  it('CONTROL: real low contrast on fundoSob still fails (texto-2 on cacau, cacau on cacau), even over a papel chain', () => {
+    falha(medir.g11([alvo(), texto({ estilo: { color: CHAO_NOITE }, cadeia: [TRANSPARENTE, PAPEL], fundoSob: CACAU })], 'claro'), /contraste/)
+    falha(medir.g11([alvo(), texto({ estilo: { color: TINTA }, cadeia: [TRANSPARENTE, PAPEL], fundoSob: CACAU })], 'claro'), /contraste/)
+  })
+
+  it('an unreadable fundoSob falls back to the chain, and a node with an opaque ground of its own keeps its own chain', () => {
+    ok(medir.g11([alvo(), texto({ estilo: { color: TINTA }, cadeia: [TRANSPARENTE, PAPEL], fundoSob: 'cor-estranha' })], 'claro'))
+    falha(medir.g11([alvo(), texto({ estilo: { color: PAPEL }, cadeia: [TRANSPARENTE, PAPEL], fundoSob: 'cor-estranha' })], 'claro'), /contraste/)
+    // The mel pill: cacau ink on its own mel fill (the ground under the pill is cacau) is read on the mel, not on the cacau.
+    const pilula = texto({ estilo: { color: TINTA, backgroundColor: MEL }, cadeia: [MEL, PAPEL], fundoSob: CACAU, m: { botaoMel: true } })
+    ok(medir.g11([alvo(), pilula], 'claro'))
+  })
+})
+
+describe('METER-INICIO 2 FAIXA: the stage edge and the night-floor edge are not section padding', () => {
+  const largo = (extra = {}) => ({ ...docDs1(1440), ...extra })
+  const sala = largo()
+  const empilhado = { ...docDs1(390) }
+  const retrato = { ...docDs1(1440), largura: 1280, clientWidth: 1280, scrollWidth: 1280, altura: 1400 }
+  const bandaDoPalco = (padding, largura = 1440) =>
+    faixaNo({ rect: { x: 0, y: 0, w: largura, h: 900 }, estilo: { paddingTop: padding.topo, paddingBottom: padding.base }, m: { faixa: true, faixaPalco: true } })
+  const bandaDoChao = (padding, largura = 1440) =>
+    faixaNo({ rect: { x: 0, y: 0, w: largura, h: 900 }, estilo: { paddingTop: padding.topo, paddingBottom: padding.base }, m: { faixa: true, faixaChao: true } })
+
+  it('PASS: the stage band has no top and no bottom padding in the room (1440)', () => {
+    ok(medir.faixa([bandaDoPalco({ topo: '0px', base: '0px' })], sala))
+  })
+
+  it('PASS: stacked (390, or a portrait window) the stage band is free at the top and keeps the section bottom', () => {
+    ok(medir.faixa([bandaDoPalco({ topo: '0px', base: '48px' }, 390)], empilhado))
+    ok(medir.faixa([bandaDoPalco({ topo: '0px', base: '80px' }, 1280)], retrato))
+  })
+
+  it('PASS: the night-floor band has no bottom padding and keeps the section top', () => {
+    ok(medir.faixa([bandaDoChao({ topo: '80px', base: '0px' })], sala))
+    ok(medir.faixa([bandaDoChao({ topo: '48px', base: '0px' }, 390)], empilhado))
+  })
+
+  it('CONTROL: stacked, the stage band bottom is still checked (0 fails), and in the room only its two edges are free', () => {
+    falha(medir.faixa([bandaDoPalco({ topo: '0px', base: '0px' }, 390)], empilhado), /padding-bottom/)
+    falha(medir.faixa([bandaDoPalco({ topo: '0px', base: '0px' }, 1280)], retrato), /padding-bottom/)
+  })
+
+  it('CONTROL: the night-floor band top is still checked, and a band with neither mark is checked on both edges', () => {
+    falha(medir.faixa([bandaDoChao({ topo: '0px', base: '0px' })], sala), /padding-top/)
+    falha(medir.faixa([bandaDoChao({ topo: '40px', base: '0px' }, 390)], empilhado), /padding-top/)
+    const comum = (padding) => faixaNo({ estilo: { paddingTop: padding.topo, paddingBottom: padding.base } })
+    falha(medir.faixa([comum({ topo: '0px', base: '80px' })], sala), /padding-top/)
+    falha(medir.faixa([comum({ topo: '80px', base: '0px' })], sala), /padding-bottom/)
+  })
+
+  it('collector: marks the band that holds .ic-estagio (faixaPalco) and the one that holds .ic-chao (faixaChao), and no other', () => {
+    const html = `<main><div data-casa>
+      <section data-faixa><div class="ic-estagio"></div></section>
+      <section data-faixa><div class="ic-chao"></div></section>
+      <section data-faixa><p>Texto</p></section>
+      <div class="ic-estagio"></div></div></main>`
+    const secoes = coletarDe(html).nos.filter((n) => n.tag === 'section')
+    assert.deepEqual(secoes.map((n) => [n.m.faixaPalco, n.m.faixaChao]), [[true, false], [false, true], [false, false]])
+  })
+})
+
+describe('METER-INICIO 3 CABECALHO: the quiet pill is accepted while the hero pill is in view', () => {
+  const quieta = (extra = {}) =>
+    com(
+      no({
+        tag: 'a',
+        texto: 'Criar conta',
+        rect: { x: 1260, y: 8, w: 140, h: 48 },
+        estilo: { backgroundColor: TRANSPARENTE, color: TINTA, borderColor: TINTA },
+        m: { cabecalhoPilula: true, noCabecalho: true, noMenu: false, interativo: true },
+      }),
+      extra,
+    )
+  const comHeroi = (largura, valor = 'visivel') => ({ ...docDs1(largura), inicioHeroi: valor })
+
+  it('PASS: transparent fill with cacau ink and cacau border passes with data-inicio-heroi="visivel" (1440 and 390)', () => {
+    ok(medir.cabecalho([quieta()], comHeroi(1440)))
+    ok(medir.cabecalho([quieta({ rect: { x: 200, y: 6, w: 140, h: 44 } })], comHeroi(390)))
+  })
+
+  it('PASS: the filled cacau pill still passes with the hero pill in view', () => {
+    ok(medir.cabecalho([quieta({ estilo: { backgroundColor: CACAU, color: PAPEL } })], comHeroi(1440)))
+  })
+
+  it('CONTROL: the same transparent pill fails when the hero pill is not in view (no attribute, or another value)', () => {
+    falha(medir.cabecalho([quieta()], docDs1(1440)), /cacau/)
+    falha(medir.cabecalho([quieta()], comHeroi(1440, 'oculto')), /cacau/)
+  })
+
+  it('CONTROL: with the hero pill in view the wrong ink or the wrong border still fails (and an unread border fails closed)', () => {
+    falha(medir.cabecalho([quieta({ estilo: { color: PAPEL } })], comHeroi(1440)), /cacau|quieta/)
+    falha(medir.cabecalho([quieta({ estilo: { borderColor: PAPEL } })], comHeroi(1440)), /cacau|quieta/)
+    falha(medir.cabecalho([quieta({ estilo: { borderColor: undefined } })], comHeroi(1440)), /cacau|quieta/)
+    falha(medir.cabecalho([quieta({ estilo: { backgroundColor: PAPEL } })], comHeroi(1440)), /cacau/)
+  })
+
+  it('collector: doc.inicioHeroi is the dataset value on <html>, and the pill border colour is read', () => {
+    const html = '<header data-cabecalho><a data-cabecalho-pilula href="#">Criar conta</a></header><main></main>'
+    const css = 'a { border-top-color: rgb(43, 35, 32); }'
+    const marcado = coletarDe(html, (d) => { d.documentElement.dataset.inicioHeroi = 'visivel' }, css)
+    assert.equal(marcado.doc.inicioHeroi, 'visivel')
+    assert.equal(marcado.nos.find((n) => n.tag === 'a').estilo.borderColor, 'rgb(43, 35, 32)')
+    const solto = coletarDe(html, undefined, css)
+    assert.ok(!solto.doc.inicioHeroi)
+  })
+})
+
+describe('METER-INICIO 4 BOTAO_LARGO: the hero action keeps its own width', () => {
+  const botao = (w, m) => no({ tag: 'a', texto: 'Criar conta', rect: { x: 20, y: 100, w, h: 52 }, m: { botaoLargo: true, interativo: true, ...m } })
+
+  it('PASS: a 220 px pill inside [data-cena-heroi] is not measured at 390', () => {
+    ok(medir.botaoLargo([botao(220, { botaoLargoNoHeroi: true })], docDs1(390)))
+    ok(medir.botaoLargo([botao(350), botao(220, { botaoLargoNoHeroi: true })], docDs1(390)))
+  })
+
+  it('CONTROL: a narrow pill in the closing band or anywhere else still fails at 390, and only it is listed', () => {
+    falha(medir.botaoLargo([botao(220, { fechamento: true })], docDs1(390)), /220/)
+    falha(medir.botaoLargo([botao(220)], docDs1(390)), /323 a 357/)
+    const r = medir.botaoLargo([botao(220, { botaoLargoNoHeroi: true }), botao(300, { fechamento: true })], docDs1(390))
+    falha(r, /300/)
+    assert.equal(r.nos_com_falha.length, 1)
+  })
+
+  it('collector: marks only the BotaoLargo inside [data-cena-heroi]', () => {
+    const html = `<main><div data-cena-heroi><a href="#" data-botao-largo>A</a></div>
+      <div data-fechamento><a href="#" data-botao-largo>B</a></div></main>`
+    const [heroi, fecho] = coletarDe(html).nos.filter((n) => n.tag === 'a')
+    assert.equal(heroi.m.botaoLargoNoHeroi, true)
+    assert.equal(fecho.m.botaoLargoNoHeroi, false)
+    assert.equal(fecho.m.botaoLargo, true)
+  })
+})
+
+describe('METER-INICIO 5 CENA: the density is the largest w candidate of the chosen source over the CSS width', () => {
+  const CDN = 'https://127.0.0.1/img/'
+  const cenaDe = ({ srcsetFonte, currentSrc, largura = 390, naturalWidth = 390 }) => {
+    const preparar = (documento) => {
+      const janela = documento.defaultView
+      janela.Element.prototype.getBoundingClientRect = () => ({ ...RETANGULO, width: largura, height: largura * 0.7, right: largura, bottom: largura * 0.7 })
+      const img = documento.querySelector('img')
+      Object.defineProperty(img, 'naturalWidth', { value: naturalWidth, configurable: true })
+      Object.defineProperty(img, 'currentSrc', { value: currentSrc, configurable: true })
+    }
+    const html = `<div data-cena-heroi data-largura-max="960"><div class="cm-cena-placa"><picture>
+      <source media="(max-width: 767px)" srcset="${srcsetFonte}"><img src="${CDN}a-390.webp" alt=""></picture></div></div>`
+    const lido = coletarDe(html, preparar)
+    const placas = lido.nos.filter((n) => n.m?.cenaPlaca)
+    assert.equal(placas.length, 1)
+    return { r: medir.cena(lido.nos, { ...lido.doc, largura: 390 }), placa: placas[0] }
+  }
+
+  it('PASS: the DPR-1 choice is the 390 w file, the source offers 780 w: density 2.00', () => {
+    const { r, placa } = cenaDe({ srcsetFonte: `${CDN}a-390.webp 390w, ${CDN}a-780.webp 780w`, currentSrc: `${CDN}a-390.webp` })
+    assert.equal(placa.larguraCodificada, 780)
+    ok(r)
+  })
+
+  it('CONTROL: a plate whose srcset maximum is too small still fails (500 w over 390 = 1.28)', () => {
+    const { r } = cenaDe({ srcsetFonte: `${CDN}a-300.webp 300w, ${CDN}a-500.webp 500w`, currentSrc: `${CDN}a-300.webp` })
+    falha(r, /densidade 1\.28/)
+  })
+
+  it('CONTROL: a currentSrc that is in no srcset of the picture still fails closed', () => {
+    const { r } = cenaDe({ srcsetFonte: `${CDN}a-390.webp 390w, ${CDN}a-780.webp 780w`, currentSrc: `${CDN}outra.webp` })
+    falha(r, /larguraCodificada/)
+  })
+
+  it('collector: the plate is only the img of [data-cena-heroi] .cm-cena-placa picture, not a light layer or a loose img', () => {
+    const html = `<div data-cena-heroi><div class="cm-cena-placa"><picture><img src="a.webp" alt=""><img data-luz src="b.webp" alt=""></picture></div>
+      <img src="c.webp" alt=""></div><picture><img src="d.webp" alt=""></picture>`
+    const imgs = coletarDe(html).nos.filter((n) => n.tag === 'img')
+    assert.deepEqual(imgs.map((n) => n.m.cenaPlaca), [true, false, false, false])
+  })
+
+  it('larguraCodificadaDe takes the largest w of the srcset that holds the chosen file, not the candidate itself', () => {
+    const base = 'http://127.0.0.1:5254/p/'
+    const fontes = ['img/a-390.webp 390w, img/a-780.webp 780w', 'img/b-1000.webp 1000w, img/b-2000.webp 2000w']
+    assert.equal(medir.larguraCodificadaDe(fontes, `${base}img/a-390.webp`, 390, base), 780)
+    assert.equal(medir.larguraCodificadaDe(fontes, `${base}img/b-1000.webp`, 1000, base), 2000)
+    assert.ok(Number.isNaN(medir.larguraCodificadaDe(fontes, `${base}img/c.webp`, 390, base)))
+  })
+})
+
+describe('METER-INICIO 6 CASA_LIMPA: an hour inside a caption is not a loose hour', () => {
+  const dentro = (extra = {}) => com(no({ m: { casa: true } }), extra)
+
+  it('PASS: an own-text hour inside [data-legenda] (noLegenda) passes', () => {
+    ok(medir.casaLimpa([dentro({ texto: '16:00', m: { folha: true, noLegenda: true } })], docDs1(1440)))
+  })
+
+  it('CONTROL: a loose hour outside any caption still fails, and so does a mel floor inside a caption', () => {
+    falha(medir.casaLimpa([dentro({ texto: '16:00', m: { folha: true } })], docDs1(1440)), /hora solta/)
+    falha(medir.casaLimpa([dentro({ texto: '16:00', m: { folha: true, noLegenda: false } })], docDs1(1440)), /hora solta/)
+    falha(medir.casaLimpa([dentro({ estilo: { backgroundColor: MEL }, m: { noLegenda: true } })], docDs1(1440)), /mel/)
+  })
+
+  it('collector: marks noLegenda only on what is inside [data-legenda]', () => {
+    const html = '<main><div data-casa><p data-legenda data-tom="dia"><span>16:00</span> Ela mamou</p><span>21:42</span></div></main>'
+    const spans = coletarDe(html).nos.filter((n) => n.tag === 'span')
+    assert.deepEqual(spans.map((n) => n.m.noLegenda), [true, false])
+  })
+})
+
+describe('METER-INICIO 7 HEROI at 390: rebased on the cropped image box', () => {
+  const RECORTE = { x: 0, y: 392, w: 390, h: 305.8 }
+  const base = ({ placa = RECORTE, link = { x: 20, y: 268, w: 200, h: 44 }, legenda = null, botao = false } = {}) => [
+    placaNo(placa),
+    rhNo({ paredeNoite: true }, { x: 0, y: 144, w: 390, h: 560 }, { tag: 'div', texto: '', ordemDom: 0, estilo: { backgroundColor: CACAU } }),
+    rhNo({ heroiLink: true }, link, { tag: 'a', texto: 'd', ordemDom: 4 }),
+    ...(legenda ? [legendaNo(legenda, { cor: PAPEL, chao: CACAU, tom: 'dia', ordemDom: 5 })] : []),
+    ...(botao ? [rhNo({ botaoMel: true, heroiBotao: true }, { x: 20, y: 268, w: 220, h: 48 }, { tag: 'a', texto: 'c', ordemDom: 6 })] : []),
+  ]
+
+  it('PASS: image box 390 x 305.8 at x 0, plate at y 392, first action at y 312', () => {
+    ok(regra('heroi')(base({ link: { x: 20, y: 312, w: 200, h: 44 } }), docRh(390)))
+    ok(regra('heroi')(base({ placa: { x: 0.4, y: 393.5, w: 390.9, h: 303 } }), docRh(390)))
+  })
+
+  it('PASS: the hero mel pill is allowed at 390 (the header pill goes quiet while it is in view)', () => {
+    ok(regra('heroi')(base({ botao: true }), docRh(390)))
+  })
+
+  it('PASS: a first action below 312 passes when the 16:00 caption ends inside the window', () => {
+    ok(regra('heroi')(base({ link: { x: 20, y: 400, w: 200, h: 44 }, legenda: { x: 20, y: 706, w: 350, h: 28 } }), docRh(390)))
+  })
+
+  it('CONTROL: a wrong box size, a plate far from y 392, or the old nominal box fail', () => {
+    falha(regra('heroi')(base({ placa: { ...RECORTE, w: 370 } }), docRh(390)), /largura|borda|390/i)
+    falha(regra('heroi')(base({ placa: { ...RECORTE, h: 219 } }), docRh(390)), /altura|recort|janela/i)
+    falha(regra('heroi')(base({ placa: { ...RECORTE, y: 364 } }), docRh(390)), /y=364|392/)
+    falha(regra('heroi')(base({ placa: { ...RECORTE, y: 500 } }), docRh(390)), /y=500|392/)
+    falha(regra('heroi')(base({ placa: { x: -153.4, y: 392, w: 543.4, h: 305.8 } }), docRh(390)), /largura|borda|390/i)
+    falha(regra('heroi')(base({ placa: { ...RECORTE, x: -20, w: 410 } }), docRh(390)), /largura|borda|esquerda/i)
+  })
+
+  it('CONTROL: a first action at y 313 fails with no caption in the fold, and with a caption that ends below innerHeight', () => {
+    falha(regra('heroi')(base({ link: { x: 20, y: 313, w: 200, h: 44 } }), docRh(390)), /312|ação|link/i)
+    falha(regra('heroi')(base({ link: { x: 20, y: 400, w: 200, h: 44 }, legenda: { x: 20, y: 830, w: 350, h: 28 } }), docRh(390)), /312|ação|link/i)
+  })
+
+  it('CONTROL: without the cacau wall over rows 144 to 364 the rule still fails; the 1440 seam rule is untouched', () => {
+    falha(regra('heroi')(base().filter((n) => !n.m.paredeNoite), docRh(390)), /cacau|parede|144/i)
+    falha(regra('heroi')(heroi1440({ placa: { ...PLACA_1440, x: PLACA_1440.x + 6 } }), docRh(1440)), /costura|seam|h1/i)
+    ok(regra('heroi')(heroi1440(), docRh(1440)))
+  })
+
+  it('MEDIDAS_REP_HOME.placa390 is the crop: img box 390 x 305.8 at x 0, y 392, on the 472-column window', () => {
+    const p = medir.MEDIDAS_REP_HOME.placa390
+    assert.deepEqual([p.w, p.h, p.x, p.y], [390, 305.8, 0, 392])
+    assert.equal(p.L, 472)
+    assert.ok(Math.abs(p.seam - (910 - p.L) * p.s) < 0.5)
+  })
+})
+
+describe('METER-INICIO 8 MOLDURA_DOBRA at 390: without a pin the frame and the header fit the window', () => {
+  it('PASS: 622.7 of frame under a 56 header fits 844, whatever the stage offset in the document', () => {
+    ok(regra('molduraDobra')(moldura390(), docRh(390)))
+    ok(regra('molduraDobra')(moldura390({ palcoY: 1300, frame: { x: 20, y: 1308, w: 296.8, h: 622.7 } }), docRh(390)))
+  })
+
+  it('CONTROL: a frame too tall for the window fails (800 + 56 > 844), and the header is part of the sum', () => {
+    falha(regra('molduraDobra')(moldura390({ frame: { x: 20, y: 730, w: 296.8, h: 800 } }), docRh(390)), /janela|innerHeight|altura/i)
+    falha(regra('molduraDobra')(moldura390({ frame: { x: 20, y: 730, w: 296.8, h: 800 - 1 } }), docRh(390)), /janela|innerHeight|altura/i)
+    ok(regra('molduraDobra')(moldura390({ frame: { x: 20, y: 730, w: 296.8, h: 788 } }), docRh(390)))
+  })
+
+  it('the 1440 behaviour is unchanged (pin offset): the frame under the header still fails, and so does a scrollY above innerHeight', () => {
+    ok(regra('molduraDobra')(moldura1440(), docRh(1440)))
+    falha(regra('molduraDobra')(moldura1440({ frame: { x: 140, y: 815, w: 300, h: 640 } }), docRh(1440)), /cabeçalho|header|topo/i)
+    falha(regra('molduraDobra')(moldura1440({ palcoY: 1000, frame: { x: 140, y: 1040, w: 300, h: 640 } }), docRh(1440)), /rolagem|scroll|innerHeight|altura/i)
+  })
+})
+
+describe('METER-INICIO 9 TEMPO: the caption hour is read from its whole text, and the hero pill is allowed at every width', () => {
+  const comTextoTodo = (lista, sufixo = ' Ela mamou') => lista.map((n) => (n.m?.legenda ? { ...n, textoTodo: `${n.texto}${sufixo}`, texto: '' } : n))
+
+  it('PASS: hours that live in a child span (own text empty, textoTodo "16:00 Ela mamou") count', () => {
+    for (const largura of [1440, 390]) ok(regra('tempo')(comTextoTodo(tempoComHoras(largura)), docRh(largura)))
+  })
+
+  it('CONTROL: a caption whose whole text does not start with an hour still fails', () => {
+    const lista = tempoComHoras(1440).map((n) => (n.m?.legenda ? { ...n, textoTodo: 'Ela mamou 16:00', texto: '' } : n))
+    falha(regra('tempo')(lista, docRh(1440)), /sem hora/)
+    falha(regra('tempo')(comTextoTodo(tempoComHoras(1440, { hora2: '15:00' })), docRh(1440)), /hora|volta/i)
+  })
+
+  it('PASS: the hero mel pill on cacau at 390, with the closing mel button', () => {
+    const lista = tempoComHoras(390, {
+      botoes: [
+        rhNo({ botaoMel: true, heroiBotao: true }, { x: 20, y: 268, w: 220, h: 48 }, { tag: 'a', texto: 'c', ordemDom: 10, fundoSob: CACAU }),
+        rhNo({ botaoMel: true, fechamento: true }, { x: 20, y: 2400, w: 220, h: 48 }, { tag: 'a', texto: 'f', ordemDom: 11, fundoSob: CACAU }),
+      ],
+    })
+    ok(regra('tempo')(lista, docRh(390)))
+  })
+
+  it('CONTROL: a hero pill on papel, a third mel button, and a missing closing button still fail at 390', () => {
+    const heroi = (chao) => rhNo({ botaoMel: true, heroiBotao: true }, { x: 20, y: 268, w: 220, h: 48 }, { tag: 'a', texto: 'c', ordemDom: 10, fundoSob: chao })
+    const fecho = rhNo({ botaoMel: true, fechamento: true }, { x: 20, y: 2400, w: 220, h: 48 }, { tag: 'a', texto: 'f', ordemDom: 11, fundoSob: CACAU })
+    falha(regra('tempo')(tempoComHoras(390, { botoes: [heroi(PAPEL), fecho] }), docRh(390)), /cacau/)
+    const outro = rhNo({ botaoMel: true }, { x: 20, y: 1800, w: 220, h: 48 }, { tag: 'a', texto: 'x', ordemDom: 12, fundoSob: CACAU })
+    falha(regra('tempo')(tempoComHoras(390, { botoes: [heroi(CACAU), fecho, outro] }), docRh(390)), /fora do herói e do fechamento/)
+    falha(regra('tempo')(tempoComHoras(390, { botoes: [heroi(CACAU)] }), docRh(390)), /fechamento/)
+  })
+
+  it('collector: textoTodo is the whole text of a caption', () => {
+    const html = '<main><p data-legenda data-tom="dia"><span>16:00</span> Ela mamou</p><p>Outro</p></main>'
+    const [legenda, outro] = coletarDe(html).nos.filter((n) => n.tag === 'p')
+    assert.equal(legenda.textoTodo, '16:00 Ela mamou')
+    assert.equal(outro.textoTodo, undefined)
+  })
+})
+
+describe('METER-INICIO 10 CAPTURA_REAL: the image path is absolute, and the manifest form does not matter', () => {
+  it('collector: a loaded image with an empty currentSrc gives the absolute src (resolved against the page)', () => {
+    const html = '<main><img data-produto-tela src="/telas/casa/historico@2x.png" alt=""></main>'
+    const img = coletarDe(html, undefined, '', 'http://127.0.0.1:5254/').nos.find((n) => n.tag === 'img')
+    assert.equal(img.currentSrc, 'http://127.0.0.1:5254/telas/casa/historico@2x.png')
+  })
+
+  it('collector: the browser currentSrc still wins when it is set', () => {
+    const html = '<main><img data-produto-tela src="/telas/casa/a.png" alt=""></main>'
+    const preparar = (d) => Object.defineProperty(d.querySelector('img'), 'currentSrc', { value: 'http://127.0.0.1:5254/telas/casa/b.png', configurable: true })
+    const img = coletarDe(html, preparar, '', 'http://127.0.0.1:5254/').nos.find((n) => n.tag === 'img')
+    assert.equal(img.currentSrc, 'http://127.0.0.1:5254/telas/casa/b.png')
+  })
+})
+
+describe('METER-INICIO 11 RODAPE at 390: the footer height ceiling is 640', () => {
+  const celular = (h) => rodapeConforme({ rect: { x: 0, y: 2000, w: 390, h } })
+
+  it('PASS: a 600 px footer at 390 and a 640 px one (the ceiling)', () => {
+    ok(medir.rodape(celular(600), docDs1(390)))
+    ok(medir.rodape(celular(640), docDs1(390)))
+  })
+
+  it('CONTROL: 641 px at 390 fails; the 440 ceiling from 768 is unchanged (441 fails at 768 and 1440)', () => {
+    falha(medir.rodape(celular(641), docDs1(390)), /teto é 640/)
+    falha(medir.rodape(rodapeConforme({ rect: { x: 0, y: 2000, w: 768, h: 441 } }), docDs1(768)), /teto é 440/)
+    falha(medir.rodape(rodapeConforme({ rect: { x: 0, y: 2000, w: 1440, h: 441 } }), docDs1(1440)), /teto é 440/)
+    ok(medir.rodape(rodapeConforme({ rect: { x: 0, y: 2000, w: 768, h: 440 } }), docDs1(768)))
+  })
+})
+
+describe('METER-INICIO 12 PRODUTO at 1440: only the room-stage screen may be under 320, at the height cap of the window', () => {
+  // The stage frame is min(320, (innerHeight - quadro-livre) / 2.2241) wide; quadro-livre is 96.5 + the 108 px floor strip (204.5).
+  const larg = (w, palco = true) => ({ rect: { x: 100, y: 100, w, h: w * 2.2241 }, m: { produtoTelaPalco: palco } })
+  const em = (altura, w, palco = true) => medir.produto(produtoCom(larg(w, palco)), { ...docDs1(1440), altura })
+
+  it('PASS: the stage screen at 312.7 is the cap of a 900 window; 270 fits a 800 window (cap 267.7)', () => {
+    ok(em(900, 312.7))
+    ok(em(900, 312.3))
+    ok(em(900, 320))
+    ok(em(800, 270))
+  })
+
+  it('CONTROL: the stage screen more than 0.5 px under the cap fails (312.1 at 900, 300 at 900, 260 at 800)', () => {
+    falha(em(900, 312.1), /312\.1/)
+    falha(em(900, 300), /300/)
+    falha(em(800, 260), /260/)
+  })
+
+  it('PASS: a tall window holds the full 320 (0.5 px of tolerance)', () => {
+    ok(em(1100, 320))
+    ok(em(1100, 319.6))
+  })
+
+  it('CONTROL: a tall window with a 318 stage screen fails', () => {
+    falha(em(1000, 318), /318/)
+    falha(em(1100, 318), /318/)
+  })
+
+  it('CONTROL: an ordinary (non-stage) product screen keeps the 320 minimum at any window height', () => {
+    falha(em(800, 275, false), /275/)
+    falha(em(900, 312.7, false), /312\.7/)
+    falha(em(1100, 275, false), /275/)
+    ok(em(800, 320, false))
+    ok(em(900, 319.6, false))
+  })
+
+  it('the 390 minimum (280) is unchanged and a missing innerHeight falls back to 320', () => {
+    ok(medir.produto(produtoCom(larg(280)), docDs1(390)))
+    falha(medir.produto(produtoCom(larg(270)), docDs1(390)))
+    falha(medir.produto(produtoCom(larg(300)), { ...docDs1(1440), altura: undefined }), /300/)
+    ok(medir.produto(produtoCom(larg(320)), { ...docDs1(1440), altura: undefined }))
   })
 })
