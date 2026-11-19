@@ -136,7 +136,7 @@ describe('rotas', () => {
     renderizarRota('/qualquer-coisa')
 
     const titulo = await screen.findByRole('heading', { level: 1 })
-    expect(titulo.textContent).toBe('Página não encontrada')
+    expect(titulo.textContent).toBe('Aqui não mora ninguém.')
 
     const link = screen.getByRole('link', { name: 'Voltar ao início' })
     expect(link.getAttribute('href')).toBe('/')

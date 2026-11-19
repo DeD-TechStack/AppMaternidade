@@ -31,6 +31,10 @@ function arquivosDe(pasta: string): string[] {
 /** The page's own sources (not its tests): the page file plus the two folders. */
 const fontesDaPagina = () => [join(SRC, 'paginas', 'Inicio.tsx'), ...PASTAS_DA_PAGINA.flatMap(arquivosDe)].filter((arquivo) => !/\.test\.tsx?$/.test(arquivo))
 
+/** sha256 of a file's bytes with CRLF folded to LF (byte-safe via latin1), so a Windows CRLF checkout hashes like the LF file. */
+const normalizarLF = (bytes: Buffer): Buffer => Buffer.from(bytes.toString('latin1').replace(/\r\n/g, '\n'), 'latin1')
+const sha256LF = (bytes: Buffer): string => createHash('sha256').update(normalizarLF(bytes)).digest('hex')
+
 const semComentarios = (texto: string) => texto.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:'"`\\])\/\/.*$/gm, '$1')
 
 // ---------------------------------------------------------------------------------------------
@@ -162,7 +166,10 @@ describe('REPH-I-17 display variants A/B/C and the M PLUS Rounded 1c package', (
     expect(existsSync(join(PASTA_WEB, LICENCA_FONTE))).toBe(true)
     const licenca = readFileSync(join(PASTA_WEB, LICENCA_FONTE))
     expect(licenca.toString('utf8')).toMatch(/SIL OPEN FONT LICENSE/i)
-    const hash = createHash('sha256').update(licenca).digest('hex')
+    const hash = sha256LF(licenca)
+    // Control: a CRLF copy of the same text must normalize to the same hash as the LF text.
+    const copiaCRLF = Buffer.from(normalizarLF(licenca).toString('latin1').replace(/\n/g, '\r\n'), 'latin1')
+    expect(sha256LF(copiaCRLF)).toBe(hash)
     const linha = lerWeb('PROVENANCE.md')
       .split(/\r?\n/)
       .find((l) => l.includes(PACOTE_FONTE))
