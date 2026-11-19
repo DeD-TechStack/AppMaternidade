@@ -4,7 +4,7 @@
    56 px e 24 px são tetos; a quebra é a da composição larga (`@container cc-pagina (min-width: 1024px)`).
    A moldura da cena (`.cc-meio-cena`, o <picture>) é a linha do tempo e recorta a placa com `overflow: clip`
    (sem rolagem, sem novo contexto de bloco): a <img> já enche a caixa, então parada nada muda. */
-@supports ((animation-timeline: view()) and (animation-range: 0% 100%)) {
+@supports ((animation-timeline: view()) and (animation-range: entry)) {
   @media (prefers-reduced-motion: no-preference) {
     @keyframes cc-entra {
       from {

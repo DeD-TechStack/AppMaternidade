@@ -2,7 +2,7 @@
    Só `transform`, preso à rolagem por view-timeline nativa, linear, fill both; nada de JS, opacidade ou recorte.
    Fora do @supports, ou com `prefers-reduced-motion`, nada daqui vale e a página é a base, parada.
    56 px em 1440 e 24 px em 390 são tetos; a quebra é a mesma das duas colunas (`@container cf-banda (min-width: 700px)`). */
-@supports ((animation-timeline: view()) and (animation-range: 0% 100%)) {
+@supports ((animation-timeline: view()) and (animation-range: entry)) {
   @media (prefers-reduced-motion: no-preference) {
     @keyframes cf-entra {
       from {
@@ -24,10 +24,14 @@
       }
     }
 
-    /* C2: 18:00, a placa M06 chega pela direita. A linha do tempo fica na coluna da placa (`.cf-colo`); a placa
-       anda dentro dela, a legenda e o chão de noite ficam parados. A coluna não recorta (o chão vai de -100vw a
-       100vw dela), então o overflow dela fica como está. */
-    .cf-duas-depois > .cf-colo {
+    /* C2: 18:00, a placa M06 chega pela direita. A linha do tempo é a <picture> da placa: parada, recortada e só com
+       a imagem (a legenda e o chão de noite ficam fora dela). Na base ela é `display: contents`, sem caixa; aqui vira
+       um bloco, que no flex da coluna toma a largura toda e tem a altura da <img> (bloco, centrada pela margem), então
+       o chão, a legenda e o espaço entre eles não mudam. A coluna (`.cf-colo`) não recorta: o chão vai de -100vw a
+       100vw dela. Este arquivo é importado antes da página: o seletor tem o peso do `.cf-colo > picture` dela. */
+    .cf-duas-depois > .cf-colo > picture {
+      display: block;
+      overflow: clip;
       view-timeline-name: --cf-depois;
     }
 

@@ -2,7 +2,7 @@
    Só `transform`, preso à rolagem por view-timeline nativa, linear, fill both; nada de JS, opacidade ou recorte.
    Fora do @supports, ou com `prefers-reduced-motion`, nada daqui vale e a página é a base, parada.
    56 px e 24 px são tetos; a quebra é a da faixa das ideias (`@container (min-width: 40rem)`, sobre `.dc-grade`). */
-@supports ((animation-timeline: view()) and (animation-range: 0% 100%)) {
+@supports ((animation-timeline: view()) and (animation-range: entry)) {
   @media (prefers-reduced-motion: no-preference) {
     @keyframes dc-entra {
       from {
@@ -24,8 +24,10 @@
       }
     }
 
-    /* E2: meio-dia, a família chega pelo lado do dia (da esquerda). A moldura (`.dc-familia`) é a linha do tempo e
-       recorta a placa com `overflow: clip` (não vira rolagem, então o tamanho mínimo do item da grade não muda). */
+    /* E2: meio-dia, a família chega pela borda de que a placa é rente. No estreito a moldura se estica e a placa fica
+       à esquerda (-24 px); no largo a página põe a moldura no fim da linha (`justify-self: end`), rente à direita
+       (+56 px). A moldura (`.dc-familia`) é a linha do tempo e recorta a placa com `overflow: clip` (não vira rolagem,
+       então o tamanho mínimo do item da grade não muda). */
     .dc-familia {
       overflow: clip;
       view-timeline-name: --dc-ideias;
@@ -44,7 +46,7 @@
 
     @container (min-width: 40rem) {
       .dc-familia img {
-        --dc-entra: -56px;
+        --dc-entra: 56px;
       }
     }
 
