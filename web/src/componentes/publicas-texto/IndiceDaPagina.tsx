@@ -2,8 +2,12 @@ import { ChevronDown } from 'lucide-react'
 import { useId, useSyncExternalStore, type MouseEvent } from 'react'
 import { ROTULO_INDICE, type SecaoDeLeitura } from '../../conteudo/publicas-texto.ts'
 
-/** Abaixo de 1100 px a página tem uma coluna só (como a grade em publicasTexto.css) e o índice se recolhe. */
-const CONSULTA_COMPACTA = '(max-width: 1099.98px)'
+/**
+ * O índice vai para a direita da coluna de leitura quando o quadro da página tem 66 rem (a consulta de contêiner de
+ * publicasTexto.css). O quadro mede 100vw − 2 × a calha (uns 0,977 × 100vw − 31 px), então isso é uns 69,5 rem de
+ * janela: abaixo disso o índice fica em fluxo, antes do documento, e se recolhe.
+ */
+const CONSULTA_COMPACTA = '(max-width: 69.5rem)'
 
 function temMatchMedia(): boolean {
   return typeof window !== 'undefined' && typeof window.matchMedia === 'function'
@@ -34,9 +38,9 @@ function irParaSecao(evento: MouseEvent<HTMLAnchorElement>, id: string) {
 }
 
 /**
- * O índice "Nesta página": um link sublinhado, de 44 px no mínimo, para cada `h2` da página, numa lista
- * vertical só, igual nas seis páginas. Em tela larga ele fica entre a abertura e a leitura, na coluna de
- * leitura; em tela estreita vira um `<details>` fechado ("Nesta página", 44 px no mínimo), para a primeira
+ * O índice "Nesta página": um link de cacau, de 44 px no mínimo e sublinhado no hover e no foco, para cada `h2` da
+ * página, numa lista vertical só, igual nas seis páginas. Com lugar para ele, fica à direita da coluna de leitura;
+ * em tela estreita vem antes do documento e vira um `<details>` fechado ("Nesta página", 48 px), para a primeira
  * tela mostrar o texto.
  */
 export function IndiceDaPagina({ secoes }: { secoes: readonly SecaoDeLeitura['secao'][] }) {
