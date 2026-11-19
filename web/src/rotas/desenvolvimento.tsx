@@ -20,7 +20,7 @@ export const rotasDesenvolvimentoLogadas: RouteObject[] = [
     return {
       path: `app/desenvolvimento/conteudo/${id}`,
       lazy: async () => {
-        const { PaginaItem } = await import('../paginas/desenvolvimento/PaginaItem.tsx')
+        const PaginaItem = (await import('../paginas/desenvolvimento/PaginaItem.tsx')).PaginaItem
         return { Component: () => <PaginaItem id={id} /> }
       },
       handle: { titulo: tituloDaAbaDesenvolvimento(item?.titulo ?? 'Desenvolvimento') },
