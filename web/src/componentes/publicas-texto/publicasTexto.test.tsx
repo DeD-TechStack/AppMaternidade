@@ -412,9 +412,8 @@ describe('Contato: bloco de e-mail', () => {
   })
 })
 
-// Os "a definir" ficam só no item a que se referem, fora da primeira dobra: nenhum bloco com "a definir"
-// entra nas duas primeiras seções de Privacidade e de Termos (só o aviso do casco aparece no alto).
-describe('"a definir" fora do alto das páginas', () => {
+// Nenhuma página de leitura tem mais parágrafo "a definir": o responsável e a idade mínima já estão respondidos.
+describe('nenhum parágrafo "a definir" em página de leitura', () => {
   const titulosDe = (caminho: string) => {
     const { container } = renderizarRota(caminho)
     return within(container.querySelector('main')!)
@@ -443,16 +442,12 @@ describe('"a definir" fora do alto das páginas', () => {
   })
 
   for (const caminho of ['/privacidade', '/termos']) {
-    it(`${caminho}: nenhum parágrafo com "a definir" está nas duas primeiras seções`, () => {
+    it(`${caminho}: nenhum parágrafo com "a definir"`, () => {
       const { container } = renderizarRota(caminho)
-      const secoes = [...container.querySelectorAll('main .pt-leitura > section')]
-      const comADefinir = secoes.flatMap((secao, posicao) =>
-        [...secao.querySelectorAll('p')].filter((p) => /a definir/.test(p.textContent ?? '')).map(() => posicao),
+      const comADefinir = [...container.querySelectorAll('main .pt-leitura p')].filter((p) =>
+        /(?<![\p{L}])a definir(?![\p{L}])/u.test(p.textContent ?? ''),
       )
-      // /privacidade não tem mais "a definir" (o responsável agora é "DeD TechStack"); /termos mantém a idade mínima.
-      if (caminho === '/termos') expect(comADefinir.length).toBeGreaterThan(0)
-      for (const posicao of comADefinir) expect(posicao).toBeGreaterThanOrEqual(2)
-      for (const secao of secoes.slice(0, 2)) expect(secao.textContent).not.toMatch(/a definir/)
+      expect(comADefinir).toHaveLength(0)
     })
 
     it(`${caminho}: "Nesta versão de avaliação" não está nas duas primeiras seções, mas aparece mais abaixo`, () => {
@@ -568,7 +563,9 @@ describe('páginas públicas: exclusão e dados na tela Conta', () => {
     expect(textoDe('/privacidade')).toContain('Responsável pelo AppMaternidade: DeD TechStack.')
     const termos = textoDe('/termos')
     expect(termos).toContain('Responsável pelo AppMaternidade: DeD TechStack.')
-    expect(termos).toContain('Idade mínima para usar o AppMaternidade: a definir.')
+    expect(termos).toContain(
+      'Não há idade mínima para usar o AppMaternidade. Quem tem menos de 18 anos usa o site com o pai, a mãe ou o responsável legal.',
+    )
   })
 
   it('I-4b /privacidade, /termos, /exclusao-de-conta e /sobre trazem o responsável "DeD TechStack" e não "a definir"', () => {

@@ -378,7 +378,7 @@ function capAbertoDaPasta(pasta) {
   return abertos
 }
 
-/** A frame or capture is at most `teto` bytes, or over it only with a cap_open line carrying exactly its measured bytes. */
+/** A frame is at most `teto` bytes, or over it only with a cap_open line carrying exactly its measured bytes. */
 function checarBytesCapAberto(pasta, nome, teto) {
   const bytes = statSync(join(pasta, nome)).size
   if (bytes <= teto) return
@@ -466,6 +466,12 @@ function camadasServidas(pasta) {
   return ATIVOS.camadas.filter((base) => !ausentes.has(base)).map((base) => arquivoDaCamada(pasta, base))
 }
 
+/** A capture is at most `teto` bytes, strictly: PROVENANCE.md cap_open lines do not waive captures. */
+function checarTetoCaptura(pasta, nome, teto) {
+  const bytes = statSync(join(pasta, nome)).size
+  assert.ok(bytes <= teto, `${nome}: ${bytes} bytes is over the ${teto} cap; there is no cap_open waiver for captures`)
+}
+
 function checarTudo(pastas) {
   const t = (pasta, nome) => statSync(join(pasta, nome)).size
   const ausentes = camadasAusentes(pastas.cenas)
@@ -481,7 +487,7 @@ function checarTudo(pastas) {
     checarBytesCapAberto(pastas.molduras, nome, ATIVOS.tetoMoldura)
   }
   for (const [nome, teto] of Object.entries(ATIVOS.capturas)) {
-    checarBytesCapAberto(pastas.telas, nome, teto)
+    checarTetoCaptura(pastas.telas, nome, teto)
   }
   const total =
     t(pastas.cenas, 'm05-sol-1672w.webp') + bytesDaCamada(pastas.cenas, 'm05-luz-1672w', ausentes) +
@@ -510,16 +516,14 @@ test('AST1-I-09 byte caps: plates, lamp layers, layer sums per DPR, frames, capt
   assert.equal(bytesDaCamada(comLista, 'm05-luz-1672w', camadasAusentes(comLista)), 0)
   writeFileSync(join(comLista, 'm05-luz-1672w.png'), Buffer.alloc(5))
   assert.throws(() => camadasAusentes(comLista), /listed as not served but present/)
-  // Captures: over the cap only with a cap_open line naming the file with exactly its bytes.
+  // Captures: strict cap, no cap_open waiver. A cap_open line must not rescue a capture over the cap.
   const telas = pastaTmp()
-  writeFileSync(join(telas, 'historico-y-alta-640w.webp'), Buffer.alloc(35001))
   const teto = ATIVOS.capturas['historico-y-alta-640w.webp']
-  assert.throws(() => checarBytesCapAberto(telas, 'historico-y-alta-640w.webp', teto), /over the 35000 cap/)
-  const aberta = (n) => `## cap_open\n\n- historico-y-alta-640w.webp: ${n} bytes over the 35000 B cap at q72 (leader rules at integration)\n`
-  writeFileSync(join(telas, 'PROVENANCE.md'), `# x\n\n${aberta(35002)}`)
-  assert.throws(() => checarBytesCapAberto(telas, 'historico-y-alta-640w.webp', teto), /cap_open says 35002/)
-  writeFileSync(join(telas, 'PROVENANCE.md'), `# x\n\n${aberta(35001)}`)
-  checarBytesCapAberto(telas, 'historico-y-alta-640w.webp', teto)
+  writeFileSync(join(telas, 'historico-y-alta-640w.webp'), Buffer.alloc(35001))
+  writeFileSync(join(telas, 'PROVENANCE.md'), '# x\n\n## cap_open\n\n- historico-y-alta-640w.webp: 35001 bytes over the 35000 B cap\n')
+  assert.throws(() => checarTetoCaptura(telas, 'historico-y-alta-640w.webp', teto), /no cap_open waiver for captures/)
+  writeFileSync(join(telas, 'historico-y-alta-640w.webp'), Buffer.alloc(35000))
+  checarTetoCaptura(telas, 'historico-y-alta-640w.webp', teto)
   checarTudo(PASTAS)
 })
 

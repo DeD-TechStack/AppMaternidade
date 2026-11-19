@@ -1,6 +1,6 @@
 {
   "versao": 1,
-  "fonte_sha": "4fcc1de5be380a007cc09cdef2b3992ff5356529",
+  "fonte_sha": "558bf5780ba3d77c29d5369dd0410d2372e473c2",
   "ferramenta": {
     "capturar_sha256": "ecb24d1c8c386e2c8e8a88412f0beca10da9c5a40b2affbdd5448f542e3175a7",
     "cdp_sha256": "fb18a5c6683d0f625a5f80ef5997cb7279d7caea34c1ffe718b8f92df3db56ea"
@@ -121,9 +121,9 @@
           "arquivo": "/telas/casa/historico-y-alta-640w.webp",
           "largura": 640,
           "altura": 2025,
-          "bytes": 38178,
-          "sha256": "af500bbac11c71731bfc55ea90ced53f06d26da5d19e64bacefa64a7acb493ee",
-          "qualidade": 72
+          "bytes": 34776,
+          "sha256": "9f0fecfbddbb239f41a5eb0711fc38f61bc9103d90339b74dc22f0d9c12362c6",
+          "qualidade": 60
         },
         {
           "arquivo": "/telas/casa/historico-y-alta-560w.webp",
@@ -137,9 +137,9 @@
           "arquivo": "/telas/casa/historico-y-alta-320w.webp",
           "largura": 320,
           "altura": 1013,
-          "bytes": 17302,
-          "sha256": "4ada61efaf1c91aa45ff962eadc831447efcdbee9119d084bc642dcc129009c9",
-          "qualidade": 72
+          "bytes": 15856,
+          "sha256": "a5d066c45911214190fc8a19ac5f16b05e31819c22dbcd42dcc5552244f4a4b6",
+          "qualidade": 60
         },
         {
           "arquivo": "/telas/casa/historico-y-alta-280w.webp",

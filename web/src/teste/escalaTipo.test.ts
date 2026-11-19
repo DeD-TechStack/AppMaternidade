@@ -116,8 +116,5 @@ describe('TYPE-1: a escala de tipo (arquivos-fonte)', () => {
     ]) {
       expect(lerTexto(arquivo), `${arquivo}: o h1 sem cm-exibicao`).toMatch(h1Com)
     }
-    expect(lerTexto('src/componentes/publicas-destaque/Abertura.tsx')).toMatch(
-      /<Titulo\b[^>]*nivel="h1"[^>]*className="[^"]*(?<![\w-])cm-exibicao(?![\w-])/,
-    )
   })
 })

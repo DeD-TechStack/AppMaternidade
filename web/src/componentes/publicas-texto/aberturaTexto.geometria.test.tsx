@@ -1,5 +1,5 @@
-import { spawnSync } from 'node:child_process'
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { spawn, spawnSync, type ChildProcess } from 'node:child_process'
+import { closeSync, existsSync, mkdirSync, mkdtempSync, openSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -309,7 +309,98 @@ function comArquivosDoDist(texto: string): string {
   return texto.replace(/url\((["']?)\/(?!\/)/g, (_t, aspas: string) => `url(${aspas}${base}`)
 }
 
-function medirNoChrome(corpoHtml: string, largura: number, altura: number, foto: string | null): Medida {
+/** Mata o Chrome e todos os filhos: o grupo inteiro no POSIX (spawn detached), a árvore no Windows. */
+function matarGrupo(pid: number, filho: ChildProcess): void {
+  if (process.platform === 'win32') {
+    try {
+      filho.kill()
+    } catch {
+      // já terminou
+    }
+    try {
+      spawnSync('taskkill', ['/pid', String(pid), '/T', '/F'], { windowsHide: true, timeout: 5_000 })
+    } catch {
+      // já terminou
+    }
+    return
+  }
+  try {
+    process.kill(-pid, 'SIGKILL')
+  } catch {
+    // grupo já terminou
+  }
+}
+
+interface ResultadoDoChrome {
+  status: number | null
+  erro: string | null
+  expirou: boolean
+  saida: string
+  erroPadrao: string
+}
+
+/**
+ * Roda o Chrome com spawn assíncrono, saída em arquivos (nunca em pipes: os filhos do Chrome que sobrevivem não seguram
+ * nada que nos bloqueie), grupo de processos próprio morto inteiro no fim e todo await limitado no tempo (45 s + 3 s).
+ */
+async function executarChrome(argumentos: string[], arquivoDeSaida: string, arquivoDeErro: string): Promise<ResultadoDoChrome> {
+  const fdSaida = openSync(arquivoDeSaida, 'w')
+  const fdErro = openSync(arquivoDeErro, 'w')
+  let filho: ChildProcess | null = null
+  let terminou: Promise<{ status: number | null; erro: string | null }> | null = null
+  let expirou = false
+  // O resultado do filho fica aqui assim que ele termina: depois do limite e da limpeza nunca se espera de novo uma promise pendente.
+  let final: { status: number | null; erro: string | null } | null = null
+  try {
+    const alvoDoFilho = spawn(CHROME, argumentos, {
+      stdio: ['ignore', fdSaida, fdErro],
+      detached: process.platform !== 'win32',
+      windowsHide: true,
+    })
+    filho = alvoDoFilho
+    terminou = new Promise((resolver) => {
+      alvoDoFilho.once('error', (erro) => {
+        final = { status: null, erro: erro.message }
+        resolver(final)
+      })
+      alvoDoFilho.once('exit', (status) => {
+        final = { status, erro: null }
+        resolver(final)
+      })
+    })
+    let relogio: NodeJS.Timeout | undefined
+    const limite = new Promise<'tempo'>((resolver) => {
+      relogio = setTimeout(() => resolver('tempo'), 45_000)
+    })
+    expirou = (await Promise.race([terminou, limite]).finally(() => clearTimeout(relogio))) === 'tempo'
+  } finally {
+    if (filho?.pid !== undefined) matarGrupo(filho.pid, filho)
+    // Depois do kill, espera o exit por um instante antes de fechar os arquivos.
+    if (terminou) {
+      let espera: NodeJS.Timeout | undefined
+      await Promise.race([
+        terminou,
+        new Promise((resolver) => {
+          espera = setTimeout(resolver, 3_000)
+        }),
+      ]).finally(() => clearTimeout(espera))
+    }
+    closeSync(fdSaida)
+    closeSync(fdErro)
+  }
+  // Sem await: se o Chrome não emitiu exit nem error mesmo depois do kill e dos 3 s de espera, falha aqui com mensagem clara.
+  const resultado = final as { status: number | null; erro: string | null } | null
+  if (!resultado) throw new Error('o Chrome não encerrou nem depois do kill (sem exit/error em 3 s)')
+  return {
+    status: resultado.status,
+    erro: resultado.erro,
+    expirou,
+    saida: readFileSync(arquivoDeSaida, 'utf8'),
+    erroPadrao: readFileSync(arquivoDeErro, 'utf8'),
+  }
+}
+
+async function medirNoChrome(corpoHtml: string, largura: number, altura: number, foto: string | null): Promise<Medida> {
   const pasta = mkdtempSync(join(tmpdir(), 'cm-abertura-'))
   try {
     const perfil = join(pasta, 'perfil')
@@ -337,13 +428,12 @@ function medirNoChrome(corpoHtml: string, largura: number, altura: number, foto:
         `<script>addEventListener('message', (e) => { document.getElementById('geometria').textContent = e.data })</script></body></html>`,
       'utf8',
     )
-    const resultado = spawnSync(
-      CHROME,
+    const resultado = await executarChrome(
       [
         '--headless=new',
         '--no-sandbox',
         '--disable-gpu',
-        '--disable-crashpad-for-testing',
+        ...(process.platform === 'win32' ? ['--disable-crashpad-for-testing'] : []),
         '--no-first-run',
         '--allow-file-access-from-files',
         `--user-data-dir=${perfil}`,
@@ -353,11 +443,13 @@ function medirNoChrome(corpoHtml: string, largura: number, altura: number, foto:
         '--dump-dom',
         pathToFileURL(envoltorio).href,
       ],
-      { encoding: 'utf8', timeout: 45_000, maxBuffer: 64 * 1024 * 1024 },
+      join(pasta, 'saida.txt'),
+      join(pasta, 'erro.txt'),
     )
-    const achado = /<pre id="geometria"[^>]*>([\s\S]*?)<\/pre>/.exec(resultado.stdout ?? '')
+    const achado = /<pre id="geometria"[^>]*>([\s\S]*?)<\/pre>/.exec(resultado.saida)
     if (!achado) {
-      throw new Error(`O Chrome não devolveu a medida (status ${resultado.status}, erro ${resultado.error?.message ?? 'nenhum'}): ${resultado.stderr ?? ''}`)
+      const mensagem = resultado.erro ?? (resultado.expirou ? 'tempo esgotado (45000 ms)' : 'nenhum')
+      throw new Error(`O Chrome não devolveu a medida (status ${resultado.status}, erro ${mensagem}): ${resultado.erroPadrao}`)
     }
     const texto = achado[1].replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
     if (foto && existsSync(PASTA_DAS_FOTOS)) {
@@ -369,13 +461,12 @@ function medirNoChrome(corpoHtml: string, largura: number, altura: number, foto:
         `<!doctype html><html><body style="margin:0"><iframe src="${pathToFileURL(pagina).href}" style="border:0;width:${largura}px;height:${ALTURA_DA_FOTO}px"></iframe></body></html>`,
         'utf8',
       )
-      spawnSync(
-        CHROME,
+      await executarChrome(
         [
           '--headless=new',
           '--no-sandbox',
           '--disable-gpu',
-          '--disable-crashpad-for-testing',
+          ...(process.platform === 'win32' ? ['--disable-crashpad-for-testing'] : []),
           '--no-first-run',
           '--allow-file-access-from-files',
           `--user-data-dir=${join(pasta, 'perfil-foto')}`,
@@ -385,7 +476,8 @@ function medirNoChrome(corpoHtml: string, largura: number, altura: number, foto:
           `--screenshot=${join(PASTA_DAS_FOTOS, foto)}`,
           pathToFileURL(alta).href,
         ],
-        { encoding: 'utf8', timeout: 45_000 },
+        join(pasta, 'foto-saida.txt'),
+        join(pasta, 'foto-erro.txt'),
       )
     }
     return JSON.parse(texto) as Medida
@@ -407,7 +499,7 @@ function consultaPelaLargura(largura: number) {
   }
 }
 
-function medirPagina(caminho: string, largura: number, altura: number, foto = false, trocar?: [string, string]): Medida {
+async function medirPagina(caminho: string, largura: number, altura: number, foto = false, trocar?: [string, string]): Promise<Medida> {
   vi.stubGlobal('matchMedia', consultaPelaLargura(largura))
   let corpo: string
   try {
@@ -421,7 +513,7 @@ function medirPagina(caminho: string, largura: number, altura: number, foto = fa
   } finally {
     vi.unstubAllGlobals()
   }
-  const medida = medirNoChrome(corpo, largura, altura, foto ? `${caminho.slice(1)}_${largura}.png` : null)
+  const medida = await medirNoChrome(corpo, largura, altura, foto ? `${caminho.slice(1)}_${largura}.png` : null)
   expect(medida.erro, `${caminho} a ${largura}`).toBeUndefined()
   expect(medida.innerWidth).toBe(largura)
   expect(medida.innerHeight).toBe(altura)
@@ -622,14 +714,14 @@ describe(descreve, () => {
 
   roda(
     'VIS-4-r4-I-04 /contato a 1280 e a 1440: o cartão de e-mail é uma linha só, com o endereço de hoje e com um mais longo',
-    () => {
+    async () => {
       const problemas: string[] = []
       for (const largura of [1280, 1440]) {
-        problemas.push(...afirmarCartaoEmUmaLinha(`/contato a ${largura}`, medirPagina('/contato', largura, 900)))
+        problemas.push(...afirmarCartaoEmUmaLinha(`/contato a ${largura}`, await medirPagina('/contato', largura, 900)))
         problemas.push(
           ...afirmarCartaoEmUmaLinha(
             `/contato a ${largura} com ${ENDERECO_LONGO}`,
-            medirPagina('/contato', largura, 900, false, [EMAIL_CONTATO, ENDERECO_LONGO]),
+            await medirPagina('/contato', largura, 900, false, [EMAIL_CONTATO, ENDERECO_LONGO]),
           ),
         )
       }
@@ -640,11 +732,11 @@ describe(descreve, () => {
 
   roda(
     'VIS-4-r4-I-04 /contato a 1100: sem rolagem horizontal e o cartão de e-mail dentro da janela (pode quebrar)',
-    () => {
+    async () => {
       const problemas: string[] = []
       for (const trocar of [undefined, [EMAIL_CONTATO, ENDERECO_LONGO] as [string, string]]) {
         const rotulo = trocar ? `/contato a 1100 com ${ENDERECO_LONGO}` : '/contato a 1100'
-        const m = medirPagina('/contato', 1100, 900, false, trocar)
+        const m = await medirPagina('/contato', 1100, 900, false, trocar)
         if (m.scrollWidth > m.innerWidth) problemas.push(`${rotulo}: rolagem horizontal (${m.scrollWidth} > ${m.innerWidth})`)
         if (!m.email) problemas.push(`${rotulo}: o cartão de e-mail não foi medido`)
         else if (m.email.x < 0 || m.email.right > m.innerWidth) {
@@ -662,12 +754,12 @@ describe(descreve, () => {
     // antes de afirmar, para a mensagem nomear todas as que falham. Nas de paisagem só a classe `pt-figura-retrato` ausente.
     roda(
       `VIS-4-r4-I-01 ${caminho} a 1100, 1280 e 1440: ${ehRetrato(caminho) ? 'o painel abraça o desenho e a frase acaba na borda do painel' : 'a figura de paisagem não leva a classe pt-figura-retrato'}`,
-      () => {
+      async () => {
         const retrato = ehRetrato(caminho)
         const problemas: string[] = []
         for (const largura of [1100, 1280, 1440]) {
           const rotulo = `${caminho} a ${largura}`
-          const m = medirPagina(caminho, largura, 900)
+          const m = await medirPagina(caminho, largura, 900)
           if (m.figuraTemRetrato !== retrato) {
             problemas.push(`${rotulo}: a classe pt-figura-retrato ${m.figuraTemRetrato ? 'está' : 'não está'} na figura (esperado: ${retrato ? 'presente' : 'ausente'})`)
           }
@@ -698,8 +790,8 @@ describe(descreve, () => {
     // VIS-4-r4-I-03: no celular o desenho de retrato tem 200 px de altura e o de paisagem 136 px; o painel não passa de 40% da tela.
     roda(
       `VIS-4-r4-I-03 ${caminho} a 390: o desenho tem ${ehRetrato(caminho) ? 200 : 136} px de altura e o painel não passa de 40% da altura da tela`,
-      () => {
-        const m = medirPagina(caminho, 390, 844)
+      async () => {
+        const m = await medirPagina(caminho, 390, 844)
         const esperada = ehRetrato(caminho) ? 200 : 136
         expect(Math.abs(m.desenho.height - esperada), `${caminho} a 390: o desenho tem ${m.desenho.height.toFixed(1)} px de altura (esperado ${esperada})`).toBeLessThanOrEqual(0.5)
         expect(m.painel.height, `${caminho} a 390: o painel tem ${m.painel.height.toFixed(1)} px (máximo ${0.4 * 844})`).toBeLessThanOrEqual(0.4 * 844)
@@ -713,8 +805,8 @@ describe(descreve, () => {
     if (!ehRetrato(caminho)) {
       roda(
         `${caminho} a 1440: o painel, a frase de apoio e a coluna da figura têm a mesma borda e a mesma largura; o painel enche a coluna`,
-        () => {
-          const m = medirPagina(caminho, 1440, 900, true)
+        async () => {
+          const m = await medirPagina(caminho, 1440, 900, true)
           expect(m.painel.x, 'a borda esquerda do painel e a da coluna da figura').toBe(m.figura.x)
           expect(m.apoio.x, 'a borda esquerda da frase de apoio e a do painel').toBe(m.painel.x)
           expect(m.painel.width, 'a largura do painel e a da coluna da figura').toBe(m.figura.width)
@@ -733,8 +825,8 @@ describe(descreve, () => {
 
       roda(
         `${caminho} a 1440: o maior vão vazio da abertura não passa de 25% da área dela`,
-        () => {
-          const m = medirPagina(caminho, 1440, 900)
+        async () => {
+          const m = await medirPagina(caminho, 1440, 900)
           const vazio = fracaoVazia(m)
           expect(vazio, `o maior vão vazio da abertura: ${vazio.toFixed(3)} da área`).toBeLessThanOrEqual(0.25)
         },
@@ -745,8 +837,8 @@ describe(descreve, () => {
     // O texto de leitura: menos de 80 letras por linha; parágrafo com `pretty` e título com `balance`.
     roda(
       `${caminho} a 1440: menos de 80 letras por linha, parágrafos com text-wrap pretty e títulos com balance`,
-      () => {
-        const m = medirPagina(caminho, 1440, 900)
+      async () => {
+        const m = await medirPagina(caminho, 1440, 900)
         expect(violacoesDasLinhasCheias(caminho, m.linhasDosParagrafos)).toEqual([])
         for (const letras of m.letrasPorLinha) expect(letras).toBeLessThan(80)
         expect(m.quebraDoParagrafo).toBe('pretty')
@@ -759,11 +851,11 @@ describe(descreve, () => {
     // do h1 não passa da medida de leitura (`max-w-leitura`, 640 px).
     roda(
       `VIS-4-r3-I-02 ${caminho} a 1100 e 1440: as linhas do h1 ficam dentro da coluna do h1 e a coluna não passa de 640 px`,
-      () => {
+      async () => {
         // As duas larguras são medidas antes de afirmar, para a mensagem nomear todas as que falham.
         const problemas: string[] = []
         for (const largura of [1100, 1440]) {
-          const m = medirPagina(caminho, largura, 900)
+          const m = await medirPagina(caminho, largura, 900)
           const fora = linhasForaDaColuna(m.h1)
           const coluna = m.h1.colunaDireita - m.h1.colunaEsquerda
           if (fora.length > 0) {
@@ -789,8 +881,8 @@ describe(descreve, () => {
     if (caminho === '/privacidade') {
       roda(
         `${caminho} a 390: o painel tem a largura da coluna do texto, o primeiro parágrafo de leitura existe e nenhum vão vazio passa de 25%`,
-        () => {
-          const m = medirPagina(caminho, 390, 844, true)
+        async () => {
+          const m = await medirPagina(caminho, 390, 844, true)
           expect(m.primeiroParagrafo, 'a segunda seção tem um parágrafo de leitura').not.toBeNull()
           expect(m.painel.width / m.cabeca.width, 'o painel enche a coluna do texto').toBeGreaterThanOrEqual(0.98)
           expect(m.painel.x).toBe(m.cabeca.x)
@@ -804,8 +896,8 @@ describe(descreve, () => {
       )
       roda.fails(
         'POL-TXT:A-2 @ /privacidade 390: excluded, protected copy order; recomposed by the visual reset (DIRECAO.md)',
-        () => {
-          const m = medirPagina(caminho, 390, 844, true)
+        async () => {
+          const m = await medirPagina(caminho, 390, 844, true)
           expect(m.primeiroParagrafo, 'a segunda seção tem um parágrafo de leitura').not.toBeNull()
           const marcos = `abertura ${Math.round(m.abertura.y)}-${Math.round(m.abertura.bottom)}, painel ${Math.round(m.painel.y)}-${Math.round(m.painel.bottom)}, apoio ${Math.round(m.apoio.y)}-${Math.round(m.apoio.bottom)}`
           expect(m.primeiroParagrafo!.y, `o primeiro parágrafo de leitura começa em ${Math.round(m.primeiroParagrafo!.y)} (${marcos})`).toBeLessThanOrEqual(844)
@@ -815,8 +907,8 @@ describe(descreve, () => {
     } else {
       roda(
         `${caminho} a 390: o painel tem a largura da coluna do texto, o primeiro parágrafo de leitura começa na primeira tela e nenhum vão vazio passa de 25%`,
-        () => {
-          const m = medirPagina(caminho, 390, 844, true)
+        async () => {
+          const m = await medirPagina(caminho, 390, 844, true)
           expect(m.primeiroParagrafo, 'a segunda seção tem um parágrafo de leitura').not.toBeNull()
           const marcos = `abertura ${Math.round(m.abertura.y)}-${Math.round(m.abertura.bottom)}, painel ${Math.round(m.painel.y)}-${Math.round(m.painel.bottom)}, apoio ${Math.round(m.apoio.y)}-${Math.round(m.apoio.bottom)}`
           expect(m.primeiroParagrafo!.y, `o primeiro parágrafo de leitura começa em ${Math.round(m.primeiroParagrafo!.y)} (${marcos})`).toBeLessThanOrEqual(844)

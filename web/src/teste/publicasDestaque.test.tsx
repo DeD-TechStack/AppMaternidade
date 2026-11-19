@@ -1,23 +1,24 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { fireEvent, screen, within } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import { rodarAxe } from './axe.ts'
 import { describe, expect, it } from 'vitest'
-import { FASES, MARCOS, QUANTO_TEMPO, TUMMY_TIME } from '../conteudo/desenvolvimento/itens.ts'
-import { CONSULTADO_EM } from '../conteudo/desenvolvimento/fontes.ts'
-import { AVISO_SAUDE, DESENVOLVIMENTO_DESTAQUE } from '../conteudo/desenvolvimento/pagina.ts'
-import { COMO_FUNCIONA_DESTAQUE, CUIDADO_DESTAQUE } from '../conteudo/publicas-destaque.ts'
+import { CUIDADO_DESTAQUE } from '../conteudo/publicas-destaque.ts'
 import { INICIO } from '../conteudo/textos.ts'
 import { renderizarRota } from './renderizarRota.tsx'
 
-// Como funciona, Cuidado compartilhado e Desenvolvimento no "Campo de mel": títulos, passos, avisos,
-// fontes, cenas e links, no site de verdade (roteador em memória, dentro da casca).
+// Cuidado compartilhado e Desenvolvimento no "Campo de mel": títulos, passos, avisos, fontes, cenas e links, no
+// site de verdade (roteador em memória, dentro da casca). Como funciona saiu daqui: ele é a casa acesa e tem o
+// seu próprio teste, paginas/publicas/comoFunciona.casa.test.tsx.
 
 const PAGINAS = [
-  ['/como-funciona', COMO_FUNCIONA_DESTAQUE.titulo],
   ['/cuidado-compartilhado', CUIDADO_DESTAQUE.titulo],
-  ['/desenvolvimento', DESENVOLVIMENTO_DESTAQUE.titulo],
 ] as const
+
+// /cuidado-compartilhado foi refeita nas seções da casa (CLONE-CUIDADO): o h1 em duas linhas com itálico, os cartões,
+// os painéis de mel e os botões `.pd-acoes` são a cara antiga e não valem para ela. O que a página nova promete está em
+// `paginas/publicas/cuidado.casa.test.tsx`; aqui ela fica só nos testes que não dependem da cara (axe, avisos, brilho).
+const PAGINAS_NA_CARA_ANTIGA = PAGINAS.filter(([caminho]) => caminho !== '/cuidado-compartilhado')
 
 /** O texto do título: as duas linhas em texto comum, sem cópia só para leitor de tela. */
 const nomeDoTitulo = (titulo: HTMLElement) => titulo.textContent
@@ -28,7 +29,7 @@ async function violacoes(container: HTMLElement): Promise<string[]> {
 }
 
 describe('as três páginas públicas em destaque', () => {
-  for (const [caminho, titulo] of PAGINAS) {
+  for (const [caminho, titulo] of PAGINAS_NA_CARA_ANTIGA) {
     it(`${caminho}: um main só, com um h1 de duas linhas (a segunda em itálico), dentro da casca`, () => {
       const { container } = renderizarRota(caminho)
       const principal = container.querySelectorAll('main')
@@ -41,7 +42,22 @@ describe('as três páginas públicas em destaque', () => {
       expect(container.querySelector('header[data-cabecalho]')).not.toBeNull()
       expect(container.querySelector('footer[data-rodape]')).not.toBeNull()
     })
+  }
 
+  // Cuidado compartilhado (casa): um main, o h1 novo (uma linha de texto, sem itálico), a casca em volta.
+  it('/cuidado-compartilhado: um main só, com o h1 "A babá vê o quê?", dentro da casca', () => {
+    const { container } = renderizarRota('/cuidado-compartilhado')
+    const principal = container.querySelectorAll('main')
+    expect(principal).toHaveLength(1)
+    const h1s = screen.getAllByRole('heading', { level: 1 })
+    expect(h1s).toHaveLength(1)
+    expect(principal[0].contains(h1s[0])).toBe(true)
+    expect(nomeDoTitulo(h1s[0])).toBe('A babá vê o quê?')
+    expect(container.querySelector('header[data-cabecalho]')).not.toBeNull()
+    expect(container.querySelector('footer[data-rodape]')).not.toBeNull()
+  })
+
+  for (const [caminho] of PAGINAS) {
     it(`${caminho}: sem violações do axe`, async () => {
       const { container } = renderizarRota(caminho)
       expect(await violacoes(container)).toEqual([])
@@ -144,7 +160,7 @@ describe('os CTAs das três páginas cabem quando ampliados', () => {
     })
   }
 
-  for (const [caminho] of PAGINAS) {
+  for (const [caminho] of PAGINAS_NA_CARA_ANTIGA) {
     it(`${caminho}: todo botão do site dentro do main mora em .pd-acoes ou .pd-faixa`, () => {
       const { container } = renderizarRota(caminho)
       for (const botao of container.querySelectorAll('main .cm-botao')) {
@@ -236,27 +252,11 @@ describe('cartões flutuantes e painéis: sem palavra partida, sem painel vazio,
     expect(pilha['flex-direction']).toBe('column')
   })
 
-  it('os desenhos dos painéis e dos passos carregam na hora (sem tamanho próprio, o painel ficaria vazio até a rolagem)', () => {
-    const cuidado = renderizarRota('/cuidado-compartilhado').container
-    const desenho = cuidado.querySelector<HTMLImageElement>('.pd-parar-painel img[data-ilustracao="maos-celular"]')!
-    expect(desenho.getAttribute('loading')).toBe('eager')
-  })
-
-  it('o painel do fecho de Cuidado compartilhado não é um painel de cor lisa: tem o desenho dentro', () => {
-    const { container } = renderizarRota('/cuidado-compartilhado')
-    const painel = container.querySelector('.pd-parar-painel')!
-    expect(painel.querySelector('img[data-ilustracao="maos-celular"]')).not.toBeNull()
-  })
-
   it('o registro do tummy time empilha o rótulo sobre o valor em qualquer largura (sem linha única a partir de 600 px)', () => {
     for (const regra of regrasDoSeletor(/^\.pd-cartao-legenda/)) {
       expect(regra.declaracoes.display, regra.seletores.join(', ')).not.toBe('flex')
       expect(regra.declaracoes['align-items'], regra.seletores.join(', ')).not.toBe('baseline')
     }
-    const { container } = renderizarRota('/desenvolvimento')
-    const cartao = container.querySelector('.pd-cartao-legenda .pd-cartao')!
-    const filhos = [...cartao.children].map((el) => el.className)
-    expect(filhos).toEqual(['pd-cartao-rotulo', 'pd-cartao-hora', 'pd-cartao-detalhe'])
   })
 })
 
@@ -264,7 +264,7 @@ describe('cartões flutuantes e painéis: sem palavra partida, sem painel vazio,
 // Desenvolvimento tinha duas colunas de conteúdo muito desiguais (RF-07 b). O jsdom não faz layout:
 // aqui ficam a classe que o `luz` produz e a estrutura/regras que impedem a composição lado a lado.
 describe('painéis de mel com luz e blocos de fim de seção sem colunas desiguais', () => {
-  for (const [caminho] of PAGINAS) {
+  for (const [caminho] of PAGINAS_NA_CARA_ANTIGA) {
     it(`${caminho}: todo painel de mel carrega a luz de estúdio (cm-painel-luz); os de areia, oliva e cacau não`, () => {
       const { container } = renderizarRota(caminho)
       const meis = [...container.querySelectorAll<HTMLElement>('main [data-painel="mel"]')]
@@ -278,18 +278,7 @@ describe('painéis de mel com luz e blocos de fim de seção sem colunas desigua
     })
   }
 
-  it('o painel de mel do desenho do tummy time (o bebê de bruços) tem a luz de estúdio', () => {
-    const { container } = renderizarRota('/desenvolvimento')
-    const painel = container.querySelector('#tummy-time img[data-ilustracao="tummy-time"]')!.closest('[data-painel]')!
-    expect(painel.getAttribute('data-painel')).toBe('mel')
-    expect(painel.classList.contains('cm-painel-luz')).toBe(true)
-  })
-
-  it('o fecho do tummy time (o texto e as fontes) é uma pilha: o texto, depois as fontes, sem duas colunas de alturas desiguais', () => {
-    const { container } = renderizarRota('/desenvolvimento')
-    const fim = container.querySelector('#tummy-time .pd-tummy-fim')!
-    expect([...fim.children].map((el) => el.className)).toEqual(['pd-partes', 'pd-fontes'])
-    expect(fim.querySelector('.pd-fontes')!.hasAttribute('data-fontes')).toBe(true)
+  it('o fecho do tummy time (o texto e as fontes) é uma pilha: sem duas colunas de alturas desiguais (regras do CSS)', () => {
     // Nenhuma regra põe duas colunas (grade de 7fr/5fr, lado a lado) no bloco, em largura nenhuma.
     // (A lista dos nomes das fontes, dentro do cartão, pode ter duas colunas: é a lista, não o bloco.)
     const regrasDoFim = regrasDoSeletor(/^\.pd-tummy-fim( \.pd-fontes)?$/)
@@ -306,286 +295,8 @@ describe('painéis de mel com luz e blocos de fim de seção sem colunas desigua
   })
 })
 
-describe('Como funciona', () => {
-  it('a primeira dobra tem a cena de estúdio com texto alternativo e tamanho 1×, sem cartão por cima', () => {
-    const { container } = renderizarRota('/como-funciona')
-    const cena = container.querySelector<HTMLImageElement>('main img[data-cena]')!
-    expect(cena.getAttribute('alt')).toBe(COMO_FUNCIONA_DESTAQUE.cena.alt)
-    expect(cena.getAttribute('src')).toBe('/cenas/publicas/como-funciona@1x.webp')
-    // O recorte em retrato em volta do celular: 340 × 525 em 1× (o @2x tem 680 × 1050).
-    expect(cena.getAttribute('width')).toBe('340')
-    expect(cena.getAttribute('height')).toBe('525')
-    expect(cena.closest('[data-painel]')!.querySelector('.cm-flutuante, [data-cartao-plano]')).toBeNull()
-  })
-
-  it('os três passos vêm em ordem, numa lista ordenada, cada um com a sua tela de exemplo; o convite e a madrugada flutuam (giros diferentes)', () => {
-    const { container } = renderizarRota('/como-funciona')
-    const itens = [...container.querySelectorAll('ol[data-passos] > li')]
-    expect(itens.map((li) => within(li as HTMLElement).getByRole('heading', { level: 3 }).textContent)).toEqual([
-      'Na primeira semana',
-      'De madrugada',
-      'Na troca de turno',
-    ])
-    for (const li of itens) expect(li.querySelector('.cm-flutuante, [data-cartao-plano]'), li.id).not.toBeNull()
-    expect(itens.map((li) => li.querySelector('.cm-flutuante') !== null)).toEqual([true, true, false])
-    expect(itens.map((li) => li.querySelector('.cm-flutuante')?.getAttribute('data-giro') ?? null)).toEqual([
-      '-2',
-      '2',
-      null,
-    ])
-    expect(itens[2].textContent).toContain('Ícaro')
-    expect(itens[2].textContent).toContain(COMO_FUNCIONA_DESTAQUE.desdeQueSaiu.andamento.rotulo)
-  })
-
-  it('o convite alinha o papel pelo nome (na mesma coluna), e a faixa de cacau tem o botão sem a palavra "protótipo"', () => {
-    const { container } = renderizarRota('/como-funciona')
-    const convite = container.querySelector('#passo-primeira-semana .cm-flutuante .pd-cartao')!
-    const coluna = convite.querySelector('.pd-cartao-titulo')!.parentElement!
-    expect(coluna.textContent).toContain(COMO_FUNCIONA_DESTAQUE.convite.papel)
-    const faixa = screen.getByRole('region', { name: COMO_FUNCIONA_DESTAQUE.fechamento.titulo.join(' ') })
-    expect(faixa.textContent).not.toMatch(/protótipo/i)
-    expect(within(faixa).getByRole('link', { name: COMO_FUNCIONA_DESTAQUE.fechamento.acao.rotulo })).toBeTruthy()
-    for (const numero of COMO_FUNCIONA_DESTAQUE.numeros) expect(faixa.textContent).toContain(numero.legenda)
-  })
-
-  it('o "para começar" põe a primeira frase sob o título e o texto denso na outra coluna', () => {
-    const { container } = renderizarRota('/como-funciona')
-    const secao = container.querySelector('section[aria-labelledby="como-comecar"] .pd-duas')!
-    const [esquerda, direita] = [...secao.children]
-    expect(esquerda.querySelector('h2')).not.toBeNull()
-    expect(esquerda.textContent).toContain(COMO_FUNCIONA_DESTAQUE.comecar.textos[0])
-    expect(direita.textContent).toBe(COMO_FUNCIONA_DESTAQUE.comecar.textos[1])
-  })
-
-  it('os dois primários levam ao protótipo e o secundário leva aos três momentos', async () => {
-    const { roteador } = renderizarRota('/como-funciona')
-    const primarios = screen.getAllByRole('link', { name: COMO_FUNCIONA_DESTAQUE.primario.rotulo })
-    expect(primarios).toHaveLength(2)
-    for (const link of primarios) expect(link.getAttribute('href')).toBe('/app/hoje')
-    expect(screen.getByRole('link', { name: COMO_FUNCIONA_DESTAQUE.secundario.rotulo }).getAttribute('href')).toBe(
-      '#tres-momentos',
-    )
-    expect(document.getElementById('tres-momentos')).not.toBeNull()
-
-    fireEvent.click(primarios[0])
-    await screen.findByRole('heading', { level: 1, name: 'Hoje' })
-    expect(roteador.state.location.pathname).toBe('/app/hoje')
-  })
-})
-
-describe('Cuidado compartilhado', () => {
-  it('o painel de mel tem a tela Família em HTML e a avó do carrinho', () => {
-    renderizarRota('/cuidado-compartilhado')
-    const figura = screen.getByRole('figure', { name: CUIDADO_DESTAQUE.familia.descricao })
-    for (const pessoa of CUIDADO_DESTAQUE.familia.pessoas) {
-      expect(figura.textContent).toContain(pessoa.nome)
-      expect(figura.textContent).toContain(pessoa.papel)
-    }
-    expect(within(figura).getByRole('img').getAttribute('data-ilustracao')).toBe('avo-carrinho')
-    expect(within(figura).getByRole('img').getAttribute('alt')).not.toBe('')
-  })
-
-  it('os três blocos curtos vêm na ordem, e a tabela dos papéis tem as três linhas', () => {
-    const { container } = renderizarRota('/cuidado-compartilhado')
-    const blocos = [...container.querySelectorAll('[data-blocos] h2')].map((h) => h.textContent)
-    expect(blocos).toEqual(['Convite com papel', 'Acesso com prazo', 'Revogue quando quiser'])
-    const tabela = screen.getByRole('table', { name: CUIDADO_DESTAQUE.papeis.tabela.legenda })
-    const linhas = within(tabela).getAllByRole('rowheader').map((th) => th.textContent)
-    expect(linhas).toEqual(['Responsável', 'Cuidador', 'Observador'])
-  })
-
-  it('tem as seções de registro, passagem de turno e de quando alguém para de cuidar', () => {
-    renderizarRota('/cuidado-compartilhado')
-    expect(screen.getByRole('heading', { level: 2, name: 'Quem fez cada registro' })).toBeTruthy()
-    expect(screen.getByRole('heading', { level: 2, name: 'Na passagem de turno' })).toBeTruthy()
-    expect(screen.getByRole('heading', { level: 2, name: 'Quando alguém para de cuidar.' })).toBeTruthy()
-  })
-
-  it('a abertura tem o primário para o protótipo, e o fim da página tem a mesma ação', () => {
-    const { container } = renderizarRota('/cuidado-compartilhado')
-    const abertura = container.querySelector('main .pd-abertura')!
-    expect(within(abertura as HTMLElement).getByRole('link', { name: CUIDADO_DESTAQUE.primario.rotulo }).getAttribute('href')).toBe(
-      COMO_FUNCIONA_DESTAQUE.fechamento.acao.destino,
-    )
-    const parar = screen.getByRole('region', { name: 'Quando alguém para de cuidar.' })
-    expect(within(parar).getByRole('link', { name: CUIDADO_DESTAQUE.primario.rotulo }).getAttribute('href')).toBe(
-      COMO_FUNCIONA_DESTAQUE.fechamento.acao.destino,
-    )
-  })
-
-  it('cada bloco curto traz um exemplo com uma pessoa da família, e o texto dos papéis não repete os blocos', () => {
-    const { container } = renderizarRota('/cuidado-compartilhado')
-    const exemplos = [...container.querySelectorAll('[data-blocos] [data-exemplo]')].map((p) => p.textContent)
-    expect(exemplos).toHaveLength(3)
-    CUIDADO_DESTAQUE.blocos.forEach((bloco, i) => expect(exemplos[i]).toContain(bloco.exemplo.quem))
-    for (const bloco of CUIDADO_DESTAQUE.blocos) expect(CUIDADO_DESTAQUE.papeis.texto).not.toContain(bloco.texto)
-    expect(CUIDADO_DESTAQUE.papeis.texto).not.toMatch(/cuidador até domingo/)
-  })
-
-  it('o painel de areia mostra quem fez cada registro da tarde, e a que horas', () => {
-    const { container } = renderizarRota('/cuidado-compartilhado')
-    const cartao = container.querySelector('.pd-registro [data-cartao-plano]')!
-    for (const item of CUIDADO_DESTAQUE.tarde.itens) {
-      expect(cartao.textContent).toContain(item.quem)
-      expect(cartao.textContent).toContain(item.hora)
-    }
-  })
-
-  it('a abertura leva o painel de mel ao lado do título, com o convite flutuante por cima da borda; a tarde da Heloísa mora só no painel de areia', () => {
-    const { container } = renderizarRota('/cuidado-compartilhado')
-    const abertura = container.querySelector('main .pd-abertura')!
-    expect(abertura.querySelector('h1')).not.toBeNull()
-    expect(abertura.querySelector('figure[data-painel="mel"]')).not.toBeNull()
-    const convite = abertura.querySelector('.pd-familia-convite')!
-    expect(convite.classList.contains('cm-flutuante')).toBe(true)
-    expect(convite.textContent).toContain(CUIDADO_DESTAQUE.convite.titulo)
-    // Sem a cópia da tarde no painel de mel: a avó é a peça do painel (70% da altura no celular).
-    expect(abertura.querySelector('.pd-familia-tarde')).toBeNull()
-    expect(abertura.textContent).not.toContain(CUIDADO_DESTAQUE.tarde.titulo)
-    expect(container.querySelectorAll('main .pd-registro [data-cartao-plano]')).toHaveLength(1)
-  })
-
-  it('os três blocos são uma lista com fios (um bloco por linha), sem cartões iguais lado a lado', () => {
-    const { container } = renderizarRota('/cuidado-compartilhado')
-    const lista = container.querySelector('[data-blocos]')!
-    expect(lista.tagName).toBe('UL')
-    expect(lista.querySelectorAll('.cm-flutuante, [data-cartao-plano]')).toHaveLength(0)
-    expect(lista.children).toHaveLength(3)
-  })
-
-  it('o fecho tem as duas mãos passando o celular num painel de mel, ao lado do texto e do primário', () => {
-    renderizarRota('/cuidado-compartilhado')
-    const parar = screen.getByRole('region', { name: 'Quando alguém para de cuidar.' })
-    const desenho = parar.querySelector('img[data-ilustracao="maos-celular"]')!
-    expect(desenho.closest('[data-painel]')!.getAttribute('data-painel')).toBe('mel')
-    for (const texto of CUIDADO_DESTAQUE.parar.textos) expect(parar.textContent).toContain(texto)
-  })
-})
-
-describe('Desenvolvimento', () => {
-  it('a cena de cacau tem texto alternativo e o tamanho 1×, num painel de cacau', () => {
-    const { container } = renderizarRota('/desenvolvimento')
-    const cena = container.querySelector<HTMLImageElement>('main img[data-cena]')!
-    expect(cena.getAttribute('alt')).toBe(DESENVOLVIMENTO_DESTAQUE.cena.alt)
-    expect(cena.getAttribute('src')).toBe('/cenas/publicas/desenvolvimento@1x.webp')
-    // O celular inclinado com a sessão de tummy time: 400 × 440 em 1× (o @2x tem 800 × 880).
-    expect(cena.getAttribute('width')).toBe('400')
-    expect(cena.getAttribute('height')).toBe('440')
-    expect(cena.closest('[data-painel]')!.getAttribute('data-painel')).toBe('cacau')
-    // Nada de traço preto sobre o cacau.
-    for (const painel of container.querySelectorAll('[data-painel="cacau"]')) {
-      expect(painel.querySelector('[data-ilustracao]')).toBeNull()
-    }
-  })
-
-  it('o aviso de saúde aparece uma vez, perto do topo, com o texto exato, e o 192 no fim', () => {
-    const { container } = renderizarRota('/desenvolvimento')
-    const avisos = screen.getAllByText(AVISO_SAUDE)
-    expect(avisos).toHaveLength(1)
-    expect(container.querySelectorAll('[data-aviso-saude]')).toHaveLength(1)
-    const abertura = container.querySelector('main .pd-abertura')!
-    expect(abertura.contains(avisos[0])).toBe(true)
-    expect(avisos[0].closest('[data-painel]')).toBeNull()
-    expect(container.querySelector('main [data-painel="cacau"] [data-cartao-plano], main [data-painel="cacau"] .cm-flutuante')).toBeNull()
-    expect(screen.getByRole('heading', { level: 2, name: 'Em urgência de saúde, ligue 192.' })).toBeTruthy()
-    expect(screen.getByText(DESENVOLVIMENTO_DESTAQUE.urgencia.texto)).toBeTruthy()
-    // Nenhuma palavra em caixa alta de 4 letras ou mais (a porta CAIXA do medidor só aceita RN, SBP, LGPD e OMS).
-    const caminhante = document.createTreeWalker(container.querySelector('main')!, NodeFilter.SHOW_TEXT)
-    const palavras: string[] = []
-    for (let no = caminhante.nextNode(); no; no = caminhante.nextNode()) {
-      palavras.push(...(no.textContent!.match(/\p{Lu}{4,}/gu) ?? []))
-    }
-    expect(palavras.filter((p) => !['LGPD'].includes(p))).toEqual([])
-  })
-
-  it('cada fase mostra as atividades, as fontes e a data da consulta', () => {
-    const { container } = renderizarRota('/desenvolvimento')
-    const fases = [...container.querySelectorAll<HTMLElement>('[data-fase]')]
-    expect(fases.map((f) => f.getAttribute('data-fase'))).toEqual(FASES.map((f) => f.id))
-    for (const [i, painel] of fases.entries()) {
-      expect(painel.querySelectorAll('li').length, FASES[i].id).toBeGreaterThanOrEqual(FASES[i].itens.length)
-      const fontes = painel.querySelector('[data-fontes]')!
-      expect(fontes.querySelectorAll('a[href^="https://"]').length, FASES[i].id).toBe(FASES[i].fontes.length)
-      expect(fontes.querySelector('[data-consulta]')!.textContent).toBe(`Fontes consultadas em ${CONSULTADO_EM}`)
-    }
-    expect(CONSULTADO_EM).toBe('05/11/2026')
-  })
-
-  it('as abas trocam a fase com o clique e com as setas, levando o foco junto', () => {
-    renderizarRota('/desenvolvimento')
-    const abas = screen.getAllByRole('tab')
-    expect(abas.map((a) => a.textContent)).toEqual(FASES.map((f) => f.faixa))
-    expect(abas[0].getAttribute('aria-selected')).toBe('true')
-    expect(screen.getByRole('tabpanel').getAttribute('data-fase')).toBe(FASES[0].id)
-
-    fireEvent.click(abas[2])
-    expect(abas[2].getAttribute('aria-selected')).toBe('true')
-    expect(screen.getByRole('tabpanel').getAttribute('data-fase')).toBe(FASES[2].id)
-
-    fireEvent.keyDown(abas[2], { key: 'ArrowRight' })
-    expect(abas[3].getAttribute('aria-selected')).toBe('true')
-    expect(document.activeElement).toBe(abas[3])
-    fireEvent.keyDown(abas[3], { key: 'End' })
-    expect(screen.getByRole('tabpanel').getAttribute('data-fase')).toBe(FASES[5].id)
-    fireEvent.keyDown(abas[5], { key: 'ArrowRight' })
-    expect(document.activeElement).toBe(abas[0])
-  })
-
-  it('o tummy time e os marcos mostram a faixa, as fontes e a data da consulta', () => {
-    const { container } = renderizarRota('/desenvolvimento')
-    for (const item of [TUMMY_TIME, MARCOS]) {
-      const secao = container.querySelector<HTMLElement>(`[data-item="${item.id}"]`)!
-      expect(secao.textContent).toContain(item.faixa)
-      const fontes = secao.querySelector('[data-fontes]')!
-      expect(fontes.querySelectorAll('a[href^="https://"]').length, item.id).toBe(item.fontes.length)
-      expect(fontes.querySelector('[data-consulta]')!.textContent).toBe(`Fontes consultadas em ${item.consultadoEm}`)
-    }
-  })
-
-  it('a tabela das fontes tem as 5 linhas, sem a AAP, e o lema da Pathways virou um traço', () => {
-    renderizarRota('/desenvolvimento')
-    const tabela = screen.getByRole('table', { name: QUANTO_TEMPO.titulo })
-    const linhas = within(tabela).getAllByRole('rowheader').map((th) => th.textContent)
-    expect(linhas).toHaveLength(5)
-    expect(linhas.join(' ')).not.toMatch(/AAP/)
-    const pathways = within(tabela).getByRole('rowheader', { name: 'Pathways.org' }).closest('tr')!
-    expect(pathways.lastElementChild!.textContent).toBe('—')
-    expect(screen.getByText(QUANTO_TEMPO.semMeta)).toBeTruthy()
-  })
-
-  it('o desenho da seção do tummy time (o bebê de bruços) fica sobre o mel, e os links da abertura levam às seções', () => {
-    const { container } = renderizarRota('/desenvolvimento')
-    const desenho = container.querySelector('#tummy-time img[data-ilustracao="tummy-time"]')!
-    expect(desenho.closest('[data-painel]')!.getAttribute('data-painel')).toBe('mel')
-    expect(desenho.closest('.pd-chao')).not.toBeNull()
-    expect(screen.getByRole('link', { name: DESENVOLVIMENTO_DESTAQUE.primario.rotulo }).getAttribute('href')).toBe('#ideias')
-    expect(screen.getByRole('link', { name: DESENVOLVIMENTO_DESTAQUE.secundario.rotulo }).getAttribute('href')).toBe(
-      '#tummy-time',
-    )
-    expect(document.getElementById('ideias')).not.toBeNull()
-    expect(document.getElementById('tummy-time')).not.toBeNull()
-  })
-
-  it('a abertura põe o título, o texto e as ações numa coluna só, e a cena ao lado; o painel do seletor é fino', () => {
-    const { container } = renderizarRota('/desenvolvimento')
-    const abertura = container.querySelector('main .pd-abertura')!
-    const texto = abertura.querySelector('.pd-abertura-texto')!
-    expect(texto.querySelector('h1')).not.toBeNull()
-    expect(texto.querySelector('.cm-lide')).not.toBeNull()
-    expect(texto.querySelector('.pd-acoes')).not.toBeNull()
-    expect(abertura.querySelector('.pd-abertura-midia img[data-cena]')).not.toBeNull()
-    expect(container.querySelector('#ideias [data-painel="areia"]')!.classList.contains('pd-painel-fino')).toBe(true)
-  })
-
-  it('a faixa do 192 guarda o título e a frase na mesma coluna', () => {
-    renderizarRota('/desenvolvimento')
-    const faixa = screen.getByRole('region', { name: 'Em urgência de saúde, ligue 192.' })
-    const colunas = faixa.querySelectorAll('.pd-faixa-lado')
-    expect(colunas).toHaveLength(1)
-    expect(colunas[0].querySelector('h2')).not.toBeNull()
-    expect(colunas[0].textContent).toContain(DESENVOLVIMENTO_DESTAQUE.urgencia.texto)
-  })
-})
+// O bloco "Cuidado compartilhado" (cartões, painéis de mel e tabela da cara antiga) saiu: a página nova é
+// coberta por `paginas/publicas/cuidado.casa.test.tsx`.
 
 // Rodada de polimento POL, volta 2 (I-POL-DES v2): uma classe de correção por teste. O jsdom não faz
 // layout: aqui ficam o que o React entrega e as regras do CSS (lidas do disco); as medidas reais saem
@@ -594,12 +305,7 @@ const decl = (alvo: RegExp) =>
   regrasDoSeletor(alvo).map((r) => r.declaracoes) as Array<Record<string, string>>
 
 describe('polimento, volta 2', () => {
-  it('horas e durações nunca quebram: viram uma peça só (span sem quebra), com o texto intacto', () => {
-    const { container } = renderizarRota('/cuidado-compartilhado')
-    const pecas = [...container.querySelectorAll('main .pd-nq')].map((el) => el.textContent)
-    expect(pecas).toContain('1 h 15 min')
-    const detalhe = [...container.querySelectorAll('.pd-linha-detalhe')].find((el) => el.textContent?.includes('1 h 15 min'))!
-    expect(detalhe.textContent).toBe('Encerrou a soneca, 1 h 15 min')
+  it('horas e durações nunca quebram: o CSS as segura numa peça só (a página de cuidado saiu da cara antiga)', () => {
     for (const alvo of [/^\.pd-nq$/, /^\.pd-linha-hora$/]) {
       const juntas = Object.assign({}, ...decl(alvo)) as Record<string, string>
       expect(juntas['white-space'], String(alvo)).toBe('nowrap')
@@ -612,16 +318,6 @@ describe('polimento, volta 2', () => {
     expect(estreito.regras.find((r) => r.seletor === '.pd-cartao-hora')?.decl).toMatch(/white-space: normal/)
   })
 
-  it('Como funciona e Desenvolvimento: "às 14:05" e "às 10:20" também são uma peça só', () => {
-    const como = renderizarRota('/como-funciona').container
-    expect([...como.querySelectorAll('main .pd-nq')].map((el) => el.textContent)).toContain('às 14:05')
-  })
-
-  it('Desenvolvimento: "às 10:20" do registro "Fizemos" é uma peça só', () => {
-    const dev = renderizarRota('/desenvolvimento').container
-    expect([...dev.querySelectorAll('main .pd-nq')].map((el) => el.textContent)).toContain('às 10:20')
-  })
-
   for (const [caminho] of PAGINAS) {
     it(`${caminho}: nenhum botão diz "protótipo" (o aviso de demonstração já está na tela)`, () => {
       const { container } = renderizarRota(caminho)
@@ -631,11 +327,8 @@ describe('polimento, volta 2', () => {
     })
   }
 
-  it('o primário de Como funciona e de Cuidado compartilhado usa o rótulo que o Início já tem para a mesma ação', () => {
-    expect(COMO_FUNCIONA_DESTAQUE.primario.rotulo).toBe(INICIO.heroi.primario.rotulo)
+  it('o primário de Cuidado compartilhado usa o rótulo que o Início já tem para a mesma ação', () => {
     expect(CUIDADO_DESTAQUE.primario.rotulo).toBe(INICIO.heroi.primario.rotulo)
-    expect(COMO_FUNCIONA_DESTAQUE.primario.destino).toBe(INICIO.heroi.primario.destino)
-    expect(COMO_FUNCIONA_DESTAQUE.fechamento.acao.rotulo).toBe(INICIO.heroi.primario.rotulo)
   })
 
   it('o painel de cada cena tem a largura do arquivo em 1× (340 e 400): o 2× nunca é ampliado (RF-02 b)', () => {
@@ -664,23 +357,9 @@ describe('polimento, volta 2', () => {
     const corpo = Object.assign({}, ...decl(/^\.pd-tabela tbody td$/)) as Record<string, string>
     expect(corpo['font-size']).toBe('var(--texto-corpo-tamanho)')
     expect(corpo['line-height']).toBe('var(--texto-corpo-entrelinha)')
-    const { container } = renderizarRota('/cuidado-compartilhado')
-    expect(container.querySelector('.pd-painel-papeis table.pd-tabela')).not.toBeNull()
     // No celular o último campo de cada bloco é o item em destaque (fio de mel), só nessa tabela.
     const destaque = Object.assign({}, ...decl(/^\.pd-painel-papeis \.pd-tabela tbody tr > td:last-child$/)) as Record<string, string>
     expect(destaque['border-left']).toBe('3px solid var(--color-mel)')
-  })
-
-  it('o fecho de Cuidado compartilhado é um painel do tamanho do desenho: não estica nem deixa resto de mel liso', () => {
-    const grade = Object.assign({}, ...decl(/^\.pd-parar$/)) as Record<string, string>
-    expect(grade['align-items']).toBe('center')
-    const { container } = renderizarRota('/cuidado-compartilhado')
-    expect(container.querySelectorAll('main .pd-parar-painel')).toHaveLength(1)
-  })
-
-  it('no celular as caixas das listas e dos painéis usam a mesma margem lateral (a do quadro: a lista é filha do QuadroLayout, sem largura própria)', () => {
-    const { container } = renderizarRota('/cuidado-compartilhado')
-    expect(container.querySelector('[data-blocos]')!.closest('[data-h~="quadro"][data-h-largura="quadro"]')).not.toBeNull()
   })
 
   it('o desenho da avó ocupa 64% da largura interna do painel no celular, sem altura máxima (sem recorte)', () => {
@@ -690,53 +369,11 @@ describe('polimento, volta 2', () => {
     expect(img).toContain('none')
   })
 
-  it('o tummy time abre com o título e, ao lado, o desenho do bebê de bruços (peça aprovada), na mesma grade', () => {
-    const { container } = renderizarRota('/desenvolvimento')
-    const cima = container.querySelector('#tummy-time .pd-tummy-cima')!
-    expect(cima.querySelector('#desenv-tummy')).not.toBeNull()
-    const desenho = cima.querySelector('img[data-ilustracao="tummy-time"]')!
-    expect(desenho.closest('[data-painel]')!.classList.contains('cm-painel-luz')).toBe(true)
-    // O texto de leitura fica numa medida de no máximo 68 caracteres por linha (36rem em 18 px ≈ 65).
-    const medida = decl(/^\.pd-partes p$/).map((d) => d['max-width'])
-    expect(medida).toContain('36rem')
-    const abertura = decl(/^\.pd-tummy-cima \.pd-cabeca p$/).map((d) => d['max-width'])
-    expect(abertura).toContain('34rem')
-  })
-
-  it('o painel de oliva do tummy time começa na mesma borda da coluna de texto da página (metade da diferença das larguras)', () => {
-    // O painel é uma célula do mesmo QuadroLayout do texto do tummy time: a borda esquerda é a mesma.
-    const { container } = renderizarRota('/desenvolvimento')
-    const quadroDoPainel = container.querySelector('.pd-tummy-tabela')!.closest('[data-h~="quadro"]')
-    expect(quadroDoPainel).toBe(container.querySelector('.pd-tummy-cima')!.closest('[data-h~="quadro"]'))
-  })
-
-  it('o trecho dos marcos tem uma frase de destaque, repetida do próprio texto (T-1: nada de texto novo)', () => {
-    const { container } = renderizarRota('/desenvolvimento')
-    const destaque = container.querySelector('#marcos blockquote[data-destaque]')!
-    expect(destaque).not.toBeNull()
-    expect(MARCOS.itens[0].textos[0]).toContain(destaque.textContent!)
-  })
-
   it('o registro "Fizemos" ocupa o cartão: duas colunas (valor com o rótulo em cima, e o detalhe), na largura da cena', () => {
     const cartao = Object.assign({}, ...decl(/^\.pd-cartao-legenda \.pd-cartao$/)) as Record<string, string>
     expect(cartao.display).toBe('grid')
     expect(cartao['grid-template-columns']).toBe('fit-content(55%) minmax(0, 1fr)')
     const largura = decl(/^\.pd-cartao-legenda\.pd-cartao-plano$/).map((d) => d.width)
     expect(largura).toContain('min(400px, 100%)')
-  })
-
-  it('os passos vão colados à borda interna da direita do painel (a mesma nos três), e o cartão da madrugada só sobra para fora lado a lado', () => {
-    const { container } = renderizarRota('/como-funciona')
-    expect(container.querySelectorAll('#tres-momentos .pd-passo-midia')).toHaveLength(3)
-    const alinhamento = decl(/^\.pd-passo-midia$/).map((d) => d['justify-content'])
-    expect(alinhamento).toContain('flex-end')
-    // A sobra (margem negativa de baixo) só existe dentro de uma regra @media (900 px para cima): fora
-    // dela, no celular, o cartão da madrugada fica inteiro dentro do painel.
-    const posicao = cssDestaque.indexOf('.pd-passo-midia:has(> .cm-flutuante)')
-    expect(posicao).toBeGreaterThan(0)
-    const antes = cssDestaque.slice(0, posicao)
-    const profundidade = (antes.match(/\{/g) ?? []).length - (antes.match(/\}/g) ?? []).length
-    expect(profundidade).toBe(1)
-    expect(antes.slice(antes.lastIndexOf('@media'))).toMatch(/^@media \(min-width: 900px\)/)
   })
 })

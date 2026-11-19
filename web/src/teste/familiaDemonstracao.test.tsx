@@ -1,9 +1,10 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { screen, within } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import { COMO_FUNCIONA_DESTAQUE, CUIDADO_DESTAQUE } from '../conteudo/publicas-destaque.ts'
 import { INI } from '../conteudo/inicio.ts'
+import { CUIDADO as CUIDADO_CASA } from '../conteudo/casa/cuidado.ts'
 import { INICIO } from '../conteudo/textos.ts'
 import { PESSOAS_DEMONSTRACAO, criarFixtureDemonstracao } from '../dados/conta.demonstracao.ts'
 import { criarDadosContaMemoria } from '../dados/conta.memoria.ts'
@@ -123,10 +124,11 @@ describe('SEED-A-I-07: o nome inteiro na Família e nos ajustes', () => {
       expect(textos).not.toContain('Helo')
     })
 
-    it('o cartão Família de /cuidado-compartilhado mostra Juliana, Ícaro e Heloísa', () => {
+    it('a página /cuidado-compartilhado mostra Juliana, Ícaro e Heloísa nos textos alternativos das imagens', () => {
       renderizarRota('/cuidado-compartilhado')
-      const figura = screen.getByRole('figure', { name: CUIDADO_DESTAQUE.familia.descricao })
-      for (const nome of ['Juliana', 'Ícaro', 'Heloísa']) expect(within(figura).getByText(nome)).toBeTruthy()
+      const alt = screen.getByAltText(CUIDADO_CASA.alt.cena1).getAttribute('alt')!
+      for (const nome of ['Juliana', 'Ícaro', 'Heloísa']) expect(alt).toContain(nome)
+      expect(screen.getByAltText(CUIDADO_CASA.alt.tela1).getAttribute('alt')).toContain('Juliana')
     })
   })
 })
@@ -161,10 +163,12 @@ describe('SEED-A-I-08: o apelido nas linhas do dia a dia', () => {
     for (const valor of valores) expect(valor).not.toMatch(/(?<![\p{L}])(Juliana|Heloísa)(?![\p{L}])/u)
   })
 
-  it('/cuidado-compartilhado mostra a nota de Carla "para Ju" e a "Tarde da Helo"', () => {
+  // T1-JOIN: a nota de Carla e a "Tarde da Helo" deixaram de existir em /cuidado-compartilhado (a página nova não
+  // tem linha escrita à mão do dia a dia); as constantes CUIDADO_DESTAQUE seguem checadas acima.
+  it('/cuidado-compartilhado traz o apelido Ju e nunca Bruno', () => {
     renderizarRota('/cuidado-compartilhado')
-    expect(comTexto('Carla, para Ju, às 15:22').length).toBeGreaterThan(0)
-    expect(comTexto('Tarde da Helo').length).toBeGreaterThan(0)
+    expect(document.body.textContent).toContain('Ju')
+    expect(document.body.textContent).not.toContain('Bruno')
   })
 
   it('/sistema mostra "Lado esquerdo, Ju" e a citação com "avó da Helo"', () => {

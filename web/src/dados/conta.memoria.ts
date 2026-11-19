@@ -1,6 +1,6 @@
 import { dataNoFuso, fusoValido, type ErroDados, type Papel, type Resultado } from './comum.ts'
 import { classificarErroConta, erroDaChave, type ChaveErro } from './conta.erros.ts'
-import type { Nota, Registro } from './rotina.tipos.ts'
+import type { DadosRotina, Nota, Registro } from './rotina.tipos.ts'
 import type {
   Bebe,
   Conta,
@@ -169,6 +169,8 @@ interface FonteDeExportacao {
   notas: () => readonly Nota[]
   /** Zera a autoria (`criadoPor`, `encerradoPor`, `excluidoPor`, `excluidaPor`) de quem teve a conta excluída. */
   anonimizarAutor?: (contaId: string) => void
+  /** A rotina em memória dona desta fonte: quem precisa lê-la (os avisos) usa esta em vez de criar outra. */
+  rotina?: () => DadosRotina
 }
 
 const SEM_ROTINA: FonteDeExportacao = { registros: () => [], notas: () => [] }
@@ -186,6 +188,11 @@ export function registrarOrigemDaConta(copia: object, original: object): void {
 /** Diz se a rotina em memória já registrou a fonte de exportação desta conta (ou da original, se for cópia). */
 export function temFonteDeExportacao(conta: object): boolean {
   return fontesDeExportacao.has(origensDaConta.get(conta) ?? conta)
+}
+
+/** A rotina em memória já registrada para esta conta (ou para a original, se for cópia); `undefined` se não há. */
+export function rotinaRegistrada(conta: object): DadosRotina | undefined {
+  return fontesDeExportacao.get(origensDaConta.get(conta) ?? conta)?.rotina?.()
 }
 
 export function registrarFonteDeExportacao(conta: object, fonte: FonteDeExportacao): void {
