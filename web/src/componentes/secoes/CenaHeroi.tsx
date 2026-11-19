@@ -99,6 +99,17 @@ export function CenaHeroi({
           <span data-camada="chao-direita" data-fundo={chao.direita} />
         </div>
         <picture>
+          {/* O AVIF vem antes do WebP de cada caso; a fonte sem `media` fica depois das duas com `media`, ou ganharia no 390. */}
+          {recorte390.avif ? (
+            <source
+              media="(max-width: 767px)"
+              type="image/avif"
+              srcSet={recorte390.avif}
+              sizes={recorte390.sizes}
+              width={recorte390.largura}
+              height={recorte390.altura}
+            />
+          ) : null}
           <source
             media="(max-width: 767px)"
             srcSet={recorte390.srcSet ?? recorte390.src}
@@ -106,6 +117,7 @@ export function CenaHeroi({
             width={recorte390.largura}
             height={recorte390.altura}
           />
+          {imagem.avif ? <source type="image/avif" srcSet={imagem.avif} sizes={imagem.sizes} /> : null}
           <img
             src={imagem.src}
             srcSet={imagem.srcSet}
