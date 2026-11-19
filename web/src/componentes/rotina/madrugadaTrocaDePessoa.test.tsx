@@ -65,14 +65,14 @@ describe('QH-06: a madrugada não passa de uma pessoa para a outra', () => {
 
       // `sessaoParaTeste` não emite o evento `entrou`: o provedor da sessão só reler a conta com a entrada real.
       await act(async () => {
-        await conta.entrar(PESSOAS.bruno.email, SENHA_DEMONSTRACAO)
+        await conta.entrar(PESSOAS.icaro.email, SENHA_DEMONSTRACAO)
       })
       await aguardarCarga()
       await ir(roteador, '/app/hoje')
 
-      // A sequência é real: Bruno está na sessão e a página é o Hoje.
+      // A sequência é real: Ícaro está na sessão e a página é o Hoje.
       const sessao = await conta.sessaoAtual()
-      expect(sessao.ok && sessao.valor?.id).toBe(PESSOAS.bruno.id)
+      expect(sessao.ok && sessao.valor?.id).toBe(PESSOAS.icaro.id)
       expect(roteador.state.location.pathname).toBe('/app/hoje')
       expect(tema()).toBeNull()
       expect(lua().getAttribute('aria-pressed')).toBe('false')
