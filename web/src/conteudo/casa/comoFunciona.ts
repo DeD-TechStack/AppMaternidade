@@ -87,7 +87,8 @@ export const CENA_COLO: Imagem = {
   altura: 980,
 }
 
-/** CF-S2: a captura do Histórico (estado Y15), a camada de tela de 280 e 320 (e o dobro). */
+/** CF-S2: a captura do Histórico (estado Y15), o celular principal: a camada de tela de até 330 numa coluna (a largura
+ * do quadro em 390) e de até 390 (a 1:1 da captura) em duas colunas. */
 export const TELA_HISTORICO: Imagem = {
   src: '/telas/t1i/historico-y15-320w.webp',
   srcSet: [
@@ -96,7 +97,7 @@ export const TELA_HISTORICO: Imagem = {
     '/telas/t1i/historico-y15-560w.webp 560w',
     '/telas/t1i/historico-y15-640w.webp 640w',
   ].join(', '),
-  sizes: '(min-width: 768px) 320px, 280px',
+  sizes: '(min-width: 1024px) 390px, (min-width: 768px) 320px, 330px',
   largura: 640,
   altura: 1385,
 }

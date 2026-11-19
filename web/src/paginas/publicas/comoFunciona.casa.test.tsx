@@ -176,6 +176,16 @@ describe('/como-funciona: a casa acesa (COMO:RF-01, RF-02)', () => {
     expect(comecar.querySelectorAll('ol')).toHaveLength(1)
   })
 
+  it('COMO-I-13 cada faixa de 2 a 5 embrulha as duas colunas num conteiner .cf-banda', () => {
+    const { container } = renderizarRota('/como-funciona')
+    const faixas = [...casa(container).children].slice(1, 5)
+    for (const faixa of faixas) {
+      const bandas = faixa.querySelectorAll('.cf-banda')
+      expect(bandas).toHaveLength(1)
+      expect(bandas[0].querySelector(':scope > .cf-duas')).not.toBeNull()
+    }
+  })
+
   it('COMO-I-01 duas ações, as duas para /criar-conta, uma no heroi e outra no fecho', () => {
     const { container } = renderizarRota('/como-funciona')
     const links = [...principal(container).querySelectorAll('a')]
@@ -329,6 +339,24 @@ describe('/como-funciona: o CSS da página é estático e só de token (COMO:RF-
   it('COMO-I-12 sem animação, quadros-chave, transição, will-change nem view-transition; nada nasce escondido', () => {
     expect(css).not.toMatch(/animation|@keyframes|transition|will-change|view-transition-name/)
     expect(css).not.toMatch(/opacity\s*:|visibility\s*:\s*hidden|transform\s*:/)
+  })
+
+  it('COMO-I-13 as faixas 2 a 5 são conteineres: as duas colunas vêm de @container, não da largura da janela', () => {
+    expect(css).toMatch(/\.cf-banda\s*\{[^}]*container:\s*cf-banda\s*\/\s*inline-size/)
+    expect(css).toMatch(/@container cf-banda \(min-width: \d+px\)/)
+    // Nenhuma regra de coluna (`.cf-duas`, `.cf-colo`) dentro de um @media de largura.
+    for (const [, corpo] of css.matchAll(/@media[^{]*\{([\s\S]*?)\n {2}\}/g)) expect(corpo).not.toMatch(/\.cf-(duas|colo|lado)/)
+  })
+
+  it('COMO-I-13 o heroi pesa mais que as regras globais do Início: todo seletor de [data-cena-heroi] tem peso (0,4,0)', () => {
+    const seletores = [...css.matchAll(/([^{}]+)\{/g)].map(([, s]) => s.trim()).filter((s) => s.includes('[data-cena-heroi]'))
+    expect(seletores.length).toBeGreaterThan(0)
+    for (const seletor of seletores) {
+      for (const parte of seletor.split(',')) expect(parte.trim(), parte).toMatch(/^\[data-casa\] \[data-cena-heroi\]\[data-lado\]:has\(\.cf-hero-texto\)/)
+    }
+    // O texto e a placa voltam ao fluxo (o Início os põe em `display: contents` e `position: absolute`).
+    expect(css).toMatch(/:has\(\.cf-hero-texto\) \.cm-cena-texto \{[^}]*display: block/)
+    expect(css).toMatch(/:has\(\.cf-hero-texto\) \.cm-cena-placa \{[^}]*position: relative/)
   })
 
   it('COMO-I-12 a página não importa movimento/ nem motion', () => {
