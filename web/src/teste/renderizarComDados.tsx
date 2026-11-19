@@ -5,7 +5,7 @@ import { createMemoryRouter, RouterProvider } from 'react-router'
 import { ProvedorDadosConta } from '../componentes/conta/sessao.tsx'
 import { PESSOAS_DEMONSTRACAO, criarFixtureDemonstracao } from '../dados/conta.demonstracao.ts'
 import { criarDadosContaMemoria, type DadosContaMemoria, type FixtureConta } from '../dados/conta.memoria.ts'
-import { criarRotas } from '../rotas.tsx'
+import { criarRotasProntas } from './rotasProntas.ts'
 
 // As pessoas dos testes de tela: os mesmos ids e papéis da fixture de demonstração
 // (`conta.demonstracao.ts`, que tem os ids do seed local e os nomes de exemplo de Daniel).
@@ -118,7 +118,7 @@ export function renderizarComDados(caminho: string, opcoes: Opcoes = {}) {
   const rolarAoTopo = vi.fn()
   vi.stubGlobal('scrollTo', rolarAoTopo)
 
-  const roteador = createMemoryRouter(criarRotas(), { initialEntries: [caminho] })
+  const roteador = createMemoryRouter(criarRotasProntas(), { initialEntries: [caminho] })
   const resultado = render(
     <ProvedorDadosConta dados={dados}>
       <RouterProvider router={roteador} />

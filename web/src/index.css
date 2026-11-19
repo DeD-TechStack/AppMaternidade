@@ -10,6 +10,7 @@
 @import './styles/site.css';
 @import './styles/campo.css';
 @import './styles/foco.css';
+@import './styles/abrir-fechar.css';
 
 @layer base {
   html {
@@ -623,6 +624,12 @@
   *::after {
     animation: none !important;
     transition: none !important;
+  }
+
+  /* Abrir e fechar (styles/abrir-fechar.css) sem duração: o menu, as caixas e o acordeão trocam de uma vez. */
+  :root {
+    --mov-abrir: 0ms;
+    --mov-fechar: 0ms;
   }
 }
 
