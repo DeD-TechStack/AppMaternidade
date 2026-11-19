@@ -297,7 +297,8 @@ function medirNoChrome(html: string): Medida {
         '--headless=new',
         '--no-sandbox',
         '--disable-gpu',
-        '--disable-crashpad-for-testing',
+        // CI-UBUNTU: no Chrome 157 do Linux esta opção mata o processo ("FD ownership violation"); no Windows ela fica.
+        ...(process.platform === 'win32' ? ['--disable-crashpad-for-testing'] : []),
         '--no-first-run',
         '--allow-file-access-from-files',
         `--user-data-dir=${perfil}`,

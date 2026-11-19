@@ -27,7 +27,7 @@ const ROTAS_PUBLICAS = [
 
 describe('cabeçalho público', () => {
   it('tem o nome do site, os quatro links, Entrar e o primário "Criar conta"', async () => {
-    const { container } = renderizarRota('/como-funciona', { sessao: null })
+    const { container } = renderizarRota('/sobre', { sessao: null })
     // Os links de visitante seguem a sessão: só aparecem depois que ela termina de carregar.
     await aguardarCarga()
     const cabecalho = container.querySelector<HTMLElement>('header[data-cabecalho]')!

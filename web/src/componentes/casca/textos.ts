@@ -97,5 +97,5 @@ export const LINKS_DO_RODAPE_COMPACTO: readonly Link[] = COLUNAS_DO_RODAPE.filte
 ).flatMap((coluna) => coluna.links)
 
 // A linha de copyright e o aviso de avaliação do rodapé público (deck COPY_casca.md §2.3).
-export const COPYRIGHT_RODAPE = '© 2026 AppMaternidade' // casca.rod.copy
+export const COPYRIGHT_RODAPE = '© 2026 DeD TechStack' // casca.rod.copy
 export const AVISO_RODAPE = 'Nesta versão de avaliação, use só dados fictícios.' // casca.rod.aviso
