@@ -15,8 +15,10 @@ const PAGINAS_DE_TEXTO = [
   '/sobre',
 ] as const
 
+// /cuidado-compartilhado saiu desta lista: foi refeita nas seções da casa e a estrutura dela
+// está em `cuidado.casa.test.tsx` (aqui ficam as duas que ainda têm a abertura `.pd-abertura`).
 // Como funciona saiu daqui: é a casa acesa (faixas de secoes/, não Secao) e tem o seu teste, comoFunciona.casa.test.tsx.
-const PAGINAS_DE_DESTAQUE = ['/cuidado-compartilhado', '/desenvolvimento'] as const
+const PAGINAS_DE_DESTAQUE = ['/desenvolvimento'] as const
 
 function principal(container: HTMLElement): HTMLElement {
   return container.querySelector('main') as HTMLElement
@@ -110,17 +112,6 @@ describe('páginas em destaque: Secao, Colunas e painéis', () => {
       }
     })
   }
-
-  it('Cuidado compartilhado: o painel de areia é uma Secao de painel (.pd-registro) e a lista dos blocos é uma Pilha', () => {
-    const { container } = renderizarRota('/cuidado-compartilhado')
-    const paineis = principal(container).querySelectorAll('[data-h~="secao"][data-h-variante="painel"]')
-    expect(paineis).toHaveLength(1)
-    const caixa = paineis[0].querySelector(':scope > [data-painel="areia"]')!
-    expect(caixa.classList.contains('pd-registro')).toBe(true)
-    const lista = principal(container).querySelector('ul[data-blocos]')!
-    expect(lista.getAttribute('data-h')).toContain('pilha')
-    expect(lista.closest('[data-h~="quadro"]')!.getAttribute('data-h-largura')).toBe('quadro')
-  })
 
   it('Desenvolvimento: a faixa de cacau é uma Secao de painel e o tummy time é uma Pilha bloco', () => {
     const { container } = renderizarRota('/desenvolvimento')

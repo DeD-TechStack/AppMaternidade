@@ -7,7 +7,7 @@ import { renderizarRota } from './renderizarRota.tsx'
 
 const PAGINAS: ReadonlyArray<[string, string]> = [
   ['/como-funciona', 'Deixa que eu anoto.'],
-  ['/cuidado-compartilhado', 'Um bebê, vários adultos.'],
+  ['/cuidado-compartilhado', 'A babá vê o quê?'],
   ['/desenvolvimento', 'Cada fase, no tempo do bebê.'],
   ['/regras-da-comunidade', 'Regras da comunidade'],
   ['/privacidade', 'Privacidade'],
