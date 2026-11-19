@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { render, within } from '@testing-library/react'
+import { fireEvent, render, within } from '@testing-library/react'
 import type { ReactElement } from 'react'
 import { MemoryRouter } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -507,6 +507,27 @@ describe('DS1-I-12 ProdutoEmMoldura: a captura da tela sob a moldura, duas camad
     for (const largura of [0, -2, 2.5, Number.NaN]) lanca(produto({ largura }))
     for (const altura of [0, -2, 2.5, Number.NaN]) lanca(produto({}, { altura }))
     lanca(produto({ alt: '' }))
+  })
+
+  it('HOME-FINAL ProdutoEmMoldura sem `rolavel` não tem botão; com `rolavel` as duas camadas ficam num botão de alternância nomeado pela tela', () => {
+    const sem = pintar(produto())
+    expect(sem.container.querySelector('button')).toBeNull()
+    sem.unmount()
+    const { container } = pintar(<ProdutoEmMoldura tela={tela()} moldura={moldura()} rolavel />)
+    const figura = container.querySelector<HTMLElement>('figure[data-produto-moldura]')!
+    const botao = figura.querySelector<HTMLButtonElement>('button[data-produto-rolar]')!
+    expect(botao.getAttribute('type')).toBe('button')
+    expect(botao.getAttribute('aria-pressed')).toBe('false')
+    // Named by the screen's alt (the frame's raster stays aria-hidden), so the name is said once.
+    expect(botao.querySelectorAll('img')).toHaveLength(2)
+    expect(botao.hasAttribute('aria-label')).toBe(false)
+    expect(figura.hasAttribute('data-rolado')).toBe(false)
+    fireEvent.click(botao)
+    expect(botao.getAttribute('aria-pressed')).toBe('true')
+    expect(figura.hasAttribute('data-rolado')).toBe(true)
+    fireEvent.click(botao)
+    expect(botao.getAttribute('aria-pressed')).toBe('false')
+    expect(figura.hasAttribute('data-rolado')).toBe(false)
   })
 
   it('DS1-I-12 ProdutoEmMoldura sem a moldura ou sem a tela lança (nenhum recurso reserva, nenhum estado vazio)', () => {

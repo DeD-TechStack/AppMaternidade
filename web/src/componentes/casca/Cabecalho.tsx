@@ -28,6 +28,13 @@ import {
   type SituacaoDaConta,
 } from './textos.ts'
 
+/**
+ * As páginas da casa (o Início e as três de produto): um link entre elas navega com `viewTransition`, e o chão do
+ * herói (`view-transition-name: chao`, em inicio-casa.css) passa de uma para a outra. Com movimento reduzido a
+ * troca é imediata (a mesma folha anula as animações da transição).
+ */
+export const PAGINAS_DA_CASA: ReadonlySet<string> = new Set(['/', '/como-funciona', '/cuidado-compartilhado', '/desenvolvimento'])
+
 // A noite do cabeçalho (DS1:RF-09) vive aqui, num guardião de módulo: uma contagem das páginas montadas que a
 // pediram. Há noite enquanto a contagem for maior que zero; o `Cabecalho` a lê com `useSyncExternalStore`.
 let paginasDeNoite = 0
@@ -122,13 +129,13 @@ export function Cabecalho({ contexto, comLua, madrugada, aoAlternarMadrugada, to
       <PularParaConteudo />
       {/* O conteúdo do cabeçalho se alinha à borda do quadro; a altura e o padding vertical continuam os de hoje. */}
       <QuadroLayout className="cm-cab-miolo">
-        <Link to="/" className="cm-marca" data-nome-site="">
+        <Link to="/" className="cm-marca" data-nome-site="" viewTransition>
           {NOME_SITE}
         </Link>
 
         <nav aria-label={ROTULO_NAVEGACAO} className="cm-cab-links">
           {ITENS_DO_CABECALHO[contexto].map((item) => (
-            <NavLink key={item.para} to={item.para} end className="cm-cab-link">
+            <NavLink key={item.para} to={item.para} end className="cm-cab-link" viewTransition={PAGINAS_DA_CASA.has(item.para)}>
               {item.rotulo}
             </NavLink>
           ))}

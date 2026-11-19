@@ -19,9 +19,11 @@ import { aguardarCarga, renderizarRota } from '../teste/renderizarRota.tsx'
 //     (`[data-cena-heroi] a[data-botao-mel]`) is in view under the header (IntersectionObserver, top root
 //     margin -72 px), deletes it when the pill leaves view and on unmount. `<main>` carries no such state.
 //   - The quiet / filled CSS of `a[data-cabecalho-pilula]` lives in `inicio-casa.css`, scoped by
-//     `html[data-inicio-heroi="visivel"]` at >= 1024 px.
-//   - Below 1024 px the attribute is never set, and the hero renders no mel pill, only the text link.
-//   - The width switch is a `matchMedia` query (`(min-width: 1024px)` or the rem form), so jsdom can drive it.
+//     `html[data-inicio-heroi="visivel"]`, at every width.
+//   - HOME-FINAL (19/11/2026): the hero holds the mel pill "Criar conta" under the value sentence at EVERY width
+//     (judge point "restore the yellow 'Criar conta' button" and responsive audit #7), with the text link beside it.
+//   - The composition switch is a `matchMedia` query (`(min-width: 1180px) and (min-aspect-ratio: 1/1)`), so jsdom
+//     can drive it (the stub reads the first width in the query).
 
 const PASTA_WEB = process.cwd()
 const PASTA_SRC = join(PASTA_WEB, 'src')
@@ -48,6 +50,9 @@ const COPY = {
 }
 
 const norm = (texto: string | null | undefined) => (texto ?? '').replace(/\s+/g, ' ').trim()
+/** The hour that opens a caption ("16:00") and its author, the last two words ("por Ju"), read from the COPY string. */
+const horaDe = (legenda: string) => legenda.slice(0, legenda.indexOf(','))
+const autorDe = (legenda: string) => legenda.split(' ').slice(-2).join(' ')
 
 // ---- width and observer stubs ----
 
@@ -412,14 +417,15 @@ describe('REPH-I-31 one h1 with two spans, and the header pill quiet or filled b
     expect(ganchoDoHeroi()).toBeUndefined()
   })
 
-  it('REPH-I-31 the page stylesheet quiets the shell pill only under html[data-inicio-heroi] at 1024 and more, with no !important', () => {
+  it('REPH-I-31 the page stylesheet quiets the shell pill only under html[data-inicio-heroi], at every width, with no !important', () => {
     const css = readFileSync(CSS_DA_CASA, 'utf8').replace(/\r\n/g, '\n')
     const semComentario = css.replace(/\/\*[\s\S]*?\*\//g, '')
     const inicio = semComentario.indexOf('html[data-inicio-heroi')
     expect(inicio).toBeGreaterThan(-1)
-    const bloco = semComentario.slice(semComentario.lastIndexOf('@media', inicio), semComentario.indexOf('@media (prefers-reduced-motion', inicio))
-    expect(bloco).toMatch(/@media \(min-width: 1024px\)/)
-    expect(bloco).toContain("html[data-inicio-heroi='visivel'] header[data-cabecalho]:not([data-tom='noite']) a[data-cabecalho-pilula]")
+    const bloco = semComentario.slice(inicio, semComentario.indexOf('@media (prefers-reduced-motion', inicio))
+    // The quiet rule is the first one under the mark, and no width query gates it (the pill is in the hero at 390 too).
+    expect(bloco.startsWith("html[data-inicio-heroi='visivel'] header[data-cabecalho]:not([data-tom='noite']) a[data-cabecalho-pilula] {")).toBe(true)
+    expect(bloco).not.toMatch(/@media \((min|max)-width/)
     expect(bloco).not.toMatch(/!important/)
     // Only the colours change, 160 ms; the filled return animates too through the transition rule of the page.
     const transicao = semComentario.slice(semComentario.indexOf("a[data-cabecalho-pilula] {\n    transition-property"))
@@ -429,17 +435,29 @@ describe('REPH-I-31 one h1 with two spans, and the header pill quiet or filled b
     expect(semComentario).not.toContain('data-cta-cabecalho')
   })
 
-  it('REPH-I-31 at 390 the html mark is never set, the header pill stays the shell filled one and the hero renders no mel pill', async () => {
-    await abrir(390)
-    expect(pilulaDoCabecalho()).not.toBeNull()
-    expect(ganchoDoHeroi()).toBeUndefined()
-    expect(document.querySelector(PILULA_DO_HEROI)).toBeNull()
-    const link = [...document.querySelectorAll<HTMLAnchorElement>('[data-cena-heroi] a')].find((a) => norm(a.textContent) === COPY.cta2)
-    expect(link).toBeDefined()
-    // The closing band holds the only mel button of the page at 390.
-    expect(principal().querySelectorAll('[data-botao-mel]')).toHaveLength(1)
-    expect(principal().querySelector('[data-fechamento] [data-botao-mel]')).not.toBeNull()
-  })
+  for (const largura of [390, 768, 1023, 1179]) {
+    it(`REPH-I-31 at ${largura} the hero has the mel pill "Criar conta" right after the value sentence, the text link beside it, and the header pill is quiet while it is in view`, async () => {
+      await abrir(largura)
+      const pilula = document.querySelector<HTMLAnchorElement>(PILULA_DO_HEROI)
+      expect(pilula).not.toBeNull()
+      expect(norm(pilula!.textContent)).toBe(COPY.cta1)
+      expect(pilula!.getAttribute('href')).toBe('/criar-conta')
+      // Under the value sentence: the lede and the pill share the night block, the lede first.
+      const lede = [...document.querySelectorAll('[data-cena-heroi] p')].find((p) => norm(p.textContent) === COPY.lede)!
+      expect(lede.compareDocumentPosition(pilula!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+      expect(lede.parentElement!.contains(pilula)).toBe(true)
+      // The link is the pill's sibling in the same row of actions.
+      const link = [...document.querySelectorAll<HTMLAnchorElement>('[data-cena-heroi] a')].find((a) => norm(a.textContent) === COPY.cta2)
+      expect(link?.parentElement).toBe(pilula!.parentElement)
+      expect(pilulaDoCabecalho()).not.toBeNull()
+      expect(ganchoDoHeroi()).toBe('visivel')
+      expect(avisarPilulaDoHeroi(false)).toBeGreaterThan(0)
+      expect(ganchoDoHeroi()).toBeUndefined()
+      // The hero pill and the closing one.
+      expect(principal().querySelectorAll('[data-botao-mel]')).toHaveLength(2)
+      expect(principal().querySelector('[data-fechamento] [data-botao-mel]')).not.toBeNull()
+    })
+  }
 
   it('REPH-I-31 at 1440 the page has two mel buttons: the hero pill and the closing one', async () => {
     await abrir(1440)
@@ -497,13 +515,13 @@ describe('REPH-I-11 pure arithmetic of the pin: progress, edge stops, translateX
     expect(progressoDoFixo(0, 0, 0)).toBe(0)
   })
 
-  it('REPH-I-11 the pin distance is 600 from 1280, 480 from 1024 and the pin needs 812 px of height', async () => {
+  it('REPH-I-11 the pin distance is 600 from 1280, 480 from 1024 and the pin needs 640 px of height (HOME-FINAL F5)', async () => {
     const { distanciaDoFixo, alturaMinimaDoFixo } = await import('../movimento/troca/medidas.ts')
     expect(distanciaDoFixo(1440)).toBe(600)
     expect(distanciaDoFixo(1280)).toBe(600)
     expect(distanciaDoFixo(1279)).toBe(480)
     expect(distanciaDoFixo(1024)).toBe(480)
-    expect(alturaMinimaDoFixo()).toBe(812)
+    expect(alturaMinimaDoFixo()).toBe(640)
   })
 
   it('REPH-I-12 the caption side is 1 while p is under 0.5 and 2 from 0.5', async () => {
@@ -618,8 +636,11 @@ describe('REPH-I-12 caption swap: one node, one text, leg1 then leg2 as p crosse
     const nos = principal().querySelectorAll('p[data-legenda][data-troca-legenda]')
     expect(nos).toHaveLength(1)
     expect(nos[0].getAttribute('aria-live')).toBe('off')
-    expect(nos[0].childNodes).toHaveLength(1)
+    // HOME-FINAL moment 4: the one node holds the copy string in the three runs of the signed caption (the hour, the
+    // middle, the author with the stroke); nothing is added to the text.
     expect(norm(nos[0].textContent)).toBe(COPY.leg1)
+    expect([...nos[0].querySelectorAll('[data-legenda-hora]')].map((s) => s.textContent)).toEqual([horaDe(COPY.leg1)])
+    expect([...nos[0].querySelectorAll('[data-legenda-autor]')].map((s) => norm(s.textContent))).toEqual([autorDe(COPY.leg1)])
     // The hero keeps its static leg1 under the plate (y 622 at 1440, out of the window when the stage starts to pin, at
     // scrollY 771); the swap node stands at stage y 812. There is no static leg2 beside the swap node.
     const heroi = principal().querySelector('[data-cena-heroi]')!
@@ -699,22 +720,22 @@ describe('REPH-I-13 reduced motion and short windows: the rest layout, decided b
     expect(principal().querySelector<HTMLElement>('[data-troca-noite]')!.style.transform).toBe('')
   })
 
-  it('REPH-I-13 /: a window under 812 high at 1440 rests too (no pin, no swap node, two static captions)', async () => {
-    await abrirJanela({ largura: 1440, altura: 800 })
+  it('REPH-I-13 /: a window under 640 high at 1440 rests too (no pin, no swap node, two static captions)', async () => {
+    await abrirJanela({ largura: 1440, altura: 639 })
     expect(principal().querySelector('[data-troca-fixo]')).toBeNull()
     expect(principal().querySelector('[data-troca-legenda]')).toBeNull()
     expect(legendasEmTela()).toEqual(expect.arrayContaining([COPY.leg1, COPY.leg2]))
     expect(legendasEmTela()).toHaveLength(2)
   })
 
-  it('REPH-I-13 /: at 812 high exactly the pin is built', async () => {
-    await abrirJanela({ largura: 1440, altura: 812 })
+  it('REPH-I-13 /: at 640 high exactly the pin is built', async () => {
+    await abrirJanela({ largura: 1440, altura: 640 })
     expect(principal().querySelector('[data-troca-fixo]')).not.toBeNull()
   })
 })
 
-describe('REPH-I-14 below 1024: no pin, no sheet, no twin, no swap node; the frame rests in the hero', () => {
-  for (const largura of [390, 768, 1023]) {
+describe('REPH-I-14 stacked composition (below 1180): no pin, no sheet, no twin, no swap node; the frame rests in the hero', () => {
+  for (const largura of [390, 768, 1023, 1179]) {
     it(`REPH-I-14 /: at ${largura} the stage is the hero's, with no sheet, no twin and two static captions`, async () => {
       await abrirJanela({ largura })
       const palcos = principal().querySelectorAll('[data-troca-palco]')
@@ -728,10 +749,233 @@ describe('REPH-I-14 below 1024: no pin, no sheet, no twin, no swap node; the fra
     })
   }
 
+  it('REPH-I-14 /: at 1180 x 900 the room stands (the stage in band 2, pinned)', async () => {
+    await abrirJanela({ largura: 1180 })
+    const palcos = principal().querySelectorAll('[data-troca-palco]')
+    expect(palcos).toHaveLength(1)
+    expect(faixaDaNoite().contains(palcos[0])).toBe(true)
+    expect(palcos[0].hasAttribute('data-troca-fixo')).toBe(true)
+  })
+
   it('REPH-I-14 /: M06 is in the page at every width, and its lamp is watched (lit when 10 % of the plate is in view)', async () => {
     await abrirJanela({ largura: 1440 })
     expect(principal().querySelectorAll('.ic-m06')).toHaveLength(1)
     const observadoresDeM06 = ObservadorFalso.todos.filter((o) => [...o.alvos].some((alvo) => alvo.closest('.ic-m06') !== null))
     expect(observadoresDeM06.length).toBeGreaterThan(0)
+  })
+})
+
+describe('HOME-FINAL every phone shows a real app screen; the lower bands carry the house', () => {
+  for (const largura of [390, 1440]) {
+    it(`at ${largura} the Histórico frame (and the night twin) serve the Y_ALTA capture, whose top is a whole 390 x 844 screen with no site footer`, async () => {
+      await abrirJanela({ largura })
+      const historico = principal().querySelector<HTMLImageElement>(`[data-produto-tela][alt="${COPY.altTela1}"]`)!
+      expect(historico.getAttribute('src')).toBe('/telas/casa/historico-y-alta-320w.webp')
+      expect(historico.getAttribute('srcset')).toMatch(/historico-y-alta-640w\.webp 640w/)
+      expect(historico.getAttribute('srcset')).not.toMatch(/historico-y-(280|320|560|640)w/)
+      for (const gemea of principal().querySelectorAll<HTMLImageElement>('[data-troca-gemea-tela]')) {
+        expect(gemea.getAttribute('src')).toBe(historico.getAttribute('src'))
+      }
+    })
+  }
+
+  it('the closing band stands M11 (the lit window, decorative, empty alt) on the night floor, after the closing block', async () => {
+    await abrir(1440)
+    const fecho = principal().querySelector('.ic-fecho')!
+    expect(fecho.querySelector('[data-fechamento]')).not.toBeNull()
+    const janela = fecho.querySelector<HTMLImageElement>('.ic-fecho-cena img')!
+    // M11 comes from vite-imagetools (LIB-IMG): a generated URL, the 542w file of its own srcset.
+    expect(janela.getAttribute('src')).toMatch(/^\/@imagetools\/[\w-]+$/)
+    expect(janela.getAttribute('srcset')).toContain(`${janela.getAttribute('src')!} 542w`)
+    expect(janela.getAttribute('alt')).toBe('')
+    expect([janela.getAttribute('width'), janela.getAttribute('height')]).toEqual(['542', '421'])
+    expect(janela.getAttribute('loading')).toBe('lazy')
+    const chao = fecho.lastElementChild!
+    expect(chao.classList.contains('ic-chao')).toBe(true)
+    expect(chao.getAttribute('aria-hidden')).toBe('true')
+  })
+
+  it('the sleep band stands its frame on the night floor', async () => {
+    await abrir(1440)
+    const tela = principal().querySelector('.ic-tela')!
+    expect(tela.querySelector('[data-produto-moldura]')).not.toBeNull()
+    expect(tela.lastElementChild!.classList.contains('ic-chao')).toBe(true)
+  })
+
+  it('F1: the sleep frame shows the whole 390:880 Hoje capture (640 x 1444), contained on the app paper, never cropped', async () => {
+    await abrir(1440)
+    const hoje = principal().querySelector<HTMLImageElement>(`.ic-tela [data-produto-tela][alt="${COPY.altTela2}"]`)!
+    expect(hoje.getAttribute('src')).toBe('/telas/casa/hoje-n-320w.webp')
+    expect([hoje.getAttribute('width'), hoje.getAttribute('height')]).toEqual(['640', '1444'])
+    expect(norm(readFileSync(CSS_DA_CASA, 'utf8'))).toContain(
+      '[data-casa] .ic-tela [data-produto-tela] { object-fit: contain; background-color: var(--color-papel); }',
+    )
+  })
+})
+
+// ---------------------------------------------------------------------------------------------
+// HOME-FINAL round 3 (review 1: F2, F3, F5)
+// ---------------------------------------------------------------------------------------------
+
+const MANIFESTO_DAS_TELAS = join(PASTA_WEB, 'public', 'telas', 'casa', 'MANIFESTO.json')
+
+/** The manifest's Y_ALTA travel, keyed by width. */
+function rolagemDoManifesto(): Record<390 | 1440, number> {
+  const manifesto = JSON.parse(readFileSync(MANIFESTO_DAS_TELAS, 'utf8')) as { capturas: Array<{ id: string; rolagem_px: Record<string, number> }> }
+  const alta = manifesto.capturas.find((c) => c.id === 'Y_ALTA')!
+  return { 390: alta.rolagem_px['390'], 1440: alta.rolagem_px['1440'] }
+}
+
+describe('HOME-FINAL F2 the Histórico pan travels MANIFESTO rolagem_px: rest on the foot, active on the top', () => {
+  it('F2: midia.ts ROLAGEM_PX is the manifest Y_ALTA rolagem_px (280 at 390, 320 at 1440)', async () => {
+    const ROLAGEM_PX = (await import('../componentes/inicio-casa/midia.ts')).ROLAGEM_PX
+    expect({ 390: ROLAGEM_PX[390], 1440: ROLAGEM_PX[1440] }).toEqual(rolagemDoManifesto())
+    expect(rolagemDoManifesto()).toEqual({ 390: 280, 1440: 320 })
+  })
+
+  for (const largura of [390, 1440]) {
+    it(`F2: at ${largura} the stage holding the Histórico frame carries the two ends of the pan from ROLAGEM_PX`, async () => {
+      const ROLAGEM_PX = (await import('../componentes/inicio-casa/midia.ts')).ROLAGEM_PX
+      await abrirJanela({ largura })
+      const quadro = principal().querySelector(`[data-produto-tela][alt="${COPY.altTela1}"]`)!
+      const palco = quadro.closest<HTMLElement>('[data-troca-palco]')!
+      expect(palco.style.getPropertyValue('--produto-rolagem-390')).toBe(String(ROLAGEM_PX[390]))
+      expect(palco.style.getPropertyValue('--produto-rolagem-1440')).toBe(String(ROLAGEM_PX[1440]))
+      for (const gemea of principal().querySelectorAll('[data-troca-gemea-tela]')) expect(palco.contains(gemea)).toBe(true)
+    })
+  }
+
+  it('F2: the declared travel equals rolagem_px at 390 and 1440 and is exactly the capture surplus over the screen layer', async () => {
+    const ROLAGEM_PX = (await import('../componentes/inicio-casa/midia.ts')).ROLAGEM_PX
+    const { CAPTURA_Y_ALTA, MOLDURA_DIA } = await import('../componentes/inicio-casa/midia.ts')
+    const css = norm(readFileSync(CSS_DA_CASA, 'utf8'))
+    // The screen layer's width and the travel, as the stylesheet declares them.
+    expect(css).toContain('--produto-tela: clamp(280px, calc(280px + (100vw - 390px) * 40 / 1050), 320px);')
+    expect(css).toContain(
+      '--produto-rolagem: min( clamp( calc(var(--produto-rolagem-390, 0) * 1px), calc(var(--produto-rolagem-390, 0) * 1px + (var(--produto-rolagem-1440, 0) - var(--produto-rolagem-390, 0)) * (100vw - 390px) / 1050), calc(var(--produto-rolagem-1440, 0) * 1px) ), var(--produto-tela) );',
+    )
+    const tela = (w: number) => Math.min(Math.max(280 + ((w - 390) * 40) / 1050, 280), 320)
+    const percurso = (w: number) =>
+      Math.min(Math.min(Math.max(ROLAGEM_PX[390] + ((ROLAGEM_PX[1440] - ROLAGEM_PX[390]) * (w - 390)) / 1050, ROLAGEM_PX[390]), ROLAGEM_PX[1440]), tela(w))
+    const manifesto = rolagemDoManifesto()
+    for (const w of [390, 1440] as const) {
+      expect(percurso(w), `travel at ${w}`).toBeCloseTo(manifesto[w], 6)
+      // The screen layer (secoes.css): the frame is 1.06 x the screen wide and as tall as its raster; 3 % inset each side.
+      const t = tela(w)
+      const camada = (t * 1.06 * MOLDURA_DIA.altura) / MOLDURA_DIA.largura - 2 * 0.03 * t
+      const exibida = (t * CAPTURA_Y_ALTA.altura) / CAPTURA_Y_ALTA.largura
+      expect(Math.abs(exibida - camada - manifesto[w]), `surplus at ${w}`).toBeLessThanOrEqual(1)
+    }
+    // Rest: the image's top `--produto-rolagem` above the layer (the foot shows); active: the top. No percentage cap.
+    expect(css).toContain('object-position: 50% calc(-1 * var(--produto-rolagem));')
+    expect(css).toContain('object-position: 50% 0%;')
+    expect(css).not.toContain('50% 40%')
+  })
+})
+
+/** Tells every observer that watches a caption whether it is in view; returns how many observers were told. */
+function avisarLegendas(visivel: boolean): number {
+  let avisados = 0
+  act(() => {
+    for (const observador of ObservadorFalso.todos) {
+      const alvos = [...observador.alvos].filter((alvo) => alvo.matches('p[data-legenda]'))
+      if (alvos.length === 0) continue
+      avisados += 1
+      observador.chamada(
+        alvos.map((target) => ({ target, isIntersecting: visivel, intersectionRatio: visivel ? 1 : 0 }) as unknown as IntersectionObserverEntry),
+        observador as unknown as IntersectionObserver,
+      )
+    }
+  })
+  return avisados
+}
+
+describe('HOME-FINAL F3 the signed caption: the hour emphasised, the author subordinate, a stroke drawn once', () => {
+  for (const largura of [390, 1440]) {
+    it(`F3: at ${largura} each caption is the copy string in three runs, the author holding an aria-hidden stroke`, async () => {
+      await abrirJanela({ largura, reduzido: true })
+      const legendas = [...principal().querySelectorAll<HTMLElement>('p[data-legenda]')]
+      expect(legendas.map((p) => norm(p.textContent))).toEqual([COPY.leg1, COPY.leg2])
+      for (const [p, copia] of legendas.map((p, i) => [p, [COPY.leg1, COPY.leg2][i]] as const)) {
+        expect([...p.querySelectorAll('[data-legenda-hora]')].map((s) => s.textContent)).toEqual([horaDe(copia)])
+        const autores = [...p.querySelectorAll('[data-legenda-autor]')]
+        expect(autores.map((s) => norm(s.textContent))).toEqual([autorDe(copia)])
+        const tracos = p.querySelectorAll('[data-legenda-traco]')
+        expect(tracos).toHaveLength(1)
+        expect(autores[0].contains(tracos[0])).toBe(true)
+        expect(tracos[0].getAttribute('aria-hidden')).toBe('true')
+        expect(tracos[0].textContent).toBe('')
+      }
+    })
+  }
+
+  it('F3: the stylesheet gives the hour titulo-3, the title weight and tabular figures, and the stroke 400 ms scaleX from the left', () => {
+    const css = norm(readFileSync(CSS_DA_CASA, 'utf8'))
+    expect(css).toContain(
+      '[data-casa] .ic-legenda-hora { font-size: var(--texto-titulo-3-tamanho); font-weight: var(--peso-titulo); font-variant-numeric: tabular-nums; }',
+    )
+    expect(css).toContain('[data-casa] .ic-legenda-autor { position: relative; display: inline-block; font-size: var(--texto-corpo-tamanho); }')
+    expect(css).toContain('transform: scaleX(0); transform-origin: left; transition: transform 400ms var(--curva-padrao);')
+    expect(css).toContain('[data-casa] [data-assinada] .ic-legenda-traco { transform: scaleX(1); }')
+    expect(css).toContain('@media (prefers-reduced-motion: reduce) { [data-casa] .ic-legenda-traco { transform: none; transition: none; } }')
+  })
+
+  it('F3: with reduced motion every caption shows the finished stroke at once, and no observer waits for it', async () => {
+    await abrirJanela({ largura: 1440, reduzido: true })
+    const legendas = [...principal().querySelectorAll<HTMLElement>('p[data-legenda]')]
+    expect(legendas).toHaveLength(2)
+    for (const p of legendas) expect(p.hasAttribute('data-assinada')).toBe(true)
+    expect(avisarLegendas(true)).toBe(0)
+  })
+
+  it('F3: the stroke plays once, when the caption is first whole in view, and stays drawn after it leaves', async () => {
+    await abrirJanela({ largura: 390 })
+    const legendas = () => [...principal().querySelectorAll<HTMLElement>('p[data-legenda]')]
+    expect(legendas()).toHaveLength(2)
+    for (const p of legendas()) expect(p.hasAttribute('data-assinada')).toBe(false)
+    // Out of view: nothing draws.
+    expect(avisarLegendas(false)).toBe(2)
+    for (const p of legendas()) expect(p.hasAttribute('data-assinada')).toBe(false)
+    // First whole in view: the stroke draws, and the observer lets go (once).
+    expect(avisarLegendas(true)).toBe(2)
+    for (const p of legendas()) expect(p.hasAttribute('data-assinada')).toBe(true)
+    expect(avisarLegendas(false)).toBe(0)
+    expect(avisarLegendas(true)).toBe(0)
+    for (const p of legendas()) expect(p.hasAttribute('data-assinada')).toBe(true)
+  })
+
+  it('F3: in the pinned stage the swap node is signed too and keeps its stroke when the text swaps', async () => {
+    await abrirJanela({ largura: 1440 })
+    const no = principal().querySelector<HTMLElement>('p[data-troca-legenda]')!
+    expect(no.hasAttribute('data-assinada')).toBe(false)
+    avisarLegendas(true)
+    expect(no.hasAttribute('data-assinada')).toBe(true)
+    expect(no.querySelectorAll('[data-legenda-traco]')).toHaveLength(1)
+  })
+})
+
+describe('HOME-FINAL F5 short desktop windows pin the stage; the stage is bounded by the window and the plate', () => {
+  for (const [largura, altura] of [
+    [1366, 768],
+    [1280, 800],
+    [1440, 900],
+    [1536, 864],
+  ] as const) {
+    it(`F5: at ${largura} x ${altura} the pin is built`, async () => {
+      await abrirJanela({ largura, altura })
+      expect(principal().querySelector('[data-troca-fixo]')).not.toBeNull()
+    })
+  }
+
+  it('F5: at 390 x 844 there is no pin (a phone is not the room)', async () => {
+    await abrirJanela({ largura: 390, altura: 844 })
+    expect(principal().querySelector('[data-troca-fixo]')).toBeNull()
+  })
+
+  it('F5: the stage is min(100svh - 24 px, the plate) tall, and the short-landscape rule holds the scene to 50svh', () => {
+    const css = norm(readFileSync(CSS_DA_CASA, 'utf8'))
+    expect(css).toContain('--palco-placa-alto: calc(320px * var(--moldura-razao) + var(--palco-quadro-livre) - var(--palco-topo));')
+    expect(css).toContain('--palco-alto: min(calc(100svh - var(--palco-topo)), var(--palco-placa-alto));')
+    expect(css).toMatch(/@media \(max-height: 520px\) and \(orientation: landscape\) \{[^}]*\.cm-cena-placa \{ max-block-size: 50svh; \}/)
   })
 })

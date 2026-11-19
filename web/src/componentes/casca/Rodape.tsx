@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router'
 import { AvisoDemonstracao } from '../AvisoDemonstracao.tsx'
+import { PAGINAS_DA_CASA } from './Cabecalho.tsx'
 import {
   AVISO_RODAPE,
   COLUNAS_DO_RODAPE,
@@ -55,7 +56,7 @@ export function Rodape({ comAviso = true }: { comAviso?: boolean }) {
                 <ul className="cm-rodape-lista">
                   {coluna.links.map((link) => (
                     <li key={link.para}>
-                      <Link to={link.para} className="cm-rodape-link">
+                      <Link to={link.para} className="cm-rodape-link" viewTransition={PAGINAS_DA_CASA.has(link.para)}>
                         {link.rotulo}
                       </Link>
                     </li>

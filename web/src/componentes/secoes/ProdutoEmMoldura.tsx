@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { exigirImagem, exigirTexto, type Imagem } from './contrato.ts'
 
 interface Props {
@@ -5,6 +6,12 @@ interface Props {
   tela: Imagem & { alt: string }
   /** A moldura do aparelho (arte decorativa, por cima da tela). */
   moldura: Imagem
+  /**
+   * A captura é mais alta que a tela do aparelho e pode rolar: as duas camadas ficam num botão de alternância
+   * (`button[data-produto-rolar]`, `aria-pressed`), nomeado pelo `alt` da tela, e o `figure` leva `data-rolado`
+   * enquanto ele está ligado. Quanto a tela rola é da página (CSS dela); sem a prop, nada muda.
+   */
+  rolavel?: boolean
 }
 
 const PECA = 'ProdutoEmMoldura'
@@ -16,13 +23,14 @@ const PECA = 'ProdutoEmMoldura'
  * (`img[data-produto-moldura-arte]`, `alt=""`, `aria-hidden`) por cima. Sem sombra, sem rotacao, sem aparelho
  * desenhado em CSS ou SVG, sem texto e sem aviso da tela.
  */
-export function ProdutoEmMoldura({ tela, moldura }: Props) {
+export function ProdutoEmMoldura({ tela, moldura, rolavel = false }: Props) {
   exigirImagem(PECA, 'tela', tela)
   exigirTexto(PECA, 'tela.alt', tela.alt)
   exigirImagem(PECA, 'moldura', moldura)
+  const [rolado, setRolado] = useState(false)
 
-  return (
-    <figure data-produto-moldura="" className="cm-produto-moldura">
+  const camadas = (
+    <>
       <img
         data-produto-tela=""
         src={tela.src}
@@ -46,6 +54,18 @@ export function ProdutoEmMoldura({ tela, moldura }: Props) {
         loading="lazy"
         decoding="async"
       />
+    </>
+  )
+
+  return (
+    <figure data-produto-moldura="" data-rolado={rolavel && rolado ? '' : undefined} className="cm-produto-moldura">
+      {rolavel ? (
+        <button type="button" className="alvo-toque" data-produto-rolar="" aria-pressed={rolado} onClick={() => setRolado((r) => !r)}>
+          {camadas}
+        </button>
+      ) : (
+        camadas
+      )}
     </figure>
   )
 }

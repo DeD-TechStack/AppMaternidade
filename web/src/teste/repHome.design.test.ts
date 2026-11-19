@@ -200,8 +200,10 @@ describe('REP-HOME-R1-01 the M06 plate is the containing block of its light grou
   it('REP-HOME-R1-01 the narrow-width .ic-m06 rule is positioned (relative) and the desktop one stays absolute', () => {
     const css = semComentarios(lerSrc('componentes', 'inicio-casa', 'inicio-casa.css'))
     const regras = [...css.matchAll(/\[data-casa\] \.ic-m06\s*\{([^}]*)\}/g)].map((m) => m[1])
-    expect(regras).toHaveLength(2)
-    const [estreita, larga] = regras
+    // Narrow (relative), a grid-column placement inside the stacked media query, then the room one (absolute).
+    expect(regras).toHaveLength(3)
+    const estreita = regras[0]
+    const larga = regras[regras.length - 1]
     expect(estreita).toMatch(/position:\s*relative\b/)
     expect(larga).toMatch(/position:\s*absolute\b/)
   })

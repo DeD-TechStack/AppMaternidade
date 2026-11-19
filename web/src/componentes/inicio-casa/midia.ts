@@ -1,9 +1,11 @@
+import type { CSSProperties } from 'react'
 import { placa } from '../campo/imagens.ts'
 import type { Imagem } from '../secoes/contrato.ts'
 import m04Recorte from '../../assets/cenas/inicio/m04-recorte-1200w.webp?w=350;600;700;1200&format=avif;webp&as=picture'
 import m05Sol from '../../assets/cenas/inicio/m05-sol-1672w.webp?w=900;1672&format=avif;webp&as=picture'
 import m05Sol390 from '../../assets/cenas/inicio/m05-sol-390c-780w.webp?w=390;780&format=avif;webp&as=picture'
 import m06Apagada from '../../assets/cenas/inicio/m06-apagada-792w.webp?w=300;396;600;792&format=avif;webp&as=picture'
+import m11Janela from '../../assets/cenas/nao-encontrada/m11-janela-542w.webp?w=340;361;542&format=avif;webp&as=picture'
 
 // The files of the page. The four scene plates (M05, M05_390, M06, M04) come from ONE master each under
 // `web/src/assets/cenas/inicio/` (PROVENANCE.md there): vite-imagetools generates the AVIF and WebP of each width at
@@ -62,22 +64,57 @@ export const MOLDURA_NOITE: Imagem = { src: '/molduras/moldura-noite.png', largu
 const TAMANHOS_DA_TELA =
   '(min-width: 1440px) 320px, (max-width: 390px) 280px, calc(280px + (100vw - 390px) * 40 / 1050)'
 
-/** State `Y` of the manifest: Histórico on 21:42, the 16:00 mamada row and the 17:30 fralda row in the top 240 px. */
-export const CAPTURA_Y: Imagem = {
-  src: '/telas/casa/historico-y-320w.webp',
+/**
+ * State `Y_ALTA` of the manifest (recaptured 19/11/2026, clock fixed 18/11 21:42): the Histórico of the day before in a
+ * 390 x 1234 window scrolled to the page maximum (scroll_y 1767 of a 3001 px document), with `[data-rodape]` hidden for
+ * the capture. The app header sits at the top of the image; the rows run from 11:00 to 20:30. The frame's screen layer
+ * shows 844 of the 1234 CSS px, so the capture has exactly one screen width more than the screen (`ROLAGEM_PX`): the
+ * frame opens on the bottom 844 px, where the 16:00 Juliana and 17:30 Ícaro rows lead the resting frame, and the pan
+ * goes up to the header. The frames of the Início serve it.
+ */
+export const CAPTURA_Y_ALTA: Imagem = {
+  src: '/telas/casa/historico-y-alta-320w.webp',
   srcSet:
-    '/telas/casa/historico-y-280w.webp 280w, /telas/casa/historico-y-320w.webp 320w, /telas/casa/historico-y-560w.webp 560w, /telas/casa/historico-y-640w.webp 640w',
+    '/telas/casa/historico-y-alta-280w.webp 280w, /telas/casa/historico-y-alta-320w.webp 320w, /telas/casa/historico-y-alta-560w.webp 560w, /telas/casa/historico-y-alta-640w.webp 640w',
   sizes: TAMANHOS_DA_TELA,
   largura: 640,
-  altura: 1385,
+  altura: 2025,
 }
 
-/** State `N` of the manifest: Hoje in the madrugada theme at 21:42, the sleep in progress since 20:30. */
+/**
+ * The pan of the Histórico frame, in displayed px: MANIFESTO.json `Y_ALTA.rolagem_px` (280 at 390, 320 at 1440). It
+ * equals the capture's surplus over the screen layer, (1234 - 844) x W / 390 = W, where W is the screen layer's width.
+ */
+export const ROLAGEM_PX = { 390: 280, 1440: 320 } as const
+
+/**
+ * The two ends of the pan as unitless custom properties, set by the page on the boxes that hold the Histórico frames
+ * (the hero stage and band 2's stage, so the night twin reads the same numbers). inicio-casa.css interpolates them
+ * between 390 and 1440 into `--produto-rolagem`, capped by the screen layer's width on a short stage.
+ */
+export const ESTILO_DA_ROLAGEM = {
+  '--produto-rolagem-390': String(ROLAGEM_PX[390]),
+  '--produto-rolagem-1440': String(ROLAGEM_PX[1440]),
+} as CSSProperties
+
+/**
+ * M11 (ASSET-2, served for the 404 under `web/public/cenas/nao-encontrada/`): a street corner at night with one lit
+ * window, already set on the cacau wall. The closing band stands it on the night floor. 542 x 421 is the largest file.
+ */
+export const M11_JANELA: Imagem = placa(m11Janela, '(min-width: 1024px) 420px, 340px', 542)
+
+/**
+ * State `N` of the manifest (recaptured 19/11/2026, clock fixed 18/11 21:42): Hoje in the madrugada theme (dark), the
+ * sleep in progress since 20:30 and the yellow "Iniciar mamada" button with "Última mamada às 16:00, registrada por
+ * Juliana" above the bottom bar, in a 390 x 880 window scrolled 78 px, so the title clears the header. It is
+ * 390:880, taller than the frame's 390:844 screen layer: the sleep frame shows it whole (`object-fit: contain` on the
+ * paper of the app, inicio-casa.css), never cropped.
+ */
 export const CAPTURA_N: Imagem = {
   src: '/telas/casa/hoje-n-320w.webp',
   srcSet:
     '/telas/casa/hoje-n-280w.webp 280w, /telas/casa/hoje-n-320w.webp 320w, /telas/casa/hoje-n-560w.webp 560w, /telas/casa/hoje-n-640w.webp 640w',
   sizes: TAMANHOS_DA_TELA,
   largura: 640,
-  altura: 1385,
+  altura: 1444,
 }

@@ -1,5 +1,5 @@
 import type { RefObject } from 'react'
-import { CAPTURA_Y, MOLDURA_NOITE } from './midia.ts'
+import { CAPTURA_Y_ALTA as CAPTURA_Y, MOLDURA_NOITE } from './midia.ts'
 
 interface Props {
   refFolha: RefObject<HTMLDivElement | null>
