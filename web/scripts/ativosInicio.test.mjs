@@ -152,20 +152,28 @@ function checarYAlta(manifesto) {
   for (const linha of y.linhas_topo) {
     assert.ok(alta.linhas_topo.includes(linha), `Y row "${linha}" is missing from Y_ALTA linhas_topo`)
   }
-  // Scroll at the page maximum: the document height minus the 1234 px viewport, or the capture tool's own scroll to the
-  // end (`rolagem_janela: 'fim'`, CAPTURA_ROLAR=fim: window.scrollTo(0, scrollHeight), which the browser clamps to the
-  // maximum). A `fim` entry carries no measured pair that could contradict it.
-  if (alta.rolagem_janela === 'fim') {
-    assert.equal(alta.scroll_y, undefined, 'Y_ALTA.rolagem_janela is fim and scroll_y is also set: the page maximum is stated twice')
-    return
+  // HOME-PHONE-B2: the window ends on the 17:30 Ícaro row (the site footer and the in-app demo note are hidden for the
+  // capture and asserted absent by the tool), not at the page maximum.
+  assert.equal(alta.ultima_linha_repouso, '17:30', `Y_ALTA.ultima_linha_repouso is ${alta.ultima_linha_repouso}, not 17:30`)
+  assert.equal(alta.rodape_ausente, true, 'Y_ALTA.rodape_ausente must be true: the site footer is in the image')
+  assert.equal(alta.aviso_ausente, true, 'Y_ALTA.aviso_ausente must be true: the demo note is in the image')
+  assert.equal(typeof alta.captura_ok, 'string', 'Y_ALTA.captura_ok must be the tool line')
+  assert.match(alta.captura_ok, /rodape=ausente aviso=ausente/, 'Y_ALTA.captura_ok lacks rodape=ausente aviso=ausente')
+  assert.match(alta.captura_ok, /ultima_linha="17:30"/, 'Y_ALTA.captura_ok lacks ultima_linha="17:30"')
+  const linhas = alta.linhas_topo
+  assert.ok(linhas.every((l) => typeof l === 'string'), 'Y_ALTA.linhas_topo rows must be strings')
+  assert.ok(linhaCom(alta, /^16:00/, /Juliana/), 'Y_ALTA has no 16:00 row with Juliana')
+  assert.ok(linhaCom(alta, /^17:30/, /Ícaro/), 'Y_ALTA has no 17:30 row with Ícaro')
+  assert.match(linhas.at(-1), /^17:30/, `Y_ALTA last row is "${linhas.at(-1)}", not the 17:30 row`)
+  assert.match(linhas.at(-2) ?? '', /^16:00/, `Y_ALTA second-to-last row is "${linhas.at(-2)}", not the 16:00 row`)
+  for (const hora of ['18:00', '19:30', '20:30']) {
+    assert.ok(!linhas.some((l) => l.startsWith(hora)), `Y_ALTA lists a ${hora} row: it is below the resting window`)
   }
-  assert.equal(typeof alta.scroll_y, 'number', 'Y_ALTA.scroll_y is not at the page maximum (no scroll_y, no rolagem_janela fim)')
-  assert.equal(alta.scroll_y, alta.altura_documento - 1234, 'Y_ALTA.scroll_y is not at the page maximum')
 }
 
 /** A known-good synthetic manifest: the negative fixtures mutate it, so a rejection is the mutation's doing. */
 function manifestoBom() {
-  const linhas = ['16:00 mamada Ju', '17:30 troca Ícaro']
+  const linhas = ['16:00 mamada Juliana', '17:30 troca Ícaro']
   const comum = { fixture: 'casa', dpr: 2, toque: true, rolagem_px: { 1440: 320, 390: 280 }, fonte_px_linha: 17 }
   return {
     capturas: [
@@ -174,8 +182,9 @@ function manifestoBom() {
         scroll_y: 280, altura_documento: 2993, offset_y_px: 88, direcao_rolagem: 'para_cima' },
       { id: 'Y_ALTA', estado: 'Y', rota: '/app/historico', caminho_final: '/app/historico', h1: 'Histórico', tema: 'claro',
         viewport: '390x1234', png: { largura: 780, altura: 2468 }, ...comum,
-        linhas_topo: [...linhas, '19:10 sono Ju'], scroll_y: 1759, altura_documento: 2993, offset_y_px: 473,
-        direcao_rolagem: 'para_cima' },
+        linhas_topo: ['11:00 mamadeira Juliana', ...linhas], scroll_y: 1099, altura_documento: 2609, offset_y_px: 473,
+        direcao_rolagem: 'para_cima', ultima_linha_repouso: '17:30', rodape_ausente: true, aviso_ausente: true,
+        captura_ok: 'CAPTURA_OK x.png caminho=/app/historico png=780x2468 (só a janela) rodape=ausente aviso=ausente ultima_linha="17:30"' },
       { id: 'N', estado: 'N', rota: '/app/hoje', caminho_final: '/app/hoje', h1: 'Hoje', tema: 'madrugada',
         viewport: '390x880', png: { largura: 780, altura: 1760 }, instante: '2026-11-18T21:42:00',
         linhas_topo: ['20:30 Ícaro mamada'], ...comum, rolagem_px: null },
@@ -228,26 +237,49 @@ test('AST1-I-06 Y_ALTA: same route, theme, fixture, scroll and rows as Y, 390x12
     m.capturas[1].linhas_topo = m.capturas[1].linhas_topo.filter((l) => !l.includes('17:30'))
   })
   assert.throws(() => checarYAlta(sem1730), /17:30/)
-  const rolagemErrada = manifestoMutado((m) => {
-    m.capturas[1].scroll_y += 1
+  // HOME-PHONE-B2: the window must end on the 17:30 row with the footer and the demo note out of the image.
+  const comRodape = manifestoMutado((m) => {
+    m.capturas[1].rodape_ausente = false
   })
-  assert.throws(() => checarYAlta(rolagemErrada), /page maximum/)
-  // The tool's own scroll to the end stands for the page maximum; with a measured scroll_y beside it, it is rejected,
-  // and an entry with neither is rejected too.
-  const fim = manifestoMutado((m) => {
-    delete m.capturas[1].scroll_y
-    delete m.capturas[1].altura_documento
-    m.capturas[1].rolagem_janela = 'fim'
+  assert.throws(() => checarYAlta(comRodape), /rodape_ausente/)
+  const comAviso = manifestoMutado((m) => {
+    m.capturas[1].aviso_ausente = false
   })
-  checarYAlta(fim)
-  const fimEMedida = manifestoMutado((m) => {
-    m.capturas[1].rolagem_janela = 'fim'
+  assert.throws(() => checarYAlta(comAviso), /aviso_ausente/)
+  const ateAs2030 = manifestoMutado((m) => {
+    m.capturas[1].ultima_linha_repouso = '20:30'
+    m.capturas[1].linhas_topo.push('20:30 sono Ícaro')
   })
-  assert.throws(() => checarYAlta(fimEMedida), /stated twice/)
-  const semRolagem = manifestoMutado((m) => {
-    delete m.capturas[1].scroll_y
+  assert.throws(() => checarYAlta(ateAs2030), /20:30/)
+  // Rows below 17:30 are rejected even when ultima_linha_repouso still says 17:30.
+  const linhaAbaixo = manifestoMutado((m) => {
+    m.capturas[1].linhas_topo.push('18:00 sono Ícaro')
   })
-  assert.throws(() => checarYAlta(semRolagem), /page maximum/)
+  assert.throws(() => checarYAlta(linhaAbaixo), /17:30/)
+  const sem1600Juliana = manifestoMutado((m) => {
+    m.capturas[1].linhas_topo = ['11:00 mamadeira Juliana', '16:00 mamada Ícaro', '17:30 troca Ícaro']
+  })
+  assert.throws(() => checarYAlta(sem1600Juliana), /16:00/)
+  const sem1600 = manifestoMutado((m) => {
+    m.capturas[1].linhas_topo = ['11:00 mamadeira Juliana', '17:30 troca Ícaro']
+  })
+  assert.throws(() => checarYAlta(sem1600), /16:00/)
+  const okSemRodape = manifestoMutado((m) => {
+    m.capturas[1].captura_ok = m.capturas[1].captura_ok.replace('rodape=ausente ', '')
+  })
+  assert.throws(() => checarYAlta(okSemRodape), /rodape=ausente/)
+  const okSemAviso = manifestoMutado((m) => {
+    m.capturas[1].captura_ok = m.capturas[1].captura_ok.replace('aviso=ausente', '')
+  })
+  assert.throws(() => checarYAlta(okSemAviso), /rodape=ausente aviso=ausente/)
+  const semCapturaOk = manifestoMutado((m) => {
+    delete m.capturas[1].captura_ok
+  })
+  assert.throws(() => checarYAlta(semCapturaOk), /captura_ok/)
+  const ultimaOkErrada = manifestoMutado((m) => {
+    m.capturas[1].captura_ok = m.capturas[1].captura_ok.replace('ultima_linha="17:30"', 'ultima_linha="20:30"')
+  })
+  assert.throws(() => checarYAlta(ultimaOkErrada), /ultima_linha/)
   // The 390 x 880 Hoje window: the old 390 x 844 size is rejected.
   const nAntigo = manifestoMutado((m) => {
     m.capturas[2].viewport = '390x844'
