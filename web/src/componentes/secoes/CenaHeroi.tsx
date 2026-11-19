@@ -24,6 +24,10 @@ interface Props {
   lado: 'direita' | 'esquerda'
   /** O id do titulo (o `h1` que o chamador poe nos filhos). */
   idTitulo: string
+  /** Decorative layers inside the plate's box, above the picture (the lamp light of the Inicio). Rendered `aria-hidden`. */
+  sobrePlaca?: ReactNode
+  /** Elements that come after the plate in DOM order, as the last children of the section (the caption stuck to the plate). */
+  depoisDaPlaca?: ReactNode
   children?: ReactNode
 }
 
@@ -52,6 +56,8 @@ export function CenaHeroi({
   alturaChao,
   lado,
   idTitulo,
+  sobrePlaca,
+  depoisDaPlaca,
   children,
 }: Props) {
   exigirImagem(PECA, 'imagem', imagem)
@@ -111,7 +117,13 @@ export function CenaHeroi({
             decoding="async"
           />
         </picture>
+        {sobrePlaca ? (
+          <div data-sobre-placa="" aria-hidden="true">
+            {sobrePlaca}
+          </div>
+        ) : null}
       </div>
+      {depoisDaPlaca}
     </section>
   )
 }

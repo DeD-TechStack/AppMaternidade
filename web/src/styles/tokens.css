@@ -48,3 +48,20 @@
   --luz-estudio: radial-gradient(120% 90% at 15% 10%, #F7D684 0%, #F2C14E 60%);
   --brilho-mel: radial-gradient(closest-side, rgb(242 193 78 / .22), transparent);
 }
+
+/* The display variants of FG-2b (REP-HOME, temporary: FG-2b keeps one block and deletes the other two).
+   A is the default block above (Literata 600). B and C are chosen at boot by `?exibicao=b|c` (main.tsx). Nothing
+   else selects on the attribute: a variant is a block of tokens. */
+html[data-exibicao="b"] {
+  --fonte-exibicao: 'M PLUS Rounded 1c', sans-serif;
+  --peso-exibicao: 800;
+  --peso-titulo: 700;
+}
+
+html[data-exibicao="c"] {
+  --fonte-exibicao: 'Literata Variable', serif;
+  --peso-exibicao: 600;
+  --peso-titulo: 600;
+  --texto-exibicao-tamanho: clamp(2.5rem, calc(2.5rem + (100vw - 390px) * 24 / 1050), 4rem);
+  --texto-exibicao-entrelinha: clamp(2.75rem, calc(2.75rem + (100vw - 390px) * 24 / 1050), 4.25rem);
+}

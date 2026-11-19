@@ -57,6 +57,8 @@ interface CampoProps {
   /** Só nos campos de data: o limite (`AAAA-MM-DD`). */
   min?: string
   max?: string
+  /** O limite de caracteres do campo de texto (`maxLength` nativo). */
+  maxLength?: number
   autoComplete?: string
   ajuda?: string
   erro?: string | null
@@ -80,6 +82,7 @@ export function Campo({
   tipo = 'text',
   min,
   max,
+  maxLength,
   autoComplete,
   ajuda,
   erro,
@@ -102,6 +105,7 @@ export function Campo({
           type={tipo}
           min={min}
           max={max}
+          maxLength={maxLength}
           value={valor}
           onChange={(evento) => aoMudar(evento.target.value)}
           autoComplete={autoComplete}

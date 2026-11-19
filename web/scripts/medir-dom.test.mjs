@@ -2,10 +2,12 @@
 // (G1, G11, G12, FONTES, CAIXA, SOMBRA, 3D): um caso que passa, um que falha e a falha fechada.
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
+import crypto from 'node:crypto'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import zlib from 'node:zlib'
 import { after, describe, it } from 'node:test'
 import { JSDOM, VirtualConsole } from 'jsdom'
 import {
@@ -3242,18 +3244,24 @@ describe('DS1-I-15 a lista de regras, o escopo por caso e o bloqueio (RF-15)', (
     assert.deepEqual(medir.REGRAS_ORIGINAIS, REGRAS_ESPERADAS.slice(0, 7))
   })
 
-  it('DS1-I-15 CASOS_PUBLICOS são os 15 casos do §0 e CASOS_CASA é só o sistema', () => {
+  // REP-HOME (REPH-I-18): the Início and its two display variants are casa cases too, so CASOS_CASA lists them and
+  // they leave the "public page" groups below (they run the 22 rules and the 8 new ones, covered by REPH-I-18).
+  const CASOS_DO_INICIO = ['inicio', 'inicio_b', 'inicio_c']
+  const PUBLICOS_SEM_INICIO = () => medir.CASOS_PUBLICOS.filter((caso) => !CASOS_DO_INICIO.includes(caso))
+
+  it('DS1-I-15 CASOS_PUBLICOS são os 15 casos do §0 e CASOS_CASA é o sistema e os três do Início', () => {
     assert.deepEqual(medir.CASOS_PUBLICOS, CASOS_PUBLICOS_ESPERADOS)
-    assert.deepEqual(medir.CASOS_CASA, ['sistema'])
+    assert.deepEqual(medir.CASOS_CASA, ['sistema', ...CASOS_DO_INICIO])
     assert.equal(new Set(medir.CASOS_PUBLICOS).size, 15)
   })
 
-  it('DS1-I-15 regrasDoCaso: página pública roda 20 regras (sem CASA_PRESENTE) e o sistema roda as 21', () => {
-    for (const caso of medir.CASOS_PUBLICOS) {
+  it('DS1-I-15 regrasDoCaso: página pública roda 20 regras (sem CASA_PRESENTE) e o sistema e o Início rodam as 21 (o Início, mais as 8 dele)', () => {
+    for (const caso of PUBLICOS_SEM_INICIO()) {
       const regras = medir.regrasDoCaso(caso, '')
       assert.deepEqual(regras, REGRAS_ESPERADAS.filter((r) => r !== 'CASA_PRESENTE'), caso)
     }
     assert.deepEqual(medir.regrasDoCaso('sistema', 'sistema'), REGRAS_ESPERADAS)
+    for (const caso of CASOS_DO_INICIO) assert.deepEqual(medir.regrasDoCaso(caso, ''), [...REGRAS_ESPERADAS, ...NOVAS_REGRAS], caso)
   })
 
   it('DS1-I-15 regrasDoCaso: nos casos da área logada vêm as sete originais, na ordem, sem as regras de página pública', () => {
@@ -3266,13 +3274,14 @@ describe('DS1-I-15 a lista de regras, o escopo por caso e o bloqueio (RF-15)', (
 
   it('DS1-I-15 bloqueantesDoCaso: público e sistema bloqueiam tudo menos as duas regras só de registro', () => {
     const registro = ['TITULO_REGISTRO', 'CASA_LIMPA_REGISTRO']
-    for (const caso of medir.CASOS_PUBLICOS) {
+    for (const caso of PUBLICOS_SEM_INICIO()) {
       const bloqueantes = medir.bloqueantesDoCaso(caso, '')
       assert.deepEqual(bloqueantes, REGRAS_ESPERADAS.filter((r) => r !== 'CASA_PRESENTE' && !registro.includes(r)), caso)
     }
     assert.deepEqual(medir.bloqueantesDoCaso('sistema', 'sistema'), REGRAS_ESPERADAS.filter((r) => !registro.includes(r)))
     assert.ok(medir.bloqueantesDoCaso('sistema', 'sistema').includes('CASA_PRESENTE'))
-    assert.ok(!medir.bloqueantesDoCaso('inicio', '').includes('CASA_PRESENTE'))
+    // The Início is a casa now (REP-HOME): CASA_PRESENTE blocks there too, and so do its 8 rules.
+    assert.deepEqual(medir.bloqueantesDoCaso('inicio', ''), [...REGRAS_ESPERADAS.filter((r) => !registro.includes(r)), ...NOVAS_REGRAS])
   })
 
   it('DS1-I-15 bloqueantesDoCaso: a área logada bloqueia as sete originais (e a chamada com um argumento segue valendo)', () => {
@@ -3405,5 +3414,701 @@ describe('MED-AUTH:RF-03/RF-05 o CLI de verdade (spawn)', () => {
     assert.match(r.stderr, /^erro de medição: fila: /m)
     assert.deepEqual(fs.readdirSync(saida), ['outro_claro_1440.json'])
     assert.ok(!`${r.stdout}${r.stderr}`.includes(SENHA))
+  })
+})
+
+// =============================================================================================
+// REP-HOME, round 1 (card t_7afd7849): the new meter rules for the rebuilt `/` (Inicio).
+// Test-first: every test below must FAIL on an assertion at this base, never on a missing import
+// (so each one reaches the code through `regra(name)`, which asserts `typeof === 'function'`).
+//
+// INPUT CONTRACT the implementation must collect (coletarNaPagina) and the rules read:
+//   marks in `no.m` (new): h1Span1, h1Span2 (the two spans of the single h1), heroiBotao (the hero
+//     mel pill), heroiLink (the hero text link), legendaHeroi, palco (the [data-troca-palco] stage),
+//     colunaNoite (the cacau night column), ladoDia, ladoNoite (text on each side of the seam),
+//     fechamento (the closing band's mel button), paredeNoite (a full-width cacau node that covers
+//     the rows above the 390 plate), camadaNoite (the sliding night layer), luz (the [data-luz]
+//     lamp), luzCapa (a rendered light cover).
+//   marks reused: cenaPlaca, produto (the frame), produtoTela (the real screen image), botaoMel,
+//     cabecalhoPilula, casa, legenda, faixa.
+//   node fields (new): ordemDom (DOM index), tom (Legenda data-tom), currentSrc, alturaConteudo.
+//   doc fields (new): cabecalhoAltura, noite = { porRolagem: [{ rolagem, total, noite, cabecalho }] },
+//     animacoesCasa (running animations inside [data-casa] after load, RM render), placa390.
+//   Seam = plate.x + (910 / 1672) * plate.w. NOITE share = sum(noite) / sum(total - cabecalho).
+// Rules are exported as functions (nos, doc) => { regra, ok, motivo, nos_com_falha }:
+//   heroi, legendaPresa, molduraDobra, noite, costura, tempo, trocaRm, capturaReal.
+// Out of scope widths answer ok with the reason "largura fora do escopo".
+// =============================================================================================
+
+const NOITE_2 = 'rgb(185, 192, 159)'
+const TEXTO_2 = CHAO_NOITE
+const NOVAS_REGRAS = ['HEROI', 'LEGENDA_PRESA', 'MOLDURA_DOBRA', 'NOITE', 'COSTURA', 'TEMPO', 'TROCA_RM', 'CAPTURA_REAL']
+const FRACAO_COSTURA = 910 / 1672
+const PLACA_1440 = { x: 66.7, y: 112, w: 900, h: 507 }
+const PLACA_390 = { x: -153.4, y: 364, w: 543.4, h: 305.8 }
+const costuraDe = (placa) => placa.x + FRACAO_COSTURA * placa.w
+
+/** The rule function `nome` from the meter; an AssertionError (not a TypeError) while it is missing. */
+function regra(nome) {
+  assert.equal(typeof medir[nome], 'function', `medir-dom.mjs must export ${nome}()`)
+  return medir[nome]
+}
+
+const docRh = (largura, extra = {}) => ({
+  ...docDs1(largura),
+  cabecalhoAltura: largura >= 768 ? 64 : 56,
+  ...extra,
+})
+
+/** A node with marks `m` and rectangle `rect`. */
+const rhNo = (m, rect, extra = {}) => no({ m, rect, ...extra })
+
+const placaNo = (rect, extra = {}) => rhNo({ cenaPlaca: true }, rect, { tag: 'img', texto: '', ordemDom: 1, ...extra })
+
+/** Text with an ink over a ground chain. */
+const tinta = (cor, chao, extra = {}) =>
+  no({ texto: 'texto', estilo: { color: cor }, cadeia: [TRANSPARENTE, chao], ...extra })
+
+const ok = (r) => assert.equal(r.ok, true, r.motivo)
+const falha = (r, padrao) => {
+  assert.equal(r.ok, false, `expected a failure: ${r.motivo}`)
+  if (padrao) assert.match(r.motivo, padrao)
+}
+
+// ---- REPH-I-03 HEROI ----
+
+const heroi1440 = ({ placa = PLACA_1440, botao = true, spans = true } = {}) => [
+  placaNo(placa),
+  ...(spans
+    ? [
+        rhNo({ h1Span1: true }, { x: 66.7, y: 120, w: 480.3, h: 64 }, { tag: 'span', texto: 'a', ordemDom: 2 }),
+        rhNo({ h1Span2: true }, { x: 566, y: 120, w: 400, h: 64 }, { tag: 'span', texto: 'b', ordemDom: 3 }),
+      ]
+    : []),
+  ...(botao
+    ? [rhNo({ botaoMel: true, heroiBotao: true }, { x: 600, y: 300, w: 220, h: 48 }, { tag: 'a', texto: 'c', ordemDom: 4, fundoSob: CACAU })]
+    : []),
+]
+
+const heroi390 = ({ placa = PLACA_390, parede = true, link = { x: 20, y: 268, w: 200, h: 44 }, botao = false } = {}) => [
+  placaNo(placa),
+  ...(parede ? [rhNo({ paredeNoite: true }, { x: 0, y: 144, w: 390, h: 220 }, { tag: 'div', texto: '', ordemDom: 0, estilo: { backgroundColor: CACAU } })] : []),
+  rhNo({ heroiLink: true }, link, { tag: 'a', texto: 'd', ordemDom: 4 }),
+  ...(botao ? [rhNo({ botaoMel: true, heroiBotao: true }, { x: 20, y: 268, w: 220, h: 48 }, { tag: 'a', texto: 'c', ordemDom: 5 })] : []),
+]
+
+describe('REPH-I-03 HEROI: 900 px plate at 1440, the M05 window at 390', () => {
+  it('REPH-I-03 HEROI passes at 1440: plate 900 wide at x 66.7, its seam on the h1 seam, the hero pill present', () => {
+    const r = regra('heroi')(heroi1440(), docRh(1440))
+    ok(r)
+    assert.equal(r.regra, 'HEROI')
+    assert.deepEqual(Object.keys(r).sort(), CHAVES_PURAS)
+  })
+
+  it('REPH-I-03 HEROI fails at 1440 for an 860 px plate', () => {
+    falha(regra('heroi')(heroi1440({ placa: { ...PLACA_1440, w: 860 } }), docRh(1440)), /900|largura|placa/i)
+  })
+
+  it('REPH-I-03 HEROI fails at 1440 when the plate seam is 6 px off the h1 seam', () => {
+    falha(regra('heroi')(heroi1440({ placa: { ...PLACA_1440, x: PLACA_1440.x + 6 } }), docRh(1440)), /costura|seam|h1/i)
+  })
+
+  it('REPH-I-03 HEROI fails at 1440 without the hero mel pill', () => {
+    falha(regra('heroi')(heroi1440({ botao: false }), docRh(1440)), /bot|pílula|pilula|mel/i)
+  })
+
+  it('REPH-I-03 HEROI passes at 390: plate edge to edge at the nominal box, rows 144-364 cacau, only the text link in the fold', () => {
+    ok(regra('heroi')(heroi390(), docRh(390)))
+  })
+
+  it('REPH-I-03 HEROI fails at 390 for a plate 370 wide (2 px short is not edge to edge)', () => {
+    falha(regra('heroi')(heroi390({ placa: { x: -173.4, y: 364, w: 543.4, h: 305.8 } }), docRh(390)), /borda|390|direita/i)
+  })
+
+  it('REPH-I-03 HEROI fails at 390 for the 390 x 219 uncropped plate', () => {
+    falha(regra('heroi')(heroi390({ placa: { x: 0, y: 364, w: 390, h: 219 } }), docRh(390)), /altura|janela|recort/i)
+  })
+
+  it('REPH-I-03 HEROI fails at 390 when rows 144-364 are not covered by a cacau full-width node', () => {
+    falha(regra('heroi')(heroi390({ parede: false }), docRh(390)), /cacau|parede|144/i)
+  })
+
+  it('REPH-I-03 HEROI fails at 390 when the first action sits at y 312', () => {
+    falha(regra('heroi')(heroi390({ link: { x: 20, y: 312, w: 200, h: 44 } }), docRh(390)), /300|ação|acao|link/i)
+  })
+
+  it('REPH-I-03 HEROI fails at 390 when the hero shows a mel pill (the header pill is the filled action)', () => {
+    falha(regra('heroi')(heroi390({ botao: true }), docRh(390)), /mel|bot|pílula|pilula/i)
+  })
+
+  it('REPH-I-03 HEROI is out of scope at 768 and 1024', () => {
+    for (const largura of [768, 1024]) {
+      const r = regra('heroi')([], docRh(largura))
+      ok(r)
+      assert.match(r.motivo, /largura fora do escopo/)
+    }
+  })
+
+  it('REPH-I-03 HEROI fails closed at 1440 and 390 without a plate', () => {
+    falha(regra('heroi')([], docRh(1440)))
+    falha(regra('heroi')([], docRh(390)))
+  })
+})
+
+// ---- REPH-I-04 LEGENDA_PRESA ----
+
+const legendaNo = (rect, { cor = TINTA, chao = PAPEL, tom = 'dia', ordemDom = 2 } = {}) =>
+  rhNo({ legenda: true }, rect, { tag: 'p', texto: 'l', tom, ordemDom, estilo: { color: cor }, cadeia: [TRANSPARENTE, chao] })
+
+const palcoNo = (y) => rhNo({ palco: true }, { x: 0, y, w: 1000, h: 900 }, { tag: 'div', texto: '', ordemDom: 3 })
+
+const legenda1440 = (rect = { x: 80, y: 622, w: 400, h: 28 }, opcoes = {}) => [placaNo(PLACA_1440), legendaNo(rect, opcoes)]
+const legenda390 = ({ rect = { x: 20, y: 678, w: 350, h: 28 }, palco = 722, entre = null, ...opcoes } = {}) => [
+  placaNo(PLACA_390),
+  ...(entre ? [entre] : []),
+  legendaNo(rect, { cor: PAPEL, chao: CACAU, tom: 'noite', ordemDom: entre ? 3 : 2, ...opcoes }),
+  palcoNo(palco),
+]
+
+describe('REPH-I-04 LEGENDA_PRESA: the caption is stuck to the plate', () => {
+  it('REPH-I-04 LEGENDA_PRESA passes at 1440 (cacau ink, 3 px under the plate, ends left of the seam - 48)', () => {
+    const r = regra('legendaPresa')(legenda1440(), docRh(1440))
+    ok(r)
+    assert.equal(r.regra, 'LEGENDA_PRESA')
+    assert.deepEqual(Object.keys(r).sort(), CHAVES_PURAS)
+  })
+
+  it('REPH-I-04 LEGENDA_PRESA passes at 390 (papel on cacau, 8 px under the plate, stage 16 px under the caption)', () => {
+    ok(regra('legendaPresa')(legenda390(), docRh(390)))
+  })
+
+  it('REPH-I-04 LEGENDA_PRESA fails for a caption overlaid on the plate at both widths', () => {
+    falha(regra('legendaPresa')(legenda1440({ x: 80, y: 560, w: 400, h: 28 }), docRh(1440)), /placa|0|12|dist/i)
+    falha(regra('legendaPresa')(legenda390({ rect: { x: 20, y: 640, w: 350, h: 28 }, palco: 684 }), docRh(390)), /placa|0|12|dist/i)
+  })
+
+  it('REPH-I-04 LEGENDA_PRESA fails for a 20 px gap at 1440 and a 24 px gap at 390', () => {
+    falha(regra('legendaPresa')(legenda1440({ x: 80, y: 639, w: 400, h: 28 }), docRh(1440)), /12|dist/i)
+    falha(regra('legendaPresa')(legenda390({ rect: { x: 20, y: 694, w: 350, h: 28 }, palco: 738 }), docRh(390)), /12|dist/i)
+  })
+
+  it('REPH-I-04 LEGENDA_PRESA fails at 390 with an element between the plate and the caption', () => {
+    const entre = rhNo({}, { x: 20, y: 670, w: 100, h: 4 }, { tag: 'div', texto: '', ordemDom: 2 })
+    falha(regra('legendaPresa')(legenda390({ entre }), docRh(390)), /entre|between|seguinte|próximo/i)
+  })
+
+  it('REPH-I-04 LEGENDA_PRESA fails at 390 for cacau ink and at 1440 for papel ink', () => {
+    falha(regra('legendaPresa')(legenda390({ cor: TINTA, chao: CACAU }), docRh(390)), /tinta|papel|cor|contraste/i)
+    falha(regra('legendaPresa')(legenda1440(undefined, { cor: PAPEL }), docRh(1440)), /tinta|cacau|cor|contraste/i)
+  })
+
+  it('REPH-I-04 LEGENDA_PRESA fails at 390 when the stage does not start 16 px under the caption', () => {
+    falha(regra('legendaPresa')(legenda390({ palco: 740 }), docRh(390)), /palco|16|estágio/i)
+  })
+
+  it('REPH-I-04 LEGENDA_PRESA fails at 1440 when the caption reaches past the seam - 48', () => {
+    const seam = costuraDe(PLACA_1440)
+    falha(regra('legendaPresa')(legenda1440({ x: 80, y: 622, w: seam - 48 - 80 + 20, h: 28 }), docRh(1440)), /costura|seam|48/i)
+  })
+
+  it('REPH-I-04 LEGENDA_PRESA is out of scope at 768 and fails closed without a caption', () => {
+    const r = regra('legendaPresa')([], docRh(768))
+    ok(r)
+    assert.match(r.motivo, /largura fora do escopo/)
+    falha(regra('legendaPresa')([placaNo(PLACA_1440)], docRh(1440)))
+  })
+})
+
+// ---- REPH-I-05 MOLDURA_DOBRA ----
+
+const moldura1440 = ({ palcoY = 795, frame = { x: 140, y: 835, w: 300, h: 640 } } = {}) => [
+  rhNo({ palco: true }, { x: 0, y: palcoY, w: 1440, h: 1200 }, { tag: 'div', texto: '', ordemDom: 5 }),
+  ...(frame ? [rhNo({ produto: true }, frame, { tag: 'div', texto: '', ordemDom: 6 }), rhNo({ produtoTela: true }, { ...frame, x: frame.x + 8, y: frame.y + 8, w: frame.w - 16, h: frame.h - 16 }, { tag: 'img', texto: '', ordemDom: 7 })] : []),
+]
+
+const moldura390 = ({ palcoY = 722, frame = { x: 20, y: 730, w: 296.8, h: 622.7 } } = {}) => moldura1440({ palcoY, frame })
+
+describe('REPH-I-05 MOLDURA_DOBRA: the real frame is whole at the scrollY of p 0', () => {
+  it('REPH-I-05 MOLDURA_DOBRA passes at 1440 (pin: scrollY 771, frame top at viewport 64 under the 64 px header)', () => {
+    const r = regra('molduraDobra')(moldura1440(), docRh(1440))
+    ok(r)
+    assert.equal(r.regra, 'MOLDURA_DOBRA')
+    assert.deepEqual(Object.keys(r).sort(), CHAVES_PURAS)
+  })
+
+  it('REPH-I-05 MOLDURA_DOBRA passes at 390 (no pin: scrollY 674, frame whole under the 56 px header)', () => {
+    ok(regra('molduraDobra')(moldura390(), docRh(390)))
+  })
+
+  it('REPH-I-05 MOLDURA_DOBRA fails at 1440 when the frame top is under the header at the p 0 scrollY', () => {
+    falha(regra('molduraDobra')(moldura1440({ frame: { x: 140, y: 815, w: 300, h: 640 } }), docRh(1440)), /cabeçalho|header|topo/i)
+  })
+
+  it('REPH-I-05 MOLDURA_DOBRA fails when the p 0 scrollY is greater than innerHeight', () => {
+    falha(regra('molduraDobra')(moldura1440({ palcoY: 1000, frame: { x: 140, y: 1040, w: 300, h: 640 } }), docRh(1440)), /rolagem|scroll|innerHeight|altura/i)
+    falha(regra('molduraDobra')(moldura390({ palcoY: 1000, frame: { x: 20, y: 1008, w: 296.8, h: 622.7 } }), docRh(390)), /rolagem|scroll|innerHeight|altura/i)
+  })
+
+  it('REPH-I-05 MOLDURA_DOBRA fails when the frame bottom is below the viewport', () => {
+    falha(regra('molduraDobra')(moldura390({ frame: { x: 20, y: 730, w: 296.8, h: 900 } }), docRh(390)), /base|bottom|dentro|inferior/i)
+  })
+
+  it('REPH-I-05 MOLDURA_DOBRA fails closed with the frame absent', () => {
+    falha(regra('molduraDobra')(moldura1440({ frame: null }), docRh(1440)))
+    falha(regra('molduraDobra')([], docRh(390)))
+  })
+
+  it('REPH-I-05 MOLDURA_DOBRA is out of scope at 768 and 1024', () => {
+    for (const largura of [768, 1024]) {
+      const r = regra('molduraDobra')([], docRh(largura))
+      ok(r)
+      assert.match(r.motivo, /largura fora do escopo/)
+    }
+  })
+})
+
+// ---- REPH-I-07 NOITE ----
+
+const amostras = (noitePx, cabecalho = 92160, total = 1296000) => ({
+  noite: { porRolagem: [{ rolagem: 0, total, noite: noitePx, cabecalho }, { rolagem: 900, total, noite: noitePx, cabecalho }] },
+})
+const bandaNoite = (largura, y = 1100) =>
+  rhNo({ faixa: true }, { x: 0, y, w: largura, h: 600 }, { tag: 'section', texto: '', estilo: { backgroundColor: CACAU }, ordemDom: 30 })
+
+describe('REPH-I-07 NOITE: the night share of the first two screens and a full-bleed cacau band', () => {
+  for (const largura of [1440, 390]) {
+    it(`REPH-I-07 NOITE passes at ${largura}: share 0.331 of the non-header area, band above 2 x innerHeight`, () => {
+      const r = regra('noite')([bandaNoite(largura)], docRh(largura, amostras(400000)))
+      ok(r)
+      assert.equal(r.regra, 'NOITE')
+      assert.deepEqual(Object.keys(r).sort(), CHAVES_PURAS)
+    })
+
+    it(`REPH-I-07 NOITE fails at ${largura} for a 0.29 share`, () => {
+      falha(regra('noite')([bandaNoite(largura)], docRh(largura, amostras(350000))), /0[.,]29|parcela|share|noite/i)
+    })
+
+    it(`REPH-I-07 NOITE fails at ${largura} with no full-bleed cacau band above 2 x innerHeight`, () => {
+      falha(regra('noite')([], docRh(largura, amostras(400000))), /faixa|banda|cacau/i)
+      falha(regra('noite')([bandaNoite(largura, 3000)], docRh(largura, amostras(400000))), /faixa|banda|cacau|2/i)
+    })
+  }
+
+  it('REPH-I-07 NOITE keeps the header pixels out of the denominator: 0.316 of the non-header area (0.293 of the full area) passes, and 0.224 fails', () => {
+    // 380000 / (1296000 - 92160) = 0.316 passes only when the header rows are subtracted from the denominator.
+    ok(regra('noite')([bandaNoite(1440)], docRh(1440, amostras(380000, 92160))))
+    // The same night pixels over a larger area with no header rows (0.224) is a real miss.
+    falha(regra('noite')([bandaNoite(1440)], docRh(1440, amostras(380000, 0, 1296000 + 400000))), /parcela|share|noite/i)
+  })
+
+  it('REPH-I-07 NOITE is out of scope at 768 and 1024 and fails closed without samples', () => {
+    for (const largura of [768, 1024]) {
+      const r = regra('noite')([], docRh(largura))
+      ok(r)
+      assert.match(r.motivo, /largura fora do escopo/)
+    }
+    falha(regra('noite')([bandaNoite(1440)], docRh(1440)))
+  })
+})
+
+// ---- REPH-I-08 COSTURA ----
+
+const costura1440 = ({ colunaX, diaDireita = 486.7, noiteEsq = 600.5, placa = PLACA_1440 } = {}) => {
+  const seam = costuraDe(placa)
+  return [
+    placaNo(placa),
+    rhNo({ colunaNoite: true }, { x: colunaX ?? seam, y: 112, w: 1440 - (colunaX ?? seam), h: 2000 }, { tag: 'div', texto: '', ordemDom: 2, estilo: { backgroundColor: CACAU } }),
+    rhNo({ ladoDia: true }, { x: diaDireita - 400, y: 360, w: 400, h: 60 }, { tag: 'p', texto: 'dia', ordemDom: 3 }),
+    rhNo({ ladoNoite: true }, { x: noiteEsq, y: 360, w: 400, h: 60 }, { tag: 'p', texto: 'noite', ordemDom: 4 }),
+  ]
+}
+const PLACA_1024 = { x: 48, y: 96, w: 640, h: 360 }
+const costura390 = ({ ordemDia = [5, 6], ordemNoite = [7, 8], yNoite = [600, 700] } = {}) => [
+  placaNo(PLACA_390),
+  rhNo({ ladoDia: true }, { x: 20, y: 420, w: 300, h: 60 }, { tag: 'p', texto: 'dia1', ordemDom: ordemDia[0] }),
+  rhNo({ ladoDia: true }, { x: 20, y: 500, w: 300, h: 60 }, { tag: 'p', texto: 'dia2', ordemDom: ordemDia[1] }),
+  rhNo({ ladoNoite: true }, { x: 20, y: yNoite[0], w: 300, h: 60 }, { tag: 'p', texto: 'noite1', ordemDom: ordemNoite[0] }),
+  rhNo({ ladoNoite: true }, { x: 20, y: yNoite[1], w: 300, h: 60 }, { tag: 'p', texto: 'noite2', ordemDom: ordemNoite[1] }),
+]
+
+describe('REPH-I-08 COSTURA: the seam is page structure', () => {
+  it('REPH-I-08 COSTURA passes at 1440 (column on the seam, day text <= seam - 48, night text >= seam + 32)', () => {
+    const r = regra('costura')(costura1440(), docRh(1440))
+    ok(r)
+    assert.equal(r.regra, 'COSTURA')
+    assert.deepEqual(Object.keys(r).sort(), CHAVES_PURAS)
+  })
+
+  it('REPH-I-08 COSTURA passes at 1024 on its own plate', () => {
+    const seam = costuraDe(PLACA_1024)
+    ok(regra('costura')(costura1440({ placa: PLACA_1024, diaDireita: seam - 50, noiteEsq: seam + 44 }), docRh(1024)))
+  })
+
+  it('REPH-I-08 COSTURA passes at 390 with the day elements first in DOM order and above the night ones', () => {
+    ok(regra('costura')(costura390(), docRh(390)))
+  })
+
+  it('REPH-I-08 COSTURA fails at 1440 when the night column is 12 px off the seam', () => {
+    falha(regra('costura')(costura1440({ colunaX: costuraDe(PLACA_1440) + 12 }), docRh(1440)), /coluna|costura|seam/i)
+  })
+
+  it('REPH-I-08 COSTURA fails at 1440 when day text ends 20 px before the seam, and when night text starts 20 px after it', () => {
+    const seam = costuraDe(PLACA_1440)
+    falha(regra('costura')(costura1440({ diaDireita: seam - 20 }), docRh(1440)), /48|dia/i)
+    falha(regra('costura')(costura1440({ noiteEsq: seam + 20 }), docRh(1440)), /32|noite/i)
+  })
+
+  it('REPH-I-08 COSTURA fails at 390 when a night element comes before a day element', () => {
+    falha(regra('costura')(costura390({ ordemDia: [7, 8], ordemNoite: [5, 6] }), docRh(390)), /ordem|DOM|noite/i)
+  })
+
+  it('REPH-I-08 COSTURA fails at 390 when a night element sits above a day element', () => {
+    falha(regra('costura')(costura390({ yNoite: [300, 700] }), docRh(390)), /acima|ordem|noite|abaixo/i)
+  })
+
+  it('REPH-I-08 COSTURA is out of scope at 768 and fails closed without a plate at 1440', () => {
+    const r = regra('costura')([], docRh(768))
+    ok(r)
+    assert.match(r.motivo, /largura fora do escopo/)
+    falha(regra('costura')([], docRh(1440)))
+  })
+})
+
+// ---- REPH-I-09 TEMPO ----
+
+const tempoNos = (largura, { hora2 = '17:30', botoes = null, tomLegenda2 = 'noite' } = {}) => [
+  rhNo({}, { x: 20, y: 100, w: 300, h: 60 }, { tag: 'h1', texto: 'titulo', ordemDom: 1 }),
+  legendaNo({ x: 20, y: 700, w: 300, h: 28 }, { tom: 'dia', ordemDom: 2 }),
+  { ...legendaNo({ x: 20, y: 1500, w: 300, h: 28 }, { cor: PAPEL, chao: CACAU, tom: tomLegenda2, ordemDom: 3 }), texto: hora2 },
+  tinta(PAPEL, CACAU, { ordemDom: 4 }),
+  tinta(NOITE_2, CACAU, { ordemDom: 5 }),
+  tinta(PAPEL, CHAO_NOITE, { ordemDom: 6 }),
+  tinta(TINTA, PAPEL, { ordemDom: 7 }),
+  tinta(TEXTO_2, PAPEL, { ordemDom: 8 }),
+  tinta(TINTA, AREIA, { ordemDom: 9 }),
+  ...(botoes ?? [
+    ...(largura >= 1024 ? [rhNo({ botaoMel: true, heroiBotao: true }, { x: 600, y: 300, w: 220, h: 48 }, { tag: 'a', texto: 'c', ordemDom: 10, fundoSob: CACAU })] : []),
+    rhNo({ botaoMel: true, fechamento: true }, { x: 20, y: 2400, w: 220, h: 48 }, { tag: 'a', texto: 'f', ordemDom: 11, fundoSob: CACAU }),
+  ]),
+]
+// The legenda helper's text is overwritten per node above; the first caption carries 16:00.
+const tempoComHoras = (largura, opcoes) => {
+  const lista = tempoNos(largura, opcoes)
+  lista[1] = { ...lista[1], texto: '16:00' }
+  return lista
+}
+
+describe('REPH-I-09 TEMPO: hours never go back, ink follows the ground, one closing mel button', () => {
+  for (const largura of [1440, 390]) {
+    it(`REPH-I-09 TEMPO passes at ${largura} on a conforming evening`, () => {
+      const r = regra('tempo')(tempoComHoras(largura), docRh(largura))
+      ok(r)
+      assert.equal(r.regra, 'TEMPO')
+      assert.deepEqual(Object.keys(r).sort(), CHAVES_PURAS)
+    })
+  }
+
+  it('REPH-I-09 TEMPO fails when 15:00 comes after 17:30', () => {
+    falha(regra('tempo')(tempoComHoras(1440, { hora2: '15:00' }), docRh(1440)), /hora|15:00|ordem|decresc|volta/i)
+  })
+
+  it('REPH-I-09 TEMPO fails for cacau ink on a cacau ground and for texto-2 ink on areia', () => {
+    const base = tempoComHoras(1440)
+    falha(regra('tempo')([...base, tinta(TINTA, CACAU, { ordemDom: 40 })], docRh(1440)), /tinta|cor|cacau|chão|chao/i)
+    falha(regra('tempo')([...base, tinta(TEXTO_2, AREIA, { ordemDom: 41 })], docRh(1440)), /tinta|texto-2|areia|cor/i)
+  })
+
+  it('REPH-I-09 TEMPO fails for a tom="dia" caption on a cacau ground', () => {
+    falha(regra('tempo')(tempoComHoras(1440, { tomLegenda2: 'dia' }), docRh(1440)), /tom|legenda/i)
+  })
+
+  it('REPH-I-09 TEMPO fails for a second mel button outside the hero pill and the closing band', () => {
+    const extra = rhNo({ botaoMel: true }, { x: 20, y: 1800, w: 220, h: 48 }, { tag: 'a', texto: 'x', ordemDom: 50, fundoSob: CACAU })
+    falha(regra('tempo')([...tempoComHoras(1440), extra], docRh(1440)), /mel|bot/i)
+  })
+
+  it('REPH-I-09 TEMPO fails when a mel button is not on cacau and when the closing button is missing', () => {
+    const sobrePapel = [
+      ...tempoComHoras(390, { botoes: [] }),
+      rhNo({ botaoMel: true, fechamento: true }, { x: 20, y: 2400, w: 220, h: 48 }, { tag: 'a', texto: 'f', ordemDom: 11, fundoSob: PAPEL }),
+    ]
+    falha(regra('tempo')(sobrePapel, docRh(390)), /cacau|mel|chão|chao/i)
+    falha(regra('tempo')(tempoComHoras(390, { botoes: [] }), docRh(390)), /fechamento|mel|bot/i)
+  })
+
+  it('REPH-I-09 TEMPO fails at 390 when the hero pill is shown (only the closing mel button exists there)', () => {
+    const lista = tempoComHoras(390, {
+      botoes: [
+        rhNo({ botaoMel: true, heroiBotao: true }, { x: 20, y: 268, w: 220, h: 48 }, { tag: 'a', texto: 'c', ordemDom: 10, fundoSob: CACAU }),
+        rhNo({ botaoMel: true, fechamento: true }, { x: 20, y: 2400, w: 220, h: 48 }, { tag: 'a', texto: 'f', ordemDom: 11, fundoSob: CACAU }),
+      ],
+    })
+    falha(regra('tempo')(lista, docRh(390)), /heroi|herói|390|bot|mel/i)
+  })
+})
+
+// ---- REPH-I-18 the meter itself ----
+
+describe('REPH-I-18 meter surface: cases, rules, fonts, MEDIDAS_REP_HOME, avaliarMovimento', () => {
+  it('REPH-I-18 CASOS_CASA lists sistema, inicio, inicio_b and inicio_c', () => {
+    assert.deepEqual(medir.CASOS_CASA, ['sistema', 'inicio', 'inicio_b', 'inicio_c'])
+  })
+
+  it('REPH-I-18 the eight new rules are exported once, in order, and REGRAS keeps its 22 names', () => {
+    assert.deepEqual(medir.REGRAS_INICIO, NOVAS_REGRAS)
+    assert.deepEqual(medir.REGRAS, REGRAS_ESPERADAS)
+  })
+
+  it('REPH-I-18 the inicio cases run the 22 rules and the eight new ones; sistema and the public pages do not', () => {
+    for (const caso of ['inicio', 'inicio_b', 'inicio_c']) {
+      const lista = medir.regrasDoCaso(caso)
+      assert.deepEqual([...lista].sort(), [...REGRAS_ESPERADAS, ...NOVAS_REGRAS].sort(), caso)
+      assert.deepEqual(lista.slice(-8), NOVAS_REGRAS, caso)
+      for (const nome of NOVAS_REGRAS) assert.ok(medir.bloqueantesDoCaso(caso).includes(nome), `${caso} ${nome}`)
+    }
+    for (const caso of ['sistema', 'comofunciona', 'hoje']) {
+      for (const nome of NOVAS_REGRAS) assert.ok(!medir.regrasDoCaso(caso).includes(nome), `${caso} ${nome}`)
+    }
+  })
+
+  it('REPH-I-18 avaliarTudo on an inicio case answers each new rule once, blocking, failing closed on an empty page', () => {
+    const r = medir.avaliarTudo({ doc: docRh(1440), nos: [], tema: 'claro', caso: 'inicio' })
+    for (const nome of NOVAS_REGRAS) {
+      const achados = r.filter((x) => x.regra === nome)
+      assert.equal(achados.length, 1, nome)
+      assert.equal(achados[0].bloqueia, true, nome)
+    }
+  })
+
+  it('REPH-I-18 the FONTES allow-list accepts M PLUS Rounded 1c next to Literata and Outfit', () => {
+    for (const familia of ['Literata', 'Outfit', 'M PLUS Rounded 1c']) assert.ok(medir.FAMILIAS_PERMITIDAS.includes(familia), familia)
+  })
+
+  it('REPH-I-18 MEDIDAS_REP_HOME carries the spec section 5 cells', () => {
+    const m = medir.MEDIDAS_REP_HOME
+    assert.equal(typeof m, 'object', 'MEDIDAS_REP_HOME must be exported')
+    assert.deepEqual([m.noite?.[1440], m.noite?.[390]], [0.3, 0.3])
+    // r4 (RECUT §7): the pin exists from 1024 wide only: 600 from 1280, 480 from 1024 to 1279, none (0) below.
+    assert.deepEqual([m.pino?.[1440], m.pino?.[1280], m.pino?.[1024], m.pino?.[768], m.pino?.[390]], [600, 600, 480, 0, 0])
+    assert.deepEqual(m.borda1440, [556.5, 470.1, 354.9, 118.3, 0])
+    assert.deepEqual(m.traducao1440, [38.65, 32.65, 24.65, 8.22, 0])
+    assert.deepEqual([m.luz?.cone_ms, m.luz?.poca_ms, m.luz?.atraso_ms, m.luz?.defasagem_ms], [240, 320, 300, 80])
+    assert.deepEqual([m.legenda?.saida_ms, m.legenda?.entrada_ms, m.legenda?.desloc_px], [160, 220, 6])
+    assert.equal(m.lcp_ms, 2500)
+    assert.deepEqual([m.bytes?.dobra_kb, m.bytes?.luz_kb_max, m.bytes?.pagina_kb], [70, 12, 185])
+    assert.equal(m.inp_ms, 200)
+    assert.deepEqual([m.escuro_medio?.[1440], m.escuro_medio?.[390], m.creme_max?.[1440], m.creme_max?.[390]], [0.45, 0.5, 0.55, 0.5])
+  })
+
+  it('REPH-I-18 MEDIDAS_REP_HOME.placa390 holds the worker-measured window and is internally consistent', () => {
+    const p = medir.MEDIDAS_REP_HOME?.placa390
+    assert.equal(typeof p, 'object', 'placa390 must be exported')
+    for (const chave of ['L', 's', 'w', 'h', 'x', 'y', 'seam']) assert.ok(Number.isFinite(p[chave]), chave)
+    assert.ok(p.L > 440 && p.L < 500, `L ${p.L}`)
+    assert.ok(Math.abs(p.s - 390 / (1672 - p.L)) < 0.001, 's = 390 / (1672 - L)')
+    assert.ok(Math.abs(p.w - 1672 * p.s) < 0.5, 'w = 1672 s')
+    assert.ok(Math.abs(p.x + p.L * p.s) < 0.5, 'x = -L s')
+    assert.ok(Math.abs(p.seam - (910 - p.L) * p.s) < 0.5, 'seam = (910 - L) s')
+    assert.equal(p.y, 364)
+  })
+
+  const NOMES_MOVIMENTO = ['LUZ', 'PALCO', 'COBERTURA', 'CONTRASTE', 'MOLDURA', 'LEGENDA', 'DURACOES', 'CLS', 'LONGTASK', 'PROPRIEDADES', 'TRANSICOES', 'LCP', 'BYTES']
+
+  it('REPH-I-18 avaliarMovimento returns the thirteen checks in order and fails every one closed on an empty probe', () => {
+    assert.equal(typeof medir.avaliarMovimento, 'function', 'avaliarMovimento must be exported')
+    const r = medir.avaliarMovimento({}, medir.MEDIDAS_REP_HOME)
+    assert.deepEqual(r.map((x) => x.regra), NOMES_MOVIMENTO)
+    for (const x of r) {
+      assert.equal(x.ok, false, `${x.regra} must fail closed`)
+      assert.ok(typeof x.motivo === 'string' && x.motivo !== '', x.regra)
+    }
+  })
+
+  it('REPH-I-18 avaliarMovimento tells CLS 0 from CLS 0.002', () => {
+    assert.equal(typeof medir.avaliarMovimento, 'function', 'avaliarMovimento must be exported')
+    const cls = (valor) => medir.avaliarMovimento({ cls: valor }, medir.MEDIDAS_REP_HOME).find((x) => x.regra === 'CLS')
+    ok(cls(0))
+    falha(cls(0.002))
+  })
+
+  it('REPH-I-18 TROCA_RM passes a reduced-motion page at rest and fails the three card controls', () => {
+    const rm = ({ posicao = 'static', transformNoite = 'none', capa = false } = {}) => [
+      rhNo({ palco: true }, { x: 0, y: 795, w: 1440, h: 1200 }, { tag: 'div', texto: '', alturaConteudo: 1200, estilo: { position: posicao } }),
+      rhNo({ camadaNoite: true }, { x: 556, y: 795, w: 884, h: 1200 }, { tag: 'div', texto: '', estilo: { transform: transformNoite } }),
+      rhNo({ luz: true }, { x: 0, y: 112, w: 900, h: 507 }, { tag: 'div', texto: '', estilo: { opacity: '1' } }),
+      ...(capa ? [rhNo({ luzCapa: true }, { x: 0, y: 112, w: 900, h: 507 }, { tag: 'div', texto: '' })] : []),
+    ]
+    const doc = docRh(1440, { animacoesCasa: 0 })
+    const r = regra('trocaRm')(rm(), doc)
+    ok(r)
+    assert.equal(r.regra, 'TROCA_RM')
+    falha(regra('trocaRm')(rm({ posicao: 'sticky' }), doc), /sticky|pino|palco/i)
+    falha(regra('trocaRm')(rm({ transformNoite: 'matrix(1, 0, 0, 1, 100, 0)' }), doc), /transform|noite/i)
+    falha(regra('trocaRm')(rm({ capa: true }), doc), /capa|luz|cobertura/i)
+  })
+})
+
+// ---- REPH-I-07 / -11 / -12 with the pinned stage (round 3, r4 numbers) ----
+
+describe('REPH-I-07 NOITE with the pinned stage: the sheet wall is the full-bleed cacau band above 2 x innerHeight', () => {
+  // With the pin the track pushes band 3 down by D (600), so the only faixa of cacau is at y 2271: the wall inside the
+  // night sheet (as wide as the stage at every p, cacau) is the band the first two screens hold.
+  const paredeDaFolha = (largura, estilo = { backgroundColor: CACAU }) =>
+    rhNo({ paredeDaFolha: true }, { x: 0, y: 795, w: largura, h: 876 }, { tag: 'div', texto: '', estilo, ordemDom: 20 })
+
+  it('REPH-I-07 NOITE passes at 1440 when the only faixa is below 2 x innerHeight and the sheet wall is cacau', () => {
+    ok(regra('noite')([bandaNoite(1440, 2271), paredeDaFolha(1440)], docRh(1440, amostras(400000))))
+  })
+
+  it('REPH-I-07 NOITE fails at 1440 when the sheet wall is not cacau, or is narrower than the stage', () => {
+    falha(regra('noite')([bandaNoite(1440, 2271), paredeDaFolha(1440, { backgroundColor: PAPEL })], docRh(1440, amostras(400000))), /faixa|banda|cacau|2/i)
+    falha(regra('noite')([bandaNoite(1440, 2271), paredeDaFolha(900)], docRh(1440, amostras(400000))), /faixa|banda|cacau|2/i)
+  })
+})
+
+describe('REPH-I-11 the pinned stage: edge stops, holds and the pin distance by width (RECUT §7)', () => {
+  const COBERTURA = { cobertura: [0.614, 0.674, 0.754, 0.918, 1] }
+  const R4 = {
+    borda: [556.5, 470.1, 354.9, 118.3, 0],
+    traducao_pct: [38.65, 32.65, 24.65, 8.22, 0],
+    retencoes: { inicio: [556.5, 556.5], centro: [354.9, 354.9], fim: [0, 0] },
+  }
+  const cobertura = (extra) => medir.avaliarMovimento({ ...COBERTURA, ...extra }, medir.MEDIDAS_REP_HOME).find((x) => x.regra === 'COBERTURA')
+  const palco = (largura, pino_px) => medir.avaliarMovimento({ largura, palco: { pino_px } }, medir.MEDIDAS_REP_HOME).find((x) => x.regra === 'PALCO')
+
+  it('REPH-I-11 COBERTURA passes with the r4 edge stops, the translateX and the three holds', () => {
+    ok(cobertura(R4))
+  })
+
+  it('REPH-I-11 COBERTURA fails the r2 edge stops of the seam at 1030, and the r2 translateX at p 0', () => {
+    falha(cobertura({ ...R4, borda: [1030, 809, 514.5, 171.5, 0] }), /borda/)
+    falha(cobertura({ ...R4, traducao_pct: [71.53, 56.18, 35.73, 11.91, 0] }), /traducao_pct/)
+  })
+
+  it('REPH-I-11 COBERTURA fails a 1440 wipe with no 0.45-0.55 hold, and one with no hold at the seam', () => {
+    falha(cobertura({ ...R4, retencoes: { ...R4.retencoes, centro: [380, 330] } }), /retenção centro/)
+    falha(cobertura({ ...R4, retencoes: { ...R4.retencoes, inicio: [556.5, 520] } }), /retenção inicio/)
+  })
+
+  it('REPH-I-11 COBERTURA fails closed on an unreadable hold, and still needs the coverage', () => {
+    falha(cobertura({ ...R4, retencoes: { inicio: [556.5], centro: [354.9, 354.9], fim: [0, 0] } }), /retenção inicio ilegível/)
+    falha(medir.avaliarMovimento({}, medir.MEDIDAS_REP_HOME).find((x) => x.regra === 'COBERTURA'))
+  })
+
+  it('REPH-I-11 PALCO: 600 from 1280, 480 from 1024 to 1279, and no pin (0) below 1024', () => {
+    ok(palco(1440, 600))
+    ok(palco(1280, 600))
+    ok(palco(1024, 480))
+    ok(palco(768, 0))
+    ok(palco(390, 0))
+    falha(palco(1440, 480), /600/)
+    falha(palco(1024, 600), /480/)
+    falha(palco(390, 360), /pino/)
+  })
+})
+
+describe('REPH-I-12 caption swap: no [data-troca-legenda] below 1024', () => {
+  it('REPH-I-12 LEGENDA_PRESA fails at 390 when a swap caption node exists (moment 3 is built from 1024 only)', () => {
+    const troca = rhNo({ legenda: true, trocaLegenda: true }, { x: 20, y: 1900, w: 350, h: 28 }, { tag: 'p', texto: 'l', tom: 'noite', ordemDom: 9, estilo: { color: PAPEL }, cadeia: [TRANSPARENTE, CACAU] })
+    falha(regra('legendaPresa')([...legenda390(), troca], docRh(390)), /legenda de troca|momento 3/i)
+    ok(regra('legendaPresa')(legenda390(), docRh(390)))
+  })
+})
+
+// ---- REPH-I-23 CAPTURA_REAL ----
+
+function crc32(buf) {
+  let c = ~0
+  for (const b of buf) {
+    c ^= b
+    for (let k = 0; k < 8; k += 1) c = (c >>> 1) ^ (0xedb88320 & -(c & 1))
+  }
+  return ~c >>> 0
+}
+function pedaco(tipo, dados) {
+  const t = Buffer.from(tipo, 'latin1')
+  const comprimento = Buffer.alloc(4)
+  comprimento.writeUInt32BE(dados.length)
+  const soma = Buffer.alloc(4)
+  soma.writeUInt32BE(crc32(Buffer.concat([t, dados])))
+  return Buffer.concat([comprimento, t, dados, soma])
+}
+/** A valid flat grey PNG: the skeleton screen the rule must refuse. */
+function pngCinza(lado = 16) {
+  const ihdr = Buffer.alloc(13)
+  ihdr.writeUInt32BE(lado, 0)
+  ihdr.writeUInt32BE(lado, 4)
+  ihdr[8] = 8
+  ihdr[9] = 0
+  const linha = Buffer.concat([Buffer.from([0]), Buffer.alloc(lado, 128)])
+  const cru = Buffer.concat(Array.from({ length: lado }, () => linha))
+  return Buffer.concat([Buffer.from('89504e470d0a1a0a', 'hex'), pedaco('IHDR', ihdr), pedaco('IDAT', zlib.deflateSync(cru)), pedaco('IEND', Buffer.alloc(0))])
+}
+const sha = (buf) => crypto.createHash('sha256').update(buf).digest('hex')
+
+describe('REPH-I-23 CAPTURA_REAL: every product screen is an ASSET-1 capture listed in the manifest', () => {
+  const pastas = []
+  after(() => {
+    for (const p of pastas) fs.rmSync(p, { recursive: true, force: true })
+  })
+  /** A temporary web/public with telas/casa/MANIFESTO.json listing `listados` (arquivo -> bytes) and the files in `gravados`. */
+  const publico = (listados, gravados = listados) => {
+    const raiz = fs.mkdtempSync(path.join(os.tmpdir(), 'repho-capt-'))
+    pastas.push(raiz)
+    const pasta = path.join(raiz, 'telas', 'casa')
+    fs.mkdirSync(pasta, { recursive: true })
+    const capturas = Object.entries(listados).map(([arquivo, bytes]) => ({ id: arquivo, servidos: [{ arquivo: `telas/casa/${arquivo}`, sha256: sha(bytes) }] }))
+    fs.writeFileSync(path.join(pasta, 'MANIFESTO.json'), JSON.stringify({ capturas }))
+    for (const [arquivo, bytes] of Object.entries(gravados)) fs.writeFileSync(path.join(pasta, arquivo), bytes)
+    return raiz
+  }
+  const quadro = (arquivo) =>
+    rhNo({ produtoTela: true }, { x: 148, y: 843, w: 284, h: 624 }, { tag: 'img', texto: '', naturalWidth: 568, currentSrc: `http://127.0.0.1:5254/telas/casa/${arquivo}` })
+  const REAL = Buffer.from('bytes of a real two-x capture, not a grey skeleton', 'utf8')
+
+  it('REPH-I-23 CAPTURA_REAL passes with a manifest + file pair, and blocks', () => {
+    const r = regra('capturaReal')([quadro('historico@2x.png')], docRh(1440), { publico: publico({ 'historico@2x.png': REAL }) })
+    ok(r)
+    assert.equal(r.regra, 'CAPTURA_REAL')
+    assert.deepEqual(Object.keys(r).sort(), CHAVES_PURAS)
+    const todos = medir.avaliarTudo({ doc: docRh(1440), nos: [], tema: 'claro', caso: 'inicio' })
+    assert.equal(todos.find((x) => x.regra === 'CAPTURA_REAL')?.bloqueia, true)
+  })
+
+  it('REPH-I-23 CAPTURA_REAL fails for a flat grey skeleton PNG', () => {
+    const cinza = pngCinza()
+    const raiz = publico({ 'historico@2x.png': REAL }, { 'historico@2x.png': REAL, 'esqueleto.png': cinza })
+    falha(regra('capturaReal')([quadro('esqueleto.png')], docRh(1440), { publico: raiz }), /manifest/i)
+  })
+
+  it('REPH-I-23 CAPTURA_REAL fails for an image that is not in the manifest', () => {
+    const outra = Buffer.from('another image', 'utf8')
+    const raiz = publico({ 'historico@2x.png': REAL }, { 'historico@2x.png': REAL, 'outra.png': outra })
+    falha(regra('capturaReal')([quadro('outra.png')], docRh(1440), { publico: raiz }), /manifest/i)
+  })
+
+  it('REPH-I-23 CAPTURA_REAL fails when the file changed after hashing', () => {
+    const raiz = publico({ 'historico@2x.png': REAL }, { 'historico@2x.png': Buffer.concat([REAL, Buffer.from('!')]) })
+    falha(regra('capturaReal')([quadro('historico@2x.png')], docRh(1440), { publico: raiz }), /sha256|hash/i)
+  })
+
+  it('REPH-I-23 CAPTURA_REAL fails for a page with zero frames', () => {
+    const raiz = publico({ 'historico@2x.png': REAL })
+    falha(regra('capturaReal')([], docRh(1440), { publico: raiz }), /nenhum|zero|0 /i)
+  })
+
+  it('REPH-I-23 CAPTURA_REAL fails when the manifest is missing, and for a path that climbs out of web/public', () => {
+    const vazio = fs.mkdtempSync(path.join(os.tmpdir(), 'repho-capt-'))
+    pastas.push(vazio)
+    falha(regra('capturaReal')([quadro('historico@2x.png')], docRh(1440), { publico: vazio }), /manifest/i)
+    const raiz = publico({ 'historico@2x.png': REAL })
+    const fora = rhNo({ produtoTela: true }, { x: 0, y: 0, w: 10, h: 10 }, { tag: 'img', texto: '', currentSrc: 'http://127.0.0.1:5254/telas/casa/../../../segredo.png' })
+    falha(regra('capturaReal')([fora], docRh(1440), { publico: raiz }))
+  })
+
+  it('REPH-I-23 CAPTURA_REAL fails when one of two frames is not a listed capture', () => {
+    const outra = Buffer.from('another image', 'utf8')
+    const raiz = publico({ 'historico@2x.png': REAL }, { 'historico@2x.png': REAL, 'outra.png': outra })
+    falha(regra('capturaReal')([quadro('historico@2x.png'), quadro('outra.png')], docRh(1440), { publico: raiz }))
   })
 })
