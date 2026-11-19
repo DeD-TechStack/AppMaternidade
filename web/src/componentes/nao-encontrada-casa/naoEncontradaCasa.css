@@ -5,6 +5,8 @@
     box-sizing: border-box;
     min-height: calc(100svh - var(--cm-cabecalho));
     padding-top: var(--espaco-secao);
+    /* O rodapé (cacau) encosta no chão: cancela a margem de respiro que ele traz por cima. */
+    margin-bottom: calc(-1 * var(--cm-entre-secoes));
     background-color: var(--color-cacau);
     overflow-x: clip;
   }
@@ -39,28 +41,14 @@
     color: var(--color-papel);
   }
 
-  /* O recorte de M11 traz um retângulo um pouco mais claro que o cacau e uma faixa escura embaixo (um "chão" que esta
-     página não tem). A janela corta a faixa (--nf-corte é a fração da altura que fica, do prédio para cima) e dissolve
-     o topo, a esquerda e a direita na parede; o prédio e a janela acesa ficam fora dos fades. */
+  /* O recorte de M11 (servido pela ASSET-2) já vem na cor da parede de cacau, sem retângulo. A janela só corta a faixa
+     escura de baixo (--nf-corte é a fração da altura que fica, do prédio para cima). */
   .cm-nf-janela {
     position: absolute;
     right: calc(-1 * var(--quadro-calha));
     bottom: 0;
     overflow: hidden;
     height: calc(264px * var(--nf-corte));
-    mask-image:
-      linear-gradient(to bottom, transparent 0, rgb(0 0 0 / 0.15) 4%, rgb(0 0 0 / 0.5) 10%, #000 16%),
-      linear-gradient(
-        to right,
-        transparent 0,
-        rgb(0 0 0 / 0.15) 5%,
-        rgb(0 0 0 / 0.5) 12%,
-        #000 20%,
-        #000 90%,
-        rgb(0 0 0 / 0.4) 96%,
-        transparent 100%
-      );
-    mask-composite: intersect;
   }
 
   .cm-nf-janela img {

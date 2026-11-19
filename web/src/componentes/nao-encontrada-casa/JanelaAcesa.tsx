@@ -1,7 +1,9 @@
-import u340 from './m11-janela-340w.webp'
-import u361 from './m11-janela-361w.webp'
-import u542 from './m11-janela-542w.webp'
 import './naoEncontradaCasa.css'
+
+/* Servidos pela ASSET-2 (web/public/cenas/nao-encontrada/), já assentados na cor da parede. */
+const u340 = '/cenas/nao-encontrada/m11-janela-340w.webp'
+const u361 = '/cenas/nao-encontrada/m11-janela-361w.webp'
+const u542 = '/cenas/nao-encontrada/m11-janela-542w.webp'
 
 /**
  * T4-S1: o canto da rua de M11 com uma janela acesa ao longe. Sem moldura, sem chão desenhado: o recorte é do mesmo
