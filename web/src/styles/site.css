@@ -42,6 +42,12 @@
     display: none;
   }
 
+  /* Nas cenas da casa, a `<picture>` some do layout e a `<img>` fica filha direta do contêiner. */
+  [data-casa] .ic-m06 > picture,
+  [data-casa] .ic-so-cena > picture {
+    display: contents;
+  }
+
   /* Tipo ------------------------------------------------------------------------------------ */
   .cm-h1,
   .cm-h2,

@@ -505,13 +505,6 @@
     height: auto;
   }
 
-  /* The `<picture>` (AVIF + WebP) of M06 and M04 has no box of its own: the `<img>` lays out as it did as the figure's
-     child. (The light group's `<picture>` is a different one: `[data-luz-grupo] picture`.) */
-  [data-casa] .ic-m06 > picture,
-  [data-casa] .ic-so-cena > picture {
-    display: contents;
-  }
-
   /* ---- The header pill (RECUT §5): quiet while the hero's pill is in view, filled at every other position -------- */
   /* The shell has no hook for this and `casca/**` is not edited: the page's `useGanchoDoCabecalho` sets
      `data-inicio-heroi="visivel"` on <html> while the hero's mel pill is in view, and removes it when the pill leaves
