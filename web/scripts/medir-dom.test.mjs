@@ -4593,15 +4593,22 @@ describe('METER-INICIO 11 RODAPE at 390: the footer height ceiling is 640', () =
   })
 })
 
-describe('METER-INICIO 12 PRODUTO at 1440: the screen may be under 320 only at the height cap of the window', () => {
-  // The stage frame is min(320, (innerHeight - quadro-livre) / 2.2241) wide; quadro-livre is 80.5 + the 108 px floor strip.
-  const larg = (w) => ({ rect: { x: 100, y: 100, w, h: w * 2.2241 } })
-  const em = (altura, w) => medir.produto(produtoCom(larg(w)), { ...docDs1(1440), altura })
+describe('METER-INICIO 12 PRODUTO at 1440: only the room-stage screen may be under 320, at the height cap of the window', () => {
+  // The stage frame is min(320, (innerHeight - quadro-livre) / 2.2241) wide; quadro-livre is 96.5 + the 108 px floor strip (204.5).
+  const larg = (w, palco = true) => ({ rect: { x: 100, y: 100, w, h: w * 2.2241 }, m: { produtoTelaPalco: palco } })
+  const em = (altura, w, palco = true) => medir.produto(produtoCom(larg(w, palco)), { ...docDs1(1440), altura })
 
-  it('PASS: 319.9 at 900 is the cap of that window, and 275 fits an 800 window (cap 274.9)', () => {
-    ok(em(900, 319.9))
-    ok(em(800, 275))
+  it('PASS: the stage screen at 312.7 is the cap of a 900 window; 270 fits a 800 window (cap 267.7)', () => {
+    ok(em(900, 312.7))
+    ok(em(900, 312.3))
     ok(em(900, 320))
+    ok(em(800, 270))
+  })
+
+  it('CONTROL: the stage screen more than 0.5 px under the cap fails (312.1 at 900, 300 at 900, 260 at 800)', () => {
+    falha(em(900, 312.1), /312\.1/)
+    falha(em(900, 300), /300/)
+    falha(em(800, 260), /260/)
   })
 
   it('PASS: a tall window holds the full 320 (0.5 px of tolerance)', () => {
@@ -4609,14 +4616,17 @@ describe('METER-INICIO 12 PRODUTO at 1440: the screen may be under 320 only at t
     ok(em(1100, 319.6))
   })
 
-  it('CONTROL: a 300 px screen at 900 fails (the window would hold 319.9)', () => {
-    falha(em(900, 300), /300/)
-  })
-
-  it('CONTROL: a window tall enough to hold 320 with a 318 screen fails, and below the 800 cap too', () => {
+  it('CONTROL: a tall window with a 318 stage screen fails', () => {
     falha(em(1000, 318), /318/)
     falha(em(1100, 318), /318/)
-    falha(em(800, 260), /260/)
+  })
+
+  it('CONTROL: an ordinary (non-stage) product screen keeps the 320 minimum at any window height', () => {
+    falha(em(800, 275, false), /275/)
+    falha(em(900, 312.7, false), /312\.7/)
+    falha(em(1100, 275, false), /275/)
+    ok(em(800, 320, false))
+    ok(em(900, 319.6, false))
   })
 
   it('the 390 minimum (280) is unchanged and a missing innerHeight falls back to 320', () => {

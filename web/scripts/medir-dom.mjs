@@ -1,6 +1,7 @@
 // Medidor do site: mede no Chrome, por CDP, os gates determinísticos do web/DESIGN.md. Só biblioteca
 // padrão do Node 24 (fetch e WebSocket), só loopback.
 //
+// Ambiente: o Chrome precisa de --hide-scrollbars (sem isso a página tem 375 px de largura útil a 390 e HEROI falha).
 // Uso: node web/scripts/medir-dom.mjs <pasta> <caso>:<tema>:<LxA> ...
 //   casos: sistema, inicio, hoje, sessao, e qualquer outro nome [a-z0-9_]+ que esteja em CASOS de
 //   .oc/cdp.mjs (a rota vem de lá). Temas: claro e madrugada. Ex.: comofunciona:claro:1440x900
@@ -940,17 +941,18 @@ export function faixa(nos, doc) {
 
 /** A moldura do palco tem 2,2241 vezes a largura da camada de tela (`--moldura-razao`, inicio-casa.css). */
 const MOLDURA_RAZAO = 2.2241
-/** O que a moldura precisa em volta dela (`--palco-quadro-livre`): 80,5 px de cabeçalho e ar mais a faixa do chão (108 px com `--heroi-k` 1). */
-const QUADRO_LIVRE = 80.5 + 108
+/** Bloco único do orçamento do palco (DIAG.md METER-INICIO, PRODUTO 1440; HOME-SEAM-FOLD): 96,5 px (cabeçalho de 88 px com 64 sobre o palco, mais o ar) e a faixa do chão (108 px com `--heroi-k` 1). */
+const QUADRO_LIVRE = 96.5 + 108
 
 /**
- * A largura mínima da camada de tela. Em 1440 é 320, mas a janela limita o palco: a tela é `min(320, (innerHeight -
- * quadro-livre) / 2,2241)` (inicio-casa.css, `.ic-estagio .cm-produto-moldura`), então abaixo de 320 só vale a que está
- * no teto que a altura da janela deixa (0,5 px de folga). Sem a altura da janela lida, o mínimo continua 320.
+ * A largura mínima de UMA camada de tela. Em 1440 é 320. Só a tela do palco da casa (`produtoTelaPalco`: `[data-casa]
+ * .ic-estagio`, a única que a CSS limita por altura) pode ficar abaixo, no teto que a altura da janela deixa:
+ * `min(320, (innerHeight - quadro-livre) / 2,2241)`, com 0,5 px de folga. Toda outra tela de produto mantém o mínimo
+ * comum (320 em 1440, 280 abaixo), e sem a altura da janela lida o mínimo do palco também é o comum.
  */
-function minimoDaTela(doc) {
+function minimoDaTela(no, doc) {
   if (!(doc?.largura >= 1440)) return 280
-  if (!ehNumero(doc.altura)) return 320
+  if (!marca(no, 'produtoTelaPalco') || !ehNumero(doc.altura)) return 320 - 0.5
   return Math.min(320, (doc.altura - QUADRO_LIVRE) / MOLDURA_RAZAO) - 0.5
 }
 
@@ -964,7 +966,6 @@ export function produto(nos, doc) {
   if (figuras.length > 2) falharDoc(falhas, `${figuras.length} molduras de produto (o máximo é 2)`)
   if (telas.length !== figuras.length) falharDoc(falhas, `${figuras.length} molduras e ${telas.length} telas (uma tela por moldura)`)
   if (molduras.length < figuras.length) falharDoc(falhas, `${figuras.length} molduras e ${molduras.length} artes de moldura`)
-  const minimo = minimoDaTela(doc)
   for (const no of [...figuras, ...telas, ...molduras]) {
     const e = no.estilo
     if (!retanguloDe(no)) falharNo(falhas, no, 'sem retângulo')
@@ -978,6 +979,7 @@ export function produto(nos, doc) {
   const vistas = new Set()
   for (const no of telas) {
     const r = retanguloDe(no)
+    const minimo = minimoDaTela(no, doc)
     if (r && r.w < minimo) falharNo(falhas, no, `tela de ${r.w.toFixed(1)} px (o mínimo é ${Number(minimo.toFixed(1))})`)
     if (!lido(no.currentSrc)) falharNo(falhas, no, 'currentSrc ausente (a imagem não carregou)')
     else if (vistas.has(no.currentSrc)) falharNo(falhas, no, `a mesma tela (currentSrc ${no.currentSrc}) em duas molduras`)
@@ -2148,6 +2150,7 @@ export function coletarNaPagina() {
       faixaLado: el.matches('[data-faixa-lado]'),
       produto: el.matches('[data-produto-moldura]'),
       produtoTela: el.matches('[data-produto-tela]'),
+      produtoTelaPalco: el.matches('[data-produto-tela]') && el.closest('[data-casa] .ic-estagio') !== null,
       produtoMoldura: el.matches('[data-produto-moldura-arte]'),
       rodape: el.matches('footer[data-rodape]'),
       rodapeGrupo: el.matches('[data-rodape-grupo]'),
