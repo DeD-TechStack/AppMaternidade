@@ -5,6 +5,13 @@ import { renderizarRota } from '../teste/renderizarRota.tsx'
 
 // REP-T4: a página inexistente é uma noite de cacau, com o h1 sozinho, uma frase, um botão de mel e a janela acesa.
 
+// A janela sai do vite-imagetools (um mestre em src/assets/cenas/nao-encontrada): no teste a URL é `/@imagetools/<hash>`,
+// no build é um arquivo com hash em /assets.
+const URL_GERADA = /^\/@imagetools\/[\w-]+$/
+const urlsDoSrcset = (srcset: string | null) => (srcset ?? '').split(',').map((parte) => parte.trim().split(/\s+/)[0])
+const larguras = (srcset: string | null) =>
+  (srcset ?? '').split(',').map((parte) => Number(parte.trim().split(/\s+/)[1]?.replace(/w$/, '')))
+
 describe('REP-T4 a página inexistente (noite)', () => {
   for (const caminho of ['/nao-existe', '/a/b/c']) {
     describe(caminho, () => {
@@ -43,12 +50,29 @@ describe('REP-T4 a página inexistente (noite)', () => {
         expect(imagem.getAttribute('alt')).toBe(TEXTOS_NAO_ENCONTRADA.alt)
         expect(imagem.getAttribute('width')).toBe('542')
         expect(imagem.getAttribute('height')).toBe('421')
-        const srcset = imagem.getAttribute('srcset')!
-        for (const largura of ['340', '361', '542']) {
-          expect(srcset).toMatch(new RegExp(`m11-janela-${largura}w[^ ,]*\\.webp ${largura}w`))
-        }
+        expect(larguras(imagem.getAttribute('srcset'))).toEqual([340, 361, 542])
+        expect(imagem.getAttribute('src')).toMatch(URL_GERADA)
+        expect(imagem.getAttribute('srcset')).toContain(imagem.getAttribute('src')!)
+        expect(imagem.getAttribute('sizes')).toBe('(min-width: 768px) 361px, 340px')
         expect(imagem.getAttribute('fetchpriority')).toBe('high')
         expect(imagem.getAttribute('loading')).toBe('eager')
+        expect(imagem.getAttribute('decoding')).toBe('async')
+      })
+
+      it('a janela é uma <picture>: a fonte AVIF vem antes da <img> de WebP, com os mesmos sizes e as mesmas três larguras', () => {
+        const { container } = renderizarRota(caminho)
+        const imagem = container.querySelector('main img')!
+        const figura = imagem.parentElement!
+        expect(figura.tagName).toBe('PICTURE')
+        expect(figura.parentElement!.classList.contains('cm-nf-janela')).toBe(true)
+        const fontes = [...figura.querySelectorAll('source')]
+        expect(fontes).toHaveLength(1)
+        expect(fontes[0].getAttribute('type')).toBe('image/avif')
+        expect(fontes[0].hasAttribute('media')).toBe(false)
+        expect(larguras(fontes[0].getAttribute('srcset'))).toEqual([340, 361, 542])
+        expect(fontes[0].getAttribute('sizes')).toBe(imagem.getAttribute('sizes'))
+        expect(fontes[0].nextElementSibling).toBe(imagem)
+        expect(fontes[0].getAttribute('srcset')).not.toBe(imagem.getAttribute('srcset'))
       })
 
       it('o texto do main é só as três linhas do deck', () => {
@@ -63,19 +87,24 @@ describe('REP-T4 a página inexistente (noite)', () => {
     })
   }
 
-  it('a janela acesa respeita a base do site (Pages): src e todo candidato do srcset', () => {
+  it('a janela acesa não monta mais a URL com a base do site: src, todo candidato do srcset e do AVIF vêm do vite-imagetools', () => {
+    // A base do site (Pages) agora é posta pelo Vite no build, nos arquivos com hash; `urlPublica` não entra mais.
+    // O teste confere a origem das URLs (nenhuma é um caminho de web/public); o prefixo da base é do build.
     vi.stubEnv('BASE_URL', '/AppMaternidade/')
     try {
       const { container } = renderizarRota('/nao-existe')
       const imagem = container.querySelector('main img')!
-      const prefixo = '/AppMaternidade/cenas/nao-encontrada/'
-      expect(imagem.getAttribute('src')!.startsWith(prefixo)).toBe(true)
-      const candidatos = imagem
-        .getAttribute('srcset')!
-        .split(',')
-        .map((c) => c.trim().split(/\s+/)[0])
-      expect(candidatos).toHaveLength(3)
-      for (const url of candidatos) expect(url.startsWith(prefixo)).toBe(true)
+      const fonte = container.querySelector('main picture source')!
+      const urls = [
+        imagem.getAttribute('src')!,
+        ...urlsDoSrcset(imagem.getAttribute('srcset')),
+        ...urlsDoSrcset(fonte.getAttribute('srcset')),
+      ]
+      expect(urls).toHaveLength(1 + 3 + 3)
+      for (const url of urls) {
+        expect(url).toMatch(URL_GERADA)
+        expect(url).not.toContain('/cenas/')
+      }
     } finally {
       vi.unstubAllEnvs()
     }

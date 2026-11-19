@@ -1,70 +1,34 @@
-import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
+import { useCallback, useEffect, useReducer, useRef, type RefObject } from 'react'
 import { bebeArquivado } from '../../../conteudo/desenvolvimento/textosLogada.ts'
 import { TT, encerrado, jaEncerrada } from '../../../conteudo/desenvolvimento/textosTummy.ts'
 import type { Papel, Resultado } from '../../../dados/comum.ts'
 import type { Bebe, FamiliaResumo, Membro } from '../../../dados/conta.ts'
 import { useDadosDesenvolvimento } from '../../../dados/desenvolvimento.contexto.tsx'
-import { comPrazoDeResposta, traduzirErro, type ChaveDeErro, type LeituraDoBloco } from '../../../dados/desenvolvimento.ts'
+import { comPrazoDeResposta, traduzirErro, type ChaveDeErro } from '../../../dados/desenvolvimento.ts'
 import { lerAparelho } from '../../../dados/rotina.dia.ts'
 import { podeEscrever, type ContextoRotina, type Registro } from '../../../dados/rotina.tipos.ts'
 import { uuidV7 } from '../../../dados/rotina.uuid.ts'
 import { usePendencia } from '../../../paginas/desenvolvimento/pendencia.tsx'
 import { formatarDuracao, formatarHora } from '../../../prototipo/formatar.ts'
 import { CHAVE, focarPrimeiro } from './foco.ts'
+import {
+  estadoInicial,
+  reduzir,
+  type ConfirmacaoDoBloco,
+  type ContextoDoBloco,
+  type ErroDoBloco,
+  type Onde,
+  type PainelAberto,
+  type PassoEmAberto,
+  type TipoDoPainel,
+} from './estadoDoTummy.ts'
 import { intervaloDoAgora, intervaloDoFormulario, proximoPasso, type EntradaDoPainel, type ErroDeCampo, type Passo } from './regras.ts'
 
 // O estado do bloco de tummy time (MAT-39b): as leituras, as cinco escritas, a operação pendente, os erros do
 // DES-09, as confirmações e o destino do foco. O gancho não desenha nada.
 
-type TipoDoPainel = 'agora' | 'horario'
-
-/** Onde a mensagem de erro e o "Salvando…" aparecem: perto do controle que disparou. */
-export type Onde = 'iniciar' | 'painel' | 'confirmacao' | `sessao:${string}`
-
-export interface ErroDoBloco {
-  chave: ChaveDeErro | 'relogioAtras'
-  texto: string
-  onde: Onde
-  /** A chave `data-foco` do controle que falhou. */
-  controle: string
-  /** Mostra "Tentar de novo" (T-41 e T-42). */
-  repetivel: boolean
-  /** O resultado é desconhecido (T-41): os controles de escrita ficam `aria-disabled` até "Fechar". */
-  bloqueia: boolean
-}
-
-interface Desfazer {
-  tipo: 'restaurar' | 'excluir'
-  id: string
-}
-
-interface ConfirmacaoDoBloco {
-  texto: string
-  /** O foco de "Fechar" e de "Desfazer": o controle da ação que gerou a confirmação, se ainda existir. */
-  foco: string[]
-  desfazer: Desfazer | null
-}
-
-export interface PainelAberto {
-  tipo: TipoDoPainel
-  /** O id do registro novo nasce com o painel e fica até o sucesso, até fechar ou até trocar o bebê. */
-  id: string
-  abertoEm: number
-}
-
-export interface PassoEmAberto {
-  passo: Passo
-  confirmados: Passo[]
-  entrada: EntradaDoPainel
-}
-
-interface ContextoDoBloco {
-  contaId: string
-  papel: Papel
-  arquivado: boolean
-  membros: readonly Membro[]
-  acessoPerdido: boolean
-}
+// Os tipos e as transições do estado moram em `estadoDoTummy.ts`; os tipos que as telas importam seguem exportados daqui.
+export type { Onde, ErroDoBloco, PainelAberto, PassoEmAberto } from './estadoDoTummy.ts'
 
 interface Efeito {
   confirmacao: ConfirmacaoDoBloco | null
@@ -209,22 +173,25 @@ export function useBlocoTummy({ bebe, familia, papel, raiz, aoPerderAcesso }: En
   const idDoIniciar = useRef<string | null>(null)
   const ultimaTarefa = useRef<Tarefa | null>(null)
 
-  const [leitura, setLeitura] = useState<'carregando' | 'ok' | 'falha'>('carregando')
-  const [lido, setLido] = useState<{ bloco: LeituraDoBloco; agora: number } | null>(null)
-  const [contexto, setContexto] = useState<ContextoDoBloco | null>(null)
-  const [ondePendente, setOndePendente] = useState<Onde | null>(null)
-  const [erro, setErro] = useState<ErroDoBloco | null>(null)
-  const [confirmacao, setConfirmacao] = useState<ConfirmacaoDoBloco | null>(null)
-  const [salvoSemAtualizar, setSalvoSemAtualizar] = useState(false)
-  const [painel, setPainel] = useState<PainelAberto | null>(null)
-  const [passo, setPasso] = useState<PassoEmAberto | null>(null)
-  const [erroDeCampo, setErroDeCampo] = useState<ErroDeCampo | null>(null)
-  const [indiceDoDia, setIndiceDoDia] = useState(0)
-  // `P0001 bebe arquivado` vale por si: os controles somem mesmo que a releitura do contexto ainda diga o contrário.
-  const [arquivadoPeloErro, setArquivadoPeloErro] = useState(false)
-  const [pedidoDeFoco, setPedidoDeFoco] = useState<{ n: number; chaves: string[] }>({ n: 0, chaves: [] })
+  const [estado, dispatch] = useReducer(reduzir, estadoInicial)
+  const {
+    leitura,
+    lido,
+    contexto,
+    ondePendente,
+    erro,
+    confirmacao,
+    salvoSemAtualizar,
+    painel,
+    passo,
+    erroDeCampo,
+    indiceDoDia,
+    arquivadoPeloErro,
+    pedidoDeFoco,
+  } = estado
 
-  const pedirFoco = useCallback((chaves: string[]) => setPedidoDeFoco((anterior) => ({ n: anterior.n + 1, chaves })), [])
+  const pedirFoco = useCallback((chaves: string[]) => dispatch({ tipo: 'pedirFoco', chaves }), [])
+  const escolherDia = useCallback((indice: number) => dispatch({ tipo: 'escolherDia', indice }), [])
 
   // O bloco vive enquanto o bebê da tela for o mesmo (a página o remonta ao trocar): ao sair, a pendência da
   // página é solta, e uma resposta que chegar depois é descartada.
@@ -249,27 +216,24 @@ export function useBlocoTummy({ bebe, familia, papel, raiz, aoPerderAcesso }: En
     async (modo: 'normal' | 'depoisDeEscrita'): Promise<Releitura> => {
       pedido.current += 1
       const numero = pedido.current
+      dispatch({ tipo: 'lerComecou', numero })
       const agora = Date.now()
       const [resposta, bloco] = await Promise.all([dados.contexto(), dados.lerBloco(bebe.id, familia.fuso, agora)])
       if (!vivo.current || numero !== pedido.current) return 'descartada'
       const falhou = () => {
-        if (modo === 'normal') setLeitura('falha')
+        dispatch({ tipo: 'lidoFalhou', numero, modo })
         return 'falha' as const
       }
       if (!resposta.ok) return falhou()
       const novo = lerContexto(resposta.valor, familia.id, bebe.id)
       if (novo.acessoPerdido) {
-        setContexto(novo)
-        setLido(null)
-        setLeitura('ok')
+        dispatch({ tipo: 'lidoAcessoPerdido', numero, contexto: novo })
         // O contexto da página ainda mostra o bebê: ela o relê, e o bloco sai da tela com o estado 3.
         perderAcesso.current?.()
         return 'ok'
       }
       if (!bloco.ok) return falhou()
-      setContexto(novo)
-      setLido({ bloco: bloco.valor, agora })
-      setLeitura('ok')
+      dispatch({ tipo: 'lidoOk', numero, contexto: novo, lido: { bloco: bloco.valor, agora } })
       return 'ok'
     },
     [dados, bebe.id, familia.id, familia.fuso],
@@ -297,10 +261,7 @@ export function useBlocoTummy({ bebe, familia, papel, raiz, aoPerderAcesso }: En
       if (emCurso.current || !vivo.current) return
       emCurso.current = true
       ultimaTarefa.current = tarefa
-      setErro(null)
-      setConfirmacao(null)
-      setSalvoSemAtualizar(false)
-      setOndePendente(tarefa.onde)
+      dispatch({ tipo: 'escritaComecou', onde: tarefa.onde })
       definirPendente(true)
 
       const resposta = await comPrazoDeResposta(tarefa.chamar())
@@ -309,22 +270,25 @@ export function useBlocoTummy({ bebe, familia, papel, raiz, aoPerderAcesso }: En
       let foco: string[]
       if (resposta.ok) {
         resposta.valor.depois?.()
-        setConfirmacao(resposta.valor.confirmacao)
+        dispatch({ tipo: 'escritaOk', confirmacao: resposta.valor.confirmacao })
         const releitura = await reler('depoisDeEscrita')
         if (!vivo.current) return
-        if (releitura === 'falha') setSalvoSemAtualizar(true)
+        if (releitura === 'falha') dispatch({ tipo: 'salvoSemAtualizar' })
         foco = resposta.valor.foco
       } else {
         const linha = traduzirErro(resposta.erro)
-        setErro({
-          chave: linha.chave,
-          texto: textoDoErro(linha.chave, bebe.nome),
-          onde: tarefa.onde,
-          controle: tarefa.controle,
-          repetivel: linha.repetivel,
-          bloqueia: linha.salvou === 'desconhecido',
+        dispatch({
+          tipo: 'escritaFalhou',
+          erro: {
+            chave: linha.chave,
+            texto: textoDoErro(linha.chave, bebe.nome),
+            onde: tarefa.onde,
+            controle: tarefa.controle,
+            repetivel: linha.repetivel,
+            bloqueia: linha.salvou === 'desconhecido',
+          },
+          arquivado: linha.chave === 'arquivado',
         })
-        if (linha.chave === 'arquivado') setArquivadoPeloErro(true)
         if (RELE_DEPOIS_DO_ERRO.has(linha.chave)) await reler('normal')
         if (!vivo.current) return
         // Erro não move o foco; se o erro tirou o controle da tela, ele vai à mensagem.
@@ -332,7 +296,7 @@ export function useBlocoTummy({ bebe, familia, papel, raiz, aoPerderAcesso }: En
       }
 
       emCurso.current = false
-      setOndePendente(null)
+      dispatch({ tipo: 'escritaTerminou' })
       definirPendente(false)
       pedirFoco(foco)
     },
@@ -366,8 +330,10 @@ export function useBlocoTummy({ bebe, familia, papel, raiz, aoPerderAcesso }: En
       const controle = CHAVE.encerrar(sessao.id)
       // O relógio do aparelho está antes do início gravado (item 8): não chama a rotina.
       if (momento < inicio) {
-        setConfirmacao(null)
-        setErro({ chave: 'relogioAtras', texto: TT.relogioAtras, onde: `sessao:${sessao.id}`, controle, repetivel: false, bloqueia: false })
+        dispatch({
+          tipo: 'relogioAtras',
+          erro: { chave: 'relogioAtras', texto: TT.relogioAtras, onde: `sessao:${sessao.id}`, controle, repetivel: false, bloqueia: false },
+        })
         return
       }
       void executar({
@@ -426,21 +392,14 @@ export function useBlocoTummy({ bebe, familia, papel, raiz, aoPerderAcesso }: En
         pedirFoco([CHAVE.campoDoPainel])
         return
       }
-      setErro(null)
-      setConfirmacao(null)
-      setPasso(null)
-      setErroDeCampo(null)
-      setPainel({ tipo, id: uuidV7(), abertoEm: Date.now() })
+      dispatch({ tipo: 'abrirPainel', painel: { tipo, id: uuidV7(), abertoEm: Date.now() } })
     },
     [painel, pedirFoco],
   )
 
   const fecharPainel = useCallback(() => {
     if (emCurso.current || !painel || erro?.bloqueia) return
-    setPainel(null)
-    setPasso(null)
-    setErroDeCampo(null)
-    if (erro?.onde === 'painel') setErro(null)
+    dispatch({ tipo: 'fecharPainel', limparErroDoPainel: erro?.onde === 'painel' })
     pedirFoco([painel.tipo === 'agora' ? CHAVE.abrirAgora : CHAVE.abrirHorario])
   }, [erro, painel, pedirFoco])
 
@@ -451,19 +410,19 @@ export function useBlocoTummy({ bebe, familia, papel, raiz, aoPerderAcesso }: En
       const resultado =
         painel.tipo === 'agora' ? intervaloDoAgora(entrada.duracao, agora) : intervaloDoFormulario(entrada, lerAparelho(agora).fuso, agora)
       if (!resultado.ok) {
-        setPasso(null)
-        setErroDeCampo(resultado.erro)
+        dispatch({ tipo: 'passoSaiu' })
+        dispatch({ tipo: 'erroDeCampo', erro: resultado.erro })
         return
       }
-      setErroDeCampo(null)
+      dispatch({ tipo: 'erroDeCampo', erro: null })
       const { intervalo } = resultado
       const proximo = proximoPasso(intervalo, [...lido.bloco.emAndamento, ...lido.bloco.sessoes], confirmados, agora)
       if (proximo) {
-        setPasso({ passo: proximo, confirmados, entrada })
+        dispatch({ tipo: 'passoEmAberto', passo: { passo: proximo, confirmados, entrada } })
         pedirFoco([CHAVE.confirmar])
         return
       }
-      setPasso(null)
+      dispatch({ tipo: 'passoSaiu' })
       const { id, tipo } = painel
       const abrir = tipo === 'agora' ? CHAVE.abrirAgora : CHAVE.abrirHorario
       void executar({
@@ -473,7 +432,7 @@ export function useBlocoTummy({ bebe, familia, papel, raiz, aoPerderAcesso }: En
           seSucesso(dados.registrarDepois({ id, bebe: bebe.id, inicio: intervalo.inicio, fim: intervalo.fim }), () => ({
             confirmacao: { texto: TT.registrado, foco: [abrir, CHAVE.iniciar], desfazer: { tipo: 'excluir', id } },
             foco: [abrir, CHAVE.iniciar],
-            depois: () => setPainel(null),
+            depois: () => dispatch({ tipo: 'painelFechado' }),
           })),
       })
     },
@@ -486,15 +445,15 @@ export function useBlocoTummy({ bebe, familia, papel, raiz, aoPerderAcesso }: En
   }, [passo, salvarPainel])
 
   const voltarDoPasso = useCallback(() => {
-    setPasso(null)
+    dispatch({ tipo: 'passoSaiu' })
     pedirFoco([CHAVE.campoDoPainel])
   }, [pedirFoco])
 
-  const editarCampo = useCallback(() => setErroDeCampo(null), [])
+  const editarCampo = useCallback(() => dispatch({ tipo: 'erroDeCampo', erro: null }), [])
 
   const fecharConfirmacao = useCallback(() => {
     if (!confirmacao) return
-    setConfirmacao(null)
+    dispatch({ tipo: 'fecharConfirmacao' })
     pedirFoco(confirmacao.foco)
   }, [confirmacao, pedirFoco])
 
@@ -507,25 +466,20 @@ export function useBlocoTummy({ bebe, familia, papel, raiz, aoPerderAcesso }: En
     if (!erro || emCurso.current) return
     const { onde, controle } = erro
     const deveFechar = onde === 'painel' ? painel : null
-    setErro(null)
+    dispatch({ tipo: 'fecharErro', fecharPainel: deveFechar !== null })
     if (onde === 'iniciar') idDoIniciar.current = null
-    if (deveFechar) {
-      setPainel(null)
-      setPasso(null)
-      setErroDeCampo(null)
-    }
     void reler('normal').then(() => {
       pedirFoco(deveFechar ? [deveFechar.tipo === 'agora' ? CHAVE.abrirAgora : CHAVE.abrirHorario, CHAVE.iniciar] : [controle, CHAVE.iniciar])
     })
   }, [erro, painel, pedirFoco, reler])
 
   const atualizar = useCallback(() => {
-    setSalvoSemAtualizar(false)
+    dispatch({ tipo: 'atualizarSalvo' })
     void reler('normal')
   }, [reler])
 
   const tentarLeituraDeNovo = useCallback(() => {
-    setLeitura('carregando')
+    dispatch({ tipo: 'tentarLeitura' })
     void reler('normal')
   }, [reler])
 
@@ -601,7 +555,7 @@ export function useBlocoTummy({ bebe, familia, papel, raiz, aoPerderAcesso }: En
       fecharErro,
       atualizar,
       tentarLeituraDeNovo,
-      escolherDia: setIndiceDoDia,
+      escolherDia,
     },
   }
 }

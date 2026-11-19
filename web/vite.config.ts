@@ -4,6 +4,7 @@ import { resolve } from 'node:path'
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { imagetools } from 'vite-imagetools'
 import { chavePublica } from './build/conferirChavePublica.ts'
 import { politicaDeConteudo } from './build/politicaDeConteudo.ts'
 
@@ -52,7 +53,7 @@ export default defineConfig(({ command }) => ({
   base: command === 'build' ? subcaminhoDoBuild(process.env.BASE_SITE) : '/',
   // Um só arquivo de CSS, na ordem de sempre: dividir o CSS por página mudaria a ordem da cascata.
   build: { cssCodeSplit: false },
-  plugins: [react(), tailwindcss(), chavePublica(), politicaDeConteudo(), paginaNaoEncontrada(), ordemDasCamadas()],
+  plugins: [react(), tailwindcss(), imagetools(), chavePublica(), politicaDeConteudo(), paginaNaoEncontrada(), ordemDasCamadas()],
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/teste/setup.ts'],

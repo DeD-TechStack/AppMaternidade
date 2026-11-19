@@ -36,47 +36,49 @@ export function listaDeFusos(): string[] {
   return [...new Set([...brasil, ...resto])]
 }
 
-// O nome da cidade de cada fuso do Brasil, com acento (o identificador IANA não tem).
+// O nome de uso dos quatro horários principais do Brasil (o de São Paulo é o de Brasília).
+const PRINCIPAIS_DO_BRASIL: Readonly<Record<string, string>> = {
+  'America/Sao_Paulo': 'Brasília',
+  'America/Manaus': 'Amazonas',
+  'America/Rio_Branco': 'Acre',
+  'America/Noronha': 'Fernando de Noronha',
+}
+
+// O nome da cidade dos outros fusos do Brasil, com acento (o identificador IANA não tem).
 const CIDADES_DO_BRASIL: Readonly<Record<string, string>> = {
-  'America/Sao_Paulo': 'São Paulo',
   'America/Cuiaba': 'Cuiabá',
   'America/Belem': 'Belém',
   'America/Maceio': 'Maceió',
   'America/Araguaina': 'Araguaína',
   'America/Santarem': 'Santarém',
-  'America/Noronha': 'Fernando de Noronha',
   'America/Eirunepe': 'Eirunepé',
 }
 
-// O fuso que dá nome ao horário dispensa a cidade ("Horário de Brasília" é o de São Paulo): o rótulo fica curto e
-// cabe na caixa do seletor a 390 px. Os outros fusos do mesmo horário levam a cidade, para nenhum rótulo se repetir.
-const PRINCIPAIS = new Set(['America/Sao_Paulo', 'America/Manaus', 'America/Rio_Branco', 'America/Noronha'])
-
-const parteDoNome = (fuso: string, timeZoneName: 'longGeneric' | 'shortOffset') =>
-  new Intl.DateTimeFormat('pt-BR', { timeZone: fuso, timeZoneName }).formatToParts(new Date()).find((p) => p.type === 'timeZoneName')?.value ?? ''
+const diferencaDoFuso = (fuso: string) =>
+  (new Intl.DateTimeFormat('pt-BR', { timeZone: fuso, timeZoneName: 'shortOffset' }).formatToParts(new Date()).find((p) => p.type === 'timeZoneName')?.value ?? '')
+    .replace(/^GMT(\+0)?/, 'UTC')
+    .replace('-', '−')
 
 const ROTULOS = new Map<string, string>()
 
 /**
- * O fuso em pt-BR para a lista: o nome genérico do horário e a diferença para o UTC, como
- * "Horário de Brasília (UTC−3)", e a cidade quando o horário não é dela ("Horário de Brasília (UTC−3, Fortaleza)").
+ * O fuso em pt-BR para a lista, curto para caber na caixa fechada do seletor a 390 px: o nome e a diferença para o UTC.
+ * Brasil: o nome de uso dos quatro horários principais ("Brasília (UTC−3)") e a cidade nos demais ("Fortaleza (UTC−3)").
+ * Fora do Brasil: a cidade, o último trecho do identificador ("Buenos Aires (UTC−3)").
  * O valor guardado continua o identificador IANA.
- * Fuso sem nome próprio (`UTC`, `Etc/GMT+3`) mostra só a diferença; identificador inválido volta como veio.
+ * Fuso sem nome (`UTC`, `Etc/GMT+3`) mostra só a diferença; identificador inválido volta como veio.
  */
 export function rotuloDoFuso(fuso: string): string {
   const pronto = ROTULOS.get(fuso)
   if (pronto) return pronto
   let rotulo = fuso
   try {
-    const diferenca = parteDoNome(fuso, 'shortOffset').replace(/^GMT(\+0)?/, 'UTC').replace('-', '−')
-    // Sem horário de verão, o nome genérico vem como o padrão ("Horário Padrão de Brasília"): fica o genérico.
-    const nome = parteDoNome(fuso, 'longGeneric').replace(/^Horário Padrão /, 'Horário ')
-    const semCidade = fuso === 'UTC' || fuso.startsWith('Etc/') || !fuso.includes('/')
-    const daCidade = semCidade ? '' : (CIDADES_DO_BRASIL[fuso] ?? fuso.slice(fuso.lastIndexOf('/') + 1).replaceAll('_', ' '))
-    const temNome = nome !== '' && !nome.startsWith('GMT') && !nome.startsWith('UTC')
-    const cidade = temNome && (PRINCIPAIS.has(fuso) || nome.includes(daCidade)) ? '' : daCidade
-    if (temNome) rotulo = cidade ? `${nome} (${diferenca}, ${cidade})` : `${nome} (${diferenca})`
-    else rotulo = cidade ? `${cidade} (${diferenca})` : diferenca
+    const diferenca = diferencaDoFuso(fuso)
+    const semNome = fuso === 'UTC' || fuso.startsWith('Etc/') || !fuso.includes('/')
+    const nome = semNome
+      ? ''
+      : (PRINCIPAIS_DO_BRASIL[fuso] ?? CIDADES_DO_BRASIL[fuso] ?? fuso.slice(fuso.lastIndexOf('/') + 1).replaceAll('_', ' '))
+    rotulo = nome ? `${nome} (${diferenca})` : diferenca
   } catch {
     // Identificador que o navegador não conhece: fica o identificador.
   }

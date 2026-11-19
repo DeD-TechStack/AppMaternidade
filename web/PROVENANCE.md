@@ -25,6 +25,7 @@ A cópia da licença é o arquivo `LICENSE` do pacote instalado do `registry.npm
 | Pacote | Versão | Licença | Cópia da licença | sha256 da licença | Uso |
 |---|---|---|---|---|---|
 | `@supabase/supabase-js` | 2.119.0 | MIT | `web/licencas/supabase-js-LICENSE.txt` | `334dd6820e2eaeab2064e7c59001b810566728a28a41a7c1dbf69bbee17d0936` | Cliente do Supabase (Auth e banco). Só `web/src/dados/cliente.ts` cria o cliente, e só quando `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` têm valor no build; sem elas o site usa a cópia em memória. Entrou na MAT-37. |
+| `vite-imagetools` | 12.0.2 | MIT | `web/licencas/vite-imagetools.txt` | `703314288373001b9e92792a00796dd9c4e06e2668d55b2bf0b1ad77155e82b6` | Plugin do Vite (só no build, `devDependencies`): gera as larguras AVIF e WebP das cenas a partir de um arquivo mestre por vaga, em `web/src/assets/cenas`, com nome de arquivo por conteúdo. Entrou no LIB-IMG. |
 
 A cópia da licença é o arquivo `LICENSE` do pacote instalado do `registry.npmjs.org`, sem alteração (mesmo sha256).
 

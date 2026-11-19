@@ -263,7 +263,14 @@
     max-width: var(--cf-medida);
   }
 
-  .cf-texto > img {
+  /* A `<picture>` (AVIF + WebP) não tem caixa: a `<img>` segue filha do flex como antes. */
+  .cf-texto > picture,
+  .cf-colo > picture {
+    display: contents;
+  }
+
+  .cf-texto > img,
+  .cf-texto > picture > img {
     display: block;
     width: min(100%, 520px);
     height: auto;
@@ -292,7 +299,8 @@
   }
 
   .cf-texto-hist > h2,
-  .cf-texto-hist > img {
+  .cf-texto-hist > img,
+  .cf-texto-hist > picture > img {
     margin-top: calc(var(--espaco-midia) - var(--espaco-pilha));
   }
 
@@ -308,7 +316,8 @@
     gap: var(--espaco-junto);
   }
 
-  .cf-colo > * {
+  .cf-colo > *,
+  .cf-colo > picture > img {
     position: relative;
     z-index: 1;
   }
@@ -324,7 +333,8 @@
     background-color: var(--color-texto-2);
   }
 
-  .cf-colo > img {
+  .cf-colo > img,
+  .cf-colo > picture > img {
     display: block;
     width: var(--cf-colo-largura);
     height: auto;
@@ -419,7 +429,8 @@
       padding-top: var(--espaco-midia);
     }
 
-    .cf-colo > img {
+    .cf-colo > img,
+    .cf-colo > picture > img {
       margin-inline: 0;
     }
 
