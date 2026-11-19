@@ -6,10 +6,11 @@ import { CenaDaPagina } from './CenaDaPagina.tsx'
 import './cuidado-casa.css'
 
 /**
- * A primeira faixa, em papel: a cena (CC-S1, uma imagem comum, sem a cena herói do pacote), o título, o texto, a ação, a tela
- * Família na moldura (CC-S2) e, sob a cena, "por enquanto, somos três". De 1024 em diante a cena fica à esquerda e o
- * texto com a moldura à direita; abaixo, a cena abre a página e o campo de areia que vem logo depois dela guarda o
- * título, o texto, a ação e a moldura.
+ * A primeira faixa, em papel: a cena (CC-S1, a placa inteira, sem a cena herói do pacote), o título, o texto, a
+ * ação, a tela Família na moldura (CC-S2) e "por enquanto, somos três". A composição muda pela largura do contêiner
+ * da página (cuidado-casa.css): uma coluna no celular (cena, título, texto, a ação logo abaixo, a moldura e o
+ * "três"), duas colunas de 640 em diante (cena e chamada; moldura e "três") e, de 1024 em diante, a cena à
+ * esquerda com o "três" embaixo e a chamada com a moldura à direita.
  */
 export function AberturaCuidado() {
   return (
@@ -27,7 +28,9 @@ export function AberturaCuidado() {
             </div>
             <BotaoLargo variante="primario" rotulo={CUIDADO.cta1} para={DESTINO_CRIAR_CONTA} />
           </div>
-          <ProdutoEmMoldura tela={{ ...IMAGENS_CUIDADO.tela, alt: CUIDADO.alt.tela1 }} moldura={IMAGENS_CUIDADO.moldura} />
+          <div className="cc-moldura">
+            <ProdutoEmMoldura tela={{ ...IMAGENS_CUIDADO.tela, alt: CUIDADO.alt.tela1 }} moldura={IMAGENS_CUIDADO.moldura} />
+          </div>
         </div>
 
         <div className="cc-tres cc-medida">
