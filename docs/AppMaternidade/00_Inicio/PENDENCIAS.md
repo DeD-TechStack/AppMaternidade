@@ -16,7 +16,7 @@ ESTADO: ATIVO (leader session D5-14 since 19/11 ~12h55). Source of state: block 
 - MOTION-PAGES t_335008a0: leader takeover; R4 (a)-(h) ALL PASS on 85263ff (comment 2613; INTQ/MOTION-PAGES/lider_verif/motion/REPORT.md). Integration child deleg_dd4cd40a running (INTEGRANDO 2614). After the push: RECIBO, mark done/archive, cleanup, ask the coordinator to score Como funciona / Cuidado compartilhado / Desenvolvimento (skills test vs the previous score). CENAS_SYNC.md holds the CENAS.md line fixes.
 - [~] ANCHOR-1 t_b47f18f0 (ready): a cold load of /page#anchor stays at the top on HEAD and base (12/12, found by R4); shell card Layout.tsx + hook.
 - [~] HEADER-200 t_35117e11 (ready): shared header clips "Criar conta" at 390 with 200% text (found by REP-T2; capture copied to INTQ/REP-T2/matriz/).
-- [D coordenador] encerrar_processos.py refuses cmdlines containing 'hermes' -> card Chromes/vites cannot be stopped (asked 19/11 ~14h40).
+- [x] encerrar_processos.py fixed by the coordinator (equipe 1dba637): scratch-path Chromes are killable with --exige <card id|scratch path>. 14h55 killed METER-INICIO-SYNC (26 procs) and the capfix orphan 28844 tree (15 procs). Executors must run it before request_review (say so in new cards).
 - IN REVIEW: LOC-08b t_5efd9893 (7ab9aaf; sistema.test.tsx scope accepted, comment 2594).
 - RUNNING (observed 13h05): I-RF14-2 t_ba7760ed (round after 1/2; next review LAST -> then release Q-7 t_63c16887 + J-RF14-1 t_41d4c4b0), REP-T2 t_ea5eaa95, METER-INICIO-SYNC t_61da495e, HOME-SEAM-FOLD t_2d31298b.
 - HELD: VIS-5 t_b31871ec, VIS-6 t_fc221dba, NEW-D t_94fe120b (DS-2/HOJE-1 successors are the next visual specs), Q-7, J-RF14-1.
@@ -24,7 +24,7 @@ ESTADO: ATIVO (leader session D5-14 since 19/11 ~12h55). Source of state: block 
 - INÍCIO SCORE 69fd4bc (coordinator t_5a891fd3): FAIL 6.4 x4, capped by B2 (phone shows the demo note + the site footer; no app chrome). File: exports/Atualizacao_Geral_20261117/NOTA_INICIO_69fd4bc_20261119/RESULTADO.md. CARDS CREATED 14h10: HOME-PHONE-B2 t_53d1da83 (ready, p25), HOME-ART-FINISH t_ecae332d (ready, p20), HOME-SEAMS t_cbcdf887 (BLOCKED by leader until B2 + ART + HOME-SEAM-FOLD are integrated; then comment "SHAs de base" and unblock). Fable signed the 3/5/6 direction (CARDS_D514/DIRECAO_FABLE_INICIO/SLOT_SHEET.md); child deleg_6746ebec drafts those cards (CARDS_D514/F2/MANIFEST.md: HOME-ASSETS-2 + second half / stage story / width) and records the §13.2-A FREEZE append. Skills test = Fable mechanism note vs this 6.4 baseline. Follow-ups: HOME-ART-REGEN after the Codex reset 20/11 13:52 (window wall, style drift).
 - RULE (coordinator t_4727156f, all projects): the reviewer cannot open localhost (sandbox stays offline). The D9 "390/1440 render" = the PNGs OpenCode took while working, cited by path in the review request; a card never returns only because the reviewer could not render. Say so in the next return comment if it bounces on this again.
 - METER-INICIO-SYNC t_61da495e returned 1/2 (real: stage budget hardcoded 188.5, cap applied to every screen; comment 2606).
-- OPEN: orphan Chrome PID 28844 (kill at cleanup). Integration worktrees _int40a, _int_t1, _int_t2.
+- Integration worktrees _int40a, _int_t1, _int_t2.
 RETOMAR-OK 19/11 SWITCH-D5-14
 ## HISTORY
 ### RETOMAR 19/11 SWITCH-D5-13 SAFE POINT (written ~12h45 by leader session local-b0f7ee71 at ~380k/call; coordinator order t_11e9c63a; NOT a pause: running cards keep running; ORDERS: ordens-vigentes rev 4 + D9; D8 English; NEVER clarify)
