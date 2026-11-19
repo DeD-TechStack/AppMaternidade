@@ -7,7 +7,9 @@ import { ProvedorDadosConta } from '../../componentes/conta/sessao.tsx'
 import { ProvedorDadosRotina } from '../../componentes/rotina/dadosRotina.tsx'
 import { AVISOS_TEXTOS } from '../../conteudo/avisos.ts'
 import { ContextoDadosAvisos, type Aviso, type DadosAvisos, type EstadoDosAvisos } from '../../dados/avisos.ts'
-import type { Resultado } from '../../dados/comum.ts'
+import type { Papel, Resultado } from '../../dados/comum.ts'
+import { CABECALHO } from '../../conteudo/conta.ts'
+import { NOTAS } from '../../conteudo/rotina.ts'
 import { criarRotasProntas } from '../../teste/rotasProntas.ts'
 import { aguardarCarga } from '../../teste/renderizarRota.tsx'
 import { criarMundoDeTeste } from '../../teste/rotina.fixture.ts'
@@ -65,9 +67,15 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-async function montar(inicial: EstadoDosAvisos, opcoes: { sessao?: 'juliana' | null; largura?: number } = {}) {
+async function montar(
+  inicial: EstadoDosAvisos,
+  opcoes: { sessao?: 'juliana' | 'icaro' | null; papelDeIcaro?: Papel; largura?: number } = {},
+) {
   fixarLargura(opcoes.largura ?? 1440)
-  const mundo = criarMundoDeTeste({ sessao: opcoes.sessao === undefined ? 'juliana' : opcoes.sessao })
+  const mundo = criarMundoDeTeste({
+    sessao: opcoes.sessao === undefined ? 'juliana' : opcoes.sessao,
+    papelDeIcaro: opcoes.papelDeIcaro,
+  })
   vi.stubGlobal('scrollTo', vi.fn())
   const roteador = createMemoryRouter(criarRotasProntas(), { initialEntries: ['/app/avisos'] })
   render(
@@ -255,6 +263,45 @@ describe('a página', () => {
     const lista = principal().querySelector('ul')!
     expect(paradas.filter((parada) => lista.contains(parada))).toEqual([])
     expect(botao.compareDocumentPosition(lista) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
+  })
+
+  describe('390 com o texto a 200%: todo link e botão da página quebra a linha em vez de alargar a página', () => {
+    const QUEBRA = ['max-w-full', 'whitespace-normal', 'wrap-anywhere']
+
+    function conferirQuebra(esperados: string[]) {
+      const controles = [...principal().querySelectorAll('a[href], button')]
+      const nomes = controles.map((controle) => controle.textContent?.trim())
+      for (const esperado of esperados) expect(nomes).toContain(esperado)
+      for (const controle of controles) {
+        const classes = [...controle.classList]
+        expect(
+          QUEBRA.filter((classe) => !classes.includes(classe)),
+          `"${controle.textContent}" não quebra: ${controle.className}`,
+        ).toEqual([])
+      }
+    }
+
+    it('desligado: o link "Ligar os avisos na Conta"', async () => {
+      await montar(estado([], false), { largura: LARGURA_DO_CELULAR })
+      conferirQuebra([AVISOS_TEXTOS.ligarNaConta])
+    })
+
+    it('vazio, quem escreve na família: o link "Nova nota"', async () => {
+      await montar(estado([]), { largura: LARGURA_DO_CELULAR })
+      await within(principal()).findByRole('link', { name: NOTAS.nova })
+      conferirQuebra([NOTAS.nova])
+    })
+
+    it('vazio, observador na família: o link "Ir para o Hoje"', async () => {
+      await montar(estado([]), { largura: LARGURA_DO_CELULAR, sessao: 'icaro', papelDeIcaro: 'observador' })
+      await within(principal()).findByRole('link', { name: CABECALHO.irParaHoje })
+      conferirQuebra([CABECALHO.irParaHoje])
+    })
+
+    it('ligado, com lista: o botão de marcar', async () => {
+      await montar(estado([aviso(2), aviso(1)]), { largura: LARGURA_DO_CELULAR })
+      conferirQuebra([AVISOS_TEXTOS.botao])
+    })
   })
 
   it('390 com o texto a 200%: nada força largura (quebra em qualquer ponto, colunas sem mínimo, sem largura fixa)', async () => {

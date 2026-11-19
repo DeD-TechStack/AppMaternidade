@@ -26,6 +26,8 @@ const LIMITE_DO_TEXTO_CURTO = 120
 const DUAS_COLUNAS = 'min-[900px]:grid-cols-[minmax(0,var(--leitura))_minmax(0,1fr)]'
 
 const PAINEL_DE_MEL = 'cm-painel-mel cm-painel-luz rounded-painel p-esp-painel text-cacau'
+/** O texto de um botão ou link da página quebra a linha (texto a 200%, 390 px) em vez de alargar a página. */
+const BOTAO_QUEBRA = 'max-w-full whitespace-normal wrap-anywhere'
 const FRASE_DO_ESTADO = 'font-titulo font-normal text-titulo-1 tracking-[-0.02em] text-balance wrap-anywhere'
 
 /** O relógio fica fora do componente: o destaque se decide na hora de desenhar. */
@@ -158,13 +160,13 @@ function AcaoDoVazio() {
   if (estado === 'carregando' && conta !== null) return null
   if (atual !== null && podeEscrever(atual.meuPapel)) {
     return (
-      <Botao to="/app/notas/nova" variante="primario" tamanho="app">
+      <Botao to="/app/notas/nova" variante="primario" tamanho="app" className={BOTAO_QUEBRA}>
         {NOTAS.nova}
       </Botao>
     )
   }
   return (
-    <Botao to="/app/hoje" variante="primario" tamanho="app">
+    <Botao to="/app/hoje" variante="primario" tamanho="app" className={BOTAO_QUEBRA}>
       {CABECALHO.irParaHoje}
     </Botao>
   )
@@ -231,7 +233,7 @@ export function PaginaAvisos() {
   } else if (mostrado !== null && !mostrado.ligados) {
     corpo = (
       <PainelDoEstado frase={AVISOS_TEXTOS.desligado}>
-        <Botao to="/app/conta#avisos" variante="primario" tamanho="app">
+        <Botao to="/app/conta#avisos" variante="primario" tamanho="app" className={BOTAO_QUEBRA}>
           {AVISOS_TEXTOS.ligarNaConta}
         </Botao>
       </PainelDoEstado>
@@ -286,7 +288,7 @@ export function PaginaAvisos() {
                   variante="primario"
                   tamanho="app"
                   desativado={salvando}
-                  className="max-w-full whitespace-normal wrap-anywhere"
+                  className={BOTAO_QUEBRA}
                   onClick={() => void marcar(lista[0].criadaEm)}
                 >
                   {salvando ? AVISOS_TEXTOS.botaoSalvando : AVISOS_TEXTOS.botao}
