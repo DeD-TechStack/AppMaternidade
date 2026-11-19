@@ -19,9 +19,11 @@ import { aguardarCarga, renderizarRota } from '../teste/renderizarRota.tsx'
 //     (`[data-cena-heroi] a[data-botao-mel]`) is in view under the header (IntersectionObserver, top root
 //     margin -72 px), deletes it when the pill leaves view and on unmount. `<main>` carries no such state.
 //   - The quiet / filled CSS of `a[data-cabecalho-pilula]` lives in `inicio-casa.css`, scoped by
-//     `html[data-inicio-heroi="visivel"]` at >= 1024 px.
-//   - Below 1024 px the attribute is never set, and the hero renders no mel pill, only the text link.
-//   - The width switch is a `matchMedia` query (`(min-width: 1024px)` or the rem form), so jsdom can drive it.
+//     `html[data-inicio-heroi="visivel"]`, at every width.
+//   - HOME-FINAL (19/11/2026): the hero holds the mel pill "Criar conta" under the value sentence at EVERY width
+//     (judge point "restore the yellow 'Criar conta' button" and responsive audit #7), with the text link beside it.
+//   - The composition switch is a `matchMedia` query (`(min-width: 1180px) and (min-aspect-ratio: 1/1)`), so jsdom
+//     can drive it (the stub reads the first width in the query).
 
 const PASTA_WEB = process.cwd()
 const PASTA_SRC = join(PASTA_WEB, 'src')
@@ -413,14 +415,15 @@ describe('REPH-I-31 one h1 with two spans, and the header pill quiet or filled b
     expect(ganchoDoHeroi()).toBeUndefined()
   })
 
-  it('REPH-I-31 the page stylesheet quiets the shell pill only under html[data-inicio-heroi] at 1024 and more, with no !important', () => {
+  it('REPH-I-31 the page stylesheet quiets the shell pill only under html[data-inicio-heroi], at every width, with no !important', () => {
     const css = readFileSync(CSS_DA_CASA, 'utf8').replace(/\r\n/g, '\n')
     const semComentario = css.replace(/\/\*[\s\S]*?\*\//g, '')
     const inicio = semComentario.indexOf('html[data-inicio-heroi')
     expect(inicio).toBeGreaterThan(-1)
-    const bloco = semComentario.slice(semComentario.lastIndexOf('@media', inicio), semComentario.indexOf('@media (prefers-reduced-motion', inicio))
-    expect(bloco).toMatch(/@media \(min-width: 1024px\)/)
-    expect(bloco).toContain("html[data-inicio-heroi='visivel'] header[data-cabecalho]:not([data-tom='noite']) a[data-cabecalho-pilula]")
+    const bloco = semComentario.slice(inicio, semComentario.indexOf('@media (prefers-reduced-motion', inicio))
+    // The quiet rule is the first one under the mark, and no width query gates it (the pill is in the hero at 390 too).
+    expect(bloco.startsWith("html[data-inicio-heroi='visivel'] header[data-cabecalho]:not([data-tom='noite']) a[data-cabecalho-pilula] {")).toBe(true)
+    expect(bloco).not.toMatch(/@media \((min|max)-width/)
     expect(bloco).not.toMatch(/!important/)
     // Only the colours change, 160 ms; the filled return animates too through the transition rule of the page.
     const transicao = semComentario.slice(semComentario.indexOf("a[data-cabecalho-pilula] {\n    transition-property"))
@@ -430,17 +433,29 @@ describe('REPH-I-31 one h1 with two spans, and the header pill quiet or filled b
     expect(semComentario).not.toContain('data-cta-cabecalho')
   })
 
-  it('REPH-I-31 at 390 the html mark is never set, the header pill stays the shell filled one and the hero renders no mel pill', async () => {
-    await abrir(390)
-    expect(pilulaDoCabecalho()).not.toBeNull()
-    expect(ganchoDoHeroi()).toBeUndefined()
-    expect(document.querySelector(PILULA_DO_HEROI)).toBeNull()
-    const link = [...document.querySelectorAll<HTMLAnchorElement>('[data-cena-heroi] a')].find((a) => norm(a.textContent) === COPY.cta2)
-    expect(link).toBeDefined()
-    // The closing band holds the only mel button of the page at 390.
-    expect(principal().querySelectorAll('[data-botao-mel]')).toHaveLength(1)
-    expect(principal().querySelector('[data-fechamento] [data-botao-mel]')).not.toBeNull()
-  })
+  for (const largura of [390, 768, 1023, 1179]) {
+    it(`REPH-I-31 at ${largura} the hero has the mel pill "Criar conta" right after the value sentence, the text link beside it, and the header pill is quiet while it is in view`, async () => {
+      await abrir(largura)
+      const pilula = document.querySelector<HTMLAnchorElement>(PILULA_DO_HEROI)
+      expect(pilula).not.toBeNull()
+      expect(norm(pilula!.textContent)).toBe(COPY.cta1)
+      expect(pilula!.getAttribute('href')).toBe('/criar-conta')
+      // Under the value sentence: the lede and the pill share the night block, the lede first.
+      const lede = [...document.querySelectorAll('[data-cena-heroi] p')].find((p) => norm(p.textContent) === COPY.lede)!
+      expect(lede.compareDocumentPosition(pilula!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+      expect(lede.parentElement!.contains(pilula)).toBe(true)
+      // The link is the pill's sibling in the same row of actions.
+      const link = [...document.querySelectorAll<HTMLAnchorElement>('[data-cena-heroi] a')].find((a) => norm(a.textContent) === COPY.cta2)
+      expect(link?.parentElement).toBe(pilula!.parentElement)
+      expect(pilulaDoCabecalho()).not.toBeNull()
+      expect(ganchoDoHeroi()).toBe('visivel')
+      expect(avisarPilulaDoHeroi(false)).toBeGreaterThan(0)
+      expect(ganchoDoHeroi()).toBeUndefined()
+      // The hero pill and the closing one.
+      expect(principal().querySelectorAll('[data-botao-mel]')).toHaveLength(2)
+      expect(principal().querySelector('[data-fechamento] [data-botao-mel]')).not.toBeNull()
+    })
+  }
 
   it('REPH-I-31 at 1440 the page has two mel buttons: the hero pill and the closing one', async () => {
     await abrir(1440)
@@ -714,8 +729,8 @@ describe('REPH-I-13 reduced motion and short windows: the rest layout, decided b
   })
 })
 
-describe('REPH-I-14 below 1024: no pin, no sheet, no twin, no swap node; the frame rests in the hero', () => {
-  for (const largura of [390, 768, 1023]) {
+describe('REPH-I-14 stacked composition (below 1180): no pin, no sheet, no twin, no swap node; the frame rests in the hero', () => {
+  for (const largura of [390, 768, 1023, 1179]) {
     it(`REPH-I-14 /: at ${largura} the stage is the hero's, with no sheet, no twin and two static captions`, async () => {
       await abrirJanela({ largura })
       const palcos = principal().querySelectorAll('[data-troca-palco]')
@@ -729,10 +744,54 @@ describe('REPH-I-14 below 1024: no pin, no sheet, no twin, no swap node; the fra
     })
   }
 
+  it('REPH-I-14 /: at 1180 x 900 the room stands (the stage in band 2, pinned)', async () => {
+    await abrirJanela({ largura: 1180 })
+    const palcos = principal().querySelectorAll('[data-troca-palco]')
+    expect(palcos).toHaveLength(1)
+    expect(faixaDaNoite().contains(palcos[0])).toBe(true)
+    expect(palcos[0].hasAttribute('data-troca-fixo')).toBe(true)
+  })
+
   it('REPH-I-14 /: M06 is in the page at every width, and its lamp is watched (lit when 10 % of the plate is in view)', async () => {
     await abrirJanela({ largura: 1440 })
     expect(principal().querySelectorAll('.ic-m06')).toHaveLength(1)
     const observadoresDeM06 = ObservadorFalso.todos.filter((o) => [...o.alvos].some((alvo) => alvo.closest('.ic-m06') !== null))
     expect(observadoresDeM06.length).toBeGreaterThan(0)
+  })
+})
+
+describe('HOME-FINAL every phone shows a real app screen; the lower bands carry the house', () => {
+  for (const largura of [390, 1440]) {
+    it(`at ${largura} the Histórico frame (and the night twin) serve the Y_ALTA capture, whose top is a whole 390 x 844 screen with no site footer`, async () => {
+      await abrirJanela({ largura })
+      const historico = principal().querySelector<HTMLImageElement>(`[data-produto-tela][alt="${COPY.altTela1}"]`)!
+      expect(historico.getAttribute('src')).toBe('/telas/casa/historico-y-alta-320w.webp')
+      expect(historico.getAttribute('srcset')).toMatch(/historico-y-alta-640w\.webp 640w/)
+      expect(historico.getAttribute('srcset')).not.toMatch(/historico-y-(280|320|560|640)w/)
+      for (const gemea of principal().querySelectorAll<HTMLImageElement>('[data-troca-gemea-tela]')) {
+        expect(gemea.getAttribute('src')).toBe(historico.getAttribute('src'))
+      }
+    })
+  }
+
+  it('the closing band stands M11 (the lit window, decorative, empty alt) on the night floor, after the closing block', async () => {
+    await abrir(1440)
+    const fecho = principal().querySelector('.ic-fecho')!
+    expect(fecho.querySelector('[data-fechamento]')).not.toBeNull()
+    const janela = fecho.querySelector<HTMLImageElement>('.ic-fecho-cena img')!
+    expect(janela.getAttribute('src')).toBe('/cenas/nao-encontrada/m11-janela-542w.webp')
+    expect(janela.getAttribute('alt')).toBe('')
+    expect([janela.getAttribute('width'), janela.getAttribute('height')]).toEqual(['542', '421'])
+    expect(janela.getAttribute('loading')).toBe('lazy')
+    const chao = fecho.lastElementChild!
+    expect(chao.classList.contains('ic-chao')).toBe(true)
+    expect(chao.getAttribute('aria-hidden')).toBe('true')
+  })
+
+  it('the sleep band stands its frame on the night floor', async () => {
+    await abrir(1440)
+    const tela = principal().querySelector('.ic-tela')!
+    expect(tela.querySelector('[data-produto-moldura]')).not.toBeNull()
+    expect(tela.lastElementChild!.classList.contains('ic-chao')).toBe(true)
   })
 })

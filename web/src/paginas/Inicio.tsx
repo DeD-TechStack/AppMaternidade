@@ -11,10 +11,11 @@ import {
   M05_CHAO,
   M05_COSTURA,
   M05_LARGURA,
+  M11_JANELA,
 } from '../componentes/inicio-casa/midia.ts'
 import { PalcoTroca } from '../componentes/inicio-casa/PalcoTroca.tsx'
 import { TituloCasa } from '../componentes/inicio-casa/TituloCasa.tsx'
-import { useGanchoDoCabecalho, useLarga1024 } from '../componentes/inicio-casa/usoDaCasa.ts'
+import { useGanchoDoCabecalho, useSala } from '../componentes/inicio-casa/usoDaCasa.ts'
 import { CenaHeroi } from '../componentes/secoes/CenaHeroi.tsx'
 import { FaixaInteira } from '../componentes/secoes/FaixaInteira.tsx'
 import { FaixaProva } from '../componentes/secoes/FaixaProva.tsx'
@@ -30,16 +31,18 @@ import '../componentes/inicio-casa/inicio-casa.css'
 
 /**
  * The Início (REP-HOME), "A casa acesa": seven bands on the shared pieces of secoes/, in this order:
- * 1 the 17:30 hand-off scene (plate M05, the two-ink h1 across the seam; below 1024 also the stage with the first
- * screen); 2 the night (M06), which from 1024 is the pinned stage of moment 2 with the first screen in it; 3 the second
- * framed screen; 4 the lone carer; 5 the proof; 6 the questions; 7 the night closing.
+ * 1 the 17:30 hand-off scene (plate M05, the two-ink h1 across the seam; in the stacked composition also the stage with
+ * the first screen); 2 the night (M06), which in the room composition (1180 px and more, landscape: `useSala`) is the
+ * pinned stage of moment 2 with the first screen in it; 3 the second framed screen, standing on the night floor; 4 the
+ * lone carer; 5 the proof and 6 the questions, heading left and rows right; 7 the night closing, with M11 (the lit
+ * window) standing on the night floor.
  * Every string comes from conteudo/inicio.ts; this file and the page folders write no text of their own.
  *
  * The header pill belongs to the shell; the page only says whether its hero pill is in view (`data-inicio-heroi` on
  * <html>, set by `useGanchoDoCabecalho`), and the page stylesheet inicio-casa.css quiets the shell's pill from it.
  */
 export function Inicio() {
-  const larga = useLarga1024()
+  const larga = useSala()
   const fixo = usePalcoFixo()
   useGanchoDoCabecalho(larga)
 
@@ -75,7 +78,7 @@ export function Inicio() {
           <TituloCasa id={ID_TITULO} />
           <div className="ic-noite-heroi" data-costura-lado="noite">
             <p className="text-abertura font-texto ic-lede">{INI.lede}</p>
-            <AcoesDoHeroi larga={larga} />
+            <AcoesDoHeroi />
           </div>
         </CenaHeroi>
 
@@ -98,17 +101,35 @@ export function Inicio() {
         </FaixaInteira>
 
         <FaixaInteira fundo="areia">
-          <FaixaProva titulo={INI.h2Prova} texto={INI.pProva} itens={INI_FATOS} />
+          <div className="ic-prova">
+            <FaixaProva titulo={INI.h2Prova} texto={INI.pProva} itens={INI_FATOS} />
+          </div>
         </FaixaInteira>
 
         <FaixaInteira fundo="papel">
-          <div id="perguntas">
+          <div id="perguntas" className="ic-perguntas">
             <Perguntas titulo={INI.h2Perg} itens={INI_PERGUNTAS} />
           </div>
         </FaixaInteira>
 
         <FaixaInteira fundo="cacau">
-          <Fechamento titulo={INI.h2Fecho} acao={{ rotulo: INI.cta3, para: INI_ROTAS.criarConta }} tom="noite" />
+          <div className="ic-fecho">
+            <Fechamento titulo={INI.h2Fecho} acao={{ rotulo: INI.cta3, para: INI_ROTAS.criarConta }} tom="noite" />
+            {/* Decorative: the heading beside it already says the night is noted; the lit window only closes the house. */}
+            <figure className="ic-fecho-cena">
+              <img
+                src={M11_JANELA.src}
+                srcSet={M11_JANELA.srcSet}
+                sizes={M11_JANELA.sizes}
+                width={M11_JANELA.largura}
+                height={M11_JANELA.altura}
+                alt=""
+                loading="lazy"
+                decoding="async"
+              />
+            </figure>
+            <div className="ic-chao" aria-hidden="true" />
+          </div>
         </FaixaInteira>
       </PaginaCasa>
     </main>

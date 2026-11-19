@@ -149,10 +149,12 @@ describe('REPH-I-06 real captures: the manifest, the hashes of the served files,
   })
 
   it('REPH-I-06 midia.ts names each capture by the manifest: same src, srcSet files, widths and heights (no guessed size)', async () => {
-    const { CAPTURA_Y, CAPTURA_N } = await import('../componentes/inicio-casa/midia.ts')
+    const { CAPTURA_Y, CAPTURA_Y_ALTA, CAPTURA_N } = await import('../componentes/inicio-casa/midia.ts')
     const manifesto = JSON.parse(readFileSync(MANIFESTO, 'utf8')) as { capturas: Captura[] }
+    // HOME-FINAL: the Histórico phone reads Y_ALTA, so it is held to the same manifest contract.
     const casos = [
       { id: 'Y', imagem: CAPTURA_Y },
+      { id: 'Y_ALTA', imagem: CAPTURA_Y_ALTA },
       { id: 'N', imagem: CAPTURA_N },
     ]
     for (const { id, imagem } of casos) {

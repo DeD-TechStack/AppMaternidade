@@ -92,6 +92,34 @@ export const CAPTURA_Y: Imagem = {
   altura: 1385,
 }
 
+/**
+ * State `Y_ALTA` of the manifest: the same Histórico at 21:42, captured in a 390 x 1234 window at the page's foot. Its
+ * top 2.164 screen widths (what the frame's screen layer shows, `object-position: top`) are exactly a 390 x 844 phone
+ * scrolled to y 1759: the app header and the day's rows from 09:00 to 20:30, the 16:00 (Juliana) and 17:30 (Ícaro)
+ * hand-off in the middle, with no site footer and no blank band. The frames of the Início serve this one.
+ */
+export const CAPTURA_Y_ALTA: Imagem = {
+  src: '/telas/casa/historico-y-alta-320w.webp',
+  srcSet:
+    '/telas/casa/historico-y-alta-280w.webp 280w, /telas/casa/historico-y-alta-320w.webp 320w, /telas/casa/historico-y-alta-560w.webp 560w, /telas/casa/historico-y-alta-640w.webp 640w',
+  sizes: TAMANHOS_DA_TELA,
+  largura: 640,
+  altura: 2025,
+}
+
+/**
+ * M11 (ASSET-2, served for the 404 under `web/public/cenas/nao-encontrada/`): a street corner at night with one lit
+ * window, already set on the cacau wall. The closing band stands it on the night floor. 542 x 421 is the largest file.
+ */
+export const M11_JANELA: Imagem = {
+  src: '/cenas/nao-encontrada/m11-janela-542w.webp',
+  srcSet:
+    '/cenas/nao-encontrada/m11-janela-340w.webp 340w, /cenas/nao-encontrada/m11-janela-361w.webp 361w, /cenas/nao-encontrada/m11-janela-542w.webp 542w',
+  sizes: '(min-width: 1024px) 420px, 340px',
+  largura: 542,
+  altura: 421,
+}
+
 /** State `N` of the manifest: Hoje in the madrugada theme at 21:42, the sleep in progress since 20:30. */
 export const CAPTURA_N: Imagem = {
   src: '/telas/casa/hoje-n-320w.webp',

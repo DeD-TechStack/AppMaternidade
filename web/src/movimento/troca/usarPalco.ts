@@ -37,13 +37,19 @@ function useConsulta(consulta: string): boolean {
 }
 
 /**
- * True where the pin is built: 1024 px wide or more, tall enough (M16 `alturaMinimaPx`) and with motion allowed. It is
+ * The room composition of the Início (`CONSULTA_SALA` in componentes/inicio-casa/usoDaCasa.ts): 1180 px wide or more on
+ * a landscape window. The stage exists only there.
+ */
+const CONSULTA_DA_SALA = '(min-width: 1180px) and (min-aspect-ratio: 1/1)'
+
+/**
+ * True where the pin is built: the room composition, tall enough (M16 `alturaMinimaPx`) and with motion allowed. It is
  * read on the client before the first paint, so the stage's attribute is right at first paint, and reduced motion, a
  * short window and a missing script all share one layout: the rest one. Switching reduced motion on in the middle of
  * the session unmounts every moving piece.
  */
 export function usePalcoFixo(): boolean {
-  const larga = useConsulta('(min-width: 1024px)')
+  const larga = useConsulta(CONSULTA_DA_SALA)
   const alta = useConsulta(`(min-height: ${alturaMinimaDoFixo()}px)`)
   const reduzido = usePrefereMovimentoReduzido()
   return larga && alta && !reduzido

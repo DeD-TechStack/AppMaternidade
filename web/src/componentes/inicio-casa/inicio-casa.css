@@ -3,11 +3,15 @@
    as custom properties on `[data-casa]` below. No gradient, no shadow, no blur, no italic, no loop, no 3D; nothing in
    this file animates (the lamp and the header pill transition only opacity, background-color and color).
 
-   Two compositions, one switch at 1024 px (the same width the page reads in JS):
-   - 1024 and more: the room of RECUT §2-§3, positioned from the seam (x 556.5 at 1440). The plate (M05, 900 wide) is
-     set so its own seam falls on the seam of the h1 (the first span's width plus 12 px). The stage (the first
+   Two compositions of the hero and the stage, one switch (the same query the page reads in JS, `CONSULTA_SALA`):
+   - The room, `(min-width: 1180px) and (min-aspect-ratio: 1/1)`: RECUT §2-§3, positioned from the seam (x 556.5 at
+     1440). The plate (M05, 900 wide) is set so its own seam falls on the seam of the h1 (the first span's width plus
+     12 px); the night column is anchored to the quadro's right edge, never to the window's. The stage (the first
      framed screen) is band 2 itself: its walls, floors, frame and night sheet are the band's layers (moment 2).
-   - Below 1024: one column, the page is night from the h1's second line down (RECUT §4).
+   - Stacked, everywhere else (below 1180 px, and any portrait window such as 1024 x 1366): one column, the page is
+     night from the h1's second line down (RECUT §4); the plate is sized by the window's height on short screens.
+   The bands below the stage switch at 1024 px: from there each one is two columns (heading left, rows or scene right)
+   and the cacau bands stand their object on the night floor (`.ic-chao`), edge to edge.
 
    Hero text sizes are the DESIGN.md levels (`text-exibicao`, `text-abertura`, `text-titulo-1`, `text-corpo`). */
 @layer components {
@@ -25,12 +29,14 @@
     --heroi-alto: 723px;
     --heroi-titulo-topo: 32px;
     --heroi-placa-topo: 152px;
-    --heroi-lede-topo: 384.8px;
+    /* The value sentence and its actions read as one block with the h1: the lede starts at doc y 330 at 1440, right of
+       the lamp, on the night wall. */
+    --heroi-lede-topo: 258px;
     --heroi-acoes-vao: 24px;
     --heroi-leg-topo: 666.5px;
     --heroi-medida: 388px;
-    --heroi-borda-noite: 36px;
-    --heroi-noite-esq: calc(100% - var(--heroi-borda-noite) - var(--heroi-medida));
+    /* The night column ends on the quadro's right edge (x 1320 at 1440, 1880 at 2560), never on the window's. */
+    --heroi-noite-esq: calc(100% - var(--heroi-esq) - var(--heroi-medida));
     --palco-topo: 24px;
     --palco-alto: calc(100svh - var(--palco-topo));
     --palco-chao: 108px;
@@ -90,25 +96,32 @@
     color: var(--color-papel);
   }
 
+  /* The mel pill keeps its own width at every width, so "Ver como funciona" sits beside it under the value sentence
+     (the shared BotaoLargo fills the quadro below 768; here it is one of two actions in a row, which wraps at 320). */
+  [data-casa] .ic-acoes .cm-botao.cm-botao-largo {
+    display: inline-flex;
+    width: auto;
+  }
+
   /* Below 768 the plate is the 390 window (`<source>` of the picture): its seam is at 142.3 of 390, not at 0.5443 of the
      whole plate. The custom property is set inline by CenaHeroi, so the window needs the important flag. */
   @media (max-width: 767px) {
-    [data-casa] [data-cena-heroi][data-lado] {
+    [data-casa] [data-cena-heroi][aria-labelledby='ic-titulo'] {
       --cena-costura: 0.365 !important;
     }
   }
 
-  /* ---- Below 1024: one column ---------------------------------------------------------------------------------- */
-  @media (max-width: 1023px) {
+  /* ---- Stacked: one column (below 1180, or a portrait window) --------------------------------------------------- */
+  @media not all and (min-width: 1180px) and (min-aspect-ratio: 1/1) {
     /* The hero is cacau from the day band down. Its text container dissolves so every piece is an item of one column. */
-    [data-casa] [data-cena-heroi][data-lado] {
+    [data-casa] [data-cena-heroi][aria-labelledby='ic-titulo'] {
       display: flex;
       flex-direction: column;
       background-color: var(--color-cacau);
       color: var(--color-papel);
     }
 
-    [data-casa] [data-cena-heroi][data-lado] .cm-cena-texto {
+    [data-casa] [data-cena-heroi][aria-labelledby='ic-titulo'] .cm-cena-texto {
       display: contents;
     }
 
@@ -135,11 +148,12 @@
       padding: var(--espaco-pilha) var(--quadro-calha) 0;
     }
 
-    /* The plate window: full width. */
-    [data-casa] [data-cena-heroi][data-lado] .cm-cena-placa {
+    /* The plate window: full width on a phone; from 768 (the whole plate) no wider than 760 px, centred, with its walls
+       and floors running on to both edges, so the caption of 16:00 stays in the first fold of a tablet. */
+    [data-casa] [data-cena-heroi][aria-labelledby='ic-titulo'] .cm-cena-placa {
       order: 3;
-      align-self: stretch;
-      width: 100%;
+      align-self: center;
+      width: min(100%, 760px);
       margin-top: var(--espaco-grupo);
     }
 
@@ -148,9 +162,10 @@
       padding: var(--espaco-junto) var(--quadro-calha) var(--espaco-pilha);
     }
 
+    /* The night moments follow each other one `secao` apart (48 px at 390): the frame, the band's heading, M06. */
     [data-casa] .ic-palco {
       order: 5;
-      padding: var(--espaco-junto) var(--quadro-calha) var(--espaco-midia);
+      padding: var(--espaco-junto) var(--quadro-calha) var(--espaco-secao);
     }
 
     /* Band 2 is cacau all the way. */
@@ -159,7 +174,7 @@
     }
 
     [data-casa] [data-faixa][aria-labelledby='ic-noite'] {
-      padding-top: var(--espaco-midia);
+      padding-top: 0;
     }
 
     [data-casa] .ic-noite-conteudo {
@@ -176,7 +191,7 @@
       /* Positioned, so the light group (absolute, inset 0) registers against this plate, not the frame. */
       position: relative;
       width: min(300px, 100%);
-      margin: calc(2 * var(--espaco-midia)) auto 0;
+      margin: var(--espaco-secao) auto 0;
     }
 
     [data-casa] .ic-m06 img:not([data-luz]) {
@@ -192,6 +207,68 @@
       background-color: var(--color-texto-2);
     }
 
+    /* From 768 (tablets, 1024 x 1366): no blank half beside an object. The hero is a grid whose last row puts the
+       16:00 caption beside the frame that shows the 16:00 row; band 2 puts its text beside M06. */
+    @media (min-width: 768px) {
+      [data-casa] [data-cena-heroi][aria-labelledby='ic-titulo'] {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+      }
+
+      [data-casa] .ic-titulo,
+      [data-casa] .ic-noite-heroi,
+      [data-casa] [data-cena-heroi][aria-labelledby='ic-titulo'] .cm-cena-placa {
+        grid-column: 1 / -1;
+      }
+
+      [data-casa] [data-cena-heroi][aria-labelledby='ic-titulo'] .cm-cena-placa {
+        justify-self: center;
+      }
+
+      [data-casa] .ic-leg1 {
+        grid-column: 1;
+        align-self: start;
+        padding-top: var(--espaco-midia);
+      }
+
+      [data-casa] .ic-palco {
+        grid-column: 2;
+        padding-top: var(--espaco-midia);
+      }
+
+      [data-casa] .ic-noite-conteudo {
+        grid-template-columns: minmax(0, 1fr) min(300px, 40%);
+        align-items: end;
+        column-gap: var(--espaco-midia);
+      }
+
+      [data-casa] .ic-noite-texto {
+        grid-column: 1;
+        align-self: center;
+      }
+
+      [data-casa] .ic-m06 {
+        grid-column: 2;
+        width: 100%;
+        margin: 0;
+      }
+
+      [data-casa] .ic-piso-noite {
+        grid-column: 1 / -1;
+      }
+    }
+  }
+
+  /* Short landscape windows (a phone on its side, 844 x 390; a laptop at 200 % zoom): the text first, and the plate no
+     taller than half the window. */
+  @media (orientation: landscape) and (max-height: 600px) {
+    [data-casa] [data-cena-heroi][aria-labelledby='ic-titulo'] .cm-cena-placa {
+      width: min(100%, 760px, 50svh * 1672 / 941);
+    }
+  }
+
+  /* ---- Below 1024: the bands after the stage, one column ------------------------------------------------------- */
+  @media (max-width: 1023px) {
     [data-casa] .ic-tela {
       display: grid;
       justify-items: center;
@@ -211,15 +288,15 @@
     }
   }
 
-  /* ---- 1024 and more: the room of RECUT §2-§3 ------------------------------------------------------------------ */
-  @media (min-width: 1024px) {
+  /* ---- The room of RECUT §2-§3 (1180 and more, landscape) ------------------------------------------------------ */
+  @media (min-width: 1180px) and (min-aspect-ratio: 1/1) {
     /* The hero's own box is the room (doc y 72 to 795); the stage follows it in the flow and band 2 lies over the stage. */
-    [data-casa] [data-cena-heroi][data-lado] {
+    [data-casa] [data-cena-heroi][aria-labelledby='ic-titulo'] {
       display: block;
       padding-top: var(--heroi-alto);
     }
 
-    [data-casa] [data-cena-heroi][data-lado] .cm-cena-texto {
+    [data-casa] [data-cena-heroi][aria-labelledby='ic-titulo'] .cm-cena-texto {
       display: contents;
     }
 
@@ -263,20 +340,20 @@
     }
 
     /* The plate: its seam on the page seam. The walls and floors run on to both edges of the window. */
-    [data-casa] [data-cena-heroi][data-lado] .cm-cena-placa {
+    [data-casa] [data-cena-heroi][aria-labelledby='ic-titulo'] .cm-cena-placa {
       position: absolute;
       top: var(--heroi-placa-topo);
       left: calc(var(--heroi-costura-x) - var(--cena-costura) * (var(--cena-largura-max) * min(100vw, 1440px) / 1440));
       z-index: 1;
     }
 
-    [data-casa] [data-camada='parede-esquerda'],
-    [data-casa] [data-camada='parede-direita'] {
+    [data-casa] [aria-labelledby='ic-titulo'] [data-camada='parede-esquerda'],
+    [data-casa] [aria-labelledby='ic-titulo'] [data-camada='parede-direita'] {
       top: calc(-1 * var(--heroi-placa-topo));
     }
 
-    [data-casa] [data-camada='chao-esquerda'],
-    [data-casa] [data-camada='chao-direita'] {
+    [data-casa] [aria-labelledby='ic-titulo'] [data-camada='chao-esquerda'],
+    [data-casa] [aria-labelledby='ic-titulo'] [data-camada='chao-direita'] {
       bottom: calc(-1 * var(--heroi-chao-extra));
     }
 
@@ -426,14 +503,23 @@
       display: contents;
     }
 
+    /* The stage's night column starts one `grupo` right of M06 (whose light reaches its box's right edge) and ends on
+       the quadro's right edge: 1016 to 1320 at 1440, never over the plate and never past the quadro. */
+    [data-casa] .ic-estagio {
+      --palco-noite-esq: max(
+        var(--heroi-noite-esq),
+        var(--heroi-costura-x) + 2 * var(--espaco-grupo) + var(--palco-m06-largura)
+      );
+    }
+
     [data-casa] .ic-noite-texto {
       position: absolute;
       bottom: var(--palco-texto-fundo);
-      left: var(--heroi-noite-esq);
-      z-index: 3;
+      left: var(--palco-noite-esq);
+      z-index: 4;
       display: grid;
       gap: var(--espaco-pilha);
-      width: var(--heroi-medida);
+      width: calc(100% - var(--heroi-esq) - var(--palco-noite-esq));
     }
 
     [data-casa] .ic-m06 {
@@ -456,24 +542,30 @@
     [data-casa] .ic-piso-noite {
       position: absolute;
       bottom: var(--palco-leg-fundo);
-      left: var(--heroi-noite-esq);
-      z-index: 3;
+      left: var(--palco-noite-esq);
+      z-index: 4;
     }
 
     [data-casa] .ic-piso-noite [data-troca-legenda] {
       min-height: 1lh;
     }
+  }
 
-    /* Band 3: the text on the left, the second frame at about x 860 (RECUT §8.3), 16 px (`pilha`) under the band's padding. */
+  /* ---- 1024 and more: the bands after the stage, two columns each -------------------------------------------- */
+  @media (min-width: 1024px) {
+    /* Band 3: the text centred on the frame (no dead wall under it), the frame standing on the night floor. The text
+       column takes what the frame leaves, so "Dormiu às 20:30." stays on one line at 1440. */
     [data-casa] .ic-tela {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
-      align-items: start;
+      align-items: center;
       column-gap: var(--espaco-midia);
+      row-gap: 0;
     }
 
     [data-casa] .ic-tela .cm-produto-moldura {
-      margin: var(--espaco-pilha) calc(var(--espaco-secao) + var(--espaco-midia) * 0.6) 0 0;
+      align-self: end;
+      justify-self: center;
     }
 
     [data-casa] .ic-tela-texto,
@@ -488,6 +580,101 @@
       grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
       align-items: center;
       column-gap: var(--espaco-midia);
+    }
+
+    /* Bands 5 and 6: the heading (and its sentence) left, the rows right, one row size and one rule between rows. */
+    [data-casa] .ic-prova .cm-faixa-prova,
+    [data-casa] .ic-perguntas .cm-perguntas {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      grid-template-rows: auto 1fr;
+      align-items: start;
+      column-gap: var(--espaco-midia);
+      row-gap: var(--espaco-pilha);
+    }
+
+    [data-casa] .ic-prova .cm-faixa-prova > h2,
+    [data-casa] .ic-prova .cm-faixa-prova > p,
+    [data-casa] .ic-perguntas .cm-perguntas > h2 {
+      grid-column: 1;
+    }
+
+    [data-casa] .ic-prova [data-prova-lista],
+    [data-casa] .ic-perguntas .cm-perguntas-lista {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      max-width: none;
+      margin: 0;
+    }
+  }
+
+  /* The questions are rows like the facts: a rule between them, the same padding. */
+  [data-casa] .ic-perguntas .cm-perguntas-lista {
+    gap: 0;
+  }
+
+  [data-casa] .ic-perguntas .cm-perguntas-lista > li {
+    padding-block: var(--espaco-pilha);
+    border-top: 1px solid currentcolor;
+  }
+
+  [data-casa] .ic-perguntas .cm-perguntas-lista > li:last-child {
+    border-bottom: 1px solid currentcolor;
+  }
+
+  /* ---- The night floor of the cacau bands (3 and 7): a `chao-noite` strip from edge to edge, the object on it ---- */
+  [data-casa] [data-faixa]:has(.ic-tela),
+  [data-casa] [data-faixa]:has(.ic-fecho) {
+    padding-bottom: 0;
+  }
+
+  /* Like CenaHeroi's floors: a solid layer that runs on to both edges of the window (the band clips it, overflow-x). */
+  [data-casa] .ic-chao {
+    position: relative;
+    grid-column: 1 / -1;
+    justify-self: stretch;
+    height: var(--espaco-midia);
+  }
+
+  [data-casa] .ic-chao::before {
+    position: absolute;
+    inset-block: 0;
+    left: -100vw;
+    width: 300vw;
+    background-color: var(--color-texto-2);
+    content: '';
+  }
+
+  /* Band 3 below 1024: the frame sits on the floor (the column's gap is cancelled above the floor). */
+  @media (max-width: 1023px) {
+    [data-casa] .ic-tela .ic-chao {
+      margin-top: calc(-1 * var(--espaco-midia));
+    }
+  }
+
+  /* Band 7: the closing (centred, the only centred block) and M11 under it, its dark foot cut (it keeps 91.7 % of its
+     height, the 404's cut), standing on the night floor. */
+  [data-casa] .ic-fecho {
+    display: grid;
+    justify-items: center;
+    row-gap: var(--espaco-midia);
+  }
+
+  [data-casa] .ic-fecho-cena {
+    width: min(100%, 340px);
+    aspect-ratio: 542 / 386;
+    margin: 0 0 calc(-1 * var(--espaco-midia));
+    overflow: hidden;
+  }
+
+  [data-casa] .ic-fecho-cena img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  @media (min-width: 1024px) {
+    [data-casa] .ic-fecho-cena {
+      width: 420px;
     }
   }
 
@@ -505,12 +692,85 @@
     height: auto;
   }
 
+  /* ---- Moment 5: the Histórico frame scrolls its real screen --------------------------------------------------- */
+  /* The frame is a toggle button named by the screen's alt (`ProdutoEmMoldura rolavel`). On hover, keyboard focus or a
+     tap (aria-pressed) the capture slides up 40 % of what it has beyond the screen (112 px of screen at 390, 128 at
+     1440), from the 09:00 rows to the 20:30 one; it stops there because further down the Y_ALTA capture shows the site
+     footer. 400 ms on the standard curve, object-position only; reduced motion: the final state at once. The night twin
+     of the stage follows the day frame, so the sheet's edge never shows two scrolls. */
+  [data-casa] [data-produto-rolar] {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: calc(var(--produto-tela) * 1.06 * 0.11);
+    background: none;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  [data-casa] [data-produto-rolar]:focus-visible {
+    outline: 3px solid var(--color-papel);
+    outline-offset: 4px;
+  }
+
+  [data-casa] .ic-estagio [data-produto-rolar]:focus-visible {
+    outline-color: var(--color-cacau);
+  }
+
+  [data-casa] [data-produto-rolar] [data-produto-tela],
+  [data-casa] .ic-gemea [data-troca-gemea-tela] {
+    transition: object-position 400ms var(--curva-padrao);
+  }
+
+  [data-casa] [data-produto-rolar]:focus-visible [data-produto-tela],
+  [data-casa] [data-rolado] [data-produto-tela],
+  [data-casa] .ic-estagio:has([data-rolado], [data-produto-rolar]:focus-visible) [data-troca-gemea-tela] {
+    object-position: 50% 40%;
+  }
+
+  @media (hover: hover) {
+    [data-casa] [data-produto-rolar]:hover [data-produto-tela],
+    [data-casa] .ic-estagio:has([data-produto-rolar]:hover) [data-troca-gemea-tela] {
+      object-position: 50% 40%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-casa] [data-produto-rolar] [data-produto-tela],
+    [data-casa] .ic-gemea [data-troca-gemea-tela] {
+      transition: none;
+    }
+  }
+
+  /* ---- Moment 6: between the pages of the house the floor carries over ------------------------------------------ */
+  /* The header and footer links among the Início and the three product pages navigate with `viewTransition`
+     (PAGINAS_DA_CASA in casca/Cabecalho.tsx). This sheet ships with the main bundle (the Início is imported eagerly),
+     so the name below holds on every casa hero: the day floor of one page morphs into the next one's. Reduced motion:
+     no animation at all, the new page at once. */
+  [data-casa] [data-cena-heroi] [data-camada='chao-esquerda'] {
+    view-transition-name: chao;
+  }
+
+  ::view-transition-group(chao) {
+    animation-duration: 400ms;
+    animation-timing-function: var(--curva-padrao);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+      animation: none;
+    }
+  }
+
   /* ---- The header pill (RECUT §5): quiet while the hero's pill is in view, filled at every other position -------- */
-  /* The shell has no hook for this and `casca/**` is not edited: the page's `useGanchoDoCabecalho` sets
-     `data-inicio-heroi="visivel"` on <html> while the hero's mel pill is in view, and removes it when the pill leaves
-     view and on unmount. With no attribute the pill is the shell's own filled one (every other page, every other scroll
-     position, and below 1024, where the hero has no pill). The attribute is set before the first paint, so a page opened
-     at the top at 1024 and more shows the quiet pill with no flash. Only background-color and color change, in 160 ms on
+  /* The shell has no hook for this: the page's `useGanchoDoCabecalho` sets `data-inicio-heroi="visivel"` on <html>
+     while the hero's mel pill is in view (at every width: the pill sits under the value sentence on a phone too), and
+     removes it when the pill leaves view and on unmount. With no attribute the pill is the shell's own filled one
+     (every other page, every other scroll position). The attribute is set before the first paint, so a page opened at
+     the top shows the quiet pill with no flash. Only background-color and color change, in 160 ms on
      the standard curve (and `scale`, the shell's touch press, is kept in the list); the box does not change. The
      selectors carry the shell's `.cm-botao-primario` weight and more (0,4,3 against 0,2,0), so no `!important`. */
   :root:has(main [data-cena-heroi]) header[data-cabecalho]:not([data-tom='noite']) a[data-cabecalho-pilula] {
@@ -519,13 +779,13 @@
     transition-timing-function: ease-out, var(--curva-padrao), var(--curva-padrao);
   }
 
-  @media (min-width: 1024px) {
-    html[data-inicio-heroi='visivel'] header[data-cabecalho]:not([data-tom='noite']) a[data-cabecalho-pilula] {
-      border-color: var(--color-cacau);
-      background-color: transparent;
-      color: var(--color-cacau);
-    }
+  html[data-inicio-heroi='visivel'] header[data-cabecalho]:not([data-tom='noite']) a[data-cabecalho-pilula] {
+    border-color: var(--color-cacau);
+    background-color: transparent;
+    color: var(--color-cacau);
+  }
 
+  @media (hover: hover) {
     html[data-inicio-heroi='visivel'] header[data-cabecalho]:not([data-tom='noite']) a[data-cabecalho-pilula]:hover {
       background-color: var(--color-cacau);
       color: var(--color-papel);
@@ -537,4 +797,11 @@
       transition-duration: 0s;
     }
   }
+}
+
+/* Outside the layers on purpose: the facts of band 5 are rows of one size (judge point "one row size"), and the shared
+   FaixaProva gives the first one the `text-abertura` utility, which a rule in the components layer cannot outweigh. */
+[data-casa] .ic-prova [data-prova-lista] > li {
+  font-size: var(--texto-corpo-tamanho);
+  line-height: var(--texto-corpo-entrelinha);
 }

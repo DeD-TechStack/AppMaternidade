@@ -1,9 +1,15 @@
 import { useLayoutEffect, useSyncExternalStore } from 'react'
 
-// Two page-owned hooks of the Início: the width switch (1024 px, the width from which the hero holds the mel pill and
-// the stage is built as a fixed composition) and the mark on <html> that quiets the shell's header pill.
+// Two page-owned hooks of the Início: the composition switch (the room of RECUT §2-§3, where the stage is built as a
+// fixed composition) and the mark on <html> that quiets the shell's header pill.
 
-const CONSULTA_LARGA = '(min-width: 1024px)'
+/**
+ * The room needs about 1180 px of width (the plate, the seam and the 388 px night column inside the quadro) and a
+ * landscape window. Below it, and on any portrait window (1024 x 1366), the page is the stacked composition. The same
+ * query is written literally in inicio-casa.css (CSS has no variable in a media query).
+ */
+export const CONSULTA_SALA = '(min-width: 1180px) and (min-aspect-ratio: 1/1)'
+const CONSULTA_LARGA = CONSULTA_SALA
 
 function temMatchMedia(): boolean {
   return typeof window !== 'undefined' && typeof window.matchMedia === 'function'
@@ -26,12 +32,12 @@ function assinar(aviso: () => void): () => void {
 const ler = () => (temMatchMedia() ? window.matchMedia(CONSULTA_LARGA).matches : false)
 const semJanela = () => false
 
-/** True from 1024 px of width. Without matchMedia (plain jsdom) the narrow layout stands. */
-export function useLarga1024(): boolean {
+/** True where the room composition stands (`CONSULTA_SALA`). Without matchMedia (plain jsdom) the stacked one stands. */
+export function useSala(): boolean {
   return useSyncExternalStore(assinar, ler, semJanela)
 }
 
-/** The hero pill, the one filled action of the first fold from 1024 px (RECUT §5). */
+/** The hero pill, the one filled action of the first fold at every width (under the value sentence). */
 const PILULA_DO_HEROI = '[data-cena-heroi] a[data-botao-mel]'
 
 /** The attribute on <html> the page stylesheet reads to quiet the shell's header pill (`html[data-inicio-heroi]`). */
@@ -49,16 +55,15 @@ function estaNaVista(pilula: HTMLElement): boolean {
 }
 
 /**
- * RECUT §5, with no hook in the shell (the shell's `casca/**` is not edited): from 1024 px the hero's mel pill is the
- * fold's one filled action, so the header pill is quiet while any part of the hero pill is in view under the header.
- * The page marks that state on <html>: `data-inicio-heroi="visivel"` while the pill is in view (the stylesheet
- * `inicio-casa.css` reads it, at 1024 and more only), and no attribute when it is not, on unmount and below 1024; with
- * no attribute the header pill is the shell's own filled one. The first state is read in a layout effect, before the
- * first paint, so a page opened at the top shows the quiet pill with no flash of the filled one.
+ * RECUT §5, with no hook in the shell: at every width the hero's mel pill is the fold's one filled action, so the
+ * header pill is quiet while any part of the hero pill is in view under the header. The page marks that state on
+ * <html>: `data-inicio-heroi="visivel"` while the pill is in view (the stylesheet `inicio-casa.css` reads it), and no
+ * attribute when it is not and on unmount; with no attribute the header pill is the shell's own filled one. The first
+ * state is read in a layout effect, before the first paint, so a page opened at the top shows the quiet pill with no
+ * flash of the filled one. `sala` only re-reads the pill when the composition switches.
  */
-export function useGanchoDoCabecalho(larga: boolean): void {
+export function useGanchoDoCabecalho(sala: boolean): void {
   useLayoutEffect(() => {
-    if (!larga) return undefined
     const pilula = document.querySelector<HTMLElement>(PILULA_DO_HEROI)
     if (!pilula) return undefined
     const raiz = document.documentElement
@@ -82,5 +87,5 @@ export function useGanchoDoCabecalho(larga: boolean): void {
       observador?.disconnect()
       delete raiz.dataset[ATRIBUTO]
     }
-  }, [larga])
+  }, [sala])
 }

@@ -8,7 +8,7 @@ import { TomDaFaixa } from '../secoes/FaixaInteira.tsx'
 import { ProdutoEmMoldura } from '../secoes/ProdutoEmMoldura.tsx'
 import { FolhaDaNoite } from './FolhaDaNoite.tsx'
 import { ID_FAIXA_NOITE } from './ids.ts'
-import { CAPTURA_Y, LUZ_M06, M06, MOLDURA_DIA } from './midia.ts'
+import { CAPTURA_Y_ALTA as CAPTURA_Y, LUZ_M06, M06, MOLDURA_DIA } from './midia.ts'
 
 interface Props {
   /** From 1024 px wide: the band is the stage (the first framed screen stands in it, on the day side of the seam). */
@@ -47,7 +47,7 @@ export function FaixaNoite({ larga, fixo }: Props) {
           <>
             <span ref={costura} className="ic-medida" aria-hidden="true" />
             <div className="ic-piso-dia" aria-hidden="true" />
-            <ProdutoEmMoldura tela={{ ...CAPTURA_Y, alt: INI.altTela1 }} moldura={MOLDURA_DIA} />
+            <ProdutoEmMoldura tela={{ ...CAPTURA_Y, alt: INI.altTela1 }} moldura={MOLDURA_DIA} rolavel />
             <FolhaDaNoite refFolha={folha} refInterior={interior} />
           </>
         ) : null}
