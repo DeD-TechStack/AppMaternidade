@@ -10,7 +10,8 @@ regra: kanban-leader-cycle, seção 0 "Lista durável de pendências"
 MANDATO (Daniel, 05/11/2026; visual refeito em 11/11): o site inteiro funcionando de ponta a ponta (RF-01 a RF-14), com o visual Campo de mel aprovado em 11/11, publicado para o professor entrar e usar tudo com dados fictícios. Fonte: [Retomada do site](Retomada_Site.md), seção "Roteiro do site completo".
 ESTADO: ATIVO (leader session D5-14 since 19/11 ~12h55). Source of state: block "RETOMAR 19/11 SWITCH-D5-14" right below; everything under "## HISTORY" is history.
 ## RETOMAR 19/11 SWITCH-D5-14 (current; ORDERS: ordens-vigentes rev 4 + D9; D8 English; NEVER clarify)
-- BRANCH: origin/int/refazer = c02c30ac8e6e6d37a44a8598420387cfe5154cce (Q-9 merge; CI 44563430633 green). main untouched. /previa/ = 69fd4bc.
+- BRANCH: origin/int/refazer = 23fc1e0964e4c2eca81e3eb5119aa3a31114af09 (LOC-08b merge; CI 44567095228 green). main untouched. /previa/ = 69fd4bc.
+- LOC-08b t_5efd9893 INTEGRATED: 7ab9aaf -> merge 23fc1e0, check 0 (220 files, 4859 pass), RECIBO 2611, worktree + wt/ removed, evidence INTQ/LOC-08b/.
 - Q-9 t_ed7db934 INTEGRATED (leader takeover): 25acd7a -> merge c02c30a, check 0 (218 files, 4855 pass), RECIBO 2608, card archived (worktree gone with it), wt/ branch deleted, evidence INTQ/Q-9/. Follow-up B02 t_ad91fb5e created (Hoje date in the family zone; ready).
 - MOTION-PAGES t_335008a0: return 2/2 (R4 evidence only) -> LEADER TAKEOVER (comment 2597, scheduled). Child deleg_fdaa6d6a produces R4 (a)-(h) on 85263ff (.oc/lider_verif/motion/, copy in INTQ/MOTION-PAGES/). All PASS -> integration child for 85263ff, then the two judges score the 3 pages (skills test vs the previous score).
 - IN REVIEW: LOC-08b t_5efd9893 (7ab9aaf; sistema.test.tsx scope accepted, comment 2594).
