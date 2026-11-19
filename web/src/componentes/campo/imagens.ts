@@ -7,7 +7,7 @@ import type { Imagem } from '../secoes/contrato.ts'
 // devolve o `Imagem` de sempre, com o `srcSet` WebP no `srcSet` e o `srcSet` AVIF em `avif`.
 
 /** A forma que o vite-imagetools devolve com `&as=picture` (ver `src/imagetools.d.ts`). */
-export interface PlacaGerada {
+interface PlacaGerada {
   sources: Record<string, string>
   img: { src: string; w: number; h: number; srcset?: string }
 }
