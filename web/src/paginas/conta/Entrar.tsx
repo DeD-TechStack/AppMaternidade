@@ -62,7 +62,6 @@ export function Entrar() {
       manchete={MANCHETES.entrar}
       frase={ENTRAR.frase}
       ocupado={carregando}
-      ilustracao="mae-noite"
       ligacoes={
         <>
           <span>{ENTRAR.semConta}</span>

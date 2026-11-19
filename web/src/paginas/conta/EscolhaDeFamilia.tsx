@@ -44,7 +44,7 @@ export function EscolhaDeFamilia({ conta }: { conta: Conta }) {
     <MolduraLogada ocupado={carregando}>
       <DuasColunas>
         <Pilha vao="grupo">
-        <Manchete linhas={MANCHETES.comecarFamilia} refTitulo={titulo} />
+        <Manchete texto={MANCHETES.comecarFamilia} refTitulo={titulo} />
         <RegiaoStatus mensagem={textoDaPassagem(location.state)} />
 
         {carregando ? (

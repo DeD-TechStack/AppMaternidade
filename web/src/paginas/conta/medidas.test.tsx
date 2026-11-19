@@ -169,22 +169,26 @@ describe('/app/conta quebra linha com a fonte a 200% (D-2)', () => {
 })
 
 describe('h1 na escala do DESIGN.md (cm-h1)', () => {
-  it('todo h1 de acesso e de conta leva cm-h1, e o das manchetes tem a segunda linha em itálico', async () => {
+  it('todo h1 de acesso e de conta leva cm-h1, e o das manchetes é um nó de texto só, em prumo, sem segunda linha', async () => {
     for (const tela of TELAS) {
       const { container, unmount } = await abrir(tela)
       const titulo = container.querySelector('h1')!
       expect(titulo.classList.contains('cm-h1'), tela.nome).toBe(true)
       expect(titulo.classList.contains('cm-h2'), tela.nome).toBe(false)
+      expect(titulo.querySelector('.cm-segunda-linha, em, i'), tela.nome).toBeNull()
       if (tela.nome !== '/app/conta' && !tela.nome.startsWith('/app/conta ')) {
-        expect(titulo.querySelector('.cm-segunda-linha'), tela.nome).not.toBeNull()
+        expect(titulo.childNodes, tela.nome).toHaveLength(1)
+        expect(titulo.firstChild!.nodeType, tela.nome).toBe(Node.TEXT_NODE)
+        expect(titulo.classList.contains('not-italic'), tela.nome).toBe(true)
       }
       unmount()
     }
   })
 
-  it('cada linha das manchetes cabe numa linha em 390 a 42 px (até 17 caracteres)', () => {
-    for (const linhas of Object.values(MANCHETES)) {
-      for (const linha of linhas) expect(linha.length, linha).toBeLessThanOrEqual(17)
+  it('as manchetes são uma frase só, e as dos cartões COPY (Entrar, Criar conta, Recuperar acesso) cabem numa linha em 390 (até 22 caracteres)', () => {
+    for (const manchete of Object.values(MANCHETES)) expect(typeof manchete).toBe('string')
+    for (const chave of ['entrar', 'criarConta', 'recuperarAcesso'] as const) {
+      expect(MANCHETES[chave].length, chave).toBeLessThanOrEqual(22)
     }
   })
 })

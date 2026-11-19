@@ -35,43 +35,47 @@ export function tituloPublico(nome: string): string {
 }
 
 /**
- * O `h1` das telas com a cena de mel: a primeira linha e a segunda, esta inteira em itálico. Cada uma
- * diz o que a família ganha, e não o que o site é. Linhas curtas: cada uma cabe numa linha na coluna do
- * formulário. O título da aba continua o de `TITULOS`.
+ * O `h1` das telas de acesso: uma frase só, em prumo, num nó só (os textos de Entrar, Criar conta e
+ * Recuperar acesso são os dos cartões COPY_*; os das telas sem cartão juntam as duas linhas de antes com
+ * um espaço). O título da aba continua o de `TITULOS`.
  */
 export const MANCHETES = {
-  entrar: ['Volte à rotina', 'da família.'],
-  criarConta: ['Divida a rotina', 'com carinho.'],
-  recuperarAcesso: ['Esqueceu a senha?', 'A gente ajuda.'],
-  redefinirSenha: ['Senha nova,', 'rotina de volta.'],
-  contaExcluida: ['Conta excluída.', 'Até a próxima.'],
-  comecar: ['Vamos começar', 'pelo seu nome.'],
-  comecarFamilia: ['Vamos começar', 'a sua família.'],
-  convite: ['Convite para', 'uma família'],
+  entrar: 'Pode entrar.',
+  criarConta: 'Fique à vontade.',
+  recuperarAcesso: 'Esqueceu a senha?',
+  redefinirSenha: 'Senha nova, rotina de volta.',
+  contaExcluida: 'Conta excluída. Até a próxima.',
+  comecar: 'Vamos começar pelo seu nome.',
+  comecarFamilia: 'Vamos começar a sua família.',
+  convite: 'Convite para uma família.',
 } as const
 
-/** O nome acessível de cada `h1` acima: as duas linhas, separadas por um espaço. */
-function nomeDoH1(linhas: readonly [string, string]): string {
-  return `${linhas[0]} ${linhas[1]}`
-}
-
+/**
+ * O nome acessível de cada `h1` acima: o próprio texto. Exceção: o do convite não leva o ponto final (os testes
+ * de rota o somam: `${NOMES_DO_H1.convite}.` é o que a tela escreve, e é `MANCHETES.convite`).
+ */
 export const NOMES_DO_H1 = {
-  entrar: nomeDoH1(MANCHETES.entrar),
-  criarConta: nomeDoH1(MANCHETES.criarConta),
-  recuperarAcesso: nomeDoH1(MANCHETES.recuperarAcesso),
-  redefinirSenha: nomeDoH1(MANCHETES.redefinirSenha),
-  contaExcluida: nomeDoH1(MANCHETES.contaExcluida),
-  comecar: nomeDoH1(MANCHETES.comecar),
-  comecarFamilia: nomeDoH1(MANCHETES.comecarFamilia),
-  convite: nomeDoH1(MANCHETES.convite),
+  entrar: MANCHETES.entrar,
+  criarConta: MANCHETES.criarConta,
+  recuperarAcesso: MANCHETES.recuperarAcesso,
+  redefinirSenha: MANCHETES.redefinirSenha,
+  contaExcluida: MANCHETES.contaExcluida,
+  comecar: MANCHETES.comecar,
+  comecarFamilia: MANCHETES.comecarFamilia,
+  convite: 'Convite para uma família',
 } as const
 
-/** A cena de mel das telas de acesso: os arquivos de `web/public/cenas/acesso/` (512 × 768 em 1×). */
-export const CENA_ACESSO = {
-  base: '/cenas/acesso/entrar',
-  largura: 512,
-  altura: 768,
-  alt: 'Celular sobre um pedestal verde-oliva, com uma tela do AppMaternidade aberta.',
+/**
+ * A única imagem das telas de acesso: a placa da porta (`web/public/cenas/acesso/porta-<largura>w.webp`, em
+ * 390, 720, 780 e 1254 px de largura; ver o PROVENANCE.md da pasta). `alt` é o `ent.alt.porta` do cartão
+ * COPY_entrar.
+ */
+export const PORTA_ACESSO = {
+  base: '/cenas/acesso/porta',
+  larguras: [390, 720, 780, 1254],
+  largura: 720,
+  altura: 720,
+  alt: 'Uma mão põe a chave na fechadura de uma porta fechada, num corredor à noite. Por baixo da porta passa uma faixa de luz.',
 } as const
 
 export const COMUM = {
@@ -112,7 +116,7 @@ export const CABECALHO = {
 } as const
 
 export const ENTRAR = {
-  frase: 'Use o e-mail e a senha que você cadastrou.',
+  frase: 'O dia do bebê está anotado aqui.',
   botao: 'Entrar',
   semConta: 'Ainda não tem conta?',
   criarConta: 'Criar conta',
@@ -121,7 +125,7 @@ export const ENTRAR = {
 } as const
 
 export const CRIAR_CONTA = {
-  frase: 'Você precisa de um nome, um e-mail e uma senha.',
+  frase: 'A família e o bebê vêm depois.',
   botao: 'Criar conta',
   jaTemConta: 'Já tem conta?',
   entrar: 'Entrar',
@@ -138,7 +142,7 @@ export const AVISO_BANCO_DEMONSTRACAO =
   'O banco é de teste. Para a família e o bebê, use só nomes e datas inventados.'
 
 export const RECUPERAR = {
-  frase: 'Escreva o e-mail da conta. Enviamos um link para você criar uma senha nova.',
+  frase: 'Enviamos um link para o seu e-mail.',
   botao: 'Enviar link',
   resultado:
     'Se houver uma conta com este e-mail, enviamos um link para criar uma senha nova. Confira também a caixa de spam.',

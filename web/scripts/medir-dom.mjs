@@ -2362,8 +2362,8 @@ function contaPadrao(rota) {
   return rota.startsWith('moderacao') ? 'moderador' : 'responsavel'
 }
 
-/** O h1 da tela de login (`MANCHETES.entrar` de web/src/conteudo/conta.ts, as linhas unidas por um espaço). */
-export const MANCHETE_LOGIN = 'Volte à rotina da família.'
+/** O h1 da tela de login (`MANCHETES.entrar` de web/src/conteudo/conta.ts, uma frase só). */
+export const MANCHETE_LOGIN = 'Pode entrar.'
 
 /** As rotas de acesso, em que o h1 do login é o esperado. */
 const CAMINHOS_DE_ACESSO = ['/entrar', '/criar-conta', '/recuperar-acesso', '/convite']

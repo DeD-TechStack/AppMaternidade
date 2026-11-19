@@ -83,9 +83,9 @@ function PassoSeuNome({ aoSalvar }: { aoSalvar: () => void }) {
 
   return (
     <MolduraLogada>
-      <DuasColunas ilustracao="tummy-time">
+      <DuasColunas>
         <Pilha vao="grupo">
-        <Manchete linhas={MANCHETES.comecar} refTitulo={titulo} />
+        <Manchete texto={MANCHETES.comecar} refTitulo={titulo} />
         <RegiaoStatus mensagem={textoDaPassagem(location.state)} />
         <Cartao
           as="section"
