@@ -760,7 +760,7 @@
     margin-top: 0;
   }
 
-  /* A largura é a do quadro da página (a mesma do cabeçalho e das seções, 1200 px no máximo), para o nome e os links
+  /* A largura é a do quadro da página (a mesma do cabeçalho e das seções, `--quadro-largura`), para o nome e os links
      ficarem na borda esquerda do resto da página; abaixo de 1224 px dá a mesma margem lateral da `.cm-area`. */
   /* Abaixo de 768 o rodapé tem de caber em 420 px também na madrugada (links de 56 px, cinco linhas de 280 px): o
      respiro do quadro é o `junto`, o nome encosta nos links (a caixa de cada link já traz folga em volta do texto) e

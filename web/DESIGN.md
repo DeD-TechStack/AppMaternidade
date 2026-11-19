@@ -1,7 +1,7 @@
 ---
 version: alpha
 name: AppMaternidade — A casa acesa
-description: "Papel quente, cacau, areia e o mel só como luz, em faixas de ponta a ponta nas páginas públicas (a área logada segue o Campo de mel até o DS-2). Literata nos títulos e Outfit no texto. Um quadro de 1200 px com uma borda esquerda por página, e espaço e tipo de duas escalas curtas, medidas no Pato Jack e na Good Inside (MEDIDAS.md)."
+description: "Papel quente, cacau, areia e o mel só como luz, em faixas de ponta a ponta nas páginas públicas (a área logada segue o Campo de mel até o DS-2). Literata nos títulos e Outfit no texto. Um quadro de 1200 px até 1440 (1600 px em 2560) com uma borda esquerda por página, e espaço e tipo de duas escalas curtas, medidas no Pato Jack e na Good Inside (MEDIDAS.md) e fluidas de 320 a 1920 px."
 colors:
   papel: "#F8F6EB"
   mel: "#F2C14E"
@@ -129,6 +129,7 @@ spacing:
   painel-390: 24px
   painel-1440: 48px
   quadro-largura: 1200px
+  quadro-largura-2560: 1600px
   quadro-calha-390: 20px
   quadro-calha-1440: 32px
   medio: 880px
@@ -210,7 +211,7 @@ A cor nunca é a única pista: erro, estado e seleção levam também ícone, te
 
 Duas famílias, SIL OFL 1.1, auto-hospedadas pelo `@fontsource-variable` (registro em `web/PROVENANCE.md`): **Literata** nos títulos e **Outfit** no texto e na interface. Nenhum texto em caixa alta. Nada menor que 15 px.
 
-Nove níveis. Cada nível tem dois pares de tamanho e entrelinha, um para 390 px de viewport e outro para 1440 px. Abaixo de 390 vale o par de 390, e acima de 1440 vale o de 1440. No meio, a medida cresce em linha reta (o `clamp` do tema gerado). O tamanho e a entrelinha são em rem no tema (16 px = 1 rem com a fonte a 100%).
+Nove níveis. Cada nível tem dois pares de tamanho e entrelinha, um para 390 px de viewport e outro para 1440 px. A escala tem quatro âncoras: 320, 390, 1440 e 1920. Entre 390 e 1440 a medida cresce em linha reta, e a mesma reta continua para baixo até 320 e para cima até 1920; abaixo de 320 e acima de 1920 ela fica parada (o piso e o teto do `clamp` do tema gerado). Os valores de 320 e de 1920 não são escritos aqui: o gerador os tira da reta. Piso de leitura: nenhum nível fica menor que o `corpo` de 390 (17 px); o nível cuja reta cairia abaixo disso em 320 (hoje só o próprio `corpo`) para no par de 390. Assim, em 320 a exibição tem 41,6 px e o corpo 17/26, e em 1920 a exibição tem perto de 96 px e o corpo perto de 18,5 px. O tamanho e a entrelinha são em rem no tema (16 px = 1 rem com a fonte a 100%).
 
 | Nível | 390 (tamanho/entrelinha) | 1440 | Família e peso | Uso (P4 da SPEC H) |
 |---|---|---|---|---|
@@ -246,12 +247,12 @@ Estes estilos **não entram** na escala de nove níveis, nem no tema gerado. Os 
 
 ## Layout
 
-O espaço vem de uma escala de oito papéis (`junto`, `pilha`, `grupo`, `bloco`, `midia`, `secao`, `secao-ampla`, `painel`), cada um com um valor para 390 e outro para 1440, mais os valores do quadro. Cada vão da página usa o token do seu papel, nunca um número solto. Entre 390 e 1440 o valor cresce em linha reta (o `clamp` do tema gerado). Abaixo de 390 e acima de 1440, é constante. O espaço é em px.
+O espaço vem de uma escala de oito papéis (`junto`, `pilha`, `grupo`, `bloco`, `midia`, `secao`, `secao-ampla`, `painel`), cada um com um valor para 390 e outro para 1440, mais os valores do quadro. Cada vão da página usa o token do seu papel, nunca um número solto. As âncoras são as mesmas do tipo (320, 390, 1440 e 1920): entre 390 e 1440 o valor cresce em linha reta, a mesma reta segue até 320 e até 1920, e fora delas o valor é constante (o `clamp` do tema gerado). O espaço é em px.
 
 ### Glossário
 
-- **Quadro:** a faixa onde fica o conteúdo da página. Largura do conteúdo `min(1200 px, viewport − 2 × calha)`, centrada. A borda esquerda do quadro é **a borda** da página: todo texto fora de painel começa nela.
-- **Calha:** 20 px em 390 e 32 px a partir de 1440, em linha reta no meio (`quadro-calha`). A largura do quadro (`quadro-largura`, 1200 px) é fixa e não entra no `clamp`.
+- **Quadro:** a faixa onde fica o conteúdo da página. Largura do conteúdo `min(quadro-largura, viewport − 2 × calha)`, centrada. A borda esquerda do quadro é **a borda** da página: todo texto fora de painel começa nela.
+- **Calha:** 20 px em 390 e 32 px em 1440, na reta das quatro âncoras (cerca de 19 px em 320 e 37 px em 1920; `quadro-calha`). A largura do quadro (`quadro-largura`) é 1200 px até 1440 e cresce em reta até `quadro-largura-2560` (1600 px) em 2560.
 - **Seção:** uma faixa vertical da página, filha direta do `<main>`, ou o cabeçalho, ou o rodapé. Tem padding de topo e de base e nenhuma margem.
 - **Painel (área logada apenas):** seção com fundo de cor (mel, cacau, oliva, areia), desenhada como caixa de raio 24 cujas bordas laterais coincidem com as do quadro. O conteúdo do painel começa na borda + `painel`. As páginas públicas não têm painel: usam as faixas de ponta a ponta (`FaixaInteira`, veja Components).
 - **Seções compartilhadas (páginas públicas):** as peças de `web/src/componentes/secoes/` (`PaginaCasa`, `FaixaInteira`, `CenaHeroi`, `ProdutoEmMoldura`, `Legenda`, `FaixaProva`, `Perguntas`, `BotaoLargo` e `Fechamento`) são as primitivas públicas de composição, e todo espaço delas vem de `secao`, `bloco`, `grupo`, `pilha` e `junto`.
@@ -296,8 +297,8 @@ A classe é `<família>-<sufixo>`, e a família é qualquer utilitário de espa�
 
 ### Quadro e contêineres
 
-- `quadro-largura`: 1200 px, fixo.
-- `quadro-calha`: 20 px em 390 e 32 px em 1440, em `clamp`.
+- `quadro-largura`: 1200 px até 1440 px de viewport; daí em diante cresce em reta até 1600 px em 2560 (`quadro-largura-2560`) e para. A reta começa em 1440, e não em 1920, para que a página use a tela grande sem que o quadro mude abaixo de 1440; a medida das linhas não cresce com ele, porque o texto corrido continua preso a `leitura` e a `medio`.
+- `quadro-calha`: 20 px em 390 e 32 px em 1440, em `clamp`, na reta de 320 a 1920.
 - `medio`: 880 px, para blocos de texto de duas ou três colunas e subtítulos longos, alinhado à borda.
 - `leitura`: 640 px, para texto corrido (perto de 76 caracteres a 18 px, dentro de 60 a 80), alinhado à borda.
 - Todo conteúdo da seção começa na borda do contêiner: há **uma** borda esquerda por página. O painel recua o conteúdo só por `painel`.
