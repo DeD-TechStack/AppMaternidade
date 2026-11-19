@@ -11,10 +11,6 @@ export const INICIO = {
     lide: 'Registre mamada, sono e fralda em dois toques. Na troca de turno, quem chega já vê o que aconteceu.',
     primario: { rotulo: 'Começar grátis', destino: '/app/hoje' },
     secundario: { rotulo: 'Ver como funciona', destino: '/como-funciona' },
-    cena: {
-      base: '/cenas/inicio/heroi',
-      alt: 'Três celulares sobre pedestais verdes, num fundo amarelo, mostrando telas do AppMaternidade.',
-    },
   },
   numeros: { titulo: 'Números do app' },
   selos: { titulo: 'O que o app promete' },
@@ -35,10 +31,6 @@ export const INICIO = {
     titulo: ['De madrugada,', 'com uma mão só.'],
     lide: 'O botão de iniciar mamada fica na metade de baixo da tela, grande e amarelo sobre o fundo escuro.',
     botao: { rotulo: 'Ver o modo madrugada', destino: '/como-funciona' },
-    cena: {
-      base: '/cenas/inicio/faixa-cacau',
-      alt: 'Um celular sobre linho com a tela escura do modo madrugada e o botão amarelo de iniciar mamada.',
-    },
   },
   tabela: {
     titulo: ['O caderno ajuda.', 'O app divide.'],
@@ -50,10 +42,6 @@ export const INICIO = {
       { necessidade: 'Dar acesso com prazo para a babá', app: true, caderno: false },
       { necessidade: 'Sem metas nem comparações', app: true, caderno: true },
     ],
-    cena: {
-      base: '/cenas/inicio/tabela',
-      alt: 'Um celular sobre linho com uma tela real do AppMaternidade.',
-    },
   },
   citacao: {
     texto: 'Pomada só à noite, a de dia acabou. Se ela acordar, o bico está na bolsa.',

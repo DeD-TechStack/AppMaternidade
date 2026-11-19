@@ -111,8 +111,11 @@ export const REGRAS_INICIO = ['HEROI', 'LEGENDA_PRESA', 'MOLDURA_DOBRA', 'NOITE'
 /** O Início e as suas duas variantes de face de exibição (`?exibicao=b|c`, FG-2b). */
 const CASOS_INICIO = ['inicio', 'inicio_b', 'inicio_c']
 
-/** Os casos que têm de trazer um [data-casa] no main (a /sistema, a vitrine das peças, e o Início). */
-export const CASOS_CASA = ['sistema', ...CASOS_INICIO]
+/**
+ * Os casos que têm de trazer um [data-casa] no main (a /sistema, a vitrine das peças, o Início e as quatro páginas
+ * públicas refeitas na casa: Como funciona, Cuidado, Desenvolvimento e a página inexistente).
+ */
+export const CASOS_CASA = ['sistema', ...CASOS_INICIO, 'comofunciona', 'cuidado', 'desenvolvimento', 'naoencontrada']
 
 /** As duas regras que só registram: nunca bloqueiam. */
 const REGRAS_DE_REGISTRO = ['TITULO_REGISTRO', 'CASA_LIMPA_REGISTRO']

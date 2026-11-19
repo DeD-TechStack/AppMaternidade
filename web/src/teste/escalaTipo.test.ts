@@ -104,10 +104,6 @@ describe('TYPE-1: a escala de tipo (arquivos-fonte)', () => {
     const inicio = lerTexto('src/componentes/inicio/inicio.css')
     expect(umCorpo(inicio, '.in-pagina .cm-segunda-linha')).not.toMatch(/italic/)
 
-    const destaque = lerTexto('src/componentes/publicas-destaque/publicas-destaque.css')
-    expect(umCorpo(destaque, '.pd-nota-texto')).not.toMatch(/italic/)
-    expect(umCorpo(destaque, '.pd-destaque')).not.toMatch(/italic/)
-
     const h1Com = /<h1\b[^>]*className="[^"]*(?<![\w-])cm-exibicao(?![\w-])/
     for (const arquivo of [
       'src/componentes/inicio-casa/TituloCasa.tsx',
