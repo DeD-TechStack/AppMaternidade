@@ -128,87 +128,91 @@ export function Cabecalho({ contexto, comLua, madrugada, aoAlternarMadrugada, to
       {/* O primeiro Tab de toda página: pula o cabeçalho e vai ao <main> (WCAG 2.4.1). */}
       <PularParaConteudo />
       {/* O conteúdo do cabeçalho se alinha à borda do quadro; a altura e o padding vertical continuam os de hoje. */}
-      <QuadroLayout className="cm-cab-miolo">
-        <Link to="/" className="cm-marca" data-nome-site="" viewTransition>
-          {NOME_SITE}
-        </Link>
+      {/* A faixa é o container das consultas em rem (texto a 200 %: o menu no lugar dos links, a pílula compacta). Só a
+          linha fica dentro dela: o menu do celular (fixed) e o alerta da saída (absolute) são irmãos, fora da contenção. */}
+      <div className="cm-cab-faixa" data-cab-faixa="">
+        <QuadroLayout className="cm-cab-miolo">
+          <Link to="/" className="cm-marca" data-nome-site="" viewTransition>
+            {NOME_SITE}
+          </Link>
 
-        <nav aria-label={ROTULO_NAVEGACAO} className="cm-cab-links">
-          {ITENS_DO_CABECALHO[contexto].map((item) => (
-            <NavLink key={item.para} to={item.para} end className="cm-cab-link" viewTransition={PAGINAS_DA_CASA.has(item.para)}>
-              {item.rotulo}
-            </NavLink>
-          ))}
-        </nav>
-
-        <div className="cm-cab-acoes">
-          {comLua ? (
-            <Botao
-              variante="contorno"
-              tamanho="app"
-              className="cm-cab-madrugada"
-              aria-pressed={madrugada}
-              aria-label={ROTULO_MADRUGADA}
-              icone={<Moon size={20} />}
-              onClick={aoAlternarMadrugada}
-              data-cabecalho-acao=""
-            >
-              <span className="cm-rotulo-longo">{ROTULO_MADRUGADA}</span>
-              <span className="cm-rotulo-curto" aria-hidden="true">
-                {ROTULO_MADRUGADA_CURTO}
-              </span>
-            </Botao>
-          ) : null}
-
-          {comVisitante ? (
-            <>
-              <Link to={DESTINO_ENTRAR} className="cm-cab-link cm-cab-entrar">
-                {ROTULO_ENTRAR}
-              </Link>
-              {/* A pílula do CabecalhoCTA: na linha em toda largura; de noite ela vira contorno (sem botão de mel). */}
-              <Botao
-                to={DESTINO_CRIAR_CONTA}
-                variante={tom === 'noite' ? 'contorno' : 'primario'}
-                className="cm-cab-criar"
-                data-cabecalho-acao=""
-                data-cabecalho-pilula=""
-              >
-                {ROTULO_CRIAR_CONTA}
-              </Botao>
-            </>
-          ) : null}
-
-          {situacao === 'com_sessao' ? (
-            // Os dois ficam no cabeçalho de 1100 para cima; abaixo disso vão para o menu (mesma classe do "Entrar").
-            <>
-              <EntradaAvisos variante="linha" />
-              <NavLink to={DESTINO_CONTA} end className="cm-cab-link cm-cab-entrar">
-                {ROTULO_CONTA}
+          <nav aria-label={ROTULO_NAVEGACAO} className="cm-cab-links">
+            {ITENS_DO_CABECALHO[contexto].map((item) => (
+              <NavLink key={item.para} to={item.para} end className="cm-cab-link" viewTransition={PAGINAS_DA_CASA.has(item.para)}>
+                {item.rotulo}
               </NavLink>
-              <button
-                type="button"
-                className="cm-cab-link cm-cab-entrar cursor-pointer"
-                disabled={saindo}
-                onClick={() => void aoSair()}
-              >
-                {saindo ? ROTULO_SAINDO : ROTULO_SAIR}
-              </button>
-            </>
-          ) : null}
+            ))}
+          </nav>
 
-          <button
-            ref={botaoMenu}
-            type="button"
-            className="sb-cab-menu"
-            aria-label={ROTULO_MENU}
-            aria-expanded={menuAberto}
-            aria-controls={idMenu}
-            onClick={() => setAbertoEm(menuAberto ? null : pathname)}
-          >
-            {menuAberto ? <X size={26} aria-hidden="true" /> : <Menu size={26} aria-hidden="true" />}
-          </button>
-        </div>
-      </QuadroLayout>
+          <div className="cm-cab-acoes">
+            {comLua ? (
+              <Botao
+                variante="contorno"
+                tamanho="app"
+                className="cm-cab-madrugada"
+                aria-pressed={madrugada}
+                aria-label={ROTULO_MADRUGADA}
+                icone={<Moon size={20} />}
+                onClick={aoAlternarMadrugada}
+                data-cabecalho-acao=""
+              >
+                <span className="cm-rotulo-longo">{ROTULO_MADRUGADA}</span>
+                <span className="cm-rotulo-curto" aria-hidden="true">
+                  {ROTULO_MADRUGADA_CURTO}
+                </span>
+              </Botao>
+            ) : null}
+
+            {comVisitante ? (
+              <>
+                <Link to={DESTINO_ENTRAR} className="cm-cab-link cm-cab-entrar">
+                  {ROTULO_ENTRAR}
+                </Link>
+                {/* A pílula do CabecalhoCTA: na linha em toda largura; de noite ela vira contorno (sem botão de mel). */}
+                <Botao
+                  to={DESTINO_CRIAR_CONTA}
+                  variante={tom === 'noite' ? 'contorno' : 'primario'}
+                  className="cm-cab-criar"
+                  data-cabecalho-acao=""
+                  data-cabecalho-pilula=""
+                >
+                  {ROTULO_CRIAR_CONTA}
+                </Botao>
+              </>
+            ) : null}
+
+            {situacao === 'com_sessao' ? (
+              // Os dois ficam no cabeçalho de 1100 para cima; abaixo disso vão para o menu (mesma classe do "Entrar").
+              <>
+                <EntradaAvisos variante="linha" />
+                <NavLink to={DESTINO_CONTA} end className="cm-cab-link cm-cab-entrar">
+                  {ROTULO_CONTA}
+                </NavLink>
+                <button
+                  type="button"
+                  className="cm-cab-link cm-cab-entrar cursor-pointer"
+                  disabled={saindo}
+                  onClick={() => void aoSair()}
+                >
+                  {saindo ? ROTULO_SAINDO : ROTULO_SAIR}
+                </button>
+              </>
+            ) : null}
+
+            <button
+              ref={botaoMenu}
+              type="button"
+              className="sb-cab-menu"
+              aria-label={ROTULO_MENU}
+              aria-expanded={menuAberto}
+              aria-controls={idMenu}
+              onClick={() => setAbertoEm(menuAberto ? null : pathname)}
+            >
+              {menuAberto ? <X size={26} aria-hidden="true" /> : <Menu size={26} aria-hidden="true" />}
+            </button>
+          </div>
+        </QuadroLayout>
+      </div>
 
       <MenuCelular
         id={idMenu}
