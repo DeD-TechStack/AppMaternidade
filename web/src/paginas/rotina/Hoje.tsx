@@ -27,7 +27,7 @@ import { useSecao } from '../../componentes/rotina/useSecao.ts'
 import { LinkDaRotina } from '../../componentes/rotina/LinkDaRotina.tsx'
 import { ORIGEM_HOJE } from '../../componentes/rotina/origemDasNotas.ts'
 import { COMUM, ESTADOS, HOJE, LIGACOES, ROTULO_TIPO, SEM_RESULTADO, TITULOS, TOTAIS } from '../../conteudo/rotina.ts'
-import type { Resultado } from '../../dados/comum.ts'
+import { fusoValido, type Resultado } from '../../dados/comum.ts'
 import { diaDaFamilia, formatarIdade, janelaDoDia, lerAparelho } from '../../dados/rotina.dia.ts'
 import { ehTipoDeSessao, LIMITES, podeEscrever, type Lista, type Registro } from '../../dados/rotina.tipos.ts'
 import { focoDoEstado } from '../../prototipo/foco.ts'
@@ -39,8 +39,13 @@ import { CartaoDaSessao } from './hoje/CartaoDaSessao.tsx'
 const UM_SEGUNDO = 1000
 
 // "Quarta-feira, 11 de novembro": a data do dia, ao lado do título em telas largas.
-function dataPorExtenso(instante: number): string {
-  const texto = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }).format(instante)
+function dataPorExtenso(instante: number, fuso: string): string {
+  const texto = new Intl.DateTimeFormat('pt-BR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    timeZone: fusoValido(fuso) ? fuso : undefined,
+  }).format(instante)
   return texto.charAt(0).toLocaleUpperCase('pt-BR') + texto.slice(1)
 }
 
@@ -470,7 +475,7 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
                 lateral={
                   <div className="flex flex-col items-start gap-2 pb-2 lg:items-end">
                     <p className="hidden lg:block" data-data-do-dia="">
-                      <Etiqueta>{dataPorExtenso(agora)}</Etiqueta>
+                      <Etiqueta>{dataPorExtenso(agora, fuso)}</Etiqueta>
                     </p>
                     <div className="flex flex-wrap items-center gap-3" data-atualizacao="">
                       {lidoEm !== null ? (
