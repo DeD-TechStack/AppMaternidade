@@ -1157,6 +1157,56 @@ export function cabecalho(nos, doc) {
   return resultado('CABECALHO', falhas, `${pilulas.length} pílula de cacau, visível, de ${minimo} px ou mais`)
 }
 
+/**
+ * A largura codificada (em px) do recurso que o navegador escolheu para a imagem. `naturalWidth` não serve em DPR 2:
+ * o Chrome o devolve corrigido pela densidade (780w num slot de 390 lê 390). Regra: o candidato do srcset cuja URL
+ * resolve para `currentSrc` dá a largura (descritor `w`: o número; `x`: naturalWidth × x; sem descritor: 1x);
+ * sem srcset, ou com `currentSrc` igual ao `src`, é o naturalWidth (recurso 1x); srcset sem candidato que case: NaN.
+ * `srcset` é o texto (ou uma lista de textos: o da imagem e o dos `<source>` do `<picture>`).
+ * A mesma lógica roda inline em `coletarNaPagina` (que é serializado e não enxerga este escopo): mude as duas juntas.
+ */
+export function larguraCodificadaDe(srcset, currentSrc, naturalWidth, base, src) {
+  const texto = (Array.isArray(srcset) ? srcset : [srcset])
+    .filter((s) => typeof s === 'string' && s.trim() !== '')
+    .join(',')
+  if (texto === '') return naturalWidth
+  const resolver = (url) => {
+    try {
+      return new URL(url, base).href
+    } catch {
+      return null
+    }
+  }
+  const alvo = resolver(currentSrc)
+  let i = 0
+  while (i < texto.length) {
+    while (i < texto.length && /[\s,]/.test(texto[i])) i += 1
+    if (i >= texto.length) break
+    let url = ''
+    while (i < texto.length && !/\s/.test(texto[i])) {
+      url += texto[i]
+      i += 1
+    }
+    let descritor = ''
+    if (url.endsWith(',')) url = url.replace(/,+$/, '')
+    else {
+      while (i < texto.length && texto[i] !== ',') {
+        descritor += texto[i]
+        i += 1
+      }
+    }
+    descritor = descritor.trim()
+    if (alvo === null || resolver(url) !== alvo) continue
+    const w = /^(\d+)w$/.exec(descritor)
+    if (w) return Number(w[1])
+    const x = descritor === '' ? ['', '1'] : /^(\d*\.?\d+)x$/.exec(descritor)
+    if (x) return naturalWidth * Number(x[1])
+    return Number.NaN
+  }
+  if (alvo !== null && typeof src === 'string' && src !== '' && resolver(src) === alvo) return naturalWidth
+  return Number.NaN
+}
+
 /** CENA: a placa de estúdio tem densidade ≥ 1,50; em 1440 mede de 836 a 1115 px e até `data-largura-max`. */
 export function cena(nos, doc) {
   const placas = nos.filter((no) => marca(no, 'cenaPlaca'))
@@ -1168,11 +1218,18 @@ export function cena(nos, doc) {
       falharNo(falhas, no, 'sem retângulo')
       continue
     }
+    // Guarda própria: imagem que não carregou reprova, mesmo que um candidato do srcset case (larguraCodificada sairia > 0).
     if (!(no.naturalWidth > 0)) {
       falharNo(falhas, no, 'a imagem não carregou (naturalWidth ausente)')
       continue
     }
-    const densidade = r.w > 0 ? Math.round((no.naturalWidth / r.w) * 100) / 100 : Number.NaN
+    // Em DPR 2 o naturalWidth vem corrigido pela densidade: vale a largura codificada do recurso escolhido, quando lida.
+    const codificada = no.larguraCodificada !== undefined ? no.larguraCodificada : no.naturalWidth
+    if (!(codificada > 0)) {
+      falharNo(falhas, no, 'a largura codificada da imagem é desconhecida (larguraCodificada ausente ou sem candidato no srcset)')
+      continue
+    }
+    const densidade = r.w > 0 ? Math.round((codificada / r.w) * 100) / 100 : Number.NaN
     if (!(densidade >= 1.5)) falharNo(falhas, no, `densidade ${Number.isFinite(densidade) ? densidade.toFixed(2) : '?'} (o mínimo é 1,50)`)
     if (doc?.largura >= 1440) {
       if (!Number.isFinite(no.larguraMax)) falharNo(falhas, no, 'data-largura-max ausente')
@@ -2178,6 +2235,53 @@ export function coletarNaPagina() {
       no.naturalWidth = el.naturalWidth
     }
     if (no.m.cenaPlaca) {
+      // A largura codificada do recurso escolhido (mesma lógica de `larguraCodificadaDe`, inline: este coletor é serializado).
+      const textos = [el.getAttribute('srcset')]
+      if (el.parentElement?.tagName === 'PICTURE') {
+        for (const fonte of el.parentElement.querySelectorAll('source')) textos.push(fonte.getAttribute('srcset'))
+      }
+      const lista = textos.filter((s) => typeof s === 'string' && s.trim() !== '').join(',')
+      const resolver = (url) => {
+        try {
+          return new URL(url, document.baseURI).href
+        } catch {
+          return null
+        }
+      }
+      let codificada = el.naturalWidth
+      if (lista !== '') {
+        codificada = Number.NaN
+        const alvo = resolver(el.currentSrc)
+        const origem = el.getAttribute('src')
+        let k = 0
+        let achou = false
+        while (alvo !== null && !achou && k < lista.length) {
+          while (k < lista.length && /[\s,]/.test(lista[k])) k += 1
+          if (k >= lista.length) break
+          let url = ''
+          while (k < lista.length && !/\s/.test(lista[k])) {
+            url += lista[k]
+            k += 1
+          }
+          let descritor = ''
+          if (url.endsWith(',')) url = url.replace(/,+$/, '')
+          else {
+            while (k < lista.length && lista[k] !== ',') {
+              descritor += lista[k]
+              k += 1
+            }
+          }
+          descritor = descritor.trim()
+          if (resolver(url) !== alvo) continue
+          achou = true
+          const w = /^(\d+)w$/.exec(descritor)
+          const x = descritor === '' ? ['', '1'] : /^(\d*\.?\d+)x$/.exec(descritor)
+          if (w) codificada = Number(w[1])
+          else if (x) codificada = el.naturalWidth * Number(x[1])
+        }
+        if (!achou && alvo !== null && origem !== null && origem !== '' && resolver(origem) === alvo) codificada = el.naturalWidth
+      }
+      no.larguraCodificada = codificada
       const bruto = el.closest('[data-cena-heroi]')?.getAttribute('data-largura-max')
       const largura = bruto === null || bruto === undefined || bruto.trim() === '' ? Number.NaN : Number(bruto)
       if (Number.isFinite(largura)) no.larguraMax = largura

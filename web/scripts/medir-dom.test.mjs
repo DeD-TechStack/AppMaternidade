@@ -3120,6 +3120,92 @@ describe('DS1-I-11 CENA: a chapa de 836 a 1115 px em 1440, até data-largura-max
     assert.equal(medir.cena([placa(900, 1672, 960, { rect: undefined })], docDs1(1440)).ok, false)
     assert.equal(medir.cena([placa(900, 1672, 960, { larguraMax: undefined })], docDs1(1440)).ok, false)
   })
+
+  it('DS1-I-11 CENA: em DPR 2 a densidade vem da largura codificada (780 w num slot de 390), não do naturalWidth (390)', () => {
+    const r = medir.cena([placa(390, 390, 960, { larguraCodificada: 780 })], docDs1(390))
+    assert.equal(r.ok, true, r.motivo)
+    assert.doesNotMatch(r.motivo, /densidade \d/)
+  })
+
+  it('DS1-I-11 CENA controle: imagem 1x ampliada em DPR 2 (codificada 390 num slot de 390) falha com densidade 1.00', () => {
+    const r = medir.cena([placa(390, 390, 960, { larguraCodificada: 390 })], docDs1(390))
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /densidade 1\.00/)
+    // A codificada manda mesmo que o naturalWidth seja grande.
+    assert.equal(medir.cena([placa(390, 1672, 960, { larguraCodificada: 390 })], docDs1(390)).ok, false)
+  })
+
+  it('DS1-I-11 CENA falha fechado: larguraCodificada NaN (srcset sem candidato) ou 0', () => {
+    const nan = medir.cena([placa(390, 780, 960, { larguraCodificada: Number.NaN })], docDs1(390))
+    assert.equal(nan.ok, false)
+    assert.match(nan.motivo, /larguraCodificada/)
+    assert.equal(medir.cena([placa(390, 780, 960, { larguraCodificada: 0 })], docDs1(390)).ok, false)
+  })
+})
+
+// R1-01: o coletor REAL (jsdom) alimenta a regra. O jsdom não carrega imagem: naturalWidth e currentSrc entram por defineProperty.
+describe('DS1-I-11 CENA R1-01: imagem que não carregou reprova mesmo com candidato de 780 w que casa', () => {
+  const CDN = 'https://127.0.0.1/img/'
+  const SRCSET = `${CDN}a-390.webp 390w, ${CDN}a-780.webp 780w`
+  const cenaDe = ({ naturalWidth, currentSrc, largura = 390, srcset = SRCSET }) => {
+    const preparar = (documento) => {
+      const janela = documento.defaultView
+      janela.Element.prototype.getBoundingClientRect = () => ({ ...RETANGULO, width: largura, height: largura * 0.7, right: largura, bottom: largura * 0.7 })
+      const img = documento.querySelector('img')
+      Object.defineProperty(img, 'naturalWidth', { value: naturalWidth, configurable: true })
+      Object.defineProperty(img, 'currentSrc', { value: currentSrc, configurable: true })
+    }
+    const lido = coletarDe(`<div data-cena-heroi data-largura-max="960"><img src="${CDN}a-390.webp" srcset="${srcset}" alt=""></div>`, preparar)
+    assert.equal(lido.nos.filter((n) => n.m?.cenaPlaca).length, 1)
+    return medir.cena(lido.nos, { ...lido.doc, largura: 390 })
+  }
+
+  it('naturalWidth 0 com o candidato de 780 w que casa: ok false (a imagem não carregou)', () => {
+    const r = cenaDe({ naturalWidth: 0, currentSrc: `${CDN}a-780.webp` })
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /não carregou|naturalWidth/)
+  })
+
+  it('controle: DPR 2 carregada (naturalWidth 390, 780 w num slot de 390) passa com densidade 2.00', () => {
+    const r = cenaDe({ naturalWidth: 390, currentSrc: `${CDN}a-780.webp` })
+    assert.equal(r.ok, true, r.motivo)
+  })
+
+  it('controle: 1x ampliada (codificada 390 num slot de 390) falha com densidade 1.00', () => {
+    const r = cenaDe({ naturalWidth: 390, currentSrc: `${CDN}a-390.webp` })
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /densidade 1\.00/)
+  })
+
+  it('controle: largura codificada desconhecida (currentSrc fora do srcset, NaN) falha fechado', () => {
+    const r = cenaDe({ naturalWidth: 390, currentSrc: `${CDN}outra.webp` })
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /larguraCodificada/)
+  })
+})
+
+describe('DS1-I-11 CENA: larguraCodificadaDe (a largura codificada do recurso que o Chrome escolheu)', () => {
+  const base = 'http://127.0.0.1:5254/pagina/'
+  const srcset = 'img/a-780.webp 780w, img/a-1560.webp 1560w'
+
+  it('descritor w: usa o número do candidato que casa com o currentSrc', () => {
+    assert.equal(medir.larguraCodificadaDe(srcset, `${base}img/a-780.webp`, 390, base), 780)
+    assert.equal(medir.larguraCodificadaDe(srcset, `${base}img/a-1560.webp`, 780, base), 1560)
+  })
+
+  it('descritor x: naturalWidth vezes o x do candidato', () => {
+    assert.equal(medir.larguraCodificadaDe('a-1x.webp 1x, a-2x.webp 2x', `${base}a-2x.webp`, 390, base), 780)
+    assert.equal(medir.larguraCodificadaDe('a-1x.webp, a-2x.webp 2x', `${base}a-1x.webp`, 390, base), 390)
+  })
+
+  it('sem srcset (ou currentSrc igual ao src): naturalWidth', () => {
+    assert.equal(medir.larguraCodificadaDe('', `${base}a.webp`, 1672, base), 1672)
+    assert.equal(medir.larguraCodificadaDe(null, `${base}a.webp`, 1672, base), 1672)
+  })
+
+  it('srcset sem candidato que case com o currentSrc: NaN (falha fechado)', () => {
+    assert.ok(Number.isNaN(medir.larguraCodificadaDe(srcset, `${base}img/outra.webp`, 390, base)))
+  })
 })
 
 // ---- DS1-I-13 CASA_LIMPA, CASA_LIMPA_REGISTRO, CASA_PRESENTE ----

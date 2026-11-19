@@ -167,6 +167,18 @@ describe('as seis fases e as fontes (todas a vista)', () => {
     }
   })
 
+  it('a faixa de idade é uma etiqueta plana (um p, nunca botão nem link), uma por item', () => {
+    const { container } = renderizarRota(ROTA)
+    for (const item of [TUMMY_TIME, MARCOS]) {
+      const raiz = container.querySelector<HTMLElement>(`[data-item="${item.id}"]`)!
+      const etiquetas = [...raiz.querySelectorAll('[data-etiqueta]')]
+      expect(etiquetas).toHaveLength(1)
+      expect(etiquetas[0].tagName).toBe('P')
+      expect(etiquetas[0].textContent).toBe(`${ROTULOS_FONTES.faixa} ${item.faixa}`)
+      expect(etiquetas[0].closest('a, button, .cm-botao')).toBeNull()
+    }
+  })
+
   it('a ordem de leitura do tummy time é a do deck 2.3: resumo, faixa, três partes, tabela, sem meta, quarta parte, fontes', () => {
     const { container } = renderizarRota(ROTA)
     const texto = container.querySelector('#tummy-time')!.textContent!
@@ -376,5 +388,41 @@ describe('DESENV-I-10 e I-12 o CSS da página: sem visual antigo e sem movimento
       const soltos = [...texto.matchAll(/>\s*([^<>{}\n]*[A-Za-zÀ-ÿ][^<>{}\n]*)\s*</g)].map((m) => m[1].trim()).filter(Boolean)
       expect(soltos, nome).toEqual([])
     }
+  })
+})
+
+// Janela baixa (adendo 2, linha 9): o jsdom não faz layout, então aqui só a ordem do DOM e a presença das regras.
+// Que o botão inteiro cabe na primeira tela (bottom <= innerHeight) só se vê nas capturas de 844x390, 667x375,
+// 500x300 e 1440x700.
+describe('janela baixa: h1, frase e botão na primeira tela', () => {
+  it('na abertura, o h1, a frase e o botão principal vêm antes da cena no DOM', () => {
+    const { container } = renderizarRota(ROTA)
+    const abertura = bandas(container)[0]
+    const cena = abertura.querySelector('picture')!
+    const antes = (no: Element) => (no.compareDocumentPosition(cena) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
+    expect(antes(within(abertura).getByRole('heading', { level: 1 }))).toBe(true)
+    expect(antes(within(abertura).getByText(D.lede))).toBe(true)
+    expect(antes(within(abertura).getByRole('link', { name: D.cta1 }))).toBe(true)
+  })
+
+  it('o CSS traz a paisagem baixa (duas colunas, a placa pela altura) e a estreita baixa, medidas em svh', () => {
+    const texto = css.map((a) => a.texto).join('\n')
+    expect(texto).toMatch(/@media \(max-width: 899px\) and \(min-width: 521px\) and \(max-height: 520px\)/)
+    expect(texto).toMatch(/@media \(max-width: 520px\) and \(max-height: 520px\)/)
+    expect(texto).toMatch(/100svh/)
+  })
+
+  // Celular em pé (R1): o aparelho vem logo depois do botão, antes do link, do aviso e da legenda. A geometria real
+  // (a tela com 240 px ou mais acima da dobra em 390x844) só se mede no navegador (.oc/geo.mjs), não aqui.
+  it('estreita e não baixa: cena, h1, frase, botão, aparelho, e depois link, aviso e legenda (ordem da grade)', () => {
+    const texto = css.map((a) => a.texto).join('\n')
+    const bloco = texto.match(/@media \(max-width: 899px\) and \(min-height: 521px\) \{([\s\S]*?)\n\}/)
+    expect(bloco, 'bloco da estreita não baixa').not.toBeNull()
+    const linha = (seletor: string) => {
+      const achado = bloco![1].match(new RegExp(`${seletor.replace(/[.*+?^${}()|[\]\\>]/g, '\\$&')} \\{[^}]*?grid-row: (\\d+);`))
+      return achado === null ? -1 : Number(achado[1])
+    }
+    const ordem = ['.dc-cena', '.dc-h1', '.dc-lede', '.dc-acoes > .cm-botao', '.dc-moldura', '.dc-link', '.dc-aviso', '.dc-nota > [data-legenda]'].map(linha)
+    expect(ordem).toEqual([1, 2, 3, 4, 5, 6, 7, 8])
   })
 })

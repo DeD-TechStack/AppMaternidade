@@ -5,15 +5,16 @@ import './desenvolvimento-casa.css'
 const TRACO = '—'
 
 /**
- * A tabela "quanto tempo" (`de.qt.*`): uma `<table>` de verdade, com legenda, `th scope` de coluna e de linha. Cada
- * linha é um bloco (do celular ao desktop: a coluna do conteúdo tem 520 px, estreita para três colunas), com o nome da
- * coluna na frente de cada célula (`data-coluna`); o cabeçalho das colunas fica só para o leitor de tela.
+ * A tabela "quanto tempo" (`de.qt.*`): uma `<table>` de verdade, com legenda, `th scope` de coluna e de linha. Na
+ * faixa larga ela é uma tabela de três colunas na largura do quadro; na estreita cada linha vira um bloco, um rótulo
+ * por linha inteira, com o nome da coluna na frente de cada célula (`data-coluna`) e o cabeçalho das colunas só para
+ * o leitor de tela (CSS da página).
  */
 export function TabelaQuantoTempo() {
   return (
     <table className="dc-tabela">
       <caption className="text-titulo-4 font-titulo cm-sec-titulo">{QUANTO_TEMPO.titulo}</caption>
-      <thead className="sr-only">
+      <thead className="dc-tabela-cabeca text-pequeno font-texto">
         <tr>
           {QUANTO_TEMPO.colunas.map((coluna) => (
             <th key={coluna} scope="col">
