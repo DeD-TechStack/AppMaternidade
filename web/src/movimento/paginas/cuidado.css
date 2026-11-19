@@ -1,4 +1,18 @@
-/* MOTION-PAGES, /cuidado-compartilhado (CENAS.md assinado, D1 e D2). Importado no topo de `cuidado-casa.css`.
+/* LAYOUT DESTA PÁGINA, uma escolha por eixo, cada uma com o motivo (a regra mora em `cuidado-casa.css`; este arquivo
+   só guarda o movimento abaixo e não muda de regra).
+   1. Alinhamento do herói. Em 1440 a chamada (título, texto, ação) fica no meio da altura da cena, e em 390 o h1 fica no
+      meio da altura dela, ao lado, com a cena maior e menos vão em cima. Motivo: o título e a porta têm de ler como um
+      bloco só, e é o centro que os une; alinhar o título ao topo ou à base deixava um vão vazio acima ou abaixo dele.
+   2. Faixa do celular. A tela Família é recortada pela página (a moldura do pacote fica inteira), e só o alto dela
+      aparece: o aparelho com Membros e o primeiro convite. Em 1440 ela fica abaixo da cena, na coluna da cena, com a
+      explicação ao lado dela e no meio da altura dela; em 390, o texto vem logo depois. Motivo: a parte que se corta é a
+      que repete o que o texto já diz, e o que sobra pode ser maior e se ler sem ampliar.
+   3. Os papéis. Uma tabela de quatro colunas em 1440 (o papel e os três campos, com o cabeçalho de colunas só para a
+      vista) e, em 390, um bloco por papel com o rótulo curto em cada campo; a linha do Cuidador ganha um tom de fundo e o
+      verbo que decide, peso. Motivo: os três papéis dizem as mesmas três coisas, então a comparação é de colunas, e o
+      destaque vai para quem a página é sobre (a babá), sem virar cartão.
+
+   MOTION-PAGES, /cuidado-compartilhado (CENAS.md assinado, D1 e D2). Importado no topo de `cuidado-casa.css`.
    Só `transform`, preso à rolagem por view-timeline nativa, linear, fill both; nada de JS, opacidade ou recorte.
    Fora do @supports, ou com `prefers-reduced-motion`, nada daqui vale e a página é a base, parada.
    56 px e 24 px são tetos; a quebra é a da composição larga (`@container cc-pagina (min-width: 1024px)`).

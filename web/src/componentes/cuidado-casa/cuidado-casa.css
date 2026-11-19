@@ -30,6 +30,13 @@
   margin-top: 0;
 }
 
+/* K5: entre a ação do fecho e o texto do rodapé havia o `secao` da faixa mais os 64 px de cima do rodapé (cerca de
+   158 px em 1440, 112 em 390), cacau sobre cacau, que lia como um vão vazio. A faixa do fecho (a última da página)
+   guarda o `secao` em cima e fica com `grupo` embaixo; o rodapé, o Fechamento e a casca não mudam. */
+[data-pagina-cuidado] [data-casa] > [data-faixa][data-faixa-fundo='cacau']:last-child {
+  padding-bottom: var(--espaco-grupo);
+}
+
 /* O contêiner da página: o [data-casa] que abre com a abertura desta página. `--cc-q` é a largura do quadro
    (a mesma conta do QuadroLayout, sobre o contêiner) e `--cc-borda`, o x da borda esquerda dele. */
 [data-casa]:has(> .cc-abertura) {
@@ -134,8 +141,27 @@
   container-type: inline-size;
 }
 
-.cc-moldura .cm-produto-moldura {
-  --produto-tela: min(330px, 100cqw / 1.06);
+/* O recorte (K1): a página mostra só o alto do aparelho, o cabeçalho, "Membros" (Juliana e Ícaro) e o primeiro convite
+   até o "Cancelar convite" (cerca de 78 % da figura, 1,74 vezes a tela); o resto da captura fica cortado, e o
+   ProdutoEmMoldura segue o do pacote, inteiro, dentro de uma caixa que o corta com `overflow: clip`. `--cc-tela` é a
+   tela (a largura da coluna menos a borda da moldura, até 330 px) e `--cc-fino` o quanto se tira de cada lado: zero
+   fora do celular, e no celular um tanto, para a borda escura do aparelho ler mais fina. */
+.cc-recorte {
+  --cc-tela: min(330px, 100cqw / 1.06);
+  --cc-fino: calc(var(--cc-tela) * 0);
+
+  width: calc(var(--cc-tela) * 1.06 - 2 * var(--cc-fino));
+  height: calc(var(--cc-tela) * 1.74);
+  overflow: clip;
+}
+
+.cc-recorte .cm-produto-moldura {
+  --produto-tela: var(--cc-tela);
+
+  /* O pacote limita a figura a 100 % do pai; o pai agora é mais estreito que a moldura (o recorte), e a figura não pode
+     encolher, senão a tela e a moldura deixam de casar. */
+  max-width: none;
+  margin-left: calc(-1 * var(--cc-fino));
 }
 
 /* No celular (contêiner < 640): a dobra de 844 guarda o h1, o texto, a ação e pelo menos 240 px da tela da moldura
@@ -144,8 +170,15 @@
    papel: `pilha` entre as linhas da grade, e a diferença até `grupo` (antes da ação e da moldura) e até `midia` (antes
    do "três") na margem de cima de quem vem depois. */
 @container cc-pagina (width < 640px) {
+  /* K4: a abertura perde parte do vão de cima (`grupo`, não `secao`), e a cena, mais larga (44 % da coluna, antes 40 %),
+     divide a primeira fileira com o h1, que fica no meio dela: o título e a cena são um bloco só. O h1 pode ir a três
+     linhas ao lado dela, e é essa a altura da cena. */
+  .cc-abertura {
+    padding-top: var(--espaco-grupo);
+  }
+
   .cc-abertura-quadro {
-    grid-template-columns: minmax(0, 1fr) min(40%, 11rem);
+    grid-template-columns: minmax(0, 1fr) min(44%, 12rem);
     grid-template-areas:
       'titulo cena'
       'lede lede'
@@ -163,12 +196,12 @@
 
   .cc-abertura .cc-cena-imagem {
     grid-area: cena;
-    align-self: end;
+    align-self: center;
   }
 
   .cc-titulos > h1 {
     grid-area: titulo;
-    align-self: end;
+    align-self: center;
   }
 
   .cc-titulos > p {
@@ -185,9 +218,13 @@
     margin-top: calc(var(--espaco-grupo) - var(--espaco-pilha));
   }
 
+  /* K1: a tela é recortada (sem o rodapé da captura), e o "três" vem logo depois dela: só o vão `pilha` da grade. */
+  .cc-recorte {
+    --cc-fino: calc(var(--cc-tela) * 0.015);
+  }
+
   .cc-tres {
     grid-area: tres;
-    margin-top: calc(var(--espaco-midia) - var(--espaco-pilha));
   }
 }
 
@@ -223,36 +260,23 @@
 }
 
 @container cc-pagina (min-width: 1024px) {
-  /* 1440: a cena de 600 e o texto de 520 em x 800 (600 + 80 de vão), "três" sob a cena. */
+  /* 1440: as mesmas áreas de 640 ('cena chamada' e 'moldura tres'), nas colunas de 600 e 520 (o texto em x 800: 600 + 80
+     de vão), e o .cc-texto segue em `contents`, então a ordem do DOM não muda. Em cima, a cena e a chamada (o título, o
+     texto e a ação) no meio da altura da cena, que é o que as duas partes têm em comum; embaixo, a tela recortada na
+     coluna da cena e a explicação ("por enquanto, somos três") no meio da altura dela, na coluna do texto. */
   .cc-abertura-quadro {
     grid-template-columns: minmax(0, 600fr) minmax(0, 520fr);
-    grid-template-rows: auto 1fr;
-    grid-template-areas:
-      'cena texto'
-      'tres texto';
     column-gap: var(--espaco-secao);
-    align-items: start;
   }
 
   .cc-abertura .cc-cena-imagem {
     width: 100%;
   }
 
-  .cc-texto {
-    display: grid;
-    grid-area: texto;
-    gap: var(--espaco-bloco);
-  }
-
-  /* As áreas de 640 não existem dentro do .cc-texto: a chamada e a moldura voltam ao fluxo dele. */
-  .cc-chamada,
-  .cc-moldura {
-    grid-area: auto;
-  }
-
-  /* A spec desta página fixa a tela em 320 px em 1440. */
-  .cc-moldura .cm-produto-moldura {
-    --produto-tela: min(320px, 100cqw / 1.06);
+  /* K1: a tela do aparelho, de 320 para 390 px de largura em 1440 (a captura, e o texto dela, lê maior). */
+  .cc-recorte {
+    --cc-tela: min(390px, 100cqw / 1.06);
+    --cc-fino: calc(var(--cc-tela) * 0);
   }
 }
 
@@ -305,7 +329,7 @@
     }
 
     .cc-tres {
-      margin-top: calc(var(--espaco-midia) - var(--espaco-junto));
+      margin-top: calc(var(--espaco-pilha) - var(--espaco-junto));
     }
   }
 
@@ -331,7 +355,13 @@
   gap: var(--espaco-bloco);
 }
 
-.cc-papeis {
+/* O cabeçalho das colunas só existe de 1024 em diante (é `aria-hidden`: desenho, não texto a mais). */
+.cc-papeis-cab {
+  display: none;
+}
+
+.cc-papeis,
+.cc-campos {
   display: grid;
   margin: 0;
   padding: 0;
@@ -354,12 +384,79 @@
   padding-bottom: 0;
 }
 
+/* Os três campos de cada papel, os mesmos e na mesma ordem. No celular cada campo mostra o rótulo curto (Quem é, O que
+   vê, O que muda) em cima do texto, e o texto fica a um vão de `junto` do rótulo. */
+.cc-campos {
+  gap: var(--espaco-pilha);
+}
+
+.cc-campo {
+  position: relative;
+  display: grid;
+}
+
+.cc-campo > dd {
+  margin: 0;
+}
+
+.cc-rotulo {
+  color: var(--color-oliva-tinta);
+}
+
+/* O verbo que decide: peso, não só cor (negrito de 600, a mesma face do texto). */
+.cc-verbo {
+  font-weight: 600;
+}
+
+/* O Cuidador (a babá, que é de quem a página fala) tem a linha num tom de fundo discreto: o papel da faixa, mais claro
+   que a areia do chão. O fundo passa o texto por um `respiro` de cada lado, para o texto ficar na mesma coluna das outras
+   linhas; cacau e oliva-tinta sobre o papel passam de 4,5:1. */
+.cc-papel[data-papel='cuidador'] {
+  --cc-respiro: var(--espaco-pilha);
+
+  margin-inline: calc(-1 * var(--cc-respiro));
+  padding-inline: var(--cc-respiro);
+  background-color: var(--color-papel);
+}
+
 @container cc-pagina (min-width: 1024px) {
-  /* Colunas de 200, 400 e o resto; o vão deixa a terceira em x 800 em 1440 (o mesmo x do texto da abertura). */
+  /* Uma tabela de quatro colunas (o nome e os três campos): o cabeçalho e cada linha usam as mesmas larguras e o mesmo
+     vão, então as colunas se alinham de cima a baixo. O rótulo de cada campo sobe para o cabeçalho; o <dt> fica no
+     DOM, só para o leitor de tela. */
+  .cc-papeis-bloco {
+    --cc-colunas: minmax(0, 11rem) minmax(0, 1.1fr) minmax(0, 0.9fr) minmax(0, 1.5fr);
+  }
+
+  .cc-papeis-cab {
+    display: grid;
+    grid-template-columns: var(--cc-colunas);
+    column-gap: var(--espaco-grupo);
+    padding-bottom: var(--espaco-junto);
+    border-bottom: 1px solid var(--color-cacau);
+  }
+
   .cc-papel {
-    grid-template-columns: minmax(0, 200px) minmax(0, 400px) minmax(0, 1fr);
-    column-gap: calc(var(--espaco-bloco) * 5 / 6);
+    grid-template-columns: minmax(0, 11rem) minmax(0, 1fr);
+    column-gap: var(--espaco-grupo);
     align-items: start;
+  }
+
+  .cc-papel:first-child {
+    padding-top: var(--espaco-grupo);
+  }
+
+  .cc-campos {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr) minmax(0, 1.5fr);
+    column-gap: var(--espaco-grupo);
+  }
+
+  .cc-campo > dt {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 }
 
