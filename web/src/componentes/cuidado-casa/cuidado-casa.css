@@ -1,8 +1,10 @@
-/* /cuidado-compartilhado (CLONE-CUIDADO, slot sheet t1i_cuidado). Só os espaços do papel (`var(--espaco-*)`,
-   `var(--quadro-calha)`) e as cores do tema (`var(--color-*)`); os px soltos são os tamanhos dos slots (as cenas, a
-   medida do texto e as colunas da lista de papéis). Estático: nada se move, nada nasce escondido, sem sombra, sem
-   gradiente, sem filtro, sem itálico, sem caixa alta, sem transição. Os chãos (papel, areia, cacau) vêm do
-   `data-faixa-fundo` das faixas; a faixa de cima e as bordas de baixo das cenas rentes à borda são desta página. */
+/* /cuidado-compartilhado (CLONE-CUIDADO, POLISH-CUIDADO, slot sheet t1i_cuidado). Só os espaços do papel
+   (`var(--espaco-*)`, `var(--quadro-calha)`) e as cores do tema (`var(--color-*)`); os px soltos são os tamanhos dos
+   slots (as cenas, a medida do texto, a tela da moldura e as colunas da lista de papéis). Estático: nada se move,
+   nada nasce escondido, sem sombra, sem gradiente, sem filtro, sem itálico, sem caixa alta, sem transição.
+   A composição quebra pela largura do contêiner da página (`cc-pagina`, o [data-casa] desta página), nunca pela
+   janela: 640 (duas colunas) e 1024 (a composição larga, a mesma do `<source>` das cenas). A altura curta da janela
+   (@media max-height) só encolhe a cena do herói, para a ação caber na primeira dobra. */
 
 /* A pílula do cabeçalho, quieta nesta página: contorno de cacau, sem enchimento (o atributo é posto no <html> pela
    página, e a casca não muda). */
@@ -23,6 +25,17 @@
   margin-top: 0;
 }
 
+/* O contêiner da página: o [data-casa] que abre com a abertura desta página. `--cc-q` é a largura do quadro
+   (a mesma conta do QuadroLayout, sobre o contêiner) e `--cc-borda`, o x da borda esquerda dele. */
+[data-casa]:has(> .cc-abertura) {
+  container: cc-pagina / inline-size;
+}
+
+[data-casa]:has(> .cc-abertura) > * {
+  --cc-q: min(var(--quadro-largura), 100cqw - 2 * var(--quadro-calha));
+  --cc-borda: calc((100cqw - var(--cc-q)) / 2);
+}
+
 /* A medida de um bloco de texto da página: 470 px em 1440 (slot sheet, seção 3). */
 .cc-medida {
   max-width: min(100%, 470px);
@@ -33,17 +46,38 @@
   gap: var(--espaco-pilha);
 }
 
-/* ---- Faixa 1: a abertura, em papel. Abaixo de 1024: a cena, o campo de areia (texto e moldura) e o bloco "três". ---- */
+/* As horas que carregam a ideia (quem começou, quem encerrou, quem anotou): o tipo dos títulos, cheias, com
+   algarismos de mesma largura, sem quebrar. Na frase do sono, um degrau acima do texto; na legenda, a hora é a linha. */
+.cc-hora {
+  font-family: var(--fonte-exibicao);
+  font-size: var(--texto-titulo-3-tamanho);
+  font-weight: var(--peso-titulo);
+  line-height: var(--texto-titulo-3-entrelinha);
+  font-variant-numeric: tabular-nums lining-nums;
+  white-space: nowrap;
+}
+
+.cc-legenda .cc-hora {
+  font-size: var(--texto-titulo-1-tamanho);
+}
+
+/* ---- Faixa 1: a abertura, em papel. ---- */
 .cc-abertura {
   position: relative;
   box-sizing: border-box;
   width: 100%;
-  padding-top: var(--espaco-junto);
-  padding-bottom: var(--espaco-secao);
+  padding-block: var(--espaco-secao);
   overflow-x: clip;
 }
 
-/* A caixa da cena é a do <picture> (proporção fixa por faixa de largura): se o arquivo não chegar, a caixa fica. */
+/* No celular: uma coluna (cena, chamada com a ação logo abaixo do texto, moldura, "três"). */
+.cc-abertura-quadro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--espaco-midia);
+}
+
+/* A caixa da cena é a do <picture> (proporção fixa): se o arquivo não chegar, a caixa fica. */
 .cc-cena-imagem {
   display: block;
   width: 100%;
@@ -56,26 +90,31 @@
   object-fit: cover;
 }
 
-/* CC-S1 em 390: o recorte de 350 × 220. */
+/* CC-S1: a placa inteira (981 × 1082) na proporção dela, então nada se corta: no máximo 420 px de largura e, numa
+   janela curta, no máximo 46 % (36 % abaixo de 700 px de altura) da altura pequena da janela. O fundo da placa é o
+   papel da faixa, então a sobra ao lado não desenha borda. */
 .cc-abertura .cc-cena-imagem {
-  aspect-ratio: 350 / 220;
+  --cc-cena-teto: 46svh;
+
+  width: min(100%, 420px, max(12rem, calc(var(--cc-cena-teto) * 981 / 1082)));
+  aspect-ratio: 981 / 1082;
 }
 
-/* O campo de areia de ponta a ponta: começa na borda de baixo da cena. */
-/* Os vãos de 390 (o campo, a ação e a moldura) deixam a tela da moldura com 240 a 250 px dentro da primeira dobra
-   de 844, e a cena maior que a parte da moldura que se vê (slot sheet, seção 4). */
+@media (max-height: 700px) {
+  .cc-abertura .cc-cena-imagem {
+    --cc-cena-teto: 36svh;
+  }
+}
+
 .cc-texto {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--espaco-midia);
-  margin-inline: calc(-1 * var(--quadro-calha));
-  padding: var(--espaco-grupo) var(--quadro-calha) var(--espaco-bloco);
-  background-color: var(--color-areia);
 }
 
 .cc-chamada {
   display: grid;
-  gap: var(--espaco-midia);
+  gap: var(--espaco-grupo);
   justify-items: start;
 }
 
@@ -84,60 +123,83 @@
   gap: var(--espaco-pilha);
 }
 
-.cc-tres {
-  padding-top: var(--espaco-secao);
+/* A moldura mede a própria coluna: a tela tem a largura da coluna (menos a borda da moldura), até 330 px, e é
+   desse tamanho que a captura de 2x se lê no celular. */
+.cc-moldura {
+  container-type: inline-size;
 }
 
-@media (min-width: 1024px) {
-  .cc-abertura {
-    padding-top: var(--espaco-bloco);
+.cc-moldura .cm-produto-moldura {
+  --produto-tela: min(330px, 100cqw / 1.06);
+}
+
+@container cc-pagina (min-width: 640px) {
+  /* De 640 a 1023: duas colunas. A cena e a chamada lado a lado; a moldura e o "três" embaixo. */
+  .cc-abertura-quadro {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      'cena chamada'
+      'moldura tres';
+    align-items: center;
   }
 
+  .cc-texto {
+    display: contents;
+  }
+
+  .cc-abertura .cc-cena-imagem {
+    grid-area: cena;
+  }
+
+  .cc-chamada {
+    grid-area: chamada;
+  }
+
+  .cc-moldura {
+    grid-area: moldura;
+  }
+
+  .cc-tres {
+    grid-area: tres;
+  }
+}
+
+@container cc-pagina (min-width: 1024px) {
   /* 1440: a cena de 600 e o texto de 520 em x 800 (600 + 80 de vão), "três" sob a cena. */
   .cc-abertura-quadro {
-    display: grid;
     grid-template-columns: minmax(0, 600fr) minmax(0, 520fr);
     grid-template-rows: auto 1fr;
     grid-template-areas:
       'cena texto'
       'tres texto';
     column-gap: var(--espaco-secao);
+    align-items: start;
   }
 
   .cc-abertura .cc-cena-imagem {
-    grid-area: cena;
-    margin-top: var(--espaco-midia);
-  }
-
-  .cc-abertura .cc-cena-imagem {
-    aspect-ratio: 600 / 662;
+    width: 100%;
   }
 
   .cc-texto {
+    display: grid;
     grid-area: texto;
     gap: var(--espaco-bloco);
-    margin-inline: 0;
-    padding: 0;
-    background-color: transparent;
   }
 
-  .cc-chamada {
-    gap: var(--espaco-grupo);
+  /* As áreas de 640 não existem dentro do .cc-texto: a chamada e a moldura voltam ao fluxo dele. */
+  .cc-chamada,
+  .cc-moldura {
+    grid-area: auto;
   }
 
-  .cc-tres {
-    grid-area: tres;
-    padding-top: var(--espaco-midia);
+  /* A spec desta página fixa a tela em 320 px em 1440. */
+  .cc-moldura .cm-produto-moldura {
+    --produto-tela: min(320px, 100cqw / 1.06);
   }
 }
 
-/* A tela de 320 px em 1440 e de 280 em 390 (a moldura tem 1,06 vez a tela): o `--produto-tela` do pacote vale 340 em
-   1440, e a spec desta página fixa 320. */
-.cc-texto .cm-produto-moldura {
-  --produto-tela: clamp(280px, calc(280px + (100vw - 390px) * 40 / 1050), 320px);
-}
-
-/* ---- Faixa 2: os papéis, uma lista de três linhas com fio de 1 px entre elas (nunca cartões). ---- */
+/* ---- Faixa 2: os papéis, uma lista de três linhas com fio de 1 px entre elas (nunca cartões). No celular, cada
+   rótulo tem a sua linha inteira. ---- */
 .cc-papeis-bloco {
   display: grid;
   gap: var(--espaco-bloco);
@@ -166,7 +228,7 @@
   padding-bottom: 0;
 }
 
-@media (min-width: 1024px) {
+@container cc-pagina (min-width: 1024px) {
   /* Colunas de 200, 400 e o resto; o vão deixa a terceira em x 800 em 1440 (o mesmo x do texto da abertura). */
   .cc-papel {
     grid-template-columns: minmax(0, 200px) minmax(0, 400px) minmax(0, 1fr);
@@ -176,7 +238,7 @@
 }
 
 /* ---- Faixas 3 e 4: a cena rente à borda da janela, de cima a baixo da faixa (a faixa tem a altura da cena). ----
-   Abaixo de 1024: o texto primeiro, depois a cena de ponta a ponta com a borda de baixo na borda da faixa. */
+   No celular: o texto primeiro, depois a cena de ponta a ponta com a borda de baixo na borda da faixa. */
 .cc-meio {
   display: flex;
   flex-direction: column;
@@ -192,27 +254,20 @@
   width: calc(100% + 2 * var(--quadro-calha));
   margin-inline: calc(-1 * var(--quadro-calha));
   margin-bottom: calc(-1 * var(--espaco-secao));
+  aspect-ratio: 390 / 343;
 }
 
-@media (max-width: 1023.98px) {
-  .cc-meio-cena {
-    aspect-ratio: 390 / 343;
-  }
-
-  .cc-meio[data-cc-cena='cena3'] .cc-meio-cena {
-    aspect-ratio: 390 / 332;
-  }
+.cc-meio[data-cc-cena='cena3'] .cc-meio-cena {
+  aspect-ratio: 390 / 332;
 }
 
-@media (min-width: 1024px) {
+@container cc-pagina (min-width: 1024px) {
   /* O quadro deixa de ser o referencial: a cena se posiciona na faixa (position: relative do pacote). */
   .cm-faixa-quadro:has(> .cc-meio) {
     position: static;
   }
 
   .cc-meio {
-    --cc-escala: calc(min(100vw, 1440px) / 1440);
-
     box-sizing: border-box;
     justify-content: center;
     margin-block: calc(-1 * var(--espaco-secao));
@@ -222,45 +277,73 @@
   .cc-meio-cena {
     position: absolute;
     inset-block: 0;
-    width: auto;
+    width: var(--cc-cena-l);
     margin: 0;
+    aspect-ratio: auto;
   }
 
-  /* CC-S3, as quatro mãos: 800 × 353 em 1440, rente à borda direita e a cima e a baixo; escala com a janela. */
+  /* CC-S3, as quatro mãos: da coluna do texto (x 640 em 1440) até a borda direita, 800 × 353 em 1440, na proporção
+     da placa; o texto fica na coluna de 470 antes dela. */
   .cc-meio[data-cc-cena='cena2'] {
-    min-height: calc(353 * var(--cc-escala));
+    --cc-cena-l: calc(100cqw - var(--cc-borda) - var(--cc-q) * 520 / 1200);
+
+    min-height: calc(var(--cc-cena-l) * 353 / 800);
   }
 
   .cc-meio[data-cc-cena='cena2'] .cc-meio-cena {
     right: 0;
-    width: calc(800 * var(--cc-escala));
   }
 
   .cc-meio[data-cc-cena='cena2'] .cc-meio-cena img {
     object-position: left center;
   }
 
-  /* O texto não chega à cena: de x 120 até 470 px, ou até o vão antes da cena, o que vier primeiro. */
   .cc-meio[data-cc-cena='cena2'] .cc-meio-texto {
-    max-width: min(470px, calc(100vw - 800 * var(--cc-escala) - (100vw - 100%) / 2 - var(--espaco-bloco)));
+    max-width: min(470px, calc(var(--cc-q) * 520 / 1200 - var(--espaco-bloco)));
   }
 
-  /* CC-S4, Ícaro com o celular: 760 × 439 em 1440, rente à borda esquerda; o texto em x 800 (600 + 80 do quadro). */
+  /* CC-S4, Ícaro com o celular: da borda esquerda até o fim da primeira coluna do quadro (720 em 1440), 720 × 600,
+     com a placa ancorada à esquerda: Ícaro e o berço enchem a caixa e o cacau vazio da placa fica de fora. O texto em
+     x 800 (600 + 80 do quadro). */
   .cc-meio[data-cc-cena='cena3'] {
-    min-height: calc(439 * var(--cc-escala));
+    --cc-cena-l: calc(var(--cc-borda) + (var(--cc-q) - var(--espaco-secao)) * 600 / 1120);
+
+    min-height: calc(var(--cc-cena-l) * 5 / 6);
   }
 
   .cc-meio[data-cc-cena='cena3'] .cc-meio-cena {
     left: 0;
-    width: calc(760 * var(--cc-escala));
+    aspect-ratio: auto;
   }
 
   .cc-meio[data-cc-cena='cena3'] .cc-meio-cena img {
-    object-position: right center;
+    object-position: left bottom;
   }
 
   .cc-meio[data-cc-cena='cena3'] .cc-meio-texto {
     max-width: 470px;
     margin-left: calc((100% - var(--espaco-secao)) * 600 / 1120 + var(--espaco-secao));
+  }
+}
+
+/* ---- Faixa 5: quando alguém para de cuidar. O título numa coluna e o texto na outra (nenhuma metade vazia); no
+   celular, um embaixo do outro. ---- */
+.cc-parar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--espaco-pilha);
+}
+
+@container cc-pagina (min-width: 640px) {
+  .cc-parar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--espaco-bloco);
+  }
+}
+
+@container cc-pagina (min-width: 1024px) {
+  .cc-parar {
+    grid-template-columns: minmax(0, 600fr) minmax(0, 520fr);
+    column-gap: var(--espaco-secao);
   }
 }
