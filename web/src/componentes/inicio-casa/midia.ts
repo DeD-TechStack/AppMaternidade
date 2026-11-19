@@ -1,29 +1,24 @@
 import type { CSSProperties } from 'react'
+import { placa } from '../campo/imagens.ts'
 import type { Imagem } from '../secoes/contrato.ts'
+import m04Recorte from '../../assets/cenas/inicio/m04-recorte-1200w.webp?w=350;600;700;1200&format=avif;webp&as=picture'
+import m05Sol from '../../assets/cenas/inicio/m05-sol-1672w.webp?w=900;1672&format=avif;webp&as=picture'
+import m05Sol390 from '../../assets/cenas/inicio/m05-sol-390c-780w.webp?w=390;780&format=avif;webp&as=picture'
+import m06Apagada from '../../assets/cenas/inicio/m06-apagada-792w.webp?w=300;396;600;792&format=avif;webp&as=picture'
+import m11Janela from '../../assets/cenas/nao-encontrada/m11-janela-542w.webp?w=340;361;542&format=avif;webp&as=picture'
 
-// The files of the page: ASSET-1's plates and light layers under `web/public/cenas/inicio/` (PROVENANCE.md, section
-// "ASSET-1 served plates and light layers") and the three real captures under `web/public/telas/casa/` (MANIFESTO.json).
-// Every path and size below is a served file's own; `src/teste/inicioCapturas.test.ts` reads the manifest and fails when
-// a capture's path, width or height here differs from it. This card does not create anything under `web/public/**`.
-// The device frames are ASSET-1's rasters under `web/public/molduras/`; nothing is drawn in CSS or SVG.
+// The files of the page. The four scene plates (M05, M05_390, M06, M04) come from ONE master each under
+// `web/src/assets/cenas/inicio/` (PROVENANCE.md there): vite-imagetools generates the AVIF and WebP of each width at
+// build time, with hashed URLs (`placa` in `campo/imagens.ts`). The light layers stay in `web/public/cenas/inicio/` as
+// PNG, and the three real captures under `web/public/telas/casa/` (MANIFESTO.json) are served as they are.
+// `src/teste/inicioCapturas.test.ts` reads the manifest and fails when a capture's path, width or height here differs
+// from it. The device frames are ASSET-1's rasters under `web/public/molduras/`; nothing is drawn in CSS or SVG.
 
 /** M05, the whole plate (900 × 506.5 CSS px at 1440): the day and the night of one room on one seam. */
-export const M05: Imagem = {
-  src: '/cenas/inicio/m05-sol-900w.webp',
-  srcSet: '/cenas/inicio/m05-sol-900w.webp 900w, /cenas/inicio/m05-sol-1672w.webp 1672w',
-  sizes: '(min-width: 1440px) 900px, 62.5vw',
-  largura: 1672,
-  altura: 941,
-}
+export const M05: Imagem = placa(m05Sol, '(min-width: 1440px) 900px, 62.5vw', 900)
 
 /** M05 for 390: the window of RECUT §4, 390 × 306 CSS px, in the plate's own pixels at 1× and 2×. */
-export const M05_390: Imagem = {
-  src: '/cenas/inicio/m05-sol-390c-390w.webp',
-  srcSet: '/cenas/inicio/m05-sol-390c-390w.webp 390w, /cenas/inicio/m05-sol-390c-780w.webp 780w',
-  sizes: '100vw',
-  largura: 780,
-  altura: 612,
-}
+export const M05_390: Imagem = placa(m05Sol390, '100vw', 390)
 
 /** The seam of M05 as a fraction of its whole width (RECUT §2: 0.5443). */
 export const M05_COSTURA = 0.5443
@@ -49,24 +44,10 @@ export const LUZ_M06: Imagem = {
 }
 
 /** M06, the whole plate with the lamp off (395.5 × 645.9 CSS px from 1024, 300 × 490 below). */
-export const M06: Imagem = {
-  src: '/cenas/inicio/m06-apagada-396w.webp',
-  srcSet:
-    '/cenas/inicio/m06-apagada-300w.webp 300w, /cenas/inicio/m06-apagada-396w.webp 396w, /cenas/inicio/m06-apagada-600w.webp 600w, /cenas/inicio/m06-apagada-792w.webp 792w',
-  sizes: '(min-width: 1024px) 395.5px, 300px',
-  largura: 792,
-  altura: 1293,
-}
+export const M06: Imagem = placa(m06Apagada, '(min-width: 1024px) 395.5px, 300px', 396)
 
 /** M04, the scene of the band "só eu" (a crop of the plate of 15:00; its caption is not rendered here). */
-export const M04: Imagem = {
-  src: '/cenas/inicio/m04-recorte-600w.webp',
-  srcSet:
-    '/cenas/inicio/m04-recorte-350w.webp 350w, /cenas/inicio/m04-recorte-600w.webp 600w, /cenas/inicio/m04-recorte-700w.webp 700w, /cenas/inicio/m04-recorte-1200w.webp 1200w',
-  sizes: '(min-width: 1024px) 600px, 100vw',
-  largura: 1200,
-  altura: 870,
-}
+export const M04: Imagem = placa(m04Recorte, '(min-width: 1024px) 600px, 100vw', 600)
 
 /**
  * The device frames (ASSET-1, `web/public/molduras/`, PROVENANCE.md there): a PNG with a hole where the screen goes, the
@@ -120,14 +101,7 @@ export const ESTILO_DA_ROLAGEM = {
  * M11 (ASSET-2, served for the 404 under `web/public/cenas/nao-encontrada/`): a street corner at night with one lit
  * window, already set on the cacau wall. The closing band stands it on the night floor. 542 x 421 is the largest file.
  */
-export const M11_JANELA: Imagem = {
-  src: '/cenas/nao-encontrada/m11-janela-542w.webp',
-  srcSet:
-    '/cenas/nao-encontrada/m11-janela-340w.webp 340w, /cenas/nao-encontrada/m11-janela-361w.webp 361w, /cenas/nao-encontrada/m11-janela-542w.webp 542w',
-  sizes: '(min-width: 1024px) 420px, 340px',
-  largura: 542,
-  altura: 421,
-}
+export const M11_JANELA: Imagem = placa(m11Janela, '(min-width: 1024px) 420px, 340px', 542)
 
 /**
  * State `N` of the manifest (recaptured 19/11/2026, clock fixed 18/11 21:42): Hoje in the madrugada theme (dark), the

@@ -73,16 +73,21 @@ export function Desenvolvimento() {
               </div>
               <Fases />
               <div className="dc-familia">
-                <img
-                  src={CENA_FAMILIA.src}
-                  srcSet={CENA_FAMILIA.srcSet}
-                  sizes={CENA_FAMILIA.sizes}
-                  width={CENA_FAMILIA.largura}
-                  height={CENA_FAMILIA.altura}
-                  alt={D.altCena2}
-                  loading="lazy"
-                  decoding="async"
-                />
+                <picture>
+                  {CENA_FAMILIA.avif ? (
+                    <source type="image/avif" srcSet={CENA_FAMILIA.avif} sizes={CENA_FAMILIA.sizes} />
+                  ) : null}
+                  <img
+                    src={CENA_FAMILIA.src}
+                    srcSet={CENA_FAMILIA.srcSet}
+                    sizes={CENA_FAMILIA.sizes}
+                    width={CENA_FAMILIA.largura}
+                    height={CENA_FAMILIA.altura}
+                    alt={D.altCena2}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </picture>
               </div>
             </div>
           </div>

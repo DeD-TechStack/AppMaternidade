@@ -11,6 +11,12 @@ import { renderizarRota } from '../../teste/renderizarRota.tsx'
 
 const ROTA = '/cuidado-compartilhado'
 
+// As três cenas saem do vite-imagetools (um mestre por vaga em src/assets/cenas/cuidado): no teste a URL é
+// `/@imagetools/<hash>`, no build é um arquivo com hash em /assets. Confere-se a forma, as larguras e as fontes AVIF.
+const URL_GERADA = /^\/@imagetools\/[\w-]+$/
+const larguras = (srcset: string | null) =>
+  (srcset ?? '').split(',').map((parte) => Number(parte.trim().split(/\s+/)[1]?.replace(/w$/, '')))
+
 /** Toda frase do deck que a página guarda, em ordem (as folhas de `CUIDADO`). */
 function folhas(valor: unknown): string[] {
   if (typeof valor === 'string') return [valor]
@@ -186,32 +192,72 @@ describe('CUID-I-06 as imagens', () => {
     expect(cena.getAttribute('alt')).toBe(CUIDADO.alt.cena1)
     expect(cena.getAttribute('loading')).toBe('eager')
     expect(cena.getAttribute('fetchpriority')).toBe('high')
-    expect(cena.getAttribute('src')).toBe('/cenas/cuidado/m12-heroi-600w.webp')
-    expect(cena.getAttribute('srcset')).toContain('/cenas/cuidado/m12-heroi-981w.webp 981w')
+    expect(cena.getAttribute('src')).toMatch(URL_GERADA)
+    expect(larguras(cena.getAttribute('srcset'))).toEqual([600, 981])
+    expect(cena.getAttribute('srcset')).toContain(cena.getAttribute('src')!)
+    expect(cena.getAttribute('sizes')).toBe('(min-width: 1440px) 600px, 42vw')
     expect(cena.getAttribute('width')).toBe('981')
     expect(cena.getAttribute('height')).toBe('1082')
     // O recorte de 390 (350 × 220) cortava Ícaro na borda e as pernas na base: abaixo de 1024 vale a placa
     // inteira (o teste "POLISH-CUIDADO ... placa inteira" abaixo).
     expect(abertura.querySelector('picture source')).not.toBeNull()
+    // O AVIF vem antes do WebP de cada caso: o celular (com `media`) e depois o largo (sem `media`), e só então a <img>.
+    const fontes = [...abertura.querySelectorAll('picture source')]
+    expect(fontes.map((f) => [f.getAttribute('type'), f.getAttribute('media')])).toEqual([
+      ['image/avif', '(max-width: 1023.98px)'],
+      [null, '(max-width: 1023.98px)'],
+      ['image/avif', null],
+    ])
+    expect(larguras(fontes[2].getAttribute('srcset'))).toEqual([600, 981])
+    expect(fontes[2].getAttribute('sizes')).toBe('(min-width: 1440px) 600px, 42vw')
+    expect(fontes[2].nextElementSibling).toBe(cena)
+  })
+
+  it('largura e altura de cada cena (largo e celular) são as de sempre, e há um AVIF de cada uma', () => {
+    const esperado = {
+      cena1: { largo: [981, 1082], celular: [981, 1082] },
+      cena2: { largo: [1472, 649], celular: [740, 651] },
+      cena3: { largo: [1152, 665], celular: [780, 664] },
+    } as const
+    for (const [cena, tamanhos] of Object.entries(esperado)) {
+      for (const lado of ['largo', 'celular'] as const) {
+        const imagem = IMAGENS_CUIDADO[cena as keyof typeof esperado][lado]
+        expect([imagem.largura, imagem.altura], `${cena}.${lado}`).toEqual(tamanhos[lado])
+        expect(imagem.avif, `${cena}.${lado}.avif`).toMatch(/@imagetools\//)
+        expect(larguras(imagem.avif ?? null), `${cena}.${lado}`).toEqual(larguras(imagem.srcSet))
+      }
+    }
   })
 
   it('as outras cenas são lazy com decoding async, com os arquivos e os tamanhos do spec', () => {
     const { container } = renderizarRota(ROTA)
     const bandas = faixas(container)
     const casos = [
-      [bandas[2], 'm05-maos', CUIDADO.alt.cena2, '1472', '649', '390c-740w'],
-      [bandas[3], 'm01-icaro', CUIDADO.alt.cena3, '1152', '665', '390c-780w'],
+      [bandas[2], CUIDADO.alt.cena2, '1472', '649', [800, 1472], [390, 740], '(min-width: 1440px) 800px, 56vw'],
+      [bandas[3], CUIDADO.alt.cena3, '1152', '665', [760, 1152], [390, 780], '(min-width: 1440px) 760px, 53vw'],
     ] as const
-    for (const [banda, nome, alt, largura, altura, recorte] of casos) {
+    for (const [banda, alt, largura, altura, largos, celulares, sizes] of casos) {
       const cena = banda.querySelector<HTMLImageElement>('picture img')!
       expect(cena.getAttribute('alt')).toBe(alt)
       expect(cena.getAttribute('loading')).toBe('lazy')
       expect(cena.getAttribute('decoding')).toBe('async')
       expect(cena.hasAttribute('fetchpriority')).toBe(false)
-      expect(cena.getAttribute('src')).toContain(`/cenas/cuidado/${nome}-`)
+      expect(cena.getAttribute('src')).toMatch(URL_GERADA)
+      expect(larguras(cena.getAttribute('srcset'))).toEqual(largos)
+      expect(cena.getAttribute('sizes')).toBe(sizes)
       expect(cena.getAttribute('width')).toBe(largura)
       expect(cena.getAttribute('height')).toBe(altura)
-      expect(banda.querySelector('picture source')!.getAttribute('srcset')).toContain(`${nome}-${recorte}`)
+      // O recorte do celular (AVIF antes do WebP, mesmo `media`), depois o AVIF largo, e só então a <img>.
+      const fontes = [...banda.querySelectorAll('picture source')]
+      expect(fontes.map((f) => [f.getAttribute('type'), f.getAttribute('media')])).toEqual([
+        ['image/avif', '(max-width: 1023.98px)'],
+        [null, '(max-width: 1023.98px)'],
+        ['image/avif', null],
+      ])
+      expect(larguras(fontes[0].getAttribute('srcset'))).toEqual(celulares)
+      expect(larguras(fontes[1].getAttribute('srcset'))).toEqual(celulares)
+      expect(larguras(fontes[2].getAttribute('srcset'))).toEqual(largos)
+      expect(fontes[2].nextElementSibling).toBe(cena)
     }
     expect(bandas[2].querySelector('[data-legenda]')).toBeNull() // as mãos não levam legenda
   })
@@ -326,12 +372,17 @@ describe('POLISH-CUIDADO as horas, a moldura, o herói e as colunas', () => {
 
   it('abaixo de 1024 o herói usa a placa inteira (as figuras de corpo inteiro, nenhuma cortada na borda)', () => {
     const { container } = renderizarRota(ROTA)
-    const recorte = faixas(container)[0].querySelector('picture source')!
-    expect(recorte.getAttribute('srcset')).toContain('/cenas/cuidado/m12-heroi-600w.webp 600w')
-    expect(recorte.getAttribute('srcset')).toContain('/cenas/cuidado/m12-heroi-981w.webp 981w')
-    expect(recorte.getAttribute('srcset')).not.toMatch(/390c/)
-    expect(recorte.getAttribute('width')).toBe('981')
-    expect(recorte.getAttribute('height')).toBe('1082')
+    const fontes = [...faixas(container)[0].querySelectorAll('picture source[media]')]
+    expect(fontes).toHaveLength(2) // AVIF e WebP, os dois com o mesmo `media`
+    for (const recorte of fontes) {
+      // A mesma placa do herói largo (600 e 981), não o recorte 390c (390 e 780).
+      expect(larguras(recorte.getAttribute('srcset'))).toEqual([600, 981])
+      expect(recorte.getAttribute('sizes')).toBe('min(90vw, 420px)')
+      expect(recorte.getAttribute('width')).toBe('981')
+      expect(recorte.getAttribute('height')).toBe('1082')
+    }
+    const largo = faixas(container)[0].querySelector('picture img')!
+    expect(fontes[1].getAttribute('srcset')).toBe(largo.getAttribute('srcset'))
   })
 
   it('a faixa "quando alguém para de cuidar" tem duas colunas: o título numa, os dois parágrafos na outra', () => {
