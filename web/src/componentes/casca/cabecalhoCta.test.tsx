@@ -280,15 +280,26 @@ describe('DS1-I-09 CabecalhoCTA: o CSS não esconde a pílula e define o estado 
     .readFileSync(path.join(PASTA, '../../styles/site.css'), 'utf8')
     .replaceAll('\r\n', '\n')
     .replace(/\/\*[\s\S]*?\*\//g, '')
-  const blocos = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({ seletor: m[1].trim(), corpo: m[2] }))
+  const separarBlocos = (texto: string) => [...texto.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({ seletor: m[1].trim(), corpo: m[2] }))
+  const blocos = separarBlocos(css)
   const daPilula = blocos.filter((b) => /cm-cab-criar|data-cabecalho-pilula/.test(b.seletor))
+  // HEADER-375: a única largura em que a pílula sai da linha é abaixo de 360 (não cabe com a marca e o menu de 48 px).
+  // O bloco `@media (max-width: 359px)` é tirado do texto antes da conta; todo o resto do CSS continua sem esconder a pílula.
+  const BLOCO_ESTREITO = /@media\s*\(max-width:\s*359px\)\s*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/g
+  const blocosEstreitos = css.match(BLOCO_ESTREITO) ?? []
+  const daPilulaForaDoEstreito = separarBlocos(css.replace(BLOCO_ESTREITO, '')).filter((b) => /cm-cab-criar|data-cabecalho-pilula/.test(b.seletor))
 
-  it('DS1-I-09 nenhuma regra da pílula a esconde (display: none) em largura nenhuma', () => {
-    expect(daPilula.length).toBeGreaterThan(0)
-    for (const { seletor, corpo } of daPilula) {
+  it('DS1-I-09 nenhuma regra da pílula a esconde (display: none) em largura nenhuma, salvo abaixo de 360 px (HEADER-375)', () => {
+    expect(daPilulaForaDoEstreito.length).toBeGreaterThan(0)
+    for (const { seletor, corpo } of daPilulaForaDoEstreito) {
       expect(corpo, `a pílula some em: ${seletor}`).not.toMatch(/display\s*:\s*none/i)
       expect(corpo, seletor).not.toMatch(/visibility\s*:\s*hidden/i)
     }
+    // A exceção é uma só, abaixo de 360, e só esconde a pílula (nunca a marca nem o botão do menu).
+    expect(blocosEstreitos, 'um só bloco @media (max-width: 359px)').toHaveLength(1)
+    const dentro = separarBlocos((blocosEstreitos[0] ?? '').replace(/^@media[^{]*\{/, ''))
+    const escondem = dentro.filter((b) => /display\s*:\s*none/i.test(b.corpo))
+    expect(escondem.map((b) => b.seletor)).toEqual(['.cm-cab-criar'])
   })
 
   it('DS1-I-09 a pílula nunca fica abaixo de 44 px de altura (min-height em px menor que 44 não existe nas regras dela)', () => {

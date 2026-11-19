@@ -586,6 +586,38 @@
     display: none;
   }
 
+  /* HEADER-375: abaixo de 390 a linha aperta os vãos (16 -> 8 entre a marca e as ações, 8 -> 4 entre os botões) e a
+     pílula "Criar conta" perde 10 px de recuo de cada lado: com a marca no token (5,3 vw) a marca, a pílula e o
+     menu de 48 px cabem de 360 a 389. Abaixo de 360 não cabem (a marca no token já ocupa o que a pílula precisaria): a pílula sai da
+     linha; o menu do celular já lista "Criar conta" e "Entrar", e a página traz o mesmo convite. 390 para cima não muda. */
+  @media (max-width: 389px) {
+    .cm-cab-miolo {
+      gap: 8px;
+    }
+
+    .cm-cab-acoes {
+      gap: 4px;
+    }
+
+    /* Os três alvos de toque (menu de 48 px, lua e pílula) não encolhem mais: quem cede é o vão entre os itens e,
+       abaixo de 360, a pílula. De 390 em diante nada disto vale, e o desenho é o de antes. */
+    .sb-cab-menu,
+    .cm-cab-madrugada {
+      flex: none;
+    }
+
+    .cm-cab-criar {
+      flex: none;
+      padding: 0 12px;
+    }
+  }
+
+  @media (max-width: 359px) {
+    .cm-cab-criar {
+      display: none;
+    }
+  }
+
   /* Abaixo de 480 o botão da madrugada fica só com a lua (o nome acessível continua "Modo madrugada"),
      para o nome do site, a lua e o menu caberem na linha de 390. */
   @media (max-width: 479px) {
