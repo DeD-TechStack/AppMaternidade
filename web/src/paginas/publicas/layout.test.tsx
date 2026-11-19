@@ -15,7 +15,7 @@ const PAGINAS_DE_TEXTO = [
   '/sobre',
 ] as const
 
-const PAGINAS_DE_DESTAQUE = ['/como-funciona', '/cuidado-compartilhado', '/desenvolvimento'] as const
+const PAGINAS_DE_DESTAQUE = ['/como-funciona', '/cuidado-compartilhado'] as const
 
 function principal(container: HTMLElement): HTMLElement {
   return container.querySelector('main') as HTMLElement
@@ -134,18 +134,6 @@ describe('páginas em destaque: Secao, Colunas e painéis', () => {
     expect(lista.getAttribute('data-h')).toContain('pilha')
     expect(lista.closest('[data-h~="quadro"]')!.getAttribute('data-h-largura')).toBe('quadro')
   })
-
-  it('Desenvolvimento: a faixa de cacau é uma Secao de painel e o tummy time é uma Pilha bloco', () => {
-    const { container } = renderizarRota('/desenvolvimento')
-    const paineis = principal(container).querySelectorAll('[data-h~="secao"][data-h-variante="painel"]')
-    expect(paineis).toHaveLength(1)
-    expect(paineis[0].querySelector(':scope > [data-painel="cacau"]')).not.toBeNull()
-    const cima = principal(container).querySelector('#tummy-time .pd-tummy-cima')!
-    expect(cima.getAttribute('data-h-vao')).toBe('midia')
-    expect(cima.parentElement!.getAttribute('data-h-vao')).toBe('bloco')
-    const fim = principal(container).querySelector('#tummy-time .pd-tummy-fim')!
-    expect(fim.getAttribute('data-h-vao')).toBe('grupo')
-  })
 })
 
 describe('rota inexistente: Secao, QuadroLayout e Pilha', () => {
@@ -176,23 +164,6 @@ describe('H-3c R1-01: caixas de conteúdo com fundo ou borda são o primitivo Ca
     const regra = css.match(/\.pt-email\s*\{([^}]*)\}/)![1]
     expect(regra).not.toMatch(/padding\s*:/)
     expect(regra).not.toMatch(/border-radius\s*:/)
-  })
-
-  it('Desenvolvimento: o painel de cada fase é um Cartao, mantendo a coluna', () => {
-    const { container } = renderizarRota('/desenvolvimento')
-    const fases = container.querySelectorAll('[role="tabpanel"].pd-fase')
-    expect(fases.length).toBeGreaterThan(0)
-    for (const fase of fases) {
-      expect(ehCartao(fase)).toBe(true)
-      expect((fase.getAttribute('data-h') ?? '').split(' ')).toContain('coluna')
-    }
-  })
-
-  it('Desenvolvimento: o aviso de saúde é um Cartao, com o ícone e o texto', () => {
-    const { container } = renderizarRota('/desenvolvimento')
-    const aviso = container.querySelector('[data-aviso-saude]')!
-    expect(ehCartao(aviso)).toBe(true)
-    expect(aviso.querySelector('svg')).not.toBeNull()
   })
 
   it('o CSS local não repete o padding nem o raio que o Cartao já dá (só a exceção do celular)', () => {

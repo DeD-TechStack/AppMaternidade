@@ -1,7 +1,6 @@
 import { Check, Moon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { COMO_FUNCIONA_DESTAQUE as CF, CUIDADO_DESTAQUE as CC } from '../../conteudo/publicas-destaque.ts'
-import { DESENVOLVIMENTO_DESTAQUE as DD } from '../../conteudo/desenvolvimento/pagina.ts'
 import { SemQuebra } from './SemQuebra.tsx'
 import './publicas-destaque.css'
 
@@ -184,16 +183,3 @@ export function CartaoTarde() {
   )
 }
 
-/** Desenvolvimento: o tummy time registrado só com "fizemos", sem meta. */
-export function CartaoTummy() {
-  const c = DD.registro
-  return (
-    <div className="pd-cartao">
-      <p className="pd-cartao-rotulo">{c.rotulo}</p>
-      <p className="pd-cartao-hora">{c.valor}</p>
-      <p className="pd-cartao-detalhe">
-        <SemQuebra texto={c.detalhe} />
-      </p>
-    </div>
-  )
-}
