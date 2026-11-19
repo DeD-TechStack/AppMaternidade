@@ -804,20 +804,37 @@
      títulos dos grupos ficam só para o leitor de tela (sr-only). Um rótulo mais largo que a coluna quebra em duas
      linhas dentro da caixa de 44 px, e nunca passa da coluna (também com a fonte a 200 %: `fr` com mínimo 0 encolhe
      junto com a janela, sem alargar o rodapé). Os grupos e as listas viram `contents` para os 11 links serem as
-     células de uma grade só, em 4 fileiras, e o início de cada coluna é o mesmo em toda fileira. */
+     células de uma grade só, em 4 fileiras, e o início de cada coluna é o mesmo em toda fileira.
+     Nenhuma palavra de link se parte (FOOT2-R1-01). A palavra mais larga é "Desenvolvimento" (~115 px a 15 px) e o
+     quadro tem 350 px em 390: três colunas iguais só a comportam se o vão for mínimo. Por isso o vão é fluido, de
+     1 px em 390 (colunas de 116 px) até o `junto` em 768, e não o `junto` fixo (8 px, colunas de 111 px). De 390 a 767
+     são três colunas iguais. Abaixo de 390 (320, 360, 375) três colunas iguais não comportam a palavra (320: ~93 px
+     por coluna): as três colunas passam a dividir a largura na proporção da palavra mais larga de cada uma
+     (Desenvolvimento 114,8 : comunidade 82,1 : Privacidade 79,5 px, medidas a 15 px, mais a mesma folga de ~0,5 px
+     em cada), de modo que as quatro fileiras e o teto de 480 px se mantêm. Duas colunas em seis fileiras passavam do
+     teto (486 px em 389, ~600 em 320, na madrugada). São `fr` com mínimo 0: a 200 % de texto as colunas encolhem
+     junto com a janela, sem alargar o rodapé (e aí a palavra pode quebrar). */
   .cm-rodape-colunas {
+    --cm-rodape-vao: clamp(1px, calc(1px + (100vw - 390px) * 7 / 378), var(--espaco-junto));
+
     position: relative;
     display: grid;
     grid-auto-flow: column;
     grid-template-rows: repeat(4, auto);
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    column-gap: var(--espaco-junto);
+    column-gap: var(--cm-rodape-vao);
   }
 
   @media (max-width: 767.98px) {
     .cm-rodape-grupo,
     .cm-rodape-lista {
       display: contents;
+    }
+  }
+
+  @media (max-width: 389.98px) {
+    .cm-rodape-colunas {
+      grid-template-columns: minmax(0, 115.3fr) minmax(0, 82.6fr) minmax(0, 80fr);
     }
   }
 

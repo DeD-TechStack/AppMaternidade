@@ -35,8 +35,10 @@ const PAGINA_CURTA = '/rota-que-nao-existe'
 const PAGINA_DE_CACAU = '/cuidado-compartilhado'
 const PAGINA_DE_PAPEL = '/privacidade'
 // 1099 e 1100 são os dois lados do ponto em que o nome do rodapé passa para a esquerda da grade.
-const LARGURAS = [390, 768, 1024, 1099, 1100, 1440]
-const ALTURA_DA_JANELA: Record<number, number> = { 390: 844, 768: 900, 1024: 900, 1099: 900, 1100: 900, 1440: 900 }
+// 320 é o celular mais estreito que importa; 389 e 390 são os dois lados do ponto em que três colunas iguais deixam de
+// comportar "Desenvolvimento".
+const LARGURAS = [320, 389, 390, 768, 1024, 1099, 1100, 1440]
+const ALTURA_DA_JANELA: Record<number, number> = { 320: 568, 389: 844, 390: 844, 768: 900, 1024: 900, 1099: 900, 1100: 900, 1440: 900 }
 const TEMAS = ['claro', 'madrugada'] as const
 type Tema = (typeof TEMAS)[number]
 
@@ -60,6 +62,12 @@ interface Texto {
   texto: string
   cor: string
 }
+/** Uma palavra de um link: a largura natural dela (sem quebra) e em quantos trechos de linha ela foi desenhada (1 = inteira). */
+interface Palavra {
+  texto: string
+  largura: number
+  trechos: number
+}
 interface Quadro {
   erro?: string
   nonce: string
@@ -74,7 +82,7 @@ interface Quadro {
   nome: Caixa
   titulos: (Caixa & Texto)[]
   grupos: Caixa[]
-  links: (Caixa & Texto & { linhas: number })[]
+  links: (Caixa & Texto & { linhas: number; palavras: Palavra[] })[]
   /** Os parágrafos de baixo: o aviso e, por último, a linha do ©. */
   base: (Caixa & Texto)[]
   textos: Texto[]
@@ -148,7 +156,30 @@ const SCRIPT_DE_MEDIDA = (nonce: string) => `
         const intervalo = document.createRange()
         intervalo.selectNodeContents(a)
         const linhas = new Set([...intervalo.getClientRects()].map((r) => Math.round(r.top))).size
-        return { ...comCor(a), linhas }
+        // Cada palavra: quantos trechos de linha o Range dela ocupa (mais de 1 = a palavra foi partida) e a largura que
+        // ela teria inteira (um span sem quebra, na mesma fonte).
+        const no = a.firstChild
+        const palavras = []
+        if (no && no.nodeType === 3) {
+          const estilo = getComputedStyle(a)
+          let inicio = 0
+          for (const palavra of no.textContent.split(' ')) {
+            if (palavra.length > 0) {
+              const r = document.createRange()
+              r.setStart(no, inicio)
+              r.setEnd(no, inicio + palavra.length)
+              const sonda = document.createElement('span')
+              sonda.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;font:' + estilo.font + ';letter-spacing:' + estilo.letterSpacing
+              sonda.textContent = palavra
+              document.body.appendChild(sonda)
+              const largura = sonda.getBoundingClientRect().width
+              sonda.remove()
+              palavras.push({ texto: palavra, largura, trechos: r.getClientRects().length })
+            }
+            inicio += palavra.length + 1
+          }
+        }
+        return { ...comCor(a), linhas, palavras }
       }),
       base: [...rodape.querySelectorAll('.cm-rodape-base > p')].map(comCor),
       textos,
@@ -387,8 +418,10 @@ function violacoesDaGrade(q: Quadro): string[] {
     }
   } else {
     const colunas = agrupar(q.links.map((l) => l.x))
+    // De 390 a 767 são três colunas IGUAIS (exigido). Abaixo de 390 três colunas iguais não comportam a palavra mais larga
+    // ("Desenvolvimento", ~115 px): ali as três colunas se dividem pela palavra mais larga de cada uma, sem ser iguais.
     if (colunas.length !== 3) v.push(`${colunas.length} inícios de coluna (são três): ${colunas.map((c) => c[0].toFixed(1)).join(', ')}`)
-    else {
+    else if (q.innerWidth >= 390) {
       const inicios = colunas.map((c) => c[0])
       const degraus = [inicios[1] - inicios[0], inicios[2] - inicios[1]]
       if (amplitude(degraus) > TOLERANCIA) v.push(`as três colunas não são iguais: degraus de ${degraus.map((d) => d.toFixed(1)).join(' e ')} px`)
@@ -431,6 +464,12 @@ function violacoesDosAlvos(q: Quadro, tema: Tema): string[] {
   const alvo = tema === 'madrugada' ? 56 : 44
   for (const link of q.links) {
     if (link.linhas > (q.innerWidth >= 1024 ? 1 : 2)) v.push(`"${link.texto}" quebra em ${link.linhas} linhas (caixa de ${Math.round(link.width)} px)`)
+    // FOOT2-R1-01: nenhuma palavra de nenhum link se parte ("Desenvolvimento" não vira "Desenvolviment" + "o"), em largura
+    // nenhuma. Cada palavra é medida pelo próprio Range: mais de um trecho de linha é palavra partida.
+    if (link.palavras.length === 0) v.push(`"${link.texto}": as palavras não foram medidas`)
+    for (const palavra of link.palavras) {
+      if (palavra.trechos > 1) v.push(`a palavra "${palavra.texto}" (${Math.round(palavra.largura)} px) de "${link.texto}" está partida em ${palavra.trechos} trechos (caixa de ${Math.round(link.width)} px)`)
+    }
     if (link.height < alvo - 0.5) v.push(`"${link.texto}" tem ${link.height.toFixed(1)} px de altura (alvo de ${alvo})`)
     if (link.x < 0 || link.right > q.innerWidth) v.push(`"${link.texto}" passa da janela`)
   }
@@ -580,6 +619,30 @@ describe('a grade do rodapé público no Chrome (FOOTER-2)', () => {
     const quebra = copiar(base)
     quebra.links[1].linhas = 2
     expect(violacoesDosAlvos(quebra, 'madrugada'), 'controle: um link em duas linhas em 1440').not.toEqual([])
+    for (const largura of [320, 390, 768]) {
+      for (const tema of TEMAS) {
+        const q = quadro(PAGINA_DE_PAPEL, tema, largura)
+        const quebradas = q.links.flatMap((l) => l.palavras.filter((p) => p.trechos > 1).map((p) => p.texto))
+        expect(quebradas, `${tema}, ${largura}: palavras partidas`).toEqual([])
+        // O controle da mesma medida: a palavra mais larga de "Desenvolvimento" partida em dois trechos viola.
+        const partida = copiar(q)
+        partida.links.find((l) => l.texto === 'Desenvolvimento')!.palavras[0].trechos = 2
+        expect(violacoesDosAlvos(partida, tema), `controle: "Desenvolvimento" partida em ${largura}`).not.toEqual([])
+      }
+    }
+    // Registrado para citar no relatório: a palavra mais larga de cada coluna (três colunas, quatro links cada, o último com três).
+    const largas = [0, 4, 8].map((inicio, i) => {
+      const links = quadro(PAGINA_DE_PAPEL, 'claro', 320).links.slice(inicio, i === 2 ? 11 : inicio + 4)
+      const maior = links.flatMap((l) => l.palavras).reduce((a, b) => (b.largura > a.largura ? b : a))
+      return `${maior.texto} ${maior.largura.toFixed(1)}px`
+    })
+    process.stdout.write(`PALAVRA_MAIS_LARGA_POR_COLUNA ${largas.join(' | ')}\n`)
+    const composta = copiar(quadro(PAGINA_DE_PAPEL, 'claro', 390))
+    composta.links.find((l) => l.texto === 'Cuidado compartilhado')!.palavras[1].trechos = 3
+    expect(violacoesDosAlvos(composta, 'claro'), 'controle: "compartilhado" partida num link de duas palavras').not.toEqual([])
+    const semMedida = copiar(quadro(PAGINA_DE_PAPEL, 'claro', 390))
+    semMedida.links[0].palavras = []
+    expect(violacoesDosAlvos(semMedida, 'claro'), 'controle: palavras não medidas falham fechado').not.toEqual([])
     const baixo = copiar(base)
     baixo.links[0].height = 44
     expect(violacoesDosAlvos(baixo, 'madrugada'), 'controle: alvo de 44 px na madrugada').not.toEqual([])
