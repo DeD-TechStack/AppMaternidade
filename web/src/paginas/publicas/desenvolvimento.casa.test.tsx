@@ -25,6 +25,12 @@ import '../../teste/setup.ts'
 
 const ROTA = '/desenvolvimento'
 
+// As placas de cena saem do vite-imagetools (um mestre por vaga em src/assets/cenas/desenvolvimento): no teste a URL é
+// `/@imagetools/<hash>`, no build é um arquivo com hash em /assets. Confere-se a forma, as larguras e as fontes AVIF.
+const URL_GERADA = /^\/@imagetools\/[\w-]+$/
+const larguras = (srcset: string | null) =>
+  (srcset ?? '').split(',').map((parte) => Number(parte.trim().split(/\s+/)[1]?.replace(/w$/, '')))
+
 function bandas(container: HTMLElement): HTMLElement[] {
   return [...container.querySelectorAll<HTMLElement>('main > [data-casa] > *')]
 }
@@ -223,19 +229,31 @@ describe('DESENV-I-06 imagens (as três vagas fechadas)', () => {
     expect(container.querySelector('[data-cena-heroi]')).toBeNull()
     expect(cena.getAttribute('alt')).toBe(D.altCena1)
     expect(cena.getAttribute('src')).toBe(CENA_ABERTURA.src)
-    expect(cena.getAttribute('src')).toContain('/cenas/desenvolvimento/m04-heroi-1100w.webp')
-    expect(cena.getAttribute('srcset')).toContain('m04-heroi-1100w.webp 1100w')
-    expect(cena.getAttribute('srcset')).toContain('m04-heroi-1672w.webp 1672w')
+    expect(cena.getAttribute('src')).toMatch(URL_GERADA)
+    expect(larguras(cena.getAttribute('srcset'))).toEqual([1100, 1672])
+    expect(cena.getAttribute('srcset')).toContain(cena.getAttribute('src')!)
+    expect(cena.getAttribute('sizes')).toBe('(min-width: 1100px) min(1100px, 76.39vw), 100vw')
     expect(cena.getAttribute('width')).toBe('1672')
     expect(cena.getAttribute('height')).toBe('941')
     expect(cena.getAttribute('fetchpriority')).toBe('high')
     expect(cena.getAttribute('loading')).not.toBe('lazy')
-    const fonte = cena.parentElement!.querySelector('source')!
-    expect(fonte.getAttribute('media')).toBe('(max-width: 767px)')
-    expect(fonte.getAttribute('srcset')).toContain('m04-heroi-390c-390w.webp 390w')
-    expect(fonte.getAttribute('srcset')).toContain('m04-heroi-390c-780w.webp 780w')
-    expect(fonte.getAttribute('width')).toBe(String(CENA_ABERTURA_RECORTE.largura))
-    expect(fonte.getAttribute('height')).toBe(String(CENA_ABERTURA_RECORTE.altura))
+    // O AVIF vem antes do WebP de cada caso: o recorte (com `media`), depois a placa larga (sem `media`), e só então a <img>.
+    const fontes = [...cena.parentElement!.querySelectorAll('source')]
+    expect(fontes.map((f) => [f.getAttribute('type'), f.getAttribute('media')])).toEqual([
+      ['image/avif', '(max-width: 767px)'],
+      [null, '(max-width: 767px)'],
+      ['image/avif', null],
+    ])
+    for (const fonte of fontes.slice(0, 2)) {
+      expect(larguras(fonte.getAttribute('srcset'))).toEqual([390, 780])
+      expect(fonte.getAttribute('sizes')).toBe('100vw')
+      expect(fonte.getAttribute('width')).toBe(String(CENA_ABERTURA_RECORTE.largura))
+      expect(fonte.getAttribute('height')).toBe(String(CENA_ABERTURA_RECORTE.altura))
+    }
+    expect([CENA_ABERTURA_RECORTE.largura, CENA_ABERTURA_RECORTE.altura]).toEqual([780, 476])
+    expect(larguras(fontes[2].getAttribute('srcset'))).toEqual([1100, 1672])
+    expect(fontes[2].getAttribute('sizes')).toBe(cena.getAttribute('sizes'))
+    expect(fontes[2].nextElementSibling).toBe(cena)
   })
 
   it('DE-S2: a captura sob a moldura do dia, com o alt do deck e o tamanho do maior arquivo', () => {
@@ -259,11 +277,20 @@ describe('DESENV-I-06 imagens (as três vagas fechadas)', () => {
     const { container } = renderizarRota(ROTA)
     const familia = container.querySelector('#ideias img')!
     expect(familia.getAttribute('alt')).toBe(D.altCena2)
-    expect(familia.getAttribute('src')).toContain('/cenas/desenvolvimento/m12-familia-390w.webp')
-    expect(familia.getAttribute('srcset')).toContain('m12-familia-390w.webp 390w')
-    expect(familia.getAttribute('srcset')).toContain('m12-familia-585w.webp 585w')
+    expect(familia.getAttribute('src')).toMatch(URL_GERADA)
+    expect(larguras(familia.getAttribute('srcset'))).toEqual([390, 585])
+    expect(familia.getAttribute('srcset')).toContain(familia.getAttribute('src')!)
+    expect(familia.getAttribute('sizes')).toBe('(min-width: 960px) 390px, 350px')
     expect(familia.getAttribute('width')).toBe(String(CENA_FAMILIA.largura))
     expect(familia.getAttribute('height')).toBe(String(CENA_FAMILIA.altura))
+    expect([CENA_FAMILIA.largura, CENA_FAMILIA.altura]).toEqual([585, 632])
+    // O AVIF de 390 e 585 vai no DOM, numa <source> da <picture> que envolve a <img>.
+    const fonteAvif = container.querySelector('#ideias picture source[type="image/avif"]')!
+    expect(fonteAvif).not.toBeNull()
+    expect(larguras(fonteAvif.getAttribute('srcset'))).toEqual([390, 585])
+    expect(fonteAvif.getAttribute('sizes')).toBe(familia.getAttribute('sizes'))
+    expect(fonteAvif.nextElementSibling).toBe(familia)
+    expect(familia.parentElement?.tagName).toBe('PICTURE')
     expect(familia.getAttribute('loading')).toBe('lazy')
     expect(familia.getAttribute('decoding')).toBe('async')
   })

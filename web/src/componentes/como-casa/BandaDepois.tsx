@@ -18,16 +18,19 @@ export function BandaDepois() {
           </div>
           <div className="cf-colo">
             <span className="cf-chao" aria-hidden="true" />
-            <img
-              src={CENA_COLO.src}
-              srcSet={CENA_COLO.srcSet}
-              sizes={CENA_COLO.sizes}
-              width={CENA_COLO.largura}
-              height={CENA_COLO.altura}
-              alt={T.altCena3}
-              loading="lazy"
-              decoding="async"
-            />
+            <picture>
+              {CENA_COLO.avif ? <source type="image/avif" srcSet={CENA_COLO.avif} sizes={CENA_COLO.sizes} /> : null}
+              <img
+                src={CENA_COLO.src}
+                srcSet={CENA_COLO.srcSet}
+                sizes={CENA_COLO.sizes}
+                width={CENA_COLO.largura}
+                height={CENA_COLO.altura}
+                alt={T.altCena3}
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
             <Legenda texto={T.leg3} tom="noite" />
           </div>
         </div>

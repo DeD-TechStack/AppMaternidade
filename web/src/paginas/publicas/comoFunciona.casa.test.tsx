@@ -9,6 +9,12 @@ import { renderizarRota } from '../../teste/renderizarRota.tsx'
 // arquivo: aqui ficam a ordem das faixas, os chãos, a cópia, os nomes dos arquivos e os atributos das imagens. As
 // medidas (1440 e 390) saem das capturas.
 
+// As placas de cena saem do vite-imagetools (um mestre por vaga em src/assets/cenas): no teste a URL é `/@imagetools/<hash>`,
+// no build é um arquivo com hash em /assets. O que se confere é a forma, as larguras do srcset e as fontes AVIF.
+const URL_GERADA = /^\/@imagetools\/[\w-]+$/
+const larguras = (srcset: string | null) =>
+  (srcset ?? '').split(',').map((parte) => Number(parte.trim().split(/\s+/)[1]?.replace(/w$/, '')))
+
 // As 24 frases do deck COPY_como-funciona (sha256 84e6bf6d…) que a página desenha; `cf.aba` é o título da aba.
 const ABA = 'Como funciona | AppMaternidade' // cf.aba
 const H1 = 'Deixa que eu anoto.' // cf.h1
@@ -232,34 +238,54 @@ describe('/como-funciona: as imagens são os cinco slots e nada mais (COMO:RF-06
     const heroi = casa(container).firstElementChild!
     const img = heroi.querySelector<HTMLImageElement>('picture img')!
     expect(img.getAttribute('alt')).toBe(ALTS['cf.alt.cena1'])
-    expect(img.getAttribute('src')).toBe('/cenas/como-funciona/m01-heroi-977w.webp')
-    expect(img.getAttribute('srcset')).toBe(
-      '/cenas/como-funciona/m01-heroi-977w.webp 977w, /cenas/como-funciona/m01-heroi-1672w.webp 1672w',
-    )
+    expect(img.getAttribute('src')).toMatch(URL_GERADA)
+    expect(larguras(img.getAttribute('srcset'))).toEqual([977, 1672])
+    expect(img.getAttribute('srcset')).toContain(img.getAttribute('src')!)
+    expect(img.getAttribute('sizes')).toBe('(min-width: 1440px) 977px, 68vw')
     expect([img.getAttribute('width'), img.getAttribute('height')]).toEqual(['1672', '915'])
     expect(img.getAttribute('fetchpriority')).toBe('high')
     expect(img.getAttribute('loading')).not.toBe('lazy')
-    const fonte = heroi.querySelector('picture source')!
-    expect(fonte.getAttribute('media')).toBe('(max-width: 767px)')
-    expect(fonte.getAttribute('srcset')).toBe(
-      '/cenas/como-funciona/m01-heroi-390c-390w.webp 390w, /cenas/como-funciona/m01-heroi-390c-780w.webp 780w',
-    )
-    expect([fonte.getAttribute('width'), fonte.getAttribute('height')]).toEqual(['780', '458'])
+    // O AVIF vem antes do WebP de cada caso: recorte (com `media`) e depois a placa larga (sem `media`), e só então a <img>.
+    const fontes = [...heroi.querySelectorAll('picture source')]
+    expect(fontes.map((f) => [f.getAttribute('type'), f.getAttribute('media')])).toEqual([
+      ['image/avif', '(max-width: 767px)'],
+      [null, '(max-width: 767px)'],
+      ['image/avif', null],
+    ])
+    for (const fonte of fontes.slice(0, 2)) {
+      expect(larguras(fonte.getAttribute('srcset'))).toEqual([390, 780])
+      expect(fonte.getAttribute('sizes')).toBe('100vw')
+      expect([fonte.getAttribute('width'), fonte.getAttribute('height')]).toEqual(['780', '458'])
+    }
+    expect(larguras(fontes[2].getAttribute('srcset'))).toEqual([977, 1672])
+    expect(fontes[2].getAttribute('sizes')).toBe('(min-width: 1440px) 977px, 68vw')
+    expect(fontes[2].nextElementSibling).toBe(img)
   })
 
   it('COMO-I-06 M04 e M06: preguiçosas e assíncronas, com o tamanho do maior arquivo e os nomes de ASSET-2', () => {
     const { container } = renderizarRota('/como-funciona')
     const m04 = container.querySelector<HTMLImageElement>(`img[alt="${ALTS['cf.alt.cena2']}"]`)!
-    expect(m04.getAttribute('srcset')).toBe(
-      [350, 520, 700, 1040].map((l) => `/cenas/como-funciona/m04-${l}w.webp ${l}w`).join(', '),
-    )
+    expect(larguras(m04.getAttribute('srcset'))).toEqual([350, 520, 700, 1040])
+    expect(m04.getAttribute('src')).toMatch(URL_GERADA)
+    expect(m04.getAttribute('sizes')).toBe('(min-width: 768px) 520px, 350px')
     expect([m04.getAttribute('width'), m04.getAttribute('height')]).toEqual(['1040', '754'])
     const m06 = container.querySelector<HTMLImageElement>(`img[alt="${ALTS['cf.alt.cena3']}"]`)!
-    expect(m06.getAttribute('srcset')).toBe('/cenas/como-funciona/m06-300w.webp 300w, /cenas/como-funciona/m06-600w.webp 600w')
+    expect(larguras(m06.getAttribute('srcset'))).toEqual([300, 600])
+    expect(m06.getAttribute('src')).toMatch(URL_GERADA)
+    expect(m06.getAttribute('sizes')).toBe('300px')
     expect([m06.getAttribute('width'), m06.getAttribute('height')]).toEqual(['600', '980'])
-    for (const img of [m04, m06]) {
+    for (const [img, largurasAvif] of [
+      [m04, [350, 520, 700, 1040]],
+      [m06, [300, 600]],
+    ] as const) {
       expect(img.getAttribute('loading')).toBe('lazy')
       expect(img.getAttribute('decoding')).toBe('async')
+      // Uma <picture> com a fonte AVIF logo antes da <img>, com os mesmos `sizes` e as mesmas larguras.
+      const fonte = img.previousElementSibling!
+      expect(img.parentElement!.tagName).toBe('PICTURE')
+      expect(fonte.getAttribute('type')).toBe('image/avif')
+      expect(larguras(fonte.getAttribute('srcset'))).toEqual(largurasAvif)
+      expect(fonte.getAttribute('sizes')).toBe(img.getAttribute('sizes'))
     }
   })
 
@@ -295,7 +321,7 @@ describe('/como-funciona: as imagens são os cinco slots e nada mais (COMO:RF-06
     }
     // Imagem a imagem: cada uma é de um dos slots (cena/ , telas/t1i/ ou a moldura).
     for (const img of main.querySelectorAll('img')) {
-      expect(img.getAttribute('src')).toMatch(/^\/(cenas\/como-funciona\/|telas\/t1i\/|molduras\/moldura-dia\.png$)/)
+      expect(img.getAttribute('src')).toMatch(/^\/(@imagetools\/|telas\/t1i\/|molduras\/moldura-dia\.png$)/)
       expect(img.getAttribute('width')).toMatch(/^[1-9]\d*$/)
       expect(img.getAttribute('height')).toMatch(/^[1-9]\d*$/)
     }
@@ -334,6 +360,13 @@ describe('/como-funciona: o CSS da página é estático e só de token (COMO:RF-
     for (const [, valor] of css.matchAll(/(?:background-color|border-color|color)\s*:\s*([^;]+);/g)) {
       expect(valor.trim(), valor).toMatch(/^var\(--(color|cor|foco)-[\w-]+\)$|^currentcolor$/)
     }
+  })
+
+  it('as <source> da <picture> em display: contents ficam fora da caixa (não somam o gap do flex)', () => {
+    expect(css).toMatch(/\.cf-texto > picture,\s*\.cf-colo > picture \{[^}]*display: contents/)
+    const site = readFileSync(join(process.cwd(), 'src', 'styles', 'site.css'), 'utf8')
+    expect(site).toMatch(/\bpicture > source \{[^}]*display: none/)
+    expect(css).not.toMatch(/picture > source/)
   })
 
   it('COMO-I-12 sem animação, quadros-chave, transição, will-change nem view-transition; nada nasce escondido', () => {
