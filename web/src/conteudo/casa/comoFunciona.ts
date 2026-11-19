@@ -1,4 +1,5 @@
 import type { Imagem } from '../../componentes/secoes/contrato.ts'
+import { imagemPublica } from '../../componentes/campo/urlPublica.ts'
 
 // /como-funciona na casa acesa: as 25 frases do deck COPY_como-funciona (copy/COPY_como-funciona.md, sha256 84e6bf6d…).
 // `cf.aba` (o título da aba) fica em NOMES_DE_PAGINA. Cada frase numa linha, com o id do deck ao lado.
@@ -46,26 +47,26 @@ export const DESTINO_CRIAR_CONTA = '/criar-conta'
 // As imagens (ASSET-2 serve os arquivos; `largura`/`altura` são as do maior arquivo servido de cada slot).
 
 /** CF-S1 (1440): a placa M01 inteira, 977 e 1672 de largura. */
-export const CENA_HEROI: Imagem = {
+export const CENA_HEROI: Imagem = imagemPublica({
   src: '/cenas/como-funciona/m01-heroi-977w.webp',
   srcSet: '/cenas/como-funciona/m01-heroi-977w.webp 977w, /cenas/como-funciona/m01-heroi-1672w.webp 1672w',
   sizes: '(min-width: 1440px) 977px, 68vw',
   largura: 1672,
   altura: 915,
-}
+})
 
 /** CF-S1 (390): o recorte das figuras, 390 e 780 de largura. */
-export const CENA_HEROI_390: Imagem = {
+export const CENA_HEROI_390: Imagem = imagemPublica({
   src: '/cenas/como-funciona/m01-heroi-390c-390w.webp',
   srcSet:
     '/cenas/como-funciona/m01-heroi-390c-390w.webp 390w, /cenas/como-funciona/m01-heroi-390c-780w.webp 780w',
   sizes: '100vw',
   largura: 780,
   altura: 458,
-}
+})
 
 /** CF-S3: a cena das 15:00 (M04, 0 30 1200 900), 350 a 1040 de largura. */
-export const CENA_TUMMY: Imagem = {
+export const CENA_TUMMY: Imagem = imagemPublica({
   src: '/cenas/como-funciona/m04-520w.webp',
   srcSet: [
     '/cenas/como-funciona/m04-350w.webp 350w',
@@ -76,20 +77,20 @@ export const CENA_TUMMY: Imagem = {
   sizes: '(min-width: 768px) 520px, 350px',
   largura: 1040,
   altura: 754,
-}
+})
 
 /** CF-S4: a noite (M06 inteira), 300 e 600 de largura. */
-export const CENA_COLO: Imagem = {
+export const CENA_COLO: Imagem = imagemPublica({
   src: '/cenas/como-funciona/m06-300w.webp',
   srcSet: '/cenas/como-funciona/m06-300w.webp 300w, /cenas/como-funciona/m06-600w.webp 600w',
   sizes: '300px',
   largura: 600,
   altura: 980,
-}
+})
 
 /** CF-S2: a captura do Histórico (estado Y15), o celular principal: a camada de tela de até 330 numa coluna (a largura
  * do quadro em 390) e de até 390 (a 1:1 da captura) em duas colunas. */
-export const TELA_HISTORICO: Imagem = {
+export const TELA_HISTORICO: Imagem = imagemPublica({
   src: '/telas/t1i/historico-y15-320w.webp',
   srcSet: [
     '/telas/t1i/historico-y15-280w.webp 280w',
@@ -100,10 +101,10 @@ export const TELA_HISTORICO: Imagem = {
   sizes: '(min-width: 1024px) 390px, (min-width: 768px) 320px, 330px',
   largura: 640,
   altura: 1385,
-}
+})
 
 /** CF-S5: a captura das Notas, mesmos tamanhos. */
-export const TELA_NOTAS: Imagem = {
+export const TELA_NOTAS: Imagem = imagemPublica({
   src: '/telas/t1i/notas-320w.webp',
   srcSet: [
     '/telas/t1i/notas-280w.webp 280w',
@@ -114,11 +115,11 @@ export const TELA_NOTAS: Imagem = {
   sizes: '(min-width: 768px) 320px, 280px',
   largura: 640,
   altura: 1385,
-}
+})
 
 /** A moldura do aparelho de dia (arte decorativa, sem texto alternativo). */
-export const MOLDURA_DIA: Imagem = {
+export const MOLDURA_DIA: Imagem = imagemPublica({
   src: '/molduras/moldura-dia.png',
   largura: 678,
   altura: 1423,
-}
+})
