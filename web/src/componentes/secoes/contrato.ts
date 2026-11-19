@@ -10,10 +10,14 @@ export type Fundo = (typeof FUNDOS)[number]
 
 export type Tom = 'dia' | 'noite'
 
-/** Um arquivo de imagem servido: o menor `src`, o `srcSet` em descritores `w`, o `sizes` e o tamanho do maior arquivo. */
+/**
+ * Um arquivo de imagem servido: o `src`, o `srcSet` em descritores `w`, o `sizes` e o tamanho do maior arquivo. `avif`,
+ * quando existe, é o `srcSet` AVIF da mesma placa (a peça põe um `<source type="image/avif">` antes do WebP).
+ */
 export interface Imagem {
   src: string
   srcSet?: string
+  avif?: string
   sizes?: string
   largura: number
   altura: number
@@ -72,5 +76,6 @@ export function exigirImagem(peca: string, nome: string, imagem: Imagem | undefi
   exigirInteiroPositivo(peca, `${nome}.altura`, imagem.altura)
   if (imagem.srcSet !== undefined) exigirTexto(peca, `${nome}.srcSet`, imagem.srcSet)
   if (imagem.sizes !== undefined) exigirTexto(peca, `${nome}.sizes`, imagem.sizes)
+  if (imagem.avif !== undefined) exigirTexto(peca, `${nome}.avif`, imagem.avif)
   return imagem
 }
