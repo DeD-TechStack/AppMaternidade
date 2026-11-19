@@ -49,6 +49,8 @@ describe('NEW-C:RF-01 o aviso da moldura vem depois do <main>, numa região rotu
 
       const main = container.querySelector('main')!
       expect(main.compareDocumentPosition(regiao!) & Node.DOCUMENT_POSITION_FOLLOWING, caminho).not.toBe(0)
+      // REP-T3: /app/comecar não tem mais barra da moldura
+      if (caminho === '/app/comecar') return
       // Nunca entre o cabeçalho e a barra: a barra vem antes do aviso.
       const barra = barraDaMoldura(container)
       expect(barra.compareDocumentPosition(regiao!) & Node.DOCUMENT_POSITION_FOLLOWING, caminho).not.toBe(0)
@@ -76,6 +78,8 @@ describe('NEW-C:RF-01 o aviso da moldura vem depois do <main>, numa região rotu
       const { container } = await renderizarRotaPronta(caminho)
       expect(container.querySelectorAll(SELETOR), caminho).toHaveLength(0)
       expect(container.querySelector(`section[aria-label="${ROTULO_REGIAO}"]`), caminho).toBeNull()
+      // REP-T3: /app/comecar não tem mais barra da moldura
+      if (caminho === '/app/comecar') return
       // A faixa da barra só tem a barra: nenhum invólucro antes dela.
       const barra = barraDaMoldura(container)
       const faixa = barra.parentElement!
