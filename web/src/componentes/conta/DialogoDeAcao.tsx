@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, type FormEvent, type ReactNode, type RefObject } from 'react'
+import { deixarFantasma } from '../comunidade/Dialogo.tsx'
 import { prenderOTab } from './foco.ts'
 import { BOTAO_PRINCIPAL, BOTAO_SECUNDARIO } from './Partes.tsx'
 
@@ -78,6 +79,7 @@ export function DialogoDeAcao({
     return () => {
       elemento.removeEventListener('cancel', pedirParaFechar)
       elemento.removeEventListener('keydown', aoTeclar)
+      if (!elemento.isConnected) deixarFantasma(elemento)
       if (typeof elemento.close === 'function' && elemento.open) elemento.close()
       devolverFoco.current()
     }

@@ -81,6 +81,29 @@
   transition-duration: var(--mov-abrir);
 }
 
+/* O fantasma da saída (deixarFantasma, comunidade/Dialogo.tsx): a cópia inerte da caixa que acaba de ser desmontada.
+   Nasce no estado aberto (sem partida) e, com `data-saindo`, faz o fade e o deslize de saída com --mov-fechar.
+   Nunca recebe clique. Com movimento reduzido ele nem é criado. */
+.cm-dialogo[data-fantasma] {
+  display: block;
+  opacity: 1;
+  transform: none;
+  pointer-events: none;
+}
+
+.cm-dialogo[data-fantasma]::backdrop {
+  opacity: 1;
+}
+
+.cm-dialogo[data-fantasma][data-saindo] {
+  opacity: 0;
+  transform: translateY(8px) scale(0.98);
+}
+
+.cm-dialogo[data-fantasma][data-saindo]::backdrop {
+  opacity: 0;
+}
+
 @starting-style {
   .cm-dialogo[open] {
     opacity: 0;
