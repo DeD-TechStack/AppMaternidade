@@ -5,7 +5,9 @@ import type { AcaoDoTummy, ConfirmacaoDoBloco, ContextoDoBloco, ErroDoBloco, Est
 
 // O reducer do bloco de tummy time (Q-6): cada transição que o gancho fazia com vários setters vira uma ação.
 // O módulo é carregado dentro de cada teste para que, sem ele, cada teste falhe na própria asserção.
-const carregar = () => import('./estadoDoTummy.ts')
+// O especificador fica numa variável: o Vite não o resolve na coleta, então no BASE os testes são coletados e falham na asserção.
+const modulo = './estadoDoTummy.ts'
+const carregar = () => import(/* @vite-ignore */ modulo) as Promise<typeof import('./estadoDoTummy.ts')>
 
 const contexto: ContextoDoBloco = { contaId: 'conta-1', papel: 'responsavel', arquivado: false, membros: [], acessoPerdido: false }
 const perdido: ContextoDoBloco = { contaId: 'conta-1', papel: 'observador', arquivado: false, membros: [], acessoPerdido: true }
