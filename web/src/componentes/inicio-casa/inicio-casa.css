@@ -38,7 +38,11 @@
     /* The night column ends on the quadro's right edge (x 1320 at 1440, 1880 at 2560), never on the window's. */
     --heroi-noite-esq: calc(100% - var(--heroi-esq) - var(--heroi-medida));
     --palco-topo: 24px;
-    --palco-alto: calc(100svh - var(--palco-topo));
+    /* The stage is bounded by the window (24 px under its top) and by the plate: the block the room composition takes
+       at full size (the 320 px frame, 2.2241 x as tall, plus the free room above and under it), 876 px. A taller window
+       does not stretch the stage; a short one (640 to 875 px, M16) shrinks it and the frame with it. */
+    --palco-placa-alto: calc(320px * var(--moldura-razao) + var(--palco-quadro-livre) - var(--palco-topo));
+    --palco-alto: min(calc(100svh - var(--palco-topo)), var(--palco-placa-alto));
     --palco-chao: 108px;
     --palco-m06-largura: 395.5px;
     /* M06's top to its own floor line, so the plate stands on the stage's floor line at any stage height. */
@@ -46,7 +50,7 @@
     /* The text block of the night column ends 28 px above the floor line; the caption is 32 px above the stage's end. */
     --palco-texto-fundo: 136px;
     --palco-leg-fundo: 32px;
-    /* Room the frame needs on a window 812 to 895 tall (motion sheet §3.1): the header's 48 px that lie over the stage,
+    /* Room the frame needs on a window 640 to 900 tall (motion sheet §3.1): the header's 48 px that lie over the stage,
        8.5 px of air, and the floor strip; its height is 2.2241 times its screen layer's width. */
     --palco-quadro-livre: 188.5px;
     --moldura-razao: 2.2241;
@@ -267,6 +271,15 @@
     }
   }
 
+  /* Addendum short-screen rule (a phone on its side, 844 x 390; 200 % zoom): the text first, then the scene, which never
+     takes more than half the window's block size. The stacked hero already puts the h1, the value sentence and the
+     actions before the plate (order 1, 2, then 3); here the plate's block is held to 50svh. */
+  @media (max-height: 520px) and (orientation: landscape) {
+    [data-casa] [data-cena-heroi][aria-labelledby='ic-titulo'] .cm-cena-placa {
+      max-block-size: 50svh;
+    }
+  }
+
   /* ---- Below 1024: the bands after the stage, one column ------------------------------------------------------- */
   @media (max-width: 1023px) {
     [data-casa] .ic-tela {
@@ -366,8 +379,8 @@
     }
 
     /* Band 2 is the stage of moment 2 (REP-HOME motion sheet §3). Its quadro and tone wrappers dissolve, so the stage's
-       containing block is the band itself: the band is the track. At rest (reduced motion, a window under 812 tall, no
-       script) the stage is 100svh - 24 px tall and nothing moves. Where the pin is built (`data-troca-fixo`, set by the
+       containing block is the band itself: the band is the track. At rest (reduced motion, a window under 640 tall, no
+       script) the stage is `--palco-alto` tall (the window less 24 px, never taller than the plate) and nothing moves. Where the pin is built (`data-troca-fixo`, set by the
        page before the first paint) the track is the stage plus the pin distance D, which the scroll driver writes as
        `--troca-d` from the catalogue (M16), and the stage sticks 24 px under the top of the window. */
     [data-casa] [data-faixa][aria-labelledby='ic-noite'] {
@@ -693,11 +706,25 @@
   }
 
   /* ---- Moment 5: the Histórico frame scrolls its real screen --------------------------------------------------- */
-  /* The frame is a toggle button named by the screen's alt (`ProdutoEmMoldura rolavel`). On hover, keyboard focus or a
-     tap (aria-pressed) the capture slides up 40 % of what it has beyond the screen (112 px of screen at 390, 128 at
-     1440), from the 09:00 rows to the 20:30 one; it stops there because further down the Y_ALTA capture shows the site
-     footer. 400 ms on the standard curve, object-position only; reduced motion: the final state at once. The night twin
-     of the stage follows the day frame, so the sheet's edge never shows two scrolls. */
+  /* The frame is a toggle button named by the screen's alt (`ProdutoEmMoldura rolavel`). The Y_ALTA capture is one
+     screen width taller than the screen layer (390:1234 under a 390:844 layer). The frame OPENS on the capture's foot
+     (the 16:00 Juliana and 17:30 Ícaro rows); on hover, keyboard focus or a tap (aria-pressed) the screen scrolls up by
+     MANIFESTO `rolagem_px` (280 px at 390, 320 at 1440: `ROLAGEM_PX`, set by the page as the two unitless ends of
+     `--produto-rolagem`) to the app header and the morning rows, and back. The travel is capped by the screen layer's
+     width, which is the capture's surplus on a stage shorter than the drawing. 400 ms on the standard curve,
+     object-position only; reduced motion: the rest state, and a toggle lands at once. The night twin of the stage
+     follows the day frame, so the sheet's edge never shows two scrolls. */
+  [data-casa] .cm-produto-moldura {
+    --produto-rolagem: min(
+      clamp(
+        calc(var(--produto-rolagem-390, 0) * 1px),
+        calc(var(--produto-rolagem-390, 0) * 1px + (var(--produto-rolagem-1440, 0) - var(--produto-rolagem-390, 0)) * (100vw - 390px) / 1050),
+        calc(var(--produto-rolagem-1440, 0) * 1px)
+      ),
+      var(--produto-tela)
+    );
+  }
+
   [data-casa] [data-produto-rolar] {
     display: block;
     width: 100%;
@@ -718,27 +745,76 @@
     outline-color: var(--color-cacau);
   }
 
+  /* Rest: the foot. The image's top edge sits `--produto-rolagem` above the screen layer's top. */
   [data-casa] [data-produto-rolar] [data-produto-tela],
   [data-casa] .ic-gemea [data-troca-gemea-tela] {
+    object-position: 50% calc(-1 * var(--produto-rolagem));
     transition: object-position 400ms var(--curva-padrao);
   }
 
+  /* Active: the top (the app header), `--produto-rolagem` further up the day. */
   [data-casa] [data-produto-rolar]:focus-visible [data-produto-tela],
   [data-casa] [data-rolado] [data-produto-tela],
   [data-casa] .ic-estagio:has([data-rolado], [data-produto-rolar]:focus-visible) [data-troca-gemea-tela] {
-    object-position: 50% 40%;
+    object-position: 50% 0%;
   }
 
   @media (hover: hover) {
     [data-casa] [data-produto-rolar]:hover [data-produto-tela],
     [data-casa] .ic-estagio:has([data-produto-rolar]:hover) [data-troca-gemea-tela] {
-      object-position: 50% 40%;
+      object-position: 50% 0%;
     }
+  }
+
+  /* The sleep frame (band 3): the Hoje capture is 390:880, taller than the 390:844 screen layer, so it is shown whole,
+     never cropped: contained, its two thin side margins on the app's own paper. */
+  [data-casa] .ic-tela [data-produto-tela] {
+    object-fit: contain;
+    background-color: var(--color-papel);
   }
 
   @media (prefers-reduced-motion: reduce) {
     [data-casa] [data-produto-rolar] [data-produto-tela],
     [data-casa] .ic-gemea [data-troca-gemea-tela] {
+      transition: none;
+    }
+  }
+
+  /* ---- Moment 4: the signed caption (16:00 under the hero plate, 17:30 on the night floor) ------------------------- */
+  /* The hour leads: larger (titulo-3 inside the abertura line), heavier, tabular figures. The author is subordinate:
+     body size at the line's regular weight, in the caption's own colour (the night floor is mid grey: a lighter ink
+     would fall under 4.5:1). Under "por <nome>" a 2 px stroke draws once, 400 ms from the left on the standard curve,
+     when the caption is first whole in view (`data-assinada`, movimento/troca/assinatura.tsx); reduced motion: drawn. */
+  [data-casa] .ic-legenda-hora {
+    font-size: var(--texto-titulo-3-tamanho);
+    font-weight: var(--peso-titulo);
+    font-variant-numeric: tabular-nums;
+  }
+
+  [data-casa] .ic-legenda-autor {
+    position: relative;
+    display: inline-block;
+    font-size: var(--texto-corpo-tamanho);
+  }
+
+  [data-casa] .ic-legenda-traco {
+    position: absolute;
+    top: 100%;
+    inset-inline: 0;
+    block-size: 2px;
+    background-color: currentColor;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 400ms var(--curva-padrao);
+  }
+
+  [data-casa] [data-assinada] .ic-legenda-traco {
+    transform: scaleX(1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-casa] .ic-legenda-traco {
+      transform: none;
       transition: none;
     }
   }

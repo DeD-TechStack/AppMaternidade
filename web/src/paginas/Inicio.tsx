@@ -3,6 +3,7 @@ import { FaixaNoite } from '../componentes/inicio-casa/FaixaNoite.tsx'
 import { FaixaSozinho } from '../componentes/inicio-casa/FaixaSozinho.tsx'
 import { FaixaTela } from '../componentes/inicio-casa/FaixaTela.tsx'
 import { ID_FAIXA_NOITE, ID_FAIXA_SO, ID_FAIXA_TELA, ID_TITULO } from '../componentes/inicio-casa/ids.ts'
+import { LegendaAssinada } from '../componentes/inicio-casa/LegendaAssinada.tsx'
 import {
   LUZ_M05,
   LUZ_M05_390,
@@ -20,7 +21,6 @@ import { CenaHeroi } from '../componentes/secoes/CenaHeroi.tsx'
 import { FaixaInteira } from '../componentes/secoes/FaixaInteira.tsx'
 import { FaixaProva } from '../componentes/secoes/FaixaProva.tsx'
 import { Fechamento } from '../componentes/secoes/Fechamento.tsx'
-import { Legenda } from '../componentes/secoes/Legenda.tsx'
 import { PaginaCasa } from '../componentes/secoes/PaginaCasa.tsx'
 import { Perguntas } from '../componentes/secoes/Perguntas.tsx'
 import { INI, INI_FATOS, INI_PERGUNTAS, INI_ROTAS } from '../conteudo/inicio.ts'
@@ -69,7 +69,7 @@ export function Inicio() {
           depoisDaPlaca={
             <>
               <div className="ic-leg1" data-costura-lado={larga ? 'dia' : 'noite'}>
-                <Legenda texto={INI.leg1} tom={larga ? 'dia' : 'noite'} />
+                <LegendaAssinada texto={INI.leg1} tom={larga ? 'dia' : 'noite'} />
               </div>
               {larga ? null : <PalcoTroca />}
             </>

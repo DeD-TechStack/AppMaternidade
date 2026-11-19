@@ -3,17 +3,17 @@ import { INI } from '../../conteudo/inicio.ts'
 import { LegendaDaTroca } from '../../movimento/troca/LegendaDaTroca.tsx'
 import { LuzDaLampada } from '../../movimento/troca/LuzDaLampada.tsx'
 import { useNoitePresa } from '../../movimento/troca/usarPalco.ts'
-import { Legenda } from '../secoes/Legenda.tsx'
 import { TomDaFaixa } from '../secoes/FaixaInteira.tsx'
 import { ProdutoEmMoldura } from '../secoes/ProdutoEmMoldura.tsx'
 import { FolhaDaNoite } from './FolhaDaNoite.tsx'
 import { ID_FAIXA_NOITE } from './ids.ts'
-import { CAPTURA_Y_ALTA as CAPTURA_Y, LUZ_M06, M06, MOLDURA_DIA } from './midia.ts'
+import { LegendaAssinada } from './LegendaAssinada.tsx'
+import { CAPTURA_Y_ALTA as CAPTURA_Y, ESTILO_DA_ROLAGEM, LUZ_M06, M06, MOLDURA_DIA } from './midia.ts'
 
 interface Props {
   /** From 1024 px wide: the band is the stage (the first framed screen stands in it, on the day side of the seam). */
   larga: boolean
-  /** Where the pin is built (1024 wide, 812 high, motion allowed): the stage sticks, the night sheet crosses it. */
+  /** Where the pin is built (the room, 640 high, motion allowed): the stage sticks, the night sheet crosses it. */
   fixo: boolean
 }
 
@@ -40,6 +40,7 @@ export function FaixaNoite({ larga, fixo }: Props) {
       <div
         ref={palco}
         className="ic-estagio"
+        style={ESTILO_DA_ROLAGEM}
         data-troca-palco={larga ? '' : undefined}
         data-troca-fixo={fixo ? '' : undefined}
       >
@@ -76,7 +77,7 @@ export function FaixaNoite({ larga, fixo }: Props) {
             />
           </figure>
           <div className="ic-piso-noite" data-costura-lado="noite">
-            {fixo ? <LegendaDaTroca textos={[INI.leg1, INI.leg2]} lado={lado} /> : <Legenda texto={INI.leg2} tom="noite" />}
+            {fixo ? <LegendaDaTroca textos={[INI.leg1, INI.leg2]} lado={lado} /> : <LegendaAssinada texto={INI.leg2} tom="noite" />}
           </div>
         </div>
       </div>

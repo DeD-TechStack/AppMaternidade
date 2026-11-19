@@ -28,7 +28,7 @@ interface RegistroMovimento {
   /** Pin (M16): the p where the wipe's holds begin and end: the first hold ends at `repousoAte`, the middle one runs from
    *  `centroDe` to `centroAte`, the last one starts at `fimDe`. Between them the edge moves linearly with p. */
   paradas?: { repousoAte: number; centroDe: number; centroAte: number; fimDe: number }
-  /** Pin (M16): the smallest window height, in px, with a pin (the 1024 and wider windows shorter than this rest). */
+  /** Pin (M16): the smallest window height, in px, with a pin (the room windows shorter than this rest). */
   alturaMinimaPx?: number
   /** Caption (M17): the p whose crossing, either way, swaps the text. */
   limiar?: number
@@ -155,7 +155,9 @@ export const CATALOGO = {
     // The edge holds at the seam (p 0 to 0.10), on the frame's centre line (0.45 to 0.55) and at the left edge (0.85
     // to 1); linear in scroll between the holds, no smoothing. Below 1024 wide there is no pin (RECUT §7).
     paradas: { repousoAte: 0.1, centroDe: 0.45, centroAte: 0.55, fimDe: 0.85 },
-    alturaMinimaPx: 812,
+    // HOME-FINAL (19/11/2026): a pinned stage needs about the plate's height, so short desktop windows pin too
+    // (1366 x 768, 1280 x 800, 1536 x 864, 1440 x 900); the stage is bounded by the window and the plate in CSS.
+    alturaMinimaPx: 640,
     curva: 'linear',
     escalonamentoMs: 0,
     atrasoMs: 0,

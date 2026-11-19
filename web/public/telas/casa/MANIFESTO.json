@@ -91,13 +91,19 @@
       "instante": "2026-11-18T21:42:04-03:00",
       "fixture": "SEED-A demo family: criarFixtureRotinaDemonstracao at the fixed clock 21:42 America/Sao_Paulo",
       "rotulo_demo_oculto": "[data-aviso-tela]",
+      "dia": "anterior",
+      "ocultos_na_captura": "site footer and demo note, by an injected display:none rule (CAPTURA_OCULTAR), for the capture only",
+      "recaptura": "2026-11-19, .oc/capturar.mjs extra janela (CAPTURA_ROLAR=fim), demo sign-in, clock fixed 2026-11-18T21:42:04-03:00",
       "png": {
         "largura": 780,
         "altura": 2468,
-        "sha256": "ea0b08187987dfb13c894b2be78a97a9c167402e83621427edfcff8e18099365"
+        "sha256": "2697512667fafe9f680bacf0ca2984cf0c99e3778b9d209717c47d6042abb061"
       },
-      "captura_ok": "CAPTURA_OK historico_y_alta_claro_390.png caminho=/app/historico png=780x2468 esperado=780x2468 mobile=true dpr=2 toque=true scrollWidth=390 sha256=ea0b08187987dfb13c894b2be78a97a9c167402e83621427edfcff8e18099365 (só a janela)",
+      "captura_ok": "CAPTURA_OK historico_ontem_claro_390_janela.png caminho=/app/historico png=780x2468 esperado=780x2468 mobile=true dpr=2 toque=true scrollWidth=390 sha256=2697512667fafe9f680bacf0ca2984cf0c99e3778b9d209717c47d6042abb061 (só a janela)",
       "linhas_topo": [
+        "03:25 Fralda, Xixi por Ícaro",
+        "03:30 Sono, 2 h 45 min por Ícaro",
+        "06:30 Mamada, 20 min · lado direito por Juliana",
         "07:00 Fralda, Cocô por Juliana",
         "09:00 Sono, 1 h 30 min por Juliana",
         "11:00 Mamadeira, 100 ml · leite materno por Juliana",
@@ -115,47 +121,45 @@
         "1440": 320,
         "390": 280
       },
-      "rolagem_dom_px": 1759,
+      "rolagem_janela": "fim",
       "servidos": [
         {
           "arquivo": "/telas/casa/historico-y-alta-640w.webp",
           "largura": 640,
           "altura": 2025,
-          "bytes": 34776,
-          "sha256": "9f0fecfbddbb239f41a5eb0711fc38f61bc9103d90339b74dc22f0d9c12362c6",
+          "bytes": 35798,
+          "sha256": "097cf652125d1d2306d296e20066143bcd3ffc77d99cf406c2b837e8d037d836",
           "qualidade": 60
         },
         {
           "arquivo": "/telas/casa/historico-y-alta-560w.webp",
           "largura": 560,
           "altura": 1772,
-          "bytes": 33236,
-          "sha256": "2e449658a213f99c52677f05396fb64f94ead41044ca4b6307ee170683e1e88e",
+          "bytes": 33812,
+          "sha256": "8553f2feff632f75eb3b8e4641a714d7229fb9be6f3c1a5d40dcd54ce0f9f9a9",
           "qualidade": 72
         },
         {
           "arquivo": "/telas/casa/historico-y-alta-320w.webp",
           "largura": 320,
           "altura": 1013,
-          "bytes": 15856,
-          "sha256": "a5d066c45911214190fc8a19ac5f16b05e31819c22dbcd42dcc5552244f4a4b6",
+          "bytes": 16102,
+          "sha256": "358e2c46fce1f935e7f49187d15ce5cf6e24ac753f8c6561942c20763ce5a4ec",
           "qualidade": 60
         },
         {
           "arquivo": "/telas/casa/historico-y-alta-280w.webp",
           "largura": 280,
           "altura": 886,
-          "bytes": 14924,
-          "sha256": "785dd25552fe5d994701a7c8c9db28855410c84384ed6200fe1d05ed14b5b021",
+          "bytes": 15232,
+          "sha256": "53fc11b8b726ed9118477c8a251bb96eab67b7ac765e33de2a71d992686dcc66",
           "qualidade": 72
         }
       ],
       "a42_aberto": {
         "390": 10.77
       },
-      "scroll_y": 1759,
-      "altura_documento": 2993,
-      "offset_y_px": 473,
+      "offset_y_px": 390,
       "direcao_rolagem": "para_cima"
     },
     {
@@ -165,57 +169,59 @@
       "caminho_final": "/app/hoje",
       "h1": "Hoje",
       "tema": "madrugada",
-      "viewport": "390x844",
+      "viewport": "390x880",
       "dpr": 2,
       "toque": true,
-      "instante": "2026-11-18T21:42:03-03:00",
+      "instante": "2026-11-18T21:42:04-03:00",
       "fixture": "SEED-A demo family: criarFixtureRotinaDemonstracao at the fixed clock 21:42 America/Sao_Paulo",
       "rotulo_demo_oculto": "[data-aviso-tela]",
+      "recaptura": "2026-11-19, .oc/capturar.mjs extra janela (CAPTURA_ROLAR=78), demo sign-in, clock fixed 2026-11-18T21:42:04-03:00",
       "png": {
         "largura": 780,
-        "altura": 1688,
-        "sha256": "9cab8fa75ce9e3bc11d51827d14788055006b2f0ed5c805addd9cbee84d579ff"
+        "altura": 1760,
+        "sha256": "f7228c3e02d01ef7b7edd9650cfb5b5a43b896144c6d9c683bf2743ec7e503cc"
       },
-      "captura_ok": "CAPTURA_OK hoje_n_madrugada_390.png caminho=/app/hoje png=780x1688 esperado=780x1688 mobile=true dpr=2 toque=true scrollWidth=390 sha256=9cab8fa75ce9e3bc11d51827d14788055006b2f0ed5c805addd9cbee84d579ff (só a janela)",
+      "captura_ok": "CAPTURA_OK hoje_app_madrugada_390_janela.png caminho=/app/hoje png=780x1760 esperado=780x1760 mobile=true dpr=2 toque=true scrollWidth=390 sha256=f7228c3e02d01ef7b7edd9650cfb5b5a43b896144c6d9c683bf2743ec7e503cc (só a janela)",
       "linhas_topo": [
         "Hoje Heloísa, 3 meses Atualizado às 21:42 Atualizar",
-        "Sono 1:12:02 1 hora, 12 minutos e 2 segundos Início às 20:30, por Ícaro",
-        "Iniciar mamada Última mamada às 16:00, registrada por Juliana"
+        "Em andamento Sono 1:12:02 Início às 20:30, por Ícaro Encerrar Ver sessão",
+        "Hoje até agora Mamadas 0 Mamadeiras 0 Fraldas 0 Sono concluído 0 h 00",
+        "Barra: Sono Mamada Fralda Mais"
       ],
       "fonte_px_linha": 17,
       "rolagem_px": null,
-      "rolagem_dom_px": 0,
+      "rolagem_dom_px": 78,
       "servidos": [
         {
           "arquivo": "/telas/casa/hoje-n-640w.webp",
           "largura": 640,
-          "altura": 1385,
-          "bytes": 28270,
-          "sha256": "59918ab597d2b364283368624fb40195b58f704ece3445802ece6b9c774f2abb",
+          "altura": 1444,
+          "bytes": 31116,
+          "sha256": "78e6b9d7ff4974821ea0cf0c88d1b3668b920c35b8fabec119a6a2db7f52453b",
           "qualidade": 72
         },
         {
           "arquivo": "/telas/casa/hoje-n-560w.webp",
           "largura": 560,
-          "altura": 1212,
-          "bytes": 29626,
-          "sha256": "d1c8d7c4ab3e0295f37e861b6f50276a892d81e52b28ab9148e8bcfad7549a4b",
+          "altura": 1264,
+          "bytes": 33414,
+          "sha256": "1195fa4bcbdcc4dddd5658ce18d80e0519ad22eacfcdb7029f7642bf83d56a5a",
           "qualidade": 82
         },
         {
           "arquivo": "/telas/casa/hoje-n-320w.webp",
           "largura": 320,
-          "altura": 693,
-          "bytes": 12740,
-          "sha256": "9e15ec5d85191f48ec0a271d95305a105af6464d9cdbff3aecfa759dc88d7258",
+          "altura": 722,
+          "bytes": 14674,
+          "sha256": "7d662d876aa5bdf700290107301f8cbe0ffb295ab0729b7c11862bfe12374a9a",
           "qualidade": 72
         },
         {
           "arquivo": "/telas/casa/hoje-n-280w.webp",
           "largura": 280,
-          "altura": 606,
-          "bytes": 13414,
-          "sha256": "f2edf6f88da4e20c8eba8853f4dd94f3fb1aaf00ff266c7d1cce58bb8c89ef65",
+          "altura": 632,
+          "bytes": 15334,
+          "sha256": "bda059ebf69c3b63c353ba043034e7ffe687e5f8f9433877c5582a88854e43e4",
           "qualidade": 82
         }
       ]

@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
+import { TextoAssinado, useAssinatura } from './assinatura.tsx'
 import { temposDaLegenda } from './medidas.ts'
 
-// Moment 3 of the Início (REP-HOME, motion sheet §5): the caption of the pinned stage. ONE `p` and ONE text node. When
+// Moment 3 of the Início (REP-HOME, motion sheet §5): the caption of the pinned stage. ONE `p`, whose text is the copy
+// string in the three runs of the signed caption (moment 4, `assinatura.tsx`: hour, middle, author with the stroke). When
 // the side wanted changes (p crossed 0.5, either way) the line leaves (opacity 1 to 0 and 0 to -6 px, M17 `saida`), the
 // text is swapped at the end of the leave, and the line enters from +6 px (M17). Only opacity and transform move, on the
 // Web Animations API, so `getAnimations()` sees them. The line is interruptible: a change during the leave lands on the
@@ -90,6 +92,7 @@ export function LegendaDaTroca({ textos, lado }: Props) {
     [],
   )
 
+  const assinada = useAssinatura(no)
   const mostrado: Lado = temAnimacao ? exibido : lado
   return (
     <p
@@ -97,10 +100,11 @@ export function LegendaDaTroca({ textos, lado }: Props) {
       data-legenda=""
       data-troca-legenda=""
       data-tom="noite"
+      data-assinada={assinada ? '' : undefined}
       aria-live="off"
-      className="text-abertura font-texto cm-legenda"
+      className="text-abertura font-texto cm-legenda ic-legenda"
     >
-      {textos[mostrado - 1]}
+      <TextoAssinado texto={textos[mostrado - 1]} />
     </p>
   )
 }

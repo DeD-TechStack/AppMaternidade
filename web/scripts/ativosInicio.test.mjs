@@ -124,7 +124,8 @@ function checarN(e) {
   assert.equal(e.caminho_final, '/app/hoje')
   assert.ok(e.h1.includes('Hoje'), `h1 "${e.h1}" lacks Hoje`)
   assert.equal(e.tema, 'madrugada')
-  checarCelular(e, '390x844', 780, 1688)
+  // HOME-FINAL (19/11/2026): recaptured in a 390 x 880 window scrolled 78 px, so the bottom bar cuts no row.
+  checarCelular(e, '390x880', 780, 1760)
   assert.ok(e.instante.includes('21:42'), `instante ${e.instante}`)
   assert.ok(Array.isArray(e.linhas_topo), 'linhas_topo must be an array')
   assert.ok(linhaCom(e, /20:30/, /Ícaro/), 'no 20:30 Ícaro row in the top 292 px')
@@ -150,7 +151,14 @@ function checarYAlta(manifesto) {
   for (const linha of y.linhas_topo) {
     assert.ok(alta.linhas_topo.includes(linha), `Y row "${linha}" is missing from Y_ALTA linhas_topo`)
   }
-  // Scroll at the page maximum: the document height minus the 1234 px viewport.
+  // Scroll at the page maximum: the document height minus the 1234 px viewport, or the capture tool's own scroll to the
+  // end (`rolagem_janela: 'fim'`, CAPTURA_ROLAR=fim: window.scrollTo(0, scrollHeight), which the browser clamps to the
+  // maximum). A `fim` entry carries no measured pair that could contradict it.
+  if (alta.rolagem_janela === 'fim') {
+    assert.equal(alta.scroll_y, undefined, 'Y_ALTA.rolagem_janela is fim and scroll_y is also set: the page maximum is stated twice')
+    return
+  }
+  assert.equal(typeof alta.scroll_y, 'number', 'Y_ALTA.scroll_y is not at the page maximum (no scroll_y, no rolagem_janela fim)')
   assert.equal(alta.scroll_y, alta.altura_documento - 1234, 'Y_ALTA.scroll_y is not at the page maximum')
 }
 
@@ -168,7 +176,7 @@ function manifestoBom() {
         linhas_topo: [...linhas, '19:10 sono Ju'], scroll_y: 1759, altura_documento: 2993, offset_y_px: 473,
         direcao_rolagem: 'para_cima' },
       { id: 'N', estado: 'N', rota: '/app/hoje', caminho_final: '/app/hoje', h1: 'Hoje', tema: 'madrugada',
-        viewport: '390x844', png: { largura: 780, altura: 1688 }, instante: '2026-11-18T21:42:00',
+        viewport: '390x880', png: { largura: 780, altura: 1760 }, instante: '2026-11-18T21:42:00',
         linhas_topo: ['20:30 Ícaro mamada'], ...comum, rolagem_px: null },
     ],
   }
@@ -223,6 +231,28 @@ test('AST1-I-06 Y_ALTA: same route, theme, fixture, scroll and rows as Y, 390x12
     m.capturas[1].scroll_y += 1
   })
   assert.throws(() => checarYAlta(rolagemErrada), /page maximum/)
+  // The tool's own scroll to the end stands for the page maximum; with a measured scroll_y beside it, it is rejected,
+  // and an entry with neither is rejected too.
+  const fim = manifestoMutado((m) => {
+    delete m.capturas[1].scroll_y
+    delete m.capturas[1].altura_documento
+    m.capturas[1].rolagem_janela = 'fim'
+  })
+  checarYAlta(fim)
+  const fimEMedida = manifestoMutado((m) => {
+    m.capturas[1].rolagem_janela = 'fim'
+  })
+  assert.throws(() => checarYAlta(fimEMedida), /stated twice/)
+  const semRolagem = manifestoMutado((m) => {
+    delete m.capturas[1].scroll_y
+  })
+  assert.throws(() => checarYAlta(semRolagem), /page maximum/)
+  // The 390 x 880 Hoje window: the old 390 x 844 size is rejected.
+  const nAntigo = manifestoMutado((m) => {
+    m.capturas[2].viewport = '390x844'
+    m.capturas[2].png = { largura: 780, altura: 1688 }
+  })
+  assert.throws(() => checarN(entradaDe(nAntigo, 'N')), /390x844/)
   const rolagemGrande = manifestoMutado((m) => {
     m.capturas[1].rolagem_px = { 1440: 400, 390: 280 }
     m.capturas[0].rolagem_px = { 1440: 400, 390: 280 }

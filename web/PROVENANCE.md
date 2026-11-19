@@ -62,6 +62,15 @@ As ilustrações e as cenas do site são imagens geradas pelo Codex CLI 0.167.0 
 | `web/public/cenas/sistema/trio-mel@1x.webp`, `@2x.webp` | `FINAL/ativos/PROVENANCE.md`, cena `S1_trio_mel` composta com `compor.py` sobre três capturas reais do site; cópia em `web/public/cenas/sistema/PROVENANCE.md` |
 | `web/public/cenas/acesso/entrar@1x.webp`, `@2x.webp` | cena `S2_unico_mel` (um celular sobre um pedestal de oliva), composição provisória das telas de acesso (MAT-37r); será recomposta com os mesmos nomes, com uma captura real do site |
 
+## Capturas de tela do Início
+
+As telas dos celulares do Início são capturas reais do próprio site, não imagens geradas. O registro de cada arquivo (sha256, bytes, tamanho, PNG de origem e linha `CAPTURA_OK`) está em `web/public/telas/casa/PROVENANCE.md`, e o das capturas em `web/public/telas/casa/MANIFESTO.json`.
+
+| Arquivo | Registro |
+|---|---|
+| `web/public/telas/casa/historico-y-alta-{280,320,560,640}w.webp` | Recapturado em 19/11/2026 (HOME-FINAL): `.oc/capturar.mjs` com o extra `janela`, entrada pela conta de demonstração, DPR 2, caminho `/app/historico` conferido, relógio fixo em 2026-11-18T21:42:04-03:00. Dia anterior, janela de 390 × 1234 rolada até o fim; o rodapé do site e o aviso de demonstração ficaram ocultos por uma regra `display:none` injetada só na captura. PNG `historico_ontem_claro_390_janela.png` (780 × 2468, sha256 `2697512667fafe9f680bacf0ca2984cf0c99e3778b9d209717c47d6042abb061`), reduzido por `.oc/gerar.py` (PIL LANCZOS, WebP método 6, qualidade 60 no 320w e no 640w, 72 no 280w e no 560w). |
+| `web/public/telas/casa/hoje-n-{280,320,560,640}w.webp` | Recapturado em 19/11/2026 (HOME-FINAL), com as mesmas condições, caminho `/app/hoje` no tema madrugada: janela de 390 × 880 rolada 78 px, para o título sair de baixo do cabeçalho e a barra de baixo não cortar nenhuma linha. PNG `hoje_app_madrugada_390_janela.png` (780 × 1760, sha256 `f7228c3e02d01ef7b7edd9650cfb5b5a43b896144c6d9c683bf2743ec7e503cc`), reduzido por `.oc/gerar.py` (PIL LANCZOS, WebP método 6, qualidade 72 no 320w e no 640w, 82 no 280w e no 560w). |
+
 ## Movimento
 
 | Pacote | Versão | Licença | Cópia da licença | sha256 da licença | Uso |

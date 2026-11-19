@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import type { Imagem } from '../secoes/contrato.ts'
 
 // The files of the page: ASSET-1's plates and light layers under `web/public/cenas/inicio/` (PROVENANCE.md, section
@@ -83,10 +84,11 @@ const TAMANHOS_DA_TELA =
   '(min-width: 1440px) 320px, (max-width: 390px) 280px, calc(280px + (100vw - 390px) * 40 / 1050)'
 
 /**
- * State `Y_ALTA` of the manifest: the same Histórico at 21:42, captured in a 390 x 1234 window at the page's foot. Its
- * top 2.164 screen widths (what the frame's screen layer shows, `object-position: top`) are exactly a 390 x 844 phone
- * scrolled to y 1759: the app header and the day's rows from 09:00 to 20:30, the 16:00 (Juliana) and 17:30 (Ícaro)
- * hand-off in the middle, with no site footer and no blank band. The frames of the Início serve this one.
+ * State `Y_ALTA` of the manifest (recaptured 19/11/2026): the Histórico of the day before at 21:42, in a 390 x 1234
+ * window scrolled to the foot, with the site footer and the demo note hidden for the capture. The app header sits at the
+ * top of the image; the rows run from 03:25 to 20:30. The frame's screen layer shows 844 of the 1234 CSS px, so the
+ * capture has exactly one screen width more than the screen (`ROLAGEM_PX`): the frame opens on the foot (the 16:00
+ * Juliana and 17:30 Ícaro rows) and the pan goes up to the header and the morning rows. The frames of the Início serve it.
  */
 export const CAPTURA_Y_ALTA: Imagem = {
   src: '/telas/casa/historico-y-alta-320w.webp',
@@ -96,6 +98,22 @@ export const CAPTURA_Y_ALTA: Imagem = {
   largura: 640,
   altura: 2025,
 }
+
+/**
+ * The pan of the Histórico frame, in displayed px: MANIFESTO.json `Y_ALTA.rolagem_px` (280 at 390, 320 at 1440). It
+ * equals the capture's surplus over the screen layer, (1234 - 844) x W / 390 = W, where W is the screen layer's width.
+ */
+export const ROLAGEM_PX = { 390: 280, 1440: 320 } as const
+
+/**
+ * The two ends of the pan as unitless custom properties, set by the page on the boxes that hold the Histórico frames
+ * (the hero stage and band 2's stage, so the night twin reads the same numbers). inicio-casa.css interpolates them
+ * between 390 and 1440 into `--produto-rolagem`, capped by the screen layer's width on a short stage.
+ */
+export const ESTILO_DA_ROLAGEM = {
+  '--produto-rolagem-390': String(ROLAGEM_PX[390]),
+  '--produto-rolagem-1440': String(ROLAGEM_PX[1440]),
+} as CSSProperties
 
 /**
  * M11 (ASSET-2, served for the 404 under `web/public/cenas/nao-encontrada/`): a street corner at night with one lit
@@ -110,12 +128,17 @@ export const M11_JANELA: Imagem = {
   altura: 421,
 }
 
-/** State `N` of the manifest: Hoje in the madrugada theme at 21:42, the sleep in progress since 20:30. */
+/**
+ * State `N` of the manifest (recaptured 19/11/2026): Hoje in the madrugada theme at 21:42, the sleep in progress since
+ * 20:30, in a 390 x 880 window scrolled 78 px, so the title clears the header and the bottom bar cuts no row. It is
+ * 390:880, taller than the frame's 390:844 screen layer: the sleep frame shows it whole (`object-fit: contain` on the
+ * paper of the app, inicio-casa.css), never cropped.
+ */
 export const CAPTURA_N: Imagem = {
   src: '/telas/casa/hoje-n-320w.webp',
   srcSet:
     '/telas/casa/hoje-n-280w.webp 280w, /telas/casa/hoje-n-320w.webp 320w, /telas/casa/hoje-n-560w.webp 560w, /telas/casa/hoje-n-640w.webp 640w',
   sizes: TAMANHOS_DA_TELA,
   largura: 640,
-  altura: 1385,
+  altura: 1444,
 }

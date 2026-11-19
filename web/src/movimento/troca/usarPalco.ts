@@ -43,10 +43,12 @@ function useConsulta(consulta: string): boolean {
 const CONSULTA_DA_SALA = '(min-width: 1180px) and (min-aspect-ratio: 1/1)'
 
 /**
- * True where the pin is built: the room composition, tall enough (M16 `alturaMinimaPx`) and with motion allowed. It is
- * read on the client before the first paint, so the stage's attribute is right at first paint, and reduced motion, a
- * short window and a missing script all share one layout: the rest one. Switching reduced motion on in the middle of
- * the session unmounts every moving piece.
+ * True where the pin is built: the room composition, at least M16 `alturaMinimaPx` (640 px) tall and with motion
+ * allowed. 640 is about the plate's height, so the short desktop windows pin (1366 x 768, 1280 x 800, 1536 x 864,
+ * 1440 x 900); a phone never does (390 x 844 is not the room). The stage itself is bounded in CSS by the window and the
+ * plate (`--palco-alto` in inicio-casa.css). It is read on the client before the first paint, so the stage's attribute
+ * is right at first paint, and reduced motion, a window under 640 px and a missing script all share one layout: the
+ * rest one. Switching reduced motion on in the middle of the session unmounts every moving piece.
  */
 export function usePalcoFixo(): boolean {
   const larga = useConsulta(CONSULTA_DA_SALA)

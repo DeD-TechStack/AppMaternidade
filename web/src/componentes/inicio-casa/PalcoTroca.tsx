@@ -1,6 +1,6 @@
 import { INI } from '../../conteudo/inicio.ts'
 import { ProdutoEmMoldura } from '../secoes/ProdutoEmMoldura.tsx'
-import { CAPTURA_Y_ALTA as CAPTURA_Y, MOLDURA_NOITE } from './midia.ts'
+import { CAPTURA_Y_ALTA as CAPTURA_Y, ESTILO_DA_ROLAGEM, MOLDURA_NOITE } from './midia.ts'
 
 /**
  * The stage below 1024 px wide (`[data-troca-palco]`): a page-owned wrapper around the first framed screen, the last
@@ -10,7 +10,8 @@ import { CAPTURA_Y_ALTA as CAPTURA_Y, MOLDURA_NOITE } from './midia.ts'
  */
 export function PalcoTroca() {
   return (
-    <div data-troca-palco="" className="ic-palco">
+    // The two ends of the Histórico pan (MANIFESTO rolagem_px), read by inicio-casa.css as `--produto-rolagem`.
+    <div data-troca-palco="" className="ic-palco" style={ESTILO_DA_ROLAGEM}>
       <ProdutoEmMoldura tela={{ ...CAPTURA_Y, alt: INI.altTela1 }} moldura={MOLDURA_NOITE} rolavel />
     </div>
   )
