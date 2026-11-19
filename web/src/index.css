@@ -5,6 +5,8 @@
 @import '@fontsource-variable/literata/wght.css';
 @import '@fontsource-variable/literata/wght-italic.css';
 @import '@fontsource-variable/outfit/wght.css';
+@import '@fontsource/m-plus-rounded-1c/latin-700.css';
+@import '@fontsource/m-plus-rounded-1c/latin-800.css';
 @import './styles/site.css';
 @import './styles/campo.css';
 @import './styles/foco.css';

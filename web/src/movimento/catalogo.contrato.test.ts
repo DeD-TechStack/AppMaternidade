@@ -28,12 +28,14 @@ describe('catálogo do movimento', () => {
     for (const removida of ['M4', 'M5', 'M6']) expect(chaves).not.toContain(removida)
   })
 
-  it('só M2, M8 e M13 correm no relógio (tipo "tempo")', () => {
+  it('só M2, M8, M13, M15 e M17 correm no relógio (tipo "tempo")', () => {
+    // REP-HOME (REPH-I-22): a lâmpada do Início (M15) e a troca da legenda (M17) correm no relógio; a noite (M16) é
+    // presa à rolagem e fica fora.
     const noTempo = Object.entries(CATALOGO)
       .filter(([, registro]) => registro.tipo === 'tempo')
       .map(([chave]) => chave)
       .sort()
-    expect(noTempo).toEqual(['M13', 'M2', 'M8'])
+    expect(noTempo).toEqual(['M13', 'M15', 'M17', 'M2', 'M8'])
   })
 })
 

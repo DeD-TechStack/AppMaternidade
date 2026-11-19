@@ -3,7 +3,8 @@ import { renderizarRota } from '../teste/renderizarRota.tsx'
 
 // MOTION-1: o conteúdo do <main> nasce visível. Nenhum título, parágrafo, item, cartão ou imagem espera
 // uma rolagem: com ou sem movimento, rolado ou não, está no estado final já na primeira pintura. A única
-// exceção é a cena da abertura (M8) sob a cortina (M2), em `/` e `/sistema`, na primeira visita da sessão.
+// exceção é a cena da abertura (M8) sob a cortina (M2), em `/sistema`, na primeira visita da sessão. O Início novo
+// (REP-HOME) não tem cortina: na primeira visita nada nele espera, e nenhuma cortina é montada.
 
 const ROTAS = [
   '/',
@@ -15,7 +16,7 @@ const ROTAS = [
   '/rota-que-nao-existe',
 ] as const
 
-const COM_CORTINA = ['/', '/sistema']
+const COM_CORTINA = ['/sistema']
 const MARCA_DA_CORTINA = 'cortina-vista'
 
 function consultas(reduzido: boolean) {
@@ -122,6 +123,7 @@ describe('primeira visita', () => {
         consultas(false)
         const { container } = renderizarRota(rota)
         if (abre) expect(container.querySelector('[data-cortina]')).not.toBeNull()
+        else expect(container.querySelector('[data-cortina]'), `${rota}: sem cortina`).toBeNull()
         // Controle negativo: a cena da abertura (M8) nasce com opacity 0 sob a cortina.
         if (abre) expect(emEspera(container, false).length).toBeGreaterThan(0)
         expect(emEspera(container, abre)).toEqual([])
