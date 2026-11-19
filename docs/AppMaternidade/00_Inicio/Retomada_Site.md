@@ -12,6 +12,10 @@ This is the starting note for the next working session on the site. It records t
 
 **Published site (06/11/2026):** https://ded-techstack.github.io/AppMaternidade/ (MAT-48a, main 2beddee). It shows Início, Hoje and Sessão with the "Demonstração sem banco" notice. The database variables go into the build with MAT-37.
 
+## PAUSE of 19/11/2026 ~00h30 (PAUSA-20261119; Daniel, coordinator t_7326ebe4): CURRENT STATE
+
+The authoritative state is the block "RETOMAR 19/11 PAUSA-20261119" at the top of [PENDENCIAS](PENDENCIAS.md). int/refazer = 64276fe (CI green); /previa/ serves the new Início (REP-HOME) and the new 404. Every open card is scheduled with PAUSA_DANIEL=2026-11-19; resume on Daniel's GO in a new leader session.
+
 ## PAUSE of 17/11/2026 ~21h15 (PAUSA-20261117; Daniel turned the PC off, coordinator t_9748a54d): CURRENT STATE
 
 STATE: PAUSED. origin/int/refazer = 222a20d (tonight: SEC-03, Q-1, LOC-04, FIX-RELOGIO-r); main untouched. 12 todo cards parked 'PAUSA-20261117'; running cards told to commit WIP; no live children. Waiting on Daniel: approval of the 5 scenes with Icaro, Juliana and Heloisa (DIRECAO_FABLE/4_cenas/CENAS.html) and the staged skill patches. The step-by-step to resume is the block 'RETOMAR 17/11 PAUSA-20261117' of [PENDENCIAS](PENDENCIAS.md).

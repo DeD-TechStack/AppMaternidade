@@ -18,6 +18,7 @@ Live checkpoint for task APP-001-DESIGNDOCS. When resuming after an interruption
 Times are in America/Sao_Paulo, taken from the machine clock or system timestamps. Correction at 03:30: the times 02:45, 02:50 and 02:58 in earlier versions were estimated without checking the clock; the values below come from actual timestamps.
 
 ## Website log (current direction, since 03/11/2026)
+- 19/11 ~00h30: PAUSA-20261119 (Daniel). Integrated REP-HOME d7d1d62, QH-03b 1891bee, CI-WIN3 2d87601, REP-404 64276fe; CI green; /previa/ shows the new Início and 404. Coordinator package 23h30 + addenda 1/2 mapped to cards (HOME-FINAL t_f23e8bb6, POLISH x3, FLUID-DS, HEADER-375, LIB-ROUTES/STARTING/IMG, FOOTER-3, IMG-SWAP). All open cards scheduled.
 
 One entry per milestone, newest first. Current state is in [Website resumption](Retomada_Site.md); details of each milestone are in the cited Kanban card.
 
