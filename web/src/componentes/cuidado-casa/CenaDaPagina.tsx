@@ -18,6 +18,17 @@ export function CenaDaPagina({ cena, alt, prioritaria = false, className }: Prop
   const { largo, celular } = cena
   return (
     <picture className={['cc-cena-imagem', className].filter(Boolean).join(' ')}>
+      {/* O AVIF vem antes do WebP de cada caso; a fonte sem `media` fica depois das duas com `media`. */}
+      {celular.avif ? (
+        <source
+          media="(max-width: 1023.98px)"
+          type="image/avif"
+          srcSet={celular.avif}
+          sizes={celular.sizes}
+          width={celular.largura}
+          height={celular.altura}
+        />
+      ) : null}
       <source
         media="(max-width: 1023.98px)"
         srcSet={celular.srcSet}
@@ -25,6 +36,7 @@ export function CenaDaPagina({ cena, alt, prioritaria = false, className }: Prop
         width={celular.largura}
         height={celular.altura}
       />
+      {largo.avif ? <source type="image/avif" srcSet={largo.avif} sizes={largo.sizes} /> : null}
       <img
         src={largo.src}
         srcSet={largo.srcSet}

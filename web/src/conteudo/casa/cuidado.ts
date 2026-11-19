@@ -1,3 +1,11 @@
+import { imagemPublica } from '../../componentes/campo/urlPublica.ts'
+import { placa } from '../../componentes/campo/imagens.ts'
+import m01Icaro from '../../assets/cenas/cuidado/m01-icaro-1152w.webp?w=760;1152&format=avif;webp&as=picture'
+import m01Icaro390 from '../../assets/cenas/cuidado/m01-icaro-390c-780w.webp?w=390;780&format=avif;webp&as=picture'
+import m05Maos from '../../assets/cenas/cuidado/m05-maos-1472w.webp?w=800;1472&format=avif;webp&as=picture'
+import m05Maos390 from '../../assets/cenas/cuidado/m05-maos-390c-740w.webp?w=390;740&format=avif;webp&as=picture'
+import m12Heroi from '../../assets/cenas/cuidado/m12-heroi-981w.webp?w=600;981&format=avif;webp&as=picture'
+
 // Cuidado compartilhado (/cuidado-compartilhado), reconstruída sobre as seções da casa (CLONE-CUIDADO).
 // Cada frase abaixo é uma frase do deck COPY_cuidado.md, palavra por palavra, com o id do deck no comentário da
 // mesma linha. A página e a pasta componentes/cuidado-casa/ não escrevem texto de interface.
@@ -65,79 +73,47 @@ export const DESTINO_CRIAR_CONTA = '/criar-conta'
 
 /** Uma cena de página: o arquivo largo e, abaixo de 1024, o recorte do celular. Largura e altura são as do maior arquivo. */
 export interface CenaDePagina {
-  largo: { src: string; srcSet: string; sizes: string; largura: number; altura: number }
-  celular: { src: string; srcSet: string; sizes: string; largura: number; altura: number }
+  largo: { src: string; srcSet: string; avif?: string; sizes: string; largura: number; altura: number }
+  celular: { src: string; srcSet: string; avif?: string; sizes: string; largura: number; altura: number }
 }
 
-// Os arquivos são os servidos pelo ASSET-2 (web/public/cenas/cuidado, web/public/telas/t1i e web/public/molduras).
+// As três cenas saem de um mestre cada (web/src/assets/cenas/cuidado, vite-imagetools: AVIF e WebP com hash); a tela
+// e a moldura são os arquivos servidos (web/public/telas/t1i e web/public/molduras).
 // Os nomes e os tamanhos são os do slot sheet t1i_cuidado e da spec §3; a caixa final de cada um vem do CSS.
 export const IMAGENS_CUIDADO = {
   /** CC-S1: a família e a porta entreaberta (M12). 1440: 600 × 662. Abaixo de 1024 vale a mesma placa inteira, de
    * no máximo 420 px de largura (350 × 386 em 390): o recorte 390c (350 × 220) cortava Ícaro na borda e as pernas na
    * base, e nenhuma figura do herói fica cortada por uma borda. */
   cena1: {
-    largo: {
-      src: '/cenas/cuidado/m12-heroi-600w.webp',
-      srcSet: '/cenas/cuidado/m12-heroi-600w.webp 600w, /cenas/cuidado/m12-heroi-981w.webp 981w',
-      sizes: '(min-width: 1440px) 600px, 42vw',
-      largura: 981,
-      altura: 1082,
-    },
-    celular: {
-      src: '/cenas/cuidado/m12-heroi-600w.webp',
-      srcSet: '/cenas/cuidado/m12-heroi-600w.webp 600w, /cenas/cuidado/m12-heroi-981w.webp 981w',
-      sizes: 'min(90vw, 420px)',
-      largura: 981,
-      altura: 1082,
-    },
+    largo: placa(m12Heroi, '(min-width: 1440px) 600px, 42vw', 600),
+    celular: placa(m12Heroi, 'min(90vw, 420px)', 600),
   },
   /** CC-S3: as quatro mãos (M05). 1440: 800 × 353 rente à borda direita; 390: 390 × 343. */
   cena2: {
-    largo: {
-      src: '/cenas/cuidado/m05-maos-800w.webp',
-      srcSet: '/cenas/cuidado/m05-maos-800w.webp 800w, /cenas/cuidado/m05-maos-1472w.webp 1472w',
-      sizes: '(min-width: 1440px) 800px, 56vw',
-      largura: 1472,
-      altura: 649,
-    },
-    celular: {
-      src: '/cenas/cuidado/m05-maos-390c-390w.webp',
-      srcSet: '/cenas/cuidado/m05-maos-390c-390w.webp 390w, /cenas/cuidado/m05-maos-390c-740w.webp 740w',
-      sizes: '100vw',
-      largura: 740,
-      altura: 651,
-    },
+    // O mestre tem 1472 × 650; a página sempre levou 649 na `<img>`, e a proporção da caixa fica como era.
+    largo: placa(m05Maos, '(min-width: 1440px) 800px, 56vw', 800, 649),
+    // O mestre tem 740 × 650; a página sempre levou 651.
+    celular: placa(m05Maos390, '100vw', 390, 651),
   },
   /** CC-S4: Ícaro com o celular (M01). 1440: 760 × 439 rente à borda esquerda; 390: 390 × 332. */
   cena3: {
-    largo: {
-      src: '/cenas/cuidado/m01-icaro-760w.webp',
-      srcSet: '/cenas/cuidado/m01-icaro-760w.webp 760w, /cenas/cuidado/m01-icaro-1152w.webp 1152w',
-      sizes: '(min-width: 1440px) 760px, 53vw',
-      largura: 1152,
-      altura: 665,
-    },
-    celular: {
-      src: '/cenas/cuidado/m01-icaro-390c-390w.webp',
-      srcSet: '/cenas/cuidado/m01-icaro-390c-390w.webp 390w, /cenas/cuidado/m01-icaro-390c-780w.webp 780w',
-      sizes: '100vw',
-      largura: 780,
-      altura: 664,
-    },
+    largo: placa(m01Icaro, '(min-width: 1440px) 760px, 53vw', 760),
+    // O mestre tem 780 × 665; a página sempre levou 664.
+    celular: placa(m01Icaro390, '100vw', 390, 664),
   },
   /** CC-S2: a captura da tela Família (ASSET-2), sob a moldura do dia. Tela de 640 × 1385 no maior arquivo. */
-  tela: {
+  tela: imagemPublica({
     src: '/telas/t1i/familia-280w.webp',
     srcSet:
       '/telas/t1i/familia-280w.webp 280w, /telas/t1i/familia-320w.webp 320w, /telas/t1i/familia-560w.webp 560w, /telas/t1i/familia-640w.webp 640w',
     sizes: '(min-width: 1024px) 320px, min(330px, 85vw)',
     largura: 640,
     altura: 1385,
-  },
+  }),
   /** A moldura do dia servida (web/public/molduras, PROVENANCE): 678 × 1423, a tela de 640 × 1385 mais 3 % de borda. */
-  moldura: {
+  moldura: imagemPublica({
     src: '/molduras/moldura-dia.png',
     largura: 678,
     altura: 1423,
-  },
+  }),
 } as const

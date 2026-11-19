@@ -1,7 +1,12 @@
 // Desenvolvimento (/desenvolvimento): as frases que o deck COPY_desenvolvimento escreveu (16), cada uma com o id do
 // deck no comentário da mesma linha. Os 91 textos de saúde NÃO moram aqui: vêm, só de leitura, de
 // `conteudo/desenvolvimento/*.ts`. As imagens são as três vagas fechadas do spec (cenas do ASSET-2).
+import { imagemPublica } from '../../componentes/campo/urlPublica.ts'
+import { placa } from '../../componentes/campo/imagens.ts'
 import type { Imagem } from '../../componentes/secoes/contrato.ts'
+import m04Heroi from '../../assets/cenas/desenvolvimento/m04-heroi-1672w.webp?w=1100;1672&format=avif;webp&as=picture'
+import m04Heroi390 from '../../assets/cenas/desenvolvimento/m04-heroi-390c-780w.webp?w=390;780&format=avif;webp&as=picture'
+import m12Familia from '../../assets/cenas/desenvolvimento/m12-familia-585w.webp?w=390;585&format=avif;webp&as=picture'
 
 export const DESENVOLVIMENTO_CASA = {
   aba: 'Desenvolvimento | AppMaternidade', // de.aba
@@ -28,44 +33,26 @@ export const DESENVOLVIMENTO_CASA = {
 export const DESTINOS_DESENVOLVIMENTO = { ideias: '#ideias', tummy: '#tummy-time' } as const
 
 // DE-S1: a cena M04 da abertura. 1440: a placa inteira (box 1100 × 619); abaixo de 768: o recorte 390 × 238.
-export const CENA_ABERTURA: Imagem = {
-  src: '/cenas/desenvolvimento/m04-heroi-1100w.webp',
-  srcSet: '/cenas/desenvolvimento/m04-heroi-1100w.webp 1100w, /cenas/desenvolvimento/m04-heroi-1672w.webp 1672w',
-  sizes: '(min-width: 1100px) min(1100px, 76.39vw), 100vw',
-  largura: 1672,
-  altura: 941,
-}
+export const CENA_ABERTURA: Imagem = placa(m04Heroi, '(min-width: 1100px) min(1100px, 76.39vw), 100vw', 1100)
 
-export const CENA_ABERTURA_RECORTE: Imagem = {
-  src: '/cenas/desenvolvimento/m04-heroi-390c-390w.webp',
-  srcSet: '/cenas/desenvolvimento/m04-heroi-390c-390w.webp 390w, /cenas/desenvolvimento/m04-heroi-390c-780w.webp 780w',
-  sizes: '100vw',
-  largura: 780,
-  altura: 476,
-}
+export const CENA_ABERTURA_RECORTE: Imagem = placa(m04Heroi390, '100vw', 390)
 
 // DE-S2: a captura do Histórico (15:00, tummy time) sob a moldura do dia. A tela tem até 390 de 900 em diante (perto
 // de 1:1 com a captura) e 320 abaixo (a largura do quadro, se menor).
-export const TELA_HISTORICO: Imagem = {
+export const TELA_HISTORICO: Imagem = imagemPublica({
   src: '/telas/t1i/historico-y15-280w.webp',
   srcSet:
     '/telas/t1i/historico-y15-280w.webp 280w, /telas/t1i/historico-y15-320w.webp 320w, /telas/t1i/historico-y15-560w.webp 560w, /telas/t1i/historico-y15-640w.webp 640w',
   sizes: '(min-width: 900px) 390px, 320px',
   largura: 640,
   altura: 1385,
-}
+})
 
-export const MOLDURA_DIA: Imagem = {
+export const MOLDURA_DIA: Imagem = imagemPublica({
   src: '/molduras/moldura-dia.png',
   largura: 721,
   altura: 1426,
-}
+})
 
 // DE-S3: a família (M12) em pé na borda de baixo da faixa das ideias. Caixa 390 × 421 (350 × 378 em 390).
-export const CENA_FAMILIA: Imagem = {
-  src: '/cenas/desenvolvimento/m12-familia-390w.webp',
-  srcSet: '/cenas/desenvolvimento/m12-familia-390w.webp 390w, /cenas/desenvolvimento/m12-familia-585w.webp 585w',
-  sizes: '(min-width: 960px) 390px, 350px',
-  largura: 585,
-  altura: 632,
-}
+export const CENA_FAMILIA: Imagem = placa(m12Familia, '(min-width: 960px) 390px, 350px', 390)

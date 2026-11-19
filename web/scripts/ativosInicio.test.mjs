@@ -11,22 +11,23 @@ import { fileURLToPath } from 'node:url'
 import { deflateSync, inflateSync } from 'node:zlib'
 
 // ---- The one constant: caps, file lists and folders ---------------------------------------------------------------
+// The scene plates are ONE master per slot under web/src/assets/cenas/inicio (vite-imagetools makes the AVIF and WebP
+// ladders at build time, with hashed names; the PROVENANCE.md of the folder lives there too). The lamp layers, the
+// frames and the captures are still served files under web/public.
 const PASTA = (rel) => fileURLToPath(new URL(`../public/${rel}/`, import.meta.url))
-const PASTAS = { cenas: PASTA('cenas/inicio'), molduras: PASTA('molduras'), telas: PASTA('telas/casa') }
+const PASTAS = {
+  placas: fileURLToPath(new URL('../src/assets/cenas/inicio/', import.meta.url)),
+  cenas: PASTA('cenas/inicio'),
+  molduras: PASTA('molduras'),
+  telas: PASTA('telas/casa'),
+}
 const ATIVOS = {
+  // The masters only: the smaller widths no longer exist as files (the build makes them from the master).
   placas: {
     'm05-sol-1672w.webp': 38600,
-    'm05-sol-900w.webp': 19500,
     'm05-sol-390c-780w.webp': 23600,
-    'm05-sol-390c-390w.webp': 10400,
     'm06-apagada-792w.webp': 30700,
-    'm06-apagada-396w.webp': 14100,
-    'm06-apagada-600w.webp': 17500,
-    'm06-apagada-300w.webp': 8250,
     'm04-recorte-1200w.webp': 27400,
-    'm04-recorte-600w.webp': 12500,
-    'm04-recorte-700w.webp': 14650,
-    'm04-recorte-350w.webp': 7200,
   },
   // Layer names without extension: the file may be .png or .webp, exactly one of them exists.
   camadas: [
@@ -457,8 +458,8 @@ function arquivoDaCamada(pasta, base) {
  * Layers the folder's PROVENANCE.md lists under "Not served (over the 12,000 B lamp-layer cap)" (cap_open, not shipped).
  * Each must be absent from the folder (neither .png nor .webp) and must be a known layer; returns their base names.
  */
-function camadasAusentes(pasta) {
-  const caminho = join(pasta, 'PROVENANCE.md')
+function camadasAusentes(pasta, pastaDaProveniencia = pasta) {
+  const caminho = join(pastaDaProveniencia, 'PROVENANCE.md')
   const ausentes = new Set()
   if (!existsSync(caminho)) return ausentes
   const linhas = readFileSync(caminho, 'utf8').split(/\r?\n/)
@@ -491,8 +492,8 @@ function checarCamada(pasta, base, teto, ausentes = new Set()) {
 }
 
 /** File names of the served layers: every layer is either served (exactly one extension) or listed as not served. */
-function camadasServidas(pasta) {
-  const ausentes = camadasAusentes(pasta)
+function camadasServidas(pasta, pastaDaProveniencia = pasta) {
+  const ausentes = camadasAusentes(pasta, pastaDaProveniencia)
   return ATIVOS.camadas.filter((base) => !ausentes.has(base)).map((base) => arquivoDaCamada(pasta, base))
 }
 
@@ -504,9 +505,9 @@ function checarTetoCaptura(pasta, nome, teto) {
 
 function checarTudo(pastas) {
   const t = (pasta, nome) => statSync(join(pasta, nome)).size
-  const ausentes = camadasAusentes(pastas.cenas)
+  const ausentes = camadasAusentes(pastas.cenas, pastas.placas)
   for (const [nome, teto] of Object.entries(ATIVOS.placas)) {
-    assert.ok(t(pastas.cenas, nome) <= teto, `${nome}: ${t(pastas.cenas, nome)} bytes is over the ${teto} cap`)
+    assert.ok(t(pastas.placas, nome) <= teto, `${nome}: ${t(pastas.placas, nome)} bytes is over the ${teto} cap`)
   }
   for (const base of ATIVOS.camadas) checarCamada(pastas.cenas, base, ATIVOS.tetoCamada, ausentes)
   for (const [rotulo, bases] of Object.entries(ATIVOS.somaCamadas)) {
@@ -520,9 +521,9 @@ function checarTudo(pastas) {
     checarTetoCaptura(pastas.telas, nome, teto)
   }
   const total =
-    t(pastas.cenas, 'm05-sol-1672w.webp') + bytesDaCamada(pastas.cenas, 'm05-luz-1672w', ausentes) +
-    t(pastas.cenas, 'm06-apagada-792w.webp') + bytesDaCamada(pastas.cenas, 'm06-luz-792w', ausentes) +
-    t(pastas.cenas, 'm04-recorte-1200w.webp') +
+    t(pastas.placas, 'm05-sol-1672w.webp') + bytesDaCamada(pastas.cenas, 'm05-luz-1672w', ausentes) +
+    t(pastas.placas, 'm06-apagada-792w.webp') + bytesDaCamada(pastas.cenas, 'm06-luz-792w', ausentes) +
+    t(pastas.placas, 'm04-recorte-1200w.webp') +
     Math.max(t(pastas.telas, 'historico-y-640w.webp'), t(pastas.telas, 'historico-y-alta-640w.webp')) +
     t(pastas.telas, 'hoje-n-640w.webp') +
     ATIVOS.molduras.reduce((s, nome) => s + t(pastas.molduras, nome), 0)
@@ -563,8 +564,8 @@ function escapar(texto) {
 }
 
 /** Every file needs a PROVENANCE.md line holding its name, its sha256 (lowercase hex) and its byte count. */
-function checarProveniencia(pasta, nomes) {
-  const caminho = join(pasta, 'PROVENANCE.md')
+function checarProveniencia(pasta, nomes, pastaDaProveniencia = pasta) {
+  const caminho = join(pastaDaProveniencia, 'PROVENANCE.md')
   assert.ok(existsSync(caminho), `${caminho} does not exist`)
   const linhas = readFileSync(caminho, 'utf8').split(/\r?\n/)
   for (const nome of nomes) {
@@ -592,10 +593,9 @@ test('AST1-I-10 provenance: every served file has a PROVENANCE.md line with name
   writeFileSync(join(dir, 'PROVENANCE.md'), `| a.webp | ${sha256(a)} | ${a.length} |\n| b.webp | ${sha256(b)} | ${b.length} |\n`)
   checarProveniencia(dir, ['a.webp', 'b.webp'])
 
-  checarProveniencia(PASTAS.cenas, [
-    ...Object.keys(ATIVOS.placas),
-    ...camadasServidas(PASTAS.cenas),
-  ])
+  // The masters sit next to their PROVENANCE.md; the served lamp layers are in web/public and are recorded in the same file.
+  checarProveniencia(PASTAS.placas, Object.keys(ATIVOS.placas))
+  checarProveniencia(PASTAS.cenas, camadasServidas(PASTAS.cenas, PASTAS.placas), PASTAS.placas)
   checarProveniencia(PASTAS.molduras, ATIVOS.molduras)
   checarProveniencia(PASTAS.telas, Object.keys(ATIVOS.capturas))
 })

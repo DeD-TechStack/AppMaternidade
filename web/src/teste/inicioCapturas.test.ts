@@ -177,7 +177,7 @@ describe('REPH-I-06 real captures: the manifest, the hashes of the served files,
     }
   })
 
-  it('REPH-I-06 every file midia.ts serves from /cenas/inicio exists under web/public', async () => {
+  it('REPH-I-06 every file midia.ts serves from web/public exists there; the four scene plates are build-made, from a master', async () => {
     const midia = await import('../componentes/inicio-casa/midia.ts')
     const caminhos = new Set<string>()
     for (const valor of Object.values(midia)) {
@@ -186,8 +186,38 @@ describe('REPH-I-06 real captures: the manifest, the hashes of the served files,
       caminhos.add(imagem.src)
       for (const parte of (imagem.srcSet ?? '').split(',')) if (parte.trim() !== '') caminhos.add(parte.trim().split(/\s+/)[0])
     }
-    expect(caminhos.size).toBeGreaterThan(10)
-    for (const caminho of caminhos) expect(existsSync(join(PUBLICO, caminho.replace(/^\/+/, ''))), caminho).toBe(true)
+    // The plates (M05, M05_390, M06, M04) are vite-imagetools URLs (`/@imagetools/<hash>` in the test run, a hashed
+    // file under /assets in the build): everything else is a file of web/public.
+    const servidos = [...caminhos].filter((caminho) => !caminho.startsWith('/@imagetools/'))
+    expect(servidos.length).toBeGreaterThan(10)
+    for (const caminho of servidos) expect(existsSync(join(PUBLICO, caminho.replace(/^\/+/, ''))), caminho).toBe(true)
+    for (const caminho of servidos) expect(caminho, 'a plate must not be a /cenas/inicio WebP any more').not.toMatch(/\/cenas\/inicio\/.*\.webp$/)
+  })
+
+  it('REPH-I-06 the scene plates: one master each under src/assets, WebP srcSet plus AVIF srcSet of the same widths, the size of the master', async () => {
+    const { M05, M05_390, M06, M04 } = await import('../componentes/inicio-casa/midia.ts')
+    const placas = [
+      { nome: 'M05', imagem: M05, mestre: 'm05-sol-1672w.webp', larguras: [900, 1672], tamanho: [1672, 941], sizes: '(min-width: 1440px) 900px, 62.5vw', src: 900 },
+      { nome: 'M05_390', imagem: M05_390, mestre: 'm05-sol-390c-780w.webp', larguras: [390, 780], tamanho: [780, 612], sizes: '100vw', src: 390 },
+      { nome: 'M06', imagem: M06, mestre: 'm06-apagada-792w.webp', larguras: [300, 396, 600, 792], tamanho: [792, 1293], sizes: '(min-width: 1024px) 395.5px, 300px', src: 396 },
+      { nome: 'M04', imagem: M04, mestre: 'm04-recorte-1200w.webp', larguras: [350, 600, 700, 1200], tamanho: [1200, 870], sizes: '(min-width: 1024px) 600px, 100vw', src: 600 },
+    ]
+    const lista = (srcSet: string | undefined) =>
+      (srcSet ?? '').split(',').map((parte) => {
+        const [url, descritor] = parte.trim().split(/\s+/)
+        return { url, largura: Number(descritor.replace(/w$/, '')) }
+      })
+    for (const { nome, imagem, mestre, larguras, tamanho, sizes, src } of placas) {
+      expect(existsSync(join(SRC, 'assets', 'cenas', 'inicio', mestre)), `${nome}: master ${mestre}`).toBe(true)
+      const webp = lista(imagem.srcSet)
+      const avif = lista(imagem.avif)
+      expect(webp.map((item) => item.largura), `${nome}: webp widths`).toEqual(larguras)
+      expect(avif.map((item) => item.largura), `${nome}: avif widths`).toEqual(larguras)
+      expect(new Set([...webp, ...avif].map((item) => item.url)).size, `${nome}: one distinct URL per format and width`).toBe(larguras.length * 2)
+      expect(webp.find((item) => item.largura === src)?.url, `${nome}: src is the ${src}w file`).toBe(imagem.src)
+      expect([imagem.largura, imagem.altura], `${nome}: size of the master`).toEqual(tamanho)
+      expect(imagem.sizes, `${nome}: sizes`).toBe(sizes)
+    }
   })
 
   it('REPH-I-06 the frames are ASSET-1 PNG rasters under web/public/molduras with the size midia.ts states (678 x 1423)', async () => {
