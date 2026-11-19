@@ -2,5 +2,4 @@
 export const ID_FAIXA_NOITE = 'ic-noite'
 export const ID_FAIXA_TELA = 'ic-tela'
 export const ID_FAIXA_SO = 'ic-so'
-export const ID_FAIXA_PROVA = 'ic-prova'
 export const ID_TITULO = 'ic-titulo'

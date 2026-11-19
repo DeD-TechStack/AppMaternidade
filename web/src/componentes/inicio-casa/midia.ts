@@ -24,9 +24,8 @@ export const M05_390: Imagem = {
   altura: 612,
 }
 
-/** The seam of M05 as a fraction of its whole width (RECUT §2: 0.5443), and of the 390 window (142.3 of 390). */
+/** The seam of M05 as a fraction of its whole width (RECUT §2: 0.5443). */
 export const M05_COSTURA = 0.5443
-export const M05_COSTURA_390 = 0.365
 
 /** The floor line of M05 as a fraction of its height (RECUT §2: 628.8 − 224 = 404.8 of 506.5). */
 export const M05_CHAO = 0.7992

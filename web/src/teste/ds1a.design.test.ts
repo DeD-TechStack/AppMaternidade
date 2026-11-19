@@ -86,10 +86,22 @@ describe('DS1-I-02 DESIGN.md: itálico só aparece como proibição', () => {
 // ---------------------------------------------------------------------------------------------
 type Css = { nome: string; limpo: string }
 
-/** Quantas declarações de `--nome:` há nos arquivos (comentários fora). */
+/**
+ * The temporary display variants of FG-2b (`html[data-exibicao="b"|"c"] { ... }`) re-declare the display tokens in
+ * their own scoped blocks. They are not a second base declaration, so they are cut out of styles/tokens.css (and only
+ * out of that file: a variant block anywhere else still counts) before the base declarations are counted.
+ */
+function semVariantesDeExibicao(f: Css): string {
+  if (f.nome !== 'styles/tokens.css') return f.limpo
+  return f.limpo.replace(/html\[data-exibicao=["'][a-z]+["']\]\s*\{[^{}]*\}/g, '')
+}
+
+/** Quantas declarações de `--nome:` há nos arquivos (comentários fora; os blocos de variante de exibição à parte). */
 function declaracoesDeVariavel(arquivos: Css[], variavel: string): Array<{ nome: string; valor: string }> {
   const regex = new RegExp(`(?:^|[;{\\s])${variavel}\\s*:\\s*([^;}]+)`, 'g')
-  return arquivos.flatMap((f) => [...f.limpo.matchAll(regex)].map((m) => ({ nome: f.nome, valor: m[1].trim() })))
+  return arquivos.flatMap((f) =>
+    [...semVariantesDeExibicao(f).matchAll(regex)].map((m) => ({ nome: f.nome, valor: m[1].trim() })),
+  )
 }
 
 /** Os arquivos (e os trechos) fora das exceções do cartão que nomeiam a Literata. */

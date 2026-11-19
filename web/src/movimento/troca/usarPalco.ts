@@ -50,7 +50,7 @@ export function usePalcoFixo(): boolean {
 }
 
 /** The elements the scroll driver reads and writes. */
-export interface AlvosDoPalco {
+interface AlvosDoPalco {
   /** The sticky stage (`[data-troca-palco]`); its band is the track. */
   palco: RefObject<HTMLElement | null>
   /** The sheet's outer box: `translateX(t)`, clips its inner box. */
