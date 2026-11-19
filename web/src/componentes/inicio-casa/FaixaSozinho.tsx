@@ -16,16 +16,19 @@ export function FaixaSozinho() {
         <p className="text-corpo font-texto cm-sec-texto">{INI.pSo}</p>
       </div>
       <figure className="ic-so-cena">
-        <img
-          src={M04.src}
-          srcSet={M04.srcSet}
-          sizes={M04.sizes}
-          width={M04.largura}
-          height={M04.altura}
-          alt={INI.altCena3}
-          loading="lazy"
-          decoding="async"
-        />
+        <picture>
+          {M04.avif ? <source type="image/avif" srcSet={M04.avif} sizes={M04.sizes} /> : null}
+          <img
+            src={M04.src}
+            srcSet={M04.srcSet}
+            sizes={M04.sizes}
+            width={M04.largura}
+            height={M04.altura}
+            alt={INI.altCena3}
+            loading="lazy"
+            decoding="async"
+          />
+        </picture>
       </figure>
     </div>
   )

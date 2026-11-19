@@ -51,6 +51,11 @@
     height: calc(264px * var(--nf-corte));
   }
 
+  /* A `<picture>` (AVIF + WebP) não tem caixa: a `<img>` segue como filha da janela. */
+  .cm-nf-janela > picture {
+    display: contents;
+  }
+
   .cm-nf-janela img {
     display: block;
     width: 340px;
