@@ -30,7 +30,7 @@
 /* A abertura -------------------------------------------------------------------------------------------------------
    Abaixo de 900 é uma grade de posições fixas (os invólucros `.dc-direita`, `.dc-texto`, `.dc-acoes` e `.dc-nota`
    somem com `display: contents`): a cena de ponta a ponta, o h1, a frase, o botão, o link, o aviso, a legenda e, no
-   fim, o aparelho em pé no chão da faixa. Com 44 rem de faixa o aparelho vai para uma segunda coluna, ao lado do
+   fim, o aparelho em pé no chão da faixa (em janela alta, o aparelho sobe para logo depois do botão). Com 44 rem de faixa o aparelho vai para uma segunda coluna, ao lado do
    texto. De 900 em diante (o h1 já cabe em duas linhas na coluna dele), a cena e o aparelho ficam no lugar do
    estudo, e o h1, a frase e o botão cabem na primeira dobra de um tablet deitado. */
 .dc-abertura-quadro {
@@ -205,6 +205,89 @@
       align-self: end;
       margin-top: var(--espaco-pilha);
     }
+  }
+}
+
+/* Celular e tablet em pé (estreita e não baixa, R1): o aparelho vem logo depois do botão, com a tela na primeira
+   dobra, e o link, o aviso e a legenda descem para depois dele (a ordem do DOM, a de leitura, não muda). Para caber,
+   os vãos acima do aparelho apertam um degrau e a placa fica mais baixa: abaixo de 768 o recorte de 390 perde um
+   pouco do papel de cima e da borda de baixo do tapete (as cabeças e as mãos ficam inteiras); de 768 a 899 a placa
+   inteira, sem o corte da direita. Aqui o aparelho não está no chão da faixa: a caixa só corta abaixo das linhas.
+   Com 44 rem de faixa o aparelho volta para a coluna da direita, em pé no chão, e o link segue o botão. */
+@media (max-width: 899px) and (min-height: 521px) {
+  .dc-cena {
+    grid-row: 1;
+  }
+
+  .dc-cena img {
+    aspect-ratio: 1672 / 941;
+    object-position: 0% 50%;
+  }
+
+  .dc-h1 {
+    grid-row: 2;
+    margin-top: var(--espaco-pilha);
+  }
+
+  .dc-lede {
+    grid-row: 3;
+    margin-top: var(--espaco-junto);
+  }
+
+  .dc-acoes > .cm-botao {
+    grid-row: 4;
+    margin-top: var(--espaco-pilha);
+  }
+
+  .dc-moldura {
+    grid-row: 5;
+    margin-top: var(--espaco-pilha);
+    margin-bottom: 0;
+  }
+
+  .dc-link {
+    grid-row: 6;
+    margin-top: var(--espaco-grupo);
+  }
+
+  .dc-aviso {
+    grid-row: 7;
+    margin-top: var(--espaco-grupo);
+  }
+
+  .dc-nota > [data-legenda] {
+    grid-row: 8;
+    margin-top: var(--espaco-bloco);
+  }
+
+  @container (min-width: 44rem) {
+    .dc-link {
+      grid-row: 5;
+      margin-top: var(--espaco-junto);
+    }
+
+    .dc-aviso {
+      grid-row: 6;
+    }
+
+    .dc-nota > [data-legenda] {
+      grid-row: 7;
+    }
+
+    .dc-moldura {
+      grid-row: 3 / 8;
+      margin-top: var(--espaco-pilha);
+      margin-bottom: calc(-1 * var(--dc-chao));
+    }
+  }
+}
+
+/* O recorte de 390 tem 780 × 476; a caixa de 2:1 o mostra na largura toda e corta 18 % da altura, 70 % disso em
+   cima (papel e a ponta do triângulo) e 30 % embaixo (a borda do tapete, abaixo das mãos). */
+@media (max-width: 767px) and (min-height: 521px) {
+  .dc-cena img {
+    aspect-ratio: 1240 / 620;
+    object-position: 0% 70%;
   }
 }
 

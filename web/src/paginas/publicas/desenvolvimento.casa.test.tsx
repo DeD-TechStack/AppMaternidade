@@ -411,4 +411,18 @@ describe('janela baixa: h1, frase e botão na primeira tela', () => {
     expect(texto).toMatch(/@media \(max-width: 520px\) and \(max-height: 520px\)/)
     expect(texto).toMatch(/100svh/)
   })
+
+  // Celular em pé (R1): o aparelho vem logo depois do botão, antes do link, do aviso e da legenda. A geometria real
+  // (a tela com 240 px ou mais acima da dobra em 390x844) só se mede no navegador (.oc/geo.mjs), não aqui.
+  it('estreita e não baixa: cena, h1, frase, botão, aparelho, e depois link, aviso e legenda (ordem da grade)', () => {
+    const texto = css.map((a) => a.texto).join('\n')
+    const bloco = texto.match(/@media \(max-width: 899px\) and \(min-height: 521px\) \{([\s\S]*?)\n\}/)
+    expect(bloco, 'bloco da estreita não baixa').not.toBeNull()
+    const linha = (seletor: string) => {
+      const achado = bloco![1].match(new RegExp(`${seletor.replace(/[.*+?^${}()|[\]\\>]/g, '\\$&')} \\{[^}]*?grid-row: (\\d+);`))
+      return achado === null ? -1 : Number(achado[1])
+    }
+    const ordem = ['.dc-cena', '.dc-h1', '.dc-lede', '.dc-acoes > .cm-botao', '.dc-moldura', '.dc-link', '.dc-aviso', '.dc-nota > [data-legenda]'].map(linha)
+    expect(ordem).toEqual([1, 2, 3, 4, 5, 6, 7, 8])
+  })
 })

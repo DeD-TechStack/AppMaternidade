@@ -17,7 +17,8 @@ import './desenvolvimento-casa.css'
  * A primeira faixa de /desenvolvimento, sobre o papel (uma `section` da página, não a CenaHeroi): a cena M04 deitada
  * na borda de baixo da primeira tela, o h1 em cima, a frase e as duas ações à direita, o Histórico na moldura em pé no
  * chão da faixa (cortado logo abaixo das linhas) e a legenda e o aviso de saúde sob a cena. Abaixo de 900 tudo
- * empilha (a cena rente ao cabeçalho, o botão sob a frase, o aparelho por último); de 900 em diante a cena e a
+ * empilha (a cena rente ao cabeçalho, o botão sob a frase, o aparelho logo depois do botão em janela alta e por
+ * último em janela baixa); de 900 em diante a cena e a
  * moldura ficam no lugar do estudo, pela CSS da página.
  */
 export function Abertura() {
