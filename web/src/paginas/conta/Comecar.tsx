@@ -85,10 +85,10 @@ function PassoSeuNome({ aoSalvar }: { aoSalvar: () => void }) {
     <>
       <main>
         <DuasColunas>
-          {/* O primeiro campo fica logo abaixo do h1: entre os dois, só o rótulo e um vão `junto`. O título do passo
-              dá nome à seção só para leitor de tela (o rótulo do campo já diz "Seu nome") e a frase vem
-              depois dos campos, antes de "Salvar". */}
-          <Pilha vao="junto">
+          {/* O primeiro campo fica logo abaixo do h1: entre os dois, só o rótulo e o vão do próprio Campo (8 px), sem
+              vão local nesta `div`. O título do passo dá nome à seção só para leitor de tela (o rótulo do campo já
+              diz "Seu nome") e a frase vem depois dos campos, antes de "Salvar". */}
+          <div>
             <Manchete texto={MANCHETES.comecar} refTitulo={titulo} />
             <RegiaoStatus mensagem={textoDaPassagem(location.state)} />
             <Pilha as="section" vao="pilha" aria-labelledby="titulo-seu-nome">
@@ -131,7 +131,7 @@ function PassoSeuNome({ aoSalvar }: { aoSalvar: () => void }) {
                 </button>
               </form>
             </Pilha>
-          </Pilha>
+          </div>
         </DuasColunas>
       </main>
       <AvisoDaTela />

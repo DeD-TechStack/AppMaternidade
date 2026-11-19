@@ -77,7 +77,7 @@ describe('o passo "Seu nome"', () => {
     expect(antes(frase, screen.getByRole('button', { name: 'Salvar' }))).toBe(true)
   })
 
-  it('o primeiro campo fica logo abaixo do h1: entre os dois, só o rótulo e um vão `junto` (nada visível: título do passo só para leitor de tela, frase depois dos campos)', async () => {
+  it('o primeiro campo fica logo abaixo do h1: entre os dois, só o rótulo e o vão do próprio Campo, sem vão local (nada visível: título do passo só para leitor de tela, frase depois dos campos)', async () => {
     const dados = await memoriaSemConta()
     const { container } = renderizarComDados('/app/comecar', { dados })
     const h1 = await screen.findByRole('heading', { level: 1 })
@@ -88,9 +88,12 @@ describe('o passo "Seu nome"', () => {
     const formulario = container.querySelector('form')!
     const botao = screen.getByRole('button', { name: 'Salvar' })
 
-    // O h1 abre a pilha da tela, e o vão dessa pilha é o `junto` (um só vão entre o h1 e o que vem depois).
+    // O h1 abre uma `div` simples, sem vão próprio: o único vão entre o h1 e a caixa é o do Campo (rótulo -> caixa).
+    // A altura de verdade (rótulo + 8 px) é conferida no Chrome, em comecar.geometria.test.tsx.
     const pilha = h1.parentElement!
-    expect(pilha.getAttribute('data-h-vao')).toBe('junto')
+    expect(pilha.tagName).toBe('DIV')
+    expect(pilha.hasAttribute('data-h-vao')).toBe(false)
+    expect(pilha.hasAttribute('data-h')).toBe(false)
 
     // O título do passo continua dando nome à seção, mas só para leitor de tela: não ocupa linha nenhuma.
     expect(h2.classList.contains('sr-only')).toBe(true)
