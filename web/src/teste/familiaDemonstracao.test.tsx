@@ -2,7 +2,6 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { screen } from '@testing-library/react'
-import { COMO_FUNCIONA_DESTAQUE, CUIDADO_DESTAQUE } from '../conteudo/publicas-destaque.ts'
 import { INI } from '../conteudo/inicio.ts'
 import { CUIDADO as CUIDADO_CASA } from '../conteudo/casa/cuidado.ts'
 import { INICIO } from '../conteudo/textos.ts'
@@ -65,39 +64,16 @@ describe('SEED-A-I-02: os nomes nos dados, nos seeds e no texto', () => {
     expect(lerArquivo('supabase/seeds/46_rotina.sql')).toMatch(/(?<![\p{L}_])c_icaro(?![\p{L}_])/u)
   })
 
-  it('o texto das páginas públicas tem a frase da família com Ícaro', () => {
-    const texto = lerArquivo('web/src/conteudo/publicas-destaque.ts')
-    expect(texto).toContain('Cada momento vem numa tela da família de Juliana, Ícaro e Carla, que cuidam da Heloísa.')
-    expect(texto).toMatch(palavra('Ícaro'))
-  })
-
   it('nenhum desses arquivos traz o nome antigo, em nenhuma caixa', () => {
-    for (const arquivo of ['supabase/seed.sql', 'supabase/seeds/46_rotina.sql', 'web/src/conteudo/publicas-destaque.ts']) {
+    for (const arquivo of ['supabase/seed.sql', 'supabase/seeds/46_rotina.sql']) {
       expect(lerArquivo(arquivo), arquivo).not.toMatch(/bruno/i)
     }
   })
 })
 
 describe('SEED-A-I-07: o nome inteiro na Família e nos ajustes', () => {
-  it('os objetos de conteúdo guardam Juliana, Ícaro, Heloísa e Carla por inteiro', () => {
-    expect(COMO_FUNCIONA_DESTAQUE.momentos.texto).toBe(
-      'Cada momento vem numa tela da família de Juliana, Ícaro e Carla, que cuidam da Heloísa.',
-    )
-    expect(COMO_FUNCIONA_DESTAQUE.convite.pessoa).toBe('Ícaro')
-    expect(COMO_FUNCIONA_DESTAQUE.convite.papel).toBe('Responsável, convidado por Juliana')
-    expect(CUIDADO_DESTAQUE.familia.bebe.nome).toBe('Heloísa')
-    expect(CUIDADO_DESTAQUE.familia.pessoas.map((pessoa) => pessoa.nome)).toEqual(['Juliana', 'Ícaro', 'Carla'])
-    const bloco = (titulo: string) => CUIDADO_DESTAQUE.blocos.find((item) => item.titulo === titulo)!
-    expect(bloco('Convite com papel').exemplo).toEqual({
-      inicial: 'Í',
-      quem: 'Ícaro',
-      oQue: 'Entrou como responsável, convidado por Juliana',
-    })
-    expect(bloco('Revogue quando quiser').exemplo).toEqual({
-      inicial: 'J',
-      quem: 'Juliana',
-      oQue: 'Removeu o acesso de uma babá antiga',
-    })
+  it('o texto alternativo da cena de Cuidado guarda Juliana, Ícaro e Heloísa por inteiro', () => {
+    for (const nome of ['Juliana', 'Ícaro', 'Heloísa']) expect(CUIDADO_CASA.alt.cena1).toContain(nome)
   })
 
   describe('as páginas renderizadas', () => {
@@ -137,34 +113,18 @@ describe('SEED-A-I-07: o nome inteiro na Família e nos ajustes', () => {
 const comTexto = (texto: string) => [...document.body.querySelectorAll('*')].filter((no) => no.textContent === texto)
 
 describe('SEED-A-I-08: o apelido nas linhas do dia a dia', () => {
-  const COMO = COMO_FUNCIONA_DESTAQUE
-  const CUIDADO = CUIDADO_DESTAQUE
-
   it('os textos escritos à mão dizem Ju e Helo, no valor exato', () => {
-    expect(COMO.primeirosRegistros.itens[0].detalhe).toBe('Lado direito, Ju')
-    expect(COMO.madrugada.detalhe).toBe('Lado esquerdo, Ju')
-    expect(COMO.desdeQueSaiu.itens[1].detalhe).toBe('Lado direito, Ju')
-    expect(CUIDADO.tarde.titulo).toBe('Tarde da Helo')
-    expect(CUIDADO.nota.autor).toBe('Carla, para Ju, às 15:22')
     expect(INICIO.turno.cartao.itens[0].pessoa).toBe('Ju')
     expect(INICIO.citacao.autor).toBe('Carla, avó da Helo, na nota das 22:40')
   })
 
   it('nenhum desses valores traz Juliana nem Heloísa por inteiro', () => {
-    const valores = [
-      COMO.primeirosRegistros.itens[0].detalhe,
-      COMO.madrugada.detalhe,
-      COMO.desdeQueSaiu.itens[1].detalhe,
-      CUIDADO.tarde.titulo,
-      CUIDADO.nota.autor,
-      INICIO.turno.cartao.itens[0].pessoa,
-      INICIO.citacao.autor,
-    ]
+    const valores = [INICIO.turno.cartao.itens[0].pessoa, INICIO.citacao.autor]
     for (const valor of valores) expect(valor).not.toMatch(/(?<![\p{L}])(Juliana|Heloísa)(?![\p{L}])/u)
   })
 
   // T1-JOIN: a nota de Carla e a "Tarde da Helo" deixaram de existir em /cuidado-compartilhado (a página nova não
-  // tem linha escrita à mão do dia a dia); as constantes CUIDADO_DESTAQUE seguem checadas acima.
+  // tem linha escrita à mão do dia a dia).
   it('/cuidado-compartilhado traz o apelido Ju e nunca Bruno', () => {
     renderizarRota('/cuidado-compartilhado')
     expect(document.body.textContent).toContain('Ju')

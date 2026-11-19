@@ -1,0 +1,91 @@
+/* Abrir e fechar com um fade curto e um deslize de 8 px: o menu do celular e a resposta do acordeão. As caixas de
+   diálogo (com o fundo) só animam na entrada e fecham na hora. CSS puro: `@starting-style` dá o estado de partida
+   de quem acaba de aparecer e `transition-behavior: allow-discrete` deixa `display` esperar a saída terminar
+   (menu e acordeão). Só animam `opacity` e `transform`; nada de altura, largura ou `transition: all`.
+   Abrir lê --mov-abrir e fechar lê --mov-fechar (tokens.css); com movimento reduzido as duas valem 0 (index.css).
+   A regra do estado aberto declara a duração de abrir; a do estado fechado, a de fechar: vale a do destino.
+   Os atributos `hidden` e `open` continuam mandando em tudo: o CSS só acompanha. */
+
+/* --- Menu do celular (casca/MenuCelular.tsx): `hidden` esconde por `display: none` (site.css). --- */
+.cm-menu-celular {
+  opacity: 1;
+  transform: none;
+  transition-property: opacity, transform, display;
+  transition-duration: var(--mov-abrir);
+  transition-timing-function: var(--mov-curva);
+  transition-behavior: allow-discrete;
+}
+
+.cm-menu-celular[hidden] {
+  opacity: 0;
+  transform: translateY(-8px);
+  transition-duration: var(--mov-fechar);
+}
+
+@starting-style {
+  .cm-menu-celular:not([hidden]) {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+/* --- Resposta do acordeão (campo/Acordeao.tsx): `hidden` esconde pelo `display: none` do navegador. --- */
+.cm-acordeao-resposta {
+  opacity: 1;
+  transform: none;
+  transition-property: opacity, transform, display;
+  transition-duration: var(--mov-abrir);
+  transition-timing-function: var(--mov-curva);
+  transition-behavior: allow-discrete;
+}
+
+.cm-acordeao-resposta[hidden] {
+  opacity: 0;
+  transform: translateY(-8px);
+  transition-duration: var(--mov-fechar);
+}
+
+@starting-style {
+  .cm-acordeao-resposta:not([hidden]) {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+/* --- Caixas de diálogo (comunidade/Dialogo.tsx, conta/DialogoDeAcao.tsx, conta/DialogoExcluirConta.tsx) e o fundo. --- */
+/* As caixas só animam na entrada: o estado fechado não declara `transition`, então fechar é imediato (nem a saída
+   nativa da camada superior espera). Só as regras `[open]` carregam transition-property e a duração de abrir. */
+.cm-dialogo {
+  opacity: 0;
+  transform: translateY(8px) scale(0.98);
+}
+
+.cm-dialogo[open] {
+  opacity: 1;
+  transform: none;
+  transition-property: opacity, transform;
+  transition-duration: var(--mov-abrir);
+  transition-timing-function: var(--mov-curva);
+}
+
+.cm-dialogo::backdrop {
+  opacity: 0;
+}
+
+.cm-dialogo[open]::backdrop {
+  opacity: 1;
+  transition-property: opacity;
+  transition-duration: var(--mov-abrir);
+  transition-timing-function: var(--mov-curva);
+}
+
+@starting-style {
+  .cm-dialogo[open] {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+
+  .cm-dialogo[open]::backdrop {
+    opacity: 0;
+  }
+}
