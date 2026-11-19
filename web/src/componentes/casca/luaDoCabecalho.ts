@@ -24,29 +24,22 @@ export function useLuaDoCabecalho(): ReturnType<typeof useLuaDaCasca> {
   // pessoa começa com a madrugada desligada. A mesma pessoa que entra de novo mantém a escolha.
   const dados = useDadosConta()
   const pessoa = useRef<string | null>(null)
-  useEffect(() => {
-    let viva = true
-    // Quem já estava na sessão ao montar não gera evento: descobre-se o id por `sessaoAtual`.
-    void dados.sessaoAtual().then((r) => {
-      if (viva && pessoa.current === null && r.ok && r.valor) pessoa.current = r.valor.id
-    })
-    const cancelar = dados.aoMudarSessao((evento, usuario) => {
-      if (evento === 'saiu') {
-        pessoa.current = null
-      } else if (usuario) {
-        if (pessoa.current === usuario.id) return
-        pessoa.current = usuario.id
-      } else {
-        return
-      }
-      escolha.current = false
-      definir(false)
-    })
-    return () => {
-      viva = false
-      cancelar()
-    }
-  }, [dados, definir])
+  useEffect(
+    () =>
+      dados.aoMudarSessao((evento, usuario) => {
+        if (evento === 'saiu') {
+          pessoa.current = null
+        } else if (usuario) {
+          if (pessoa.current === usuario.id) return
+          pessoa.current = usuario.id
+        } else {
+          return
+        }
+        escolha.current = false
+        definir(false)
+      }),
+    [dados, definir],
+  )
 
   useEffect(() => {
     if (!dentro) {
@@ -58,8 +51,15 @@ export function useLuaDoCabecalho(): ReturnType<typeof useLuaDaCasca> {
     } else {
       // Já aplicada: quem liga ou desliga a madrugada dentro da Rotina muda a escolha.
       escolha.current = ligada
+      // Quem já estava na sessão ao montar não gera evento: o id de quem fez a escolha vem de `sessaoAtual`,
+      // consultada só quando há uma escolha a proteger.
+      if (ligada && pessoa.current === null) {
+        void dados.sessaoAtual().then((r) => {
+          if (pessoa.current === null && r.ok && r.valor) pessoa.current = r.valor.id
+        })
+      }
     }
-  }, [dentro, ligada, definir])
+  }, [dentro, ligada, definir, dados])
 
   // Fechar a página (desmontar a casca) joga o estado fora.
   useEffect(
