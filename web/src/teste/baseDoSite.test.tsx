@@ -113,7 +113,11 @@ describe('imagemPublica (o ajudante único da base)', () => {
   })
 })
 
+// vite-imagetools (LIB-IMG) serves generated URLs in the test/dev server as /@imagetools/<hash>; the build gives them the base.
+const GERADA = /^\/@imagetools\//
+
 /** Os endereços de imagem da tela: cada `src`, cada candidato de `srcset` de `<img>` e de `<source>`. */
+
 function enderecosDeImagem(raiz: ParentNode): string[] {
   const urls: string[] = []
   for (const elemento of raiz.querySelectorAll('img, source')) {
@@ -180,7 +184,7 @@ describe(`as páginas públicas no build do Pages (BASE_URL=${BASE})`, () => {
 
       const urls = enderecosDeImagem(container)
       if (exigeImagem) expect(urls.length, `${rota} sem imagem`).toBeGreaterThan(0)
-      const fora = urls.filter((url) => !url.startsWith(BASE))
+      const fora = urls.filter((url) => !url.startsWith(BASE) && !GERADA.test(url))
       expect(fora, `${rota}: endereços fora da base`).toEqual([])
       expect(urls.filter((url) => url.startsWith(`${BASE}${BASE.slice(1)}`)), `${rota}: base duplicada`).toEqual([])
       expect(urlsDeEstiloEmLinha(container).filter((url) => !url.startsWith(BASE)), `${rota}: url() em estilo`).toEqual([])
@@ -192,6 +196,6 @@ describe(`as páginas públicas no build do Pages (BASE_URL=${BASE})`, () => {
     const { container } = await renderizarRotaPronta('/como-funciona')
     const urls = enderecosDeImagem(container)
     expect(urls.length).toBeGreaterThan(0)
-    expect(urls.every((url) => /^\/(cenas|telas|molduras|ilustracoes)\//.test(url))).toBe(true)
+    expect(urls.every((url) => GERADA.test(url) || /^\/(cenas|telas|molduras|ilustracoes)\//.test(url))).toBe(true)
   })
 })

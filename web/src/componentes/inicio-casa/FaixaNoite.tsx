@@ -60,16 +60,19 @@ export function FaixaNoite({ larga, fixo }: Props) {
             <p className="text-corpo font-texto cm-sec-texto">{INI.pNoite}</p>
           </div>
           <figure className="ic-m06">
-            <img
-              src={M06.src}
-              srcSet={M06.srcSet}
-              sizes={M06.sizes}
-              width={M06.largura}
-              height={M06.altura}
-              alt={INI.altCena2}
-              loading="lazy"
-              decoding="async"
-            />
+            <picture>
+              {M06.avif ? <source type="image/avif" srcSet={M06.avif} sizes={M06.sizes} /> : null}
+              <img
+                src={M06.src}
+                srcSet={M06.srcSet}
+                sizes={M06.sizes}
+                width={M06.largura}
+                height={M06.altura}
+                alt={INI.altCena2}
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
             <LuzDaLampada
               luz={LUZ_M06}
               memoria="casa-luz-m06"

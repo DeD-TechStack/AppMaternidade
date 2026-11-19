@@ -47,6 +47,16 @@ export function Abertura() {
         {/* A cena vem depois do texto no DOM (o leitor chega ao h1, à frase e ao botão primeiro); o lugar dela na
             tela é dado pela grade da CSS da página. */}
         <picture className="dc-cena">
+          {CENA_ABERTURA_RECORTE.avif ? (
+            <source
+              media="(max-width: 767px)"
+              type="image/avif"
+              srcSet={CENA_ABERTURA_RECORTE.avif}
+              sizes={CENA_ABERTURA_RECORTE.sizes}
+              width={CENA_ABERTURA_RECORTE.largura}
+              height={CENA_ABERTURA_RECORTE.altura}
+            />
+          ) : null}
           <source
             media="(max-width: 767px)"
             srcSet={CENA_ABERTURA_RECORTE.srcSet}
@@ -54,6 +64,9 @@ export function Abertura() {
             width={CENA_ABERTURA_RECORTE.largura}
             height={CENA_ABERTURA_RECORTE.altura}
           />
+          {CENA_ABERTURA.avif ? (
+            <source type="image/avif" srcSet={CENA_ABERTURA.avif} sizes={CENA_ABERTURA.sizes} />
+          ) : null}
           <img
             src={CENA_ABERTURA.src}
             srcSet={CENA_ABERTURA.srcSet}
