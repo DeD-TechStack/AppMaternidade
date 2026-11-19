@@ -5,7 +5,7 @@ import { createMemoryRouter, RouterProvider } from 'react-router'
 import { ProvedorDadosConta } from '../componentes/conta/sessao.tsx'
 import { ProvedorDadosRotina } from '../componentes/rotina/dadosRotina.tsx'
 import { ProvedorDadosComunidade, type DadosComunidade } from '../dados/comunidade.ts'
-import { criarRotas } from '../rotas.tsx'
+import { criarRotasProntas } from './rotasProntas.ts'
 import { criarMundoDeTeste, type Mundo, type OpcoesMundo } from './rotina.fixture.ts'
 
 // Renderiza o site real num roteador em memória, no caminho pedido, com a conta e a rotina em memória já
@@ -31,7 +31,7 @@ export function renderizarRota(caminho: string, opcoes: OpcoesRota = {}) {
   // O jsdom não implementa `window.scrollTo`: a rolagem ao topo vira um espião.
   vi.stubGlobal('scrollTo', vi.fn())
 
-  const roteador = createMemoryRouter(criarRotas(), { initialEntries: [caminho] })
+  const roteador = createMemoryRouter(criarRotasProntas(), { initialEntries: [caminho] })
   // A ordem da árvore: conta → Comunidade (só se o teste deu uma) → rotina → roteador.
   const comRotina = (
     <ProvedorDadosRotina dados={mundo.rotina}>

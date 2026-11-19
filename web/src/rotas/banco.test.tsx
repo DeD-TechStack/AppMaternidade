@@ -4,7 +4,7 @@ import { createMemoryRouter, RouterProvider } from 'react-router'
 import { createClient } from '@supabase/supabase-js'
 import { AVISO_RODAPE } from '../componentes/casca/textos.ts'
 import { AVISO_BANCO_DEMONSTRACAO, NOMES_DO_H1, TEXTOS_ERRO } from '../conteudo/conta.ts'
-import { criarRotas } from '../rotas.tsx'
+import { criarRotasProntas } from '../teste/rotasProntas.ts'
 import { CHAVE_RECUPERACAO } from '../componentes/conta/armazenamento.ts'
 import { criarClienteFalso, USUARIO_FALSO } from '../teste/renderizarComDados.tsx'
 import { comObrigatorio } from '../paginas/conta/obrigatorio.ts'
@@ -30,7 +30,15 @@ beforeEach(() => {
 afterEach(() => {
   vi.unstubAllEnvs()
   vi.unstubAllGlobals()
+  // O link de recuperação (hash) de um teste não vale para o seguinte.
+  window.history.replaceState(null, '', '/')
 })
+
+// Uma visita anônima nova a uma página pública não carrega o pacote do Supabase (ver `teste/visitaPublica.test.tsx`).
+// Os casos abaixo que exercitam o cliente simulam o que o navegador teria: uma sessão guardada pelo Auth.
+function guardarSessao() {
+  localStorage.setItem('sb-banco-auth-token', JSON.stringify({ access_token: 'x' }))
+}
 
 function proibirARede() {
   const fetchProibido = vi.fn(() => {
@@ -49,7 +57,7 @@ function definirBanco() {
 
 function abrir(caminho: string) {
   window.scrollTo = vi.fn()
-  const roteador = createMemoryRouter(criarRotas(), { initialEntries: [caminho] })
+  const roteador = createMemoryRouter(criarRotasProntas(), { initialEntries: [caminho] })
   return { roteador, ...render(<RouterProvider router={roteador} />) }
 }
 
@@ -120,6 +128,8 @@ describe('R1: com o banco, a recuperação de senha concluída não volta a abri
     const { cliente, auth, emitirAuth } = criarClienteFalso({ tabelas: { contas: [{ data: LINHA_CONTA, error: null }] } })
     falso.cliente = cliente
     definirBanco()
+    // O link do e-mail traz o retorno do Auth na URL (o hash do fluxo implícito): é o sinal para o cliente carregar.
+    window.history.replaceState(null, '', '/redefinir-senha#access_token=x&type=recovery')
     const aberto = abrir('/redefinir-senha')
     await screen.findByText(TEXTOS_ERRO.link_vencido)
 
@@ -268,6 +278,7 @@ describe('com as duas variáveis (cliente falso): o banco', () => {
     const { cliente, auth } = criarClienteFalso({ usuario: null })
     falso.cliente = cliente
     definirBanco()
+    guardarSessao()
 
     // O aviso do banco de demonstração é só de /criar-conta; o da memória some nas duas telas.
     for (const [caminho, botao, avisosDoBanco] of [
@@ -319,6 +330,7 @@ describe('com as duas variáveis (cliente falso): o banco', () => {
     })
     falso.cliente = vencida.cliente
     definirBanco()
+    guardarSessao()
     const primeira = abrir('/app/conta')
     await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.entrar })
     expect(screen.getByRole('status').textContent).toBe(TEXTOS_ERRO.sessao_encerrada)
@@ -328,6 +340,7 @@ describe('com as duas variáveis (cliente falso): o banco', () => {
     semRede.auth.getSession.mockRejectedValue(new TypeError('Failed to fetch'))
     falso.cliente = semRede.cliente
     definirBanco()
+    guardarSessao()
     abrir('/app/conta')
     const alerta = await screen.findByRole('alert')
     expect(alerta.textContent).toContain(TEXTOS_ERRO.rede)

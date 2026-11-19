@@ -9,7 +9,7 @@ import { NOTAS } from '../../conteudo/rotina.ts'
 import { ContextoDadosAvisos, type Aviso, type DadosAvisos, type EstadoDosAvisos } from '../../dados/avisos.ts'
 import type { Resultado } from '../../dados/comum.ts'
 import { erroDaChave } from '../../dados/conta.erros.ts'
-import { criarRotas } from '../../rotas.tsx'
+import { criarRotasProntas } from '../../teste/rotasProntas.ts'
 import { aguardarCarga } from '../../teste/renderizarRota.tsx'
 import { criarMundoDeTeste, type OpcoesMundo } from '../../teste/rotina.fixture.ts'
 
@@ -101,7 +101,7 @@ function renderizar(falso: Falso, opcoes: OpcoesMundo & { caminho?: string } = {
   const { caminho = '/app/avisos', ...mundoOpcoes } = opcoes
   const mundo = criarMundoDeTeste(mundoOpcoes)
   vi.stubGlobal('scrollTo', vi.fn())
-  const roteador = createMemoryRouter(criarRotas(), { initialEntries: [caminho] })
+  const roteador = createMemoryRouter(criarRotasProntas(), { initialEntries: [caminho] })
   render(
     <ProvedorDadosConta dados={mundo.conta}>
       <ProvedorDadosRotina dados={mundo.rotina}>

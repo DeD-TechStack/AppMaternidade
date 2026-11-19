@@ -8,7 +8,7 @@ import { ProvedorDadosRotina } from '../../componentes/rotina/dadosRotina.tsx'
 import { AVISOS_TEXTOS } from '../../conteudo/avisos.ts'
 import { ContextoDadosAvisos, type Aviso, type DadosAvisos, type EstadoDosAvisos } from '../../dados/avisos.ts'
 import type { Resultado } from '../../dados/comum.ts'
-import { criarRotas } from '../../rotas.tsx'
+import { criarRotasProntas } from '../../teste/rotasProntas.ts'
 import { aguardarCarga } from '../../teste/renderizarRota.tsx'
 import { criarMundoDeTeste } from '../../teste/rotina.fixture.ts'
 
@@ -69,7 +69,7 @@ async function montar(inicial: EstadoDosAvisos, opcoes: { sessao?: 'juliana' | n
   fixarLargura(opcoes.largura ?? 1440)
   const mundo = criarMundoDeTeste({ sessao: opcoes.sessao === undefined ? 'juliana' : opcoes.sessao })
   vi.stubGlobal('scrollTo', vi.fn())
-  const roteador = createMemoryRouter(criarRotas(), { initialEntries: ['/app/avisos'] })
+  const roteador = createMemoryRouter(criarRotasProntas(), { initialEntries: ['/app/avisos'] })
   render(
     <ProvedorDadosConta dados={mundo.conta}>
       <ProvedorDadosRotina dados={mundo.rotina}>
