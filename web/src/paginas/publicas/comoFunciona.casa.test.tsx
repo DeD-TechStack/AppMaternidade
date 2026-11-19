@@ -176,6 +176,16 @@ describe('/como-funciona: a casa acesa (COMO:RF-01, RF-02)', () => {
     expect(comecar.querySelectorAll('ol')).toHaveLength(1)
   })
 
+  it('COMO-I-13 cada faixa de 2 a 5 embrulha as duas colunas num conteiner .cf-banda', () => {
+    const { container } = renderizarRota('/como-funciona')
+    const faixas = [...casa(container).children].slice(1, 5)
+    for (const faixa of faixas) {
+      const bandas = faixa.querySelectorAll('.cf-banda')
+      expect(bandas).toHaveLength(1)
+      expect(bandas[0].querySelector(':scope > .cf-duas')).not.toBeNull()
+    }
+  })
+
   it('COMO-I-01 duas ações, as duas para /criar-conta, uma no heroi e outra no fecho', () => {
     const { container } = renderizarRota('/como-funciona')
     const links = [...principal(container).querySelectorAll('a')]
@@ -329,6 +339,64 @@ describe('/como-funciona: o CSS da página é estático e só de token (COMO:RF-
   it('COMO-I-12 sem animação, quadros-chave, transição, will-change nem view-transition; nada nasce escondido', () => {
     expect(css).not.toMatch(/animation|@keyframes|transition|will-change|view-transition-name/)
     expect(css).not.toMatch(/opacity\s*:|visibility\s*:\s*hidden|transform\s*:/)
+  })
+
+  it('COMO-I-13 as faixas 2 a 5 são conteineres: as duas colunas vêm de @container, não da largura da janela', () => {
+    expect(css).toMatch(/\.cf-banda\s*\{[^}]*container:\s*cf-banda\s*\/\s*inline-size/)
+    expect(css).toMatch(/@container cf-banda \(min-width: \d+px\)/)
+    // Nenhuma regra de coluna (`.cf-duas`, `.cf-colo`) dentro de um @media de largura.
+    for (const [, corpo] of css.matchAll(/@media[^{]*\{([\s\S]*?)\n {2}\}/g)) expect(corpo).not.toMatch(/\.cf-(duas|colo|lado)/)
+  })
+
+  it('COMO-I-13 o heroi pesa mais que as regras globais do Início: todo seletor de [data-cena-heroi] tem peso (0,4,0)', () => {
+    const seletores = [...css.matchAll(/([^{}]+)\{/g)].map(([, s]) => s.trim()).filter((s) => s.includes('[data-cena-heroi]'))
+    expect(seletores.length).toBeGreaterThan(0)
+    for (const seletor of seletores) {
+      for (const parte of seletor.split(',')) expect(parte.trim(), parte).toMatch(/^\[data-casa\] \[data-cena-heroi\]\[data-lado\]:has\(\.cf-hero-texto\)/)
+    }
+    // O texto e a placa voltam ao fluxo (o Início os põe em `display: contents` e `position: absolute`).
+    expect(css).toMatch(/:has\(\.cf-hero-texto\) \.cm-cena-texto \{[^}]*display: block/)
+    expect(css).toMatch(/:has\(\.cf-hero-texto\) \.cm-cena-placa \{[^}]*position: relative/)
+  })
+
+  // R1 (janela baixa): o jsdom não faz layout; a geometria (h1, frase e o botão inteiro na primeira tela em 844x390,
+  // 667x375, 390x300 e 1440x700) sai das capturas. Aqui fica o contrato das regras.
+  const consultasBaixas = [...css.matchAll(/@media([^{]*max-height:\s*(\d+)px[^{]*)\{([\s\S]*?)\n {2}\}/g)].map(
+    ([, consulta, altura, corpo]) => ({ consulta, altura: Number(altura), corpo }),
+  )
+
+  it('COMO-I-14 janela baixa e estreita: o texto vem antes da placa (order) e o padding do texto aperta', () => {
+    const estreita = consultasBaixas.find(({ consulta }) => /max-width:\s*639px/.test(consulta))
+    expect(estreita, 'consulta de max-height abaixo de 640').toBeDefined()
+    expect(estreita!.corpo).toMatch(/\.cm-cena-texto \{[^}]*order: 0;/)
+    expect(estreita!.corpo).toMatch(/\.cm-cena-placa \{[^}]*order: 1;/)
+    expect(estreita!.corpo).toMatch(/\.cm-cena-texto \{[^}]*padding: var\(--espaco-pilha\)/)
+  })
+
+  it('COMO-I-14 janela baixa e larga (de 640 em diante): placa e texto lado a lado, com o padding do texto em pilha', () => {
+    const larga = consultasBaixas.find(({ consulta }) => /min-width:\s*640px/.test(consulta) && !/max-width/.test(consulta))
+    expect(larga, 'consulta de max-height de 640 em diante').toBeDefined()
+    expect(larga!.corpo).toMatch(/\.cm-cena-texto \{[^}]*padding-block: var\(--espaco-pilha\)/)
+    const entre = consultasBaixas.find(({ consulta }) => /min-width:\s*640px/.test(consulta) && /max-width:\s*767px/.test(consulta))
+    expect(entre, 'consulta de max-height entre 640 e 767').toBeDefined()
+    expect(entre!.corpo).toMatch(/:has\(\.cf-hero-texto\) \{[^}]*display: grid;[^}]*grid-template-columns/)
+    expect(entre!.corpo).toMatch(/\.cm-cena-placa \{[^}]*grid-column: 1;/)
+    expect(entre!.corpo).toMatch(/\.cm-cena-texto \{[^}]*grid-column: 2;/)
+    // O botão de cacau (texto no papel) não vale quando o texto está na parede de cacau: nada de cacau sobre cacau.
+    expect(css).toMatch(/@media \(max-width: 639px\), \(max-width: 767px\) and \(min-height: 761px\) \{\s*\.cf-hero-texto \.cm-botao-mel/)
+  })
+
+  it('COMO-I-14 janela muito baixa (até 480): o texto aperta de novo e o h1 desce um degrau da escala', () => {
+    const baixa = consultasBaixas.find(({ altura, consulta }) => altura === 480 && !/width/.test(consulta))
+    expect(baixa, 'consulta de max-height: 480px em toda largura').toBeDefined()
+    expect(baixa!.corpo).toMatch(/\.cm-cena-texto \{[^}]*padding-block: var\(--espaco-junto\)/)
+    expect(baixa!.corpo).toMatch(/\.cf-hero-texto \{[^}]*gap: var\(--espaco-pilha\)/)
+    expect(baixa!.corpo).toMatch(/--texto-exibicao-tamanho: var\(--texto-titulo-1-tamanho\)/)
+  })
+
+  it('COMO-I-14 nenhuma regra de janela baixa vale acima de 760 (390x844 e 1440x900 ficam como estão)', () => {
+    expect(consultasBaixas.length).toBeGreaterThanOrEqual(4)
+    for (const { altura, consulta } of consultasBaixas) expect(altura, consulta).toBeLessThanOrEqual(760)
   })
 
   it('COMO-I-12 a página não importa movimento/ nem motion', () => {
