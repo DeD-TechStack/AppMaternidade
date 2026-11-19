@@ -156,6 +156,30 @@ describe('DS1-I-09 CabecalhoCTA: o rótulo e a marcação', () => {
   })
 })
 
+describe('HEADER-375 o gancho de página que deixa a pílula sair abaixo de 360', () => {
+  it('/como-funciona põe data-pagina-como-funciona no <html> enquanto está montada e o tira ao sair (a pílula continua na árvore)', async () => {
+    const { unmount } = renderizarRota('/como-funciona', { sessao: null })
+    // A página é preguiçosa (lazy): o gancho só existe depois de ela montar.
+    await screen.findAllByRole('heading', { level: 1 }, { timeout: 10_000 })
+    await aguardarCarga()
+    expect(document.documentElement.dataset.paginaComoFunciona).toBe('')
+    expect(document.documentElement.hasAttribute('data-pagina-como-funciona')).toBe(true)
+    // O gancho muda só o CSS: a pílula está no DOM, com o mesmo destino.
+    expect(pilulas()).toHaveLength(1)
+    expect(pilulas()[0].getAttribute('href')).toBe('/criar-conta')
+    unmount()
+    expect(document.documentElement.dataset.paginaComoFunciona).toBeUndefined()
+  })
+
+  it('o Início não põe nenhum gancho data-pagina-*: nele a pílula é o convite ao cadastro e fica à vista em 320', async () => {
+    renderizarRota('/', { sessao: null })
+    await screen.findAllByRole('heading', { level: 1 }, { timeout: 10_000 })
+    await aguardarCarga()
+    expect(document.documentElement.getAttributeNames().filter((nome) => nome.startsWith('data-pagina'))).toEqual([])
+    expect(pilulas()).toHaveLength(1)
+  })
+})
+
 describe('DS1-I-09 CabecalhoCTA: com sessão ou carregando, a pílula não existe', () => {
   it('DS1-I-09 enquanto a sessão carrega não há pílula (nem "Entrar"): sem piscar', async () => {
     renderizarRota('/', { sessao: 'juliana' })
@@ -283,8 +307,9 @@ describe('DS1-I-09 CabecalhoCTA: o CSS não esconde a pílula e define o estado 
   const separarBlocos = (texto: string) => [...texto.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({ seletor: m[1].trim(), corpo: m[2] }))
   const blocos = separarBlocos(css)
   const daPilula = blocos.filter((b) => /cm-cab-criar|data-cabecalho-pilula/.test(b.seletor))
-  // HEADER-375: a única largura em que a pílula sai da linha é abaixo de 360 (não cabe com a marca e o menu de 48 px).
-  // O bloco `@media (max-width: 359px)` é tirado do texto antes da conta; todo o resto do CSS continua sem esconder a pílula.
+  // HEADER-375: de 320 a 359 a pílula fica na linha numa forma compacta; ela só sai da linha abaixo de 360 numa página
+  // que põe um gancho `data-pagina-*` no <html> (o convite dela está na primeira dobra). O bloco
+  // `@media (max-width: 359px)` é tirado do texto antes da conta; todo o resto do CSS continua sem esconder a pílula.
   const BLOCO_ESTREITO = /@media\s*\(max-width:\s*359px\)\s*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/g
   const blocosEstreitos = css.match(BLOCO_ESTREITO) ?? []
   const daPilulaForaDoEstreito = separarBlocos(css.replace(BLOCO_ESTREITO, '')).filter((b) => /cm-cab-criar|data-cabecalho-pilula/.test(b.seletor))
@@ -295,11 +320,26 @@ describe('DS1-I-09 CabecalhoCTA: o CSS não esconde a pílula e define o estado 
       expect(corpo, `a pílula some em: ${seletor}`).not.toMatch(/display\s*:\s*none/i)
       expect(corpo, seletor).not.toMatch(/visibility\s*:\s*hidden/i)
     }
-    // A exceção é uma só, abaixo de 360, e só esconde a pílula (nunca a marca nem o botão do menu).
+    // A exceção é uma só, abaixo de 360, só com o gancho da página no <html> (nunca por largura sozinha), e só esconde a
+    // pílula (nunca a marca nem o botão do menu).
     expect(blocosEstreitos, 'um só bloco @media (max-width: 359px)').toHaveLength(1)
     const dentro = separarBlocos((blocosEstreitos[0] ?? '').replace(/^@media[^{]*\{/, ''))
     const escondem = dentro.filter((b) => /display\s*:\s*none/i.test(b.corpo))
-    expect(escondem.map((b) => b.seletor)).toEqual(['.cm-cab-criar'])
+    expect(escondem.map((b) => b.seletor)).toEqual(['[data-pagina-como-funciona] .cm-cab-criar'])
+    for (const { seletor } of escondem) expect(seletor, 'só some com o gancho de página').toMatch(/^\[data-pagina-[a-z-]+\] \.cm-cab-criar$/)
+  })
+
+  it('HEADER-375 de 320 a 359 a pílula é compacta e continua um alvo: recuo menor, letra do nível pequeno (15 px), 44 px de altura, sem display none por largura', () => {
+    expect(blocosEstreitos).toHaveLength(1)
+    const dentro = separarBlocos((blocosEstreitos[0] ?? '').replace(/^@media[^{]*\{/, ''))
+    const compacta = dentro.find((b) => b.seletor === '.cm-cab-criar')
+    expect(compacta, 'a regra compacta da pílula').toBeDefined()
+    expect(compacta!.corpo).toMatch(/padding\s*:\s*0\s+8px/)
+    // O nível `pequeno` (15 px, o piso do DESIGN.md), pelo token e não por um número solto.
+    expect(compacta!.corpo).toMatch(/font-size\s*:\s*var\(--texto-pequeno-tamanho\)/)
+    expect(compacta!.corpo).toMatch(/white-space\s*:\s*nowrap/)
+    expect(compacta!.corpo).not.toMatch(/display\s*:\s*none/i)
+    expect(compacta!.corpo).not.toMatch(/(?<![-\w])(?:min-)?height\s*:/i)
   })
 
   it('DS1-I-09 a pílula nunca fica abaixo de 44 px de altura (min-height em px menor que 44 não existe nas regras dela)', () => {

@@ -588,8 +588,8 @@
 
   /* HEADER-375: abaixo de 390 a linha aperta os vãos (16 -> 8 entre a marca e as ações, 8 -> 4 entre os botões) e a
      pílula "Criar conta" perde 10 px de recuo de cada lado: com a marca no token (5,3 vw) a marca, a pílula e o
-     menu de 48 px cabem de 360 a 389. Abaixo de 360 não cabem (a marca no token já ocupa o que a pílula precisaria): a pílula sai da
-     linha; o menu do celular já lista "Criar conta" e "Entrar", e a página traz o mesmo convite. 390 para cima não muda. */
+     menu de 48 px cabem de 360 a 389. De 320 a 359 a pílula fica na linha numa forma compacta (bloco de 359 abaixo).
+     390 para cima não muda. */
   @media (max-width: 389px) {
     .cm-cab-miolo {
       gap: 8px;
@@ -612,8 +612,21 @@
     }
   }
 
+  /* De 320 a 359 a marca no token (5,3 vw), o menu de 48 px e a pílula "Criar conta" só cabem com a pílula compacta: o
+     mesmo rótulo e o mesmo alvo de 44 px de altura, com recuo de 8 px (e não 12) e a letra do nível `pequeno` (15 px,
+     o piso do DESIGN.md). O Início e as outras páginas não têm convite ao cadastro na primeira dobra de 320: a
+     pílula é o convite e fica à vista.
+     Uma página que traz o próprio convite ali põe um gancho `data-pagina-*` no <html> (como paginaCuidado e
+     paginaDesenvolvimento já fazem para a cor): só com o gancho, e só abaixo de 360, a pílula sai da linha (o menu
+     do celular continua listando "Criar conta" e "Entrar"). Hoje o gancho que esconde é o de /como-funciona. */
   @media (max-width: 359px) {
     .cm-cab-criar {
+      padding: 0 8px;
+      font-size: var(--texto-pequeno-tamanho);
+      white-space: nowrap;
+    }
+
+    [data-pagina-como-funciona] .cm-cab-criar {
       display: none;
     }
   }
