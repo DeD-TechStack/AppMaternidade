@@ -79,6 +79,41 @@ describe('QH-06: a madrugada não passa de uma pessoa para a outra', () => {
     },
   )
 
+  it('entrar como outra pessoa sem sair começa com a madrugada desligada', async () => {
+    const { roteador, conta } = await renderizarRotaPronta('/app/hoje', { madrugada: true })
+    expect(tema()).toBe('madrugada')
+    expect(lua().getAttribute('aria-pressed')).toBe('true')
+
+    // Sem clicar em "Sair": a entrada de Ícaro troca a pessoa da sessão e não passa pelo evento `saiu`.
+    await act(async () => {
+      await conta.entrar(PESSOAS.icaro.email, SENHA_DEMONSTRACAO)
+    })
+    await aguardarCarga()
+
+    const sessao = await conta.sessaoAtual()
+    expect(sessao.ok && sessao.valor?.id).toBe(PESSOAS.icaro.id)
+    expect(roteador.state.location.pathname).toBe('/app/hoje')
+    expect(tema()).toBeNull()
+    expect(lua().getAttribute('aria-pressed')).toBe('false')
+  })
+
+  it('a mesma pessoa que entra de novo mantém a madrugada', async () => {
+    const { roteador, conta } = await renderizarRotaPronta('/app/hoje', { madrugada: true })
+    expect(tema()).toBe('madrugada')
+    expect(lua().getAttribute('aria-pressed')).toBe('true')
+
+    await act(async () => {
+      await conta.entrar(PESSOAS.juliana.email, SENHA_DEMONSTRACAO)
+    })
+    await aguardarCarga()
+
+    const sessao = await conta.sessaoAtual()
+    expect(sessao.ok && sessao.valor?.id).toBe(PESSOAS.juliana.id)
+    expect(roteador.state.location.pathname).toBe('/app/hoje')
+    expect(tema()).toBe('madrugada')
+    expect(lua().getAttribute('aria-pressed')).toBe('true')
+  })
+
   it('sem trocar de pessoa a lua continua funcionando', async () => {
     const { roteador } = await renderizarRotaPronta('/app/hoje')
     expect(tema()).toBeNull()

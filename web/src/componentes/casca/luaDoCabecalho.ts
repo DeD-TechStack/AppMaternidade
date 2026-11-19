@@ -8,7 +8,7 @@ import { AREA_DA_ROTINA, useMadrugada, type useLuaDaCasca } from '../rotina/madr
  * pessoa sobrevive a uma visita fora da Rotina. Dentro da Rotina a madrugada acompanha a escolha; ao sair
  * (Conta, Início, outra área) o `data-tema` vai embora e a lua não existe; ao voltar, a escolha é restaurada.
  * Quem estava com a madrugada desligada continua desligada. Fechar a página joga a escolha fora, e sair da
- * conta ("Sair") também: a próxima pessoa começa com a madrugada desligada.
+ * conta ("Sair") ou entrar como outra pessoa também: a próxima pessoa começa com a madrugada desligada.
  */
 export function useLuaDoCabecalho(): ReturnType<typeof useLuaDaCasca> {
   const dentro = useMatches().some((rota) => (rota.handle as { area?: unknown } | undefined)?.area === AREA_DA_ROTINA)
@@ -19,18 +19,34 @@ export function useLuaDoCabecalho(): ReturnType<typeof useLuaDaCasca> {
   const escolha = useRef(false)
   const aplicada = useRef(false)
 
-  // A casca fica montada depois do "Sair" e acima da sessão (sem `useSessao`): a saída chega pelo evento `saiu`
-  // da conta. A escolha era de quem saiu: a próxima pessoa começa com a madrugada desligada.
+  // A casca fica montada depois do "Sair" e acima da sessão (sem `useSessao`): a troca de pessoa chega pelos
+  // eventos da conta. A escolha era de quem saiu (ou de quem foi trocado por outra entrada sem `saiu`): a próxima
+  // pessoa começa com a madrugada desligada. A mesma pessoa que entra de novo mantém a escolha.
   const dados = useDadosConta()
-  useEffect(
-    () =>
-      dados.aoMudarSessao((evento) => {
-        if (evento !== 'saiu') return
-        escolha.current = false
-        definir(false)
-      }),
-    [dados, definir],
-  )
+  const pessoa = useRef<string | null>(null)
+  useEffect(() => {
+    let viva = true
+    // Quem já estava na sessão ao montar não gera evento: descobre-se o id por `sessaoAtual`.
+    void dados.sessaoAtual().then((r) => {
+      if (viva && pessoa.current === null && r.ok && r.valor) pessoa.current = r.valor.id
+    })
+    const cancelar = dados.aoMudarSessao((evento, usuario) => {
+      if (evento === 'saiu') {
+        pessoa.current = null
+      } else if (usuario) {
+        if (pessoa.current === usuario.id) return
+        pessoa.current = usuario.id
+      } else {
+        return
+      }
+      escolha.current = false
+      definir(false)
+    })
+    return () => {
+      viva = false
+      cancelar()
+    }
+  }, [dados, definir])
 
   useEffect(() => {
     if (!dentro) {
