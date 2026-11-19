@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { Info } from 'lucide-react'
 import { Link, Navigate, useSearchParams } from 'react-router'
 import { AreaDoLoginSocial } from '../../componentes/conta/AreaDoLoginSocial.tsx'
 import { Campo, CampoSenha } from '../../componentes/conta/Campos.tsx'
@@ -89,7 +88,6 @@ export function CriarConta() {
       manchete={MANCHETES.criarConta}
       frase={CRIAR_CONTA.frase}
       ocupado={carregando}
-      ilustracao="maos-celular"
       ligacoes={
         <>
           <span>{CRIAR_CONTA.jaTemConta}</span>
@@ -99,15 +97,6 @@ export function CriarConta() {
         </>
       }
     >
-      {comBanco ? (
-        <p
-          data-aviso="banco-de-demonstracao"
-          className="cm-pequeno flex items-start gap-3 rounded-campo bg-[var(--cor-papel-fundo)] px-4 py-3"
-        >
-          <Info size={20} aria-hidden="true" className="mt-0.5 shrink-0" />
-          <span>{AVISO_BANCO_DEMONSTRACAO}</span>
-        </p>
-      ) : null}
       <RegiaoStatus mensagem={confirmacao} />
       <AreaDoLoginSocial />
       {carregando ? (
@@ -175,6 +164,12 @@ export function CriarConta() {
             refEntrada={senhaRef}
             obrigatorio
           />
+          {/* O aviso do banco de teste vem depois dos campos, junto dos termos, e não acima do primeiro campo (cartão COPY_criar-conta). */}
+          {comBanco ? (
+            <p data-aviso="banco-de-demonstracao" className="cm-pequeno">
+              {AVISO_BANCO_DEMONSTRACAO}
+            </p>
+          ) : null}
           <div>
             <p className="cm-pequeno text-[var(--cor-texto-2)]">{CRIAR_CONTA.termos.frase}</p>
             <ul className="m-0 flex list-none flex-wrap gap-x-5 p-0">

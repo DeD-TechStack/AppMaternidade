@@ -63,9 +63,8 @@ export function RecuperarAcesso() {
       titulo={TITULOS.recuperarAcesso}
       manchete={MANCHETES.recuperarAcesso}
       frase={RECUPERAR.frase}
-      ilustracao="avo-carrinho"
       ligacoes={
-        // Como em /entrar: links sublinhados na régua. "Enviar link" é a única ação principal da tela.
+        // Como em /entrar: links sublinhados, sem fio em cima. "Enviar link" é a única ação principal da tela.
         <>
           <Link to={caminhoComVolta('/entrar', volta)} className={LINK_ALVO}>
             {RECUPERAR.entrar}

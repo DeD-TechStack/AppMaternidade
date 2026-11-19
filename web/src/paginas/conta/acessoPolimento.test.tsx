@@ -57,12 +57,18 @@ interface Caixa {
 interface Medida {
   erro?: string
   innerWidth: number
+  /** A largura da página sem a barra de rolagem (a janela sem emulação de celular tem barra de 15 px). */
+  larguraUtil: number
   innerHeight: number
   fontes: string
   scrollWidth: number
   /** Cada linha de texto do `h1` (uma caixa por linha de cada trecho de texto). */
   linhasDoH1: Caixa[]
-  ilustracao: Caixa | null
+  /** A placa da porta (a única imagem da tela), quando visível. */
+  porta: Caixa | null
+  /** O primeiro campo do formulário (`main input`) e o botão de envio (`main button[type=submit]`). */
+  primeiroCampo: Caixa | null
+  envio: Caixa | null
   /** A frase logo abaixo do título. */
   lide: Caixa | null
   /** A ação principal que é um link (`a.cm-botao-primario`), quando a tela tem uma. */
@@ -99,8 +105,10 @@ const SCRIPT_DE_MEDIDA = `
         for (const r of intervalo.getClientRects()) if (r.width > 0 && r.height > 0) linhasDoH1.push(caixa(r))
       }
     }
-    const lideEl = document.querySelector('main p.cm-lide')
-    const desenho = document.querySelector('main img[data-ilustracao]')
+    const lideEl = document.querySelector('main h1 + p')
+    const porta = document.querySelector('main img')
+    const campoEl = document.querySelector('main input')
+    const envioEl = document.querySelector('main button[type=submit]')
     const acao = document.querySelector('main a.cm-botao-primario')
     const principal = document.querySelector('main')
     const vazando = [...principal.querySelectorAll('*')]
@@ -108,17 +116,20 @@ const SCRIPT_DE_MEDIDA = `
       .map((el) => el.tagName.toLowerCase() + '.' + String(el.className).slice(0, 60))
     emitir({
       innerWidth: window.innerWidth,
+      larguraUtil: document.documentElement.clientWidth,
       innerHeight: window.innerHeight,
       fontes: document.fonts.status,
       scrollWidth: document.documentElement.scrollWidth,
       linhasDoH1,
-      ilustracao: desenho && visivel(desenho) ? caixa(desenho.getBoundingClientRect()) : null,
+      porta: porta && visivel(porta) ? caixa(porta.getBoundingClientRect()) : null,
+      primeiroCampo: campoEl ? caixa(campoEl.getBoundingClientRect()) : null,
+      envio: envioEl ? caixa(envioEl.getBoundingClientRect()) : null,
       lide: lideEl ? caixa(lideEl.getBoundingClientRect()) : null,
       acaoPrincipal: acao ? { ...caixa(acao.getBoundingClientRect()), texto: acao.textContent.trim() } : null,
       vazando,
     })
   } catch (e) {
-    emitir({ erro: String(e), innerWidth: 0, innerHeight: 0, fontes: '', scrollWidth: 0, linhasDoH1: [], ilustracao: null, lide: null, acaoPrincipal: null, vazando: [] })
+    emitir({ erro: String(e), innerWidth: 0, innerHeight: 0, fontes: '', scrollWidth: 0, linhasDoH1: [], porta: null, primeiroCampo: null, envio: null, lide: null, acaoPrincipal: null, vazando: [] })
   }
 })()
 `
@@ -278,15 +289,6 @@ async function medirNoChrome(corpoHtml: string, largura: number, altura: number)
   }
 }
 
-/** A distância entre duas caixas (0 se se tocam ou se cruzam). */
-function distancia(a: Caixa, b: Caixa): number {
-  const dx = Math.max(0, a.x - b.right, b.x - a.right)
-  const dy = Math.max(0, a.y - b.bottom, b.y - a.bottom)
-  return Math.hypot(dx, dy)
-}
-
-const cruza = (a: Caixa, b: Caixa) => a.x < b.right && b.x < a.right && a.y < b.bottom && b.y < a.bottom
-
 async function medirTela(caminho: string, largura = 390, altura = 844): Promise<Medida> {
   renderizarComDados(caminho)
   await aguardarCarga()
@@ -313,23 +315,24 @@ describe(`telas de acesso no Chrome, a 390 px${motivoDoPulo ? ` (pulado: ${motiv
   }
   const roda = it.skipIf(motivoDoPulo !== null && !exigirNoCI)
 
-  // A-1: o desenho de traço do celular fica ao lado da segunda linha do título e não pode encostar no texto.
-  for (const caminho of ['/criar-conta', '/entrar', '/recuperar-acesso']) {
+  // REP-T3 (A7): o formulário é a primeira tela. O h1 tem uma linha só e a frase uma linha só (cartões COPY),
+  // o primeiro campo começa até 300 px do alto, o botão de envio termina dentro de 844 px, e a placa da porta
+  // vem depois do formulário, de ponta a ponta (390 × 390), encostada na borda esquerda.
+  for (const caminho of ['/entrar', '/criar-conta', '/recuperar-acesso']) {
     roda(
-      `${caminho}: nenhuma linha do título cruza o desenho de traço e há 16 px (o vão pilha) entre eles`,
+      `${caminho}: h1 e frase de uma linha, primeiro campo até y 300, envio dentro de 844 px e a porta depois do formulário`,
       async () => {
         const medida = await medirTela(caminho)
-        expect(medida.ilustracao, 'o desenho de traço aparece no celular').not.toBeNull()
-        expect(medida.linhasDoH1.length).toBeGreaterThan(1)
-        for (const linha of medida.linhasDoH1) {
-          expect(cruza(linha, medida.ilustracao!), `uma linha do título (${JSON.stringify(linha)}) cruza o desenho (${JSON.stringify(medida.ilustracao)})`).toBe(false)
-          expect(distancia(linha, medida.ilustracao!), `o vão entre a linha do título e o desenho: ${JSON.stringify(linha)} / ${JSON.stringify(medida.ilustracao)}`).toBeGreaterThanOrEqual(16)
-        }
-        // A frase logo abaixo também não encosta no desenho (a segunda linha do título termina acima da frase).
-        if (medida.lide) {
-          expect(cruza(medida.lide, medida.ilustracao!), 'a frase cruza o desenho').toBe(false)
-          expect(distancia(medida.lide, medida.ilustracao!), 'o vão entre o desenho e a frase').toBeGreaterThanOrEqual(8)
-        }
+        expect(medida.linhasDoH1, 'o h1 tem uma linha só').toHaveLength(1)
+        expect(medida.lide, 'a frase abaixo do título').not.toBeNull()
+        expect(medida.lide!.height, 'a frase tem uma linha só (26 px de entrelinha)').toBeLessThanOrEqual(26.5)
+        expect(medida.primeiroCampo!.y, 'o primeiro campo começa até y 300').toBeLessThanOrEqual(300)
+        expect(medida.envio!.bottom, `o envio termina em ${medida.envio!.bottom}`).toBeLessThanOrEqual(medida.innerHeight)
+        expect(medida.porta, 'a porta aparece').not.toBeNull()
+        expect(medida.porta!.x).toBe(0)
+        expect(medida.porta!.width).toBe(medida.larguraUtil)
+        expect(medida.porta!.height).toBe(medida.larguraUtil)
+        expect(medida.porta!.y, 'a porta vem depois do formulário').toBeGreaterThanOrEqual(medida.envio!.bottom)
       },
       60_000,
     )
@@ -363,16 +366,17 @@ describe(`telas de acesso no Chrome, a 390 px${motivoDoPulo ? ` (pulado: ${motiv
   }
 })
 
-describe('/recuperar-acesso: os links são links sublinhados na régua, e só "Enviar link" é botão', () => {
-  it('"Entrar" e "Criar conta" são <a> com LINK_ALVO e nenhuma classe de pílula na linha de links', async () => {
+describe('/recuperar-acesso: os links são links sublinhados, sem fio em cima, e só "Enviar link" é botão', () => {
+  it('"Entrar" e "Criar conta" são <a> com LINK_ALVO e nenhuma classe de pílula na linha de links, que não tem fio', async () => {
     renderizarComDados('/recuperar-acesso')
     await screen.findByRole('button', { name: 'Enviar link' })
 
     const entrar = principal().getByRole('link', { name: 'Entrar' })
     const criar = principal().getByRole('link', { name: 'Criar conta' })
-    const linha = entrar.closest('.border-t')!
-    expect(linha).not.toBeNull()
+    const linha = entrar.parentElement!
     expect(linha.contains(criar)).toBe(true)
+    expect(entrar.closest('.border-t'), 'sem fio acima dos links').toBeNull()
+    expect(linha.className).not.toMatch(/(^|\s)border-/)
     for (const link of [entrar, criar]) {
       expect(link.tagName).toBe('A')
       for (const classe of LINK_ALVO.split(' ')) expect(link.classList.contains(classe), classe).toBe(true)
@@ -455,13 +459,14 @@ describe('/redefinir-senha e /conta-excluida: uma só ação principal, preenchi
 })
 
 describe('/convite: o título termina com ponto final, como as outras manchetes', () => {
-  it('o h1 é "Convite para uma família." e a segunda linha leva o ponto', async () => {
+  it('o h1 é "Convite para uma família." num nó de texto só, com o ponto', async () => {
     renderizarComDados('/convite')
     const titulo = await screen.findByRole('heading', { level: 1 })
 
-    expect(titulo.textContent).toBe(`${MANCHETES.convite[0]} ${MANCHETES.convite[1]}.`)
+    expect(titulo.textContent).toBe(MANCHETES.convite)
     expect(titulo.textContent).toBe(`${NOMES_DO_H1.convite}.`)
     expect(titulo.textContent!.endsWith('família.')).toBe(true)
-    expect(titulo.querySelector('.cm-segunda-linha')!.textContent!.trim()).toBe('uma família.')
+    expect(titulo.childNodes).toHaveLength(1)
+    expect(titulo.querySelector('.cm-segunda-linha')).toBeNull()
   })
 })
