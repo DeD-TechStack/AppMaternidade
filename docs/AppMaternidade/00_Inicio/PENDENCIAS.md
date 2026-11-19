@@ -9,14 +9,15 @@ regra: kanban-leader-cycle, seção 0 "Lista durável de pendências"
 
 MANDATO (Daniel, 05/11/2026; visual refeito em 11/11): o site inteiro funcionando de ponta a ponta (RF-01 a RF-14), com o visual Campo de mel aprovado em 11/11, publicado para o professor entrar e usar tudo com dados fictícios. Fonte: [Retomada do site](Retomada_Site.md), seção "Roteiro do site completo".
 ESTADO: ATIVO (leader session D5-15, 19/11). Source of state: block "RETOMAR 19/11 D5-15" right below; everything under "## HISTORY" is history.
-## RETOMAR 19/11 D5-15 (written ~15h50 by leader session D5-15; coordinator t_b952b80d; ORDERS: ordens-vigentes rev 4 + D9; D8 English; NEVER clarify)
-- BRANCH: origin/int/refazer = 239938c2284de45afae6b16adeda1cc41278137d (CI 44588400855 green; Pages 44590513679 building). main untouched.
-- INTEGRATED in D5-15 (RECIBO on each): HOME-PHONE-B2 t_53d1da83 leader takeover f7e00a2 -> re-titled b2cffcb -> merge ca658b7 (CI 44587345540, Pages 44589742212 green, served blob verified; RECIBO 2662; archived). Stacked on ca658b7: HOME-SEAM-FOLD t_2d31298b e025420 (64d4376), REP-T2 t_ea5eaa95 e95c937 (6ea2797), METER-INICIO-SYNC t_61da495e ef2c0cf (239938c); full check exit 0 (4911 passed); RECIBOs 2659-2661; all done. MOTION-PAGES t_335008a0 archived.
-- COORDINATOR asked (t_ad58bc7c) to score with GPT: Início rescore, Como funciona / Cuidado compartilhado / Desenvolvimento (Daniel's skills test), reading pages.
-- RUNNING: HOME-ART-FINISH t_ecae332d released at ~15h25 for round 3 (R1 M05 outline, R2 M06 2x caps; comment 2658); next review is the LAST; on approval integrate at once (re-title if needed).
-- HELD (scheduled, Claude allowance): ANCHOR-1 t_b47f18f0 (return 1/2 ANCHOR-R1 history revisit; leader comment 2656), Q-7 t_63c16887, HEADER-200 t_35117e11, HOME-ASSETS-2 t_d7af38b3 (never block again), J-RF14-1 t_41d4c4b0, B02 t_ad91fb5e. AVISOS-200 t_c9bfb9e8 in review.
-- BLOCKED BY LEADER: HOME-SEAMS t_cbcdf887 (parents B2 archived + ART-FINISH) -> release with "SHAs de base" after ART-FINISH integrates; then HOME-WIDTH t_3e461a68 + HOME-STAGE-STORY t_4401a4f4; then HOME-SECOND-HALF t_bb3048d4.
-- CLEANUP left: dirs .worktrees/t_335008a0, t_ea5eaa95, t_53d1da83 locked by a process (branches deleted, worktrees pruned); rm later. Worktrees _int_mp, _int_hsf hold verif logs (copied to INTQ/<card>/).
+## RETOMAR 19/11 D5-15 (rewritten ~16h20 by leader session D5-15; coordinator t_b952b80d; ORDERS: ordens-vigentes rev 4 + D9; D8 English; NEVER clarify)
+- DANIEL ~16h20 (coordinator t_d6abea6d): allowance remains; keep finishing; push every approved step so /previa/ updates (working previews, not final).
+- BRANCH: origin/int/refazer = 98817ec62ff7cd6805131157092c7d4c43c67b33 (CI 44593441265 green; Pages 44595765040 serves it). main untouched.
+- INTEGRATED in D5-15 (RECIBO on each): HOME-PHONE-B2 t_53d1da83 (takeover, ca658b7, archived), HOME-SEAM-FOLD t_2d31298b + REP-T2 t_ea5eaa95 + METER-INICIO-SYNC t_61da495e (stacked, 239938c), HOME-ART-FINISH t_ecae332d (9f6d030 re-titled 4714596, merge 98817ec; R2 disposition 2663: M06 1x, M05 2x wiring -> HOME-SEAMS). MOTION-PAGES t_335008a0 archived.
+- SCORES (GPT v4, 239938c): Início 6.7/6.7 PASS; Como funciona 6.32/6.7; Cuidado 6.4/6.4; Desenvolvimento 6.2/6.2; Privacidade 6.2/6.2; Sobre 6.0/5.9 (NOTA_PREVIA_239938c_20261119). No earlier v4 score for the MOTION-PAGES pages: this is the baseline. Início findings routed as comments 2665-2667.
+- RUNNING: HOME-SEAMS t_cbcdf887 (released, SHAs de base 2669) -> on integrate release HOME-WIDTH t_3e461a68 + HOME-STAGE-STORY t_4401a4f4, then HOME-SECOND-HALF t_bb3048d4. COMO-P3 t_a9bc02f4 and CUIDADO-P3 t_6bbb1c96 (bodies _staging/appmaternidade/CARDS_D515/). Next: Part 3 cards for Desenvolvimento, Privacidade, Sobre when a slot frees.
+- HELD (scheduled): ANCHOR-1 t_b47f18f0 (return 1/2, comment 2656), Q-7 t_63c16887, HEADER-200 t_35117e11, HOME-ASSETS-2 t_d7af38b3 (never block again), J-RF14-1 t_41d4c4b0, B02 t_ad91fb5e. AVISOS-200 t_c9bfb9e8 in review.
+- CLEANUP left: dirs .worktrees/t_335008a0, t_ea5eaa95, t_53d1da83 locked (branches deleted, pruned). Integration worktrees reused: _int_mp, _int_hsf. Evidence copied to INTQ/<card>/.
+- LIVE CHILDREN: none. Background processes: none.
 RETOMAR-OK 19/11 D5-15
 ## HISTORY
 ## RETOMAR 19/11 SWITCH-D5-14 SAFE POINT (written ~16h10 by leader session D5-14 at ~363k/call; coordinator t_b952b80d; ORDERS: ordens-vigentes rev 4 + D9; D8 English; NEVER clarify; NOT a pause: running cards keep running)
