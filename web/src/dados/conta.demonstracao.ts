@@ -14,7 +14,7 @@ export const CODIGO_CONVITE_VENCIDO = '45b2'.repeat(16)
 
 export const PESSOAS_DEMONSTRACAO = {
   responsavel: { id: '11111111-1111-4111-8111-111111111111', email: 'juliana@exemplo.invalid', nome: 'Juliana' },
-  bruno: { id: '22222222-2222-4222-8222-222222222222', email: 'bruno@exemplo.invalid', nome: 'Bruno' },
+  icaro: { id: '22222222-2222-4222-8222-222222222222', email: 'icaro@exemplo.invalid', nome: 'Ícaro' },
   carla: { id: '33333333-3333-4333-8333-333333333333', email: 'carla@exemplo.invalid', nome: 'Carla' },
   davi: { id: '45444444-4444-4444-8444-444444444444', email: 'davi@exemplo.invalid', nome: 'Davi' },
   // O moderador fictício (MED-AUTH): o `CONTAS.diego` de `comunidade.demonstracao.ts` e o do seed
@@ -35,11 +35,11 @@ const DIA = 86_400_000
 /** `agora` é o instante da carga da página: o convite pendente vence 7 dias depois dele. */
 export function criarFixtureDemonstracao(agora: number): FixtureConta {
   const quando = (dias: number) => new Date(agora + dias * DIA).toISOString()
-  const { responsavel, bruno, carla, davi, moderador } = PESSOAS_DEMONSTRACAO
+  const { responsavel, icaro, carla, davi, moderador } = PESSOAS_DEMONSTRACAO
   const fuso = 'America/Sao_Paulo'
 
   return {
-    usuarios: [responsavel, bruno, carla, davi, moderador].map((pessoa) => ({
+    usuarios: [responsavel, icaro, carla, davi, moderador].map((pessoa) => ({
       id: pessoa.id,
       email: pessoa.email,
       senha: SENHA_DEMONSTRACAO,
@@ -47,7 +47,7 @@ export function criarFixtureDemonstracao(agora: number): FixtureConta {
     })),
     contas: [
       { id: responsavel.id, nome: responsavel.nome, fuso, criadaEm: quando(-30) },
-      { id: bruno.id, nome: bruno.nome, fuso, criadaEm: quando(-30) },
+      { id: icaro.id, nome: icaro.nome, fuso, criadaEm: quando(-30) },
       { id: carla.id, nome: carla.nome, fuso, criadaEm: quando(-30) },
       { id: davi.id, nome: davi.nome, fuso, criadaEm: quando(-30) },
       { id: moderador.id, nome: moderador.nome, fuso, criadaEm: quando(-30) },
@@ -70,7 +70,7 @@ export function criarFixtureDemonstracao(agora: number): FixtureConta {
       {
         id: 'b2222222-2222-4222-8222-222222222222',
         familiaId: FAMILIAS_DEMONSTRACAO.exemplo,
-        contaId: bruno.id,
+        contaId: icaro.id,
         papel: 'cuidador',
         estado: 'ativo',
         validoAte: null,

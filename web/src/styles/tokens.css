@@ -4,13 +4,18 @@
 @theme static {
   /* Duas famílias só: Literata e Outfit (DESIGN.md 2 e 8). As famílias padrão do Tailwind (sans, serif,
      mono) apontam para elas, para nenhuma outra família (nem monospace) chegar ao CSS gerado. */
-  --font-titulo: 'Literata Variable', serif;
+  --fonte-exibicao: 'Literata Variable', serif;
+  --font-titulo: var(--fonte-exibicao);
   --font-texto: 'Outfit Variable', system-ui, sans-serif;
   --font-sans: var(--font-texto);
   --font-serif: var(--font-titulo);
   --font-mono: var(--font-texto);
   --default-font-family: var(--font-texto);
   --default-mono-font-family: var(--font-texto);
+  /* Peso dos títulos: o nível `exibicao` lê --peso-exibicao; titulo-1 a titulo-4 e a marca do cabeçalho leem
+     --peso-titulo. Uma troca de face (FG-2b) muda este bloco e --fonte-exibicao, e mais nada. */
+  --peso-exibicao: 600;
+  --peso-titulo: 600;
 
   /* 1. Paleta (papéis; nomes do tema do Tailwind) */
   --color-*: initial;
@@ -42,4 +47,25 @@
   --sombra-cartao: 0 1px 2px rgb(43 35 32 / .06), 0 8px 24px rgb(43 35 32 / .06);
   --luz-estudio: radial-gradient(120% 90% at 15% 10%, #F7D684 0%, #F2C14E 60%);
   --brilho-mel: radial-gradient(closest-side, rgb(242 193 78 / .22), transparent);
+  /* Abrir e fechar (menu, caixas de diálogo, acordeão; styles/abrir-fechar.css). Movimento reduzido zera as duas. */
+  --mov-abrir: 220ms;
+  --mov-fechar: 160ms;
+  --mov-curva: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* The display variants of FG-2b (REP-HOME, temporary: FG-2b keeps one block and deletes the other two).
+   A is the default block above (Literata 600). B and C are chosen at boot by `?exibicao=b|c` (main.tsx). Nothing
+   else selects on the attribute: a variant is a block of tokens. */
+html[data-exibicao="b"] {
+  --fonte-exibicao: 'M PLUS Rounded 1c', sans-serif;
+  --peso-exibicao: 800;
+  --peso-titulo: 700;
+}
+
+html[data-exibicao="c"] {
+  --fonte-exibicao: 'Literata Variable', serif;
+  --peso-exibicao: 600;
+  --peso-titulo: 600;
+  --texto-exibicao-tamanho: clamp(2.5rem, calc(2.5rem + (100vw - 390px) * 24 / 1050), 4rem);
+  --texto-exibicao-entrelinha: clamp(2.75rem, calc(2.75rem + (100vw - 390px) * 24 / 1050), 4.25rem);
 }

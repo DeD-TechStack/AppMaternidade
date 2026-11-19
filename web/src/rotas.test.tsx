@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, screen, within } from '@testing-library/react'
+import { INI } from './conteudo/inicio.ts'
 import { PROMESSA } from './conteudo/textos.ts'
 import { aguardarCarga, renderizarRota } from './teste/renderizarRota.tsx'
 import { criarMundoDeTeste, semSessaoEmAndamento } from './teste/rotina.fixture.ts'
@@ -7,24 +8,31 @@ import { criarMundoDeTeste, semSessaoEmAndamento } from './teste/rotina.fixture.
 const semSessao = () => ({ ajustarRotina: semSessaoEmAndamento })
 
 describe('rotas', () => {
-  it('o Início tem um único h1, igual à promessa', async () => {
+  // REP-HOME: the Início has ONE h1, "Ela mamou que horas?", written as two spans (day wall, night wall).
+  it('o Início tem um único h1, "Ela mamou que horas?", em dois spans', async () => {
     renderizarRota('/')
 
     const titulos = await screen.findAllByRole('heading', { level: 1 })
     expect(titulos).toHaveLength(1)
-    expect(titulos[0].textContent).toBe(PROMESSA)
+    expect(titulos[0].textContent).toBe(INI.h1)
+    // The old home's promise ("A rotina do bebê, dividida com carinho.") is retired from the Início.
+    expect(titulos[0].textContent).not.toBe(PROMESSA)
+    expect(titulos[0].querySelector('[data-h1-dia]')!.textContent).toBe(INI.h1Dia)
+    expect(titulos[0].querySelector('[data-h1-noite]')!.textContent).toBe(INI.h1Noite)
   })
 
-  // MAT-49c: o primário "Começar grátis" (abertura e fechamento) vai a /app/hoje; o link de texto
-  // "Ver como funciona", a Como funciona.
-  it('o Início traz o primário "Começar grátis" para /app/hoje e o link "Ver como funciona"', async () => {
+  // REP-HOME: the primary action (the closing band's wide mel button; the hero one only exists from 1024 px, which this
+  // jsdom run is not) is "Criar conta" to /criar-conta; the text link "Ver como funciona" goes to Como funciona.
+  it('o Início traz a ação primária "Criar conta" para /criar-conta e o link "Ver como funciona"', async () => {
     const { container } = renderizarRota('/')
     await screen.findByRole('heading', { level: 1 })
 
-    const primarios = [...container.querySelectorAll<HTMLElement>('main [data-botao="primario"]')]
-    expect(primarios).toHaveLength(2)
-    expect(primarios.map((p) => p.textContent)).toEqual(['Começar grátis', 'Começar grátis'])
-    expect(primarios.map((p) => p.getAttribute('href'))).toEqual(['/app/hoje', '/app/hoje'])
+    const primarios = [...container.querySelectorAll<HTMLElement>('main a[data-botao-largo]')]
+    expect(primarios.length).toBeGreaterThan(0)
+    for (const primario of primarios) {
+      expect(primario.textContent).toBe('Criar conta')
+      expect(primario.getAttribute('href')).toBe('/criar-conta')
+    }
 
     const main = container.querySelector<HTMLElement>('main')!
     const secundario = within(main).getByRole('link', { name: 'Ver como funciona' })
@@ -34,9 +42,9 @@ describe('rotas', () => {
   })
 
   for (const [caminho, titulo] of [
-    ['/como-funciona', 'Do primeiro dia à troca de turno.'],
-    ['/cuidado-compartilhado', 'Um bebê, vários adultos.'],
-    ['/desenvolvimento', 'Cada fase, no tempo do bebê.'],
+    ['/como-funciona', 'Deixa que eu anoto.'],
+    ['/cuidado-compartilhado', 'A babá vê o quê?'],
+    ['/desenvolvimento', 'Ela já devia rolar?'],
     ['/regras-da-comunidade', 'Regras da comunidade'],
     ['/privacidade', 'Privacidade'],
     ['/termos', 'Termos de uso'],
@@ -73,7 +81,7 @@ describe('rotas', () => {
     await aguardarCarga()
     expect(titulo.textContent).toBe('Tummy time de Heloísa')
     expect(screen.getByText('Atividade sugerida: Espelho no chão')).toBeTruthy()
-    expect(screen.getByText(/^Iniciado às \d{2}:\d{2} por Juliana$/)).toBeTruthy()
+    expect(screen.getByText(/^Início às \d{2}:\d{2}, por Juliana$/)).toBeTruthy()
   })
 
   it('a Sessão sem sessão e sem tipo mostra o estado vazio', async () => {
@@ -128,7 +136,7 @@ describe('rotas', () => {
     renderizarRota('/qualquer-coisa')
 
     const titulo = await screen.findByRole('heading', { level: 1 })
-    expect(titulo.textContent).toBe('Página não encontrada')
+    expect(titulo.textContent).toBe('Aqui não mora ninguém.')
 
     const link = screen.getByRole('link', { name: 'Voltar ao início' })
     expect(link.getAttribute('href')).toBe('/')

@@ -156,7 +156,7 @@ export function SessoesEmParalelo({
                       <p className="font-medium">
                         {ROTULO_TIPO[sessao.tipo]} <span className="tabular-nums">{formatarDuracao(agora - Date.parse(sessao.inicio))}</span>
                       </p>
-                      <p className="text-pequeno text-(--cor-texto-2)">{SESSOES.porAutor(autor)}</p>
+                      <p className="text-pequeno text-(--cor-texto-2) wrap-anywhere">{SESSOES.porAutor(autor)}</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {podeEncerrar ? (

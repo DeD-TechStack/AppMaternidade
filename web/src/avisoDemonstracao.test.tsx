@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { AvisoDemonstracao } from './componentes/AvisoDemonstracao.tsx'
+import * as textosCasca from './componentes/casca/textos.ts'
 import { AVISO_DEMONSTRACAO } from './conteudo/textos.ts'
 import { rodarAxe } from './teste/axe.ts'
 import { aguardarCarga, renderizarRota, renderizarRotaPronta, type OpcoesRota } from './teste/renderizarRota.tsx'
@@ -50,18 +51,24 @@ describe('aviso de demonstração: o texto', () => {
   })
 })
 
+// DS1:RF-14: o aviso do rodapé do site público é sempre renderizado (um nó só, `casca.rod.aviso`); sem banco o
+// mesmo nó traz a frase da demonstração sem banco, no lugar da linha de avaliação (COPY_casca.md §2.3).
+const TEXTO_COM_BANCO = 'Nesta versão de avaliação, use só dados fictícios.'
+
 describe('aviso de demonstração: uma linha no rodapé do site público', () => {
-  for (const [nome, url, chave, aparece] of BANCOS) {
+  it('DS1-I-14 a constante do rodapé é a linha de avaliação do deck da casca', () => {
+    expect(textosCasca.AVISO_RODAPE).toBe(TEXTO_COM_BANCO)
+  })
+
+  for (const [nome, url, chave, semBanco] of BANCOS) {
     for (const caminho of PUBLICAS) {
-      it(`${nome}: ${aparece ? 'um aviso, no rodapé' : 'nenhum aviso'} em ${caminho}`, () => {
+      it(`DS1-I-14 ${nome}: um aviso no rodapé, com o texto ${semBanco ? 'da demonstração sem banco' : 'de avaliação'}, em ${caminho}`, () => {
         definirBanco(url, chave)
         const { container, unmount } = renderizarRota(caminho)
         const avisos = container.querySelectorAll(SELETOR)
-        expect(avisos, caminho).toHaveLength(aparece ? 1 : 0)
-        if (aparece) {
-          expect(avisos[0].closest('footer[data-rodape]'), caminho).not.toBeNull()
-          expect(avisos[0].textContent, caminho).toBe(TEXTO)
-        }
+        expect(avisos, caminho).toHaveLength(1)
+        expect(avisos[0].closest('footer[data-rodape]'), caminho).not.toBeNull()
+        expect(avisos[0].textContent, caminho).toBe(semBanco ? TEXTO : TEXTO_COM_BANCO)
         expect(container.querySelector(`main ${SELETOR}`), caminho).toBeNull()
         unmount()
       })
@@ -91,16 +98,23 @@ describe('aviso de demonstração: uma linha no rodapé do site público', () =>
 })
 
 describe('aviso de demonstração: as telas do app têm um aviso fora do conteúdo, e não a etiqueta', () => {
-  const telas: Array<[string, string, OpcoesRota]> = [
+  // O quarto campo: só sem banco (com banco a tela lê a Comunidade do banco, que o teste não tem).
+  const telas: Array<[string, string, OpcoesRota, 'soSemBanco'?]> = [
     ['o Hoje', '/app/hoje', claro],
     ['o Hoje (madrugada)', '/app/hoje', madrugada],
     ['a Sessão', '/app/sessao', claro],
     ['a Sessão (madrugada)', '/app/sessao', madrugada],
     ['a Sessão sem sessão', '/app/sessao', { ajustarRotina: semSessaoEmAndamento }],
+    // NEW-C: as telas da MolduraLogada em /app/* seguem a mesma regra (o aviso depois do <main>). A /moderacao
+    // fica fora da área do app: lá o aviso é o do rodapé (o laço de um aviso por página, abaixo, a cobre).
+    ['o Começar', '/app/comecar', claro],
+    ['a Conta', '/app/conta', claro],
+    ['a Família', '/app/familia', claro],
+    ['a Comunidade', '/app/comunidade', claro, 'soSemBanco'],
   ]
 
-  for (const [tela, caminho, opcoes] of telas) {
-    for (const [banco, url, chave, aparece] of BANCOS) {
+  for (const [tela, caminho, opcoes, soSemBanco] of telas) {
+    for (const [banco, url, chave, aparece] of BANCOS.filter((linha) => !soSemBanco || linha[3])) {
       it(`${tela}, ${banco}: ${aparece ? 'um aviso' : 'nenhum aviso'}, depois do conteúdo e fora do main, e nenhuma etiqueta`, async () => {
         definirBanco(url, chave)
         const { container } = await renderizarRotaPronta(caminho, opcoes)
@@ -129,7 +143,7 @@ describe('aviso de demonstração: as telas do app têm um aviso fora do conteú
 
   it('no máximo um aviso por página, em todas as rotas (públicas e do app), sem banco', async () => {
     definirBanco('', '')
-    for (const caminho of [...PUBLICAS, '/app/hoje', '/app/sessao']) {
+    for (const caminho of [...PUBLICAS, '/app/hoje', '/app/sessao', '/app/comecar', '/app/conta', '/app/familia', '/app/comunidade', '/moderacao']) {
       const { container, unmount } = renderizarRota(caminho)
       await aguardarCarga()
       expect(container.querySelectorAll(SELETOR).length, caminho).toBeLessThanOrEqual(1)
@@ -154,12 +168,29 @@ describe('aviso de demonstração: as telas do app têm um aviso fora do conteú
 })
 
 describe('aviso de demonstração: as variantes do componente', () => {
-  for (const [nome, url, chave, aparece] of BANCOS) {
-    it(`rodapé, ${nome}: ${aparece ? 'mostra' : 'não mostra'} o aviso`, () => {
+  // DS1:RF-14: a variante do rodapé renderiza sempre (antes sumia com banco); as outras variantes seguem `temBanco()`.
+  for (const [nome, url, chave, semBanco] of BANCOS) {
+    it(`DS1-I-14 rodapé, ${nome}: mostra sempre o aviso, com o texto ${semBanco ? 'sem banco' : 'de avaliação'}`, () => {
       definirBanco(url, chave)
-      const { container } = render(<AvisoDemonstracao rodape />)
-      expect(container.querySelectorAll(SELETOR)).toHaveLength(aparece ? 1 : 0)
-      expect(container.textContent === '').toBe(!aparece)
+      // O texto de avaliação chega por `textoComBanco` (o rodapé o preenche com AVISO_RODAPE): o componente não importa a casca.
+      const { container } = render(<AvisoDemonstracao rodape textoComBanco={TEXTO_COM_BANCO} />)
+      expect(container.querySelectorAll(SELETOR)).toHaveLength(1)
+      expect(container.textContent).toBe(semBanco ? TEXTO : TEXTO_COM_BANCO)
+    })
+  }
+
+  it('DS1-I-14 rodapé com banco e sem `textoComBanco`: fica o texto base, ainda um só aviso', () => {
+    definirBanco('https://exemplo.invalid', 'chave-ficticia')
+    const { container } = render(<AvisoDemonstracao rodape />)
+    expect(container.querySelectorAll(SELETOR)).toHaveLength(1)
+    expect(container.textContent).toBe(TEXTO)
+  })
+
+  for (const [nome, url, chave, semBanco] of BANCOS) {
+    it(`DS1-I-14 a variante padrão, ${nome}: ${semBanco ? 'mostra' : 'não mostra'} o aviso (só a do rodapé mudou)`, () => {
+      definirBanco(url, chave)
+      const { container } = render(<AvisoDemonstracao />)
+      expect(container.querySelectorAll(SELETOR)).toHaveLength(semBanco ? 1 : 0)
     })
   }
 

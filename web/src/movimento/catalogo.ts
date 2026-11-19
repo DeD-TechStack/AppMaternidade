@@ -2,7 +2,7 @@
 // número de movimento fica solto num componente. Com `prefers-reduced-motion: reduce` tudo para
 // (as peças leem `usePrefereMovimentoReduzido`).
 
-export interface RegistroMovimento {
+interface RegistroMovimento {
   id: string
   /** `tempo` corre no relógio; `rolagem` segue a posição da rolagem; `laco` repete. */
   tipo: 'tempo' | 'rolagem' | 'laco'
@@ -21,6 +21,17 @@ export interface RegistroMovimento {
   escala: { de: number; para: number }
   /** Saída (desaparecer), quando difere da entrada. */
   duracaoSaidaMs?: number
+  /** Lamp (M15): duration of the pool of light in ms, when it differs from the cone's (`duracaoMs`). */
+  duracaoPocaMs?: number
+  /** Pin distance by width: 600 px from 1280, 480 from 1024 to 1279, 360 below 1024. */
+  janelaPxPorLargura?: { largo: number; medio: number; estreito: number }
+  /** Pin (M16): the p where the wipe's holds begin and end: the first hold ends at `repousoAte`, the middle one runs from
+   *  `centroDe` to `centroAte`, the last one starts at `fimDe`. Between them the edge moves linearly with p. */
+  paradas?: { repousoAte: number; centroDe: number; centroAte: number; fimDe: number }
+  /** Pin (M16): the smallest window height, in px, with a pin (the room windows shorter than this rest). */
+  alturaMinimaPx?: number
+  /** Caption (M17): the p whose crossing, either way, swaps the text. */
+  limiar?: number
   /** Cortina: número de colunas no largo (46 rem ou mais) e no estreito. */
   colunas?: { largo: number; estreito: number }
   /** Cortina: atraso da camada de mel em relação à de cacau, em ms. */
@@ -61,33 +72,7 @@ export const CATALOGO = {
     escala: { de: 0.9, para: 1 },
     mola: { stiffness: 120, damping: 30 },
   },
-  // Títulos de seção e números: as linhas sobem 48 px e aparecem, 1,25 s, uma a cada 250 ms.
-  M4: {
-    id: 'M4',
-    tipo: 'tempo',
-    duracaoMs: 1250,
-    janelaPx: 0,
-    curva: [0.165, 0.84, 0.44, 1],
-    escalonamentoMs: 250,
-    atrasoMs: 0,
-    deslocamentoPx: 48,
-    deslocamentoPct: 0,
-    escala: { de: 1, para: 1 },
-  },
-  // Faixa de cacau: o conteúdo sai de baixo, de -50 % a 0, preso à rolagem.
-  M6: {
-    id: 'M6',
-    tipo: 'rolagem',
-    duracaoMs: null,
-    janelaPx: 0,
-    curva: 'linear',
-    escalonamentoMs: 0,
-    atrasoMs: 0,
-    deslocamentoPx: 0,
-    deslocamentoPct: 50,
-    escala: { de: 1, para: 1 },
-  },
-  // Rodapé: o mesmo, de -30 % a 0.
+  // Rodapé: o conteúdo sai de baixo, de -30 % a 0, preso à rolagem.
   M7: {
     id: 'M7',
     tipo: 'rolagem',
@@ -139,6 +124,63 @@ export const CATALOGO = {
     deslocamentoPx: 0,
     deslocamentoPct: 50,
     escala: { de: 1, para: 1 },
+  },
+  // Início, moment 1 (REP-HOME): the lamp lights at the seam. The cone fades in over 240 ms and the pool of light
+  // on the floor 80 ms later, over 320 ms; both start 300 ms after the plate's `load`, on the first visit only.
+  // `duracaoMs` is the cone, `duracaoPocaMs` the pool. Opacity only. ASSET-1 serves cone and pool merged in ONE light
+  // layer per plate, so the page runs that one layer from the cone's start to the pool's end (`escalonamentoMs` +
+  // `duracaoPocaMs`, 400 ms); the two numbers stay here as the sheet's.
+  M15: {
+    id: 'M15',
+    tipo: 'tempo',
+    duracaoMs: 240,
+    duracaoPocaMs: 320,
+    janelaPx: 0,
+    curva: [0.16, 1, 0.3, 1],
+    escalonamentoMs: 80,
+    atrasoMs: 300,
+    deslocamentoPx: 0,
+    deslocamentoPct: 0,
+    escala: { de: 1, para: 1 },
+  },
+  // Início, moment 2: the night takes the house, tied to scroll (the pinned stage). The pin distance is 600 px
+  // from 1280 px wide (480 from 1024 to 1279; 360 below 1024); `janelaPx` holds the 1440 value.
+  M16: {
+    // In `svh`: 600 px is 66.7 svh on a 900 px tall window (the 1440 x 900 window of the drawing).
+    id: 'M16',
+    tipo: 'rolagem',
+    duracaoMs: null,
+    janelaPx: 600,
+    janelaPxPorLargura: { largo: 600, medio: 480, estreito: 360 },
+    // The edge holds at the seam (p 0 to 0.10), on the frame's centre line (0.45 to 0.55) and at the left edge (0.85
+    // to 1); linear in scroll between the holds, no smoothing. Below 1024 wide there is no pin (RECUT §7).
+    paradas: { repousoAte: 0.1, centroDe: 0.45, centroAte: 0.55, fimDe: 0.85 },
+    // HOME-FINAL (19/11/2026): a pinned stage needs about the plate's height, so short desktop windows pin too
+    // (1366 x 768, 1280 x 800, 1536 x 864, 1440 x 900); the stage is bounded by the window and the plate in CSS.
+    alturaMinimaPx: 640,
+    curva: 'linear',
+    escalonamentoMs: 0,
+    atrasoMs: 0,
+    deslocamentoPx: 0,
+    deslocamentoPct: 0,
+    escala: { de: 1, para: 1 },
+  },
+  // Início, moment 3: the caption swaps its text in one node. It leaves in 160 ms (opacity 1 to 0, 0 to -6 px) and
+  // enters in 220 ms (from +6 px), on the standard curve. The text swap falls at the end of the leave.
+  M17: {
+    id: 'M17',
+    tipo: 'tempo',
+    duracaoMs: 220,
+    janelaPx: 0,
+    curva: [0.4, 0, 0.2, 1],
+    escalonamentoMs: 0,
+    atrasoMs: 0,
+    deslocamentoPx: 6,
+    deslocamentoPct: 0,
+    escala: { de: 1, para: 1 },
+    duracaoSaidaMs: 160,
+    // The swap fires when p crosses 0.5 in either direction, inside the middle hold (no hysteresis).
+    limiar: 0.5,
   },
 } satisfies Record<string, RegistroMovimento>
 

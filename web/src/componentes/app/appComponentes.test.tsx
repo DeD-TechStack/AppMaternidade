@@ -45,7 +45,7 @@ describe('CartaoSessao', () => {
     expect(timer.getAttribute('aria-live')).toBe('off')
     for (const classe of ['font-titulo', 'tabular-nums']) expect(timer.classList.contains(classe), classe).toBe(true)
     expect(within(regiao).getByText('por Juliana')).toBeTruthy()
-    expect(regiao.textContent).toContain('Iniciado às 09:21')
+    expect(regiao.textContent).toContain('Início às 09:21')
   })
 
   it('o "Encerrar" é a pílula primária de nome exato e chama aoEncerrar; o "Ver sessão" leva à Sessão', () => {
@@ -61,7 +61,7 @@ describe('CartaoSessao', () => {
   })
 
   it('Encerrar e Ver sessão têm o alvo do app: 48 px de dia e 56 px na madrugada (--alvo-toque, G11)', () => {
-    montarCartao({ tipo: 'sono', inicio: AGORA - MIN, pessoa: 'Bruno' })
+    montarCartao({ tipo: 'sono', inicio: AGORA - MIN, pessoa: 'Ícaro' })
 
     for (const controle of [screen.getByRole('button', { name: 'Encerrar' }), screen.getByRole('link', { name: 'Ver sessão' })]) {
       expect(controle.classList.contains(ALVO_APP), controle.textContent!).toBe(true)
@@ -70,7 +70,7 @@ describe('CartaoSessao', () => {
   })
 
   it('o desenho de traço é enfeite (fora da árvore de acessibilidade) e some na madrugada', () => {
-    const { container } = montarCartao({ tipo: 'sono', inicio: AGORA - MIN, pessoa: 'Bruno' })
+    const { container } = montarCartao({ tipo: 'sono', inicio: AGORA - MIN, pessoa: 'Ícaro' })
 
     const imagem = container.querySelector('img')!
     expect(imagem.getAttribute('alt')).toBe('')
@@ -80,7 +80,7 @@ describe('CartaoSessao', () => {
   })
 
   it('o desenho tem a altura do cartão e o traço engrossado por cópias deslocadas, todas fora da árvore de acessibilidade', () => {
-    const { container } = montarCartao({ tipo: 'sono', inicio: AGORA - MIN, pessoa: 'Bruno' })
+    const { container } = montarCartao({ tipo: 'sono', inicio: AGORA - MIN, pessoa: 'Ícaro' })
 
     const desenho = container.querySelector<HTMLElement>('[data-desenho]')!
     expect(desenho.getAttribute('aria-hidden')).toBe('true')
@@ -109,7 +109,7 @@ describe('CartaoSessao', () => {
   })
 
   it('não tem violações do axe, com e sem sessão', async () => {
-    const com = montarCartao({ tipo: 'tummy', inicio: AGORA - MIN, pessoa: 'Bruno' })
+    const com = montarCartao({ tipo: 'tummy', inicio: AGORA - MIN, pessoa: 'Ícaro' })
     expect(await violacoes(com.container)).toEqual([])
     com.unmount()
 
@@ -119,8 +119,8 @@ describe('CartaoSessao', () => {
 })
 
 const ITENS: ItemDesde[] = [
-  { chave: 'f', pessoa: 'Bruno', texto: 'Fralda, xixi', detalhe: 'Bruno, pai', quando: '04:05' },
-  { chave: 's', pessoa: 'Bruno', texto: 'Sono em andamento', detalhe: 'Bruno, desde 03:50', quando: '38 min', emAndamento: true },
+  { chave: 'f', pessoa: 'Ícaro', texto: 'Fralda, xixi', detalhe: 'Ícaro, pai', quando: '04:05' },
+  { chave: 's', pessoa: 'Ícaro', texto: 'Sono em andamento', detalhe: 'Ícaro, desde 03:50', quando: '38 min', emAndamento: true },
   { chave: 'm', pessoa: 'Juliana', texto: 'Mamada, lado esquerdo', detalhe: 'Juliana, mãe', quando: '02:40' },
 ]
 
@@ -136,12 +136,12 @@ const MAMADA_COM_DURACAO: ItemDesde = {
   detalhe: 'Juliana, mãe',
   quando: '07:50',
 }
-const FRALDA: ItemDesde = { chave: 'fr', pessoa: 'Bruno', texto: 'Fralda, xixi', detalhe: 'Bruno, pai', quando: '04:05' }
+const FRALDA: ItemDesde = { chave: 'fr', pessoa: 'Ícaro', texto: 'Fralda, xixi', detalhe: 'Ícaro, pai', quando: '04:05' }
 const SESSAO: ItemDesde = {
   chave: 'ss',
-  pessoa: 'Bruno',
+  pessoa: 'Ícaro',
   texto: 'Sono em andamento',
-  detalhe: 'Bruno, desde 03:50',
+  detalhe: 'Ícaro, desde 03:50',
   quando: '38 min',
   emAndamento: true,
 }
@@ -323,14 +323,14 @@ describe('DesdeQueVoceSaiu', () => {
     render(<DesdeQueVoceSaiu itens={ITENS} />)
 
     const linhas = screen.getAllByRole('listitem')
-    expect(linhas.map((li) => li.querySelector('[data-avatar]')!.textContent)).toEqual(['B', 'B', 'J'])
+    expect(linhas.map((li) => li.querySelector('[data-avatar]')!.textContent)).toEqual(['Í', 'Í', 'J'])
     for (const li of linhas) {
       const avatar = li.querySelector<HTMLElement>('[data-avatar]')!
       expect(avatar.classList.contains('rounded-full')).toBe(true)
       expect(avatar.getAttribute('aria-hidden')).toBe('true')
       expect(li.querySelector('img')).toBeNull()
     }
-    expect(within(linhas[0]).getByText('Bruno, pai')).toBeTruthy()
+    expect(within(linhas[0]).getByText('Ícaro, pai')).toBeTruthy()
     expect(within(linhas[0]).getByText('04:05')).toBeTruthy()
     expect(within(linhas[2]).getByText('Juliana, mãe')).toBeTruthy()
   })

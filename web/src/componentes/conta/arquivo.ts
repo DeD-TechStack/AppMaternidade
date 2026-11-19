@@ -15,5 +15,6 @@ export function baixarJson(conteudo: unknown, nome: string): void {
   document.body.appendChild(ligacao)
   ligacao.click()
   ligacao.remove()
-  URL.revokeObjectURL(endereco)
+  // Depois do clique, para o download começar antes de o endereço deixar de valer.
+  setTimeout(() => URL.revokeObjectURL(endereco))
 }

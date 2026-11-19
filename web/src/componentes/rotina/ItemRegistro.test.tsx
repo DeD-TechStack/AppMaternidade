@@ -29,19 +29,19 @@ describe('ItemRegistro', () => {
   it('desenha a hora, o rótulo com o resumo e o autor', () => {
     render(
       <ul>
-        <ItemRegistro registro={registro} fuso="America/Sao_Paulo" autor="Bruno" />
+        <ItemRegistro registro={registro} fuso="America/Sao_Paulo" autor="Ícaro" />
       </ul>,
     )
 
     expect(screen.getByText('Mamadeira, 90 ml · leite materno')).toBeTruthy()
-    expect(screen.getByText('por Bruno')).toBeTruthy()
+    expect(screen.getByText('por Ícaro')).toBeTruthy()
     expect(screen.getByText('09:10')).toBeTruthy()
   })
 
   it('sem `marca`, o span data-marca-envio não existe', () => {
     const { container } = render(
       <ul>
-        <ItemRegistro registro={registro} fuso="America/Sao_Paulo" autor="Bruno" />
+        <ItemRegistro registro={registro} fuso="America/Sao_Paulo" autor="Ícaro" />
       </ul>,
     )
 
@@ -51,7 +51,7 @@ describe('ItemRegistro', () => {
   it('com `marca`, ela fica dentro do span data-marca-envio, logo depois da hora', () => {
     const { container } = render(
       <ul>
-        <ItemRegistro registro={registro} fuso="America/Sao_Paulo" autor="Bruno" marca={<b>pendente</b>} />
+        <ItemRegistro registro={registro} fuso="America/Sao_Paulo" autor="Ícaro" marca={<b>pendente</b>} />
       </ul>,
     )
 

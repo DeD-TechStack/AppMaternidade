@@ -1,4 +1,11 @@
-import { dataNoFuso, fusoValido, type ErroDados, type Papel, type Resultado } from './comum.ts'
+import {
+  dataNoFuso,
+  fusoValido,
+  type ErroDados,
+  type Papel,
+  type Resultado,
+} from './comum.ts'
+import { carregadorDaFonte, fonteDeAvisos, fonteDeExportacao, SEM_ROTINA } from './fontes.ts'
 import { classificarErroConta, erroDaChave, type ChaveErro } from './conta.erros.ts'
 import type { Nota, Registro } from './rotina.tipos.ts'
 import type {
@@ -159,22 +166,6 @@ function paraJson(texto: string | null): string | null {
   return new Date(texto).toISOString().replace(/\.(\d{3})Z$/, '.$1000Z')
 }
 
-/**
- * Quem leva os registros e as notas da rotina para a exportação (RF-13). A memória da rotina se registra aqui
- * com `registrarFonteDeExportacao(conta, ...)`, chaveada pelo objeto da conta; sem rotina ligada, as listas
- * saem vazias. A assinatura de `exportarDados` não muda.
- */
-interface FonteDeExportacao {
-  registros: () => readonly Registro[]
-  notas: () => readonly Nota[]
-}
-
-const SEM_ROTINA: FonteDeExportacao = { registros: () => [], notas: () => [] }
-const fontesDeExportacao = new WeakMap<object, FonteDeExportacao>()
-
-export function registrarFonteDeExportacao(conta: object, fonte: FonteDeExportacao): void {
-  fontesDeExportacao.set(conta, fonte)
-}
 
 const compararTexto = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
 
@@ -384,7 +375,7 @@ export function criarDadosContaMemoria(fixture: FixtureConta, opcoes: OpcoesMemo
   ): Resultado<{ usuario: Usuario; comSessao: boolean }> {
     const email = emailBruto.trim().toLowerCase()
     if (!FORMATO_DO_EMAIL.test(email)) return falhaAuth('email_invalido')
-    if (senha.length < 6) return falhaAuth('senha_fraca')
+    if (senha.length < 8) return falhaAuth('senha_fraca')
     if (usuarios.some((u) => u.email === email)) return falhaAuth('email_em_uso')
     const usuario: UsuarioMem = { id: novoId(), email, senha, nomeMetadados: nome }
     usuarios.push(usuario)
@@ -405,7 +396,7 @@ export function criarDadosContaMemoria(fixture: FixtureConta, opcoes: OpcoesMemo
     const usuario = usuarioAtual()
     if (!usuario) return falhaAuth('sessao_encerrada')
     if (nova === usuario.senha) return falhaAuth('senha_igual')
-    if (nova.length < 6) return falhaAuth('senha_fraca')
+    if (nova.length < 8) return falhaAuth('senha_fraca')
     usuario.senha = nova
     emitir('usuario_atualizado', paraUsuario(usuario))
     return ok(null)
@@ -791,7 +782,7 @@ export function criarDadosContaMemoria(fixture: FixtureConta, opcoes: OpcoesMemo
       (f) => [f.criadaEm, f.id],
     )
     const idsDasFamilias = new Set(familiasDoResponsavel.map((f) => f.id))
-    const fonte = fontesDeExportacao.get(dados) ?? SEM_ROTINA
+    const fonte = fonteDeExportacao(dados) ?? SEM_ROTINA
     const autor = (id: string | null) => (id !== null && contasApagadas.has(id) ? null : id)
     const registrosVivos = () => fonte.registros().filter((r) => !familiasApagadas.has(r.familiaId))
     const notasVivas = () => fonte.notas().filter((n) => !familiasApagadas.has(n.familiaId))
@@ -857,6 +848,10 @@ export function criarDadosContaMemoria(fixture: FixtureConta, opcoes: OpcoesMemo
       // O que a conta criou onde não é responsável ativa; onde é, já está dentro de familias[].
       registros: registrosEmJson(registrosVivos().filter((r) => r.criadoPor === conta.id && !idsDasFamilias.has(r.familiaId)), autor),
       notas: notasEmJson(notasVivas().filter((n) => n.criadoPor === conta.id && !idsDasFamilias.has(n.familiaId)), autor),
+      avisos: (() => {
+        const { ligados, vistosAte } = fonteDeAvisos(dados)(conta.id)
+        return { ligados, vistos_ate: paraJson(vistosAte) }
+      })(),
     })
   }
 
@@ -902,6 +897,8 @@ export function criarDadosContaMemoria(fixture: FixtureConta, opcoes: OpcoesMemo
       if (c.criadoPor === eu) c.criadoPor = null
       if (c.aceitoPor === eu) c.aceitoPor = null
     }
+    // Os registros e as notas da rotina moram na fonte registrada; ela zera a autoria dos que eram da conta.
+    fonteDeExportacao(dados)?.anonimizarAutor?.(eu)
     contasApagadas.add(eu)
     contas.splice(contas.indexOf(conta), 1)
     usuarios.splice(usuarios.indexOf(usuario), 1)
@@ -911,10 +908,35 @@ export function criarDadosContaMemoria(fixture: FixtureConta, opcoes: OpcoesMemo
 
   // ---- envoltório: falhas simuladas e respostas perdidas -----------------------------------------
 
-  function operacao<A extends unknown[], T>(nome: OperacaoConta, corpo: (...args: A) => Resultado<T>) {
+  /**
+   * A rotina em memória é baixada sob demanda: antes de ler a fonte de exportação, espera o carregador registrado
+   * (se a fonte ainda não existe). Sem isso, exportar ou excluir a conta antes de abrir a rotina deixaria os
+   * registros e as notas de fora (ou sem anonimizar). Falha ao carregar não vira exportação pela metade: volta `rede`.
+   */
+  async function prepararFonte(): Promise<Resultado<null>> {
+    if (fonteDeExportacao(dados)) return ok(null)
+    const carregar = carregadorDaFonte(dados)
+    if (!carregar) return ok(null)
+    try {
+      await carregar()
+    } catch {
+      return falhaAuth('rede')
+    }
+    return ok(null)
+  }
+
+  function operacao<A extends unknown[], T>(
+    nome: OperacaoConta,
+    corpo: (...args: A) => Resultado<T>,
+    preparar?: () => Promise<Resultado<null>>,
+  ) {
     return async (...args: A): Promise<Resultado<T>> => {
       const simulada = controle.falhas.get(nome)?.shift()
       if (simulada) return { ok: false, erro: simulada }
+      if (preparar) {
+        const preparada = await preparar()
+        if (!preparada.ok) return preparada
+      }
       const resultado = corpo(...args)
       const perdidas = controle.perdidas.get(nome) ?? 0
       if (perdidas > 0) {
@@ -960,8 +982,8 @@ export function criarDadosContaMemoria(fixture: FixtureConta, opcoes: OpcoesMemo
     revogarVinculo: operacao('revogarVinculo', revogarVinculo),
     sairDaFamilia: operacao('sairDaFamilia', sairDaFamilia),
     excluirFamilia: operacao('excluirFamilia', excluirFamilia),
-    exportarDados: operacao('exportarDados', exportarDados),
-    excluirConta: operacao('excluirConta', excluirConta),
+    exportarDados: operacao('exportarDados', exportarDados, prepararFonte),
+    excluirConta: operacao('excluirConta', excluirConta, prepararFonte),
 
     ultimoPedidoDeRecuperacao: (email) => recuperacoes.get(email.trim().toLowerCase()),
     abrirLinkDeRecuperacao(email) {

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { PORTA_ACESSO } from '../../conteudo/conta.ts'
 import { criarDadosContaMemoria } from '../../dados/conta.memoria.ts'
 import { criarFixtureDeTeste, renderizarComDados } from '../../teste/renderizarComDados.tsx'
 import { comObrigatorio } from './obrigatorio.ts'
@@ -22,57 +23,57 @@ async function memoriaSemConta() {
   return dados
 }
 
-describe('telas de acesso: cena e desenho', () => {
-  const telas: Array<[string, string, () => ReturnType<typeof renderizarComDados>]> = [
-    ['/entrar', 'mae-noite', () => renderizarComDados('/entrar')],
-    ['/criar-conta', 'maos-celular', () => renderizarComDados('/criar-conta')],
-    ['/recuperar-acesso', 'avo-carrinho', () => renderizarComDados('/recuperar-acesso')],
+describe('telas de acesso: só a placa da porta', () => {
+  const telas: Array<[string, () => ReturnType<typeof renderizarComDados>]> = [
+    ['/entrar', () => renderizarComDados('/entrar')],
+    ['/criar-conta', () => renderizarComDados('/criar-conta')],
+    ['/recuperar-acesso', () => renderizarComDados('/recuperar-acesso')],
   ]
 
-  for (const [rota, desenho, montar] of telas) {
-    it(`${rota}: um desenho de traço decorativo (alt vazio) só no celular e a cena com proporção fixa`, async () => {
+  for (const [rota, montar] of telas) {
+    it(`${rota}: nenhum desenho de traço nem cena de mel; a única imagem é a porta, com proporção quadrada e sem moldura`, async () => {
       const { container } = montar()
       await screen.findByRole('heading', { level: 1 })
 
-      const imagens = container.querySelectorAll<HTMLImageElement>('main img[data-ilustracao]')
+      expect(container.querySelector('main img[data-ilustracao], img[data-cena], .cm-cena')).toBeNull()
+      const imagens = container.querySelectorAll<HTMLImageElement>('main img')
       expect(imagens).toHaveLength(1)
-      expect(imagens[0].getAttribute('data-ilustracao')).toBe(desenho)
-      expect(imagens[0].getAttribute('alt')).toBe('')
-      expect(imagens[0].classList.contains('sm:hidden')).toBe(true)
-
-      const cena = container.querySelector('img[data-cena]')!.closest('.cm-cena')!
-      expect(cena.classList.contains('aspect-[4/3]')).toBe(true)
-      expect(cena.classList.contains('lg:aspect-[4/5]')).toBe(true)
-      expect(cena.className).not.toMatch(/min-h-/)
-      // O painel fica preso no alto da coluna, e a coluna do formulário não se centra na altura dele.
-      expect(cena.parentElement!.classList.contains('lg:sticky')).toBe(true)
-      expect(cena.parentElement!.parentElement!.getAttribute('data-h-alinhar')).toBe('inicio')
+      expect(imagens[0].getAttribute('alt')).toBe(PORTA_ACESSO.alt)
+      expect(imagens[0].classList.contains('aspect-square')).toBe(true)
+      expect(imagens[0].className).not.toMatch(/shadow|rounded|border|ring|outline/)
+      // A placa fica na segunda coluna, ao lado do formulário (a partir de 1024 px, à esquerda dele).
+      const colunas = imagens[0].closest('[data-h~="colunas"]')!
+      expect(colunas.children[1].contains(imagens[0])).toBe(true)
+      expect(colunas.children[1].className).toContain('lg:col-start-1')
+      expect(colunas.children[0].className).toContain('lg:col-start-2')
     })
   }
 
-  it('/app/comecar: o desenho decorativo e a mesma cena de proporção fixa', async () => {
+  it('/app/comecar: a mesma placa da porta, sem desenho decorativo', async () => {
     const { container } = renderizarComDados('/app/comecar', { dados: await memoriaSemConta() })
     await screen.findByRole('heading', { level: 2, name: 'Seu nome' })
 
-    const imagem = container.querySelector<HTMLImageElement>('main img[data-ilustracao]')!
-    expect(imagem.getAttribute('data-ilustracao')).toBe('tummy-time')
-    expect(imagem.getAttribute('alt')).toBe('')
-    expect(container.querySelector('img[data-cena]')!.closest('.cm-cena')!.classList.contains('lg:aspect-[4/5]')).toBe(true)
+    expect(container.querySelector('main img[data-ilustracao], img[data-cena], .cm-cena')).toBeNull()
+    const imagens = container.querySelectorAll<HTMLImageElement>('main img')
+    expect(imagens).toHaveLength(1)
+    expect(imagens[0].getAttribute('alt')).toBe(PORTA_ACESSO.alt)
   })
 })
 
 describe('/recuperar-acesso: hierarquia dos links', () => {
-  it('"Entrar" é o botão secundário do sistema e "Criar conta" o link de texto com seta, nessa ordem', async () => {
+  // VIS-4 (A-2): os dois são links sublinhados na régua, como em /entrar; "Enviar link" é a única ação principal.
+  it('"Entrar" e "Criar conta" são links de texto (alvo-toque, sem pílula nem seta), nessa ordem', async () => {
     renderizarComDados('/recuperar-acesso')
     await screen.findByRole('button', { name: 'Enviar link' })
 
     const entrar = within(document.querySelector('main')!).getByRole('link', { name: 'Entrar' })
     const criar = within(document.querySelector('main')!).getByRole('link', { name: 'Criar conta' })
-    expect(entrar.classList.contains('cm-botao')).toBe(true)
-    expect(entrar.classList.contains('cm-botao-contorno')).toBe(true)
-    expect(criar.classList.contains('cm-botao')).toBe(false)
-    expect(criar.classList.contains('alvo-toque')).toBe(true)
-    expect(criar.querySelector('svg[aria-hidden="true"]')).not.toBeNull()
+    for (const link of [entrar, criar]) {
+      expect(link.classList.contains('cm-botao')).toBe(false)
+      expect(link.classList.contains('cm-botao-contorno')).toBe(false)
+      expect(link.classList.contains('alvo-toque')).toBe(true)
+      expect(link.querySelector('svg')).toBeNull()
+    }
     expect(Boolean(entrar.compareDocumentPosition(criar) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true)
   })
 })

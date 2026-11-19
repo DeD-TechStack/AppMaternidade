@@ -19,6 +19,13 @@ import { Numeros } from '../componentes/campo/Numeros.tsx'
 import { PainelCampo, type VariantePainel } from '../componentes/campo/PainelCampo.tsx'
 import { TabelaComparacao } from '../componentes/campo/TabelaComparacao.tsx'
 import { Titulo } from '../componentes/campo/Titulo.tsx'
+import { ROTULO_CRIAR_CONTA } from '../componentes/casca/textos.ts'
+import { FaixaInteira } from '../componentes/secoes/FaixaInteira.tsx'
+import { FaixaProva } from '../componentes/secoes/FaixaProva.tsx'
+import { Fechamento } from '../componentes/secoes/Fechamento.tsx'
+import { Legenda } from '../componentes/secoes/Legenda.tsx'
+import { PaginaCasa } from '../componentes/secoes/PaginaCasa.tsx'
+import { Perguntas } from '../componentes/secoes/Perguntas.tsx'
 import { NOMES_DE_PAGINA } from '../conteudo/publicas-texto.ts'
 import { FATOS } from '../conteudo/textos.ts'
 import {
@@ -32,7 +39,6 @@ import {
 import { CamadaHover } from '../movimento/CamadaHover.tsx'
 import { Cortina } from '../movimento/Cortina.tsx'
 import { EntradaCena } from '../movimento/EntradaCena.tsx'
-import { LinhasEscalonadas } from '../movimento/LinhasEscalonadas.tsx'
 import { useTituloDaPagina } from './publicas/useTitulo.ts'
 
 interface PropsParte {
@@ -216,55 +222,51 @@ export function Sistema() {
         </Secao>
 
         <Parte id="tipo" rotulo="Tipo" titulo={SECOES.tipo}>
-          {/* Cada linha da escala sobe 48 px e aparece ao entrar na janela, uma a cada 250 ms (M4). */}
+          {/* A escala de tipo é texto comum: cada linha já está no lugar desde a primeira pintura (a revelação M4 saiu na MOTION-1). */}
           <QuadroLayout>
-            <LinhasEscalonadas
-              className="cm-tipos"
-              classeLinha="cm-tipo-linha"
-              linhas={[
-                <>
-                  <p className="cm-rotulo cm-texto-2">Título 1, Literata 600, 84 por 88</p>
-                  <p className="cm-h1">
-                    A rotina do bebê,
-                    <span className="cm-segunda-linha">dividida com carinho.</span>
+            <div className="cm-tipos">
+              <div className="cm-tipo-linha">
+                <p className="cm-rotulo cm-texto-2">Título 1, Literata 600, 84 por 88</p>
+                <p className="cm-h1">
+                  A rotina do bebê,
+                  <span className="cm-segunda-linha">dividida com carinho.</span>
+                </p>
+              </div>
+              <div className="cm-tipo-linha">
+                <p className="cm-rotulo cm-texto-2">Título 2, 56 por 62</p>
+                <p className="cm-h2">
+                  Quem chega no turno
+                  <span className="cm-segunda-linha">já sabe o que houve.</span>
+                </p>
+              </div>
+              <div className="cm-tipo-linha">
+                <p className="cm-rotulo cm-texto-2">Título 3, 36 por 42</p>
+                <p className="cm-h3">Mamada às 02:40, lado esquerdo</p>
+              </div>
+              <div className="cm-tipo-linha">
+                <p className="cm-rotulo cm-texto-2">Título 4, 24 por 30</p>
+                <p className="cm-h4">Desde que você saiu</p>
+              </div>
+              <div className="cm-tipo-linha">
+                <p className="cm-rotulo cm-texto-2">Outfit: corpo 18, pequeno 15, rótulo 14</p>
+                <div className="cm-tipo-textos">
+                  <p className="cm-corpo cm-medida">
+                    Cada adulto autorizado registra sono, mamada e fralda com um ou dois toques, e todos veem o
+                    mesmo dia, com o nome de quem registrou.
                   </p>
-                </>,
-                <>
-                  <p className="cm-rotulo cm-texto-2">Título 2, 56 por 62</p>
-                  <p className="cm-h2">
-                    Quem chega no turno
-                    <span className="cm-segunda-linha">já sabe o que houve.</span>
-                  </p>
-                </>,
-                <>
-                  <p className="cm-rotulo cm-texto-2">Título 3, 36 por 42</p>
-                  <p className="cm-h3">Mamada às 02:40, lado esquerdo</p>
-                </>,
-                <>
-                  <p className="cm-rotulo cm-texto-2">Título 4, 24 por 30</p>
-                  <p className="cm-h4">Desde que você saiu</p>
-                </>,
-                <>
-                  <p className="cm-rotulo cm-texto-2">Outfit: corpo 18, pequeno 15, rótulo 14</p>
-                  <div className="cm-tipo-textos">
-                    <p className="cm-corpo cm-medida">
-                      Cada adulto autorizado registra sono, mamada e fralda com um ou dois toques, e todos veem o
-                      mesmo dia, com o nome de quem registrou.
-                    </p>
-                    <p className="cm-pequeno cm-texto-2">Registrado por Bruno às 04:05.</p>
-                    <p className="cm-rotulo">Última mamada</p>
-                  </div>
-                </>,
-                <>
-                  <p className="cm-rotulo cm-texto-2">Algarismos tabulares nos tempos</p>
-                  <p className="cm-h3 cm-tabular cm-tabular-amostra">
-                    <span>00:12:40</span>
-                    <span>01:05:09</span>
-                    <span>10:47:33</span>
-                  </p>
-                </>,
-              ]}
-            />
+                  <p className="cm-pequeno cm-texto-2">Registrado por Ícaro às 04:05.</p>
+                  <p className="cm-rotulo">Última mamada</p>
+                </div>
+              </div>
+              <div className="cm-tipo-linha">
+                <p className="cm-rotulo cm-texto-2">Algarismos tabulares nos tempos</p>
+                <p className="cm-h3 cm-tabular cm-tabular-amostra">
+                  <span>00:12:40</span>
+                  <span>01:05:09</span>
+                  <span>10:47:33</span>
+                </p>
+              </div>
+            </div>
           </QuadroLayout>
         </Parte>
 
@@ -372,7 +374,7 @@ export function Sistema() {
             <CartaoFlutuante giro={-2} posicao="baixo-esquerda">
               <p className="cm-cartao-sessao-rotulo">Mamada em andamento</p>
               <p className="cm-cartao-sessao-tempo">00:12:40</p>
-              <p className="cm-cartao-sessao-quem">Lado esquerdo, Juliana</p>
+              <p className="cm-cartao-sessao-quem">Lado esquerdo, Ju</p>
             </CartaoFlutuante>
           </CenaEstudio>
           <QuadroLayout as="section" aria-labelledby="sistema-numeros">
@@ -413,7 +415,7 @@ export function Sistema() {
           <QuadroLayout>
             <Citacao
               texto="Pomada só à noite, a de dia acabou. Se ela acordar, o bico está na bolsa."
-              autor="Carla, avó da Heloísa, na nota das 22:40"
+              autor="Carla, avó da Helo, na nota das 22:40"
             />
           </QuadroLayout>
         </Parte>
@@ -461,6 +463,41 @@ export function Sistema() {
               relatos={RELATOS}
             />
           </Pilha>
+        </Secao>
+
+        {/* A casa acesa (DS1:RF-16): as seis pecas da base de secoes/, num PaginaCasa. Tudo com texto que ja existe em
+            conteudo/ (a /sistema nao escreve frase nova). CenaHeroi e ProdutoEmMoldura nao entram: ainda nao ha arte
+            servida. */}
+        <Secao as="div" id="sistema-casa">
+          <PaginaCasa>
+            <FaixaInteira fundo="papel" fundoDireita="cacau" costuraX="calc(50% + 310px)">
+              <Legenda texto={ILUSTRACOES_DA_AMOSTRA[3].resumo} tom="dia" />
+            </FaixaInteira>
+            <FaixaInteira fundo="cacau">
+              <Legenda texto={ILUSTRACOES_DA_AMOSTRA[1].resumo} tom="noite" />
+            </FaixaInteira>
+            <FaixaInteira fundo="areia">
+              <FaixaProva
+                titulo={SECOES.selos.join(' ')}
+                texto={FRASE_DE_EXEMPLO}
+                itens={LINHAS_DA_TABELA.filter((linha) => linha.app).map((linha) => linha.necessidade)}
+              />
+            </FaixaInteira>
+            <FaixaInteira fundo="papel">
+              <Perguntas titulo={SECOES.perguntas.join(' ')} itens={PERGUNTAS} />
+            </FaixaInteira>
+            <FaixaInteira fundo="chao-noite">
+              <Legenda texto={ILUSTRACOES_DA_AMOSTRA[0].resumo} tom="noite" />
+            </FaixaInteira>
+            {/* A pilula de mel so existe sobre o cacau (CASA_LIMPA): o Fechamento da noite fica numa faixa de cacau. */}
+            <FaixaInteira fundo="cacau">
+              <Fechamento
+                titulo={SECOES.faixa.join(' ')}
+                acao={{ rotulo: ROTULO_CRIAR_CONTA, para: '/criar-conta' }}
+                tom="noite"
+              />
+            </FaixaInteira>
+          </PaginaCasa>
         </Secao>
 
         <Parte rotulo="Perguntas frequentes" titulo={SECOES.perguntas}>

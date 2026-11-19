@@ -95,7 +95,7 @@ describe('tokens (DESIGN.md 1 a 3)', () => {
 describe('tipo: duas famílias só (DESIGN.md 2 e 8)', () => {
   const GENERICAS = new Set(['serif', 'sans-serif', 'system-ui'])
 
-  it('toda pilha de fontes do CSS do produto é Literata ou Outfit, com genéricas só de reserva', () => {
+  it('toda pilha de fontes do CSS do produto é Literata, Outfit ou (só na variante B do h1) M PLUS Rounded 1c, com genéricas só de reserva', () => {
     const familias = new Set<string>()
     for (const arquivo of css) {
       for (const { propriedade, valor } of declaracoes(arquivo.limpo)) {
@@ -108,7 +108,8 @@ describe('tipo: duas famílias só (DESIGN.md 2 e 8)', () => {
       }
     }
     const nomeadas = [...familias].filter((f) => !GENERICAS.has(f))
-    expect(nomeadas.sort()).toEqual(['Literata Variable', 'Outfit Variable'])
+    // REP-HOME (REPH-I-17): o bloco da variante B de tokens.css nomeia M PLUS Rounded 1c; FG-2b apaga o que perder.
+    expect(nomeadas.sort()).toEqual(['Literata Variable', 'M PLUS Rounded 1c', 'Outfit Variable'])
   })
 
   it('nenhum monospace e nenhuma família fora do tema, nem no CSS nem nos componentes', () => {
@@ -204,23 +205,48 @@ function corpoDaRegra(texto: string, seletor: string): string {
   return regra?.[2] ?? ''
 }
 
-describe('rodapé: marca ajustada ao painel e alvos da casca (MAT-49e)', () => {
+describe('rodapé: marca no nível titulo-3 e alvos da casca (MAT-49e, FOOTER-1)', () => {
   const site = css.find((f) => f.nome === 'styles/site.css')!.limpo
 
-  it('o nome do rodapé tem o tamanho preso à largura do painel (cqi), sem teto de 160 px, sem transform nem mexida no tracking', () => {
+  it('o nome do rodapé é texto comum no nível titulo-3 (tokens de tamanho e entrelinha), sem cqi, sem transform e sem fator de largura', () => {
     const corpo = corpoDaRegra(site, '.cm-rodape-nome')
     expect(corpo).not.toBe('')
-    const tamanho = /font-size:\s*([^;]+);/.exec(corpo)?.[1] ?? ''
-    expect(tamanho).toMatch(/cqi/)
-    expect(tamanho).not.toMatch(/min\(\s*160px/)
-    expect(tamanho).not.toMatch(/160px/)
-    expect(corpo).not.toMatch(/transform|scale/)
-    expect(corpo.match(/letter-spacing:\s*([^;]+);/g)).toEqual(['letter-spacing: -0.03em;'])
+    expect(/font-size:\s*([^;]+);/.exec(corpo)?.[1]).toBe('var(--texto-titulo-3-tamanho)')
+    expect(/line-height:\s*([^;]+);/.exec(corpo)?.[1]).toBe('var(--texto-titulo-3-entrelinha)')
+    // DS1:RF-05: a família e o peso dos títulos vêm da variável de exibição e dos tokens de peso (ambos 600 hoje).
+    expect(corpo).toMatch(/font-family:\s*var\(--fonte-(titulo|exibicao)\)/)
+    expect(corpo).toMatch(/font-weight:\s*(600|var\(--peso-(titulo|exibicao)\))/)
+    expect(corpo).not.toMatch(/cqi|transform|scale|white-space/)
   })
 
-  it('o fator da largura do texto é declarado uma vez, como propriedade própria', () => {
-    expect(site.match(/--cm-fator-marca:\s*[\d.]+;/g)).toHaveLength(1)
-    expect(corpoDaRegra(site, '.cm-rodape-nome')).toMatch(/var\(--cm-fator-marca\)/)
+  it('nenhuma regra do site.css usa 100cqi, container-type ou o fator da marca (a marca do rodapé não é mais fora da escala)', () => {
+    expect(site).not.toMatch(/cqi|container-type|--cm-fator-marca/)
+  })
+
+  // DS1:RF-04 (antes: o rodapé não tinha fundo próprio, sob o fio suave de 1 px): o RodapeMapa é uma faixa de cacau.
+  it('o rodapé do site é de cacau (fundo pelo token), sem sombra nem gradiente, e o compacto do app não herda o cacau', () => {
+    const regras = [...site.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter((m) => /\.cm-rodape/.test(m[1]))
+    expect(regras.length).toBeGreaterThan(0)
+    const pintaCacau = regras.filter(
+      ([, seletor, corpo]) =>
+        /(^|[\s,])\.cm-rodape(\s*(,|$)|:not\(\.cm-rodape-compacto\))/.test(seletor.trim()) &&
+        /background(-color)?:\s*var\(--(color|cor)-(cacau|noite)\)/.test(corpo),
+    )
+    expect(pintaCacau.length, 'regra do rodapé com fundo de cacau').toBeGreaterThan(0)
+    for (const [, seletor, corpo] of regras) {
+      expect(corpo, seletor.trim()).not.toMatch(/box-shadow:\s*(?!none)|gradient\(/)
+    }
+    // O compacto: ou a regra de cacau o exclui (:not), ou ele tem a regra própria que devolve o fundo.
+    const excluiCompacto = pintaCacau.every(([, seletor]) => /:not\(\.cm-rodape-compacto\)/.test(seletor))
+    const devolveFundo = regras.some(
+      ([, seletor, corpo]) => /\.cm-rodape-compacto/.test(seletor) && /background(-color)?:\s*(transparent|none|var\(--cor-fundo\)|var\(--color-papel\))/.test(corpo),
+    )
+    expect(excluiCompacto || devolveFundo).toBe(true)
+  })
+
+  it('os tokens do painel de mel do rodapé saíram do tema, do dia e da madrugada', () => {
+    expect(temaCss).not.toMatch(/--cor-painel-rodape|--cor-sobre-painel-rodape/)
+    expect(site).not.toMatch(/--cor-painel-rodape|--cor-sobre-painel-rodape/)
   })
 
   it('.alvo-toque é só um piso de especificidade zero (:where), sem !important, para não vencer o .cm-botao de 56 px', () => {

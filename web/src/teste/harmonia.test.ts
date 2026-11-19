@@ -70,17 +70,37 @@ describe('harmonia: o front matter do DESIGN.md (H:RF-01)', () => {
     expect(Object.keys(front.rounded).sort()).toEqual(['campo', 'cartao', 'painel', 'pilula'])
   })
 
-  it('tem os 16 tokens de espaço dos 8 papéis e os 5 do quadro e dos contêineres', () => {
+  it('tem os 16 tokens de espaço dos 8 papéis e os 6 do quadro e dos contêineres', () => {
     for (const papel of PAPEIS) {
       expect(front.spacing[`${papel}-390`], `${papel}-390`).toMatch(/^\d+px$/)
       expect(front.spacing[`${papel}-1440`], `${papel}-1440`).toMatch(/^\d+px$/)
     }
     expect(front.spacing['quadro-largura']).toBe('1200px')
+    expect(front.spacing['quadro-largura-2560']).toBe('1600px')
     expect(front.spacing['quadro-calha-390']).toBe('20px')
     expect(front.spacing['quadro-calha-1440']).toBe('32px')
     expect(front.spacing.medio).toBe('880px')
     expect(front.spacing.leitura).toBe('640px')
-    expect(Object.keys(front.spacing)).toHaveLength(PAPEIS.length * 2 + 5)
+    expect(Object.keys(front.spacing)).toHaveLength(PAPEIS.length * 2 + 6)
+  })
+
+  it('as quatro âncoras: o piso do clamp é o valor de 320 e o teto o de 1920, na reta de 390 a 1440', () => {
+    const gerado = lerTexto('src/styles/harmonia.gerado.css')
+    const limites = (nome: string) => {
+      const achado = new RegExp(`^ {2}--${nome}: clamp\\(([\\d.]+)px, calc\\([^;]+\\), ([\\d.]+)px\\);$`, 'm').exec(gerado)
+      expect(achado, `--${nome} não é um clamp em px`).not.toBeNull()
+      return { em320: Number(achado![1]), em1920: Number(achado![2]) }
+    }
+    const secao = limites('espaco-secao')
+    const calha = limites('quadro-calha')
+    // secao: 48 em 390 e 80 em 1440, então 48 − 32/15 em 320 e 80 + 32 × 480/1050 em 1920.
+    expect(secao.em320).toBeCloseTo(48 - 32 / 15, 5)
+    expect(secao.em1920).toBeCloseTo(80 + (32 * 480) / 1050, 5)
+    // calha: 20 em 390 e 32 em 1440, então 19,2 em 320 e perto de 37,5 em 1920.
+    expect(calha.em320).toBeCloseTo(19.2, 5)
+    expect(calha.em1920).toBeCloseTo(32 + (12 * 480) / 1050, 5)
+    // O quadro: 1200 até 1440 e 1600 em 2560.
+    expect(gerado).toContain('  --quadro-largura: clamp(1200px, calc(1200px + (100vw - 1440px) * 400 / 1120), 1600px);\n')
   })
 
   it('tem os 18 tokens de tipo dos 9 níveis, com a família e o peso da SPEC H e nada menor que 15 px', () => {

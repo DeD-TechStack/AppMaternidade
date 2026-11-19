@@ -4,7 +4,7 @@ import type { Nota, Registro } from '../../dados/rotina.tipos.ts'
 import { formatarHora } from '../../prototipo/formatar.ts'
 import { Avatar } from '../app/Avatar.tsx'
 import { Pilha } from '../base/layout/index.ts'
-import { horaDaNota } from './formatos.ts'
+import { horaDaNota, horaDoItem } from './formatos.ts'
 import { ItemRegistro } from './ItemRegistro.tsx'
 
 // A linguagem da área da lista do Hoje (a 49b v2): linhas separadas por um fio fino, sem cartão branco.
@@ -46,7 +46,7 @@ export function ParaVoceSaber({ notas, autorDe, agora, className, dataH, rodape 
                 <Avatar nome={autor} />
                 <div className="min-w-0 flex-1">
                   <p className="font-medium wrap-anywhere">{nota.texto}</p>
-                  <p className="text-pequeno text-(--cor-texto-2)">
+                  <p className="text-pequeno text-(--cor-texto-2) wrap-anywhere">
                     {HOJE.notaDe(autor, horaDaNota(Date.parse(nota.criadaEm), agora))}
                   </p>
                 </div>
@@ -89,7 +89,7 @@ export function DesdeUltimoRegistro({ marcoEm, registros, fuso, autorDe, marcaDe
   return (
     <Pilha as="section" vao="pilha" dataH={dataH} aria-labelledby={idTitulo} data-desde="" className={className}>
       <h2 id={idTitulo} className="text-titulo-4 font-titulo font-semibold">
-        {HOJE.desdeOUltimo(formatarHora(marcoEm))}
+        {HOJE.desdeOUltimo(agora === undefined ? formatarHora(marcoEm) : horaDoItem(marcoEm, agora))}
       </h2>
       {registros.length === 0 ? (
         <p className={VAZIO}>{HOJE.nadaNovo}</p>
