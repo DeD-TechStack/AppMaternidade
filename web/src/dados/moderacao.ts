@@ -1,6 +1,6 @@
 import { createContext, createElement, type ReactNode } from 'react'
-import { obterCliente } from './cliente.ts'
-import { modoDados, type Resultado } from './comum.ts'
+import { chaveDoBanco } from './cliente.ts'
+import { dadosSobDemanda, modoDados, type Resultado } from './comum.ts'
 import {
   criarDadosComunidade,
   type Pagina,
@@ -11,7 +11,6 @@ import { fixtureComunidadeDemonstracao } from './comunidade.demonstracao.ts'
 import { criarEstadoComunidade, type EstadoComunidade } from './comunidade.memoria.ts'
 import type { EstadoDenuncia, EstadoModeracao, MotivoDenuncia, PapelPlataforma } from './comunidade.regras.ts'
 import { criarDadosModeracaoMemoria } from './moderacao.memoria.ts'
-import { criarDadosModeracaoSupabase } from './moderacao.supabase.ts'
 
 // O painel de moderação (MAT-40b): os tipos que a tela vê, a interface de dados e a instância da página.
 // Datas e horas são texto ISO 8601 em UTC, como o banco devolve. Nenhuma operação lança exceção.
@@ -176,16 +175,24 @@ export function informarContaDaSessaoModeracao(id: string | null): void {
 }
 
 let emMemoria: DadosModeracao | null = null
-let noBanco: { cliente: unknown; dados: DadosModeracao } | null = null
+let noBanco: { chave: string; dados: DadosModeracao } | null = null
 
 /**
  * A instância de dados da página: a mesma durante toda a vida dela. No modo memória age sobre o mesmo
  * estado da Comunidade da página, então ocultar um conteúdo aqui muda o que a Comunidade mostra.
  */
 export function criarDadosModeracao(): DadosModeracao {
-  const cliente = obterCliente()
-  if (modoDados() === 'supabase' && cliente) {
-    if (!noBanco || noBanco.cliente !== cliente) noBanco = { cliente, dados: criarDadosModeracaoSupabase(cliente) }
+  const chave = chaveDoBanco()
+  if (modoDados() === 'supabase' && chave) {
+    // A implementação do banco só é baixada (com o pacote do Supabase) na primeira operação.
+    if (!noBanco || noBanco.chave !== chave) {
+      noBanco = {
+        chave,
+        dados: dadosSobDemanda<DadosModeracao>(OPERACOES_MODERACAO, async (cliente) =>
+          (await import('./moderacao.supabase.ts')).criarDadosModeracaoSupabase(cliente),
+        ),
+      }
+    }
     return noBanco.dados
   }
   if (!emMemoria) {

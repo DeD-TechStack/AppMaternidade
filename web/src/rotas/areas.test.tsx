@@ -90,7 +90,8 @@ describe('rotasDasAreas: o registro por área', () => {
     // A rotina: uma rota sem caminho (o provedor da área), pai das quatro telas do 38a.
     expect(rotasRotinaLogadas).toHaveLength(1)
     expect(rotasRotinaLogadas[0].path).toBeUndefined()
-    expect(rotasRotinaLogadas[0].element).toBeTruthy()
+    // O provedor da área também é um pacote à parte (`lazy`).
+    expect(rotasRotinaLogadas[0].lazy).toBeTypeOf('function')
     expect(rotasRotinaLogadas[0].children!.map(caminhoDe)).toEqual([
       'app/hoje',
       'app/sessao',

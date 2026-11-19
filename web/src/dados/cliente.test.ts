@@ -57,11 +57,14 @@ describe('RF-01: quem cria o cliente e quem lê as variáveis', () => {
     expect(aviso.texto).toMatch(/from '\.\.\/prototipo\/banco\.ts'/)
   })
 
-  it('só dados/cliente.ts importa o pacote do Supabase como valor (os demais, só tipos)', () => {
+  it('nenhum arquivo importa o pacote do Supabase como valor (só tipos); só dados/cliente.ts o carrega, por import() dinâmico', () => {
     const comoValor = fontes
       .filter((f) => /^import\s+(?!type\b)[^;]*from\s+'@supabase\/supabase-js'/m.test(f.texto))
       .map((f) => f.nome)
-    expect(comoValor).toEqual(['dados/cliente.ts'])
+    // Os testes que trocam o pacote por um falso (`vi.mock`) o importam como valor para espiar `createClient`.
+    expect(comoValor.filter((nome) => !nome.endsWith('.test.ts') && !nome.endsWith('.test.tsx'))).toEqual([])
+    const dinamico = fontes.filter((f) => /\bimport\(\s*'@supabase\/supabase-js'\s*\)/.test(f.texto)).map((f) => f.nome)
+    expect(dinamico.filter((nome) => !nome.endsWith('.test.ts') && !nome.endsWith('.test.tsx'))).toEqual(['dados/cliente.ts'])
   })
 })
 
@@ -74,13 +77,13 @@ describe('RF-01: as quatro combinações das variáveis', () => {
   ]
 
   for (const [nome, url, chave, modo] of casos) {
-    it(`${nome}: modo ${modo}, cliente ${modo === 'supabase' ? 'criado' : 'ausente'} e aviso ${modo === 'memoria' ? 'visível' : 'oculto'}`, () => {
+    it(`${nome}: modo ${modo}, cliente ${modo === 'supabase' ? 'criado' : 'ausente'} e aviso ${modo === 'memoria' ? 'visível' : 'oculto'}`, async () => {
       const fetchProibido = proibirARede()
       definirBanco(url, chave)
 
       expect(modoDados()).toBe(modo)
       expect(bancoConfigurado()).toBe(modo === 'supabase')
-      expect(obterCliente() !== null).toBe(modo === 'supabase')
+      expect((await obterCliente()) !== null).toBe(modo === 'supabase')
 
       // O aviso de demonstração usa o mesmo critério: aparece quando falta uma das variáveis.
       const { container } = render(createElement(AvisoDemonstracao))
@@ -90,9 +93,9 @@ describe('RF-01: as quatro combinações das variáveis', () => {
     })
   }
 
-  it('sem variável nenhuma (o estado do Vitest), o modo é memória', () => {
+  it('sem variável nenhuma (o estado do Vitest), o modo é memória', async () => {
     expect(modoDados()).toBe('memoria')
-    expect(obterCliente()).toBeNull()
+    expect(await obterCliente()).toBeNull()
   })
 })
 
@@ -110,7 +113,7 @@ describe('RF-01: variáveis ausentes, vazias ou só com espaços: sem banco e se
   ]
 
   for (const [nome, url, chave] of casos) {
-    it(`${nome}: bancoConfigurado é falso, obterCliente devolve null e createClient não é chamado`, () => {
+    it(`${nome}: bancoConfigurado é falso, obterCliente devolve null e createClient não é chamado`, async () => {
       const fetchProibido = proibirARede()
       vi.mocked(createClient).mockClear()
       vi.stubEnv('VITE_SUPABASE_URL', url)
@@ -118,65 +121,74 @@ describe('RF-01: variáveis ausentes, vazias ou só com espaços: sem banco e se
 
       expect(bancoConfigurado()).toBe(false)
       expect(modoDados()).toBe('memoria')
-      expect(obterCliente()).toBeNull()
+      expect(await obterCliente()).toBeNull()
       expect(createClient).not.toHaveBeenCalled()
       expect(fetchProibido).not.toHaveBeenCalled()
     })
   }
 
-  it('os espaços em volta de um valor com texto saem antes de criar o cliente', () => {
+  it('os espaços em volta de um valor com texto saem antes de criar o cliente', async () => {
     vi.mocked(createClient).mockClear()
     definirBanco('  https://com-espacos.invalid  ', '  chave-com-espacos  ')
 
     expect(bancoConfigurado()).toBe(true)
-    expect(obterCliente()).not.toBeNull()
+    expect(await obterCliente()).not.toBeNull()
     expect(vi.mocked(createClient).mock.calls[0].slice(0, 2)).toEqual(['https://com-espacos.invalid', 'chave-com-espacos'])
   })
 })
 
 describe('RF-01: a troca de variável no meio da página', () => {
-  it('trocar a chave cria outro cliente, tirar uma variável tira o cliente e voltar ao par anterior devolve o dele', () => {
+  it('trocar a chave cria outro cliente, tirar uma variável tira o cliente e voltar ao par anterior devolve o dele', async () => {
     vi.mocked(createClient).mockClear()
     definirBanco('https://troca-a.invalid', 'chave-a')
-    const a = obterCliente()
+    const a = await obterCliente()
     expect(a).not.toBeNull()
 
     definirBanco('https://troca-a.invalid', 'chave-b')
-    const b = obterCliente()
+    const b = await obterCliente()
     expect(b).not.toBeNull()
     expect(b).not.toBe(a)
 
     vi.stubEnv('VITE_SUPABASE_ANON_KEY', '')
     expect(bancoConfigurado()).toBe(false)
-    expect(obterCliente()).toBeNull()
+    expect(await obterCliente()).toBeNull()
 
     definirBanco('https://troca-a.invalid', 'chave-b')
-    expect(obterCliente()).toBe(b)
+    expect(await obterCliente()).toBe(b)
     expect(createClient).toHaveBeenCalledTimes(2)
   })
 
-  it('trocar só a URL também cria outro cliente', () => {
+  it('trocar só a URL também cria outro cliente', async () => {
     definirBanco('https://troca-c.invalid', 'chave-c')
-    const c = obterCliente()
+    const c = await obterCliente()
     definirBanco('https://troca-d.invalid', 'chave-c')
-    expect(obterCliente()).not.toBe(c)
+    expect(await obterCliente()).not.toBe(c)
+  })
+
+  it('chamadas juntas, antes de o pacote chegar, dividem o mesmo cliente (um createClient só)', async () => {
+    vi.mocked(createClient).mockClear()
+    definirBanco('https://juntas.invalid', 'chave-juntas')
+    const [um, dois] = await Promise.all([obterCliente(), obterCliente()])
+    expect(um).not.toBeNull()
+    expect(dois).toBe(um)
+    expect(createClient).toHaveBeenCalledTimes(1)
   })
 })
 
 describe('RF-01: um cliente só por página', () => {
-  it('o mesmo par de variáveis devolve sempre o mesmo cliente', () => {
+  it('o mesmo par de variáveis devolve sempre o mesmo cliente', async () => {
     const fetchProibido = proibirARede()
     definirBanco(URL_FICTICIA, CHAVE_FICTICIA)
 
-    const primeiro = obterCliente()
+    const primeiro = await obterCliente()
     expect(primeiro).not.toBeNull()
-    expect(obterCliente()).toBe(primeiro)
+    expect(await obterCliente()).toBe(primeiro)
     expect(fetchProibido).not.toHaveBeenCalled()
   })
 
-  it('o cliente guarda e renova a sessão e lê o link de recuperação da URL (opções do pacote)', () => {
+  it('o cliente guarda e renova a sessão e lê o link de recuperação da URL (opções do pacote)', async () => {
     definirBanco(URL_FICTICIA, CHAVE_FICTICIA)
-    const cliente = obterCliente()!
+    const cliente = (await obterCliente())!
 
     const autenticacao = cliente.auth as unknown as { persistSession: boolean; autoRefreshToken: boolean; detectSessionInUrl: boolean }
     expect(autenticacao.persistSession).toBe(true)
@@ -184,12 +196,12 @@ describe('RF-01: um cliente só por página', () => {
     expect(autenticacao.detectSessionInUrl).toBe(true)
   })
 
-  it('I-S3: o cliente usa o fluxo PKCE e mantém as três opções de sessão', () => {
+  it('I-S3: o cliente usa o fluxo PKCE e mantém as três opções de sessão', async () => {
     const fetchProibido = proibirARede()
     vi.mocked(createClient).mockClear()
     definirBanco('https://pkce.invalid', 'chave-pkce')
 
-    expect(obterCliente()).not.toBeNull()
+    expect(await obterCliente()).not.toBeNull()
     expect(createClient).toHaveBeenCalledTimes(1)
     const opcoes = vi.mocked(createClient).mock.calls[0][2]
     expect(opcoes?.auth).toMatchObject({ flowType: 'pkce', persistSession: true, autoRefreshToken: true, detectSessionInUrl: true })

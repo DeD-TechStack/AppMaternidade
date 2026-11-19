@@ -1,6 +1,6 @@
 import { dataNoFuso, fusoValido, type ErroDados, type Resultado } from './comum.ts'
 import type { DadosConta } from './conta.ts'
-import { registrarFonteDeExportacao } from './conta.memoria.ts'
+import { registrarFonteDeExportacao } from './fontes.ts'
 import { lerAparelho, type Aparelho } from './rotina.dia.ts'
 import { classificarErroRotina, erroRotinaDaChave, type ChaveErroRotina } from './rotina.erros.ts'
 import { ehUuidV7 } from './rotina.uuid.ts'

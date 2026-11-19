@@ -1,5 +1,4 @@
 import type { RouteObject } from 'react-router'
-import { GuardaSessao } from '../componentes/conta/guarda.tsx'
 import { navegacaoComunidade, rotasComunidadeLogadas, rotasComunidadePublicas } from './comunidade.tsx'
 import { navegacaoConta, rotasContaLogadas, rotasContaPublicas } from './conta.tsx'
 import {
@@ -30,7 +29,8 @@ export const rotasDasAreas: RouteObject[] = [
   ...rotasComunidadePublicas,
   ...rotasModeracaoPublicas,
   {
-    element: <GuardaSessao />,
+    // A guarda e tudo o que fica sob ela são pacotes à parte: as páginas públicas não os baixam.
+    lazy: async () => ({ Component: (await import('../componentes/conta/guarda.tsx')).GuardaSessao }),
     children: [
       ...rotasContaLogadas,
       ...rotasRotinaLogadas,

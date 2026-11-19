@@ -4,7 +4,7 @@ import { vi } from 'vitest'
 import { ProvedorDadosConta } from '../../componentes/conta/sessao.tsx'
 import { ELENCO } from '../../dados/comunidade.elenco.ts'
 import { ProvedorDadosComunidade, type DadosComunidade } from '../../dados/comunidade.ts'
-import { criarRotas } from '../../rotas.tsx'
+import { criarRotasProntas } from '../../teste/rotasProntas.ts'
 import type { criarFixtureDeTeste } from '../../teste/renderizarComDados.tsx'
 
 // O apoio dos testes das telas da Comunidade: as rotas reais num roteador em memória, dentro do
@@ -48,7 +48,7 @@ export function renderizarComunidade(caminho: string, { contas, comunidade, base
   const rolarAoTopo = vi.fn()
   vi.stubGlobal('scrollTo', rolarAoTopo)
   if (madrugada) document.documentElement.setAttribute('data-tema', 'madrugada')
-  const roteador = createMemoryRouter(criarRotas(), {
+  const roteador = createMemoryRouter(criarRotasProntas(), {
     initialEntries: [basename ? `${basename}${caminho}` : caminho],
     basename,
   })
