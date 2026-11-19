@@ -60,7 +60,7 @@ export function ProdutoEmMoldura({ tela, moldura, rolavel = false }: Props) {
   return (
     <figure data-produto-moldura="" data-rolado={rolavel && rolado ? '' : undefined} className="cm-produto-moldura">
       {rolavel ? (
-        <button type="button" data-produto-rolar="" aria-pressed={rolado} onClick={() => setRolado((r) => !r)}>
+        <button type="button" className="alvo-toque" data-produto-rolar="" aria-pressed={rolado} onClick={() => setRolado((r) => !r)}>
           {camadas}
         </button>
       ) : (

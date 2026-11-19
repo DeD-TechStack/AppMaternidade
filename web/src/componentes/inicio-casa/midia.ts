@@ -82,16 +82,6 @@ export const MOLDURA_NOITE: Imagem = { src: '/molduras/moldura-noite.png', largu
 const TAMANHOS_DA_TELA =
   '(min-width: 1440px) 320px, (max-width: 390px) 280px, calc(280px + (100vw - 390px) * 40 / 1050)'
 
-/** State `Y` of the manifest: Histórico on 21:42, the 16:00 mamada row and the 17:30 fralda row in the top 240 px. */
-export const CAPTURA_Y: Imagem = {
-  src: '/telas/casa/historico-y-320w.webp',
-  srcSet:
-    '/telas/casa/historico-y-280w.webp 280w, /telas/casa/historico-y-320w.webp 320w, /telas/casa/historico-y-560w.webp 560w, /telas/casa/historico-y-640w.webp 640w',
-  sizes: TAMANHOS_DA_TELA,
-  largura: 640,
-  altura: 1385,
-}
-
 /**
  * State `Y_ALTA` of the manifest: the same Histórico at 21:42, captured in a 390 x 1234 window at the page's foot. Its
  * top 2.164 screen widths (what the frame's screen layer shows, `object-position: top`) are exactly a 390 x 844 phone

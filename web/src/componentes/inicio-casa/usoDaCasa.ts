@@ -8,7 +8,7 @@ import { useLayoutEffect, useSyncExternalStore } from 'react'
  * landscape window. Below it, and on any portrait window (1024 x 1366), the page is the stacked composition. The same
  * query is written literally in inicio-casa.css (CSS has no variable in a media query).
  */
-export const CONSULTA_SALA = '(min-width: 1180px) and (min-aspect-ratio: 1/1)'
+const CONSULTA_SALA = '(min-width: 1180px) and (min-aspect-ratio: 1/1)'
 const CONSULTA_LARGA = CONSULTA_SALA
 
 function temMatchMedia(): boolean {

@@ -133,7 +133,7 @@ describe('REPH-I-06 real captures: the manifest, the hashes of the served files,
     expect(texto(n)).toContain('21:42')
   })
 
-  it('REPH-I-06 the page uses the entry Y for the Histórico frame and the entry N for the Hoje frame', () => {
+  it('REPH-I-06 the page uses the entry Y_ALTA for the Histórico frame and the entry N for the Hoje frame', () => {
     expect(existsSync(MANIFESTO)).toBe(true)
     const manifesto = JSON.parse(readFileSync(MANIFESTO, 'utf8')) as { capturas: Captura[] }
     const fontes = [join(SRC, 'paginas', 'Inicio.tsx'), ...arquivosDe(join(SRC, 'componentes', 'inicio-casa')), join(SRC, 'conteudo', 'inicio.ts')]
@@ -144,16 +144,16 @@ describe('REPH-I-06 real captures: the manifest, the hashes of the served files,
     const caminhos = (estado: string) =>
       (entrada(manifesto.capturas, estado)?.servidos as Servido[] | undefined)?.map(caminhoDe).filter((c): c is string => c !== null) ?? []
     const usa = (estado: string) => caminhos(estado).some((caminho) => fontes.includes(caminho) || fontes.includes(caminho.replace(/@[12]x(?=\.)/, '')))
-    expect(usa('Y')).toBe(true)
+    // HOME-FINAL: the Histórico frame serves Y_ALTA (same route, theme and rows as Y, taller window).
+    expect(usa('Y_ALTA')).toBe(true)
     expect(usa('N')).toBe(true)
   })
 
   it('REPH-I-06 midia.ts names each capture by the manifest: same src, srcSet files, widths and heights (no guessed size)', async () => {
-    const { CAPTURA_Y, CAPTURA_Y_ALTA, CAPTURA_N } = await import('../componentes/inicio-casa/midia.ts')
+    const { CAPTURA_Y_ALTA, CAPTURA_N } = await import('../componentes/inicio-casa/midia.ts')
     const manifesto = JSON.parse(readFileSync(MANIFESTO, 'utf8')) as { capturas: Captura[] }
-    // HOME-FINAL: the Histórico phone reads Y_ALTA, so it is held to the same manifest contract.
+    // HOME-FINAL: the Histórico phone reads Y_ALTA (the original Y capture is no longer served by the page).
     const casos = [
-      { id: 'Y', imagem: CAPTURA_Y },
       { id: 'Y_ALTA', imagem: CAPTURA_Y_ALTA },
       { id: 'N', imagem: CAPTURA_N },
     ]
