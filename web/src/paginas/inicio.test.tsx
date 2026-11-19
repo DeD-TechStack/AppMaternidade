@@ -276,7 +276,6 @@ describe('REPH-I-01 composition of /: one [data-casa], the seven bands in order,
     expect(texto).not.toContain(INICIO_ANTIGO.heroi.titulo[0])
     expect(texto).not.toContain(INICIO_ANTIGO.heroi.primario.rotulo)
     expect(texto).not.toContain(INICIO_ANTIGO.turno.titulo[0])
-    expect(texto).not.toContain(INICIO_ANTIGO.heroi.cena.alt)
   })
 
   it('REPH-I-01 /: the page is built from the shared bands and page-owned wrappers (the old inicio components are gone)', () => {

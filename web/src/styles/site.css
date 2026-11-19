@@ -773,7 +773,7 @@
     margin-top: 0;
   }
 
-  /* A largura é a do quadro da página (a mesma do cabeçalho e das seções, 1200 px no máximo), para o nome e os links
+  /* A largura é a do quadro da página (a mesma do cabeçalho e das seções, `--quadro-largura`), para o nome e os links
      ficarem na borda esquerda do resto da página; abaixo de 1224 px dá a mesma margem lateral da `.cm-area`. */
   /* O respiro de cima e de baixo do rodapé de cacau é de 64 px em toda largura (FOOTER-2): `pilha` (16, fixo) vezes 4.
      O rodapé tem de caber em 440 px de 768 em diante e em 640 abaixo disso (duas colunas, seis fileiras), também na
