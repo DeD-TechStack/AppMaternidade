@@ -1,6 +1,13 @@
-import { dataNoFuso, fusoValido, type ErroDados, type Papel, type Resultado } from './comum.ts'
+import {
+  dataNoFuso,
+  fusoValido,
+  type ErroDados,
+  type Papel,
+  type Resultado,
+} from './comum.ts'
+import { carregadorDaFonte, fonteDeAvisos, fonteDeExportacao, SEM_ROTINA } from './fontes.ts'
 import { classificarErroConta, erroDaChave, type ChaveErro } from './conta.erros.ts'
-import type { DadosRotina, Nota, Registro } from './rotina.tipos.ts'
+import type { Nota, Registro } from './rotina.tipos.ts'
 import type {
   Bebe,
   Conta,
@@ -159,59 +166,6 @@ function paraJson(texto: string | null): string | null {
   return new Date(texto).toISOString().replace(/\.(\d{3})Z$/, '.$1000Z')
 }
 
-/**
- * Quem leva os registros e as notas da rotina para a exportação (RF-13). A memória da rotina se registra aqui
- * com `registrarFonteDeExportacao(conta, ...)`, chaveada pelo objeto da conta; sem rotina ligada, as listas
- * saem vazias. A assinatura de `exportarDados` não muda.
- */
-interface FonteDeExportacao {
-  registros: () => readonly Registro[]
-  notas: () => readonly Nota[]
-  /** Zera a autoria (`criadoPor`, `encerradoPor`, `excluidoPor`, `excluidaPor`) de quem teve a conta excluída. */
-  anonimizarAutor?: (contaId: string) => void
-  /** A rotina em memória dona desta fonte: quem precisa lê-la (os avisos) usa esta em vez de criar outra. */
-  rotina?: () => DadosRotina
-}
-
-const SEM_ROTINA: FonteDeExportacao = { registros: () => [], notas: () => [] }
-const fontesDeExportacao = new WeakMap<object, FonteDeExportacao>()
-const origensDaConta = new WeakMap<object, object>()
-
-/**
- * Diz que `copia` (o que um provedor faz da conta, como o `envolver` da sessão) é a mesma memória que `original`:
- * a fonte registrada pela rotina sobre a cópia vale para a exportação e para a exclusão da conta original.
- */
-export function registrarOrigemDaConta(copia: object, original: object): void {
-  origensDaConta.set(copia, origensDaConta.get(original) ?? original)
-}
-
-/** Diz se a rotina em memória já registrou a fonte de exportação desta conta (ou da original, se for cópia). */
-export function temFonteDeExportacao(conta: object): boolean {
-  return fontesDeExportacao.has(origensDaConta.get(conta) ?? conta)
-}
-
-/** A rotina em memória já registrada para esta conta (ou para a original, se for cópia); `undefined` se não há. */
-export function rotinaRegistrada(conta: object): DadosRotina | undefined {
-  return fontesDeExportacao.get(origensDaConta.get(conta) ?? conta)?.rotina?.()
-}
-
-export function registrarFonteDeExportacao(conta: object, fonte: FonteDeExportacao): void {
-  fontesDeExportacao.set(origensDaConta.get(conta) ?? conta, fonte)
-}
-
-/**
- * Quem leva a preferência de avisos e o "visto até" da conta para a exportação (RF14:RF-15). A memória dos
- * avisos se registra aqui com `registrarFonteDeAvisos(conta, ...)`; sem ela, a conta exporta desligado e
- * sem "visto até". O "visto até" vem como instante ISO, ou `null`.
- */
-type FonteDeAvisos = (contaId: string) => { ligados: boolean; vistosAte: string | null }
-
-const SEM_AVISOS: FonteDeAvisos = () => ({ ligados: false, vistosAte: null })
-const fontesDeAvisos = new WeakMap<object, FonteDeAvisos>()
-
-export function registrarFonteDeAvisos(conta: object, fonte: FonteDeAvisos): void {
-  fontesDeAvisos.set(conta, fonte)
-}
 
 const compararTexto = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
 
@@ -828,7 +782,7 @@ export function criarDadosContaMemoria(fixture: FixtureConta, opcoes: OpcoesMemo
       (f) => [f.criadaEm, f.id],
     )
     const idsDasFamilias = new Set(familiasDoResponsavel.map((f) => f.id))
-    const fonte = fontesDeExportacao.get(dados) ?? SEM_ROTINA
+    const fonte = fonteDeExportacao(dados) ?? SEM_ROTINA
     const autor = (id: string | null) => (id !== null && contasApagadas.has(id) ? null : id)
     const registrosVivos = () => fonte.registros().filter((r) => !familiasApagadas.has(r.familiaId))
     const notasVivas = () => fonte.notas().filter((n) => !familiasApagadas.has(n.familiaId))
@@ -895,7 +849,7 @@ export function criarDadosContaMemoria(fixture: FixtureConta, opcoes: OpcoesMemo
       registros: registrosEmJson(registrosVivos().filter((r) => r.criadoPor === conta.id && !idsDasFamilias.has(r.familiaId)), autor),
       notas: notasEmJson(notasVivas().filter((n) => n.criadoPor === conta.id && !idsDasFamilias.has(n.familiaId)), autor),
       avisos: (() => {
-        const { ligados, vistosAte } = (fontesDeAvisos.get(dados) ?? SEM_AVISOS)(conta.id)
+        const { ligados, vistosAte } = fonteDeAvisos(dados)(conta.id)
         return { ligados, vistos_ate: paraJson(vistosAte) }
       })(),
     })
@@ -944,7 +898,7 @@ export function criarDadosContaMemoria(fixture: FixtureConta, opcoes: OpcoesMemo
       if (c.aceitoPor === eu) c.aceitoPor = null
     }
     // Os registros e as notas da rotina moram na fonte registrada; ela zera a autoria dos que eram da conta.
-    fontesDeExportacao.get(dados)?.anonimizarAutor?.(eu)
+    fonteDeExportacao(dados)?.anonimizarAutor?.(eu)
     contasApagadas.add(eu)
     contas.splice(contas.indexOf(conta), 1)
     usuarios.splice(usuarios.indexOf(usuario), 1)
@@ -954,10 +908,35 @@ export function criarDadosContaMemoria(fixture: FixtureConta, opcoes: OpcoesMemo
 
   // ---- envoltório: falhas simuladas e respostas perdidas -----------------------------------------
 
-  function operacao<A extends unknown[], T>(nome: OperacaoConta, corpo: (...args: A) => Resultado<T>) {
+  /**
+   * A rotina em memória é baixada sob demanda: antes de ler a fonte de exportação, espera o carregador registrado
+   * (se a fonte ainda não existe). Sem isso, exportar ou excluir a conta antes de abrir a rotina deixaria os
+   * registros e as notas de fora (ou sem anonimizar). Falha ao carregar não vira exportação pela metade: volta `rede`.
+   */
+  async function prepararFonte(): Promise<Resultado<null>> {
+    if (fonteDeExportacao(dados)) return ok(null)
+    const carregar = carregadorDaFonte(dados)
+    if (!carregar) return ok(null)
+    try {
+      await carregar()
+    } catch {
+      return falhaAuth('rede')
+    }
+    return ok(null)
+  }
+
+  function operacao<A extends unknown[], T>(
+    nome: OperacaoConta,
+    corpo: (...args: A) => Resultado<T>,
+    preparar?: () => Promise<Resultado<null>>,
+  ) {
     return async (...args: A): Promise<Resultado<T>> => {
       const simulada = controle.falhas.get(nome)?.shift()
       if (simulada) return { ok: false, erro: simulada }
+      if (preparar) {
+        const preparada = await preparar()
+        if (!preparada.ok) return preparada
+      }
       const resultado = corpo(...args)
       const perdidas = controle.perdidas.get(nome) ?? 0
       if (perdidas > 0) {
@@ -1003,8 +982,8 @@ export function criarDadosContaMemoria(fixture: FixtureConta, opcoes: OpcoesMemo
     revogarVinculo: operacao('revogarVinculo', revogarVinculo),
     sairDaFamilia: operacao('sairDaFamilia', sairDaFamilia),
     excluirFamilia: operacao('excluirFamilia', excluirFamilia),
-    exportarDados: operacao('exportarDados', exportarDados),
-    excluirConta: operacao('excluirConta', excluirConta),
+    exportarDados: operacao('exportarDados', exportarDados, prepararFonte),
+    excluirConta: operacao('excluirConta', excluirConta, prepararFonte),
 
     ultimoPedidoDeRecuperacao: (email) => recuperacoes.get(email.trim().toLowerCase()),
     abrirLinkDeRecuperacao(email) {

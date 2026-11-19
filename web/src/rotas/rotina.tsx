@@ -1,36 +1,68 @@
 import type { RouteObject } from 'react-router'
 import type { ItemNavegacao } from './navegacao.ts'
 import { AREA_DA_ROTINA } from '../componentes/rotina/madrugada.ts'
-import { ProvedorRotina } from '../componentes/rotina/ProvedorRotina.tsx'
 import { TITULOS } from '../conteudo/rotina.ts'
 import { tituloDaAba } from '../conteudo/conta.ts'
-import { Historico } from '../paginas/rotina/Historico.tsx'
-import { Hoje } from '../paginas/rotina/Hoje.tsx'
-import { Lixeira } from '../paginas/rotina/Lixeira.tsx'
-import { NotaEditar, NotaNova, Notas } from '../paginas/rotina/Notas.tsx'
-import { RegistroEditar, RegistroNovo } from '../paginas/rotina/Registro.tsx'
-import { RegistroDetalhe } from '../paginas/rotina/RegistroDetalhe.tsx'
-import { Sessao } from '../paginas/rotina/Sessao.tsx'
 
 // As rotas da área Rotina. Todas as telas ficam sob a guarda da MAT-37 e sob o provedor da área (uma rota
 // sem caminho, pai de todas elas, que marca a área em `handle.area` para a madrugada, R38-04). O título da aba
-// é fixo por rota (`handle.titulo`).
+// é fixo por rota (`handle.titulo`). O provedor e cada tela são pacotes à parte (`lazy`).
 export const rotasRotinaPublicas: RouteObject[] = []
 export const rotasRotinaLogadas: RouteObject[] = [
   {
-    element: <ProvedorRotina />,
+    lazy: async () => ({ Component: (await import('../componentes/rotina/ProvedorRotina.tsx')).ProvedorRotina }),
     handle: { area: AREA_DA_ROTINA },
     children: [
-      { path: 'app/hoje', element: <Hoje />, handle: { titulo: tituloDaAba(TITULOS.hoje) } },
-      { path: 'app/sessao', element: <Sessao />, handle: { titulo: tituloDaAba(TITULOS.sessao) } },
-      { path: 'app/registro/novo', element: <RegistroNovo />, handle: { titulo: tituloDaAba(TITULOS.registroNovo) } },
-      { path: 'app/registro/:id/editar', element: <RegistroEditar />, handle: { titulo: tituloDaAba(TITULOS.registroEditar) } },
-      { path: 'app/registro/:id', element: <RegistroDetalhe />, handle: { titulo: tituloDaAba(TITULOS.registro) } },
-      { path: 'app/historico', element: <Historico />, handle: { titulo: tituloDaAba(TITULOS.historico) } },
-      { path: 'app/lixeira', element: <Lixeira />, handle: { titulo: tituloDaAba(TITULOS.lixeira) } },
-      { path: 'app/notas', element: <Notas />, handle: { titulo: tituloDaAba(TITULOS.notas) } },
-      { path: 'app/notas/nova', element: <NotaNova />, handle: { titulo: tituloDaAba(TITULOS.notaNova) } },
-      { path: 'app/notas/:id/editar', element: <NotaEditar />, handle: { titulo: tituloDaAba(TITULOS.notaEditar) } },
+      {
+        path: 'app/hoje',
+        lazy: async () => ({ Component: (await import('../paginas/rotina/Hoje.tsx')).Hoje }),
+        handle: { titulo: tituloDaAba(TITULOS.hoje) },
+      },
+      {
+        path: 'app/sessao',
+        lazy: async () => ({ Component: (await import('../paginas/rotina/Sessao.tsx')).Sessao }),
+        handle: { titulo: tituloDaAba(TITULOS.sessao) },
+      },
+      {
+        path: 'app/registro/novo',
+        lazy: async () => ({ Component: (await import('../paginas/rotina/Registro.tsx')).RegistroNovo }),
+        handle: { titulo: tituloDaAba(TITULOS.registroNovo) },
+      },
+      {
+        path: 'app/registro/:id/editar',
+        lazy: async () => ({ Component: (await import('../paginas/rotina/Registro.tsx')).RegistroEditar }),
+        handle: { titulo: tituloDaAba(TITULOS.registroEditar) },
+      },
+      {
+        path: 'app/registro/:id',
+        lazy: async () => ({ Component: (await import('../paginas/rotina/RegistroDetalhe.tsx')).RegistroDetalhe }),
+        handle: { titulo: tituloDaAba(TITULOS.registro) },
+      },
+      {
+        path: 'app/historico',
+        lazy: async () => ({ Component: (await import('../paginas/rotina/Historico.tsx')).Historico }),
+        handle: { titulo: tituloDaAba(TITULOS.historico) },
+      },
+      {
+        path: 'app/lixeira',
+        lazy: async () => ({ Component: (await import('../paginas/rotina/Lixeira.tsx')).Lixeira }),
+        handle: { titulo: tituloDaAba(TITULOS.lixeira) },
+      },
+      {
+        path: 'app/notas',
+        lazy: async () => ({ Component: (await import('../paginas/rotina/Notas.tsx')).Notas }),
+        handle: { titulo: tituloDaAba(TITULOS.notas) },
+      },
+      {
+        path: 'app/notas/nova',
+        lazy: async () => ({ Component: (await import('../paginas/rotina/Notas.tsx')).NotaNova }),
+        handle: { titulo: tituloDaAba(TITULOS.notaNova) },
+      },
+      {
+        path: 'app/notas/:id/editar',
+        lazy: async () => ({ Component: (await import('../paginas/rotina/Notas.tsx')).NotaEditar }),
+        handle: { titulo: tituloDaAba(TITULOS.notaEditar) },
+      },
     ],
   },
 ]

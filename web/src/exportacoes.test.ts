@@ -8,6 +8,8 @@ const pastaSrc = pastaSrcDe(import.meta.url)
 
 const EXPORTACAO = /^export\s+(?:async\s+)?(?:const|let|function|class|interface|type)\s+([A-Za-z0-9_]+)/gm
 const IMPORTACAO = /import\s+(?:type\s+)?\{([^}]*)\}\s+from\s+'(\.[^']+)'/g
+// `(await import('./x.tsx')).Nome`: a página de uma rota `lazy` conta como importada.
+const IMPORTACAO_DINAMICA = /\(await import\('(\.[^']+)'\)\)\.([A-Za-z0-9_]+)/g
 
 describe('exportações de web/src', () => {
   it('toda exportação do produto é importada por outro arquivo', () => {
@@ -22,6 +24,12 @@ describe('exportações de web/src', () => {
           const limpo = item.trim().replace(/^type\s+/, '').split(/\s+as\s+/)[0]
           if (limpo) importados.add(`${arquivo}::${limpo}`)
         }
+      }
+    }
+
+    for (const { nome, texto } of todos) {
+      for (const [, origem, exportado] of texto.matchAll(IMPORTACAO_DINAMICA)) {
+        importados.add(`${posix.normalize(posix.join(posix.dirname(nome), origem))}::${exportado}`)
       }
     }
 

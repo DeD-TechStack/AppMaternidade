@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { criarRotas } from '../../rotas.tsx'
+import { criarRotasProntas } from '../../teste/rotasProntas.ts'
 import { criarClienteFalso } from '../../teste/renderizarComDados.tsx'
 import { aguardarCarga, renderizarRota } from '../../teste/renderizarRota.tsx'
 import * as textos from './textos.ts'
@@ -92,7 +92,7 @@ function comBanco(ligado: boolean) {
 function renderizar(caminho: string, ligado: boolean) {
   comBanco(ligado)
   vi.stubGlobal('scrollTo', vi.fn())
-  const roteador = createMemoryRouter(criarRotas(), { initialEntries: [caminho] })
+  const roteador = createMemoryRouter(criarRotasProntas(), { initialEntries: [caminho] })
   return render(<RouterProvider router={roteador} />)
 }
 
