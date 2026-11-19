@@ -53,8 +53,9 @@ interface ColunaDoRodape {
   links: readonly Link[]
 }
 
-// Os quatro grupos do RodapeMapa, na ordem da spec §3.8 (Produto, Conta, Ajuda, Legal; não a ordem do deck).
-// Cada rótulo e destino é o do deck COPY_casca.md §2.3 (ids no comentário de cada linha).
+// Os quatro grupos do RodapeMapa (11 links), na ordem da spec §3.8 (Produto, Conta, Ajuda, Legal; não a ordem do deck).
+// Cada rótulo e destino é o do deck COPY_casca.md §2.3 (ids no comentário de cada linha). "Entrar" (g4.1) e
+// "Criar conta" (g4.2) saíram do grupo Conta (FOOTER-2): os dois já estão no cabeçalho.
 export const COLUNAS_DO_RODAPE: readonly ColunaDoRodape[] = [
   {
     titulo: 'Produto', // casca.rod.g1
@@ -67,8 +68,6 @@ export const COLUNAS_DO_RODAPE: readonly ColunaDoRodape[] = [
   {
     titulo: 'Conta', // casca.rod.g4
     links: [
-      { rotulo: 'Entrar', para: '/entrar' }, // casca.rod.g4.1
-      { rotulo: ROTULO_CRIAR_CONTA, para: '/criar-conta' }, // casca.rod.g4.2
       { rotulo: 'Recuperar acesso', para: '/recuperar-acesso' }, // casca.rod.g4.3
       { rotulo: 'Tenho um convite', para: '/convite' }, // casca.rod.g4.4
     ],
