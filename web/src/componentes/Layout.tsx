@@ -1,4 +1,6 @@
-import { Outlet, useLocation, useMatches } from 'react-router'
+import { useEffect, useRef } from 'react'
+import { matchPath, Outlet, useLocation, useMatches } from 'react-router'
+import { rotasContaPublicas } from '../rotas/conta.tsx'
 import { Cabecalho, useCabecalhoNoite } from './casca/Cabecalho.tsx'
 import { Rodape } from './casca/Rodape.tsx'
 import type { Contexto } from './casca/textos.ts'
@@ -17,7 +19,8 @@ function contextoDoCaminho(caminho: string): Contexto {
 // A casca do site: cabeçalho, a tela e o rodapé, em todas as rotas. Sem altura mínima própria: o
 // rodapé vem depois de todo o conteúdo da tela.
 function Casca() {
-  const { pathname } = useLocation()
+  const { pathname, hash } = useLocation()
+  const caminhoAnterior = useRef(pathname)
   const { madrugada, alternar } = useLuaDoCabecalho()
   const contexto = contextoDoCaminho(pathname)
   // Carga a frio de /rota#id: a rota preguiçosa só existe depois do primeiro commit da casca.
@@ -29,6 +32,16 @@ function Casca() {
   // (/app/*) e a fila de moderação (/moderacao*) mantêm o desenho delas (site.css, `data-titulos`).
   const daModeracao = pathname === '/moderacao' || pathname.startsWith('/moderacao/')
   const titulosDoSite = contexto === 'publico' && !daModeracao
+
+  useEffect(() => {
+    const mudouDePagina = caminhoAnterior.current !== pathname
+    caminhoAnterior.current = pathname
+    // Só uma troca de caminho já renderizada: não disputa hashes nem repete no StrictMode.
+    if (!mudouDePagina || hash || !titulosDoSite) return
+    // As telas de acesso já cuidam da própria rolagem e do foco no título.
+    if (rotasContaPublicas.some((rota) => rota.path && matchPath(rota.path, pathname))) return
+    window.scrollTo(0, 0)
+  }, [pathname, hash, titulosDoSite])
 
   // `sb-casca` continua como marcador da casca para os testes das telas do app.
   return (
