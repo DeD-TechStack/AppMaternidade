@@ -1,0 +1,92 @@
+/* MOTION-PAGES, /como-funciona (CENAS.md assinado, C2 e C3). Importado no topo de `como-casa.css`.
+   Só `transform`, preso à rolagem por view-timeline nativa, linear, fill both; nada de JS, opacidade ou recorte.
+   Fora do @supports, ou com `prefers-reduced-motion`, nada daqui vale e a página é a base, parada.
+   56 px em 1440 e 24 px em 390 são tetos; a quebra é a mesma das duas colunas (`@container cf-banda (min-width: 700px)`). */
+@supports ((animation-timeline: view()) and (animation-range: entry)) {
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes cf-entra {
+      from {
+        transform: translateX(var(--cf-entra));
+      }
+
+      to {
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes cf-fio {
+      from {
+        transform: scaleX(0);
+      }
+
+      to {
+        transform: scaleX(1);
+      }
+    }
+
+    /* C2: 18:00, a placa M06 chega pela direita. A linha do tempo é a <picture> da placa: parada, recortada e só com
+       a imagem (a legenda e o chão de noite ficam fora dela). Na base ela é `display: contents`, sem caixa; aqui vira
+       um bloco, que no flex da coluna toma a largura toda e tem a altura da <img> (bloco, centrada pela margem), então
+       o chão, a legenda e o espaço entre eles não mudam. A coluna (`.cf-colo`) não recorta: o chão vai de -100vw a
+       100vw dela. Este arquivo é importado antes da página: o seletor tem o peso do `.cf-colo > picture` dela. */
+    .cf-duas-depois > .cf-colo > picture {
+      display: block;
+      overflow: clip;
+      view-timeline-name: --cf-depois;
+    }
+
+    .cf-duas-depois > .cf-colo > picture > img {
+      --cf-entra: 24px;
+
+      animation-name: cf-entra;
+      animation-duration: auto;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: --cf-depois;
+      animation-range: entry 0% entry 100%;
+    }
+
+    @container cf-banda (min-width: 700px) {
+      .cf-duas-depois > .cf-colo > picture > img {
+        --cf-entra: 56px;
+      }
+    }
+
+    /* C3: cada passo riscado como uma linha do registro. O fio de 1 px entre os passos (`border-top`) vira um
+       pseudo de 1 px no mesmo lugar e na mesma cor; a borda fica, transparente, para nada sair do lugar. O `::before`
+       do item já é o número, então o fio é o `::after`. O fio é horizontal: scaleX a partir da esquerda. */
+    .cf-passos {
+      view-timeline-name: --cf-comecar;
+    }
+
+    .cf-passos > li + li {
+      position: relative;
+      border-top-color: transparent;
+    }
+
+    .cf-passos > li + li::after {
+      content: '';
+      position: absolute;
+      top: -1px;
+      right: 0;
+      left: 0;
+      height: 1px;
+      background-color: var(--color-cacau);
+      transform-origin: left center;
+      animation-name: cf-fio;
+      animation-duration: auto;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: --cf-comecar;
+    }
+
+    /* Os degraus por nth-child: 0-60 (o primeiro item, sem fio), 20-80 e 40-100. */
+    .cf-passos > li:nth-child(2)::after {
+      animation-range: entry 20% entry 80%;
+    }
+
+    .cf-passos > li:nth-child(3)::after {
+      animation-range: entry 40% entry 100%;
+    }
+  }
+}
