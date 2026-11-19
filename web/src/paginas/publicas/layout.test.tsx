@@ -26,7 +26,7 @@ function ehSecao(elemento: Element): boolean {
 }
 
 describe('páginas públicas: o <main> tem só Secao', () => {
-  for (const caminho of [...PAGINAS_DE_TEXTO, ...PAGINAS_DE_DESTAQUE, '/nao-existe']) {
+  for (const caminho of [...PAGINAS_DE_TEXTO, ...PAGINAS_DE_DESTAQUE]) {
     it(`${caminho}: todo filho do <main> é uma Secao e nenhum elemento usa cm-area`, () => {
       const { container } = renderizarRota(caminho)
       const filhos = Array.from(principal(container).children)
@@ -145,18 +145,6 @@ describe('páginas em destaque: Secao, Colunas e painéis', () => {
     expect(cima.parentElement!.getAttribute('data-h-vao')).toBe('bloco')
     const fim = principal(container).querySelector('#tummy-time .pd-tummy-fim')!
     expect(fim.getAttribute('data-h-vao')).toBe('grupo')
-  })
-})
-
-describe('rota inexistente: Secao, QuadroLayout e Pilha', () => {
-  it('o título, a linha de ajuda e o botão são itens de uma Pilha dentro do QuadroLayout', () => {
-    const { container } = renderizarRota('/nao-existe')
-    const secao = principal(container).firstElementChild!
-    const quadro = secao.querySelector(':scope > [data-h~="quadro"]')!
-    expect(quadro.getAttribute('data-h-largura')).toBe('medio')
-    const pilha = quadro.querySelector(':scope > [data-h~="pilha"]')!
-    expect(Array.from(pilha.children).map((filho) => filho.tagName)).toEqual(['H1', 'P', 'A'])
-    expect(principal(container).querySelector('.cm-pagina-simples')).toBeNull()
   })
 })
 

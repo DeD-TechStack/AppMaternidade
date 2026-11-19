@@ -12,6 +12,7 @@
   /* A janela é absoluta em toda a largura: abaixo de 768 o quadro reserva embaixo a altura dela (340 x 264), para o
      texto nunca passar por cima. */
   .cm-nf-quadro {
+    --nf-corte: 0.917;
     position: relative;
     box-sizing: border-box;
     min-height: calc(100svh - var(--cm-cabecalho) - var(--espaco-secao));
@@ -19,7 +20,7 @@
 
   .cm-nf-quadro::after {
     display: block;
-    height: 264px;
+    height: calc(264px * var(--nf-corte));
     content: '';
   }
 
@@ -38,10 +39,28 @@
     color: var(--color-papel);
   }
 
+  /* O recorte de M11 traz um retângulo um pouco mais claro que o cacau e uma faixa escura embaixo (um "chão" que esta
+     página não tem). A janela corta a faixa (--nf-corte é a fração da altura que fica, do prédio para cima) e dissolve
+     o topo, a esquerda e a direita na parede; o prédio e a janela acesa ficam fora dos fades. */
   .cm-nf-janela {
     position: absolute;
     right: calc(-1 * var(--quadro-calha));
     bottom: 0;
+    overflow: hidden;
+    height: calc(264px * var(--nf-corte));
+    mask-image:
+      linear-gradient(to bottom, transparent 0, rgb(0 0 0 / 0.15) 4%, rgb(0 0 0 / 0.5) 10%, #000 16%),
+      linear-gradient(
+        to right,
+        transparent 0,
+        rgb(0 0 0 / 0.15) 5%,
+        rgb(0 0 0 / 0.5) 12%,
+        #000 20%,
+        #000 90%,
+        rgb(0 0 0 / 0.4) 96%,
+        transparent 100%
+      );
+    mask-composite: intersect;
   }
 
   .cm-nf-janela img {
@@ -66,6 +85,7 @@
 
     .cm-nf-janela {
       right: 0;
+      height: calc(280px * var(--nf-corte));
     }
 
     .cm-nf-janela img {

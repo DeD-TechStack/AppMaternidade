@@ -258,11 +258,11 @@ describe('DS1-I-21 exibicao-404 (fora da escala)', () => {
     expect(corpos).toMatch(/font-weight:\s*var\(--peso-exibicao\)/)
   })
 
-  it('DS1-I-21 nenhuma página usa `cm-exibicao-404` no DS-1a (quem usa é o REP-T4)', () => {
+  it('DS1-I-21 só a página inexistente usa `cm-exibicao-404` (REP-T4)', () => {
     const usos = listarFontes(pastaSrc)
       .filter((f) => /\.tsx?$/.test(f.nome))
       .filter((f) => f.texto.includes('cm-exibicao-404'))
       .map((f) => f.nome)
-    expect(usos).toEqual([])
+    expect(usos).toEqual(['paginas/NaoEncontrada.tsx'])
   })
 })
