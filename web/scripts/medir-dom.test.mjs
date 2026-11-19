@@ -2615,15 +2615,15 @@ const linksDoRodape = (n) =>
 const gruposDoRodape = (n) =>
   Array.from({ length: n }, (_, i) => no({ tag: 'div', texto: '', m: { rodapeGrupo: true, noRodape: true }, tituloId: `g${i}` }))
 const avisoNo = (extra = {}) => com(no({ tag: 'p', texto: 'Aviso', m: { aviso: true, noRodape: true } }), extra)
-const rodapeConforme = (extra = {}, links = 13, grupos = 4, avisos = [avisoNo()]) => [rodapeNo(extra), ...linksDoRodape(links), ...gruposDoRodape(grupos), ...avisos]
+const rodapeConforme = (extra = {}, links = 11, grupos = 4, avisos = [avisoNo()]) => [rodapeNo(extra), ...linksDoRodape(links), ...gruposDoRodape(grupos), ...avisos]
 
-describe('DS1-I-04 RODAPE: cacau, largura cheia, 13 links, 4 grupos, ©, altura máxima, um aviso dentro dele', () => {
+describe('DS1-I-04 RODAPE: cacau, largura cheia, 11 links, 4 grupos, ©, altura máxima, um aviso dentro dele', () => {
   it('DS1-I-04 RODAPE passa com o rodapé de cacau em 1440 e em 390, e o resultado tem a forma pura', () => {
     const r = medir.rodape(rodapeConforme(), docDs1(1440))
     assert.equal(r.ok, true, r.motivo)
     assert.equal(r.regra, 'RODAPE')
     assert.deepEqual(Object.keys(r).sort(), CHAVES_PURAS)
-    const celular = rodapeConforme({ rect: { x: 0, y: 2000, w: 390, h: 420 } })
+    const celular = rodapeConforme({ rect: { x: 0, y: 2000, w: 390, h: 480 } })
     assert.equal(medir.rodape(celular, docDs1(390)).ok, true)
   })
 
@@ -2631,25 +2631,25 @@ describe('DS1-I-04 RODAPE: cacau, largura cheia, 13 links, 4 grupos, ©, altura 
     assert.equal(medir.rodape(rodapeConforme({ estilo: { backgroundColor: PAPEL } }), docDs1(1440)).ok, false)
   })
 
-  it('DS1-I-04 RODAPE controle: 11 links falham, 12 passam (o piso é 12)', () => {
-    assert.equal(medir.rodape(rodapeConforme({}, 11), docDs1(1440)).ok, false)
-    assert.equal(medir.rodape(rodapeConforme({}, 12), docDs1(1440)).ok, true)
+  it('DS1-I-04 RODAPE controle: 10 links falham, 11 passam (o piso é 11)', () => {
+    assert.equal(medir.rodape(rodapeConforme({}, 10), docDs1(1440)).ok, false)
+    assert.equal(medir.rodape(rodapeConforme({}, 11), docDs1(1440)).ok, true)
   })
 
   it('DS1-I-04 RODAPE controle: 3 grupos falham', () => {
-    assert.equal(medir.rodape(rodapeConforme({}, 13, 3), docDs1(1440)).ok, false)
+    assert.equal(medir.rodape(rodapeConforme({}, 11, 3), docDs1(1440)).ok, false)
   })
 
   it('DS1-I-04 RODAPE controle: sem o © no texto falha', () => {
     assert.equal(medir.rodape(rodapeConforme({ textoTodo: 'AppMaternidade Produto Conta Ajuda Legal 2026' }), docDs1(1440)).ok, false)
   })
 
-  it('DS1-I-04 RODAPE controle: 430 px de altura em 390 falha (420 passa), 401 px em 1440 falha (400 passa)', () => {
+  it('DS1-I-04 RODAPE controle: 481 px de altura em 390 falha (480 passa), 441 px em 1440 falha (440 passa)', () => {
     const celular = (h) => rodapeConforme({ rect: { x: 0, y: 2000, w: 390, h } })
-    assert.equal(medir.rodape(celular(420), docDs1(390)).ok, true)
-    assert.equal(medir.rodape(celular(430), docDs1(390)).ok, false)
-    assert.equal(medir.rodape(rodapeConforme({ rect: { x: 0, y: 2000, w: 1440, h: 400 } }), docDs1(1440)).ok, true)
-    assert.equal(medir.rodape(rodapeConforme({ rect: { x: 0, y: 2000, w: 1440, h: 401 } }), docDs1(1440)).ok, false)
+    assert.equal(medir.rodape(celular(480), docDs1(390)).ok, true)
+    assert.equal(medir.rodape(celular(481), docDs1(390)).ok, false)
+    assert.equal(medir.rodape(rodapeConforme({ rect: { x: 0, y: 2000, w: 1440, h: 440 } }), docDs1(1440)).ok, true)
+    assert.equal(medir.rodape(rodapeConforme({ rect: { x: 0, y: 2000, w: 1440, h: 441 } }), docDs1(1440)).ok, false)
   })
 
   it('DS1-I-04 RODAPE controle: um rodapé estreito (menos de 0,95 da janela) falha', () => {
@@ -2658,16 +2658,16 @@ describe('DS1-I-04 RODAPE: cacau, largura cheia, 13 links, 4 grupos, ©, altura 
   })
 
   it('DS1-I-04 RODAPE controle: nenhum aviso, dois avisos, ou o aviso fora do rodapé falham', () => {
-    assert.equal(medir.rodape(rodapeConforme({}, 13, 4, []), docDs1(1440)).ok, false)
-    assert.equal(medir.rodape(rodapeConforme({}, 13, 4, [avisoNo(), avisoNo()]), docDs1(1440)).ok, false)
+    assert.equal(medir.rodape(rodapeConforme({}, 11, 4, []), docDs1(1440)).ok, false)
+    assert.equal(medir.rodape(rodapeConforme({}, 11, 4, [avisoNo(), avisoNo()]), docDs1(1440)).ok, false)
     const fora = avisoNo({ m: { noRodape: false } })
-    assert.equal(medir.rodape(rodapeConforme({}, 13, 4, [fora]), docDs1(1440)).ok, false)
+    assert.equal(medir.rodape(rodapeConforme({}, 11, 4, [fora]), docDs1(1440)).ok, false)
     // Um aviso dentro e outro fora também é "mais de um" no documento.
-    assert.equal(medir.rodape(rodapeConforme({}, 13, 4, [avisoNo(), fora]), docDs1(1440)).ok, false)
+    assert.equal(medir.rodape(rodapeConforme({}, 11, 4, [avisoNo(), fora]), docDs1(1440)).ok, false)
   })
 
   it('DS1-I-04 RODAPE falha fechado: sem rodapé, sem texto do rodapé, sem retângulo ou sem fundo legível', () => {
-    assert.equal(medir.rodape([no(), ...linksDoRodape(13)], docDs1(1440)).ok, false)
+    assert.equal(medir.rodape([no(), ...linksDoRodape(11)], docDs1(1440)).ok, false)
     assert.equal(medir.rodape(rodapeConforme({ textoTodo: undefined }), docDs1(1440)).ok, false)
     assert.equal(medir.rodape(rodapeConforme({ rect: undefined }), docDs1(1440)).ok, false)
     assert.equal(medir.rodape(rodapeConforme({ estilo: { backgroundColor: 'cor-estranha' } }), docDs1(1440)).ok, false)

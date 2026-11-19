@@ -10,7 +10,7 @@ import { aguardarCarga, renderizarRota } from '../../teste/renderizarRota.tsx'
 import * as textos from './textos.ts'
 
 // DS1:RF-04 / RF-14 / RN-02 (DS1-I-14 e DS1-I-20): o RodapeMapa. O rodapé do FOOTER-1 reassentado em cacau, com
-// quatro grupos e 13 links na ordem do §3.8 da spec (Produto, Conta, Ajuda, Legal: a ordem da spec, não a do deck),
+// quatro grupos e 11 links na ordem do §3.8 da spec (Produto, Conta, Ajuda, Legal: a ordem da spec, não a do deck),
 // a linha de copyright e o aviso de avaliação, sempre renderizado, com ou sem banco. Os rótulos vêm de textos.ts
 // (a casca do deck COPY_casca.md): o teste confere que as constantes são as frases do deck, e que a tela as mostra.
 // O rodapé compacto de /app/* não muda: 9 links (Produto, Ajuda e Legal), sem nome, sem títulos e sem aviso.
@@ -23,13 +23,13 @@ const DECK = {
   grupos: ['Produto', 'Conta', 'Ajuda', 'Legal'],
   rotulos: [
     ['Como funciona', 'Cuidado compartilhado', 'Desenvolvimento'],
-    ['Entrar', 'Criar conta', 'Recuperar acesso', 'Tenho um convite'],
+    ['Recuperar acesso', 'Tenho um convite'],
     ['Regras da comunidade', 'Contato', 'Sobre'],
     ['Privacidade', 'Termos', 'Exclusão de conta'],
   ],
   destinos: [
     ['/como-funciona', '/cuidado-compartilhado', '/desenvolvimento'],
-    ['/entrar', '/criar-conta', '/recuperar-acesso', '/convite'],
+    ['/recuperar-acesso', '/convite'],
     ['/regras-da-comunidade', '/contato', '/sobre'],
     ['/privacidade', '/termos', '/exclusao-de-conta'],
   ],
@@ -113,12 +113,12 @@ function semComentarios(fonte: string) {
 }
 
 describe('DS1-I-14 as frases de textos.ts são as do deck da casca (COPY_casca.md §2.3)', () => {
-  it('DS1-I-14 COLUNAS_DO_RODAPE: quatro grupos, na ordem Produto, Conta, Ajuda, Legal, com 13 links e os rótulos do deck', () => {
+  it('DS1-I-14 COLUNAS_DO_RODAPE: quatro grupos, na ordem Produto, Conta, Ajuda, Legal, com 11 links e os rótulos do deck', () => {
     const colunas = textos.COLUNAS_DO_RODAPE
     expect(colunas.map((c) => c.titulo)).toEqual(DECK.grupos)
     expect(colunas.map((c) => c.links.map((l) => l.rotulo))).toEqual(DECK.rotulos)
     expect(colunas.map((c) => c.links.map((l) => l.para))).toEqual(DECK.destinos)
-    expect(colunas.flatMap((c) => c.links)).toHaveLength(13)
+    expect(colunas.flatMap((c) => c.links)).toHaveLength(11)
   })
 
   it('LEGB-I-01 DS1-I-14 a linha de copyright, o aviso de avaliação e o rótulo da pílula são os do deck', () => {
@@ -133,20 +133,20 @@ describe('DS1-I-14 as frases de textos.ts são as do deck da casca (COPY_casca.m
   })
 })
 
-describe('DS1-I-14 o RodapeMapa em toda rota pública: 13 links em 4 grupos, copyright e um aviso, com e sem banco', () => {
+describe('DS1-I-14 o RodapeMapa em toda rota pública: 11 links em 4 grupos, copyright e um aviso, com e sem banco', () => {
   for (const [modo, ligado] of [
     ['sem banco', false],
     ['com banco', true],
   ] as const) {
     for (const caminho of ROTAS_PUBLICAS) {
-      it(`DS1-I-14 ${caminho} ${modo}: footer[data-rodape] com os 13 links na ordem, os 4 grupos, o © e o aviso único`, async () => {
+      it(`DS1-I-14 ${caminho} ${modo}: footer[data-rodape] com os 11 links na ordem, os 4 grupos, o © e o aviso único`, async () => {
         const { container } = renderizar(caminho, ligado)
         await aguardarCarga()
         const rodape = rodapeDe(container)
         expect(rodape, caminho).not.toBeNull()
         expect(container.querySelectorAll('footer[data-rodape]'), caminho).toHaveLength(1)
 
-        // Os 13 links, na ordem do §3.8, com o destino de cada um.
+        // Os 11 links, na ordem do §3.8, com o destino de cada um.
         const links = within(rodape).getAllByRole('link')
         expect(links.map((a) => a.textContent), caminho).toEqual(TODOS_OS_ROTULOS)
         expect(links.map((a) => a.getAttribute('href')), caminho).toEqual(TODOS_OS_DESTINOS)
@@ -177,12 +177,12 @@ describe('DS1-I-14 o RodapeMapa em toda rota pública: 13 links em 4 grupos, cop
 describe('DS1-I-14 o RodapeMapa: marcação e ordem', () => {
   const montar = () => rodapeDe(renderizar('/sobre', true).container)
 
-  it('DS1-I-14 a navegação do rodapé tem o nome "Rodapé", só ela guarda os 13 links e o aviso e o © ficam fora dela, depois', () => {
+  it('DS1-I-14 a navegação do rodapé tem o nome "Rodapé", só ela guarda os 11 links e o aviso e o © ficam fora dela, depois', () => {
     const rodape = montar()
     const navs = within(rodape).getAllByRole('navigation')
     expect(navs).toHaveLength(1)
     expect(navs[0].getAttribute('aria-label')).toBe('Rodapé')
-    expect(within(navs[0]).getAllByRole('link')).toHaveLength(13)
+    expect(within(navs[0]).getAllByRole('link')).toHaveLength(11)
     const aviso = rodape.querySelector(SELETOR_AVISO)!
     expect(navs[0].contains(aviso)).toBe(false)
     expect(navs[0].compareDocumentPosition(aviso) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
@@ -273,7 +273,7 @@ describe('DS1-I-14 o RodapeMapa: marcação e ordem', () => {
 
   it('DS1-I-14 em /sistema (rota interna, fora das 15) o rodapé também é o RodapeMapa', () => {
     const rodape = rodapeDe(renderizar('/sistema', true).container)
-    expect(within(rodape).getAllByRole('link')).toHaveLength(13)
+    expect(within(rodape).getAllByRole('link')).toHaveLength(11)
     expect(rodape.querySelectorAll(SELETOR_AVISO)).toHaveLength(1)
   })
 })
@@ -302,7 +302,7 @@ describe('DS1-I-20 o rodapé compacto de /app/*: igual a hoje, 9 links, sem nome
       const links = within(nav).getAllByRole('link')
       expect(links).toHaveLength(9)
       expect(links.map((a) => a.getAttribute('href'))).toEqual(COMPACTOS)
-      // Nenhum link do grupo Conta (Entrar, Criar conta, Recuperar acesso, Tenho um convite) entra no compacto.
+      // Nenhum link do grupo Conta (Recuperar acesso, Tenho um convite) entra no compacto.
       for (const destino of DECK.destinos[1]) expect(links.map((a) => a.getAttribute('href'))).not.toContain(destino)
     })
   }
