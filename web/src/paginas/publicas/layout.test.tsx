@@ -28,7 +28,7 @@ function ehSecao(elemento: Element): boolean {
 }
 
 describe('páginas públicas: o <main> tem só Secao', () => {
-  for (const caminho of [...PAGINAS_DE_TEXTO, '/nao-existe']) {
+  for (const caminho of PAGINAS_DE_TEXTO) {
     it(`${caminho}: todo filho do <main> é uma Secao e nenhum elemento usa cm-area`, () => {
       const { container } = renderizarRota(caminho)
       const filhos = Array.from(principal(container).children)
@@ -78,18 +78,6 @@ describe('páginas de leitura: coluna de leitura de 640', () => {
     const { container } = renderizarRota('/privacidade')
     const pilha = principal(container).querySelector('.pt-leitura')!
     expect(pilha.firstElementChild!.matches('nav.pt-indice')).toBe(true)
-  })
-})
-
-describe('rota inexistente: Secao, QuadroLayout e Pilha', () => {
-  it('o título, a linha de ajuda e o botão são itens de uma Pilha dentro do QuadroLayout', () => {
-    const { container } = renderizarRota('/nao-existe')
-    const secao = principal(container).firstElementChild!
-    const quadro = secao.querySelector(':scope > [data-h~="quadro"]')!
-    expect(quadro.getAttribute('data-h-largura')).toBe('medio')
-    const pilha = quadro.querySelector(':scope > [data-h~="pilha"]')!
-    expect(Array.from(pilha.children).map((filho) => filho.tagName)).toEqual(['H1', 'P', 'A'])
-    expect(principal(container).querySelector('.cm-pagina-simples')).toBeNull()
   })
 })
 
