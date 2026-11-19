@@ -359,6 +359,46 @@ describe('/como-funciona: o CSS da página é estático e só de token (COMO:RF-
     expect(css).toMatch(/:has\(\.cf-hero-texto\) \.cm-cena-placa \{[^}]*position: relative/)
   })
 
+  // R1 (janela baixa): o jsdom não faz layout; a geometria (h1, frase e o botão inteiro na primeira tela em 844x390,
+  // 667x375, 390x300 e 1440x700) sai das capturas. Aqui fica o contrato das regras.
+  const consultasBaixas = [...css.matchAll(/@media([^{]*max-height:\s*(\d+)px[^{]*)\{([\s\S]*?)\n {2}\}/g)].map(
+    ([, consulta, altura, corpo]) => ({ consulta, altura: Number(altura), corpo }),
+  )
+
+  it('COMO-I-14 janela baixa e estreita: o texto vem antes da placa (order) e o padding do texto aperta', () => {
+    const estreita = consultasBaixas.find(({ consulta }) => /max-width:\s*639px/.test(consulta))
+    expect(estreita, 'consulta de max-height abaixo de 640').toBeDefined()
+    expect(estreita!.corpo).toMatch(/\.cm-cena-texto \{[^}]*order: 0;/)
+    expect(estreita!.corpo).toMatch(/\.cm-cena-placa \{[^}]*order: 1;/)
+    expect(estreita!.corpo).toMatch(/\.cm-cena-texto \{[^}]*padding: var\(--espaco-pilha\)/)
+  })
+
+  it('COMO-I-14 janela baixa e larga (de 640 em diante): placa e texto lado a lado, com o padding do texto em pilha', () => {
+    const larga = consultasBaixas.find(({ consulta }) => /min-width:\s*640px/.test(consulta) && !/max-width/.test(consulta))
+    expect(larga, 'consulta de max-height de 640 em diante').toBeDefined()
+    expect(larga!.corpo).toMatch(/\.cm-cena-texto \{[^}]*padding-block: var\(--espaco-pilha\)/)
+    const entre = consultasBaixas.find(({ consulta }) => /min-width:\s*640px/.test(consulta) && /max-width:\s*767px/.test(consulta))
+    expect(entre, 'consulta de max-height entre 640 e 767').toBeDefined()
+    expect(entre!.corpo).toMatch(/:has\(\.cf-hero-texto\) \{[^}]*display: grid;[^}]*grid-template-columns/)
+    expect(entre!.corpo).toMatch(/\.cm-cena-placa \{[^}]*grid-column: 1;/)
+    expect(entre!.corpo).toMatch(/\.cm-cena-texto \{[^}]*grid-column: 2;/)
+    // O botão de cacau (texto no papel) não vale quando o texto está na parede de cacau: nada de cacau sobre cacau.
+    expect(css).toMatch(/@media \(max-width: 639px\), \(max-width: 767px\) and \(min-height: 761px\) \{\s*\.cf-hero-texto \.cm-botao-mel/)
+  })
+
+  it('COMO-I-14 janela muito baixa (até 480): o texto aperta de novo e o h1 desce um degrau da escala', () => {
+    const baixa = consultasBaixas.find(({ altura, consulta }) => altura === 480 && !/width/.test(consulta))
+    expect(baixa, 'consulta de max-height: 480px em toda largura').toBeDefined()
+    expect(baixa!.corpo).toMatch(/\.cm-cena-texto \{[^}]*padding-block: var\(--espaco-junto\)/)
+    expect(baixa!.corpo).toMatch(/\.cf-hero-texto \{[^}]*gap: var\(--espaco-pilha\)/)
+    expect(baixa!.corpo).toMatch(/--texto-exibicao-tamanho: var\(--texto-titulo-1-tamanho\)/)
+  })
+
+  it('COMO-I-14 nenhuma regra de janela baixa vale acima de 760 (390x844 e 1440x900 ficam como estão)', () => {
+    expect(consultasBaixas.length).toBeGreaterThanOrEqual(4)
+    for (const { altura, consulta } of consultasBaixas) expect(altura, consulta).toBeLessThanOrEqual(760)
+  })
+
   it('COMO-I-12 a página não importa movimento/ nem motion', () => {
     for (const arquivo of ['src/paginas/publicas/ComoFunciona.tsx', 'src/componentes/como-casa/TextoDoHeroi.tsx']) {
       expect(readFileSync(join(process.cwd(), arquivo), 'utf8'), arquivo).not.toMatch(/movimento\/|from 'motion|from "motion/)

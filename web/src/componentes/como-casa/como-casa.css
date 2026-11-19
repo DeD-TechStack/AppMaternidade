@@ -86,8 +86,9 @@
   }
 
   /* Abaixo de 768 o texto fica no papel, sob o recorte de 390: o botao de mel so existe sobre o cacau, entao ali ele
-     toma a cara do primario (cacau, texto de papel). */
-  @media (max-width: 767px) {
+     toma a cara do primario (cacau, texto de papel). Entre 640 e 767 numa janela baixa o texto vai para a parede de
+     cacau (lado a lado, abaixo) e o botao volta a ser de mel. */
+  @media (max-width: 639px), (max-width: 767px) and (min-height: 761px) {
     .cf-hero-texto .cm-botao-mel {
       border-color: var(--color-cacau);
       background-color: var(--color-cacau);
@@ -145,6 +146,85 @@
         calc(var(--cena-largura-max) * min(100vw, 1440px) / 1440),
         calc((100svh - var(--espaco-secao-ampla) - var(--espaco-midia)) * var(--cena-aspecto))
       );
+    }
+  }
+
+  /* Janela baixa (R1): a primeira tela mostra o h1, a frase e o botao inteiro, nos dois sentidos. Nada daqui vale acima
+     de 760 de altura, entao 390 x 844 e 1440 x 900 ficam como estao.
+     De 640 em diante o texto fica ao lado da placa e o padding dele cai de `secao` para `pilha`. */
+  @media (min-width: 640px) and (max-height: 760px) {
+    [data-casa] [data-cena-heroi][data-lado]:has(.cf-hero-texto) .cm-cena-texto {
+      padding-block: var(--espaco-pilha);
+    }
+  }
+
+  /* Entre 640 e 767 (celular deitado): duas colunas, a placa (o recorte de 390, inteiro) na primeira, assentada no pe, e
+     o texto na segunda, sobre a parede de cacau, com a largura da frase em tres linhas. */
+  @media (min-width: 640px) and (max-width: 767px) and (max-height: 760px) {
+    [data-casa] [data-cena-heroi][data-lado]:has(.cf-hero-texto) {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+      column-gap: var(--espaco-grupo);
+      background-color: var(--color-cacau);
+      color: var(--color-papel);
+    }
+
+    [data-casa] [data-cena-heroi][data-lado]:has(.cf-hero-texto) .cm-cena-placa {
+      grid-row: 1;
+      grid-column: 1;
+      align-self: end;
+    }
+
+    [data-casa] [data-cena-heroi][data-lado]:has(.cf-hero-texto) .cm-cena-texto {
+      display: flex;
+      grid-row: 1;
+      grid-column: 2;
+      flex-direction: column;
+      justify-content: center;
+      padding-inline: 0 var(--quadro-calha);
+    }
+
+    .cf-hero-texto {
+      --foco-faixa: var(--color-papel);
+
+      gap: var(--espaco-grupo);
+      color: var(--color-papel);
+    }
+
+    .cf-hero-texto .cm-botao.cm-botao-largo {
+      display: inline-flex;
+      width: auto;
+    }
+  }
+
+  /* Abaixo de 640, numa janela onde a placa, o texto e o botao nao cabem um sobre o outro (o empilhado precisa de 557 px
+     em 320 e de 659 em 639): o texto vem antes da placa, no papel, e a placa segue abaixo da dobra. */
+  @media (max-width: 639px) and (max-height: 660px) {
+    [data-casa] [data-cena-heroi][data-lado]:has(.cf-hero-texto) .cm-cena-texto {
+      order: 0;
+      padding: var(--espaco-pilha) var(--quadro-calha);
+    }
+
+    [data-casa] [data-cena-heroi][data-lado]:has(.cf-hero-texto) .cm-cena-placa {
+      order: 1;
+    }
+  }
+
+  /* Ate 480 de altura (celular deitado, janela muito baixa): o texto aperta de novo (`junto` em cima e embaixo, `pilha`
+     entre o titulo e o botao) e o h1 desce um degrau da escala, de `exibicao` para `titulo-1` (o utilitario
+     `text-exibicao` le estas duas variaveis). */
+  @media (max-height: 480px) {
+    [data-casa] [data-cena-heroi][data-lado]:has(.cf-hero-texto) .cm-cena-texto {
+      padding-block: var(--espaco-junto);
+    }
+
+    .cf-hero-texto {
+      gap: var(--espaco-pilha);
+    }
+
+    .cf-hero-titulo > h1 {
+      --texto-exibicao-tamanho: var(--texto-titulo-1-tamanho);
+      --texto-exibicao-entrelinha: var(--texto-titulo-1-entrelinha);
     }
   }
 
