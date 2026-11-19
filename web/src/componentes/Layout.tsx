@@ -3,6 +3,7 @@ import { Cabecalho, useCabecalhoNoite } from './casca/Cabecalho.tsx'
 import { Rodape } from './casca/Rodape.tsx'
 import type { Contexto } from './casca/textos.ts'
 import { useLuaDoCabecalho } from './casca/luaDoCabecalho.ts'
+import { useRolarParaAncora } from './casca/useRolarParaAncora.ts'
 import { AREA_DA_ROTINA } from './rotina/madrugada.ts'
 
 // A noite do cabeçalho mora em casca/Cabecalho.tsx; as páginas a pedem por aqui.
@@ -19,6 +20,8 @@ function Casca() {
   const { pathname } = useLocation()
   const { madrugada, alternar } = useLuaDoCabecalho()
   const contexto = contextoDoCaminho(pathname)
+  // Carga a frio de /rota#id: a rota preguiçosa só existe depois do primeiro commit da casca.
+  useRolarParaAncora()
   // O "Modo madrugada" só existe nas páginas da Rotina (a rota pai delas leva `handle.area`).
   const naRotina = useMatches().some((rota) => (rota.handle as { area?: unknown } | undefined)?.area === AREA_DA_ROTINA)
 

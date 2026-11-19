@@ -3,8 +3,9 @@ import { COMO_FUNCIONA as T, CENA_COLO } from '../../conteudo/casa/comoFunciona.
 import './como-casa.css'
 
 const ID = 'cf-depois'
+const TAMANHO_CENA = '(min-width: 768px) 420px, 350px'
 
-/** Faixa 3 (cacau): o texto e M06 inteira, com a linha do chao continuada em `chao-noite` e a legenda sobre ela. */
+/** Cocoa band: the existing M06 scene, cropped below the light pool, with its caption directly beneath. */
 export function BandaDepois() {
   return (
     <FaixaInteira fundo="cacau" idTitulo={ID}>
@@ -19,11 +20,11 @@ export function BandaDepois() {
           <div className="cf-colo">
             <span className="cf-chao" aria-hidden="true" />
             <picture>
-              {CENA_COLO.avif ? <source type="image/avif" srcSet={CENA_COLO.avif} sizes={CENA_COLO.sizes} /> : null}
+              {CENA_COLO.avif ? <source type="image/avif" srcSet={CENA_COLO.avif} sizes={TAMANHO_CENA} /> : null}
               <img
                 src={CENA_COLO.src}
                 srcSet={CENA_COLO.srcSet}
-                sizes={CENA_COLO.sizes}
+                sizes={TAMANHO_CENA}
                 width={CENA_COLO.largura}
                 height={CENA_COLO.altura}
                 alt={T.altCena3}

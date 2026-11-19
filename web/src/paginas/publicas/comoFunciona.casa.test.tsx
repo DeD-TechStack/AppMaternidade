@@ -15,12 +15,13 @@ const URL_GERADA = /^\/@imagetools\/[\w-]+$/
 const larguras = (srcset: string | null) =>
   (srcset ?? '').split(',').map((parte) => Number(parte.trim().split(/\s+/)[1]?.replace(/w$/, '')))
 
-// As 24 frases do deck COPY_como-funciona (sha256 84e6bf6d…) que a página desenha; `cf.aba` é o título da aba.
+// Approved copy deck plus the two COMO-P3 supporting-copy changes; `cf.aba` is the browser title.
 const ABA = 'Como funciona | AppMaternidade' // cf.aba
 const H1 = 'Deixa que eu anoto.' // cf.h1
 const TEXTOS: Record<string, string> = {
   'cf.h1': H1,
-  'cf.lede': 'Um dia da Helo, da mamada das 03:00 ao sono das 20:30, do jeito que ficou anotado no site.',
+  'cf.lede':
+    'A família anota mamadas, sono e fraldas num histórico só. Este é um dia da Helo, da mamada das 03:00 ao sono das 20:30.',
   'cf.cta1': 'Criar conta',
   'cf.leg1': '03:00, mamada, anotada por Ícaro',
   'cf.h2.hist': 'Olha no histórico.',
@@ -40,6 +41,7 @@ const TEXTOS: Record<string, string> = {
   'cf.passo3': 'Cadastre o bebê. O site pede só o nome ou apelido e a data de nascimento.',
   'cf.aviso': 'O AppMaternidade não faz diagnóstico e não substitui a orientação de um profissional de saúde.',
   'cf.h2.fecho': 'E amanhã tem tudo de novo.',
+  'cf.p.fecho': 'O que foi anotado hoje fica no histórico da família, pronto para o dia seguinte.',
   'cf.cta2': 'Criar conta',
 }
 const ALTS: Record<string, string> = {
@@ -206,6 +208,38 @@ describe('/como-funciona: a casa acesa (COMO:RF-01, RF-02)', () => {
   })
 })
 
+describe('/como-funciona: correções do juiz, parte 3 (COMO-P3)', () => {
+  it('C3 a primeira frase de apoio do heroi diz que a família anota mamadas, sono e fraldas num histórico só', () => {
+    const { container } = renderizarRota('/como-funciona')
+    const heroi = casa(container).firstElementChild!
+    const lede = heroi.querySelector('.cf-hero-titulo > p')!
+    expect(lede.textContent).toBe(TEXTOS['cf.lede'])
+    expect(lede.textContent).toMatch(/família anota mamadas, sono e fraldas num histórico só/)
+    expect(lede.textContent).toMatch(/Helo/)
+  })
+
+  it('C1 a legenda das 18:00 é a irmã seguinte da cena, na mesma coluna que o chão de noite', () => {
+    const { container } = renderizarRota('/como-funciona')
+    const depois = [...casa(container).children][2]
+    const cena = depois.querySelector('.cf-colo > picture')!
+    expect(cena.nextElementSibling).toBe(depois.querySelector('p[data-legenda]'))
+    expect(cena.parentElement!.querySelector(':scope > .cf-chao')).not.toBeNull()
+  })
+
+  it('C4 a linha de apoio do fecho liga o dia seguinte ao histórico e fica dentro da faixa do fecho', () => {
+    const { container } = renderizarRota('/como-funciona')
+    const ultima = casa(container).lastElementChild!
+    const linha = [...ultima.querySelectorAll('p')].find((p) => p.textContent === TEXTOS['cf.p.fecho'])
+    expect(linha).toBeDefined()
+    expect(linha!.textContent).toMatch(/histórico/)
+    const fecho = ultima.querySelector('[data-fechamento]')!
+    expect([...fecho.children].map((no) => no.tagName)).toEqual(['H2', 'P', 'A'])
+    expect(linha!.nextElementSibling).toBe(fecho.querySelector('a'))
+    expect(ultima.querySelectorAll('p')).toHaveLength(1)
+    expect(container.querySelectorAll('[data-fechamento]')).toHaveLength(1)
+  })
+})
+
 describe('/como-funciona: a cópia é o deck (COMO:RF-07)', () => {
   it('COMO-I-04 todo nó de texto do main e todo alt não vazio é uma frase do deck', () => {
     const { container } = renderizarRota('/como-funciona')
@@ -221,7 +255,7 @@ describe('/como-funciona: a cópia é o deck (COMO:RF-07)', () => {
     for (const [id, texto] of Object.entries(TEXTOS)) expect(nos, id).toContain(texto)
     const alts = new Set([...principal(container).querySelectorAll('img')].map((img) => img.getAttribute('alt')))
     for (const [id, alt] of Object.entries(ALTS)) expect(alts.has(alt), id).toBe(true)
-    expect(Object.keys(TEXTOS).length + Object.keys(ALTS).length + FORA_DO_PRINCIPAL.length).toBe(25)
+    expect(Object.keys(TEXTOS).length + Object.keys(ALTS).length + FORA_DO_PRINCIPAL.length).toBe(26)
   })
 
   it('COMO-I-04 nenhum texto em prumo quebrado: sem seta, sem ponto médio, sem travessão, sem itálico no texto', () => {
@@ -272,7 +306,7 @@ describe('/como-funciona: as imagens são os cinco slots e nada mais (COMO:RF-06
     const m06 = container.querySelector<HTMLImageElement>(`img[alt="${ALTS['cf.alt.cena3']}"]`)!
     expect(larguras(m06.getAttribute('srcset'))).toEqual([300, 600])
     expect(m06.getAttribute('src')).toMatch(URL_GERADA)
-    expect(m06.getAttribute('sizes')).toBe('300px')
+    expect(m06.getAttribute('sizes')).toBe('(min-width: 768px) 420px, 350px')
     expect([m06.getAttribute('width'), m06.getAttribute('height')]).toEqual(['600', '980'])
     for (const [img, largurasAvif] of [
       [m04, [350, 520, 700, 1040]],
@@ -379,6 +413,14 @@ describe('/como-funciona: o CSS da página é estático e só de token (COMO:RF-
     expect(css).toMatch(/@container cf-banda \(min-width: \d+px\)/)
     // Nenhuma regra de coluna (`.cf-duas`, `.cf-colo`) dentro de um @media de largura.
     for (const [, corpo] of css.matchAll(/@media[^{]*\{([\s\S]*?)\n {2}\}/g)) expect(corpo).not.toMatch(/\.cf-(duas|colo|lado)/)
+  })
+
+  it('C2/C5 recortam as capturas existentes por coordenadas da imagem, sem preencher o rodapé com uma máscara', () => {
+    expect(css).toMatch(/\.cf-duas-hist\s*\{[^}]*--cf-captura-inicio: 155;[^}]*--cf-captura-fim: 890;/)
+    expect(css).toMatch(/\.cf-duas-nota\s*\{[^}]*--cf-captura-inicio: 310;[^}]*--cf-captura-fim: 1270;/)
+    expect(css).toMatch(/\.cf-duas-nota \.cm-produto-moldura\s*\{[^}]*height: calc\([^;]*var\(--cf-captura-fim\)[^;]*var\(--cf-captura-inicio\)[^}]*overflow: clip;/)
+    expect(css).toMatch(/\.cf-duas-nota \.cm-produto-moldura \[data-produto-tela\]\s*\{[^}]*object-position: bottom;/)
+    expect(css).not.toMatch(/\.cf-duas-hist \.cm-produto-moldura::(?:before|after)/)
   })
 
   it('COMO-I-13 o heroi pesa mais que as regras globais do Início: todo seletor de [data-cena-heroi] tem peso (0,4,0)', () => {
