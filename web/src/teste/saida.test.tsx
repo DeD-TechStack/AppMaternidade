@@ -7,8 +7,8 @@ import { Dialogo } from '../componentes/comunidade/Dialogo.tsx'
 import { DialogoDeAcao } from '../componentes/conta/DialogoDeAcao.tsx'
 import { DialogoExcluirConta } from '../componentes/conta/DialogoExcluirConta.tsx'
 
-// A saída (styles/abrir-fechar.css): quem chama desmonta a caixa de uma vez, então ela deixa um fantasma inerte que
-// faz o fade de saída (--mov-fechar, 160 ms) e some. O menu do celular guarda o conteúdo pelo mesmo tempo.
+// A saída (styles/abrir-fechar.css): as caixas de diálogo só animam na entrada e fecham na hora, sem cópia nenhuma.
+// O menu do celular guarda o conteúdo pela duração de fechar (--mov-fechar, 160 ms).
 // Aqui o `matchMedia` responde "sem preferência de movimento reduzido": sem ele (jsdom puro) nada sai animado.
 const SAIDA_MS = 160
 
@@ -23,20 +23,6 @@ function movimentoReduzido(reduzido: boolean) {
     dispatchEvent: () => false,
     onchange: null,
   }))
-}
-
-const fantasma = () => document.body.querySelector<HTMLElement>('dialog[data-fantasma]')
-
-function conferirFantasma() {
-  const copia = fantasma()
-  expect(copia, 'o fantasma da caixa fica no DOM durante a saída').not.toBeNull()
-  expect(copia!.hasAttribute('inert')).toBe(true)
-  expect(copia!.getAttribute('aria-hidden')).toBe('true')
-  expect(copia!.hasAttribute('data-saindo')).toBe(true)
-  expect(copia!.querySelector('[id]')).toBeNull()
-  // Nada dentro dele aparece para o leitor de tela nem para a busca por papel.
-  expect(screen.queryByRole('dialog')).toBeNull()
-  expect(screen.queryByRole('button', { name: 'Fechar caixa' })).toBeNull()
 }
 
 function passarASaida() {
@@ -110,49 +96,27 @@ const CAIXAS = [
 ]
 
 describe('saída das caixas de diálogo (R1-01)', () => {
+  // As caixas só animam na entrada: fechar é imediato, sem cópia da caixa nem camada de popover.
   for (const { nome, Caixa } of CAIXAS) {
-    it(`${nome}: ao desmontar, o fantasma inerte fica pela duração de fechar, some e o foco volta ao botão`, () => {
-      vi.useFakeTimers()
-      movimentoReduzido(false)
-      const { rerender } = render(<Caixa aberta />)
-      expect(screen.getByRole('dialog')).toBeTruthy()
-      expect(fantasma()).toBeNull()
+    for (const reduzido of [false, true]) {
+      it(`${nome}${reduzido ? ' (movimento reduzido)' : ''}: ao fechar, não sobra fantasma nem cópia na camada de popover, e o foco volta ao botão no mesmo instante`, () => {
+        vi.useFakeTimers()
+        movimentoReduzido(reduzido)
+        const { rerender } = render(<Caixa aberta />)
+        expect(screen.getByRole('dialog')).toBeTruthy()
 
-      rerender(<Caixa aberta={false} />)
-      conferirFantasma()
-      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Abrir caixa' }))
-
-      act(() => {
-        vi.advanceTimersByTime(SAIDA_MS - 1)
+        rerender(<Caixa aberta={false} />)
+        // Sem avançar nenhum relógio: a caixa já saiu.
+        expect(document.querySelector('dialog')).toBeNull()
+        expect(document.querySelector('dialog[data-fantasma]')).toBeNull()
+        expect(document.querySelector('[data-fantasma]')).toBeNull()
+        expect(document.querySelector('[popover]')).toBeNull()
+        expect(screen.queryByRole('dialog')).toBeNull()
+        expect(screen.queryByRole('button', { name: 'Fechar caixa' })).toBeNull()
+        expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Abrir caixa' }))
       })
-      expect(fantasma()).not.toBeNull()
-      passarASaida()
-      expect(fantasma()).toBeNull()
-      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Abrir caixa' }))
-    })
-
-    it(`${nome}: com movimento reduzido não existe fantasma`, () => {
-      vi.useFakeTimers()
-      movimentoReduzido(true)
-      const { rerender } = render(<Caixa aberta />)
-      rerender(<Caixa aberta={false} />)
-      expect(fantasma()).toBeNull()
-      expect(screen.queryByRole('dialog')).toBeNull()
-      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Abrir caixa' }))
-    })
+    }
   }
-
-  it('fechar duas vezes seguidas deixa um fantasma só', () => {
-    vi.useFakeTimers()
-    movimentoReduzido(false)
-    const { rerender } = render(<Comunidade aberta />)
-    rerender(<Comunidade aberta={false} />)
-    rerender(<Comunidade aberta />)
-    rerender(<Comunidade aberta={false} />)
-    expect(document.body.querySelectorAll('dialog[data-fantasma]')).toHaveLength(1)
-    passarASaida()
-    expect(fantasma()).toBeNull()
-  })
 })
 
 function Menu() {

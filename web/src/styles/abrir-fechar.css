@@ -1,7 +1,7 @@
-/* Abrir e fechar com um fade curto e um deslize de 8 px: o menu do celular, as caixas de diálogo (com o fundo)
-   e a resposta do acordeão. CSS puro: `@starting-style` dá o estado de partida de quem acaba de aparecer e
-   `transition-behavior: allow-discrete` deixa `display` (e `overlay`, na camada superior do <dialog>) esperar
-   a saída terminar. Só animam `opacity` e `transform`; nada de altura, largura ou `transition: all`.
+/* Abrir e fechar com um fade curto e um deslize de 8 px: o menu do celular e a resposta do acordeão. As caixas de
+   diálogo (com o fundo) só animam na entrada e fecham na hora. CSS puro: `@starting-style` dá o estado de partida
+   de quem acaba de aparecer e `transition-behavior: allow-discrete` deixa `display` esperar a saída terminar
+   (menu e acordeão). Só animam `opacity` e `transform`; nada de altura, largura ou `transition: all`.
    Abrir lê --mov-abrir e fechar lê --mov-fechar (tokens.css); com movimento reduzido as duas valem 0 (index.css).
    A regra do estado aberto declara a duração de abrir; a do estado fechado, a de fechar: vale a do destino.
    Os atributos `hidden` e `open` continuam mandando em tudo: o CSS só acompanha. */
@@ -53,55 +53,30 @@
 }
 
 /* --- Caixas de diálogo (comunidade/Dialogo.tsx, conta/DialogoDeAcao.tsx, conta/DialogoExcluirConta.tsx) e o fundo. --- */
+/* As caixas só animam na entrada: o estado fechado não declara `transition`, então fechar é imediato (nem a saída
+   nativa da camada superior espera). Só as regras `[open]` carregam transition-property e a duração de abrir. */
 .cm-dialogo {
   opacity: 0;
   transform: translateY(8px) scale(0.98);
-  transition-property: opacity, transform, overlay, display;
-  transition-duration: var(--mov-fechar);
-  transition-timing-function: var(--mov-curva);
-  transition-behavior: allow-discrete;
 }
 
 .cm-dialogo[open] {
   opacity: 1;
   transform: none;
+  transition-property: opacity, transform;
   transition-duration: var(--mov-abrir);
+  transition-timing-function: var(--mov-curva);
 }
 
 .cm-dialogo::backdrop {
   opacity: 0;
-  transition-property: opacity, overlay, display;
-  transition-duration: var(--mov-fechar);
-  transition-timing-function: var(--mov-curva);
-  transition-behavior: allow-discrete;
 }
 
 .cm-dialogo[open]::backdrop {
   opacity: 1;
+  transition-property: opacity;
   transition-duration: var(--mov-abrir);
-}
-
-/* O fantasma da saída (deixarFantasma, comunidade/Dialogo.tsx): a cópia inerte da caixa que acaba de ser desmontada.
-   Nasce no estado aberto (sem partida) e, com `data-saindo`, faz o fade e o deslize de saída com --mov-fechar.
-   Nunca recebe clique. Com movimento reduzido ele nem é criado. */
-.cm-dialogo[data-fantasma] {
-  display: block;
-  opacity: 1;
-  transform: none;
-  pointer-events: none;
-}
-
-.cm-dialogo[data-fantasma]::backdrop {
-  opacity: 1;
-}
-
-.cm-dialogo[data-fantasma][data-saindo] {
-  opacity: 0;
-  transform: translateY(8px) scale(0.98);
-}
-
-.cm-dialogo[data-fantasma][data-saindo]::backdrop {
-  opacity: 0;
+  transition-timing-function: var(--mov-curva);
 }
 
 @starting-style {
