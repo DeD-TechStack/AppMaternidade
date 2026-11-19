@@ -1,5 +1,7 @@
 import type { RouteObject } from 'react-router'
+import { AVISOS_TEXTOS } from '../conteudo/avisos.ts'
 import { TITULOS, tituloDaAba } from '../conteudo/conta.ts'
+import { PaginaAvisos } from '../paginas/avisos/PaginaAvisos.tsx'
 import { Comecar } from '../paginas/conta/Comecar.tsx'
 import { ContaExcluida } from '../paginas/conta/ContaExcluida.tsx'
 import { Convite } from '../paginas/conta/Convite.tsx'
@@ -31,6 +33,7 @@ export const rotasContaLogadas: RouteObject[] = [
   { path: 'app/comecar', element: <Comecar />, handle: { titulo: tituloDaAba(TITULOS.comecar) } },
   { path: 'app/conta', element: <PaginaConta />, handle: { titulo: tituloDaAba(TITULOS.conta) } },
   { path: 'app/familia', element: <Familia />, handle: { titulo: tituloDaAba(TITULOS.familia) } },
+  { path: 'app/avisos', element: <PaginaAvisos />, handle: { titulo: AVISOS_TEXTOS.abaDaPagina } },
 ]
 
 export const navegacaoConta: ItemNavegacao[] = [

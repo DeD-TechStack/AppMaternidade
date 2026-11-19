@@ -1,5 +1,6 @@
 import { useEffect, useRef, type RefObject } from 'react'
 import { Link, NavLink } from 'react-router'
+import { EntradaAvisos } from '../avisos/EntradaAvisos.tsx'
 import { Botao } from '../base/Botao.tsx'
 import {
   DESTINO_CONTA,
@@ -106,6 +107,7 @@ export function MenuCelular({ id, aberto, contexto, situacao, saindo, aoSair, ao
           ) : null}
           {situacao === 'com_sessao' ? (
             <div className="cm-menu-acoes">
+              <EntradaAvisos variante="menu" aoFechar={aoFechar} />
               {/* Link do mesmo desenho do botão, para fechar o menu também quando a pessoa já está na Conta. */}
               <Link
                 to={DESTINO_CONTA}
