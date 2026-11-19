@@ -3143,6 +3143,47 @@ describe('DS1-I-11 CENA: a chapa de 836 a 1115 px em 1440, até data-largura-max
   })
 })
 
+// R1-01: o coletor REAL (jsdom) alimenta a regra. O jsdom não carrega imagem: naturalWidth e currentSrc entram por defineProperty.
+describe('DS1-I-11 CENA R1-01: imagem que não carregou reprova mesmo com candidato de 780 w que casa', () => {
+  const CDN = 'https://127.0.0.1/img/'
+  const SRCSET = `${CDN}a-390.webp 390w, ${CDN}a-780.webp 780w`
+  const cenaDe = ({ naturalWidth, currentSrc, largura = 390, srcset = SRCSET }) => {
+    const preparar = (documento) => {
+      const janela = documento.defaultView
+      janela.Element.prototype.getBoundingClientRect = () => ({ ...RETANGULO, width: largura, height: largura * 0.7, right: largura, bottom: largura * 0.7 })
+      const img = documento.querySelector('img')
+      Object.defineProperty(img, 'naturalWidth', { value: naturalWidth, configurable: true })
+      Object.defineProperty(img, 'currentSrc', { value: currentSrc, configurable: true })
+    }
+    const lido = coletarDe(`<div data-cena-heroi data-largura-max="960"><img src="${CDN}a-390.webp" srcset="${srcset}" alt=""></div>`, preparar)
+    assert.equal(lido.nos.filter((n) => n.m?.cenaPlaca).length, 1)
+    return medir.cena(lido.nos, { ...lido.doc, largura: 390 })
+  }
+
+  it('naturalWidth 0 com o candidato de 780 w que casa: ok false (a imagem não carregou)', () => {
+    const r = cenaDe({ naturalWidth: 0, currentSrc: `${CDN}a-780.webp` })
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /não carregou|naturalWidth/)
+  })
+
+  it('controle: DPR 2 carregada (naturalWidth 390, 780 w num slot de 390) passa com densidade 2.00', () => {
+    const r = cenaDe({ naturalWidth: 390, currentSrc: `${CDN}a-780.webp` })
+    assert.equal(r.ok, true, r.motivo)
+  })
+
+  it('controle: 1x ampliada (codificada 390 num slot de 390) falha com densidade 1.00', () => {
+    const r = cenaDe({ naturalWidth: 390, currentSrc: `${CDN}a-390.webp` })
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /densidade 1\.00/)
+  })
+
+  it('controle: largura codificada desconhecida (currentSrc fora do srcset, NaN) falha fechado', () => {
+    const r = cenaDe({ naturalWidth: 390, currentSrc: `${CDN}outra.webp` })
+    assert.equal(r.ok, false)
+    assert.match(r.motivo, /larguraCodificada/)
+  })
+})
+
 describe('DS1-I-11 CENA: larguraCodificadaDe (a largura codificada do recurso que o Chrome escolheu)', () => {
   const base = 'http://127.0.0.1:5254/pagina/'
   const srcset = 'img/a-780.webp 780w, img/a-1560.webp 1560w'

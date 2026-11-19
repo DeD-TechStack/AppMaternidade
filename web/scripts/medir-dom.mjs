@@ -1218,16 +1218,15 @@ export function cena(nos, doc) {
       falharNo(falhas, no, 'sem retângulo')
       continue
     }
+    // Guarda própria: imagem que não carregou reprova, mesmo que um candidato do srcset case (larguraCodificada sairia > 0).
+    if (!(no.naturalWidth > 0)) {
+      falharNo(falhas, no, 'a imagem não carregou (naturalWidth ausente)')
+      continue
+    }
     // Em DPR 2 o naturalWidth vem corrigido pela densidade: vale a largura codificada do recurso escolhido, quando lida.
     const codificada = no.larguraCodificada !== undefined ? no.larguraCodificada : no.naturalWidth
     if (!(codificada > 0)) {
-      falharNo(
-        falhas,
-        no,
-        no.larguraCodificada !== undefined
-          ? 'a largura codificada da imagem é desconhecida (larguraCodificada ausente ou sem candidato no srcset)'
-          : 'a imagem não carregou (naturalWidth ausente)',
-      )
+      falharNo(falhas, no, 'a largura codificada da imagem é desconhecida (larguraCodificada ausente ou sem candidato no srcset)')
       continue
     }
     const densidade = r.w > 0 ? Math.round((codificada / r.w) * 100) / 100 : Number.NaN
