@@ -1,6 +1,8 @@
 import { render, within } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { createClient } from '@supabase/supabase-js'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { criarRotas } from '../../rotas.tsx'
 import { criarClienteFalso } from '../../teste/renderizarComDados.tsx'
@@ -31,7 +33,7 @@ const DECK = {
     ['/regras-da-comunidade', '/contato', '/sobre'],
     ['/privacidade', '/termos', '/exclusao-de-conta'],
   ],
-  copyright: '© 2026 AppMaternidade',
+  copyright: '© 2026 DeD TechStack',
   aviso: 'Nesta versão de avaliação, use só dados fictícios.',
   avisoSemBanco: 'Demonstração sem banco: nada do que você registra aqui é salvo. Ao recarregar a página, tudo volta ao começo.',
   pilula: 'Criar conta',
@@ -96,6 +98,20 @@ function renderizar(caminho: string, ligado: boolean) {
 
 const rodapeDe = (container: HTMLElement) => container.querySelector<HTMLElement>('footer[data-rodape]')!
 
+/** Quantos elementos sob `raiz` têm exatamente `texto` como textContent. */
+function contarLinhasCopy(raiz: ParentNode, texto: string) {
+  return [...raiz.querySelectorAll('*')].filter((el) => el.textContent === texto).length
+}
+
+/** O código-fonte sem as linhas de comentário (começam por `*`, `//` ou `/*`). */
+function semComentarios(fonte: string) {
+  return fonte
+    .replace(/\r\n/g, '\n')
+    .split('\n')
+    .filter((linha) => !/^\s*(\*|\/\/|\/\*)/.test(linha))
+    .join('\n')
+}
+
 describe('DS1-I-14 as frases de textos.ts são as do deck da casca (COPY_casca.md §2.3)', () => {
   it('DS1-I-14 COLUNAS_DO_RODAPE: quatro grupos, na ordem Produto, Conta, Ajuda, Legal, com 13 links e os rótulos do deck', () => {
     const colunas = textos.COLUNAS_DO_RODAPE
@@ -105,7 +121,7 @@ describe('DS1-I-14 as frases de textos.ts são as do deck da casca (COPY_casca.m
     expect(colunas.flatMap((c) => c.links)).toHaveLength(13)
   })
 
-  it('DS1-I-14 a linha de copyright, o aviso de avaliação e o rótulo da pílula são os do deck', () => {
+  it('LEGB-I-01 DS1-I-14 a linha de copyright, o aviso de avaliação e o rótulo da pílula são os do deck', () => {
     expect(textos.COPYRIGHT_RODAPE).toBe(DECK.copyright)
     expect(textos.AVISO_RODAPE).toBe(DECK.aviso)
     expect(textos.ROTULO_CRIAR_CONTA).toBe(DECK.pilula)
@@ -172,13 +188,46 @@ describe('DS1-I-14 o RodapeMapa: marcação e ordem', () => {
     expect(navs[0].compareDocumentPosition(aviso) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
   })
 
-  it('DS1-I-14 depois dos grupos vêm o aviso e, depois dele, a linha do ©, cada um em um parágrafo', () => {
+  it('LEGB-I-01 DS1-I-14 depois dos grupos vêm o aviso e, depois dele, a linha do ©, cada um em um parágrafo', () => {
     const rodape = montar()
     const aviso = rodape.querySelector(SELETOR_AVISO)!
     const copia = [...rodape.querySelectorAll('p')].find((p) => p.textContent === DECK.copyright)!
     expect(copia).toBeDefined()
     expect(aviso.compareDocumentPosition(copia) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
     expect(copia.hasAttribute('data-aviso')).toBe(false)
+  })
+
+  it('LEGB-I-01 o rodapé tem exatamente um elemento com a linha do ©', () => {
+    const rodape = montar()
+    expect(contarLinhasCopy(rodape, DECK.copyright)).toBe(1)
+  })
+
+  it('LEGB-I-01 controle negativo: a linha antiga não conta como a nova', () => {
+    const frag = document.createElement('div')
+    const antiga = document.createElement('p')
+    antiga.textContent = `© 2026 ${textos.NOME_SITE}`
+    frag.appendChild(antiga)
+    expect(contarLinhasCopy(frag, DECK.copyright)).toBe(0)
+  })
+
+  it('LEGB-I-01 controle negativo: duas linhas iguais dão 2, e a checagem de exatamente um falharia', () => {
+    const frag = document.createElement('div')
+    for (let i = 0; i < 2; i += 1) {
+      const p = document.createElement('p')
+      p.textContent = DECK.copyright
+      frag.appendChild(p)
+    }
+    expect(contarLinhasCopy(frag, DECK.copyright)).toBe(2)
+  })
+
+  it('LEGB-I-02 Rodape.tsx has no © literal', () => {
+    const fonte = readFileSync(join(process.cwd(), 'src', 'componentes', 'casca', 'Rodape.tsx'), 'utf8')
+    expect(semComentarios(fonte)).not.toContain('©')
+  })
+
+  it('LEGB-I-02 controle negativo: © em código aparece, © em comentário não', () => {
+    expect(semComentarios("const a = '© x'\n")).toContain('©')
+    expect(semComentarios('// © x\n')).not.toContain('©')
   })
 
   it('DS1-I-14 a ordem de Tab é a dos grupos: Produto, Conta, Ajuda, Legal (a ordem do DOM)', () => {
