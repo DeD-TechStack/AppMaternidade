@@ -2,11 +2,10 @@ import { Fragment, useEffect, type ReactNode } from 'react'
 import { useLocation } from 'react-router'
 import type { PaginaDeTexto } from '../../conteudo/publicas-texto.ts'
 import { Botao } from '../base/Botao.tsx'
-import { Colunas, Pilha, QuadroLayout, Secao } from '../base/layout/index.ts'
-import { DIMENSAO_ILUSTRACAO, Ilustracao } from '../campo/Ilustracao.tsx'
-import { PainelCampo } from '../campo/PainelCampo.tsx'
+import { Pilha, QuadroLayout, Secao } from '../base/layout/index.ts'
 import { BlocoDeEmail } from './BlocoDeEmail.tsx'
 import { IndiceDaPagina } from './IndiceDaPagina.tsx'
+import { PlacaDaRua } from './PlacaDaRua.tsx'
 import { SecaoDeTexto } from './SecaoDeTexto.tsx'
 import './publicasTexto.css'
 
@@ -56,29 +55,26 @@ function tituloDoFragmento(hash: string, secoes: PaginaDeTexto['secoes']): HTMLE
 }
 
 /**
- * Página pública de leitura longa (Campo de mel). Três partes, de cima para baixo, igual nas seis páginas:
- * 1. a abertura: o nome da página (`h1`, na escala de título), logo abaixo a segunda linha em itálico (corpo de
- *    `h3`) e o botão de ação principal (ou o cartão de e-mail, em Contato). Em 1100 px ou mais, o painel de mel
- *    (só o desenho, com 24 px de respiro em volta, e a frase de apoio logo abaixo dele) fica ao lado; abaixo
- *    disso, embaixo do botão, com o painel de no máximo 40% da altura da janela. A figura é uma coluna só: o
- *    painel e a frase de apoio têm a borda e a largura dela, nas duas disposições. Com o desenho de retrato, o
- *    painel de mel abraça o desenho de 1100 px em diante, rente à borda final da coluna da figura, com a frase de
- *    apoio na mesma borda;
- * 2. o índice "Nesta página": uma lista vertical só (fechada num `details` abaixo de 1100 px);
- * 3. o parágrafo de abertura, quando há, e as seções de leitura, numa coluna só, centrada, com o mesmo fio entre
- *    uma seção e a outra.
+ * Página pública de leitura longa (T2, a folha assinada em `.oc/ref/t2.md`). Duas partes, igual nas seis páginas:
+ * 1. a abertura: uma faixa de cacau logo abaixo do cabeçalho, com o nome da página (`h1`, o maior texto da página,
+ *    em papel), a frase de abertura (`subtitulo`, em prumo, no degrau `abertura`) e uma pílula de mel (ou, em
+ *    Contato, o bloco de e-mail no lugar do botão). A placa da rua (M11) fica na parte direita da mesma faixa, rente
+ *    à borda direita e ao pé dela; abaixo de 60 rem ela desce para baixo do texto, rente à borda direita;
+ * 2. o documento, sobre papel: uma coluna de leitura de 640 px na borda esquerda do quadro (a mesma do `h1`), com as
+ *    seções separadas só por espaço e títulos, e o índice "Nesta página" à direita da coluna quando o quadro tem
+ *    lugar para 640 + vão + 320 (consulta de contêiner em `publicasTexto.css`); abaixo disso o índice vem antes do
+ *    documento, em fluxo.
+ * Os campos `ilustracao` e `apoio` ficam no conteúdo, mas esta página não os mostra.
  * Quem chega por um endereço com `#secao-...` (como o link das Regras, no Contato) cai no título da seção,
  * com o foco nele.
  *
  * O `h1` leva só o nome da página (o texto exato que as rotas conferem), por isso não usa o `Titulo`
- * animado, cujo texto para leitor de tela repete as linhas; a segunda linha é um parágrafo logo depois dele.
- * A coluna do texto tem piso de `min-content` porque as palavras coladas do título (`.pt-junto`, sem quebra)
- * têm de caber na coluna em toda largura de duas colunas.
+ * animado, cujo texto para leitor de tela repete as linhas; a frase de abertura é um parágrafo logo depois dele.
+ * Nada se move: o primeiro desenho já é o final.
  */
 export function PaginaDeLeitura({ pagina }: { pagina: PaginaDeTexto }) {
   const { hash, key } = useLocation()
-  const { nome, subtitulo, ilustracao, apoio, acao, blocoDeEmail, apresentacao, secoes } = pagina
-  const retrato = DIMENSAO_ILUSTRACAO[ilustracao].largura < DIMENSAO_ILUSTRACAO[ilustracao].altura
+  const { nome, subtitulo, acao, blocoDeEmail, apresentacao, secoes } = pagina
 
   useEffect(() => {
     const alvo = tituloDoFragmento(hash, secoes)
@@ -89,39 +85,38 @@ export function PaginaDeLeitura({ pagina }: { pagina: PaginaDeTexto }) {
 
   return (
     <main>
-      <Secao className="pt-secao-abertura">
-        <QuadroLayout>
-          <Colunas fracoes="minmax(min-content, 1fr) minmax(0, 1fr)" aPartirDe={1100} vao="midia" alinhar="centro" className="pt-abertura">
-            <Pilha vao="grupo" dataH="coluna" className="pt-cabeca max-w-leitura">
+      <Secao as="div" className="pt-abertura" data-faixa-fundo="cacau">
+        <div className="pt-abertura-grade">
+          <QuadroLayout largura="leitura" className="pt-abertura-quadro">
+            <Pilha vao="grupo" dataH="coluna" className="pt-cabeca">
               <Pilha vao="pilha">
                 <h1 className="cm-h1 cm-exibicao">{ligarPalavrasCurtas(nome)}</h1>
-                <p className="pt-segunda-linha">{ligarPalavrasCurtas(subtitulo)}</p>
+                <p className="cm-lide">{subtitulo}</p>
               </Pilha>
               {blocoDeEmail ? <BlocoDeEmail /> : null}
               {acao ? (
                 <div className="pt-acao">
-                  <Botao to={acao.para}>{acao.botao}</Botao>
+                  <Botao variante="mel" to={acao.para}>
+                    {acao.botao}
+                  </Botao>
                 </div>
               ) : null}
             </Pilha>
-            <Pilha vao="pilha" dataH="coluna" className={retrato ? 'pt-figura pt-figura-retrato' : 'pt-figura'}>
-              <PainelCampo como="aside" variante="mel" largura="celula" className="pt-painel">
-                <Ilustracao nome={ilustracao} carregamento="eager" className="pt-ilustracao" />
-              </PainelCampo>
-              <p className="pt-apoio">{apoio}</p>
-            </Pilha>
-          </Colunas>
-        </QuadroLayout>
+          </QuadroLayout>
+          <PlacaDaRua />
+        </div>
       </Secao>
       <Secao as="div" className="pt-secao-leitura">
-        <QuadroLayout largura="leitura">
-          <Pilha vao="bloco" className="pt-leitura">
+        <QuadroLayout className="pt-pagina">
+          <div className="pt-pagina-grade">
             <IndiceDaPagina secoes={secoes.map(({ secao }) => secao)} />
-            {apresentacao ? <p className="cm-lide">{apresentacao}</p> : null}
-            {secoes.map((dados) => (
-              <SecaoDeTexto key={dados.secao.id} dados={dados} />
-            ))}
-          </Pilha>
+            <Pilha vao="midia" className="pt-leitura max-w-leitura">
+              {apresentacao ? <p className="cm-lide">{apresentacao}</p> : null}
+              {secoes.map((dados) => (
+                <SecaoDeTexto key={dados.secao.id} dados={dados} />
+              ))}
+            </Pilha>
+          </div>
         </QuadroLayout>
       </Secao>
     </main>

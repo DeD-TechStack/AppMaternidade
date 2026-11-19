@@ -19,10 +19,12 @@
     /* The left text edge: the quadro's, or the gutter on narrow windows. */
     --heroi-esq: max(var(--quadro-calha), (100% - var(--quadro-largura)) / 2);
 
-    /* The seam of the plate: the h1's first span (5.30625 em wide in display variant B, 424.5 px at 80 px) plus the
-       12 px (`junto`) that separate it from the seam. The ratio is the measured one of variant B; A and C follow the
-       face chosen at FG-2b (the meter's COSTURA rule reads the real gap). */
-    --heroi-span1-em: 5.30625;
+    /* The seam of the plate: the h1's first span ("Ela mamou", in em of the display size) plus the 12 px (`junto`) that
+       separate it from the seam. The width is a property of the face, so the ratio is per face: this default is the one
+       of Literata 600, the face of A (the shipped one) and of C (same face, same weight, other size, so the same em);
+       variant B (M PLUS Rounded 1c 800, 5.126 em, 410.1 px at 80 px, read from the meter) re-declares it right below. The meter's COSTURA
+       rule reads the real gap between the plate's seam and the h1's. */
+    --heroi-span1-em: 5.356;
     --heroi-costura-x: calc(var(--heroi-esq) + var(--heroi-span1-em) * var(--texto-exibicao-tamanho) + var(--espaco-junto));
 
     /* The scale of the room: one unitless number, 1 up to 1440 and growing with the quadro (1200 px at 1440, 1600 at
@@ -62,13 +64,23 @@
     /* The text block of the night column ends 28 px above the floor line; the caption is 32 px above the stage's end. */
     --palco-texto-fundo: calc(136px * var(--heroi-k));
     --palco-leg-fundo: calc(32px * var(--heroi-k));
-    /* Room the frame needs on a window 640 to 900 tall (motion sheet §3.1): the header's 48 px that lie over the stage,
-       8.5 px of air and the 24 px under the window's top (80.5 px, they do not scale), and the floor strip (108 px at
-       1440); its height is 2.2241 times its screen layer's width. */
-    --palco-quadro-livre: calc(80.5px + var(--palco-chao));
+    /* Room the frame needs on a window 640 to 900 tall (motion sheet §3.1): the header's 64 px that lie over the pinned
+       stage (the 88 px header less the stage's 24 px `palco-topo`), 8.5 px of air and the 24 px under the window's top
+       (96.5 px = header 88 + 8.5, they do not scale), and the floor strip (108 px at 1440); the frame's height is 2.2241
+       times its screen layer's width. So the whole frame sits at least 8.5 px under the header while the stage is
+       pinned, and where the window is short the screen shrinks to the height cap (312.7 px at 900 tall) instead of
+       taking the room from the floor strip or the spacing. */
+    --palco-quadro-livre: calc(96.5px + var(--palco-chao));
     --moldura-razao: 2.2241;
     /* The hero's floor runs 65 px under the plate, to the foot of the hero. */
     --heroi-chao-extra: calc(65px * var(--heroi-k));
+  }
+
+  /* Display variant B (`?exibicao=b`, FG-2b): its own face is wider or narrower than Literata's, so its first span has
+     its own ratio. Declared on `[data-casa]` itself (one more selector than the block above), so `--heroi-costura-x`
+     resolves with it. This file keeps the per-face constant: the display tokens live in tokens.css, out of this card. */
+  html[data-exibicao='b'] [data-casa] {
+    --heroi-span1-em: 5.126;
   }
 
   /* The framed screens (`ProdutoEmMoldura`: the real capture under ASSET-1's frame raster): 320 px of screen layer at 1440

@@ -1,6 +1,7 @@
 // Medidor do site: mede no Chrome, por CDP, os gates determinísticos do web/DESIGN.md. Só biblioteca
 // padrão do Node 24 (fetch e WebSocket), só loopback.
 //
+// Ambiente: o Chrome precisa de --hide-scrollbars (sem isso a página tem 375 px de largura útil a 390 e HEROI falha).
 // Uso: node web/scripts/medir-dom.mjs <pasta> <caso>:<tema>:<LxA> ...
 //   casos: sistema, inicio, hoje, sessao, e qualquer outro nome [a-z0-9_]+ que esteja em CASOS de
 //   .oc/cdp.mjs (a rota vem de lá). Temas: claro e madrugada. Ex.: comofunciona:claro:1440x900
@@ -355,7 +356,12 @@ export function g11(nos, tema) {
       }
       opacidade = daDica * cadeia
     }
-    const razao = contraste(estiloDoTexto?.color, no.cadeia, opacidade)
+    // O chão do texto: o que se vê por baixo dele (`fundoSob`, como o TEMPO lê), quando legível e quando o próprio nó
+    // não tem fundo opaco (a pílula de mel tem o dela: o `fundoSob` é o chão sob a pílula, não o do texto). Senão, a
+    // cadeia de fundos dos ancestrais (as paredes do herói são camadas irmãs, que a cadeia não vê).
+    const fundoProprioOpaco = parseCor(no.estilo?.backgroundColor)?.a >= 0.999
+    const fundos = lido(no.fundoSob) && parseCor(no.fundoSob) !== null && !fundoProprioOpaco ? [no.fundoSob] : no.cadeia
+    const razao = contraste(estiloDoTexto?.color, fundos, opacidade)
     if (razao === null) {
       falhas.push({ no: descrever(no), motivo: `${descrever(no)}: contraste incalculável (fundo transparente sem ancestral opaco, ou cor ilegível)` })
       continue
@@ -903,6 +909,11 @@ export function faixa(nos, doc) {
   const falhas = []
   const largura = doc?.clientWidth
   const espaco = px(doc?.tokens?.espacoSecao)
+  // A composição "sala" do Início (a mesma consulta da página): 1180 ou mais e janela deitada. Nela a faixa do palco
+  // (`[data-faixa]:has(.ic-estagio)`) não tem padding nenhum, nem em cima nem embaixo (o palco é a própria faixa);
+  // empilhada ela só perde o de cima. A faixa que tem o chão da noite (`:has(.ic-chao)`) perde só o de baixo.
+  // Qualquer outra borda e qualquer outra faixa seguem medidas.
+  const sala = doc?.largura >= 1180 && doc?.altura <= doc?.largura
   for (const no of faixas) {
     const r = retanguloDe(no)
     if (!r) falharNo(falhas, no, 'sem retângulo')
@@ -913,6 +924,8 @@ export function faixa(nos, doc) {
     }
     if (!raioZero(no.estilo?.borderRadius)) falharNo(falhas, no, `raio ${leitura(no.estilo?.borderRadius) || 'ausente'} (a faixa é reta)`)
     for (const [lado, nome] of [['paddingTop', 'padding-top'], ['paddingBottom', 'padding-bottom']]) {
+      if (marca(no, 'faixaPalco') && (lado === 'paddingTop' || sala)) continue
+      if (marca(no, 'faixaChao') && lado === 'paddingBottom') continue
       const p = px(no.estilo?.[lado])
       if (!Number.isFinite(espaco)) falharNo(falhas, no, 'token --espaco-secao não lido na raiz')
       else if (!Number.isFinite(p)) falharNo(falhas, no, `${nome} ausente ou ilegível`)
@@ -926,6 +939,23 @@ export function faixa(nos, doc) {
   return resultado('FAIXA', falhas, `${faixas.length} faixas de ponta a ponta, ${lados.length} lados, só nos quatro chãos`)
 }
 
+/** A moldura do palco tem 2,2241 vezes a largura da camada de tela (`--moldura-razao`, inicio-casa.css). */
+const MOLDURA_RAZAO = 2.2241
+/** Bloco único do orçamento do palco (DIAG.md METER-INICIO, PRODUTO 1440; HOME-SEAM-FOLD): 96,5 px (cabeçalho de 88 px com 64 sobre o palco, mais o ar) e a faixa do chão (108 px com `--heroi-k` 1). */
+const QUADRO_LIVRE = 96.5 + 108
+
+/**
+ * A largura mínima de UMA camada de tela. Em 1440 é 320. Só a tela do palco da casa (`produtoTelaPalco`: `[data-casa]
+ * .ic-estagio`, a única que a CSS limita por altura) pode ficar abaixo, no teto que a altura da janela deixa:
+ * `min(320, (innerHeight - quadro-livre) / 2,2241)`, com 0,5 px de folga. Toda outra tela de produto mantém o mínimo
+ * comum (320 em 1440, 280 abaixo), e sem a altura da janela lida o mínimo do palco também é o comum.
+ */
+function minimoDaTela(no, doc) {
+  if (!(doc?.largura >= 1440)) return 280
+  if (!marca(no, 'produtoTelaPalco') || !ehNumero(doc.altura)) return 320 - 0.5
+  return Math.min(320, (doc.altura - QUADRO_LIVRE) / MOLDURA_RAZAO) - 0.5
+}
+
 /** PRODUTO: no máximo 2 molduras, cada uma com tela única e moldura, sem sombra, filtro nem gradiente. */
 export function produto(nos, doc) {
   const figuras = nos.filter((no) => marca(no, 'produto'))
@@ -936,7 +966,6 @@ export function produto(nos, doc) {
   if (figuras.length > 2) falharDoc(falhas, `${figuras.length} molduras de produto (o máximo é 2)`)
   if (telas.length !== figuras.length) falharDoc(falhas, `${figuras.length} molduras e ${telas.length} telas (uma tela por moldura)`)
   if (molduras.length < figuras.length) falharDoc(falhas, `${figuras.length} molduras e ${molduras.length} artes de moldura`)
-  const minimo = doc?.largura >= 1440 ? 320 : 280
   for (const no of [...figuras, ...telas, ...molduras]) {
     const e = no.estilo
     if (!retanguloDe(no)) falharNo(falhas, no, 'sem retângulo')
@@ -950,7 +979,8 @@ export function produto(nos, doc) {
   const vistas = new Set()
   for (const no of telas) {
     const r = retanguloDe(no)
-    if (r && r.w < minimo) falharNo(falhas, no, `tela de ${r.w.toFixed(1)} px (o mínimo é ${minimo})`)
+    const minimo = minimoDaTela(no, doc)
+    if (r && r.w < minimo) falharNo(falhas, no, `tela de ${r.w.toFixed(1)} px (o mínimo é ${Number(minimo.toFixed(1))})`)
     if (!lido(no.currentSrc)) falharNo(falhas, no, 'currentSrc ausente (a imagem não carregou)')
     else if (vistas.has(no.currentSrc)) falharNo(falhas, no, `a mesma tela (currentSrc ${no.currentSrc}) em duas molduras`)
     else vistas.add(no.currentSrc)
@@ -958,7 +988,7 @@ export function produto(nos, doc) {
   return resultado('PRODUTO', falhas, `${figuras.length} molduras, ${telas.length} telas únicas, sem sombra, filtro nem gradiente`)
 }
 
-/** RODAPE: o RodapeMapa de cacau, largura cheia, 11 links, 4 grupos, ©, altura máxima (440 de 768 em diante, 480 abaixo) e um só aviso, dentro dele. */
+/** RODAPE: o RodapeMapa de cacau, largura cheia, 11 links, 4 grupos, ©, altura máxima (440 de 768 em diante, 640 abaixo) e um só aviso, dentro dele. */
 export function rodape(nos, doc) {
   const raiz = nos.find((no) => marca(no, 'rodape'))
   if (!raiz) return falhaFechada('RODAPE', 'nenhum rodapé (footer[data-rodape])')
@@ -968,7 +998,7 @@ export function rodape(nos, doc) {
   else if (!Number.isFinite(doc?.largura)) falharDoc(falhas, 'largura da janela ausente')
   else {
     if (r.w < 0.95 * doc.largura) falharNo(falhas, raiz, `rodapé de ${r.w.toFixed(1)} px numa janela de ${doc.largura} (largura cheia)`)
-    const teto = doc.largura >= 768 ? 440 : 480
+    const teto = doc.largura >= 768 ? 440 : 640
     if (r.h > teto) falharNo(falhas, raiz, `rodapé de ${r.h.toFixed(1)} px de altura (o teto é ${teto})`)
   }
   if (!ehCor(raiz.estilo?.backgroundColor, COR.cacau, 2)) falharNo(falhas, raiz, `fundo ${leitura(raiz.estilo?.backgroundColor) || 'ausente'} (o rodapé é de cacau)`)
@@ -1121,9 +1151,13 @@ export function dock(nos, doc) {
   return resultado('DOCK', falhas, `${nos.length} nós, nenhuma barra colada na base da janela`)
 }
 
-/** BOTAO_LARGO: em 390, a pílula tem de 323 a 357 px de largura e 44 de altura. */
+/**
+ * BOTAO_LARGO: em 390, a pílula tem de 323 a 357 px de largura e 44 de altura. A ação do herói (`[data-cena-heroi]
+ * [data-botao-largo]`) fica de fora: ela tem a largura própria, ao lado do link, sob a frase de valor. Só ela: uma
+ * pílula estreita no fechamento ou em qualquer outro lugar continua medida.
+ */
 export function botaoLargo(nos, doc) {
-  const botoes = nos.filter((no) => marca(no, 'botaoLargo'))
+  const botoes = nos.filter((no) => marca(no, 'botaoLargo') && !marca(no, 'botaoLargoNoHeroi'))
   if (botoes.length === 0) return nenhumElemento('BOTAO_LARGO')
   if (Math.round(doc?.largura) !== 390) return { regra: 'BOTAO_LARGO', ok: true, motivo: 'a largura do botão só é medida em 390', nos_com_falha: [] }
   const falhas = []
@@ -1151,25 +1185,28 @@ export function cabecalho(nos, doc) {
     const fundo = no.estilo?.backgroundColor
     // De noite (o cabeçalho de cacau) a pílula é de contorno: fundo transparente e texto de papel.
     const deNoite = no.tom === 'noite' && parseCor(fundo)?.a === 0 && ehCor(no.estilo?.color, COR.papel)
+    // Com a pílula do herói à vista (`<html data-inicio-heroi="visivel">`) a do cabeçalho fica quieta: fundo transparente,
+    // texto e contorno de cacau. É só a forma quieta que a página declara; sem o atributo, só a de cacau cheia vale.
+    const quieta = doc?.inicioHeroi === 'visivel' && parseCor(fundo)?.a === 0 && ehCor(no.estilo?.color, COR.cacau, 2) && ehCor(no.estilo?.borderColor, COR.cacau, 2)
     if (parseCor(fundo) === null) falharNo(falhas, no, `fundo ${leitura(fundo) || 'ausente'} ilegível`)
-    else if (!deNoite && !ehCor(fundo, COR.cacau, 2)) falharNo(falhas, no, `fundo ${leitura(fundo)} (a pílula é de cacau)`)
+    else if (!deNoite && !quieta && !ehCor(fundo, COR.cacau, 2)) falharNo(falhas, no, `fundo ${leitura(fundo)} (a pílula é de cacau; quieta, só com o herói à vista, texto e contorno de cacau)`)
   }
   return resultado('CABECALHO', falhas, `${pilulas.length} pílula de cacau, visível, de ${minimo} px ou mais`)
 }
 
 /**
- * A largura codificada (em px) do recurso que o navegador escolheu para a imagem. `naturalWidth` não serve em DPR 2:
- * o Chrome o devolve corrigido pela densidade (780w num slot de 390 lê 390). Regra: o candidato do srcset cuja URL
- * resolve para `currentSrc` dá a largura (descritor `w`: o número; `x`: naturalWidth × x; sem descritor: 1x);
- * sem srcset, ou com `currentSrc` igual ao `src`, é o naturalWidth (recurso 1x); srcset sem candidato que case: NaN.
- * `srcset` é o texto (ou uma lista de textos: o da imagem e o dos `<source>` do `<picture>`).
+ * A largura codificada (em px) que a fonte da imagem oferece. `naturalWidth` não serve em DPR 2: o Chrome o devolve
+ * corrigido pela densidade (780w num slot de 390 lê 390), e em DPR 1 o navegador escolhe o menor candidato que serve.
+ * Regra: o srcset que tem o candidato cuja URL resolve para `currentSrc` é a fonte escolhida; com descritor `w`, vale o
+ * maior `w` dessa fonte (a densidade da chapa é a do melhor arquivo que ela serve); com `x`: naturalWidth × x do
+ * candidato; sem descritor: 1x. Sem srcset, ou com `currentSrc` igual ao `src`, é o naturalWidth (recurso 1x);
+ * srcset sem candidato que case: NaN. `srcset` é o texto (ou uma lista de textos: o da imagem e o de cada `<source>`
+ * do `<picture>`, cada um uma fonte à parte).
  * A mesma lógica roda inline em `coletarNaPagina` (que é serializado e não enxerga este escopo): mude as duas juntas.
  */
 export function larguraCodificadaDe(srcset, currentSrc, naturalWidth, base, src) {
-  const texto = (Array.isArray(srcset) ? srcset : [srcset])
-    .filter((s) => typeof s === 'string' && s.trim() !== '')
-    .join(',')
-  if (texto === '') return naturalWidth
+  const textos = (Array.isArray(srcset) ? srcset : [srcset]).filter((s) => typeof s === 'string' && s.trim() !== '')
+  if (textos.length === 0) return naturalWidth
   const resolver = (url) => {
     try {
       return new URL(url, base).href
@@ -1178,30 +1215,36 @@ export function larguraCodificadaDe(srcset, currentSrc, naturalWidth, base, src)
     }
   }
   const alvo = resolver(currentSrc)
-  let i = 0
-  while (i < texto.length) {
-    while (i < texto.length && /[\s,]/.test(texto[i])) i += 1
-    if (i >= texto.length) break
-    let url = ''
-    while (i < texto.length && !/\s/.test(texto[i])) {
-      url += texto[i]
-      i += 1
-    }
-    let descritor = ''
-    if (url.endsWith(',')) url = url.replace(/,+$/, '')
-    else {
-      while (i < texto.length && texto[i] !== ',') {
-        descritor += texto[i]
+  for (const texto of textos) {
+    const candidatos = []
+    let i = 0
+    while (i < texto.length) {
+      while (i < texto.length && /[\s,]/.test(texto[i])) i += 1
+      if (i >= texto.length) break
+      let url = ''
+      while (i < texto.length && !/\s/.test(texto[i])) {
+        url += texto[i]
         i += 1
       }
+      let descritor = ''
+      if (url.endsWith(',')) url = url.replace(/,+$/, '')
+      else {
+        while (i < texto.length && texto[i] !== ',') {
+          descritor += texto[i]
+          i += 1
+        }
+      }
+      candidatos.push({ url, descritor: descritor.trim() })
     }
-    descritor = descritor.trim()
-    if (alvo === null || resolver(url) !== alvo) continue
-    const w = /^(\d+)w$/.exec(descritor)
-    if (w) return Number(w[1])
-    const x = descritor === '' ? ['', '1'] : /^(\d*\.?\d+)x$/.exec(descritor)
-    if (x) return naturalWidth * Number(x[1])
-    return Number.NaN
+    const escolhido = alvo === null ? undefined : candidatos.find((c) => resolver(c.url) === alvo)
+    if (!escolhido) continue
+    // A lista que tem o arquivo escolhido é a fonte (`<source>` ou a própria imagem): vale o maior candidato `w` dela, não
+    // o que o navegador escolheu nesta janela (em densidade 1 ele escolhe o menor que serve).
+    if (/^\d+w$/.test(escolhido.descritor)) {
+      return Math.max(...candidatos.map((c) => /^(\d+)w$/.exec(c.descritor)).filter(Boolean).map((m) => Number(m[1])))
+    }
+    const x = escolhido.descritor === '' ? ['', '1'] : /^(\d*\.?\d+)x$/.exec(escolhido.descritor)
+    return x ? naturalWidth * Number(x[1]) : Number.NaN
   }
   if (alvo !== null && typeof src === 'string' && src !== '' && resolver(src) === alvo) return naturalWidth
   return Number.NaN
@@ -1264,7 +1307,8 @@ function casaLimpaDe(regra, nos, noEscopo) {
     else if (e.visibility.trim() !== 'visible') falharNo(falhas, no, `visibility ${e.visibility.trim()}`)
     if (marca(no, 'painel')) falharNo(falhas, no, 'painel (a casa não tem painel)')
     if (marca(no, 'vivo') && !marca(no, 'noProduto')) falharNo(falhas, no, 'peça viva fora da moldura do produto')
-    if (marca(no, 'folha') && !marca(no, 'noProduto') && HORA_SOLTA.test(leitura(no.texto))) falharNo(falhas, no, 'hora solta fora da moldura do produto')
+    // A hora de uma legenda (`[data-legenda]`) é parte dela, não uma hora solta: só a hora fora de legenda e de moldura falha.
+    if (marca(no, 'folha') && !marca(no, 'noProduto') && !marca(no, 'noLegenda') && HORA_SOLTA.test(leitura(no.texto))) falharNo(falhas, no, 'hora solta fora da moldura do produto')
     const fundo = parseCor(e.backgroundColor)
     if (fundo === null) falharNo(falhas, no, `fundo ${leitura(e.backgroundColor) || 'ausente'} ilegível`)
     else if (ehCor(e.backgroundColor, COR.mel) || ehCor(e.backgroundColor, COR.melClaro)) {
@@ -1321,8 +1365,10 @@ export const MEDIDAS_REP_HOME = {
   // retém na costura de 0 a 0,10, na linha de centro do quadro (354,9) de 0,45 a 0,55 e em 0 de 0,85 em diante.
   borda1440: [556.5, 470.1, 354.9, 118.3, 0],
   traducao1440: [38.65, 32.65, 24.65, 8.22, 0],
-  // A janela da placa M05 em 390 (RECUT §4): L = 472 colunas de origem, escala s = 390 / (1672 - L).
-  placa390: { L: 472, s: 0.325, w: 543.4, h: 305.8, x: -153.4, y: 364, seam: 142.3 },
+  // A janela da placa M05 em 390 (RECUT §4): L = 472 colunas de origem, escala s = 390 / (1672 - L). A imagem aprovada já
+  // é o recorte pronto: a caixa dela mede 390 × 305,8 em x 0 (w, h, x), e a placa começa em y 392; `seam` é a costura
+  // dentro da janela (910 - L) × s.
+  placa390: { L: 472, s: 0.325, w: 390, h: 305.8, x: 0, y: 392, seam: 142.3 },
 }
 
 /** A costura da placa M05 como fração da largura dela: a coluna 910 de 1672. */
@@ -1353,8 +1399,8 @@ const fundoDoNo = (no) => (lido(no.fundoSob) ? no.fundoSob : null)
 
 /**
  * HEROI: em 1440 a placa M05 mede 900 e a costura dela cai na costura do h1 (±2), com a pílula de mel no herói; em 390
- * a janela da placa vai de borda a borda na caixa nominal de RECUT §4, as linhas 144 a 364 são uma parede de cacau de
- * ponta a ponta, a primeira ação fica até y 300 e o herói não tem pílula de mel (a ação cheia é a do cabeçalho).
+ * a caixa da imagem é o recorte (390 × 305,8 em x 0, a placa em y 392), as linhas 144 a 364 são uma parede de cacau de
+ * ponta a ponta e a primeira ação fica até y 312 (ou a legenda das 16:00 termina dentro da janela).
  */
 export function heroi(nos, doc) {
   const largura = doc?.largura
@@ -1379,11 +1425,11 @@ export function heroi(nos, doc) {
     }
     if (botoes.length === 0) falharDoc(falhas, 'pílula de mel do herói ausente (botão heroiBotao)')
   } else {
+    // A caixa da imagem é o recorte já pronto (RECUT §4): 390 de largura de borda a borda, 305,8 de altura, em x 0.
     const nominal = MEDIDAS_REP_HOME.placa390
-    const direita = r.x + r.w
-    if (Math.abs(direita - largura) > 1) falharNo(falhas, placa, `borda direita da placa em x=${direita.toFixed(1)}: a janela de ${largura} vai de borda a borda`)
-    if (r.x > 0.5) falharNo(falhas, placa, `borda esquerda da placa em x=${r.x.toFixed(1)} (tem de ser 0 ou menos)`)
-    if (Math.abs(r.w - nominal.w) > 3 || Math.abs(r.h - nominal.h) > 3) {
+    if (Math.abs(r.w - nominal.w) > 1) falharNo(falhas, placa, `placa de ${r.w.toFixed(1)} px de largura (a janela recortada de ${largura} mede ${nominal.w}, de borda a borda)`)
+    if (Math.abs(r.x - nominal.x) > 1) falharNo(falhas, placa, `borda esquerda da placa em x=${r.x.toFixed(1)} (a janela recortada começa em ${nominal.x})`)
+    if (Math.abs(r.h - nominal.h) > 3) {
       falharNo(falhas, placa, `janela de recorte ${r.w.toFixed(1)} × ${r.h.toFixed(1)} (a de 390 mede ${nominal.w} × ${nominal.h}; altura e largura vêm do recorte)`)
     }
     if (Math.abs(r.y - nominal.y) > 2) falharNo(falhas, placa, `placa em y=${r.y.toFixed(1)} (a de 390 começa em ${nominal.y})`)
@@ -1401,10 +1447,15 @@ export function heroi(nos, doc) {
     const acoes = nos.filter((no) => (marca(no, 'heroiLink') || marca(no, 'heroiBotao')) && comRetangulo(no))
     if (acoes.length === 0) falharDoc(falhas, 'nenhuma ação (link do herói) medida')
     else {
+      // A primeira ação fica até y 312; ou, se a legenda das 16:00 termina dentro da janela, ela está na primeira dobra.
       const primeira = Math.min(...acoes.map((no) => no.rect.y))
-      if (primeira > 300) falharDoc(falhas, `primeira ação do herói em y=${primeira.toFixed(1)} (o teto é 300)`)
+      const legenda = nos.find((no) => marca(no, 'legenda') && comRetangulo(no))
+      const legendaNaDobra = legenda !== undefined && ehNumero(doc.altura) && legenda.rect.y + legenda.rect.h <= doc.altura
+      if (primeira > 312.5 && !legendaNaDobra) {
+        falharDoc(falhas, `primeira ação do herói em y=${primeira.toFixed(1)} (o teto é 312, ou a legenda das 16:00 terminar dentro da janela de ${doc.altura ?? '?'})`)
+      }
     }
-    if (botoes.length > 0) falharNo(falhas, botoes[0], 'pílula de mel no herói em 390 (a ação cheia é a pílula do cabeçalho)')
+    // A pílula de mel do herói existe em 390 (a do cabeçalho fica quieta enquanto ela está à vista): nada a recusar aqui.
   }
   return resultadoInicio('HEROI', falhas, `placa e herói conforme a RECUT em ${largura}`)
 }
@@ -1463,8 +1514,8 @@ export function legendaPresa(nos, doc) {
   return resultadoInicio('LEGENDA_PRESA', falhas, `legenda a ${distancia.toFixed(1)} px da placa, com a tinta do chão`)
 }
 
-/** Onde a rolagem p 0 do palco fica em relação ao topo dele: 771 de 795 em 1440 e 674 de 722 em 390 (RECUT §7, §3). */
-const RECUO_DE_P0 = { 1440: 24, 390: 48 }
+/** Onde a rolagem p 0 do palco fica em relação ao topo dele onde há fixo: 771 de 795 em 1440 (RECUT §7, §3). Abaixo de 1024 não há fixo. */
+const RECUO_DE_P0 = { 1440: 24 }
 
 /** MOLDURA_DOBRA: na rolagem p 0 a moldura de verdade está inteira na janela, abaixo do cabeçalho. */
 export function molduraDobra(nos, doc) {
@@ -1476,6 +1527,15 @@ export function molduraDobra(nos, doc) {
   if (!moldura) return falhaFechada('MOLDURA_DOBRA', 'nenhuma moldura medida no palco')
   if (!ehNumero(doc.cabecalhoAltura) || !ehNumero(doc.altura)) return falhaFechada('MOLDURA_DOBRA', 'altura do cabeçalho ou innerHeight ausente')
   const falhas = []
+  // Sem fixo (abaixo de 1024) não há rolagem de p 0 a recuperar do palco: a moldura, de qualquer rolagem, cabe sob o
+  // cabeçalho quando a altura dela mais a do cabeçalho cabem na janela.
+  if (largura < 1024) {
+    const total = moldura.rect.h + doc.cabecalhoAltura
+    if (total > doc.altura + 0.5) {
+      falharNo(falhas, moldura, `moldura de ${moldura.rect.h.toFixed(1)} px mais o cabeçalho de ${doc.cabecalhoAltura} = ${total.toFixed(1)}, não cabe na janela (innerHeight ${doc.altura})`)
+    }
+    return resultadoInicio('MOLDURA_DOBRA', falhas, `moldura de ${moldura.rect.h.toFixed(0)} px e cabeçalho de ${doc.cabecalhoAltura} cabem na janela de ${doc.altura} (sem fixo)`)
+  }
   const rolagem = palco.rect.y - RECUO_DE_P0[largura]
   if (rolagem > doc.altura) falharNo(falhas, palco, `rolagem de p 0 em ${rolagem.toFixed(1)} acima de innerHeight ${doc.altura} (a moldura tem de estar inteira antes de uma altura de janela)`)
   const topo = moldura.rect.y - rolagem
@@ -1564,11 +1624,10 @@ const MINIMO_TINTA = 4.5
 
 /**
  * TEMPO: as horas das legendas nunca voltam, a tinta segue o chão (contraste de 4,5:1: cacau sobre cacau e texto-2 sobre
- * areia reprovam), o tom da legenda é o do chão e só há dois botões de mel: a pílula do herói (de 1024 em diante) e a do
+ * areia reprovam), o tom da legenda é o do chão e só há dois botões de mel: a pílula do herói (em toda largura) e a do
  * fechamento, sempre sobre o cacau.
  */
 export function tempo(nos, doc) {
-  const largura = doc?.largura
   const falhas = []
   const legendas = nos
     .map((no, indice) => ({ no, indice }))
@@ -1578,7 +1637,8 @@ export function tempo(nos, doc) {
   if (legendas.length === 0) falharDoc(falhas, 'nenhuma legenda medida')
   let anterior = null
   for (const no of legendas) {
-    const m = /^(\d{1,2}):(\d{2})/.exec(leitura(no.texto))
+    // A hora fica no começo do texto inteiro da legenda (`textoTodo`): ela mora num filho, o texto próprio pode estar vazio.
+    const m = /^(\d{1,2}):(\d{2})/.exec(leitura(typeof no.textoTodo === 'string' ? no.textoTodo : no.texto))
     if (!m) {
       falharNo(falhas, no, 'legenda sem hora no começo')
       continue
@@ -1613,9 +1673,9 @@ export function tempo(nos, doc) {
   }
   const meis = nos.filter((no) => marca(no, 'botaoMel'))
   for (const no of meis) {
-    const doHeroi = marca(no, 'heroiBotao')
-    if (!(doHeroi && largura >= 1024) && !marca(no, 'fechamento')) {
-      falharNo(falhas, no, doHeroi ? `pílula de mel do herói em ${largura} (de 1024 em diante; abaixo só a do fechamento)` : 'botão de mel fora do herói e do fechamento')
+    // A pílula do herói existe em toda largura (o cabeçalho fica quieto enquanto ela está à vista).
+    if (!marca(no, 'heroiBotao') && !marca(no, 'fechamento')) {
+      falharNo(falhas, no, 'botão de mel fora do herói e do fechamento')
     } else if (!ehCor(fundoDoNo(no), COR.cacau, 2)) {
       falharNo(falhas, no, `botão de mel sobre ${lido(no.fundoSob) ? nomeDaCor(no.fundoSob) : 'chão não lido'} (o mel só vale sobre o cacau)`)
     }
@@ -1712,7 +1772,8 @@ export function capturaReal(nos, _doc, opcoes = {}) {
   try {
     const manifesto = JSON.parse(fs.readFileSync(path.join(publico, 'telas', 'casa', 'MANIFESTO.json'), 'utf8'))
     servidos = new Map()
-    for (const captura of manifesto.capturas) for (const item of captura.servidos) servidos.set(String(item.arquivo), String(item.sha256))
+    // O manifesto real lista "/telas/casa/...": a barra do começo não conta, nem aqui nem no caminho lido da imagem.
+    for (const captura of manifesto.capturas) for (const item of captura.servidos) servidos.set(String(item.arquivo).replace(/^\/+/, ''), String(item.sha256))
   } catch {
     return falhaFechada('CAPTURA_REAL', 'telas/casa/MANIFESTO.json ausente ou ilegível em web/public')
   }
@@ -1967,6 +2028,8 @@ export function verificarLoopback(url) {
 
 export function coletarNaPagina() {
   const ignorar = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE', 'OPTION', 'OPTGROUP'])
+  // A placa de estúdio do herói: a imagem do <picture> da cena (este coletor é serializado: a constante mora aqui dentro).
+  const SELETOR_DA_PLACA = '[data-cena-heroi] .cm-cena-placa picture > img:not([data-luz])'
   const sx = window.scrollX
   const sy = window.scrollY
   const raiz = document.documentElement
@@ -1996,6 +2059,8 @@ export function coletarNaPagina() {
     doc.tokens.espacoSecao = getComputedStyle(sonda).paddingTop
     sonda.remove()
   }
+  // A pílula do herói avisa o cabeçalho pelo atributo de <html> (`data-inicio-heroi="visivel"`): a regra CABECALHO o lê.
+  doc.inicioHeroi = raiz.dataset.inicioHeroi
   const colapsar = (t) => t.replace(/\s+/g, ' ').trim()
   const cadeiaDe = (el) => {
     const cadeia = []
@@ -2078,9 +2143,14 @@ export function coletarNaPagina() {
     const proximo = el.nextElementSibling
     return {
       faixa: el.matches('[data-faixa]'),
+      // A faixa que é o palco (`:has(.ic-estagio)`: a borda do palco não é padding de seção) e a que tem o chão da noite
+      // (`:has(.ic-chao)`: o objeto fica sobre o chão, sem padding embaixo). A regra FAIXA dispensa só essas bordas.
+      faixaPalco: el.matches('[data-faixa]') && el.querySelector('.ic-estagio') !== null,
+      faixaChao: el.matches('[data-faixa]') && el.querySelector('.ic-chao') !== null,
       faixaLado: el.matches('[data-faixa-lado]'),
       produto: el.matches('[data-produto-moldura]'),
       produtoTela: el.matches('[data-produto-tela]'),
+      produtoTelaPalco: el.matches('[data-produto-tela]') && el.closest('[data-casa] .ic-estagio') !== null,
       produtoMoldura: el.matches('[data-produto-moldura-arte]'),
       rodape: el.matches('footer[data-rodape]'),
       rodapeGrupo: el.matches('[data-rodape-grupo]'),
@@ -2096,16 +2166,20 @@ export function coletarNaPagina() {
       cabecalhoPilula: el.matches('[data-cabecalho-pilula]'),
       noMenu: el.closest('[data-menu-celular]') !== null,
       botaoLargo: el.matches('[data-botao-largo]'),
+      // A ação do herói tem a largura própria (a regra BOTAO_LARGO a dispensa); o do fechamento e os outros não.
+      botaoLargoNoHeroi: el.matches('[data-cena-heroi] [data-botao-largo]'),
       // O mel de BotaoLargo leva `data-botao-mel`; `data-botao="mel"` é a forma antiga e continua valendo.
       botaoMel: el.matches('[data-botao-mel], [data-botao="mel"]'),
-      // A placa é a imagem da cena; as camadas de luz (`[data-luz]`) dentro da caixa dela não são placa.
-      cenaPlaca: el.matches('[data-cena-heroi] img:not([data-luz])'),
+      // A placa é a imagem do `<picture>` da cena; as camadas de luz (`[data-luz]`) e as outras imagens do herói não são placa.
+      cenaPlaca: el.matches(SELETOR_DA_PLACA),
       // REP-HOME: as marcas das oito regras do Início, lidas dos atributos que a página e as peças carregam.
       h1Span1: el.matches('h1 [data-h1-dia]'),
       h1Span2: el.matches('h1 [data-h1-noite]'),
       heroiBotao: el.matches('[data-cena-heroi] a[data-botao-mel]'),
       heroiLink: el.matches('[data-hero-link]'),
       legenda: el.matches('[data-legenda]'),
+      // O que está dentro de uma legenda (a hora dela fica num filho): não é "hora solta" da CASA_LIMPA.
+      noLegenda: el.closest('[data-legenda]') !== null,
       legendaHeroi: el.matches('[data-cena-heroi] [data-legenda]'),
       palco: el.matches('[data-troca-palco]'),
       colunaNoite: el.matches('[data-casa] [data-faixa-lado][data-faixa-fundo="cacau"]'),
@@ -2178,6 +2252,8 @@ export function coletarNaPagina() {
         paddingBottom: cs.paddingBottom,
         textShadow: cs.textShadow,
         visibility: cs.visibility,
+        // O contorno da pílula quieta do cabeçalho (CABECALHO).
+        borderColor: cs.borderTopColor,
       },
       m: {
         ...marcasDaCasa(el),
@@ -2229,9 +2305,21 @@ export function coletarNaPagina() {
     no.classes = [...el.classList]
     const idTitulo = idDoTitulo(el)
     if (idTitulo !== undefined) no.tituloId = idTitulo
-    if (no.m.rodape) no.textoTodo = colapsar(el.textContent ?? '')
+    // O rodapé e as legendas: o texto inteiro (a hora de uma legenda mora num filho, não no texto próprio dela).
+    if (no.m.rodape || no.m.legenda) no.textoTodo = colapsar(el.textContent ?? '')
     if (el.tagName === 'IMG') {
-      no.currentSrc = el.currentSrc || el.getAttribute('src') || ''
+      // O arquivo que carregou. Sem `currentSrc`, a URL absoluta do `src` (`el.src`, ou o atributo resolvido contra a
+      // página): a CAPTURA_REAL lê o caminho dela, e um caminho solto ("/telas/...") não é URL.
+      const origemAbsoluta = (() => {
+        const bruto = el.getAttribute('src')
+        if (!bruto) return ''
+        try {
+          return new URL(bruto, document.baseURI || window.location.href).href
+        } catch {
+          return bruto
+        }
+      })()
+      no.currentSrc = el.currentSrc || el.src || origemAbsoluta
       no.naturalWidth = el.naturalWidth
     }
     if (no.m.cenaPlaca) {
@@ -2240,7 +2328,7 @@ export function coletarNaPagina() {
       if (el.parentElement?.tagName === 'PICTURE') {
         for (const fonte of el.parentElement.querySelectorAll('source')) textos.push(fonte.getAttribute('srcset'))
       }
-      const lista = textos.filter((s) => typeof s === 'string' && s.trim() !== '').join(',')
+      const listas = textos.filter((s) => typeof s === 'string' && s.trim() !== '')
       const resolver = (url) => {
         try {
           return new URL(url, document.baseURI).href
@@ -2249,35 +2337,43 @@ export function coletarNaPagina() {
         }
       }
       let codificada = el.naturalWidth
-      if (lista !== '') {
+      if (listas.length > 0) {
         codificada = Number.NaN
         const alvo = resolver(el.currentSrc)
         const origem = el.getAttribute('src')
-        let k = 0
         let achou = false
-        while (alvo !== null && !achou && k < lista.length) {
-          while (k < lista.length && /[\s,]/.test(lista[k])) k += 1
-          if (k >= lista.length) break
-          let url = ''
-          while (k < lista.length && !/\s/.test(lista[k])) {
-            url += lista[k]
-            k += 1
-          }
-          let descritor = ''
-          if (url.endsWith(',')) url = url.replace(/,+$/, '')
-          else {
-            while (k < lista.length && lista[k] !== ',') {
-              descritor += lista[k]
+        for (const lista of listas) {
+          const candidatos = []
+          let k = 0
+          while (k < lista.length) {
+            while (k < lista.length && /[\s,]/.test(lista[k])) k += 1
+            if (k >= lista.length) break
+            let url = ''
+            while (k < lista.length && !/\s/.test(lista[k])) {
+              url += lista[k]
               k += 1
             }
+            let descritor = ''
+            if (url.endsWith(',')) url = url.replace(/,+$/, '')
+            else {
+              while (k < lista.length && lista[k] !== ',') {
+                descritor += lista[k]
+                k += 1
+              }
+            }
+            candidatos.push({ url, descritor: descritor.trim() })
           }
-          descritor = descritor.trim()
-          if (resolver(url) !== alvo) continue
+          const escolhido = alvo === null ? undefined : candidatos.find((c) => resolver(c.url) === alvo)
+          if (!escolhido) continue
           achou = true
-          const w = /^(\d+)w$/.exec(descritor)
-          const x = descritor === '' ? ['', '1'] : /^(\d*\.?\d+)x$/.exec(descritor)
-          if (w) codificada = Number(w[1])
-          else if (x) codificada = el.naturalWidth * Number(x[1])
+          // A fonte escolhida é a lista que tem o arquivo carregado; com `w`, vale o maior candidato dela.
+          if (/^\d+w$/.test(escolhido.descritor)) {
+            codificada = Math.max(...candidatos.map((c) => /^(\d+)w$/.exec(c.descritor)).filter(Boolean).map((m) => Number(m[1])))
+          } else {
+            const x = escolhido.descritor === '' ? ['', '1'] : /^(\d*\.?\d+)x$/.exec(escolhido.descritor)
+            if (x) codificada = el.naturalWidth * Number(x[1])
+          }
+          break
         }
         if (!achou && alvo !== null && origem !== null && origem !== '' && resolver(origem) === alvo) codificada = el.naturalWidth
       }
@@ -2337,7 +2433,7 @@ export function coletarNaPagina() {
       ? document.getAnimations().filter((a) => a.playState === 'running' && a.effect?.target?.closest?.('[data-casa]') != null).length
       : null
   {
-    const imagem = document.querySelector('[data-cena-heroi] img:not([data-luz])')
+    const imagem = document.querySelector(SELETOR_DA_PLACA)
     const r = imagem ? imagem.getBoundingClientRect() : null
     doc.placa390 = r && window.innerWidth <= 767 ? { x: r.x + sx, y: r.y + sy, w: r.width, h: r.height } : null
   }
@@ -2348,7 +2444,7 @@ export function coletarNaPagina() {
     const larguraJanela = window.innerWidth
     const alturaJanela = window.innerHeight
     const alturaCabecalho = Number.isFinite(doc.cabecalhoAltura) ? doc.cabecalhoAltura : 0
-    const placa = document.querySelector('[data-cena-heroi] img:not([data-luz])')
+    const placa = document.querySelector(SELETOR_DA_PLACA)
     const lerCor = (texto) => {
       const m = /^rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)(?:[\s,/]+([\d.]+))?/.exec(texto || '')
       return m ? { r: +m[1], g: +m[2], b: +m[3], a: m[4] === undefined ? 1 : +m[4] } : null

@@ -185,7 +185,7 @@ const FONTES_DE_ITALICO: Array<[arquivo: string, classe: string]> = [
   ['index.css', 't-citacao'],
   ['componentes/inicio/inicio.css', 'in-relato-grande-texto'],
   ['componentes/inicio/inicio.css', 'in-relato-texto'],
-  ['componentes/publicas-texto/publicasTexto.css', 'pt-segunda-linha'],
+  // `pt-segunda-linha` saiu com o modelo T2 (a frase de abertura das páginas de leitura é o `cm-lide`, em prumo).
 ]
 
 describe('DS1-I-06 as fontes CSS de itálico público do §5.3', () => {

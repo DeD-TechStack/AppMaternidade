@@ -5,7 +5,11 @@
    A composição quebra pela largura do contêiner da página (`cc-pagina`, o [data-casa] desta página), nunca pela
    janela: abaixo de 640 (o celular), 640 (duas colunas) e 1024 (a composição larga, a mesma do `<source>` das
    cenas). A altura curta da janela (@media max-height) só encolhe a cena do herói de 640 em diante; no celular a
-   cena já é a coluna de 40 % ao lado do h1, menor que qualquer teto de altura. */
+   cena já é a coluna de 40 % ao lado do h1, menor que qualquer teto de altura.
+
+   MOTION-PAGES (D1, D2): o movimento preso à rolagem mora no arquivo importado abaixo, todo sob @supports e
+   prefers-reduced-motion: no-preference; sem suporte ou com movimento reduzido, esta página segue estática. */
+@import '../../movimento/paginas/cuidado.css';
 
 /* A pílula do cabeçalho, quieta nesta página: contorno de cacau, sem enchimento (o atributo é posto no <html> pela
    página, e a casca não muda). */
