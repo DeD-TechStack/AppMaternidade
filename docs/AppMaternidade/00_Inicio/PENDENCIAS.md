@@ -8,8 +8,17 @@ regra: kanban-leader-cycle, seção 0 "Lista durável de pendências"
 # Pendências do AppMaternidade
 
 MANDATO (Daniel, 05/11/2026; visual refeito em 11/11): o site inteiro funcionando de ponta a ponta (RF-01 a RF-14), com o visual Campo de mel aprovado em 11/11, publicado para o professor entrar e usar tudo com dados fictícios. Fonte: [Retomada do site](Retomada_Site.md), seção "Roteiro do site completo".
-ESTADO: ATIVO (session switch D5-13 19/11 ~12h45 host clock, not a pause). Source of state: block "RETOMAR 19/11 SWITCH-D5-13 SAFE POINT" right below; everything under "## HISTORY" is history.
-## RETOMAR 19/11 SWITCH-D5-13 SAFE POINT (written ~12h45 by leader session local-b0f7ee71 at ~380k/call; coordinator order t_11e9c63a; NOT a pause: running cards keep running; ORDERS: ordens-vigentes rev 4 + D9; D8 English; NEVER clarify)
+ESTADO: ATIVO (leader session D5-14 since 19/11 ~12h55). Source of state: block "RETOMAR 19/11 SWITCH-D5-14" right below; everything under "## HISTORY" is history.
+## RETOMAR 19/11 SWITCH-D5-14 (current; ORDERS: ordens-vigentes rev 4 + D9; D8 English; NEVER clarify)
+- BRANCH: origin/int/refazer = f0e84233c2a562a71d99d0edf79dd24d6b4e1251 (IMG-A) until the Q-9 push lands. main untouched. /previa/ = 69fd4bc.
+- Q-9 t_ed7db934: return 2/2 (evidence only) -> LEADER TAKEOVER (comment 2591, card scheduled). Child deleg_297246ca fixes the comparator (.oc/lider_verif/q9/) and integrates 25acd7a; receipt INTQ/Q-9/RECIBO_CHILD.md. On its result: RECIBO on the card, mark done, cleanup worktree/branch, create the B02 card (Hoje date with no timeZone, Hoje.tsx:45-48).
+- RUNNING (observed 13h05): I-RF14-2 t_ba7760ed (round after 1/2; next review LAST -> then release Q-7 t_63c16887 + J-RF14-1 t_41d4c4b0), REP-T2 t_ea5eaa95, METER-INICIO-SYNC t_61da495e, HOME-SEAM-FOLD t_2d31298b, MOTION-PAGES t_335008a0 (next review LAST; skills-test page score), LOC-08b t_5efd9893.
+- HELD: VIS-5 t_b31871ec, VIS-6 t_fc221dba, NEW-D t_94fe120b (DS-2/HOJE-1 successors are the next visual specs), Q-7, J-RF14-1.
+- WAITING: coordinator's Início score on /previa/ 69fd4bc -> route findings into cards.
+- OPEN: orphan Chrome PID 28844 (kill at cleanup). Integration worktrees _int40a, _int_t1, _int_t2.
+RETOMAR-OK 19/11 SWITCH-D5-14
+## HISTORY
+### RETOMAR 19/11 SWITCH-D5-13 SAFE POINT (written ~12h45 by leader session local-b0f7ee71 at ~380k/call; coordinator order t_11e9c63a; NOT a pause: running cards keep running; ORDERS: ordens-vigentes rev 4 + D9; D8 English; NEVER clarify)
 - BRANCH: origin/int/refazer = f0e84233c2a562a71d99d0edf79dd24d6b4e1251 (IMG-A). main untouched. CI green through 69fd4bc (44554377338); CI on f0e8423 not observed. /previa/ = 69fd4bc (Pages 44557062616). The coordinator is scoring the Início on /previa/ 69fd4bc now; the result comes to the new session.
 - INTEGRATED this session (RECIBO on each card): FUSO-1 6420877, Q-4 f806786, Q-12 6158030, QH-06 d310e24, MOTION-PALCO 955ac27, HOME-RHYTHM 69fd4bc (ff), IMG-A f0e8423.
 - IN REVIEW (on approval: merge with the tip in a leader worktree, check through vaga_suite, verificar-commits, push under the INTQ lock, RECIBO, cleanup; copy .oc evidence to INTQ/<card>/ BEFORE removing the worktree):
@@ -20,8 +29,7 @@ ESTADO: ATIVO (session switch D5-13 19/11 ~12h45 host clock, not a pause). Sourc
 - LIVE CHILDREN: none. Background processes: none. Leader integration worktrees: .worktrees/_int40a, _int_t1, _int_t2 (each its own node_modules; _int_t2 at f0e8423).
 - OPEN: orphan headless Chrome PID 28844 (scratch/capfix/chrome-9395) did not stop with encerrar_processos/taskkill; kill at a cleanup. Shared capture tool fixed (ferramentas/captura/capturar.mjs, `--quadros` for judges; report ferramentas/CAPTURAR_FIX_20261119.md). Production CSP blocks injected <style>, so the default capture mode's sticky override is a silent no-op on builds.
 - NEXT STEPS (new session): (1) read this block + kanban_list; (2) handle the verdicts above with D9; (3) read the coordinator's Início score and route findings into cards; (4) when a slot frees: B02 after Q-9, Q-7/J-RF14-1 after I-RF14-2; the DS-2/HOJE-1 successors for the logged-in area (VIS-5/6, NEW-D) are the next visual specs.
-RETOMAR-OK 19/11 SWITCH-D5-13
-## HISTORY
+RETOMAR-OK 19/11 SWITCH-D5-13 (superseded by D5-14)
 ## RETOMAR 19/11 SWITCH-D5-13 (leader session local-b0f7ee71; religar exit 0 by the coordinator, 15 subscriptions; brief BRIEF_LIDER_TROCA_D5_12_20261119.md; ORDERS: ordens-vigentes rev 4 + D9; D8 English; NEVER clarify; the D5-12 SAFE POINT block below stays valid except where this block says otherwise)
 - ~11h30 FUSO-1 t_ba364bd0 INTEGRATED: pushed fae25c1..6420877 (64208773f386576664b752efb1d1384f4e8c57cb) under the INTQ lock; check 0 (213 files, 4813 passed), commits 0, ativos 0, build ok; RECIBO 2542; worktree + wt/ removed; evidence in INTQ/FUSO-1/. CI 44544419089 on 6420877 watched (proc_3462200a01fc). 676f004 CI red = Banco runner port 54322 in use (no test ran; fae25c1 green): no action.
 - Q-4 t_11b6376f: candidate f806786 (on 6420877) check still running in .worktrees/_int_t1 (q4/); push after green.
@@ -385,6 +393,7 @@ RETOMAR-OK 18/11 SWITCH-D5-3
 - ~08h50 coordinator t_464fd04c: rodada.py now launches Chrome with pinned raster flags (Q-8 two-state flake not reproduced, cure unproven). [ ] At a quiet moment (no card rodada or leader capture running) stop the Chrome on CDP port 9344 once (encerrar_processos.py) so the next rodada relaunches it pinned; if the flake recurs, send both PNGs to the coordinator. [doc] cards: attach every deliverable before review (equipe fa87623; skill patched).
 - NEXT: on each child result create/release cards, post the Q-8 RECIBO, CAL-1 child after the RUB answer (footer A/B FOOTER-1 vs NEW-A inside it), DS-1a spec gate after FG-1 + footer winner.
 ## DECIDED FOR DANIEL
+- DECIDED FOR DANIEL: 19/11 ~13h05 | Q-9 t_ed7db934 return 2/2 (evidence only, Q9-R2 comparator alpha-only): leader takeover, no round 3; leader child deleg_297246ca fixes the comparator in .oc/lider_verif/q9/ and integrates the reviewed SHA 25acd7a (both review rounds found the source clean; 397 px at 1/255 = raster variation per the reviewer) | D9: never hold the queue; skill rule "return 2/2 is the last, leader takes over" | revert the Q-9 merge on int/refazer and reopen the card |
 - DECIDED FOR DANIEL: 19/11 ~12h30 | At 1440x900 the Início product screen may shrink to the height cap (~312-320 px) instead of taking 8 px from the floor strip or spacing (HOME-SEAM-FOLD t_2d31298b + PRODUTO height-cap clause in METER-INICIO-SYNC t_61da495e) | 320 px screen + 108 px floor + header clearance cannot all hold in 900 px; ~8 px on the screen is invisible, the floor strip is part of the signed composition | find the 8 px in the floor/spacing in a later card |
 - DECIDED FOR DANIEL: 19/11 ~12h10 | REP-T2 t_ea5eaa95 reuses the served 404 M11 crop (not the signed zone (a), which is not served) and keeps the current reading-page strings (COPY_GAP lines for the deck strings) | no new asset card or copy change blocks the reading pages; legal text stays Daniel's | a later asset card cuts zone (a) and a LOC card applies the deck strings |
 - DECIDED FOR DANIEL: 19/11 ~12h05 | HOME-RHYTHM keeps the 600 px pin distance (hook untouched); proof = pin frames <= 40% plain ground at 1440/1920/2560 | step 1 measured no gap at the pin; touching the just-integrated MOTION-PALCO hook in a last round risks the Início | a follow-up card for a plate/svh-derived distance in medidas.ts + CSS |
