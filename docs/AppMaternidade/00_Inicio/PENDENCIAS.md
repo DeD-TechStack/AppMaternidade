@@ -16,7 +16,8 @@ ESTADO: ATIVO (leader session D5-14 since 19/11 ~12h55). Source of state: block 
 - IN REVIEW: LOC-08b t_5efd9893 (7ab9aaf; sistema.test.tsx scope accepted, comment 2594).
 - RUNNING (observed 13h05): I-RF14-2 t_ba7760ed (round after 1/2; next review LAST -> then release Q-7 t_63c16887 + J-RF14-1 t_41d4c4b0), REP-T2 t_ea5eaa95, METER-INICIO-SYNC t_61da495e, HOME-SEAM-FOLD t_2d31298b.
 - HELD: VIS-5 t_b31871ec, VIS-6 t_fc221dba, NEW-D t_94fe120b (DS-2/HOJE-1 successors are the next visual specs), Q-7, J-RF14-1.
-- WAITING: coordinator's Início score on /previa/ 69fd4bc -> route findings into cards.
+- INTEGRATING (children): Q-9 deleg_297246ca (25acd7a), I-RF14-2 deleg_0eb311f1 (fd15897; then release Q-7 + J-RF14-1), LOC-08b deleg_9d3b98c0 (7ab9aaf). REP-T2 returned 1/2 (captures only; comment 2604). METER-INICIO-SYNC in review (comment 2601).
+- INÍCIO SCORE 69fd4bc (coordinator t_5a891fd3): FAIL 6.4 x4, capped by B2 (phone shows the demo note + the site footer; no app chrome). File: exports/Atualizacao_Geral_20261117/NOTA_INICIO_69fd4bc_20261119/RESULTADO.md. Child deleg_c338b9eb: (a) card drafts HOME-PHONE-B2 / HOME-ART-FINISH / HOME-SEAMS in _staging/.../CARDS_D514/ + MANIFEST.md; (b) Fable direction for 3/5/6 (second half text-only, pinned stage story, width-fluid hero) in CARDS_D514/DIRECAO_FABLE_INICIO/SLOT_SHEET.md. Create the cards from the manifest; the coordinator rescores after they integrate. Skills test = Fable mechanism note vs this 6.4 baseline.
 - OPEN: orphan Chrome PID 28844 (kill at cleanup). Integration worktrees _int40a, _int_t1, _int_t2.
 RETOMAR-OK 19/11 SWITCH-D5-14
 ## HISTORY
