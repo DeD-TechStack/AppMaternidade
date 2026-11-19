@@ -3,7 +3,7 @@ import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { CHAVE_CONVITE } from '../../componentes/conta/armazenamento.ts'
 import { hojeNoFuso, somarDias } from '../../componentes/conta/datas.ts'
 import { fusoDoAparelho, listaDeFusos } from '../../componentes/conta/fusos.ts'
-import { AVISO_BANCO_DEMONSTRACAO, NOMES_DO_H1, TEXTOS_ERRO } from '../../conteudo/conta.ts'
+import { AVISO_BANCO_DEMONSTRACAO, NOMES_DO_H1, PORTA_ACESSO, TEXTOS_ERRO } from '../../conteudo/conta.ts'
 import { CODIGO_CONVITE_PENDENTE } from '../../dados/conta.demonstracao.ts'
 import { criarDadosContaMemoria, simularFalha } from '../../dados/conta.memoria.ts'
 import { criarFixtureDeTeste, renderizarComDados } from '../../teste/renderizarComDados.tsx'
@@ -44,7 +44,7 @@ describe('o passo "Seu nome"', () => {
     expect(salvarBotao.classList.contains('w-full')).toBe(true)
   })
 
-  it('a partir de 64 rem usa as duas colunas das telas de acesso: o h1 e o cartão do passo à esquerda, a cena de mel à direita', async () => {
+  it('a partir de 64 rem usa as duas metades das telas de acesso: o h1 e o cartão do passo no formulário, a placa da porta na outra metade', async () => {
     const dados = await memoriaSemConta()
     const { container } = renderizarComDados('/app/comecar', { dados })
     const h1 = await screen.findByRole('heading', { level: 1 })
@@ -54,25 +54,74 @@ describe('o passo "Seu nome"', () => {
     const formulario = container.querySelector('form')!
     const cartao = h2.closest('section')!
 
-    // Uma coluna no celular (o cartão primeiro, a cena depois); duas a partir de 64 rem.
+    // Uma coluna no celular (o cartão primeiro, a placa depois); duas metades iguais a partir de 64 rem.
     const grade = h1.closest('[data-h~="colunas"]')!
     expect(grade.getAttribute('data-h')).toContain('colunas')
-    expect(grade.getAttribute('data-h-vao')).toBe('midia')
-    expect((grade as HTMLElement).style.getPropertyValue('--h-colunas')).toBe('minmax(0, 7fr) minmax(0, 5fr)')
+    expect((grade as HTMLElement).style.getPropertyValue('--h-colunas')).toBe('minmax(0, 1fr) minmax(0, 1fr)')
     expect(grade.getAttribute('data-h-quebra')).toBe('1024')
     const [esquerda, direita] = [...grade.children]
     expect(esquerda.contains(h1) && esquerda.contains(status) && esquerda.contains(cartao)).toBe(true)
-    expect(direita.querySelector('img[data-cena]')).not.toBeNull()
+    expect(direita.querySelector(`img[alt="${PORTA_ACESSO.alt}"]`)).not.toBeNull()
     expect(cartao.contains(h2) && cartao.contains(frase) && cartao.contains(formulario)).toBe(true)
     expect(cartao.contains(h1)).toBe(false)
     expect(cartao.contains(status)).toBe(false)
 
-    // A ordem do DOM é a visual: o h1, a região de status, o título do passo, a frase e o formulário.
+    // A ordem do DOM é a visual: o h1, a região de status, o título do passo (só leitor de tela) e o formulário, com a
+    // frase entre os campos e o botão Salvar.
     const antes = (a: Element, b: Element) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)
     expect(antes(h1, status)).toBe(true)
     expect(antes(status, h2)).toBe(true)
-    expect(antes(h2, frase)).toBe(true)
-    expect(antes(frase, formulario)).toBe(true)
+    expect(antes(h2, formulario)).toBe(true)
+    expect(formulario.contains(frase)).toBe(true)
+    expect(antes(campoDeFuso(), frase)).toBe(true)
+    expect(antes(frase, screen.getByRole('button', { name: 'Salvar' }))).toBe(true)
+  })
+
+  it('o primeiro campo fica logo abaixo do h1: entre os dois, só o rótulo e o vão do próprio Campo, sem vão local (nada visível: título do passo só para leitor de tela, frase depois dos campos)', async () => {
+    const dados = await memoriaSemConta()
+    const { container } = renderizarComDados('/app/comecar', { dados })
+    const h1 = await screen.findByRole('heading', { level: 1 })
+    const h2 = screen.getByRole('heading', { level: 2, name: 'Seu nome' })
+    const frase = screen.getByText('Falta pouco. Diga o seu nome e o fuso em que você está.')
+    const entrada = campoDeTexto()
+    const campo = entrada.closest('.cm-campo')!
+    const formulario = container.querySelector('form')!
+    const botao = screen.getByRole('button', { name: 'Salvar' })
+
+    // O h1 abre uma `div` simples, sem vão próprio: o único vão entre o h1 e a caixa é o do Campo (rótulo -> caixa).
+    // A altura de verdade (rótulo + 8 px) é conferida no Chrome, em comecar.geometria.test.tsx.
+    const pilha = h1.parentElement!
+    expect(pilha.tagName).toBe('DIV')
+    expect(pilha.hasAttribute('data-h-vao')).toBe(false)
+    expect(pilha.hasAttribute('data-h')).toBe(false)
+
+    // O título do passo continua dando nome à seção, mas só para leitor de tela: não ocupa linha nenhuma.
+    expect(h2.classList.contains('sr-only')).toBe(true)
+    expect(h2.closest('section')!.getAttribute('aria-labelledby')).toBe(h2.id)
+
+    // Do campo para cima até a pilha do h1, nenhum irmão anterior ocupa o fluxo (só o h1 antes da seção).
+    const emFluxo = (no: Element) => !no.classList.contains('sr-only')
+    let atual: Element = campo
+    while (atual.parentElement !== pilha) {
+      for (let irmao = atual.previousElementSibling; irmao; irmao = irmao.previousElementSibling) {
+        expect(emFluxo(irmao), `irmão visível antes de ${atual.tagName.toLowerCase()}: ${irmao.outerHTML.slice(0, 80)}`).toBe(false)
+      }
+      atual = atual.parentElement!
+    }
+    // `atual` é a seção, filha da pilha do h1: entre o h1 e ela só a região de status vazia (sr-only).
+    for (let irmao = atual.previousElementSibling; irmao && irmao !== h1; irmao = irmao.previousElementSibling) {
+      expect(emFluxo(irmao), `irmão visível entre o h1 e a seção: ${irmao.outerHTML.slice(0, 80)}`).toBe(false)
+    }
+
+    // Dentro do campo, o rótulo vem primeiro, depois a caixa; a frase não fica entre o h1 e o campo.
+    expect(campo.firstElementChild!.tagName).toBe('LABEL')
+    expect((campo.firstElementChild as HTMLLabelElement).htmlFor).toBe(entrada.id)
+    const antes = (a: Element, b: Element) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(antes(campo, frase)).toBe(true)
+    expect(formulario.contains(frase)).toBe(true)
+    // O botão Salvar vem depois dos campos e da frase.
+    expect(antes(frase, botao)).toBe(true)
+    expect(antes(campoDeFuso(), botao)).toBe(true)
   })
 
   it('o seletor de fuso do passo não leva a marca de só leitura', async () => {
@@ -185,15 +234,13 @@ describe('o passo "Seu nome"', () => {
     await waitFor(() => expect(document.activeElement).toBe(campoDeTexto()))
   })
 
-  it('traz a barra com "Ir para o Hoje", sem o link do protótipo; o Conta e o Sair são do cabeçalho do site, que traz a navegação', async () => {
+  it('sem a barra "Ir para o Hoje" (a tela de acesso não tem moldura logada); o Conta e o Sair são do cabeçalho do site, que traz a navegação', async () => {
     const dados = await memoriaSemConta()
     renderizarComDados('/app/comecar', { dados })
     await screen.findByRole('heading', { level: 2, name: 'Seu nome' })
 
-    const barra = within(screen.getByRole('navigation', { name: 'Conta' }))
-    expect(screen.getByRole('link', { name: 'Ir para o Hoje' }).getAttribute('href')).toBe('/app/hoje')
-    expect(barra.queryByRole('link', { name: 'Conta' })).toBeNull()
-    expect(barra.queryByRole('button', { name: 'Sair' })).toBeNull()
+    expect(screen.queryByRole('navigation', { name: 'Conta' })).toBeNull()
+    expect(screen.queryByRole('link', { name: 'Ir para o Hoje' })).toBeNull()
     // Um só "Sair" na página, o do cabeçalho, e o "Conta" do cabeçalho não está na página atual.
     const cabecalho = within(document.querySelector<HTMLElement>('header[data-cabecalho]')!)
     expect(screen.getAllByRole('button', { name: 'Sair' })).toHaveLength(1)
