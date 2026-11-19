@@ -66,12 +66,59 @@ describe('o passo "Seu nome"', () => {
     expect(cartao.contains(h1)).toBe(false)
     expect(cartao.contains(status)).toBe(false)
 
-    // A ordem do DOM é a visual: o h1, a região de status, o título do passo, a frase e o formulário.
+    // A ordem do DOM é a visual: o h1, a região de status, o título do passo (só leitor de tela) e o formulário, com a
+    // frase entre os campos e o botão Salvar.
     const antes = (a: Element, b: Element) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)
     expect(antes(h1, status)).toBe(true)
     expect(antes(status, h2)).toBe(true)
-    expect(antes(h2, frase)).toBe(true)
-    expect(antes(frase, formulario)).toBe(true)
+    expect(antes(h2, formulario)).toBe(true)
+    expect(formulario.contains(frase)).toBe(true)
+    expect(antes(campoDeFuso(), frase)).toBe(true)
+    expect(antes(frase, screen.getByRole('button', { name: 'Salvar' }))).toBe(true)
+  })
+
+  it('o primeiro campo fica logo abaixo do h1: entre os dois, só o rótulo e um vão `junto` (nada visível: título do passo só para leitor de tela, frase depois dos campos)', async () => {
+    const dados = await memoriaSemConta()
+    const { container } = renderizarComDados('/app/comecar', { dados })
+    const h1 = await screen.findByRole('heading', { level: 1 })
+    const h2 = screen.getByRole('heading', { level: 2, name: 'Seu nome' })
+    const frase = screen.getByText('Falta pouco. Diga o seu nome e o fuso em que você está.')
+    const entrada = campoDeTexto()
+    const campo = entrada.closest('.cm-campo')!
+    const formulario = container.querySelector('form')!
+    const botao = screen.getByRole('button', { name: 'Salvar' })
+
+    // O h1 abre a pilha da tela, e o vão dessa pilha é o `junto` (um só vão entre o h1 e o que vem depois).
+    const pilha = h1.parentElement!
+    expect(pilha.getAttribute('data-h-vao')).toBe('junto')
+
+    // O título do passo continua dando nome à seção, mas só para leitor de tela: não ocupa linha nenhuma.
+    expect(h2.classList.contains('sr-only')).toBe(true)
+    expect(h2.closest('section')!.getAttribute('aria-labelledby')).toBe(h2.id)
+
+    // Do campo para cima até a pilha do h1, nenhum irmão anterior ocupa o fluxo (só o h1 antes da seção).
+    const emFluxo = (no: Element) => !no.classList.contains('sr-only')
+    let atual: Element = campo
+    while (atual.parentElement !== pilha) {
+      for (let irmao = atual.previousElementSibling; irmao; irmao = irmao.previousElementSibling) {
+        expect(emFluxo(irmao), `irmão visível antes de ${atual.tagName.toLowerCase()}: ${irmao.outerHTML.slice(0, 80)}`).toBe(false)
+      }
+      atual = atual.parentElement!
+    }
+    // `atual` é a seção, filha da pilha do h1: entre o h1 e ela só a região de status vazia (sr-only).
+    for (let irmao = atual.previousElementSibling; irmao && irmao !== h1; irmao = irmao.previousElementSibling) {
+      expect(emFluxo(irmao), `irmão visível entre o h1 e a seção: ${irmao.outerHTML.slice(0, 80)}`).toBe(false)
+    }
+
+    // Dentro do campo, o rótulo vem primeiro, depois a caixa; a frase não fica entre o h1 e o campo.
+    expect(campo.firstElementChild!.tagName).toBe('LABEL')
+    expect((campo.firstElementChild as HTMLLabelElement).htmlFor).toBe(entrada.id)
+    const antes = (a: Element, b: Element) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(antes(campo, frase)).toBe(true)
+    expect(formulario.contains(frase)).toBe(true)
+    // O botão Salvar vem depois dos campos e da frase.
+    expect(antes(frase, botao)).toBe(true)
+    expect(antes(campoDeFuso(), botao)).toBe(true)
   })
 
   it('o seletor de fuso do passo não leva a marca de só leitura', async () => {

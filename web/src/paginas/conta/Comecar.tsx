@@ -85,14 +85,16 @@ function PassoSeuNome({ aoSalvar }: { aoSalvar: () => void }) {
     <>
       <main>
         <DuasColunas>
-          <Pilha vao="grupo">
+          {/* O primeiro campo fica logo abaixo do h1: entre os dois, só o rótulo e um vão `junto`. O título do passo
+              dá nome à seção só para leitor de tela (o rótulo do campo já diz "Seu nome") e a frase vem
+              depois dos campos, antes de "Salvar". */}
+          <Pilha vao="junto">
             <Manchete texto={MANCHETES.comecar} refTitulo={titulo} />
             <RegiaoStatus mensagem={textoDaPassagem(location.state)} />
             <Pilha as="section" vao="pilha" aria-labelledby="titulo-seu-nome">
-              <h2 id="titulo-seu-nome" className="cm-h4">
+              <h2 id="titulo-seu-nome" className="sr-only">
                 {COMECAR.titulo}
               </h2>
-              <p>{COMECAR.frase}</p>
               <form onSubmit={aoEnviar} noValidate className="flex flex-col gap-4">
                 {erroDoEnvio && !campoDoErro ? (
                   <ErroDaConta
@@ -123,6 +125,7 @@ function PassoSeuNome({ aoSalvar }: { aoSalvar: () => void }) {
                   erro={campoDoErro === 'fuso' && erroDoEnvio ? textoDoErro(erroDoEnvio) : null}
                   refEntrada={fusoRef}
                 />
+                <p>{COMECAR.frase}</p>
                 <button type="submit" disabled={enviando} className={BOTAO_PRINCIPAL}>
                   {enviando ? COMUM.salvando : COMECAR.botao}
                 </button>
