@@ -15,6 +15,7 @@ ESTADO: ATIVO (leader session D5-14 since 19/11 ~12h55). Source of state: block 
 - Q-9 t_ed7db934 INTEGRATED (leader takeover): 25acd7a -> merge c02c30a, check 0 (218 files, 4855 pass), RECIBO 2608, card archived (worktree gone with it), wt/ branch deleted, evidence INTQ/Q-9/. Follow-up B02 t_ad91fb5e created (Hoje date in the family zone; ready).
 - MOTION-PAGES t_335008a0: leader takeover; R4 (a)-(h) ALL PASS on 85263ff (comment 2613; INTQ/MOTION-PAGES/lider_verif/motion/REPORT.md). Integration child deleg_dd4cd40a running (INTEGRANDO 2614). After the push: RECIBO, mark done/archive, cleanup, ask the coordinator to score Como funciona / Cuidado compartilhado / Desenvolvimento (skills test vs the previous score). CENAS_SYNC.md holds the CENAS.md line fixes.
 - [~] ANCHOR-1 t_b47f18f0 (ready): a cold load of /page#anchor stays at the top on HEAD and base (12/12, found by R4); shell card Layout.tsx + hook.
+- [~] HEADER-200 t_35117e11 (ready): shared header clips "Criar conta" at 390 with 200% text (found by REP-T2; capture copied to INTQ/REP-T2/matriz/).
 - [D coordenador] encerrar_processos.py refuses cmdlines containing 'hermes' -> card Chromes/vites cannot be stopped (asked 19/11 ~14h40).
 - IN REVIEW: LOC-08b t_5efd9893 (7ab9aaf; sistema.test.tsx scope accepted, comment 2594).
 - RUNNING (observed 13h05): I-RF14-2 t_ba7760ed (round after 1/2; next review LAST -> then release Q-7 t_63c16887 + J-RF14-1 t_41d4c4b0), REP-T2 t_ea5eaa95, METER-INICIO-SYNC t_61da495e, HOME-SEAM-FOLD t_2d31298b.
