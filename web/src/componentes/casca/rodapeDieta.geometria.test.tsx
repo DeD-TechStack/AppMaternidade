@@ -34,7 +34,8 @@ const LARGURAS = [390, 768, 1024, 1440]
 const ALTURA_DA_JANELA: Record<number, number> = { 390: 844, 768: 900, 1024: 900, 1440: 900 }
 const TEMAS = ['claro', 'madrugada'] as const
 type Tema = (typeof TEMAS)[number]
-const TETO_DA_ALTURA: Record<number, number> = { 390: 480, 768: 440, 1024: 440, 1440: 440 }
+// Guarda de regressão, não meta (FOOTER-3): abaixo de 768 os 11 links são duas colunas em seis fileiras, ~600 px em 320 na madrugada.
+const TETO_DA_ALTURA: Record<number, number> = { 390: 640, 768: 440, 1024: 440, 1440: 440 }
 const ALVO_MINIMO: Record<Tema, number> = { claro: 44, madrugada: 56 }
 const MEL = ['rgb(242, 193, 78)', 'rgb(247, 214, 132)']
 const TOLERANCIA = 0.5
@@ -416,7 +417,7 @@ describe('a geometria do rodapé público no Chrome (FOOTER-1)', () => {
     })
   })
 
-  it('altura: o rodapé tem no máximo 480 px em 390x844 e 440 px de 768 em diante (1440x900), nas cinco páginas, de dia e na madrugada, sem rolagem lateral', () => {
+  it('altura: o rodapé tem no máximo 640 px em 390x844 e 440 px de 768 em diante (1440x900), nas cinco páginas, de dia e na madrugada, sem rolagem lateral', () => {
     paraCadaCaso(TEMAS, LARGURAS, (q, rotulo, _tema, largura) => {
       expect(q.rodape!.height, `${rotulo}: altura do rodapé`).toBeLessThanOrEqual(TETO_DA_ALTURA[largura])
       expect(q.scrollWidth, `${rotulo}: scrollWidth do documento`).toBe(q.innerWidth)
@@ -447,7 +448,7 @@ describe('a geometria do rodapé público no Chrome (FOOTER-1)', () => {
       expect(q.links.map((l) => l.rotulo), rotulo).toEqual(LINKS.map((l) => l.rotulo))
       for (const link of q.links) {
         // Uma linha de texto (o intervalo do texto do link ocupa uma só linha); o piso de 44 px (56 na madrugada, campo.css) vale para a caixa.
-        // De 1024 em diante cada rótulo cabe em uma linha; abaixo de 768 (três colunas de ~110 px, spec §3.8 e §3.12 "labels
+        // De 1024 em diante cada rótulo cabe em uma linha; abaixo de 768 (duas colunas, FOOTER-3; spec §3.8 e §3.12 "labels
         // wrap inside 44 px boxes") um rótulo largo quebra em duas linhas dentro da caixa de 44 px, e em 768 também
         // (FOOTER-2: quatro colunas iguais de ~155 px; "Cuidado compartilhado" pede ~160 px).
         expect(link.linhas, `${rotulo}: "${link.rotulo}" quebra em ${link.linhas} linhas (caixa ${Math.round(link.width)} px, nome ${Math.round(q.nome!.width)} px, navegação ${Math.round(q.nav?.width ?? 0)} px)`).toBeLessThanOrEqual(largura < 1024 ? 2 : 1)
@@ -466,8 +467,8 @@ describe('a geometria do rodapé público no Chrome (FOOTER-1)', () => {
       expect(q.titulos.map((t) => t.texto), `${rotulo}: os títulos dos grupos ficam no DOM`).toEqual(COLUNAS_DO_RODAPE.map((c) => c.titulo))
 
       if (largura < 768) {
-        // DS1:RF-04 / §3.8: o desenho abaixo de 768 é livre (a grade de 3 colunas é só a opção medida), dentro do teto de
-        // 480 px. O que vale em toda largura: a ordem do DOM é a dos grupos (Produto, Conta, Ajuda, Legal), os 11 links
+        // DS1:RF-04 / §3.8: o desenho abaixo de 768 é livre (FOOTER-3: duas colunas), dentro do teto de
+        // 640 px. O que vale em toda largura: a ordem do DOM é a dos grupos (Produto, Conta, Ajuda, Legal), os 11 links
         // ficam dentro da janela e nenhum título de grupo some do DOM.
         expect(q.links.map((l) => l.rotulo), `${rotulo}: ordem do DOM`).toEqual(LINKS.map((l) => l.rotulo))
       } else {

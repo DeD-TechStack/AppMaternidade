@@ -776,9 +776,10 @@
   /* A largura é a do quadro da página (a mesma do cabeçalho e das seções, 1200 px no máximo), para o nome e os links
      ficarem na borda esquerda do resto da página; abaixo de 1224 px dá a mesma margem lateral da `.cm-area`. */
   /* O respiro de cima e de baixo do rodapé de cacau é de 64 px em toda largura (FOOTER-2): `pilha` (16, fixo) vezes 4.
-     O rodapé tem de caber em 480 px abaixo de 768 e em 440 daí em diante, também na madrugada (links de 56 px): o
-     nome encosta nos links (a caixa de cada link já traz folga em volta do texto) e o © segue o aviso na mesma linha
-     corrida (a segunda linha do aviso é curta); de 1100 em diante os dois blocos de baixo voltam a ser blocos. */
+     O rodapé tem de caber em 440 px de 768 em diante e em 640 abaixo disso (duas colunas, seis fileiras), também na
+     madrugada (links de 56 px): o nome encosta nos links (a caixa de cada link já traz folga em volta do texto) e o ©
+     segue o aviso na mesma linha corrida (a segunda linha do aviso é curta); de 1100 em diante os dois blocos de baixo
+     voltam a ser blocos. */
   .cm-rodape-quadro {
     width: min(var(--quadro-largura), 100vw - 2 * var(--quadro-calha));
     padding-block: calc(var(--espaco-pilha) * 4);
@@ -799,42 +800,27 @@
     letter-spacing: -0.01em;
   }
 
-  /* Abaixo de 768 o desenho é livre dentro do teto de 480 px (spec §3.8): os 11 links são uma lista só, em três
-     colunas iguais (4 linhas de 44 px), lidas coluna a coluna na ordem dos grupos (Produto, Conta, Ajuda, Legal). Os
-     títulos dos grupos ficam só para o leitor de tela (sr-only). Um rótulo mais largo que a coluna quebra em duas
-     linhas dentro da caixa de 44 px, e nunca passa da coluna (também com a fonte a 200 %: `fr` com mínimo 0 encolhe
-     junto com a janela, sem alargar o rodapé). Os grupos e as listas viram `contents` para os 11 links serem as
-     células de uma grade só, em 4 fileiras, e o início de cada coluna é o mesmo em toda fileira.
-     Nenhuma palavra de link se parte (FOOT2-R1-01). A palavra mais larga é "Desenvolvimento" (~115 px a 15 px) e o
-     quadro tem 350 px em 390: três colunas iguais só a comportam se o vão for mínimo. Por isso o vão é fluido, de
-     1 px em 390 (colunas de 116 px) até o `junto` em 768, e não o `junto` fixo (8 px, colunas de 111 px). De 390 a 767
-     são três colunas iguais. Abaixo de 390 (320, 360, 375) três colunas iguais não comportam a palavra (320: ~93 px
-     por coluna): as três colunas passam a dividir a largura na proporção da palavra mais larga de cada uma
-     (Desenvolvimento 114,8 : comunidade 82,1 : Privacidade 79,5 px, medidas a 15 px, mais a mesma folga de ~0,5 px
-     em cada), de modo que as quatro fileiras e o teto de 480 px se mantêm. Duas colunas em seis fileiras passavam do
-     teto (486 px em 389, ~600 em 320, na madrugada). São `fr` com mínimo 0: a 200 % de texto as colunas encolhem
-     junto com a janela, sem alargar o rodapé (e aí a palavra pode quebrar). */
+  /* Abaixo de 768 os 11 links são uma lista só, em DUAS colunas iguais e calmas (FOOTER-3), em seis fileiras de 44 px
+     (ceil(11 / 2)), lidas coluna a coluna na ordem dos grupos (Produto, Conta, Ajuda, Legal). Os títulos dos grupos
+     ficam só para o leitor de tela (sr-only). Os grupos e as listas viram `contents` para os 11 links serem as células
+     de uma grade só, e o início de cada coluna é o mesmo em toda fileira. O vão entre as colunas é o `bloco` (24 em
+     390, em linha reta até 48 em 1440): a palavra mais larga, "Desenvolvimento" (~115 px a 15 px), cabe inteira em
+     320 (colunas de 128 px) e o texto de um link nunca encosta no do vizinho. Um rótulo mais largo que a coluna
+     ("Cuidado compartilhado") quebra entre as palavras, em duas linhas dentro da caixa de 44 px, e nunca passa da
+     coluna (também com a fonte a 200 %: `fr` com mínimo 0 encolhe junto com a janela, sem alargar o rodapé). */
   .cm-rodape-colunas {
-    --cm-rodape-vao: clamp(1px, calc(1px + (100vw - 390px) * 7 / 378), var(--espaco-junto));
-
     position: relative;
     display: grid;
     grid-auto-flow: column;
-    grid-template-rows: repeat(4, auto);
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    column-gap: var(--cm-rodape-vao);
+    grid-template-rows: repeat(6, auto);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--espaco-bloco);
   }
 
   @media (max-width: 767.98px) {
     .cm-rodape-grupo,
     .cm-rodape-lista {
       display: contents;
-    }
-  }
-
-  @media (max-width: 389.98px) {
-    .cm-rodape-colunas {
-      grid-template-columns: minmax(0, 115.3fr) minmax(0, 82.6fr) minmax(0, 80fr);
     }
   }
 
@@ -919,6 +905,21 @@
 
   .cm-rodape-base > p + p {
     margin-inline-start: var(--espaco-junto);
+  }
+
+  /* FOOTER-3. Abaixo de 768 o aviso e a linha do © são duas linhas de bloco, uma sobre a outra, com 4 px entre elas
+     (o mesmo vão do bloco de baixo de 1100 em diante). De 768 em diante vale o que está acima. */
+  @media (max-width: 767.98px) {
+    .cm-rodape-base {
+      display: grid;
+      gap: 4px;
+    }
+
+    .cm-rodape-base > p,
+    .cm-rodape-base > p + p {
+      display: block;
+      margin: 0;
+    }
   }
 
   /* Rodapé das rotas /app/*: uma linha de links que quebra, sobre uma régua fina; sem painel de mel. */

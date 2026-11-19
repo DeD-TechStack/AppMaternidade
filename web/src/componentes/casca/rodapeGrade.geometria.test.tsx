@@ -34,18 +34,38 @@ const PAGINAS = ['/privacidade', '/como-funciona', '/cuidado-compartilhado', '/r
 const PAGINA_CURTA = '/rota-que-nao-existe'
 const PAGINA_DE_CACAU = '/cuidado-compartilhado'
 const PAGINA_DE_PAPEL = '/privacidade'
-// 1099 e 1100 são os dois lados do ponto em que o nome do rodapé passa para a esquerda da grade.
-// 320 é o celular mais estreito que importa; 389 e 390 são os dois lados do ponto em que três colunas iguais deixam de
-// comportar "Desenvolvimento".
-const LARGURAS = [320, 389, 390, 768, 1024, 1099, 1100, 1440]
-const ALTURA_DA_JANELA: Record<number, number> = { 320: 568, 389: 844, 390: 844, 768: 900, 1024: 900, 1099: 900, 1100: 900, 1440: 900 }
+// 1099 e 1100 são os dois lados do ponto em que o nome do rodapé passa para a esquerda da grade. 767 e 768 são os dois
+// lados do ponto em que as duas colunas viram quatro grupos (FOOTER-3). 320 é o celular mais estreito que importa; 375,
+// 389, 390 e 414 são celulares comuns, todos com as mesmas duas colunas.
+const LARGURAS = [320, 375, 389, 390, 414, 767, 768, 1024, 1099, 1100, 1440]
+const ALTURA_DA_JANELA: Record<number, number> = {
+  320: 568,
+  375: 812,
+  389: 844,
+  390: 844,
+  414: 896,
+  767: 900,
+  768: 900,
+  1024: 900,
+  1099: 900,
+  1100: 900,
+  1440: 900,
+}
+// Abaixo de 768 os 11 links são uma lista de duas colunas, em seis fileiras (FOOTER-3).
+const COLUNAS_ABAIXO_DE_768 = 2
+const LINKS_NA_PRIMEIRA_COLUNA = Math.ceil(11 / COLUNAS_ABAIXO_DE_768)
+// O vão mínimo entre o texto de um link e o do vizinho da mesma fileira, abaixo de 768.
+const VAO_MINIMO_ENTRE_TEXTOS = 8
+// As larguras de celular em que a medida de "uma palavra nunca se parte" e a do vão entre textos valem.
+const LARGURAS_DE_CELULAR = LARGURAS.filter((largura) => largura < 768)
 const TEMAS = ['claro', 'madrugada'] as const
 type Tema = (typeof TEMAS)[number]
 
 const PAPEL = '#F8F6EB'
 const NOITE_2 = '#B9C09F'
 const RESPIRO = 64
-const TETO_DA_ALTURA = (largura: number) => (largura >= 768 ? 440 : 480)
+// Guarda de regressão, não meta: duas colunas em seis fileiras pedem ~600 px em 320, na madrugada (links de 56 px).
+const TETO_DA_ALTURA = (largura: number) => (largura >= 768 ? 440 : 640)
 const DISTANCIA_DO_FECHO = 96
 const TOLERANCIA = 1
 const LINKS_ESPERADOS = COLUNAS_DO_RODAPE.flatMap((coluna) => coluna.links.map((link) => link.rotulo))
@@ -80,9 +100,12 @@ interface Quadro {
   entreSecoes: number
   rodape: Caixa & { margemTopo: number; bordaTopo: number; fundo: string }
   nome: Caixa
+  /** A grade `.cm-rodape-colunas` dos links. */
+  colunas: Caixa
   titulos: (Caixa & Texto)[]
   grupos: Caixa[]
-  links: (Caixa & Texto & { linhas: number; palavras: Palavra[] })[]
+  /** `textoDireita`: a borda direita do texto do link (a caixa do link pode ser mais larga que o texto quando ele quebra). */
+  links: (Caixa & Texto & { linhas: number; palavras: Palavra[]; textoDireita: number })[]
   /** Os parágrafos de baixo: o aviso e, por último, a linha do ©. */
   base: (Caixa & Texto)[]
   textos: Texto[]
@@ -150,6 +173,7 @@ const SCRIPT_DE_MEDIDA = (nonce: string) => `
       entreSecoes: px('--cm-entre-secoes'),
       rodape: { ...caixa(rodape), margemTopo: parseFloat(getComputedStyle(rodape).marginTop), bordaTopo: parseFloat(getComputedStyle(rodape).borderTopWidth), fundo: getComputedStyle(rodape).backgroundColor },
       nome: caixa(rodape.querySelector('[data-nome-rodape]')),
+      colunas: caixa(rodape.querySelector('.cm-rodape-colunas')),
       titulos: [...rodape.querySelectorAll('h2')].map(comCor),
       grupos: [...rodape.querySelectorAll('[data-rodape-grupo]')].map(caixa),
       links: [...rodape.querySelectorAll('a')].map((a) => {
@@ -179,7 +203,8 @@ const SCRIPT_DE_MEDIDA = (nonce: string) => `
             inicio += palavra.length + 1
           }
         }
-        return { ...comCor(a), linhas, palavras }
+        const textoDireita = Math.max(...[...intervalo.getClientRects()].map((r) => r.right))
+        return { ...comCor(a), linhas, palavras, textoDireita }
       }),
       base: [...rodape.querySelectorAll('.cm-rodape-base > p')].map(comCor),
       textos,
@@ -395,7 +420,7 @@ const agrupar = (valores: number[]): number[][] => {
 }
 const amplitude = (valores: number[]) => (valores.length === 0 ? 0 : Math.max(...valores) - Math.min(...valores))
 
-/** Item 1: a grade. De 768 em diante quatro colunas iguais com um vão só (o `espaco-bloco`); abaixo, três colunas iguais. */
+/** Item 1: a grade. De 768 em diante quatro colunas iguais com um vão só (o `espaco-bloco`); abaixo, duas colunas iguais. */
 function violacoesDaGrade(q: Quadro): string[] {
   const v: string[] = []
   if (q.innerWidth >= 768) {
@@ -417,17 +442,52 @@ function violacoesDaGrade(q: Quadro): string[] {
       indice += quantos
     }
   } else {
+    // Abaixo de 768 (FOOTER-3): duas colunas IGUAIS em toda largura, com o vão `espaco-bloco` entre elas. Colunas iguais
+    // = a segunda começa em (largura da grade − vão) / 2 + vão depois da primeira, que começa na borda da grade.
     const colunas = agrupar(q.links.map((l) => l.x))
-    // De 390 a 767 são três colunas IGUAIS (exigido). Abaixo de 390 três colunas iguais não comportam a palavra mais larga
-    // ("Desenvolvimento", ~115 px): ali as três colunas se dividem pela palavra mais larga de cada uma, sem ser iguais.
-    if (colunas.length !== 3) v.push(`${colunas.length} inícios de coluna (são três): ${colunas.map((c) => c[0].toFixed(1)).join(', ')}`)
-    else if (q.innerWidth >= 390) {
+    if (colunas.length !== COLUNAS_ABAIXO_DE_768) {
+      v.push(`${colunas.length} inícios de coluna (são ${COLUNAS_ABAIXO_DE_768}): ${colunas.map((c) => c[0].toFixed(1)).join(', ')}`)
+    } else {
       const inicios = colunas.map((c) => c[0])
-      const degraus = [inicios[1] - inicios[0], inicios[2] - inicios[1]]
-      if (amplitude(degraus) > TOLERANCIA) v.push(`as três colunas não são iguais: degraus de ${degraus.map((d) => d.toFixed(1)).join(' e ')} px`)
+      const larguraDaColuna = (q.colunas.width - q.espacoBloco) / COLUNAS_ABAIXO_DE_768
+      const esperados = [q.colunas.x, q.colunas.x + larguraDaColuna + q.espacoBloco]
+      for (const [i, esperado] of esperados.entries()) {
+        if (Math.abs(inicios[i] - esperado) > TOLERANCIA) v.push(`as duas colunas não são iguais: a coluna ${i + 1} começa em x ${inicios[i].toFixed(1)} e devia começar em ${esperado.toFixed(1)}`)
+      }
+      // A leitura desce por cada coluna: os seis primeiros links na primeira, os cinco seguintes na segunda.
+      for (const [i, link] of q.links.entries()) {
+        const inicio = i < LINKS_NA_PRIMEIRA_COLUNA ? inicios[0] : inicios[1]
+        if (Math.abs(link.x - inicio) > TOLERANCIA) v.push(`"${link.texto}" (link ${i + 1}) devia estar na coluna ${i < LINKS_NA_PRIMEIRA_COLUNA ? 1 : 2}`)
+        const anterior = q.links[i - 1]
+        if (i !== 0 && i !== LINKS_NA_PRIMEIRA_COLUNA && anterior && link.y < anterior.bottom - 0.5) v.push(`"${link.texto}" não vem abaixo de "${anterior.texto}"`)
+        // A coluna da direita guarda o recuo lateral da página: o texto acaba a tanto da borda direita quanto a grade começa da esquerda.
+        const recuoDireito = q.innerWidth - link.textoDireita
+        if (recuoDireito < q.colunas.x - TOLERANCIA) v.push(`"${link.texto}" acaba a ${recuoDireito.toFixed(1)} px da borda direita (o recuo da página é ${q.colunas.x.toFixed(1)})`)
+      }
     }
     for (const coluna of agrupar(q.links.map((l) => l.x))) if (amplitude(coluna) > TOLERANCIA) v.push('um início de coluna varia')
   }
+  return v
+}
+
+/**
+ * FOOTER-3: abaixo de 768, o texto de um link nunca encosta no do vizinho da mesma fileira. O vão é medido entre a borda
+ * direita do TEXTO do link da esquerda (não a da caixa, que é mais larga quando o texto quebra) e o início do da direita.
+ */
+function violacoesDoVaoEntreTextos(q: Quadro): string[] {
+  const v: string[] = []
+  if (q.innerWidth >= 768) return v
+  let pares = 0
+  for (const a of q.links) {
+    for (const b of q.links) {
+      if (b.x <= a.x + TOLERANCIA || Math.abs(a.y - b.y) > TOLERANCIA) continue
+      pares += 1
+      const vao = b.x - a.textoDireita
+      if (vao < VAO_MINIMO_ENTRE_TEXTOS - 0.01) v.push(`"${a.texto}" e "${b.texto}": ${vao.toFixed(1)} px entre os textos (mínimo ${VAO_MINIMO_ENTRE_TEXTOS})`)
+    }
+  }
+  // Falha fechada: duas colunas, onze links, cinco pares de vizinhos por fileira.
+  if (pares !== 11 - LINKS_NA_PRIMEIRA_COLUNA) v.push(`${pares} pares de vizinhos medidos (são ${11 - LINKS_NA_PRIMEIRA_COLUNA})`)
   return v
 }
 
@@ -451,6 +511,22 @@ function violacoesDoRespiro(q: Quadro): string[] {
   if (topo < RESPIRO - 0.5) v.push(`o nome fica a ${topo.toFixed(1)} px do topo do rodapé (mínimo ${RESPIRO})`)
   if (baixo < RESPIRO - 0.5) v.push(`a linha do © fica a ${baixo.toFixed(1)} px da base do rodapé (mínimo ${RESPIRO})`)
   if (q.rodape.height > TETO_DA_ALTURA(q.innerWidth)) v.push(`QUESTION FOR LEADER: rodape ${q.innerWidth} ${Math.round(q.rodape.height)}px passa do teto de ${TETO_DA_ALTURA(q.innerWidth)}`)
+  return v
+}
+
+/**
+ * FOOTER-3: abaixo de 768 o aviso e a linha do © são duas linhas de bloco, uma sobre a outra: o topo do © fica abaixo da
+ * base do aviso (e a menos de 12 px dela, um vão pequeno e não uma faixa solta). De 768 em diante o © pode seguir o aviso
+ * na mesma linha corrida (a medida só vale abaixo de 768).
+ */
+function violacoesDaLinhaDoCopyright(q: Quadro): string[] {
+  const v: string[] = []
+  if (q.innerWidth >= 768) return v
+  if (q.base.length !== 2) return [`${q.base.length} parágrafos na base (são dois: o aviso e o ©)`]
+  const [aviso, copia] = q.base
+  if (copia.y < aviso.bottom - 0.5) v.push(`o © (topo em y ${copia.y.toFixed(1)}) não está abaixo do aviso (base em y ${aviso.bottom.toFixed(1)})`)
+  else if (copia.y - aviso.bottom > 12) v.push(`${(copia.y - aviso.bottom).toFixed(1)} px entre o aviso e o © (o vão é pequeno, 4 px)`)
+  if (Math.abs(copia.x - aviso.x) > TOLERANCIA) v.push('o © não começa na borda esquerda do aviso')
   return v
 }
 
@@ -580,7 +656,7 @@ describe('a grade do rodapé público no Chrome (FOOTER-2)', () => {
     })
   })
 
-  it('1 grade: quatro colunas iguais com um vão só de 768 em diante, três colunas iguais abaixo (controle: uma coluna deslocada falha)', () => {
+  it('1 grade: quatro colunas iguais com um vão só de 768 em diante, duas colunas iguais em toda largura abaixo (controle: uma coluna deslocada falha)', () => {
     paraCadaCaso(PAGINAS, LARGURAS, (q, rotulo) => expect(violacoesDaGrade(q), rotulo).toEqual([]))
     const larga = quadro(PAGINA_DE_PAPEL, 'claro', 1440)
     const estreita = quadro(PAGINA_DE_PAPEL, 'claro', 390)
@@ -598,8 +674,63 @@ describe('a grade do rodapé público no Chrome (FOOTER-2)', () => {
     colunaTorta.links[5].x += 5
     expect(violacoesDaGrade(colunaTorta), 'controle: um link fora da coluna').not.toEqual([])
     const colunasDesiguais = copiar(estreita)
-    for (const link of colunasDesiguais.links) if (link.x > estreita.links[0].x + 100) link.x += 8
-    expect(violacoesDaGrade(colunasDesiguais), 'controle: terceira coluna deslocada').not.toEqual([])
+    for (const link of colunasDesiguais.links.slice(LINKS_NA_PRIMEIRA_COLUNA)) link.x += 8
+    expect(violacoesDaGrade(colunasDesiguais), 'controle: segunda coluna deslocada (colunas desiguais)').not.toEqual([])
+    const tresColunas = copiar(estreita)
+    for (const link of tresColunas.links.slice(8)) link.x += 60
+    expect(violacoesDaGrade(tresColunas), 'controle: uma terceira coluna').not.toEqual([])
+    const leituraTrocada = copiar(estreita)
+    ;[leituraTrocada.links[0].x, leituraTrocada.links[6].x] = [leituraTrocada.links[6].x, leituraTrocada.links[0].x]
+    expect(violacoesDaGrade(leituraTrocada), 'controle: a leitura não desce por cada coluna').not.toEqual([])
+    const colado = copiar(estreita)
+    colado.links[LINKS_NA_PRIMEIRA_COLUNA].textoDireita = colado.innerWidth - 9
+    expect(violacoesDaGrade(colado), 'controle: texto a 9 px da borda direita').not.toEqual([])
+  })
+
+  it('1b vão entre textos: abaixo de 768 o texto de um link fica a 8 px ou mais do vizinho da mesma fileira, em toda largura de celular (controle: 1 px falha)', () => {
+    paraCadaCaso(PAGINAS, LARGURAS_DE_CELULAR, (q, rotulo) => expect(violacoesDoVaoEntreTextos(q), rotulo).toEqual([]))
+    // Registrado para citar no relatório: o menor vão medido em cada largura de celular.
+    const menores = LARGURAS_DE_CELULAR.map((largura) => {
+      const vaos = PAGINAS.flatMap((p) =>
+        TEMAS.flatMap((tema) => {
+          const q = quadro(p, tema, largura)
+          return q.links.flatMap((a) => q.links.filter((b) => b.x > a.x + TOLERANCIA && Math.abs(a.y - b.y) <= TOLERANCIA).map((b) => b.x - a.textoDireita))
+        }),
+      )
+      return `${largura} ${Math.min(...vaos).toFixed(1)}px`
+    })
+    process.stdout.write(`VAO_ENTRE_TEXTOS ${menores.join(' | ')}\n`)
+    for (const largura of LARGURAS_DE_CELULAR) {
+      const base = quadro(PAGINA_DE_PAPEL, 'claro', largura)
+      const colado = copiar(base)
+      // O vizinho da direita começa 1 px depois do texto da esquerda: é o vão de 1 px do desenho antigo.
+      colado.links[LINKS_NA_PRIMEIRA_COLUNA].x = colado.links[0].textoDireita + 1
+      expect(violacoesDoVaoEntreTextos(colado), `controle: vão de 1 px em ${largura}`).not.toEqual([])
+      const sete = copiar(base)
+      sete.links[LINKS_NA_PRIMEIRA_COLUNA].x = sete.links[0].textoDireita + 7
+      expect(violacoesDoVaoEntreTextos(sete), `controle: vão de 7 px em ${largura}`).not.toEqual([])
+    }
+    const semPares = copiar(quadro(PAGINA_DE_PAPEL, 'claro', 390))
+    semPares.links.forEach((link) => (link.y += link.x))
+    expect(violacoesDoVaoEntreTextos(semPares), 'controle: sem vizinhos medidos falha fechado').not.toEqual([])
+  })
+
+  it('1c aviso e ©: abaixo de 768 são duas linhas de bloco, o © abaixo do aviso (controle: o © na linha do aviso falha)', () => {
+    paraCadaCaso(PAGINAS, LARGURAS_DE_CELULAR, (q, rotulo) => expect(violacoesDaLinhaDoCopyright(q), rotulo).toEqual([]))
+    for (const largura of LARGURAS_DE_CELULAR) {
+      const base = quadro(PAGINA_DE_PAPEL, 'claro', largura)
+      const corrida = copiar(base)
+      // O desenho antigo: o © segue o aviso na mesma linha corrida (mesmo topo que a última linha do aviso).
+      corrida.base[1].y = corrida.base[0].bottom - 10
+      expect(violacoesDaLinhaDoCopyright(corrida), `controle: © na linha do aviso em ${largura}`).not.toEqual([])
+      const solto = copiar(base)
+      solto.base[1].y = solto.base[0].bottom + 40
+      expect(violacoesDaLinhaDoCopyright(solto), `controle: © a 40 px do aviso em ${largura}`).not.toEqual([])
+    }
+    // De 768 em diante a medida não vale: o © pode seguir o aviso.
+    const larga = copiar(quadro(PAGINA_DE_PAPEL, 'claro', 768))
+    larga.base[1].y = larga.base[0].bottom - 10
+    expect(violacoesDaLinhaDoCopyright(larga)).toEqual([])
   })
 
   it('2 links: 11 links nos quatro grupos, sem Entrar nem Criar conta (controle: um link a mais falha)', () => {
@@ -619,7 +750,7 @@ describe('a grade do rodapé público no Chrome (FOOTER-2)', () => {
     const quebra = copiar(base)
     quebra.links[1].linhas = 2
     expect(violacoesDosAlvos(quebra, 'madrugada'), 'controle: um link em duas linhas em 1440').not.toEqual([])
-    for (const largura of [320, 390, 768]) {
+    for (const largura of [320, 375, 390, 414, 767, 768]) {
       for (const tema of TEMAS) {
         const q = quadro(PAGINA_DE_PAPEL, tema, largura)
         const quebradas = q.links.flatMap((l) => l.palavras.filter((p) => p.trechos > 1).map((p) => p.texto))
@@ -630,9 +761,9 @@ describe('a grade do rodapé público no Chrome (FOOTER-2)', () => {
         expect(violacoesDosAlvos(partida, tema), `controle: "Desenvolvimento" partida em ${largura}`).not.toEqual([])
       }
     }
-    // Registrado para citar no relatório: a palavra mais larga de cada coluna (três colunas, quatro links cada, o último com três).
-    const largas = [0, 4, 8].map((inicio, i) => {
-      const links = quadro(PAGINA_DE_PAPEL, 'claro', 320).links.slice(inicio, i === 2 ? 11 : inicio + 4)
+    // Registrado para citar no relatório: a palavra mais larga de cada coluna (duas colunas: seis links e cinco).
+    const largas = [0, LINKS_NA_PRIMEIRA_COLUNA].map((inicio, i) => {
+      const links = quadro(PAGINA_DE_PAPEL, 'claro', 320).links.slice(inicio, i === 1 ? 11 : inicio + LINKS_NA_PRIMEIRA_COLUNA)
       const maior = links.flatMap((l) => l.palavras).reduce((a, b) => (b.largura > a.largura ? b : a))
       return `${maior.texto} ${maior.largura.toFixed(1)}px`
     })
@@ -652,7 +783,7 @@ describe('a grade do rodapé público no Chrome (FOOTER-2)', () => {
     expect(violacoesDosAlvos(sobre, 'madrugada'), 'controle: dois links no mesmo lugar').not.toEqual([])
   })
 
-  it('3 respiro e altura: 64 px em cima e embaixo e até 440 px de 768 em diante, 480 abaixo (controle: 40 px falha)', () => {
+  it('3 respiro e altura: 64 px em cima e embaixo e até 440 px de 768 em diante, 640 abaixo (controle: 40 px falha)', () => {
     paraCadaCaso(PAGINAS, LARGURAS, (q, rotulo) => expect(violacoesDoRespiro(q), rotulo).toEqual([]))
     // Registrado para citar no relatório: a maior altura medida de cada largura e tema.
     const resumo: string[] = []
@@ -671,8 +802,8 @@ describe('a grade do rodapé público no Chrome (FOOTER-2)', () => {
     alto.rodape.height = 441
     expect(violacoesDoRespiro(alto), 'controle: 441 px passa do teto').not.toEqual([])
     const celularAlto = copiar(quadro(PAGINA_DE_PAPEL, 'madrugada', 390))
-    celularAlto.rodape.height = 481
-    expect(violacoesDoRespiro(celularAlto), 'controle: 481 px em 390 passa do teto').not.toEqual([])
+    celularAlto.rodape.height = 641
+    expect(violacoesDoRespiro(celularAlto), 'controle: 641 px em 390 passa do teto').not.toEqual([])
   })
 
   it('4 tons: todo texto do rodapé é papel (nome, links) ou noite-2 (títulos, aviso, ©), nos dois temas (controle: um terceiro tom falha)', () => {
