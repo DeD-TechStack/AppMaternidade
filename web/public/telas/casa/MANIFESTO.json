@@ -1,0 +1,224 @@
+{
+  "versao": 1,
+  "fonte_sha": "4fcc1de5be380a007cc09cdef2b3992ff5356529",
+  "ferramenta": {
+    "capturar_sha256": "ecb24d1c8c386e2c8e8a88412f0beca10da9c5a40b2affbdd5448f542e3175a7",
+    "cdp_sha256": "fb18a5c6683d0f625a5f80ef5997cb7279d7caea34c1ffe718b8f92df3db56ea"
+  },
+  "capturas": [
+    {
+      "id": "Y",
+      "estado": "Y",
+      "rota": "/app/historico",
+      "caminho_final": "/app/historico",
+      "h1": "Histórico",
+      "tema": "claro",
+      "viewport": "390x844",
+      "dpr": 2,
+      "toque": true,
+      "instante": "2026-11-18T21:42:04-03:00",
+      "fixture": "SEED-A demo family: criarFixtureRotinaDemonstracao at the fixed clock 21:42 America/Sao_Paulo",
+      "rotulo_demo_oculto": "[data-aviso-tela]",
+      "png": {
+        "largura": 780,
+        "altura": 1688,
+        "sha256": "d701a1ad534373e36f54470f4933789249c2920eb5bfb65db671d79c5cd145a1"
+      },
+      "captura_ok": "CAPTURA_OK historico_y_claro_390.png caminho=/app/historico png=780x1688 esperado=780x1688 mobile=true dpr=2 toque=true scrollWidth=390 sha256=d701a1ad534373e36f54470f4933789249c2920eb5bfb65db671d79c5cd145a1 (só a janela)",
+      "linhas_topo": [
+        "15:00 Tummy time, 8 min por Juliana",
+        "16:00 Mamada, 20 min · os dois lados por Juliana",
+        "17:30 Fralda, Xixi por Ícaro"
+      ],
+      "fonte_px_linha": 15,
+      "rolagem_px": {
+        "1440": 320,
+        "390": 280
+      },
+      "rolagem_dom_px": 2144,
+      "servidos": [
+        {
+          "arquivo": "/telas/casa/historico-y-640w.webp",
+          "largura": 640,
+          "altura": 1385,
+          "bytes": 30986,
+          "sha256": "b39cdf1d10d3c64cd713fea9289bce6ff5c22dee97b2c4aeb6c188f56844b1b1",
+          "qualidade": 82
+        },
+        {
+          "arquivo": "/telas/casa/historico-y-560w.webp",
+          "largura": 560,
+          "altura": 1212,
+          "bytes": 26834,
+          "sha256": "99679ea38918e022f0253ecd544ce2cce6ef20060c1db4b0c516cf8745b30a3d",
+          "qualidade": 82
+        },
+        {
+          "arquivo": "/telas/casa/historico-y-320w.webp",
+          "largura": 320,
+          "altura": 693,
+          "bytes": 13752,
+          "sha256": "fa6462b412e4be99752bd3626af98d93bfa00f6deb8c310d470a366bc4d8a60f",
+          "qualidade": 82
+        },
+        {
+          "arquivo": "/telas/casa/historico-y-280w.webp",
+          "largura": 280,
+          "altura": 606,
+          "bytes": 11924,
+          "sha256": "25e7c44db58acfe875c07aa60a4630e981e32b45d4772f0d98ce67b1edff1679",
+          "qualidade": 82
+        }
+      ],
+      "a42_aberto": {
+        "390": 10.77
+      },
+      "scroll_y": 2144,
+      "altura_documento": 2993,
+      "offset_y_px": 88,
+      "direcao_rolagem": "para_cima"
+    },
+    {
+      "id": "Y_ALTA",
+      "estado": "Y",
+      "rota": "/app/historico",
+      "caminho_final": "/app/historico",
+      "h1": "Histórico",
+      "tema": "claro",
+      "viewport": "390x1234",
+      "dpr": 2,
+      "toque": true,
+      "instante": "2026-11-18T21:42:04-03:00",
+      "fixture": "SEED-A demo family: criarFixtureRotinaDemonstracao at the fixed clock 21:42 America/Sao_Paulo",
+      "rotulo_demo_oculto": "[data-aviso-tela]",
+      "png": {
+        "largura": 780,
+        "altura": 2468,
+        "sha256": "ea0b08187987dfb13c894b2be78a97a9c167402e83621427edfcff8e18099365"
+      },
+      "captura_ok": "CAPTURA_OK historico_y_alta_claro_390.png caminho=/app/historico png=780x2468 esperado=780x2468 mobile=true dpr=2 toque=true scrollWidth=390 sha256=ea0b08187987dfb13c894b2be78a97a9c167402e83621427edfcff8e18099365 (só a janela)",
+      "linhas_topo": [
+        "07:00 Fralda, Cocô por Juliana",
+        "09:00 Sono, 1 h 30 min por Juliana",
+        "11:00 Mamadeira, 100 ml · leite materno por Juliana",
+        "11:15 Fralda, Ambos por Juliana",
+        "13:00 Sono, 1 h 40 min por Juliana",
+        "15:00 Tummy time, 8 min por Juliana",
+        "16:00 Mamada, 20 min · os dois lados por Juliana",
+        "17:30 Fralda, Xixi por Ícaro",
+        "18:00 Sono, 40 min por Ícaro",
+        "19:30 Mamadeira, 120 ml · fórmula por Ícaro",
+        "20:30 Sono, 3 h 20 min por Ícaro"
+      ],
+      "fonte_px_linha": 15,
+      "rolagem_px": {
+        "1440": 320,
+        "390": 280
+      },
+      "rolagem_dom_px": 1759,
+      "servidos": [
+        {
+          "arquivo": "/telas/casa/historico-y-alta-640w.webp",
+          "largura": 640,
+          "altura": 2025,
+          "bytes": 38178,
+          "sha256": "af500bbac11c71731bfc55ea90ced53f06d26da5d19e64bacefa64a7acb493ee",
+          "qualidade": 72
+        },
+        {
+          "arquivo": "/telas/casa/historico-y-alta-560w.webp",
+          "largura": 560,
+          "altura": 1772,
+          "bytes": 33236,
+          "sha256": "2e449658a213f99c52677f05396fb64f94ead41044ca4b6307ee170683e1e88e",
+          "qualidade": 72
+        },
+        {
+          "arquivo": "/telas/casa/historico-y-alta-320w.webp",
+          "largura": 320,
+          "altura": 1013,
+          "bytes": 17302,
+          "sha256": "4ada61efaf1c91aa45ff962eadc831447efcdbee9119d084bc642dcc129009c9",
+          "qualidade": 72
+        },
+        {
+          "arquivo": "/telas/casa/historico-y-alta-280w.webp",
+          "largura": 280,
+          "altura": 886,
+          "bytes": 14924,
+          "sha256": "785dd25552fe5d994701a7c8c9db28855410c84384ed6200fe1d05ed14b5b021",
+          "qualidade": 72
+        }
+      ],
+      "a42_aberto": {
+        "390": 10.77
+      },
+      "scroll_y": 1759,
+      "altura_documento": 2993,
+      "offset_y_px": 473,
+      "direcao_rolagem": "para_cima"
+    },
+    {
+      "id": "N",
+      "estado": "N",
+      "rota": "/app/hoje",
+      "caminho_final": "/app/hoje",
+      "h1": "Hoje",
+      "tema": "madrugada",
+      "viewport": "390x844",
+      "dpr": 2,
+      "toque": true,
+      "instante": "2026-11-18T21:42:03-03:00",
+      "fixture": "SEED-A demo family: criarFixtureRotinaDemonstracao at the fixed clock 21:42 America/Sao_Paulo",
+      "rotulo_demo_oculto": "[data-aviso-tela]",
+      "png": {
+        "largura": 780,
+        "altura": 1688,
+        "sha256": "9cab8fa75ce9e3bc11d51827d14788055006b2f0ed5c805addd9cbee84d579ff"
+      },
+      "captura_ok": "CAPTURA_OK hoje_n_madrugada_390.png caminho=/app/hoje png=780x1688 esperado=780x1688 mobile=true dpr=2 toque=true scrollWidth=390 sha256=9cab8fa75ce9e3bc11d51827d14788055006b2f0ed5c805addd9cbee84d579ff (só a janela)",
+      "linhas_topo": [
+        "Hoje Heloísa, 3 meses Atualizado às 21:42 Atualizar",
+        "Sono 1:12:02 1 hora, 12 minutos e 2 segundos Início às 20:30, por Ícaro",
+        "Iniciar mamada Última mamada às 16:00, registrada por Juliana"
+      ],
+      "fonte_px_linha": 17,
+      "rolagem_px": null,
+      "rolagem_dom_px": 0,
+      "servidos": [
+        {
+          "arquivo": "/telas/casa/hoje-n-640w.webp",
+          "largura": 640,
+          "altura": 1385,
+          "bytes": 28270,
+          "sha256": "59918ab597d2b364283368624fb40195b58f704ece3445802ece6b9c774f2abb",
+          "qualidade": 72
+        },
+        {
+          "arquivo": "/telas/casa/hoje-n-560w.webp",
+          "largura": 560,
+          "altura": 1212,
+          "bytes": 29626,
+          "sha256": "d1c8d7c4ab3e0295f37e861b6f50276a892d81e52b28ab9148e8bcfad7549a4b",
+          "qualidade": 82
+        },
+        {
+          "arquivo": "/telas/casa/hoje-n-320w.webp",
+          "largura": 320,
+          "altura": 693,
+          "bytes": 12740,
+          "sha256": "9e15ec5d85191f48ec0a271d95305a105af6464d9cdbff3aecfa759dc88d7258",
+          "qualidade": 72
+        },
+        {
+          "arquivo": "/telas/casa/hoje-n-280w.webp",
+          "largura": 280,
+          "altura": 606,
+          "bytes": 13414,
+          "sha256": "f2edf6f88da4e20c8eba8853f4dd94f3fb1aaf00ff266c7d1cce58bb8c89ef65",
+          "qualidade": 82
+        }
+      ]
+    }
+  ]
+}
