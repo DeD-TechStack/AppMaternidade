@@ -760,15 +760,29 @@
     margin-top: 0;
   }
 
-  /* A largura é a do quadro da página (a mesma do cabeçalho e das seções, 1200 px no máximo), para o nome e os links
+  /* FOOTER-2. Página curta (a rota inexistente, por exemplo): o main chega à base da janela e o rodapé começa nela,
+     sem uma faixa de papel embaixo dele. O cabeçalho (sticky) está no fluxo e tira a altura dele da conta. */
+  main:has(~ .cm-rodape:not(.cm-rodape-compacto)) {
+    min-height: calc(100svh - var(--cm-cabecalho));
+  }
+
+  /* FOOTER-2. Quando a última faixa do main é de cacau (o Fechamento da noite), o rodapé, também de cacau, começa na
+     base dela: sem margem, sem fio e sem faixa de papel entre as duas. A regra é daqui, do lado do rodapé. Uma última
+     faixa de papel segue com a junção de hoje (as regras acima). */
+  main:has([data-casa] > [data-faixa][data-faixa-fundo='cacau']:last-child) ~ .cm-rodape:not(.cm-rodape-compacto) {
+    margin-top: 0;
+  }
+
+  /* A largura é a do quadro da página (a mesma do cabeçalho e das seções, `--quadro-largura`), para o nome e os links
      ficarem na borda esquerda do resto da página; abaixo de 1224 px dá a mesma margem lateral da `.cm-area`. */
-  /* Abaixo de 768 o rodapé tem de caber em 420 px também na madrugada (links de 56 px, cinco linhas de 280 px): o
-     respiro do quadro é o `junto`, o nome encosta nos links (a caixa de cada link já traz folga em volta do texto) e
-     o © segue o aviso na mesma linha corrida (a segunda linha do aviso é curta). De 768 em diante volta tudo ao
-     respiro de grupo, com o nome e o ©/aviso em blocos. */
+  /* O respiro de cima e de baixo do rodapé de cacau é de 64 px em toda largura (FOOTER-2): `pilha` (16, fixo) vezes 4.
+     O rodapé tem de caber em 440 px de 768 em diante e em 640 abaixo disso (duas colunas, seis fileiras), também na
+     madrugada (links de 56 px): o nome encosta nos links (a caixa de cada link já traz folga em volta do texto) e o ©
+     segue o aviso na mesma linha corrida (a segunda linha do aviso é curta); de 1100 em diante os dois blocos de baixo
+     voltam a ser blocos. */
   .cm-rodape-quadro {
     width: min(var(--quadro-largura), 100vw - 2 * var(--quadro-calha));
-    padding-block: var(--espaco-junto);
+    padding-block: calc(var(--espaco-pilha) * 4);
   }
 
   .cm-rodape-topo {
@@ -786,21 +800,21 @@
     letter-spacing: -0.01em;
   }
 
-  /* Abaixo de 768 o desenho é livre dentro do teto de 420 px (spec §3.8): os 13 links são uma lista só, em três
-     colunas (5 linhas de 44 px), lidos coluna a coluna na ordem dos grupos (Produto, Conta, Ajuda, Legal). Os
-     títulos dos grupos ficam só para o leitor de tela (sr-only). Um rótulo mais largo que a coluna quebra em duas
-     linhas dentro da caixa de 44 px, e nunca passa da coluna (também com a fonte a 200 %). As colunas não são
-     terços iguais: dividem a largura na proporção da palavra mais longa de cada uma (12 : 8 : 8, de ~122, ~82 e
-     ~79 px), então a menor tem folga sobre a palavra a 100 % ("Desenvolvimento" cabe inteira, sem quebra no meio)
-     e, por serem `fr` com mínimo 0, encolhem junto com a janela a 200 %, sem alargar o rodapé. Os grupos e as listas
-     viram `contents` para os 13 links serem as células de uma grade só, em 5 fileiras, lida coluna a coluna. */
+  /* Abaixo de 768 os 11 links são uma lista só, em DUAS colunas iguais e calmas (FOOTER-3), em seis fileiras de 44 px
+     (ceil(11 / 2)), lidas coluna a coluna na ordem dos grupos (Produto, Conta, Ajuda, Legal). Os títulos dos grupos
+     ficam só para o leitor de tela (sr-only). Os grupos e as listas viram `contents` para os 11 links serem as células
+     de uma grade só, e o início de cada coluna é o mesmo em toda fileira. O vão entre as colunas é o `bloco` (24 em
+     390, em linha reta até 48 em 1440): a palavra mais larga, "Desenvolvimento" (~115 px a 15 px), cabe inteira em
+     320 (colunas de 128 px) e o texto de um link nunca encosta no do vizinho. Um rótulo mais largo que a coluna
+     ("Cuidado compartilhado") quebra entre as palavras, em duas linhas dentro da caixa de 44 px, e nunca passa da
+     coluna (também com a fonte a 200 %: `fr` com mínimo 0 encolhe junto com a janela, sem alargar o rodapé). */
   .cm-rodape-colunas {
     position: relative;
     display: grid;
     grid-auto-flow: column;
-    grid-template-rows: repeat(5, auto);
-    grid-template-columns: minmax(0, 12fr) minmax(0, 8fr) minmax(0, 8fr);
-    column-gap: var(--espaco-junto);
+    grid-template-rows: repeat(6, auto);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--espaco-bloco);
   }
 
   @media (max-width: 767.98px) {
@@ -875,8 +889,12 @@
     line-height: var(--texto-pequeno-entrelinha);
   }
 
-  /* O aviso e, depois dele, a linha do ©: cada um em um parágrafo de `pequeno`, em noite-2, embaixo dos links. */
-  .cm-rodape-base {
+  /* O aviso e, depois dele, a linha do ©: cada um em um parágrafo de `pequeno`, em noite-2, embaixo dos links. O tom
+     do aviso é posto aqui (o componente AvisoDemonstracao só traz o marcador): papel e noite-2 são os dois únicos
+     tons de texto do rodapé. */
+  .cm-rodape-base,
+  .cm-rodape-base > p,
+  .cm-rodape-base .aviso-demonstracao {
     color: var(--color-noite-2);
   }
 
@@ -887,6 +905,21 @@
 
   .cm-rodape-base > p + p {
     margin-inline-start: var(--espaco-junto);
+  }
+
+  /* FOOTER-3. Abaixo de 768 o aviso e a linha do © são duas linhas de bloco, uma sobre a outra, com 4 px entre elas
+     (o mesmo vão do bloco de baixo de 1100 em diante). De 768 em diante vale o que está acima. */
+  @media (max-width: 767.98px) {
+    .cm-rodape-base {
+      display: grid;
+      gap: 4px;
+    }
+
+    .cm-rodape-base > p,
+    .cm-rodape-base > p + p {
+      display: block;
+      margin: 0;
+    }
   }
 
   /* Rodapé das rotas /app/*: uma linha de links que quebra, sobre uma régua fina; sem painel de mel. */
@@ -903,17 +936,15 @@
     border-top: 1px solid var(--cor-fio-suave);
   }
 
-  /* De 768 em diante os quatro grupos (com os títulos à vista) ficam numa fileira só. Em 768 o texto dos quatro
-     grupos (~565 px) e o nome (~185 px) não cabem lado a lado numa área de ~720 px: até 1023 o nome fica
-     sobre a fileira dos grupos; de 1024 em diante o nome vai à esquerda e os grupos à direita. Com o nome numa
-     fileira própria (768 a 1023) e os links de 56 px na madrugada, o rodapé só cabe nos 400 px com o respiro
-     `pilha` no quadro, o nome encostado nos grupos e o © na linha corrida do aviso (como abaixo de 768); de 1024
-     em diante, com o nome ao lado, o respiro de grupo e os dois blocos voltam. */
+  /* De 768 em diante os quatro grupos (com os títulos à vista) ficam numa fileira só, numa grade de quatro colunas
+     iguais (`minmax(0, 1fr)`) com um vão só entre elas, o `espaco-bloco` (48 em 1440): as bordas esquerdas dos
+     grupos andam de um degrau constante. O nome (~185 px) e os grupos só cabem lado a lado, com cada rótulo numa
+     linha ("Cuidado compartilhado" pede ~160 px de coluna), de 1100 em diante: até 1099 o nome fica sobre a grade,
+     que toma a largura toda do quadro; de 1100 em diante o nome vai à esquerda e a grade ocupa o resto da fileira.
+     Só em ~768 a coluna (155 px) é menor que esse rótulo, que então quebra em duas linhas dentro da caixa de 44 px.
+     Com o nome numa fileira própria e os links de 56 px na madrugada, o © segue na linha corrida do aviso (como
+     abaixo de 768); de 1100 em diante os dois blocos de baixo voltam. */
   @media (min-width: 768px) {
-    .cm-rodape-quadro {
-      padding-block: var(--espaco-pilha);
-    }
-
     .cm-rodape-topo {
       display: grid;
       row-gap: var(--espaco-junto);
@@ -921,10 +952,10 @@
     }
 
     .cm-rodape-colunas {
-      display: flex;
-      justify-content: space-between;
-      column-count: auto;
-      column-gap: var(--espaco-junto);
+      grid-auto-flow: row;
+      grid-template-rows: none;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      column-gap: var(--espaco-bloco);
     }
 
     /* Os títulos dos grupos voltam ao fluxo normal, à vista. */
@@ -940,17 +971,22 @@
     }
   }
 
-  @media (min-width: 1024px) {
-    .cm-rodape-quadro {
-      padding-block: var(--espaco-grupo);
-    }
-
+  @media (min-width: 1100px) {
     .cm-rodape-topo {
       display: flex;
       align-items: flex-start;
-      justify-content: space-between;
       column-gap: var(--espaco-grupo);
       margin-bottom: var(--espaco-pilha);
+    }
+
+    /* A grade toma o resto da fileira ao lado do nome; `min-width: 0` deixa as colunas encolherem com a janela. */
+    .cm-rodape-nome {
+      flex: none;
+    }
+
+    .cm-rodape-colunas {
+      flex: 1 1 0;
+      min-width: 0;
     }
 
     .cm-rodape-base {
@@ -962,11 +998,6 @@
     .cm-rodape-base > p + p {
       display: block;
       margin: 0;
-    }
-
-    .cm-rodape-colunas {
-      justify-content: flex-start;
-      column-gap: var(--espaco-grupo);
     }
   }
 

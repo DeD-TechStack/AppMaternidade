@@ -315,13 +315,13 @@ describe('rodapé público (FOOTER-1)', () => {
     expect(rodape.querySelector('[data-nome-rodape]')!.textContent).toBe('AppMaternidade')
   })
 
-  it('cada link vai a uma das 9 rotas públicas ou das 4 de acesso (grupo Conta), e as 13 aparecem', () => {
+  it('cada link vai a uma das 9 rotas públicas ou das 4 de acesso (grupo Conta), e as 11 aparecem', () => {
     const { container } = renderizarRota('/')
     const rodape = container.querySelector<HTMLElement>('footer[data-rodape]')!
     const destinos = [...rodape.querySelectorAll('a')].map((a) => a.getAttribute('href'))
-    const esperados = [...ROTAS_PUBLICAS, '/entrar', '/criar-conta', '/recuperar-acesso', '/convite']
+    const esperados = [...ROTAS_PUBLICAS, '/recuperar-acesso', '/convite']
     expect([...destinos].sort()).toEqual([...esperados].sort())
-    expect(COLUNAS_DO_RODAPE.flatMap((c) => c.links).length).toBe(13)
+    expect(COLUNAS_DO_RODAPE.flatMap((c) => c.links).length).toBe(11)
   })
 
   it('cada link do rodapé abre uma página com o próprio h1', async () => {
@@ -336,7 +336,7 @@ describe('rodapé público (FOOTER-1)', () => {
     }
   })
 
-  it('nas rotas públicas o rodapé completo é o compacto de FOOTER-1: sem painel de mel nem frase, com o nome, 4 grupos e 13 links', () => {
+  it('nas rotas públicas o rodapé completo é o compacto de FOOTER-1: sem painel de mel nem frase, com o nome, 4 grupos e 11 links', () => {
     for (const caminho of ['/', '/sobre', '/contato']) {
       const { container, unmount } = renderizarRota(caminho)
       const rodape = container.querySelector<HTMLElement>('footer[data-rodape]')!
@@ -346,7 +346,7 @@ describe('rodapé público (FOOTER-1)', () => {
       expect(rodape.querySelector('.cm-rodape-frase'), caminho).toBeNull()
       expect(rodape.querySelector('.cm-segunda-linha'), caminho).toBeNull()
       expect(within(rodape).getAllByRole('heading', { level: 2 }), caminho).toHaveLength(4)
-      expect(within(rodape).getAllByRole('link'), caminho).toHaveLength(13)
+      expect(within(rodape).getAllByRole('link'), caminho).toHaveLength(11)
       unmount()
     }
   })

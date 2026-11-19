@@ -32,7 +32,9 @@ const umCorpo = (css: string, seletor: string): string => {
   return corpos.join('\n')
 }
 
-// As variáveis do tema gerado no BASE (56c2121) que NÃO mudam: tudo fora de `exibicao`.
+// As variáveis do tema gerado no BASE (56c2121), fora de `exibicao`. Desde o FLUID-DS o piso e o teto do clamp
+// passaram a ser os valores de 320 e de 1920 (a mesma reta continuada), mas a reta (o `calc`) e o valor constante
+// não mudam: em 390 e em 1440 cada variável vale o mesmo que no BASE. O quadro tem conferência própria.
 const LINHAS_DO_BASE_SEM_EXIBICAO = [
   '--espaco-junto: clamp(8px, calc(8px + (100vw - 390px) * 4 / 1050), 12px);',
   '--espaco-pilha: 16px;',
@@ -74,11 +76,41 @@ describe('TYPE-1: a escala de tipo (arquivos-fonte)', () => {
     expect(px(t['titulo-1-1440'].fontSize)).toBeGreaterThanOrEqual(40)
 
     const gerado = lerTexto('src/styles/harmonia.gerado.css')
-    expect(gerado).toMatch(/--texto-exibicao-tamanho: clamp\(2\.75rem, [^;]*, 5rem\);/)
-    expect(gerado).toMatch(/--texto-exibicao-entrelinha: clamp\(3rem, [^;]*, 5\.25rem\);/)
+    // A exibição: a reta de 44 (390) a 80 (1440), com o piso no valor de 320 e o teto no de 1920.
+    expect(gerado).toMatch(/--texto-exibicao-tamanho: clamp\([^,]+, calc\(2\.75rem \+ \(100vw - 390px\) \* 36 \/ 1050\), [^;]+\);/)
+    expect(gerado).toMatch(/--texto-exibicao-entrelinha: clamp\([^,]+, calc\(3rem \+ \(100vw - 390px\) \* 36 \/ 1050\), [^;]+\);/)
     for (const linha of LINHAS_DO_BASE_SEM_EXIBICAO) {
-      expect(gerado, `a variável do BASE mudou ou sumiu: ${linha}`).toContain(`  ${linha}\n`)
+      if (linha.startsWith('--quadro-largura:')) continue
+      const fluida = /^(--[\w-]+): clamp\([^,]+, (calc\(.+\)), [^,]+\);$/.exec(linha)
+      if (!fluida) {
+        expect(gerado, `a variável constante do BASE mudou ou sumiu: ${linha}`).toContain(`  ${linha}\n`)
+        continue
+      }
+      const [, nome, reta] = fluida
+      const atual = new RegExp(`^ {2}${nome}: clamp\\([^,]+, (calc\\(.+\\)), [^,]+\\);$`, 'm').exec(gerado)
+      expect(atual?.[1], `a reta de ${nome} mudou (o valor em 390 ou em 1440 deixaria de ser o do BASE)`).toBe(reta)
     }
+  })
+
+  it('tokens nas quatro âncoras: exibição e corpo em 320 e em 1920', () => {
+    const gerado = lerTexto('src/styles/harmonia.gerado.css')
+    const limites = (nome: string) => {
+      const achado = new RegExp(`^ {2}--${nome}: clamp\\(([\\d.]+)rem, calc\\([^;]+\\), ([\\d.]+)rem\\);$`, 'm').exec(gerado)
+      expect(achado, `--${nome} não é um clamp em rem`).not.toBeNull()
+      return { em320: Number(achado![1]) * 16, em1920: Number(achado![2]) * 16 }
+    }
+    const exibicao = limites('texto-exibicao-tamanho')
+    const corpo = limites('texto-corpo-tamanho')
+    const entrelinhaDoCorpo = limites('texto-corpo-entrelinha')
+    // 320: a exibição segue a reta (44 − 36/15 = 41,6 px); o corpo não desce do seu valor de 390 (17/26).
+    expect(exibicao.em320).toBeCloseTo(41.6, 3)
+    expect(corpo.em320).toBe(px(front.typography['corpo-390'].fontSize))
+    expect(entrelinhaDoCorpo.em320).toBe(px(front.typography['corpo-390'].lineHeight))
+    // 1920: a mesma reta, 480 px depois de 1440 (80 + 36 × 480/1050 e 18 + 480/1050).
+    expect(exibicao.em1920).toBeCloseTo(96.457, 2)
+    expect(corpo.em1920).toBeCloseTo(18.457, 2)
+    // Nada menor que 15 px em 320 (o pequeno é constante).
+    expect(gerado).toContain('  --texto-pequeno-tamanho: 0.9375rem;\n')
   })
 
   it('regras', () => {

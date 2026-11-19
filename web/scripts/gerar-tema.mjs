@@ -15,9 +15,18 @@ const RAIZ_WEB = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 export const CAMINHO_DESIGN = resolve(RAIZ_WEB, 'DESIGN.md')
 export const CAMINHO_SAIDA = resolve(RAIZ_WEB, 'src/styles/harmonia.gerado.css')
 
-/** Os dois viewports que fixam a escala: abaixo de 390 vale o valor de 390; acima de 1440, o de 1440. */
+/**
+ * As quatro âncoras da escala (DESIGN.md, Layout). O DESIGN.md dá os valores de 390 e de 1440; a reta que liga os
+ * dois segue igual para baixo até 320 e para cima até 1920, e só aí a medida para (o piso e o teto do `clamp`).
+ * Os valores de 320 e de 1920 não são escritos à mão: saem da reta (`naReta`). Em 390 e em 1440 nada muda.
+ */
+export const VIEWPORT_PISO = 320
 export const VIEWPORT_MIN = 390
 export const VIEWPORT_MAX = 1440
+export const VIEWPORT_TETO = 1920
+
+/** O quadro tem a sua própria ponta de cima: 1200 px até 1440 e cresce até `quadro-largura-2560` em 2560. */
+export const VIEWPORT_QUADRO_TETO = 2560
 
 /** Os 8 papéis de espaço (MEDIDAS.md §7). Cada um tem `spacing.<papel>-390` e `spacing.<papel>-1440`. */
 export const PAPEIS = ['junto', 'pilha', 'grupo', 'bloco', 'midia', 'secao', 'secao-ampla', 'painel']
@@ -119,18 +128,37 @@ function exigir(objeto, caminho) {
   return atual
 }
 
+/** O valor (px) da reta que passa por (390, a) e (1440, b), num viewport qualquer. */
+export function naReta(a, b, viewport) {
+  return a + ((viewport - VIEWPORT_MIN) * (b - a)) / (VIEWPORT_MAX - VIEWPORT_MIN)
+}
+
 /**
- * `clamp(<390>, <reta>, <1440>)`. A reta liga (390, a) a (1440, b): a + (100vw − 390px) × (b − a) / 1050, com
+ * `clamp(<320>, <reta>, <1920>)`. A reta liga (390, a) a (1440, b): a + (100vw − 390px) × (b − a) / 1050, com
  * (b − a) em px, sem unidade, e a conta toda em inteiros (sem arredondar a inclinação). `a` e `b` em px.
+ * O piso e o teto são a mesma reta em 320 e em 1920, então em 390 e em 1440 o valor é o do DESIGN.md, sem mudar.
+ * `minimo` (px, opcional) sobe o piso: o valor nunca fica abaixo dele (o tipo de leitura, ver `gerarTema`).
  * Em rem, as pontas saem de `px / 16`: com a fonte a 100% elas batem exato. Igual nas duas pontas: valor constante.
  */
-export function fluido(a, b, unidade) {
+export function fluido(a, b, unidade, minimo = -Infinity) {
   const escrever = (px) => (unidade === 'rem' ? `${numero(px / 16)}rem` : `${numero(px)}px`)
   if (a === b) return escrever(a)
-  const piso = escrever(Math.min(a, b))
-  const teto = escrever(Math.max(a, b))
+  const em320 = naReta(a, b, VIEWPORT_PISO)
+  const em1920 = naReta(a, b, VIEWPORT_TETO)
+  const piso = escrever(Math.max(Math.min(em320, em1920), minimo))
+  const teto = escrever(Math.max(em320, em1920))
   const largura = VIEWPORT_MAX - VIEWPORT_MIN
   return `clamp(${piso}, calc(${escrever(a)} + (100vw - ${VIEWPORT_MIN}px) * ${numero(b - a)} / ${largura}), ${teto})`
+}
+
+/**
+ * A largura do quadro: `a` (px) até 1440 e uma reta de (1440, a) a (2560, b), parada em `b` daí para cima. É o único
+ * token cuja reta começa em 1440: abaixo dele o quadro já fica limitado pela janela (100vw − 2 × calha).
+ */
+export function quadroFluido(a, b) {
+  if (a === b) return `${numero(a)}px`
+  const largura = VIEWPORT_QUADRO_TETO - VIEWPORT_MAX
+  return `clamp(${numero(Math.min(a, b))}px, calc(${numero(a)}px + (100vw - ${VIEWPORT_MAX}px) * ${numero(b - a)} / ${largura}), ${numero(Math.max(a, b))}px)`
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -155,24 +183,30 @@ export function gerarTema(textoDoDesign) {
   const calha390 = emPx(exigir(design, 'spacing.quadro-calha-390'), 'spacing.quadro-calha-390')
   const calha1440 = emPx(exigir(design, 'spacing.quadro-calha-1440'), 'spacing.quadro-calha-1440')
   const largura = emPx(exigir(design, 'spacing.quadro-largura'), 'spacing.quadro-largura')
+  const largura2560 = emPx(exigir(design, 'spacing.quadro-largura-2560'), 'spacing.quadro-largura-2560')
   const medio = emPx(exigir(design, 'spacing.medio'), 'spacing.medio')
   const leitura = emPx(exigir(design, 'spacing.leitura'), 'spacing.leitura')
 
   const quadro = [
-    `  --quadro-largura: ${numero(largura)}px;`,
+    `  --quadro-largura: ${quadroFluido(largura, largura2560)};`,
     `  --quadro-calha: ${fluido(calha390, calha1440, 'px')};`,
     `  --medio: ${numero(medio)}px;`,
     `  --leitura: ${numero(leitura)}px;`,
   ]
   apelidosDeEspaco.push(`  --spacing-${PREFIXO_DE_ESPACO}-quadro-calha: var(--quadro-calha);`)
 
+  // Piso de leitura: abaixo de 390 nenhum nível fica menor que o `corpo` de 390. O nível cuja reta cairia abaixo
+  // dele em 320 (hoje só o próprio `corpo`) para no par de 390, tamanho e entrelinha juntos; `pequeno` e
+  // `sobretitulo` já são constantes (15 px, a regra "nada menor que 15 px").
+  const pisoDeLeitura = emPx(exigir(design, 'typography.corpo-390.fontSize'), 'typography.corpo-390.fontSize')
   for (const nivel of NIVEIS) {
     const tamanho390 = emPx(exigir(design, `typography.${nivel}-390.fontSize`), `typography.${nivel}-390.fontSize`)
     const tamanho1440 = emPx(exigir(design, `typography.${nivel}-1440.fontSize`), `typography.${nivel}-1440.fontSize`)
     const entrelinha390 = emPx(exigir(design, `typography.${nivel}-390.lineHeight`), `typography.${nivel}-390.lineHeight`)
     const entrelinha1440 = emPx(exigir(design, `typography.${nivel}-1440.lineHeight`), `typography.${nivel}-1440.lineHeight`)
-    tipo.push(`  --texto-${nivel}-tamanho: ${fluido(tamanho390, tamanho1440, 'rem')};`)
-    tipo.push(`  --texto-${nivel}-entrelinha: ${fluido(entrelinha390, entrelinha1440, 'rem')};`)
+    const segura = naReta(tamanho390, tamanho1440, VIEWPORT_PISO) < Math.min(tamanho390, pisoDeLeitura)
+    tipo.push(`  --texto-${nivel}-tamanho: ${fluido(tamanho390, tamanho1440, 'rem', segura ? tamanho390 : undefined)};`)
+    tipo.push(`  --texto-${nivel}-entrelinha: ${fluido(entrelinha390, entrelinha1440, 'rem', segura ? entrelinha390 : undefined)};`)
     apelidosDeTipo.push(`  --text-${nivel}: var(--texto-${nivel}-tamanho);`)
     apelidosDeTipo.push(`  --text-${nivel}--line-height: var(--texto-${nivel}-entrelinha);`)
   }
@@ -182,8 +216,11 @@ export function gerarTema(textoDoDesign) {
     '   Para mudar um valor, edite web/DESIGN.md e rode `npm --prefix web run tema`.',
     '   O teste src/teste/harmonia.test.ts falha se este arquivo divergir de uma geração nova.',
     '',
-    `   Cada variável fluida vale o valor de ${VIEWPORT_MIN} px até ${VIEWPORT_MIN} px de viewport, o de ${VIEWPORT_MAX} px a partir de ${VIEWPORT_MAX} px,`,
-    '   e cresce em linha reta no meio. Espaço em px; tipo em rem (com a fonte a 100% as pontas batem exato).',
+    `   Cada variável fluida é uma reta que passa pelo valor de ${VIEWPORT_MIN} px e pelo de ${VIEWPORT_MAX} px de viewport (os do DESIGN.md)`,
+    `   e segue a mesma reta até ${VIEWPORT_PISO} px e até ${VIEWPORT_TETO} px; fora deles fica parada (o piso e o teto do clamp).`,
+    `   O corpo não desce abaixo do seu valor de ${VIEWPORT_MIN}. Espaço em px; tipo em rem (com a fonte a 100% as pontas batem exato).`,
+    `   Quadro: ${numero(largura)} px até ${VIEWPORT_MAX} px e em reta até ${numero(largura2560)} px em ${VIEWPORT_QUADRO_TETO} px, para a página não ficar`,
+    '   estreita numa tela grande; a medida do texto continua presa a --medio e --leitura.',
     '   Largura útil do quadro: min(var(--quadro-largura), 100vw - 2 * var(--quadro-calha)).',
     '',
     '   Apelidos do Tailwind (segundo bloco): espaço (padding, margin, gap...) com o prefixo único `esp-` em todo',
