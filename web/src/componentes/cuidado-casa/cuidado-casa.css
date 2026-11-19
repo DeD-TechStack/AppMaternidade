@@ -3,8 +3,9 @@
    slots (as cenas, a medida do texto, a tela da moldura e as colunas da lista de papéis). Estático: nada se move,
    nada nasce escondido, sem sombra, sem gradiente, sem filtro, sem itálico, sem caixa alta, sem transição.
    A composição quebra pela largura do contêiner da página (`cc-pagina`, o [data-casa] desta página), nunca pela
-   janela: 640 (duas colunas) e 1024 (a composição larga, a mesma do `<source>` das cenas). A altura curta da janela
-   (@media max-height) só encolhe a cena do herói, para a ação caber na primeira dobra. */
+   janela: abaixo de 640 (o celular), 640 (duas colunas) e 1024 (a composição larga, a mesma do `<source>` das
+   cenas). A altura curta da janela (@media max-height) só encolhe a cena do herói de 640 em diante; no celular a
+   cena já é a coluna de 40 % ao lado do h1, menor que qualquer teto de altura. */
 
 /* A pílula do cabeçalho, quieta nesta página: contorno de cacau, sem enchimento (o atributo é posto no <html> pela
    página, e a casca não muda). */
@@ -133,6 +134,59 @@
   --produto-tela: min(330px, 100cqw / 1.06);
 }
 
+/* No celular (contêiner < 640): a dobra de 844 guarda o h1, o texto, a ação e pelo menos 240 px da tela da moldura
+   (slot sheet). Para isso a placa inteira (sem recorte, na proporção dela) fica ao lado do h1, numa coluna de 40 %
+   (cerca de 140 × 154 em 390), e o texto, a ação, a moldura e o "três" seguem na largura toda. Os vãos são os do
+   papel: `pilha` entre as linhas da grade, e a diferença até `grupo` (antes da ação e da moldura) e até `midia` (antes
+   do "três") na margem de cima de quem vem depois. */
+@container cc-pagina (width < 640px) {
+  .cc-abertura-quadro {
+    grid-template-columns: minmax(0, 1fr) min(40%, 11rem);
+    grid-template-areas:
+      'titulo cena'
+      'lede lede'
+      'acao acao'
+      'moldura moldura'
+      'tres tres';
+    gap: var(--espaco-pilha);
+  }
+
+  .cc-texto,
+  .cc-chamada,
+  .cc-titulos {
+    display: contents;
+  }
+
+  .cc-abertura .cc-cena-imagem {
+    grid-area: cena;
+    align-self: end;
+  }
+
+  .cc-titulos > h1 {
+    grid-area: titulo;
+    align-self: end;
+  }
+
+  .cc-titulos > p {
+    grid-area: lede;
+  }
+
+  .cc-chamada > .cm-botao-largo {
+    grid-area: acao;
+    margin-top: calc(var(--espaco-grupo) - var(--espaco-pilha));
+  }
+
+  .cc-moldura {
+    grid-area: moldura;
+    margin-top: calc(var(--espaco-grupo) - var(--espaco-pilha));
+  }
+
+  .cc-tres {
+    grid-area: tres;
+    margin-top: calc(var(--espaco-midia) - var(--espaco-pilha));
+  }
+}
+
 @container cc-pagina (min-width: 640px) {
   /* De 640 a 1023: duas colunas. A cena e a chamada lado a lado; a moldura e o "três" embaixo. */
   .cc-abertura-quadro {
@@ -195,6 +249,74 @@
   /* A spec desta página fixa a tela em 320 px em 1440. */
   .cc-moldura .cm-produto-moldura {
     --produto-tela: min(320px, 100cqw / 1.06);
+  }
+}
+
+/* Janela curta (até 520 px de altura: celular deitado, 390 × 300, notebook baixo): o h1, o texto e a ação inteira
+   cabem na janela. O topo da abertura cai para `junto`, os vãos da chamada para `junto` e `pilha`, e o h1 desce
+   para o nível `titulo-1` (34/40 em 390, 40/46 em 844). A placa continua inteira, na proporção dela:
+   de 640 a 1023 ela vai para uma coluna estreita ao lado da chamada (o h1 cabe numa linha), e no celular ela vem
+   logo depois da ação. As janelas de 844 e de 700 px de altura não entram aqui. */
+@media (max-height: 520px) {
+  .cc-abertura {
+    padding-top: var(--espaco-junto);
+  }
+
+  .cc-abertura .cc-cena-imagem {
+    --cc-cena-teto: 55svh;
+  }
+
+  .cc-titulos > h1 {
+    font-size: var(--texto-titulo-1-tamanho);
+    line-height: var(--texto-titulo-1-entrelinha);
+  }
+
+  .cc-chamada {
+    gap: var(--espaco-pilha);
+  }
+
+  .cc-titulos {
+    gap: var(--espaco-junto);
+  }
+
+  @container cc-pagina (width < 640px) {
+    .cc-abertura-quadro {
+      grid-template-areas:
+        'titulo titulo'
+        'lede lede'
+        'acao acao'
+        'cena cena'
+        'moldura moldura'
+        'tres tres';
+      row-gap: var(--espaco-junto);
+    }
+
+    .cc-chamada > .cm-botao-largo,
+    .cc-abertura .cc-cena-imagem {
+      margin-top: calc(var(--espaco-pilha) - var(--espaco-junto));
+    }
+
+    .cc-moldura {
+      margin-top: calc(var(--espaco-grupo) - var(--espaco-junto));
+    }
+
+    .cc-tres {
+      margin-top: calc(var(--espaco-midia) - var(--espaco-junto));
+    }
+  }
+
+  @container cc-pagina (640px <= width < 1024px) {
+    .cc-abertura-quadro {
+      grid-template-columns: min(25%, calc(55svh * 981 / 1082)) minmax(0, 1fr);
+    }
+
+    .cc-abertura .cc-cena-imagem {
+      width: 100%;
+    }
+
+    .cc-titulos > p {
+      max-width: var(--leitura);
+    }
   }
 }
 

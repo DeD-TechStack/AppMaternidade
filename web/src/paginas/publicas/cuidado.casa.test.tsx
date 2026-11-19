@@ -354,6 +354,34 @@ describe('POLISH-CUIDADO as horas, a moldura, o herói e as colunas', () => {
     expect(css).not.toMatch(/@media[^{]*(?:min|max)-width/)
     expect(css).toMatch(/@media[^{]*max-height/)
   })
+
+  it('no celular (contêiner < 640) a cena inteira fica ao lado do h1, para a ação e a moldura caberem na dobra de 844', () => {
+    const css = readFileSync(join(process.cwd(), 'src/componentes/cuidado-casa/cuidado-casa.css'), 'utf8').replace(
+      /\/\*[\s\S]*?\*\//g,
+      '',
+    )
+    const celular = css.match(/@container\s+cc-pagina\s*\(width\s*<\s*640px\)\s*\{([\s\S]*?)\n\}/)
+    expect(celular, 'o bloco @container cc-pagina (width < 640px)').not.toBeNull()
+    expect(celular![1]).toMatch(/grid-template-areas:\s*'titulo cena'\s*'lede lede'\s*'acao acao'\s*'moldura moldura'\s*'tres tres'/)
+    // A placa nunca é recortada: a caixa da cena segue a proporção do arquivo inteiro (981 × 1082).
+    expect(css).toMatch(/\.cc-abertura \.cc-cena-imagem\s*\{[^}]*aspect-ratio:\s*981 \/ 1082/)
+  })
+
+  it('janela curta (max-height 520): abertura com junto no topo, h1 no nível titulo-1 e a ação antes da cena no celular', () => {
+    const css = readFileSync(join(process.cwd(), 'src/componentes/cuidado-casa/cuidado-casa.css'), 'utf8').replace(
+      /\/\*[\s\S]*?\*\//g,
+      '',
+    )
+    const curta = css.match(/@media \(max-height: 520px\) \{([\s\S]*?)\n\}/)
+    expect(curta, 'o bloco @media (max-height: 520px)').not.toBeNull()
+    const bloco = curta![1]
+    expect(bloco).toMatch(/\.cc-abertura\s*\{[^}]*padding-top:\s*var\(--espaco-junto\)/)
+    // Só pares de token de tipo (stylelint harmonia/valores-soltos): titulo-1 nas janelas curtas.
+    expect(bloco).toMatch(/font-size:\s*var\(--texto-titulo-1-tamanho\)/)
+    expect(bloco).toMatch(/line-height:\s*var\(--texto-titulo-1-entrelinha\)/)
+    expect(bloco).toMatch(/grid-template-areas:\s*'titulo titulo'\s*'lede lede'\s*'acao acao'\s*'cena cena'/)
+    expect(bloco).toMatch(/@container cc-pagina \(640px <= width < 1024px\)/)
+  })
 })
 
 describe('CUID-I-12 o gancho do cabeçalho', () => {
