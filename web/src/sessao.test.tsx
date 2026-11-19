@@ -43,7 +43,7 @@ describe('Sessão: a estrutura', () => {
         screen.getByRole('link', { name: 'Voltar para Hoje' }),
         screen.getByRole('heading', { level: 1 }),
         cartao(container),
-        screen.getByRole('region', { name: 'Sonecas anteriores' }),
+        screen.getByRole('region', { name: 'Sessões anteriores de sono' }),
       ]
       for (let i = 1; i < ordem.length; i++) {
         expect(ordem[i - 1].compareDocumentPosition(ordem[i]) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
@@ -71,14 +71,14 @@ describe('Sessão: a estrutura', () => {
 })
 
 describe('Sessão: o título', () => {
-  it('o h1 é "Sono de Heloísa", focável por programa, e "Iniciado às 08:48 por Bruno" é a segunda linha em itálico', async () => {
+  it('o h1 é "Sono de Heloísa", focável por programa, e "Início às 08:48, por Ícaro" é a segunda linha em itálico', async () => {
     await renderizarRotaPronta('/app/sessao')
 
     const h1 = screen.getByRole('heading', { level: 1 })
     expect(h1.textContent).toBe('Sono de Heloísa')
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
     expect(h1.getAttribute('tabindex')).toBe('-1')
-    const linha = screen.getByText('Iniciado às 08:48 por Bruno')
+    const linha = screen.getByText('Início às 08:48, por Ícaro')
     expect(linha.classList.contains('italic')).toBe(true)
     expect(h1.nextElementSibling).toBe(linha)
   })
@@ -227,8 +227,8 @@ describe('Sessão: o cartão do cronômetro', () => {
   })
 
   it('com a nota aberta, o Descartar só aparece para quem pode descartar (cuidador: só as sessões que iniciou)', async () => {
-    // Bruno é cuidador e a sessão aberta é dele: pode descartar. Juliana é responsável. Carla (cuidadora)
-    // abre a sessão de Bruno: encerra e anota, mas não descarta.
+    // Ícaro é cuidador e a sessão aberta é dele: pode descartar. Juliana é responsável. Carla (cuidadora)
+    // abre a sessão de Ícaro: encerra e anota, mas não descarta.
     await renderizarRotaPronta('/app/sessao', { sessao: 'carla' })
     fireEvent.click(screen.getByRole('button', { name: 'Encerrar e anotar' }))
 
@@ -298,9 +298,9 @@ describe('Sessão: as sessões anteriores', () => {
   it('sono: três sonecas, com quem, onde e quanto durou', async () => {
     await renderizarRotaPronta('/app/sessao', { diaCompleto: true })
 
-    const linhas = within(screen.getByRole('region', { name: 'Sonecas anteriores' })).getAllByRole('listitem')
+    const linhas = within(screen.getByRole('region', { name: 'Sessões anteriores de sono' })).getAllByRole('listitem')
     expect(linhas.map((li) => [...li.querySelectorAll('p')].map((p) => p.textContent).join(' | '))).toEqual([
-      '05:55 às 06:40 | Bruno, no carrinho',
+      '05:55 às 06:40 | Ícaro, no carrinho',
       '03:30 às 04:20 | Juliana, no berço',
       '23:00 às 02:45 | Juliana, sono da noite',
     ])
@@ -313,7 +313,7 @@ describe('Sessão: as sessões anteriores', () => {
     mamada.unmount()
 
     await renderizarRotaPronta('/app/sessao', { ajustarRotina: sessaoDe('tummy', MIN, PESSOAS.juliana.id) })
-    expect(screen.getByRole('region', { name: 'Tummy time anteriores' })).toBeTruthy()
+    expect(screen.getByRole('region', { name: 'Sessões anteriores de tummy time' })).toBeTruthy()
   })
 
   it('encerrar põe a sessão no topo da lista da próxima sessão do mesmo tipo', async () => {
@@ -326,7 +326,7 @@ describe('Sessão: as sessões anteriores', () => {
     await aguardarCarga()
 
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Sono de Heloísa')
-    const primeira = within(screen.getByRole('region', { name: 'Sonecas anteriores' })).getAllByRole('listitem')[0]
+    const primeira = within(screen.getByRole('region', { name: 'Sessões anteriores de sono' })).getAllByRole('listitem')[0]
     expect(primeira.textContent).toContain('08:48 às 10:00')
   })
 })
@@ -338,7 +338,7 @@ describe('Sessão: sem sessão', () => {
     const h1 = screen.getByRole('heading', { level: 1 })
     expect(h1.textContent).toBe('Nenhuma sessão em andamento')
     expect(h1.getAttribute('tabindex')).toBe('-1')
-    expect(screen.getByText('Comece uma sessão pela barra Registrar no Hoje.').classList.contains('italic')).toBe(true)
+    expect(screen.getByText('Comece uma sessão pelo registro rápido, na tela Hoje.').classList.contains('italic')).toBe(true)
     expect(screen.getByRole('link', { name: 'Voltar para Hoje' }).getAttribute('href')).toBe('/app/hoje')
     expect(container.querySelector('[data-andamento], [role="timer"]')).toBeNull()
     expect(screen.queryAllByRole('button').filter((b) => !b.closest('[data-cabecalho], [data-rodape]'))).toEqual([])

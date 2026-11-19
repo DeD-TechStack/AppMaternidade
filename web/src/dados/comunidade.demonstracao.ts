@@ -13,7 +13,7 @@ const HORA = 3_600_000
 
 const CONTAS = {
   juliana: '11111111-1111-4111-8111-111111111111',
-  bruno: '22222222-2222-4222-8222-222222222222',
+  icaro: '22222222-2222-4222-8222-222222222222',
   carla: '33333333-3333-4333-8333-333333333333',
   davi: '45444444-4444-4444-8444-444444444444',
   diego: '47000000-0000-4000-8000-000000000001',
@@ -22,7 +22,7 @@ const CONTAS = {
 
 const PERFIS = {
   juliana: '47000000-0000-4000-8000-000000000011',
-  bruno: '47000000-0000-4000-8000-000000000012',
+  icaro: '47000000-0000-4000-8000-000000000012',
   carla: '47000000-0000-4000-8000-000000000013',
 } as const
 
@@ -65,14 +65,14 @@ function criarFixture(carga: number): FixtureComunidade {
     { contaId: CONTAS.diego, papel: 'moderador' as const, concedidoPor: null, concedidoEm: data(), validoAte: null },
     { contaId: CONTAS.elisa, papel: 'admin' as const, concedidoPor: null, concedidoEm: data(), validoAte: null },
   ]
-  const aceites = [CONTAS.juliana, CONTAS.bruno, CONTAS.carla].map((contaId) => ({
+  const aceites = [CONTAS.juliana, CONTAS.icaro, CONTAS.carla].map((contaId) => ({
     contaId,
     versao: '2026-11-05',
     aceitoEm: data(),
   }))
   const perfis = [
     { id: PERFIS.juliana, contaId: CONTAS.juliana, apelido: 'noites_em_claro', bio: null, faixa: null, criadoEm: data() },
-    { id: PERFIS.bruno, contaId: CONTAS.bruno, apelido: 'turno_da_tarde', bio: null, faixa: null, criadoEm: data() },
+    { id: PERFIS.icaro, contaId: CONTAS.icaro, apelido: 'turno_da_tarde', bio: null, faixa: null, criadoEm: data() },
     { id: PERFIS.carla, contaId: CONTAS.carla, apelido: 'cafe_e_colo', bio: null, faixa: null, criadoEm: data() },
   ]
   const topicos = [
@@ -128,7 +128,7 @@ function criarFixture(carga: number): FixtureComunidade {
     {
       id: RESPOSTAS.propaganda,
       topicoId: TOPICOS.mamadeira,
-      autorId: PERFIS.bruno,
+      autorId: PERFIS.icaro,
       respostaA: null,
       corpo: 'Compre o kit de mamadeiras pelo meu link com desconto.',
       estado: 'visivel' as const,
@@ -137,7 +137,7 @@ function criarFixture(carga: number): FixtureComunidade {
       editadoEm: null,
     },
   ]
-  // Carla denuncia a resposta de Bruno como propaganda.
+  // Carla denuncia a resposta de Ícaro como propaganda.
   const denuncias = [
     {
       id: DENUNCIA,

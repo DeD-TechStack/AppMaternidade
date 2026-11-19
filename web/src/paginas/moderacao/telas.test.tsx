@@ -332,7 +332,7 @@ describe('M1: a fila (MAT-40:RF-03)', () => {
     expect(linhas[0].textContent).toContain(COMUM_MODERACAO.tipoDoAlvo.topico)
     expect(linhas[0].textContent).toContain(COMUM_MODERACAO.semTexto)
     expect(linhas[1].textContent).toContain('Texto da denúncia')
-    expect(linhas[0].textContent).toMatch(/\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}/)
+    expect(linhas[0].textContent).toMatch(/\d{2}\/\d{2}\/\d{4} às \d{2}:\d{2}/)
   })
 
   it('o texto passa de 120 caracteres: a linha mostra só os 120 primeiros e as reticências', async () => {
@@ -903,7 +903,7 @@ describe('M4: a auditoria (MAT-40:RF-07)', () => {
     expect(within(linha).getByRole('link', { name: AUDITORIA.abrirConteudo(AUDITORIA.alvoConteudo.topico) }).getAttribute('href')).toBe(
       conteudo('topico', CONTEUDO.topicoDoAutor),
     )
-    expect(within(linha).getByText(/\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}/)).toBeTruthy()
+    expect(within(linha).getByText(/\d{2}\/\d{2}\/\d{4} às \d{2}:\d{2}/)).toBeTruthy()
     unmount()
 
     // A mesma linha, vista por quem agiu: "Você".

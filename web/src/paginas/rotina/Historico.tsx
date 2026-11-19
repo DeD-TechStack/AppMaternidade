@@ -4,6 +4,7 @@ import { Trash2 } from 'lucide-react'
 import { ALVO_APP } from '../../componentes/app/alvo.ts'
 import { Botao } from '../../componentes/base/Botao.tsx'
 import { Pilha } from '../../componentes/base/layout/index.ts'
+import { PainelVazio } from '../../componentes/estado/PainelVazio.tsx'
 import { AvisoDeFuso } from '../../componentes/rotina/AvisoDeFuso.tsx'
 import { AvisoDeLista } from '../../componentes/rotina/AvisoDeLista.tsx'
 import { AvisoDoPapel } from '../../componentes/rotina/AvisoDoPapel.tsx'
@@ -131,7 +132,7 @@ function HistoricoDoBebe({ ativo }: { ativo: BebeAtivo }) {
             {HISTORICO.registrosDoDia}
           </h2>
           {visiveis.length === 0 ? (
-            <p className="border-y border-(--cor-fio-suave) py-4 text-(--cor-texto-2)">{HISTORICO.semRegistros}</p>
+            <PainelVazio texto={HISTORICO.semRegistros} />
           ) : (
             <ul className="border-y border-(--cor-fio-suave)">
               {visiveis.map((registro) => (
@@ -156,7 +157,7 @@ function HistoricoDoBebe({ ativo }: { ativo: BebeAtivo }) {
           <p className="text-(--cor-texto-2)">{ESTADOS.demaisParaSomar}</p>
         ) : (
           <>
-            {vazia ? <p className="text-(--cor-texto-2)">{HISTORICO.semRegistrosNaSemana}</p> : null}
+            {vazia ? <PainelVazio texto={HISTORICO.semRegistrosNaSemana} /> : null}
             <SemanaDoHistorico dias={dias} urlDoDia={(diaDaLinha) => urlDoHistorico({ dia: diaDaLinha, tipos, vista: 'dia' })} />
           </>
         )}

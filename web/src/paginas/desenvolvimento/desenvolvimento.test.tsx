@@ -331,7 +331,7 @@ describe('DES-09: os estados do contexto', () => {
     const mundo = await mundoComBebeDe(100, { bebeArquivado: true, papelDeDavi: 'observador', sessao: 'davi' })
     renderizarRota('/app/desenvolvimento', { mundo })
     await aguardarCarga()
-    expect(screen.getByText('Heloísa está arquivado. Os registros continuam visíveis, mas não dá para registrar.')).toBeTruthy()
+    expect(screen.getByText('O cadastro de Heloísa está arquivado. Os registros continuam visíveis, mas não dá para registrar.')).toBeTruthy()
     expect(screen.queryByText('Seu papel nesta família permite só ver os registros.')).toBeNull()
   })
 

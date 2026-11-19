@@ -44,14 +44,14 @@ describe('R6: a fixture de teste (R38-33)', () => {
     expect(detalhe.ok && detalhe.valor.membros.find((m) => m.contaId === PESSOAS.juliana.id)?.papel).toBe('responsavel')
   })
 
-  it('R6: Bruno é cuidador e Carla é cuidadora só nesta fixture, na Família Exemplo', async () => {
+  it('R6: Ícaro é cuidador e Carla é cuidadora só nesta fixture, na Família Exemplo', async () => {
     const { conta } = criarMundoDeTeste()
 
     const detalhe = await conta.detalheFamilia(ID_FAMILIA)
     expect(detalhe.ok).toBe(true)
     if (!detalhe.ok) return
     const papel = (id: string) => detalhe.valor.membros.find((m) => m.contaId === id)?.papel
-    expect(papel(PESSOAS.bruno.id)).toBe('cuidador')
+    expect(papel(PESSOAS.icaro.id)).toBe('cuidador')
     expect(papel(PESSOAS.carla.id)).toBe('cuidador')
     expect(FAMILIAS_DEMONSTRACAO.exemplo).toBe(ID_FAMILIA)
   })
@@ -68,13 +68,13 @@ describe('R6: a fixture de teste (R38-33)', () => {
     expect(formatarIdade(heloisa.nascimento, diaDaFamilia(agora, Intl.DateTimeFormat().resolvedOptions().timeZone))).toBe('3 meses')
   })
 
-  it('R6: a sessão de sono de Bruno em andamento começou há 72 minutos', () => {
+  it('R6: a sessão de sono de Ícaro em andamento começou há 72 minutos', () => {
     const { fixture, agora } = criarMundoDeTeste()
 
     const sono = fixture.registros.filter((r) => r.tipo === 'sono')
     expect(sono).toHaveLength(1)
     expect(sono[0].fim).toBeNull()
-    expect(sono[0].criadoPor).toBe(PESSOAS.bruno.id)
+    expect(sono[0].criadoPor).toBe(PESSOAS.icaro.id)
     expect(agora - Date.parse(sono[0].inicio)).toBe(72 * MIN)
   })
 
@@ -92,13 +92,13 @@ describe('R6: a fixture de teste (R38-33)', () => {
     expect(Date.parse(nota.destaqueAte!) - agora).toBe(24 * 60 * MIN)
   })
 
-  it('R6: a mamada de Bruno termina há 130 minutos, a fralda de Bruno é de há 50 e o tummy time de Carla termina às 17:30 de ontem', () => {
+  it('R6: a mamada de Ícaro termina há 130 minutos, a fralda de Ícaro é de há 50 e o tummy time de Carla termina às 17:30 de ontem', () => {
     const { fixture, agora } = criarMundoDeTeste()
 
     const de = (tipo: string) => fixture.registros.find((r) => r.tipo === tipo)!
-    expect(de('mamada').criadoPor).toBe(PESSOAS.bruno.id)
+    expect(de('mamada').criadoPor).toBe(PESSOAS.icaro.id)
     expect(agora - Date.parse(de('mamada').fim!)).toBe(130 * MIN)
-    expect(de('fralda').criadoPor).toBe(PESSOAS.bruno.id)
+    expect(de('fralda').criadoPor).toBe(PESSOAS.icaro.id)
     expect(agora - Date.parse(de('fralda').inicio)).toBe(50 * MIN)
     expect(de('tummy').criadoPor).toBe(PESSOAS.carla.id)
     const fim = new Date(de('tummy').fim!)
@@ -156,7 +156,7 @@ describe('R6: a fixture de demonstração (rotina do seed 46_rotina.sql)', () =>
     const dia = (k: number) => new Date(Date.parse(`${hoje}T12:00:00Z`) - k * 86_400_000).toISOString().slice(0, 10)
     const doDia = (k: number) => registros.filter((r) => diaDaFamilia(Date.parse(r.inicio), SP) === dia(k))
     const mae = '11111111-1111-4111-8111-111111111111'
-    const bruno = '22222222-2222-4222-8222-222222222222'
+    const icaro = '22222222-2222-4222-8222-222222222222'
 
     // 1 (D-4): observação da mãe, às 14:50.
     const observacao = doDia(4).filter((r) => r.tipo === 'observacao')
@@ -164,19 +164,19 @@ describe('R6: a fixture de demonstração (rotina do seed 46_rotina.sql)', () =>
     // 2 (D-3): o sono das 20:30 termina às 00:20 de D-2.
     const sonoLongo = doDia(3).find((r) => r.tipo === 'sono' && hora(r.inicio, SP) === '20:30')!
     expect([hora(sonoLongo.fim!, SP), diaDaFamilia(Date.parse(sonoLongo.fim!), SP)]).toEqual(['00:20', dia(2)])
-    // 3 (D-2): a fralda de Bruno, excluída pela mãe.
+    // 3 (D-2): a fralda de Ícaro, excluída pela mãe.
     const excluidos = registros.filter((r) => r.excluidoEm !== null)
-    expect(excluidos.map((r) => [r.tipo, r.criadoPor, r.excluidoPor, diaDaFamilia(Date.parse(r.inicio), SP)])).toEqual([['fralda', bruno, mae, dia(2)]])
-    // 4 (D-1): o sono das 13:00 nasce ao vivo pela mãe e Bruno o encerra às 14:40.
+    expect(excluidos.map((r) => [r.tipo, r.criadoPor, r.excluidoPor, diaDaFamilia(Date.parse(r.inicio), SP)])).toEqual([['fralda', icaro, mae, dia(2)]])
+    // 4 (D-1): o sono das 13:00 nasce ao vivo pela mãe e Ícaro o encerra às 14:40.
     const sonoDaTarde = doDia(1).find((r) => r.tipo === 'sono' && hora(r.inicio, SP) === '13:00')!
-    expect([sonoDaTarde.origem, sonoDaTarde.criadoPor, sonoDaTarde.encerradoPor, hora(sonoDaTarde.fim!, SP)]).toEqual(['ao_vivo', mae, bruno, '14:40'])
+    expect([sonoDaTarde.origem, sonoDaTarde.criadoPor, sonoDaTarde.encerradoPor, hora(sonoDaTarde.fim!, SP)]).toEqual(['ao_vivo', mae, icaro, '14:40'])
     // 5 (D-1): a mamadeira das 11:00 foi corrigida de 90 para 100 ml.
     const mamadeira = doDia(1).find((r) => r.tipo === 'mamadeira' && hora(r.inicio, SP) === '11:00')!
     expect([mamadeira.detalhes.ml, mamadeira.versao]).toEqual([100, 2])
-    // 6 (hoje): o sono de Bruno em andamento, ao vivo, há 72 minutos.
+    // 6 (hoje): o sono de Ícaro em andamento, ao vivo, há 72 minutos.
     const emAndamento = registros.filter((r) => r.fim === null && r.tipo === 'sono')
     expect(emAndamento).toHaveLength(1)
-    expect([emAndamento[0].criadoPor, emAndamento[0].origem, agora() - Date.parse(emAndamento[0].inicio)]).toEqual([bruno, 'ao_vivo', 72 * MIN])
+    expect([emAndamento[0].criadoPor, emAndamento[0].origem, agora() - Date.parse(emAndamento[0].inicio)]).toEqual([icaro, 'ao_vivo', 72 * MIN])
   })
 
   it('R6: tudo no bebê e na Família Exemplo da fixture de conta, com ids v7 únicos e fuso de São Paulo (-180)', () => {
@@ -190,7 +190,7 @@ describe('R6: a fixture de demonstração (rotina do seed 46_rotina.sql)', () =>
     expect(new Set(registros.map((r) => [r.fuso, r.deslocamentoMin].join('|')))).toEqual(new Set([`${SP}|-180`]))
   })
 
-  it('R6: as notas: "Pomada só à noite." da mãe, em destaque por 1 dia, e "Fraldas P no armário de cima." de Bruno', () => {
+  it('R6: as notas: "Pomada só à noite." da mãe, em destaque por 1 dia, e "Fraldas P no armário de cima." de Ícaro', () => {
     const { notas } = criarFixtureRotinaDemonstracao(agora())
 
     const pomada = notas.find((n) => n.texto === 'Pomada só à noite.')!

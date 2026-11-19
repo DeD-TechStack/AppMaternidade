@@ -9,6 +9,7 @@ import { TextoDoCronometro } from './TextoDoCronometro.tsx'
 import { Ilustracao, type NomeIlustracao } from '../campo/Ilustracao.tsx'
 import { ROTULO_SESSAO, type TipoSessao } from '../../prototipo/estado.ts'
 import { formatarCronometro, formatarHora } from '../../prototipo/formatar.ts'
+import { CARTAO_SESSAO } from '../../prototipo/textosSessao.ts'
 
 interface Props {
   /** Com `id`, o "Ver sessão" abre aquela sessão (`/app/sessao?id=`); sem ele, a mais recente. */
@@ -52,12 +53,10 @@ export function CartaoSessao({ sessao, agora, aoEncerrar, podeEncerrar = true, o
         className={`alvo-foco flex flex-col gap-esp-junto border border-(--cor-fio-suave) bg-(--cor-cartao) ${className ?? ''}`}
       >
         <h2 id={idTitulo} className="text-pequeno font-medium text-(--cor-texto-2)">
-          Em andamento
+          {CARTAO_SESSAO.emAndamento}
         </h2>
-        <p className="font-titulo text-titulo-4 font-semibold">Nenhuma sessão em andamento.</p>
-        <p className="text-pequeno text-(--cor-texto-2)">
-          Para começar, toque em Sono ou Mamada na barra Registrar, embaixo.
-        </p>
+        <p className="font-titulo text-titulo-4 font-semibold">{CARTAO_SESSAO.semSessao}</p>
+        <p className="text-pequeno text-(--cor-texto-2)">{CARTAO_SESSAO.comoComecar}</p>
       </Cartao>
     )
   }
@@ -89,7 +88,7 @@ export function CartaoSessao({ sessao, agora, aoEncerrar, podeEncerrar = true, o
             <Icone className="size-4" strokeWidth={2} aria-hidden="true" />
           </span>
           <h2 id={idTitulo} className="text-pequeno font-medium">
-            Em andamento
+            {CARTAO_SESSAO.emAndamento}
           </h2>
         </div>
 
@@ -99,22 +98,22 @@ export function CartaoSessao({ sessao, agora, aoEncerrar, podeEncerrar = true, o
             <div
               role="timer"
               aria-live="off"
-              aria-label={`Tempo de ${ROTULO_SESSAO[sessao.tipo].toLowerCase()}`}
+              aria-label={CARTAO_SESSAO.tempoDe(ROTULO_SESSAO[sessao.tipo].toLowerCase())}
               data-numero=""
               className={`font-titulo text-[64px] leading-none font-semibold tracking-[-0.02em] whitespace-nowrap tabular-nums lg:text-[120px] ${recuoOptico(tempo)}`}
             >
               <TextoDoCronometro tempo={tempo} />
             </div>
             <p className="text-pequeno">
-              {`Iniciado às ${formatarHora(sessao.inicio)} `}
-              <span>{`por ${sessao.pessoa}`}</span>
+              {CARTAO_SESSAO.inicioAs(formatarHora(sessao.inicio))}
+              <span>{CARTAO_SESSAO.porPessoa(sessao.pessoa)}</span>
             </p>
           </Pilha>
 
           <div className="flex flex-wrap items-center gap-3">
             {podeEncerrar ? (
               <Botao tamanho="app" className={`min-w-[8.5rem] ${ALVO_APP}`} desativado={ocupado} data-acao="encerrar" onClick={aoEncerrar}>
-                Encerrar
+                {CARTAO_SESSAO.encerrar}
               </Botao>
             ) : null}
             <Link
@@ -124,7 +123,7 @@ export function CartaoSessao({ sessao, agora, aoEncerrar, podeEncerrar = true, o
               data-botao="contorno"
               data-tamanho="app"
             >
-              Ver sessão
+              {CARTAO_SESSAO.verSessao}
             </Link>
           </div>
           {painel}

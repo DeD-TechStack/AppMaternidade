@@ -15,7 +15,9 @@ const PAGINAS_DE_TEXTO = [
   '/sobre',
 ] as const
 
-const PAGINAS_DE_DESTAQUE = ['/como-funciona', '/cuidado-compartilhado', '/desenvolvimento'] as const
+// /como-funciona, /cuidado-compartilhado e /desenvolvimento saíram das páginas em destaque: as três foram refeitas
+// nas seções da casa e cada uma tem o seu teste (comoFunciona.casa.test.tsx, cuidado.casa.test.tsx e
+// desenvolvimento.casa.test.tsx). Com a lista vazia, o bloco "páginas em destaque" daqui saiu.
 
 function principal(container: HTMLElement): HTMLElement {
   return container.querySelector('main') as HTMLElement
@@ -26,7 +28,7 @@ function ehSecao(elemento: Element): boolean {
 }
 
 describe('páginas públicas: o <main> tem só Secao', () => {
-  for (const caminho of [...PAGINAS_DE_TEXTO, ...PAGINAS_DE_DESTAQUE, '/nao-existe']) {
+  for (const caminho of PAGINAS_DE_TEXTO) {
     it(`${caminho}: todo filho do <main> é uma Secao e nenhum elemento usa cm-area`, () => {
       const { container } = renderizarRota(caminho)
       const filhos = Array.from(principal(container).children)
@@ -79,87 +81,6 @@ describe('páginas de leitura: coluna de leitura de 640', () => {
   })
 })
 
-describe('páginas em destaque: Secao, Colunas e painéis', () => {
-  for (const caminho of PAGINAS_DE_DESTAQUE) {
-    it(`${caminho}: a abertura é um Colunas de vão midia, de 1100 px em diante, com o texto e a mídia por filhos`, () => {
-      const { container } = renderizarRota(caminho)
-      const abertura = principal(container).querySelector('.pd-abertura')!
-      expect(abertura.getAttribute('data-h')).toContain('colunas')
-      expect(abertura.getAttribute('data-h-vao')).toBe('midia')
-      expect(abertura.getAttribute('data-h-quebra')).toBe('1100')
-      expect(abertura.querySelector(':scope > .pd-abertura-texto')!.getAttribute('data-h')).toContain('coluna')
-      expect(abertura.querySelector(':scope > .pd-abertura-midia')!.getAttribute('data-h')).toContain('coluna')
-      expect(abertura.closest('[data-h~="secao"]')!.parentElement).toBe(principal(container))
-    })
-
-    it(`${caminho}: nenhum bloco do <main> usa classe de margem entre seções (pd-secao, pd-pagina)`, () => {
-      const { container } = renderizarRota(caminho)
-      expect(principal(container).classList.contains('pd-pagina')).toBe(false)
-      expect(principal(container).querySelector('.pd-secao, .pd-pagina')).toBeNull()
-    })
-
-    it(`${caminho}: a cabeça de cada seção é um QuadroLayout medio (880) e o h2 vem de uma Pilha`, () => {
-      const { container } = renderizarRota(caminho)
-      const cabecas = principal(container).querySelectorAll('.pd-cabeca')
-      for (const cabeca of cabecas) {
-        expect(cabeca.getAttribute('data-h')).toContain('pilha')
-        const quadro = cabeca.closest('[data-h~="quadro"]')
-        // Dentro de uma coluna (tummy time) a cabeça não leva quadro próprio.
-        if (!cabeca.closest('[data-h~="coluna"]')) expect(quadro!.getAttribute('data-h-largura')).toBe('medio')
-      }
-    })
-  }
-
-  it('Como funciona: uma faixa de cacau, como Secao de painel; os passos são uma Pilha bloco (ol)', () => {
-    const { container } = renderizarRota('/como-funciona')
-    const faixas = principal(container).querySelectorAll('[data-h~="secao"][data-h-variante="painel"]')
-    expect(faixas).toHaveLength(1)
-    expect(faixas[0].querySelector(':scope > [data-painel="cacau"]')).not.toBeNull()
-    expect(faixas[0].matches('section[aria-labelledby]')).toBe(true)
-    const passos = principal(container).querySelector('ol[data-passos]')!
-    expect(passos.getAttribute('data-h')).toContain('pilha')
-    expect(passos.getAttribute('data-h-vao')).toBe('bloco')
-    const colunas = principal(container).querySelector('.pd-duas')!
-    expect(colunas.getAttribute('data-h-vao')).toBe('bloco')
-    expect(colunas.getAttribute('data-h-quebra')).toBe('900')
-  })
-
-  it('Cuidado compartilhado: o painel de areia é uma Secao de painel (.pd-registro) e a lista dos blocos é uma Pilha', () => {
-    const { container } = renderizarRota('/cuidado-compartilhado')
-    const paineis = principal(container).querySelectorAll('[data-h~="secao"][data-h-variante="painel"]')
-    expect(paineis).toHaveLength(1)
-    const caixa = paineis[0].querySelector(':scope > [data-painel="areia"]')!
-    expect(caixa.classList.contains('pd-registro')).toBe(true)
-    const lista = principal(container).querySelector('ul[data-blocos]')!
-    expect(lista.getAttribute('data-h')).toContain('pilha')
-    expect(lista.closest('[data-h~="quadro"]')!.getAttribute('data-h-largura')).toBe('quadro')
-  })
-
-  it('Desenvolvimento: a faixa de cacau é uma Secao de painel e o tummy time é uma Pilha bloco', () => {
-    const { container } = renderizarRota('/desenvolvimento')
-    const paineis = principal(container).querySelectorAll('[data-h~="secao"][data-h-variante="painel"]')
-    expect(paineis).toHaveLength(1)
-    expect(paineis[0].querySelector(':scope > [data-painel="cacau"]')).not.toBeNull()
-    const cima = principal(container).querySelector('#tummy-time .pd-tummy-cima')!
-    expect(cima.getAttribute('data-h-vao')).toBe('midia')
-    expect(cima.parentElement!.getAttribute('data-h-vao')).toBe('bloco')
-    const fim = principal(container).querySelector('#tummy-time .pd-tummy-fim')!
-    expect(fim.getAttribute('data-h-vao')).toBe('grupo')
-  })
-})
-
-describe('rota inexistente: Secao, QuadroLayout e Pilha', () => {
-  it('o título, a linha de ajuda e o botão são itens de uma Pilha dentro do QuadroLayout', () => {
-    const { container } = renderizarRota('/nao-existe')
-    const secao = principal(container).firstElementChild!
-    const quadro = secao.querySelector(':scope > [data-h~="quadro"]')!
-    expect(quadro.getAttribute('data-h-largura')).toBe('medio')
-    const pilha = quadro.querySelector(':scope > [data-h~="pilha"]')!
-    expect(Array.from(pilha.children).map((filho) => filho.tagName)).toEqual(['H1', 'P', 'A'])
-    expect(principal(container).querySelector('.cm-pagina-simples')).toBeNull()
-  })
-})
-
 function semComentarios(arquivo: string): string {
   return readFileSync(arquivo, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
 }
@@ -177,51 +98,6 @@ describe('H-3c R1-01: caixas de conteúdo com fundo ou borda são o primitivo Ca
     expect(regra).not.toMatch(/padding\s*:/)
     expect(regra).not.toMatch(/border-radius\s*:/)
   })
-
-  it('Desenvolvimento: o painel de cada fase é um Cartao, mantendo a coluna', () => {
-    const { container } = renderizarRota('/desenvolvimento')
-    const fases = container.querySelectorAll('[role="tabpanel"].pd-fase')
-    expect(fases.length).toBeGreaterThan(0)
-    for (const fase of fases) {
-      expect(ehCartao(fase)).toBe(true)
-      expect((fase.getAttribute('data-h') ?? '').split(' ')).toContain('coluna')
-    }
-  })
-
-  it('Desenvolvimento: o aviso de saúde é um Cartao, com o ícone e o texto', () => {
-    const { container } = renderizarRota('/desenvolvimento')
-    const aviso = container.querySelector('[data-aviso-saude]')!
-    expect(ehCartao(aviso)).toBe(true)
-    expect(aviso.querySelector('svg')).not.toBeNull()
-  })
-
-  it('o CSS local não repete o padding nem o raio que o Cartao já dá (só a exceção do celular)', () => {
-    const css = semComentarios('src/componentes/publicas-destaque/publicas-destaque.css')
-    const base = css.match(/\n\.pd-fase\s*\{([^}]*)\}/)![1]
-    expect(base).not.toMatch(/padding\s*:/)
-    expect(base).not.toMatch(/border-radius\s*:/)
-    const aviso = css.match(/\n\.pd-aviso-saude\s*\{([^}]*)\}/)![1]
-    expect(aviso).not.toMatch(/padding\s*:/)
-    expect(aviso).not.toMatch(/border-radius\s*:/)
-  })
-})
-
-describe('H-3c R1-03: o vão entre os passos é o da Pilha (bloco), sem margem de fora no item', () => {
-  it('nenhuma regra põe margem no item da lista de passos', () => {
-    const css = semComentarios('src/componentes/publicas-destaque/publicas-destaque.css')
-    const regras = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
-    const comMargem = regras
-      .filter(([, seletor]) => /\.pd-passos\s*>\s*li/.test(seletor))
-      .filter(([, , corpo]) => /margin/.test(corpo))
-    expect(comMargem.map(([, seletor]) => seletor.trim())).toEqual([])
-  })
-
-  it('Como funciona: os passos são uma Pilha de vão bloco e cada item é filho direto', () => {
-    const { container } = renderizarRota('/como-funciona')
-    const passos = principal(container).querySelector('ol[data-passos]')!
-    expect(passos.getAttribute('data-h-vao')).toBe('bloco')
-    for (const item of passos.children) expect(item.tagName).toBe('LI')
-  })
 })
 
 describe('H-3c R1-05: a cabeça da página de leitura tem o limite de leitura (640)', () => {
@@ -238,10 +114,7 @@ describe('H-3c R1-05: a cabeça da página de leitura tem o limite de leitura (6
 })
 
 describe('os arquivos de estilo das páginas públicas não têm espaço solto', () => {
-  const ARQUIVOS = [
-    'src/componentes/publicas-texto/publicasTexto.css',
-    'src/componentes/publicas-destaque/publicas-destaque.css',
-  ]
+  const ARQUIVOS = ['src/componentes/publicas-texto/publicasTexto.css']
   for (const arquivo of ARQUIVOS) {
     it(`${arquivo}: sem clamp() nem px acima de 32 em margin, padding e gap`, () => {
       const css = readFileSync(arquivo, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')

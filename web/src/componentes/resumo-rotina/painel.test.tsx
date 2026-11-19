@@ -118,7 +118,7 @@ describe('painel: o que o painel mostra', () => {
     const casos: Array<[OpcoesMundo, string]> = [
       [{ sessao: 'davi' }, 'Você ainda não faz parte de uma família.'],
       [{ semBebes: true }, 'Esta família ainda não tem bebê cadastrado.'],
-      [{ sessao: 'bruno' }, 'Só quem é responsável pelo bebê pode compartilhar números da rotina.'],
+      [{ sessao: 'icaro' }, 'Só quem é responsável pelo bebê pode compartilhar números da rotina.'],
       [{ sessao: 'davi', papelDeDavi: 'observador' }, 'Só quem é responsável pelo bebê pode compartilhar números da rotina.'],
       [{ bebeArquivado: true }, 'Não há bebê ativo para resumir.'],
     ]

@@ -178,8 +178,8 @@ reset role;
 
 select is(
   pg_temp.chaves(current_setting('teste.a')::jsonb),
-  array['conta', 'familias', 'formato', 'gerado_em', 'notas', 'registros', 'vinculos'],
-  'o resultado tem exatamente as sete chaves do topo'
+  array['avisos', 'comunidade', 'conta', 'familias', 'formato', 'gerado_em', 'notas', 'registros', 'vinculos'],
+  'o resultado tem exatamente as nove chaves do topo (as oito de antes e avisos, RF14:RF-15)'
 );
 select is(current_setting('teste.a')::jsonb ->> 'formato', 'appmaternidade-exportacao-v1', 'formato');
 select is(current_setting('teste.a')::jsonb ->> 'gerado_em', pg_temp.utc(now()), 'gerado_em é agora, em UTC');
@@ -354,8 +354,8 @@ select is(
 );
 select is(
   pg_temp.ids(current_setting('teste.a')::jsonb -> 'notas', 'id'),
-  array['a2000000-0000-7000-8000-000000000020', 'a2000000-0000-7000-8000-000000000011'],
-  'notas do topo: só as que A criou onde não é responsável ativo (famílias 4 e 3), sem repetir as de familias[]'
+  array['a2000000-0000-7000-8000-000000000011'],
+  'notas do topo: só as que A criou onde tem vínculo ativo sem ser responsável (família 3); a da família 4, de onde saiu, não (SEC-06, decisão b)'
 );
 select is(
   current_setting('teste.a')::jsonb -> 'registros' -> 0 ->> 'familia_id',
@@ -460,7 +460,7 @@ create function pg_temp.vaza_itens(doc text, propria int) returns boolean langua
 $$;
 
 select is(
-  current_setting('teste.b')::jsonb - 'gerado_em',
+  current_setting('teste.b')::jsonb - 'gerado_em' - 'comunidade' - 'avisos',
   jsonb_build_object(
     'formato', 'appmaternidade-exportacao-v1',
     'conta', jsonb_build_object('id', 'aaaaaaaa-0000-4000-8000-000000000002', 'email', 'b@exemplo.invalid',
@@ -520,7 +520,7 @@ select is(
 );
 
 select is(
-  current_setting('teste.c')::jsonb - 'gerado_em',
+  current_setting('teste.c')::jsonb - 'gerado_em' - 'comunidade' - 'avisos',
   jsonb_build_object(
     'formato', 'appmaternidade-exportacao-v1',
     'conta', jsonb_build_object('id', 'aaaaaaaa-0000-4000-8000-000000000003', 'email', 'c@exemplo.invalid',
@@ -536,7 +536,7 @@ select is(pg_temp.vaza(current_setting('teste.c'), 3), false,
   'observador: o texto não traz família, bebê, convite, codigo_hash nem outra conta');
 
 select is(
-  current_setting('teste.e')::jsonb - 'gerado_em',
+  current_setting('teste.e')::jsonb - 'gerado_em' - 'comunidade' - 'avisos',
   jsonb_build_object(
     'formato', 'appmaternidade-exportacao-v1',
     'conta', jsonb_build_object('id', 'aaaaaaaa-0000-4000-8000-000000000005', 'email', 'e@exemplo.invalid',
@@ -592,9 +592,8 @@ select is(
   'depois de excluir a família 3, o topo dos registros de A só tem o da família 4'
 );
 select is(
-  pg_temp.ids(current_setting('teste.a2')::jsonb -> 'notas', 'id'),
-  array['a2000000-0000-7000-8000-000000000020'],
-  'depois de excluir a família 3, o topo das notas de A só tem a da família 4'
+  current_setting('teste.a2')::jsonb -> 'notas', '[]'::jsonb,
+  'depois de excluir a família 3, o topo das notas de A fica vazio (a da família 4, de onde saiu, não vai; SEC-06)'
 );
 select ok(
   current_setting('teste.a2') !~ '(a1000000-0000-7000-8000-0000000000(10|11)|a2000000-0000-7000-8000-0000000000(10|11)|Nota do X|Nota do A, cuidador)',

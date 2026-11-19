@@ -1,10 +1,11 @@
 import { spawnSync } from 'node:child_process'
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync, writeSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { cleanup, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
+import { INI } from '../../conteudo/inicio.ts'
 import { aguardarCarga, renderizarRota } from '../../teste/renderizarRota.tsx'
 
 // BASE-DEF-1: a legenda da tabela de comparação e os títulos de duas linhas do Início, medidos num Chrome de
@@ -41,6 +42,10 @@ interface Titulo {
   texto: string
   /** A largura somada de cada linha visual, de cima para baixo. */
   linhas: number[]
+  /** A largura útil da coluna do título: a caixa do h1/h2 sem o padding, arredondada. */
+  coluna: number
+  /** Quantas palavras ficam partidas em mais de uma linha visual. */
+  palavrasQuebradas: number
 }
 
 interface Medida {
@@ -71,17 +76,43 @@ const SCRIPT_DE_MEDIDA = `
     const titulos = [...document.querySelectorAll('h1, h2')].filter((t) => t.textContent.trim().length > 0 && t.getClientRects().length > 0 && !t.classList.contains('sr-only')).map((t) => {
       const partes = t.querySelectorAll('[aria-hidden="true"]').length > 0 ? [...t.querySelectorAll('[aria-hidden="true"]')] : [t]
       const porTopo = new Map()
+      // Só os retângulos do texto: selectNodeContents(span) devolve também a caixa do próprio span de bloco
+      // (a coluna inteira), que somada ao texto inflava a linha acima da coluna.
       for (const parte of partes) {
-        const faixa = document.createRange()
-        faixa.selectNodeContents(parte)
-        for (const r of faixa.getClientRects()) {
-          if (r.width < 1) continue
-          const topo = [...porTopo.keys()].find((k) => Math.abs(k - r.top) < r.height / 2) ?? r.top
-          porTopo.set(topo, (porTopo.get(topo) ?? 0) + r.width)
+        const andadorDeLinhas = document.createTreeWalker(parte, NodeFilter.SHOW_TEXT)
+        for (let no = andadorDeLinhas.nextNode(); no; no = andadorDeLinhas.nextNode()) {
+          const faixa = document.createRange()
+          faixa.selectNodeContents(no)
+          for (const r of faixa.getClientRects()) {
+            if (r.width < 1) continue
+            const topo = [...porTopo.keys()].find((k) => Math.abs(k - r.top) < r.height / 2) ?? r.top
+            porTopo.set(topo, (porTopo.get(topo) ?? 0) + r.width)
+          }
         }
       }
       const linhas = [...porTopo.entries()].sort((a, b) => a[0] - b[0]).map((e) => Math.round(e[1]))
-      return { texto: t.textContent.trim(), linhas }
+      // A coluna: a caixa do título sem o padding. As palavras partidas: cada palavra vira um Range, e ela está
+      // partida quando os retângulos dela caem em dois ou mais topos distintos (a mesma regra de agrupar das linhas).
+      const estilo = getComputedStyle(t)
+      const coluna = Math.round(t.getBoundingClientRect().width - parseFloat(estilo.paddingLeft) - parseFloat(estilo.paddingRight))
+      let palavrasQuebradas = 0
+      for (const parte of partes) {
+        const andador = document.createTreeWalker(parte, NodeFilter.SHOW_TEXT)
+        for (let no = andador.nextNode(); no; no = andador.nextNode()) {
+          for (const palavra of no.textContent.matchAll(/\\S+/g)) {
+            const faixaDaPalavra = document.createRange()
+            faixaDaPalavra.setStart(no, palavra.index)
+            faixaDaPalavra.setEnd(no, palavra.index + palavra[0].length)
+            const topos = []
+            for (const r of faixaDaPalavra.getClientRects()) {
+              if (r.width < 1) continue
+              if (!topos.some((k) => Math.abs(k - r.top) < r.height / 2)) topos.push(r.top)
+            }
+            if (topos.length >= 2) palavrasQuebradas += 1
+          }
+        }
+      }
+      return { texto: t.textContent.trim(), linhas, coluna, palavrasQuebradas }
     })
     responder(JSON.stringify({
       innerWidth: window.innerWidth,
@@ -104,6 +135,26 @@ const SEM_MOVIMENTO = '<style>*,*::before,*::after{animation:none!important;tran
  * O CSS do build aponta as fontes por `/assets/...` ou, com o subcaminho do Pages (vite.config.ts), por
  * `/AppMaternidade/assets/...`: numa página file:// as duas formas passam a apontar para web/dist/assets.
  */
+// A limpeza da pasta temporária do Chrome nunca decide o resultado do teste: no Windows o Chrome pode segurar o perfil
+// e o `rmSync` lançaria EPERM do `finally`. A falha vira só um aviso (caminho, código e mensagem), sem throw.
+function avisar(texto: string): void {
+  console.warn(texto)
+  try {
+    writeSync(2, `${texto}\n`)
+  } catch (erro) {
+    console.error(`Aviso: não deu para escrever no stderr (${String(erro)}); o aviso era: ${texto}`)
+  }
+}
+
+function limparPasta(pasta: string, comTentativas = true): void {
+  try {
+    rmSync(pasta, comTentativas ? { recursive: true, force: true, maxRetries: 6, retryDelay: 250 } : { recursive: true, force: true })
+  } catch (erro) {
+    const e = erro as NodeJS.ErrnoException
+    avisar(`Aviso: não deu para remover a pasta temporária ${pasta} (${e.code ?? 'sem código'}): ${e.message}`)
+  }
+}
+
 function cssComFontesDoDist(nome: string): string {
   const base = `${pathToFileURL(PASTA_CSS).href}/`
   return readFileSync(join(PASTA_CSS, nome), 'utf8').replace(/url\((["']?)\/(?!\/)(?:[^)"'/]+\/)*?assets\//g, (_t, aspas: string) => `url(${aspas}${base}`)
@@ -143,7 +194,8 @@ function medirNoChrome(corpoHtml: string, largura: number, altura: number): Medi
         '--headless=new',
         '--no-sandbox',
         '--disable-gpu',
-        '--disable-crashpad-for-testing',
+        // CI-UBUNTU: no Chrome 157 do Linux esta opção mata o processo ("FD ownership violation"); no Windows ela fica.
+        ...(process.platform === 'win32' ? ['--disable-crashpad-for-testing'] : []),
         '--no-first-run',
         '--allow-file-access-from-files',
         '--hide-scrollbars',
@@ -167,7 +219,7 @@ function medirNoChrome(corpoHtml: string, largura: number, altura: number): Medi
     }
     return JSON.parse(achado[1].replaceAll('&quot;', '"').replaceAll('&amp;', '&').replaceAll('&lt;', '<').replaceAll('&gt;', '>')) as Medida
   } finally {
-    rmSync(pasta, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 })
+    limparPasta(pasta)
   }
 }
 
@@ -190,10 +242,16 @@ function equilibrado(linhas: number[]): boolean {
   return linhas.every((l) => l >= 0.4 * maior)
 }
 
+/** Nenhuma linha passa da coluna (com 1 px de folga de arredondamento) e nenhuma palavra fica partida no meio. */
+function semEstouro(titulo: { linhas: number[]; coluna: number; palavrasQuebradas: number }): boolean {
+  return titulo.linhas.every((l) => l <= titulo.coluna + 1) && titulo.palavrasQuebradas === 0
+}
+
 describe('a área que rola a tabela de comparação (AUD-01)', () => {
   afterEach(cleanup)
 
-  for (const caminho of ['/sistema', '/']) {
+  // REP-HOME: the new Início has no comparison table (COPY_inicio.md), so /sistema alone carries this contract.
+  for (const caminho of ['/sistema']) {
     it(`em ${caminho}: recebe o foco do Tab e tem o papel de região com o nome da legenda`, async () => {
       renderizarRota(caminho, { sessao: null })
       await aguardarCarga()
@@ -214,6 +272,14 @@ describe('o controle negativo da regra de equilíbrio', () => {
     expect(equilibrado([264, 285])).toBe(true)
     expect(equilibrado([385, 663, 476])).toBe(true)
     expect(equilibrado([])).toBe(true)
+  })
+})
+
+describe('o controle negativo da regra de estouro', () => {
+  it('reprova a linha mais larga que a coluna e a palavra partida, e aprova o título que cabe', () => {
+    expect(semEstouro({ linhas: [641, 1131, 311], coluna: 1200, palavrasQuebradas: 0 })).toBe(true)
+    expect(semEstouro({ linhas: [641, 1331, 311], coluna: 1200, palavrasQuebradas: 0 })).toBe(false)
+    expect(semEstouro({ linhas: [100], coluna: 1200, palavrasQuebradas: 1 })).toBe(false)
   })
 })
 
@@ -251,16 +317,21 @@ describe(`a geometria da legenda e dos títulos no Chrome${motivoDoPulo ? ` (pul
     [390, 844],
   ] as const) {
     it.skipIf(motivoDoPulo !== null)(
-      `Início em ${largura}: o título da faixa da madrugada e o h1 quebram em linhas equilibradas`,
+      `Início em ${largura}: os títulos de seção (prova, fecho) quebram em linhas equilibradas e o h1 não estoura a coluna nem parte uma palavra`,
       async () => {
         const medida = await medirRota('/', largura, altura)
-        const madrugada = medida.titulos.find((t) => t.texto.startsWith('De madrugada'))
-        const heroi = medida.titulos.find((t) => t.texto.startsWith('A rotina do bebê'))
-        for (const titulo of [madrugada, heroi]) {
+        // REP-HOME: the new Início's two-line headings are the proof and the closing h2s; the h1 is "Ela mamou que horas?".
+        const secoes = [INI.h2Prova, INI.h2Fecho].map((texto) => medida.titulos.find((t) => t.texto === texto))
+        const heroi = medida.titulos.find((t) => t.texto.startsWith(INI.h1Dia))
+        for (const titulo of [...secoes, heroi]) {
           expect(titulo, 'título não encontrado').toBeDefined()
           expect(titulo!.linhas.length).toBeGreaterThan(0)
-          expect(equilibrado(titulo!.linhas), `${titulo!.texto}: linhas ${titulo!.linhas.join(' / ')}`).toBe(true)
         }
+        for (const titulo of secoes) {
+          expect(equilibrado(titulo!.linhas), `${titulo!.texto}: linhas ${titulo!.linhas.join(' / ')}`).toBe(true)
+          expect(semEstouro(titulo!), 'título de seção estoura a coluna ou quebra uma palavra: ' + JSON.stringify(titulo)).toBe(true)
+        }
+        expect(semEstouro(heroi!), 'h1 estoura a coluna ou quebra uma palavra: ' + JSON.stringify(heroi)).toBe(true)
       },
       120_000,
     )

@@ -142,3 +142,133 @@ describe('/sistema: o espaço da página sai das primitivas', () => {
     for (const vao of ['junto', 'pilha', 'grupo', 'bloco']) expect(pilhas, vao).toContain(vao)
   })
 })
+
+// DS1-I-16 (RF-16): a /sistema ganha um bloco dentro de PaginaCasa com as seis peças da base, e nenhuma peça
+// aposentada (§1) aparece dentro dele. O bloco mora numa filha do <main> que é uma Secao: o teste "toda filha do
+// <main> é uma Secao", acima, continua valendo sem mudança. CenaHeroi e ProdutoEmMoldura não entram (sem arte servida).
+describe('DS1-I-16 /sistema: o bloco da casa com as seis seções da base', () => {
+  const casaDe = (container: HTMLElement) => {
+    const casas = container.querySelectorAll<HTMLElement>('main [data-casa]')
+    expect(casas, 'um único [data-casa] dentro do <main>').toHaveLength(1)
+    return casas[0]
+  }
+
+  it('DS1-I-16 há um único [data-casa] no <main>, e a página inteira não tem outro fora dele', () => {
+    const { container } = renderizarRota('/sistema')
+    casaDe(container)
+    expect(container.querySelectorAll('[data-casa]')).toHaveLength(1)
+  })
+
+  it('DS1-I-16 FaixaInteira aparece nos quatro chãos (papel, cacau, areia, chao-noite), com o chão marcado', () => {
+    const { container } = renderizarRota('/sistema')
+    const faixas = [...casaDe(container).querySelectorAll<HTMLElement>('[data-faixa]')]
+    const chaos = faixas.map((f) => f.getAttribute('data-faixa-fundo'))
+    for (const chao of ['papel', 'cacau', 'areia', 'chao-noite']) expect(chaos, chao).toContain(chao)
+    expect(chaos.filter((c) => c !== null && !['papel', 'cacau', 'areia', 'chao-noite'].includes(c))).toEqual([])
+  })
+
+  it('DS1-I-16 há uma faixa dividida: o lado de cacau é uma camada [data-faixa-lado] aria-hidden dentro da casa', () => {
+    const { container } = renderizarRota('/sistema')
+    const lados = casaDe(container).querySelectorAll<HTMLElement>('[data-faixa] > [data-faixa-lado]')
+    expect(lados.length).toBeGreaterThanOrEqual(1)
+    for (const lado of lados) {
+      expect(lado.getAttribute('aria-hidden')).toBe('true')
+      expect(lado.getAttribute('data-faixa-fundo')).toBe('cacau')
+    }
+  })
+
+  it('DS1-I-16 Legenda: pelo menos um <p data-legenda> com um só nó de texto, dentro da casa', () => {
+    const { container } = renderizarRota('/sistema')
+    const legendas = [...casaDe(container).querySelectorAll<HTMLElement>('p[data-legenda]')]
+    expect(legendas.length).toBeGreaterThanOrEqual(1)
+    for (const legenda of legendas) {
+      expect(legenda.children).toHaveLength(0)
+      expect((legenda.textContent ?? '').trim().length).toBeGreaterThan(0)
+    }
+  })
+
+  it('DS1-I-16 FaixaProva: uma ul[data-prova-lista] com itens, e um h2 acima dela na mesma faixa', () => {
+    const { container } = renderizarRota('/sistema')
+    const lista = casaDe(container).querySelector<HTMLElement>('ul[data-prova-lista]')!
+    expect(lista).not.toBeNull()
+    expect(lista.querySelectorAll(':scope > li').length).toBeGreaterThanOrEqual(2)
+    const faixa = lista.closest<HTMLElement>('[data-faixa]')!
+    expect(faixa, 'a lista de prova está numa faixa').not.toBeNull()
+    expect(faixa.querySelector('h2')).not.toBeNull()
+  })
+
+  it('DS1-I-16 Perguntas: h3 de titulo-4 e p de corpo, todos à vista (sem botão que abra e feche)', () => {
+    const { container } = renderizarRota('/sistema')
+    const casa = casaDe(container)
+    const perguntas = [...casa.querySelectorAll<HTMLElement>('h3.text-titulo-4')]
+    expect(perguntas.length).toBeGreaterThanOrEqual(2)
+    expect(perguntas.length).toBeLessThanOrEqual(8)
+    for (const h3 of perguntas) {
+      const resposta = h3.nextElementSibling ?? h3.parentElement?.querySelector('p.text-corpo')
+      expect(resposta?.matches('p.text-corpo'), h3.textContent ?? '').toBe(true)
+    }
+    expect(casa.querySelector('button[aria-expanded], details, summary, [hidden]')).toBeNull()
+  })
+
+  it('DS1-I-16 Fechamento: um h2 e um BotaoLargo ([data-botao-largo], cm-botao) que leva a um destino', () => {
+    const { container } = renderizarRota('/sistema')
+    const casa = casaDe(container)
+    const botoes = [...casa.querySelectorAll<HTMLAnchorElement>('a[data-botao-largo]')]
+    expect(botoes.length).toBeGreaterThanOrEqual(1)
+    for (const botao of botoes) {
+      expect(botao.classList.contains('cm-botao')).toBe(true)
+      expect(botao.getAttribute('href')).toMatch(/^\//)
+      expect((botao.textContent ?? '').trim().length).toBeGreaterThan(0)
+    }
+    const fechamento = botoes[0].closest<HTMLElement>('[data-faixa]')!
+    expect(fechamento, 'o botão largo está numa faixa de fechamento').not.toBeNull()
+    expect(within(fechamento).getAllByRole('heading', { level: 2 }).length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('DS1-I-16 nenhuma peça aposentada dentro da casa (§1): flutuante, painel, cena de estúdio, números, citação, relatos, acordeão, tabela, selos, faixa de cacau', () => {
+    const { container } = renderizarRota('/sistema')
+    const casa = casaDe(container)
+    const aposentadas = [
+      '.cm-flutuante',
+      '[data-cartao-plano]',
+      '[data-painel]',
+      "[data-h~='caixa-cor']",
+      '.cm-cena',
+      '[data-cena]',
+      '.cm-faixa-cacau',
+      '[data-selos]',
+      '[data-numeros]',
+      '.cm-citacao',
+      '.cm-depoimento',
+      '.cm-depoimentos-lista',
+      '[data-acordeao]',
+      'table.cm-tabela',
+      '.cm-tabela-rolagem',
+    ]
+    for (const seletor of aposentadas) expect(casa.querySelector(seletor), seletor).toBeNull()
+  })
+
+  it('DS1-I-16 CenaHeroi e ProdutoEmMoldura não são exibidos na /sistema (sem arte servida)', () => {
+    const { container } = renderizarRota('/sistema')
+    expect(container.querySelector('[data-cena-heroi]')).toBeNull()
+    expect(container.querySelector('[data-produto-moldura]')).toBeNull()
+  })
+
+  it('DS1-I-16 o bloco da casa não traz texto novo: os títulos e rótulos vêm de conteudo/, e nenhum fica vazio', () => {
+    const { container } = renderizarRota('/sistema')
+    const casa = casaDe(container)
+    for (const titulo of casa.querySelectorAll('h2, h3')) {
+      expect((titulo.textContent ?? '').trim().length, titulo.outerHTML.slice(0, 60)).toBeGreaterThan(0)
+    }
+    for (const botao of casa.querySelectorAll('a[data-botao-largo]')) {
+      expect((botao.textContent ?? '').trim().length).toBeGreaterThan(0)
+    }
+  })
+
+  it('DS1-I-16 a /sistema mantém o resto: os níveis de tipo e as barras de espaço continuam fora da casa', () => {
+    const { container } = renderizarRota('/sistema')
+    const casa = casaDe(container)
+    expect(container.querySelectorAll('[data-nivel]').length).toBe(9)
+    expect(casa.querySelector('[data-nivel], [data-espaco]')).toBeNull()
+  })
+})

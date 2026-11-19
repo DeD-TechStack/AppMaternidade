@@ -1,0 +1,334 @@
+/* As nove pecas compartilhadas das paginas publicas (DS1:RF-12, spec 3 e 3.12). Estatico: o primeiro desenho ja mostra
+   tudo (nada nasce escondido, nada se move); a unica transicao do pacote seria a escala do toque do `.cm-botao`
+   (site.css), que este arquivo nao repete. So tokens de cor (`var(--color-*)`), nenhuma sombra, nenhum gradiente. */
+@layer components {
+  /* Os quatro chaos de uma faixa (DS1:RF-01): papel, cacau, areia e chao-noite (o `texto-2` do tema, #6E6560).
+     O texto de cacau fica sobre papel e areia; o de papel, sobre cacau e chao-noite (papel sobre chao-noite = 5,25:1;
+     cacau sobre ele, 2,7:1, e proibido). O anel de foco segue o texto. */
+  [data-faixa][data-faixa-fundo='papel'],
+  [data-faixa-lado][data-faixa-fundo='papel'] {
+    background-color: var(--color-papel);
+  }
+
+  [data-faixa][data-faixa-fundo='cacau'],
+  [data-faixa-lado][data-faixa-fundo='cacau'] {
+    background-color: var(--color-cacau);
+  }
+
+  [data-faixa][data-faixa-fundo='areia'],
+  [data-faixa-lado][data-faixa-fundo='areia'] {
+    background-color: var(--color-areia);
+  }
+
+  [data-faixa][data-faixa-fundo='chao-noite'],
+  [data-faixa-lado][data-faixa-fundo='chao-noite'] {
+    background-color: var(--color-texto-2);
+  }
+
+  [data-faixa-fundo='papel'],
+  [data-faixa-fundo='areia'] {
+    --foco-faixa: var(--color-cacau);
+
+    color: var(--color-cacau);
+  }
+
+  [data-faixa-fundo='cacau'],
+  [data-faixa-fundo='chao-noite'] {
+    --foco-faixa: var(--color-papel);
+
+    color: var(--color-papel);
+  }
+
+  [data-faixa-fundo] :focus-visible {
+    outline-color: var(--foco-faixa);
+  }
+
+  /* FaixaInteira: de ponta a ponta, raio 0, padding vertical `secao`. A parte direita de uma faixa dividida e uma
+     camada solida da costura ate a borda direita, por baixo do conteudo; abaixo de 768 ela so existe com
+     `costuraX390` (sem ele a costura fica a 100 %, e a camada tem largura zero). */
+  .cm-faixa-inteira {
+    position: relative;
+    box-sizing: border-box;
+    width: 100%;
+    padding-block: var(--espaco-secao);
+    border-radius: 0;
+    overflow-x: clip;
+  }
+
+  .cm-faixa-quadro {
+    position: relative;
+  }
+
+  [data-faixa-lado] {
+    position: absolute;
+    inset-block: 0;
+    right: 0;
+    left: var(--costura-x-390, 100%);
+  }
+
+  @media (min-width: 768px) {
+    [data-faixa-lado] {
+      left: var(--costura-x, 100%);
+    }
+  }
+
+  .cm-tom-da-faixa {
+    min-width: 0;
+  }
+
+  /* Titulos e textos das pecas: o peso do titulo vem do token, a medida de leitura limita a linha. */
+  .cm-sec-titulo {
+    margin: 0;
+    font-weight: var(--peso-titulo);
+    font-style: normal;
+    overflow-wrap: anywhere;
+    text-wrap: balance;
+  }
+
+  .cm-sec-texto {
+    max-width: var(--leitura);
+    margin: 0;
+    text-wrap: pretty;
+  }
+
+  /* Legenda: uma linha de abertura em prumo; cacau de dia, papel de noite. */
+  .cm-legenda {
+    max-width: var(--leitura);
+    margin: 0;
+    font-style: normal;
+    text-wrap: pretty;
+  }
+
+  [data-legenda][data-tom='dia'] {
+    color: var(--color-cacau);
+  }
+
+  [data-legenda][data-tom='noite'] {
+    color: var(--color-papel);
+  }
+
+  /* FaixaProva: titulo, texto e uma lista de fatos em linhas com fio de 1 px; nunca uma grade de blocos iguais. */
+  .cm-faixa-prova {
+    display: grid;
+    gap: var(--espaco-pilha);
+  }
+
+  [data-prova-lista] {
+    display: flex;
+    flex-direction: column;
+    max-width: var(--medio);
+    margin: var(--espaco-junto) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  [data-prova-lista] > li {
+    padding-block: var(--espaco-pilha);
+    border-top: 1px solid currentcolor;
+    overflow-wrap: anywhere;
+  }
+
+  [data-prova-lista] > li:last-child {
+    border-bottom: 1px solid currentcolor;
+  }
+
+  /* Perguntas: o h2 e a lista, com todas as respostas a vista. */
+  .cm-perguntas {
+    display: grid;
+    gap: var(--espaco-bloco);
+  }
+
+  .cm-perguntas-lista {
+    display: grid;
+    gap: var(--espaco-grupo);
+    max-width: var(--medio);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cm-perguntas-lista > li {
+    display: grid;
+    gap: var(--espaco-junto);
+  }
+
+  /* BotaoLargo: a largura do quadro abaixo de 768 (350 em 390), a propria dali em diante. */
+  .cm-botao.cm-botao-largo {
+    display: flex;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  @media (min-width: 768px) {
+    .cm-botao.cm-botao-largo {
+      display: inline-flex;
+      width: auto;
+    }
+  }
+
+  /* Fechamento: o unico bloco centrado. */
+  .cm-fechamento {
+    display: grid;
+    justify-items: center;
+    gap: var(--espaco-grupo);
+    text-align: center;
+  }
+
+  /* CenaHeroi: a placa de estudio rente a uma borda, o texto ao lado, e as paredes e os chaos em camadas solidas que
+     seguem a costura da placa ate as duas bordas da janela. Abaixo de 768 o texto vem sobre a placa (o recorte de
+     390, na largura da janela); de 768 em diante a placa tem `larguraMax` em 1440 e cresce em linha reta com a
+     janela. */
+  .cm-cena-heroi {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow-x: clip;
+  }
+
+  .cm-cena-texto {
+    position: relative;
+    z-index: 1;
+    min-width: 0;
+    padding-block: var(--espaco-secao);
+    padding-inline: var(--quadro-calha);
+  }
+
+  .cm-cena-placa {
+    position: relative;
+    width: 100%;
+  }
+
+  .cm-cena-placa picture,
+  .cm-cena-placa img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .cm-cena-placa picture {
+    position: relative;
+  }
+
+  .cm-cena-camadas {
+    position: absolute;
+    inset: 0;
+  }
+
+  .cm-cena-camadas > span {
+    position: absolute;
+  }
+
+  [data-camada='parede-esquerda'],
+  [data-camada='parede-direita'] {
+    inset-block: 0;
+  }
+
+  [data-camada='chao-esquerda'],
+  [data-camada='chao-direita'] {
+    top: calc(var(--cena-altura-chao) * 100%);
+    bottom: 0;
+  }
+
+  [data-camada='parede-esquerda'],
+  [data-camada='chao-esquerda'] {
+    left: -100vw;
+    width: calc(100vw + var(--cena-costura) * 100%);
+  }
+
+  [data-camada='parede-direita'],
+  [data-camada='chao-direita'] {
+    left: calc(var(--cena-costura) * 100%);
+    width: 100vw;
+  }
+
+  [data-camada][data-fundo='papel'] {
+    background-color: var(--color-papel);
+  }
+
+  [data-camada][data-fundo='cacau'] {
+    background-color: var(--color-cacau);
+  }
+
+  [data-camada][data-fundo='areia'] {
+    background-color: var(--color-areia);
+  }
+
+  [data-camada][data-fundo='chao-noite'] {
+    background-color: var(--color-texto-2);
+  }
+
+  [data-camada][data-fundo='nenhum'] {
+    display: none;
+  }
+
+  @media (min-width: 768px) {
+    .cm-cena-heroi {
+      flex-direction: row;
+      align-items: stretch;
+      justify-content: space-between;
+    }
+
+    .cm-cena-heroi[data-lado='esquerda'] {
+      flex-direction: row-reverse;
+    }
+
+    .cm-cena-texto {
+      display: flex;
+      flex: 1 1 0;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .cm-cena-heroi[data-lado='direita'] .cm-cena-texto {
+      padding-left: max(var(--quadro-calha), (100% - var(--quadro-largura)) / 2);
+      padding-right: var(--espaco-bloco);
+    }
+
+    .cm-cena-heroi[data-lado='esquerda'] .cm-cena-texto {
+      padding-left: var(--espaco-bloco);
+      padding-right: max(var(--quadro-calha), (100% - var(--quadro-largura)) / 2);
+    }
+
+    .cm-cena-placa {
+      flex: none;
+      align-self: start;
+      width: calc(var(--cena-largura-max) * min(100vw, 1440px) / 1440);
+    }
+  }
+
+  /* ProdutoEmMoldura: a tela sob a moldura. Borda de 3 % da largura da tela de cada lado; raio externo de 11 % da
+     largura externa (1,06 x a da tela), e o da tela, o externo menos a borda. A tela tem 280 px em 390 e 340 em
+     1440 (nunca menos que 280 nem, em 1440, menos que 320). */
+  .cm-produto-moldura {
+    --produto-tela: clamp(280px, calc(280px + (100vw - 390px) * 60 / 1050), 340px);
+    --produto-borda: calc(var(--produto-tela) * 0.03);
+
+    position: relative;
+    width: calc(var(--produto-tela) * 1.06);
+    max-width: 100%;
+    margin: 0;
+  }
+
+  .cm-produto-moldura img {
+    display: block;
+  }
+
+  .cm-produto-moldura [data-produto-tela] {
+    position: absolute;
+    top: var(--produto-borda);
+    left: var(--produto-borda);
+    width: var(--produto-tela);
+    height: calc(100% - 2 * var(--produto-borda));
+    border-radius: calc(var(--produto-tela) * 0.1166 - var(--produto-borda));
+    object-fit: cover;
+    object-position: top;
+  }
+
+  .cm-produto-moldura [data-produto-moldura-arte] {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: auto;
+    pointer-events: none;
+  }
+}

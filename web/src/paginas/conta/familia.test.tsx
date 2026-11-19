@@ -8,9 +8,9 @@ import { FAMILIAS_DEMONSTRACAO } from '../../dados/conta.demonstracao.ts'
 import { criarDadosContaMemoria, simularFalha } from '../../dados/conta.memoria.ts'
 import { PESSOAS, criarFixtureDeTeste, renderizarComDados } from '../../teste/renderizarComDados.tsx'
 
-// RF-15: a Família com Juliana (responsável), Bruno (cuidador) e um observador, em modo memória.
+// RF-15: a Família com Juliana (responsável), Ícaro (cuidador) e um observador, em modo memória.
 
-const VINCULO_DO_BRUNO = 'b2222222-2222-4222-8222-222222222222'
+const VINCULO_DO_ICARO = 'b2222222-2222-4222-8222-222222222222'
 const EXEMPLO = FAMILIAS_DEMONSTRACAO.exemplo
 const TESTE = FAMILIAS_DEMONSTRACAO.teste
 const FUSO = 'America/Sao_Paulo'
@@ -27,7 +27,7 @@ const botao = (nome: string | RegExp) => screen.getByRole('button', { name: nome
 const talvezBotao = (nome: string | RegExp) => screen.queryByRole('button', { name: nome })
 const campo = (rotulo: string) => screen.getByLabelText(rotulo, { selector: 'input, select' }) as HTMLInputElement
 const digitar = (rotulo: string, texto: string) => fireEvent.change(campo(rotulo), { target: { value: texto } })
-const status = () => screen.getByRole('status')
+const status = () => screen.getAllByRole('status').find((regiao) => regiao.getAttribute('data-estado') !== 'carregando')!
 const caminhoDe = (roteador: { state: { location: { pathname: string } } }) => roteador.state.location.pathname
 const secao = (nome: string) => within(screen.getByRole('region', { name: nome }))
 
@@ -64,7 +64,7 @@ async function memoriaComObservador() {
 async function memoriaComDoisResponsaveis() {
   const dados = novaMemoria()
   dados.sessaoParaTeste(PESSOAS.juliana.email)
-  await dados.mudarPapel(VINCULO_DO_BRUNO, 'responsavel')
+  await dados.mudarPapel(VINCULO_DO_ICARO, 'responsavel')
   return dados
 }
 
@@ -101,8 +101,8 @@ describe('os blocos e a ordem (responsável)', () => {
     const linhas = secao('Membros').getAllByRole('listitem')
     expect(linhas.map((linha) => linha.querySelector('p')!.textContent)).toEqual([
       'Juliana (você)',
-      'Bruno',
       'Carla',
+      'Ícaro',
       'Davi',
     ])
     expect(linhas.map((linha) => linha.querySelectorAll('p')[1].textContent)).toEqual([
@@ -128,8 +128,8 @@ describe('os blocos e a ordem (responsável)', () => {
 
     const membros = secao('Membros')
     expect(membros.getByRole('button', { name: 'Mudar papel de Juliana' })).toBeTruthy()
-    expect(membros.getByRole('button', { name: 'Mudar papel de Bruno' })).toBeTruthy()
-    expect(membros.getByRole('button', { name: 'Remover acesso de Bruno' })).toBeTruthy()
+    expect(membros.getByRole('button', { name: 'Mudar papel de Ícaro' })).toBeTruthy()
+    expect(membros.getByRole('button', { name: 'Remover acesso de Ícaro' })).toBeTruthy()
     expect(membros.queryByRole('button', { name: 'Remover acesso de Juliana' })).toBeNull()
     const sair = membros.getByRole('link', { name: 'Sair da família' })
     expect(sair.getAttribute('href')).toBe('#sair-da-familia')
@@ -174,7 +174,7 @@ describe('cuidador e observador: nenhum controle de escrita no DOM', () => {
   const ESCRITA = /Adicionar bebê|Editar|Arquivar|Desarquivar|Mudar papel|Remover acesso|Criar convite|Cancelar convite|Excluir família/
 
   for (const [nome, pessoa] of [
-    ['cuidador (Bruno)', 'bruno'],
+    ['cuidador (Ícaro)', 'icaro'],
     ['observador (Davi)', 'davi'],
   ] as const) {
     it(`${nome}: vê o cabeçalho, os bebês e os membros, e só "Sair da família"`, async () => {
@@ -192,7 +192,7 @@ describe('cuidador e observador: nenhum controle de escrita no DOM', () => {
       expect(document.querySelector('form')).toBeNull()
       expect(secao('Membros').queryByRole('link', { name: 'Sair da família' })).toBeNull()
       expect(botao('Sair da família')).toBeTruthy()
-      expect(screen.getByText(`Você é ${PAPEIS[pessoa === 'bruno' ? 'cuidador' : 'observador'].minusculo}.`)).toBeTruthy()
+      expect(screen.getByText(`Você é ${PAPEIS[pessoa === 'icaro' ? 'cuidador' : 'observador'].minusculo}.`)).toBeTruthy()
     })
   }
 })
@@ -259,31 +259,31 @@ describe('o seletor de família e a família atual', () => {
 describe('mudar papel', () => {
   it('abre a caixa com os três papéis, o atual marcado e o foco no primeiro controle; muda o papel e mostra a confirmação', async () => {
     await abrir()
-    const abridor = botao('Mudar papel de Bruno')
+    const abridor = botao('Mudar papel de Ícaro')
     fireEvent.click(abridor)
 
-    const dialogo = screen.getByRole('dialog', { name: 'Mudar o papel de Bruno' })
+    const dialogo = screen.getByRole('dialog', { name: 'Mudar o papel de Ícaro' })
     expect(dialogo.tagName).toBe('DIALOG')
     expect(dialogo.getAttribute('aria-modal')).toBe('true')
     const opcoes = within(dialogo).getAllByRole('radio') as HTMLInputElement[]
     expect(opcoes.map((opcao) => opcao.value)).toEqual(['responsavel', 'cuidador', 'observador'])
     expect(opcoes.map((opcao) => opcao.checked)).toEqual([false, true, false])
     expect(document.activeElement).toBe(opcoes[0])
-    // Bruno não é a própria pessoa: sem o aviso de autorrebaixamento.
+    // Ícaro não é a própria pessoa: sem o aviso de autorrebaixamento.
     expect(within(dialogo).queryByText(AVISO_AUTORREBAIXAMENTO)).toBeNull()
 
     fireEvent.click(within(dialogo).getByRole('radio', { name: /Observador/ }))
     fireEvent.click(within(dialogo).getByRole('button', { name: 'Mudar papel' }))
 
-    await waitFor(() => expect(status().textContent).toBe('Bruno agora é observador.'))
+    await waitFor(() => expect(status().textContent).toBe('Ícaro agora é observador.'))
     expect(screen.queryByRole('dialog')).toBeNull()
-    const linha = secao('Membros').getByText('Bruno').closest('li')!
+    const linha = secao('Membros').getByText('Ícaro').closest('li')!
     expect(within(linha).getByText('Observador')).toBeTruthy()
   })
 
   it('Esc fecha a caixa e o foco volta ao botão que a abriu', async () => {
     await abrir()
-    const abridor = botao('Mudar papel de Bruno')
+    const abridor = botao('Mudar papel de Ícaro')
     fireEvent.click(abridor)
 
     fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' })
@@ -293,7 +293,7 @@ describe('mudar papel', () => {
 
   it('o mesmo papel: papel_igual dentro da caixa, que fica aberta', async () => {
     await abrir()
-    fireEvent.click(botao('Mudar papel de Bruno'))
+    fireEvent.click(botao('Mudar papel de Ícaro'))
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Mudar papel' }))
 
     const alerta = await within(screen.getByRole('dialog')).findByRole('alert')
@@ -339,23 +339,23 @@ describe('mudar papel', () => {
 describe('remover acesso', () => {
   it('explica o que acontece, tira a pessoa de Membros e mostra a confirmação', async () => {
     await abrir()
-    fireEvent.click(botao('Remover acesso de Bruno'))
+    fireEvent.click(botao('Remover acesso de Ícaro'))
 
-    const dialogo = screen.getByRole('dialog', { name: 'Remover o acesso de Bruno?' })
+    const dialogo = screen.getByRole('dialog', { name: 'Remover o acesso de Ícaro?' })
     expect(within(dialogo).getByText(/perde o acesso a esta família na hora/)).toBeTruthy()
     expect(within(dialogo).getByText(/não pode ser apagado/)).toBeTruthy()
     // Sem campo: o foco inicial é o primeiro controle, "Cancelar".
     expect(document.activeElement).toBe(within(dialogo).getByRole('button', { name: 'Cancelar' }))
 
     fireEvent.click(within(dialogo).getByRole('button', { name: 'Remover acesso' }))
-    await waitFor(() => expect(status().textContent).toBe('O acesso de Bruno foi removido.'))
+    await waitFor(() => expect(status().textContent).toBe('O acesso de Ícaro foi removido.'))
     expect(screen.queryByRole('dialog')).toBeNull()
-    expect(secao('Membros').queryByText('Bruno')).toBeNull()
+    expect(secao('Membros').queryByText('Ícaro')).toBeNull()
   })
 
   it('"Cancelar" fecha a caixa sem mudar nada', async () => {
     const { dados } = await abrir()
-    fireEvent.click(botao('Remover acesso de Bruno'))
+    fireEvent.click(botao('Remover acesso de Ícaro'))
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancelar' }))
 
     expect(screen.queryByRole('dialog')).toBeNull()
@@ -367,7 +367,7 @@ describe('remover acesso', () => {
     const dados = novaMemoria()
     await abrir('juliana', dados)
     simularFalha(dados, 'revogarVinculo', 'use_sair')
-    fireEvent.click(botao('Remover acesso de Bruno'))
+    fireEvent.click(botao('Remover acesso de Ícaro'))
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Remover acesso' }))
 
     expect((await within(screen.getByRole('dialog')).findByRole('alert')).textContent).toBe(TEXTOS_ERRO.use_sair)
@@ -406,14 +406,49 @@ describe('novo convite', () => {
     expect((await dados.verConvite(codigo)).ok).toBe(true)
 
     // Criar outro faz o código anterior sumir; sair da página também.
-    fireEvent.click(botao('Criar convite'))
-    await waitFor(() => expect(secao('Convites').getAllByRole('listitem')).toHaveLength(4))
+    // Um clique deliberado, depois da janela do mesmo gesto (500 ms) que segue o sucesso.
+    const agoraReal = Date.now.bind(Date)
+    const relogio = vi.spyOn(Date, 'now').mockImplementation(() => agoraReal() + 600)
+    try {
+      fireEvent.click(botao('Criar convite'))
+      await waitFor(() => expect(secao('Convites').getAllByRole('listitem')).toHaveLength(4))
+    } finally {
+      relogio.mockRestore()
+    }
     const novo = screen.getByRole('region', { name: 'Código do convite' })
     expect(novo.querySelector('[data-codigo-convite]')!.textContent).not.toBe(codigo)
     expect(document.body.textContent).not.toContain(codigo)
     unmount()
     await abrir('juliana', dados)
     expect(screen.queryByRole('region', { name: 'Código do convite' })).toBeNull()
+  })
+
+  it('o mesmo gesto preserva o único código do convite', async () => {
+    const dados = novaMemoria()
+    const criar = vi.spyOn(dados, 'criarConvite')
+    await abrir('juliana', dados)
+    // O relógio parado: o 2º clique cai dentro da janela de 500 ms que segue o sucesso.
+    const agoraReal = Date.now()
+    const relogio = vi.spyOn(Date, 'now').mockImplementation(() => agoraReal)
+    try {
+      fireEvent.click(botao('Criar convite'))
+      const bloco = await screen.findByRole('region', { name: 'Código do convite' })
+      const codigo = bloco.querySelector('[data-codigo-convite]')!.textContent!
+      await waitFor(() => expect(status().textContent).toBe('Convite de cuidador criado.'))
+      await waitFor(() => expect(botao('Criar convite').disabled).toBe(false))
+
+      fireEvent.click(botao('Criar convite'))
+      await act(async () => {
+        await Promise.resolve()
+      })
+
+      expect(criar).toHaveBeenCalledTimes(1)
+      const depois = screen.getByRole('region', { name: 'Código do convite' })
+      expect(depois.querySelector('[data-codigo-convite]')!.textContent).toBe(codigo)
+      expect(status().textContent).toBe('Convite de cuidador criado.')
+    } finally {
+      relogio.mockRestore()
+    }
   })
 
   it('a validade gravada é o fim do dia escolhido no fuso da família', async () => {
@@ -440,7 +475,7 @@ describe('novo convite', () => {
     await waitFor(() => expect(campo('Validade do acesso').getAttribute('aria-invalid')).toBe('true'))
     const ligados = campo('Validade do acesso').getAttribute('aria-describedby')!.split(' ').map((id) => document.getElementById(id)!.textContent)
     expect(ligados).toContain(TEXTOS_ERRO.validade_menor)
-    expect(document.activeElement).toBe(campo('Validade do acesso'))
+    await waitFor(() => expect(document.activeElement).toBe(campo('Validade do acesso')))
   })
 
   it('"Copiar link" e "Copiar código" usam a área de transferência e confirmam no status', async () => {
@@ -634,7 +669,7 @@ describe('as ações da família', () => {
   })
 
   it('sair da família (cuidador): pede confirmação e, sem outra família, vai ao Começar', async () => {
-    const { roteador } = await abrir('bruno')
+    const { roteador } = await abrir('icaro')
     fireEvent.click(botao('Sair da família'))
 
     const dialogo = screen.getByRole('dialog', { name: 'Sair da família Família Exemplo?' })
@@ -669,8 +704,8 @@ describe('acesso encerrado, sem permissão e objeto sumido', () => {
 
   it('sem outra família: vai ao Começar com "Seu acesso à família <nome> foi encerrado." na região de status', async () => {
     const dados = novaMemoria()
-    const { roteador } = await abrir('bruno', dados)
-    await removerPorFora(dados, 'bruno')
+    const { roteador } = await abrir('icaro', dados)
+    await removerPorFora(dados, 'icaro')
 
     fireEvent.click(botao('Sair da família'))
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Sair da família' }))
@@ -698,10 +733,10 @@ describe('acesso encerrado, sem permissão e objeto sumido', () => {
 
   it('sem permissão com vínculo: a frase do catálogo e os controles passam a seguir o papel relido', async () => {
     const dados = await memoriaComDoisResponsaveis()
-    await abrir('bruno', dados)
+    await abrir('icaro', dados)
     dados.sessaoParaTeste(PESSOAS.juliana.email)
-    await dados.mudarPapel(VINCULO_DO_BRUNO, 'observador')
-    dados.sessaoParaTeste(PESSOAS.bruno.email)
+    await dados.mudarPapel(VINCULO_DO_ICARO, 'observador')
+    dados.sessaoParaTeste(PESSOAS.icaro.email)
 
     fireEvent.click(botao('Criar convite'))
 
@@ -715,14 +750,14 @@ describe('acesso encerrado, sem permissão e objeto sumido', () => {
 
   it('rebaixado com o editor de bebê aberto: a escrita é negada e o editor some, com "Você é cuidador."', async () => {
     const dados = await memoriaComDoisResponsaveis()
-    await abrir('bruno', dados)
+    await abrir('icaro', dados)
     fireEvent.click(botao('Editar Heloísa'))
     expect(campo('Nome ou apelido').value).toBe('Heloísa')
     digitar('Nome ou apelido', 'Helô')
 
     dados.sessaoParaTeste(PESSOAS.juliana.email)
-    await dados.mudarPapel(VINCULO_DO_BRUNO, 'cuidador')
-    dados.sessaoParaTeste(PESSOAS.bruno.email)
+    await dados.mudarPapel(VINCULO_DO_ICARO, 'cuidador')
+    dados.sessaoParaTeste(PESSOAS.icaro.email)
     fireEvent.click(botao('Salvar'))
 
     expect((await screen.findByRole('alert')).textContent).toBe(TEXTOS_ERRO.sem_permissao)
@@ -736,13 +771,13 @@ describe('acesso encerrado, sem permissão e objeto sumido', () => {
 
   it('rebaixado com o formulário de novo bebê aberto: o formulário some assim que o papel é relido', async () => {
     const dados = await memoriaComDoisResponsaveis()
-    await abrir('bruno', dados)
+    await abrir('icaro', dados)
     fireEvent.click(botao('Adicionar bebê'))
     expect(campo('Nome ou apelido')).toBeTruthy()
 
     dados.sessaoParaTeste(PESSOAS.juliana.email)
-    await dados.mudarPapel(VINCULO_DO_BRUNO, 'cuidador')
-    dados.sessaoParaTeste(PESSOAS.bruno.email)
+    await dados.mudarPapel(VINCULO_DO_ICARO, 'cuidador')
+    dados.sessaoParaTeste(PESSOAS.icaro.email)
     digitar('Nome ou apelido', 'Mel')
     digitar('Data de nascimento', somarDias(hojeNoFuso(FUSO), -5))
     fireEvent.click(botao('Salvar'))

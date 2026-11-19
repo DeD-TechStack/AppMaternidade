@@ -1,0 +1,10 @@
+// As nove pecas compartilhadas das paginas publicas (DS1:RF-12) e o TomDaFaixa. Nenhuma importa de movimento/.
+export { BotaoLargo } from './BotaoLargo.tsx'
+export { CenaHeroi } from './CenaHeroi.tsx'
+export { FaixaInteira, TomDaFaixa } from './FaixaInteira.tsx'
+export { FaixaProva } from './FaixaProva.tsx'
+export { Fechamento } from './Fechamento.tsx'
+export { Legenda } from './Legenda.tsx'
+export { PaginaCasa } from './PaginaCasa.tsx'
+export { Perguntas } from './Perguntas.tsx'
+export { ProdutoEmMoldura } from './ProdutoEmMoldura.tsx'

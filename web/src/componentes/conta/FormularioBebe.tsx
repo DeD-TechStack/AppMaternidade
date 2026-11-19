@@ -7,6 +7,7 @@ import { Campo } from './Campos.tsx'
 import { hojeNoFuso } from './datas.ts'
 import { useEnvio } from './envio.ts'
 import { useFocoNoResumo } from './foco.ts'
+import { NOME_DO_BEBE_MAX } from './limitesDeNome.ts'
 import { AvisoDoBanco, BOTAO_PRINCIPAL, BOTAO_SECUNDARIO, ResumoErro } from './Partes.tsx'
 import { useDadosConta } from './sessao.tsx'
 
@@ -114,6 +115,7 @@ export function FormularioBebe({
       ) : null}
       <Campo
         rotulo={COMECAR_FAMILIA.bebe.nome}
+        maxLength={NOME_DO_BEBE_MAX}
         tamanho="app"
         valor={nome}
         aoMudar={(valor) => {

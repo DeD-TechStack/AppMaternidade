@@ -443,8 +443,9 @@ describe('D3: a casca do Campo de mel e os números', () => {
     })
   }
 
-  it('os números (Início e /sistema) são uma lista de 3 itens, cada um com o valor e a legenda', () => {
-    for (const caminho of ['/', '/sistema']) {
+  // REP-HOME: the new Início (COPY_inicio.md) has no numbers list, so the contract is held by /sistema alone.
+  it('os números (/sistema) são uma lista de 3 itens, cada um com o valor e a legenda', () => {
+    for (const caminho of ['/sistema']) {
       const { container, unmount } = renderizarRota(caminho)
       const lista = container.querySelector<HTMLElement>('main ul[data-numeros]')!
       const itens = [...lista.querySelectorAll(':scope > li')]
@@ -455,13 +456,13 @@ describe('D3: a casca do Campo de mel e os números', () => {
     }
   })
 
-  it('na /sistema a faixa de cacau é uma seção nomeada pelo seu h2, com o conteúdo no recipiente da revelação', () => {
+  it('na /sistema a faixa de cacau é uma seção nomeada pelo seu h2, com o conteúdo no recipiente do conteúdo da faixa', () => {
     const { container } = renderizarRota('/sistema')
     const faixa = container.querySelector<HTMLElement>('main section.cm-faixa-cacau[data-painel="cacau"]')!
     const titulo = document.getElementById(faixa.getAttribute('aria-labelledby')!)!
     expect(titulo.tagName).toBe('H2')
     expect(faixa.contains(titulo)).toBe(true)
-    expect(faixa.querySelector('.cm-faixa-conteudo.overflow-hidden')!.contains(titulo)).toBe(true)
+    expect(faixa.querySelector('.cm-faixa-conteudo')!.contains(titulo)).toBe(true)
   })
 })
 
