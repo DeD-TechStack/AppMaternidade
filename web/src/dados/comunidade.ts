@@ -9,7 +9,11 @@ import {
   type PapelPlataforma,
 } from './comunidade.regras.ts'
 import { fixtureComunidadeDemonstracao } from './comunidade.demonstracao.ts'
-import { criarDadosComunidadeMemoria, criarEstadoComunidade } from './comunidade.memoria.ts'
+import {
+  criarDadosComunidadeMemoria,
+  criarEstadoComunidade,
+  type EstadoComunidade,
+} from './comunidade.memoria.ts'
 
 // A área Comunidade (MAT-40a): os tipos que a tela vê, a interface de dados e a instância da página.
 // Datas e horas são texto ISO 8601 em UTC, como o banco devolve. Nenhuma operação lança exceção.
@@ -191,6 +195,7 @@ export function informarContaDaSessao(id: string | null): void {
 // Uma instância por modo, como na área de conta. No modo memória a conta entrada vira conta habilitada
 // (o guarda da MAT-37 só a deixa passar com a linha de `contas`).
 let emMemoria: DadosComunidade | null = null
+let estadoEmMemoria: EstadoComunidade | null = null
 let noBanco: { chave: string; dados: DadosComunidade } | null = null
 
 /** A instância de dados da página: a mesma durante toda a vida dela. */
@@ -210,12 +215,21 @@ export function criarDadosComunidade(): DadosComunidade {
   }
   if (!emMemoria) {
     const estado = criarEstadoComunidade(fixtureComunidadeDemonstracao)
+    estadoEmMemoria = estado
     emMemoria = criarDadosComunidadeMemoria(estado, () => {
       if (contaDaPagina && !estado.contas.includes(contaDaPagina)) estado.contas.push(contaDaPagina)
       return contaDaPagina
     })
   }
   return emMemoria
+}
+
+/** O estado em memória da página (o painel de moderação parte dele), ou null fora do modo memória. */
+export function estadoMemoriaDaPagina(): EstadoComunidade | null {
+  criarDadosComunidade()
+  const chave = chaveDoBanco()
+  if (modoDados() === 'supabase' && chave) return null
+  return estadoEmMemoria
 }
 
 /** O contexto de dados: os testes injetam a memória; sem ele, vale a instância da página. */

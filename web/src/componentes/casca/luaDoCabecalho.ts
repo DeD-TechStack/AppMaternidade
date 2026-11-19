@@ -1,12 +1,14 @@
 import { useEffect, useRef } from 'react'
 import { useMatches } from 'react-router'
+import { useDadosConta } from '../conta/sessao.tsx'
 import { AREA_DA_ROTINA, useMadrugada, type useLuaDaCasca } from '../rotina/madrugada.ts'
 
 /**
  * A lua do cabeçalho: o mesmo que `useLuaDaCasca` (o estado da lua e o toque que a alterna), mas a escolha da
  * pessoa sobrevive a uma visita fora da Rotina. Dentro da Rotina a madrugada acompanha a escolha; ao sair
  * (Conta, Início, outra área) o `data-tema` vai embora e a lua não existe; ao voltar, a escolha é restaurada.
- * Quem estava com a madrugada desligada continua desligada. Fechar a página joga a escolha fora.
+ * Quem estava com a madrugada desligada continua desligada. Fechar a página joga a escolha fora, e sair da
+ * conta ("Sair") ou entrar como outra pessoa também: a próxima pessoa começa com a madrugada desligada.
  */
 export function useLuaDoCabecalho(): ReturnType<typeof useLuaDaCasca> {
   const dentro = useMatches().some((rota) => (rota.handle as { area?: unknown } | undefined)?.area === AREA_DA_ROTINA)
@@ -16,6 +18,28 @@ export function useLuaDoCabecalho(): ReturnType<typeof useLuaDaCasca> {
   // A escolha da pessoa e se a Rotina já a aplicou nesta visita.
   const escolha = useRef(false)
   const aplicada = useRef(false)
+
+  // A casca fica montada depois do "Sair" e acima da sessão (sem `useSessao`): a troca de pessoa chega pelos
+  // eventos da conta. A escolha era de quem saiu (ou de quem foi trocado por outra entrada sem `saiu`): a próxima
+  // pessoa começa com a madrugada desligada. A mesma pessoa que entra de novo mantém a escolha.
+  const dados = useDadosConta()
+  const pessoa = useRef<string | null>(null)
+  useEffect(
+    () =>
+      dados.aoMudarSessao((evento, usuario) => {
+        if (evento === 'saiu') {
+          pessoa.current = null
+        } else if (usuario) {
+          if (pessoa.current === usuario.id) return
+          pessoa.current = usuario.id
+        } else {
+          return
+        }
+        escolha.current = false
+        definir(false)
+      }),
+    [dados, definir],
+  )
 
   useEffect(() => {
     if (!dentro) {
@@ -27,8 +51,15 @@ export function useLuaDoCabecalho(): ReturnType<typeof useLuaDaCasca> {
     } else {
       // Já aplicada: quem liga ou desliga a madrugada dentro da Rotina muda a escolha.
       escolha.current = ligada
+      // Quem já estava na sessão ao montar não gera evento: o id de quem fez a escolha vem de `sessaoAtual`,
+      // consultada só quando há uma escolha a proteger.
+      if (ligada && pessoa.current === null) {
+        void dados.sessaoAtual().then((r) => {
+          if (pessoa.current === null && r.ok && r.valor) pessoa.current = r.valor.id
+        })
+      }
     }
-  }, [dentro, ligada, definir])
+  }, [dentro, ligada, definir, dados])
 
   // Fechar a página (desmontar a casca) joga o estado fora.
   useEffect(
