@@ -306,6 +306,31 @@ describe('a lista', () => {
     expect(textosDaLista()).not.toEqual([...esperado].reverse())
   })
 
+  it('mantém a ordem do servidor abaixo do milissegundo e marca o instante mais novo sem mudar (RF14-R1-02)', async () => {
+    // O mais novo (.123999Z) tem o id menor; o mais velho (.123456Z), o maior: só o texto inteiro do instante decide.
+    const maisNovo = aviso(1, { criadaEm: '2026-11-15T13:03:00.123999Z', texto: 'Mais novo' })
+    const maisVelho = aviso(2, { criadaEm: '2026-11-15T13:03:00.123456Z', texto: 'Mais velho' })
+    const falso = criarFalso(estado([maisNovo, maisVelho]))
+    await montar(falso)
+
+    expect(textosDaLista()).toEqual(['Mais novo', 'Mais velho'])
+    fireEvent.click(botaoMarcar()!)
+    expect(falso.dados.marcarVistos).toHaveBeenCalledTimes(1)
+    expect(falso.dados.marcarVistos).toHaveBeenCalledWith('2026-11-15T13:03:00.123999Z')
+    expect(falso.dados.marcarVistos).not.toHaveBeenCalledWith('2026-11-15T13:03:00.123456Z')
+  })
+
+  it('instantes sem fração e com frações de tamanhos diferentes se comparam como o mesmo relógio', async () => {
+    const lista = [
+      aviso(1, { criadaEm: '2026-11-15T13:03:00Z', texto: 'Sem fração' }),
+      aviso(2, { criadaEm: '2026-11-15T13:03:00.5Z', texto: 'Meio segundo' }),
+      aviso(3, { criadaEm: '2026-11-15T13:03:00.05Z', texto: 'Cinco centésimos' }),
+    ]
+    await montar(criarFalso(estado(lista)))
+
+    expect(textosDaLista()).toEqual(['Meio segundo', 'Cinco centésimos', 'Sem fração'])
+  })
+
   it('51 avisos: 50 linhas (as mais novas) e a linha "Mostrando os 50 avisos mais recentes."', async () => {
     const lista = Array.from({ length: 51 }, (_, i) => aviso(i + 1))
     await montar(criarFalso(estado(lista, { maisDe50: true })))

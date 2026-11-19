@@ -31,11 +31,24 @@ const FRASE_DO_ESTADO = 'font-titulo font-normal text-titulo-1 tracking-[-0.02em
 /** O relógio fica fora do componente: o destaque se decide na hora de desenhar. */
 const agoraEmMs = () => Date.now()
 
-/** Do mais novo ao mais velho; no empate de instante, o id maior primeiro. */
+const INSTANTE_ISO_UTC = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.(\d{1,9}))?Z$/
+
+/**
+ * A chave de comparação de um instante do servidor, como texto: a fração de segundo vai a 6 dígitos (microssegundos),
+ * porque `Date.parse` corta no milissegundo. Fora do formato ISO em UTC, vale o texto como veio.
+ */
+function chaveDoInstante(instante: string): string {
+  const partes = INSTANTE_ISO_UTC.exec(instante)
+  if (!partes) return instante
+  return `${partes[1]}.${(partes[2] ?? '').slice(0, 6).padEnd(6, '0')}Z`
+}
+
+/** Do mais novo ao mais velho, pelo texto do instante; no empate, o id maior primeiro. */
 function ordenar(avisos: Aviso[]): Aviso[] {
   return [...avisos].sort((a, b) => {
-    const diferenca = Date.parse(b.criadaEm) - Date.parse(a.criadaEm)
-    if (diferenca !== 0 && !Number.isNaN(diferenca)) return diferenca
+    const chaveA = chaveDoInstante(a.criadaEm)
+    const chaveB = chaveDoInstante(b.criadaEm)
+    if (chaveA !== chaveB) return chaveA < chaveB ? 1 : -1
     return a.id < b.id ? 1 : a.id > b.id ? -1 : 0
   })
 }

@@ -3,6 +3,7 @@ import { obterCliente } from './cliente.ts'
 import type { ErroDados, Resultado } from './comum.ts'
 import { modoDados } from './comum.ts'
 import { classificarErroConta } from './conta.erros.ts'
+import { rotinaRegistrada } from './conta.memoria.ts'
 import { criarDadosConta, type DadosConta } from './conta.ts'
 import { criarDadosAvisosMemoria } from './avisos.memoria.ts'
 import { criarDadosAvisosSupabase } from './avisos.supabase.ts'
@@ -74,11 +75,14 @@ export function criarDadosAvisos(dadosConta: DadosConta): DadosAvisos {
   const chave = noBanco ? cliente : null
   const guardada = instancias.get(dadosConta)
   if (guardada && guardada.cliente === chave) return guardada.dados
+  // No modo memória a rotina já registrada na conta é lida, nunca refeita: uma segunda trocaria a fonte de exportação.
   // A conta da página chega embrulhada pelo provedor de sessão; a exportação em memória lê da instância de
   // dentro, a de `criarDadosConta()`. Por isso a fonte dos avisos se registra nas duas.
   const dados = noBanco
     ? criarDadosAvisosSupabase(cliente)
-    : criarDadosAvisosMemoria(dadosConta, criarDadosRotina(dadosConta), { registrarTambemEm: [criarDadosConta()] })
+    : criarDadosAvisosMemoria(dadosConta, rotinaRegistrada(dadosConta) ?? criarDadosRotina(dadosConta), {
+        registrarTambemEm: [criarDadosConta()],
+      })
   instancias.set(dadosConta, { cliente: chave, dados })
   return dados
 }

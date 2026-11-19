@@ -10,7 +10,7 @@ import type { Resultado } from '../../dados/comum.ts'
 import { erroDaChave } from '../../dados/conta.erros.ts'
 import { criarRotas } from '../../rotas.tsx'
 import { aguardarCarga } from '../../teste/renderizarRota.tsx'
-import { criarMundoDeTeste } from '../../teste/rotina.fixture.ts'
+import { ID_FAMILIA, criarMundoDeTeste } from '../../teste/rotina.fixture.ts'
 import { useAvisos } from './useAvisos.ts'
 
 // RF14:RF-01 (a entrada do cabeçalho): o link "Avisos" com a contagem só existe com sessão e com os avisos
@@ -220,6 +220,49 @@ describe('onde a entrada fica', () => {
     fireEvent.click(primeiro)
     await waitFor(() => expect(roteador.state.location.pathname).toBe('/app/avisos'))
     expect(painel().hidden).toBe(true)
+  })
+})
+
+describe('a rotina já registrada na conta (RF14-R1-01)', () => {
+  const idDaNota = 'a3000000-0000-7000-8000-000000000001'
+
+  async function notasExportadas(conta: ReturnType<typeof criarMundoDeTeste>['conta']) {
+    const exportado = await conta.exportarDados()
+    if (!exportado.ok) throw new Error('a exportação falhou')
+    const valor = exportado.valor as { familias: Array<{ notas: Array<{ id: string }> }> }
+    return valor.familias.flatMap((familia) => familia.notas.map((nota) => nota.id))
+  }
+
+  it('montar a entrada (sem dados de avisos injetados) mantém a fonte de exportação da rotina da conta', async () => {
+    const mundo = criarMundoDeTeste({ semRegistros: true })
+    const gravada = await mundo.rotina.gravarNota({ id: idDaNota, familiaId: ID_FAMILIA, texto: 'Nota que o chamador registrou' })
+    expect(gravada.ok).toBe(true)
+    expect(await notasExportadas(mundo.conta)).toEqual([idDaNota])
+
+    fixarLargura(1440)
+    const roteador = createMemoryRouter(
+      [
+        {
+          element: <ProvedorSessao />,
+          children: [
+            {
+              path: '*',
+              element: <Cabecalho contexto="publico" comLua={false} madrugada={false} aoAlternarMadrugada={() => undefined} />,
+            },
+          ],
+        },
+      ],
+      { initialEntries: ['/'] },
+    )
+    render(
+      <ProvedorDadosConta dados={mundo.conta}>
+        <RouterProvider router={roteador} />
+      </ProvedorDadosConta>,
+    )
+    await aguardarCarga()
+    expect(cabecalho()).toBeTruthy()
+
+    expect(await notasExportadas(mundo.conta)).toEqual([idDaNota])
   })
 })
 
