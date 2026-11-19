@@ -1,7 +1,7 @@
 import { erroSemMensagem, resultadoSemMensagem, type AutorDoAviso, type Aviso, type DadosAvisos } from './avisos.ts'
 import type { Resultado } from './comum.ts'
 import { erroDaChave } from './conta.erros.ts'
-import { registrarFonteDeAvisos } from './conta.memoria.ts'
+import { registrarFonteDeAvisos } from './fontes.ts'
 import type { DadosConta } from './conta.ts'
 import type { DadosRotina, FamiliaDaRotina, Nota } from './rotina.tipos.ts'
 

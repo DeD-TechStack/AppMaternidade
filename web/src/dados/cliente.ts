@@ -37,6 +37,12 @@ export function chaveDoBanco(): string | null {
 
 let guardado: { url: string; chave: string; cliente: Promise<SupabaseClient> } | null = null
 
+/** O pacote do Supabase já foi pedido (para o par de variáveis de agora)? Não carrega nada. */
+export function clientePedido(): boolean {
+  const credenciais = lerCredenciais()
+  return credenciais !== null && guardado !== null && guardado.url === credenciais.url && guardado.chave === credenciais.chave
+}
+
 /** No máximo um cliente por página: o mesmo par de variáveis devolve sempre a mesma instância. */
 export function obterCliente(): Promise<SupabaseClient | null> {
   const credenciais = lerCredenciais()

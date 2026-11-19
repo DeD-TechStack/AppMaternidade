@@ -1,8 +1,8 @@
-import { chaveDoBanco } from './cliente.ts'
+import { chaveDoBanco, clientePedido } from './cliente.ts'
+import { haSinalDeSessao } from '../componentes/conta/armazenamento.ts'
 import type { Papel, Resultado } from './comum.ts'
-import { dadosSobDemanda, modoDados } from './comum.ts'
-import { criarFixtureDemonstracao } from './conta.demonstracao.ts'
-import { criarDadosContaMemoria } from './conta.memoria.ts'
+import { dadosLocaisSobDemanda, dadosSobDemanda, modoDados } from './comum.ts'
+import { registrarOrigemDaConta } from './fontes.ts'
 
 // A área de conta: os tipos que a tela vê, a interface de dados e a instância da página. Datas e
 // horas são texto ISO 8601 em UTC, como o banco devolve; `nascimento` é `AAAA-MM-DD`.
@@ -181,35 +181,107 @@ export const OPERACOES_CONTA = Object.keys(TODAS) as OperacaoConta[]
 let emMemoria: DadosConta | null = null
 let noBanco: { chave: string; dados: DadosConta } | null = null
 
-// O modo Supabase: a implementação do banco só é baixada (junto com o pacote do Supabase) na primeira operação.
+const SEM_SESSAO: Resultado<Usuario | null> = { ok: true, valor: null }
+
+interface Inscricao {
+  ouvinte: Parameters<DadosConta['aoMudarSessao']>[0]
+  cancelada: boolean
+  /** O cancelamento da inscrição de verdade; `null` enquanto o adaptador não chegou. */
+  cancelar: (() => void) | null
+}
+
+/**
+ * As inscrições em `aoMudarSessao` de uma instância sob demanda. A inscrição é síncrona: ela fica guardada e vale
+ * quando o adaptador chega (por qualquer operação, ou por `aoPedir`), e cancelar antes disso a desfaz. Cada inscrição se
+ * liga ao adaptador no máximo uma vez, e só se ainda não foi cancelada.
+ */
+function criarInscricoes() {
+  const entradas = new Set<Inscricao>()
+  let adaptador: DadosConta | null = null
+  const ligar = (inscricao: Inscricao, dados: DadosConta) => {
+    if (inscricao.cancelada || inscricao.cancelar) return
+    inscricao.cancelar = dados.aoMudarSessao(inscricao.ouvinte)
+  }
+  return {
+    /** O adaptador chegou: as inscrições que esperavam passam a valer. */
+    chegou(dados: DadosConta) {
+      adaptador = dados
+      for (const inscricao of entradas) ligar(inscricao, dados)
+    },
+    /** `aoPedir` roda quando o adaptador ainda não chegou: é onde se decide pedir a carga já ou esperar. */
+    inscrever(ouvinte: Inscricao['ouvinte'], aoPedir: () => void): () => void {
+      const inscricao: Inscricao = { ouvinte, cancelada: false, cancelar: null }
+      entradas.add(inscricao)
+      if (adaptador) ligar(inscricao, adaptador)
+      else aoPedir()
+      return () => {
+        inscricao.cancelada = true
+        entradas.delete(inscricao)
+        inscricao.cancelar?.()
+      }
+    },
+  }
+}
+
+// O modo Supabase: a implementação do banco só é baixada (junto com o pacote do Supabase) na primeira operação, e uma
+// visita anônima (sem sessão guardada nem link de autenticação na URL) não precisa dela: `sessaoAtual` responde
+// "sem sessão" e `aoMudarSessao` guarda a inscrição até o adaptador chegar por outro motivo (um `entrar`, por exemplo).
 function criarDadosContaSobDemanda(): DadosConta {
+  const inscricoes = criarInscricoes()
+  const haMotivoParaOAuth = () => clientePedido() || haSinalDeSessao()
+
   return dadosSobDemanda<DadosConta>(
     OPERACOES_CONTA,
-    async (cliente) => (await import('./conta.supabase.ts')).criarDadosContaSupabase(cliente),
-    (carregar) => ({
-      // A inscrição é síncrona: ela vale quando o adaptador chega, e cancelar antes disso a desfaz.
-      aoMudarSessao(ouvinte) {
-        let cancelada = false
-        let cancelar: (() => void) | null = null
-        carregar().then(
-          (dados) => {
-            if (!cancelada) cancelar = dados.aoMudarSessao(ouvinte)
-          },
-          () => {},
-        )
-        return () => {
-          cancelada = true
-          cancelar?.()
-        }
-      },
+    async (cliente) => {
+      const dados = (await import('./conta.supabase.ts')).criarDadosContaSupabase(cliente)
+      inscricoes.chegou(dados)
+      return dados
+    },
+    (carregar, base) => ({
+      sessaoAtual: () => (haMotivoParaOAuth() ? base.sessaoAtual() : Promise.resolve(SEM_SESSAO)),
+      aoMudarSessao: (ouvinte) =>
+        inscricoes.inscrever(ouvinte, () => {
+          if (haMotivoParaOAuth()) carregar().then(() => {}, () => {})
+        }),
     }),
   )
+}
+
+// O modo memória: o motor (`conta.memoria.ts`) e a fixture de demonstração só são baixados na primeira operação. Uma
+// página recém-aberta não tem sessão em memória (só recarregar a página perde o que há nela), então, enquanto a carga não
+// foi pedida, `sessaoAtual` responde "sem sessão" sem baixar nada. Os registros da rotina e dos avisos feitos sobre esta
+// fachada valem para o motor (`registrarOrigemDaConta`).
+function criarDadosContaEmMemoriaSobDemanda(): DadosConta {
+  const inscricoes = criarInscricoes()
+  let fachada: DadosConta | null = null
+  const local = dadosLocaisSobDemanda<DadosConta>(
+    OPERACOES_CONTA,
+    async () => {
+      // O único lugar que importa o motor e a fixture da conta fora dos testes, e só por `import()`.
+      const [{ criarDadosContaMemoria }, { criarFixtureDemonstracao }] = await Promise.all([
+        import('./conta.memoria.ts'),
+        import('./conta.demonstracao.ts'),
+      ])
+      return criarDadosContaMemoria(criarFixtureDemonstracao(Date.now()))
+    },
+    (motor) => {
+      if (fachada) registrarOrigemDaConta(motor, fachada)
+      inscricoes.chegou(motor)
+    },
+  )
+  const base = { ...local.dados }
+  fachada = Object.assign(local.dados, {
+    sessaoAtual: () => (local.pedido() ? base.sessaoAtual() : Promise.resolve(SEM_SESSAO)),
+    aoMudarSessao: (ouvinte: Inscricao['ouvinte']) => inscricoes.inscrever(ouvinte, () => {}),
+  })
+  return fachada
 }
 
 /**
  * A instância de dados da página: a mesma durante toda a vida dela. No modo Supabase é a
  * implementação do banco; no modo memória, a cópia em memória com a fixture de demonstração
- * (a sessão, as contas e as famílias vivem nela, e só recarregar a página as perde).
+ * (a sessão, as contas e as famílias vivem nela, e só recarregar a página as perde). Nos dois modos ela é só a
+ * fachada: o motor chega na primeira operação.
  */
 export function criarDadosConta(): DadosConta {
   const chave = chaveDoBanco()
@@ -217,6 +289,6 @@ export function criarDadosConta(): DadosConta {
     if (!noBanco || noBanco.chave !== chave) noBanco = { chave, dados: criarDadosContaSobDemanda() }
     return noBanco.dados
   }
-  emMemoria ??= criarDadosContaMemoria(criarFixtureDemonstracao(Date.now()))
+  emMemoria ??= criarDadosContaEmMemoriaSobDemanda()
   return emMemoria
 }
