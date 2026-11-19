@@ -284,8 +284,13 @@ describe('DESENV-I-06 imagens (as três vagas fechadas)', () => {
     expect(familia.getAttribute('width')).toBe(String(CENA_FAMILIA.largura))
     expect(familia.getAttribute('height')).toBe(String(CENA_FAMILIA.altura))
     expect([CENA_FAMILIA.largura, CENA_FAMILIA.altura]).toEqual([585, 632])
-    // A vaga já tem o AVIF de 390 e 585 (o build o gera); quem o desenha é a página (paginas/publicas/Desenvolvimento.tsx).
-    expect(larguras(CENA_FAMILIA.avif ?? null)).toEqual([390, 585])
+    // O AVIF de 390 e 585 vai no DOM, numa <source> da <picture> que envolve a <img>.
+    const fonteAvif = container.querySelector('#ideias picture source[type="image/avif"]')!
+    expect(fonteAvif).not.toBeNull()
+    expect(larguras(fonteAvif.getAttribute('srcset'))).toEqual([390, 585])
+    expect(fonteAvif.getAttribute('sizes')).toBe(familia.getAttribute('sizes'))
+    expect(fonteAvif.nextElementSibling).toBe(familia)
+    expect(familia.parentElement?.tagName).toBe('PICTURE')
     expect(familia.getAttribute('loading')).toBe('lazy')
     expect(familia.getAttribute('decoding')).toBe('async')
   })

@@ -362,6 +362,13 @@ describe('/como-funciona: o CSS da página é estático e só de token (COMO:RF-
     }
   })
 
+  it('as <source> da <picture> em display: contents ficam fora da caixa (não somam o gap do flex)', () => {
+    expect(css).toMatch(/\.cf-texto > picture,\s*\.cf-colo > picture \{[^}]*display: contents/)
+    const site = readFileSync(join(process.cwd(), 'src', 'styles', 'site.css'), 'utf8')
+    expect(site).toMatch(/\bpicture > source \{[^}]*display: none/)
+    expect(css).not.toMatch(/picture > source/)
+  })
+
   it('COMO-I-12 sem animação, quadros-chave, transição, will-change nem view-transition; nada nasce escondido', () => {
     expect(css).not.toMatch(/animation|@keyframes|transition|will-change|view-transition-name/)
     expect(css).not.toMatch(/opacity\s*:|visibility\s*:\s*hidden|transform\s*:/)

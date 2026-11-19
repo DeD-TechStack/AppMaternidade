@@ -37,6 +37,11 @@
     margin-inline: auto;
   }
 
+  /* Nenhuma `<source>` de `<picture>` entra no layout: com a `<picture>` em `display: contents` ela viraria item do flex/grid. */
+  picture > source {
+    display: none;
+  }
+
   /* Tipo ------------------------------------------------------------------------------------ */
   .cm-h1,
   .cm-h2,
