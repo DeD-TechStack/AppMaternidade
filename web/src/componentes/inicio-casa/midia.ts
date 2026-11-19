@@ -84,11 +84,12 @@ const TAMANHOS_DA_TELA =
   '(min-width: 1440px) 320px, (max-width: 390px) 280px, calc(280px + (100vw - 390px) * 40 / 1050)'
 
 /**
- * State `Y_ALTA` of the manifest (recaptured 19/11/2026): the Histórico of the day before at 21:42, in a 390 x 1234
- * window scrolled to the foot, with the site footer and the demo note hidden for the capture. The app header sits at the
- * top of the image; the rows run from 03:25 to 20:30. The frame's screen layer shows 844 of the 1234 CSS px, so the
- * capture has exactly one screen width more than the screen (`ROLAGEM_PX`): the frame opens on the foot (the 16:00
- * Juliana and 17:30 Ícaro rows) and the pan goes up to the header and the morning rows. The frames of the Início serve it.
+ * State `Y_ALTA` of the manifest (recaptured 19/11/2026, clock fixed 18/11 21:42): the Histórico of the day before in a
+ * 390 x 1234 window scrolled to the page maximum (scroll_y 1767 of a 3001 px document), with `[data-rodape]` hidden for
+ * the capture. The app header sits at the top of the image; the rows run from 11:00 to 20:30. The frame's screen layer
+ * shows 844 of the 1234 CSS px, so the capture has exactly one screen width more than the screen (`ROLAGEM_PX`): the
+ * frame opens on the bottom 844 px, where the 16:00 Juliana and 17:30 Ícaro rows lead the resting frame, and the pan
+ * goes up to the header. The frames of the Início serve it.
  */
 export const CAPTURA_Y_ALTA: Imagem = {
   src: '/telas/casa/historico-y-alta-320w.webp',
@@ -129,8 +130,9 @@ export const M11_JANELA: Imagem = {
 }
 
 /**
- * State `N` of the manifest (recaptured 19/11/2026): Hoje in the madrugada theme at 21:42, the sleep in progress since
- * 20:30, in a 390 x 880 window scrolled 78 px, so the title clears the header and the bottom bar cuts no row. It is
+ * State `N` of the manifest (recaptured 19/11/2026, clock fixed 18/11 21:42): Hoje in the madrugada theme (dark), the
+ * sleep in progress since 20:30 and the yellow "Iniciar mamada" button with "Última mamada às 16:00, registrada por
+ * Juliana" above the bottom bar, in a 390 x 880 window scrolled 78 px, so the title clears the header. It is
  * 390:880, taller than the frame's 390:844 screen layer: the sleep frame shows it whole (`object-fit: contain` on the
  * paper of the app, inicio-casa.css), never cropped.
  */

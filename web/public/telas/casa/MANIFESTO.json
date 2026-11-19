@@ -2,8 +2,8 @@
   "versao": 1,
   "fonte_sha": "558bf5780ba3d77c29d5369dd0410d2372e473c2",
   "ferramenta": {
-    "capturar_sha256": "ecb24d1c8c386e2c8e8a88412f0beca10da9c5a40b2affbdd5448f542e3175a7",
-    "cdp_sha256": "fb18a5c6683d0f625a5f80ef5997cb7279d7caea34c1ffe718b8f92df3db56ea"
+    "capturar_sha256": "a3a52a372066ed1f524d5f37a80ae86dead6e4f963a8ddb3b4ded55ef8286d02",
+    "cdp_sha256": "9270944acbf90d51a6f3efaa8848d215434882c78432c68784f11b19d5cf16ad"
   },
   "capturas": [
     {
@@ -92,20 +92,17 @@
       "fixture": "SEED-A demo family: criarFixtureRotinaDemonstracao at the fixed clock 21:42 America/Sao_Paulo",
       "rotulo_demo_oculto": "[data-aviso-tela]",
       "dia": "anterior",
-      "ocultos_na_captura": "site footer and demo note, by an injected display:none rule (CAPTURA_OCULTAR), for the capture only",
-      "recaptura": "2026-11-19, .oc/capturar.mjs extra janela (CAPTURA_ROLAR=fim), demo sign-in, clock fixed 2026-11-18T21:42:04-03:00",
+      "ocultos_na_captura": "[data-rodape] (site footer), by an injected display:none rule (CAPTURA_OCULTAR), for the capture only",
+      "recaptura": "2026-11-19 (HOME-FINAL-b), .oc/rec.mjs -> .oc/capturar.mjs janela (CAPTURA_ALINHAR=16:00 at y=404 css, CAPTURA_ASSERT=historico), demo sign-in, clock pinned 2026-11-18T21:42:04-03:00 by a CDP Date shim, fail-closed asserts passed; the 16:00 and 17:30 rows lead the resting frame (the bottom 844 css px)",
+      "relogio_fixado": "2026-11-18T21:42:04-03:00 (Page.addScriptToEvaluateOnNewDocument Date shim)",
+      "espaco_captura_px": 69,
       "png": {
         "largura": 780,
         "altura": 2468,
-        "sha256": "2697512667fafe9f680bacf0ca2984cf0c99e3778b9d209717c47d6042abb061"
+        "sha256": "06c93bd433a268d7c96171239f2580bde622b008dd63b63d55d7134d03d9780b"
       },
-      "captura_ok": "CAPTURA_OK historico_ontem_claro_390_janela.png caminho=/app/historico png=780x2468 esperado=780x2468 mobile=true dpr=2 toque=true scrollWidth=390 sha256=2697512667fafe9f680bacf0ca2984cf0c99e3778b9d209717c47d6042abb061 (só a janela)",
+      "captura_ok": "CAPTURA_OK historico_ontem_claro_390_janela.png caminho=/app/historico png=780x2468 esperado=780x2468 mobile=true dpr=2 toque=true scrollWidth=390 sha256=06c93bd433a268d7c96171239f2580bde622b008dd63b63d55d7134d03d9780b (só a janela)",
       "linhas_topo": [
-        "03:25 Fralda, Xixi por Ícaro",
-        "03:30 Sono, 2 h 45 min por Ícaro",
-        "06:30 Mamada, 20 min · lado direito por Juliana",
-        "07:00 Fralda, Cocô por Juliana",
-        "09:00 Sono, 1 h 30 min por Juliana",
         "11:00 Mamadeira, 100 ml · leite materno por Juliana",
         "11:15 Fralda, Ambos por Juliana",
         "13:00 Sono, 1 h 40 min por Juliana",
@@ -121,44 +118,45 @@
         "1440": 320,
         "390": 280
       },
-      "rolagem_janela": "fim",
       "servidos": [
         {
           "arquivo": "/telas/casa/historico-y-alta-640w.webp",
           "largura": 640,
           "altura": 2025,
-          "bytes": 35798,
-          "sha256": "097cf652125d1d2306d296e20066143bcd3ffc77d99cf406c2b837e8d037d836",
-          "qualidade": 60
+          "bytes": 34788,
+          "sha256": "2afcfa6d8d37b3230f7ebcc754dde1c0b15efe11ef0e37501ae275c922d511e9",
+          "qualidade": 39
         },
         {
           "arquivo": "/telas/casa/historico-y-alta-560w.webp",
           "largura": 560,
           "altura": 1772,
-          "bytes": 33812,
-          "sha256": "8553f2feff632f75eb3b8e4641a714d7229fb9be6f3c1a5d40dcd54ce0f9f9a9",
-          "qualidade": 72
+          "bytes": 34524,
+          "sha256": "8bc9c64cc7ea7909eb66d529a50965c9d3e211a288d6e21ed8c48b79060c8363",
+          "qualidade": 54
         },
         {
           "arquivo": "/telas/casa/historico-y-alta-320w.webp",
           "largura": 320,
           "altura": 1013,
-          "bytes": 16102,
-          "sha256": "358e2c46fce1f935e7f49187d15ce5cf6e24ac753f8c6561942c20763ce5a4ec",
+          "bytes": 17790,
+          "sha256": "7aba27eddc2806a517a19c5e7b623eff8ec99737e2044aee3697a3b5b0496fc2",
           "qualidade": 60
         },
         {
           "arquivo": "/telas/casa/historico-y-alta-280w.webp",
           "largura": 280,
           "altura": 886,
-          "bytes": 15232,
-          "sha256": "53fc11b8b726ed9118477c8a251bb96eab67b7ac765e33de2a71d992686dcc66",
+          "bytes": 16104,
+          "sha256": "7c11c0b787aa2ee944806d95ea15e88848de05cf9dc4b90d499c17ce12d4cb9f",
           "qualidade": 72
         }
       ],
       "a42_aberto": {
         "390": 10.77
       },
+      "scroll_y": 1767,
+      "altura_documento": 3001,
       "offset_y_px": 390,
       "direcao_rolagem": "para_cima"
     },
@@ -175,17 +173,20 @@
       "instante": "2026-11-18T21:42:04-03:00",
       "fixture": "SEED-A demo family: criarFixtureRotinaDemonstracao at the fixed clock 21:42 America/Sao_Paulo",
       "rotulo_demo_oculto": "[data-aviso-tela]",
-      "recaptura": "2026-11-19, .oc/capturar.mjs extra janela (CAPTURA_ROLAR=78), demo sign-in, clock fixed 2026-11-18T21:42:04-03:00",
+      "recaptura": "2026-11-19 (HOME-FINAL-b), .oc/rec.mjs -> .oc/capturar.mjs janela (CAPTURA_ROLAR=78, CAPTURA_ASSERT=hoje, madrugada theme switched on), demo sign-in, clock pinned 2026-11-18T21:42:04-03:00 by a CDP Date shim, fail-closed asserts passed; the demo fixture has no entries for today, so the counters stay 0 by the fixture",
+      "relogio_fixado": "2026-11-18T21:42:04-03:00 (Page.addScriptToEvaluateOnNewDocument Date shim)",
       "png": {
         "largura": 780,
         "altura": 1760,
-        "sha256": "f7228c3e02d01ef7b7edd9650cfb5b5a43b896144c6d9c683bf2743ec7e503cc"
+        "sha256": "65f98b0ccb2471c5868dc6b2d8f3994ede0e48e3f906a8a8c5ce848a7ba556f2"
       },
-      "captura_ok": "CAPTURA_OK hoje_app_madrugada_390_janela.png caminho=/app/hoje png=780x1760 esperado=780x1760 mobile=true dpr=2 toque=true scrollWidth=390 sha256=f7228c3e02d01ef7b7edd9650cfb5b5a43b896144c6d9c683bf2743ec7e503cc (só a janela)",
+      "captura_ok": "CAPTURA_OK hoje_madrugada_390_janela.png caminho=/app/hoje png=780x1760 esperado=780x1760 mobile=true dpr=2 toque=true scrollWidth=390 sha256=65f98b0ccb2471c5868dc6b2d8f3994ede0e48e3f906a8a8c5ce848a7ba556f2 (só a janela)",
       "linhas_topo": [
+        "AppMaternidade",
         "Hoje Heloísa, 3 meses Atualizado às 21:42 Atualizar",
         "Em andamento Sono 1:12:02 Início às 20:30, por Ícaro Encerrar Ver sessão",
-        "Hoje até agora Mamadas 0 Mamadeiras 0 Fraldas 0 Sono concluído 0 h 00",
+        "Iniciar mamada Última mamada às 16:00, registrada por Juliana",
+        "Para você saber",
         "Barra: Sono Mamada Fralda Mais"
       ],
       "fonte_px_linha": 17,
@@ -196,32 +197,32 @@
           "arquivo": "/telas/casa/hoje-n-640w.webp",
           "largura": 640,
           "altura": 1444,
-          "bytes": 31116,
-          "sha256": "78e6b9d7ff4974821ea0cf0c88d1b3668b920c35b8fabec119a6a2db7f52453b",
-          "qualidade": 72
+          "bytes": 33318,
+          "sha256": "4839c5706f10717bcd1cf822095e488939edbaf5b26e9093d4fbad58cc4d0f50",
+          "qualidade": 70
         },
         {
           "arquivo": "/telas/casa/hoje-n-560w.webp",
           "largura": 560,
           "altura": 1264,
-          "bytes": 33414,
-          "sha256": "1195fa4bcbdcc4dddd5658ce18d80e0519ad22eacfcdb7029f7642bf83d56a5a",
-          "qualidade": 82
+          "bytes": 33272,
+          "sha256": "b0855395324aa2b6723380c428455b4bd14a1be171165dfba4d471d665ab2686",
+          "qualidade": 80
         },
         {
           "arquivo": "/telas/casa/hoje-n-320w.webp",
           "largura": 320,
           "altura": 722,
-          "bytes": 14674,
-          "sha256": "7d662d876aa5bdf700290107301f8cbe0ffb295ab0729b7c11862bfe12374a9a",
+          "bytes": 14516,
+          "sha256": "6571ccd866fe1b4c62de58327af8275fd04938b7eb90f2da52d03fb98df940a3",
           "qualidade": 72
         },
         {
           "arquivo": "/telas/casa/hoje-n-280w.webp",
           "largura": 280,
           "altura": 632,
-          "bytes": 15334,
-          "sha256": "bda059ebf69c3b63c353ba043034e7ffe687e5f8f9433877c5582a88854e43e4",
+          "bytes": 15122,
+          "sha256": "0b0f0522429d22b3a7aea287300aabc34115273fc3c4cab74c6dff7a37cade13",
           "qualidade": 82
         }
       ]
