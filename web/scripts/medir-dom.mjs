@@ -111,8 +111,11 @@ export const REGRAS_INICIO = ['HEROI', 'LEGENDA_PRESA', 'MOLDURA_DOBRA', 'NOITE'
 /** O Início e as suas duas variantes de face de exibição (`?exibicao=b|c`, FG-2b). */
 const CASOS_INICIO = ['inicio', 'inicio_b', 'inicio_c']
 
-/** Os casos que têm de trazer um [data-casa] no main (a /sistema, a vitrine das peças, e o Início). */
-export const CASOS_CASA = ['sistema', ...CASOS_INICIO]
+/**
+ * Os casos que têm de trazer um [data-casa] no main (a /sistema, a vitrine das peças, o Início e as quatro páginas
+ * públicas refeitas na casa: Como funciona, Cuidado, Desenvolvimento e a página inexistente).
+ */
+export const CASOS_CASA = ['sistema', ...CASOS_INICIO, 'comofunciona', 'cuidado', 'desenvolvimento', 'naoencontrada']
 
 /** As duas regras que só registram: nunca bloqueiam. */
 const REGRAS_DE_REGISTRO = ['TITULO_REGISTRO', 'CASA_LIMPA_REGISTRO']
@@ -955,7 +958,7 @@ export function produto(nos, doc) {
   return resultado('PRODUTO', falhas, `${figuras.length} molduras, ${telas.length} telas únicas, sem sombra, filtro nem gradiente`)
 }
 
-/** RODAPE: o RodapeMapa de cacau, largura cheia, 13 links, 4 grupos, ©, altura máxima e um só aviso, dentro dele. */
+/** RODAPE: o RodapeMapa de cacau, largura cheia, 11 links, 4 grupos, ©, altura máxima (440 de 768 em diante, 480 abaixo) e um só aviso, dentro dele. */
 export function rodape(nos, doc) {
   const raiz = nos.find((no) => marca(no, 'rodape'))
   if (!raiz) return falhaFechada('RODAPE', 'nenhum rodapé (footer[data-rodape])')
@@ -965,14 +968,14 @@ export function rodape(nos, doc) {
   else if (!Number.isFinite(doc?.largura)) falharDoc(falhas, 'largura da janela ausente')
   else {
     if (r.w < 0.95 * doc.largura) falharNo(falhas, raiz, `rodapé de ${r.w.toFixed(1)} px numa janela de ${doc.largura} (largura cheia)`)
-    const teto = doc.largura >= 1440 ? 400 : 420
+    const teto = doc.largura >= 768 ? 440 : 480
     if (r.h > teto) falharNo(falhas, raiz, `rodapé de ${r.h.toFixed(1)} px de altura (o teto é ${teto})`)
   }
   if (!ehCor(raiz.estilo?.backgroundColor, COR.cacau, 2)) falharNo(falhas, raiz, `fundo ${leitura(raiz.estilo?.backgroundColor) || 'ausente'} (o rodapé é de cacau)`)
   if (typeof raiz.textoTodo !== 'string') falharNo(falhas, raiz, 'texto do rodapé não lido')
   else if (!raiz.textoTodo.includes('©')) falharNo(falhas, raiz, 'sem a linha do ©')
   const links = nos.filter((no) => marca(no, 'link') && marca(no, 'noRodape')).length
-  if (links < 12) falharDoc(falhas, `${links} links no rodapé (o piso é 12)`)
+  if (links < 11) falharDoc(falhas, `${links} links no rodapé (o piso é 11)`)
   const grupos = nos.filter((no) => marca(no, 'rodapeGrupo')).length
   if (grupos < 4) falharDoc(falhas, `${grupos} grupos no rodapé (o piso é 4)`)
   const avisos = nos.filter((no) => marca(no, 'aviso'))

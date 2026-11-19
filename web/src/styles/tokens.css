@@ -47,6 +47,10 @@
   --sombra-cartao: 0 1px 2px rgb(43 35 32 / .06), 0 8px 24px rgb(43 35 32 / .06);
   --luz-estudio: radial-gradient(120% 90% at 15% 10%, #F7D684 0%, #F2C14E 60%);
   --brilho-mel: radial-gradient(closest-side, rgb(242 193 78 / .22), transparent);
+  /* Abrir e fechar (menu, caixas de diálogo, acordeão; styles/abrir-fechar.css). Movimento reduzido zera as duas. */
+  --mov-abrir: 220ms;
+  --mov-fechar: 160ms;
+  --mov-curva: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* The display variants of FG-2b (REP-HOME, temporary: FG-2b keeps one block and deletes the other two).

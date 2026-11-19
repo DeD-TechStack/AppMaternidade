@@ -98,27 +98,6 @@ describe('H-3c R1-01: caixas de conteúdo com fundo ou borda são o primitivo Ca
     expect(regra).not.toMatch(/padding\s*:/)
     expect(regra).not.toMatch(/border-radius\s*:/)
   })
-
-  it('o CSS local não repete o padding nem o raio que o Cartao já dá (só a exceção do celular)', () => {
-    const css = semComentarios('src/componentes/publicas-destaque/publicas-destaque.css')
-    const base = css.match(/\n\.pd-fase\s*\{([^}]*)\}/)![1]
-    expect(base).not.toMatch(/padding\s*:/)
-    expect(base).not.toMatch(/border-radius\s*:/)
-    const aviso = css.match(/\n\.pd-aviso-saude\s*\{([^}]*)\}/)![1]
-    expect(aviso).not.toMatch(/padding\s*:/)
-    expect(aviso).not.toMatch(/border-radius\s*:/)
-  })
-})
-
-describe('H-3c R1-03: o vão entre os passos é o da Pilha (bloco), sem margem de fora no item', () => {
-  it('nenhuma regra põe margem no item da lista de passos', () => {
-    const css = semComentarios('src/componentes/publicas-destaque/publicas-destaque.css')
-    const regras = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
-    const comMargem = regras
-      .filter(([, seletor]) => /\.pd-passos\s*>\s*li/.test(seletor))
-      .filter(([, , corpo]) => /margin/.test(corpo))
-    expect(comMargem.map(([, seletor]) => seletor.trim())).toEqual([])
-  })
 })
 
 describe('H-3c R1-05: a cabeça da página de leitura tem o limite de leitura (640)', () => {
@@ -135,10 +114,7 @@ describe('H-3c R1-05: a cabeça da página de leitura tem o limite de leitura (6
 })
 
 describe('os arquivos de estilo das páginas públicas não têm espaço solto', () => {
-  const ARQUIVOS = [
-    'src/componentes/publicas-texto/publicasTexto.css',
-    'src/componentes/publicas-destaque/publicas-destaque.css',
-  ]
+  const ARQUIVOS = ['src/componentes/publicas-texto/publicasTexto.css']
   for (const arquivo of ARQUIVOS) {
     it(`${arquivo}: sem clamp() nem px acima de 32 em margin, padding e gap`, () => {
       const css = readFileSync(arquivo, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
