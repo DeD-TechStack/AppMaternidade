@@ -22,16 +22,19 @@ export function BandaHistorico() {
               {T.h2Hist}
             </h2>
             <p className="text-corpo font-texto cm-sec-texto">{T.pHist}</p>
-            <img
-              src={CENA_TUMMY.src}
-              srcSet={CENA_TUMMY.srcSet}
-              sizes={CENA_TUMMY.sizes}
-              width={CENA_TUMMY.largura}
-              height={CENA_TUMMY.altura}
-              alt={T.altCena2}
-              loading="lazy"
-              decoding="async"
-            />
+            <picture>
+              {CENA_TUMMY.avif ? <source type="image/avif" srcSet={CENA_TUMMY.avif} sizes={CENA_TUMMY.sizes} /> : null}
+              <img
+                src={CENA_TUMMY.src}
+                srcSet={CENA_TUMMY.srcSet}
+                sizes={CENA_TUMMY.sizes}
+                width={CENA_TUMMY.largura}
+                height={CENA_TUMMY.altura}
+                alt={T.altCena2}
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
             <Legenda texto={T.leg2} tom="dia" />
           </div>
         </div>

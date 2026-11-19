@@ -790,7 +790,9 @@ describe('HOME-FINAL every phone shows a real app screen; the lower bands carry 
     const fecho = principal().querySelector('.ic-fecho')!
     expect(fecho.querySelector('[data-fechamento]')).not.toBeNull()
     const janela = fecho.querySelector<HTMLImageElement>('.ic-fecho-cena img')!
-    expect(janela.getAttribute('src')).toBe('/cenas/nao-encontrada/m11-janela-542w.webp')
+    // M11 comes from vite-imagetools (LIB-IMG): a generated URL, the 542w file of its own srcset.
+    expect(janela.getAttribute('src')).toMatch(/^\/@imagetools\/[\w-]+$/)
+    expect(janela.getAttribute('srcset')).toContain(`${janela.getAttribute('src')!} 542w`)
     expect(janela.getAttribute('alt')).toBe('')
     expect([janela.getAttribute('width'), janela.getAttribute('height')]).toEqual(['542', '421'])
     expect(janela.getAttribute('loading')).toBe('lazy')
