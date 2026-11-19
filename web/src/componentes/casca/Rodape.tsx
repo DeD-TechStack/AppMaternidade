@@ -29,7 +29,7 @@ function RodapeCompacto() {
 /**
  * O rodapé do site, o RodapeMapa (DESIGN.md 4): uma faixa de cacau de borda a borda no fim de toda página
  * pública. O nome em Literata no nível `titulo-3` (nunca maior que o h1 da página), os quatro grupos Produto,
- * Conta, Ajuda e Legal (13 links, todos para rotas públicas), o aviso de avaliação (um só nó `[data-aviso]`, sempre
+ * Conta, Ajuda e Legal (11 links, todos para rotas públicas), o aviso de avaliação (um só nó `[data-aviso]`, sempre
  * renderizado, dentro do rodapé) e a linha do ©, nesta ordem. Abaixo de 768 os links são uma lista em três colunas
  * e os títulos dos grupos ficam só para o leitor de tela; de 768 em diante os quatro grupos ficam à vista numa
  * fileira. Estático: sem movimento, sem sombra, sem ícone e sem rede social.
