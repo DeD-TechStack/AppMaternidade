@@ -139,6 +139,51 @@ describe('rolar para a âncora depois que a rota preguiçosa renderiza', () => {
     expect(rolar).not.toHaveBeenCalled()
   })
 
+  it.each([
+    { strict: false, direcao: 'Voltar', passo: -1 },
+    { strict: true, direcao: 'Voltar', passo: -1 },
+    { strict: false, direcao: 'Avançar', passo: 1 },
+    { strict: true, direcao: 'Avançar', passo: 1 },
+  ])('no histórico, $direcao refoca e rola uma vez por visita, inclusive repetida (StrictMode: $strict)', async ({ strict, passo }) => {
+    const caminho = `/como-funciona#${ID_ALVO}`
+    const { roteador } = renderizarRota(passo === -1 ? caminho : '/sobre', { sessao: null, strict })
+    await aguardarCarga()
+    if (passo === 1) {
+      await act(async () => { await roteador.navigate(caminho) })
+      await aguardarCarga()
+    }
+    await waitFor(() => expect(rolar).toHaveBeenCalledTimes(1))
+    const chaveDoAlvo = roteador.state.location.key
+    let alvoAnterior = document.getElementById(ID_ALVO)
+    expect(document.activeElement).toBe(alvoAnterior)
+
+    for (let visita = 0; visita < 2; visita += 1) {
+      rolar.mockClear()
+      await act(async () => {
+        if (passo === -1 && visita === 0) await roteador.navigate('/sobre')
+        else await roteador.navigate(-passo)
+      })
+      await aguardarCarga()
+      await esperarQuadros()
+      expect(roteador.state.location.pathname).toBe('/sobre')
+      expect(document.getElementById(ID_ALVO)).toBeNull()
+      expect(rolar).not.toHaveBeenCalled()
+
+      await act(async () => { await roteador.navigate(passo) })
+      await aguardarCarga()
+      await waitFor(() => expect(rolar).toHaveBeenCalledTimes(1))
+      await esperarQuadros()
+      const alvo = document.getElementById(ID_ALVO)
+      expect(roteador.state.location.key).toBe(chaveDoAlvo)
+      expect(alvo).not.toBe(alvoAnterior)
+      expect(rolar).toHaveBeenCalledTimes(1)
+      expect(rolar.mock.contexts[0]).toBe(alvo)
+      expect(rolar).toHaveBeenCalledWith({ block: 'start', behavior: 'smooth' })
+      expect(document.activeElement).toBe(alvo)
+      alvoAnterior = alvo
+    }
+  })
+
   it('navegar para outro caminho com hash rola uma vez, suave por padrão', async () => {
     const { roteador } = renderizarRota('/sobre', { sessao: null })
     await aguardarCarga()

@@ -119,6 +119,9 @@ export function useRolarParaAncora() {
     } else if (!ultima) {
       origem = 'fria'
     } else {
+      // A deduplicação vale só para a visita atual, inclusive quando saímos para uma rota sem hash.
+      // Voltar/Avançar reutiliza a key antiga, mas o alvo remontado precisa receber rolagem e foco de novo.
+      rolada.current = null
       origem = ultima.caminho === pathname ? 'mesma-pagina' : 'outra-pagina'
     }
     anterior.current = { chave: key, caminho: pathname, origem }
