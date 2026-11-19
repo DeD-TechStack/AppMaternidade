@@ -3,7 +3,7 @@ import { render } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { createClient } from '@supabase/supabase-js'
 import { TEXTO_APOIO_CONTATO, TEXTO_QUEM_PODE_USAR, TEXTO_SEUS_DIREITOS } from '../conteudo/publicas-texto.ts'
-import { criarRotas } from '../rotas.tsx'
+import { criarRotasProntas } from './rotasProntas.ts'
 import { criarClienteFalso } from './renderizarComDados.tsx'
 import { aguardarCarga } from './renderizarRota.tsx'
 
@@ -112,7 +112,7 @@ function avisosExtras(container: HTMLElement): string[] {
 function renderizar(caminho: string, ligado: boolean) {
   comBanco(ligado)
   vi.stubGlobal('scrollTo', vi.fn())
-  const roteador = createMemoryRouter(criarRotas(), { initialEntries: [caminho] })
+  const roteador = createMemoryRouter(criarRotasProntas(), { initialEntries: [caminho] })
   return render(<RouterProvider router={roteador} />)
 }
 
