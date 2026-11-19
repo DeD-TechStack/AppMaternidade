@@ -140,6 +140,7 @@ export function criarDadosRotinaMemoria(conta: DadosConta, fixture: FixtureRotin
   registrarFonteDeExportacao(conta, {
     registros: () => registros,
     notas: () => notas,
+    rotina: () => dados,
     anonimizarAutor: (contaId) => {
       for (const r of registros) {
         if (r.criadoPor === contaId) r.criadoPor = null
