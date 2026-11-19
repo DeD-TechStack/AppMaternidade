@@ -368,7 +368,7 @@ export function Sistema() {
             base="/cenas/sistema/trio-mel"
             largura={1536}
             altura={1024}
-            alt="Três celulares sobre pedestais de oliva, num fundo de mel, mostrando telas do site AppMaternidade: a base do sistema, a escala de títulos e o rodapé de mel."
+            alt="Três celulares sobre pedestais verdes, num fundo amarelo, mostrando telas do AppMaternidade: a base do sistema, a escala de títulos e o rodapé."
             prioritaria
           >
             <CartaoFlutuante giro={-2} posicao="baixo-esquerda">
@@ -392,7 +392,7 @@ export function Sistema() {
                 {ILUSTRACOES_DA_AMOSTRA.map((item, i) => (
                   <li key={item.nome}>
                     <CamadaHover
-                      className="cm-ilustracao-cartao"
+                      className="cm-ilustracao-envoltorio"
                       classeCamada="cm-camada-resumo"
                       camada={<p className="cm-corpo">{item.resumo}</p>}
                     >
@@ -429,7 +429,7 @@ export function Sistema() {
               <div className="cm-faixa-texto">
                 <Titulo nivel="h2" id="sistema-faixa" linhas={SECOES.faixa} />
                 <p className="cm-lide">
-                  O botão de iniciar mamada fica na metade de baixo da tela, grande, em mel sobre o escuro.
+                  O botão de iniciar mamada fica na metade de baixo da tela, grande e amarelo sobre o fundo escuro.
                 </p>
                 <Botao variante="mel" to="/como-funciona">
                   Ver como funciona

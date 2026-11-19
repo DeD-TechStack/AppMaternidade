@@ -85,7 +85,7 @@ describe('/sistema', () => {
     // A cena composta é 3:2 (1536 × 1024 em 1×).
     expect(imagem.getAttribute('width')).toBe('1536')
     expect(imagem.getAttribute('height')).toBe('1024')
-    expect(imagem.getAttribute('alt')).toMatch(/telas do site AppMaternidade/)
+    expect(imagem.getAttribute('alt')).toMatch(/telas do AppMaternidade/)
     // /sistema é a vitrine: a cena carrega na hora, como os desenhos da página.
     expect(imagem.getAttribute('loading')).toBe('eager')
     expect(imagem.closest('picture')!.querySelector('source[type="image/webp"]')).not.toBeNull()
