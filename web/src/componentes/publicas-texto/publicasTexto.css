@@ -8,9 +8,16 @@
    de leitura do quadro (borda esquerda única: o `h1`, a frase, o botão, os títulos e os parágrafos). As disposições
    mudam por consulta de contêiner (a faixa da abertura e o quadro da leitura), não pela janela. */
 @layer components {
-  /* Palavra curta colada à seguinte (ver `ligarPalavrasCurtas`): a linha não quebra entre as duas. */
+  /* Palavra curta colada à seguinte (ver `ligarPalavrasCurtas`): o par fica junto quando cabe na linha (é uma caixa
+     só) e, quando não cabe (320 px, texto a 200%), quebra por dentro em vez de passar da coluna. */
   .pt-junto {
-    white-space: nowrap;
+    display: inline-block;
+    max-inline-size: 100%;
+  }
+
+  /* Uma palavra longa quebra no título em vez de alargar a coluna (texto ampliado, tela estreita). */
+  .pt-abertura h1 {
+    overflow-wrap: anywhere;
   }
 
   /* ----- Abertura: uma faixa de cacau, de ponta a ponta, logo abaixo do cabeçalho ----- */
@@ -236,6 +243,7 @@
     font-family: var(--fonte-titulo);
     font-weight: 600;
     text-wrap: balance;
+    overflow-wrap: anywhere;
   }
 
   .pt-h2 {
@@ -351,6 +359,7 @@
 
   /* Tabela: legenda, cabeçalhos e linhas; rola dentro da própria região em tela estreita. */
   .pt-tabela {
+    container: pt-tabela / inline-size;
     max-width: 100%;
     overflow-x: auto;
     border: 1px solid var(--cor-fio-suave);
@@ -389,11 +398,26 @@
 
   .pt-tabela tbody th {
     font-weight: 600;
-    white-space: nowrap;
   }
 
-  .pt-tabela tbody td:nth-child(2) {
-    white-space: nowrap;
+  /* Em coluna estreita para o tamanho do texto (menos de 15 em: texto a 200% no celular) as células quebram até
+     dentro da palavra e a tabela cabe na coluna. Com folga (15 em ou mais: 390 e 1440 com o texto normal) o canal e o
+     número ficam numa linha só, como sempre foram; o em é o do corpo, por isso a consulta acompanha o texto. */
+  .pt-tabela th,
+  .pt-tabela td {
+    overflow-wrap: anywhere;
+  }
+
+  @container pt-tabela (min-width: 15em) {
+    .pt-tabela th,
+    .pt-tabela td {
+      overflow-wrap: normal;
+    }
+
+    .pt-tabela tbody th,
+    .pt-tabela tbody td:nth-child(2) {
+      white-space: nowrap;
+    }
   }
 
   @media (max-width: 767px) {
