@@ -1,9 +1,8 @@
-import { obterCliente } from './cliente.ts'
+import { chaveDoBanco } from './cliente.ts'
 import type { Papel, Resultado } from './comum.ts'
-import { modoDados } from './comum.ts'
+import { dadosSobDemanda, modoDados } from './comum.ts'
 import { criarFixtureDemonstracao } from './conta.demonstracao.ts'
 import { criarDadosContaMemoria } from './conta.memoria.ts'
-import { criarDadosContaSupabase } from './conta.supabase.ts'
 
 // A área de conta: os tipos que a tela vê, a interface de dados e a instância da página. Datas e
 // horas são texto ISO 8601 em UTC, como o banco devolve; `nascimento` é `AAAA-MM-DD`.
@@ -180,7 +179,32 @@ export const OPERACOES_CONTA = Object.keys(TODAS) as OperacaoConta[]
 // Uma instância por modo. No site o modo não muda durante a vida da página; só os testes trocam as
 // variáveis, e voltar ao modo anterior devolve a instância que ele já tinha.
 let emMemoria: DadosConta | null = null
-let noBanco: { cliente: unknown; dados: DadosConta } | null = null
+let noBanco: { chave: string; dados: DadosConta } | null = null
+
+// O modo Supabase: a implementação do banco só é baixada (junto com o pacote do Supabase) na primeira operação.
+function criarDadosContaSobDemanda(): DadosConta {
+  return dadosSobDemanda<DadosConta>(
+    OPERACOES_CONTA,
+    async (cliente) => (await import('./conta.supabase.ts')).criarDadosContaSupabase(cliente),
+    (carregar) => ({
+      // A inscrição é síncrona: ela vale quando o adaptador chega, e cancelar antes disso a desfaz.
+      aoMudarSessao(ouvinte) {
+        let cancelada = false
+        let cancelar: (() => void) | null = null
+        carregar().then(
+          (dados) => {
+            if (!cancelada) cancelar = dados.aoMudarSessao(ouvinte)
+          },
+          () => {},
+        )
+        return () => {
+          cancelada = true
+          cancelar?.()
+        }
+      },
+    }),
+  )
+}
 
 /**
  * A instância de dados da página: a mesma durante toda a vida dela. No modo Supabase é a
@@ -188,9 +212,9 @@ let noBanco: { cliente: unknown; dados: DadosConta } | null = null
  * (a sessão, as contas e as famílias vivem nela, e só recarregar a página as perde).
  */
 export function criarDadosConta(): DadosConta {
-  const cliente = obterCliente()
-  if (modoDados() === 'supabase' && cliente) {
-    if (!noBanco || noBanco.cliente !== cliente) noBanco = { cliente, dados: criarDadosContaSupabase(cliente) }
+  const chave = chaveDoBanco()
+  if (modoDados() === 'supabase' && chave) {
+    if (!noBanco || noBanco.chave !== chave) noBanco = { chave, dados: criarDadosContaSobDemanda() }
     return noBanco.dados
   }
   emMemoria ??= criarDadosContaMemoria(criarFixtureDemonstracao(Date.now()))

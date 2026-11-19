@@ -4,7 +4,7 @@ import { createMemoryRouter, RouterProvider } from 'react-router'
 import { createClient } from '@supabase/supabase-js'
 import { AVISO_RODAPE } from '../componentes/casca/textos.ts'
 import { AVISO_BANCO_DEMONSTRACAO, NOMES_DO_H1, TEXTOS_ERRO } from '../conteudo/conta.ts'
-import { criarRotas } from '../rotas.tsx'
+import { criarRotasProntas } from '../teste/rotasProntas.ts'
 import { CHAVE_RECUPERACAO } from '../componentes/conta/armazenamento.ts'
 import { criarClienteFalso, USUARIO_FALSO } from '../teste/renderizarComDados.tsx'
 import { comObrigatorio } from '../paginas/conta/obrigatorio.ts'
@@ -49,7 +49,7 @@ function definirBanco() {
 
 function abrir(caminho: string) {
   window.scrollTo = vi.fn()
-  const roteador = createMemoryRouter(criarRotas(), { initialEntries: [caminho] })
+  const roteador = createMemoryRouter(criarRotasProntas(), { initialEntries: [caminho] })
   return { roteador, ...render(<RouterProvider router={roteador} />) }
 }
 

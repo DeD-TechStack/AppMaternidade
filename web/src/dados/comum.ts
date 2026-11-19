@@ -1,4 +1,5 @@
-import { bancoConfigurado } from './cliente.ts'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import { bancoConfigurado, obterCliente } from './cliente.ts'
 
 // O contrato comum da camada de dados: o modo, os erros, o resultado e o papel. Nenhuma função de
 // dados lança exceção para a tela: todo erro volta como `Resultado` com `ok: false`.
@@ -100,6 +101,49 @@ export function classificarErro(origem: unknown): ErroDados {
   }
   if (lida.codigo === 'P0001' && lida.mensagem === 'tente de novo') return montar('tente_de_novo', 'tente_de_novo')
   return montar('desconhecido', 'desconhecido')
+}
+
+/**
+ * A implementação do banco montada na primeira chamada. As fábricas de dados seguem síncronas: no modo Supabase
+ * devolvem este objeto, cuja operação espera o cliente (e o `import()` do adaptador `*.supabase.ts`) e só então
+ * delega. Assim o pacote do Supabase e os adaptadores ficam fora do pacote de entrada. Uma falha ao carregar
+ * (rede) volta como `Resultado` de erro, sem lançar, e a próxima chamada tenta de novo.
+ *
+ * `aMedida` troca operações que não são assíncronas por um equivalente síncrono (`aoMudarSessao`).
+ */
+export function dadosSobDemanda<T extends object>(
+  operacoes: readonly (keyof T & string)[],
+  montar: (cliente: SupabaseClient) => Promise<T>,
+  aMedida?: (carregar: () => Promise<T>) => Partial<T>,
+): T {
+  let pronto: Promise<T> | null = null
+  const carregar = (): Promise<T> => {
+    pronto ??= obterCliente()
+      .then((cliente) => {
+        if (!cliente) throw new Error('sem banco configurado')
+        return montar(cliente)
+      })
+      .catch((erro: unknown) => {
+        pronto = null
+        throw erro
+      })
+    return pronto
+  }
+  const objeto: Record<string, unknown> = {}
+  for (const nome of operacoes) {
+    objeto[nome] = async (...argumentos: unknown[]): Promise<Resultado<unknown>> => {
+      let alvo: T
+      try {
+        alvo = await carregar()
+      } catch (erro) {
+        // Sem a mensagem de origem (o endereço do pacote que falhou): a classe basta, e os avisos (RF14:RN-06) a exigem.
+        return { ok: false, erro: { ...classificarErro(erro), mensagemOriginal: '' } }
+      }
+      const operacao = (alvo as Record<string, unknown>)[nome] as (...a: unknown[]) => Promise<Resultado<unknown>>
+      return operacao.apply(alvo, argumentos)
+    }
+  }
+  return Object.assign(objeto, aMedida?.(carregar)) as T
 }
 
 /** Um fuso que o motor aceita (o conjunto da memória; o do banco é o `pg_timezone_names`). */

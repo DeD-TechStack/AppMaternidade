@@ -1,12 +1,11 @@
 import { createContext } from 'react'
-import { obterCliente } from './cliente.ts'
+import { chaveDoBanco } from './cliente.ts'
 import type { ErroDados, Resultado } from './comum.ts'
-import { modoDados } from './comum.ts'
+import { dadosSobDemanda, modoDados } from './comum.ts'
 import { classificarErroConta } from './conta.erros.ts'
 import { rotinaRegistrada } from './conta.memoria.ts'
 import { criarDadosConta, type DadosConta } from './conta.ts'
 import { criarDadosAvisosMemoria } from './avisos.memoria.ts'
-import { criarDadosAvisosSupabase } from './avisos.supabase.ts'
 import { criarDadosRotina } from './rotina.ts'
 
 // Os avisos entre cuidadores (RF14): os tipos que a tela vê e a interface de dados. Cada operação é
@@ -63,27 +62,32 @@ export interface DadosAvisos {
 }
 
 // Uma instância por conta de dados e por modo: a mesma durante toda a vida da página.
-const instancias = new WeakMap<DadosConta, { cliente: unknown; dados: DadosAvisos }>()
+const instancias = new WeakMap<DadosConta, { chave: string | null; dados: DadosAvisos }>()
+
+const OPERACOES_AVISOS: readonly (keyof DadosAvisos)[] = ['lerEstado', 'definirLigados', 'marcarVistos']
 
 /**
- * No modo Supabase é o adaptador do banco; no modo memória, a composição da conta e da rotina em memória
- * (as mesmas instâncias que a página usa), com o relógio da memória.
+ * No modo Supabase é o adaptador do banco (baixado na primeira operação, junto com o pacote do Supabase);
+ * no modo memória, a composição da conta e da rotina em memória (as mesmas instâncias que a página usa),
+ * com o relógio da memória.
  */
 export function criarDadosAvisos(dadosConta: DadosConta): DadosAvisos {
-  const cliente = obterCliente()
-  const noBanco = modoDados() === 'supabase' && cliente !== null
-  const chave = noBanco ? cliente : null
+  const chaveAtual = chaveDoBanco()
+  const noBanco = modoDados() === 'supabase' && chaveAtual !== null
+  const chave = noBanco ? chaveAtual : null
   const guardada = instancias.get(dadosConta)
-  if (guardada && guardada.cliente === chave) return guardada.dados
+  if (guardada && guardada.chave === chave) return guardada.dados
   // No modo memória a rotina já registrada na conta é lida, nunca refeita: uma segunda trocaria a fonte de exportação.
   // A conta da página chega embrulhada pelo provedor de sessão; a exportação em memória lê da instância de
   // dentro, a de `criarDadosConta()`. Por isso a fonte dos avisos se registra nas duas.
   const dados = noBanco
-    ? criarDadosAvisosSupabase(cliente)
+    ? dadosSobDemanda<DadosAvisos>(OPERACOES_AVISOS, async (cliente) =>
+        (await import('./avisos.supabase.ts')).criarDadosAvisosSupabase(cliente),
+      )
     : criarDadosAvisosMemoria(dadosConta, rotinaRegistrada(dadosConta) ?? criarDadosRotina(dadosConta), {
         registrarTambemEm: [criarDadosConta()],
       })
-  instancias.set(dadosConta, { cliente: chave, dados })
+  instancias.set(dadosConta, { chave, dados })
   return dados
 }
 
