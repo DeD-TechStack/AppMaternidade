@@ -741,6 +741,19 @@
     list-style: none;
   }
 
+  /* O envoltório do cartão herda o arredondamento para a camada de resumo. A altura cheia só vale com
+     hover: em toque o resumo fica abaixo do cartão, dentro do envoltório, e a altura fixa o faria
+     transbordar sobre a legenda de baixo. */
+  .cm-ilustracao-envoltorio {
+    border-radius: var(--radius-cartao);
+  }
+
+  @media (hover: hover) {
+    .cm-ilustracao-envoltorio {
+      height: 100%;
+    }
+  }
+
   .cm-ilustracao-cartao {
     display: block;
     height: 100%;
