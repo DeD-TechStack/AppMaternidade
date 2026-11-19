@@ -1,7 +1,21 @@
-/* MOTION-PAGES, /como-funciona (CENAS.md assinado, C2 e C3). Importado no topo de `como-casa.css`.
-   Só `transform`, preso à rolagem por view-timeline nativa, linear, fill both; nada de JS, opacidade ou recorte.
-   Fora do @supports, ou com `prefers-reduced-motion`, nada daqui vale e a página é a base, parada.
-   56 px em 1440 e 24 px em 390 são tetos; a quebra é a mesma das duas colunas (`@container cf-banda (min-width: 700px)`). */
+/* COMO-P3 editorial choices within the signed MOTION-PAGES direction (not a redesign).
+   1. Skeleton: C1/C2 retain the asymmetric two-column grid, folding with the existing container query;
+      scene and product need a reading column beside them. C4 stays a single centered stack for one action.
+   2. First screen: keep the family scene beside the headline; C3 names shared recording before the signup.
+      C1/C2/C4 do not add a second hero because they continue Helo's day.
+   3. Boundaries: C1 keeps cocoa behind scene AND caption, C2 retains sand, C4 joins the cocoa footer;
+      the existing sequence remains recognizable without the detached gray caption strip.
+   4. Images: C1 enlarges the existing scene with its caption immediately below; C2 pans the existing capture
+      to its heading and two notes. Neither adds assets. C4 is text-only because the practical payoff is the focus.
+   5. Signature: C1's larger light-pool scene remains the narrative moment; C2 aligns its explanation with
+      the highlighted note. C4 connects tomorrow to today's history rather than adding a new visual motif.
+   6. Density: C1 crops only below the light pool; C2 removes navigation/blank space while keeping both notes
+      legible; C4 uses the group token below its action, so the footer follows without another empty band.
+   7. Edges/navigation: preserve the shared header and footer. C1/C2 align to the existing page gutter;
+      C4 keeps the existing BotaoLargo and semantic heading/support/action order. No shared CSS changes.
+
+   Existing native scroll motion below is unchanged: transform only, reduced motion uses the static layout.
+   The same container breakpoint controls columns and the existing 24/56 px scene-entry distance. */
 @supports ((animation-timeline: view()) and (animation-range: entry)) {
   @media (prefers-reduced-motion: no-preference) {
     @keyframes cf-entra {

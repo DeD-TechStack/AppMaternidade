@@ -238,6 +238,24 @@
     margin-top: 0;
   }
 
+  /* The closing keeps heading, support and action in reading order. Only this page tightens the footer gap. */
+  .cf-fecho {
+    display: grid;
+    justify-items: center;
+    row-gap: var(--espaco-pilha);
+    margin-bottom: calc(var(--espaco-grupo) - var(--espaco-secao));
+    text-align: center;
+  }
+
+  .cf-fecho > p {
+    color: var(--color-papel);
+    text-wrap: balance;
+  }
+
+  .cf-fecho > a {
+    margin-top: calc(var(--espaco-grupo) - var(--espaco-pilha));
+  }
+
   /* ---- Faixas 2 a 5: cada uma e um conteiner; as duas colunas vem dele ---- */
   .cf-banda {
     container: cf-banda / inline-size;
@@ -246,7 +264,7 @@
   .cf-duas {
     --cf-medida: 470px;
     --cf-lista: 560px;
-    --cf-colo-largura: min(300px, 100cqi);
+    --cf-colo-largura: min(350px, 100cqi);
 
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -297,6 +315,45 @@
     margin-left: 0;
   }
 
+  /* Source-pixel bounds in the existing 640 x 1385 captures. Pan without resizing or inventing UI:
+     history shows complete records; Notes starts just above its heading and ends after both notes.
+     The original frame keeps its proportions; its lower end is intentionally outside the excerpt. */
+  .cf-duas-hist {
+    --cf-captura-inicio: 155;
+    --cf-captura-fim: 890;
+  }
+
+  .cf-duas-nota {
+    --cf-captura-inicio: 310;
+    --cf-captura-fim: 1270;
+  }
+
+  .cf-duas-hist .cm-produto-moldura,
+  .cf-duas-nota .cm-produto-moldura {
+    height: calc(var(--produto-tela) * (var(--cf-captura-fim) - var(--cf-captura-inicio)) / 640 + 2 * var(--produto-borda));
+    overflow: clip;
+  }
+
+  .cf-duas-hist .cm-produto-moldura [data-produto-tela],
+  .cf-duas-nota .cm-produto-moldura [data-produto-tela] {
+    height: calc(var(--produto-tela) * (1385 - var(--cf-captura-inicio)) / 640);
+    object-position: bottom;
+  }
+
+  /* The existing highlighted note spans source y=672..975; the ring follows the same pan as the capture. */
+  .cf-duas-nota .cm-produto-moldura::after {
+    content: '';
+    position: absolute;
+    z-index: 0;
+    top: calc(var(--produto-borda) + var(--produto-tela) * (672 - var(--cf-captura-inicio)) / 640);
+    right: 4.5%;
+    height: calc(var(--produto-tela) * (975 - 672) / 640);
+    left: 4.5%;
+    border: 2px solid var(--color-mel);
+    border-radius: var(--radius-campo);
+    pointer-events: none;
+  }
+
   /* Faixa 2: a legenda da cena, o texto do Historico e a cena das 15:00; a moldura do Historico. A faixa sobe ate 16 px
      abaixo do heroi (o padding `secao` da faixa menos o `pilha`). */
   .cf-duas-hist {
@@ -327,15 +384,19 @@
     z-index: 1;
   }
 
-  /* A linha do chao fica a 0,8596 da altura da placa (600 x 980). */
+  /* O chao de noite não é mais uma faixa cinza de ponta a ponta: a placa M06 já traz o seu chão (a poça de luz e uma
+     tira cinza de 0,8596 da altura para baixo) e a faixa de cacau corre por trás dela e da legenda. O elemento
+     (aria-hidden) fica no DOM, sem caixa. */
   .cf-colo > .cf-chao {
-    position: absolute;
-    z-index: 0;
-    top: calc(var(--cf-colo-largura) * 980 / 600 * 0.8596);
-    right: -100vw;
-    bottom: calc(var(--espaco-grupo) * -1);
-    left: -100vw;
-    background-color: var(--color-texto-2);
+    display: none;
+  }
+
+  /* A placa (600 x 980) é cortada embaixo, logo depois da poça de luz (que termina a 0,916): da tira cinza do chão
+     sobram só as cunhas dos dois lados da poça, e a legenda fica rente à cena. Só o corte; a imagem não é esticada. */
+  .cf-duas-depois > .cf-colo > picture {
+    display: block;
+    height: calc(var(--cf-colo-largura) * 980 / 600 * 0.925);
+    overflow: clip;
   }
 
   .cf-colo > img,
@@ -403,9 +464,14 @@
     }
 
     [data-casa] .cf-duas-nota .cf-lado .cm-produto-moldura {
-      --produto-tela: clamp(280px, 40cqi, 320px);
+      --produto-tela: var(--cf-nota-tela);
 
       margin-left: 0;
+    }
+
+    /* Faixa 3 em duas colunas: a cena cresce de 300 para 420 (a placa M06 tem 600), sem passar da primeira coluna. */
+    .cf-duas-depois {
+      --cf-colo-largura: min(420px, 100cqi * 8 / 15);
     }
 
     .cf-duas-hist > .cf-texto {
@@ -444,10 +510,17 @@
       grid-column: 1;
     }
 
+    /* Align the heading with the highlighted note after the source-pixel pan, at every two-column width. */
+    .cf-duas-nota {
+      --cf-nota-tela: clamp(280px, 40cqi, 320px);
+      --cf-nota-alinhamento: calc(0.03 + (672 - var(--cf-captura-inicio)) / 640);
+    }
+
     .cf-duas-nota > .cf-texto {
       grid-row: 1;
       grid-column: 2;
-      align-self: center;
+      align-self: start;
+      padding-top: calc(var(--cf-nota-tela) * var(--cf-nota-alinhamento));
     }
 
     .cf-duas-comecar {
