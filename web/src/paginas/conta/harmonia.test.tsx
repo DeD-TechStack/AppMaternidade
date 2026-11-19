@@ -217,9 +217,9 @@ describe('/app/conta: seção, quadro, título em medio, índice 16rem/1fr e lin
     expect(modeloDe(indice)).toBe('16rem minmax(0, 1fr)')
     expect(indice.getAttribute('data-h-quebra')).toBe('1024')
     expect(indice.getAttribute('data-h-vao')).toBe('bloco')
-    // Uma linha de duas colunas (5fr/7fr) por seção: perfil, id, exportar, excluir e privacidade.
+    // Uma linha de duas colunas (5fr/7fr) por seção: perfil, avisos, id, exportar, excluir e privacidade.
     const linhas = todas.slice(1)
-    expect(linhas).toHaveLength(5)
+    expect(linhas).toHaveLength(6)
     for (const linha of linhas) {
       expect(modeloDe(linha)).toBe('minmax(0, 5fr) minmax(0, 7fr)')
       expect(linha.getAttribute('data-h-quebra')).toBe('1024')
@@ -230,13 +230,14 @@ describe('/app/conta: seção, quadro, título em medio, índice 16rem/1fr e lin
     const secoesDaConta = [...container.querySelectorAll('main section[aria-labelledby]')]
     expect(secoesDaConta.map((s) => s.getAttribute('aria-labelledby'))).toEqual([
       'perfil',
+      'avisos',
       'id-conta',
       'exportar',
       'excluir-conta',
       'privacidade',
     ])
     expect(secoesDaConta[0].parentElement!.getAttribute('data-h-vao')).toBe('bloco')
-    expect(secoesDaConta[3].getAttribute('data-h')?.split(' ')).toContain('cartao')
+    expect(secoesDaConta[4].getAttribute('data-h')?.split(' ')).toContain('cartao')
   })
 
   it('a caixa de excluir aberta e o estado de espera da guarda ficam dentro do <main> como seções', async () => {
