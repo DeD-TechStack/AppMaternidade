@@ -1,6 +1,6 @@
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import { PROMESSA } from '../conteudo/textos.ts'
+import { INI } from '../conteudo/inicio.ts'
 import { renderizarRota } from './renderizarRota.tsx'
 
 // As 9 rotas públicas do Campo de mel (MAT-49a), o Início mínimo e a rota inexistente.
@@ -33,22 +33,23 @@ describe('rotas públicas', () => {
 })
 
 describe('Início (MAT-49c)', () => {
-  it('tem um h1 de duas linhas, com a segunda em itálico, e o primário para /app/hoje', () => {
+  // REP-HOME: one h1 in two plain spans (no italic line) and the primary action, "Criar conta" to /criar-conta (the hero
+  // one exists only from 1024 px; this jsdom run is narrower, so the closing band's is the one found).
+  it('tem um h1 em dois spans, sem itálico, e a ação primária para /criar-conta', () => {
     const { container } = renderizarRota('/')
     const h1 = screen.getByRole('heading', { level: 1 })
-    expect(h1.textContent).toBe(PROMESSA)
-    expect(h1.firstChild!.textContent).toBe('A rotina do bebê,')
-    const segunda = h1.querySelector('.cm-segunda-linha')!
-    expect(segunda.textContent!.trim()).toBe('dividida com carinho.')
-    const primarios = screen.getAllByRole('link', { name: 'Começar grátis' })
+    expect(h1.textContent).toBe(INI.h1)
+    expect(h1.querySelector('[data-h1-dia]')!.textContent).toBe(INI.h1Dia)
+    expect(h1.querySelector('[data-h1-noite]')!.textContent).toBe(INI.h1Noite)
+    expect(h1.querySelector('.cm-segunda-linha, em, i')).toBeNull()
+    expect(container.querySelector('main')!.contains(h1)).toBe(true)
+    const primarios = within(container.querySelector('main')!).getAllByRole('link', { name: 'Criar conta' })
     expect(primarios.length).toBeGreaterThan(0)
     for (const primario of primarios) {
-      expect(primario.getAttribute('href')).toBe('/app/hoje')
-      expect(primario.getAttribute('data-botao')).toBe('primario')
+      expect(primario.getAttribute('href')).toBe('/criar-conta')
+      expect(primario.hasAttribute('data-botao-largo')).toBe(true)
     }
-    expect(h1.closest('section')!.contains(primarios[0])).toBe(true)
     expect(screen.getByRole('link', { name: 'Ver como funciona' }).getAttribute('href')).toBe('/como-funciona')
-    expect(container.querySelector('main [data-numeros]')!.querySelectorAll('li')).toHaveLength(3)
   })
 
   it('não traz mais aparelhos em CSS nem molduras da mídia antiga', () => {

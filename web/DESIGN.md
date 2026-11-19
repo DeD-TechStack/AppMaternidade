@@ -230,6 +230,8 @@ O espaçamento entre letras (tracking) dos títulos continua o do código até a
 
 Itálico: nenhum nas páginas públicas, em nenhum elemento; a área logada não entra nesta regra até o DS-2.
 
+Variantes de exibição (temporárias, até o FG-2b): `tokens.css` guarda três blocos de tokens para o `h1`. A é o padrão (Literata 600). B, escolhida por `?exibicao=b` e lida uma vez em `main.tsx` que põe `data-exibicao` na raiz, usa M PLUS Rounded 1c (`@fontsource/m-plus-rounded-1c`, latin 700 e 800) com peso 800 na exibição e 700 nos títulos. C, por `?exibicao=c`, é Literata 600 em 64/68 em 1440 e 40/44 em 390. Os tamanhos de A e de B são os da tabela; nada mais seleciona por `data-exibicao`, e o FG-2b fica com um bloco só e apaga os outros dois.
+
 A face dos títulos é a variável `--fonte-exibicao` (declarada uma só vez, em `tokens.css`), e os pesos são `--peso-exibicao` e `--peso-titulo` (600 os dois). Uma troca de face muda esses três tokens e mais nada. A ênfase é por peso, nunca por inclinação.
 
 ### Fora da escala (`fora-da-escala: true`)
@@ -471,6 +473,9 @@ Curto e sem surpresa, com a biblioteca `motion` (`motion/react`, versão fixa no
 | Faixa de cacau e rodapé | Sem movimento: a faixa de cacau e o rodapé já estão no lugar desde a primeira pintura. O M7 (o conteúdo que saía de baixo, preso à rolagem, `catalogo.ts`) saiu do rodapé: está estacionado e nenhuma página o usa; M6 saiu na MOTION-1 | Igual |
 | Hover | O primário inverte na hora; a camada de cacau com o resumo do cartão de mídia aparece em 100 ms, também com foco (M13, `catalogo.ts:116-129`). A escala do toque nos botões é 0,96 no `:active`, 120 ms, `ease-out`, e só ela anima (`web/src/styles/site.css:146-154`). | Igual, sem deslocamento |
 | Selos | Letreiro de 60 s por volta, em CSS (M14, `campo.css:284-295`); para no hover, no foco e pelo botão | Fileira parada |
+| Início, momento 1: a lâmpada | A luz da lâmpada da placa acende (M15, `catalogo.ts`; `movimento/troca/LuzDaLampada.tsx`): o cone sobe em 240 ms e a poça de luz no chão, 80 ms depois, em 320 ms; tudo 300 ms depois do `load` da placa (a de M06, quando 10 % dela está à vista), curva `[0.16, 1, 0.3, 1]`, só opacidade, só na primeira visita da sessão (`sessionStorage`). A placa nunca se move | A luz já nasce acesa; nada anima |
+| Início, momento 2: a noite toma a casa | A folha de noite varre o palco preso à rolagem (M16, `catalogo.ts`): 600 px de rolagem a partir de 1280 px de largura, 480 de 1024 a 1279 e 360 abaixo de 1024 (600 px são 66,7 svh numa janela de 1440 × 900); só `transform`, uma linha do tempo. Montado no cartão seguinte; neste a tela fixa já mostra o estado de repouso | Sem fixação, sem folha: o estado de repouso, a luz acesa |
+| Início, momento 3: a legenda troca | A legenda do palco troca de texto num nó só (M17, `catalogo.ts`): sai em 160 ms (opacidade de 1 a 0 e de 0 a −6 px), o texto muda no fim da saída e entra em 220 ms (de +6 px), curva `[0.4, 0, 0.2, 1]`. Montado no cartão seguinte | Duas legendas estáticas, cada uma no seu lugar |
 
 Os componentes de `web/src/movimento/` (`Cortina`, `EntradaCena`, `RevelaNaRolagem` e `CamadaHover`) implementam essas receitas e são os que se reutilizam. A `RevelacaoPorBaixo` (M7) fica estacionada em `web/src/movimento/`, sem uso em nenhuma página, e o teste de contrato proíbe importá-la em código de produção. Nenhum conteúdo do `<main>` começa escondido à espera da rolagem.
 

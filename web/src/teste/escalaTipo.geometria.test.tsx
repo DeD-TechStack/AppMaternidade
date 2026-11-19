@@ -109,6 +109,7 @@ const SCRIPT_DE_MEDIDA = `
       const porTopo = new Map()
       // Por linha também: o menor left e o maior right das letras, para ver se a linha cabe na coluna do h1.
       const limitesPorTopo = new Map()
+      const fimDaUltimaPorTopo = new Map()
       let textoDoH1 = ''
       const caminhante = document.createTreeWalker(h1, NodeFilter.SHOW_TEXT)
       while (caminhante.nextNode()) {
@@ -122,7 +123,14 @@ const SCRIPT_DE_MEDIDA = `
           const retangulos = faixa.getClientRects()
           if (retangulos.length === 0) continue
           const topo = Math.round(retangulos[0].top)
-          porTopo.set(topo, (porTopo.get(topo) || '') + no.data[i])
+          // Two spans side by side (the Início h1: day span and night span, each a flex item) are separated by a visible gap
+          // but not by a rendered space (the whitespace between flex items has no box). A gap of more than 2 px between two
+          // letters of the same line, with no space character on either side, is a word boundary: read it as one.
+          const atual = porTopo.get(topo) || ''
+          const fimAnterior = fimDaUltimaPorTopo.get(topo)
+          const separador = fimAnterior !== undefined && retangulos[0].left - fimAnterior > 2 && atual !== '' && !/\\s$/.test(atual) && !/\\s/.test(no.data[i]) ? ' ' : ''
+          fimDaUltimaPorTopo.set(topo, retangulos[retangulos.length - 1].right)
+          porTopo.set(topo, atual + separador + no.data[i])
           const limite = limitesPorTopo.get(topo) || { esquerda: Infinity, direita: -Infinity }
           for (const retangulo of retangulos) {
             limite.esquerda = Math.min(limite.esquerda, retangulo.left)

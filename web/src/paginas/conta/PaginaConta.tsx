@@ -13,6 +13,7 @@ import { DialogoExcluirConta } from '../../componentes/conta/DialogoExcluirConta
 import { useEnvio } from '../../componentes/conta/envio.ts'
 import { useFocoNoResumo, useFocoNoTitulo } from '../../componentes/conta/foco.ts'
 import { IndiceDaConta } from '../../componentes/conta/IndiceDaConta.tsx'
+import { NOME_DA_CONTA_MAX } from '../../componentes/conta/limitesDeNome.ts'
 import { MolduraLogada } from '../../componentes/conta/MolduraLogada.tsx'
 import {
   BOTAO_PERIGO,
@@ -300,6 +301,7 @@ export function PaginaConta() {
               ) : null}
               <Campo
                 rotulo={CONTA.perfil.nome}
+                maxLength={NOME_DA_CONTA_MAX}
                 autoComplete="name"
                 tamanho="app"
                 valor={nome}

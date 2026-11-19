@@ -1,0 +1,45 @@
+/* Motion of the Início, moments 1 to 3 (REP-HOME). Only opacity and transform are animated; no `transition: all`,
+   no loop, no layout property. The duration of the lamp comes from the catalogue (M15) as an inline custom property:
+   the number below is only a fallback for a missing property. With reduced motion nothing runs and the lamp is lit at
+   rest. */
+@layer components {
+  /* The two curves of the motion sheet: expo for the lamp, standard for the caption. */
+  :root {
+    --curva-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --curva-padrao: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* The light: ONE layer over the plate (cone and pool merged by ASSET-1), lit at rest (opacity 1). The dark state exists
+     only on a first visit. */
+  [data-luz-grupo] {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  [data-luz-grupo] picture {
+    display: contents;
+  }
+
+  [data-luz] {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    opacity: 1;
+    transition: opacity var(--luz-ms, 400ms) var(--curva-expo);
+  }
+
+  [data-luz-estado='apagada'] [data-luz] {
+    opacity: 0;
+    transition: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-luz] {
+      transition: none;
+    }
+  }
+}

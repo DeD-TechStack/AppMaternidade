@@ -3,6 +3,7 @@ import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { screen } from '@testing-library/react'
 import { COMO_FUNCIONA_DESTAQUE, CUIDADO_DESTAQUE } from '../conteudo/publicas-destaque.ts'
+import { INI } from '../conteudo/inicio.ts'
 import { CUIDADO as CUIDADO_CASA } from '../conteudo/casa/cuidado.ts'
 import { INICIO } from '../conteudo/textos.ts'
 import { PESSOAS_DEMONSTRACAO, criarFixtureDemonstracao } from '../dados/conta.demonstracao.ts'
@@ -132,6 +133,9 @@ describe('SEED-A-I-07: o nome inteiro na Família e nos ajustes', () => {
   })
 })
 
+/** Os elementos cujo texto inteiro é este (a hora presa em um `<span>` não parte a linha em dois nós). */
+const comTexto = (texto: string) => [...document.body.querySelectorAll('*')].filter((no) => no.textContent === texto)
+
 describe('SEED-A-I-08: o apelido nas linhas do dia a dia', () => {
   const COMO = COMO_FUNCIONA_DESTAQUE
   const CUIDADO = CUIDADO_DESTAQUE
@@ -173,10 +177,14 @@ describe('SEED-A-I-08: o apelido nas linhas do dia a dia', () => {
     expect(screen.getAllByText('Carla, avó da Helo, na nota das 22:40').length).toBeGreaterThan(0)
   })
 
-  it('o Início tem uma linha de "Desde que você saiu" cujo quem é "Ju"', () => {
+  // REP-HOME: the new Início (COPY_inicio.md) has no "Desde que você saiu" card. The two carers are named in its captions
+  // and paragraphs: "Ju" by her nickname, Ícaro by his name, and the visible text never carries the full names.
+  it('o Início nomeia a Ju (apelido) e o Ícaro no texto visível', () => {
     const { container } = renderizarRota('/')
-    const quem = [...container.querySelectorAll('.in-cartao-quem')].map((no) => no.textContent)
-    expect(quem).toContain('Ju')
-    expect(quem).toContain('Ícaro')
+    const texto = container.querySelector('main')!.textContent!
+    expect(texto).toMatch(/(?<![\p{L}])Ju(?![\p{L}])/u)
+    expect(texto).toContain('Ícaro')
+    expect(texto).not.toMatch(/(?<![\p{L}])(Juliana|Heloísa)(?![\p{L}])/u)
+    expect(comTexto(INI.leg2).length).toBeGreaterThan(0)
   })
 })

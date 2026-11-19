@@ -1,5 +1,5 @@
-import { spawnSync } from 'node:child_process'
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { spawn, spawnSync, type ChildProcess } from 'node:child_process'
+import { closeSync, existsSync, mkdirSync, mkdtempSync, openSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -129,7 +129,98 @@ function comArquivosDoDist(texto: string): string {
   return texto.replace(/url\((["']?)\/(?!\/)/g, (_t, aspas: string) => `url(${aspas}${base}`)
 }
 
-function medirNoChrome(corpoHtml: string, largura: number, altura: number): Medida {
+/** Mata o Chrome e todos os filhos: o grupo inteiro no POSIX (spawn detached), a árvore no Windows. */
+function matarGrupo(pid: number, filho: ChildProcess): void {
+  if (process.platform === 'win32') {
+    try {
+      filho.kill()
+    } catch {
+      // já terminou
+    }
+    try {
+      spawnSync('taskkill', ['/pid', String(pid), '/T', '/F'], { windowsHide: true, timeout: 5_000 })
+    } catch {
+      // já terminou
+    }
+    return
+  }
+  try {
+    process.kill(-pid, 'SIGKILL')
+  } catch {
+    // grupo já terminou
+  }
+}
+
+interface ResultadoDoChrome {
+  status: number | null
+  erro: string | null
+  expirou: boolean
+  saida: string
+  erroPadrao: string
+}
+
+/**
+ * Roda o Chrome com spawn assíncrono, saída em arquivos (nunca em pipes: os filhos do Chrome que sobrevivem não seguram
+ * nada que nos bloqueie), grupo de processos próprio morto inteiro no fim e todo await limitado no tempo (45 s + 3 s).
+ */
+async function executarChrome(argumentos: string[], arquivoDeSaida: string, arquivoDeErro: string): Promise<ResultadoDoChrome> {
+  const fdSaida = openSync(arquivoDeSaida, 'w')
+  const fdErro = openSync(arquivoDeErro, 'w')
+  let filho: ChildProcess | null = null
+  let terminou: Promise<{ status: number | null; erro: string | null }> | null = null
+  let expirou = false
+  // O resultado do filho fica aqui assim que ele termina: depois do limite e da limpeza nunca se espera de novo uma promise pendente.
+  let final: { status: number | null; erro: string | null } | null = null
+  try {
+    const alvoDoFilho = spawn(CHROME, argumentos, {
+      stdio: ['ignore', fdSaida, fdErro],
+      detached: process.platform !== 'win32',
+      windowsHide: true,
+    })
+    filho = alvoDoFilho
+    terminou = new Promise((resolver) => {
+      alvoDoFilho.once('error', (erro) => {
+        final = { status: null, erro: erro.message }
+        resolver(final)
+      })
+      alvoDoFilho.once('exit', (status) => {
+        final = { status, erro: null }
+        resolver(final)
+      })
+    })
+    let relogio: NodeJS.Timeout | undefined
+    const limite = new Promise<'tempo'>((resolver) => {
+      relogio = setTimeout(() => resolver('tempo'), 45_000)
+    })
+    expirou = (await Promise.race([terminou, limite]).finally(() => clearTimeout(relogio))) === 'tempo'
+  } finally {
+    if (filho?.pid !== undefined) matarGrupo(filho.pid, filho)
+    // Depois do kill, espera o exit por um instante antes de fechar os arquivos.
+    if (terminou) {
+      let espera: NodeJS.Timeout | undefined
+      await Promise.race([
+        terminou,
+        new Promise((resolver) => {
+          espera = setTimeout(resolver, 3_000)
+        }),
+      ]).finally(() => clearTimeout(espera))
+    }
+    closeSync(fdSaida)
+    closeSync(fdErro)
+  }
+  // Sem await: se o Chrome não emitiu exit nem error mesmo depois do kill e dos 3 s de espera, falha aqui com mensagem clara.
+  const resultado = final as { status: number | null; erro: string | null } | null
+  if (!resultado) throw new Error('o Chrome não encerrou nem depois do kill (sem exit/error em 3 s)')
+  return {
+    status: resultado.status,
+    erro: resultado.erro,
+    expirou,
+    saida: readFileSync(arquivoDeSaida, 'utf8'),
+    erroPadrao: readFileSync(arquivoDeErro, 'utf8'),
+  }
+}
+
+async function medirNoChrome(corpoHtml: string, largura: number, altura: number): Promise<Medida> {
   const pasta = mkdtempSync(join(tmpdir(), 'cm-acesso-'))
   try {
     const perfil = join(pasta, 'perfil')
@@ -157,13 +248,12 @@ function medirNoChrome(corpoHtml: string, largura: number, altura: number): Medi
         `<script>addEventListener('message', (e) => { document.getElementById('geometria').textContent = e.data })</script></body></html>`,
       'utf8',
     )
-    const resultado = spawnSync(
-      CHROME,
+    const resultado = await executarChrome(
       [
         '--headless=new',
         '--no-sandbox',
         '--disable-gpu',
-        '--disable-crashpad-for-testing',
+        ...(process.platform === 'win32' ? ['--disable-crashpad-for-testing'] : []),
         '--no-first-run',
         '--allow-file-access-from-files',
         `--user-data-dir=${perfil}`,
@@ -173,11 +263,13 @@ function medirNoChrome(corpoHtml: string, largura: number, altura: number): Medi
         '--dump-dom',
         pathToFileURL(envoltorio).href,
       ],
-      { encoding: 'utf8', timeout: 45_000, maxBuffer: 64 * 1024 * 1024 },
+      join(pasta, 'saida.txt'),
+      join(pasta, 'erro.txt'),
     )
-    const achado = /<pre id="geometria"[^>]*>([\s\S]*?)<\/pre>/.exec(resultado.stdout ?? '')
+    const achado = /<pre id="geometria"[^>]*>([\s\S]*?)<\/pre>/.exec(resultado.saida)
     if (!achado) {
-      throw new Error(`O Chrome não devolveu a medida (status ${resultado.status}, erro ${resultado.error?.message ?? 'nenhum'}): ${resultado.stderr ?? ''}`)
+      const mensagem = resultado.erro ?? (resultado.expirou ? 'tempo esgotado (45000 ms)' : 'nenhum')
+      throw new Error(`O Chrome não devolveu a medida (status ${resultado.status}, erro ${mensagem}): ${resultado.erroPadrao}`)
     }
     const texto = achado[1].replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
     return JSON.parse(texto) as Medida
@@ -198,7 +290,7 @@ const cruza = (a: Caixa, b: Caixa) => a.x < b.right && b.x < a.right && a.y < b.
 async function medirTela(caminho: string, largura = 390, altura = 844): Promise<Medida> {
   renderizarComDados(caminho)
   await aguardarCarga()
-  const medida = medirNoChrome(document.body.innerHTML, largura, altura)
+  const medida = await medirNoChrome(document.body.innerHTML, largura, altura)
   expect(medida.erro).toBeUndefined()
   expect(medida.innerWidth).toBe(largura)
   expect(medida.innerHeight).toBe(altura)
