@@ -112,9 +112,9 @@ describe('useSessao', () => {
     await waitFor(() => expect(sessao()).toBe('sem_sessao|-|-|-'))
 
     await act(async () => {
-      await dados.entrar('bruno@exemplo.invalid', 'senha-local-ficticia')
+      await dados.entrar('icaro@exemplo.invalid', 'senha-local-ficticia')
     })
-    await waitFor(() => expect(sessao()).toBe('com_sessao|bruno@exemplo.invalid|Bruno|-'))
+    await waitFor(() => expect(sessao()).toBe('com_sessao|icaro@exemplo.invalid|Ícaro|-'))
 
     await act(async () => {
       dados.encerrarSessaoPorFora()

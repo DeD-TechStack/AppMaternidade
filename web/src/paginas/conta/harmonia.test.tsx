@@ -121,7 +121,7 @@ async function semMemoria() {
   return dados
 }
 
-describe('telas de acesso: Secao, QuadroLayout e as duas colunas 7/5 com vão de mídia', () => {
+describe('telas de acesso: a banda de duas metades iguais (formulário e placa da porta), sem Secao nem QuadroLayout', () => {
   const telas: Array<[string, () => ReturnType<typeof renderizarComDados>]> = [
     ['/entrar', () => renderizarComDados('/entrar')],
     ['/criar-conta', () => renderizarComDados('/criar-conta')],
@@ -138,58 +138,63 @@ describe('telas de acesso: Secao, QuadroLayout e as duas colunas 7/5 com vão de
   ]
 
   for (const [rota, montar] of telas) {
-    it(`${rota}: o <main> só tem seções, o quadro guarda as colunas 7fr/5fr (vão de mídia, a partir de 1024) e o texto é uma pilha`, async () => {
+    it(`${rota}: o <main> tem uma banda de colunas iguais (1fr/1fr, a partir de 1024), o formulário primeiro e a placa depois, e o texto é uma pilha`, async () => {
       const { container } = montar()
       await screen.findByRole('heading', { level: 1 })
       await esperar()
 
-      soSecoes(container)
-      const colunas = container.querySelector(`main ${DATA_H('secao')} ${DATA_H('quadro')} ${DATA_H('colunas')}`)!
-      expect(colunas, 'Secao > QuadroLayout > Colunas').not.toBeNull()
-      expect(colunas.getAttribute('data-h-vao')).toBe('midia')
+      // A banda é filha direta do <main> (de ponta a ponta, sem o quadro centrado nem o respiro da seção).
+      const filhos = filhosDoMain(container)
+      expect(filhos).toHaveLength(1)
+      const colunas = filhos[0]
+      expect(colunas.getAttribute('data-h')?.split(' ')).toContain('colunas')
       expect(colunas.getAttribute('data-h-quebra')).toBe('1024')
-      expect(modeloDe(colunas)).toBe('minmax(0, 7fr) minmax(0, 5fr)')
+      expect(modeloDe(colunas)).toBe('minmax(0, 1fr) minmax(0, 1fr)')
+      expect(colunas.classList.contains('gap-0')).toBe(true)
       expect([...colunas.children].map((c) => c.getAttribute('data-h')?.split(' '))).toEqual([
         expect.arrayContaining(['coluna']),
         expect.arrayContaining(['coluna']),
       ])
+      expect(colunas.children[0].contains(colunas.querySelector('h1'))).toBe(true)
+      expect(colunas.children[1].querySelector('img')).not.toBeNull()
       // O título e a frase são uma pilha (título → texto), e o texto do formulário e os links outra, com o vão de grupo.
       const titulo = colunas.querySelector('h1')!
       expect(titulo.parentElement!.getAttribute('data-h')?.split(' ')).toContain('pilha')
       expect(titulo.parentElement!.parentElement!.getAttribute('data-h-vao')).toBe('grupo')
-      // O texto do título fica em `medio` (880) no máximo.
-      expect(titulo.parentElement!.classList.contains('max-w-medio')).toBe(true)
     })
   }
 
   it('/app/comecar (passo "Seu nome") e a escolha da família usam as mesmas colunas dentro do <main>', async () => {
     const passo = renderizarComDados('/app/comecar', { dados: await semMemoria() })
     await screen.findByRole('heading', { level: 2, name: 'Seu nome' })
-    soSecoes(passo.container)
+    expect(filhosDoMain(passo.container)).toHaveLength(1)
     const colunas = passo.container.querySelector(`main ${DATA_H('colunas')}`)!
-    expect(colunas.getAttribute('data-h-vao')).toBe('midia')
-    expect(modeloDe(colunas)).toBe('minmax(0, 7fr) minmax(0, 5fr)')
-    // O cartão do passo é um Cartao (padding de painel e raio do cartão), com o formulário e o título dentro.
+    expect(modeloDe(colunas)).toBe('minmax(0, 1fr) minmax(0, 1fr)')
+    // O passo é uma pilha sem cartão (sem borda, fundo nem raio), com o título e o formulário dentro.
     const cartao = screen.getByRole('heading', { level: 2, name: 'Seu nome' }).closest('section')!
-    expect(cartao.getAttribute('data-h')?.split(' ')).toContain('cartao')
+    expect(cartao.getAttribute('data-h')?.split(' ')).toContain('pilha')
+    expect(cartao.getAttribute('data-h')?.split(' ')).not.toContain('cartao')
+    expect(cartao.className).not.toMatch(/border|bg-|rounded|shadow/)
     passo.unmount()
 
     const escolha = renderizarComDados('/app/comecar', { sessao: 'davi' })
     // Davi tem família: o Começar cai na escolha da família.
     await screen.findByRole('heading', { level: 2, name: 'Como você quer começar?' })
-    soSecoes(escolha.container)
+    expect(filhosDoMain(escolha.container)).toHaveLength(1)
     const colunasDaEscolha = escolha.container.querySelector(`main ${DATA_H('colunas')}`)!
-    expect(colunasDaEscolha.getAttribute('data-h-vao')).toBe('midia')
+    expect(modeloDe(colunasDaEscolha)).toBe('minmax(0, 1fr) minmax(0, 1fr)')
     const cartaoDaEscolha = screen.getByRole('heading', { level: 2, name: 'Como você quer começar?' }).closest('section')!
-    expect(cartaoDaEscolha.getAttribute('data-h')?.split(' ')).toContain('cartao')
+    expect(cartaoDaEscolha.getAttribute('data-h')?.split(' ')).toContain('pilha')
+    expect(cartaoDaEscolha.getAttribute('data-h')?.split(' ')).not.toContain('cartao')
+    expect(cartaoDaEscolha.className).not.toMatch(/border|bg-|rounded|shadow/)
   })
 
-  it('o estado carregando e o estado de erro da tela de acesso também são seções com pilha', async () => {
+  it('o estado carregando e o estado de erro da tela de acesso também são a banda de duas metades, com pilha', async () => {
     const dados = criarDadosContaMemoria(criarFixtureDeTeste(Date.now()))
     simularFalha(dados, 'sessaoAtual', 'rede')
     const { container } = renderizarComDados('/entrar', { dados })
     await screen.findByRole('alert')
-    soSecoes(container)
+    expect(filhosDoMain(container)).toHaveLength(1)
     expect(container.querySelector(`main ${DATA_H('pilha')} [role="alert"]`)).not.toBeNull()
   })
 })

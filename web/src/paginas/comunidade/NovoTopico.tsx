@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { useLocation, useParams } from 'react-router'
-import { ErroDeLeitura, Esqueleto, NaoEncontrado, ParaEntrar } from '../../componentes/comunidade/Avisos.tsx'
+import { NaoEncontrado, ParaEntrar } from '../../componentes/comunidade/Avisos.tsx'
 import { useDadosComunidade } from '../../componentes/comunidade/dados.ts'
+import { Carregando } from '../../componentes/estado/Carregando.tsx'
+import { ErroDaComunidade } from '../../componentes/estado/ErroDaComunidade.tsx'
 import { Faixa } from '../../componentes/comunidade/Faixa.tsx'
 import { FormularioDeTopico } from '../../componentes/comunidade/FormularioDeTopico.tsx'
 import { Quadro, TituloDaTela } from '../../componentes/comunidade/Quadro.tsx'
@@ -30,12 +32,12 @@ export function NovoTopico() {
       cabeca={
         <>
           <Status mensagem={aviso ?? textoDaPassagemComunidade(location.state)} />
-          {espacos.esqueleto || situacao.esqueleto ? <Esqueleto linhas={2} /> : null}
+          {espacos.estado.fase === 'carregando' || situacao.estado.fase === 'carregando' ? <Carregando linhas={2} /> : null}
           {espacos.estado.fase === 'erro' ? (
-            <ErroDeLeitura erro={espacos.estado.erro} aoTentarDeNovo={() => void espacos.recarregar()} />
+            <ErroDaComunidade erro={espacos.estado.erro} aoTentarDeNovo={() => void espacos.recarregar()} />
           ) : null}
           {situacao.estado.fase === 'erro' ? (
-            <ErroDeLeitura erro={situacao.estado.erro} aoTentarDeNovo={() => void situacao.recarregar()} />
+            <ErroDaComunidade erro={situacao.estado.erro} aoTentarDeNovo={() => void situacao.recarregar()} />
           ) : null}
           {espacos.estado.fase === 'pronto' && !espaco ? <NaoEncontrado /> : null}
           {espaco && lida && !ehEscritor(lida) ? <ParaEntrar destino={`/app/comunidade/${espaco.slug}/novo`} /> : null}

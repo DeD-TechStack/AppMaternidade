@@ -5,9 +5,12 @@
 @import '@fontsource-variable/literata/wght.css';
 @import '@fontsource-variable/literata/wght-italic.css';
 @import '@fontsource-variable/outfit/wght.css';
+@import '@fontsource/m-plus-rounded-1c/latin-700.css';
+@import '@fontsource/m-plus-rounded-1c/latin-800.css';
 @import './styles/site.css';
 @import './styles/campo.css';
 @import './styles/foco.css';
+@import './styles/abrir-fechar.css';
 
 @layer base {
   html {
@@ -253,7 +256,7 @@
     font-size: var(--texto-titulo-1-tamanho);
     line-height: var(--texto-titulo-1-entrelinha);
     font-weight: 400;
-    font-style: italic;
+    font-style: normal;
     letter-spacing: 0;
   }
 
@@ -621,6 +624,12 @@
   *::after {
     animation: none !important;
     transition: none !important;
+  }
+
+  /* Abrir e fechar (styles/abrir-fechar.css) sem duração: o menu, as caixas e o acordeão trocam de uma vez. */
+  :root {
+    --mov-abrir: 0ms;
+    --mov-fechar: 0ms;
   }
 }
 

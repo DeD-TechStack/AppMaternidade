@@ -4,7 +4,7 @@ import { cn } from '../componentes/terceiros/cn.ts'
 import { CATALOGO } from './catalogo.ts'
 import { usePrefereMovimentoReduzido } from './reduzido.ts'
 
-// M6 e M7: a seção parece sair de baixo da anterior. O conteúdo vai de -50% (M6) ou -30% (M7) da
+// M7 (o rodapé): a seção parece sair de baixo da anterior. O conteúdo vai de -30% da
 // própria altura até 0, preso à rolagem, linear e sem suavização. O movimento corre de quando o
 // topo da seção entra pela base da janela até quando a base dela chega à base da janela, para
 // terminar no lugar mesmo na última seção da página. O recipiente corta o que sobe além da borda.
@@ -12,7 +12,7 @@ import { usePrefereMovimentoReduzido } from './reduzido.ts'
 // conteúdo fica fixo no lugar (y em 0).
 
 interface Props {
-  variante: 'M6' | 'M7'
+  variante: 'M7'
   children: ReactNode
   className?: string
 }

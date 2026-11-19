@@ -5,7 +5,8 @@ import { AvisoDaTela } from '../../componentes/app/AvisoDaTela.tsx'
 import { Colunas, Pilha, QuadroLayout, Secao } from '../../componentes/base/layout/index.ts'
 import { CronometroSessao } from '../../componentes/app/CronometroSessao.tsx'
 import { SessoesAnteriores } from '../../componentes/app/SessoesAnteriores.tsx'
-import { AvisoDeErro } from '../../componentes/rotina/AvisoDeErro.tsx'
+import { Carregando } from '../../componentes/estado/Carregando.tsx'
+import { ErroDaRotina } from '../../componentes/estado/ErroDaRotina.tsx'
 import { ConfirmacaoRotina } from '../../componentes/rotina/ConfirmacaoRotina.tsx'
 import type { AcaoDaConfirmacao } from '../../componentes/rotina/contexto.ts'
 import { SessoesEmParalelo } from '../../componentes/rotina/SessoesEmParalelo.tsx'
@@ -198,13 +199,13 @@ export function Sessao() {
   }
 
   const avisoDaPendencia = pendencia ? (
-    <AvisoDeErro erro={pendencia.erro} escrita papel={ativo?.papel ?? null} aoTentarDeNovo={pendencia.repetir} className="max-w-md">
+    <ErroDaRotina erro={pendencia.erro} escrita papel={ativo?.papel ?? null} aoTentarDeNovo={pendencia.repetir} className="max-w-md">
       {pendencia.nota !== '' ? (
         <p className="w-full rounded-campo bg-(--cor-papel-fundo) px-4 py-3 wrap-anywhere" data-texto-da-nota="">
           {pendencia.nota}
         </p>
       ) : null}
-    </AvisoDeErro>
+    </ErroDaRotina>
   ) : null
 
   // As releituras que falharam com dados anteriores na tela: o aviso e `Tentar de novo` ficam junto dos dados,
@@ -212,7 +213,7 @@ export function Sessao() {
   const avisosDasAnteriores =
     anteriores.erro || anteriores.dados?.incompleta ? (
       <Pilha vao="pilha" dataH="coluna" className="lg:col-span-2" data-avisos-das-anteriores="">
-        {anteriores.erro ? <AvisoDeErro erro={anteriores.erro} papel={ativo?.papel ?? null} aoTentarDeNovo={anteriores.recarregar} /> : null}
+        {anteriores.erro ? <ErroDaRotina erro={anteriores.erro} papel={ativo?.papel ?? null} aoTentarDeNovo={anteriores.recarregar} /> : null}
         {anteriores.dados?.incompleta ? <AvisoDeLista limite={LIMITES.sessoesDaJanela} dado="anteriores" /> : null}
       </Pilha>
     ) : null
@@ -269,7 +270,7 @@ export function Sessao() {
 
                 {leitura.erro ? (
                   <div className="max-w-md" data-releitura-falhou="">
-                    <AvisoDeErro erro={leitura.erro} papel={bebeDaSessao.papel} aoTentarDeNovo={leitura.recarregar} />
+                    <ErroDaRotina erro={leitura.erro} papel={bebeDaSessao.papel} aoTentarDeNovo={leitura.recarregar} />
                   </div>
                 ) : null}
 
@@ -329,7 +330,7 @@ export function Sessao() {
               <Pilha vao="bloco">
                 <TituloRotina antes={VOLTAR_PARA_HOJE} titulo={TITULOS.sessao} linha={null} />
                 <div className="max-w-md">
-                  <AvisoDeErro erro={leitura.erro} papel={ativo.papel} aoTentarDeNovo={leitura.recarregar} />
+                  <ErroDaRotina erro={leitura.erro} papel={ativo.papel} aoTentarDeNovo={leitura.recarregar} />
                 </div>
                 {pendencia ? <div>{avisoDaPendencia}</div> : null}
               </Pilha>
@@ -350,14 +351,14 @@ export function Sessao() {
             {carregando || iniciandoPelaUrl ? (
               <Pilha vao="bloco">
                 <TituloRotina antes={VOLTAR_PARA_HOJE} titulo={TITULOS.sessao} linha={null} />
-                <p>{iniciandoPelaUrl ? null : COMUM.carregando}</p>
+                {iniciandoPelaUrl ? null : <Carregando texto={COMUM.carregando} />}
               </Pilha>
             ) : (
               <Pilha vao="bloco">
                 <TituloRotina antes={VOLTAR_PARA_HOJE} titulo={TITULO_SEM_SESSAO} linha={SUBTITULO_SEM_SESSAO} />
                 {leitura.erro ? (
                   <div className="max-w-md">
-                    <AvisoDeErro erro={leitura.erro} papel={ativo.papel} aoTentarDeNovo={leitura.recarregar} />
+                    <ErroDaRotina erro={leitura.erro} papel={ativo.papel} aoTentarDeNovo={leitura.recarregar} />
                   </div>
                 ) : null}
                 {/* A sessão pode ter acabado de ser encerrada ou descartada, mas a escrita falhou sem resposta: a

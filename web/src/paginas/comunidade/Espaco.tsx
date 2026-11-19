@@ -4,8 +4,11 @@ import { Botao } from '../../componentes/base/Botao.tsx'
 import { Cartao } from '../../componentes/base/layout/Cartao.tsx'
 import { Pilha } from '../../componentes/base/layout/Pilha.tsx'
 import { BOTAO_SECUNDARIO, LINK_ALVO } from '../../componentes/conta/Partes.tsx'
-import { AvisoDeSaude, ErroDeLeitura, Esqueleto, NaoEncontrado } from '../../componentes/comunidade/Avisos.tsx'
+import { AvisoDeSaude, NaoEncontrado } from '../../componentes/comunidade/Avisos.tsx'
 import { useDadosComunidade } from '../../componentes/comunidade/dados.ts'
+import { Carregando } from '../../componentes/estado/Carregando.tsx'
+import { ErroDaComunidade } from '../../componentes/estado/ErroDaComunidade.tsx'
+import { PainelVazio } from '../../componentes/estado/PainelVazio.tsx'
 import { Faixa } from '../../componentes/comunidade/Faixa.tsx'
 import { EtiquetaDeEstado, Meta } from '../../componentes/comunidade/Itens.tsx'
 import { Quadro, TituloDaTela } from '../../componentes/comunidade/Quadro.tsx'
@@ -38,7 +41,7 @@ function ListaDoEspaco({ espaco, escritor }: ListaProps) {
         {/* A leitura que falhou vem antes do filtro: o aviso e o "Tentar de novo" ficam na primeira tela. */}
         {estado.fase === 'erro' ? (
           <div className="max-w-[40rem] empty:hidden">
-            <ErroDeLeitura erro={estado.erro} aoTentarDeNovo={() => void paginas.recarregar()} />
+            <ErroDaComunidade erro={estado.erro} aoTentarDeNovo={() => void paginas.recarregar()} />
           </div>
         ) : null}
         <Pilha vao="pilha" className="items-start">
@@ -65,8 +68,8 @@ function ListaDoEspaco({ espaco, escritor }: ListaProps) {
           <h2 id="topicos" className="cm-h4 text-titulo-4">
             {ESPACO.topicos}
           </h2>
-          {paginas.esqueleto ? <Esqueleto /> : null}
-          {estado.fase === 'pronto' && estado.itens.length === 0 ? <p>{TX.tx16}</p> : null}
+          {estado.fase === 'carregando' ? <Carregando linhas={3} /> : null}
+          {estado.fase === 'pronto' && estado.itens.length === 0 ? <PainelVazio texto={TX.tx16} /> : null}
           {estado.fase === 'pronto' && estado.itens.length > 0 ? (
             <Pilha as="ul" vao="grupo" className="m-0 list-none p-0">
               {estado.itens.map((topico) => (
@@ -92,7 +95,7 @@ function ListaDoEspaco({ espaco, escritor }: ListaProps) {
             </Pilha>
           ) : null}
           {estado.fase === 'pronto' && estado.erroDaPagina ? (
-            <ErroDeLeitura erro={estado.erroDaPagina} aoTentarDeNovo={() => void paginas.carregarMais()} />
+            <ErroDaComunidade erro={estado.erroDaPagina} aoTentarDeNovo={() => void paginas.carregarMais()} />
           ) : null}
           {estado.fase === 'pronto' && estado.haMais && !estado.erroDaPagina ? (
             <div>
@@ -135,15 +138,15 @@ export function Espaco() {
             <AvisoDeSaude />
             <Status mensagem={textoDaPassagemComunidade(location.state)} />
           </Pilha>
-          {espacos.esqueleto ? <Esqueleto /> : null}
+          {espacos.estado.fase === 'carregando' ? <Carregando linhas={3} /> : null}
           {espacos.estado.fase === 'erro' ? (
             <div className="max-w-[40rem]">
-              <ErroDeLeitura erro={espacos.estado.erro} aoTentarDeNovo={() => void espacos.recarregar()} />
+              <ErroDaComunidade erro={espacos.estado.erro} aoTentarDeNovo={() => void espacos.recarregar()} />
             </div>
           ) : null}
           {situacao.estado.fase === 'erro' ? (
             <div className="max-w-[40rem]">
-              <ErroDeLeitura erro={situacao.estado.erro} aoTentarDeNovo={() => void situacao.recarregar()} />
+              <ErroDaComunidade erro={situacao.estado.erro} aoTentarDeNovo={() => void situacao.recarregar()} />
             </div>
           ) : null}
           {espacos.estado.fase === 'pronto' && !espaco ? <NaoEncontrado /> : null}

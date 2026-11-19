@@ -2,7 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { createClient } from '@supabase/supabase-js'
-import { criarRotas } from '../rotas.tsx'
+import { TEXTO_APOIO_CONTATO, TEXTO_QUEM_PODE_USAR, TEXTO_SEUS_DIREITOS } from '../conteudo/publicas-texto.ts'
+import { criarRotasProntas } from './rotasProntas.ts'
 import { criarClienteFalso } from './renderizarComDados.tsx'
 import { aguardarCarga } from './renderizarRota.tsx'
 
@@ -22,6 +23,10 @@ const N =
 const PERMITIDOS = [
   'Nesta versão de avaliação, use só dados fictícios.',
   'Nesta fase de avaliação, a demonstração roda num projeto Supabase nos Estados Unidos (região us-east-1), só com dados fictícios.',
+  // Daniel 18/11, STRINGS.md A3/A7/A8 (LEGAL-D54a)
+  TEXTO_QUEM_PODE_USAR,
+  TEXTO_APOIO_CONTATO,
+  TEXTO_SEUS_DIREITOS,
 ]
 
 /** O aviso honesto único: o da demonstração, dentro do rodapé. */
@@ -107,7 +112,7 @@ function avisosExtras(container: HTMLElement): string[] {
 function renderizar(caminho: string, ligado: boolean) {
   comBanco(ligado)
   vi.stubGlobal('scrollTo', vi.fn())
-  const roteador = createMemoryRouter(criarRotas(), { initialEntries: [caminho] })
+  const roteador = createMemoryRouter(criarRotasProntas(), { initialEntries: [caminho] })
   return render(<RouterProvider router={roteador} />)
 }
 
@@ -190,6 +195,14 @@ describe('o filtro enxerga o que procura (controles negativos do RF-01)', () => 
   it('só o texto fixo exato é permitido: o mesmo texto com um acréscimo é achado', () => {
     const { container } = render(<p>{PERMITIDOS[0]} O protótipo avisa.</p>)
     expect(avisosNoCorpo(container)).toHaveLength(1)
+  })
+
+  it('LEGA-I-13 uma quarta frase com "fictício" em /contato continua sendo achada', () => {
+    const quarta = render(<p>Este endereço de e-mail é fictício e ninguém responde.</p>)
+    expect(avisosNoCorpo(quarta.container)).toHaveLength(1)
+    quarta.unmount()
+    const a7 = render(<p>{TEXTO_APOIO_CONTATO}</p>)
+    expect(avisosNoCorpo(a7.container)).toEqual([])
   })
 
   it('a FAQ de preço com a oração de status é achada; só com o fato, não', () => {

@@ -1,10 +1,11 @@
 import { spawnSync } from 'node:child_process'
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync, writeSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { cleanup, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
+import { INI } from '../../conteudo/inicio.ts'
 import { aguardarCarga, renderizarRota } from '../../teste/renderizarRota.tsx'
 
 // BASE-DEF-1: a legenda da tabela de comparação e os títulos de duas linhas do Início, medidos num Chrome de
@@ -134,6 +135,26 @@ const SEM_MOVIMENTO = '<style>*,*::before,*::after{animation:none!important;tran
  * O CSS do build aponta as fontes por `/assets/...` ou, com o subcaminho do Pages (vite.config.ts), por
  * `/AppMaternidade/assets/...`: numa página file:// as duas formas passam a apontar para web/dist/assets.
  */
+// A limpeza da pasta temporária do Chrome nunca decide o resultado do teste: no Windows o Chrome pode segurar o perfil
+// e o `rmSync` lançaria EPERM do `finally`. A falha vira só um aviso (caminho, código e mensagem), sem throw.
+function avisar(texto: string): void {
+  console.warn(texto)
+  try {
+    writeSync(2, `${texto}\n`)
+  } catch (erro) {
+    console.error(`Aviso: não deu para escrever no stderr (${String(erro)}); o aviso era: ${texto}`)
+  }
+}
+
+function limparPasta(pasta: string, comTentativas = true): void {
+  try {
+    rmSync(pasta, comTentativas ? { recursive: true, force: true, maxRetries: 6, retryDelay: 250 } : { recursive: true, force: true })
+  } catch (erro) {
+    const e = erro as NodeJS.ErrnoException
+    avisar(`Aviso: não deu para remover a pasta temporária ${pasta} (${e.code ?? 'sem código'}): ${e.message}`)
+  }
+}
+
 function cssComFontesDoDist(nome: string): string {
   const base = `${pathToFileURL(PASTA_CSS).href}/`
   return readFileSync(join(PASTA_CSS, nome), 'utf8').replace(/url\((["']?)\/(?!\/)(?:[^)"'/]+\/)*?assets\//g, (_t, aspas: string) => `url(${aspas}${base}`)
@@ -173,7 +194,8 @@ function medirNoChrome(corpoHtml: string, largura: number, altura: number): Medi
         '--headless=new',
         '--no-sandbox',
         '--disable-gpu',
-        '--disable-crashpad-for-testing',
+        // CI-UBUNTU: no Chrome 157 do Linux esta opção mata o processo ("FD ownership violation"); no Windows ela fica.
+        ...(process.platform === 'win32' ? ['--disable-crashpad-for-testing'] : []),
         '--no-first-run',
         '--allow-file-access-from-files',
         '--hide-scrollbars',
@@ -197,7 +219,7 @@ function medirNoChrome(corpoHtml: string, largura: number, altura: number): Medi
     }
     return JSON.parse(achado[1].replaceAll('&quot;', '"').replaceAll('&amp;', '&').replaceAll('&lt;', '<').replaceAll('&gt;', '>')) as Medida
   } finally {
-    rmSync(pasta, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 })
+    limparPasta(pasta)
   }
 }
 
@@ -228,7 +250,8 @@ function semEstouro(titulo: { linhas: number[]; coluna: number; palavrasQuebrada
 describe('a área que rola a tabela de comparação (AUD-01)', () => {
   afterEach(cleanup)
 
-  for (const caminho of ['/sistema', '/']) {
+  // REP-HOME: the new Início has no comparison table (COPY_inicio.md), so /sistema alone carries this contract.
+  for (const caminho of ['/sistema']) {
     it(`em ${caminho}: recebe o foco do Tab e tem o papel de região com o nome da legenda`, async () => {
       renderizarRota(caminho, { sessao: null })
       await aguardarCarga()
@@ -294,16 +317,20 @@ describe(`a geometria da legenda e dos títulos no Chrome${motivoDoPulo ? ` (pul
     [390, 844],
   ] as const) {
     it.skipIf(motivoDoPulo !== null)(
-      `Início em ${largura}: o título da madrugada quebra em linhas equilibradas e o h1 não estoura a coluna nem parte uma palavra`,
+      `Início em ${largura}: os títulos de seção (prova, fecho) quebram em linhas equilibradas e o h1 não estoura a coluna nem parte uma palavra`,
       async () => {
         const medida = await medirRota('/', largura, altura)
-        const madrugada = medida.titulos.find((t) => t.texto.startsWith('De madrugada'))
-        const heroi = medida.titulos.find((t) => t.texto.startsWith('A rotina do bebê'))
-        for (const titulo of [madrugada, heroi]) {
+        // REP-HOME: the new Início's two-line headings are the proof and the closing h2s; the h1 is "Ela mamou que horas?".
+        const secoes = [INI.h2Prova, INI.h2Fecho].map((texto) => medida.titulos.find((t) => t.texto === texto))
+        const heroi = medida.titulos.find((t) => t.texto.startsWith(INI.h1Dia))
+        for (const titulo of [...secoes, heroi]) {
           expect(titulo, 'título não encontrado').toBeDefined()
           expect(titulo!.linhas.length).toBeGreaterThan(0)
         }
-        expect(equilibrado(madrugada!.linhas), `${madrugada!.texto}: linhas ${madrugada!.linhas.join(' / ')}`).toBe(true)
+        for (const titulo of secoes) {
+          expect(equilibrado(titulo!.linhas), `${titulo!.texto}: linhas ${titulo!.linhas.join(' / ')}`).toBe(true)
+          expect(semEstouro(titulo!), 'título de seção estoura a coluna ou quebra uma palavra: ' + JSON.stringify(titulo)).toBe(true)
+        }
         expect(semEstouro(heroi!), 'h1 estoura a coluna ou quebra uma palavra: ' + JSON.stringify(heroi)).toBe(true)
       },
       120_000,

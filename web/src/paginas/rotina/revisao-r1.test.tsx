@@ -37,7 +37,7 @@ it('P03 editar registro pela URL sem state retorna ao detalhe ao cancelar', asyn
 })
 
 it.each(['/app/historico', '/app/lixeira', '/app/registro/a0000000-0000-7000-8000-000000000003'])('P04 observador recebe texto do papel em %s', async (rota) => {
-  await renderizarRotaPronta(rota, { papelDeBruno: 'observador', sessao: 'bruno' })
+  await renderizarRotaPronta(rota, { papelDeIcaro: 'observador', sessao: 'icaro' })
   expect(screen.queryAllByText(ESTADOS.observador)).toHaveLength(1)
 })
 
@@ -74,7 +74,7 @@ it('C01 controle: abrir notas pela URL → nova nota → cancelar volta às nota
 })
 
 it('C02 controle: notas do observador exibem aviso e ocultam escrita', async () => {
-  await renderizarRotaPronta('/app/notas', { papelDeBruno: 'observador', sessao: 'bruno' })
+  await renderizarRotaPronta('/app/notas', { papelDeIcaro: 'observador', sessao: 'icaro' })
   expect(screen.getByText(ESTADOS.observador)).toBeTruthy()
   expect(within(screen.getByRole('main')).queryByRole('link', { name: 'Nova nota' })).toBeNull()
 })

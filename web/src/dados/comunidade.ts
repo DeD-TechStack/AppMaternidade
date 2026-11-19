@@ -1,6 +1,6 @@
 import { createContext, createElement, type ReactNode } from 'react'
-import { obterCliente } from './cliente.ts'
-import { modoDados, type Resultado } from './comum.ts'
+import { chaveDoBanco } from './cliente.ts'
+import { dadosSobDemanda, modoDados, type Resultado } from './comum.ts'
 import {
   type EstadoDenuncia,
   type EstadoModeracao,
@@ -9,8 +9,11 @@ import {
   type PapelPlataforma,
 } from './comunidade.regras.ts'
 import { fixtureComunidadeDemonstracao } from './comunidade.demonstracao.ts'
-import { criarDadosComunidadeMemoria, criarEstadoComunidade } from './comunidade.memoria.ts'
-import { criarDadosComunidadeSupabase } from './comunidade.supabase.ts'
+import {
+  criarDadosComunidadeMemoria,
+  criarEstadoComunidade,
+  type EstadoComunidade,
+} from './comunidade.memoria.ts'
 
 // A área Comunidade (MAT-40a): os tipos que a tela vê, a interface de dados e a instância da página.
 // Datas e horas são texto ISO 8601 em UTC, como o banco devolve. Nenhuma operação lança exceção.
@@ -192,23 +195,41 @@ export function informarContaDaSessao(id: string | null): void {
 // Uma instância por modo, como na área de conta. No modo memória a conta entrada vira conta habilitada
 // (o guarda da MAT-37 só a deixa passar com a linha de `contas`).
 let emMemoria: DadosComunidade | null = null
-let noBanco: { cliente: unknown; dados: DadosComunidade } | null = null
+let estadoEmMemoria: EstadoComunidade | null = null
+let noBanco: { chave: string; dados: DadosComunidade } | null = null
 
 /** A instância de dados da página: a mesma durante toda a vida dela. */
 export function criarDadosComunidade(): DadosComunidade {
-  const cliente = obterCliente()
-  if (modoDados() === 'supabase' && cliente) {
-    if (!noBanco || noBanco.cliente !== cliente) noBanco = { cliente, dados: criarDadosComunidadeSupabase(cliente) }
+  const chave = chaveDoBanco()
+  if (modoDados() === 'supabase' && chave) {
+    // A implementação do banco só é baixada (com o pacote do Supabase) na primeira operação.
+    if (!noBanco || noBanco.chave !== chave) {
+      noBanco = {
+        chave,
+        dados: dadosSobDemanda<DadosComunidade>(OPERACOES_COMUNIDADE, async (cliente) =>
+          (await import('./comunidade.supabase.ts')).criarDadosComunidadeSupabase(cliente),
+        ),
+      }
+    }
     return noBanco.dados
   }
   if (!emMemoria) {
     const estado = criarEstadoComunidade(fixtureComunidadeDemonstracao)
+    estadoEmMemoria = estado
     emMemoria = criarDadosComunidadeMemoria(estado, () => {
       if (contaDaPagina && !estado.contas.includes(contaDaPagina)) estado.contas.push(contaDaPagina)
       return contaDaPagina
     })
   }
   return emMemoria
+}
+
+/** O estado em memória da página (o painel de moderação parte dele), ou null fora do modo memória. */
+export function estadoMemoriaDaPagina(): EstadoComunidade | null {
+  criarDadosComunidade()
+  const chave = chaveDoBanco()
+  if (modoDados() === 'supabase' && chave) return null
+  return estadoEmMemoria
 }
 
 /** O contexto de dados: os testes injetam a memória; sem ele, vale a instância da página. */

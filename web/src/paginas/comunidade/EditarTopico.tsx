@@ -1,6 +1,8 @@
 import { useParams } from 'react-router'
-import { ErroDeLeitura, Esqueleto, NaoEncontrado, ParaEntrar } from '../../componentes/comunidade/Avisos.tsx'
+import { NaoEncontrado, ParaEntrar } from '../../componentes/comunidade/Avisos.tsx'
 import { useDadosComunidade } from '../../componentes/comunidade/dados.ts'
+import { Carregando } from '../../componentes/estado/Carregando.tsx'
+import { ErroDaComunidade } from '../../componentes/estado/ErroDaComunidade.tsx'
 import { Faixa } from '../../componentes/comunidade/Faixa.tsx'
 import { FormularioDeTopico } from '../../componentes/comunidade/FormularioDeTopico.tsx'
 import { Quadro, TituloDaTela } from '../../componentes/comunidade/Quadro.tsx'
@@ -29,10 +31,10 @@ function EdicaoLida({ id }: { id: string }) {
       titulo={<TituloDaTela>{FORMULARIO_TOPICO.tituloEditar}</TituloDaTela>}
       cabeca={
         <>
-          {leituras.some((leitura) => leitura.esqueleto) ? <Esqueleto linhas={2} /> : null}
+          {leituras.some((leitura) => leitura.estado.fase === 'carregando') ? <Carregando linhas={2} /> : null}
           {leituras.map((leitura, indice) =>
             leitura.estado.fase === 'erro' ? (
-              <ErroDeLeitura key={indice} erro={leitura.estado.erro} aoTentarDeNovo={() => void leitura.recarregar()} />
+              <ErroDaComunidade key={indice} erro={leitura.estado.erro} aoTentarDeNovo={() => void leitura.recarregar()} />
             ) : null,
           )}
           {pronto && lida && !ehEscritor(lida) ? <ParaEntrar destino={`/app/comunidade/topico/${id}/editar`} /> : null}

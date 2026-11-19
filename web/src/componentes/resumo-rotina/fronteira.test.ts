@@ -47,7 +47,8 @@ const ISENTOS_DE_ARMAZENAMENTO: ReadonlySet<string> = new Set([ARMAZENAMENTO])
 
 const MARCAS_DE_ARMAZENAMENTO = /\b(localStorage|sessionStorage|indexedDB|serviceWorker)\b|document\.cookie|\bconsole\b/
 
-const REAIS: readonly Fonte[] = listarFontes(pastaSrc)
+// As rotas prontas dos testes (`teste/rotasProntas.ts`) ligam o apoio às rotas reais: entram no grafo.
+const REAIS: readonly Fonte[] = [...listarFontes(pastaSrc), ...listarFontes(pastaSrc, true).filter((f) => f.nome === 'teste/rotasProntas.ts')]
 
 // ---- o grafo de importações -------------------------------------------------------------------------------------
 

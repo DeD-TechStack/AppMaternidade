@@ -23,15 +23,15 @@ describe('formatarQuando (hora do aparelho, minutos completos)', () => {
     expect(quando(10 * HORA)).toBe('há 10 h')
   })
 
-  it('no dia anterior, "ontem HH:MM"; antes disso, "DD/MM HH:MM"', () => {
-    expect(quando(16 * HORA + 30 * MIN)).toBe('ontem 17:30')
-    expect(quando(10 * HORA + MIN)).toBe('ontem 23:59')
+  it('no dia anterior, "ontem às HH:MM"; antes disso, "DD/MM HH:MM"', () => {
+    expect(quando(16 * HORA + 30 * MIN)).toBe('ontem às 17:30')
+    expect(quando(10 * HORA + MIN)).toBe('ontem às 23:59')
     expect(quando(3 * 24 * HORA)).toBe('02/11 10:00')
   })
 
   it('uma hora de uma hora atrás que cai no dia anterior é "ontem", e não "há 1 h"', () => {
     const meiaNoite30 = new Date('2026-11-05T00:30:00').getTime()
-    expect(formatarQuando(meiaNoite30 - HORA, meiaNoite30)).toBe('ontem 23:30')
+    expect(formatarQuando(meiaNoite30 - HORA, meiaNoite30)).toBe('ontem às 23:30')
   })
 
   it('um momento no futuro (relógio adiantado de outro aparelho) vira "agora"', () => {
@@ -82,7 +82,7 @@ describe('resumoDoRegistro', () => {
     // 23:30 a 00:30 em São Paulo (02:30Z a 03:30Z).
     expect(
       resumo({ tipo: 'sono', inicio: '2026-11-05T02:30:00.000Z', fim: '2026-11-05T03:30:00.000Z' }),
-    ).toBe('1 h 0 min · termina no dia seguinte')
+    ).toBe('1 h · termina no dia seguinte')
   })
 
   it('mamada com lado, mamadeira com ml e conteúdo, fralda, alimento e observação cortada em 80', () => {

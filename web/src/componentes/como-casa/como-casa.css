@@ -1,0 +1,452 @@
+/* /como-funciona na casa acesa (CLONE-COMO). Estatico: nada nasce escondido, nada se move, nenhuma transicao. So tokens
+   (`--espaco-*`, `--color-*`); os unicos numeros soltos sao as medidas do slot sheet (470, 560, 300 x 490, 0,8596, a
+   razao da placa 1672 x 915 e da moldura). As faixas de secoes/ nao sao editadas: o que e so desta pagina mora aqui.
+
+   O heroi usa um seletor de peso (0,4,0) ou mais, `[data-casa] [data-cena-heroi][data-lado]:has(.cf-hero-texto)`: as
+   regras do Inicio (`inicio-casa.css`) miram `[data-casa] [data-cena-heroi][data-lado]` sem nome de pagina (0,3,0) e,
+   carregadas no mesmo pacote, desmontavam este heroi (texto em `display: contents`, placa absoluta, parede de cacau
+   sob o texto de cacau). Aqui cada propriedade que elas tocam volta ao desenho desta pagina.
+
+   As faixas 2 a 5 sao conteineres (`.cf-banda`): as duas colunas vem de uma consulta de conteiner, nao da janela. */
+@layer components {
+  /* ---- Heroi: a placa rente a esquerda, o texto pendurado na parede da noite (de 768 em diante) ---- */
+  [data-casa] [data-cena-heroi][data-lado]:has(.cf-hero-texto) {
+    /* A borda do quadro e a segunda coluna (x 760 em 1440: 8/15 do quadro), medidas na largura da propria faixa. */
+    --cf-esq: max(var(--quadro-calha), (100% - var(--quadro-largura)) / 2);
+    --cf-col2: calc(var(--cf-esq) + min(var(--quadro-largura), 100% - 2 * var(--quadro-calha)) * 8 / 15);
+    --cf-placa: calc(var(--cena-largura-max) * min(100vw, 1440px) / 1440);
+
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    background-color: var(--color-papel);
+    color: var(--color-cacau);
+  }
+
+  /* As duas paredes (cacau) cobrem so a altura da placa, de ponta a ponta; a costura do Inicio nao vale aqui. */
+  [data-casa] [data-cena-heroi][data-lado]:has(.cf-hero-texto) [data-camada] {
+    top: 0;
+    right: -100vw;
+    bottom: 0;
+    left: -100vw;
+    width: auto;
+  }
+
+  [data-casa] [data-cena-heroi][data-lado]:has(.cf-hero-texto) .cm-cena-placa {
+    position: relative;
+    top: auto;
+    left: auto;
+    z-index: 0;
+    order: 0;
+    align-self: stretch;
+    width: 100%;
+    margin: 0;
+  }
+
+  [data-casa] [data-cena-heroi][data-lado]:has(.cf-hero-texto) .cm-cena-texto {
+    position: relative;
+    z-index: 1;
+    display: block;
+    order: 1;
+    min-width: 0;
+    padding: var(--espaco-pilha) var(--quadro-calha) 0;
+  }
+
+  .cf-hero-texto {
+    --cf-medida: 470px;
+    --cf-lista: 560px;
+    --foco-faixa: var(--color-cacau);
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--espaco-pilha);
+    min-width: 0;
+    color: var(--color-cacau);
+  }
+
+  .cf-hero-texto :focus-visible {
+    outline-color: var(--foco-faixa);
+  }
+
+  .cf-hero-titulo {
+    display: flex;
+    flex-direction: column;
+    gap: var(--espaco-junto);
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .cf-hero-titulo > h1 {
+    max-width: var(--cf-lista);
+  }
+
+  .cf-hero-titulo > p {
+    max-width: var(--cf-medida);
+  }
+
+  /* Abaixo de 768 o texto fica no papel, sob o recorte de 390: o botao de mel so existe sobre o cacau, entao ali ele
+     toma a cara do primario (cacau, texto de papel). Entre 640 e 767 numa janela baixa o texto vai para a parede de
+     cacau (lado a lado, abaixo) e o botao volta a ser de mel. */
+  @media (max-width: 639px), (max-width: 767px) and (min-height: 761px) {
+    .cf-hero-texto .cm-botao-mel {
+      border-color: var(--color-cacau);
+      background-color: var(--color-cacau);
+      color: var(--color-papel);
+    }
+
+    .cf-hero-texto .cm-botao-mel:hover {
+      border-color: var(--color-cacau);
+      background-color: var(--color-papel);
+      color: var(--color-cacau);
+    }
+  }
+
+  /* De 768 em diante: uma grade de tres trilhas medidas na faixa (ate a segunda coluna, a coluna do texto, a calha da
+     direita). A placa ocupa as tres, rente a esquerda e assentada no pe da faixa; o texto, so a do meio, centrado na
+     altura. A placa passa por baixo da coluna do texto so com a parede dela (o berco termina a 68 % da placa). */
+  @media (min-width: 768px) {
+    [data-casa] [data-cena-heroi][data-lado]:has(.cf-hero-texto) {
+      display: grid;
+      grid-template-columns: var(--cf-col2) minmax(0, 1fr) var(--cf-esq);
+      grid-template-rows: auto;
+      background-color: var(--color-cacau);
+      color: var(--color-papel);
+    }
+
+    [data-casa] [data-cena-heroi][data-lado]:has(.cf-hero-texto) .cm-cena-placa {
+      grid-row: 1;
+      grid-column: 1 / -1;
+      justify-self: start;
+      align-self: end;
+      width: var(--cf-placa);
+    }
+
+    [data-casa] [data-cena-heroi][data-lado]:has(.cf-hero-texto) .cm-cena-texto {
+      display: flex;
+      grid-row: 1;
+      grid-column: 2;
+      flex-direction: column;
+      justify-content: center;
+      padding: var(--espaco-secao) 0;
+    }
+
+    .cf-hero-texto {
+      --foco-faixa: var(--color-papel);
+
+      gap: var(--espaco-grupo);
+      color: var(--color-papel);
+    }
+  }
+
+  /* Janela baixa: a placa encolhe pela altura (mesma razao), para o texto e a moldura de baixo seguirem na dobra. */
+  @media (min-width: 768px) and (max-height: 760px) {
+    [data-casa] [data-cena-heroi][data-lado]:has(.cf-hero-texto) {
+      --cf-placa: min(
+        calc(var(--cena-largura-max) * min(100vw, 1440px) / 1440),
+        calc((100svh - var(--espaco-secao-ampla) - var(--espaco-midia)) * var(--cena-aspecto))
+      );
+    }
+  }
+
+  /* Janela baixa (R1): a primeira tela mostra o h1, a frase e o botao inteiro, nos dois sentidos. Nada daqui vale acima
+     de 760 de altura, entao 390 x 844 e 1440 x 900 ficam como estao.
+     De 640 em diante o texto fica ao lado da placa e o padding dele cai de `secao` para `pilha`. */
+  @media (min-width: 640px) and (max-height: 760px) {
+    [data-casa] [data-cena-heroi][data-lado]:has(.cf-hero-texto) .cm-cena-texto {
+      padding-block: var(--espaco-pilha);
+    }
+  }
+
+  /* Entre 640 e 767 (celular deitado): duas colunas, a placa (o recorte de 390, inteiro) na primeira, assentada no pe, e
+     o texto na segunda, sobre a parede de cacau, com a largura da frase em tres linhas. */
+  @media (min-width: 640px) and (max-width: 767px) and (max-height: 760px) {
+    [data-casa] [data-cena-heroi][data-lado]:has(.cf-hero-texto) {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+      column-gap: var(--espaco-grupo);
+      background-color: var(--color-cacau);
+      color: var(--color-papel);
+    }
+
+    [data-casa] [data-cena-heroi][data-lado]:has(.cf-hero-texto) .cm-cena-placa {
+      grid-row: 1;
+      grid-column: 1;
+      align-self: end;
+    }
+
+    [data-casa] [data-cena-heroi][data-lado]:has(.cf-hero-texto) .cm-cena-texto {
+      display: flex;
+      grid-row: 1;
+      grid-column: 2;
+      flex-direction: column;
+      justify-content: center;
+      padding-inline: 0 var(--quadro-calha);
+    }
+
+    .cf-hero-texto {
+      --foco-faixa: var(--color-papel);
+
+      gap: var(--espaco-grupo);
+      color: var(--color-papel);
+    }
+
+    .cf-hero-texto .cm-botao.cm-botao-largo {
+      display: inline-flex;
+      width: auto;
+    }
+  }
+
+  /* Abaixo de 640, numa janela onde a placa, o texto e o botao nao cabem um sobre o outro (o empilhado precisa de 557 px
+     em 320 e de 659 em 639): o texto vem antes da placa, no papel, e a placa segue abaixo da dobra. */
+  @media (max-width: 639px) and (max-height: 660px) {
+    [data-casa] [data-cena-heroi][data-lado]:has(.cf-hero-texto) .cm-cena-texto {
+      order: 0;
+      padding: var(--espaco-pilha) var(--quadro-calha);
+    }
+
+    [data-casa] [data-cena-heroi][data-lado]:has(.cf-hero-texto) .cm-cena-placa {
+      order: 1;
+    }
+  }
+
+  /* Ate 480 de altura (celular deitado, janela muito baixa): o texto aperta de novo (`junto` em cima e embaixo, `pilha`
+     entre o titulo e o botao) e o h1 desce um degrau da escala, de `exibicao` para `titulo-1` (o utilitario
+     `text-exibicao` le estas duas variaveis). */
+  @media (max-height: 480px) {
+    [data-casa] [data-cena-heroi][data-lado]:has(.cf-hero-texto) .cm-cena-texto {
+      padding-block: var(--espaco-junto);
+    }
+
+    .cf-hero-texto {
+      gap: var(--espaco-pilha);
+    }
+
+    .cf-hero-titulo > h1 {
+      --texto-exibicao-tamanho: var(--texto-titulo-1-tamanho);
+      --texto-exibicao-entrelinha: var(--texto-titulo-1-entrelinha);
+    }
+  }
+
+  /* A pagina termina no fecho de cacau: o rodape (cacau) encosta nele, sem a margem de respiro de quem termina em papel. */
+  main:has(.cf-hero-texto) ~ .cm-rodape:not(.cm-rodape-compacto) {
+    margin-top: 0;
+  }
+
+  /* ---- Faixas 2 a 5: cada uma e um conteiner; as duas colunas vem dele ---- */
+  .cf-banda {
+    container: cf-banda / inline-size;
+  }
+
+  .cf-duas {
+    --cf-medida: 470px;
+    --cf-lista: 560px;
+    --cf-colo-largura: min(300px, 100cqi);
+
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--espaco-midia);
+  }
+
+  .cf-duas > * {
+    min-width: 0;
+  }
+
+  .cf-texto {
+    display: flex;
+    flex-direction: column;
+    gap: var(--espaco-pilha);
+  }
+
+  .cf-texto > h2,
+  .cf-texto > p:not([data-legenda]) {
+    max-width: var(--cf-medida);
+  }
+
+  /* A `<picture>` (AVIF + WebP) não tem caixa: a `<img>` segue filha do flex como antes. */
+  .cf-texto > picture,
+  .cf-colo > picture {
+    display: contents;
+  }
+
+  .cf-texto > img,
+  .cf-texto > picture > img {
+    display: block;
+    width: min(100%, 520px);
+    height: auto;
+  }
+
+  /* A moldura numa coluna so: a camada de tela de 280 (nunca mais larga que o conteiner, em 320), e a tela
+     (nao a moldura) alinha na borda do quadro. O peso (0,3,0) passa o `--produto-tela` que o Inicio poe em toda
+     moldura dentro de [data-casa]. */
+  [data-casa] .cf-lado .cm-produto-moldura {
+    --produto-tela: min(280px, 100cqi / 1.06);
+
+    margin-left: calc(var(--produto-borda) * -1);
+  }
+
+  /* O Historico e o celular principal: numa coluna so a moldura toma a largura do quadro (330 de tela em 390). */
+  [data-casa] .cf-duas-hist .cf-lado .cm-produto-moldura {
+    --produto-tela: min(330px, 100cqi / 1.06);
+
+    margin-left: 0;
+  }
+
+  /* Faixa 2: a legenda da cena, o texto do Historico e a cena das 15:00; a moldura do Historico. A faixa sobe ate 16 px
+     abaixo do heroi (o padding `secao` da faixa menos o `pilha`). */
+  .cf-duas-hist {
+    margin-top: calc(var(--espaco-pilha) - var(--espaco-secao));
+  }
+
+  .cf-texto-hist > h2,
+  .cf-texto-hist > img,
+  .cf-texto-hist > picture > img {
+    margin-top: calc(var(--espaco-midia) - var(--espaco-pilha));
+  }
+
+  /* Faixa 3: M06 inteira sobre o chao de noite, que segue pela largura da janela. */
+  .cf-duas-depois {
+    margin-bottom: calc(var(--espaco-grupo) - var(--espaco-secao));
+  }
+
+  .cf-colo {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--espaco-junto);
+  }
+
+  .cf-colo > *,
+  .cf-colo > picture > img {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* A linha do chao fica a 0,8596 da altura da placa (600 x 980). */
+  .cf-colo > .cf-chao {
+    position: absolute;
+    z-index: 0;
+    top: calc(var(--cf-colo-largura) * 980 / 600 * 0.8596);
+    right: -100vw;
+    bottom: calc(var(--espaco-grupo) * -1);
+    left: -100vw;
+    background-color: var(--color-texto-2);
+  }
+
+  .cf-colo > img,
+  .cf-colo > picture > img {
+    display: block;
+    width: var(--cf-colo-largura);
+    height: auto;
+    margin-inline: auto;
+  }
+
+  /* Faixa 5: os tres passos, uma lista numerada com fio de 1 px so entre as linhas. */
+  .cf-passos {
+    max-width: var(--cf-lista);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: cf-passo;
+  }
+
+  .cf-passos > li {
+    display: grid;
+    grid-template-columns: 2em minmax(0, 1fr);
+    padding-block: var(--espaco-pilha);
+    counter-increment: cf-passo;
+  }
+
+  .cf-passos > li::before {
+    content: counter(cf-passo) '.';
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cf-passos > li:first-child {
+    padding-top: 0;
+  }
+
+  .cf-passos > li:last-child {
+    padding-bottom: 0;
+  }
+
+  .cf-passos > li + li {
+    border-top: 1px solid var(--color-cacau);
+  }
+
+  .cf-lista-col > p {
+    max-width: var(--cf-lista);
+    margin: var(--espaco-grupo) 0 0;
+  }
+
+  /* Duas colunas: 8/15 e 7/15 do quadro (640 + 560 em 1200), a segunda comeca em x 760 em 1440. */
+  @container cf-banda (min-width: 700px) {
+    .cf-duas {
+      grid-template-columns: minmax(0, 8fr) minmax(0, 7fr);
+      column-gap: 0;
+    }
+
+    .cf-duas > .cf-texto {
+      padding-right: var(--espaco-bloco);
+    }
+
+    /* O Historico e o celular principal: a tela na escala da captura (390 de 390), lida a 1:1. */
+    [data-casa] .cf-duas-hist .cf-lado .cm-produto-moldura {
+      --produto-tela: clamp(280px, 44cqi, 390px);
+
+      margin-left: 0;
+    }
+
+    [data-casa] .cf-duas-nota .cf-lado .cm-produto-moldura {
+      --produto-tela: clamp(280px, 40cqi, 320px);
+
+      margin-left: 0;
+    }
+
+    .cf-duas-hist > .cf-texto {
+      grid-row: 1;
+      grid-column: 1;
+    }
+
+    .cf-duas-hist > .cf-lado {
+      grid-row: 1;
+      grid-column: 2;
+    }
+
+    /* Faixa 3: 48 px de parede (o `bloco`) acima de M06, o texto na segunda coluna. */
+    .cf-duas-depois {
+      margin-top: calc(var(--espaco-bloco) - var(--espaco-secao));
+    }
+
+    .cf-duas-depois > .cf-colo {
+      grid-row: 1;
+      grid-column: 1;
+    }
+
+    .cf-duas-depois > .cf-texto {
+      grid-row: 1;
+      grid-column: 2;
+      padding-top: var(--espaco-midia);
+    }
+
+    .cf-colo > img,
+    .cf-colo > picture > img {
+      margin-inline: 0;
+    }
+
+    .cf-duas-nota > .cf-lado {
+      grid-row: 1;
+      grid-column: 1;
+    }
+
+    .cf-duas-nota > .cf-texto {
+      grid-row: 1;
+      grid-column: 2;
+      align-self: center;
+    }
+
+    .cf-duas-comecar {
+      align-items: start;
+    }
+  }
+}

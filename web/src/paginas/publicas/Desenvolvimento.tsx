@@ -1,158 +1,162 @@
-import { Botao } from '../../componentes/base/Botao.tsx'
-import { Coluna, Colunas, Pilha, QuadroLayout, Secao } from '../../componentes/base/layout/index.ts'
-import { Ilustracao } from '../../componentes/campo/Ilustracao.tsx'
-import { PainelCampo } from '../../componentes/campo/PainelCampo.tsx'
-import { Titulo } from '../../componentes/campo/Titulo.tsx'
-import { Abertura } from '../../componentes/publicas-destaque/Abertura.tsx'
-import { AvisoSaude } from '../../componentes/publicas-destaque/AvisoSaude.tsx'
-import { CabecaDeSecao } from '../../componentes/publicas-destaque/CabecaDeSecao.tsx'
-import { CartaoPlano, CartaoTummy } from '../../componentes/publicas-destaque/CartoesApp.tsx'
-import { CenaCacau } from '../../componentes/publicas-destaque/CenaCacau.tsx'
-import { FontesDoItem } from '../../componentes/publicas-destaque/FontesDoItem.tsx'
-import { PartesDoArtigo } from '../../componentes/publicas-destaque/PartesDoArtigo.tsx'
-import { SeletorDeFase } from '../../componentes/publicas-destaque/SeletorDeFase.tsx'
-import { TabelaTexto } from '../../componentes/publicas-destaque/TabelaTexto.tsx'
-import { FASES, IDEIAS, MARCOS, QUANTO_TEMPO, TUMMY_TIME } from '../../conteudo/desenvolvimento/itens.ts'
-import { DESENVOLVIMENTO_DESTAQUE as T, ROTULOS_FONTES } from '../../conteudo/desenvolvimento/pagina.ts'
+import { useEffect } from 'react'
+import { Abertura } from '../../componentes/desenvolvimento-casa/Abertura.tsx'
+import { Etiqueta } from '../../componentes/desenvolvimento-casa/Etiqueta.tsx'
+import { Fases } from '../../componentes/desenvolvimento-casa/Fases.tsx'
+import { Fontes } from '../../componentes/desenvolvimento-casa/Fontes.tsx'
+import { Partes } from '../../componentes/desenvolvimento-casa/Partes.tsx'
+import { TabelaQuantoTempo } from '../../componentes/desenvolvimento-casa/TabelaQuantoTempo.tsx'
+import { FaixaInteira } from '../../componentes/secoes/FaixaInteira.tsx'
+import { PaginaCasa } from '../../componentes/secoes/PaginaCasa.tsx'
+import { CENA_FAMILIA, DESENVOLVIMENTO_CASA as D } from '../../conteudo/casa/desenvolvimento.ts'
+import { IDEIAS, MARCOS, QUANTO_TEMPO, TUMMY_TIME } from '../../conteudo/desenvolvimento/itens.ts'
+import { DESENVOLVIMENTO_DESTAQUE, ROTULOS_FONTES } from '../../conteudo/desenvolvimento/pagina.ts'
 import { NOMES_DE_PAGINA } from '../../conteudo/publicas-texto.ts'
-import { RevelacaoPorBaixo } from '../../movimento/RevelacaoPorBaixo.tsx'
 import { useTituloDaPagina } from './useTitulo.ts'
 
-// As partes do tummy time antes da tabela "quanto tempo" (o que é, segurança, quando começar); a
-// última ("se o bebê reclamar") vem depois dela.
-const ANTES_DA_TABELA = 3
-
-// O tamanho 1× da cena de cacau recomposta (@2x: 800 × 880). Vem daqui e não de `T.cena`: o conteúdo
-// de Desenvolvimento é só leitura nesta rodada.
-const CENA_LARGURA = 400
-const CENA_ALTURA = 440
-
-// A frase de destaque do trecho dos marcos: uma frase de `MARCOS.itens[0]`, repetida como citação.
-const DESTAQUE_MARCOS = 'Cada criança chega lá no seu próprio ritmo.'
+// As partes do tummy time em dois blocos antes da tabela (o que é e segurança; quando começar) e a última ("se o
+// bebê reclamar") depois dela, como no deck (2.3). Os marcos, em dois pares.
+const TUMMY_A = TUMMY_TIME.itens.slice(0, 2)
+const TUMMY_B = TUMMY_TIME.itens.slice(2, 3)
+const TUMMY_DEPOIS = TUMMY_TIME.itens.slice(3)
+const MARCOS_A = MARCOS.itens.slice(0, 2)
+const MARCOS_B = MARCOS.itens.slice(2)
 
 /**
- * /desenvolvimento: a abertura com a cena de cacau (dois tablets, sem nada por cima) e, abaixo dela, o
- * registro do tummy time num cartão no fluxo; o aviso de saúde, uma vez, no texto da abertura; as
- * ideias para brincar por fase (abas), o que as fontes dizem sobre tummy time (o título e, ao lado
- * dele, o desenho do bebê de bruços; depois o texto, a tabela das fontes, sem meta), os marcos sem
- * cobrança (com uma frase de destaque) e a faixa de cacau com o SAMU. Cada item mostra as fontes e a
- * data da consulta.
+ * /desenvolvimento nas seções compartilhadas da casa: uma abertura com a cena e o Histórico na moldura (a pergunta
+ * "Ela já devia rolar?" e, na resposta, ideias e fontes, sem meta), o registro, as ideias por fase (as seis, em uma
+ * lista só, sob a família), o tummy time pelas fontes, os marcos e a faixa de cacau do 192, onde a página acaba.
+ * Cada faixa é uma malha de duas colunas (título e abertura em cima, o resto em pares) que vira uma coluna só quando
+ * a faixa fica estreita (consulta de contêiner, CSS da página). O texto de saúde vem de `conteudo/desenvolvimento/*.ts`,
+ * só de leitura; as frases do deck, de `conteudo/casa`.
  */
 export function Desenvolvimento() {
   useTituloDaPagina(NOMES_DE_PAGINA.desenvolvimento)
+
+  // O gancho da página: o CSS dela aquieta a pílula "Criar conta" do cabeçalho enquanto a abertura tem o botão.
+  useEffect(() => {
+    document.documentElement.dataset.paginaDesenvolvimento = ''
+    return () => {
+      delete document.documentElement.dataset.paginaDesenvolvimento
+    }
+  }, [])
+
   return (
     <main>
-      <Abertura
-        titulo={T.titulo}
-        texto={
-          <>
-            <p className="cm-lide">{T.lide}</p>
-            <div className="pd-acoes">
-              <Botao href={T.primario.destino}>{T.primario.rotulo}</Botao>
-              <Botao variante="texto" href={T.secundario.destino} className="pd-link">
-                {T.secundario.rotulo}
-              </Botao>
+      <PaginaCasa>
+        <Abertura />
+
+        <FaixaInteira fundo="areia" idTitulo="dc-registro-titulo">
+          <div className="dc-grade">
+            <div className="dc-malha">
+              <h2 id="dc-registro-titulo" className="dc-titulo text-titulo-1 font-titulo cm-sec-titulo">
+                {D.h2Registro}
+              </h2>
+              <p className="dc-intro text-abertura font-texto cm-sec-texto">{D.pRegistro}</p>
             </div>
-          </>
-        }
-        aviso={<AvisoSaude />}
-        midia={
-          <Pilha vao="pilha">
-            <CenaCacau base={T.cena.base} largura={CENA_LARGURA} altura={CENA_ALTURA} alt={T.cena.alt} prioritaria />
-            <CartaoPlano className="pd-cartao-legenda">
-              <CartaoTummy />
-            </CartaoPlano>
-          </Pilha>
-        }
-      />
-
-      <Secao id="ideias" aria-labelledby="desenv-ideias">
-        <Pilha vao="bloco">
-          <CabecaDeSecao id="desenv-ideias" titulo={IDEIAS.titulo}>
-            <p className="cm-lide">{IDEIAS.texto}</p>
-          </CabecaDeSecao>
-          <QuadroLayout>
-            <PainelCampo variante="areia" largura="celula" className="pd-painel-fino">
-              <SeletorDeFase
-                fases={FASES}
-                lateral={
-                  <>
-                    <h3 className="cm-h4">{IDEIAS.todasTitulo}</h3>
-                    <ul className="pd-lista cm-corpo">
-                      {IDEIAS.todas.map((linha) => (
-                        <li key={linha}>{linha}</li>
-                      ))}
-                    </ul>
-                  </>
-                }
-              />
-            </PainelCampo>
-          </QuadroLayout>
-        </Pilha>
-      </Secao>
-
-      <Secao id="tummy-time" aria-labelledby="desenv-tummy" data-item={TUMMY_TIME.id}>
-        <QuadroLayout>
-          <Pilha vao="bloco">
-            <Colunas fracoes="34rem 1fr" aPartirDe={1100} vao="midia" className="pd-tummy-cima">
-              <Coluna>
-                <CabecaDeSecao id="desenv-tummy" titulo={T.tummyTitulo} emColuna>
-                  <p className="cm-lide">{TUMMY_TIME.resumo}</p>
-                  <p className="cm-pequeno pd-faixa-idade">{`${ROTULOS_FONTES.faixa} ${TUMMY_TIME.faixa}`}</p>
-                </CabecaDeSecao>
-              </Coluna>
-              <Coluna className="pd-tummy-lado">
-                <PainelCampo variante="mel" luz largura="celula" className="pd-celula pd-tummy-desenho">
-                  <div className="pd-chao">
-                    <Ilustracao nome="tummy-time" carregamento="eager" />
-                  </div>
-                </PainelCampo>
-              </Coluna>
-            </Colunas>
-            <PartesDoArtigo partes={TUMMY_TIME.itens.slice(0, ANTES_DA_TABELA)} colunas="tres" />
-            <TabelaTexto
-              legenda={QUANTO_TEMPO.titulo}
-              colunas={QUANTO_TEMPO.colunas}
-              linhas={QUANTO_TEMPO.linhas}
-              depois={<p className="cm-lide pd-tabela-depois">{QUANTO_TEMPO.semMeta}</p>}
-              className="pd-tummy-tabela"
-            />
-            <Pilha vao="grupo" className="pd-tummy-fim">
-              <PartesDoArtigo partes={TUMMY_TIME.itens.slice(ANTES_DA_TABELA)} />
-              <FontesDoItem fontes={TUMMY_TIME.fontes} consultadoEm={TUMMY_TIME.consultadoEm} />
-            </Pilha>
-          </Pilha>
-        </QuadroLayout>
-      </Secao>
-
-      <Secao id="marcos" aria-labelledby="desenv-marcos" data-item={MARCOS.id}>
-        <Pilha vao="bloco">
-          <CabecaDeSecao id="desenv-marcos" titulo={T.marcosTitulo}>
-            <p className="cm-lide">{MARCOS.resumo}</p>
-            <p className="cm-pequeno pd-faixa-idade">{`${ROTULOS_FONTES.faixa} ${MARCOS.faixa}`}</p>
-          </CabecaDeSecao>
-          <QuadroLayout>
-            <Pilha vao="bloco" className="pd-marcos">
-              <blockquote className="pd-destaque" data-destaque="">
-                <p>{DESTAQUE_MARCOS}</p>
-              </blockquote>
-              <PartesDoArtigo partes={MARCOS.itens} colunas="duas" />
-              <FontesDoItem fontes={MARCOS.fontes} consultadoEm={MARCOS.consultadoEm} />
-            </Pilha>
-          </QuadroLayout>
-        </Pilha>
-      </Secao>
-
-      <Secao variante="painel" painel="cacau" classeCaixa="cm-faixa-cacau" aria-labelledby="desenv-urgencia">
-        <RevelacaoPorBaixo variante="M6" className="cm-faixa-conteudo">
-          <div className="pd-faixa pd-faixa-texto">
-            <Pilha vao="grupo" className="pd-faixa-lado">
-              <Titulo nivel="h2" id="desenv-urgencia" linhas={T.urgencia.titulo} />
-              <p className="cm-lide">{T.urgencia.texto}</p>
-            </Pilha>
           </div>
-        </RevelacaoPorBaixo>
-      </Secao>
+        </FaixaInteira>
+
+        <FaixaInteira fundo="papel" idTitulo="dc-ideias-titulo">
+          <div id="ideias" className="dc-grade">
+            <div className="dc-malha dc-ideias">
+              <div className="dc-ideias-texto">
+                <h2 id="dc-ideias-titulo" className="text-titulo-1 font-titulo cm-sec-titulo">
+                  {D.h2Ideias}
+                </h2>
+                <p className="text-corpo font-texto cm-sec-texto">{IDEIAS.texto}</p>
+                <h3 className="text-titulo-4 font-titulo cm-sec-titulo">{IDEIAS.todasTitulo}</h3>
+                <ul className="dc-itens text-corpo font-texto">
+                  {IDEIAS.todas.map((linha) => (
+                    <li key={linha}>{linha}</li>
+                  ))}
+                </ul>
+              </div>
+              <Fases />
+              <div className="dc-familia">
+                <picture>
+                  {CENA_FAMILIA.avif ? (
+                    <source type="image/avif" srcSet={CENA_FAMILIA.avif} sizes={CENA_FAMILIA.sizes} />
+                  ) : null}
+                  <img
+                    src={CENA_FAMILIA.src}
+                    srcSet={CENA_FAMILIA.srcSet}
+                    sizes={CENA_FAMILIA.sizes}
+                    width={CENA_FAMILIA.largura}
+                    height={CENA_FAMILIA.altura}
+                    alt={D.altCena2}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </picture>
+              </div>
+            </div>
+          </div>
+        </FaixaInteira>
+
+        <FaixaInteira fundo="areia" idTitulo="dc-tummy-titulo">
+          <div id="tummy-time" data-item={TUMMY_TIME.id} className="dc-grade">
+            <div className="dc-malha">
+              <h2 id="dc-tummy-titulo" className="dc-titulo text-titulo-1 font-titulo cm-sec-titulo">
+                {D.h2Tummy}
+              </h2>
+              <div className="dc-intro">
+                <p className="text-abertura font-texto cm-sec-texto">{TUMMY_TIME.resumo}</p>
+                <Etiqueta texto={`${ROTULOS_FONTES.faixa} ${TUMMY_TIME.faixa}`} />
+              </div>
+              <div className="dc-bloco">
+                <Partes partes={TUMMY_A} />
+              </div>
+              <div className="dc-bloco">
+                <Partes partes={TUMMY_B} />
+              </div>
+              <div className="dc-largo">
+                <TabelaQuantoTempo />
+              </div>
+              <p className="dc-bloco text-corpo font-texto cm-sec-texto">{QUANTO_TEMPO.semMeta}</p>
+              <div className="dc-bloco">
+                <Partes partes={TUMMY_DEPOIS} />
+              </div>
+              <div className="dc-largo">
+                <Fontes fontes={TUMMY_TIME.fontes} consultadoEm={TUMMY_TIME.consultadoEm} />
+              </div>
+            </div>
+          </div>
+        </FaixaInteira>
+
+        <FaixaInteira fundo="papel" idTitulo="dc-marcos-titulo">
+          <div id="marcos" data-item={MARCOS.id} className="dc-grade">
+            <div className="dc-malha">
+              <h2 id="dc-marcos-titulo" className="dc-titulo text-titulo-1 font-titulo cm-sec-titulo">
+                {D.h2Marcos}
+              </h2>
+              <div className="dc-intro">
+                <p className="text-abertura font-texto cm-sec-texto">{MARCOS.resumo}</p>
+                <Etiqueta texto={`${ROTULOS_FONTES.faixa} ${MARCOS.faixa}`} />
+              </div>
+              <div className="dc-bloco">
+                <Partes partes={MARCOS_A} />
+              </div>
+              <div className="dc-bloco">
+                <Partes partes={MARCOS_B} />
+              </div>
+              <div className="dc-largo">
+                <Fontes fontes={MARCOS.fontes} consultadoEm={MARCOS.consultadoEm} />
+              </div>
+            </div>
+          </div>
+        </FaixaInteira>
+
+        <FaixaInteira fundo="cacau" idTitulo="dc-urgencia-titulo">
+          <div className="dc-grade">
+            <div className="dc-malha">
+              <h2 id="dc-urgencia-titulo" className="dc-titulo text-titulo-1 font-titulo cm-sec-titulo">
+                {D.h2Urgencia}
+              </h2>
+              <p className="dc-intro text-abertura font-texto cm-sec-texto">{DESENVOLVIMENTO_DESTAQUE.urgencia.texto}</p>
+            </div>
+          </div>
+        </FaixaInteira>
+      </PaginaCasa>
     </main>
   )
 }

@@ -1,5 +1,5 @@
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process'
-import { closeSync, existsSync, mkdirSync, mkdtempSync, openSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { closeSync, existsSync, mkdirSync, mkdtempSync, openSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync, writeSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -109,6 +109,7 @@ const SCRIPT_DE_MEDIDA = `
       const porTopo = new Map()
       // Por linha também: o menor left e o maior right das letras, para ver se a linha cabe na coluna do h1.
       const limitesPorTopo = new Map()
+      const fimDaUltimaPorTopo = new Map()
       let textoDoH1 = ''
       const caminhante = document.createTreeWalker(h1, NodeFilter.SHOW_TEXT)
       while (caminhante.nextNode()) {
@@ -122,7 +123,14 @@ const SCRIPT_DE_MEDIDA = `
           const retangulos = faixa.getClientRects()
           if (retangulos.length === 0) continue
           const topo = Math.round(retangulos[0].top)
-          porTopo.set(topo, (porTopo.get(topo) || '') + no.data[i])
+          // Two spans side by side (the Início h1: day span and night span, each a flex item) are separated by a visible gap
+          // but not by a rendered space (the whitespace between flex items has no box). A gap of more than 2 px between two
+          // letters of the same line, with no space character on either side, is a word boundary: read it as one.
+          const atual = porTopo.get(topo) || ''
+          const fimAnterior = fimDaUltimaPorTopo.get(topo)
+          const separador = fimAnterior !== undefined && retangulos[0].left - fimAnterior > 2 && atual !== '' && !/\\s$/.test(atual) && !/\\s/.test(no.data[i]) ? ' ' : ''
+          fimDaUltimaPorTopo.set(topo, retangulos[retangulos.length - 1].right)
+          porTopo.set(topo, atual + separador + no.data[i])
           const limite = limitesPorTopo.get(topo) || { esquerda: Infinity, direita: -Infinity }
           for (const retangulo of retangulos) {
             limite.esquerda = Math.min(limite.esquerda, retangulo.left)
@@ -198,6 +206,26 @@ const SCRIPT_DE_MEDIDA = `
 `
 
 /** O CSS do build aponta as fontes por `/assets/...`: numa página file:// isso vira a raiz do disco, então as URLs absolutas passam a apontar para o dist. */
+// A limpeza da pasta temporária do Chrome nunca decide o resultado do teste: no Windows o Chrome pode segurar o perfil
+// e o `rmSync` lançaria EPERM do `finally`. A falha vira só um aviso (caminho, código e mensagem), sem throw.
+function avisar(texto: string): void {
+  console.warn(texto)
+  try {
+    writeSync(2, `${texto}\n`)
+  } catch (erro) {
+    console.error(`Aviso: não deu para escrever no stderr (${String(erro)}); o aviso era: ${texto}`)
+  }
+}
+
+function limparPasta(pasta: string, comTentativas = true): void {
+  try {
+    rmSync(pasta, comTentativas ? { recursive: true, force: true, maxRetries: 6, retryDelay: 250 } : { recursive: true, force: true })
+  } catch (erro) {
+    const e = erro as NodeJS.ErrnoException
+    avisar(`Aviso: não deu para remover a pasta temporária ${pasta} (${e.code ?? 'sem código'}): ${e.message}`)
+  }
+}
+
 function cssComFontesDoDist(nome: string): string {
   const base = `${pathToFileURL(PASTA_DIST).href}/`
   return readFileSync(join(PASTA_CSS, nome), 'utf8').replace(/url\((["']?)\/(?!\/)/g, (_t, aspas: string) => `url(${aspas}${base}`)
@@ -337,7 +365,7 @@ async function medirNoChrome(conteudoHtml: string, largura: number): Promise<Med
     if (medida.erro) throw new Error(`a medida falhou na página: ${medida.erro}`)
     return medida
   } finally {
-    rmSync(pasta, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 })
+    limparPasta(pasta)
   }
 }
 

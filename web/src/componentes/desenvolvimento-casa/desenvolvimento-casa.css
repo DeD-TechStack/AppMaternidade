@@ -1,0 +1,858 @@
+/* /desenvolvimento nas seções da casa (CLONE-DESENV). Estático: nada nasce escondido e nada se move (sem animação).
+   Espaço só pelos papéis `--espaco-*` e pelo `--quadro-*`; cor só por `--color-*`. Os comprimentos soltos são as
+   medidas fechadas das vagas do estudo (a cena de 1100, a tela do aparelho de 320 e 390, a medida de 470 e 560) e as
+   proporções das artes (a moldura 721 × 1426 e a captura do Histórico, cujas linhas acabam a 1,52 × a largura da tela).
+
+   O chão: o padding de topo e de base das faixas da página é `secao`; abaixo de 768 ele desce a `midia` (64 px entre
+   duas faixas em 390). O aparelho da abertura e a família das ideias ficam em pé nesse chão. */
+.dc-abertura {
+  --dc-chao: var(--espaco-secao);
+
+  container-type: inline-size;
+  position: relative;
+  overflow-x: clip;
+  background-color: var(--color-papel);
+}
+
+.cm-faixa-inteira:has(> .cm-faixa-quadro > .dc-grade) {
+  --dc-chao: var(--espaco-secao);
+
+  padding-block: var(--dc-chao);
+}
+
+@media (max-width: 767px) {
+  .dc-abertura,
+  .cm-faixa-inteira:has(> .cm-faixa-quadro > .dc-grade) {
+    --dc-chao: var(--espaco-midia);
+  }
+}
+
+/* A abertura -------------------------------------------------------------------------------------------------------
+   Abaixo de 900 é uma grade de posições fixas (os invólucros `.dc-direita`, `.dc-texto`, `.dc-acoes` e `.dc-nota`
+   somem com `display: contents`): a cena de ponta a ponta, o h1, a frase, o botão, o link, o aviso, a legenda e, no
+   fim, o aparelho em pé no chão da faixa (em janela alta, o aparelho sobe para logo depois do botão). Com 44 rem de faixa o aparelho vai para uma segunda coluna, ao lado do
+   texto. De 900 em diante (o h1 já cabe em duas linhas na coluna dele), a cena e o aparelho ficam no lugar do
+   estudo, e o h1, a frase e o botão cabem na primeira dobra de um tablet deitado. */
+.dc-abertura-quadro {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  padding-bottom: var(--dc-chao);
+}
+
+.dc-direita,
+.dc-texto,
+.dc-acoes,
+.dc-nota {
+  display: contents;
+}
+
+.dc-cena {
+  display: block;
+  margin-inline: calc(-1 * var(--quadro-calha));
+}
+
+.dc-cena img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1672 / 941;
+  object-fit: cover;
+}
+
+/* Abaixo de 900 a placa vai de ponta a ponta e é cortada logo depois da borda direita do tapete (x = 1240 na placa
+   de 1672): o terço da direita era papel vazio. Abaixo de 768 o arquivo é o recorte de 390 (1360 × 830, da mesma
+   origem). Em janela baixa, o corte tira também um pouco do papel de cima e do de baixo, sem chegar às cabeças. */
+@media (max-width: 899px) {
+  .dc-cena img {
+    aspect-ratio: 1240 / 941;
+    object-position: 0% 50%;
+  }
+}
+
+@media (max-width: 767px) {
+  .dc-cena img {
+    aspect-ratio: 1240 / 830;
+  }
+}
+
+@media (max-width: 899px) and (max-height: 820px) {
+  .dc-cena img {
+    aspect-ratio: 1240 / 760;
+    object-position: 0% 70%;
+  }
+}
+
+@media (max-width: 767px) and (max-height: 820px) {
+  .dc-cena img {
+    aspect-ratio: 1240 / 700;
+  }
+}
+
+.dc-h1 {
+  font-weight: var(--peso-exibicao);
+  letter-spacing: -0.02em;
+}
+
+.dc-link {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  min-height: 44px;
+  color: inherit;
+  font-weight: 500;
+  text-decoration-line: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 6px;
+}
+
+.dc-link:hover {
+  text-decoration-thickness: 2.5px;
+}
+
+.dc-link:focus-visible {
+  outline: 2px solid var(--foco-faixa, var(--color-cacau));
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* A hora que carrega a ideia ("15:00, tummy time, anotado por Ju") lê forte, na face dos títulos. */
+.dc-nota > [data-legenda] {
+  font-family: var(--fonte-exibicao);
+  font-size: var(--texto-titulo-3-tamanho);
+  line-height: var(--texto-titulo-3-entrelinha);
+  font-weight: var(--peso-titulo);
+  font-variant-numeric: tabular-nums lining-nums;
+  text-wrap: balance;
+}
+
+/* O aparelho: a tela tem 320 (ou a largura do quadro, se menor) abaixo de 900 e até 390 de 900 em diante, perto de
+   1:1 com a captura de 390. A caixa corta a moldura logo abaixo das linhas do Histórico (1,52 × a tela): o vazio e o
+   rodapé da captura ficam abaixo do chão da faixa, e o aparelho fica em pé nele. */
+.dc-moldura {
+  --dc-tela: min(320px, (100cqi - 2 * var(--quadro-calha)) / 1.06);
+
+  position: relative;
+  z-index: 2;
+  height: calc(var(--dc-tela) * 1.52);
+  overflow: hidden;
+}
+
+.dc-moldura .cm-produto-moldura {
+  --produto-tela: var(--dc-tela);
+}
+
+@media (max-width: 899px) {
+  .dc-cena {
+    grid-row: 1;
+  }
+
+  .dc-h1 {
+    grid-row: 2;
+    margin-top: var(--espaco-grupo);
+  }
+
+  .dc-lede {
+    grid-row: 3;
+    margin-top: var(--espaco-pilha);
+  }
+
+  .dc-acoes > .cm-botao {
+    grid-row: 4;
+    justify-self: start;
+    margin-top: var(--espaco-grupo);
+  }
+
+  .dc-link {
+    grid-row: 5;
+    justify-self: start;
+    margin-top: var(--espaco-junto);
+  }
+
+  .dc-aviso {
+    grid-row: 6;
+    margin-top: var(--espaco-grupo);
+  }
+
+  .dc-nota > [data-legenda] {
+    grid-row: 7;
+    margin-top: var(--espaco-bloco);
+  }
+
+  .dc-moldura {
+    grid-row: 8;
+    justify-self: start;
+    margin-top: var(--espaco-grupo);
+    margin-bottom: calc(-1 * var(--dc-chao));
+  }
+
+  /* A consulta é à faixa (`.dc-abertura`): 44 rem de janela dão perto de 40 rem de quadro. */
+  @container (min-width: 44rem) {
+    .dc-abertura-quadro {
+      grid-template-columns: minmax(0, 1fr) auto;
+      column-gap: var(--espaco-midia);
+    }
+
+    .dc-cena,
+    .dc-h1 {
+      grid-column: 1 / -1;
+    }
+
+    .dc-moldura {
+      grid-column: 2;
+      grid-row: 3 / 8;
+      align-self: end;
+      margin-top: var(--espaco-pilha);
+    }
+  }
+}
+
+/* Celular e tablet em pé (estreita e não baixa, R1): o aparelho vem logo depois do botão, com a tela na primeira
+   dobra, e o link, o aviso e a legenda descem para depois dele (a ordem do DOM, a de leitura, não muda). Para caber,
+   os vãos acima do aparelho apertam um degrau e a placa fica mais baixa: abaixo de 768 o recorte de 390 perde um
+   pouco do papel de cima e da borda de baixo do tapete (as cabeças e as mãos ficam inteiras); de 768 a 899 a placa
+   inteira, sem o corte da direita. Aqui o aparelho não está no chão da faixa: a caixa só corta abaixo das linhas.
+   Com 44 rem de faixa o aparelho volta para a coluna da direita, em pé no chão, e o link segue o botão. */
+@media (max-width: 899px) and (min-height: 521px) {
+  .dc-cena {
+    grid-row: 1;
+  }
+
+  .dc-cena img {
+    aspect-ratio: 1672 / 941;
+    object-position: 0% 50%;
+  }
+
+  .dc-h1 {
+    grid-row: 2;
+    margin-top: var(--espaco-pilha);
+  }
+
+  .dc-lede {
+    grid-row: 3;
+    margin-top: var(--espaco-junto);
+  }
+
+  .dc-acoes > .cm-botao {
+    grid-row: 4;
+    margin-top: var(--espaco-pilha);
+  }
+
+  .dc-moldura {
+    grid-row: 5;
+    margin-top: var(--espaco-pilha);
+    margin-bottom: 0;
+  }
+
+  .dc-link {
+    grid-row: 6;
+    margin-top: var(--espaco-grupo);
+  }
+
+  .dc-aviso {
+    grid-row: 7;
+    margin-top: var(--espaco-grupo);
+  }
+
+  .dc-nota > [data-legenda] {
+    grid-row: 8;
+    margin-top: var(--espaco-bloco);
+  }
+
+  @container (min-width: 44rem) {
+    .dc-link {
+      grid-row: 5;
+      margin-top: var(--espaco-junto);
+    }
+
+    .dc-aviso {
+      grid-row: 6;
+    }
+
+    .dc-nota > [data-legenda] {
+      grid-row: 7;
+    }
+
+    .dc-moldura {
+      grid-row: 3 / 8;
+      margin-top: var(--espaco-pilha);
+      margin-bottom: calc(-1 * var(--dc-chao));
+    }
+  }
+}
+
+/* O recorte de 390 tem 780 × 476; a caixa de 2:1 o mostra na largura toda e corta 18 % da altura, 70 % disso em
+   cima (papel e a ponta do triângulo) e 30 % embaixo (a borda do tapete, abaixo das mãos). */
+@media (max-width: 767px) and (min-height: 521px) {
+  .dc-cena img {
+    aspect-ratio: 1240 / 620;
+    object-position: 0% 70%;
+  }
+}
+
+@media (min-width: 900px) {
+  /* A cena mede 1100 em 1440 e 630 em 900, em linha reta entre os dois (assim a borda do tapete fica sempre antes da
+     coluna do aparelho); a borda em pé do triângulo de luz fica a 2,36 % da largura dela, e é essa borda que cai na
+     margem do texto. O terço vazio da placa fica sob o aparelho. */
+  .dc-abertura-quadro {
+    --dc-cena-w: min(1100px, 630px + (100vw - 900px) * 470 / 540);
+
+    grid-template-columns: minmax(0, 8fr) minmax(0, 7fr);
+    grid-template-rows: calc(193px + var(--dc-cena-w) * 0.5628 - var(--espaco-grupo)) auto;
+    padding-top: var(--espaco-grupo);
+  }
+
+  .dc-cena {
+    position: absolute;
+    top: 193px;
+    left: calc(var(--dc-cena-w) * -0.0236);
+    width: var(--dc-cena-w);
+    margin-inline: 0;
+  }
+
+  .dc-h1 {
+    position: relative;
+    z-index: 1;
+    grid-column: 1;
+    grid-row: 1;
+    max-width: 560px;
+  }
+
+  .dc-direita {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: stretch;
+    align-items: flex-start;
+  }
+
+  .dc-texto {
+    display: block;
+    margin-bottom: var(--espaco-midia);
+  }
+
+  .dc-lede {
+    max-width: 470px;
+  }
+
+  .dc-acoes {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: var(--espaco-grupo);
+    row-gap: var(--espaco-junto);
+    margin-top: var(--espaco-grupo);
+  }
+
+  /* 390, ou a coluna da direita (7/15 do quadro), se ela for mais estreita que a moldura. */
+  .dc-moldura {
+    --dc-tela: min(390px, min(var(--quadro-largura), 100cqi - 2 * var(--quadro-calha)) * 7 / 15 / 1.06);
+
+    align-self: flex-end;
+    margin-top: auto;
+    margin-bottom: calc(-1 * var(--dc-chao));
+  }
+
+  .dc-nota {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--espaco-pilha);
+    grid-column: 1;
+    grid-row: 2;
+    max-width: 560px;
+    margin-top: var(--espaco-grupo);
+  }
+}
+
+/* Janela baixa: o aparelho desce a 340 para a abertura não passar muito da dobra. */
+@media (min-width: 900px) and (max-height: 760px) {
+  .dc-moldura {
+    --dc-tela: 340px;
+  }
+}
+
+/* Janela baixa (adendo 2, linha 9): a primeira tela mostra o h1, a frase e o botão inteiro. Não basta encolher a
+   placa: o padding de cima, os vãos, a grade e o tamanho do h1 também descem. O h1 desce um degrau da escala por
+   altura de janela (`titulo-1` até 520 px de altura, `titulo-2` até 340), e a frase fica no `corpo`. */
+@media (max-width: 899px) and (max-height: 520px) {
+  .dc-h1 {
+    margin-top: 0;
+    font-size: var(--texto-titulo-1-tamanho);
+    line-height: var(--texto-titulo-1-entrelinha);
+  }
+
+  .dc-lede {
+    margin-top: var(--espaco-junto);
+    font-size: var(--texto-corpo-tamanho);
+    line-height: var(--texto-corpo-entrelinha);
+  }
+
+  .dc-acoes > .cm-botao {
+    margin-top: var(--espaco-pilha);
+  }
+
+  .dc-link {
+    margin-top: 0;
+  }
+}
+
+/* Paisagem baixa (844 × 390, 667 × 375): duas colunas, o texto à esquerda e a placa à direita, medida pela altura
+   da janela (a coluna dela é a altura útil × a proporção do corte, até 45 % do quadro). O aparelho vem depois, na
+   largura toda. `--dc-razao` é a proporção do corte da placa em janela baixa (1240/760 e, abaixo de 768, 1240/700). */
+@media (max-width: 899px) and (min-width: 521px) and (max-height: 520px) {
+  .dc-abertura-quadro {
+    --dc-razao: 1.6316;
+
+    grid-template-columns:
+      minmax(0, 1fr)
+      min(45%, (100svh - var(--cm-cabecalho) - 2 * var(--espaco-pilha)) * var(--dc-razao));
+    column-gap: var(--espaco-bloco);
+    padding-top: var(--espaco-pilha);
+  }
+
+  .dc-h1 {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .dc-lede {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .dc-acoes > .cm-botao {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .dc-link {
+    grid-column: 1;
+    grid-row: 4;
+  }
+
+  .dc-cena {
+    grid-column: 2;
+    grid-row: 1 / 5;
+    margin-inline: 0;
+  }
+
+  .dc-aviso {
+    grid-column: 1 / -1;
+    grid-row: 5;
+  }
+
+  .dc-nota > [data-legenda] {
+    grid-column: 1 / -1;
+    grid-row: 6;
+  }
+
+  .dc-moldura {
+    grid-column: 1 / -1;
+    grid-row: 7;
+    align-self: start;
+    margin-top: var(--espaco-grupo);
+  }
+}
+
+@media (max-width: 767px) and (min-width: 521px) and (max-height: 520px) {
+  .dc-abertura-quadro {
+    --dc-razao: 1.7714;
+  }
+}
+
+/* Estreita e baixa (390 × 300): o h1, a frase e o botão primeiro, com o padding de cima apertado; a placa desce para
+   depois do link, fora da primeira tela. */
+@media (max-width: 520px) and (max-height: 520px) {
+  .dc-abertura-quadro {
+    padding-top: var(--espaco-junto);
+  }
+
+  .dc-h1 {
+    grid-row: 1;
+  }
+
+  .dc-lede {
+    grid-row: 2;
+  }
+
+  .dc-acoes > .cm-botao {
+    grid-row: 3;
+  }
+
+  .dc-link {
+    grid-row: 4;
+  }
+
+  .dc-cena {
+    grid-row: 5;
+    margin-top: var(--espaco-grupo);
+  }
+}
+
+@media (max-width: 899px) and (max-height: 340px) {
+  .dc-h1 {
+    font-size: var(--texto-titulo-2-tamanho);
+    line-height: var(--texto-titulo-2-entrelinha);
+  }
+}
+
+/* A pílula "Criar conta" do cabeçalho não disputa com o botão da abertura: nesta página ela é contorno (a cor do
+   texto do tema, de dia e de madrugada). O gancho é posto na raiz pela página. */
+[data-pagina-desenvolvimento] [data-cabecalho-pilula] {
+  border-color: var(--cor-texto);
+  background-color: transparent;
+  color: var(--cor-texto);
+}
+
+[data-pagina-desenvolvimento] [data-cabecalho-pilula]:hover {
+  background-color: var(--cor-texto);
+  color: var(--cor-fundo);
+}
+
+/* As faixas -------------------------------------------------------------------------------------------------------
+   `.dc-grade` é o contêiner (a largura do quadro); `.dc-malha`, a grade. Estreita, uma coluna. Com 56 rem, duas
+   colunas 7/5: o título e a abertura em cima, o resto em pares, e o que é largo (tabela, fontes, fases) nas duas. */
+.dc-grade {
+  container-type: inline-size;
+  scroll-margin-top: calc(var(--cm-cabecalho) + var(--espaco-junto));
+}
+
+.dc-malha {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: var(--espaco-bloco);
+}
+
+.dc-titulo {
+  max-width: 560px;
+}
+
+.dc-intro {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--espaco-pilha);
+  min-width: 0;
+}
+
+.dc-bloco {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-grupo);
+  min-width: 0;
+}
+
+.dc-largo {
+  min-width: 0;
+}
+
+.dc-parte {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--espaco-junto);
+}
+
+@container (min-width: 56rem) {
+  .dc-malha {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    column-gap: var(--espaco-midia);
+    row-gap: var(--espaco-midia);
+  }
+
+  .dc-largo {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Um fato curto (a faixa de idade): etiqueta plana, no chão da outra faixa, sem raio e sem contorno. */
+.dc-etiqueta {
+  margin: 0;
+  padding-inline: var(--espaco-junto);
+  background-color: var(--color-papel);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+[data-faixa-fundo='papel'] .dc-etiqueta {
+  background-color: var(--color-areia);
+}
+
+/* Faixa das ideias: estreita, o texto, as fases e a família em pé no chão da faixa. Larga, o texto e a família lado a
+   lado, a família em pé no primeiro fio das fases, e as seis fases em duas colunas embaixo. */
+.dc-ideias {
+  grid-template-areas:
+    'texto'
+    'fases'
+    'familia';
+}
+
+.dc-ideias-texto {
+  display: flex;
+  flex-direction: column;
+  grid-area: texto;
+  gap: var(--espaco-pilha);
+  min-width: 0;
+}
+
+.dc-ideias-texto > h3 {
+  margin-top: var(--espaco-junto);
+}
+
+.dc-familia {
+  grid-area: familia;
+  align-self: end;
+  margin-bottom: calc(-1 * var(--dc-chao));
+}
+
+.dc-familia img {
+  display: block;
+  width: min(390px, 100%);
+  height: auto;
+  aspect-ratio: 585 / 632;
+}
+
+@container (min-width: 40rem) {
+  .dc-ideias {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    grid-template-areas:
+      'texto familia'
+      'fases fases';
+    column-gap: var(--espaco-midia);
+    row-gap: 0;
+  }
+
+  .dc-ideias-texto {
+    padding-bottom: var(--espaco-midia);
+  }
+
+  .dc-familia {
+    justify-self: end;
+    margin-bottom: 0;
+  }
+}
+
+/* Uma lista só, com fio de 1 px na cor do texto; larga, em duas colunas. */
+.dc-fases {
+  grid-area: fases;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dc-fases > li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: var(--espaco-pilha);
+  padding-block: var(--espaco-grupo);
+  border-top: 1px solid currentcolor;
+  scroll-margin-top: calc(var(--cm-cabecalho) + var(--espaco-junto));
+}
+
+.dc-fases > li:last-child {
+  border-bottom: 1px solid currentcolor;
+}
+
+@container (min-width: 56rem) {
+  .dc-fases {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--espaco-midia);
+  }
+
+  .dc-fases > li:nth-last-child(2) {
+    border-bottom: 1px solid currentcolor;
+  }
+}
+
+.dc-itens {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--espaco-junto);
+  max-width: var(--leitura);
+  margin: 0;
+  padding-left: 1.25em;
+  list-style: disc;
+}
+
+/* As fontes: legenda de texto simples, sempre aberta. Estreita, um link por linha; com 30 rem, os links seguem na
+   mesma linha e quebram. Cada link é um alvo de 44 px de altura (11 + 22 + 11). */
+.dc-fontes {
+  container-type: inline-size;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+}
+
+.dc-fontes-rotulo {
+  margin: 0;
+  font-weight: 500;
+}
+
+.dc-fontes-data {
+  margin: 0;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.dc-fontes-lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@container (min-width: 30rem) {
+  .dc-fontes-lista {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: var(--espaco-grupo);
+  }
+}
+
+.dc-fontes-lista a {
+  display: inline-block;
+  padding-block: 11px;
+  color: inherit;
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+
+.dc-fontes-lista a:hover {
+  text-decoration-thickness: 2px;
+}
+
+.dc-fontes-lista a:focus-visible {
+  outline: 2px solid var(--foco-faixa, var(--color-cacau));
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* A tabela "quanto tempo". Estreita: cada linha um bloco, cada rótulo na linha inteira, o nome da coluna antes da
+   célula e o cabeçalho das colunas só para o leitor de tela. Larga (56 rem): uma tabela de três colunas. */
+.dc-tabela {
+  position: relative;
+  display: block;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.dc-tabela caption {
+  display: block;
+  margin-bottom: var(--espaco-pilha);
+  text-align: left;
+}
+
+.dc-tabela-cabeca {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.dc-tabela tbody {
+  display: block;
+}
+
+.dc-tabela tr {
+  display: block;
+  padding-block: var(--espaco-pilha);
+  border-top: 1px solid currentcolor;
+}
+
+.dc-tabela tbody tr:last-child {
+  border-bottom: 1px solid currentcolor;
+}
+
+.dc-tabela th[scope='row'] {
+  display: block;
+  margin: 0;
+  font-weight: 500;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.dc-tabela td {
+  display: block;
+  margin-top: var(--espaco-junto);
+  overflow-wrap: anywhere;
+}
+
+.dc-tabela td::before {
+  content: attr(data-coluna);
+  display: block;
+  font-size: var(--texto-pequeno-tamanho);
+  line-height: var(--texto-pequeno-entrelinha);
+  font-weight: 500;
+}
+
+/* A célula vazia (o traço da Pathways) fica vazia: sem o nome da coluna solto. */
+.dc-tabela td:empty {
+  display: none;
+}
+
+@container (min-width: 56rem) {
+  .dc-tabela {
+    display: table;
+    table-layout: fixed;
+  }
+
+  .dc-tabela caption {
+    display: table-caption;
+  }
+
+  .dc-tabela-cabeca {
+    position: static;
+    display: table-header-group;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+  }
+
+  .dc-tabela-cabeca th {
+    padding: 0 var(--espaco-grupo) var(--espaco-junto) 0;
+    font-weight: 500;
+    text-align: left;
+    vertical-align: bottom;
+  }
+
+  .dc-tabela-cabeca th:nth-child(1) {
+    width: 26%;
+  }
+
+  .dc-tabela-cabeca th:nth-child(2) {
+    width: 40%;
+  }
+
+  .dc-tabela tbody {
+    display: table-row-group;
+  }
+
+  .dc-tabela tr {
+    display: table-row;
+    padding-block: 0;
+  }
+
+  .dc-tabela th[scope='row'],
+  .dc-tabela td,
+  .dc-tabela td:empty {
+    display: table-cell;
+    margin: 0;
+    padding: var(--espaco-pilha) var(--espaco-grupo) var(--espaco-pilha) 0;
+    vertical-align: top;
+  }
+
+  .dc-tabela td::before {
+    content: none;
+  }
+}

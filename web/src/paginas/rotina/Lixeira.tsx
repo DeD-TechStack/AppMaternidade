@@ -3,6 +3,7 @@ import { ChevronLeft, Undo2 } from 'lucide-react'
 import { ALVO_APP } from '../../componentes/app/alvo.ts'
 import { Botao } from '../../componentes/base/Botao.tsx'
 import { Pilha } from '../../componentes/base/layout/index.ts'
+import { PainelVazio } from '../../componentes/estado/PainelVazio.tsx'
 import { AvisoDeLista } from '../../componentes/rotina/AvisoDeLista.tsx'
 import { AvisoDoPapel } from '../../componentes/rotina/AvisoDoPapel.tsx'
 import { IconeDoTipo } from '../../componentes/rotina/IconeDoTipo.tsx'
@@ -82,7 +83,7 @@ function LixeiraDoBebe({ ativo }: { ativo: BebeAtivo }) {
                 {/* O cuidador restaura só o que ele mesmo excluiu: uma frase, se há item de outra pessoa na lista. */}
                 {!somenteLeitura && itens.some((registro) => !podeAlterar(registro)) ? <AvisoDoPapel texto={textoDoPapel(ativo)} /> : null}
                 {itens.length === 0 ? (
-                  <p className="border-y border-(--cor-fio-suave) py-4 text-(--cor-texto-2)">{LIXEIRA.vazia}</p>
+                  <PainelVazio texto={LIXEIRA.vazia} />
                 ) : (
                   <ul className="border-y border-(--cor-fio-suave)">
                     {itens.map((registro) => {

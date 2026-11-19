@@ -240,7 +240,7 @@
     font-family: var(--fonte-titulo);
     font-size: var(--texto-titulo-1-tamanho);
     line-height: var(--texto-titulo-1-entrelinha);
-    font-style: italic;
+    font-style: normal;
     font-weight: 500;
     letter-spacing: -0.01em;
     text-wrap: balance;
@@ -492,7 +492,7 @@
     font-family: var(--fonte-titulo);
     font-size: var(--texto-abertura-tamanho);
     line-height: var(--texto-abertura-entrelinha);
-    font-style: italic;
+    font-style: normal;
     font-weight: 500;
   }
 

@@ -27,7 +27,7 @@ const ROTAS_PUBLICAS = [
 
 describe('cabeçalho público', () => {
   it('tem o nome do site, os quatro links, Entrar e o primário "Criar conta"', async () => {
-    const { container } = renderizarRota('/como-funciona', { sessao: null })
+    const { container } = renderizarRota('/sobre', { sessao: null })
     // Os links de visitante seguem a sessão: só aparecem depois que ela termina de carregar.
     await aguardarCarga()
     const cabecalho = container.querySelector<HTMLElement>('header[data-cabecalho]')!
@@ -256,7 +256,8 @@ describe('alvos da casca na madrugada (DESIGN.md 8)', () => {
 })
 
 describe('rodapé compacto nas rotas /app/*', () => {
-  const TODOS_OS_LINKS = COLUNAS_DO_RODAPE.flatMap((c) => c.links)
+  // DS1:RF-14: o rodapé compacto de /app/* guarda os 9 links de Produto, Ajuda e Legal; o grupo Conta é só do rodapé público.
+  const TODOS_OS_LINKS = COLUNAS_DO_RODAPE.filter((c) => ['Produto', 'Ajuda', 'Legal'].includes(c.titulo)).flatMap((c) => c.links)
 
   it.each(['/app/hoje', '/app/sessao'])('em %s é uma linha só de links, sem o nome grande nem o painel de mel', (caminho) => {
     const { container } = renderizarRota(caminho)
@@ -305,21 +306,22 @@ describe('rodapé compacto nas rotas /app/*', () => {
   })
 })
 
-describe('rodapé de mel', () => {
-  it('é um painel de mel com data-rodape, as colunas Produto, Ajuda e Legal e o nome em tamanho de exibição', () => {
+describe('rodapé público (FOOTER-1)', () => {
+  it('é um rodapé sem painel de cor, com data-rodape, as colunas Produto, Conta, Ajuda e Legal e o nome do site em texto simples', () => {
     const { container } = renderizarRota('/sobre')
     const rodape = container.querySelector<HTMLElement>('footer[data-rodape]')!
-    expect(rodape.querySelector('[data-painel="mel"]')).not.toBeNull()
-    expect(within(rodape).getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Produto', 'Ajuda', 'Legal'])
+    expect(rodape.querySelector('[data-painel]')).toBeNull()
+    expect(within(rodape).getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Produto', 'Conta', 'Ajuda', 'Legal'])
     expect(rodape.querySelector('[data-nome-rodape]')!.textContent).toBe('AppMaternidade')
   })
 
-  it('cada link vai a uma das 9 rotas públicas, e as 9 aparecem', () => {
+  it('cada link vai a uma das 9 rotas públicas ou das 4 de acesso (grupo Conta), e as 11 aparecem', () => {
     const { container } = renderizarRota('/')
     const rodape = container.querySelector<HTMLElement>('footer[data-rodape]')!
     const destinos = [...rodape.querySelectorAll('a')].map((a) => a.getAttribute('href'))
-    expect([...destinos].sort()).toEqual([...ROTAS_PUBLICAS].sort())
-    expect(COLUNAS_DO_RODAPE.flatMap((c) => c.links).length).toBe(9)
+    const esperados = [...ROTAS_PUBLICAS, '/recuperar-acesso', '/convite']
+    expect([...destinos].sort()).toEqual([...esperados].sort())
+    expect(COLUNAS_DO_RODAPE.flatMap((c) => c.links).length).toBe(11)
   })
 
   it('cada link do rodapé abre uma página com o próprio h1', async () => {
@@ -334,15 +336,17 @@ describe('rodapé de mel', () => {
     }
   })
 
-  it('nas rotas públicas o rodapé completo não muda: painel de mel, frase, 3 colunas e o nome grande', () => {
+  it('nas rotas públicas o rodapé completo é o compacto de FOOTER-1: sem painel de mel nem frase, com o nome, 4 grupos e 11 links', () => {
     for (const caminho of ['/', '/sobre', '/contato']) {
       const { container, unmount } = renderizarRota(caminho)
       const rodape = container.querySelector<HTMLElement>('footer[data-rodape]')!
       expect(rodape.classList.contains('cm-rodape-compacto'), caminho).toBe(false)
-      expect(rodape.querySelector('[data-painel="mel"]'), caminho).not.toBeNull()
+      expect(rodape.querySelector('[data-painel="mel"]'), caminho).toBeNull()
       expect(rodape.querySelector('[data-nome-rodape]'), caminho).not.toBeNull()
-      expect(rodape.querySelector('.cm-rodape-frase'), caminho).not.toBeNull()
-      expect(within(rodape).getAllByRole('heading', { level: 2 }), caminho).toHaveLength(3)
+      expect(rodape.querySelector('.cm-rodape-frase'), caminho).toBeNull()
+      expect(rodape.querySelector('.cm-segunda-linha'), caminho).toBeNull()
+      expect(within(rodape).getAllByRole('heading', { level: 2 }), caminho).toHaveLength(4)
+      expect(within(rodape).getAllByRole('link'), caminho).toHaveLength(11)
       unmount()
     }
   })

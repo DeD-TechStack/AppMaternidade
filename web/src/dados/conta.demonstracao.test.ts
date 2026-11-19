@@ -42,12 +42,12 @@ describe('MED-AUTH:RF-02 o moderador da demonstração', () => {
     expect(fixture.bebes).toHaveLength(1)
   })
 
-  it('as linhas de Juliana, Bruno, Carla e Davi ficam iguais, e o moderador vem depois delas', () => {
+  it('as linhas de Juliana, Ícaro, Carla e Davi ficam iguais, e o moderador vem depois delas', () => {
     const fixture = criarFixtureDemonstracao(AGORA)
     const criadaEm = new Date(AGORA - 30 * DIA).toISOString()
     const pessoas = [
       ['11111111-1111-4111-8111-111111111111', 'juliana@exemplo.invalid', 'Juliana'],
-      ['22222222-2222-4222-8222-222222222222', 'bruno@exemplo.invalid', 'Bruno'],
+      ['22222222-2222-4222-8222-222222222222', 'icaro@exemplo.invalid', 'Ícaro'],
       ['33333333-3333-4333-8333-333333333333', 'carla@exemplo.invalid', 'Carla'],
       ['45444444-4444-4444-8444-444444444444', 'davi@exemplo.invalid', 'Davi'],
     ]
@@ -55,7 +55,7 @@ describe('MED-AUTH:RF-02 o moderador da demonstração', () => {
     expect(fixture.contas.slice(0, 4)).toEqual(pessoas.map(([id, , nome]) => ({ id, nome, fuso: 'America/Sao_Paulo', criadaEm })))
     expect(fixture.usuarios.map((u) => u.id)).toEqual([...pessoas.map(([id]) => id), '47000000-0000-4000-8000-000000000001'])
     expect(fixture.contas.map((c) => c.id)).toEqual([...pessoas.map(([id]) => id), '47000000-0000-4000-8000-000000000001'])
-    const { responsavel, bruno, carla, davi } = PESSOAS_DEMONSTRACAO
-    expect([responsavel, bruno, carla, davi].map((p) => [p.id, p.email, p.nome])).toEqual(pessoas)
+    const { responsavel, icaro, carla, davi } = PESSOAS_DEMONSTRACAO
+    expect([responsavel, icaro, carla, davi].map((p) => [p.id, p.email, p.nome])).toEqual(pessoas)
   })
 })
