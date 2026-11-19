@@ -190,8 +190,9 @@ describe('o espaço da conta no cabeçalho, em 1440', () => {
     await montar('/moderacao', 'moderador', 1440)
 
     expect(screen.getAllByRole('button', { name: 'Sair' })).toHaveLength(1)
-    expect(screen.queryByRole('link', { name: 'Entrar' })).toBeNull()
-    expect(screen.queryByRole('link', { name: 'Criar conta' })).toBeNull()
+    // DS1:RF-14: o rodapé público ganhou o grupo Conta (Entrar, Criar conta); o espaço da conta que a sessão troca é o do cabeçalho.
+    expect(within(cabecalho()).queryByRole('link', { name: 'Entrar' })).toBeNull()
+    expect(within(cabecalho()).queryByRole('link', { name: 'Criar conta' })).toBeNull()
   })
 
   it('a barra da página logada não tem mais "Conta" nem "Sair"; "Ir para o Hoje" continua', async () => {

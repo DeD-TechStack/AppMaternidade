@@ -5,7 +5,7 @@ import { Titulo } from './Titulo.tsx'
 // MOTION-1: o título é texto comum. Sem cópia só para leitor de tela e sem linhas escondidas dele.
 
 describe('Titulo', () => {
-  it('renderiza um h2 só, com o texto das duas linhas separado por um espaço, e a segunda linha em itálico', () => {
+  it('renderiza um h2 só, com o texto das duas linhas separado por um espaço, e a segunda linha em um span próprio (sem itálico, DS1:RF-06)', () => {
     const { container } = render(<Titulo nivel="h2" linhas={['Uma linha', 'outra linha.']} />)
     const titulos = container.querySelectorAll('h2')
     expect(titulos).toHaveLength(1)

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from 'react'
 import { Link, NavLink, useLocation } from 'react-router'
 import { Menu, Moon, X } from 'lucide-react'
 import type { ErroDados } from '../../dados/comum.ts'
@@ -27,6 +27,38 @@ import {
   type SituacaoDaConta,
 } from './textos.ts'
 
+// A noite do cabeçalho (DS1:RF-09) vive aqui, num guardião de módulo: uma contagem das páginas montadas que a
+// pediram. Há noite enquanto a contagem for maior que zero; o `Cabecalho` a lê com `useSyncExternalStore`.
+let paginasDeNoite = 0
+const ouvintesDaNoite = new Set<() => void>()
+
+function assinarNoite(ouvinte: () => void) {
+  ouvintesDaNoite.add(ouvinte)
+  return () => {
+    ouvintesDaNoite.delete(ouvinte)
+  }
+}
+
+const lerNoite = () => paginasDeNoite > 0
+const lerNoiteNoServidor = () => false
+
+function mudarNoite(passo: 1 | -1) {
+  paginasDeNoite = Math.max(0, paginasDeNoite + passo)
+  ouvintesDaNoite.forEach((ouvinte) => ouvinte())
+}
+
+/**
+ * Liga a noite do cabeçalho enquanto a página que o chama está montada: o cabeçalho vira cacau, os links e a marca
+ * ficam de papel e a pílula "Criar conta" vira contorno. Ao desmontar, o tom volta ao dia. No StrictMode o efeito
+ * roda duas vezes (soma, subtrai, soma) e termina de noite.
+ */
+export function useCabecalhoNoite(): void {
+  useEffect(() => {
+    mudarNoite(1)
+    return () => mudarNoite(-1)
+  }, [])
+}
+
 interface Props {
   /** `publico`: os quatro links, Entrar e "Criar conta". `logado` (/app/*): Hoje, Sessão e os itens da área. */
   contexto: Contexto
@@ -34,16 +66,20 @@ interface Props {
   comLua: boolean
   madrugada: boolean
   aoAlternarMadrugada: () => void
+  /** Força o tom (os testes). Sem ele, o tom segue `useCabecalhoNoite()`: `dia` (papel) ou `noite` (cacau). */
+  tom?: 'dia' | 'noite'
 }
 
 /**
- * O cabeçalho do site (DESIGN.md 4): fixo no topo, de papel, o nome em Literata 600 24 px, os links e o
- * espaço da conta, que segue a sessão: sem sessão, Entrar e o primário "Criar conta"; com sessão, "Conta" e
- * "Sair" em toda página; enquanto a sessão carrega, nada. Abaixo de 1100 px os links e o espaço da conta vão
- * para o menu de altura cheia (o botão Menu), e abaixo de 640 o "Criar conta" também. Nas páginas da Rotina,
- * a lua liga o modo madrugada.
+ * O cabeçalho do site (DESIGN.md 4, CabecalhoCTA): fixo no topo, de papel (de cacau no tom `noite`), o nome em
+ * Literata 600, os links e o espaço da conta, que segue a sessão: sem sessão, Entrar e a pílula "Criar conta"
+ * (na linha em toda largura, ao lado do botão do menu); com sessão, "Conta" e "Sair" em toda página; enquanto a
+ * sessão carrega, nada. Abaixo de 1100 px os links e "Entrar" vão para o menu de altura cheia (o botão Menu).
+ * Nas páginas da Rotina, a lua liga o modo madrugada.
  */
-export function Cabecalho({ contexto, comLua, madrugada, aoAlternarMadrugada }: Props) {
+export function Cabecalho({ contexto, comLua, madrugada, aoAlternarMadrugada, tom: tomForcado }: Props) {
+  const deNoite = useSyncExternalStore(assinarNoite, lerNoite, lerNoiteNoServidor)
+  const tom = tomForcado ?? (deNoite ? 'noite' : 'dia')
   // O menu guarda o caminho em que foi aberto: ao navegar (por um link dele ou não), fecha sozinho.
   const { pathname } = useLocation()
   const [abertoEm, setAbertoEm] = useState<string | null>(null)
@@ -80,7 +116,7 @@ export function Cabecalho({ contexto, comLua, madrugada, aoAlternarMadrugada }: 
   }
 
   return (
-    <header className="cm-cabecalho" data-cabecalho="" data-contexto={contexto}>
+    <header className="cm-cabecalho" data-cabecalho="" data-contexto={contexto} data-tom={tom}>
       {/* O primeiro Tab de toda página: pula o cabeçalho e vai ao <main> (WCAG 2.4.1). */}
       <PularParaConteudo />
       {/* O conteúdo do cabeçalho se alinha à borda do quadro; a altura e o padding vertical continuam os de hoje. */}
@@ -121,7 +157,14 @@ export function Cabecalho({ contexto, comLua, madrugada, aoAlternarMadrugada }: 
               <Link to={DESTINO_ENTRAR} className="cm-cab-link cm-cab-entrar">
                 {ROTULO_ENTRAR}
               </Link>
-              <Botao to={DESTINO_CRIAR_CONTA} className="cm-cab-criar" data-cabecalho-acao="">
+              {/* A pílula do CabecalhoCTA: na linha em toda largura; de noite ela vira contorno (sem botão de mel). */}
+              <Botao
+                to={DESTINO_CRIAR_CONTA}
+                variante={tom === 'noite' ? 'contorno' : 'primario'}
+                className="cm-cab-criar"
+                data-cabecalho-acao=""
+                data-cabecalho-pilula=""
+              >
                 {ROTULO_CRIAR_CONTA}
               </Botao>
             </>

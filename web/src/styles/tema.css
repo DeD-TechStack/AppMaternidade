@@ -35,7 +35,6 @@
   /* Oliva tinta sobre areia: ~5,6:1 (o texto-2 sobre areia dava 4,24:1, abaixo do AA). */
   --cor-desativado-texto: var(--color-oliva-tinta);
 
-  --fonte-exibicao: var(--font-titulo);
   --fonte-sb-titulo: var(--font-titulo);
   --fonte-sb-serifa: var(--font-titulo);
   --fonte-sb-corpo: var(--font-texto);

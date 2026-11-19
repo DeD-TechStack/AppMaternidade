@@ -9,7 +9,14 @@ import type { NomeIlustracao } from '../componentes/campo/Ilustracao.tsx'
 import { ROTULO_CRIAR_CONTA } from '../componentes/casca/textos.ts'
 
 /** O endereço de contato de demonstração: uma constante só, usada apenas na página Contato. */
-export const EMAIL_CONTATO = 'danielmacedosilva11@gmail.com'
+export const EMAIL_CONTATO = 'contato@appmaternidade.example'
+
+/** Fatos jurídicos que Daniel respondeu (18/11/2026, STRINGS.md A3/A7/A8): não são um segundo aviso de avaliação. */
+export const TEXTO_QUEM_PODE_USAR =
+  'O AppMaternidade é para quem cuida de um bebê. O bebê não vai ter conta, e nesta versão de avaliação os dados dele também devem ser fictícios.'
+export const TEXTO_APOIO_CONTATO = 'E-mail fictício.'
+export const TEXTO_SEUS_DIREITOS =
+  'Na tela Conta, quem entrou na conta já pode baixar uma cópia dos seus dados num arquivo JSON, que não é um formato regulamentado de portabilidade, e excluir a conta. A confirmação de que seus dados são tratados, a correção e a revogação do consentimento ainda não têm tela própria. O endereço de e-mail da página Contato é fictício e não recebe mensagens. Por enquanto, o que dá para pedir é o que a tela Conta já faz: baixar os dados ou excluir a conta.'
 
 /** O rótulo do índice da página (a lista de âncoras para cada seção). */
 export const ROTULO_INDICE = 'Nesta página'
@@ -45,7 +52,8 @@ const CAMINHO_REGRAS = '/regras-da-comunidade'
 const TF = {
   responsavel: 'Responsável pelo AppMaternidade: DeD TechStack.',
   encarregado: 'Encarregado pelo tratamento de dados: Daniel Macedo.',
-  idadeMinima: 'Idade mínima para usar o AppMaternidade: a definir.',
+  idadeMinima:
+    'Não há idade mínima para usar o AppMaternidade. Quem tem menos de 18 anos usa o site com o pai, a mãe ou o responsável legal.',
   prazoExclusao: 'O prazo da exclusão ainda será definido e publicado nesta página.',
   pedidoExclusao:
     'O pedido de exclusão é feito na tela Conta (/app/conta), por quem entrou na conta. Lá, toque em “Baixar meus dados” se quiser guardar uma cópia e depois em “Excluir minha conta”.',
@@ -298,7 +306,7 @@ const PRIVACIDADE: PaginaDeTexto = {
     {
       secao: secao('Seus direitos'),
       blocos: [
-        'Na tela Conta, quem entrou na conta já pode baixar uma cópia dos seus dados num arquivo JSON, que não é um formato regulamentado de portabilidade, e excluir a conta. A confirmação de que seus dados são tratados, a correção e a revogação do consentimento ainda não têm tela própria: peça pelo contato desta página.',
+        TEXTO_SEUS_DIREITOS,
         'Quando o seu vínculo com uma família acaba, o arquivo leva só a última versão dos registros que você mesmo escreveu, sem as mudanças feitas depois por outras pessoas, e não leva as notas de passagem de turno dessa família.',
         [
           'Os pedidos de acesso, com o botão “Baixar meus dados”, e de exclusão são feitos na tela Conta (/app/conta), por quem entrou na conta. Para apagar a conta, veja a página ',
@@ -358,7 +366,7 @@ const TERMOS: PaginaDeTexto = {
     },
     {
       secao: secao('Quem pode usar'),
-      blocos: ['O plano é que só adultos tenham conta. Não vai haver conta de criança.', TF.idadeMinima],
+      blocos: [TEXTO_QUEM_PODE_USAR, TF.idadeMinima],
     },
     {
       secao: secao('Excluir a conta'),
@@ -439,7 +447,7 @@ const CONTATO: PaginaDeTexto = {
   nome: 'Contato',
   subtitulo: 'Fale conosco.',
   ilustracao: 'maos-celular',
-  apoio: 'Um canal para falar com a gente.',
+  apoio: TEXTO_APOIO_CONTATO,
   // O e-mail vem num bloco próprio na abertura (cartão com o rótulo, o endereço e o botão `mailto:`).
   blocoDeEmail: true,
   secoes: [

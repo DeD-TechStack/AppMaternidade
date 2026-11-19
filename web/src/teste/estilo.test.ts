@@ -212,8 +212,9 @@ describe('rodapé: marca no nível titulo-3 e alvos da casca (MAT-49e, FOOTER-1)
     expect(corpo).not.toBe('')
     expect(/font-size:\s*([^;]+);/.exec(corpo)?.[1]).toBe('var(--texto-titulo-3-tamanho)')
     expect(/line-height:\s*([^;]+);/.exec(corpo)?.[1]).toBe('var(--texto-titulo-3-entrelinha)')
-    expect(corpo).toMatch(/font-family:\s*var\(--fonte-titulo\)/)
-    expect(corpo).toMatch(/font-weight:\s*600/)
+    // DS1:RF-05: a família e o peso dos títulos vêm da variável de exibição e dos tokens de peso (ambos 600 hoje).
+    expect(corpo).toMatch(/font-family:\s*var\(--fonte-(titulo|exibicao)\)/)
+    expect(corpo).toMatch(/font-weight:\s*(600|var\(--peso-(titulo|exibicao)\))/)
     expect(corpo).not.toMatch(/cqi|transform|scale|white-space/)
   })
 
@@ -221,11 +222,25 @@ describe('rodapé: marca no nível titulo-3 e alvos da casca (MAT-49e, FOOTER-1)
     expect(site).not.toMatch(/cqi|container-type|--cm-fator-marca/)
   })
 
-  it('o rodapé do site não tem fundo próprio: nenhuma regra .cm-rodape* pinta fundo, e o fio de cima é o fio suave de 1 px', () => {
+  // DS1:RF-04 (antes: o rodapé não tinha fundo próprio, sob o fio suave de 1 px): o RodapeMapa é uma faixa de cacau.
+  it('o rodapé do site é de cacau (fundo pelo token), sem sombra nem gradiente, e o compacto do app não herda o cacau', () => {
     const regras = [...site.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter((m) => /\.cm-rodape/.test(m[1]))
     expect(regras.length).toBeGreaterThan(0)
-    for (const [, seletor, corpo] of regras) expect(corpo, seletor.trim()).not.toMatch(/background/)
-    expect(corpoDaRegra(site, '.cm-rodape-quadro')).toMatch(/border-top:\s*1px solid var\(--cor-fio-suave\)/)
+    const pintaCacau = regras.filter(
+      ([, seletor, corpo]) =>
+        /(^|[\s,])\.cm-rodape(\s*(,|$)|:not\(\.cm-rodape-compacto\))/.test(seletor.trim()) &&
+        /background(-color)?:\s*var\(--(color|cor)-(cacau|noite)\)/.test(corpo),
+    )
+    expect(pintaCacau.length, 'regra do rodapé com fundo de cacau').toBeGreaterThan(0)
+    for (const [, seletor, corpo] of regras) {
+      expect(corpo, seletor.trim()).not.toMatch(/box-shadow:\s*(?!none)|gradient\(/)
+    }
+    // O compacto: ou a regra de cacau o exclui (:not), ou ele tem a regra própria que devolve o fundo.
+    const excluiCompacto = pintaCacau.every(([, seletor]) => /:not\(\.cm-rodape-compacto\)/.test(seletor))
+    const devolveFundo = regras.some(
+      ([, seletor, corpo]) => /\.cm-rodape-compacto/.test(seletor) && /background(-color)?:\s*(transparent|none|var\(--cor-fundo\)|var\(--color-papel\))/.test(corpo),
+    )
+    expect(excluiCompacto || devolveFundo).toBe(true)
   })
 
   it('os tokens do painel de mel do rodapé saíram do tema, do dia e da madrugada', () => {

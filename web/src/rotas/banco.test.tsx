@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, render, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { createClient } from '@supabase/supabase-js'
+import { AVISO_RODAPE } from '../componentes/casca/textos.ts'
 import { AVISO_BANCO_DEMONSTRACAO, NOMES_DO_H1, TEXTOS_ERRO } from '../conteudo/conta.ts'
 import { criarRotas } from '../rotas.tsx'
 import { CHAVE_RECUPERACAO } from '../componentes/conta/armazenamento.ts'
@@ -277,7 +278,11 @@ describe('com as duas variáveis (cliente falso): o banco', () => {
       expect(await screen.findByRole('button', { name: botao }), caminho).toBeTruthy()
       expect(container.querySelectorAll(BANCO), caminho).toHaveLength(avisosDoBanco)
       if (avisosDoBanco) expect(container.querySelector(BANCO)?.textContent, caminho).toBe(AVISO_BANCO_DEMONSTRACAO)
-      expect(container.querySelectorAll(MEMORIA), caminho).toHaveLength(0)
+      // DS1:RF-14: o aviso do rodapé (o único `[data-aviso="demonstracao"]`) vale nas rotas públicas também com banco.
+      const avisosDoRodape = container.querySelectorAll(MEMORIA)
+      expect(avisosDoRodape, caminho).toHaveLength(1)
+      expect(avisosDoRodape[0].closest('footer[data-rodape]'), caminho).not.toBeNull()
+      expect(avisosDoRodape[0].textContent, caminho).toBe(AVISO_RODAPE)
       unmount()
     }
     expect(createClient).toHaveBeenCalledTimes(1)

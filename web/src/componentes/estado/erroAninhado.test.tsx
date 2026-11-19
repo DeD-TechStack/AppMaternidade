@@ -174,6 +174,26 @@ function matarArvore() {
   }
 }
 
+// Leitura do DevToolsActivePort. Os controles negativos simulam um EBUSY (arquivo preso por antivírus ou indexador).
+let leiturasDaPorta = 0
+
+function lerPortaDoChrome(arquivo) {
+  leiturasDaPorta++
+  const controle = process.env.ERRO_ANINHADO_CONTROLE
+  if (controle === 'porta-sempre-ocupada' || (controle === 'porta-ocupada' && leiturasDaPorta <= 3)) {
+    throw Object.assign(new Error('EBUSY: resource busy or locked, open ' + arquivo), { code: 'EBUSY' })
+  }
+  const incompleta = /^porta-ocupada-incompleta-(EBUSY|EPERM|EACCES)$/.exec(controle || '')
+  if (incompleta) {
+    // Primeira leitura presa com o código pedido; as seguintes veem o arquivo incompleto (1 linha).
+    if (leiturasDaPorta === 1) {
+      throw Object.assign(new Error(incompleta[1] + ': operation not permitted, open ' + arquivo), { code: incompleta[1] })
+    }
+    return '12345\n'
+  }
+  return readFileSync(arquivo, 'utf8')
+}
+
 let codigo = 0
 let linha = ''
 const vigia = setTimeout(() => {
@@ -203,14 +223,31 @@ try {
 
   const arquivoDaPorta = join(PERFIL, 'DevToolsActivePort')
   let porta = null
+  let ultimoCodigo = null
   for (let i = 0; i < 200 && porta === null; i++) {
     if (existsSync(arquivoDaPorta)) {
-      const primeira = readFileSync(arquivoDaPorta, 'utf8').split('\n')[0].trim()
-      if (/^[0-9]+$/.test(primeira)) porta = primeira
+      let conteudo = null
+      try {
+        conteudo = lerPortaDoChrome(arquivoDaPorta)
+      } catch (e) {
+        // Arquivo preso por outro processo (antivírus, indexador): ainda não está pronto, tenta de novo.
+        if (e && (e.code === 'EBUSY' || e.code === 'EPERM' || e.code === 'EACCES')) ultimoCodigo = e.code
+        else throw e
+      }
+      if (conteudo !== null) {
+        // O Chrome escreve a porta e depois o caminho: com menos de 2 linhas o arquivo ainda está incompleto.
+        const linhas = conteudo.split(/\r?\n/).filter(Boolean)
+        const primeira = (linhas[0] || '').trim()
+        if (linhas.length >= 2 && /^[0-9]+$/.test(primeira)) porta = primeira
+      }
     }
     if (porta === null) await esperar(100)
   }
-  if (porta === null) throw new Error('O Chrome não publicou a porta do DevTools em 20 s.')
+  if (porta === null) {
+    throw new Error(
+      'O Chrome não publicou a porta do DevTools em 20 s (' + arquivoDaPorta + ', último erro: ' + (ultimoCodigo || 'incompleto') + ').',
+    )
+  }
 
   let alvo = null
   for (let i = 0; i < 100 && alvo === null; i++) {
@@ -390,6 +427,14 @@ function montarPagina(html: string, tema: Tema, pasta: string, script?: string):
  * - `trava`: segura `perfil/trava.lock` aberto durante TODA a limpeza (num PowerShell filho, porque o `openSync` do
  *   Node compartilha DELETE no Windows e não bloqueia a remoção). O teste TEM de continuar verde e a limpeza TEM de
  *   avisar com o caminho (que contém `erro-aninhado`), sem lançar. Depois a trava é solta e a pasta removida.
+ * - `porta-ocupada`: lido no script de foco; as 3 primeiras leituras do `DevToolsActivePort` veem um EBUSY simulado
+ *   e o teste TEM de continuar verde.
+ * - `porta-sempre-ocupada`: lido no script de foco; toda leitura do `DevToolsActivePort` é um EBUSY simulado e o
+ *   teste TEM de ficar vermelho, com a mensagem citando `DevToolsActivePort` e `EBUSY`.
+ * - `porta-ocupada-incompleta-EBUSY`, `porta-ocupada-incompleta-EPERM` e `porta-ocupada-incompleta-EACCES`: lidos no
+ *   script de foco; a primeira leitura do `DevToolsActivePort` lança o código do nome e as seguintes devolvem
+ *   `12345\n` (arquivo incompleto, 1 linha). O teste TEM de ficar vermelho, com a mensagem citando
+ *   `DevToolsActivePort` e esse código (o código do erro não se perde nas leituras incompletas).
  *
  * Cada remoção tenta por ~5 s no máximo (6 tentativas, espera linear de 250 ms vezes a tentativa), para um perfil
  * travado não custar minutos. O aviso sai por `console.warn` e também direto no descritor 2: o Vitest captura o
@@ -472,7 +517,8 @@ function medirNoChrome(html: string, tema: Tema): Medida {
         '--headless=new',
         '--no-sandbox',
         '--disable-gpu',
-        '--disable-crashpad-for-testing',
+        // CI-UBUNTU: no Chrome 157 do Linux esta opção mata o processo ("FD ownership violation"); no Windows ela fica.
+        ...(process.platform === 'win32' ? ['--disable-crashpad-for-testing'] : []),
         '--no-first-run',
         '--allow-file-access-from-files',
         `--user-data-dir=${perfil}`,
