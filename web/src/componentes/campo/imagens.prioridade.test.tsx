@@ -1,13 +1,12 @@
 import { render } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import { CenaCacau } from '../publicas-destaque/CenaCacau.tsx'
 import { FotoCena } from '../inicio/FotoCena.tsx'
 import { CenaEstudio } from './CenaEstudio.tsx'
 
 // IMG-B: só a cena da primeira dobra carrega na hora e com prioridade alta; a foto da Início é lazy
 // por padrão.
 
-const BASE = '/cenas/inicio/tabela'
+const BASE = '/cenas/teste/cena'
 const LARGURA = 768
 const ALTURA = 512
 const ALT = 'As telas do AppMaternidade, nos aparelhos.'
@@ -42,7 +41,6 @@ describe('FotoCena', () => {
 
 describe.each([
   ['CenaEstudio', CenaEstudio],
-  ['CenaCacau', CenaCacau],
 ])('%s', (_nome, Cena) => {
   it('com prioritaria carrega na hora e com prioridade alta', () => {
     const imagem = imagemDe(<Cena base={BASE} largura={LARGURA} altura={ALTURA} alt={ALT} prioritaria />, 'img[data-cena]')

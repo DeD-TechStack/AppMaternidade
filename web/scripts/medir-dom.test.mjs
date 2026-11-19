@@ -3247,20 +3247,22 @@ describe('DS1-I-15 a lista de regras, o escopo por caso e o bloqueio (RF-15)', (
   // REP-HOME (REPH-I-18): the Início and its two display variants are casa cases too, so CASOS_CASA lists them and
   // they leave the "public page" groups below (they run the 22 rules and the 8 new ones, covered by REPH-I-18).
   const CASOS_DO_INICIO = ['inicio', 'inicio_b', 'inicio_c']
-  const PUBLICOS_SEM_INICIO = () => medir.CASOS_PUBLICOS.filter((caso) => !CASOS_DO_INICIO.includes(caso))
+  const CASOS_CASA_ESPERADOS = ['sistema', ...CASOS_DO_INICIO, 'comofunciona', 'cuidado', 'desenvolvimento', 'naoencontrada']
+  const PUBLICOS_SEM_INICIO = () => medir.CASOS_PUBLICOS.filter((caso) => !CASOS_CASA_ESPERADOS.includes(caso))
 
-  it('DS1-I-15 CASOS_PUBLICOS são os 15 casos do §0 e CASOS_CASA é o sistema e os três do Início', () => {
+  it('DS1-I-15 CASOS_PUBLICOS são os 15 casos do §0 e CASOS_CASA é o sistema, os três do Início e as quatro páginas na casa', () => {
     assert.deepEqual(medir.CASOS_PUBLICOS, CASOS_PUBLICOS_ESPERADOS)
-    assert.deepEqual(medir.CASOS_CASA, ['sistema', ...CASOS_DO_INICIO])
+    assert.deepEqual(medir.CASOS_CASA, CASOS_CASA_ESPERADOS)
     assert.equal(new Set(medir.CASOS_PUBLICOS).size, 15)
   })
 
-  it('DS1-I-15 regrasDoCaso: página pública roda 20 regras (sem CASA_PRESENTE) e o sistema e o Início rodam as 21 (o Início, mais as 8 dele)', () => {
+  it('DS1-I-15 regrasDoCaso: página pública roda 20 regras (sem CASA_PRESENTE) e o sistema, as páginas na casa e o Início rodam as 21 (o Início, mais as 8 dele)', () => {
     for (const caso of PUBLICOS_SEM_INICIO()) {
       const regras = medir.regrasDoCaso(caso, '')
       assert.deepEqual(regras, REGRAS_ESPERADAS.filter((r) => r !== 'CASA_PRESENTE'), caso)
     }
     assert.deepEqual(medir.regrasDoCaso('sistema', 'sistema'), REGRAS_ESPERADAS)
+    for (const caso of ['comofunciona', 'cuidado', 'desenvolvimento', 'naoencontrada']) assert.deepEqual(medir.regrasDoCaso(caso, ''), REGRAS_ESPERADAS, caso)
     for (const caso of CASOS_DO_INICIO) assert.deepEqual(medir.regrasDoCaso(caso, ''), [...REGRAS_ESPERADAS, ...NOVAS_REGRAS], caso)
   })
 
@@ -3279,6 +3281,7 @@ describe('DS1-I-15 a lista de regras, o escopo por caso e o bloqueio (RF-15)', (
       assert.deepEqual(bloqueantes, REGRAS_ESPERADAS.filter((r) => r !== 'CASA_PRESENTE' && !registro.includes(r)), caso)
     }
     assert.deepEqual(medir.bloqueantesDoCaso('sistema', 'sistema'), REGRAS_ESPERADAS.filter((r) => !registro.includes(r)))
+    for (const caso of ['comofunciona', 'cuidado', 'desenvolvimento', 'naoencontrada']) assert.deepEqual(medir.bloqueantesDoCaso(caso, ''), REGRAS_ESPERADAS.filter((r) => !registro.includes(r)), caso)
     assert.ok(medir.bloqueantesDoCaso('sistema', 'sistema').includes('CASA_PRESENTE'))
     // The Início is a casa now (REP-HOME): CASA_PRESENTE blocks there too, and so do its 8 rules.
     assert.deepEqual(medir.bloqueantesDoCaso('inicio', ''), [...REGRAS_ESPERADAS.filter((r) => !registro.includes(r)), ...NOVAS_REGRAS])
@@ -3850,8 +3853,8 @@ describe('REPH-I-09 TEMPO: hours never go back, ink follows the ground, one clos
 // ---- REPH-I-18 the meter itself ----
 
 describe('REPH-I-18 meter surface: cases, rules, fonts, MEDIDAS_REP_HOME, avaliarMovimento', () => {
-  it('REPH-I-18 CASOS_CASA lists sistema, inicio, inicio_b and inicio_c', () => {
-    assert.deepEqual(medir.CASOS_CASA, ['sistema', 'inicio', 'inicio_b', 'inicio_c'])
+  it('REPH-I-18 CASOS_CASA lists sistema, inicio, inicio_b, inicio_c and the four public pages in the casa', () => {
+    assert.deepEqual(medir.CASOS_CASA, ['sistema', 'inicio', 'inicio_b', 'inicio_c', 'comofunciona', 'cuidado', 'desenvolvimento', 'naoencontrada'])
   })
 
   it('REPH-I-18 the eight new rules are exported once, in order, and REGRAS keeps its 22 names', () => {
