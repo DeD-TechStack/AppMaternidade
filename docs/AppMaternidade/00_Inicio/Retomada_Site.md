@@ -14,7 +14,7 @@ This is the starting note for the next working session on the site. It records t
 
 ## CURRENT STATE (19/11/2026 ~15h50, leader session D5-15): ACTIVE, visual-only priority
 
-The authoritative state is the block "RETOMAR 19/11 D5-15" at the top of [PENDENCIAS](PENDENCIAS.md). int/refazer = 98817ec (CI green, served on /previa/): HOME-PHONE-B2, HOME-SEAM-FOLD, REP-T2, METER-INICIO-SYNC and HOME-ART-FINISH integrated today. Running: HOME-SEAMS t_cbcdf887, COMO-P3 t_a9bc02f4, CUIDADO-P3 t_6bbb1c96 (Daniel ~16h20: keep finishing, push every approved step). Other code-lane cards stay held. The pause of 19/11 ~00h30 (PAUSA-20261119) ended on Daniel's GO.
+The authoritative state is the block "RETOMAR 19/11 SWITCH-TO-GPT SAFE POINT" at the top of [PENDENCIAS](PENDENCIAS.md) (leader and executor switch from Claude to GPT, ~16h50). int/refazer = 98817ec (CI green, served on /previa/): HOME-PHONE-B2, HOME-SEAM-FOLD, REP-T2, METER-INICIO-SYNC and HOME-ART-FINISH integrated today. Running: HOME-SEAMS t_cbcdf887, COMO-P3 t_a9bc02f4, CUIDADO-P3 t_6bbb1c96, IMG-RES t_c64aa48c; Fable direction sheet for motion and time of day pending (DIRECAO_MOV_DIA). Other code-lane cards stay held. The pause of 19/11 ~00h30 (PAUSA-20261119) ended on Daniel's GO.
 
 ## PAUSE of 17/11/2026 ~21h15 (PAUSA-20261117; Daniel turned the PC off, coordinator t_9748a54d): CURRENT STATE
 
