@@ -1,0 +1,84 @@
+/* A página inexistente (REP-T4): uma noite de cacau do cabeçalho ao rodapé. O chão é desta página (a FaixaInteira
+   guarda o respiro de baixo, e a janela tem de ficar rente ao pé da dobra). Estático: nenhuma animação. */
+@layer components {
+  .cm-nf-chao {
+    box-sizing: border-box;
+    min-height: calc(100svh - var(--cm-cabecalho));
+    padding-top: var(--espaco-secao);
+    /* O rodapé (cacau) encosta no chão: cancela a margem de respiro que ele traz por cima. */
+    margin-bottom: calc(-1 * var(--cm-entre-secoes));
+    background-color: var(--color-cacau);
+    overflow-x: clip;
+  }
+
+  /* A janela é absoluta em toda a largura: abaixo de 768 o quadro reserva embaixo a altura dela (340 x 264), para o
+     texto nunca passar por cima. */
+  .cm-nf-quadro {
+    --nf-corte: 0.917;
+    position: relative;
+    box-sizing: border-box;
+    min-height: calc(100svh - var(--cm-cabecalho) - var(--espaco-secao));
+  }
+
+  .cm-nf-quadro::after {
+    display: block;
+    height: calc(264px * var(--nf-corte));
+    content: '';
+  }
+
+  /* O h1 fora da escala (112/112 em 1440, 56/58 em 390): vence o `.cm-h1.cm-exibicao` das páginas de conteúdo. Uma
+     borda esquerda só: h1, frase e botão são filhos da mesma pilha, no x do quadro. */
+  h1.cm-exibicao-404.cm-nf-titulo {
+    max-width: var(--leitura);
+    font-size: var(--texto-exibicao-404-tamanho);
+    line-height: var(--texto-exibicao-404-entrelinha);
+    font-weight: var(--peso-exibicao);
+    color: var(--color-papel);
+  }
+
+  .cm-nf-linha {
+    max-width: 350px;
+    color: var(--color-papel);
+  }
+
+  /* O recorte de M11 (servido pela ASSET-2) já vem na cor da parede de cacau, sem retângulo. A janela só corta a faixa
+     escura de baixo (--nf-corte é a fração da altura que fica, do prédio para cima). */
+  .cm-nf-janela {
+    position: absolute;
+    right: calc(-1 * var(--quadro-calha));
+    bottom: 0;
+    overflow: hidden;
+    height: calc(264px * var(--nf-corte));
+  }
+
+  .cm-nf-janela img {
+    display: block;
+    width: 340px;
+    height: 264px;
+    max-width: none;
+  }
+
+  @media (min-width: 768px) {
+    .cm-nf-quadro::after {
+      display: none;
+    }
+
+    .cm-nf-pilha {
+      align-items: flex-start;
+    }
+
+    .cm-nf-linha {
+      max-width: 520px;
+    }
+
+    .cm-nf-janela {
+      right: 0;
+      height: calc(280px * var(--nf-corte));
+    }
+
+    .cm-nf-janela img {
+      width: 361px;
+      height: 280px;
+    }
+  }
+}

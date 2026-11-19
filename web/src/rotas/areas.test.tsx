@@ -182,7 +182,7 @@ describe('o Hoje e a Sessão ficam sob a guarda e sob o provedor da área (R38-3
   it('/app/inexistente cai na Página não encontrada, com ou sem sessão', async () => {
     for (const sessao of [null, 'juliana'] as const) {
       const { unmount } = renderizarComDados('/app/inexistente', { sessao })
-      expect((await screen.findByRole('heading', { level: 1 })).textContent).toBe('Página não encontrada')
+      expect((await screen.findByRole('heading', { level: 1 })).textContent).toBe('Aqui não mora ninguém.')
       unmount()
     }
   })
