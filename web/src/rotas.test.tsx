@@ -34,7 +34,7 @@ describe('rotas', () => {
   })
 
   for (const [caminho, titulo] of [
-    ['/como-funciona', 'Do primeiro dia à troca de turno.'],
+    ['/como-funciona', 'Deixa que eu anoto.'],
     ['/cuidado-compartilhado', 'Um bebê, vários adultos.'],
     ['/desenvolvimento', 'Cada fase, no tempo do bebê.'],
     ['/regras-da-comunidade', 'Regras da comunidade'],

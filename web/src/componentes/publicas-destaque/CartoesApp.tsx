@@ -1,6 +1,6 @@
-import { Check, Moon } from 'lucide-react'
+import { Check } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { COMO_FUNCIONA_DESTAQUE as CF, CUIDADO_DESTAQUE as CC } from '../../conteudo/publicas-destaque.ts'
+import { CUIDADO_DESTAQUE as CC } from '../../conteudo/publicas-destaque.ts'
 import { DESENVOLVIMENTO_DESTAQUE as DD } from '../../conteudo/desenvolvimento/pagina.ts'
 import { SemQuebra } from './SemQuebra.tsx'
 import './publicas-destaque.css'
@@ -43,84 +43,6 @@ function Linha({ inicial, bebe = false, nome, detalhe, hora }: PropsLinha) {
       </span>
       {hora ? <span className="pd-linha-hora">{hora}</span> : null}
     </li>
-  )
-}
-
-/** Passo 1: o convite aceito. O papel fica na coluna do nome, alinhado a ele e não ao selo. */
-export function CartaoConvite() {
-  const c = CF.convite
-  return (
-    <div className="pd-cartao pd-cartao-cabeca">
-      <span className="pd-selo-ok" aria-hidden="true">
-        <Check strokeWidth={2.25} />
-      </span>
-      <div>
-        <p className="pd-cartao-rotulo">{c.rotulo}</p>
-        <p className="pd-cartao-titulo">{c.pessoa}</p>
-        <p className="pd-cartao-detalhe pd-mt-2">{c.papel}</p>
-      </div>
-    </div>
-  )
-}
-
-/** Passo 1: os primeiros registros dos dois responsáveis. */
-export function CartaoPrimeirosRegistros() {
-  const c = CF.primeirosRegistros
-  return (
-    <div className="pd-cartao">
-      <p className="pd-cartao-titulo">{c.titulo}</p>
-      <ul className="pd-linhas">
-        {c.itens.map((item) => (
-          <Linha key={item.tipo} nome={item.tipo} detalhe={item.detalhe} hora={item.hora} />
-        ))}
-      </ul>
-    </div>
-  )
-}
-
-/** Passo 2: o modo madrugada, com o botão grande de mel. */
-export function CartaoMadrugada() {
-  const c = CF.madrugada
-  return (
-    <div className="pd-cartao">
-      <p className="pd-cartao-cabeca pd-cartao-rotulo">
-        <Moon aria-hidden="true" strokeWidth={2} />
-        {c.rotulo}
-      </p>
-      <p className="pd-cartao-rotulo pd-mt-20">{c.ultima}</p>
-      <p className="pd-cartao-hora">{c.hora}</p>
-      <p className="pd-cartao-detalhe">{c.detalhe}</p>
-      <p className="pd-botao-redondo">{c.botao}</p>
-    </div>
-  )
-}
-
-/** Passo 3: o que aconteceu desde que você saiu, com a soneca de Ícaro ainda em andamento. */
-export function CartaoDesdeQueSaiu() {
-  const c = CF.desdeQueSaiu
-  return (
-    <div className="pd-cartao">
-      <p className="pd-cartao-titulo">{c.titulo}</p>
-      <div className="pd-andamento">
-        <p className="pd-cartao-rotulo">{c.andamento.rotulo}</p>
-        <p className="pd-cartao-hora">{c.andamento.tempo}</p>
-        <p className="pd-cartao-detalhe">
-          <SemQuebra texto={c.andamento.detalhe} />
-        </p>
-      </div>
-      <ul className="pd-linhas">
-        {c.itens.map((item) => (
-          <Linha key={item.tipo} inicial={item.inicial} nome={item.tipo} detalhe={item.detalhe} hora={item.hora} />
-        ))}
-      </ul>
-      <div className="pd-nota">
-        <p className="pd-cartao-rotulo">{c.nota.rotulo}</p>
-        <p className="pd-nota-texto">{c.nota.texto}</p>
-        <p className="pd-cartao-detalhe">
-          <SemQuebra texto={c.nota.autor} />
-        </p>
-      </div>
-    </div>
   )
 }
 

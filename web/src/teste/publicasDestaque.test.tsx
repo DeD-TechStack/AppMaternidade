@@ -6,15 +6,15 @@ import { describe, expect, it } from 'vitest'
 import { FASES, MARCOS, QUANTO_TEMPO, TUMMY_TIME } from '../conteudo/desenvolvimento/itens.ts'
 import { CONSULTADO_EM } from '../conteudo/desenvolvimento/fontes.ts'
 import { AVISO_SAUDE, DESENVOLVIMENTO_DESTAQUE } from '../conteudo/desenvolvimento/pagina.ts'
-import { COMO_FUNCIONA_DESTAQUE, CUIDADO_DESTAQUE } from '../conteudo/publicas-destaque.ts'
+import { CUIDADO_DESTAQUE } from '../conteudo/publicas-destaque.ts'
 import { INICIO } from '../conteudo/textos.ts'
 import { renderizarRota } from './renderizarRota.tsx'
 
-// Como funciona, Cuidado compartilhado e Desenvolvimento no "Campo de mel": títulos, passos, avisos,
-// fontes, cenas e links, no site de verdade (roteador em memória, dentro da casca).
+// Cuidado compartilhado e Desenvolvimento no "Campo de mel": títulos, passos, avisos, fontes, cenas e links, no
+// site de verdade (roteador em memória, dentro da casca). Como funciona saiu daqui: ele é a casa acesa e tem o
+// seu próprio teste, paginas/publicas/comoFunciona.casa.test.tsx.
 
 const PAGINAS = [
-  ['/como-funciona', COMO_FUNCIONA_DESTAQUE.titulo],
   ['/cuidado-compartilhado', CUIDADO_DESTAQUE.titulo],
   ['/desenvolvimento', DESENVOLVIMENTO_DESTAQUE.titulo],
 ] as const
@@ -306,73 +306,6 @@ describe('painéis de mel com luz e blocos de fim de seção sem colunas desigua
   })
 })
 
-describe('Como funciona', () => {
-  it('a primeira dobra tem a cena de estúdio com texto alternativo e tamanho 1×, sem cartão por cima', () => {
-    const { container } = renderizarRota('/como-funciona')
-    const cena = container.querySelector<HTMLImageElement>('main img[data-cena]')!
-    expect(cena.getAttribute('alt')).toBe(COMO_FUNCIONA_DESTAQUE.cena.alt)
-    expect(cena.getAttribute('src')).toBe('/cenas/publicas/como-funciona@1x.webp')
-    // O recorte em retrato em volta do celular: 340 × 525 em 1× (o @2x tem 680 × 1050).
-    expect(cena.getAttribute('width')).toBe('340')
-    expect(cena.getAttribute('height')).toBe('525')
-    expect(cena.closest('[data-painel]')!.querySelector('.cm-flutuante, [data-cartao-plano]')).toBeNull()
-  })
-
-  it('os três passos vêm em ordem, numa lista ordenada, cada um com a sua tela de exemplo; o convite e a madrugada flutuam (giros diferentes)', () => {
-    const { container } = renderizarRota('/como-funciona')
-    const itens = [...container.querySelectorAll('ol[data-passos] > li')]
-    expect(itens.map((li) => within(li as HTMLElement).getByRole('heading', { level: 3 }).textContent)).toEqual([
-      'Na primeira semana',
-      'De madrugada',
-      'Na troca de turno',
-    ])
-    for (const li of itens) expect(li.querySelector('.cm-flutuante, [data-cartao-plano]'), li.id).not.toBeNull()
-    expect(itens.map((li) => li.querySelector('.cm-flutuante') !== null)).toEqual([true, true, false])
-    expect(itens.map((li) => li.querySelector('.cm-flutuante')?.getAttribute('data-giro') ?? null)).toEqual([
-      '-2',
-      '2',
-      null,
-    ])
-    expect(itens[2].textContent).toContain('Ícaro')
-    expect(itens[2].textContent).toContain(COMO_FUNCIONA_DESTAQUE.desdeQueSaiu.andamento.rotulo)
-  })
-
-  it('o convite alinha o papel pelo nome (na mesma coluna), e a faixa de cacau tem o botão sem a palavra "protótipo"', () => {
-    const { container } = renderizarRota('/como-funciona')
-    const convite = container.querySelector('#passo-primeira-semana .cm-flutuante .pd-cartao')!
-    const coluna = convite.querySelector('.pd-cartao-titulo')!.parentElement!
-    expect(coluna.textContent).toContain(COMO_FUNCIONA_DESTAQUE.convite.papel)
-    const faixa = screen.getByRole('region', { name: COMO_FUNCIONA_DESTAQUE.fechamento.titulo.join(' ') })
-    expect(faixa.textContent).not.toMatch(/protótipo/i)
-    expect(within(faixa).getByRole('link', { name: COMO_FUNCIONA_DESTAQUE.fechamento.acao.rotulo })).toBeTruthy()
-    for (const numero of COMO_FUNCIONA_DESTAQUE.numeros) expect(faixa.textContent).toContain(numero.legenda)
-  })
-
-  it('o "para começar" põe a primeira frase sob o título e o texto denso na outra coluna', () => {
-    const { container } = renderizarRota('/como-funciona')
-    const secao = container.querySelector('section[aria-labelledby="como-comecar"] .pd-duas')!
-    const [esquerda, direita] = [...secao.children]
-    expect(esquerda.querySelector('h2')).not.toBeNull()
-    expect(esquerda.textContent).toContain(COMO_FUNCIONA_DESTAQUE.comecar.textos[0])
-    expect(direita.textContent).toBe(COMO_FUNCIONA_DESTAQUE.comecar.textos[1])
-  })
-
-  it('os dois primários levam ao protótipo e o secundário leva aos três momentos', async () => {
-    const { roteador } = renderizarRota('/como-funciona')
-    const primarios = screen.getAllByRole('link', { name: COMO_FUNCIONA_DESTAQUE.primario.rotulo })
-    expect(primarios).toHaveLength(2)
-    for (const link of primarios) expect(link.getAttribute('href')).toBe('/app/hoje')
-    expect(screen.getByRole('link', { name: COMO_FUNCIONA_DESTAQUE.secundario.rotulo }).getAttribute('href')).toBe(
-      '#tres-momentos',
-    )
-    expect(document.getElementById('tres-momentos')).not.toBeNull()
-
-    fireEvent.click(primarios[0])
-    await screen.findByRole('heading', { level: 1, name: 'Hoje' })
-    expect(roteador.state.location.pathname).toBe('/app/hoje')
-  })
-})
-
 describe('Cuidado compartilhado', () => {
   it('o painel de mel tem a tela Família em HTML e a avó do carrinho', () => {
     renderizarRota('/cuidado-compartilhado')
@@ -405,11 +338,11 @@ describe('Cuidado compartilhado', () => {
     const { container } = renderizarRota('/cuidado-compartilhado')
     const abertura = container.querySelector('main .pd-abertura')!
     expect(within(abertura as HTMLElement).getByRole('link', { name: CUIDADO_DESTAQUE.primario.rotulo }).getAttribute('href')).toBe(
-      COMO_FUNCIONA_DESTAQUE.fechamento.acao.destino,
+      INICIO.heroi.primario.destino,
     )
     const parar = screen.getByRole('region', { name: 'Quando alguém para de cuidar.' })
     expect(within(parar).getByRole('link', { name: CUIDADO_DESTAQUE.primario.rotulo }).getAttribute('href')).toBe(
-      COMO_FUNCIONA_DESTAQUE.fechamento.acao.destino,
+      INICIO.heroi.primario.destino,
     )
   })
 
@@ -612,11 +545,6 @@ describe('polimento, volta 2', () => {
     expect(estreito.regras.find((r) => r.seletor === '.pd-cartao-hora')?.decl).toMatch(/white-space: normal/)
   })
 
-  it('Como funciona e Desenvolvimento: "às 14:05" e "às 10:20" também são uma peça só', () => {
-    const como = renderizarRota('/como-funciona').container
-    expect([...como.querySelectorAll('main .pd-nq')].map((el) => el.textContent)).toContain('às 14:05')
-  })
-
   it('Desenvolvimento: "às 10:20" do registro "Fizemos" é uma peça só', () => {
     const dev = renderizarRota('/desenvolvimento').container
     expect([...dev.querySelectorAll('main .pd-nq')].map((el) => el.textContent)).toContain('às 10:20')
@@ -631,11 +559,8 @@ describe('polimento, volta 2', () => {
     })
   }
 
-  it('o primário de Como funciona e de Cuidado compartilhado usa o rótulo que o Início já tem para a mesma ação', () => {
-    expect(COMO_FUNCIONA_DESTAQUE.primario.rotulo).toBe(INICIO.heroi.primario.rotulo)
+  it('o primário de Cuidado compartilhado usa o rótulo que o Início já tem para a mesma ação', () => {
     expect(CUIDADO_DESTAQUE.primario.rotulo).toBe(INICIO.heroi.primario.rotulo)
-    expect(COMO_FUNCIONA_DESTAQUE.primario.destino).toBe(INICIO.heroi.primario.destino)
-    expect(COMO_FUNCIONA_DESTAQUE.fechamento.acao.rotulo).toBe(INICIO.heroi.primario.rotulo)
   })
 
   it('o painel de cada cena tem a largura do arquivo em 1× (340 e 400): o 2× nunca é ampliado (RF-02 b)', () => {
@@ -723,20 +648,5 @@ describe('polimento, volta 2', () => {
     expect(cartao['grid-template-columns']).toBe('fit-content(55%) minmax(0, 1fr)')
     const largura = decl(/^\.pd-cartao-legenda\.pd-cartao-plano$/).map((d) => d.width)
     expect(largura).toContain('min(400px, 100%)')
-  })
-
-  it('os passos vão colados à borda interna da direita do painel (a mesma nos três), e o cartão da madrugada só sobra para fora lado a lado', () => {
-    const { container } = renderizarRota('/como-funciona')
-    expect(container.querySelectorAll('#tres-momentos .pd-passo-midia')).toHaveLength(3)
-    const alinhamento = decl(/^\.pd-passo-midia$/).map((d) => d['justify-content'])
-    expect(alinhamento).toContain('flex-end')
-    // A sobra (margem negativa de baixo) só existe dentro de uma regra @media (900 px para cima): fora
-    // dela, no celular, o cartão da madrugada fica inteiro dentro do painel.
-    const posicao = cssDestaque.indexOf('.pd-passo-midia:has(> .cm-flutuante)')
-    expect(posicao).toBeGreaterThan(0)
-    const antes = cssDestaque.slice(0, posicao)
-    const profundidade = (antes.match(/\{/g) ?? []).length - (antes.match(/\}/g) ?? []).length
-    expect(profundidade).toBe(1)
-    expect(antes.slice(antes.lastIndexOf('@media'))).toMatch(/^@media \(min-width: 900px\)/)
   })
 })
