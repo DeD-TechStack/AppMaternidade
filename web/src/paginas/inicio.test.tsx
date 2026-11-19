@@ -974,8 +974,70 @@ describe('HOME-FINAL F5 short desktop windows pin the stage; the stage is bounde
 
   it('F5: the stage is min(100svh - 24 px, the plate) tall, and the short-landscape rule holds the scene to 50svh', () => {
     const css = norm(readFileSync(CSS_DA_CASA, 'utf8'))
-    expect(css).toContain('--palco-placa-alto: calc(320px * var(--moldura-razao) + var(--palco-quadro-livre) - var(--palco-topo));')
+    expect(css).toContain(
+      '--palco-placa-alto: calc(320px * var(--heroi-k) * var(--moldura-razao) + var(--palco-quadro-livre) - var(--palco-topo));',
+    )
     expect(css).toContain('--palco-alto: min(calc(100svh - var(--palco-topo)), var(--palco-placa-alto));')
     expect(css).toMatch(/@media \(max-height: 520px\) and \(orientation: landscape\) \{[^}]*\.cm-cena-placa \{ max-block-size: 50svh; \}/)
+  })
+})
+
+describe('HOME-RHYTHM the room scales with the quadro by one unitless number, and the preview label leaves the picture', () => {
+  it('the scale --heroi-k is 1 at 1440 (the quadro is 1200 px), clamped to [1, 1.34], and follows the window height too', () => {
+    const css = norm(readFileSync(CSS_DA_CASA, 'utf8'))
+    expect(css).toContain('--heroi-k-largura: tan(atan2(var(--quadro-largura), 1200px));')
+    expect(css).toContain('--heroi-k-altura: tan(atan2(100svh, 900px));')
+    expect(css).toContain('--heroi-k: clamp(1, min(var(--heroi-k-largura), var(--heroi-k-altura)), 1.34);')
+    // The two ratios are numbers, so no length is divided by a length anywhere in the sheet.
+    expect(css).not.toMatch(/\d+px \/ \d+px/)
+  })
+
+  it('the frozen 1440 lengths of the room are that number times the measured ones (723 px stays 723 at k = 1)', () => {
+    const css = norm(readFileSync(CSS_DA_CASA, 'utf8'))
+    for (const [nome, px] of [
+      ['--heroi-alto', '723px'],
+      ['--heroi-titulo-topo', '32px'],
+      ['--heroi-placa-topo', '152px'],
+      ['--heroi-lede-topo', '258px'],
+      ['--heroi-leg-topo', '666.5px'],
+      ['--heroi-chao-extra', '65px'],
+      ['--palco-chao', '108px'],
+      ['--palco-m06-largura', '395.5px'],
+      ['--palco-m06-chao', '555.2px'],
+    ] as const) {
+      expect(css, nome).toContain(`${nome}: calc(${px} * var(--heroi-k));`)
+    }
+    // The plate is as wide as `--cena-largura-max` at 1440 times k, on its seam; the measure of the text does not scale.
+    expect(css).toContain('width: calc(var(--cena-largura-max) * min(100vw, 1440px) / 1440 * var(--heroi-k));')
+    expect(css).toContain('--heroi-medida: 388px;')
+    // Band 3's frame follows the quadro by the width ratio only (1 up to 1440), so its gap to the heading stays closed.
+    expect(css).toContain(
+      '--produto-tela: calc(clamp(280px, calc(280px + (100vw - 390px) * 40 / 1050), 320px) * var(--heroi-k-largura));',
+    )
+    // The rule never reads `dvh`, and the hero keeps its pin formula.
+    expect(css).not.toContain('dvh')
+    expect(css).toContain('min-height: calc(var(--palco-alto) + var(--troca-d, 0px));')
+  })
+
+  it('the preview label has one visually-hidden rule, on the note only (the form wrappers carry data-previa without a role)', () => {
+    const css = norm(readFileSync(join(PASTA_SRC, 'styles', 'site.css'), 'utf8'))
+    const regras = [...css.matchAll(/(\[data-previa[^{]*)\{([^}]*)\}/g)]
+    expect(regras).toHaveLength(1)
+    expect(regras[0][1].trim()).toBe("[data-previa][role='note']")
+    const corpo = regras[0][2]
+    for (const declaracao of [
+      'position: absolute !important',
+      'width: 1px !important',
+      'height: 1px !important',
+      'margin: -1px !important',
+      'padding: 0 !important',
+      'overflow: hidden !important',
+      'clip: rect(0 0 0 0) !important',
+      'white-space: nowrap !important',
+    ]) {
+      expect(corpo, declaracao).toContain(declaracao)
+    }
+    // It is not display:none or visibility:hidden, so a screen reader still reads it.
+    expect(corpo).not.toMatch(/display:\s*none|visibility:\s*hidden/)
   })
 })
