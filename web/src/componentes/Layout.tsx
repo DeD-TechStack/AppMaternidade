@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react'
 import { matchPath, Outlet, useLocation, useMatches } from 'react-router'
-import { rotasContaPublicas } from '../rotas/conta.tsx'
 import { Cabecalho, useCabecalhoNoite } from './casca/Cabecalho.tsx'
 import { Rodape } from './casca/Rodape.tsx'
 import type { Contexto } from './casca/textos.ts'
@@ -38,8 +37,10 @@ function Casca() {
     caminhoAnterior.current = pathname
     // Só uma troca de caminho já renderizada: não disputa hashes nem repete no StrictMode.
     if (!mudouDePagina || hash || !titulosDoSite) return
-    // As telas de acesso já cuidam da própria rolagem e do foco no título.
-    if (rotasContaPublicas.some((rota) => rota.path && matchPath(rota.path, pathname))) return
+    // As seis telas públicas de acesso já cuidam da rolagem e do foco no título.
+    // Só os caminhos de rotas/conta.tsx: importar o registro acopla seus pacotes à entrada pública.
+    const caminhosDeAcesso = ['/entrar', '/criar-conta', '/recuperar-acesso', '/redefinir-senha', '/conta-excluida', '/convite']
+    if (caminhosDeAcesso.some((caminho) => matchPath(caminho, pathname))) return
     window.scrollTo(0, 0)
   }, [pathname, hash, titulosDoSite])
 

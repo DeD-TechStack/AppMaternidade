@@ -8,6 +8,7 @@ import {
   DESTINO_ENTRAR,
   ITENS_DO_CABECALHO,
 } from '../componentes/casca/textos.ts'
+import { rotasContaPublicas } from '../rotas/conta.tsx'
 import { aguardarCarga, renderizarRota } from './renderizarRota.tsx'
 
 // A casca do Campo de mel (MAT-49a): cabeçalho, menu de altura cheia e rodapé de mel. Substitui o
@@ -46,18 +47,28 @@ describe('rolagem entre páginas públicas', () => {
     expect(rolar).toHaveBeenCalledExactlyOnceWith(0, 0)
   })
 
-  it('preserva a única rolagem e o foco da própria tela de acesso', async () => {
-    const { roteador } = renderizarRota('/', { sessao: null })
-    await aguardarCarga()
-    const rolar = vi.mocked(window.scrollTo)
-    rolar.mockClear()
+  // O registro real fica só no teste: o Layout não deve trazer os módulos de rota para a entrada.
+  it.each(rotasContaPublicas.flatMap((rota) => [`/${rota.path}`, `/${rota.path!.toUpperCase()}/`]))(
+    'preserva a única rolagem e o foco da própria tela de acesso em %s',
+    async (caminho) => {
+      const { roteador } = renderizarRota('/', { sessao: null })
+      await aguardarCarga()
+      const rolar = vi.mocked(window.scrollTo)
+      rolar.mockClear()
 
-    await act(async () => { await roteador.navigate('/entrar') })
-    await aguardarCarga()
+      await act(async () => { await roteador.navigate(caminho) })
+      await aguardarCarga()
 
-    expect(document.activeElement).toBe(screen.getByRole('heading', { level: 1 }))
-    expect(rolar).toHaveBeenCalledExactlyOnceWith(0, 0)
-  })
+      expect(roteador.state.location.pathname).toBe(caminho)
+      expect(document.activeElement).toBe(screen.getByRole('heading', { level: 1 }))
+      expect(rolar).toHaveBeenCalledExactlyOnceWith(0, 0)
+
+      rolar.mockClear()
+      await act(async () => { await roteador.navigate('/sobre') })
+      await aguardarCarga()
+      expect(rolar).toHaveBeenCalledExactlyOnceWith(0, 0)
+    },
+  )
 })
 
 describe('limites do reset de rolagem', () => {
