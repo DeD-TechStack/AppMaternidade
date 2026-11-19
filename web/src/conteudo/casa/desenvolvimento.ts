@@ -44,12 +44,13 @@ export const CENA_ABERTURA_RECORTE: Imagem = {
   altura: 476,
 }
 
-// DE-S2: a captura do Histórico (15:00, tummy time) sob a moldura do dia.
+// DE-S2: a captura do Histórico (15:00, tummy time) sob a moldura do dia. A tela tem até 390 de 900 em diante (perto
+// de 1:1 com a captura) e 320 abaixo (a largura do quadro, se menor).
 export const TELA_HISTORICO: Imagem = {
   src: '/telas/t1i/historico-y15-280w.webp',
   srcSet:
     '/telas/t1i/historico-y15-280w.webp 280w, /telas/t1i/historico-y15-320w.webp 320w, /telas/t1i/historico-y15-560w.webp 560w, /telas/t1i/historico-y15-640w.webp 640w',
-  sizes: '(min-width: 1440px) 320px, 280px',
+  sizes: '(min-width: 900px) 390px, 320px',
   largura: 640,
   altura: 1385,
 }

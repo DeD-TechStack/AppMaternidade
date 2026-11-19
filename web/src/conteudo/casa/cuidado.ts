@@ -69,10 +69,12 @@ export interface CenaDePagina {
   celular: { src: string; srcSet: string; sizes: string; largura: number; altura: number }
 }
 
-// Os arquivos são servidos pelo ASSET-2 (web/public/cenas/cuidado e web/public/telas/t1i); até lá dão 404 e a
-// página mostra a caixa vazia da imagem. Os nomes e os tamanhos são os do slot sheet t1i_cuidado e da spec §3.
+// Os arquivos são os servidos pelo ASSET-2 (web/public/cenas/cuidado, web/public/telas/t1i e web/public/molduras).
+// Os nomes e os tamanhos são os do slot sheet t1i_cuidado e da spec §3; a caixa final de cada um vem do CSS.
 export const IMAGENS_CUIDADO = {
-  /** CC-S1: a família e a porta entreaberta (M12). 1440: 600 × 662; 390: 350 × 220. */
+  /** CC-S1: a família e a porta entreaberta (M12). 1440: 600 × 662. Abaixo de 1024 vale a mesma placa inteira, de
+   * no máximo 420 px de largura (350 × 386 em 390): o recorte 390c (350 × 220) cortava Ícaro na borda e as pernas na
+   * base, e nenhuma figura do herói fica cortada por uma borda. */
   cena1: {
     largo: {
       src: '/cenas/cuidado/m12-heroi-600w.webp',
@@ -82,11 +84,11 @@ export const IMAGENS_CUIDADO = {
       altura: 1082,
     },
     celular: {
-      src: '/cenas/cuidado/m12-heroi-390c-350w.webp',
-      srcSet: '/cenas/cuidado/m12-heroi-390c-350w.webp 350w, /cenas/cuidado/m12-heroi-390c-700w.webp 700w',
-      sizes: '100vw',
-      largura: 700,
-      altura: 440,
+      src: '/cenas/cuidado/m12-heroi-600w.webp',
+      srcSet: '/cenas/cuidado/m12-heroi-600w.webp 600w, /cenas/cuidado/m12-heroi-981w.webp 981w',
+      sizes: 'min(90vw, 420px)',
+      largura: 981,
+      altura: 1082,
     },
   },
   /** CC-S3: as quatro mãos (M05). 1440: 800 × 353 rente à borda direita; 390: 390 × 343. */
@@ -128,15 +130,14 @@ export const IMAGENS_CUIDADO = {
     src: '/telas/t1i/familia-280w.webp',
     srcSet:
       '/telas/t1i/familia-280w.webp 280w, /telas/t1i/familia-320w.webp 320w, /telas/t1i/familia-560w.webp 560w, /telas/t1i/familia-640w.webp 640w',
-    sizes: '(min-width: 1024px) 320px, 280px',
+    sizes: '(min-width: 1024px) 320px, min(330px, 85vw)',
     largura: 640,
     altura: 1385,
   },
-  // placeholder until ASSET-2 manifest: a moldura do dia ainda não tem arquivo servido; 678 × 1470 são medidas
-  // provisórias (a proporção de uma moldura de celular em pé), e valem as do manifesto do ASSET-2 quando ele existir.
+  /** A moldura do dia servida (web/public/molduras, PROVENANCE): 678 × 1423, a tela de 640 × 1385 mais 3 % de borda. */
   moldura: {
     src: '/molduras/moldura-dia.png',
     largura: 678,
-    altura: 1470,
+    altura: 1423,
   },
 } as const

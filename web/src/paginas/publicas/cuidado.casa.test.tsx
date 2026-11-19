@@ -135,20 +135,27 @@ describe('CUID-I-05 os chãos e o ritmo', () => {
   })
 })
 
+/** O texto de cada bloco do main (título, parágrafo, ação): as horas em <strong> ficam dentro da frase do bloco. */
+function blocosDeTexto(raiz: Element): string[] {
+  return [...raiz.querySelectorAll('h1, h2, h3, p, a')].map((no) => (no.textContent ?? '').trim()).filter((t) => t !== '')
+}
+
 describe('CUID-I-04 o texto é o deck, e só o deck', () => {
-  it('todo nó de texto do main e todo alt não vazio é uma frase do deck', () => {
+  it('todo bloco de texto do main e todo alt não vazio é uma frase do deck', () => {
     const { container } = renderizarRota(ROTA)
     const principal = container.querySelector('main')!
-    const textos = nosDeTexto(principal)
+    const textos = blocosDeTexto(principal)
     const alts = [...principal.querySelectorAll('img[alt]')].map((img) => img.getAttribute('alt')!).filter((alt) => alt !== '')
     for (const texto of [...textos, ...alts]) expect(DECK.has(texto), texto).toBe(true)
+    // Nenhum nó de texto solto fora de um bloco: cada nó está dentro de um h1, h2, h3, p ou a.
+    for (const texto of nosDeTexto(principal)) expect(textos.some((bloco) => bloco.includes(texto)), texto).toBe(true)
   })
 
   it('toda frase do deck que se desenha aparece (31 frases: o título da aba e o nome da lista ficam de fora do texto)', () => {
     const { container } = renderizarRota(ROTA)
     const principal = container.querySelector('main')!
     const vistas = new Set([
-      ...nosDeTexto(principal),
+      ...blocosDeTexto(principal),
       ...[...principal.querySelectorAll('img[alt]')].map((img) => img.getAttribute('alt')!),
     ])
     expect(DECK.size).toBe(30) // 31 ids do deck; "Criar conta" (cc.cta1 e cc.cta2) é a mesma frase
@@ -183,9 +190,9 @@ describe('CUID-I-06 as imagens', () => {
     expect(cena.getAttribute('srcset')).toContain('/cenas/cuidado/m12-heroi-981w.webp 981w')
     expect(cena.getAttribute('width')).toBe('981')
     expect(cena.getAttribute('height')).toBe('1082')
-    const recorte = abertura.querySelector('picture source')!
-    expect(recorte.getAttribute('srcset')).toContain('/cenas/cuidado/m12-heroi-390c-350w.webp 350w')
-    expect(recorte.getAttribute('srcset')).toContain('/cenas/cuidado/m12-heroi-390c-700w.webp 700w')
+    // O recorte de 390 (350 × 220) cortava Ícaro na borda e as pernas na base: abaixo de 1024 vale a placa
+    // inteira (o teste "POLISH-CUIDADO ... placa inteira" abaixo).
+    expect(abertura.querySelector('picture source')).not.toBeNull()
   })
 
   it('as outras cenas são lazy com decoding async, com os arquivos e os tamanhos do spec', () => {
@@ -269,6 +276,7 @@ describe('CUID-I-02 o que a página não tem', () => {
       'src/componentes/cuidado-casa/AberturaCuidado.tsx',
       'src/componentes/cuidado-casa/CenaDaPagina.tsx',
       'src/componentes/cuidado-casa/FaixaComCena.tsx',
+      'src/componentes/cuidado-casa/HorasNoTexto.tsx',
       'src/componentes/cuidado-casa/PapeisDaFamilia.tsx',
       'src/conteudo/casa/cuidado.ts',
     ]
@@ -291,6 +299,88 @@ describe('CUID-I-02 o que a página não tem', () => {
     // Todo vão (margin, padding, gap) é token, 0, auto, %, ou um cálculo sobre tokens.
     const vaos = css.match(/(?:^|[;{\s])(?:margin|padding|gap|column-gap|row-gap)[a-z-]*\s*:[^;}]+/g) ?? []
     for (const vao of vaos) expect(vao.replace(/var\([^)]*\)/g, ''), vao).not.toMatch(/\d+(?:\.\d+)?px/)
+  })
+})
+
+describe('POLISH-CUIDADO as horas, a moldura, o herói e as colunas', () => {
+  it('as horas que carregam a ideia (13:00, 14:40 e 03:00) são <strong data-cc-hora>, dentro da frase do deck', () => {
+    const { container } = renderizarRota(ROTA)
+    const bandas = faixas(container)
+    const sono = [...bandas[2].querySelectorAll('p')].find((p) => p.textContent === CUIDADO.sono.p)!
+    expect(sono, 'o parágrafo do sono').toBeDefined()
+    expect([...sono.querySelectorAll('strong[data-cc-hora]')].map((s) => s.textContent)).toEqual(['13:00', '14:40'])
+    const legenda = bandas[3].querySelector('p[data-legenda]')!
+    expect(legenda.textContent).toBe(CUIDADO.senha.legenda)
+    expect(legenda.getAttribute('data-tom')).toBe('noite')
+    expect([...legenda.querySelectorAll('strong[data-cc-hora]')].map((s) => s.textContent)).toEqual(['03:00'])
+    // Nenhuma outra hora marcada na página.
+    expect(container.querySelectorAll('main [data-cc-hora]')).toHaveLength(3)
+  })
+
+  it('a altura da moldura é a do arquivo servido (o PNG de verdade), para a tela caber sem vão', () => {
+    const png = readFileSync(join(process.cwd(), 'public', IMAGENS_CUIDADO.moldura.src))
+    // IHDR: largura nos bytes 16 a 19 e altura nos bytes 20 a 23, big-endian.
+    expect(IMAGENS_CUIDADO.moldura.largura).toBe(png.readUInt32BE(16))
+    expect(IMAGENS_CUIDADO.moldura.altura).toBe(png.readUInt32BE(20))
+  })
+
+  it('abaixo de 1024 o herói usa a placa inteira (as figuras de corpo inteiro, nenhuma cortada na borda)', () => {
+    const { container } = renderizarRota(ROTA)
+    const recorte = faixas(container)[0].querySelector('picture source')!
+    expect(recorte.getAttribute('srcset')).toContain('/cenas/cuidado/m12-heroi-600w.webp 600w')
+    expect(recorte.getAttribute('srcset')).toContain('/cenas/cuidado/m12-heroi-981w.webp 981w')
+    expect(recorte.getAttribute('srcset')).not.toMatch(/390c/)
+    expect(recorte.getAttribute('width')).toBe('981')
+    expect(recorte.getAttribute('height')).toBe('1082')
+  })
+
+  it('a faixa "quando alguém para de cuidar" tem duas colunas: o título numa, os dois parágrafos na outra', () => {
+    const { container } = renderizarRota(ROTA)
+    const parar = faixas(container)[4].querySelector('.cc-parar')!
+    expect(parar, '.cc-parar').not.toBeNull()
+    const colunas = [...parar.children]
+    expect(colunas).toHaveLength(2)
+    expect(colunas[0].querySelector('h2')!.textContent).toBe(CUIDADO.parar.h2)
+    expect([...colunas[1].querySelectorAll('p')].map((p) => p.textContent)).toEqual([CUIDADO.parar.p1, CUIDADO.parar.p2])
+  })
+
+  it('o CSS da página quebra por contêiner (@container), nunca por largura de janela; a altura curta é @media (max-height)', () => {
+    const css = readFileSync(join(process.cwd(), 'src/componentes/cuidado-casa/cuidado-casa.css'), 'utf8').replace(
+      /\/\*[\s\S]*?\*\//g,
+      '',
+    )
+    expect(css).toMatch(/container-type:\s*inline-size/)
+    expect(css).toMatch(/@container\s+cc-pagina\s*\(min-width/)
+    expect(css).not.toMatch(/@media[^{]*(?:min|max)-width/)
+    expect(css).toMatch(/@media[^{]*max-height/)
+  })
+
+  it('no celular (contêiner < 640) a cena inteira fica ao lado do h1, para a ação e a moldura caberem na dobra de 844', () => {
+    const css = readFileSync(join(process.cwd(), 'src/componentes/cuidado-casa/cuidado-casa.css'), 'utf8').replace(
+      /\/\*[\s\S]*?\*\//g,
+      '',
+    )
+    const celular = css.match(/@container\s+cc-pagina\s*\(width\s*<\s*640px\)\s*\{([\s\S]*?)\n\}/)
+    expect(celular, 'o bloco @container cc-pagina (width < 640px)').not.toBeNull()
+    expect(celular![1]).toMatch(/grid-template-areas:\s*'titulo cena'\s*'lede lede'\s*'acao acao'\s*'moldura moldura'\s*'tres tres'/)
+    // A placa nunca é recortada: a caixa da cena segue a proporção do arquivo inteiro (981 × 1082).
+    expect(css).toMatch(/\.cc-abertura \.cc-cena-imagem\s*\{[^}]*aspect-ratio:\s*981 \/ 1082/)
+  })
+
+  it('janela curta (max-height 520): abertura com junto no topo, h1 no nível titulo-1 e a ação antes da cena no celular', () => {
+    const css = readFileSync(join(process.cwd(), 'src/componentes/cuidado-casa/cuidado-casa.css'), 'utf8').replace(
+      /\/\*[\s\S]*?\*\//g,
+      '',
+    )
+    const curta = css.match(/@media \(max-height: 520px\) \{([\s\S]*?)\n\}/)
+    expect(curta, 'o bloco @media (max-height: 520px)').not.toBeNull()
+    const bloco = curta![1]
+    expect(bloco).toMatch(/\.cc-abertura\s*\{[^}]*padding-top:\s*var\(--espaco-junto\)/)
+    // Só pares de token de tipo (stylelint harmonia/valores-soltos): titulo-1 nas janelas curtas.
+    expect(bloco).toMatch(/font-size:\s*var\(--texto-titulo-1-tamanho\)/)
+    expect(bloco).toMatch(/line-height:\s*var\(--texto-titulo-1-entrelinha\)/)
+    expect(bloco).toMatch(/grid-template-areas:\s*'titulo titulo'\s*'lede lede'\s*'acao acao'\s*'cena cena'/)
+    expect(bloco).toMatch(/@container cc-pagina \(640px <= width < 1024px\)/)
   })
 })
 
