@@ -582,6 +582,42 @@ async function abrirJanela(opcoes: OpcoesDaJanela) {
 }
 
 const faixaDaNoite = () => principal().querySelector<HTMLElement>("[data-faixa][aria-labelledby='ic-noite']")!
+
+// jsdom has no layout. The night track's scroll is modelled with real coordinates, the ones Motion's `useScroll` reads:
+// the document scrolls (`scrollTop` and `clientHeight` of the scrolling element) and the track stands at `TOPO_DA_FAIXA`
+// in the document, `ALTURA_DA_FAIXA` tall (`offsetTop`, `clientHeight`). A track top of `t` px in the window is a
+// `scrollTop` of `TOPO_DA_FAIXA - t`.
+const TOPO_DA_FAIXA = 2000
+const ALTURA_DA_FAIXA = 1500
+let rolagemDoDocumento = 0
+
+afterEach(() => {
+  rolagemDoDocumento = 0
+  Reflect.deleteProperty(document.documentElement, 'scrollTop')
+  Reflect.deleteProperty(document.documentElement, 'clientHeight')
+})
+
+/** Gives the night track and the document the layout above; the window is `altura` tall. Measures again afterwards. */
+async function modelarRolagem(faixa: HTMLElement, altura = 900) {
+  rolagemDoDocumento = 0
+  Object.defineProperty(document.documentElement, 'scrollTop', { configurable: true, get: () => rolagemDoDocumento })
+  Object.defineProperty(document.documentElement, 'clientHeight', { configurable: true, value: altura })
+  Object.defineProperty(faixa, 'offsetTop', { configurable: true, value: TOPO_DA_FAIXA })
+  Object.defineProperty(faixa, 'clientHeight', { configurable: true, value: ALTURA_DA_FAIXA })
+  await act(async () => {
+    window.dispatchEvent(new Event('resize'))
+  })
+}
+
+/** Scrolls the document until the night track's top is `topo` px from the window's top, and lets the frames run. */
+async function rolarAteTopo(topo: number, esperaMs: number) {
+  rolagemDoDocumento = TOPO_DA_FAIXA - topo
+  await act(async () => {
+    window.dispatchEvent(new Event('scroll'))
+    await new Promise((resolver) => setTimeout(resolver, esperaMs))
+  })
+}
+
 const legendasEmTela = () => [...principal().querySelectorAll('p[data-legenda]')].map((p) => norm(p.textContent))
 
 describe('REPH-I-11 pinned stage (1440 x 900): one stage in band 2, one night sheet, one twin', () => {
@@ -659,17 +695,8 @@ describe('REPH-I-12 caption swap: one node, one text, leg1 then leg2 as p crosse
 
   it('REPH-I-12 /: scrolling p across 0.5 swaps the text to leg2 and back, either way, with one node', async () => {
     await abrirJanela({ largura: 1440 })
-    const faixa = faixaDaNoite()
-    const noDoTopo = (topo: number) => {
-      faixa.getBoundingClientRect = () => ({ top: topo, bottom: topo + 1500, left: 0, right: 1440, width: 1440, height: 1500, x: 0, y: topo, toJSON: () => ({}) })
-    }
-    const rolar = async (topo: number) => {
-      noDoTopo(topo)
-      await act(async () => {
-        window.dispatchEvent(new Event('scroll'))
-        await new Promise((resolver) => setTimeout(resolver, 60))
-      })
-    }
+    await modelarRolagem(faixaDaNoite())
+    const rolar = (topo: number) => rolarAteTopo(topo, 60)
     const texto = () => norm(principal().querySelector('[data-troca-legenda]')!.textContent)
     await rolar(-330) // p 0.55 (D 600, sticky top 0 in jsdom)
     expect(texto()).toBe(COPY.leg2)
@@ -694,13 +721,8 @@ describe('REPH-I-12 caption swap: one node, one text, leg1 then leg2 as p crosse
     fixar(marcador, 'offsetLeft', 556.5)
     fixar(quadro, 'offsetLeft', 200)
     fixar(quadro, 'offsetWidth', 309.8)
-    const rolar = async (topo: number) => {
-      faixa.getBoundingClientRect = () => ({ top: topo, bottom: topo + 1500, left: 0, right: 1440, width: 1440, height: 1500, x: 0, y: topo, toJSON: () => ({}) })
-      await act(async () => {
-        window.dispatchEvent(new Event('resize'))
-        await new Promise((resolver) => setTimeout(resolver, 60))
-      })
-    }
+    await modelarRolagem(faixa) // also measures the stage's widths faked above
+    const rolar = (topo: number) => rolarAteTopo(topo, 60)
     const folha = principal().querySelector<HTMLElement>('[data-troca-noite]')!
     const interior = principal().querySelector<HTMLElement>('[data-troca-noite-interior]')!
     const valor = (no: HTMLElement) => Number.parseFloat(/translateX\((-?[\d.]+)%\)/.exec(no.style.transform)?.[1] ?? 'NaN')

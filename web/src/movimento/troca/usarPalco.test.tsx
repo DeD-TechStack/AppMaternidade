@@ -1,13 +1,21 @@
 import { useMemo, useRef } from 'react'
 import { act, render, renderHook } from '@testing-library/react'
+import { useScroll } from 'motion/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useNoitePresa, usePalcoFixo } from './usarPalco.ts'
 
+// The real `useScroll`, behind a spy: the driver must read the scroll through it (the card's contract).
+vi.mock('motion/react', async (importarOriginal) => {
+  const real = await importarOriginal<typeof import('motion/react')>()
+  return { ...real, useScroll: vi.fn(real.useScroll) }
+})
+
 // Pins of the night-sheet scroll driver (moment 2 of the Início): the translateX written on the two boxes of the sheet at
 // fixed scroll offsets, the caption side, the in-view flag, the cleanup, and the windows where the hook is inactive.
-// The track's top is faked (`getBoundingClientRect`, as the page tests do), the scroll is a window `scroll` event, and
-// the stage's own measures (width, seam, frame centre) are faked on the elements. These pins must hold for any way the
-// driver reads the scroll.
+// jsdom has no layout, so the layout is modelled with real coordinates: the document scrolls (`scrollTop`, `clientHeight`
+// of the scrolling element), the track sits at `TOPO_DA_TRILHA` in the document and is `ALTURA_DA_TRILHA` tall (`offsetTop`,
+// `clientHeight`), exactly what Motion's offset resolver reads; the scroll is a window `scroll` event. The stage's own
+// measures (width, seam, frame centre) are faked on the elements. A "track top" below is `TOPO_DA_TRILHA - scrollTop`.
 
 // jsdom has no `document.scrollingElement`, and Motion's scroll tracker (the one `useScroll` uses) is a no-op without it.
 // Every browser has it, and it is the element whose window `scroll` event the tracker listens to.
@@ -15,13 +23,21 @@ if (!document.scrollingElement) {
   Object.defineProperty(document, 'scrollingElement', { configurable: true, get: () => document.documentElement })
 }
 
+/** Where the track starts in the document and how tall it is (stage + D at 1440: 900 + 600). */
+const TOPO_DA_TRILHA = 2000
+const ALTURA_DA_TRILHA = 1500
+
 const LARGURA_ORIGINAL = window.innerWidth
 const ALTURA_ORIGINAL = window.innerHeight
 const MATCHMEDIA_ORIGINAL = window.matchMedia
 
+/** How far the document is scrolled, as the scrolling element reports it. */
+let rolagem = 0
+
 function fixarJanela(largura: number, altura: number, reduzido = false) {
   Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: largura })
   Object.defineProperty(window, 'innerHeight', { configurable: true, writable: true, value: altura })
+  Object.defineProperty(document.documentElement, 'clientHeight', { configurable: true, value: altura })
   Object.defineProperty(window, 'matchMedia', {
     configurable: true,
     writable: true,
@@ -49,9 +65,13 @@ function fixarJanela(largura: number, altura: number, reduzido = false) {
 
 beforeEach(() => {
   vi.useRealTimers()
+  rolagem = 0
+  Object.defineProperty(document.documentElement, 'scrollTop', { configurable: true, get: () => rolagem })
 })
 
 afterEach(() => {
+  Reflect.deleteProperty(document.documentElement, 'scrollTop')
+  Reflect.deleteProperty(document.documentElement, 'clientHeight')
   Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: LARGURA_ORIGINAL })
   Object.defineProperty(window, 'innerHeight', { configurable: true, writable: true, value: ALTURA_ORIGINAL })
   Object.defineProperty(window, 'matchMedia', { configurable: true, writable: true, value: MATCHMEDIA_ORIGINAL })
@@ -95,13 +115,17 @@ async function montar({ largura, altura }: { largura: number; altura: number }, 
   fixar(achar('[data-teste-costura]'), 'offsetLeft', medidas.costura)
   fixar(achar('[data-teste-quadro]'), 'offsetLeft', medidas.centro - 50)
   fixar(achar('[data-teste-quadro]'), 'offsetWidth', 100)
+  // The track's place in the document (what Motion's offset resolver reads).
+  fixar(achar('[data-teste-trilha]'), 'offsetTop', TOPO_DA_TRILHA)
+  fixar(achar('[data-teste-trilha]'), 'clientHeight', ALTURA_DA_TRILHA)
   // Re-measure now that the stage's numbers are faked.
   await act(async () => {
     window.dispatchEvent(new Event('resize'))
   })
   const rolar = async (topo: number) => {
+    rolagem = TOPO_DA_TRILHA - topo
     achar('[data-teste-trilha]').getBoundingClientRect = () =>
-      ({ top: topo, bottom: topo + 1500, left: 0, right: largura, width: largura, height: 1500, x: 0, y: topo, toJSON: () => ({}) }) as DOMRect
+      ({ top: topo, bottom: topo + ALTURA_DA_TRILHA, left: 0, right: largura, width: largura, height: ALTURA_DA_TRILHA, x: 0, y: topo, toJSON: () => ({}) }) as DOMRect
     await act(async () => {
       window.dispatchEvent(new Event('scroll'))
       await new Promise((resolver) => setTimeout(resolver, 80))
@@ -199,6 +223,35 @@ describe('useNoitePresa: translateX of the night sheet at fixed scroll offsets',
       await new Promise((resolver) => setTimeout(resolver, 80))
     })
     expect(valor(folha())).toBeCloseTo((354.9 / 1000) * 100, 1)
+  })
+})
+
+describe('useNoitePresa: the scroll is read through Motion useScroll', () => {
+  it('calls useScroll with a target that resolves to the [data-faixa] track and with an offset', async () => {
+    vi.mocked(useScroll).mockClear()
+    await montar(NA_1440, MEDIDAS_1440)
+    const chamadas = vi.mocked(useScroll).mock.calls
+    expect(chamadas.length).toBeGreaterThan(0)
+    const opcoes = chamadas[chamadas.length - 1][0]
+    expect(opcoes?.target?.current).toBe(achar('[data-teste-trilha]'))
+    expect(opcoes?.target?.current?.hasAttribute('data-faixa')).toBe(true)
+    expect(opcoes?.offset).toEqual(['start end', 'end start'])
+  })
+
+  it('a sticky top of 24 px moves p 0 to a track top of 24: p is 0.4967 at -274, 0.5017 at -277, 0 at 24 and before', async () => {
+    const { rolar, lados } = await montar(NA_1440, MEDIDAS_1440)
+    achar('[data-teste-palco]').style.top = '24px'
+    await act(async () => {
+      window.dispatchEvent(new Event('resize'))
+    })
+    await rolar(-274) // p (24 + 274) / 600 = 0.4967
+    expect(lados).toEqual([1])
+    await rolar(-277) // p 0.5017
+    expect(lados).toEqual([1, 2])
+    await rolar(24) // p 0, at the sticky top
+    expect(lados).toEqual([1, 2, 1])
+    await rolar(600) // before the pin
+    expect(valor(folha())).toBeCloseTo(38.65, 1)
   })
 })
 
