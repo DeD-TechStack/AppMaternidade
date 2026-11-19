@@ -56,9 +56,9 @@ describe('rodapé público compacto (FOOTER-1)', () => {
     expect(rodape.querySelector('.cm-area')).not.toBeNull()
   })
 
-  it('traz os 13 links de COLUNAS_DO_RODAPE, na ordem e com o destino de cada um', () => {
+  it('traz os 11 links de COLUNAS_DO_RODAPE, na ordem e com o destino de cada um', () => {
     const { rodape } = rodapeDe('/privacidade')
-    expect(LINKS).toHaveLength(13)
+    expect(LINKS).toHaveLength(11)
     const links = within(rodape).getAllByRole('link')
     expect(links.map((a) => a.textContent)).toEqual(LINKS.map((l) => l.rotulo))
     expect(links.map((a) => a.getAttribute('href'))).toEqual(LINKS.map((l) => l.para))
@@ -100,7 +100,7 @@ describe('rodapé público compacto (FOOTER-1)', () => {
     const navs = within(rodape).getAllByRole('navigation')
     expect(navs).toHaveLength(1)
     expect(navs[0].getAttribute('aria-label')).toBe('Rodapé')
-    expect(within(navs[0]).getAllByRole('link')).toHaveLength(13)
+    expect(within(navs[0]).getAllByRole('link')).toHaveLength(11)
   })
 
   it('a linha do aviso de demonstração continua no rodapé, depois dos links (sem as variáveis do banco)', () => {
