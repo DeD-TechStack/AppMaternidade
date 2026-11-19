@@ -2,13 +2,13 @@ import { createContext, createElement, type ReactNode } from 'react'
 import { chaveDoBanco } from './cliente.ts'
 import { dadosSobDemanda, modoDados, type Resultado } from './comum.ts'
 import {
-  criarDadosComunidade,
+  estadoMemoriaDaPagina,
   type Pagina,
   type Resposta,
   type Topico,
 } from './comunidade.ts'
 import { fixtureComunidadeDemonstracao } from './comunidade.demonstracao.ts'
-import { criarEstadoComunidade, type EstadoComunidade } from './comunidade.memoria.ts'
+import { criarEstadoComunidade } from './comunidade.memoria.ts'
 import type { EstadoDenuncia, EstadoModeracao, MotivoDenuncia, PapelPlataforma } from './comunidade.regras.ts'
 import { criarDadosModeracaoMemoria } from './moderacao.memoria.ts'
 
@@ -196,9 +196,8 @@ export function criarDadosModeracao(): DadosModeracao {
     return noBanco.dados
   }
   if (!emMemoria) {
-    // A memória da Comunidade expõe o próprio estado; sem ele, o painel parte de uma cópia da fixture.
-    const daComunidade = criarDadosComunidade() as unknown as { estado?: EstadoComunidade }
-    const estado = daComunidade.estado ?? criarEstadoComunidade(fixtureComunidadeDemonstracao)
+    // O painel parte do estado em memória da Comunidade; sem ele, de uma cópia da fixture.
+    const estado = estadoMemoriaDaPagina() ?? criarEstadoComunidade(fixtureComunidadeDemonstracao)
     emMemoria = criarDadosModeracaoMemoria(estado, () => contaDaPagina)
   }
   return emMemoria

@@ -13,6 +13,7 @@ import type { ErroDados, Resultado } from '../../dados/comum.ts'
 import { modoDados } from '../../dados/comum.ts'
 import { registrarCarregadorDaFonte, registrarOrigemDaConta, temFonteDeExportacao } from '../../dados/fontes.ts'
 import { criarDadosConta, OPERACOES_CONTA, type Conta, type DadosConta, type FamiliaResumo, type Usuario } from '../../dados/conta.ts'
+import { envolverOperacoes } from '../envolverOperacoes.ts'
 import { apagarChave, CHAVE_FAMILIA_ATUAL, CHAVE_RECUPERACAO, gravarChave, lerChave } from './armazenamento.ts'
 
 // A sessão da área de conta: o provedor de dados (a instância da página), o provedor de sessão
@@ -78,22 +79,14 @@ interface ContextoDeDados {
 const ContextoDados = createContext<ContextoDeDados | null>(null)
 const ContextoSessao = createContext<ValorSessao | null>(null)
 
-type Operacao = (...argumentos: unknown[]) => Promise<Resultado<unknown>>
-
 /**
- * Qualquer operação que devolva `sessao_encerrada` avisa o provedor de sessão (RF-11). A operação
- * é procurada na hora da chamada, para o teste poder trocá-la por um espião.
+ * Qualquer operação que devolva `sessao_encerrada` avisa o provedor de sessão (RF-11); a cópia leva
+ * também o `aoMudarSessao`. Depois disso, a parte própria da conta: o registro das fontes.
  */
-function envolver(dados: DadosConta, aoEncerrar: () => void): DadosConta {
-  const copia: Record<string, unknown> = { aoMudarSessao: (ouvinte: Parameters<DadosConta['aoMudarSessao']>[0]) => dados.aoMudarSessao(ouvinte) }
-  for (const nome of OPERACOES_CONTA) {
-    copia[nome] = async (...argumentos: unknown[]) => {
-      const operacao = (dados as unknown as Record<string, Operacao>)[nome]
-      const resultado = await operacao.apply(dados, argumentos)
-      if (!resultado.ok && resultado.erro.classe === 'sessao_encerrada') aoEncerrar()
-      return resultado
-    }
-  }
+function envolverConta(dados: DadosConta, aoEncerrar: () => void): DadosConta {
+  const copia = envolverOperacoes(dados, OPERACOES_CONTA, aoEncerrar, {
+    aoMudarSessao: (ouvinte: Parameters<DadosConta['aoMudarSessao']>[0]) => dados.aoMudarSessao(ouvinte),
+  })
   // A rotina em memória se registra na cópia; a exportação e a exclusão da conta procuram pela memória original.
   registrarOrigemDaConta(copia, dados)
   // Na memória, a rotina precisa estar ligada já aqui: quem abre a conta sem passar pela rotina também exporta os
@@ -101,17 +94,17 @@ function envolver(dados: DadosConta, aoEncerrar: () => void): DadosConta {
   // ou excluir, ou quando a rotina é usada). Uma rotina que quem chamou já registrou na conta (como a de um teste) é mantida.
   if (modoDados() === 'memoria' && !temFonteDeExportacao(dados)) {
     registrarCarregadorDaFonte(copia, async () =>
-      (await import('../../dados/rotina.ts')).carregarRotinaEmMemoria(copia as unknown as DadosConta),
+      (await import('../../dados/rotina.ts')).carregarRotinaEmMemoria(copia),
     )
   }
-  return copia as unknown as DadosConta
+  return copia
 }
 
 /** O contexto de dados. Sem `dados`, vale a instância da página (`criarDadosConta()`). */
 export function ProvedorDadosConta({ dados, children }: { dados?: DadosConta; children: ReactNode }) {
   const base = dados ?? criarDadosConta()
   const [registro] = useState(criarRegistro)
-  const valor = useMemo(() => ({ dados: envolver(base, () => registro.chamar()), registro }), [base, registro])
+  const valor = useMemo(() => ({ dados: envolverConta(base, () => registro.chamar()), registro }), [base, registro])
   return <ContextoDados value={valor}>{children}</ContextoDados>
 }
 
@@ -220,8 +213,12 @@ function SessaoInterna() {
       const lida = await dados.sessaoAtual()
       if (lida.ok && lida.valor === null) tratarEncerrada()
     }
-    document.addEventListener('visibilitychange', aoVoltar)
-    return () => document.removeEventListener('visibilitychange', aoVoltar)
+    // O ouvinte do documento é síncrono: a leitura assíncrona roda solta, sem devolver promessa ao evento.
+    const ouvinte = () => {
+      void aoVoltar()
+    }
+    document.addEventListener('visibilitychange', ouvinte)
+    return () => document.removeEventListener('visibilitychange', ouvinte)
   }, [dados, tratarEncerrada])
 
   // O título da aba é fixo por rota (`handle: { titulo }`), só nas rotas das áreas.

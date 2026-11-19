@@ -1,3 +1,4 @@
+import { imagemPublica } from '../../componentes/campo/urlPublica.ts'
 import { placa } from '../../componentes/campo/imagens.ts'
 import m01Icaro from '../../assets/cenas/cuidado/m01-icaro-1152w.webp?w=760;1152&format=avif;webp&as=picture'
 import m01Icaro390 from '../../assets/cenas/cuidado/m01-icaro-390c-780w.webp?w=390;780&format=avif;webp&as=picture'
@@ -101,18 +102,18 @@ export const IMAGENS_CUIDADO = {
     celular: placa(m01Icaro390, '100vw', 390, 664),
   },
   /** CC-S2: a captura da tela Família (ASSET-2), sob a moldura do dia. Tela de 640 × 1385 no maior arquivo. */
-  tela: {
+  tela: imagemPublica({
     src: '/telas/t1i/familia-280w.webp',
     srcSet:
       '/telas/t1i/familia-280w.webp 280w, /telas/t1i/familia-320w.webp 320w, /telas/t1i/familia-560w.webp 560w, /telas/t1i/familia-640w.webp 640w',
     sizes: '(min-width: 1024px) 320px, min(330px, 85vw)',
     largura: 640,
     altura: 1385,
-  },
+  }),
   /** A moldura do dia servida (web/public/molduras, PROVENANCE): 678 × 1423, a tela de 640 × 1385 mais 3 % de borda. */
-  moldura: {
+  moldura: imagemPublica({
     src: '/molduras/moldura-dia.png',
     largura: 678,
     altura: 1423,
-  },
+  }),
 } as const
