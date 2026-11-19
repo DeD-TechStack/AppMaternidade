@@ -205,7 +205,7 @@ describe('DS1-I-14 o RodapeMapa: marcação e ordem', () => {
   it('LEGB-I-01 controle negativo: a linha antiga não conta como a nova', () => {
     const frag = document.createElement('div')
     const antiga = document.createElement('p')
-    antiga.textContent = '© 2026 AppMaternidade'
+    antiga.textContent = `© 2026 ${textos.NOME_SITE}`
     frag.appendChild(antiga)
     expect(contarLinhasCopy(frag, DECK.copyright)).toBe(0)
   })
