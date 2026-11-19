@@ -3,15 +3,12 @@ import { useLocation, useNavigate } from 'react-router'
 import { Info, RefreshCw } from 'lucide-react'
 import { AvisoDaTela } from '../../componentes/app/AvisoDaTela.tsx'
 import { BotaoIniciarMamada } from '../../componentes/app/BotaoIniciarMamada.tsx'
-import { CartaoSessao } from '../../componentes/app/CartaoSessao.tsx'
 import { ResumoDoDia } from '../../componentes/app/ResumoDoDia.tsx'
-import { PerguntaSessaoCurta, sessaoCurta } from '../../componentes/app/PerguntaSessaoCurta.tsx'
+import { sessaoCurta } from '../../componentes/app/PerguntaSessaoCurta.tsx'
 import { ALVO_APP } from '../../componentes/app/alvo.ts'
 import { Botao } from '../../componentes/base/Botao.tsx'
 import { Etiqueta } from '../../componentes/base/Etiqueta.tsx'
-import { Cartao, Colunas, Pilha, QuadroLayout, Secao } from '../../componentes/base/layout/index.ts'
-import { Carregando } from '../../componentes/estado/Carregando.tsx'
-import { ErroDaRotina } from '../../componentes/estado/ErroDaRotina.tsx'
+import { Colunas, Pilha, QuadroLayout, Secao } from '../../componentes/base/layout/index.ts'
 import { PainelVazio } from '../../componentes/estado/PainelVazio.tsx'
 import { AvisoDeFuso } from '../../componentes/rotina/AvisoDeFuso.tsx'
 import { AvisoDeLista } from '../../componentes/rotina/AvisoDeLista.tsx'
@@ -19,7 +16,6 @@ import { BarraRegistroRapido, type BotaoRapido, type ItemDoMais } from '../../co
 import { DesdeUltimoRegistro, ParaVoceSaber } from '../../componentes/rotina/BlocosDoHoje.tsx'
 import { SecaoDoHoje } from '../../componentes/rotina/SecaoDoHoje.tsx'
 import { SeletorBebe } from '../../componentes/rotina/SeletorBebe.tsx'
-import { SessoesEmParalelo } from '../../componentes/rotina/SessoesEmParalelo.tsx'
 import { TituloRotina } from '../../componentes/rotina/TituloRotina.tsx'
 import { UltimosDoHoje, type ItemDosUltimos } from '../../componentes/rotina/UltimosDoHoje.tsx'
 import { type AcaoDaConfirmacao, type BebeAtivo, type ConfirmacaoDaRotina, useRotina } from '../../componentes/rotina/contexto.ts'
@@ -38,6 +34,7 @@ import { focoDoEstado } from '../../prototipo/foco.ts'
 import { formatarHora, formatarUltimo } from '../../prototipo/formatar.ts'
 import { useAgora } from '../../prototipo/useAgora.ts'
 import { useTituloDaTela } from '../../prototipo/useTituloDaTela.ts'
+import { CartaoDaSessao } from './hoje/CartaoDaSessao.tsx'
 
 const UM_SEGUNDO = 1000
 
@@ -290,77 +287,30 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
   // ---- os blocos; a composição (a grade) escolhe a ordem e a posição de cada um --------------------------
 
   const blocoCartao = (classe: string) => (
-    <Pilha vao="pilha" dataH="coluna" className={classe}>
-      {/* Leitura que falhou sem sessão guardada (primeira ou releitura): o erro ocupa o cartão, nunca "Nenhuma sessão". */}
-      {emAndamento.estado === 'carregando' || (emAndamento.erro && !principalSessao) ? (
-        <Cartao
-          as="section"
-          ref={cartao}
-          tabIndex={-1}
-          data-andamento=""
-          aria-busy={emAndamento.estado === 'carregando' ? 'true' : undefined}
-          className="alvo-foco flex flex-col gap-esp-pilha border border-(--cor-fio-suave) bg-(--cor-cartao)"
-        >
-          <h2 className="text-pequeno font-medium text-(--cor-texto-2)">{HOJE.emAndamento}</h2>
-          {emAndamento.erro ? (
-            <ErroDaRotina erro={emAndamento.erro} papel={ativo.papel} aoTentarDeNovo={emAndamento.recarregar} aninhado />
-          ) : (
-            <Carregando texto={COMUM.carregando} />
-          )}
-        </Cartao>
-      ) : (
-        <>
-          {emAndamento.erro ? (
-            <ErroDaRotina erro={emAndamento.erro} papel={ativo.papel} aoTentarDeNovo={emAndamento.recarregar} />
-          ) : null}
-          <CartaoSessao
-            ref={cartao}
-            sessao={
-              principalSessao
-                ? {
-                    id: principalSessao.id,
-                    tipo: principalSessao.tipo as 'sono' | 'mamada' | 'tummy',
-                    inicio: Date.parse(principalSessao.inicio),
-                    pessoa: autorDoRegistro(principalSessao),
-                  }
-                : null
-            }
-            agora={agora}
-            podeEncerrar={gravacaoLiberada}
-            ocupado={encerrando}
-            aoEncerrar={pedirEncerrarPrincipal}
-            painel={
-              principalSessao && curtaDe === principalSessao.id ? (
-                <PerguntaSessaoCurta
-                  className="w-full"
-                  ocupado={encerrando}
-                  podeDescartar={rotina.podeAlterar(principalSessao)}
-                  aoSalvar={encerrarPrincipal}
-                  aoDescartar={descartarPrincipal}
-                  aoFechar={fecharPerguntaDoCartao}
-                />
-              ) : null
-            }
-          />
-        </>
-      )}
-      <SessoesEmParalelo
-        sessoes={sessoes}
-        agora={agora}
-        autorDe={autorDoRegistro}
-        podeEncerrar={gravacaoLiberada}
-        podeUnir={(grupo) => gravacaoLiberada && acoes.podeUnir(grupo)}
-        textoDoPapel={textoDoPapel}
-        ocupado={encerrando}
-        relogioAtrasDe={relogioAtrasDe}
-        aoEncerrar={(sessao) => void encerrar(sessao)}
-        podeDescartar={(sessao) => rotina.podeAlterar(sessao)}
-        aoDescartar={(sessao) => void descartarSessao(sessao)}
-        aoEncerrarEm={(sessao, momento) => void encerrar(sessao, momento)}
-        aoUnir={(grupo) => acoes.unir(grupo)}
-      />
-      {emAndamento.dados?.incompleta ? <AvisoDeLista limite={LIMITES.emAndamento} dado="emAndamento" /> : null}
-    </Pilha>
+    <CartaoDaSessao
+      classe={classe}
+      emAndamento={emAndamento}
+      principalSessao={principalSessao}
+      sessoes={sessoes}
+      papel={ativo.papel}
+      refCartao={cartao}
+      agora={agora}
+      gravacaoLiberada={gravacaoLiberada}
+      encerrando={encerrando}
+      curtaDe={curtaDe}
+      relogioAtrasDe={relogioAtrasDe}
+      textoDoPapel={textoDoPapel}
+      pedirEncerrarPrincipal={pedirEncerrarPrincipal}
+      encerrarPrincipal={encerrarPrincipal}
+      descartarPrincipal={descartarPrincipal}
+      fecharPerguntaDoCartao={fecharPerguntaDoCartao}
+      encerrar={encerrar}
+      descartarSessao={descartarSessao}
+      autorDoRegistro={autorDoRegistro}
+      podeAlterar={rotina.podeAlterar}
+      podeUnir={acoes.podeUnir}
+      unir={acoes.unir}
+    />
   )
 
   const blocoBotaoMamada = (classe: string, compacto: boolean) => (
