@@ -1,0 +1,61 @@
+/* MOTION-PAGES, /cuidado-compartilhado (CENAS.md assinado, D1 e D2). Importado no topo de `cuidado-casa.css`.
+   Só `transform`, preso à rolagem por view-timeline nativa, linear, fill both; nada de JS, opacidade ou recorte.
+   Fora do @supports, ou com `prefers-reduced-motion`, nada daqui vale e a página é a base, parada.
+   56 px e 24 px são tetos; a quebra é a da composição larga (`@container cc-pagina (min-width: 1024px)`).
+   A moldura da cena (`.cc-meio-cena`, o <picture>) é a linha do tempo e recorta a placa com `overflow: clip`
+   (sem rolagem, sem novo contexto de bloco): a <img> já enche a caixa, então parada nada muda. */
+@supports ((animation-timeline: view()) and (animation-range: 0% 100%)) {
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes cc-entra {
+      from {
+        transform: translateX(var(--cc-entra));
+      }
+
+      to {
+        transform: translateX(0);
+      }
+    }
+
+    .cc-meio[data-cc-cena='cena2'] .cc-meio-cena {
+      overflow: clip;
+      view-timeline-name: --cc-sono;
+    }
+
+    .cc-meio[data-cc-cena='cena3'] .cc-meio-cena {
+      overflow: clip;
+      view-timeline-name: --cc-senha;
+    }
+
+    .cc-meio-cena img {
+      animation-name: cc-entra;
+      animation-duration: auto;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-range: entry 0% entry 100%;
+    }
+
+    /* D1: as quatro mãos chegam pela direita, a borda de que a cena é rente. */
+    .cc-meio[data-cc-cena='cena2'] .cc-meio-cena img {
+      --cc-entra: 24px;
+
+      animation-timeline: --cc-sono;
+    }
+
+    /* D2: Ícaro com o celular chega pela esquerda. */
+    .cc-meio[data-cc-cena='cena3'] .cc-meio-cena img {
+      --cc-entra: -24px;
+
+      animation-timeline: --cc-senha;
+    }
+
+    @container cc-pagina (min-width: 1024px) {
+      .cc-meio[data-cc-cena='cena2'] .cc-meio-cena img {
+        --cc-entra: 56px;
+      }
+
+      .cc-meio[data-cc-cena='cena3'] .cc-meio-cena img {
+        --cc-entra: -56px;
+      }
+    }
+  }
+}

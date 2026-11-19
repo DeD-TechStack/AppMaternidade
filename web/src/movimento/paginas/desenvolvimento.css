@@ -1,0 +1,79 @@
+/* MOTION-PAGES, /desenvolvimento (CENAS.md assinado, E2 e E3). Importado no topo de `desenvolvimento-casa.css`.
+   Só `transform`, preso à rolagem por view-timeline nativa, linear, fill both; nada de JS, opacidade ou recorte.
+   Fora do @supports, ou com `prefers-reduced-motion`, nada daqui vale e a página é a base, parada.
+   56 px e 24 px são tetos; a quebra é a da faixa das ideias (`@container (min-width: 40rem)`, sobre `.dc-grade`). */
+@supports ((animation-timeline: view()) and (animation-range: 0% 100%)) {
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes dc-entra {
+      from {
+        transform: translateX(var(--dc-entra));
+      }
+
+      to {
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes dc-fio {
+      from {
+        transform: scaleX(0);
+      }
+
+      to {
+        transform: scaleX(1);
+      }
+    }
+
+    /* E2: meio-dia, a família chega pelo lado do dia (da esquerda). A moldura (`.dc-familia`) é a linha do tempo e
+       recorta a placa com `overflow: clip` (não vira rolagem, então o tamanho mínimo do item da grade não muda). */
+    .dc-familia {
+      overflow: clip;
+      view-timeline-name: --dc-ideias;
+    }
+
+    .dc-familia img {
+      --dc-entra: -24px;
+
+      animation-name: dc-entra;
+      animation-duration: auto;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: --dc-ideias;
+      animation-range: entry 0% entry 100%;
+    }
+
+    @container (min-width: 40rem) {
+      .dc-familia img {
+        --dc-entra: -56px;
+      }
+    }
+
+    /* E3: cada fase riscada quando chega. Uma linha do tempo por item (`--dc-fase`); o fio de cima (`border-top`,
+       1 px, cor do texto) vira um `::before` de 1 px no mesmo lugar, e a borda fica, transparente, para nada sair do
+       lugar. O fio de baixo do último item (e do penúltimo, em duas colunas) segue borda, parado.
+       Este arquivo entra antes das regras da página (o @import fica no topo): o `:nth-child(n)` dá o peso para a cor
+       transparente vencer o `border-top` de `.dc-fases > li`. */
+    .dc-fases > li:nth-child(n) {
+      position: relative;
+      border-top-color: transparent;
+      view-timeline-name: --dc-fase;
+    }
+
+    .dc-fases > li::before {
+      content: '';
+      position: absolute;
+      top: -1px;
+      right: 0;
+      left: 0;
+      height: 1px;
+      background-color: currentcolor;
+      transform-origin: left center;
+      animation-name: dc-fio;
+      animation-duration: auto;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: --dc-fase;
+      animation-range: entry 0% entry 100%;
+    }
+  }
+}
