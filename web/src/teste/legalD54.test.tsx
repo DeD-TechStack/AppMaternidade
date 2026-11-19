@@ -89,7 +89,8 @@ describe('LEGAL-D54a', () => {
     expect(() => conferirSemTextoAntigo(`texto ${ANTIGO_IDADE}`)).toThrow()
   })
 
-  it('LEGA-I-02 Contato: o endereço fictício aparece uma vez como texto, o botão leva ao mesmo endereço e a frase de apoio aparece uma vez', () => {
+  // T2 (REP-T2): a frase de apoio saiu da abertura das seis páginas; o campo `apoio` segue no conteúdo, sem aparecer.
+  it('LEGA-I-02 Contato: o endereço fictício aparece uma vez como texto, o botão leva ao mesmo endereço e a frase de apoio não é mostrada (T2)', () => {
     expect(EMAIL_CONTATO).toBe(ENDERECO)
     const { container } = renderizarRota('/contato')
     const principal = container.querySelector('main')!
@@ -105,7 +106,7 @@ describe('LEGAL-D54a', () => {
     conferirEndereco((botao.getAttribute('href') ?? '').replace('mailto:', ''))
 
     expect(TEXTO_APOIO_CONTATO).toBe(A7)
-    expect(ocorrencias(texto, A7)).toBe(1)
+    expect(ocorrencias(texto, A7)).toBe(0)
   })
 
   it('LEGA-I-02 controle negativo: o auxiliar recusa um endereço de outro domínio', () => {
