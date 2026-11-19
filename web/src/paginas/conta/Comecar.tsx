@@ -8,6 +8,7 @@ import { destinoDepoisDeEntrar, voltaValida } from '../../componentes/conta/dest
 import { useEnvio } from '../../componentes/conta/envio.ts'
 import { useFocoNoResumo, useFocoNoTitulo } from '../../componentes/conta/foco.ts'
 import { fusoDoAparelho } from '../../componentes/conta/fusos.ts'
+import { NOME_DA_CONTA_MAX } from '../../componentes/conta/limitesDeNome.ts'
 import { MolduraLogada } from '../../componentes/conta/MolduraLogada.tsx'
 import { BOTAO_PRINCIPAL, RegiaoStatus } from '../../componentes/conta/Partes.tsx'
 import { ErroDaConta } from '../../componentes/estado/ErroDaConta.tsx'
@@ -108,6 +109,7 @@ function PassoSeuNome({ aoSalvar }: { aoSalvar: () => void }) {
             <Campo
               rotulo={COMUM.rotuloNome}
               ajuda={COMUM.ajudaNome}
+              maxLength={NOME_DA_CONTA_MAX}
               autoComplete="name"
               tamanho="app"
               valor={nome}

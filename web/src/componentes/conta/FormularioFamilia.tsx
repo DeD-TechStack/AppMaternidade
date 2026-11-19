@@ -5,6 +5,7 @@ import { familiaMudou, useAoFalharNaFamilia } from './acoesFamilia.ts'
 import { Campo, SeletorFuso } from './Campos.tsx'
 import { useEnvio } from './envio.ts'
 import { useFocoNoResumo } from './foco.ts'
+import { NOME_DA_FAMILIA_MAX } from './limitesDeNome.ts'
 import { AvisoDoBanco, BOTAO_PRINCIPAL, BOTAO_SECUNDARIO, ResumoErro } from './Partes.tsx'
 
 interface Props<T> {
@@ -107,6 +108,7 @@ export function FormularioFamilia<T>({
       <Campo
         rotulo={rotuloNome}
         ajuda={ajudaNome}
+        maxLength={NOME_DA_FAMILIA_MAX}
         tamanho="app"
         valor={nome}
         aoMudar={(valor) => {

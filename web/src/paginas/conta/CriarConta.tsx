@@ -7,6 +7,7 @@ import { caminhoComVolta, destinoDepoisDeEntrar, urlDoSite, voltaValida } from '
 import { useEnvio } from '../../componentes/conta/envio.ts'
 import { useFocoNoResumo } from '../../componentes/conta/foco.ts'
 import { fusoDoAparelho } from '../../componentes/conta/fusos.ts'
+import { NOME_DA_CONTA_MAX } from '../../componentes/conta/limitesDeNome.ts'
 import { MolduraPublica } from '../../componentes/conta/MolduraPublica.tsx'
 import { BOTAO_PRINCIPAL, Carregando, LINK_ALVO, RegiaoStatus, ResumoErro } from '../../componentes/conta/Partes.tsx'
 import { useDadosConta, useSessao } from '../../componentes/conta/sessao.tsx'
@@ -137,6 +138,7 @@ export function CriarConta() {
           <Campo
             rotulo={COMUM.rotuloNome}
             ajuda={COMUM.ajudaNome}
+            maxLength={NOME_DA_CONTA_MAX}
             autoComplete="name"
             valor={nome}
             aoMudar={(valor) => {
