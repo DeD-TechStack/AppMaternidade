@@ -11,6 +11,23 @@ interface Props {
   children: ReactNode
 }
 
+/** A duração de saída de reserva (ms): espelha `--mov-fechar` (styles/tokens.css) quando a variável não pode ser lida. */
+const SAIDA_PADRAO_MS = 160
+
+/** O movimento está desligado (ou não dá para saber: sem `matchMedia`, como no jsdom puro)? Então nada sai animado. */
+export function semMovimento(): boolean {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return true
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
+/** A duração de saída em ms: lê `--mov-fechar` da raiz; sem a variável, 160. */
+export function duracaoDeSaida(): number {
+  const bruto = getComputedStyle(document.documentElement).getPropertyValue('--mov-fechar').trim()
+  const numero = Number.parseFloat(bruto)
+  if (!Number.isFinite(numero) || numero <= 0) return SAIDA_PADRAO_MS
+  return bruto.endsWith('ms') ? numero : bruto.endsWith('s') ? numero * 1000 : SAIDA_PADRAO_MS
+}
+
 // A caixa de diálogo da Comunidade: o elemento `<dialog>` aberto como modal, com título, o foco inicial
 // no primeiro controle (ou no botão marcado com `data-foco-inicial`), o foco preso dentro dela, `Esc`
 // fechando e o foco voltando ao botão de origem.
@@ -65,7 +82,7 @@ export function Dialogo({ titulo, aoFechar, origem, ocupado = false, children }:
       ref={dialogo}
       aria-labelledby={tituloId}
       aria-modal="true"
-      className="m-auto max-h-[calc(100dvh-2rem)] w-[min(32rem,calc(100%_-_2rem))] overflow-y-auto rounded-cartao border-[1.5px] border-[var(--cor-texto)] bg-[var(--cor-fundo)] p-6 text-[var(--cor-texto)] backdrop:bg-[var(--cor-texto)]/40 lg:p-8"
+      className="cm-dialogo m-auto max-h-[calc(100dvh-2rem)] w-[min(32rem,calc(100%_-_2rem))] overflow-y-auto rounded-cartao border-[1.5px] border-[var(--cor-texto)] bg-[var(--cor-fundo)] p-6 text-[var(--cor-texto)] backdrop:bg-[var(--cor-texto)]/40 lg:p-8"
     >
       <div className="flex flex-col gap-4">
         <h2 id={tituloId} className="cm-h4 text-titulo-4">
