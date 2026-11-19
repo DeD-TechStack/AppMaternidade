@@ -15,7 +15,9 @@ const PAGINAS_DE_TEXTO = [
   '/sobre',
 ] as const
 
-const PAGINAS_DE_DESTAQUE = ['/como-funciona', '/cuidado-compartilhado'] as const
+// /como-funciona, /cuidado-compartilhado e /desenvolvimento saíram das páginas em destaque: as três foram refeitas
+// nas seções da casa e cada uma tem o seu teste (comoFunciona.casa.test.tsx, cuidado.casa.test.tsx e
+// desenvolvimento.casa.test.tsx). Com a lista vazia, o bloco "páginas em destaque" daqui saiu.
 
 function principal(container: HTMLElement): HTMLElement {
   return container.querySelector('main') as HTMLElement
@@ -26,7 +28,7 @@ function ehSecao(elemento: Element): boolean {
 }
 
 describe('páginas públicas: o <main> tem só Secao', () => {
-  for (const caminho of [...PAGINAS_DE_TEXTO, ...PAGINAS_DE_DESTAQUE, '/nao-existe']) {
+  for (const caminho of [...PAGINAS_DE_TEXTO, '/nao-existe']) {
     it(`${caminho}: todo filho do <main> é uma Secao e nenhum elemento usa cm-area`, () => {
       const { container } = renderizarRota(caminho)
       const filhos = Array.from(principal(container).children)
@@ -79,63 +81,6 @@ describe('páginas de leitura: coluna de leitura de 640', () => {
   })
 })
 
-describe('páginas em destaque: Secao, Colunas e painéis', () => {
-  for (const caminho of PAGINAS_DE_DESTAQUE) {
-    it(`${caminho}: a abertura é um Colunas de vão midia, de 1100 px em diante, com o texto e a mídia por filhos`, () => {
-      const { container } = renderizarRota(caminho)
-      const abertura = principal(container).querySelector('.pd-abertura')!
-      expect(abertura.getAttribute('data-h')).toContain('colunas')
-      expect(abertura.getAttribute('data-h-vao')).toBe('midia')
-      expect(abertura.getAttribute('data-h-quebra')).toBe('1100')
-      expect(abertura.querySelector(':scope > .pd-abertura-texto')!.getAttribute('data-h')).toContain('coluna')
-      expect(abertura.querySelector(':scope > .pd-abertura-midia')!.getAttribute('data-h')).toContain('coluna')
-      expect(abertura.closest('[data-h~="secao"]')!.parentElement).toBe(principal(container))
-    })
-
-    it(`${caminho}: nenhum bloco do <main> usa classe de margem entre seções (pd-secao, pd-pagina)`, () => {
-      const { container } = renderizarRota(caminho)
-      expect(principal(container).classList.contains('pd-pagina')).toBe(false)
-      expect(principal(container).querySelector('.pd-secao, .pd-pagina')).toBeNull()
-    })
-
-    it(`${caminho}: a cabeça de cada seção é um QuadroLayout medio (880) e o h2 vem de uma Pilha`, () => {
-      const { container } = renderizarRota(caminho)
-      const cabecas = principal(container).querySelectorAll('.pd-cabeca')
-      for (const cabeca of cabecas) {
-        expect(cabeca.getAttribute('data-h')).toContain('pilha')
-        const quadro = cabeca.closest('[data-h~="quadro"]')
-        // Dentro de uma coluna (tummy time) a cabeça não leva quadro próprio.
-        if (!cabeca.closest('[data-h~="coluna"]')) expect(quadro!.getAttribute('data-h-largura')).toBe('medio')
-      }
-    })
-  }
-
-  it('Como funciona: uma faixa de cacau, como Secao de painel; os passos são uma Pilha bloco (ol)', () => {
-    const { container } = renderizarRota('/como-funciona')
-    const faixas = principal(container).querySelectorAll('[data-h~="secao"][data-h-variante="painel"]')
-    expect(faixas).toHaveLength(1)
-    expect(faixas[0].querySelector(':scope > [data-painel="cacau"]')).not.toBeNull()
-    expect(faixas[0].matches('section[aria-labelledby]')).toBe(true)
-    const passos = principal(container).querySelector('ol[data-passos]')!
-    expect(passos.getAttribute('data-h')).toContain('pilha')
-    expect(passos.getAttribute('data-h-vao')).toBe('bloco')
-    const colunas = principal(container).querySelector('.pd-duas')!
-    expect(colunas.getAttribute('data-h-vao')).toBe('bloco')
-    expect(colunas.getAttribute('data-h-quebra')).toBe('900')
-  })
-
-  it('Cuidado compartilhado: o painel de areia é uma Secao de painel (.pd-registro) e a lista dos blocos é uma Pilha', () => {
-    const { container } = renderizarRota('/cuidado-compartilhado')
-    const paineis = principal(container).querySelectorAll('[data-h~="secao"][data-h-variante="painel"]')
-    expect(paineis).toHaveLength(1)
-    const caixa = paineis[0].querySelector(':scope > [data-painel="areia"]')!
-    expect(caixa.classList.contains('pd-registro')).toBe(true)
-    const lista = principal(container).querySelector('ul[data-blocos]')!
-    expect(lista.getAttribute('data-h')).toContain('pilha')
-    expect(lista.closest('[data-h~="quadro"]')!.getAttribute('data-h-largura')).toBe('quadro')
-  })
-})
-
 describe('rota inexistente: Secao, QuadroLayout e Pilha', () => {
   it('o título, a linha de ajuda e o botão são itens de uma Pilha dentro do QuadroLayout', () => {
     const { container } = renderizarRota('/nao-existe')
@@ -185,13 +130,6 @@ describe('H-3c R1-03: o vão entre os passos é o da Pilha (bloco), sem margem d
       .filter(([, seletor]) => /\.pd-passos\s*>\s*li/.test(seletor))
       .filter(([, , corpo]) => /margin/.test(corpo))
     expect(comMargem.map(([, seletor]) => seletor.trim())).toEqual([])
-  })
-
-  it('Como funciona: os passos são uma Pilha de vão bloco e cada item é filho direto', () => {
-    const { container } = renderizarRota('/como-funciona')
-    const passos = principal(container).querySelector('ol[data-passos]')!
-    expect(passos.getAttribute('data-h-vao')).toBe('bloco')
-    for (const item of passos.children) expect(item.tagName).toBe('LI')
   })
 })
 

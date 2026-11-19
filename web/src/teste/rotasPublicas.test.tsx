@@ -6,8 +6,8 @@ import { renderizarRota } from './renderizarRota.tsx'
 // As 9 rotas públicas do Campo de mel (MAT-49a), o Início mínimo e a rota inexistente.
 
 const PAGINAS: ReadonlyArray<[string, string]> = [
-  ['/como-funciona', 'Do primeiro dia à troca de turno.'],
-  ['/cuidado-compartilhado', 'Um bebê, vários adultos.'],
+  ['/como-funciona', 'Deixa que eu anoto.'],
+  ['/cuidado-compartilhado', 'A babá vê o quê?'],
   ['/desenvolvimento', 'Ela já devia rolar?'],
   ['/regras-da-comunidade', 'Regras da comunidade'],
   ['/privacidade', 'Privacidade'],
