@@ -4,7 +4,7 @@ import { render, screen } from '@testing-library/react'
 import { SeletorFuso } from '../componentes/conta/Campos.tsx'
 import { listaDeFusos, rotuloDoFuso } from '../componentes/conta/fusos.ts'
 import * as TEXTOS from '../conteudo/conta.ts'
-import { CENA_ACESSO, COMECAR, COMECAR_FAMILIA, COMUM, CONTA, CONVITE, FAMILIA, PAPEIS, TEXTOS_ERRO, textoDoErro } from '../conteudo/conta.ts'
+import { PORTA_ACESSO, COMECAR, COMECAR_FAMILIA, COMUM, CONTA, CONVITE, FAMILIA, PAPEIS, TEXTOS_ERRO, textoDoErro } from '../conteudo/conta.ts'
 import { erroDaChave } from '../dados/conta.erros.ts'
 import { criarDadosContaMemoria } from '../dados/conta.memoria.ts'
 import { criarFixtureDeTeste } from './renderizarComDados.tsx'
@@ -76,9 +76,11 @@ describe('LOC-04: registro, regência e sentido (C03 a C08, C10, C11, C13)', () 
     expect(CONTA.privacidade.encarregado.antes).toBe('Encarregado pelo tratamento de dados: ')
   })
 
-  it('C11: o alt da cena descreve o que se vê, sem nome de token de cor, e termina em ponto', () => {
-    expect(CENA_ACESSO.alt).toBe('Celular sobre um pedestal verde-oliva, com uma tela do AppMaternidade aberta.')
-    expect(CENA_ACESSO.alt).not.toMatch(/\b(de oliva|mel|cacau)\b/)
+  it('C11: o alt da porta descreve o que se vê (`ent.alt.porta`), sem nome de token de cor, e termina em ponto', () => {
+    expect(PORTA_ACESSO.alt).toBe(
+      'Uma mão põe a chave na fechadura de uma porta fechada, num corredor à noite. Por baixo da porta passa uma faixa de luz.',
+    )
+    expect(PORTA_ACESSO.alt).not.toMatch(/\b(de oliva|mel|cacau)\b/)
   })
 
   it('C13: o código de convite "não é válido"', () => {

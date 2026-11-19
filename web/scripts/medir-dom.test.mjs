@@ -2254,9 +2254,9 @@ describe('MED-AUTH:RF-04 caminhoEsperado e verificarPagina', () => {
     assert.throws(() => medir.rotasDosPedidos([{ caso: 'ruim', tema: 'claro', largura: 1, altura: 1 }], casos), /caminho inválido/)
   })
 
-  it('MANCHETE_LOGIN é MANCHETES.entrar de web/src/conteudo/conta.ts, unida por um espaço', async () => {
+  it('MANCHETE_LOGIN é MANCHETES.entrar de web/src/conteudo/conta.ts', async () => {
     const { MANCHETES } = await import('../src/conteudo/conta.ts')
-    assert.equal(medir.MANCHETE_LOGIN, MANCHETES.entrar.join(' '))
+    assert.equal(medir.MANCHETE_LOGIN, MANCHETES.entrar)
   })
 
   it('verificarPagina passa com o caminho certo e um h1 que não é o do login, e devolve o que viu', async () => {
@@ -2275,7 +2275,7 @@ describe('MED-AUTH:RF-04 caminhoEsperado e verificarPagina', () => {
     await assert.rejects(medir.verificarPagina(cdpFalso({ pagina: { caminho: '/entrar', h1_texto: null } }), '/entrar'), /sem h1/)
     await assert.rejects(medir.verificarPagina(cdpFalso({ pagina: { caminho: '/entrar', h1_texto: '   ' } }), '/entrar'), /sem h1/)
     // DS1:RF-15: o h1 do login só reprova onde a rota esperada NÃO é uma página de acesso pública (controle: /app/*).
-    for (const h1 of ['Volte à rotina da família.', 'Volte à rotinada família.', '\n Volte à rotina\n  da família. ']) {
+    for (const h1 of ['Pode entrar.', 'Podeentrar.', '\n Pode\n  entrar. ']) {
       const cdp = cdpFalso({ pagina: { caminho: '/app/hoje', h1_texto: h1 } })
       await assert.rejects(medir.verificarPagina(cdp, '/app/hoje'), /h1 do login/, JSON.stringify(h1))
     }
@@ -2283,11 +2283,11 @@ describe('MED-AUTH:RF-04 caminhoEsperado e verificarPagina', () => {
 
   it('DS1-I-15 verificarPagina aceita o h1 do login nas quatro páginas públicas de acesso e o reprova em /app/*', async () => {
     for (const caminho of ['/entrar', '/criar-conta', '/recuperar-acesso', '/convite']) {
-      const cdp = cdpFalso({ pagina: { caminho, h1_texto: 'Volte à rotina da família.' } })
-      assert.deepEqual(await medir.verificarPagina(cdp, caminho), { caminho, h1_texto: 'Volte à rotina da família.' }, caminho)
+      const cdp = cdpFalso({ pagina: { caminho, h1_texto: 'Pode entrar.' } })
+      assert.deepEqual(await medir.verificarPagina(cdp, caminho), { caminho, h1_texto: 'Pode entrar.' }, caminho)
     }
     for (const caminho of ['/app/hoje', '/app/historico', '/app/sessao']) {
-      const cdp = cdpFalso({ pagina: { caminho, h1_texto: 'Volte à rotina da família.' } })
+      const cdp = cdpFalso({ pagina: { caminho, h1_texto: 'Pode entrar.' } })
       await assert.rejects(medir.verificarPagina(cdp, caminho), /h1 do login/, caminho)
     }
   })
@@ -2320,14 +2320,14 @@ describe('MED-AUTH:RF-05 medirPedido falha fechado e não grava JSON', () => {
 
   it('o h1 do login numa rota do app (DS1:RF-15, antes era a rota entrar): lança e não grava', async () => {
     const pasta = pastaNova()
-    const cdp = cdpFalso({ pagina: { caminho: '/app/hoje', h1_texto: 'Volte à rotina da família.' }, leitura: leituraMinima() })
+    const cdp = cdpFalso({ pagina: { caminho: '/app/hoje', h1_texto: 'Pode entrar.' }, leitura: leituraMinima() })
     await assert.rejects(medir.medirPedido(cdp, BASE_MED, { caso: 'login', tema: 'claro', largura: 1440, altura: 900, rota: 'app/hoje', conta: 'responsavel' }, pasta), /login: .*h1 do login/)
     assert.deepEqual(fs.readdirSync(pasta), [])
   })
 
   it('o login que não sai de /entrar: lança com o caso e não grava', async () => {
     const pasta = pastaNova()
-    const cdp = cdpFalso({ entra: false, pagina: { caminho: '/entrar', h1_texto: 'Volte à rotina da família.' }, leitura: leituraMinima() })
+    const cdp = cdpFalso({ entra: false, pagina: { caminho: '/entrar', h1_texto: 'Pode entrar.' }, leitura: leituraMinima() })
     await assert.rejects(medir.medirPedido(cdp, BASE_MED, pedidoFila, pasta, { voltas: 3 }), /fila: .*não consegui entrar na demonstração/)
     assert.deepEqual(fs.readdirSync(pasta), [])
   })
