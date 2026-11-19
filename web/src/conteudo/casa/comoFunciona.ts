@@ -1,3 +1,4 @@
+import { imagemPublica } from '../../componentes/campo/urlPublica.ts'
 import { placa } from '../../componentes/campo/imagens.ts'
 import type { Imagem } from '../../componentes/secoes/contrato.ts'
 import m01Heroi from '../../assets/cenas/como-funciona/m01-heroi-1672w.webp?w=977;1672&format=avif;webp&as=picture'
@@ -64,7 +65,7 @@ export const CENA_COLO: Imagem = placa(m06Colo, '300px', 300)
 
 /** CF-S2: a captura do Histórico (estado Y15), o celular principal: a camada de tela de até 330 numa coluna (a largura
  * do quadro em 390) e de até 390 (a 1:1 da captura) em duas colunas. */
-export const TELA_HISTORICO: Imagem = {
+export const TELA_HISTORICO: Imagem = imagemPublica({
   src: '/telas/t1i/historico-y15-320w.webp',
   srcSet: [
     '/telas/t1i/historico-y15-280w.webp 280w',
@@ -75,10 +76,10 @@ export const TELA_HISTORICO: Imagem = {
   sizes: '(min-width: 1024px) 390px, (min-width: 768px) 320px, 330px',
   largura: 640,
   altura: 1385,
-}
+})
 
 /** CF-S5: a captura das Notas, mesmos tamanhos. */
-export const TELA_NOTAS: Imagem = {
+export const TELA_NOTAS: Imagem = imagemPublica({
   src: '/telas/t1i/notas-320w.webp',
   srcSet: [
     '/telas/t1i/notas-280w.webp 280w',
@@ -89,11 +90,11 @@ export const TELA_NOTAS: Imagem = {
   sizes: '(min-width: 768px) 320px, 280px',
   largura: 640,
   altura: 1385,
-}
+})
 
 /** A moldura do aparelho de dia (arte decorativa, sem texto alternativo). */
-export const MOLDURA_DIA: Imagem = {
+export const MOLDURA_DIA: Imagem = imagemPublica({
   src: '/molduras/moldura-dia.png',
   largura: 678,
   altura: 1423,
-}
+})

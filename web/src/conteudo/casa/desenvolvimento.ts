@@ -1,6 +1,7 @@
 // Desenvolvimento (/desenvolvimento): as frases que o deck COPY_desenvolvimento escreveu (16), cada uma com o id do
 // deck no comentário da mesma linha. Os 91 textos de saúde NÃO moram aqui: vêm, só de leitura, de
 // `conteudo/desenvolvimento/*.ts`. As imagens são as três vagas fechadas do spec (cenas do ASSET-2).
+import { imagemPublica } from '../../componentes/campo/urlPublica.ts'
 import { placa } from '../../componentes/campo/imagens.ts'
 import type { Imagem } from '../../componentes/secoes/contrato.ts'
 import m04Heroi from '../../assets/cenas/desenvolvimento/m04-heroi-1672w.webp?w=1100;1672&format=avif;webp&as=picture'
@@ -38,20 +39,20 @@ export const CENA_ABERTURA_RECORTE: Imagem = placa(m04Heroi390, '100vw', 390)
 
 // DE-S2: a captura do Histórico (15:00, tummy time) sob a moldura do dia. A tela tem até 390 de 900 em diante (perto
 // de 1:1 com a captura) e 320 abaixo (a largura do quadro, se menor).
-export const TELA_HISTORICO: Imagem = {
+export const TELA_HISTORICO: Imagem = imagemPublica({
   src: '/telas/t1i/historico-y15-280w.webp',
   srcSet:
     '/telas/t1i/historico-y15-280w.webp 280w, /telas/t1i/historico-y15-320w.webp 320w, /telas/t1i/historico-y15-560w.webp 560w, /telas/t1i/historico-y15-640w.webp 640w',
   sizes: '(min-width: 900px) 390px, 320px',
   largura: 640,
   altura: 1385,
-}
+})
 
-export const MOLDURA_DIA: Imagem = {
+export const MOLDURA_DIA: Imagem = imagemPublica({
   src: '/molduras/moldura-dia.png',
   largura: 721,
   altura: 1426,
-}
+})
 
 // DE-S3: a família (M12) em pé na borda de baixo da faixa das ideias. Caixa 390 × 421 (350 × 378 em 390).
 export const CENA_FAMILIA: Imagem = placa(m12Familia, '(min-width: 960px) 390px, 350px', 390)
