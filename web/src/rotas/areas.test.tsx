@@ -85,7 +85,7 @@ describe('rotasDasAreas: o registro por área', () => {
       'conta-excluida',
       'convite',
     ])
-    expect(rotasContaLogadas.map(caminhoDe)).toEqual(['app/comecar', 'app/conta', 'app/familia'])
+    expect(rotasContaLogadas.map(caminhoDe)).toEqual(['app/comecar', 'app/conta', 'app/familia', 'app/avisos'])
 
     // A rotina: uma rota sem caminho (o provedor da área), pai das quatro telas do 38a.
     expect(rotasRotinaLogadas).toHaveLength(1)
@@ -117,6 +117,7 @@ describe('rotasDasAreas: o registro por área', () => {
       'Começar | AppMaternidade',
       'Conta | AppMaternidade',
       'Família | AppMaternidade',
+      'Avisos | AppMaternidade',
     ])
     expect(tituloDaAba(TITULOS.conta)).toBe('Conta | AppMaternidade')
   })
@@ -206,7 +207,7 @@ describe('o Hoje e a Sessão ficam sob a guarda e sob o provedor da área (R38-3
 
 describe('as rotas logadas só abrem com sessão; as públicas, sempre', () => {
   it('cada rota logada sem sessão vai a /entrar?volta=<caminho>', async () => {
-    for (const caminho of ['/app/conta', '/app/comecar']) {
+    for (const caminho of ['/app/conta', '/app/comecar', '/app/avisos']) {
       const { roteador, unmount } = renderizarComDados(caminho)
       await screen.findByRole('heading', { level: 1, name: NOMES_DO_H1.entrar })
       expect(roteador.state.location.pathname).toBe('/entrar')
@@ -227,6 +228,7 @@ describe('as rotas logadas só abrem com sessão; as públicas, sempre', () => {
       ['/convite', TITULOS.convite, `${NOMES_DO_H1.convite}.`, null],
       ['/app/conta', TITULOS.conta, 'Conta', 'juliana'],
       ['/app/familia', TITULOS.familia, 'Família', 'juliana'],
+      ['/app/avisos', 'Avisos', 'Avisos', 'juliana'],
     ]
     for (const [caminho, titulo, h1, sessao] of casos) {
       const { unmount, container } = renderizarComDados(caminho, { sessao })

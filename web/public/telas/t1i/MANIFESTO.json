@@ -1,0 +1,579 @@
+{
+  "versao": 1,
+  "fonte_sha": "a9e08471a67eed2407b0cc4790210e10fe8308c9",
+  "ferramenta": {
+    "capturar_sha256": "ce359eda05098be2b20c3b2706f906cb87abcbfce633dfc6a8d6d4865aa03313",
+    "cdp_sha256": "cebd9ea927d27067a68df3ecbd9e17d22b1fd594e91aabea8c9eec814432917c",
+    "servir_capturas_sha256": "84d434a82962ca6f1921fae03649ef44ffe20df022f478ae5197f142a2a9ce07",
+    "pillow": "12.3.0"
+  },
+  "capturas": [
+    {
+      "id": "historico-y15",
+      "estado": "T1I",
+      "caso": "historico_y15",
+      "rota": "app/historico",
+      "caminho_final": "/app/historico",
+      "h1": "Histórico",
+      "tema": "claro",
+      "viewport": "390x844",
+      "dpr": 2,
+      "toque": true,
+      "rotulo_demo_oculto": "[data-aviso-tela]",
+      "scroll_y": 2067,
+      "offset_y_px": 92,
+      "a42_aberto": "a página só rola até 2067 px: a linha 15:00 ficou a 92 px do topo da janela, não a 88 px (cabeçalho 72 px + 16 px)",
+      "fonte_px_linha": 15,
+      "linhas_visiveis": [
+        "15:00 Tummy time, 8 min por Juliana",
+        "16:00 Mamada, 20 min · os dois lados por Juliana"
+      ],
+      "png": {
+        "arquivo": ".oc/capturas/historico_y15_claro_390.png",
+        "largura": 780,
+        "altura": 1688,
+        "sha256": "4096a1164562ae1218046adb69a3099e2197c9d3b39dde9f465d7dca2d1b94a1"
+      },
+      "captura_ok": "CAPTURA_OK historico_y15_claro_390.png caminho=/app/historico png=780x1688 esperado=780x1688 mobile=true dpr=2 toque=true scrollWidth=390 sha256=4096a1164562ae1218046adb69a3099e2197c9d3b39dde9f465d7dca2d1b94a1 (só a janela)",
+      "servidos": [
+        {
+          "arquivo": "/telas/t1i/historico-y15-280w.webp",
+          "largura": 280,
+          "altura": 606,
+          "bytes": 13118,
+          "sha256": "287874a56951e6f2edfc0bf7a023566492301bbac3dbbb32c59c6b84070a6121",
+          "qualidade": 82
+        },
+        {
+          "arquivo": "/telas/t1i/historico-y15-320w.webp",
+          "largura": 320,
+          "altura": 693,
+          "bytes": 15560,
+          "sha256": "f09a862ba76b578843ebd758965a3ddfd6b52b6953ae1bfdf0b4d477aea64e1d",
+          "qualidade": 82
+        },
+        {
+          "arquivo": "/telas/t1i/historico-y15-560w.webp",
+          "largura": 560,
+          "altura": 1212,
+          "bytes": 29898,
+          "sha256": "29ae29ac59fa65738be5568afa01ab7f2bc7194266b6c6a14fc32a6e29f4178c",
+          "qualidade": 82
+        },
+        {
+          "arquivo": "/telas/t1i/historico-y15-640w.webp",
+          "largura": 640,
+          "altura": 1385,
+          "bytes": 28868,
+          "sha256": "a49604c7d865bcd78bc1a6180e9f41ab2394ac29436b5dacb08c97e4dc4b971a",
+          "qualidade": 72
+        }
+      ],
+      "busca_final": "?dia=2026-11-17"
+    },
+    {
+      "id": "notas",
+      "estado": "T1I",
+      "caso": "notas",
+      "rota": "app/notas",
+      "caminho_final": "/app/notas",
+      "h1": "Notas",
+      "tema": "claro",
+      "viewport": "390x844",
+      "dpr": 2,
+      "toque": true,
+      "rotulo_demo_oculto": "[data-aviso-tela]",
+      "scroll_y": 0,
+      "offset_y_px": null,
+      "a42_aberto": null,
+      "fonte_px_linha": null,
+      "linhas_visiveis": [],
+      "png": {
+        "arquivo": ".oc/capturas/notas_claro_390.png",
+        "largura": 780,
+        "altura": 1688,
+        "sha256": "48a8ed6548f3cf6b848bce4a91561f37ab3256382cae0dac1e9e064be0efdc03"
+      },
+      "captura_ok": "CAPTURA_OK notas_claro_390.png caminho=/app/notas png=780x1688 esperado=780x1688 mobile=true dpr=2 toque=true scrollWidth=390 sha256=48a8ed6548f3cf6b848bce4a91561f37ab3256382cae0dac1e9e064be0efdc03 (só a janela)",
+      "servidos": [
+        {
+          "arquivo": "/telas/t1i/notas-280w.webp",
+          "largura": 280,
+          "altura": 606,
+          "bytes": 12048,
+          "sha256": "436a2bb1828ded42e1f80290ae0d162982a8474c6ff08e5d3ec4459b30f6288f",
+          "qualidade": 82
+        },
+        {
+          "arquivo": "/telas/t1i/notas-320w.webp",
+          "largura": 320,
+          "altura": 693,
+          "bytes": 14626,
+          "sha256": "25d813623cb5d842127cd5929286afc0cb410e396cd59a6a515469a314650886",
+          "qualidade": 82
+        },
+        {
+          "arquivo": "/telas/t1i/notas-560w.webp",
+          "largura": 560,
+          "altura": 1212,
+          "bytes": 26882,
+          "sha256": "29b1f2216cf9dc47d273488fd37d7e68550cd0c8e1576e8549c3c80be63a96ad",
+          "qualidade": 82
+        },
+        {
+          "arquivo": "/telas/t1i/notas-640w.webp",
+          "largura": 640,
+          "altura": 1385,
+          "bytes": 31878,
+          "sha256": "5f14fc51ddc121000a2b59565e3ce11bb3b949313fe5e3d5c1b6e410a85350d6",
+          "qualidade": 82
+        }
+      ],
+      "busca_final": ""
+    },
+    {
+      "id": "familia",
+      "estado": "T1I",
+      "caso": "familia",
+      "rota": "app/familia",
+      "caminho_final": "/app/familia",
+      "h1": "Família",
+      "tema": "claro",
+      "viewport": "390x844",
+      "dpr": 2,
+      "toque": true,
+      "rotulo_demo_oculto": "[data-aviso-tela]",
+      "scroll_y": 592,
+      "offset_y_px": null,
+      "a42_aberto": null,
+      "fonte_px_linha": null,
+      "linhas_visiveis": [
+        "Juliana (você) Responsável Mudar papel Sair da família"
+      ],
+      "png": {
+        "arquivo": ".oc/capturas/familia_claro_390.png",
+        "largura": 780,
+        "altura": 1688,
+        "sha256": "2bc0bd814e8376f2618f759fb1a500b238e4b50b48502777cb07e5961ff23bbc"
+      },
+      "captura_ok": "CAPTURA_OK familia_claro_390.png caminho=/app/familia png=780x1688 esperado=780x1688 mobile=true dpr=2 toque=true scrollWidth=390 sha256=2bc0bd814e8376f2618f759fb1a500b238e4b50b48502777cb07e5961ff23bbc (só a janela)",
+      "servidos": [
+        {
+          "arquivo": "/telas/t1i/familia-280w.webp",
+          "largura": 280,
+          "altura": 606,
+          "bytes": 11432,
+          "sha256": "ecbed5d3a0bfc9ddca5daa332ee7e56ba2a8d747ac105b26f99f2a384af33724",
+          "qualidade": 82
+        },
+        {
+          "arquivo": "/telas/t1i/familia-320w.webp",
+          "largura": 320,
+          "altura": 693,
+          "bytes": 13500,
+          "sha256": "268ff902f0bae7bdf9a8d0f578135e9f420c96c53bba0558043f5e3e8d457d11",
+          "qualidade": 82
+        },
+        {
+          "arquivo": "/telas/t1i/familia-560w.webp",
+          "largura": 560,
+          "altura": 1212,
+          "bytes": 25688,
+          "sha256": "129b64c534c07f2fec96039078a5f9445599126359e1678766c5bc9328456e71",
+          "qualidade": 82
+        },
+        {
+          "arquivo": "/telas/t1i/familia-640w.webp",
+          "largura": 640,
+          "altura": 1385,
+          "bytes": 29074,
+          "sha256": "1f3812173c761539498c27f7cac3b6c09bd60d03bfebb7070714690759da4d78",
+          "qualidade": 82
+        }
+      ],
+      "busca_final": ""
+    }
+  ],
+  "paginas": {
+    "como-funciona": {
+      "slots": [
+        {
+          "slot": "m01-heroi",
+          "tipo": "cena",
+          "arquivos": [
+            {
+              "arquivo": "/cenas/como-funciona/m01-heroi-977w.webp",
+              "largura": 977,
+              "bytes": 19744
+            },
+            {
+              "arquivo": "/cenas/como-funciona/m01-heroi-1672w.webp",
+              "largura": 1672,
+              "bytes": 36846
+            },
+            {
+              "arquivo": "/cenas/como-funciona/m01-heroi-390c-390w.webp",
+              "largura": 390,
+              "bytes": 9120
+            },
+            {
+              "arquivo": "/cenas/como-funciona/m01-heroi-390c-780w.webp",
+              "largura": 780,
+              "bytes": 19590
+            }
+          ],
+          "arquivo_1440_dpr2": "/cenas/como-funciona/m01-heroi-1672w.webp",
+          "bytes_1440_dpr2": 36846,
+          "primeira_dobra": true
+        },
+        {
+          "slot": "m04",
+          "tipo": "cena",
+          "arquivos": [
+            {
+              "arquivo": "/cenas/como-funciona/m04-350w.webp",
+              "largura": 350,
+              "bytes": 6546
+            },
+            {
+              "arquivo": "/cenas/como-funciona/m04-520w.webp",
+              "largura": 520,
+              "bytes": 9898
+            },
+            {
+              "arquivo": "/cenas/como-funciona/m04-700w.webp",
+              "largura": 700,
+              "bytes": 13316
+            },
+            {
+              "arquivo": "/cenas/como-funciona/m04-1040w.webp",
+              "largura": 1040,
+              "bytes": 20988
+            }
+          ],
+          "arquivo_1440_dpr2": "/cenas/como-funciona/m04-1040w.webp",
+          "bytes_1440_dpr2": 20988,
+          "primeira_dobra": false
+        },
+        {
+          "slot": "m06",
+          "tipo": "cena",
+          "arquivos": [
+            {
+              "arquivo": "/cenas/como-funciona/m06-300w.webp",
+              "largura": 300,
+              "bytes": 7660
+            },
+            {
+              "arquivo": "/cenas/como-funciona/m06-600w.webp",
+              "largura": 600,
+              "bytes": 16914
+            }
+          ],
+          "arquivo_1440_dpr2": "/cenas/como-funciona/m06-600w.webp",
+          "bytes_1440_dpr2": 16914,
+          "primeira_dobra": false
+        },
+        {
+          "slot": "historico-y15",
+          "tipo": "tela",
+          "arquivos": [
+            {
+              "arquivo": "/telas/t1i/historico-y15-280w.webp",
+              "largura": 280,
+              "bytes": 13118
+            },
+            {
+              "arquivo": "/telas/t1i/historico-y15-320w.webp",
+              "largura": 320,
+              "bytes": 15560
+            },
+            {
+              "arquivo": "/telas/t1i/historico-y15-560w.webp",
+              "largura": 560,
+              "bytes": 29898
+            },
+            {
+              "arquivo": "/telas/t1i/historico-y15-640w.webp",
+              "largura": 640,
+              "bytes": 28868
+            }
+          ],
+          "arquivo_1440_dpr2": "/telas/t1i/historico-y15-640w.webp",
+          "bytes_1440_dpr2": 28868,
+          "primeira_dobra": true
+        },
+        {
+          "slot": "notas",
+          "tipo": "tela",
+          "arquivos": [
+            {
+              "arquivo": "/telas/t1i/notas-280w.webp",
+              "largura": 280,
+              "bytes": 12048
+            },
+            {
+              "arquivo": "/telas/t1i/notas-320w.webp",
+              "largura": 320,
+              "bytes": 14626
+            },
+            {
+              "arquivo": "/telas/t1i/notas-560w.webp",
+              "largura": 560,
+              "bytes": 26882
+            },
+            {
+              "arquivo": "/telas/t1i/notas-640w.webp",
+              "largura": 640,
+              "bytes": 31878
+            }
+          ],
+          "arquivo_1440_dpr2": "/telas/t1i/notas-640w.webp",
+          "bytes_1440_dpr2": 31878,
+          "primeira_dobra": false
+        }
+      ],
+      "moldura": {
+        "arquivo": "molduras/moldura-dia.png",
+        "bytes_contados": 1000
+      },
+      "primeira_dobra_bytes": 66714,
+      "primeira_dobra_limite": 70000,
+      "pagina_bytes": 136494,
+      "pagina_limite": 160000,
+      "cap_open": false,
+      "primeira_dobra_ok": true,
+      "pagina_ok": true
+    },
+    "cuidado": {
+      "slots": [
+        {
+          "slot": "m12-heroi",
+          "tipo": "cena",
+          "arquivos": [
+            {
+              "arquivo": "/cenas/cuidado/m12-heroi-600w.webp",
+              "largura": 600,
+              "bytes": 14516
+            },
+            {
+              "arquivo": "/cenas/cuidado/m12-heroi-981w.webp",
+              "largura": 981,
+              "bytes": 25548
+            },
+            {
+              "arquivo": "/cenas/cuidado/m12-heroi-390c-350w.webp",
+              "largura": 350,
+              "bytes": 6074
+            },
+            {
+              "arquivo": "/cenas/cuidado/m12-heroi-390c-700w.webp",
+              "largura": 700,
+              "bytes": 13344
+            }
+          ],
+          "arquivo_1440_dpr2": "/cenas/cuidado/m12-heroi-981w.webp",
+          "bytes_1440_dpr2": 25548,
+          "primeira_dobra": true
+        },
+        {
+          "slot": "m05-maos",
+          "tipo": "cena",
+          "arquivos": [
+            {
+              "arquivo": "/cenas/cuidado/m05-maos-800w.webp",
+              "largura": 800,
+              "bytes": 14176
+            },
+            {
+              "arquivo": "/cenas/cuidado/m05-maos-1472w.webp",
+              "largura": 1472,
+              "bytes": 28298
+            },
+            {
+              "arquivo": "/cenas/cuidado/m05-maos-390c-390w.webp",
+              "largura": 390,
+              "bytes": 11674
+            },
+            {
+              "arquivo": "/cenas/cuidado/m05-maos-390c-740w.webp",
+              "largura": 740,
+              "bytes": 23178
+            }
+          ],
+          "arquivo_1440_dpr2": "/cenas/cuidado/m05-maos-1472w.webp",
+          "bytes_1440_dpr2": 28298,
+          "primeira_dobra": false
+        },
+        {
+          "slot": "m01-icaro",
+          "tipo": "cena",
+          "arquivos": [
+            {
+              "arquivo": "/cenas/cuidado/m01-icaro-760w.webp",
+              "largura": 760,
+              "bytes": 10034
+            },
+            {
+              "arquivo": "/cenas/cuidado/m01-icaro-1152w.webp",
+              "largura": 1152,
+              "bytes": 16398
+            },
+            {
+              "arquivo": "/cenas/cuidado/m01-icaro-390c-390w.webp",
+              "largura": 390,
+              "bytes": 7512
+            },
+            {
+              "arquivo": "/cenas/cuidado/m01-icaro-390c-780w.webp",
+              "largura": 780,
+              "bytes": 15980
+            }
+          ],
+          "arquivo_1440_dpr2": "/cenas/cuidado/m01-icaro-1152w.webp",
+          "bytes_1440_dpr2": 16398,
+          "primeira_dobra": false
+        },
+        {
+          "slot": "familia",
+          "tipo": "tela",
+          "arquivos": [
+            {
+              "arquivo": "/telas/t1i/familia-280w.webp",
+              "largura": 280,
+              "bytes": 11432
+            },
+            {
+              "arquivo": "/telas/t1i/familia-320w.webp",
+              "largura": 320,
+              "bytes": 13500
+            },
+            {
+              "arquivo": "/telas/t1i/familia-560w.webp",
+              "largura": 560,
+              "bytes": 25688
+            },
+            {
+              "arquivo": "/telas/t1i/familia-640w.webp",
+              "largura": 640,
+              "bytes": 29074
+            }
+          ],
+          "arquivo_1440_dpr2": "/telas/t1i/familia-640w.webp",
+          "bytes_1440_dpr2": 29074,
+          "primeira_dobra": true
+        }
+      ],
+      "moldura": {
+        "arquivo": "molduras/moldura-dia.png",
+        "bytes_contados": 1000
+      },
+      "primeira_dobra_bytes": 55622,
+      "primeira_dobra_limite": 70000,
+      "pagina_bytes": 100318,
+      "pagina_limite": 160000,
+      "cap_open": false,
+      "primeira_dobra_ok": true,
+      "pagina_ok": true
+    },
+    "desenvolvimento": {
+      "slots": [
+        {
+          "slot": "m04-heroi",
+          "tipo": "cena",
+          "arquivos": [
+            {
+              "arquivo": "/cenas/desenvolvimento/m04-heroi-1100w.webp",
+              "largura": 1100,
+              "bytes": 16004
+            },
+            {
+              "arquivo": "/cenas/desenvolvimento/m04-heroi-1672w.webp",
+              "largura": 1672,
+              "bytes": 25686
+            },
+            {
+              "arquivo": "/cenas/desenvolvimento/m04-heroi-390c-390w.webp",
+              "largura": 390,
+              "bytes": 6318
+            },
+            {
+              "arquivo": "/cenas/desenvolvimento/m04-heroi-390c-780w.webp",
+              "largura": 780,
+              "bytes": 13106
+            }
+          ],
+          "arquivo_1440_dpr2": "/cenas/desenvolvimento/m04-heroi-1672w.webp",
+          "bytes_1440_dpr2": 25686,
+          "primeira_dobra": true
+        },
+        {
+          "slot": "m12-familia",
+          "tipo": "cena",
+          "arquivos": [
+            {
+              "arquivo": "/cenas/desenvolvimento/m12-familia-390w.webp",
+              "largura": 390,
+              "bytes": 12054
+            },
+            {
+              "arquivo": "/cenas/desenvolvimento/m12-familia-585w.webp",
+              "largura": 585,
+              "bytes": 17930
+            }
+          ],
+          "arquivo_1440_dpr2": "/cenas/desenvolvimento/m12-familia-585w.webp",
+          "bytes_1440_dpr2": 17930,
+          "primeira_dobra": false
+        },
+        {
+          "slot": "historico-y15",
+          "tipo": "tela",
+          "arquivos": [
+            {
+              "arquivo": "/telas/t1i/historico-y15-280w.webp",
+              "largura": 280,
+              "bytes": 13118
+            },
+            {
+              "arquivo": "/telas/t1i/historico-y15-320w.webp",
+              "largura": 320,
+              "bytes": 15560
+            },
+            {
+              "arquivo": "/telas/t1i/historico-y15-560w.webp",
+              "largura": 560,
+              "bytes": 29898
+            },
+            {
+              "arquivo": "/telas/t1i/historico-y15-640w.webp",
+              "largura": 640,
+              "bytes": 28868
+            }
+          ],
+          "arquivo_1440_dpr2": "/telas/t1i/historico-y15-640w.webp",
+          "bytes_1440_dpr2": 28868,
+          "primeira_dobra": true
+        }
+      ],
+      "moldura": {
+        "arquivo": "molduras/moldura-dia.png",
+        "bytes_contados": 1000
+      },
+      "primeira_dobra_bytes": 55554,
+      "primeira_dobra_limite": 70000,
+      "pagina_bytes": 73484,
+      "pagina_limite": 160000,
+      "cap_open": false,
+      "primeira_dobra_ok": true,
+      "pagina_ok": true
+    }
+  },
+  "alts": {
+    "cf.alt.tela1": "Tela do Histórico do site num celular. Na lista do dia, o tummy time das 15:00 e a mamada das 16:00 estão anotados por Juliana.",
+    "de.alt.tela1": "Tela do Histórico do site num celular. Na lista do dia, o tummy time das 15:00, de 8 minutos, está anotado por Juliana.",
+    "cf.alt.tela2": "Tela Notas do site num celular, com duas notas: “Pomada só à noite.”, de Juliana, em destaque, e “Fraldas P no armário de cima.”, de Ícaro.",
+    "cc.alt.tela1": "Tela Família do site num celular: a lista de membros, com Juliana e Ícaro e o papel de cada um, e um convite pendente com a data em que vence."
+  },
+  "alts_pendentes": []
+}
