@@ -114,7 +114,7 @@ describe('DS1-I-09 CabecalhoCTA: o rótulo e a marcação', () => {
   }
 
   it('DS1-I-09 a pílula é a única ação cheia do cabeçalho de dia e o cabeçalho não tem botão de mel', async () => {
-    renderizarRota('/como-funciona', { sessao: null })
+    renderizarRota('/sobre', { sessao: null })
     await aguardarCarga()
     expect(cabecalho().querySelectorAll('.cm-botao-primario')).toHaveLength(1)
     expect(cabecalho().querySelector('.cm-botao-mel, [data-botao-mel]')).toBeNull()
