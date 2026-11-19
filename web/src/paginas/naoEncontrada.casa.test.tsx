@@ -1,5 +1,5 @@
 import { fireEvent, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { TEXTOS_NAO_ENCONTRADA } from '../conteudo/casa/naoEncontrada.ts'
 import { renderizarRota } from '../teste/renderizarRota.tsx'
 
@@ -62,6 +62,24 @@ describe('REP-T4 a página inexistente (noite)', () => {
       })
     })
   }
+
+  it('a janela acesa respeita a base do site (Pages): src e todo candidato do srcset', () => {
+    vi.stubEnv('BASE_URL', '/AppMaternidade/')
+    try {
+      const { container } = renderizarRota('/nao-existe')
+      const imagem = container.querySelector('main img')!
+      const prefixo = '/AppMaternidade/cenas/nao-encontrada/'
+      expect(imagem.getAttribute('src')!.startsWith(prefixo)).toBe(true)
+      const candidatos = imagem
+        .getAttribute('srcset')!
+        .split(',')
+        .map((c) => c.trim().split(/\s+/)[0])
+      expect(candidatos).toHaveLength(3)
+      for (const url of candidatos) expect(url.startsWith(prefixo)).toBe(true)
+    } finally {
+      vi.unstubAllEnvs()
+    }
+  })
 
   it('clicar no botão leva ao início', () => {
     const { roteador } = renderizarRota('/nao-existe')
