@@ -85,17 +85,22 @@ function PassoSeuNome({ aoSalvar }: { aoSalvar: () => void }) {
     <>
       <main>
         <DuasColunas>
-          {/* O primeiro campo fica logo abaixo do h1: entre os dois, só o rótulo e o vão do próprio Campo (8 px), sem
-              vão local nesta `div`. O título do passo dá nome à seção só para leitor de tela (o rótulo do campo já
-              diz "Seu nome") e a frase vem depois dos campos, antes de "Salvar". */}
-          <div>
-            <Manchete texto={MANCHETES.comecar} refTitulo={titulo} />
-            <RegiaoStatus mensagem={textoDaPassagem(location.state)} />
+          {/* Título/status, campos e conclusão seguem a mesma coluna; os vãos vêm do DESIGN.md.
+              O título do passo nomeia a seção sem repetir visualmente o rótulo "Seu nome". */}
+          <Pilha vao="grupo" className="min-w-0">
+            <Pilha vao="pilha">
+              <Manchete texto={MANCHETES.comecar} refTitulo={titulo} />
+              <RegiaoStatus mensagem={textoDaPassagem(location.state)} />
+            </Pilha>
             <Pilha as="section" vao="pilha" aria-labelledby="titulo-seu-nome">
               <h2 id="titulo-seu-nome" className="sr-only">
                 {COMECAR.titulo}
               </h2>
-              <form onSubmit={aoEnviar} noValidate className="flex flex-col gap-4">
+              <form
+                onSubmit={aoEnviar}
+                noValidate
+                className="flex min-w-0 flex-col gap-esp-grupo [&_.cm-campo]:min-w-0 [&_.cm-campo-entrada]:min-w-0"
+              >
                 {erroDoEnvio && !campoDoErro ? (
                   <ErroDaConta
                     erro={erroDoEnvio}
@@ -125,13 +130,19 @@ function PassoSeuNome({ aoSalvar }: { aoSalvar: () => void }) {
                   erro={campoDoErro === 'fuso' && erroDoEnvio ? textoDoErro(erroDoEnvio) : null}
                   refEntrada={fusoRef}
                 />
-                <p>{COMECAR.frase}</p>
-                <button type="submit" disabled={enviando} className={BOTAO_PRINCIPAL}>
-                  {enviando ? COMUM.salvando : COMECAR.botao}
-                </button>
+                <Pilha vao="pilha" className="min-w-0">
+                  <p className="wrap-anywhere">{COMECAR.frase}</p>
+                  <button
+                    type="submit"
+                    disabled={enviando}
+                    className={`${BOTAO_PRINCIPAL} min-w-0 max-w-full py-esp-junto whitespace-normal wrap-anywhere`}
+                  >
+                    {enviando ? COMUM.salvando : COMECAR.botao}
+                  </button>
+                </Pilha>
               </form>
             </Pilha>
-          </div>
+          </Pilha>
         </DuasColunas>
       </main>
       <AvisoDaTela />
