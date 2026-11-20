@@ -458,7 +458,7 @@
     position: sticky;
     top: 0;
     z-index: 40;
-    height: var(--cm-cabecalho);
+    min-height: var(--cm-cabecalho);
     /* Nunca passa da janela (fonte a 200 %): o que sobrar na horizontal é cortado aqui, e não rola a página. */
     max-width: 100%;
     overflow-x: clip;
@@ -470,7 +470,7 @@
     display: flex;
     align-items: center;
     gap: 16px;
-    height: 100%;
+    min-height: var(--cm-cabecalho);
     min-width: 0;
   }
 
@@ -683,70 +683,104 @@
     }
   }
 
+  /* HEADER-200: a faixa que envolve só a linha do cabeçalho é um container de largura (a largura do cabeçalho, a da
+     janela). As consultas de container em `rem` seguem o tamanho da letra da raiz, que as de mídia (px) não seguem:
+     a 100 % nada muda; a 200 % os links saem da linha e voltam ao menu. A contenção faz da faixa o bloco de contenção
+     de filhos fixed/absolute: por isso o menu do celular e o alerta da saída ficam FORA dela, irmãos da faixa. */
+  .cm-cab-faixa {
+    container: cm-cab / inline-size;
+  }
+
+  /* A linha de links só vale de 1100 px de janela (mídia) E de 67 rem de faixa (container). A 100 % 67 rem são 1072 px:
+     abaixo do ponto de 1100, ainda com a barra de rolagem de 15 px (faixa de 1085), então o par não muda nada. A 200 %
+     67 rem são 2144 px e o cabeçalho cai para a linha com o botão Menu, mesmo numa janela de 1440. */
   @media (min-width: 1100px) {
-    .cm-cab-miolo {
-      gap: 24px;
-    }
+    @container cm-cab (min-width: 67rem) {
+      .cm-cab-miolo {
+        gap: 24px;
+      }
 
-    .cm-cab-links {
-      display: flex;
-      align-items: center;
-      gap: var(--espaco-pilha);
-      margin-left: auto;
-    }
+      .cm-cab-links {
+        display: flex;
+        align-items: center;
+        gap: var(--espaco-pilha);
+        margin-left: auto;
+      }
 
-    .cm-cab-acoes {
-      gap: 20px;
-      margin-left: var(--espaco-pilha);
-    }
+      .cm-cab-acoes {
+        gap: 20px;
+        margin-left: var(--espaco-pilha);
+      }
 
-    .cm-cab-entrar {
-      display: inline-flex;
-    }
+      .cm-cab-entrar {
+        display: inline-flex;
+      }
 
-    .sb-cab-menu {
-      display: none;
-    }
+      .sb-cab-menu {
+        display: none;
+      }
 
-    /* C-2 (P-50): na área logada o cabeçalho tem seis links e o botão "Modo madrugada" na mesma linha, de 1100 px
-       para cima (o ponto onde ele já troca hoje; nenhum ponto novo). Os vãos viram o token `junto` (12 px em 1440)
-       para a linha única caber em 1100 sem cortar item: a altura da navegação é uma linha. */
-    .cm-cabecalho[data-contexto='logado'] .cm-cab-links {
-      flex-wrap: nowrap;
-      gap: var(--espaco-junto);
-    }
+      /* C-2 (P-50): na área logada o cabeçalho tem seis links e o botão "Modo madrugada" na mesma linha, de 1100 px
+         para cima (o ponto onde ele já troca hoje; nenhum ponto novo). Os vãos viram o token `junto` (12 px em 1440)
+         para a linha única caber em 1100 sem cortar item: a altura da navegação é uma linha. */
+      .cm-cabecalho[data-contexto='logado'] .cm-cab-links {
+        flex-wrap: nowrap;
+        gap: var(--espaco-junto);
+      }
 
-    .cm-cabecalho[data-contexto='logado'] .cm-cab-miolo {
-      gap: var(--espaco-junto);
-    }
+      .cm-cabecalho[data-contexto='logado'] .cm-cab-miolo {
+        gap: var(--espaco-junto);
+      }
 
-    .cm-cabecalho[data-contexto='logado'] .cm-cab-acoes {
-      flex: none;
-      gap: var(--espaco-junto);
-      margin-left: var(--espaco-junto);
-    }
+      .cm-cabecalho[data-contexto='logado'] .cm-cab-acoes {
+        flex: none;
+        gap: var(--espaco-junto);
+        margin-left: var(--espaco-junto);
+      }
 
-    /* R2-01: com marca, seis links, Conta e Sair a 1100 o rótulo longo da lua não cabe na janela. No cabeçalho
-       logado, de 1100 para cima, a lua fica só com o ícone (o nome acessível continua "Modo madrugada"), como
-       abaixo de 480; o 1440 mantém a mesma linha. */
-    .cm-cabecalho[data-contexto='logado'] .cm-cab-madrugada {
-      width: 48px;
-      padding: 0;
-    }
+      /* R2-01: com marca, seis links, Conta e Sair a 1100 o rótulo longo da lua não cabe na janela. No cabeçalho
+         logado, de 1100 para cima, a lua fica só com o ícone (o nome acessível continua "Modo madrugada"), como
+         abaixo de 480; o 1440 mantém a mesma linha. */
+      .cm-cabecalho[data-contexto='logado'] .cm-cab-madrugada {
+        width: 48px;
+        padding: 0;
+      }
 
-    .cm-cabecalho[data-contexto='logado'] .cm-cab-madrugada .cm-rotulo-longo,
-    .cm-cabecalho[data-contexto='logado'] .cm-cab-madrugada .cm-rotulo-curto {
-      display: none;
+      .cm-cabecalho[data-contexto='logado'] .cm-cab-madrugada .cm-rotulo-longo,
+      .cm-cabecalho[data-contexto='logado'] .cm-cab-madrugada .cm-rotulo-curto {
+        display: none;
+      }
     }
   }
 
-  /* Menu do celular: painel de altura cheia abaixo do cabeçalho. */
+  /* HEADER-200: 16 rem não alcançam as janelas de 320 px ou mais com texto normal. Com a raiz ampliada, a
+     linha pode quebrar e ganhar altura, sem limitar a fonte da pílula. Marca, ações e Menu conservam a ordem
+     do DOM; não há corte nem redução da letra para fazê-los caber. */
+  @container cm-cab (max-width: 16rem) {
+    .cm-cab-miolo {
+      flex-wrap: wrap;
+      gap: var(--espaco-junto);
+      padding-block: var(--espaco-junto);
+    }
+
+    .cm-cab-acoes {
+      flex-wrap: wrap;
+    }
+
+    .cm-cab-criar,
+    .sb-cab-menu {
+      flex: none;
+    }
+  }
+
+  /* O painel começa depois da altura real do cabeçalho, inclusive quando o texto ampliado cria outra linha.
+     O cabeçalho sticky é o bloco de referência; o painel termina na borda visível da janela. */
   .cm-menu-celular {
-    position: fixed;
-    top: var(--cm-cabecalho);
+    position: absolute;
+    top: 100%;
     right: 0;
-    bottom: 0;
     left: 0;
+    height: calc(100dvh - 100%);
     overflow-y: auto;
     background-color: var(--cor-fundo);
     color: var(--cor-texto);
