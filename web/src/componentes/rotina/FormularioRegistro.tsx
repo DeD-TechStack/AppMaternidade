@@ -200,6 +200,7 @@ export function FormularioRegistro({ modo, ativo, tipoInicial, registro }: Props
   const grupoDeAvisos = useRef<HTMLDivElement>(null)
   const voltouDaConfirmacao = useRef(false)
   const idDosAvisos = useId()
+  const idErroDoTipo = useId()
 
   const emAndamento = registro !== undefined && registro.fim === null && ehTipoDeSessao(registro.tipo)
   const tipo = campos.tipo
@@ -370,17 +371,37 @@ export function FormularioRegistro({ modo, ativo, tipoInicial, registro }: Props
   const rotuloDoHorario = tipo !== '' && ehTipoDeSessao(tipo) ? FORMULARIO.inicio : FORMULARIO.horario
 
   return (
-    <form ref={formulario} noValidate onSubmit={aoEnviar} className="flex max-w-leitura flex-col gap-esp-grupo" data-formulario-registro={modo}>
+    <form ref={formulario} noValidate onSubmit={aoEnviar} className="flex min-w-0 max-w-leitura flex-col gap-esp-grupo" data-formulario-registro={modo}>
       {modo === 'novo' && tipoInicial === '' ? (
-        <Selecao
-          rotulo={FORMULARIO.escolhaDoTipo}
-          valor={tipo}
-          opcoes={TIPOS_REGISTRO.map((valor) => ({ valor, rotulo: ROTULO_TIPO[valor] }))}
-          vazio={FORMULARIO.tipoPlaceholder}
-          aoMudar={(novo) => mudar({ tipo: novo })}
-          erro={erros.tipo}
-          bloqueado={bloqueado}
-        />
+        <fieldset
+          className="cm-campo min-w-0 max-w-none"
+          aria-invalid={erros.tipo ? true : undefined}
+          aria-describedby={erros.tipo ? idErroDoTipo : undefined}
+          tabIndex={-1}
+        >
+          <legend className="cm-campo-rotulo">{FORMULARIO.escolhaDoTipo}</legend>
+          <div className="flex flex-wrap gap-2">
+            {TIPOS_REGISTRO.map((valor) => (
+              <Botao
+                key={valor}
+                variante="contorno"
+                tamanho="app"
+                className={`max-w-full py-2 whitespace-normal wrap-anywhere ${ALVO_APP}`}
+                aria-pressed={tipo === valor}
+                desativado={bloqueado}
+                onClick={() => mudar({ tipo: valor })}
+              >
+                {ROTULO_TIPO[valor]}
+              </Botao>
+            ))}
+          </div>
+          {erros.tipo ? (
+            <p id={idErroDoTipo} className="cm-campo-mensagem cm-campo-erro text-pequeno flex items-start gap-2">
+              <CircleAlert size={18} aria-hidden="true" className="mt-0.5 shrink-0" />
+              <span>{erros.tipo}</span>
+            </p>
+          ) : null}
+        </fieldset>
       ) : null}
 
       {tipo !== '' ? (

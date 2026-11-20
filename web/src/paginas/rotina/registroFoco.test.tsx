@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, screen } from '@testing-library/react'
+import { fireEvent, screen, within } from '@testing-library/react'
 import { aguardarCarga, renderizarRotaPronta } from '../../teste/renderizarRota.tsx'
-import { comSessaoEmAndamento } from '../../teste/rotina.fixture.ts'
+import { comSessaoEmAndamento, criarMundoDeTeste } from '../../teste/rotina.fixture.ts'
 
 // O foco do formulário de registro quando o "Salvar" cai num aviso que não bloqueia (passo "confirmando"):
 // vai ao grupo dos avisos (nunca ao body), o próximo Tab chega a "Salvar assim", e "Corrigir" devolve o
@@ -43,6 +43,43 @@ const proximoNoTab = (grupo: HTMLElement) =>
   [...grupo.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]')].find(
     (elemento) => elemento.tabIndex >= 0 && !elemento.hasAttribute('disabled'),
   )
+
+describe('a escolha do tipo e os links de retorno', () => {
+  it('sem tipo: preserva a explicação, foca o grupo e oferece a primeira escolha no próximo Tab, sem gravar', async () => {
+    const { rotina } = await renderizarRotaPronta('/app/registro/novo')
+    const gravar = vi.spyOn(rotina, 'gravarRegistro')
+    await enviar()
+    const grupo = screen.getByRole('group', { name: 'Tipo do registro' })
+    expect(grupo.getAttribute('aria-invalid')).toBe('true')
+    expect(descricao(grupo)).toBe('Escolha o tipo do registro.')
+    expect(document.activeElement).toBe(grupo)
+    expect(proximoNoTab(grupo)).toBe(within(grupo).getByRole('button', { name: 'Sono' }))
+    expect(gravar).not.toHaveBeenCalled()
+  })
+
+  it('novo, edição e detalhe mantêm os destinos e o foco do retorno, com sublinhado em repouso', async () => {
+    const mundo = criarMundoDeTeste()
+    const id = mundo.fixture.registros.find((registro) => registro.tipo === 'fralda')!.id
+    for (const [origem, nome, destino, titulo] of [
+      ['/app/registro/novo', 'Voltar para Hoje', '/app/hoje', 'Hoje'],
+      [`/app/registro/${id}/editar`, 'Voltar para o registro', `/app/registro/${id}`, 'Registro'],
+      [`/app/registro/${id}`, 'Voltar para o Histórico', '/app/historico', 'Histórico'],
+    ]) {
+      const tela = await renderizarRotaPronta(origem, { mundo })
+      const voltar = screen.getByRole('link', { name: nome })
+      expect(voltar.classList.contains('underline')).toBe(true)
+      expect(voltar.classList.contains('no-underline')).toBe(false)
+      const href = voltar.getAttribute('href')!
+      expect(href.split('?')[0]).toBe(destino)
+      fireEvent.click(voltar)
+      await aguardarCarga()
+      expect(tela.roteador.state.location.pathname + tela.roteador.state.location.search).toBe(href)
+      expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(titulo)
+      expect(document.activeElement).toBe(screen.getByRole('heading', { level: 1 }))
+      tela.unmount()
+    }
+  })
+})
 
 describe('o foco quando "Salvar" cai num aviso', () => {
   for (const tipo of ['sono', 'mamada'] as const) {
