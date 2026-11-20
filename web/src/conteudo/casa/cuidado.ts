@@ -12,7 +12,7 @@ import m12Heroi from '../../assets/cenas/cuidado/m12-heroi-981w.webp?w=600;981&f
 export const CUIDADO = {
   aba: 'Cuidado compartilhado | AppMaternidade', // cc.aba (o título da aba; quem o grava é NOMES_DE_PAGINA, sem mudança)
   h1: 'A babá vê o quê?', // cc.h1
-  lede: 'Cada adulto entra com a própria conta e um papel. O papel decide o que a pessoa vê e o que pode fazer.', // cc.lede
+  lede: 'A babá vê o histórico do bebê, com o nome de quem anotou cada registro. Ela anota sono, mamada e fralda, e só edita ou exclui o que ela mesma anotou.', // cc.lede
   cta1: 'Criar conta', // cc.cta1
   alt: {
     cena1:
@@ -30,21 +30,27 @@ export const CUIDADO = {
   papeis: {
     h2: 'Quem convida escolhe o papel.', // cc.h2.papeis
     legenda: 'Papéis na família', // cc.papeis.legenda
+    // Os rótulos curtos dos três campos de cada papel (cc.papeis.rotulo.quem, .ve e .muda).
+    rotulos: ['Quem é', 'O que vê', 'O que muda'],
+    // Cada papel tem os mesmos três campos. Os verbos que a página destaca em `muda` estão em VERBOS_DOS_PAPEIS.
     linhas: [
       {
         nome: 'Responsável', // cc.papel.1.nome
         quem: 'Mãe, pai ou outro responsável legal. Pode haver mais de um.', // cc.papel.1.quem
-        pode: 'Cuidar da família, do cadastro do bebê, dos convites e dos dados.', // cc.papel.1.pode
+        ve: 'Tudo o que a família registra.', // cc.papel.1.ve
+        muda: 'Administra a família, o cadastro do bebê, os convites e os dados.', // cc.papel.1.muda
       },
       {
         nome: 'Cuidador', // cc.papel.2.nome
         quem: 'Avó, babá ou outro adulto de confiança.', // cc.papel.2.quem
-        pode: 'Registrar e acompanhar. Editar e excluir só o que ele mesmo registrou, e encerrar qualquer sessão em andamento.', // cc.papel.2.pode
+        ve: 'Os registros e as notas da família.', // cc.papel.2.ve
+        muda: 'Registra. Edita e exclui só o que ele mesmo registrou, e encerra qualquer sessão em andamento.', // cc.papel.2.muda
       },
       {
         nome: 'Observador', // cc.papel.3.nome
         quem: 'Quem só acompanha.', // cc.papel.3.quem
-        pode: 'Ler os registros e as notas, sem escrever.', // cc.papel.3.pode
+        ve: 'Os registros e as notas.', // cc.papel.3.ve
+        muda: 'Nada: só lê, não escreve.', // cc.papel.3.muda
       },
     ],
   },
@@ -67,6 +73,17 @@ export const CUIDADO = {
     cta2: 'Criar conta', // cc.cta2
   },
 } as const
+
+/**
+ * Os verbos de `muda` que a página põe em `<strong data-cc-verbo>` (peso, não só cor), por nome de papel. Cada trecho é
+ * um começo de frase de `CUIDADO.papeis.linhas[].muda`: a frase não muda, só ganha marcação. Ficam fora de `CUIDADO`
+ * porque não são frases do deck.
+ */
+export const VERBOS_DOS_PAPEIS: Readonly<Record<string, readonly string[]>> = {
+  Responsável: ['Administra'],
+  Cuidador: ['Registra', 'Edita e exclui'],
+  Observador: ['Nada'],
+}
 
 /** Para onde vai a ação principal da página (a mesma no começo e no fim). */
 export const DESTINO_CRIAR_CONTA = '/criar-conta'

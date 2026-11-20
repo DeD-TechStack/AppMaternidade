@@ -5,10 +5,12 @@ import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { describe, expect, it, vi } from 'vitest'
 import { renderizarRota } from '../../teste/renderizarRota.tsx'
-import { DIMENSAO_ILUSTRACAO } from '../campo/Ilustracao.tsx'
-import { EMAIL_CONTATO, PAGINAS_DE_TEXTO } from '../../conteudo/publicas-texto.ts'
+import { EMAIL_CONTATO } from '../../conteudo/publicas-texto.ts'
 
-// VIS-4, as seis páginas de texto: a abertura (título, painel de mel, frase de apoio) medida num Chrome de
+// REP-T2: o modelo T2 assinado (`.oc/ref/t2.md`): a faixa de cacau da abertura (400 px no mínimo em 1440), a placa da
+// rua rente à borda direita e ao pé dela, o `h1` e a coluna de leitura na mesma borda esquerda, o índice à direita da
+// coluna em 1440 e o primeiro título do documento dentro da primeira dobra, sem rolagem horizontal em 390 e 1440.
+// VIS-4, as seis páginas de texto: a abertura (título, frase, botão e placa) medida num Chrome de
 // verdade. O jsdom não tem layout: o corpo serializado vai para uma página com o CSS e as imagens do build
 // (`web/dist`), numa janela de 1440 x 900 (a leitura no computador) e de 390 x 844 (o celular). Sem Chrome ou
 // sem build o teste pula e diz por quê; em CI falha. O executor do Chrome repete o de `casca/geometria.test.tsx`:
@@ -85,16 +87,18 @@ interface Medida {
   innerHeight: number
   fontes: string
   scrollWidth: number
+  /** A faixa de cacau da abertura (`.pt-abertura`) e a placa da rua dentro dela (`.pt-placa`). */
   abertura: Caixa
-  /** As linhas de texto e os blocos (painel, botão, cartão) da abertura: o que não é vão. */
-  blocos: Caixa[]
-  /** A coluna da figura (`.pt-figura`), o painel de mel, a frase de apoio e o desenho. */
-  figura: Caixa
-  painel: Caixa
-  apoio: Caixa
-  desenho: Caixa
+  placa: Caixa
   /** A coluna do texto da abertura (`.pt-cabeca`). */
   cabeca: Caixa
+  /** O índice "Nesta página" (`.pt-indice`), a coluna de leitura (`.pt-leitura`) e o primeiro `h2` dela. */
+  indice: Caixa
+  leitura: Caixa
+  primeiroH2: Caixa
+  /** O tamanho de letra computado do `h1` e o maior entre as demais letras de `main`. */
+  h1Tamanho: number
+  maiorOutroTamanho: number
   /** O primeiro `p` de mais de 60 letras da segunda seção da página (a de leitura); o `cm-lide` conta quando é longo. */
   primeiroParagrafo: Caixa | null
   /** O `text-wrap` computado do primeiro parágrafo de leitura e do primeiro `h2`. */
@@ -109,15 +113,7 @@ interface Medida {
   linhasDosParagrafos: number[][]
   /** O h1 da abertura: a coluna dele e as linhas medidas letra a letra. */
   h1: H1Medido
-  /** VIS-4-r4: o maior right das letras da última linha da frase de apoio (null sem letras) e o `text-align` dela. */
-  apoioUltimaLinhaDireita: number | null
-  apoioAlinhamento: string
-  /** O padding computado do painel de mel. */
-  painelPaddingEsquerda: number
-  painelPaddingDireita: number
-  /** `.pt-figura` leva a classe `pt-figura-retrato`. */
-  figuraTemRetrato: boolean
-  /** O cartão de e-mail, o botão, o endereço e as linhas do endereço: só em /contato, null nas outras páginas. */
+  /** O bloco de e-mail, o botão, o endereço e as linhas do endereço: só em /contato, null nas outras páginas. */
   email: Caixa | null
   emailBotao: Caixa | null
   emailEndereco: Caixa | null
@@ -217,37 +213,14 @@ const SCRIPT_DE_MEDIDA = `
         direita: arredondar(limitesDoH1.get(par[0]).direita),
       })),
     }
-    // O que a abertura ocupa de fato: as linhas de texto (uma caixa por linha, não a caixa de bloco, que vai até a
-    // borda da coluna), o painel, o botão e o cartão de e-mail.
-    const blocos = []
-    const linhasDe = (el) => {
-      const intervalo = document.createRange()
-      intervalo.selectNodeContents(el)
-      for (const r of intervalo.getClientRects()) if (r.width > 0 && r.height > 0) blocos.push({ x: r.x, right: r.right, y: r.y, bottom: r.bottom, width: r.width, height: r.height })
+    // REP-T2: o h1 é a maior letra da página? O maior tamanho computado entre os elementos de main que têm texto próprio
+    // (o h1 e o que está dentro dele ficam de fora).
+    let maiorOutroTamanho = 0
+    for (const el of document.querySelectorAll('main *')) {
+      if (el.closest('h1')) continue
+      const temTexto = [...el.childNodes].some((no) => no.nodeType === 3 && no.data.trim().length > 0)
+      if (temTexto) maiorOutroTamanho = Math.max(maiorOutroTamanho, parseFloat(getComputedStyle(el).fontSize))
     }
-    for (const el of document.querySelectorAll('main .pt-abertura h1, main .pt-abertura .pt-segunda-linha, main .pt-abertura .pt-apoio')) linhasDe(el)
-    for (const el of document.querySelectorAll('main .pt-abertura .pt-painel, main .pt-abertura .pt-email, main .pt-abertura .pt-acao a')) blocos.push(caixa(el))
-    // VIS-4-r4: a frase de apoio letra a letra (o maior right das letras da linha de maior topo) e o estilo do painel.
-    const apoioEl = um('main .pt-apoio')
-    let apoioUltimaLinhaDireita = null
-    {
-      let topoMaior = -Infinity
-      const caminhanteDoApoio = document.createTreeWalker(apoioEl, NodeFilter.SHOW_TEXT)
-      while (caminhanteDoApoio.nextNode()) {
-        const no = caminhanteDoApoio.currentNode
-        const faixa = document.createRange()
-        for (let i = 0; i < no.length; i++) {
-          faixa.setStart(no, i)
-          faixa.setEnd(no, i + 1)
-          for (const r of faixa.getClientRects()) {
-            if (r.width <= 0) continue
-            if (r.top > topoMaior + 1) { topoMaior = r.top; apoioUltimaLinhaDireita = r.right }
-            else if (Math.abs(r.top - topoMaior) <= 1) apoioUltimaLinhaDireita = Math.max(apoioUltimaLinhaDireita, r.right)
-          }
-        }
-      }
-    }
-    const estiloDoPainel = getComputedStyle(um('main .pt-painel'))
     const talvezCaixa = (seletor) => {
       const el = document.querySelector(seletor)
       return el ? caixa(el) : null
@@ -270,26 +243,22 @@ const SCRIPT_DE_MEDIDA = `
       enderecoLinhas = topos.size
     }
     emitir({
-      apoioUltimaLinhaDireita,
-      apoioAlinhamento: getComputedStyle(apoioEl).textAlign,
-      painelPaddingEsquerda: parseFloat(estiloDoPainel.paddingLeft),
-      painelPaddingDireita: parseFloat(estiloDoPainel.paddingRight),
-      figuraTemRetrato: um('main .pt-figura').classList.contains('pt-figura-retrato'),
       email: talvezCaixa('main .pt-email'),
       emailBotao: talvezCaixa('main .pt-email a'),
       emailEndereco: talvezCaixa('main .pt-email address'),
       enderecoLinhas,
-      blocos,
       innerWidth: window.innerWidth,
       innerHeight: window.innerHeight,
       fontes: document.fonts.status,
       scrollWidth: document.documentElement.scrollWidth,
       abertura: caixa(um('main .pt-abertura')),
-      figura: caixa(um('main .pt-figura')),
-      painel: caixa(um('main .pt-painel')),
-      apoio: caixa(um('main .pt-apoio')),
-      desenho: caixa(um('main .pt-ilustracao')),
+      placa: caixa(um('main .pt-placa')),
       cabeca: caixa(um('main .pt-cabeca')),
+      indice: caixa(um('main .pt-indice')),
+      leitura: caixa(um('main .pt-leitura')),
+      primeiroH2: caixa(um('main .pt-leitura h2')),
+      h1Tamanho: parseFloat(estiloDoH1.fontSize),
+      maiorOutroTamanho,
       primeiroParagrafo: paragrafo ? caixa(paragrafo) : null,
       quebraDoParagrafo: paragrafo ? getComputedStyle(paragrafo).textWrap : '',
       quebraDoTitulo: getComputedStyle(um('main h2')).textWrap,
@@ -411,7 +380,8 @@ async function medirNoChrome(corpoHtml: string, largura: number, altura: number,
       return `<link rel="stylesheet" href="${pathToFileURL(arquivo).href}">`
     })
     const base = `${pathToFileURL(PASTA_DIST).href}/`
-    const corpo = corpoHtml.replace(/(["'\s,])\/(ilustracoes|cenas)\//g, (_t, antes: string, pasta2: string) => `${antes}${base}${pasta2}/`)
+    // `assets`: a placa da rua (vite-imagetools) sai do build em /assets/, com hash no nome.
+    const corpo = corpoHtml.replace(/(["'\s,])\/(ilustracoes|cenas|assets)\//g, (_t, antes: string, pasta2: string) => `${antes}${base}${pasta2}/`)
     const pagina = join(pasta, 'pagina.html')
     writeFileSync(
       pagina,
@@ -492,9 +462,11 @@ async function medirNoChrome(corpoHtml: string, largura: number, altura: number,
  */
 function consultaPelaLargura(largura: number) {
   return (consulta: string) => {
-    const maxima = /\(max-width:\s*([\d.]+)px\)/.exec(consulta)
-    const minima = /\(min-width:\s*([\d.]+)px\)/.exec(consulta)
-    const casa = maxima ? largura <= Number(maxima[1]) : minima ? largura >= Number(minima[1]) : false
+    // O índice consulta a largura em rem (69,5 rem); 1 rem = 16 px.
+    const pixels = (numero: string, unidade: string) => Number(numero) * (unidade === 'rem' ? 16 : 1)
+    const maxima = /\(max-width:\s*([\d.]+)(px|rem)\)/.exec(consulta)
+    const minima = /\(min-width:\s*([\d.]+)(px|rem)\)/.exec(consulta)
+    const casa = maxima ? largura <= pixels(maxima[1], maxima[2]) : minima ? largura >= pixels(minima[1], minima[2]) : false
     return { matches: casa, media: consulta, addEventListener: () => {}, removeEventListener: () => {} }
   }
 }
@@ -519,41 +491,6 @@ async function medirPagina(caminho: string, largura: number, altura: number, fot
   expect(medida.innerHeight).toBe(altura)
   expect(medida.fontes).toBe('loaded')
   return medida
-}
-
-/**
- * O maior retângulo vazio da caixa da abertura (o que nenhuma linha de texto, painel, botão ou cartão toca), em
- * fração da área da abertura. Grade de 8 px e o algoritmo do maior retângulo de uns num histograma.
- */
-function fracaoVazia(medida: Medida): number {
-  const CELULA = 8
-  const { abertura } = medida
-  const colunas = Math.ceil(abertura.width / CELULA)
-  const linhas = Math.ceil(abertura.height / CELULA)
-  const livre = Array.from({ length: linhas }, (_l, l) =>
-    Array.from({ length: colunas }, (_c, c) => {
-      const caixa = {
-        x: abertura.x + c * CELULA,
-        right: abertura.x + (c + 1) * CELULA,
-        y: abertura.y + l * CELULA,
-        bottom: abertura.y + (l + 1) * CELULA,
-      }
-      return !medida.blocos.some((bloco) => bloco.x < caixa.right && caixa.x < bloco.right && bloco.y < caixa.bottom && caixa.y < bloco.bottom)
-    }),
-  )
-  let melhor = 0
-  const alturas = new Array<number>(colunas).fill(0)
-  for (let l = 0; l < linhas; l++) {
-    for (let c = 0; c < colunas; c++) alturas[c] = livre[l][c] ? alturas[c] + 1 : 0
-    for (let c = 0; c < colunas; c++) {
-      let minima = Infinity
-      for (let d = c; d < colunas && alturas[d] > 0; d++) {
-        minima = Math.min(minima, alturas[d])
-        melhor = Math.max(melhor, minima * (d - c + 1))
-      }
-    }
-  }
-  return (melhor * CELULA * CELULA) / (colunas * CELULA * linhas * CELULA)
 }
 
 /**
@@ -593,19 +530,98 @@ function linhasForaDaColuna(h1: H1Medido, tolerancia = 1): LinhaDoH1[] {
   )
 }
 
-const CHAVE_DA_PAGINA = {
-  '/regras-da-comunidade': 'regras',
-  '/privacidade': 'privacidade',
-  '/termos': 'termos',
-  '/exclusao-de-conta': 'exclusao',
-  '/contato': 'contato',
-  '/sobre': 'sobre',
-} as const
+/** Dois valores de px iguais, com folga de `folga` px. */
+const igual = (a: number, b: number, folga: number) => Math.abs(a - b) <= folga
 
-/** VIS-4-r4: o desenho da página é de retrato (mais alto que largo)? Vem do desenho, não de uma lista de páginas. */
-function ehRetrato(caminho: (typeof PAGINAS)[number]): boolean {
-  const { largura, altura } = DIMENSAO_ILUSTRACAO[PAGINAS_DE_TEXTO[CHAVE_DA_PAGINA[caminho]].ilustracao]
-  return largura < altura
+/**
+ * REP-T2 a 1440 (régua pura, sem Chrome): a faixa de cacau tem 400 px no mínimo; a placa de 340 px fica rente à borda
+ * direita e ao pé da faixa e o texto não passa por baixo dela; o `h1` e a coluna de leitura (640 no máximo) têm a mesma
+ * borda esquerda; o índice fica à direita da coluna, na mesma altura; o primeiro `h2` do documento está dentro da
+ * primeira dobra (900); o `h1` é a maior letra; nenhuma rolagem horizontal. Devolve as mensagens (vazio = ok).
+ */
+function violacoesDoT2Largo(rotulo: string, m: Medida): string[] {
+  const problemas: string[] = []
+  const { abertura, placa, cabeca, indice, leitura, primeiroH2 } = m
+  if (abertura.height < 399.5) problemas.push(`${rotulo}: a faixa de cacau tem ${abertura.height.toFixed(1)} px de altura (mínimo 400)`)
+  if (!igual(placa.right, abertura.right, 0.5)) {
+    problemas.push(`${rotulo}: a placa acaba em ${placa.right.toFixed(1)} e a faixa em ${abertura.right.toFixed(1)} (esperado: rente à borda direita)`)
+  }
+  if (!igual(placa.bottom, abertura.bottom, 0.5)) {
+    problemas.push(`${rotulo}: a placa acaba em ${placa.bottom.toFixed(1)} e a faixa em ${abertura.bottom.toFixed(1)} (esperado: rente ao pé)`)
+  }
+  if (!igual(placa.width, 340, 1)) problemas.push(`${rotulo}: a placa tem ${placa.width.toFixed(1)} px de largura (esperado 340, a densidade nativa)`)
+  if (cabeca.right > placa.x + 0.5) {
+    problemas.push(`${rotulo}: a coluna do texto acaba em ${cabeca.right.toFixed(1)}, depois do começo da placa (${placa.x.toFixed(1)})`)
+  }
+  if (!igual(m.h1.colunaEsquerda, leitura.x, 1)) {
+    problemas.push(`${rotulo}: o h1 começa em ${m.h1.colunaEsquerda} e a coluna de leitura em ${leitura.x.toFixed(1)} (esperado: a mesma borda esquerda)`)
+  }
+  if (leitura.width > 640.5) problemas.push(`${rotulo}: a coluna de leitura tem ${leitura.width.toFixed(1)} px (máximo 640)`)
+  if (indice.x < leitura.right - 0.5) {
+    problemas.push(`${rotulo}: o índice começa em ${indice.x.toFixed(1)}, antes do fim da coluna de leitura (${leitura.right.toFixed(1)}): não está à direita dela`)
+  }
+  if (indice.right > m.innerWidth + 0.5) problemas.push(`${rotulo}: o índice acaba em ${indice.right.toFixed(1)}, fora da janela de ${m.innerWidth} px`)
+  if (!(indice.y < leitura.bottom && leitura.y < indice.bottom)) {
+    problemas.push(`${rotulo}: o índice (${indice.y.toFixed(1)} a ${indice.bottom.toFixed(1)}) não está na altura da leitura (${leitura.y.toFixed(1)} a ${leitura.bottom.toFixed(1)})`)
+  }
+  if (primeiroH2.y >= 900) problemas.push(`${rotulo}: o primeiro título do documento está em y ${primeiroH2.y.toFixed(1)} (esperado: dentro dos 900 da primeira dobra)`)
+  if (m.h1Tamanho <= m.maiorOutroTamanho) problemas.push(`${rotulo}: o h1 tem ${m.h1Tamanho} px e há letra de ${m.maiorOutroTamanho} px na página (o h1 deve ser a maior)`)
+  if (m.scrollWidth > m.innerWidth) problemas.push(`${rotulo}: rolagem horizontal (${m.scrollWidth} > ${m.innerWidth})`)
+  return problemas
+}
+
+/**
+ * REP-T2 a 390 (régua pura): a faixa empilhada (texto e, embaixo, a placa rente à borda direita e ao pé), depois o
+ * índice em fluxo e só então o documento; o `h1` é a maior letra; nenhuma rolagem horizontal.
+ */
+function violacoesDoT2Estreito(rotulo: string, m: Medida): string[] {
+  const problemas: string[] = []
+  const { abertura, placa, cabeca, indice, leitura } = m
+  if (placa.y < cabeca.bottom - 0.5) {
+    problemas.push(`${rotulo}: a placa começa em y ${placa.y.toFixed(1)}, antes do fim do texto (${cabeca.bottom.toFixed(1)}): devia ficar embaixo dele`)
+  }
+  if (!igual(placa.right, abertura.right, 0.5)) {
+    problemas.push(`${rotulo}: a placa acaba em ${placa.right.toFixed(1)} e a faixa em ${abertura.right.toFixed(1)} (esperado: rente à borda direita)`)
+  }
+  if (!igual(placa.bottom, abertura.bottom, 0.5)) {
+    problemas.push(`${rotulo}: a placa acaba em ${placa.bottom.toFixed(1)} e a faixa em ${abertura.bottom.toFixed(1)} (esperado: rente ao pé)`)
+  }
+  if (indice.y < abertura.bottom - 0.5) problemas.push(`${rotulo}: o índice começa em y ${indice.y.toFixed(1)}, dentro da faixa (que acaba em ${abertura.bottom.toFixed(1)})`)
+  if (indice.bottom > leitura.y + 0.5) {
+    problemas.push(`${rotulo}: o índice acaba em y ${indice.bottom.toFixed(1)}, depois do começo do documento (${leitura.y.toFixed(1)}): devia vir antes dele, em fluxo`)
+  }
+  if (m.h1Tamanho <= m.maiorOutroTamanho) problemas.push(`${rotulo}: o h1 tem ${m.h1Tamanho} px e há letra de ${m.maiorOutroTamanho} px na página (o h1 deve ser a maior)`)
+  if (m.scrollWidth > m.innerWidth) problemas.push(`${rotulo}: rolagem horizontal (${m.scrollWidth} > ${m.innerWidth})`)
+  return problemas
+}
+
+/** Uma medida de 1440 que passa nas réguas do T2 (para os controles negativos): cada controle muda um só campo. */
+function medidaT2Larga(): Medida {
+  const caixa = (x: number, y: number, width: number, height: number): Caixa => ({ x, y, width, height, right: x + width, bottom: y + height })
+  return {
+    innerWidth: 1440,
+    innerHeight: 900,
+    fontes: 'loaded',
+    scrollWidth: 1440,
+    abertura: caixa(0, 88, 1440, 400),
+    placa: caixa(1100, 125, 340, 363),
+    cabeca: caixa(120, 160, 640, 250),
+    indice: caixa(840, 552, 320, 400),
+    leitura: caixa(120, 552, 640, 1500),
+    primeiroH2: caixa(120, 552, 640, 42),
+    h1Tamanho: 80,
+    maiorOutroTamanho: 36,
+    primeiroParagrafo: null,
+    quebraDoParagrafo: 'pretty',
+    quebraDoTitulo: 'balance',
+    letrasPorLinha: [],
+    linhasDosParagrafos: [],
+    h1: { colunaEsquerda: 120, colunaDireita: 760, linhas: [] },
+    email: null,
+    emailBotao: null,
+    emailEndereco: null,
+    enderecoLinhas: null,
+  }
 }
 
 const descreve = `a abertura das seis páginas de texto no Chrome${motivoDoPulo ? ` (pulado: ${motivoDoPulo})` : ''}`
@@ -677,11 +693,48 @@ describe(descreve, () => {
     expect(dentro).toEqual([])
   })
 
-  // VIS-4-r4-I-01 (conjunto): a regra "retrato" vem do desenho e há ao menos uma página de retrato e uma de paisagem.
-  it('VIS-4-r4-I-01 o conjunto de páginas de desenho em retrato não é vazio, e há páginas de paisagem', () => {
-    const retratos = PAGINAS.filter((caminho) => ehRetrato(caminho))
-    expect(retratos.length, 'páginas com desenho em retrato').toBeGreaterThan(0)
-    expect(retratos.length, 'páginas com desenho em paisagem').toBeLessThan(PAGINAS.length)
+  // REP-T2: controles negativos das réguas do modelo, nas funções puras (sem Chrome, fora do skipIf). Cada controle
+  // muda um só campo de uma medida que passa, e a régua tem de apontar exatamente esse campo.
+  it('REP-T2 controle: a medida de 1440 de referência passa nas réguas do modelo', () => {
+    expect(violacoesDoT2Largo('/privacidade a 1440', medidaT2Larga())).toEqual([])
+  })
+
+  it('REP-T2 controle: faixa de 399 px, placa fora da borda direita ou do pé, índice à esquerda e título fora da dobra são apontados', () => {
+    const base = medidaT2Larga()
+    const mudar = (parcial: Partial<Medida>) => violacoesDoT2Largo('/x a 1440', { ...base, ...parcial })
+    expect(mudar({ abertura: { ...base.abertura, height: 399, bottom: 487 } })).toHaveLength(2)
+    expect(mudar({ placa: { ...base.placa, x: 1090, right: 1430 } })).toHaveLength(1)
+    expect(mudar({ placa: { ...base.placa, y: 115, bottom: 478 } })).toHaveLength(1)
+    expect(mudar({ placa: { ...base.placa, width: 400, x: 1040 } })).toHaveLength(1)
+    expect(mudar({ indice: { ...base.indice, x: 100, right: 420 } })).toHaveLength(1)
+    expect(mudar({ primeiroH2: { ...base.primeiroH2, y: 900 } })).toHaveLength(1)
+    expect(mudar({ h1: { ...base.h1, colunaEsquerda: 130 } })).toHaveLength(1)
+    expect(mudar({ h1Tamanho: 36 })).toHaveLength(1)
+    expect(mudar({ scrollWidth: 1441 })).toHaveLength(1)
+  })
+
+  it('REP-T2 controle: a 390 a placa acima do fim do texto, o índice dentro da faixa ou depois do documento e a rolagem horizontal são apontados', () => {
+    const caixa = (x: number, y: number, width: number, height: number): Caixa => ({ x, y, width, height, right: x + width, bottom: y + height })
+    const base: Medida = {
+      ...medidaT2Larga(),
+      innerWidth: 390,
+      innerHeight: 844,
+      scrollWidth: 390,
+      h1Tamanho: 44,
+      maiorOutroTamanho: 28,
+      abertura: caixa(0, 72, 390, 561),
+      cabeca: caixa(20, 96, 350, 220),
+      placa: caixa(50, 360, 340, 273),
+      indice: caixa(20, 680, 350, 48),
+      leitura: caixa(20, 760, 350, 1500),
+    }
+    expect(violacoesDoT2Estreito('/x a 390', base)).toEqual([])
+    const mudar = (parcial: Partial<Medida>) => violacoesDoT2Estreito('/x a 390', { ...base, ...parcial })
+    expect(mudar({ placa: { ...base.placa, y: 300, bottom: 573 } })).toHaveLength(2)
+    expect(mudar({ placa: { ...base.placa, x: 40, right: 380 } })).toHaveLength(1)
+    expect(mudar({ indice: { ...base.indice, y: 600, bottom: 648 } })).toHaveLength(1)
+    expect(mudar({ indice: { ...base.indice, y: 740, bottom: 788 } })).toHaveLength(1)
+    expect(mudar({ scrollWidth: 391 })).toHaveLength(1)
   })
 
   // VIS-4-r4-I-04: o cartão de e-mail de /contato fica numa linha só de 1280 em diante, mesmo com um endereço mais longo.
@@ -749,90 +802,26 @@ describe(descreve, () => {
   )
 
   for (const caminho of PAGINAS) {
-    // VIS-4-r4-I-01: nas páginas de desenho em retrato, de 1100 em diante, o painel de mel abraça o desenho, fica rente
-    // à borda final da coluna da figura e a frase de apoio acaba na borda final do painel. As três larguras são medidas
-    // antes de afirmar, para a mensagem nomear todas as que falham. Nas de paisagem só a classe `pt-figura-retrato` ausente.
+    // REP-T2 a 1440: a faixa de cacau (400 px no mínimo), a placa rente à borda direita e ao pé, o h1 e a coluna de leitura
+    // na mesma borda esquerda, o índice à direita da coluna e o primeiro título do documento dentro dos 900 da dobra.
     roda(
-      `VIS-4-r4-I-01 ${caminho} a 1100, 1280 e 1440: ${ehRetrato(caminho) ? 'o painel abraça o desenho e a frase acaba na borda do painel' : 'a figura de paisagem não leva a classe pt-figura-retrato'}`,
+      `REP-T2 ${caminho} a 1440: faixa de 400 px, placa rente à direita e ao pé, h1 e leitura na mesma borda, índice à direita, primeiro título na dobra`,
       async () => {
-        const retrato = ehRetrato(caminho)
-        const problemas: string[] = []
-        for (const largura of [1100, 1280, 1440]) {
-          const rotulo = `${caminho} a ${largura}`
-          const m = await medirPagina(caminho, largura, 900)
-          if (m.figuraTemRetrato !== retrato) {
-            problemas.push(`${rotulo}: a classe pt-figura-retrato ${m.figuraTemRetrato ? 'está' : 'não está'} na figura (esperado: ${retrato ? 'presente' : 'ausente'})`)
-          }
-          if (!retrato) continue
-          const esperada = m.desenho.width + m.painelPaddingEsquerda + m.painelPaddingDireita
-          if (Math.abs(m.painel.width - esperada) > 1) {
-            problemas.push(`${rotulo}: o painel tem ${m.painel.width.toFixed(1)} px; o desenho (${m.desenho.width.toFixed(1)}) mais o padding (${m.painelPaddingEsquerda} + ${m.painelPaddingDireita}) dá ${esperada.toFixed(1)}`)
-          }
-          if (Math.abs(m.painel.right - m.figura.right) > 0.5) {
-            problemas.push(`${rotulo}: o painel acaba em ${m.painel.right.toFixed(1)} e a coluna da figura em ${m.figura.right.toFixed(1)}`)
-          }
-          if (m.apoioUltimaLinhaDireita === null || Math.abs(m.apoioUltimaLinhaDireita - m.painel.right) > 1) {
-            problemas.push(`${rotulo}: a última linha da frase de apoio acaba em ${m.apoioUltimaLinhaDireita?.toFixed(1) ?? 'nada'} e o painel em ${m.painel.right.toFixed(1)}`)
-          }
-          if (m.apoioAlinhamento !== 'end') problemas.push(`${rotulo}: o text-align da frase de apoio é "${m.apoioAlinhamento}" (esperado: end)`)
-          const vao = m.apoio.y - m.painel.bottom
-          if (vao < 0 || vao > 16) problemas.push(`${rotulo}: a frase de apoio fica ${vao.toFixed(1)} px abaixo do painel (de 0 a 16)`)
-          if (m.desenho.x < m.painel.x || m.desenho.right > m.painel.right) {
-            problemas.push(`${rotulo}: o desenho (${m.desenho.x.toFixed(1)} a ${m.desenho.right.toFixed(1)}) sai do painel (${m.painel.x.toFixed(1)} a ${m.painel.right.toFixed(1)})`)
-          }
-          if (m.scrollWidth > m.innerWidth) problemas.push(`${rotulo}: rolagem horizontal (${m.scrollWidth} > ${m.innerWidth})`)
-        }
-        expect(problemas).toEqual([])
+        const m = await medirPagina(caminho, 1440, 900, true)
+        expect(violacoesDoT2Largo(`${caminho} a 1440`, m)).toEqual([])
       },
       TEMPO_DO_CHROME,
     )
 
-    // VIS-4-r4-I-03: no celular o desenho de retrato tem 200 px de altura e o de paisagem 136 px; o painel não passa de 40% da tela.
+    // REP-T2 a 390: a faixa empilhada (texto e, embaixo, a placa), o índice em fluxo, depois o documento; sem rolagem horizontal.
     roda(
-      `VIS-4-r4-I-03 ${caminho} a 390: o desenho tem ${ehRetrato(caminho) ? 200 : 136} px de altura e o painel não passa de 40% da altura da tela`,
+      `REP-T2 ${caminho} a 390: faixa empilhada com a placa embaixo, índice antes do documento, sem rolagem horizontal`,
       async () => {
-        const m = await medirPagina(caminho, 390, 844)
-        const esperada = ehRetrato(caminho) ? 200 : 136
-        expect(Math.abs(m.desenho.height - esperada), `${caminho} a 390: o desenho tem ${m.desenho.height.toFixed(1)} px de altura (esperado ${esperada})`).toBeLessThanOrEqual(0.5)
-        expect(m.painel.height, `${caminho} a 390: o painel tem ${m.painel.height.toFixed(1)} px (máximo ${0.4 * 844})`).toBeLessThanOrEqual(0.4 * 844)
+        const m = await medirPagina(caminho, 390, 844, true)
+        expect(violacoesDoT2Estreito(`${caminho} a 390`, m)).toEqual([])
       },
       TEMPO_DO_CHROME,
     )
-
-    // B-1: a figura (painel de mel + frase de apoio) é uma coluna só: mesma borda esquerda e mesma largura, a frase
-    // a no máximo 16 px do painel, e o painel ocupa pelo menos 60% da coluna (nenhuma ilha estreita no meio).
-    // VIS-4-r4: só nas páginas de desenho paisagem; nas de retrato o painel abraça o desenho (VIS-4-r4-I-01).
-    if (!ehRetrato(caminho)) {
-      roda(
-        `${caminho} a 1440: o painel, a frase de apoio e a coluna da figura têm a mesma borda e a mesma largura; o painel enche a coluna`,
-        async () => {
-          const m = await medirPagina(caminho, 1440, 900, true)
-          expect(m.painel.x, 'a borda esquerda do painel e a da coluna da figura').toBe(m.figura.x)
-          expect(m.apoio.x, 'a borda esquerda da frase de apoio e a do painel').toBe(m.painel.x)
-          expect(m.painel.width, 'a largura do painel e a da coluna da figura').toBe(m.figura.width)
-          expect(m.apoio.width, 'a largura da frase de apoio e a do painel').toBe(m.painel.width)
-          expect(m.painel.width / m.figura.width).toBeGreaterThanOrEqual(0.6)
-          const vao = m.apoio.y - m.painel.bottom
-          expect(vao, `a frase de apoio fica ${vao} px abaixo do painel`).toBeGreaterThanOrEqual(0)
-          expect(vao).toBeLessThanOrEqual(16)
-          // O desenho fica dentro do painel.
-          expect(m.desenho.x).toBeGreaterThanOrEqual(m.painel.x)
-          expect(m.desenho.right).toBeLessThanOrEqual(m.painel.right)
-          expect(m.scrollWidth).toBeLessThanOrEqual(m.innerWidth)
-        },
-        TEMPO_DO_CHROME,
-      )
-
-      roda(
-        `${caminho} a 1440: o maior vão vazio da abertura não passa de 25% da área dela`,
-        async () => {
-          const m = await medirPagina(caminho, 1440, 900)
-          const vazio = fracaoVazia(m)
-          expect(vazio, `o maior vão vazio da abertura: ${vazio.toFixed(3)} da área`).toBeLessThanOrEqual(0.25)
-        },
-        TEMPO_DO_CHROME,
-      )
-    }
 
     // O texto de leitura: menos de 80 letras por linha; parágrafo com `pretty` e título com `balance`.
     roda(
@@ -847,8 +836,8 @@ describe(descreve, () => {
       TEMPO_DO_CHROME,
     )
 
-    // VIS-4-r3-I-02: a coluna de duas frações não pode deixar uma linha do h1 passar da própria coluna, e a coluna
-    // do h1 não passa da medida de leitura (`max-w-leitura`, 640 px).
+    // VIS-4-r3-I-02: nenhuma linha do h1 passa da própria coluna (que divide a faixa com a placa), e a coluna do h1
+    // não passa da medida de leitura (640 px).
     roda(
       `VIS-4-r3-I-02 ${caminho} a 1100 e 1440: as linhas do h1 ficam dentro da coluna do h1 e a coluna não passa de 640 px`,
       async () => {
@@ -872,56 +861,5 @@ describe(descreve, () => {
       TEMPO_DO_CHROME,
     )
 
-    // B-2: no celular o primeiro parágrafo de leitura começa dentro da primeira tela.
-    // Exclusão decidida (decisão do líder em 17/11, DIRECAO.md): SÓ a asserção de y (o primeiro parágrafo de leitura
-    // começar na primeira tela) de /privacidade a 390 fica excluída, porque a ordem da cópia é protegida. Ela vira um
-    // caso nomeado com `it.fails`, que deixa o VERMELHO visível e fica vermelho assim que a asserção passar a passar.
-    // Todos os outros critérios de /privacidade a 390 (parágrafo existe, painel, eixos, vão vazio, rolagem) seguem como
-    // portão comum. As outras cinco páginas afirmam tudo como antes.
-    if (caminho === '/privacidade') {
-      roda(
-        `${caminho} a 390: o painel tem a largura da coluna do texto, o primeiro parágrafo de leitura existe e nenhum vão vazio passa de 25%`,
-        async () => {
-          const m = await medirPagina(caminho, 390, 844, true)
-          expect(m.primeiroParagrafo, 'a segunda seção tem um parágrafo de leitura').not.toBeNull()
-          expect(m.painel.width / m.cabeca.width, 'o painel enche a coluna do texto').toBeGreaterThanOrEqual(0.98)
-          expect(m.painel.x).toBe(m.cabeca.x)
-          expect(m.apoio.x).toBe(m.painel.x)
-          expect(m.apoio.width).toBe(m.painel.width)
-          const vazio = fracaoVazia(m)
-          expect(vazio, `o maior vão vazio da abertura: ${vazio.toFixed(3)} da área`).toBeLessThanOrEqual(0.25)
-          expect(m.scrollWidth).toBeLessThanOrEqual(m.innerWidth)
-        },
-        TEMPO_DO_CHROME,
-      )
-      roda.fails(
-        'POL-TXT:A-2 @ /privacidade 390: excluded, protected copy order; recomposed by the visual reset (DIRECAO.md)',
-        async () => {
-          const m = await medirPagina(caminho, 390, 844, true)
-          expect(m.primeiroParagrafo, 'a segunda seção tem um parágrafo de leitura').not.toBeNull()
-          const marcos = `abertura ${Math.round(m.abertura.y)}-${Math.round(m.abertura.bottom)}, painel ${Math.round(m.painel.y)}-${Math.round(m.painel.bottom)}, apoio ${Math.round(m.apoio.y)}-${Math.round(m.apoio.bottom)}`
-          expect(m.primeiroParagrafo!.y, `o primeiro parágrafo de leitura começa em ${Math.round(m.primeiroParagrafo!.y)} (${marcos})`).toBeLessThanOrEqual(844)
-        },
-        TEMPO_DO_CHROME,
-      )
-    } else {
-      roda(
-        `${caminho} a 390: o painel tem a largura da coluna do texto, o primeiro parágrafo de leitura começa na primeira tela e nenhum vão vazio passa de 25%`,
-        async () => {
-          const m = await medirPagina(caminho, 390, 844, true)
-          expect(m.primeiroParagrafo, 'a segunda seção tem um parágrafo de leitura').not.toBeNull()
-          const marcos = `abertura ${Math.round(m.abertura.y)}-${Math.round(m.abertura.bottom)}, painel ${Math.round(m.painel.y)}-${Math.round(m.painel.bottom)}, apoio ${Math.round(m.apoio.y)}-${Math.round(m.apoio.bottom)}`
-          expect(m.primeiroParagrafo!.y, `o primeiro parágrafo de leitura começa em ${Math.round(m.primeiroParagrafo!.y)} (${marcos})`).toBeLessThanOrEqual(844)
-          expect(m.painel.width / m.cabeca.width, 'o painel enche a coluna do texto').toBeGreaterThanOrEqual(0.98)
-          expect(m.painel.x).toBe(m.cabeca.x)
-          expect(m.apoio.x).toBe(m.painel.x)
-          expect(m.apoio.width).toBe(m.painel.width)
-          const vazio = fracaoVazia(m)
-          expect(vazio, `o maior vão vazio da abertura: ${vazio.toFixed(3)} da área`).toBeLessThanOrEqual(0.25)
-          expect(m.scrollWidth).toBeLessThanOrEqual(m.innerWidth)
-        },
-        TEMPO_DO_CHROME,
-      )
-    }
   }
 })

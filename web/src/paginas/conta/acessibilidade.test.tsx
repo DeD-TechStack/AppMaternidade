@@ -58,6 +58,8 @@ function semAlvoDe44(container: HTMLElement): string[] {
     .filter((elemento) => elemento.closest('p, [inert]') === null)
     // A opção de papel é um rótulo inteiro (alvo-toque, 44 px) com o botão de opção dentro.
     .filter((elemento) => !(elemento instanceof HTMLInputElement && elemento.type === 'radio' && elemento.closest('label.alvo-toque')))
+    // A caixa dos avisos também: o rótulo inteiro (alvo-toque, 44 px) é a área de toque, com a caixa dentro.
+    .filter((elemento) => !(elemento instanceof HTMLInputElement && elemento.type === 'checkbox' && elemento.closest('label.alvo-toque')))
     .filter((elemento) => !CLASSE_DE_ALVO.test(elemento.className))
     .map((elemento) => elemento.outerHTML.slice(0, 160))
 }

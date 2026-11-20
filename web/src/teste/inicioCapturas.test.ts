@@ -81,6 +81,24 @@ function problemas(manifesto: { capturas?: unknown }, ler: (relativo: string) =>
   return achados
 }
 
+/** Problems in the Y_ALTA entry: HOME-PHONE-B2 window ends on the 17:30 Ícaro row (16:00 Juliana just above), no 18:00 / 19:30 / 20:30 row, footer and demo note absent. */
+function problemasYAlta(alta: Captura): string[] {
+  const achados: string[] = []
+  const linhas = (Array.isArray(alta.linhas_topo) ? alta.linhas_topo : []).map((linha) => texto(linha))
+  const ultima = linhas[linhas.length - 1] ?? ''
+  const penultima = linhas[linhas.length - 2] ?? ''
+  if (!(ultima.includes('17:30') && ultima.includes('Ícaro'))) achados.push(`last row is ${ultima}, not the 17:30 Ícaro row`)
+  if (!linhas.some((l) => l.includes('16:00') && l.includes('Juliana'))) achados.push('no 16:00 Juliana row')
+  if (!penultima.includes('16:00')) achados.push(`the row before the last is ${penultima}, not the 16:00 row`)
+  for (const hora of ['18:00', '19:30', '20:30']) {
+    if (linhas.some((l) => l.includes(hora))) achados.push(`a ${hora} row is below the resting window`)
+  }
+  if (alta.rodape_ausente !== true) achados.push('rodape_ausente is not true')
+  if (alta.aviso_ausente !== true) achados.push('aviso_ausente is not true')
+  if (alta.ultima_linha_repouso !== '17:30') achados.push(`ultima_linha_repouso is ${String(alta.ultima_linha_repouso)}, not 17:30`)
+  return achados
+}
+
 const lerDoPublico = (relativo: string): Buffer | null => {
   const arquivo = join(PUBLICO, relativo)
   return existsSync(arquivo) ? readFileSync(arquivo) : null
@@ -131,6 +149,35 @@ describe('REPH-I-06 real captures: the manifest, the hashes of the served files,
     expect(linhas.some((l) => l.includes('17:30') && l.includes('Ícaro'))).toBe(true)
     const n = entrada(manifesto.capturas, 'N')
     expect(texto(n)).toContain('21:42')
+  })
+
+  it('REPH-I-06 state Y_ALTA ends on the 17:30 Ícaro row, holds the 16:00 Juliana row and lists no 18:00, 19:30 or 20:30 row', () => {
+    expect(existsSync(MANIFESTO)).toBe(true)
+    const manifesto = JSON.parse(readFileSync(MANIFESTO, 'utf8')) as { capturas: Captura[] }
+    const alta = entrada(manifesto.capturas, 'Y_ALTA')
+    expect(alta).toBeDefined()
+    expect(problemasYAlta(alta!)).toEqual([])
+  })
+
+  it('REPH-I-06 the Y_ALTA row check catches its controls: a 20:30 row, a missing 16:00 Juliana row, a last row that is not 17:30, the footer or note present', () => {
+    expect(existsSync(MANIFESTO)).toBe(true)
+    const bom: Captura = {
+      linhas_topo: ['15:00 Tummy time por Juliana', '16:00 Mamada por Juliana', '17:30 Fralda por Ícaro'],
+      rodape_ausente: true,
+      aviso_ausente: true,
+      ultima_linha_repouso: '17:30',
+    }
+    expect(problemasYAlta(bom)).toEqual([])
+    const com = (mudanca: Captura): Captura => ({ ...bom, ...mudanca })
+    const linhasBom = bom.linhas_topo as string[]
+    expect(problemasYAlta(com({ linhas_topo: [...linhasBom, '20:30 Sono por Ícaro'] })).some((p) => /20:30|last row/.test(p))).toBe(true)
+    expect(problemasYAlta(com({ linhas_topo: [...linhasBom, '18:00 Sono por Ícaro'] })).some((p) => /18:00/.test(p))).toBe(true)
+    expect(problemasYAlta(com({ linhas_topo: [linhasBom[0], '16:00 Mamada por Ícaro', linhasBom[2]] })).some((p) => /16:00/.test(p))).toBe(true)
+    expect(problemasYAlta(com({ linhas_topo: [linhasBom[0], linhasBom[2]] })).some((p) => /16:00/.test(p))).toBe(true)
+    expect(problemasYAlta(com({ linhas_topo: [linhasBom[1]] })).some((p) => /last row/.test(p))).toBe(true)
+    expect(problemasYAlta(com({ rodape_ausente: false })).some((p) => /rodape_ausente/.test(p))).toBe(true)
+    expect(problemasYAlta(com({ aviso_ausente: false })).some((p) => /aviso_ausente/.test(p))).toBe(true)
+    expect(problemasYAlta(com({ ultima_linha_repouso: '20:30' })).some((p) => /ultima_linha_repouso/.test(p))).toBe(true)
   })
 
   it('REPH-I-06 the page uses the entry Y_ALTA for the Histórico frame and the entry N for the Hoje frame', () => {

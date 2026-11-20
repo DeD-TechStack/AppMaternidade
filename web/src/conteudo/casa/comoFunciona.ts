@@ -6,11 +6,11 @@ import m01Heroi390 from '../../assets/cenas/como-funciona/m01-heroi-390c-780w.we
 import m04Tummy from '../../assets/cenas/como-funciona/m04-1040w.webp?w=350;520;700;1040&format=avif;webp&as=picture'
 import m06Colo from '../../assets/cenas/como-funciona/m06-600w.webp?w=300;600&format=avif;webp&as=picture'
 
-// /como-funciona na casa acesa: as 25 frases do deck COPY_como-funciona (copy/COPY_como-funciona.md, sha256 84e6bf6d…).
+// Approved COPY_como-funciona deck (sha256 84e6bf6d…) with COMO-P3 hero/closing copy; no other copy changes.
 // `cf.aba` (o título da aba) fica em NOMES_DE_PAGINA. Cada frase numa linha, com o id do deck ao lado.
 export const COMO_FUNCIONA = {
   h1: 'Deixa que eu anoto.', // cf.h1
-  lede: 'Um dia da Helo, da mamada das 03:00 ao sono das 20:30, do jeito que ficou anotado no site.', // cf.lede
+  lede: 'A família anota mamadas, sono e fraldas num histórico só. Este é um dia da Helo, da mamada das 03:00 ao sono das 20:30.', // cf.lede
   cta1: 'Criar conta', // cf.cta1
   leg1: '03:00, mamada, anotada por Ícaro', // cf.leg1
   altCena1:
@@ -40,6 +40,7 @@ export const COMO_FUNCIONA = {
   passo3: 'Cadastre o bebê. O site pede só o nome ou apelido e a data de nascimento.', // cf.passo3
   aviso: 'O AppMaternidade não faz diagnóstico e não substitui a orientação de um profissional de saúde.', // cf.aviso
   h2Fecho: 'E amanhã tem tudo de novo.', // cf.h2.fecho
+  fecho: 'O que foi anotado hoje fica no histórico da família, pronto para o dia seguinte.', // cf.p.fecho
   cta2: 'Criar conta', // cf.cta2
 } as const
 

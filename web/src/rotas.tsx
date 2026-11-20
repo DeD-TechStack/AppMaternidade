@@ -1,6 +1,7 @@
 import type { RouteObject } from 'react-router'
 import { Layout } from './componentes/Layout.tsx'
 import { ProvedorSessao } from './componentes/conta/sessao.tsx'
+import { Carregando } from './componentes/estado/Carregando.tsx'
 import { Inicio } from './paginas/Inicio.tsx'
 import { NaoEncontrada } from './paginas/NaoEncontrada.tsx'
 import { rotasDasAreas } from './rotas/areas.tsx'
@@ -13,6 +14,7 @@ export function criarRotas(): RouteObject[] {
     // O conteúdo das páginas públicas não espera por ela.
     {
       element: <ProvedorSessao />,
+      hydrateFallbackElement: <Carregando texto="Carregando a página…" />,
       children: [
         {
           element: <Layout />,

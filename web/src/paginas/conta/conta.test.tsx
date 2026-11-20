@@ -56,7 +56,7 @@ describe('estrutura da tela', () => {
     const secoes = within(document.querySelector('main')!)
       .getAllByRole('heading', { level: 2 })
       .map((titulo) => titulo.textContent)
-    expect(secoes).toEqual(['Perfil', 'ID da sua conta', 'Seus dados', 'Excluir conta', 'Privacidade'])
+    expect(secoes).toEqual(['Perfil', 'Avisos de outros cuidadores', 'ID da sua conta', 'Seus dados', 'Excluir conta', 'Privacidade'])
 
     // O "Conta" e o "Sair" são do cabeçalho do site (a sessão); a barra da página só tem "Ir para o Hoje".
     const cabecalho = within(document.querySelector<HTMLElement>('header[data-cabecalho]')!)
@@ -77,8 +77,8 @@ describe('estrutura da tela', () => {
 
     const indice = within(screen.getByRole('navigation', { name: 'Nesta página' }))
     const links = indice.getAllByRole('link')
-    expect(links.map((link) => link.textContent)).toEqual(['Perfil', 'ID da conta', 'Seus dados', 'Excluir conta', 'Privacidade'])
-    expect(links.map((link) => link.getAttribute('href'))).toEqual(['#perfil', '#id-conta', '#exportar', '#excluir-conta', '#privacidade'])
+    expect(links.map((link) => link.textContent)).toEqual(['Perfil', 'Avisos', 'ID da conta', 'Seus dados', 'Excluir conta', 'Privacidade'])
+    expect(links.map((link) => link.getAttribute('href'))).toEqual(['#perfil', '#avisos', '#id-conta', '#exportar', '#excluir-conta', '#privacidade'])
     for (const link of links) {
       expect(link.classList.contains('alvo-toque')).toBe(true)
       expect(document.querySelector(link.getAttribute('href')!)).not.toBeNull()

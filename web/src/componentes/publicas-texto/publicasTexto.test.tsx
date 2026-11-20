@@ -50,7 +50,7 @@ afterEach(() => {
 describe('páginas públicas de leitura', () => {
   for (const [caminho, nome, dados] of PAGINAS) {
     describe(caminho, () => {
-      it(`tem um só título, "${nome}", seguido da segunda linha do título`, () => {
+      it(`tem um só título, "${nome}", seguido da frase de abertura (o subtítulo, em prumo)`, () => {
         const { container } = renderizarRota(caminho)
         const principal = container.querySelector('main')!
         const titulos = within(principal).getAllByRole('heading', { level: 1 })
@@ -83,67 +83,50 @@ describe('páginas públicas de leitura', () => {
         expect(rolar).toHaveBeenCalledTimes(links.length)
       })
 
-      it('tem um só desenho de traço, dentro do painel de mel, com texto alternativo, sem repetir a mesma figura na própria página', () => {
+      it('não mostra mais o desenho de traço, o painel de mel nem a frase de apoio (os campos ficam no conteúdo, sem aparecer)', () => {
         const { container } = renderizarRota(caminho)
         const principal = container.querySelector('main')!
-        const desenhos = container.querySelectorAll<HTMLImageElement>('main img[data-ilustracao]')
-        expect(desenhos).toHaveLength(1)
-        expect(desenhos[0].getAttribute('data-ilustracao')).toBe(dados.ilustracao)
-        expect(desenhos[0].getAttribute('alt')).toMatch(/^Desenho de traço: .+/)
-        expect(desenhos[0].classList.contains('pt-ilustracao')).toBe(true)
-        expect(desenhos[0].closest('aside.pt-painel')).not.toBeNull()
-        expect(principal.querySelectorAll('aside.pt-painel')).toHaveLength(1)
-        expect(within(principal).getAllByRole('img', { name: desenhos[0].alt })).toHaveLength(1)
-
-        // A regra é por página: uma só peça nela, e nenhuma outra imagem da página repete a figura do painel.
-        expect(principal.querySelectorAll(`img[data-ilustracao="${dados.ilustracao}"]`)).toHaveLength(1)
-        expect(principal.querySelectorAll('img[data-ilustracao]')).toHaveLength(1)
+        expect(principal.querySelector('img[data-ilustracao]')).toBeNull()
+        expect(principal.querySelector('aside')).toBeNull()
+        expect(principal.querySelector('.cm-painel, [data-painel], .pt-painel, .pt-figura, .pt-apoio, .pt-segunda-linha')).toBeNull()
+        expect(principal.textContent!.includes(dados.apoio)).toBe(false)
+        expect(dados.ilustracao).toBeTruthy()
+        expect(dados.apoio).toBeTruthy()
       })
 
-      it('põe o painel de mel na abertura, depois do bloco do título, e carrega o desenho na hora', () => {
+      it('abre com uma faixa de cacau (pt-abertura) que tem o h1, a frase e a placa da rua, decorativa e na hora', () => {
         const { container } = renderizarRota(caminho)
         const principal = container.querySelector('main')!
-        const painel = principal.querySelector('aside.pt-painel')!
-        const desenho = painel.querySelector('img[data-ilustracao]')!
+        const faixa = principal.firstElementChild!
+        expect(faixa.classList.contains('pt-abertura')).toBe(true)
+        expect(faixa.getAttribute('data-faixa-fundo')).toBe('cacau')
+        expect(faixa.querySelector('h1')).not.toBeNull()
+        // Uma só imagem na página inteira: a placa, com `alt` vazio (decorativa), carregada na hora.
+        const imagens = principal.querySelectorAll('img')
+        expect(imagens).toHaveLength(1)
+        const [imagem] = imagens
+        expect(faixa.contains(imagem)).toBe(true)
+        expect(imagem.closest('.pt-placa')).not.toBeNull()
+        expect(imagem.getAttribute('alt')).toBe('')
+        expect(imagem.getAttribute('loading')).toBe('eager')
+        // A placa vem depois do texto, para o título abrir a leitura.
         const titulo = principal.querySelector('h1')!
-        expect(titulo.compareDocumentPosition(painel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-        const figura = painel.parentElement!
-        expect(figura.parentElement!.classList.contains('pt-abertura')).toBe(true)
-        expect(figura.previousElementSibling!.classList.contains('pt-cabeca')).toBe(true)
-        expect(desenho.getAttribute('loading')).toBe('eager')
-        // Nenhuma página guarda o painel na leitura: o texto começa depois do índice.
-        expect(principal.querySelector('.pt-leitura aside')).toBeNull()
+        expect(titulo.compareDocumentPosition(imagem) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
       })
 
-      it('mostra a frase de apoio (pt-apoio) logo abaixo do painel de mel, que fica só com o desenho, e só ali', () => {
+      it('tem o índice entre a abertura e o documento, na grade da leitura, antes da coluna de leitura', () => {
         const { container } = renderizarRota(caminho)
         const principal = container.querySelector('main')!
-        const painel = principal.querySelector('aside.pt-painel')!
-        const apoio = within(principal as HTMLElement).getByText(dados.apoio)
-        expect(apoio.classList.contains('pt-apoio')).toBe(true)
-        expect(painel.contains(apoio)).toBe(false)
-        expect(painel.nextElementSibling).toBe(apoio)
-        expect(painel.parentElement!.classList.contains('pt-figura')).toBe(true)
-        // O painel é só o desenho: nenhum texto dentro dele.
-        expect(painel.textContent).toBe('')
-        expect(painel.children).toHaveLength(1)
-        expect(painel.querySelector('nav')).toBeNull()
-        expect(principal.textContent!.split(dados.apoio)).toHaveLength(2)
-      })
-
-      it('tem o índice entre a abertura e a leitura, fora do painel de mel', () => {
-        const { container } = renderizarRota(caminho)
-        const principal = container.querySelector('main')!
-        const indice = principal.querySelector('.pt-leitura > nav.pt-indice')!
+        const indice = principal.querySelector('.pt-pagina-grade > nav.pt-indice')!
         const secaoDaLeitura = indice.closest('main > [data-h~="secao"]')!
-        expect(secaoDaLeitura.previousElementSibling!.querySelector('.pt-abertura')).not.toBeNull()
+        expect(secaoDaLeitura.previousElementSibling!.classList.contains('pt-abertura')).toBe(true)
         expect(indice.previousElementSibling).toBeNull()
-        expect(indice.nextElementSibling).not.toBeNull()
-        expect(indice.parentElement!.classList.contains('pt-leitura')).toBe(true)
+        expect(indice.nextElementSibling!.classList.contains('pt-leitura')).toBe(true)
+        expect(principal.querySelector('.pt-leitura nav')).toBeNull()
         expect(indice.closest('aside')).toBeNull()
       })
 
-      it(`tem na abertura, depois do título e da segunda linha, o botão de ação principal "${BOTAO_DA_ABERTURA[caminho][0]}" (${BOTAO_DA_ABERTURA[caminho][1]})`, () => {
+      it(`tem na abertura, depois do título e da frase, a pílula de mel "${BOTAO_DA_ABERTURA[caminho][0]}" (${BOTAO_DA_ABERTURA[caminho][1]})`, () => {
         const { container } = renderizarRota(caminho)
         const abertura = container.querySelector('main .pt-abertura')!
         const titulo = abertura.querySelector('h1')!
@@ -153,7 +136,7 @@ describe('páginas públicas de leitura', () => {
         const [rotulo, destino] = BOTAO_DA_ABERTURA[caminho]
         expect(titulo.nextElementSibling!.textContent).toBe(dados.subtitulo)
         expect(titulo.compareDocumentPosition(botao) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-        expect(botao.className).toBe('cm-botao cm-botao-primario alvo-toque')
+        expect(botao.className).toBe('cm-botao cm-botao-mel alvo-toque')
         expect(botao.textContent).toBe(rotulo)
         expect(botao.getAttribute('href')).toBe(destino)
       })
@@ -166,14 +149,17 @@ describe('páginas públicas de leitura', () => {
 
       it(
         caminho === '/contato'
-          ? 'mostra o e-mail de contato num cartão na abertura, só com o rótulo, o endereço e o botão "Escrever para nós" (mailto)'
+          ? 'mostra o e-mail de contato na abertura, no lugar do botão e sem caixa, só com o rótulo, o endereço e o botão "Escrever para nós" (mailto)'
           : 'não mostra o e-mail de contato (só a página Contato o mostra)',
         () => {
           const { container } = renderizarRota(caminho)
           const principal = container.querySelector('main')!
           if (caminho === '/contato') {
-            const bloco = principal.querySelector('.pt-abertura > .pt-cabeca > .pt-email')!
+            const bloco = principal.querySelector('.pt-abertura .pt-cabeca > .pt-email')!
             expect(bloco).not.toBeNull()
+            // Sem caixa: não é um Cartao (a primitiva de caixa com fundo e borda).
+            expect((bloco.getAttribute('data-h') ?? '').split(' ')).not.toContain('cartao')
+            expect(principal.querySelector('.pt-abertura [data-h~="cartao"]')).toBeNull()
             expect(principal.querySelectorAll('.pt-email')).toHaveLength(1)
             expect(bloco.previousElementSibling!.tagName).toBe('DIV')
             expect(bloco.textContent).toContain('E-mail')
@@ -256,14 +242,12 @@ describe('índice "Nesta página" em tela estreita', () => {
   })
 })
 
-describe('Contato: desenho', () => {
-  it('usa "maos-celular", do mesmo conjunto das outras páginas, com o texto alternativo que a peça já tem', () => {
+describe('Contato: sem desenho de traço', () => {
+  it('o campo "ilustracao" segue no conteúdo ("maos-celular"), mas a página mostra só a placa da rua', () => {
     const { container } = renderizarRota('/contato')
-    const desenho = container.querySelector<HTMLImageElement>('main img[data-ilustracao]')!
     expect(PAGINAS_DE_TEXTO.contato.ilustracao).toBe('maos-celular')
-    expect(desenho.getAttribute('data-ilustracao')).toBe('maos-celular')
-    expect(desenho.getAttribute('alt')).toBe('Desenho de traço: duas mãos passam um celular de uma pessoa para outra.')
-    expect(container.querySelector('main img[data-ilustracao="baba-tapete"]')).toBeNull()
+    expect(container.querySelector('main img[data-ilustracao]')).toBeNull()
+    expect(container.querySelectorAll('main img')).toHaveLength(1)
   })
 })
 
@@ -405,10 +389,10 @@ describe('Contato: bloco de e-mail', () => {
     expect(principal.querySelector('h1')!.nextElementSibling!.textContent).toBe('Fale conosco.')
   })
 
-  it('o botão "Escrever para nós" é um link mailto com o estilo de botão do site (alvo de 44 px)', () => {
+  it('o botão "Escrever para nós" é um link mailto com o estilo de botão de mel, para ler sobre o cacau (alvo de 44 px)', () => {
     renderizarRota('/contato')
     const botao = screen.getByRole('link', { name: 'Escrever para nós' })
-    expect(botao.className).toBe('cm-botao cm-botao-primario alvo-toque')
+    expect(botao.className).toBe('cm-botao cm-botao-mel alvo-toque')
   })
 })
 
@@ -490,12 +474,12 @@ describe('Exclusão de conta: página de tarefa', () => {
     )
   })
 
-  it('o botão "Ir para a Conta" fica na abertura, logo depois da segunda linha do título, e leva a /app/conta', () => {
+  it('o botão "Ir para a Conta" fica na abertura, logo depois da frase de abertura, e leva a /app/conta', () => {
     const { container } = renderizarRota('/exclusao-de-conta')
-    const cabeca = container.querySelector('main .pt-abertura > .pt-cabeca')!
+    const cabeca = container.querySelector('main .pt-abertura .pt-cabeca')!
     const botao = within(cabeca as HTMLElement).getByRole('link', { name: 'Ir para a Conta' })
     expect(botao.getAttribute('href')).toBe('/app/conta')
-    expect(botao.className).toBe('cm-botao cm-botao-primario alvo-toque')
+    expect(botao.className).toBe('cm-botao cm-botao-mel alvo-toque')
     expect(cabeca.lastElementChild).toBe(botao.parentElement)
     expect(cabeca.lastElementChild!.previousElementSibling!.tagName).toBe('DIV')
     expect(container.querySelectorAll('main a[href="/app/conta"]')).toHaveLength(1)
@@ -513,14 +497,14 @@ describe('Exclusão de conta: página de tarefa', () => {
     expect(principal.querySelector('a[href="/contato"]')).toBeNull()
   })
 
-  it('o painel de mel (o desenho) fica na abertura, como nas outras páginas: nada de painel no meio da leitura', () => {
+  it('a placa da rua fica na abertura, depois do botão, como nas outras páginas: nada de painel nem de figura na leitura', () => {
     const { container } = renderizarRota('/exclusao-de-conta')
     const principal = container.querySelector('main')!
-    const painel = principal.querySelector('aside.pt-painel')!
-    expect(painel.parentElement!.parentElement!.classList.contains('pt-abertura')).toBe(true)
-    expect(principal.querySelector('.pt-leitura aside')).toBeNull()
+    const placa = principal.querySelector('.pt-abertura .pt-placa')!
+    expect(placa).not.toBeNull()
+    expect(principal.querySelector('.pt-leitura aside, .pt-leitura img, .pt-leitura picture')).toBeNull()
     const botao = screen.getByRole('link', { name: 'Ir para a Conta' })
-    expect(botao.compareDocumentPosition(painel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(botao.compareDocumentPosition(placa) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 })
 
@@ -618,7 +602,7 @@ describe('índice igual nas seis páginas', () => {
         const { container, unmount } = renderizarRota(caminho)
         const principal = container.querySelector('main')!
         expect(principal.hasAttribute('data-desenho'), caminho).toBe(false)
-        const indice = principal.querySelector('.pt-leitura > nav.pt-indice')!
+        const indice = principal.querySelector('.pt-pagina-grade > nav.pt-indice')!
         const detalhes = indice.querySelector('details')
         expect(detalhes, caminho).not.toBeNull()
         expect(detalhes!.open, caminho).toBe(false)
@@ -631,7 +615,7 @@ describe('índice igual nas seis páginas', () => {
     }
     for (const [caminho, , dados] of PAGINAS) {
       const { container, unmount } = renderizarRota(caminho)
-      const indice = container.querySelector('main .pt-leitura > nav.pt-indice')!
+      const indice = container.querySelector('main .pt-pagina-grade > nav.pt-indice')!
       expect(indice.querySelector('details'), caminho).toBeNull()
       expect(indice.querySelectorAll('ul'), caminho).toHaveLength(1)
       expect(indice.querySelectorAll('li'), caminho).toHaveLength(dados.secoes.length)
@@ -654,134 +638,95 @@ describe('listas longas', () => {
   })
 })
 
-// O jsdom não mede layout: a coluna única, o painel do tamanho do desenho e a lista do índice são lidos do CSS
-// (regras do arquivo, na ordem em que aparecem: a primeira é a do celular; a seguinte, a de 1100 px).
-describe('painel e figura por largura (CSS)', () => {
+// O jsdom não mede layout: o modelo T2 (a faixa de cacau, a placa, a coluna de 640 e o índice à direita) é lido do
+// CSS; a medida de verdade, num Chrome, é a de `aberturaTexto.geometria.test.tsx`.
+describe('modelo T2 por largura (CSS)', () => {
   const css = lerCss().replace(/\/\*[\s\S]*?\*\//g, '')
   const regras = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, seletor, corpo]) => ({ seletor: seletor.trim(), corpo }))
   const corpos = (seletor: string) => regras.filter((regra) => regra.seletor === seletor).map(({ corpo }) => corpo)
 
-  const altura = (corpo: string) => Number(/height:\s*(\d+)px/.exec(corpo)![1])
-
-  it('o painel de mel não tem fundo próprio no CSS (a cor vem do PainelCampo) e abraça a figura: figura mais o respiro de 24, centrado na coluna, nas duas larguras', () => {
-    const [celular] = corpos('.pt-figura > .cm-painel.pt-painel')
-    expect(celular).toMatch(/padding:\s*var\(--espaco-grupo\)/)
-    // No celular o painel ocupa a largura do quadro, na borda esquerda dele; em tela larga tem a largura da figura
-    // (fit-content), no máximo a da coluna, e fica centrado nela.
-    expect(celular).toMatch(/(^|[\s;])inline-size:\s*100%/)
-    expect(celular).toMatch(/(^|[\s;])max-inline-size:\s*100%/)
-    expect(celular).toMatch(/box-sizing:\s*border-box/)
-    expect(celular).toMatch(/align-self:\s*center/)
-    expect(css).toMatch(/@media \(min-width: 1100px\)/)
-    const [, largo] = corpos('.pt-figura > .cm-painel.pt-painel')
-    expect(largo).toMatch(/(^|[\s;])inline-size:\s*fit-content/)
-    expect(largo).toMatch(/align-self:\s*center/)
-    expect(css).not.toMatch(/background-color:\s*var\(--color-areia\)/)
-    // Nada mais dá respiro ao painel em tela larga: o painel continua figura + 24.
-    expect(css).not.toMatch(/\.cm-painel\.pt-painel\s*\{[^}]*padding:\s*40px/)
+  it('a abertura é uma faixa de cacau com letras de papel, e é o contêiner da própria disposição', () => {
+    const [faixa] = corpos('.pt-abertura')
+    expect(faixa).toMatch(/background-color:\s*var\(--color-cacau\)/)
+    expect(faixa).toMatch(/(^|[\s;])color:\s*var\(--color-papel\)/)
+    expect(faixa).toMatch(/container:\s*pt-abertura\s*\/\s*inline-size/)
+    expect(css).toMatch(/@container pt-abertura \(min-width: 60rem\)/)
   })
 
-  it('o painel nunca é mais largo que a figura mais 48 (24 de cada lado) e a figura ocupa pelo menos 70% da altura e 60% da largura da área interna', () => {
-    const declara = (corpo: string, propriedade: string) =>
-      new RegExp(`(^|[\\s;])${propriedade}\\s*:`).test(corpo)
-
-    // Nenhuma regra de painel dá largura mínima ou fixa ao painel nem altura própria: ele é o conteúdo mais o respiro.
-    const doPainel = regras.filter(({ seletor }) => seletor.includes('.pt-painel'))
-    expect(doPainel.length).toBeGreaterThan(0)
-    for (const { corpo } of doPainel) {
-      for (const propriedade of ['width', 'min-width', 'min-inline-size', 'height', 'min-height', 'block-size', 'min-block-size', 'aspect-ratio']) {
-        expect(declara(corpo, propriedade), propriedade).toBe(false)
-      }
-      expect(corpo).toMatch(/(^|[\s;])inline-size:\s*(fit-content|100%)/)
-      expect(corpo).toMatch(/(^|[\s;])max-inline-size:\s*100%/)
-      expect(corpo).toMatch(/padding:\s*var\(--espaco-grupo\)/)
-      expect(corpo).toMatch(/box-sizing:\s*border-box/)
-    }
-
-    // A caixa da figura (a imagem): bloco, largura automática limitada à do painel, sem respiro, borda nem largura mínima.
-    const doDesenho = regras.filter(({ seletor }) => seletor === '.pt-ilustracao').map(({ corpo }) => corpo)
-    expect(doDesenho.length).toBeGreaterThan(0)
-    for (const corpo of doDesenho) {
-      expect(declara(corpo, 'min-width')).toBe(false)
-      expect(declara(corpo, 'min-inline-size')).toBe(false)
-      expect(declara(corpo, 'inline-size')).toBe(false)
-      expect(declara(corpo, 'padding')).toBe(false)
-      expect(declara(corpo, 'border')).toBe(false)
-    }
-    const [imagem] = doDesenho
-    expect(imagem).toMatch(/display:\s*block/)
-    expect(imagem).toMatch(/width:\s*auto/)
-    expect(imagem).toMatch(/max-width:\s*100%/)
-    expect(imagem).toMatch(/object-fit:\s*contain/)
-
-    // Por construção: a largura do painel é a da figura mais 48 (padding de 24 dos dois lados) e a altura é a da figura
-    // mais 48; a figura ocupa h / (h + 48 - 48) = 100% da altura e da largura da área interna (mínimo exigido: 70% e 60%).
-    for (const corpo of doDesenho) {
-      const h = altura(corpo)
-      const areaInterna = h + 48 - 2 * 24
-      expect(h / areaInterna).toBeGreaterThanOrEqual(0.7)
-    }
+  it('largo: a faixa tem 400 px de altura mínima (min-block-size, cresce com o texto) e a placa sai do fluxo, rente à borda direita e ao pé', () => {
+    const bloco = /@container pt-abertura \(min-width: 60rem\)\s*\{([\s\S]*?\n {2}\})/.exec(css)![1]
+    expect(bloco).toMatch(/min-block-size:\s*400px/)
+    expect(bloco).not.toMatch(/(^|[\s;])(block-size|height):\s*\d/)
+    const placa = /\.pt-placa\s*\{([^}]*)\}/.exec(bloco)![1]
+    expect(placa).toMatch(/position:\s*absolute/)
+    expect(placa).toMatch(/inset-inline-end:\s*0/)
+    expect(placa).toMatch(/inset-block-end:\s*0/)
+    // A coluna do texto nunca passa por baixo da placa.
+    expect(bloco).toMatch(/max-inline-size:\s*min\(var\(--leitura\),\s*100%\s*-\s*var\(--pt-borda\)\s*-\s*var\(--pt-placa-largura\)/)
   })
 
-  it('a frase de apoio fica sempre à vista, em Literata em prumo, no degrau de título 4 (o token, que cresce com a tela), embaixo do painel', () => {
-    const [celular, largo] = corpos('.pt-apoio')
-    expect(celular).not.toMatch(/display:\s*none/)
-    expect(celular).toMatch(/font-style:\s*normal/)
-    expect(celular).toMatch(/font-family:\s*var\(--fonte-titulo\)/)
-    expect(celular).toMatch(/font-size:\s*var\(--texto-titulo-4-tamanho\)/)
-    expect(celular).toMatch(/line-height:\s*var\(--texto-titulo-4-entrelinha\)/)
-    expect(largo).toMatch(/text-align:\s*end/)
-    expect(largo).not.toMatch(/font-size|line-height/)
+  it('a placa é mostrada na largura nativa de 340 px (densidade 1,59 do arquivo de 542, nunca ampliada) e o pé da faixa continua o chão dela, sem areia nem #6E6560', () => {
+    expect(corpos('.pt-abertura')[0]).toMatch(/--pt-placa-largura:\s*340px/)
+    const [placa] = corpos('.pt-placa')
+    expect(placa).toMatch(/inline-size:\s*min\(var\(--pt-placa-largura\),\s*100%\)/)
+    const [chao] = corpos('.pt-abertura-grade::before')
+    expect(chao).toMatch(/background-color:\s*color-mix\(in srgb,\s*var\(--color-cacau\)/)
+    expect(css).not.toMatch(/areia|6E6560|texto-2/i)
+    expect(css).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
   })
 
-  it('o desenho do painel fica inteiro (contain): 220 px de altura no celular, 300 px em tela larga', () => {
-    const [celular, largo] = corpos('.pt-ilustracao')
-    expect(celular).toMatch(/display:\s*block/)
-    expect(altura(celular)).toBe(220)
-    expect(celular).toMatch(/object-fit:\s*contain/)
-    expect(altura(largo)).toBe(300)
-  })
-
-  it('o painel do celular cabe em 40% da janela de 844 px: respiro 24 + figura + respiro 24 (a frase de apoio fica fora dele)', () => {
-    const [celular] = corpos('.pt-ilustracao')
-    expect(24 + altura(celular) + 24).toBeLessThanOrEqual(0.4 * 844)
-  })
-
-  it('uma coluna de leitura de 640 px (QuadroLayout), à esquerda, para o índice e para toda a leitura; o mesmo fio abre cada bloco', () => {
-    expect(css).not.toMatch(/--pt-coluna/)
-    expect(css).not.toMatch(/\.pt-pagina/)
-    const [fio] = corpos('.pt-leitura > .pt-indice,\n  .pt-leitura > .cm-lide,\n  .pt-leitura > .pt-secao')
-    expect(fio).toMatch(/border-top:\s*1px solid/)
-    // Nenhuma regra dá fio só a uma seção ou a um bloco de dentro dela.
+  it('o documento: uma coluna de leitura de 640 px (max-w-leitura) sem fio entre as seções, com 64 px (vão midia) entre elas', () => {
+    expect(css).not.toMatch(/border-top:\s*1px solid var\(--cor-fio-suave\)\s*;\s*padding-top/)
+    expect(css).not.toMatch(/\.pt-leitura\s*>\s*\.pt-secao/)
     expect(css).not.toMatch(/\.pt-secao:first-child/)
     expect(css).not.toMatch(/\.pt-secao\s*\+\s*\.pt-secao/)
+    expect(css).not.toMatch(/--pt-coluna/)
+    const { container } = renderizarRota('/privacidade')
+    const leitura = container.querySelector('main .pt-leitura')!
+    expect(leitura.classList.contains('max-w-leitura')).toBe(true)
+    expect(leitura.getAttribute('data-h-vao')).toBe('midia')
+    for (const secao of leitura.querySelectorAll('section')) expect(secao.getAttribute('data-h-vao')).toBe('pilha')
   })
 
-  it('o título usa a escala de h1 (cm-h1, 84/88 em 1440); a segunda linha usa só o degrau de título 2 (o token)', () => {
-    const [segunda] = corpos('.pt-segunda-linha')
-    expect(segunda).toMatch(/font-size:\s*var\(--texto-titulo-2-tamanho\)/)
-    expect(segunda).toMatch(/line-height:\s*var\(--texto-titulo-2-entrelinha\)/)
-    // DS1:RF-06 (§5.3): sem itálico público; a linha vira `font-style: normal` ou some.
-    expect(segunda).not.toMatch(/font-style:\s*italic/)
+  it('o índice vai para a direita da coluna quando o quadro tem lugar para 640 + vão + 320 (consulta de contêiner); abaixo disso fica em fluxo', () => {
+    const [quadro] = corpos('.pt-pagina')
+    expect(quadro).toMatch(/container:\s*pt-pagina\s*\/\s*inline-size/)
+    const [estreito] = corpos('.pt-pagina-grade')
+    expect(estreito).toMatch(/grid-template-columns:\s*minmax\(0,\s*1fr\)/)
+    const bloco = /@container pt-pagina \(min-width: 66rem\)\s*\{([\s\S]*?\n {2}\})/.exec(css)![1]
+    expect(bloco).toMatch(/grid-template-columns:\s*minmax\(0,\s*var\(--leitura\)\)\s*minmax\(0,\s*20rem\)/)
+    expect(bloco).toMatch(/\.pt-indice\s*\{[^}]*grid-column:\s*2/)
+    expect(bloco).toMatch(/\.pt-leitura\s*\{[^}]*grid-column:\s*1/)
   })
 
-  it('o índice em tela larga é uma lista vertical só, em corpo pequeno (15/22), sem grade nem colunas', () => {
+  it('o índice é uma lista vertical só, com o rótulo e os links no corpo; links de cacau, de 44 px, sublinhados só no hover e no foco', () => {
     const [rotulo] = corpos('.pt-indice-rotulo')
-    expect(rotulo).toMatch(/font-size:\s*var\(--texto-pequeno-tamanho\)/)
-    expect(rotulo).toMatch(/line-height:\s*var\(--texto-pequeno-entrelinha\)/)
+    expect(rotulo).toMatch(/font-size:\s*var\(--texto-corpo-tamanho\)/)
+    expect(rotulo).toMatch(/line-height:\s*var\(--texto-corpo-entrelinha\)/)
+    expect(rotulo).toMatch(/font-weight:\s*500/)
     const [link] = corpos('.pt-indice-link')
-    expect(link).toMatch(/font-size:\s*var\(--texto-pequeno-tamanho\)/)
-    expect(link).toMatch(/line-height:\s*var\(--texto-pequeno-entrelinha\)/)
+    expect(link).toMatch(/font-size:\s*var\(--texto-corpo-tamanho\)/)
+    expect(link).toMatch(/color:\s*var\(--color-cacau\)/)
+    expect(link).toMatch(/min-block-size:\s*var\(--alvo-toque\)/)
+    expect(link).toMatch(/text-decoration-line:\s*none/)
+    const [sublinhado] = corpos('.pt-indice-link:hover,\n  .pt-indice-link:focus-visible')
+    expect(sublinhado).toMatch(/text-decoration-line:\s*underline/)
     const [lista] = corpos('.pt-indice-lista')
     expect(lista).not.toMatch(/display:\s*grid|columns:/)
     expect(css).not.toMatch(/grid-template-columns:\s*repeat\(/)
     expect(css).not.toMatch(/\.pt-indice-lista\s*>\s*li\s*\+\s*li/)
   })
 
-  it('o índice recolhido é uma linha de 48 px, sem fundo, e o fio de cima é o do próprio índice (o mesmo das seções)', () => {
+  it('o índice recolhido é uma linha de 48 px, sem fundo e sem fio', () => {
     expect(css).not.toMatch(/\.pt-indice-detalhes\s*\{/)
     expect(corpos('.pt-indice-resumo')[0]).toMatch(/min-height:\s*48px/)
     expect(corpos('.pt-indice-resumo')[0]).not.toMatch(/background/)
-    expect(corpos('.pt-indice:has(> .pt-indice-detalhes)')[0]).toMatch(/padding-top:\s*var\(--espaco-bloco\)/)
+    expect(css).not.toMatch(/\.pt-indice:has\(/)
+  })
+
+  it('o cartão de e-mail não tem caixa: sem fundo, borda, sombra nem gradiente, e nada se move (sem animação nem transição)', () => {
+    const [email] = corpos('.pt-email')
+    expect(email).not.toMatch(/background|border|box-shadow/)
+    expect(css).not.toMatch(/box-shadow|gradient|animation|transition|@keyframes|position:\s*(sticky|fixed)/)
   })
 })

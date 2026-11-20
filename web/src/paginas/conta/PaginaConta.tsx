@@ -8,6 +8,7 @@ import {
   CHAVE_FAMILIA_ATUAL,
   CHAVE_RECUPERACAO,
 } from '../../componentes/conta/armazenamento.ts'
+import { SecaoAvisosDaConta } from '../../componentes/avisos/SecaoAvisosDaConta.tsx'
 import { Campo, SeletorFuso } from '../../componentes/conta/Campos.tsx'
 import { DialogoExcluirConta } from '../../componentes/conta/DialogoExcluirConta.tsx'
 import { useEnvio } from '../../componentes/conta/envio.ts'
@@ -26,6 +27,7 @@ import { Carregando } from '../../componentes/estado/Carregando.tsx'
 import { ErroDaConta } from '../../componentes/estado/ErroDaConta.tsx'
 import { Cartao, Coluna, Colunas, Pilha, QuadroLayout, Secao } from '../../componentes/base/layout/index.ts'
 import { useDadosConta, useSessao } from '../../componentes/conta/sessao.tsx'
+import { AVISOS_TEXTOS } from '../../conteudo/avisos.ts'
 import { COMUM, CONTA, TITULOS, textoDaPassagem, textoDoErro } from '../../conteudo/conta.ts'
 import type { ErroDados } from '../../dados/comum.ts'
 
@@ -36,6 +38,7 @@ type LeituraDosImpedimentos =
 
 const SECOES_DO_INDICE = [
   ['perfil', CONTA.secoes.perfil],
+  ['avisos', AVISOS_TEXTOS.indiceDaConta],
   ['id-conta', CONTA.secoes.id],
   ['exportar', CONTA.secoes.dados],
   ['excluir-conta', CONTA.secoes.excluir],
@@ -149,11 +152,11 @@ export function PaginaConta() {
     queueMicrotask(() => void ler())
   }, [ler])
 
-  // `/app/conta#exportar` rola até a seção e foca o título dela.
+  // `/app/conta#exportar` e `/app/conta#avisos` rolam até a seção e focam o título dela.
   const { hash, key } = location
   useEffect(() => {
-    if (hash !== '#exportar') return
-    const alvo = document.getElementById('exportar')
+    if (hash !== '#exportar' && hash !== '#avisos') return
+    const alvo = document.getElementById(hash.slice(1))
     alvo?.scrollIntoView?.()
     alvo?.focus()
   }, [hash, key])
@@ -336,6 +339,8 @@ export function PaginaConta() {
             </Pilha>
             </Colunas>
           </section>
+
+          <SecaoAvisosDaConta aoStatus={setStatus} />
 
           <section aria-labelledby="id-conta" className={SECAO}>
             <Colunas fracoes="5fr 7fr" vao="bloco" aPartirDe={1024}>

@@ -42,12 +42,14 @@ describe('páginas públicas: o <main> tem só Secao', () => {
 
 describe('páginas de leitura: coluna de leitura de 640', () => {
   for (const caminho of PAGINAS_DE_TEXTO) {
-    it(`${caminho}: as seções de texto são itens de uma só Pilha bloco dentro do QuadroLayout leitura`, () => {
+    it(`${caminho}: as seções de texto são itens de uma só Pilha midia (64 px em 1440), a coluna de leitura de 640, dentro do quadro da página`, () => {
       const { container } = renderizarRota(caminho)
-      const quadro = principal(container).querySelector('[data-h~="quadro"][data-h-largura="leitura"]')!
+      const quadro = principal(container).querySelector('[data-h~="quadro"].pt-pagina')!
       expect(quadro).not.toBeNull()
-      const pilha = quadro.querySelector(':scope > [data-h~="pilha"]')!
-      expect(pilha.getAttribute('data-h-vao')).toBe('bloco')
+      expect(quadro.getAttribute('data-h-largura')).toBe('quadro')
+      const pilha = quadro.querySelector('.pt-pagina-grade > [data-h~="pilha"]')!
+      expect(pilha.getAttribute('data-h-vao')).toBe('midia')
+      expect(pilha.classList.contains('max-w-leitura')).toBe(true)
       const secoes = Array.from(principal(container).querySelectorAll('section.pt-secao'))
       expect(secoes.length).toBeGreaterThan(0)
       for (const secao of secoes) expect(secao.parentElement).toBe(pilha)
@@ -55,14 +57,15 @@ describe('páginas de leitura: coluna de leitura de 640', () => {
       expect(principal(container).querySelectorAll('[data-h~="pilha"]:has(> section.pt-secao)')).toHaveLength(1)
     })
 
-    it(`${caminho}: o título e a abertura ficam em Colunas de vão midia, à esquerda da coluna`, () => {
+    it(`${caminho}: a abertura é uma Secao de cacau, de ponta a ponta, com o texto num QuadroLayout leitura na borda esquerda do quadro`, () => {
       const { container } = renderizarRota(caminho)
-      const colunas = principal(container).querySelector('.pt-abertura')!
-      expect(colunas.getAttribute('data-h')).toContain('colunas')
-      expect(colunas.getAttribute('data-h-vao')).toBe('midia')
-      expect(colunas.getAttribute('data-h-quebra')).toBe('1100')
-      expect(colunas.querySelector('h1')!.closest('[data-h~="coluna"]')).not.toBeNull()
-      expect(colunas.querySelector('aside.pt-painel')!.closest('[data-h~="coluna"]')).not.toBeNull()
+      const faixa = principal(container).querySelector('.pt-abertura')!
+      expect(ehSecao(faixa)).toBe(true)
+      expect(faixa.getAttribute('data-faixa-fundo')).toBe('cacau')
+      const quadro = faixa.querySelector('[data-h~="quadro"]')!
+      expect(quadro.getAttribute('data-h-largura')).toBe('leitura')
+      expect(quadro.querySelector('h1')).not.toBeNull()
+      expect(faixa.querySelector('[data-h~="colunas"], [data-h~="cartao"], aside')).toBeNull()
     })
 
     it(`${caminho}: o corpo de cada seção é uma Pilha (h2 e texto são irmãos diretos)`, () => {
@@ -74,10 +77,11 @@ describe('páginas de leitura: coluna de leitura de 640', () => {
     })
   }
 
-  it('o índice abre a pilha de leitura, antes do texto', () => {
+  it('o índice abre a grade da leitura, antes do texto', () => {
     const { container } = renderizarRota('/privacidade')
-    const pilha = principal(container).querySelector('.pt-leitura')!
-    expect(pilha.firstElementChild!.matches('nav.pt-indice')).toBe(true)
+    const grade = principal(container).querySelector('.pt-pagina-grade')!
+    expect(grade.firstElementChild!.matches('nav.pt-indice')).toBe(true)
+    expect(grade.lastElementChild!.matches('.pt-leitura')).toBe(true)
   })
 })
 
@@ -89,26 +93,26 @@ function ehCartao(elemento: Element | null): boolean {
   return (elemento?.getAttribute('data-h') ?? '').split(' ').includes('cartao')
 }
 
-describe('H-3c R1-01: caixas de conteúdo com fundo ou borda são o primitivo Cartao', () => {
-  it('Contato: o cartão de e-mail é um Cartao (padding do token, sem padding próprio)', () => {
+describe('T2: nenhuma caixa de conteúdo na abertura (nada de cartão, painel nem sombra)', () => {
+  it('Contato: o bloco de e-mail não é um Cartao (sem fundo, borda nem padding próprio): fica sobre o cacau', () => {
     const { container } = renderizarRota('/contato')
-    expect(ehCartao(container.querySelector('.pt-email'))).toBe(true)
+    expect(ehCartao(container.querySelector('.pt-email'))).toBe(false)
     const css = semComentarios('src/componentes/publicas-texto/publicasTexto.css')
     const regra = css.match(/\.pt-email\s*\{([^}]*)\}/)![1]
     expect(regra).not.toMatch(/padding\s*:/)
-    expect(regra).not.toMatch(/border-radius\s*:/)
+    expect(regra).not.toMatch(/border|background|box-shadow/)
   })
 })
 
 describe('H-3c R1-05: a cabeça da página de leitura tem o limite de leitura (640)', () => {
   for (const caminho of PAGINAS_DE_TEXTO) {
-    it(`${caminho}: título e abertura ficam numa coluna com max-w-leitura, e o corpo num quadro leitura`, () => {
+    it(`${caminho}: título e abertura ficam num QuadroLayout leitura (640), e o corpo numa coluna com max-w-leitura`, () => {
       const { container } = renderizarRota(caminho)
-      const cabeca = principal(container).querySelector('.pt-abertura > .pt-cabeca')!
-      expect(cabeca.classList.contains('max-w-leitura')).toBe(true)
+      const cabeca = principal(container).querySelector('.pt-abertura .pt-cabeca')!
+      expect(cabeca.closest('[data-h~="quadro"]')!.getAttribute('data-h-largura')).toBe('leitura')
       expect(cabeca.querySelector('h1')).not.toBeNull()
       const corpo = principal(container).querySelector('.pt-leitura')!
-      expect(corpo.closest('[data-h~="quadro"]')!.getAttribute('data-h-largura')).toBe('leitura')
+      expect(corpo.classList.contains('max-w-leitura')).toBe(true)
     })
   }
 })
