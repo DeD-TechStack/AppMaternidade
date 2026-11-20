@@ -177,18 +177,21 @@ describe('H3:RF-01/02, a Sessão e as telas de lista e de formulário da Rotina'
     semMargemNosBlocos(main)
   })
 
-  it('Histórico: controles antes do conteúdo, em Colunas 4/8 de bloco a partir de 1200, sem mudar o casco', async () => {
+  it('Histórico: colunas com bases relativas empilham ao ampliar o texto, preservando mais espaço para os registros', async () => {
     const { container } = await renderizarRotaPronta('/app/historico', { diaCompleto: true })
     const main = principal(container)
     conferirCasco(main)
     const grade = main.querySelector<HTMLElement>('[data-grade-do-historico]')!
     expect(grade.matches("[data-h~='colunas']")).toBe(true)
     expect(grade.getAttribute('data-h-vao')).toBe('bloco')
-    expect(grade.getAttribute('data-h-quebra')).toBe('1200')
-    expect(grade.style.getPropertyValue('--h-colunas')).toBe('minmax(min(100%, 24rem), 4fr) minmax(0, 8fr)')
+    // O jsdom verifica a composição; a quebra real e as palavras inteiras a 200% são conferidas no navegador.
+    expect(grade.classList.contains('flex')).toBe(true)
+    expect(grade.classList.contains('flex-wrap')).toBe(true)
     expect(grade.children).toHaveLength(2)
     expect(grade.children[0].hasAttribute('data-controles-do-historico')).toBe(true)
+    expect(grade.children[0].classList.contains('flex-[1_1_24rem]')).toBe(true)
     expect(grade.children[1].hasAttribute('data-conteudo-do-historico')).toBe(true)
+    expect(grade.children[1].classList.contains('flex-[2_1_36rem]')).toBe(true)
     for (const filho of grade.children) expect(filho.matches("[data-h~='coluna']")).toBe(true)
     const filtros = main.querySelector<HTMLElement>('[data-filtros]')!
     expect(filtros.classList.contains('flex-wrap')).toBe(true)

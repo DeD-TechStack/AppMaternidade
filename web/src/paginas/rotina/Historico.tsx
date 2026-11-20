@@ -202,8 +202,9 @@ function HistoricoDoBebe({ ativo }: { ativo: BebeAtivo }) {
             {aparelho !== fuso ? <AvisoDeFuso aparelho={aparelho} familia={fuso} /> : null}
           </Pilha>
         ) : null}
-        <Colunas fracoes="minmax(min(100%, 24rem), 4fr) minmax(0, 8fr)" vao="bloco" aPartirDe={1200} alinhar="inicio" data-grade-do-historico="">
-          <Pilha vao="pilha" dataH="coluna" data-controles-do-historico="">
+        {/* As bases em rem empilham as colunas quando o texto cresce, sem comprimir os registros. */}
+        <Colunas className="flex flex-wrap" vao="bloco" alinhar="inicio" data-grade-do-historico="">
+          <Pilha className="flex-[1_1_24rem]" vao="pilha" dataH="coluna" data-controles-do-historico="">
             <div role="group" aria-label={HISTORICO.vistas} className="flex flex-wrap gap-2" data-vistas="">
               <Botao variante={vista === 'dia' ? 'primario' : 'contorno'} tamanho="app" className={ALVO_APP} aria-pressed={vista === 'dia'} onClick={() => ir({ vista: 'dia' })}>
                 {HISTORICO.dia}
@@ -221,7 +222,7 @@ function HistoricoDoBebe({ ativo }: { ativo: BebeAtivo }) {
             <SeletorDeDia dia={dia} hoje={hoje} aoEscolher={(novo) => ir({ dia: novo })} />
             {vista === 'dia' ? <FiltrosDoHistorico tipos={tipos} aoMudar={(novos) => ir({ tipos: novos }, true)} /> : null}
           </Pilha>
-          {falhouSemDados ? null : <Coluna data-conteudo-do-historico="">{secao}</Coluna>}
+          {falhouSemDados ? null : <Coluna className="flex-[2_1_36rem]" data-conteudo-do-historico="">{secao}</Coluna>}
         </Colunas>
       </Pilha>
     </TelaRotina>
