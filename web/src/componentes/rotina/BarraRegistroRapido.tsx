@@ -143,7 +143,7 @@ export function BarraRegistroRapido({
             {textoNoLugarDosBotoes}
           </p>
         ) : (
-          <div className="grid grid-cols-4 gap-2" data-fileira="">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,4.5rem),1fr))] gap-2" data-fileira="">
             <button
               ref={refSono}
               type="button"
