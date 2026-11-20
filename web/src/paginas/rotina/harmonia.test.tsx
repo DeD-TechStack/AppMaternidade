@@ -177,6 +177,34 @@ describe('H3:RF-01/02, a Sessão e as telas de lista e de formulário da Rotina'
     semMargemNosBlocos(main)
   })
 
+  it('Histórico: controles antes do conteúdo, em Colunas 4/8 de bloco a partir de 1200, sem mudar o casco', async () => {
+    const { container } = await renderizarRotaPronta('/app/historico', { diaCompleto: true })
+    const main = principal(container)
+    conferirCasco(main)
+    const grade = main.querySelector<HTMLElement>('[data-grade-do-historico]')!
+    expect(grade.matches("[data-h~='colunas']")).toBe(true)
+    expect(grade.getAttribute('data-h-vao')).toBe('bloco')
+    expect(grade.getAttribute('data-h-quebra')).toBe('1200')
+    expect(grade.style.getPropertyValue('--h-colunas')).toBe('minmax(min(100%, 24rem), 4fr) minmax(0, 8fr)')
+    expect(grade.children).toHaveLength(2)
+    expect(grade.children[0].hasAttribute('data-controles-do-historico')).toBe(true)
+    expect(grade.children[1].hasAttribute('data-conteudo-do-historico')).toBe(true)
+    for (const filho of grade.children) expect(filho.matches("[data-h~='coluna']")).toBe(true)
+    const filtros = main.querySelector<HTMLElement>('[data-filtros]')!
+    expect(filtros.classList.contains('flex-wrap')).toBe(true)
+    expect(filtros.classList.contains('overflow-x-auto')).toBe(false)
+    const resumo = main.querySelector('[data-resumo-do-dia] dl')!
+    expect(resumo.classList.contains('max-w-leitura')).toBe(true)
+    for (const linha of resumo.children) {
+      expect(linha.classList.contains('flex-wrap')).toBe(true)
+      expect(linha.classList.contains('justify-between')).toBe(false)
+      expect(linha.children[0].classList.contains('w-[12ch]')).toBe(true)
+      expect(linha.children[1].classList.contains('basis-[20ch]')).toBe(true)
+      expect([...linha.children].map((el) => el.tagName)).toEqual(['DT', 'DD'])
+    }
+    semMargemNosBlocos(main)
+  })
+
   it('a região de status da confirmação nunca sai do DOM, e vazia não ocupa o vão da pilha (sr-only)', async () => {
     const { container } = await renderizarRotaPronta('/app/lixeira')
 

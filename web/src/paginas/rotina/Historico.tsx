@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router'
 import { Trash2 } from 'lucide-react'
 import { ALVO_APP } from '../../componentes/app/alvo.ts'
 import { Botao } from '../../componentes/base/Botao.tsx'
-import { Pilha } from '../../componentes/base/layout/index.ts'
+import { Coluna, Colunas, Pilha } from '../../componentes/base/layout/index.ts'
 import { PainelVazio } from '../../componentes/estado/PainelVazio.tsx'
 import { AvisoDeFuso } from '../../componentes/rotina/AvisoDeFuso.tsx'
 import { AvisoDeLista } from '../../componentes/rotina/AvisoDeLista.tsx'
@@ -202,25 +202,27 @@ function HistoricoDoBebe({ ativo }: { ativo: BebeAtivo }) {
             {aparelho !== fuso ? <AvisoDeFuso aparelho={aparelho} familia={fuso} /> : null}
           </Pilha>
         ) : null}
-        <Pilha vao="pilha">
-          <div role="group" aria-label={HISTORICO.vistas} className="flex flex-wrap gap-2" data-vistas="">
-            <Botao variante={vista === 'dia' ? 'primario' : 'contorno'} tamanho="app" className={ALVO_APP} aria-pressed={vista === 'dia'} onClick={() => ir({ vista: 'dia' })}>
-              {HISTORICO.dia}
-            </Botao>
-            <Botao
-              variante={vista === 'semana' ? 'primario' : 'contorno'}
-              tamanho="app"
-              className={ALVO_APP}
-              aria-pressed={vista === 'semana'}
-              onClick={() => ir({ vista: 'semana' })}
-            >
-              {HISTORICO.semana}
-            </Botao>
-          </div>
-          <SeletorDeDia dia={dia} hoje={hoje} aoEscolher={(novo) => ir({ dia: novo })} />
-          {vista === 'dia' ? <FiltrosDoHistorico tipos={tipos} aoMudar={(novos) => ir({ tipos: novos }, true)} /> : null}
-        </Pilha>
-        {falhouSemDados ? null : secao}
+        <Colunas fracoes="minmax(min(100%, 24rem), 4fr) minmax(0, 8fr)" vao="bloco" aPartirDe={1200} alinhar="inicio" data-grade-do-historico="">
+          <Pilha vao="pilha" dataH="coluna" data-controles-do-historico="">
+            <div role="group" aria-label={HISTORICO.vistas} className="flex flex-wrap gap-2" data-vistas="">
+              <Botao variante={vista === 'dia' ? 'primario' : 'contorno'} tamanho="app" className={ALVO_APP} aria-pressed={vista === 'dia'} onClick={() => ir({ vista: 'dia' })}>
+                {HISTORICO.dia}
+              </Botao>
+              <Botao
+                variante={vista === 'semana' ? 'primario' : 'contorno'}
+                tamanho="app"
+                className={ALVO_APP}
+                aria-pressed={vista === 'semana'}
+                onClick={() => ir({ vista: 'semana' })}
+              >
+                {HISTORICO.semana}
+              </Botao>
+            </div>
+            <SeletorDeDia dia={dia} hoje={hoje} aoEscolher={(novo) => ir({ dia: novo })} />
+            {vista === 'dia' ? <FiltrosDoHistorico tipos={tipos} aoMudar={(novos) => ir({ tipos: novos }, true)} /> : null}
+          </Pilha>
+          {falhouSemDados ? null : <Coluna data-conteudo-do-historico="">{secao}</Coluna>}
+        </Colunas>
       </Pilha>
     </TelaRotina>
   )

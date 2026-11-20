@@ -145,8 +145,11 @@ describe('R38-20: os filtros', () => {
   // QA-05 (TESTES_TROCADOS): com todos ligados, o primeiro toque num tipo deixa só ele (antes, o desligava).
   it('Todos liga os sete; o primeiro toque num tipo deixa só ele na lista e no resumo, e a URL guarda só ele', async () => {
     const mundo = await renderizarRotaPronta('/app/historico', { diaCompleto: true })
-    expect(botao('Todos').getAttribute('aria-pressed')).toBe('true')
-    expect(botao('Sono').getAttribute('aria-pressed')).toBe('true')
+    // POL-HIS:A-1's single-selection interpretation is obsolete: every selected type stays pressed.
+    const filtros = within(document.querySelector<HTMLElement>('[data-filtros]')!)
+    expect(filtros.getAllByRole('button')).toHaveLength(8)
+    expect(filtros.getAllByRole('button').every((b) => b.getAttribute('aria-pressed') === 'true')).toBe(true)
+    const totaisIniciais = resumo()
 
     fireEvent.click(botao('Sono'))
     await aguardarCarga()
@@ -157,12 +160,13 @@ describe('R38-20: os filtros', () => {
     expect(botao('Fralda').getAttribute('aria-pressed')).toBe('false')
     expect(linhas()).toHaveLength(3)
     expect(linhas().every((l) => l.texto.startsWith('Sono'))).toBe(true)
-    expect(resumo().every((linha) => linha.startsWith('Sono'))).toBe(true)
+    expect(resumo()).toEqual(totaisIniciais.filter((linha) => linha.startsWith('Sono')))
 
     fireEvent.click(botao('Todos'))
     await aguardarCarga()
     expect(busca(mundo)).toBe('?dia=2026-11-05')
     expect(linhas()).toHaveLength(9)
+    expect(resumo()).toEqual(totaisIniciais)
   })
 
   it('desligar o último tipo ligado volta a Todos: nunca há zero tipos', async () => {
