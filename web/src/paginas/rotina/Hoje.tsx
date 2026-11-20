@@ -44,7 +44,7 @@ function dataPorExtenso(instante: number, fuso: string): string {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
-    timeZone: fusoValido(fuso) ? fuso : undefined,
+    timeZone: fusoValido(fuso) ? fuso : 'UTC',
   }).format(instante)
   return texto.charAt(0).toLocaleUpperCase('pt-BR') + texto.slice(1)
 }

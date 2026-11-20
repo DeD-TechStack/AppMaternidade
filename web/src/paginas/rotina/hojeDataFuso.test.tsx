@@ -33,6 +33,21 @@ describe('Hoje: a data do título usa o fuso da família', () => {
     expect(dataDoTitulo(container)).toBe('Quarta-feira, 11 de novembro')
   })
 
+  it('família com fuso inválido usa o dia em UTC mesmo com aparelho em São Paulo', async () => {
+    process.env.TZ = SAO_PAULO
+    const instante = new Date('2026-11-12T01:30:00Z')
+    vi.setSystemTime(instante)
+
+    expect(Intl.DateTimeFormat().resolvedOptions().timeZone).toBe(SAO_PAULO)
+    expect(new Intl.DateTimeFormat('pt-BR', { day: 'numeric' }).format(instante)).toBe('11')
+
+    const fuso = 'Invalid/Zone'
+    const { container } = await renderizarRotaPronta('/app/hoje', { fusoDaFamilia: fuso })
+
+    expect(diaDaFamilia(instante.getTime(), fuso)).toBe('2026-11-12')
+    expect(dataDoTitulo(container)).toBe('Quinta-feira, 12 de novembro')
+  })
+
   it('controle: aparelho e família em São Paulo ao meio-dia mostram a mesma data de sempre', async () => {
     process.env.TZ = SAO_PAULO
     const instante = new Date('2026-11-05T15:00:00Z')
