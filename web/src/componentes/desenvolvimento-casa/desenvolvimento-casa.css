@@ -640,6 +640,55 @@
   }
 }
 
+/* Native phase index: the existing grid area contains the index and the unchanged phase list. */
+.dc-fases-bloco {
+  grid-area: fases;
+  min-width: 0;
+}
+
+.dc-fases-indice {
+  padding-block: var(--espaco-grupo);
+}
+
+.dc-fases-indice > p {
+  margin: 0;
+  font-weight: 500;
+}
+
+.dc-fases-indice > ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-junto) var(--espaco-grupo);
+  margin: var(--espaco-junto) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dc-fases-indice li {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.dc-fases-indice a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: inherit;
+  text-decoration-line: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 6px;
+  overflow-wrap: anywhere;
+}
+
+.dc-fases-indice a:hover {
+  text-decoration-thickness: 2.5px;
+}
+
+.dc-fases-indice a:focus-visible {
+  outline: 2px solid var(--foco-faixa, var(--color-cacau));
+  outline-offset: 3px;
+}
+
 /* Uma lista só, com fio de 1 px na cor do texto; larga, em duas colunas. */
 .dc-fases {
   grid-area: fases;
