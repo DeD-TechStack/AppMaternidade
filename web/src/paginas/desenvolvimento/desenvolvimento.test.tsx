@@ -38,6 +38,35 @@ const ITENS: ReadonlyArray<readonly [string, string]> = [
   ['desenv-marcos-sem-cobranca', 'Marcos, sem cobrança'],
 ]
 
+const FASES_ESPERADAS = [
+  ['desenv-ideias-0-2m', 'Do nascimento a uns 2 meses', 'Converse com o rosto perto do dele e olhe nos olhos. Nessa idade o bebê já ouve e enxerga a uns 20 cm, mais ou menos a distância do rosto de quem amamenta.'],
+  ['desenv-ideias-2-4m', 'De uns 2 a 4 meses', 'Coloque um brinquedo na mão dele para tocar e apertar. Nessa idade ele ainda não costuma buscar o objeto sozinho.'],
+  ['desenv-ideias-4-6m', 'De uns 4 a 6 meses', 'Ofereça brinquedos limpos e macios que ele possa pegar e levar à boca sem risco de engasgar, como chocalho e mordedor.'],
+  ['desenv-ideias-6-8m', 'De uns 6 a 8 meses', 'Coloque o bebê no chão, numa esteira ou num colchonete, e deixe que ele tente sentar.'],
+  ['desenv-ideias-8-10m', 'De uns 8 a 10 meses', 'Deixe um brinquedo um pouco à frente para ele ir buscar, se arrastando ou engatinhando.'],
+  ['desenv-ideias-10-12m', 'De uns 10 a 12 meses', 'Coloque um brinquedo em cima do sofá para ele se apoiar e ficar em pé. Confira antes se o móvel está firme.'],
+] as const
+
+function conferirLinhasDasFases(esperadas: ReadonlyArray<readonly [string, string, string]> = FASES_ESPERADAS) {
+  const bloco = document.querySelector<HTMLElement>('[data-todas-as-fases]')!
+  const links = within(bloco).getAllByRole('link')
+  expect(links.map((link) => link.getAttribute('href'))).toEqual(
+    esperadas.map(([id]) => `/app/desenvolvimento/conteudo/${id}`),
+  )
+  expect(within(bloco).getAllByRole('listitem')).toHaveLength(esperadas.length)
+  for (const [indice, [, titulo, descricao]] of esperadas.entries()) {
+    const link = within(bloco).getByRole('link', { name: titulo })
+    expect(link).toBe(links[indice])
+    expect(link.tagName).toBe('A')
+    expect(within(link).getByText(titulo).textContent).toBe(titulo)
+    expect(within(link).getByText(descricao).textContent).toBe(descricao)
+    expect(document.getElementById(link.getAttribute('aria-describedby')!)?.textContent).toBe(descricao)
+    expect(link.textContent).toBe(`${titulo}${link.hasAttribute('aria-current') ? 'nesta fase' : ''}${descricao}`)
+    expect(link.querySelector('a, button, [tabindex]')).toBeNull()
+  }
+  return links
+}
+
 function relogioEm(data: Date = HOJE) {
   vi.useFakeTimers({ toFake: ['Date'] })
   vi.setSystemTime(data)
@@ -223,19 +252,60 @@ describe('a fase pela idade em dias (janelas com limites inclusivos)', () => {
     renderizarRota('/app/desenvolvimento', { mundo })
     await aguardarCarga()
     const bloco = document.querySelector<HTMLElement>('[data-todas-as-fases]')!
-    expect(within(bloco).getAllByRole('link').map((link) => link.textContent)).toEqual([
-      'Do nascimento a uns 2 meses',
-      'De uns 2 a 4 meses',
-      'De uns 4 a 6 meses',
-      'De uns 6 a 8 meses',
-      'De uns 8 a 10 meses',
-      'De uns 10 a 12 meses',
-    ])
+    const links = conferirLinhasDasFases()
+    expect(links.filter((link) => link.hasAttribute('aria-current'))).toHaveLength(1)
     expect(within(bloco).getAllByText('nesta fase')).toHaveLength(1)
     expect(within(bloco).getByRole('link', { name: 'De uns 2 a 4 meses' }).getAttribute('aria-current')).toBe('true')
     expect(within(bloco).getByRole('link', { name: 'De uns 2 a 4 meses' }).getAttribute('href')).toBe(
       '/app/desenvolvimento/conteudo/desenv-ideias-2-4m',
     )
+  })
+
+  it('as fases sobrepostas mantêm as duas etiquetas e aria-current nas linhas', async () => {
+    relogioEm()
+    const mundo = await mundoComBebeDe(105)
+    renderizarRota('/app/desenvolvimento', { mundo })
+    await aguardarCarga()
+    const links = conferirLinhasDasFases()
+    expect(links.filter((link) => link.getAttribute('aria-current') === 'true').map((link) => link.getAttribute('href'))).toEqual([
+      '/app/desenvolvimento/conteudo/desenv-ideias-2-4m',
+      '/app/desenvolvimento/conteudo/desenv-ideias-4-6m',
+    ])
+    for (const link of links) {
+      expect(within(link).queryAllByText('nesta fase')).toHaveLength(link.hasAttribute('aria-current') ? 1 : 0)
+    }
+  })
+
+  it.each([
+    { nome: 'corpo vazio', corpo: [] },
+    { nome: 'lista vazia', corpo: [{ tipo: 'lista', itens: [] }] },
+    { nome: 'só parágrafo', corpo: [{ tipo: 'paragrafo', texto: ABERTURA_DAS_IDEIAS }] },
+  ] satisfies { nome: string; corpo: ItemDeConteudo['corpo'] }[])(
+    'sem frase de lista, a linha mostra só o título, sem inventar resumo: $nome', async ({ corpo }) => {
+      relogioEm()
+      const mundo = await mundoComBebeDe(100)
+      const itens = ITENS_DE_CONTEUDO.map((item) => item.id === 'desenv-ideias-0-2m' ? { ...item, corpo } : item)
+      renderizarCustom({ mundo, caminho: '/app/desenvolvimento', itens })
+      await aguardarCarga()
+      const bloco = document.querySelector<HTMLElement>('[data-todas-as-fases]')!
+      const link = within(bloco).getByRole('link', { name: 'Do nascimento a uns 2 meses' })
+      expect(link.textContent).toBe('Do nascimento a uns 2 meses')
+      expect(link.getAttribute('href')).toBe('/app/desenvolvimento/conteudo/desenv-ideias-0-2m')
+      expect(link.hasAttribute('aria-describedby')).toBe(false)
+      expect(within(bloco).getAllByRole('link')).toHaveLength(6)
+    },
+  )
+
+  it('ignora parágrafos e listas vazias antes da primeira frase de lista existente', async () => {
+    relogioEm()
+    const mundo = await mundoComBebeDe(100)
+    const itens = ITENS_DE_CONTEUDO.map((item): ItemDeConteudo => item.fase ? {
+      ...item,
+      corpo: [{ tipo: 'paragrafo', texto: ABERTURA_DAS_IDEIAS }, { tipo: 'lista', itens: [] }, ...item.corpo],
+    } : item)
+    renderizarCustom({ mundo, caminho: '/app/desenvolvimento', itens })
+    await aguardarCarga()
+    conferirLinhasDasFases()
   })
 
   it('a ação principal leva às ideias e a seção de ideias existe', async () => {
@@ -359,7 +429,7 @@ function conferirBlocosEstaticos() {
   expect(screen.getByRole('heading', { level: 2, name: 'Todas as fases' })).toBeTruthy()
   expect(screen.getByRole('heading', { level: 2, name: 'Para ler' })).toBeTruthy()
   const bloco = document.querySelector<HTMLElement>('[data-todas-as-fases]')!
-  expect(within(bloco).getAllByRole('link')).toHaveLength(6)
+  expect(conferirLinhasDasFases()).toHaveLength(6)
   expect(within(bloco).queryByText('nesta fase')).toBeNull()
   expect(bloco.querySelector('[aria-current]')).toBeNull()
   expect(within(document.querySelector<HTMLElement>('[data-para-ler]')!).getAllByRole('link')).toHaveLength(2)
@@ -599,12 +669,16 @@ describe('DES-06 item 5: a publicação', () => {
     const producao = renderizarCustom({ mundo, caminho: '/app/desenvolvimento', itens, siteDeProducao: true })
     await aguardarCarga()
     expect(document.querySelector('[data-todas-as-fases]')!.textContent).not.toContain('De uns 2 a 4 meses')
+    conferirLinhasDasFases(FASES_ESPERADAS.filter(([id]) => id !== RECOLHIDO))
+    expect(document.querySelector('[data-todas-as-fases]')!.textContent).not.toContain(FASES_ESPERADAS[1][2])
+    expect(document.querySelector('[data-todas-as-fases] [aria-current]')).toBeNull()
     expect(document.getElementById('ideias')?.textContent ?? '').not.toContain('De uns 2 a 4 meses')
     producao.unmount()
 
     renderizarCustom({ mundo, caminho: '/app/desenvolvimento', itens, siteDeProducao: false })
     await aguardarCarga()
     expect(document.querySelector('[data-todas-as-fases]')!.textContent).toContain('De uns 2 a 4 meses')
+    conferirLinhasDasFases()
   })
 
   // R4: uma seção esvaziada pela publicação mantém o h2 e mostra T-50, uma vez só.
@@ -690,6 +764,8 @@ describe('DES-06 item 5: a publicação', () => {
     await aguardarCarga()
     const todas = secao('[data-todas-as-fases]', 'Todas as fases')
     expect(within(todas).getAllByText(EM_REVISAO)).toHaveLength(1)
+    expect(within(todas).queryAllByRole('link')).toHaveLength(0)
+    expect(todas.querySelector('[aria-current], [aria-describedby]')).toBeNull()
     const ideias = secao('#ideias', 'Ideias para brincar nesta fase')
     expect(within(ideias).queryByText(EM_REVISAO)).toBeNull()
     expect(within(ideias).getByText(ABERTURA_DAS_IDEIAS)).toBeTruthy()

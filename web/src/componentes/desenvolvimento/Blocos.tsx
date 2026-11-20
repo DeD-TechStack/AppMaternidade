@@ -45,19 +45,31 @@ export function TodasAsFases({
       {fases.length === 0 ? (
         <EmRevisao />
       ) : (
-        <ul className="m-0 flex list-none flex-col gap-2 p-0">
-          {fases.map((fase) => (
-            <li key={fase.id} className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <Link
-                to={rotaDoItem(fase.id)}
-                aria-current={atuais.has(fase.id) ? 'true' : undefined}
-                className="alvo-toque inline-flex items-center font-medium text-[var(--cor-link)] underline decoration-[1.5px] underline-offset-4 hover:decoration-2"
-              >
-                {fase.titulo}
-              </Link>
-              {atuais.has(fase.id) ? <Etiqueta>{T.nestaFase}</Etiqueta> : null}
-            </li>
-          ))}
+        <ul className="m-0 list-none p-0">
+          {fases.map((fase) => {
+            const descricao = fase.corpo.flatMap((bloco) => (bloco.tipo === 'lista' ? bloco.itens : []))[0]
+            const tituloId = `lista-${fase.id}-titulo`
+            const descricaoId = `lista-${fase.id}-descricao`
+            return (
+              <li key={fase.id} className="border-b border-[var(--cor-fio-suave)]">
+                <Link
+                  to={rotaDoItem(fase.id)}
+                  aria-current={atuais.has(fase.id) ? 'true' : undefined}
+                  aria-labelledby={tituloId}
+                  aria-describedby={descricao ? descricaoId : undefined}
+                  className="alvo-toque group flex w-full flex-col gap-esp-junto py-esp-pilha text-corpo no-underline wrap-anywhere"
+                >
+                  <span className="flex flex-wrap items-center gap-esp-junto">
+                    <span id={tituloId} className="font-medium text-[var(--cor-link)] underline decoration-[1.5px] underline-offset-4 group-hover:decoration-2">
+                      {fase.titulo}
+                    </span>
+                    {atuais.has(fase.id) ? <Etiqueta>{T.nestaFase}</Etiqueta> : null}
+                  </span>
+                  {descricao ? <span id={descricaoId} className="max-w-[65ch] text-[var(--cor-texto-2)]">{descricao}</span> : null}
+                </Link>
+              </li>
+            )
+          })}
         </ul>
       )}
     </Pilha>
