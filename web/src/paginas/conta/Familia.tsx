@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router'
-import { Colunas, Pilha, QuadroLayout, Secao } from '../../componentes/base/layout/index.ts'
+import { Coluna, Colunas, Pilha, QuadroLayout, Secao } from '../../componentes/base/layout/index.ts'
 import { familiaMudou, useAoFalharNaFamilia, type AcoesDaFamilia, type DialogoAberto } from '../../componentes/conta/acoesFamilia.ts'
 import { BlocoAcoes } from '../../componentes/conta/BlocoAcoes.tsx'
 import { BlocoBebes } from '../../componentes/conta/BlocoBebes.tsx'
@@ -208,28 +208,35 @@ export function Familia() {
                 />
               </div>
             ) : pronto ? (
-              <Colunas fracoes="5fr 7fr" vao="bloco" aPartirDe={1024}>
-                <Pilha
-                  as="section"
-                  dataH="coluna"
-                  vao="junto"
-                  aria-labelledby="familia-atual"
-                  className="lg:sticky lg:top-28 lg:self-start"
-                >
+              <Pilha vao="bloco">
+                <Pilha as="section" vao="junto" aria-labelledby="familia-atual">
                   <h2 id="familia-atual" className="cm-h3 wrap-anywhere">
                     {pronto.familia.nome}
                   </h2>
-                  <p className="text-[var(--cor-texto-2)]">{FAMILIA.fuso(pronto.familia.fuso)}</p>
-                  <p className="font-medium">{FAMILIA.voceE(PAPEIS[pronto.familia.meuPapel].minusculo)}</p>
+                  <div className="flex flex-wrap gap-x-esp-grupo gap-y-esp-junto">
+                    <p className="text-[var(--cor-texto-2)]">{FAMILIA.fuso(pronto.familia.fuso)}</p>
+                    <p className="font-medium">{FAMILIA.voceE(PAPEIS[pronto.familia.meuPapel].minusculo)}</p>
+                  </div>
                 </Pilha>
 
+                <Colunas
+                  vao="bloco"
+                  aPartirDe={1024}
+                  alinhar="inicio"
+                  className="[&>*]:border-t [&>*]:border-[var(--cor-fio-suave)] [&>*]:pt-esp-bloco"
+                >
+                  <Coluna>
+                    <BlocoBebes key={`bebes-${pronto.familia.id}`} detalhe={pronto} responsavel={responsavel} acoes={acoes} />
+                  </Coluna>
+                  <Coluna>
+                    <BlocoMembros detalhe={pronto} responsavel={responsavel} acoes={acoes} />
+                  </Coluna>
+                </Colunas>
+
                 <Pilha
-                  dataH="coluna"
                   vao="bloco"
                   className="[&>*]:border-t [&>*]:border-[var(--cor-fio-suave)] [&>*]:pt-esp-bloco"
                 >
-                  <BlocoBebes key={`bebes-${pronto.familia.id}`} detalhe={pronto} responsavel={responsavel} acoes={acoes} />
-                  <BlocoMembros detalhe={pronto} responsavel={responsavel} acoes={acoes} />
                   {responsavel ? <BlocoConvites key={`convites-${pronto.familia.id}`} detalhe={pronto} acoes={acoes} /> : null}
                   <BlocoAcoes key={`acoes-${pronto.familia.id}`} detalhe={pronto} responsavel={responsavel} acoes={acoes} />
                   <div>
@@ -238,7 +245,7 @@ export function Familia() {
                     </Link>
                   </div>
                 </Pilha>
-              </Colunas>
+              </Pilha>
             ) : null}
           </Pilha>
         </QuadroLayout>
