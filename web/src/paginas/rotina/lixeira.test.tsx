@@ -60,6 +60,37 @@ describe('R38-23: a lista da lixeira', () => {
     expect(fralda.textContent).toContain('pode ser restaurado até 02/12 às 10:00')
   })
 
+  it('aproxima a introdução da lista e mantém marcador, prazo e ação agrupados em cada registro', async () => {
+    await renderizarRotaPronta('/app/lixeira', { ajustarRotina: TRES })
+
+    expect(screen.getByText('Os registros excluídos ficam aqui por 30 dias.').parentElement?.getAttribute('data-h-vao')).toBe('pilha')
+    for (const item of itens()) {
+      const marcador = item.querySelector('svg[aria-hidden="true"]')!
+      expect(marcador.classList.contains('rounded-full')).toBe(true)
+      const prazo = within(item).getByText(/^pode ser restaurado até/)
+      expect(prazo.classList.contains('font-semibold')).toBe(true)
+      expect(prazo.classList.contains('text-(--cor-texto)')).toBe(true)
+      expect(item.classList.contains('flex-wrap')).toBe(true)
+      expect(within(item).getByRole('button', { name: /^Restaurar / })).toBeTruthy()
+      expect(item.querySelector('.wrap-anywhere, .truncate, .break-all')).toBeNull()
+    }
+  })
+
+  it('desempata exclusões pelo id, mesmo quando a fonte entrega a lista ao contrário', async () => {
+    await renderizarRotaPronta('/app/lixeira', {
+      ajustarRotina: (fixture) => {
+        const ajustada = excluindo({
+          2: { por: PESSOAS.juliana.id, haMs: 60_000 },
+          3: { por: PESSOAS.juliana.id, haMs: 60_000 },
+          4: { por: PESSOAS.juliana.id, haMs: 60_000 },
+        })(fixture)
+        return { ...ajustada, registros: [...ajustada.registros].reverse() }
+      },
+    })
+
+    expect(idsDaLista()).toEqual([id(2), id(3), id(4)])
+  })
+
   it('o link Voltar para o Histórico leva ao Histórico, com o foco no h1 dele', async () => {
     const { roteador } = await renderizarRotaPronta('/app/lixeira', { ajustarRotina: TRES })
 
@@ -161,6 +192,65 @@ describe('R38-23: restaurar', () => {
     fireEvent.click(within(status()).getByRole('link', { name: 'Ver no Histórico' }))
     await aguardarCarga()
     expect(document.querySelector('[data-registros-do-dia]')!.textContent).toContain('Mamada')
+  })
+
+  it('bloqueia só a linha pendente e ignora uma segunda ativação até a resposta', async () => {
+    const mundo = criarMundoDeTeste({ ajustarRotina: TRES })
+    const original = mundo.rotina.restaurarRegistro.bind(mundo.rotina)
+    let liberar = () => {}
+    const espera = new Promise<void>((resolve) => { liberar = resolve })
+    const restaurar = vi.spyOn(mundo.rotina, 'restaurarRegistro').mockImplementationOnce(async (registro) => {
+      await espera
+      return original(registro)
+    })
+    await renderizarRotaPronta('/app/lixeira', { mundo })
+    const botoes = screen.getAllByRole('button', { name: /^Restaurar / })
+
+    fireEvent.click(botoes[0])
+    fireEvent.click(botoes[0])
+    expect(restaurar).toHaveBeenCalledTimes(1)
+    expect(botoes[0].getAttribute('aria-disabled')).toBe('true')
+    expect(botoes[1].hasAttribute('aria-disabled')).toBe(false)
+    expect(botoes[2].hasAttribute('aria-disabled')).toBe(false)
+
+    liberar()
+    await aguardarCarga()
+    expect(idsDaLista()).toEqual([id(4), id(2)])
+    expect(document.activeElement).toBe(screen.getByRole('heading', { level: 1, name: 'Lixeira' }))
+  })
+
+  it('fechar um erro cancela a nova tentativa sem restaurar nem perder o foco', async () => {
+    const mundo = criarMundoDeTeste({ ajustarRotina: TRES })
+    await renderizarRotaPronta('/app/lixeira', { mundo })
+    simularFalhaRotina(mundo.rotina, 'restaurarRegistro', 'rede')
+    const restaurar = vi.spyOn(mundo.rotina, 'restaurarRegistro')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Restaurar mamada de 05/11 às 07:32' }))
+    await aguardarCarga()
+    fireEvent.click(within(status()).getByRole('button', { name: 'Fechar' }))
+    await aguardarCarga()
+
+    expect(restaurar).toHaveBeenCalledTimes(1)
+    expect(idsDaLista()).toEqual([id(3), id(4), id(2)])
+    expect(status().textContent).toBe('')
+    expect(document.activeElement).toBe(screen.getByRole('heading', { level: 1, name: 'Lixeira' }))
+  })
+
+  it('a recusa de permissão não restaura o item nem oferece repetição', async () => {
+    const mundo = criarMundoDeTeste({ ajustarRotina: TRES })
+    await renderizarRotaPronta('/app/lixeira', { mundo })
+    simularFalhaRotina(mundo.rotina, 'restaurarRegistro', {
+      classe: 'sem_permissao', chave: 'sem_permissao', codigo: '42501', mensagemOriginal: 'permission denied',
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Restaurar mamada de 05/11 às 07:32' }))
+    await aguardarCarga()
+
+    expect(idsDaLista()).toEqual([id(3), id(4), id(2)])
+    expect(status().textContent).not.toContain('Registro restaurado.')
+    expect(within(status()).queryByRole('button', { name: 'Tentar de novo' })).toBeNull()
+    expect(within(status()).getByRole('button', { name: 'Fechar' })).toBeTruthy()
+    expect(document.activeElement).toBe(screen.getByRole('heading', { level: 1, name: 'Lixeira' }))
   })
 
   it('o prazo vence entre a leitura e o toque: a frase do catálogo e o item sai da lista', async () => {
