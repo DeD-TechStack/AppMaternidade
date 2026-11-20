@@ -5,7 +5,7 @@ import { BandaHistorico } from '../../componentes/como-casa/BandaHistorico.tsx'
 import { BandaNota } from '../../componentes/como-casa/BandaNota.tsx'
 import { ID_DO_TITULO, TextoDoHeroi } from '../../componentes/como-casa/TextoDoHeroi.tsx'
 import { useCabecalhoNoite } from '../../componentes/casca/Cabecalho.tsx'
-import { CenaHeroi, FaixaInteira, Fechamento, PaginaCasa } from '../../componentes/secoes/index.ts'
+import { BotaoLargo, CenaHeroi, FaixaInteira, PaginaCasa } from '../../componentes/secoes/index.ts'
 import {
   COMO_FUNCIONA as T,
   CENA_HEROI,
@@ -57,7 +57,11 @@ export function ComoFunciona() {
         <BandaNota />
         <BandaComecar />
         <FaixaInteira fundo="cacau">
-          <Fechamento titulo={T.h2Fecho} acao={{ rotulo: T.cta2, para: DESTINO_CRIAR_CONTA }} tom="noite" />
+          <div data-fechamento="" data-tom="noite" className="cm-fechamento cf-fecho">
+            <h2 className="text-titulo-1 font-titulo cm-sec-titulo">{T.h2Fecho}</h2>
+            <p className="text-corpo font-texto cm-sec-texto">{T.fecho}</p>
+            <BotaoLargo rotulo={T.cta2} para={DESTINO_CRIAR_CONTA} variante="mel" />
+          </div>
         </FaixaInteira>
       </PaginaCasa>
     </main>

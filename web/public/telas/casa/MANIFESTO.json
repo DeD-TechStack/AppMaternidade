@@ -92,26 +92,32 @@
       "fixture": "SEED-A demo family: criarFixtureRotinaDemonstracao at the fixed clock 21:42 America/Sao_Paulo",
       "rotulo_demo_oculto": "[data-aviso-tela]",
       "dia": "anterior",
-      "ocultos_na_captura": "[data-rodape] (site footer), by an injected display:none rule (CAPTURA_OCULTAR), for the capture only",
-      "recaptura": "2026-11-19 (HOME-FINAL-b), .oc/rec.mjs -> .oc/capturar.mjs janela (CAPTURA_ALINHAR=16:00 at y=404 css, CAPTURA_ASSERT=historico), demo sign-in, clock pinned 2026-11-18T21:42:04-03:00 by a CDP Date shim, fail-closed asserts passed; the 16:00 and 17:30 rows lead the resting frame (the bottom 844 css px)",
+      "ocultos_na_captura": "[data-rodape] (site footer) and [data-aviso-tela] (in-app demo note), by an injected display:none rule, for the capture only; asserted absent by the tool (computed display none, no AVISO_DEMONSTRACAO text visible)",
+      "recaptura": "2026-11-19 HOME-PHONE-B2 (t_53d1da83), .oc/capturar.mjs janela with CAPTURA_FIM_EM=17:30 CAPTURA_LINHA_ANTES=16:00 CAPTURA_ESPERA_ULTIMA=17:30; demo sign-in, clock pinned 2026-11-18T21:42:04-03:00 by a CDP Date shim; negative controls (no hide, target 20:30) exit 3",
       "relogio_fixado": "2026-11-18T21:42:04-03:00 (Page.addScriptToEvaluateOnNewDocument Date shim)",
-      "espaco_captura_px": 69,
+      "ultima_linha_repouso": "17:30",
+      "rodape_ausente": true,
+      "aviso_ausente": true,
       "png": {
         "largura": 780,
         "altura": 2468,
-        "sha256": "06c93bd433a268d7c96171239f2580bde622b008dd63b63d55d7134d03d9780b"
+        "sha256": "ad36fd18162070ed1e442e7e5e09c6f517cfce68f13096d7385808312d56e121"
       },
-      "captura_ok": "CAPTURA_OK historico_ontem_claro_390_janela.png caminho=/app/historico png=780x2468 esperado=780x2468 mobile=true dpr=2 toque=true scrollWidth=390 sha256=06c93bd433a268d7c96171239f2580bde622b008dd63b63d55d7134d03d9780b (só a janela)",
+      "captura_ok": "CAPTURA_OK historico_ontem_claro_390_janela.png caminho=/app/historico png=780x2468 esperado=780x2468 mobile=true dpr=2 toque=true scrollWidth=390 sha256=ad36fd18162070ed1e442e7e5e09c6f517cfce68f13096d7385808312d56e121 (só a janela) rodape=ausente aviso=ausente ultima_linha=\"17:30\"",
       "linhas_topo": [
+        "00:30 Sono, 2 h 15 min por Ícaro",
+        "03:00 Mamada, 20 min · lado esquerdo por Ícaro",
+        "03:25 Fralda, Xixi por Ícaro",
+        "03:30 Sono, 2 h 45 min por Ícaro",
+        "06:30 Mamada, 20 min · lado direito por Juliana",
+        "07:00 Fralda, Cocô por Juliana",
+        "09:00 Sono, 1 h 30 min por Juliana",
         "11:00 Mamadeira, 100 ml · leite materno por Juliana",
         "11:15 Fralda, Ambos por Juliana",
         "13:00 Sono, 1 h 40 min por Juliana",
         "15:00 Tummy time, 8 min por Juliana",
         "16:00 Mamada, 20 min · os dois lados por Juliana",
-        "17:30 Fralda, Xixi por Ícaro",
-        "18:00 Sono, 40 min por Ícaro",
-        "19:30 Mamadeira, 120 ml · fórmula por Ícaro",
-        "20:30 Sono, 3 h 20 min por Ícaro"
+        "17:30 Fralda, Xixi por Ícaro"
       ],
       "fonte_px_linha": 15,
       "rolagem_px": {
@@ -123,40 +129,40 @@
           "arquivo": "/telas/casa/historico-y-alta-640w.webp",
           "largura": 640,
           "altura": 2025,
-          "bytes": 34788,
-          "sha256": "2afcfa6d8d37b3230f7ebcc754dde1c0b15efe11ef0e37501ae275c922d511e9",
-          "qualidade": 39
+          "bytes": 34804,
+          "sha256": "7365e0b1f4cbd82a00ee48c7a90845c1268ad4ed626e259ac058ec40deac0cd9",
+          "qualidade": 40
         },
         {
           "arquivo": "/telas/casa/historico-y-alta-560w.webp",
           "largura": 560,
           "altura": 1772,
-          "bytes": 34524,
-          "sha256": "8bc9c64cc7ea7909eb66d529a50965c9d3e211a288d6e21ed8c48b79060c8363",
+          "bytes": 34724,
+          "sha256": "4166ee7ff0dcb6ee1991a9c0035ef559a0e0912797fcf8a8463b3b84910dc24f",
           "qualidade": 54
         },
         {
           "arquivo": "/telas/casa/historico-y-alta-320w.webp",
           "largura": 320,
           "altura": 1013,
-          "bytes": 17790,
-          "sha256": "7aba27eddc2806a517a19c5e7b623eff8ec99737e2044aee3697a3b5b0496fc2",
+          "bytes": 18424,
+          "sha256": "aa7deb44a355db0622895c22fbe28c00e045840141e3b0d210c40cb8afea3ee2",
           "qualidade": 60
         },
         {
           "arquivo": "/telas/casa/historico-y-alta-280w.webp",
           "largura": 280,
           "altura": 886,
-          "bytes": 16104,
-          "sha256": "7c11c0b787aa2ee944806d95ea15e88848de05cf9dc4b90d499c17ce12d4cb9f",
+          "bytes": 16348,
+          "sha256": "a852a80de47e80ce46dd0eb4221e943dc911cf89a8d88506b7c7b5d4bc5ac4cf",
           "qualidade": 72
         }
       ],
       "a42_aberto": {
         "390": 10.77
       },
-      "scroll_y": 1767,
-      "altura_documento": 3001,
+      "scroll_y": 1099,
+      "altura_documento": 2609,
       "offset_y_px": 390,
       "direcao_rolagem": "para_cima"
     },

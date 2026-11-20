@@ -143,7 +143,15 @@ describe('CUID-I-05 os chãos e o ritmo', () => {
 
 /** O texto de cada bloco do main (título, parágrafo, ação): as horas em <strong> ficam dentro da frase do bloco. */
 function blocosDeTexto(raiz: Element): string[] {
-  return [...raiz.querySelectorAll('h1, h2, h3, p, a')].map((no) => (no.textContent ?? '').trim()).filter((t) => t !== '')
+  // `dt` e `dd` são os campos de cada papel; `[data-cc-rotulo-cab]` é o cabeçalho (aria-hidden) das colunas dos papéis.
+  return [...raiz.querySelectorAll('h1, h2, h3, p, a, dt, dd, [data-cc-rotulo-cab]')]
+    .map((no) => (no.textContent ?? '').trim())
+    .filter((t) => t !== '')
+}
+
+/** O CSS da página, sem os comentários. */
+function lerCss(): string {
+  return readFileSync(join(process.cwd(), 'src/componentes/cuidado-casa/cuidado-casa.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
 }
 
 describe('CUID-I-04 o texto é o deck, e só o deck', () => {
@@ -157,14 +165,16 @@ describe('CUID-I-04 o texto é o deck, e só o deck', () => {
     for (const texto of nosDeTexto(principal)) expect(textos.some((bloco) => bloco.includes(texto)), texto).toBe(true)
   })
 
-  it('toda frase do deck que se desenha aparece (31 frases: o título da aba e o nome da lista ficam de fora do texto)', () => {
+  it('toda frase do deck que se desenha aparece (o título da aba e o nome da lista ficam de fora do texto)', () => {
     const { container } = renderizarRota(ROTA)
     const principal = container.querySelector('main')!
     const vistas = new Set([
       ...blocosDeTexto(principal),
       ...[...principal.querySelectorAll('img[alt]')].map((img) => img.getAttribute('alt')!),
     ])
-    expect(DECK.size).toBe(30) // 31 ids do deck; "Criar conta" (cc.cta1 e cc.cta2) é a mesma frase
+    // 30 antes de CUIDADO-P3: o lede trocou de frase, os três `pode` saíram e entraram os três `ve`, os três `muda` e os
+    // três rótulos (Quem é, O que vê, O que muda). "Criar conta" (cc.cta1 e cc.cta2) é a mesma frase.
+    expect(DECK.size).toBe(36)
     const faltam = [...DECK].filter((frase) => !FORA_DO_TEXTO.has(frase) && !vistas.has(frase))
     expect(faltam).toEqual([])
   })
@@ -291,8 +301,8 @@ describe('CUID-I-06 as imagens', () => {
   })
 })
 
-describe('CUID-I-01 os papéis: uma lista de três linhas', () => {
-  it('é um ul com três li, cada um com o nome em h3, para quem é e o que pode', () => {
+describe('CUID-I-01 os papéis: uma lista de três linhas, os mesmos três campos em cada uma', () => {
+  it('é um ul com três li, cada um com o nome em h3 e uma <dl> de quem é, o que vê e o que muda', () => {
     const { container } = renderizarRota(ROTA)
     const lista = within(container.querySelector('main') as HTMLElement).getByRole('list', { name: CUIDADO.papeis.legenda })
     expect(lista.tagName).toBe('UL')
@@ -301,10 +311,115 @@ describe('CUID-I-01 os papéis: uma lista de três linhas', () => {
     expect(itens.every((li) => li.tagName === 'LI')).toBe(true)
     CUIDADO.papeis.linhas.forEach((linha, i) => {
       expect(itens[i].querySelector('h3')!.textContent).toBe(linha.nome)
-      expect([...itens[i].querySelectorAll('p')].map((p) => p.textContent)).toEqual([linha.quem, linha.pode])
+      const dl = itens[i].querySelector('dl')!
+      expect(dl, `dl de ${linha.nome}`).not.toBeNull()
+      // Os mesmos três campos, na mesma ordem, com o rótulo curto no <dt>.
+      expect([...dl.querySelectorAll('dt')].map((dt) => dt.textContent)).toEqual([...CUIDADO.papeis.rotulos])
+      expect([...dl.querySelectorAll('dd')].map((dd) => dd.textContent)).toEqual([linha.quem, linha.ve, linha.muda])
+      expect(itens[i].querySelectorAll('p')).toHaveLength(0)
     })
     // Nunca cartões: nada de data-h cartao, de [data-painel] nem de cartão flutuante.
     expect(container.querySelector('main [data-h~="cartao"], main [data-painel], main .cm-flutuante')).toBeNull()
+  })
+
+  it('os rótulos são curtos: Quem é, O que vê, O que muda', () => {
+    expect([...CUIDADO.papeis.rotulos]).toEqual(['Quem é', 'O que vê', 'O que muda'])
+  })
+
+  it('o cabeçalho das colunas é aria-hidden e repete os três rótulos, na ordem; os <dt> continuam no DOM', () => {
+    const { container } = renderizarRota(ROTA)
+    const cabecalho = container.querySelector('main [data-cc-papeis-cab]')!
+    expect(cabecalho, 'o cabeçalho das colunas').not.toBeNull()
+    expect(cabecalho.getAttribute('aria-hidden')).toBe('true')
+    expect([...cabecalho.querySelectorAll('[data-cc-rotulo-cab]')].map((c) => c.textContent)).toEqual([...CUIDADO.papeis.rotulos])
+    expect(container.querySelectorAll('main .cc-papeis dt')).toHaveLength(9)
+  })
+
+  it('o verbo que decide é <strong data-cc-verbo>, e a frase continua inteira', () => {
+    const { container } = renderizarRota(ROTA)
+    const itens = [...container.querySelectorAll('main ul.cc-papeis > li')]
+    const verbos = itens.map((li) => [...li.querySelectorAll('strong[data-cc-verbo]')].map((s) => s.textContent))
+    expect(verbos).toEqual([['Administra'], ['Registra', 'Edita e exclui'], ['Nada']])
+    for (const strong of container.querySelectorAll('main strong[data-cc-verbo]')) expect(strong.closest('dd')).not.toBeNull()
+  })
+
+  it('o Cuidador é o único papel marcado (data-papel="cuidador"), para a faixa de destaque', () => {
+    const { container } = renderizarRota(ROTA)
+    const itens = [...container.querySelectorAll('main ul.cc-papeis > li')]
+    expect(itens.map((li) => li.getAttribute('data-papel'))).toEqual(['responsavel', 'cuidador', 'observador'])
+    expect(itens[1].querySelector('h3')!.textContent).toBe('Cuidador')
+    // O destaque é só CSS, sobre o atributo (sem classe nem texto a mais).
+    expect(lerCss()).toMatch(/\.cc-papel\[data-papel='cuidador'\]\s*\{[^}]*background-color:\s*var\(--color-[a-z-]+\)/)
+  })
+
+  it('o texto dos papéis diz o que a babá (Cuidador) faz: registra, edita e exclui só o que ela anotou', () => {
+    const cuidador = CUIDADO.papeis.linhas[1]
+    expect(cuidador.nome).toBe('Cuidador')
+    expect(cuidador.muda).toMatch(/^Registra\. Edita e exclui só o que ele mesmo registrou/)
+    expect(CUIDADO.papeis.linhas[2].muda).toMatch(/^Nada: só lê/)
+    expect(CUIDADO.papeis.linhas[0].muda).toMatch(/^Administra /)
+    // O campo antigo `pode` saiu.
+    for (const linha of CUIDADO.papeis.linhas) expect(Object.keys(linha)).not.toContain('pode')
+  })
+})
+
+describe('CUID-K2 o texto do herói diz o que a babá lê e anota', () => {
+  it('o lede nomeia o histórico com o nome de quem anotou, o que a babá registra e o que ela só edita do que anotou', () => {
+    expect(CUIDADO.lede).toBe(
+      'A babá vê o histórico do bebê, com o nome de quem anotou cada registro. Ela anota sono, mamada e fralda, e só edita ou exclui o que ela mesma anotou.',
+    )
+    expect(CUIDADO.lede).toMatch(/histórico do bebê/)
+    expect(CUIDADO.lede).toMatch(/nome de quem anotou/)
+    expect(CUIDADO.lede).toMatch(/sono, mamada e fralda/)
+    expect(CUIDADO.lede).toMatch(/só edita ou exclui o que ela mesma anotou/)
+  })
+
+  it('o lede aparece no herói, depois do h1 e antes da ação', () => {
+    const { container } = renderizarRota(ROTA)
+    const abertura = faixas(container)[0]
+    const lede = [...abertura.querySelectorAll('p')].find((p) => p.textContent === CUIDADO.lede)!
+    expect(lede).toBeDefined()
+    expect(abertura.querySelector('h1')!.compareDocumentPosition(lede) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(lede.compareDocumentPosition(abertura.querySelector('a[data-botao-largo]')!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+})
+
+describe('CUID-K1 a faixa do celular: a tela recortada pela página, a moldura intacta', () => {
+  it('a moldura fica num recorte da página (.cc-moldura > .cc-recorte), com o ProdutoEmMoldura dentro, sem mudar a ordem do DOM', () => {
+    const { container } = renderizarRota(ROTA)
+    const abertura = faixas(container)[0]
+    const recorte = abertura.querySelector('.cc-moldura > .cc-recorte')!
+    expect(recorte, '.cc-moldura > .cc-recorte').not.toBeNull()
+    expect(recorte.querySelectorAll('figure[data-produto-moldura]')).toHaveLength(1)
+    expect(recorte.querySelectorAll('img')).toHaveLength(2)
+  })
+
+  it('o CSS recorta o recorte com overflow: clip e altura em função da tela (--cc-tela), sem px solto', () => {
+    const css = lerCss()
+    const regra = css.match(/\.cc-recorte\s*\{([^}]*)\}/)
+    expect(regra, '.cc-recorte').not.toBeNull()
+    expect(regra![1]).toMatch(/overflow:\s*clip/)
+    expect(regra![1]).toMatch(/height:\s*calc\(var\(--cc-tela\)\s*\*\s*[\d.]+\)/)
+    expect(css).toMatch(/--produto-tela:\s*var\(--cc-tela\)/)
+  })
+
+  it('de 1024 em diante a composição é "cena chamada" e "moldura tres" (a do 640 a 1023), com o .cc-texto em contents', () => {
+    const css = lerCss()
+    const largo = css.match(/@container\s+cc-pagina\s*\(min-width:\s*1024px\)\s*\{([\s\S]*?)\n\}/)
+    expect(largo, 'o bloco largo da abertura').not.toBeNull()
+    const medio = css.match(/@container\s+cc-pagina\s*\(min-width:\s*640px\)\s*\{([\s\S]*?)\n\}/)
+    expect(medio![1]).toMatch(/grid-template-areas:\s*'cena chamada'\s*'moldura tres'/)
+    // A tela de 390 a 400 px de largura em 1440 (era 320).
+    expect(largo![1]).toMatch(/--cc-tela:\s*min\(3[89]\dpx|--cc-tela:\s*min\(400px/)
+    // O .cc-texto continua contents no largo: nenhuma regra largo o devolve a grid.
+    expect(largo![1]).not.toMatch(/\.cc-texto\s*\{[^}]*display:\s*grid/)
+  })
+})
+
+describe('CUID-K5 o fecho encosta no rodapé', () => {
+  it('a página aperta o espaço entre a ação final e o rodapé só com CSS escopado em [data-pagina-cuidado]', () => {
+    const css = lerCss()
+    expect(css).toMatch(/\[data-pagina-cuidado\][^{]*\{[^}]*padding-bottom|\[data-pagina-cuidado\][^{]*\{[^}]*margin-bottom/)
   })
 })
 
@@ -414,6 +529,9 @@ describe('POLISH-CUIDADO as horas, a moldura, o herói e as colunas', () => {
     const celular = css.match(/@container\s+cc-pagina\s*\(width\s*<\s*640px\)\s*\{([\s\S]*?)\n\}/)
     expect(celular, 'o bloco @container cc-pagina (width < 640px)').not.toBeNull()
     expect(celular![1]).toMatch(/grid-template-areas:\s*'titulo cena'\s*'lede lede'\s*'acao acao'\s*'moldura moldura'\s*'tres tres'/)
+    // K4: a cena é maior (44 % da coluna, antes 40 %) e a abertura perde o vão de cima nesta largura.
+    expect(celular![1]).toMatch(/grid-template-columns:\s*minmax\(0, 1fr\) min\(44%, 12rem\)/)
+    expect(celular![1]).toMatch(/\.cc-abertura\s*\{[^}]*padding-top:\s*var\(--espaco-grupo\)/)
     // A placa nunca é recortada: a caixa da cena segue a proporção do arquivo inteiro (981 × 1082).
     expect(css).toMatch(/\.cc-abertura \.cc-cena-imagem\s*\{[^}]*aspect-ratio:\s*981 \/ 1082/)
   })

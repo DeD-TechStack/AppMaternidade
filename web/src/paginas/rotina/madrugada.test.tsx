@@ -36,11 +36,31 @@ async function ir(roteador: { navigate: (caminho: string) => Promise<void> }, ca
 }
 
 describe('R3: a madrugada termina ao sair da Rotina e começa limpa ao entrar', () => {
-  it('R3: o Layout não guarda estado da madrugada nem escreve no <html> (volta à versão da base)', () => {
+  // O efeito de navegação é permitido; estado/contexto de tema e acesso direto ao <html> não são.
+  const estadoOuEscritaNoHtml = /useState|setAttribute|removeAttribute|createContext|ContextoDaMadrugada|document\s*\.\s*documentElement/
+
+  it.each([String.fromCharCode(10), String.fromCharCode(13, 10)])('R3: o invariante permite efeito de navegação sem estado de tema (%j)', (quebra) => {
+    const navegacao = ['useEffect(() => {', '  window.scrollTo(0, 0)', '}, [pathname])'].join(quebra)
+    expect(navegacao).not.toMatch(estadoOuEscritaNoHtml)
+  })
+
+  it.each([
+    'const [madrugada, definirMadrugada] = useState(false)',
+    'const ContextoDaMadrugada = createContext(null)',
+    'useEffect(() => raiz.setAttribute("data-tema", "madrugada"), [])',
+    'raiz.removeAttribute("data-tema")',
+    'document.documentElement.dataset.tema = "madrugada"',
+    'document.documentElement.classList.add("madrugada")',
+    'document . documentElement.style.colorScheme = "dark"',
+  ])('R3: o invariante ainda rejeita estado ou mutação de tema: %s', (codigo) => {
+    expect(codigo).toMatch(estadoOuEscritaNoHtml)
+  })
+
+  it('R3: o Layout não guarda estado da madrugada nem escreve no <html>', () => {
     // `pastaSrcDe` devolve a pasta do teste (web/src/paginas/rotina/): o Layout fica dois níveis acima.
     const texto = readFileSync(`${pastaSrcDe(import.meta.url)}../../componentes/Layout.tsx`, 'utf8')
 
-    expect(texto).not.toMatch(/useState|useEffect|setAttribute|removeAttribute|createContext|ContextoDaMadrugada/)
+    expect(texto).not.toMatch(estadoOuEscritaNoHtml)
   })
 
   it('R3: Hoje em madrugada → /app/conta: sem data-tema, e a lua some do cabeçalho (ela só existe na Rotina)', async () => {

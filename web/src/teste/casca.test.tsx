@@ -8,6 +8,7 @@ import {
   DESTINO_ENTRAR,
   ITENS_DO_CABECALHO,
 } from '../componentes/casca/textos.ts'
+import { rotasContaPublicas } from '../rotas/conta.tsx'
 import { aguardarCarga, renderizarRota } from './renderizarRota.tsx'
 
 // A casca do Campo de mel (MAT-49a): cabeçalho, menu de altura cheia e rodapé de mel. Substitui o
@@ -24,6 +25,123 @@ const ROTAS_PUBLICAS = [
   '/contato',
   '/sobre',
 ]
+
+describe('rolagem entre páginas públicas', () => {
+  it.each([
+    { origem: 'header', strict: false },
+    { origem: 'footer', strict: false },
+    { origem: 'header', strict: true },
+    { origem: 'footer', strict: true },
+  ])('o link do $origem abre Como funciona no topo uma vez (StrictMode: $strict)', async ({ origem, strict }) => {
+    const { container, roteador } = renderizarRota('/', { sessao: null, strict })
+    await aguardarCarga()
+    const rolar = vi.mocked(window.scrollTo)
+    rolar.mockClear()
+    const link = container.querySelector<HTMLAnchorElement>(`${origem} a[href="/como-funciona"]`)!
+
+    await act(async () => { fireEvent.click(link) })
+    await aguardarCarga()
+
+    expect(roteador.state.location.pathname).toBe('/como-funciona')
+    expect(container.querySelector('main h1')?.textContent).toContain('Deixa que eu anoto.')
+    expect(rolar).toHaveBeenCalledExactlyOnceWith(0, 0)
+  })
+
+  // O registro real fica só no teste: o Layout não deve trazer os módulos de rota para a entrada.
+  it.each(rotasContaPublicas.flatMap((rota) => [`/${rota.path}`, `/${rota.path!.toUpperCase()}/`]))(
+    'preserva a única rolagem e o foco da própria tela de acesso em %s',
+    async (caminho) => {
+      const { roteador } = renderizarRota('/', { sessao: null })
+      await aguardarCarga()
+      const rolar = vi.mocked(window.scrollTo)
+      rolar.mockClear()
+
+      await act(async () => { await roteador.navigate(caminho) })
+      await aguardarCarga()
+
+      expect(roteador.state.location.pathname).toBe(caminho)
+      expect(document.activeElement).toBe(screen.getByRole('heading', { level: 1 }))
+      expect(rolar).toHaveBeenCalledExactlyOnceWith(0, 0)
+
+      rolar.mockClear()
+      await act(async () => { await roteador.navigate('/sobre') })
+      await aguardarCarga()
+      expect(rolar).toHaveBeenCalledExactlyOnceWith(0, 0)
+    },
+  )
+})
+
+describe('limites do reset de rolagem', () => {
+  it.each([false, true])('Voltar e Avançar repetidos voltam ao topo, não à posição salva (StrictMode: %s)', async (strict) => {
+    const { roteador } = renderizarRota('/sobre', { sessao: null, strict })
+    await aguardarCarga()
+    const rolar = vi.mocked(window.scrollTo)
+    const chaveInicial = roteador.state.location.key
+    await act(async () => { await roteador.navigate('/como-funciona') })
+    const chaveDestino = roteador.state.location.key
+
+    for (const passo of [-1, 1, -1, 1]) {
+      rolar.mockClear()
+      await act(async () => { await roteador.navigate(passo) })
+      await aguardarCarga()
+      expect(roteador.state.location.key).toBe(passo === -1 ? chaveInicial : chaveDestino)
+      expect(rolar).toHaveBeenCalledExactlyOnceWith(0, 0)
+    }
+  })
+
+  it('o link de Privacidade no rodapé também chega ao topo', async () => {
+    const { container, roteador } = renderizarRota('/', { sessao: null })
+    await aguardarCarga()
+    const rolar = vi.mocked(window.scrollTo)
+    rolar.mockClear()
+    await act(async () => {
+      fireEvent.click(container.querySelector<HTMLAnchorElement>('footer a[href="/privacidade"]')!)
+    })
+    expect(roteador.state.location.pathname).toBe('/privacidade')
+    expect(screen.getByRole('heading', { level: 1, name: 'Privacidade' })).toBeTruthy()
+    expect(rolar).toHaveBeenCalledExactlyOnceWith(0, 0)
+  })
+
+  it('a carga inicial, query, hash e estado no mesmo caminho não forçam o topo', async () => {
+    const { roteador } = renderizarRota('/como-funciona', { sessao: null, strict: true })
+    await aguardarCarga()
+    const rolar = vi.mocked(window.scrollTo)
+    expect(rolar).not.toHaveBeenCalled()
+    for (const destino of ['?origem=rodape', '#cf-historico', '#cf-depois', '/como-funciona']) {
+      await act(async () => { await roteador.navigate(destino) })
+      await aguardarCarga()
+      expect(rolar).not.toHaveBeenCalled()
+    }
+    await act(async () => { await roteador.navigate('/como-funciona', { state: { origem: 'teste' } }) })
+    expect(rolar).not.toHaveBeenCalled()
+  })
+
+  it.each(['#cf-historico', '#nao-existe', '#%'])('deixa %s com ANCHOR-1, mas reseta ao sair para outro caminho sem hash', async (hash) => {
+    const { roteador } = renderizarRota('/sobre', { sessao: null, strict: true })
+    await aguardarCarga()
+    const rolar = vi.mocked(window.scrollTo)
+    rolar.mockClear()
+    await act(async () => { await roteador.navigate(`/como-funciona${hash}`) })
+    await aguardarCarga()
+    expect(rolar).not.toHaveBeenCalled()
+    if (hash === '#cf-historico') expect(document.activeElement).toBe(document.getElementById('cf-historico'))
+
+    await act(async () => { await roteador.navigate('/sobre') })
+    await aguardarCarga()
+    expect(rolar).toHaveBeenCalledExactlyOnceWith(0, 0)
+  })
+
+  it('não acrescenta rolagem nem altera o foco na navegação logada', async () => {
+    const { roteador } = renderizarRota('/app/hoje')
+    await aguardarCarga()
+    const rolar = vi.mocked(window.scrollTo)
+    rolar.mockClear()
+    await act(async () => { await roteador.navigate('/app/conta') })
+    await aguardarCarga()
+    expect(document.activeElement).toBe(screen.getByRole('heading', { level: 1, name: 'Conta' }))
+    expect(rolar).toHaveBeenCalledExactlyOnceWith(0, 0)
+  })
+})
 
 describe('cabeçalho público', () => {
   it('tem o nome do site, os quatro links, Entrar e o primário "Criar conta"', async () => {

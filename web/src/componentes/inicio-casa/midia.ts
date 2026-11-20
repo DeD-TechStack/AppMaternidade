@@ -67,10 +67,11 @@ const TAMANHOS_DA_TELA =
 
 /**
  * State `Y_ALTA` of the manifest (recaptured 19/11/2026, clock fixed 18/11 21:42): the Histórico of the day before in a
- * 390 x 1234 window scrolled to the page maximum (scroll_y 1767 of a 3001 px document), with `[data-rodape]` hidden for
- * the capture. The app header sits at the top of the image; the rows run from 11:00 to 20:30. The frame's screen layer
- * shows 844 of the 1234 CSS px, so the capture has exactly one screen width more than the screen (`ROLAGEM_PX`): the
- * frame opens on the bottom 844 px, where the 16:00 Juliana and 17:30 Ícaro rows lead the resting frame, and the pan
+ * 390 x 1234 window at scrollY 1099 of a 2609 px document (HOME-PHONE-B2), with `[data-rodape]` (site footer) and
+ * `[data-aviso-tela]` (in-app demo note) hidden for the capture only and asserted absent by the capture tool. The sticky
+ * app header sits at the top of the image. The frame's screen layer shows 844 of the 1234 CSS px, so the capture has
+ * exactly one screen width more than the screen (`ROLAGEM_PX`): the frame rests on the bottom 844 px, which ends on the
+ * 16:00 Juliana row followed by the 17:30 Ícaro row (the last row, 16 css px above the window bottom), and the pan
  * goes up to the header. The frames of the Início serve it.
  */
 export const CAPTURA_Y_ALTA: Imagem = imagemPublica({
