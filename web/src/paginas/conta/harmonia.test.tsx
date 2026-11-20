@@ -271,7 +271,7 @@ describe('/app/conta: seção, quadro, título em medio, índice 16rem/1fr e lin
   })
 })
 
-describe('/app/familia: seção, título em medio, colunas 5fr/7fr e blocos em pilha', () => {
+describe('/app/familia: identidade acima de bebês e membros em colunas iguais, convites e ações depois', () => {
   it('estrutura da página', async () => {
     const { container } = renderizarComDados('/app/familia', { sessao: 'juliana' })
     await screen.findByRole('heading', { level: 2, name: 'Bebês' })
@@ -281,20 +281,33 @@ describe('/app/familia: seção, título em medio, colunas 5fr/7fr e blocos em p
     expect(titulo.parentElement!.classList.contains('max-w-medio')).toBe(true)
     expect(titulo.parentElement!.getAttribute('data-h')?.split(' ')).toContain('pilha')
 
+    const identidade = screen.getByRole('region', { name: 'Família Exemplo' })
+    expect(identidade.getAttribute('data-h-vao')).toBe('junto')
+    expect(identidade.className).not.toContain('sticky')
+    expect(identidade.closest(DATA_H('colunas'))).toBeNull()
+
     const colunas = container.querySelector(`main ${DATA_H('colunas')}`)!
-    expect(modeloDe(colunas)).toBe('minmax(0, 5fr) minmax(0, 7fr)')
+    expect(modeloDe(colunas)).toBe('minmax(0, 1fr) minmax(0, 1fr)')
     expect(colunas.getAttribute('data-h-quebra')).toBe('1024')
     expect(colunas.getAttribute('data-h-vao')).toBe('bloco')
+    expect(colunas.previousElementSibling).toBe(identidade)
+    expect(colunas.children).toHaveLength(2)
 
-    // Os quatro blocos (bebês, membros, convites e ações) são seções-pilha de uma pilha de bloco.
+    // Bebês e membros ocupam colunas iguais; convites e ações seguem em uma pilha de largura inteira.
     const blocos = ['bebes', 'membros', 'convites', 'acoes-da-familia'].map(
       (id) => container.querySelector(`section[aria-labelledby="${id}"]`)!,
     )
     for (const bloco of blocos) {
       expect(bloco.getAttribute('data-h')?.split(' '), bloco.getAttribute('aria-labelledby') ?? undefined).toContain('pilha')
     }
-    expect(blocos[0].parentElement!.getAttribute('data-h-vao')).toBe('bloco')
-    expect(blocos[0].parentElement).toBe(blocos[3].parentElement)
+    for (const [indice, coluna] of [...colunas.children].entries()) {
+      expect(coluna.getAttribute('data-h')?.split(' ')).toContain('coluna')
+      expect(coluna.firstElementChild).toBe(blocos[indice])
+    }
+    const depois = colunas.nextElementSibling!
+    expect(depois.getAttribute('data-h-vao')).toBe('bloco')
+    expect(blocos[2].parentElement).toBe(depois)
+    expect(blocos[3].parentElement).toBe(depois)
   })
 
   it('o estado carregando e os erros da página são seções com pilha, sem margem solta', async () => {
