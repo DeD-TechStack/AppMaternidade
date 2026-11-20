@@ -129,15 +129,17 @@ describe('campos: 56 px nas telas públicas e 48 px nas do app', () => {
 })
 
 describe('/app/conta quebra linha com a fonte a 200% (D-2)', () => {
-  it('botões e parágrafos da Conta podem quebrar linha e a coluna deixa encolher', async () => {
+  it('Conta content wraps in bounded shrinkable stacks and retained child columns', async () => {
     const { container, unmount } = await abrir(TELAS.find((t) => t.nome === '/app/conta')!)
     const achados: string[] = []
 
-    for (const nome of ['Copiar ID', 'Baixar meus dados', 'Excluir minha conta']) {
+    for (const nome of ['Salvar', 'Copiar ID', 'Baixar meus dados', 'Excluir minha conta']) {
       const botao = screen.getByRole('button', { name: nome })
-      for (const necessaria of ['whitespace-normal', 'max-w-full', 'wrap-anywhere']) {
+      for (const necessaria of ['whitespace-normal', 'max-w-full']) {
         if (!botao.classList.contains(necessaria)) achados.push(`${nome}: falta ${necessaria}`)
       }
+      // Owned short labels wrap at spaces; unchanged export/delete buttons retain their emergency wrapping.
+      expect(botao.classList.contains('wrap-anywhere'), nome).toBe(nome === 'Baixar meus dados' || nome === 'Excluir minha conta')
       if (botao.classList.contains('whitespace-nowrap')) achados.push(`${nome}: whitespace-nowrap`)
       if (/(^|\s)w-\[\d/.test(botao.className)) achados.push(`${nome}: largura fixa`)
     }
@@ -147,26 +149,50 @@ describe('/app/conta quebra linha com a fonte a 200% (D-2)', () => {
       if (alvo.classList.contains('whitespace-nowrap')) achados.push(`nowrap em ${alvo.textContent}`)
       if (/(^|\s)w-\[\d/.test(alvo.className)) achados.push(`largura fixa em ${alvo.textContent}`)
     }
-    // O id da conta (UUID): a quebra preferida é depois do hífen (`<wbr>`), mas o último bloco (12 caracteres) a 200% e
-    // 1024 px não cabe na coluna (~90 px) e alargava a página: `wrap-anywhere` só quebra dentro do bloco quando precisa.
+    // UUIDs keep preferred hyphen breaks and emergency wrapping for a long final block at 200% text.
     const idDaConta = container.querySelector('[data-id-conta]')!
     if (!idDaConta.classList.contains('wrap-anywhere')) achados.push('id da conta sem wrap-anywhere')
     const explicacao = screen.getByText(/única pessoa responsável/)
-    const encarregado = container.querySelector('[data-encarregado]')!.parentElement!
-    for (const paragrafo of [explicacao, encarregado]) {
-      if (!paragrafo.classList.contains('wrap-anywhere')) achados.push(`falta wrap-anywhere em ${paragrafo.textContent}`)
+    // Privacy prose wraps at spaces; only the contact/identifier spans need emergency wrapping.
+    const encarregado = container.querySelector('[data-encarregado]')!
+    const contato = container.querySelector('[data-contato]')!
+    for (const texto of [explicacao, encarregado, contato]) {
+      if (!texto.classList.contains('wrap-anywhere')) achados.push(`falta wrap-anywhere em ${texto.textContent}`)
     }
 
-    // As seções são `Colunas` com `minmax(0, Nfr)` (encolhem) e cada coluna interna é `Coluna` (min-w-0 pela primitiva).
-    for (const secao of container.querySelectorAll<HTMLElement>('main section')) {
-      const colunas = secao.querySelector<HTMLElement>('[data-h~="colunas"]')!
-      if (!colunas.style.getPropertyValue('--h-colunas').includes('minmax(0,')) achados.push(`seção sem coluna encolhível: ${secao.getAttribute('aria-labelledby')}`)
-      for (const filho of colunas.children) {
-        if (!filho.getAttribute('data-h')?.split(' ').includes('coluna')) achados.push(`filho sem coluna em ${secao.getAttribute('aria-labelledby')}`)
+    const secoes = [...container.querySelectorAll<HTMLElement>('main section')]
+    expect(secoes.map((secao) => secao.getAttribute('aria-labelledby'))).toEqual([
+      'perfil', 'avisos', 'id-conta', 'exportar', 'excluir-conta', 'privacidade',
+    ])
+    // Owned sections use a bounded, shrinkable vertical reading stack, never a vacant peer column.
+    for (const id of ['perfil', 'id-conta', 'privacidade']) {
+      const secao = container.querySelector<HTMLElement>(`main section[aria-labelledby="${id}"]`)!
+      const pilha = secao.firstElementChild!
+      expect(pilha.getAttribute('data-h')?.split(' '), id).toContain('pilha')
+      expect(pilha.getAttribute('data-h-vao'), id).toBe('grupo')
+      for (const classe of ['w-full', 'min-w-0', 'max-w-[28rem]']) {
+        expect(pilha.classList.contains(classe), `${id}: ${classe}`).toBe(true)
       }
-      // A coluna do texto da seção (títulos e frases) quebra palavra longa: a 200% e a 1024 px ela fica com ~90 px.
+      expect(secao.querySelector('[data-h~="colunas"]'), id).toBeNull()
+      expect(pilha.children, id).toHaveLength(2)
+      expect(pilha.firstElementChild!.querySelector('h2')!.id).toBe(id)
+      for (const filho of pilha.children) {
+        expect(filho.getAttribute('data-h')?.split(' '), id).toContain('pilha')
+        expect(filho.classList.contains('wrap-anywhere'), id).toBe(false)
+      }
+    }
+    // Unchanged notice/export/delete children retain shrinkable Colunas and Coluna primitives.
+    for (const id of ['avisos', 'exportar', 'excluir-conta']) {
+      const secao = container.querySelector<HTMLElement>(`main section[aria-labelledby="${id}"]`)!
+      const colunas = secao.querySelector<HTMLElement>('[data-h~="colunas"]')!
+      expect(colunas, id).not.toBeNull()
+      if (!colunas.style.getPropertyValue('--h-colunas').includes('minmax(0,')) achados.push(`seção sem coluna encolhível: ${id}`)
+      expect(colunas.children, id).toHaveLength(2)
+      for (const filho of colunas.children) {
+        if (!filho.getAttribute('data-h')?.split(' ').includes('coluna')) achados.push(`filho sem coluna em ${id}`)
+      }
       const texto = colunas.children[0]
-      if (texto && !texto.classList.contains('wrap-anywhere')) achados.push(`coluna do texto sem wrap-anywhere em ${secao.getAttribute('aria-labelledby')}`)
+      if (!texto.classList.contains('wrap-anywhere')) achados.push(`coluna do texto sem wrap-anywhere em ${id}`)
     }
     expect(achados).toEqual([])
     unmount()

@@ -70,12 +70,27 @@ describe('Hoje: a ordem dos blocos', () => {
     expect(screen.getByText('Última mamada às 07:32, registrada por Ícaro')).toBeTruthy()
   })
 
-  it('(madrugada) o histórico vem antes dos números do dia, para a primeira linha subir no celular', async () => {
-    await renderizarRotaPronta('/app/hoje', { madrugada: true, diaCompleto: true })
-
-    const historico = regiao('Desde o seu último registro, às 07:50')
-    expect(regiao('Para você saber').compareDocumentPosition(historico) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
-    expect(historico.compareDocumentPosition(regiao('Hoje até agora')) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
+  it('(night) session and next action precede daily summary, notes and history, with or without a session', async () => {
+    // LEADER-SCOPE-HOJE-20261120: summary-first reading also applies at night.
+    for (const vazia of [false, true]) {
+      const { container, unmount } = await renderizarRotaPronta('/app/hoje', {
+        madrugada: true,
+        diaCompleto: true,
+        ajustarRotina: vazia ? semSessaoEmAndamento : undefined,
+      })
+      const acoes = container.querySelector<HTMLElement>('main [data-acoes-do-hoje]')!
+      const leitura = container.querySelector<HTMLElement>('main [data-area-lista]')!
+      const iniciar = screen.getByRole('button', { name: 'Iniciar mamada' })
+      expect(acoes.contains(cartao(container))).toBe(true)
+      expect(acoes.contains(iniciar)).toBe(true)
+      const blocos = [regiao('Hoje até agora'), regiao('Para você saber'), regiao('Desde o seu último registro, às 07:50'), ultimos(container)]
+      for (const bloco of blocos) expect(leitura.contains(bloco)).toBe(true)
+      const ordem = [cartao(container), iniciar, ...blocos]
+      for (let i = 1; i < ordem.length; i++) {
+        expect(ordem[i - 1].compareDocumentPosition(ordem[i]) & Node.DOCUMENT_POSITION_FOLLOWING, `block ${i}, empty=${vazia}`).not.toBe(0)
+      }
+      unmount()
+    }
   })
 
   it('(claro) não há botão redondo de mamada: ele é só da madrugada', async () => {
@@ -921,30 +936,75 @@ describe('Hoje: madrugada', () => {
     expect(grande.classList.contains('size-[13rem]')).toBe(true)
   })
 
-  it('no celular, com o sono em andamento, o histórico sobe: a grade é Colunas de bloco (H-3e; antes gap-5 e mt-4 soltos), frações 8/4', async () => {
-    const { container } = await renderizarRotaPronta('/app/hoje', { madrugada: true, diaCompleto: true })
-
-    const grade = container.querySelector<HTMLElement>('main [data-grade-do-hoje]')!
-    expect(grade.contains(cartao(container))).toBe(true)
-    expect(grade.contains(regiao('Desde o seu último registro, às 07:50'))).toBe(true)
-    const contrato: Array<[string, string | null]> = [
-      ['data-h', 'colunas'],
-      ['data-h-vao', 'bloco'],
-      ['data-h-quebra', '1024'],
-      ['data-h-alinhar', 'inicio'],
-    ]
-    for (const [atributo, valor] of contrato) expect(grade.getAttribute(atributo), atributo).toBe(valor)
-    for (const classe of ['gap-8', 'mt-6']) expect(grade.classList.contains(classe), classe).toBe(false)
-    // Nenhum alvo encolhe: o círculo continua com 7 rem e o Encerrar com o alvo do app.
-    expect(screen.getByRole('button', { name: 'Iniciar mamada' }).classList.contains('size-[7rem]')).toBe(true)
+  it('night stacks wrap by available space, retain touch targets and mount a single session/action branch', async () => {
+    for (const vazia of [false, true]) {
+      const { container, unmount } = await renderizarRotaPronta('/app/hoje', {
+        madrugada: true,
+        diaCompleto: true,
+        ajustarRotina: vazia ? semSessaoEmAndamento : undefined,
+      })
+      const grade = container.querySelector<HTMLElement>('main [data-grade-do-hoje]')!
+      expect(grade.matches('[data-h="colunas"][data-h-vao="bloco"][data-h-alinhar="inicio"]')).toBe(true)
+      expect(grade.classList.contains('flex')).toBe(true)
+      expect(grade.classList.contains('flex-wrap')).toBe(true)
+      expect(grade.children).toHaveLength(2)
+      const [acoes, leitura] = [...grade.children]
+      expect(acoes.hasAttribute('data-acoes-do-hoje')).toBe(true)
+      expect(leitura.hasAttribute('data-area-lista')).toBe(true)
+      expect(acoes.contains(cartao(container))).toBe(true)
+      expect(leitura.contains(regiao('Desde o seu último registro, às 07:50'))).toBe(true)
+      for (const coluna of [acoes, leitura]) {
+        // The shared coluna primitive supplies min-width: 0; rem bases allow text-driven wrapping.
+        expect(coluna.matches('[data-h~="pilha"][data-h~="coluna"][data-h-vao="bloco"]')).toBe(true)
+        expect(coluna.classList.contains('flex-[1_1_32rem]')).toBe(true)
+      }
+      for (const classe of ['gap-8', 'mt-6']) expect(grade.classList.contains(classe), classe).toBe(false)
+      // Raw DOM queries include hidden branches, unlike default role queries.
+      expect(container.querySelectorAll('[data-acoes-do-hoje]')).toHaveLength(1)
+      expect(container.querySelectorAll('[data-area-lista]')).toHaveLength(1)
+      expect(container.querySelectorAll('[data-andamento]')).toHaveLength(1)
+      expect(container.querySelectorAll('[role="timer"]')).toHaveLength(vazia ? 0 : 1)
+      expect(container.querySelectorAll('[data-iniciar-mamada] button')).toHaveLength(1)
+      expect(container.querySelectorAll('[data-acao="encerrar"]')).toHaveLength(vazia ? 0 : 1)
+      const iniciar = screen.getByRole('button', { name: 'Iniciar mamada' })
+      expect(acoes.contains(iniciar)).toBe(true)
+      expect(iniciar.classList.contains(vazia ? 'size-[13rem]' : 'size-[7rem]')).toBe(true)
+      if (!vazia) {
+        for (const controle of cartao(container).querySelectorAll('button, a')) {
+          expect(controle.classList.contains('alvo-toque')).toBe(true)
+          expect(controle.classList.contains('min-h-[max(48px,var(--alvo-toque))]')).toBe(true)
+        }
+      }
+      unmount()
+    }
   })
 
-  it('o ajuste é só da madrugada com sessão: de dia a grade é Colunas de bloco com as frações 6/6 (antes gap-10 e mt-6 soltos)', async () => {
+  it('day uses the same shrinkable reading stacks and a single live timer instead of fixed grid tracks', async () => {
     const { container } = await renderizarRotaPronta('/app/hoje')
-
     const grade = container.querySelector<HTMLElement>('main [data-grade-do-hoje]')!
-    expect(grade.getAttribute('data-h-vao')).toBe('bloco')
-    expect(grade.style.getPropertyValue('--h-colunas')).toBe('minmax(0, 6fr) minmax(0, 6fr)')
+    expect(grade.matches('[data-h="colunas"][data-h-vao="bloco"][data-h-alinhar="inicio"]')).toBe(true)
+    expect(grade.classList.contains('flex')).toBe(true)
+    expect(grade.classList.contains('flex-wrap')).toBe(true)
+    expect(grade.children).toHaveLength(2)
+    const [acoes, leitura] = [...grade.children]
+    expect(acoes.hasAttribute('data-acoes-do-hoje')).toBe(true)
+    expect(leitura.hasAttribute('data-area-lista')).toBe(true)
+    expect(acoes.contains(cartao(container))).toBe(true)
+    expect(leitura.contains(regiao('Hoje até agora'))).toBe(true)
+    expect(leitura.contains(regiao('Para você saber'))).toBe(true)
+    expect(leitura.contains(ultimos(container))).toBe(true)
+    for (const coluna of [acoes, leitura]) {
+      expect(coluna.matches('[data-h~="pilha"][data-h~="coluna"][data-h-vao="bloco"]')).toBe(true)
+      expect(coluna.classList.contains('flex-[1_1_32rem]')).toBe(true)
+    }
+    expect(container.querySelectorAll('[data-andamento]')).toHaveLength(1)
+    expect(container.querySelectorAll('[role="timer"]')).toHaveLength(1)
+    expect(container.querySelectorAll('[data-acao="encerrar"]')).toHaveLength(1)
+    expect(container.querySelectorAll('[data-iniciar-mamada]')).toHaveLength(0)
+    for (const controle of cartao(container).querySelectorAll('button, a')) {
+      expect(controle.classList.contains('alvo-toque')).toBe(true)
+      expect(controle.classList.contains('min-h-[max(48px,var(--alvo-toque))]')).toBe(true)
+    }
   })
 
   it('com uma mamada em andamento o botão redondo some (o cartão já mostra a mamada)', async () => {

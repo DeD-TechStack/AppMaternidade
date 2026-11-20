@@ -87,6 +87,51 @@ describe('R38-24: a lista de notas', () => {
     expect(notas()[0].textContent).not.toContain('em destaque')
   })
 
+  it('realça só o texto com destaque vigente, sem mudar a ordem nem repetir o sobre', async () => {
+    await renderizarRotaPronta('/app/notas', {
+      ajustarRotina: comNotas(
+        notaDe(1, { texto: 'Sem destaque' }),
+        notaDe(2, { texto: 'No limite', destaqueAte: iso(INSTANTE.getTime()) }),
+        notaDe(3, { texto: 'Vencida', destaqueAte: iso(INSTANTE.getTime() - HORA) }),
+        notaDe(4, { texto: 'Vigente', bebeId: ID_BEBE, destaqueAte: iso(INSTANTE.getTime() + HORA) }),
+      ),
+    })
+
+    expect(textosDasNotas()).toEqual(['Sem destaque', 'No limite', 'Vencida', 'Vigente', 'Pomada só à noite.'])
+    for (const [indice, nota] of notas().entries()) {
+      const texto = nota.querySelector('p')!
+      const vigente = indice >= 3
+      expect(texto.classList.contains('bg-(--cor-papel-fundo)')).toBe(vigente)
+      expect(texto.classList.contains('text-abertura')).toBe(vigente)
+      const sobre = indice === 3 ? 'Sobre Heloísa' : 'Sobre a família toda'
+      expect(within(nota).getAllByText(sobre, { exact: true })).toHaveLength(1)
+      expect(texto.compareDocumentPosition(within(nota).getByText(sobre)) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    }
+  })
+
+  it('retira o realce quando o destaque vence sem recarregar nem reordenar a lista', async () => {
+    await renderizarRotaPronta('/app/notas', {
+      ajustarRotina: comNotas(notaDe(1, { texto: 'Por um minuto', destaqueAte: iso(INSTANTE.getTime() + 60_000) })),
+    })
+    const texto = within(notas()[0]).getByText('Por um minuto')
+    expect(texto.classList.contains('bg-(--cor-papel-fundo)')).toBe(true)
+    await act(async () => { vi.advanceTimersByTime(60_000) })
+    expect(texto.classList.contains('bg-(--cor-papel-fundo)')).toBe(false)
+    expect(notas()[0].textContent).not.toContain('em destaque')
+    expect(textosDasNotas()[0]).toBe('Por um minuto')
+  })
+
+  it('mantém as ações na área da própria nota, com coluna de texto flexível e ações abaixo no celular', async () => {
+    await renderizarRotaPronta('/app/notas')
+    const nota = notas()[0]
+    expect(nota.classList.contains('grid')).toBe(true)
+    expect(nota.classList.contains('lg:grid-cols-[minmax(0,1fr)_max-content]')).toBe(true)
+    const editar = within(nota).getByRole('link', { name: 'Editar nota: Pomada só à noite.' })
+    expect(editar.parentElement).toBe(within(nota).getByRole('button', { name: 'Excluir nota: Pomada só à noite.' }).parentElement)
+    expect(editar.parentElement!.classList.contains('lg:flex-col')).toBe(true)
+    expect(editar.parentElement!.classList.contains('flex-wrap')).toBe(true)
+  })
+
   it('uma nota do bebê diz `Sobre <nome>`', async () => {
     await renderizarRotaPronta('/app/notas', { ajustarRotina: comNotas(notaDe(1, { texto: 'Da Heloísa', bebeId: ID_BEBE })) })
 

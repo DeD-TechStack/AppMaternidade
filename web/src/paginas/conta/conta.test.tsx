@@ -72,6 +72,33 @@ describe('estrutura da tela', () => {
     expect(screen.queryByRole('navigation', { name: 'Principal' })).toBeNull()
   })
 
+  it('perfil e identidade mantêm título, descrição e controles na mesma pilha de leitura', async () => {
+    await abrirConta()
+
+    for (const id of ['perfil', 'id-conta']) {
+      const secao = document.getElementById(id)!.closest('section')!
+      const leitura = secao.firstElementChild!
+      expect(leitura.getAttribute('data-h')?.split(' ')).toContain('pilha')
+      expect(leitura.classList.contains('max-w-[28rem]')).toBe(true)
+      const abertura = leitura.firstElementChild!
+      expect(abertura.querySelector('h2')?.id).toBe(id)
+      expect(abertura.querySelector('p')).not.toBeNull()
+      const controles = abertura.nextElementSibling!
+      expect(controles.querySelector(id === 'perfil' ? 'input' : '[data-id-conta]')).not.toBeNull()
+      expect(secao.querySelector('[data-h~="colunas"]')).toBeNull()
+    }
+    const formulario = campo('Seu nome').closest('form')!
+    const identidade = document.querySelector('[data-id-conta]')!
+    for (const controle of [formulario, identidade]) {
+      expect(controle.classList.contains('w-full')).toBe(true)
+      expect(controle.classList.contains('min-w-0')).toBe(true)
+      expect(controle.classList.contains('max-w-[28rem]')).toBe(true)
+    }
+    for (const nome of ['Salvar', 'Copiar ID']) {
+      expect(screen.getByRole('button', { name: nome }).classList.contains('whitespace-normal')).toBe(true)
+    }
+  })
+
   it('o índice das seções leva às âncoras, cada link com alvo de 44 px', async () => {
     await abrirConta()
 

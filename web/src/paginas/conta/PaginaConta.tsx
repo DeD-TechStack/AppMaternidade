@@ -30,12 +30,10 @@ const SECOES_DO_INDICE = [
   ['privacidade', CONTA.secoes.privacidade],
 ] as const
 
-// Cada seção é uma linha de duas colunas 5/7 (o texto, depois os controles: `Colunas` com o vão de bloco, a
-// partir de 1024) sobre um fio de 1 px, numa pilha de bloco; a zona de perigo (excluir a conta) é um
-// `Cartao` com contorno, separado das outras. As colunas são `minmax(0, Nfr)`: o texto mais largo (o botão,
-// o id) não alarga a trilha nem faz a página rolar de lado com a fonte a 200%.
-// Os botões de uma seção quebram o rótulo dentro da coluna em vez de passar dela (`.cm-botao` é nowrap).
-const QUEBRA_DO_BOTAO = 'max-w-full whitespace-normal wrap-anywhere'
+// Keep the existing section index and child sections. Owned profile, identity and privacy content
+// reads top-to-bottom at the same bounded measure, without a vacant peer column beside the controls.
+// Normal words wrap at spaces; identifiers retain their emergency wrapping below.
+const QUEBRA_DO_BOTAO = 'max-w-full whitespace-normal'
 const SECAO = 'border-t border-[var(--cor-fio-suave)] pt-esp-bloco'
 // Os controles de uma seção (campos, caixa do id) têm todos a mesma largura: a borda direita se alinha.
 const COLUNA_DOS_CONTROLES = 'w-full min-w-0 max-w-[28rem]'
@@ -143,21 +141,21 @@ export function PaginaConta() {
             </Pilha>
 
             <Colunas fracoes="16rem 1fr" vao="bloco" aPartirDe={1024}>
-              <Coluna>
+              <Coluna className="[&_ul]:flex-wrap [&_li]:min-w-0 [&_li]:max-w-full [&_a]:whitespace-normal">
                 <IndiceDaConta secoes={SECOES_DO_INDICE} />
               </Coluna>
 
               <Coluna>
                 <Pilha vao="bloco">
           <section aria-labelledby="perfil" className={SECAO}>
-            <Colunas fracoes="5fr 7fr" vao="bloco" aPartirDe={1024}>
-            <Pilha dataH="coluna" vao="pilha" className="wrap-anywhere">
+            <Pilha vao="grupo" className={COLUNA_DOS_CONTROLES}>
+            <Pilha vao="pilha">
               <h2 id="perfil" className="cm-h4">
                 {CONTA.perfil.titulo}
               </h2>
               <p className="cm-medida">{CONTA.perfil.frase}</p>
             </Pilha>
-            <Pilha dataH="coluna" vao="pilha">
+            <Pilha vao="pilha">
             <form onSubmit={salvarPerfil} noValidate className={`flex ${COLUNA_DOS_CONTROLES} flex-col gap-5`}>
               {erroDoPerfil && !campoDoPerfil ? (
                 <ErroDaConta
@@ -197,25 +195,25 @@ export function PaginaConta() {
                 erro={campoDoPerfil === 'fuso' && erroDoPerfil ? textoDoErro(erroDoPerfil) : null}
                 refEntrada={fusoRef}
               />
-              <button type="submit" disabled={perfil.enviando} className={BOTAO_PRINCIPAL}>
+              <button type="submit" disabled={perfil.enviando} className={`${BOTAO_PRINCIPAL} ${QUEBRA_DO_BOTAO}`}>
                 {perfil.enviando ? COMUM.salvando : CONTA.perfil.botao}
               </button>
             </form>
             </Pilha>
-            </Colunas>
+            </Pilha>
           </section>
 
           <SecaoAvisosDaConta aoStatus={setStatus} />
 
           <section aria-labelledby="id-conta" className={SECAO}>
-            <Colunas fracoes="5fr 7fr" vao="bloco" aPartirDe={1024}>
-            <Pilha dataH="coluna" vao="pilha" className="wrap-anywhere">
+            <Pilha vao="grupo" className={COLUNA_DOS_CONTROLES}>
+            <Pilha vao="pilha">
               <h2 id="id-conta" className="cm-h4">
                 {CONTA.id.titulo}
               </h2>
               <p className="cm-medida">{CONTA.id.frase}</p>
             </Pilha>
-            <Pilha dataH="coluna" vao="pilha" className="items-start">
+            <Pilha vao="pilha" className="items-start">
               <p
                 ref={idRef}
                 data-id-conta
@@ -232,7 +230,7 @@ export function PaginaConta() {
                 {CONTA.id.botao}
               </button>
             </Pilha>
-            </Colunas>
+            </Pilha>
           </section>
 
           <ExportarMeusDados aoStatus={setStatus} />
@@ -240,32 +238,32 @@ export function PaginaConta() {
           {secao}
 
           <section aria-labelledby="privacidade" className={SECAO}>
-            <Colunas fracoes="5fr 7fr" vao="bloco" aPartirDe={1024}>
-            <Pilha dataH="coluna" vao="pilha" className="wrap-anywhere">
+            <Pilha vao="grupo" className={COLUNA_DOS_CONTROLES}>
+            <Pilha vao="pilha">
               <h2 id="privacidade" className="cm-h4">
                 {CONTA.privacidade.titulo}
               </h2>
             </Pilha>
-            <Pilha dataH="coluna" vao="junto" className="items-start">
-              <p className="wrap-anywhere">
+            <Pilha vao="junto" className="items-start">
+              <p>
                 {CONTA.privacidade.contato.antes}
                 <span data-contato className="wrap-anywhere">
                   {CONTA.privacidade.contato.valor}
                 </span>
                 {CONTA.privacidade.contato.depois}
               </p>
-              <p className="wrap-anywhere">
+              <p>
                 {CONTA.privacidade.encarregado.antes}
                 <span data-encarregado className="wrap-anywhere">
                   {CONTA.privacidade.encarregado.valor}
                 </span>
                 {CONTA.privacidade.encarregado.depois}
               </p>
-              <Link to="/privacidade" className={`${LINK_ALVO} wrap-anywhere`}>
+              <Link to="/privacidade" className={LINK_ALVO}>
                 {CONTA.privacidade.politica}
               </Link>
             </Pilha>
-            </Colunas>
+            </Pilha>
           </section>
                 </Pilha>
               </Coluna>
