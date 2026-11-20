@@ -68,7 +68,7 @@ function LixeiraDoBebe({ ativo }: { ativo: BebeAtivo }) {
         </LinkDaRotina>
       }
     >
-      <Pilha vao="bloco" className="max-w-leitura">
+      <Pilha vao="pilha" className="max-w-leitura">
         <p>{LIXEIRA.intro}</p>
         {somenteLeitura ? <AvisoDoPapel texto={textoDoPapel(ativo)} /> : null}
         <SecaoDoHoje secao={lixeira} titulo={LIXEIRA.lista} papel={ativo.papel}>
@@ -94,18 +94,18 @@ function LixeiraDoBebe({ ativo }: { ativo: BebeAtivo }) {
                         <li
                           key={registro.id}
                           data-registro={registro.id}
-                          className="flex flex-col gap-3 border-t border-(--cor-fio-suave) py-4 first:border-t-0 sm:flex-row sm:items-center sm:justify-between"
+                          className="flex flex-wrap items-center gap-x-esp-pilha gap-y-esp-junto border-t border-(--cor-fio-suave) py-esp-pilha first:border-t-0"
                         >
-                          <div className="flex min-w-0 items-start gap-3">
-                            <IconeDoTipo tipo={registro.tipo} className="mt-0.5 size-5 shrink-0" />
-                            <div className="min-w-0">
-                              <p className="font-medium wrap-anywhere">
+                          <div className="flex min-w-0 flex-[1_1_22rem] items-start gap-esp-junto">
+                            <IconeDoTipo tipo={registro.tipo} className="size-9 shrink-0 rounded-full bg-(--cor-papel-fundo) p-2 text-(--cor-texto)" />
+                            <div className="min-w-0 wrap-break-word">
+                              <p className="font-medium">
                                 {rotulo}, <span className="tabular-nums">{dataEHora(Date.parse(registro.inicio))}</span>
                               </p>
-                              <p className="text-pequeno text-(--cor-texto-2) wrap-anywhere">
+                              <p className="text-pequeno text-(--cor-texto-2)">
                                 {LIXEIRA.excluidoPor(acoes.nomeDoAutor(registro.excluidoPor, registro.familiaId), dataEHora(excluidoEm))}
                               </p>
-                              <p className="text-pequeno text-(--cor-texto-2)">
+                              <p className="mt-1 text-pequeno font-semibold text-(--cor-texto) tabular-nums">
                                 {LIXEIRA.podeSerRestauradoAte(dataEHora(prazoDaRestauracao(registro.excluidoEm ?? '')))}
                               </p>
                             </div>
@@ -114,7 +114,7 @@ function LixeiraDoBebe({ ativo }: { ativo: BebeAtivo }) {
                             <Botao
                               variante="contorno"
                               tamanho="app"
-                              className={`${ALVO_APP} shrink-0`}
+                              className={`${ALVO_APP} max-w-full shrink-0 whitespace-normal`}
                               icone={<Undo2 />}
                               desativado={ocupados.has(registro.id)}
                               aria-label={LIXEIRA.restaurarItem(ROTULO_TIPO[registro.tipo], dataEHora(Date.parse(registro.inicio)))}

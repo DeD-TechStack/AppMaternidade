@@ -81,7 +81,7 @@ export function CartaoDaSessao({
           tabIndex={-1}
           data-andamento=""
           aria-busy={emAndamento.estado === 'carregando' ? 'true' : undefined}
-          className="alvo-foco flex flex-col gap-esp-pilha border border-(--cor-fio-suave) bg-(--cor-cartao)"
+          className="alvo-foco flex flex-col gap-esp-pilha border border-(--cor-fio-suave) bg-(--cor-cartao) p-esp-grupo"
         >
           <h2 className="text-pequeno font-medium text-(--cor-texto-2)">{HOJE.emAndamento}</h2>
           {emAndamento.erro ? (
@@ -97,6 +97,7 @@ export function CartaoDaSessao({
           ) : null}
           <CartaoSessao
             ref={refCartao}
+            className="p-esp-grupo lg:[&_[data-desenho]]:-mb-esp-grupo lg:[&_[role=timer]]:text-exibicao lg:[&_[role=timer]]:leading-none"
             sessao={
               principalSessao
                 ? {
