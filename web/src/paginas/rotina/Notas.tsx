@@ -39,7 +39,7 @@ function VoltarDasNotas({ origem }: { origem: typeof ORIGEM_NOTAS | typeof ORIGE
   return (
     <LinkDaRotina
       to={origem}
-      className="-ml-1 inline-flex items-center gap-1.5 self-start no-underline hover:underline"
+      className="-ml-1 inline-flex items-center gap-1.5 self-start"
       icone={<ChevronLeft className="size-5" strokeWidth={2} />}
     >
       {origem === ORIGEM_HOJE ? NOTAS.voltarParaHoje : NOTAS.voltarParaNotas}
@@ -97,7 +97,7 @@ function ListaDeNotas({ ativo }: { ativo: BebeAtivo }) {
       ocupada={notas.estado === 'carregando'}
       antes={<VoltarDasNotas origem={ORIGEM_HOJE} />}
     >
-      <Pilha vao="bloco" className="max-w-leitura">
+      <Pilha vao="bloco" className="max-w-medio min-w-0">
         {podeCriar ? (
           <div>
             <LinkDaRotina to="/app/notas/nova" state={{ origem }} variante="contorno" icone={<Plus />}>
@@ -127,23 +127,29 @@ function ListaDeNotas({ ativo }: { ativo: BebeAtivo }) {
                       const resumo = resumoDaNota(nota.texto)
                       const emDestaque = nota.destaqueAte !== null && Date.parse(nota.destaqueAte) > agora
                       return (
-                        <li key={nota.id} data-nota={nota.id} className="flex flex-col gap-3 border-t border-(--cor-fio-suave) py-4 first:border-t-0">
-                          <div className="flex items-start gap-3">
-                            <Avatar nome={autor} />
-                            <div className="min-w-0 flex-1">
-                              <p className="font-medium wrap-anywhere whitespace-pre-line">{nota.texto}</p>
-                              <p className="text-pequeno text-(--cor-texto-2)">{nomeDoSobre(nota)}</p>
-                              <p className="text-pequeno text-(--cor-texto-2) wrap-anywhere">
-                                {NOTAS.autorEm(autor, dataEHora(Date.parse(nota.criadaEm)))}
-                              </p>
-                              {emDestaque && nota.destaqueAte ? (
-                                <p className="text-pequeno text-(--cor-texto-2)">{NOTAS.emDestaqueAte(dataEHora(Date.parse(nota.destaqueAte)))}</p>
-                              ) : null}
+                        <li
+                          key={nota.id}
+                          data-nota={nota.id}
+                          className="grid min-w-0 grid-cols-1 items-start gap-esp-pilha border-t border-(--cor-fio-suave) py-esp-pilha first:border-t-0 lg:grid-cols-[minmax(0,1fr)_max-content] lg:gap-x-esp-grupo"
+                        >
+                          <div className="flex min-w-0 flex-col gap-esp-junto">
+                            <p className={`font-medium wrap-anywhere whitespace-pre-line ${emDestaque ? 'rounded-campo bg-(--cor-papel-fundo) p-esp-pilha text-abertura' : 'text-corpo'}`}>
+                              {nota.texto}
+                            </p>
+                            <div className="flex min-w-0 items-start gap-3">
+                              <Avatar nome={autor} />
+                              <div className="min-w-0 text-pequeno text-(--cor-texto-2) wrap-anywhere">
+                                <p>{nomeDoSobre(nota)}</p>
+                                <p>{NOTAS.autorEm(autor, dataEHora(Date.parse(nota.criadaEm)))}</p>
+                                {emDestaque && nota.destaqueAte ? (
+                                  <p>{NOTAS.emDestaqueAte(dataEHora(Date.parse(nota.destaqueAte)))}</p>
+                                ) : null}
+                              </div>
                             </div>
                           </div>
                           {podeAlterar(nota) ? (
                             excluindo === nota.id ? (
-                              <Cartao role="group" aria-label={NOTAS.grupoDaExclusao} className="bg-(--cor-papel-fundo)" data-confirmar-exclusao="">
+                              <Cartao role="group" aria-label={NOTAS.grupoDaExclusao} className="min-w-0 bg-(--cor-papel-fundo) wrap-anywhere lg:col-span-2" data-confirmar-exclusao="">
                                 <Pilha vao="pilha">
                                   <p className="font-medium">{NOTAS.confirmarExclusao}</p>
                                   <div className="flex flex-wrap gap-3">
@@ -157,7 +163,7 @@ function ListaDeNotas({ ativo }: { ativo: BebeAtivo }) {
                                 </Pilha>
                               </Cartao>
                             ) : (
-                              <div className="flex flex-wrap gap-3">
+                              <div className="flex min-w-0 flex-wrap gap-3 lg:flex-col">
                                 <LinkDaRotina
                                   to={`/app/notas/${nota.id}/editar`}
                                   state={{ origem }}
