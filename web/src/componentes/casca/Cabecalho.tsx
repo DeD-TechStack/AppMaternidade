@@ -127,9 +127,9 @@ export function Cabecalho({ contexto, comLua, madrugada, aoAlternarMadrugada, to
     <header className="cm-cabecalho" data-cabecalho="" data-contexto={contexto} data-tom={tom}>
       {/* O primeiro Tab de toda página: pula o cabeçalho e vai ao <main> (WCAG 2.4.1). */}
       <PularParaConteudo />
-      {/* O conteúdo do cabeçalho se alinha à borda do quadro; a altura e o padding vertical continuam os de hoje. */}
-      {/* A faixa é o container das consultas em rem (texto a 200 %: o menu no lugar dos links, a pílula compacta). Só a
-          linha fica dentro dela: o menu do celular (fixed) e o alerta da saída (absolute) são irmãos, fora da contenção. */}
+      {/* O conteúdo se alinha à borda do quadro; a altura mínima preserva a linha com texto normal. */}
+      {/* A faixa é o container das consultas em rem (texto a 200 %: o menu no lugar dos links, a linha pode quebrar). Só a
+          linha fica dentro dela: o menu do celular e o alerta da saída são irmãos, fora da contenção. */}
       <div className="cm-cab-faixa" data-cab-faixa="">
         <QuadroLayout className="cm-cab-miolo">
           <Link to="/" className="cm-marca" data-nome-site="" viewTransition>

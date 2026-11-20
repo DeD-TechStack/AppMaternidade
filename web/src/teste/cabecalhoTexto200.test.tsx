@@ -44,11 +44,16 @@ describe('HEADER-200 a marcação do cabeçalho', () => {
 })
 
 describe('HEADER-200 o CSS do cabeçalho', () => {
-  it('a faixa é um container de largura (inline-size) com nome, e ocupa a altura do cabeçalho', () => {
+  it('a faixa é um container de largura; a linha e o cabeçalho crescem com o conteúdo', () => {
     const regra = /\.cm-cab-faixa\s*\{([^{}]*)\}/.exec(css)
     expect(regra, 'a regra .cm-cab-faixa').not.toBeNull()
     expect(regra![1]).toMatch(/container\s*:\s*cm-cab\s*\/\s*inline-size/)
-    expect(regra![1]).toMatch(/height\s*:\s*100%/)
+    expect(regra![1]).not.toMatch(/\bheight\s*:/)
+    for (const classe of ['cm-cabecalho', 'cm-cab-miolo']) {
+      const corpo = new RegExp(`\\.${classe}\\s*\\{([^{}]*)\\}`).exec(css)![1]
+      expect(corpo).toMatch(/min-height\s*:\s*var\(--cm-cabecalho\)/)
+      expect(corpo).not.toMatch(/(?<![-\w])height\s*:/)
+    }
   })
 
   it('a linha de links de 1100 px também exige 67 rem de faixa (consulta em rem: segue a letra da raiz)', () => {
@@ -58,17 +63,22 @@ describe('HEADER-200 o CSS do cabeçalho', () => {
     expect(texto).toMatch(/@container cm-cab \(min-width: 67rem\) \{[^@]*\.sb-cab-menu \{ display: none;/)
   })
 
-  it('a pílula compacta da faixa estreita usa unidades de container, sem largura fixa em px e sem esconder o texto', () => {
+  it('a faixa estreita quebra a linha sem reduzir a fonte nem esconder a pílula', () => {
     const achada = /@container cm-cab \(max-width: 16rem\)\s*\{((?:[^{}]*\{[^{}]*\})+)\s*\}/.exec(css)
     expect(achada, 'o @container (max-width: 16rem)').not.toBeNull()
     const corpo = achada![1]
-    // A conta com cqw mora num token local `--texto-*` (o lint de harmonia só aceita `var(--texto-*)` em font-size).
-    expect(corpo).toMatch(/--texto-cab-pilula-tamanho\s*:\s*min\(var\(--texto-pequeno-tamanho\),\s*[\d.]+cqw\)/)
-    expect(corpo).toMatch(/font-size\s*:\s*var\(--texto-cab-pilula-tamanho\)/)
-    // O recuo é em `em`: encolhe junto com a letra.
-    expect(corpo).toMatch(/padding\s*:\s*0\s+[\d.]+em\b/)
+    expect(corpo).toMatch(/\.cm-cab-miolo\s*\{\s*flex-wrap:\s*wrap;/)
+    expect(corpo).toMatch(/\.cm-cab-acoes\s*\{\s*flex-wrap:\s*wrap;/)
+    expect(corpo).not.toMatch(/font-size|--texto-|\b(?:cqw|vw)\b/)
     expect(corpo).not.toMatch(/display\s*:\s*none|visibility\s*:\s*hidden|overflow\s*:|text-overflow|(?<![-\w])(?:min-|max-)?width\s*:/i)
     // 16 rem são 256 px a 100 %: nenhuma janela de 320 em diante cai nesta regra com a letra normal.
     expect(16 * 16).toBeLessThan(320)
+  })
+
+  it('o painel do menu acompanha a altura real, não a altura mínima da linha normal', () => {
+    const corpo = /\.cm-menu-celular\s*\{([^{}]*)\}/.exec(css)![1]
+    expect(corpo).toMatch(/position\s*:\s*absolute/)
+    expect(corpo).toMatch(/top\s*:\s*100%/)
+    expect(corpo).toMatch(/height\s*:\s*calc\(100dvh - 100%\)/)
   })
 })

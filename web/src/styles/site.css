@@ -458,7 +458,7 @@
     position: sticky;
     top: 0;
     z-index: 40;
-    height: var(--cm-cabecalho);
+    min-height: var(--cm-cabecalho);
     /* Nunca passa da janela (fonte a 200 %): o que sobrar na horizontal é cortado aqui, e não rola a página. */
     max-width: 100%;
     overflow-x: clip;
@@ -470,7 +470,7 @@
     display: flex;
     align-items: center;
     gap: 16px;
-    height: 100%;
+    min-height: var(--cm-cabecalho);
     min-width: 0;
   }
 
@@ -689,7 +689,6 @@
      de filhos fixed/absolute: por isso o menu do celular e o alerta da saída ficam FORA dela, irmãos da faixa. */
   .cm-cab-faixa {
     container: cm-cab / inline-size;
-    height: 100%;
   }
 
   /* A linha de links só vale de 1100 px de janela (mídia) E de 67 rem de faixa (container). A 100 % 67 rem são 1072 px:
@@ -754,28 +753,34 @@
     }
   }
 
-  /* HEADER-200: faixa estreita para o tamanho da letra (16 rem = 256 px a 100 %: nenhuma janela de 320 em diante cai
-     aqui; a 200 % são 512 px, e as janelas de 320 e 390 caem). A marca, a pílula "Criar conta" e o Menu têm de
-     caber inteiros na linha: a letra da pílula acompanha a faixa (cqw) em vez de crescer com a raiz (o nível
-     `pequeno` é o teto), e o recuo é em `em`, então encolhe junto com a letra. O texto não é cortado nem escondido,
-     o rótulo e o alvo de 44 px de altura continuam. O token local `--texto-cab-pilula-tamanho` guarda a conta, para
-     o `font-size` continuar vindo de um `var(--texto-*)`. */
+  /* HEADER-200: 16 rem não alcançam as janelas de 320 px ou mais com texto normal. Com a raiz ampliada, a
+     linha pode quebrar e ganhar altura, sem limitar a fonte da pílula. Marca, ações e Menu conservam a ordem
+     do DOM; não há corte nem redução da letra para fazê-los caber. */
   @container cm-cab (max-width: 16rem) {
-    .cm-cab-criar {
-      --texto-cab-pilula-tamanho: min(var(--texto-pequeno-tamanho), 4.4cqw);
+    .cm-cab-miolo {
+      flex-wrap: wrap;
+      gap: var(--espaco-junto);
+      padding-block: var(--espaco-junto);
+    }
 
-      padding: 0 0.7em;
-      font-size: var(--texto-cab-pilula-tamanho);
+    .cm-cab-acoes {
+      flex-wrap: wrap;
+    }
+
+    .cm-cab-criar,
+    .sb-cab-menu {
+      flex: none;
     }
   }
 
-  /* Menu do celular: painel de altura cheia abaixo do cabeçalho. */
+  /* O painel começa depois da altura real do cabeçalho, inclusive quando o texto ampliado cria outra linha.
+     O cabeçalho sticky é o bloco de referência; o painel termina na borda visível da janela. */
   .cm-menu-celular {
-    position: fixed;
-    top: var(--cm-cabecalho);
+    position: absolute;
+    top: 100%;
     right: 0;
-    bottom: 0;
     left: 0;
+    height: calc(100dvh - 100%);
     overflow-y: auto;
     background-color: var(--cor-fundo);
     color: var(--cor-texto);
