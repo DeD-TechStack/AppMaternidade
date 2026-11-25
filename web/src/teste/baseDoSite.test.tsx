@@ -113,8 +113,9 @@ describe('imagemPublica (o ajudante único da base)', () => {
   })
 })
 
-// vite-imagetools (LIB-IMG) serves generated URLs in the test/dev server as /@imagetools/<hash>; the build gives them the base.
-const GERADA = /^\/@imagetools\//
+// vite-imagetools (LIB-IMG) serves generated URLs in the test/dev server as /@imagetools/<hash>, and plain asset imports
+// (the fixed M04 and M05 plates) as /src/assets/...; the build gives both the base.
+const GERADA = /^\/(@imagetools|src\/assets)\//
 
 /** Os endereços de imagem da tela: cada `src`, cada candidato de `srcset` de `<img>` e de `<source>`. */
 
@@ -190,6 +191,12 @@ describe(`as páginas públicas no build do Pages (BASE_URL=${BASE})`, () => {
       expect(urlsDeEstiloEmLinha(container).filter((url) => !url.startsWith(BASE)), `${rota}: url() em estilo`).toEqual([])
     })
   }
+
+  it('controle negativo: um caminho público raiz-absoluto sem a base não é GERADA e o mesmo filtro o acusa', () => {
+    const url = '/cenas/x.webp'
+    expect(GERADA.test(url)).toBe(false)
+    expect([url].filter((u) => !u.startsWith(BASE) && !GERADA.test(u))).toEqual([url])
+  })
 
   it('na base padrão "/" o endereço continua o mesmo caminho público (nada mudou fora do Pages)', async () => {
     const { renderizarRotaPronta } = await import('./renderizarRota.tsx')
