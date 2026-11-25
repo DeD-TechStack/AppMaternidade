@@ -48,7 +48,7 @@ export interface ConfirmacaoDaRotina {
   acoes: AcaoDaConfirmacao[]
   /** A frase de uma nota que não pôde ser gravada, para a pessoa não perder o que escreveu. */
   textoDaNota?: string
-  /** Só nas confirmações com `Desfazer` (e no erro dele): para onde o foco vai quando a pessoa toca. */
+  /** Nas confirmações com `Desfazer` (e no erro dele) e no erro do restaurar: para onde o foco vai quando a pessoa toca. */
   origem?: OrigemDoRegistro
 }
 
