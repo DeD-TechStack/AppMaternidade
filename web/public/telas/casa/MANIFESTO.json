@@ -80,6 +80,13 @@
     },
     {
       "id": "Y_ALTA",
+      "captura_dpr3": {
+        "fonte_sha": "98817ec62ff7cd6805131157092c7d4c43c67b33",
+        "viewport": "390x1234", "dpr": 3, "toque": true, "user_agent_mobile": false,
+        "rota": "/app/historico", "h1": "Histórico", "tema": "claro",
+        "scroll_y": 1099, "altura_documento": 2609,
+        "png": { "largura": 1170, "altura": 3702, "sha256": "0f0b075cef840710cf8a1e5b6db540aa1af7680f8f3a22e44f62026a231f7f46" }
+      },
       "estado": "Y",
       "rota": "/app/historico",
       "caminho_final": "/app/historico",
@@ -156,6 +163,14 @@
           "bytes": 16348,
           "sha256": "a852a80de47e80ce46dd0eb4221e943dc911cf89a8d88506b7c7b5d4bc5ac4cf",
           "qualidade": 72
+        },
+        {
+          "arquivo": "/telas/casa/historico-y-alta-780w.webp", "largura": 780, "altura": 2468, "bytes": 86976,
+          "sha256": "ba6c52d5eddd070d6864715029e9663c61cde6b75019971ff68646d582f6534a", "qualidade": 90, "fonte": "captura_dpr3"
+        },
+        {
+          "arquivo": "/telas/casa/historico-y-alta-1170w.webp", "largura": 1170, "altura": 3702, "bytes": 137086,
+          "sha256": "10db11ff414a9e83b40ca311f982297a7661f3f6f87f45dce2defb5ffd0e3e45", "qualidade": 90, "fonte": "captura_dpr3"
         }
       ],
       "a42_aberto": {
@@ -168,6 +183,12 @@
     },
     {
       "id": "N",
+      "captura_dpr3": {
+        "fonte_sha": "98817ec62ff7cd6805131157092c7d4c43c67b33",
+        "viewport": "390x880", "dpr": 3, "toque": true, "user_agent_mobile": false,
+        "rota": "/app/hoje", "h1": "Hoje", "tema": "madrugada", "scroll_y": 78, "timer": "1:12:02",
+        "png": { "largura": 1170, "altura": 2640, "sha256": "b2e4d16236e836d7b968bba1097cd13b896ac58aaab420050217d3b3b7e565eb" }
+      },
       "estado": "N",
       "rota": "/app/hoje",
       "caminho_final": "/app/hoje",
@@ -230,6 +251,14 @@
           "bytes": 15122,
           "sha256": "0b0f0522429d22b3a7aea287300aabc34115273fc3c4cab74c6dff7a37cade13",
           "qualidade": 82
+        },
+        {
+          "arquivo": "/telas/casa/hoje-n-780w.webp", "largura": 780, "altura": 1760, "bytes": 64120,
+          "sha256": "632f061d428b5bd800924a184a22620e72ebbf88eeddb65bc1f0487388ba1d00", "qualidade": 90, "fonte": "captura_dpr3"
+        },
+        {
+          "arquivo": "/telas/casa/hoje-n-1170w.webp", "largura": 1170, "altura": 2640, "bytes": 99274,
+          "sha256": "5c32c07739a27d964ada11ae3bd24d64af590e3aa16e88548f9e0658191127da", "qualidade": 90, "fonte": "captura_dpr3"
         }
       ]
     }

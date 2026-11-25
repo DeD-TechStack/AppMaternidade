@@ -247,10 +247,12 @@ describe('SH-4 band 5: the statement on the rug, with the Notas capture on the b
     expect(telas).toHaveLength(1)
     expect(telas[0].getAttribute('alt')).toBe(ALT_NOTAS)
     expect(telas[0].getAttribute('src')).toBe('/telas/t1i/notas-320w.webp')
-    expect([telas[0].getAttribute('width'), telas[0].getAttribute('height')]).toEqual(['640', '1385'])
+    // IMG-RES: the box is that of the largest file, the 1170 x 2532 DPR 3 capture (the aspect of the 640 x 1385 it had).
+    expect([telas[0].getAttribute('width'), telas[0].getAttribute('height')]).toEqual(['1170', '2532'])
     const artes = banda.querySelectorAll('[data-produto-moldura-arte]')
     expect(artes).toHaveLength(1)
     expect(artes[0].getAttribute('src')).toBe('/molduras/moldura-dia.png')
+    expect(artes[0].getAttribute('srcset')).toBe('/molduras/moldura-dia.png 678w, /molduras/moldura-dia-1356w.png 1356w')
     expect(banda.querySelectorAll('svg')).toHaveLength(0)
     expect(banda.querySelectorAll('.ic-prova > *:last-child')[0].hasAttribute('data-produto-moldura')).toBe(true)
   })
@@ -509,7 +511,7 @@ describe('SH-8 midia.ts: the plates and layers of the half exist where the const
       }
     }
     expect([midia.PORTA_NOITE.largura, midia.PORTA_NOITE.altura]).toEqual([1254, 1070])
-    expect([midia.CAPTURA_NOTAS.largura, midia.CAPTURA_NOTAS.altura]).toEqual([640, 1385])
+    expect([midia.CAPTURA_NOTAS.largura, midia.CAPTURA_NOTAS.altura]).toEqual([1170, 2532])
   })
 
   it('the WIDTH `sizes` of M05 stay byte-identical', async () => {

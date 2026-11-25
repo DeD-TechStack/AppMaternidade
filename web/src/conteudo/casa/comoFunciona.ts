@@ -2,9 +2,9 @@ import { imagemPublica } from '../../componentes/campo/urlPublica.ts'
 import { placa } from '../../componentes/campo/imagens.ts'
 import type { Imagem } from '../../componentes/secoes/contrato.ts'
 import m01Heroi from '../../assets/cenas/como-funciona/m01-heroi-1672w.webp?w=977;1672&format=avif;webp&as=picture'
-import m01Heroi390 from '../../assets/cenas/como-funciona/m01-heroi-390c-780w.webp?w=390;780&format=avif;webp&as=picture'
+import m01Heroi390 from '../../assets/cenas/como-funciona/m01-heroi-390c-1170w.webp?w=390;780;1170&format=avif;webp&as=picture'
 import m04Tummy from '../../assets/cenas/como-funciona/m04-1040w.webp?w=350;520;700;1040&format=avif;webp&as=picture'
-import m06Colo from '../../assets/cenas/como-funciona/m06-600w.webp?w=300;600&format=avif;webp&as=picture'
+import m06Colo from '../../assets/cenas/como-funciona/m06-900w.webp?w=300;600;900&format=avif;webp&as=picture'
 
 // Approved COPY_como-funciona deck (sha256 84e6bf6d…) with COMO-P3 hero/closing copy; no other copy changes.
 // `cf.aba` (o título da aba) fica em NOMES_DE_PAGINA. Cada frase numa linha, com o id do deck ao lado.
@@ -73,10 +73,12 @@ export const TELA_HISTORICO: Imagem = imagemPublica({
     '/telas/t1i/historico-y15-320w.webp 320w',
     '/telas/t1i/historico-y15-560w.webp 560w',
     '/telas/t1i/historico-y15-640w.webp 640w',
+    '/telas/t1i/historico-y15-780w.webp 780w',
+    '/telas/t1i/historico-y15-1170w.webp 1170w',
   ].join(', '),
   sizes: '(min-width: 1024px) 390px, (min-width: 768px) 320px, 330px',
-  largura: 640,
-  altura: 1385,
+  largura: 1170,
+  altura: 2532,
 })
 
 /** CF-S5: a captura das Notas, mesmos tamanhos. */
@@ -87,15 +89,19 @@ export const TELA_NOTAS: Imagem = imagemPublica({
     '/telas/t1i/notas-320w.webp 320w',
     '/telas/t1i/notas-560w.webp 560w',
     '/telas/t1i/notas-640w.webp 640w',
+    '/telas/t1i/notas-780w.webp 780w',
+    '/telas/t1i/notas-1170w.webp 1170w',
   ].join(', '),
   sizes: '(min-width: 768px) 320px, 280px',
-  largura: 640,
-  altura: 1385,
+  largura: 1170,
+  altura: 2532,
 })
 
 /** A moldura do aparelho de dia (arte decorativa, sem texto alternativo). */
 export const MOLDURA_DIA: Imagem = imagemPublica({
   src: '/molduras/moldura-dia.png',
+  srcSet: '/molduras/moldura-dia.png 678w, /molduras/moldura-dia-1356w.png 1356w',
+  sizes: '(min-width: 1440px) 414px, 350px',
   largura: 678,
   altura: 1423,
 })

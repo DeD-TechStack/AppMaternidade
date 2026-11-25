@@ -5,7 +5,7 @@ import { imagemPublica } from '../../componentes/campo/urlPublica.ts'
 import { placa } from '../../componentes/campo/imagens.ts'
 import type { Imagem } from '../../componentes/secoes/contrato.ts'
 import m04Heroi from '../../assets/cenas/desenvolvimento/m04-heroi-1672w.webp?w=1100;1672&format=avif;webp&as=picture'
-import m04Heroi390 from '../../assets/cenas/desenvolvimento/m04-heroi-390c-780w.webp?w=390;780&format=avif;webp&as=picture'
+import m04Heroi390 from '../../assets/cenas/desenvolvimento/m04-heroi-390c-1170w.webp?w=390;780;1170&format=avif;webp&as=picture'
 import m12Familia from '../../assets/cenas/desenvolvimento/m12-familia-585w.webp?w=390;585&format=avif;webp&as=picture'
 
 export const DESENVOLVIMENTO_CASA = {
@@ -42,14 +42,16 @@ export const CENA_ABERTURA_RECORTE: Imagem = placa(m04Heroi390, '100vw', 390)
 export const TELA_HISTORICO: Imagem = imagemPublica({
   src: '/telas/t1i/historico-y15-280w.webp',
   srcSet:
-    '/telas/t1i/historico-y15-280w.webp 280w, /telas/t1i/historico-y15-320w.webp 320w, /telas/t1i/historico-y15-560w.webp 560w, /telas/t1i/historico-y15-640w.webp 640w',
+    '/telas/t1i/historico-y15-280w.webp 280w, /telas/t1i/historico-y15-320w.webp 320w, /telas/t1i/historico-y15-560w.webp 560w, /telas/t1i/historico-y15-640w.webp 640w, /telas/t1i/historico-y15-780w.webp 780w, /telas/t1i/historico-y15-1170w.webp 1170w',
   sizes: '(min-width: 900px) 390px, 320px',
-  largura: 640,
-  altura: 1385,
+  largura: 1170,
+  altura: 2532,
 })
 
 export const MOLDURA_DIA: Imagem = imagemPublica({
   src: '/molduras/moldura-dia.png',
+  srcSet: '/molduras/moldura-dia.png 678w, /molduras/moldura-dia-1356w.png 1356w',
+  sizes: '(min-width: 1440px) 414px, 350px',
   largura: 721,
   altura: 1426,
 })

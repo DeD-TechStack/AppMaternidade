@@ -226,7 +226,8 @@ describe('CUID-I-06 as imagens', () => {
   it('largura e altura de cada cena (largo e celular) são as de sempre, e há um AVIF de cada uma', () => {
     const esperado = {
       cena1: { largo: [981, 1082], celular: [981, 1082] },
-      cena2: { largo: [1472, 649], celular: [740, 651] },
+      // IMG-RES: the 1640 x 724 master with the box kept at the aspect of 1472 x 649 (round(1640 x 649 / 1472) = 723).
+      cena2: { largo: [1640, 723], celular: [740, 651] },
       cena3: { largo: [1152, 665], celular: [780, 664] },
     } as const
     for (const [cena, tamanhos] of Object.entries(esperado)) {
@@ -243,7 +244,7 @@ describe('CUID-I-06 as imagens', () => {
     const { container } = renderizarRota(ROTA)
     const bandas = faixas(container)
     const casos = [
-      [bandas[2], CUIDADO.alt.cena2, '1472', '649', [800, 1472], [390, 740], '(min-width: 1440px) 800px, 56vw'],
+      [bandas[2], CUIDADO.alt.cena2, '1640', '723', [800, 1472, 1640], [390, 740], '(min-width: 1440px) 800px, 56vw'],
       [bandas[3], CUIDADO.alt.cena3, '1152', '665', [760, 1152], [390, 780], '(min-width: 1440px) 760px, 53vw'],
     ] as const
     for (const [banda, alt, largura, altura, largos, celulares, sizes] of casos) {
@@ -280,12 +281,16 @@ describe('CUID-I-06 as imagens', () => {
     expect(tela.getAttribute('alt')).toBe(CUIDADO.alt.tela1)
     expect(tela.getAttribute('src')).toBe(IMAGENS_CUIDADO.tela.src)
     expect(tela.getAttribute('srcset')).toBe(IMAGENS_CUIDADO.tela.srcSet)
-    expect(tela.getAttribute('width')).toBe('640')
-    expect(tela.getAttribute('height')).toBe('1385')
+    // IMG-RES: the box is that of the 1170 x 2532 DPR 3 capture, the aspect of the 640 x 1385 it had.
+    expect(tela.getAttribute('width')).toBe('1170')
+    expect(tela.getAttribute('height')).toBe('2532')
     expect(tela.closest('[data-faixa-fundo="cacau"]')).toBeNull()
     expect(tela.closest('[data-faixa]')).toBe(faixas(container)[0])
     expect(container.querySelectorAll('[data-produto-moldura-arte]')).toHaveLength(1)
-    expect(container.querySelector('[data-produto-moldura-arte]')!.getAttribute('src')).toBe('/molduras/moldura-dia.png')
+    const arte = container.querySelector('[data-produto-moldura-arte]')!
+    expect(arte.getAttribute('src')).toBe('/molduras/moldura-dia.png')
+    expect(arte.getAttribute('srcset')).toBe('/molduras/moldura-dia.png 678w, /molduras/moldura-dia-1356w.png 1356w')
+    expect(arte.getAttribute('sizes')).toBe('(min-width: 1440px) 414px, 350px')
   })
 
   it('toda imagem do main tem largura e altura, e nenhuma é do acervo antigo', () => {

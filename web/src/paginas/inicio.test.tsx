@@ -862,7 +862,7 @@ describe('HOME-FINAL every phone shows a real app screen; the lower bands carry 
     await abrir(1440)
     const hoje = principal().querySelector<HTMLImageElement>(`.ic-tela [data-produto-tela][alt="${COPY.altTela2}"]`)!
     expect(hoje.getAttribute('src')).toBe('/telas/casa/hoje-n-320w.webp')
-    expect([hoje.getAttribute('width'), hoje.getAttribute('height')]).toEqual(['640', '1444'])
+    expect([hoje.getAttribute('width'), hoje.getAttribute('height')]).toEqual(['1170', '2640'])
     expect(norm(readFileSync(CSS_DA_CASA, 'utf8'))).toContain(
       '[data-casa] .ic-tela [data-produto-tela] { object-fit: contain; background-color: var(--color-papel); }',
     )
@@ -1134,6 +1134,7 @@ describe('HOME-SEAMS S4: the hero floors end on the hero foot, not 65 px under t
 // page serves is the ground the export script measured (PROVENANCE.md there).
 const PLACAS_FIXAS = [
   { chave: 'M05', base: 'm05-sol', larguras: [900, 1672], alturas: [507, 941], sizes: '(min-width: 1440px) min(62.5vw, 1600px), (min-width: 1180px) 62.5vw, min(100vw, 760px)', tamanho: [1672, 941], src: 900 },
+  { chave: 'M05_390', base: 'm05-sol-390c', larguras: [390, 780, 1170], alturas: [306, 612, 918], sizes: '100vw', tamanho: [1170, 918], src: 390 },
   { chave: 'M04', base: 'm04-recorte', larguras: [350, 600, 700, 1200], alturas: [254, 435, 508, 870], sizes: '(min-width: 1024px) 600px, 100vw', tamanho: [1200, 870], src: 600 },
 ] as const
 const PASTA_PLACAS = join(PASTA_SRC, 'assets', 'cenas', 'inicio')
@@ -1198,16 +1199,23 @@ describe('HOME-SEAMS-G3 S3 / S2: M04 and M05 are fixed files (an AVIF ladder and
     expect(existsSync(join(PASTA_PLACAS, 'm05-sol-901w.avif'))).toBe(false)
   })
 
-  it('M05_390 stays the WebP-only projection of its own ladder; M06 keeps the build ladder; midia.ts holds no lossless query', async () => {
+  it('M05_390 is a fixed-file plate with an AVIF and a WebP ladder (390, 780, 1170); M06 keeps the build ladder; midia.ts holds no lossless query', async () => {
     const { M05_390, M06 } = await import('../componentes/inicio-casa/midia.ts')
     const { placa } = await import('../componentes/campo/imagens.ts')
     const phone = await import('../assets/cenas/inicio/m05-sol-390c-780w.webp?w=390;780&format=avif;webp&as=picture')
     const original = placa(phone.default, '100vw', 390)
-    expect(M05_390).not.toHaveProperty('avif')
-    expect(M05_390).toEqual({ src: original.src, srcSet: original.srcSet, sizes: original.sizes, largura: original.largura, altura: original.altura })
-    // Negative control: the shared helper still exposes the AVIF alternative that the projection leaves out.
+    expect(M05_390.avif).toBeTruthy()
+    const webp = degraus(M05_390.srcSet)
+    const avif = degraus(M05_390.avif)
+    expect(webp.map((d) => d.largura)).toEqual([390, 780, 1170])
+    expect(avif.map((d) => d.largura)).toEqual([390, 780, 1170])
+    expect(new Set([...webp, ...avif].map((d) => d.url)).size).toBe(6)
+    expect(M05_390.src).toBe(webp[0].url)
+    expect([M05_390.largura, M05_390.altura, M05_390.sizes]).toEqual([1170, 918, '100vw'])
+    // Negative control: the shared helper still exposes an AVIF alternative that differs from its own WebP srcset.
     expect(original.avif).toBeTruthy()
     expect(original.avif).not.toBe(original.srcSet)
+    expect(M05_390.avif).not.toBe(M05_390.srcSet)
     expect(M06.avif).toBeTruthy()
     // HOME-SECOND-HALF: the one exception is the band 4 and band 7 plates of inicio-faixas, whose grounds the card checks
     // on the decoded file (a lossless WebP keeps the exact ground); every `lossless=true` sits on such an import line.
@@ -1217,15 +1225,20 @@ describe('HOME-SEAMS-G3 S3 / S2: M04 and M05 are fixed files (an AVIF ladder and
     expect(comLossless.every((linha) => linha.includes('assets/cenas/inicio-faixas/'))).toBe(true)
   })
 
-  it('renders the M05 AVIF source after the phone WebP source, and the lossless M04_FAIXA plate (no AVIF) in band 4', async () => {
-    const { M05, M04_FAIXA } = await import('../componentes/inicio-casa/midia.ts')
+  it('renders the phone AVIF and WebP sources, then the M05 AVIF source, and the lossless M04_FAIXA plate (no AVIF) in band 4', async () => {
+    const { M05, M05_390, M04_FAIXA } = await import('../componentes/inicio-casa/midia.ts')
     await abrir(1440)
     const hero = principal().querySelector('.cm-cena-placa > picture')!
     const avif = hero.querySelectorAll('source[type="image/avif"]')
-    expect(avif).toHaveLength(1)
-    expect(avif[0].getAttribute('srcset')).toBe(M05.avif)
-    expect(avif[0].hasAttribute('media')).toBe(false)
-    expect(hero.querySelector('source[media="(max-width: 767px)"]')?.getAttribute('srcset')).toBeTruthy()
+    expect(avif).toHaveLength(2)
+    expect(avif[0].getAttribute('media')).toBe('(max-width: 767px)')
+    expect(avif[0].getAttribute('srcset')).toBe(M05_390.avif)
+    expect(avif[1].getAttribute('srcset')).toBe(M05.avif)
+    expect(avif[1].hasAttribute('media')).toBe(false)
+    const celular = hero.querySelectorAll('source[media="(max-width: 767px)"]')
+    expect(celular).toHaveLength(2)
+    expect(celular[1].hasAttribute('type')).toBe(false)
+    expect(celular[1].getAttribute('srcset')).toBe(M05_390.srcSet)
     expect(hero.querySelector('img')?.getAttribute('srcset')).toBe(M05.srcSet)
     expect(hero.querySelector('img')?.getAttribute('src')).toBe(M05.src)
     const so = principal().querySelector('.ic-so-cena')!
@@ -1240,9 +1253,9 @@ describe('HOME-SEAMS S7: every lamp-light file named in midia.ts exists in web/p
     const { LUZ_M05, LUZ_M05_390, LUZ_M06 } = await import('../componentes/inicio-casa/midia.ts')
     expect(LUZ_M05.srcSet).toBe('/cenas/inicio/m05-luz-900w.png 900w, /cenas/inicio/m05-luz-1672w.png 1672w')
     expect(LUZ_M05.sizes).toBe('(min-width: 1440px) min(62.5vw, 1600px), (min-width: 1180px) 62.5vw, min(100vw, 760px)')
-    expect(LUZ_M05_390.srcSet).toBe('/cenas/inicio/m05-luz-390c-390w.png 390w, /cenas/inicio/m05-luz-390c-780w.png 780w')
+    expect(LUZ_M05_390.srcSet).toBe('/cenas/inicio/m05-luz-390c-390w.png 390w, /cenas/inicio/m05-luz-390c-780w.png 780w, /cenas/inicio/m05-luz-390c-1170w.png 1170w')
     expect(LUZ_M05_390.sizes).toBe('100vw')
-    expect(LUZ_M06.srcSet).toBe('/cenas/inicio/m06-luz-300w.png 300w, /cenas/inicio/m06-luz-396w.png 396w')
+    expect(LUZ_M06.srcSet).toBe('/cenas/inicio/m06-luz-300w.png 300w, /cenas/inicio/m06-luz-396w.png 396w, /cenas/inicio/m06-luz-600w.png 600w, /cenas/inicio/m06-luz-792w.png 792w')
   })
 
   it('LUZ_M05, LUZ_M05_390 and LUZ_M06 point at existing files', async () => {

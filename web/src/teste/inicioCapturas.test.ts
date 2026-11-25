@@ -224,7 +224,7 @@ describe('REPH-I-06 real captures: the manifest, the hashes of the served files,
     }
   })
 
-  it('REPH-I-06 every file midia.ts serves from web/public exists there; M05_390 and M06 are build-made from a master, M04 and M05 are fixed files', async () => {
+  it('REPH-I-06 every file midia.ts serves from web/public exists there; M06 is build-made from a master, M04, M05 and M05_390 are fixed files', async () => {
     const midia = await import('../componentes/inicio-casa/midia.ts')
     const caminhos = new Set<string>()
     const juntar = (lista: string | undefined) => {
@@ -237,13 +237,14 @@ describe('REPH-I-06 real captures: the manifest, the hashes of the served files,
       juntar(imagem.srcSet)
       juntar(imagem.avif)
     }
-    // M05_390 and M06 are vite-imagetools URLs (`/@imagetools/<hash>` in the test run, a hashed file under /assets in the
-    // build). M04 and M05 are plain Vite assets of the files in src/assets/cenas/inicio (`/src/assets/...` in the test
-    // run, `/assets/<name>-<hash>` in the build). Everything else is a file of web/public.
-    const FIXA = /^\/(?:src\/assets\/cenas\/inicio|assets)\/(m0[45]-[a-z]+-\d+w)(?:-[\w-]+)?\.(avif|webp)$/
+    // M06 is a vite-imagetools URL (`/@imagetools/<hash>` in the test run, a hashed file under /assets in the build). M04,
+    // M05 and M05_390 are plain Vite assets of the files in src/assets/cenas/inicio (`/src/assets/...` in the test run,
+    // `/assets/<name>-<hash>` in the build). Everything else is a file of web/public. The name of an M05_390 file has a
+    // `390c-` crop tag before the width (`m05-sol-390c-780w`).
+    const FIXA = /^\/(?:src\/assets\/cenas\/inicio|assets)\/(m0[45]-[a-z]+-(?:390c-)?\d+w)(?:-[\w-]+)?\.(avif|webp)$/
     const fixas = [...caminhos].filter((caminho) => FIXA.test(caminho))
     const servidos = [...caminhos].filter((caminho) => !caminho.startsWith('/@imagetools/') && !FIXA.test(caminho))
-    expect(fixas, 'M05 (2 widths) and M04 (4 widths), each in WebP and AVIF').toHaveLength(12)
+    expect(fixas, 'M05 (2 widths), M05_390 (3 widths) and M04 (4 widths), each in WebP and AVIF').toHaveLength(18)
     for (const caminho of fixas) {
       const [, nome, formato] = FIXA.exec(caminho)!
       expect(existsSync(join(SRC, 'assets', 'cenas', 'inicio', `${nome}.${formato}`)), caminho).toBe(true)
@@ -255,12 +256,13 @@ describe('REPH-I-06 real captures: the manifest, the hashes of the served files,
 
   it('REPH-I-06 the scene plates: WebP srcSet of every plate, AVIF srcSet of the same widths where the plate has one, the size of the master', async () => {
     const { M05, M05_390, M06, M04 } = await import('../componentes/inicio-casa/midia.ts')
-    // `comAvif`: M04, M05 (fixed files) and M06 (build ladder) serve both formats; M05_390 is the WebP-only projection of
-    // its build ladder (its phone crop is outside the AVIF re-export), so it has no `avif` field at all.
+    // `comAvif`: M04, M05 and M05_390 (fixed files) and M06 (build ladder) serve both formats. IMG-RES (25/11/2026): M05_390
+    // is a 390, 780, 1170 ladder of fixed files (1170 x 918, the aspect of the 780 x 612 it had), M06 gains the 900w master
+    // (900 x 1470, the aspect of the 792 x 1293 within 0.1 %).
     const placas = [
       { nome: 'M05', imagem: M05, mestre: 'm05-sol-1672w.webp', larguras: [900, 1672], tamanho: [1672, 941], sizes: '(min-width: 1440px) min(62.5vw, 1600px), (min-width: 1180px) 62.5vw, min(100vw, 760px)', src: 900, comAvif: true },
-      { nome: 'M05_390', imagem: M05_390, mestre: 'm05-sol-390c-780w.webp', larguras: [390, 780], tamanho: [780, 612], sizes: '100vw', src: 390, comAvif: false },
-      { nome: 'M06', imagem: M06, mestre: 'm06-apagada-792w.webp', larguras: [300, 396, 600, 792], tamanho: [792, 1293], sizes: '(min-width: 1024px) 395.5px, 300px', src: 396, comAvif: true },
+      { nome: 'M05_390', imagem: M05_390, mestre: 'm05-sol-390c-1170w.webp', larguras: [390, 780, 1170], tamanho: [1170, 918], sizes: '100vw', src: 390, comAvif: true },
+      { nome: 'M06', imagem: M06, mestre: 'm06-apagada-900w.webp', larguras: [300, 396, 600, 792, 900], tamanho: [900, 1470], sizes: '(min-width: 1024px) 395.5px, 300px', src: 396, comAvif: true },
       { nome: 'M04', imagem: M04, mestre: 'm04-recorte-1200w.webp', larguras: [350, 600, 700, 1200], tamanho: [1200, 870], sizes: '(min-width: 1024px) 600px, 100vw', src: 600, comAvif: true },
     ]
     const lista = (srcSet: string | undefined) =>
@@ -293,6 +295,12 @@ describe('REPH-I-06 real captures: the manifest, the hashes of the served files,
       expect(bytes.subarray(0, 8).toString('hex'), moldura.src).toBe('89504e470d0a1a0a')
       expect([bytes.readUInt32BE(16), bytes.readUInt32BE(20)], moldura.src).toEqual([moldura.largura, moldura.altura])
       expect(bytes[25], `${moldura.src}: colour type 6 (RGBA, the hole is alpha)`).toBe(6)
+      // IMG-RES: the 1356w twin has the same aspect (2x of 678 x 1423 is 1356 x 2846), so the `<img>` box does not move.
+      const gemeo = join(PUBLICO, moldura.src.replace(/^\/+/, '').replace(/\.png$/, '-1356w.png'))
+      const dobro = readFileSync(gemeo)
+      expect([dobro.readUInt32BE(16), dobro.readUInt32BE(20)], gemeo).toEqual([moldura.largura * 2, 2846])
+      expect(moldura.srcSet, moldura.src).toBe(`${moldura.src} 678w, ${moldura.src.replace(/\.png$/, '-1356w.png')} 1356w`)
+      expect(moldura.sizes, moldura.src).toBe('(min-width: 1440px) 414px, 350px')
     }
   })
 
