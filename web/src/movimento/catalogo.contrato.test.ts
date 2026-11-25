@@ -37,6 +37,21 @@ describe('catálogo do movimento', () => {
       .sort()
     expect(noTempo).toEqual(['M13', 'M15', 'M17', 'M2', 'M8'])
   })
+
+  it('M16 (a noite presa à rolagem) guarda o pino como regra de altura e as faixas em ordem, sem tabela por largura', () => {
+    // STAGE: D = clamp(minPx, svh x altura, maxPx); a troca da vez (3 % do pino) cai no cruzamento da legenda (M17).
+    const { tipo, pino, paradas, vez, vezEmpilhada, janelaPx } = CATALOGO.M16
+    expect(tipo).toBe('rolagem')
+    expect(pino.minPx).toBeLessThan(pino.maxPx)
+    expect(janelaPx).toBe((900 * pino.svh) / 100)
+    expect(paradas.repousoAte).toBeLessThan(paradas.fimDe)
+    expect(vez.de).toBeLessThan(vez.ate)
+    expect((vez.de + vez.ate) / 2).toBeCloseTo(CATALOGO.M17.limiar, 6)
+    expect(vezEmpilhada.de).toBeLessThan(vezEmpilhada.de + 0.1)
+    expect(vezEmpilhada.de).toBeGreaterThan(0)
+    expect(vezEmpilhada.ate).toBeLessThan(1)
+    expect(Object.keys(CATALOGO.M16)).not.toContain('janelaPxPorLargura')
+  })
 })
 
 describe('o código fora dos testes', () => {

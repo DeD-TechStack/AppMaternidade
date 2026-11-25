@@ -3,6 +3,7 @@ import { join } from 'node:path'
 import { act } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { INICIO as INICIO_ANTIGO } from '../conteudo/textos.ts'
+import { CATALOGO } from '../movimento/catalogo.ts'
 import { aguardarCarga, renderizarRota } from '../teste/renderizarRota.tsx'
 
 // REP-HOME, round 1 (card t_7afd7849), test-first: the rebuilt `/` (Inicio) rendered in jsdom.
@@ -476,37 +477,38 @@ describe('REPH-I-31 one h1 with two spans, and the header pill quiet or filled b
 // REPH-I-11 / -12 / -13 / -14 (round 3): the pinned stage, the night sheet, the caption swap, reduced motion
 // ---------------------------------------------------------------------------------------------
 
-const BORDAS_R4 = [556.5, 470.1, 354.9, 118.3, 0]
-const TRADUCOES_R4 = [38.65, 32.65, 24.65, 8.22, 0]
-const PASSOS = [0, 0.25, 0.5, 0.75, 1]
+// STAGE (25/11/2026): the edge holds at the seam to p 0.10, runs linearly to the left edge at p 0.70 and holds there (the
+// hold on the frame's centre line, 0.45-0.55, and the r4 numbers 556.5 / 354.9 are gone). The seam is the 553 of 1440 x 900.
+const BORDAS_STAGE = [553, 553, 414.75, 184.33, 0, 0]
+const TRADUCOES_STAGE = [38.4, 38.4, 28.8, 12.8, 0, 0]
+const PASSOS = [0, 0.1, 0.25, 0.5, 0.7, 1]
 
 describe('REPH-I-11 pure arithmetic of the pin: progress, edge stops, translateX, pin distance, caption side', () => {
-  it('REPH-I-11 the edge stops at p 0 / .25 / .5 / .75 / 1 are the r4 numbers (seam 556.5, centre line 354.9)', async () => {
+  it('REPH-I-11 the edge stops at p 0 / .1 / .25 / .5 / .7 / 1 are the STAGE numbers (seam 553)', async () => {
     const { bordaDaNoite } = await import('../movimento/troca/medidas.ts')
-    PASSOS.forEach((p, i) => expect(bordaDaNoite(p, 556.5, 354.9), `p ${p}`).toBeCloseTo(BORDAS_R4[i], 0))
+    PASSOS.forEach((p, i) => expect(bordaDaNoite(p, 553), `p ${p}`).toBeCloseTo(BORDAS_STAGE[i], 1))
   })
 
-  it('REPH-I-11 the three holds: 0-0.10 at the seam, 0.45-0.55 on the centre line, 0.85-1 at the left edge', async () => {
+  it('REPH-I-11 the two holds: 0-0.10 at the seam, 0.70-1 at the left edge, and the edge still moves across the frame centre (0.45-0.55)', async () => {
     const { bordaDaNoite } = await import('../movimento/troca/medidas.ts')
-    for (const p of [0, 0.05, 0.1]) expect(bordaDaNoite(p, 556.5, 354.9)).toBe(556.5)
-    for (const p of [0.45, 0.5, 0.55]) expect(bordaDaNoite(p, 556.5, 354.9)).toBe(354.9)
-    for (const p of [0.85, 0.95, 1]) expect(bordaDaNoite(p, 556.5, 354.9)).toBe(0)
-    expect(bordaDaNoite(0.3, 556.5, 354.9)).toBeLessThan(556.5)
-    expect(bordaDaNoite(0.3, 556.5, 354.9)).toBeGreaterThan(354.9)
+    for (const p of [0, 0.05, 0.1]) expect(bordaDaNoite(p, 553)).toBe(553)
+    for (const p of [0.7, 0.85, 0.95, 1]) expect(bordaDaNoite(p, 553)).toBe(0)
+    expect(bordaDaNoite(0.45, 553)).toBeGreaterThan(bordaDaNoite(0.5, 553))
+    expect(bordaDaNoite(0.5, 553)).toBeGreaterThan(bordaDaNoite(0.55, 553))
   })
 
   it('REPH-I-11 the edge is linear in p between the holds (no smoothing)', async () => {
     const { bordaDaNoite } = await import('../movimento/troca/medidas.ts')
-    const a = bordaDaNoite(0.2, 556.5, 354.9)
-    const b = bordaDaNoite(0.3, 556.5, 354.9)
-    const c = bordaDaNoite(0.4, 556.5, 354.9)
+    const a = bordaDaNoite(0.2, 553)
+    const b = bordaDaNoite(0.3, 553)
+    const c = bordaDaNoite(0.4, 553)
     expect(a - b).toBeCloseTo(b - c, 6)
   })
 
-  it('REPH-I-11 translateX of the outer box is the edge as a percent of the stage width (38.65 / 32.65 / 24.65 / 8.22 / 0 at 1440)', async () => {
+  it('REPH-I-11 translateX of the outer box is the edge as a percent of the stage width (38.40 / 38.40 / 28.80 / 12.80 / 0 / 0 at 1440)', async () => {
     const { bordaDaNoite, traducaoEmPercentual } = await import('../movimento/troca/medidas.ts')
     PASSOS.forEach((p, i) =>
-      expect(traducaoEmPercentual(bordaDaNoite(p, 556.5, 354.9), 1440), `p ${p}`).toBeCloseTo(TRADUCOES_R4[i], 1),
+      expect(traducaoEmPercentual(bordaDaNoite(p, 553), 1440), `p ${p}`).toBeCloseTo(TRADUCOES_STAGE[i], 1),
     )
     expect(traducaoEmPercentual(100, 0)).toBe(0)
   })
@@ -521,13 +523,16 @@ describe('REPH-I-11 pure arithmetic of the pin: progress, edge stops, translateX
     expect(progressoDoFixo(0, 0, 0)).toBe(0)
   })
 
-  it('REPH-I-11 the pin distance is 600 from 1280, 480 from 1024 and the pin needs 640 px of height (HOME-FINAL F5)', async () => {
-    const { distanciaDoFixo, alturaMinimaDoFixo } = await import('../movimento/troca/medidas.ts')
-    expect(distanciaDoFixo(1440)).toBe(600)
-    expect(distanciaDoFixo(1280)).toBe(600)
-    expect(distanciaDoFixo(1279)).toBe(480)
-    expect(distanciaDoFixo(1024)).toBe(480)
-    expect(alturaMinimaDoFixo()).toBe(640)
+  it('REPH-I-11 the pin distance is one rule of the window height, clamp(600, 80svh, 900), and the pin needs the measured height of a 240 px phone (STAGE)', async () => {
+    const { pinoDoPalco, alturaMinimaDoFixo } = await import('../movimento/troca/medidas.ts')
+    expect(pinoDoPalco(900)).toBe(720)
+    expect(pinoDoPalco(768)).toBeCloseTo(614.4, 6)
+    expect(pinoDoPalco(800)).toBeCloseTo(640, 6)
+    expect(pinoDoPalco(1080)).toBeCloseTo(864, 6)
+    expect(pinoDoPalco(1440)).toBe(900)
+    expect(pinoDoPalco(600)).toBe(600)
+    expect(alturaMinimaDoFixo()).toBe(CATALOGO.M16.alturaMinimaPx)
+    expect(alturaMinimaDoFixo()).toBeGreaterThan(640)
   })
 
   it('REPH-I-12 the caption side is 1 while p is under 0.5 and 2 from 0.5', async () => {
@@ -600,6 +605,13 @@ afterEach(() => {
 /** Gives the night track and the document the layout above; the window is `altura` tall. Measures again afterwards. */
 async function modelarRolagem(faixa: HTMLElement, altura = 900) {
   rolagemDoDocumento = 0
+  // STAGE: the pin D is MEASURED from two rects (the track's height less the stage's), and the browser here is one with no
+  // scroll-driven animations (the JS fallback is what writes the sheet, the markers and the caption's side). D is 600.
+  vi.stubGlobal('CSS', { supports: () => false })
+  const retangulo = (top: number, height: number) =>
+    ({ top, bottom: top + height, left: 0, right: 1440, width: 1440, height, x: 0, y: top, toJSON: () => ({}) }) as DOMRect
+  faixa.getBoundingClientRect = () => retangulo(TOPO_DA_FAIXA - rolagemDoDocumento, ALTURA_DA_FAIXA)
+  faixa.querySelector<HTMLElement>('.ic-estagio')!.getBoundingClientRect = () => retangulo(0, ALTURA_DA_FAIXA - 600)
   Object.defineProperty(document.documentElement, 'scrollTop', { configurable: true, get: () => rolagemDoDocumento })
   Object.defineProperty(document.documentElement, 'clientHeight', { configurable: true, value: altura })
   Object.defineProperty(faixa, 'offsetTop', { configurable: true, value: TOPO_DA_FAIXA })
@@ -663,7 +675,8 @@ describe('REPH-I-11 pinned stage (1440 x 900): one stage in band 2, one night sh
     }
   })
 
-  it('REPH-I-11 /: the pin starts at p 0 with the outer box at +t and the inner box at -t (the two cancel)', async () => {
+  it('REPH-I-11 /: the pin starts at p 0 with the outer box at +t and the inner box at -t (the two cancel; the JS fallback writes them)', async () => {
+    vi.stubGlobal('CSS', { supports: () => false }) // no scroll-driven animations: the hook writes the sheet itself
     await abrirJanela({ largura: 1440 })
     const folha = principal().querySelector<HTMLElement>('[data-troca-noite]')!
     const interior = principal().querySelector<HTMLElement>('[data-troca-noite-interior]')!
@@ -710,29 +723,31 @@ describe('REPH-I-12 caption swap: one node, one text, leg1 then leg2 as p crosse
     expect(faixaDaNoite().querySelectorAll('p[data-legenda]')).toHaveLength(1)
   })
 
-  it('REPH-I-11 /: scrolling writes the r4 translateX on the two boxes (24.65 % at p 0.5, 0 at p 1)', async () => {
+  it('REPH-I-11 /: scrolling writes the STAGE translateX on the two boxes (12.80 % at p 0.5, 0 from p 0.7), with no centre hold', async () => {
+    vi.stubGlobal('CSS', { supports: () => false }) // before the page mounts: the support is read once, by the layout effect
     await abrirJanela({ largura: 1440 })
     const faixa = faixaDaNoite()
     const palco = principal().querySelector<HTMLElement>('[data-troca-palco]')!
     const marcador = principal().querySelector<HTMLElement>('.ic-medida')!
-    const quadro = palco.querySelector<HTMLElement>('[data-produto-moldura]')!
     const fixar = (no: HTMLElement, campo: string, valor: number) => Object.defineProperty(no, campo, { configurable: true, value: valor })
     fixar(palco, 'clientWidth', 1440)
-    fixar(marcador, 'offsetLeft', 556.5)
-    fixar(quadro, 'offsetLeft', 200)
-    fixar(quadro, 'offsetWidth', 309.8)
+    fixar(marcador, 'offsetLeft', 553)
     await modelarRolagem(faixa) // also measures the stage's widths faked above
     const rolar = (topo: number) => rolarAteTopo(topo, 60)
     const folha = principal().querySelector<HTMLElement>('[data-troca-noite]')!
     const interior = principal().querySelector<HTMLElement>('[data-troca-noite-interior]')!
     const valor = (no: HTMLElement) => Number.parseFloat(/translateX\((-?[\d.]+)%\)/.exec(no.style.transform)?.[1] ?? 'NaN')
-    await rolar(-300)
-    expect(valor(folha)).toBeCloseTo(24.65, 1)
-    expect(valor(interior)).toBeCloseTo(-24.65, 1)
+    await rolar(-300) // p 0.5
+    expect(valor(folha)).toBeCloseTo(12.8, 1)
+    expect(valor(interior)).toBeCloseTo(-12.8, 1)
+    await rolar(-270) // p 0.45: the edge is still moving across the frame's centre line
+    expect(valor(folha)).toBeGreaterThan(12.8)
+    await rolar(-420) // p 0.70
+    expect(valor(folha)).toBeCloseTo(0, 6)
     await rolar(-600)
     expect(valor(folha)).toBeCloseTo(0, 6)
     await rolar(0)
-    expect(valor(folha)).toBeCloseTo(38.65, 1)
+    expect(valor(folha)).toBeCloseTo(38.4, 1)
   })
 })
 
@@ -748,16 +763,16 @@ describe('REPH-I-13 reduced motion and short windows: the rest layout, decided b
     expect(principal().querySelector<HTMLElement>('[data-troca-noite]')!.style.transform).toBe('')
   })
 
-  it('REPH-I-13 /: a window under 640 high at 1440 rests too (no pin, no swap node, two static captions)', async () => {
-    await abrirJanela({ largura: 1440, altura: 639 })
+  it('REPH-I-13 /: a window one px under the measured height gate at 1440 rests too (no pin, no swap node, two static captions)', async () => {
+    await abrirJanela({ largura: 1440, altura: CATALOGO.M16.alturaMinimaPx - 1 })
     expect(principal().querySelector('[data-troca-fixo]')).toBeNull()
     expect(principal().querySelector('[data-troca-legenda]')).toBeNull()
     expect(legendasEmTela()).toEqual(expect.arrayContaining([COPY.leg1, COPY.leg2]))
     expect(legendasEmTela()).toHaveLength(2)
   })
 
-  it('REPH-I-13 /: at 640 high exactly the pin is built', async () => {
-    await abrirJanela({ largura: 1440, altura: 640 })
+  it('REPH-I-13 /: at the measured height gate exactly the pin is built', async () => {
+    await abrirJanela({ largura: 1440, altura: CATALOGO.M16.alturaMinimaPx })
     expect(principal().querySelector('[data-troca-fixo]')).not.toBeNull()
   })
 })
@@ -785,11 +800,19 @@ describe('REPH-I-14 stacked composition (below 1180): no pin, no sheet, no twin,
     expect(palcos[0].hasAttribute('data-troca-fixo')).toBe(true)
   })
 
-  it('REPH-I-14 /: M06 is in the page at every width, and its lamp is watched (lit when 10 % of the plate is in view)', async () => {
-    await abrirJanela({ largura: 1440 })
+  it('REPH-I-14 /: M06 is in the page at every width; its lamp is watched where the page is stacked (10 % of the plate in view) and lit by the crossing where it is pinned (STAGE)', async () => {
+    await abrirJanela({ largura: 1179 })
     expect(principal().querySelectorAll('.ic-m06')).toHaveLength(1)
     const observadoresDeM06 = ObservadorFalso.todos.filter((o) => [...o.alvos].some((alvo) => alvo.closest('.ic-m06') !== null))
     expect(observadoresDeM06.length).toBeGreaterThan(0)
+  })
+
+  it('REPH-I-14 /: at 1440 the pinned M06 lamp watches nothing: it lights at the same instant as the caption swap (data-troca-lado)', async () => {
+    await abrirJanela({ largura: 1440 })
+    expect(principal().querySelectorAll('.ic-m06')).toHaveLength(1)
+    const observadoresDeM06 = ObservadorFalso.todos.filter((o) => [...o.alvos].some((alvo) => alvo.closest('.ic-m06') !== null))
+    expect(observadoresDeM06).toHaveLength(0)
+    expect(principal().querySelector('.ic-m06 [data-luz-estado]')!.getAttribute('data-luz-estado')).toBe('apagada')
   })
 })
 
@@ -950,7 +973,7 @@ describe('HOME-FINAL F3 the signed caption: the hour emphasised, the author subo
       '[data-casa] .ic-legenda-hora { font-size: var(--texto-titulo-3-tamanho); font-weight: var(--peso-titulo); font-variant-numeric: tabular-nums; }',
     )
     expect(css).toContain('[data-casa] .ic-legenda-autor { position: relative; display: inline-block; font-size: var(--texto-corpo-tamanho); }')
-    expect(css).toContain('transform: scaleX(0); transform-origin: left; transition: transform 400ms var(--curva-padrao);')
+    expect(css).toContain('transform: scaleX(0); transform-origin: left; transition: transform 400ms linear;')
     expect(css).toContain('[data-casa] [data-assinada] .ic-legenda-traco { transform: scaleX(1); }')
     expect(css).toContain('@media (prefers-reduced-motion: reduce) { [data-casa] .ic-legenda-traco { transform: none; transition: none; } }')
   })

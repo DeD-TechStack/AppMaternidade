@@ -37,9 +37,246 @@
     transition: none;
   }
 
+  /* A lamp that was lit before the first paint (a stage mounted at p 0.5 or later) shows lit, never as a light that comes on. */
+  [data-luz-direto] [data-luz] {
+    transition: none;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     [data-luz] {
       transition: none;
+    }
+  }
+
+  /* ---- Moment 2, the pinned stage (STAGE, 25/11/2026) ------------------------------------------------------------------- */
+
+  /* The pin (M16): D is one rule of the window's height, `clamp(600px, 80svh, 900px)`, owned here and read by the track's
+     `min-height` in inicio-casa.css (`--troca-d`), by the scroll driver (it measures the track and the stage) and by the
+     view timeline below. */
+  [data-casa] [data-faixa]:has(.ic-estagio[data-troca-fixo]) {
+    --palco-pino: clamp(600px, 80svh, 900px);
+    --troca-d: var(--palco-pino);
+  }
+
+  /* The overlay box: the day frame's box, one more `.cm-produto-moldura` (the rules that place the day frame place this one
+     too). It is never a stacking context: the marker blends (multiply) with the frame under it. */
+  [data-casa] [data-vez-caixa] {
+    display: block;
+    aspect-ratio: 678 / 1423;
+    pointer-events: none;
+  }
+
+  /* Same selector, step for step, as the rule of inicio-casa.css that gives the stage's frames `z-index: 1`, plus the mark. */
+  [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-estagio .cm-produto-moldura[data-vez-caixa] {
+    z-index: auto;
+  }
+
+  /* The stacked composition: the figure and the overlay share one grid cell, the overlay on top of the frame. */
+  [data-casa] .ic-palco {
+    display: grid;
+    justify-items: start;
+  }
+
+  [data-casa] .ic-palco > * {
+    grid-area: 1 / 1;
+  }
+
+  [data-casa] .ic-palco > [data-vez-caixa] {
+    align-self: start;
+  }
+
+  /* The screen hole: the box of `[data-produto-tela]` (secoes.css). Row constants measured on historico-y-alta-640w.webp
+     (640 x 2025): rules at y 1759.5 / 1879 / 1999, pitch 120 (the 16:00 row is one pitch above the 17:30 row). */
+  [data-casa] [data-vez-tela] {
+    --vez-passo: calc(var(--produto-tela) * 120 / 640);
+    --vez-linha: calc(var(--produto-tela) * 1879 / 640);
+
+    position: absolute;
+    top: var(--produto-borda);
+    left: var(--produto-borda);
+    width: var(--produto-tela);
+    height: calc(100% - 2 * var(--produto-borda));
+    border-radius: calc(var(--produto-tela) * 0.1166 - var(--produto-borda));
+    overflow: clip;
+    pointer-events: none;
+  }
+
+  /* The band: its base is the 17:30 row at the capture's rest pan, and it rides moment 5 (the capture's pan) with its own
+     `transform`; B3 steps it with its own `translate`. The two compose. `z-index: 1` puts it after the day figure (also 1,
+     earlier in the DOM) and under the sheet (2); in the twin, between the capture and the raster. */
+  [data-casa] [data-vez] {
+    position: absolute;
+    inset-inline: 0;
+    top: var(--vez-linha);
+    block-size: var(--vez-passo);
+    z-index: 1;
+    background-color: var(--color-areia);
+    mix-blend-mode: multiply;
+    transform: translateY(calc(-1 * var(--produto-rolagem)));
+    transition: transform 400ms var(--curva-padrao);
+  }
+
+  [data-casa] [data-troca-palco]:has([data-rolado]) [data-vez] {
+    transform: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-casa] [data-vez] {
+      transition: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    [data-casa] [data-vez] {
+      display: none;
+    }
+  }
+
+  /* Where the stage falls back to the in-flow frame (the room at a large text size) there is no sheet and no marker. */
+  @media (min-width: 1180px) and (min-aspect-ratio: 1/1) {
+    @container (width < 72.5rem) {
+      [data-casa] .ic-estagio [data-vez-caixa] {
+        display: none;
+      }
+    }
+  }
+
+  /* P-S1-F1: the sheet never takes the press (the real button, under it, does); the twin row is the night ink of the day
+     row the sheet covers. */
+  [data-casa] .ic-folha {
+    pointer-events: none;
+  }
+
+  [data-casa] .ic-gemea [data-troca-gemea-acao] {
+    position: absolute;
+    top: 100%;
+    inset-inline: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    column-gap: var(--espaco-junto);
+    min-height: var(--alvo-toque);
+    padding-block: var(--espaco-junto);
+    padding-inline: var(--espaco-pilha);
+    color: var(--color-papel);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-pequeno-tamanho);
+    line-height: var(--texto-pequeno-entrelinha);
+    text-align: start;
+  }
+
+  [data-casa] .ic-gemea [data-troca-gemea-rotulo],
+  [data-casa] .ic-gemea [data-troca-gemea-estado] {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  [data-casa] .ic-gemea [data-troca-gemea-rotulo] {
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-thickness: 0.0625em;
+    text-underline-offset: 0.25em;
+  }
+
+  [data-casa] .ic-gemea [data-troca-gemea-estado] {
+    font-weight: 400;
+  }
+
+  [data-casa] .ic-gemea [data-troca-gemea-estado='detalhe'],
+  [data-casa] .ic-estagio:has([data-rolado]) .ic-gemea [data-troca-gemea-estado='inicial'] {
+    display: none;
+  }
+
+  [data-casa] .ic-estagio:has([data-rolado]) .ic-gemea [data-troca-gemea-estado='detalhe'] {
+    display: inline;
+  }
+
+  [data-casa] .ic-estagio:has([data-produto-rolar]:hover) [data-troca-gemea-rotulo] {
+    text-decoration-thickness: 0.125em;
+  }
+
+  [data-casa] .ic-estagio:has([data-produto-rolar]:focus-visible) .ic-gemea {
+    border-radius: calc(var(--produto-tela) * 1.06 * 0.11);
+    outline: 3px solid var(--color-papel);
+    outline-offset: 4px;
+  }
+
+  [data-casa] .ic-estagio:has([data-produto-rolar]:focus-visible) .ic-gemea [data-troca-gemea-acao] {
+    outline: 3px solid var(--color-papel);
+    outline-offset: -3px;
+  }
+
+  /* The scrubbed beats: native only, motion allowed only (opt in, never cancel). The longhands come after the shorthand,
+     which carries an explicit `auto` duration. One view timeline, `--palco`, sits on the track: its inset makes
+     `contain 0%` the sticky top and `contain 100%` the release, so the percentages below are shares of the pin. */
+  @supports ((animation-timeline: view()) and (animation-range: entry)) {
+    @media (prefers-reduced-motion: no-preference) {
+      [data-casa] [data-faixa]:has(.ic-estagio[data-troca-fixo]) {
+        view-timeline: --palco block;
+        view-timeline-inset: var(--palco-topo) calc(100% - var(--palco-topo) - var(--palco-alto));
+      }
+
+      [data-casa] .ic-estagio[data-troca-fixo] .ic-folha {
+        animation: ic-folha auto linear both;
+        animation-timeline: --palco;
+        animation-range: contain 10% contain 70%;
+      }
+
+      [data-casa] .ic-estagio[data-troca-fixo] .ic-folha-interior {
+        animation: ic-folha-interior auto linear both;
+        animation-timeline: --palco;
+        animation-range: contain 10% contain 70%;
+      }
+
+      [data-casa] .ic-estagio[data-troca-fixo] [data-vez] {
+        animation: ic-vez auto linear both;
+        animation-timeline: --palco;
+        animation-range: contain 48.5% contain 51.5%;
+      }
+
+      /* The inset is 0: the default (`auto`) would take the page's `scroll-padding-top` (the header) and shrink the step from
+         about 22 px of scroll at 390 x 844 to about 12. */
+      [data-casa] [data-troca-palco]:not([data-troca-fixo]) [data-vez-caixa] {
+        view-timeline: --vez block;
+        view-timeline-inset: 0;
+      }
+
+      [data-casa] [data-troca-palco]:not([data-troca-fixo]) [data-vez-caixa] [data-vez] {
+        animation: ic-vez auto linear both;
+        animation-timeline: --vez;
+        animation-range: contain 45% contain 55%;
+      }
+    }
+  }
+
+  @keyframes ic-folha {
+    from {
+      transform: translateX(var(--heroi-costura-x));
+    }
+
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes ic-folha-interior {
+    from {
+      transform: translateX(calc(-1 * var(--heroi-costura-x)));
+    }
+
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes ic-vez {
+    from {
+      translate: 0 calc(-1 * var(--vez-passo));
+    }
+
+    to {
+      translate: 0 0;
     }
   }
 }

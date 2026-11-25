@@ -1230,7 +1230,7 @@
     background-color: currentColor;
     transform: scaleX(0);
     transform-origin: left;
-    transition: transform 400ms var(--curva-padrao);
+    transition: transform 400ms linear;
   }
 
   [data-casa] [data-assinada] .ic-legenda-traco {
