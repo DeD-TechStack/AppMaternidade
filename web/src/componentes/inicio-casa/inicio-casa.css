@@ -1080,10 +1080,14 @@
     row-gap: var(--espaco-bloco);
   }
 
+  /* `overflow: clip` is not a scroll container: without `min-block-size: 0` the in-flow img (block-size auto, 421 of the
+     file) would set the frame's automatic minimum height (a grid item) and the frame would show the whole plate instead of
+     cutting its dark foot. Every clip frame with an aspect ratio says so (inicioFaixas.test.tsx, SH-10). */
   [data-casa] .ic-fecho-cena {
     position: relative;
     inline-size: min(var(--fecho-janela), 542px);
     aspect-ratio: 542 / 386;
+    min-block-size: 0;
     margin: 0;
     overflow: clip;
   }
@@ -1113,6 +1117,7 @@
   [data-casa] .ic-so-cena {
     margin: 0;
     aspect-ratio: 1200 / 832;
+    min-block-size: 0;
     overflow: clip;
     inline-size: 100cqi;
   }
@@ -1141,8 +1146,9 @@
   }
 
   /* Band 5: the five hairlines of the facts (one before each fact and one under the last) are drawn by the page, not by
-     a border, so they can draw once: `scaleX(0)` to `scaleX(1)`, from the left, 400 ms linear, when the wrapper is signed
-     (`data-assinada`: 60 % of it in view, at once with reduced motion). They never undraw. */
+     a border, so they can draw once: `scaleX(0)` to `scaleX(1)`, from the left, 400 ms linear, when the LIST is signed
+     (`data-assinada`: 60 % of it in view, at once with reduced motion). The list, not the band's wrapper: the wrapper is
+     taller than the window on a phone (1425 px at 390 x 844), so 60 % of it is never in view. They never undraw. */
   [data-casa] .ic-prova [data-prova-lista] {
     max-width: var(--leitura);
     margin: 0;
@@ -1176,8 +1182,8 @@
     content: '';
   }
 
-  [data-casa] .ic-prova[data-assinada] [data-prova-lista] > li::before,
-  [data-casa] .ic-prova[data-assinada] [data-prova-lista] > li:last-child::after {
+  [data-casa] .ic-prova [data-prova-lista][data-assinada] > li::before,
+  [data-casa] .ic-prova [data-prova-lista][data-assinada] > li:last-child::after {
     transform: scaleX(1);
   }
 

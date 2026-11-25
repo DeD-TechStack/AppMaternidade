@@ -1,4 +1,4 @@
-import { useRef, type CSSProperties } from 'react'
+import { useLayoutEffect, useRef, type CSSProperties } from 'react'
 import { AcoesDoHeroi } from '../componentes/inicio-casa/AcoesDoHeroi.tsx'
 import { FaixaNoite } from '../componentes/inicio-casa/FaixaNoite.tsx'
 import { FaixaSozinho } from '../componentes/inicio-casa/FaixaSozinho.tsx'
@@ -41,14 +41,27 @@ import '../componentes/inicio-casa/inicio-casa.css'
 
 /**
  * Band 5 (HOME-SECOND-HALF): the statement on the rug, with the Notas capture standing on the band's bottom edge. The
- * wrapper is signed by the same primitive as the captions (`useAssinatura`: `data-assinada` once 60 % of it is in view,
- * at once with reduced motion), and the five hairlines of the facts draw from that one attribute (inicio-casa.css).
+ * LIST of facts (`[data-prova-lista]`, ~400 px) is signed by the same primitive as the captions (`useAssinatura`:
+ * `data-assinada` once 60 % of it is in view, at once with reduced motion), and the five hairlines draw from that one
+ * attribute (inicio-casa.css). Not the band's wrapper: on a phone it is 1425 px tall, so 60 % of it (855 px) is never in
+ * a 844 px window and the rules would never draw. The list is rendered by the shared FaixaProva, so the page finds it in
+ * the wrapper and writes the attribute on it (layout effects, before the first paint and before the observer starts).
  */
 function ProvaDaCasa() {
   const raiz = useRef<HTMLDivElement>(null)
-  const assinada = useAssinatura(raiz)
+  const lista = useRef<HTMLElement | null>(null)
+  useLayoutEffect(() => {
+    lista.current = raiz.current?.querySelector<HTMLElement>('[data-prova-lista]') ?? null
+  }, [])
+  const assinada = useAssinatura(lista)
+  useLayoutEffect(() => {
+    const no = lista.current
+    if (!no) return
+    if (assinada) no.setAttribute('data-assinada', '')
+    else no.removeAttribute('data-assinada')
+  }, [assinada])
   return (
-    <div ref={raiz} className="ic-prova" data-assinada={assinada ? '' : undefined}>
+    <div ref={raiz} className="ic-prova">
       <FaixaProva titulo={INI.h2Prova} texto={INI.pProva} itens={INI_FATOS} />
       <ProdutoEmMoldura tela={{ ...CAPTURA_NOTAS, alt: INI.altNotas }} moldura={MOLDURA_DIA} />
     </div>

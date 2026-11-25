@@ -241,15 +241,17 @@ export const ESTILO_DA_ROLAGEM = {
 /**
  * M11 of band 7 (HOME-SECOND-HALF): the street corner at night with the four panes UNLIT (`inicio-faixas`, lossless,
  * 326 and 542 wide: the master holds 542 px, so no 1440 w file exists). The lit panes are `LUZ_M11`, a layer over it.
- * The figure is `min(var(--fecho-janela), 542px)` wide: 542 at 1440, 326 at 390.
+ * The figure is `min(var(--fecho-janela), 542px)` wide: 542 at 1440, 326 at 390, and half the container between (326 from
+ * 652 px up to 541 at 1083), so DPR 1 at 768, 1024 and 1083 (384, 512 and 541.5 px) takes the 542 file, never the 326 one.
  */
-export const M11_JANELA: Imagem = placaWebp(m11Apagada, '(min-width: 1084px) 542px, 326px', 542)
+const M11_TAMANHOS = '(min-width: 1084px) 542px, (min-width: 652px) 50vw, 326px'
+export const M11_JANELA: Imagem = placaWebp(m11Apagada, M11_TAMANHOS, 542)
 
 /** The lit panes of M11: one RGBA layer in the plate's own box, opacity only (`LuzDaLampada`, key `casa-luz-m11`). */
 export const LUZ_M11: Imagem = imagemPublica({
   src: '/cenas/inicio-faixas/m11-luz-542w.png',
   srcSet: '/cenas/inicio-faixas/m11-luz-326w.png 326w, /cenas/inicio-faixas/m11-luz-542w.png 542w',
-  sizes: '(min-width: 1084px) 542px, 326px',
+  sizes: M11_TAMANHOS,
   largura: 542,
   altura: 421,
 })

@@ -266,23 +266,37 @@ describe('SH-4 band 5: the statement on the rug, with the Notas capture on the b
     expect(valor(/\.ic-prova \[data-prova-lista\] > li:nth-child\(2\)/, 'font-family').join(' ')).toMatch(/--fonte-titulo|Literata/)
   })
 
-  it('the wrapper is signed by the H2 primitive: data-assinada after 60 % in view, the rules draw once (400 ms, linear, from the left)', async () => {
+  it('the LIST is signed by the H2 primitive (not the band wrapper, which is taller than the window on a phone): data-assinada after 60 % in view, the rules draw once (400 ms, linear, from the left)', async () => {
     await abrir(1440)
     const prova = principal().querySelector<HTMLElement>('.ic-prova')!
-    expect(prova.hasAttribute('data-assinada')).toBe(false)
-    const dele = ObservadorFalso.todos.find((o) => o.alvos.has(prova))!
-    expect(dele, 'an observer watches the wrapper').toBeDefined()
+    const lista = prova.querySelector<HTMLElement>('[data-prova-lista]')!
+    expect(lista.hasAttribute('data-assinada')).toBe(false)
+    expect(prova.hasAttribute('data-assinada'), 'the wrapper is never the signed element').toBe(false)
+    const dele = ObservadorFalso.todos.find((o) => o.alvos.has(lista))!
+    expect(dele, 'an observer watches the list').toBeDefined()
     expect(dele.opcoes?.threshold).toBe(0.6)
-    avisarVista('.ic-prova')
-    expect(prova.hasAttribute('data-assinada')).toBe(true)
+    expect(ObservadorFalso.todos.some((o) => o.alvos.has(prova)), 'no observer watches the wrapper').toBe(false)
+    avisarVista('[data-prova-lista]')
+    expect(lista.hasAttribute('data-assinada')).toBe(true)
+    expect(prova.hasAttribute('data-assinada')).toBe(false)
     const css = colapsar(semComentarios(CSS_DA_CASA()))
     expect(css).toMatch(/\[data-casa\] \.ic-prova \[data-prova-lista\] > li::before \{[^}]*transform: scaleX\(0\);[^}]*transform-origin: left;[^}]*transition: transform 400ms linear;/)
-    expect(css).toMatch(/\[data-casa\] \.ic-prova\[data-assinada\] \[data-prova-lista\] > li::(before|after)[^{]*\{[^}]*transform: scaleX\(1\);/)
+    expect(css).toMatch(/\[data-casa\] \.ic-prova \[data-prova-lista\]\[data-assinada\] > li::(before|after)[^{]*\{[^}]*transform: scaleX\(1\);/)
+    expect(css).not.toMatch(/\.ic-prova\[data-assinada\]/)
   })
 
-  it('with reduced motion the wrapper is signed from the first paint (the rules are drawn)', async () => {
+  it('with reduced motion the list is signed from the first paint (the rules are drawn)', async () => {
     await abrir(1440, true)
-    expect(principal().querySelector('.ic-prova')!.hasAttribute('data-assinada')).toBe(true)
+    expect(principal().querySelector('.ic-prova [data-prova-lista]')!.hasAttribute('data-assinada')).toBe(true)
+  })
+
+  it('the list stays signed after a re-render and never loses the attribute', async () => {
+    await abrir(390)
+    const lista = principal().querySelector<HTMLElement>('.ic-prova [data-prova-lista]')!
+    avisarVista('[data-prova-lista]')
+    expect(lista.hasAttribute('data-assinada')).toBe(true)
+    act(() => window.dispatchEvent(new Event('resize')))
+    expect(lista.hasAttribute('data-assinada')).toBe(true)
   })
 
   it('there are five rules: one before each of the four facts and one under the last', () => {
@@ -456,6 +470,27 @@ describe('SH-7 motion: inicio-faixas.css holds the band 4 and band 6 entries und
 
 // ---- midia.ts ------------------------------------------------------------------------------------------------------
 
+describe('SH-8a M11 `sizes` follow the drawn width of the figure', () => {
+  // The figure is min(var(--fecho-janela), 542px): --fecho-janela = clamp(min(326px, 100cqi - 2 calha), 50cqi, 720px), so from
+  // 652 to 1083 it is half the container (326 to 541 px) and 542 from 1084. At 768, 1024 and 1083 the browser needs 384,
+  // 512 and 541.5 px: the 542 file, never the 326 one stretched.
+  it('sizes is `(min-width: 1084px) 542px, (min-width: 652px) 50vw, 326px` for the plate and its light layer', async () => {
+    const { M11_JANELA, LUZ_M11 } = await import('../componentes/inicio-casa/midia.ts')
+    const esperado = '(min-width: 1084px) 542px, (min-width: 652px) 50vw, 326px'
+    expect(M11_JANELA.sizes).toBe(esperado)
+    expect(LUZ_M11.sizes).toBe(esperado)
+  })
+
+  it('the drawn width the string describes: 50vw is at least the 326 file from 652 and below 542 until 1084', () => {
+    const sizes = '(min-width: 1084px) 542px, (min-width: 652px) 50vw, 326px'
+    const largura = (vw: number) => (vw >= 1084 ? 542 : vw >= 652 ? vw / 2 : 326)
+    const escolhe = (vw: number, dpr: number) => ([326, 542].find((arquivo) => arquivo >= largura(vw) * dpr) ?? 542)
+    expect(sizes).toContain('50vw')
+    for (const vw of [768, 1024, 1083]) expect(escolhe(vw, 1), `${vw} px, DPR 1`).toBe(542)
+    expect(escolhe(390, 1)).toBe(326)
+  })
+})
+
 describe('SH-8 midia.ts: the plates and layers of the half exist where the constants say', () => {
   it('M04_FAIXA is the m04-faixa master, lossless; M11_JANELA the unlit M11; LUZ_M11, PORTA_NOITE and CAPTURA_NOTAS are served files', async () => {
     const midia = await import('../componentes/inicio-casa/midia.ts')
@@ -482,6 +517,53 @@ describe('SH-8 midia.ts: the plates and layers of the half exist where the const
     const sizes = '(min-width: 1440px) min(62.5vw, 1600px), (min-width: 1180px) 62.5vw, min(100vw, 760px)'
     expect(M05.sizes).toBe(sizes)
     expect(LUZ_M05.sizes).toBe(sizes)
+  })
+})
+
+describe('SH-10 clip frames: a frame that crops an in-flow img must not be held open by it', () => {
+  // `overflow: clip` does not make a scroll container, so the img's block-size (auto) would set the frame's automatic
+  // minimum height (grid item or aspect-ratio box) and the frame would show the whole file instead of cutting it. The
+  // frame says `min-block-size: 0`, or the img fills the frame (`block-size: 100%`, `object-fit: cover`, aligned to the
+  // edge it stands on: top for the plates, bottom for the door of band 6 below 1024, where its frame is 13 / 10; from
+  // 1024 the door's frame has no ratio and is sized by the whole door, so `min-block-size: 0` there would collapse the row).
+  const regras = () => declaracoes(CSS_DA_CASA())
+  const quadros = () => {
+    const porSeletor = new Map<string, Declaracao[]>()
+    for (const d of regras()) porSeletor.set(d.seletor, [...(porSeletor.get(d.seletor) ?? []), d])
+    return [...porSeletor.entries()].filter(([, lista]) => lista.some((d) => d.prop === 'overflow' && d.valor === 'clip') && lista.some((d) => d.prop === 'aspect-ratio'))
+  }
+
+  it('the clip frames of bands 4, 6 and 7 are found (the test cannot pass by finding none)', () => {
+    expect(quadros().map(([seletor]) => seletor).sort()).toEqual(['[data-casa] .ic-fecho-cena', '[data-casa] .ic-porta', '[data-casa] .ic-so-cena'])
+  })
+
+  it('every clip frame with an aspect ratio declares min-block-size: 0 or its img fills it', () => {
+    for (const [seletor, lista] of quadros()) {
+      const zero = lista.some((d) => d.prop === 'min-block-size' && d.valor === '0')
+      const img = regras().filter((d) => d.seletor.startsWith(`${seletor} img`))
+      const preenche =
+        img.some((d) => d.prop === 'block-size' && d.valor === '100%') &&
+        img.some((d) => d.prop === 'object-fit' && d.valor === 'cover') &&
+        img.some((d) => d.prop === 'object-position' && /^50% (0|100)(%|px)?$/.test(d.valor))
+      expect(zero || preenche, `${seletor} is held open by its img`).toBe(true)
+    }
+  })
+
+  it('the frame of band 4 stays 1200 / 832 and the one of band 7 stays 542 / 386, both clipped', () => {
+    const css = colapsar(semComentarios(CSS_DA_CASA()))
+    expect(css).toMatch(/\[data-casa\] \.ic-so-cena \{[^}]*aspect-ratio: 1200 \/ 832;[^}]*overflow: clip;/)
+    expect(css).toMatch(/\[data-casa\] \.ic-fecho-cena \{[^}]*aspect-ratio: 542 \/ 386;[^}]*overflow: clip;/)
+  })
+
+  it('every observed element of bands 3 to 7 is smaller than window / 0.6: the band 5 list and the M11 plate, never a band wrapper', async () => {
+    await abrir(390)
+    const observados = ObservadorFalso.todos.filter((o) => o.opcoes?.threshold === 0.6).flatMap((o) => [...o.alvos])
+    const lista = principal().querySelector('.ic-prova [data-prova-lista]')!
+    const placa = principal().querySelector('.ic-fecho-cena img:not([data-luz])')!
+    expect(observados).toContain(lista)
+    expect(observados).toContain(placa)
+    for (const alvo of observados) expect(alvo.closest('[data-faixa]') === alvo, 'a band wrapper is observed at 60 %').toBe(false)
+    expect(observados.some((alvo) => alvo.matches('.ic-prova, .ic-fecho, [data-faixa]'))).toBe(false)
   })
 })
 
