@@ -723,20 +723,28 @@
 
   /* ---- The room with enlarged text (item 11 of HOME-WIDTH) ------------------------------------------------------------ */
   /* The room (the plate on the seam, the h1 across it, the lede on the night wall right of the lamp, the pinned stage) is
-     drawn for 1180 px of 16 px text. When the root text is larger, those 1180 px are fewer rem: at 200 % the h1 alone is
-     wider than the window, and the plate, moved by the first span, ends under the lede. The media query above reads the
-     window in px (and the page script reads the same one), so the hand-over is a container query in rem: it follows the
-     root font size, the way the shell's header does (`@container cm-cab (min-width: 67rem)`). Under 72.5 rem of container
-     the hero and band 2 flow as the stacked composition does (one column, the h1 wraps, the lede and the actions come
-     under it, the stage is a plain band), with the DOM of the room: the room-only layers are hidden and the frame, the
-     night column and the caption flow in the band. The bound is the narrowest container the room media can give at a
-     16 px root: the window is at least 1180 px and a classic scrollbar takes up to 20 px, so the container is at least
-     1180 - 20 = 1160 px = 72.5 rem, and `width < 72.5rem` (a container of exactly 1160 px is not handed over) never
-     applies at 16 px: the room above is unchanged, and it agrees with the page script, which reads the same media
-     query. At 200 % the window is at most 1440 / 32 = 45 rem, far below the bound. No margin crosses a band edge here:
-     the space above the frame is the padding of the static stage. Everything is read from the Início root. */
+     drawn for 16 px text: the lede is two lines (a fixed two-line grid row, bottom anchored) only at a 16 px root. Above it
+     the lede takes three or four lines, and a bottom-anchored block that grows would climb into the lamp (rule W1: when
+     the two-line assumption fails, the hero leaves the room). So the condition is the text size, on any window width:
+     above a 16 px root the hero and band 2 flow as the stacked composition does (one column, the h1 wraps, the lede and
+     the actions come under it, the stage is a plain band).
+     A plain width bound cannot say that: at 16 px the room must stay down to the narrowest window the media query gives
+     (1180 px less a classic scrollbar of up to 20 px = 1160 px = 72.5 rem), while 2560 px at 200 % is a container of more
+     than 79.5 rem. The bound is therefore 72.5 rem, less a slack of 8 px, plus a bonus of (1rem - 16px) times 10000.
+     Inside a container query `1rem` is the root's own computed font size, so the bonus is 0 at a 16 px root and positive
+     above it: from 17 px up it is 10000 px or more, far wider than any window, so every window hands over. Under 16 px
+     the bound is negative and the room stays. The slack is there because `1rem - 16px` is not exactly 0 in the browser's
+     float arithmetic: its error times the multiplier is a few px (a multiplier of 100000 gave a bound a few px above 72.5
+     rem and handed a 1160 to 1166 px container over at 16 px). The narrowest container the room can have is 1160 px =
+     72.5 rem, so at a 16 px root the bound is 72.5 rem - 8 px = 1152 px, safely under it (the room stays with a classic
+     scrollbar of up to 20 px), and the multiplier is 10000, ten times less error than before. The page script
+     (`useTextoGrande` in Inicio.tsx: root font size above 16 px) reads the same state and renders the DOM this block lays
+     out: the stage frame in the hero (`.ic-palco`, with the night frame raster) and none of the room layers in band 2. The
+     media query above is the window's half of the condition, the same one the script reads.
+     No margin crosses a band edge here: the gap under the hero's frame is the padding-bottom of `.ic-palco`, and band 2
+     starts with its own padding. Everything is read from the Início root. */
   @media (min-width: 1180px) and (min-aspect-ratio: 1/1) {
-    @container (width < 72.5rem) {
+    @container (width < calc(72.5rem - 8px + (1rem - 16px) * 10000)) {
       [data-casa]:has(> [data-cena-heroi] .ic-titulo) [data-cena-heroi][aria-labelledby='ic-titulo'] {
         display: flex;
         flex-direction: column;
@@ -814,6 +822,13 @@
         color: var(--color-papel);
       }
 
+      /* The hero's stage (the first framed screen, in its night raster on the cacau wall): the last item of the column,
+         one `junto` under the caption and one `secao` above band 2, which starts with no padding of its own. */
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-palco {
+        order: 5;
+        padding: var(--espaco-junto) var(--heroi-esq) var(--espaco-secao);
+      }
+
       /* Band 2: a plain cacau band, no track, no pin, no night sheet. */
       [data-casa]:has(> [data-cena-heroi] .ic-titulo) [data-faixa][aria-labelledby='ic-noite'] {
         padding-block: 0 var(--espaco-secao);
@@ -836,7 +851,7 @@
       [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-estagio[data-troca-fixo] {
         position: static;
         height: auto;
-        padding-block-start: var(--espaco-secao);
+        padding-block-start: 0;
         overflow-x: visible;
       }
 

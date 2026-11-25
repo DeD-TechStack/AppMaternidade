@@ -79,6 +79,28 @@ describe('HOME-WIDTH S1: the page container and the width rule sit on the Iníci
     expect(nuas.map((r) => r.seletor)).toEqual([])
   })
 
+  // N1: a rule that declares the container, the frame size or a hero/quadro variable is the Início's own. If it were on a
+  // looser selector, the other five pages (which keep this stylesheet loaded after a navigation) would inherit it.
+  const DECLARA_DO_INICIO = (prop: string) => prop === 'container-type' || prop === '--produto-tela' || prop.startsWith('--heroi-') || prop.startsWith('--quadro-')
+  const daRaizDoInicio = (parte: string) => parte.trim().startsWith(RAIZ) || parte.trim().startsWith(`html[data-exibicao='b'] ${RAIZ}`)
+  /** The selectors that declare an Início-only property on something that does not start at the Início root. */
+  const forasDaRaiz = (css: string) =>
+    ler(limpo(css))
+      .filter((r) => declaracoes(r.corpo).some((d) => DECLARA_DO_INICIO(d.prop)))
+      .filter((r) => !r.seletor.split(',').every(daRaizDoInicio))
+      .map((r) => r.seletor)
+
+  it('N1: every rule that declares container-type, --produto-tela, --heroi-* or --quadro-* starts at the Início root', () => {
+    expect(forasDaRaiz(readFileSync(CSS_DA_CASA, 'utf8'))).toEqual([])
+  })
+
+  it('N1 negative control: the same predicate flags a bare [data-casa] rule that declares --produto-tela', () => {
+    const sintetico = `${RAIZ} { container-type: inline-size; --heroi-k: 1; } [data-casa] .cm-produto-moldura { --produto-tela: 1px; }`
+    expect(forasDaRaiz(sintetico)).toEqual(['[data-casa] .cm-produto-moldura'])
+    // The Início root and the display variant are not flagged.
+    expect(forasDaRaiz(`html[data-exibicao='b'] ${RAIZ} { --heroi-span1-em: 5; } ${RAIZ} .ic-estagio .cm-produto-moldura { --produto-tela: 1px; }`)).toEqual([])
+  })
+
   it('display variant B re-declares its first-span ratio on the Início root, one class more than the root rule', () => {
     const b = regras().find((r) => r.seletor === `html[data-exibicao='b'] ${RAIZ}`)
     expect(b, "html[data-exibicao='b'] on the root").toBeDefined()
@@ -147,18 +169,55 @@ describe('HOME-WIDTH S1: the page container and the width rule sit on the Iníci
 })
 
 describe('HOME-WIDTH item 11: with the root text enlarged the hero stays whole (a rem container query, one system)', () => {
-  const CONTAINER_TEXTO = '@container (width < 72.5rem)'
+  // The bound follows the text size: `1rem - 16px` is 0 at a 16 px root (the room is unchanged) and positive above it, times
+  // 10000 it is far wider than any window, so every window hands over. The 8 px slack keeps the bound under the narrowest
+  // room container (1160 px) even though `1rem - 16px` times the multiplier carries a few px of float error in the browser.
+  // See the comment above the block.
+  const CONTAINER_TEXTO = '@container (width < calc(72.5rem - 8px + (1rem - 16px) * 10000))'
+  const FORMA = /^@container \(width < calc\(72\.5rem - (\d+(?:\.\d+)?)px \+ \(1rem - 16px\) \* (\d+)\)\)$/
   const daFolga = () => regras().filter((r) => r.contexto.includes(CONTAINER_TEXTO) && r.contexto.some((c) => c.startsWith('@media (min-width: 1180px) and (min-aspect-ratio: 1/1)')))
   const corpoDe = (seletor: string) => daFolga().filter((r) => r.seletor.split(',').some((s) => s.trim().endsWith(seletor))).map((r) => r.corpo).join(' ')
 
-  it('the room hands over to the stacked flow when the container is under 72.5 rem (1160 px at 16 px: 1180 less a 20 px scrollbar, the narrowest the room media gives); the query is in rem', () => {
+  it('the room hands over to the stacked flow when the container is under 72.5 rem less a slack, plus a text-size bonus that is 0 at a 16 px root (1160 px: 1180 less a 20 px scrollbar, the narrowest the room media gives)', () => {
     expect(daFolga().length).toBeGreaterThan(5)
-    expect(CONTAINER_TEXTO).toMatch(/rem\)$/)
-    // Strictly below 1160 px: a container of exactly 1160 px keeps the room, like the page script's media query.
-    expect(CONTAINER_TEXTO).toMatch(/\(width < 72\.5rem\)/)
+    // At 16 px the bound is under 1160 px: a container of 1160 px or more keeps the room, like the page script's media query.
+    expect(CONTAINER_TEXTO).toMatch(FORMA)
     expect(72.5 * 16).toBe(1180 - 20)
     // The switch is read from the Início root only.
     for (const r of daFolga()) expect(r.seletor.split(',').every((s) => s.trim().startsWith(RAIZ)), r.seletor).toBe(true)
+  })
+
+  it('the bonus term is (1rem - 16px): exactly 0 at a 16 px root, so the room at 16 px is unchanged; above it the bound is huge, so every window hands over', () => {
+    expect(CONTAINER_TEXTO).toContain('(1rem - 16px)')
+    // The stylesheet declares that very condition (the test's constant is not a copy that could drift).
+    expect(regras().some((r) => r.contexto.includes(CONTAINER_TEXTO))).toBe(true)
+    const [, folga, multiplicador] = FORMA.exec(CONTAINER_TEXTO)!
+    const folgaPx = Number(folga)
+    const fator = Number(multiplicador)
+    const bonus = (raizPx: number) => (raizPx - 16) * fator
+    const limitePx = (raizPx: number) => 72.5 * raizPx - folgaPx + bonus(raizPx)
+    expect(bonus(16)).toBe(0)
+    // 17 to 32 px roots: the bound is above any window width (the widest window under test is 2560 px).
+    for (const raizPx of [17, 18, 20, 24, 32]) expect(limitePx(raizPx)).toBeGreaterThan(2560)
+    // Below 16 px the bound is negative: the room stays, as the page script (root text > 16 px) reads it.
+    expect(limitePx(14)).toBeLessThan(0)
+  })
+
+  it('the 8 px slack keeps the bound at a 16 px root under the narrowest room container (1160 px), whatever few px of float error the bonus carries', () => {
+    const [, folga, multiplicador] = FORMA.exec(CONTAINER_TEXTO)!
+    const folgaPx = Number(folga)
+    const fator = Number(multiplicador)
+    // The slack is at least 1 px and at most 20 px: enough to absorb the error, never so much that it eats the scrollbar band.
+    expect(folgaPx).toBeGreaterThanOrEqual(1)
+    expect(folgaPx).toBeLessThanOrEqual(20)
+    // At 16 px the bound is 72.5 rem less the slack: under 1160 px, and still above 1140 px (1160 less a 20 px scrollbar).
+    const limite16 = 72.5 * 16 - folgaPx
+    expect(limite16).toBeLessThan(1160)
+    expect(limite16).toBeGreaterThanOrEqual(1160 - 20)
+    // The multiplier times 1 px of bonus (a 17 px root) is at least 8000 px: wider than any window, so 17 px and up hand over.
+    expect(fator * 1).toBeGreaterThanOrEqual(8000)
+    // The error of `1rem - 16px` (a few ulp of a length) times the multiplier stays within the slack: 1e-9 px here is the generous side.
+    expect(fator * 1e-9).toBeLessThan(folgaPx)
   })
 
   it('the h1 wraps (normal white-space, in the flow); the lede and the actions flow under it (static, not absolute)', () => {
@@ -183,14 +242,24 @@ describe('HOME-WIDTH item 11: with the root text enlarged the hero stays whole (
     expect(corpoDe('.ic-piso-dia')).toMatch(/display\s*:\s*none/)
   })
 
-  it('no margin crosses a band edge: the hand-over frame has no block margin, the static stage carries the space as padding-block-start', () => {
+  it('no margin crosses a band edge: the hand-over frame has no block margin, and the static stage adds no padding above (the gap is the hero stage wrapper\'s padding-bottom)', () => {
     const moldura = corpoDe('.ic-estagio .cm-produto-moldura')
     expect(moldura).toMatch(/(?:^|;)\s*margin\s*:\s*0 auto\s*(?:;|$)/)
     expect(moldura).not.toMatch(/margin-(?:top|bottom|block)/)
-    // The stage rule (`.ic-estagio`, also with `[data-troca-fixo]`) is the one that owns the space above the frame.
+    // The page now renders the stacked DOM in the hand-over: the frame lives in the hero (`.ic-palco`), not in band 2, so the
+    // stage rule (`.ic-estagio`, also with `[data-troca-fixo]`) must not add a second `secao` above the band's heading.
     const palco = daFolga().filter((r) => r.seletor.split(',').some((s) => s.trim().endsWith('.ic-estagio')))
     expect(palco.length).toBeGreaterThan(0)
-    expect(palco.map((r) => r.corpo).join(' ')).toMatch(/padding-block-start\s*:\s*var\(--espaco-secao\)/)
+    expect(palco.map((r) => r.corpo).join(' ')).toMatch(/(?:^|;)\s*padding-block-start\s*:\s*0\s*(?:;|$)/)
+    expect(palco.map((r) => r.corpo).join(' ')).not.toMatch(/padding-block-start\s*:\s*var\(--espaco-secao\)/)
+  })
+
+  it('the hero stage wrapper (.ic-palco) is a single-column item of the hand-over hero, with the gap under the frame as its padding-bottom', () => {
+    const corpo = corpoDe('.ic-palco')
+    expect(corpo).toMatch(/(?:^|;)\s*order\s*:\s*5\s*(?:;|$)/)
+    expect(corpo).toMatch(/(?:^|;)\s*padding\s*:\s*var\(--espaco-junto\) var\(--heroi-esq\) var\(--espaco-secao\)\s*(?:;|$)/)
+    // The hand-over hero is a flex column: no grid column is needed (and none is set).
+    expect(corpo).not.toMatch(/grid-column/)
   })
 })
 
@@ -225,7 +294,7 @@ describe('HOME-WIDTH W1: the lede block hangs from the hero\'s foot in the room,
 
   it('the hand-over for enlarged text puts the block back in the flow, so a bottom anchor never grows into the lamp', () => {
     const empilhada = regras().filter(
-      (r) => r.seletor.split(',').some((s) => s.trim().endsWith('.ic-noite-heroi')) && r.contexto.some((c) => c.startsWith('@container (width < 72.5rem)')),
+      (r) => r.seletor.split(',').some((s) => s.trim().endsWith('.ic-noite-heroi')) && r.contexto.some((c) => c.startsWith('@container (width < calc(72.5rem - 8px + (1rem - 16px) * 10000))')),
     )
     expect(empilhada.map((r) => r.corpo).join(' ')).toMatch(/position\s*:\s*static/)
   })

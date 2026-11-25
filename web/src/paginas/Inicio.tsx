@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, type CSSProperties } from 'react'
+import { useLayoutEffect, useRef, useSyncExternalStore, type CSSProperties } from 'react'
 import { AcoesDoHeroi } from '../componentes/inicio-casa/AcoesDoHeroi.tsx'
 import { FaixaNoite } from '../componentes/inicio-casa/FaixaNoite.tsx'
 import { FaixaSozinho } from '../componentes/inicio-casa/FaixaSozinho.tsx'
@@ -38,6 +38,38 @@ import { usePalcoFixo } from '../movimento/troca/usarPalco.ts'
 // the page sheet.
 import '../componentes/inicio-casa/inicio-faixas.css'
 import '../componentes/inicio-casa/inicio-casa.css'
+
+/** The text size the room is drawn for (WCAG 1.4.4): the lede needs two lines only at a 16 px root. */
+const RAIZ_DA_SALA_PX = 16
+
+function assinarTexto(aviso: () => void): () => void {
+  if (typeof window === 'undefined') return () => {}
+  // A change of the browser text size reflows the page without a change of width, so `resize` alone would miss it: the root's
+  // box is watched too (where the browser has the observer).
+  window.addEventListener('resize', aviso)
+  const observador = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(aviso)
+  observador?.observe(document.documentElement)
+  return () => {
+    window.removeEventListener('resize', aviso)
+    observador?.disconnect()
+  }
+}
+
+/** Whether the root text is above 16 px: what the stylesheet reads as `1rem - 16px` in its hand-over container query. */
+function lerTextoGrande(): boolean {
+  if (typeof window === 'undefined' || typeof window.getComputedStyle !== 'function') return false
+  const tamanho = Number.parseFloat(window.getComputedStyle(document.documentElement).fontSize)
+  return Number.isFinite(tamanho) && tamanho > RAIZ_DA_SALA_PX
+}
+
+/**
+ * True while the root text is above 16 px (17 to 32 px at 200 %). The room is then not drawn: inicio-casa.css hands the hero
+ * over to the stacked flow on every window width, and this flag makes the page render the DOM that flow lays out (the stage
+ * in the hero, no room layers), so the two agree in every state. NaN, an empty value or no window read as 16 px.
+ */
+function useTextoGrande(): boolean {
+  return useSyncExternalStore(assinarTexto, lerTextoGrande, () => false)
+}
 
 /**
  * Band 5 (HOME-SECOND-HALF): the statement on the rug, with the Notas capture standing on the band's bottom edge. The
@@ -82,8 +114,12 @@ function ProvaDaCasa() {
  * <html>, set by `useGanchoDoCabecalho`), and the page stylesheet inicio-casa.css quiets the shell's pill from it.
  */
 export function Inicio() {
-  const larga = useSala()
-  const fixo = usePalcoFixo()
+  // The room composition needs the room window AND a 16 px root: with larger text the hero leaves the room (rule W1, see the
+  // hand-over in inicio-casa.css), so `larga` is false there and the stacked DOM renders.
+  const sala = useSala()
+  const textoGrande = useTextoGrande()
+  const larga = sala && !textoGrande
+  const fixo = usePalcoFixo() && larga
   useGanchoDoCabecalho(larga)
 
   return (

@@ -1320,3 +1320,86 @@ describe('HOME-RHYTHM the room scales with the quadro by one unitless number, an
     expect(corpo).not.toMatch(/display:\s*none|visibility:\s*hidden/)
   })
 })
+
+// WIDTH-2 (WCAG 1.4.4): the room (the plate on the seam, the lede on a two-line row) is drawn for a 16 px root. With a larger
+// root the hero leaves the room on any window: the CSS hand-over (inicio-casa.css, a container query with a text-size bonus)
+// and the page script must agree, so the page renders the stacked DOM (the stage in the hero, no room layers) whenever the root
+// text is above 16 px, and the room DOM at 16 px.
+describe('WIDTH-2: with the root text above 16 px the page renders the stacked DOM on a room-sized window', () => {
+  const raiz = () => document.documentElement
+  afterEach(() => {
+    raiz().style.removeProperty('font-size')
+  })
+
+  const ehSala = () => principal().querySelector('.ic-medida') !== null
+  const palcoDoHeroi = () => principal().querySelector('[data-cena-heroi] [data-troca-palco]')
+
+  it('at 1440 x 900 with a 16 px root the room DOM stands: the stage is band 2, the hero holds none', async () => {
+    raiz().style.fontSize = '16px'
+    await abrirJanela({ largura: 1440 })
+    expect(ehSala()).toBe(true)
+    expect(palcoDoHeroi()).toBeNull()
+    expect(faixaDaNoite().querySelector('[data-troca-palco]')).not.toBeNull()
+    expect(principal().querySelector('[data-troca-fixo]')).not.toBeNull()
+  })
+
+  it('a root under 16 px (a smaller browser text size) keeps the room: the CSS bound is negative there too', async () => {
+    raiz().style.fontSize = '14px'
+    await abrirJanela({ largura: 1440 })
+    expect(ehSala()).toBe(true)
+    expect(palcoDoHeroi()).toBeNull()
+  })
+
+  for (const tamanho of ['17px', '20px', '32px']) {
+    it(`at 1440 x 900 with a ${tamanho} root the stacked DOM stands: the night frame in the hero, no room layers, no pin`, async () => {
+      raiz().style.fontSize = tamanho
+      await abrirJanela({ largura: 1440 })
+      expect(ehSala()).toBe(false)
+      expect(principal().querySelector('.ic-piso-dia')).toBeNull()
+      expect(principal().querySelector('[data-troca-noite]')).toBeNull()
+      expect(principal().querySelector('[data-troca-fixo]')).toBeNull()
+      expect(principal().querySelector('[data-troca-gemea-tela]')).toBeNull()
+      expect(faixaDaNoite().querySelector('[data-troca-palco]')).toBeNull()
+      // The one stage is the hero's, with the NIGHT frame raster (a day frame would vanish on the cacau band).
+      expect(principal().querySelectorAll('[data-troca-palco]')).toHaveLength(1)
+      const palco = palcoDoHeroi()!
+      expect(palco).not.toBeNull()
+      expect(palco.classList.contains('ic-palco')).toBe(true)
+      expect(palco.querySelector('img[data-produto-moldura-arte]')!.getAttribute('src')).toBe('/molduras/moldura-noite.png')
+      // Both captions are static, as in any stacked page.
+      expect(legendasEmTela()).toHaveLength(2)
+    })
+  }
+
+  it('the 2560 x 1440 window at a 32 px root (200 %) is the stacked DOM too: the switch is the text size, not the width', async () => {
+    raiz().style.fontSize = '32px'
+    await abrirJanela({ largura: 2560, altura: 1440 })
+    expect(ehSala()).toBe(false)
+    expect(palcoDoHeroi()).not.toBeNull()
+  })
+
+  it('a window under 1180 px never was the room: 16 px or 20 px, the same stacked DOM', async () => {
+    raiz().style.fontSize = '20px'
+    await abrirJanela({ largura: 1179 })
+    expect(ehSala()).toBe(false)
+    expect(palcoDoHeroi()).not.toBeNull()
+  })
+
+  it('a change of the browser text size after mount (no change of width) switches the composition on the next resize', async () => {
+    raiz().style.fontSize = '16px'
+    await abrirJanela({ largura: 1440 })
+    expect(ehSala()).toBe(true)
+    raiz().style.fontSize = '24px'
+    await act(async () => {
+      window.dispatchEvent(new Event('resize'))
+    })
+    expect(ehSala()).toBe(false)
+    expect(palcoDoHeroi()).not.toBeNull()
+    raiz().style.fontSize = '16px'
+    await act(async () => {
+      window.dispatchEvent(new Event('resize'))
+    })
+    expect(ehSala()).toBe(true)
+    expect(palcoDoHeroi()).toBeNull()
+  })
+})
