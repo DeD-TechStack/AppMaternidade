@@ -4,6 +4,7 @@ import { Etiqueta } from '../../componentes/desenvolvimento-casa/Etiqueta.tsx'
 import { Fases } from '../../componentes/desenvolvimento-casa/Fases.tsx'
 import { Fontes } from '../../componentes/desenvolvimento-casa/Fontes.tsx'
 import { Partes } from '../../componentes/desenvolvimento-casa/Partes.tsx'
+import { Registro } from '../../componentes/desenvolvimento-casa/Registro.tsx'
 import { TabelaQuantoTempo } from '../../componentes/desenvolvimento-casa/TabelaQuantoTempo.tsx'
 import { FaixaInteira } from '../../componentes/secoes/FaixaInteira.tsx'
 import { PaginaCasa } from '../../componentes/secoes/PaginaCasa.tsx'
@@ -13,21 +14,25 @@ import { DESENVOLVIMENTO_DESTAQUE, ROTULOS_FONTES } from '../../conteudo/desenvo
 import { NOMES_DE_PAGINA } from '../../conteudo/publicas-texto.ts'
 import { useTituloDaPagina } from './useTitulo.ts'
 
-// As partes do tummy time em dois blocos antes da tabela (o que é e segurança; quando começar) e a última ("se o
-// bebê reclamar") depois dela, como no deck (2.3). Os marcos, em dois pares.
-const TUMMY_A = TUMMY_TIME.itens.slice(0, 2)
-const TUMMY_B = TUMMY_TIME.itens.slice(2, 3)
+// As partes do tummy time: três pilares iniciais (o que é, segurança, quando começar) antes da tabela e a última
+// ("se o bebê reclamar") depois dela, ao lado da postura sem meta. Nos marcos, três tópicos corridos e o fechamento
+// de cuidado ("quando conversar com o profissional") destacado antes da faixa do 192.
+const TUMMY_PILARES = TUMMY_TIME.itens.slice(0, 3)
 const TUMMY_DEPOIS = TUMMY_TIME.itens.slice(3)
-const MARCOS_A = MARCOS.itens.slice(0, 2)
-const MARCOS_B = MARCOS.itens.slice(2)
+const MARCOS_BASE = MARCOS.itens.slice(0, 3)
+const MARCOS_PROFISSIONAL = MARCOS.itens.slice(3)
 
 /**
- * /desenvolvimento nas seções compartilhadas da casa: uma abertura com a cena e o Histórico na moldura (a pergunta
- * "Ela já devia rolar?" e, na resposta, ideias e fontes, sem meta), o registro, as ideias por fase (as seis, em uma
- * lista só, sob a família), o tummy time pelas fontes, os marcos e a faixa de cacau do 192, onde a página acaba.
- * Cada faixa é uma malha de duas colunas (título e abertura em cima, o resto em pares) que vira uma coluna só quando
- * a faixa fica estreita (consulta de contêiner, CSS da página). O texto de saúde vem de `conteudo/desenvolvimento/*.ts`,
- * só de leitura; as frases do deck, de `conteudo/casa`.
+ * /desenvolvimento nas seções compartilhadas da casa:
+ * 1. Abertura editorial (papel): pergunta central, ações e cena M04 no tapete como ponto focal único.
+ * 2. Registro (areia): prova real do Histórico das 15:00 na moldura ao lado do argumento.
+ * 3. Ideias por fase (papel): regras universais em destaque plano, retrato da família, seletor rotulado com estado
+ *    ativo e lista aberta das seis fases.
+ * 4. Tummy time segundo as fontes (areia): três pilares em grade horizontal, tabela comparativa, postura sem meta em
+ *    destaque editorial ao lado de "Se o bebê reclamar" e fontes.
+ * 5. Marcos sem cobrança (papel): trilho esquerdo fixo (título, resumo, faixa, fontes) e leitura corrida com fios à
+ *    direita, fechando com o alerta de conversa com o profissional em destaque plano.
+ * 6. Urgência 192 (cacau): fecho em contraste separado do rodapé.
  */
 export function Desenvolvimento() {
   useTituloDaPagina(NOMES_DE_PAGINA.desenvolvimento)
@@ -46,30 +51,25 @@ export function Desenvolvimento() {
         <Abertura />
 
         <FaixaInteira fundo="areia" idTitulo="dc-registro-titulo">
-          <div className="dc-grade">
-            <div className="dc-malha">
-              <h2 id="dc-registro-titulo" className="dc-titulo text-titulo-1 font-titulo cm-sec-titulo">
-                {D.h2Registro}
-              </h2>
-              <p className="dc-intro text-abertura font-texto cm-sec-texto">{D.pRegistro}</p>
-            </div>
-          </div>
+          <Registro />
         </FaixaInteira>
 
         <FaixaInteira fundo="papel" idTitulo="dc-ideias-titulo">
           <div id="ideias" className="dc-grade">
-            <div className="dc-malha dc-ideias">
+            <div className="dc-ideias">
               <div className="dc-ideias-texto">
-                <h2 id="dc-ideias-titulo" className="text-titulo-1 font-titulo cm-sec-titulo">
+                <h2 id="dc-ideias-titulo" className="dc-titulo text-titulo-1 font-titulo cm-sec-titulo">
                   {D.h2Ideias}
                 </h2>
-                <p className="text-corpo font-texto cm-sec-texto">{IDEIAS.texto}</p>
-                <h3 className="text-titulo-4 font-titulo cm-sec-titulo">{IDEIAS.todasTitulo}</h3>
-                <ul className="dc-itens text-corpo font-texto">
-                  {IDEIAS.todas.map((linha) => (
-                    <li key={linha}>{linha}</li>
-                  ))}
-                </ul>
+                <p className="text-abertura font-texto cm-sec-texto">{IDEIAS.texto}</p>
+                <div className="dc-regras">
+                  <h3 className="text-titulo-4 font-titulo cm-sec-titulo">{IDEIAS.todasTitulo}</h3>
+                  <ul className="dc-itens text-corpo font-texto">
+                    {IDEIAS.todas.map((linha) => (
+                      <li key={linha}>{linha}</li>
+                    ))}
+                  </ul>
+                </div>
               </div>
               <Fases />
               <div className="dc-familia">
@@ -95,28 +95,33 @@ export function Desenvolvimento() {
 
         <FaixaInteira fundo="areia" idTitulo="dc-tummy-titulo">
           <div id="tummy-time" data-item={TUMMY_TIME.id} className="dc-grade">
-            <div className="dc-malha">
-              <h2 id="dc-tummy-titulo" className="dc-titulo text-titulo-1 font-titulo cm-sec-titulo">
-                {D.h2Tummy}
-              </h2>
-              <div className="dc-intro">
-                <p className="text-abertura font-texto cm-sec-texto">{TUMMY_TIME.resumo}</p>
-                <Etiqueta texto={`${ROTULOS_FONTES.faixa} ${TUMMY_TIME.faixa}`} />
+            <div className="dc-tummy">
+              <div className="dc-cabeca-duas">
+                <h2 id="dc-tummy-titulo" className="dc-titulo text-titulo-1 font-titulo cm-sec-titulo">
+                  {D.h2Tummy}
+                </h2>
+                <div className="dc-intro">
+                  <p className="text-abertura font-texto cm-sec-texto">{TUMMY_TIME.resumo}</p>
+                  <Etiqueta texto={`${ROTULOS_FONTES.faixa} ${TUMMY_TIME.faixa}`} />
+                </div>
               </div>
-              <div className="dc-bloco">
-                <Partes partes={TUMMY_A} />
+
+              <div className="dc-pilares">
+                <Partes partes={TUMMY_PILARES} variante="pilares" />
               </div>
-              <div className="dc-bloco">
-                <Partes partes={TUMMY_B} />
-              </div>
-              <div className="dc-largo">
+
+              <div className="dc-tabela-quadro">
                 <TabelaQuantoTempo />
               </div>
-              <p className="dc-bloco text-corpo font-texto cm-sec-texto">{QUANTO_TEMPO.semMeta}</p>
-              <div className="dc-bloco">
-                <Partes partes={TUMMY_DEPOIS} />
+
+              <div className="dc-tummy-fecho">
+                <p className="dc-postura text-abertura font-texto cm-sec-texto">{QUANTO_TEMPO.semMeta}</p>
+                <div className="dc-bloco">
+                  <Partes partes={TUMMY_DEPOIS} />
+                </div>
               </div>
-              <div className="dc-largo">
+
+              <div className="dc-largo dc-fontes-barra">
                 <Fontes fontes={TUMMY_TIME.fontes} consultadoEm={TUMMY_TIME.consultadoEm} />
               </div>
             </div>
@@ -125,21 +130,25 @@ export function Desenvolvimento() {
 
         <FaixaInteira fundo="papel" idTitulo="dc-marcos-titulo">
           <div id="marcos" data-item={MARCOS.id} className="dc-grade">
-            <div className="dc-malha">
-              <h2 id="dc-marcos-titulo" className="dc-titulo text-titulo-1 font-titulo cm-sec-titulo">
-                {D.h2Marcos}
-              </h2>
-              <div className="dc-intro">
-                <p className="text-abertura font-texto cm-sec-texto">{MARCOS.resumo}</p>
-                <Etiqueta texto={`${ROTULOS_FONTES.faixa} ${MARCOS.faixa}`} />
+            <div className="dc-marcos">
+              <div className="dc-marcos-trilho">
+                <h2 id="dc-marcos-titulo" className="dc-titulo text-titulo-1 font-titulo cm-sec-titulo">
+                  {D.h2Marcos}
+                </h2>
+                <div className="dc-intro">
+                  <p className="text-abertura font-texto cm-sec-texto">{MARCOS.resumo}</p>
+                  <Etiqueta texto={`${ROTULOS_FONTES.faixa} ${MARCOS.faixa}`} />
+                </div>
               </div>
-              <div className="dc-bloco">
-                <Partes partes={MARCOS_A} />
+
+              <div className="dc-marcos-conteudo">
+                <Partes partes={MARCOS_BASE} variante="trilho" />
+                <div className="dc-marcos-destaque">
+                  <Partes partes={MARCOS_PROFISSIONAL} />
+                </div>
               </div>
-              <div className="dc-bloco">
-                <Partes partes={MARCOS_B} />
-              </div>
-              <div className="dc-largo">
+
+              <div className="dc-marcos-fontes">
                 <Fontes fontes={MARCOS.fontes} consultadoEm={MARCOS.consultadoEm} />
               </div>
             </div>
@@ -147,9 +156,9 @@ export function Desenvolvimento() {
         </FaixaInteira>
 
         <FaixaInteira fundo="cacau" idTitulo="dc-urgencia-titulo">
-          <div className="dc-grade">
-            <div className="dc-malha">
-              <h2 id="dc-urgencia-titulo" className="dc-titulo text-titulo-1 font-titulo cm-sec-titulo">
+          <div className="dc-grade dc-urgencia-wrap">
+            <div className="dc-urgencia">
+              <h2 id="dc-urgencia-titulo" className="dc-urgencia-titulo text-titulo-1 font-titulo cm-sec-titulo">
                 {D.h2Urgencia}
               </h2>
               <p className="dc-intro text-abertura font-texto cm-sec-texto">{DESENVOLVIMENTO_DESTAQUE.urgencia.texto}</p>
