@@ -44,6 +44,9 @@ function placaFixa(webp: Degrau[], avif: Degrau[], sizes: string, larguraDoSrc: 
   return { src: doSrc.url, srcSet: lista(webp), avif: lista(avif), sizes, largura, altura }
 }
 
+/** The `sizes` of the plate and of its light layer: one string, so both pick the same tier (W2). */
+const M05_TAMANHOS = '(min-width: 1440px) min(62.5vw, 1600px), (min-width: 1180px) 62.5vw, min(100vw, 760px)'
+
 /** M05, the whole plate (900 × 506.5 CSS px at 1440): the day and the night of one room on one seam. */
 export const M05: Imagem = placaFixa(
   [
@@ -54,7 +57,10 @@ export const M05: Imagem = placaFixa(
     { url: m05Avif900, largura: 900 },
     { url: m05Avif1672, largura: 1672 },
   ],
-  '(min-width: 1440px) 900px, 62.5vw',
+  // The plate is 900 x min(window, 1440) / 1440 x k wide, and k is at most the quadro over 1200 (the quadro is 83.333 % of
+  // the window): never more than 62.5 % of the window, capped at 1600 css px from 1440 (HOME-WIDTH, W2). Below 1180 the
+  // stacked plate is no wider than 760 px. The light layer of the plate (`LUZ_M05`) reads the same string.
+  M05_TAMANHOS,
   900,
   1672,
   941,
@@ -89,7 +95,7 @@ export const M05_LARGURA = 900
 export const LUZ_M05: Imagem = imagemPublica({
   src: '/cenas/inicio/m05-luz-900w.png',
   srcSet: '/cenas/inicio/m05-luz-900w.png 900w, /cenas/inicio/m05-luz-1672w.png 1672w',
-  sizes: '(min-width: 1440px) 900px, 62.5vw',
+  sizes: M05_TAMANHOS,
   largura: 900,
   altura: 507,
 })

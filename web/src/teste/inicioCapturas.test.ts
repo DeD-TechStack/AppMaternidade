@@ -258,7 +258,7 @@ describe('REPH-I-06 real captures: the manifest, the hashes of the served files,
     // `comAvif`: M04, M05 (fixed files) and M06 (build ladder) serve both formats; M05_390 is the WebP-only projection of
     // its build ladder (its phone crop is outside the AVIF re-export), so it has no `avif` field at all.
     const placas = [
-      { nome: 'M05', imagem: M05, mestre: 'm05-sol-1672w.webp', larguras: [900, 1672], tamanho: [1672, 941], sizes: '(min-width: 1440px) 900px, 62.5vw', src: 900, comAvif: true },
+      { nome: 'M05', imagem: M05, mestre: 'm05-sol-1672w.webp', larguras: [900, 1672], tamanho: [1672, 941], sizes: '(min-width: 1440px) min(62.5vw, 1600px), (min-width: 1180px) 62.5vw, min(100vw, 760px)', src: 900, comAvif: true },
       { nome: 'M05_390', imagem: M05_390, mestre: 'm05-sol-390c-780w.webp', larguras: [390, 780], tamanho: [780, 612], sizes: '100vw', src: 390, comAvif: false },
       { nome: 'M06', imagem: M06, mestre: 'm06-apagada-792w.webp', larguras: [300, 396, 600, 792], tamanho: [792, 1293], sizes: '(min-width: 1024px) 395.5px, 300px', src: 396, comAvif: true },
       { nome: 'M04', imagem: M04, mestre: 'm04-recorte-1200w.webp', larguras: [350, 600, 700, 1200], tamanho: [1200, 870], sizes: '(min-width: 1024px) 600px, 100vw', src: 600, comAvif: true },

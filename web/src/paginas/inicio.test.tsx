@@ -878,9 +878,11 @@ describe('HOME-FINAL F2 the Histórico pan travels MANIFESTO rolagem_px: rest on
     const { CAPTURA_Y_ALTA, MOLDURA_DIA } = await import('../componentes/inicio-casa/midia.ts')
     const css = norm(readFileSync(CSS_DA_CASA, 'utf8'))
     // The screen layer's width and the travel, as the stylesheet declares them.
-    expect(css).toContain('--produto-tela: clamp(280px, calc(280px + (100vw - 390px) * 40 / 1050), 320px);')
+    // The screen layer reads the Início container (cqi), not the window (HOME-WIDTH); the travel keeps its window ramp.
+    expect(css).toContain('--produto-tela: clamp(280px, calc(280px + (100cqi - 390px) * 40 / 1050), 320px);')
+    expect(css).not.toContain('--produto-tela: clamp(280px, calc(280px + (100vw - 390px) * 40 / 1050), 320px);')
     expect(css).toContain(
-      '--produto-rolagem: min( clamp( calc(var(--produto-rolagem-390, 0) * 1px), calc(var(--produto-rolagem-390, 0) * 1px + (var(--produto-rolagem-1440, 0) - var(--produto-rolagem-390, 0)) * (100vw - 390px) / 1050), calc(var(--produto-rolagem-1440, 0) * 1px) ), var(--produto-tela) );',
+      '--produto-rolagem: min( calc( clamp( calc(var(--produto-rolagem-390, 0) * 1px), calc(var(--produto-rolagem-390, 0) * 1px + (var(--produto-rolagem-1440, 0) - var(--produto-rolagem-390, 0)) * (100vw - 390px) / 1050), calc(var(--produto-rolagem-1440, 0) * 1px) ) * var(--heroi-k) ), var(--produto-tela) );',
     )
     const tela = (w: number) => Math.min(Math.max(280 + ((w - 390) * 40) / 1050, 280), 320)
     const percurso = (w: number) =>
@@ -1101,7 +1103,7 @@ describe('HOME-SEAMS S4: the hero floors end on the hero foot, not 65 px under t
 // ground, WebP fallback tiers), imported as plain Vite assets. The build never re-transcodes them, so the decoded ground the
 // page serves is the ground the export script measured (PROVENANCE.md there).
 const PLACAS_FIXAS = [
-  { chave: 'M05', base: 'm05-sol', larguras: [900, 1672], alturas: [507, 941], sizes: '(min-width: 1440px) 900px, 62.5vw', tamanho: [1672, 941], src: 900 },
+  { chave: 'M05', base: 'm05-sol', larguras: [900, 1672], alturas: [507, 941], sizes: '(min-width: 1440px) min(62.5vw, 1600px), (min-width: 1180px) 62.5vw, min(100vw, 760px)', tamanho: [1672, 941], src: 900 },
   { chave: 'M04', base: 'm04-recorte', larguras: [350, 600, 700, 1200], alturas: [254, 435, 508, 870], sizes: '(min-width: 1024px) 600px, 100vw', tamanho: [1200, 870], src: 600 },
 ] as const
 const PASTA_PLACAS = join(PASTA_SRC, 'assets', 'cenas', 'inicio')
@@ -1201,7 +1203,7 @@ describe('HOME-SEAMS S7: every lamp-light file named in midia.ts exists in web/p
   it('M05 serves both delivered 2x tiers; M06 keeps its approved capped ladder', async () => {
     const { LUZ_M05, LUZ_M05_390, LUZ_M06 } = await import('../componentes/inicio-casa/midia.ts')
     expect(LUZ_M05.srcSet).toBe('/cenas/inicio/m05-luz-900w.png 900w, /cenas/inicio/m05-luz-1672w.png 1672w')
-    expect(LUZ_M05.sizes).toBe('(min-width: 1440px) 900px, 62.5vw')
+    expect(LUZ_M05.sizes).toBe('(min-width: 1440px) min(62.5vw, 1600px), (min-width: 1180px) 62.5vw, min(100vw, 760px)')
     expect(LUZ_M05_390.srcSet).toBe('/cenas/inicio/m05-luz-390c-390w.png 390w, /cenas/inicio/m05-luz-390c-780w.png 780w')
     expect(LUZ_M05_390.sizes).toBe('100vw')
     expect(LUZ_M06.srcSet).toBe('/cenas/inicio/m06-luz-300w.png 300w, /cenas/inicio/m06-luz-396w.png 396w')
@@ -1218,11 +1220,16 @@ describe('HOME-SEAMS S7: every lamp-light file named in midia.ts exists in web/p
 })
 
 describe('HOME-RHYTHM the room scales with the quadro by one unitless number, and the preview label leaves the picture', () => {
-  it('the scale --heroi-k is 1 at 1440 (the quadro is 1200 px), clamped to [1, 1.34], and follows the window height too', () => {
+  it('the scale --heroi-k is 1 at 1440 (the quadro is 1200 px), the smallest of the width, first-screen and seam terms, clamped to [0.9, 1.78]', () => {
     const css = norm(readFileSync(CSS_DA_CASA, 'utf8'))
     expect(css).toContain('--heroi-k-largura: tan(atan2(var(--quadro-largura), 1200px));')
-    expect(css).toContain('--heroi-k-altura: tan(atan2(100svh, 900px));')
-    expect(css).toContain('--heroi-k: clamp(1, min(var(--heroi-k-largura), var(--heroi-k-altura)), 1.34);')
+    expect(css).toContain('--heroi-k-altura: tan(atan2(calc(100svh - var(--cabecalho-alto)), 723px));')
+    expect(css).toContain(
+      '--heroi-k-costura: tan(atan2(var(--heroi-costura-x), calc(489.87 * min(100cqi, 1440px) / 1440)));',
+    )
+    expect(css).toContain(
+      '--heroi-k: clamp(0.9, min(var(--heroi-k-largura), var(--heroi-k-altura), var(--heroi-k-costura)), 1.78);',
+    )
     // The two ratios are numbers, so no length is divided by a length anywhere in the sheet.
     expect(css).not.toMatch(/\d+px \/ \d+px/)
   })
@@ -1233,7 +1240,6 @@ describe('HOME-RHYTHM the room scales with the quadro by one unitless number, an
       ['--heroi-alto', '723px'],
       ['--heroi-titulo-topo', '32px'],
       ['--heroi-placa-topo', '152px'],
-      ['--heroi-lede-topo', '258px'],
       ['--heroi-leg-topo', '666.5px'],
       ['--palco-chao', '108px'],
       ['--palco-m06-largura', '395.5px'],
@@ -1241,12 +1247,15 @@ describe('HOME-RHYTHM the room scales with the quadro by one unitless number, an
     ] as const) {
       expect(css, nome).toContain(`${nome}: calc(${px} * var(--heroi-k));`)
     }
+    // The lede block is anchored to the hero's foot (W1), not to a top offset: no `--heroi-lede-topo` is left behind.
+    expect(css).toContain('--heroi-texto-fundo: calc((723px - 556.8px + 28px) * var(--heroi-k));')
+    expect(css).not.toContain('--heroi-lede-topo')
     // The plate is as wide as `--cena-largura-max` at 1440 times k, on its seam; the measure of the text does not scale.
-    expect(css).toContain('width: calc(var(--cena-largura-max) * min(100vw, 1440px) / 1440 * var(--heroi-k));')
+    expect(css).toContain('width: calc(var(--cena-largura-max) * min(100cqi, 1440px) / 1440 * var(--heroi-k));')
     expect(css).toContain('--heroi-medida: 388px;')
     // Band 3's frame follows the quadro by the width ratio only (1 up to 1440), so its gap to the heading stays closed.
     expect(css).toContain(
-      '--produto-tela: calc(clamp(280px, calc(280px + (100vw - 390px) * 40 / 1050), 320px) * var(--heroi-k-largura));',
+      '--produto-tela: calc(clamp(280px, calc(280px + (100cqi - 390px) * 40 / 1050), 320px) * var(--heroi-k-largura));',
     )
     // The rule never reads `dvh`, and the hero keeps its pin formula.
     expect(css).not.toContain('dvh')

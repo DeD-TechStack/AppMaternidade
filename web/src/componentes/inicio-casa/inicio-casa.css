@@ -35,35 +35,59 @@
 
    Hero text sizes are the DESIGN.md levels (`text-exibicao`, `text-abertura`, `text-titulo-1`, `text-corpo`). */
 @layer components {
-  [data-casa] {
+  /* The Início root (HOME-WIDTH, slot sheet S1): the one `[data-casa]` whose hero holds the h1. `PaginaCasa` takes no
+     props, so the hook is CSS-only: `:has(> [data-cena-heroi] .ic-titulo)` matches exactly one element on the Início and
+     none on the other five pages of the house (this sheet stays loaded after a navigation, so a bare `[data-casa]` rule
+     would leak). It is the page container (`container-type: inline-size`): every `cqi` below is consumed on a descendant,
+     never on this element, where it would resolve against its own ancestor. */
+  [data-casa]:has(> [data-cena-heroi] .ic-titulo) {
+    container-type: inline-size;
+
+    /* The shell header's height, from its own token (88 px from 1100 px, 72 px below; the meter reads the same boxes). */
+    --cabecalho-alto: var(--cm-cabecalho);
+
+    /* The quadro follows the container (83.333 cqi: 1200 px at 1440, 1600 at 1920, 2133 at 2560) and a short, wide window
+       caps it at 213.33 svh, so the plate, the seam and the lede stay one group. The global token (1200 to 1600 px, in
+       vw) is not touched: this overrides it on the Início only. */
+    --quadro-largura: clamp(1200px, 83.333cqi, min(2134px, 213.33svh));
+    --quadro-margem: max(var(--quadro-calha), calc((100cqi - var(--quadro-largura)) / 2));
+
     /* The left text edge: the quadro's, or the gutter on narrow windows. */
-    --heroi-esq: max(var(--quadro-calha), (100% - var(--quadro-largura)) / 2);
+    --heroi-esq: var(--quadro-margem);
 
     /* The seam of the plate: the h1's first span ("Ela mamou", in em of the display size) plus the 12 px (`junto`) that
        separate it from the seam. The width is a property of the face, so the ratio is per face: this default is the one
        of Literata 600, the face of A (the shipped one) and of C (same face, same weight, other size, so the same em);
-       variant B (M PLUS Rounded 1c 800, 5.126 em, 410.1 px at 80 px, read from the meter) re-declares it right below. The meter's COSTURA
-       rule reads the real gap between the plate's seam and the h1's. */
+       variant B (M PLUS Rounded 1c 800, 5.126 em, 410.1 px at 80 px, read from the meter) re-declares it right below. The
+       meter's COSTURA rule reads the real gap between the plate's seam and the h1's. Measured at 1440, 1920 and 2560 the gap
+       from the quadro edge to the h1 word gap is 5.50 em (5.356 em of span + `junto`), Fable's 5.1 em of the sheet's
+       first reading; the seam hangs on it, never on the quadro edge. */
     --heroi-span1-em: 5.356;
-    --heroi-costura-x: calc(var(--heroi-esq) + var(--heroi-span1-em) * var(--texto-exibicao-tamanho) + var(--espaco-junto));
+    --heroi-vao: calc(var(--heroi-span1-em) * var(--texto-exibicao-tamanho) + var(--espaco-junto));
+    --heroi-costura-x: calc(var(--heroi-esq) + var(--heroi-vao));
 
-    /* The scale of the room: one unitless number, 1 up to 1440 and growing with the quadro (1200 px at 1440, 1600 at
-       2560) that the page already scales by, so the room fills a wide window instead of floating in it. `tan(atan2(a, b))`
-       is the ratio a / b of two lengths as a number. It also follows the window's height (900 px is the 1440 room's
-       window), so a wide but short window does not outgrow its stage. Clamped to [1, 1.34]: at 2560 x 1440 the hero is
-       0.67 of the window. */
+    /* The scale of the room: one unitless number, the smallest of three terms, clamped to [0.9, 1.78]. `tan(atan2(a, b))`
+       is the ratio a / b of two lengths as a number.
+       - the width term: the quadro over 1200 px (1 at 1440, 1.78 at 2560);
+       - the first-screen term: the window less the header over the 723 px of the 1440 room, so the hero fits the first
+         screen down to a 739 px tall window and scrolls under it (width drives, height only caps);
+       - the seam term: the plate may grow until its left edge reaches the window's left edge (the plate is 0.5443 of its
+         own width from its seam to its left edge; 489.87 = 0.5443 x 900, and the plate itself is narrower below 1440). */
     --heroi-k-largura: tan(atan2(var(--quadro-largura), 1200px));
-    --heroi-k-altura: tan(atan2(100svh, 900px));
-    --heroi-k: clamp(1, min(var(--heroi-k-largura), var(--heroi-k-altura)), 1.34);
+    --heroi-k-altura: tan(atan2(calc(100svh - var(--cabecalho-alto)), 723px));
+    --heroi-k-costura: tan(atan2(var(--heroi-costura-x), calc(489.87 * min(100cqi, 1440px) / 1440)));
+    --heroi-k: clamp(0.9, min(var(--heroi-k-largura), var(--heroi-k-altura), var(--heroi-k-costura)), 1.78);
 
     /* The measured positions of RECUT §2-§3 at 1440, measured from the hero's top (doc y 72) or the stage's top; each
        one times `--heroi-k`, so the plate, its floor line and its caption keep their places in the hero. */
     --heroi-alto: calc(723px * var(--heroi-k));
     --heroi-titulo-topo: calc(32px * var(--heroi-k));
     --heroi-placa-topo: calc(152px * var(--heroi-k));
-    /* The value sentence and its actions read as one block with the h1: the lede starts at doc y 330 at 1440, right of
-       the lamp, on the night wall. */
-    --heroi-lede-topo: calc(258px * var(--heroi-k));
+    /* The value sentence and its actions hang on the night wall, right of the lamp, as one block anchored to the hero's
+       foot (W1): its last box (the pill) ends 194.2 px above the hero's floor at 1440 (723 - 556.8 + 28), the distance the
+       stage's night column keeps from the stage floor, so the two blocks stand on the same line of the floor. The block
+       grows upward from there, never from a top offset. */
+    --heroi-texto-fundo: calc((723px - 556.8px + 28px) * var(--heroi-k));
     --heroi-acoes-vao: 24px;
     --heroi-leg-topo: calc(666.5px * var(--heroi-k));
     /* The measure of the night column is the text's, not the room's: the type does not scale, and a wider column would
@@ -98,17 +122,19 @@
   }
 
   /* Display variant B (`?exibicao=b`, FG-2b): its own face is wider or narrower than Literata's, so its first span has
-     its own ratio. Declared on `[data-casa]` itself (one more selector than the block above), so `--heroi-costura-x`
-     resolves with it. This file keeps the per-face constant: the display tokens live in tokens.css, out of this card. */
-  html[data-exibicao='b'] [data-casa] {
+     its own ratio. Declared on the Início root itself (one class more than the block above), so `--heroi-vao` and
+     `--heroi-costura-x` resolve with it. This file keeps the per-face constant: the display tokens live in tokens.css, out
+     of this card. */
+  html[data-exibicao='b'] [data-casa]:has(> [data-cena-heroi] .ic-titulo) {
     --heroi-span1-em: 5.126;
   }
 
   /* The framed screens (`ProdutoEmMoldura`: the real capture under ASSET-1's frame raster): 320 px of screen layer at 1440
-     and 280 at 390 (RECUT §6). The shared box (`.cm-produto-moldura` in secoes.css) does the rest: the capture is inset by
-     3 % of the screen layer's width, the frame is 1.06 x that wide and `--moldura-razao` x as tall. */
-  [data-casa] .cm-produto-moldura {
-    --produto-tela: clamp(280px, calc(280px + (100vw - 390px) * 40 / 1050), 320px);
+     and 280 at 390 (RECUT §6), read from the container (cqi) like the quadro. The shared box (`.cm-produto-moldura` in
+     secoes.css) does the rest: the capture is inset by 3 % of the screen layer's width, the frame is 1.06 x that wide and
+     `--moldura-razao` x as tall. */
+  [data-casa]:has(> [data-cena-heroi] .ic-titulo) .cm-produto-moldura {
+    --produto-tela: clamp(280px, calc(280px + (100cqi - 390px) * 40 / 1050), 320px);
   }
 
   /* The h1: one string, two inks. The first span is cacau on the day wall, the second papel on the night wall. */
@@ -375,7 +401,7 @@
     /* The hero's own box is the room (doc y 72 to 795); the stage follows it in the flow and band 2 lies over the stage. */
     [data-casa] [data-cena-heroi][aria-labelledby='ic-titulo'] {
       display: block;
-      padding-top: var(--heroi-alto);
+      min-block-size: var(--heroi-alto);
     }
 
     [data-casa] [data-cena-heroi][aria-labelledby='ic-titulo'] .cm-cena-texto {
@@ -396,7 +422,8 @@
     /* The lede and the one filled action hang on the night wall, right of the lamp. */
     [data-casa] .ic-noite-heroi {
       position: absolute;
-      top: var(--heroi-lede-topo);
+      top: auto;
+      bottom: var(--heroi-texto-fundo);
       left: var(--heroi-noite-esq);
       z-index: 2;
       width: var(--heroi-medida);
@@ -427,10 +454,10 @@
       top: var(--heroi-placa-topo);
       left: calc(
         var(--heroi-costura-x) - var(--cena-costura) *
-          (var(--cena-largura-max) * min(100vw, 1440px) / 1440 * var(--heroi-k))
+          (var(--cena-largura-max) * min(100cqi, 1440px) / 1440 * var(--heroi-k))
       );
       z-index: 1;
-      width: calc(var(--cena-largura-max) * min(100vw, 1440px) / 1440 * var(--heroi-k));
+      width: calc(var(--cena-largura-max) * min(100cqi, 1440px) / 1440 * var(--heroi-k));
     }
 
     [data-casa] [aria-labelledby='ic-titulo'] [data-camada='parede-esquerda'],
@@ -492,9 +519,9 @@
 
     /* Layer order, bottom to top: the day wall (the band's own) and the day floor; the day frame; the night sheet; the
        night column's content. Window 812 to 895 tall: the frames take the height they have (motion sheet §3.1). */
-    [data-casa] .ic-estagio .cm-produto-moldura {
+    [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-estagio .cm-produto-moldura {
       --produto-tela: min(
-        calc(clamp(280px, calc(280px + (100vw - 390px) * 40 / 1050), 320px) * var(--heroi-k)),
+        calc(clamp(280px, calc(280px + (100cqi - 390px) * 40 / 1050), 320px) * var(--heroi-k)),
         calc((100svh - var(--palco-quadro-livre)) / var(--moldura-razao))
       );
       /* The capture's surplus grows with the screen layer, so the travel of moment 5 grows with the room. */
@@ -657,6 +684,208 @@
     }
   }
 
+  /* ---- The room with enlarged text (item 11 of HOME-WIDTH) ------------------------------------------------------------ */
+  /* The room (the plate on the seam, the h1 across it, the lede on the night wall right of the lamp, the pinned stage) is
+     drawn for 1180 px of 16 px text. When the root text is larger, those 1180 px are fewer rem: at 200 % the h1 alone is
+     wider than the window, and the plate, moved by the first span, ends under the lede. The media query above reads the
+     window in px (and the page script reads the same one), so the hand-over is a container query in rem: it follows the
+     root font size, the way the shell's header does (`@container cm-cab (min-width: 67rem)`). Under 73.75 rem of container
+     the hero and band 2 flow as the stacked composition does (one column, the h1 wraps, the lede and the actions come
+     under it, the stage is a plain band), with the DOM of the room: the room-only layers are hidden and the frame, the
+     night column and the caption flow in the band. At 16 px of root, 73.75 rem are 1180 px, the media query's own
+     threshold, so this block never applies there: the room above is unchanged. Everything is read from the Início root. */
+  @media (min-width: 1180px) and (min-aspect-ratio: 1/1) {
+    @container (max-width: 73.75rem) {
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) [data-cena-heroi][aria-labelledby='ic-titulo'] {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        min-block-size: 0;
+        background-color: var(--color-cacau);
+        color: var(--color-papel);
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-titulo {
+        position: static;
+        z-index: auto;
+        display: flex;
+        flex-direction: column;
+        order: 1;
+        gap: 0;
+        white-space: normal;
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-titulo [data-h1-dia] {
+        display: block;
+        padding: var(--espaco-midia) var(--heroi-esq) var(--espaco-junto);
+        background-color: var(--color-papel);
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-titulo [data-h1-noite] {
+        display: block;
+        padding: var(--espaco-junto) var(--heroi-esq) 0;
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-noite-heroi {
+        position: static;
+        z-index: auto;
+        display: block;
+        order: 2;
+        width: auto;
+        padding: var(--espaco-pilha) var(--heroi-esq) 0;
+        grid-template-rows: none;
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-acoes {
+        margin-top: var(--espaco-grupo);
+        align-items: center;
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) [data-cena-heroi][aria-labelledby='ic-titulo'] .cm-cena-placa {
+        position: relative;
+        top: auto;
+        left: auto;
+        order: 3;
+        align-self: center;
+        width: min(100%, 760px);
+        margin-top: var(--espaco-grupo);
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) [aria-labelledby='ic-titulo'] [data-camada='parede-esquerda'],
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) [aria-labelledby='ic-titulo'] [data-camada='parede-direita'] {
+        top: 0;
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) [aria-labelledby='ic-titulo'] [data-camada='chao-esquerda'],
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) [aria-labelledby='ic-titulo'] [data-camada='chao-direita'] {
+        bottom: 0;
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-leg1 {
+        position: static;
+        z-index: auto;
+        order: 4;
+        padding: var(--espaco-junto) var(--heroi-esq) var(--espaco-pilha);
+      }
+
+      /* The caption is the day's by the data, but here it lies on the cacau wall of the stacked hero. */
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-leg1 [data-legenda] {
+        color: var(--color-papel);
+      }
+
+      /* Band 2: a plain cacau band, no track, no pin, no night sheet. */
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) [data-faixa][aria-labelledby='ic-noite'] {
+        padding-block: 0 var(--espaco-secao);
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) [data-faixa][aria-labelledby='ic-noite'] [data-faixa-lado] {
+        left: 0;
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) [data-faixa][aria-labelledby='ic-noite']:has([data-troca-fixo]) {
+        min-height: 0;
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) [data-faixa][aria-labelledby='ic-noite'] > .cm-faixa-quadro,
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) [data-faixa][aria-labelledby='ic-noite'] .cm-tom-da-faixa {
+        display: block;
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-estagio,
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-estagio[data-troca-fixo] {
+        position: static;
+        height: auto;
+        overflow-x: visible;
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-medida,
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-piso-dia,
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-folha {
+        display: none;
+      }
+
+      /* The day frame of the stage stands in the flow, centred, at the unscaled size of the frames below 1180. */
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-estagio .cm-produto-moldura {
+        --produto-tela: clamp(280px, calc(280px + (100cqi - 390px) * 40 / 1050), 320px);
+
+        position: relative;
+        bottom: auto;
+        left: auto;
+        margin: var(--espaco-secao) auto 0;
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-estagio [data-produto-acao] {
+        position: relative;
+        top: auto;
+        inset-inline: auto;
+        color: var(--color-papel);
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-estagio [data-produto-rolar]:focus-visible {
+        outline-color: var(--color-papel);
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-estagio [data-produto-rolar]:focus-visible [data-produto-acao] {
+        outline: 0;
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-noite-conteudo {
+        display: grid;
+        gap: 0;
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-noite-texto {
+        position: relative;
+        bottom: auto;
+        left: auto;
+        z-index: 1;
+        width: auto;
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-m06 {
+        position: relative;
+        top: auto;
+        left: auto;
+        z-index: auto;
+        isolation: isolate;
+        width: min(300px, 100%);
+        margin: var(--espaco-secao) auto 0;
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-m06::before {
+        position: absolute;
+        top: calc(var(--m06-chao-fracao) * 100%);
+        bottom: 0;
+        left: -100vw;
+        z-index: -1;
+        width: 300vw;
+        background-color: var(--color-texto-2);
+        content: '';
+      }
+
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-piso-noite {
+        position: relative;
+        bottom: auto;
+        left: auto;
+        z-index: auto;
+        isolation: isolate;
+        padding: var(--espaco-junto) 0;
+      }
+
+      /* The bar reaches both window edges like the ground strip above it: a layer behind the text, as `.ic-chao` does
+         (the band clips what spills). */
+      [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-piso-noite::before {
+        position: absolute;
+        inset-block: 0;
+        left: -100vw;
+        z-index: -1;
+        width: 300vw;
+        background-color: var(--color-texto-2);
+        content: '';
+      }
+    }
+  }
+
   /* ---- 1024 and more: the bands after the stage, two columns each -------------------------------------------- */
   @media (min-width: 1024px) {
     /* Band 3: the text centred on the frame (no dead wall under it), the frame standing on the night floor. The text
@@ -669,10 +898,10 @@
       row-gap: 0;
     }
 
-    [data-casa] .ic-tela .cm-produto-moldura {
+    [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-tela .cm-produto-moldura {
       /* The frame follows the quadro like the room does (the width ratio only: 1 up to 1440), so on a wide window the
-         gap between the heading and the frame closes instead of opening past 400 px. */
-      --produto-tela: calc(clamp(280px, calc(280px + (100vw - 390px) * 40 / 1050), 320px) * var(--heroi-k-largura));
+         gap between the heading and the frame closes instead of opening past 400 px. Read from the container (cqi). */
+      --produto-tela: calc(clamp(280px, calc(280px + (100cqi - 390px) * 40 / 1050), 320px) * var(--heroi-k-largura));
 
       align-self: end;
       justify-self: center;
