@@ -16,7 +16,8 @@ import m05Webp900 from '../../assets/cenas/inicio/m05-sol-900w.webp'
 import m05Webp1672 from '../../assets/cenas/inicio/m05-sol-1672w.webp'
 import m05Sol390 from '../../assets/cenas/inicio/m05-sol-390c-780w.webp?w=390;780&format=avif;webp&as=picture'
 import m06Apagada from '../../assets/cenas/inicio/m06-apagada-792w.webp?w=300;396;600;792&format=avif;webp&as=picture'
-import m11Janela from '../../assets/cenas/nao-encontrada/m11-janela-542w.webp?w=340;361;542&format=avif;webp&as=picture'
+import m04Faixa from '../../assets/cenas/inicio-faixas/m04-faixa-1200w.webp?w=1200&format=webp&lossless=true&as=picture'
+import m11Apagada from '../../assets/cenas/inicio-faixas/m11-apagada-542w.webp?w=326;542&format=webp&lossless=true&as=picture'
 
 // The files of the page. M04 and M05 are FIXED files under `web/src/assets/cenas/inicio/` (PROVENANCE.md there): an AVIF
 // 4:4:4 ladder whose ground is calibrated on the decoded output, and a WebP ladder, both exported once from the lossless
@@ -138,6 +139,57 @@ export const M04: Imagem = placaFixa(
 )
 
 /**
+ * The `Imagem` of a WebP-only plate from `src/assets/cenas/inicio-faixas/` (HOME-SECOND-HALF). Those masters are LOSSLESS
+ * (the import query asks for the lossless encoder): the plate's flat ground is a token colour that a lossy encode would shift, and the
+ * band meets its neighbour on that ground without a seam. No AVIF: the lossy codec cannot hold the ground either.
+ */
+function placaWebp(gerada: { sources: Record<string, string>; img: { src: string; w: number; h: number } }, sizes: string, larguraDoSrc: number, altura: number = gerada.img.h) {
+  // With one width the build leaves the fallback format out of `sources`: the only file is `img.src`, bare (no `w`
+  // descriptor), and its descriptor is the plate's width.
+  const bruto: string = gerada.sources.webp ?? gerada.img.src
+  const webp = bruto
+    .split(', ')
+    .map((item) => (/\s\d+w$/.test(item) ? item : `${item} ${gerada.img.w}w`))
+    .join(', ')
+  const entrada = webp.split(', ').find((item) => item.endsWith(` ${larguraDoSrc}w`))
+  if (entrada === undefined) throw new Error(`placaWebp: no WebP file of ${larguraDoSrc}w`)
+  return { src: entrada.slice(0, entrada.lastIndexOf(' ')), srcSet: webp, sizes, largura: gerada.img.w, altura } satisfies Imagem
+}
+
+/**
+ * M04 of band 4 (HOME-SECOND-HALF): the 1200 × 870 plate of the 15:00 scene, the mat to row 853 and 17 rows of ground
+ * above, lossless. The band's frame (`1200 / 832`, clipped) shows its rows 0 to 832; the band line cuts the mat. Drawn at
+ * `--faixa4-placa` (720 at 1440, the whole width stacked), so the one file serves 1× and 2×. The older `M04` ladder
+ * above stays for `inicioCapturas.test.ts`, which pins it.
+ */
+export const M04_FAIXA: Imagem = placaWebp(m04Faixa, '(min-width: 1024px) min(50vw, 1040px), 100vw', 1200)
+
+/**
+ * The Notas capture of band 5 (HOME-SECOND-HALF): `/telas/t1i/notas-*.webp` (MANIFESTO.json of that folder: 280, 320,
+ * 560 and 640 wide, 640 × 1385 the largest), in the day frame on the areia rug. Same widths as the other captures.
+ */
+export const CAPTURA_NOTAS: Imagem = imagemPublica({
+  src: '/telas/t1i/notas-320w.webp',
+  srcSet: '/telas/t1i/notas-280w.webp 280w, /telas/t1i/notas-320w.webp 320w, /telas/t1i/notas-560w.webp 560w, /telas/t1i/notas-640w.webp 640w',
+  sizes: '(min-width: 1440px) 320px, (max-width: 390px) 280px, calc(280px + (100vw - 390px) * 40 / 1050)',
+  largura: 640,
+  altura: 1385,
+})
+
+/**
+ * The door of band 6 (HOME-SECOND-HALF): the night corridor, a hand with the key at a closed door, 1254 × 1070 with the
+ * floor strip cut out, lossless (the wall is `cacau` to the pixel). Shown at `min(var(--faixa6-porta), 627px)`.
+ */
+export const PORTA_NOITE: Imagem = imagemPublica({
+  src: '/cenas/inicio-faixas/porta-noite-720w.webp',
+  srcSet:
+    '/cenas/inicio-faixas/porta-noite-390w.webp 390w, /cenas/inicio-faixas/porta-noite-720w.webp 720w, /cenas/inicio-faixas/porta-noite-780w.webp 780w, /cenas/inicio-faixas/porta-noite-1254w.webp 1254w',
+  sizes: '(min-width: 1024px) min(43vw, 627px), 100vw',
+  largura: 1254,
+  altura: 1070,
+})
+
+/**
  * The device frames (ASSET-1, `web/public/molduras/`, PROVENANCE.md there): a PNG with a hole where the screen goes, the
  * real capture under it. The day frame stands on the papel wall, the night frame on cacau (and as the night twin).
  * 678 x 1423 = the screen layer's width x 1.06 by its height x 2.2241 (`--moldura-razao`).
@@ -187,10 +239,20 @@ export const ESTILO_DA_ROLAGEM = {
 } as CSSProperties
 
 /**
- * M11 (ASSET-2, served for the 404 under `web/public/cenas/nao-encontrada/`): a street corner at night with one lit
- * window, already set on the cacau wall. The closing band stands it on the night floor. 542 x 421 is the largest file.
+ * M11 of band 7 (HOME-SECOND-HALF): the street corner at night with the four panes UNLIT (`inicio-faixas`, lossless,
+ * 326 and 542 wide: the master holds 542 px, so no 1440 w file exists). The lit panes are `LUZ_M11`, a layer over it.
+ * The figure is `min(var(--fecho-janela), 542px)` wide: 542 at 1440, 326 at 390.
  */
-export const M11_JANELA: Imagem = placa(m11Janela, '(min-width: 1024px) 420px, 340px', 542)
+export const M11_JANELA: Imagem = placaWebp(m11Apagada, '(min-width: 1084px) 542px, 326px', 542)
+
+/** The lit panes of M11: one RGBA layer in the plate's own box, opacity only (`LuzDaLampada`, key `casa-luz-m11`). */
+export const LUZ_M11: Imagem = imagemPublica({
+  src: '/cenas/inicio-faixas/m11-luz-542w.png',
+  srcSet: '/cenas/inicio-faixas/m11-luz-326w.png 326w, /cenas/inicio-faixas/m11-luz-542w.png 542w',
+  sizes: '(min-width: 1084px) 542px, 326px',
+  largura: 542,
+  altura: 421,
+})
 
 /**
  * State `N` of the manifest (recaptured 19/11/2026, clock fixed 18/11 21:42): Hoje in the madrugada theme (dark), the

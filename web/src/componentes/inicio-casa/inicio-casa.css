@@ -10,8 +10,8 @@
      framed screen) is band 2 itself: its walls, floors, frame and night sheet are the band's layers (moment 2).
    - Stacked, everywhere else (below 1180 px, and any portrait window such as 1024 x 1366): one column, the page is
      night from the h1's second line down (RECUT §4); the plate is sized by the window's height on short screens.
-   The bands below the stage switch at 1024 px: from there each one is two columns (heading left, rows or scene right)
-   and the cacau bands stand their object on the night floor (`.ic-chao`), edge to edge.
+   The bands below the stage switch at 1024 px: from there each one is two columns (text left, object or field right) and
+   each object stands on its band's edge; no band has a floor strip.
 
    Seven axes (existing direction retained):
    1. Skeleton: full-bleed stacked bands; each care moment keeps its own ground across the viewport.
@@ -27,10 +27,10 @@
       clean edge (no 0.5 px of floor over it at 1440, no strip of wall under the floor below 1440).
    - Band 2, stacked: M06's night floor starts at 0.8599 of the plate (`--m06-chao-fracao`, 555.2 of 645.69) and runs to
      both edges of the window; the room keeps the stage's own floor strip.
-   - Band 3: the frame stands on the night floor (`.ic-chao`, `midia` high), edge to edge.
-   - Band 4: M04's crop is 1200 x 800 of the 1200 x 870 art (it ends above the foot of the rug) and stands on the day
-     floor (`.ic-chao-dia`, areia), the band has no bottom padding; from 1024 the 600 px scene bleeds off the left edge
-     (`--so-sangria` = the quadro's margin or the gutter), below 1024 off both.
+   - Bands 3 to 7 (HOME-SECOND-HALF): no floor strip; each object stands on its band's edge.
+   - Band 4: the plate's frame shows rows 0 to 832 of the 1200 x 870 art; the band line cuts the mat and the
+     next band's areia goes on from there; the band has no bottom padding. From 1024 the plate bleeds off the left edge
+     (by the quadro's margin), below 1024 off both.
    - Display variant C: the 16:00 caption ends one `bloco` left of the seam (`--heroi-costura-x`).
 
    Hero text sizes are the DESIGN.md levels (`text-exibicao`, `text-abertura`, `text-titulo-1`, `text-corpo`). */
@@ -119,6 +119,18 @@
     /* M06's own floor line as a fraction of the plate's height (555.2 of 645.69 at 395.5 wide, RECUT): the stacked
        composition runs the night floor on to both edges of the window from this line down. */
     --m06-chao-fracao: 0.8599;
+
+    /* The widths of bands 4 to 7 (HOME-SECOND-HALF; the WIDTH card did not land them, so they are declared here, once).
+       Each one is read from the container (cqi) where it is used, never on this element. The plate of band 4 is half the
+       container up to 1040 px (720 at 1440); the door field of band 6 is 43 cqi (619 at 1440); the street of band 7 is
+       half the container between 326 and 720 px, held to the 326 px of a 390 window (the plate's own width there). The
+       second edge is the one x that band 4's text, band 6's heading and the door field's left edge share (821 at 1440).
+       The text of band 4 ends 28 px above the band line (the floor rule of WIDTH). */
+    --faixa4-placa: min(50cqi, 1040px);
+    --faixa6-porta: 43cqi;
+    --fecho-janela: clamp(min(326px, 100cqi - 2 * var(--quadro-calha)), 50cqi, 720px);
+    --segunda-borda: calc(100cqi - var(--faixa6-porta));
+    --faixa-texto-fundo: 28px;
   }
 
   /* Display variant B (`?exibicao=b`, FG-2b): its own face is wider or narrower than Literata's, so its first span has
@@ -385,14 +397,39 @@
       gap: var(--espaco-pilha);
     }
 
+    /* Band 4: the text, then the plate full-bleed on the band line. */
     [data-casa] .ic-so {
       display: grid;
       gap: var(--espaco-midia);
     }
 
-    /* Band 4: the scene stands on the day floor, which follows it with no gap (its bleed is set after `.ic-so-cena`). */
-    [data-casa] .ic-so .ic-chao {
-      margin-top: calc(-1 * var(--espaco-midia));
+    /* Band 5: the statement, then the frame on the band line. */
+    [data-casa] .ic-prova {
+      display: grid;
+      justify-items: center;
+      gap: var(--espaco-midia);
+    }
+
+    [data-casa] .ic-prova .cm-faixa-prova {
+      justify-self: stretch;
+    }
+
+    /* Band 6: the heading, the four rows, then the door field full-bleed on the band line (13:10, the plate's foot). */
+    [data-casa] .ic-perguntas {
+      display: grid;
+      gap: var(--espaco-bloco);
+    }
+
+    [data-casa] .ic-porta {
+      aspect-ratio: 13 / 10;
+      margin-inline: calc(-1 * var(--quadro-calha));
+    }
+
+    [data-casa] .ic-porta img {
+      inline-size: 100%;
+      block-size: 100%;
+      object-fit: cover;
+      object-position: 50% 100%;
     }
   }
 
@@ -891,10 +928,10 @@
     }
   }
 
-  /* ---- 1024 and more: the bands after the stage, two columns each -------------------------------------------- */
+  /* ---- 1024 and more: the bands after the stage ------------------------------------------------------------------ */
   @media (min-width: 1024px) {
-    /* Band 3: the text centred on the frame (no dead wall under it), the frame standing on the night floor. The text
-       column takes what the frame leaves, so "Dormiu às 20:30." stays on one line at 1440. */
+    /* Band 3: the text beside the frame, centred on it; the frame right-aligned to the quadro and standing on the band's
+       bottom edge (the band has no bottom padding, so the band's height is `secao` plus the frame's). */
     [data-casa] .ic-tela {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
@@ -909,7 +946,7 @@
       --produto-tela: calc(clamp(280px, calc(280px + (100cqi - 390px) * 40 / 1050), 320px) * var(--heroi-k-largura));
 
       align-self: end;
-      justify-self: center;
+      justify-self: end;
     }
 
     [data-casa] .ic-tela-texto,
@@ -918,61 +955,86 @@
       gap: var(--espaco-pilha);
     }
 
-    /* Band 4: the answer on the left, the scene on the right. */
-    /* The scene (600 px, M04's `sizes`) bleeds off the window's left edge, where the crop cuts the shelf, and stands on
-       the day floor under it: the scene first, the answer right of it, the floor across both. */
+    /* Band 4: the plate flush with the window's left edge and the band line, the text on the second edge, its last line
+       28 px above the band line. The first column ends at the second edge; the plate takes the quadro's margin back. */
     [data-casa] .ic-so {
-      --so-sangria: max(var(--quadro-calha), (100vw - var(--quadro-largura)) / 2);
-
       display: grid;
-      grid-template-columns: calc(600px - var(--so-sangria)) minmax(0, 1fr);
-      align-items: center;
-      column-gap: var(--espaco-midia);
-    }
-
-    [data-casa] .ic-so-cena {
-      grid-row: 1;
-      grid-column: 1;
-      align-self: end;
+      grid-template-columns: calc(var(--segunda-borda) - var(--quadro-margem)) minmax(0, 1fr);
+      align-items: end;
     }
 
     [data-casa] .ic-so-texto {
       grid-row: 1;
       grid-column: 2;
+      padding-block-end: var(--faixa-texto-fundo);
     }
 
-    /* Bands 5 and 6: the heading (and its sentence) left, the rows right, one row size and one rule between rows. */
-    [data-casa] .ic-prova .cm-faixa-prova,
-    [data-casa] .ic-perguntas .cm-perguntas {
-      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-      grid-template-rows: auto 1fr;
-      align-items: start;
+    /* Band 5: the statement on the left (a measure of 640 at most), the Notas frame right-aligned to the quadro on the
+       band line. The text keeps one `secao` under the list where the list is the taller of the two. */
+    [data-casa] .ic-prova {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: end;
       column-gap: var(--espaco-midia);
-      row-gap: var(--espaco-pilha);
     }
 
-    [data-casa] .ic-prova .cm-faixa-prova > h2,
-    [data-casa] .ic-prova .cm-faixa-prova > p,
+    [data-casa] .ic-prova .cm-faixa-prova {
+      align-self: start;
+      padding-block-end: var(--espaco-secao);
+    }
+
+    [data-casa] .ic-prova .cm-produto-moldura {
+      justify-self: end;
+    }
+
+    /* Band 6: the questions left, from the quadro edge to the second edge less one `midia`; the heading right, on the
+       second edge, as the lintel; the door field under it, from the second edge to the right window edge and down to the
+       band line. The field's track is the quadro's part of it; its margin takes the window's part. */
+    [data-casa] .ic-perguntas {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) calc(var(--faixa6-porta) - var(--quadro-margem));
+      grid-template-rows: auto 1fr;
+      column-gap: var(--espaco-midia);
+      row-gap: var(--espaco-bloco);
+    }
+
     [data-casa] .ic-perguntas .cm-perguntas > h2 {
-      grid-column: 1;
+      grid-row: 1;
+      grid-column: 2;
     }
 
-    [data-casa] .ic-prova [data-prova-lista],
     [data-casa] .ic-perguntas .cm-perguntas-lista {
-      grid-column: 2;
       grid-row: 1 / span 2;
+      grid-column: 1;
       max-width: none;
       margin: 0;
+      padding-block-end: var(--espaco-secao);
+    }
+
+    [data-casa] .ic-porta {
+      grid-row: 2;
+      grid-column: 2;
+      margin-inline-end: calc(-1 * var(--quadro-margem));
+    }
+
+    [data-casa] .ic-porta img {
+      inline-size: min(var(--faixa6-porta), 627px);
+      block-size: auto;
     }
   }
 
-  /* The questions are rows like the facts: a rule between them, the same padding. */
+  /* Band 6: the shared block dissolves into the page's grid, so the heading and the field share a grid. The heading and the
+     list stay in the tree. The questions are rows: a rule between them, `grupo` of padding. */
+  [data-casa] .ic-perguntas .cm-perguntas {
+    display: contents;
+  }
+
   [data-casa] .ic-perguntas .cm-perguntas-lista {
     gap: 0;
   }
 
   [data-casa] .ic-perguntas .cm-perguntas-lista > li {
-    padding-block: var(--espaco-pilha);
+    padding-block: var(--espaco-grupo);
     border-top: 1px solid currentcolor;
   }
 
@@ -980,97 +1042,149 @@
     border-bottom: 1px solid currentcolor;
   }
 
-  /* ---- The night floor of the cacau bands (3 and 7): a `chao-noite` strip from edge to edge, the object on it ---- */
+  /* The door field: cacau, the wall of the door plate (the plate's own ground is the same token), so the plate has no
+     visible box. The plate stands in its bottom-right corner; the frame clips it while it enters (inicio-faixas.css). */
+  [data-casa] .ic-porta {
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    min-inline-size: 0;
+    background-color: var(--color-cacau);
+    overflow: clip;
+  }
+
+  [data-casa] .ic-porta img {
+    display: block;
+    max-inline-size: none;
+  }
+
+  /* Bands 3 to 7 stand their object on the band's edge: no bottom padding (band 7 also opens one `secao-ampla`). Nothing
+     is drawn under an object: a floor is only the continuation of a plate. */
   [data-casa] [data-faixa]:has(.ic-tela),
   [data-casa] [data-faixa]:has(.ic-so),
+  [data-casa] [data-faixa]:has(.ic-prova),
+  [data-casa] [data-faixa]:has(.ic-perguntas),
   [data-casa] [data-faixa]:has(.ic-fecho) {
     padding-bottom: 0;
   }
 
-  /* Like CenaHeroi's floors: a solid layer that runs on to both edges of the window (the band clips it, overflow-x). */
-  [data-casa] .ic-chao {
-    position: relative;
-    grid-column: 1 / -1;
-    justify-self: stretch;
-    height: var(--espaco-midia);
+  [data-casa] [data-faixa]:has(.ic-fecho) {
+    padding-top: var(--espaco-secao-ampla);
   }
 
-  [data-casa] .ic-chao::before {
-    position: absolute;
-    inset-block: 0;
-    left: -100vw;
-    width: 300vw;
-    background-color: var(--color-texto-2);
-    content: '';
-  }
-
-  /* Band 4's floor is the day one: areia, the token of the hero's and the stage's day floors. */
-  [data-casa] .ic-chao-dia::before {
-    background-color: var(--color-areia);
-  }
-
-  /* Band 3 below 1024: the frame sits on the floor (the column's gap is cancelled above the floor). */
-  @media (max-width: 1023px) {
-    [data-casa] .ic-tela .ic-chao {
-      margin-top: calc(-1 * var(--espaco-midia));
-    }
-  }
-
-  /* Band 7: the closing (centred, the only centred block) and M11 under it, its dark foot cut (it keeps 91.7 % of its
-     height, the 404's cut), standing on the night floor. */
+  /* Band 7: the closing (centred, the only centred block), then M11 on the band's bottom edge, its dark foot cut (542 x
+     386 of the 542 x 421 plate). The light layer is the plate's own box, so it keeps the plate's proportion. */
   [data-casa] .ic-fecho {
     display: grid;
     justify-items: center;
-    row-gap: var(--espaco-midia);
+    row-gap: var(--espaco-bloco);
   }
 
   [data-casa] .ic-fecho-cena {
-    width: min(100%, 340px);
+    position: relative;
+    inline-size: min(var(--fecho-janela), 542px);
     aspect-ratio: 542 / 386;
-    margin: 0 0 calc(-1 * var(--espaco-midia));
-    overflow: hidden;
+    margin: 0;
+    overflow: clip;
   }
 
-  [data-casa] .ic-fecho-cena img {
+  [data-casa] .ic-fecho-cena img:not([data-luz]) {
     display: block;
-    width: 100%;
-    height: auto;
+    inline-size: 100%;
+    block-size: auto;
   }
 
-  @media (min-width: 1024px) {
-    [data-casa] .ic-fecho-cena {
-      width: 420px;
-    }
+  [data-casa] .ic-fecho-cena [data-luz-grupo] {
+    inset-block-end: auto;
+    aspect-ratio: 542 / 421;
+  }
+
+  /* The panes come on in the catalogue's M11 time (`--luz-fecho-ms`, set by the page from CATALOGO.M11). */
+  [data-casa] .ic-fecho-cena [data-luz] {
+    transition-duration: var(--luz-fecho-ms);
   }
 
   [data-casa] .ic-h2-exibicao {
     font-weight: var(--peso-exibicao);
   }
 
-  /* M04's art is 1200 x 870; the crop (1200 x 800) ends just above the foot of the rug, so the scene stands on the
-     day floor (`.ic-chao-dia`) that follows it, with no gap and no cut visible. */
+  /* Band 4: the plate's frame shows rows 0 to 832 of the 870 (1200 / 832), clipped, the image top-aligned; the band line
+     cuts the mat at its widest row and band 5's areia goes on from there. Below 1024 the plate is the window's width. */
   [data-casa] .ic-so-cena {
     margin: 0;
-    aspect-ratio: 1200 / 800;
-    overflow: hidden;
+    aspect-ratio: 1200 / 832;
+    overflow: clip;
+    inline-size: 100cqi;
   }
 
   [data-casa] .ic-so-cena img {
     display: block;
-    width: 100%;
-    height: auto;
+    inline-size: 100%;
+    block-size: auto;
   }
 
-  /* The scene bleeds off the window's left edge (below 1024 off both, one gutter each). After the base rule above. */
   @media (max-width: 1023px) {
     [data-casa] .ic-so-cena {
       margin-inline: calc(-1 * var(--quadro-calha));
     }
   }
 
+  /* From 1024 the plate is `--faixa4-placa` wide in the first column and takes the quadro's margin back, so it is flush
+     with the window's left edge. After the base rule above. */
   @media (min-width: 1024px) {
     [data-casa] .ic-so-cena {
-      margin-inline: calc(-1 * var(--so-sangria)) 0;
+      grid-row: 1;
+      grid-column: 1;
+      inline-size: var(--faixa4-placa);
+      margin-inline: calc(-1 * var(--quadro-margem)) 0;
+    }
+  }
+
+  /* Band 5: the five hairlines of the facts (one before each fact and one under the last) are drawn by the page, not by
+     a border, so they can draw once: `scaleX(0)` to `scaleX(1)`, from the left, 400 ms linear, when the wrapper is signed
+     (`data-assinada`: 60 % of it in view, at once with reduced motion). They never undraw. */
+  [data-casa] .ic-prova [data-prova-lista] {
+    max-width: var(--leitura);
+    margin: 0;
+  }
+
+  [data-casa] .ic-prova [data-prova-lista] > li {
+    position: relative;
+    border-top: 0;
+    border-bottom: 0;
+  }
+
+  [data-casa] .ic-prova [data-prova-lista] > li::before {
+    position: absolute;
+    inset: 0 0 auto;
+    block-size: 1px;
+    background-color: currentcolor;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 400ms linear;
+    content: '';
+  }
+
+  [data-casa] .ic-prova [data-prova-lista] > li:last-child::after {
+    position: absolute;
+    inset: auto 0 0;
+    block-size: 1px;
+    background-color: currentcolor;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 400ms linear;
+    content: '';
+  }
+
+  [data-casa] .ic-prova[data-assinada] [data-prova-lista] > li::before,
+  [data-casa] .ic-prova[data-assinada] [data-prova-lista] > li:last-child::after {
+    transform: scaleX(1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-casa] .ic-prova [data-prova-lista] > li::before,
+    [data-casa] .ic-prova [data-prova-lista] > li:last-child::after {
+      transition: none;
     }
   }
 
@@ -1300,9 +1414,72 @@
   }
 }
 
-/* Outside the layers on purpose: the facts of band 5 are rows of one size (judge point "one row size"), and the shared
-   FaixaProva gives the first one the `text-abertura` utility, which a rule in the components layer cannot outweigh. */
+/* The type of bands 3 to 7 (HOME-SECOND-HALF, DIRECAO 3.8), outside the layers on purpose: the shared pieces set their
+   sizes with the `text-*` utilities (a utilities-layer class, which a rule in the components layer cannot outweigh), and
+   the page sets the sizes it needs here from the same token variables, with no new size, no new variable and no italic.
+   Band 3's hour is the 404's out-of-scale level (112 / 56); bands 5 and 7 state in `exibicao` (80 / 44); the questions of
+   band 6 are `titulo-2` (36 / 28); the sentence of band 5 is `titulo-3`; the second fact is `titulo-4`; the rest is body. */
+
+/* Band 3: two lines, "Dormiu" and "às 20:30.", by the width in em (never a `<br>`); lining, tabular figures. */
+[data-casa] .ic-tela-texto h2 {
+  max-inline-size: 4.8em;
+  font-size: var(--texto-exibicao-404-tamanho);
+  line-height: var(--texto-exibicao-404-entrelinha);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+[data-casa] .ic-tela-texto p {
+  max-inline-size: var(--heroi-medida);
+}
+
+/* Band 4: the answer keeps the page's night-column measure. */
+[data-casa] .ic-so-texto p {
+  max-inline-size: var(--heroi-medida);
+}
+
+/* Band 5: the statement. */
+[data-casa] .ic-prova .cm-faixa-prova {
+  gap: 0;
+}
+
+[data-casa] .ic-prova .cm-faixa-prova > h2 {
+  margin-block-end: var(--espaco-grupo);
+  font-size: var(--texto-exibicao-tamanho);
+  line-height: var(--texto-exibicao-entrelinha);
+  font-weight: var(--peso-exibicao);
+}
+
+[data-casa] .ic-prova .cm-faixa-prova > p {
+  margin-block-end: var(--espaco-bloco);
+  font-family: var(--fonte-titulo);
+  font-size: var(--texto-titulo-3-tamanho);
+  line-height: var(--texto-titulo-3-entrelinha);
+}
+
+/* The facts are rows of one size (judge point "one row size"), and the shared FaixaProva gives the first one the
+   `text-abertura` utility: body size for all, then the second one, the note the phone proves, one level up. */
 [data-casa] .ic-prova [data-prova-lista] > li {
   font-size: var(--texto-corpo-tamanho);
   line-height: var(--texto-corpo-entrelinha);
+}
+
+[data-casa] .ic-prova [data-prova-lista] > li:nth-child(2) {
+  font-family: var(--fonte-titulo);
+  font-size: var(--texto-titulo-4-tamanho);
+  line-height: var(--texto-titulo-4-entrelinha);
+}
+
+/* Band 6: the questions are the display lines of the band; the answers stay body. */
+[data-casa] .ic-perguntas .cm-perguntas-lista h3 {
+  font-size: var(--texto-titulo-2-tamanho);
+  line-height: var(--texto-titulo-2-entrelinha);
+}
+
+/* Band 7: the closing statement in two balanced lines. */
+[data-casa] .ic-fecho .cm-fechamento > h2 {
+  max-inline-size: 10em;
+  font-size: var(--texto-exibicao-tamanho);
+  line-height: var(--texto-exibicao-entrelinha);
+  font-weight: var(--peso-exibicao);
+  text-wrap: balance;
 }

@@ -2,6 +2,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { act } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { INI } from '../conteudo/inicio.ts'
 import { INICIO as INICIO_ANTIGO } from '../conteudo/textos.ts'
 import { CATALOGO } from '../movimento/catalogo.ts'
 import { aguardarCarga, renderizarRota } from '../teste/renderizarRota.tsx'
@@ -236,17 +237,18 @@ describe('REPH-I-01 composition of /: one [data-casa], the seven bands in order,
     expect(principal().querySelector('[data-fechamento]')!.getAttribute('data-tom')).toBe('noite')
   })
 
-  it('REPH-I-01 /: two framed real screens, each a [data-produto-tela] with its deck alt', async () => {
+  it('REPH-I-01 /: three framed real screens (one per fold: Histórico, Hoje, Notas), each a [data-produto-tela] with its deck alt', async () => {
+    // HOME-SECOND-HALF (AVALIACAO S-16, FREEZE 1.5 exception E38): band 5 adds the Notas capture to the two of the stage and band 3.
     await abrir(1440)
     const telas = [...principal().querySelectorAll<HTMLImageElement>('[data-produto-tela]')]
-    expect(telas.map((t) => t.getAttribute('alt'))).toEqual([COPY.altTela1, COPY.altTela2])
+    expect(telas.map((t) => t.getAttribute('alt'))).toEqual([COPY.altTela1, COPY.altTela2, INI.altNotas])
   })
 
-  it('REPH-I-01 /: each framed screen is a real capture under ASSET-1\'s frame raster (day on band 2, night on band 3), and no device is drawn in CSS', async () => {
+  it('REPH-I-01 /: each framed screen is a real capture under ASSET-1\'s frame raster (day on band 2, night on band 3, day on band 5), and no device is drawn in CSS', async () => {
     await abrir(1440)
     const artes = [...principal().querySelectorAll<HTMLImageElement>('[data-produto-moldura-arte]')]
-    expect(artes.map((a) => a.tagName)).toEqual(['IMG', 'IMG'])
-    expect(artes.map((a) => a.getAttribute('src'))).toEqual(['/molduras/moldura-dia.png', '/molduras/moldura-noite.png'])
+    expect(artes.map((a) => a.tagName)).toEqual(['IMG', 'IMG', 'IMG'])
+    expect(artes.map((a) => a.getAttribute('src'))).toEqual(['/molduras/moldura-dia.png', '/molduras/moldura-noite.png', '/molduras/moldura-dia.png'])
     for (const arte of artes) {
       expect(arte.getAttribute('alt')).toBe('')
       expect(arte.getAttribute('aria-hidden')).toBe('true')
@@ -258,7 +260,8 @@ describe('REPH-I-01 composition of /: one [data-casa], the seven bands in order,
   it('REPH-I-01 at 390 the first frame is the night raster on the cacau wall, and no device is drawn in CSS', async () => {
     await abrir(390)
     const artes = [...principal().querySelectorAll<HTMLImageElement>('[data-produto-moldura-arte]')]
-    expect(artes.map((a) => a.getAttribute('src'))).toEqual(['/molduras/moldura-noite.png', '/molduras/moldura-noite.png'])
+    // The two night frames (the hero's, then band 3's), then band 5's day frame on the areia rug.
+    expect(artes.map((a) => a.getAttribute('src'))).toEqual(['/molduras/moldura-noite.png', '/molduras/moldura-noite.png', '/molduras/moldura-dia.png'])
     expect(principal().querySelector('.ic-aparelho, .ic-aparelho-corpo, [data-corpo]')).toBeNull()
   })
 
@@ -661,8 +664,9 @@ describe('REPH-I-11 pinned stage (1440 x 900): one stage in band 2, one night sh
     expect(gemeaTela.getAttribute('src')).toBe(principal().querySelector('[data-produto-tela]')!.getAttribute('src'))
     // None of the marks the meter counts a framed screen by.
     expect(folha.querySelector('[data-produto-tela], [data-produto-moldura], [data-produto-moldura-arte]')).toBeNull()
-    // The twin is invisible to the tree: only the day frame counts as a framed real screen.
-    expect(principal().querySelectorAll('[data-produto-tela]')).toHaveLength(2)
+    // The twin is invisible to the tree: only the day frame counts as a framed real screen. The page holds three (the
+    // stage's, band 3's and, since HOME-SECOND-HALF, band 5's Notas capture: FREEZE 1.5 exception E38).
+    expect(principal().querySelectorAll('[data-produto-tela]')).toHaveLength(3)
   })
 
   it('REPH-I-11 /: the sheet is never clipped by clip-path or sized by width in its inline style, only by transform', async () => {
@@ -830,27 +834,28 @@ describe('HOME-FINAL every phone shows a real app screen; the lower bands carry 
     })
   }
 
-  it('the closing band stands M11 (the lit window, decorative, empty alt) on the night floor, after the closing block', async () => {
+  it('the closing band stands M11 (the unlit street window, decorative, empty alt) on the band edge, after the closing block', async () => {
+    // HOME-SECOND-HALF (AVALIACAO S-09): no floor node; M11 is the last box of the band and its own bottom is the band's.
     await abrir(1440)
     const fecho = principal().querySelector('.ic-fecho')!
     expect(fecho.querySelector('[data-fechamento]')).not.toBeNull()
-    const janela = fecho.querySelector<HTMLImageElement>('.ic-fecho-cena img')!
+    const janela = fecho.querySelector<HTMLImageElement>('.ic-fecho-cena img:not([data-luz])')!
     // M11 comes from vite-imagetools (LIB-IMG): a generated URL, the 542w file of its own srcset.
     expect(janela.getAttribute('src')).toMatch(/^\/@imagetools\/[\w-]+$/)
     expect(janela.getAttribute('srcset')).toContain(`${janela.getAttribute('src')!} 542w`)
     expect(janela.getAttribute('alt')).toBe('')
     expect([janela.getAttribute('width'), janela.getAttribute('height')]).toEqual(['542', '421'])
     expect(janela.getAttribute('loading')).toBe('lazy')
-    const chao = fecho.lastElementChild!
-    expect(chao.classList.contains('ic-chao')).toBe(true)
-    expect(chao.getAttribute('aria-hidden')).toBe('true')
+    expect(fecho.lastElementChild!.classList.contains('ic-fecho-cena')).toBe(true)
+    expect(fecho.querySelector('.ic-chao')).toBeNull()
   })
 
-  it('the sleep band stands its frame on the night floor', async () => {
+  it('the sleep band stands its frame on the band edge: the frame is its last box and no floor node follows it', async () => {
     await abrir(1440)
     const tela = principal().querySelector('.ic-tela')!
     expect(tela.querySelector('[data-produto-moldura]')).not.toBeNull()
-    expect(tela.lastElementChild!.classList.contains('ic-chao')).toBe(true)
+    expect(tela.lastElementChild!.hasAttribute('data-produto-moldura')).toBe(true)
+    expect(tela.querySelector('.ic-chao')).toBeNull()
   })
 
   it('F1: the sleep frame shows the whole 390:880 Hoje capture (640 x 1444), contained on the app paper, never cropped', async () => {
@@ -1070,22 +1075,19 @@ describe('HOME-SEAMS S6: display variant C holds the 16:00 caption left of the s
   })
 })
 
-describe('HOME-SEAMS S2: band 4 stands the scene on a day floor that runs to the band edge', () => {
-  it('.ic-so ends in an aria-hidden .ic-chao.ic-chao-dia, after the scene', async () => {
+describe('HOME-SEAMS S2 (superseded by HOME-SECOND-HALF, AVALIACAO S-09): band 4 has no floor; the band line cuts the mat', () => {
+  it('.ic-so ends in the scene or the text and holds no .ic-chao node', async () => {
     await abrir(1440)
     const so = principal().querySelector('.ic-so')!
-    const chao = so.lastElementChild!
-    expect(chao.classList.contains('ic-chao')).toBe(true)
-    expect(chao.classList.contains('ic-chao-dia')).toBe(true)
-    expect(chao.getAttribute('aria-hidden')).toBe('true')
-    expect(so.querySelector('.ic-so-cena')!.compareDocumentPosition(chao) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(so.querySelector('.ic-chao')).toBeNull()
+    expect(so.querySelector('.ic-so-cena')).not.toBeNull()
+    expect(so.lastElementChild!.classList.contains('ic-so-cena')).toBe(true)
   })
 
-  it('the stylesheet gives the floor the areia token, the band no bottom padding, and crops the scene at the rug', () => {
+  it('the stylesheet gives the band no bottom padding and shows rows 0-832 of the plate (1200 / 832), clipped', () => {
     const css = cssDaCasa()
-    expect(css).toMatch(/\[data-casa\] \.ic-chao-dia::before \{ background-color: var\(--color-areia\); \}/)
     expect(css).toMatch(/\[data-faixa\]:has\(\.ic-so\)[^{]*\{ padding-bottom: 0; \}/)
-    expect(css).toMatch(/\[data-casa\] \.ic-so-cena \{[^}]*aspect-ratio: 1200 \/ 800;[^}]*overflow: hidden;/)
+    expect(css).toMatch(/\[data-casa\] \.ic-so-cena \{[^}]*aspect-ratio: 1200 \/ 832;[^}]*overflow: clip;/)
   })
 })
 
@@ -1207,11 +1209,16 @@ describe('HOME-SEAMS-G3 S3 / S2: M04 and M05 are fixed files (an AVIF ladder and
     expect(original.avif).toBeTruthy()
     expect(original.avif).not.toBe(original.srcSet)
     expect(M06.avif).toBeTruthy()
-    expect(readFileSync(MIDIA_DA_CASA, 'utf8')).not.toContain('lossless=true')
+    // HOME-SECOND-HALF: the one exception is the band 4 and band 7 plates of inicio-faixas, whose grounds the card checks
+    // on the decoded file (a lossless WebP keeps the exact ground); every `lossless=true` sits on such an import line.
+    const comLossless = readFileSync(MIDIA_DA_CASA, 'utf8')
+      .split('\n')
+      .filter((linha) => linha.includes('lossless=true'))
+    expect(comLossless.every((linha) => linha.includes('assets/cenas/inicio-faixas/'))).toBe(true)
   })
 
-  it('renders the M05 AVIF source after the phone WebP source, and the M04 AVIF source in band 4, from the fixed ladders', async () => {
-    const { M05, M04 } = await import('../componentes/inicio-casa/midia.ts')
+  it('renders the M05 AVIF source after the phone WebP source, and the lossless M04_FAIXA plate (no AVIF) in band 4', async () => {
+    const { M05, M04_FAIXA } = await import('../componentes/inicio-casa/midia.ts')
     await abrir(1440)
     const hero = principal().querySelector('.cm-cena-placa > picture')!
     const avif = hero.querySelectorAll('source[type="image/avif"]')
@@ -1222,8 +1229,9 @@ describe('HOME-SEAMS-G3 S3 / S2: M04 and M05 are fixed files (an AVIF ladder and
     expect(hero.querySelector('img')?.getAttribute('srcset')).toBe(M05.srcSet)
     expect(hero.querySelector('img')?.getAttribute('src')).toBe(M05.src)
     const so = principal().querySelector('.ic-so-cena')!
-    expect(so.querySelector('source[type="image/avif"]')?.getAttribute('srcset')).toBe(M04.avif)
-    expect(so.querySelector('img')?.getAttribute('srcset')).toBe(M04.srcSet)
+    expect(so.querySelector('source[type="image/avif"]')).toBeNull()
+    expect(so.querySelector('img')?.getAttribute('src')).toBe(M04_FAIXA.src)
+    expect(so.querySelector('img')?.getAttribute('srcset')).toBe(M04_FAIXA.srcSet)
   })
 })
 

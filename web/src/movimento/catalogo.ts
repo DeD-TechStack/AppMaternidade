@@ -194,6 +194,22 @@ export const CATALOGO = {
     // The swap fires when p crosses 0.5 in either direction, inside the middle hold (no hysteresis).
     limiar: 0.5,
   },
+  // Início, band 7 (HOME-SECOND-HALF): the street's lit windows come on in one step, opacity only, 240 ms on the expo
+  // curve, once per session when 60 % of the plate is in view (`LuzDaLampada gatilho="vista" limiar={0.6}`), and rest
+  // lit. The component starts the step after M15's `atrasoMs`; inicio-casa.css gives that one layer these 240 ms.
+  M11: {
+    id: 'M11',
+    tipo: 'tempo',
+    duracaoMs: 240,
+    janelaPx: 0,
+    curva: [0.16, 1, 0.3, 1],
+    escalonamentoMs: 0,
+    atrasoMs: 0,
+    deslocamentoPx: 0,
+    deslocamentoPct: 0,
+    escala: { de: 1, para: 1 },
+    limiar: 0.6,
+  },
 } satisfies Record<string, RegistroMovimento>
 
 /** Quando termina a cortina (todas as colunas do largo, com a camada de mel), em ms. */

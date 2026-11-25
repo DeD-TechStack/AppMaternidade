@@ -674,6 +674,66 @@ function checarProveniencia(pasta, nomes, pastaDaProveniencia = pasta) {
   }
 }
 
+// ---- The second-half plates (HOME-SECOND-HALF, folder inicio-faixas) -------------------------------------------------------
+// HOME-ASSETS-2 deterministic re-exports. The two imagetools masters sit under src/assets/cenas/inicio-faixas (with the
+// PROVENANCE.md); the light layers and the door plates are served files under web/public/cenas/inicio-faixas. Caps: the
+// lamp-layer cap (12,000 B) for the M11 light, and for every other file the byte count PROVENANCE.md measured (no cap of
+// the page above is raised; band 4's lossless plate is lazy and below the first view, so the first-view page total above
+// does not count it: IMG-RES / asset A04 own a lighter delivery).
+const PASTAS_FAIXAS = {
+  mestres: fileURLToPath(new URL('../src/assets/cenas/inicio-faixas/', import.meta.url)),
+  servidos: PASTA('cenas/inicio-faixas'),
+}
+const FAIXAS = {
+  mestres: {
+    'm04-faixa-1200w.webp': 285194,
+    'm11-apagada-542w.webp': 17076,
+  },
+  servidos: {
+    'm11-luz-326w.png': 12000,
+    'm11-luz-542w.png': 12000,
+    'porta-noite-390w.webp': 17026,
+    'porta-noite-720w.webp': 46024,
+    'porta-noite-780w.webp': 52486,
+    'porta-noite-1254w.webp': 104118,
+  },
+}
+
+function checarFaixas(mestres, servidos) {
+  for (const [nome, teto] of Object.entries(FAIXAS.mestres)) {
+    const bytes = statSync(join(mestres, nome)).size
+    assert.ok(bytes <= teto, `${nome}: ${bytes} bytes is over the ${teto} cap`)
+    checarFormato(mestres, nome)
+  }
+  for (const [nome, teto] of Object.entries(FAIXAS.servidos)) {
+    const bytes = statSync(join(servidos, nome)).size
+    assert.ok(bytes <= teto, `${nome}: ${bytes} bytes is over the ${teto} cap`)
+    if (nome.endsWith('.webp')) checarFormato(servidos, nome)
+    else assert.ok(readFileSync(join(servidos, nome)).subarray(0, 8).equals(ASSINATURA_PNG), `${nome} is not a PNG`)
+  }
+}
+
+test('AST1-I-11 inicio-faixas: every file is under its cap, in the format it names, with a PROVENANCE.md row', () => {
+  // Negative 1: one byte over a cap fails by name.
+  const gorda = pastaTmp()
+  writeFileSync(join(gorda, 'm11-luz-326w.png'), Buffer.concat([ASSINATURA_PNG, Buffer.alloc(12001 - 8)]))
+  assert.throws(() => checarFaixas(PASTAS_FAIXAS.mestres, gorda), /m11-luz-326w\.png: 12001 bytes is over the 12000 cap/)
+  // Negative 2: a file that is not what its extension says is rejected by its first bytes.
+  const falsa = pastaTmp()
+  writeFileSync(join(falsa, 'x.webp'), ASSINATURA_PNG)
+  assert.throws(() => checarFormato(falsa, 'x.webp'), /x\.webp is not a WebP file/)
+  // The real files.
+  for (const nome of Object.keys(FAIXAS.mestres)) assert.ok(existsSync(join(PASTAS_FAIXAS.mestres, nome)), `${nome} does not exist`)
+  for (const nome of Object.keys(FAIXAS.servidos)) assert.ok(existsSync(join(PASTAS_FAIXAS.servidos, nome)), `${nome} does not exist`)
+  checarFaixas(PASTAS_FAIXAS.mestres, PASTAS_FAIXAS.servidos)
+  checarProveniencia(PASTAS_FAIXAS.mestres, Object.keys(FAIXAS.mestres))
+  checarProveniencia(PASTAS_FAIXAS.servidos, Object.keys(FAIXAS.servidos), PASTAS_FAIXAS.mestres)
+  // The M11 light is a lamp layer: it also sits under the 12,000 B lamp-layer cap of the page.
+  for (const nome of ['m11-luz-326w.png', 'm11-luz-542w.png']) {
+    assert.ok(statSync(join(PASTAS_FAIXAS.servidos, nome)).size <= ATIVOS.tetoCamada, `${nome} is over the lamp-layer cap`)
+  }
+})
+
 test('AST1-I-10 provenance: every served file has a PROVENANCE.md line with name, sha256 and byte count', () => {
   const dir = pastaTmp()
   const a = Buffer.from('conteudo-a')

@@ -1,0 +1,84 @@
+/* The two scrubbed entries of the Início's second half (HOME-SECOND-HALF, DIRECAO 3.9): the plate of band 4 comes in from
+   the left wall and the door of band 6 from the right wall, by 56 px (24 below 1024), linear, over `entry 0%` to
+   `entry 100%` of their own still clip frame. Transform only. The frame holds the view timeline and never moves; the image
+   inside it is what is animated, and the frame clips it.
+
+   One gate, the one STAGE owns (`CONDICAO_NATIVA` in movimento/troca/usarPalco.ts, same text): a browser without
+   scroll-driven animations, or a visitor who asks for less motion, gets the still (identity). Every `view-timeline` and
+   `animation-timeline` sits inside it. The `animation` shorthand carries `auto linear both` and the timeline and range
+   longhands come after it, because the shorthand resets them. No JS, no listener, and the lengths are `px` and `cqi`
+   only. Bands 3, 5 and 7 have no entry here: band 5 draws once on the H2 primitive and band 7 is a light. */
+
+@keyframes ic-faixa-da-esquerda {
+  from {
+    transform: translateX(-56px);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes ic-faixa-da-direita {
+  from {
+    transform: translateX(56px);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes ic-faixa-da-esquerda-curta {
+  from {
+    transform: translateX(-24px);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes ic-faixa-da-direita-curta {
+  from {
+    transform: translateX(24px);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+@supports ((animation-timeline: view()) and (animation-range: entry)) {
+  @media (prefers-reduced-motion: no-preference) {
+    [data-casa] .ic-so-cena {
+      view-timeline: --ic-faixa-so block;
+    }
+
+    [data-casa] .ic-so-cena img {
+      animation: ic-faixa-da-esquerda auto linear both;
+      animation-timeline: --ic-faixa-so;
+      animation-range: entry 0% entry 100%;
+    }
+
+    [data-casa] .ic-porta {
+      view-timeline: --ic-faixa-porta block;
+    }
+
+    [data-casa] .ic-porta img {
+      animation: ic-faixa-da-direita auto linear both;
+      animation-timeline: --ic-faixa-porta;
+      animation-range: entry 0% entry 100%;
+    }
+
+    @media (max-width: 1023px) {
+      [data-casa] .ic-so-cena img {
+        animation-name: ic-faixa-da-esquerda-curta;
+      }
+
+      [data-casa] .ic-porta img {
+        animation-name: ic-faixa-da-direita-curta;
+      }
+    }
+  }
+}

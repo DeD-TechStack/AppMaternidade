@@ -1,10 +1,12 @@
 import { INI } from '../../conteudo/inicio.ts'
 import { ID_FAIXA_SO } from './ids.ts'
-import { M04 } from './midia.ts'
+import { M04_FAIXA } from './midia.ts'
 
 /**
- * Band 4, on papel: the question of whoever cares alone, its answer and an M04 crop of the scene. The caption of the
- * 15:00 scene (`ini.leg3`) is not rendered: the bands run in time order (FREEZE 13.2).
+ * Band 4, on papel: the question of whoever cares alone, its answer and the plate of the 15:00 scene, unboxed. The plate
+ * is a lossless WebP whose ground is the papel token, so it has no visible box; its frame (`1200 / 832`, clipped) shows
+ * rows 0 to 832 and the band line cuts the mat at its widest row, where band 5's areia goes on. The caption of the 15:00
+ * scene (`ini.leg3`) is not rendered: the bands run in time order (FREEZE 13.2).
  */
 export function FaixaSozinho() {
   return (
@@ -16,21 +18,17 @@ export function FaixaSozinho() {
         <p className="text-corpo font-texto cm-sec-texto">{INI.pSo}</p>
       </div>
       <figure className="ic-so-cena">
-        <picture>
-          {M04.avif ? <source type="image/avif" srcSet={M04.avif} sizes={M04.sizes} /> : null}
-          <img
-            src={M04.src}
-            srcSet={M04.srcSet}
-            sizes={M04.sizes}
-            width={M04.largura}
-            height={M04.altura}
-            alt={INI.altCena3}
-            loading="lazy"
-            decoding="async"
-          />
-        </picture>
+        <img
+          src={M04_FAIXA.src}
+          srcSet={M04_FAIXA.srcSet}
+          sizes={M04_FAIXA.sizes}
+          width={M04_FAIXA.largura}
+          height={M04_FAIXA.altura}
+          alt={INI.altCena3}
+          loading="lazy"
+          decoding="async"
+        />
       </figure>
-      <div className="ic-chao ic-chao-dia" aria-hidden="true" />
     </div>
   )
 }
