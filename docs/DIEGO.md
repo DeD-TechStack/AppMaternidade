@@ -176,6 +176,8 @@ Build e testes são necessários, não suficientes. Um cartão só está pronto 
 - as telas logadas `/app`: `web/src/paginas/rotina/**`, `desenvolvimento/**`, `comunidade/**`, `avisos/**`, `moderacao/**`, e os componentes só delas: `web/src/componentes/app/**`, `rotina/**`, `resumo-rotina/**`, `avisos/**`, `comunidade/**`, `moderacao/**`, `desenvolvimento/**`, `estado/**`, `web/src/prototipo/**`, os textos `web/src/conteudo/{rotina,resumoRotina,resumoRotinaPainel,conta,comunidade,moderacao,avisos,email}.ts`, e os testes de tudo isso;
 - o polimento funcional dentro desses escopos.
 
+**Reservado agora para outra frente da equipe:** a página pública Desenvolvimento (`web/src/paginas/publicas/Desenvolvimento.tsx`, `desenvolvimento.casa.test.tsx`, `web/src/componentes/desenvolvimento-casa/**` e `web/src/conteudo/casa/desenvolvimento.ts`) está em redesenho. Não edite esses arquivos até este guia liberar; as telas logadas de desenvolvimento continuam suas.
+
 **A equipe é dona** de:
 
 - a Home: `web/src/paginas/Inicio.tsx`, `web/src/componentes/inicio-casa/**`, `web/src/componentes/inicio/**`, `web/src/movimento/**`, `web/src/conteudo/inicio.ts` e as imagens da Home (`web/src/assets/cenas/inicio*/**`);
