@@ -350,8 +350,8 @@ describe('SH-5 band 6: the questions are the display lines, the heading is the l
   })
 })
 
-describe('SH-6 band 7: the closing on its edge, M11 lit once at 60 %', () => {
-  it('the only centred band: the Fechamento, then the M11 figure with its light layer, and no floor node after it', async () => {
+describe('SH-6 band 7: the closing on its edge, the A05 street lit once at 60 %', () => {
+  it('the only centred band: the Fechamento, then the A05 figure with its light layer, and no floor node after it', async () => {
     await abrir(1440)
     const fecho = principal().querySelector('.ic-fecho')!
     expect(fecho.querySelector('[data-fechamento]')).not.toBeNull()
@@ -359,20 +359,21 @@ describe('SH-6 band 7: the closing on its edge, M11 lit once at 60 %', () => {
     const base = figura.querySelector('img:not([data-luz])')!
     expect(base.getAttribute('alt')).toBe('')
     expect(base.getAttribute('src')).toMatch(/^\/@imagetools\/[\w-]+$/)
-    expect([base.getAttribute('width'), base.getAttribute('height')]).toEqual(['542', '421'])
+    expect([base.getAttribute('width'), base.getAttribute('height')]).toEqual(['1672', '642'])
     const luz = figura.querySelectorAll('[data-luz]')
     expect(luz).toHaveLength(1)
-    expect(luz[0].getAttribute('src')).toMatch(/inicio-faixas\/m11-luz-(326|542)w\.png$/)
+    expect(luz[0].getAttribute('src')).toMatch(/inicio-faixas\/a05-rua-luz-1672w\.png$/)
+    expect(luz[0].getAttribute('srcset')).toMatch(/a05-rua-luz-390w\.png 390w.*a05-rua-luz-780w\.png 780w.*a05-rua-luz-1170w\.png 1170w.*a05-rua-luz-1672w\.png 1672w/)
     expect(fecho.lastElementChild).toBe(figura)
   })
 
-  it('the light is watched at 60 % with the key casa-luz-m11: dark on a first visit, lit by the crossing, remembered', async () => {
+  it('the light is watched at 60 % with the key casa-luz-a05: dark on a first visit, lit by the crossing, remembered', async () => {
     await abrir(1440)
     const grupo = principal().querySelector<HTMLElement>('.ic-fecho [data-luz-estado]')!
     expect(grupo.getAttribute('data-luz-estado')).toBe('apagada')
     const base = principal().querySelector('.ic-fecho-cena img:not([data-luz])')!
     const dele = ObservadorFalso.todos.find((o) => o.alvos.has(base))!
-    expect(dele, 'an observer watches the M11 plate').toBeDefined()
+    expect(dele, 'an observer watches the A05 plate').toBeDefined()
     expect(dele.opcoes?.threshold).toBe(0.6)
   })
 
@@ -381,10 +382,17 @@ describe('SH-6 band 7: the closing on its edge, M11 lit once at 60 %', () => {
     expect(principal().querySelector('.ic-fecho [data-luz-estado]')!.getAttribute('data-luz-estado')).toBe('acesa')
   })
 
-  it('the figure is min(var(--fecho-janela), 542px) wide, 542 / 386, and the heading is exibicao with balanced lines', () => {
+  it('the figure is min(100cqi, 1672px) wide, 1672 / 642 (the manifest), edge to edge, and the heading is exibicao with balanced lines', () => {
     const css = colapsar(semComentarios(CSS_DA_CASA()))
-    expect(css).toContain('min(var(--fecho-janela), 542px)')
-    expect(css).toMatch(/\[data-casa\] \.ic-fecho-cena \{[^}]*aspect-ratio: 542 \/ 386;/)
+    expect(css).toMatch(/\[data-casa\] \.ic-fecho-cena \{[^}]*inline-size: min\(100cqi, 1672px\);/)
+    expect(css).toMatch(/\[data-casa\] \.ic-fecho-cena \{[^}]*aspect-ratio: 1672 \/ 642;/)
+    expect(css).toMatch(/\[data-casa\] \.ic-fecho-cena \{[^}]*inset-inline-start: 50%;[^}]*translate: -50% 0;/)
+    expect(css).not.toContain('--fecho-janela), 542px')
+    // The street is decorative and rises under the pill from 768 (the pill's own width): it takes no click, and the closing
+    // block stands above it in stacking. Under 768 the pill is the column's width, so there is no overlap.
+    expect(css).toMatch(/\[data-casa\] \.ic-fecho-cena \{[^}]*pointer-events: none;/)
+    expect(css).toMatch(/\[data-casa\] \.ic-fecho \.cm-fechamento \{[^}]*position: relative;[^}]*z-index: 1;/)
+    expect(css).toMatch(/@media \(min-width: 768px\) \{ \[data-casa\] \.ic-fecho-cena \{ margin-block-start: calc\(var\(--espaco-grupo\) \* -1\.5\); \} \}/)
     const fora = declaracoes(CSS_DA_CASA()).filter((d) => d.pilha.every((p) => !p.startsWith('@layer')))
     const h2 = fora.filter((d) => /\.ic-fecho .*h2/.test(d.seletor))
     expect(h2.filter((d) => d.prop === 'font-size').map((d) => d.valor)).toContain('var(--texto-exibicao-tamanho)')
@@ -472,40 +480,50 @@ describe('SH-7 motion: inicio-faixas.css holds the band 4 and band 6 entries und
 
 // ---- midia.ts ------------------------------------------------------------------------------------------------------
 
-describe('SH-8a M11 `sizes` follow the drawn width of the figure', () => {
-  // The figure is min(var(--fecho-janela), 542px): --fecho-janela = clamp(min(326px, 100cqi - 2 calha), 50cqi, 720px), so from
-  // 652 to 1083 it is half the container (326 to 541 px) and 542 from 1084. At 768, 1024 and 1083 the browser needs 384,
-  // 512 and 541.5 px: the 542 file, never the 326 one stretched.
-  it('sizes is `(min-width: 1084px) 542px, (min-width: 652px) 50vw, 326px` for the plate and its light layer', async () => {
-    const { M11_JANELA, LUZ_M11 } = await import('../componentes/inicio-casa/midia.ts')
-    const esperado = '(min-width: 1084px) 542px, (min-width: 652px) 50vw, 326px'
-    expect(M11_JANELA.sizes).toBe(esperado)
-    expect(LUZ_M11.sizes).toBe(esperado)
+describe('SH-8a A05 `sizes` follow the drawn width of the figure', () => {
+  // The figure is min(100cqi, 1672px) wide (edge to edge up to the master's width), so `sizes` is that same length and the
+  // light layer reads the same string: both pick the same tier.
+  it('sizes is `min(100cqi, 1672px)` for the plate and its light layer', async () => {
+    const { A05_RUA, LUZ_A05 } = await import('../componentes/inicio-casa/midia.ts')
+    expect(A05_RUA.sizes).toBe('min(100cqi, 1672px)')
+    expect(LUZ_A05.sizes).toBe(A05_RUA.sizes)
   })
 
-  it('the drawn width the string describes: 50vw is at least the 326 file from 652 and below 542 until 1084', () => {
-    const sizes = '(min-width: 1084px) 542px, (min-width: 652px) 50vw, 326px'
-    const largura = (vw: number) => (vw >= 1084 ? 542 : vw >= 652 ? vw / 2 : 326)
-    const escolhe = (vw: number, dpr: number) => ([326, 542].find((arquivo) => arquivo >= largura(vw) * dpr) ?? 542)
-    expect(sizes).toContain('50vw')
-    for (const vw of [768, 1024, 1083]) expect(escolhe(vw, 1), `${vw} px, DPR 1`).toBe(542)
-    expect(escolhe(390, 1)).toBe(326)
+  it('the drawn width the string describes: a 390 phone at DPR 2 takes the 780 tier, 1440 at DPR 2 the 1672 one, never upscaled', () => {
+    const largura = (vw: number) => Math.min(vw, 1672)
+    const escolhe = (vw: number, dpr: number) => ([390, 780, 1170, 1672].find((arquivo) => arquivo >= largura(vw) * dpr) ?? 1672)
+    expect(escolhe(390, 1)).toBe(390)
+    expect(escolhe(390, 2)).toBe(780)
+    expect(escolhe(390, 3)).toBe(1170)
+    expect(escolhe(1440, 2)).toBe(1672)
+    expect(escolhe(1920, 1)).toBe(1672)
   })
 })
 
 describe('SH-8 midia.ts: the plates and layers of the half exist where the constants say', () => {
-  it('M04_FAIXA is the m04-faixa master, lossless; M11_JANELA the unlit M11; LUZ_M11, PORTA_NOITE and CAPTURA_NOTAS are served files', async () => {
+  it('M04_FAIXA is the m04-faixa master, lossless; A05_RUA the unlit street, lossless, of the manifest size; LUZ_A05, PORTA_NOITE and CAPTURA_NOTAS are served files', async () => {
     const midia = await import('../componentes/inicio-casa/midia.ts')
     const texto = lerTexto(join(PASTA_CASA, 'midia.ts'))
+    const manifesto = JSON.parse(lerTexto(join(process.cwd(), 'public', 'cenas', 'inicio-faixas', 'a05-rua.MANIFESTO.json'))) as {
+      scene: { width_px: number; height_px: number }
+      light: { tiers: { file: string }[] }
+    }
     expect(texto).toContain('inicio-faixas/m04-faixa-1200w.webp')
-    expect(texto).toContain('inicio-faixas/m11-apagada-542w.webp')
+    expect(texto).toContain('inicio-faixas/a05-rua-fundo-1672w.webp')
+    expect(texto).not.toContain('m11-apagada-542w')
     expect([midia.M04_FAIXA.largura, midia.M04_FAIXA.altura]).toEqual([1200, 870])
     // The older M04 ladder stays exported (inicioCapturas.test.ts pins it) but band 4 no longer serves it.
     expect(M04.src).not.toBe(midia.M04_FAIXA.src)
-    expect([midia.M11_JANELA.largura, midia.M11_JANELA.altura]).toEqual([542, 421])
-    expect(midia.M11_JANELA.src).toMatch(/^\/@imagetools\//)
+    expect([midia.A05_RUA.largura, midia.A05_RUA.altura]).toEqual([manifesto.scene.width_px, manifesto.scene.height_px])
+    expect([midia.LUZ_A05.largura, midia.LUZ_A05.altura]).toEqual([manifesto.scene.width_px, manifesto.scene.height_px])
+    expect(midia.A05_RUA.src).toMatch(/^\/@imagetools\//)
     expect(midia.M04_FAIXA.src).toMatch(/^\/@imagetools\//)
-    for (const imagem of [midia.LUZ_M11, midia.PORTA_NOITE, midia.CAPTURA_NOTAS]) {
+    // Every width of the plate is at most the master's: nothing is upscaled.
+    for (const parte of (midia.A05_RUA.srcSet ?? '').split(', ')) expect(Number(/\s(\d+)w$/.exec(parte)?.[1]), parte).toBeLessThanOrEqual(manifesto.scene.width_px)
+    // The light's four tiers are the manifest's, in order of width.
+    const nomes = (midia.LUZ_A05.srcSet ?? '').split(',').map((p) => p.trim().split(/\s+/)[0].replace(/^\/+/, 'web/public/'))
+    expect(nomes.sort()).toEqual(manifesto.light.tiers.map((t) => t.file).sort())
+    for (const imagem of [midia.LUZ_A05, midia.PORTA_NOITE, midia.CAPTURA_NOTAS]) {
       for (const parte of [imagem.src, ...(imagem.srcSet ?? '').split(',').map((p) => p.trim().split(/\s+/)[0])]) {
         expect(existsSync(join(process.cwd(), 'public', parte.replace(/^\/+/, ''))), parte).toBe(true)
       }
@@ -551,13 +569,13 @@ describe('SH-10 clip frames: a frame that crops an in-flow img must not be held 
     }
   })
 
-  it('the frame of band 4 stays 1200 / 832 and the one of band 7 stays 542 / 386, both clipped', () => {
+  it('the frame of band 4 stays 1200 / 832 and the one of band 7 is 1672 / 642 (the A05 street), both clipped', () => {
     const css = colapsar(semComentarios(CSS_DA_CASA()))
     expect(css).toMatch(/\[data-casa\] \.ic-so-cena \{[^}]*aspect-ratio: 1200 \/ 832;[^}]*overflow: clip;/)
-    expect(css).toMatch(/\[data-casa\] \.ic-fecho-cena \{[^}]*aspect-ratio: 542 \/ 386;[^}]*overflow: clip;/)
+    expect(css).toMatch(/\[data-casa\] \.ic-fecho-cena \{[^}]*aspect-ratio: 1672 \/ 642;[^}]*overflow: clip;/)
   })
 
-  it('every observed element of bands 3 to 7 is smaller than window / 0.6: the band 5 list and the M11 plate, never a band wrapper', async () => {
+  it('every observed element of bands 3 to 7 is smaller than window / 0.6: the band 5 list and the A05 plate, never a band wrapper', async () => {
     await abrir(390)
     const observados = ObservadorFalso.todos.filter((o) => o.opcoes?.threshold === 0.6).flatMap((o) => [...o.alvos])
     const lista = principal().querySelector('.ic-prova [data-prova-lista]')!

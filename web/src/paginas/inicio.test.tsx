@@ -834,17 +834,17 @@ describe('HOME-FINAL every phone shows a real app screen; the lower bands carry 
     })
   }
 
-  it('the closing band stands M11 (the unlit street window, decorative, empty alt) on the band edge, after the closing block', async () => {
-    // HOME-SECOND-HALF (AVALIACAO S-09): no floor node; M11 is the last box of the band and its own bottom is the band's.
+  it('the closing band stands A05 (the unlit street, edge to edge, decorative, empty alt) on the band edge, after the closing block', async () => {
+    // HOME-SECOND-HALF (AVALIACAO S-09): no floor node; the street is the last box of the band and its own bottom is the band's.
     await abrir(1440)
     const fecho = principal().querySelector('.ic-fecho')!
     expect(fecho.querySelector('[data-fechamento]')).not.toBeNull()
     const janela = fecho.querySelector<HTMLImageElement>('.ic-fecho-cena img:not([data-luz])')!
-    // M11 comes from vite-imagetools (LIB-IMG): a generated URL, the 542w file of its own srcset.
+    // A05 comes from vite-imagetools (LIB-IMG): a generated URL, the 1672w file of its own srcset.
     expect(janela.getAttribute('src')).toMatch(/^\/@imagetools\/[\w-]+$/)
-    expect(janela.getAttribute('srcset')).toContain(`${janela.getAttribute('src')!} 542w`)
+    expect(janela.getAttribute('srcset')).toContain(`${janela.getAttribute('src')!} 1672w`)
     expect(janela.getAttribute('alt')).toBe('')
-    expect([janela.getAttribute('width'), janela.getAttribute('height')]).toEqual(['542', '421'])
+    expect([janela.getAttribute('width'), janela.getAttribute('height')]).toEqual(['1672', '642'])
     expect(janela.getAttribute('loading')).toBe('lazy')
     expect(fecho.lastElementChild!.classList.contains('ic-fecho-cena')).toBe(true)
     expect(fecho.querySelector('.ic-chao')).toBeNull()
@@ -953,9 +953,9 @@ function avisarLegendas(visivel: boolean): number {
   return avisados
 }
 
-describe('HOME-FINAL F3 the signed caption: the hour emphasised, the author subordinate, a stroke drawn once', () => {
+describe('HOME-FINAL F3 the signed caption: the hour heavy, the name upright, no stroke', () => {
   for (const largura of [390, 1440]) {
-    it(`F3: at ${largura} each caption is the copy string in three runs, the author holding an aria-hidden stroke`, async () => {
+    it(`F3: at ${largura} each caption is the copy string in three runs, the hour and the author spans, and no stroke`, async () => {
       await abrirJanela({ largura, reduzido: true })
       const legendas = [...principal().querySelectorAll<HTMLElement>('p[data-legenda]')]
       expect(legendas.map((p) => norm(p.textContent))).toEqual([COPY.leg1, COPY.leg2])
@@ -963,27 +963,25 @@ describe('HOME-FINAL F3 the signed caption: the hour emphasised, the author subo
         expect([...p.querySelectorAll('[data-legenda-hora]')].map((s) => s.textContent)).toEqual([horaDe(copia)])
         const autores = [...p.querySelectorAll('[data-legenda-autor]')]
         expect(autores.map((s) => norm(s.textContent))).toEqual([autorDe(copia)])
-        const tracos = p.querySelectorAll('[data-legenda-traco]')
-        expect(tracos).toHaveLength(1)
-        expect(autores[0].contains(tracos[0])).toBe(true)
-        expect(tracos[0].getAttribute('aria-hidden')).toBe('true')
-        expect(tracos[0].textContent).toBe('')
+        expect(p.querySelectorAll('[data-legenda-traco]')).toHaveLength(0)
+        expect(p.querySelectorAll('.ic-legenda-traco')).toHaveLength(0)
       }
     })
   }
 
-  it('F3: the stylesheet gives the hour titulo-3, the title weight and tabular figures, and the stroke 400 ms scaleX from the left', () => {
+  it('F3: the stylesheet gives the hour Literata 800 in tabular lining figures at 1.5 x the caption size, and the name Literata upright, with no stroke rule', () => {
     const css = norm(readFileSync(CSS_DA_CASA, 'utf8'))
     expect(css).toContain(
-      '[data-casa] .ic-legenda-hora { font-size: var(--texto-titulo-3-tamanho); font-weight: var(--peso-titulo); font-variant-numeric: tabular-nums; }',
+      '[data-casa] .ic-legenda-hora { font-family: var(--fonte-exibicao); font-size: calc(var(--texto-abertura-tamanho) * 1.5); font-weight: 800; font-variant-numeric: tabular-nums lining-nums; line-height: inherit; }',
     )
-    expect(css).toContain('[data-casa] .ic-legenda-autor { position: relative; display: inline-block; font-size: var(--texto-corpo-tamanho); }')
-    expect(css).toContain('transform: scaleX(0); transform-origin: left; transition: transform 400ms linear;')
-    expect(css).toContain('[data-casa] [data-assinada] .ic-legenda-traco { transform: scaleX(1); }')
-    expect(css).toContain('@media (prefers-reduced-motion: reduce) { [data-casa] .ic-legenda-traco { transform: none; transition: none; } }')
+    expect(css).toContain(
+      '[data-casa] .ic-legenda-autor { display: inline-block; font-family: var(--fonte-exibicao); font-size: var(--texto-abertura-tamanho); font-weight: var(--peso-titulo); font-style: normal; text-decoration: none; }',
+    )
+    expect(css).not.toContain('ic-legenda-traco')
+    expect(css).not.toMatch(/\.ic-legenda-autor[^{]*\{[^}]*(text-decoration: underline|border-bottom)/)
   })
 
-  it('F3: with reduced motion every caption shows the finished stroke at once, and no observer waits for it', async () => {
+  it('F3: with reduced motion every caption is signed at once (data-assinada), and no observer waits for it', async () => {
     await abrirJanela({ largura: 1440, reduzido: true })
     const legendas = [...principal().querySelectorAll<HTMLElement>('p[data-legenda]')]
     expect(legendas).toHaveLength(2)
@@ -991,7 +989,7 @@ describe('HOME-FINAL F3 the signed caption: the hour emphasised, the author subo
     expect(avisarLegendas(true)).toBe(0)
   })
 
-  it('F3: the stroke plays once, when the caption is first whole in view, and stays drawn after it leaves', async () => {
+  it('F3: the caption is signed once, when it is first whole in view, and stays signed after it leaves', async () => {
     await abrirJanela({ largura: 390 })
     const legendas = () => [...principal().querySelectorAll<HTMLElement>('p[data-legenda]')]
     expect(legendas()).toHaveLength(2)
@@ -999,7 +997,7 @@ describe('HOME-FINAL F3 the signed caption: the hour emphasised, the author subo
     // Out of view: nothing draws.
     expect(avisarLegendas(false)).toBe(2)
     for (const p of legendas()) expect(p.hasAttribute('data-assinada')).toBe(false)
-    // First whole in view: the stroke draws, and the observer lets go (once).
+    // First whole in view: the caption is signed, and the observer lets go (once).
     expect(avisarLegendas(true)).toBe(2)
     for (const p of legendas()) expect(p.hasAttribute('data-assinada')).toBe(true)
     expect(avisarLegendas(false)).toBe(0)
@@ -1007,13 +1005,15 @@ describe('HOME-FINAL F3 the signed caption: the hour emphasised, the author subo
     for (const p of legendas()) expect(p.hasAttribute('data-assinada')).toBe(true)
   })
 
-  it('F3: in the pinned stage the swap node is signed too and keeps its stroke when the text swaps', async () => {
+  it('F3: in the pinned stage the swap node is signed too, with the hour and the author spans and no stroke', async () => {
     await abrirJanela({ largura: 1440 })
     const no = principal().querySelector<HTMLElement>('p[data-troca-legenda]')!
     expect(no.hasAttribute('data-assinada')).toBe(false)
     avisarLegendas(true)
     expect(no.hasAttribute('data-assinada')).toBe(true)
-    expect(no.querySelectorAll('[data-legenda-traco]')).toHaveLength(1)
+    expect(no.querySelectorAll('[data-legenda-hora]')).toHaveLength(1)
+    expect(no.querySelectorAll('[data-legenda-autor]')).toHaveLength(1)
+    expect(no.querySelectorAll('[data-legenda-traco]')).toHaveLength(0)
   })
 })
 
@@ -1051,29 +1051,6 @@ describe('HOME-FINAL F5 short desktop windows pin the stage; the stage is bounde
 
 const MIDIA_DA_CASA = join(PASTA_SRC, 'componentes', 'inicio-casa', 'midia.ts')
 const cssDaCasa = () => norm(readFileSync(CSS_DA_CASA, 'utf8'))
-
-describe('HOME-SEAMS S6: display variant C holds the 16:00 caption left of the seam', () => {
-  it('the caption is a p.ic-legenda inside .ic-leg1, and variant C alone caps .ic-leg1 at the seam less one block', async () => {
-    await abrir(1440)
-    expect(principal().querySelector('.ic-leg1 p.ic-legenda[data-legenda]')).not.toBeNull()
-    const css = cssDaCasa()
-    expect(css).toContain(
-      "html[data-exibicao='c'] [data-casa] .ic-leg1 { max-inline-size: calc(var(--heroi-costura-x) - var(--heroi-esq) - var(--espaco-bloco)); }",
-    )
-    // A and B keep the shipped width: no rule of theirs on the caption.
-    expect(css).not.toMatch(/data-exibicao='(a|b)'\] \[data-casa\] \.ic-leg1/)
-  })
-
-  it('the cap sits in the room composition, where .ic-leg1 is absolute', () => {
-    const css = cssDaCasa()
-    const sala = css.indexOf('@media (min-width: 1180px) and (min-aspect-ratio: 1/1) { /* The hero')
-    const regra = css.indexOf("html[data-exibicao='c'] [data-casa] .ic-leg1 {")
-    const fim = css.indexOf('/* ---- 1024 and more: the bands after the stage')
-    expect(sala).toBeGreaterThan(-1)
-    expect(regra).toBeGreaterThan(sala)
-    expect(regra).toBeLessThan(fim)
-  })
-})
 
 describe('HOME-SEAMS S2 (superseded by HOME-SECOND-HALF, AVALIACAO S-09): band 4 has no floor; the band line cuts the mat', () => {
   it('.ic-so ends in the scene or the text and holds no .ic-chao node', async () => {
