@@ -689,13 +689,17 @@
      drawn for 1180 px of 16 px text. When the root text is larger, those 1180 px are fewer rem: at 200 % the h1 alone is
      wider than the window, and the plate, moved by the first span, ends under the lede. The media query above reads the
      window in px (and the page script reads the same one), so the hand-over is a container query in rem: it follows the
-     root font size, the way the shell's header does (`@container cm-cab (min-width: 67rem)`). Under 73.75 rem of container
+     root font size, the way the shell's header does (`@container cm-cab (min-width: 67rem)`). Under 72.5 rem of container
      the hero and band 2 flow as the stacked composition does (one column, the h1 wraps, the lede and the actions come
      under it, the stage is a plain band), with the DOM of the room: the room-only layers are hidden and the frame, the
-     night column and the caption flow in the band. At 16 px of root, 73.75 rem are 1180 px, the media query's own
-     threshold, so this block never applies there: the room above is unchanged. Everything is read from the Início root. */
+     night column and the caption flow in the band. The bound is the narrowest container the room media can give at a
+     16 px root: the window is at least 1180 px and a classic scrollbar takes up to 20 px, so the container is at least
+     1180 - 20 = 1160 px = 72.5 rem, and `width < 72.5rem` (a container of exactly 1160 px is not handed over) never
+     applies at 16 px: the room above is unchanged, and it agrees with the page script, which reads the same media
+     query. At 200 % the window is at most 1440 / 32 = 45 rem, far below the bound. No margin crosses a band edge here:
+     the space above the frame is the padding of the static stage. Everything is read from the Início root. */
   @media (min-width: 1180px) and (min-aspect-ratio: 1/1) {
-    @container (max-width: 73.75rem) {
+    @container (width < 72.5rem) {
       [data-casa]:has(> [data-cena-heroi] .ic-titulo) [data-cena-heroi][aria-labelledby='ic-titulo'] {
         display: flex;
         flex-direction: column;
@@ -795,6 +799,7 @@
       [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-estagio[data-troca-fixo] {
         position: static;
         height: auto;
+        padding-block-start: var(--espaco-secao);
         overflow-x: visible;
       }
 
@@ -811,7 +816,7 @@
         position: relative;
         bottom: auto;
         left: auto;
-        margin: var(--espaco-secao) auto 0;
+        margin: 0 auto;
       }
 
       [data-casa]:has(> [data-cena-heroi] .ic-titulo) .ic-estagio [data-produto-acao] {

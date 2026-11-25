@@ -881,6 +881,11 @@ describe('HOME-FINAL F2 the Histórico pan travels MANIFESTO rolagem_px: rest on
     // The screen layer reads the Início container (cqi), not the window (HOME-WIDTH); the travel keeps its window ramp.
     expect(css).toContain('--produto-tela: clamp(280px, calc(280px + (100cqi - 390px) * 40 / 1050), 320px);')
     expect(css).not.toContain('--produto-tela: clamp(280px, calc(280px + (100vw - 390px) * 40 / 1050), 320px);')
+    // The shared frame rule (`[data-casa] .cm-produto-moldura`) keeps the travel exactly as before HOME-WIDTH...
+    expect(css).toContain(
+      '--produto-rolagem: min( clamp( calc(var(--produto-rolagem-390, 0) * 1px), calc(var(--produto-rolagem-390, 0) * 1px + (var(--produto-rolagem-1440, 0) - var(--produto-rolagem-390, 0)) * (100vw - 390px) / 1050), calc(var(--produto-rolagem-1440, 0) * 1px) ), var(--produto-tela) );',
+    )
+    // ...and the stage rule (`.ic-estagio .cm-produto-moldura`) scales it with the room (k), next to it, not instead of it.
     expect(css).toContain(
       '--produto-rolagem: min( calc( clamp( calc(var(--produto-rolagem-390, 0) * 1px), calc(var(--produto-rolagem-390, 0) * 1px + (var(--produto-rolagem-1440, 0) - var(--produto-rolagem-390, 0)) * (100vw - 390px) / 1050), calc(var(--produto-rolagem-1440, 0) * 1px) ) * var(--heroi-k) ), var(--produto-tela) );',
     )

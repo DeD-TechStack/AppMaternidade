@@ -147,13 +147,16 @@ describe('HOME-WIDTH S1: the page container and the width rule sit on the Iníci
 })
 
 describe('HOME-WIDTH item 11: with the root text enlarged the hero stays whole (a rem container query, one system)', () => {
-  const CONTAINER_TEXTO = '@container (max-width: 73.75rem)'
+  const CONTAINER_TEXTO = '@container (width < 72.5rem)'
   const daFolga = () => regras().filter((r) => r.contexto.includes(CONTAINER_TEXTO) && r.contexto.some((c) => c.startsWith('@media (min-width: 1180px) and (min-aspect-ratio: 1/1)')))
   const corpoDe = (seletor: string) => daFolga().filter((r) => r.seletor.split(',').some((s) => s.trim().endsWith(seletor))).map((r) => r.corpo).join(' ')
 
-  it('the room hands over to the stacked flow when 73.75 rem (1180 px at 16 px) no longer fit in the container; the query is in rem', () => {
+  it('the room hands over to the stacked flow when the container is under 72.5 rem (1160 px at 16 px: 1180 less a 20 px scrollbar, the narrowest the room media gives); the query is in rem', () => {
     expect(daFolga().length).toBeGreaterThan(5)
     expect(CONTAINER_TEXTO).toMatch(/rem\)$/)
+    // Strictly below 1160 px: a container of exactly 1160 px keeps the room, like the page script's media query.
+    expect(CONTAINER_TEXTO).toMatch(/\(width < 72\.5rem\)/)
+    expect(72.5 * 16).toBe(1180 - 20)
     // The switch is read from the Início root only.
     for (const r of daFolga()) expect(r.seletor.split(',').every((s) => s.trim().startsWith(RAIZ)), r.seletor).toBe(true)
   })
@@ -178,6 +181,16 @@ describe('HOME-WIDTH item 11: with the root text enlarged the hero stays whole (
     expect(corpoDe('.ic-m06')).toMatch(/position\s*:\s*relative/)
     expect(corpoDe('.ic-folha')).toMatch(/display\s*:\s*none/)
     expect(corpoDe('.ic-piso-dia')).toMatch(/display\s*:\s*none/)
+  })
+
+  it('no margin crosses a band edge: the hand-over frame has no block margin, the static stage carries the space as padding-block-start', () => {
+    const moldura = corpoDe('.ic-estagio .cm-produto-moldura')
+    expect(moldura).toMatch(/(?:^|;)\s*margin\s*:\s*0 auto\s*(?:;|$)/)
+    expect(moldura).not.toMatch(/margin-(?:top|bottom|block)/)
+    // The stage rule (`.ic-estagio`, also with `[data-troca-fixo]`) is the one that owns the space above the frame.
+    const palco = daFolga().filter((r) => r.seletor.split(',').some((s) => s.trim().endsWith('.ic-estagio')))
+    expect(palco.length).toBeGreaterThan(0)
+    expect(palco.map((r) => r.corpo).join(' ')).toMatch(/padding-block-start\s*:\s*var\(--espaco-secao\)/)
   })
 })
 
@@ -212,7 +225,7 @@ describe('HOME-WIDTH W1: the lede block hangs from the hero\'s foot in the room,
 
   it('the hand-over for enlarged text puts the block back in the flow, so a bottom anchor never grows into the lamp', () => {
     const empilhada = regras().filter(
-      (r) => r.seletor.split(',').some((s) => s.trim().endsWith('.ic-noite-heroi')) && r.contexto.some((c) => c.startsWith('@container (max-width: 73.75rem)')),
+      (r) => r.seletor.split(',').some((s) => s.trim().endsWith('.ic-noite-heroi')) && r.contexto.some((c) => c.startsWith('@container (width < 72.5rem)')),
     )
     expect(empilhada.map((r) => r.corpo).join(' ')).toMatch(/position\s*:\s*static/)
   })
