@@ -12,7 +12,7 @@ export function PalcoTroca() {
   return (
     // The two ends of the Histórico pan (MANIFESTO rolagem_px), read by inicio-casa.css as `--produto-rolagem`.
     <div data-troca-palco="" className="ic-palco" style={ESTILO_DA_ROLAGEM}>
-      <ProdutoEmMoldura tela={{ ...CAPTURA_Y, alt: INI.altTela1 }} moldura={MOLDURA_NOITE} rolavel />
+      <ProdutoEmMoldura tela={{ ...CAPTURA_Y, alt: INI.altTela1 }} moldura={MOLDURA_NOITE} rolavel={{ acao: INI.acaoTela1, inicial: INI.inicialTela1, detalhe: INI.detalheTela1 }} />
     </div>
   )
 }

@@ -48,7 +48,7 @@ export function FaixaNoite({ larga, fixo }: Props) {
           <>
             <span ref={costura} className="ic-medida" aria-hidden="true" />
             <div className="ic-piso-dia" aria-hidden="true" />
-            <ProdutoEmMoldura tela={{ ...CAPTURA_Y, alt: INI.altTela1 }} moldura={MOLDURA_DIA} rolavel />
+            <ProdutoEmMoldura tela={{ ...CAPTURA_Y, alt: INI.altTela1 }} moldura={MOLDURA_DIA} rolavel={{ acao: INI.acaoTela1, inicial: INI.inicialTela1, detalhe: INI.detalheTela1 }} />
             <FolhaDaNoite refFolha={folha} refInterior={interior} />
           </>
         ) : null}
