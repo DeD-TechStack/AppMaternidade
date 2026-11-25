@@ -32,18 +32,19 @@ export const DESENVOLVIMENTO_CASA = {
 /** Os destinos dos dois links da abertura (âncoras da própria página). */
 export const DESTINOS_DESENVOLVIMENTO = { ideias: '#ideias', tummy: '#tummy-time' } as const
 
-// DE-S1: a cena M04 da abertura. 1440: a placa inteira (box 1100 × 619); abaixo de 768: o recorte 390 × 238.
-export const CENA_ABERTURA: Imagem = placa(m04Heroi, '(min-width: 1100px) min(1100px, 76.39vw), 100vw', 1100)
+// DE-S1: a cena M04 da abertura. Em telas largas ocupa a coluna direita (~640 px com recorte útil de 1240/1672,
+// puxando o arquivo 1672w em DPR 2 para nitidez próxima de 2x); abaixo de 768 usa o recorte de 390.
+export const CENA_ABERTURA: Imagem = placa(m04Heroi, '(min-width: 960px) min(880px, 58vw), 100vw', 1100)
 
 export const CENA_ABERTURA_RECORTE: Imagem = placa(m04Heroi390, '100vw', 390)
 
-// DE-S2: a captura do Histórico (15:00, tummy time) sob a moldura do dia. A tela tem até 390 de 900 em diante (perto
-// de 1:1 com a captura) e 320 abaixo (a largura do quadro, se menor).
+// DE-S2: a captura do Histórico (15:00, tummy time) sob a moldura do dia, agora ao lado da faixa "No site, é só um
+// registro.". A tela chega a 340 px em telas largas (com 780w/1170w em DPR 2/3) e até 300 px no celular.
 export const TELA_HISTORICO: Imagem = imagemPublica({
   src: '/telas/t1i/historico-y15-280w.webp',
   srcSet:
     '/telas/t1i/historico-y15-280w.webp 280w, /telas/t1i/historico-y15-320w.webp 320w, /telas/t1i/historico-y15-560w.webp 560w, /telas/t1i/historico-y15-640w.webp 640w, /telas/t1i/historico-y15-780w.webp 780w, /telas/t1i/historico-y15-1170w.webp 1170w',
-  sizes: '(min-width: 900px) 390px, 320px',
+  sizes: '(min-width: 900px) 340px, 300px',
   largura: 1170,
   altura: 2532,
 })
@@ -51,10 +52,11 @@ export const TELA_HISTORICO: Imagem = imagemPublica({
 export const MOLDURA_DIA: Imagem = imagemPublica({
   src: '/molduras/moldura-dia.png',
   srcSet: '/molduras/moldura-dia.png 678w, /molduras/moldura-dia-1356w.png 1356w',
-  sizes: '(min-width: 1440px) 414px, 350px',
+  sizes: '(min-width: 900px) 360px, 318px',
   largura: 721,
   altura: 1426,
 })
 
-// DE-S3: a família (M12) em pé na borda de baixo da faixa das ideias. Caixa 390 × 421 (350 × 378 em 390).
-export const CENA_FAMILIA: Imagem = placa(m12Familia, '(min-width: 960px) 390px, 350px', 390)
+// DE-S3: a família (M12) na abertura da faixa das ideias. Limitada a 292 px em telas largas e 260 px no estreito
+// para que o mestre de 585 px mantenha nitidez plena (~2x) em DPR 2 sem estourar.
+export const CENA_FAMILIA: Imagem = placa(m12Familia, '(min-width: 960px) 292px, 260px', 390)
