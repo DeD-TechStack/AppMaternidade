@@ -235,14 +235,16 @@
         animation-range: contain 48.5% contain 51.5%;
       }
 
-      /* The inset is 0: the default (`auto`) would take the page's `scroll-padding-top` (the header) and shrink the step from
+      /* The stacked marker (below 1024 px) belongs to `.ic-palco` ONLY. `[data-troca-palco]` is also on the stage from 1024 px
+         wide in the rest room (no `data-troca-fixo`), which must stay still: the pinned and the rest room never match here.
+         The inset is 0: the default (`auto`) would take the page's `scroll-padding-top` (the header) and shrink the step from
          about 22 px of scroll at 390 x 844 to about 12. */
-      [data-casa] [data-troca-palco]:not([data-troca-fixo]) [data-vez-caixa] {
+      [data-casa] .ic-palco [data-vez-caixa] {
         view-timeline: --vez block;
         view-timeline-inset: 0;
       }
 
-      [data-casa] [data-troca-palco]:not([data-troca-fixo]) [data-vez-caixa] [data-vez] {
+      [data-casa] .ic-palco [data-vez-caixa] [data-vez] {
         animation: ic-vez auto linear both;
         animation-timeline: --vez;
         animation-range: contain 45% contain 55%;

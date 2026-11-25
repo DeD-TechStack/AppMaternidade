@@ -147,6 +147,67 @@ describe('U3 troca.css: the pin, the gate text, the order of the declarations, t
     // The stacked marker's timeline has no inset: `auto` would take the page's scroll-padding-top (the header, 104 px).
     expect(inset[1].valor).toBe('0')
     expect(inset[1].seletor).toContain('[data-vez-caixa]')
+    expect(inset[1].seletor).toContain('.ic-palco')
+  })
+})
+
+describe('F1 troca.css: the rest room (an .ic-estagio without data-troca-fixo) gets no timeline and no animation (acceptance 10, "no third state")', () => {
+  const todas = () => declaracoes(CSS_DA_TROCA())
+  const DE_ANIMACAO = ['view-timeline', 'view-timeline-inset', 'animation', 'animation-timeline', 'animation-range']
+  const regrasDeAnimacao = () => todas().filter((d) => DE_ANIMACAO.includes(d.prop))
+
+  /** The three rooms of the band as bare fixtures: pinned (fixo), rest (palco without fixo), stacked (.ic-palco, below 1024). */
+  function montar(sala: 'fixa' | 'repouso' | 'empilhada') {
+    document.body.innerHTML =
+      sala === 'empilhada'
+        ? '<div data-casa><div data-troca-palco class="ic-palco"><figure data-produto-moldura></figure><div data-vez-caixa class="cm-produto-moldura"><div data-vez-tela><span data-vez></span></div></div></div></div>'
+        : `<div data-casa><div data-faixa><div class="ic-estagio" data-troca-palco${sala === 'fixa' ? ' data-troca-fixo' : ''}><div class="ic-folha"><div class="ic-folha-interior"></div></div><div data-vez-caixa class="cm-produto-moldura"><div data-vez-tela><span data-vez></span></div></div></div></div></div>`
+    return document.body
+  }
+  const quemCasa = (d: Declaracao, raiz: HTMLElement) => {
+    try {
+      return Array.from(raiz.querySelectorAll(d.seletor))
+    } catch {
+      return []
+    }
+  }
+
+  it('the two stacked rules (--vez timeline and ic-vez animation) are keyed on .ic-palco and on nothing that the rest room carries', () => {
+    const empilhadas = regrasDeAnimacao().filter((d) => d.valor.includes('--vez') || (d.prop === 'animation-range' && d.valor === 'contain 45% contain 55%') || d.seletor.includes('[data-vez-caixa]'))
+    expect(empilhadas.length).toBeGreaterThanOrEqual(5)
+    for (const d of empilhadas) {
+      expect(d.seletor, `${d.seletor} { ${d.prop} }`).toContain('.ic-palco')
+      expect(d.seletor, `${d.seletor} { ${d.prop} }`).not.toContain('data-troca-palco')
+      expect(d.seletor, `${d.seletor} { ${d.prop} }`).not.toContain(':not(')
+    }
+  })
+
+  it('no timeline or animation declaration of troca.css is keyed on [data-troca-palco] (the stage carries it in every room from 1024 px)', () => {
+    for (const d of regrasDeAnimacao()) expect(d.seletor, `${d.seletor} { ${d.prop} }`).not.toContain('data-troca-palco')
+  })
+
+  it('negative control: in the rest room no declaration that starts a timeline or an animation matches any node', () => {
+    const raiz = montar('repouso')
+    for (const d of regrasDeAnimacao()) expect(quemCasa(d, raiz), `${d.seletor} { ${d.prop} }`).toHaveLength(0)
+  })
+
+  it('positive controls: the pinned room matches the sheet and pinned-marker rules, the stacked room the --vez rules', () => {
+    const fixa = montar('fixa')
+    const nasFixas = regrasDeAnimacao().filter((d) => quemCasa(d, fixa).length > 0)
+    expect(nasFixas.map((d) => d.seletor).some((s) => s.includes('.ic-folha-interior'))).toBe(true)
+    expect(nasFixas.map((d) => d.seletor).some((s) => s.endsWith('[data-vez]'))).toBe(true)
+    expect(nasFixas.some((d) => d.valor.includes('--vez'))).toBe(false)
+    const empilhada = montar('empilhada')
+    const nasEmpilhadas = regrasDeAnimacao().filter((d) => quemCasa(d, empilhada).length > 0)
+    expect(nasEmpilhadas.some((d) => d.prop === 'view-timeline' && d.valor === '--vez block')).toBe(true)
+    expect(nasEmpilhadas.some((d) => d.prop === 'animation-timeline' && d.valor === '--vez')).toBe(true)
+    expect(nasEmpilhadas.some((d) => d.valor.includes('--palco'))).toBe(false)
+  })
+
+  it('the only rule keyed on [data-troca-palco] in troca.css and inicio-casa.css is the transform reset of a scrolled screen', () => {
+    const todasAsRegras = [...declaracoes(CSS_DA_TROCA()), ...declaracoes(CSS_DA_CASA())]
+    const chaveadas = todasAsRegras.filter((d) => d.seletor.includes('data-troca-palco'))
+    expect(chaveadas.map((d) => `${d.prop}: ${d.valor}`)).toEqual(['transform: none'])
   })
 })
 

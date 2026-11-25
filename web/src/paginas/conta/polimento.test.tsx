@@ -39,7 +39,10 @@ describe('telas de acesso: só a placa da porta', () => {
       const imagens = container.querySelectorAll<HTMLImageElement>('main img')
       expect(imagens).toHaveLength(1)
       expect(imagens[0].getAttribute('alt')).toBe(PORTA_ACESSO.alt)
-      expect(imagens[0].classList.contains('aspect-square')).toBe(true)
+      // F8-4: quadrada de 1024 px em diante (`lg:aspect-square`); abaixo disso é a faixa da porta (cover, h-full, w-full).
+      expect(imagens[0].classList.contains('lg:aspect-square')).toBe(true)
+      expect(imagens[0].classList.contains('aspect-square')).toBe(false)
+      for (const classe of ['object-cover', 'h-full', 'w-full']) expect(imagens[0].classList.contains(classe), classe).toBe(true)
       expect(imagens[0].className).not.toMatch(/shadow|rounded|border|ring|outline/)
       // A placa fica na segunda coluna, ao lado do formulário (a partir de 1024 px, à esquerda dele).
       const colunas = imagens[0].closest('[data-h~="colunas"]')!
