@@ -30,6 +30,7 @@ export function FaixaSozinho() {
           />
         </picture>
       </figure>
+      <div className="ic-chao ic-chao-dia" aria-hidden="true" />
     </div>
   )
 }

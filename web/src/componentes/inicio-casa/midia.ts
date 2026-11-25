@@ -2,24 +2,76 @@ import { imagemPublica } from '../campo/urlPublica.ts'
 import type { CSSProperties } from 'react'
 import { placa } from '../campo/imagens.ts'
 import type { Imagem } from '../secoes/contrato.ts'
-import m04Recorte from '../../assets/cenas/inicio/m04-recorte-1200w.webp?w=350;600;700;1200&format=avif;webp&as=picture'
-import m05Sol from '../../assets/cenas/inicio/m05-sol-1672w.webp?w=900;1672&format=avif;webp&as=picture'
+import m04Avif350 from '../../assets/cenas/inicio/m04-recorte-350w.avif'
+import m04Avif600 from '../../assets/cenas/inicio/m04-recorte-600w.avif'
+import m04Avif700 from '../../assets/cenas/inicio/m04-recorte-700w.avif'
+import m04Avif1200 from '../../assets/cenas/inicio/m04-recorte-1200w.avif'
+import m04Webp350 from '../../assets/cenas/inicio/m04-recorte-350w.webp'
+import m04Webp600 from '../../assets/cenas/inicio/m04-recorte-600w.webp'
+import m04Webp700 from '../../assets/cenas/inicio/m04-recorte-700w.webp'
+import m04Webp1200 from '../../assets/cenas/inicio/m04-recorte-1200w.webp'
+import m05Avif900 from '../../assets/cenas/inicio/m05-sol-900w.avif'
+import m05Avif1672 from '../../assets/cenas/inicio/m05-sol-1672w.avif'
+import m05Webp900 from '../../assets/cenas/inicio/m05-sol-900w.webp'
+import m05Webp1672 from '../../assets/cenas/inicio/m05-sol-1672w.webp'
 import m05Sol390 from '../../assets/cenas/inicio/m05-sol-390c-780w.webp?w=390;780&format=avif;webp&as=picture'
 import m06Apagada from '../../assets/cenas/inicio/m06-apagada-792w.webp?w=300;396;600;792&format=avif;webp&as=picture'
 import m11Janela from '../../assets/cenas/nao-encontrada/m11-janela-542w.webp?w=340;361;542&format=avif;webp&as=picture'
 
-// The files of the page. The four scene plates (M05, M05_390, M06, M04) come from ONE master each under
-// `web/src/assets/cenas/inicio/` (PROVENANCE.md there): vite-imagetools generates the AVIF and WebP of each width at
-// build time, with hashed URLs (`placa` in `campo/imagens.ts`). The light layers stay in `web/public/cenas/inicio/` as
-// PNG, and the three real captures under `web/public/telas/casa/` (MANIFESTO.json) are served as they are.
-// `src/teste/inicioCapturas.test.ts` reads the manifest and fails when a capture's path, width or height here differs
-// from it. The device frames are ASSET-1's rasters under `web/public/molduras/`; nothing is drawn in CSS or SVG.
+// The files of the page. M04 and M05 are FIXED files under `web/src/assets/cenas/inicio/` (PROVENANCE.md there): an AVIF
+// 4:4:4 ladder whose ground is calibrated on the decoded output, and a WebP ladder, both exported once from the lossless
+// masters and imported as plain Vite assets (no query, so vite-imagetools leaves them alone and the build never
+// re-transcodes the ground). M05_390 and M06 still come from ONE master each, through vite-imagetools (`placa` in
+// `campo/imagens.ts`). The light layers stay in `web/public/cenas/inicio/` as PNG, and the three real captures under
+// `web/public/telas/casa/` (MANIFESTO.json) are served as they are. `src/teste/inicioCapturas.test.ts` reads the manifest
+// and fails when a capture's path, width or height here differs from it. The device frames are ASSET-1's rasters under
+// `web/public/molduras/`; nothing is drawn in CSS or SVG.
+
+interface Degrau {
+  url: string
+  largura: number
+}
+
+const lista = (degraus: Degrau[]) => degraus.map(({ url, largura }) => `${url} ${largura}w`).join(', ')
+
+/**
+ * The `Imagem` of a plate made of fixed files: `src` is the WebP of `larguraDoSrc`, `srcSet` the WebP ladder, `avif` the
+ * AVIF ladder of the same widths. `largura` and `altura` are those of the largest file (the lossless master's crop).
+ */
+function placaFixa(webp: Degrau[], avif: Degrau[], sizes: string, larguraDoSrc: number, largura: number, altura: number): Imagem & { avif: string; srcSet: string; sizes: string } {
+  const doSrc = webp.find((degrau) => degrau.largura === larguraDoSrc)
+  if (doSrc === undefined) throw new Error(`placaFixa: no WebP file of ${larguraDoSrc}w`)
+  return { src: doSrc.url, srcSet: lista(webp), avif: lista(avif), sizes, largura, altura }
+}
 
 /** M05, the whole plate (900 × 506.5 CSS px at 1440): the day and the night of one room on one seam. */
-export const M05: Imagem = placa(m05Sol, '(min-width: 1440px) 900px, 62.5vw', 900)
+export const M05: Imagem = placaFixa(
+  [
+    { url: m05Webp900, largura: 900 },
+    { url: m05Webp1672, largura: 1672 },
+  ],
+  [
+    { url: m05Avif900, largura: 900 },
+    { url: m05Avif1672, largura: 1672 },
+  ],
+  '(min-width: 1440px) 900px, 62.5vw',
+  900,
+  1672,
+  941,
+)
 
-/** M05 for 390: the window of RECUT §4, 390 × 306 CSS px, in the plate's own pixels at 1× and 2×. */
-export const M05_390: Imagem = placa(m05Sol390, '100vw', 390)
+/**
+ * M05 for 390: the window of RECUT §4, 390 × 306 CSS px, in the plate's own pixels at 1× and 2×. WebP only: the phone
+ * crop's own files are outside the AVIF re-export of M04 and M05, so only the WebP fields of the build ladder are served.
+ */
+const m05Recorte = placa(m05Sol390, '100vw', 390)
+export const M05_390: Imagem = {
+  src: m05Recorte.src,
+  srcSet: m05Recorte.srcSet,
+  sizes: m05Recorte.sizes,
+  largura: m05Recorte.largura,
+  altura: m05Recorte.altura,
+}
 
 /** The seam of M05 as a fraction of its whole width (RECUT §2: 0.5443). */
 export const M05_COSTURA = 0.5443
@@ -32,10 +84,22 @@ export const M05_LARGURA = 900
 
 /**
  * The light layer of a plate: ONE file (cone and pool merged) in the plate's own box, opacity only, lit at rest. The
- * layers over 12,000 bytes (`m05-luz-1672w`, `m05-luz-390c-780w`, `m06-luz-600w`, `m06-luz-792w`) are not served.
+ * M05 includes the delivered 2x tiers. Only M06's 600w/792w layers exceed 12,000 bytes and remain unserved.
  */
-export const LUZ_M05: Imagem = imagemPublica({ src: '/cenas/inicio/m05-luz-900w.png', largura: 900, altura: 507 })
-export const LUZ_M05_390: Imagem = imagemPublica({ src: '/cenas/inicio/m05-luz-390c-390w.png', largura: 390, altura: 306 })
+export const LUZ_M05: Imagem = imagemPublica({
+  src: '/cenas/inicio/m05-luz-900w.png',
+  srcSet: '/cenas/inicio/m05-luz-900w.png 900w, /cenas/inicio/m05-luz-1672w.png 1672w',
+  sizes: '(min-width: 1440px) 900px, 62.5vw',
+  largura: 900,
+  altura: 507,
+})
+export const LUZ_M05_390: Imagem = imagemPublica({
+  src: '/cenas/inicio/m05-luz-390c-390w.png',
+  srcSet: '/cenas/inicio/m05-luz-390c-390w.png 390w, /cenas/inicio/m05-luz-390c-780w.png 780w',
+  sizes: '100vw',
+  largura: 390,
+  altura: 306,
+})
 export const LUZ_M06: Imagem = imagemPublica({
   src: '/cenas/inicio/m06-luz-396w.png',
   srcSet: '/cenas/inicio/m06-luz-300w.png 300w, /cenas/inicio/m06-luz-396w.png 396w',
@@ -48,7 +112,24 @@ export const LUZ_M06: Imagem = imagemPublica({
 export const M06: Imagem = placa(m06Apagada, '(min-width: 1024px) 395.5px, 300px', 396)
 
 /** M04, the scene of the band "só eu" (a crop of the plate of 15:00; its caption is not rendered here). */
-export const M04: Imagem = placa(m04Recorte, '(min-width: 1024px) 600px, 100vw', 600)
+export const M04: Imagem = placaFixa(
+  [
+    { url: m04Webp350, largura: 350 },
+    { url: m04Webp600, largura: 600 },
+    { url: m04Webp700, largura: 700 },
+    { url: m04Webp1200, largura: 1200 },
+  ],
+  [
+    { url: m04Avif350, largura: 350 },
+    { url: m04Avif600, largura: 600 },
+    { url: m04Avif700, largura: 700 },
+    { url: m04Avif1200, largura: 1200 },
+  ],
+  '(min-width: 1024px) 600px, 100vw',
+  600,
+  1200,
+  870,
+)
 
 /**
  * The device frames (ASSET-1, `web/public/molduras/`, PROVENANCE.md there): a PNG with a hole where the screen goes, the

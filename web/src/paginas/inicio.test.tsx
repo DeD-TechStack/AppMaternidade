@@ -1010,6 +1010,213 @@ describe('HOME-FINAL F5 short desktop windows pin the stage; the stage is bounde
   })
 })
 
+// ---------------------------------------------------------------------------------------------
+// HOME-SEAMS: every floor, plate edge and divider meets its neighbour without a step, a box or a cut
+// ---------------------------------------------------------------------------------------------
+
+const MIDIA_DA_CASA = join(PASTA_SRC, 'componentes', 'inicio-casa', 'midia.ts')
+const cssDaCasa = () => norm(readFileSync(CSS_DA_CASA, 'utf8'))
+
+describe('HOME-SEAMS S6: display variant C holds the 16:00 caption left of the seam', () => {
+  it('the caption is a p.ic-legenda inside .ic-leg1, and variant C alone caps .ic-leg1 at the seam less one block', async () => {
+    await abrir(1440)
+    expect(principal().querySelector('.ic-leg1 p.ic-legenda[data-legenda]')).not.toBeNull()
+    const css = cssDaCasa()
+    expect(css).toContain(
+      "html[data-exibicao='c'] [data-casa] .ic-leg1 { max-inline-size: calc(var(--heroi-costura-x) - var(--heroi-esq) - var(--espaco-bloco)); }",
+    )
+    // A and B keep the shipped width: no rule of theirs on the caption.
+    expect(css).not.toMatch(/data-exibicao='(a|b)'\] \[data-casa\] \.ic-leg1/)
+  })
+
+  it('the cap sits in the room composition, where .ic-leg1 is absolute', () => {
+    const css = cssDaCasa()
+    const sala = css.indexOf('@media (min-width: 1180px) and (min-aspect-ratio: 1/1) { /* The hero')
+    const regra = css.indexOf("html[data-exibicao='c'] [data-casa] .ic-leg1 {")
+    const fim = css.indexOf('/* ---- 1024 and more: the bands after the stage')
+    expect(sala).toBeGreaterThan(-1)
+    expect(regra).toBeGreaterThan(sala)
+    expect(regra).toBeLessThan(fim)
+  })
+})
+
+describe('HOME-SEAMS S2: band 4 stands the scene on a day floor that runs to the band edge', () => {
+  it('.ic-so ends in an aria-hidden .ic-chao.ic-chao-dia, after the scene', async () => {
+    await abrir(1440)
+    const so = principal().querySelector('.ic-so')!
+    const chao = so.lastElementChild!
+    expect(chao.classList.contains('ic-chao')).toBe(true)
+    expect(chao.classList.contains('ic-chao-dia')).toBe(true)
+    expect(chao.getAttribute('aria-hidden')).toBe('true')
+    expect(so.querySelector('.ic-so-cena')!.compareDocumentPosition(chao) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('the stylesheet gives the floor the areia token, the band no bottom padding, and crops the scene at the rug', () => {
+    const css = cssDaCasa()
+    expect(css).toMatch(/\[data-casa\] \.ic-chao-dia::before \{ background-color: var\(--color-areia\); \}/)
+    expect(css).toMatch(/\[data-faixa\]:has\(\.ic-so\)[^{]*\{ padding-bottom: 0; \}/)
+    expect(css).toMatch(/\[data-casa\] \.ic-so-cena \{[^}]*aspect-ratio: 1200 \/ 800;[^}]*overflow: hidden;/)
+  })
+})
+
+describe('HOME-SEAMS S1: below 1180 the M06 floor runs on to both edges at the plate\'s own floor line', () => {
+  it('a floor layer behind the plate, in token texto-2, from the floor line down, 300 vw wide, in the stacked block only', () => {
+    const css = cssDaCasa()
+    const regra = /\[data-casa\] \.ic-m06::before \{([^}]*)\}/.exec(css)
+    expect(regra, '.ic-m06::before rule').not.toBeNull()
+    expect(regra![1]).toContain('top: calc(var(--m06-chao-fracao) * 100%);')
+    expect(regra![1]).toContain('bottom: 0;')
+    expect(regra![1]).toContain('left: -100vw;')
+    expect(regra![1]).toContain('width: 300vw;')
+    expect(regra![1]).toContain('background-color: var(--color-texto-2);')
+    expect(regra![1]).toContain('z-index: -1;')
+    expect(css).toContain('--m06-chao-fracao: 0.8599;')
+    const empilhada = css.indexOf('@media not all and (min-width: 1180px) and (min-aspect-ratio: 1/1) {')
+    const curta = css.indexOf('/* Short landscape windows')
+    const posicao = css.indexOf('[data-casa] .ic-m06::before {')
+    expect(posicao).toBeGreaterThan(empilhada)
+    expect(posicao).toBeLessThan(curta)
+    // The plate opens its own stacking context, so the layer at z -1 stays above the band's wall.
+    const estreita = /\[data-casa\] \.ic-m06 \{([^}]*)\}/.exec(css)!
+    expect(estreita[1]).toContain('isolation: isolate;')
+  })
+})
+
+describe('HOME-SEAMS S4: the hero floors end on the hero foot, not 65 px under the plate', () => {
+  it('bottom = 100% less the hero foot measured from the plate top, in the room block, and no --heroi-chao-extra left', () => {
+    const css = cssDaCasa()
+    expect(css).toContain(
+      "[data-casa] [aria-labelledby='ic-titulo'] [data-camada='chao-esquerda'], [data-casa] [aria-labelledby='ic-titulo'] [data-camada='chao-direita'] { bottom: calc(100% - (var(--heroi-alto) - var(--heroi-placa-topo))); }",
+    )
+    expect(css).not.toContain('--heroi-chao-extra')
+    // At 1440 (k = 1): the plate is 506.5 tall, so the layer ends 64.5 px under it, at the hero's 723 (not at 723.5).
+    expect(152 + 506.5 + (506.5 - (723 - 152)) * -1).toBeCloseTo(723, 5)
+    const sala = css.indexOf('@media (min-width: 1180px) and (min-aspect-ratio: 1/1) { /* The hero')
+    const regra = css.indexOf("[data-camada='chao-direita'] { bottom: calc(100% -")
+    expect(regra).toBeGreaterThan(sala)
+  })
+})
+
+// HOME-SEAMS-G3: the M04 and M05 plates are FIXED files under src/assets/cenas/inicio (AVIF 4:4:4 calibrated on the decoded
+// ground, WebP fallback tiers), imported as plain Vite assets. The build never re-transcodes them, so the decoded ground the
+// page serves is the ground the export script measured (PROVENANCE.md there).
+const PLACAS_FIXAS = [
+  { chave: 'M05', base: 'm05-sol', larguras: [900, 1672], alturas: [507, 941], sizes: '(min-width: 1440px) 900px, 62.5vw', tamanho: [1672, 941], src: 900 },
+  { chave: 'M04', base: 'm04-recorte', larguras: [350, 600, 700, 1200], alturas: [254, 435, 508, 870], sizes: '(min-width: 1024px) 600px, 100vw', tamanho: [1200, 870], src: 600 },
+] as const
+const PASTA_PLACAS = join(PASTA_SRC, 'assets', 'cenas', 'inicio')
+
+/** The `url wN` entries of a srcset, in order. */
+function degraus(srcSet: string | undefined) {
+  return (srcSet ?? '').split(',').map((parte) => {
+    const [url, descritor] = parte.trim().split(/\s+/)
+    return { url, largura: Number((descritor ?? '').replace(/w$/, '')) }
+  })
+}
+
+/** Width and height the file itself states: the `ispe` box of an AVIF, the VP8 / VP8X chunk of a WebP. */
+function dimensoesDoArquivo(arquivo: string): { formato: 'avif' | 'webp'; largura: number; altura: number } {
+  const bytes = readFileSync(arquivo)
+  if (bytes.subarray(4, 12).toString('latin1') === 'ftypavif') {
+    const caixa = bytes.indexOf('ispe', 0, 'latin1')
+    return { formato: 'avif', largura: bytes.readUInt32BE(caixa + 8), altura: bytes.readUInt32BE(caixa + 12) }
+  }
+  expect(bytes.subarray(0, 4).toString('latin1'), arquivo).toBe('RIFF')
+  expect(bytes.subarray(8, 12).toString('latin1'), arquivo).toBe('WEBP')
+  const pedaco = bytes.subarray(12, 16).toString('latin1')
+  if (pedaco === 'VP8X') return { formato: 'webp', largura: bytes.readUIntLE(24, 3) + 1, altura: bytes.readUIntLE(27, 3) + 1 }
+  expect(pedaco, arquivo).toBe('VP8 ')
+  return { formato: 'webp', largura: bytes.readUInt16LE(26) & 0x3fff, altura: bytes.readUInt16LE(28) & 0x3fff }
+}
+
+describe('HOME-SEAMS-G3 S3 / S2: M04 and M05 are fixed files (an AVIF ladder and a WebP ladder), not build transcodes', () => {
+  it('M05 and M04 serve plain asset URLs: no @imagetools URL, both ladders on the same widths, sizes and size unchanged', async () => {
+    const midia = await import('../componentes/inicio-casa/midia.ts')
+    for (const { chave, base, larguras, sizes, tamanho, src } of PLACAS_FIXAS) {
+      const imagem = midia[chave]
+      const webp = degraus(imagem.srcSet)
+      const avif = degraus(imagem.avif)
+      expect(webp.map((d) => d.largura), `${chave}: WebP widths`).toEqual(larguras)
+      expect(avif.map((d) => d.largura), `${chave}: AVIF widths`).toEqual(larguras)
+      for (const { url, largura } of webp) {
+        expect(url, `${chave} ${largura}w WebP`).toMatch(new RegExp(`^/(?:src/assets/cenas/inicio|assets)/${base}-${largura}w(?:-[\\w-]+)?\\.webp$`))
+      }
+      for (const { url, largura } of avif) {
+        expect(url, `${chave} ${largura}w AVIF`).toMatch(new RegExp(`^/(?:src/assets/cenas/inicio|assets)/${base}-${largura}w(?:-[\\w-]+)?\\.avif$`))
+      }
+      expect(new Set([...webp, ...avif].map((d) => d.url)).size, `${chave}: one distinct URL per format and width`).toBe(larguras.length * 2)
+      expect(`${imagem.src}${imagem.srcSet}${imagem.avif}`, chave).not.toContain('@imagetools')
+      expect(imagem.src, `${chave}: src is the ${src}w WebP`).toBe(webp.find((d) => d.largura === src)?.url)
+      expect([imagem.largura, imagem.altura], `${chave}: size of the largest file`).toEqual(tamanho)
+      expect(imagem.sizes, `${chave}: sizes`).toBe(sizes)
+    }
+  })
+
+  it('every file of both ladders exists under src/assets/cenas/inicio, in its format, with the exact width and height of its tier', () => {
+    for (const { base, larguras, alturas } of PLACAS_FIXAS) {
+      larguras.forEach((largura, i) => {
+        for (const formato of ['avif', 'webp'] as const) {
+          const arquivo = join(PASTA_PLACAS, `${base}-${largura}w.${formato}`)
+          expect(existsSync(arquivo), arquivo).toBe(true)
+          expect(dimensoesDoArquivo(arquivo), `${base}-${largura}w.${formato}`).toEqual({ formato, largura, altura: alturas[i] })
+        }
+      })
+    }
+    // Negative control: a width that is not in a ladder is not a file, so the dimension check above cannot pass by accident.
+    expect(existsSync(join(PASTA_PLACAS, 'm05-sol-901w.avif'))).toBe(false)
+  })
+
+  it('M05_390 stays the WebP-only projection of its own ladder; M06 keeps the build ladder; midia.ts holds no lossless query', async () => {
+    const { M05_390, M06 } = await import('../componentes/inicio-casa/midia.ts')
+    const { placa } = await import('../componentes/campo/imagens.ts')
+    const phone = await import('../assets/cenas/inicio/m05-sol-390c-780w.webp?w=390;780&format=avif;webp&as=picture')
+    const original = placa(phone.default, '100vw', 390)
+    expect(M05_390).not.toHaveProperty('avif')
+    expect(M05_390).toEqual({ src: original.src, srcSet: original.srcSet, sizes: original.sizes, largura: original.largura, altura: original.altura })
+    // Negative control: the shared helper still exposes the AVIF alternative that the projection leaves out.
+    expect(original.avif).toBeTruthy()
+    expect(original.avif).not.toBe(original.srcSet)
+    expect(M06.avif).toBeTruthy()
+    expect(readFileSync(MIDIA_DA_CASA, 'utf8')).not.toContain('lossless=true')
+  })
+
+  it('renders the M05 AVIF source after the phone WebP source, and the M04 AVIF source in band 4, from the fixed ladders', async () => {
+    const { M05, M04 } = await import('../componentes/inicio-casa/midia.ts')
+    await abrir(1440)
+    const hero = principal().querySelector('.cm-cena-placa > picture')!
+    const avif = hero.querySelectorAll('source[type="image/avif"]')
+    expect(avif).toHaveLength(1)
+    expect(avif[0].getAttribute('srcset')).toBe(M05.avif)
+    expect(avif[0].hasAttribute('media')).toBe(false)
+    expect(hero.querySelector('source[media="(max-width: 767px)"]')?.getAttribute('srcset')).toBeTruthy()
+    expect(hero.querySelector('img')?.getAttribute('srcset')).toBe(M05.srcSet)
+    expect(hero.querySelector('img')?.getAttribute('src')).toBe(M05.src)
+    const so = principal().querySelector('.ic-so-cena')!
+    expect(so.querySelector('source[type="image/avif"]')?.getAttribute('srcset')).toBe(M04.avif)
+    expect(so.querySelector('img')?.getAttribute('srcset')).toBe(M04.srcSet)
+  })
+})
+
+describe('HOME-SEAMS S7: every lamp-light file named in midia.ts exists in web/public', () => {
+  it('M05 serves both delivered 2x tiers; M06 keeps its approved capped ladder', async () => {
+    const { LUZ_M05, LUZ_M05_390, LUZ_M06 } = await import('../componentes/inicio-casa/midia.ts')
+    expect(LUZ_M05.srcSet).toBe('/cenas/inicio/m05-luz-900w.png 900w, /cenas/inicio/m05-luz-1672w.png 1672w')
+    expect(LUZ_M05.sizes).toBe('(min-width: 1440px) 900px, 62.5vw')
+    expect(LUZ_M05_390.srcSet).toBe('/cenas/inicio/m05-luz-390c-390w.png 390w, /cenas/inicio/m05-luz-390c-780w.png 780w')
+    expect(LUZ_M05_390.sizes).toBe('100vw')
+    expect(LUZ_M06.srcSet).toBe('/cenas/inicio/m06-luz-300w.png 300w, /cenas/inicio/m06-luz-396w.png 396w')
+  })
+
+  it('LUZ_M05, LUZ_M05_390 and LUZ_M06 point at existing files', async () => {
+    const { LUZ_M05, LUZ_M05_390, LUZ_M06 } = await import('../componentes/inicio-casa/midia.ts')
+    for (const luz of [LUZ_M05, LUZ_M05_390, LUZ_M06]) {
+      const urls = [luz.src, ...(luz.srcSet ?? '').split(',').map((item) => item.trim().split(' ')[0])].filter((url) => url !== '')
+      expect(urls.length).toBeGreaterThan(0)
+      for (const url of urls) expect(existsSync(join(PASTA_WEB, 'public', url.replace(/^\//, ''))), url).toBe(true)
+    }
+  })
+})
+
 describe('HOME-RHYTHM the room scales with the quadro by one unitless number, and the preview label leaves the picture', () => {
   it('the scale --heroi-k is 1 at 1440 (the quadro is 1200 px), clamped to [1, 1.34], and follows the window height too', () => {
     const css = norm(readFileSync(CSS_DA_CASA, 'utf8'))
@@ -1028,7 +1235,6 @@ describe('HOME-RHYTHM the room scales with the quadro by one unitless number, an
       ['--heroi-placa-topo', '152px'],
       ['--heroi-lede-topo', '258px'],
       ['--heroi-leg-topo', '666.5px'],
-      ['--heroi-chao-extra', '65px'],
       ['--palco-chao', '108px'],
       ['--palco-m06-largura', '395.5px'],
       ['--palco-m06-chao', '555.2px'],

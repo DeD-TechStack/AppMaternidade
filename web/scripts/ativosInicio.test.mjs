@@ -22,13 +22,31 @@ const PASTAS = {
   telas: PASTA('telas/casa'),
 }
 const ATIVOS = {
-  // The masters only: the smaller widths no longer exist as files (the build makes them from the master).
+  // The masters kept as files: M05_390 and M06 still get their smaller widths from the build; the M04 and M05 WebP masters
+  // are also the top tier of their fixed WebP ladders.
   placas: {
     'm05-sol-1672w.webp': 38600,
     'm05-sol-390c-780w.webp': 23600,
     'm06-apagada-792w.webp': 30700,
     'm04-recorte-1200w.webp': 27400,
   },
+  // HOME-SEAMS-G3: the files the page SELECTS for M04 and M05 at the top tier (the AVIF 4:4:4 of the lossless master, ground
+  // calibrated on the decoded output). The plate source caps apply to them, and the page total counts them.
+  entrega: {
+    'm05-sol-1672w.avif': 38600,
+    'm04-recorte-1200w.avif': 27400,
+  },
+  // The rest of the two fixed ladders: no byte cap of their own, but each needs its PROVENANCE.md row and its file type.
+  escadas: [
+    'm05-sol-900w.avif',
+    'm05-sol-900w.webp',
+    'm04-recorte-350w.avif',
+    'm04-recorte-600w.avif',
+    'm04-recorte-700w.avif',
+    'm04-recorte-350w.webp',
+    'm04-recorte-600w.webp',
+    'm04-recorte-700w.webp',
+  ],
   // Layer names without extension: the file may be .png or .webp, exactly one of them exists.
   camadas: [
     'm05-luz-900w',
@@ -43,9 +61,9 @@ const ATIVOS = {
   tetoCamada: 12000,
   // Lamp layers that `/` loads together, per viewport and DPR.
   somaCamadas: {
-    'DPR 2 on 1440': ['m05-luz-1672w', 'm06-luz-792w'],
+    'DPR 2 on 1440': ['m05-luz-1672w', 'm06-luz-396w'],
     'DPR 1 on 1440': ['m05-luz-900w', 'm06-luz-396w'],
-    'DPR 2 on 390': ['m05-luz-390c-780w', 'm06-luz-600w'],
+    'DPR 2 on 390': ['m05-luz-390c-780w', 'm06-luz-396w'],
     'DPR 1 on 390': ['m05-luz-390c-390w', 'm06-luz-300w'],
   },
   tetoSomaCamadas: 25000,
@@ -538,7 +556,7 @@ function checarTetoCaptura(pasta, nome, teto) {
 function checarTudo(pastas) {
   const t = (pasta, nome) => statSync(join(pasta, nome)).size
   const ausentes = camadasAusentes(pastas.cenas, pastas.placas)
-  for (const [nome, teto] of Object.entries(ATIVOS.placas)) {
+  for (const [nome, teto] of Object.entries({ ...ATIVOS.placas, ...ATIVOS.entrega })) {
     assert.ok(t(pastas.placas, nome) <= teto, `${nome}: ${t(pastas.placas, nome)} bytes is over the ${teto} cap`)
   }
   for (const base of ATIVOS.camadas) checarCamada(pastas.cenas, base, ATIVOS.tetoCamada, ausentes)
@@ -552,10 +570,11 @@ function checarTudo(pastas) {
   for (const [nome, teto] of Object.entries(ATIVOS.capturas)) {
     checarTetoCaptura(pastas.telas, nome, teto)
   }
+  // The plates counted are the ones the page selects at 1440 x DPR 2: the AVIF of M05 (1672w) and of M04 (1200w).
   const total =
-    t(pastas.placas, 'm05-sol-1672w.webp') + bytesDaCamada(pastas.cenas, 'm05-luz-1672w', ausentes) +
-    t(pastas.placas, 'm06-apagada-792w.webp') + bytesDaCamada(pastas.cenas, 'm06-luz-792w', ausentes) +
-    t(pastas.placas, 'm04-recorte-1200w.webp') +
+    t(pastas.placas, 'm05-sol-1672w.avif') + bytesDaCamada(pastas.cenas, 'm05-luz-1672w', ausentes) +
+    t(pastas.placas, 'm06-apagada-792w.webp') + bytesDaCamada(pastas.cenas, 'm06-luz-396w', ausentes) +
+    t(pastas.placas, 'm04-recorte-1200w.avif') +
     Math.max(t(pastas.telas, 'historico-y-640w.webp'), t(pastas.telas, 'historico-y-alta-640w.webp')) +
     t(pastas.telas, 'hoje-n-640w.webp') +
     ATIVOS.molduras.reduce((s, nome) => s + t(pastas.molduras, nome), 0)
@@ -588,6 +607,48 @@ test('AST1-I-09 byte caps: plates, lamp layers, layer sums per DPR, frames, capt
   writeFileSync(join(telas, 'historico-y-alta-640w.webp'), Buffer.alloc(35000))
   checarTetoCaptura(telas, 'historico-y-alta-640w.webp', teto)
   checarTudo(PASTAS)
+})
+
+// ---- Fixed plates (HOME-SEAMS-G3) -----------------------------------------------------------------------------------
+/** The first bytes of a file say its format: an AVIF is an ISO box `ftyp` with the brand `avif`, a WebP is RIFF....WEBP. */
+function checarFormato(pasta, nome) {
+  const buf = readFileSync(join(pasta, nome))
+  if (nome.endsWith('.avif')) {
+    assert.equal(buf.subarray(4, 12).toString('latin1'), 'ftypavif', `${nome} is not an AVIF file`)
+  } else {
+    assert.equal(buf.subarray(0, 4).toString('latin1'), 'RIFF', `${nome} is not a WebP file`)
+    assert.equal(buf.subarray(8, 12).toString('latin1'), 'WEBP', `${nome} is not a WebP file`)
+  }
+}
+
+/** The plates the page selects at the top tier are at most their cap, and each plate file is what its extension says. */
+function checarPlacasSelecionadas(pasta) {
+  for (const [nome, teto] of Object.entries(ATIVOS.entrega)) {
+    const bytes = statSync(join(pasta, nome)).size
+    assert.ok(bytes <= teto, `${nome}: ${bytes} bytes is over the ${teto} cap`)
+  }
+  for (const nome of [...Object.keys(ATIVOS.entrega), ...ATIVOS.escadas]) checarFormato(pasta, nome)
+}
+
+test('AST1-I-09b plates the page selects: the AVIF top tiers hold the plate caps, and every ladder file is the format it names', () => {
+  // Negative 1: one byte over the M04 cap, and one over the M05 cap, fail by name.
+  const gorda = pastaTmp()
+  const avifVazio = (bytes) => Buffer.concat([Buffer.from([0, 0, 0, 0x1c]), Buffer.from('ftypavif', 'latin1'), Buffer.alloc(bytes - 12)])
+  writeFileSync(join(gorda, 'm04-recorte-1200w.avif'), avifVazio(27401))
+  writeFileSync(join(gorda, 'm05-sol-1672w.avif'), avifVazio(38600))
+  assert.throws(() => checarPlacasSelecionadas(gorda), /m04-recorte-1200w\.avif: 27401 bytes is over the 27400 cap/)
+  writeFileSync(join(gorda, 'm04-recorte-1200w.avif'), avifVazio(27400))
+  writeFileSync(join(gorda, 'm05-sol-1672w.avif'), avifVazio(38601))
+  assert.throws(() => checarPlacasSelecionadas(gorda), /m05-sol-1672w\.avif: 38601 bytes is over the 38600 cap/)
+  // Negative 2: a WebP renamed to .avif (and an AVIF renamed to .webp) is rejected by its first bytes.
+  const webp = Buffer.concat([Buffer.from('RIFF', 'latin1'), Buffer.alloc(4), Buffer.from('WEBPVP8 ', 'latin1'), Buffer.alloc(16)])
+  writeFileSync(join(gorda, 'x.avif'), webp)
+  assert.throws(() => checarFormato(gorda, 'x.avif'), /x\.avif is not an AVIF file/)
+  writeFileSync(join(gorda, 'y.webp'), avifVazio(40))
+  assert.throws(() => checarFormato(gorda, 'y.webp'), /y\.webp is not a WebP file/)
+  // The real files: both top tiers fit, and all ten ladder files exist in their format.
+  for (const nome of [...Object.keys(ATIVOS.entrega), ...ATIVOS.escadas]) assert.ok(existsSync(join(PASTAS.placas, nome)), `${nome} does not exist`)
+  checarPlacasSelecionadas(PASTAS.placas)
 })
 
 // ---- Provenance (I-10) --------------------------------------------------------------------------------------------
@@ -626,7 +687,7 @@ test('AST1-I-10 provenance: every served file has a PROVENANCE.md line with name
   checarProveniencia(dir, ['a.webp', 'b.webp'])
 
   // The masters sit next to their PROVENANCE.md; the served lamp layers are in web/public and are recorded in the same file.
-  checarProveniencia(PASTAS.placas, Object.keys(ATIVOS.placas))
+  checarProveniencia(PASTAS.placas, [...Object.keys(ATIVOS.placas), ...Object.keys(ATIVOS.entrega), ...ATIVOS.escadas])
   checarProveniencia(PASTAS.cenas, camadasServidas(PASTAS.cenas, PASTAS.placas), PASTAS.placas)
   checarProveniencia(PASTAS.molduras, ATIVOS.molduras)
   checarProveniencia(PASTAS.telas, Object.keys(ATIVOS.capturas))

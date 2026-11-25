@@ -13,6 +13,26 @@
    The bands below the stage switch at 1024 px: from there each one is two columns (heading left, rows or scene right)
    and the cacau bands stand their object on the night floor (`.ic-chao`), edge to edge.
 
+   Seven axes (existing direction retained):
+   1. Skeleton: full-bleed stacked bands; each care moment keeps its own ground across the viewport.
+   2. First screen: type beside one room; the handoff between carers remains the opening idea.
+   3. Section boundary: continuous floors; plates and captions meet on the same surface token.
+   4. Image placement: room bleed, framed product, then edge-anchored M04; no new box around the art.
+   5. Signature: the day/night room and product handoff; seam work must not move either composition.
+   6. Density: one care moment per band; keep all existing copy and measured spacing.
+   7. Navigation: the shared top bar; no page-owned replacement or shell edits.
+
+   Floor details (HOME-SEAMS), bands 1 to 4:
+    - Band 1, room: the plate's floors end on the hero's foot (`--heroi-alto`), at any width, so the stage starts on a
+      clean edge (no 0.5 px of floor over it at 1440, no strip of wall under the floor below 1440).
+   - Band 2, stacked: M06's night floor starts at 0.8599 of the plate (`--m06-chao-fracao`, 555.2 of 645.69) and runs to
+     both edges of the window; the room keeps the stage's own floor strip.
+   - Band 3: the frame stands on the night floor (`.ic-chao`, `midia` high), edge to edge.
+   - Band 4: M04's crop is 1200 x 800 of the 1200 x 870 art (it ends above the foot of the rug) and stands on the day
+     floor (`.ic-chao-dia`, areia), the band has no bottom padding; from 1024 the 600 px scene bleeds off the left edge
+     (`--so-sangria` = the quadro's margin or the gutter), below 1024 off both.
+   - Display variant C: the 16:00 caption ends one `bloco` left of the seam (`--heroi-costura-x`).
+
    Hero text sizes are the DESIGN.md levels (`text-exibicao`, `text-abertura`, `text-titulo-1`, `text-corpo`). */
 @layer components {
   [data-casa] {
@@ -72,8 +92,9 @@
        taking the room from the floor strip or the spacing. */
     --palco-quadro-livre: calc(96.5px + var(--palco-chao));
     --moldura-razao: 2.2241;
-    /* The hero's floor runs 65 px under the plate, to the foot of the hero. */
-    --heroi-chao-extra: calc(65px * var(--heroi-k));
+    /* M06's own floor line as a fraction of the plate's height (555.2 of 645.69 at 395.5 wide, RECUT): the stacked
+       composition runs the night floor on to both edges of the window from this line down. */
+    --m06-chao-fracao: 0.8599;
   }
 
   /* Display variant B (`?exibicao=b`, FG-2b): its own face is wider or narrower than Literata's, so its first span has
@@ -219,6 +240,7 @@
     [data-casa] .ic-m06 {
       /* Positioned, so the light group (absolute, inset 0) registers against this plate, not the frame. */
       position: relative;
+      isolation: isolate;
       width: min(300px, 100%);
       margin: var(--espaco-secao) auto 0;
     }
@@ -227,6 +249,20 @@
       display: block;
       width: 100%;
       height: auto;
+    }
+
+    /* The plate's floor runs on to both edges of the window: a night-floor layer behind the plate (the plate opens its
+       own stacking context, so z -1 stays above the band's wall), from the plate's floor line down to its foot, where
+       the caption strip below carries the same token. The band clips the overflow (overflow-x). */
+    [data-casa] .ic-m06::before {
+      position: absolute;
+      top: calc(var(--m06-chao-fracao) * 100%);
+      bottom: 0;
+      left: -100vw;
+      z-index: -1;
+      width: 300vw;
+      background-color: var(--color-texto-2);
+      content: '';
     }
 
     /* The caption of 17:30 lies on the night floor, a strip across the whole window. */
@@ -271,7 +307,10 @@
         column-gap: var(--espaco-midia);
       }
 
+      /* Above M06's floor layer (which runs left under the column), so the text is never painted over. */
       [data-casa] .ic-noite-texto {
+        position: relative;
+        z-index: 1;
         grid-column: 1;
         align-self: center;
       }
@@ -323,6 +362,11 @@
     [data-casa] .ic-so {
       display: grid;
       gap: var(--espaco-midia);
+    }
+
+    /* Band 4: the scene stands on the day floor, which follows it with no gap (its bleed is set after `.ic-so-cena`). */
+    [data-casa] .ic-so .ic-chao {
+      margin-top: calc(-1 * var(--espaco-midia));
     }
   }
 
@@ -394,9 +438,12 @@
       top: calc(-1 * var(--heroi-placa-topo));
     }
 
+    /* The hero's floors end exactly on the hero's foot (`heroi-alto` from the hero's top, `heroi-placa-topo` of it above the
+       plate): `bottom` is measured from the plate's own bottom, so `100%` less that foot. Never 65 px under the plate:
+       that left a 56 px strip of wall under the floor at 1280 and spilled 0.5 px over the stage at 1440. */
     [data-casa] [aria-labelledby='ic-titulo'] [data-camada='chao-esquerda'],
     [data-casa] [aria-labelledby='ic-titulo'] [data-camada='chao-direita'] {
-      bottom: calc(-1 * var(--heroi-chao-extra));
+      bottom: calc(100% - (var(--heroi-alto) - var(--heroi-placa-topo)));
     }
 
     /* The caption of 16:00 on the day floor under the plate, left of the seam. */
@@ -405,6 +452,12 @@
       top: var(--heroi-leg-topo);
       left: var(--heroi-esq);
       z-index: 2;
+    }
+
+    /* Display variant C (64 px at 1440): the caption's box ends one `bloco` left of the seam, so the text never crosses
+       it (A and B keep the shipped width). On the box, not the p: the hero's left edge resolves against the hero. */
+    html[data-exibicao='c'] [data-casa] .ic-leg1 {
+      max-inline-size: calc(var(--heroi-costura-x) - var(--heroi-esq) - var(--espaco-bloco));
     }
 
     /* Band 2 is the stage of moment 2 (REP-HOME motion sheet §3). Its quadro and tone wrappers dissolve, so the stage's
@@ -632,11 +685,26 @@
     }
 
     /* Band 4: the answer on the left, the scene on the right. */
+    /* The scene (600 px, M04's `sizes`) bleeds off the window's left edge, where the crop cuts the shelf, and stands on
+       the day floor under it: the scene first, the answer right of it, the floor across both. */
     [data-casa] .ic-so {
+      --so-sangria: max(var(--quadro-calha), (100vw - var(--quadro-largura)) / 2);
+
       display: grid;
-      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      grid-template-columns: calc(600px - var(--so-sangria)) minmax(0, 1fr);
       align-items: center;
       column-gap: var(--espaco-midia);
+    }
+
+    [data-casa] .ic-so-cena {
+      grid-row: 1;
+      grid-column: 1;
+      align-self: end;
+    }
+
+    [data-casa] .ic-so-texto {
+      grid-row: 1;
+      grid-column: 2;
     }
 
     /* Bands 5 and 6: the heading (and its sentence) left, the rows right, one row size and one rule between rows. */
@@ -680,6 +748,7 @@
 
   /* ---- The night floor of the cacau bands (3 and 7): a `chao-noite` strip from edge to edge, the object on it ---- */
   [data-casa] [data-faixa]:has(.ic-tela),
+  [data-casa] [data-faixa]:has(.ic-so),
   [data-casa] [data-faixa]:has(.ic-fecho) {
     padding-bottom: 0;
   }
@@ -699,6 +768,11 @@
     width: 300vw;
     background-color: var(--color-texto-2);
     content: '';
+  }
+
+  /* Band 4's floor is the day one: areia, the token of the hero's and the stage's day floors. */
+  [data-casa] .ic-chao-dia::before {
+    background-color: var(--color-areia);
   }
 
   /* Band 3 below 1024: the frame sits on the floor (the column's gap is cancelled above the floor). */
@@ -739,14 +813,31 @@
     font-weight: var(--peso-exibicao);
   }
 
+  /* M04's art is 1200 x 870; the crop (1200 x 800) ends just above the foot of the rug, so the scene stands on the
+     day floor (`.ic-chao-dia`) that follows it, with no gap and no cut visible. */
   [data-casa] .ic-so-cena {
     margin: 0;
+    aspect-ratio: 1200 / 800;
+    overflow: hidden;
   }
 
   [data-casa] .ic-so-cena img {
     display: block;
     width: 100%;
     height: auto;
+  }
+
+  /* The scene bleeds off the window's left edge (below 1024 off both, one gutter each). After the base rule above. */
+  @media (max-width: 1023px) {
+    [data-casa] .ic-so-cena {
+      margin-inline: calc(-1 * var(--quadro-calha));
+    }
+  }
+
+  @media (min-width: 1024px) {
+    [data-casa] .ic-so-cena {
+      margin-inline: calc(-1 * var(--so-sangria)) 0;
+    }
   }
 
   /* ---- Moment 5: the Histórico frame scrolls its real screen --------------------------------------------------- */
