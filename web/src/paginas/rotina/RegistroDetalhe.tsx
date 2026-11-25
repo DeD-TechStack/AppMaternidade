@@ -79,7 +79,7 @@ function DetalheDoRegistro() {
   const voltar = (dia: string | null) => (
     <LinkDaRotina
       to={dia === null ? '/app/historico' : urlDoHistoricoDoDia(dia)}
-      className="-ml-1 inline-flex items-center gap-1.5 self-start no-underline hover:underline"
+      className="-ml-1 inline-flex items-center gap-1.5 self-start underline underline-offset-4"
       data-voltar=""
       icone={<ChevronLeft className="size-5" strokeWidth={2} />}
     >

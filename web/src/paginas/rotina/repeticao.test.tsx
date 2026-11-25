@@ -214,7 +214,7 @@ describe('R2: o formulário repete a chamada completa', () => {
   async function falharAoSalvarUmaFralda() {
     const mundo = await renderizarRotaPronta('/app/registro/novo')
     const gravar = vi.spyOn(mundo.rotina, 'gravarRegistro')
-    digitar('Tipo do registro', 'fralda')
+    fireEvent.click(botao('Fralda'))
     digitar('Conteúdo', 'xixi')
     simularRespostaPerdidaRotina(mundo.rotina, 'gravarRegistro')
     fireEvent.click(botao('Salvar'))
@@ -226,7 +226,7 @@ describe('R2: o formulário repete a chamada completa', () => {
   it('R2: mudar o tipo depois da falha não altera a repetição (mesmo id, tipo, bebê e detalhes)', async () => {
     const { gravar } = await falharAoSalvarUmaFralda()
 
-    digitar('Tipo do registro', 'sono')
+    fireEvent.click(botao('Sono'))
     fireEvent.click(botao('Tentar de novo'))
     await aguardarCarga()
 

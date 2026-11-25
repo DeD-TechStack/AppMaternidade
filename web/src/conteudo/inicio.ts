@@ -17,6 +17,11 @@ export const INI = {
   altTela1:
     'Tela do Histórico do site num celular. Na lista do dia, a mamada das 16:00 está anotada por Juliana e a fralda das 17:30, por Ícaro.',
 
+  // The action of the Histórico frame (ProdutoEmMoldura `rolavel`): the visible label and the two state cues.
+  acaoTela1: 'Explorar a tela',
+  inicialTela1: 'Vista inicial',
+  detalheTela1: 'Mais detalhes',
+
   h2Noite: 'Agora é comigo.',
   pNoite: 'A Ju anotou o dia até a mamada das 16:00. Das 17:30 em diante, quem anota é o Ícaro, e o que ela escreveu continua ali para ele ler.',
   leg2: '17:30, fralda, anotada por Ícaro',

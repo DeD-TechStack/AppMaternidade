@@ -750,14 +750,16 @@
   }
 
   /* ---- Moment 5: the Histórico frame scrolls its real screen --------------------------------------------------- */
-  /* The frame is a toggle button named by the screen's alt (`ProdutoEmMoldura rolavel`). The Y_ALTA capture is one
+  /* The frame is a toggle button (`ProdutoEmMoldura rolavel`) named by its visible label "Explorar a tela", with the
+      static state cue ("Vista inicial" / "Mais detalhes") beside it. The pressed state (`data-rolado` on the figure,
+      set with `aria-pressed`) is the ONLY thing that moves the screen: hover and keyboard focus never do. The Y_ALTA capture is one
      screen width taller than the screen layer (390:1234 under a 390:844 layer). The frame OPENS on the capture's foot
-     (the 16:00 Juliana and 17:30 Ícaro rows); on hover, keyboard focus or a tap (aria-pressed) the screen scrolls up by
+     (the 16:00 Juliana and 17:30 Ícaro rows); when pressed the screen scrolls up by
      MANIFESTO `rolagem_px` (280 px at 390, 320 at 1440: `ROLAGEM_PX`, set by the page as the two unitless ends of
      `--produto-rolagem`) to the app header and the morning rows, and back. The travel is capped by the screen layer's
      width, which is the capture's surplus on a stage shorter than the drawing. 400 ms on the standard curve,
-     object-position only; reduced motion: the rest state, and a toggle lands at once. The night twin of the stage
-     follows the day frame, so the sheet's edge never shows two scrolls. */
+     object-position only; reduced motion: a toggle lands at once. The night twin of the stage
+     follows the day frame's pressed state, so the sheet's edge never shows two scrolls. */
   [data-casa] .cm-produto-moldura {
     --produto-rolagem: min(
       clamp(
@@ -796,18 +798,72 @@
     transition: object-position 400ms var(--curva-padrao);
   }
 
-  /* Active: the top (the app header), `--produto-rolagem` further up the day. */
-  [data-casa] [data-produto-rolar]:focus-visible [data-produto-tela],
+  /* Pressed (`data-rolado`): the top (the app header), `--produto-rolagem` further up the day. Only this state moves the
+     screen and its night twin; focus and hover keep whatever the pressed state shows, so the cue, `aria-pressed` and the
+     picture never disagree. */
   [data-casa] [data-rolado] [data-produto-tela],
-  [data-casa] .ic-estagio:has([data-rolado], [data-produto-rolar]:focus-visible) [data-troca-gemea-tela] {
+  [data-casa] .ic-estagio:has([data-rolado]) [data-troca-gemea-tela] {
     object-position: 50% 0%;
   }
 
-  @media (hover: hover) {
-    [data-casa] [data-produto-rolar]:hover [data-produto-tela],
-    [data-casa] .ic-estagio:has([data-produto-rolar]:hover) [data-troca-gemea-tela] {
-      object-position: 50% 0%;
-    }
+  /* The visible action: the label "Explorar a tela" and, beside it, the static state cue. It is page text under the
+     frame, never over the screen. Below 1024 (the hero's frame, on the cacau wall) it is the button's last row, in
+     flow; the row is at least one touch target tall and wraps (200 % text, 320 px, long pt-BR words). */
+  [data-casa] [data-produto-camadas] {
+    position: relative;
+    display: block;
+  }
+
+  [data-casa] [data-produto-acao] {
+    display: flex;
+    padding-inline: var(--espaco-pilha);
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    column-gap: var(--espaco-junto);
+    min-height: var(--alvo-toque);
+    padding-block: var(--espaco-junto);
+    color: var(--color-papel);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-pequeno-tamanho);
+    line-height: var(--texto-pequeno-entrelinha);
+    text-align: start;
+  }
+
+  [data-casa] [data-produto-rotulo],
+  [data-casa] [data-produto-estado] {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  [data-casa] [data-produto-rotulo] {
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-thickness: 0.0625em;
+    text-underline-offset: 0.25em;
+  }
+
+  [data-casa] [data-produto-rolar]:hover [data-produto-rotulo] {
+    text-decoration-thickness: 0.125em;
+  }
+
+  [data-casa] [data-produto-estado] {
+    font-weight: 400;
+  }
+
+  /* From 1024 (the stage): the frame stands on the floor line and its box is fixed by the stage, so the row hangs from
+     the figure's bottom edge onto the day floor (areia: cacau text, about 11:1) and takes no height from the frame. The
+     button's ring wraps the frame only, so the row carries its own ring while the button has focus. */
+  [data-casa] .ic-estagio [data-produto-acao] {
+    position: absolute;
+    top: 100%;
+    inset-inline: 0;
+    color: var(--color-cacau);
+  }
+
+  [data-casa] .ic-estagio [data-produto-rolar]:focus-visible [data-produto-acao] {
+    outline: 3px solid var(--color-cacau);
+    outline-offset: -3px;
   }
 
   /* The sleep frame (band 3): the Hoje capture is 390:880, taller than the 390:844 screen layer, so it is shown whole,

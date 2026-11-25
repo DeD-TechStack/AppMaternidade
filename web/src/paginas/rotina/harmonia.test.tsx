@@ -60,10 +60,14 @@ describe('H3:RF-01/02, Hoje: o casco e as colunas', () => {
     expect(grade.parentElement).toBe(pilha)
     expect(grade.matches("[data-h~='colunas']")).toBe(true)
     expect(grade.getAttribute('data-h-vao')).toBe('bloco')
-    // As frações de hoje (12 colunas: cartão 6, lista 6) ficam; o ponto de quebra de hoje (lg, 1024) também.
-    expect(grade.style.getPropertyValue('--h-colunas')).toBe('minmax(0, 6fr) minmax(0, 6fr)')
-    expect(grade.getAttribute('data-h-quebra')).toBe('1024')
-    for (const filho of grade.children) expect(filho.matches("[data-h~='coluna']"), filho.outerHTML.slice(0, 80)).toBe(true)
+    // A composição empilha pelo espaço disponível em rem, inclusive quando a fonte aumenta.
+    expect(grade.classList.contains('flex')).toBe(true)
+    expect(grade.classList.contains('flex-wrap')).toBe(true)
+    expect(grade.children).toHaveLength(2)
+    for (const filho of grade.children) {
+      expect(filho.matches("[data-h~='pilha'][data-h~='coluna']"), filho.outerHTML.slice(0, 80)).toBe(true)
+      expect(filho.classList.contains('flex-[1_1_32rem]')).toBe(true)
+    }
   })
 
   it('(claro) a lista do dia é Pilha de bloco e o cartão é Pilha de pilha, os dois colunas', async () => {
@@ -86,24 +90,50 @@ describe('H3:RF-01/02, Hoje: o casco e as colunas', () => {
     semMargemNosBlocos(principal(container))
   })
 
-  it('(madrugada com sessão) frações 8/4; (madrugada sem sessão) frações 7/5; as duas com vão bloco, quebra em 1024', async () => {
-    const comSessao = await renderizarRotaPronta('/app/hoje', { madrugada: true, diaCompleto: true })
-    const grade = comSessao.container.querySelector<HTMLElement>('main [data-grade-do-hoje]')!
+  it.each([
+    { madrugada: false, vazia: false },
+    { madrugada: true, vazia: false },
+    { madrugada: true, vazia: true },
+  ])('sessão e próxima ação precedem a coluna de leitura: %j', async ({ madrugada, vazia }) => {
+    const { container } = await renderizarRotaPronta('/app/hoje', {
+      madrugada,
+      diaCompleto: true,
+      ajustarRotina: vazia ? semSessaoEmAndamento : undefined,
+    })
+    const grade = container.querySelector<HTMLElement>('main [data-grade-do-hoje]')!
     expect(grade.matches("[data-h~='colunas']")).toBe(true)
     expect(grade.getAttribute('data-h-vao')).toBe('bloco')
-    expect(grade.getAttribute('data-h-quebra')).toBe('1024')
-    expect(grade.style.getPropertyValue('--h-colunas')).toBe('minmax(0, 8fr) minmax(0, 4fr)')
-    expect(grade.contains(comSessao.container.querySelector('[data-iniciar-mamada]'))).toBe(true)
-    conferirCasco(principal(comSessao.container))
-    semMargemNosBlocos(principal(comSessao.container))
-    comSessao.unmount()
-
-    const semSessao = await renderizarRotaPronta('/app/hoje', { madrugada: true, ajustarRotina: semSessaoEmAndamento })
-    const grade2 = semSessao.container.querySelector<HTMLElement>('main [data-grade-do-hoje]')!
-    expect(grade2.style.getPropertyValue('--h-colunas')).toBe('minmax(0, 7fr) minmax(0, 5fr)')
-    expect(grade2.getAttribute('data-h-vao')).toBe('bloco')
-    conferirCasco(principal(semSessao.container))
-    semMargemNosBlocos(principal(semSessao.container))
+    expect(grade.classList.contains('flex-wrap')).toBe(true)
+    expect(grade.children).toHaveLength(2)
+    const [acoes, leitura] = [...grade.children]
+    expect(acoes.hasAttribute('data-acoes-do-hoje')).toBe(true)
+    expect(leitura.hasAttribute('data-area-lista')).toBe(true)
+    expect(acoes.querySelectorAll('[data-andamento]')).toHaveLength(1)
+    expect(container.querySelectorAll('[role="timer"]')).toHaveLength(vazia ? 0 : 1)
+    const botao = acoes.querySelector('[data-iniciar-mamada]')
+    if (madrugada) {
+      expect(botao).not.toBeNull()
+      expect(acoes.lastElementChild).toBe(botao)
+      expect(botao!.hasAttribute('data-compacto')).toBe(!vazia)
+      expect(botao!.classList.contains('[&>button]:max-w-full')).toBe(true)
+    } else {
+      expect(botao).toBeNull()
+    }
+    expect([...leitura.querySelectorAll('[data-resumo], [data-historico], [data-ultimos]')].map((e) =>
+      e.hasAttribute('data-resumo') ? 'resumo' : e.hasAttribute('data-historico') ? 'historico' : 'ultimos',
+    )).toEqual(['resumo', 'historico', 'ultimos'])
+    for (const coluna of [acoes, leitura]) {
+      expect(coluna.classList.contains('flex-[1_1_32rem]')).toBe(true)
+      expect(coluna.className).not.toMatch(/row-span|self-center|h-full/)
+    }
+    const desde = leitura.querySelector<HTMLElement>('[data-desde]')!
+    expect(desde.classList.contains('[&_[data-registro]]:flex-wrap')).toBe(true)
+    expect(desde.classList.contains('[&_[data-registro]>div:first-of-type]:basis-[14ch]')).toBe(true)
+    const cartao = container.querySelector<HTMLElement>('[data-andamento]')!
+    expect(cartao.classList.contains('p-esp-grupo')).toBe(true)
+    if (!vazia) expect(cartao.classList.contains('lg:[&_[role=timer]]:text-exibicao')).toBe(true)
+    conferirCasco(principal(container))
+    semMargemNosBlocos(principal(container))
   })
 
   it('a abertura do Hoje é a primeira filha do <main>: ganha espaco-secao-ampla no topo pela regra de layout.css', async () => {

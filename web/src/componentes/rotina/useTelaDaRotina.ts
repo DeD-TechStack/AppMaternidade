@@ -9,8 +9,8 @@ import { useRotina, type AcaoDaConfirmacao } from './contexto.ts'
  * `h1` quando a tela é aberta por navegação interna com `foco: 'titulo'` no `state` (pela URL, o foco não se
  * move) e `acionar`, que trata os botões da confirmação: `Desfazer`, `Fechar` e as outras ações fecham a
  * confirmação e levam o foco ao `h1`. `Tentar de novo` deixa a confirmação na tela até dar certo; o do erro de
- * um `Desfazer` (confirmação com `origem`) leva o foco ao `h1` já ao tocar, porque o botão some quando a
- * repetição dá certo e o foco não pode se perder (A11Y-004).
+ * um `Desfazer` ou de um restaurar (confirmação com `origem`) leva o foco ao `h1` já ao tocar, porque o botão
+ * some quando a repetição dá certo e o foco não pode se perder (A11Y-004, LIX-INH-01).
  */
 export function useTelaDaRotina() {
   const { principal, focarTitulo } = useTituloDaTela()

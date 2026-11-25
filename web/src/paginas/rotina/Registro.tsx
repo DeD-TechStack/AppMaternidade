@@ -26,7 +26,7 @@ function Voltar({ para, texto }: { para: string; texto: string }) {
     <Link
       to={para}
       state={{ foco: 'titulo' }}
-      className="alvo-toque -ml-1 inline-flex min-h-(--alvo-toque) items-center gap-1.5 self-start rounded-pilula px-1 text-corpo font-medium no-underline underline-offset-4 hover:underline"
+      className="alvo-toque -ml-1 inline-flex min-h-(--alvo-toque) items-center gap-1.5 self-start rounded-pilula px-1 text-corpo font-medium underline underline-offset-4"
       data-voltar=""
     >
       <ChevronLeft aria-hidden="true" className="size-5" strokeWidth={2} />

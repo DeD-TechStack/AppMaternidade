@@ -77,51 +77,46 @@ describe('o passo "Seu nome"', () => {
     expect(antes(frase, screen.getByRole('button', { name: 'Salvar' }))).toBe(true)
   })
 
-  it('o primeiro campo fica logo abaixo do h1: entre os dois, só o rótulo e o vão do próprio Campo, sem vão local (nada visível: título do passo só para leitor de tela, frase depois dos campos)', async () => {
+  it('separa título/status, campos e conclusão com os vãos do tema, mantendo os rótulos e as ajudas ligados aos controles', async () => {
     const dados = await memoriaSemConta()
-    const { container } = renderizarComDados('/app/comecar', { dados })
+    const { container, roteador } = renderizarComDados('/app/comecar', { dados })
     const h1 = await screen.findByRole('heading', { level: 1 })
     const h2 = screen.getByRole('heading', { level: 2, name: 'Seu nome' })
     const frase = screen.getByText('Falta pouco. Diga o seu nome e o fuso em que você está.')
-    const entrada = campoDeTexto()
-    const campo = entrada.closest('.cm-campo')!
     const formulario = container.querySelector('form')!
     const botao = screen.getByRole('button', { name: 'Salvar' })
+    const cabecalho = h1.parentElement!
 
-    // O h1 abre uma `div` simples, sem vão próprio: o único vão entre o h1 e a caixa é o do Campo (rótulo -> caixa).
-    // A altura de verdade (rótulo + 8 px) é conferida no Chrome, em comecar.geometria.test.tsx.
-    const pilha = h1.parentElement!
-    expect(pilha.tagName).toBe('DIV')
-    expect(pilha.hasAttribute('data-h-vao')).toBe(false)
-    expect(pilha.hasAttribute('data-h')).toBe(false)
-
-    // O título do passo continua dando nome à seção, mas só para leitor de tela: não ocupa linha nenhuma.
+    expect(cabecalho.getAttribute('data-h-vao')).toBe('pilha')
+    expect(cabecalho.parentElement!.getAttribute('data-h-vao')).toBe('grupo')
+    expect(formulario.classList.contains('gap-esp-grupo')).toBe(true)
+    expect(frase.parentElement).toBe(botao.parentElement)
+    expect(frase.parentElement!.getAttribute('data-h-vao')).toBe('pilha')
+    expect(botao.classList.contains('whitespace-normal')).toBe(true)
+    expect(botao.classList.contains('wrap-anywhere')).toBe(true)
     expect(h2.classList.contains('sr-only')).toBe(true)
     expect(h2.closest('section')!.getAttribute('aria-labelledby')).toBe(h2.id)
 
-    // Do campo para cima até a pilha do h1, nenhum irmão anterior ocupa o fluxo (só o h1 antes da seção).
-    const emFluxo = (no: Element) => !no.classList.contains('sr-only')
-    let atual: Element = campo
-    while (atual.parentElement !== pilha) {
-      for (let irmao = atual.previousElementSibling; irmao; irmao = irmao.previousElementSibling) {
-        expect(emFluxo(irmao), `irmão visível antes de ${atual.tagName.toLowerCase()}: ${irmao.outerHTML.slice(0, 80)}`).toBe(false)
-      }
-      atual = atual.parentElement!
+    for (const [controle, ajuda] of [
+      [campoDeTexto(), 'É o nome que a família vai ver.'],
+      [campoDeFuso(), 'Os horários aparecem neste fuso.'],
+    ] as const) {
+      expect(controle.labels?.length).toBe(1)
+      expect(document.getElementById(controle.getAttribute('aria-describedby')!)!.textContent).toBe(ajuda)
     }
-    // `atual` é a seção, filha da pilha do h1: entre o h1 e ela só a região de status vazia (sr-only).
-    for (let irmao = atual.previousElementSibling; irmao && irmao !== h1; irmao = irmao.previousElementSibling) {
-      expect(emFluxo(irmao), `irmão visível entre o h1 e a seção: ${irmao.outerHTML.slice(0, 80)}`).toBe(false)
-    }
-
-    // Dentro do campo, o rótulo vem primeiro, depois a caixa; a frase não fica entre o h1 e o campo.
-    expect(campo.firstElementChild!.tagName).toBe('LABEL')
-    expect((campo.firstElementChild as HTMLLabelElement).htmlFor).toBe(entrada.id)
     const antes = (a: Element, b: Element) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)
-    expect(antes(campo, frase)).toBe(true)
-    expect(formulario.contains(frase)).toBe(true)
-    // O botão Salvar vem depois dos campos e da frase.
+    expect(antes(campoDeTexto(), campoDeFuso())).toBe(true)
+    expect(antes(campoDeFuso(), frase)).toBe(true)
     expect(antes(frase, botao)).toBe(true)
-    expect(antes(campoDeFuso(), botao)).toBe(true)
+
+    await act(async () => {
+      await roteador.navigate('/app/comecar', { state: { mensagem: 'senha_trocada' } })
+    })
+    const status = screen.getByRole('status')
+    expect(status.textContent).toBe('Senha trocada.')
+    expect(status.parentElement).toBe(cabecalho)
+    expect(antes(h1, status) && antes(status, formulario)).toBe(true)
+    expect(screen.getAllByRole('status')).toHaveLength(1)
   })
 
   it('o seletor de fuso do passo não leva a marca de só leitura', async () => {
@@ -196,6 +191,50 @@ describe('o passo "Seu nome"', () => {
     expect(campoDeTexto().getAttribute('aria-invalid')).toBe('true')
     expect(document.activeElement).toBe(campoDeTexto())
     expect(criarConta).not.toHaveBeenCalled()
+  })
+
+  it('mantém Salvar desativado enquanto grava e ignora um segundo envio', async () => {
+    const dados = await memoriaSemConta()
+    const gravar = dados.criarMinhaConta.bind(dados)
+    let liberar!: () => void
+    const pendente = new Promise<void>((resolve) => { liberar = resolve })
+    const criarConta = vi.spyOn(dados, 'criarMinhaConta').mockImplementationOnce(async (...entrada) => {
+      await pendente
+      return gravar(...entrada)
+    })
+    const { container } = renderizarComDados('/app/comecar', { dados })
+    await screen.findByRole('heading', { level: 2, name: 'Seu nome' })
+
+    salvar()
+    const botao = await screen.findByRole('button', { name: 'Salvando…' }) as HTMLButtonElement
+    expect(botao.disabled).toBe(true)
+    fireEvent.submit(container.querySelector('form')!)
+    expect(criarConta).toHaveBeenCalledTimes(1)
+    await act(async () => { liberar() })
+    await screen.findByRole('heading', { level: 2, name: 'Como você quer começar?' })
+    expect(criarConta).toHaveBeenCalledTimes(1)
+  })
+
+  it('mantém o nome e o fuso após falha, foca o resumo e permite tentar de novo', async () => {
+    const dados = await memoriaSemConta()
+    simularFalha(dados, 'criarMinhaConta', 'desconhecido')
+    const criarConta = vi.spyOn(dados, 'criarMinhaConta')
+    renderizarComDados('/app/comecar', { dados })
+    await screen.findByRole('heading', { level: 2, name: 'Seu nome' })
+    fireEvent.change(campoDeTexto(), { target: { value: 'Nova Pessoa' } })
+    fireEvent.change(campoDeFuso(), { target: { value: 'America/Manaus' } })
+    salvar()
+
+    const alerta = await screen.findByRole('alert')
+    await waitFor(() => expect(document.activeElement).toBe(alerta))
+    expect(alerta.textContent).toContain(TEXTOS_ERRO.desconhecido)
+    expect(campoDeTexto().value).toBe('Nova Pessoa')
+    expect(campoDeFuso().value).toBe('America/Manaus')
+    expect((screen.getByRole('button', { name: 'Salvar' }) as HTMLButtonElement).disabled).toBe(false)
+    fireEvent.click(within(alerta).getByRole('button', { name: 'Tentar de novo' }))
+    await screen.findByRole('heading', { level: 2, name: 'Como você quer começar?' })
+    expect(criarConta).toHaveBeenCalledTimes(2)
+    expect(await dados.minhaConta()).toMatchObject({ ok: true, valor: { nome: 'Nova Pessoa', fuso: 'America/Manaus' } })
   })
 
   it('nome_vazio do banco: o erro fica no campo do nome', async () => {

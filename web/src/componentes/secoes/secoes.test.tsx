@@ -476,6 +476,8 @@ describe('DS1-I-12 ProdutoEmMoldura: a captura da tela sob a moldura, duas camad
   const produto = (t: Record<string, unknown> = {}, m: Record<string, unknown> = {}) => (
     <ProdutoEmMoldura tela={tela(t)} moldura={moldura(m)} />
   )
+  // Os três textos da prévia rolável chegam por prop (a peça não lê conteúdo da página).
+  const TEXTOS = { acao: 'Explorar a tela', inicial: 'Vista inicial', detalhe: 'Mais detalhes' }
 
   it('DS1-I-12 ProdutoEmMoldura rende figure[data-produto-moldura] com a tela e a moldura, nessa ordem', () => {
     const { container } = pintar(produto())
@@ -513,7 +515,7 @@ describe('DS1-I-12 ProdutoEmMoldura: a captura da tela sob a moldura, duas camad
     const sem = pintar(produto())
     expect(sem.container.querySelector('button')).toBeNull()
     sem.unmount()
-    const { container } = pintar(<ProdutoEmMoldura tela={tela()} moldura={moldura()} rolavel />)
+    const { container } = pintar(<ProdutoEmMoldura tela={tela()} moldura={moldura()} rolavel={TEXTOS} />)
     const figura = container.querySelector<HTMLElement>('figure[data-produto-moldura]')!
     const botao = figura.querySelector<HTMLButtonElement>('button[data-produto-rolar]')!
     expect(botao.getAttribute('type')).toBe('button')
@@ -528,6 +530,152 @@ describe('DS1-I-12 ProdutoEmMoldura: a captura da tela sob a moldura, duas camad
     fireEvent.click(botao)
     expect(botao.getAttribute('aria-pressed')).toBe('false')
     expect(figura.hasAttribute('data-rolado')).toBe(false)
+  })
+
+  // REA S1 (Início): a prévia do Histórico é uma ação visível e reversível, não uma surpresa de hover.
+  const palavra = (texto: string) => new RegExp(`(?<![\\p{L}])${texto}(?![\\p{L}])`, 'u')
+  const rolavel = () => pintar(<ProdutoEmMoldura tela={tela()} moldura={moldura()} rolavel={TEXTOS} />)
+  // O rótulo e a pista são dois nós; o `textContent` da figura os cola sem espaço, então cada um é lido à parte.
+  const rotuloDe = (figura: HTMLElement) => figura.querySelector('[data-produto-rotulo]')?.textContent ?? ''
+  const pistaDe = (figura: HTMLElement) => figura.querySelector('[data-produto-estado]')?.textContent ?? ''
+  const posicao = (container: HTMLElement) =>
+    container.querySelector<HTMLElement>('figure')!.hasAttribute('data-rolado') ? 'mais-detalhes' : 'vista-inicial'
+
+  it('REA-S1 com `rolavel` a ação tem rótulo visível "Explorar a tela" e a pista estática ao lado: "Vista inicial", depois "Mais detalhes"', () => {
+    const { container } = rolavel()
+    const figura = container.querySelector<HTMLElement>('figure')!
+    const botao = figura.querySelector<HTMLButtonElement>('button[data-produto-rolar]')!
+    // O texto é da página (DOM real), nunca pintado na captura: as duas imagens seguem sem texto.
+    expect(rotuloDe(figura)).toMatch(palavra('Explorar a tela'))
+    expect(pistaDe(figura)).toMatch(palavra('Vista inicial'))
+    expect(pistaDe(figura)).not.toMatch(palavra('Mais detalhes'))
+    expect(figura.querySelectorAll('img')).toHaveLength(2)
+    expect(botao.contains(figura.querySelector('[data-produto-estado]'))).toBe(true)
+    expect(botao.getAttribute('aria-pressed')).toBe('false')
+    fireEvent.click(botao)
+    expect(botao.getAttribute('aria-pressed')).toBe('true')
+    expect(pistaDe(figura)).toMatch(palavra('Mais detalhes'))
+    expect(pistaDe(figura)).not.toMatch(palavra('Vista inicial'))
+    expect(rotuloDe(figura)).toMatch(palavra('Explorar a tela'))
+  })
+
+  it('REA-S1 o nome acessível traz o rótulo visível e não repete o alt longo da tela; a descrição guarda o alt', () => {
+    const { container } = rolavel()
+    const botao = within(container).getByRole('button', { name: palavra('Explorar a tela') })
+    expect(botao.hasAttribute('data-produto-rolar')).toBe(true)
+    expect(botao.getAttribute('aria-pressed')).toBe('false')
+    expect(within(container).queryByRole('button', { name: palavra('Tela do Hoje com a última mamada') })).toBeNull()
+    expect(botao.getAttribute('aria-labelledby')).toBeTruthy()
+    // O alt da tela continua dito uma vez: como descrição, não como nome.
+    const descricao = document.getElementById(botao.getAttribute('aria-describedby') ?? '')
+    expect(descricao?.getAttribute('alt')).toBe('Tela do Hoje com a última mamada')
+  })
+
+  it('REA-S1 uma parada de Tab só: um botão nativo, nada mais focável na figura', () => {
+    const { container } = rolavel()
+    const focaveis = container.querySelectorAll('button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
+    expect(focaveis).toHaveLength(1)
+    expect(focaveis[0].tagName).toBe('BUTTON')
+    expect(container.querySelectorAll('figure [role="button"], figure [onclick]')).toHaveLength(0)
+  })
+
+  it('REA-S1 clicar seleciona e clicar de novo volta, com o foco no mesmo botão; pista, aria-pressed e posição andam juntos', () => {
+    const { container } = rolavel()
+    const figura = container.querySelector<HTMLElement>('figure')!
+    const botao = figura.querySelector<HTMLButtonElement>('button[data-produto-rolar]')!
+    botao.focus()
+    for (const [pressionado, pista, lugar] of [
+      ['true', 'Mais detalhes', 'mais-detalhes'],
+      ['false', 'Vista inicial', 'vista-inicial'],
+      ['true', 'Mais detalhes', 'mais-detalhes'],
+      ['false', 'Vista inicial', 'vista-inicial'],
+    ] as const) {
+      fireEvent.click(botao)
+      expect(document.activeElement).toBe(botao)
+      expect(botao.getAttribute('aria-pressed')).toBe(pressionado)
+      expect(pistaDe(figura)).toMatch(palavra(pista))
+      expect(rotuloDe(figura)).toMatch(palavra('Explorar a tela'))
+      expect(posicao(container)).toBe(lugar)
+    }
+  })
+
+  it('REA-S1 a linha de texto fica fora da caixa das camadas: a altura da tela segue a da moldura, não a da linha (e nada cobre a arte)', () => {
+    const { container } = rolavel()
+    const figura = container.querySelector<HTMLElement>('figure')!
+    const camadas = figura.querySelector<HTMLElement>('[data-produto-camadas]')!
+    const acao = figura.querySelector<HTMLElement>('[data-produto-acao]')!
+    expect(camadas.querySelectorAll('img')).toHaveLength(2)
+    expect(camadas.textContent).toBe('')
+    expect(camadas.contains(acao)).toBe(false)
+    expect(acao.querySelector('img')).toBeNull()
+    // Irmãs dentro do botão: as camadas primeiro, a linha depois (nunca por cima da tela).
+    expect(camadas.compareDocumentPosition(acao) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
+    expect(camadas.parentElement).toBe(acao.parentElement)
+    const css = fs.readFileSync(path.join(PASTA, '../inicio-casa/inicio-casa.css'), 'utf8').replaceAll('\r\n', '\n')
+    expect(css).toMatch(/\[data-casa\] \[data-produto-camadas\] \{[^}]*position: relative;/)
+  })
+
+  it('REA-S1 `rolavel` sem um dos três textos (vazio, só espaços ou ausente) lança, como um alt vazio; sem a prop não lança', () => {
+    for (const nome of ['acao', 'inicial', 'detalhe'] as const) {
+      for (const valor of ['', '   ']) {
+        lanca(<ProdutoEmMoldura tela={tela()} moldura={moldura()} rolavel={{ ...TEXTOS, [nome]: valor }} />)
+      }
+      const resto = Object.fromEntries(Object.entries(TEXTOS).filter(([chave]) => chave !== nome))
+      lanca(<ProdutoEmMoldura tela={tela()} moldura={moldura()} rolavel={resto as unknown as typeof TEXTOS} />)
+    }
+    expect(() => pintar(produto())).not.toThrow()
+  })
+
+  it('REA-S1 a peça não lê conteúdo da página: os textos rendidos são os da prop, quaisquer que sejam', () => {
+    const { container } = pintar(
+      <ProdutoEmMoldura tela={tela()} moldura={moldura()} rolavel={{ acao: 'Abrir a prévia', inicial: 'Em repouso', detalhe: 'Aberta' }} />,
+    )
+    const figura = container.querySelector<HTMLElement>('figure')!
+    expect(rotuloDe(figura)).toBe('Abrir a prévia')
+    expect(pistaDe(figura)).toBe('Em repouso')
+    fireEvent.click(figura.querySelector('button')!)
+    expect(pistaDe(figura)).toBe('Aberta')
+    const fonte = fs.readFileSync(path.join(PASTA, 'ProdutoEmMoldura.tsx'), 'utf8')
+    expect(fonte).not.toMatch(/conteudo\//)
+    expect(fonte).not.toMatch(/Explorar a tela|Vista inicial|Mais detalhes/)
+  })
+
+  it('REA-S1 sem `rolavel` a saída não muda: duas imagens, nenhum controle, nenhum texto', () => {
+    const { container } = pintar(produto())
+    const figura = container.querySelector('figure')!
+    expect(figura.querySelectorAll('img')).toHaveLength(2)
+    expect(figura.querySelector('button, [data-produto-rolar], [aria-pressed]')).toBeNull()
+    expect(figura.textContent).toBe('')
+    expect(figura.hasAttribute('data-rolado')).toBe(false)
+  })
+
+  describe('REA-S1 a posição mostrada é a do estado apertado, também com foco e ponteiro no controle (o CSS da página)', () => {
+    const CSS = fs.readFileSync(path.join(PASTA, '../inicio-casa/inicio-casa.css'), 'utf8').replaceAll('\r\n', '\n').replace(/\/\*[\s\S]*?\*\//g, '')
+    const regras = [...CSS.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({ seletor: m[1].replace(/\s+/g, ' ').trim(), corpo: m[2] }))
+    const comPosicao = regras.filter((r) => /object-position/.test(r.corpo))
+
+    it('nenhuma regra move a tela (nem a gêmea da noite) por :hover ou :focus; só o estado apertado a move', () => {
+      expect(comPosicao.length).toBeGreaterThan(0)
+      const movidas = comPosicao.filter((r) => /50% 0%/.test(r.corpo))
+      expect(movidas.length).toBeGreaterThan(0)
+      for (const r of comPosicao) expect(r.seletor, r.seletor).not.toMatch(/:hover|:focus/)
+      for (const r of movidas) expect(r.seletor, r.seletor).toMatch(/\[data-rolado\]/)
+    })
+
+    it('em repouso a tela mostra o pé e, apertada, o topo; a gêmea da noite segue o `data-rolado` do mesmo palco', () => {
+      const repouso = comPosicao.filter((r) => /calc\(-1 \* var\(--produto-rolagem\)\)/.test(r.corpo))
+      expect(repouso.map((r) => r.seletor).join(' | ')).toMatch(/\[data-produto-rolar\] \[data-produto-tela\]/)
+      expect(repouso.map((r) => r.seletor).join(' | ')).toMatch(/\[data-troca-gemea-tela\]/)
+      const topo = comPosicao.filter((r) => /50% 0%/.test(r.corpo)).map((r) => r.seletor).join(' | ')
+      expect(topo).toMatch(/\[data-rolado\] \[data-produto-tela\]/)
+      expect(topo).toMatch(/:has\(\[data-rolado\]\) \[data-troca-gemea-tela\]/)
+    })
+
+    it('com movimento reduzido a posição troca na hora (sem transição) na tela e na gêmea', () => {
+      const bloco = CSS.match(/@media \(prefers-reduced-motion: reduce\) \{\s*\[data-casa\] \[data-produto-rolar\] \[data-produto-tela\],[^{}]*\{[^{}]*\}/)
+      expect(bloco?.[0]).toMatch(/transition: none/)
+      expect(bloco?.[0]).toMatch(/\[data-troca-gemea-tela\]/)
+    })
   })
 
   it('DS1-I-12 ProdutoEmMoldura sem a moldura ou sem a tela lança (nenhum recurso reserva, nenhum estado vazio)', () => {

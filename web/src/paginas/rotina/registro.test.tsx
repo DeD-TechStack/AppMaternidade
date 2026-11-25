@@ -39,26 +39,49 @@ const todosOsRegistros = async (rotina: Awaited<ReturnType<typeof renderizarRota
 }
 
 describe('o formulário novo: a escolha do tipo e os campos de cada tipo', () => {
+  it('oferece todos os sete tipos como escolhas nativas visíveis, sem enviar ao escolher', async () => {
+    const { rotina, roteador } = await renderizarRotaPronta('/app/registro/novo')
+    const gravar = vi.spyOn(rotina, 'gravarRegistro')
+    const grupo = screen.getByRole('group', { name: 'Tipo do registro' })
+    const escolhas = within(grupo).getAllByRole('button')
+    expect(escolhas.map((escolha) => escolha.textContent)).toEqual([
+      'Sono', 'Mamada', 'Tummy time', 'Mamadeira', 'Fralda', 'Alimentação sólida', 'Observação',
+    ])
+    expect(escolhas.every((escolha) => escolha instanceof HTMLButtonElement && escolha.type === 'button')).toBe(true)
+    expect(within(grupo).queryAllByRole('button', { pressed: true })).toHaveLength(0)
+    fireEvent.click(within(grupo).getByRole('button', { name: 'Mamadeira' }))
+    expect(within(grupo).getAllByRole('button', { pressed: true })).toEqual([botao('Mamadeira')])
+    digitar('Quantidade em ml', '120')
+    digitar('Nota', 'Rascunho sintético')
+    fireEvent.click(within(grupo).getByRole('button', { name: 'Sono' }))
+    fireEvent.click(within(grupo).getByRole('button', { name: 'Mamadeira' }))
+    expect(campo('Quantidade em ml').value).toBe('120')
+    expect(campo('Nota').value).toBe('Rascunho sintético')
+    expect(roteador.state.location.pathname).toBe('/app/registro/novo')
+    expect(gravar).not.toHaveBeenCalled()
+  })
+
   it('sem ?tipo=, ou com um tipo desconhecido, o primeiro campo é a escolha do tipo, e cada tipo traz os seus campos', async () => {
     for (const caminho of ['/app/registro/novo', '/app/registro/novo?tipo=banho']) {
       const { unmount } = await renderizarRotaPronta(caminho)
       expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Novo registro')
-      expect((campo('Tipo do registro') as HTMLSelectElement).value).toBe('')
+      expect(within(screen.getByRole('group', { name: 'Tipo do registro' })).queryAllByRole('button', { pressed: true })).toHaveLength(0)
       expect(screen.queryByLabelText('Horário: data')).toBeNull()
       unmount()
     }
 
     await renderizarRotaPronta('/app/registro/novo')
     const casos: Array<[string, string[]]> = [
-      ['sono', ['Início: data', 'Fim: data', 'Nota']],
-      ['mamada', ['Início: data', 'Fim: data', 'Lado', 'Nota']],
-      ['mamadeira', ['Horário: data', 'Quantidade em ml', 'Conteúdo', 'Nota']],
-      ['fralda', ['Horário: data', 'Conteúdo', 'Nota']],
-      ['solido', ['Horário: data', 'Alimento', 'Nota']],
-      ['observacao', ['Horário: data', 'Texto']],
+      ['Sono', ['Início: data', 'Fim: data', 'Nota']],
+      ['Mamada', ['Início: data', 'Fim: data', 'Lado', 'Nota']],
+      ['Tummy time', ['Início: data', 'Fim: data', 'Nota']],
+      ['Mamadeira', ['Horário: data', 'Quantidade em ml', 'Conteúdo', 'Nota']],
+      ['Fralda', ['Horário: data', 'Conteúdo', 'Nota']],
+      ['Alimentação sólida', ['Horário: data', 'Alimento', 'Nota']],
+      ['Observação', ['Horário: data', 'Texto']],
     ]
     for (const [tipo, rotulos] of casos) {
-      digitar('Tipo do registro', tipo)
+      fireEvent.click(botao(tipo))
       for (const rotulo of rotulos) expect(screen.getByLabelText(rotulo), `${tipo}: ${rotulo}`).toBeTruthy()
     }
     // A observação não tem o campo Nota: o texto dela é a nota.
@@ -68,7 +91,7 @@ describe('o formulário novo: a escolha do tipo e os campos de cada tipo', () =>
   it('o ?tipo= válido fixa o tipo, que não aparece como campo, e o início vem com agora', async () => {
     await renderizarRotaPronta('/app/registro/novo?tipo=sono')
 
-    expect(screen.queryByLabelText('Tipo do registro')).toBeNull()
+    expect(screen.queryByRole('group', { name: 'Tipo do registro' })).toBeNull()
     expect((campo('Início: data') as HTMLInputElement).value).toBe('2026-11-05')
     expect((campo('Início: hora') as HTMLInputElement).value).toBe('10:00')
     expect(screen.getByText('Sono, Heloísa')).toBeTruthy()
@@ -243,7 +266,8 @@ describe('gravar um registro novo', () => {
   })
 
   it('enquanto envia: "Salvando…" com aria-disabled, campos somente leitura, e um segundo toque não envia', async () => {
-    const { rotina } = await renderizarRotaPronta('/app/registro/novo?tipo=fralda')
+    const { rotina } = await renderizarRotaPronta('/app/registro/novo')
+    fireEvent.click(botao('Fralda'))
     digitar('Conteúdo', 'xixi')
     let liberar: () => void = () => undefined
     const original = rotina.gravarRegistro.bind(rotina)
@@ -255,6 +279,10 @@ describe('gravar um registro novo', () => {
     await aguardarCarga()
     const salvando = botao('Salvando…')
     expect(salvando.getAttribute('aria-disabled')).toBe('true')
+    const grupo = screen.getByRole('group', { name: 'Tipo do registro' })
+    expect(within(grupo).getAllByRole('button').every((escolha) => escolha.getAttribute('aria-disabled') === 'true')).toBe(true)
+    fireEvent.click(within(grupo).getByRole('button', { name: 'Mamadeira' }))
+    expect(within(grupo).getAllByRole('button', { pressed: true })).toEqual([botao('Fralda')])
     expect((campo('Horário: hora') as HTMLInputElement).readOnly).toBe(true)
     fireEvent.click(salvando)
     fireEvent.submit(salvando.closest('form')!)
@@ -409,7 +437,7 @@ describe('a edição', () => {
     const { rotina } = await renderizarRotaPronta(`/app/registro/${alvo.id}/editar`, { mundo: primeira })
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Editar registro')
     expect((campo('Conteúdo') as HTMLSelectElement).value).toBe('xixi')
-    expect(screen.queryByLabelText('Tipo do registro')).toBeNull()
+    expect(screen.queryByRole('group', { name: 'Tipo do registro' })).toBeNull()
 
     digitar('Conteúdo', 'coco')
     digitar('Nota', 'Muito')

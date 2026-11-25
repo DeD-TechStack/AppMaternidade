@@ -355,6 +355,7 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
         {(lido) =>
           lido.marco ? (
             <DesdeUltimoRegistro
+              className="[&_[data-registro]]:flex-wrap [&_[data-registro]>div:first-of-type]:basis-[14ch]"
               marcoEm={Date.parse(lido.marco.recebidoEm)}
               registros={[...lido.novos].sort(maisNovoPrimeiro)}
               agora={agora}
@@ -426,40 +427,22 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
     </SecaoDoHoje>
   )
 
-  // De dia: o cartão à esquerda e a área da lista à direita, que abre com os números do dia em Literata
-  // grande e segue com o histórico; "Últimos" fica embaixo do cartão. Tudo em linhas com fio fino.
-  // As frações são as de hoje em 12 colunas (6/6, 8/4, 7/5); a quebra é a de hoje (1024).
-  const composicaoDoDia = (
-    <Colunas data-grade-do-hoje="" fracoes="6fr 6fr" aPartirDe={1024} alinhar="inicio" vao="bloco">
-      {blocoCartao('lg:col-start-1 lg:row-start-1')}
-      <Pilha vao="bloco" dataH="coluna" data-area-lista="" className="lg:col-start-2 lg:row-span-2 lg:row-start-1">
+  // Ações primeiro no DOM; resumo, histórico e últimos na coluna companheira. As bases em rem deixam
+  // as colunas empilharem pelo espaço disponível (inclusive com texto a 200%), sem linhas compartilhadas
+  // que alonguem o cartão ou empurrem o próximo bloco pela altura do histórico.
+  const composicao = (
+    <Colunas data-grade-do-hoje="" alinhar="inicio" vao="bloco" className="flex flex-wrap">
+      <Pilha vao="bloco" dataH="coluna" data-acoes-do-hoje="" className="flex-[1_1_32rem]">
+        {blocoCartao('lg:col-start-1 lg:row-start-1')}
+        {madrugada && noite && comBotaoDaMamada
+          ? blocoBotaoMamada('[&>button]:aspect-square [&>button]:h-auto [&>button]:max-w-full', comSessao)
+          : null}
+      </Pilha>
+      <Pilha vao="bloco" dataH="coluna" data-area-lista="" className="flex-[1_1_32rem]">
         {blocoResumo()}
         {blocoHistorico()}
+        {blocoUltimos()}
       </Pilha>
-      {blocoUltimos('coluna', 'lg:col-start-1 lg:row-start-2')}
-    </Colunas>
-  )
-
-  // Madrugada com sessão em andamento: a sessão é o destaque (o círculo encolhe e vai para baixo dela), o
-  // histórico sobe para logo depois do botão (no celular a primeira linha aparece antes da dobra) e os
-  // números vêm depois dele. O vão entre os blocos é o de `bloco` em todas as composições.
-  const composicaoDaMadrugadaComSessao = (
-    <Colunas data-grade-do-hoje="" fracoes="8fr 4fr" aPartirDe={1024} alinhar="inicio" vao="bloco">
-      {blocoCartao('lg:col-start-1 lg:row-start-1')}
-      {noite && comBotaoDaMamada ? blocoBotaoMamada('lg:col-start-2 lg:row-start-2', true) : null}
-      {blocoHistorico('coluna', 'lg:col-start-1 lg:row-start-2')}
-      {blocoResumo('coluna', 'lg:col-start-2 lg:row-start-1 lg:self-center')}
-      {blocoUltimos('coluna', 'lg:col-start-1 lg:row-start-3')}
-    </Colunas>
-  )
-
-  const composicaoDaMadrugadaSemSessao = (
-    <Colunas data-grade-do-hoje="" fracoes="7fr 5fr" aPartirDe={1024} alinhar="inicio" vao="bloco">
-      {blocoCartao('lg:col-start-1 lg:row-start-1')}
-      {comBotaoDaMamada ? blocoBotaoMamada('lg:col-start-2 lg:row-start-1 lg:self-center', false) : null}
-      {blocoHistorico('coluna', 'lg:col-start-1 lg:row-span-2 lg:row-start-2')}
-      {blocoResumo('coluna', 'lg:col-start-2 lg:row-start-2')}
-      {blocoUltimos('coluna', 'lg:col-start-2 lg:row-start-3')}
     </Colunas>
   )
 
@@ -501,7 +484,7 @@ function HojeDoBebe({ ativo }: { ativo: BebeAtivo }) {
                 </Pilha>
               ) : null}
 
-              {!madrugada ? composicaoDoDia : noite && !comSessao ? composicaoDaMadrugadaSemSessao : composicaoDaMadrugadaComSessao}
+              {composicao}
             </Pilha>
           </QuadroLayout>
         </Secao>

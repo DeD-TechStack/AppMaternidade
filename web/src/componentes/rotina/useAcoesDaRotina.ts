@@ -89,7 +89,7 @@ export function useAcoesDaRotina() {
     return { texto: textoDoErro(erro, { escrita: true, papel: ativo?.papel }), acoes, textoDaNota, ...(origem ? { origem } : {}) }
   }
 
-  /** `origem`: só no erro de um `Desfazer`, para o `Tentar de novo` levar o foco ao mesmo lugar que ele levou. */
+  /** `origem`: no erro de um `Desfazer` e no do restaurar, para o `Tentar de novo` levar o foco ao mesmo lugar que ele levou. */
   function mostrarErro(erro: ErroDados, repetir?: () => void, textoDaNota?: string, origem?: OrigemDoRegistro) {
     mostrarConfirmacao(confirmacaoDeErro(erro, repetir, textoDaNota, origem))
     aposErro(erro)
@@ -114,8 +114,10 @@ export function useAcoesDaRotina() {
   async function restaurar(registro: Registro, opcoes: { confirmar: boolean }): Promise<boolean> {
     const resultado = await dados.restaurarRegistro(registro.id)
     if (!resultado.ok) {
-      // O erro de um Desfazer leva a origem: o controle que o criou (a exclusão no detalhe) já saiu da tela.
-      mostrarErro(resultado.erro, () => void restaurar(registro, opcoes), undefined, opcoes.confirmar ? undefined : 'tela')
+      // O erro leva sempre a origem 'tela', com `confirmar` ou sem ele: no Desfazer, o controle que criou o
+      // registro já saiu da tela; no restaurar comum, o `Tentar de novo` some quando a repetição dá certo (a
+      // linha ou o botão Restaurar também saem). Nos dois casos o foco já vai ao `h1` ao tocar (LIX-INH-01).
+      mostrarErro(resultado.erro, () => void restaurar(registro, opcoes), undefined, 'tela')
       if (resultado.erro.chave === 'prazo_encerrado') atualizar()
       return false
     }

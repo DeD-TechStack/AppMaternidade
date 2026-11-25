@@ -199,7 +199,7 @@ describe('telas de acesso: a banda de duas metades iguais (formulário e placa d
   })
 })
 
-describe('/app/conta: seção, quadro, título em medio, índice 16rem/1fr e linhas 5fr/7fr', () => {
+describe('/app/conta: seção, quadro, título em medio, índice 16rem/1fr e leitura vertical limitada', () => {
   it('estrutura da página, das linhas e da zona de perigo', async () => {
     const { container } = renderizarComDados('/app/conta', { sessao: 'juliana' })
     await screen.findByRole('heading', { level: 1, name: 'Conta' })
@@ -217,15 +217,26 @@ describe('/app/conta: seção, quadro, título em medio, índice 16rem/1fr e lin
     expect(modeloDe(indice)).toBe('16rem minmax(0, 1fr)')
     expect(indice.getAttribute('data-h-quebra')).toBe('1024')
     expect(indice.getAttribute('data-h-vao')).toBe('bloco')
-    // Uma linha de duas colunas (5fr/7fr) por seção: perfil, avisos, id, exportar, excluir e privacidade.
+    // Only the unchanged notice/export/delete children retain their 5fr/7fr layout.
     const linhas = todas.slice(1)
-    expect(linhas).toHaveLength(6)
+    expect(linhas.map((linha) => linha.closest('section')?.getAttribute('aria-labelledby'))).toEqual([
+      'avisos', 'exportar', 'excluir-conta',
+    ])
     for (const linha of linhas) {
       expect(modeloDe(linha)).toBe('minmax(0, 5fr) minmax(0, 7fr)')
       expect(linha.getAttribute('data-h-quebra')).toBe('1024')
       expect(linha.getAttribute('data-h-vao')).toBe('bloco')
       for (const filha of linha.children) expect(filha.getAttribute('data-h')?.split(' ')).toContain('coluna')
     }
+    for (const id of ['perfil', 'id-conta', 'privacidade']) {
+      const leitura = container.querySelector(`section[aria-labelledby="${id}"]`)!.firstElementChild!
+      expect(leitura.getAttribute('data-h')?.split(' ')).toContain('pilha')
+      expect(leitura.getAttribute('data-h-vao')).toBe('grupo')
+      expect(leitura.classList.contains('max-w-[28rem]')).toBe(true)
+    }
+    const colunaDoIndice = screen.getByRole('navigation', { name: 'Nesta página' }).parentElement!
+    expect(colunaDoIndice.classList.contains('[&_ul]:flex-wrap')).toBe(true)
+    expect(colunaDoIndice.classList.contains('[&_a]:whitespace-normal')).toBe(true)
     // A coluna das linhas é uma pilha com o vão de bloco, e a zona de perigo é um Cartao.
     const secoesDaConta = [...container.querySelectorAll('main section[aria-labelledby]')]
     expect(secoesDaConta.map((s) => s.getAttribute('aria-labelledby'))).toEqual([

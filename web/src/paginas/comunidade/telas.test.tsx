@@ -579,7 +579,7 @@ describe('C5: entrar na comunidade (MAT-40:RF-03, teste 7)', () => {
     digitar(ENTRAR_NA_COMUNIDADE.apelido, 'AUTOR_DO_FORUM')
     fireEvent.click(botao(ENTRAR_NA_COMUNIDADE.criarPerfil))
     expect(await screen.findByText(TEXTOS_ERRO_COMUNIDADE.apelido_em_uso)).toBeTruthy()
-    expect(document.activeElement).toBe(campo(ENTRAR_NA_COMUNIDADE.apelido))
+    await waitFor(() => expect(document.activeElement).toBe(campo(ENTRAR_NA_COMUNIDADE.apelido)))
 
     // Outra aba cria o perfil primeiro: o `23505` da conta única não é erro para a pessoa.
     estado.perfis.push({ id: 'e0000000-0000-4000-8000-000000000001', contaId: ELENCO.semPerfil.conta, apelido: 'criado_noutra_aba', bio: null, faixa: null, criadoEm: new Date().toISOString() })
