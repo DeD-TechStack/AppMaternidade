@@ -102,7 +102,7 @@ O projeto estudou sites premiados e produtos reais só para extrair técnicas, n
 - Faixas de conteúdo bem distintas e um fecho em contraste (Extrafazant).
 - Objeto que cruza a emenda entre duas faixas (visível hoje no tapete entre as faixas 4 e 5 da Home).
 
-Regras: registre só o nome da técnica e a URL pública; não cole trechos, não recorte imagens, não reproduza estrutura de página. A lista completa está em `docs/AppMaternidade/00_Inicio/REA_ESTADO.md`, seção 1.
+Regras: registre só o nome da técnica e a URL pública; não cole trechos, não recorte imagens, não reproduza estrutura de página. Essa é a lista de técnicas que vale para o projeto; os sites são públicos e podem ser encontrados pelo nome.
 
 ## 7. Convenções de código e de design
 
@@ -167,19 +167,17 @@ Build e testes são necessários, não suficientes. Um cartão só está pronto 
 
 ## 10. Divisão de trabalho
 
-**Diego é dono** de:
+**Diego é dono** de (atualizado em 25/11, para dar a ele frentes inteiras sem conflito com os agentes):
 
-- `web/src/paginas/publicas/**`, exceto o Início (que está em `web/src/paginas/Inicio.tsx`, não nessa pasta), e seus testes;
-- os componentes só dessas páginas: `web/src/componentes/como-casa/**`, `cuidado-casa/**`, `desenvolvimento-casa/**`, `nao-encontrada-casa/**`, `publicas-texto/**`;
-- os textos delas: `web/src/conteudo/casa/**` (menos `inicio.ts`), `web/src/conteudo/desenvolvimento/**`, e `web/src/conteudo/publicas-texto.ts` **exceto** o texto legal (privacidade, termos e exclusão de conta, que só Daniel altera);
+- as telas logadas `/app`: `web/src/paginas/rotina/**`, `desenvolvimento/**`, `comunidade/**`, `avisos/**`, `moderacao/**`, e os componentes só delas: `web/src/componentes/app/**`, `rotina/**`, `resumo-rotina/**`, `avisos/**`, `comunidade/**`, `moderacao/**`, além de `web/src/componentes/desenvolvimento/**` e `web/src/conteudo/desenvolvimento/**`;
 - as páginas de acesso: `web/src/paginas/conta/**` (Entrar, Criar conta, Recuperar acesso, Convite, Família, Conta) e `web/src/componentes/acesso/**`, `web/src/componentes/conta/**`;
-- as telas logadas `/app`: `web/src/paginas/rotina/**`, `desenvolvimento/**`, `comunidade/**`, `avisos/**`, `moderacao/**`, e os componentes só delas: `web/src/componentes/app/**`, `rotina/**`, `resumo-rotina/**`, `avisos/**`, `comunidade/**`, `moderacao/**`, `desenvolvimento/**`, `estado/**`, `web/src/prototipo/**`, os textos `web/src/conteudo/{rotina,resumoRotina,resumoRotinaPainel,conta,comunidade,moderacao,avisos,email}.ts`, e os testes de tudo isso;
-- o polimento funcional dentro desses escopos.
+- os testes dessas telas e o polimento funcional e visual dentro desses escopos.
 
-**Reservado agora para outra frente da equipe:** a página pública Desenvolvimento (`web/src/paginas/publicas/Desenvolvimento.tsx`, `desenvolvimento.casa.test.tsx`, `web/src/componentes/desenvolvimento-casa/**` e `web/src/conteudo/casa/desenvolvimento.ts`) está em redesenho. Não edite esses arquivos até este guia liberar; as telas logadas de desenvolvimento continuam suas.
+**Reservado agora para outra frente:** a página pública Desenvolvimento (`web/src/paginas/publicas/Desenvolvimento.tsx`, `desenvolvimento.casa.test.tsx`, `web/src/componentes/desenvolvimento-casa/**` e `web/src/conteudo/casa/desenvolvimento.ts`) está em redesenho. Não edite esses arquivos até este guia liberar.
 
 **A equipe é dona** de:
 
+- as demais páginas públicas: Como funciona, Cuidado compartilhado, Sobre, Contato e 404 (`web/src/paginas/publicas/**` exceto Desenvolvimento, `web/src/componentes/como-casa/**`, `cuidado-casa/**`, `nao-encontrada-casa/**`, `publicas-texto/**`, `web/src/conteudo/casa/**` e `web/src/conteudo/publicas-texto.ts`; o texto legal continua só do Daniel);
 - a Home: `web/src/paginas/Inicio.tsx`, `web/src/componentes/inicio-casa/**`, `web/src/componentes/inicio/**`, `web/src/movimento/**`, `web/src/conteudo/inicio.ts` e as imagens da Home (`web/src/assets/cenas/inicio*/**`);
 - o design system compartilhado: `web/src/styles/**`, `web/src/index.css`, `web/src/main.tsx`, `web/DESIGN.md`, os tokens;
 - a casca e o layout compartilhados: `web/src/componentes/casca/**`, `web/src/componentes/Layout.tsx`, `web/src/componentes/base/**`, `web/src/componentes/campo/**`, `web/src/componentes/secoes/**`;
@@ -201,9 +199,9 @@ Build e testes são necessários, não suficientes. Um cartão só está pronto 
 
 1. **Telas logadas:** passe pelos fluxos Hoje, Registro, Histórico, Notas e Família em 390 e 1440, com dados fictícios, e liste ou corrija o que parece protótipo (espaçamento, estado vazio, rótulos, ritmo vertical).
 2. **Estados:** confira vazio, carregando e erro de cada tela logada; texto em português, ação clara, foco visível.
-3. **Como funciona e Cuidado compartilhado:** reduza o vazio da primeira tela em 390 (veja a captura de Cuidado), ponha o texto perto do ponto focal e adote a escala de título que o design system define.
+3. **Família e Convite:** deixe o convite, a lista de pessoas e os estados (pendente, aceito, erro) claros em 390 e 1440, com dados fictícios e ações evidentes.
 4. **Entrar e Criar conta:** deixe o formulário e a ilustração equilibrados em 1440 e empilhados com boa ordem em 390; revise mensagens de erro de campo.
-5. **Sobre, Contato e 404:** composição própria e consistente com as demais, sem reaproveitar o prédio ou a janela onde der.
+5. **Conta e Recuperar acesso:** revise hierarquia, mensagens e confirmações de ações sensíveis (sair, excluir), sem mudar o texto legal.
 6. **Auditoria de acessibilidade:** rode os testes de axe, ande por teclado em cada página sua e registre os achados com captura.
 7. **Imagens:** liste os slots borrados nas suas páginas (pedido no PR) em vez de reexportar em 2×.
 
@@ -212,7 +210,7 @@ Sugestão de fluxo com IA própria: dê à ferramenta este guia, `web/DESIGN.md`
 ## 12. Plano resumido de sexta (27/11)
 
 - **Essencial:** Home com a nova composição integrada (ou, se não ficar pronta, a Home atual com rua, luz e grão e a nova tipografia); páginas públicas navegáveis e consistentes em 390 e 1440; os fluxos principais de `/app` apresentáveis com dados fictícios; sem imagem quebrada ou borrada nas páginas mostradas; link de pré-visualização pronto (a publicação depende do sim do Daniel).
-- **Importante:** faixa da porta; masters de imagem trocados onde são pequenos, depois que o gerador entregar; o seu polimento das páginas secundárias e do `/app`; paleta "hora azul" só se Daniel escolher.
+- **Importante:** faixa da porta; masters de imagem trocados onde são pequenos, depois que o gerador entregar; o seu polimento do `/app` e das páginas de acesso; paleta "hora azul" só se Daniel escolher.
 - **Depois:** redesenho completo de Como funciona, Cuidado e Desenvolvimento, os dois modos do RF-14, checagem de AVIF no Safari/iOS, publicação em `main`.
 
 ## 13. Segurança do que é público
