@@ -972,10 +972,10 @@ describe('HOME-FINAL F3 the signed caption: the hour heavy, the name upright, no
   it('F3: the stylesheet gives the hour Literata 800 in tabular lining figures at 1.5 x the caption size, and the name Literata upright, with no stroke rule', () => {
     const css = norm(readFileSync(CSS_DA_CASA, 'utf8'))
     expect(css).toContain(
-      '[data-casa] .ic-legenda-hora { font-family: var(--fonte-exibicao); font-size: calc(var(--texto-abertura-tamanho) * 1.5); font-weight: 800; font-variant-numeric: tabular-nums lining-nums; line-height: inherit; }',
+      '[data-casa] .ic-legenda-hora { font-family: var(--fonte-exibicao); font-size: calc(var(--texto-abertura-tamanho) * 1.5); font-weight: 800; font-variant-numeric: tabular-nums lining-nums; line-height: calc(var(--texto-abertura-tamanho) * 0.5); }',
     )
     expect(css).toContain(
-      '[data-casa] .ic-legenda-autor { display: inline-block; font-family: var(--fonte-exibicao); font-size: var(--texto-abertura-tamanho); font-weight: var(--peso-titulo); font-style: normal; text-decoration: none; }',
+      '[data-casa] .ic-legenda-autor { display: inline-block; padding-block-end: 2px; font-family: var(--fonte-exibicao); font-size: var(--texto-abertura-tamanho); font-weight: var(--peso-titulo); font-style: normal; text-decoration: none; }',
     )
     expect(css).not.toContain('ic-legenda-traco')
     expect(css).not.toMatch(/\.ic-legenda-autor[^{]*\{[^}]*(text-decoration: underline|border-bottom)/)

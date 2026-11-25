@@ -1092,18 +1092,18 @@
 
   /* The street runs edge to edge: the window's width (the container's, `cqi`) up to the master's 1672 px, never scaled
      below its own pixels (the plate is 1672 x 642, `a05-rua.MANIFESTO.json`). The quadro is narrower than the window, so
-     the box leaves it by an equal negative margin on both sides; the band clips what is past the window (`overflow-x:
-     clip`). `overflow: clip` is not a scroll container: without `min-block-size: 0` the in-flow img (block-size auto)
-     would set the frame's automatic minimum height (a grid item). Every clip frame with an aspect ratio says so
-     (inicioFaixas.test.tsx, SH-10). The light layer is the plate's own box (`[data-luz-grupo]` is `inset: 0`). */
+     the box is wider than its track: the grid (`justify-items: center`) centres it and it overflows the track by the
+     same amount on both sides; the band clips what is past the window (`overflow-x: clip`). No `inset` or `translate`
+     re-centres it: on top of the grid's centring that pair would shift the box to one side. `overflow: clip` is not a
+     scroll container: without `min-block-size: 0` the in-flow img (block-size auto) would set the frame's automatic
+     minimum height (a grid item). Every clip frame with an aspect ratio says so (inicioFaixas.test.tsx, SH-10). The
+     light layer is the plate's own box (`[data-luz-grupo]` is `inset: 0`). */
   [data-casa] .ic-fecho-cena {
     position: relative;
     inline-size: min(100cqi, 1672px);
     aspect-ratio: 1672 / 642;
     min-block-size: 0;
     margin: 0;
-    inset-inline-start: 50%;
-    translate: -50% 0;
     overflow: clip;
     pointer-events: none;
   }
@@ -1351,17 +1351,23 @@
      heavy, at one and a half times the caption's size (`texto-abertura`, the line's own token: no new level), in tabular
      lining figures so 16:00 and 17:30 stand on the same grid. The name is Literata upright at the caption's size, in the
      caption's colour (the night floor is mid grey: a lighter ink would fall under 4.5:1). No rule, no underline: nothing
-     reads like a link. The line height of the hour is 1, so it does not push the caption's line box open. */
+     reads like a link. The hour is a taller face than the words around it: with `inherit`, and even with a line height of
+     1, its ascent over the shared baseline is larger than the caption's, and the line box grows by about 3 px. The hour
+     keeps the caption's baseline and its own line box is smaller than its glyphs (half of the caption's size, written
+     with the `--texto-*` token the lint asks for there), so the caption's line is as tall as before the hour grew. */
   [data-casa] .ic-legenda-hora {
     font-family: var(--fonte-exibicao);
     font-size: calc(var(--texto-abertura-tamanho) * 1.5);
     font-weight: 800;
     font-variant-numeric: tabular-nums lining-nums;
-    line-height: inherit;
+    line-height: calc(var(--texto-abertura-tamanho) * 0.5);
   }
 
+  /* The padding under the name stands for the rule the name no longer draws: the caption keeps the height it had, so the
+     bands below it (two static captions in the flow under 1024) stay where they were. */
   [data-casa] .ic-legenda-autor {
     display: inline-block;
+    padding-block-end: 2px;
     font-family: var(--fonte-exibicao);
     font-size: var(--texto-abertura-tamanho);
     font-weight: var(--peso-titulo);

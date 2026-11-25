@@ -386,7 +386,17 @@ describe('SH-6 band 7: the closing on its edge, the A05 street lit once at 60 %'
     const css = colapsar(semComentarios(CSS_DA_CASA()))
     expect(css).toMatch(/\[data-casa\] \.ic-fecho-cena \{[^}]*inline-size: min\(100cqi, 1672px\);/)
     expect(css).toMatch(/\[data-casa\] \.ic-fecho-cena \{[^}]*aspect-ratio: 1672 \/ 642;/)
-    expect(css).toMatch(/\[data-casa\] \.ic-fecho-cena \{[^}]*inset-inline-start: 50%;[^}]*translate: -50% 0;/)
+    // The grid centres the box (`justify-items: center`): a relative `inset-inline-start: 50%` + `translate: -50%` pair on
+    // top of that moves a box wider than its track off-centre (it overflows to one side only), so no rule has the pair.
+    expect(css).toMatch(/\[data-casa\] \.ic-fecho \{[^}]*grid-template-columns: minmax\(0, 1fr\);[^}]*justify-items: center;/)
+    const regras = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({ seletor: m[1].trim(), corpo: m[2] }))
+    const recentra = regras.filter(
+      (r) => /\[data-casa\]/.test(r.seletor) && /inset-inline-start: 50%/.test(r.corpo) && /translate: -50%/.test(r.corpo),
+    )
+    expect(recentra.map((r) => r.seletor)).toEqual([])
+    const cena = regras.filter((r) => /\.ic-fecho-cena$/.test(r.seletor)).map((r) => r.corpo).join(' ')
+    expect(cena).not.toMatch(/inset-inline-start/)
+    expect(cena).not.toMatch(/(^|[\s;])translate:/)
     expect(css).not.toContain('--fecho-janela), 542px')
     // The street is decorative and rises under the pill from 768 (the pill's own width): it takes no click, and the closing
     // block stands above it in stacking. Under 768 the pill is the column's width, so there is no overlap.
