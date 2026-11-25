@@ -7,6 +7,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, wri
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { after, test } from 'node:test'
+import sharp from 'sharp'
 import { fileURLToPath } from 'node:url'
 import { deflateSync, inflateSync } from 'node:zlib'
 
@@ -22,24 +23,33 @@ const PASTAS = {
   telas: PASTA('telas/casa'),
 }
 const ATIVOS = {
-  // The masters kept as files: M05_390 and M06 still get their smaller widths from the build; the M04 and M05 WebP masters
-  // are also the top tier of their fixed WebP ladders.
+  // The masters kept as files: M06 still gets its smaller widths from the build (its top tier is now the 900w master of
+  // IMG-RES; the 792w master stays on disk and in the page total below); the M04 and M05 WebP masters are also the top tier
+  // of their fixed WebP ladders. IMG-RES (25/11/2026): the M05 phone ladder (390, 780, 1170) is fixed files too, its caps
+  // are the measured bytes plus about 5 %, and the old 23600 cap of the lossy-from-lossy 780w file is gone.
   placas: {
     'm05-sol-1672w.webp': 38600,
-    'm05-sol-390c-780w.webp': 23600,
+    'm05-sol-390c-780w.webp': 18800,
+    'm05-sol-390c-1170w.webp': 29900,
     'm06-apagada-792w.webp': 30700,
+    'm06-apagada-900w.webp': 33500,
     'm04-recorte-1200w.webp': 27400,
   },
   // HOME-SEAMS-G3: the files the page SELECTS for M04 and M05 at the top tier (the AVIF 4:4:4 of the lossless master, ground
-  // calibrated on the decoded output). The plate source caps apply to them, and the page total counts them.
+  // calibrated on the decoded output). The plate source caps apply to them, and the page total counts them. The last row
+  // is the AVIF the page selects for M05 on a 390 phone at DPR 3 (IMG-RES).
   entrega: {
     'm05-sol-1672w.avif': 38600,
     'm04-recorte-1200w.avif': 27400,
+    'm05-sol-390c-1170w.avif': 31800,
   },
-  // The rest of the two fixed ladders: no byte cap of their own, but each needs its PROVENANCE.md row and its file type.
+  // The rest of the fixed ladders: no byte cap of their own, but each needs its PROVENANCE.md row and its file type.
   escadas: [
     'm05-sol-900w.avif',
     'm05-sol-900w.webp',
+    'm05-sol-390c-390w.avif',
+    'm05-sol-390c-390w.webp',
+    'm05-sol-390c-780w.avif',
     'm04-recorte-350w.avif',
     'm04-recorte-600w.avif',
     'm04-recorte-700w.avif',
@@ -53,20 +63,31 @@ const ATIVOS = {
     'm05-luz-1672w',
     'm05-luz-390c-390w',
     'm05-luz-390c-780w',
+    'm05-luz-390c-1170w',
     'm06-luz-300w',
     'm06-luz-396w',
     'm06-luz-600w',
     'm06-luz-792w',
   ],
   tetoCamada: 12000,
+  // IMG-RES: the tiers served since 25/11/2026 are bigger than the 12,000 B lamp-layer cap; each has its own cap (measured
+  // bytes plus about 5 %). Every other layer keeps `tetoCamada`.
+  tetosCamadaNova: {
+    'm05-luz-390c-1170w': 30000,
+    'm06-luz-600w': 13300,
+    'm06-luz-792w': 18400,
+  },
   // Lamp layers that `/` loads together, per viewport and DPR.
   somaCamadas: {
     'DPR 2 on 1440': ['m05-luz-1672w', 'm06-luz-396w'],
     'DPR 1 on 1440': ['m05-luz-900w', 'm06-luz-396w'],
     'DPR 2 on 390': ['m05-luz-390c-780w', 'm06-luz-396w'],
     'DPR 1 on 390': ['m05-luz-390c-390w', 'm06-luz-300w'],
+    'DPR 3 on 390': ['m05-luz-390c-1170w', 'm06-luz-792w'],
   },
   tetoSomaCamadas: 25000,
+  // The DPR 3 sum holds the two big tiers (29835 + 17499 = 47334 B), so it has its own cap: the sum rounded up.
+  tetosSomaPropios: { 'DPR 3 on 390': 47400 },
   molduras: ['moldura-dia.png', 'moldura-noite.png'],
   tetoMoldura: 1000,
   capturas: {
@@ -76,6 +97,11 @@ const ATIVOS = {
     'hoje-n-560w.webp': 34000,
     'historico-y-alta-640w.webp': 35000,
     'historico-y-alta-560w.webp': 35000,
+    // IMG-RES: the DPR 3 tiers; the caps are the ones the IMG-RES test below states per capture.
+    'historico-y-alta-780w.webp': 140000,
+    'historico-y-alta-1170w.webp': 140000,
+    'hoje-n-780w.webp': 100000,
+    'hoje-n-1170w.webp': 100000,
   },
   tetoPagina1440Dpr2: 197000,
 }
@@ -559,10 +585,11 @@ function checarTudo(pastas) {
   for (const [nome, teto] of Object.entries({ ...ATIVOS.placas, ...ATIVOS.entrega })) {
     assert.ok(t(pastas.placas, nome) <= teto, `${nome}: ${t(pastas.placas, nome)} bytes is over the ${teto} cap`)
   }
-  for (const base of ATIVOS.camadas) checarCamada(pastas.cenas, base, ATIVOS.tetoCamada, ausentes)
+  for (const base of ATIVOS.camadas) checarCamada(pastas.cenas, base, ATIVOS.tetosCamadaNova[base] ?? ATIVOS.tetoCamada, ausentes)
   for (const [rotulo, bases] of Object.entries(ATIVOS.somaCamadas)) {
     const soma = bases.reduce((s, base) => s + bytesDaCamada(pastas.cenas, base, ausentes), 0)
-    assert.ok(soma <= ATIVOS.tetoSomaCamadas, `${rotulo}: layers total ${soma} bytes, over ${ATIVOS.tetoSomaCamadas}`)
+    const teto = ATIVOS.tetosSomaPropios[rotulo] ?? ATIVOS.tetoSomaCamadas
+    assert.ok(soma <= teto, `${rotulo}: layers total ${soma} bytes, over ${teto}`)
   }
   for (const nome of ATIVOS.molduras) {
     checarBytesCapAberto(pastas.molduras, nome, ATIVOS.tetoMoldura)
@@ -751,4 +778,54 @@ test('AST1-I-10 provenance: every served file has a PROVENANCE.md line with name
   checarProveniencia(PASTAS.cenas, camadasServidas(PASTAS.cenas, PASTAS.placas), PASTAS.placas)
   checarProveniencia(PASTAS.molduras, ATIVOS.molduras)
   checarProveniencia(PASTAS.telas, Object.keys(ATIVOS.capturas))
+})
+
+// IMG-RES: physical file dimensions, not density-adjusted HTMLImageElement.naturalWidth.
+// The original capture metadata describes the untouched small files; new tiers name their DPR3 source.
+test('IMG-RES phone tiers retain capture lineage, hash, dimensions and byte budgets without upscaling', async () => {
+  for (const folder of ['casa', 't1i']) {
+    const pasta = PASTA(`telas/${folder}`)
+    const capturas = lerManifesto(join(pasta, 'MANIFESTO.json')).capturas.filter((c) => c.captura_dpr3)
+    assert.equal(capturas.length, folder === 'casa' ? 2 : 3)
+    for (const captura of capturas) {
+      const fonte = captura.captura_dpr3
+      assert.match(fonte.fonte_sha, /^[0-9a-f]{40}$/)
+      assert.equal(fonte.dpr, 3)
+      assert.equal(fonte.toque, true)
+      assert.equal(fonte.png.largura, 1170)
+      assert.equal(fonte.png.altura, Number(fonte.viewport.split('x')[1]) * 3)
+      const novos = captura.servidos.filter((s) => s.fonte === 'captura_dpr3')
+      assert.deepEqual(novos.map((s) => s.largura), [780, 1170])
+      for (const servido of novos) {
+        const arquivo = fileURLToPath(new URL(`../public${servido.arquivo}`, import.meta.url))
+        const bytes = readFileSync(arquivo)
+        const meta = await sharp(bytes).metadata()
+        assert.equal(sha256(bytes), servido.sha256)
+        assert.equal(bytes.length, servido.bytes)
+        assert.deepEqual([meta.width, meta.height], [servido.largura, servido.altura])
+        assert.ok(meta.width <= fonte.png.largura && meta.height <= fonte.png.altura)
+        assert.ok(Math.abs(meta.height - fonte.png.altura * meta.width / fonte.png.largura) <= 0.5)
+        const teto = captura.id === 'Y_ALTA' ? 140000 : captura.id === 'N' ? 100000 : 95000
+        checarTetoCaptura(pasta, servido.arquivo.split('/').at(-1), teto)
+      }
+      checarProveniencia(pasta, novos.map((s) => s.arquivo.split('/').at(-1)))
+    }
+  }
+})
+
+test('IMG-RES vector frames preserve the transparent hole and body colors at the native larger tier', async () => {
+  for (const [tema, cor] of [['dia', [43, 35, 32]], ['noite', [110, 101, 96]]]) {
+    const nome = `moldura-${tema}-1356w.png`
+    const arquivo = join(PASTAS.molduras, nome)
+    const meta = await sharp(arquivo).metadata()
+    assert.deepEqual([meta.width, meta.height], [1356, 2846])
+    assert.equal(meta.hasAlpha, true)
+    const { data, info } = await sharp(arquivo).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+    const pixel = (x, y) => [...data.subarray((y * info.width + x) * 4, (y * info.width + x) * 4 + 4)]
+    assert.equal(pixel(678, 1423)[3], 0)
+    assert.equal(pixel(0, 0)[3], 0)
+    assert.deepEqual(pixel(18, 1423), [...cor, 255])
+    assert.ok(statSync(arquivo).size <= 26000)
+    checarProveniencia(PASTAS.molduras, [nome])
+  }
 })

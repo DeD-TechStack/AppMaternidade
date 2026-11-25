@@ -2,7 +2,7 @@ import { imagemPublica } from '../../componentes/campo/urlPublica.ts'
 import { placa } from '../../componentes/campo/imagens.ts'
 import m01Icaro from '../../assets/cenas/cuidado/m01-icaro-1152w.webp?w=760;1152&format=avif;webp&as=picture'
 import m01Icaro390 from '../../assets/cenas/cuidado/m01-icaro-390c-780w.webp?w=390;780&format=avif;webp&as=picture'
-import m05Maos from '../../assets/cenas/cuidado/m05-maos-1472w.webp?w=800;1472&format=avif;webp&as=picture'
+import m05Maos from '../../assets/cenas/cuidado/m05-maos-1640w.webp?w=800;1472;1640&format=avif;webp&as=picture'
 import m05Maos390 from '../../assets/cenas/cuidado/m05-maos-390c-740w.webp?w=390;740&format=avif;webp&as=picture'
 import m12Heroi from '../../assets/cenas/cuidado/m12-heroi-981w.webp?w=600;981&format=avif;webp&as=picture'
 
@@ -107,8 +107,9 @@ export const IMAGENS_CUIDADO = {
   },
   /** CC-S3: as quatro mãos (M05). 1440: 800 × 353 rente à borda direita; 390: 390 × 343. */
   cena2: {
-    // O mestre tem 1472 × 650; a página sempre levou 649 na `<img>`, e a proporção da caixa fica como era.
-    largo: placa(m05Maos, '(min-width: 1440px) 800px, 56vw', 800, 649),
+    // O mestre tem 1640 × 724 (antes 1472 × 650); a página sempre levou 649 de 1472 na `<img>`, e a proporção da caixa
+    // fica como era: 723 = round(1640 × 649 / 1472).
+    largo: placa(m05Maos, '(min-width: 1440px) 800px, 56vw', 800, 723),
     // O mestre tem 740 × 650; a página sempre levou 651.
     celular: placa(m05Maos390, '100vw', 390, 651),
   },
@@ -122,14 +123,16 @@ export const IMAGENS_CUIDADO = {
   tela: imagemPublica({
     src: '/telas/t1i/familia-280w.webp',
     srcSet:
-      '/telas/t1i/familia-280w.webp 280w, /telas/t1i/familia-320w.webp 320w, /telas/t1i/familia-560w.webp 560w, /telas/t1i/familia-640w.webp 640w',
+      '/telas/t1i/familia-280w.webp 280w, /telas/t1i/familia-320w.webp 320w, /telas/t1i/familia-560w.webp 560w, /telas/t1i/familia-640w.webp 640w, /telas/t1i/familia-780w.webp 780w, /telas/t1i/familia-1170w.webp 1170w',
     sizes: '(min-width: 1024px) 320px, min(330px, 85vw)',
-    largura: 640,
-    altura: 1385,
+    largura: 1170,
+    altura: 2532,
   }),
   /** A moldura do dia servida (web/public/molduras, PROVENANCE): 678 × 1423, a tela de 640 × 1385 mais 3 % de borda. */
   moldura: imagemPublica({
     src: '/molduras/moldura-dia.png',
+    srcSet: '/molduras/moldura-dia.png 678w, /molduras/moldura-dia-1356w.png 1356w',
+    sizes: '(min-width: 1440px) 414px, 350px',
     largura: 678,
     altura: 1423,
   }),

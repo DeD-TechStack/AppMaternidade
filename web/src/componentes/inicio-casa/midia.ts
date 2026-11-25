@@ -14,8 +14,13 @@ import m05Avif900 from '../../assets/cenas/inicio/m05-sol-900w.avif'
 import m05Avif1672 from '../../assets/cenas/inicio/m05-sol-1672w.avif'
 import m05Webp900 from '../../assets/cenas/inicio/m05-sol-900w.webp'
 import m05Webp1672 from '../../assets/cenas/inicio/m05-sol-1672w.webp'
-import m05Sol390 from '../../assets/cenas/inicio/m05-sol-390c-780w.webp?w=390;780&format=avif;webp&as=picture'
-import m06Apagada from '../../assets/cenas/inicio/m06-apagada-792w.webp?w=300;396;600;792&format=avif;webp&as=picture'
+import m05Avif390c390 from '../../assets/cenas/inicio/m05-sol-390c-390w.avif'
+import m05Avif390c780 from '../../assets/cenas/inicio/m05-sol-390c-780w.avif'
+import m05Avif390c1170 from '../../assets/cenas/inicio/m05-sol-390c-1170w.avif'
+import m05Webp390c390 from '../../assets/cenas/inicio/m05-sol-390c-390w.webp'
+import m05Webp390c780 from '../../assets/cenas/inicio/m05-sol-390c-780w.webp'
+import m05Webp390c1170 from '../../assets/cenas/inicio/m05-sol-390c-1170w.webp'
+import m06Apagada from '../../assets/cenas/inicio/m06-apagada-900w.webp?w=300;396;600;792;900&format=avif;webp&as=picture'
 import m04Faixa from '../../assets/cenas/inicio-faixas/m04-faixa-1200w.webp?w=1200&format=webp&lossless=true&as=picture'
 import m11Apagada from '../../assets/cenas/inicio-faixas/m11-apagada-542w.webp?w=326;542&format=webp&lossless=true&as=picture'
 
@@ -68,17 +73,26 @@ export const M05: Imagem = placaFixa(
 )
 
 /**
- * M05 for 390: the window of RECUT §4, 390 × 306 CSS px, in the plate's own pixels at 1× and 2×. WebP only: the phone
- * crop's own files are outside the AVIF re-export of M04 and M05, so only the WebP fields of the build ladder are served.
+ * M05 for 390: the window of RECUT §4, 390 × 306 CSS px, in the plate's own pixels at 1×, 2× and 3× (390, 780, 1170 wide;
+ * the lossless master's 1199 × 941 crop, 1170 × 918 at the top tier, the same aspect as the 780 × 612 of before). Fixed
+ * files like M04 and M05: an AVIF 4:4:4 ladder and a WebP ladder, `CenaHeroi` reads both.
  */
-const m05Recorte = placa(m05Sol390, '100vw', 390)
-export const M05_390: Imagem = {
-  src: m05Recorte.src,
-  srcSet: m05Recorte.srcSet,
-  sizes: m05Recorte.sizes,
-  largura: m05Recorte.largura,
-  altura: m05Recorte.altura,
-}
+export const M05_390: Imagem = placaFixa(
+  [
+    { url: m05Webp390c390, largura: 390 },
+    { url: m05Webp390c780, largura: 780 },
+    { url: m05Webp390c1170, largura: 1170 },
+  ],
+  [
+    { url: m05Avif390c390, largura: 390 },
+    { url: m05Avif390c780, largura: 780 },
+    { url: m05Avif390c1170, largura: 1170 },
+  ],
+  '100vw',
+  390,
+  1170,
+  918,
+)
 
 /** The seam of M05 as a fraction of its whole width (RECUT §2: 0.5443). */
 export const M05_COSTURA = 0.5443
@@ -91,7 +105,7 @@ export const M05_LARGURA = 900
 
 /**
  * The light layer of a plate: ONE file (cone and pool merged) in the plate's own box, opacity only, lit at rest. The
- * M05 includes the delivered 2x tiers. Only M06's 600w/792w layers exceed 12,000 bytes and remain unserved.
+ * M05 includes the delivered 2x tiers, M05_390 and M06 their 3x and 2x tiers (the byte caps in `ativosInicio.test.mjs`).
  */
 export const LUZ_M05: Imagem = imagemPublica({
   src: '/cenas/inicio/m05-luz-900w.png',
@@ -102,14 +116,16 @@ export const LUZ_M05: Imagem = imagemPublica({
 })
 export const LUZ_M05_390: Imagem = imagemPublica({
   src: '/cenas/inicio/m05-luz-390c-390w.png',
-  srcSet: '/cenas/inicio/m05-luz-390c-390w.png 390w, /cenas/inicio/m05-luz-390c-780w.png 780w',
+  srcSet:
+    '/cenas/inicio/m05-luz-390c-390w.png 390w, /cenas/inicio/m05-luz-390c-780w.png 780w, /cenas/inicio/m05-luz-390c-1170w.png 1170w',
   sizes: '100vw',
   largura: 390,
   altura: 306,
 })
 export const LUZ_M06: Imagem = imagemPublica({
   src: '/cenas/inicio/m06-luz-396w.png',
-  srcSet: '/cenas/inicio/m06-luz-300w.png 300w, /cenas/inicio/m06-luz-396w.png 396w',
+  srcSet:
+    '/cenas/inicio/m06-luz-300w.png 300w, /cenas/inicio/m06-luz-396w.png 396w, /cenas/inicio/m06-luz-600w.png 600w, /cenas/inicio/m06-luz-792w.png 792w',
   sizes: '(min-width: 1024px) 395.5px, 300px',
   largura: 396,
   altura: 647,
@@ -170,10 +186,11 @@ export const M04_FAIXA: Imagem = placaWebp(m04Faixa, '(min-width: 1024px) min(50
  */
 export const CAPTURA_NOTAS: Imagem = imagemPublica({
   src: '/telas/t1i/notas-320w.webp',
-  srcSet: '/telas/t1i/notas-280w.webp 280w, /telas/t1i/notas-320w.webp 320w, /telas/t1i/notas-560w.webp 560w, /telas/t1i/notas-640w.webp 640w',
+  srcSet:
+    '/telas/t1i/notas-280w.webp 280w, /telas/t1i/notas-320w.webp 320w, /telas/t1i/notas-560w.webp 560w, /telas/t1i/notas-640w.webp 640w, /telas/t1i/notas-780w.webp 780w, /telas/t1i/notas-1170w.webp 1170w',
   sizes: '(min-width: 1440px) 320px, (max-width: 390px) 280px, calc(280px + (100vw - 390px) * 40 / 1050)',
-  largura: 640,
-  altura: 1385,
+  largura: 1170,
+  altura: 2532,
 })
 
 /**
@@ -194,8 +211,20 @@ export const PORTA_NOITE: Imagem = imagemPublica({
  * real capture under it. The day frame stands on the papel wall, the night frame on cacau (and as the night twin).
  * 678 x 1423 = the screen layer's width x 1.06 by its height x 2.2241 (`--moldura-razao`).
  */
-export const MOLDURA_DIA: Imagem = imagemPublica({ src: '/molduras/moldura-dia.png', largura: 678, altura: 1423 })
-export const MOLDURA_NOITE: Imagem = imagemPublica({ src: '/molduras/moldura-noite.png', largura: 678, altura: 1423 })
+export const MOLDURA_DIA: Imagem = imagemPublica({
+  src: '/molduras/moldura-dia.png',
+  srcSet: '/molduras/moldura-dia.png 678w, /molduras/moldura-dia-1356w.png 1356w',
+  sizes: '(min-width: 1440px) 414px, 350px',
+  largura: 678,
+  altura: 1423,
+})
+export const MOLDURA_NOITE: Imagem = imagemPublica({
+  src: '/molduras/moldura-noite.png',
+  srcSet: '/molduras/moldura-noite.png 678w, /molduras/moldura-noite-1356w.png 1356w',
+  sizes: '(min-width: 1440px) 414px, 350px',
+  largura: 678,
+  altura: 1423,
+})
 
 /**
  * The screen layer of a framed capture: 320 CSS px wide at 1440 and 280 at 390 (RECUT §6), so the 280w, 320w, 560w and
@@ -216,10 +245,10 @@ const TAMANHOS_DA_TELA =
 export const CAPTURA_Y_ALTA: Imagem = imagemPublica({
   src: '/telas/casa/historico-y-alta-320w.webp',
   srcSet:
-    '/telas/casa/historico-y-alta-280w.webp 280w, /telas/casa/historico-y-alta-320w.webp 320w, /telas/casa/historico-y-alta-560w.webp 560w, /telas/casa/historico-y-alta-640w.webp 640w',
+    '/telas/casa/historico-y-alta-280w.webp 280w, /telas/casa/historico-y-alta-320w.webp 320w, /telas/casa/historico-y-alta-560w.webp 560w, /telas/casa/historico-y-alta-640w.webp 640w, /telas/casa/historico-y-alta-780w.webp 780w, /telas/casa/historico-y-alta-1170w.webp 1170w',
   sizes: TAMANHOS_DA_TELA,
-  largura: 640,
-  altura: 2025,
+  largura: 1170,
+  altura: 3702,
 })
 
 /**
@@ -266,8 +295,8 @@ export const LUZ_M11: Imagem = imagemPublica({
 export const CAPTURA_N: Imagem = imagemPublica({
   src: '/telas/casa/hoje-n-320w.webp',
   srcSet:
-    '/telas/casa/hoje-n-280w.webp 280w, /telas/casa/hoje-n-320w.webp 320w, /telas/casa/hoje-n-560w.webp 560w, /telas/casa/hoje-n-640w.webp 640w',
+    '/telas/casa/hoje-n-280w.webp 280w, /telas/casa/hoje-n-320w.webp 320w, /telas/casa/hoje-n-560w.webp 560w, /telas/casa/hoje-n-640w.webp 640w, /telas/casa/hoje-n-780w.webp 780w, /telas/casa/hoje-n-1170w.webp 1170w',
   sizes: TAMANHOS_DA_TELA,
-  largura: 640,
-  altura: 1444,
+  largura: 1170,
+  altura: 2640,
 })

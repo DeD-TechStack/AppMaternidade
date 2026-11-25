@@ -10,6 +10,13 @@
   "capturas": [
     {
       "id": "historico-y15",
+      "captura_dpr3": {
+        "fonte_sha": "98817ec62ff7cd6805131157092c7d4c43c67b33",
+        "viewport": "390x844", "dpr": 3, "toque": true, "user_agent_mobile": false,
+        "rota": "/app/historico", "h1": "Histórico", "tema": "claro",
+        "scroll_y_pedido": 2067, "scroll_y": 2006, "altura_documento": 2850, "offset_y_px": 92,
+        "png": { "largura": 1170, "altura": 2532, "sha256": "06b34ed5c7e75f98628d9e9401fb4acdcebb6a4bfe0d036c1ac70b5a89638250" }
+      },
       "estado": "T1I",
       "caso": "historico_y15",
       "rota": "app/historico",
@@ -67,12 +74,27 @@
           "bytes": 28868,
           "sha256": "a49604c7d865bcd78bc1a6180e9f41ab2394ac29436b5dacb08c97e4dc4b971a",
           "qualidade": 72
+        },
+        {
+          "arquivo": "/telas/t1i/historico-y15-780w.webp", "largura": 780, "altura": 1688, "bytes": 57782,
+          "sha256": "3b2fb8a8129f02a7eaf52c603de1c2877c81f5344e806b678e2fe956b31eb5f7", "qualidade": 90, "fonte": "captura_dpr3"
+        },
+        {
+          "arquivo": "/telas/t1i/historico-y15-1170w.webp", "largura": 1170, "altura": 2532, "bytes": 89926,
+          "sha256": "26e63e74ef247b61bf9c1f74f212d0ce75b6e5322fd1058dd66a856a8ec48628", "qualidade": 90, "fonte": "captura_dpr3"
         }
       ],
       "busca_final": "?dia=2026-11-17"
     },
     {
       "id": "notas",
+      "captura_dpr3": {
+        "fonte_sha": "98817ec62ff7cd6805131157092c7d4c43c67b33",
+        "viewport": "390x844", "dpr": 3, "toque": true, "user_agent_mobile": false,
+        "rota": "/app/notas", "h1": "Notas", "tema": "claro", "scroll_y": 0,
+        "relogio": "2026-11-18T20:26:00-03:00",
+        "png": { "largura": 1170, "altura": 2532, "sha256": "680047e480798e40fba37d70ef3e1edd0624a39f195a2ab5b7bd9892346dda11" }
+      },
       "estado": "T1I",
       "caso": "notas",
       "rota": "app/notas",
@@ -127,12 +149,27 @@
           "bytes": 31878,
           "sha256": "5f14fc51ddc121000a2b59565e3ce11bb3b949313fe5e3d5c1b6e410a85350d6",
           "qualidade": 82
+        },
+        {
+          "arquivo": "/telas/t1i/notas-780w.webp", "largura": 780, "altura": 1688, "bytes": 53638,
+          "sha256": "830c3e422c36bcbb8a37cfd3992e3b35b57689124f747d69135e9f8ed8767070", "qualidade": 90, "fonte": "captura_dpr3"
+        },
+        {
+          "arquivo": "/telas/t1i/notas-1170w.webp", "largura": 1170, "altura": 2532, "bytes": 81512,
+          "sha256": "3d6e8bcb1802ea04a2d65053c1b347968417c8795e89f9b8dd59f7ff1d9e2e19", "qualidade": 90, "fonte": "captura_dpr3"
         }
       ],
       "busca_final": ""
     },
     {
       "id": "familia",
+      "captura_dpr3": {
+        "fonte_sha": "98817ec62ff7cd6805131157092c7d4c43c67b33",
+        "viewport": "390x844", "dpr": 3, "toque": true, "user_agent_mobile": false,
+        "rota": "/app/familia", "h1": "Família", "tema": "claro", "scroll_y": 592,
+        "relogio": "2026-11-18T20:26:00-03:00",
+        "png": { "largura": 1170, "altura": 2532, "sha256": "179a6505ce551c09c4e09711e9af08ce6c484a1836d3298764bb9c803fe0a7e6" }
+      },
       "estado": "T1I",
       "caso": "familia",
       "rota": "app/familia",
@@ -189,6 +226,14 @@
           "bytes": 29074,
           "sha256": "1f3812173c761539498c27f7cac3b6c09bd60d03bfebb7070714690759da4d78",
           "qualidade": 82
+        },
+        {
+          "arquivo": "/telas/t1i/familia-780w.webp", "largura": 780, "altura": 1688, "bytes": 51784,
+          "sha256": "e9914ae899f0c0e0d2ca670e92c252ac5cb1300b04be91ac3fbfca28e53cc24d", "qualidade": 90, "fonte": "captura_dpr3"
+        },
+        {
+          "arquivo": "/telas/t1i/familia-1170w.webp", "largura": 1170, "altura": 2532, "bytes": 80678,
+          "sha256": "e1cbb9d7069ffc441fce50a2b02cf0e6599dffe72e83e174d3214e036dc71ec7", "qualidade": 90, "fonte": "captura_dpr3"
         }
       ],
       "busca_final": ""

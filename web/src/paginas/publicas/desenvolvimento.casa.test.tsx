@@ -245,12 +245,13 @@ describe('DESENV-I-06 imagens (as três vagas fechadas)', () => {
       ['image/avif', null],
     ])
     for (const fonte of fontes.slice(0, 2)) {
-      expect(larguras(fonte.getAttribute('srcset'))).toEqual([390, 780])
+      expect(larguras(fonte.getAttribute('srcset'))).toEqual([390, 780, 1170])
       expect(fonte.getAttribute('sizes')).toBe('100vw')
       expect(fonte.getAttribute('width')).toBe(String(CENA_ABERTURA_RECORTE.largura))
       expect(fonte.getAttribute('height')).toBe(String(CENA_ABERTURA_RECORTE.altura))
     }
-    expect([CENA_ABERTURA_RECORTE.largura, CENA_ABERTURA_RECORTE.altura]).toEqual([780, 476])
+    // IMG-RES: the 3x tier, 1170 x 714, has the aspect of the 780 x 476 it had.
+    expect([CENA_ABERTURA_RECORTE.largura, CENA_ABERTURA_RECORTE.altura]).toEqual([1170, 714])
     expect(larguras(fontes[2].getAttribute('srcset'))).toEqual([1100, 1672])
     expect(fontes[2].getAttribute('sizes')).toBe(cena.getAttribute('sizes'))
     expect(fontes[2].nextElementSibling).toBe(cena)
@@ -261,13 +262,15 @@ describe('DESENV-I-06 imagens (as três vagas fechadas)', () => {
     const tela = container.querySelector('img[data-produto-tela]')!
     expect(tela.getAttribute('alt')).toBe(D.altTela1)
     expect(tela.getAttribute('src')).toContain('/telas/t1i/historico-y15-280w.webp')
-    for (const largura of [280, 320, 560, 640]) {
+    for (const largura of [280, 320, 560, 640, 780, 1170]) {
       expect(tela.getAttribute('srcset')).toContain(`historico-y15-${largura}w.webp ${largura}w`)
     }
     expect(tela.getAttribute('width')).toBe(String(TELA_HISTORICO.largura))
     expect(tela.getAttribute('height')).toBe(String(TELA_HISTORICO.altura))
     const moldura = container.querySelector('img[data-produto-moldura-arte]')!
     expect(moldura.getAttribute('src')).toBe('/molduras/moldura-dia.png')
+    expect(moldura.getAttribute('srcset')).toBe('/molduras/moldura-dia.png 678w, /molduras/moldura-dia-1356w.png 1356w')
+    expect(moldura.getAttribute('sizes')).toBe('(min-width: 1440px) 414px, 350px')
     expect(moldura.getAttribute('alt')).toBe('')
     expect(moldura.getAttribute('width')).toBe(String(MOLDURA_DIA.largura))
     expect(moldura.getAttribute('height')).toBe(String(MOLDURA_DIA.altura))
