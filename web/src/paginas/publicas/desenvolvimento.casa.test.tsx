@@ -20,8 +20,8 @@ import { renderizarRota } from '../../teste/renderizarRota.tsx'
 // quando o Vitest roda da raiz do repositório e não acha a configuração de web/ (o ambiente vem do comentário acima).
 import '../../teste/setup.ts'
 
-// /desenvolvimento nas seções da casa (CLONE-DESENV). O jsdom não faz layout: aqui ficam a estrutura, os atributos,
-// o texto e as regras; as medidas reais saem das capturas.
+// /desenvolvimento nas seções da casa (redesign editorial). O jsdom não faz layout: aqui ficam a estrutura, os
+// atributos, o texto e as regras; as medidas reais saem das capturas.
 
 const ROTA = '/desenvolvimento'
 
@@ -36,7 +36,7 @@ function bandas(container: HTMLElement): HTMLElement[] {
 }
 
 describe('DESENV-I-01 faixas e componentes, dentro de um [data-casa]', () => {
-  it('um main, um [data-casa], um h1, e as seis faixas filhas diretas na ordem do spec', () => {
+  it('um main, um [data-casa], um h1, e as seis faixas filhas diretas na ordem', () => {
     const { container } = renderizarRota(ROTA)
     expect(container.querySelectorAll('main')).toHaveLength(1)
     expect(container.querySelectorAll('[data-casa]')).toHaveLength(1)
@@ -49,9 +49,11 @@ describe('DESENV-I-01 faixas e componentes, dentro de um [data-casa]', () => {
     expect(container.querySelector('[data-fechamento]')).toBeNull()
   })
 
-  it('a abertura: h1, frase, botão base para #ideias, link para #tummy-time, moldura uma vez, legenda e aviso', () => {
+  it('a abertura tem ponto focal único (h1, frase, ações, aviso e cena) e a prova do produto mora na faixa do registro', () => {
     const { container } = renderizarRota(ROTA)
     const abertura = bandas(container)[0]
+    const registro = bandas(container)[1]
+
     expect(within(abertura).getByRole('heading', { level: 1 }).textContent).toBe(D.h1)
     expect(within(abertura).getByText(D.lede)).toBeTruthy()
     const botao = within(abertura).getByRole('link', { name: D.cta1 })
@@ -60,12 +62,18 @@ describe('DESENV-I-01 faixas e componentes, dentro de um [data-casa]', () => {
     const link = within(abertura).getByRole('link', { name: D.cta2 })
     expect(link.getAttribute('href')).toBe('#tummy-time')
     expect(link.hasAttribute('data-botao')).toBe(false)
+    expect(abertura.querySelectorAll('[data-produto-moldura]')).toHaveLength(0)
+
+    // O aparelho real e a legenda assinada ficam juntos do argumento "No site, é só um registro."
+    expect(within(registro).getByRole('heading', { level: 2, name: D.h2Registro })).toBeTruthy()
+    expect(within(registro).getByText(D.pRegistro)).toBeTruthy()
     expect(container.querySelectorAll('[data-produto-moldura]')).toHaveLength(1)
-    expect(abertura.querySelectorAll('[data-produto-moldura]')).toHaveLength(1)
+    expect(registro.querySelectorAll('[data-produto-moldura]')).toHaveLength(1)
     expect(container.querySelectorAll('[data-produto-tela]')).toHaveLength(1)
-    const legenda = abertura.querySelector<HTMLElement>('p[data-legenda]')!
+    const legenda = registro.querySelector<HTMLElement>('p[data-legenda]')!
     expect(legenda.textContent).toBe(D.legenda1)
     expect(legenda.getAttribute('data-tom')).toBe('dia')
+
     const avisos = screen.getAllByText(AVISO_SAUDE)
     expect(avisos).toHaveLength(1)
     expect(abertura.contains(avisos[0])).toBe(true)
@@ -136,7 +144,7 @@ describe('DESENV-I-08 âncoras e itens (RF-08)', () => {
 })
 
 describe('as seis fases e as fontes (todas a vista)', () => {
-  it('as seis fases numa lista só, com h3, itens, fontes com link e a data; sem abas nem details', () => {
+  it('as seis fases numa lista só, com janela etária, h3, itens, fontes com link e a data; sem abas nem details', () => {
     const { container } = renderizarRota(ROTA)
     expect(container.querySelector('[role="tab"], [role="tablist"], details')).toBeNull()
     const listas = container.querySelectorAll('#ideias ul[data-fases]')
@@ -144,6 +152,7 @@ describe('as seis fases e as fontes (todas a vista)', () => {
     const fases = [...listas[0].querySelectorAll(':scope > li')]
     expect(fases).toHaveLength(6)
     for (const [i, fase] of fases.entries()) {
+      expect(within(fase as HTMLElement).getByText(FASES[i].faixa)).toBeTruthy()
       expect(within(fase as HTMLElement).getByRole('heading', { level: 3 }).textContent).toBe(FASES[i].titulo)
       for (const item of FASES[i].itens) expect(fase.textContent).toContain(item)
       const fontes = fase.querySelector('[data-fontes]')!
@@ -185,7 +194,7 @@ describe('as seis fases e as fontes (todas a vista)', () => {
     }
   })
 
-  it('a ordem de leitura do tummy time é a do deck 2.3: resumo, faixa, três partes, tabela, sem meta, quarta parte, fontes', () => {
+  it('a ordem de leitura do tummy time e dos marcos mantém fontes ao final do bloco no DOM', () => {
     const { container } = renderizarRota(ROTA)
     const texto = container.querySelector('#tummy-time')!.textContent!
     const partes = TUMMY_TIME.itens
@@ -203,6 +212,17 @@ describe('as seis fases e as fontes (todas a vista)', () => {
     const posicoes = ordem.map((trecho) => texto.indexOf(trecho))
     for (const [i, p] of posicoes.entries()) expect(p, ordem[i]).toBeGreaterThanOrEqual(0)
     expect([...posicoes].sort((a, b) => a - b)).toEqual(posicoes)
+
+    const textoMarcos = container.querySelector('#marcos')!.textContent!
+    const ordemMarcos = [
+      MARCOS.resumo,
+      `${ROTULOS_FONTES.faixa} ${MARCOS.faixa}`,
+      ...MARCOS.itens.map((parte) => parte.titulo),
+      D.fontesRotulo,
+    ]
+    const posMarcos = ordemMarcos.map((trecho) => textoMarcos.indexOf(trecho))
+    for (const [i, p] of posMarcos.entries()) expect(p, ordemMarcos[i]).toBeGreaterThanOrEqual(0)
+    expect([...posMarcos].sort((a, b) => a - b)).toEqual(posMarcos)
   })
 
   it('a tabela: caption, th de coluna e de linha, 5 linhas, e a célula da Pathways fica vazia (sem traço)', () => {
@@ -223,7 +243,9 @@ describe('DESENV-I-06 imagens (as três vagas fechadas)', () => {
   it('DE-S1: a cena da abertura é <img> comum, eager, fetchpriority high, com tamanho e srcset; recorte de 390 no source', () => {
     const { container } = renderizarRota(ROTA)
     const abertura = bandas(container)[0]
-    const imagens = [...abertura.querySelectorAll('img')].filter((i) => !i.hasAttribute('data-produto-tela') && !i.hasAttribute('data-produto-moldura-arte'))
+    const imagens = [...abertura.querySelectorAll('img')].filter(
+      (i) => !i.hasAttribute('data-produto-tela') && !i.hasAttribute('data-produto-moldura-arte'),
+    )
     expect(imagens).toHaveLength(1)
     const cena = imagens[0]
     expect(container.querySelector('[data-cena-heroi]')).toBeNull()
@@ -232,7 +254,7 @@ describe('DESENV-I-06 imagens (as três vagas fechadas)', () => {
     expect(cena.getAttribute('src')).toMatch(URL_GERADA)
     expect(larguras(cena.getAttribute('srcset'))).toEqual([1100, 1672])
     expect(cena.getAttribute('srcset')).toContain(cena.getAttribute('src')!)
-    expect(cena.getAttribute('sizes')).toBe('(min-width: 1100px) min(1100px, 76.39vw), 100vw')
+    expect(cena.getAttribute('sizes')).toBe(CENA_ABERTURA.sizes)
     expect(cena.getAttribute('width')).toBe('1672')
     expect(cena.getAttribute('height')).toBe('941')
     expect(cena.getAttribute('fetchpriority')).toBe('high')
@@ -250,7 +272,6 @@ describe('DESENV-I-06 imagens (as três vagas fechadas)', () => {
       expect(fonte.getAttribute('width')).toBe(String(CENA_ABERTURA_RECORTE.largura))
       expect(fonte.getAttribute('height')).toBe(String(CENA_ABERTURA_RECORTE.altura))
     }
-    // IMG-RES: the 3x tier, 1170 x 714, has the aspect of the 780 x 476 it had.
     expect([CENA_ABERTURA_RECORTE.largura, CENA_ABERTURA_RECORTE.altura]).toEqual([1170, 714])
     expect(larguras(fontes[2].getAttribute('srcset'))).toEqual([1100, 1672])
     expect(fontes[2].getAttribute('sizes')).toBe(cena.getAttribute('sizes'))
@@ -270,24 +291,23 @@ describe('DESENV-I-06 imagens (as três vagas fechadas)', () => {
     const moldura = container.querySelector('img[data-produto-moldura-arte]')!
     expect(moldura.getAttribute('src')).toBe('/molduras/moldura-dia.png')
     expect(moldura.getAttribute('srcset')).toBe('/molduras/moldura-dia.png 678w, /molduras/moldura-dia-1356w.png 1356w')
-    expect(moldura.getAttribute('sizes')).toBe('(min-width: 1440px) 414px, 350px')
+    expect(moldura.getAttribute('sizes')).toBe(MOLDURA_DIA.sizes)
     expect(moldura.getAttribute('alt')).toBe('')
     expect(moldura.getAttribute('width')).toBe(String(MOLDURA_DIA.largura))
     expect(moldura.getAttribute('height')).toBe(String(MOLDURA_DIA.altura))
   })
 
-  it('DE-S3: a família na faixa das ideias, lazy e assíncrona, com tamanho e srcset', () => {
+  it('DE-S3: a família na faixa das ideias, lazy e assíncrona, com tamanho e srcset ajustados para nitidez 2x', () => {
     const { container } = renderizarRota(ROTA)
     const familia = container.querySelector('#ideias img')!
     expect(familia.getAttribute('alt')).toBe(D.altCena2)
     expect(familia.getAttribute('src')).toMatch(URL_GERADA)
     expect(larguras(familia.getAttribute('srcset'))).toEqual([390, 585])
     expect(familia.getAttribute('srcset')).toContain(familia.getAttribute('src')!)
-    expect(familia.getAttribute('sizes')).toBe('(min-width: 960px) 390px, 350px')
+    expect(familia.getAttribute('sizes')).toBe(CENA_FAMILIA.sizes)
     expect(familia.getAttribute('width')).toBe(String(CENA_FAMILIA.largura))
     expect(familia.getAttribute('height')).toBe(String(CENA_FAMILIA.altura))
     expect([CENA_FAMILIA.largura, CENA_FAMILIA.altura]).toEqual([585, 632])
-    // O AVIF de 390 e 585 vai no DOM, numa <source> da <picture> que envolve a <img>.
     const fonteAvif = container.querySelector('#ideias picture source[type="image/avif"]')!
     expect(fonteAvif).not.toBeNull()
     expect(larguras(fonteAvif.getAttribute('srcset'))).toEqual([390, 585])
@@ -313,7 +333,6 @@ describe('DESENV-I-04 copy: as frases do deck estão no main, e as de saúde nã
   it('toda frase do deck de conteudo/casa/desenvolvimento.ts aparece no texto do main (menos a aba e os alts)', () => {
     const { container } = renderizarRota(ROTA)
     const texto = container.querySelector('main')!.textContent!
-    // Fora do texto do main: a aba (document.title) e os três alts (atributos).
     const fora = new Set<string>([D.aba, D.altCena1, D.altTela1, D.altCena2])
     for (const frase of Object.values(D)) {
       if (fora.has(frase)) continue
@@ -372,7 +391,6 @@ describe('guardas da página como as outras públicas (axe, nada de rascunho, um
 })
 
 // ---- os arquivos da página (importações e estilo) ---------------------------------------------------------------
-// Relativo a este arquivo (e não ao cwd): o teste roda da raiz do repositório e de web/.
 const AQUI = dirname(fileURLToPath(import.meta.url))
 const PASTA = join(AQUI, '..', '..', 'componentes', 'desenvolvimento-casa')
 const arquivos = (extensao: string) =>
@@ -388,7 +406,6 @@ describe('DESENV-I-02 os módulos aposentados não são importados', () => {
     /CenaEstudio|CartaoFlutuante|PainelCampo|CartoesApp|\/Abertura\.tsx|CabecaDeSecao|\/Numeros|\/Passos|TabelaTexto|Ilustracao|campo\/Titulo|CenaCacau|SeletorDeFase|PartesDoArtigo|FontesDoItem|AvisoSaude|publicas-destaque|cenas\/publicas|ilustracoes\/|data-aparelho|movimento\/|from 'motion/
   it('nenhum arquivo da página os importa nem os cita', () => {
     for (const { nome, texto } of codigo) {
-      // `Abertura.tsx` de desenvolvimento-casa é a abertura DESTA página; o aposentado é publicas-destaque/Abertura.
       const importacoes = texto
         .split('\n')
         .filter((linha) => /^import /.test(linha) && !linha.includes("'./Abertura.tsx'") && !linha.includes('desenvolvimento-casa/'))
@@ -399,7 +416,7 @@ describe('DESENV-I-02 os módulos aposentados não são importados', () => {
   })
 })
 
-describe('DESENV-I-10 e I-12 o CSS da página: sem visual antigo e sem movimento', () => {
+describe('DESENV-I-10 e I-12 o CSS da página: sem visual antigo e sem movimento próprio', () => {
   it('sem sombra, gradiente, blur, itálico, caixa alta, hex, mel de fundo, seta, animação nem opacidade < 1', () => {
     expect(css.length).toBeGreaterThan(0)
     for (const { nome, texto } of css) {
@@ -414,18 +431,14 @@ describe('DESENV-I-10 e I-12 o CSS da página: sem visual antigo e sem movimento
 
   it('o CSS não traz literal pt-BR e o TSX da página não escreve frase de interface', () => {
     for (const { nome, texto } of codigo) {
-      // Texto solto entre tags (uma letra com acento ou palavra com espaço), fora de expressões `{…}`.
       const soltos = [...texto.matchAll(/>\s*([^<>{}\n]*[A-Za-zÀ-ÿ][^<>{}\n]*)\s*</g)].map((m) => m[1].trim()).filter(Boolean)
       expect(soltos, nome).toEqual([])
     }
   })
 })
 
-// Janela baixa (adendo 2, linha 9): o jsdom não faz layout, então aqui só a ordem do DOM e a presença das regras.
-// Que o botão inteiro cabe na primeira tela (bottom <= innerHeight) só se vê nas capturas de 844x390, 667x375,
-// 500x300 e 1440x700.
-describe('janela baixa: h1, frase e botão na primeira tela', () => {
-  it('na abertura, o h1, a frase e o botão principal vêm antes da cena no DOM', () => {
+describe('janela baixa e ordem de leitura da abertura', () => {
+  it('na abertura, o h1, a frase, o botão principal e o link vêm antes da cena no DOM', () => {
     const { container } = renderizarRota(ROTA)
     const abertura = bandas(container)[0]
     const cena = abertura.querySelector('picture')!
@@ -433,6 +446,7 @@ describe('janela baixa: h1, frase e botão na primeira tela', () => {
     expect(antes(within(abertura).getByRole('heading', { level: 1 }))).toBe(true)
     expect(antes(within(abertura).getByText(D.lede))).toBe(true)
     expect(antes(within(abertura).getByRole('link', { name: D.cta1 }))).toBe(true)
+    expect(antes(within(abertura).getByRole('link', { name: D.cta2 }))).toBe(true)
   })
 
   it('o CSS traz a paisagem baixa (duas colunas, a placa pela altura) e a estreita baixa, medidas em svh', () => {
@@ -442,17 +456,9 @@ describe('janela baixa: h1, frase e botão na primeira tela', () => {
     expect(texto).toMatch(/100svh/)
   })
 
-  // Celular em pé (R1): o aparelho vem logo depois do botão, antes do link, do aviso e da legenda. A geometria real
-  // (a tela com 240 px ou mais acima da dobra em 390x844) só se mede no navegador (.oc/geo.mjs), não aqui.
-  it('estreita e não baixa: cena, h1, frase, botão, aparelho, e depois link, aviso e legenda (ordem da grade)', () => {
+  it('no fechamento em contraste, a faixa 192 encosta no rodapé de cacau com fio separador', () => {
     const texto = css.map((a) => a.texto).join('\n')
-    const bloco = texto.match(/@media \(max-width: 899px\) and \(min-height: 521px\) \{([\s\S]*?)\n\}/)
-    expect(bloco, 'bloco da estreita não baixa').not.toBeNull()
-    const linha = (seletor: string) => {
-      const achado = bloco![1].match(new RegExp(`${seletor.replace(/[.*+?^${}()|[\]\\>]/g, '\\$&')} \\{[^}]*?grid-row: (\\d+);`))
-      return achado === null ? -1 : Number(achado[1])
-    }
-    const ordem = ['.dc-cena', '.dc-h1', '.dc-lede', '.dc-acoes > .cm-botao', '.dc-moldura', '.dc-link', '.dc-aviso', '.dc-nota > [data-legenda]'].map(linha)
-    expect(ordem).toEqual([1, 2, 3, 4, 5, 6, 7, 8])
+    expect(texto).toMatch(/dc-urgencia-wrap/)
+    expect(texto).toMatch(/border-bottom:\s*1px solid var\(--color-noite-cartao\)/)
   })
 })

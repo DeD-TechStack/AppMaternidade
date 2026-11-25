@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { FASES, IDEIAS } from '../../conteudo/desenvolvimento/itens.ts'
 import { ROTULOS_FONTES } from '../../conteudo/desenvolvimento/pagina.ts'
@@ -25,19 +25,42 @@ describe('índice nativo das fases', () => {
     expect(indice.compareDocumentPosition(lista) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0)
   })
 
-  it('preserva uma lista aberta com os itens, fontes e datas originais na mesma ordem', () => {
+  it('marca o estado selecionado visível na navegação de fases ao clicar em outra fase', () => {
+    const { container } = render(<Fases />)
+    const indice = screen.getByRole('navigation', { name: IDEIAS.rotuloSeletor })
+    const links = within(indice).getAllByRole('link')
+
+    expect(links[0].getAttribute('aria-current')).toBe('location')
+    expect(links[0].hasAttribute('data-fase-ativa')).toBe(true)
+    expect(links[2].getAttribute('aria-current')).toBeNull()
+
+    fireEvent.click(links[2])
+
+    expect(links[0].getAttribute('aria-current')).toBeNull()
+    expect(links[2].getAttribute('aria-current')).toBe('location')
+    expect(links[2].hasAttribute('data-fase-ativa')).toBe(true)
+    const faseAlvo = container.querySelector<HTMLElement>(`#${FASES[2].id}`)!
+    expect(faseAlvo.hasAttribute('data-fase-selecionada')).toBe(true)
+  })
+
+  it('preserva uma lista aberta com janela etária, itens, fontes e datas originais na mesma ordem', () => {
     const { container } = render(<Fases />)
     const listas = container.querySelectorAll('[data-fases]')
     expect(listas).toHaveLength(1)
     const fases = [...listas[0].children] as HTMLElement[]
     expect(fases.map((fase) => fase.id)).toEqual(FASES.map((fase) => fase.id))
     for (const [i, fase] of fases.entries()) {
+      expect(within(fase).getByText(FASES[i].faixa)).toBeTruthy()
       expect(within(fase).getByRole('heading', { level: 3, name: FASES[i].titulo })).toBeTruthy()
       expect([...fase.querySelectorAll('.dc-itens > li')].map((item) => item.textContent)).toEqual(FASES[i].itens)
-      expect(within(fase).getAllByRole('link').map((link) => ({
-        nome: link.textContent,
-        url: link.getAttribute('href'),
-      }))).toEqual(FASES[i].fontes.map(({ nome, url }) => ({ nome, url })))
+      expect(
+        within(fase)
+          .getAllByRole('link')
+          .map((link) => ({
+            nome: link.textContent,
+            url: link.getAttribute('href'),
+          })),
+      ).toEqual(FASES[i].fontes.map(({ nome, url }) => ({ nome, url })))
       expect(within(fase).getByText(`${ROTULOS_FONTES.consultadas} ${FASES[i].consultadoEm}`)).toBeTruthy()
     }
     expect(container.querySelector('[hidden], [inert], [aria-hidden="true"], [role="tab"], [role="tablist"], select, details')).toBeNull()
