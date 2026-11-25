@@ -1,5 +1,11 @@
 # Provenance: web/public/cenas/desenvolvimento/
 
+## IMG-RES native tier (2026-11-19)
+
+| file | SHA256 | bytes | dimensions | source and operation |
+|---|---|---|---|---|
+| m04-heroi-390c-1170w.webp | 28a3faa88516def99b43d124ed550c9150da26b4df11f49dc20e74c65c8164be | 32714 | 1170x714 | m04-heroi-1672w.webp (dd18f5fdefa3f837bfb1a9b36a26ec5251684c18f353e311a37aa851eda1c6ff), same native crop (0,40,1360,870), LANCZOS downscale, WebP q92 method6; no upscaling |
+
 Plates are read-only sources under DIRECAO_FABLE (sha256 asserted by the script), snapped whole, cropped, downscaled with LANCZOS, never upscaled, no retouching, no generated pixels.
 
 Columns: file | source + sha256 | script + sha256 | crop | scale | encoder/quality | output sha256 | bytes | size

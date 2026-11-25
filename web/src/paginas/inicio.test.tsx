@@ -2,7 +2,9 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { act } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { INI } from '../conteudo/inicio.ts'
 import { INICIO as INICIO_ANTIGO } from '../conteudo/textos.ts'
+import { CATALOGO } from '../movimento/catalogo.ts'
 import { aguardarCarga, renderizarRota } from '../teste/renderizarRota.tsx'
 
 // REP-HOME, round 1 (card t_7afd7849), test-first: the rebuilt `/` (Inicio) rendered in jsdom.
@@ -235,17 +237,18 @@ describe('REPH-I-01 composition of /: one [data-casa], the seven bands in order,
     expect(principal().querySelector('[data-fechamento]')!.getAttribute('data-tom')).toBe('noite')
   })
 
-  it('REPH-I-01 /: two framed real screens, each a [data-produto-tela] with its deck alt', async () => {
+  it('REPH-I-01 /: three framed real screens (one per fold: Histórico, Hoje, Notas), each a [data-produto-tela] with its deck alt', async () => {
+    // HOME-SECOND-HALF (AVALIACAO S-16, FREEZE 1.5 exception E38): band 5 adds the Notas capture to the two of the stage and band 3.
     await abrir(1440)
     const telas = [...principal().querySelectorAll<HTMLImageElement>('[data-produto-tela]')]
-    expect(telas.map((t) => t.getAttribute('alt'))).toEqual([COPY.altTela1, COPY.altTela2])
+    expect(telas.map((t) => t.getAttribute('alt'))).toEqual([COPY.altTela1, COPY.altTela2, INI.altNotas])
   })
 
-  it('REPH-I-01 /: each framed screen is a real capture under ASSET-1\'s frame raster (day on band 2, night on band 3), and no device is drawn in CSS', async () => {
+  it('REPH-I-01 /: each framed screen is a real capture under ASSET-1\'s frame raster (day on band 2, night on band 3, day on band 5), and no device is drawn in CSS', async () => {
     await abrir(1440)
     const artes = [...principal().querySelectorAll<HTMLImageElement>('[data-produto-moldura-arte]')]
-    expect(artes.map((a) => a.tagName)).toEqual(['IMG', 'IMG'])
-    expect(artes.map((a) => a.getAttribute('src'))).toEqual(['/molduras/moldura-dia.png', '/molduras/moldura-noite.png'])
+    expect(artes.map((a) => a.tagName)).toEqual(['IMG', 'IMG', 'IMG'])
+    expect(artes.map((a) => a.getAttribute('src'))).toEqual(['/molduras/moldura-dia.png', '/molduras/moldura-noite.png', '/molduras/moldura-dia.png'])
     for (const arte of artes) {
       expect(arte.getAttribute('alt')).toBe('')
       expect(arte.getAttribute('aria-hidden')).toBe('true')
@@ -257,7 +260,8 @@ describe('REPH-I-01 composition of /: one [data-casa], the seven bands in order,
   it('REPH-I-01 at 390 the first frame is the night raster on the cacau wall, and no device is drawn in CSS', async () => {
     await abrir(390)
     const artes = [...principal().querySelectorAll<HTMLImageElement>('[data-produto-moldura-arte]')]
-    expect(artes.map((a) => a.getAttribute('src'))).toEqual(['/molduras/moldura-noite.png', '/molduras/moldura-noite.png'])
+    // The two night frames (the hero's, then band 3's), then band 5's day frame on the areia rug.
+    expect(artes.map((a) => a.getAttribute('src'))).toEqual(['/molduras/moldura-noite.png', '/molduras/moldura-noite.png', '/molduras/moldura-dia.png'])
     expect(principal().querySelector('.ic-aparelho, .ic-aparelho-corpo, [data-corpo]')).toBeNull()
   })
 
@@ -476,37 +480,38 @@ describe('REPH-I-31 one h1 with two spans, and the header pill quiet or filled b
 // REPH-I-11 / -12 / -13 / -14 (round 3): the pinned stage, the night sheet, the caption swap, reduced motion
 // ---------------------------------------------------------------------------------------------
 
-const BORDAS_R4 = [556.5, 470.1, 354.9, 118.3, 0]
-const TRADUCOES_R4 = [38.65, 32.65, 24.65, 8.22, 0]
-const PASSOS = [0, 0.25, 0.5, 0.75, 1]
+// STAGE (25/11/2026): the edge holds at the seam to p 0.10, runs linearly to the left edge at p 0.70 and holds there (the
+// hold on the frame's centre line, 0.45-0.55, and the r4 numbers 556.5 / 354.9 are gone). The seam is the 553 of 1440 x 900.
+const BORDAS_STAGE = [553, 553, 414.75, 184.33, 0, 0]
+const TRADUCOES_STAGE = [38.4, 38.4, 28.8, 12.8, 0, 0]
+const PASSOS = [0, 0.1, 0.25, 0.5, 0.7, 1]
 
 describe('REPH-I-11 pure arithmetic of the pin: progress, edge stops, translateX, pin distance, caption side', () => {
-  it('REPH-I-11 the edge stops at p 0 / .25 / .5 / .75 / 1 are the r4 numbers (seam 556.5, centre line 354.9)', async () => {
+  it('REPH-I-11 the edge stops at p 0 / .1 / .25 / .5 / .7 / 1 are the STAGE numbers (seam 553)', async () => {
     const { bordaDaNoite } = await import('../movimento/troca/medidas.ts')
-    PASSOS.forEach((p, i) => expect(bordaDaNoite(p, 556.5, 354.9), `p ${p}`).toBeCloseTo(BORDAS_R4[i], 0))
+    PASSOS.forEach((p, i) => expect(bordaDaNoite(p, 553), `p ${p}`).toBeCloseTo(BORDAS_STAGE[i], 1))
   })
 
-  it('REPH-I-11 the three holds: 0-0.10 at the seam, 0.45-0.55 on the centre line, 0.85-1 at the left edge', async () => {
+  it('REPH-I-11 the two holds: 0-0.10 at the seam, 0.70-1 at the left edge, and the edge still moves across the frame centre (0.45-0.55)', async () => {
     const { bordaDaNoite } = await import('../movimento/troca/medidas.ts')
-    for (const p of [0, 0.05, 0.1]) expect(bordaDaNoite(p, 556.5, 354.9)).toBe(556.5)
-    for (const p of [0.45, 0.5, 0.55]) expect(bordaDaNoite(p, 556.5, 354.9)).toBe(354.9)
-    for (const p of [0.85, 0.95, 1]) expect(bordaDaNoite(p, 556.5, 354.9)).toBe(0)
-    expect(bordaDaNoite(0.3, 556.5, 354.9)).toBeLessThan(556.5)
-    expect(bordaDaNoite(0.3, 556.5, 354.9)).toBeGreaterThan(354.9)
+    for (const p of [0, 0.05, 0.1]) expect(bordaDaNoite(p, 553)).toBe(553)
+    for (const p of [0.7, 0.85, 0.95, 1]) expect(bordaDaNoite(p, 553)).toBe(0)
+    expect(bordaDaNoite(0.45, 553)).toBeGreaterThan(bordaDaNoite(0.5, 553))
+    expect(bordaDaNoite(0.5, 553)).toBeGreaterThan(bordaDaNoite(0.55, 553))
   })
 
   it('REPH-I-11 the edge is linear in p between the holds (no smoothing)', async () => {
     const { bordaDaNoite } = await import('../movimento/troca/medidas.ts')
-    const a = bordaDaNoite(0.2, 556.5, 354.9)
-    const b = bordaDaNoite(0.3, 556.5, 354.9)
-    const c = bordaDaNoite(0.4, 556.5, 354.9)
+    const a = bordaDaNoite(0.2, 553)
+    const b = bordaDaNoite(0.3, 553)
+    const c = bordaDaNoite(0.4, 553)
     expect(a - b).toBeCloseTo(b - c, 6)
   })
 
-  it('REPH-I-11 translateX of the outer box is the edge as a percent of the stage width (38.65 / 32.65 / 24.65 / 8.22 / 0 at 1440)', async () => {
+  it('REPH-I-11 translateX of the outer box is the edge as a percent of the stage width (38.40 / 38.40 / 28.80 / 12.80 / 0 / 0 at 1440)', async () => {
     const { bordaDaNoite, traducaoEmPercentual } = await import('../movimento/troca/medidas.ts')
     PASSOS.forEach((p, i) =>
-      expect(traducaoEmPercentual(bordaDaNoite(p, 556.5, 354.9), 1440), `p ${p}`).toBeCloseTo(TRADUCOES_R4[i], 1),
+      expect(traducaoEmPercentual(bordaDaNoite(p, 553), 1440), `p ${p}`).toBeCloseTo(TRADUCOES_STAGE[i], 1),
     )
     expect(traducaoEmPercentual(100, 0)).toBe(0)
   })
@@ -521,13 +526,16 @@ describe('REPH-I-11 pure arithmetic of the pin: progress, edge stops, translateX
     expect(progressoDoFixo(0, 0, 0)).toBe(0)
   })
 
-  it('REPH-I-11 the pin distance is 600 from 1280, 480 from 1024 and the pin needs 640 px of height (HOME-FINAL F5)', async () => {
-    const { distanciaDoFixo, alturaMinimaDoFixo } = await import('../movimento/troca/medidas.ts')
-    expect(distanciaDoFixo(1440)).toBe(600)
-    expect(distanciaDoFixo(1280)).toBe(600)
-    expect(distanciaDoFixo(1279)).toBe(480)
-    expect(distanciaDoFixo(1024)).toBe(480)
-    expect(alturaMinimaDoFixo()).toBe(640)
+  it('REPH-I-11 the pin distance is one rule of the window height, clamp(600, 80svh, 900), and the pin needs the measured height of a 240 px phone (STAGE)', async () => {
+    const { pinoDoPalco, alturaMinimaDoFixo } = await import('../movimento/troca/medidas.ts')
+    expect(pinoDoPalco(900)).toBe(720)
+    expect(pinoDoPalco(768)).toBeCloseTo(614.4, 6)
+    expect(pinoDoPalco(800)).toBeCloseTo(640, 6)
+    expect(pinoDoPalco(1080)).toBeCloseTo(864, 6)
+    expect(pinoDoPalco(1440)).toBe(900)
+    expect(pinoDoPalco(600)).toBe(600)
+    expect(alturaMinimaDoFixo()).toBe(CATALOGO.M16.alturaMinimaPx)
+    expect(alturaMinimaDoFixo()).toBeGreaterThan(640)
   })
 
   it('REPH-I-12 the caption side is 1 while p is under 0.5 and 2 from 0.5', async () => {
@@ -600,6 +608,13 @@ afterEach(() => {
 /** Gives the night track and the document the layout above; the window is `altura` tall. Measures again afterwards. */
 async function modelarRolagem(faixa: HTMLElement, altura = 900) {
   rolagemDoDocumento = 0
+  // STAGE: the pin D is MEASURED from two rects (the track's height less the stage's), and the browser here is one with no
+  // scroll-driven animations (the JS fallback is what writes the sheet, the markers and the caption's side). D is 600.
+  vi.stubGlobal('CSS', { supports: () => false })
+  const retangulo = (top: number, height: number) =>
+    ({ top, bottom: top + height, left: 0, right: 1440, width: 1440, height, x: 0, y: top, toJSON: () => ({}) }) as DOMRect
+  faixa.getBoundingClientRect = () => retangulo(TOPO_DA_FAIXA - rolagemDoDocumento, ALTURA_DA_FAIXA)
+  faixa.querySelector<HTMLElement>('.ic-estagio')!.getBoundingClientRect = () => retangulo(0, ALTURA_DA_FAIXA - 600)
   Object.defineProperty(document.documentElement, 'scrollTop', { configurable: true, get: () => rolagemDoDocumento })
   Object.defineProperty(document.documentElement, 'clientHeight', { configurable: true, value: altura })
   Object.defineProperty(faixa, 'offsetTop', { configurable: true, value: TOPO_DA_FAIXA })
@@ -649,8 +664,9 @@ describe('REPH-I-11 pinned stage (1440 x 900): one stage in band 2, one night sh
     expect(gemeaTela.getAttribute('src')).toBe(principal().querySelector('[data-produto-tela]')!.getAttribute('src'))
     // None of the marks the meter counts a framed screen by.
     expect(folha.querySelector('[data-produto-tela], [data-produto-moldura], [data-produto-moldura-arte]')).toBeNull()
-    // The twin is invisible to the tree: only the day frame counts as a framed real screen.
-    expect(principal().querySelectorAll('[data-produto-tela]')).toHaveLength(2)
+    // The twin is invisible to the tree: only the day frame counts as a framed real screen. The page holds three (the
+    // stage's, band 3's and, since HOME-SECOND-HALF, band 5's Notas capture: FREEZE 1.5 exception E38).
+    expect(principal().querySelectorAll('[data-produto-tela]')).toHaveLength(3)
   })
 
   it('REPH-I-11 /: the sheet is never clipped by clip-path or sized by width in its inline style, only by transform', async () => {
@@ -663,7 +679,8 @@ describe('REPH-I-11 pinned stage (1440 x 900): one stage in band 2, one night sh
     }
   })
 
-  it('REPH-I-11 /: the pin starts at p 0 with the outer box at +t and the inner box at -t (the two cancel)', async () => {
+  it('REPH-I-11 /: the pin starts at p 0 with the outer box at +t and the inner box at -t (the two cancel; the JS fallback writes them)', async () => {
+    vi.stubGlobal('CSS', { supports: () => false }) // no scroll-driven animations: the hook writes the sheet itself
     await abrirJanela({ largura: 1440 })
     const folha = principal().querySelector<HTMLElement>('[data-troca-noite]')!
     const interior = principal().querySelector<HTMLElement>('[data-troca-noite-interior]')!
@@ -710,29 +727,31 @@ describe('REPH-I-12 caption swap: one node, one text, leg1 then leg2 as p crosse
     expect(faixaDaNoite().querySelectorAll('p[data-legenda]')).toHaveLength(1)
   })
 
-  it('REPH-I-11 /: scrolling writes the r4 translateX on the two boxes (24.65 % at p 0.5, 0 at p 1)', async () => {
+  it('REPH-I-11 /: scrolling writes the STAGE translateX on the two boxes (12.80 % at p 0.5, 0 from p 0.7), with no centre hold', async () => {
+    vi.stubGlobal('CSS', { supports: () => false }) // before the page mounts: the support is read once, by the layout effect
     await abrirJanela({ largura: 1440 })
     const faixa = faixaDaNoite()
     const palco = principal().querySelector<HTMLElement>('[data-troca-palco]')!
     const marcador = principal().querySelector<HTMLElement>('.ic-medida')!
-    const quadro = palco.querySelector<HTMLElement>('[data-produto-moldura]')!
     const fixar = (no: HTMLElement, campo: string, valor: number) => Object.defineProperty(no, campo, { configurable: true, value: valor })
     fixar(palco, 'clientWidth', 1440)
-    fixar(marcador, 'offsetLeft', 556.5)
-    fixar(quadro, 'offsetLeft', 200)
-    fixar(quadro, 'offsetWidth', 309.8)
+    fixar(marcador, 'offsetLeft', 553)
     await modelarRolagem(faixa) // also measures the stage's widths faked above
     const rolar = (topo: number) => rolarAteTopo(topo, 60)
     const folha = principal().querySelector<HTMLElement>('[data-troca-noite]')!
     const interior = principal().querySelector<HTMLElement>('[data-troca-noite-interior]')!
     const valor = (no: HTMLElement) => Number.parseFloat(/translateX\((-?[\d.]+)%\)/.exec(no.style.transform)?.[1] ?? 'NaN')
-    await rolar(-300)
-    expect(valor(folha)).toBeCloseTo(24.65, 1)
-    expect(valor(interior)).toBeCloseTo(-24.65, 1)
+    await rolar(-300) // p 0.5
+    expect(valor(folha)).toBeCloseTo(12.8, 1)
+    expect(valor(interior)).toBeCloseTo(-12.8, 1)
+    await rolar(-270) // p 0.45: the edge is still moving across the frame's centre line
+    expect(valor(folha)).toBeGreaterThan(12.8)
+    await rolar(-420) // p 0.70
+    expect(valor(folha)).toBeCloseTo(0, 6)
     await rolar(-600)
     expect(valor(folha)).toBeCloseTo(0, 6)
     await rolar(0)
-    expect(valor(folha)).toBeCloseTo(38.65, 1)
+    expect(valor(folha)).toBeCloseTo(38.4, 1)
   })
 })
 
@@ -748,16 +767,16 @@ describe('REPH-I-13 reduced motion and short windows: the rest layout, decided b
     expect(principal().querySelector<HTMLElement>('[data-troca-noite]')!.style.transform).toBe('')
   })
 
-  it('REPH-I-13 /: a window under 640 high at 1440 rests too (no pin, no swap node, two static captions)', async () => {
-    await abrirJanela({ largura: 1440, altura: 639 })
+  it('REPH-I-13 /: a window one px under the measured height gate at 1440 rests too (no pin, no swap node, two static captions)', async () => {
+    await abrirJanela({ largura: 1440, altura: CATALOGO.M16.alturaMinimaPx - 1 })
     expect(principal().querySelector('[data-troca-fixo]')).toBeNull()
     expect(principal().querySelector('[data-troca-legenda]')).toBeNull()
     expect(legendasEmTela()).toEqual(expect.arrayContaining([COPY.leg1, COPY.leg2]))
     expect(legendasEmTela()).toHaveLength(2)
   })
 
-  it('REPH-I-13 /: at 640 high exactly the pin is built', async () => {
-    await abrirJanela({ largura: 1440, altura: 640 })
+  it('REPH-I-13 /: at the measured height gate exactly the pin is built', async () => {
+    await abrirJanela({ largura: 1440, altura: CATALOGO.M16.alturaMinimaPx })
     expect(principal().querySelector('[data-troca-fixo]')).not.toBeNull()
   })
 })
@@ -785,11 +804,19 @@ describe('REPH-I-14 stacked composition (below 1180): no pin, no sheet, no twin,
     expect(palcos[0].hasAttribute('data-troca-fixo')).toBe(true)
   })
 
-  it('REPH-I-14 /: M06 is in the page at every width, and its lamp is watched (lit when 10 % of the plate is in view)', async () => {
-    await abrirJanela({ largura: 1440 })
+  it('REPH-I-14 /: M06 is in the page at every width; its lamp is watched where the page is stacked (10 % of the plate in view) and lit by the crossing where it is pinned (STAGE)', async () => {
+    await abrirJanela({ largura: 1179 })
     expect(principal().querySelectorAll('.ic-m06')).toHaveLength(1)
     const observadoresDeM06 = ObservadorFalso.todos.filter((o) => [...o.alvos].some((alvo) => alvo.closest('.ic-m06') !== null))
     expect(observadoresDeM06.length).toBeGreaterThan(0)
+  })
+
+  it('REPH-I-14 /: at 1440 the pinned M06 lamp watches nothing: it lights at the same instant as the caption swap (data-troca-lado)', async () => {
+    await abrirJanela({ largura: 1440 })
+    expect(principal().querySelectorAll('.ic-m06')).toHaveLength(1)
+    const observadoresDeM06 = ObservadorFalso.todos.filter((o) => [...o.alvos].some((alvo) => alvo.closest('.ic-m06') !== null))
+    expect(observadoresDeM06).toHaveLength(0)
+    expect(principal().querySelector('.ic-m06 [data-luz-estado]')!.getAttribute('data-luz-estado')).toBe('apagada')
   })
 })
 
@@ -807,34 +834,35 @@ describe('HOME-FINAL every phone shows a real app screen; the lower bands carry 
     })
   }
 
-  it('the closing band stands M11 (the lit window, decorative, empty alt) on the night floor, after the closing block', async () => {
+  it('the closing band stands M11 (the unlit street window, decorative, empty alt) on the band edge, after the closing block', async () => {
+    // HOME-SECOND-HALF (AVALIACAO S-09): no floor node; M11 is the last box of the band and its own bottom is the band's.
     await abrir(1440)
     const fecho = principal().querySelector('.ic-fecho')!
     expect(fecho.querySelector('[data-fechamento]')).not.toBeNull()
-    const janela = fecho.querySelector<HTMLImageElement>('.ic-fecho-cena img')!
+    const janela = fecho.querySelector<HTMLImageElement>('.ic-fecho-cena img:not([data-luz])')!
     // M11 comes from vite-imagetools (LIB-IMG): a generated URL, the 542w file of its own srcset.
     expect(janela.getAttribute('src')).toMatch(/^\/@imagetools\/[\w-]+$/)
     expect(janela.getAttribute('srcset')).toContain(`${janela.getAttribute('src')!} 542w`)
     expect(janela.getAttribute('alt')).toBe('')
     expect([janela.getAttribute('width'), janela.getAttribute('height')]).toEqual(['542', '421'])
     expect(janela.getAttribute('loading')).toBe('lazy')
-    const chao = fecho.lastElementChild!
-    expect(chao.classList.contains('ic-chao')).toBe(true)
-    expect(chao.getAttribute('aria-hidden')).toBe('true')
+    expect(fecho.lastElementChild!.classList.contains('ic-fecho-cena')).toBe(true)
+    expect(fecho.querySelector('.ic-chao')).toBeNull()
   })
 
-  it('the sleep band stands its frame on the night floor', async () => {
+  it('the sleep band stands its frame on the band edge: the frame is its last box and no floor node follows it', async () => {
     await abrir(1440)
     const tela = principal().querySelector('.ic-tela')!
     expect(tela.querySelector('[data-produto-moldura]')).not.toBeNull()
-    expect(tela.lastElementChild!.classList.contains('ic-chao')).toBe(true)
+    expect(tela.lastElementChild!.hasAttribute('data-produto-moldura')).toBe(true)
+    expect(tela.querySelector('.ic-chao')).toBeNull()
   })
 
   it('F1: the sleep frame shows the whole 390:880 Hoje capture (640 x 1444), contained on the app paper, never cropped', async () => {
     await abrir(1440)
     const hoje = principal().querySelector<HTMLImageElement>(`.ic-tela [data-produto-tela][alt="${COPY.altTela2}"]`)!
     expect(hoje.getAttribute('src')).toBe('/telas/casa/hoje-n-320w.webp')
-    expect([hoje.getAttribute('width'), hoje.getAttribute('height')]).toEqual(['640', '1444'])
+    expect([hoje.getAttribute('width'), hoje.getAttribute('height')]).toEqual(['1170', '2640'])
     expect(norm(readFileSync(CSS_DA_CASA, 'utf8'))).toContain(
       '[data-casa] .ic-tela [data-produto-tela] { object-fit: contain; background-color: var(--color-papel); }',
     )
@@ -878,9 +906,16 @@ describe('HOME-FINAL F2 the Histórico pan travels MANIFESTO rolagem_px: rest on
     const { CAPTURA_Y_ALTA, MOLDURA_DIA } = await import('../componentes/inicio-casa/midia.ts')
     const css = norm(readFileSync(CSS_DA_CASA, 'utf8'))
     // The screen layer's width and the travel, as the stylesheet declares them.
-    expect(css).toContain('--produto-tela: clamp(280px, calc(280px + (100vw - 390px) * 40 / 1050), 320px);')
+    // The screen layer reads the Início container (cqi), not the window (HOME-WIDTH); the travel keeps its window ramp.
+    expect(css).toContain('--produto-tela: clamp(280px, calc(280px + (100cqi - 390px) * 40 / 1050), 320px);')
+    expect(css).not.toContain('--produto-tela: clamp(280px, calc(280px + (100vw - 390px) * 40 / 1050), 320px);')
+    // The shared frame rule (`[data-casa] .cm-produto-moldura`) keeps the travel exactly as before HOME-WIDTH...
     expect(css).toContain(
       '--produto-rolagem: min( clamp( calc(var(--produto-rolagem-390, 0) * 1px), calc(var(--produto-rolagem-390, 0) * 1px + (var(--produto-rolagem-1440, 0) - var(--produto-rolagem-390, 0)) * (100vw - 390px) / 1050), calc(var(--produto-rolagem-1440, 0) * 1px) ), var(--produto-tela) );',
+    )
+    // ...and the stage rule (`.ic-estagio .cm-produto-moldura`) scales it with the room (k), next to it, not instead of it.
+    expect(css).toContain(
+      '--produto-rolagem: min( calc( clamp( calc(var(--produto-rolagem-390, 0) * 1px), calc(var(--produto-rolagem-390, 0) * 1px + (var(--produto-rolagem-1440, 0) - var(--produto-rolagem-390, 0)) * (100vw - 390px) / 1050), calc(var(--produto-rolagem-1440, 0) * 1px) ) * var(--heroi-k) ), var(--produto-tela) );',
     )
     const tela = (w: number) => Math.min(Math.max(280 + ((w - 390) * 40) / 1050, 280), 320)
     const percurso = (w: number) =>
@@ -943,7 +978,7 @@ describe('HOME-FINAL F3 the signed caption: the hour emphasised, the author subo
       '[data-casa] .ic-legenda-hora { font-size: var(--texto-titulo-3-tamanho); font-weight: var(--peso-titulo); font-variant-numeric: tabular-nums; }',
     )
     expect(css).toContain('[data-casa] .ic-legenda-autor { position: relative; display: inline-block; font-size: var(--texto-corpo-tamanho); }')
-    expect(css).toContain('transform: scaleX(0); transform-origin: left; transition: transform 400ms var(--curva-padrao);')
+    expect(css).toContain('transform: scaleX(0); transform-origin: left; transition: transform 400ms linear;')
     expect(css).toContain('[data-casa] [data-assinada] .ic-legenda-traco { transform: scaleX(1); }')
     expect(css).toContain('@media (prefers-reduced-motion: reduce) { [data-casa] .ic-legenda-traco { transform: none; transition: none; } }')
   })
@@ -1040,22 +1075,19 @@ describe('HOME-SEAMS S6: display variant C holds the 16:00 caption left of the s
   })
 })
 
-describe('HOME-SEAMS S2: band 4 stands the scene on a day floor that runs to the band edge', () => {
-  it('.ic-so ends in an aria-hidden .ic-chao.ic-chao-dia, after the scene', async () => {
+describe('HOME-SEAMS S2 (superseded by HOME-SECOND-HALF, AVALIACAO S-09): band 4 has no floor; the band line cuts the mat', () => {
+  it('.ic-so ends in the scene or the text and holds no .ic-chao node', async () => {
     await abrir(1440)
     const so = principal().querySelector('.ic-so')!
-    const chao = so.lastElementChild!
-    expect(chao.classList.contains('ic-chao')).toBe(true)
-    expect(chao.classList.contains('ic-chao-dia')).toBe(true)
-    expect(chao.getAttribute('aria-hidden')).toBe('true')
-    expect(so.querySelector('.ic-so-cena')!.compareDocumentPosition(chao) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(so.querySelector('.ic-chao')).toBeNull()
+    expect(so.querySelector('.ic-so-cena')).not.toBeNull()
+    expect(so.lastElementChild!.classList.contains('ic-so-cena')).toBe(true)
   })
 
-  it('the stylesheet gives the floor the areia token, the band no bottom padding, and crops the scene at the rug', () => {
+  it('the stylesheet gives the band no bottom padding and shows rows 0-832 of the plate (1200 / 832), clipped', () => {
     const css = cssDaCasa()
-    expect(css).toMatch(/\[data-casa\] \.ic-chao-dia::before \{ background-color: var\(--color-areia\); \}/)
     expect(css).toMatch(/\[data-faixa\]:has\(\.ic-so\)[^{]*\{ padding-bottom: 0; \}/)
-    expect(css).toMatch(/\[data-casa\] \.ic-so-cena \{[^}]*aspect-ratio: 1200 \/ 800;[^}]*overflow: hidden;/)
+    expect(css).toMatch(/\[data-casa\] \.ic-so-cena \{[^}]*aspect-ratio: 1200 \/ 832;[^}]*overflow: clip;/)
   })
 })
 
@@ -1101,7 +1133,8 @@ describe('HOME-SEAMS S4: the hero floors end on the hero foot, not 65 px under t
 // ground, WebP fallback tiers), imported as plain Vite assets. The build never re-transcodes them, so the decoded ground the
 // page serves is the ground the export script measured (PROVENANCE.md there).
 const PLACAS_FIXAS = [
-  { chave: 'M05', base: 'm05-sol', larguras: [900, 1672], alturas: [507, 941], sizes: '(min-width: 1440px) 900px, 62.5vw', tamanho: [1672, 941], src: 900 },
+  { chave: 'M05', base: 'm05-sol', larguras: [900, 1672], alturas: [507, 941], sizes: '(min-width: 1440px) min(62.5vw, 1600px), (min-width: 1180px) 62.5vw, min(100vw, 760px)', tamanho: [1672, 941], src: 900 },
+  { chave: 'M05_390', base: 'm05-sol-390c', larguras: [390, 780, 1170], alturas: [306, 612, 918], sizes: '100vw', tamanho: [1170, 918], src: 390 },
   { chave: 'M04', base: 'm04-recorte', larguras: [350, 600, 700, 1200], alturas: [254, 435, 508, 870], sizes: '(min-width: 1024px) 600px, 100vw', tamanho: [1200, 870], src: 600 },
 ] as const
 const PASTA_PLACAS = join(PASTA_SRC, 'assets', 'cenas', 'inicio')
@@ -1166,34 +1199,52 @@ describe('HOME-SEAMS-G3 S3 / S2: M04 and M05 are fixed files (an AVIF ladder and
     expect(existsSync(join(PASTA_PLACAS, 'm05-sol-901w.avif'))).toBe(false)
   })
 
-  it('M05_390 stays the WebP-only projection of its own ladder; M06 keeps the build ladder; midia.ts holds no lossless query', async () => {
+  it('M05_390 is a fixed-file plate with an AVIF and a WebP ladder (390, 780, 1170); M06 keeps the build ladder; midia.ts holds no lossless query', async () => {
     const { M05_390, M06 } = await import('../componentes/inicio-casa/midia.ts')
     const { placa } = await import('../componentes/campo/imagens.ts')
     const phone = await import('../assets/cenas/inicio/m05-sol-390c-780w.webp?w=390;780&format=avif;webp&as=picture')
     const original = placa(phone.default, '100vw', 390)
-    expect(M05_390).not.toHaveProperty('avif')
-    expect(M05_390).toEqual({ src: original.src, srcSet: original.srcSet, sizes: original.sizes, largura: original.largura, altura: original.altura })
-    // Negative control: the shared helper still exposes the AVIF alternative that the projection leaves out.
+    expect(M05_390.avif).toBeTruthy()
+    const webp = degraus(M05_390.srcSet)
+    const avif = degraus(M05_390.avif)
+    expect(webp.map((d) => d.largura)).toEqual([390, 780, 1170])
+    expect(avif.map((d) => d.largura)).toEqual([390, 780, 1170])
+    expect(new Set([...webp, ...avif].map((d) => d.url)).size).toBe(6)
+    expect(M05_390.src).toBe(webp[0].url)
+    expect([M05_390.largura, M05_390.altura, M05_390.sizes]).toEqual([1170, 918, '100vw'])
+    // Negative control: the shared helper still exposes an AVIF alternative that differs from its own WebP srcset.
     expect(original.avif).toBeTruthy()
     expect(original.avif).not.toBe(original.srcSet)
+    expect(M05_390.avif).not.toBe(M05_390.srcSet)
     expect(M06.avif).toBeTruthy()
-    expect(readFileSync(MIDIA_DA_CASA, 'utf8')).not.toContain('lossless=true')
+    // HOME-SECOND-HALF: the one exception is the band 4 and band 7 plates of inicio-faixas, whose grounds the card checks
+    // on the decoded file (a lossless WebP keeps the exact ground); every `lossless=true` sits on such an import line.
+    const comLossless = readFileSync(MIDIA_DA_CASA, 'utf8')
+      .split('\n')
+      .filter((linha) => linha.includes('lossless=true'))
+    expect(comLossless.every((linha) => linha.includes('assets/cenas/inicio-faixas/'))).toBe(true)
   })
 
-  it('renders the M05 AVIF source after the phone WebP source, and the M04 AVIF source in band 4, from the fixed ladders', async () => {
-    const { M05, M04 } = await import('../componentes/inicio-casa/midia.ts')
+  it('renders the phone AVIF and WebP sources, then the M05 AVIF source, and the lossless M04_FAIXA plate (no AVIF) in band 4', async () => {
+    const { M05, M05_390, M04_FAIXA } = await import('../componentes/inicio-casa/midia.ts')
     await abrir(1440)
     const hero = principal().querySelector('.cm-cena-placa > picture')!
     const avif = hero.querySelectorAll('source[type="image/avif"]')
-    expect(avif).toHaveLength(1)
-    expect(avif[0].getAttribute('srcset')).toBe(M05.avif)
-    expect(avif[0].hasAttribute('media')).toBe(false)
-    expect(hero.querySelector('source[media="(max-width: 767px)"]')?.getAttribute('srcset')).toBeTruthy()
+    expect(avif).toHaveLength(2)
+    expect(avif[0].getAttribute('media')).toBe('(max-width: 767px)')
+    expect(avif[0].getAttribute('srcset')).toBe(M05_390.avif)
+    expect(avif[1].getAttribute('srcset')).toBe(M05.avif)
+    expect(avif[1].hasAttribute('media')).toBe(false)
+    const celular = hero.querySelectorAll('source[media="(max-width: 767px)"]')
+    expect(celular).toHaveLength(2)
+    expect(celular[1].hasAttribute('type')).toBe(false)
+    expect(celular[1].getAttribute('srcset')).toBe(M05_390.srcSet)
     expect(hero.querySelector('img')?.getAttribute('srcset')).toBe(M05.srcSet)
     expect(hero.querySelector('img')?.getAttribute('src')).toBe(M05.src)
     const so = principal().querySelector('.ic-so-cena')!
-    expect(so.querySelector('source[type="image/avif"]')?.getAttribute('srcset')).toBe(M04.avif)
-    expect(so.querySelector('img')?.getAttribute('srcset')).toBe(M04.srcSet)
+    expect(so.querySelector('source[type="image/avif"]')).toBeNull()
+    expect(so.querySelector('img')?.getAttribute('src')).toBe(M04_FAIXA.src)
+    expect(so.querySelector('img')?.getAttribute('srcset')).toBe(M04_FAIXA.srcSet)
   })
 })
 
@@ -1201,10 +1252,10 @@ describe('HOME-SEAMS S7: every lamp-light file named in midia.ts exists in web/p
   it('M05 serves both delivered 2x tiers; M06 keeps its approved capped ladder', async () => {
     const { LUZ_M05, LUZ_M05_390, LUZ_M06 } = await import('../componentes/inicio-casa/midia.ts')
     expect(LUZ_M05.srcSet).toBe('/cenas/inicio/m05-luz-900w.png 900w, /cenas/inicio/m05-luz-1672w.png 1672w')
-    expect(LUZ_M05.sizes).toBe('(min-width: 1440px) 900px, 62.5vw')
-    expect(LUZ_M05_390.srcSet).toBe('/cenas/inicio/m05-luz-390c-390w.png 390w, /cenas/inicio/m05-luz-390c-780w.png 780w')
+    expect(LUZ_M05.sizes).toBe('(min-width: 1440px) min(62.5vw, 1600px), (min-width: 1180px) 62.5vw, min(100vw, 760px)')
+    expect(LUZ_M05_390.srcSet).toBe('/cenas/inicio/m05-luz-390c-390w.png 390w, /cenas/inicio/m05-luz-390c-780w.png 780w, /cenas/inicio/m05-luz-390c-1170w.png 1170w')
     expect(LUZ_M05_390.sizes).toBe('100vw')
-    expect(LUZ_M06.srcSet).toBe('/cenas/inicio/m06-luz-300w.png 300w, /cenas/inicio/m06-luz-396w.png 396w')
+    expect(LUZ_M06.srcSet).toBe('/cenas/inicio/m06-luz-300w.png 300w, /cenas/inicio/m06-luz-396w.png 396w, /cenas/inicio/m06-luz-600w.png 600w, /cenas/inicio/m06-luz-792w.png 792w')
   })
 
   it('LUZ_M05, LUZ_M05_390 and LUZ_M06 point at existing files', async () => {
@@ -1218,11 +1269,16 @@ describe('HOME-SEAMS S7: every lamp-light file named in midia.ts exists in web/p
 })
 
 describe('HOME-RHYTHM the room scales with the quadro by one unitless number, and the preview label leaves the picture', () => {
-  it('the scale --heroi-k is 1 at 1440 (the quadro is 1200 px), clamped to [1, 1.34], and follows the window height too', () => {
+  it('the scale --heroi-k is 1 at 1440 (the quadro is 1200 px), the smallest of the width, first-screen and seam terms, clamped to [0.9, 1.78]', () => {
     const css = norm(readFileSync(CSS_DA_CASA, 'utf8'))
     expect(css).toContain('--heroi-k-largura: tan(atan2(var(--quadro-largura), 1200px));')
-    expect(css).toContain('--heroi-k-altura: tan(atan2(100svh, 900px));')
-    expect(css).toContain('--heroi-k: clamp(1, min(var(--heroi-k-largura), var(--heroi-k-altura)), 1.34);')
+    expect(css).toContain('--heroi-k-altura: tan(atan2(calc(100svh - var(--cabecalho-alto)), 723px));')
+    expect(css).toContain(
+      '--heroi-k-costura: tan(atan2(var(--heroi-costura-x), calc(489.87 * min(100cqi, 1440px) / 1440)));',
+    )
+    expect(css).toContain(
+      '--heroi-k: clamp(0.9, min(var(--heroi-k-largura), var(--heroi-k-altura), var(--heroi-k-costura)), 1.78);',
+    )
     // The two ratios are numbers, so no length is divided by a length anywhere in the sheet.
     expect(css).not.toMatch(/\d+px \/ \d+px/)
   })
@@ -1233,7 +1289,6 @@ describe('HOME-RHYTHM the room scales with the quadro by one unitless number, an
       ['--heroi-alto', '723px'],
       ['--heroi-titulo-topo', '32px'],
       ['--heroi-placa-topo', '152px'],
-      ['--heroi-lede-topo', '258px'],
       ['--heroi-leg-topo', '666.5px'],
       ['--palco-chao', '108px'],
       ['--palco-m06-largura', '395.5px'],
@@ -1241,12 +1296,15 @@ describe('HOME-RHYTHM the room scales with the quadro by one unitless number, an
     ] as const) {
       expect(css, nome).toContain(`${nome}: calc(${px} * var(--heroi-k));`)
     }
+    // The lede block is anchored to the hero's foot (W1), not to a top offset: no `--heroi-lede-topo` is left behind.
+    expect(css).toContain('--heroi-texto-fundo: calc((723px - 556.8px + 28px) * var(--heroi-k));')
+    expect(css).not.toContain('--heroi-lede-topo')
     // The plate is as wide as `--cena-largura-max` at 1440 times k, on its seam; the measure of the text does not scale.
-    expect(css).toContain('width: calc(var(--cena-largura-max) * min(100vw, 1440px) / 1440 * var(--heroi-k));')
+    expect(css).toContain('width: calc(var(--cena-largura-max) * min(100cqi, 1440px) / 1440 * var(--heroi-k));')
     expect(css).toContain('--heroi-medida: 388px;')
     // Band 3's frame follows the quadro by the width ratio only (1 up to 1440), so its gap to the heading stays closed.
     expect(css).toContain(
-      '--produto-tela: calc(clamp(280px, calc(280px + (100vw - 390px) * 40 / 1050), 320px) * var(--heroi-k-largura));',
+      '--produto-tela: calc(clamp(280px, calc(280px + (100cqi - 390px) * 40 / 1050), 320px) * var(--heroi-k-largura));',
     )
     // The rule never reads `dvh`, and the hero keeps its pin formula.
     expect(css).not.toContain('dvh')
@@ -1273,5 +1331,88 @@ describe('HOME-RHYTHM the room scales with the quadro by one unitless number, an
     }
     // It is not display:none or visibility:hidden, so a screen reader still reads it.
     expect(corpo).not.toMatch(/display:\s*none|visibility:\s*hidden/)
+  })
+})
+
+// WIDTH-2 (WCAG 1.4.4): the room (the plate on the seam, the lede on a two-line row) is drawn for a 16 px root. With a larger
+// root the hero leaves the room on any window: the CSS hand-over (inicio-casa.css, a container query with a text-size bonus)
+// and the page script must agree, so the page renders the stacked DOM (the stage in the hero, no room layers) whenever the root
+// text is above 16 px, and the room DOM at 16 px.
+describe('WIDTH-2: with the root text above 16 px the page renders the stacked DOM on a room-sized window', () => {
+  const raiz = () => document.documentElement
+  afterEach(() => {
+    raiz().style.removeProperty('font-size')
+  })
+
+  const ehSala = () => principal().querySelector('.ic-medida') !== null
+  const palcoDoHeroi = () => principal().querySelector('[data-cena-heroi] [data-troca-palco]')
+
+  it('at 1440 x 900 with a 16 px root the room DOM stands: the stage is band 2, the hero holds none', async () => {
+    raiz().style.fontSize = '16px'
+    await abrirJanela({ largura: 1440 })
+    expect(ehSala()).toBe(true)
+    expect(palcoDoHeroi()).toBeNull()
+    expect(faixaDaNoite().querySelector('[data-troca-palco]')).not.toBeNull()
+    expect(principal().querySelector('[data-troca-fixo]')).not.toBeNull()
+  })
+
+  it('a root under 16 px (a smaller browser text size) keeps the room: the CSS bound is negative there too', async () => {
+    raiz().style.fontSize = '14px'
+    await abrirJanela({ largura: 1440 })
+    expect(ehSala()).toBe(true)
+    expect(palcoDoHeroi()).toBeNull()
+  })
+
+  for (const tamanho of ['17px', '20px', '32px']) {
+    it(`at 1440 x 900 with a ${tamanho} root the stacked DOM stands: the night frame in the hero, no room layers, no pin`, async () => {
+      raiz().style.fontSize = tamanho
+      await abrirJanela({ largura: 1440 })
+      expect(ehSala()).toBe(false)
+      expect(principal().querySelector('.ic-piso-dia')).toBeNull()
+      expect(principal().querySelector('[data-troca-noite]')).toBeNull()
+      expect(principal().querySelector('[data-troca-fixo]')).toBeNull()
+      expect(principal().querySelector('[data-troca-gemea-tela]')).toBeNull()
+      expect(faixaDaNoite().querySelector('[data-troca-palco]')).toBeNull()
+      // The one stage is the hero's, with the NIGHT frame raster (a day frame would vanish on the cacau band).
+      expect(principal().querySelectorAll('[data-troca-palco]')).toHaveLength(1)
+      const palco = palcoDoHeroi()!
+      expect(palco).not.toBeNull()
+      expect(palco.classList.contains('ic-palco')).toBe(true)
+      expect(palco.querySelector('img[data-produto-moldura-arte]')!.getAttribute('src')).toBe('/molduras/moldura-noite.png')
+      // Both captions are static, as in any stacked page.
+      expect(legendasEmTela()).toHaveLength(2)
+    })
+  }
+
+  it('the 2560 x 1440 window at a 32 px root (200 %) is the stacked DOM too: the switch is the text size, not the width', async () => {
+    raiz().style.fontSize = '32px'
+    await abrirJanela({ largura: 2560, altura: 1440 })
+    expect(ehSala()).toBe(false)
+    expect(palcoDoHeroi()).not.toBeNull()
+  })
+
+  it('a window under 1180 px never was the room: 16 px or 20 px, the same stacked DOM', async () => {
+    raiz().style.fontSize = '20px'
+    await abrirJanela({ largura: 1179 })
+    expect(ehSala()).toBe(false)
+    expect(palcoDoHeroi()).not.toBeNull()
+  })
+
+  it('a change of the browser text size after mount (no change of width) switches the composition on the next resize', async () => {
+    raiz().style.fontSize = '16px'
+    await abrirJanela({ largura: 1440 })
+    expect(ehSala()).toBe(true)
+    raiz().style.fontSize = '24px'
+    await act(async () => {
+      window.dispatchEvent(new Event('resize'))
+    })
+    expect(ehSala()).toBe(false)
+    expect(palcoDoHeroi()).not.toBeNull()
+    raiz().style.fontSize = '16px'
+    await act(async () => {
+      window.dispatchEvent(new Event('resize'))
+    })
+    expect(ehSala()).toBe(true)
+    expect(palcoDoHeroi()).toBeNull()
   })
 })

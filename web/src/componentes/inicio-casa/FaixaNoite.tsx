@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import { INI } from '../../conteudo/inicio.ts'
+import { CaixaDaVez } from '../../movimento/troca/FaixaDaVez.tsx'
 import { LegendaDaTroca } from '../../movimento/troca/LegendaDaTroca.tsx'
 import { LuzDaLampada } from '../../movimento/troca/LuzDaLampada.tsx'
 import { useNoitePresa } from '../../movimento/troca/usarPalco.ts'
@@ -49,6 +50,7 @@ export function FaixaNoite({ larga, fixo }: Props) {
             <span ref={costura} className="ic-medida" aria-hidden="true" />
             <div className="ic-piso-dia" aria-hidden="true" />
             <ProdutoEmMoldura tela={{ ...CAPTURA_Y, alt: INI.altTela1 }} moldura={MOLDURA_DIA} rolavel={{ acao: INI.acaoTela1, inicial: INI.inicialTela1, detalhe: INI.detalheTela1 }} />
+            <CaixaDaVez />
             <FolhaDaNoite refFolha={folha} refInterior={interior} />
           </>
         ) : null}
@@ -76,7 +78,8 @@ export function FaixaNoite({ larga, fixo }: Props) {
             <LuzDaLampada
               luz={LUZ_M06}
               memoria="casa-luz-m06"
-              gatilho="vista"
+              gatilho={fixo ? 'vez' : 'vista'}
+              acender={lado === 2}
             />
           </figure>
           <div className="ic-piso-noite" data-costura-lado="noite">

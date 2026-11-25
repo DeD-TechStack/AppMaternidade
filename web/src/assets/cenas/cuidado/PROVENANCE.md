@@ -1,5 +1,11 @@
 # Provenance: web/public/cenas/cuidado/
 
+## IMG-RES native tier (2026-11-19)
+
+| file | SHA256 | bytes | dimensions | source and operation |
+|---|---|---|---|---|
+| m05-maos-1640w.webp | d0f32489cde2053c914fa272d4c9b3c48e8406b1483044b6d047989c482a68b8 | 50318 | 1640x724 | IMG_DEFECT/out/05_troca_1730_v4.png (c68b01c1e0aff8942a1fea1a0fb06138a9a21dace1762a7b6a13addbc9764660), existing approved whole-plate palette snap, same crop (20,30,1660,754), WebP q92 method6, no resizing or upscaling |
+
 Plates are read-only sources under DIRECAO_FABLE (sha256 asserted by the script), snapped whole, cropped, downscaled with LANCZOS, never upscaled, no retouching, no generated pixels.
 
 Columns: file | source + sha256 | script + sha256 | crop | scale | encoder/quality | output sha256 | bytes | size

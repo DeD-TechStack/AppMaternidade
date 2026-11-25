@@ -1,5 +1,18 @@
 # Provenance: web/public/telas/t1i/
 
+## IMG-RES DPR3 recaptures (2026-11-19)
+
+Real demo renderer, source revision 98817ec62ff7cd6805131157092c7d4c43c67b33. `.oc/capturar.mjs`: 390x844@3, mobile metrics + touch (desktop user agent), route/heading/theme/content/PNG assertions. History's scroll target is clamped to the actual maximum (2006 instead of requested 2067); its 15:00 row still starts at 92 CSS px. Notas/Família retain the accepted clock 2026-11-18T20:26:00-03:00 and scroll positions 0/592. `.oc/exportar_telas.py`: whole PNG, LANCZOS downscale only, WebP q90 method6. No DOM content editing, no crop change or upscaling. Small tiers and their original DPR2 records stay unchanged; new tiers reference `captura_dpr3` in MANIFESTO.json. New-tier cap: 95,000 B.
+
+| file | SHA256 | bytes | dimensions | source PNG SHA256 |
+|---|---|---|---|---|
+| historico-y15-780w.webp | 3b2fb8a8129f02a7eaf52c603de1c2877c81f5344e806b678e2fe956b31eb5f7 | 57782 | 780x1688 | 06b34ed5c7e75f98628d9e9401fb4acdcebb6a4bfe0d036c1ac70b5a89638250 |
+| historico-y15-1170w.webp | 26e63e74ef247b61bf9c1f74f212d0ce75b6e5322fd1058dd66a856a8ec48628 | 89926 | 1170x2532 | 06b34ed5c7e75f98628d9e9401fb4acdcebb6a4bfe0d036c1ac70b5a89638250 |
+| notas-780w.webp | 830c3e422c36bcbb8a37cfd3992e3b35b57689124f747d69135e9f8ed8767070 | 53638 | 780x1688 | 680047e480798e40fba37d70ef3e1edd0624a39f195a2ab5b7bd9892346dda11 |
+| notas-1170w.webp | 3d6e8bcb1802ea04a2d65053c1b347968417c8795e89f9b8dd59f7ff1d9e2e19 | 81512 | 1170x2532 | 680047e480798e40fba37d70ef3e1edd0624a39f195a2ab5b7bd9892346dda11 |
+| familia-780w.webp | e9914ae899f0c0e0d2ca670e92c252ac5cb1300b04be91ac3fbfca28e53cc24d | 51784 | 780x1688 | 179a6505ce551c09c4e09711e9af08ce6c484a1836d3298764bb9c803fe0a7e6 |
+| familia-1170w.webp | e1cbb9d7069ffc441fce50a2b02cf0e6599dffe72e83e174d3214e036dc71ec7 | 80678 | 1170x2532 | 179a6505ce551c09c4e09711e9af08ce6c484a1836d3298764bb9c803fe0a7e6 |
+
 Window captures of the signed-in demo (light theme, the demo label hidden at capture time only), downscaled whole with LANCZOS, no crop, no edit. Details per capture are in MANIFESTO.json.
 
 Columns: file | source + sha256 | script + sha256 | crop | scale | encoder/quality | output sha256 | bytes | size

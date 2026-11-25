@@ -287,9 +287,10 @@ describe('/como-funciona: as imagens são os cinco slots e nada mais (COMO:RF-06
       ['image/avif', null],
     ])
     for (const fonte of fontes.slice(0, 2)) {
-      expect(larguras(fonte.getAttribute('srcset'))).toEqual([390, 780])
+      // IMG-RES: the 3x tier (1170 x 687, the aspect of the 780 x 458 it had) is the largest file of the crop.
+      expect(larguras(fonte.getAttribute('srcset'))).toEqual([390, 780, 1170])
       expect(fonte.getAttribute('sizes')).toBe('100vw')
-      expect([fonte.getAttribute('width'), fonte.getAttribute('height')]).toEqual(['780', '458'])
+      expect([fonte.getAttribute('width'), fonte.getAttribute('height')]).toEqual(['1170', '687'])
     }
     expect(larguras(fontes[2].getAttribute('srcset'))).toEqual([977, 1672])
     expect(fontes[2].getAttribute('sizes')).toBe('(min-width: 1440px) 977px, 68vw')
@@ -304,13 +305,14 @@ describe('/como-funciona: as imagens são os cinco slots e nada mais (COMO:RF-06
     expect(m04.getAttribute('sizes')).toBe('(min-width: 768px) 520px, 350px')
     expect([m04.getAttribute('width'), m04.getAttribute('height')]).toEqual(['1040', '754'])
     const m06 = container.querySelector<HTMLImageElement>(`img[alt="${ALTS['cf.alt.cena3']}"]`)!
-    expect(larguras(m06.getAttribute('srcset'))).toEqual([300, 600])
+    // IMG-RES: the M06 master is 900 x 1470 now (the aspect of the 600 x 980 it had); 420 css px x 2 needs the 900w tier.
+    expect(larguras(m06.getAttribute('srcset'))).toEqual([300, 600, 900])
     expect(m06.getAttribute('src')).toMatch(URL_GERADA)
     expect(m06.getAttribute('sizes')).toBe('(min-width: 768px) 420px, 350px')
-    expect([m06.getAttribute('width'), m06.getAttribute('height')]).toEqual(['600', '980'])
+    expect([m06.getAttribute('width'), m06.getAttribute('height')]).toEqual(['900', '1470'])
     for (const [img, largurasAvif] of [
       [m04, [350, 520, 700, 1040]],
-      [m06, [300, 600]],
+      [m06, [300, 600, 900]],
     ] as const) {
       expect(img.getAttribute('loading')).toBe('lazy')
       expect(img.getAttribute('decoding')).toBe('async')
@@ -332,11 +334,16 @@ describe('/como-funciona: as imagens são os cinco slots e nada mais (COMO:RF-06
     expect(telas[1].getAttribute('src')).toMatch(/^\/telas\/t1i\/notas-\d+w\.webp$/)
     for (const tela of telas) {
       expect(tela.getAttribute('srcset')).toBe(
-        [280, 320, 560, 640].map((l) => `${tela.getAttribute('src')!.replace(/-\d+w\.webp$/, '')}-${l}w.webp ${l}w`).join(', '),
+        [280, 320, 560, 640, 780, 1170].map((l) => `${tela.getAttribute('src')!.replace(/-\d+w\.webp$/, '')}-${l}w.webp ${l}w`).join(', '),
       )
+      expect([tela.getAttribute('width'), tela.getAttribute('height')]).toEqual(['1170', '2532'])
       expect(tela.getAttribute('loading')).toBe('lazy')
       const arte = tela.parentElement!.querySelector<HTMLImageElement>('[data-produto-moldura-arte]')!
       expect(arte.getAttribute('src')).toBe('/molduras/moldura-dia.png')
+      // IMG-RES: the 1356w twin, same 678 x 1423 box.
+      expect(arte.getAttribute('srcset')).toBe('/molduras/moldura-dia.png 678w, /molduras/moldura-dia-1356w.png 1356w')
+      expect(arte.getAttribute('sizes')).toBe('(min-width: 1440px) 414px, 350px')
+      expect([arte.getAttribute('width'), arte.getAttribute('height')]).toEqual(['678', '1423'])
       expect(arte.getAttribute('alt')).toBe('')
       expect(arte.getAttribute('aria-hidden')).toBe('true')
       // Nenhuma moldura sobre o cacau (RF-06): a faixa que a contém é de papel ou de areia.

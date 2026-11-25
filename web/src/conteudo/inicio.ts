@@ -34,7 +34,7 @@ export const INI = {
 
   h2So: 'E quando sou só eu?',
   pSo: 'Um dia anotado por uma pessoa só é um dia inteiro. Quando chegar mais alguém para cuidar, você convida e escolhe o papel dessa pessoa: responsável, cuidador ou observador.',
-  altCena3: 'Heloísa de bruços num tapete firme, de cabeça erguida, olhando para a frente. Juliana está ao lado, na altura dos olhos dela, de olho na bebê.',
+  altCena3: 'Heloísa de bruços no tapete, de cabeça erguida e sorrindo. Juliana está deitada ao lado dela, também de bruços, olhando para a bebê.',
 
   h2Prova: 'Ninguém dá nota para o seu dia.',
   pProva: 'O site guarda o que aconteceu, com a hora e o nome de quem anotou. Não põe meta e não compara o seu bebê com nenhum outro.',
@@ -42,6 +42,8 @@ export const INI = {
   li2: 'Recado para quem chega fica em nota, como a da Ju: “Pomada só à noite.”',
   li3: 'A intenção é não vender dados, não ter anúncios, não rastrear as pessoas entre apps e não usar inteligência artificial para responder às famílias.',
   li4: 'O AppMaternidade não faz diagnóstico e não substitui a orientação de um profissional de saúde.',
+  altNotas:
+    'Tela de Notas do AppMaternidade com a nota de Juliana em destaque: “Pomada só à noite.” Abaixo, uma nota de Ícaro: “Fraldas P no armário de cima.”',
 
   h2Perg: 'Perguntas de quem chega agora.',
   q1: 'Quanto custa?',
@@ -52,6 +54,7 @@ export const INI = {
   r3: 'Funciona. O modo madrugada escurece a tela e deixa o botão de iniciar mamada grande, na metade de baixo.',
   q4: 'Posso convidar a babá?',
   r4: 'Pode. O convite já leva o papel, e dá para pôr uma data para o acesso terminar. Um responsável remove o acesso quando quiser.',
+  altPorta: 'Uma mão põe a chave na fechadura de uma porta fechada, num corredor à noite.',
 
   h2Fecho: 'Da próxima vez, já está anotado.',
   cta3: 'Criar conta',

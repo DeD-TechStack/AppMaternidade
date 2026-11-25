@@ -1,4 +1,6 @@
 import type { RefObject } from 'react'
+import { INI } from '../../conteudo/inicio.ts'
+import { FaixaDaVez } from '../../movimento/troca/FaixaDaVez.tsx'
 import { CAPTURA_Y_ALTA as CAPTURA_Y, MOLDURA_NOITE } from './midia.ts'
 
 interface Props {
@@ -34,6 +36,7 @@ export function FolhaDaNoite({ refFolha, refInterior }: Props) {
             loading="lazy"
             decoding="async"
           />
+          <FaixaDaVez />
           <img
             data-troca-gemea-arte=""
             src={MOLDURA_NOITE.src}
@@ -44,6 +47,13 @@ export function FolhaDaNoite({ refFolha, refInterior }: Props) {
             loading="lazy"
             decoding="async"
           />
+          {/* The night ink of the day frame's action row, which the sheet covers: the real button stays under the sheet,
+              takes every press (the sheet takes none) and this row is what reads there. Same three strings. */}
+          <span data-troca-gemea-acao="">
+            <span data-troca-gemea-rotulo="">{INI.acaoTela1}</span>
+            <span data-troca-gemea-estado="inicial">{INI.inicialTela1}</span>
+            <span data-troca-gemea-estado="detalhe">{INI.detalheTela1}</span>
+          </span>
         </figure>
       </div>
     </div>

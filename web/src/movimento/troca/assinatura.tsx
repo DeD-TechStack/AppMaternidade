@@ -10,8 +10,8 @@ import { usePrefereMovimentoReduzido } from '../reduzido.ts'
 /** "hh:mm" + the middle + the last two words (the author: "por Ju", "por Ícaro"). */
 const PARTES = /^(\d{1,2}:\d{2})(.*\s)(\S+\s+\S+)$/u
 
-/** Whole in view: the stroke starts when the caption's line is entirely on screen. */
-const LIMIAR_DA_ASSINATURA = 1
+/** Mostly in view: the stroke starts when 60 % of the caption's line is on screen (STAGE, H2). */
+const LIMIAR_DA_ASSINATURA = 0.6
 
 /** The caption's text in three runs: the hour, the middle, and the author holding the stroke. */
 export function TextoAssinado({ texto }: { texto: string }) {

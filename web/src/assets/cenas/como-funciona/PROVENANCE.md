@@ -1,5 +1,12 @@
 # Provenance: web/public/cenas/como-funciona/
 
+## IMG-RES native tiers (2026-11-19)
+
+Same approved art and crop; no upscaling. Columns: file | SHA256 | bytes | dimensions | source and operation.
+
+| m01-heroi-390c-1170w.webp | d5b0aab2673f4504c9d28d17808b64d37a90b71797e08f12f0ef9873cbc19b5a | 45650 | 1170x687 | m01-heroi-1672w.webp (4e7dd3263c31155c13d9a37db225233eec040b230f1e8df4357469a8b545196c), native crop (0,146,1310,915), LANCZOS downscale, WebP q92 method6 |
+| m06-900w.webp | 307d39d5ec41f6a468451cdb07bb92c6142f0c071630f019c92a51f1d6bcfdad | 45814 | 900x1470 | IMG_DEFECT/out/06_colo_1745_v6.png (bf0bec7abf0397070e79b079479554d2b73d14da6471124d754fe568b893fc2a), native 981x1602, LANCZOS downscale, WebP q92 method6 |
+
 Plates are read-only sources under DIRECAO_FABLE (sha256 asserted by the script), snapped whole, cropped, downscaled with LANCZOS, never upscaled, no retouching, no generated pixels.
 
 Columns: file | source + sha256 | script + sha256 | crop | scale | encoder/quality | output sha256 | bytes | size

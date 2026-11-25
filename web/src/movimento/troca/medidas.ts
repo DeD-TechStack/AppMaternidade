@@ -3,12 +3,15 @@ import { CATALOGO } from '../catalogo.ts'
 // The numbers of moments 2 and 3 of the Início, read from the catalogue and nowhere else, and the pure arithmetic of
 // the pinned scroll: pin distance, progress p, the night sheet's edge and the caption's side. No DOM here.
 
-/** The distance of the pinned scroll in px for a window width (M16): 600 from 1280, 480 from 1024 to 1279, 360 below. */
-export function distanciaDoFixo(largura: number): number {
-  const { largo, medio, estreito } = CATALOGO.M16.janelaPxPorLargura
-  if (largura >= 1280) return largo
-  if (largura >= 1024) return medio
-  return estreito
+/**
+ * The pin distance D in px for a window height (M16): `clamp(minPx, svh * height, maxPx)`, 80 svh clamped to 600-900 px.
+ * It is the model of the CSS (`--palco-pino` in troca.css, which owns D): tests and probes compare the page against it,
+ * and the scroll driver never writes it, it measures D from the track and the stage.
+ */
+export function pinoDoPalco(alturaDaJanela: number): number {
+  const { minPx, svh, maxPx } = CATALOGO.M16.pino
+  const alvo = (alturaDaJanela * svh) / 100
+  return Math.min(maxPx, Math.max(minPx, alvo))
 }
 
 /** The smallest window height, in px, with a pin (M16). */
@@ -31,21 +34,26 @@ export function progressoDoFixo(topoDaTrilha: number, topoColado: number, distan
   return Math.min(1, Math.max(0, (topoColado - topoDaTrilha) / distancia))
 }
 
-const entre = (de: number, ate: number, fracao: number) => de + (ate - de) * fracao
+const limitar = (valor: number) => Math.min(1, Math.max(0, Number.isFinite(valor) ? valor : 0))
 
 /**
  * The x of the night sheet's edge in the stage, in px, for the progress p. It starts at the seam and holds there until
- * p 0.10, runs to the frame's centre line and holds from 0.45 to 0.55, runs to the left edge and holds from 0.85 on.
- * Linear in p between the holds. The sheet is cut paper: the edge moves, nothing fades.
+ * p 0.10, then runs linearly to the left edge, which it reaches at p 0.70 and holds (no hold on the frame's centre line).
+ * The sheet is cut paper: the edge moves, nothing fades.
  */
-export function bordaDaNoite(p: number, costura: number, centro: number): number {
-  const { repousoAte, centroDe, centroAte, fimDe } = CATALOGO.M16.paradas
-  const q = Math.min(1, Math.max(0, Number.isFinite(p) ? p : 0))
-  if (q <= repousoAte) return costura
-  if (q < centroDe) return entre(costura, centro, (q - repousoAte) / (centroDe - repousoAte))
-  if (q <= centroAte) return centro
-  if (q < fimDe) return entre(centro, 0, (q - centroAte) / (fimDe - centroAte))
-  return 0
+export function bordaDaNoite(p: number, costura: number): number {
+  const { repousoAte, fimDe } = CATALOGO.M16.paradas
+  const avanco = limitar((limitar(p) - repousoAte) / (fimDe - repousoAte))
+  return costura * (1 - avanco)
+}
+
+/**
+ * How far the marker ("a faixa da vez") has stepped from the 16:00 row to the 17:30 row, 0 to 1, for the progress p: 0
+ * up to p 0.485, 1 from p 0.515, linear between (3 % of the pin).
+ */
+export function passoDaVez(p: number): number {
+  const { de, ate } = CATALOGO.M16.vez
+  return limitar((limitar(p) - de) / (ate - de))
 }
 
 /** The edge as a percent of the sheet's own width, the `translateX` the two boxes of the sheet take (outer +t, inner -t). */
