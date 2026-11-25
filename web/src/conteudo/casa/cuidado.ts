@@ -124,7 +124,7 @@ export const IMAGENS_CUIDADO = {
     src: '/telas/t1i/familia-280w.webp',
     srcSet:
       '/telas/t1i/familia-280w.webp 280w, /telas/t1i/familia-320w.webp 320w, /telas/t1i/familia-560w.webp 560w, /telas/t1i/familia-640w.webp 640w, /telas/t1i/familia-780w.webp 780w, /telas/t1i/familia-1170w.webp 1170w',
-    sizes: '(min-width: 1024px) 320px, min(330px, 85vw)',
+    sizes: '(min-width: 1024px) 390px, min(330px, 85vw)',
     largura: 1170,
     altura: 2532,
   }),
