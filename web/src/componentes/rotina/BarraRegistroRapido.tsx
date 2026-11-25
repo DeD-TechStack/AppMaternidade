@@ -143,55 +143,60 @@ export function BarraRegistroRapido({
             {textoNoLugarDosBotoes}
           </p>
         ) : (
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,4.5rem),1fr))] gap-2" data-fileira="">
-            <button
-              ref={refSono}
-              type="button"
-              aria-label={REGISTRO_RAPIDO.iniciarSono(nome)}
-              aria-disabled={desativado('sono') ? 'true' : undefined}
-              data-ativo={sessaoAtiva === 'sono' ? '' : undefined}
-              className={`${BOTAO} ${cor('sono')}`}
-              onClick={() => iniciar('sono')}
-            >
-              <Moon aria-hidden="true" className={ICONE} strokeWidth={1.75} />
-              <span>{ROTULO_TIPO.sono}</span>
-            </button>
-            <button
-              type="button"
-              aria-label={REGISTRO_RAPIDO.iniciarMamada(nome)}
-              aria-disabled={desativado('mamada') ? 'true' : undefined}
-              data-ativo={sessaoAtiva === 'mamada' ? '' : undefined}
-              className={`${BOTAO} ${cor('mamada')}`}
-              onClick={() => iniciar('mamada')}
-            >
-              <Milk aria-hidden="true" className={ICONE} strokeWidth={1.75} />
-              <span>{ROTULO_TIPO.mamada}</span>
-            </button>
-            <button
-              ref={botaoFralda}
-              type="button"
-              aria-label={REGISTRO_RAPIDO.registrarFralda(nome)}
-              aria-expanded={painel === 'fralda'}
-              aria-controls={painel === 'fralda' ? idPainel : undefined}
-              aria-disabled={desativado('fralda') ? 'true' : undefined}
-              className={`${BOTAO} ${NEUTRO}`}
-              onClick={() => alternar('fralda')}
-            >
-              <Droplets aria-hidden="true" className={ICONE} strokeWidth={1.75} />
-              <span>{ROTULO_TIPO.fralda}</span>
-            </button>
-            <button
-              ref={botaoMais}
-              type="button"
-              aria-label={REGISTRO_RAPIDO.maisRegistros}
-              aria-expanded={painel === 'mais'}
-              aria-controls={painel === 'mais' ? idPainel : undefined}
-              className={`${BOTAO} ${NEUTRO}`}
-              onClick={() => alternar('mais')}
-            >
-              <Ellipsis aria-hidden="true" className={ICONE} strokeWidth={1.75} />
-              <span>{REGISTRO_RAPIDO.mais}</span>
-            </button>
+          // Uma fileira de quatro ou duas de dois, nunca 3+1: a largura da própria barra (contêiner, em rem, que
+          // acompanha a fonte da raiz) escolhe. "Mamada", o maior rótulo, mede 3,772 rem; quatro colunas com vão de
+          // 0,5 rem pedem 16,6 rem, e 17,25 rem deixa uma folga mínima.
+          <div className="@container/barra">
+            <div className="grid grid-cols-2 gap-2 @min-[17.25rem]/barra:grid-cols-4" data-fileira="">
+              <button
+                ref={refSono}
+                type="button"
+                aria-label={REGISTRO_RAPIDO.iniciarSono(nome)}
+                aria-disabled={desativado('sono') ? 'true' : undefined}
+                data-ativo={sessaoAtiva === 'sono' ? '' : undefined}
+                className={`${BOTAO} ${cor('sono')}`}
+                onClick={() => iniciar('sono')}
+              >
+                <Moon aria-hidden="true" className={ICONE} strokeWidth={1.75} />
+                <span>{ROTULO_TIPO.sono}</span>
+              </button>
+              <button
+                type="button"
+                aria-label={REGISTRO_RAPIDO.iniciarMamada(nome)}
+                aria-disabled={desativado('mamada') ? 'true' : undefined}
+                data-ativo={sessaoAtiva === 'mamada' ? '' : undefined}
+                className={`${BOTAO} ${cor('mamada')}`}
+                onClick={() => iniciar('mamada')}
+              >
+                <Milk aria-hidden="true" className={ICONE} strokeWidth={1.75} />
+                <span>{ROTULO_TIPO.mamada}</span>
+              </button>
+              <button
+                ref={botaoFralda}
+                type="button"
+                aria-label={REGISTRO_RAPIDO.registrarFralda(nome)}
+                aria-expanded={painel === 'fralda'}
+                aria-controls={painel === 'fralda' ? idPainel : undefined}
+                aria-disabled={desativado('fralda') ? 'true' : undefined}
+                className={`${BOTAO} ${NEUTRO}`}
+                onClick={() => alternar('fralda')}
+              >
+                <Droplets aria-hidden="true" className={ICONE} strokeWidth={1.75} />
+                <span>{ROTULO_TIPO.fralda}</span>
+              </button>
+              <button
+                ref={botaoMais}
+                type="button"
+                aria-label={REGISTRO_RAPIDO.maisRegistros}
+                aria-expanded={painel === 'mais'}
+                aria-controls={painel === 'mais' ? idPainel : undefined}
+                className={`${BOTAO} ${NEUTRO}`}
+                onClick={() => alternar('mais')}
+              >
+                <Ellipsis aria-hidden="true" className={ICONE} strokeWidth={1.75} />
+                <span>{REGISTRO_RAPIDO.mais}</span>
+              </button>
+            </div>
           </div>
         )}
 

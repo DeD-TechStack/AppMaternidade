@@ -150,3 +150,66 @@ describe('Últimos and quick actions retain readable text in Chrome', () => {
     }, 60_000)
   }
 })
+
+// F1 (review round 1): the fixed quick-action bar is ONE row of four or TWO rows of two, never 3+1, and it
+// does not double its height while every label still fits on one row. The sweep covers the whole
+// width x root-size grid; the full grid runs in both themes.
+const SWEEP_WIDTHS = [320, 360, 390, 430]
+const SWEEP_FONTS = [16, 18, 20, 24, 32]
+// Measured: "Mamada", the widest label, is 3.772rem wide (90.5px at root 24px). Four columns hold it only when the
+// bar is at least 4 x 3.772 + 3 x 0.5 (gap) = 16.6rem wide; the bar is the viewport minus two gutters (~20px each).
+// Cases where all four labels fit on one row: the bar must stay on ONE row.
+const ONE_ROW = new Set(['320/16', '360/16', '390/16', '390/18', '390/20', '430/16', '430/18', '430/20'])
+// Cases where they cannot (390/32 is the minimum; 430/24 is a 16.2rem bar, below the 16.6rem the four labels need).
+const TWO_ROWS = new Set(['390/32', '320/32', '360/32', '430/24'])
+
+describe('quick-action bar: one row of four or two rows of two, at every width and root size', () => {
+  let html: string | undefined
+  async function barHtml() {
+    if (html) return html
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-11-20T13:00:00Z'))
+    const { container } = await renderizarRotaPronta('/app/hoje', { sessao: 'juliana', diaCompleto: true, fusoDaFamilia: 'America/Sao_Paulo' })
+    html = container.innerHTML
+    return html
+  }
+
+  for (const theme of ['claro', 'madrugada']) for (const width of SWEEP_WIDTHS) for (const font of SWEEP_FONTS) {
+    const key = `${width}/${font}`
+    it(`${width}px / root ${font}px / ${theme}: 1x4 or 2x2, labels contained, no horizontal scroll`, async () => {
+      const m = measure(await barHtml(), width, font, theme)
+      expect(m.width).toBe(width)
+      expect(m.rootFont).toBe(font)
+      expect(m.fonts).toBe('loaded')
+      expect(m.scrollWidth).toBeLessThanOrEqual(m.clientWidth)
+      expect(m.buttons.map(button => button.label.text)).toEqual(['Sono', 'Mamada', 'Fralda', 'Mais'])
+
+      const rowsY = new Map<number, number>()
+      for (const button of m.buttons) rowsY.set(Math.round(button.box.y), (rowsY.get(Math.round(button.box.y)) ?? 0) + 1)
+      const shape = JSON.stringify([...rowsY.entries()])
+      expect([1, 2], `distinct row count ${shape}`).toContain(rowsY.size)
+      // 1 row = four buttons; 2 rows = two buttons each, never a lone button.
+      expect([...rowsY.values()], `buttons per row ${shape}`).toEqual(rowsY.size === 1 ? [4] : [2, 2])
+      if (ONE_ROW.has(key)) expect(rowsY.size, `all four labels fit at ${key}: one row, not a doubled bar`).toBe(1)
+      if (TWO_ROWS.has(key)) expect(rowsY.size, `labels cannot fit on one row at ${key}`).toBe(2)
+
+      for (const [index, button] of m.buttons.entries()) {
+        inside(button.label, button.box)
+        expect.soft(button.label.rects, button.label.text).toHaveLength(1)
+        expect.soft(button.label.font).toBeGreaterThanOrEqual(font * 0.875)
+        expect.soft(button.box.height).toBeGreaterThanOrEqual(3.5 * font)
+        expect.soft(button.box.width).toBeGreaterThanOrEqual(44)
+        for (const next of m.buttons.slice(index + 1)) separate(button.label, next.label)
+      }
+
+      // No needless 2x2: with two rows, a four-column track must NOT have held the widest label with 0.2rem to spare.
+      if (rowsY.size === 2) {
+        const gap = 0.5 * font
+        const row = m.buttons[1].box.right - m.buttons[0].box.x
+        const track = (row - 3 * gap) / 4
+        const widest = Math.max(...m.buttons.map(button => button.label.rects[0].width))
+        expect(track, `2x2 at ${key} although a four-column track (${track.toFixed(1)}px) holds the widest label (${widest.toFixed(1)}px)`).toBeLessThan(widest + 0.2 * font)
+      }
+    }, 60_000)
+  }
+})
