@@ -684,22 +684,47 @@ describe('índice igual nas cinco páginas com três seções ou mais (o Contato
   })
 })
 
-// F8-1: o link da seção atual. O jsdom não tem IntersectionObserver nem rolagem: um observador falso guarda o que foi
-// observado e deixa o teste entregar as entradas, como o navegador entregaria ao cruzar a linha de âncora.
+// F8-1: o link da seção atual. O jsdom não tem IntersectionObserver, layout nem rolagem. O observador falso daqui se
+// comporta como o de verdade: calcula a interseção de cada título com a raiz que o `rootMargin` define (a janela, com
+// as margens somadas) e só avisa na observação inicial e quando `isIntersecting` ou a faixa de razão (os `threshold`)
+// de um título muda. A rolagem é simulada: `rolarPara(y)` guarda o `scrollY`, e o `getBoundingClientRect` dos `h2`
+// devolve o topo a partir dele. Assim um salto qualquer, para a frente ou para trás, só avisa se o navegador avisaria.
 describe('índice: a seção atual (aria-current="location")', () => {
+  const ALTURA_DA_JANELA = 900
+  const LINHA_DE_ANCORA = 104
+  const ALTURA_DO_TITULO = 40
+  /** O topo do título i no documento: um título a cada 450 px, o primeiro a 300 px. */
+  const topoNoDocumento = (i: number) => 300 + 450 * i
+
   interface Entrada {
     target: Element
     isIntersecting: boolean
-    boundingClientRect: { top: number }
-    rootBounds: { top: number } | null
+    intersectionRatio: number
+    boundingClientRect: { top: number; bottom: number; height: number }
+    rootBounds: { top: number; bottom: number }
   }
   let observadores: FalsoObservador[] = []
+  let rolagem = 0
+  /** O índice (na página) de cada `h2` com seção, pelo id. */
+  let posicoes = new Map<string, number>()
+
+  const caixaDoTitulo = (alvo: Element) => {
+    const i = posicoes.get(alvo.id)
+    if (i === undefined) return null
+    const top = topoNoDocumento(i) - rolagem
+    return { top, bottom: top + ALTURA_DO_TITULO, height: ALTURA_DO_TITULO }
+  }
+
+  /** Lê um comprimento do `rootMargin` (px ou %, % da altura da janela, como o navegador faz para topo e base). */
+  const emPixels = (valor: string) => (valor.endsWith('%') ? (parseFloat(valor) / 100) * ALTURA_DA_JANELA : parseFloat(valor))
 
   class FalsoObservador {
     observados: Element[] = []
     desconectado = false
     readonly aviso: (entradas: Entrada[]) => void
     readonly opcoes: IntersectionObserverInit
+    /** O estado de cada alvo na última entrega: interseção e faixa da razão. */
+    private estado = new Map<Element, string>()
     constructor(aviso: (entradas: Entrada[]) => void, opcoes: IntersectionObserverInit) {
       this.aviso = aviso
       this.opcoes = opcoes
@@ -712,13 +737,77 @@ describe('índice: a seção atual (aria-current="location")', () => {
     disconnect() {
       this.desconectado = true
     }
+    /** A raiz: a janela com as margens (positiva alarga, negativa encolhe), do topo à base. */
+    private raiz() {
+      const [topo = '0px', , base = topo] = (this.opcoes.rootMargin ?? '0px').split(/\s+/)
+      return { top: -emPixels(topo), bottom: ALTURA_DA_JANELA + emPixels(base) }
+    }
+    /** Entrega o que mudou desde a última vez (tudo, na primeira): o que o navegador faria depois de um quadro. */
+    entregarMudancas() {
+      if (this.desconectado) return
+      const raiz = this.raiz()
+      const limiares = [this.opcoes.threshold ?? 0].flat().sort((a, b) => a - b)
+      const mudaram: Entrada[] = []
+      for (const alvo of this.observados) {
+        const caixa = caixaDoTitulo(alvo)
+        if (!caixa) continue
+        const sobreposicao = Math.min(caixa.bottom, raiz.bottom) - Math.max(caixa.top, raiz.top)
+        // Como no navegador, encostar na borda conta como interseção.
+        const intersecta = sobreposicao >= 0
+        const razao = intersecta ? sobreposicao / caixa.height : 0
+        const faixa = limiares.filter((limiar) => razao >= limiar && (limiar > 0 || intersecta)).length
+        const novo = `${intersecta}:${faixa}`
+        if (this.estado.get(alvo) !== novo) {
+          mudaram.push({
+            target: alvo,
+            isIntersecting: intersecta,
+            intersectionRatio: razao,
+            boundingClientRect: caixa,
+            rootBounds: { top: raiz.top, bottom: raiz.bottom },
+          })
+        }
+        this.estado.set(alvo, novo)
+      }
+      if (mudaram.length > 0) this.aviso(mudaram)
+    }
   }
+
+  const realGetComputedStyle = window.getComputedStyle.bind(window)
+  let espiaoDaCaixa: { mockRestore: () => void } | undefined
+  let espiaoDoEstilo: { mockRestore: () => void } | undefined
+  let alturaOriginal: PropertyDescriptor | undefined
 
   beforeEach(() => {
     observadores = []
+    rolagem = 0
+    posicoes = new Map()
     vi.stubGlobal('IntersectionObserver', FalsoObservador)
+    alturaOriginal = Object.getOwnPropertyDescriptor(window, 'innerHeight')
+    Object.defineProperty(window, 'innerHeight', { value: ALTURA_DA_JANELA, configurable: true, writable: true })
+    // A linha de âncora vem do `scroll-padding-top` do html (104 px em 1440); o jsdom não lê o CSS do build.
+    espiaoDoEstilo = vi.spyOn(window, 'getComputedStyle').mockImplementation(((elemento: Element, pseudo?: string | null) => {
+      const estilo = realGetComputedStyle(elemento, pseudo)
+      if (elemento !== document.documentElement) return estilo
+      return new Proxy(estilo, {
+        get: (alvo, chave) => {
+          if (chave === 'scrollPaddingTop') return `${LINHA_DE_ANCORA}px`
+          const valor = Reflect.get(alvo, chave, alvo)
+          return typeof valor === 'function' ? valor.bind(alvo) : valor
+        },
+      })
+    }) as typeof window.getComputedStyle)
+    espiaoDaCaixa = vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
+      const caixa = caixaDoTitulo(this)
+      const topo = caixa?.top ?? 0
+      const base = caixa?.bottom ?? 0
+      return { x: 0, y: topo, top: topo, bottom: base, left: 0, right: 0, width: 0, height: base - topo, toJSON: () => ({}) } as DOMRect
+    })
   })
   afterEach(() => {
+    espiaoDaCaixa?.mockRestore()
+    espiaoDoEstilo?.mockRestore()
+    if (alturaOriginal) Object.defineProperty(window, 'innerHeight', alturaOriginal)
+    else Reflect.deleteProperty(window, 'innerHeight')
     vi.unstubAllGlobals()
   })
 
@@ -726,61 +815,135 @@ describe('índice: a seção atual (aria-current="location")', () => {
   const doIndice = () =>
     observadores.filter((observador) => !observador.desconectado && observador.observados.some((alvo) => alvo.tagName === 'H2'))
 
-  /** Entrega ao observador uma entrada por título: `passados` títulos já chegaram à linha de âncora (topo ≤ 0), os outros estão abaixo. */
-  const entregar = (observador: FalsoObservador, passados: number, visiveis: readonly number[] = []) => {
+  /** Renderiza a rota e liga a posição de cada título da seção (a ordem da página) no documento simulado. */
+  const abrir = (caminho: keyof typeof PAGINAS_DE_TEXTO, y = 0) => {
+    const renderizado = renderizarRota(`/${caminho}`)
+    const ids = PAGINAS_DE_TEXTO[caminho].secoes.map(({ secao }) => secao.id)
+    posicoes = new Map(ids.map((id, i) => [id, i]))
+    rolarPara(y)
+    return renderizado
+  }
+
+  /** A rolagem: muda o `scrollY` simulado e deixa os observadores avisarem o que o navegador avisaria. */
+  const rolarPara = (y: number) => {
+    rolagem = y
     act(() => {
-      observador.aviso(
-        observador.observados.map((alvo, i) => ({
-          target: alvo,
-          isIntersecting: visiveis.includes(i) || (i >= passados && i < passados + 2),
-          boundingClientRect: { top: i < passados ? -40 * (passados - i) : 300 + 100 * (i - passados) },
-          rootBounds: { top: 0 },
-        })),
-      )
+      for (const observador of doIndice()) observador.entregarMudancas()
     })
   }
+
+  /** O título esperado: o último cujo topo já chegou à linha de âncora, ou o primeiro se nenhum chegou. */
+  const esperado = (caminho: keyof typeof PAGINAS_DE_TEXTO, y: number) => {
+    const secoes = PAGINAS_DE_TEXTO[caminho].secoes
+    let indice = 0
+    secoes.forEach((_, i) => {
+      if (topoNoDocumento(i) - y <= LINHA_DE_ANCORA) indice = i
+    })
+    return secoes[indice].secao.titulo
+  }
+
   const atuais = (container: HTMLElement) =>
     [...container.querySelectorAll('main .pt-indice-link[aria-current="location"]')].map((link) => link.textContent)
 
-  it('observa só os h2 da página e usa a raiz a partir da linha de âncora (sem ouvinte de rolagem)', () => {
-    const { container, unmount } = renderizarRota('/privacidade')
+  it('observa só os h2 da página, com a raiz do topo até a linha de âncora (sem ouvinte de rolagem)', () => {
+    const { container, unmount } = abrir('privacidade')
     expect(doIndice()).toHaveLength(1)
     const [observador] = doIndice()
     expect(observador.observados.map((alvo) => alvo.id)).toEqual(PAGINAS_DE_TEXTO.privacidade.secoes.map(({ secao }) => secao.id))
     expect(observador.observados.every((alvo) => alvo.tagName === 'H2' && container.contains(alvo))).toBe(true)
-    expect(observador.opcoes.rootMargin).toMatch(/^-\d+(\.\d+)?px 0px 0px 0px$/)
+    // Tudo o que está acima da linha de âncora entra na raiz: o topo vai bem para cima, a base sobe até a linha.
+    expect(observador.opcoes.rootMargin).toBe(`1000000px 0px -${ALTURA_DA_JANELA - LINHA_DE_ANCORA}px 0px`)
     unmount()
     expect(observador.desconectado).toBe(true)
   })
 
   it('em scroll 0 o primeiro link é o atual, e só ele', () => {
-    const { container } = renderizarRota('/privacidade')
-    expect(atuais(container)).toEqual([PAGINAS_DE_TEXTO.privacidade.secoes[0].secao.titulo])
-    entregar(doIndice()[0], 0)
+    const { container } = abrir('privacidade')
     expect(atuais(container)).toEqual([PAGINAS_DE_TEXTO.privacidade.secoes[0].secao.titulo])
   })
 
-  it('rolando, o atual é o último título que já chegou à linha de âncora, e sempre um só', () => {
-    const { container } = renderizarRota('/privacidade')
-    const titulos = PAGINAS_DE_TEXTO.privacidade.secoes.map(({ secao }) => secao.titulo)
-    for (const passados of [1, 3, 6, 10, 4, 2]) {
-      entregar(doIndice()[0], passados)
-      expect(atuais(container), `${passados} títulos passados`).toEqual([titulos[passados - 1]])
+  it('rolando de pouco em pouco, o atual é o último título que já chegou à linha de âncora, e sempre um só', () => {
+    const { container } = abrir('privacidade')
+    for (let y = 0; y <= 4400; y += 150) {
+      rolarPara(y)
+      expect(atuais(container), `scrollY ${y}`).toEqual([esperado('privacidade', y)])
     }
   })
 
+  it('saltos de qualquer tamanho, para a frente e para trás, deixam o atual certo (o título pula de abaixo da janela para acima da linha)', () => {
+    const { container } = abrir('privacidade')
+    const titulos = PAGINAS_DE_TEXTO.privacidade.secoes.map(({ secao }) => secao.titulo)
+    // Os casos do relato: de 0 direto a 1500 e a 2300.
+    rolarPara(1500)
+    expect(atuais(container)).toEqual([titulos[2]])
+    rolarPara(0)
+    expect(atuais(container)).toEqual([titulos[0]])
+    rolarPara(2300)
+    expect(atuais(container)).toEqual([titulos[4]])
+    rolarPara(1500)
+    expect(atuais(container)).toEqual([titulos[2]])
+    for (const y of [4100, 700, 3600, 0, 2950, 100, 3850, 1200, 40, 4400, 2300, 0]) {
+      rolarPara(y)
+      expect(atuais(container), `salto para scrollY ${y}`).toEqual([esperado('privacidade', y)])
+    }
+  })
+
+  it('o salto que o navegador não avisaria sem a raiz até a linha (0 para 2300 pela raiz antiga) agora avisa', () => {
+    abrir('privacidade')
+    const [observador] = doIndice()
+    const avisos: string[][] = []
+    const original = observador.aviso
+    ;(observador as { aviso: (entradas: Entrada[]) => void }).aviso = (entradas) => {
+      avisos.push(entradas.map((entrada) => entrada.target.id))
+      original(entradas)
+    }
+    rolarPara(2300)
+    // Os títulos 0 e 1 saíram da janela e o 2, 3 e 4 passaram da linha sem nunca estarem à vista: todos mudaram.
+    const ids = PAGINAS_DE_TEXTO.privacidade.secoes.map(({ secao }) => secao.id)
+    expect(avisos.flat()).toEqual(expect.arrayContaining(ids.slice(0, 5)))
+  })
+
+  it('um endereço com âncora (rolagem inicial longe do topo) abre com o título certo como atual', () => {
+    const { container } = abrir('privacidade', 2300)
+    expect(atuais(container)).toEqual([esperado('privacidade', 2300)])
+  })
+
   it('depois de apertar o link n, n é o atual, mesmo quando o título n não alcança a linha (fim da página) e ainda está à vista', () => {
-    const { container } = renderizarRota('/privacidade')
+    const { container } = abrir('privacidade')
     const links = [...container.querySelectorAll<HTMLAnchorElement>('main .pt-indice-link')]
     const ultimo = links.length - 1
     fireEvent.click(links[ultimo])
     expect(atuais(container)).toEqual([links[ultimo].textContent])
-    // O fim da página: o último título está à vista, mas só o penúltimo chegou à linha.
-    entregar(doIndice()[0], ultimo, [ultimo])
+    // O fim da página: o último título está à vista (a 500 px do topo), mas só o penúltimo chegou à linha.
+    const fim = topoNoDocumento(ultimo) - 500
+    rolarPara(fim)
     expect(atuais(container)).toEqual([links[ultimo].textContent])
     // Quando o título n sai da tela, volta a valer o cálculo.
-    entregar(doIndice()[0], 2, [])
-    expect(atuais(container)).toEqual([links[1].textContent])
+    rolarPara(1500)
+    expect(atuais(container)).toEqual([esperado('privacidade', 1500)])
+  })
+
+  it('apertar o link n e rolar até lá: n é o atual quando o título chega à linha, e a lista segue o cálculo', () => {
+    const { container } = abrir('privacidade')
+    const links = [...container.querySelectorAll<HTMLAnchorElement>('main .pt-indice-link')]
+    fireEvent.click(links[5])
+    expect(atuais(container)).toEqual([links[5].textContent])
+    rolarPara(topoNoDocumento(5) - LINHA_DE_ANCORA)
+    expect(atuais(container)).toEqual([links[5].textContent])
+    rolarPara(topoNoDocumento(7) - LINHA_DE_ANCORA)
+    expect(atuais(container)).toEqual([links[7].textContent])
+  })
+
+  it('mudar a altura da janela refaz o observador com a base da raiz na linha de âncora nova', () => {
+    abrir('privacidade')
+    const [primeiro] = doIndice()
+    Object.defineProperty(window, 'innerHeight', { value: 700, configurable: true, writable: true })
+    act(() => {
+      window.dispatchEvent(new Event('resize'))
+    })
+    expect(primeiro.desconectado).toBe(true)
+    const [novo] = doIndice()
+    expect(novo.opcoes.rootMargin).toBe(`1000000px 0px -${700 - LINHA_DE_ANCORA}px 0px`)
   })
 
   it('com menos de três seções (Contato) não há observador nem índice', () => {

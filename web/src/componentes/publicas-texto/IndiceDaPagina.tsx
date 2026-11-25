@@ -37,9 +37,15 @@ function linhaDeAncora(): number {
   return Number.isFinite(valor) ? valor : 0
 }
 
+/** Folga do topo da raiz do observador: grande o bastante para cobrir tudo o que está acima da linha de âncora. */
+const MARGEM_ACIMA_DA_LINHA = 1_000_000
+
 /**
- * Qual título é o da seção atual: o último que já chegou à linha de âncora (ou passou dela); antes de o primeiro chegar,
- * o primeiro. Um `IntersectionObserver` sobre os `h2`, com a raiz começando na linha de âncora (sem ouvinte de rolagem).
+ * Qual título é o da seção atual: o último cujo topo já chegou à linha de âncora (ou passou dela); antes de o primeiro
+ * chegar, o primeiro. Sem ouvinte de rolagem: um `IntersectionObserver` sobre os `h2` só avisa que algo mudou, e cada
+ * aviso recalcula todos os títulos pelo `getBoundingClientRect`. A raiz cobre tudo o que está acima da linha de âncora
+ * (do topo, com uma margem enorme, até a linha), então um título cruzar a linha sempre muda a interseção, seja qual for o
+ * tamanho do salto da rolagem, para a frente ou para trás. A janela mudar de altura refaz o observador.
  * Quem aperta o link n fica com n como atual enquanto o título n estiver à vista, mesmo no fim da página, onde ele pode
  * não alcançar a linha; quando sai da tela, volta a valer o cálculo.
  */
@@ -52,31 +58,42 @@ function useSecaoAtual(ids: readonly string[]): [string, (id: string) => void] {
     const lista = chave ? chave.split('|') : []
     forcado.current = null
     if (lista.length < MINIMO_DE_SECOES || typeof IntersectionObserver === 'undefined') return undefined
-    const passou = new Map<string, boolean>()
-    const visivel = new Map<string, boolean>()
-    const observador = new IntersectionObserver(
-      (entradas) => {
-        for (const entrada of entradas) {
-          const id = entrada.target.id
-          const topoDaRaiz = entrada.rootBounds?.top ?? 0
-          passou.set(id, entrada.boundingClientRect.top <= topoDaRaiz + 1)
-          visivel.set(id, entrada.isIntersecting)
-        }
-        let calculado = lista[0] ?? ''
-        for (const id of lista) if (passou.get(id)) calculado = id
-        if (forcado.current !== null) {
-          if (calculado === forcado.current || !visivel.get(forcado.current)) forcado.current = null
-          else calculado = forcado.current
-        }
-        definirAtual(calculado)
-      },
-      { rootMargin: `-${linhaDeAncora()}px 0px 0px 0px`, threshold: [0, 1] },
-    )
-    for (const id of lista) {
-      const titulo = document.getElementById(id)
-      if (titulo) observador.observe(titulo)
+    const ancora = linhaDeAncora()
+
+    const recalcular = () => {
+      let calculado = lista[0] ?? ''
+      for (const id of lista) {
+        const titulo = document.getElementById(id)
+        if (titulo && titulo.getBoundingClientRect().top <= ancora + 1) calculado = id
+      }
+      if (forcado.current !== null) {
+        const caixa = document.getElementById(forcado.current)?.getBoundingClientRect()
+        const naTela = caixa !== undefined && caixa.bottom > 0 && caixa.top < window.innerHeight
+        if (calculado === forcado.current || !naTela) forcado.current = null
+        else calculado = forcado.current
+      }
+      definirAtual(calculado)
     }
-    return () => observador.disconnect()
+
+    let observador: IntersectionObserver | undefined
+    const montar = () => {
+      observador?.disconnect()
+      const abaixoDaLinha = Math.max(0, window.innerHeight - ancora)
+      observador = new IntersectionObserver(recalcular, {
+        rootMargin: `${MARGEM_ACIMA_DA_LINHA}px 0px -${abaixoDaLinha}px 0px`,
+        threshold: [0, 1],
+      })
+      for (const id of lista) {
+        const titulo = document.getElementById(id)
+        if (titulo) observador.observe(titulo)
+      }
+    }
+    montar()
+    window.addEventListener('resize', montar)
+    return () => {
+      window.removeEventListener('resize', montar)
+      observador?.disconnect()
+    }
   }, [chave])
 
   return [
