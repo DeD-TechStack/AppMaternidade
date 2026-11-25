@@ -1,0 +1,278 @@
+{
+  "asset": "A43 auth door (acesso)",
+  "task": "t_bb5e9dfd (F7a-1), 2026-11-25",
+  "script": {
+    "file": "web/scripts/ativos/exportar_camadas.py",
+    "sha256": "29a866187e34ac3561096c4b2e0243f98d4b722a61b0966520f04d6d97d77094"
+  },
+  "source": {
+    "file": "DIRECAO_FABLE/4_cenas/10a_porta.png",
+    "sha256": "4120836e2626bc66cba05faaa8f99aaabda1b4adbf1eb338838cfeed56d111be",
+    "width": 1254,
+    "height": 1254
+  },
+  "scene": {
+    "width_px": 1254,
+    "height_px": 1254,
+    "aspect": 1.0,
+    "master_crop": [
+      0,
+      0,
+      1254,
+      1254
+    ],
+    "note": "all boxes are fractions (0..1) of the whole plate"
+  },
+  "floor_line": 0.863636,
+  "unlit_neighbours": {
+    "door": "#3A302B",
+    "floor": "#3A302B"
+  },
+  "base": {
+    "box": [
+      0.0,
+      0.0,
+      1.0,
+      1.0
+    ],
+    "tiers": [
+      {
+        "file": "web/public/cenas/acesso/a43-porta-fundo-1254w.webp",
+        "sha256": "4d2275dd13801da6e895dbe5aebd9312893477785b954e81b32a71f3eba14b59",
+        "bytes": 11186,
+        "width": 1254,
+        "height": 1254,
+        "scale": 1.0,
+        "source_width": 1254,
+        "format": "webp-lossy-q82-m6"
+      },
+      {
+        "file": "web/public/cenas/acesso/a43-porta-fundo-780w.webp",
+        "sha256": "4fab68c80c6eec182d89a09c419f15988230f6ac5d57e4cabfac25dd6588e433",
+        "bytes": 6050,
+        "width": 780,
+        "height": 780,
+        "scale": 0.62201,
+        "source_width": 1254,
+        "format": "webp-lossy-q82-m6"
+      },
+      {
+        "file": "web/public/cenas/acesso/a43-porta-fundo-720w.webp",
+        "sha256": "b46ffb1a20d2d59201ad8b01f9baa181a15a358b7d4ceb9f601353f47a69d37e",
+        "bytes": 5440,
+        "width": 720,
+        "height": 720,
+        "scale": 0.574163,
+        "source_width": 1254,
+        "format": "webp-lossy-q82-m6"
+      },
+      {
+        "file": "web/public/cenas/acesso/a43-porta-fundo-390w.webp",
+        "sha256": "42cec9897bca7a621a84d524fa484efda344df73dc3759a28f2e938ed9e90e47",
+        "bytes": 2798,
+        "width": 390,
+        "height": 390,
+        "scale": 0.311005,
+        "source_width": 1254,
+        "format": "webp-lossy-q82-m6"
+      }
+    ],
+    "measurements": {
+      "lit_colour_pixels": 0,
+      "lit_colour_rule": "prep.py is_mel() or R>=0xE8,G>=0xA8,B<=0x70"
+    }
+  },
+  "light": {
+    "box": [
+      0.374801,
+      0.858852,
+      0.986443,
+      0.979266
+    ],
+    "line_box": [
+      0.448963,
+      0.858852,
+      0.917065,
+      0.867624
+    ],
+    "wedge_box": [
+      0.374801,
+      0.867624,
+      0.986443,
+      0.979266
+    ],
+    "shape_boxes_px_1254": [
+      [
+        563,
+        1077,
+        1149,
+        1087
+      ],
+      [
+        470,
+        1088,
+        1236,
+        1227
+      ]
+    ],
+    "split_row": 1088,
+    "alpha_margin_px": 1,
+    "tiers": [
+      {
+        "file": "web/public/cenas/acesso/a43-porta-luz-1254w.png",
+        "sha256": "c257c3695a96ade6eeb4b4c5499d691fbb15a8ee957c1a2e5aebc51838cf85c4",
+        "bytes": 76787,
+        "width": 1254,
+        "height": 1254,
+        "scale": 1.0,
+        "source_width": 1254,
+        "alpha_bbox": [
+          469,
+          1077,
+          1237,
+          1228
+        ],
+        "tail_px_cut": 0,
+        "over_cap": true
+      },
+      {
+        "file": "web/public/cenas/acesso/a43-porta-luz-780w.png",
+        "sha256": "7e54e250fec59eae996d16fa2850962e167d783cfa5e9be6372cd53bdf25094d",
+        "bytes": 41518,
+        "width": 780,
+        "height": 780,
+        "scale": 0.62201,
+        "source_width": 1254,
+        "alpha_bbox": [
+          291,
+          669,
+          770,
+          764
+        ],
+        "tail_px_cut": 846,
+        "over_cap": true
+      },
+      {
+        "file": "web/public/cenas/acesso/a43-porta-luz-720w.png",
+        "sha256": "b454c00db1c95a81513c08cc745469f0cd76a3331eff4eaae59f39b4fe3c34b8",
+        "bytes": 36143,
+        "width": 720,
+        "height": 720,
+        "scale": 0.574163,
+        "source_width": 1254,
+        "alpha_bbox": [
+          268,
+          618,
+          711,
+          705
+        ],
+        "tail_px_cut": 783,
+        "over_cap": true
+      },
+      {
+        "file": "web/public/cenas/acesso/a43-porta-luz-390w.png",
+        "sha256": "384e6185b9405f05bcb07952cad58d2c1c2662c812b9738bdbba17b61142f018",
+        "bytes": 12529,
+        "width": 390,
+        "height": 390,
+        "scale": 0.311005,
+        "source_width": 1254,
+        "alpha_bbox": [
+          145,
+          334,
+          385,
+          382
+        ],
+        "tail_px_cut": 428,
+        "over_cap": true
+      }
+    ],
+    "split": {
+      "core_px": 100700,
+      "mix_px": 1648,
+      "silhouette_px": 0,
+      "left_px": 196
+    },
+    "composite_1254_vs_snapped_master": {
+      "mean": [
+        0.0001,
+        0.0,
+        0.0
+      ],
+      "max": 4,
+      "at": [
+        563,
+        1085
+      ]
+    },
+    "composite_vs_served": [
+      {
+        "tier": 1254,
+        "served_file": "web/public/cenas/acesso/porta-1254w.webp",
+        "mean_abs_diff_per_channel": [
+          0.1828,
+          0.1425,
+          0.2642
+        ],
+        "max_pixel_diff": 59,
+        "max_at": [
+          566,
+          1077
+        ],
+        "threshold_mean": 2.0
+      },
+      {
+        "tier": 780,
+        "served_file": "web/public/cenas/acesso/porta-780w.webp",
+        "mean_abs_diff_per_channel": [
+          0.2232,
+          0.1682,
+          0.3298
+        ],
+        "max_pixel_diff": 57,
+        "max_at": [
+          311,
+          735
+        ],
+        "threshold_mean": 2.0
+      },
+      {
+        "tier": 720,
+        "served_file": "web/public/cenas/acesso/porta-720w.webp",
+        "mean_abs_diff_per_channel": [
+          0.2393,
+          0.1997,
+          0.3966
+        ],
+        "max_pixel_diff": 75,
+        "max_at": [
+          658,
+          619
+        ],
+        "threshold_mean": 2.0
+      },
+      {
+        "tier": 390,
+        "served_file": "web/public/cenas/acesso/porta-390w.webp",
+        "mean_abs_diff_per_channel": [
+          0.4149,
+          0.2889,
+          0.6726
+        ],
+        "max_pixel_diff": 76,
+        "max_at": [
+          356,
+          335
+        ],
+        "threshold_mean": 2.0
+      }
+    ],
+    "lamp_layer_cap_bytes": 12000,
+    "cap_open": [
+      "a43-porta-luz-1254w.png",
+      "a43-porta-luz-780w.png",
+      "a43-porta-luz-720w.png",
+      "a43-porta-luz-390w.png"
+    ]
+  }
+}
