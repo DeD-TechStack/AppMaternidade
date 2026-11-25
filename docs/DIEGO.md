@@ -2,6 +2,8 @@
 
 Este guia é para quem chega ao AppMaternidade para melhorar o site, sozinho ou com uma IA própria. Ele aponta para os documentos do repositório em vez de repeti-los. Ele será atualizado quando a nova composição da Home entrar.
 
+> **Qual guia seguir:** o `AGENTS.md` da raiz é para os executores internos do projeto. Você e a sua IA seguem este `DIEGO.md`; do `AGENTS.md` use só o bloco "Conventions", que a seção 7 resume. Se algo do `AGENTS.md` (ferramentas, caminhos locais, fluxo de cartões) contradisser este guia, vale este guia.
+
 ## 1. O que é o produto
 
 O AppMaternidade é um site em português do Brasil que ajuda um casal (e outros cuidadores autorizados) a dividir o cuidado com o recém-nascido: registro da rotina (sono, mamada, fralda, mamadeira, tummy time), histórico, notas, família e desenvolvimento do bebê. A ideia central cabe em duas frases: quem cuida anota o que fez; quem chega vê a hora e o nome de quem anotou.
@@ -104,7 +106,7 @@ Regras: registre só o nome da técnica e a URL pública; não cole trechos, nã
 
 ## 7. Convenções de código e de design
 
-Resumo do bloco "Conventions" do `AGENTS.md` (leia o original):
+Resumo do bloco "Conventions" do `AGENTS.md` (o original está no `AGENTS.md`):
 
 1. Título de commit com até 72 caracteres e iniciando por maiúscula, no formato em português com verbo no início; sem merge nem commit vazio. Confira com `node scripts/verificar-commits.mjs <base>..HEAD`.
 2. Texto aguenta zoom de 200% e viewport de 320 px: sem corte, sobreposição ou rolagem horizontal; palavras longas quebram.
@@ -203,7 +205,7 @@ Build e testes são necessários, não suficientes. Um cartão só está pronto 
 6. **Auditoria de acessibilidade:** rode os testes de axe, ande por teclado em cada página sua e registre os achados com captura.
 7. **Imagens:** liste os slots borrados nas suas páginas (pedido no PR) em vez de reexportar em 2×.
 
-Sugestão de fluxo com IA própria: dê à ferramenta este guia, `web/DESIGN.md` e `AGENTS.md`; peça mudanças pequenas por PR; sempre rode `npm run check` e confira as telas à mão nos dois tamanhos.
+Sugestão de fluxo com IA própria: dê à ferramenta este guia, `web/DESIGN.md` e o bloco "Conventions" do `AGENTS.md`; peça mudanças pequenas por PR; sempre rode `npm run check` e confira as telas à mão nos dois tamanhos.
 
 ## 12. Plano resumido de sexta (27/11)
 
