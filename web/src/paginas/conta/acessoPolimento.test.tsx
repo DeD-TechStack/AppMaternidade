@@ -315,24 +315,24 @@ describe(`telas de acesso no Chrome, a 390 px${motivoDoPulo ? ` (pulado: ${motiv
   }
   const roda = it.skipIf(motivoDoPulo !== null && !exigirNoCI)
 
-  // REP-T3 (A7): o formulário é a primeira tela. O h1 tem uma linha só e a frase uma linha só (cartões COPY),
-  // o primeiro campo começa até 300 px do alto, o botão de envio termina dentro de 844 px, e a placa da porta
-  // vem depois do formulário, de ponta a ponta (390 × 390), encostada na borda esquerda.
+  // REP-T3 (A7) e F8-4: a porta vem primeiro, como faixa de ponta a ponta de 3,25:1 (390 × 120), encostada na borda
+  // esquerda; o h1 vem logo abaixo dela (a ordem é só visual: no DOM o formulário continua primeiro). O h1 tem uma
+  // linha só e a frase uma linha só (cartões COPY), e o h1 e o primeiro campo ficam dentro da primeira tela (844 px).
   for (const caminho of ['/entrar', '/criar-conta', '/recuperar-acesso']) {
     roda(
-      `${caminho}: h1 e frase de uma linha, primeiro campo até y 300, envio dentro de 844 px e a porta depois do formulário`,
+      `${caminho}: h1 e frase de uma linha, a faixa da porta (3,25:1) antes do h1 e o primeiro campo dentro de 844 px`,
       async () => {
         const medida = await medirTela(caminho)
         expect(medida.linhasDoH1, 'o h1 tem uma linha só').toHaveLength(1)
         expect(medida.lide, 'a frase abaixo do título').not.toBeNull()
         expect(medida.lide!.height, 'a frase tem uma linha só (26 px de entrelinha)').toBeLessThanOrEqual(26.5)
-        expect(medida.primeiroCampo!.y, 'o primeiro campo começa até y 300').toBeLessThanOrEqual(300)
-        expect(medida.envio!.bottom, `o envio termina em ${medida.envio!.bottom}`).toBeLessThanOrEqual(medida.innerHeight)
         expect(medida.porta, 'a porta aparece').not.toBeNull()
         expect(medida.porta!.x).toBe(0)
         expect(medida.porta!.width).toBe(medida.larguraUtil)
-        expect(medida.porta!.height).toBe(medida.larguraUtil)
-        expect(medida.porta!.y, 'a porta vem depois do formulário').toBeGreaterThanOrEqual(medida.envio!.bottom)
+        expect(medida.porta!.height, 'a faixa tem 3,25:1').toBeCloseTo(medida.larguraUtil / 3.25, 0)
+        expect(medida.porta!.y, 'a faixa vem depois do cabeçalho').toBeGreaterThan(0)
+        expect(medida.linhasDoH1[0].y, 'o h1 vem depois da faixa da porta').toBeGreaterThanOrEqual(medida.porta!.bottom)
+        expect(medida.primeiroCampo!.bottom, `o primeiro campo termina em ${medida.primeiroCampo!.bottom}`).toBeLessThanOrEqual(medida.innerHeight)
       },
       60_000,
     )

@@ -1,0 +1,383 @@
+{
+  "asset": "A05 closing street (Inicio band 7)",
+  "task": "t_bb5e9dfd (F7a-1), 2026-11-25",
+  "script": {
+    "file": "web/scripts/ativos/exportar_camadas.py",
+    "sha256": "29a866187e34ac3561096c4b2e0243f98d4b722a61b0966520f04d6d97d77094"
+  },
+  "source": {
+    "file": "DIRECAO_FABLE/6_scenes1/M11_street_v3.png",
+    "sha256": "f1d73820c10eb3ee264321c8e6538887e57af61ba8a330eaac5241eb4653f492",
+    "width": 1672,
+    "height": 941
+  },
+  "scene": {
+    "width_px": 1672,
+    "height_px": 642,
+    "aspect": 2.604361,
+    "master_crop": [
+      0,
+      299,
+      1672,
+      941
+    ],
+    "note": "all boxes are fractions (0..1) of the scene frame (rows from the highest roof row to the bottom)"
+  },
+  "highest_roof_row": {
+    "master_row": 299,
+    "fraction_of_master_height": 0.317747,
+    "fraction_of_scene": 0.0
+  },
+  "floor_line": 0.948598,
+  "focal_window_box": [
+    0.504785,
+    0.4081,
+    0.578947,
+    0.699377
+  ],
+  "base": {
+    "box": [
+      0.0,
+      0.0,
+      1.0,
+      1.0
+    ],
+    "file": "web/src/assets/cenas/inicio-faixas/a05-rua-fundo-1672w.webp",
+    "sha256": "0c5b8817d267a1d94090d449c419f3900b9bb4310b5f83a0bb032bab7d10c925",
+    "bytes": 96628,
+    "width": 1672,
+    "height": 642,
+    "scale": 1.0,
+    "source_width": 1672,
+    "format": "webp-lossless-rgba",
+    "measurements": {
+      "lit_colour_pixels": 0,
+      "warm_pixels": 0,
+      "sky_transparent_pixels": 396577,
+      "opaque_bbox": [
+        0,
+        0,
+        1671,
+        641
+      ],
+      "lit_colour_rule": "prep.py is_mel() or R>=0xE8,G>=0xA8,B<=0x70"
+    }
+  },
+  "light": {
+    "box": [
+      0.166268,
+      0.180685,
+      0.892344,
+      0.700935
+    ],
+    "window_boxes": [
+      [
+        0.607057,
+        0.182243,
+        0.652512,
+        0.313084
+      ],
+      [
+        0.504785,
+        0.4081,
+        0.578947,
+        0.699377
+      ],
+      [
+        0.166866,
+        0.451713,
+        0.221292,
+        0.621495
+      ],
+      [
+        0.369617,
+        0.457944,
+        0.407895,
+        0.580997
+      ],
+      [
+        0.869617,
+        0.523364,
+        0.891746,
+        0.5919
+      ]
+    ],
+    "pane_boxes": [
+      [
+        0.607057,
+        0.182243,
+        0.62799,
+        0.242991
+      ],
+      [
+        0.631579,
+        0.182243,
+        0.652512,
+        0.242991
+      ],
+      [
+        0.607057,
+        0.253894,
+        0.62799,
+        0.313084
+      ],
+      [
+        0.631579,
+        0.253894,
+        0.652512,
+        0.313084
+      ],
+      [
+        0.504785,
+        0.4081,
+        0.539474,
+        0.545171
+      ],
+      [
+        0.54366,
+        0.4081,
+        0.578947,
+        0.546729
+      ],
+      [
+        0.504785,
+        0.556075,
+        0.532297,
+        0.699377
+      ],
+      [
+        0.534091,
+        0.556075,
+        0.539474,
+        0.604361
+      ],
+      [
+        0.569378,
+        0.557632,
+        0.578947,
+        0.699377
+      ],
+      [
+        0.54366,
+        0.560748,
+        0.549043,
+        0.579439
+      ],
+      [
+        0.166866,
+        0.451713,
+        0.191986,
+        0.531153
+      ],
+      [
+        0.196172,
+        0.451713,
+        0.221292,
+        0.531153
+      ],
+      [
+        0.166866,
+        0.543614,
+        0.191986,
+        0.621495
+      ],
+      [
+        0.196172,
+        0.543614,
+        0.221292,
+        0.621495
+      ],
+      [
+        0.369617,
+        0.457944,
+        0.386962,
+        0.514019
+      ],
+      [
+        0.39055,
+        0.457944,
+        0.407895,
+        0.514019
+      ],
+      [
+        0.369617,
+        0.523364,
+        0.386962,
+        0.580997
+      ],
+      [
+        0.39055,
+        0.523364,
+        0.407895,
+        0.580997
+      ],
+      [
+        0.869617,
+        0.523364,
+        0.879785,
+        0.556075
+      ],
+      [
+        0.881579,
+        0.523364,
+        0.891746,
+        0.556075
+      ],
+      [
+        0.881579,
+        0.55919,
+        0.891746,
+        0.5919
+      ],
+      [
+        0.869617,
+        0.560748,
+        0.879785,
+        0.5919
+      ]
+    ],
+    "window_boxes_px_1672": [
+      [
+        1015,
+        117,
+        1090,
+        200
+      ],
+      [
+        844,
+        262,
+        967,
+        448
+      ],
+      [
+        279,
+        290,
+        369,
+        398
+      ],
+      [
+        618,
+        294,
+        681,
+        372
+      ],
+      [
+        1454,
+        336,
+        1490,
+        379
+      ]
+    ],
+    "alpha_margin_px": 1,
+    "tiers": [
+      {
+        "file": "web/public/cenas/inicio-faixas/a05-rua-luz-1672w.png",
+        "sha256": "23453f10004506b0536b48ef5b8b608afa39d2060a341befe1629d58031535b1",
+        "bytes": 66386,
+        "width": 1672,
+        "height": 642,
+        "scale": 1.0,
+        "source_width": 1672,
+        "alpha_bbox": [
+          278,
+          116,
+          1491,
+          449
+        ],
+        "tail_px_cut": 0,
+        "over_cap": true
+      },
+      {
+        "file": "web/public/cenas/inicio-faixas/a05-rua-luz-1170w.png",
+        "sha256": "28f71b06712dbc4b99cc1af9af92e842f62628712cf18b6a319184b7bac477d4",
+        "bytes": 43104,
+        "width": 1170,
+        "height": 449,
+        "scale": 0.699761,
+        "source_width": 1672,
+        "alpha_bbox": [
+          194,
+          81,
+          1043,
+          315
+        ],
+        "tail_px_cut": 1181,
+        "over_cap": true
+      },
+      {
+        "file": "web/public/cenas/inicio-faixas/a05-rua-luz-780w.png",
+        "sha256": "115ecb1d7862a799e05707ce322acc7d8173961396272955ba2a977828d72063",
+        "bytes": 22189,
+        "width": 780,
+        "height": 299,
+        "scale": 0.466507,
+        "source_width": 1672,
+        "alpha_bbox": [
+          129,
+          54,
+          695,
+          209
+        ],
+        "tail_px_cut": 808,
+        "over_cap": true
+      },
+      {
+        "file": "web/public/cenas/inicio-faixas/a05-rua-luz-390w.png",
+        "sha256": "d0a85edf1092406947000b8245289a47956cceceb5387a4bdcff4771dcab3e87",
+        "bytes": 7628,
+        "width": 390,
+        "height": 150,
+        "scale": 0.233254,
+        "source_width": 1672,
+        "alpha_bbox": [
+          64,
+          27,
+          347,
+          105
+        ],
+        "tail_px_cut": 404,
+        "over_cap": false
+      }
+    ],
+    "split": {
+      "core_px": 29396,
+      "mix_px": 4062,
+      "silhouette_px": 10248,
+      "left_px": 4279
+    },
+    "composite_vs_snapped_master": {
+      "inside_boxes_mean_abs_diff": [
+        0.0223,
+        0.0002,
+        0.0017
+      ],
+      "inside_boxes_max": 7,
+      "inside_boxes_max_at": [
+        944,
+        610
+      ],
+      "outside_boxes_differing_samples": 0,
+      "threshold_mean": 1.0
+    },
+    "lamp_layer_cap_bytes": 12000,
+    "cap_open": [
+      "a05-rua-luz-1672w.png",
+      "a05-rua-luz-1170w.png",
+      "a05-rua-luz-780w.png"
+    ]
+  },
+  "served_m11_comparison": {
+    "opaque_base_px": 97882,
+    "base_px_differing_from_m11_apagada": 292,
+    "differing_bbox_master_px": [
+      1453,
+      633,
+      1491,
+      679
+    ],
+    "layer_alpha_px_new": 1688,
+    "layer_alpha_px_served": 1670,
+    "layer_core_px_new": 1373,
+    "layer_core_px_served": 1462
+  }
+}
