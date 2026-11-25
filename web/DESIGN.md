@@ -209,7 +209,7 @@ A cor nunca é a única pista: erro, estado e seleção levam também ícone, te
 
 ## Typography
 
-Duas famílias, SIL OFL 1.1, auto-hospedadas pelo `@fontsource-variable` (registro em `web/PROVENANCE.md`): **Literata** nos títulos e **Outfit** no texto e na interface. Nenhum texto em caixa alta. Nada menor que 15 px.
+Duas famílias, SIL OFL 1.1, auto-hospedadas pelo `@fontsource-variable` (registro em `web/PROVENANCE.md`): **Literata** nos títulos (importada com o eixo de corte óptico, `literata/opsz.css`, mais o itálico `wght-italic.css`) e **Outfit** no texto e na interface. Nenhum texto em caixa alta. Nada menor que 15 px.
 
 Nove níveis. Cada nível tem dois pares de tamanho e entrelinha, um para 390 px de viewport e outro para 1440 px. A escala tem quatro âncoras: 320, 390, 1440 e 1920. Entre 390 e 1440 a medida cresce em linha reta, e a mesma reta continua para baixo até 320 e para cima até 1920; abaixo de 320 e acima de 1920 ela fica parada (o piso e o teto do `clamp` do tema gerado). Os valores de 320 e de 1920 não são escritos aqui: o gerador os tira da reta. Piso de leitura: nenhum nível fica menor que o `corpo` de 390 (17 px); o nível cuja reta cairia abaixo disso em 320 (hoje só o próprio `corpo`) para no par de 390. Assim, em 320 a exibição tem 41,6 px e o corpo 17/26, e em 1920 a exibição tem perto de 96 px e o corpo perto de 18,5 px. O tamanho e a entrelinha são em rem no tema (16 px = 1 rem com a fonte a 100%).
 
@@ -231,7 +231,7 @@ O espaçamento entre letras (tracking) dos títulos continua o do código até a
 
 Itálico: nenhum nas páginas públicas, em nenhum elemento; a área logada não entra nesta regra até o DS-2.
 
-Variantes de exibição (temporárias, até o FG-2b): `tokens.css` guarda três blocos de tokens para o `h1`. A é o padrão (Literata 600). B, escolhida por `?exibicao=b` e lida uma vez em `main.tsx` que põe `data-exibicao` na raiz, usa M PLUS Rounded 1c (`@fontsource/m-plus-rounded-1c`, latin 700 e 800) com peso 800 na exibição e 700 nos títulos. C, por `?exibicao=c`, é Literata 600 em 64/68 em 1440 e 40/44 em 390. Os tamanhos de A e de B são os da tabela; nada mais seleciona por `data-exibicao`, e o FG-2b fica com um bloco só e apaga os outros dois.
+Variantes de exibição: removidas. A Literata 600 é a única face de exibição; o `main.tsx` não lê mais `?exibicao=` e o pacote da M PLUS Rounded não é mais importado pelo CSS. Os blocos `html[data-exibicao="b"|"c"]` de `tokens.css` e `inicio-casa.css` são código morto, sem nada que ponha o atributo, e a dependência `@fontsource/m-plus-rounded-1c` segue no `package.json` até a equipe tirá-la.
 
 A face dos títulos é a variável `--fonte-exibicao` (declarada uma só vez, em `tokens.css`), e os pesos são `--peso-exibicao` e `--peso-titulo` (600 os dois). Uma troca de face muda esses três tokens e mais nada. A ênfase é por peso, nunca por inclinação.
 
@@ -513,3 +513,5 @@ Cada linha é uma regra que perdeu para o código na base (a003fe4, sem mudança
 - **Cena em AVIF e WebP.** A FINAL §4 diz `<picture>` com AVIF e WebP em 1× e 2×. As placas de cena das cinco páginas da casa já cumprem (AVIF e WebP gerados no build, URLs com hash). O código ainda faz só WebP em `CenaEstudio.tsx:30-34` e `Ilustracao.tsx:41-46`.
 - **Acordeão em Radix ou shadcn.** A FINAL §4. O código faz: botões nativos com `aria-expanded`, sem biblioteca, `Acordeao.tsx:16-40`.
 - **Registro de origem em `web/PROVENANCE.md`.** A FINAL §6 diz um arquivo só para as cenas. O código faz: um `PROVENANCE.md` por pasta de cena e de desenho (`web/public/cenas/*/PROVENANCE.md`, `web/public/ilustracoes/PROVENANCE.md`); o `web/PROVENANCE.md` cobre fontes, ícones, bibliotecas e movimento.
+
+Guia para quem contribui, com a divisão de trabalho e o caminho de PR: `docs/DIEGO.md`.

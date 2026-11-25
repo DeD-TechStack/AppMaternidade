@@ -1,6 +1,6 @@
 # Site do AppMaternidade
 
-Projeto do site em React 19, TypeScript e Vite, com Tailwind CSS 4 e React Router 7 em modo biblioteca. Por enquanto tem só a página inicial provisória e a página de rota inexistente.
+Projeto do site em React 19, TypeScript e Vite, com Tailwind CSS 4 e React Router 7 em modo biblioteca. As páginas públicas, a conta e as telas logadas estão no código; veja `docs/DIEGO.md` para o mapa e a divisão de trabalho.
 
 Requisitos: Node 24 e npm (conferido com Node v24.22.1 e npm 11.19.1).
 
@@ -53,4 +53,4 @@ O teste cria repositórios git temporários no diretório temporário do sistema
 
 ## Tokens de cor
 
-Os tokens em `src/styles/tokens.css` são provisórios; a MAT-34 vai substituí-los pelos do DESIGN.md.
+Os tokens ficam em `src/styles/tokens.css` e no tema gerado por `npm run tema` a partir de `DESIGN.md`. Componentes usam tokens, nunca cor crua.

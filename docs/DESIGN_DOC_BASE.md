@@ -3,7 +3,7 @@
 **Versão:** 0.4  
 **Status:** em revisão  
 **Data:** 3 de novembro de 2026  
-**Etapa:** definição de produto e escopo, antes de qualquer implementação  
+**Etapa:** definição de produto e escopo (o site já está implementado em `web/`; este texto mantém o escopo original)  
 **Histórico de versões:** no fim do documento.
 
 Esta base consolida o pedido original do projeto e a documentação da primeira etapa (APP-001, em `docs/AppMaternidade`). Serve para discutir o que o produto deve fazer, em que ordem e o que ainda precisa de decisão. O rumo e a stack do site estão decididos no [ADR-009](AppMaternidade/06_ADRs/ADR-009_Site_Completo_Primeiro.md). As propostas de público e de operação continuam em revisão e não substituem automaticamente os outros ADRs.
@@ -352,3 +352,7 @@ As fontes sustentam capacidades e limites técnicos específicos. O rumo e a sta
 ## Como manter este documento
 
 Toda mudança de escopo, decisão ou fase atualiza este documento no mesmo passo, com uma linha no histórico. As decisões entram também na tarefa correspondente (MAT-20 a MAT-26).
+
+## Nota de estado (25/11/2026)
+
+O escopo acima foi escrito antes da implementação. O estado atual do código, o sistema visual (Literata e Outfit, tokens, sem cor crua) e o que falta estão em `web/DESIGN.md` e em `docs/DIEGO.md`, que também traz a divisão de trabalho e o caminho de contribuição.
