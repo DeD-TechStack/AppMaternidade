@@ -3,6 +3,7 @@ import { useLocation } from 'react-router'
 import type { PaginaDeTexto } from '../../conteudo/publicas-texto.ts'
 import { Botao } from '../base/Botao.tsx'
 import { Pilha, QuadroLayout, Secao } from '../base/layout/index.ts'
+import { useCabecalhoNoite } from '../casca/Cabecalho.tsx'
 import { BlocoDeEmail } from './BlocoDeEmail.tsx'
 import { IndiceDaPagina } from './IndiceDaPagina.tsx'
 import { PlacaDaRua } from './PlacaDaRua.tsx'
@@ -55,26 +56,30 @@ function tituloDoFragmento(hash: string, secoes: PaginaDeTexto['secoes']): HTMLE
 }
 
 /**
- * Página pública de leitura longa (T2, a folha assinada em `.oc/ref/t2.md`). Duas partes, igual nas seis páginas:
- * 1. a abertura: uma faixa de cacau logo abaixo do cabeçalho, com o nome da página (`h1`, o maior texto da página,
- *    em papel), a frase de abertura (`subtitulo`, em prumo, no degrau `abertura`) e uma pílula de mel (ou, em
- *    Contato, o bloco de e-mail no lugar do botão). A placa da rua (M11) fica na parte direita da mesma faixa, rente
- *    à borda direita e ao pé dela; abaixo de 60 rem ela desce para baixo do texto, rente à borda direita;
+ * Página pública de leitura longa (F8-1: a placa de rua, em noite). Duas partes, igual nas seis páginas:
+ * 1. a abertura: uma faixa de cacau, da altura do próprio texto, que é um bloco só com o cabeçalho (a página liga
+ *    `useCabecalhoNoite()`): o nome da página (`h1`, o maior texto, em papel, no degrau `titulo-1`) e a frase de
+ *    abertura (`subtitulo`, no degrau `abertura`); só Exclusão ("Ir para a Conta") e Contato (o bloco de e-mail) trazem
+ *    uma ação. A placa da rua (M11) é a faixa de luz na parte direita (rente à borda direita e ao pé, com a altura da
+ *    faixa); abaixo de 60 rem ela é uma linha própria no pé da faixa, rente à borda direita;
  * 2. o documento, sobre papel: uma coluna de leitura de 640 px na borda esquerda do quadro (a mesma do `h1`), com as
- *    seções separadas só por espaço e títulos, e o índice "Nesta página" à direita da coluna quando o quadro tem
- *    lugar para 640 + vão + 320 (consulta de contêiner em `publicasTexto.css`); abaixo disso o índice vem antes do
- *    documento, em fluxo.
+ *    seções separadas só por espaço e títulos, e o índice "Nesta página" (três seções ou mais) à direita da coluna
+ *    quando o quadro tem lugar para 640 + vão + 320 (consulta de contêiner em `publicasTexto.css`), gruda na linha de
+ *    âncora e marca a seção atual; abaixo disso o índice vem antes do documento, em fluxo. Com menos de três seções
+ *    (Contato) não há índice e as duas seções ficam lado a lado, em telas largas.
  * Os campos `ilustracao` e `apoio` ficam no conteúdo, mas esta página não os mostra.
  * Quem chega por um endereço com `#secao-...` (como o link das Regras, no Contato) cai no título da seção,
  * com o foco nele.
  *
  * O `h1` leva só o nome da página (o texto exato que as rotas conferem), por isso não usa o `Titulo`
  * animado, cujo texto para leitor de tela repete as linhas; a frase de abertura é um parágrafo logo depois dele.
- * Nada se move: o primeiro desenho já é o final.
+ * Nada se move na abertura: o primeiro desenho já é o final. O único movimento da página é o marcador do índice.
  */
 export function PaginaDeLeitura({ pagina }: { pagina: PaginaDeTexto }) {
+  useCabecalhoNoite()
   const { hash, key } = useLocation()
   const { nome, subtitulo, acao, blocoDeEmail, apresentacao, secoes } = pagina
+  const temIndice = secoes.length >= 3
 
   useEffect(() => {
     const alvo = tituloDoFragmento(hash, secoes)
@@ -88,9 +93,9 @@ export function PaginaDeLeitura({ pagina }: { pagina: PaginaDeTexto }) {
       <Secao as="div" className="pt-abertura" data-faixa-fundo="cacau">
         <div className="pt-abertura-grade">
           <QuadroLayout largura="leitura" className="pt-abertura-quadro">
-            <Pilha vao="grupo" dataH="coluna" className="pt-cabeca">
-              <Pilha vao="pilha">
-                <h1 className="cm-h1 cm-exibicao">{ligarPalavrasCurtas(nome)}</h1>
+            <Pilha vao="pilha" dataH="coluna" className="pt-cabeca">
+              <Pilha vao="junto">
+                <h1 className="cm-h1">{ligarPalavrasCurtas(nome)}</h1>
                 <p className="cm-lide">{subtitulo}</p>
               </Pilha>
               {blocoDeEmail ? <BlocoDeEmail /> : null}
@@ -108,7 +113,7 @@ export function PaginaDeLeitura({ pagina }: { pagina: PaginaDeTexto }) {
       </Secao>
       <Secao as="div" className="pt-secao-leitura">
         <QuadroLayout className="pt-pagina">
-          <div className="pt-pagina-grade">
+          <div className={temIndice ? 'pt-pagina-grade' : 'pt-pagina-grade pt-sem-indice'}>
             <IndiceDaPagina secoes={secoes.map(({ secao }) => secao)} />
             <Pilha vao="midia" className="pt-leitura max-w-leitura">
               {apresentacao ? <p className="cm-lide">{apresentacao}</p> : null}

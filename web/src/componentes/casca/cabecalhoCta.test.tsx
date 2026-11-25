@@ -113,11 +113,27 @@ describe('DS1-I-09 CabecalhoCTA: o rótulo e a marcação', () => {
     })
   }
 
+  // F8-1 (troca a S-22): /sobre e as outras páginas de leitura são de noite agora (`PaginaDeLeitura` liga
+  // `useCabecalhoNoite()`), então o caso do cabeçalho de dia passa para uma página de dia.
   it('DS1-I-09 a pílula é a única ação cheia do cabeçalho de dia e o cabeçalho não tem botão de mel', async () => {
-    renderizarRota('/sobre', { sessao: null })
+    renderizarRota('/cuidado-compartilhado', { sessao: null })
     await aguardarCarga()
+    expect(cabecalho().getAttribute('data-tom')).toBe('dia')
     expect(cabecalho().querySelectorAll('.cm-botao-primario')).toHaveLength(1)
     expect(cabecalho().querySelector('.cm-botao-mel, [data-botao-mel]')).toBeNull()
+  })
+
+  it('F8-1 nas seis páginas de leitura o cabeçalho é de noite: a pílula é só contorno e o cabeçalho não tem botão de mel', async () => {
+    for (const caminho of ['/regras-da-comunidade', '/privacidade', '/termos', '/exclusao-de-conta', '/contato', '/sobre']) {
+      const { unmount } = renderizarRota(caminho, { sessao: null })
+      await aguardarCarga()
+      expect(cabecalho().getAttribute('data-tom'), caminho).toBe('noite')
+      expect(cabecalho().querySelectorAll('.cm-botao-primario'), caminho).toHaveLength(0)
+      expect(pilulas(), caminho).toHaveLength(1)
+      expect(pilulas()[0].classList.contains('cm-botao-contorno'), caminho).toBe(true)
+      expect(cabecalho().querySelector('.cm-botao-mel, [data-botao-mel]'), caminho).toBeNull()
+      unmount()
+    }
   })
 
   it('DS1-I-09 em toda rota pública a pílula está lá (a casca é uma só)', async () => {

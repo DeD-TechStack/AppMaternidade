@@ -1,9 +1,10 @@
-/* Páginas públicas de leitura longa (Regras, Privacidade, Termos, Exclusão, Contato, Sobre), no modelo T2 assinado
-   (`.oc/ref/t2.md`). Só valores dos tokens: cores, raios e as duas famílias vêm de tema.css e tokens.css; espaço e
-   tipo, das variáveis do tema gerado (`--espaco-*`, `--texto-*`). Classes `pt-*`.
-   Ordem da página: a abertura (uma faixa de cacau com o título, a frase de abertura, a pílula de mel e, na parte
-   direita, a placa da rua), depois o documento sobre papel (uma coluna de 640 px, com o índice à direita quando há
-   lugar). Nada se move: nenhuma transição além da resposta de hover e foco, que é imediata.
+/* Páginas públicas de leitura longa (Regras, Privacidade, Termos, Exclusão, Contato, Sobre): a placa de rua em noite
+   (F8-1). Só valores dos tokens: cores, raios e as duas famílias vêm de tema.css e tokens.css; espaço e tipo, das
+   variáveis do tema gerado (`--espaco-*`, `--texto-*`). Classes `pt-*`.
+   Ordem da página: a abertura (uma faixa de cacau da altura do próprio texto, um bloco só com o cabeçalho: o título, a
+   frase de abertura e, na parte direita, a faixa de luz da rua), depois o documento sobre papel (uma coluna de 640 px,
+   com o índice à direita quando há lugar: ele gruda na linha de âncora e marca a seção atual). Na abertura nada se move
+   nem gruda; o único movimento é o do marcador do índice (a transformação do traço de 2 px, no tempo de `--mov-fechar`).
    O espaço vem das primitivas de layout (H-3a): a página é uma pilha de `Secao`; a abertura e a leitura leem o limite
    de leitura do quadro (borda esquerda única: o `h1`, a frase, o botão, os títulos e os parágrafos). As disposições
    mudam por consulta de contêiner (a faixa da abertura e o quadro da leitura), não pela janela. */
@@ -23,10 +24,8 @@
   /* ----- Abertura: uma faixa de cacau, de ponta a ponta, logo abaixo do cabeçalho ----- */
 
   /* A faixa é o contêiner da própria disposição. O papel das letras e o anel de foco vêm de `data-faixa-fundo`
-     (secoes.css). `--pt-placa-largura`: a placa é mostrada na largura nativa de 340 px (densidade 1,59, nunca
-     ampliada). `--pt-borda`: onde o texto começa (a borda esquerda do quadro). */
+     (secoes.css). `--pt-borda`: onde o texto começa (a borda esquerda do quadro). */
   .pt-abertura {
-    --pt-placa-largura: 340px;
     --pt-borda: max(var(--quadro-calha), (100% - var(--quadro-largura)) / 2);
 
     container: pt-abertura / inline-size;
@@ -40,32 +39,27 @@
     padding-block: 0;
   }
 
-  /* Estreito: o texto em cima e a placa embaixo, rente à borda direita e ao pé da faixa. */
+  /* A faixa tem a altura do próprio texto (nenhuma altura mínima): o espaço do pé e do topo é o do grupo. Estreito: o
+     texto em cima e a rua numa linha só no pé da faixa, rente à borda direita (o recuo do pé devolve o espaço para a rua
+     encostar na borda de baixo). */
   .pt-abertura-grade {
     position: relative;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    row-gap: var(--espaco-secao);
+    row-gap: var(--espaco-grupo);
     box-sizing: border-box;
-    padding-block: var(--espaco-bloco) 0;
+    padding-block: var(--espaco-grupo);
   }
 
-  /* O pé da faixa continua o chão da placa (a faixa escura do pé do recorte) até a borda esquerda: sem linha de
-     areia nem de piso, só a mesma noite. A altura é a do chão da placa (32 de 542 px de largura). A cor é a do chão
-     do recorte (cacau com metade de preto). */
-  .pt-abertura-grade::before {
-    position: absolute;
-    inset-inline: 0;
-    inset-block-end: 0;
-    block-size: calc(min(var(--pt-placa-largura), 100cqi) * 0.059);
-    background-color: color-mix(in srgb, var(--color-cacau) 50%, black);
-    content: '';
-  }
-
+  /* A rua: a imagem preenche a caixa (`cover`, ancorada no topo, onde estão a janela acesa e o poste). Estreito: uma
+     linha de `secao-ampla` de altura, até 340 px de largura (o teto é a largura em que o arquivo de 542 px ainda tem
+     densidade 1,59: nunca ampliada), rente à borda direita. */
   .pt-placa {
     position: relative;
     justify-self: end;
-    inline-size: min(var(--pt-placa-largura), 100%);
+    block-size: var(--espaco-secao-ampla);
+    inline-size: min(340px, 100%);
+    margin-block-end: calc(var(--espaco-grupo) * -1);
   }
 
   /* A `<picture>` (AVIF + WebP) não tem caixa: a `<img>` segue como filha da placa. */
@@ -76,28 +70,26 @@
   .pt-placa img {
     display: block;
     inline-size: 100%;
-    block-size: auto;
+    block-size: 100%;
     max-inline-size: none;
+    object-fit: cover;
+    object-position: top;
   }
 
-  /* Largo: a faixa tem 400 px de altura no mínimo (cresce com o texto), o texto fica centrado na vertical e a placa
-     sai do fluxo, rente à borda direita e ao pé. A coluna do texto nunca passa por baixo da placa. */
+  /* Largo: a rua sai do fluxo e fica na parte direita, rente à borda direita e aos dois lados da faixa (a altura é a da
+     faixa). A largura nunca passa por baixo da coluna do texto: o que sobra à direita de borda + leitura + vão. */
   @container pt-abertura (min-width: 60rem) {
     .pt-abertura-grade {
-      align-content: center;
-      min-block-size: 400px;
-      padding-block: var(--espaco-grupo);
       row-gap: 0;
-    }
-
-    .pt-abertura .pt-abertura-grade > .pt-abertura-quadro[data-h~='quadro'] {
-      max-inline-size: min(var(--leitura), 100% - var(--pt-borda) - var(--pt-placa-largura) - var(--espaco-grupo));
     }
 
     .pt-placa {
       position: absolute;
       inset-inline-end: 0;
       inset-block-end: 0;
+      block-size: 100%;
+      inline-size: min(340px, 100cqi - var(--pt-borda) - var(--leitura) - var(--espaco-grupo));
+      margin-block-end: 0;
     }
   }
 
@@ -161,9 +153,32 @@
       grid-row: 1;
     }
 
+    /* O índice acompanha a leitura: gruda na linha de âncora (`--ancora-leitura`, a mesma que o `scroll-padding-top`
+       do html lê, para o título cair onde o índice começa) e, se a lista não cabe na janela, rola por dentro. Ele
+       gruda dentro da grade, então no fim da página para antes do rodapé. */
     .pt-pagina-grade > .pt-indice {
       grid-column: 2;
       grid-row: 1;
+      position: sticky;
+      inset-block-start: var(--ancora-leitura);
+      max-block-size: calc(100svh - var(--ancora-leitura) - var(--espaco-grupo));
+      overflow-y: auto;
+    }
+
+    /* Sem índice (menos de três seções: Contato): as duas seções lado a lado, 7 para 5, e a frase de apresentação,
+       quando há, ocupa a linha de cima. A coluna de leitura deixa de ser caixa: as seções viram células da grade. */
+    .pt-pagina-grade.pt-sem-indice {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      column-gap: var(--espaco-secao);
+      row-gap: var(--espaco-midia);
+    }
+
+    .pt-pagina-grade.pt-sem-indice > .pt-leitura {
+      display: contents;
+    }
+
+    .pt-pagina-grade.pt-sem-indice > .pt-leitura > .cm-lide {
+      grid-column: 1 / -1;
     }
   }
 
@@ -176,9 +191,11 @@
     font-weight: 500;
   }
 
+  /* A lista leva o trilho: um fio de 1 px na cor do fio suave, no começo da linha. Os links recuam o vão da pilha. */
   .pt-indice-lista {
     margin: 4px 0 0;
     padding: 0;
+    border-inline-start: 1px solid var(--cor-fio-suave);
     list-style: none;
   }
 
@@ -208,11 +225,13 @@
 
   /* Links de cacau, alvo de 44 px no mínimo, sublinhados só no hover e no foco (a resposta é imediata). */
   .pt-indice-link {
+    position: relative;
     display: flex;
     align-items: center;
     box-sizing: border-box;
     min-block-size: var(--alvo-toque);
     padding-block: 6px;
+    padding-inline-start: var(--espaco-pilha);
     color: var(--color-cacau);
     font-family: var(--fonte-texto);
     font-size: var(--texto-corpo-tamanho);
@@ -225,6 +244,24 @@
   .pt-indice-link:hover,
   .pt-indice-link:focus-visible {
     text-decoration-line: underline;
+  }
+
+  /* O marcador da seção atual: um traço de cacau de 2 px, da altura do link, sobre o trilho. Fica sempre desenhado e só
+     a escala vertical muda (0 → 1), no tempo e na curva de fechar; com movimento reduzido a transição vale 0 (index.css)
+     e o traço aparece no lugar. */
+  .pt-indice-link::before {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: -1px;
+    inline-size: 2px;
+    background-color: var(--color-cacau);
+    content: '';
+    transform: scaleY(0);
+    transition: transform var(--mov-fechar) var(--mov-curva);
+  }
+
+  .pt-indice-link[aria-current='location']::before {
+    transform: scaleY(1);
   }
 
   /* Leitura: Outfit no corpo (18/28 em 1440) numa coluna de 640 px (uns 70 letras por linha). As seções se separam

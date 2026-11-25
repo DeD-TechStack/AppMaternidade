@@ -6,7 +6,6 @@
 // em literal: tiram tudo daqui. A frase de dados fictícios é um parágrafo comum da seção a que se refere.
 
 import type { NomeIlustracao } from '../componentes/campo/Ilustracao.tsx'
-import { ROTULO_CRIAR_CONTA } from '../componentes/casca/textos.ts'
 
 /** O endereço de contato de demonstração: uma constante só, usada apenas na página Contato. */
 export const EMAIL_CONTATO = 'contato@appmaternidade.example'
@@ -41,7 +40,6 @@ function secao(titulo: string, id?: string): Secao {
 }
 
 const CAMINHO_CONTA = '/app/conta'
-const CAMINHO_CRIAR_CONTA = '/criar-conta'
 const CAMINHO_CONTATO = '/contato'
 const CAMINHO_EXCLUSAO = '/exclusao-de-conta'
 const CAMINHO_REGRAS = '/regras-da-comunidade'
@@ -103,9 +101,6 @@ interface AcaoPrincipal {
   para: string
 }
 
-/** O botão de ação principal das páginas de texto que não são Exclusão nem Contato: "Criar conta". */
-const ACAO_CRIAR_CONTA: AcaoPrincipal = { botao: ROTULO_CRIAR_CONTA, para: CAMINHO_CRIAR_CONTA }
-
 /** Uma tabela: legenda, cabeçalhos das colunas e linhas (a primeira célula é o cabeçalho da linha). */
 export interface DadosDeTabela {
   legenda: string
@@ -154,7 +149,6 @@ const REGRAS: PaginaDeTexto = {
   subtitulo: 'Para quem conversa nela.',
   ilustracao: 'maos-celular',
   apoio: 'Regras claras para quem participa.',
-  acao: ACAO_CRIAR_CONTA,
   apresentacao:
     'A comunidade do AppMaternidade está aberta para quem tem conta. Aqui estão as regras que valem nela e o jeito como a moderação trabalha.',
   secoes: [
@@ -256,7 +250,6 @@ const PRIVACIDADE: PaginaDeTexto = {
   subtitulo: 'O que o site vai guardar.',
   ilustracao: 'mae-noite',
   apoio: 'Seus dados, explicados sem pressa.',
-  acao: ACAO_CRIAR_CONTA,
   secoes: [
     {
       secao: secao('Que dados o site vai guardar'),
@@ -332,7 +325,6 @@ const TERMOS: PaginaDeTexto = {
   subtitulo: 'As regras de uso do site.',
   ilustracao: 'pai-colo',
   apoio: 'Combinados simples para usar o site.',
-  acao: ACAO_CRIAR_CONTA,
   secoes: [
     {
       secao: secao('O que é o AppMaternidade'),
@@ -476,7 +468,6 @@ const SOBRE: PaginaDeTexto = {
   subtitulo: 'Quem faz e para quem.',
   ilustracao: 'tummy-time',
   apoio: 'Feito para o dia a dia do cuidado.',
-  acao: ACAO_CRIAR_CONTA,
   apresentacao:
     'O AppMaternidade junta num lugar só a rotina do bebê, o desenvolvimento, o cuidado dividido entre os adultos e uma comunidade separada da rotina privada. As quatro partes já estão no site.',
   secoes: [

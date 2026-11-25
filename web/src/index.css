@@ -18,8 +18,12 @@
     text-size-adjust: 100%;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* A linha de âncora: onde o título de uma seção para depois de um link, do Voltar ou de um `#...` na carga, e onde
+       o índice das páginas de leitura gruda (`publicasTexto.css`). Declarada aqui, uma vez. */
+    --ancora-leitura: 104px;
+
     /* Os links-âncora não deixam o título sob o cabeçalho fixo. */
-    scroll-padding-top: 104px;
+    scroll-padding-top: var(--ancora-leitura);
   }
 
   body {

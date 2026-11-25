@@ -19,15 +19,15 @@ const PAGINAS = [
   ['/sobre', 'Sobre', PAGINAS_DE_TEXTO.sobre],
 ] as const
 
-// O botão de ação principal da abertura de cada página (rótulo que já existe no site e destino). Contato usa o botão
-// do cartão de e-mail; Exclusão, "Ir para a Conta"; as outras quatro, "Criar conta".
-const BOTAO_DA_ABERTURA: Record<string, readonly [string, string]> = {
-  '/regras-da-comunidade': [ROTULO_CRIAR_CONTA, '/criar-conta'],
-  '/privacidade': [ROTULO_CRIAR_CONTA, '/criar-conta'],
-  '/termos': [ROTULO_CRIAR_CONTA, '/criar-conta'],
+// A ação da abertura (F8-1; troca a S-20, "quatro pílulas de Criar conta"): só Exclusão de conta ("Ir para a Conta") e
+// Contato (o botão do cartão de e-mail) a trazem. Nas outras quatro a abertura não tem botão: o convite é o do cabeçalho.
+const BOTAO_DA_ABERTURA: Record<string, readonly [string, string] | null> = {
+  '/regras-da-comunidade': null,
+  '/privacidade': null,
+  '/termos': null,
   '/exclusao-de-conta': ['Ir para a Conta', '/app/conta'],
   '/contato': ['Escrever para nós', `mailto:${EMAIL_CONTATO}`],
-  '/sobre': [ROTULO_CRIAR_CONTA, '/criar-conta'],
+  '/sobre': null,
 }
 
 // O jsdom não implementa a rolagem: o código a chama só se ela existir, e aqui ela é observada.
@@ -66,22 +66,35 @@ describe('páginas públicas de leitura', () => {
         for (const titulo of titulos) expect(titulo.getAttribute('tabindex')).toBe('-1')
       })
 
-      it('tem o índice "Nesta página" com um link sublinhado para cada seção; ativar o link leva o foco ao título', () => {
-        const { container } = renderizarRota(caminho)
-        const indice = within(container.querySelector('main')!).getByRole('navigation', { name: ROTULO_INDICE })
-        const links = within(indice).getAllByRole('link')
-        expect(links.map((link) => link.textContent)).toEqual(dados.secoes.map(({ secao }) => secao.titulo))
+      if (dados.secoes.length >= 3) {
+        it('tem o índice "Nesta página" com um link para cada seção; ativar o link leva o foco ao título e o faz o atual', () => {
+          const { container } = renderizarRota(caminho)
+          const indice = within(container.querySelector('main')!).getByRole('navigation', { name: ROTULO_INDICE })
+          const links = within(indice).getAllByRole('link')
+          expect(links.map((link) => link.textContent)).toEqual(dados.secoes.map(({ secao }) => secao.titulo))
 
-        for (const [posicao, link] of links.entries()) {
-          const { id, titulo } = dados.secoes[posicao].secao
-          expect(link.getAttribute('href')).toBe(`#${id}`)
-          expect(link.classList.contains('alvo-toque')).toBe(true)
-          fireEvent.click(link)
-          const alvo = screen.getByRole('heading', { level: 2, name: titulo })
-          expect(document.activeElement).toBe(alvo)
-        }
-        expect(rolar).toHaveBeenCalledTimes(links.length)
-      })
+          for (const [posicao, link] of links.entries()) {
+            const { id, titulo } = dados.secoes[posicao].secao
+            expect(link.getAttribute('href')).toBe(`#${id}`)
+            expect(link.classList.contains('alvo-toque')).toBe(true)
+            fireEvent.click(link)
+            const alvo = screen.getByRole('heading', { level: 2, name: titulo })
+            expect(document.activeElement).toBe(alvo)
+            // Depois de apertar o link n, só ele é o atual (a página marca a seção na hora, sem esperar a rolagem).
+            expect(links.filter((outro) => outro.getAttribute('aria-current') === 'location')).toEqual([link])
+          }
+          expect(rolar).toHaveBeenCalledTimes(links.length)
+        })
+      } else {
+        it('com menos de três seções não tem o índice "Nesta página" (nem o <details> dele)', () => {
+          const { container } = renderizarRota(caminho)
+          const principal = container.querySelector('main')!
+          expect(principal.querySelector('nav.pt-indice')).toBeNull()
+          expect(within(principal).queryByRole('navigation', { name: ROTULO_INDICE })).toBeNull()
+          expect(principal.querySelector('.pt-indice-link, .pt-indice-detalhes')).toBeNull()
+          expect(principal.querySelector('.pt-pagina-grade')!.classList.contains('pt-sem-indice')).toBe(true)
+        })
+      }
 
       it('não mostra mais o desenho de traço, o painel de mel nem a frase de apoio (os campos ficam no conteúdo, sem aparecer)', () => {
         const { container } = renderizarRota(caminho)
@@ -114,32 +127,46 @@ describe('páginas públicas de leitura', () => {
         expect(titulo.compareDocumentPosition(imagem) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
       })
 
-      it('tem o índice entre a abertura e o documento, na grade da leitura, antes da coluna de leitura', () => {
-        const { container } = renderizarRota(caminho)
-        const principal = container.querySelector('main')!
-        const indice = principal.querySelector('.pt-pagina-grade > nav.pt-indice')!
-        const secaoDaLeitura = indice.closest('main > [data-h~="secao"]')!
-        expect(secaoDaLeitura.previousElementSibling!.classList.contains('pt-abertura')).toBe(true)
-        expect(indice.previousElementSibling).toBeNull()
-        expect(indice.nextElementSibling!.classList.contains('pt-leitura')).toBe(true)
-        expect(principal.querySelector('.pt-leitura nav')).toBeNull()
-        expect(indice.closest('aside')).toBeNull()
-      })
+      if (dados.secoes.length >= 3) {
+        it('tem o índice entre a abertura e o documento, na grade da leitura, antes da coluna de leitura', () => {
+          const { container } = renderizarRota(caminho)
+          const principal = container.querySelector('main')!
+          const indice = principal.querySelector('.pt-pagina-grade > nav.pt-indice')!
+          const secaoDaLeitura = indice.closest('main > [data-h~="secao"]')!
+          expect(secaoDaLeitura.previousElementSibling!.classList.contains('pt-abertura')).toBe(true)
+          expect(indice.previousElementSibling).toBeNull()
+          expect(indice.nextElementSibling!.classList.contains('pt-leitura')).toBe(true)
+          expect(principal.querySelector('.pt-leitura nav')).toBeNull()
+          expect(indice.closest('aside')).toBeNull()
+        })
+      }
 
-      it(`tem na abertura, depois do título e da frase, a pílula de mel "${BOTAO_DA_ABERTURA[caminho][0]}" (${BOTAO_DA_ABERTURA[caminho][1]})`, () => {
-        const { container } = renderizarRota(caminho)
-        const abertura = container.querySelector('main .pt-abertura')!
-        const titulo = abertura.querySelector('h1')!
-        const botoes = [...abertura.querySelectorAll<HTMLAnchorElement>('.pt-cabeca a.cm-botao')]
-        expect(botoes).toHaveLength(1)
-        const [botao] = botoes
-        const [rotulo, destino] = BOTAO_DA_ABERTURA[caminho]
-        expect(titulo.nextElementSibling!.textContent).toBe(dados.subtitulo)
-        expect(titulo.compareDocumentPosition(botao) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-        expect(botao.className).toBe('cm-botao cm-botao-mel alvo-toque')
-        expect(botao.textContent).toBe(rotulo)
-        expect(botao.getAttribute('href')).toBe(destino)
-      })
+      const botaoDaPagina = BOTAO_DA_ABERTURA[caminho]
+      it(
+        botaoDaPagina
+          ? `tem na abertura, depois do título e da frase, a pílula de mel "${botaoDaPagina[0]}" (${botaoDaPagina[1]})`
+          : 'não tem botão na abertura (nem a pílula de "Criar conta"): só o título, a frase e a rua',
+        () => {
+          const { container } = renderizarRota(caminho)
+          const abertura = container.querySelector('main .pt-abertura')!
+          const titulo = abertura.querySelector('h1')!
+          const botoes = [...abertura.querySelectorAll<HTMLAnchorElement>('.pt-cabeca a.cm-botao')]
+          expect(titulo.nextElementSibling!.textContent).toBe(dados.subtitulo)
+          if (!botaoDaPagina) {
+            expect(botoes).toHaveLength(0)
+            expect(abertura.querySelector('.pt-acao, .pt-cabeca a')).toBeNull()
+            expect(abertura.textContent).not.toContain(ROTULO_CRIAR_CONTA)
+            return
+          }
+          expect(botoes).toHaveLength(1)
+          const [botao] = botoes
+          const [rotulo, destino] = botaoDaPagina
+          expect(titulo.compareDocumentPosition(botao) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+          expect(botao.className).toBe('cm-botao cm-botao-mel alvo-toque')
+          expect(botao.textContent).toBe(rotulo)
+          expect(botao.getAttribute('href')).toBe(destino)
+        },
+      )
 
       it('não tem caixa de aviso (pt-aviso): o único aviso do site é o do casco', () => {
         const { container } = renderizarRota(caminho)
@@ -334,14 +361,34 @@ describe('fragmento do endereço (#...)', () => {
   })
 })
 
-// Nada fica fixo ao rolar: o painel lateral com o índice foi embora (um painel que só gruda deixava meia tela em
-// branco nos recortes da página inteira). O jsdom não mede layout, então a regra é lida do CSS.
-describe('nada fixo ao rolar (CSS)', () => {
+// F8-1 (troca a S-19, "nada grudado nem em movimento"): só o índice acompanha a leitura. A abertura não gruda nem se move, nada
+// é `fixed`, e a página não tem ouvinte de rolagem (o link atual vem de um IntersectionObserver). O jsdom não mede layout,
+// então a regra é lida do CSS e do código.
+describe('só o índice gruda ao rolar (CSS e código)', () => {
   const css = lerCss().replace(/\/\*[\s\S]*?\*\//g, '')
+  const lerFonte = (arquivo: string) => readFileSync(join(process.cwd(), 'src/componentes/publicas-texto', arquivo), 'utf8')
 
-  it('o CSS das páginas de leitura não tem position: sticky nem rolagem interna de painel', () => {
-    expect(css).not.toMatch(/position:\s*(sticky|fixed)/)
-    expect(css).not.toMatch(/overflow-y:\s*auto/)
+  it('o CSS das páginas de leitura tem um único position: sticky, o do índice, e nenhum position: fixed', () => {
+    expect(css.match(/position:\s*sticky/g)).toHaveLength(1)
+    expect(css).not.toMatch(/position:\s*fixed/)
+    const bloco = /@container pt-pagina \(min-width: 66rem\)\s*\{([\s\S]*?\n {2}\})/.exec(css)![1]
+    expect(/\.pt-indice\s*\{([^}]*)\}/.exec(bloco)![1]).toMatch(/position:\s*sticky/)
+    expect(css.match(/overflow-y:\s*auto/g)).toHaveLength(1)
+  })
+
+  it('a abertura não tem animação, transição, sticky nem fixed: nada nela se move nem gruda', () => {
+    const regras = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, seletor, corpo]) => ({ seletor: seletor.trim(), corpo }))
+    for (const { seletor, corpo } of regras.filter(({ seletor }) => /^\.pt-(abertura|placa|email|cabeca)/.test(seletor))) {
+      expect(corpo, seletor).not.toMatch(/animation|transition|position:\s*(sticky|fixed)|transform/)
+    }
+  })
+
+  it('nem o índice nem a página ouvem a rolagem (nada de addEventListener("scroll") nem onScroll)', () => {
+    for (const arquivo of ['IndiceDaPagina.tsx', 'PaginaDeLeitura.tsx']) {
+      const fonte = lerFonte(arquivo)
+      expect(fonte, arquivo).not.toMatch(/addEventListener\(\s*['"]scroll|onScroll|requestAnimationFrame/)
+    }
+    expect(lerFonte('IndiceDaPagina.tsx')).toMatch(/new IntersectionObserver/)
   })
 })
 
@@ -376,12 +423,12 @@ describe('aviso de dados fictícios', () => {
 })
 
 describe('Contato: bloco de e-mail', () => {
-  it('não repete o título "Fale conosco" como seção: o índice lista só as outras seções', () => {
+  it('não repete o título "Fale conosco" como seção: a página tem só as duas outras seções e, com duas, nenhum índice', () => {
     const { container } = renderizarRota('/contato')
     const principal = container.querySelector('main')!
     expect(within(principal).queryByRole('heading', { level: 2, name: 'Fale conosco' })).toBeNull()
-    const indice = within(principal).getByRole('navigation', { name: ROTULO_INDICE })
-    expect(within(indice).getAllByRole('link').map((link) => link.textContent)).toEqual([
+    expect(within(principal).queryByRole('navigation', { name: ROTULO_INDICE })).toBeNull()
+    expect(within(principal).getAllByRole('heading', { level: 2 }).map((titulo) => titulo.textContent)).toEqual([
       'Em uma urgência',
       'Para que serve este canal',
     ])
@@ -589,8 +636,21 @@ describe('Privacidade: lista de dados', () => {
   })
 })
 
-describe('índice igual nas seis páginas', () => {
-  it('em tela estreita é um <details> fechado nas seis páginas (a Sobre não é exceção); em tela larga, uma lista só', () => {
+describe('índice igual nas cinco páginas com três seções ou mais (o Contato, com duas, não tem)', () => {
+  const COM_INDICE = PAGINAS.filter(([, , dados]) => dados.secoes.length >= 3)
+
+  it('as páginas com índice são as cinco de três seções ou mais; o Contato é a única sem', () => {
+    expect(COM_INDICE.map(([caminho]) => caminho)).toEqual([
+      '/regras-da-comunidade',
+      '/privacidade',
+      '/termos',
+      '/exclusao-de-conta',
+      '/sobre',
+    ])
+    expect(PAGINAS_DE_TEXTO.contato.secoes).toHaveLength(2)
+  })
+
+  it('em tela estreita é um <details> fechado nas cinco páginas (a Sobre não é exceção); em tela larga, uma lista só', () => {
     vi.stubGlobal('matchMedia', (consulta: string) => ({
       matches: consulta.includes('max-width'),
       media: consulta,
@@ -598,7 +658,7 @@ describe('índice igual nas seis páginas', () => {
       removeEventListener: () => {},
     }))
     try {
-      for (const [caminho, , dados] of PAGINAS) {
+      for (const [caminho, , dados] of COM_INDICE) {
         const { container, unmount } = renderizarRota(caminho)
         const principal = container.querySelector('main')!
         expect(principal.hasAttribute('data-desenho'), caminho).toBe(false)
@@ -613,7 +673,7 @@ describe('índice igual nas seis páginas', () => {
     } finally {
       vi.unstubAllGlobals()
     }
-    for (const [caminho, , dados] of PAGINAS) {
+    for (const [caminho, , dados] of COM_INDICE) {
       const { container, unmount } = renderizarRota(caminho)
       const indice = container.querySelector('main .pt-pagina-grade > nav.pt-indice')!
       expect(indice.querySelector('details'), caminho).toBeNull()
@@ -621,6 +681,112 @@ describe('índice igual nas seis páginas', () => {
       expect(indice.querySelectorAll('li'), caminho).toHaveLength(dados.secoes.length)
       unmount()
     }
+  })
+})
+
+// F8-1: o link da seção atual. O jsdom não tem IntersectionObserver nem rolagem: um observador falso guarda o que foi
+// observado e deixa o teste entregar as entradas, como o navegador entregaria ao cruzar a linha de âncora.
+describe('índice: a seção atual (aria-current="location")', () => {
+  interface Entrada {
+    target: Element
+    isIntersecting: boolean
+    boundingClientRect: { top: number }
+    rootBounds: { top: number } | null
+  }
+  let observadores: FalsoObservador[] = []
+
+  class FalsoObservador {
+    observados: Element[] = []
+    desconectado = false
+    readonly aviso: (entradas: Entrada[]) => void
+    readonly opcoes: IntersectionObserverInit
+    constructor(aviso: (entradas: Entrada[]) => void, opcoes: IntersectionObserverInit) {
+      this.aviso = aviso
+      this.opcoes = opcoes
+      observadores.push(this)
+    }
+    observe(alvo: Element) {
+      this.observados.push(alvo)
+    }
+    unobserve() {}
+    disconnect() {
+      this.desconectado = true
+    }
+  }
+
+  beforeEach(() => {
+    observadores = []
+    vi.stubGlobal('IntersectionObserver', FalsoObservador)
+  })
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  /** Os observadores do índice: os que observam os `h2` (a página pode ter outros, de outras peças). */
+  const doIndice = () =>
+    observadores.filter((observador) => !observador.desconectado && observador.observados.some((alvo) => alvo.tagName === 'H2'))
+
+  /** Entrega ao observador uma entrada por título: `passados` títulos já chegaram à linha de âncora (topo ≤ 0), os outros estão abaixo. */
+  const entregar = (observador: FalsoObservador, passados: number, visiveis: readonly number[] = []) => {
+    act(() => {
+      observador.aviso(
+        observador.observados.map((alvo, i) => ({
+          target: alvo,
+          isIntersecting: visiveis.includes(i) || (i >= passados && i < passados + 2),
+          boundingClientRect: { top: i < passados ? -40 * (passados - i) : 300 + 100 * (i - passados) },
+          rootBounds: { top: 0 },
+        })),
+      )
+    })
+  }
+  const atuais = (container: HTMLElement) =>
+    [...container.querySelectorAll('main .pt-indice-link[aria-current="location"]')].map((link) => link.textContent)
+
+  it('observa só os h2 da página e usa a raiz a partir da linha de âncora (sem ouvinte de rolagem)', () => {
+    const { container, unmount } = renderizarRota('/privacidade')
+    expect(doIndice()).toHaveLength(1)
+    const [observador] = doIndice()
+    expect(observador.observados.map((alvo) => alvo.id)).toEqual(PAGINAS_DE_TEXTO.privacidade.secoes.map(({ secao }) => secao.id))
+    expect(observador.observados.every((alvo) => alvo.tagName === 'H2' && container.contains(alvo))).toBe(true)
+    expect(observador.opcoes.rootMargin).toMatch(/^-\d+(\.\d+)?px 0px 0px 0px$/)
+    unmount()
+    expect(observador.desconectado).toBe(true)
+  })
+
+  it('em scroll 0 o primeiro link é o atual, e só ele', () => {
+    const { container } = renderizarRota('/privacidade')
+    expect(atuais(container)).toEqual([PAGINAS_DE_TEXTO.privacidade.secoes[0].secao.titulo])
+    entregar(doIndice()[0], 0)
+    expect(atuais(container)).toEqual([PAGINAS_DE_TEXTO.privacidade.secoes[0].secao.titulo])
+  })
+
+  it('rolando, o atual é o último título que já chegou à linha de âncora, e sempre um só', () => {
+    const { container } = renderizarRota('/privacidade')
+    const titulos = PAGINAS_DE_TEXTO.privacidade.secoes.map(({ secao }) => secao.titulo)
+    for (const passados of [1, 3, 6, 10, 4, 2]) {
+      entregar(doIndice()[0], passados)
+      expect(atuais(container), `${passados} títulos passados`).toEqual([titulos[passados - 1]])
+    }
+  })
+
+  it('depois de apertar o link n, n é o atual, mesmo quando o título n não alcança a linha (fim da página) e ainda está à vista', () => {
+    const { container } = renderizarRota('/privacidade')
+    const links = [...container.querySelectorAll<HTMLAnchorElement>('main .pt-indice-link')]
+    const ultimo = links.length - 1
+    fireEvent.click(links[ultimo])
+    expect(atuais(container)).toEqual([links[ultimo].textContent])
+    // O fim da página: o último título está à vista, mas só o penúltimo chegou à linha.
+    entregar(doIndice()[0], ultimo, [ultimo])
+    expect(atuais(container)).toEqual([links[ultimo].textContent])
+    // Quando o título n sai da tela, volta a valer o cálculo.
+    entregar(doIndice()[0], 2, [])
+    expect(atuais(container)).toEqual([links[1].textContent])
+  })
+
+  it('com menos de três seções (Contato) não há observador nem índice', () => {
+    renderizarRota('/contato')
+    expect(doIndice()).toHaveLength(0)
+    expect(document.querySelector('.pt-indice-link')).toBeNull()
   })
 })
 
@@ -638,9 +804,9 @@ describe('listas longas', () => {
   })
 })
 
-// O jsdom não mede layout: o modelo T2 (a faixa de cacau, a placa, a coluna de 640 e o índice à direita) é lido do
-// CSS; a medida de verdade, num Chrome, é a de `aberturaTexto.geometria.test.tsx`.
-describe('modelo T2 por largura (CSS)', () => {
+// O jsdom não mede layout: a abertura em noite (a faixa de cacau do tamanho do texto, a rua, a coluna de 640 e o índice
+// grudado à direita) é lida do CSS; a medida de verdade, num Chrome, é a de `aberturaTexto.geometria.test.tsx`.
+describe('abertura em noite e índice por largura (CSS)', () => {
   const css = lerCss().replace(/\/\*[\s\S]*?\*\//g, '')
   const regras = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, seletor, corpo]) => ({ seletor: seletor.trim(), corpo }))
   const corpos = (seletor: string) => regras.filter((regra) => regra.seletor === seletor).map(({ corpo }) => corpo)
@@ -653,24 +819,58 @@ describe('modelo T2 por largura (CSS)', () => {
     expect(css).toMatch(/@container pt-abertura \(min-width: 60rem\)/)
   })
 
-  it('largo: a faixa tem 400 px de altura mínima (min-block-size, cresce com o texto) e a placa sai do fluxo, rente à borda direita e ao pé', () => {
+  // F8-1 (troca a S-18, o T2 de 400 px): a abertura tem a altura do próprio texto, sem altura mínima nem faixa de piso.
+  it('a abertura é intrínseca: padding-block do grupo, sem min-block-size nem altura fixa, sem a faixa de piso (::before)', () => {
+    const [grade] = corpos('.pt-abertura-grade')
+    expect(grade).toMatch(/padding-block:\s*var\(--espaco-grupo\)\s*;/)
+    expect(css).not.toMatch(/\.pt-abertura-grade::before/)
+    expect(css).not.toMatch(/color-mix/)
+    for (const corpo of corpos('.pt-abertura-grade')) expect(corpo).not.toMatch(/(^|[\s;])(min-|max-)?(block-size|height):/)
+    expect(css).not.toMatch(/min-block-size:\s*\d/)
+  })
+
+  it('largo: a rua sai do fluxo, rente à borda direita, com a altura da faixa e a largura que sobra à direita da coluna de leitura (340 px no máximo)', () => {
     const bloco = /@container pt-abertura \(min-width: 60rem\)\s*\{([\s\S]*?\n {2}\})/.exec(css)![1]
-    expect(bloco).toMatch(/min-block-size:\s*400px/)
-    expect(bloco).not.toMatch(/(^|[\s;])(block-size|height):\s*\d/)
     const placa = /\.pt-placa\s*\{([^}]*)\}/.exec(bloco)![1]
     expect(placa).toMatch(/position:\s*absolute/)
     expect(placa).toMatch(/inset-inline-end:\s*0/)
     expect(placa).toMatch(/inset-block-end:\s*0/)
-    // A coluna do texto nunca passa por baixo da placa.
-    expect(bloco).toMatch(/max-inline-size:\s*min\(var\(--leitura\),\s*100%\s*-\s*var\(--pt-borda\)\s*-\s*var\(--pt-placa-largura\)/)
+    expect(placa).toMatch(/(^|[\s;])block-size:\s*100%/)
+    expect(placa).toMatch(
+      /inline-size:\s*min\(340px,\s*100cqi\s*-\s*var\(--pt-borda\)\s*-\s*var\(--leitura\)\s*-\s*var\(--espaco-grupo\)\)/,
+    )
+    // A coluna do texto fica com a medida de leitura inteira: a rua cede a largura, não o texto.
+    expect(bloco).not.toMatch(/max-inline-size/)
   })
 
-  it('a placa é mostrada na largura nativa de 340 px (densidade 1,59 do arquivo de 542, nunca ampliada) e o pé da faixa continua o chão dela, sem areia nem #6E6560', () => {
-    expect(corpos('.pt-abertura')[0]).toMatch(/--pt-placa-largura:\s*340px/)
+  it('estreito: a rua é uma linha de secao-ampla no pé da faixa, até 340 px, rente à borda direita; a imagem cobre a caixa a partir do topo', () => {
     const [placa] = corpos('.pt-placa')
-    expect(placa).toMatch(/inline-size:\s*min\(var\(--pt-placa-largura\),\s*100%\)/)
-    const [chao] = corpos('.pt-abertura-grade::before')
-    expect(chao).toMatch(/background-color:\s*color-mix\(in srgb,\s*var\(--color-cacau\)/)
+    expect(placa).toMatch(/justify-self:\s*end/)
+    expect(placa).toMatch(/block-size:\s*var\(--espaco-secao-ampla\)/)
+    expect(placa).toMatch(/inline-size:\s*min\(340px,\s*100%\)/)
+    const [imagem] = corpos('.pt-placa img')
+    expect(imagem).toMatch(/inline-size:\s*100%/)
+    expect(imagem).toMatch(/block-size:\s*100%/)
+    expect(imagem).toMatch(/object-fit:\s*cover/)
+    expect(imagem).toMatch(/object-position:\s*top/)
+    expect(css).not.toMatch(/--pt-placa-largura/)
+  })
+
+  it('regras do CSS: nenhum px na abertura além do teto de 340 px da rua; nada de clamp() nem de px acima de 32 em margin, padding ou gap; sem hex', () => {
+    const regrasDaAbertura = regras.filter(({ seletor }) => /^\.pt-(abertura|placa)/.test(seletor))
+    expect(regrasDaAbertura.length).toBeGreaterThan(3)
+    for (const { seletor, corpo } of regrasDaAbertura) {
+      const comprimentos = [...corpo.matchAll(/(-?\d+(?:\.\d+)?)px/g)].map(([, numero]) => numero)
+      for (const numero of comprimentos) expect(numero, `${seletor}: ${corpo.trim()}`).toBe('340')
+    }
+    for (const { seletor, corpo } of regras) {
+      for (const [, propriedade, valor] of corpo.matchAll(/(margin[\w-]*|padding[\w-]*|(?:row-|column-)?gap):\s*([^;]+)/g)) {
+        expect(valor, `${seletor} ${propriedade}`).not.toMatch(/clamp\(/)
+        for (const [, numero] of valor.matchAll(/(-?\d+(?:\.\d+)?)px/g)) {
+          expect(Math.abs(Number(numero)), `${seletor} ${propriedade}: ${valor}`).toBeLessThanOrEqual(32)
+        }
+      }
+    }
     expect(css).not.toMatch(/areia|6E6560|texto-2/i)
     expect(css).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
   })
@@ -699,6 +899,58 @@ describe('modelo T2 por largura (CSS)', () => {
     expect(bloco).toMatch(/\.pt-leitura\s*\{[^}]*grid-column:\s*1/)
   })
 
+  it('o índice (66 rem de quadro ou mais) gruda na linha de âncora, limita a altura à janela e rola por dentro; abaixo disso é estático', () => {
+    const bloco = /@container pt-pagina \(min-width: 66rem\)\s*\{([\s\S]*?\n {2}\})/.exec(css)![1]
+    const indice = /\.pt-indice\s*\{([^}]*)\}/.exec(bloco)![1]
+    expect(indice).toMatch(/position:\s*sticky/)
+    expect(indice).toMatch(/inset-block-start:\s*var\(--ancora-leitura\)/)
+    expect(indice).toMatch(/max-block-size:\s*calc\(100svh\s*-\s*var\(--ancora-leitura\)\s*-\s*var\(--espaco-grupo\)\)/)
+    expect(indice).toMatch(/overflow-y:\s*auto/)
+    // Fora da consulta o índice não tem `position` (é estático, em fluxo).
+    expect(corpos('.pt-indice').join('')).not.toMatch(/position:/)
+    expect(css.replace(bloco, '')).not.toMatch(/position:\s*sticky/)
+  })
+
+  it('a linha de âncora é uma só propriedade, declarada no index.css, que o scroll-padding-top e o índice leem', () => {
+    const raiz = readFileSync(join(process.cwd(), 'src/index.css'), 'utf8').replace(/\r\n/g, '\n')
+    expect(raiz.match(/--ancora-leitura:/g)).toHaveLength(1)
+    expect(raiz).toMatch(/--ancora-leitura:\s*104px/)
+    expect(raiz).toMatch(/scroll-padding-top:\s*var\(--ancora-leitura\)/)
+    expect(raiz).not.toMatch(/scroll-padding-top:\s*\d/)
+    expect(css).not.toMatch(/--ancora-leitura:/)
+  })
+
+  it('sem índice (Contato) as duas seções ficam lado a lado, 7fr e 5fr, a partir dos 66 rem; a coluna de leitura deixa de ser caixa', () => {
+    const bloco = /@container pt-pagina \(min-width: 66rem\)\s*\{([\s\S]*?\n {2}\})/.exec(css)![1]
+    const grade = /\.pt-pagina-grade\.pt-sem-indice\s*\{([^}]*)\}/.exec(bloco)![1]
+    expect(grade).toMatch(/grid-template-columns:\s*minmax\(0,\s*7fr\)\s*minmax\(0,\s*5fr\)/)
+    expect(/\.pt-sem-indice\s*>\s*\.pt-leitura\s*\{([^}]*)\}/.exec(bloco)![1]).toMatch(/display:\s*contents/)
+    expect(/\.pt-sem-indice\s*>\s*\.pt-leitura\s*>\s*\.cm-lide\s*\{([^}]*)\}/.exec(bloco)![1]).toMatch(/grid-column:\s*1\s*\/\s*-1/)
+  })
+
+  it('T1, o marcador: trilho de 1 px no fio suave no começo da lista, links recuados pelo vão da pilha, traço de cacau de 2 px que só muda de escala', () => {
+    expect(corpos('.pt-indice-lista')[0]).toMatch(/border-inline-start:\s*1px solid var\(--cor-fio-suave\)/)
+    expect(corpos('.pt-indice-link')[0]).toMatch(/padding-inline-start:\s*var\(--espaco-pilha\)/)
+    expect(corpos('.pt-indice-link')[0]).toMatch(/position:\s*relative/)
+    const [traco] = corpos('.pt-indice-link::before')
+    expect(traco).toMatch(/inset-block:\s*0/)
+    expect(traco).toMatch(/inline-size:\s*2px/)
+    expect(traco).toMatch(/background-color:\s*var\(--color-cacau\)/)
+    expect(traco).toMatch(/transform:\s*scaleY\(0\)/)
+    expect(traco).toMatch(/transition:\s*transform var\(--mov-fechar\) var\(--mov-curva\)/)
+    expect(corpos(".pt-indice-link[aria-current='location']::before")[0]).toMatch(/transform:\s*scaleY\(1\)/)
+    // Um só `transition`, o do marcador, e nenhuma animação.
+    expect(css.match(/transition/g)).toHaveLength(1)
+    expect(css).not.toMatch(/animation|@keyframes|transition:\s*all/)
+  })
+
+  it('com movimento reduzido o marcador fica no lugar: a regra global zera as transições e o tempo de fechar', () => {
+    const raiz = readFileSync(join(process.cwd(), 'src/index.css'), 'utf8').replace(/\r\n/g, '\n')
+    const reduzido = /@media \(prefers-reduced-motion: reduce\)\s*\{([\s\S]*?\n\})/.exec(raiz)![1]
+    expect(reduzido).toMatch(/transition:\s*none\s*!important/)
+    expect(reduzido).toMatch(/--mov-fechar:\s*0ms/)
+  })
+
   it('o índice é uma lista vertical só, com o rótulo e os links no corpo; links de cacau, de 44 px, sublinhados só no hover e no foco', () => {
     const [rotulo] = corpos('.pt-indice-rotulo')
     expect(rotulo).toMatch(/font-size:\s*var\(--texto-corpo-tamanho\)/)
@@ -724,9 +976,9 @@ describe('modelo T2 por largura (CSS)', () => {
     expect(css).not.toMatch(/\.pt-indice:has\(/)
   })
 
-  it('o cartão de e-mail não tem caixa: sem fundo, borda, sombra nem gradiente, e nada se move (sem animação nem transição)', () => {
+  it('o cartão de e-mail não tem caixa: sem fundo, borda, sombra nem gradiente; a página não tem sombra, gradiente nem animação (a única transição é a do marcador do índice)', () => {
     const [email] = corpos('.pt-email')
     expect(email).not.toMatch(/background|border|box-shadow/)
-    expect(css).not.toMatch(/box-shadow|gradient|animation|transition|@keyframes|position:\s*(sticky|fixed)/)
+    expect(css).not.toMatch(/box-shadow|gradient|animation|@keyframes|position:\s*fixed/)
   })
 })

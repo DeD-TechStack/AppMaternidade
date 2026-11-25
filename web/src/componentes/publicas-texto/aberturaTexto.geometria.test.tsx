@@ -7,9 +7,11 @@ import { describe, expect, it, vi } from 'vitest'
 import { renderizarRota } from '../../teste/renderizarRota.tsx'
 import { EMAIL_CONTATO } from '../../conteudo/publicas-texto.ts'
 
-// REP-T2: o modelo T2 assinado (`.oc/ref/t2.md`): a faixa de cacau da abertura (400 px no mínimo em 1440), a placa da
-// rua rente à borda direita e ao pé dela, o `h1` e a coluna de leitura na mesma borda esquerda, o índice à direita da
-// coluna em 1440 e o primeiro título do documento dentro da primeira dobra, sem rolagem horizontal em 390 e 1440.
+// F8-1: a placa de rua em noite. A abertura tem a altura do próprio texto (170 px em 1440, 240 px em 390; 240 e 340 com ação),
+// um bloco só com o cabeçalho (de noite), com a rua rente à borda direita e à altura da faixa (em 390, uma linha no pé);
+// o índice fica grudado na linha de âncora com o marcador no link atual, e o Contato (duas seções) não tem índice. Isto
+// troca as réguas do REP-T2 (S-18: faixa de 400 px no mínimo e placa de 340 px de chão a chão), assinadas antes.
+// Fotos e medidas saem em densidade 2 para `.oc/olhar/texto` e `.oc/medidas`, com o prefixo da rodada (antes_ ou depois_).
 // VIS-4, as seis páginas de texto: a abertura (título, frase, botão e placa) medida num Chrome de
 // verdade. O jsdom não tem layout: o corpo serializado vai para uma página com o CSS e as imagens do build
 // (`web/dist`), numa janela de 1440 x 900 (a leitura no computador) e de 390 x 844 (o celular). Sem Chrome ou
@@ -35,8 +37,19 @@ const PASTA_DIST = resolve(import.meta.dirname, '..', '..', '..', 'dist')
 const PASTA_CSS = join(PASTA_DIST, 'assets')
 const PASTA_DAS_FOTOS = resolve(import.meta.dirname, '..', '..', '..', '..', '.oc', 'olhar', 'texto')
 const ALTURA_DA_FOTO = 2600
+// As fotos (só onde a pasta `.oc/olhar/texto` existe) saem em densidade 2, com este prefixo no nome do arquivo.
+const PREFIXO_DAS_FOTOS = 'depois_'
+const DENSIDADE_DAS_FOTOS = 2
 // Cada medida abre o Chrome (e, com a pasta das fotos, uma segunda vez): numa máquina carregada passa de 60 s.
 const TEMPO_DO_CHROME = 240_000
+
+/** Escreve um relatório curto em `.oc/medidas` (só onde a pasta de trabalho existe), com o prefixo da rodada. */
+function escreverMedidas(nome: string, linhas: string[]): void {
+  const pasta = resolve(import.meta.dirname, '..', '..', '..', '..', '.oc', 'medidas')
+  if (!existsSync(resolve(pasta, '..'))) return
+  mkdirSync(pasta, { recursive: true })
+  writeFileSync(join(pasta, `${PREFIXO_DAS_FOTOS}${nome}`), linhas.join('\n') + '\n', 'utf8')
+}
 
 function arquivosCss(): string[] {
   return existsSync(PASTA_CSS) ? readdirSync(PASTA_CSS).filter((nome) => nome.endsWith('.css')) : []
@@ -92,8 +105,8 @@ interface Medida {
   placa: Caixa
   /** A coluna do texto da abertura (`.pt-cabeca`). */
   cabeca: Caixa
-  /** O índice "Nesta página" (`.pt-indice`), a coluna de leitura (`.pt-leitura`) e o primeiro `h2` dela. */
-  indice: Caixa
+  /** O índice "Nesta página" (`.pt-indice`; null com menos de três seções), a coluna de leitura (`.pt-leitura`) e o primeiro `h2` dela. */
+  indice: Caixa | null
   leitura: Caixa
   primeiroH2: Caixa
   /** O tamanho de letra computado do `h1` e o maior entre as demais letras de `main`. */
@@ -118,6 +131,52 @@ interface Medida {
   emailBotao: Caixa | null
   emailEndereco: Caixa | null
   enderecoLinhas: number | null
+  /** F8-1: o `scrollY` lido de volta depois da rolagem pedida e a densidade real da janela. */
+  scrollY?: number
+  densidade?: number
+  /** F8-1: a altura do documento, a caixa do rodapé e a do índice depois da rolagem (null sem índice ou sem rodapé). */
+  alturaDoDocumento?: number
+  rodape?: Caixa | null
+  indiceRolado?: Caixa | null
+  /** F8-1: o `position` e o `max-block-size` computados do `<nav>` do índice, e a linha de âncora (`scroll-padding-top`). */
+  indicePosicao?: string
+  indiceMaxAltura?: string
+  ancora?: number
+  /** F8-1: a transição do marcador (`::before` do link atual) e quantos links têm `aria-current`. */
+  marcadorTransicao?: string
+  marcadorEscala?: string
+  /** F8-1: quantas transições de transform o marcador começou ao virar o atual e a duração da primeira (ms). */
+  marcadorTransicoes?: number
+  marcadorDuracao?: number
+  linksAtuais?: number
+  /** F8-1: o cabeçalho do site (tom e a pílula "Criar conta": contorno ou mel) e o `h1` (altura da linha). */
+  cabecalhoTom?: string
+  cabecalhoPilulaFundo?: string
+  /** F8-1: a rua (`.pt-placa`): a imagem servida e a razão arquivo/css (largura natural ÷ largura em css × densidade). */
+  ruaArquivo?: string
+  ruaRazao?: number
+  ruaObjeto?: string
+  /** F8-1: os pixels de mel dentro da abertura: contagem de pixels de fundo de cor mel nos elementos (devem ser só a ação). */
+  elementosComMel?: string[]
+  /** F8-1: a caixa do h1 e da frase de abertura, a última linha de texto da abertura e a caixa da placa em relação ao texto. */
+  h1Caixa?: Caixa
+  lideCaixa?: Caixa | null
+  acaoCaixa?: Caixa | null
+  /** F8-1: a primeira seção do Contato e a segunda (lado a lado): as duas caixas, ou null. */
+  secoesDoContato?: Caixa[]
+  /** F8-1: o `padding-block` e o `min-block-size` computados da abertura. */
+  aberturaPaddingBloco?: string
+  aberturaMinBloco?: string
+}
+
+/** O que a medida de F8-1 pode pedir à página: rolar, marcar um link, movimento reduzido e o nome da foto. */
+interface Extras {
+  rolar?: number | 'fim'
+  marcar?: 'auto'
+  reduzido?: boolean
+  nomeDaFoto?: string
+  alturaDaFoto?: number
+  raiz?: number
 }
 
 // O script de dentro da página: espera as fontes e as imagens e escreve a medida em JSON num <pre>.
@@ -132,9 +191,50 @@ const SCRIPT_DE_MEDIDA = `
   try {
     document.body.offsetWidth
     for (const img of document.images) img.loading = 'eager'
+    // A placa da rua: o arquivo mais largo do build (o harness tirou os endereços de desenvolvimento dela).
+    const imgDaRua = document.querySelector('main .pt-placa img')
+    const ruas = window.__RUAS || []
+    if (imgDaRua && ruas.length > 0) {
+      const lidas = await Promise.all(ruas.map((url) => new Promise((r) => {
+        const img = new Image()
+        img.onload = () => r([url, img.naturalWidth])
+        img.onerror = () => r([url, 0])
+        img.src = url
+      })))
+      lidas.sort((a, b) => b[1] - a[1])
+      imgDaRua.src = lidas[0][0]
+    }
     await document.fonts.ready
     await Promise.all([...document.images].map((img) => (img.complete ? null : new Promise((r) => { img.onload = img.onerror = r }))))
     await new Promise((r) => setTimeout(r, 100))
+    // F8-1: o que o teste pediu (tamanho do texto da raiz, um link marcado, a rolagem).
+    const pedido = window.__PEDIDO || {}
+    if (pedido.raiz) document.documentElement.style.fontSize = pedido.raiz + 'px'
+    if (pedido.rolar) {
+      window.scrollTo(0, pedido.rolar === 'fim' ? 1e7 : pedido.rolar)
+      await new Promise((r) => setTimeout(r, 200))
+    }
+    // O harness é HTML estático (sem React): o link atual da foto é posto aqui, pela regra do índice (o último h2 na
+    // linha de âncora ou acima dela; o primeiro no topo). O comportamento real do observador é o do teste de jsdom.
+    if (pedido.marcar === 'auto') {
+      // O corpo serializado já traz o primeiro link marcado (o estado inicial do React): a foto parte do zero.
+      for (const marcado of document.querySelectorAll('.pt-indice-link[aria-current]')) marcado.removeAttribute('aria-current')
+      const linha = (parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0) + 1
+      const titulos = [...document.querySelectorAll('main .pt-leitura h2')]
+      let atual = 0
+      titulos.forEach((titulo, i) => { if (titulo.getBoundingClientRect().top <= linha) atual = i })
+      const alvo = document.querySelectorAll('.pt-indice-link')[atual]
+      if (alvo) {
+        alvo.setAttribute('aria-current', 'location')
+        // O relógio das animações não anda no tempo virtual do Chrome sem janela: a medida conta as transições que o
+        // marcador começou (a de transform, 160 ms; nenhuma com movimento reduzido) e as termina, para ler o estado final.
+        getComputedStyle(alvo, '::before').transform
+        const iniciadas = document.getAnimations().filter((a) => a.transitionProperty === 'transform')
+        window.__TRANSICOES = iniciadas.length
+        window.__DURACAO = iniciadas.length > 0 ? iniciadas[0].effect.getComputedTiming().duration : 0
+        for (const a of document.getAnimations()) a.finish()
+      }
+    }
     const caixa = (el) => {
       const r = el.getBoundingClientRect()
       return { x: r.x, right: r.right, y: r.y, bottom: r.bottom, width: r.width, height: r.height }
@@ -242,7 +342,58 @@ const SCRIPT_DE_MEDIDA = `
       }
       enderecoLinhas = topos.size
     }
+    // F8-1: o índice depois da rolagem, o rodapé, o marcador, o cabeçalho, a rua e o mel da abertura.
+    const nav = document.querySelector('main .pt-indice')
+    const estiloDoNav = nav ? getComputedStyle(nav) : null
+    const atual = document.querySelector('main .pt-indice-link[aria-current="location"]')
+    const estiloDoMarcador = atual ? getComputedStyle(atual, '::before') : null
+    const rodape = document.querySelector('[data-rodape], body > div > footer, footer')
+    const cabecalho = document.querySelector('header[data-cabecalho]')
+    const pilula = cabecalho ? cabecalho.querySelector('a.cm-botao, .cm-botao') : null
+    const rua = document.querySelector('main .pt-placa img')
+    const MEL = 'rgb(242, 193, 78)'
+    const elementosComMel = [...document.querySelectorAll('main .pt-abertura, main .pt-abertura *')]
+      .filter((el) => {
+        const e = getComputedStyle(el)
+        return e.backgroundColor === MEL || e.borderTopColor === MEL
+      })
+      .map((el) => el.tagName.toLowerCase() + '.' + String(el.className).split(' ')[0])
+    const estiloDaAbertura = getComputedStyle(document.querySelector('main .pt-abertura-grade'))
+    const lide = document.querySelector('main .pt-abertura .cm-lide')
+    const acao = document.querySelector('main .pt-abertura .pt-acao, main .pt-abertura .pt-email')
+    const secoesDoContato = [...document.querySelectorAll('main .pt-leitura > section')].map((el) => caixa(el))
+    const extrasF81 = {
+      scrollY: window.scrollY,
+      densidade: window.devicePixelRatio,
+      alturaDoDocumento: document.documentElement.scrollHeight,
+      rodape: rodape ? caixa(rodape) : null,
+      indiceRolado: nav ? caixa(nav) : null,
+      indicePosicao: estiloDoNav ? estiloDoNav.position : undefined,
+      indiceMaxAltura: estiloDoNav ? estiloDoNav.maxBlockSize : undefined,
+      ancora: parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0,
+      marcadorTransicao: estiloDoMarcador ? estiloDoMarcador.transitionDuration : undefined,
+      marcadorEscala: estiloDoMarcador ? estiloDoMarcador.transform : undefined,
+      marcadorTransicoes: window.__TRANSICOES || 0,
+      marcadorDuracao: window.__DURACAO || 0,
+      linksAtuais: document.querySelectorAll('main .pt-indice-link[aria-current="location"]').length,
+      cabecalhoTom: cabecalho ? cabecalho.getAttribute('data-tom') : null,
+      cabecalhoPilulaFundo: pilula ? getComputedStyle(pilula).backgroundColor : null,
+      ruaArquivo: rua ? rua.currentSrc.split('/').pop() + ' ' + rua.naturalWidth + 'x' + rua.naturalHeight : null,
+      // Pixels do arquivo por pixel físico: 1 ÷ (px css por px de arquivo × densidade). Com object-fit cover vale o maior dos dois fatores.
+      ruaRazao: rua && rua.naturalWidth
+        ? 1 / (Math.max(rua.getBoundingClientRect().width / rua.naturalWidth, rua.getBoundingClientRect().height / rua.naturalHeight) * window.devicePixelRatio)
+        : null,
+      ruaObjeto: rua ? getComputedStyle(rua).objectFit + ' ' + getComputedStyle(rua).objectPosition : null,
+      elementosComMel,
+      h1Caixa: caixa(h1),
+      lideCaixa: lide ? caixa(lide) : null,
+      acaoCaixa: acao ? caixa(acao) : null,
+      secoesDoContato,
+      aberturaPaddingBloco: estiloDaAbertura.paddingTop + ' ' + estiloDaAbertura.paddingBottom,
+      aberturaMinBloco: estiloDaAbertura.minBlockSize,
+    }
     emitir({
+      ...extrasF81,
       email: talvezCaixa('main .pt-email'),
       emailBotao: talvezCaixa('main .pt-email a'),
       emailEndereco: talvezCaixa('main .pt-email address'),
@@ -254,7 +405,7 @@ const SCRIPT_DE_MEDIDA = `
       abertura: caixa(um('main .pt-abertura')),
       placa: caixa(um('main .pt-placa')),
       cabeca: caixa(um('main .pt-cabeca')),
-      indice: caixa(um('main .pt-indice')),
+      indice: nav ? caixa(nav) : null,
       leitura: caixa(um('main .pt-leitura')),
       primeiroH2: caixa(um('main .pt-leitura h2')),
       h1Tamanho: parseFloat(estiloDoH1.fontSize),
@@ -271,6 +422,25 @@ const SCRIPT_DE_MEDIDA = `
   }
 })()
 `
+
+/** Os `m11-janela-542w-*.webp` do build (os arquivos da placa da rua): a página escolhe o mais largo pelo `naturalWidth`. */
+function arquivosDaRuaNoDist(): string[] {
+  return readdirSync(PASTA_CSS)
+    .filter((nome) => /^m11-janela-542w-.+\.webp$/.test(nome))
+    .map((nome) => `${pathToFileURL(PASTA_DIST).href}/assets/${nome}`)
+}
+
+/**
+ * Na renderização do vitest a placa da rua sai com endereços do servidor de desenvolvimento (`/@imagetools/<hash>`), que
+ * não existem no dist. O harness tira o `<source>` e o `srcset`; a página (ver `SCRIPT_DE_MEDIDA`) aponta a `<img>` para o
+ * arquivo mais largo do build, para `currentSrc` e `naturalWidth` serem os do arquivo de verdade.
+ */
+function semEnderecosDeDesenvolvimento(corpo: string): string {
+  return corpo
+    .replace(/<source[^>]*\/@imagetools\/[^>]*>/g, '')
+    .replace(/ srcset="[^"]*\/@imagetools\/[^"]*"/g, '')
+    .replace(/ src="\/@imagetools\/[^"]*"/g, ' src="data:,"')
+}
 
 /** O CSS do build aponta fontes e imagens por `/...`: numa página file:// isso vira a raiz do disco, então apontam para o dist. */
 function comArquivosDoDist(texto: string): string {
@@ -369,7 +539,13 @@ async function executarChrome(argumentos: string[], arquivoDeSaida: string, arqu
   }
 }
 
-async function medirNoChrome(corpoHtml: string, largura: number, altura: number, foto: string | null): Promise<Medida> {
+async function medirNoChrome(
+  corpoHtml: string,
+  largura: number,
+  altura: number,
+  foto: string | null,
+  extras: Extras = {},
+): Promise<Medida> {
   const pasta = mkdtempSync(join(tmpdir(), 'cm-abertura-'))
   try {
     const perfil = join(pasta, 'perfil')
@@ -381,12 +557,14 @@ async function medirNoChrome(corpoHtml: string, largura: number, altura: number,
     })
     const base = `${pathToFileURL(PASTA_DIST).href}/`
     // `assets`: a placa da rua (vite-imagetools) sai do build em /assets/, com hash no nome.
-    const corpo = corpoHtml.replace(/(["'\s,])\/(ilustracoes|cenas|assets)\//g, (_t, antes: string, pasta2: string) => `${antes}${base}${pasta2}/`)
+    const corpo = semEnderecosDeDesenvolvimento(
+      corpoHtml.replace(/(["'\s,])\/(ilustracoes|cenas|assets)\//g, (_t, antes: string, pasta2: string) => `${antes}${base}${pasta2}/`),
+    )
     const pagina = join(pasta, 'pagina.html')
     writeFileSync(
       pagina,
       `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">${folhas.join('')}</head>` +
-        `<body>${corpo}<pre id="geometria" hidden></pre><script>${SCRIPT_DE_MEDIDA}</script></body></html>`,
+        `<body>${corpo}<pre id="geometria" hidden></pre><script>window.__PEDIDO=${JSON.stringify({ rolar: extras.rolar, marcar: extras.marcar, raiz: extras.raiz })};window.__RUAS=${JSON.stringify(arquivosDaRuaNoDist())}</script><script>${SCRIPT_DE_MEDIDA}</script></body></html>`,
       'utf8',
     )
     // O Chrome sem janela não passa de ~500 px de largura: a página vai num iframe da largura e da altura pedidas
@@ -407,7 +585,8 @@ async function medirNoChrome(corpoHtml: string, largura: number, altura: number,
         '--no-first-run',
         '--allow-file-access-from-files',
         `--user-data-dir=${perfil}`,
-        '--force-device-scale-factor=1',
+        `--force-device-scale-factor=${DENSIDADE_DAS_FOTOS}`,
+        ...(extras.reduzido ? ['--force-prefers-reduced-motion'] : []),
         `--window-size=${Math.max(largura, 600) + 16},${altura + 100}`,
         '--virtual-time-budget=4000',
         '--dump-dom',
@@ -426,9 +605,10 @@ async function medirNoChrome(corpoHtml: string, largura: number, altura: number,
       // Só na máquina de quem tem a pasta `.oc/olhar` (o conferidor de telas do cartão): a página inteira num PNG,
       // para olhar. Em CI a pasta não existe e nada é escrito.
       const alta = join(pasta, 'alta.html')
+      const alturaDaFoto = extras.alturaDaFoto ?? ALTURA_DA_FOTO
       writeFileSync(
         alta,
-        `<!doctype html><html><body style="margin:0"><iframe src="${pathToFileURL(pagina).href}" style="border:0;width:${largura}px;height:${ALTURA_DA_FOTO}px"></iframe></body></html>`,
+        `<!doctype html><html><body style="margin:0"><iframe src="${pathToFileURL(pagina).href}" style="border:0;width:${largura}px;height:${alturaDaFoto}px"></iframe></body></html>`,
         'utf8',
       )
       await executarChrome(
@@ -440,8 +620,9 @@ async function medirNoChrome(corpoHtml: string, largura: number, altura: number,
           '--no-first-run',
           '--allow-file-access-from-files',
           `--user-data-dir=${join(pasta, 'perfil-foto')}`,
-          '--force-device-scale-factor=1',
-          `--window-size=${Math.max(largura, 600) + 16},${ALTURA_DA_FOTO + 16}`,
+          `--force-device-scale-factor=${DENSIDADE_DAS_FOTOS}`,
+          ...(extras.reduzido ? ['--force-prefers-reduced-motion'] : []),
+          `--window-size=${Math.max(largura, 600) + 16},${alturaDaFoto + 16}`,
           '--virtual-time-budget=4000',
           `--screenshot=${join(PASTA_DAS_FOTOS, foto)}`,
           pathToFileURL(alta).href,
@@ -471,21 +652,33 @@ function consultaPelaLargura(largura: number) {
   }
 }
 
-async function medirPagina(caminho: string, largura: number, altura: number, foto = false, trocar?: [string, string]): Promise<Medida> {
+async function medirPagina(
+  caminho: string,
+  largura: number,
+  altura: number,
+  foto = false,
+  trocar?: [string, string],
+  extras: Extras = {},
+): Promise<Medida> {
   vi.stubGlobal('matchMedia', consultaPelaLargura(largura))
   let corpo: string
   try {
-    renderizarRota(caminho)
+    // O desmonte logo depois de serializar: sem ele, cada medida do mesmo teste carregaria as páginas das anteriores.
+    const { unmount } = renderizarRota(caminho)
     corpo = document.body.innerHTML
+    unmount()
     // VIS-4-r4-I-04: o texto trocado no corpo serializado (o endereço de e-mail mais longo que o real).
     if (trocar) {
       expect(corpo, `o texto "${trocar[0]}" existe no corpo de ${caminho}`).toContain(trocar[0])
       corpo = corpo.replaceAll(trocar[0], trocar[1])
     }
+    // O celular real tem barra de rolagem de sobreposição: a janela estreita não perde 15 px de largura.
+    if (largura < 600) corpo = `<style>html{scrollbar-width:none}</style>${corpo}`
   } finally {
     vi.unstubAllGlobals()
   }
-  const medida = await medirNoChrome(corpo, largura, altura, foto ? `${caminho.slice(1)}_${largura}.png` : null)
+  const nome = extras.nomeDaFoto ?? (foto ? `${caminho.slice(1)}_${largura}` : null)
+  const medida = await medirNoChrome(corpo, largura, altura, nome ? `${PREFIXO_DAS_FOTOS}${nome}.png` : null, extras)
   expect(medida.erro, `${caminho} a ${largura}`).toBeUndefined()
   expect(medida.innerWidth).toBe(largura)
   expect(medida.innerHeight).toBe(altura)
@@ -533,83 +726,148 @@ function linhasForaDaColuna(h1: H1Medido, tolerancia = 1): LinhaDoH1[] {
 /** Dois valores de px iguais, com folga de `folga` px. */
 const igual = (a: number, b: number, folga: number) => Math.abs(a - b) <= folga
 
-/**
- * REP-T2 a 1440 (régua pura, sem Chrome): a faixa de cacau tem 400 px no mínimo; a placa de 340 px fica rente à borda
- * direita e ao pé da faixa e o texto não passa por baixo dela; o `h1` e a coluna de leitura (640 no máximo) têm a mesma
- * borda esquerda; o índice fica à direita da coluna, na mesma altura; o primeiro `h2` do documento está dentro da
- * primeira dobra (900); o `h1` é a maior letra; nenhuma rolagem horizontal. Devolve as mensagens (vazio = ok).
- */
-function violacoesDoT2Largo(rotulo: string, m: Medida): string[] {
-  const problemas: string[] = []
-  const { abertura, placa, cabeca, indice, leitura, primeiroH2 } = m
-  if (abertura.height < 399.5) problemas.push(`${rotulo}: a faixa de cacau tem ${abertura.height.toFixed(1)} px de altura (mínimo 400)`)
-  if (!igual(placa.right, abertura.right, 0.5)) {
-    problemas.push(`${rotulo}: a placa acaba em ${placa.right.toFixed(1)} e a faixa em ${abertura.right.toFixed(1)} (esperado: rente à borda direita)`)
-  }
-  if (!igual(placa.bottom, abertura.bottom, 0.5)) {
-    problemas.push(`${rotulo}: a placa acaba em ${placa.bottom.toFixed(1)} e a faixa em ${abertura.bottom.toFixed(1)} (esperado: rente ao pé)`)
-  }
-  if (!igual(placa.width, 340, 1)) problemas.push(`${rotulo}: a placa tem ${placa.width.toFixed(1)} px de largura (esperado 340, a densidade nativa)`)
-  if (cabeca.right > placa.x + 0.5) {
-    problemas.push(`${rotulo}: a coluna do texto acaba em ${cabeca.right.toFixed(1)}, depois do começo da placa (${placa.x.toFixed(1)})`)
-  }
-  if (!igual(m.h1.colunaEsquerda, leitura.x, 1)) {
-    problemas.push(`${rotulo}: o h1 começa em ${m.h1.colunaEsquerda} e a coluna de leitura em ${leitura.x.toFixed(1)} (esperado: a mesma borda esquerda)`)
-  }
-  if (leitura.width > 640.5) problemas.push(`${rotulo}: a coluna de leitura tem ${leitura.width.toFixed(1)} px (máximo 640)`)
-  if (indice.x < leitura.right - 0.5) {
-    problemas.push(`${rotulo}: o índice começa em ${indice.x.toFixed(1)}, antes do fim da coluna de leitura (${leitura.right.toFixed(1)}): não está à direita dela`)
-  }
-  if (indice.right > m.innerWidth + 0.5) problemas.push(`${rotulo}: o índice acaba em ${indice.right.toFixed(1)}, fora da janela de ${m.innerWidth} px`)
-  if (!(indice.y < leitura.bottom && leitura.y < indice.bottom)) {
-    problemas.push(`${rotulo}: o índice (${indice.y.toFixed(1)} a ${indice.bottom.toFixed(1)}) não está na altura da leitura (${leitura.y.toFixed(1)} a ${leitura.bottom.toFixed(1)})`)
-  }
-  if (primeiroH2.y >= 900) problemas.push(`${rotulo}: o primeiro título do documento está em y ${primeiroH2.y.toFixed(1)} (esperado: dentro dos 900 da primeira dobra)`)
-  if (m.h1Tamanho <= m.maiorOutroTamanho) problemas.push(`${rotulo}: o h1 tem ${m.h1Tamanho} px e há letra de ${m.maiorOutroTamanho} px na página (o h1 deve ser a maior)`)
-  if (m.scrollWidth > m.innerWidth) problemas.push(`${rotulo}: rolagem horizontal (${m.scrollWidth} > ${m.innerWidth})`)
-  return problemas
+/** A razão servida da rua na base (arquivo de 542 px mostrado em 340 px, densidade 2): nunca abaixo dela (F8-1). */
+const RAZAO_DA_RUA_NA_BASE = 0.797
+
+/** As páginas que mantêm uma ação na abertura (Exclusão: "Ir para a Conta"; Contato: o bloco de e-mail). */
+const COM_ACAO: readonly string[] = ['/exclusao-de-conta', '/contato']
+
+/** O mel (o fundo e a borda do botão e das luzes): os elementos da abertura que o usam, por `tag.classe`. */
+function violacoesDoMel(rotulo: string, caminho: string, m: Medida): string[] {
+  const esperados = COM_ACAO.includes(caminho) ? 1 : 0
+  const achados = m.elementosComMel ?? []
+  return achados.length === esperados
+    ? []
+    : [`${rotulo}: ${achados.length} elemento(s) de mel na abertura (${achados.join(', ') || 'nenhum'}); esperado ${esperados} (só a ação)`]
 }
 
 /**
- * REP-T2 a 390 (régua pura): a faixa empilhada (texto e, embaixo, a placa rente à borda direita e ao pé), depois o
- * índice em fluxo e só então o documento; o `h1` é a maior letra; nenhuma rolagem horizontal.
+ * F8-1 a 1440 (régua pura, sem Chrome): a abertura tem a altura do próprio texto (até 170 px nas quatro páginas sem
+ * ação e até 240 em Exclusão e Contato, sem altura mínima e com o `padding-block` do grupo), o `h1` do degrau titulo-1
+ * é a maior letra, o cabeçalho é de noite, a rua fica rente à borda direita e aos dois lados da faixa (nunca abaixo da
+ * razão da base) sem passar por baixo do texto, o `h1` e a coluna de leitura têm a mesma borda esquerda, o índice (com
+ * três seções ou mais) fica à direita da coluna, e não há rolagem horizontal. Devolve as mensagens (vazio = ok).
  */
-function violacoesDoT2Estreito(rotulo: string, m: Medida): string[] {
+function violacoesDaAberturaLarga(rotulo: string, caminho: string, m: Medida): string[] {
   const problemas: string[] = []
   const { abertura, placa, cabeca, indice, leitura } = m
-  if (placa.y < cabeca.bottom - 0.5) {
-    problemas.push(`${rotulo}: a placa começa em y ${placa.y.toFixed(1)}, antes do fim do texto (${cabeca.bottom.toFixed(1)}): devia ficar embaixo dele`)
+  const teto = COM_ACAO.includes(caminho) ? 240 : 170
+  if (abertura.height > teto + 0.5) problemas.push(`${rotulo}: a abertura tem ${abertura.height.toFixed(1)} px de altura (máximo ${teto})`)
+  if (m.aberturaMinBloco && m.aberturaMinBloco !== 'auto' && m.aberturaMinBloco !== '0px') {
+    problemas.push(`${rotulo}: a abertura tem min-block-size ${m.aberturaMinBloco} (esperado nenhum)`)
+  }
+  const [cima, baixo] = (m.aberturaPaddingBloco ?? '').split(' ')
+  if (!cima || cima !== baixo || parseFloat(cima) < 23) {
+    problemas.push(`${rotulo}: o padding-block da abertura é "${m.aberturaPaddingBloco}" (esperado o do grupo nos dois lados)`)
   }
   if (!igual(placa.right, abertura.right, 0.5)) {
-    problemas.push(`${rotulo}: a placa acaba em ${placa.right.toFixed(1)} e a faixa em ${abertura.right.toFixed(1)} (esperado: rente à borda direita)`)
+    problemas.push(`${rotulo}: a rua acaba em ${placa.right.toFixed(1)} e a faixa em ${abertura.right.toFixed(1)} (esperado: rente à borda direita)`)
   }
-  if (!igual(placa.bottom, abertura.bottom, 0.5)) {
-    problemas.push(`${rotulo}: a placa acaba em ${placa.bottom.toFixed(1)} e a faixa em ${abertura.bottom.toFixed(1)} (esperado: rente ao pé)`)
+  if (!igual(placa.y, abertura.y, 0.5) || !igual(placa.bottom, abertura.bottom, 0.5)) {
+    problemas.push(`${rotulo}: a rua vai de ${placa.y.toFixed(1)} a ${placa.bottom.toFixed(1)} e a faixa de ${abertura.y.toFixed(1)} a ${abertura.bottom.toFixed(1)} (esperado: a altura da faixa)`)
   }
-  if (indice.y < abertura.bottom - 0.5) problemas.push(`${rotulo}: o índice começa em y ${indice.y.toFixed(1)}, dentro da faixa (que acaba em ${abertura.bottom.toFixed(1)})`)
-  if (indice.bottom > leitura.y + 0.5) {
-    problemas.push(`${rotulo}: o índice acaba em y ${indice.bottom.toFixed(1)}, depois do começo do documento (${leitura.y.toFixed(1)}): devia vir antes dele, em fluxo`)
+  if (placa.width > 340.5) problemas.push(`${rotulo}: a rua tem ${placa.width.toFixed(1)} px de largura (teto 340)`)
+  if (cabeca.right > placa.x + 0.5) {
+    problemas.push(`${rotulo}: a coluna do texto acaba em ${cabeca.right.toFixed(1)}, depois do começo da rua (${placa.x.toFixed(1)})`)
+  }
+  if ((m.ruaObjeto ?? '') !== 'cover 50% 0%') problemas.push(`${rotulo}: a imagem da rua tem object-fit/position "${m.ruaObjeto}" (esperado cover 50% 0%)`)
+  if ((m.ruaRazao ?? 0) < RAZAO_DA_RUA_NA_BASE - 0.005) {
+    problemas.push(`${rotulo}: a rua é servida a ${(m.ruaRazao ?? 0).toFixed(3)} (arquivo ÷ pixels físicos), abaixo da base (${RAZAO_DA_RUA_NA_BASE})`)
+  }
+  if (m.cabecalhoTom !== 'noite') problemas.push(`${rotulo}: o cabeçalho está de "${m.cabecalhoTom}" (esperado noite)`)
+  if (!igual(m.h1.colunaEsquerda, leitura.x, 1) && indice !== null) {
+    problemas.push(`${rotulo}: o h1 começa em ${m.h1.colunaEsquerda} e a coluna de leitura em ${leitura.x.toFixed(1)} (esperado: a mesma borda esquerda)`)
+  }
+  if (indice !== null) {
+    if (leitura.width > 640.5) problemas.push(`${rotulo}: a coluna de leitura tem ${leitura.width.toFixed(1)} px (máximo 640)`)
+    if (indice.x < leitura.right - 0.5) {
+      problemas.push(`${rotulo}: o índice começa em ${indice.x.toFixed(1)}, antes do fim da coluna de leitura (${leitura.right.toFixed(1)}): não está à direita dela`)
+    }
+    if (indice.right > m.innerWidth + 0.5) problemas.push(`${rotulo}: o índice acaba em ${indice.right.toFixed(1)}, fora da janela de ${m.innerWidth} px`)
   }
   if (m.h1Tamanho <= m.maiorOutroTamanho) problemas.push(`${rotulo}: o h1 tem ${m.h1Tamanho} px e há letra de ${m.maiorOutroTamanho} px na página (o h1 deve ser a maior)`)
+  problemas.push(...violacoesDoMel(rotulo, caminho, m))
   if (m.scrollWidth > m.innerWidth) problemas.push(`${rotulo}: rolagem horizontal (${m.scrollWidth} > ${m.innerWidth})`)
   return problemas
 }
 
-/** Uma medida de 1440 que passa nas réguas do T2 (para os controles negativos): cada controle muda um só campo. */
-function medidaT2Larga(): Medida {
+/**
+ * F8-1 a 390 (régua pura): a abertura tem até 240 px (340 em Exclusão e Contato); a rua é uma linha no pé da faixa, rente
+ * à borda direita, abaixo do texto; o cabeçalho é de noite; o índice, quando há, fica em fluxo entre a faixa e o
+ * documento; as quatro páginas sem ação começam o documento até y 422; o `h1` é a maior letra; sem rolagem horizontal.
+ */
+function violacoesDaAberturaEstreita(rotulo: string, caminho: string, m: Medida): string[] {
+  const problemas: string[] = []
+  const { abertura, placa, cabeca, indice, leitura } = m
+  const teto = COM_ACAO.includes(caminho) ? 340 : 240
+  if (abertura.height > teto + 0.5) problemas.push(`${rotulo}: a abertura tem ${abertura.height.toFixed(1)} px de altura (máximo ${teto})`)
+  if (placa.y < cabeca.bottom - 0.5) {
+    problemas.push(`${rotulo}: a rua começa em y ${placa.y.toFixed(1)}, antes do fim do texto (${cabeca.bottom.toFixed(1)}): devia ficar embaixo dele`)
+  }
+  if (!igual(placa.right, abertura.right, 0.5)) {
+    problemas.push(`${rotulo}: a rua acaba em ${placa.right.toFixed(1)} e a faixa em ${abertura.right.toFixed(1)} (esperado: rente à borda direita)`)
+  }
+  if (!igual(placa.bottom, abertura.bottom, 0.5)) {
+    problemas.push(`${rotulo}: a rua acaba em ${placa.bottom.toFixed(1)} e a faixa em ${abertura.bottom.toFixed(1)} (esperado: rente ao pé)`)
+  }
+  if (placa.width > 340.5) problemas.push(`${rotulo}: a rua tem ${placa.width.toFixed(1)} px de largura (teto 340)`)
+  if ((m.ruaRazao ?? 0) < RAZAO_DA_RUA_NA_BASE - 0.005) {
+    problemas.push(`${rotulo}: a rua é servida a ${(m.ruaRazao ?? 0).toFixed(3)} (arquivo ÷ pixels físicos), abaixo da base (${RAZAO_DA_RUA_NA_BASE})`)
+  }
+  if (m.cabecalhoTom !== 'noite') problemas.push(`${rotulo}: o cabeçalho está de "${m.cabecalhoTom}" (esperado noite)`)
+  if (indice !== null) {
+    if (indice.y < abertura.bottom - 0.5) problemas.push(`${rotulo}: o índice começa em y ${indice.y.toFixed(1)}, dentro da faixa (que acaba em ${abertura.bottom.toFixed(1)})`)
+    if (indice.bottom > leitura.y + 0.5) {
+      problemas.push(`${rotulo}: o índice acaba em y ${indice.bottom.toFixed(1)}, depois do começo do documento (${leitura.y.toFixed(1)}): devia vir antes dele, em fluxo`)
+    }
+  }
+  if (!COM_ACAO.includes(caminho) && leitura.y > 422.5) {
+    problemas.push(`${rotulo}: a primeira linha do documento está em y ${leitura.y.toFixed(1)} (máximo 422)`)
+  }
+  if (m.h1Tamanho <= m.maiorOutroTamanho) problemas.push(`${rotulo}: o h1 tem ${m.h1Tamanho} px e há letra de ${m.maiorOutroTamanho} px na página (o h1 deve ser a maior)`)
+  problemas.push(...violacoesDoMel(rotulo, caminho, m))
+  if (m.scrollWidth > m.innerWidth) problemas.push(`${rotulo}: rolagem horizontal (${m.scrollWidth} > ${m.innerWidth})`)
+  return problemas
+}
+
+/**
+ * F8-1, o índice grudado (régua pura): a 1440 x 900 rolada, o `<nav>` está em `sticky`, o topo na linha de âncora (±1) e
+ * o pé dentro da janela; no fim da página o pé do índice não passa do topo do rodapé; com a rolagem pedida o `<nav>`
+ * leva `max-block-size` e é o único com `aria-current` (a foto marca um link na mão, ver `SCRIPT_DE_MEDIDA`).
+ */
+function violacoesDoIndiceGrudado(rotulo: string, m: Medida, noFim: boolean): string[] {
+  const problemas: string[] = []
+  const nav = m.indiceRolado
+  if (!nav) return [`${rotulo}: o índice não foi medido`]
+  if (m.indicePosicao !== 'sticky') problemas.push(`${rotulo}: o índice está "${m.indicePosicao}" (esperado sticky)`)
+  if (!m.indiceMaxAltura || m.indiceMaxAltura === 'none') problemas.push(`${rotulo}: o índice não tem max-block-size`)
+  if (noFim) {
+    if (!m.rodape) problemas.push(`${rotulo}: o rodapé não foi medido`)
+    else if (nav.bottom > m.rodape.y + 0.5) {
+      problemas.push(`${rotulo}: no fim da página o índice acaba em ${nav.bottom.toFixed(1)}, depois do topo do rodapé (${m.rodape.y.toFixed(1)})`)
+    }
+  } else {
+    if (Math.abs(nav.y - (m.ancora ?? 0)) > 1) problemas.push(`${rotulo}: o topo do índice está em ${nav.y.toFixed(1)} e a linha de âncora em ${m.ancora}`)
+    if (nav.bottom > m.innerHeight + 0.5) problemas.push(`${rotulo}: o pé do índice (${nav.bottom.toFixed(1)}) passa da janela (${m.innerHeight})`)
+  }
+  return problemas
+}
+
+/** Uma medida de 1440 que passa nas réguas (para os controles negativos): cada controle muda um só campo. */
+function medidaLarga(): Medida {
   const caixa = (x: number, y: number, width: number, height: number): Caixa => ({ x, y, width, height, right: x + width, bottom: y + height })
   return {
     innerWidth: 1440,
     innerHeight: 900,
     fontes: 'loaded',
     scrollWidth: 1440,
-    abertura: caixa(0, 88, 1440, 400),
-    placa: caixa(1100, 125, 340, 363),
-    cabeca: caixa(120, 160, 640, 250),
-    indice: caixa(840, 552, 320, 400),
-    leitura: caixa(120, 552, 640, 1500),
-    primeiroH2: caixa(120, 552, 640, 42),
-    h1Tamanho: 80,
+    abertura: caixa(0, 80, 1440, 160),
+    placa: caixa(1100, 80, 340, 160),
+    cabeca: caixa(120, 112, 640, 96),
+    indice: caixa(840, 320, 320, 400),
+    leitura: caixa(120, 320, 640, 1500),
+    primeiroH2: caixa(120, 320, 640, 42),
+    h1Tamanho: 48,
     maiorOutroTamanho: 36,
     primeiroParagrafo: null,
     quebraDoParagrafo: 'pretty',
@@ -621,6 +879,12 @@ function medidaT2Larga(): Medida {
     emailBotao: null,
     emailEndereco: null,
     enderecoLinhas: null,
+    aberturaPaddingBloco: '32px 32px',
+    aberturaMinBloco: 'auto',
+    ruaObjeto: 'cover 50% 0%',
+    ruaRazao: 0.797,
+    cabecalhoTom: 'noite',
+    elementosComMel: [],
   }
 }
 
@@ -693,48 +957,93 @@ describe(descreve, () => {
     expect(dentro).toEqual([])
   })
 
-  // REP-T2: controles negativos das réguas do modelo, nas funções puras (sem Chrome, fora do skipIf). Cada controle
-  // muda um só campo de uma medida que passa, e a régua tem de apontar exatamente esse campo.
-  it('REP-T2 controle: a medida de 1440 de referência passa nas réguas do modelo', () => {
-    expect(violacoesDoT2Largo('/privacidade a 1440', medidaT2Larga())).toEqual([])
+  // F8-1: controles negativos das réguas da abertura em noite, nas funções puras (sem Chrome, fora do skipIf). Cada controle
+  // muda um só campo de uma medida que passa, e a régua tem de apontar exatamente esse campo. Eles trocam os do T2 antigo
+  // (REP-T2: faixa de 400 px no mínimo, placa de 340 px de chão a chão): a regra assinada S-18 foi trocada por esta.
+  it('F8-1 controle: a medida de 1440 de referência passa nas réguas da abertura', () => {
+    expect(violacoesDaAberturaLarga('/privacidade a 1440', '/privacidade', medidaLarga())).toEqual([])
   })
 
-  it('REP-T2 controle: faixa de 399 px, placa fora da borda direita ou do pé, índice à esquerda e título fora da dobra são apontados', () => {
-    const base = medidaT2Larga()
-    const mudar = (parcial: Partial<Medida>) => violacoesDoT2Largo('/x a 1440', { ...base, ...parcial })
-    expect(mudar({ abertura: { ...base.abertura, height: 399, bottom: 487 } })).toHaveLength(2)
+  it('F8-1 controle: faixa alta, altura mínima, padding torto, rua fora da borda, do topo ou do pé, rua por baixo do texto, recorte errado, razão menor, cabeçalho de dia, mel e rolagem são apontados', () => {
+    const base = medidaLarga()
+    const mudar = (parcial: Partial<Medida>, caminho = '/privacidade') =>
+      violacoesDaAberturaLarga(`${caminho} a 1440`, caminho, { ...base, ...parcial })
+    expect(mudar({ abertura: { ...base.abertura, height: 171, bottom: 251 } })).toHaveLength(2)
+    const comAcao = { elementosComMel: ['a.cm-botao'] }
+    const alta = (altura: number): Partial<Medida> => ({
+      ...comAcao,
+      abertura: { ...base.abertura, height: altura, bottom: 80 + altura },
+      placa: { ...base.placa, height: altura, bottom: 80 + altura },
+    })
+    expect(mudar(alta(240), '/contato')).toEqual([])
+    expect(mudar(alta(241), '/contato')).toHaveLength(1)
+    expect(mudar({ aberturaMinBloco: '400px' })).toHaveLength(1)
+    expect(mudar({ aberturaPaddingBloco: '32px 0px' })).toHaveLength(1)
     expect(mudar({ placa: { ...base.placa, x: 1090, right: 1430 } })).toHaveLength(1)
-    expect(mudar({ placa: { ...base.placa, y: 115, bottom: 478 } })).toHaveLength(1)
+    expect(mudar({ placa: { ...base.placa, y: 90, bottom: 250 } })).toHaveLength(1)
     expect(mudar({ placa: { ...base.placa, width: 400, x: 1040 } })).toHaveLength(1)
-    expect(mudar({ indice: { ...base.indice, x: 100, right: 420 } })).toHaveLength(1)
-    expect(mudar({ primeiroH2: { ...base.primeiroH2, y: 900 } })).toHaveLength(1)
+    expect(mudar({ cabeca: { ...base.cabeca, right: 1200, width: 1080 } })).toHaveLength(1)
+    expect(mudar({ ruaObjeto: 'fill 50% 50%' })).toHaveLength(1)
+    expect(mudar({ ruaRazao: 0.5 })).toHaveLength(1)
+    expect(mudar({ cabecalhoTom: 'dia' })).toHaveLength(1)
+    expect(mudar({ elementosComMel: ['a.cm-botao'] })).toHaveLength(1)
+    expect(mudar({ elementosComMel: [] }, '/contato')).toHaveLength(1)
+    expect(mudar({ indice: { ...base.indice!, x: 100, right: 420 } })).toHaveLength(1)
     expect(mudar({ h1: { ...base.h1, colunaEsquerda: 130 } })).toHaveLength(1)
     expect(mudar({ h1Tamanho: 36 })).toHaveLength(1)
     expect(mudar({ scrollWidth: 1441 })).toHaveLength(1)
   })
 
-  it('REP-T2 controle: a 390 a placa acima do fim do texto, o índice dentro da faixa ou depois do documento e a rolagem horizontal são apontados', () => {
+  it('F8-1 controle: a 390 a rua acima do fim do texto ou fora do pé, a faixa alta, o documento depois de y 422, o índice fora do fluxo e a rolagem horizontal são apontados', () => {
     const caixa = (x: number, y: number, width: number, height: number): Caixa => ({ x, y, width, height, right: x + width, bottom: y + height })
     const base: Medida = {
-      ...medidaT2Larga(),
+      ...medidaLarga(),
       innerWidth: 390,
       innerHeight: 844,
       scrollWidth: 390,
-      h1Tamanho: 44,
-      maiorOutroTamanho: 28,
-      abertura: caixa(0, 72, 390, 561),
-      cabeca: caixa(20, 96, 350, 220),
-      placa: caixa(50, 360, 340, 273),
-      indice: caixa(20, 680, 350, 48),
-      leitura: caixa(20, 760, 350, 1500),
+      h1Tamanho: 34,
+      maiorOutroTamanho: 20,
+      abertura: caixa(0, 72, 390, 200),
+      cabeca: caixa(20, 96, 350, 80),
+      placa: caixa(50, 200, 340, 72),
+      indice: caixa(20, 320, 350, 48),
+      leitura: caixa(20, 400, 350, 1500),
     }
-    expect(violacoesDoT2Estreito('/x a 390', base)).toEqual([])
-    const mudar = (parcial: Partial<Medida>) => violacoesDoT2Estreito('/x a 390', { ...base, ...parcial })
-    expect(mudar({ placa: { ...base.placa, y: 300, bottom: 573 } })).toHaveLength(2)
+    expect(violacoesDaAberturaEstreita('/privacidade a 390', '/privacidade', base)).toEqual([])
+    const mudar = (parcial: Partial<Medida>, caminho = '/privacidade') =>
+      violacoesDaAberturaEstreita(`${caminho} a 390`, caminho, { ...base, ...parcial })
+    expect(mudar({ placa: { ...base.placa, y: 150, bottom: 222 } })).toHaveLength(2)
     expect(mudar({ placa: { ...base.placa, x: 40, right: 380 } })).toHaveLength(1)
-    expect(mudar({ indice: { ...base.indice, y: 600, bottom: 648 } })).toHaveLength(1)
-    expect(mudar({ indice: { ...base.indice, y: 740, bottom: 788 } })).toHaveLength(1)
+    expect(mudar({ abertura: { ...base.abertura, height: 241, bottom: 313 } })).toHaveLength(2)
+    // Faixa de 341 px com ação: o limite de 340 é apontado, e a rua e o índice deixam de ficar no pé e depois da faixa.
+    expect(mudar({ abertura: { ...base.abertura, height: 341, bottom: 413 }, elementosComMel: ['a.cm-botao'] }, '/contato')).toHaveLength(3)
+    expect(mudar({ leitura: { ...base.leitura, y: 423, bottom: 1923 }, indice: { ...base.indice!, y: 330, bottom: 378 } })).toHaveLength(1)
+    // Com ação (Contato e Exclusão) o documento pode começar depois de y 422: o limite é só das quatro páginas sem ação.
+    expect(mudar({ leitura: { ...base.leitura, y: 500, bottom: 2000 }, elementosComMel: ['a.cm-botao'] }, '/contato')).toEqual([])
+    expect(mudar({ indice: { ...base.indice!, y: 250, bottom: 298 } })).toHaveLength(1)
+    expect(mudar({ indice: { ...base.indice!, y: 380, bottom: 428 } })).toHaveLength(1)
+    expect(mudar({ ruaRazao: 0.4 })).toHaveLength(1)
     expect(mudar({ scrollWidth: 391 })).toHaveLength(1)
+  })
+
+  it('F8-1 controle: o índice grudado fora da linha de âncora, solto, sem limite de altura ou por cima do rodapé é apontado', () => {
+    const caixa = (x: number, y: number, width: number, height: number): Caixa => ({ x, y, width, height, right: x + width, bottom: y + height })
+    const base: Medida = {
+      ...medidaLarga(),
+      indiceRolado: caixa(840, 104, 320, 400),
+      indicePosicao: 'sticky',
+      indiceMaxAltura: '772px',
+      ancora: 104,
+      rodape: caixa(0, 1000, 1440, 300),
+    }
+    expect(violacoesDoIndiceGrudado('/privacidade y1500', base, false)).toEqual([])
+    expect(violacoesDoIndiceGrudado('/privacidade fim', { ...base, indiceRolado: caixa(840, 560, 320, 400) }, true)).toEqual([])
+    const rolado = (parcial: Partial<Medida>) => violacoesDoIndiceGrudado('/privacidade y1500', { ...base, ...parcial }, false)
+    expect(rolado({ indiceRolado: caixa(840, 106, 320, 400) })).toHaveLength(1)
+    expect(rolado({ indicePosicao: 'static' })).toHaveLength(1)
+    expect(rolado({ indiceMaxAltura: 'none' })).toHaveLength(1)
+    expect(rolado({ indiceRolado: caixa(840, 104, 320, 800) })).toHaveLength(1)
+    expect(violacoesDoIndiceGrudado('/privacidade fim', { ...base, indiceRolado: caixa(840, 700, 320, 400) }, true)).toHaveLength(1)
   })
 
   // VIS-4-r4-I-04: o cartão de e-mail de /contato fica numa linha só de 1280 em diante, mesmo com um endereço mais longo.
@@ -801,26 +1110,183 @@ describe(descreve, () => {
     TEMPO_DO_CHROME,
   )
 
-  for (const caminho of PAGINAS) {
-    // REP-T2 a 1440: a faixa de cacau (400 px no mínimo), a placa rente à borda direita e ao pé, o h1 e a coluna de leitura
-    // na mesma borda esquerda, o índice à direita da coluna e o primeiro título do documento dentro dos 900 da dobra.
+  // F8-1, o relatório: a altura da abertura (sem o cabeçalho), o h1, a rua e onde começa o texto do documento, por página
+  // e por largura. Só imprime (o que vale está nos testes de aceite abaixo).
+  roda(
+    'F8-1 relatório das medidas da abertura (só imprime)',
+    async () => {
+      const linhas: string[] = []
+      for (const [largura, altura] of [[390, 844], [1440, 900]] as const) {
+        for (const caminho of PAGINAS) {
+          const m = await medirPagina(caminho, largura, altura)
+          linhas.push(
+            [
+              `${caminho}@${largura}`,
+              `dpr=${m.densidade}`,
+              `faixa=${m.abertura.height.toFixed(1)}`,
+              `h1=${m.h1Tamanho}px`,
+              `lide.y=${m.lideCaixa?.y.toFixed(1)}`,
+              `docY=${m.leitura.y.toFixed(1)}`,
+              `h2Y=${m.primeiroH2.y.toFixed(1)}`,
+              `placa=${m.placa.width.toFixed(0)}x${m.placa.height.toFixed(0)}`,
+              `razao=${m.ruaRazao?.toFixed(3)}`,
+              `rua=${m.ruaArquivo}`,
+              `ruaObj=${m.ruaObjeto}`,
+              `tom=${m.cabecalhoTom}`,
+              `scrollW=${m.scrollWidth}`,
+              `mel=${(m.elementosComMel ?? []).join('|')}`,
+            ].join(' '),
+          )
+        }
+      }
+      const pastaDasMedidas = resolve(import.meta.dirname, '..', '..', '..', '..', '.oc', 'medidas')
+      mkdirSync(pastaDasMedidas, { recursive: true })
+      writeFileSync(join(pastaDasMedidas, `${PREFIXO_DAS_FOTOS}relatorio.txt`), linhas.join('\n') + '\n', 'utf8')
+    },
+    TEMPO_DO_CHROME * 4,
+  )
+
+  // F8-1, o índice grudado: a Privacidade a 1440 x 900 rolada até 1500 (o topo do índice na linha de âncora, o pé dentro da
+  // janela, o marcador no link atual com a transição de 160 ms, ou sem transição com movimento reduzido) e rolada até o
+  // fim (o pé do índice antes do rodapé). As fotos saem em densidade 2. O link atual da foto é posto na mão pela regra do
+  // índice, porque o harness é HTML sem React (o comportamento do observador é o do teste de jsdom em `publicasTexto.test.tsx`).
+  for (const reduzido of [false, true]) {
     roda(
-      `REP-T2 ${caminho} a 1440: faixa de 400 px, placa rente à direita e ao pé, h1 e leitura na mesma borda, índice à direita, primeiro título na dobra`,
+      `F8-1 a Privacidade a 1440 x 900, scrollY 1500${reduzido ? ', movimento reduzido' : ''}: índice grudado na linha de âncora, um só link atual com o marcador`,
+      async () => {
+        const m = await medirPagina('/privacidade', 1440, 900, false, undefined, {
+          rolar: 1500,
+          marcar: 'auto',
+          reduzido,
+          nomeDaFoto: `privacidade_1440_y1500${reduzido ? '_reduzido' : ''}`,
+          alturaDaFoto: 900,
+        })
+        expect(m.densidade).toBe(DENSIDADE_DAS_FOTOS)
+        expect(m.scrollY).toBe(1500)
+        expect(violacoesDoIndiceGrudado('/privacidade a 1440 y1500', m, false)).toEqual([])
+        expect(m.linksAtuais).toBe(1)
+        // O estado final: o traço inteiro (scaleY 1). Com movimento normal ele chegou ali por uma transição de transform
+        // de 160 ms; com movimento reduzido não houve transição nenhuma (o traço já estava no lugar).
+        expect(m.marcadorEscala).toBe('matrix(1, 0, 0, 1, 0, 0)')
+        expect(m.marcadorTransicao).toBe(reduzido ? '0s' : '0.16s')
+        // (Duas no movimento normal: a do traço que sai do link antigo e a do que chega ao novo.)
+        if (reduzido) expect(m.marcadorTransicoes).toBe(0)
+        else expect(m.marcadorTransicoes).toBeGreaterThanOrEqual(1)
+        expect(m.marcadorDuracao).toBe(reduzido ? 0 : 160)
+      },
+      TEMPO_DO_CHROME,
+    )
+  }
+
+  roda(
+    'F8-1 a Privacidade a 1440 x 900 no fim da página: o pé do índice não passa do topo do rodapé',
+    async () => {
+      const m = await medirPagina('/privacidade', 1440, 900, false, undefined, { rolar: 'fim', nomeDaFoto: 'privacidade_1440_fim', alturaDaFoto: 900 })
+      expect(violacoesDoIndiceGrudado('/privacidade a 1440 no fim', m, true)).toEqual([])
+    },
+    TEMPO_DO_CHROME,
+  )
+
+  roda(
+    'F8-1 a Privacidade a 390 e a 1024 x 768: o índice fica em fluxo (position static), sem rolagem horizontal',
+    async () => {
+      for (const [largura, altura] of [[390, 844], [1024, 768]] as const) {
+        const m = await medirPagina('/privacidade', largura, altura, false, undefined, { rolar: 1500 })
+        expect(m.indicePosicao, `a ${largura}`).toBe('static')
+        expect(m.scrollWidth, `a ${largura}`).toBeLessThanOrEqual(m.innerWidth)
+      }
+    },
+    TEMPO_DO_CHROME * 2,
+  )
+
+  // F8-1, Contato sem índice: as duas seções lado a lado, 7 para 5, a 1440 e a 1280; empilhadas a 1024 e a 390.
+  roda(
+    'F8-1 o Contato não tem índice e põe as duas seções lado a lado (7fr e 5fr) a partir de 66 rem de quadro',
+    async () => {
+      for (const largura of [1280, 1440]) {
+        const m = await medirPagina('/contato', largura, 900)
+        expect(m.indice, `a ${largura}`).toBeNull()
+        const [a, b] = m.secoesDoContato ?? []
+        expect(a && b, `a ${largura}: duas seções medidas`).toBeTruthy()
+        expect(igual(a.y, b.y, 1), `a ${largura}: as seções começam na mesma altura (${a.y} e ${b.y})`).toBe(true)
+        expect(b.x).toBeGreaterThan(a.right)
+        expect(igual(a.width / b.width, 7 / 5, 0.02), `a ${largura}: ${a.width.toFixed(1)} para ${b.width.toFixed(1)}`).toBe(true)
+      }
+      for (const [largura, altura] of [[1024, 768], [390, 844]] as const) {
+        const m = await medirPagina('/contato', largura, altura)
+        const [a, b] = m.secoesDoContato ?? []
+        expect(b.y, `a ${largura}: empilhadas`).toBeGreaterThan(a.bottom - 0.5)
+      }
+    },
+    TEMPO_DO_CHROME * 4,
+  )
+
+  for (const caminho of PAGINAS) {
+    // F8-1 a 1440: a abertura do tamanho do texto (170 px, ou 240 com ação), a rua rente à direita e aos dois lados da faixa,
+    // o cabeçalho de noite, o mel só na ação, o índice (três seções ou mais) à direita da coluna, sem rolagem horizontal.
+    roda(
+      `F8-1 ${caminho} a 1440: abertura do tamanho do texto, rua rente à direita e à altura da faixa, cabeçalho de noite, mel só na ação`,
       async () => {
         const m = await medirPagina(caminho, 1440, 900, true)
-        expect(violacoesDoT2Largo(`${caminho} a 1440`, m)).toEqual([])
+        expect(violacoesDaAberturaLarga(`${caminho} a 1440`, caminho, m)).toEqual([])
+        // A primeira tela (1440 x 900, densidade 2), a foto que a galeria mostra.
+        await medirPagina(caminho, 1440, 900, false, undefined, { nomeDaFoto: `${caminho.slice(1)}_1440_dobra`, alturaDaFoto: 900 })
       },
       TEMPO_DO_CHROME,
     )
 
-    // REP-T2 a 390: a faixa empilhada (texto e, embaixo, a placa), o índice em fluxo, depois o documento; sem rolagem horizontal.
+    // F8-1 a 390: a abertura (240 px, ou 340 com ação) com a rua numa linha no pé, o índice em fluxo, o documento até y 422.
     roda(
-      `REP-T2 ${caminho} a 390: faixa empilhada com a placa embaixo, índice antes do documento, sem rolagem horizontal`,
+      `F8-1 ${caminho} a 390: abertura compacta com a rua numa linha no pé, índice em fluxo, documento até y 422`,
       async () => {
         const m = await medirPagina(caminho, 390, 844, true)
-        expect(violacoesDoT2Estreito(`${caminho} a 390`, m)).toEqual([])
+        expect(violacoesDaAberturaEstreita(`${caminho} a 390`, caminho, m)).toEqual([])
+        // A primeira tela (390 x 844, densidade 2), a foto que a galeria mostra.
+        await medirPagina(caminho, 390, 844, false, undefined, { nomeDaFoto: `${caminho.slice(1)}_390_dobra`, alturaDaFoto: 844 })
       },
       TEMPO_DO_CHROME,
+    )
+
+    // F8-1, texto ampliado: a 320 e a 390, com a letra da raiz a 16, 20 e 32 px (32 = 200%): o h1 quebra dentro da faixa, o
+    // texto não passa por cima da linha da rua e a página não rola na horizontal. A 320 com 32 px o cabeçalho do site já
+    // passava da janela antes desta unidade (P-320-200, scrollWidth 378): esse caso é só registrado, não barrado.
+    roda(
+      `F8-1 ${caminho} a 320 e 390 com a letra da raiz a 16, 20 e 32 px: h1 na faixa, nada sobre a linha da rua, sem rolagem horizontal`,
+      async () => {
+        const problemas: string[] = []
+        const registro: string[] = []
+        for (const largura of [320, 390]) {
+          for (const raiz of [16, 20, 32]) {
+            const rotulo = `${caminho} a ${largura} com raiz ${raiz}`
+            const m = await medirPagina(caminho, largura, 844, false, undefined, { raiz })
+            const fora = linhasForaDaColuna(m.h1)
+            if (fora.length > 0) problemas.push(`${rotulo}: linha(s) do h1 fora da coluna: ${fora.map((l) => `"${l.texto}"`).join('; ')}`)
+            if (m.placa.y < m.cabeca.bottom - 0.5) problemas.push(`${rotulo}: a rua começa em y ${m.placa.y.toFixed(1)}, antes do fim do texto (${m.cabeca.bottom.toFixed(1)})`)
+            if (m.h1Caixa && m.h1Caixa.right > m.abertura.right + 0.5) problemas.push(`${rotulo}: o h1 passa da faixa (${m.h1Caixa.right.toFixed(1)} > ${m.abertura.right.toFixed(1)})`)
+            registro.push(`${rotulo}: scrollWidth ${m.scrollWidth}, janela ${m.innerWidth}`)
+            const casoConhecido = largura === 320 && raiz === 32
+            if (m.scrollWidth > m.innerWidth && !casoConhecido) problemas.push(`${rotulo}: rolagem horizontal (${m.scrollWidth} > ${m.innerWidth})`)
+          }
+        }
+        escreverMedidas(`texto-ampliado${caminho.replaceAll('/', '_')}.txt`, registro)
+        expect(problemas).toEqual([])
+      },
+      TEMPO_DO_CHROME * 3,
+    )
+
+    // F8-1, a rolagem horizontal nas larguras de 768 e 1024 (1024 x 768 é também a janela onde o índice fica em fluxo).
+    roda(
+      `F8-1 ${caminho} a 768 e 1024: sem rolagem horizontal; o índice não gruda (position static)`,
+      async () => {
+        const problemas: string[] = []
+        for (const [largura, altura] of [[768, 1024], [1024, 768]] as const) {
+          const m = await medirPagina(caminho, largura, altura)
+          if (m.scrollWidth > m.innerWidth) problemas.push(`${caminho} a ${largura}: rolagem horizontal (${m.scrollWidth} > ${m.innerWidth})`)
+          if (m.indicePosicao !== undefined && m.indicePosicao !== 'static') problemas.push(`${caminho} a ${largura}: o índice está "${m.indicePosicao}" (esperado static)`)
+        }
+        expect(problemas).toEqual([])
+      },
+      TEMPO_DO_CHROME * 2,
     )
 
     // O texto de leitura: menos de 80 letras por linha; parágrafo com `pretty` e título com `balance`.
