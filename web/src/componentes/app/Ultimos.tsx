@@ -41,7 +41,7 @@ export function Ultimos({ itens, className, dataH }: Props) {
           return (
             <div
               key={posicao}
-              className="sb-numeros-item flex min-h-14 flex-row-reverse items-center justify-between gap-4 border-t border-l-0 border-(--cor-fio-suave) px-0 py-2 first:border-t-0 lg:flex-col-reverse lg:items-start lg:justify-end lg:gap-1 lg:border-t-0 lg:border-l lg:py-5 lg:pl-6 lg:first:border-l-0 lg:first:pl-0"
+              className="sb-numeros-item flex min-h-14 flex-row-reverse flex-wrap-reverse items-center justify-between gap-x-4 gap-y-1 lg:flex-nowrap border-t border-l-0 border-(--cor-fio-suave) px-0 py-2 first:border-t-0 lg:flex-col-reverse lg:items-start lg:justify-end lg:gap-1 lg:border-t-0 lg:border-l lg:py-5 lg:pl-6 lg:first:border-l-0 lg:first:pl-0"
             >
               <div className="flex items-baseline gap-1.5 whitespace-nowrap">
                 {desde ? (
@@ -53,7 +53,7 @@ export function Ultimos({ itens, className, dataH }: Props) {
                   {item.valor}
                 </p>
               </div>
-              <p className="min-w-0 font-medium lg:text-pequeno lg:text-(--cor-texto-2)">
+              <p className="mr-auto min-w-0 font-medium lg:text-pequeno lg:text-(--cor-texto-2)">
                 {nome}
                 {desde ? <span className="sr-only">{DESDE}</span> : null}
               </p>

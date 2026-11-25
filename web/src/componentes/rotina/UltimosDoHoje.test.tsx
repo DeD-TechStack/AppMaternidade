@@ -83,6 +83,37 @@ describe('R9: UltimosDoHoje, o componente que o Hoje usa nos Últimos', () => {
     expect(html(nosso.container)).toBe(baseHtml)
   })
 
+  it('retains every full label, value and accessible suffix in both reflow renderers', () => {
+    const contents = [
+      { valor: '23:50', legenda: 'Sono, fim ontem' },
+      { valor: '2 h 10', legenda: 'Mamada, tempo desde o registro' },
+      { valor: '19:30', legenda: 'Mamadeira ontem' },
+      { valor: '50 min', legenda: 'Fralda, tempo desde o registro' },
+      { valor: '15:08', legenda: 'Tummy time, fim ontem' },
+      { valor: '12:00', legenda: 'Alimentação sólida ontem' },
+      { valor: '16/11 14:50', legenda: 'Observação' },
+      { valor: '—', legenda: '—' },
+    ]
+    for (const Component of [Ultimos, UltimosDoHoje]) {
+      const view = render(<Component itens={contents} />)
+      const rows = [...view.container.querySelectorAll('.sb-numeros-item')]
+      expect(rows).toHaveLength(contents.length)
+      for (const [index, row] of rows.entries()) {
+        expect(row.querySelector('[data-numero]')?.textContent).toBe(contents[index].valor)
+        expect(row.querySelector(':scope > p')?.textContent).toBe(contents[index].legenda)
+      }
+      view.unmount()
+    }
+  })
+
+  it('retains the date witness and its adjacent sending marker without changing the label', () => {
+    const observation = registro('d0000000-0000-7000-8000-000000000003', 'observacao')
+    const { container } = render(<UltimosDoHoje itens={[{ valor: '16/11 14:50', legenda: 'Observação', registro: observation }]} marcaDe={() => <b>pendente</b>} />)
+    const marker = container.querySelector('[data-marca-envio]')!
+    expect(marker.previousElementSibling?.textContent).toBe('16/11 14:50')
+    expect(container.querySelector('.sb-numeros-item > p')?.textContent).toBe('Observação')
+  })
+
   it('R9: o Hoje monta os Últimos por este componente (e não pelo Ultimos da base) e não passa marcaDe', () => {
     // `pastaSrcDe` devolve a pasta do teste (web/src/componentes/rotina/): a página fica em ../../paginas/rotina.
     const hoje = readFileSync(`${pastaSrcDe(import.meta.url)}../../paginas/rotina/Hoje.tsx`, 'utf8')
