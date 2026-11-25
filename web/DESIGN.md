@@ -209,7 +209,7 @@ A cor nunca é a única pista: erro, estado e seleção levam também ícone, te
 
 ## Typography
 
-Duas famílias, SIL OFL 1.1, auto-hospedadas pelo `@fontsource-variable` (registro em `web/PROVENANCE.md`): **Literata** nos títulos (importada com o eixo de corte óptico, `literata/opsz.css`, mais o itálico `wght-italic.css`) e **Outfit** no texto e na interface. Nenhum texto em caixa alta. Nada menor que 15 px.
+Duas famílias, SIL OFL 1.1, auto-hospedadas pelo `@fontsource-variable` (registro em `web/PROVENANCE.md`): **Literata** nos títulos (importada com o eixo de corte óptico, `literata/opsz.css`) e **Outfit** no texto e na interface. Nenhum texto em caixa alta. Nada menor que 15 px.
 
 Nove níveis. Cada nível tem dois pares de tamanho e entrelinha, um para 390 px de viewport e outro para 1440 px. A escala tem quatro âncoras: 320, 390, 1440 e 1920. Entre 390 e 1440 a medida cresce em linha reta, e a mesma reta continua para baixo até 320 e para cima até 1920; abaixo de 320 e acima de 1920 ela fica parada (o piso e o teto do `clamp` do tema gerado). Os valores de 320 e de 1920 não são escritos aqui: o gerador os tira da reta. Piso de leitura: nenhum nível fica menor que o `corpo` de 390 (17 px); o nível cuja reta cairia abaixo disso em 320 (hoje só o próprio `corpo`) para no par de 390. Assim, em 320 a exibição tem 41,6 px e o corpo 17/26, e em 1920 a exibição tem perto de 96 px e o corpo perto de 18,5 px. O tamanho e a entrelinha são em rem no tema (16 px = 1 rem com a fonte a 100%).
 
@@ -231,7 +231,7 @@ O espaçamento entre letras (tracking) dos títulos continua o do código até a
 
 Itálico: nenhum nas páginas públicas, em nenhum elemento; a área logada não entra nesta regra até o DS-2.
 
-Variantes de exibição: removidas. A Literata 600 é a única face de exibição; o `main.tsx` não lê mais `?exibicao=` e o pacote da M PLUS Rounded não é mais importado pelo CSS. Os blocos `html[data-exibicao="b"|"c"]` de `tokens.css` e `inicio-casa.css` são código morto, sem nada que ponha o atributo, e a dependência `@fontsource/m-plus-rounded-1c` segue no `package.json` até a equipe tirá-la.
+Variantes de exibição (restos temporários): a Literata 600 (bloco A) é a única face em uso. O `main.tsx` não lê mais `?exibicao=` e o CSS não importa mais a M PLUS Rounded 1c. Os blocos B e C de `html[data-exibicao]` em `tokens.css` e em `inicio-casa.css` ficaram como código morto, que nada ativa; a dependência `@fontsource/m-plus-rounded-1c` segue no `package.json`. A equipe apaga tudo isso junto com os testes que ainda o fixam.
 
 A face dos títulos é a variável `--fonte-exibicao` (declarada uma só vez, em `tokens.css`), e os pesos são `--peso-exibicao` e `--peso-titulo` (600 os dois). Uma troca de face muda esses três tokens e mais nada. A ênfase é por peso, nunca por inclinação.
 
