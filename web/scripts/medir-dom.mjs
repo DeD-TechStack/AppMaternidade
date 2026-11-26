@@ -296,6 +296,32 @@ export function g1(doc) {
 }
 
 /**
+ * O chão que se vê sob um texto, lido da pilha de acertos que a página registra (`pilhaSob`, na ordem de
+ * `elementsFromPoint`, cada entrada `{ cor, recorte }`): a cor do primeiro elemento opaco cujo recorte (a caixa que o
+ * corta, em coordenadas da janela; nulo se nada o corta) contém o ponto do texto, bordas incluídas. Um recorte que não
+ * contém o ponto ou é vazio não pinta ali, e a entrada é ignorada. `undefined` quando nada serve (quem chama cai na
+ * cadeia de ancestrais). Falha fechado: cor ilegível, recorte com número não finito, pilha que não é lista ou ponto
+ * não finito devolvem 'ilegível' (que não é cor: o TEMPO reprova o chão e o G11 volta à cadeia).
+ */
+export function fundoVisivelDaPilha(pilha, ponto) {
+  if (!Array.isArray(pilha)) return 'ilegível'
+  if (!ponto || typeof ponto !== 'object' || !ehNumero(ponto.x) || !ehNumero(ponto.y)) return 'ilegível'
+  for (const entrada of pilha) {
+    const cor = entrada?.cor
+    if (typeof cor !== 'string' || cor.trim() === '') return 'ilegível'
+    const lida = parseCor(cor)
+    if (lida === null) return 'ilegível'
+    if (lida.a === 0) continue
+    const recorte = entrada.recorte
+    if (recorte === null || recorte === undefined) return cor
+    if (typeof recorte !== 'object' || !['x', 'y', 'w', 'h'].every((chave) => ehNumero(recorte[chave]))) return 'ilegível'
+    const { x, y, w, h } = recorte
+    if (w > 0 && h > 0 && ponto.x >= x && ponto.x <= x + w && ponto.y >= y && ponto.y <= y + h) return cor
+  }
+  return undefined
+}
+
+/**
  * G11: alvo de toque de 44 × 44 (56 de altura na BarraRegistrar e na madrugada) e contraste do texto
  * de 4,5:1, ou de 3:1 para texto grande (≥ 24 px, ou ≥ 18,66 px com peso ≥ 700).
  */
@@ -323,6 +349,8 @@ export function g11(nos, tema) {
   }
   let menor = Infinity
   for (const no of textos) {
+    // O texto recortado para fora da tela (`recortadoFora === true` estrito) não está à vista: não tem contraste a ler.
+    if (no.recortadoFora === true) continue
     if (!(no.rect?.w > 0)) {
       falhas.push({ no: descrever(no), motivo: `${descrever(no)}: texto com largura 0` })
       continue
@@ -1660,6 +1688,8 @@ export function tempo(nos, doc) {
   for (const no of nos) {
     // O botão de mel tem o próprio fundo (o chão sob ele é `fundoSob`): o contraste dele é o do G11.
     if (marca(no, 'botaoMel')) continue
+    // O texto recortado para fora da tela (`recortadoFora === true` estrito) não está à vista: não tem tinta a conferir.
+    if (no.recortadoFora === true) continue
     if (!visivel(no) || !temTexto(no) || !lido(no.estilo?.color) || !(lido(no.fundoSob) || Array.isArray(no.cadeia))) continue
     const razao = contraste(no.estilo.color, lido(no.fundoSob) ? [no.fundoSob] : no.cadeia)
     const chao = corDoFundo(no)
@@ -1956,7 +1986,14 @@ export function bloqueantesDoCaso(caso) {
  * originais; com ele, as do caso (`regrasDoCaso`), e só as duas de registro não bloqueiam.
  */
 export function avaliarTudo({ doc, nos, tema, caso }) {
-  const lista = Array.isArray(nos) ? nos : []
+  // O chão visível sob o texto vem da pilha que a página registrou (`pilhaSob`), lido aqui; sem copiar o que o chamador
+  // passou. Nó com `fundoSob` simples e sem `pilhaSob` fica como está.
+  const lista = (Array.isArray(nos) ? nos : []).map((no) => {
+    if (!no || typeof no !== 'object' || no.pilhaSob === undefined) return no
+    const { fundoSob: _antigo, ...resto } = no
+    const fundo = fundoVisivelDaPilha(no.pilhaSob, no.pontoSob)
+    return fundo === undefined ? resto : { ...resto, fundoSob: fundo }
+  })
   const bloqueantes = bloqueantesDoCaso(caso)
   const avaliadores = {
     G1: () => g1(doc),
@@ -2394,32 +2431,104 @@ export function coletarNaPagina() {
   // `elementsFromPoint` só enxerga o que está na janela: rola até a pílula e devolve a rolagem de antes.
   // REP-HOME: o texto dentro da casa também tem o fundo lido por baixo dele, porque as paredes do herói são camadas
   // irmãs (não ancestrais), e a cadeia de fundos dos ancestrais não as vê.
+  // A folha da noite tem `pointer-events: none` (e os filhos herdam), e `elementsFromPoint` pula o que não recebe o
+  // ponteiro: na passada, um `<style>` com `pointer-events: auto !important` faz a pilha mostrar tudo o que pinta. A
+  // página registra a pilha inteira (`pilhaSob`, com o recorte de cada entrada) e o ponto (`pontoSob`); quem decide o
+  // chão visível é `fundoVisivelDaPilha`, no lado puro. `recortadoFora`: o texto cai fora do recorte dos ancestrais.
   let rolou = false
   const fundoOpaco = (texto) => {
     const m = /^rgba?\(\s*[\d.]+[\s,]+[\d.]+[\s,]+[\d.]+(?:[\s,/]+([\d.]+))?/.exec(texto || '')
     return m !== null && (m[1] === undefined || Number(m[1]) >= 0.999)
   }
-  elementos.forEach((el, indice) => {
-    const marcas = nos[indice].m
-    if (!marcas.botaoMel && !(marcas.casa && marcas.folha && nos[indice].visivel)) return
-    // Um texto com fundo opaco próprio (o dia do h1 em 390) fica sobre ele: a cadeia de fundos já o lê.
-    if (!marcas.botaoMel && fundoOpaco(nos[indice].estilo.backgroundColor)) return
-    if (typeof document.elementsFromPoint !== 'function') return
-    if (typeof el.scrollIntoView === 'function') {
-      el.scrollIntoView({ block: 'center', inline: 'nearest' })
-      rolou = true
-    }
-    const r = el.getBoundingClientRect()
-    const pilhas = document.elementsFromPoint(r.x + r.width / 2, r.y + r.height / 2)
-    for (const abaixo of pilhas) {
-      if (abaixo === el || el.contains(abaixo)) continue
-      const cor = getComputedStyle(abaixo).backgroundColor
-      if (cor && cor !== 'transparent' && !/rgba\(\s*\d+,\s*\d+,\s*\d+,\s*0\s*\)/.test(cor)) {
-        nos[indice].fundoSob = cor
-        break
+  const retangulo = (r) => ({ x: r.x, y: r.y, w: r.width, h: r.height })
+  const cortar = (a, b) => {
+    const x1 = Math.max(a.x, b.x)
+    const y1 = Math.max(a.y, b.y)
+    return { x: x1, y: y1, w: Math.min(a.x + a.w, b.x + b.w) - x1, h: Math.min(a.y + a.h, b.y + b.h) - y1 }
+  }
+  // Os ancestrais estritos (até antes de body e html) com overflow que corta: a interseção das caixas de borda deles.
+  const recorteDosAncestrais = (el) => {
+    let recorte = null
+    for (let a = el.parentElement; a && a !== document.body && a !== document.documentElement; a = a.parentElement) {
+      const cs = getComputedStyle(a)
+      const corta = (v) => ['hidden', 'clip', 'scroll', 'auto', 'overlay'].includes(String(v || '').trim().split(/\s+/)[0])
+      const atalho = String(cs.overflow || '').trim().split(/\s+/)
+      if (corta(cs.overflowX || atalho[0]) || corta(cs.overflowY || atalho[1] || atalho[0])) {
+        const caixa = retangulo(a.getBoundingClientRect())
+        recorte = recorte === null ? caixa : cortar(recorte, caixa)
       }
     }
-  })
+    return recorte
+  }
+  // O `clip-path: inset(...)` do próprio elemento, sobre a caixa de borda dele (px e %, 1 a 4 valores, sem `round`).
+  const recorteInset = (el) => {
+    const cs = getComputedStyle(el)
+    const texto = String(cs.getPropertyValue('clip-path') || cs.clipPath || '').trim()
+    const m = /^inset\(\s*([^)]*?)\s*\)$/i.exec(texto)
+    if (!m) return null
+    const valores = m[1].replace(/\s+round\b.*$/i, '').trim().split(/\s+/)
+    if (valores.length < 1 || valores.length > 4 || valores[0] === '') return null
+    const caixa = retangulo(el.getBoundingClientRect())
+    const em = (v, total) => (/^-?[\d.]+(px)?$/.test(v) ? parseFloat(v) : /^-?[\d.]+%$/.test(v) ? (parseFloat(v) / 100) * total : Number.NaN)
+    const [t, d = t, b = t, e = d] = valores
+    const medidas = [em(t, caixa.h), em(d, caixa.w), em(b, caixa.h), em(e, caixa.w)]
+    if (medidas.some((v) => Number.isNaN(v))) return null
+    return { x: caixa.x + medidas[3], y: caixa.y + medidas[0], w: caixa.w - medidas[3] - medidas[1], h: caixa.h - medidas[0] - medidas[2] }
+  }
+  const recorteDe = (el) => {
+    const dosAncestrais = recorteDosAncestrais(el)
+    const inset = recorteInset(el)
+    return dosAncestrais === null ? inset : inset === null ? dosAncestrais : cortar(dosAncestrais, inset)
+  }
+  const sondar = () => {
+    elementos.forEach((el, indice) => {
+      const marcas = nos[indice].m
+      if (!marcas.botaoMel && !(marcas.casa && marcas.folha && nos[indice].visivel)) return
+      // Um texto com fundo opaco próprio (o dia do h1 em 390) fica sobre ele: a cadeia de fundos já o lê.
+      if (!marcas.botaoMel && fundoOpaco(nos[indice].estilo.backgroundColor)) return
+      if (typeof document.elementsFromPoint !== 'function') return
+      if (typeof el.scrollIntoView === 'function') {
+        el.scrollIntoView({ block: 'center', inline: 'nearest' })
+        rolou = true
+      }
+      const r = el.getBoundingClientRect()
+      const ponto = { x: r.x + r.width / 2, y: r.y + r.height / 2 }
+      nos[indice].pilhaSob = document
+        .elementsFromPoint(ponto.x, ponto.y)
+        .filter((abaixo) => abaixo !== el && !el.contains(abaixo))
+        .map((abaixo) => ({ cor: getComputedStyle(abaixo).backgroundColor, recorte: recorteDe(abaixo) }))
+      nos[indice].pontoSob = ponto
+      if (!marcas.botaoMel && r.width > 0 && r.height > 0) {
+        // Um nó sem tamanho não é "recortado": o G11 o reprova como texto de largura 0, e isso não pode sumir.
+        const dosAncestrais = recorteDosAncestrais(el)
+        if (dosAncestrais !== null) {
+          const vista = cortar(dosAncestrais, retangulo(r))
+          if (!(vista.w > 0) || !(vista.h > 0)) nos[indice].recortadoFora = true
+        }
+      }
+    })
+  }
+  // O site tem CSP, e a política bloqueia um `<style>` inline: o `pointer-events` calculado da folha ficava `none` e o
+  // `elementsFromPoint` nunca a listava. Uma folha construível (`CSSStyleSheet` + `adoptedStyleSheets`) não passa pela
+  // CSP de estilo inline. O `<style>` fica só de reserva, onde não há folha construível (jsdom). Sai exatamente o que
+  // entrou: a folha é filtrada de `adoptedStyleSheets` (as que já estavam adotadas ficam) ou o `<style>` é removido.
+  const folhaDaSonda =
+    typeof CSSStyleSheet === 'function' && 'adoptedStyleSheets' in document ? new CSSStyleSheet() : null
+  let estiloDaSonda = null
+  if (folhaDaSonda !== null) {
+    folhaDaSonda.replaceSync('* { pointer-events: auto !important }')
+    document.adoptedStyleSheets = [...document.adoptedStyleSheets, folhaDaSonda]
+  } else {
+    estiloDaSonda = document.createElement('style')
+    estiloDaSonda.textContent = '* { pointer-events: auto !important }'
+    ;(document.head || document.documentElement).appendChild(estiloDaSonda)
+  }
+  try {
+    sondar()
+  } finally {
+    if (folhaDaSonda !== null) document.adoptedStyleSheets = document.adoptedStyleSheets.filter((folha) => folha !== folhaDaSonda)
+    else estiloDaSonda.remove()
+  }
   if (rolou) window.scrollTo(sx, sy)
 
   // REP-HOME: o que as regras do Início leem do documento. A altura do cabeçalho; as animações que rodam na casa depois

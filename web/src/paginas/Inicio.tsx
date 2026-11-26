@@ -6,16 +6,16 @@ import { FaixaTela } from '../componentes/inicio-casa/FaixaTela.tsx'
 import { ID_FAIXA_NOITE, ID_FAIXA_SO, ID_FAIXA_TELA, ID_TITULO } from '../componentes/inicio-casa/ids.ts'
 import { LegendaAssinada } from '../componentes/inicio-casa/LegendaAssinada.tsx'
 import {
+  A05_RUA,
   CAPTURA_NOTAS,
+  LUZ_A05,
   LUZ_M05,
   LUZ_M05_390,
-  LUZ_M11,
   M05,
   M05_390,
   M05_CHAO,
   M05_COSTURA,
   M05_LARGURA,
-  M11_JANELA,
   MOLDURA_DIA,
   PORTA_NOITE,
 } from '../componentes/inicio-casa/midia.ts'
@@ -106,8 +106,8 @@ function ProvaDaCasa() {
  * the first screen); 2 the night (M06), which in the room composition (1180 px and more, landscape: `useSala`) is the
  * pinned stage of moment 2 with the first screen in it; 3 the hour as type, with the second framed screen on the band's
  * bottom edge; 4 the lone carer, the mat cut by the band line; 5 the statement on the rug and the Notas screen; 6 the
- * questions, with the night door field on the band's bottom and the right window edge; 7 the night closing, with M11
- * (the street, its panes lit once) on the band's bottom edge. No band has a floor strip.
+ * questions, with the night door field on the band's bottom and the right window edge; 7 the night closing, with A05
+ * (the street, edge to edge, its windows lit once) on the band's bottom edge. No band has a floor strip.
  * Every string comes from conteudo/inicio.ts; this file and the page folders write no text of their own.
  *
  * The header pill belongs to the shell; the page only says whether its hero pill is in view (`data-inicio-heroi` on
@@ -203,20 +203,21 @@ export function Inicio() {
         <FaixaInteira fundo="cacau">
           <div className="ic-fecho">
             <Fechamento titulo={INI.h2Fecho} acao={{ rotulo: INI.cta3, para: INI_ROTAS.criarConta }} tom="noite" />
-            {/* Decorative: the heading above it already says the night is noted; the street only closes the house. Its
-                panes come on once (M11: opacity, `--luz-fecho-ms` from the catalogue) at 60 % in view, and rest lit. */}
+            {/* Decorative: the heading above it already says the night is noted; the street only closes the house. It runs
+                edge to edge and stands on the band's bottom edge, which is the footer's top. Its windows come on once (A05:
+                opacity, `--luz-fecho-ms` from the catalogue's M11 time) at 60 % in view, and rest lit. */}
             <figure className="ic-fecho-cena" style={{ '--luz-fecho-ms': `${CATALOGO.M11.duracaoMs}ms` } as CSSProperties}>
               <img
-                src={M11_JANELA.src}
-                srcSet={M11_JANELA.srcSet}
-                sizes={M11_JANELA.sizes}
-                width={M11_JANELA.largura}
-                height={M11_JANELA.altura}
+                src={A05_RUA.src}
+                srcSet={A05_RUA.srcSet}
+                sizes={A05_RUA.sizes}
+                width={A05_RUA.largura}
+                height={A05_RUA.altura}
                 alt=""
                 loading="lazy"
                 decoding="async"
               />
-              <LuzDaLampada luz={LUZ_M11} memoria="casa-luz-m11" gatilho="vista" limiar={0.6} />
+              <LuzDaLampada luz={LUZ_A05} memoria="casa-luz-a05" gatilho="vista" limiar={0.6} />
             </figure>
           </div>
         </FaixaInteira>
