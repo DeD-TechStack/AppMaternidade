@@ -145,6 +145,8 @@ interface Medida {
   /** F8-1: a transição do marcador (`::before` do link atual) e quantos links têm `aria-current`. */
   marcadorTransicao?: string
   marcadorEscala?: string
+  /** F8-1: o que o próprio Chrome responde a `(prefers-reduced-motion: reduce)` (o teste não confia no padrão da máquina). */
+  movimentoReduzidoDoNavegador?: boolean
   /** F8-1: quantas transições de transform o marcador começou ao virar o atual e a duração da primeira (ms). */
   marcadorTransicoes?: number
   marcadorDuracao?: number
@@ -373,6 +375,7 @@ const SCRIPT_DE_MEDIDA = `
       ancora: parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0,
       marcadorTransicao: estiloDoMarcador ? estiloDoMarcador.transitionDuration : undefined,
       marcadorEscala: estiloDoMarcador ? estiloDoMarcador.transform : undefined,
+      movimentoReduzidoDoNavegador: matchMedia('(prefers-reduced-motion: reduce)').matches,
       marcadorTransicoes: window.__TRANSICOES || 0,
       marcadorDuracao: window.__DURACAO || 0,
       linksAtuais: document.querySelectorAll('main .pt-indice-link[aria-current="location"]').length,
@@ -539,6 +542,12 @@ async function executarChrome(argumentos: string[], arquivoDeSaida: string, arqu
   }
 }
 
+/** O modo de movimento pedido: `true` força "reduce", `false` força "no-preference" (sem depender do sistema), `undefined` deixa o padrão. */
+function bandeirasDeMovimento(reduzido: boolean | undefined): string[] {
+  if (reduzido === undefined) return []
+  return reduzido ? ['--force-prefers-reduced-motion'] : ['--blink-settings=prefersReducedMotion=false']
+}
+
 async function medirNoChrome(
   corpoHtml: string,
   largura: number,
@@ -586,7 +595,7 @@ async function medirNoChrome(
         '--allow-file-access-from-files',
         `--user-data-dir=${perfil}`,
         `--force-device-scale-factor=${DENSIDADE_DAS_FOTOS}`,
-        ...(extras.reduzido ? ['--force-prefers-reduced-motion'] : []),
+        ...bandeirasDeMovimento(extras.reduzido),
         `--window-size=${Math.max(largura, 600) + 16},${altura + 100}`,
         '--virtual-time-budget=4000',
         '--dump-dom',
@@ -621,7 +630,7 @@ async function medirNoChrome(
           '--allow-file-access-from-files',
           `--user-data-dir=${join(pasta, 'perfil-foto')}`,
           `--force-device-scale-factor=${DENSIDADE_DAS_FOTOS}`,
-          ...(extras.reduzido ? ['--force-prefers-reduced-motion'] : []),
+          ...bandeirasDeMovimento(extras.reduzido),
           `--window-size=${Math.max(largura, 600) + 16},${alturaDaFoto + 16}`,
           '--virtual-time-budget=4000',
           `--screenshot=${join(PASTA_DAS_FOTOS, foto)}`,
@@ -1167,6 +1176,11 @@ describe(descreve, () => {
         expect(m.linksAtuais).toBe(1)
         // O estado final: o traço inteiro (scaleY 1). Com movimento normal ele chegou ali por uma transição de transform
         // de 160 ms; com movimento reduzido não houve transição nenhuma (o traço já estava no lugar).
+        // O próprio Chrome confirma o modo de movimento: nem o padrão do sistema da máquina decide o caso normal.
+        expect(
+          m.movimentoReduzidoDoNavegador,
+          `prefers-reduced-motion: reduce deu ${String(m.movimentoReduzidoDoNavegador)} (esperado ${String(reduzido)})`,
+        ).toBe(reduzido)
         expect(m.marcadorEscala).toBe('matrix(1, 0, 0, 1, 0, 0)')
         expect(m.marcadorTransicao).toBe(reduzido ? '0s' : '0.16s')
         // (Duas no movimento normal: a do traço que sai do link antigo e a do que chega ao novo.)
